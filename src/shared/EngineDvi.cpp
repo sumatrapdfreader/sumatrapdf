@@ -18,6 +18,12 @@
 #include "EngineBase.h"
 #include "EngineAll.h"
 
+#if OS_POSIX && !OS_WASM
+#include <signal.h>
+#include <sys/wait.h>
+#include <unistd.h>
+#endif
+
 TempStr GetSumatraDataDirTemp();
 
 // pdflatex / xelatex / lualatex do not read DVI. dvipdfmx from that
@@ -39,6 +45,7 @@ static bool gDviToolsInited = false;
 static Str gDviConvertTool;
 
 static TempStr FindExeTemp(Str name) {
+#if OS_WIN
     WCHAR* nameW = CWStrTemp(name);
     WCHAR buf[4096];
     DWORD n = SearchPathW(nullptr, nameW, nullptr, dimof(buf), buf, nullptr);
@@ -46,6 +53,24 @@ static TempStr FindExeTemp(Str name) {
         return {};
     }
     return ToUtf8Temp(buf);
+#elif OS_WASM
+    return {};
+#else
+    const char* env = getenv("PATH");
+    if (!env) {
+        return {};
+    }
+    Str envPath(env);
+    StrVec dirs;
+    Split(&dirs, envPath, StrL(":"), true);
+    for (Str folder : dirs) {
+        TempStr candidate = path::JoinTemp(folder, name);
+        if (access(CStrTemp(candidate), X_OK) == 0 && !dir::Exists(candidate)) {
+            return candidate;
+        }
+    }
+    return {};
+#endif
 }
 
 static TempStr ExeInDirTemp(Str dir, Str exeName) {
@@ -65,7 +90,11 @@ static TempStr FindTexExeTemp(Str exeName) {
     if (len(found) > 0) {
         return found;
     }
+#if OS_WIN
     Str bins[] = {StrL("pdflatex.exe"), StrL("xelatex.exe"), StrL("lualatex.exe"), StrL("latex.exe")};
+#else
+    Str bins[] = {StrL("pdflatex"), StrL("xelatex"), StrL("lualatex"), StrL("latex")};
+#endif
     for (Str bin : bins) {
         TempStr binPath = FindExeTemp(bin);
         if (len(binPath) == 0) {
@@ -85,19 +114,33 @@ static void InitDviTools() {
     }
     gDviToolsInited = true;
 
-    TempStr pdfmx = FindTexExeTemp(StrL("dvipdfmx.exe"));
+#if OS_WIN
+    Str dvipdfmx = StrL("dvipdfmx.exe");
+    Str xdvipdfmx = StrL("xdvipdfmx.exe");
+    Str dvipsName = StrL("dvips.exe");
+#else
+    Str dvipdfmx = StrL("dvipdfmx");
+    Str xdvipdfmx = StrL("xdvipdfmx");
+    Str dvipsName = StrL("dvips");
+#endif
+    TempStr pdfmx = FindTexExeTemp(dvipdfmx);
     if (len(pdfmx) == 0) {
-        pdfmx = FindTexExeTemp(StrL("xdvipdfmx.exe"));
+        pdfmx = FindTexExeTemp(xdvipdfmx);
     }
     if (len(pdfmx) > 0) {
         gDviTools.pdfmx = str::Dup(pdfmx);
     }
 
-    TempStr dvips = FindTexExeTemp(StrL("dvips.exe"));
+    TempStr dvips = FindTexExeTemp(dvipsName);
     if (len(dvips) > 0) {
         gDviTools.dvips = str::Dup(dvips);
     }
-    TempStr gs = GetGhostscriptPathTemp();
+    TempStr gs;
+#if OS_WIN
+    gs = GetGhostscriptPathTemp();
+#else
+    gs = FindExeTemp(StrL("gs"));
+#endif
     if (len(gs) > 0) {
         gDviTools.gs = str::Dup(gs);
     }
@@ -119,21 +162,29 @@ bool IsEngineDviSupportedFileType(FileType kind) {
     return kind == FileType::Dvi && IsEngineDviAvailable();
 }
 
-static DWORD DviConvertTimeoutMs() {
-    if (GetEnvironmentVariableW(L"SUMATRAPDF_NO_GHOSTSCRIPT_TIMEOUT", nullptr, 0)) {
-        return INFINITE;
+static int DviConvertTimeoutMs() {
+    if (getenv("SUMATRAPDF_NO_GHOSTSCRIPT_TIMEOUT")) {
+        return -1;
     }
     return 120000;
 }
 
-static bool RunDviCmd(Str cmdLine, Str workDir) {
+static bool RunDviTool(Str exe, const Str* args, int nArgs, Str workDir) {
+#if OS_WIN
+    str::Builder cmd;
+    cmd.Append(QuoteCmdLineArgTemp(exe));
+    for (int i = 0; i < nArgs; i++) {
+        cmd.AppendChar(' ');
+        cmd.Append(QuoteCmdLineArgTemp(args[i]));
+    }
+    TempStr cmdLine = ToStrTemp(cmd);
     HANDLE process = LaunchProcessInDir(cmdLine, workDir, CREATE_NO_WINDOW);
     if (!process) {
         logf("dvi: CreateProcess failed: %s\n", cmdLine);
         return false;
     }
-    DWORD timeoutMs = DviConvertTimeoutMs();
-    DWORD wait = WaitForSingleObject(process, timeoutMs);
+    int timeoutMs = DviConvertTimeoutMs();
+    DWORD wait = WaitForSingleObject(process, timeoutMs < 0 ? INFINITE : (DWORD)timeoutMs);
     DWORD exitCode = EXIT_FAILURE;
     GetExitCodeProcess(process, &exitCode);
     if (wait != WAIT_OBJECT_0 || exitCode == STILL_ACTIVE) {
@@ -148,6 +199,53 @@ static bool RunDviCmd(Str cmdLine, Str workDir) {
         return false;
     }
     return true;
+#elif OS_WASM
+    return false;
+#else
+    if (nArgs < 0 || nArgs > 14) {
+        return false;
+    }
+    char* argv[16]{};
+    argv[0] = (char*)CStrTemp(exe);
+    for (int i = 0; i < nArgs; i++) {
+        argv[i + 1] = (char*)CStrTemp(args[i]);
+    }
+    pid_t pid = fork();
+    if (pid < 0) {
+        logf("dvi: fork failed: %s\n", exe);
+        return false;
+    }
+    if (pid == 0) {
+        if (len(workDir) > 0 && chdir(CStrTemp(workDir)) != 0) {
+            _exit(126);
+        }
+        execv(argv[0], argv);
+        _exit(127);
+    }
+    int timeoutMs = DviConvertTimeoutMs();
+    u64 started = GetTickCount64();
+    int status = 0;
+    for (;;) {
+        pid_t waited = waitpid(pid, &status, WNOHANG);
+        if (waited == pid) {
+            bool ok = WIFEXITED(status) && WEXITSTATUS(status) == 0;
+            if (!ok) {
+                logf("dvi: converter failed: %s\n", exe);
+            }
+            return ok;
+        }
+        if (waited < 0) {
+            return false;
+        }
+        if (timeoutMs >= 0 && GetTickCount64() - started >= (u64)timeoutMs) {
+            kill(pid, SIGKILL);
+            waitpid(pid, &status, 0);
+            logf("dvi: timed out: %s\n", exe);
+            return false;
+        }
+        SleepInMs(10);
+    }
+#endif
 }
 
 struct DviTmpFile {
@@ -165,9 +263,8 @@ static bool PdfNonEmpty(Str path) {
 
 static bool ConvertWithPdfmx(Str src, Str dst, Str workDir) {
     gDviConvertTool = gDviTools.pdfmx;
-    TempStr cmd =
-        fmt("%s -o %s %s", QuoteCmdLineArgTemp(gDviTools.pdfmx), QuoteCmdLineArgTemp(dst), QuoteCmdLineArgTemp(src));
-    if (!RunDviCmd(cmd, workDir) || !PdfNonEmpty(dst)) {
+    Str args[] = {StrL("-o"), dst, src};
+    if (!RunDviTool(gDviTools.pdfmx, args, dimofi(args), workDir) || !PdfNonEmpty(dst)) {
         file::Delete(dst);
         return false;
     }
@@ -181,14 +278,15 @@ static bool ConvertWithDvips(Str src, Str dst, Str workDir) {
     if (len(ps.path) == 0) {
         return false;
     }
-    TempStr dvipsCmd = fmt("%s -q -o %s %s", QuoteCmdLineArgTemp(gDviTools.dvips), QuoteCmdLineArgTemp(ps.path),
-                           QuoteCmdLineArgTemp(src));
-    if (!RunDviCmd(dvipsCmd, workDir)) {
+    Str dvipsArgs[] = {StrL("-q"), StrL("-o"), ps.path, src};
+    if (!RunDviTool(gDviTools.dvips, dvipsArgs, dimofi(dvipsArgs), workDir)) {
         return false;
     }
-    TempStr gsCmd = fmt("%s -q -dSAFER -dNOPAUSE -dBATCH -sDEVICE=pdfwrite -sOutputFile=%s -f %s",
-                        QuoteCmdLineArgTemp(gDviTools.gs), QuoteCmdLineArgTemp(dst), QuoteCmdLineArgTemp(ps.path));
-    if (!RunDviCmd(gsCmd, workDir) || !PdfNonEmpty(dst)) {
+    TempStr outputArg = str::JoinTemp(StrL("-sOutputFile="), dst);
+    Str gsArgs[] = {
+        StrL("-q"), StrL("-dSAFER"), StrL("-dNOPAUSE"), StrL("-dBATCH"), StrL("-sDEVICE=pdfwrite"), outputArg,
+        StrL("-f"), ps.path};
+    if (!RunDviTool(gDviTools.gs, gsArgs, dimofi(gsArgs), workDir) || !PdfNonEmpty(dst)) {
         file::Delete(dst);
         return false;
     }
@@ -220,7 +318,7 @@ static TempStr Md5HexTemp(Str data) {
     return str::MemToHexTemp(Str((const char*)digest, (int)sizeof(digest)));
 }
 
-// md5(path|mtime).pdf — a new mtime is a new file, so a locked older PDF
+// md5(path|mtime).pdf - a new mtime is a new file, so a locked older PDF
 // does not have to be replaced.
 static TempStr DviPdfNameTemp(Str src, FILETIME mtime) {
     TempStr key = fmt("%s|%u|%u", src, mtime.dwHighDateTime, mtime.dwLowDateTime);
@@ -293,10 +391,10 @@ static bool IsSafePdfName(Str name) {
     if (len(name) != 36 || !str::EndsWithI(name, StrL(".pdf"))) {
         return false;
     }
-    for (int i = 0; i < len(name); i++) {
+    for (int i = 0; i < 32; i++) {
         char c = name.s[i];
         bool hex = (c >= '0' && c <= '9') || (c >= 'a' && c <= 'f') || (c >= 'A' && c <= 'F');
-        if (!hex && c != '.') {
+        if (!hex) {
             return false;
         }
     }
@@ -398,16 +496,12 @@ static TempStr EnsureDviPdf(Str src) {
 static i64 FileAgeSec(FILETIME ft) {
     FILETIME nowFt{};
     GetSystemTimeAsFileTime(&nowFt);
-    ULARGE_INTEGER now{};
-    now.LowPart = nowFt.dwLowDateTime;
-    now.HighPart = nowFt.dwHighDateTime;
-    ULARGE_INTEGER t{};
-    t.LowPart = ft.dwLowDateTime;
-    t.HighPart = ft.dwHighDateTime;
-    if (t.QuadPart == 0 || t.QuadPart > now.QuadPart) {
+    u64 now = FileTimeToU64(nowFt);
+    u64 then = FileTimeToU64(ft);
+    if (then == 0 || then > now) {
         return 0;
     }
-    return (i64)((now.QuadPart - t.QuadPart) / 10000000ULL);
+    return (i64)((now - then) / kFileTimeTicksPerSec);
 }
 
 static void DeleteAged(Str path, i64 ageSec, i64 maxAgeSec) {

@@ -665,9 +665,6 @@
     <ClCompile Include="..\src\EbookSettingsDialog.cpp">
       <Filter>src</Filter>
     </ClCompile>
-    <ClCompile Include="..\src\EngineDvi.cpp">
-      <Filter>src</Filter>
-    </ClCompile>
     <ClCompile Include="..\src\EngineMupdf.cpp">
       <Filter>src</Filter>
     </ClCompile>
@@ -1113,6 +1110,9 @@
       <Filter>src\shared</Filter>
     </ClCompile>
     <ClCompile Include="..\src\shared\EngineDjvuDec.cpp">
+      <Filter>src\shared</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\shared\EngineDvi.cpp">
       <Filter>src\shared</Filter>
     </ClCompile>
     <ClCompile Include="..\src\shared\EngineEbook.cpp">
