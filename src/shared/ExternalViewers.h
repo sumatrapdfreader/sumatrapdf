@@ -2,6 +2,7 @@
    License: GPLv3 */
 
 struct CustomCommand;
+struct WindowTab;
 
 // the CmdOpenWith* commands for viewers we detect ourselves, in menu order,
 // 0-terminated
@@ -18,7 +19,7 @@ bool CanViewWithKnownExternalViewer(WindowTab* tab, int cmd);
 bool ViewWithKnownExternalViewer(WindowTab* tab, int cmd);
 
 bool CanSendAsEmailAttachment(WindowTab* tab = nullptr);
-bool SendAsEmailAttachment(WindowTab* tab, HWND hwndParent = nullptr);
+bool SendAsEmailAttachment(WindowTab* tab);
 
 bool CouldBePDFDoc(WindowTab*);
 bool IsPdfDoc(WindowTab*);

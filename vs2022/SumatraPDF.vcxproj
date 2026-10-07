@@ -1425,7 +1425,6 @@
     <ClInclude Include="..\src\DocumentProperties.h" />
     <ClInclude Include="..\src\EngineMupdf.h" />
     <ClInclude Include="..\src\ExplorerQuickLook.h" />
-    <ClInclude Include="..\src\ExternalViewers.h" />
     <ClInclude Include="..\src\Favorites.h" />
     <ClInclude Include="..\src\FilterHighlightDraw.h" />
     <ClInclude Include="..\src\FindBar.h" />
@@ -1515,6 +1514,7 @@
     <ClInclude Include="..\src\shared\EngineBase.h" />
     <ClInclude Include="..\src\shared\EutlTrust.h" />
     <ClInclude Include="..\src\shared\ExifDump.h" />
+    <ClInclude Include="..\src\shared\ExternalViewers.h" />
     <ClInclude Include="..\src\shared\FileHistory.h" />
     <ClInclude Include="..\src\shared\FileThumbnails.h" />
     <ClInclude Include="..\src\shared\FilterUtil.h" />

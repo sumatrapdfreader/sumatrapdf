@@ -13120,7 +13120,7 @@ static LRESULT FrameOnCommand(MainWindow* win, HWND hwnd, UINT msg, WPARAM wp, L
             break;
 
         case CmdSendByEmail:
-            SendAsEmailAttachment(tab, win->hwndFrame);
+            SendAsEmailAttachment(tab);
             break;
 
         case CmdProperties: {
