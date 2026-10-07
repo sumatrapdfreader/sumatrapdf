@@ -215,17 +215,15 @@ static TempStr Base64DecodeTemp(Str data) {
     static const Str digits = StrL("ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/");
     constexpr int kDigitBits = 6;
     constexpr int kByteBits = 8;
-    int sLen = len(data);
-    char* s = data.s;
-    char* end = data.s + sLen;
-    char* result = AllocArrayTemp<char>(sLen * 3 / 4);
-    char* curr = result;
+    char* result = AllocArrayTemp<char>(len(data) * 3 / 4);
+    int count = 0;
     u32 value = 0;
     int bits = 0;
-    for (; s < end && *s != '='; s++) {
-        int n = str::IndexOfChar(digits, *s);
+    for (int i = 0; i < len(data) && data.s[i] != '='; i++) {
+        char c = data.s[i];
+        int n = str::IndexOfChar(digits, c);
         if (-1 == n) {
-            if (str::IsWs(*s)) {
+            if (str::IsWs(c)) {
                 continue;
             }
             return {};
@@ -234,10 +232,10 @@ static TempStr Base64DecodeTemp(Str data) {
         bits += kDigitBits;
         if (bits >= kByteBits) {
             bits -= kByteBits;
-            *curr++ = (char)(value >> bits);
+            result[count++] = (char)(value >> bits);
         }
     }
-    return Str(result, (int)(curr - result));
+    return Str(result, count);
 }
 
 static TempStr DecodeDataURITemp(Str url) {
