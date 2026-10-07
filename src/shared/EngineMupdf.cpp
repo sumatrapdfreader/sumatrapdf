@@ -4707,7 +4707,6 @@ static bool IsLinearizedFile(EngineMupdf* e) {
 }
 
 // one vector, pageCount full entries: PDF, XPS and single-chapter reflow docs
-#if !defined(SUMATRA_NG)
 // size of each page of a PDF, from its page object. Caller holds docLock
 static void LoadPdfPageMediaboxes(EngineMupdf* e) {
     auto* ctx = e->Ctx();
@@ -4739,6 +4738,7 @@ static void LoadPdfPageMediaboxes(EngineMupdf* e) {
     }
 }
 
+#if !defined(SUMATRA_NG)
 // Caller holds docLock
 static void LoadPdfPageLabels(EngineMupdf* e) {
     auto* ctx = e->Ctx();
@@ -5036,36 +5036,7 @@ bool EngineMupdf::FinishLoading() {
     AutoUnlockRecursiveMutex scope(&docLock);
 #endif
 
-#if defined(SUMATRA_NG)
-    for (int pageNo = 0; pageNo < pageCount; pageNo++) {
-        pdf_obj* pageref = nullptr;
-        fz_rect mbox{};
-        fz_matrix page_ctm{};
-        fz_var(pageref);
-        fz_var(mbox);
-        fz_try(ctx) {
-            // note: don't pdf_drop_obj() this
-            pageref = pdf_lookup_page_obj(ctx, pdfdoc, pageNo);
-            pdf_page_obj_transform(ctx, pageref, &mbox, &page_ctm);
-            mbox = fz_transform_rect(mbox, page_ctm);
-        }
-        fz_catch(ctx) {
-            fz_report_error(ctx);
-            mbox = {};
-        }
-        if (fz_is_empty_rect(mbox)) {
-            logf("cannot find page size for page %d", pageNo);
-            mbox.x0 = 0;
-            mbox.y0 = 0;
-            mbox.x1 = 612;
-            mbox.y1 = 792;
-        }
-        FzPageInfo* pageInfo = (*chapterPages[0])[pageNo];
-        pageInfo->mediabox = ToRectF(mbox);
-    }
-#else
     LoadPdfPageMediaboxes(this);
-#endif
 
     fz_try(ctx) {
         outline = fz_load_outline(ctx, _doc);
