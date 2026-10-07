@@ -8,20 +8,6 @@
 #include "base/ScopedWin.h"
 #include "gui/Dpi.h"
 
-/* Info from https://code.msdn.microsoft.com/DPI-Tutorial-sample-64134744
-
-DPI Unaware: virtualized to 96 DPI and scaled by the system for the DPI of the monitor where shown
-
-System DPI Aware:
- These apps render themselves according to the DPI of the display where they
- are launched, and they expect that scaling to remain constant for all displays on the system.
- These apps are scaled up or down when moved to a display with a different DPI from the system DPI.
-
-Per-Monitor DPI Aware:
- These apps render themselves for any DPI, and re-render when the DPI changes
- (as indicated by the WM_DPICHANGED window message).
-*/
-
 constexpr int kMdtEffectiveDpi = 0;
 
 int gDpiOverride = 0;
@@ -62,10 +48,7 @@ void DpiSetWineOverride(int dpi) {
 }
 
 static int DpiApplyWineOverride(int dpi) {
-    if (gWineDpiOverride > dpi) {
-        return gWineDpiOverride;
-    }
-    return dpi;
+    return std::max(dpi, gWineDpiOverride);
 }
 
 static bool DpiIsDesktopHwnd(HWND hwnd) {
@@ -94,7 +77,7 @@ int DpiGetForPoint(int x, int y) {
         return MulDiv(96, gDpiOverride, 100);
     }
     POINT pt{x, y};
-    int dx = 96, dy = 96;
+    int dx, dy;
     if (DpiFromMonitor(MonitorFromPoint(pt, MONITOR_DEFAULTTONEAREST), &dx, &dy)) {
         return dx;
     }
@@ -114,7 +97,6 @@ int DpiGetForPoint(int x, int y) {
 // 250% primary (discussion #4831).
 static void DpiQueryForHwnd(HWND hwnd, int& x, int& y) {
     DpiMaybeReadEnvOverride();
-    x = y = 96;
     if (gDpiOverride > 0 && !DpiIsDesktopHwnd(hwnd)) {
         x = y = MulDiv(96, gDpiOverride, 100);
         return;
@@ -171,7 +153,7 @@ static void DpiQueryForHwnd(HWND hwnd, int& x, int& y) {
 }
 
 int DpiGetForHwnd(HWND hwnd) {
-    int x = 96, y = 96;
+    int x, y;
     DpiQueryForHwnd(hwnd, x, y);
     return x;
 }
@@ -201,7 +183,7 @@ void DpiSetFromHwnd(HWND hwnd) {
             hwnd = root;
         }
     }
-    int x = 96, y = 96;
+    int x, y;
     DpiQueryForHwnd(hwnd, x, y);
     DpiSet(x, y);
 }
