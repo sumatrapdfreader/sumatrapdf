@@ -1410,7 +1410,6 @@
     <ClInclude Include="..\ext\darkmodelib\src\StdAfx.h" />
     <ClInclude Include="..\ext\darkmodelib\src\UAHMenuBar.h" />
     <ClInclude Include="..\ext\darkmodelib\src\Version.h" />
-    <ClInclude Include="..\src\AIChatPanel.h" />
     <ClInclude Include="..\src\Accelerators.h" />
     <ClInclude Include="..\src\AnnotEditToolbar.h" />
     <ClInclude Include="..\src\AnnotFilterToolbar.h" />
@@ -1484,6 +1483,7 @@
     <ClInclude Include="..\src\gui\win\WinGui.h" />
     <ClInclude Include="..\src\resource.h" />
     <ClInclude Include="..\src\shared\AIChatCommon.h" />
+    <ClInclude Include="..\src\shared\AIChatPanel.h" />
     <ClInclude Include="..\src\shared\AnnotSearch.h" />
     <ClInclude Include="..\src\shared\Annotation.h" />
     <ClInclude Include="..\src\shared\AppSettings.h" />

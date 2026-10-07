@@ -117,9 +117,6 @@
     <ClInclude Include="..\ext\darkmodelib\src\Version.h">
       <Filter>ext\darkmodelib\src</Filter>
     </ClInclude>
-    <ClInclude Include="..\src\AIChatPanel.h">
-      <Filter>src</Filter>
-    </ClInclude>
     <ClInclude Include="..\src\Accelerators.h">
       <Filter>src</Filter>
     </ClInclude>
@@ -337,6 +334,9 @@
       <Filter>src</Filter>
     </ClInclude>
     <ClInclude Include="..\src\shared\AIChatCommon.h">
+      <Filter>src\shared</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\shared\AIChatPanel.h">
       <Filter>src\shared</Filter>
     </ClInclude>
     <ClInclude Include="..\src\shared\AnnotSearch.h">
