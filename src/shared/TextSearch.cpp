@@ -475,12 +475,8 @@ void TextSearch::EnsureFullyLaidOut() {
     if (newPages == nPages) {
         return;
     }
-    int oldPages = nPages;
     nPages = newPages;
     VecResize(pagesToSkip, nPages);
-    for (int i = oldPages; i < nPages; i++) {
-        pagesToSkip[i] = false;
-    }
 }
 
 bool TextSearch::FindStartingAtPage(int pageNo) {
