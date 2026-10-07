@@ -149,6 +149,7 @@ export const sharedFiles = [
   "src/shared/EngineCreate.cpp",
   "src/shared/EngineDjvuDec.cpp",
   "src/shared/EngineMupdf.h",
+  "src/shared/EnginePs.cpp",
   "src/shared/EutlTrust.cpp",
   "src/shared/EutlTrust.h",
   "src/shared/ExifDump.cpp",

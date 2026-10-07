@@ -704,9 +704,6 @@
     <ClCompile Include="..\src\EngineMupdf.cpp">
       <Filter>src</Filter>
     </ClCompile>
-    <ClCompile Include="..\src\EnginePs.cpp">
-      <Filter>src</Filter>
-    </ClCompile>
     <ClCompile Include="..\src\ExplorerQuickLook.cpp">
       <Filter>src</Filter>
     </ClCompile>
@@ -1158,6 +1155,9 @@
       <Filter>src\shared</Filter>
     </ClCompile>
     <ClCompile Include="..\src\shared\EngineDjvuDec.cpp">
+      <Filter>src\shared</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\shared\EnginePs.cpp">
       <Filter>src\shared</Filter>
     </ClCompile>
     <ClCompile Include="..\src\shared\EutlTrust.cpp">

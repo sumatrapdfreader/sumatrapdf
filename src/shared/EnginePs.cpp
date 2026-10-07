@@ -3,7 +3,7 @@
 
 #include "base/Base.h"
 #include <zlib.h>
-#include "base/AutoWin.h"
+#include "base/ScopedWin.h"
 #include "base/File.h"
 #include "base/GuessFileType.h"
 #include "base/Win.h"
@@ -16,6 +16,9 @@
 #include "EngineAll.h"
 
 Kind kindEnginePostScript = "enginePostScript";
+
+// Ghostscript discovery and process launching use Win32 APIs.
+#if OS_WIN
 
 TempStr GetGhostscriptPathTemp() {
     static const Str gsProducts[] = {
@@ -415,3 +418,23 @@ bool IsEnginePsSupportedFileType(FileType kind) {
     }
     return kind == FileType::PS;
 }
+
+#else
+
+TempStr GetGhostscriptPathTemp() {
+    return {};
+}
+
+EngineBase* CreateEnginePsFromFile(Str) {
+    return nullptr;
+}
+
+bool IsEnginePsAvailable() {
+    return false;
+}
+
+bool IsEnginePsSupportedFileType(FileType) {
+    return false;
+}
+
+#endif
