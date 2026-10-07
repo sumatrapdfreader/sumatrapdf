@@ -4,17 +4,6 @@
 // Windows native crypto backend for mupdf PDF signature handling.
 // Implemented on top of the Win32 CryptoAPI (crypt32.dll). Uses only
 // stock Windows facilities; no external dependencies.
-//
-// Verification:
-//   - pkcs7_windows_new_verifier       — pdf_pkcs7_verifier factory
-//   - pkcs7_windows_check_certificate  — is the signer's certificate trusted?
-//   - pkcs7_windows_check_digest       — has the signed byte range been modified?
-//   - pkcs7_windows_distinguished_name — who signed it?
-//   - pkcs7_windows_inspect            — algorithms, issuer, expiry, digest, TSA
-// Signing:
-//   - pkcs7_windows_read_pfx             — load a PFX/PKCS#12 file
-//   - pkcs7_windows_read_pfx_from_buffer — load a PFX/PKCS#12 from memory
-//   - pkcs7_windows_read_store           — load a cert from CurrentUser\MY by SHA-1 thumbprint
 
 #ifndef MUPDF_PKCS7_WINDOWS_H
 #define MUPDF_PKCS7_WINDOWS_H
