@@ -1465,7 +1465,9 @@ static Pixmap* PixmapForHtml(Pixmap* src) {
 #endif
 
 #if OS_LINUX
-static void CairoSetColor(cairo_t* cairo, Color col) {
+using HtmlDrawContext = cairo_t*;
+
+static void HtmlSetColor(cairo_t* cairo, Color col) {
     u8 r = 0;
     u8 g = 0;
     u8 b = 0;
@@ -1473,7 +1475,7 @@ static void CairoSetColor(cairo_t* cairo, Color col) {
     cairo_set_source_rgb(cairo, r / 255.0, g / 255.0, b / 255.0);
 }
 
-static void CairoDrawImage(cairo_t* cairo, Str data, RectF bbox) {
+static void HtmlDrawImage(cairo_t* cairo, Str data, RectF bbox) {
     Pixmap* decoded = PixmapFromData(data);
     Pixmap* pixmap = PixmapForHtml(decoded);
     FreePixmap(decoded);
@@ -1495,38 +1497,12 @@ static void CairoDrawImage(cairo_t* cairo, Str data, RectF bbox) {
     FreePixmap(pixmap);
 }
 
-void DrawHtmlPage(cairo_t* cairo, PlatformTextRender* textDraw, Vec<DrawInstr>* drawInstructions, float offX,
-                  float offY, bool showBbox, Color textColor, bool* abortCookie) {
-    DrawHtmlText(textDraw, drawInstructions, offX, offY, textColor, abortCookie);
-
-    for (DrawInstr& i : *drawInstructions) {
-        RectF bbox = i.bbox;
-        bbox.Offset(offX, offY);
-        if (DrawInstrType::Line == i.type || DrawInstrType::LinkStart == i.type) {
-            bool rule = DrawInstrType::Line == i.type;
-            float y = floorf(bbox.y + (rule ? bbox.dy / 2.f : bbox.dy) + 0.5f);
-            CairoSetColor(cairo, rule ? MkRgb(0x5f, 0x4b, 0x32) : textColor);
-            cairo_set_line_width(cairo, rule ? 2 : 1);
-            cairo_move_to(cairo, bbox.x, y);
-            cairo_line_to(cairo, bbox.x + bbox.dx, y);
-            cairo_stroke(cairo);
-        } else if (DrawInstrType::Image == i.type) {
-            CairoDrawImage(cairo, i.GetImage(), bbox);
-        } else if ((DrawInstrType::String == i.type || DrawInstrType::RtlString == i.type) && showBbox) {
-            CairoSetColor(cairo, kColRed);
-            cairo_set_line_width(cairo, 1);
-            cairo_rectangle(cairo, bbox.x, bbox.y, bbox.dx, bbox.dy);
-            cairo_stroke(cairo);
-        }
-        if (abortCookie && *abortCookie) {
-            break;
-        }
-    }
-}
 #endif
 
 #if OS_DARWIN
-static void CoreGraphicsSetColor(CGContextRef context, Color color) {
+using HtmlDrawContext = CGContextRef;
+
+static void HtmlSetColor(CGContextRef context, Color color) {
     u8 r = 0;
     u8 g = 0;
     u8 b = 0;
@@ -1534,7 +1510,7 @@ static void CoreGraphicsSetColor(CGContextRef context, Color color) {
     CGContextSetRGBStrokeColor(context, r / 255.0, g / 255.0, b / 255.0, 1);
 }
 
-static void CoreGraphicsDrawImage(CGContextRef context, Str data, RectF bbox) {
+static void HtmlDrawImage(CGContextRef context, Str data, RectF bbox) {
     Pixmap* decoded = PixmapFromData(data);
     Pixmap* pixmap = PixmapForHtml(decoded);
     FreePixmap(decoded);
@@ -1561,7 +1537,10 @@ static void CoreGraphicsDrawImage(CGContextRef context, Str data, RectF bbox) {
     FreePixmap(pixmap);
 }
 
-void DrawHtmlPage(CGContextRef context, PlatformTextRender* textDraw, Vec<DrawInstr>* drawInstructions, float offX,
+#endif
+
+#if OS_LINUX || OS_DARWIN
+void DrawHtmlPage(HtmlDrawContext context, PlatformTextRender* textDraw, Vec<DrawInstr>* drawInstructions, float offX,
                   float offY, bool showBbox, Color textColor, bool* abortCookie) {
     DrawHtmlText(textDraw, drawInstructions, offX, offY, textColor, abortCookie);
 
@@ -1571,17 +1550,30 @@ void DrawHtmlPage(CGContextRef context, PlatformTextRender* textDraw, Vec<DrawIn
         if (DrawInstrType::Line == i.type || DrawInstrType::LinkStart == i.type) {
             bool rule = DrawInstrType::Line == i.type;
             float y = floorf(bbox.y + (rule ? bbox.dy / 2.f : bbox.dy) + 0.5f);
-            CoreGraphicsSetColor(context, rule ? MkRgb(0x5f, 0x4b, 0x32) : textColor);
+            HtmlSetColor(context, rule ? MkRgb(0x5f, 0x4b, 0x32) : textColor);
+#if OS_LINUX
+            cairo_set_line_width(context, rule ? 2 : 1);
+            cairo_move_to(context, bbox.x, y);
+            cairo_line_to(context, bbox.x + bbox.dx, y);
+            cairo_stroke(context);
+#else
             CGContextSetLineWidth(context, rule ? 2 : 1);
             CGContextMoveToPoint(context, bbox.x, y);
             CGContextAddLineToPoint(context, bbox.x + bbox.dx, y);
             CGContextStrokePath(context);
+#endif
         } else if (DrawInstrType::Image == i.type) {
-            CoreGraphicsDrawImage(context, i.GetImage(), bbox);
+            HtmlDrawImage(context, i.GetImage(), bbox);
         } else if ((DrawInstrType::String == i.type || DrawInstrType::RtlString == i.type) && showBbox) {
-            CoreGraphicsSetColor(context, kColRed);
+            HtmlSetColor(context, kColRed);
+#if OS_LINUX
+            cairo_set_line_width(context, 1);
+            cairo_rectangle(context, bbox.x, bbox.y, bbox.dx, bbox.dy);
+            cairo_stroke(context);
+#else
             CGContextSetLineWidth(context, 1);
             CGContextStrokeRect(context, CGRectMake(bbox.x, bbox.y, bbox.dx, bbox.dy));
+#endif
         }
         if (abortCookie && *abortCookie) {
             break;
