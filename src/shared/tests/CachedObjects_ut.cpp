@@ -34,18 +34,18 @@ static CachedObject MkObj(uintptr_t id, u64 size, EngineBase* engine) {
     return o;
 }
 
-static void ClearCachedObjects() {
+static void ResetCacheTest() {
     while (len(gCachedObjects) > 0) {
         UnregisterCachedObject(gCachedObjects[0].id);
+    }
+    for (bool& freed : gFreed) {
+        freed = false;
     }
 }
 
 void CachedObjects_UnitTests() {
     int saved = gSaveMemory;
-    ClearCachedObjects();
-    for (int i = 0; i < 16; i++) {
-        gFreed[i] = false;
-    }
+    ResetCacheTest();
 
     auto* e1 = (EngineBase*)(uintptr_t)0x100;
     auto* e2 = (EngineBase*)(uintptr_t)0x200;
@@ -71,10 +71,7 @@ void CachedObjects_UnitTests() {
     utassert(len(gCachedObjects) == 1);
     utassert(gCachedObjects[0].id == 1);
 
-    ClearCachedObjects();
-    for (int i = 0; i < 16; i++) {
-        gFreed[i] = false;
-    }
+    ResetCacheTest();
 
     gSaveMemory = 100;
     a = MkObj(1, 1000, e1);
@@ -94,10 +91,7 @@ void CachedObjects_UnitTests() {
     utassert(len(gCachedObjects) == 1);
     utassert(gCachedObjects[0].id == 1);
 
-    ClearCachedObjects();
-    for (int i = 0; i < 16; i++) {
-        gFreed[i] = false;
-    }
+    ResetCacheTest();
 
     gSaveMemory = 0;
     a = MkObj(4, 100, e1);
@@ -110,10 +104,7 @@ void CachedObjects_UnitTests() {
     utassert(len(gCachedObjects) == 1);
     utassert(gCachedObjects[0].id == 5);
 
-    ClearCachedObjects();
-    for (int i = 0; i < 16; i++) {
-        gFreed[i] = false;
-    }
+    ResetCacheTest();
     gSaveMemory = 0;
     a = MkObj(6, 2048, nullptr);
     a.kind = kindCachedRender;
@@ -132,6 +123,6 @@ void CachedObjects_UnitTests() {
     utassert(str::Contains(t, StrL("6.0 KB")));
     utassert(str::IndexOf(t, StrL("image")) < str::IndexOf(t, StrL("render")));
 
-    ClearCachedObjects();
+    ResetCacheTest();
     gSaveMemory = saved;
 }
