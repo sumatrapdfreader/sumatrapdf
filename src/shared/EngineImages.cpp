@@ -84,6 +84,11 @@ struct ImagePage {
     }
 };
 
+enum class PixmapDecode {
+    AllowHuge,
+    SmallOnly,
+};
+
 struct ImagePageInfo {
     Vec<IPageElement*> allElements;
     PageElementImage imageElement;
@@ -147,6 +152,7 @@ class EngineImages : public EngineBase {
     Mutex threadCtxsLock;
 
     fz_context* Ctx();
+    void EnsurePixmap(ImagePage* page, int pageNo, PixmapDecode decode);
 
     PointF TransformPoint(PointF pt, int pageNo, float zoom, int rotation, bool inverse);
 
@@ -814,18 +820,7 @@ Pixmap* EngineImages::RenderPage(RenderPageArgs& args) {
     // Pixmap path: needs page->pixmap. If we only have img (subclass loaded via
     // mupdf), lazy-load/decode the Pixmap on demand for this rare path
     // (rotation, or mupdf decode/scale failure on a small image).
-    if (!page->pixmap && !page->failedToLoad) {
-        ScopedMutex scope(&page->drawLock);
-        if (!page->pixmap) {
-            bool ownPixmap = true;
-            page->pixmap = LoadPixmapForPage(pageNo, ownPixmap);
-            page->ownPixmap = ownPixmap;
-            if (!page->pixmap && page->img && !FzImageTooBigToFullyDecode(page->img)) {
-                page->pixmap = FzImageToPixmap(Ctx(), page->img);
-                page->ownPixmap = true;
-            }
-        }
-    }
+    EnsurePixmap(page, pageNo, PixmapDecode::SmallOnly);
 
     Pixmap* src = page->pixmap;
     if (page->failedToLoad || !src || !src->data) {
@@ -995,18 +990,7 @@ RenderedBitmap* EngineImages::GetImageForPageElement(IPageElement* pel) {
         return nullptr;
     }
 
-    if (!page->pixmap && !page->failedToLoad) {
-        ScopedMutex scope(&page->drawLock);
-        if (!page->pixmap) {
-            bool ownPixmap = true;
-            page->pixmap = LoadPixmapForPage(pageNo, ownPixmap);
-            page->ownPixmap = ownPixmap;
-            if (!page->pixmap && page->img) {
-                page->pixmap = FzImageToPixmap(Ctx(), page->img);
-                page->ownPixmap = true;
-            }
-        }
-    }
+    EnsurePixmap(page, pageNo, PixmapDecode::AllowHuge);
     if (!page->pixmap) {
         DropPage(page, false);
         return nullptr;
@@ -1193,6 +1177,26 @@ void EngineImages::DropPage(ImagePage* page, bool forceRemove) {
     }
 }
 
+void EngineImages::EnsurePixmap(ImagePage* page, int pageNo, PixmapDecode decode) {
+    if (page->pixmap || page->failedToLoad) {
+        return;
+    }
+
+    ScopedMutex scope(&page->drawLock);
+    if (page->pixmap) {
+        return;
+    }
+
+    bool ownPixmap = true;
+    page->pixmap = LoadPixmapForPage(pageNo, ownPixmap);
+    page->ownPixmap = ownPixmap;
+    bool allowDecode = page->img && (decode == PixmapDecode::AllowHuge || !FzImageTooBigToFullyDecode(page->img));
+    if (!page->pixmap && allowDecode) {
+        page->pixmap = FzImageToPixmap(Ctx(), page->img);
+        page->ownPixmap = true;
+    }
+}
+
 // Get content box for image by cropping out margins of similar color
 RectF EngineImages::PageContentBox(int pageNo, RenderTarget /*target*/) {
     // try to load bitmap for the image
@@ -1202,18 +1206,7 @@ RectF EngineImages::PageContentBox(int pageNo, RenderTarget /*target*/) {
         DropPage(page, false);
     };
 
-    if (!page->pixmap && !page->failedToLoad) {
-        ScopedMutex scope(&page->drawLock);
-        if (!page->pixmap) {
-            bool ownPixmap = true;
-            page->pixmap = LoadPixmapForPage(pageNo, ownPixmap);
-            page->ownPixmap = ownPixmap;
-            if (!page->pixmap && page->img) {
-                page->pixmap = FzImageToPixmap(Ctx(), page->img);
-                page->ownPixmap = true;
-            }
-        }
-    }
+    EnsurePixmap(page, pageNo, PixmapDecode::AllowHuge);
 
     auto* pixmap = page->pixmap;
     if (!pixmap || !pixmap->data) return RectF{};
