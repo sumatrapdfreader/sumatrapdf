@@ -152,19 +152,13 @@ static inline bool PageDestHasAddress(IPageDestination* dest) {
 }
 
 static inline int PageDestGetPageNo(IPageDestination* dest) {
-    if (!dest) {
-        return -1;
-    }
-    return dest->pageNo;
+    return dest ? dest->pageNo : -1;
 }
 
 // anchor point on the destination page (x, y in user-space). Returns {0,0,0,0}
 // when the destination has no specific anchor.
 static inline RectF PageDestGetDestPoint(IPageDestination* dest) {
-    if (!dest) {
-        return {};
-    }
-    return dest->GetDestPoint();
+    return dest ? dest->GetDestPoint() : RectF{};
 }
 
 struct PageDestinationURL : IPageDestination {
@@ -317,12 +311,7 @@ struct PageElementDestination : IPageElement {
         }
     }
 
-    Str GetValue() override {
-        if (dest) {
-            return dest->GetValue();
-        }
-        return {};
-    }
+    Str GetValue() override { return dest ? dest->GetValue() : Str{}; }
     IPageDestination* AsLink() override { return dest; }
 };
 
