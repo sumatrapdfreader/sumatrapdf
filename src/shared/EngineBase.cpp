@@ -446,13 +446,11 @@ bool TocTree::IsExpanded(TreeItem ti) {
 }
 
 void TocTree::SetUserData(TreeItem ti, uintptr_t userData) {
-    ReportIf(ti < 0);
     TocItem* tocItem = (TocItem*)ti;
     tocItem->userData = userData;
 }
 
 uintptr_t TocTree::GetUserData(TreeItem ti) {
-    ReportIf(ti < 0);
     TocItem* tocItem = (TocItem*)ti;
     return tocItem->userData;
 }
