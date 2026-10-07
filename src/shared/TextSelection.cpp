@@ -223,42 +223,30 @@ static void FillResultRects(TextSelection* ts, int pageNo, int glyph, int length
     }
     Rect mediabox = ts->engine->PageMediabox(pageNo).Round();
 
-    // Copy path (lines != null): soft-join spaces from FzTextPageToUtf8 (#5793) have
-    // empty rects like hard newlines. Treat only newline (empty-rect) glyphs as line
-    // breaks; keep soft-join spaces inside the same extract line so Ctrl+C does not
-    // re-split wrapped paragraphs. Highlight path (lines == null) still splits on any
-    // empty rect so each visual line gets its own selection rectangle.
+    // Copy soft-join spaces inside a line; only empty-box newlines split it.
+    // Highlighting below still splits at every empty box.
     if (lines) {
-        int runStart = -1;
+        int runStart = glyph;
         int endGlyph = glyph + length;
-        auto flushLine = [&](int runEnd) {
-            if (runStart >= 0 && runEnd > runStart) {
+        auto appendLine = [&](int runEnd) {
+            if (runEnd > runStart) {
                 Str s = Utf8SliceByCodepoints(text, runStart, runEnd - runStart);
                 lines->AppendNonEmpty(s);
             }
-            runStart = -1;
         };
         for (int i = glyph; i < endGlyph; i++) {
             Rect& r = coords[i];
-            bool emptyBox = !r.x && !r.dx;
-            if (!emptyBox) {
-                if (runStart < 0) {
-                    runStart = i;
-                }
+            if (r.x || r.dx) {
                 continue;
             }
-            // empty box: newline ends the extract line; soft-join space stays in it
             int byteIdx = Utf8CodepointToByteIndex(text, i);
             int cp = Utf8CodepointNext(text, byteIdx);
             if (cp == '\n' || cp == '\r') {
-                flushLine(i);
-                continue;
-            }
-            if (runStart < 0) {
-                runStart = i;
+                appendLine(i);
+                runStart = i + 1;
             }
         }
-        flushLine(endGlyph);
+        appendLine(endGlyph);
         return;
     }
 
