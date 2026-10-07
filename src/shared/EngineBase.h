@@ -246,8 +246,7 @@ extern Kind kindPageElementImage;
 extern Kind kindPageElementComment;
 
 // an element on a page. Might be clicked, provides tooltip info for hoover
-struct IPageElement {
-    Kind kind = nullptr;
+struct IPageElement : KindBase {
     // position of the element on the page
     RectF rect;
     int pageNo = -1;
@@ -257,8 +256,6 @@ struct IPageElement {
     virtual ~IPageElement() = default;
 
     bool Is(Kind expectedKind);
-
-    Kind GetKind() { return kind; }
     // page this element lives on (-1 for elements in a ToC)
     int GetPageNo() { return pageNo; }
 
