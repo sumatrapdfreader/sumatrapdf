@@ -1910,10 +1910,9 @@ RectF EngineImage::LoadMediabox(int pageNo) {
     return {};
 }
 
-EngineBase* EngineImage::CreateFromFile(Str path) {
-    logf("EngineImage::CreateFromFile(%s)\n", path);
+static EngineBase* CreateImageEngine(Str source, bool (EngineImage::*load)(Str)) {
     EngineImage* engine = new EngineImage();
-    bool ok = engine->LoadSingleFile(path);
+    bool ok = (engine->*load)(source);
     // decoding might run a 3rd-party WIC codec (e.g. CopyTrans HEIC) that
     // unmasks fp exceptions on this thread, which would crash later float math
 #if OS_WIN
@@ -1926,17 +1925,13 @@ EngineBase* EngineImage::CreateFromFile(Str path) {
     return engine;
 }
 
+EngineBase* EngineImage::CreateFromFile(Str path) {
+    logf("EngineImage::CreateFromFile(%s)\n", path);
+    return CreateImageEngine(path, &EngineImage::LoadSingleFile);
+}
+
 EngineBase* EngineImage::CreateFromData(Str data) {
-    EngineImage* engine = new EngineImage();
-    bool ok = engine->LoadFromData(data);
-#if OS_WIN
-    MaskFpExceptions();
-#endif
-    if (!ok) {
-        SafeEngineRelease(&engine);
-        return nullptr;
-    }
-    return engine;
+    return CreateImageEngine(data, &EngineImage::LoadFromData);
 }
 
 // clang-format off
