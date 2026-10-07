@@ -138,6 +138,7 @@ class EngineEbook : public EngineBase {
     RectF Transform(const RectF& rect, int pageNo, float zoom, int rotation, bool inverse = false) override;
 
     Str GetFileData() override;
+    TempStr GetPropertyTemp(DocProp prop) override;
 
     bool SaveFileAs(Str dstPath) override;
     PageText ExtractPageText(int pageNo) override;
@@ -194,6 +195,7 @@ class EngineEbook : public EngineBase {
     TocTree* FinishToc(EbookTocBuilder& builder);
     EngineBase* CloneFromSource(CreateEbookEngine fromFile, CreateEbookEngine fromData = nullptr);
     TempStr ExtractFontListTemp();
+    virtual TempStr GetBookPropTemp(DocProp prop) = 0;
     void ExtractFontListFromPage(Location loc, Vec<PlatformFont*>& seenFonts, StrVec& fonts);
 
     virtual IPageElement* CreatePageLink(DrawInstr* link, Rect rect, int pageNo);
@@ -981,6 +983,13 @@ EngineBase* EngineEbook::CloneFromSource(CreateEbookEngine fromFile, CreateEbook
     return path ? fromFile(path) : nullptr;
 }
 
+TempStr EngineEbook::GetPropertyTemp(DocProp prop) {
+    if (prop == DocProp::FontList) {
+        return ExtractFontListTemp();
+    }
+    return GetBookPropTemp(prop);
+}
+
 template <typename T>
 static EngineBase* CreateLoadedEngine(Str source, bool (T::*load)(Str)) {
     T* engine = new T();
@@ -999,12 +1008,7 @@ class EngineEpub : public EngineEbook {
     ~EngineEpub() override;
     EngineBase* Clone() override;
 
-    TempStr GetPropertyTemp(DocProp prop) override {
-        if (prop == DocProp::FontList) {
-            return ExtractFontListTemp();
-        }
-        return GetPropValueTemp(doc->props, prop);
-    }
+    TempStr GetBookPropTemp(DocProp prop) override { return GetPropValueTemp(doc->props, prop); }
 
     bool HasToc() override;
     TocTree* GetToc() override;
@@ -1123,12 +1127,7 @@ class EngineFb2 : public EngineEbook {
     ~EngineFb2() override { delete doc; }
     EngineBase* Clone() override { return CloneFromSource(CreateFromFile, CreateFromData); }
 
-    TempStr GetPropertyTemp(DocProp prop) override {
-        if (prop == DocProp::FontList) {
-            return ExtractFontListTemp();
-        }
-        return GetPropValueTemp(doc->props, prop);
-    }
+    TempStr GetBookPropTemp(DocProp prop) override { return GetPropValueTemp(doc->props, prop); }
 
     bool HasToc() override;
     TocTree* GetToc() override;
@@ -1221,12 +1220,7 @@ class EngineMobi : public EngineEbook {
     ~EngineMobi() override;
     EngineBase* Clone() override { return CloneFromSource(CreateFromFile, CreateFromData); }
 
-    TempStr GetPropertyTemp(DocProp prop) override {
-        if (prop == DocProp::FontList) {
-            return ExtractFontListTemp();
-        }
-        return doc->GetPropertyTemp(prop);
-    }
+    TempStr GetBookPropTemp(DocProp prop) override { return doc->GetPropertyTemp(prop); }
 
     IPageDestination* GetNamedDest(Str name) override;
     IPageDestination* GetNamedDestLazy(Str url) override;
@@ -1584,12 +1578,7 @@ class EnginePdb : public EngineEbook {
     ~EnginePdb() override { delete doc; }
     EngineBase* Clone() override { return CloneFromSource(CreateFromFile); }
 
-    TempStr GetPropertyTemp(DocProp prop) override {
-        if (prop == DocProp::FontList) {
-            return ExtractFontListTemp();
-        }
-        return {};
-    }
+    TempStr GetBookPropTemp(DocProp) override { return {}; }
 
     bool HasToc() override;
     TocTree* GetToc() override;
@@ -1771,12 +1760,7 @@ class EngineChm : public EngineEbook {
     }
     EngineBase* Clone() override { return CloneFromSource(CreateFromFile); }
 
-    TempStr GetPropertyTemp(DocProp prop) override {
-        if (prop == DocProp::FontList) {
-            return ExtractFontListTemp();
-        }
-        return doc->GetPropertyTemp(prop);
-    }
+    TempStr GetBookPropTemp(DocProp prop) override { return doc->GetPropertyTemp(prop); }
 
     IPageDestination* GetNamedDest(Str name) override;
     bool HasToc() override;
@@ -2039,12 +2023,7 @@ class EngineHtml : public EngineEbook {
     ~EngineHtml() override { delete doc; }
     EngineBase* Clone() override { return CloneFromSource(CreateFromFile); }
 
-    TempStr GetPropertyTemp(DocProp prop) override {
-        if (prop == DocProp::FontList) {
-            return ExtractFontListTemp();
-        }
-        return GetPropValueTemp(doc->props, prop);
-    }
+    TempStr GetBookPropTemp(DocProp prop) override { return GetPropValueTemp(doc->props, prop); }
 
     static EngineBase* CreateFromFile(Str path);
 
