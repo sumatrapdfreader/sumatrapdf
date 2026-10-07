@@ -114,6 +114,16 @@ static HFONT RememberCreatedFont(HFONT font, Str name, int size, u16 flags) {
     return font;
 }
 
+static PlatformFont* CreateGuiFont(LOGFONTW& lf, Str name, int size, u16 flags) {
+    if (flags & kFontFlagBold) {
+        lf.lfWeight = FW_BOLD;
+    }
+    if (flags & kFontFlagItalic) {
+        lf.lfItalic = TRUE;
+    }
+    return GetPlatformFont(RememberCreatedFont(CreateFontIndirectW(&lf), name, size, flags));
+}
+
 void DeleteCreatedFonts() {
     ListDelete(gFonts);
     gFonts = nullptr;
@@ -136,8 +146,7 @@ PlatformFont* HdcCreateSimpleFont(HDC hdc, Str fontName, int fontSizePt) {
     wstr::BufSet(WStr(lf.lfFaceName, dimof(lf.lfFaceName)), ToWStrTemp(fontName));
     lf.lfWeight = FW_DONTCARE;
     lf.lfClipPrecision = CLIP_DEFAULT_PRECIS;
-    HFONT res = CreateFontIndirectW(&lf);
-    return GetPlatformFont(RememberCreatedFont(res, fontName, realSize, flags));
+    return CreateGuiFont(lf, fontName, realSize, flags);
 }
 
 PlatformFont* GetUserGuiFont(Str fontName, int size) {
@@ -161,14 +170,7 @@ PlatformFont* GetUserGuiFontEx(Str fontName, int size, bool bold, bool italic) {
         wstr::BufSet(WStr(ncm.lfMessageFont.lfFaceName, dimof(ncm.lfMessageFont.lfFaceName)), ToWStrTemp(fontName));
     }
     ncm.lfMessageFont.lfHeight = -size;
-    if (bold) {
-        ncm.lfMessageFont.lfWeight = FW_BOLD;
-    }
-    if (italic) {
-        ncm.lfMessageFont.lfItalic = TRUE;
-    }
-    HFONT res = CreateFontIndirectW(&ncm.lfMessageFont);
-    return GetPlatformFont(RememberCreatedFont(res, fontName, size, flags));
+    return CreateGuiFont(ncm.lfMessageFont, fontName, size, flags);
 }
 
 PlatformFont* GetDefaultGuiFont(bool bold, bool italic) {
@@ -183,14 +185,7 @@ PlatformFont* GetDefaultGuiFont(bool bold, bool italic) {
     if (font) {
         return GetPlatformFont(font->font);
     }
-    if (bold) {
-        ncm.lfMessageFont.lfWeight = FW_BOLD;
-    }
-    if (italic) {
-        ncm.lfMessageFont.lfItalic = TRUE;
-    }
-    HFONT res = CreateFontIndirectW(&ncm.lfMessageFont);
-    return GetPlatformFont(RememberCreatedFont(res, Str(), size, flags));
+    return CreateGuiFont(ncm.lfMessageFont, Str(), size, flags);
 }
 
 PlatformFont* GetScaledPlatformFont(PlatformFont* font, int percent) {
