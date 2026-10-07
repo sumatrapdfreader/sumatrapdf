@@ -638,6 +638,42 @@ class EngineBase {
     void EnsureChapterTable();
 };
 
+class EnginePdfProxy : public EngineBase {
+  public:
+    RectF PageMediabox(int pageNo) override;
+    RectF PageContentBox(int pageNo, RenderTarget target = RenderTarget::View) override;
+    Pixmap* RenderPage(RenderPageArgs& args) override;
+    RectF Transform(const RectF& rect, int pageNo, float zoom, int rotation, bool inverse = false) override;
+    Str GetFileData() override;
+    PageText ExtractPageText(int pageNo) override;
+    bool HasClipOptimizations(int pageNo) override;
+    TempStr GetPropertyTemp(DocProp prop) override;
+    bool BenchLoadPage(int pageNo) override;
+    Vec<IPageElement*> GetElements(int pageNo) override;
+    RenderedBitmap* GetImageForPageElement(IPageElement* ipel) override;
+    Str GetImageDataForPageElement(IPageElement* ipel) override;
+    bool TryGetElements(int pageNo, Vec<IPageElement*>* out) override;
+    bool TryExtractPageText(int pageNo, PageText* out) override;
+    void ReleaseTextExtractionThreadContext() override;
+    void GetPdfPageBoxes(int pageNo, Vec<PdfPageBox>& out) override;
+    int GetOpenActionPageNo() override;
+    Location ResolveDest(IPageDestination* dest) override;
+    TempStr GetPageLabeTemp(int pageNo) const override;
+    int GetPageByLabel(Str label) const override;
+    void GetBitmapRecolorSkipRects(int pageNo, float zoom, int rotation, const RectF& renderPageRect, Size bmpSize,
+                                   Vec<Rect>& skipRects) override;
+    IPageElement* GetElementAtPos(int pageNo, PointF pt) override;
+    bool HandleLink(IPageDestination* dest, ILinkHandler* lh) override;
+    IPageDestination* GetNamedDest(Str name) override;
+    TocTree* GetToc() override;
+
+    EngineBase* pdfEngine = nullptr;
+    void CopyStateFromPdfEngine();
+
+  protected:
+    ~EnginePdfProxy() override;
+};
+
 extern Func1<EngineBase*> gOnEngineDestroyed;
 
 struct PasswordUI {

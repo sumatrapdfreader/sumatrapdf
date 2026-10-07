@@ -223,151 +223,45 @@ static EngineBase* psgz2pdf(Str fileName, Str* pdfDataOut) {
 
 // EnginePs is mostly a proxy for a PdfEngine that's fed whatever
 // the ps2pdf conversion from Ghostscript returns
-class EnginePs : public EngineBase {
+class EnginePs : public EnginePdfProxy {
   public:
     EnginePs() {
         kind = kindEnginePostScript;
         defaultExt = str::Dup(StrL(".ps"));
     }
 
-    ~EnginePs() override {
-        if (pdfEngine) {
-            pdfEngine->Release();
-        }
-        str::Free(pdfData);
-    }
+    ~EnginePs() override { str::Free(pdfData); }
 
-    // from our copy of the converted PDF: pdfEngine->Clone() can't, and running
-    // Ghostscript again would cost seconds
+    // Reuse the converted PDF because another Ghostscript run costs seconds.
     EngineBase* Clone() override {
         if (len(pdfData) == 0) {
-            return {};
+            return nullptr;
         }
         TempStr nameHint = str::JoinTemp(FilePath(), StrL(".pdf"));
-        EngineBase* newEngine = CreateEngineMupdfFromData(pdfData, nameHint, nullptr);
-        if (!newEngine) {
-            return {};
+        EngineBase* inner = CreateEngineMupdfFromData(pdfData, nameHint, nullptr);
+        if (!inner) {
+            return nullptr;
         }
         EnginePs* clone = new EnginePs();
         if (FilePath()) {
             clone->SetFilePath(FilePath());
         }
-        clone->pdfEngine = newEngine;
+        clone->pdfEngine = inner;
         clone->pdfData = str::Dup(pdfData);
         clone->CopyStateFromPdfEngine();
         return clone;
     }
 
-    RectF PageMediabox(int pageNo) override { return pdfEngine->PageMediabox(pageNo); }
-
-    RectF PageContentBox(int pageNo, RenderTarget target = RenderTarget::View) override {
-        return pdfEngine->PageContentBox(pageNo, target);
-    }
-
-    Pixmap* RenderPage(RenderPageArgs& args) override { return pdfEngine->RenderPage(args); }
-
-    RectF Transform(const RectF& rect, int pageNo, float zoom, int rotation, bool inverse = false) override {
-        return pdfEngine->Transform(rect, pageNo, zoom, rotation, inverse);
-    }
-
-    Str GetFileData() override { return file::ReadFile(FilePath()); }
-
-    // saving as .pdf writes what Ghostscript produced; anything else is a copy
-    // of the PostScript we opened
+    // saving as .pdf writes what Ghostscript produced; anything else copies the PostScript
     bool SaveFileAs(Str dstPath) override {
         if (str::EndsWithI(dstPath, StrL(".pdf")) && len(pdfData) > 0) {
             return file::WriteFile(dstPath, pdfData);
         }
         Str srcPath = FilePath();
-        if (len(srcPath) == 0) {
-            return false;
-        }
-        return file::Copy(dstPath, srcPath, false);
+        return len(srcPath) > 0 && file::Copy(dstPath, srcPath, false);
     }
 
-    PageText ExtractPageText(int pageNo) override { return pdfEngine->ExtractPageText(pageNo); }
-
-    bool HasClipOptimizations(int pageNo) override { return pdfEngine->HasClipOptimizations(pageNo); }
-
-    TempStr GetPropertyTemp(DocProp prop) override {
-        // omit properties created by Ghostscript
-        if (!pdfEngine) {
-            return {};
-        }
-        static const DocProp toOmit[] = {DocProp::CreationDate, DocProp::ModificationDate, DocProp::PdfVersion,
-                                         DocProp::PdfProducer,  DocProp::PdfFileStructure, DocProp::None};
-
-        for (DocProp omit : toOmit) {
-            if (omit == DocProp::None) {
-                break;
-            }
-            if (omit == prop) {
-                return {};
-            }
-        }
-        return pdfEngine->GetPropertyTemp(prop);
-    }
-
-    bool BenchLoadPage(int pageNo) override { return pdfEngine->BenchLoadPage(pageNo); }
-
-    Vec<IPageElement*> GetElements(int pageNo) override { return pdfEngine->GetElements(pageNo); }
-
-    // the elements above are the pdf engine's, so its images are too
-    RenderedBitmap* GetImageForPageElement(IPageElement* ipel) override {
-        return pdfEngine->GetImageForPageElement(ipel);
-    }
-
-    Str GetImageDataForPageElement(IPageElement* ipel) override { return pdfEngine->GetImageDataForPageElement(ipel); }
-
-    // the base version blocks in GetElements(); the pdf engine gives up instead
-    // when a render thread holds its locks
-    bool TryGetElements(int pageNo, Vec<IPageElement*>* out) override { return pdfEngine->TryGetElements(pageNo, out); }
-
-    bool TryExtractPageText(int pageNo, PageText* out) override { return pdfEngine->TryExtractPageText(pageNo, out); }
-
-    void ReleaseTextExtractionThreadContext() override { pdfEngine->ReleaseTextExtractionThreadContext(); }
-
-    void GetPdfPageBoxes(int pageNo, Vec<PdfPageBox>& out) override { pdfEngine->GetPdfPageBoxes(pageNo, out); }
-
-    int GetOpenActionPageNo() override { return pdfEngine->GetOpenActionPageNo(); }
-
-    Location ResolveDest(IPageDestination* dest) override { return pdfEngine->ResolveDest(dest); }
-
-    TempStr GetPageLabeTemp(int pageNo) const override { return pdfEngine->GetPageLabeTemp(pageNo); }
-
-    int GetPageByLabel(Str label) const override { return pdfEngine->GetPageByLabel(label); }
-
-    void GetBitmapRecolorSkipRects(int pageNo, float zoom, int rotation, const RectF& renderPageRect, Size bmpSize,
-                                   Vec<Rect>& skipRects) override {
-        pdfEngine->GetBitmapRecolorSkipRects(pageNo, zoom, rotation, renderPageRect, bmpSize, skipRects);
-    }
-
-    // don't delete the result
-    IPageElement* GetElementAtPos(int pageNo, PointF pt) override { return pdfEngine->GetElementAtPos(pageNo, pt); }
-
-    bool HandleLink(IPageDestination* dest, ILinkHandler* lh) override { return pdfEngine->HandleLink(dest, lh); }
-
-    // engine-owned; do not delete
-    IPageDestination* GetNamedDest(Str name) override { return pdfEngine->GetNamedDest(name); }
-
-    TocTree* GetToc() override { return pdfEngine->GetToc(); }
-
-    EngineBase* pdfEngine = nullptr;
-    // the PDF Ghostscript made, kept for Clone() and "save as PDF"
     Str pdfData;
-
-    // the base class keeps this in plain fields, so a clone has to copy it or it
-    // reports one page (EnsureChapterTable) at the default dpi
-    void CopyStateFromPdfEngine() {
-        preferredLayout = pdfEngine->preferredLayout;
-        fileDPI = pdfEngine->fileDPI;
-        allowsPrinting = pdfEngine->AllowsPrinting();
-        allowsCopyingText = pdfEngine->allowsCopyingText;
-        decryptionKey = str::Dup(arena, pdfEngine->decryptionKey);
-        pageCount = pdfEngine->PageCount();
-        hasPageLabels = pdfEngine->hasPageLabels;
-        logicalPageCount = pdfEngine->LogicalPageCount();
-    }
 
     bool Load(Str fileName) {
         pageCount = 0;
@@ -382,17 +276,13 @@ class EnginePs : public EngineBase {
         } else {
             pdfEngine = ps2pdf(fileName, &pdfData);
         }
-
         if (!pdfEngine) {
             return false;
         }
-
         if (str::EndsWithI(FilePath(), StrL(".eps"))) {
             defaultExt = str::Dup(StrL(".eps"));
         }
-
         CopyStateFromPdfEngine();
-
         return true;
     }
 };

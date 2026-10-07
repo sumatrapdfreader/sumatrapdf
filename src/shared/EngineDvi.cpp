@@ -558,19 +558,14 @@ void DeleteStaleDviCache() {
     }
 }
 
-class EngineDvi : public EngineBase {
+class EngineDvi : public EnginePdfProxy {
   public:
     EngineDvi() {
         kind = kindEngineDvi;
         defaultExt = str::Dup(StrL(".dvi"));
     }
 
-    ~EngineDvi() override {
-        if (pdfEngine) {
-            pdfEngine->Release();
-        }
-        str::Free(cachedPdf);
-    }
+    ~EngineDvi() override { str::Free(cachedPdf); }
 
     EngineBase* Clone() override {
         if (len(cachedPdf) == 0 || !file::Exists(cachedPdf)) {
@@ -590,105 +585,16 @@ class EngineDvi : public EngineBase {
         return clone;
     }
 
-    RectF PageMediabox(int pageNo) override { return pdfEngine->PageMediabox(pageNo); }
-
-    RectF PageContentBox(int pageNo, RenderTarget target = RenderTarget::View) override {
-        return pdfEngine->PageContentBox(pageNo, target);
-    }
-
-    Pixmap* RenderPage(RenderPageArgs& args) override { return pdfEngine->RenderPage(args); }
-
-    RectF Transform(const RectF& rect, int pageNo, float zoom, int rotation, bool inverse = false) override {
-        return pdfEngine->Transform(rect, pageNo, zoom, rotation, inverse);
-    }
-
-    Str GetFileData() override { return file::ReadFile(FilePath()); }
-
     // saving as .pdf writes the cached conversion; anything else copies the DVI
     bool SaveFileAs(Str dstPath) override {
         if (str::EndsWithI(dstPath, StrL(".pdf")) && len(cachedPdf) > 0) {
             return file::Copy(dstPath, cachedPdf, false);
         }
         Str srcPath = FilePath();
-        if (len(srcPath) == 0) {
-            return false;
-        }
-        return file::Copy(dstPath, srcPath, false);
+        return len(srcPath) > 0 && file::Copy(dstPath, srcPath, false);
     }
 
-    PageText ExtractPageText(int pageNo) override { return pdfEngine->ExtractPageText(pageNo); }
-
-    bool HasClipOptimizations(int pageNo) override { return pdfEngine->HasClipOptimizations(pageNo); }
-
-    TempStr GetPropertyTemp(DocProp prop) override {
-        if (!pdfEngine) {
-            return {};
-        }
-        static const DocProp toOmit[] = {DocProp::CreationDate, DocProp::ModificationDate, DocProp::PdfVersion,
-                                         DocProp::PdfProducer,  DocProp::PdfFileStructure, DocProp::None};
-        for (DocProp omit : toOmit) {
-            if (omit == DocProp::None) {
-                break;
-            }
-            if (omit == prop) {
-                return {};
-            }
-        }
-        return pdfEngine->GetPropertyTemp(prop);
-    }
-
-    bool BenchLoadPage(int pageNo) override { return pdfEngine->BenchLoadPage(pageNo); }
-
-    Vec<IPageElement*> GetElements(int pageNo) override { return pdfEngine->GetElements(pageNo); }
-
-    RenderedBitmap* GetImageForPageElement(IPageElement* ipel) override {
-        return pdfEngine->GetImageForPageElement(ipel);
-    }
-
-    Str GetImageDataForPageElement(IPageElement* ipel) override { return pdfEngine->GetImageDataForPageElement(ipel); }
-
-    bool TryGetElements(int pageNo, Vec<IPageElement*>* out) override { return pdfEngine->TryGetElements(pageNo, out); }
-
-    bool TryExtractPageText(int pageNo, PageText* out) override { return pdfEngine->TryExtractPageText(pageNo, out); }
-
-    void ReleaseTextExtractionThreadContext() override { pdfEngine->ReleaseTextExtractionThreadContext(); }
-
-    void GetPdfPageBoxes(int pageNo, Vec<PdfPageBox>& out) override { pdfEngine->GetPdfPageBoxes(pageNo, out); }
-
-    int GetOpenActionPageNo() override { return pdfEngine->GetOpenActionPageNo(); }
-
-    Location ResolveDest(IPageDestination* dest) override { return pdfEngine->ResolveDest(dest); }
-
-    TempStr GetPageLabeTemp(int pageNo) const override { return pdfEngine->GetPageLabeTemp(pageNo); }
-
-    int GetPageByLabel(Str label) const override { return pdfEngine->GetPageByLabel(label); }
-
-    void GetBitmapRecolorSkipRects(int pageNo, float zoom, int rotation, const RectF& renderPageRect, Size bmpSize,
-                                   Vec<Rect>& skipRects) override {
-        pdfEngine->GetBitmapRecolorSkipRects(pageNo, zoom, rotation, renderPageRect, bmpSize, skipRects);
-    }
-
-    IPageElement* GetElementAtPos(int pageNo, PointF pt) override { return pdfEngine->GetElementAtPos(pageNo, pt); }
-
-    bool HandleLink(IPageDestination* dest, ILinkHandler* lh) override { return pdfEngine->HandleLink(dest, lh); }
-
-    IPageDestination* GetNamedDest(Str name) override { return pdfEngine->GetNamedDest(name); }
-
-    TocTree* GetToc() override { return pdfEngine->GetToc(); }
-
-    EngineBase* pdfEngine = nullptr;
     Str cachedPdf;
-
-    void CopyStateFromPdfEngine() {
-        preferredLayout = pdfEngine->preferredLayout;
-        fileDPI = pdfEngine->fileDPI;
-        allowsPrinting = pdfEngine->AllowsPrinting();
-        allowsCopyingText = pdfEngine->allowsCopyingText;
-        decryptionKey = str::Dup(arena, pdfEngine->decryptionKey);
-        pageCount = pdfEngine->PageCount();
-        hasPageLabels = pdfEngine->hasPageLabels;
-        logicalPageCount = pdfEngine->LogicalPageCount();
-    }
 
     bool Load(Str fileName) {
         pageCount = 0;

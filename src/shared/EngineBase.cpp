@@ -1170,6 +1170,134 @@ PointF TransformPagePoint(PointF pt, SizeF page, float zoom, int rotation, Trans
     return res;
 }
 
+EnginePdfProxy::~EnginePdfProxy() {
+    if (pdfEngine) {
+        pdfEngine->Release();
+    }
+}
+
+RectF EnginePdfProxy::PageMediabox(int pageNo) {
+    return pdfEngine->PageMediabox(pageNo);
+}
+
+RectF EnginePdfProxy::PageContentBox(int pageNo, RenderTarget target) {
+    return pdfEngine->PageContentBox(pageNo, target);
+}
+
+Pixmap* EnginePdfProxy::RenderPage(RenderPageArgs& args) {
+    return pdfEngine->RenderPage(args);
+}
+
+RectF EnginePdfProxy::Transform(const RectF& rect, int pageNo, float zoom, int rotation, bool inverse) {
+    return pdfEngine->Transform(rect, pageNo, zoom, rotation, inverse);
+}
+
+Str EnginePdfProxy::GetFileData() {
+    return file::ReadFile(FilePath());
+}
+
+PageText EnginePdfProxy::ExtractPageText(int pageNo) {
+    return pdfEngine->ExtractPageText(pageNo);
+}
+
+bool EnginePdfProxy::HasClipOptimizations(int pageNo) {
+    return pdfEngine->HasClipOptimizations(pageNo);
+}
+
+TempStr EnginePdfProxy::GetPropertyTemp(DocProp prop) {
+    if (!pdfEngine) {
+        return {};
+    }
+    static const DocProp omitted[] = {DocProp::CreationDate, DocProp::ModificationDate, DocProp::PdfVersion,
+                                      DocProp::PdfProducer, DocProp::PdfFileStructure};
+    for (DocProp candidate : omitted) {
+        if (candidate == prop) {
+            return {};
+        }
+    }
+    return pdfEngine->GetPropertyTemp(prop);
+}
+
+bool EnginePdfProxy::BenchLoadPage(int pageNo) {
+    return pdfEngine->BenchLoadPage(pageNo);
+}
+
+Vec<IPageElement*> EnginePdfProxy::GetElements(int pageNo) {
+    return pdfEngine->GetElements(pageNo);
+}
+
+RenderedBitmap* EnginePdfProxy::GetImageForPageElement(IPageElement* ipel) {
+    return pdfEngine->GetImageForPageElement(ipel);
+}
+
+Str EnginePdfProxy::GetImageDataForPageElement(IPageElement* ipel) {
+    return pdfEngine->GetImageDataForPageElement(ipel);
+}
+
+bool EnginePdfProxy::TryGetElements(int pageNo, Vec<IPageElement*>* out) {
+    return pdfEngine->TryGetElements(pageNo, out);
+}
+
+bool EnginePdfProxy::TryExtractPageText(int pageNo, PageText* out) {
+    return pdfEngine->TryExtractPageText(pageNo, out);
+}
+
+void EnginePdfProxy::ReleaseTextExtractionThreadContext() {
+    pdfEngine->ReleaseTextExtractionThreadContext();
+}
+
+void EnginePdfProxy::GetPdfPageBoxes(int pageNo, Vec<PdfPageBox>& out) {
+    pdfEngine->GetPdfPageBoxes(pageNo, out);
+}
+
+int EnginePdfProxy::GetOpenActionPageNo() {
+    return pdfEngine->GetOpenActionPageNo();
+}
+
+Location EnginePdfProxy::ResolveDest(IPageDestination* dest) {
+    return pdfEngine->ResolveDest(dest);
+}
+
+TempStr EnginePdfProxy::GetPageLabeTemp(int pageNo) const {
+    return pdfEngine->GetPageLabeTemp(pageNo);
+}
+
+int EnginePdfProxy::GetPageByLabel(Str label) const {
+    return pdfEngine->GetPageByLabel(label);
+}
+
+void EnginePdfProxy::GetBitmapRecolorSkipRects(int pageNo, float zoom, int rotation, const RectF& renderPageRect,
+                                               Size bmpSize, Vec<Rect>& skipRects) {
+    pdfEngine->GetBitmapRecolorSkipRects(pageNo, zoom, rotation, renderPageRect, bmpSize, skipRects);
+}
+
+IPageElement* EnginePdfProxy::GetElementAtPos(int pageNo, PointF pt) {
+    return pdfEngine->GetElementAtPos(pageNo, pt);
+}
+
+bool EnginePdfProxy::HandleLink(IPageDestination* dest, ILinkHandler* lh) {
+    return pdfEngine->HandleLink(dest, lh);
+}
+
+IPageDestination* EnginePdfProxy::GetNamedDest(Str name) {
+    return pdfEngine->GetNamedDest(name);
+}
+
+TocTree* EnginePdfProxy::GetToc() {
+    return pdfEngine->GetToc();
+}
+
+void EnginePdfProxy::CopyStateFromPdfEngine() {
+    preferredLayout = pdfEngine->preferredLayout;
+    fileDPI = pdfEngine->fileDPI;
+    allowsPrinting = pdfEngine->AllowsPrinting();
+    allowsCopyingText = pdfEngine->allowsCopyingText;
+    decryptionKey = str::Dup(arena, pdfEngine->decryptionKey);
+    pageCount = pdfEngine->PageCount();
+    hasPageLabels = pdfEngine->hasPageLabels;
+    logicalPageCount = pdfEngine->LogicalPageCount();
+}
+
 // returns false if didn't perform action (temporary until we move
 // all code there)
 bool EngineBase::HandleLink(IPageDestination* /*dest*/, ILinkHandler* /*linkHandler*/) {
