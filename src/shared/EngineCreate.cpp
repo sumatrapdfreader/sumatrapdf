@@ -226,61 +226,19 @@ TempStr MaybeCopyEphemeralHostFile(Str path) {
 
 /* EngineCreate.cpp */
 bool IsSupportedFileType(FileType kind, bool enableEngineEbooks) {
-    if (kind == FileType::Unknown) {
+    if (kind == FileType::Unknown || kind == FileType::Directory) {
         return false;
     }
-    if (IsEngineMupdfSupportedFileType(kind)) {
+    if (IsEngineMupdfSupportedFileType(kind) || IsEngineDjVuSupportedFileType(kind) ||
+        IsEngineImageSupportedFileType(kind) || IsEngineCbxSupportedFileType(kind) ||
+        IsEnginePsSupportedFileType(kind) || IsEngineDviSupportedFileType(kind) || kind == FileType::Lit) {
         return true;
     }
-    if (IsEngineDjVuSupportedFileType(kind)) {
-        return true;
-    }
-    if (IsEngineImageSupportedFileType(kind)) {
-        return true;
-    }
-    if (kind == FileType::Directory) {
-        // TODO: more complex
-        return false;
-    }
-    if (IsEngineCbxSupportedFileType(kind)) {
-        return true;
-    }
-    if (IsEnginePsSupportedFileType(kind)) {
-        return true;
-    }
-    if (IsEngineDviSupportedFileType(kind)) {
-        return true;
-    }
-    if (kind == FileType::Lit) {
-        return true;
-    }
-
     if (!enableEngineEbooks) {
         return false;
     }
-
-    if (kind == FileType::Epub) {
-        return true;
-    }
-    if (kind == FileType::Fb2) {
-        return true;
-    }
-    if (kind == FileType::Fb2z) {
-        return true;
-    }
-    if (kind == FileType::Mobi) {
-        return true;
-    }
-    if (kind == FileType::PalmDoc) {
-        return true;
-    }
-    if (kind == FileType::HTML) {
-        return true;
-    }
-    if (kind == FileType::Txt) {
-        return true;
-    }
-    return false;
+    return kind == FileType::Epub || kind == FileType::Fb2 || kind == FileType::Fb2z || kind == FileType::Mobi ||
+           kind == FileType::PalmDoc || kind == FileType::HTML || kind == FileType::Txt;
 }
 
 static EngineBase* CreateEngineForKind(FileType kind, FileType contentHintKind, Str path, PasswordUI* pwdUI,
