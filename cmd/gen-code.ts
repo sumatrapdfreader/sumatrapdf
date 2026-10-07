@@ -10,7 +10,7 @@ import { clangFormatFiles } from "./util";
 // C++ outputs touched by gen-code; formatted at the end so a follow-up
 // cmd/format.ts run does not dirty the tree (e.g. indented @gen markers).
 const generatedCppFiles = [
-  "src/Flags.cpp",
+  "src/shared/Flags.cpp",
   "src/shared/Commands.h",
   "src/shared/Commands.cpp",
   "src/Accelerators.cpp",

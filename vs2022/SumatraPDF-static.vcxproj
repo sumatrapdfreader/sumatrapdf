@@ -1626,7 +1626,6 @@
     <ClCompile Include="..\src\FilterHighlightDraw.cpp" />
     <ClCompile Include="..\src\FindBar.cpp" />
     <ClCompile Include="..\src\FindWindow.cpp" />
-    <ClCompile Include="..\src\Flags.cpp" />
     <ClCompile Include="..\src\FormFields.cpp" />
     <ClCompile Include="..\src\GetPasswordDialog.cpp" />
     <ClCompile Include="..\src\GlobalHotkeys.cpp" />
@@ -2134,6 +2133,7 @@
     <ClCompile Include="..\src\shared\ExifDump.cpp" />
     <ClCompile Include="..\src\shared\FileHistory.cpp" />
     <ClCompile Include="..\src\shared\FilterUtil.cpp" />
+    <ClCompile Include="..\src\shared\Flags.cpp" />
     <ClCompile Include="..\src\shared\GumboHtmlParser.cpp" />
     <ClCompile Include="..\src\shared\HtmlFormatter.cpp" />
     <ClCompile Include="..\src\shared\JxlReader.cpp" />

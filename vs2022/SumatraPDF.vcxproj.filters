@@ -701,9 +701,6 @@
     <ClCompile Include="..\src\FindWindow.cpp">
       <Filter>src</Filter>
     </ClCompile>
-    <ClCompile Include="..\src\Flags.cpp">
-      <Filter>src</Filter>
-    </ClCompile>
     <ClCompile Include="..\src\FormFields.cpp">
       <Filter>src</Filter>
     </ClCompile>
@@ -1173,6 +1170,9 @@
       <Filter>src\shared</Filter>
     </ClCompile>
     <ClCompile Include="..\src\shared\FilterUtil.cpp">
+      <Filter>src\shared</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\shared\Flags.cpp">
       <Filter>src\shared</Filter>
     </ClCompile>
     <ClCompile Include="..\src\shared\GumboHtmlParser.cpp">
