@@ -776,9 +776,6 @@
     <ClCompile Include="..\src\PdfCreator.cpp">
       <Filter>src</Filter>
     </ClCompile>
-    <ClCompile Include="..\src\PdfSign.cpp">
-      <Filter>src</Filter>
-    </ClCompile>
     <ClCompile Include="..\src\PdfTools.cpp">
       <Filter>src</Filter>
     </ClCompile>
@@ -1206,6 +1203,9 @@
       <Filter>src\shared</Filter>
     </ClCompile>
     <ClCompile Include="..\src\shared\PdfDate.cpp">
+      <Filter>src\shared</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\shared\PdfSign.cpp">
       <Filter>src\shared</Filter>
     </ClCompile>
     <ClCompile Include="..\src\shared\PdfSync.cpp">
