@@ -72,11 +72,6 @@ int TextSearch::GetCurrentPageNo() const {
     return findPage;
 }
 
-// note: the result might not be a valid page number!
-int TextSearch::GetSearchHitStartPageNo() const {
-    return searchHitStartAt;
-}
-
 void TextSearch::SetText(Str text) {
     // Single leading/trailing spaces request word boundaries; whole-word mode
     // requests both. Strip one space from each end for matching.
@@ -208,7 +203,6 @@ void TextSearch::SetLastResult(TextSelection* sel) {
     selection.len -= str::NormalizeWSInPlace(selection);
     SetText(selection);
 
-    searchHitStartAt = findPage = std::min(startPage, endPage);
     findPage = std::max(startPage, endPage);
     findIndex = (findPage == endPage ? endGlyph : startGlyph);
     pageText = engine->GetTextForPage(findPage, &pageTextLen);
@@ -444,7 +438,6 @@ bool TextSearch::FindTextInPage(int pageNo, TextSearch::PageAndOffset* finalGlyp
             continue;
         }
 
-        searchHitStartAt = pageNo;
         StartAt(pageNo, found);
         SelectUpTo(fg.page, fg.offset);
         findIndex = forward ? fg.offset : found;
@@ -512,7 +505,7 @@ bool TextSearch::FindStartingAtPage(int pageNo) {
     }
 
     // allow for the first/last page of the (restricted) range to be included next
-    searchHitStartAt = findPage = forward ? hi + 1 : lo - 1;
+    findPage = forward ? hi + 1 : lo - 1;
 
     return false;
 }
