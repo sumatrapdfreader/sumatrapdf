@@ -353,7 +353,7 @@ bool MarkdownModel::SetParentWindow(MainWindow* win) {
         htmlWindowCb = nullptr;
     }
     htmlWindowCb = new MarkdownHtmlWindowHandler(this);
-    docView = BrowserViewCreate(win, htmlWindowCb, Str(kMdVirtualHost));
+    docView = BrowserViewCreate(win, nullptr, htmlWindowCb, Str(kMdVirtualHost));
     if (!docView) {
         delete htmlWindowCb;
         htmlWindowCb = nullptr;

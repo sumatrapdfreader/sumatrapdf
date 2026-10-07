@@ -177,7 +177,7 @@ void SimpleBrowserWindowShow(const SimpleBrowserCreateArgs& args) {
     // without a provider nothing is served from the virtual host, which is
     // what a plain browser window wants
     Str host = len(args.resourceUriPrefix) > 0 ? args.resourceUriPrefix : StrL("https://sumatrapdf.browser/");
-    gBrowser.view = BrowserViewCreate(args.win, &gBrowser.cb, host);
+    gBrowser.view = BrowserViewCreate(args.win, nullptr, &gBrowser.cb, host);
     if (!gBrowser.view) {
         gp::OpenUrl(ToGpui(args.url));
         return;

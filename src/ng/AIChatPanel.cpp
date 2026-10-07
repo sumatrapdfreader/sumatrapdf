@@ -312,7 +312,7 @@ static void EnsureWebViewReady(MainWindow* win) {
     EnsureMarkedLoaded();
     MakeChatPage(p, provider);
     p->res.panel = p;
-    p->view = BrowserViewCreate(win, &p->res, provider->virtualHost);
+    p->view = BrowserViewCreate(win, nullptr, &p->res, provider->virtualHost);
     if (!p->view) {
         return;
     }

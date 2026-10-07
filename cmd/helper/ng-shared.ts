@@ -249,6 +249,7 @@ export const sharedFiles = [
   "src/shared/gfx/img-32bit.ico",
   "src/shared/gfx/mobi-32bit.ico",
   "src/shared/gfx/pdf-32bit.ico",
+  "src/shared/gui/BrowserView.h",
   "src/shared/gui/Dpi.cpp",
   "src/shared/gui/Dpi.h",
   "src/shared/gui/PlatformFont.cpp",

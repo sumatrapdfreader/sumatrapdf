@@ -13,7 +13,7 @@ bool BrowserViewAvailable() {
     return false;
 }
 
-BrowserView* BrowserViewCreate(MainWindow*, BrowserViewCallback*, Str) {
+BrowserView* BrowserViewCreate(MainWindow*, HWND, BrowserViewCallback*, Str) {
     return nullptr;
 }
 
@@ -57,11 +57,13 @@ Point BrowserViewGetScrollPos(BrowserView*) {
 
 void BrowserViewSetScrollPos(BrowserView*, Point) {}
 
+void BrowserViewEval(BrowserView*, Str) {}
+
 void BrowserViewSelectAll(BrowserView*) {}
 
 void BrowserViewCopySelection(BrowserView*) {}
 
-void BrowserViewPrint(BrowserView*) {}
+void BrowserViewPrint(BrowserView*, bool) {}
 
 void BrowserViewFindInPageUI(BrowserView*) {}
 
@@ -76,6 +78,10 @@ void BrowserViewFindAllPages(BrowserView*, const StrVec&, Str, bool, bool, int) 
 void BrowserViewFindGoto(BrowserView*, int) {}
 
 void BrowserViewFindClear(BrowserView*) {}
+
+LRESULT BrowserViewPassUIMsg(BrowserView*, UINT, WPARAM, LPARAM) {
+    return 0;
+}
 
 gpui::El* BrowserViewBuild(BrowserView*, gpui::Ctx*) {
     return nullptr;

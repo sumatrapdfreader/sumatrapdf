@@ -1,15 +1,8 @@
 /* Copyright 2026 the SumatraPDF project authors (see AUTHORS file).
    License: GPLv3 */
 
-// ng: the browser host for ChmModel / MarkdownModel. orig hosts the pages in
-// a win32 child window (gui/win/BrowserDocView.cpp over WebView2, with an IE
-// fallback); here the same API sits on gpui's WebView (wry). The callback is
-// orig's HtmlWindowCallback under a name that says what it is now.
-//
-// A gpui WebView can only be made from inside a frame (it needs a Ctx), so
-// BrowserViewCreate() only records the intent and BrowserViewBuild() makes
-// the real view the first time the shell asks for its element. Calls made
-// before that (a navigation, a zoom) are remembered and applied then.
+// Browser host shared by the document models. The original uses WebView2/IE;
+// ng uses the GPUI WebView.
 
 namespace gpui {
 struct Ctx;
@@ -53,7 +46,7 @@ struct BrowserViewCallback {
 };
 
 // takes ownership of nothing; `cb` outlives the view (the model owns it)
-BrowserView* BrowserViewCreate(MainWindow* win, BrowserViewCallback* cb, Str virtualHost);
+BrowserView* BrowserViewCreate(MainWindow* win, HWND hwndParent, BrowserViewCallback* cb, Str virtualHost);
 void BrowserViewDelete(BrowserView*);
 MainWindow* BrowserViewWindow(BrowserView*);
 // for a view in a window of its own whose main window closed
@@ -81,7 +74,7 @@ void BrowserViewEval(BrowserView*, Str js);
 
 void BrowserViewSelectAll(BrowserView*);
 void BrowserViewCopySelection(BrowserView*);
-void BrowserViewPrint(BrowserView*);
+void BrowserViewPrint(BrowserView*, bool showUI = true);
 // the browser's own find bar (orig's FindInCurrentPage)
 void BrowserViewFindInPageUI(BrowserView*);
 
@@ -90,6 +83,7 @@ void BrowserViewFindStart(BrowserView*, Str term, bool matchCase, bool wholeWord
 void BrowserViewFindAllPages(BrowserView*, const StrVec& pageUrls, Str term, bool matchCase, bool wholeWord, int gen);
 void BrowserViewFindGoto(BrowserView*, int idx);
 void BrowserViewFindClear(BrowserView*);
+LRESULT BrowserViewPassUIMsg(BrowserView*, UINT msg, WPARAM wp, LPARAM lp);
 
 // the element the webview is positioned over; asked once a frame by the shell
 gpui::El* BrowserViewBuild(BrowserView*, gpui::Ctx* cx);

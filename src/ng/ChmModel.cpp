@@ -148,7 +148,7 @@ bool ChmModel::SetParentWindow(MainWindow* win) {
         htmlWindowCb = nullptr;
     }
     htmlWindowCb = new HtmlWindowHandler(this);
-    docView = BrowserViewCreate(win, htmlWindowCb, {});
+    docView = BrowserViewCreate(win, nullptr, htmlWindowCb, {});
     if (!docView) {
         delete htmlWindowCb;
         htmlWindowCb = nullptr;

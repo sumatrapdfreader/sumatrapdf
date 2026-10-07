@@ -14,6 +14,7 @@
 
 #include "AppTools.h"
 #include "Accelerators.h"
+#include "gui/BrowserView.h"
 #include "gui/win/BrowserDocView.h"
 
 constexpr const char* kChmVirtualHost = "https://sumatrapdf.chm/";
@@ -834,6 +835,12 @@ void BrowserDocView::FindClear() {
     wv->Eval(StrL("window.__sumatraFind && __sumatraFind.clear();"));
 }
 
+void BrowserDocView::Eval(Str js) {
+    if (backend == Backend::WebView2 && wv) {
+        wv->Eval(js);
+    }
+}
+
 void BrowserDocView::SelectAll() {
     if (backend == Backend::WebView2 && wv) {
         wv->Eval(StrL("document.execCommand('selectAll', false, null)"));
@@ -875,3 +882,185 @@ LRESULT BrowserDocView::SendMsg(UINT msg, WPARAM wp, LPARAM lp) {
     }
     return 0;
 }
+
+struct BrowserViewCallbackAdapter : HtmlWindowCallback {
+    BrowserViewCallback* cb = nullptr;
+
+    bool OnBeforeNavigate(Str url, bool newWindow) override { return cb->OnBeforeNavigate(url, newWindow); }
+    void OnDocumentComplete(Str url) override { cb->OnDocumentComplete(url); }
+    Str GetDataForUrl(Str url) override { return cb->GetDataForUrl(url); }
+    void OnLButtonDown() override { cb->OnLButtonDown(); }
+    void DownloadData(Str url, Str data) override { cb->DownloadData(url, data); }
+    void OnFindResult(int gen, int current, int total) override { cb->OnFindResult(gen, current, total); }
+    void OnFindAllResult(Str payload) override { cb->OnFindAllResult(payload); }
+};
+
+struct BrowserView {
+    MainWindow* win = nullptr;
+    BrowserDocView* view = nullptr;
+    BrowserViewCallbackAdapter adapter;
+};
+
+bool BrowserViewAvailable() {
+    return true;
+}
+
+BrowserView* BrowserViewCreate(MainWindow* win, HWND hwndParent, BrowserViewCallback* cb, Str virtualHost) {
+    if (!hwndParent || !cb) {
+        return nullptr;
+    }
+
+    auto* res = new BrowserView();
+    res->win = win;
+    res->adapter.cb = cb;
+    res->view = BrowserDocView::Create(hwndParent, &res->adapter, virtualHost);
+    if (!res->view) {
+        delete res;
+        return nullptr;
+    }
+    return res;
+}
+
+void BrowserViewDelete(BrowserView* bv) {
+    if (!bv) {
+        return;
+    }
+    delete bv->view;
+    delete bv;
+}
+
+MainWindow* BrowserViewWindow(BrowserView* bv) {
+    return bv ? bv->win : nullptr;
+}
+
+void BrowserViewSetWindow(BrowserView* bv, MainWindow* win) {
+    if (bv) {
+        bv->win = win;
+    }
+}
+
+void BrowserViewSetVisible(BrowserView* bv, bool visible) {
+    if (bv) {
+        bv->view->SetVisible(visible);
+    }
+}
+
+bool BrowserViewIsVisible(BrowserView* bv) {
+    return bv && bv->view->IsVisible();
+}
+
+void BrowserViewNavigate(BrowserView* bv, Str url) {
+    if (bv) {
+        bv->view->NavigateToDataUrl(url);
+    }
+}
+
+void BrowserViewGoBack(BrowserView* bv) {
+    if (bv) {
+        bv->view->GoBack();
+    }
+}
+
+void BrowserViewGoForward(BrowserView* bv) {
+    if (bv) {
+        bv->view->GoForward();
+    }
+}
+
+bool BrowserViewCanGoBack(BrowserView* bv) {
+    return bv && bv->view->canGoBack;
+}
+
+bool BrowserViewCanGoForward(BrowserView* bv) {
+    return bv && bv->view->canGoForward;
+}
+
+void BrowserViewSetZoomPercent(BrowserView* bv, int zoom) {
+    if (bv) {
+        bv->view->SetZoomPercent(zoom);
+    }
+}
+
+int BrowserViewGetZoomPercent(BrowserView* bv) {
+    return bv ? bv->view->GetZoomPercent() : 100;
+}
+
+Point BrowserViewGetScrollPos(BrowserView* bv) {
+    return bv ? bv->view->GetScrollPos() : Point(-1, -1);
+}
+
+void BrowserViewSetScrollPos(BrowserView* bv, Point pos) {
+    if (bv) {
+        bv->view->SetScrollPos(pos);
+    }
+}
+
+void BrowserViewEval(BrowserView* bv, Str js) {
+    if (bv) {
+        bv->view->Eval(js);
+    }
+}
+
+void BrowserViewSelectAll(BrowserView* bv) {
+    if (bv) {
+        bv->view->SelectAll();
+    }
+}
+
+void BrowserViewCopySelection(BrowserView* bv) {
+    if (bv) {
+        bv->view->CopySelection();
+    }
+}
+
+void BrowserViewPrint(BrowserView* bv, bool showUI) {
+    if (bv) {
+        bv->view->PrintCurrentPage(showUI);
+    }
+}
+
+void BrowserViewFindInPageUI(BrowserView* bv) {
+    if (bv) {
+        bv->view->FindInCurrentPage();
+    }
+}
+
+bool BrowserViewCanFindInPage(BrowserView* bv) {
+    return bv && bv->view->CanFindInPage();
+}
+
+void BrowserViewFindStart(BrowserView* bv, Str term, bool matchCase, bool wholeWord, int gen, int gotoIdx) {
+    if (bv) {
+        bv->view->FindStart(term, matchCase, wholeWord, gen, gotoIdx);
+    }
+}
+
+void BrowserViewFindAllPages(BrowserView* bv, const StrVec& urls, Str term, bool matchCase, bool wholeWord, int gen) {
+    if (bv) {
+        bv->view->FindAllPages(urls, term, matchCase, wholeWord, gen);
+    }
+}
+
+void BrowserViewFindGoto(BrowserView* bv, int idx) {
+    if (bv) {
+        bv->view->FindGoto(idx);
+    }
+}
+
+void BrowserViewFindClear(BrowserView* bv) {
+    if (bv) {
+        bv->view->FindClear();
+    }
+}
+
+LRESULT BrowserViewPassUIMsg(BrowserView* bv, UINT msg, WPARAM wp, LPARAM lp) {
+    return bv ? bv->view->SendMsg(msg, wp, lp) : 0;
+}
+
+gpui::El* BrowserViewBuild(BrowserView*, gpui::Ctx*) {
+    return nullptr;
+}
+
+void BrowserViewCreatePending(MainWindow*, gpui::Ctx*) {}
+void BrowserViewSetOwnHost(BrowserView*) {}
+void BrowserViewCreatePendingIn(BrowserView*, gpui::Ctx*) {}

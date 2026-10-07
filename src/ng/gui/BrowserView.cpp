@@ -520,7 +520,7 @@ static void OnIpcMessage(void* ctx, gp::Str, gp::Str body) {
 
 // --- lifetime ---------------------------------------------------------------
 
-BrowserView* BrowserViewCreate(MainWindow* win, BrowserViewCallback* cb, Str virtualHost) {
+BrowserView* BrowserViewCreate(MainWindow* win, HWND, BrowserViewCallback* cb, Str virtualHost) {
     if (!win || !cb) {
         return nullptr;
     }
@@ -674,7 +674,7 @@ void BrowserViewCopySelection(BrowserView* bv) {
     Eval(bv, StrL("document.execCommand('copy', false, null)"));
 }
 
-void BrowserViewPrint(BrowserView* bv) {
+void BrowserViewPrint(BrowserView* bv, bool) {
     Eval(bv, StrL("window.print()"));
 }
 
@@ -776,6 +776,10 @@ void BrowserViewFindClear(BrowserView* bv) {
         return;
     }
     Eval(bv, StrL("window.__sumatraFind && __sumatraFind.clear();"));
+}
+
+LRESULT BrowserViewPassUIMsg(BrowserView*, UINT, WPARAM, LPARAM) {
+    return 0;
 }
 
 // --- the element ------------------------------------------------------------

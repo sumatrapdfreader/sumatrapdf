@@ -51,6 +51,7 @@ class BrowserDocView {
     void FindAllPages(const StrVec& pageUrls, Str term, bool matchCase, bool wholeWord, int gen);
     void FindGoto(int idx);
     void FindClear();
+    void Eval(Str js);
     void SelectAll();
     void CopySelection();
     LRESULT SendMsg(UINT msg, WPARAM wp, LPARAM lp);
