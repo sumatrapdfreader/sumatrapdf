@@ -108,9 +108,13 @@ static bool Decompress(const u8* compressed, size_t compressedSize, u8* uncompre
                          LZMA_FINISH_END, &status, &lzmaAlloc);
 
     if (SZ_OK != res || status != LZMA_STATUS_FINISHED_WITH_MARK) {
+        logf("lzma::Decompress: LzmaDecode failed, res=%d status=%d, decoded %d of %d bytes, consumed %d of %d\n", res,
+             (int)status, (int)uncompressedSizeCmp, (int)uncompressedSize, (int)compressedSizeTmp,
+             (int)(compressedSize - kLzmaHeaderSize));
         return false;
     }
     if (uncompressedSizeCmp != uncompressedSize) {
+        logf("lzma::Decompress: decoded %d bytes, expected %d\n", (int)uncompressedSizeCmp, (int)uncompressedSize);
         return false;
     }
 
@@ -240,6 +244,7 @@ u8* GetFileDataByIdx(SimpleArchive* archive, int idx, Arena* a) {
     size_t allocSize = (size_t)fi->uncompressedSize + 2;
     u8* uncompressed = (u8*)Alloc(a, allocSize);
     if (!uncompressed) {
+        logf("lzma::GetFileDataByIdx: '%s': failed to allocate %d bytes\n", fi->name, (int)allocSize);
         return nullptr;
     }
     uncompressed[fi->uncompressedSize] = 0;
@@ -247,12 +252,16 @@ u8* GetFileDataByIdx(SimpleArchive* archive, int idx, Arena* a) {
 
     bool ok = Decompress(fi->compressedData, fi->compressedSize, uncompressed, fi->uncompressedSize, a);
     if (!ok) {
+        logf("lzma::GetFileDataByIdx: '%s': decompression failed, method byte %d, compressed %d bytes\n", fi->name,
+             fi->compressedSize > 0 ? (int)fi->compressedData[0] : -1, (int)fi->compressedSize);
         Free(a, uncompressed);
         return nullptr;
     }
 
     u32 realCrc = lzma_crc32(0, (const u8*)uncompressed, fi->uncompressedSize);
     if (realCrc != fi->uncompressedCrc32) {
+        logf("lzma::GetFileDataByIdx: '%s': crc32 mismatch, got 0x%08x, expected 0x%08x\n", fi->name, realCrc,
+             fi->uncompressedCrc32);
         Free(a, uncompressed);
         return nullptr;
     }
