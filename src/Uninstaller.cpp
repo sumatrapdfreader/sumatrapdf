@@ -105,7 +105,7 @@ static void RemoveInstallDirFromPath(bool allUsers, Str installDir) {
 static void RemoveInstalledFiles() {
     // can't use GetExistingInstallationDir() anymore because we
     // delete registry entries
-    Str dir = gCli->installer.installDir;
+    Str dir = gCli->installDir;
     if (len(dir) == 0) {
         log(StrL("RemoveInstalledFiles(): dir is empty\n"));
     }
@@ -123,7 +123,7 @@ static void RemoveInstalledFiles() {
 }
 
 static TempStr GetInstalledExePathTemp() {
-    TempStr dir = gCli->installer.installDir;
+    TempStr dir = gCli->installDir;
     return path::JoinTemp(dir, Str(kExeName));
 }
 
@@ -154,7 +154,7 @@ static void UninstallerThread() {
     RemoveInstallRegistryKeys(HKEY_CURRENT_USER);
     RemoveAppShortcuts();
 
-    RemoveInstallDirFromPath(gCli->installer.allUsers, gCli->installer.installDir);
+    RemoveInstallDirFromPath(gCli->allUsers, gCli->installDir);
     RemoveInstalledFiles();
     LoggedDeleteRegValue(HKEY_CURRENT_USER, StrL("Software\\Microsoft\\Windows\\CurrentVersion\\Run"),
                          StrL("SumatraPDF-QuickLook"));
@@ -406,12 +406,12 @@ static void RelaunchMaybeElevatedFromTempDirectory(Flags* cli) {
     if (cli->log) {
         cmdLine.Append(StrL(" -log"));
     }
-    if (cli->installer.allUsers) {
+    if (cli->allUsers) {
         cmdLine.Append(StrL(" -all-users"));
     }
     Str cl = ToStr(cmdLine);
 
-    if (cli->installer.allUsers) {
+    if (cli->allUsers) {
         if (!IsProcessRunningElevated()) {
             // Elevate the installed executable directly. Copying it to a
             // user-writable temporary path before elevation would let another
@@ -562,8 +562,8 @@ int RunUninstaller() {
 
     // TODO: remove dependency on this in the uninstaller
     // dup from the perm arena: flag strings are never individually freed
-    gCli->installer.installDir = str::Dup(GetPermArena(), GetExistingInstallationDirTemp());
-    Str instDir = gCli->installer.installDir;
+    gCli->installDir = str::Dup(GetPermArena(), GetExistingInstallationDirTemp());
+    Str instDir = gCli->installDir;
     TempStr cmdLine = ToUtf8Temp(GetCommandLineW());
     TempStr exePath = GetSelfExePathTemp();
     logf("Running uninstaller '%s' with args '%s' for '%s'\n", exePath, cmdLine, instDir);
@@ -578,7 +578,7 @@ int RunUninstaller() {
         goto Exit;
     }
 
-    if (gCli->installer.showHelp) {
+    if (gCli->showHelp) {
         ShowUsage();
         ret = 0;
         goto Exit;
@@ -623,10 +623,10 @@ int RunUninstaller() {
 
     // re-register if we un-registered but uninstallation was cancelled
     if (gWasSearchFilterInstalled) {
-        RegisterSearchFilter(gCli->installer.allUsers, gCli->installer.installDir);
+        RegisterSearchFilter(gCli->allUsers, gCli->installDir);
     }
     if (gWasPreviewInstaller) {
-        RegisterPreviewer(gCli->installer.allUsers, gCli->installer.installDir);
+        RegisterPreviewer(gCli->allUsers, gCli->installDir);
     }
     InitSelfDelete();
     LaunchFileIfExists(uninstallerLogPath);

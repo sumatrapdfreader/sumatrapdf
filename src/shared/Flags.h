@@ -129,9 +129,6 @@ struct Flags {
     // -html-backend ie|webview2: force the embedded browser hosting CHM /
     // markdown. Empty (the default) picks WebView2 when it's installed.
     Str htmlBackend;
-    // ng: -install-reg-root <key>: the installer / uninstaller write their
-    // registry entries under HKCU\<key> instead of the real HKCU / HKLM, so a
-    // test run can't touch the user's file associations
     Str installRegRoot;
     Str perfLogFile;           // -log-perf-file <path>
     bool startPerfLog = false; // -start-perf-log (profile builds)
@@ -143,7 +140,6 @@ struct Flags {
 #if OS_WIN
 void ParseFlags(Arena* a, WStr cmdLine, Flags&, Str toolNames = {});
 #endif
-// ng: same parser, from an argv the platform already split
 void ParseFlagsArgv(Arena* a, int argc, char** argv, Flags&, Str toolNames = {});
 void ShowPrintersDialog(bool consoleOnly = false);
 

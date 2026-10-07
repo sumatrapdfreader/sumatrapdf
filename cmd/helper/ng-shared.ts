@@ -156,6 +156,7 @@ export const sharedFiles = [
   "src/shared/FileThumbnails.h",
   "src/shared/FilterUtil.cpp",
   "src/shared/FilterUtil.h",
+  "src/shared/Flags.h",
   "src/shared/GlobalHotkeys.h",
   "src/shared/GoogleLens.h",
   "src/shared/GumboHtmlParser.cpp",
