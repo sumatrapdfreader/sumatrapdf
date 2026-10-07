@@ -322,9 +322,7 @@ static void RelayoutRows(DocumentLayout& layout, bool isFitContent) {
             DocumentLayoutPage* page = layout.GetPage(pageNo);
             if (single || row.isSpread || (cover && !IsContinuous(params.displayMode))) {
                 page->pos.x = pageOffX + ((pagesDx - page->pos.dx) / 2);
-            } else if (cover) {
-                page->pos.x = pageOffX + columnMaxWidth[0] + params.pageSpacing.dx;
-            } else if (pageNo == row.firstPage) {
+            } else if (!cover && pageNo == row.firstPage) {
                 page->pos.x = pageOffX + columnMaxWidth[0] - page->pos.dx;
             } else {
                 page->pos.x = pageOffX + (columnMaxWidth[0] + params.pageSpacing.dx);
