@@ -10,7 +10,6 @@
 #include "base/Pixmap.h"
 #include "base/HtmlTags.h"
 #include "GumboHtmlParser.h"
-#include "base/JsonParser.h"
 #include "base/Timer.h"
 #include "base/DirScan.h"
 
@@ -2227,15 +2226,11 @@ EngineBase* CreateEngineImageDirFromFile(Str fileName) {
 ///// CbxEngine handles comic book files (either .cbz, .cbr, .cb7 or .cbt) /////
 
 struct ComicInfoParser {
-    // extracted metadata
     Str propTitle;
     StrVec propAuthors;
-    Str propDate;
-    Str propModDate;
-    Str propCreator;
     Str propSummary;
-    // temporary state needed for extracting metadata
-    Str propAuthorTmp;
+    int year = 0;
+    int month = 0;
 
     // ComicInfo.xml <Page Image="N" Bookmark="..."/> entries (Image is 0-based)
     Vec<int> bookmarkImageIdx;
@@ -2243,26 +2238,18 @@ struct ComicInfoParser {
 
     ~ComicInfoParser() {
         str::Free(propTitle);
-        str::Free(propDate);
-        str::Free(propModDate);
-        str::Free(propCreator);
         str::Free(propSummary);
-        str::Free(propAuthorTmp);
     }
 
-    // used for ComicBookInfo JSON and ComicInfo.xml field mapping
-    void Visit(json::Value* v);
-
     void Parse(Str xmlData);
+    void AddAuthor(Str author);
     void AddBookmark(int imageIdx, Str title);
 };
 
-static void ComicInfoVisit(ComicInfoParser* cip, StrNode* path, Str value, json::Type type) {
-    json::Value v;
-    v.path = path;
-    v.value = value;
-    v.type = type;
-    cip->Visit(&v);
+void ComicInfoParser::AddAuthor(Str author) {
+    if (len(author) > 0 && !propAuthors.Contains(author)) {
+        propAuthors.Append(author);
+    }
 }
 
 void ComicInfoParser::AddBookmark(int imageIdx, Str title) {
@@ -2287,50 +2274,27 @@ static void ComicInfoVisitNode(ComicInfoParser* cip, const GumboNode* root) {
             if (GumboTagNameIs(node, StrL("Title"))) {
                 TempStr v = GumboTextContentTemp(node);
                 if (v) {
-                    ComicInfoVisit(cip, json::PathBuildTemp(StrL("/ComicBookInfo/1.0"), StrL("/title")), v,
-                                   json::Type::String);
+                    str::ReplaceWithCopy(&cip->propTitle, v);
                 }
             } else if (GumboTagNameIs(node, StrL("Year"))) {
                 TempStr v = GumboTextContentTemp(node);
                 if (v) {
-                    ComicInfoVisit(cip, json::PathBuildTemp(StrL("/ComicBookInfo/1.0"), StrL("/publicationYear")), v,
-                                   json::Type::Number);
+                    cip->year = ParseInt(v);
                 }
             } else if (GumboTagNameIs(node, StrL("Month"))) {
                 TempStr v = GumboTextContentTemp(node);
                 if (v) {
-                    ComicInfoVisit(cip, json::PathBuildTemp(StrL("/ComicBookInfo/1.0"), StrL("/publicationMonth")), v,
-                                   json::Type::Number);
+                    cip->month = ParseInt(v);
                 }
             } else if (GumboTagNameIs(node, StrL("Summary"))) {
                 TempStr v = GumboTextContentTemp(node);
                 if (v) {
-                    ComicInfoVisit(cip, json::PathBuildTemp(StrL("/X-summary")), v, json::Type::String);
+                    str::ReplaceWithCopy(&cip->propSummary, v);
                 }
             } else if (GumboTagNameIs(node, StrL("Writer"))) {
-                TempStr v = GumboTextContentTemp(node);
-                if (v) {
-                    ComicInfoVisit(
-                        cip,
-                        json::PathBuildTemp(StrL("/ComicBookInfo/1.0"), StrL("/credits"), StrL("i0"), StrL("/person")),
-                        v, json::Type::String);
-                    ComicInfoVisit(
-                        cip,
-                        json::PathBuildTemp(StrL("/ComicBookInfo/1.0"), StrL("/credits"), StrL("i0"), StrL("/primary")),
-                        StrL("true"), json::Type::Bool);
-                }
+                cip->AddAuthor(GumboTextContentTemp(node));
             } else if (GumboTagNameIs(node, StrL("Penciller"))) {
-                TempStr v = GumboTextContentTemp(node);
-                if (v) {
-                    ComicInfoVisit(
-                        cip,
-                        json::PathBuildTemp(StrL("/ComicBookInfo/1.0"), StrL("/credits"), StrL("i1"), StrL("/person")),
-                        v, json::Type::String);
-                    ComicInfoVisit(
-                        cip,
-                        json::PathBuildTemp(StrL("/ComicBookInfo/1.0"), StrL("/credits"), StrL("i1"), StrL("/primary")),
-                        StrL("true"), json::Type::Bool);
-                }
+                cip->AddAuthor(GumboTextContentTemp(node));
             } else if (GumboTagNameIs(node, StrL("Page"))) {
                 const GumboAttribute* imageAttr = gumbo_get_attribute(&node->v.element.attributes, "Image");
                 const GumboAttribute* bookmarkAttr = gumbo_get_attribute(&node->v.element.attributes, "Bookmark");
@@ -2373,54 +2337,6 @@ void ComicInfoParser::Parse(Str xmlData) {
     }
     ComicInfoVisitNode(this, output->document);
     gumbo_destroy_output_iter(&opts, output);
-}
-
-// extract ComicBookInfo metadata
-// https://code.google.com/archive/p/comicbookinfo/
-void ComicInfoParser::Visit(json::Value* v) {
-    StrNode* path = v->path;
-    Str value = v->value;
-    json::Type type = v->type;
-    if (json::Type::String == type && json::PathMatch(path, StrL("/ComicBookInfo/1.0"), StrL("/title"))) {
-        str::Free(propTitle);
-        propTitle = str::Dup(value);
-    } else if (json::Type::Number == type &&
-               json::PathMatch(path, StrL("/ComicBookInfo/1.0"), StrL("/publicationYear"))) {
-        Str newDate = str::Dup(fmt("%s/%d", len(propDate) == 0 ? StrL("") : propDate, ParseInt(value)));
-        str::Free(propDate);
-        propDate = newDate;
-    } else if (json::Type::Number == type &&
-               json::PathMatch(path, StrL("/ComicBookInfo/1.0"), StrL("/publicationMonth"))) {
-        Str newDate = str::Dup(fmt("%d%s", ParseInt(value), len(propDate) == 0 ? StrL("") : propDate));
-        str::Free(propDate);
-        propDate = newDate;
-    } else if (json::Type::String == type && json::PathMatch(path, StrL("/appID"))) {
-        str::Free(propCreator);
-        propCreator = str::Dup(value);
-    } else if (json::Type::String == type && json::PathMatch(path, StrL("/lastModified"))) {
-        str::Free(propModDate);
-        propModDate = str::Dup(value);
-    } else if (json::Type::String == type && json::PathMatch(path, StrL("/X-summary"))) {
-        str::Free(propSummary);
-        propSummary = str::Dup(value);
-    } else if (json::PathMatch(path, StrL("/ComicBookInfo/1.0"), StrL("/credits"), StrL("*"), StrL("/person"))) {
-        if (json::Type::String == type) {
-            str::Free(propAuthorTmp);
-            propAuthorTmp = str::Dup(value);
-        }
-        return;
-    } else if (json::PathMatch(path, StrL("/ComicBookInfo/1.0"), StrL("/credits"), StrL("*"), StrL("/primary"))) {
-        if (json::Type::Bool == type && len(propAuthorTmp) > 0 && !propAuthors.Contains(propAuthorTmp)) {
-            propAuthors.Append(propAuthorTmp);
-        }
-        return;
-    }
-    // stop parsing once we have all desired information
-    Str dateStr = propDate;
-    int slash = str::IndexOfChar(dateStr, '/');
-    bool cont =
-        len(propTitle) == 0 || len(propAuthors) == 0 || len(propCreator) == 0 || len(propDate) == 0 || slash <= 0;
-    v->stop = !cont;
 }
 
 class EngineCbx : public EngineImages {
@@ -2715,12 +2631,6 @@ bool EngineCbx::FinishLoading() {
         Str metadata = Str(metadataFi->data, metadataFi->fileSizeUncompressed);
         cip.Parse(metadata);
     }
-#if 0
-    Str comment = cbxArchive->GetComment();
-    if (comment) {
-        json::Parse(comment, MkMethod1<ComicInfoParser, json::Value*, &ComicInfoParser::Visit>(&cip));
-    }
-#endif
     int nFiles = len(pageFiles);
     if (nFiles == 0) {
         delete cbxArchive;
@@ -2850,13 +2760,16 @@ TempStr EngineCbx::GetPropertyTemp(DocProp prop) {
     }
 
     if (prop == DocProp::CreationDate) {
-        return cip.propDate;
-    }
-    if (prop == DocProp::ModificationDate) {
-        return cip.propModDate;
-    }
-    if (prop == DocProp::CreatorApp) {
-        return cip.propCreator;
+        if (cip.year > 0 && cip.month > 0) {
+            return fmt("%d/%d", cip.month, cip.year);
+        }
+        if (cip.year > 0) {
+            return fmt("/%d", cip.year);
+        }
+        if (cip.month > 0) {
+            return fmt("%d", cip.month);
+        }
+        return {};
     }
     if (prop == DocProp::Subject) {
         // TODO: replace with Prop_Summary
