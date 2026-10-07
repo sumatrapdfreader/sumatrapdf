@@ -517,4 +517,4 @@ enum class PaletteMode {
     Thumbnails,
 };
 
-PaletteMode PaletteModeFromQuery(Str query, Str* restOut = nullptr);
+PaletteMode ParsePaletteMode(Str& query);

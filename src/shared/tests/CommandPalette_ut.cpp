@@ -75,14 +75,14 @@ static void PalettePrefixes_UnitTests() {
         {"&", PaletteMode::Thumbnails, ""},
     };
     for (auto& c : cases) {
-        Str rest;
-        PaletteMode mode = PaletteModeFromQuery(Str(c.query), &rest);
+        Str rest(c.query);
+        PaletteMode mode = ParsePaletteMode(rest);
         utassert(mode == c.mode);
         utassert(str::Eq(rest, Str(c.rest)));
     }
     // the prefix is only a prefix: a '#' inside the query is part of the text
-    Str rest;
-    utassert(PaletteModeFromQuery(StrL("a#b"), &rest) == PaletteMode::Commands);
+    Str rest = StrL("a#b");
+    utassert(ParsePaletteMode(rest) == PaletteMode::Commands);
     utassert(str::Eq(rest, StrL("a#b")));
 }
 

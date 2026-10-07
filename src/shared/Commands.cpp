@@ -908,30 +908,26 @@ Str GetCommandStringArg(CustomCommand* cmd, Str name, Str defValue) {
     return arg ? arg->strVal : defValue;
 }
 
-PaletteMode PaletteModeFromQuery(Str query, Str* restOut) {
-    Str rest = query;
+PaletteMode ParsePaletteMode(Str& query) {
     PaletteMode mode = PaletteMode::Commands;
-    if (str::TrimPrefix(rest, Str(kPalettePrefixEverything))) {
+    if (str::TrimPrefix(query, Str(kPalettePrefixEverything))) {
         mode = PaletteMode::Everything;
-    } else if (str::TrimPrefix(rest, Str(kPalettePrefixTabs))) {
+    } else if (str::TrimPrefix(query, Str(kPalettePrefixTabs))) {
         mode = PaletteMode::Tabs;
-    } else if (str::TrimPrefix(rest, Str(kPalettePrefixFileHistory))) {
+    } else if (str::TrimPrefix(query, Str(kPalettePrefixFileHistory))) {
         mode = PaletteMode::FileHistory;
-    } else if (str::TrimPrefix(rest, Str(kPalettePrefixTOC))) {
+    } else if (str::TrimPrefix(query, Str(kPalettePrefixTOC))) {
         mode = PaletteMode::Toc;
-    } else if (str::TrimPrefix(rest, Str(kPalettePrefixFavorites))) {
+    } else if (str::TrimPrefix(query, Str(kPalettePrefixFavorites))) {
         mode = PaletteMode::Favorites;
-    } else if (str::TrimPrefix(rest, Str(kPalettePrefixAnnotations))) {
+    } else if (str::TrimPrefix(query, Str(kPalettePrefixAnnotations))) {
         mode = PaletteMode::Annotations;
-    } else if (str::TrimPrefix(rest, Str(kPalettePrefixBoolSettings))) {
+    } else if (str::TrimPrefix(query, Str(kPalettePrefixBoolSettings))) {
         mode = PaletteMode::Settings;
-    } else if (str::TrimPrefix(rest, Str(kPalettePrefixThumbnails))) {
+    } else if (str::TrimPrefix(query, Str(kPalettePrefixThumbnails))) {
         mode = PaletteMode::Thumbnails;
     } else {
-        str::TrimPrefix(rest, Str(kPalettePrefixCommands));
-    }
-    if (restOut) {
-        *restOut = rest;
+        str::TrimPrefix(query, Str(kPalettePrefixCommands));
     }
     return mode;
 }
