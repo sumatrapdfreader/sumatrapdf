@@ -151,7 +151,7 @@ bool DetectCitationInPageText(WStr text, const Rect* coords, int textLen, Point 
         }
         WCHAR c = text.s[i];
         bool isLineBreak = (prevY != INT_MIN && r.y > prevY + 2);
-        bool isSpace = isLineBreak || c == L' ' || c == L'\t' || c == L'\n' || c == L'\r';
+        bool isSpace = isLineBreak || IsGlyphSpace(c);
         if (i == cursorIdx) {
             cursorChunkPos = len(chunk);
         }
@@ -321,8 +321,7 @@ bool FindSurnameInPageText(WStr text, const Rect* coords, int textLen, WStr surn
     // Determine the page's leftmost text X (= bibliography column left edge).
     int leftX = INT_MAX;
     for (int i = 0; i < textLen; i++) {
-        WCHAR c = text.s[i];
-        if (c == L' ' || c == L'\t' || c == L'\n' || c == L'\r') {
+        if (IsGlyphSpace(text.s[i])) {
             continue;
         }
         leftX = std::min(coords[i].x, leftX);
@@ -341,8 +340,7 @@ bool FindSurnameInPageText(WStr text, const Rect* coords, int textLen, WStr surn
 
     int prevY = INT_MIN;
     for (int i = 0; i < textLen; i++) {
-        WCHAR c = text.s[i];
-        if (c == L' ' || c == L'\t' || c == L'\n' || c == L'\r') {
+        if (IsGlyphSpace(text.s[i])) {
             continue;
         }
         bool isNewLine = (coords[i].y > prevY + 2);
@@ -633,8 +631,7 @@ bool FindNumericReferenceInPageText(WStr text, const Rect* coords, int textLen, 
         int yTol = coords[i].dy > 6 ? coords[i].dy : 8;
         bool hasLeftNeighbour = false;
         for (int k = 0; k < textLen; k++) {
-            WCHAR c = text.s[k];
-            if (c == L' ' || c == L'\t' || c == L'\n' || c == L'\r') {
+            if (IsGlyphSpace(text.s[k])) {
                 continue;
             }
             Rect r = coords[k];

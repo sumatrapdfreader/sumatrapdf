@@ -294,8 +294,7 @@ float RefHoverResolveDestYFromSourceText(EngineBase* engine, int srcPage, RectF 
             if (i == idx || destCoords[i].y != sy) {
                 continue;
             }
-            WCHAR c = destText.s[i];
-            if (c == L' ' || c == L'\t' || c == L'\n' || c == L'\r') {
+            if (IsGlyphSpace(destText.s[i])) {
                 continue;
             }
             if (destCoords[i].x < sx) {

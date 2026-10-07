@@ -172,6 +172,8 @@ gpui::El* RefHoverBuild(MainWindow* win, gpui::Ctx* cx);
 
 //--- layout detection (RefHoverDetect.cpp)
 
+bool IsGlyphSpace(WCHAR c);
+
 // Flatten per-glyph ink boxes to uniform top-aligned line rows. mupdf reports
 // tight per-glyph boxes whose tops vary within a line; the detectors below key
 // off coords[i].y as a line coordinate, so callers must pass coords through

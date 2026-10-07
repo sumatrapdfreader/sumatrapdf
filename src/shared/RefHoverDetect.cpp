@@ -15,7 +15,7 @@ bool ShouldSearchNextPage(RectF mediabox, float destY) {
     return mediabox.dy > 0.f && destY >= mediabox.dy * kLatePageStartRatio;
 }
 
-static bool IsGlyphSpace(WCHAR c) {
+bool IsGlyphSpace(WCHAR c) {
     return c == L' ' || c == L'\t' || c == L'\n' || c == L'\r';
 }
 
