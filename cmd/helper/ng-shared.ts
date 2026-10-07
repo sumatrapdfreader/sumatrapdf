@@ -194,6 +194,7 @@ export const sharedFiles = [
   "src/shared/GoogleLens.h",
   "src/shared/GumboHtmlParser.cpp",
   "src/shared/GumboHtmlParser.h",
+  "src/shared/HangDetector.cpp",
   "src/shared/HangDetector.h",
   "src/shared/HtmlFormatter.cpp",
   "src/shared/HtmlFormatter.h",

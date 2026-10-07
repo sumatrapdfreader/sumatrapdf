@@ -701,9 +701,6 @@
     <ClCompile Include="..\src\GoogleLens.cpp">
       <Filter>src</Filter>
     </ClCompile>
-    <ClCompile Include="..\src\HangDetector.cpp">
-      <Filter>src</Filter>
-    </ClCompile>
     <ClCompile Include="..\src\HomePage.cpp">
       <Filter>src</Filter>
     </ClCompile>
@@ -1137,6 +1134,9 @@
       <Filter>src\shared</Filter>
     </ClCompile>
     <ClCompile Include="..\src\shared\GumboHtmlParser.cpp">
+      <Filter>src\shared</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\shared\HangDetector.cpp">
       <Filter>src\shared</Filter>
     </ClCompile>
     <ClCompile Include="..\src\shared\HtmlFormatter.cpp">
