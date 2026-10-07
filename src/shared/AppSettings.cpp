@@ -337,19 +337,13 @@ static void CreateSelectionHandlerCommands() {
     }
 }
 
-#if defined(SUMATRA_NG)
-// creates one command per configured text snippet
-#else
-// a command per TextSnippets entry, for the context menu, the palette and its Key
-#endif
+// Create one command per configured text snippet.
 static void CreateTextSnippetCommands() {
     for (TextSnippet* ts : *gSettings->textSnippets) {
         if (!ts || str::IsEmptyOrWhiteSpace(ts->name) || str::IsEmptyOrWhiteSpace(ts->text)) {
             continue;
         }
-#if !defined(SUMATRA_NG)
-        // settings values are single-line: \n in Text is a line break
-#endif
+        // Settings values are single-line: \n in Text is a line break.
         TempStr text = str::ReplaceTemp(ts->text, StrL("\\n"), StrL("\n"));
         CommandArg* args = NewStringArg(kCmdArgText, text);
         CreateCustomCommand(StrL(""), CmdInsertTextSnippet, args, ts->name, ts->key);
