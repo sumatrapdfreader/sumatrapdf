@@ -309,6 +309,11 @@ int TextSearch::FindAnchor() const {
     return result;
 }
 
+static bool InsideWordAtByte(Str text, int byteIdx) {
+    int prevIdx = byteIdx;
+    return isWordChar(Utf8CodepointPrev(text, prevIdx)) && isWordChar(Utf8CodepointAtByte(text, byteIdx));
+}
+
 // try to match "findText" from "start" with whitespace tolerance
 // (ignore all whitespace except after alphanumeric characters)
 TextSearch::PageAndOffset TextSearch::MatchEnd(int startOff) const {
@@ -327,14 +332,8 @@ TextSearch::PageAndOffset TextSearch::MatchEnd(int startOff) const {
     int endIdx = startOff;
     int endByteIdx = Utf8CodepointToByteIndex(currentPageText, endIdx);
 
-    if (matchWordStart && startOff > 0) {
-        int prevByteIdx = endByteIdx;
-        int prevCh = Utf8CodepointPrev(pageText, prevByteIdx);
-        int nextByteIdx = endByteIdx;
-        int curCh = Utf8CodepointNext(pageText, nextByteIdx);
-        if (isWordChar(prevCh) && isWordChar(curCh)) {
-            return notFound;
-        }
+    if (matchWordStart && startOff > 0 && InsideWordAtByte(pageText, endByteIdx)) {
+        return notFound;
     }
 
     auto nextPage = [&]() {
@@ -419,14 +418,8 @@ TextSearch::PageAndOffset TextSearch::MatchEnd(int startOff) const {
             }
         }
     }
-    if (matchWordEnd && endIdx > 0 && endIdx < currentPageTextLen) {
-        int prevByteIdx = endByteIdx;
-        int prevCh = Utf8CodepointPrev(currentPageText, prevByteIdx);
-        int nextByteIdx = endByteIdx;
-        int curCh = Utf8CodepointNext(currentPageText, nextByteIdx);
-        if (isWordChar(prevCh) && isWordChar(curCh)) {
-            return notFound;
-        }
+    if (matchWordEnd && endIdx > 0 && endIdx < currentPageTextLen && InsideWordAtByte(currentPageText, endByteIdx)) {
+        return notFound;
     }
 
     return {currentPage, endIdx};
