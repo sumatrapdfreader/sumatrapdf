@@ -182,9 +182,6 @@ static Str ParseHtmlNumericEntity(Str str, int& rune) {
     if (off == start) {
         return {};
     }
-    if (off < str.len && str.s[off] == ';') {
-        off++;
-    }
 
     rune = ValidHtmlEntityRuneOrFallback(codepoint);
     return Str(str.s + off, str.len - off);
@@ -205,28 +202,22 @@ static Str ResolveHtmlNamedEntity(Str str, int& rune) {
     }
     rune = ValidHtmlEntityRuneOrFallback(rune);
 
-    int endOff = entLen;
-    if (endOff < str.len && str.s[endOff] == ';') {
-        endOff++;
-    }
-    return Str(str.s + endOff, str.len - endOff);
+    return Str(str.s + entLen, str.len - entLen);
 }
 
 // if "&foo;" was the entity, str points at the char after '&'
 // returns a slice starting after the entity, or empty on failure
 Str ResolveHtmlEntity(Str str, int& rune) {
     Str entEnd = ParseHtmlNumericEntity(str, rune);
-    if (!str::IsNull(entEnd)) {
-        return entEnd;
+    if (str::IsNull(entEnd)) {
+        entEnd = ResolveHtmlNamedEntity(str, rune);
     }
-
-    entEnd = ResolveHtmlNamedEntity(str, rune);
-    if (!str::IsNull(entEnd)) {
-        return entEnd;
+    if (str::IsNull(entEnd)) {
+        rune = -1;
+        return {};
     }
-
-    rune = -1;
-    return {};
+    str::TrimPrefix(entEnd, StrL(";"));
+    return entEnd;
 }
 
 // Borrow unchanged text; decoded output belongs to the requested allocator.
