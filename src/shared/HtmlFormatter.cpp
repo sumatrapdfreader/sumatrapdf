@@ -126,7 +126,6 @@ HtmlFormatter::HtmlFormatter(HtmlFormatterArgs* args)
     DrawStyle style;
     style.font = GetPlatformFont(defaultFontName, defaultFontSize, PlatformFontStyle::Regular);
     style.align = AlignAttr::Justify;
-    style.dirRtl = false;
     VecAppend(styleStack, style);
     nextPageStyle = VecLast(styleStack);
 
@@ -1062,9 +1061,7 @@ static bool AutoCloseOnOpen(HtmlTag curr, HtmlTag prev) {
 
 void HtmlFormatter::AutoCloseTags(size_t count) {
     keepTagNesting = true; // prevent recursion
-    HtmlToken tok{};
-    tok.type = HtmlToken::EndTag;
-    tok.s = {};
+    HtmlToken tok{.type = HtmlToken::EndTag};
     // let HandleHtmlTag clean up (in reverse order)
     for (size_t i = 0; i < count; i++) {
         tok.tag = VecPop(tagNesting);
@@ -1082,7 +1079,7 @@ void HtmlFormatter::UpdateTagNesting(HtmlToken* t) {
     int idx = len(tagNesting);
     bool isInline = IsInlineTag(t->tag);
     if (t->IsStartTag()) {
-        if (IsInlineTag(t->tag)) {
+        if (isInline) {
             VecAppend(tagNesting, t->tag);
             return;
         }
@@ -1221,17 +1218,15 @@ void HtmlFormatter::HandleText(Str curr) {
         // don't collapse whitespace and respect text newlines
         while (curr) {
             currReparseIdx = htmlParser->PosOf(curr);
-            Str text, rest;
-            bool newline = str::CutChar(curr, '\n', &text, &rest);
+            Str text;
+            bool newline = str::CutChar(curr, '\n', &text, &curr);
             if (newline) {
                 str::TrimSuffix(text, StrL("\r"));
             }
             EmitTextRun(text);
-            if (!newline) {
-                break;
+            if (newline) {
+                HandleTagBr();
             }
-            curr = rest;
-            HandleTagBr();
         }
         return;
     }
