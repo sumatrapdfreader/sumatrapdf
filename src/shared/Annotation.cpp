@@ -1639,81 +1639,36 @@ void SetFreeTextFont(Annotation* annot, Str family, int style) {
     MarkNotificationAsModified(e, annot);
 }
 
-int DefaultAppearanceTextSize(Annotation* annot) {
+struct DefaultAppearance {
+    int textSize = 0;
+    PdfColor textColor = 0;
+};
+
+static DefaultAppearance ReadDefaultAppearance(Annotation* annot) {
+    DefaultAppearance res;
     if (!AnnotationIsLive(annot)) {
-        return 0;
+        return res;
     }
     EngineMupdf* e = annot->engine;
     auto* a = annot->pdfannot;
     auto* ctx = e->Ctx();
     ScopedRecursiveMutex cs(&e->docLock);
     const char* fontNameZ = nullptr;
-    float sizeF{0.0};
+    float size = 0;
     int n = 0;
-    float textColor[4]{};
+    float color[4]{};
     fz_try(ctx) {
-        pdf_annot_default_appearance(ctx, a, &fontNameZ, &sizeF, &n, textColor);
+        pdf_annot_default_appearance(ctx, a, &fontNameZ, &size, &n, color);
     }
     fz_catch(ctx) {
         fz_report_error(ctx);
     }
-    return (int)sizeF;
-}
-
-void SetDefaultAppearanceTextSize(Annotation* annot, int textSize) {
-    if (!AnnotationIsLive(annot)) {
-        return;
-    }
-    EngineMupdf* e = annot->engine;
-    auto* a = annot->pdfannot;
-    {
-        auto* ctx = e->Ctx();
-        ScopedRecursiveMutex cs(&e->docLock);
-        const char* fontNameZ = nullptr;
-        float sizeF{0.0};
-        int n = 0;
-        float textColor[4]{};
-        Str family;
-        int style = 0;
-        fz_try(ctx) {
-            ReadFreeTextFontLocked(ctx, a, family, style);
-            pdf_annot_default_appearance(ctx, a, &fontNameZ, &sizeF, &n, textColor);
-            pdf_set_annot_default_appearance(ctx, a, fontNameZ, (float)textSize, n, textColor);
-            if (IsCustomFreeTextFont(family, style)) {
-                WriteFreeTextFontLocked(ctx, a, family, style);
-            }
-            pdf_update_annot(ctx, a);
-        }
-        fz_catch(ctx) {
-            fz_report_error(ctx);
-        }
-    }
-    MarkNotificationAsModified(e, annot);
-}
-
-PdfColor DefaultAppearanceTextColor(Annotation* annot) {
-    if (!AnnotationIsLive(annot)) {
-        return 0;
-    }
-    EngineMupdf* e = annot->engine;
-    auto* a = annot->pdfannot;
-    auto* ctx = e->Ctx();
-    ScopedRecursiveMutex cs(&e->docLock);
-    const char* fontNameZ = nullptr;
-    float sizeF{0.0};
-    int n = 0;
-    float textColor[4]{};
-    fz_try(ctx) {
-        pdf_annot_default_appearance(ctx, a, &fontNameZ, &sizeF, &n, textColor);
-    }
-    fz_catch(ctx) {
-        fz_report_error(ctx);
-    }
-    PdfColor res = PdfColorFromFloat(ctx, n, textColor);
+    res.textSize = (int)size;
+    res.textColor = PdfColorFromFloat(ctx, n, color);
     return res;
 }
 
-void SetDefaultAppearanceTextColor(Annotation* annot, PdfColor col) {
+static void SetDefaultAppearance(Annotation* annot, const int* textSize, const PdfColor* textColor) {
     if (!AnnotationIsLive(annot)) {
         return;
     }
@@ -1723,16 +1678,22 @@ void SetDefaultAppearanceTextColor(Annotation* annot, PdfColor col) {
         auto* ctx = e->Ctx();
         ScopedRecursiveMutex cs(&e->docLock);
         const char* fontNameZ = nullptr;
-        float sizeF{0.0};
+        float size = 0;
         int n = 0;
-        float textColor[4]{}; // must be at least 4
+        float color[4]{};
         Str family;
         int style = 0;
         fz_try(ctx) {
             ReadFreeTextFontLocked(ctx, a, family, style);
-            pdf_annot_default_appearance(ctx, a, &fontNameZ, &sizeF, &n, textColor);
-            PdfColorToFloat(col, textColor);
-            pdf_set_annot_default_appearance(ctx, a, fontNameZ, sizeF, 3, textColor);
+            pdf_annot_default_appearance(ctx, a, &fontNameZ, &size, &n, color);
+            if (textSize) {
+                size = (float)*textSize;
+            }
+            if (textColor) {
+                PdfColorToFloat(*textColor, color);
+                n = 3;
+            }
+            pdf_set_annot_default_appearance(ctx, a, fontNameZ, size, n, color);
             if (IsCustomFreeTextFont(family, style)) {
                 WriteFreeTextFontLocked(ctx, a, family, style);
             }
@@ -1743,6 +1704,22 @@ void SetDefaultAppearanceTextColor(Annotation* annot, PdfColor col) {
         }
     }
     MarkNotificationAsModified(e, annot);
+}
+
+int DefaultAppearanceTextSize(Annotation* annot) {
+    return ReadDefaultAppearance(annot).textSize;
+}
+
+void SetDefaultAppearanceTextSize(Annotation* annot, int textSize) {
+    SetDefaultAppearance(annot, &textSize, nullptr);
+}
+
+PdfColor DefaultAppearanceTextColor(Annotation* annot) {
+    return ReadDefaultAppearance(annot).textColor;
+}
+
+void SetDefaultAppearanceTextColor(Annotation* annot, PdfColor color) {
+    SetDefaultAppearance(annot, nullptr, &color);
 }
 
 void GetLineEndingStyles(Annotation* annot, int* start, int* end) {
