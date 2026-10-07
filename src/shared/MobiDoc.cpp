@@ -1179,19 +1179,10 @@ static bool FileMightBePrintReplica(Str path) {
     }
     u32 off0 = r.UInt32BE(78);
     u32 off1 = r.UInt32BE(86);
-    bool isType8 = false;
-    bool sawType = false;
-    if (off0 <= (u32)(n - 28) && MemEq(buf + off0 + 16, "MOBI", 4)) {
-        sawType = true;
-        isType8 = r.UInt32BE((int)off0 + 24) == 8;
+    if (off0 > (u32)(n - 28) || !MemEq(buf + off0 + 16, "MOBI", 4) || r.UInt32BE((int)off0 + 24) == 8) {
+        return true;
     }
-    bool sawRec1 = false;
-    bool rec1Mop = false;
-    if (off1 <= (u32)(n - 4)) {
-        sawRec1 = true;
-        rec1Mop = MemEq(buf + off1, "%MOP", 4);
-    }
-    return isType8 || rec1Mop || !sawType || !sawRec1;
+    return off1 > (u32)(n - 4) || MemEq(buf + off1, "%MOP", 4);
 }
 
 Str ExtractPdfFromPrintReplicaFile(Str path) {
