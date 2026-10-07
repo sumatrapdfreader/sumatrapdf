@@ -873,25 +873,19 @@ void EngineDjvuDec::NotePageCacheAfterRender(int page0) {
     // via the decoder callbacks — never hold djvuCacheLock here.
     {
         ScopedMutex scope(&cacheLock);
-        for (int i = 0; i < len(pageCacheLru); i++) {
-            if (pageCacheLru[i] == page0) {
-                VecRemoveAt(pageCacheLru, i);
-                break;
-            }
-        }
+        VecRemove(pageCacheLru, page0);
         VecInsertAt(pageCacheLru, 0, page0);
     }
 
     for (;;) {
-        size_t total = 0;
-        int n = 0;
         int dropPage = -1;
         {
             ScopedMutex scope(&cacheLock);
-            n = len(pageCacheLru);
+            int n = len(pageCacheLru);
             if (n <= 1) {
                 return;
             }
+            size_t total = 0;
             for (int i = 0; i < n; i++) {
                 total += djvu_doc_page_cache_size(doc, pageCacheLru[i]);
             }
@@ -903,7 +897,7 @@ void EngineDjvuDec::NotePageCacheAfterRender(int page0) {
             if (dropPage == page0) {
                 return;
             }
-            VecRemoveAt(pageCacheLru, n - 1);
+            VecRemoveLast(pageCacheLru);
         }
         djvu_doc_drop_page_cache(doc, dropPage);
     }
