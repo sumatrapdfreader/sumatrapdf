@@ -1478,7 +1478,6 @@
     <ClInclude Include="..\src\gui\GuiColors.h" />
     <ClInclude Include="..\src\gui\Layout.h" />
     <ClInclude Include="..\src\gui\PasswordDialog.h" />
-    <ClInclude Include="..\src\gui\PlatformText.h" />
     <ClInclude Include="..\src\gui\PlatformWindow.h" />
     <ClInclude Include="..\src\gui\VirtCtrl.h" />
     <ClInclude Include="..\src\gui\VirtHost.h" />
@@ -1551,6 +1550,7 @@
     <ClInclude Include="..\src\shared\Version.h" />
     <ClInclude Include="..\src\shared\WebpReader.h" />
     <ClInclude Include="..\src\shared\gui\PlatformFont.h" />
+    <ClInclude Include="..\src\shared\gui\PlatformText.h" />
     <ClInclude Include="..\src\shared\gui\UIModels.h" />
     <ClInclude Include="..\src\testcode\test-app.h" />
     <ClInclude Include="..\src\uia\DocumentProvider.h" />

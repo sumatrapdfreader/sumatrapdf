@@ -1262,7 +1262,6 @@
   <ItemGroup>
     <ClInclude Include="..\src\RegistryPreview.h" />
     <ClInclude Include="..\src\base\Archive.h" />
-    <ClInclude Include="..\src\gui\PlatformText.h" />
     <ClInclude Include="..\src\previewer\PdfPreview.h" />
     <ClInclude Include="..\src\shared\AvifReader.h" />
     <ClInclude Include="..\src\shared\CachedObjects.h" />
@@ -1288,6 +1287,7 @@
     <ClInclude Include="..\src\shared\SumatraLog.h" />
     <ClInclude Include="..\src\shared\WebpReader.h" />
     <ClInclude Include="..\src\shared\gui\PlatformFont.h" />
+    <ClInclude Include="..\src\shared\gui\PlatformText.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\src\EngineMupdf.cpp" />

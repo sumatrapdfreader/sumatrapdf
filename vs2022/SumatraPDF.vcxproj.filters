@@ -321,9 +321,6 @@
     <ClInclude Include="..\src\gui\PasswordDialog.h">
       <Filter>src\gui</Filter>
     </ClInclude>
-    <ClInclude Include="..\src\gui\PlatformText.h">
-      <Filter>src\gui</Filter>
-    </ClInclude>
     <ClInclude Include="..\src\gui\PlatformWindow.h">
       <Filter>src\gui</Filter>
     </ClInclude>
@@ -538,6 +535,9 @@
       <Filter>src\shared</Filter>
     </ClInclude>
     <ClInclude Include="..\src\shared\gui\PlatformFont.h">
+      <Filter>src\shared\gui</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\shared\gui\PlatformText.h">
       <Filter>src\shared\gui</Filter>
     </ClInclude>
     <ClInclude Include="..\src\shared\gui\UIModels.h">

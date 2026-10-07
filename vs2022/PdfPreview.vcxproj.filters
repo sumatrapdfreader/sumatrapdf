@@ -22,9 +22,6 @@
     <ClInclude Include="..\src\base\Archive.h">
       <Filter>base</Filter>
     </ClInclude>
-    <ClInclude Include="..\src\gui\PlatformText.h">
-      <Filter>gui</Filter>
-    </ClInclude>
     <ClInclude Include="..\src\previewer\PdfPreview.h">
       <Filter>previewer</Filter>
     </ClInclude>
@@ -98,6 +95,9 @@
       <Filter>shared</Filter>
     </ClInclude>
     <ClInclude Include="..\src\shared\gui\PlatformFont.h">
+      <Filter>shared\gui</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\shared\gui\PlatformText.h">
       <Filter>shared\gui</Filter>
     </ClInclude>
   </ItemGroup>
