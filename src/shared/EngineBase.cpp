@@ -1141,6 +1141,14 @@ PointF EngineBase::Transform(PointF pt, int pageNo, float zoom, int rotation, bo
     return rect.TL();
 }
 
+RectF EngineBase::Transform(const RectF& rect, int pageNo, float zoom, int rotation, bool inverse) {
+    TransformDir dir = inverse ? TransformDir::ToPage : TransformDir::ToScreen;
+    SizeF page = zoom > 0 ? PageMediabox(pageNo).Size() : SizeF{};
+    PointF tl = TransformPagePoint(rect.TL(), page, zoom, rotation, dir);
+    PointF br = TransformPagePoint(rect.BR(), page, zoom, rotation, dir);
+    return RectF::FromXY(tl, br);
+}
+
 PointF TransformPagePoint(PointF pt, SizeF page, float zoom, int rotation, TransformDir dir) {
     ReportIf(zoom <= 0);
     if (zoom <= 0) {

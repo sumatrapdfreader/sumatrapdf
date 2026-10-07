@@ -146,8 +146,6 @@ class EngineDjvuDec : public EngineBase {
 
     Pixmap* RenderPage(RenderPageArgs& args) override;
 
-    RectF Transform(const RectF& rect, int pageNo, float zoom, int rotation, bool inverse = false) override;
-
     Str GetFileData() override;
     bool SaveFileAs(Str dstPath) override;
     PageText ExtractPageText(int pageNo) override;
@@ -218,7 +216,6 @@ class EngineDjvuDec : public EngineBase {
     Vec<DjvuDecPageInfo*> pages;
     TocTree* tocTree = nullptr;
 
-    PointF TransformPoint(PointF pt, int pageNo, float zoom, int rotation, bool inverse);
     bool FinishLoading();
     TocItem* BuildTocTree(TocItem* parent, djvu_outline_item* items, int n, int& idCounter, int depth);
     // After a successful render of page0: mark MRU and drop cold pages if the
@@ -387,21 +384,6 @@ TempStr EngineDjvuDec::GetPropertyTemp(DocProp /*prop*/) {
 
 bool EngineDjvuDec::BenchLoadPage(int /*pageNo*/) {
     return true;
-}
-
-PointF EngineDjvuDec::TransformPoint(PointF pt, int pageNo, float zoom, int rotation, bool inverse) {
-    TransformDir dir = inverse ? TransformDir::ToPage : TransformDir::ToScreen;
-    if (zoom <= 0) {
-        return TransformPagePoint(pt, {}, zoom, rotation, dir);
-    }
-    SizeF page = PageMediabox(pageNo).Size();
-    return TransformPagePoint(pt, page, zoom, rotation, dir);
-}
-
-RectF EngineDjvuDec::Transform(const RectF& rect, int pageNo, float zoom, int rotation, bool inverse) {
-    PointF TL = TransformPoint(rect.TL(), pageNo, zoom, rotation, inverse);
-    PointF BR = TransformPoint(rect.BR(), pageNo, zoom, rotation, inverse);
-    return RectF::FromXY(TL, BR);
 }
 
 constexpr int kGrayChannels = 1;

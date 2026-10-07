@@ -534,7 +534,7 @@ class EngineBase {
     virtual Pixmap* RenderPage(RenderPageArgs& args) = 0;
 
     PointF Transform(PointF pt, int pageNo, float zoom, int rotation, bool inverse = false);
-    virtual RectF Transform(const RectF& rect, int pageNo, float zoom, int rotation, bool inverse = false) = 0;
+    virtual RectF Transform(const RectF& rect, int pageNo, float zoom, int rotation, bool inverse = false);
 
     // returns the binary data for the current file
     // (e.g. for saving again when the file has already been deleted)

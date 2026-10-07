@@ -183,7 +183,6 @@ class EngineEbook : public EngineBase {
 #if OS_WIN
     void GetTransform(Matrix& m, float zoom, int rotation);
 #endif
-    PointF TransformPoint(PointF pt, int pageNo, float zoom, int rotation, bool inverse);
     bool ExtractPageAnchors();
     TempStr ExtractFontListTemp();
     void ExtractFontListFromPage(Location loc, Vec<PlatformFont*>& seenFonts, StrVec& fonts);
@@ -348,19 +347,8 @@ bool EngineEbook::ExtractPageAnchors() {
     return true;
 }
 
-PointF EngineEbook::TransformPoint(PointF pt, int pageNo, float zoom, int rotation, bool inverse) {
-    TransformDir dir = inverse ? TransformDir::ToPage : TransformDir::ToScreen;
-    if (zoom <= 0) {
-        return TransformPagePoint(pt, {}, zoom, rotation, dir);
-    }
-    SizeF page = PageMediabox(pageNo).Size();
-    return TransformPagePoint(pt, page, zoom, rotation, dir);
-}
-
 RectF EngineEbook::Transform(const RectF& rect, int pageNo, float zoom, int rotation, bool inverse) {
-    PointF tl = TransformPoint(rect.TL(), pageNo, zoom, rotation, inverse);
-    PointF br = TransformPoint(rect.BR(), pageNo, zoom, rotation, inverse);
-    RectF res = RectF::FromXY(tl, br);
+    RectF res = EngineBase::Transform(rect, pageNo, zoom, rotation, inverse);
     if (rotation != 0) {
         res.Inflate(-0.01f, -0.01f);
     }
