@@ -248,3 +248,7 @@ void RemoveThumbnail(FileState* fs) {
     fs->thumbnail = nullptr;
     HomePageThumbnailChanged(fs);
 }
+
+void CreateChmThumbnail(Str, const Size&, const OnBitmapRendered* saveThumbnail) {
+    delete saveThumbnail;
+}

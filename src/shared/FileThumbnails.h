@@ -7,6 +7,8 @@ constexpr int kThumbnailDy = 150;
 
 struct Pixmap;
 struct FileState;
+struct RenderedBitmap;
+using OnBitmapRendered = Func1<RenderedBitmap*>;
 
 Pixmap* LoadThumbnail(FileState* fs);
 bool HasThumbnail(FileState* fs);
@@ -19,3 +21,4 @@ TempStr GetThumbnailPathTemp(Str filePath);
 void DeleteThumbnailForFile(Str path);
 void EmptyThumbnailCacheDirectory();
 void HomePageThumbnailChanged(FileState* fs);
+void CreateChmThumbnail(Str path, const Size& size, const OnBitmapRendered* saveThumbnail);
