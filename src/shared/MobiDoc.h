@@ -16,7 +16,7 @@ struct MobiDoc {
     int compressionType = 0;
     int docUncompressedSize = 0;
     int textEncoding = CP_UTF8;
-    int docTocIndex = 0;
+    int docTocIndex = -1;
 
     bool multibyte = false;
     int trailersCount = 0;

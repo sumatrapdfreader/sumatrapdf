@@ -335,10 +335,7 @@ static bool IsValidCompression(int comprType) {
     return (kCompressionNone == comprType) || (kCompressionPalm == comprType) || (kCompressionHuff == comprType);
 }
 
-MobiDoc::MobiDoc(Str filePath) {
-    docTocIndex = -1;
-    str::ReplaceWithCopy(&fileName, filePath);
-}
+MobiDoc::MobiDoc(Str filePath) : fileName(str::Dup(filePath)) {}
 
 MobiDoc::~MobiDoc() {
     FreeProps(props);
