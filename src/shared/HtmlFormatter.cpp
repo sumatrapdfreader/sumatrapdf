@@ -181,20 +181,18 @@ HtmlFormatter::MeasureCache* HtmlFormatter::GetMeasureCacheForCurrFont() {
 
 // measuring text is expensive and text runs (mostly words) repeat a lot
 // within a document, so cache the measured size per font, keyed by text.
-// The caller must have called textMeasure->SetFont(CurrFont()) already.
 RectF HtmlFormatter::MeasureTextCached(Str s) {
+    textMeasure->SetFont(CurrFont());
     MeasureCache* mc = GetMeasureCacheForCurrFont();
-    if (!mc) {
-        return textMeasure->Measure(s);
-    }
     // MapStrToInt keys are utf-8, which is what we measure, so s is the key
-    int existingIdx = 0;
-    int idx = len(mc->vals);
-    if (!mc->keys->Insert(s, idx, &existingIdx)) {
-        return mc->vals[existingIdx];
+    int idx = 0;
+    if (mc && !mc->keys->Insert(s, len(mc->vals), &idx)) {
+        return mc->vals[idx];
     }
     RectF bbox = textMeasure->Measure(s);
-    VecAppend(mc->vals, bbox);
+    if (mc) {
+        VecAppend(mc->vals, bbox);
+    }
     return bbox;
 }
 
@@ -720,7 +718,6 @@ void HtmlFormatter::EmitTextRun(Str s) {
         if (len(buf) == 0) {
             break;
         }
-        textMeasure->SetFont(CurrFont());
         RectF bbox = MeasureTextCached(buf);
         if (bbox.dx <= pageDx - currX) {
             AppendInstr(DrawInstr::Text(run, bbox, dirRtl));
@@ -754,7 +751,6 @@ void HtmlFormatter::EmitTextRun(Str s) {
         if (lenThatFits < len(buf)) {
             lenThatFits = Utf8CodepointStartByte(buf, lenThatFits);
         }
-        textMeasure->SetFont(CurrFont());
         bbox = MeasureTextCached(Str(buf.s, lenThatFits));
         ReportIf(bbox.dx > pageDx);
         // buf is `run` with the soft hyphens removed, so a length in buf maps
@@ -775,7 +771,6 @@ void HtmlFormatter::EmitTextMarker(Str s) {
     if (len(s) == 0) {
         return;
     }
-    textMeasure->SetFont(CurrFont());
     RectF bbox = MeasureTextCached(s);
     AppendInstr(DrawInstr::Text(s, bbox, dirRtl));
     currX += bbox.dx;
