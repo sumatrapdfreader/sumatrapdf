@@ -509,76 +509,36 @@ Exit:
     return res;
 }
 
-// ng: gpui names its keys itself (gpui::KeyChordParse). Everything here is a
-// win32 virtual key code, so this is the translation table between the two.
+static const struct {
+    u8 vk;
+    Str name;
+} kGpuiKeyNames[] = {
+    {VK_BACK, StrL("backspace")},      {VK_TAB, StrL("tab")},       {VK_RETURN, StrL("enter")},
+    {VK_ESCAPE, StrL("escape")},       {VK_SPACE, StrL("space")},   {VK_PRIOR, StrL("pageup")},
+    {VK_NEXT, StrL("pagedown")},       {VK_END, StrL("end")},       {VK_HOME, StrL("home")},
+    {VK_LEFT, StrL("left")},           {VK_UP, StrL("up")},         {VK_RIGHT, StrL("right")},
+    {VK_DOWN, StrL("down")},           {VK_INSERT, StrL("insert")}, {VK_DELETE, StrL("delete")},
+    {VK_APPS, StrL("menu")},           {VK_ADD, StrL("add")},       {VK_SUBTRACT, StrL("subtract")},
+    {VK_MULTIPLY, StrL("multiply")},   {VK_DIVIDE, StrL("divide")}, {VK_DECIMAL, StrL("decimal")},
+    {VK_SEPARATOR, StrL("separator")},
+};
+
 static Str GpuiKeyName(u16 vk) {
-    switch (vk) {
-        case VK_BACK:
-            return StrL("backspace");
-        case VK_TAB:
-            return StrL("tab");
-        case VK_RETURN:
-            return StrL("enter");
-        case VK_ESCAPE:
-            return StrL("escape");
-        case VK_SPACE:
-            return StrL("space");
-        case VK_PRIOR:
-            return StrL("pageup");
-        case VK_NEXT:
-            return StrL("pagedown");
-        case VK_END:
-            return StrL("end");
-        case VK_HOME:
-            return StrL("home");
-        case VK_LEFT:
-            return StrL("left");
-        case VK_UP:
-            return StrL("up");
-        case VK_RIGHT:
-            return StrL("right");
-        case VK_DOWN:
-            return StrL("down");
-        case VK_INSERT:
-            return StrL("insert");
-        case VK_DELETE:
-            return StrL("delete");
-        case VK_APPS:
-            return StrL("menu");
-        case VK_ADD:
-            return StrL("add");
-        case VK_SUBTRACT:
-            return StrL("subtract");
-        case VK_MULTIPLY:
-            return StrL("multiply");
-        case VK_DIVIDE:
-            return StrL("divide");
-        case VK_DECIMAL:
-            return StrL("decimal");
-        case VK_SEPARATOR:
-            return StrL("separator");
-        case VK_OEM_1:
-            return StrL(";");
-        case VK_OEM_PLUS:
-            return StrL("=");
-        case VK_OEM_COMMA:
-            return StrL(",");
-        case VK_OEM_MINUS:
-            return StrL("-");
-        case VK_OEM_PERIOD:
-            return StrL(".");
-        case VK_OEM_2:
-            return StrL("/");
-        case VK_OEM_3:
-            return StrL("`");
-        case VK_OEM_4:
-            return StrL("[");
-        case VK_OEM_5:
-            return StrL("\\");
-        case VK_OEM_6:
-            return StrL("]");
-        case VK_OEM_7:
-            return StrL("'");
+    for (const auto& key : kGpuiKeyNames) {
+        if (key.vk == vk) {
+            return key.name;
+        }
+    }
+    for (const auto& key : kPunctKeys) {
+        if (key.vk == vk) {
+            return Str(&key.unshifted, 1);
+        }
+    }
+    if (vk == VK_OEM_PLUS) {
+        return StrL("=");
+    }
+    if (vk == VK_OEM_MINUS) {
+        return StrL("-");
     }
     if (vk >= VK_F1 && vk <= VK_F24) {
         return fmt("f%d", vk - VK_F1 + 1);
