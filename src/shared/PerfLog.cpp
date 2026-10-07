@@ -281,20 +281,6 @@ static void FillSymNames() {
     }
 }
 
-static const char* NameForHexAddr(Str hex, int* nOut) {
-    u64 v;
-    int n = ReadHexAddr(hex, v);
-    if (n == 0) {
-        return nullptr;
-    }
-    *nOut = n;
-    PerfSym* e = FindSymSlot((const void*)(uintptr_t)v, false);
-    if (e && e->name) {
-        return e->name;
-    }
-    return nullptr;
-}
-
 static Str RawLog() {
     LONG n = gRawUsed;
     if (n > kMaxPerfLogBytes) {
@@ -313,10 +299,11 @@ static Str RewriteLogTemp() {
     int i = 0;
     while (i < src.len) {
         if (i + 2 < src.len && src.s[i] == '0' && src.s[i + 1] == 'x') {
-            int n = 0;
-            const char* name = NameForHexAddr(Str(src.s + i, src.len - i), &n);
-            if (name) {
-                dst.Append(Str(name));
+            u64 addr;
+            int n = ReadHexAddr(Str(src.s + i, len(src) - i), addr);
+            PerfSym* sym = n > 0 ? FindSymSlot((const void*)(uintptr_t)addr, false) : nullptr;
+            if (sym && sym->name) {
+                dst.Append(Str(sym->name));
                 i += n;
                 continue;
             }
