@@ -1122,33 +1122,15 @@ RectF DetectEntryBox(WStr text, const Rect* coords, RectF mediabox, float destX,
             indentX = r.x;
         }
 
-        // (a) An aligned bracket starts the next entry; body-text brackets are indented.
-        if (c == L'[' && atFirstLineLeftX) {
-            descListSibling = true;
-            endIdx = i;
-            break;
-        }
+        // Aligned brackets or a return from a hanging indent start a sibling.
+        // An aligned new line with no continuation indent also counts.
+        bool alignedNewLine = isNewLine && pastFirstLine && atFirstLineLeftX && prevLineLeftX != INT_MAX;
+        bool prevIndented = prevLineLeftX < firstLineLeftX - 5 || prevLineLeftX > firstLineLeftX + 5;
+        bool nextEntry = (c == L'[' && atFirstLineLeftX) || (alignedNewLine && (prevIndented || indentX < 0));
 
-        // (b) Returning from a hanging indent to the first-line x starts the next author-year entry.
-        if (isNewLine && atFirstLineLeftX && pastFirstLine && prevLineLeftX != INT_MAX &&
-            (prevLineLeftX < firstLineLeftX - 5 || prevLineLeftX > firstLineLeftX + 5)) {
-            descListSibling = true;
-            endIdx = i;
-            break;
-        }
-
-        // (c) A paragraph gap ends the entry; an aligned next line identifies a sibling.
-        if (r.y > prevBottom + (lineHeight * 5 / 4)) {
-            if (atFirstLineLeftX) {
-                descListSibling = true;
-            }
-            endIdx = i;
-            break;
-        }
-
-        // (d) An aligned new line without a continuation indent identifies single-line siblings.
-        if (isNewLine && pastFirstLine && atFirstLineLeftX && indentX < 0 && prevLineLeftX != INT_MAX) {
-            descListSibling = true;
+        // Paragraph gaps end the entry; an aligned next line identifies a sibling.
+        if (nextEntry || r.y > prevBottom + (lineHeight * 5 / 4)) {
+            descListSibling = atFirstLineLeftX;
             endIdx = i;
             break;
         }
