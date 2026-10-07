@@ -203,20 +203,3 @@ void WindowTab::ToggleZoom() const {
     }
     ctrl->SetZoomVirtual(NextToggleZoom(), nullptr);
 }
-
-// ng: body copied from orig ExternalViewers.cpp, which is step 10.
-// CouldBePDFDoc() is true for everything the mupdf engine renders -- epub, mobi,
-// fb2, xps, svg -- which is what "open in Acrobat" wants but not what the
-// PDF-only commands (Encrypt PDF, Show PDF Info, ...) want.
-bool IsPdfDoc(WindowTab* tab) {
-    if (!tab || !tab->ctrl) {
-        // same permissive answer as CouldBePDFDoc for a document that failed to load
-        return true;
-    }
-    if (tab->GetEngineType() != kindEngineMupdf) {
-        return false;
-    }
-    DisplayModel* dm = tab->AsFixed();
-    EngineBase* engine = dm ? dm->GetEngine() : nullptr;
-    return !engine || EngineMupdfIsPdf(engine);
-}

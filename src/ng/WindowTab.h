@@ -178,6 +178,4 @@ struct WindowTab {
     void MoveDocBy(int dx, int dy) const;
 };
 
-// ng: orig has this in ExternalViewers.cpp (step 10); the command availability
-// policy needs it now
 bool IsPdfDoc(WindowTab* tab);

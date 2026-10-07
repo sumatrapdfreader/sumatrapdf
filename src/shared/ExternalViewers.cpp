@@ -5,6 +5,7 @@
 #include "base/CmdLineArgs.h"
 #include "base/File.h"
 #include "base/Win.h"
+#include "base/Launch.h"
 
 #include "gui/UIModels.h"
 
@@ -19,6 +20,11 @@
 #include "MainWindow.h"
 #include "Commands.h"
 #include "Translations.h"
+#ifdef SUMATRA_NG
+#include "SumatraDialogs.h"
+#include "gui/AppShell.h"
+#include "gui/WasmBridge.h"
+#endif
 #include "ExternalViewers.h"
 
 struct ExternalViewerInfo {
@@ -224,6 +230,7 @@ void FreeExternalViewers() {
     }
 }
 
+#if OS_WIN
 static TempStr GetAcrobatPathTemp() {
     // Try Adobe Acrobat as a fall-back, if the Reader isn't installed
     Str keyName = StrL(R"(Software\Microsoft\Windows\CurrentVersion\App Paths\AcroRd32.exe)");
@@ -288,7 +295,9 @@ static TempStr GetRegisteredOpenExeTemp(Str progId) {
         return {};
     }
     StrNode* args = ParseCmdLine(command);
-    AutoFreeStrNode freeArgs(args);
+    defer {
+        FreeStrNode(nullptr, args);
+    };
     if (!args || !file::Exists(args->s)) {
         return {};
     }
@@ -440,6 +449,11 @@ void DetectExternalViewers() {
     exePath = GetFoxitPathTemp();
     SetKnownExternalViewerExePath(CmdOpenWithFoxit, exePath);
 }
+#else
+void DetectExternalViewers() {
+    (void)gExternalViewersCount;
+}
+#endif
 
 static bool filterMatchesEverything(Str ext) {
     return str::IsEmptyOrWhiteSpace(ext) || str::EqIS(ext, StrL("*"));
@@ -481,13 +495,8 @@ bool CouldBePDFDoc(WindowTab* tab) {
     return !tab || !tab->ctrl || tab->GetEngineType() == kindEngineMupdf;
 }
 
-// CouldBePDFDoc() is true for everything the mupdf engine renders -- epub, mobi,
-// fb2, xps, svg -- which is what "open in Acrobat" wants but not what the
-// PDF-only commands (Encrypt PDF, Show PDF Info, ...) want: those were offered
-// on ebooks. This asks the engine whether there is really a PDF behind the tab.
 bool IsPdfDoc(WindowTab* tab) {
     if (!tab || !tab->ctrl) {
-        // same permissive answer as CouldBePDFDoc for a document that failed to load
         return true;
     }
     if (tab->GetEngineType() != kindEngineMupdf) {
@@ -672,7 +681,11 @@ bool RunWithExe(WindowTab* tab, Str cmdLine, Str filter) {
         TempStr msg =
             fmt("External viewer executable not found: %s. Fix ExternalViewers in advanced settings.", exePath);
         auto caption = Tr("Error");
+#ifdef SUMATRA_NG
+        MsgBox(tab ? tab->win : nullptr, msg, caption, MbOk | MbIconError);
+#else
         MsgBox(nullptr, msg, caption, MB_OK | MB_ICONERROR);
+#endif
         return false;
     }
     if (str::IsEmptyOrWhiteSpace(rest)) {
@@ -683,9 +696,9 @@ bool RunWithExe(WindowTab* tab, Str cmdLine, Str filter) {
     return LaunchFileShell(exePath, params);
 }
 
-#define DEFINE_GUID_STATIC(name, l, w1, w2, b1, b2, b3, b4, b5, b6, b7, b8) \
-    static const GUID name = {l, w1, w2, {b1, b2, b3, b4, b5, b6, b7, b8}}
-DEFINE_GUID_STATIC(CLSID_SendMail, 0x9E56BE60, 0xC50F, 0x11CF, 0x9A, 0x2C, 0x00, 0xA0, 0xC9, 0x0A, 0x90, 0xCE);
+// --- send as e-mail attachment (step 14a) -----------------------------------
+
+#if OS_WIN
 
 static bool IsMapiSendMailAvailable() {
     HMODULE hMapi = LoadLibraryW(L"mapi32.dll");
@@ -708,14 +721,6 @@ static bool IsEmailAttachmentSendAvailable() {
     bool ok = IsMapiSendMailAvailable();
     cached = ok ? 1 : 0;
     return ok;
-}
-
-bool CanSendAsEmailAttachment(WindowTab* tab) {
-    // Requirements: a valid filename and a working MAPISendMailW (what we use to send).
-    if (!CanViewExternally(tab)) {
-        return false;
-    }
-    return IsEmailAttachmentSendAvailable();
 }
 
 // Use MAPISendMailW to send email with attachment.
@@ -780,36 +785,109 @@ static bool SendAsEmailAttachmentWithMapi(HWND hwndParent, Str filePath) {
     return result <= 1;
 }
 
+#else
+
+// ng: no MAPI off Windows. Linux's xdg-email supports attachments; other
+// desktops get a mailto naming the file so the user can attach it.
+static bool IsEmailAttachmentSendAvailable() {
+    return true;
+}
+
+#if OS_LINUX
+static Str XdgEmailPath() {
+    static const Str paths[] = {StrL("/usr/bin/xdg-email"), StrL("/bin/xdg-email")};
+    for (Str path : paths) {
+        if (file::Exists(path)) {
+            return path;
+        }
+    }
+    return {};
+}
+
+static bool SendAsEmailAttachmentWithXdg(Str filePath) {
+    Str exe = XdgEmailPath();
+    if (len(exe) == 0) {
+        return false;
+    }
+    TempStr name = path::GetBaseNameTemp(filePath);
+    TempStr params = fmt("--attach \"%s\" --subject \"%s\"", filePath, name);
+    return LaunchFileShell(exe, params);
+}
+#endif
+
+#if OS_DARWIN
+static bool SendAsEmailAttachmentWithMail(Str filePath) {
+    TempStr name = path::GetBaseNameTemp(filePath);
+    StrVec args;
+    args.Append(StrL("/usr/bin/osascript"));
+    args.Append(StrL("-e"));
+    args.Append(StrL("on run argv"));
+    args.Append(StrL("-e"));
+    args.Append(StrL("set attachmentFile to POSIX file (item 1 of argv)"));
+    args.Append(StrL("-e"));
+    args.Append(StrL("tell application \"Mail\""));
+    args.Append(StrL("-e"));
+    args.Append(
+        StrL("set newMessage to make new outgoing message with properties {subject:(item 2 of argv), visible:true}"));
+    args.Append(StrL("-e"));
+    args.Append(StrL("tell content of newMessage"));
+    args.Append(StrL("-e"));
+    args.Append(StrL("make new attachment with properties {file name:attachmentFile} at after last paragraph"));
+    args.Append(StrL("-e"));
+    args.Append(StrL("end tell"));
+    args.Append(StrL("-e"));
+    args.Append(StrL("activate"));
+    args.Append(StrL("-e"));
+    args.Append(StrL("end tell"));
+    args.Append(StrL("-e"));
+    args.Append(StrL("end run"));
+    args.Append(StrL("--"));
+    args.Append(filePath);
+    args.Append(name);
+    return LaunchFileShellArgs(args);
+}
+#endif
+
+static bool SendAsEmailAttachmentWithMailto(Str filePath) {
+    TempStr name = path::GetBaseNameTemp(filePath);
+    TempStr url = fmt("mailto:?subject=%s&body=%s", name, filePath);
+    return LaunchBrowser(url);
+}
+
+#endif
+
+bool CanSendAsEmailAttachment(WindowTab* tab) {
+    // Requirements: a valid filename and a working way to send it
+    if (!CanViewExternally(tab)) {
+        return false;
+    }
+    return IsEmailAttachmentSendAvailable();
+}
+
 bool SendAsEmailAttachment(WindowTab* tab) {
     if (!tab || !CanSendAsEmailAttachment(tab)) {
         return false;
     }
-
-    if (SendAsEmailAttachmentWithMapi(tab->win->hwndFrame, tab->filePath)) {
+#if OS_WIN
+#ifdef SUMATRA_NG
+    return SendAsEmailAttachmentWithMapi(AppShellNativeHwnd(tab->win), tab->filePath);
+#else
+    return SendAsEmailAttachmentWithMapi(tab->win->hwndFrame, tab->filePath);
+#endif
+#else
+#if OS_LINUX
+    if (SendAsEmailAttachmentWithXdg(tab->filePath)) {
         return true;
     }
-    // if there's no e-mail client associated, they both show the same message box
-    // which will be confusing so I'll just hope that mapi works
-#if 0
-    // We use the SendTo drop target provided by SendMail.dll, which should ship with all
-    // commonly used Windows versions, instead of MAPISendMail, which doesn't support
-    // Unicode paths and might not be set up on systems not having Microsoft Outlook installed.
-    AutoReleaseComPtr<IDataObject> pDataObject(GetDataObjectForFile(tab->filePath, hwndParent));
-    if (!pDataObject) {
-        return false;
+#elif OS_DARWIN
+    if (SendAsEmailAttachmentWithMail(tab->filePath)) {
+        return true;
     }
-
-    AutoReleaseComPtr<IDropTarget> pDropTarget;
-    if (!pDropTarget.Create(CLSID_SendMail)) {
-        return false;
+#elif OS_WASM
+    if (WasmShareFile(tab->filePath)) {
+        return true;
     }
-
-    POINTL pt = {0, 0};
-    DWORD dwEffect = 0;
-    pDropTarget->DragEnter(pDataObject, MK_LBUTTON, pt, &dwEffect);
-    HRESULT hr = pDropTarget->Drop(pDataObject, MK_LBUTTON, pt, &dwEffect);
-    return SUCCEEDED(hr);
-#else
-    return false;
+#endif
+    return SendAsEmailAttachmentWithMailto(tab->filePath);
 #endif
 }

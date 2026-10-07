@@ -176,6 +176,7 @@ export const sharedFiles = [
   "src/shared/EutlTrust.h",
   "src/shared/ExifDump.cpp",
   "src/shared/ExifDump.h",
+  "src/shared/ExternalViewers.cpp",
   "src/shared/ExternalViewers.h",
   "src/shared/FileHistory.cpp",
   "src/shared/FileHistory.h",
