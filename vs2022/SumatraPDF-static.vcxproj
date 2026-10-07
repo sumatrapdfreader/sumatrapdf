@@ -1406,7 +1406,6 @@
     <ClInclude Include="..\src\Notifications.h" />
     <ClInclude Include="..\src\OverlayScrollbar.h" />
     <ClInclude Include="..\src\PageThumbnails.h" />
-    <ClInclude Include="..\src\ReadAloud.h" />
     <ClInclude Include="..\src\RegistryPreview.h" />
     <ClInclude Include="..\src\RegistrySearchFilter.h" />
     <ClInclude Include="..\src\ScreenshotCapture.h" />
@@ -1507,6 +1506,7 @@
     <ClInclude Include="..\src\shared\Print.h" />
     <ClInclude Include="..\src\shared\PrintWin11.h" />
     <ClInclude Include="..\src\shared\ProgressUpdateUI.h" />
+    <ClInclude Include="..\src\shared\ReadAloud.h" />
     <ClInclude Include="..\src\shared\ReadingAutoScroll.h" />
     <ClInclude Include="..\src\shared\ReadingBar.h" />
     <ClInclude Include="..\src\shared\RefHover.h" />

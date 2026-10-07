@@ -150,9 +150,6 @@
     <ClInclude Include="..\src\PageThumbnails.h">
       <Filter>src</Filter>
     </ClInclude>
-    <ClInclude Include="..\src\ReadAloud.h">
-      <Filter>src</Filter>
-    </ClInclude>
     <ClInclude Include="..\src\RegistryPreview.h">
       <Filter>src</Filter>
     </ClInclude>
@@ -451,6 +448,9 @@
       <Filter>src\shared</Filter>
     </ClInclude>
     <ClInclude Include="..\src\shared\ProgressUpdateUI.h">
+      <Filter>src\shared</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\shared\ReadAloud.h">
       <Filter>src\shared</Filter>
     </ClInclude>
     <ClInclude Include="..\src\shared\ReadingAutoScroll.h">
