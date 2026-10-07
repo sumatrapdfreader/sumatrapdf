@@ -1,14 +1,17 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <ItemGroup>
-    <Filter Include="tools">
-      <UniqueIdentifier>{36DF7010-A2F3-98C1-6B75-3C21D74895F2}</UniqueIdentifier>
+    <Filter Include="shared">
+      <UniqueIdentifier>{9C5CB11B-88FE-DBF1-71B9-EF455DFA6242}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="shared\tools">
+      <UniqueIdentifier>{3CB6D7A8-2819-674D-D19E-9F03BDE032D0}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\src\BasePch.cpp" />
-    <ClCompile Include="..\src\tools\plugin-test.cpp">
-      <Filter>tools</Filter>
+    <ClCompile Include="..\src\shared\tools\plugin-test.cpp">
+      <Filter>shared\tools</Filter>
     </ClCompile>
   </ItemGroup>
 </Project>

@@ -988,7 +988,7 @@ end
 
 function plugin_test_files()
   files {
-    "src/tools/plugin-test.cpp",
+    "src/shared/tools/plugin-test.cpp",
   }
 end
 

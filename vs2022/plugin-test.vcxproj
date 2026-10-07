@@ -1183,7 +1183,7 @@
     <ClCompile Include="..\src\BasePch.cpp">
       <PrecompiledHeader>Create</PrecompiledHeader>
     </ClCompile>
-    <ClCompile Include="..\src\tools\plugin-test.cpp" />
+    <ClCompile Include="..\src\shared\tools\plugin-test.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="base.vcxproj">

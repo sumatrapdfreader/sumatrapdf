@@ -96,7 +96,7 @@ WStr GetSumatraExePath() {
     return ToWStr(path);
 }
 
-int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE, LPSTR, int nShowCmd) {
+int APIENTRY wWinMain(HINSTANCE hInstance, HINSTANCE, LPWSTR, int nShowCmd) {
     StrNode* parsedArgs = ParseCmdLine(GetCommandLineW());
     AutoFreeStrNode freeParsedArgs(parsedArgs);
     StrVec args;
