@@ -127,7 +127,7 @@ HtmlFormatter::HtmlFormatter(HtmlFormatterArgs* args)
     style.font = GetPlatformFont(defaultFontName, defaultFontSize, PlatformFontStyle::Regular);
     style.align = AlignAttr::Justify;
     VecAppend(styleStack, style);
-    nextPageStyle = VecLast(styleStack);
+    nextPageFont = CurrFont();
 
     textMeasure->SetFont(CurrFont());
 
@@ -496,14 +496,14 @@ bool HtmlFormatter::FlushCurrLine(bool isParagraphBreak) {
         AppendInstr(DrawInstr::LinkStart(link.str));
         currLinkIdx = len(currLineInstr);
     }
-    nextPageStyle = VecLast(styleStack);
+    nextPageFont = CurrFont();
     return createdPage;
 }
 
 void HtmlFormatter::EmitNewPage() {
     ReportIf(currReparseIdx > INT_MAX);
     currPage = new HtmlPage((int)currReparseIdx);
-    VecAppend(currPage->instructions, DrawInstr::SetFont(nextPageStyle.font));
+    VecAppend(currPage->instructions, DrawInstr::SetFont(nextPageFont));
     currY = 0.f;
 }
 

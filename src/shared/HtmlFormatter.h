@@ -218,8 +218,7 @@ struct HtmlFormatter {
 
     // style stack of the current line
     Vec<DrawStyle> styleStack;
-    // style for the start of the next page
-    DrawStyle nextPageStyle;
+    PlatformFont* nextPageFont = nullptr;
     float currX = 0;
     float currY = 0;
     // Deferred top padding applied when the line is flushed.
