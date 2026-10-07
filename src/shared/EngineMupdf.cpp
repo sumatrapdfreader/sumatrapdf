@@ -8143,6 +8143,37 @@ static TempStr LookupMetadataTemp(fz_context* ctx, fz_document* doc, Str key) {
     return str::DupTemp(Str(buf, (int)((size_t)n - 1)));
 }
 
+#if OS_WIN || defined(SUMATRA_HAVE_OPENSSL)
+struct SigFieldWalk {
+    Vec<pdf_obj*> fields;
+};
+
+static void OnSigFieldArrive(fz_context* ctx, pdf_obj* node, void* arg, pdf_obj** values) {
+    pdf_obj* ft = values && values[0] ? values[0] : pdf_dict_get_inheritable(ctx, node, PDF_NAME(FT));
+    if (ft && pdf_name_eq(ctx, ft, PDF_NAME(Sig))) {
+        VecAppend(((SigFieldWalk*)arg)->fields, pdf_keep_obj(ctx, node));
+    }
+}
+
+static void CollectSignatureFields(fz_context* ctx, pdf_document* pdfdoc, Vec<pdf_obj*>& fields) {
+    SigFieldWalk walk;
+    pdf_obj* formFields = pdf_dict_getp(ctx, pdf_trailer(ctx, pdfdoc), "Root/AcroForm/Fields");
+    pdf_obj* ftName[2] = {PDF_NAME(FT), nullptr};
+    pdf_obj* ftVal = nullptr;
+    pdf_walk_tree(ctx, formFields, PDF_NAME(Kids), OnSigFieldArrive, nullptr, &walk, ftName, &ftVal);
+    fields = walk.fields;
+}
+
+static int PageNoForSigField(fz_context* ctx, pdf_document* pdfdoc, pdf_obj* field) {
+    pdf_obj* page = pdf_dict_get(ctx, field, PDF_NAME(P));
+    if (!page) {
+        return 0;
+    }
+    int pageNo = pdf_lookup_page_number(ctx, pdfdoc, page);
+    return pageNo >= 0 ? pageNo + 1 : 0;
+}
+#endif
+
 #if OS_WIN
 static bool (*gEutlLookupFn)(const u8* der, int derLen) = nullptr;
 
@@ -8292,35 +8323,6 @@ static void AppendPadesLevel(str::Builder& s, bool isCades, bool hasTs, bool ltv
         return;
     }
     s.Append(fmt("  Signature level: %s\n", Str(level)));
-}
-
-struct SigFieldWalk {
-    Vec<pdf_obj*> fields;
-};
-
-static void OnSigFieldArrive(fz_context* ctx, pdf_obj* node, void* arg, pdf_obj** values) {
-    pdf_obj* ft = values && values[0] ? values[0] : pdf_dict_get_inheritable(ctx, node, PDF_NAME(FT));
-    if (ft && pdf_name_eq(ctx, ft, PDF_NAME(Sig))) {
-        VecAppend(((SigFieldWalk*)arg)->fields, pdf_keep_obj(ctx, node));
-    }
-}
-
-static void CollectSignatureFields(fz_context* ctx, pdf_document* pdfdoc, Vec<pdf_obj*>& fields) {
-    SigFieldWalk walk;
-    pdf_obj* formFields = pdf_dict_getp(ctx, pdf_trailer(ctx, pdfdoc), "Root/AcroForm/Fields");
-    pdf_obj* ftName[2] = {PDF_NAME(FT), nullptr};
-    pdf_obj* ftVal = nullptr;
-    pdf_walk_tree(ctx, formFields, PDF_NAME(Kids), OnSigFieldArrive, nullptr, &walk, ftName, &ftVal);
-    fields = walk.fields;
-}
-
-static int PageNoForSigField(fz_context* ctx, pdf_document* pdfdoc, pdf_obj* field) {
-    pdf_obj* p = pdf_dict_get(ctx, field, PDF_NAME(P));
-    if (!p) {
-        return 0;
-    }
-    int n = pdf_lookup_page_number(ctx, pdfdoc, p);
-    return n >= 0 ? n + 1 : 0;
 }
 
 static void AppendSignatureFieldInfo(fz_context* ctx, str::Builder& s, pdf_pkcs7_verifier* verifier,
@@ -8537,41 +8539,12 @@ void FreePdfSigCerts(PdfSigCert* certs) {
 #endif
 
 #if defined(SUMATRA_HAVE_OPENSSL)
-struct OpenSslSigFields {
-    Vec<pdf_obj*> fields;
-};
-
-static void OnOpenSslSigField(fz_context* ctx, pdf_obj* node, void* arg, pdf_obj** values) {
-    pdf_obj* ft = values && values[0] ? values[0] : pdf_dict_get_inheritable(ctx, node, PDF_NAME(FT));
-    if (ft && pdf_name_eq(ctx, ft, PDF_NAME(Sig))) {
-        VecAppend(((OpenSslSigFields*)arg)->fields, pdf_keep_obj(ctx, node));
-    }
-}
-
-static void CollectOpenSslSigFields(fz_context* ctx, pdf_document* pdfdoc, Vec<pdf_obj*>& fields) {
-    OpenSslSigFields walk;
-    pdf_obj* formFields = pdf_dict_getp(ctx, pdf_trailer(ctx, pdfdoc), "Root/AcroForm/Fields");
-    pdf_obj* ftName[2] = {PDF_NAME(FT), nullptr};
-    pdf_obj* ftVal = nullptr;
-    pdf_walk_tree(ctx, formFields, PDF_NAME(Kids), OnOpenSslSigField, nullptr, &walk, ftName, &ftVal);
-    fields = walk.fields;
-}
-
-static int OpenSslSigPageNo(fz_context* ctx, pdf_document* pdfdoc, pdf_obj* field) {
-    pdf_obj* page = pdf_dict_get(ctx, field, PDF_NAME(P));
-    if (!page) {
-        return 0;
-    }
-    int pageNo = pdf_lookup_page_number(ctx, pdfdoc, page);
-    return pageNo >= 0 ? pageNo + 1 : 0;
-}
-
 static void AppendOpenSslSigText(fz_context* ctx, str::Builder& out, pdf_pkcs7_verifier* verifier, pdf_document* pdfdoc,
                                  pdf_obj* field, int sigNo) {
     if (len(out) > 0) {
         out.AppendChar('\n');
     }
-    int pageNo = OpenSslSigPageNo(ctx, pdfdoc, field);
+    int pageNo = PageNoForSigField(ctx, pdfdoc, field);
     if (pageNo > 0) {
         out.Append(fmt("Signature %d (page %d):\n", sigNo, pageNo));
     } else {
@@ -8686,7 +8659,7 @@ static TempStr GetSignatures(EngineMupdf* e) {
     fz_var(verifier);
     fz_try(ctx) {
         verifier = pkcs7_openssl_new_verifier(ctx);
-        CollectOpenSslSigFields(ctx, pdfdoc, fields);
+        CollectSignatureFields(ctx, pdfdoc, fields);
         for (int i = 0; i < len(fields); i++) {
             AppendOpenSslSigText(ctx, sigs, verifier, pdfdoc, fields[i], i + 1);
         }
