@@ -488,19 +488,8 @@ static bool MoveCaret(MainWindow* win, int key, bool isCtrl) {
 }
 
 static bool IsCaretMoveKey(int key) {
-    switch (key) {
-        case VK_LEFT:
-        case VK_RIGHT:
-        case VK_UP:
-        case VK_DOWN:
-        case VK_PRIOR:
-        case VK_NEXT:
-        case VK_HOME:
-        case VK_END:
-            return true;
-        default:
-            return false;
-    }
+    return key == VK_LEFT || key == VK_RIGHT || key == VK_UP || key == VK_DOWN || key == VK_PRIOR || key == VK_NEXT ||
+           key == VK_HOME || key == VK_END;
 }
 
 // Movement keys, handled before they can scroll the view. Returns true if the
