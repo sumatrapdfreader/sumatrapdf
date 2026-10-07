@@ -6,9 +6,6 @@ struct ProgressUpdateData {
 
 using ProgressUpdateCb = Func1<ProgressUpdateData*>;
 
-// void UpdateProgress(ProgressUpdateCb* cb, int current, int total);
-// bool WasCanceled(ProgressUpdateCb* cb);
-
 inline void UpdateProgress(const ProgressUpdateCb& cb, int current, int total) {
     ProgressUpdateData data{.current = current, .total = total, .wasCancelled = nullptr};
     cb.Call(&data);
