@@ -101,7 +101,7 @@ WindowTab::~WindowTab() {
     if (AsChm()) {
         AsChm()->DestroyParentHwnd();
     } else if (AsMarkdown()) {
-        AsMarkdown()->DestroyParentHwnd();
+        AsMarkdown()->DestroyParentWindow();
     }
     if (hwndPDFInfo) {
         DestroyWindow(hwndPDFInfo);

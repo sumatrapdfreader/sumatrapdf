@@ -55,6 +55,7 @@ void BrowserViewSetWindow(BrowserView*, MainWindow*);
 // show / hide without destroying the browser (a tab switch)
 void BrowserViewSetVisible(BrowserView*, bool visible);
 bool BrowserViewIsVisible(BrowserView*);
+void BrowserViewRefreshSurface(BrowserView*);
 
 void BrowserViewNavigate(BrowserView*, Str url);
 void BrowserViewGoBack(BrowserView*);

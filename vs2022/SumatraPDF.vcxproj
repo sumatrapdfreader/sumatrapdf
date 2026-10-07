@@ -1435,7 +1435,6 @@
     <ClInclude Include="..\src\KeyboardHelp.h" />
     <ClInclude Include="..\src\LinkFollow.h" />
     <ClInclude Include="..\src\MainWindow.h" />
-    <ClInclude Include="..\src\MarkdownModel.h" />
     <ClInclude Include="..\src\Menu.h" />
     <ClInclude Include="..\src\MergePdf.h" />
     <ClInclude Include="..\src\NavFilesInFolder.h" />
@@ -1524,6 +1523,7 @@
     <ClInclude Include="..\src\shared\ImageReader.h" />
     <ClInclude Include="..\src\shared\JxlReader.h" />
     <ClInclude Include="..\src\shared\LitDoc.h" />
+    <ClInclude Include="..\src\shared\MarkdownModel.h" />
     <ClInclude Include="..\src\shared\MarkdownToc.h" />
     <ClInclude Include="..\src\shared\MobiDoc.h" />
     <ClInclude Include="..\src\shared\PagePosition.h" />
@@ -1656,7 +1656,6 @@
     <ClCompile Include="..\src\KeyboardHelp.cpp" />
     <ClCompile Include="..\src\LinkFollow.cpp" />
     <ClCompile Include="..\src\MainWindow.cpp" />
-    <ClCompile Include="..\src\MarkdownModel.cpp" />
     <ClCompile Include="..\src\Menu.cpp" />
     <ClCompile Include="..\src\MergePdf.cpp" />
     <ClCompile Include="..\src\MuPDF_Exports.cpp" />
@@ -2149,6 +2148,7 @@
     <ClCompile Include="..\src\shared\HtmlFormatter.cpp" />
     <ClCompile Include="..\src\shared\JxlReader.cpp" />
     <ClCompile Include="..\src\shared\LitDoc.cpp" />
+    <ClCompile Include="..\src\shared\MarkdownModel.cpp" />
     <ClCompile Include="..\src\shared\MarkdownToc.cpp" />
     <ClCompile Include="..\src\shared\MobiDoc.cpp" />
     <ClCompile Include="..\src\shared\PagePosition.cpp" />

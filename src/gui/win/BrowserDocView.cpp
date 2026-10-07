@@ -949,6 +949,12 @@ bool BrowserViewIsVisible(BrowserView* bv) {
     return bv && bv->view->IsVisible();
 }
 
+void BrowserViewRefreshSurface(BrowserView* bv) {
+    if (bv) {
+        bv->view->RefreshControllerSurface();
+    }
+}
+
 void BrowserViewNavigate(BrowserView* bv, Str url) {
     if (bv) {
         bv->view->NavigateToDataUrl(url);

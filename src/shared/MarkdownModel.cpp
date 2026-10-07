@@ -1,15 +1,6 @@
 /* Copyright 2026 the SumatraPDF project authors (see AUTHORS file).
    License: GPLv3 */
 
-// ng: the markdown model (the file list, the virtual url mapping, the
-// generated HTML, the background ToC build) is portable and live. orig's
-// win32 browser host is a gpui WebView here (gui/BrowserView.h); see
-// ChmModel.cpp
-
-// ng: FindTabByController() is in the UI layer, which the `app` library this
-// file belongs to does not link. A live model is enough here
-#define NG_HAS_TABS 0
-
 #include "base/Base.h"
 #include "base/Dict.h"
 #include "base/File.h"
@@ -338,7 +329,7 @@ TempStr MarkdownModel::VirtualUrlToFileTemp(Str url) const {
     return mdPath;
 }
 
-bool MarkdownModel::SetParentWindow(MainWindow* win) {
+bool MarkdownModel::SetParentWindow(MainWindow* win, HWND hwndParent) {
     // reuse the existing browser when switching back to this tab: creating a
     // WebView is hundreds of ms, so we only hide it in RemoveParentWindow
     if (docView) {
@@ -353,7 +344,7 @@ bool MarkdownModel::SetParentWindow(MainWindow* win) {
         htmlWindowCb = nullptr;
     }
     htmlWindowCb = new MarkdownHtmlWindowHandler(this);
-    docView = BrowserViewCreate(win, nullptr, htmlWindowCb, Str(kMdVirtualHost));
+    docView = BrowserViewCreate(win, hwndParent, htmlWindowCb, Str(kMdVirtualHost));
     if (!docView) {
         delete htmlWindowCb;
         htmlWindowCb = nullptr;
@@ -390,8 +381,8 @@ void MarkdownModel::DestroyParentWindow() {
     htmlWindowCb = nullptr;
 }
 
-void MarkdownModel::PrintCurrentPage(bool /*showUI*/) const {
-    BrowserViewPrint(docView);
+void MarkdownModel::PrintCurrentPage(bool showUI) const {
+    BrowserViewPrint(docView, showUI);
 }
 
 void MarkdownModel::FindInCurrentPage() const {
@@ -453,6 +444,18 @@ void MarkdownModel::CopySelection() const {
     BrowserViewCopySelection(docView);
 }
 
+static bool gSendingMarkdownBrowserMsg = false;
+
+LRESULT MarkdownModel::PassUIMsg(UINT msg, WPARAM wp, LPARAM lp) const {
+    if (!docView || gSendingMarkdownBrowserMsg) {
+        return 0;
+    }
+    gSendingMarkdownBrowserMsg = true;
+    LRESULT res = BrowserViewPassUIMsg(docView, msg, wp, lp);
+    gSendingMarkdownBrowserMsg = false;
+    return res;
+}
+
 // The path a link points at when it's a file the browser view can't show itself
 // (a .pdf, .epub, an archive, ...), or {} when the link stays in the view.
 // Unlike VirtualUrlToFileTemp() this doesn't fall back to page lookups, so a
@@ -479,19 +482,9 @@ static void MarkdownLaunchDoc(MarkdownLaunchTask* task) {
         return;
     }
     mm->launchTask = nullptr;
-    // a model that no longer belongs to a tab is on its way out and its callback
-    // (owned by the window) may be gone already
-    // ng: this file is in the app library, which does not see the tabs; a
-    // live model is enough
-#if NG_HAS_TABS
-    if (!FindTabByController(mm) || !mm->cb) {
-        return;
-    }
-#else
     if (!mm->cb) {
         return;
     }
-#endif
     // a fragment is the destination to scroll to in the opened document, the
     // same way LinkHandler::LaunchURL() treats one on a file:// url
     auto* dest = new PageDestinationFile(task->path, task->dest);
@@ -962,8 +955,6 @@ bool MarkdownModel::IsHtmlFileType(FileType kind) {
     return kind == FileType::HTML;
 }
 
-// ng: orig builds this only in debug; here MarkdownBrowserNavigationUrl() has
-// no other caller while the browser host is gated, so keep it in every config
 bool MarkdownModel_UnitTestBrowserNavigationUrl() {
     Str url = StrL("https://sumatrapdf.markdown/issue-5842.html#target-heading");
     if (!str::Eq(MarkdownBrowserNavigationUrl(url), StrL("issue-5842.html#target-heading"))) {
@@ -1092,19 +1083,9 @@ static void MarkdownTocBuildFinished(MarkdownTocBuildTask* task) {
     if (mm) {
         mm->tocBuildTask = nullptr;
     }
-    // a model that no longer belongs to a tab is on its way out and its
-    // callback (owned by the window) may be gone already, so drop the result
-    // ng: this file is in the app library, which does not see the tabs; a
-    // live model is enough
-#if NG_HAS_TABS
-    if (!mm || !FindTabByController(mm)) {
-        return;
-    }
-#else
     if (!mm) {
         return;
     }
-#endif
     mm->SetToc(task->tocTree);
     task->tocTree = nullptr;
 }

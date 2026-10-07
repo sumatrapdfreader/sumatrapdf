@@ -1535,7 +1535,7 @@ static bool ShouldUseBrowserView(FileType kind) {
 // unless ChmUI.UseFixedPageUI is set or no embedded browser is installed, in
 // which case the fixed-page ChmEngine renders it, as orig falls back too.
 // Markdown / HTML fall back to their fixed-page engines the same way (orig's
-// CreateControllerForMarkdown, when SetParentHwnd() fails).
+// CreateControllerForMarkdown, when SetParentWindow() fails).
 static DocController* CreateControllerForFile(MainWindow* win, Str path, PasswordUI* pwdUI) {
     auto timeStart = TimeGet();
     FileType kind = GuessFileTypeFromName(path);

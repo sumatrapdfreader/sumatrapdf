@@ -47,11 +47,8 @@ struct MarkdownModel : DocController {
     // a subset of IsSupportedFileType: .html/.htm rendered raw in the browser view
     static bool IsHtmlFileType(FileType);
 
-    // ng: the gpui WebView host; same split as ChmModel
-    bool SetParentWindow(MainWindow* win);
-    // hide for tab switch (keep the WebView for fast re-show)
+    bool SetParentWindow(MainWindow* win, HWND hwndParent);
     void RemoveParentWindow();
-    // full teardown (tab/window close)
     void DestroyParentWindow();
 
     void PrintCurrentPage(bool showUI) const;
@@ -66,6 +63,7 @@ struct MarkdownModel : DocController {
     void GoToPageWithFind(int pageNo, Str term, bool matchCase, bool wholeWord, int idx, int gen) override;
     void OnFindResult(int gen, int current, int total);
     void OnFindAllResult(Str payload);
+    LRESULT PassUIMsg(UINT msg, WPARAM wp, LPARAM lp) const;
 
     bool OnBeforeNavigate(Str url, bool newWindow);
     void OnDocumentComplete(Str url);

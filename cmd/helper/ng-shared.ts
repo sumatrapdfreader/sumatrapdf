@@ -183,6 +183,8 @@ export const sharedFiles = [
   "src/shared/JxlReader.h",
   "src/shared/LitDoc.cpp",
   "src/shared/LitDoc.h",
+  "src/shared/MarkdownModel.cpp",
+  "src/shared/MarkdownModel.h",
   "src/shared/MarkdownToc.cpp",
   "src/shared/MarkdownToc.h",
   "src/shared/MobiDoc.cpp",

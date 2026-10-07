@@ -581,6 +581,8 @@ bool BrowserViewIsVisible(BrowserView* bv) {
     return bv && bv->visible;
 }
 
+void BrowserViewRefreshSurface(BrowserView*) {}
+
 // --- navigation -------------------------------------------------------------
 
 static TempStr FullUrlTemp(BrowserView* bv, Str url) {

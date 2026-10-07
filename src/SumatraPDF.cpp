@@ -25,6 +25,7 @@
 
 #include "gui/UIModels.h"
 #include "gui/Layout.h"
+#include "gui/BrowserView.h"
 #include "gui/win/WinGui.h"
 #include "gui/win/WebView.h"
 #include "gui/win/BrowserDocView.h"
@@ -2106,12 +2107,12 @@ static DocController* CreateControllerForMarkdown(Str path, MainWindow* win) {
         return nullptr;
     }
     DocController* ctrl = nullptr;
-    if (!mdModel->SetParentHwnd(win->hwndCanvas)) {
+    if (!mdModel->SetParentWindow(win, win->hwndCanvas)) {
         log(StrL("CreateControllerForMarkdown: WebView2 unavailable, falling back to MuPDF markdown view\n"));
         delete mdModel;
         return nullptr;
     }
-    mdModel->RemoveParentHwnd();
+    mdModel->RemoveParentWindow();
     ctrl = mdModel;
     ReportIf(!ctrl || !ctrl->AsMarkdown() || ctrl->AsFixed());
     VerifyController(ctrl, path);
@@ -2675,7 +2676,7 @@ static void ReplaceDocumentInCurrentTab(LoadArgs* args, DocController* ctrl, Fil
             if (win->AsChm()) {
                 win->AsChm()->SetParentHwnd(win->hwndCanvas);
             } else {
-                win->AsMarkdown()->SetParentHwnd(win->hwndCanvas);
+                win->AsMarkdown()->SetParentWindow(win, win->hwndCanvas);
             }
             FillCanvasThemeBackground(win->hwndCanvas);
             win->ctrl->SetDisplayMode(displayMode);
@@ -5065,7 +5066,7 @@ void LoadModelIntoTab(WindowTab* tab) {
     if (win->AsChm()) {
         win->AsChm()->SetParentHwnd(win->hwndCanvas);
     } else if (win->AsMarkdown()) {
-        win->AsMarkdown()->SetParentHwnd(win->hwndCanvas);
+        win->AsMarkdown()->SetParentWindow(win, win->hwndCanvas);
     }
 
     DisplayModel* dm = win->AsFixed();
@@ -5429,7 +5430,7 @@ static void CloseDocumentInCurrentTab(MainWindow* win, bool keepUIEnabled, bool 
     if (win->AsChm()) {
         win->AsChm()->RemoveParentHwnd();
     } else if (win->AsMarkdown()) {
-        win->AsMarkdown()->RemoveParentHwnd();
+        win->AsMarkdown()->RemoveParentWindow();
     }
     ClearTocBox(win);
     ClearSidebarThumbnails(win);
@@ -9185,14 +9186,13 @@ void EnterFullScreen(MainWindow* win, bool presentation) {
     RepositionAnnotEditToolbar(win);
     // show menu bar rebar after layout positions it correctly
     ShowMenuBarRebar(win);
-    BrowserDocView* browserView = nullptr;
     if (win->AsChm()) {
-        browserView = win->AsChm()->docView;
+        BrowserDocView* browserView = win->AsChm()->docView;
+        if (browserView) {
+            browserView->RefreshControllerSurface();
+        }
     } else if (win->AsMarkdown()) {
-        browserView = win->AsMarkdown()->docView;
-    }
-    if (browserView) {
-        browserView->RefreshControllerSurface();
+        BrowserViewRefreshSurface(win->AsMarkdown()->docView);
     }
     EndFrameRedrawSuppression(win);
 

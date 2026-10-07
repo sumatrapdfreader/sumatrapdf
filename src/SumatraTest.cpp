@@ -20,6 +20,7 @@ extern "C" {
 #include "gui/Gfx.h"
 #include "gui/GuiColors.h"
 #include "gui/VirtCtrl.h"
+#include "gui/BrowserView.h"
 #include "DocController.h"
 #include "EngineBase.h"
 #include "base/GuessFileType.h"
@@ -1330,7 +1331,7 @@ TempStr MarkdownTocNavigateResultTemp(int destNo, int minScrollY, int* exitCodeO
         return finish(fmt("NAVIGATING dest=%d name=%s", destNo, item->dest->GetName()), 0);
     }
 
-    Point pos = mm->docView->GetScrollPos();
+    Point pos = BrowserViewGetScrollPos(mm->docView);
     if (pos.y < minScrollY) {
         return finish(fmt("NOTREADY scrollY=%d min=%d", pos.y, minScrollY), 2);
     }
