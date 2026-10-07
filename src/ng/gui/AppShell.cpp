@@ -1121,17 +1121,19 @@ void AppShellSyncMenu(MainWindow* win) {
     if (!gp::AppHasMenuBar() || !gApp || !WindowOwnsAppMenu(win)) {
         return;
     }
-    bool vis = win->isMenuBarVisible;
-    if (!gMenuDirty && gMenuOwner == win && gMenuVis == vis) {
+    // ShowMenubar hides a row of a Windows window. Here the menu is the
+    // process menu bar; hiding it (the default once tabs are on) leaves none.
+    // Fullscreen hides the bar on its own.
+    if (!gMenuDirty && gMenuOwner == win && gMenuVis) {
         return;
     }
-    gp::AppSetMenuBarVisible(vis);
-    if (vis && win->menu) {
+    gp::AppSetMenuBarVisible(true);
+    if (win->menu) {
         InstallNativeMenu(win);
     }
     gMenuDirty = false;
     gMenuOwner = win;
-    gMenuVis = vis;
+    gMenuVis = true;
 }
 
 // Windows underlines the access keys always or only once Alt was pressed
