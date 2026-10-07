@@ -18,8 +18,4 @@ TempStr GetThumbnailCacheDirTemp();
 TempStr GetThumbnailPathTemp(Str filePath);
 void DeleteThumbnailForFile(Str path);
 void EmptyThumbnailCacheDirectory();
-
-// ng: the home page caches the decoded thumbnail image per FileState, so the
-// two places that replace one on disk say so. HomePage.cpp defines it; the
-// console tools get the no-op in AppStubs.cpp
 void HomePageThumbnailChanged(FileState* fs);
