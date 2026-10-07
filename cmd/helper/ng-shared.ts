@@ -240,6 +240,7 @@ export const sharedFiles = [
   "src/shared/RefHoverTextDetect.cpp",
   "src/shared/RegistryInstaller.cpp",
   "src/shared/Screenshot.h",
+  "src/shared/ReadingBar.cpp",
   "src/shared/ReadingBar.h",
   "src/shared/ReadingAutoScroll.h",
   "src/shared/SelectionHandlers.h",

@@ -770,9 +770,6 @@
     <ClCompile Include="..\src\ReadingAutoScroll.cpp">
       <Filter>src</Filter>
     </ClCompile>
-    <ClCompile Include="..\src\ReadingBar.cpp">
-      <Filter>src</Filter>
-    </ClCompile>
     <ClCompile Include="..\src\RefHover.cpp">
       <Filter>src</Filter>
     </ClCompile>
@@ -1197,6 +1194,9 @@
       <Filter>src\shared</Filter>
     </ClCompile>
     <ClCompile Include="..\src\shared\PrintWin11.cpp">
+      <Filter>src\shared</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\shared\ReadingBar.cpp">
       <Filter>src\shared</Filter>
     </ClCompile>
     <ClCompile Include="..\src\shared\RefHoverDetect.cpp">

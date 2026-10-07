@@ -1452,6 +1452,7 @@ export const targets: Target[] = [
     ],
     perSource: [
       { glob: "src/ng/LinkFollow.cpp", flags: ["-DSUMATRA_NG"], msvcFlags: ["/DSUMATRA_NG"] },
+      { glob: "src/ng/ReadingBar.cpp", flags: ["-DSUMATRA_NG"], msvcFlags: ["/DSUMATRA_NG"] },
       { glob: "src/ng/SelectTextKeyboard.cpp", flags: ["-DSUMATRA_NG"], msvcFlags: ["/DSUMATRA_NG"] },
       { glob: "src/ng/StressTesting.cpp", flags: ["-DSUMATRA_NG"], msvcFlags: ["/DSUMATRA_NG"] },
     ],

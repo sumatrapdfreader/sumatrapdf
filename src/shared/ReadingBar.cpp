@@ -1,12 +1,17 @@
 /* Copyright 2026 the SumatraPDF project authors (see AUTHORS file).
    License: GPLv3 */
 
+#if defined(SUMATRA_NG)
+#include "gui/GpuiBridge.h"
+#include "VirtKeys.h"
+#else
 #include "base/Base.h"
 #include "base/Win.h"
+#include "gui/Gfx.h"
+#endif
 
 #include "gui/Dpi.h"
 #include "gui/UIModels.h"
-#include "gui/Gfx.h"
 
 #include "Settings.h"
 #include "AppSettings.h"
@@ -18,12 +23,23 @@
 #include "WindowTab.h"
 #include "MainWindow.h"
 #include "SumatraPDF.h"
+#if defined(SUMATRA_NG)
+#include "gui/AppShell.h"
+#include "gui/DocCanvas.h"
+#endif
 #include "ReadingAutoScroll.h"
 #include "ReadingBar.h"
+
+#if defined(SUMATRA_NG)
+#include "SumatraLog.h"
+#endif
 
 // Horizontal reading guide: a viewport band (Skim / #5771 / #3389). Highlight
 // fills it; Invert dims the rest. Per-tab on/yFrac; color, invert, height in
 // gSettings->readingBar.
+// ng: orig's canvas is an HWND whose client rect is the viewport and which
+// captures the mouse; here the band is painted by DocCanvas' customPaint in
+// viewport coordinates and the canvas forwards the mouse to the handlers below.
 
 constexpr int kDefaultHeight96 = 48;
 constexpr int kMinHeight96 = 16;
@@ -71,8 +87,13 @@ static void SetHeightPx(int px, bool save) {
         return;
     }
     int dpi = DpiGet();
-    int unscaled = (dpi > 0) ? MulDiv(px, 96, dpi) : px;
-    unscaled = ClampI(unscaled, kMinHeight96, 400);
+    int unscaled = (dpi > 0) ? (px * 96) / dpi : px;
+    if (unscaled < kMinHeight96) {
+        unscaled = kMinHeight96;
+    }
+    if (unscaled > 400) {
+        unscaled = 400;
+    }
     if (gSettings->readingBar.height == unscaled) {
         if (save) {
             ScheduleSaveSettings();
@@ -85,11 +106,22 @@ static void SetHeightPx(int px, bool save) {
     }
 }
 
+// ng: orig's HwndClientRect(win->hwndCanvas). The viewport is what the canvas
+// paints and what ToDoc() maps the mouse into, so the band lives in it.
 static Rect CanvasRect(MainWindow* win) {
+#if defined(SUMATRA_NG)
+    DisplayModel* dm = win ? win->AsFixed() : nullptr;
+    if (!dm) {
+        return {};
+    }
+    Size vp = dm->GetViewPort().Size();
+    return Rect{0, 0, vp.dx, vp.dy};
+#else
     if (!win || !win->hwndCanvas) {
         return {};
     }
     return HwndClientRect(win->hwndCanvas);
+#endif
 }
 
 static Rect BandRect(MainWindow* win) {
@@ -113,8 +145,13 @@ static Rect BandRect(MainWindow* win) {
         return {};
     }
     float frac = tab->readingBar.yFrac;
-    frac = ClampF(frac, 0, 1);
-    int y = (int)lroundf(frac * (float)canvas.dy);
+    if (frac < 0) {
+        frac = 0;
+    }
+    if (frac > 1) {
+        frac = 1;
+    }
+    int y = (int)(frac * (float)canvas.dy + 0.5f);
     if (y < 0) {
         y = 0;
     }
@@ -132,7 +169,12 @@ static void SetBandY(WindowTab* tab, int y, int canvasDy) {
     if (!tab || canvasDy <= 0) {
         return;
     }
-    y = ClampI(y, 0, canvasDy);
+    if (y < 0) {
+        y = 0;
+    }
+    if (y > canvasDy) {
+        y = canvasDy;
+    }
     tab->readingBar.yFrac = (float)y / (float)canvasDy;
 }
 
@@ -155,8 +197,12 @@ static ReadingBarHit HitTest(MainWindow* win, Point pt) {
         return ReadingBarHit::Close;
     }
     int edge = DpiScale(kEdgeHit96);
-    // at least 1 even when the band is too thin for a third of it
-    edge = ClampI(edge, 1, std::max(band.dy / 3, 1));
+    if (edge > band.dy / 3) {
+        edge = band.dy / 3;
+    }
+    if (edge < 1) {
+        edge = 1;
+    }
     if (pt.y < band.y + edge) {
         return ReadingBarHit::ResizeTop;
     }
@@ -167,9 +213,15 @@ static ReadingBarHit HitTest(MainWindow* win, Point pt) {
 }
 
 static void InvalidateCanvas(MainWindow* win) {
+#if defined(SUMATRA_NG)
+    if (win) {
+        AppShellInvalidate(win);
+    }
+#else
     if (win && win->hwndCanvas) {
         InvalidateRect(win->hwndCanvas, nullptr, FALSE);
     }
+#endif
 }
 
 static Color BandFill(u8& alphaOut) {
@@ -195,6 +247,50 @@ static bool InvertOn() {
     return gSettings && gSettings->readingBar.invert;
 }
 
+#if defined(SUMATRA_NG)
+void ReadingBarPaint(MainWindow* win, gp::PaintCtx* ctx) {
+    if (!win || !ctx) {
+        return;
+    }
+    Rect band = BandRect(win);
+    if (band.IsEmpty()) {
+        return;
+    }
+    Rect canvas = CanvasRect(win);
+    if (InvertOn()) {
+        Rect above{0, 0, canvas.dx, band.y};
+        Rect below{0, band.Bottom(), canvas.dx, canvas.dy - band.Bottom()};
+        if (!above.IsEmpty()) {
+            CanvasFillRects(ctx, &above, 1, kColBlack, kMaskAlpha, 0);
+        }
+        if (!below.IsEmpty()) {
+            CanvasFillRects(ctx, &below, 1, kColBlack, kMaskAlpha, 0);
+        }
+        // orig's Gfx::DrawRect: a 1px outline, no fill
+        CanvasFillRects(ctx, &band, 1, kColWhite, 0, 1);
+    } else {
+        u8 alpha = kDefaultAlpha;
+        Color fill = BandFill(alpha);
+        CanvasFillRects(ctx, &band, 1, fill, alpha, 0);
+    }
+
+    if (!win->readingBarHover && win->readingBarDrag == ReadingBarDrag::None) {
+        return;
+    }
+    Rect close = CloseRect(band);
+    if (close.IsEmpty()) {
+        return;
+    }
+    int m = DpiScale(3);
+    Point a{close.x + m, close.y + m};
+    Point b{close.Right() - m - 1, close.Bottom() - m - 1};
+    Point c{close.Right() - m - 1, close.y + m};
+    Point d{close.x + m, close.Bottom() - m - 1};
+    Color xcol = InvertOn() ? kColWhite : kColBlack;
+    CanvasDrawLine(ctx, a, b, xcol, 1.5f);
+    CanvasDrawLine(ctx, c, d, xcol, 1.5f);
+}
+#else
 void ReadingBarPaint(MainWindow* win, Gfx* gfx) {
     if (!win || !gfx) {
         return;
@@ -236,6 +332,7 @@ void ReadingBarPaint(MainWindow* win, Gfx* gfx) {
     gfx->DrawLineAA(a, b, xcol, 1.5f);
     gfx->DrawLineAA(c, d, xcol, 1.5f);
 }
+#endif
 
 bool ReadingBarIsOn(MainWindow* win) {
     return ActiveBarTab(win) != nullptr;
@@ -248,12 +345,21 @@ void ReadingBarCancelDrag(MainWindow* win) {
     bool dragging = win->readingBarDrag != ReadingBarDrag::None;
     win->readingBarDrag = ReadingBarDrag::None;
     win->readingBarDragOff = 0;
-    if (dragging && win->hwndCanvas && GetCapture() == win->hwndCanvas) {
-        ReleaseCapture();
+    if (dragging) {
+#if defined(SUMATRA_NG)
+        CanvasSetCapture(win, false);
+#else
+        if (win->hwndCanvas && GetCapture() == win->hwndCanvas) {
+            ReleaseCapture();
+        }
+#endif
     }
 }
 
 void ReadingBarHide(MainWindow* win) {
+#if defined(SUMATRA_NG)
+    logf("ReadingBar: off\n");
+#endif
     WindowTab* tab = DocTab(win);
     ReadingBarCancelDrag(win);
     if (tab) {
@@ -263,9 +369,11 @@ void ReadingBarHide(MainWindow* win) {
         win->readingBarHover = false;
     }
     InvalidateCanvas(win);
+#if !defined(SUMATRA_NG)
     if (win && win->hwndCanvas) {
         ReadingAutoScrollRelayout(win->hwndCanvas);
     }
+#endif
 }
 
 void ReadingBarForgetTab(WindowTab* tab) {
@@ -294,9 +402,14 @@ void ReadingBarToggle(MainWindow* win) {
     }
     tab->readingBar.on = true;
     InvalidateCanvas(win);
+#if defined(SUMATRA_NG)
+    Rect band = BandRect(win);
+    logf("ReadingBar: on, band %d,%d %dx%d, invert %d\n", band.x, band.y, band.dx, band.dy, (int)InvertOn());
+#else
     if (win->hwndCanvas) {
         ReadingAutoScrollRelayout(win->hwndCanvas);
     }
+#endif
 }
 
 void ReadingBarToggleInvert(MainWindow* win) {
@@ -304,6 +417,9 @@ void ReadingBarToggleInvert(MainWindow* win) {
         return;
     }
     gSettings->readingBar.invert = !gSettings->readingBar.invert;
+#if defined(SUMATRA_NG)
+    logf("ReadingBar: invert %d\n", (int)gSettings->readingBar.invert);
+#endif
     ScheduleSaveSettings();
     InvalidateCanvas(win);
 }
@@ -367,12 +483,18 @@ static void ApplyResizeBottom(MainWindow* win, int y) {
     }
     int newBottom = y - win->readingBarDragOff;
     int minH = DpiScale(kMinHeight96);
+    int newH = newBottom - band.y;
+    if (newH < minH) {
+        newH = minH;
+    }
     int maxH = canvas.dy - band.y;
     int cap = canvas.dy * 4 / 5;
     if (maxH > cap) {
         maxH = cap;
     }
-    int newH = ClampI(newBottom - band.y, minH, maxH);
+    if (newH > maxH) {
+        newH = maxH;
+    }
     SetHeightPx(newH, false);
     InvalidateCanvas(win);
 }
@@ -398,9 +520,13 @@ bool ReadingBarOnLeftDown(MainWindow* win, int x, int y) {
         win->readingBarDrag = ReadingBarDrag::Move;
         win->readingBarDragOff = y - band.y;
     }
+#if defined(SUMATRA_NG)
+    CanvasSetCapture(win, true);
+#else
     if (win->hwndCanvas) {
         SetCapture(win->hwndCanvas);
     }
+#endif
     return true;
 }
 
@@ -429,9 +555,11 @@ bool ReadingBarOnMouseMove(MainWindow* win, int x, int y) {
         win->readingBarHover = hover;
         InvalidateCanvas(win);
     }
+#if !defined(SUMATRA_NG)
     if (hover && win->hwndCanvas) {
         TrackMouseLeave(win->hwndCanvas);
     }
+#endif
     return false;
 }
 
@@ -451,6 +579,35 @@ bool ReadingBarOnLeftUp(MainWindow* win) {
     return true;
 }
 
+#if defined(SUMATRA_NG)
+bool ReadingBarOnSetCursor(MainWindow* win, int x, int y) {
+    if (!win) {
+        return false;
+    }
+    if (win->readingBarDrag == ReadingBarDrag::ResizeTop || win->readingBarDrag == ReadingBarDrag::ResizeBottom) {
+        CanvasSetCursor(win, (int)gp::CursorKind::RowResize);
+        return true;
+    }
+    if (win->readingBarDrag == ReadingBarDrag::Move) {
+        CanvasSetCursor(win, (int)gp::CursorKind::ClosedHand);
+        return true;
+    }
+    ReadingBarHit hit = HitTest(win, {x, y});
+    if (hit == ReadingBarHit::None) {
+        return false;
+    }
+    if (hit == ReadingBarHit::Close) {
+        CanvasSetCursor(win, (int)gp::CursorKind::Pointer);
+        return true;
+    }
+    if (hit == ReadingBarHit::ResizeTop || hit == ReadingBarHit::ResizeBottom) {
+        CanvasSetCursor(win, (int)gp::CursorKind::RowResize);
+        return true;
+    }
+    CanvasSetCursor(win, (int)gp::CursorKind::ClosedHand);
+    return true;
+}
+#else
 bool ReadingBarOnSetCursor(MainWindow* win) {
     if (!win || !win->hwndCanvas) {
         return false;
@@ -463,8 +620,7 @@ bool ReadingBarOnSetCursor(MainWindow* win) {
         SetCursorCached(IDC_SIZEALL);
         return true;
     }
-    Point pt = HwndGetCursorPos(win->hwndCanvas);
-    ReadingBarHit hit = HitTest(win, pt);
+    ReadingBarHit hit = HitTest(win, HwndGetCursorPos(win->hwndCanvas));
     if (hit == ReadingBarHit::None) {
         return false;
     }
@@ -479,6 +635,7 @@ bool ReadingBarOnSetCursor(MainWindow* win) {
     SetCursorCached(IDC_SIZEALL);
     return true;
 }
+#endif
 
 void ReadingBarOnMouseLeave(MainWindow* win) {
     if (!win || win->readingBarDrag != ReadingBarDrag::None) {
@@ -509,35 +666,41 @@ static void NudgeHeight(MainWindow* win, int dir) {
         return;
     }
     int step = DpiScale(8);
+    int newH = band.dy + (dir * step);
     int minH = DpiScale(kMinHeight96);
+    if (newH < minH) {
+        newH = minH;
+    }
     int maxH = canvas.dy * 4 / 5;
-    int newH = ClampI(band.dy + (dir * step), minH, maxH);
+    if (newH > maxH) {
+        newH = maxH;
+    }
     SetHeightPx(newH, true);
     InvalidateCanvas(win);
 }
 
-bool ReadingBarOnKey(MainWindow* win, WPARAM key) {
+static bool ReadingBarOnKeyImpl(MainWindow* win, int key, bool ctrl, bool shift, bool alt) {
     if (!ActiveBarTab(win)) {
         return false;
     }
     if (IsFindUIVisible(win)) {
         return false;
     }
-    if (IsAltPressed()) {
+    if (alt) {
         return false;
     }
-    if (key == VK_ESCAPE && !IsCtrlPressed() && !IsShiftPressed()) {
+    if (key == VK_ESCAPE && !ctrl && !shift) {
         if (ReadingAutoScrollIsOn(win)) {
             return false;
         }
         ReadingBarHide(win);
         return true;
     }
-    if (!IsCtrlPressed()) {
+    if (!ctrl) {
         return false;
     }
     if (key == VK_UP) {
-        if (IsShiftPressed()) {
+        if (shift) {
             NudgeHeight(win, -1);
         } else {
             NudgeY(win, -1);
@@ -545,7 +708,7 @@ bool ReadingBarOnKey(MainWindow* win, WPARAM key) {
         return true;
     }
     if (key == VK_DOWN) {
-        if (IsShiftPressed()) {
+        if (shift) {
             NudgeHeight(win, 1);
         } else {
             NudgeY(win, 1);
@@ -554,6 +717,16 @@ bool ReadingBarOnKey(MainWindow* win, WPARAM key) {
     }
     return false;
 }
+
+#if defined(SUMATRA_NG)
+bool ReadingBarOnKey(MainWindow* win, int key, bool ctrl, bool shift, bool alt) {
+    return ReadingBarOnKeyImpl(win, key, ctrl, shift, alt);
+}
+#else
+bool ReadingBarOnKey(MainWindow* win, WPARAM key) {
+    return ReadingBarOnKeyImpl(win, (int)key, IsCtrlPressed(), IsShiftPressed(), IsAltPressed());
+}
+#endif
 
 TempStr ReadingBarStateTemp(int* exitCodeOut) {
     str::Builder out;
@@ -580,6 +753,6 @@ TempStr ReadingBarStateTemp(int* exitCodeOut) {
     int height = gSettings ? gSettings->readingBar.height : 0;
     float yFrac = (tab && !home) ? tab->readingBar.yFrac : 0;
     out.Append(fmt("OK on=%d invert=%d home=%d auto=%d yFrac=%d height=%d bandY=%d bandH=%d scrollY=%d\n", (int)on,
-                   invert, (int)home, autoOn, (int)lroundf(yFrac * 1000.0f), height, band.y, band.dy, scrollY));
+                   invert, (int)home, autoOn, (int)(yFrac * 1000.0f + 0.5f), height, band.y, band.dy, scrollY));
     return finish(0);
 }

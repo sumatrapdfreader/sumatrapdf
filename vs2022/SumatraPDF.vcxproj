@@ -1665,7 +1665,6 @@
     <ClCompile Include="..\src\Print.cpp" />
     <ClCompile Include="..\src\ReadAloud.cpp" />
     <ClCompile Include="..\src\ReadingAutoScroll.cpp" />
-    <ClCompile Include="..\src\ReadingBar.cpp" />
     <ClCompile Include="..\src\RefHover.cpp" />
     <ClCompile Include="..\src\RefHoverCanvas.cpp" />
     <ClCompile Include="..\src\RefHoverPopup.cpp" />
@@ -2161,6 +2160,9 @@
     <ClCompile Include="..\src\shared\PdfSync.cpp" />
     <ClCompile Include="..\src\shared\PngOptimizer.cpp" />
     <ClCompile Include="..\src\shared\PrintWin11.cpp" />
+    <ClCompile Include="..\src\shared\ReadingBar.cpp">
+      <PrecompiledHeader>NotUsing</PrecompiledHeader>
+    </ClCompile>
     <ClCompile Include="..\src\shared\RefHoverDetect.cpp" />
     <ClCompile Include="..\src\shared\RefHoverInternal.cpp" />
     <ClCompile Include="..\src\shared\RefHoverShow.cpp" />
