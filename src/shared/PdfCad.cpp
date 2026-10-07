@@ -36,20 +36,13 @@ const char* CadEnhanceReasonName(CadEnhanceReason reason) {
 
 // The manual toggle wins over the global mode, which wins over auto-detection.
 bool CadEnhanceEnabledForEngine(const CadDetectResult& detect, CadEnhanceOverride overrideState) {
-    if (overrideState == CadEnhanceOverride::ForceOn) {
-        return true;
-    }
-    if (overrideState == CadEnhanceOverride::ForceOff) {
-        return false;
+    if (overrideState != CadEnhanceOverride::Unset) {
+        return overrideState == CadEnhanceOverride::ForceOn;
     }
     EngineeringDrawingEnhanceMode mode = GetEngineeringDrawingEnhanceMode();
-    if (mode == EngineeringDrawingEnhanceMode::On) {
-        return true;
+    if (mode == EngineeringDrawingEnhanceMode::Off || mode == EngineeringDrawingEnhanceMode::On) {
+        return mode == EngineeringDrawingEnhanceMode::On;
     }
-    if (mode == EngineeringDrawingEnhanceMode::Off) {
-        return false;
-    }
-    // Auto (or unknown): follow detection
     return detect.enable;
 }
 
