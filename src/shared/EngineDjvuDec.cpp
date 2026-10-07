@@ -297,20 +297,6 @@ void EngineDjvuDec::CacheUnlockCb(void* user, void* /*ctx*/) {
     ((EngineDjvuDec*)user)->djvuCacheLock.Unlock();
 }
 
-// djvu_init() must run once before concurrent decode (bilinear scaler table).
-// Engines can be created on multiple threads (async document loads).
-static Mutex gDjvuDecInitLock;
-static bool gDjvuDecInitialized = false;
-
-static void DjvuDecInitOnce() {
-    gDjvuDecInitLock.Lock();
-    if (!gDjvuDecInitialized) {
-        djvu_init();
-        gDjvuDecInitialized = true;
-    }
-    gDjvuDecInitLock.Unlock();
-}
-
 bool EngineDjvuDec::FinishLoading() {
     const u8* data = (const u8*)fileData.s;
     size_t dataLen = (size_t)fileData.len;
@@ -321,7 +307,12 @@ bool EngineDjvuDec::FinishLoading() {
     if (!data || dataLen == 0) {
         return false;
     }
-    DjvuDecInitOnce();
+    // Initialize scaler tables once before engines decode concurrently.
+    [[maybe_unused]] static const bool initialized = [] {
+        djvu_init();
+        return true;
+    }();
+
     ctx = djvu_ctx_new(nullptr, nullptr, CacheLockCb, CacheUnlockCb, DjvuDecErrorCb, this);
     if (!ctx) {
         return false;
