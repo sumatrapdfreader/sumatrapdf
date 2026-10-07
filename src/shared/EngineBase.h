@@ -621,13 +621,7 @@ class EngineBase {
     // bitmap regions (in device pixels of the rendered tile) whose original
     // colors should be preserved by the dark-mode bitmap recolor pass
     // (photos / artwork); default: none
-    virtual void GetBitmapRecolorSkipRects(int pageNo, float zoom, int rotation, const RectF& renderPageRect,
-                                           Size bmpSize, Vec<Rect>& skipRects) {
-        (void)pageNo;
-        (void)zoom;
-        (void)rotation;
-        (void)renderPageRect;
-        (void)bmpSize;
+    virtual void GetBitmapRecolorSkipRects(int, float, int, const RectF&, Size, Vec<Rect>& skipRects) {
         VecClear(skipRects);
     }
 
