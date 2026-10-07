@@ -2735,17 +2735,19 @@ static SeqStrings kXmpLocalMap =
 
 static SeqStrings kXmpPrefixes = "dc\0pdf\0xmp\0xap\0";
 
-// order must match XmpSlot cases
-static SeqStrings kXmpInfoKeys =
-    "Title\0"
-    "Author\0"
-    "Subject\0"
-    "Keywords\0"
-    "Copyright\0"
-    "Creator\0"
-    "Producer\0"
-    "CreationDate\0"
-    "ModDate\0";
+enum class XmpValKind {
+    Text,
+    Date
+};
+
+static const struct {
+    Str key;
+    XmpValKind kind;
+} kXmpFields[] = {
+    {StrL("Title"), XmpValKind::Text},    {StrL("Author"), XmpValKind::Text},       {StrL("Subject"), XmpValKind::Text},
+    {StrL("Keywords"), XmpValKind::Text}, {StrL("Copyright"), XmpValKind::Text},    {StrL("Creator"), XmpValKind::Text},
+    {StrL("Producer"), XmpValKind::Text}, {StrL("CreationDate"), XmpValKind::Date}, {StrL("ModDate"), XmpValKind::Date},
+};
 
 static Str XmpInfoKey(Str local) {
     for (Str name = SeqStrFirst(kXmpLocalMap); len(name);) {
@@ -2759,40 +2761,16 @@ static Str XmpInfoKey(Str local) {
 }
 
 struct XmpFields {
-    TempStr title;
-    TempStr author;
-    TempStr subject;
-    TempStr keywords;
-    TempStr copyright;
-    TempStr creator;
-    TempStr producer;
-    TempStr creationDate;
-    TempStr modDate;
+    TempStr values[dimof(kXmpFields)];
 };
 
 static TempStr* XmpSlot(XmpFields* f, Str key) {
-    switch (SeqStrIndex(kXmpInfoKeys, key)) {
-        case 0:
-            return &f->title;
-        case 1:
-            return &f->author;
-        case 2:
-            return &f->subject;
-        case 3:
-            return &f->keywords;
-        case 4:
-            return &f->copyright;
-        case 5:
-            return &f->creator;
-        case 6:
-            return &f->producer;
-        case 7:
-            return &f->creationDate;
-        case 8:
-            return &f->modDate;
-        default:
-            return nullptr;
+    for (int i = 0; i < dimof(kXmpFields); i++) {
+        if (str::Eq(kXmpFields[i].key, key)) {
+            return &f->values[i];
+        }
     }
+    return nullptr;
 }
 
 static void XmpSetIfEmpty(TempStr* slot, Str val) {
@@ -2976,11 +2954,6 @@ static bool PdfInfoHasValue(fz_context* ctx, pdf_obj* info, Str key) {
     return s && s[0];
 }
 
-enum class XmpValKind {
-    Text,
-    Date
-};
-
 static void PdfInfoPutMissing(fz_context* ctx, pdf_obj* info, Str key, Str val, XmpValKind kind) {
     if (len(val) == 0 || PdfInfoHasValue(ctx, info, key)) {
         return;
@@ -3015,15 +2988,10 @@ static void PdfFillInfoFromXmp(fz_context* ctx, pdf_document* doc, pdf_obj* info
         xml = fz_parse_xml(ctx, buf, 0);
         XmpFields fields{};
         XmlWalkXmp(xml, &fields);
-        PdfInfoPutMissing(ctx, info, SeqStrByIndex(kXmpInfoKeys, 0), fields.title, XmpValKind::Text);
-        PdfInfoPutMissing(ctx, info, SeqStrByIndex(kXmpInfoKeys, 1), fields.author, XmpValKind::Text);
-        PdfInfoPutMissing(ctx, info, SeqStrByIndex(kXmpInfoKeys, 2), fields.subject, XmpValKind::Text);
-        PdfInfoPutMissing(ctx, info, SeqStrByIndex(kXmpInfoKeys, 3), fields.keywords, XmpValKind::Text);
-        PdfInfoPutMissing(ctx, info, SeqStrByIndex(kXmpInfoKeys, 4), fields.copyright, XmpValKind::Text);
-        PdfInfoPutMissing(ctx, info, SeqStrByIndex(kXmpInfoKeys, 5), fields.creator, XmpValKind::Text);
-        PdfInfoPutMissing(ctx, info, SeqStrByIndex(kXmpInfoKeys, 6), fields.producer, XmpValKind::Text);
-        PdfInfoPutMissing(ctx, info, SeqStrByIndex(kXmpInfoKeys, 7), fields.creationDate, XmpValKind::Date);
-        PdfInfoPutMissing(ctx, info, SeqStrByIndex(kXmpInfoKeys, 8), fields.modDate, XmpValKind::Date);
+        for (int i = 0; i < dimof(kXmpFields); i++) {
+            const auto& field = kXmpFields[i];
+            PdfInfoPutMissing(ctx, info, field.key, fields.values[i], field.kind);
+        }
     }
     fz_always(ctx) {
         fz_drop_xml(ctx, xml);
