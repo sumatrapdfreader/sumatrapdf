@@ -17,17 +17,16 @@ extern "C" {
 }
 #include "MarkdownToc.h"
 
-static bool IsMarkdownExt(Str path) {
-    return str::EndsWithI(path, StrL(".md")) || str::EndsWithI(path, StrL(".markdown"));
-}
+static constexpr SeqStrings kMarkdownExtensions = ".md\0.markdown\0";
+static constexpr SeqStrings kHtmlExtensions = ".html\0.htm\0.xhtml\0";
 
-static bool IsHtmlExt(Str path) {
-    return str::EndsWithI(path, StrL(".html")) || str::EndsWithI(path, StrL(".htm")) ||
-           str::EndsWithI(path, StrL(".xhtml"));
-}
-
-static bool IsCollectedExt(Str path, bool htmlMode) {
-    return htmlMode ? IsHtmlExt(path) : IsMarkdownExt(path);
+static Str FindFileExt(Str path, SeqStrings extensions) {
+    for (Str ext = SeqStrFirst(extensions); ext; ext = SeqStrNext(ext)) {
+        if (str::EndsWithI(path, ext)) {
+            return ext;
+        }
+    }
+    return {};
 }
 
 static void CollectMdInDir(Str dir, bool htmlMode, int depth, StrVec& out) {
@@ -36,7 +35,7 @@ static void CollectMdInDir(Str dir, bool htmlMode, int depth, StrVec& out) {
     for (DirIterEntry* de : di) {
         if (IsDirectory(de)) {
             CollectMdInDir(de->filePath, htmlMode, depth - 1, out);
-        } else if (IsRegularFile(de) && IsCollectedExt(de->name, htmlMode)) {
+        } else if (IsRegularFile(de) && FindFileExt(de->name, htmlMode ? kHtmlExtensions : kMarkdownExtensions)) {
             out.Append(de->filePath);
         }
     }
@@ -411,16 +410,12 @@ static TempStr MarkdownLinkToHtmlTemp(Str url) {
         return {};
     }
 
-    int extLen = 0;
-    if (str::EndsWithI(path, StrL(".markdown"))) {
-        extLen = 9;
-    } else if (str::EndsWithI(path, StrL(".md"))) {
-        extLen = 3;
-    } else {
+    Str ext = FindFileExt(path, kMarkdownExtensions);
+    if (len(ext) == 0) {
         return {};
     }
 
-    Str base(path.s, len(path) - extLen);
+    Str base(path.s, len(path) - len(ext));
     Str suffix(url.s + len(path), len(url) - len(path));
     return fmt("%s.html%s", base, suffix);
 }
