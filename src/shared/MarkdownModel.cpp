@@ -119,13 +119,6 @@ struct MarkdownCacheEntry {
     Str data;
 };
 
-struct MarkdownTocTraceItem {
-    Str title;
-    Str url;
-    int level = 0;
-    int pageNo = 0;
-};
-
 // State shared with the background TOC builder. Outlives the model: it holds
 // copies of everything the worker needs, and `model` is nulled (under the lock)
 // when the model is destroyed, so a build that finishes too late is harmless.
@@ -158,28 +151,8 @@ struct MarkdownLaunchTask {
 };
 
 static IPageDestination* NewMarkdownNamedDest(Arena* arena, Str url, int pageNo) {
-    if (len(url) == 0) {
-        return nullptr;
-    }
-    IPageDestination* dest = nullptr;
-    if (IsMarkdownExternalUrl(url)) {
-        dest = arena ? New<PageDestinationURL>(arena, url) : new PageDestinationURL(url);
-    } else {
-        auto* pdest = arena ? New<PageDestination>(arena) : new PageDestination();
-        pdest->kind = kindDestinationScrollTo;
-        pdest->name = str::Dup(url);
-        dest = pdest;
-    }
-    dest->pageNo = pageNo;
-    dest->rect = RectF(kDestUseDefault, kDestUseDefault, kDestUseDefault, kDestUseDefault);
-    return dest;
-}
-
-static TocItem* NewMarkdownTocItem(Arena* arena, TocItem* parent, Str title, int pageNo, Str url) {
-    auto* res = AllocTocItem(arena, title, pageNo);
-    res->parent = parent;
-    res->dest = NewMarkdownNamedDest(arena, url, pageNo);
-    return res;
+    BrowserUrlType type = IsMarkdownExternalUrl(url) ? BrowserUrlType::External : BrowserUrlType::Internal;
+    return NewBrowserDestination(arena, url, pageNo, type);
 }
 
 // ToC is built on a worker that can outlive the model, so it has its own arena
@@ -404,7 +377,7 @@ bool MarkdownModel::DisplayPage(Str pageUrl) {
     pageUrl = str::DupTemp(pageUrl);
     if (IsMarkdownExternalUrl(pageUrl)) {
         if (cb) {
-            auto* item = NewMarkdownTocItem(nullptr, nullptr, {}, 1, pageUrl);
+            auto* item = NewBrowserTocItem(nullptr, {}, 1, pageUrl, BrowserUrlType::External);
             cb->GotoLink(item->dest);
             FreeTocItemRec(nullptr, item);
         }
@@ -482,7 +455,7 @@ bool MarkdownModel::OnBeforeNavigate(Str url, bool newWindow) {
     // document webview off-document (issue #5920)
     if (IsMarkdownExternalUrl(url)) {
         if (url && cb) {
-            auto* item = NewMarkdownTocItem(nullptr, nullptr, {}, 1, url);
+            auto* item = NewBrowserTocItem(nullptr, {}, 1, url, BrowserUrlType::External);
             cb->GotoLink(item->dest);
             FreeTocItemRec(nullptr, item);
         }
@@ -642,43 +615,16 @@ bool MarkdownModel_UnitTestBrowserNavigationUrl() {
 
 // trace items own their strings: the full TOC is built on a background thread,
 // which must not touch the model's arena (the model can go away under it)
-static void FreeTocTrace(Vec<MarkdownTocTraceItem>& tocTrace) {
-    for (MarkdownTocTraceItem& ti : tocTrace) {
+static void FreeTocTrace(Vec<BrowserTocTraceItem>& tocTrace) {
+    for (BrowserTocTraceItem& ti : tocTrace) {
         str::Free(ti.title);
         str::Free(ti.url);
     }
     VecReset(tocTrace);
 }
 
-static TocTree* BuildTocTreeFromTrace(Arena* arena, Vec<MarkdownTocTraceItem>& tocTrace) {
-    TocItem* root = nullptr;
-    TocItem** nextChild = &root;
-    Vec<TocItem*> levels;
-    bool foundRoot = false;
-    int idCounter = 0;
-    for (MarkdownTocTraceItem& ti : tocTrace) {
-        TocItem* item = NewMarkdownTocItem(arena, nullptr, ti.title, ti.pageNo, ti.url);
-        item->id = ++idCounter;
-        if (ti.level <= len(levels)) {
-            VecRemoveAtN(levels, ti.level, len(levels) - ti.level);
-            VecLast(levels)->AddSiblingAtEnd(item);
-        } else {
-            *nextChild = item;
-            VecAppend(levels, item);
-            foundRoot = true;
-        }
-        nextChild = &item->child;
-    }
-    if (!foundRoot) {
-        return nullptr;
-    }
-    auto* realRoot = AllocTocItem(arena, {}, 0);
-    realRoot->child = root;
-    return AllocTocTree(arena, realRoot);
-}
-
-static void AppendFileTocTraceItem(Vec<MarkdownTocTraceItem>& tocTrace, Str filePath, Str pageUrl, int pageNo) {
-    MarkdownTocTraceItem fileItem;
+static void AppendFileTocTraceItem(Vec<BrowserTocTraceItem>& tocTrace, Str filePath, Str pageUrl, int pageNo) {
+    BrowserTocTraceItem fileItem;
     // first-level items show the full file name, extension included
     fileItem.title = str::Dup(path::GetBaseNameTemp(filePath));
     fileItem.url = str::Dup(pageUrl);
@@ -692,12 +638,12 @@ static void AppendFileTocTraceItem(Vec<MarkdownTocTraceItem>& tocTrace, Str file
 // of them (#5918), so the document opens with this and BuildFullToc() replaces
 // it when it's ready.
 static TocTree* BuildFilesOnlyToc(Arena* arena, StrVec& pages, Str baseDir, bool isHtml) {
-    Vec<MarkdownTocTraceItem> tocTrace;
+    Vec<BrowserTocTraceItem> tocTrace;
     for (int i = 0; i < len(pages); i++) {
         Str filePath = pages[i];
         AppendFileTocTraceItem(tocTrace, filePath, FileToVirtualUrlTemp(filePath, baseDir, isHtml), i + 1);
     }
-    TocTree* res = BuildTocTreeFromTrace(arena, tocTrace);
+    TocTree* res = BuildBrowserTocTree(arena, tocTrace);
     FreeTocTrace(tocTrace);
     return res;
 }
@@ -707,7 +653,7 @@ static TocTree* BuildFullToc(Arena* arena, StrVec& pages, Str baseDir, bool isHt
     Vec<MarkdownFileToc> fileTocs;
     ParseMarkdownTocsParallel(pages, isHtml, fileTocs);
 
-    Vec<MarkdownTocTraceItem> tocTrace;
+    Vec<BrowserTocTraceItem> tocTrace;
     for (int i = 0; i < len(fileTocs); i++) {
         MarkdownFileToc& ft = fileTocs[i];
         int pageNo = i + 1;
@@ -719,7 +665,7 @@ static TocTree* BuildFullToc(Arena* arena, StrVec& pages, Str baseDir, bool isHt
             if (hi.anchor) {
                 destUrl = str::JoinTemp(pageUrl, fmt("#%s", hi.anchor));
             }
-            MarkdownTocTraceItem hItem;
+            BrowserTocTraceItem hItem;
             hItem.title = str::Dup(hi.title);
             hItem.url = str::Dup(destUrl);
             hItem.level = hi.level + 1;
@@ -737,7 +683,7 @@ static TocTree* BuildFullToc(Arena* arena, StrVec& pages, Str baseDir, bool isHt
         VecReset(ft.headings);
     }
 
-    TocTree* res = BuildTocTreeFromTrace(arena, tocTrace);
+    TocTree* res = BuildBrowserTocTree(arena, tocTrace);
     FreeTocTrace(tocTrace);
     return res;
 }

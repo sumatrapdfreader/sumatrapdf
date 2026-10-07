@@ -20,6 +20,23 @@ struct Location;
 enum class DisplayMode;
 enum class DocProp : u8;
 
+enum class BrowserUrlType {
+    Internal,
+    External,
+};
+
+struct BrowserTocTraceItem {
+    Str title;
+    Str url;
+    int level = 0;
+    int pageNo = 0;
+    BrowserUrlType urlType = BrowserUrlType::Internal;
+};
+
+IPageDestination* NewBrowserDestination(Arena* arena, Str url, int pageNo, BrowserUrlType type);
+TocItem* NewBrowserTocItem(Arena* arena, Str title, int pageNo, Str url, BrowserUrlType type);
+TocTree* BuildBrowserTocTree(Arena* arena, Vec<BrowserTocTraceItem>& trace);
+
 using OnBitmapRendered = Func1<RenderedBitmap*>;
 
 struct DocControllerCallback {

@@ -3,7 +3,6 @@
 
 struct ChmFile;
 enum class FileType : u8;
-struct ChmTocTraceItem;
 struct BrowserView;
 struct BrowserViewCallback;
 struct ChmCacheEntry;
@@ -42,7 +41,7 @@ struct ChmModel : BrowserDocController {
     ChmFile* doc = nullptr;
     TocTree* tocTree = nullptr;
     Mutex docAccess;
-    Vec<ChmTocTraceItem>* tocTrace = nullptr;
+    Vec<BrowserTocTraceItem>* tocTrace = nullptr;
 
     Vec<ChmCacheEntry*> urlDataCache;
     // arena for strings that aren't freed until this ChmModel is deleted

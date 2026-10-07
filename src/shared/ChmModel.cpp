@@ -25,29 +25,8 @@ static bool IsBlankUrl(Str url) {
 }
 
 static IPageDestination* NewChmNamedDest(Arena* arena, Str url, int pageNo) {
-    if (len(url) == 0) {
-        return nullptr;
-    }
-    IPageDestination* dest = nullptr;
-    if (IsExternalUrl(url)) {
-        dest = arena ? New<PageDestinationURL>(arena, url) : new PageDestinationURL(url);
-    } else {
-        auto* pdest = arena ? New<PageDestination>(arena) : new PageDestination();
-        pdest->kind = kindDestinationScrollTo;
-        pdest->name = str::Dup(url);
-        dest = pdest;
-    }
-    dest->pageNo = pageNo;
-    ReportIf(!dest->kind);
-    dest->rect = RectF(kDestUseDefault, kDestUseDefault, kDestUseDefault, kDestUseDefault);
-    return dest;
-}
-
-static TocItem* NewChmTocItem(Arena* arena, TocItem* parent, Str title, int pageNo, Str url) {
-    auto* res = AllocTocItem(arena, title, pageNo);
-    res->parent = parent;
-    res->dest = NewChmNamedDest(arena, url, pageNo);
-    return res;
+    BrowserUrlType type = IsExternalUrl(url) ? BrowserUrlType::External : BrowserUrlType::Internal;
+    return NewBrowserDestination(arena, url, pageNo, type);
 }
 
 class BrowserViewHandler : public BrowserViewCallback {
@@ -64,13 +43,6 @@ class BrowserViewHandler : public BrowserViewCallback {
     void DownloadData(Str url, Str data) override { cm->DownloadData(url, data); }
     void OnFindResult(int gen, int current, int total) override { cm->OnFindResult(gen, current, total); }
     void OnFindAllResult(Str payload) override { cm->OnFindAllResult(payload); }
-};
-
-struct ChmTocTraceItem {
-    Str title; // owned by ChmModel::poolAllocator
-    Str url;   // owned by ChmModel::poolAllocator
-    int level = 0;
-    int pageNo = 0;
 };
 
 ChmModel::ChmModel(DocControllerCallback* cb) : BrowserDocController(cb) {
@@ -210,7 +182,7 @@ struct ChmTocBuilder : EbookTocVisitor {
     ChmFile* doc = nullptr;
 
     StrVec* pages = nullptr;
-    Vec<ChmTocTraceItem>* tocTrace = nullptr;
+    Vec<BrowserTocTraceItem>* tocTrace = nullptr;
     Arena* a = nullptr;
     dict::MapStrToInt urlsSet;
 
@@ -235,7 +207,7 @@ struct ChmTocBuilder : EbookTocVisitor {
     }
 
   public:
-    ChmTocBuilder(ChmFile* doc, StrVec* pages, Vec<ChmTocTraceItem>* tocTrace, Arena* a) {
+    ChmTocBuilder(ChmFile* doc, StrVec* pages, Vec<BrowserTocTraceItem>* tocTrace, Arena* a) {
         this->doc = doc;
         this->pages = pages;
         this->tocTrace = tocTrace;
@@ -252,7 +224,8 @@ struct ChmTocBuilder : EbookTocVisitor {
         Str nameDup = str::Dup(a, name);
         Str urlDup = str::Dup(a, url);
         int pageNo = CreatePageNoForURL(urlDup);
-        ChmTocTraceItem item{nameDup, urlDup, level, pageNo};
+        BrowserUrlType type = IsExternalUrl(urlDup) ? BrowserUrlType::External : BrowserUrlType::Internal;
+        BrowserTocTraceItem item{nameDup, urlDup, level, pageNo, type};
         VecAppend(*tocTrace, item);
     }
 };
@@ -269,7 +242,7 @@ bool ChmModel::Load(Str fileName) {
     pages.Append(page);
 
     // parse the ToC here, since page numbering depends on it
-    tocTrace = new Vec<ChmTocTraceItem>();
+    tocTrace = new Vec<BrowserTocTraceItem>();
     ChmTocBuilder tmpTocBuilder(doc, &pages, tocTrace, poolAlloc);
     doc->ParseToc(&tmpTocBuilder);
     ReportIf(len(pages) == 0);
@@ -520,33 +493,7 @@ TocTree* ChmModel::GetToc() {
         return nullptr;
     }
 
-    TocItem* root = nullptr;
-    bool foundRoot = false;
-    TocItem** nextChild = &root;
-    Vec<TocItem*> levels;
-    int idCounter = 0;
-
-    for (ChmTocTraceItem& ti : *tocTrace) {
-        TocItem* item = NewChmTocItem(poolAlloc, nullptr, ti.title, ti.pageNo, ti.url);
-        item->id = ++idCounter;
-        // append the item at the correct level
-        ReportIf(ti.level < 1);
-        if (ti.level <= len(levels)) {
-            VecRemoveAtN(levels, ti.level, len(levels) - ti.level);
-            VecLast(levels)->AddSiblingAtEnd(item);
-        } else {
-            *nextChild = item;
-            VecAppend(levels, item);
-            foundRoot = true;
-        }
-        nextChild = &item->child;
-    }
-    if (!foundRoot) {
-        return nullptr;
-    }
-    auto* realRoot = AllocTocItem(poolAlloc, {}, 0);
-    realRoot->child = root;
-    tocTree = AllocTocTree(poolAlloc, realRoot);
+    tocTree = BuildBrowserTocTree(poolAlloc, *tocTrace);
     return tocTree;
 }
 

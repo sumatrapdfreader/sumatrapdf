@@ -15,6 +15,59 @@ Location DocController::CurrentLocation() {
     return LocFromPageNo(CurrentPageNo());
 }
 
+IPageDestination* NewBrowserDestination(Arena* arena, Str url, int pageNo, BrowserUrlType type) {
+    if (len(url) == 0) {
+        return nullptr;
+    }
+
+    IPageDestination* dest = nullptr;
+    if (type == BrowserUrlType::External) {
+        dest = arena ? New<PageDestinationURL>(arena, url) : new PageDestinationURL(url);
+    } else {
+        auto* scrollDest = arena ? New<PageDestination>(arena) : new PageDestination();
+        scrollDest->kind = kindDestinationScrollTo;
+        scrollDest->name = str::Dup(url);
+        dest = scrollDest;
+    }
+    dest->pageNo = pageNo;
+    dest->rect = RectF(kDestUseDefault, kDestUseDefault, kDestUseDefault, kDestUseDefault);
+    return dest;
+}
+
+TocItem* NewBrowserTocItem(Arena* arena, Str title, int pageNo, Str url, BrowserUrlType type) {
+    TocItem* item = AllocTocItem(arena, title, pageNo);
+    item->dest = NewBrowserDestination(arena, url, pageNo, type);
+    return item;
+}
+
+TocTree* BuildBrowserTocTree(Arena* arena, Vec<BrowserTocTraceItem>& trace) {
+    if (len(trace) == 0) {
+        return nullptr;
+    }
+
+    TocItem* root = nullptr;
+    TocItem** nextChild = &root;
+    Vec<TocItem*> levels;
+    int idCounter = 0;
+    for (BrowserTocTraceItem& ti : trace) {
+        ReportIf(ti.level < 1);
+        TocItem* item = NewBrowserTocItem(arena, ti.title, ti.pageNo, ti.url, ti.urlType);
+        item->id = ++idCounter;
+        if (ti.level <= len(levels)) {
+            VecRemoveAtN(levels, ti.level, len(levels) - ti.level);
+            VecLast(levels)->AddSiblingAtEnd(item);
+        } else {
+            *nextChild = item;
+            VecAppend(levels, item);
+        }
+        nextChild = &item->child;
+    }
+
+    TocItem* realRoot = AllocTocItem(arena, {}, 0);
+    realRoot->child = root;
+    return AllocTocTree(arena, realRoot);
+}
+
 void DocController::GoToLocation(Location loc, bool addNavPoint) {
     GoToPage(loc.page, addNavPoint);
 }
