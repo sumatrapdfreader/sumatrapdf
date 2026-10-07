@@ -129,9 +129,6 @@
     <ClInclude Include="..\src\DarkMode.h">
       <Filter>src</Filter>
     </ClInclude>
-    <ClInclude Include="..\src\Favorites.h">
-      <Filter>src</Filter>
-    </ClInclude>
     <ClInclude Include="..\src\FindBar.h">
       <Filter>src</Filter>
     </ClInclude>
@@ -373,6 +370,9 @@
       <Filter>src\shared</Filter>
     </ClInclude>
     <ClInclude Include="..\src\shared\ExternalViewers.h">
+      <Filter>src\shared</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\shared\Favorites.h">
       <Filter>src\shared</Filter>
     </ClInclude>
     <ClInclude Include="..\src\shared\FileHistory.h">

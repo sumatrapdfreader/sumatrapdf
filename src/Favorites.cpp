@@ -38,42 +38,10 @@
 
 static void RememberFavTreeExpansionStateForAllWindows();
 
-struct FavTreeItem {
-    ~FavTreeItem();
-
-    uintptr_t userData = 0;
-    FavTreeItem* parent = nullptr;
-    Str text;
-    bool isExpanded = false;
-    int fileNameOffset = -1;
-    int fileNameLen = 0;
-
-    // not owned by us
-    Favorite* favorite = nullptr;
-
-    Vec<FavTreeItem*> children;
-};
-
 FavTreeItem::~FavTreeItem() {
     str::Free(text);
     DeleteVecMembers(children);
 }
-
-struct FavTreeModel : TreeModel {
-    ~FavTreeModel() override;
-
-    TreeItem Root() override;
-
-    Str Text(TreeItem ti) override;
-    TreeItem Parent(TreeItem ti) override;
-    int ChildCount(TreeItem ti) override;
-    TreeItem ChildAt(TreeItem ti, int idx) override;
-    bool IsExpanded(TreeItem ti) override;
-    void SetUserData(TreeItem ti, uintptr_t userData) override;
-    uintptr_t GetUserData(TreeItem ti) override;
-
-    FavTreeItem* root = nullptr;
-};
 
 FavTreeModel::~FavTreeModel() {
     delete root;

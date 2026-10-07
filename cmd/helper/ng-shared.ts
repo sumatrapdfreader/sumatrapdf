@@ -179,6 +179,7 @@ export const sharedFiles = [
   "src/shared/ExifDump.h",
   "src/shared/ExternalViewers.cpp",
   "src/shared/ExternalViewers.h",
+  "src/shared/Favorites.h",
   "src/shared/FileHistory.cpp",
   "src/shared/FileHistory.h",
   "src/shared/FileThumbnails.h",
