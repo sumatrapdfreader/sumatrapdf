@@ -12,10 +12,6 @@ enum {
 extern bool gDontSaveSettings;
 
 extern Vec<SessionData*>* gInitialSessionData;
-
-// ng: installed by the shell (src/SessionState.cpp); SaveSettings() calls it
-// where orig calls UpdateTabFileDisplayStateForTab() for every tab plus
-// RememberSessionState() + SyncInitialSessionData()
 extern void (*gRememberSessionStateFn)();
 
 struct PlatformFont;
@@ -27,6 +23,7 @@ bool LoadSettings();
 void ScheduleSaveSettings();
 void FlushScheduledSaveSettings();
 void ForceReloadSettings();
+void ReloadDeferredSettings();
 void ApplySettingsToOpenWindows();
 void CleanUpSettings();
 void RegisterSettingsForFileChanges();
@@ -101,6 +98,7 @@ void DeleteSettings(Settings*);
 SessionData* NewSessionData();
 TabState* NewTabState(FileState*);
 void DeleteTabState(TabState*);
+TabState* CloneTabState(const TabState*);
 void FreeSessionData(SessionData*);
 void FreeSessionDataVec(Vec<SessionData*>*);
 // A color setting's parse, done on first use and cached in the setting itself.

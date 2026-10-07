@@ -32,7 +32,7 @@
 #include "SessionState.h"
 #include "SumatraLog.h"
 
-static TabState* CloneTabState(const TabState* src) {
+static TabState* CloneSessionTabState(const TabState* src) {
     TabState* dst = (TabState*)AllocStruct<TabState>();
     str::ReplaceWithCopy(&dst->filePath, src->filePath);
     str::ReplaceWithCopy(&dst->displayMode, src->displayMode);
@@ -52,7 +52,7 @@ static SessionData* CloneSessionData(const SessionData* src) {
     dst->windowPos = src->windowPos;
     dst->sidebarDx = src->sidebarDx;
     for (TabState* ts : *src->tabStates) {
-        VecAppend(*dst->tabStates, CloneTabState(ts));
+        VecAppend(*dst->tabStates, CloneSessionTabState(ts));
     }
     return dst;
 }
@@ -157,7 +157,7 @@ static void RememberSessionState() {
                     src = FindSessionTabState(fp);
                 }
                 if (src) {
-                    VecAppend(*windowState->tabStates, CloneTabState(src));
+                    VecAppend(*windowState->tabStates, CloneSessionTabState(src));
                 }
                 continue;
             }
