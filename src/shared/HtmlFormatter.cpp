@@ -1413,7 +1413,9 @@ void DrawHtmlPage(Gdiplus::Graphics* g, PlatformTextRender* textDraw, Vec<DrawIn
 #endif
 
 #if OS_LINUX || OS_DARWIN
-static Pixmap* PixmapForHtml(Pixmap* src) {
+static Pixmap* PixmapForHtml(Str data) {
+    Pixmap* src = PixmapFromData(data);
+    AutoCall cleanup(FreePixmap, src);
     if (!src || !src->data || src->format == PixmapFormat::Native) {
         return nullptr;
     }
@@ -1456,9 +1458,7 @@ static void HtmlSetColor(cairo_t* cairo, Color col) {
 }
 
 static void HtmlDrawImage(cairo_t* cairo, Str data, RectF bbox) {
-    Pixmap* decoded = PixmapFromData(data);
-    Pixmap* pixmap = PixmapForHtml(decoded);
-    FreePixmap(decoded);
+    Pixmap* pixmap = PixmapForHtml(data);
     if (!pixmap) {
         return;
     }
@@ -1491,9 +1491,7 @@ static void HtmlSetColor(CGContextRef context, Color color) {
 }
 
 static void HtmlDrawImage(CGContextRef context, Str data, RectF bbox) {
-    Pixmap* decoded = PixmapFromData(data);
-    Pixmap* pixmap = PixmapForHtml(decoded);
-    FreePixmap(decoded);
+    Pixmap* pixmap = PixmapForHtml(data);
     if (!pixmap) {
         return;
     }
