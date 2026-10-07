@@ -12,17 +12,11 @@
 
 namespace trans {
 
-// defined in Trans*_txt.cpp
-extern int gLangsCount;
-extern SeqStrings gLangNames;
-extern SeqStrings gLangCodes;
-extern const LANGID* GetLangIds();
+extern int FindLangIdx(Str code);
+extern LANGID GetLangIdByIdx(int idx);
 extern bool IsLangRtl(int langIdx);
-} // namespace trans
 
-namespace trans {
-
-// used locally, gCurrLangCode is a view into gLangCodes
+// A view into the shared language table.
 static Str gCurrLangCode;
 static int gCurrLangIdx = 0;
 // for each translation: english string followed by a translation
@@ -161,10 +155,6 @@ Str GetTranslation(Str s) {
     return s;
 }
 
-int GetLangsCount() {
-    return gLangsCount;
-}
-
 Str GetCurrentLangCode() {
     return gCurrLangCode;
 }
@@ -181,7 +171,7 @@ void SetCurrentLangByCode(Str langCode) {
         return;
     }
 
-    int idx = SeqStrIndex(gLangCodes, langCode);
+    int idx = FindLangIdx(langCode);
     if (idx < 0) {
         logf("SetCurrentLangByCode: unknown lang code: '%s'\n", langCode);
         // set to English
@@ -231,19 +221,11 @@ void SetCurrentLangByCode(Str langCode) {
 
 Str ValidateLangCode(Str langCode) {
     if (len(langCode) == 0) return {};
-    int idx = SeqStrIndex(gLangCodes, langCode);
+    int idx = FindLangIdx(langCode);
     if (idx < 0) {
         return {};
     }
     return GetLangCodeByIdxTemp(idx);
-}
-
-TempStr GetLangCodeByIdxTemp(int idx) {
-    return SeqStrByIndex(gLangCodes, idx);
-}
-
-TempStr GetLangNameByIdxTemp(int idx) {
-    return SeqStrByIndex(gLangNames, idx);
 }
 
 bool IsCurrLangRtl() {
@@ -251,11 +233,10 @@ bool IsCurrLangRtl() {
 }
 
 Str DetectUserLang() {
-    const LANGID* langIds = GetLangIds();
     LANGID langId = GetUserDefaultUILanguage();
     // try the exact match
-    for (int i = 0; i < gLangsCount; i++) {
-        if (langId == langIds[i]) {
+    for (int i = 0; i < GetLangsCount(); i++) {
+        if (langId == GetLangIdByIdx(i)) {
             return GetLangCodeByIdxTemp(i);
         }
     }
@@ -263,8 +244,8 @@ Str DetectUserLang() {
     // see if we have a translation in a language that has the same
     // primary id as user's language and neutral sublang
     LANGID userLangIdNeutral = MAKELANGID(PRIMARYLANGID(langId), SUBLANG_NEUTRAL);
-    for (int i = 0; i < gLangsCount; i++) {
-        if (userLangIdNeutral == langIds[i]) {
+    for (int i = 0; i < GetLangsCount(); i++) {
+        if (userLangIdNeutral == GetLangIdByIdx(i)) {
             return GetLangCodeByIdxTemp(i);
         }
     }
