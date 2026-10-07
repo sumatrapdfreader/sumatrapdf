@@ -272,13 +272,7 @@ static int CountOcgLayers(fz_context* ctx, pdf_document* doc) {
     pdf_obj* trailer = pdf_trailer(ctx, doc);
     pdf_obj* root = pdf_dict_get(ctx, trailer, PDF_NAME(Root));
     pdf_obj* ocp = pdf_dict_get(ctx, root, PDF_NAME(OCProperties));
-    if (!ocp) {
-        return 0;
-    }
     pdf_obj* ocgs = pdf_dict_get(ctx, ocp, PDF_NAME(OCGs));
-    if (!pdf_is_array(ctx, ocgs)) {
-        return 0;
-    }
     return pdf_array_len(ctx, ocgs);
 }
 
@@ -289,9 +283,6 @@ static int CountSquareAnnots(fz_context* ctx, pdf_document* doc, int pageCount) 
     for (int i = 0; i < pages; i++) {
         pdf_obj* pageObj = pdf_lookup_page_obj(ctx, doc, i);
         pdf_obj* annots = pdf_dict_get(ctx, pageObj, PDF_NAME(Annots));
-        if (!pdf_is_array(ctx, annots)) {
-            continue;
-        }
         int n = pdf_array_len(ctx, annots);
         for (int j = 0; j < n; j++) {
             pdf_obj* annot = pdf_array_get(ctx, annots, j);
