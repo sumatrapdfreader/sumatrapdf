@@ -179,8 +179,7 @@ static bool DestNeedsValidPageNo(IPageDestination* dest) {
         return false;
     }
     Kind k = dest->GetKind();
-    return k != kindDestinationLaunchURL && k != kindDestinationLaunchFile && k != kindDestinationLaunchEmbedded &&
-           k != kindDestinationAttachment;
+    return !IsLaunchLinkKind(k) && k != kindDestinationLaunchEmbedded && k != kindDestinationAttachment;
 }
 
 static GoToTocLinkData* NewGoToTocLinkData(MainWindow* win, TocItem* tocItem, bool selectInTree) {

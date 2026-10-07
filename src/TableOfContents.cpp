@@ -71,9 +71,8 @@ static void TocCustomizeTooltip(TreeView::GetTooltipEvent* ev) {
         return;
     }
 
-    bool isOk = (k == kindDestinationLaunchURL) || (k == kindDestinationLaunchFile) ||
-                (k == kindDestinationLaunchEmbedded) || (k == kindDestinationMupdf) || (k == kindDestinationDjVu) ||
-                (k == kindDestinationAttachment) || (k == kindDestinationJsMenu);
+    bool isOk = IsLaunchLinkKind(k) || (k == kindDestinationLaunchEmbedded) || (k == kindDestinationMupdf) ||
+                (k == kindDestinationDjVu) || (k == kindDestinationAttachment) || (k == kindDestinationJsMenu);
     ReportIf(!isOk);
 
     str::Builder infotip;
@@ -253,8 +252,7 @@ static bool DestNeedsValidPageNo(IPageDestination* dest) {
         return false;
     }
     Kind k = dest->GetKind();
-    return k != kindDestinationLaunchURL && k != kindDestinationLaunchFile && k != kindDestinationLaunchEmbedded &&
-           k != kindDestinationAttachment;
+    return !IsLaunchLinkKind(k) && k != kindDestinationLaunchEmbedded && k != kindDestinationAttachment;
 }
 
 static GoToTocLinkData* NewGoToTocLinkData(MainWindow* win, TocItem* tocItem, bool selectInTree) {

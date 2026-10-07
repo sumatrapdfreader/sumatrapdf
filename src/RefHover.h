@@ -223,8 +223,6 @@ constexpr float kRefHoverUserZoomStep = 1.15f;
 
 constexpr int kRefHoverMaxLiveStates = 32;
 
-bool RefHoverIsLaunchLink(IPageDestination* dest);
-
 bool RefHoverIsLiveState(RefHoverState* s);
 void RefHoverRegisterLiveState(RefHoverState* s);
 void RefHoverUnregisterLiveState(RefHoverState* s);

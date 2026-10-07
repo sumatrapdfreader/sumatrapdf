@@ -3205,7 +3205,7 @@ static void OnMouseLeftButtonUp(MainWindow* win, int x, int y) {
         // highlight the clicked link (as a reminder of the last action once the
         // user returns)
         Kind kind = dest ? dest->GetKind() : nullptr;
-        if (kindDestinationLaunchURL == kind || kindDestinationLaunchFile == kind) {
+        if (IsLaunchLinkKind(kind)) {
             DeleteOldSelectionInfo(win, true);
             tab->selectionOnPage = SelectionOnPage::FromRectangle(dm, dm->CvtToScreen(pageNo, link->GetRect()));
             win->showSelection = tab->selectionOnPage != nullptr;
@@ -3214,8 +3214,7 @@ static void OnMouseLeftButtonUp(MainWindow* win, int x, int y) {
         logf("FollowLink: '%s' kind %s, ctrl %d\n", link->GetValue(), Str(kind), (int)CanvasCtrlPressed());
 
         // Ctrl+click on an internal link: open in a new tab and navigate there
-        bool isInternal =
-            (kindDestinationLaunchURL != kind && kindDestinationLaunchFile != kind && kindDestinationJsMenu != kind);
+        bool isInternal = !IsLaunchLinkKind(kind) && kindDestinationJsMenu != kind;
         if (CanvasCtrlPressed() && dest && isInternal && len(tab->filePath) > 0) {
             MainWindow* newWin = LoadDocument(win, tab->filePath);
             if (newWin && newWin->IsDocLoaded()) {

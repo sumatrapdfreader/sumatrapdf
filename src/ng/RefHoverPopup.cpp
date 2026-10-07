@@ -72,7 +72,7 @@ static IPageDestination* LaunchLinkAtPagePt(RefHoverState* s, PointF pagePt) {
         return nullptr;
     }
     IPageDestination* dest = el->AsLink();
-    if (!RefHoverIsLaunchLink(dest)) {
+    if (!dest || !IsLaunchLinkKind(dest->GetKind())) {
         return nullptr;
     }
     return dest;

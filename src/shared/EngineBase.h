@@ -138,6 +138,10 @@ struct IPageDestination : KindBase {
     virtual Str GetName() { return {}; }
 };
 
+static inline bool IsLaunchLinkKind(Kind kind) {
+    return kind == kindDestinationLaunchURL || kind == kindDestinationLaunchFile;
+}
+
 // true when the destination's value is an address worth copying (a URL or a
 // file path). A link inside the document has no address; its value is the
 // description the PDF gives it, which is for showing, not for copying
@@ -145,8 +149,7 @@ static inline bool PageDestHasAddress(IPageDestination* dest) {
     if (!dest || len(dest->GetValue()) == 0) {
         return false;
     }
-    Kind k = dest->GetKind();
-    return k == kindDestinationLaunchURL || k == kindDestinationLaunchFile;
+    return IsLaunchLinkKind(dest->GetKind());
 }
 
 static inline int PageDestGetPageNo(IPageDestination* dest) {

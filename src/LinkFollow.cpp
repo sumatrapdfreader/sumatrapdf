@@ -274,8 +274,7 @@ static void FollowKeyboardLinkTarget(MainWindow* win, const KeyboardLinkTarget& 
         return;
     }
     WindowTab* tab = win->CurrentTab();
-    Kind kind = dest->GetKind();
-    if (tab && (kindDestinationLaunchURL == kind || kindDestinationLaunchFile == kind)) {
+    if (tab && IsLaunchLinkKind(dest->GetKind())) {
         // highlight the followed link, like clicking one does, as a reminder of
         // the last action once the user comes back
         DeleteOldSelectionInfo(win, true);

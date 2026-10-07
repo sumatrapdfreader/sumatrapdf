@@ -25,8 +25,7 @@ bool RefHoverIsInternalLink(IPageElement* el, DisplayModel* dm) {
     if (!dest) {
         return false;
     }
-    Kind k = dest->GetKind();
-    if (k == kindDestinationLaunchURL || k == kindDestinationLaunchFile) {
+    if (IsLaunchLinkKind(dest->GetKind())) {
         return false;
     }
     int destPage = PageDestGetPageNo(dest);

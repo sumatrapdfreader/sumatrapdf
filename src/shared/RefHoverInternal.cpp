@@ -9,14 +9,6 @@
 #include "EngineBase.h"
 #include "RefHover.h"
 
-bool RefHoverIsLaunchLink(IPageDestination* dest) {
-    if (!dest) {
-        return false;
-    }
-    Kind k = dest->GetKind();
-    return k == kindDestinationLaunchURL || k == kindDestinationLaunchFile;
-}
-
 static RefHoverState* gLiveStates[kRefHoverMaxLiveStates];
 
 bool RefHoverIsLiveState(RefHoverState* s) {

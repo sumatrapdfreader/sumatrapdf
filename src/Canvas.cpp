@@ -2818,7 +2818,7 @@ static void OnMouseLeftButtonUp(MainWindow* win, int x, int y, WPARAM key) {
         /* follow an active link */
         // highlight the clicked link (as a reminder of the last action once the user returns)
         Kind kind = destKind;
-        if ((kindDestinationLaunchURL == kind || kindDestinationLaunchFile == kind)) {
+        if (IsLaunchLinkKind(kind)) {
             DeleteOldSelectionInfo(win, true);
             tab->selectionOnPage = SelectionOnPage::FromRectangle(dm, dm->CvtToScreen(pageNo, link->GetRect()));
             win->showSelection = tab->selectionOnPage != nullptr;
@@ -2827,8 +2827,7 @@ static void OnMouseLeftButtonUp(MainWindow* win, int x, int y, WPARAM key) {
         SetCanvasCursor(win, IDC_ARROW);
 
         // Ctrl+click on internal link: open in new tab and navigate there
-        bool isInternal =
-            (kindDestinationLaunchURL != kind && kindDestinationLaunchFile != kind && kindDestinationJsMenu != kind);
+        bool isInternal = !IsLaunchLinkKind(kind) && kindDestinationJsMenu != kind;
         if (IsCtrlPressed() && dest && isInternal && tab->filePath) {
             LoadArgs args(tab->filePath, win);
             args.showWin = true;
