@@ -208,9 +208,8 @@ static bool MigrateDocumentColorsFollowThemeSetting(Str prefsData) {
     return false;
 }
 
-#if defined(SUMATRA_NG)
-// ng: builds before the portable FILETIME fix stored Unix nanoseconds in this
-// field. Convert realistic post-2001 values once so Windows can read them too.
+// Older ng builds stored Unix nanoseconds here. Convert realistic post-2001
+// values once so Windows can read them too.
 static bool MigrateLegacyFileTime(FILETIME* ft) {
     constexpr u64 kLegacyMin = 1000000000000000000ULL;
     u64 value = FileTimeToU64(*ft);
@@ -220,7 +219,6 @@ static bool MigrateLegacyFileTime(FILETIME* ft) {
     *ft = FileTimeFromU64(kFileTimeUnixEpoch + value / 100);
     return true;
 }
-#endif
 
 #if !defined(SUMATRA_NG) || NG_HAS_UI
 // UI fonts are cached per DPI so windows on monitors with different scale
@@ -824,33 +822,21 @@ bool LoadSettings() {
 
     Settings* gprefs = nullptr;
     TempStr settingsPath = GetSettingsPathTemp();
-#if defined(SUMATRA_NG)
     bool settingsMigrated = false;
-#else
-    bool migratedDocumentColorsFollowTheme = false;
-#endif
     {
         Str prefsData = file::ReadFile(settingsPath);
 
         gSettings = NewSettings(prefsData);
         ReportIf(!gSettings);
         gprefs = gSettings;
-#if defined(SUMATRA_NG)
         settingsMigrated = MigrateDocumentColorsFollowThemeSetting(prefsData);
         settingsMigrated |= MigrateLegacyFileTime(&gSettings->timeOfLastUpdateCheck);
-#else
-        migratedDocumentColorsFollowTheme = MigrateDocumentColorsFollowThemeSetting(prefsData);
-#endif
         RememberLastSavedPrefs(prefsData);
         str::Free(prefsData);
     }
     if (MigrateRenamedThemeNames()) {
         // the file still named a theme we dropped; save so it stops doing that
-#if defined(SUMATRA_NG)
         settingsMigrated = true;
-#else
-        migratedDocumentColorsFollowTheme = true;
-#endif
     }
 
     // takes effect for PDFs loaded after this (startup, and on settings reload)
@@ -1022,11 +1008,7 @@ bool LoadSettings() {
     ApplySettingsToOpenWindows();
     bool readAloudVoiceCleared = ApplyReadAloudVoiceFromSettings();
 
-#if defined(SUMATRA_NG)
     bool needsSave = !file::Exists(settingsPath) || readAloudVoiceCleared || settingsMigrated;
-#else
-    bool needsSave = !file::Exists(settingsPath) || readAloudVoiceCleared || migratedDocumentColorsFollowTheme;
-#endif
     if (needsSave) {
         SaveSettings();
     }
