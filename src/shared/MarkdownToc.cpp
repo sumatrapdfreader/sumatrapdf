@@ -144,6 +144,19 @@ static Str ExtractHeadingTitle(cmark_node* heading) {
     return out.TakeStr();
 }
 
+template <typename F>
+static void VisitMarkdownNodes(cmark_node* doc, cmark_node_type type, F visit) {
+    cmark_iter* iter = cmark_iter_new(doc);
+    cmark_event_type ev;
+    while ((ev = cmark_iter_next(iter)) != CMARK_EVENT_DONE) {
+        cmark_node* node = cmark_iter_get_node(iter);
+        if (ev == CMARK_EVENT_ENTER && cmark_node_get_type(node) == type) {
+            visit(node);
+        }
+    }
+    cmark_iter_free(iter);
+}
+
 static void ParseMarkdownHeadings(Str data, Vec<MarkdownHeadingItem>& headingsOut) {
     VecReset(headingsOut);
     if (len(data) == 0) {
@@ -157,27 +170,13 @@ static void ParseMarkdownHeadings(Str data, Vec<MarkdownHeadingItem>& headingsOu
         return;
     }
 
-    cmark_iter* iter = cmark_iter_new(doc);
-    cmark_event_type ev;
-    while ((ev = cmark_iter_next(iter)) != CMARK_EVENT_DONE) {
-        if (ev != CMARK_EVENT_ENTER) {
-            continue;
-        }
-        cmark_node* node = cmark_iter_get_node(iter);
-        if (cmark_node_get_type(node) != CMARK_NODE_HEADING) {
-            continue;
-        }
+    VisitMarkdownNodes(doc, CMARK_NODE_HEADING, [&](cmark_node* node) {
         Str title = ExtractHeadingTitle(node);
         if (len(title) == 0) {
-            continue;
+            return;
         }
-        MarkdownHeadingItem item;
-        item.title = title;
-        item.anchor = MarkdownHeadingSlug(title);
-        item.level = cmark_node_get_heading_level(node);
-        VecAppend(headingsOut, item);
-    }
-    cmark_iter_free(iter);
+        VecAppend(headingsOut, {title, MarkdownHeadingSlug(title), cmark_node_get_heading_level(node)});
+    });
     cmark_node_free(doc);
 }
 
@@ -427,26 +426,16 @@ static TempStr MarkdownLinkToHtmlTemp(Str url) {
 }
 
 static void RewriteMarkdownLinks(cmark_node* doc) {
-    cmark_iter* iter = cmark_iter_new(doc);
-    cmark_event_type ev;
-    while ((ev = cmark_iter_next(iter)) != CMARK_EVENT_DONE) {
-        if (ev != CMARK_EVENT_ENTER) {
-            continue;
-        }
-        cmark_node* node = cmark_iter_get_node(iter);
-        if (cmark_node_get_type(node) != CMARK_NODE_LINK) {
-            continue;
-        }
+    VisitMarkdownNodes(doc, CMARK_NODE_LINK, [](cmark_node* node) {
         const char* url = cmark_node_get_url(node);
         if (!url) {
-            continue;
+            return;
         }
         TempStr htmlUrl = MarkdownLinkToHtmlTemp(Str(url));
         if (htmlUrl) {
             cmark_node_set_url(node, CStrTemp(htmlUrl));
         }
-    }
-    cmark_iter_free(iter);
+    });
 }
 
 static bool IsSafeAnchorId(Str id) {
