@@ -169,15 +169,15 @@ AttrInfo GetStylesheetHref(HtmlToken* t) {
     return t->GetAttrByName(StrL("href"));
 }
 
+template <typename T, typename... Args>
+static Str ReadLinkedStyle(T* doc, HtmlToken* t, Args... args) {
+    AttrInfo attr = GetStylesheetHref(t);
+    return attr ? doc->GetFileData(url::DecodeTemp(attr.val), args...) : Str{};
+}
+
 void EpubFormatter::HandleTagLink(HtmlToken* t) {
     ReportIf(!epubDoc);
-    AttrInfo attr = GetStylesheetHref(t);
-    if (!attr) {
-        return;
-    }
-
-    TempStr src = url::DecodeTemp(attr.val);
-    Str data = epubDoc->GetFileData(src, pagePath);
+    Str data = ReadLinkedStyle(epubDoc, t, pagePath);
     if (data) {
         ParseStyleSheet(data);
         str::Free(data);
@@ -323,13 +323,7 @@ void HtmlFileFormatter::HandleTagImg(HtmlToken* t) {
 
 void HtmlFileFormatter::HandleTagLink(HtmlToken* t) {
     ReportIf(!htmlDoc);
-    AttrInfo attr = GetStylesheetHref(t);
-    if (!attr) {
-        return;
-    }
-
-    TempStr src = url::DecodeTemp(attr.val);
-    Str data = htmlDoc->GetFileData(src);
+    Str data = ReadLinkedStyle(htmlDoc, t);
     if (data) {
         ParseStyleSheet(data);
     }
