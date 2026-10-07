@@ -50,16 +50,16 @@ void FileHistoryClear(bool keepFavorites) {
         return;
     }
     HomePageInvalidateLayoutCache();
-    Vec<FileState*> keep;
+    int kept = 0;
     for (FileState* fs : *gStates) {
         if (keepFavorites && len(*fs->favorites) > 0) {
             fs->openCount = 0;
-            VecAppend(keep, fs);
+            (*gStates)[kept++] = fs;
             continue;
         }
         DeleteFileState(fs);
     }
-    *gStates = keep;
+    VecResize(*gStates, kept);
 }
 
 FileState* FileHistoryGet(int index) {
