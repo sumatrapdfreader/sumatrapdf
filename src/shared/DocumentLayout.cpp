@@ -7,8 +7,6 @@
 #include "DisplayMode.h"
 #include "DocumentLayout.h"
 
-constexpr int kDocumentLayoutInvalidPageNo = -1;
-
 static bool PageIsSpread(const Vec<u8>& flags, int pageNo) {
     int i = pageNo - 1;
     if (i < 0 || i >= len(flags)) {
@@ -372,46 +370,4 @@ void DocumentLayout::RecalcVisibleParts() {
         page.pageOnScreen = pageRect;
         page.pageOnScreen.Offset(-viewPort.x, -viewPort.y);
     }
-}
-
-int DocumentLayout::CurrentPageNo() const {
-    if (!IsContinuous(params.displayMode)) {
-        return params.startPage;
-    }
-    int mostVisiblePage = 1;
-    float ratio = 0;
-    for (int pageNo = 1; pageNo <= pages.len; pageNo++) {
-        const DocumentLayoutPage* page = GetPage(pageNo);
-        if (page->visibleRatio > ratio) {
-            mostVisiblePage = pageNo;
-            ratio = page->visibleRatio;
-        }
-    }
-    if (ratio <= 0 && pages.len > 0) {
-        // Horizontal scrolling may miss centered, narrow pages; choose by vertical band.
-        mostVisiblePage = PageNoAtViewPortTop();
-    }
-    return mostVisiblePage;
-}
-
-// the page whose vertical band contains the top of the viewport (the last page
-// when the viewport is past the end); ignores horizontal position
-int DocumentLayout::PageNoAtViewPortTop() const {
-    for (int pageNo = 1; pageNo <= len(pages); pageNo++) {
-        const auto& page = pages[pageNo - 1];
-        if (viewPort.y < page.pos.y + page.pos.dy) {
-            return pageNo;
-        }
-    }
-    return std::max(1, len(pages));
-}
-
-int DocumentLayout::FirstVisiblePageNo() const {
-    for (int pageNo = 1; pageNo <= pages.len; pageNo++) {
-        const DocumentLayoutPage* page = GetPage(pageNo);
-        if (page->visibleRatio > 0) {
-            return pageNo;
-        }
-    }
-    return kDocumentLayoutInvalidPageNo;
 }

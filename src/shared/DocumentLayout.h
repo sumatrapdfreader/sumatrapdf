@@ -65,7 +65,4 @@ struct DocumentLayout {
     const DocumentLayoutPage* GetPage(int pageNo) const;
     void Relayout(const DocumentLayoutParams& params);
     void RecalcVisibleParts();
-    int CurrentPageNo() const;
-    int PageNoAtViewPortTop() const;
-    int FirstVisiblePageNo() const;
 };
