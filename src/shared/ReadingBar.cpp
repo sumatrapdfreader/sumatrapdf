@@ -563,32 +563,30 @@ bool ReadingBarOnLeftUp(MainWindow* win) {
     return true;
 }
 
+static ReadingBarHit CursorHit(MainWindow* win, Point pt) {
+    if (win->readingBarDrag == ReadingBarDrag::ResizeTop || win->readingBarDrag == ReadingBarDrag::ResizeBottom) {
+        return ReadingBarHit::ResizeTop;
+    }
+    if (win->readingBarDrag == ReadingBarDrag::Move) {
+        return ReadingBarHit::Band;
+    }
+    return HitTest(win, pt);
+}
+
 #if defined(SUMATRA_NG)
 bool ReadingBarOnSetCursor(MainWindow* win, int x, int y) {
     if (!win) {
         return false;
     }
-    if (win->readingBarDrag == ReadingBarDrag::ResizeTop || win->readingBarDrag == ReadingBarDrag::ResizeBottom) {
-        CanvasSetCursor(win, (int)gp::CursorKind::RowResize);
-        return true;
-    }
-    if (win->readingBarDrag == ReadingBarDrag::Move) {
-        CanvasSetCursor(win, (int)gp::CursorKind::ClosedHand);
-        return true;
-    }
-    ReadingBarHit hit = HitTest(win, {x, y});
+    ReadingBarHit hit = CursorHit(win, {x, y});
     if (hit == ReadingBarHit::None) {
         return false;
     }
-    if (hit == ReadingBarHit::Close) {
-        CanvasSetCursor(win, (int)gp::CursorKind::Pointer);
-        return true;
-    }
-    if (hit == ReadingBarHit::ResizeTop || hit == ReadingBarHit::ResizeBottom) {
-        CanvasSetCursor(win, (int)gp::CursorKind::RowResize);
-        return true;
-    }
-    CanvasSetCursor(win, (int)gp::CursorKind::ClosedHand);
+    bool resize = hit == ReadingBarHit::ResizeTop || hit == ReadingBarHit::ResizeBottom;
+    gp::CursorKind cursor = hit == ReadingBarHit::Close ? gp::CursorKind::Pointer
+                            : resize                    ? gp::CursorKind::RowResize
+                                                        : gp::CursorKind::ClosedHand;
+    CanvasSetCursor(win, (int)cursor);
     return true;
 }
 #else
@@ -596,27 +594,13 @@ bool ReadingBarOnSetCursor(MainWindow* win) {
     if (!win || !win->hwndCanvas) {
         return false;
     }
-    if (win->readingBarDrag == ReadingBarDrag::ResizeTop || win->readingBarDrag == ReadingBarDrag::ResizeBottom) {
-        SetCursorCached(IDC_SIZENS);
-        return true;
-    }
-    if (win->readingBarDrag == ReadingBarDrag::Move) {
-        SetCursorCached(IDC_SIZEALL);
-        return true;
-    }
-    ReadingBarHit hit = HitTest(win, HwndGetCursorPos(win->hwndCanvas));
+    ReadingBarHit hit = CursorHit(win, HwndGetCursorPos(win->hwndCanvas));
     if (hit == ReadingBarHit::None) {
         return false;
     }
-    if (hit == ReadingBarHit::Close) {
-        SetCursorCached(IDC_HAND);
-        return true;
-    }
-    if (hit == ReadingBarHit::ResizeTop || hit == ReadingBarHit::ResizeBottom) {
-        SetCursorCached(IDC_SIZENS);
-        return true;
-    }
-    SetCursorCached(IDC_SIZEALL);
+    bool resize = hit == ReadingBarHit::ResizeTop || hit == ReadingBarHit::ResizeBottom;
+    LPWSTR cursor = hit == ReadingBarHit::Close ? IDC_HAND : resize ? IDC_SIZENS : IDC_SIZEALL;
+    SetCursorCached(cursor);
     return true;
 }
 #endif
