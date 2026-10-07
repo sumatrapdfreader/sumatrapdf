@@ -460,114 +460,85 @@ constexpr Color kLinkFollowHighlightCol = MkRgb(0xff, 0xf1, 0x00);
 constexpr Color kLinkFollowBadgeBgCol = MkRgb(0xd3, 0x2f, 0x2f);
 constexpr Color kLinkFollowBadgeTextCol = kColWhite;
 
+static bool CollectLinkTargets(MainWindow* win, Vec<Rect>& rects, Vec<Str>& labels) {
+    if (!KeyboardLinkFollowingActive(win)) {
+        return false;
+    }
+    DisplayModel* dm = win->AsFixed();
+    if (!dm) {
+        return false;
+    }
+    for (const KeyboardLinkTarget& target : win->linkFollowTargets) {
+        if (!HintStartsWith(target, win->linkFollowInput, win->linkFollowInputLen)) {
+            continue;
+        }
+        VecAppend(rects, dm->CvtToScreen(target.pageNo, target.rect));
+        VecAppend(labels, Str(target.hint, target.hintLen));
+    }
+    return len(rects) > 0;
+}
+
+static Rect LinkBadgeRect(const Rect& linkRect, Size textSize, int& padX) {
+    padX = textSize.dy / 3;
+    int dx = textSize.dx + (2 * padX);
+    int dy = textSize.dy;
+    int x = linkRect.x - (dx / 3);
+    int y = linkRect.y - (dy / 3);
+    if (x < 0) {
+        x = linkRect.x;
+    }
+    if (y < 0) {
+        y = linkRect.y;
+    }
+    return {x, y, dx, dy};
+}
+
 #if defined(SUMATRA_NG)
 constexpr float kLinkFollowBadgeFontSize = 11;
 
 static void PaintLinkBadge(gp::PaintCtx* ctx, const Rect& linkRect, Str label) {
     Size textSize = CanvasMeasureText(ctx, label, kLinkFollowBadgeFontSize);
-    int padX = textSize.dy / 3;
-    int dx = textSize.dx + (2 * padX);
-    int dy = textSize.dy;
-    int x = linkRect.x - (dx / 3);
-    int y = linkRect.y - (dy / 3);
-    if (x < 0) {
-        x = linkRect.x;
-    }
-    if (y < 0) {
-        y = linkRect.y;
-    }
-
-    Rect badge{x, y, dx, dy};
+    int padX;
+    Rect badge = LinkBadgeRect(linkRect, textSize, padX);
     CanvasFillRects(ctx, &badge, 1, kLinkFollowBadgeBgCol, 235, 0);
-    CanvasDrawText(ctx, label, {x + padX, y}, kLinkFollowBadgeTextCol, kLinkFollowBadgeFontSize);
+    CanvasDrawText(ctx, label, {badge.x + padX, badge.y}, kLinkFollowBadgeTextCol, kLinkFollowBadgeFontSize);
 }
 
 void PaintKeyboardLinkTargets(MainWindow* win, gp::PaintCtx* ctx) {
-    if (!KeyboardLinkFollowingActive(win)) {
-        return;
-    }
-    DisplayModel* dm = win->AsFixed();
-    if (!dm) {
-        return;
-    }
-    int n = len(win->linkFollowTargets);
-    if (n == 0) {
+    Vec<Rect> rects;
+    Vec<Str> labels;
+    if (!CollectLinkTargets(win, rects, labels)) {
         return;
     }
 
-    Vec<Rect> screenRects;
-    for (int i = 0; i < n; i++) {
-        const KeyboardLinkTarget& target = win->linkFollowTargets[i];
-        if (!HintStartsWith(target, win->linkFollowInput, win->linkFollowInputLen)) {
-            continue;
-        }
-        VecAppend(screenRects, dm->CvtToScreen(target.pageNo, target.rect));
-    }
-    Rect canvas(Point(), dm->GetViewPort().Size());
-    PaintTransparentRectangles(ctx, canvas, screenRects, kLinkFollowHighlightCol, 90, 2, false);
+    Rect canvas(Point(), win->GetViewPortSize());
+    PaintTransparentRectangles(ctx, canvas, rects, kLinkFollowHighlightCol, 90, 2, false);
 
-    int rectIdx = 0;
-    for (int i = 0; i < n; i++) {
-        const KeyboardLinkTarget& target = win->linkFollowTargets[i];
-        if (!HintStartsWith(target, win->linkFollowInput, win->linkFollowInputLen)) {
-            continue;
-        }
-        PaintLinkBadge(ctx, screenRects[rectIdx++], Str(target.hint, target.hintLen));
+    for (int i = 0; i < len(rects); i++) {
+        PaintLinkBadge(ctx, rects[i], labels[i]);
     }
 }
 #else
 static void PaintLinkBadge(Gfx* gfx, PlatformFont* font, const Rect& linkRect, Str label) {
     Size textSize = gfx->MeasureText(label, font);
-    int padX = textSize.dy / 3;
-    int dx = textSize.dx + (2 * padX);
-    int dy = textSize.dy;
-    // sit at the link's top-left corner, pulled slightly outside it so the badge
-    // doesn't cover the link text itself
-    int x = linkRect.x - (dx / 3);
-    int y = linkRect.y - (dy / 3);
-    if (x < 0) {
-        x = linkRect.x;
-    }
-    if (y < 0) {
-        y = linkRect.y;
-    }
-
-    Rect badge{x, y, dx, dy};
+    int padX;
+    Rect badge = LinkBadgeRect(linkRect, textSize, padX);
     gfx->FillRects(&badge, 1, kLinkFollowBadgeBgCol, 235);
-    gfx->DrawTextAt(label, {x + padX, y}, gfxTextSingleLine | gfxTextNoClip, font, kLinkFollowBadgeTextCol);
+    gfx->DrawTextAt(label, {badge.x + padX, badge.y}, gfxTextSingleLine | gfxTextNoClip, font, kLinkFollowBadgeTextCol);
 }
 
 void PaintKeyboardLinkTargets(MainWindow* win, Gfx* gfx) {
-    if (!KeyboardLinkFollowingActive(win)) {
-        return;
-    }
-    DisplayModel* dm = win->AsFixed();
-    if (!dm) {
-        return;
-    }
-    int n = len(win->linkFollowTargets);
-    if (n == 0) {
+    Vec<Rect> rects;
+    Vec<Str> labels;
+    if (!CollectLinkTargets(win, rects, labels)) {
         return;
     }
 
-    Vec<Rect> screenRects;
-    for (int i = 0; i < n; i++) {
-        const KeyboardLinkTarget& t = win->linkFollowTargets[i];
-        if (!HintStartsWith(t, win->linkFollowInput, win->linkFollowInputLen)) {
-            continue;
-        }
-        VecAppend(screenRects, dm->CvtToScreen(t.pageNo, t.rect));
-    }
-    PaintTransparentRectangles(gfx, win->canvasRc, screenRects, kLinkFollowHighlightCol, 90, 2, false);
+    PaintTransparentRectangles(gfx, win->canvasRc, rects, kLinkFollowHighlightCol, 90, 2, false);
 
     PlatformFont* font = GetBoldPlatformFont(GetUserGuiFont(StrL("Segoe UI"), DpiScale(11)));
-    int rectIdx = 0;
-    for (int i = 0; i < n; i++) {
-        const KeyboardLinkTarget& t = win->linkFollowTargets[i];
-        if (!HintStartsWith(t, win->linkFollowInput, win->linkFollowInputLen)) {
-            continue;
-        }
-        PaintLinkBadge(gfx, font, screenRects[rectIdx++], Str(t.hint, t.hintLen));
+    for (int i = 0; i < len(rects); i++) {
+        PaintLinkBadge(gfx, font, rects[i], labels[i]);
     }
 }
 #endif
