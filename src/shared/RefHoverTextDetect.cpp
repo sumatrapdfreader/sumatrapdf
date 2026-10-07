@@ -626,16 +626,11 @@ bool FindNumericReferenceInPageText(WStr text, const Rect* coords, int textLen, 
         }
         int j = i + 1;
         int val = 0;
-        int nd = 0;
         while (j < textLen && iswdigit(text.s[j])) {
             val = (val * 10) + (text.s[j] - L'0');
             j++;
-            nd++;
         }
-        if (nd == 0 || j >= textLen || text.s[j] != L']') {
-            continue;
-        }
-        if (val != num) {
+        if (j == i + 1 || j >= textLen || text.s[j] != L']' || val != num) {
             continue;
         }
         // Reject a mid-line "[num]" (body-text citation): require clear space
