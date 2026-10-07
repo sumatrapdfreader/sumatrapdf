@@ -99,7 +99,7 @@ static UINT_PTR gNoDocWhitelist[] = {
     0,
 };
 
-UINT_PTR disableIfNoSelection[] = {
+uintptr_t disableIfNoSelection[] = {
     CmdCopySelection,
     CmdZoomToSelection,
     CmdFindNextSel,

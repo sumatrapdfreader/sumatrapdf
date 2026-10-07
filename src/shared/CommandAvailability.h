@@ -57,17 +57,32 @@ struct AppCommandCtx {
     bool hasUserRedactMarks = false;
     bool canUndo = false;
     bool canRedo = false;
+    bool clipboardHasImage = false;
+    bool clipboardReadAsync = false;
 
     int nTabs = 0;
     bool hasDocTabs = false;
+    bool hasOpenDocuments = false;
+    bool engineHasErrors = false;
     bool canCloseOtherTabs = false;
     bool canCloseTabsToRight = false;
     bool canCloseTabsToLeft = false;
 
     bool canSendEmail = false;
+    // the document's own permission (orig's MenuUpdatePrintItem)
+    bool allowsPrinting = true;
     bool allowToggleMenuBar = true;
     bool isSpeaking = false;
     bool canContinueReadAloud = false;
+    bool ttsAvailable = false;
+    bool aiChatAvailable = false;
+    bool aiChatSupported = false;
+    bool grokInstalled = false;
+    bool claudeInstalled = false;
+    bool codexInstalled = false;
+    bool antiGravityInstalled = false;
+    bool autoScrollOn = false;
+    bool readingBarOn = false;
 };
 
 using BuildMenuCtx = AppCommandCtx;
@@ -96,4 +111,4 @@ inline bool CommandShouldShow(CommandVisibility v) {
 }
 
 // used by Menu.cpp for live menu updates (not visibility policy)
-extern UINT_PTR disableIfNoSelection[];
+extern uintptr_t disableIfNoSelection[];
