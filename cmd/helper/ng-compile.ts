@@ -244,7 +244,15 @@ function definesOf(t: Target, f: BuildFlags): string[] {
 }
 
 function msvcCflags(t: Target, f: BuildFlags, cpp: boolean): string[] {
-  const flags = ["/nologo", "/utf-8", "/DUNICODE", "/D_UNICODE", "/D_CRT_SECURE_NO_WARNINGS", "/DIS_TRACY=0"];
+  const flags = [
+    "/nologo",
+    "/utf-8",
+    "/DUNICODE",
+    "/D_UNICODE",
+    "/D_CRT_SECURE_NO_WARNINGS",
+    "/DIS_TRACY=0",
+    "/DSUMATRA_NG",
+  ];
   if (cpp) {
     flags.push("/std:c++20", "/GR-");
     flags.push(...(t.exceptions ? ["/EHsc"] : ["/EHs-c-", "/D_HAS_EXCEPTIONS=0"]));
@@ -289,7 +297,7 @@ function msvcCflags(t: Target, f: BuildFlags, cpp: boolean): string[] {
 }
 
 function gccCflags(tc: Toolchain, t: Target, f: BuildFlags, cpp: boolean): string[] {
-  const flags = ["-DIS_TRACY=0"];
+  const flags = ["-DIS_TRACY=0", "-DSUMATRA_NG"];
   if (cpp) {
     flags.push("-std=c++20", "-fno-rtti");
     if (!t.exceptions) flags.push("-fno-exceptions");
