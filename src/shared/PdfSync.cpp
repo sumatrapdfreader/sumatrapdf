@@ -106,20 +106,11 @@ Synchronizer::~Synchronizer() {
 }
 
 bool Synchronizer::NeedsToRebuildIndex() {
-    // was the index manually discarded?
-    if (needsToRebuildIndex) {
-        return true;
+    // Keep failed rebuilds dirty; timestamps can change in either direction.
+    if (!needsToRebuildIndex) {
+        needsToRebuildIndex = SyncFileTimestamp() != syncfileTimestamp;
     }
-
-    // A rewrite can move the timestamp backwards too.
-    i64 newstamp = SyncFileTimestamp();
-    if (newstamp != syncfileTimestamp) {
-        // Retry failed rebuilds until MarkIndexWasRebuilt adopts the new timestamp.
-        needsToRebuildIndex = true;
-        return true; // the file has changed!
-    }
-
-    return false;
+    return needsToRebuildIndex;
 }
 
 int Synchronizer::MarkIndexWasRebuilt() {
