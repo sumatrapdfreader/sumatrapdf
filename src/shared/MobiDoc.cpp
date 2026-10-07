@@ -1095,9 +1095,7 @@ static Str ExtractPdfFromPrintReplica(PdbReader* pdb) {
         DecodeMobiDocHeader((const u8*)rec0.s + kPalmDocHeaderLen, rec0.len - kPalmDocHeaderLen, &mobi);
         if (str::EqN(StrL("MOBI"), Str(mobi.id, 4), 4)) {
             // MOBI type 8 is Print Replica (AZW4).
-            if (mobi.type == 8) {
-                isPrintReplica = true;
-            }
+            isPrintReplica = mobi.type == 8;
             // Print Replica version 4 can have a long header without record trailers.
             if (mobi.hdrLen >= kMobiExtraFlagsHeaderLen &&
                 mobi.minRequiredMobiFormatVersion >= kMobiTrailerMinVersion) {
@@ -1115,15 +1113,12 @@ static Str ExtractPdfFromPrintReplica(PdbReader* pdb) {
         return {};
     }
 
-    if (!IsValidCompression(palm.compressionType) || palm.compressionType == kCompressionHuff) {
+    if (palm.compressionType != kCompressionNone && palm.compressionType != kCompressionPalm) {
         logf("ExtractPdfFromPrintReplica: unsupported compression %d\n", (int)palm.compressionType);
         return {};
     }
 
-    int recCount = palm.recordsCount;
-    if (recCount >= pdb->GetRecordCount()) {
-        recCount = pdb->GetRecordCount() - 1;
-    }
+    int recCount = std::min((int)palm.recordsCount, pdb->GetRecordCount() - 1);
     if (recCount < 1) {
         return {};
     }
@@ -1148,11 +1143,9 @@ static Str ExtractPdfFromPrintReplica(PdbReader* pdb) {
         }
         if (kCompressionNone == palm.compressionType) {
             raw.Append(Str(rec.s, recSize));
-        } else if (kCompressionPalm == palm.compressionType) {
-            if (!PalmdocUncompress((const u8*)rec.s, recSize, raw)) {
-                logf("ExtractPdfFromPrintReplica: PalmDoc decompression failed\n");
-                return {};
-            }
+        } else if (!PalmdocUncompress((const u8*)rec.s, recSize, raw)) {
+            logf("ExtractPdfFromPrintReplica: PalmDoc decompression failed\n");
+            return {};
         }
     }
 
