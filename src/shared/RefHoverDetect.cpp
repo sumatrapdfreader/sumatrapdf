@@ -651,7 +651,6 @@ static RectF FindColumnWrapContinuation(WStr text, const Rect* coords, RectF med
     constexpr int kMaxContinuationPt = 60;
     int capY = topY + kMaxContinuationPt;
     int boundaryY = capY;
-    bool closedBySibling = false;
     for (int i = 0; i < text.len; i++) {
         if (text.s[i] != L'[') {
             continue;
@@ -663,10 +662,7 @@ static RectF FindColumnWrapContinuation(WStr text, const Rect* coords, RectF med
         if (r.y <= topY + (topDy / 2) || r.y >= capY) {
             continue;
         }
-        if (r.y < boundaryY) {
-            boundaryY = r.y;
-            closedBySibling = true;
-        }
+        boundaryY = std::min(boundaryY, r.y);
     }
     int bMinX = INT_MAX, bMinY = INT_MAX, bMaxX = INT_MIN, bMaxY = INT_MIN;
     for (int i = 0; i < text.len; i++) {
@@ -678,7 +674,7 @@ static RectF FindColumnWrapContinuation(WStr text, const Rect* coords, RectF med
             continue;
         }
         // Without a closing sibling, a continuation must end within the cap.
-        if (!closedBySibling && r.y >= capY - topDy) {
+        if (boundaryY == capY && r.y >= capY - topDy) {
             return RectF{};
         }
         if (r.y < topY - 5 || r.y >= boundaryY) {
