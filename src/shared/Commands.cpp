@@ -1309,8 +1309,7 @@ CommandArg* NewStringArg(Str name, Str val) {
 }
 
 CommandArg* NewFloatArg(Str name, float val) {
-    auto* res = AllocCommandArg(name, {});
-    res->type = CommandArg::Type::Float;
+    auto* res = NewArg(CommandArg::Type::Float, name);
     res->floatVal = val;
     return res;
 }
@@ -1336,9 +1335,7 @@ static CommandArg* ParseArgOfType(Str argName, CommandArg::Type type, Str val) {
     }
 
     if (type == CommandArg::Type::String) {
-        auto* arg = AllocCommandArg(argName, val);
-        arg->type = type;
-        return arg;
+        return NewStringArg(argName, val);
     }
 
     ReportIf(true);
@@ -1449,9 +1446,7 @@ static CommandArg* TryParseNamedArg(int firstArgIdx, Str* argsInOut) {
 // or DDE commands
 // return null if unkown command
 CustomCommand* CreateCommandFromDefinition(Str definition) {
-    // an empty Shortcuts entry (e.g. a stray "[ ]" block) deserializes to an
-    // empty cmd. ignore it silently instead of reporting a bogus "Unknown cmd
-    // name" for it.
+    // Ignore empty Shortcuts entries, including stray "[ ]" blocks.
     if (str::IsEmptyOrWhiteSpace(definition)) {
         return nullptr;
     }
@@ -1464,16 +1459,18 @@ CustomCommand* CreateCommandFromDefinition(Str definition) {
         }
     }
 
-    StrVec parts;
-    Split(&parts, definition, StrL(" "), true, 2);
-    Str cmd = parts[0];
+    Str cmd = definition;
+    str::TrimChar(cmd, ' ');
+    Str currArg;
+    str::CutChar(cmd, ' ', &cmd, &currArg);
+    str::TrimChar(currArg, ' ');
     int cmdId = GetCommandIdByName(cmd);
     if (cmdId < 0) {
         MaybeDelayedWarningNotification(
             fmt("Error parsing Shortcuts in advanced settings. Unknown cmd name '%s'\n", definition));
         return nullptr;
     }
-    if (len(parts) == 1) {
+    if (len(currArg) == 0) {
         return CreateCustomCommand(definition, cmdId, nullptr);
     }
 
@@ -1498,7 +1495,7 @@ CustomCommand* CreateCommandFromDefinition(Str definition) {
         }
     }
 
-    Str currArg = str::DupTemp(parts[1]);
+    currArg = str::DupTemp(currArg);
 
     CommandArg* firstArg = nullptr;
     CommandArg* arg;
@@ -1517,7 +1514,7 @@ CustomCommand* CreateCommandFromDefinition(Str definition) {
         return nullptr;
     }
 
-    if (cmdId == CmdCommandPalette && firstArg) {
+    if (cmdId == CmdCommandPalette) {
         // validate mode
         Str s = firstArg->strVal;
         static SeqStrings validModes = ">\0#\0@\0:\0*\0$\0%\0=\0"; // TODO: "@@\0" ?
@@ -1541,7 +1538,7 @@ CustomCommand* CreateCommandFromDefinition(Str definition) {
         firstArg->type = CommandArg::Type::Float;
         firstArg->floatVal = zoomVal;
     }
-    if (cmdId == CmdToggleBoolSetting && firstArg) {
+    if (cmdId == CmdToggleBoolSetting) {
         // validate the named boolean setting exists (case-insensitive leaf or path)
         Str settingName = firstArg->strVal;
         if (len(settingName) == 0 || !FindSettingsBoolSetting(settingName)) {
@@ -1551,8 +1548,7 @@ CustomCommand* CreateCommandFromDefinition(Str definition) {
             // will warn again if the name is still wrong
         }
     }
-    auto* res = CreateCustomCommand(definition, cmdId, firstArg);
-    return res;
+    return CreateCustomCommand(definition, cmdId, firstArg);
 }
 
 CommandArg* GetCommandArg(CustomCommand* cmd, Str name) {
