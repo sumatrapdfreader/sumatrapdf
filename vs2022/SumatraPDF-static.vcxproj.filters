@@ -833,9 +833,6 @@
     <ClCompile Include="..\src\UpdateCheck.cpp">
       <Filter>src</Filter>
     </ClCompile>
-    <ClCompile Include="..\src\WindowTab.cpp">
-      <Filter>src</Filter>
-    </ClCompile>
     <ClCompile Include="..\src\base\Archive.cpp">
       <Filter>src\base</Filter>
     </ClCompile>
@@ -1245,6 +1242,9 @@
       <Filter>src\shared</Filter>
     </ClCompile>
     <ClCompile Include="..\src\shared\WebpReader.cpp">
+      <Filter>src\shared</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\shared\WindowTab.cpp">
       <Filter>src\shared</Filter>
     </ClCompile>
     <ClCompile Include="..\src\shared\gui\PlatformFont.cpp">

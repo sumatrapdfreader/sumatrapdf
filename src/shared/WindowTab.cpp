@@ -18,12 +18,16 @@
 #include "DisplayModel.h"
 #include "SumatraPDF.h"
 #include "MainWindow.h"
+#if !defined(SUMATRA_NG)
 #include "Selection.h"
+#endif
 #include "ReadAloud.h"
+#include "Translations.h"
+#if !defined(SUMATRA_NG)
 #include "ReadingAutoScroll.h"
 #include "ReadingBar.h"
-#include "Translations.h"
 #include "AnnotEditToolbar.h"
+#endif
 #include "WindowTab.h"
 
 WindowTab::WindowTab(MainWindow* win) {
@@ -51,6 +55,7 @@ bool WindowTab::IsAboutTab() const {
     return type == WindowTab::Type::About;
 }
 
+#if !defined(SUMATRA_NG)
 // the SidebarView / SidebarBottomView settings
 static const char* kSidebarViewNames[kSidebarViewCount] = {"bookmarks", "thumbnails", "favorites"};
 
@@ -67,6 +72,8 @@ Str SidebarViewToStr(SidebarView v) {
     return Str(kSidebarViewNames[(int)v]);
 }
 
+#endif
+
 bool WindowTab::IsFavoritesTab() const {
     ReportIf(type == WindowTab::Type::None);
     return type == WindowTab::Type::Favorites;
@@ -79,14 +86,13 @@ bool WindowTab::IsNonDocumentTab() const {
 
 WindowTab::~WindowTab() {
     logf("~WindowTab: 0x%p, dm: 0x%p\n", this, AsFixed());
-    // whatever a close path forgot, nothing may be left pointing at a tab that
-    // is going away (the read-aloud playback bar holds one)
+    // Nothing may point at a tab that is going away.
     ReadAloudForgetTab(this);
+#if !defined(SUMATRA_NG)
     ReadingAutoScrollForgetTab(this);
     ReadingBarForgetTab(this);
-    // Drop MainWindow pointers into this tab / its controller before we free
-    // them: DestroyWindow during WebView teardown can re-enter the canvas
-    // WndProc, which reads win->ctrl / CurrentTab().
+#endif
+    // DestroyWindow can re-enter code that reads these pointers.
     if (win) {
         if (win->ctrl == ctrl) {
             win->ctrl = nullptr;
@@ -95,6 +101,7 @@ WindowTab::~WindowTab() {
             win->currentTabTemp = nullptr;
         }
     }
+#if !defined(SUMATRA_NG)
     // Full browser teardown next (not mere hide). DestroyWindow pumps; with
     // win->ctrl already nulled (and isBeingClosed on window close), canvas
     // re-entry must not touch a freed DisplayModel.
@@ -112,15 +119,20 @@ WindowTab::~WindowTab() {
         hwndPDFOutline = nullptr;
     }
     CloseAnnotationUiForTab(this);
+#endif
     FileWatcherUnsubscribe(watcher);
+    watcher = nullptr;
     delete selectionOnPage;
+#if !defined(SUMATRA_NG)
     // technically we only need to clear ctrl == gMostRecentlyOpenedDoc
     // but gMostRecentlyOpenedDoc is only for dde commands
     // so doesn't need to be kept for long
     gMostRecentlyOpenedDoc = nullptr;
+#endif
     // waits for in-flight renders off the UI thread; deletes on the UI thread
     DeleteControllerAsync(ctrl);
     ctrl = nullptr;
+#if !defined(SUMATRA_NG)
     if (pendingLoadArgs) {
         // LoadArgs dtor releases any leftover engine; drop ctrl first so we do
         // not double-delete through both paths if both were set
@@ -129,6 +141,7 @@ WindowTab::~WindowTab() {
         SafeEngineRelease(&pendingLoadArgs->engine);
     }
     delete pendingLoadArgs;
+#endif
     if (IsOpenCachePath(filePath)) {
         file::Delete(filePath);
     }
@@ -137,15 +150,19 @@ WindowTab::~WindowTab() {
     str::Free(displayName);
     displayName = {};
     str::Free(frameTitle);
-    str::Free(loadErrorReason);
-    str::Free(pendingFindText);
     frameTitle = {};
+    str::Free(loadErrorReason);
+    loadErrorReason = {};
+    str::Free(pendingFindText);
+    pendingFindText = {};
     str::Free(readAloudText);
     readAloudText = {};
     if (readAloudHighlight) {
         ReadAloudHighlightFree(readAloudHighlight);
         delete readAloudHighlight;
+        readAloudHighlight = nullptr;
     }
+#if !defined(SUMATRA_NG)
     for (AIChatTabState& st : aiChat) {
         str::Free(st.sessionId);
         st.sessionId = {};
@@ -154,6 +171,7 @@ WindowTab::~WindowTab() {
             CloseHandle(st.process);
         }
     }
+#endif
 }
 
 bool WindowTab::IsDocLoaded() const {
@@ -220,10 +238,12 @@ void WindowTab::MoveDocBy(int dx, int dy) const {
     if (!dm) {
         return;
     }
+#if !defined(SUMATRA_NG)
     ReportIf(win->linkOnLastButtonDown);
     if (win->linkOnLastButtonDown) {
         return;
     }
+#endif
     if (0 != dx) {
         dm->ScrollXBy(dx);
     }
@@ -239,7 +259,6 @@ void WindowTab::MoveDocBy(int dx, int dy) const {
 // the zoom ToggleZoom() would switch to. Split out so the command palette can
 // name it without repeating (and drifting from) the cycle
 float WindowTab::NextToggleZoom() const {
-    // TODO: maybe move to DocController?
     float currZoom = ctrl ? ctrl->GetZoomVirtual() : kInvalidZoom;
     if (kZoomFitPage == currZoom) {
         return kZoomFitWidth;
@@ -265,6 +284,7 @@ void WindowTab::ToggleZoom() const {
     }
     ctrl->SetZoomVirtual(NextToggleZoom(), nullptr);
 }
+#if !defined(SUMATRA_NG)
 
 bool SaveDataToFile(HWND hwndParent, Str fileName, Str data) {
     if (!CanAccessDisk()) {
@@ -309,3 +329,4 @@ bool SaveDataToFile(HWND hwndParent, Str fileName, Str data) {
 #endif
     return ok;
 }
+#endif

@@ -1689,7 +1689,6 @@
     <ClCompile Include="..\src\Toolbar.cpp" />
     <ClCompile Include="..\src\Uninstaller.cpp" />
     <ClCompile Include="..\src\UpdateCheck.cpp" />
-    <ClCompile Include="..\src\WindowTab.cpp" />
     <ClCompile Include="..\src\base\Archive.cpp">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
@@ -2178,6 +2177,7 @@
     <ClCompile Include="..\src\shared\Translations.cpp" />
     <ClCompile Include="..\src\shared\UpdateTemp.cpp" />
     <ClCompile Include="..\src\shared\WebpReader.cpp" />
+    <ClCompile Include="..\src\shared\WindowTab.cpp" />
     <ClCompile Include="..\src\shared\gui\PlatformFont.cpp" />
     <ClCompile Include="..\src\shared\gui\PlatformText.cpp" />
     <ClCompile Include="..\src\shared\gui\UIModels.cpp" />
