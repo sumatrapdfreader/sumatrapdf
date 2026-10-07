@@ -153,6 +153,7 @@ export const sharedFiles = [
   "src/shared/FileHistory.h",
   "src/shared/FilterUtil.cpp",
   "src/shared/FilterUtil.h",
+  "src/shared/GlobalHotkeys.h",
   "src/shared/GoogleLens.h",
   "src/shared/GumboHtmlParser.cpp",
   "src/shared/GumboHtmlParser.h",

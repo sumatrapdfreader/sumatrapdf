@@ -186,9 +186,6 @@
     <ClInclude Include="..\src\FormFields.h">
       <Filter>src</Filter>
     </ClInclude>
-    <ClInclude Include="..\src\GlobalHotkeys.h">
-      <Filter>src</Filter>
-    </ClInclude>
     <ClInclude Include="..\src\HomePage.h">
       <Filter>src</Filter>
     </ClInclude>
@@ -448,6 +445,9 @@
       <Filter>src\shared</Filter>
     </ClInclude>
     <ClInclude Include="..\src\shared\FilterUtil.h">
+      <Filter>src\shared</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\shared\GlobalHotkeys.h">
       <Filter>src\shared</Filter>
     </ClInclude>
     <ClInclude Include="..\src\shared\GoogleLens.h">

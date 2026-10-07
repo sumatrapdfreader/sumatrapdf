@@ -1418,7 +1418,6 @@
     <ClInclude Include="..\src\FindWindow.h" />
     <ClInclude Include="..\src\Flags.h" />
     <ClInclude Include="..\src\FormFields.h" />
-    <ClInclude Include="..\src\GlobalHotkeys.h" />
     <ClInclude Include="..\src\HomePage.h" />
     <ClInclude Include="..\src\ImageSaveCropResize.h" />
     <ClInclude Include="..\src\Installer.h" />
@@ -1506,6 +1505,7 @@
     <ClInclude Include="..\src\shared\ExifDump.h" />
     <ClInclude Include="..\src\shared\FileHistory.h" />
     <ClInclude Include="..\src\shared\FilterUtil.h" />
+    <ClInclude Include="..\src\shared\GlobalHotkeys.h" />
     <ClInclude Include="..\src\shared\GoogleLens.h" />
     <ClInclude Include="..\src\shared\GumboHtmlParser.h" />
     <ClInclude Include="..\src\shared\HangDetector.h" />
