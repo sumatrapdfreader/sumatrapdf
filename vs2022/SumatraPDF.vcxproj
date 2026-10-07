@@ -1442,7 +1442,6 @@
     <ClInclude Include="..\src\SumatraPDF.h" />
     <ClInclude Include="..\src\SumatraTest.h" />
     <ClInclude Include="..\src\TableOfContents.h" />
-    <ClInclude Include="..\src\Tabs.h" />
     <ClInclude Include="..\src\Toolbar.h" />
     <ClInclude Include="..\src\WindowTab.h" />
     <ClInclude Include="..\src\base\Archive.h" />
@@ -1541,6 +1540,7 @@
     <ClInclude Include="..\src\shared\SumatraLog.h" />
     <ClInclude Include="..\src\shared\SvgIcons.h" />
     <ClInclude Include="..\src\shared\TabGroupsManage.h" />
+    <ClInclude Include="..\src\shared\Tabs.h" />
     <ClInclude Include="..\src\shared\TextSearch.h" />
     <ClInclude Include="..\src\shared\TextSelection.h" />
     <ClInclude Include="..\src\shared\Theme.h" />

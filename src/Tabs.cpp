@@ -60,7 +60,7 @@ TempStr MakeTabTooltipTemp(Str path, bool dirty) {
     return tip;
 }
 
-static TempStr TabPageSuffixTemp(WindowTab* tab) {
+TempStr TabPageSuffixTemp(WindowTab* tab) {
     if (!gSettings || !gSettings->showPageNumberInTabs) {
         return {};
     }

@@ -213,9 +213,6 @@
     <ClInclude Include="..\src\TableOfContents.h">
       <Filter>src</Filter>
     </ClInclude>
-    <ClInclude Include="..\src\Tabs.h">
-      <Filter>src</Filter>
-    </ClInclude>
     <ClInclude Include="..\src\Toolbar.h">
       <Filter>src</Filter>
     </ClInclude>
@@ -508,6 +505,9 @@
       <Filter>src\shared</Filter>
     </ClInclude>
     <ClInclude Include="..\src\shared\TabGroupsManage.h">
+      <Filter>src\shared</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\shared\Tabs.h">
       <Filter>src\shared</Filter>
     </ClInclude>
     <ClInclude Include="..\src\shared\TextSearch.h">

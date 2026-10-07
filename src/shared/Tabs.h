@@ -2,8 +2,17 @@
    License: GPLv3 */
 
 constexpr int kTabBarDy = 24;
-// orig's TabsCtrl: a tab never gets narrower than this
-constexpr int kTabMinDx = 100;
+
+struct MenuModel;
+
+#if OS_WIN
+int GetTabbarHeight(HWND, float factor = 1.f);
+void CreateTabbar(MainWindow*);
+void UpdateTabWidth(MainWindow*);
+void SetTabsInTitlebar(MainWindow* win, bool inTitlebar);
+void SetTabInfoColor(WindowTab*);
+void UpdateTabIsError(WindowTab*);
+#endif
 
 void SaveCurrentWindowTab(MainWindow*);
 void LoadModelIntoTab(WindowTab*);
