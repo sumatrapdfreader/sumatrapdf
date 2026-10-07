@@ -63,13 +63,9 @@ static Kind kNotifStressTestBenchmark = "stressTestBenchmark";
 static Kind kNotifStressTestSummary = "stressTestSummary";
 static AtomicInt gStressTestFileNo = 0;
 
-static void SetStressNotifParent(NotificationCreateArgs& args, MainWindow* win) {
-#if defined(SUMATRA_NG)
-    args.win = win;
+static void SetStressNotifWindow(NotificationCreateArgs& args, MainWindow* win) {
+    SetNotifWindow(args, win);
     args.plainText = true;
-#else
-    args.hwndParent = win->hwndCanvas;
-#endif
 }
 
 // files to skip during stress testing, by name (not full path)
@@ -554,7 +550,7 @@ static void Finished(StressTest* st, bool success) {
         printf("%s\n", s.s);
         fflush(stdout);
         NotificationCreateArgs args;
-        SetStressNotifParent(args, st->win);
+        SetStressNotifWindow(args, st->win);
         args.msg = s;
         args.timeoutMs = 0;
         args.groupId = kNotifStressTestSummary;
@@ -582,7 +578,7 @@ static void Start(StressTest* st, Str path, Str filter, Str ranges, int cycles) 
         TempStr s = fmt("Path '%s' doesn't exist", path);
         logf("%s\n", s);
         NotificationCreateArgs args;
-        SetStressNotifParent(args, st->win);
+        SetStressNotifWindow(args, st->win);
         args.msg = s;
         args.warning = true;
         args.timeoutMs = 0;
@@ -727,7 +723,7 @@ static bool OpenFile(StressTest* st, Str fileName) {
     TempStr s = fmt("File %d (left: %d): %s, time: %s", st->nFilesProcessed, nTotalFiles, fileName, tm);
     logf("%s\n", s);
     NotificationCreateArgs nargs;
-    SetStressNotifParent(nargs, st->win);
+    SetStressNotifWindow(nargs, st->win);
     nargs.msg = s;
     nargs.timeoutMs = 0;
     nargs.groupId = kNotifStressTestSummary;
@@ -814,7 +810,7 @@ static bool GoToNextPage(StressTest* st) {
     TempStr s = fmt("Page %d rendered in %d ms", st->currPageNo, (int)pageRenderTime);
     logf("%s\n", s);
     NotificationCreateArgs args;
-    SetStressNotifParent(args, st->win);
+    SetStressNotifWindow(args, st->win);
     args.msg = s;
     args.groupId = kNotifStressTestBenchmark;
     ShowNotification(args);

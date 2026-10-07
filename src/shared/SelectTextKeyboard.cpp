@@ -330,11 +330,7 @@ bool StopSelectTextWithKeyboard(MainWindow* win) {
 
 static void ShowModeNotification(MainWindow* win) {
     NotificationCreateArgs args;
-#if defined(SUMATRA_NG)
-    args.win = win;
-#else
-    args.hwndParent = win->hwndCanvas;
-#endif
+    SetNotifWindow(args, win);
     args.msg = win->textSelectModeVisual
                    ? Tr("**Arrows**: extend selection * **V**: cursor mode * "
                         "**Esc**: exit keyboard selection")
@@ -364,11 +360,7 @@ void ToggleSelectTextWithKeyboard(MainWindow* win) {
         // no text to put a caret in: don't leave the user in a mode with no
         // feedback (scanned pages without OCR, blank pages)
         NotificationCreateArgs args;
-#if defined(SUMATRA_NG)
-        args.win = win;
-#else
-        args.hwndParent = win->hwndCanvas;
-#endif
+        SetNotifWindow(args, win);
         args.msg = Tr("No text on this page");
         args.timeoutMs = 2000;
         args.groupId = kNotifTextSelectMode;

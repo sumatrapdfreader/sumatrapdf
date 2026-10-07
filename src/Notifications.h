@@ -2,6 +2,7 @@
    License: GPLv3 */
 
 struct NotificationWnd;
+struct MainWindow;
 struct WindowTab;
 struct VirtCtrl;
 struct VirtRichText;
@@ -82,6 +83,7 @@ struct NotificationCreateArgs {
     NotificationClosed onClosed;
 };
 
+void SetNotifWindow(NotificationCreateArgs&, MainWindow*);
 void NotificationUpdateMessage(NotificationWnd* wnd, Str msg, int timeoutInMS = 0, bool highlight = false);
 TempStr NotificationGetMessageTemp(NotificationWnd* wnd);
 void RemoveNotification(NotificationWnd*);

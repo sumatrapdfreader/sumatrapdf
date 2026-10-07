@@ -33,6 +33,10 @@ static Vec<Str> gDelayedNotifications;
 static bool gNotificationsEnabled = true;
 static u32 gNextNotifKey = 1;
 
+void SetNotifWindow(NotificationCreateArgs& args, MainWindow* win) {
+    args.win = win;
+}
+
 const Vec<NotificationWnd*>& GetNotifications() {
     return gNotifications;
 }

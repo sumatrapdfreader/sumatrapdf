@@ -1226,11 +1226,7 @@ class PrintThreadData {
         this->win = win;
         this->data = data;
         NotificationCreateArgs args;
-#if defined(SUMATRA_NG)
-        args.win = win;
-#else
-        args.hwndParent = win->hwndCanvas;
-#endif
+        SetNotifWindow(args, win);
         args.timeoutMs = 0;
         auto fn = MkMethod1<PrintThreadData, NotificationClosedEvent*, &PrintThreadData::OnNotifClosed>(this);
         args.onClosed = fn;

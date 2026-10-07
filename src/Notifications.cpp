@@ -28,6 +28,10 @@
 
 static StrNode* gDelayedNotifications = nullptr;
 
+void SetNotifWindow(NotificationCreateArgs& args, MainWindow* win) {
+    args.hwndParent = win ? win->hwndCanvas : nullptr;
+}
+
 Kind kNotifCursorPos = "cursorPosHelper";
 Kind kNotifActionResponse = "responseToAction";
 Kind kNotifPageInfo = "pageInfoHelper";

@@ -261,11 +261,7 @@ void ToggleKeyboardLinkFollowing(MainWindow* win) {
         // nothing to follow: don't leave the user in a mode with no feedback
         win->linkFollowActive = false;
         NotificationCreateArgs args;
-#if defined(SUMATRA_NG)
-        args.win = win;
-#else
-        args.hwndParent = win->hwndCanvas;
-#endif
+        SetNotifWindow(args, win);
         args.msg = Tr("No links on this page");
         args.timeoutMs = 2000;
         args.groupId = kNotifLinkFollow;

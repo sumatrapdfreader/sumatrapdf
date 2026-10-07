@@ -114,11 +114,7 @@ static void ShowSelectionHandlerNotification(WindowTab* tab, Str msg, bool isWar
         return;
     }
     NotificationCreateArgs args;
-#ifdef SUMATRA_NG
-    args.win = tab->win;
-#else
-    args.hwndParent = tab->win->hwndCanvas;
-#endif
+    SetNotifWindow(args, tab->win);
     args.tab = tab;
     args.warning = isWarning;
     args.timeoutMs = isWarning ? 8000 : 4000;

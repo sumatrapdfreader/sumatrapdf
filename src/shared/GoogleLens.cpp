@@ -35,11 +35,7 @@ static void GoogleLensNotify(WindowTab* tab, Str message) {
         return;
     }
     NotificationCreateArgs args;
-#ifdef SUMATRA_NG
-    args.win = tab->win;
-#else
-    args.hwndParent = tab->win->hwndCanvas;
-#endif
+    SetNotifWindow(args, tab->win);
     args.tab = tab;
     args.warning = true;
     args.timeoutMs = kNotif5SecsTimeOut;

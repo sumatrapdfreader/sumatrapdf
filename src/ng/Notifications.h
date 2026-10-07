@@ -98,6 +98,7 @@ struct NotificationCreateArgs {
     NotificationClosed onClosed;
 };
 
+void SetNotifWindow(NotificationCreateArgs&, MainWindow*);
 NotificationWnd* ShowNotification(const NotificationCreateArgs& args);
 NotificationWnd* ShowTemporaryNotification(MainWindow* win, Str msg, int timeoutMs = kNotifDefaultTimeOut);
 NotificationWnd* ShowWarningNotification(MainWindow* win, Str msg, int timeoutMs);
