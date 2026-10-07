@@ -12,47 +12,31 @@ class Graphics;
 } // namespace Gdiplus
 #endif
 
-// PlatformFont / PlatformFontStyle live in gui/PlatformFont.h and the text
-// measuring API in gui/PlatformText.h; include them before this header
-
-// Layout information for a given page is a list of
-// draw instructions that define what to draw and where.
+// Include gui/PlatformFont.h and gui/PlatformText.h first.
 enum class DrawInstrType {
     Unknown = 0,
-    // a piece of text
     String = 1,
-    // elastic space takes at least spaceDx pixels but can take more
-    // if a line is justified
+    // Minimum spaceDx; expands during justification.
     ElasticSpace,
-    // a fixed space takes a fixed amount of pixels. It's used e.g.
-    // to implement paragraph indentation
+    // Fixed width, e.g. paragraph indentation.
     FixedSpace,
-    // a horizontal line
     Line,
-    // change current font
     SetFont,
-    // an image (raw data for e.g. PixmapFromData)
     Image,
-    // marks the beginning of a link (<a> tag)
     LinkStart,
-    // marks end of the link (must have matching InstrLinkStart)
     LinkEnd,
-    // marks an anchor an internal link might refer to
     Anchor,
-    // an Anchor that marks the beginning of a sub-document within
-    // a merged document (str is the sub-document's path)
+    // Sub-document boundary; str holds its path.
     PageMarkerAnchor,
-    // same as InstrString but for RTL text
     RtlString,
 };
 
 struct DrawInstr {
     DrawInstrType type{DrawInstrType::Unknown};
-    // info specific to a given instruction
-    // InstrString, InstrLinkStart, InstrAnchor, InstrRtlString, InstrImage
+    // Text, link target, anchor name or encoded image.
     ::Str str;
-    PlatformFont* font = nullptr; // InstrSetFont
-    RectF bbox{};                 // common to most instructions
+    PlatformFont* font = nullptr;
+    RectF bbox{};
 
     DrawInstr() = default;
 
@@ -110,18 +94,13 @@ struct HtmlPage {
     explicit HtmlPage(int reparseIdx = 0) : reparseIdx(reparseIdx) {}
 
     Vec<DrawInstr> instructions;
-    // if we start parsing html again from reparseIdx, we should
-    // get the same instructions. reparseIdx is an offset within
-    // html data
-    // TODO: reparsing from reparseIdx can lead to different styling
-    // due to internal state of HtmlFormatter not being properly set
+    // HTML offset for reparsing. Restarting here may not recover the original style.
     int reparseIdx;
 
     Vec<IPageElement*> elements;
     bool gotElements = false;
 };
 
-// just to pack args to HtmlFormatter
 struct HtmlFormatterArgs {
     HtmlFormatterArgs() = default;
     ~HtmlFormatterArgs() { wstr::Free(fontName); }
@@ -139,11 +118,8 @@ struct HtmlFormatterArgs {
     float fontSize = 0;
     bool overrideFontName = false;
 
-    /* Strings stored in DrawInstr must outlive the formatter (they are
-       used for the lifetime of the engine). Strings that don't point into
-       the original html text (e.g. resolved html entities or attribute
-       values, which are owned by the gumbo parse tree destroyed with the
-       formatter) are copied into this allocator. */
+    // DrawInstr strings must outlive the formatter. Keep original HTML alive with
+    // the pages; copy generated strings and Gumbo attributes into this arena.
     Arena* textAllocator = nullptr;
 
     Str htmlStr;
@@ -176,7 +152,6 @@ struct HtmlFormatter {
     void UpdateTagNesting(HtmlToken* t);
     virtual void HandleHtmlTag(HtmlToken* t);
     void HandleText(::Str s);
-    // blank convenience methods to override
     virtual void HandleTagImg(HtmlToken* t) {}
     virtual void HandleTagPagebreak(HtmlToken*) {}
     virtual void HandleTagLink(HtmlToken*) {}
@@ -219,7 +194,6 @@ struct HtmlFormatter {
 
     RectF MeasureTextCached(Str s);
 
-    // constant during layout process
     float pageDx = 0;
     float pageDy = 0;
     float lineSpacing = 0;
@@ -230,11 +204,8 @@ struct HtmlFormatter {
     Arena* textAllocator = nullptr;
     PlatformTextRender* textMeasure = nullptr;
 
-    // Cache of measured text. We assume few distinct fonts, so each font gets
-    // its own hash table (keyed by text only). If we ever see more than
-    // kMaxMeasureCacheFonts fonts, further fonts measure uncached. Because
-    // measurements come in runs of the same font, we remember the last font
-    // to skip the per-font table lookup.
+    // Cache by font and text; excess fonts measure uncached.
+    // Remember the last font to avoid repeated table lookups.
     static constexpr int kMaxMeasureCacheFonts = 6;
     struct MeasureCache {
         PlatformFont* font = nullptr;
@@ -252,46 +223,38 @@ struct HtmlFormatter {
     Vec<DrawStyle> styleStack;
     // style for the start of the next page
     DrawStyle nextPageStyle;
-    // current position in a page
     float currX = 0;
     float currY = 0;
-    // remembered when we start a new line, used when we actually
-    // layout a line
+    // Deferred top padding applied when the line is flushed.
     float currLineTopPadding = 0;
-    // number of nested lists for indenting whole paragraphs
     int listDepth = 0;
-    // per-open-list marker state, for <ul> bullets and <ol> numbering
-    // (incl. honoring the <ol start="N"> attribute)
+    // Markers for open lists, including <ol start="N">.
     struct ListInfo {
         bool ordered = false;
         int nextNum = 1;
     };
     Vec<ListInfo> listInfos;
-    // set if newlines are not to be ignored
     bool preFormatted = false;
-    // set if the reading direction is RTL
     bool dirRtl = false;
     // list of currently opened tags for auto-closing when needed
     Vec<HtmlTag> tagNesting;
     bool keepTagNesting = false;
-    // set from CSS and to be checked by the individual tag handlers
     Vec<StyleRule> styleRules;
 
-    // isntructions for the current line
     Vec<DrawInstr> currLineInstr;
-    // reparse point of the first instructions in a current line
+    // HTML offset of the line's first instruction.
     ptrdiff_t currLineReparseIdx = 0;
     HtmlPage* currPage = nullptr;
 
-    // for tracking whether we're currently inside <a> tag
+    // One-based LinkStart index in currLineInstr; zero outside a link.
     size_t currLinkIdx = 0;
 
-    // reparse point for the current HtmlToken
+    // Current token's HTML offset.
     ptrdiff_t currReparseIdx = 0;
 
     GumboHtmlParser* htmlParser = nullptr;
 
-    // list of pages that we've created but haven't yet sent to client
+    // Pages awaiting Next().
     Vec<HtmlPage*> pagesToSend;
 
     bool finishedParsing = false;
