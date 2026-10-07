@@ -38,7 +38,6 @@ void install_load_mac_font_funcs(fz_context* ctx);
 #include "base/tests/UtAssert.h"
 
 void CachedObjects_UnitTests();
-void PageRenderPolicy_UnitTests();
 void CommandPaletteModel_UnitTests();
 void ImageReader_UnitTests();
 bool RenderCache_UnitTestCookieUnlocked();
@@ -458,7 +457,6 @@ static void PageAspectViewTest() {
 
 void SumatraPDF_UnitTests() {
     CachedObjects_UnitTests();
-    PageRenderPolicy_UnitTests();
     CommandPaletteModel_UnitTests();
     ImageReader_UnitTests();
     utassert(RenderCache_UnitTestCookieUnlocked());

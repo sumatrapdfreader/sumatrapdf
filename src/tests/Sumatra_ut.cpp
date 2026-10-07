@@ -60,7 +60,6 @@ void MobiDoc_UnitTests();
 void PagePosition_UnitTests();
 void PdfSync_UnitTests();
 void CachedObjects_UnitTests();
-void PageRenderPolicy_UnitTests();
 bool PdfDarkModeImageStats_UnitTest();
 void SimpleLogTest();
 
@@ -408,7 +407,6 @@ static void DocPropertiesTest() {
 
 static void SumatraPDF_UnitTests() {
     CachedObjects_UnitTests();
-    PageRenderPolicy_UnitTests();
     CommandPaletteModel_UnitTests();
     DocPropertiesTest();
     parseCommandsTest();

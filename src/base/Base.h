@@ -1204,8 +1204,7 @@ void SleepInMs(int ms);
 
 // ng: the wasm build has no pthreads (emscripten without -pthread), so
 // StartThread() runs the function inline and returns a handle that joins
-// immediately. Code whose "thread" is an endless loop (RenderCache,
-// PageRenderService) tests this and drains on the main thread instead.
+// immediately. RenderCache checks this and drains on the main thread instead.
 constexpr bool kHasThreads = OS_WASM == 0;
 
 void RunAsync(const Func0&, Str threadName = {});

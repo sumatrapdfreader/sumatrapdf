@@ -321,8 +321,6 @@ function sumatrapdf_files()
     "DisplayMode.*",
     "DisplayModel.*",
     "DocumentLayout.*",
-    "PageRenderPolicy.*",
-    "PageRenderService.*",
     "DocController.*",
     "DocProperties.*",
     "EditAnnotations.*",
