@@ -13,13 +13,8 @@
 
 #include "AvifReader.h"
 
-// Set pixmap xres/yres from EXIF density. DisplayModel uses xres as fileDPI:
-// zoomReal at 100% is screenDPI/fileDPI, so a missing density (default 96)
-// makes photos with EXIF 72 or 300 DPI look the wrong physical size.
+// Apply EXIF density so 100% zoom uses the photo's physical size.
 static void ApplyExifDensity(Pixmap* px, const ExifParser& parser) {
-    if (!px) {
-        return;
-    }
     double dpiX = 0, dpiY = 0;
     if (!parser.GetFloatProp(ExifProp::XResolution, &dpiX) || !parser.GetFloatProp(ExifProp::YResolution, &dpiY) ||
         dpiX <= 0 || dpiY <= 0) {
@@ -67,26 +62,27 @@ Pixmap* PixmapFromAvifData(Str d) {
 
     heic_image_destroy(ctx, img);
 
-    // EXIF density + orientation. heicdec returns decoded pixels without
-    // applying density (defaults to 96 dpi); WIC/GDI+ honor EXIF resolution,
-    // which is what DisplayModel uses for 100% zoom size.
-    if (px) {
-        u8* exif = nullptr;
-        size_t n = 0;
-        if (heic_doc_exif(doc, &exif, &n) != 0 && exif && n > 0) {
-            ExifParser parser;
-            if (parser.Parse(Str((const char*)exif, (int)n))) {
-                ApplyExifDensity(px, parser);
-#if OS_WIN
-                i64 orient = 0;
-                if (parser.GetIntProp(ExifProp::Orientation, &orient)) {
-                    px = PixmapApplyExifOrientation(px, (int)orient);
-                }
-#endif
-            }
-            heic_free(ctx, exif);
-        }
+    if (!px) {
+        return nullptr;
     }
 
+    // Match the EXIF density and orientation used by Windows image decoders.
+    u8* exif = nullptr;
+    size_t n = 0;
+    if (heic_doc_exif(doc, &exif, &n) == 0 || !exif || n == 0) {
+        return px;
+    }
+
+    ExifParser parser;
+    if (parser.Parse(Str((const char*)exif, (int)n))) {
+        ApplyExifDensity(px, parser);
+#if OS_WIN
+        i64 orient = 0;
+        if (parser.GetIntProp(ExifProp::Orientation, &orient)) {
+            px = PixmapApplyExifOrientation(px, (int)orient);
+        }
+#endif
+    }
+    heic_free(ctx, exif);
     return px;
 }
