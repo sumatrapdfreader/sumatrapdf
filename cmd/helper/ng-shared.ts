@@ -166,6 +166,7 @@ export const sharedFiles = [
   "src/shared/EngineImages.cpp",
   "src/shared/EngineMupdf.h",
   "src/shared/EnginePs.cpp",
+  "src/shared/ExplorerQuickLook.h",
   "src/shared/EutlTrust.cpp",
   "src/shared/EutlTrust.h",
   "src/shared/ExifDump.cpp",

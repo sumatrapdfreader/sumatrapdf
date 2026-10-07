@@ -138,9 +138,6 @@
     <ClInclude Include="..\src\DocumentProperties.h">
       <Filter>src</Filter>
     </ClInclude>
-    <ClInclude Include="..\src\ExplorerQuickLook.h">
-      <Filter>src</Filter>
-    </ClInclude>
     <ClInclude Include="..\src\Favorites.h">
       <Filter>src</Filter>
     </ClInclude>
@@ -403,6 +400,9 @@
       <Filter>src\shared</Filter>
     </ClInclude>
     <ClInclude Include="..\src\shared\ExifDump.h">
+      <Filter>src\shared</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\shared\ExplorerQuickLook.h">
       <Filter>src\shared</Filter>
     </ClInclude>
     <ClInclude Include="..\src\shared\ExternalViewers.h">

@@ -1402,7 +1402,6 @@
     <ClInclude Include="..\src\CommandPalette.h" />
     <ClInclude Include="..\src\DarkMode.h" />
     <ClInclude Include="..\src\DocumentProperties.h" />
-    <ClInclude Include="..\src\ExplorerQuickLook.h" />
     <ClInclude Include="..\src\Favorites.h" />
     <ClInclude Include="..\src\FilterHighlightDraw.h" />
     <ClInclude Include="..\src\FindBar.h" />
@@ -1491,6 +1490,7 @@
     <ClInclude Include="..\src\shared\EngineMupdf.h" />
     <ClInclude Include="..\src\shared\EutlTrust.h" />
     <ClInclude Include="..\src\shared\ExifDump.h" />
+    <ClInclude Include="..\src\shared\ExplorerQuickLook.h" />
     <ClInclude Include="..\src\shared\ExternalViewers.h" />
     <ClInclude Include="..\src\shared\FileHistory.h" />
     <ClInclude Include="..\src\shared\FileThumbnails.h" />
