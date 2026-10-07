@@ -112,8 +112,6 @@ class GumboHtmlParser {
     HtmlToken* Next();
 };
 
-bool IsSpaceOnly(Str s);
-
 Str ResolveHtmlEntity(Str str, int& rune);
 Str ResolveHtmlEntities(Str s, Arena* a);
 Str ResolveHtmlEntities(Str s);

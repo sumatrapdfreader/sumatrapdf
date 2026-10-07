@@ -711,7 +711,7 @@ void HtmlFormatter::EmitTextRun(Str s) {
     Str run = s;
     currReparseIdx = htmlParser->PosOf(run);
     ReportIf(!ValidReparseIdx(currReparseIdx, htmlParser));
-    ReportIf(IsSpaceOnly(run) && !preFormatted);
+    ReportIf(str::IsEmptyOrWhiteSpace(run) && !preFormatted);
     ::Str tmp = ResolveHtmlEntities(s, textAllocator);
     bool resolved = tmp.s != s.s;
     if (resolved) {

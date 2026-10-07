@@ -222,12 +222,6 @@ static Str ResolveHtmlNamedEntity(Str str, int& rune) {
     return Str(str.s + endOff, str.len - endOff);
 }
 
-// return true if s consists only of whitespace
-bool IsSpaceOnly(Str s) {
-    str::TrimWs(s);
-    return len(s) == 0;
-}
-
 // if "&foo;" was the entity, str points at the char after '&'
 // returns a slice starting after the entity, or empty on failure
 Str ResolveHtmlEntity(Str str, int& rune) {
