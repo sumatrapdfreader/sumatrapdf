@@ -80,14 +80,10 @@ void AddProp(Props& props, DocProp prop, Str val, bool replaceIfExists) {
     ReportIf(prop == DocProp::None || len(val) == 0);
     int idx = GetPropIdx(props, prop);
     if (idx < 0) {
-        // doesn't exsit
         VecAppend(props, {prop, val});
-        return;
+    } else if (replaceIfExists) {
+        props[idx].val = val;
     }
-    if (!replaceIfExists) {
-        return;
-    }
-    props[idx].val = val;
 }
 
 // like AddProp but stores an owned (heap) copy of val. Use when props must
@@ -97,14 +93,11 @@ void AddPropOwned(Props& props, DocProp prop, Str val, bool replaceIfExists) {
         return;
     }
     int idx = GetPropIdx(props, prop);
-    if (idx >= 0 && !replaceIfExists) {
-        return;
-    }
     if (idx < 0) {
         VecAppend(props, {prop, str::Dup(val)});
-        return;
+    } else if (replaceIfExists) {
+        str::ReplaceWithCopy(&props[idx].val, val);
     }
-    str::ReplaceWithCopy(&props[idx].val, val);
 }
 
 // frees values stored by AddPropOwned and empties props
