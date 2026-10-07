@@ -1675,7 +1675,6 @@
     <ClCompile Include="..\src\ScreenshotCapture.cpp" />
     <ClCompile Include="..\src\SearchAndDDE.cpp" />
     <ClCompile Include="..\src\Selection.cpp" />
-    <ClCompile Include="..\src\SelectionHandlers.cpp" />
     <ClCompile Include="..\src\SelectionToolbar.cpp" />
     <ClCompile Include="..\src\SelectionTranslate.cpp" />
     <ClCompile Include="..\src\Settings.cpp" />
@@ -2170,6 +2169,9 @@
     <ClCompile Include="..\src\shared\RefHoverTextDetect.cpp" />
     <ClCompile Include="..\src\shared\RegistryInstaller.cpp" />
     <ClCompile Include="..\src\shared\SelectTextKeyboard.cpp">
+      <PrecompiledHeader>NotUsing</PrecompiledHeader>
+    </ClCompile>
+    <ClCompile Include="..\src\shared\SelectionHandlers.cpp">
       <PrecompiledHeader>NotUsing</PrecompiledHeader>
     </ClCompile>
     <ClCompile Include="..\src\shared\StressTesting.cpp" />

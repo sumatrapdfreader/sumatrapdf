@@ -244,6 +244,7 @@ export const sharedFiles = [
   "src/shared/ReadingBar.cpp",
   "src/shared/ReadingBar.h",
   "src/shared/ReadingAutoScroll.h",
+  "src/shared/SelectionHandlers.cpp",
   "src/shared/SelectionHandlers.h",
   "src/shared/SelectionTranslate.h",
   "src/shared/SelectionToolbar.h",

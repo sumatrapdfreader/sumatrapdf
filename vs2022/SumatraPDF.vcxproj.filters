@@ -803,9 +803,6 @@
     <ClCompile Include="..\src\Selection.cpp">
       <Filter>src</Filter>
     </ClCompile>
-    <ClCompile Include="..\src\SelectionHandlers.cpp">
-      <Filter>src</Filter>
-    </ClCompile>
     <ClCompile Include="..\src\SelectionToolbar.cpp">
       <Filter>src</Filter>
     </ClCompile>
@@ -1221,6 +1218,9 @@
       <Filter>src\shared</Filter>
     </ClCompile>
     <ClCompile Include="..\src\shared\SelectTextKeyboard.cpp">
+      <Filter>src\shared</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\shared\SelectionHandlers.cpp">
       <Filter>src\shared</Filter>
     </ClCompile>
     <ClCompile Include="..\src\shared\StressTesting.cpp">

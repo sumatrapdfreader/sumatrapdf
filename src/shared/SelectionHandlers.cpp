@@ -1,38 +1,13 @@
 /* Copyright 2026 the SumatraPDF project authors (see AUTHORS file).
    License: GPLv3 */
 
-// Sending selected text to a web service (the SelectionHandlers setting).
-//
-// Three ways to send it, chosen by the Method field:
-//
-//  GET (default)     the selection is URL-encoded into the URL and the URL is
-//                    opened in the browser. Simple, works with any search or
-//                    translation site, but a URL can only hold so much text -
-//                    see kMaxUrlEncodedLen. This is what every
-//                    SelectionHandlers entry did before Method existed.
-//
-//  POST              we make the http request ourselves and put the selection
-//                    in the body, so there is no length limit. Supports custom
-//                    headers, which is how api services authenticate. The
-//                    browser is not involved, so the service does NOT see the
-//                    user's cookies or logins - an api key in Headers is the
-//                    only credential it gets. The response is reported in a
-//                    notification, not rendered.
-//
-//  POST-VIA-BROWSER  we write a temp html page containing a form that submits
-//                    itself, and open it in the browser. Also unlimited in
-//                    length, and because the browser sends it, the service sees
-//                    the user's normal session - which is what you want for a
-//                    site you're logged into. Custom headers are impossible
-//                    this way (a form submission can't set them).
-//
-// Why WinHTTP rather than the WinINet used elsewhere in base/Http.cpp:
-// WinINet shares Internet Explorer's cookie jar and cache, so a request would
-// carry whatever cookies happen to be lying around to a third-party endpoint.
-// For calls that are meant to be authenticated only by an explicit api key,
-// that's both surprising and a privacy leak.
-
+// Sends selected text with GET, POST, or a browser-submitted POST form.
+#ifdef SUMATRA_NG
 #include "gui/GpuiBridge.h"
+#else
+#include "base/Base.h"
+#include "base/AutoWin.h"
+#endif
 #include "base/File.h"
 #include "base/JsonParser.h"
 #include "base/Http.h"
@@ -41,6 +16,10 @@
 #include "base/UITask.h"
 
 #include "gui/UIModels.h"
+#ifndef SUMATRA_NG
+#include "gui/Layout.h"
+#include "gui/win/WinGui.h"
+#endif
 
 #include "Settings.h"
 #include "DisplayMode.h"
@@ -56,8 +35,6 @@
 #include "TextSelection.h"
 #include "Selection.h"
 #include "SelectionHandlers.h"
-
-#include "SumatraLog.h"
 
 constexpr const char* kUserLangStr = "${userlang}";
 constexpr const char* kSelectionStr = "${selection}";
@@ -137,7 +114,11 @@ static void ShowSelectionHandlerNotification(WindowTab* tab, Str msg, bool isWar
         return;
     }
     NotificationCreateArgs args;
+#ifdef SUMATRA_NG
     args.win = tab->win;
+#else
+    args.hwndParent = tab->win->hwndCanvas;
+#endif
     args.tab = tab;
     args.warning = isWarning;
     args.timeoutMs = isWarning ? 8000 : 4000;
@@ -196,7 +177,6 @@ static void PostRequestFinished(PostRequest* req) {
         }
         msg = str::JoinTemp(msg, StrL("\n"), body);
     }
-    logf("SelectionHandlerPost: status=%d err=%d\n", (int)req->statusCode, (int)req->winErr);
     ShowSelectionHandlerNotification(req->tab, msg, !ok || req->winErr != 0);
     FreePostRequest(req);
 }
@@ -275,7 +255,6 @@ void SelectionHandlerPost(WindowTab* tab, Str url, Str bodyPattern, Str contentT
     req->contentType = str::Dup(ct);
     req->headers = str::Dup(headers);
 
-    logf("SelectionHandlerPost: url '%s' %d bytes\n", req->url, len(req->body));
 #if OS_WASM
     PostRequestWasm(req);
 #else
@@ -369,7 +348,6 @@ void SelectionHandlerPostViaBrowser(WindowTab* tab, Str url, Str bodyPattern, St
         ShowSelectionHandlerNotification(tab, Tr("Couldn't create a temporary file"), true);
         return;
     }
-    logf("SelectionHandlerPostViaBrowser: url '%s' -> '%s'\n", url, path);
     // the file stays behind after the browser reads it; it's overwritten on the
     // next use and lives in the temp directory, which the system cleans up
     LaunchFileShell(path, Str(), StrL("open"));
