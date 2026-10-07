@@ -241,6 +241,7 @@ float RefHoverResolveDestYFromSourceText(EngineBase* engine, int srcPage, RectF 
     auto isAlnum = [](WCHAR c) {
         return (c >= L'a' && c <= L'z') || (c >= L'A' && c <= L'Z') || (c >= L'0' && c <= L'9');
     };
+    auto lowerAscii = [](WCHAR c) { return c >= L'A' && c <= L'Z' ? (WCHAR)(c + L'a' - L'A') : c; };
 
     struct Cand {
         int start;
@@ -312,15 +313,7 @@ float RefHoverResolveDestYFromSourceText(EngineBase* engine, int srcPage, RectF 
                 return false;
             }
             for (int j = 0; j < bestLen; j++) {
-                WCHAR a = destText.s[idx + j];
-                WCHAR b = rawText[bestStart + j];
-                if (a >= L'A' && a <= L'Z') {
-                    a = (WCHAR)(a + 32);
-                }
-                if (b >= L'A' && b <= L'Z') {
-                    b = (WCHAR)(b + 32);
-                }
-                if (a != b) {
+                if (lowerAscii(destText.s[idx + j]) != lowerAscii(rawText[bestStart + j])) {
                     return false;
                 }
             }
