@@ -1453,6 +1453,7 @@ export const targets: Target[] = [
     perSource: [
       { glob: "src/ng/LinkFollow.cpp", flags: ["-DSUMATRA_NG"], msvcFlags: ["/DSUMATRA_NG"] },
       { glob: "src/ng/SelectTextKeyboard.cpp", flags: ["-DSUMATRA_NG"], msvcFlags: ["/DSUMATRA_NG"] },
+      { glob: "src/ng/StressTesting.cpp", flags: ["-DSUMATRA_NG"], msvcFlags: ["/DSUMATRA_NG"] },
     ],
     includes: ["src/ng", "ext/gpui", "ext/mupdf/include"],
     // the app icon, the document-type icons, the version resource and the

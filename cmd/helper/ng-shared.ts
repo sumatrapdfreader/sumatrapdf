@@ -248,6 +248,7 @@ export const sharedFiles = [
   "src/shared/SelectTextKeyboard.cpp",
   "src/shared/SelectTextKeyboard.h",
   "src/shared/ShortcutParse.h",
+  "src/shared/StressTesting.cpp",
   "src/shared/StressTesting.h",
   "src/shared/SumatraConfig.cpp",
   "src/shared/SumatraConfig.h",

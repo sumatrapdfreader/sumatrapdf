@@ -7,12 +7,16 @@
 #include "base/File.h"
 #include "base/GuessFileType.h"
 #include "base/Timer.h"
+#if !defined(SUMATRA_NG) || OS_WIN
 #include "base/Win.h"
+#endif
 #include "base/StrQueue.h"
 
 #include "gui/UIModels.h"
+#if !defined(SUMATRA_NG)
 #include "gui/Layout.h"
 #include "gui/win/WinGui.h"
+#endif
 
 #include "Settings.h"
 #include "DocProperties.h"
@@ -32,20 +36,41 @@
 #include "WindowTab.h"
 #include "Flags.h"
 #include "SearchAndDDE.h"
+#if defined(SUMATRA_NG)
+#include "FindBar.h"
+#include "gui/AppShell.h"
+#endif
 #include "base/CrashHandler.h"
 #include "StressTesting.h"
 
+#if defined(SUMATRA_NG)
+#include "SumatraLog.h"
+#endif
+
+#if !defined(SUMATRA_NG)
 constexpr int kFirstStressTimerID = 101;
+#endif
 
 constexpr int kStressTestMaxPagesPerFile = 16;
 constexpr int kStressTestMaxPagesSlowFile = 8;
 constexpr int kStressTestSlowPageMs = 4 * 1000;
 
 static bool gIsStressTesting = false;
+#if !defined(SUMATRA_NG)
 static int gCurrStressTimerId = kFirstStressTimerID;
+#endif
 static Kind kNotifStressTestBenchmark = "stressTestBenchmark";
 static Kind kNotifStressTestSummary = "stressTestSummary";
 static AtomicInt gStressTestFileNo = 0;
+
+static void SetStressNotifParent(NotificationCreateArgs& args, MainWindow* win) {
+#if defined(SUMATRA_NG)
+    args.win = win;
+    args.plainText = true;
+#else
+    args.hwndParent = win->hwndCanvas;
+#endif
+}
 
 // files to skip during stress testing, by name (not full path)
 static const char* gStressTestBlacklist[] = {
@@ -268,18 +293,8 @@ static bool IsStressTestSupportedFile(Str filePath, Str filter) {
     return false;
 }
 
-// return t1 - t2 in seconds
-static int SystemTimeDiffInSecs(SYSTEMTIME& t1, SYSTEMTIME& t2) {
-    FILETIME ft1, ft2;
-    SystemTimeToFileTime(&t1, &ft1);
-    SystemTimeToFileTime(&t2, &ft2);
-    return FileTimeDiffInSecs(ft1, ft2);
-}
-
-static int SecsSinceSystemTime(SYSTEMTIME& time) {
-    SYSTEMTIME currTime;
-    GetSystemTime(&currTime);
-    return SystemTimeDiffInSecs(currTime, time);
+static int SecsSinceTime(TimeStamp time) {
+    return (int)(TimeSinceInMs(time) / 1000.0);
 }
 
 static TempStr FormatTimeTemp(int totalSecs) {
@@ -320,17 +335,17 @@ static void MakeRandomSelection(MainWindow* win, int pageNo) {
 // encapsulates the logic of getting the next file to test, so
 // that we can implement different strategies
 struct TestFileProvider {
-    AtomicInt refCount = 1;
+    AtomicRefCount refCount = 1;
     virtual ~TestFileProvider() {}
     // returns path of the next file to test or nullptr if done (caller needs to free() the result)
     virtual TempStr NextFile() = 0;
     virtual void Restart() = 0;
     virtual int GetFilesCount() = 0;
 
-    void AddRef() { AtomicIntInc(&refCount); }
+    void AddRef() { AtomicRefCountAdd(&refCount); }
     // returns new ref count
     int Release() {
-        int n = AtomicIntDec(&refCount);
+        int n = AtomicRefCountDec(&refCount);
         ReportIf(n < 0);
         if (n == 0) {
             delete this;
@@ -447,18 +462,20 @@ of PDFs before a release to make sure we're crash proof. */
 
 struct StressTest {
     MainWindow* win = nullptr;
-    LARGE_INTEGER currPageRenderTime = {};
+    TimeStamp currPageRenderTime = {};
     Vec<int> pagesToRender;
     int currPageNo = 0;
     int pageForSearchStart = 0;
     int nFilesProcessed = 0; // number of files processed so far
     int maxFiles = 0;        // max files to process, 0 means no limit
+#if !defined(SUMATRA_NG)
     int timerId = 0;
+#endif
     bool exitWhenDone = false;
     int maxPagesForFile = kStressTestMaxPagesPerFile;
     int nPagesRenderedThisFile = 0;
 
-    SYSTEMTIME stressStartTime{};
+    TimeStamp stressStartTime{};
     int cycles = 1;
     Vec<PageRange> pageRanges;
     // range of files to render (files get a new index when going through several cycles)
@@ -491,7 +508,9 @@ static void LimitPagesToRender(Vec<int>& pages, int maxPages) {
 StressTest::StressTest(MainWindow* win, bool exitWhenDone) {
     this->win = win;
     this->exitWhenDone = exitWhenDone;
+#if !defined(SUMATRA_NG)
     timerId = gCurrStressTimerId++;
+#endif
 }
 
 StressTest::~StressTest() {
@@ -501,11 +520,15 @@ StressTest::~StressTest() {
 }
 
 static void TickTimer(StressTest* st) {
+#if !defined(SUMATRA_NG)
     SetTimer(st->win->hwndFrame, st->timerId, USER_TIMER_MINIMUM, nullptr);
+#else
+    (void)st;
+#endif
 }
 
 static void Start(StressTest* st, TestFileProvider* fileProvider, int cycles) {
-    GetSystemTime(&st->stressStartTime);
+    st->stressStartTime = TimeGet();
 
     st->fileProvider = fileProvider;
     st->cycles = cycles;
@@ -524,21 +547,25 @@ static void Finished(StressTest* st, bool success) {
     st->win->stressTest = nullptr; // make sure we're not double-deleted
 
     if (success) {
-        int secs = SecsSinceSystemTime(st->stressStartTime);
+        int secs = SecsSinceTime(st->stressStartTime);
         TempStr tm = FormatTimeTemp(secs);
         TempStr s = fmt("Stress test complete, rendered %d files in %s", st->nFilesProcessed, tm);
         logf("%s\n", s);
         printf("%s\n", s.s);
         fflush(stdout);
         NotificationCreateArgs args;
-        args.hwndParent = st->win->hwndCanvas;
+        SetStressNotifParent(args, st->win);
         args.msg = s;
         args.timeoutMs = 0;
         args.groupId = kNotifStressTestSummary;
         ShowNotification(args);
     }
 
+#if defined(SUMATRA_NG)
+    CloseWindow(st->win, st->exitWhenDone, false);
+#else
     CloseWindow(st->win, st->exitWhenDone && CanCloseWindow(st->win), false);
+#endif
     delete st;
 }
 
@@ -555,7 +582,7 @@ static void Start(StressTest* st, Str path, Str filter, Str ranges, int cycles) 
         TempStr s = fmt("Path '%s' doesn't exist", path);
         logf("%s\n", s);
         NotificationCreateArgs args;
-        args.hwndParent = st->win->hwndCanvas;
+        SetStressNotifParent(args, st->win);
         args.msg = s;
         args.warning = true;
         args.timeoutMs = 0;
@@ -563,6 +590,17 @@ static void Start(StressTest* st, Str path, Str filter, Str ranges, int cycles) 
         ShowNotification(args);
         Finished(st, false);
     }
+}
+
+static void StartStressSearch(MainWindow* win) {
+#if defined(SUMATRA_NG)
+    FindTextOnThread(win, TextSearch::Direction::Forward, StrL("!z_yt"), true, true);
+#else
+    if (win->findEdit) {
+        win->findEdit->SetText(StrL("!z_yt"));
+    }
+    FindTextOnThread(win, TextSearch::Direction::Forward, true);
+#endif
 }
 
 static bool OpenFile(StressTest* st, Str fileName) {
@@ -574,11 +612,14 @@ static bool OpenFile(StressTest* st, Str fileName) {
     printf("%d: %s\n", fileNo, fileName.s);
     fflush(stdout);
 
+#if defined(SUMATRA_NG)
+    MainWindow* w = LoadDocument(st->win, fileName, LoadPrefs::Save, LoadReuse::CurrentTab);
+#else
     LoadArgs args(fileName, st->win);
-    // args->forceReuse = rand() % 3 != 1;
     args.forceReuse = true;
     args.noPlaceWindow = true;
     MainWindow* w = LoadDocument(&args);
+#endif
     if (!w) {
         return false;
     }
@@ -625,8 +666,13 @@ static bool OpenFile(StressTest* st, Str fileName) {
     ctrl->SetDisplayMode(DisplayMode::Continuous);
     ctrl->SetZoomVirtual(kZoomFitPage, nullptr);
     ctrl->GoToFirstPage();
-    if (st->win->uiState.sidebarTopVisible || gSettings->showFavorites) {
-        SetSidebarVisibility(st->win, st->win->uiState.sidebarTopVisible, gSettings->showFavorites);
+#if defined(SUMATRA_NG)
+    bool tocVisible = st->win->uiState.tocVisible;
+#else
+    bool tocVisible = st->win->uiState.sidebarTopVisible;
+#endif
+    if (tocVisible || gSettings->showFavorites) {
+        SetSidebarVisibility(st->win, tocVisible, gSettings->showFavorites);
     }
 
     st->maxPagesForFile = kStressTestMaxPagesPerFile;
@@ -672,20 +718,16 @@ static bool OpenFile(StressTest* st, Str fileName) {
 
     // search immediately in single page documents
     if (1 == st->pageForSearchStart) {
-        // use text that is unlikely to be found, so that we search all pages
-        if (st->win->findEdit) {
-            st->win->findEdit->SetText(StrL("!z_yt"));
-        }
-        FindTextOnThread(st->win, TextSearch::Direction::Forward, true);
+        StartStressSearch(st->win);
     }
 
-    int secs = SecsSinceSystemTime(st->stressStartTime);
+    int secs = SecsSinceTime(st->stressStartTime);
     TempStr tm = FormatTimeTemp(secs);
     int nTotalFiles = st->fileProvider->GetFilesCount();
     TempStr s = fmt("File %d (left: %d): %s, time: %s", st->nFilesProcessed, nTotalFiles, fileName, tm);
     logf("%s\n", s);
     NotificationCreateArgs nargs;
-    nargs.hwndParent = st->win->hwndCanvas;
+    SetStressNotifParent(nargs, st->win);
     nargs.msg = s;
     nargs.timeoutMs = 0;
     nargs.groupId = kNotifStressTestSummary;
@@ -772,7 +814,7 @@ static bool GoToNextPage(StressTest* st) {
     TempStr s = fmt("Page %d rendered in %d ms", st->currPageNo, (int)pageRenderTime);
     logf("%s\n", s);
     NotificationCreateArgs args;
-    args.hwndParent = st->win->hwndCanvas;
+    SetStressNotifParent(args, st->win);
     args.msg = s;
     args.groupId = kNotifStressTestBenchmark;
     ShowNotification(args);
@@ -817,13 +859,10 @@ static bool GoToNextPage(StressTest* st) {
     // TODO: it would be nice to also randomize search starting page but the
     // current API doesn't make it easy
     if (st->currPageNo == st->pageForSearchStart) {
-        // use text that is unlikely to be found, so that we search all pages
-        if (st->win->findEdit) {
-            st->win->findEdit->SetText(StrL("!z_yt"));
-        }
-        FindTextOnThread(st->win, TextSearch::Direction::Forward, true);
+        StartStressSearch(st->win);
     }
 
+#if !defined(SUMATRA_NG)
     if (1 == rand() % 3) {
         Rect rect = HwndClientRect(st->win->hwndFrame);
         int deltaX = (rand() % 40) - 23;
@@ -838,15 +877,22 @@ static bool GoToNextPage(StressTest* st) {
         }
         SendMessageW(st->win->hwndFrame, WM_SIZE, 0, MAKELONG(rect.dx, rect.dy));
     }
+#endif
     return true;
 }
 
+#if defined(SUMATRA_NG)
+static void OnTimer(StressTest* st) {
+#else
 static void OnTimer(StressTest* st, int timerIdGot) {
+#endif
     DisplayModel* dm;
     bool didRender;
 
+#if !defined(SUMATRA_NG)
     ReportIf(st->timerId != timerIdGot);
     KillTimer(st->win->hwndFrame, st->timerId);
+#endif
     if (!st->win->IsDocLoaded()) {
         if (!GoToNextFile(st)) {
             Finished(st, true);
@@ -890,7 +936,7 @@ Next:
 // note: used from CrashHandler, shouldn't allocate memory
 static void GetLogInfo(str::Builder& b, StressTest* st) {
     b.Append(fmt(", stress test rendered %d files in ", st->nFilesProcessed));
-    b.Append(FormatTimeTemp(SecsSinceSystemTime(st->stressStartTime)));
+    b.Append(FormatTimeTemp(SecsSinceTime(st->stressStartTime)));
     b.Append(fmt(", currPage: %d", st->currPageNo));
 }
 
@@ -917,6 +963,7 @@ void GetStressTestInfo(str::Builder& b) {
     }
 }
 
+#if !defined(SUMATRA_NG)
 static Rect GetWorkAreaRect() {
     RECT rc;
     SystemParametersInfo(SPI_GETWORKAREA, 0, &rc, 0);
@@ -950,6 +997,9 @@ static void PositionStressWindows(MainWindow** windows, int n) {
         MoveWindow(windows[j]->hwndFrame, p.x, p.y, p.dx, p.dy, TRUE);
     }
 }
+#else
+static void PositionStressWindows(MainWindow**, int) {}
+#endif
 
 void StartStressTest(Flags* i, MainWindow* win) {
     gIsStressTesting = true;
@@ -957,13 +1007,18 @@ void StartStressTest(Flags* i, MainWindow* win) {
     gSettings->chmUI.useFixedPageUI = true;
     // TODO: make stress test work with tabs?
     gSettings->useTabs = false;
-    // forbid entering sleep mode during tests
+#if !defined(SUMATRA_NG) || OS_WIN
     SetThreadExecutionState(ES_CONTINUOUS | ES_SYSTEM_REQUIRED | ES_DISPLAY_REQUIRED);
+#endif
     srand((unsigned int)time(nullptr));
 
-    // redirect stderr to NUL to disable (MuPDF) logging
-    FILE* nul;
+#if !defined(SUMATRA_NG) || OS_WIN
+    FILE* nul = nullptr;
     freopen_s(&nul, "NUL", "w", stderr);
+#else
+    FILE* nul = freopen("/dev/null", "w", stderr);
+#endif
+    (void)nul;
 
     int n = i->stressParallelCount;
     if (n > 4) {
@@ -1012,9 +1067,17 @@ void StartStressTest(Flags* i, MainWindow* win) {
     }
 }
 
+#if defined(SUMATRA_NG)
+void OnStressTestTimer(MainWindow* win) {
+    if (win->stressTest) {
+        OnTimer(win->stressTest);
+    }
+}
+#else
 void OnStressTestTimer(MainWindow* win, int timerId) {
     OnTimer(win->stressTest, timerId);
 }
+#endif
 
 void FinishStressTest(MainWindow* win) {
     delete win->stressTest;

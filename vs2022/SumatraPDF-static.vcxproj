@@ -1670,7 +1670,6 @@
     <ClCompile Include="..\src\SidebarPanel.cpp" />
     <ClCompile Include="..\src\SignDocumentDialog.cpp" />
     <ClCompile Include="..\src\SimpleBrowserWindow.cpp" />
-    <ClCompile Include="..\src\StressTesting.cpp" />
     <ClCompile Include="..\src\SumatraControl.cpp" />
     <ClCompile Include="..\src\SumatraDialogs.cpp" />
     <ClCompile Include="..\src\SumatraPDF.cpp" />
@@ -2155,6 +2154,7 @@
     <ClCompile Include="..\src\shared\SelectTextKeyboard.cpp">
       <PrecompiledHeader>NotUsing</PrecompiledHeader>
     </ClCompile>
+    <ClCompile Include="..\src\shared\StressTesting.cpp" />
     <ClCompile Include="..\src\shared\SumatraConfig.cpp" />
     <ClCompile Include="..\src\shared\SumatraLog.cpp" />
     <ClCompile Include="..\src\shared\TextSearch.cpp">

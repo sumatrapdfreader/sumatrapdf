@@ -833,9 +833,6 @@
     <ClCompile Include="..\src\SimpleBrowserWindow.cpp">
       <Filter>src</Filter>
     </ClCompile>
-    <ClCompile Include="..\src\StressTesting.cpp">
-      <Filter>src</Filter>
-    </ClCompile>
     <ClCompile Include="..\src\SumatraControl.cpp">
       <Filter>src</Filter>
     </ClCompile>
@@ -1221,6 +1218,9 @@
       <Filter>src\shared</Filter>
     </ClCompile>
     <ClCompile Include="..\src\shared\SelectTextKeyboard.cpp">
+      <Filter>src\shared</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\shared\StressTesting.cpp">
       <Filter>src\shared</Filter>
     </ClCompile>
     <ClCompile Include="..\src\shared\SumatraConfig.cpp">
