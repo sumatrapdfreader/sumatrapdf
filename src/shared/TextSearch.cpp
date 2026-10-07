@@ -344,6 +344,19 @@ TextSearch::PageAndOffset TextSearch::MatchEnd(int startOff) const {
         }
     }
 
+    auto nextPage = [&]() {
+        if (!PageAllowed(++currentPage)) {
+            return false;
+        }
+        bool abortSearch = false;
+        currentPageText = GetSearchPageText(engine, currentPage, currentPageTextLen, progressCb, abortSearch);
+        if (abortSearch) {
+            return false;
+        }
+        endIdx = endByteIdx = 0;
+        return true;
+    };
+
     while (matchIdx < findTextLen) {
         bool atPageEnd = endIdx >= currentPageTextLen;
         if (atPageEnd && currentPage >= nPages) {
@@ -388,26 +401,12 @@ TextSearch::PageAndOffset TextSearch::MatchEnd(int startOff) const {
         int matchAdv = 1 + extraMatchAdv;
         matchByteIdx = matchNextByteIdx;
         matchIdx += matchAdv;
-        // We might get here either ...
         if (!atPageEnd && endCh) {
-            // ... because there's a genuine match -> consider next character in next loop iteration
             int endAdv = 1 + extraEndAdv;
             endByteIdx = endNextByteIdx;
             endIdx += endAdv;
-        } else {
-            // ... or because we were looking at whitespace in the pattern and we were at a page break
-            // -> skip to next page (but not past a restricted range)
-            ++currentPage;
-            if (!PageAllowed(currentPage)) {
-                return notFound;
-            }
-            bool abortSearch = false;
-            currentPageText = GetSearchPageText(engine, currentPage, currentPageTextLen, progressCb, abortSearch);
-            if (abortSearch) {
-                return notFound;
-            }
-            endIdx = 0;
-            endByteIdx = 0;
+        } else if (!nextPage()) {
+            return notFound;
         }
         // treat "??" and "? ?" differently, since '?' could have been a word
         // character that's just missing an encoding (and '?' is the replacement
@@ -420,15 +419,9 @@ TextSearch::PageAndOffset TextSearch::MatchEnd(int startOff) const {
             SkipWhitespace(findText, findTextLen, matchIdx, matchByteIdx);
             SkipWhitespace(currentPageText, currentPageTextLen, endIdx, endByteIdx);
             while (endIdx >= currentPageTextLen && PageAllowed(currentPage + 1)) {
-                // treat page break as whitespace, too
-                ++currentPage;
-                bool abortSearch = false;
-                currentPageText = GetSearchPageText(engine, currentPage, currentPageTextLen, progressCb, abortSearch);
-                if (abortSearch) {
+                if (!nextPage()) {
                     return notFound;
                 }
-                endIdx = 0;
-                endByteIdx = 0;
                 SkipWhitespace(currentPageText, currentPageTextLen, endIdx, endByteIdx);
             }
         }
