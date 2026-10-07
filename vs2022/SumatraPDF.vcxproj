@@ -1653,7 +1653,6 @@
     <ClCompile Include="..\src\RefHoverPopup.cpp" />
     <ClCompile Include="..\src\RegistryPreview.cpp" />
     <ClCompile Include="..\src\RegistrySearchFilter.cpp" />
-    <ClCompile Include="..\src\RenderCache.cpp" />
     <ClCompile Include="..\src\Screenshot.cpp" />
     <ClCompile Include="..\src\ScreenshotCapture.cpp" />
     <ClCompile Include="..\src\SearchAndDDE.cpp" />
@@ -2165,6 +2164,7 @@
     <ClCompile Include="..\src\shared\RefHoverText.cpp" />
     <ClCompile Include="..\src\shared\RefHoverTextDetect.cpp" />
     <ClCompile Include="..\src\shared\RegistryInstaller.cpp" />
+    <ClCompile Include="..\src\shared\RenderCache.cpp" />
     <ClCompile Include="..\src\shared\SelectTextKeyboard.cpp">
       <PrecompiledHeader>NotUsing</PrecompiledHeader>
     </ClCompile>

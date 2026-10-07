@@ -758,9 +758,6 @@
     <ClCompile Include="..\src\RegistrySearchFilter.cpp">
       <Filter>src</Filter>
     </ClCompile>
-    <ClCompile Include="..\src\RenderCache.cpp">
-      <Filter>src</Filter>
-    </ClCompile>
     <ClCompile Include="..\src\Screenshot.cpp">
       <Filter>src</Filter>
     </ClCompile>
@@ -1200,6 +1197,9 @@
       <Filter>src\shared</Filter>
     </ClCompile>
     <ClCompile Include="..\src\shared\RegistryInstaller.cpp">
+      <Filter>src\shared</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\shared\RenderCache.cpp">
       <Filter>src\shared</Filter>
     </ClCompile>
     <ClCompile Include="..\src\shared\SelectTextKeyboard.cpp">
