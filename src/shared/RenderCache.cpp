@@ -1680,18 +1680,9 @@ i64 RenderCache::CacheBytes(int& nEntriesOut) {
 }
 
 void RenderCache::LogCacheSize() {
-    ScopedRecursiveMutex scope(&cacheAccess);
-    i64 size = 0;
-    for (int i = 0; i < cacheCount; i++) {
-        BitmapCacheEntry* e = cache[i];
-        if (e->bitmap) {
-            i64 bs = PixmapByteSize(e->bitmap);
-            size += bs;
-        }
-    }
-    // ng: orig leaves the total unused (its logging is commented out), which
-    // clang rejects under /WX
-    rcLogf("RenderCache::LogCacheSize: %d entries, %lld bytes\n", cacheCount, (long long)size);
+    int count = 0;
+    i64 size = CacheBytes(count);
+    rcLogf("RenderCache::LogCacheSize: %d entries, %lld bytes\n", count, (long long)size);
 }
 
 // --------- render queue debug window (CmdDebugToggleRenderInfo) ---------
