@@ -54,10 +54,8 @@ bool DecodeRgbInto(Str d, DecodeDstAllocFn allocDst, void* user) {
         return false;
     }
     size_t size = (size_t)stride * h;
-    if (hasAlpha) {
-        return WebPDecodeRGBAInto((const u8*)d.s, (size_t)d.len, dst, size, stride) != nullptr;
-    }
-    return WebPDecodeRGBInto((const u8*)d.s, (size_t)d.len, dst, size, stride) != nullptr;
+    auto decode = hasAlpha ? WebPDecodeRGBAInto : WebPDecodeRGBInto;
+    return decode((const u8*)d.s, (size_t)len(d), dst, size, stride) != nullptr;
 }
 
 } // namespace webp
