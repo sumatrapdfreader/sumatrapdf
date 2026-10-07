@@ -582,10 +582,7 @@ Str MobiDoc::GetCoverImage() {
         return {};
     }
     int imageNo = coverImageRec - imageFirstRec;
-    if (imageNo >= len(images) || len(images[imageNo]) == 0) {
-        return {};
-    }
-    return images[imageNo];
+    return imageNo >= len(images) ? Str{} : GetImage(imageNo + 1);
 }
 
 // each record can have extra data at the end, which we must discard
