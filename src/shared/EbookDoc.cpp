@@ -610,13 +610,7 @@ static bool ParseNavToc(Str data, Str pagePath, EbookTocVisitor* visitor) {
         }
         HtmlTag itemTag = tok->tag;
         str::Builder text;
-        TempStr href;
-        if (Tag_A == tok->tag) {
-            AttrInfo attrInfo = tok->GetAttrByName(StrL("href"));
-            if (attrInfo) {
-                href = str::DupTemp(attrInfo.val);
-            }
-        }
+        Str href = Tag_A == tok->tag ? tok->GetAttrByName(StrL("href")).val : Str{};
         while ((tok = parser.Next()) != nullptr && (!tok->IsEndTag() || itemTag != tok->tag)) {
             if (tok->IsText()) {
                 text.Append(tok->s);
