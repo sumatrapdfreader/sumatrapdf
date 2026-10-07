@@ -31,6 +31,27 @@ void PdfCreator::SetProducerName(Str name) {
     }
 }
 
+// Takes ownership of data through the temporary pixmap.
+static fz_image* FzImageFromRgbData(fz_context* ctx, u8* data, int width, int height, int stride) {
+    fz_pixmap* pixmap = nullptr;
+    fz_image* image = nullptr;
+    fz_var(pixmap);
+    fz_var(image);
+    fz_try(ctx) {
+        pixmap = fz_new_pixmap_with_data(ctx, fz_device_rgb(ctx), width, height, nullptr, 0, stride, data);
+        pixmap->flags |= FZ_PIXMAP_FLAG_FREE_SAMPLES;
+        image = fz_new_image_from_pixmap(ctx, pixmap, nullptr);
+    }
+    fz_always(ctx) {
+        fz_drop_pixmap(ctx, pixmap);
+    }
+    fz_catch(ctx) {
+        fz_report_error(ctx);
+        fz_rethrow(ctx);
+    }
+    return image;
+}
+
 // TODO: the resulting pdf is big, even though we tell it to compress images
 // maybe encode bitmaps to *.png or .jp2 and use AddPageFromImageData
 #if OS_WIN
@@ -76,22 +97,7 @@ static fz_image* render_to_pixmap(fz_context* ctx, HBITMAP hbmp, Size size) {
         }
     }
 
-    fz_color_params cp = fz_default_color_params;
-    fz_colorspace* cs = fz_device_rgb(ctx);
-    fz_image* img = nullptr;
-    fz_var(img);
-
-    fz_try(ctx) {
-        fz_pixmap* pix = fz_new_pixmap_with_data(ctx, cs, w, h, nullptr, 0, stride, data);
-        pix->flags |= FZ_PIXMAP_FLAG_FREE_SAMPLES;
-        img = fz_new_image_from_pixmap(ctx, pix, nullptr);
-        fz_drop_pixmap(ctx, pix);
-    }
-    fz_catch(ctx) {
-        fz_report_error(ctx);
-        fz_rethrow(ctx);
-    }
-    return img;
+    return FzImageFromRgbData(ctx, data, w, h, stride);
 }
 
 #endif
@@ -119,20 +125,7 @@ static fz_image* fz_image_from_pixmap(fz_context* ctx, const Pixmap* px) {
         }
     }
 
-    fz_colorspace* cs = fz_device_rgb(ctx);
-    fz_image* img = nullptr;
-    fz_var(img);
-    fz_try(ctx) {
-        fz_pixmap* pix = fz_new_pixmap_with_data(ctx, cs, w, h, nullptr, 0, stride, data);
-        pix->flags |= FZ_PIXMAP_FLAG_FREE_SAMPLES;
-        img = fz_new_image_from_pixmap(ctx, pix, nullptr);
-        fz_drop_pixmap(ctx, pix);
-    }
-    fz_catch(ctx) {
-        fz_report_error(ctx);
-        fz_rethrow(ctx);
-    }
-    return img;
+    return FzImageFromRgbData(ctx, data, w, h, stride);
 }
 
 PdfCreator::PdfCreator() {
