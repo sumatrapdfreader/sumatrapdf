@@ -72,8 +72,6 @@ struct StyleRule {
     Unit textIndentUnit = inherit;
     AlignAttr textAlign = AlignAttr::NotFound;
 
-    StyleRule() = default;
-
     void Merge(StyleRule& source);
 
     static StyleRule Parse(CssPullParser* parser);
@@ -102,7 +100,6 @@ struct HtmlPage {
 };
 
 struct HtmlFormatterArgs {
-    HtmlFormatterArgs() = default;
     ~HtmlFormatterArgs() { wstr::Free(fontName); }
 
     float pageDx = 0;

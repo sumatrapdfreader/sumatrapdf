@@ -84,7 +84,6 @@ struct Annotation {
     EngineMupdf* engine = nullptr;
     pdf_annot* pdfannot = nullptr; // not owned
 
-    Annotation() = default;
     ~Annotation() {
         if (this == gPendingCutAnnotation) {
             gPendingCutAnnotation = nullptr;

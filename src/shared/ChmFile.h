@@ -35,7 +35,6 @@ struct ChmFile {
 
     bool Load(Str path);
 
-    ChmFile() = default;
     ~ChmFile();
 
     bool HasData(Str fileName) const;
