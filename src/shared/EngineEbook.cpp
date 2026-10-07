@@ -574,56 +574,36 @@ PageText EngineEbook::ExtractPageText(int pageNo) {
         Rect lastCoord = hasCoords ? VecLast(coords) : Rect{};
         switch (i.type) {
             case DrawInstrType::String:
-                if (hasCoords && (bbox.x < lastCoord.BR().x || bbox.y > lastCoord.y + (lastCoord.dy * 0.8))) {
+            case DrawInstrType::RtlString: {
+                bool rtl = i.type == DrawInstrType::RtlString;
+                int textStart = rtl ? bbox.BR().x : bbox.x;
+                int previousEnd = rtl ? lastCoord.x : lastCoord.BR().x;
+                bool wrapped = rtl ? textStart > previousEnd : textStart < previousEnd;
+                if (hasCoords && (wrapped || bbox.y > lastCoord.y + (lastCoord.dy * 0.8))) {
                     content.Append(lineSep);
                     VecAppendBlanks(coords, len(lineSep));
                     ReportIf(lineSep && !VecLast(coords).IsEmpty());
                 } else if (insertSpace && hasCoords) {
-                    int swidth = bbox.x - lastCoord.BR().x;
+                    int swidth = rtl ? previousEnd - textStart : textStart - previousEnd;
                     if (swidth > 0) {
                         content.AppendChar(' ');
-                        VecAppend(coords, Rect(bbox.x - swidth, bbox.y, swidth, bbox.dy));
+                        int spaceX = rtl ? textStart : textStart - swidth;
+                        VecAppend(coords, Rect(spaceX, bbox.y, swidth, bbox.dy));
                     }
                 }
                 insertSpace = false;
-                {
-                    TempStr s = ResolveHtmlEntitiesTemp(i.str);
-                    int nCodepoints = Utf8CodepointCount(s);
-                    content.Append(s);
-                    if (nCodepoints > 0) {
-                        double cwidth = 1.0 * bbox.dx / (double)nCodepoints;
-                        for (int k = 0; k < nCodepoints; k++) {
-                            VecAppend(coords, Rect((int)(bbox.x + ((double)k * cwidth)), bbox.y, (int)cwidth, bbox.dy));
-                        }
+                TempStr s = ResolveHtmlEntitiesTemp(i.str);
+                int nCodepoints = Utf8CodepointCount(s);
+                content.Append(s);
+                if (nCodepoints > 0) {
+                    double cwidth = 1.0 * bbox.dx / (double)nCodepoints;
+                    for (int k = 0; k < nCodepoints; k++) {
+                        int glyph = rtl ? nCodepoints - k - 1 : k;
+                        VecAppend(coords, Rect((int)(bbox.x + ((double)glyph * cwidth)), bbox.y, (int)cwidth, bbox.dy));
                     }
                 }
                 break;
-            case DrawInstrType::RtlString:
-                if (hasCoords && (bbox.BR().x > lastCoord.x || bbox.y > lastCoord.y + (lastCoord.dy * 0.8))) {
-                    content.Append(lineSep);
-                    VecAppendBlanks(coords, len(lineSep));
-                    ReportIf(lineSep && !VecLast(coords).IsEmpty());
-                } else if (insertSpace && hasCoords) {
-                    int swidth = lastCoord.x - bbox.BR().x;
-                    if (swidth > 0) {
-                        content.AppendChar(' ');
-                        VecAppend(coords, Rect(bbox.BR().x, bbox.y, swidth, bbox.dy));
-                    }
-                }
-                insertSpace = false;
-                {
-                    TempStr s = ResolveHtmlEntitiesTemp(i.str);
-                    int nCodepoints = Utf8CodepointCount(s);
-                    content.Append(s);
-                    if (nCodepoints > 0) {
-                        double cwidth = 1.0 * bbox.dx / (double)nCodepoints;
-                        for (int k = 0; k < nCodepoints; k++) {
-                            VecAppend(coords, Rect((int)(bbox.x + ((double)(nCodepoints - k - 1) * cwidth)), bbox.y,
-                                                   (int)cwidth, bbox.dy));
-                        }
-                    }
-                }
-                break;
+            }
             case DrawInstrType::ElasticSpace:
             case DrawInstrType::FixedSpace:
                 insertSpace = true;
