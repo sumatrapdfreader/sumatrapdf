@@ -917,9 +917,6 @@
     <ClCompile Include="..\src\Toolbar.cpp">
       <Filter>src</Filter>
     </ClCompile>
-    <ClCompile Include="..\src\Translations.cpp">
-      <Filter>src</Filter>
-    </ClCompile>
     <ClCompile Include="..\src\Uninstaller.cpp">
       <Filter>src</Filter>
     </ClCompile>
@@ -1245,6 +1242,9 @@
       <Filter>src\shared</Filter>
     </ClCompile>
     <ClCompile Include="..\src\shared\TranslationLangs.cpp">
+      <Filter>src\shared</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\shared\Translations.cpp">
       <Filter>src\shared</Filter>
     </ClCompile>
     <ClCompile Include="..\src\shared\UpdateTemp.cpp">

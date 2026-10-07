@@ -1723,7 +1723,6 @@
     <ClCompile Include="..\src\TextViewWnd.cpp" />
     <ClCompile Include="..\src\Theme.cpp" />
     <ClCompile Include="..\src\Toolbar.cpp" />
-    <ClCompile Include="..\src\Translations.cpp" />
     <ClCompile Include="..\src\Uninstaller.cpp" />
     <ClCompile Include="..\src\UpdateCheck.cpp" />
     <ClCompile Include="..\src\WindowTab.cpp" />
@@ -2165,6 +2164,7 @@
     </ClCompile>
     <ClCompile Include="..\src\shared\TextSelection.cpp" />
     <ClCompile Include="..\src\shared\TranslationLangs.cpp" />
+    <ClCompile Include="..\src\shared\Translations.cpp" />
     <ClCompile Include="..\src\shared\UpdateTemp.cpp" />
     <ClCompile Include="..\src\shared\WebpReader.cpp" />
     <ClCompile Include="..\src\shared\gui\PlatformFont.cpp" />
