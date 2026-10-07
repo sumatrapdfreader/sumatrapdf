@@ -20,7 +20,6 @@
 #include "WindowTab.h"
 #include "SumatraDialogs.h"
 #include "Translations.h"
-#include "gui/AppShell.h"
 #include "Print.h"
 
 #include "SumatraLog.h"
@@ -83,7 +82,7 @@ using PrintRequestedHandler =
 // on the classic dialog for the rest of the session.
 static bool gWin11PrintUnavailable = false;
 
-static void RetryWithClassicDialog(HWND__* hwnd);
+static void RetryWithClassicDialog(MainWindow* win);
 
 using OptionChangedHandler =
     Foundation::ITypedEventHandler<OptDetails::PrintTaskOptionDetails*, OptDetails::PrintTaskOptionChangedEventArgs*>;
@@ -1156,7 +1155,7 @@ class Win11PrintSession {
         return hr;
     }
 
-    HRESULT Show() {
+    HRESULT Show(MainWindow* win) {
         ComPtr<__FIAsyncOperation_1_boolean> operation;
         HRESULT hr = interop->ShowPrintUIForWindowAsync(hwnd, IID_PPV_ARGS(&operation));
         logf("Win11 print: ShowPrintUIForWindowAsync result=0x%08x operation=%p\n", (uint)hr, operation.Get());
@@ -1170,9 +1169,8 @@ class Win11PrintSession {
         // a successful call only means the request went out. The operation
         // completes with false (or fails) when the host process couldn't put the
         // dialog up, which is otherwise silent -- printing just does nothing
-        HWND owner = hwnd;
         auto completed = Callback<__FIAsyncOperationCompletedHandler_1_boolean>(
-            [owner](__FIAsyncOperation_1_boolean* op, Foundation::AsyncStatus status) -> HRESULT {
+            [win](__FIAsyncOperation_1_boolean* op, Foundation::AsyncStatus status) -> HRESULT {
                 boolean shown = false;
                 HRESULT opHr = op->GetResults(&shown);
                 logf("Win11 print: ShowPrintUI done status=%d shown=%d hr=0x%08x\n", (int)status, (int)shown,
@@ -1181,7 +1179,7 @@ class Win11PrintSession {
                     return S_OK;
                 }
                 gWin11PrintUnavailable = true;
-                uitask::Post(MkFunc0(RetryWithClassicDialog, owner), "Win11PrintFallback");
+                uitask::Post(MkFunc0(RetryWithClassicDialog, win), "Win11PrintFallback");
                 return S_OK;
             });
         if (!completed) {
@@ -1207,7 +1205,7 @@ static bool IsWin11OrGreater() {
     return ver.dwBuildNumber >= kWin11Build;
 }
 
-bool TryPrintCurrentFileWin11(MainWindow* win, PrintScaleAdv defaultScale) {
+bool TryPrintCurrentFileWin11(MainWindow* win, HWND hwndFrame, PrintScaleAdv defaultScale) {
     if (!IsWin11OrGreater()) {
         logf("Win11 print: unavailable before Windows 11\n");
         return false;
@@ -1223,7 +1221,6 @@ bool TryPrintCurrentFileWin11(MainWindow* win, PrintScaleAdv defaultScale) {
         gWin11PrintUnavailable = true;
         return false;
     }
-    HWND hwndFrame = win ? AppShellNativeHwnd(win) : nullptr;
     if (!win || !hwndFrame || !win->AsFixed() || !win->CurrentTab()) {
         logf("Win11 print: unavailable, invalid window or document\n");
         return false;
@@ -1252,7 +1249,7 @@ bool TryPrintCurrentFileWin11(MainWindow* win, PrintScaleAdv defaultScale) {
     HRESULT hr =
         gPrintSession->Initialize(hwndFrame, engine, win->AsFixed()->CurrentPageNo(), defaultScale, previewDpi);
     if (SUCCEEDED(hr)) {
-        hr = gPrintSession->Show();
+        hr = gPrintSession->Show(win);
     }
     if (FAILED(hr)) {
         logf("Windows print dialog unavailable: 0x%08x\n", (uint)hr);
@@ -1263,16 +1260,12 @@ bool TryPrintCurrentFileWin11(MainWindow* win, PrintScaleAdv defaultScale) {
     return true;
 }
 
-// the modern dialog gave up without printing anything, so show the classic one.
-// ng: orig has FindMainWindowByHwnd(); our windows are gpui's, so the frame is
-// found through AppShellNativeHwnd()
-static void RetryWithClassicDialog(HWND__* hwnd) {
-    for (MainWindow* win : gWindows) {
-        if (IsMainWindowValidAndNotClosing(win) && AppShellNativeHwnd(win) == hwnd) {
-            PrintCurrentFile(win);
-            return;
-        }
+// the modern dialog gave up without printing anything, so show the classic one
+static void RetryWithClassicDialog(MainWindow* win) {
+    if (!IsMainWindowValidAndNotClosing(win)) {
+        return;
     }
+    PrintCurrentFile(win);
 }
 
 void ShutdownWin11Printing() {
@@ -1284,7 +1277,7 @@ void ShutdownWin11Printing() {
 
 #include "PrintWin11.h"
 
-bool TryPrintCurrentFileWin11(MainWindow*, PrintScaleAdv) {
+bool TryPrintCurrentFileWin11(MainWindow*, HWND, PrintScaleAdv) {
     return false;
 }
 

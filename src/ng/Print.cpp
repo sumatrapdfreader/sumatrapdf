@@ -1783,7 +1783,7 @@ static void PrintCurrentFileCont(MainWindow* win, bool waitForCompletion, bool s
     // the Windows 11 dialog runs the whole job itself; -print-to and friends
     // need the synchronous classic path
     if (!waitForCompletion && !selectionByDefault && !PrinterUIWantsClassic()) {
-        bool usedWin11Dialog = TryPrintCurrentFileWin11(win, defaultScaleAdv);
+        bool usedWin11Dialog = TryPrintCurrentFileWin11(win, AppShellNativeHwnd(win), defaultScaleAdv);
         logf("PrintCurrentFile: Windows 11 dialog=%d\n", (int)usedWin11Dialog);
         if (usedWin11Dialog) {
             return;

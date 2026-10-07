@@ -209,6 +209,7 @@ export const sharedFiles = [
   "src/shared/PerfLog_x64.asm",
   "src/shared/PngOptimizer.cpp",
   "src/shared/PngOptimizer.h",
+  "src/shared/PrintWin11.cpp",
   "src/shared/PrintWin11.h",
   "src/shared/ProgressUpdateUI.h",
   "src/shared/RefHoverDetect.cpp",

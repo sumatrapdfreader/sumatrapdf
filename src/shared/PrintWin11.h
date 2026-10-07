@@ -8,7 +8,7 @@ enum class PrintScaleAdv;
 // Returns false when it isn't available -- older Windows, no fixed-page
 // document, a selection to print, or the WinRT pipeline failing to start -- and
 // the caller falls back to the classic PrintDlgEx path.
-bool TryPrintCurrentFileWin11(MainWindow* win, PrintScaleAdv defaultScale);
+bool TryPrintCurrentFileWin11(MainWindow* win, HWND hwnd, PrintScaleAdv defaultScale);
 
 // frees the print session; call once, on app shutdown
 void ShutdownWin11Printing();

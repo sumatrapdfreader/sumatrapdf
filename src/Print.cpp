@@ -1424,7 +1424,7 @@ void PrintCurrentFile(MainWindow* win, bool waitForCompletion, bool selectionByD
     // declines when there is one), so a selection request goes straight to the
     // classic dialog
     if (!waitForCompletion && !selectionByDefault && !PrinterUIWantsClassic()) {
-        bool usedWin11Dialog = TryPrintCurrentFileWin11(win, defaultScaleAdv);
+        bool usedWin11Dialog = TryPrintCurrentFileWin11(win, win->hwndFrame, defaultScaleAdv);
         logf("PrintCurrentFile: Windows 11 dialog=%d\n", (int)usedWin11Dialog);
         if (usedWin11Dialog) {
             return;

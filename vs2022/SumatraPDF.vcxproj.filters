@@ -782,9 +782,6 @@
     <ClCompile Include="..\src\Print.cpp">
       <Filter>src</Filter>
     </ClCompile>
-    <ClCompile Include="..\src\PrintWin11.cpp">
-      <Filter>src</Filter>
-    </ClCompile>
     <ClCompile Include="..\src\ReadAloud.cpp">
       <Filter>src</Filter>
     </ClCompile>
@@ -1212,6 +1209,9 @@
       <Filter>src\shared</Filter>
     </ClCompile>
     <ClCompile Include="..\src\shared\PngOptimizer.cpp">
+      <Filter>src\shared</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\shared\PrintWin11.cpp">
       <Filter>src\shared</Filter>
     </ClCompile>
     <ClCompile Include="..\src\shared\RefHoverDetect.cpp">
