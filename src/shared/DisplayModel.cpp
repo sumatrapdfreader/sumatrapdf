@@ -2202,17 +2202,21 @@ RectF DisplayModel::CvtFromScreen(Rect r, int pageNo) {
     return RectF::FromXY(TL, BR);
 }
 
+static int VisiblePageAt(DisplayModel* dm, Point pt) {
+    dm->SyncWithEngineLayout();
+    int pageNo = dm->GetPageNoByPoint(pt);
+    if (!dm->ValidPageNo(pageNo) || !Rect(Point(), dm->GetViewPort().Size()).Contains(pt)) {
+        return kInvalidPageNo;
+    }
+    return pageNo;
+}
+
 // Given position 'x'/'y' in the draw area, returns a structure describing
 // a link or nullptr if there is no link at this position.
 // don't delete the result
 IPageElement* DisplayModel::GetElementAtPos(Point pt, int* pageNoOut) {
-    SyncWithEngineLayout();
-    int pageNo = GetPageNoByPoint(pt);
+    int pageNo = VisiblePageAt(this, pt);
     if (!ValidPageNo(pageNo)) {
-        return nullptr;
-    }
-    // only return visible elements (for cursor interaction)
-    if (!Rect(Point(), viewPort.Size()).Contains(pt)) {
         return nullptr;
     }
     if (pageNoOut) {
@@ -2226,13 +2230,8 @@ Annotation* DisplayModel::GetAnnotationAtPos(Point pt, Annotation* annot) {
     if (AnnotationsAreDisabled()) {
         return nullptr;
     }
-    SyncWithEngineLayout();
-    int pageNo = GetPageNoByPoint(pt);
+    int pageNo = VisiblePageAt(this, pt);
     if (!ValidPageNo(pageNo)) {
-        return nullptr;
-    }
-    // only return visible elements (for cursor interaction)
-    if (!Rect(Point(), viewPort.Size()).Contains(pt)) {
         return nullptr;
     }
 
@@ -2248,12 +2247,8 @@ Annotation* DisplayModel::GetWidgetAtPos(Point pt) {
     if (AnnotationsAreDisabled()) {
         return nullptr;
     }
-    SyncWithEngineLayout();
-    int pageNo = GetPageNoByPoint(pt);
+    int pageNo = VisiblePageAt(this, pt);
     if (!ValidPageNo(pageNo)) {
-        return nullptr;
-    }
-    if (!Rect(Point(), viewPort.Size()).Contains(pt)) {
         return nullptr;
     }
     PointF pos = CvtFromScreen(pt, pageNo);
