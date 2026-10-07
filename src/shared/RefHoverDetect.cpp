@@ -143,10 +143,7 @@ void NormalizeGlyphLines(const Rect* coords, Rect* out, int glyphCount) {
         int best = -1;
         int bestDist = kBaselineTolPt + 1;
         for (int L = 0; L < nLines; L++) {
-            int dist = bl - lines[L].baseline;
-            if (dist < 0) {
-                dist = -dist;
-            }
+            int dist = abs(bl - lines[L].baseline);
             if (dist < bestDist) {
                 bestDist = dist;
                 best = L;
@@ -736,7 +733,7 @@ RectF DetectEntryBox(WStr text, const Rect* coords, RectF mediabox, float destX,
         if (r.x < columnLeft) {
             continue;
         }
-        int distY = (r.y >= dY) ? (r.y - dY) : (dY - r.y);
+        int distY = abs(r.y - dY);
         if (distY < bestDistY || (distY == bestDistY && r.x < bestX)) {
             bestDistY = distY;
             bestX = r.x;
