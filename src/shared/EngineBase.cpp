@@ -513,13 +513,13 @@ struct PageTextCache {
 
     ~PageTextCache() { DeleteVecMembers(chapters); }
 
-    // existing chapter cache, or nullptr if the chapter has never been touched
-    ChapterTextCache* Peek(int chapter) {
-        int idx = chapter - 1;
-        if (idx < 0 || idx >= len(chapters)) {
+    // Existing page entry, without creating or growing its chapter cache.
+    TextCacheEntry* Peek(Location loc) {
+        if (!loc.IsValid() || loc.chapter > len(chapters)) {
             return nullptr;
         }
-        return chapters[idx];
+        ChapterTextCache* ct = chapters[loc.chapter - 1];
+        return ct && loc.page <= len(ct->pages) ? &ct->pages[loc.page - 1] : nullptr;
     }
 
     // creates the chapter's cache if needed and grows it to at least count
@@ -905,11 +905,8 @@ bool EngineBase::HasTextForPage(int pageNo) {
         return false;
     }
     ScopedMutex scope(&textCacheLock);
-    ChapterTextCache* ct = pageTextCache->Peek(loc.chapter);
-    if (!ct || loc.page > len(ct->pages)) {
-        return false;
-    }
-    return (bool)ct->pages[loc.page - 1].data.text;
+    TextCacheEntry* page = pageTextCache->Peek(loc);
+    return page && (bool)page->data.text;
 }
 
 void EngineBase::RequestTextExtraction(int pageNo) {
@@ -1062,12 +1059,12 @@ void EngineBase::InvalidateTextForPage(int pageNo) {
         return;
     }
     ScopedMutex scope(&textCacheLock);
-    ChapterTextCache* ct = pageTextCache->Peek(loc.chapter);
-    if (!ct || loc.page > len(ct->pages)) {
+    TextCacheEntry* page = pageTextCache->Peek(loc);
+    if (!page) {
         return;
     }
-    FreePageText(&ct->pages[loc.page - 1].data);
-    ct->pages[loc.page - 1].state = TextExtractionState::NotExtracted;
+    FreePageText(&page->data);
+    page->state = TextExtractionState::NotExtracted;
 }
 
 // number of pages the loaded document contains. Comes from the chapter table
