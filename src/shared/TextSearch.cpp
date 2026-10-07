@@ -321,7 +321,6 @@ TextSearch::PageAndOffset TextSearch::MatchEnd(int startOff) const {
     int currentPage = findPage;
     Str currentPageText = pageText;
     int currentPageTextLen = pageTextLen;
-    bool lookingAtWs;
 
     if (len(findText) == 0) {
         return notFound;
@@ -356,13 +355,11 @@ TextSearch::PageAndOffset TextSearch::MatchEnd(int startOff) const {
         }
         int endNextByteIdx = endByteIdx;
         int endCh = atPageEnd ? 0 : Utf8CodepointNext(currentPageText, endNextByteIdx);
-        /* Going from page n to page n+1 is a space, too.*/
-        lookingAtWs = (atPageEnd && (currentPage < nPages)) || str::IsWs((char)endCh);
+        // Page boundaries count as whitespace.
+        bool lookingAtWs = atPageEnd || str::IsWs((char)endCh);
         bool isMatch = false;
-        // extra advance for the German ß <-> ss equivalence, where one side
-        // consumes one codepoint and the other two (issue #933)
-        int extraMatchAdv = 0;
-        int extraEndAdv = 0;
+        int matchAdv = 1;
+        int endAdv = 1;
         int matchNextByteIdx = matchByteIdx;
         int matchCh = Utf8CodepointNext(findText, matchNextByteIdx);
         if (matchCase) {
@@ -374,8 +371,8 @@ TextSearch::PageAndOffset TextSearch::MatchEnd(int startOff) const {
                 isMatch = MatchSearchUnit(currentPageText, currentPageTextLen, endIdx, endByteIdx, findText,
                                           findTextLen, matchIdx, matchByteIdx, hAdv, nAdv, hByteAdv, nByteAdv);
                 if (isMatch) {
-                    extraEndAdv = hAdv - 1;
-                    extraMatchAdv = nAdv - 1;
+                    endAdv = hAdv;
+                    matchAdv = nAdv;
                     endNextByteIdx = endByteIdx + hByteAdv;
                     matchNextByteIdx = matchByteIdx + nByteAdv;
                 }
@@ -389,12 +386,9 @@ TextSearch::PageAndOffset TextSearch::MatchEnd(int startOff) const {
         if (!isMatch && !sameWhitespace && !samePunctuation) {
             return notFound;
         }
-        // consume the extra char on whichever side of a ß <-> ss match is longer
-        int matchAdv = 1 + extraMatchAdv;
         matchByteIdx = matchNextByteIdx;
         matchIdx += matchAdv;
         if (!atPageEnd && endCh) {
-            int endAdv = 1 + extraEndAdv;
             endByteIdx = endNextByteIdx;
             endIdx += endAdv;
         } else if (!nextPage()) {
