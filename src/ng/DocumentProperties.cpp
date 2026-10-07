@@ -1002,7 +1002,7 @@ void PropertiesView::OnUpdateEutl(PropertiesView*, gp::Ctx* cx, const gp::ClickE
 #endif
 
 void PropertiesView::OnClose(PropertiesView*, gp::Ctx* cx, const gp::ClickEvent*) {
-    DeletePropertiesWindow(nullptr);
+    DeletePropertiesWindow((MainWindow*)nullptr);
     gp::Notify(cx);
 }
 
@@ -1201,13 +1201,13 @@ static bool PropsToolOnKey(MainWindow*, gp::Ctx*, const gp::KeyEvent* ev) {
     if (ev->vk != VK_ESCAPE) {
         return false;
     }
-    DeletePropertiesWindow(nullptr);
+    DeletePropertiesWindow((MainWindow*)nullptr);
     return true;
 }
 
 static void PropsToolOnClosed(MainWindow*) {
     gProps.tw = nullptr;
-    DeletePropertiesWindow(nullptr);
+    DeletePropertiesWindow((MainWindow*)nullptr);
 }
 
 static void PropsToolOnMoved(MainWindow*, Rect) {

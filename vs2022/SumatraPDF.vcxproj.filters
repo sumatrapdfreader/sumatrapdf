@@ -135,9 +135,6 @@
     <ClInclude Include="..\src\DarkMode.h">
       <Filter>src</Filter>
     </ClInclude>
-    <ClInclude Include="..\src\DocumentProperties.h">
-      <Filter>src</Filter>
-    </ClInclude>
     <ClInclude Include="..\src\Favorites.h">
       <Filter>src</Filter>
     </ClInclude>
@@ -370,6 +367,9 @@
       <Filter>src\shared</Filter>
     </ClInclude>
     <ClInclude Include="..\src\shared\DocumentLayout.h">
+      <Filter>src\shared</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\shared\DocumentProperties.h">
       <Filter>src\shared</Filter>
     </ClInclude>
     <ClInclude Include="..\src\shared\EbookDoc.h">

@@ -1401,7 +1401,6 @@
     <ClInclude Include="..\src\Canvas.h" />
     <ClInclude Include="..\src\CommandPalette.h" />
     <ClInclude Include="..\src\DarkMode.h" />
-    <ClInclude Include="..\src\DocumentProperties.h" />
     <ClInclude Include="..\src\Favorites.h" />
     <ClInclude Include="..\src\FilterHighlightDraw.h" />
     <ClInclude Include="..\src\FindBar.h" />
@@ -1480,6 +1479,7 @@
     <ClInclude Include="..\src\shared\DocController.h" />
     <ClInclude Include="..\src\shared\DocProperties.h" />
     <ClInclude Include="..\src\shared\DocumentLayout.h" />
+    <ClInclude Include="..\src\shared\DocumentProperties.h" />
     <ClInclude Include="..\src\shared\EbookDoc.h" />
     <ClInclude Include="..\src\shared\EbookFormatter.h" />
     <ClInclude Include="..\src\shared\EmbeddedResources.h" />
