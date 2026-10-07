@@ -229,6 +229,7 @@ export const sharedFiles = [
   "src/shared/tests/EngineDjvuDec_ut.cpp",
   "src/shared/tests/MobiDoc_ut.cpp",
   "src/shared/tests/PagePosition_ut.cpp",
+  "src/shared/tests/PdfSync_ut.cpp",
   "src/shared/tests/ReadAloudHighlight_ut.cpp",
   "src/shared/tests/RenderCache_ut.cpp",
   "src/shared/tests/SimpleLog_ut.cpp",

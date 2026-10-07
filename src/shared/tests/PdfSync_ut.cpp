@@ -3,9 +3,10 @@
 
 #include "base/Base.h"
 #include "base/File.h"
-#include "base/tests/UtAssert.h"
 
 #include "PdfSync.h"
+
+#include "base/tests/UtAssert.h"
 
 struct TestSync : Synchronizer {
     TestSync(Str syncPath, Str pdfPath) : Synchronizer(syncPath, pdfPath) {}
@@ -15,15 +16,8 @@ struct TestSync : Synchronizer {
 
 // Moves the file's mtime forward by a second, as a LaTeX re-compile would.
 static void BumpModTime(Str path) {
-    constexpr i64 kOneSecIn100ns = 10LL * 1000 * 1000;
-
     FILETIME ft = file::GetModificationTime(path);
-    ULARGE_INTEGER uli;
-    uli.LowPart = ft.dwLowDateTime;
-    uli.HighPart = ft.dwHighDateTime;
-    uli.QuadPart += kOneSecIn100ns;
-    ft.dwLowDateTime = uli.LowPart;
-    ft.dwHighDateTime = uli.HighPart;
+    ft = FileTimeFromU64(FileTimeToU64(ft) + kFileTimeTicksPerSec);
     file::SetModificationTime(path, ft);
 }
 
