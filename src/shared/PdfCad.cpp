@@ -107,11 +107,8 @@ static void WithXmpData(fz_context* ctx, pdf_obj* meta, Fn consume) {
 static bool HasPdfEMarker(fz_context* ctx, pdf_document* doc) {
     pdf_obj* trailer = pdf_trailer(ctx, doc);
     pdf_obj* info = pdf_dict_get(ctx, trailer, PDF_NAME(Info));
-    if (info) {
-        pdf_obj* v = pdf_dict_gets(ctx, info, "ISO_PDFEVersion");
-        if (pdf_is_string(ctx, v)) {
-            return true;
-        }
+    if (pdf_is_string(ctx, pdf_dict_gets(ctx, info, "ISO_PDFEVersion"))) {
+        return true;
     }
 
     pdf_obj* root = pdf_dict_get(ctx, trailer, PDF_NAME(Root));
