@@ -1399,7 +1399,6 @@
     <ClInclude Include="..\src\AnnotEditToolbar.h" />
     <ClInclude Include="..\src\AnnotFilterToolbar.h" />
     <ClInclude Include="..\src\AnnotPlacement.h" />
-    <ClInclude Include="..\src\AnnotTextPopup.h" />
     <ClInclude Include="..\src\Canvas.h" />
     <ClInclude Include="..\src\CommandPalette.h" />
     <ClInclude Include="..\src\DarkMode.h" />
@@ -1470,6 +1469,7 @@
     <ClInclude Include="..\src\shared\AIChatCommon.h" />
     <ClInclude Include="..\src\shared\AIChatPanel.h" />
     <ClInclude Include="..\src\shared\AnnotSearch.h" />
+    <ClInclude Include="..\src\shared\AnnotTextPopup.h" />
     <ClInclude Include="..\src\shared\Annotation.h" />
     <ClInclude Include="..\src\shared\AppSettings.h" />
     <ClInclude Include="..\src\shared\AppTools.h" />
