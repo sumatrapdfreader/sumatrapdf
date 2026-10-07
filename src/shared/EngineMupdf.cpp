@@ -3555,7 +3555,6 @@ fz_context* EngineMupdf::Ctx() const {
     return GetOrClonePerThreadContext(const_cast<EngineMupdf*>(this), _ctx);
 }
 
-#if !defined(SUMATRA_NG)
 // Frees what a page holds and leaves it empty but valid
 static void FreePageInfo(fz_context* ctx, FzPageInfo* pi) {
     DeleteVecMembers(pi->links);
@@ -3597,7 +3596,6 @@ static void FreePageInfo(fz_context* ctx, FzPageInfo* pi) {
     pi->elementsNeedRebuilding = true;
 }
 
-#endif
 EngineMupdf::~EngineMupdf() {
     pagesLock.Lock();
 
@@ -3607,36 +3605,8 @@ EngineMupdf::~EngineMupdf() {
             continue;
         }
         for (FzPageInfo* pi : *v) {
-#if defined(SUMATRA_NG)
-            DeleteVecMembers(pi->links);
-            DeleteVecMembers(pi->autoLinks);
-            DeleteVecMembers(pi->comments);
-            for (FitzPageImageInfo* img : pi->images) {
-                if (img && img->image) {
-                    fz_drop_image(ctx, img->image);
-                    img->image = nullptr;
-                }
-            }
-            DeleteVecMembers(pi->images);
-            DeleteVecMembers(pi->annotations);
-            DeleteVecMembers(pi->widgets);
-            if (pi->retainedLinks) {
-                fz_drop_link(ctx, pi->retainedLinks);
-            }
-            if (pi->displayList) {
-                fz_drop_display_list(ctx, pi->displayList);
-            }
-            pi->ResetDarkMode();
-            if (pi->page) {
-                fz_drop_page(ctx, pi->page);
-            }
-            // storage is arena-owned; run the destructor in place so the inner
-            // Vec<>s free their heap-allocated els buffers, then leave the
-            // memory to the arena.
-#else
             FreePageInfo(ctx, pi);
             // storage is arena-owned: destroy in place, the arena frees it
-#endif
             pi->~FzPageInfo();
         }
         v->~Vec<FzPageInfo*>();
