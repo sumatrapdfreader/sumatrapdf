@@ -579,7 +579,7 @@ static void SetTocMultiHighlight(MainWindow* win, TreeView* treeView, TocItem* b
     }
 }
 
-static bool TocItemIsMultiHighlight(MainWindow* win, TocItem* item) {
+bool TocItemIsMultiHighlight(MainWindow* win, TocItem* item) {
     if (!gShowAllMatchingTOC || !win || !item) {
         return false;
     }

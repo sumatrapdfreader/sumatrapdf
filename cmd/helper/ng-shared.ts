@@ -272,6 +272,7 @@ export const sharedFiles = [
   "src/shared/SvgIcons.cpp",
   "src/shared/SvgIcons.h",
   "src/shared/TabGroupsManage.h",
+  "src/shared/TableOfContents.h",
   "src/shared/TextSearch.cpp",
   "src/shared/TextSearch.h",
   "src/shared/TextSelection.cpp",

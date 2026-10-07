@@ -1,6 +1,9 @@
 /* Copyright 2022 the SumatraPDF project authors (see AUTHORS file).
    License: GPLv3 */
 
+struct MenuModel;
+struct TreeView;
+
 void ClearTocBox(MainWindow*);
 void ToggleTocBox(MainWindow*);
 void LoadTocTree(MainWindow*);
@@ -31,3 +34,15 @@ void TocExpandAll(MainWindow*);
 void TocCollapseAll(MainWindow*);
 void TocExpandToLevel(MainWindow*, int level);
 void TocCollapseSameLevel(MainWindow*, TocItem*);
+
+#if OS_WIN
+void CreateToc(MainWindow*);
+void RefreshTocTreeIfNeeded(MainWindow*);
+void UpdateTocExpansionState(Vec<int>& tocState, TreeView*, TocTree*);
+bool CanShowThumbnails(WindowTab*);
+void UpdateSidebarThumbnails(MainWindow*);
+void SidebarPagesChanged(MainWindow*);
+void ClearSidebarThumbnails(MainWindow*);
+void UpdateSidebarColors(MainWindow*);
+bool ThumbnailsTakeKey(MainWindow*, HWND, WPARAM key);
+#endif
