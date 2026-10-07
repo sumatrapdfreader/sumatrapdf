@@ -8602,22 +8602,27 @@ static void AppendOpenSslSigText(fz_context* ctx, str::Builder& out, pdf_pkcs7_v
 #endif
 
 static TempStr GetSignatures(EngineMupdf* e) {
-    // pdf signatures (signed form widgets). Walks each page's widget set;
-    // for each signature widget, pulls signer DN + cert/digest verdict via
-    // the Windows CryptoAPI pdf_pkcs7_verifier.
-#if OS_WIN
-    auto pdfdoc = e->pdfdoc;
-    if (!pdfdoc) return {};
-    auto ctx = e->Ctx();
-    int nSigs = pdf_count_signatures(ctx, pdfdoc);
-    if (nSigs == 0) return {};
+#if OS_WIN || defined(SUMATRA_HAVE_OPENSSL)
+    pdf_document* pdfdoc = e->pdfdoc;
+    if (!pdfdoc) {
+        return {};
+    }
+    fz_context* ctx = e->Ctx();
+    if (pdf_count_signatures(ctx, pdfdoc) == 0) {
+        return {};
+    }
     str::Builder sigs;
     pdf_pkcs7_verifier* verifier = nullptr;
     Vec<pdf_obj*> fields;
     fz_var(verifier);
     fz_try(ctx) {
+#if OS_WIN
         verifier = pkcs7_windows_new_verifier(ctx);
+#else
+        verifier = pkcs7_openssl_new_verifier(ctx);
+#endif
         CollectSignatureFields(ctx, pdfdoc, fields);
+#if OS_WIN
         bool hasDss = PdfHasDssRevocation(ctx, pdfdoc);
         bool hasDocTs = false;
         for (pdf_obj* field : fields) {
@@ -8633,36 +8638,11 @@ static TempStr GetSignatures(EngineMupdf* e) {
             int pageNo = PageNoForSigField(ctx, pdfdoc, field);
             AppendSignatureFieldInfo(ctx, sigs, verifier, pdfdoc, field, sigNo, pageNo, hasDss, hasDocTs);
         }
-    }
-    fz_always(ctx) {
-        for (pdf_obj* field : fields) {
-            pdf_drop_obj(ctx, field);
-        }
-        pdf_drop_verifier(ctx, verifier);
-    }
-    fz_catch(ctx) {
-        fz_report_error(ctx);
-    }
-    return len(sigs) > 0 ? str::DupTemp(ToStr(sigs)) : TempStr{};
-#elif defined(SUMATRA_HAVE_OPENSSL)
-    pdf_document* pdfdoc = e->pdfdoc;
-    if (!pdfdoc) {
-        return {};
-    }
-    fz_context* ctx = e->Ctx();
-    if (pdf_count_signatures(ctx, pdfdoc) == 0) {
-        return {};
-    }
-    str::Builder sigs;
-    pdf_pkcs7_verifier* verifier = nullptr;
-    Vec<pdf_obj*> fields;
-    fz_var(verifier);
-    fz_try(ctx) {
-        verifier = pkcs7_openssl_new_verifier(ctx);
-        CollectSignatureFields(ctx, pdfdoc, fields);
+#else
         for (int i = 0; i < len(fields); i++) {
             AppendOpenSslSigText(ctx, sigs, verifier, pdfdoc, fields[i], i + 1);
         }
+#endif
     }
     fz_always(ctx) {
         for (pdf_obj* field : fields) {
