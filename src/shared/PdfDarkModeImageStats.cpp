@@ -263,19 +263,6 @@ bool PdfDarkModeImageLooksLikeDarkArtwork(fz_context* ctx, fz_image* image, floa
     return LooksLikeDarkArtwork(SampleImageStats(ctx, image), pageCoverage);
 }
 
-static bool ImageIsArtwork(fz_context* ctx, fz_image* image, float pageCoverage) {
-    ImageStats stats = SampleImageStats(ctx, image);
-    // artwork on a flat light backdrop: recolor so the backdrop follows the page
-    // instead of staying a bright block on it (#6088)
-    if (LooksLikeLayoutBackground(stats) || LooksLikeLightBackdrop(stats)) {
-        return false;
-    }
-    if (LooksLikeDarkArtwork(stats, pageCoverage)) {
-        return true;
-    }
-    return LooksLikePhoto(stats) && !(pageCoverage < 0.14f && LooksLikePaperTextBox(stats));
-}
-
 // A page-sized image is normally a scan or a full-bleed background, and those
 // should recolor along with the page. Artwork shouldn't: keeping pictures as
 // they are is what smart mode is for, and a cover illustration is no less a
@@ -291,14 +278,20 @@ bool PdfDarkModePageDominantImageRecolors(fz_context* ctx, fz_image* image, floa
 // Gate for Legacy skip-rect preserve: combines bbox size, pixel stats, and artwork heuristics.
 bool PdfDarkModeShouldPreserveEmbeddedImageRect(fz_context* ctx, fz_image* image, float pageCoverage, int devW,
                                                 int devH) {
-    if (PdfDarkModePageDominantImageRecolors(ctx, image, pageCoverage)) {
+    if (devW < kPreservePdfImagesMinSize || devH < kPreservePdfImagesMinSize) {
         return false;
     }
-    int minPx = kPreservePdfImagesMinSize;
-    if (devW < minPx || devH < minPx) {
+
+    ImageStats stats = SampleImageStats(ctx, image);
+    // Recolor artwork's light backdrop along with the page (#6088).
+    if (LooksLikeLayoutBackground(stats) || LooksLikeLightBackdrop(stats)) {
         return false;
     }
-    return ImageIsArtwork(ctx, image, pageCoverage);
+    if (LooksLikeDarkArtwork(stats, pageCoverage)) {
+        return true;
+    }
+    return pageCoverage < kMaxPreserveImagePageCoverage && LooksLikePhoto(stats) &&
+           !(pageCoverage < 0.14f && LooksLikePaperTextBox(stats));
 }
 
 #if IS_DEBUG
