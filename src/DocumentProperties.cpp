@@ -492,8 +492,7 @@ static void GetAllProps(DocController* ctrl, Props& propsOut) {
         engine->GetProperties(propsOut);
         return;
     }
-    for (int i = 0; gAllProps[i] != DocProp::None; i++) {
-        DocProp prop = gAllProps[i];
+    for (DocProp prop : kCommonDocProps) {
         TempStr val = ctrl->GetPropertyTemp(prop);
         if (val) {
             AddProp(propsOut, prop, val);

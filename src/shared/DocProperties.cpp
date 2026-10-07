@@ -61,24 +61,6 @@ static SeqStrings gPropNames =
     "imagePath\0"
     "\0";
 
-// clang-format off
-DocProp gAllProps[] = {
-    DocProp::Title,
-    DocProp::Author,
-    DocProp::Copyright,
-    DocProp::Subject,
-    DocProp::CreationDate,
-    DocProp::ModificationDate,
-    DocProp::CreatorApp,
-    DocProp::UnsupportedFeatures,
-    DocProp::FontList,
-    DocProp::PdfVersion,
-    DocProp::PdfProducer,
-    DocProp::PdfFileStructure,
-    DocProp::None,
-};
-// clang-format on
-
 int GetPropIdx(const Props& props, DocProp prop) {
     int n = len(props);
     for (int i = 0; i < n; i++) {

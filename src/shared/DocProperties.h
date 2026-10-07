@@ -58,7 +58,10 @@ enum class DocProp : u8 {
     ImagePath = 53,
 };
 
-extern DocProp gAllProps[];
+inline constexpr DocProp kCommonDocProps[] = {
+    DocProp::Title,        DocProp::Author,           DocProp::Copyright,   DocProp::Subject,
+    DocProp::CreationDate, DocProp::ModificationDate, DocProp::CreatorApp,  DocProp::UnsupportedFeatures,
+    DocProp::FontList,     DocProp::PdfVersion,       DocProp::PdfProducer, DocProp::PdfFileStructure};
 
 struct PropValue {
     DocProp prop;

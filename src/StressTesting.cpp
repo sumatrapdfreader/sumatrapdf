@@ -797,8 +797,7 @@ static bool GoToNextPage(StressTest* st) {
         // trigger getting toc and props
         st->gotToc = true;
         ctrl->GetToc();
-        for (int i = 0; gAllProps[i] != DocProp::None; i++) {
-            DocProp prop = gAllProps[i];
+        for (DocProp prop : kCommonDocProps) {
             if (prop == DocProp::FontList) {
                 // this can be expensive so skip
                 continue;

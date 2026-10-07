@@ -1082,8 +1082,7 @@ TocTree* EngineBase::GetToc() {
 
 // Append nonempty properties in standard order, preserving existing values.
 void EngineBase::GetProperties(Props& propsOut) {
-    for (int i = 0; gAllProps[i] != DocProp::None; i++) {
-        DocProp prop = gAllProps[i];
+    for (DocProp prop : kCommonDocProps) {
         // font list is loaded asynchronously in ShowProperties()
         if (prop == DocProp::FontList) {
             continue;
