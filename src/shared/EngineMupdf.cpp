@@ -8917,18 +8917,12 @@ const pdf_write_options pdf_default_write_options2 = {
 
 bool EngineMupdfIsEncrypted(EngineBase* engine) {
     EngineMupdf* epdf = AsEngineMupdf(engine);
-    if (!epdf || !epdf->pdfdoc) {
-        return false;
-    }
-    return epdf->pdfdoc->crypt != nullptr;
+    return epdf && epdf->pdfdoc && epdf->pdfdoc->crypt;
 }
 
 Str EngineMupdfGetPassword(EngineBase* engine) {
     EngineMupdf* epdf = AsEngineMupdf(engine);
-    if (!epdf) {
-        return {};
-    }
-    return epdf->pdfPassword;
+    return epdf ? epdf->pdfPassword : Str{};
 }
 
 //--- saving a file whose bytes are in memory (discussion #6256)
@@ -9781,10 +9775,7 @@ void EngineMupdfStartLoadAllAnnotations(EngineBase* engine, const Vec<int>& firs
 
 bool EngineMupdfHasUnsavedAnnotations(EngineBase* engine) {
     EngineMupdf* epdf = AsEngineMupdf(engine);
-    if (!epdf || !epdf->pdfdoc) {
-        return false;
-    }
-    return epdf->modifiedAnnotations;
+    return epdf && epdf->pdfdoc && epdf->modifiedAnnotations;
 }
 
 // redaction marks the user made in this session. Marks that came with the
@@ -9792,10 +9783,7 @@ bool EngineMupdfHasUnsavedAnnotations(EngineBase* engine) {
 // would appear out of nowhere when an annotation is selected
 bool EngineMupdfHasUserRedactMarks(EngineBase* engine) {
     EngineMupdf* e = AsEngineMupdf(engine);
-    if (!e || !e->createdRedactMark) {
-        return false;
-    }
-    return EngineMupdfHasRedactMarks(engine);
+    return e && e->createdRedactMark && EngineMupdfHasRedactMarks(engine);
 }
 
 bool EngineMupdfHasRedactMarks(EngineBase* engine) {
@@ -10524,10 +10512,7 @@ void EngineMupdfInvalidateDarkMode(EngineBase* engine) {
 // is CAD/engineering-drawing line enhancement in effect for this document?
 bool EngineMupdfCadEnhanceActive(EngineBase* engine) {
     EngineMupdf* epdf = AsEngineMupdf(engine);
-    if (!epdf || !epdf->pdfdoc) {
-        return false;
-    }
-    return epdf->CadEnhanceActive();
+    return epdf && epdf->pdfdoc && epdf->CadEnhanceActive();
 }
 
 // toggle CAD/engineering-drawing line enhancement for this document
