@@ -1,9 +1,7 @@
 /* Copyright 2022 the SumatraPDF project authors (see AUTHORS file).
    License: GPLv3 */
 
-// MakeLzSA creates LzSA archives as described in utils/LzmaSimpleArchive.cpp
-// Such archives use LZMA compression with an x86 bytecode filter which produces
-// best results for installer payloads. See ../makefile.msvc for a use case.
+// Pack files into the format defined in base/LzmaSimpleArchive.cpp.
 
 #include "base/Base.h"
 #include "base/ByteReaderWriter.h"
