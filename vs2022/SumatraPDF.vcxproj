@@ -1644,7 +1644,6 @@
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|ARM64'">NotUsing</PrecompiledHeader>
     </ClCompile>
     <ClCompile Include="..\src\EnginePs.cpp" />
-    <ClCompile Include="..\src\EutlTrust.cpp" />
     <ClCompile Include="..\src\ExplorerQuickLook.cpp" />
     <ClCompile Include="..\src\ExternalViewers.cpp" />
     <ClCompile Include="..\src\Favorites.cpp" />
@@ -2147,6 +2146,7 @@
     <ClCompile Include="..\src\shared\EngineBase.cpp" />
     <ClCompile Include="..\src\shared\EngineCreate.cpp" />
     <ClCompile Include="..\src\shared\EngineDjvuDec.cpp" />
+    <ClCompile Include="..\src\shared\EutlTrust.cpp" />
     <ClCompile Include="..\src\shared\ExifDump.cpp" />
     <ClCompile Include="..\src\shared\FileHistory.cpp" />
     <ClCompile Include="..\src\shared\FilterUtil.cpp" />
