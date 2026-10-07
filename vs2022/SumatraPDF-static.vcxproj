@@ -1617,7 +1617,6 @@
     <ClCompile Include="..\src\DisplayModel.cpp" />
     <ClCompile Include="..\src\DocumentProperties.cpp" />
     <ClCompile Include="..\src\EbookSettingsDialog.cpp" />
-    <ClCompile Include="..\src\EngineCreate.cpp" />
     <ClCompile Include="..\src\EngineDvi.cpp" />
     <ClCompile Include="..\src\EngineEbook.cpp" />
     <ClCompile Include="..\src\EngineImages.cpp" />
@@ -2130,6 +2129,7 @@
     <ClCompile Include="..\src\shared\EbookFormatter.cpp" />
     <ClCompile Include="..\src\shared\EmbeddedResources.cpp" />
     <ClCompile Include="..\src\shared\EngineBase.cpp" />
+    <ClCompile Include="..\src\shared\EngineCreate.cpp" />
     <ClCompile Include="..\src\shared\EngineDjvuDec.cpp" />
     <ClCompile Include="..\src\shared\ExifDump.cpp" />
     <ClCompile Include="..\src\shared\FileHistory.cpp" />

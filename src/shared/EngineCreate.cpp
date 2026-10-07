@@ -11,13 +11,17 @@
 #include "gui/UIModels.h"
 
 #include "Settings.h"
-#include "SumatraPDF.h"
 #include "DocController.h"
 #include "EngineBase.h"
 #include "AppSettings.h"
 #include "LitDoc.h"
-#include "StressTesting.h"
+
 #include "EngineAll.h"
+
+// Keep engine creation independent of the application UI headers.
+TempStr GetSumatraDataDirTemp();
+bool IsStressTesting();
+bool AnnotationsAreDisabled();
 
 static bool gEnableEpubWithPdfEngine = true;
 
@@ -448,7 +452,7 @@ static EngineBase* CreateEngineForKindFromData(FileType kind, Str data, Str name
     if (kind == FileType::Unknown || len(data) == 0) {
         return nullptr;
     }
-    if (kind == FileType::PDF || kind == FileType::Xps || kind == FileType::Markdown) {
+    if (kind == FileType::PDF || kind == FileType::Xps || kind == FileType::Markdown || IsOfficeFileType(kind)) {
         return CreateEngineMupdfFromData(data, nameHint, pwdUI);
     }
     if (IsEngineDjVuSupportedFileType(kind)) {
