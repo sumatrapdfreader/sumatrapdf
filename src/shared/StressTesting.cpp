@@ -631,29 +631,6 @@ static bool OpenFile(StressTest* st, Str fileName) {
         }
     }
 
-#if 0
-    // transfer ownership of stressTest object to a new window and close the
-    // current one
-    ReportIf(st != st->win->stressTest);
-    if (w != st->win) {
-        if (st->win->IsDocLoaded()) {
-            // try to provoke a crash in RenderCache cleanup code
-            Rect rect = HwndClientRect(st->win->hwndFrame);
-            rect.Inflate(rand() % 10, rand() % 10);
-            SendMessageW(st->win->hwndFrame, WM_SIZE, 0, MAKELONG(rect.dx, rect.dy));
-            if (st->win->AsFixed()) {
-                st->win->cbHandler->RequestRendering(st->win->AsFixed(), 1);
-            }
-            ScheduleRepaint(st->win, 0);
-        }
-
-        MainWindow* toClose = st->win;
-        w->stressTest = st->win->stressTest;
-        st->win->stressTest = nullptr;
-        st->win = w;
-        CloseWindow(toClose, false, false);
-    }
-#endif
     if (!st->win->IsDocLoaded()) {
         return false;
     }
