@@ -1602,7 +1602,6 @@
     <ClCompile Include="..\src\AIChatCommon.cpp" />
     <ClCompile Include="..\src\AIChatPanel.cpp" />
     <ClCompile Include="..\src\AICodexBuild.cpp" />
-    <ClCompile Include="..\src\AIGrokBuild.cpp" />
     <ClCompile Include="..\src\Accelerators.cpp" />
     <ClCompile Include="..\src\AddFavoriteDialog.cpp" />
     <ClCompile Include="..\src\AdvancedSettingsDialog.cpp" />
@@ -2128,6 +2127,7 @@
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Profile x64_asan|x64'">true</ExcludedFromBuild>
     </ClCompile>
     <ClCompile Include="..\src\shared\AIClaudeCode.cpp" />
+    <ClCompile Include="..\src\shared\AIGrokBuild.cpp" />
     <ClCompile Include="..\src\shared\AnnotSearch.cpp" />
     <ClCompile Include="..\src\shared\AppTools.cpp" />
     <ClCompile Include="..\src\shared\AvifReader.cpp" />

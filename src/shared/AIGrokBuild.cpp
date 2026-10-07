@@ -2,8 +2,7 @@
    License: GPLv3 */
 
 // Grok Build provider for the AI chat sidebar (see AIChatPanel.cpp)
-// ng: orig's file; `grok models` is queried on Windows only (it peeks a win32
-// pipe), everything else compiles everywhere
+// Model discovery uses Win32 pipe inspection; the remaining provider is portable.
 
 #include "base/Base.h"
 #include "base/CmdLineArgs.h"

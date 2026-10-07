@@ -611,9 +611,6 @@
     <ClCompile Include="..\src\AICodexBuild.cpp">
       <Filter>src</Filter>
     </ClCompile>
-    <ClCompile Include="..\src\AIGrokBuild.cpp">
-      <Filter>src</Filter>
-    </ClCompile>
     <ClCompile Include="..\src\Accelerators.cpp">
       <Filter>src</Filter>
     </ClCompile>
@@ -1107,6 +1104,9 @@
       <Filter>src\regress</Filter>
     </ClCompile>
     <ClCompile Include="..\src\shared\AIClaudeCode.cpp">
+      <Filter>src\shared</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\shared\AIGrokBuild.cpp">
       <Filter>src\shared</Filter>
     </ClCompile>
     <ClCompile Include="..\src\shared\AnnotSearch.cpp">
