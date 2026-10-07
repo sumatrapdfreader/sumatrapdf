@@ -107,5 +107,6 @@ NotificationWnd* ShowPlainWarningNotification(HWND hwndParent, Str msg, int time
 
 void MaybeDelayedWarningNotification(Str msg);
 void ShowMaybeDelayedNotifications(HWND hwndParent);
+void InstallLayoutNotifHooks();
 
 int CalcPerc(int current, int total);

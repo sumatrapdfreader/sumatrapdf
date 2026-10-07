@@ -44,10 +44,11 @@
 */
 
 #include "base/Base.h"
-#include "VirtKeys.h"
+#include "base/GuessFileType.h"
+#include "base/Timer.h"
+#include "base/UITask.h"
 #include "base/Win.h"
 #include "gui/Dpi.h"
-#include "base/Timer.h"
 
 #include "gui/UIModels.h"
 
@@ -56,7 +57,6 @@
 #include "DocumentLayout.h"
 #include "DocController.h"
 #include "EngineBase.h"
-#include "base/GuessFileType.h"
 #include "EngineAll.h"
 #include "AppSettings.h"
 #include "SumatraPDF.h"
@@ -65,7 +65,6 @@
 #include "TextSelection.h"
 #include "TextSearch.h"
 #include "RenderCache.h"
-#include "base/UITask.h"
 #include "SumatraConfig.h"
 #include "PagePosition.h"
 #include "DisplayModel.h"
@@ -459,9 +458,7 @@ int DisplayModel::FindPageNoByLoc(Location loc) const {
     return kInvalidPageNo;
 }
 
-// ng: orig looks the DisplayModel up in the tabs of the open MainWindows, to
-// tell a still-live model from one a posted task outlived. Without a window
-// layer we keep the live instances here instead (ctor / dtor maintain it)
+// Posted work uses this to avoid touching a model deleted in the meantime.
 static Vec<DisplayModel*> gLiveDisplayModels;
 
 static bool IsDisplayModelValid(DisplayModel* dm) {
@@ -516,7 +513,6 @@ static void ShowChapterLayoutProgress(ChapterLayoutProgressMsg* msg) {
     } else {
         text = fmt("Laying out chapters: %d / %d", msg->done, msg->total);
     }
-    // ng: the window and the notification are the app's; see Notifications.cpp
     gShowChapterLayoutNotifFn(msg->dm, text, msg->finished);
 }
 
@@ -923,7 +919,6 @@ void DisplayModel::SetUiDpi(int dpi) {
         m = gSettings->comicBookUI.windowMargin;
         sp = gSettings->comicBookUI.pageSpacing;
     }
-    // ng: orig scales with win32 MulDiv(); DpiScaleByDpi() is the same maths
     auto scale = [dpi](int n) -> int { return DpiScaleByDpi(dpi, n); };
     windowMargin = {scale(m.top), scale(m.right), scale(m.bottom), scale(m.left)};
     pageSpacing = {scale(sp.dx), scale(sp.dy)};
@@ -1891,8 +1886,6 @@ void DisplayModel::RelayoutKeepingView() {
     RepaintDisplay();
 }
 
-// ng: the window half (find the window showing dm, show the notification) is
-// ShowLazyLayoutNotif in Notifications.cpp; this library has no windows
 void (*gShowLazyLayoutNotifFn)(DisplayModel* dm, Str msg) = nullptr;
 
 static void NotifyMediaBoxRelayout(DisplayModel* dm, Str msg) {

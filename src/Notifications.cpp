@@ -16,6 +16,9 @@
 
 #include "Settings.h"
 #include "AppSettings.h"
+#include "DocController.h"
+#include "EngineBase.h"
+#include "DisplayModel.h"
 #include "SumatraPDF.h"
 #include "MainWindow.h"
 #include "WindowTab.h"
@@ -974,4 +977,63 @@ void ShowMaybeDelayedNotifications(HWND hwndParent) {
     }
     FreeStrNode(nullptr, gDelayedNotifications);
     gDelayedNotifications = nullptr;
+}
+
+static void ShowChapterLayoutNotif(DisplayModel* dm, Str msg, bool finished) {
+    MainWindow* found = nullptr;
+    WindowTab* tab = nullptr;
+    for (MainWindow* win : gWindows) {
+        for (WindowTab* t : win->Tabs()) {
+            if (t->AsFixed() == dm) {
+                found = win;
+                tab = t;
+                break;
+            }
+        }
+        if (found) {
+            break;
+        }
+    }
+    if (!found) {
+        return;
+    }
+
+    int timeout = finished ? kNotif5SecsTimeOut : kNotifNoTimeout;
+    NotificationWnd* wnd = GetNotificationForGroup(found->hwndCanvas, kNotifChapterLayout);
+    if (wnd) {
+        NotificationUpdateMessage(wnd, msg, timeout);
+        return;
+    }
+
+    NotificationCreateArgs args;
+    args.hwndParent = found->hwndCanvas;
+    args.groupId = kNotifChapterLayout;
+    args.timeoutMs = timeout;
+    args.corner = NotifCorner::BottomLeft;
+    args.msg = msg;
+    args.plainText = true;
+    args.tab = tab;
+    ShowNotification(args);
+}
+
+static void ShowLazyLayoutNotif(DisplayModel* dm, Str msg) {
+    for (MainWindow* win : gWindows) {
+        if (win->AsFixed() != dm) {
+            continue;
+        }
+
+        NotificationCreateArgs args;
+        args.hwndParent = win->hwndCanvas;
+        args.groupId = kNotifLazyLayout;
+        args.timeoutMs = kNotif5SecsTimeOut;
+        args.corner = NotifCorner::BottomLeft;
+        args.msg = msg;
+        ShowNotification(args);
+        return;
+    }
+}
+
+void InstallLayoutNotifHooks() {
+    gShowChapterLayoutNotifFn = ShowChapterLayoutNotif;
+    gShowLazyLayoutNotifFn = ShowLazyLayoutNotif;
 }

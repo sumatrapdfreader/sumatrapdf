@@ -120,7 +120,7 @@ NotificationWnd* GetNotificationByKey(u32 key);
 // closes this window's notifications whose timeout elapsed; the shell's tick
 // calls it with the ms since the last one
 void ExpireNotifications(MainWindow* win, int elapsedMs);
-void InstallChapterLayoutNotifHook();
+void InstallLayoutNotifHooks();
 
 void MaybeDelayedWarningNotification(Str msg);
 void ShowMaybeDelayedNotifications(MainWindow* win);

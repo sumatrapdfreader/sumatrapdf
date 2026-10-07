@@ -1622,7 +1622,6 @@
     <ClCompile Include="..\src\CommandPalette.cpp" />
     <ClCompile Include="..\src\CustomZoomDialog.cpp" />
     <ClCompile Include="..\src\DarkMode.cpp" />
-    <ClCompile Include="..\src\DisplayModel.cpp" />
     <ClCompile Include="..\src\DocumentProperties.cpp" />
     <ClCompile Include="..\src\EbookSettingsDialog.cpp" />
     <ClCompile Include="..\src\EngineDvi.cpp" />
@@ -2128,6 +2127,7 @@
     <ClCompile Include="..\src\shared\ChmFile.cpp" />
     <ClCompile Include="..\src\shared\Commands.cpp" />
     <ClCompile Include="..\src\shared\DisplayMode.cpp" />
+    <ClCompile Include="..\src\shared\DisplayModel.cpp" />
     <ClCompile Include="..\src\shared\DocController.cpp" />
     <ClCompile Include="..\src\shared\DocProperties.cpp" />
     <ClCompile Include="..\src\shared\DocumentLayout.cpp" />

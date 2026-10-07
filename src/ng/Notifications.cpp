@@ -325,7 +325,7 @@ static void ShowLazyLayoutNotif(DisplayModel* dm, Str msg) {
     }
 }
 
-void InstallChapterLayoutNotifHook() {
+void InstallLayoutNotifHooks() {
     gShowChapterLayoutNotifFn = ShowChapterLayoutNotif;
     gShowLazyLayoutNotifFn = ShowLazyLayoutNotif;
 }

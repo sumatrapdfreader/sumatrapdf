@@ -18502,6 +18502,7 @@ int APIENTRY WinMain(_In_ HINSTANCE /*hInstance*/, _In_opt_ HINSTANCE /*hPrevIns
     gRenderCache = new RenderCache();
     gFindTabByEngine = FindTabByEngineForCache;
     gCurrentTabForCache = CurrentTabForCache;
+    InstallLayoutNotifHooks();
 
     // TODO: for reasons I don't understand, this must be called before LoadSettings()
     DarkModeInit();

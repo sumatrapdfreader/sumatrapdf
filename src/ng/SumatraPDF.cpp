@@ -8666,7 +8666,7 @@ int GpuiMain(int argc, char** argv) {
     // reads its TabState) and let SaveSettings() snapshot the live one
     TakeInitialSessionData();
     InstallSessionStateHook();
-    InstallChapterLayoutNotifHook();
+    InstallLayoutNotifHooks();
 #if OS_WIN
     // a DDE / WM_COPYDATA open that arrives while the command line is still
     // being opened is queued instead of racing it
