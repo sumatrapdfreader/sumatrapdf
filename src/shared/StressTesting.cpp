@@ -716,48 +716,26 @@ static void RandomizeViewingState(StressTest* st) {
     }
     auto ctrl = st->win->ctrl;
 
-    int n = rand() % 12;
-    float zoom;
-    switch (n) {
-        case 0:
-            ctrl->SetZoomVirtual(kZoomFitPage, nullptr);
-            break;
-        case 1:
-            ctrl->SetZoomVirtual(kZoomFitWidth, nullptr);
-            break;
-        case 2:
-            ctrl->SetZoomVirtual(kZoomFitContent, nullptr);
-            break;
-        case 3:
-            ctrl->SetZoomVirtual(kZoomActualSize, nullptr);
-            break;
-        case 4:
-            ctrl->SetDisplayMode(DisplayMode::SinglePage);
-            break;
-        case 5:
-            ctrl->SetDisplayMode(DisplayMode::Facing);
-            break;
-        case 6:
-            ctrl->SetDisplayMode(DisplayMode::BookView);
-            break;
-        case 7:
-            ctrl->SetDisplayMode(DisplayMode::Continuous);
-            break;
-        case 8:
-            ctrl->SetDisplayMode(DisplayMode::ContinuousFacing);
-            break;
-        case 9:
-            ctrl->SetDisplayMode(DisplayMode::ContinuousBookView);
-            break;
-        case 10:
-            zoom = ctrl->GetNextZoomStep(kZoomMax);
-            ctrl->SetZoomVirtual(zoom, nullptr);
-            break;
-        case 11:
-            zoom = ctrl->GetNextZoomStep(kZoomMin);
-            ctrl->SetZoomVirtual(zoom, nullptr);
-            break;
+    static const float zoomModes[] = {kZoomFitPage, kZoomFitWidth, kZoomFitContent, kZoomActualSize};
+    static const DisplayMode displayModes[] = {
+        DisplayMode::SinglePage, DisplayMode::Facing,           DisplayMode::BookView,
+        DisplayMode::Continuous, DisplayMode::ContinuousFacing, DisplayMode::ContinuousBookView,
+    };
+
+    constexpr int nZoomSteps = 2;
+    int n = rand() % (dimof(zoomModes) + dimof(displayModes) + nZoomSteps);
+    if (n < dimof(zoomModes)) {
+        ctrl->SetZoomVirtual(zoomModes[n], nullptr);
+        return;
     }
+    n -= dimof(zoomModes);
+    if (n < dimof(displayModes)) {
+        ctrl->SetDisplayMode(displayModes[n]);
+        return;
+    }
+
+    float zoom = ctrl->GetNextZoomStep(n == dimof(displayModes) ? kZoomMax : kZoomMin);
+    ctrl->SetZoomVirtual(zoom, nullptr);
 }
 
 static bool GoToNextFile(StressTest* st) {
