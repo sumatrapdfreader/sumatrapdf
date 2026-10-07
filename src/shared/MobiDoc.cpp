@@ -649,17 +649,11 @@ bool MobiDoc::LoadDocRecordIntoBuffer(int recNo, str::Builder& strOut) {
         strOut.Append(Str((char*)recData, recSize));
         return true;
     }
-    if (kCompressionPalm == compressionType) {
-        bool ok = PalmdocUncompress(recData, recSize, strOut);
+    if (kCompressionPalm == compressionType || (kCompressionHuff == compressionType && huffDic)) {
+        bool palm = kCompressionPalm == compressionType;
+        bool ok = palm ? PalmdocUncompress(recData, recSize, strOut) : huffDic->Decompress(recData, recSize, strOut);
         if (!ok) {
-            logf("PalmDoc decompression failed\n");
-        }
-        return ok;
-    }
-    if (kCompressionHuff == compressionType && huffDic) {
-        bool ok = huffDic->Decompress(recData, recSize, strOut);
-        if (!ok) {
-            logf("HuffDic decompression failed\n");
+            logf("%s decompression failed\n", palm ? StrL("PalmDoc") : StrL("HuffDic"));
         }
         return ok;
     }
