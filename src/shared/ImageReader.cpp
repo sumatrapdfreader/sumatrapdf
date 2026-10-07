@@ -42,6 +42,16 @@ extern "C" {
 
 #include "ImageReader.h"
 
+static bool AppendDecodedPixmap(Vec<Pixmap*>& pixmaps, Pixmap* pixmap, i64& decodedBytes) {
+    decodedBytes += PixmapByteSize(pixmap);
+    if (decodedBytes > kMaxDecodedPixmapBytes) {
+        FreePixmap(pixmap);
+        return false;
+    }
+    VecAppend(pixmaps, pixmap);
+    return true;
+}
+
 static int GifColorIndex(u8 r, u8 g, u8 b) {
     return ((int)r & 0xe0) | (((int)g >> 3) & 0x1c) | ((int)b >> 6);
 }
@@ -836,7 +846,6 @@ static Pixmap* PixmapFromDataWin(Str bmpData) {
 }
 
 constexpr UINT kMaxImageFrames = 1000;
-constexpr i64 kMaxDecodedFrameBytes = 512LL * 1024 * 1024;
 
 // All frames from a WIC decoder (ICO sizes, and a fallback if GDI+ multi-frame fails).
 static Vec<Pixmap*> PixmapsFromWicFrames(Str bmpData) {
@@ -877,12 +886,9 @@ static Vec<Pixmap*> PixmapsFromWicFrames(Str bmpData) {
         if (!px) {
             continue;
         }
-        decodedBytes += PixmapByteSize(px);
-        if (decodedBytes > kMaxDecodedFrameBytes) {
-            FreePixmap(px);
+        if (!AppendDecodedPixmap(res, px, decodedBytes)) {
             break;
         }
-        VecAppend(res, px);
     }
     return res;
 }
@@ -904,13 +910,8 @@ static Vec<Pixmap*> PixmapsFromMultiFrameData(Str bmpData, FileType kind) {
             break;
         }
         Pixmap* px = PixmapFromGdiplus(bmp);
-        if (px) {
-            decodedBytes += PixmapByteSize(px);
-            if (decodedBytes > kMaxDecodedFrameBytes) {
-                FreePixmap(px);
-                break;
-            }
-            VecAppend(res, px);
+        if (px && !AppendDecodedPixmap(res, px, decodedBytes)) {
+            break;
         }
     }
     delete bmp;
@@ -1231,12 +1232,9 @@ static Vec<Pixmap*> PixmapsFromGifData(Str data) {
         CompositeGifFrame(canvas, frame, left, top);
         FreePixmap(frame);
         Pixmap* snapshot = ClonePixmap(canvas);
-        decodedBytes += PixmapByteSize(snapshot);
-        if (!snapshot || decodedBytes > kMaxDecodedPixmapBytes) {
-            FreePixmap(snapshot);
+        if (!snapshot || !AppendDecodedPixmap(res, snapshot, decodedBytes)) {
             break;
         }
-        VecAppend(res, snapshot);
         previousRect = Rect(left, top, width, height);
         previousDisposal = disposal;
         gceStart = gceEnd = -1;
@@ -1346,12 +1344,9 @@ static Vec<Pixmap*> PixmapsFromIcoData(Str data) {
         if (!frame) {
             continue;
         }
-        decodedBytes += PixmapByteSize(frame);
-        if (decodedBytes > kMaxDecodedPixmapBytes) {
-            FreePixmap(frame);
+        if (!AppendDecodedPixmap(res, frame, decodedBytes)) {
             break;
         }
-        VecAppend(res, frame);
     }
     return res;
 }
@@ -1417,12 +1412,9 @@ static Vec<Pixmap*> PixmapsFromGifData(Str data) {
         if (!frame) {
             break;
         }
-        decodedBytes += PixmapByteSize(frame);
-        if (decodedBytes > kMaxDecodedPixmapBytes) {
-            FreePixmap(frame);
+        if (!AppendDecodedPixmap(res, frame, decodedBytes)) {
             break;
         }
-        VecAppend(res, frame);
         if (i + 1 == nFrames) {
             break;
         }
@@ -1501,12 +1493,9 @@ static Vec<Pixmap*> PixmapsFromImageIo(Str data) {
         if (!frame) {
             continue;
         }
-        decodedBytes += PixmapByteSize(frame);
-        if (decodedBytes > kMaxDecodedPixmapBytes) {
-            FreePixmap(frame);
+        if (!AppendDecodedPixmap(result, frame, decodedBytes)) {
             break;
         }
-        VecAppend(result, frame);
     }
     CFRelease(source);
     return result;
