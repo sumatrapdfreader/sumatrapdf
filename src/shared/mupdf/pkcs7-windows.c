@@ -113,94 +113,51 @@ static DWORD get_signer_count(HCRYPTMSG hMsg) {
     return count;
 }
 
-// Windows crypto error codes we give symbolic names to. Names are stored as
-// a double-NUL terminated SeqStrings blob; gleCodes[i] pairs with the i-th
-// name in gleNames. Keep the two tables in the same order.
-// clang-format off
-static const char gleNames[] =
-    "NTE_BAD_SIGNATURE\0"
-    "NTE_BAD_HASH\0"
-    "NTE_BAD_KEY\0"
-    "NTE_BAD_LEN\0"
-    "NTE_BAD_ALGID\0"
-    "NTE_BAD_TYPE\0"
-    "NTE_BAD_DATA\0"
-    "NTE_NO_MEMORY\0"
-    "CRYPT_E_MSG_ERROR\0"
-    "CRYPT_E_UNKNOWN_ALGO\0"
-    "CRYPT_E_OID_FORMAT\0"
-    "CRYPT_E_INVALID_MSG_TYPE\0"
-    "CRYPT_E_UNEXPECTED_ENCODING\0"
-    "CRYPT_E_AUTH_ATTR_MISSING\0"
-    "CRYPT_E_HASH_VALUE\0"
-    "CRYPT_E_INVALID_INDEX\0"
-    "CRYPT_E_ALREADY_DECRYPTED\0"
-    "CRYPT_E_NOT_DECRYPTED\0"
-    "CRYPT_E_RECIPIENT_NOT_FOUND\0"
-    "CRYPT_E_CONTROL_TYPE\0"
-    "CRYPT_E_ISSUER_SERIALNUMBER\0"
-    "CRYPT_E_SIGNER_NOT_FOUND\0"
-    "CRYPT_E_ATTRIBUTES_MISSING\0"
-    "CRYPT_E_UNEXPECTED_MSG_TYPE\0"
-    "CRYPT_E_NO_SIGNER\0"
-    "CRYPT_E_NO_MATCH\0"
-    "CRYPT_E_BAD_ENCODE\0"
-    "CRYPT_E_OSS_ERROR\0"
-    "CRYPT_E_ASN1_ERROR\0"
-    "CRYPT_E_ASN1_BADTAG\0"
-    "CRYPT_E_NOT_FOUND\0"
-    "ERROR_INVALID_PARAMETER\0"
-    "ERROR_MORE_DATA\0";
-
-static const DWORD gleCodes[] = {
-    (DWORD)NTE_BAD_SIGNATURE,
-    (DWORD)NTE_BAD_HASH,
-    (DWORD)NTE_BAD_KEY,
-    (DWORD)NTE_BAD_LEN,
-    (DWORD)NTE_BAD_ALGID,
-    (DWORD)NTE_BAD_TYPE,
-    (DWORD)NTE_BAD_DATA,
-    (DWORD)NTE_NO_MEMORY,
-    (DWORD)CRYPT_E_MSG_ERROR,
-    (DWORD)CRYPT_E_UNKNOWN_ALGO,
-    (DWORD)CRYPT_E_OID_FORMAT,
-    (DWORD)CRYPT_E_INVALID_MSG_TYPE,
-    (DWORD)CRYPT_E_UNEXPECTED_ENCODING,
-    (DWORD)CRYPT_E_AUTH_ATTR_MISSING,
-    (DWORD)CRYPT_E_HASH_VALUE,
-    (DWORD)CRYPT_E_INVALID_INDEX,
-    (DWORD)CRYPT_E_ALREADY_DECRYPTED,
-    (DWORD)CRYPT_E_NOT_DECRYPTED,
-    (DWORD)CRYPT_E_RECIPIENT_NOT_FOUND,
-    (DWORD)CRYPT_E_CONTROL_TYPE,
-    (DWORD)CRYPT_E_ISSUER_SERIALNUMBER,
-    (DWORD)CRYPT_E_SIGNER_NOT_FOUND,
-    (DWORD)CRYPT_E_ATTRIBUTES_MISSING,
-    (DWORD)CRYPT_E_UNEXPECTED_MSG_TYPE,
-    (DWORD)CRYPT_E_NO_SIGNER,
-    (DWORD)CRYPT_E_NO_MATCH,
-    (DWORD)CRYPT_E_BAD_ENCODE,
-    (DWORD)CRYPT_E_OSS_ERROR,
-    (DWORD)CRYPT_E_ASN1_ERROR,
-    (DWORD)CRYPT_E_ASN1_BADTAG,
-    (DWORD)CRYPT_E_NOT_FOUND,
-    (DWORD)ERROR_INVALID_PARAMETER,
-    (DWORD)ERROR_MORE_DATA,
+// Symbolic names for Windows crypto errors.
+static const struct {
+    DWORD code;
+    const char* name;
+} gleErrors[] = {
+    {(DWORD)NTE_BAD_SIGNATURE, "NTE_BAD_SIGNATURE"},
+    {(DWORD)NTE_BAD_HASH, "NTE_BAD_HASH"},
+    {(DWORD)NTE_BAD_KEY, "NTE_BAD_KEY"},
+    {(DWORD)NTE_BAD_LEN, "NTE_BAD_LEN"},
+    {(DWORD)NTE_BAD_ALGID, "NTE_BAD_ALGID"},
+    {(DWORD)NTE_BAD_TYPE, "NTE_BAD_TYPE"},
+    {(DWORD)NTE_BAD_DATA, "NTE_BAD_DATA"},
+    {(DWORD)NTE_NO_MEMORY, "NTE_NO_MEMORY"},
+    {(DWORD)CRYPT_E_MSG_ERROR, "CRYPT_E_MSG_ERROR"},
+    {(DWORD)CRYPT_E_UNKNOWN_ALGO, "CRYPT_E_UNKNOWN_ALGO"},
+    {(DWORD)CRYPT_E_OID_FORMAT, "CRYPT_E_OID_FORMAT"},
+    {(DWORD)CRYPT_E_INVALID_MSG_TYPE, "CRYPT_E_INVALID_MSG_TYPE"},
+    {(DWORD)CRYPT_E_UNEXPECTED_ENCODING, "CRYPT_E_UNEXPECTED_ENCODING"},
+    {(DWORD)CRYPT_E_AUTH_ATTR_MISSING, "CRYPT_E_AUTH_ATTR_MISSING"},
+    {(DWORD)CRYPT_E_HASH_VALUE, "CRYPT_E_HASH_VALUE"},
+    {(DWORD)CRYPT_E_INVALID_INDEX, "CRYPT_E_INVALID_INDEX"},
+    {(DWORD)CRYPT_E_ALREADY_DECRYPTED, "CRYPT_E_ALREADY_DECRYPTED"},
+    {(DWORD)CRYPT_E_NOT_DECRYPTED, "CRYPT_E_NOT_DECRYPTED"},
+    {(DWORD)CRYPT_E_RECIPIENT_NOT_FOUND, "CRYPT_E_RECIPIENT_NOT_FOUND"},
+    {(DWORD)CRYPT_E_CONTROL_TYPE, "CRYPT_E_CONTROL_TYPE"},
+    {(DWORD)CRYPT_E_ISSUER_SERIALNUMBER, "CRYPT_E_ISSUER_SERIALNUMBER"},
+    {(DWORD)CRYPT_E_SIGNER_NOT_FOUND, "CRYPT_E_SIGNER_NOT_FOUND"},
+    {(DWORD)CRYPT_E_ATTRIBUTES_MISSING, "CRYPT_E_ATTRIBUTES_MISSING"},
+    {(DWORD)CRYPT_E_UNEXPECTED_MSG_TYPE, "CRYPT_E_UNEXPECTED_MSG_TYPE"},
+    {(DWORD)CRYPT_E_NO_SIGNER, "CRYPT_E_NO_SIGNER"},
+    {(DWORD)CRYPT_E_NO_MATCH, "CRYPT_E_NO_MATCH"},
+    {(DWORD)CRYPT_E_BAD_ENCODE, "CRYPT_E_BAD_ENCODE"},
+    {(DWORD)CRYPT_E_OSS_ERROR, "CRYPT_E_OSS_ERROR"},
+    {(DWORD)CRYPT_E_ASN1_ERROR, "CRYPT_E_ASN1_ERROR"},
+    {(DWORD)CRYPT_E_ASN1_BADTAG, "CRYPT_E_ASN1_BADTAG"},
+    {(DWORD)CRYPT_E_NOT_FOUND, "CRYPT_E_NOT_FOUND"},
+    {(DWORD)ERROR_INVALID_PARAMETER, "ERROR_INVALID_PARAMETER"},
+    {(DWORD)ERROR_MORE_DATA, "ERROR_MORE_DATA"},
 };
-// clang-format on
 
-// Returns symbolic name for known Windows crypto error codes, or NULL if
-// unknown. Walks gleNames / gleCodes in parallel; stops at the SeqStrings
-// terminator so the two tables can't walk past each other.
 static const char* gle_name(DWORD err) {
-    const char* s = gleNames;
-    size_t i = 0;
-    while (*s && i < sizeof(gleCodes) / sizeof(gleCodes[0])) {
-        if (gleCodes[i] == err) {
-            return s;
+    for (size_t i = 0; i < sizeof(gleErrors) / sizeof(gleErrors[0]); i++) {
+        if (gleErrors[i].code == err) {
+            return gleErrors[i].name;
         }
-        s += strlen(s) + 1;
-        i++;
     }
     return NULL;
 }
