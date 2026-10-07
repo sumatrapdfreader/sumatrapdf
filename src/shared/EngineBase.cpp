@@ -728,16 +728,14 @@ static void ChapterLayoutThread(ChapterLayoutJob* job) {
     EngineBase* engine = job->engine;
     int id = job->job;
     delete job;
+    AutoRelease release(engine);
 
     int total = engine->ChapterCount();
-    int done = 0;
-    bool cancelled = false;
     {
         ChapterLayoutQuiet quiet;
         for (int c = 1; c <= total; c++) {
             if (!engine->LayoutJobCurrent(id)) {
-                cancelled = true;
-                break;
+                return;
             }
             if (!engine->IsChapterLaidOut(c)) {
                 // count only. publishing here shifts flat page numbers under
@@ -745,19 +743,16 @@ static void ChapterLayoutThread(ChapterLayoutJob* job) {
                 engine->WarmChapter(c);
             }
             if (!engine->LayoutJobCurrent(id)) {
-                cancelled = true;
-                break;
+                return;
             }
-            done++;
-            engine->ReportLayoutProgress(done, total, false);
+            engine->ReportLayoutProgress(c, total, false);
         }
     }
-    if (!cancelled && engine->LayoutJobCurrent(id)) {
+    if (engine->LayoutJobCurrent(id)) {
         // the UI thread publishes the counts (LayOutChapter is cheap once
         // WarmChapter has paginated) and then resyncs the page total
-        engine->ReportLayoutProgress(done, total, true);
+        engine->ReportLayoutProgress(total, total, true);
     }
-    engine->Release();
 }
 
 // the open path lays out the chapter being read first; this counts the rest
