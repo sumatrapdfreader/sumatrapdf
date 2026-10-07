@@ -621,29 +621,22 @@ static bool LitReadDrm(LitFile* lit) {
     }
     MsSha1 sha;
     MsSha1Init(&sha);
-    const char* hashFiles[3] = {"/meta", "/DRMStorage/DRMSource", nullptr};
-    if (lit->drmLevel == 3) {
-        hashFiles[2] = "/DRMStorage/DRMBookplate";
-    }
+    const Str hashFiles[] = {StrL("/meta"), StrL("/DRMStorage/DRMSource"), StrL("/DRMStorage/DRMBookplate")};
+    int nHashFiles = lit->drmLevel == 3 ? dimofi(hashFiles) : dimofi(hashFiles) - 1;
+    constexpr int kMetaPrefixBytes = 2;
     u8 zeros[64] = {};
-    int prepad = 2; // the first hashed file gets 2 leading NUL bytes
-    for (const char* name : hashFiles) {
-        if (!name) {
-            continue;
-        }
-        Str data = lit->GetFile(Str(name));
+    for (int i = 0; i < nHashFiles; i++) {
+        Str data = lit->GetFile(hashFiles[i]);
         if (str::IsNull(data)) {
             return false;
         }
-        if (prepad > 0) {
-            MsSha1Update(&sha, zeros, prepad);
-        }
+        int prepad = i == 0 ? kMetaPrefixBytes : 0;
+        MsSha1Update(&sha, zeros, prepad);
         MsSha1Update(&sha, (const u8*)data.s, len(data));
         int pad = 64 - ((len(data) + prepad) % 64);
         if (pad < 64) {
             MsSha1Update(&sha, zeros, pad);
         }
-        prepad = 0;
     }
     u8 digest[20];
     MsSha1Final(&sha, digest);
