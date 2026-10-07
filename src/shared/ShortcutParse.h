@@ -1,6 +1,9 @@
 /* Copyright 2022 the SumatraPDF project authors (see AUTHORS file).
    License: Simplified BSD (see COPYING.BSD) */
 
+#ifndef SUMATRA_SHORTCUT_PARSE_H
+#define SUMATRA_SHORTCUT_PARSE_H
+
 struct KeyShortcut {
     enum : u8 {
         kVirtKey = 1,
@@ -39,4 +42,6 @@ TempStr ShortcutToGpuiStroke(const KeyShortcut& sc);
 #if OS_WIN
 bool ParseShortcutString(Str shortcut, ACCEL& accel);
 TempStr AppendAccelKeyToMenuStringTemp(TempStr menuStr, const ACCEL& a);
+#endif
+
 #endif
