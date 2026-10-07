@@ -58,9 +58,6 @@
     <Filter Include="src">
       <UniqueIdentifier>{2DAB880B-99B4-887C-2230-9F7C8E38947C}</UniqueIdentifier>
     </Filter>
-    <Filter Include="src\mupdf">
-      <UniqueIdentifier>{788FB2B5-E4F9-662C-2D38-18D299E14481}</UniqueIdentifier>
-    </Filter>
     <Filter Include="src\shared">
       <UniqueIdentifier>{D3351079-BFED-51C6-28F5-2A2214CCECB6}</UniqueIdentifier>
     </Filter>
@@ -1199,10 +1196,10 @@
     <ClCompile Include="..\ext\mupdf\source\xps\xps-zip.c">
       <Filter>ext\mupdf\source\xps</Filter>
     </ClCompile>
-    <ClCompile Include="..\src\mupdf\mupdf_load_system_font.c">
-      <Filter>src\mupdf</Filter>
-    </ClCompile>
     <ClCompile Include="..\src\shared\mupdf\load-jxl.cpp">
+      <Filter>src\shared\mupdf</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\shared\mupdf\mupdf_load_system_font.c">
       <Filter>src\shared\mupdf</Filter>
     </ClCompile>
     <ClCompile Include="..\src\shared\mupdf\noto_sumatra.c">

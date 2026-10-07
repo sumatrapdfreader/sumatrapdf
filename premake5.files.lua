@@ -614,7 +614,7 @@ end
 function mupdf_files()
   -- our additions to mupdf (not patches): see src/mupdf/README.md
   files {
-    "src/mupdf/mupdf_load_system_font.c",
+    "src/shared/mupdf/mupdf_load_system_font.c",
     "src/shared/mupdf/noto_sumatra.c",
     "src/shared/mupdf/noto_sumatra.h",
     "src/shared/mupdf/pkcs7-windows.c",

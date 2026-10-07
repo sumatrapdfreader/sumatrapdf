@@ -254,6 +254,7 @@ export const sharedFiles = [
   "src/shared/gui/UIModels.h",
   "src/shared/mupdf/load-jxl.cpp",
   "src/shared/mupdf/load-jxl.h",
+  "src/shared/mupdf/mupdf_load_system_font.c",
   "src/shared/mupdf/noto_sumatra.c",
   "src/shared/mupdf/noto_sumatra.h",
   "src/shared/mupdf/pkcs7-windows.c",
