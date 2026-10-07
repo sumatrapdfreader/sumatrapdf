@@ -358,6 +358,8 @@ function setup_base_pch()
     enablepch "Off"
   filter { "files:src/shared/ReadingBar.cpp" }
     enablepch "Off"
+  filter { "files:src/shared/Selection.cpp" }
+    enablepch "Off"
   filter { "files:src/shared/SelectionHandlers.cpp" }
     enablepch "Off"
   filter { "files:src/shared/SelectTextKeyboard.cpp" }
