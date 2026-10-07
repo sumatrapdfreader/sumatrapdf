@@ -24,8 +24,6 @@ static bool Compress(const char* uncompressed, size_t uncompressedSize, char* co
     ReportIf(*compressedSize < uncompressedSize + 1);
     if (*compressedSize < uncompressedSize + 1) return false;
 
-    size_t lzma_size = (size_t)-1;
-
     if (*compressedSize >= kLzmaHeaderSize) {
         ISzAlloc lzmaAlloc{[](void*, size_t size) { return malloc(size); }, [](void*, void* ptr) { free(ptr); }};
         CLzmaEncProps props;
@@ -47,17 +45,15 @@ static bool Compress(const char* uncompressed, size_t uncompressedSize, char* co
             LzmaEncode((Byte*)compressed + kLzmaHeaderSize, &outSize, bcj_enc ? bcj_enc : (const Byte*)uncompressed,
                        uncompressedSize, &props, (Byte*)compressed + 1, &propsSize, true /* add EOS marker */, nullptr,
                        &lzmaAlloc, &lzmaAlloc);
-        if (SZ_OK == res && propsSize == LZMA_PROPS_SIZE) lzma_size = outSize + kLzmaHeaderSize;
+        if (SZ_OK == res && propsSize == LZMA_PROPS_SIZE && outSize + kLzmaHeaderSize <= uncompressedSize) {
+            *compressedSize = outSize + kLzmaHeaderSize;
+            return true;
+        }
     }
 
-    if (lzma_size <= uncompressedSize) {
-        *compressedSize = lzma_size;
-    } else {
-        compressed[0] = (char)(u8)-1;
-        memcpy(compressed + 1, uncompressed, uncompressedSize);
-        *compressedSize = uncompressedSize + 1;
-    }
-
+    compressed[0] = (char)(u8)-1;
+    memcpy(compressed + 1, uncompressed, uncompressedSize);
+    *compressedSize = uncompressedSize + 1;
     return true;
 }
 
