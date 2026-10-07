@@ -29,13 +29,7 @@ static int CalculateAverageCharWidth(PlatformFont* font) {
 }
 
 bool PlatformFont::SameAs(Str otherName, float otherSizePt, PlatformFontStyle otherStyle) const {
-    if (sizePt != otherSizePt) {
-        return false;
-    }
-    if (style != otherStyle) {
-        return false;
-    }
-    return str::Eq(name, otherName);
+    return sizePt == otherSizePt && style == otherStyle && str::Eq(name, otherName);
 }
 
 static PlatformFont* GetPlatformFontInternal(Str name, float sizePt, PlatformFontStyle style, uintptr_t nativeId) {
