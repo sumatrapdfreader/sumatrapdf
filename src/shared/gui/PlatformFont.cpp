@@ -68,10 +68,6 @@ PlatformFont* GetPlatformFont(Str name, float sizePt, PlatformFontStyle style) {
 }
 
 #if OS_WIN
-PlatformFont* GetPlatformFontForNative(Str name, float sizePt, PlatformFontStyle style, uintptr_t nativeId) {
-    return GetPlatformFontInternal(name, sizePt, style, nativeId);
-}
-
 using Gdiplus::Font;
 using Gdiplus::Ok;
 using Gdiplus::Status;
@@ -339,7 +335,7 @@ PlatformFont* GetPlatformFont(HFONT hfont) {
     // points at 96 dpi, which is what the rest of the font cache is keyed on
     int dyPx = lf.lfHeight < 0 ? -lf.lfHeight : lf.lfHeight;
     float sizePt = (float)dyPx * 72.f / 96.f;
-    return GetPlatformFontForNative(ToUtf8Temp(WStr(lf.lfFaceName)), sizePt, style, (uintptr_t)hfont);
+    return GetPlatformFontInternal(ToUtf8Temp(WStr(lf.lfFaceName)), sizePt, style, (uintptr_t)hfont);
 }
 
 // derived from the font's own HFONT rather than from (name, size, Bold): an
