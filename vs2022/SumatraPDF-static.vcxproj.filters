@@ -1268,6 +1268,9 @@
     <ClCompile Include="..\src\shared\tests\EngineDjvuDec_ut.cpp">
       <Filter>src\shared\tests</Filter>
     </ClCompile>
+    <ClCompile Include="..\src\shared\tests\LitDoc_ut.cpp">
+      <Filter>src\shared\tests</Filter>
+    </ClCompile>
     <ClCompile Include="..\src\shared\tests\MobiDoc_ut.cpp">
       <Filter>src\shared\tests</Filter>
     </ClCompile>
@@ -1299,9 +1302,6 @@
       <Filter>src\testcode</Filter>
     </ClCompile>
     <ClCompile Include="..\src\tests\CommandPalette_ut.cpp">
-      <Filter>src\tests</Filter>
-    </ClCompile>
-    <ClCompile Include="..\src\tests\LitDoc_ut.cpp">
       <Filter>src\tests</Filter>
     </ClCompile>
     <ClCompile Include="..\src\tests\ShortcutParse_ut.cpp">

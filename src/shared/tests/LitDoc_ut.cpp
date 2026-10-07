@@ -81,8 +81,7 @@ static void LitMustReject(Str lit) {
 
 // hdrLen near INT_MAX: hdrLen + nPieces*16 used to wrap to a negative offset
 static Str MkLitHdrLenWrap() {
-    Str s = MkLitBuf(40, 0x7ffffff0, 5, 0);
-    return s;
+    return MkLitBuf(40, 0x7ffffff0, 5, 0);
 }
 
 // secondary-header pos = 0x7fffffff: pos+8 used to overflow the loop bound
