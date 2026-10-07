@@ -138,17 +138,17 @@ void NormalizeGlyphLines(const Rect* coords, Rect* out, int glyphCount) {
     }
     constexpr int kBaselineTolPt = 4;
     constexpr int kMaxLines = 4096;
-    int* lineBaseline = AllocArrayTemp<int>(kMaxLines);
-    int* lineTop = AllocArrayTemp<int>(kMaxLines);
-    int* lineBottom = AllocArrayTemp<int>(kMaxLines);
-    int* lineId = AllocArrayTemp<int>(glyphCount);
+    struct Line {
+        int baseline, top, bottom;
+    };
+    auto* lines = AllocArrayTemp<Line>(kMaxLines);
     int nLines = 0;
     for (int i = 0; i < glyphCount; i++) {
         int bl = coords[i].y + coords[i].dy;
         int best = -1;
         int bestDist = kBaselineTolPt + 1;
         for (int L = 0; L < nLines; L++) {
-            int dist = bl - lineBaseline[L];
+            int dist = bl - lines[L].baseline;
             if (dist < 0) {
                 dist = -dist;
             }
@@ -161,23 +161,21 @@ void NormalizeGlyphLines(const Rect* coords, Rect* out, int glyphCount) {
             // new line (or, on the unlikely line overflow, fold into line 0)
             if (nLines < kMaxLines) {
                 best = nLines++;
-                lineBaseline[best] = bl;
-                lineTop[best] = coords[i].y;
-                lineBottom[best] = bl;
+                lines[best] = {bl, coords[i].y, bl};
             } else {
                 best = 0;
             }
         } else {
-            lineTop[best] = std::min(coords[i].y, lineTop[best]);
-            lineBottom[best] = std::max(bl, lineBottom[best]);
+            lines[best].top = std::min(coords[i].y, lines[best].top);
+            lines[best].bottom = std::max(bl, lines[best].bottom);
         }
-        lineId[i] = best;
+        out[i] = coords[i];
+        out[i].y = best; // Keep the line index until all bounds are known.
     }
     for (int i = 0; i < glyphCount; i++) {
-        out[i] = coords[i];
-        int L = lineId[i];
-        out[i].y = lineTop[L];
-        out[i].dy = lineBottom[L] - lineTop[L];
+        const Line& line = lines[out[i].y];
+        out[i].y = line.top;
+        out[i].dy = line.bottom - line.top;
     }
 }
 
