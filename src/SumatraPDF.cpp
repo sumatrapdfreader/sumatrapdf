@@ -9573,7 +9573,7 @@ static bool FrameOnKeydown(MainWindow* win, WPARAM key, LPARAM lp) {
 
     // while the keyboard selection caret is up, movement keys move it instead
     // of scrolling the view
-    if (SelectTextWithKeyboardOnKeyDown(win, key)) {
+    if (SelectTextWithKeyboardOnKeyDown(win, (int)key)) {
         return true;
     }
 
@@ -9912,7 +9912,7 @@ static void FrameOnChar(MainWindow* win, WPARAM key, LPARAM info = 0) {
     }
 
     // while the selection caret is up, 'v' toggles visual mode and 'y' copies
-    if (!isCtrl && !isAlt && SelectTextWithKeyboardOnChar(win, key)) {
+    if (!isCtrl && !isAlt && SelectTextWithKeyboardOnChar(win, (int)key)) {
         return;
     }
 

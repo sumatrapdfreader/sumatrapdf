@@ -6,6 +6,7 @@ struct PaintCtx;
 }
 
 struct MainWindow;
+struct Gfx;
 enum class TextSelectUnit;
 
 extern Kind kNotifTextSelectMode;
@@ -14,14 +15,15 @@ bool CanSelectTextWithKeyboard(MainWindow*);
 void ToggleSelectTextWithKeyboard(MainWindow*);
 bool SelectTextWithKeyboardActive(MainWindow*);
 bool StopSelectTextWithKeyboard(MainWindow*);
-// ng: orig reads the modifiers with GetKeyState(); gpui reports them with the
-// key event, so they are passed in
+bool SelectTextWithKeyboardOnKeyDown(MainWindow*, int key);
 bool SelectTextWithKeyboardOnKeyDown(MainWindow*, int key, bool ctrl, bool shift, bool alt);
 bool SelectTextWithKeyboardOnChar(MainWindow*, int key);
 bool CanExtendTextSelection(MainWindow*);
 bool ExtendTextSelection(MainWindow*, TextSelectUnit, int dir);
-// ng: orig blinks the caret on a WM_TIMER; the shell's tick calls this
+void SelectTextWithKeyboardBlinkCaret(MainWindow*);
 void SelectTextWithKeyboardBlinkTick(MainWindow*, int elapsedMs);
+void PaintKeyboardTextCaret(MainWindow*, Gfx*);
 void PaintKeyboardTextCaret(MainWindow*, gpui::PaintCtx*);
 
+TempStr SelectTextKeyboardResultTemp(int* exitCodeOut);
 TempStr SelectTextKeyboardResultTemp(MainWindow* win);

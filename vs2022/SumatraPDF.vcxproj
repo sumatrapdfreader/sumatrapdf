@@ -1434,7 +1434,6 @@
     <ClInclude Include="..\src\RenderCache.h" />
     <ClInclude Include="..\src\ScreenshotCapture.h" />
     <ClInclude Include="..\src\SearchAndDDE.h" />
-    <ClInclude Include="..\src\SelectTextKeyboard.h" />
     <ClInclude Include="..\src\Selection.h" />
     <ClInclude Include="..\src\Settings.h" />
     <ClInclude Include="..\src\SidebarPanel.h" />
@@ -1532,6 +1531,7 @@
     <ClInclude Include="..\src\shared\ReadingAutoScroll.h" />
     <ClInclude Include="..\src\shared\ReadingBar.h" />
     <ClInclude Include="..\src\shared\Screenshot.h" />
+    <ClInclude Include="..\src\shared\SelectTextKeyboard.h" />
     <ClInclude Include="..\src\shared\SelectionHandlers.h" />
     <ClInclude Include="..\src\shared\SelectionToolbar.h" />
     <ClInclude Include="..\src\shared\SelectionTranslate.h" />
@@ -1676,7 +1676,6 @@
     <ClCompile Include="..\src\Screenshot.cpp" />
     <ClCompile Include="..\src\ScreenshotCapture.cpp" />
     <ClCompile Include="..\src\SearchAndDDE.cpp" />
-    <ClCompile Include="..\src\SelectTextKeyboard.cpp" />
     <ClCompile Include="..\src\Selection.cpp" />
     <ClCompile Include="..\src\SelectionHandlers.cpp" />
     <ClCompile Include="..\src\SelectionToolbar.cpp" />
@@ -2169,6 +2168,9 @@
     <ClCompile Include="..\src\shared\RefHoverText.cpp" />
     <ClCompile Include="..\src\shared\RefHoverTextDetect.cpp" />
     <ClCompile Include="..\src\shared\RegistryInstaller.cpp" />
+    <ClCompile Include="..\src\shared\SelectTextKeyboard.cpp">
+      <PrecompiledHeader>NotUsing</PrecompiledHeader>
+    </ClCompile>
     <ClCompile Include="..\src\shared\SumatraConfig.cpp" />
     <ClCompile Include="..\src\shared\SumatraLog.cpp" />
     <ClCompile Include="..\src\shared\TextSearch.cpp">

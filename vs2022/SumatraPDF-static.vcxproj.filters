@@ -189,9 +189,6 @@
     <ClInclude Include="..\src\SearchAndDDE.h">
       <Filter>src</Filter>
     </ClInclude>
-    <ClInclude Include="..\src\SelectTextKeyboard.h">
-      <Filter>src</Filter>
-    </ClInclude>
     <ClInclude Include="..\src\Selection.h">
       <Filter>src</Filter>
     </ClInclude>
@@ -481,6 +478,9 @@
       <Filter>src\shared</Filter>
     </ClInclude>
     <ClInclude Include="..\src\shared\Screenshot.h">
+      <Filter>src\shared</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\shared\SelectTextKeyboard.h">
       <Filter>src\shared</Filter>
     </ClInclude>
     <ClInclude Include="..\src\shared\SelectionHandlers.h">
@@ -801,9 +801,6 @@
       <Filter>src</Filter>
     </ClCompile>
     <ClCompile Include="..\src\SearchAndDDE.cpp">
-      <Filter>src</Filter>
-    </ClCompile>
-    <ClCompile Include="..\src\SelectTextKeyboard.cpp">
       <Filter>src</Filter>
     </ClCompile>
     <ClCompile Include="..\src\Selection.cpp">
@@ -1221,6 +1218,9 @@
       <Filter>src\shared</Filter>
     </ClCompile>
     <ClCompile Include="..\src\shared\RegistryInstaller.cpp">
+      <Filter>src\shared</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\shared\SelectTextKeyboard.cpp">
       <Filter>src\shared</Filter>
     </ClCompile>
     <ClCompile Include="..\src\shared\SumatraConfig.cpp">
