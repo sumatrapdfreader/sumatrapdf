@@ -210,9 +210,6 @@
     <ClInclude Include="..\src\Settings.h">
       <Filter>src</Filter>
     </ClInclude>
-    <ClInclude Include="..\src\ShortcutParse.h">
-      <Filter>src</Filter>
-    </ClInclude>
     <ClInclude Include="..\src\SidebarPanel.h">
       <Filter>src</Filter>
     </ClInclude>
@@ -493,6 +490,9 @@
       <Filter>src\shared</Filter>
     </ClInclude>
     <ClInclude Include="..\src\shared\SelectionTranslate.h">
+      <Filter>src\shared</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\shared\ShortcutParse.h">
       <Filter>src\shared</Filter>
     </ClInclude>
     <ClInclude Include="..\src\shared\StressTesting.h">
