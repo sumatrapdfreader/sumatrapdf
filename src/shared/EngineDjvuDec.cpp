@@ -817,7 +817,8 @@ TocItem* EngineDjvuDec::BuildTocTree(TocItem* parent, djvu_outline_item* items, 
     if (depth >= 64) {
         return nullptr;
     }
-    TocItem* node = nullptr;
+    TocItem* root = nullptr;
+    TocItem** next = &root;
     for (int i = 0; i < n; i++) {
         djvu_outline_item& it = items[i];
         Str title = Str(it.title);
@@ -832,13 +833,10 @@ TocItem* EngineDjvuDec::BuildTocTree(TocItem* parent, djvu_outline_item* items, 
         TocItem* tocItem = NewDjvuDecTocItem(arena, parent, title, link);
         tocItem->id = ++idCounter;
         tocItem->child = BuildTocTree(tocItem, it.children, it.nchildren, idCounter, depth + 1);
-        if (!node) {
-            node = tocItem;
-        } else {
-            node->AddSiblingAtEnd(tocItem);
-        }
+        *next = tocItem;
+        next = &tocItem->next;
     }
-    return node;
+    return root;
 }
 
 TocTree* EngineDjvuDec::GetToc() {
