@@ -1,19 +1,15 @@
 /* Copyright 2026 the SumatraPDF project authors (see AUTHORS file).
    License: GPLv3 */
 
-// ng: orig's AIChatCommon.h. What changed: HANDLE / FILETIME / DWORD are gone
-// from the interface (the process plumbing is platform-specific in the .cpp),
-// the "not installed" TaskDialog is a gpui dialog, and
-// AIChatProvider::virtualHostW (a WCHAR* for WebView2) is gone because
-// BrowserView takes the utf-8 host.
-
 namespace gpui {
 struct Ctx;
 struct El;
 } // namespace gpui
 
 struct MainWindow;
+struct PlatformFont;
 struct WindowTab;
+struct WebViewResourceResult;
 
 constexpr int kAIChatProviderCount = 4;
 
@@ -44,7 +40,6 @@ struct AIChatNotInstalledDialogArgs {
     Str docUri;
 };
 
-// ng: HANDLE -> void*, DWORD -> u32, so the header is portable
 struct AIChatProcessLaunchResult {
     bool ok = false;
     void* hProcess = nullptr;
@@ -64,9 +59,8 @@ enum class AIChatUpdateType {
 };
 
 // context for parsing a provider's stdout stream on the reader thread
-// ng: orig identifies the window by its HWND; here it is the MainWindow*, which
-// OnAIChatUpdate re-validates against gWindows before touching it
 struct AIChatStreamCtx {
+    HWND hwndFrame = nullptr;
     MainWindow* win = nullptr;
     int providerId = 0;
     Str sessionId; // owned; the session the output belongs to
@@ -149,7 +143,7 @@ TempStr AIChatExtractUserTextTemp(Str line);
 Str AIChatSessionDescription(Str sessionPath);
 void AIChatLoadSessionHistory(MainWindow* win, Str sessionPath);
 
-// ng: the user's home directory; orig calls GetSpecialFolderTemp(CSIDL_PROFILE)
+MainWindow* AIChatFindMainWindowByFrame(HWND hwndFrame);
 TempStr AIChatHomeDirTemp();
 
 void AIChatFreeSessions(Vec<AIChatSessionInfo>& sessions);
@@ -171,6 +165,7 @@ TempStr AIChatTestResultTemp(int backend, Str filePath, Str message, int* exitCo
 // panel if needed) to debug webview rendering without a live provider call.
 TempStr AIChatTestReplayResultTemp(Str userMsg, Str response, int* exitCode);
 
+void AIChatShowNotInstalledDialog(const AIChatNotInstalledDialogArgs& args);
 void AIChatShowNotInstalledDialog(MainWindow* win, const AIChatNotInstalledDialogArgs& args);
 bool IsAIChatNotInstalledDialogVisible();
 void CloseAIChatNotInstalledDialog();
@@ -184,6 +179,7 @@ Str AIChatResolveModel(const StrVec& models, Str model, Str defaultModel);
 TempStr AIChatModelDisplayNameTemp(Str model, Str defaultDisplay);
 
 TempStr AIChatFormatChatHtmlTemp(Str virtualHost, Str bgColor);
+bool AIChatGetMarkedJsResource(void* ctx, Str path, WebViewResourceResult* res);
 
 void AIChatCloseProcess(void** processHandle, bool terminateIfRunning);
 bool AIChatLaunchProcessWithStdoutPipe(Str cmdLine, Str cwd, AIChatProcessLaunchResult* out);
@@ -197,9 +193,9 @@ bool AIChatWaitForProcess(void* hProcess, int timeoutMs);
 void AIChatTerminateProcess(void* hProcess);
 
 TempStr AIChatGenerateSessionIdTemp();
-// a version 4 (random) UUID out of 16 random bytes; in AIChatProcess.cpp so
-// that it can be tested without the UI
 TempStr AIChatFormatSessionIdTemp(const u8* bytes);
+int AIChatLabelMaxTextDx(int labelDx);
+TempStr AIChatFitPanelTitleTemp(PlatformFont* font, Str prefix, Str docName, int maxDx);
 
 AIChatBackend AIChatGetTabPanelOpen(WindowTab* tab);
 void AIChatSetTabPanelOpen(WindowTab* tab, AIChatBackend backend);
