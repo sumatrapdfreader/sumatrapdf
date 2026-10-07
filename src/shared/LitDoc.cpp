@@ -347,20 +347,16 @@ static int LitUtf8Char(Str d, int* pos) {
 }
 
 static void LitAppendUtf8(str::Builder& out, int c) {
-    if (c < 0x80) {
-        out.AppendChar((char)c);
-    } else if (c < 0x800) {
-        out.AppendChar((char)(0xC0 | (c >> 6)));
-        out.AppendChar((char)(0x80 | (c & 0x3f)));
-    } else if (c < 0x10000) {
-        out.AppendChar((char)(0xE0 | (c >> 12)));
-        out.AppendChar((char)(0x80 | ((c >> 6) & 0x3f)));
-        out.AppendChar((char)(0x80 | (c & 0x3f)));
-    } else {
-        out.AppendChar((char)(0xF0 | (c >> 18)));
-        out.AppendChar((char)(0x80 | ((c >> 12) & 0x3f)));
-        out.AppendChar((char)(0x80 | ((c >> 6) & 0x3f)));
-        out.AppendChar((char)(0x80 | (c & 0x3f)));
+    constexpr int kMaxRuneBytes = 4;
+    char buf[kMaxRuneBytes];
+    int n = 0;
+    str::Utf8Encode(buf, n, c);
+    // LIT keeps extra prefix bits for values outside Unicode.
+    if (n == kMaxRuneBytes) {
+        buf[0] = (char)(0xF0 | (c >> 18));
+    }
+    for (int i = 0; i < n; i++) {
+        out.AppendChar(buf[i]);
     }
 }
 
