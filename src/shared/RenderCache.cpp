@@ -1460,14 +1460,20 @@ void RenderCache::SchedulePump() {
 
 // TODO: conceptually, RenderCache is not the right place for code that paints
 //       (this is the only place that knows about Tiles, though)
+int RenderCache::PaintTile(
 #if defined(SUMATRA_NG)
-int RenderCache::PaintTile(gpui::PaintCtx* ctx, Rect bounds, DisplayModel* dm, int pageNo, TilePosition tile,
-                           Rect tileOnScreen, bool renderMissing, bool* renderOutOfDateCue, bool* renderedReplacement) {
+    gpui::PaintCtx* ctx,
+#else
+    HDC hdc,
+#endif
+    Rect bounds, DisplayModel* dm, int pageNo, TilePosition tile, Rect tileOnScreen, bool renderMissing,
+    bool* renderOutOfDateCue, bool* renderedReplacement) {
     float zoom = dm->GetZoomReal(pageNo);
     BitmapCacheEntry* entry = Find(dm, pageNo, dm->GetRotation(), zoom, &tile);
     int renderDelay = 0;
 
     if (!entry) {
+        // A stale comic bitmap at another zoom visibly jumps when stretched.
         bool allowOtherZoom = !isRemoteSession;
         if (allowOtherZoom && dm->GetEngine() && dm->GetEngine()->isImageCollection) {
             allowOtherZoom = false;
@@ -1494,7 +1500,7 @@ int RenderCache::PaintTile(gpui::PaintCtx* ctx, Rect bounds, DisplayModel* dm, i
             renderDelay = 1;
         }
 
-        // ReduceTileSize() deletes all cache entries; don't touch a stale pointer
+        // ReduceTileSize() deletes all cache entries; don't touch a stale pointer.
         if (entry && !didReduce) {
             DropCacheEntry(entry);
         }
@@ -1515,90 +1521,20 @@ int RenderCache::PaintTile(gpui::PaintCtx* ctx, Rect bounds, DisplayModel* dm, i
         source.dx = (int)((float)bounds.dx * factor);
         source.dy = (int)((float)bounds.dy * factor);
     }
-    // ng: orig blits the tile with GDI (BlitPixmapRegion); the canvas draws it
-    // as a gpui RenderImage cached on the entry
+#if defined(SUMATRA_NG)
     CanvasDrawTile(ctx, entry, target, source);
-
     if (gShowTileLayout) {
         CanvasDrawTileOutline(ctx, bounds);
     }
-
-    if (entry->outOfDate) {
-        if (renderOutOfDateCue) {
-            *renderOutOfDateCue = true;
-        }
-        ReportIf(renderedReplacement && !*renderedReplacement);
-    }
-
-    DropCacheEntry(entry);
-    return 0;
-}
-
 #else
-int RenderCache::PaintTile(HDC hdc, Rect bounds, DisplayModel* dm, int pageNo, TilePosition tile, Rect tileOnScreen,
-                           bool renderMissing, bool* renderOutOfDateCue, bool* renderedReplacement) {
-    float zoom = dm->GetZoomReal(pageNo);
-    BitmapCacheEntry* entry = Find(dm, pageNo, dm->GetRotation(), zoom, &tile);
-    int renderDelay = 0;
-
-    if (!entry) {
-        // comics in fit-page: a leftover bitmap at the previous zoom is the
-        // wrong size; blitting it stretched then replacing it is a visible jump
-        bool allowOtherZoom = !isRemoteSession;
-        if (allowOtherZoom && dm->GetEngine() && dm->GetEngine()->isImageCollection) {
-            allowOtherZoom = false;
-        }
-        if (allowOtherZoom) {
-            if (renderedReplacement) {
-                *renderedReplacement = true;
-            }
-            entry = Find(dm, pageNo, dm->GetRotation(), kInvalidZoom, &tile);
-        }
-        renderDelay = GetRenderDelay(dm, pageNo, tile);
-        if (renderMissing && kRenderDelayUndefined == renderDelay && !IsRenderQueueFull()) {
-            RequestRendering(dm, pageNo, tile);
-            renderDelay = 1;
-        }
-    }
-    Pixmap* renderedBmp = entry ? entry->bitmap : nullptr;
-
-    if (!renderedBmp || !renderedBmp->data) {
-        bool didReduce = entry && ReduceTileSize();
-        if (entry && !didReduce) {
-            renderDelay = kRenderDelayFailed;
-        } else if (0 == renderDelay) {
-            renderDelay = 1;
-        }
-
-        // ReduceTileSize() deletes all cache entries; don't touch a stale pointer
-        if (entry && !didReduce) {
-            DropCacheEntry(entry);
-        }
-        return renderDelay;
-    }
-
-    Size bmpSize = Size(renderedBmp->width, renderedBmp->height);
-    int xSrc = -std::min(tileOnScreen.x, 0);
-    int ySrc = -std::min(tileOnScreen.y, 0);
-    float factor =
-        std::min(1.0f * (float)bmpSize.dx / (float)tileOnScreen.dx, 1.0f * (float)bmpSize.dy / (float)tileOnScreen.dy);
-
-    Rect target = bounds;
-    Rect source(xSrc, ySrc, bounds.dx, bounds.dy);
-    if (factor != 1.0f) {
-        source.x = (int)((float)xSrc * factor);
-        source.y = (int)((float)ySrc * factor);
-        source.dx = (int)((float)bounds.dx * factor);
-        source.dy = (int)((float)bounds.dy * factor);
-    }
     BlitPixmapRegion(renderedBmp, hdc, target, source);
-
     if (gShowTileLayout) {
         HPEN pen = CreatePen(PS_SOLID, 1, kColYellow);
         HGDIOBJ oldPen = SelectObject(hdc, pen);
         HdcDrawRect(hdc, bounds);
         DeletePen(SelectObject(hdc, oldPen));
     }
+#endif
 
     if (entry->outOfDate) {
         if (renderOutOfDateCue) {
@@ -1610,8 +1546,6 @@ int RenderCache::PaintTile(HDC hdc, Rect bounds, DisplayModel* dm, int pageNo, T
     DropCacheEntry(entry);
     return 0;
 }
-
-#endif
 
 static int cmpTilePosition(const TilePosition* a, const TilePosition* b) {
     if (a->res != b->res) {
@@ -1626,25 +1560,45 @@ static int cmpTilePosition(const TilePosition* a, const TilePosition* b) {
 // returns how much time in ms has past since the most recent rendering
 // request for the visible part of the page if nothing at all could be
 // painted, 0 if something has been painted and kRenderDelayFailed on failure
+int RenderCache::Paint(
 #if defined(SUMATRA_NG)
-int RenderCache::Paint(gpui::PaintCtx* ctx, Rect bounds, DisplayModel* dm, int pageNo, PageInfo* pi,
-                       bool* renderOutOfDateCue) {
+    gpui::PaintCtx* ctx,
+#else
+    HDC hdc,
+#endif
+    Rect bounds, DisplayModel* dm, int pageNo, PageInfo* pi, bool* renderOutOfDateCue) {
     ReportIf(!pi->isShown || 0.0 == pi->visibleRatio);
 
-#if 0
-    auto timeStart = TimeGet();
-    defer {
-        auto dur = TimeSinceInMs(timeStart);
-        rcLogf("RenderCache::Paint() pageNo: %d, bounds={%d,%d,%d,%d} in %.2f ms\n", pageNo, bounds.x, bounds.y, bounds.dx,
-             bounds.dy, dur);
-    };
-#endif
-
-    // ng: orig renders the uncached case right here, on the UI thread. This
-    // port never renders a page on the UI thread, and the branch is dead
-    // anyway (ShouldCacheRendering() always answers true).
     if (!dm->ShouldCacheRendering(pageNo)) {
+#if defined(SUMATRA_NG)
         return kRenderDelayFailed;
+#else
+        int rotation = dm->GetRotation();
+        float zoom = dm->GetZoomReal(pageNo);
+        bounds = pi->pageOnScreen.Intersect(bounds);
+
+        RectF area = ToRectF(bounds);
+        area.Offset((float)-pi->pageOnScreen.x, (float)-pi->pageOnScreen.y);
+        RectF pageBox = dm->PageMediaBoxForLayout(pageNo);
+        PointF origin = dm->GetEngine()->Transform(pageBox, pageNo, zoom, rotation).TL();
+        area.Offset(origin.x, origin.y);
+        area = dm->GetEngine()->Transform(area, pageNo, zoom, rotation, true);
+
+        RenderPageArgs args(pageNo, zoom, rotation, &area);
+        if (pi->loc.IsValid()) {
+            args.loc = pi->loc;
+        }
+        args.keepAlpha = true;
+        args.transparentBackdrop = ShowTransparencyGrid();
+        Pixmap* bmp = dm->GetEngine()->RenderPage(args);
+        if (AtomicBoolGet(&grayscalePageColors)) {
+            bmp = GrayscalePagePixmap(bmp);
+        }
+
+        bool success = bmp && BlitPixmap(bmp, hdc, bounds);
+        FreePixmap(bmp);
+        return success ? 0 : kRenderDelayFailed;
+#endif
     }
 
     int rotation = dm->GetRotation();
@@ -1662,7 +1616,6 @@ int RenderCache::Paint(gpui::PaintCtx* ctx, Rect bounds, DisplayModel* dm, int p
         TilePosition tile = VecPopAt(queue, 0);
         Rect tileOnScreen = GetTileOnScreen(dm, pageNo, rotation, zoom, tile, pi->pageOnScreen);
         if (tileOnScreen.IsEmpty()) {
-            // display an error message when only empty tiles should be drawn (i.e. on page loading errors)
             renderDelayMin = std::min(kRenderDelayFailed, renderDelayMin);
             continue;
         }
@@ -1673,8 +1626,13 @@ int RenderCache::Paint(gpui::PaintCtx* ctx, Rect bounds, DisplayModel* dm, int p
         }
 
         bool isTargetRes = tile.res == targetRes;
+#if defined(SUMATRA_NG)
         int renderDelay = PaintTile(ctx, isect, dm, pageNo, tile, tileOnScreen, isTargetRes, renderOutOfDateCue,
                                     isTargetRes ? &neededScaling : nullptr);
+#else
+        int renderDelay = PaintTile(hdc, isect, dm, pageNo, tile, tileOnScreen, isTargetRes, renderOutOfDateCue,
+                                    isTargetRes ? &neededScaling : nullptr);
+#endif
         if (!(isTargetRes && 0 == renderDelay) && tile.res < maxRes) {
             VecAppend(queue, TilePosition(tile.res + 1, tile.row * 2, tile.col * 2));
             VecAppend(queue, TilePosition(tile.res + 1, tile.row * 2, (tile.col * 2) + 1));
@@ -1689,7 +1647,6 @@ int RenderCache::Paint(gpui::PaintCtx* ctx, Rect bounds, DisplayModel* dm, int p
         } else {
             renderDelayMin = std::min(renderDelay, renderDelayMin);
         }
-        // paint tiles from left to right from top to bottom
         if (tile.res > 0 && len(queue) > 0 && tile.res < queue[0].res) {
             VecSort(queue, cmpTilePosition);
         }
@@ -1706,111 +1663,6 @@ int RenderCache::Paint(gpui::PaintCtx* ctx, Rect bounds, DisplayModel* dm, int p
 
     return renderDelayMin;
 }
-
-#else
-int RenderCache::Paint(HDC hdc, Rect bounds, DisplayModel* dm, int pageNo, PageInfo* pi, bool* renderOutOfDateCue) {
-    ReportIf(!pi->isShown || 0.0 == pi->visibleRatio);
-
-#if 0
-    auto timeStart = TimeGet();
-    defer {
-        auto dur = TimeSinceInMs(timeStart);
-        rcLogf("RenderCache::Paint() pageNo: %d, bounds={%d,%d,%d,%d} in %.2f ms\n", pageNo, bounds.x, bounds.y, bounds.dx,
-             bounds.dy, dur);
-    };
-#endif
-
-    if (!dm->ShouldCacheRendering(pageNo)) {
-        int rotation = dm->GetRotation();
-        float zoom = dm->GetZoomReal(pageNo);
-        bounds = pi->pageOnScreen.Intersect(bounds);
-
-        RectF area = ToRectF(bounds);
-        area.Offset((float)-pi->pageOnScreen.x, (float)-pi->pageOnScreen.y);
-        RectF pageBox = dm->PageMediaBoxForLayout(pageNo);
-        PointF origin = dm->GetEngine()->Transform(pageBox, pageNo, zoom, rotation).TL();
-        area.Offset(origin.x, origin.y);
-        area = dm->GetEngine()->Transform(area, pageNo, zoom, rotation, true);
-
-        RenderPageArgs args(pageNo, zoom, rotation, &area);
-        if (pi->loc.IsValid()) {
-            args.loc = pi->loc;
-        }
-        args.keepAlpha = true; // see the other RenderPageArgs above (#5844)
-        args.transparentBackdrop = ShowTransparencyGrid();
-        Pixmap* bmp = dm->GetEngine()->RenderPage(args);
-
-        if (AtomicBoolGet(&grayscalePageColors)) {
-            bmp = GrayscalePagePixmap(bmp);
-        }
-
-        bool success = bmp && BlitPixmap(bmp, hdc, bounds);
-        FreePixmap(bmp);
-
-        return success ? 0 : kRenderDelayFailed;
-    }
-
-    int rotation = dm->GetRotation();
-    float zoom = dm->GetZoomReal(pageNo);
-    USHORT targetRes = GetTileRes(dm, pageNo);
-    USHORT maxRes = GetMaxTileRes(dm, pageNo, rotation);
-    maxRes = std::max(maxRes, targetRes);
-
-    Vec<TilePosition> queue;
-    VecAppend(queue, TilePosition(0, 0, 0));
-    int renderDelayMin = kRenderDelayUndefined;
-    bool neededScaling = false;
-
-    while (len(queue) > 0) {
-        TilePosition tile = VecPopAt(queue, 0);
-        Rect tileOnScreen = GetTileOnScreen(dm, pageNo, rotation, zoom, tile, pi->pageOnScreen);
-        if (tileOnScreen.IsEmpty()) {
-            // display an error message when only empty tiles should be drawn (i.e. on page loading errors)
-            renderDelayMin = std::min(kRenderDelayFailed, renderDelayMin);
-            continue;
-        }
-        tileOnScreen = pi->pageOnScreen.Intersect(tileOnScreen);
-        Rect isect = bounds.Intersect(tileOnScreen);
-        if (isect.IsEmpty()) {
-            continue;
-        }
-
-        bool isTargetRes = tile.res == targetRes;
-        int renderDelay = PaintTile(hdc, isect, dm, pageNo, tile, tileOnScreen, isTargetRes, renderOutOfDateCue,
-                                    isTargetRes ? &neededScaling : nullptr);
-        if (!(isTargetRes && 0 == renderDelay) && tile.res < maxRes) {
-            VecAppend(queue, TilePosition(tile.res + 1, tile.row * 2, tile.col * 2));
-            VecAppend(queue, TilePosition(tile.res + 1, tile.row * 2, (tile.col * 2) + 1));
-            VecAppend(queue, TilePosition(tile.res + 1, (tile.row * 2) + 1, tile.col * 2));
-            VecAppend(queue, TilePosition(tile.res + 1, (tile.row * 2) + 1, (tile.col * 2) + 1));
-        }
-        if (isTargetRes && renderDelay != 0) {
-            neededScaling = true;
-        }
-        if (renderDelay == kRenderDelayFailed || renderDelayMin == kRenderDelayFailed) {
-            renderDelayMin = kRenderDelayFailed;
-        } else {
-            renderDelayMin = std::min(renderDelay, renderDelayMin);
-        }
-        // paint tiles from left to right from top to bottom
-        if (tile.res > 0 && len(queue) > 0 && tile.res < queue[0].res) {
-            VecSort(queue, cmpTilePosition);
-        }
-    }
-
-    if (gSaveMemory > 0 && !neededScaling) {
-        if (renderOutOfDateCue) {
-            *renderOutOfDateCue = false;
-        }
-        TilePosition tile(targetRes, (USHORT)-1, 0);
-        rcLogf("RenderCache::Paint: calling FreePage() pageNo: %d\n", pageNo);
-        FreePage(dm, pageNo, &tile);
-    }
-
-    return renderDelayMin;
-}
-
-#endif
 
 // how many tiles the cache holds and what they cost, for the -dbg-control
 // performance snapshot
