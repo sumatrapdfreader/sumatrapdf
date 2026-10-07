@@ -672,16 +672,12 @@ static void CollectZonesUtf8(djvu_text_zone* z, float dpiF, str::Builder& sb, Ve
 
 PageText EngineDjvuDec::ExtractPageText(int pageNo) {
     djvu_page_text_zones* z = djvu_page_text_get_zones(doc, pageNo - 1);
+    AutoCall freeZones(djvu_text_zones_destroy, ctx, z);
     if (!z || !z->root) {
-        if (z) {
-            djvu_text_zones_destroy(ctx, z);
-        }
         return {};
     }
     float dpiF = fileDPI / (float)pages[pageNo - 1]->dpi;
-    PageText res = DjvuZonesToPageText(z->root, dpiF);
-    djvu_text_zones_destroy(ctx, z);
-    return res;
+    return DjvuZonesToPageText(z->root, dpiF);
 }
 
 // zone text is cut out of the page text by byte offsets, so a multi-byte
