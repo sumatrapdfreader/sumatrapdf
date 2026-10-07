@@ -917,25 +917,6 @@ int PopupId(Annotation* annot) {
     return res;
 }
 
-/*
-time_t CreationDate(Annotation* annot) {
-    EngineMupdf* e = annot->engine;
-    auto a = annot->pdfannot;
-    auto ctx = e->Ctx();
-    auto pdf = annot->pdf;
-    ScopedRecursiveMutex cs(&e->docLock);
-    int64_t res = 0;
-    fz_try(ctx)
-    {
-        res = pdf_annot_creation_date(ctx, a);
-    }
-    fz_catch(ctx) {
-        fz_report_error(ctx);
-    }
-    return res;
-}
-*/
-
 time_t ModificationDate(Annotation* annot) {
     if (!AnnotationIsLive(annot)) {
         return 0;
