@@ -247,6 +247,7 @@ export const sharedFiles = [
   "src/shared/PrintWin11.cpp",
   "src/shared/PrintWin11.h",
   "src/shared/ProgressUpdateUI.h",
+  "src/shared/RefHover.h",
   "src/shared/RefHoverDetect.cpp",
   "src/shared/RefHoverInternal.cpp",
   "src/shared/RefHoverRender.cpp",

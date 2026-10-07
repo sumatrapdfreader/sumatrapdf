@@ -153,9 +153,6 @@
     <ClInclude Include="..\src\ReadAloud.h">
       <Filter>src</Filter>
     </ClInclude>
-    <ClInclude Include="..\src\RefHover.h">
-      <Filter>src</Filter>
-    </ClInclude>
     <ClInclude Include="..\src\RegistryPreview.h">
       <Filter>src</Filter>
     </ClInclude>
@@ -466,6 +463,9 @@
       <Filter>src\shared</Filter>
     </ClInclude>
     <ClInclude Include="..\src\shared\ReadingBar.h">
+      <Filter>src\shared</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\shared\RefHover.h">
       <Filter>src\shared</Filter>
     </ClInclude>
     <ClInclude Include="..\src\shared\RenderCache.h">
