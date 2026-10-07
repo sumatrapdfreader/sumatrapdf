@@ -43,15 +43,6 @@ static TempStr FindClaudeExecutableTemp() {
     return gClaudeExecutablePath;
 }
 
-// the providers (implemented in AIClaudeCode.cpp, AIGrokBuild.cpp, AICodexBuild.cpp)
-bool IsClaudeCodeInstalled() {
-    return len(FindClaudeExecutableTemp()) > 0;
-}
-
-TempStr ClaudeCodeExecutablePathTemp() {
-    return FindClaudeExecutableTemp();
-}
-
 static Mutex gClaudeCodeLogMutex;
 static AIChatLogger gClaudeCodeLogger = {&gClaudeCodeLogMutex, StrL("claude-code-log.txt"), StrL("claude-code")};
 

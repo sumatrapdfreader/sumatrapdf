@@ -47,14 +47,6 @@ static TempStr FindGrokExecutableTemp() {
     return gGrokExecutablePath;
 }
 
-bool IsGrokBuildInstalled() {
-    return len(FindGrokExecutableTemp()) > 0;
-}
-
-TempStr GrokBuildExecutablePathTemp() {
-    return FindGrokExecutableTemp();
-}
-
 static Mutex gGrokBuildLogMutex;
 static AIChatLogger gGrokBuildLogger = {&gGrokBuildLogMutex, StrL("grok-build-log.txt"), StrL("grok-build")};
 static bool gTriedGrokModels = false;

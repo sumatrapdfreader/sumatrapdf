@@ -9,21 +9,13 @@ struct El;
 struct MainWindow;
 struct AIChatProvider;
 
-bool IsClaudeCodeInstalled();
-TempStr ClaudeCodeExecutablePathTemp();
 AIChatProvider* GetClaudeCodeProvider();
 
-bool IsGrokBuildInstalled();
-TempStr GrokBuildExecutablePathTemp();
 AIChatProvider* GetGrokBuildProvider();
 
-bool IsCodexBuildInstalled();
-TempStr CodexBuildExecutablePathTemp();
 AIChatProvider* GetCodexBuildProvider();
 
 constexpr char kAntiGravityDefaultModel[] = "gemini-3.8-flash-medium";
-bool IsAntiGravityInstalled();
-TempStr AntiGravityExecutablePathTemp();
 AIChatProvider* GetAntiGravityProvider();
 
 AIChatProvider* GetAIChatProvider(int providerId);

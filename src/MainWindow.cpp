@@ -1106,10 +1106,10 @@ AppCommandCtx NewAppCommandCtx(MainWindow* win, Point cursorPos) {
     ctx.clipboardHasImage = IsClipboardFormatAvailable(CF_BITMAP);
     ctx.aiChatAvailable = IsAIChatAvailable();
     ctx.aiChatSupported = IsAIChatSupportedForTab(ctx.tab);
-    ctx.grokInstalled = IsGrokBuildInstalled();
-    ctx.claudeInstalled = IsClaudeCodeInstalled();
-    ctx.codexInstalled = IsCodexBuildInstalled();
-    ctx.antiGravityInstalled = IsAntiGravityInstalled();
+    ctx.grokInstalled = GetGrokBuildProvider()->IsInstalled();
+    ctx.claudeInstalled = GetClaudeCodeProvider()->IsInstalled();
+    ctx.codexInstalled = GetCodexBuildProvider()->IsInstalled();
+    ctx.antiGravityInstalled = GetAntiGravityProvider()->IsInstalled();
     ctx.hasSelection = ctx.isDocLoaded && ctx.tab && win->showSelection && ctx.tab->selectionOnPage;
 
     if (ctx.isDocLoaded && win->ctrl) {

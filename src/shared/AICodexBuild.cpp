@@ -48,14 +48,6 @@ static TempStr FindCodexExecutableTemp() {
     return gCodexExecutablePath;
 }
 
-bool IsCodexBuildInstalled() {
-    return len(FindCodexExecutableTemp()) > 0;
-}
-
-TempStr CodexBuildExecutablePathTemp() {
-    return FindCodexExecutableTemp();
-}
-
 static Mutex gCodexBuildLogMutex;
 static AIChatLogger gCodexBuildLogger = {&gCodexBuildLogMutex, StrL("gpt-5.5-log.txt"), StrL("gpt-5.5")};
 static bool gTriedCodexModels = false;

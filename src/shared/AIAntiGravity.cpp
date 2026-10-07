@@ -67,14 +67,6 @@ static TempStr FindAntiGravityExecutableTemp() {
     return gAntiGravityExecutablePath;
 }
 
-bool IsAntiGravityInstalled() {
-    return len(FindAntiGravityExecutableTemp()) > 0;
-}
-
-TempStr AntiGravityExecutablePathTemp() {
-    return FindAntiGravityExecutableTemp();
-}
-
 static Mutex gAntiGravityLogMutex;
 static AIChatLogger gAntiGravityLogger = {&gAntiGravityLogMutex, StrL("antigravity-log.txt"), StrL("antigravity")};
 static bool gTriedAntiGravityModels = false;

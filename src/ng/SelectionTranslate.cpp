@@ -596,32 +596,32 @@ static TempStr BuildAntiGravityTranslateCmdLineTemp(Str exePath, Str prompt) {
 
 static TempStr FindBackendExecutableTemp(AIChatBackend backend) {
     if (backend == AIChatBackend::Grok) {
-        return GrokBuildExecutablePathTemp();
+        return GetGrokBuildProvider()->FindExecutableTemp();
     }
     if (backend == AIChatBackend::Claude) {
-        return ClaudeCodeExecutablePathTemp();
+        return GetClaudeCodeProvider()->FindExecutableTemp();
     }
     if (backend == AIChatBackend::Codex) {
-        return CodexBuildExecutablePathTemp();
+        return GetCodexBuildProvider()->FindExecutableTemp();
     }
     if (backend == AIChatBackend::AntiGravity) {
-        return AntiGravityExecutablePathTemp();
+        return GetAntiGravityProvider()->FindExecutableTemp();
     }
     return {};
 }
 
 static bool IsBackendInstalled(AIChatBackend backend) {
     if (backend == AIChatBackend::Grok) {
-        return IsGrokBuildInstalled();
+        return GetGrokBuildProvider()->IsInstalled();
     }
     if (backend == AIChatBackend::Claude) {
-        return IsClaudeCodeInstalled();
+        return GetClaudeCodeProvider()->IsInstalled();
     }
     if (backend == AIChatBackend::Codex) {
-        return IsCodexBuildInstalled();
+        return GetCodexBuildProvider()->IsInstalled();
     }
     if (backend == AIChatBackend::AntiGravity) {
-        return IsAntiGravityInstalled();
+        return GetAntiGravityProvider()->IsInstalled();
     }
     return false;
 }
