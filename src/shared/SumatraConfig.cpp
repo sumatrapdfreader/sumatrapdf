@@ -24,12 +24,6 @@ Str gBuiltOn;
 
 Str currentVersion = Str(CURR_VERSION_STRA);
 
-#ifdef PRE_RELEASE_VER
-Str preReleaseVersion = Str(QM(PRE_RELEASE_VER));
-#else
-Str preReleaseVersion;
-#endif
-
 #ifdef GIT_COMMIT_ID
 Str gitCommidId = Str(QM(GIT_COMMIT_ID));
 #else

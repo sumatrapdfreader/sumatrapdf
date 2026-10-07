@@ -17,7 +17,6 @@ extern bool gForTesting;
 extern Str gBuiltOn;
 extern Str currentVersion; // e.g. "3.2.1138"
 extern Str gitCommidId;
-extern Str preReleaseVersion;
 
 constexpr const char* kExeName = "SumatraPDF.exe";
 
