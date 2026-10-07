@@ -274,9 +274,7 @@ static TempStr GetRegClassesAppTemp(Str appName) {
 static void UnregisterFromBeingDefaultViewer(HKEY hkey) {
     log(StrL("UnregisterFromBeingDefaultViewer()\n"));
     TempStr curr = LoggedReadRegStrTemp(hkey, StrL(kRegClassesPdf), {});
-    if (len(curr) == 0 || !str::Eq(curr, StrL(kAppName))) {
-        // not the default, do nothing
-    } else {
+    if (str::Eq(curr, StrL(kAppName))) {
         LoggedDeleteRegValue(hkey, StrL(kRegClassesPdf), {});
     }
 
@@ -312,11 +310,9 @@ static bool DeleteEmptyRegKey(HKEY root, Str keyName) {
         isEmpty = 0 == subkeys && 0 == values;
     }
     RegCloseKey(hkey);
-    if (!isEmpty) {
-        return isEmpty;
+    if (isEmpty) {
+        LoggedDeleteRegKey(root, keyName);
     }
-
-    LoggedDeleteRegKey(root, keyName);
     return isEmpty;
 }
 
