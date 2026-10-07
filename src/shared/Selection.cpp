@@ -321,6 +321,35 @@ static Rect NormalizeScreenRect(Rect r) {
     return r;
 }
 
+static void RepaintSelection(MainWindow* win) {
+#if defined(SUMATRA_NG)
+    AppShellInvalidate(win);
+#else
+    ScheduleRepaint(win, 0);
+#endif
+}
+
+static void StartSelectionCapture(MainWindow* win) {
+#if defined(SUMATRA_NG)
+    CanvasSetCapture(win, true);
+#else
+    SetCapture(win->hwndCanvas);
+    SetTimer(win->hwndCanvas, kSelectSmoothScrollTimerID, kSelectSmoothScrollDelayInMs, nullptr);
+#endif
+    RepaintSelection(win);
+}
+
+static void StopSelectionCapture(MainWindow* win) {
+#if defined(SUMATRA_NG)
+    CanvasSetCapture(win, false);
+#else
+    if (GetCapture() == win->hwndCanvas) {
+        ReleaseCapture();
+    }
+    KillTimer(win->hwndCanvas, kSelectSmoothScrollTimerID);
+#endif
+}
+
 // Apply edge/corner/move drag to an original normalized rect (screen coords).
 static Rect ApplySelectionEdgeDrag(Rect orig, SelectionDragEdge edge, int dx, int dy) {
     int x = orig.x;
@@ -493,14 +522,7 @@ bool StartRectangularSelectionEdit(MainWindow* win, int x, int y, SelectionDragE
     win->linkOnLastButtonDown = nullptr;
     win->textDragPending = false;
     win->imageDragPending = false;
-#if defined(SUMATRA_NG)
-    CanvasSetCapture(win, true);
-    AppShellInvalidate(win);
-#else
-    SetCapture(win->hwndCanvas);
-    SetTimer(win->hwndCanvas, kSelectSmoothScrollTimerID, kSelectSmoothScrollDelayInMs, nullptr);
-    ScheduleRepaint(win, 0);
-#endif
+    StartSelectionCapture(win);
     return true;
 }
 
@@ -568,11 +590,7 @@ static void PaintTransparentQuads(Gfx* gfx, Rect screenRc, Vec<Point>& pts, Colo
     screenRc.Inflate(1, 1);
     Vec<Point> painted;
     for (int i = 0; i < nQuads; i++) {
-#if defined(SUMATRA_NG)
-        Point* q = pts.els + (i * 4);
-#else
-        Point* q = pts.els + ((ptrdiff_t)i * 4);
-#endif
+        Point* q = pts.els + i * 4;
         if (QuadScreenBounds(q).Intersect(screenRc).IsEmpty()) {
             continue;
         }
@@ -1050,10 +1068,8 @@ void OnSelectAll(MainWindow* win, bool textOnly) {
     win->showSelection = win->CurrentTab()->selectionOnPage != nullptr;
 #if defined(SUMATRA_NG)
     ShowSelectionToolbar(win, SelToolbarShow::Settled);
-    AppShellInvalidate(win);
-#else
-    ScheduleRepaint(win, 0);
 #endif
+    RepaintSelection(win);
 }
 
 // like Select All, but only the text of the current page
@@ -1073,11 +1089,7 @@ void OnSelectCurrentPage(MainWindow* win) {
     dm->textSelection->SelectUpTo(pageNo, -1);
     win->selectionRect = Rect::FromXY(INT_MIN / 2, INT_MIN / 2, INT_MAX, INT_MAX);
     UpdateTextSelection(win, false);
-#if defined(SUMATRA_NG)
-    AppShellInvalidate(win);
-#else
-    ScheduleRepaint(win, 0);
-#endif
+    RepaintSelection(win);
 }
 
 #define kSelectAutoscrollAreaWidth DpiScale(15)
@@ -1141,36 +1153,23 @@ void OnSelectionEdgeAutoscroll(MainWindow* win, int x, int y) {
         dy = kSelectAutoscrollStepLength;
     }
 
-#if defined(SUMATRA_NG)
-    // clamping can legitimately leave dx at 0 while the cursor is still in the
-    // auto-scroll strip
-#else
+#if !defined(SUMATRA_NG)
     ReportIf(NeedsSelectionEdgeAutoscroll(win, x, y) != (dx != 0 || dy != 0));
-    // after the assert: clamping can legitimately leave dx at 0 while the
-    // cursor is still in the auto-scroll strip
 #endif
     if (dx != 0 && MouseAction::SelectingText == win->mouseAction) {
         dx = LimitTextSelectionAutoscrollDx(win, dx);
     }
-#if defined(SUMATRA_NG)
     if (dx == 0 && dy == 0) {
         return;
     }
     DisplayModel* dm = win->AsFixed();
+    ReportIf(!dm);
     if (!dm) {
         return;
     }
     Point oldOffset = dm->GetViewPort().TL();
     win->MoveDocBy(dx, dy);
-#else
-    if (dx != 0 || dy != 0) {
-        ReportIf(!win->AsFixed());
-        DisplayModel* dm = win->AsFixed();
-        Point oldOffset = dm->GetViewPort().TL();
-        win->MoveDocBy(dx, dy);
-#endif
 
-#if defined(SUMATRA_NG)
     dx = dm->GetViewPort().x - oldOffset.x;
     dy = dm->GetViewPort().y - oldOffset.y;
     if (win->selectionDragEdge != SelectionDragEdge::None) {
@@ -1187,25 +1186,6 @@ void OnSelectionEdgeAutoscroll(MainWindow* win, int x, int y) {
         win->selectionRect.y -= dy;
         win->selectionRect.dx += dx;
         win->selectionRect.dy += dy;
-#else
-        dx = dm->GetViewPort().x - oldOffset.x;
-        dy = dm->GetViewPort().y - oldOffset.y;
-        if (win->selectionDragEdge != SelectionDragEdge::None) {
-            // move/resize: keep the selection fixed on the document as the view pans
-            win->selectionEditOrig.x -= dx;
-            win->selectionEditOrig.y -= dy;
-            win->dragStart.x -= dx;
-            win->dragStart.y -= dy;
-            win->selectionRect.x -= dx;
-            win->selectionRect.y -= dy;
-        } else {
-            // new selection: keep the start corner fixed on the document
-            win->selectionRect.x -= dx;
-            win->selectionRect.y -= dy;
-            win->selectionRect.dx += dx;
-            win->selectionRect.dy += dy;
-        }
-#endif
     }
 }
 
@@ -1252,25 +1232,11 @@ void OnSelectionStart(MainWindow* win, int x, int y, WPARAM /*key*/, bool forceR
         }
     }
 
-#if defined(SUMATRA_NG)
-    CanvasSetCapture(win, true);
-    AppShellInvalidate(win);
-#else
-    SetCapture(win->hwndCanvas);
-    SetTimer(win->hwndCanvas, kSelectSmoothScrollTimerID, kSelectSmoothScrollDelayInMs, nullptr);
-    ScheduleRepaint(win, 0);
-#endif
+    StartSelectionCapture(win);
 }
 
 void OnSelectionStop(MainWindow* win, int x, int y, bool aborted) {
-#if defined(SUMATRA_NG)
-    CanvasSetCapture(win, false);
-#else
-    if (GetCapture() == win->hwndCanvas) {
-        ReleaseCapture();
-    }
-    KillTimer(win->hwndCanvas, kSelectSmoothScrollTimerID);
-#endif
+    StopSelectionCapture(win);
 
     bool editingRect = win->selectionDragEdge != SelectionDragEdge::None && win->mouseAction == MouseAction::Selecting;
 
