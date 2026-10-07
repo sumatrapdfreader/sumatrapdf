@@ -934,17 +934,16 @@ bool Fb2Doc::Load(Str srcData) {
                 // some files give only a nickname
                 docAuthor = nickname;
             }
-            if (docAuthor) {
-                docAuthor.len -= str::NormalizeWSInPlace(docAuthor);
-                if (len(docAuthor) > 0) {
-                    if (inTitleInfo) {
-                        // a book can list several authors; report all of them
-                        titleAuthors = titleAuthors ? str::JoinTemp(titleAuthors, StrL(", "), docAuthor) : docAuthor;
-                        AddPropOwned(props, DocProp::Author, titleAuthors, true);
-                    } else {
-                        AddPropOwned(props, DocProp::Author, docAuthor, false);
-                    }
-                }
+            docAuthor.len -= str::NormalizeWSInPlace(docAuthor);
+            if (len(docAuthor) == 0) {
+                continue;
+            }
+            if (inTitleInfo) {
+                // A book can list several authors; report all of them.
+                titleAuthors = titleAuthors ? str::JoinTemp(titleAuthors, StrL(", "), docAuthor) : docAuthor;
+                AddPropOwned(props, DocProp::Author, titleAuthors, true);
+            } else {
+                AddPropOwned(props, DocProp::Author, docAuthor, false);
             }
         } else if ((inTitleInfo || inDocInfo) && tok->IsStartTag() && tok->NameIs(StrL("date"), HtmlNameMatch::Local)) {
             AttrInfo attr = tok->GetAttrByName(StrL("value"), HtmlNameMatch::Local);
@@ -973,12 +972,8 @@ bool Fb2Doc::Load(Str srcData) {
                     annotation = JoinEbookTextTemp(annotation, tok->s);
                 }
             }
-            if (annotation) {
-                annotation.len -= str::NormalizeWSInPlace(annotation);
-                if (len(annotation) > 0) {
-                    AddPropOwned(props, DocProp::Subject, annotation);
-                }
-            }
+            annotation.len -= str::NormalizeWSInPlace(annotation);
+            AddPropOwned(props, DocProp::Subject, annotation);
         } else if (inTitleInfo || inDocInfo) {
             continue;
         } else if (tok->IsStartTag() && tok->NameIs(StrL("title-info"), HtmlNameMatch::Local)) {
