@@ -472,10 +472,7 @@ CommandVisibility GetCommandVisibility(int cmdId, const AppCommandCtx& ctx, Comm
         if (!ctx.ttsAvailable) {
             return CommandVisibility::Hide;
         }
-        Kind k = ctx.engineKind;
-        bool isImage =
-            k == kindEngineImage || k == kindEngineImageDir || k == kindEngineComicBooks || ctx.isImageCollection;
-        if (isImage) {
+        if (ctx.isImageCollection) {
             return CommandVisibility::Hide;
         }
         // listed while a session is active (speaking or paused) so speech can be
@@ -612,9 +609,7 @@ CommandVisibility GetCommandVisibility(int cmdId, const AppCommandCtx& ctx, Comm
     if (isTextSelectCmd) {
         // needs a fixed-page engine with extractable text: image collections
         // have none and CHM / markdown do their own selection (#4684, #4116)
-        Kind k = ctx.engineKind;
-        bool isImage = k == kindEngineImage || k == kindEngineImageDir || k == kindEngineComicBooks;
-        if (ctx.isImageCollection || isImage || ctx.isChm || !k) {
+        if (ctx.isImageCollection || ctx.isChm || !ctx.engineKind) {
             return CommandVisibility::Hide;
         }
     }
@@ -622,9 +617,7 @@ CommandVisibility GetCommandVisibility(int cmdId, const AppCommandCtx& ctx, Comm
     if (cmdId == CmdToggleKeyboardLinkFollowing) {
         // pages of image collections (comic books, image folders, single
         // images) can't carry links; CHM / markdown handle their own (#2629)
-        Kind k = ctx.engineKind;
-        bool isImage = k == kindEngineImage || k == kindEngineImageDir || k == kindEngineComicBooks;
-        if (ctx.isImageCollection || isImage || ctx.isChm || !k) {
+        if (ctx.isImageCollection || ctx.isChm || !ctx.engineKind) {
             return CommandVisibility::Hide;
         }
     }
@@ -651,10 +644,7 @@ CommandVisibility GetCommandVisibility(int cmdId, const AppCommandCtx& ctx, Comm
 
     if (cmdId == CmdConvertToPDF) {
         // comic books, image folders, single images (issue #4118)
-        Kind k = ctx.engineKind;
-        bool isImage =
-            k == kindEngineImage || k == kindEngineImageDir || k == kindEngineComicBooks || ctx.isImageCollection;
-        if (!ctx.isDocLoaded || !isImage) {
+        if (!ctx.isDocLoaded || !ctx.isImageCollection) {
             return CommandVisibility::Hide;
         }
     }
@@ -805,10 +795,7 @@ CommandVisibility GetCommandVisibility(int cmdId, const AppCommandCtx& ctx, Comm
         if (!ctx.ttsAvailable) {
             return CommandVisibility::Hide;
         }
-        Kind k = ctx.engineKind;
-        bool isImage =
-            k == kindEngineImage || k == kindEngineImageDir || k == kindEngineComicBooks || ctx.isImageCollection;
-        if (isImage) {
+        if (ctx.isImageCollection) {
             return CommandVisibility::Hide;
         }
     }
