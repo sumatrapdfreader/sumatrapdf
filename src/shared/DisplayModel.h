@@ -360,7 +360,7 @@ struct DisplayModel : DocController {
     struct StableNavPointState {
         ScrollState pending;
         ScrollState lastCommitted;
-        DWORD64 pendingTick = 0;
+        u64 pendingTick = 0;
         bool hasPending = false;
         bool hasLastCommitted = false;
         /* set while SetScrollState() restores a view (session restore,
@@ -412,6 +412,9 @@ struct DisplayModel : DocController {
 };
 
 extern bool gPredictiveRender;
+
+extern void (*gShowChapterLayoutNotifFn)(DisplayModel* dm, Str msg, bool finished);
+extern void (*gShowLazyLayoutNotifFn)(DisplayModel* dm, Str msg);
 
 // print / dump / full-document search / PDF export / stress test: lay out
 // every chapter and resync pagesInfo. No-op for a single-chapter document
