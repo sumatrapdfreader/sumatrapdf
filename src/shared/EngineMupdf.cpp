@@ -4239,10 +4239,6 @@ static bool EbookFontIsAvailable(fz_context* ctx, Str fontName) {
 }
 
 // stm is either freed or retained via _doc
-#if defined(SUMATRA_NG)
-// TODO(port): fz_stream can no-longer be re-opened (fz_clone_stream)
-// bool Load(fz_stream* stm, PasswordUI* pwdUI = nullptr);
-#endif
 bool EngineMupdf::LoadFromStream(fz_stream* stm, Str nameHint, PasswordUI* pwdUI) {
     if (!stm) {
         return false;
@@ -4253,18 +4249,6 @@ bool EngineMupdf::LoadFromStream(fz_stream* stm, Str nameHint, PasswordUI* pwdUI
     MaskFpExceptions();
 #endif
     auto* ctx = Ctx();
-
-#if 0
-    /* a heuristic. a layout page size for .epub is A5 but that makes a font size too
-       large for non-epub files like .txt or .xml, so for those use larger A4 */
-    float ldx = layoutA4DxPt;
-    float ldy = layoutA4DyPt;
-    TempStr ext = path::GetExtTemp(nameHint);
-    if (str::EqI(ext, StrL(".epub"))) {
-        ldx = layoutA5DxPt;
-        ldy = layoutA5DyPt;
-    }
-#endif
 
     float ldx = layoutA5DxPt;
     float ldy = layoutA5DyPt;
@@ -5828,61 +5812,6 @@ int EngineMupdf::GetOpenActionPageNo() {
     }
     return pageNo;
 }
-
-#if 0
-IPageDestination* EngineMupdf::GetNamedDest(Str name) {
-    if (!pdfdoc) {
-        return nullptr;
-    }
-
-    ScopedRecursiveMutex scope1(&pagesLock);
-    ScopedRecursiveMutex scope2(&docLock);
-
-    int nameLen = len(name);
-    pdf_obj* dest = nullptr;
-
-    fz_var(dest);
-    pdf_obj* nameobj = nullptr;
-    fz_var(nameobj);
-    fz_try(ctx) {
-        nameobj = pdf_new_string(ctx, name, nameLen);
-        dest = pdf_lookup_dest(ctx, pdfdoc, nameobj);
-        pdf_drop_obj(ctx, nameobj);
-    }
-    fz_catch(ctx) {
-        fz_report_error(ctx);
-        dest = nullptr;
-    }
-
-    if (!dest) {
-        return nullptr;
-    }
-
-    IPageDestination* pageDest = nullptr;
-    char* uri = nullptr;
-
-    fz_var(uri);
-    fz_try(ctx) {
-        uri = pdf_parse_link_dest(ctx, pdfdoc, dest);
-    }
-    fz_catch(ctx) {
-        fz_report_error(ctx);
-        uri = nullptr;
-    }
-
-    if (!uri) {
-        return nullptr;
-    }
-
-    float x, y, zoom = 0;
-    int pageNo = ResolveLink(ctx, _doc, uri, &x, &y);
-
-    RectF r{x, y, 0, 0};
-    pageDest = NewSimpleDest(pageNo, r, zoom);
-    fz_free(ctx, uri);
-    return pageDest;
-}
-#endif
 
 // return a page but only if is fully loaded
 FzPageInfo* EngineMupdf::GetFzPageInfoFast(int pageNo) {
@@ -10724,19 +10653,6 @@ void EngineMupdfGetFormFieldHighlightRects(EngineBase* engine, int pageNo, Annot
     }
 }
 
-// Note: this code is compiled in release mode even if debug build so
-// DEBUG is not defined so we can't do #if IS_DEBUG here
-// so we use this runtime boolean instead
-static bool gSkipAnnotatoinValidation = true;
-
-// check that pageInfo->annotations has the same info as in mupdf
-static NO_INLINE void ValidateAnnotationsInSync(EngineMupdf* /*e*/, FzPageInfo* /*pageInfo*/) {
-    if (gSkipAnnotatoinValidation) {
-        return;
-    }
-    // TODO: write me
-}
-
 // in a function so that we can set a breakpoint or add logging
 // to easily trace all places that modify annotations
 void MarkNotificationAsModified(EngineMupdf* e, Annotation* annot) {
@@ -10769,7 +10685,6 @@ NO_INLINE void MarkNotificationAsModified(EngineMupdf* e, Annotation* annot, Ann
             removedPos = VecRemove(pageInfo->widgets, annot);
         }
         ReportIf(removedPos < 0); // must exist in one of the lists
-        ValidateAnnotationsInSync(e, pageInfo);
     } else if (change == AnnotationChange::Add) {
         if (annot->type == AnnotationType::Redact) {
             e->createdRedactMark = true;
@@ -10780,7 +10695,6 @@ NO_INLINE void MarkNotificationAsModified(EngineMupdf* e, Annotation* annot, Ann
         VecAppend(pageInfo->annotations, annot);
         int sizeNow = len(pageInfo->annotations);
         ReportIf(sizeBefore != sizeNow - 1);
-        ValidateAnnotationsInSync(e, pageInfo);
     } else {
         ReportIf(change != AnnotationChange::Modify);
     }
