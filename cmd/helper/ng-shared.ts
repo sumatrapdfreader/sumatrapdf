@@ -180,6 +180,7 @@ export const sharedFiles = [
   "src/shared/Flags.h",
   "src/shared/GlobalHotkeys.h",
   "src/shared/KeyboardHelp.h",
+  "src/shared/LinkFollow.h",
   "src/shared/GoogleLens.h",
   "src/shared/GumboHtmlParser.cpp",
   "src/shared/GumboHtmlParser.h",

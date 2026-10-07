@@ -1411,7 +1411,6 @@
     <ClInclude Include="..\src\HomePage.h" />
     <ClInclude Include="..\src\ImageSaveCropResize.h" />
     <ClInclude Include="..\src\Installer.h" />
-    <ClInclude Include="..\src\LinkFollow.h" />
     <ClInclude Include="..\src\MainWindow.h" />
     <ClInclude Include="..\src\Menu.h" />
     <ClInclude Include="..\src\MergePdf.h" />
@@ -1506,6 +1505,7 @@
     <ClInclude Include="..\src\shared\ImageReader.h" />
     <ClInclude Include="..\src\shared\JxlReader.h" />
     <ClInclude Include="..\src\shared\KeyboardHelp.h" />
+    <ClInclude Include="..\src\shared\LinkFollow.h" />
     <ClInclude Include="..\src\shared\LitDoc.h" />
     <ClInclude Include="..\src\shared\MarkdownModel.h" />
     <ClInclude Include="..\src\shared\MarkdownToc.h" />

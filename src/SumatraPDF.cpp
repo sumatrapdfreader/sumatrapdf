@@ -9907,7 +9907,7 @@ static void FrameOnChar(MainWindow* win, WPARAM key, LPARAM info = 0) {
     }
 
     // while keyboard link following is on, type a link's letter hint
-    if (!isCtrl && !isAlt && KeyboardLinkFollowingOnChar(win, key)) {
+    if (!isCtrl && !isAlt && KeyboardLinkFollowingOnChar(win, (int)key)) {
         return;
     }
 
@@ -16381,7 +16381,7 @@ static bool MaybeTranslateAccelerator(MSG& msg) {
     // accelerators ('a' = highlight, 'n' = next page, …). Ctrl/Alt/Shift
     // shortcuts still work (Shift+F toggles the mode off). Issue #6019.
     if (msg.message == WM_KEYDOWN && !IsCtrlPressed() && !IsAltPressed() && !IsShiftPressed()) {
-        if (KeyboardLinkFollowingCapturesKey(FindMainWindowByHwnd(msg.hwnd), msg.wParam)) {
+        if (KeyboardLinkFollowingCapturesKey(FindMainWindowByHwnd(msg.hwnd), (int)msg.wParam)) {
             return false;
         }
     }

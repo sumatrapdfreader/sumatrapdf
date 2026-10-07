@@ -124,7 +124,7 @@ bool KeyboardLinkFollowingActive(MainWindow* win) {
 
 // Unmodified letter keys and Backspace type a hint. Callers must already have
 // filtered out Ctrl/Alt/Shift so Shift+F still toggles the mode off. Issue #6019.
-bool KeyboardLinkFollowingCapturesKey(MainWindow* win, WPARAM vk) {
+bool KeyboardLinkFollowingCapturesKey(MainWindow* win, int vk) {
     if (!KeyboardLinkFollowingActive(win)) {
         return false;
     }
@@ -290,7 +290,7 @@ static bool HintStartsWith(const KeyboardLinkTarget& target, const char* prefix,
 
 // Letter hints are prefix-free, so a complete match can be followed
 // immediately even when other targets use multi-letter hints.
-bool KeyboardLinkFollowingOnChar(MainWindow* win, WPARAM key) {
+bool KeyboardLinkFollowingOnChar(MainWindow* win, int key) {
     if (!KeyboardLinkFollowingActive(win)) {
         return false;
     }
