@@ -265,13 +265,7 @@ bool HuffDicDecompressor::SetHuffData(u8* huffData, int huffDataLen) {
 }
 
 bool HuffDicDecompressor::AddCdicData(u8* cdicData, u32 cdicDataLen) {
-    if (dictsCount >= kCdicsMax) {
-        return false;
-    }
-    if (cdicDataLen < kCdicHeaderLen) {
-        return false;
-    }
-    if (!str::EqN(StrL("CDIC"), Str((char*)cdicData, 4), 4)) {
+    if (dictsCount >= kCdicsMax || cdicDataLen < kCdicHeaderLen || !MemEq(cdicData, "CDIC", LenL("CDIC"))) {
         return false;
     }
     u32 hdrLen = UInt32BE(cdicData + 4);
