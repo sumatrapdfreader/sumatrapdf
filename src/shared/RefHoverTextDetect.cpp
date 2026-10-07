@@ -340,24 +340,17 @@ bool FindSurnameInPageText(WStr text, const Rect* coords, int textLen, WStr surn
     yearStr[4] = 0;
 
     int prevY = INT_MIN;
-    int currentLineFirstIdx = -1;
     for (int i = 0; i < textLen; i++) {
         WCHAR c = text.s[i];
         if (c == L' ' || c == L'\t' || c == L'\n' || c == L'\r') {
             continue;
         }
         bool isNewLine = (coords[i].y > prevY + 2);
-        if (isNewLine) {
-            currentLineFirstIdx = i;
-        }
         prevY = coords[i].y;
 
         // Match at the column's left edge or within the first 30 characters,
         // allowing a detected fragment such as "Vri" in "Oude Vrielink".
-        if (i != currentLineFirstIdx) {
-            continue;
-        }
-        if (coords[i].x > leftX + 20) {
+        if (!isNewLine || coords[i].x > leftX + 20) {
             continue;
         }
         int matchAt = -1;
