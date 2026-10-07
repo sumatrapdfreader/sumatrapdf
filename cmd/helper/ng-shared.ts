@@ -201,6 +201,7 @@ export const sharedFiles = [
   "src/shared/SumatraControl.h",
   "src/shared/SumatraLog.h",
   "src/shared/SumatraPDF.exe.manifest",
+  "src/shared/SvgIcons.h",
   "src/shared/TextSearch.cpp",
   "src/shared/TextSearch.h",
   "src/shared/TextSelection.cpp",

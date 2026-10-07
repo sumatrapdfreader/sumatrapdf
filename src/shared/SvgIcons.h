@@ -63,5 +63,5 @@ extern const char* gIconHome;
 
 struct Pixmap;
 
-Pixmap* GetCachedPixmapForSvg(Str svg, int dx, int dy, Color fg = kColorUnset, Color bg = kColorUnset);
+Pixmap* GetCachedPixmapForSvg(Str svg, int width, int height, Color fg = kColorUnset, Color bg = kColorUnset);
 void DestroySvgPixmapIconsCache();
