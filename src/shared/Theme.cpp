@@ -944,12 +944,7 @@ Color ThemePageRenderColors(Color& bg) {
 }
 
 Color ThemeControlBackgroundColor() {
-    if (gUseHighContrast) {
-        return SysWindowBgColor();
-    }
-    // note: we can change it in ThemeUpdateAfterLoadSettings()
-    auto col = GetThemeCol(gCurrentTheme->controlBackgroundColor, kColRed);
-    return col;
+    return gUseHighContrast ? SysWindowBgColor() : GetThemeCol(gCurrentTheme->controlBackgroundColor, kColRed);
 }
 
 Color ThemeMainWindowBackgroundColor() {
@@ -968,19 +963,11 @@ Color ThemeMainWindowBackgroundColor() {
 }
 
 Color ThemeWindowBackgroundColor() {
-    if (gUseHighContrast) {
-        return SysWindowBgColor();
-    }
-    auto col = GetThemeCol(gCurrentTheme->backgroundColor, kColRed);
-    return col;
+    return gUseHighContrast ? SysWindowBgColor() : GetThemeCol(gCurrentTheme->backgroundColor, kColRed);
 }
 
 Color ThemeWindowTextColor() {
-    if (gUseHighContrast) {
-        return SysWindowTextColor();
-    }
-    auto col = GetThemeCol(gCurrentTheme->textColor, kColRed);
-    return col;
+    return gUseHighContrast ? SysWindowTextColor() : GetThemeCol(gCurrentTheme->textColor, kColRed);
 }
 
 static Color BlendTextAndBgHalfway() {
@@ -994,10 +981,8 @@ static Color BlendTextAndBgHalfway() {
 }
 
 Color ThemeWindowTextDisabledColor() {
-    if (gUseHighContrast) {
-        return SysDisabledTextColor();
-    }
-    return GetThemeCol(gCurrentTheme->disabledTextColor, BlendTextAndBgHalfway());
+    return gUseHighContrast ? SysDisabledTextColor()
+                            : GetThemeCol(gCurrentTheme->disabledTextColor, BlendTextAndBgHalfway());
 }
 
 Color ThemeWindowDarkerTextColor() {
@@ -1015,10 +1000,8 @@ Color ThemeWindowControlBackgroundColor() {
 }
 
 Color ThemeActiveTabBackgroundColor() {
-    if (gUseHighContrast) {
-        return SysWindowBgColor();
-    }
-    return GetThemeCol(gCurrentTheme->activeTabBackgroundColor, ThemeWindowControlBackgroundColor());
+    return gUseHighContrast ? SysWindowBgColor()
+                            : GetThemeCol(gCurrentTheme->activeTabBackgroundColor, ThemeWindowControlBackgroundColor());
 }
 
 Color ThemeInactiveTabBackgroundColor() {
@@ -1030,11 +1013,7 @@ Color ThemeInactiveTabBackgroundColor() {
 }
 
 Color ThemeWindowLinkColor() {
-    if (gUseHighContrast) {
-        return SysLinkColor();
-    }
-    auto col = GetThemeCol(gCurrentTheme->linkColor, kColRed);
-    return col;
+    return gUseHighContrast ? SysLinkColor() : GetThemeCol(gCurrentTheme->linkColor, kColRed);
 }
 
 Color ThemeHotBackgroundColor() {
