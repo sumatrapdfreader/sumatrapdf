@@ -1604,14 +1604,6 @@
     <ClCompile Include="..\src\DarkMode.cpp" />
     <ClCompile Include="..\src\DocumentProperties.cpp" />
     <ClCompile Include="..\src\EbookSettingsDialog.cpp" />
-    <ClCompile Include="..\src\EngineMupdf.cpp">
-      <Optimization Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">MaxSpeed</Optimization>
-      <Optimization Condition="'$(Configuration)|$(Platform)'=='Release|x64'">MaxSpeed</Optimization>
-      <Optimization Condition="'$(Configuration)|$(Platform)'=='Release|ARM64'">MaxSpeed</Optimization>
-      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">NotUsing</PrecompiledHeader>
-      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|x64'">NotUsing</PrecompiledHeader>
-      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|ARM64'">NotUsing</PrecompiledHeader>
-    </ClCompile>
     <ClCompile Include="..\src\Favorites.cpp" />
     <ClCompile Include="..\src\FileThumbnails.cpp" />
     <ClCompile Include="..\src\FilterHighlightDraw.cpp" />
@@ -2108,6 +2100,14 @@
     <ClCompile Include="..\src\shared\EngineDvi.cpp" />
     <ClCompile Include="..\src\shared\EngineEbook.cpp" />
     <ClCompile Include="..\src\shared\EngineImages.cpp" />
+    <ClCompile Include="..\src\shared\EngineMupdf.cpp">
+      <Optimization Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">MaxSpeed</Optimization>
+      <Optimization Condition="'$(Configuration)|$(Platform)'=='Release|x64'">MaxSpeed</Optimization>
+      <Optimization Condition="'$(Configuration)|$(Platform)'=='Release|ARM64'">MaxSpeed</Optimization>
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">NotUsing</PrecompiledHeader>
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|x64'">NotUsing</PrecompiledHeader>
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|ARM64'">NotUsing</PrecompiledHeader>
+    </ClCompile>
     <ClCompile Include="..\src\shared\EnginePs.cpp" />
     <ClCompile Include="..\src\shared\EutlTrust.cpp" />
     <ClCompile Include="..\src\shared\ExifDump.cpp" />

@@ -950,7 +950,7 @@ function test_engines_files()
     "src/shared/CachedObjects.h",
     "src/shared/EngineDjvuDec.cpp",
     "src/EngineImages.cpp",
-    "src/EngineMupdf.cpp",
+    "src/shared/EngineMupdf.cpp",
     "src/ImageReader.cpp",
     "src/shared/GumboHtmlParser.cpp",
     "src/GumboHelpers.cpp",

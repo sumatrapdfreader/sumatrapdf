@@ -1175,7 +1175,6 @@
   <ItemGroup>
     <ClCompile Include="..\src\CachedObjects.cpp" />
     <ClCompile Include="..\src\EngineImages.cpp" />
-    <ClCompile Include="..\src\EngineMupdf.cpp" />
     <ClCompile Include="..\src\GumboHelpers.cpp" />
     <ClCompile Include="..\src\ImageReader.cpp" />
     <ClCompile Include="..\src\PdfDarkModeNoOp.cpp" />
@@ -1187,6 +1186,7 @@
     <ClCompile Include="..\src\shared\EmbeddedResources.cpp" />
     <ClCompile Include="..\src\shared\EngineBase.cpp" />
     <ClCompile Include="..\src\shared\EngineDjvuDec.cpp" />
+    <ClCompile Include="..\src\shared\EngineMupdf.cpp" />
     <ClCompile Include="..\src\shared\GumboHtmlParser.cpp" />
     <ClCompile Include="..\src\shared\JxlReader.cpp" />
     <ClCompile Include="..\src\shared\LitDoc.cpp" />

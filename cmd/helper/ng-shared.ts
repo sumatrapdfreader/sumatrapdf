@@ -174,6 +174,7 @@ export const sharedFiles = [
   "src/shared/EngineDvi.cpp",
   "src/shared/EngineEbook.cpp",
   "src/shared/EngineImages.cpp",
+  "src/shared/EngineMupdf.cpp",
   "src/shared/EngineMupdf.h",
   "src/shared/EnginePs.cpp",
   "src/shared/ExplorerQuickLook.cpp",

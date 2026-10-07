@@ -1310,7 +1310,7 @@ workspace "SumatraPDF"
     gui_files()
     uia_files()
     engines_files()
-    favor_speed_files { "src/shared/TextSearch.cpp", "src/EngineMupdf.cpp" }
+    favor_speed_files { "src/shared/TextSearch.cpp", "src/shared/EngineMupdf.cpp" }
     sumatrapdf_files()
 
     setup_base_pch()
@@ -1413,7 +1413,7 @@ workspace "SumatraPDF"
     gui_files()
     uia_files()
     engines_files()
-    favor_speed_files { "src/shared/TextSearch.cpp", "src/EngineMupdf.cpp" }
+    favor_speed_files { "src/shared/TextSearch.cpp", "src/shared/EngineMupdf.cpp" }
     sumatrapdf_files()
 
     setup_base_pch()

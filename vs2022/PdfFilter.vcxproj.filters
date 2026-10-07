@@ -69,7 +69,6 @@
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="..\src\EngineMupdf.cpp" />
     <ClCompile Include="..\src\MUPDF_Exports.cpp" />
     <ClCompile Include="..\src\PdfDarkModeNoOp.cpp" />
     <ClCompile Include="..\src\RegistrySearchFilter.cpp" />
@@ -104,6 +103,9 @@
       <Filter>shared</Filter>
     </ClCompile>
     <ClCompile Include="..\src\shared\EngineBase.cpp">
+      <Filter>shared</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\shared\EngineMupdf.cpp">
       <Filter>shared</Filter>
     </ClCompile>
     <ClCompile Include="..\src\shared\GumboHtmlParser.cpp">
