@@ -2176,13 +2176,7 @@ static void FzFindImagePositions(fz_context* ctx, int pageNo, Location loc, Vec<
     }
 }
 
-#if defined(SUMATRA_NG)
-// ctmOut receives the matrix the image is drawn with when requested.
-#else
-// ctmOut, when given, receives the matrix the image is drawn with (unit
-// square to page space, mupdf's flip already applied)
-#endif
-static fz_image* FzFindImageAtIdx(fz_context* ctx, FzPageInfo* pageInfo, int idx, fz_matrix* ctmOut = nullptr) {
+static fz_stext_page* FzLoadImageTextPage(fz_context* ctx, FzPageInfo* pageInfo) {
     fz_stext_options opts = NewTextPageOptions(FZ_STEXT_PRESERVE_IMAGES);
     fz_stext_page* stext = nullptr;
     fz_var(stext);
@@ -2192,6 +2186,17 @@ static fz_image* FzFindImageAtIdx(fz_context* ctx, FzPageInfo* pageInfo, int idx
     fz_catch(ctx) {
         fz_report_error(ctx);
     }
+    return stext;
+}
+
+#if defined(SUMATRA_NG)
+// ctmOut receives the matrix the image is drawn with when requested.
+#else
+// ctmOut, when given, receives the matrix the image is drawn with (unit
+// square to page space, mupdf's flip already applied)
+#endif
+static fz_image* FzFindImageAtIdx(fz_context* ctx, FzPageInfo* pageInfo, int idx, fz_matrix* ctmOut = nullptr) {
+    fz_stext_page* stext = FzLoadImageTextPage(ctx, pageInfo);
     if (!stext) {
         return nullptr;
     }
@@ -2401,15 +2406,7 @@ static void FzCollectImagesFromPageContent(fz_context* ctx, int pageNo, FzPageIn
 }
 
 static fz_image* FzFindImageByRect(fz_context* ctx, FzPageInfo* pageInfo, fz_rect target) {
-    fz_stext_options opts = NewTextPageOptions(FZ_STEXT_PRESERVE_IMAGES);
-    fz_stext_page* stext = nullptr;
-    fz_var(stext);
-    fz_try(ctx) {
-        stext = fz_new_stext_page_from_page(ctx, pageInfo->page, &opts);
-    }
-    fz_catch(ctx) {
-        fz_report_error(ctx);
-    }
+    fz_stext_page* stext = FzLoadImageTextPage(ctx, pageInfo);
     if (!stext) {
         return nullptr;
     }
