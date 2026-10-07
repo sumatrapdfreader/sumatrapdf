@@ -1539,12 +1539,10 @@ u8* SettingFieldPtr(int offset) {
     return (u8*)gSettings + offset;
 }
 
-// Walk setting metadata for a Bool field matching name (case-insensitive leaf
-// or full dotted path). Returns a pointer into gSettings, or nullptr.
-static bool* FindBoolSettingInStruct(const StructInfo* info, u8* base, Str pathPrefix, Str name) {
-    if (!info || !base || len(name) == 0) {
-        return nullptr;
-    }
+// Walk setting metadata for the field matching name (case-insensitive leaf or
+// full dotted path), whatever its type.
+static bool FindSettingInStruct(const StructInfo* info, u8* base, Str prefix, Str name, SettingType* typeOut,
+                                u8** ptrOut) {
     const char* fieldName = info->fieldNames;
     for (u16 i = 0; i < info->fieldCount; i++) {
         const FieldInfo& field = info->fields[i];
@@ -1554,23 +1552,21 @@ static bool* FindBoolSettingInStruct(const StructInfo* info, u8* base, Str pathP
             continue;
         }
         u8* fieldPtr = base + field.offset;
-        TempStr path = len(pathPrefix) > 0 ? fmt("%s.%s", pathPrefix, fname) : str::DupTemp(fname);
+        TempStr path = len(prefix) > 0 ? fmt("%s.%s", prefix, fname) : str::DupTemp(fname);
         if (field.type == SettingType::Struct) {
             const auto* sub = (const StructInfo*)field.value;
-            bool* boolPtr = FindBoolSettingInStruct(sub, fieldPtr, path, name);
-            if (boolPtr != nullptr) {
-                return boolPtr;
+            if (FindSettingInStruct(sub, fieldPtr, path, name, typeOut, ptrOut)) {
+                return true;
             }
             continue;
         }
-        if (field.type != SettingType::Bool) {
-            continue;
-        }
         if (str::EqI(fname, name) || str::EqI(path, name)) {
-            return (bool*)fieldPtr;
+            *typeOut = field.type;
+            *ptrOut = fieldPtr;
+            return true;
         }
     }
-    return nullptr;
+    return false;
 }
 
 // Case-insensitive leaf or dotted path (e.g. "SelectionToolbar", "Fullscreen.ShowMenubar").
@@ -1578,7 +1574,12 @@ bool* FindSettingsBoolSetting(Str name) {
     if (!gSettings || len(name) == 0) {
         return nullptr;
     }
-    return FindBoolSettingInStruct(&gSettingsInfo, (u8*)gSettings, {}, name);
+    SettingType type = SettingType::Comment;
+    u8* p = nullptr;
+    if (!FindSettingInStruct(&gSettingsInfo, (u8*)gSettings, {}, name, &type, &p) || type != SettingType::Bool) {
+        return nullptr;
+    }
+    return (bool*)p;
 }
 
 void ToggleSettingsBool(bool* p) {
@@ -1657,36 +1658,6 @@ const char** GetSettingsEnumValues(Str path) {
         }
     }
     return nullptr;
-}
-
-// Walk setting metadata for the field matching name (case-insensitive leaf or
-// full dotted path), whatever its type.
-static bool FindSettingInStruct(const StructInfo* info, u8* base, Str prefix, Str name, SettingType* typeOut,
-                                u8** ptrOut) {
-    const char* fieldName = info->fieldNames;
-    for (u16 i = 0; i < info->fieldCount; i++) {
-        const FieldInfo& field = info->fields[i];
-        Str fname(fieldName);
-        fieldName += len(fname) + 1;
-        if (field.type == SettingType::Comment || field.offset == (size_t)-1) {
-            continue;
-        }
-        u8* fieldPtr = base + field.offset;
-        TempStr path = len(prefix) > 0 ? fmt("%s.%s", prefix, fname) : str::DupTemp(fname);
-        if (field.type == SettingType::Struct) {
-            const auto* sub = (const StructInfo*)field.value;
-            if (FindSettingInStruct(sub, fieldPtr, path, name, typeOut, ptrOut)) {
-                return true;
-            }
-            continue;
-        }
-        if (str::EqI(fname, name) || str::EqI(path, name)) {
-            *typeOut = field.type;
-            *ptrOut = fieldPtr;
-            return true;
-        }
-    }
-    return false;
 }
 
 // SaveSettings() re-generates these strings from their parsed twins, which would
