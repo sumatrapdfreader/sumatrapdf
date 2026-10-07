@@ -228,26 +228,24 @@ bool IsRectangularSelection(MainWindow* win) {
     return len(dm->textSelection->result) == 0;
 }
 
+static Rect SelectionBounds(DisplayModel* dm, Vec<SelectionOnPage>* selections) {
+    Rect bounds;
+    for (SelectionOnPage& sel : *selections) {
+        Rect r = sel.GetRect(dm);
+        if (r.IsEmpty()) {
+            continue;
+        }
+        bounds = bounds.IsEmpty() ? r : bounds.Union(r);
+    }
+    return bounds;
+}
+
 Rect GetRectangularSelectionScreenRect(MainWindow* win) {
     Rect bounds;
     if (!IsRectangularSelection(win)) {
         return bounds;
     }
-    DisplayModel* dm = win->AsFixed();
-    bool first = true;
-    for (SelectionOnPage& sel : *win->CurrentTab()->selectionOnPage) {
-        Rect r = sel.GetRect(dm);
-        if (r.IsEmpty()) {
-            continue;
-        }
-        if (first) {
-            bounds = r;
-            first = false;
-        } else {
-            bounds = bounds.Union(r);
-        }
-    }
-    return bounds;
+    return SelectionBounds(win->AsFixed(), win->CurrentTab()->selectionOnPage);
 }
 
 #if defined(SUMATRA_NG)
@@ -273,21 +271,8 @@ bool GetSelectionScreenRect(WindowTab* tab, Rect& out) {
 #endif
         return false;
     }
-    Rect bounds;
-    bool first = true;
-    for (SelectionOnPage& sel : *tab->selectionOnPage) {
-        Rect r = sel.GetRect(dm);
-        if (r.IsEmpty()) {
-            continue;
-        }
-        if (first) {
-            bounds = r;
-            first = false;
-        } else {
-            bounds = bounds.Union(r);
-        }
-    }
-    if (first) {
+    Rect bounds = SelectionBounds(dm, tab->selectionOnPage);
+    if (bounds.IsEmpty()) {
         return false;
     }
 #if defined(SUMATRA_NG)
