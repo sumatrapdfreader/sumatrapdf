@@ -24,7 +24,6 @@ struct MobiFormatter : HtmlFormatter {
     void HandleTagImg(HtmlToken* t) override;
     void HandleHtmlTag(HtmlToken* t) override;
 
-  public:
     MobiFormatter(HtmlFormatterArgs* args, MobiDoc* doc, MobiCoverImage coverImage = MobiCoverImage::Show);
 };
 
@@ -45,7 +44,6 @@ struct EpubFormatter : HtmlFormatter {
     Str pagePath;
     int hiddenDepth;
 
-  public:
     EpubFormatter(HtmlFormatterArgs* args, EpubDoc* doc) : HtmlFormatter(args), epubDoc(doc), hiddenDepth(0) {}
     ~EpubFormatter() override;
 };
