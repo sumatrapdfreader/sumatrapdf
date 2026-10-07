@@ -234,9 +234,6 @@
     <ClInclude Include="..\src\SimpleBrowserWindow.h">
       <Filter>src</Filter>
     </ClInclude>
-    <ClInclude Include="..\src\StressTesting.h">
-      <Filter>src</Filter>
-    </ClInclude>
     <ClInclude Include="..\src\SumatraDialogs.h">
       <Filter>src</Filter>
     </ClInclude>
@@ -499,6 +496,9 @@
       <Filter>src\shared</Filter>
     </ClInclude>
     <ClInclude Include="..\src\shared\SelectionHandlers.h">
+      <Filter>src\shared</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\shared\StressTesting.h">
       <Filter>src\shared</Filter>
     </ClInclude>
     <ClInclude Include="..\src\shared\SumatraControl.h">

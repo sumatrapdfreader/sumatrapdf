@@ -7,5 +7,7 @@ struct MainWindow;
 void BenchFileOrDir(StrVec& pathsToBench);
 bool IsStressTesting();
 void StartStressTest(Flags* i, MainWindow* win);
+void OnStressTestTimer(MainWindow* win);
 void OnStressTestTimer(MainWindow* win, int timerId);
 void FinishStressTest(MainWindow* win);
+void GetStressTestInfo(str::Builder& b);
