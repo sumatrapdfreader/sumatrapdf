@@ -77,6 +77,17 @@ static bool IsNamePrefix(WStr word) {
     return false;
 }
 
+static WStr ReadNameBack(WStr s, int& idx) {
+    while (idx >= 0 && s.s[idx] == L' ') {
+        idx--;
+    }
+    int end = idx + 1;
+    while (idx >= 0 && (iswalpha(s.s[idx]) || s.s[idx] == L'\'' || s.s[idx] == L'-')) {
+        idx--;
+    }
+    return WStr(s.s + idx + 1, end - idx - 1);
+}
+
 static constexpr int kCitationMaxDistance = 30;
 
 static int FindCursorGlyph(const Rect* coords, int textLen, Point pagePos) {
@@ -252,41 +263,22 @@ bool DetectCitationInPageText(WStr text, const Rect* coords, int textLen, Point 
             p--;
         } else if (c == L' ') {
             // Look at the word before this space.
-            int wordEnd = p - 1;
-            while (wordEnd >= 0 && s.s[wordEnd] == L' ') {
-                wordEnd--;
-            }
-            int wordStart = wordEnd;
-            while (wordStart >= 0 && (iswalpha(s.s[wordStart]) || s.s[wordStart] == L'\'' || s.s[wordStart] == L'-')) {
-                wordStart--;
-            }
-            wordStart++;
-            if (wordEnd < wordStart) {
+            int wordPos = p - 1;
+            WStr word = ReadNameBack(s, wordPos);
+            if (len(word) == 0) {
                 break;
             }
-            int wordLen = wordEnd - wordStart + 1;
-            WCHAR firstChar = s.s[wordStart];
-            bool isLower = iswlower(firstChar);
-            bool isUpper = iswupper(firstChar);
+            bool isLower = iswlower(word.s[0]);
+            bool isUpper = iswupper(word.s[0]);
             // Stop on connectors like "and", "&", or non-name words.
-            if (isLower && !IsNamePrefix(WStr(s.s + wordStart, wordLen))) {
+            if (isLower && !IsNamePrefix(word)) {
                 // Keep short lowercase fragments between capitalized words:
                 // extraction can split "Oude Vrielink" into "O d Vri li k".
                 bool peekCap = false;
-                if (wordLen <= 2) {
-                    int peek = wordStart - 1;
-                    while (peek >= 0 && s.s[peek] == L' ') {
-                        peek--;
-                    }
-                    int peekEnd = peek;
-                    while (peekEnd >= 0 && (iswalpha(s.s[peekEnd]) || s.s[peekEnd] == L'\'' || s.s[peekEnd] == L'-')) {
-                        peekEnd--;
-                    }
-                    int peekStart = peekEnd + 1;
-                    int peekLen = peek - peekEnd;
-                    if (peekLen > 0 && iswupper(s.s[peekStart])) {
-                        peekCap = true;
-                    }
+                if (len(word) <= 2) {
+                    int peek = wordPos;
+                    WStr previous = ReadNameBack(s, peek);
+                    peekCap = len(previous) > 0 && iswupper(previous.s[0]);
                 }
                 if (!peekCap) {
                     break;
@@ -296,7 +288,7 @@ bool DetectCitationInPageText(WStr text, const Rect* coords, int textLen, Point 
                 break;
             }
             // Continue: include this word as part of the surname.
-            p = wordStart - 1;
+            p = wordPos;
         } else {
             break;
         }
