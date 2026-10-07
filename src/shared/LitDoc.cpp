@@ -394,7 +394,6 @@ constexpr int kLitMaxSections = 16;
 struct LitFile {
     Str d; // the whole file
     int contentOffset = 0;
-    u32 entryChunkLen = 0;
     Vec<LitEntry> entries;
     StrVec sectionNames;
     Str sectionData[kLitMaxSections]; // decoded caches, owned
@@ -443,6 +442,7 @@ static bool LitParseHeader(LitFile* lit) {
         return false;
     }
 
+    u32 entryChunkLen = 0;
     // secondary header: CAOL / ITSF blocks
     {
         int off = hdrLen + (nPieces * 16);
@@ -457,7 +457,7 @@ static bool LitParseHeader(LitFile* lit) {
                 if (ver != 2) {
                     return false;
                 }
-                lit->entryChunkLen = LitU32(sec, pos + 20);
+                entryChunkLen = LitU32(sec, pos + 20);
                 pos += 48;
             } else if (str::Eq(blockTag, StrL("ITSF"))) {
                 if (ver != 4 || LitU32(sec, pos + 20) != 0) {
@@ -494,7 +494,7 @@ static bool LitParseHeader(LitFile* lit) {
     if (chunkSize <= 48 || nChunks <= 0 || 32 + ((i64)nChunks * chunkSize) != dirLen64) {
         return false;
     }
-    if (lit->entryChunkLen && (u32)chunkSize != lit->entryChunkLen) {
+    if (entryChunkLen && (u32)chunkSize != entryChunkLen) {
         return false;
     }
     for (int i = 0; i < nChunks; i++) {
