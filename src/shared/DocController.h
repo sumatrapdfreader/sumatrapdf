@@ -13,6 +13,7 @@ struct TocItem;
 struct MainWindow;
 struct FileState;
 struct RenderedBitmap;
+struct BrowserView;
 // chapter-aware page location; full definition in ChapterTable.h
 struct Location;
 enum class DisplayMode;
@@ -170,6 +171,60 @@ struct DocController {
     virtual DisplayModel* AsFixed() { return nullptr; }
     virtual ChmModel* AsChm() { return nullptr; }
     virtual MarkdownModel* AsMarkdown() { return nullptr; }
+};
+
+struct BrowserDocController : DocController {
+    explicit BrowserDocController(DocControllerCallback* cb);
+    ~BrowserDocController() override;
+
+    int PageCount() const override;
+    int CurrentPageNo() const override;
+    bool CanNavigate(int dir) const override;
+    void Navigate(int dir) override;
+
+    void SetDisplayMode(DisplayMode mode, bool keepContinuous = false) override;
+    DisplayMode GetDisplayMode() const override;
+    void SetInPresentation(bool enable) override;
+    void SetZoomVirtual(float zoom, Point* fixPt) override;
+    float GetZoomVirtual(bool absolute = false) const override;
+    float GetNextZoomStep(float towards) const override;
+    void SetViewPortSize(Size size) override;
+
+    bool CanFindInPage() const override;
+    void FindStart(Str term, bool matchCase, bool wholeWord, int gen) override;
+    void FindGoto(int idx) override;
+    void GoToPageWithFind(int pageNo, Str term, bool matchCase, bool wholeWord, int idx, int gen) override;
+    void FindClear() override;
+
+    void PrintCurrentPage(bool showUI) const;
+    void FindInCurrentPage() const;
+    void SelectAll() const;
+    void CopySelection() const;
+    LRESULT PassUIMsg(UINT msg, WPARAM wp, LPARAM lp) const;
+    void FinishPendingFind();
+    void OnFindResult(int gen, int current, int total);
+    void OnFindAllResult(Str payload);
+
+    StrVec pages;
+    int currentPageNo = 1;
+    Str currentPageUrl;
+    BrowserView* docView = nullptr;
+    float initZoom;
+    float zoomVirtual = 100.0f;
+    PointF htmlScrollPos = PointF(-1, -1);
+    bool restoreHtmlScrollPos = false;
+    bool skipNextBeforeNavigateScrollSave = false;
+    Str pendingFindTerm;
+    bool pendingFindMatchCase = false;
+    bool pendingFindWholeWord = false;
+    int pendingFindIdx = -1;
+    int pendingFindGen = 0;
+    bool hasPendingFind = false;
+    StrVec htmlScrollUrls;
+    Vec<PointF> htmlScrollPositions;
+
+  private:
+    mutable bool sendingBrowserMsg = false;
 };
 
 inline bool IsBrowserDocController(DocController* ctrl) {

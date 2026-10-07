@@ -208,7 +208,7 @@ class MarkdownHtmlWindowHandler : public BrowserViewCallback {
     void OnFindAllResult(Str payload) override { mm->OnFindAllResult(payload); }
 };
 
-MarkdownModel::MarkdownModel(DocControllerCallback* cb) : DocController(cb) {
+MarkdownModel::MarkdownModel(DocControllerCallback* cb) : BrowserDocController(cb) {
     poolAlloc = ArenaNew();
 }
 
@@ -232,8 +232,6 @@ MarkdownModel::~MarkdownModel() {
     docAccess.Unlock();
     ArenaDelete(poolAlloc);
     str::Free(fileName);
-    str::Free(currentPageUrl);
-    str::Free(pendingFindTerm);
 }
 
 Str MarkdownModel::GetFilePath() const {
@@ -244,19 +242,11 @@ Str MarkdownModel::GetDefaultFileExt() const {
     return isHtml ? StrL(".html") : StrL(".md");
 }
 
-int MarkdownModel::PageCount() const {
-    return len(pages);
-}
-
 TempStr MarkdownModel::GetPropertyTemp(DocProp prop) {
     if (prop == DocProp::Title) {
         return path::GetBaseNameTemp(fileName);
     }
     return {};
-}
-
-int MarkdownModel::CurrentPageNo() const {
-    return currentPageNo;
 }
 
 // the TOC is also built on a background thread, which has no model to ask, so
@@ -381,22 +371,6 @@ void MarkdownModel::DestroyParentWindow() {
     htmlWindowCb = nullptr;
 }
 
-void MarkdownModel::PrintCurrentPage(bool showUI) const {
-    BrowserViewPrint(docView, showUI);
-}
-
-void MarkdownModel::FindInCurrentPage() const {
-    BrowserViewFindInPageUI(docView);
-}
-
-bool MarkdownModel::CanFindInPage() const {
-    return BrowserViewCanFindInPage(docView);
-}
-
-void MarkdownModel::FindStart(Str term, bool matchCase, bool wholeWord, int gen) {
-    BrowserViewFindStart(docView, term, matchCase, wholeWord, gen, -1);
-}
-
 void MarkdownModel::FindAllPages(Str term, bool matchCase, bool wholeWord, int gen) {
     if (!docView) {
         return;
@@ -408,54 +382,8 @@ void MarkdownModel::FindAllPages(Str term, bool matchCase, bool wholeWord, int g
     BrowserViewFindAllPages(docView, urls, term, matchCase, wholeWord, gen);
 }
 
-void MarkdownModel::FindGoto(int idx) {
-    BrowserViewFindGoto(docView, idx);
-}
-
 // navigate to pageNo and, once it has loaded, highlight term there and make
 // its idx-th match current (see OnDocumentComplete)
-void MarkdownModel::GoToPageWithFind(int pageNo, Str term, bool matchCase, bool wholeWord, int idx, int gen) {
-    str::ReplaceWithCopy(&pendingFindTerm, term);
-    pendingFindMatchCase = matchCase;
-    pendingFindWholeWord = wholeWord;
-    pendingFindIdx = idx;
-    pendingFindGen = gen;
-    hasPendingFind = true;
-    GoToPage(pageNo, false);
-}
-
-void MarkdownModel::FindClear() {
-    BrowserViewFindClear(docView);
-}
-
-void MarkdownModel::OnFindResult(int gen, int current, int total) {
-    cb->FindResultReceived(gen, current, total);
-}
-
-void MarkdownModel::OnFindAllResult(Str payload) {
-    cb->FindAllResultReceived(payload);
-}
-
-void MarkdownModel::SelectAll() const {
-    BrowserViewSelectAll(docView);
-}
-
-void MarkdownModel::CopySelection() const {
-    BrowserViewCopySelection(docView);
-}
-
-static bool gSendingMarkdownBrowserMsg = false;
-
-LRESULT MarkdownModel::PassUIMsg(UINT msg, WPARAM wp, LPARAM lp) const {
-    if (!docView || gSendingMarkdownBrowserMsg) {
-        return 0;
-    }
-    gSendingMarkdownBrowserMsg = true;
-    LRESULT res = BrowserViewPassUIMsg(docView, msg, wp, lp);
-    gSendingMarkdownBrowserMsg = false;
-    return res;
-}
-
 // The path a link points at when it's a file the browser view can't show itself
 // (a .pdf, .epub, an archive, ...), or {} when the link stays in the view.
 // Unlike VirtualUrlToFileTemp() this doesn't fall back to page lookups, so a
@@ -590,52 +518,8 @@ bool MarkdownModel::HandleLink(IPageDestination* link, ILinkHandler* /*linkHandl
     return true;
 }
 
-bool MarkdownModel::CanNavigate(int dir) const {
-    if (dir < 0) {
-        return BrowserViewCanGoBack(docView);
-    }
-    return BrowserViewCanGoForward(docView);
-}
-
-void MarkdownModel::Navigate(int dir) {
-    if (!docView) {
-        return;
-    }
-    if (dir < 0) {
-        for (; dir < 0 && CanNavigate(dir); dir++) {
-            BrowserViewGoBack(docView);
-        }
-    } else {
-        for (; dir > 0 && CanNavigate(dir); dir--) {
-            BrowserViewGoForward(docView);
-        }
-    }
-}
-
-void MarkdownModel::SetDisplayMode(DisplayMode /*mode*/, bool /*keepContinuous*/) {}
-
-DisplayMode MarkdownModel::GetDisplayMode() const {
-    return DisplayMode::SinglePage;
-}
-
-void MarkdownModel::SetInPresentation(bool /*enable*/) {}
-
-void MarkdownModel::SetViewPortSize(Size /*size*/) {}
-
 MarkdownModel* MarkdownModel::AsMarkdown() {
     return this;
-}
-
-void MarkdownModel::SetZoomVirtual(float zoom, Point* /*fixPt*/) {
-    if (zoom > 0) {
-        zoom = limitValue(zoom, kZoomMin, kZoomMax);
-    }
-    if (zoom <= 0 || !IsValidZoom(zoom)) {
-        zoom = 100.0f;
-    }
-    ZoomTo(zoom);
-    zoomVirtual = zoom;
-    initZoom = zoom;
 }
 
 void MarkdownModel::SaveHtmlScrollPos() {
@@ -710,53 +594,6 @@ void MarkdownModel::RestoreHtmlScrollPos() {
     BrowserViewSetScrollPos(docView, Point(x, y));
 }
 
-void MarkdownModel::ZoomTo(float zoomLevel) const {
-    BrowserViewSetZoomPercent(docView, (int)zoomLevel);
-}
-
-float MarkdownModel::GetZoomVirtual(bool /*absolute*/) const {
-    if (!docView) {
-        return zoomVirtual;
-    }
-    return (float)BrowserViewGetZoomPercent(docView);
-}
-
-float MarkdownModel::GetNextZoomStep(float towardsLevel) const {
-    float currZoom = GetZoomVirtual(true);
-    if (MaybeGetNextZoomByIncrement(&currZoom, towardsLevel)) {
-        int iCurrZoom2 = (int)GetZoomVirtual(true);
-        int iCurrZoom = (int)currZoom;
-        if (iCurrZoom == iCurrZoom2) {
-            currZoom += 1.f;
-        }
-        return currZoom;
-    }
-
-    int nZoomLevels;
-    float* zoomLevels = GetDefaultZoomLevels(&nZoomLevels);
-    int iCurrZoom = (int)currZoom;
-    int iTowardsLevel = (int)towardsLevel;
-    int iNewZoom = iTowardsLevel;
-    if ((float)iCurrZoom < towardsLevel) {
-        for (int i = 0; i < nZoomLevels; i++) {
-            int iZoom = (int)zoomLevels[i];
-            if (iZoom > iCurrZoom) {
-                iNewZoom = iZoom;
-                break;
-            }
-        }
-    } else if ((float)iCurrZoom > towardsLevel) {
-        for (int i = nZoomLevels - 1; i >= 0; i--) {
-            int iZoom = (int)zoomLevels[i];
-            if (iZoom < iCurrZoom) {
-                iNewZoom = iZoom;
-                break;
-            }
-        }
-    }
-    return (float)iNewZoom;
-}
-
 MarkdownCacheEntry* MarkdownModel::FindDataForUrl(Str url) const {
     TempStr plainUrl = UrlPathTemp(url);
     for (MarkdownCacheEntry* e : urlDataCache) {
@@ -825,7 +662,7 @@ void MarkdownModel::OnDocumentComplete(Str url) {
     } else if (GetSavedHtmlScrollPosForUrl(plainUrl, &htmlScrollPos)) {
         restoreHtmlScrollPos = true;
     }
-    ZoomTo(zoomVirtual);
+    BrowserViewSetZoomPercent(docView, (int)zoomVirtual);
     RestoreHtmlScrollPos();
 
     if (cb && pageNo > 0) {
@@ -834,12 +671,7 @@ void MarkdownModel::OnDocumentComplete(Str url) {
 
     // finish a pending "jump to a match on another page": the fresh document
     // has no find state, so re-run the search and go to the requested match
-    if (hasPendingFind && docView) {
-        BrowserViewFindStart(docView, pendingFindTerm, pendingFindMatchCase, pendingFindWholeWord, pendingFindGen,
-                             pendingFindIdx);
-        hasPendingFind = false;
-        str::FreePtr(&pendingFindTerm);
-    }
+    FinishPendingFind();
 }
 
 Str MarkdownModel::GetDataForUrl(Str url) {

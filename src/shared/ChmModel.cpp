@@ -73,7 +73,7 @@ struct ChmTocTraceItem {
     int pageNo = 0;
 };
 
-ChmModel::ChmModel(DocControllerCallback* cb) : DocController(cb) {
+ChmModel::ChmModel(DocControllerCallback* cb) : BrowserDocController(cb) {
     poolAlloc = ArenaNew();
 }
 
@@ -88,8 +88,6 @@ ChmModel::~ChmModel() {
     docAccess.Unlock();
     ArenaDelete(poolAlloc);
     str::Free(fileName);
-    str::Free(currentPageUrl);
-    str::Free(pendingFindTerm);
 }
 
 // meta data
@@ -101,19 +99,11 @@ Str ChmModel::GetDefaultFileExt() const {
     return StrL(".chm");
 }
 
-int ChmModel::PageCount() const {
-    return len(pages);
-}
-
 TempStr ChmModel::GetPropertyTemp(DocProp prop) {
     return doc->GetPropertyTemp(prop);
 }
 
 // page navigation (stateful)
-int ChmModel::CurrentPageNo() const {
-    return currentPageNo;
-}
-
 void ChmModel::GoToPage(int pageNo, bool /*addNavPoint*/) {
     ReportIf(!ValidPageNo(pageNo));
     if (!ValidPageNo(pageNo)) {
@@ -180,22 +170,6 @@ void ChmModel::DestroyParentWindow() {
     browserCb = nullptr;
 }
 
-void ChmModel::PrintCurrentPage(bool showUI) const {
-    BrowserViewPrint(docView, showUI);
-}
-
-void ChmModel::FindInCurrentPage() const {
-    BrowserViewFindInPageUI(docView);
-}
-
-bool ChmModel::CanFindInPage() const {
-    return BrowserViewCanFindInPage(docView);
-}
-
-void ChmModel::FindStart(Str term, bool matchCase, bool wholeWord, int gen) {
-    BrowserViewFindStart(docView, term, matchCase, wholeWord, gen, -1);
-}
-
 void ChmModel::FindAllPages(Str term, bool matchCase, bool wholeWord, int gen) {
     if (!docView) {
         return;
@@ -205,57 +179,8 @@ void ChmModel::FindAllPages(Str term, bool matchCase, bool wholeWord, int gen) {
     BrowserViewFindAllPages(docView, pages, term, matchCase, wholeWord, gen);
 }
 
-void ChmModel::FindGoto(int idx) {
-    BrowserViewFindGoto(docView, idx);
-}
-
 // navigate to pageNo and, once it has loaded, highlight term there and make
 // its idx-th match current (see OnDocumentComplete)
-void ChmModel::GoToPageWithFind(int pageNo, Str term, bool matchCase, bool wholeWord, int idx, int gen) {
-    if (!ValidPageNo(pageNo)) {
-        return;
-    }
-    str::ReplaceWithCopy(&pendingFindTerm, term);
-    pendingFindMatchCase = matchCase;
-    pendingFindWholeWord = wholeWord;
-    pendingFindIdx = idx;
-    pendingFindGen = gen;
-    hasPendingFind = true;
-    GoToPage(pageNo, false);
-}
-
-void ChmModel::FindClear() {
-    BrowserViewFindClear(docView);
-}
-
-void ChmModel::OnFindResult(int gen, int current, int total) {
-    cb->FindResultReceived(gen, current, total);
-}
-
-void ChmModel::OnFindAllResult(Str payload) {
-    cb->FindAllResultReceived(payload);
-}
-
-void ChmModel::SelectAll() const {
-    BrowserViewSelectAll(docView);
-}
-
-void ChmModel::CopySelection() const {
-    BrowserViewCopySelection(docView);
-}
-
-static bool gSendingChmBrowserMsg = false;
-
-LRESULT ChmModel::PassUIMsg(UINT msg, WPARAM wp, LPARAM lp) const {
-    if (!docView || gSendingChmBrowserMsg) {
-        return 0;
-    }
-    gSendingChmBrowserMsg = true;
-    LRESULT res = BrowserViewPassUIMsg(docView, msg, wp, lp);
-    gSendingChmBrowserMsg = false;
-    return res;
-}
-
 bool ChmModel::DisplayPage(Str pageUrl) {
     if (len(pageUrl) == 0) {
         return false;
@@ -343,61 +268,10 @@ bool ChmModel::HandleLink(IPageDestination* link, ILinkHandler* /*linkHandler*/)
     return true;
 }
 
-bool ChmModel::CanNavigate(int dir) const {
-    if (dir < 0) {
-        return BrowserViewCanGoBack(docView);
-    }
-    return BrowserViewCanGoForward(docView);
-}
-
-void ChmModel::Navigate(int dir) {
-    if (!docView) {
-        return;
-    }
-
-    if (dir < 0) {
-        for (; dir < 0 && CanNavigate(dir); dir++) {
-            BrowserViewGoBack(docView);
-        }
-    } else {
-        for (; dir > 0 && CanNavigate(dir); dir--) {
-            BrowserViewGoForward(docView);
-        }
-    }
-}
-
 // view settings
-void ChmModel::SetDisplayMode(DisplayMode /*mode*/, bool /*keepContinuous*/) {
-    // no-op
-}
-
-DisplayMode ChmModel::GetDisplayMode() const {
-    return DisplayMode::SinglePage;
-}
-
-void ChmModel::SetInPresentation(bool /*enable*/) {
-    // no-op
-}
-
-void ChmModel::SetViewPortSize(Size /*size*/) {
-    // no-op
-}
-
 // for quick type determination and type-safe casting
 ChmModel* ChmModel::AsChm() {
     return this;
-}
-
-void ChmModel::SetZoomVirtual(float zoom, Point* /*fixPt*/) {
-    if (zoom > 0) {
-        zoom = limitValue(zoom, kZoomMin, kZoomMax);
-    }
-    if (zoom <= 0 || !IsValidZoom(zoom)) {
-        zoom = 100.0f;
-    }
-    ZoomTo(zoom);
-    zoomVirtual = zoom;
-    initZoom = zoom;
 }
 
 // Save the current scroll position for the currently displayed url/page.
@@ -475,17 +349,6 @@ void ChmModel::RestoreHtmlScrollPos() {
     x = std::max(x, 0);
     y = std::max(y, 0);
     BrowserViewSetScrollPos(docView, Point(x, y));
-}
-
-void ChmModel::ZoomTo(float zoomLevel) const {
-    BrowserViewSetZoomPercent(docView, (int)zoomLevel);
-}
-
-float ChmModel::GetZoomVirtual(bool /*absolute*/) const {
-    if (!docView) {
-        return zoomVirtual;
-    }
-    return (float)BrowserViewGetZoomPercent(docView);
 }
 
 struct ChmTocBuilder : EbookTocVisitor {
@@ -613,7 +476,7 @@ void ChmModel::OnDocumentComplete(Str url) {
         zoomVirtual = initZoom;
         initZoom = kInvalidZoom;
     }
-    ZoomTo(zoomVirtual);
+    BrowserViewSetZoomPercent(docView, (int)zoomVirtual);
     RestoreHtmlScrollPos();
 
     if (cb && pageNo > 0) {
@@ -622,12 +485,7 @@ void ChmModel::OnDocumentComplete(Str url) {
 
     // finish a pending "jump to a match on another page": the fresh document
     // has no find state, so re-run the search and go to the requested match
-    if (hasPendingFind && docView) {
-        BrowserViewFindStart(docView, pendingFindTerm, pendingFindMatchCase, pendingFindWholeWord, pendingFindGen,
-                             pendingFindIdx);
-        hasPendingFind = false;
-        str::FreePtr(&pendingFindTerm);
-    }
+    FinishPendingFind();
 }
 
 // Called before we start loading html for a given url. Will block
@@ -851,49 +709,6 @@ TocTree* ChmModel::GetToc() {
 }
 
 // adapted from DisplayModel::NextZoomStep
-float ChmModel::GetNextZoomStep(float towardsLevel) const {
-    float currZoom = GetZoomVirtual(true);
-    if (MaybeGetNextZoomByIncrement(&currZoom, towardsLevel)) {
-        // chm uses browser control which only supports integer zoom levels
-        // this ensures we're not stuck on a given zoom level i.e. advance by at least 1%
-        int iCurrZoom2 = (int)GetZoomVirtual(true);
-        int iCurrZoom = (int)currZoom;
-        if (iCurrZoom == iCurrZoom2) {
-            currZoom += 1.f;
-        }
-        return currZoom;
-    }
-
-    int nZoomLevels;
-    float* zoomLevels = GetDefaultZoomLevels(&nZoomLevels);
-
-    // chm uses browser control which only supports integer zoom levels
-    // this ensures we're not stuck on a given zoom level
-    // due to float => int truncation
-    int iCurrZoom = (int)currZoom;
-    int iTowardsLevel = (int)towardsLevel;
-    int iNewZoom = iTowardsLevel;
-    if ((float)iCurrZoom < towardsLevel) {
-        for (int i = 0; i < nZoomLevels; i++) {
-            int iZoom = (int)zoomLevels[i];
-            if (iZoom > iCurrZoom) {
-                iNewZoom = iZoom;
-                break;
-            }
-        }
-    } else if ((float)iCurrZoom > towardsLevel) {
-        for (int i = nZoomLevels - 1; i >= 0; i--) {
-            int iZoom = (int)zoomLevels[i];
-            if (iZoom < iCurrZoom) {
-                iNewZoom = iZoom;
-                break;
-            }
-        }
-    }
-
-    return (float)iNewZoom;
-}
-
 void ChmModel::GetDisplayState(FileState* fs) {
     Str fileNameA = fileName;
     if (len(fs->filePath) == 0 || !str::EqI(fs->filePath, fileNameA)) {
