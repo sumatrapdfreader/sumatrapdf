@@ -123,9 +123,6 @@
     <ClInclude Include="..\src\Canvas.h">
       <Filter>src</Filter>
     </ClInclude>
-    <ClInclude Include="..\src\CommandPalette.h">
-      <Filter>src</Filter>
-    </ClInclude>
     <ClInclude Include="..\src\DarkMode.h">
       <Filter>src</Filter>
     </ClInclude>
@@ -310,6 +307,9 @@
       <Filter>src\shared</Filter>
     </ClInclude>
     <ClInclude Include="..\src\shared\CommandAvailability.h">
+      <Filter>src\shared</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\shared\CommandPalette.h">
       <Filter>src\shared</Filter>
     </ClInclude>
     <ClInclude Include="..\src\shared\Commands.h">

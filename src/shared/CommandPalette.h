@@ -1,5 +1,5 @@
 /* Copyright 2022 the SumatraPDF project authors (see AUTHORS file).
-   License: GPLv3 */
+   License: Simplified BSD (see COPYING.BSD) */
 
 namespace gpui {
 struct Ctx;
@@ -40,3 +40,9 @@ void PaletteCollectTabs(MainWindow* win, bool mru, Vec<WindowTab*>& out, int& cu
 // the document's annotations changed: the `*` list is stale
 void CommandPaletteOnAnnotationsChanged();
 void CommandPaletteOnSettingsReloaded();
+
+#if OS_WIN
+HWND CommandPaletteHwndForAccelerator(HWND hwnd);
+TempStr CommandPaletteStateTemp(int* exitCodeOut);
+void CommandPaletteUpdateTheme();
+#endif

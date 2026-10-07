@@ -1412,7 +1412,6 @@
     <ClInclude Include="..\ext\darkmodelib\src\Version.h" />
     <ClInclude Include="..\src\AnnotEditToolbar.h" />
     <ClInclude Include="..\src\Canvas.h" />
-    <ClInclude Include="..\src\CommandPalette.h" />
     <ClInclude Include="..\src\DarkMode.h" />
     <ClInclude Include="..\src\FindBar.h" />
     <ClInclude Include="..\src\FindWindow.h" />
@@ -1475,6 +1474,7 @@
     <ClInclude Include="..\src\shared\ChmFile.h" />
     <ClInclude Include="..\src\shared\ChmModel.h" />
     <ClInclude Include="..\src\shared\CommandAvailability.h" />
+    <ClInclude Include="..\src\shared\CommandPalette.h" />
     <ClInclude Include="..\src\shared\Commands.h" />
     <ClInclude Include="..\src\shared\DisplayMode.h" />
     <ClInclude Include="..\src\shared\DisplayModel.h" />
