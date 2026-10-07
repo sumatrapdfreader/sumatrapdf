@@ -20,13 +20,10 @@ struct ChmModel : BrowserDocController {
     void GoToPage(int pageNo, bool addNavPoint) override;
 
     TocTree* GetToc() override;
-    void ScrollTo(int pageNo, RectF rect, float zoom) override;
-
     bool HandleLink(IPageDestination*, ILinkHandler*) override;
 
     IPageDestination* GetNamedDest(Str name) override;
 
-    void GetDisplayState(FileState* fs) override;
     void CreateThumbnail(Size size, const OnBitmapRendered* saveThumbnail) override;
 
     ChmModel* AsChm() override;
@@ -41,9 +38,7 @@ struct ChmModel : BrowserDocController {
 
     bool OnBeforeNavigate(Str url, bool newWindow);
     void OnDocumentComplete(Str url);
-    void OnLButtonDown();
     Str GetDataForUrl(Str url);
-    void DownloadData(Str url, Str data);
     void UpdateTheme();
 
     static bool IsSupportedFileType(FileType);
@@ -66,10 +61,6 @@ struct ChmModel : BrowserDocController {
 
     ChmCacheEntry* FindDataForUrl(Str url) const;
 
-    void SaveHtmlScrollPos();
-    void SaveHtmlScrollPosForPage(int pageNo);
-    void SaveHtmlScrollPosForUrl(Str url, PointF pos);
-    bool GetSavedHtmlScrollPosForPage(int pageNo, PointF* pos) const;
-    bool GetSavedHtmlScrollPosForUrl(Str url, PointF* pos) const;
-    void RestoreHtmlScrollPos();
+    TempStr NormalizeScrollUrlTemp(Str url) const override;
+    TempStr ScrollUrlForPageTemp(int pageNo) const override;
 };

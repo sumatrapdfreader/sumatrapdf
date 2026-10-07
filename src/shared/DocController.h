@@ -189,6 +189,8 @@ struct BrowserDocController : DocController {
     float GetZoomVirtual(bool absolute = false) const override;
     float GetNextZoomStep(float towards) const override;
     void SetViewPortSize(Size size) override;
+    void ScrollTo(int pageNo, RectF rect, float zoom) override;
+    void GetDisplayState(FileState* fs) override;
 
     bool CanFindInPage() const override;
     void FindStart(Str term, bool matchCase, bool wholeWord, int gen) override;
@@ -204,6 +206,15 @@ struct BrowserDocController : DocController {
     void FinishPendingFind();
     void OnFindResult(int gen, int current, int total);
     void OnFindAllResult(Str payload);
+    void DownloadData(Str url, Str data);
+    void OnLButtonDown();
+
+    void SaveHtmlScrollPos();
+    void SaveHtmlScrollPosForPage(int pageNo);
+    void SaveHtmlScrollPosForUrl(Str url, PointF pos);
+    bool GetSavedHtmlScrollPosForPage(int pageNo, PointF* pos) const;
+    bool GetSavedHtmlScrollPosForUrl(Str url, PointF* pos) const;
+    void RestoreHtmlScrollPos();
 
     StrVec pages;
     int currentPageNo = 1;
@@ -224,6 +235,8 @@ struct BrowserDocController : DocController {
     Vec<PointF> htmlScrollPositions;
 
   private:
+    virtual TempStr NormalizeScrollUrlTemp(Str url) const = 0;
+    virtual TempStr ScrollUrlForPageTemp(int pageNo) const = 0;
     mutable bool sendingBrowserMsg = false;
 };
 

@@ -491,20 +491,6 @@ void MarkdownModel::GoToPage(int pageNo, bool /*addNavPoint*/) {
     DisplayPage(url);
 }
 
-void MarkdownModel::ScrollTo(int pageNo, RectF rect, float zoom) {
-    if (IsValidZoom(zoom)) {
-        SetZoomVirtual(zoom, nullptr);
-    }
-    if (rect.x >= 0 || rect.y >= 0) {
-        htmlScrollPos = PointF(rect.x, rect.y);
-        restoreHtmlScrollPos = true;
-        if (ValidPageNo(pageNo)) {
-            SaveHtmlScrollPosForUrl(FileToVirtualUrlTemp(pages[pageNo - 1]), htmlScrollPos);
-        }
-    }
-    GoToPage(pageNo, false);
-}
-
 bool MarkdownModel::HandleLink(IPageDestination* link, ILinkHandler* /*linkHandler*/) {
     Str url = link->GetName();
     if (MaybeLaunchLinkedDoc(url)) {
@@ -522,76 +508,12 @@ MarkdownModel* MarkdownModel::AsMarkdown() {
     return this;
 }
 
-void MarkdownModel::SaveHtmlScrollPos() {
-    if (!docView) {
-        return;
-    }
-    Point pos = BrowserViewGetScrollPos(docView);
-    if (pos.x < 0 && pos.y < 0) {
-        return;
-    }
-    htmlScrollPos = PointF((float)pos.x, (float)pos.y);
-    if (len(currentPageUrl) > 0) {
-        SaveHtmlScrollPosForUrl(currentPageUrl, htmlScrollPos);
-        return;
-    }
-    SaveHtmlScrollPosForPage(currentPageNo);
+TempStr MarkdownModel::NormalizeScrollUrlTemp(Str url) const {
+    return UrlPathTemp(url);
 }
 
-void MarkdownModel::SaveHtmlScrollPosForPage(int pageNo) {
-    if (!ValidPageNo(pageNo)) {
-        return;
-    }
-    SaveHtmlScrollPosForUrl(FileToVirtualUrlTemp(pages[pageNo - 1]), htmlScrollPos);
-}
-
-void MarkdownModel::SaveHtmlScrollPosForUrl(Str url, PointF pos) {
-    if (len(url) == 0 || pos.x < 0 || pos.y < 0) {
-        return;
-    }
-    TempStr plainUrl = UrlPathTemp(url);
-    int idx = htmlScrollUrls.Find(plainUrl);
-    if (idx >= 0) {
-        htmlScrollPositions[idx] = pos;
-        return;
-    }
-    htmlScrollUrls.Append(plainUrl);
-    VecAppend(htmlScrollPositions, pos);
-}
-
-bool MarkdownModel::GetSavedHtmlScrollPosForPage(int pageNo, PointF* pos) const {
-    if (!pos || !ValidPageNo(pageNo)) {
-        return false;
-    }
-    return GetSavedHtmlScrollPosForUrl(FileToVirtualUrlTemp(pages[pageNo - 1]), pos);
-}
-
-bool MarkdownModel::GetSavedHtmlScrollPosForUrl(Str url, PointF* pos) const {
-    if (len(url) == 0 || !pos) {
-        return false;
-    }
-    TempStr plainUrl = UrlPathTemp(url);
-    int idx = htmlScrollUrls.Find(plainUrl);
-    if (idx < 0) {
-        return false;
-    }
-    *pos = htmlScrollPositions[idx];
-    return pos->x >= 0 || pos->y >= 0;
-}
-
-void MarkdownModel::RestoreHtmlScrollPos() {
-    if (!docView || !restoreHtmlScrollPos) {
-        return;
-    }
-    restoreHtmlScrollPos = false;
-    if (htmlScrollPos.x < 0 && htmlScrollPos.y < 0) {
-        return;
-    }
-    int x = (int)htmlScrollPos.x;
-    int y = (int)htmlScrollPos.y;
-    x = std::max(x, 0);
-    y = std::max(y, 0);
-    BrowserViewSetScrollPos(docView, Point(x, y));
+TempStr MarkdownModel::ScrollUrlForPageTemp(int pageNo) const {
+    return FileToVirtualUrlTemp(pages[pageNo - 1]);
 }
 
 MarkdownCacheEntry* MarkdownModel::FindDataForUrl(Str url) const {
@@ -735,18 +657,6 @@ void MarkdownModel::UpdateTheme() {
     }
 }
 
-void MarkdownModel::DownloadData(Str url, Str data) {
-    if (cb) {
-        cb->SaveDownload(url, data);
-    }
-}
-
-void MarkdownModel::OnLButtonDown() {
-    if (cb) {
-        cb->FocusFrame(true);
-    }
-}
-
 // engine-owned; do not delete
 IPageDestination* MarkdownModel::GetNamedDest(Str name) {
     TempStr url = UrlPathTemp(name);
@@ -761,20 +671,6 @@ IPageDestination* MarkdownModel::GetNamedDest(Str name) {
 
 TocTree* MarkdownModel::GetToc() {
     return tocTree;
-}
-
-void MarkdownModel::GetDisplayState(FileState* fs) {
-    Str fileNameA = fileName;
-    if (len(fs->filePath) == 0 || !str::EqI(fs->filePath, fileNameA)) {
-        SetFileStatePath(fs, fileNameA);
-    }
-    fs->useDefaultState = !gSettings->rememberStatePerDocument;
-    str::ReplaceWithCopy(&fs->displayMode, DisplayModeToString(GetDisplayMode()));
-    ZoomToString(&fs->zoom, GetZoomVirtual(), fs);
-    str::ReplaceWithCopy(&fs->pageNo, StoredPagePosFromCtrlTemp(this));
-    fs->pageCount = PageCount();
-    SaveHtmlScrollPos();
-    fs->scrollPos = htmlScrollPos;
 }
 
 void MarkdownModel::CreateThumbnail(Size /*size*/, const OnBitmapRendered* /*saveThumbnail*/) {}

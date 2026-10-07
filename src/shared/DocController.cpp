@@ -7,6 +7,8 @@
 #include "Settings.h"
 #include "DisplayMode.h"
 #include "EngineBase.h"
+#include "AppSettings.h"
+#include "PagePosition.h"
 #include "DocController.h"
 
 Location DocController::CurrentLocation() {
@@ -90,6 +92,18 @@ DisplayMode BrowserDocController::GetDisplayMode() const {
 void BrowserDocController::SetInPresentation(bool) {}
 
 void BrowserDocController::SetViewPortSize(Size) {}
+
+void BrowserDocController::ScrollTo(int pageNo, RectF rect, float zoom) {
+    if (IsValidZoom(zoom)) {
+        SetZoomVirtual(zoom, nullptr);
+    }
+    if (rect.x >= 0 || rect.y >= 0) {
+        htmlScrollPos = PointF(rect.x, rect.y);
+        restoreHtmlScrollPos = true;
+        SaveHtmlScrollPosForPage(pageNo);
+    }
+    GoToPage(pageNo, false);
+}
 
 void BrowserDocController::SetZoomVirtual(float zoom, Point*) {
     if (zoom > 0) {
@@ -209,4 +223,98 @@ void BrowserDocController::OnFindResult(int gen, int current, int total) {
 
 void BrowserDocController::OnFindAllResult(Str payload) {
     cb->FindAllResultReceived(payload);
+}
+
+void BrowserDocController::DownloadData(Str url, Str data) {
+    if (cb) {
+        cb->SaveDownload(url, data);
+    }
+}
+
+void BrowserDocController::OnLButtonDown() {
+    if (cb) {
+        cb->FocusFrame(true);
+    }
+}
+
+void BrowserDocController::SaveHtmlScrollPos() {
+    if (!docView) {
+        return;
+    }
+    Point pos = BrowserViewGetScrollPos(docView);
+    if (pos.x < 0 && pos.y < 0) {
+        return;
+    }
+    htmlScrollPos = PointF((float)pos.x, (float)pos.y);
+    if (len(currentPageUrl) > 0) {
+        SaveHtmlScrollPosForUrl(currentPageUrl, htmlScrollPos);
+        return;
+    }
+    SaveHtmlScrollPosForPage(currentPageNo);
+}
+
+void BrowserDocController::SaveHtmlScrollPosForPage(int pageNo) {
+    if (ValidPageNo(pageNo)) {
+        SaveHtmlScrollPosForUrl(ScrollUrlForPageTemp(pageNo), htmlScrollPos);
+    }
+}
+
+void BrowserDocController::SaveHtmlScrollPosForUrl(Str url, PointF pos) {
+    if (len(url) == 0 || pos.x < 0 || pos.y < 0) {
+        return;
+    }
+
+    TempStr plainUrl = NormalizeScrollUrlTemp(url);
+    int idx = htmlScrollUrls.Find(plainUrl);
+    if (idx >= 0) {
+        htmlScrollPositions[idx] = pos;
+        return;
+    }
+    htmlScrollUrls.Append(plainUrl);
+    VecAppend(htmlScrollPositions, pos);
+}
+
+bool BrowserDocController::GetSavedHtmlScrollPosForPage(int pageNo, PointF* pos) const {
+    if (!pos || !ValidPageNo(pageNo)) {
+        return false;
+    }
+    return GetSavedHtmlScrollPosForUrl(ScrollUrlForPageTemp(pageNo), pos);
+}
+
+bool BrowserDocController::GetSavedHtmlScrollPosForUrl(Str url, PointF* pos) const {
+    if (len(url) == 0 || !pos) {
+        return false;
+    }
+
+    int idx = htmlScrollUrls.Find(NormalizeScrollUrlTemp(url));
+    if (idx < 0) {
+        return false;
+    }
+    *pos = htmlScrollPositions[idx];
+    return pos->x >= 0 || pos->y >= 0;
+}
+
+void BrowserDocController::RestoreHtmlScrollPos() {
+    if (!docView || !restoreHtmlScrollPos) {
+        return;
+    }
+    restoreHtmlScrollPos = false;
+    if (htmlScrollPos.x < 0 && htmlScrollPos.y < 0) {
+        return;
+    }
+    BrowserViewSetScrollPos(docView, Point(std::max((int)htmlScrollPos.x, 0), std::max((int)htmlScrollPos.y, 0)));
+}
+
+void BrowserDocController::GetDisplayState(FileState* fs) {
+    Str filePath = GetFilePath();
+    if (len(fs->filePath) == 0 || !str::EqI(fs->filePath, filePath)) {
+        SetFileStatePath(fs, filePath);
+    }
+    fs->useDefaultState = !gSettings->rememberStatePerDocument;
+    str::ReplaceWithCopy(&fs->displayMode, DisplayModeToString(GetDisplayMode()));
+    ZoomToString(&fs->zoom, GetZoomVirtual(), fs);
+    str::ReplaceWithCopy(&fs->pageNo, StoredPagePosFromCtrlTemp(this));
+    fs->pageCount = PageCount();
+    SaveHtmlScrollPos();
+    fs->scrollPos = htmlScrollPos;
 }

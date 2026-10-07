@@ -239,20 +239,6 @@ bool ChmModel::DisplayPage(Str pageUrl) {
     return true;
 }
 
-void ChmModel::ScrollTo(int pageNo, RectF rect, float zoom) {
-    if (IsValidZoom(zoom)) {
-        SetZoomVirtual(zoom, nullptr);
-    }
-    if (rect.x >= 0 || rect.y >= 0) {
-        htmlScrollPos = PointF(rect.x, rect.y);
-        restoreHtmlScrollPos = true;
-        if (ValidPageNo(pageNo)) {
-            SaveHtmlScrollPosForUrl(pages[pageNo - 1], htmlScrollPos);
-        }
-    }
-    GoToPage(pageNo, false);
-}
-
 bool ChmModel::HandleLink(IPageDestination* link, ILinkHandler* /*linkHandler*/) {
     Kind k = link->GetKind();
     if (k != kindDestinationScrollTo) {
@@ -274,81 +260,12 @@ ChmModel* ChmModel::AsChm() {
     return this;
 }
 
-// Save the current scroll position for the currently displayed url/page.
-void ChmModel::SaveHtmlScrollPos() {
-    if (!docView) {
-        return;
-    }
-    Point pos = BrowserViewGetScrollPos(docView);
-    if (pos.x < 0 && pos.y < 0) {
-        return;
-    }
-    htmlScrollPos = PointF((float)pos.x, (float)pos.y);
-    if (len(currentPageUrl) > 0) {
-        SaveHtmlScrollPosForUrl(currentPageUrl, htmlScrollPos);
-        return;
-    }
-    SaveHtmlScrollPosForPage(currentPageNo);
+TempStr ChmModel::NormalizeScrollUrlTemp(Str url) const {
+    return url::GetFullPathTemp(url);
 }
 
-void ChmModel::SaveHtmlScrollPosForPage(int pageNo) {
-    if (!ValidPageNo(pageNo)) {
-        return;
-    }
-    SaveHtmlScrollPosForUrl(pages[pageNo - 1], htmlScrollPos);
-}
-
-void ChmModel::SaveHtmlScrollPosForUrl(Str url, PointF pos) {
-    if (len(url) == 0 || pos.x < 0 || pos.y < 0) {
-        return;
-    }
-
-    TempStr plainUrl = url::GetFullPathTemp(url);
-    int idx = htmlScrollUrls.Find(plainUrl);
-    if (idx >= 0) {
-        htmlScrollPositions[idx] = pos;
-        return;
-    }
-
-    htmlScrollUrls.Append(plainUrl);
-    VecAppend(htmlScrollPositions, pos);
-}
-
-bool ChmModel::GetSavedHtmlScrollPosForPage(int pageNo, PointF* pos) const {
-    if (!pos || !ValidPageNo(pageNo)) {
-        return false;
-    }
-    return GetSavedHtmlScrollPosForUrl(pages[pageNo - 1], pos);
-}
-
-bool ChmModel::GetSavedHtmlScrollPosForUrl(Str url, PointF* pos) const {
-    if (len(url) == 0 || !pos) {
-        return false;
-    }
-
-    TempStr plainUrl = url::GetFullPathTemp(url);
-    int idx = htmlScrollUrls.Find(plainUrl);
-    if (idx < 0) {
-        return false;
-    }
-
-    *pos = htmlScrollPositions[idx];
-    return pos->x >= 0 || pos->y >= 0;
-}
-
-void ChmModel::RestoreHtmlScrollPos() {
-    if (!docView || !restoreHtmlScrollPos) {
-        return;
-    }
-    restoreHtmlScrollPos = false;
-    if (htmlScrollPos.x < 0 && htmlScrollPos.y < 0) {
-        return;
-    }
-    int x = (int)htmlScrollPos.x;
-    int y = (int)htmlScrollPos.y;
-    x = std::max(x, 0);
-    y = std::max(y, 0);
-    BrowserViewSetScrollPos(docView, Point(x, y));
+TempStr ChmModel::ScrollUrlForPageTemp(int pageNo) const {
+    return str::DupTemp(pages[pageNo - 1]);
 }
 
 struct ChmTocBuilder : EbookTocVisitor {
@@ -625,19 +542,6 @@ void ChmModel::UpdateTheme() {
     }
 }
 
-void ChmModel::DownloadData(Str url, Str data) {
-    if (!cb) {
-        return;
-    }
-    cb->SaveDownload(url, data);
-}
-
-void ChmModel::OnLButtonDown() {
-    if (cb) {
-        cb->FocusFrame(true);
-    }
-}
-
 // named destinations are either in-document URLs or Alias topic IDs.
 // engine-owned; do not delete
 IPageDestination* ChmModel::GetNamedDest(Str name) {
@@ -709,23 +613,6 @@ TocTree* ChmModel::GetToc() {
 }
 
 // adapted from DisplayModel::NextZoomStep
-void ChmModel::GetDisplayState(FileState* fs) {
-    Str fileNameA = fileName;
-    if (len(fs->filePath) == 0 || !str::EqI(fs->filePath, fileNameA)) {
-        SetFileStatePath(fs, fileNameA);
-    }
-
-    fs->useDefaultState = !gSettings->rememberStatePerDocument;
-
-    str::ReplaceWithCopy(&fs->displayMode, DisplayModeToString(GetDisplayMode()));
-    ZoomToString(&fs->zoom, GetZoomVirtual(), fs);
-
-    str::ReplaceWithCopy(&fs->pageNo, StoredPagePosFromCtrlTemp(this));
-    fs->pageCount = PageCount();
-    SaveHtmlScrollPos();
-    fs->scrollPos = htmlScrollPos;
-}
-
 // Platform thumbnail service renders the CHM home page when supported.
 void ChmModel::CreateThumbnail(Size size, const OnBitmapRendered* saveThumbnail) {
     CreateChmThumbnail(fileName, size, saveThumbnail);
