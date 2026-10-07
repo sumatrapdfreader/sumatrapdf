@@ -143,33 +143,13 @@ static TempStr GrokSessionsProjectDirTemp(Str dir) {
     return fmt("%s\\.grok\\sessions\\%s", userProfile, encodedDir);
 }
 
-static TempStr ExtractGrokPromptFromHistoryLineTemp(Str line, Str sessionId) {
-    TempStr sid = AIChatJsonStrTemp(line, StrL("session_id"));
-    if (len(sid) == 0 || !str::Eq(sid, sessionId)) {
-        return {};
-    }
-    return AIChatJsonStrTemp(line, StrL("prompt"));
-}
-
 static Str GetGrokSessionDescription(Str projectDir, Str sessionId) {
     TempStr historyPath = fmt("%s\\prompt_history.jsonl", projectDir);
     Str data = file::ReadFile(historyPath);
     if (len(data) == 0) {
         return str::Dup(StrL("(no description)"));
     }
-    Str rest = data;
-    Str result;
-    Str line;
-
-    while (len(result) == 0 && str::NextLine(rest, line, rest)) {
-        if (len(line) == 0) {
-            continue;
-        }
-        TempStr prompt = ExtractGrokPromptFromHistoryLineTemp(str::DupTemp(line), sessionId);
-        if (len(prompt) > 0) {
-            result = str::Dup(prompt);
-        }
-    }
+    Str result = AIChatFindHistoryPrompt(data, sessionId, StrL("prompt"));
     str::Free(data);
     return result ? result : str::Dup(StrL("(no description)"));
 }

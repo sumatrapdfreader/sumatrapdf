@@ -138,6 +138,20 @@ bool IsAIChatSupportedForTab(WindowTab* tab);
 
 TempStr AIChatJsEscapeTemp(Str s);
 TempStr AIChatJsonStrTemp(Str json, Str key);
+inline Str AIChatFindHistoryPrompt(Str data, Str sessionId, Str key) {
+    Str line;
+    while (str::NextLine(data, line, data)) {
+        TempStr sid = AIChatJsonStrTemp(line, StrL("session_id"));
+        if (!str::Eq(sid, sessionId)) {
+            continue;
+        }
+        TempStr prompt = AIChatJsonStrTemp(line, key);
+        if (len(prompt) > 0) {
+            return str::Dup(prompt);
+        }
+    }
+    return {};
+}
 TempStr AIChatEncodeSessionDirTemp(Str dir);
 TempStr AIChatExtractUserTextTemp(Str line);
 Str AIChatSessionDescription(Str sessionPath);

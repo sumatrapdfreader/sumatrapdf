@@ -223,14 +223,6 @@ static bool IsCodexRolloutFileName(Str name) {
     return name && str::StartsWith(name, StrL("rollout-")) && str::EndsWithI(name, StrL(".jsonl"));
 }
 
-static TempStr ExtractCodexPromptFromHistoryLineTemp(Str line, Str sessionId) {
-    TempStr sid = AIChatJsonStrTemp(line, StrL("session_id"));
-    if (len(sid) == 0 || !str::Eq(sid, sessionId)) {
-        return {};
-    }
-    return AIChatJsonStrTemp(line, StrL("text"));
-}
-
 static Str GetCodexSessionDescription(Str sessionId) {
     TempStr userProfile = AIChatHomeDirTemp();
     TempStr historyPath = len(userProfile) > 0 ? fmt("%s\\.codex\\history.jsonl", userProfile) : TempStr();
@@ -241,19 +233,7 @@ static Str GetCodexSessionDescription(Str sessionId) {
     if (len(data) == 0) {
         return str::Dup(StrL("(no description)"));
     }
-    Str rest = data;
-    Str result;
-    Str line;
-
-    while (len(result) == 0 && str::NextLine(rest, line, rest)) {
-        if (len(line) == 0) {
-            continue;
-        }
-        TempStr prompt = ExtractCodexPromptFromHistoryLineTemp(str::DupTemp(line), sessionId);
-        if (len(prompt) > 0) {
-            result = str::Dup(prompt);
-        }
-    }
+    Str result = AIChatFindHistoryPrompt(data, sessionId, StrL("text"));
     str::Free(data);
     return result ? result : str::Dup(StrL("(no description)"));
 }
