@@ -143,12 +143,6 @@ RenderCache::RenderCache() : maxTileSize({GetSystemMetrics(SM_CXSCREEN), GetSyst
     int numCores = (int)si.dwNumberOfProcessors;
     maxRenderThreads = std::max(gMaxRenderThreads, numCores);
     maxRenderThreads = std::min(maxRenderThreads, kMaxRenderThreads);
-
-    // use a semaphore so each queued request wakes one thread.
-    // threads themselves are spawned lazily in Render() when work appears
-    // and no idle thread is available -- many sessions only ever need a
-    // couple of render threads, so creating 8+ upfront is wasteful.
-    startRendering = CreateSemaphoreW(nullptr, 0, INT_MAX, nullptr);
 }
 
 RenderCache::~RenderCache() {
@@ -161,7 +155,7 @@ RenderCache::~RenderCache() {
 
     if (nRenderThreads > 0) {
         // wake all threads waiting on the semaphore
-        ReleaseSemaphore(startRendering, nRenderThreads, nullptr);
+        startRendering.Signal(nRenderThreads);
 
         // wait for all threads to finish
         DWORD res = WaitForMultipleObjects((DWORD)nRenderThreads, renderThreads, TRUE, 5000);
@@ -173,8 +167,6 @@ RenderCache::~RenderCache() {
             SafeCloseThreadHandle(&renderThreads[i]);
         }
     }
-    CloseHandle(startRendering);
-
     // Threads are gone; remaining state inspection is single-threaded.
     bool hasCurReq = false;
     for (int i = 0; i < nRenderThreads; i++) {
@@ -923,7 +915,7 @@ bool RenderCache::Render(DisplayModel* dm, int pageNo, int rotation, float zoom,
     }
     newRequest->renderFinishedCb = renderFinishedCb;
 
-    ReleaseSemaphore(startRendering, 1, nullptr);
+    startRendering.Signal();
 
     // Lazy thread spawn: if no thread is currently waiting and we're below
     // the cap, start a new one. Existing busy threads will pick up the work
@@ -1252,17 +1244,13 @@ static DWORD WINAPI RenderCacheThread(LPVOID data) {
                 AutoUnlockRecursiveMutex scope(&cache->requestAccess);
                 cache->idleThreads++;
             }
-            DWORD waitResult = WaitForSingleObject(cache->startRendering, INFINITE);
+            cache->startRendering.Wait();
             {
                 AutoUnlockRecursiveMutex scope(&cache->requestAccess);
                 cache->idleThreads--;
             }
             if (AtomicBoolGet(&cache->shouldExit)) {
                 break;
-            }
-            // Is it not a page render request?
-            if (WAIT_OBJECT_0 != waitResult) {
-                continue;
             }
         }
 

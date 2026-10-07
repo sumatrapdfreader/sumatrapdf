@@ -6,7 +6,7 @@
 constexpr int kRenderDelayUndefined = INT_MAX - 1;
 constexpr int kRenderDelayFailed = INT_MAX - 2;
 
-constexpr USHORT kInvalidTileRes = (USHORT)-1;
+constexpr u16 kInvalidTileRes = (u16)-1;
 
 constexpr int kMaxPageRequests = 8;
 // keep this value reasonably low, else we'll run out of
@@ -23,6 +23,10 @@ constexpr int kRenderCacheAllPages = -1;
 struct PageInfo;
 struct Pixmap;
 
+namespace gpui {
+struct PaintCtx;
+}
+
 // describes the chain of pages to render predictively after the current page.
 // originPageNo is the visible page that anchors the chain; the chain stops
 // once it's no longer visible.
@@ -35,12 +39,12 @@ struct PredictiveChain {
 /* A page is split into tiles of at most TILE_MAX_W x TILE_MAX_H pixels.
    A given tile starts at (col / 2^res * page_width, row / 2^res * page_height). */
 struct TilePosition {
-    USHORT res = kInvalidTileRes;
-    USHORT row = (USHORT)-1;
-    USHORT col = (USHORT)-1;
+    u16 res = kInvalidTileRes;
+    u16 row = (u16)-1;
+    u16 col = (u16)-1;
 
     TilePosition() = default;
-    explicit TilePosition(USHORT res, USHORT row, USHORT col) {
+    explicit TilePosition(u16 res, u16 row, u16 col) {
         this->res = res;
         this->row = row;
         this->col = col;
@@ -65,6 +69,9 @@ struct BitmapCacheEntry {
 
     // owned by the BitmapCacheEntry
     Pixmap* bitmap = nullptr;
+    // ng: the platform image the canvas draws (a gpui RenderImage), built from
+    // `bitmap` the first time the tile is painted and dropped with the entry
+    void* renderImage = nullptr;
     bool outOfDate = false;
     int refs = 1;
     // RenderCache::darkModeEpoch at render time; entries from an older epoch
@@ -179,18 +186,20 @@ struct RenderCache {
     Color textColor = 0;
     Color backgroundColor = 0;
     Color linkColor = 0;
-
-    // FixedPageUI.Grayscale, copied by UpdateDocumentColors() for render threads
     AtomicBool grayscalePageColors = 0;
-
     // bumped by UpdateDocumentColors when page render colors / the PDF
     // document color mode change; renders started under an older epoch are
     // discarded instead of cached
     u32 darkModeEpoch = 0;
 
     /* Interface for page rendering thread */
-    HANDLE startRendering = nullptr; // semaphore, signaled once per queued request
+    Semaphore startRendering; // signaled once per queued request
     AtomicBool shouldExit = 0;
+
+    // no threads (wasm): the queue is drained on the main thread instead, see
+    // RenderCache::SchedulePump()
+    struct RenderCachePump* pump = nullptr;
+    bool pumpPosted = false;
 
     RenderCache();
     RenderCache(RenderCache const&) = delete;
@@ -215,14 +224,21 @@ struct RenderCache {
     void KeepForDisplayModel(DisplayModel* oldDm, DisplayModel* newDm);
     void RekeyForLayoutChange(DisplayModel* dm);
     void Invalidate(DisplayModel* dm, int pageNo, RectF rect);
+#if OS_WIN
     int Paint(HDC hdc, Rect bounds, DisplayModel* dm, int pageNo, PageInfo* pi, bool* renderOutOfDateCue);
+#endif
+    // ng: orig paints the cached tiles with GDI into an HDC; here they go
+    // through the gpui canvas (src/gui/DocCanvas.cpp)
+    int Paint(gpui::PaintCtx* ctx, Rect bounds, DisplayModel* dm, int pageNo, PageInfo* pi, bool* renderOutOfDateCue);
 
     bool ClearCurrentRequest(int threadIdx);
     bool GetNextRequest(PageRenderRequest* req, int threadIdx);
+    // no-op when there are threads; see the pump comment above
+    void SchedulePump();
     void Add(PageRenderRequest& req, Pixmap* bmp);
 
-    USHORT GetTileRes(DisplayModel* dm, int pageNo) const;
-    USHORT GetMaxTileRes(DisplayModel* dm, int pageNo, int rotation);
+    u16 GetTileRes(DisplayModel* dm, int pageNo) const;
+    u16 GetMaxTileRes(DisplayModel* dm, int pageNo, int rotation);
     bool ReduceTileSize();
 
     bool IsRenderQueueFull() const { return requestCount == kMaxPageRequests; }
@@ -243,9 +259,14 @@ struct RenderCache {
     void FreePage(DisplayModel* dm, int pageNo, TilePosition* tile = nullptr);
     void FreeNotVisible();
 
+#if OS_WIN
     int PaintTile(HDC hdc, Rect bounds, DisplayModel* dm, int pageNo, TilePosition tile, Rect tileOnScreen,
                   bool renderMissing, bool* renderOutOfDateCue, bool* renderedReplacement);
+#endif
+    int PaintTile(gpui::PaintCtx* ctx, Rect bounds, DisplayModel* dm, int pageNo, TilePosition tile, Rect tileOnScreen,
+                  bool renderMissing, bool* renderOutOfDateCue, bool* renderedReplacement);
     void LogCacheSize();
+    i64 CacheBytes(int& nEntriesOut);
 
     void RecordFinishedRequest(PageRenderRequest* req);
     void SerializeQueueState(str::Builder& s);

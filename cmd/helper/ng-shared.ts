@@ -255,6 +255,7 @@ export const sharedFiles = [
   "src/shared/Screenshot.h",
   "src/shared/ReadingBar.cpp",
   "src/shared/ReadingBar.h",
+  "src/shared/RenderCache.h",
   "src/shared/ReadingAutoScroll.h",
   "src/shared/SelectionHandlers.cpp",
   "src/shared/SelectionHandlers.h",

@@ -1425,7 +1425,6 @@
     <ClInclude Include="..\src\RefHover.h" />
     <ClInclude Include="..\src\RegistryPreview.h" />
     <ClInclude Include="..\src\RegistrySearchFilter.h" />
-    <ClInclude Include="..\src\RenderCache.h" />
     <ClInclude Include="..\src\ScreenshotCapture.h" />
     <ClInclude Include="..\src\SearchAndDDE.h" />
     <ClInclude Include="..\src\Selection.h" />
@@ -1528,6 +1527,7 @@
     <ClInclude Include="..\src\shared\ProgressUpdateUI.h" />
     <ClInclude Include="..\src\shared\ReadingAutoScroll.h" />
     <ClInclude Include="..\src\shared\ReadingBar.h" />
+    <ClInclude Include="..\src\shared\RenderCache.h" />
     <ClInclude Include="..\src\shared\Screenshot.h" />
     <ClInclude Include="..\src\shared\SelectTextKeyboard.h" />
     <ClInclude Include="..\src\shared\SelectionHandlers.h" />

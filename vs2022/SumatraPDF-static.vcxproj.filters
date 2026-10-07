@@ -162,9 +162,6 @@
     <ClInclude Include="..\src\RegistrySearchFilter.h">
       <Filter>src</Filter>
     </ClInclude>
-    <ClInclude Include="..\src\RenderCache.h">
-      <Filter>src</Filter>
-    </ClInclude>
     <ClInclude Include="..\src\ScreenshotCapture.h">
       <Filter>src</Filter>
     </ClInclude>
@@ -469,6 +466,9 @@
       <Filter>src\shared</Filter>
     </ClInclude>
     <ClInclude Include="..\src\shared\ReadingBar.h">
+      <Filter>src\shared</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\shared\RenderCache.h">
       <Filter>src\shared</Filter>
     </ClInclude>
     <ClInclude Include="..\src\shared\Screenshot.h">
