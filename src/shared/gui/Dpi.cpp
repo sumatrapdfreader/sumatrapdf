@@ -112,14 +112,11 @@ int DpiGetForPoint(int x, int y) {
 // (still hidden) hwnd returns the process / primary DPI, which made the
 // toolbar and tab bar 2.5× too big when launching on a 100% screen next to a
 // 250% primary (discussion #4831).
-static void DpiQueryForHwnd(HWND hwnd, int* outX, int* outY) {
+static void DpiQueryForHwnd(HWND hwnd, int& x, int& y) {
     DpiMaybeReadEnvOverride();
-    int x = 96;
-    int y = 96;
+    x = y = 96;
     if (gDpiOverride > 0 && !DpiIsDesktopHwnd(hwnd)) {
         x = y = MulDiv(96, gDpiOverride, 100);
-        *outX = x;
-        *outY = y;
         return;
     }
     if (!DpiIsDesktopHwnd(hwnd)) {
@@ -129,21 +126,17 @@ static void DpiQueryForHwnd(HWND hwnd, int* outX, int* outY) {
             // primary monitor until its owner positions it. Keep the DPI the
             // caller seeded from the owner; querying the temporary position
             // here makes its layout use the primary monitor's scale.
-            *outX = dpiX > 0 ? dpiX : 96;
-            *outY = dpiY > 0 ? dpiY : *outX;
+            x = dpiX > 0 ? dpiX : 96;
+            y = dpiY > 0 ? dpiY : x;
             return;
         }
         if (DpiFromMonitor(MonitorFromWindow(hwnd, MONITOR_DEFAULTTONEAREST), &x, &y)) {
-            *outX = x;
-            *outY = y;
             return;
         }
         if (DynGetDpiForWindow) {
             uint dpiWin = DynGetDpiForWindow(hwnd);
             if (dpiWin >= 72) {
                 x = y = DpiApplyWineOverride((int)dpiWin);
-                *outX = x;
-                *outY = y;
                 return;
             }
         }
@@ -173,13 +166,13 @@ static void DpiQueryForHwnd(HWND hwnd, int* outX, int* outY) {
     if (y < 72) {
         y = x;
     }
-    *outX = DpiApplyWineOverride(x);
-    *outY = DpiApplyWineOverride(y);
+    x = DpiApplyWineOverride(x);
+    y = DpiApplyWineOverride(y);
 }
 
 int DpiGetForHwnd(HWND hwnd) {
     int x = 96, y = 96;
-    DpiQueryForHwnd(hwnd, &x, &y);
+    DpiQueryForHwnd(hwnd, x, y);
     return x;
 }
 
@@ -209,7 +202,7 @@ void DpiSetFromHwnd(HWND hwnd) {
         }
     }
     int x = 96, y = 96;
-    DpiQueryForHwnd(hwnd, &x, &y);
+    DpiQueryForHwnd(hwnd, x, y);
     DpiSet(x, y);
 }
 
@@ -225,8 +218,8 @@ int DpiScale(int x) {
 }
 
 void DpiScale(int& x, int& y) {
-    x = DpiScaleByDpi(dpiX > 0 ? dpiX : 96, x);
-    y = DpiScaleByDpi(dpiY > 0 ? dpiY : 96, y);
+    x = DpiScaleByDpi(dpiX, x);
+    y = DpiScaleByDpi(dpiY, y);
 }
 
 // GetSystemMetrics() for the dpi of a specific monitor/window. Plain
