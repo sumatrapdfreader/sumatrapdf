@@ -2,8 +2,7 @@
    License: GPLv3 */
 
 // OpenAI Codex provider for the AI chat sidebar (see AIChatPanel.cpp)
-// ng: orig's file; the `codex app-server` model query drives two win32 pipes,
-// so it is compiled on Windows only
+// The app-server model query uses Win32 pipes and is disabled elsewhere.
 
 #include "base/Base.h"
 #include "base/CmdLineArgs.h"

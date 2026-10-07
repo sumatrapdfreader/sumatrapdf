@@ -110,6 +110,7 @@ export const sharedFiles = [
   "src/base/tests/Win_ut.cpp",
   "src/shared/AIAntiGravity.cpp",
   "src/shared/AIClaudeCode.cpp",
+  "src/shared/AICodexBuild.cpp",
   "src/shared/AIGrokBuild.cpp",
   "src/shared/AnnotSearch.cpp",
   "src/shared/AnnotSearch.h",
