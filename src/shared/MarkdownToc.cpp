@@ -503,10 +503,8 @@ static void PreserveSafeEmptyAnchors(cmark_node* parent) {
             cmark_node_type customType =
                 type == CMARK_NODE_HTML_BLOCK ? CMARK_NODE_CUSTOM_BLOCK : CMARK_NODE_CUSTOM_INLINE;
             if (InsertSafeAnchorBefore(node, customType, id)) {
-                cmark_node_unlink(node);
                 cmark_node_free(node);
                 if (close) {
-                    cmark_node_unlink(close);
                     cmark_node_free(close);
                 }
             }
