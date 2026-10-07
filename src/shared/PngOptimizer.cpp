@@ -100,9 +100,7 @@ static void OptimizePngFile(Str path) {
         return;
     }
     // insert the "optimized by us" marker chunk after IHDR
-    bool canMark = IsPngWithIhdr(out, (int)outSize);
-    ReportIf(!canMark); // zopflipng output always starts with signature + IHDR
-    size_t outSizeTotal = outSize + (canMark ? kMarkerChunkSize : 0);
+    size_t outSizeTotal = outSize + kMarkerChunkSize;
     if (outSizeTotal >= (size_t)nOrig) {
         logf("OptimizePngFile: '%s' is already optimal (%d bytes)\n", path, nOrig);
         return;
@@ -112,13 +110,9 @@ static void OptimizePngFile(Str path) {
     if (!withMarker) {
         return;
     }
-    if (canMark) {
-        memcpy(withMarker, out, kMarkerOffset);
-        BuildMarkerChunk(withMarker + kMarkerOffset);
-        memcpy(withMarker + kMarkerOffset + kMarkerChunkSize, out + kMarkerOffset, outSize - kMarkerOffset);
-    } else {
-        memcpy(withMarker, out, outSize);
-    }
+    memcpy(withMarker, out, kMarkerOffset);
+    BuildMarkerChunk(withMarker + kMarkerOffset);
+    memcpy(withMarker + kMarkerOffset + kMarkerChunkSize, out + kMarkerOffset, outSize - kMarkerOffset);
     TempStr tmpPath = fmt("%s.zopfli-tmp", path);
     bool ok = file::WriteFile(tmpPath, Str((char*)withMarker, (int)outSizeTotal));
     if (!ok) {
