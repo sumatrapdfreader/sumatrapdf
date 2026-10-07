@@ -17,6 +17,7 @@ struct KeyboardHelpDataSource {
 
 struct KeyboardHelpArgs {
     MainWindow* win = nullptr;
+    void* parent = nullptr;
     bool parentFullscreen = false;
     KeyboardHelpDataSource* dataSource = nullptr;
 };
