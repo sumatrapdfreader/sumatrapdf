@@ -315,18 +315,9 @@ bool SaveDataToFile(HWND hwndParent, Str fileName, Str data) {
     ofn.nFilterIndex = 1;
     ofn.Flags = OFN_OVERWRITEPROMPT | OFN_PATHMUSTEXIST | OFN_HIDEREADONLY;
 
-    bool ok = GetSaveFileNameW(&ofn);
-    if (!ok) {
+    if (!GetSaveFileNameW(&ofn)) {
         return false;
     }
-    TempStr path = ToUtf8Temp(dstFileName);
-    ok = file::WriteFile(path, data);
-    // https://github.com/sumatrapdfreader/sumatrapdf/issues/1336
-#if 0
-    if (ok && tab && IsUntrustedFile(tab->filePath, gPluginURL)) {
-        file::SetZoneIdentifier(dstFileName);
-    }
-#endif
-    return ok;
+    return file::WriteFile(ToUtf8Temp(dstFileName), data);
 }
 #endif
