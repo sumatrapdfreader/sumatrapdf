@@ -170,9 +170,7 @@ static Str ReadSyncLine(Str& rest) {
     }
     Str line;
     str::CutChar(rest, 0, &line, &rest);
-    while (len(rest) > 0 && rest.s[0] == 0) {
-        rest = Str(rest.s + 1, len(rest) - 1);
-    }
+    str::TrimChar(rest, 0);
     return line;
 }
 
