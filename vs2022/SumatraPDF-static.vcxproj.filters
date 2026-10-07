@@ -522,9 +522,6 @@
     <ClInclude Include="..\src\shared\ProgressUpdateUI.h">
       <Filter>src\shared</Filter>
     </ClInclude>
-    <ClInclude Include="..\src\shared\ReaderModel.h">
-      <Filter>src\shared</Filter>
-    </ClInclude>
     <ClInclude Include="..\src\shared\SelectionHandlers.h">
       <Filter>src\shared</Filter>
     </ClInclude>
@@ -1230,9 +1227,6 @@
       <Filter>src\shared</Filter>
     </ClCompile>
     <ClCompile Include="..\src\shared\PngOptimizer.cpp">
-      <Filter>src\shared</Filter>
-    </ClCompile>
-    <ClCompile Include="..\src\shared\ReaderModel.cpp">
       <Filter>src\shared</Filter>
     </ClCompile>
     <ClCompile Include="..\src\shared\RefHoverDetect.cpp">

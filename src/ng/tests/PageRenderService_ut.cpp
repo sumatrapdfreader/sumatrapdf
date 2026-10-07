@@ -8,6 +8,7 @@
 
 #include "base/Base.h"
 #include "base/File.h"
+#include "base/GuessFileType.h"
 #include "base/Pixmap.h"
 #include "base/UITask.h"
 
@@ -16,9 +17,9 @@
 #include "DocumentLayout.h"
 #include "gui/UIModels.h"
 #include "EngineBase.h"
+#include "EngineAll.h"
 #include "PageRenderPolicy.h"
 #include "PageRenderService.h"
-#include "ReaderModel.h"
 
 // must be last due to assert() over-write
 #include "base/tests/UtAssert.h"
@@ -39,9 +40,9 @@ void PageRenderService_UnitTests() {
     TempStr path = TestDocPathTemp(StrL("docs/test/zlib.3.pdf"));
     utassert(file::Exists(path));
 
-    ReaderModel* model = ReaderModel::Create(path);
-    utassert(model != nullptr);
-    utassert(model->PageCount() == 2);
+    EngineBase* engine = CreateEngineMupdfFromFile(path, FileType::PDF, 96);
+    utassert(engine != nullptr);
+    utassert(engine->PageCount() == 2);
 
     // the layout is what a canvas would ask for; no window is involved
     DocumentLayoutParams params;
@@ -49,14 +50,19 @@ void PageRenderService_UnitTests() {
     params.viewPortSize = {800, 600};
     params.zoomVirtual = 100;
     DocumentLayout layout;
-    utassert(model->Layout(params, &layout));
+    layout.Reset(engine->PageCount());
+    for (int page = 1; page <= engine->PageCount(); page++) {
+        layout.SetPageMediaBox(page, engine->PageMediabox(page));
+    }
+    layout.Relayout(params);
     utassert(len(layout.pages) == 2);
     utassert(layout.GetPage(1)->pos.dx > 0);
 
     Rect normalPage = layout.GetPage(1)->pos;
     params.freePan = true;
     DocumentLayout freePanLayout;
-    utassert(model->Layout(params, &freePanLayout));
+    freePanLayout.pages = layout.pages;
+    freePanLayout.Relayout(params);
     Size slack = FreePanSlack(params.viewPortSize);
     utassert(freePanLayout.GetPage(1)->pos.x == normalPage.x + slack.dx);
     utassert(freePanLayout.GetPage(1)->pos.y == normalPage.y + slack.dy);
@@ -67,7 +73,7 @@ void PageRenderService_UnitTests() {
     ThreadId mainThread = GetCurrentThreadId();
 
     RenderReadyFlag flag;
-    auto* service = PageRenderService::Create(model->GetEngine(), MkFunc0(OnPageReady, &flag));
+    auto* service = PageRenderService::Create(engine, MkFunc0(OnPageReady, &flag));
     utassert(service != nullptr);
 
     PageRenderKey key;
@@ -94,5 +100,5 @@ void PageRenderService_UnitTests() {
 
     delete service;
     uitask::Destroy();
-    delete model;
+    engine->Release();
 }

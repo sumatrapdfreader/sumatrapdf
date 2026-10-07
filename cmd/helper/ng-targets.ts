@@ -494,7 +494,6 @@ const appSources = [
   "src/ng/PagePosition.cpp",
   "src/PageRenderPolicy.cpp",
   "src/ng/PageRenderService.cpp",
-  "src/ReaderModel.cpp",
   "src/ng/RefHoverDetect.cpp",
   "src/RefHoverInternal.cpp",
   "src/RefHoverText.cpp",

@@ -323,7 +323,6 @@ function sumatrapdf_files()
     "DocumentLayout.*",
     "PageRenderPolicy.*",
     "PageRenderService.*",
-    "ReaderModel.*",
     "DocController.*",
     "DocProperties.*",
     "EditAnnotations.*",
