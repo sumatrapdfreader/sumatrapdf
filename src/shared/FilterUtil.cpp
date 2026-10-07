@@ -30,11 +30,7 @@ int FilterIndexOf(Str s, Str word, int* matchLenOut) {
         int si = start;
         int wi = 0;
         bool matched = true;
-        while (wi < word.len) {
-            int wc = NextFoldedRune(word, wi);
-            if (wc == 0) {
-                break;
-            }
+        while (int wc = NextFoldedRune(word, wi)) {
             if (NextFoldedRune(s, si) != wc) {
                 matched = false;
                 break;
