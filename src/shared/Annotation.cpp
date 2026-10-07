@@ -84,71 +84,51 @@ static Str TranslateAnnotTypeNameTemp(Str english, Str menuKey = {}) {
     return tr;
 }
 
-// Human-readable annotation type names for UI (list box, hover tip, menus).
-// TrN marks strings for extraction; TranslateAnnotTypeNameTemp localizes.
-// Order matches AnnotationType / pdf_annot_type.
+struct AnnotTypeLabel {
+    Str name;
+    Str menuKey;
+};
+
+static const AnnotTypeLabel gAnnotTypeLabels[] = {
+    {TrN("Text"), StrL("&Text")},
+    {TrN("Link")},
+    {TrN("Free Text"), StrL("&Free Text")},
+    {TrN("Line")},
+    {TrN("Square")},
+    {TrN("Circle")},
+    {TrN("Polygon")},
+    {TrN("Polyline")},
+    {TrN("Highlight"), StrL("&Highlight")},
+    {TrN("Underline"), StrL("&Underline")},
+    {TrN("Squiggly"), StrL("S&quiggly")},
+    {TrN("Strike Out"), StrL("&Strike Out")},
+    {TrN("Redact")},
+    {TrN("Stamp"), StrL("&Stamp")},
+    {TrN("Caret"), StrL("&Caret")},
+    {TrN("Ink")},
+    {TrN("Popup")},
+    {TrN("File Attachment")},
+    {TrN("Sound")},
+    {TrN("Movie")},
+    {TrN("RichMedia")},
+    {TrN("Widget")},
+    {TrN("Screen")},
+    {TrN("Printer Mark")},
+    {TrN("Trap Net")},
+    {TrN("Watermark")},
+    {TrN("3D")},
+    {TrN("Projection")},
+};
+static_assert(dimof(gAnnotTypeLabels) == (int)AnnotationType::Last + 1);
+
 Str AnnotationReadableNameTemp(AnnotationType tp) {
-    switch (tp) {
-        case AnnotationType::Text:
-            return TranslateAnnotTypeNameTemp(TrN("Text"), StrL("&Text"));
-        case AnnotationType::Link:
-            return TranslateAnnotTypeNameTemp(TrN("Link"));
-        case AnnotationType::FreeText:
-            return TranslateAnnotTypeNameTemp(TrN("Free Text"), StrL("&Free Text"));
-        case AnnotationType::Line:
-            return TranslateAnnotTypeNameTemp(TrN("Line"));
-        case AnnotationType::Square:
-            return TranslateAnnotTypeNameTemp(TrN("Square"));
-        case AnnotationType::Circle:
-            return TranslateAnnotTypeNameTemp(TrN("Circle"));
-        case AnnotationType::Polygon:
-            return TranslateAnnotTypeNameTemp(TrN("Polygon"));
-        case AnnotationType::PolyLine:
-            return TranslateAnnotTypeNameTemp(TrN("Polyline"));
-        case AnnotationType::Highlight:
-            return TranslateAnnotTypeNameTemp(TrN("Highlight"), StrL("&Highlight"));
-        case AnnotationType::Underline:
-            return TranslateAnnotTypeNameTemp(TrN("Underline"), StrL("&Underline"));
-        case AnnotationType::Squiggly:
-            return TranslateAnnotTypeNameTemp(TrN("Squiggly"), StrL("S&quiggly"));
-        case AnnotationType::StrikeOut:
-            return TranslateAnnotTypeNameTemp(TrN("Strike Out"), StrL("&Strike Out"));
-        case AnnotationType::Redact:
-            return TranslateAnnotTypeNameTemp(TrN("Redact"));
-        case AnnotationType::Stamp:
-            return TranslateAnnotTypeNameTemp(TrN("Stamp"), StrL("&Stamp"));
-        case AnnotationType::Caret:
-            return TranslateAnnotTypeNameTemp(TrN("Caret"), StrL("&Caret"));
-        case AnnotationType::Ink:
-            return TranslateAnnotTypeNameTemp(TrN("Ink"));
-        case AnnotationType::Popup:
-            return TranslateAnnotTypeNameTemp(TrN("Popup"));
-        case AnnotationType::FileAttachment:
-            return TranslateAnnotTypeNameTemp(TrN("File Attachment"));
-        case AnnotationType::Sound:
-            return TranslateAnnotTypeNameTemp(TrN("Sound"));
-        case AnnotationType::Movie:
-            return TranslateAnnotTypeNameTemp(TrN("Movie"));
-        case AnnotationType::RichMedia:
-            return TranslateAnnotTypeNameTemp(TrN("RichMedia"));
-        case AnnotationType::Widget:
-            return TranslateAnnotTypeNameTemp(TrN("Widget"));
-        case AnnotationType::Screen:
-            return TranslateAnnotTypeNameTemp(TrN("Screen"));
-        case AnnotationType::PrinterMark:
-            return TranslateAnnotTypeNameTemp(TrN("Printer Mark"));
-        case AnnotationType::TrapNet:
-            return TranslateAnnotTypeNameTemp(TrN("Trap Net"));
-        case AnnotationType::Watermark:
-            return TranslateAnnotTypeNameTemp(TrN("Watermark"));
-        case AnnotationType::ThreeD:
-            return TranslateAnnotTypeNameTemp(TrN("3D"));
-        case AnnotationType::Projection:
-            return TranslateAnnotTypeNameTemp(TrN("Projection"));
-        case AnnotationType::Unknown:
-        default:
-            return TranslateAnnotTypeNameTemp(TrN("Unknown"));
+    int idx = (int)tp;
+    if (idx < 0 || idx >= dimof(gAnnotTypeLabels)) {
+        return TranslateAnnotTypeNameTemp(TrN("Unknown"));
     }
+
+    const AnnotTypeLabel& label = gAnnotTypeLabels[idx];
+    return TranslateAnnotTypeNameTemp(label.name, label.menuKey);
 }
 
 // annot is still owned by EngineMupdf (markup or form widget list).
