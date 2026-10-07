@@ -217,19 +217,14 @@ int Pdfsync::RebuildIndexIfNeeded() {
     // add the initial tex file to the source file stack
     VecAppend(filestack, len(srcfiles));
     srcfiles.Append(jobName);
-    PdfsyncFileIndex findex{};
-    VecAppend(fileIndex, findex);
-
-    PdfsyncLine psline;
-    PdfsyncPoint pspoint;
+    VecAppend(fileIndex, {});
 
     // parse data
     int maxPageNo = engine->PageCount();
     while (Str line = ReadSyncLine(rest)) {
         switch (line.s[0]) {
             case 'l': {
-                psline.file = VecLast(filestack);
-                psline.column = 0;
+                PdfsyncLine psline{.file = VecLast(filestack)};
                 Str column = str::Parse(line, "l %u %u", &psline.record, &psline.line);
                 if (!str::IsNull(column)) {
                     str::Parse(column, " %u", &psline.column);
@@ -243,15 +238,15 @@ int Pdfsync::RebuildIndexIfNeeded() {
                 }
                 break;
 
-            case 'p':
+            case 'p': {
                 if (0 == page || page > maxPageNo) {
                     break;
                 }
-                pspoint.page = page;
+                PdfsyncPoint pspoint{.page = (UINT)page};
                 if (!str::IsNull(str::Parse(line, "p%?* %u %u %u", &pspoint.record, &pspoint.x, &pspoint.y))) {
                     VecAppend(points, pspoint);
                 }
-                break;
+            } break;
 
             case '(': {
                 TempStr filename = strconv::AnsiToUtf8Temp(Str(line.s + 1, line.len - 1));
@@ -271,8 +266,7 @@ int Pdfsync::RebuildIndexIfNeeded() {
 
                 VecAppend(filestack, len(srcfiles));
                 srcfiles.Append(filename);
-                findex.start = findex.end = len(lines);
-                VecAppend(fileIndex, findex);
+                VecAppend(fileIndex, {len(lines), len(lines)});
             } break;
 
             case ')':
