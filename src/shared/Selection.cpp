@@ -438,54 +438,34 @@ SelectionDragEdge HitTestRectangularSelection(MainWindow* win, int mx, int my) {
 }
 
 #if defined(SUMATRA_NG)
-// ng: orig answers a win32 IDC_* cursor; the portable canvas stores gpui's
-// equivalent enum value as an int.
-int CursorIdForSelectionEdge(SelectionDragEdge edge) {
+using SelectionCursorId = int;
+static const SelectionCursorId kSelectionCursors[] = {
+    (int)gp::CursorKind::Arrow,
+    (int)gp::CursorKind::ColResize,
+    (int)gp::CursorKind::ColResize,
+    (int)gp::CursorKind::RowResize,
+    (int)gp::CursorKind::RowResize,
+    (int)gp::CursorKind::ResizeUpLeftDownRight,
+    (int)gp::CursorKind::ResizeUpRightDownLeft,
+    (int)gp::CursorKind::ResizeUpRightDownLeft,
+    (int)gp::CursorKind::ResizeUpLeftDownRight,
+    (int)gp::CursorKind::ClosedHand,
+};
 #else
-LPWSTR CursorIdForSelectionEdge(SelectionDragEdge edge) {
+using SelectionCursorId = LPWSTR;
+static const SelectionCursorId kSelectionCursors[] = {
+    IDC_ARROW,    IDC_SIZEWE,   IDC_SIZEWE,   IDC_SIZENS,   IDC_SIZENS,
+    IDC_SIZENWSE, IDC_SIZENESW, IDC_SIZENESW, IDC_SIZENWSE, IDC_SIZEALL,
+};
 #endif
-    switch (edge) {
-        case SelectionDragEdge::Left:
-        case SelectionDragEdge::Right:
-#if defined(SUMATRA_NG)
-            return (int)gp::CursorKind::ColResize;
-#else
-            return IDC_SIZEWE;
-#endif
-        case SelectionDragEdge::Top:
-        case SelectionDragEdge::Bottom:
-#if defined(SUMATRA_NG)
-            return (int)gp::CursorKind::RowResize;
-#else
-            return IDC_SIZENS;
-#endif
-        case SelectionDragEdge::TopLeft:
-        case SelectionDragEdge::BottomRight:
-#if defined(SUMATRA_NG)
-            return (int)gp::CursorKind::ResizeUpLeftDownRight;
-#else
-            return IDC_SIZENWSE;
-#endif
-        case SelectionDragEdge::TopRight:
-        case SelectionDragEdge::BottomLeft:
-#if defined(SUMATRA_NG)
-            return (int)gp::CursorKind::ResizeUpRightDownLeft;
-#else
-            return IDC_SIZENESW;
-#endif
-        case SelectionDragEdge::Move:
-#if defined(SUMATRA_NG)
-            return (int)gp::CursorKind::ClosedHand;
-#else
-            return IDC_SIZEALL;
-#endif
-        default:
-#if defined(SUMATRA_NG)
-            return (int)gp::CursorKind::Arrow;
-#else
-            return IDC_ARROW;
-#endif
+static_assert(dimof(kSelectionCursors) == (int)SelectionDragEdge::Move + 1);
+
+SelectionCursorId CursorIdForSelectionEdge(SelectionDragEdge edge) {
+    int idx = (int)edge;
+    if (idx < 0 || idx >= dimof(kSelectionCursors)) {
+        idx = (int)SelectionDragEdge::None;
     }
+    return kSelectionCursors[idx];
 }
 
 bool StartRectangularSelectionEdit(MainWindow* win, int x, int y, SelectionDragEdge edge) {
