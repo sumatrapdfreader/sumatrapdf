@@ -9,6 +9,9 @@ struct El;
 struct MainWindow;
 struct WindowTab;
 struct Annotation;
+struct Gfx;
+struct PlatformFont;
+struct StrVec;
 
 // the compact property row under the selected annotation ("Edit PDF" mode)
 void UpdateAnnotEditToolbar(MainWindow*);
@@ -56,3 +59,15 @@ SeqStrings AnnotEditorLineEndingStyles();
 // "Highlight" / "Highlight  the quick brown fox" - what the annotation list and
 // the command palette show for one annotation
 TempStr AnnotationListRowTextTemp(Annotation*);
+
+#if OS_WIN
+void RepositionAnnotEditToolbar(MainWindow*);
+void RepositionFreeTextInPlaceEdit(MainWindow*);
+HBRUSH FreeTextInPlaceEditCtlColor(HWND edit, HDC hdc);
+TempStr FreeTextInPlaceEditStateTemp(MainWindow*);
+void DrawAnnotationListRow(Gfx*, PlatformFont*, Rect, Annotation*, const StrVec& filterWords, Vec<u8>& hlScratch,
+                           Color colBg, Color colText, bool selected);
+void UpdateAnnotationHoverOverlay(MainWindow*);
+void RepositionAnnotationHoverOverlay(MainWindow*);
+TempStr AnnotEditorLayoutResultTemp(int clientDy, int selectItem, int* exitCodeOut = nullptr, int selectLast = 0);
+#endif

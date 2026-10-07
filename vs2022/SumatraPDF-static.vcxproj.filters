@@ -117,9 +117,6 @@
     <ClInclude Include="..\ext\darkmodelib\src\Version.h">
       <Filter>ext\darkmodelib\src</Filter>
     </ClInclude>
-    <ClInclude Include="..\src\AnnotEditToolbar.h">
-      <Filter>src</Filter>
-    </ClInclude>
     <ClInclude Include="..\src\Canvas.h">
       <Filter>src</Filter>
     </ClInclude>
@@ -259,6 +256,9 @@
       <Filter>src\shared</Filter>
     </ClInclude>
     <ClInclude Include="..\src\shared\Accelerators.h">
+      <Filter>src\shared</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\shared\AnnotEditToolbar.h">
       <Filter>src\shared</Filter>
     </ClInclude>
     <ClInclude Include="..\src\shared\AnnotFilterToolbar.h">
