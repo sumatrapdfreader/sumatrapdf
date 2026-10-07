@@ -219,10 +219,6 @@ Str ExtractJsCallName(Str js) {
     const char* p = js.s;
     const char* end = js.s + len(js);
     while (p < end) {
-        SkipJsWs(p, end);
-        if (p >= end) {
-            break;
-        }
         if (!IsJsIdentStart(*p)) {
             p++;
             continue;
