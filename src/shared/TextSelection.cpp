@@ -535,13 +535,11 @@ TempStr TextSelection::ExtractTextTemp(Str lineSep) {
 }
 
 void TextSelection::GetGlyphRange(int* fromPage, int* fromGlyph, int* toPage, int* toGlyph) const {
-    *fromPage = std::min(startPage, endPage);
-    *toPage = std::max(startPage, endPage);
-    *fromGlyph = (*fromPage == endPage ? endGlyph : startGlyph);
-    *toGlyph = (*fromPage == endPage ? startGlyph : endGlyph);
-    if (*fromPage == *toPage && *fromGlyph > *toGlyph) {
-        std::swap(*fromGlyph, *toGlyph);
-    }
+    bool reverse = PosBefore(endPage, endGlyph, startPage, startGlyph);
+    *fromPage = reverse ? endPage : startPage;
+    *fromGlyph = reverse ? endGlyph : startGlyph;
+    *toPage = reverse ? startPage : endPage;
+    *toGlyph = reverse ? startGlyph : endGlyph;
 }
 
 // Cross a page boundary, landing at its first or last glyph.
