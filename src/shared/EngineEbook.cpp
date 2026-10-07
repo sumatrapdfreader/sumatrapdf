@@ -122,6 +122,8 @@ class EbookAbortCookie : public AbortCookie {
     void* GetData() override { return nullptr; }
 };
 
+struct EbookTocBuilder;
+
 class EngineEbook : public EngineBase {
   public:
     EngineEbook();
@@ -176,6 +178,8 @@ class EngineEbook : public EngineBase {
     // ExtractPageText, ...)
     RecursiveMutex pagesAccess;
     Str sourceData;
+    TocTree* tocTree = nullptr;
+    bool tocBuilt = false;
     // page dimensions can vary between filetypes
     RectF pageRect;
     float pageBorder;
@@ -184,6 +188,7 @@ class EngineEbook : public EngineBase {
     void GetTransform(Matrix& m, float zoom, int rotation);
 #endif
     bool ExtractPageAnchors();
+    TocTree* FinishToc(EbookTocBuilder& builder);
     TempStr ExtractFontListTemp();
     void ExtractFontListFromPage(Location loc, Vec<PlatformFont*>& seenFonts, StrVec& fonts);
 
@@ -256,6 +261,7 @@ EngineEbook::~EngineEbook() {
     delete pages;
 
     pagesAccess.Unlock();
+    DestroyTocTree(tocTree);
     str::Free(sourceData);
     ArenaDelete(a);
 }
@@ -937,6 +943,17 @@ void EbookTocBuilder::Visit(Str name, Str url, int level) {
     AppendTocItem(root, item, level);
 }
 
+TocTree* EngineEbook::FinishToc(EbookTocBuilder& builder) {
+    TocItem* root = builder.GetRoot();
+    if (!root) {
+        return nullptr;
+    }
+    TocItem* realRoot = AllocTocItem(arena, {}, 0);
+    realRoot->child = root;
+    tocTree = AllocTocTree(arena, realRoot);
+    return tocTree;
+}
+
 /* EngineBase for handling EPUB documents */
 
 class EngineEpub : public EngineEbook {
@@ -960,8 +977,6 @@ class EngineEpub : public EngineEbook {
 
   protected:
     EpubDoc* doc = nullptr;
-    TocTree* tocTree = nullptr;
-    bool tocBuilt = false;
 
     bool Load(Str fileName);
     bool LoadFromData(Str data);
@@ -975,7 +990,6 @@ EngineEpub::EngineEpub() {
 
 EngineEpub::~EngineEpub() {
     delete doc;
-    DestroyTocTree(tocTree);
 }
 
 EngineBase* EngineEpub::Clone() {
@@ -1067,14 +1081,7 @@ TocTree* EngineEpub::GetToc() {
     tocBuilt = true;
     EbookTocBuilder builder(this);
     doc->ParseToc(&builder);
-    TocItem* root = builder.GetRoot();
-    if (!root) {
-        return nullptr;
-    }
-    auto realRoot = AllocTocItem(arena, {}, 0);
-    realRoot->child = root;
-    tocTree = AllocTocTree(arena, realRoot);
-    return tocTree;
+    return FinishToc(builder);
 }
 
 EngineBase* EngineEpub::CreateFromFile(Str path) {
@@ -1112,10 +1119,7 @@ class EngineFb2 : public EngineEbook {
         kind = kindEngineFb2;
         str::ReplaceWithCopy(&defaultExt, StrL(".fb2"));
     }
-    ~EngineFb2() override {
-        DestroyTocTree(tocTree);
-        delete doc;
-    }
+    ~EngineFb2() override { delete doc; }
     EngineBase* Clone() override {
         Str fileName = FilePath();
         if (fileName) {
@@ -1142,8 +1146,6 @@ class EngineFb2 : public EngineEbook {
 
   protected:
     Fb2Doc* doc = nullptr;
-    TocTree* tocTree = nullptr;
-    bool tocBuilt = false;
 
     bool Load(Str fileName);
     bool LoadFromData(Str data);
@@ -1203,14 +1205,7 @@ TocTree* EngineFb2::GetToc() {
     tocBuilt = true;
     EbookTocBuilder builder(this);
     doc->ParseToc(&builder);
-    TocItem* root = builder.GetRoot();
-    if (!root) {
-        return nullptr;
-    }
-    auto realRoot = AllocTocItem(arena, {}, 0);
-    realRoot->child = root;
-    tocTree = AllocTocTree(arena, realRoot);
-    return tocTree;
+    return FinishToc(builder);
 }
 
 EngineBase* EngineFb2::CreateFromFile(Str path) {
@@ -1283,8 +1278,6 @@ class EngineMobi : public EngineEbook {
 
   protected:
     MobiDoc* doc = nullptr;
-    TocTree* tocTree = nullptr;
-    bool tocBuilt = false;
 
     // byte offsets into doc's html where each chapter starts (chapter 1 is
     // always 0); fewer than 2 entries means the book stays single-chapter
@@ -1322,7 +1315,6 @@ static void FindMobiChapterStarts(Str html, Vec<int>& starts) {
 }
 
 EngineMobi::~EngineMobi() {
-    DestroyTocTree(tocTree);
     delete doc;
     ScopedRecursiveMutex scope(&pagesAccess);
     for (Vec<HtmlPage*>* v : chapterPages) {
@@ -1607,14 +1599,7 @@ TocTree* EngineMobi::GetToc() {
     tocBuilt = true;
     EbookTocBuilder builder(this);
     doc->ParseToc(&builder);
-    TocItem* root = builder.GetRoot();
-    if (!root) {
-        return nullptr;
-    }
-    auto realRoot = AllocTocItem(arena, {}, 0);
-    realRoot->child = root;
-    tocTree = AllocTocTree(arena, realRoot);
-    return tocTree;
+    return FinishToc(builder);
 }
 
 EngineBase* EngineMobi::CreateFromFile(Str path) {
@@ -1651,10 +1636,7 @@ class EnginePdb : public EngineEbook {
         kind = kindEnginePdb;
         str::ReplaceWithCopy(&defaultExt, StrL(".pdb"));
     }
-    ~EnginePdb() override {
-        DestroyTocTree(tocTree);
-        delete doc;
-    }
+    ~EnginePdb() override { delete doc; }
     EngineBase* Clone() override {
         Str fileName = FilePath();
         if (len(fileName) == 0) {
@@ -1677,8 +1659,6 @@ class EnginePdb : public EngineEbook {
 
   protected:
     PalmDoc* doc = nullptr;
-    TocTree* tocTree = nullptr;
-    bool tocBuilt = false;
 
     bool Load(Str fileName);
 };
@@ -1724,14 +1704,7 @@ TocTree* EnginePdb::GetToc() {
     tocBuilt = true;
     EbookTocBuilder builder(this);
     doc->ParseToc(&builder);
-    auto* root = builder.GetRoot();
-    if (!root) {
-        return nullptr;
-    }
-    auto realRoot = AllocTocItem(arena, {}, 0);
-    realRoot->child = root;
-    tocTree = AllocTocTree(arena, realRoot);
-    return tocTree;
+    return FinishToc(builder);
 }
 
 EngineBase* EnginePdb::CreateFromFile(Str path) {
@@ -1870,7 +1843,6 @@ class EngineChm : public EngineEbook {
     ~EngineChm() override {
         delete dataCache;
         delete doc;
-        DestroyTocTree(tocTree);
     }
     EngineBase* Clone() override {
         Str fileName = FilePath();
@@ -1896,8 +1868,6 @@ class EngineChm : public EngineEbook {
   protected:
     ChmFile* doc = nullptr;
     ChmDataCache* dataCache = nullptr;
-    TocTree* tocTree = nullptr;
-    bool tocBuilt = false;
 
     bool Load(Str fileName);
 
@@ -2112,14 +2082,7 @@ TocTree* EngineChm::GetToc() {
         builder.SetIsIndex(true);
         doc->ParseIndex(&builder);
     }
-    TocItem* root = builder.GetRoot();
-    if (!root) {
-        return nullptr;
-    }
-    auto realRoot = AllocTocItem(arena, {}, 0);
-    realRoot->child = root;
-    tocTree = AllocTocTree(arena, realRoot);
-    return tocTree;
+    return FinishToc(builder);
 }
 
 static IPageDestination* newChmEmbeddedDest(Str path) {
