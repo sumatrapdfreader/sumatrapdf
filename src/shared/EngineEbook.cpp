@@ -395,7 +395,6 @@ Pixmap* EngineEbook::RenderPage(RenderPageArgs& args) {
     Point screenTL = screen.TL();
     screen.Offset(-screen.x, -screen.y);
 
-#if OS_LINUX
     EbookAbortCookie* cookie = nullptr;
     if (args.cookie_out) {
         cookie = new EbookAbortCookie();
@@ -404,6 +403,8 @@ Pixmap* EngineEbook::RenderPage(RenderPageArgs& args) {
     if (cookie && cookie->abort) {
         return nullptr;
     }
+
+#if OS_LINUX
     Pixmap* pixmap = AllocPixmap(screen.dx, screen.dy, PixmapFormat::BGRA8, true);
     if (!pixmap) {
         return nullptr;
@@ -449,14 +450,6 @@ Pixmap* EngineEbook::RenderPage(RenderPageArgs& args) {
     }
     return pixmap;
 #elif OS_DARWIN
-    EbookAbortCookie* cookie = nullptr;
-    if (args.cookie_out) {
-        cookie = new EbookAbortCookie();
-        *args.cookie_out = cookie;
-    }
-    if (cookie && cookie->abort) {
-        return nullptr;
-    }
     Pixmap* pixmap = AllocPixmap(screen.dx, screen.dy, PixmapFormat::BGRA8, true);
     if (!pixmap) {
         return nullptr;
@@ -504,14 +497,6 @@ Pixmap* EngineEbook::RenderPage(RenderPageArgs& args) {
     }
     return pixmap;
 #elif !OS_WIN
-    EbookAbortCookie* cookie = nullptr;
-    if (args.cookie_out) {
-        cookie = new EbookAbortCookie();
-        *args.cookie_out = cookie;
-    }
-    if (cookie && cookie->abort) {
-        return nullptr;
-    }
     Pixmap* pixmap = AllocPixmap(screen.dx, screen.dy);
     if (!pixmap) {
         return nullptr;
@@ -546,12 +531,6 @@ Pixmap* EngineEbook::RenderPage(RenderPageArgs& args) {
     GetTransform(m, zoom, rotation);
     m.Translate((float)-screenTL.x, (float)-screenTL.y, MatrixOrderAppend);
     g.SetTransform(&m);
-
-    EbookAbortCookie* cookie = nullptr;
-    if (args.cookie_out) {
-        cookie = new EbookAbortCookie();
-        *args.cookie_out = cookie;
-    }
 
     ScopedRecursiveMutex scope(&pagesAccess);
 
