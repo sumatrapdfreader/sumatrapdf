@@ -265,24 +265,15 @@ bool PdfDarkModeImageLooksLikeDarkArtwork(fz_context* ctx, fz_image* image, floa
 
 static bool ImageIsArtwork(fz_context* ctx, fz_image* image, float pageCoverage) {
     ImageStats stats = SampleImageStats(ctx, image);
-    if (LooksLikeLayoutBackground(stats)) {
-        return false;
-    }
     // artwork on a flat light backdrop: recolor so the backdrop follows the page
     // instead of staying a bright block on it (#6088)
-    if (LooksLikeLightBackdrop(stats)) {
+    if (LooksLikeLayoutBackground(stats) || LooksLikeLightBackdrop(stats)) {
         return false;
     }
     if (LooksLikeDarkArtwork(stats, pageCoverage)) {
         return true;
     }
-    if (LooksLikePhoto(stats)) {
-        if (pageCoverage < 0.14f && LooksLikePaperTextBox(stats)) {
-            return false;
-        }
-        return true;
-    }
-    return false;
+    return LooksLikePhoto(stats) && !(pageCoverage < 0.14f && LooksLikePaperTextBox(stats));
 }
 
 // A page-sized image is normally a scan or a full-bleed background, and those
