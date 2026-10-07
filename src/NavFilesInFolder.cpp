@@ -81,13 +81,6 @@ constexpr int kNavFallbackMainDxMargin = 256; // main client dx minus this → p
 constexpr int kNavFallbackMainDyMargin = 72;
 constexpr int kNavFallbackYOffset = 42; // top offset when centered over main
 
-struct NavFileEntry {
-    Str name; // owned; leaf display name (dirs end with "\\"); ".." for parent
-    Str path; // owned; full path (empty for "..")
-    bool isDir = false;
-    i64 size = 0; // file size; 0 for dirs / unknown
-};
-
 static void FreeNavEntry(NavFileEntry& e) {
     str::Free(e.name);
     str::Free(e.path);
@@ -241,14 +234,14 @@ static void SortNavEntries(Vec<NavFileEntry>& entries, int firstIdx) {
     qsort(entries.els + firstIdx, (size_t)n, sizeof(NavFileEntry), cmp);
 }
 
-static void FreeNavEntries(Vec<NavFileEntry>& entries) {
+void FreeNavEntries(Vec<NavFileEntry>& entries) {
     for (NavFileEntry& e : entries) {
         FreeNavEntry(e);
     }
     VecReset(entries);
 }
 
-static void StealNavEntries(Vec<NavFileEntry>& dst, Vec<NavFileEntry>& src) {
+void StealNavEntries(Vec<NavFileEntry>& dst, Vec<NavFileEntry>& src) {
     FreeNavEntries(dst);
     dst.els = src.els;
     dst.len = src.len;
@@ -258,7 +251,7 @@ static void StealNavEntries(Vec<NavFileEntry>& dst, Vec<NavFileEntry>& src) {
     src.cap = 0;
 }
 
-static Str NavEntryBaseName(const NavFileEntry& e);
+Str NavEntryBaseName(const NavFileEntry& e);
 
 // rebuild the shown entries: all of them without a filter, else those whose
 // name has every filter word (the command palette's matching), without ".."
@@ -281,7 +274,7 @@ static void ClearNavModel(ListBoxModelNav* m) {
     VecReset(m->entries);
 }
 
-static bool SameNavEntries(const Vec<NavFileEntry>& a, const Vec<NavFileEntry>& b) {
+bool SameNavEntries(const Vec<NavFileEntry>& a, const Vec<NavFileEntry>& b) {
     if (len(a) != len(b)) {
         return false;
     }
@@ -295,7 +288,7 @@ static bool SameNavEntries(const Vec<NavFileEntry>& a, const Vec<NavFileEntry>& 
     return true;
 }
 
-static bool DirHasParent(Str dir) {
+bool NavDirHasParent(Str dir) {
     if (len(dir) == 0) {
         return false; // home view
     }
@@ -303,7 +296,7 @@ static bool DirHasParent(Str dir) {
     return !path::IsSame(parent, dir);
 }
 
-static void AppendParentEntry(Vec<NavFileEntry>& entries) {
+void AppendNavParentEntry(Vec<NavFileEntry>& entries) {
     NavFileEntry e;
     e.name = str::Dup(StrL(".."));
     e.isDir = true;
@@ -327,7 +320,7 @@ static bool gQuickAccessCached = false;
 static StrVec gQuickAccessDirs;
 static StrVec gQuickAccessFiles;
 
-static void ResetQuickAccessCache() {
+void ResetQuickAccessCache() {
     gQuickAccessMutex.Lock();
     gQuickAccessCached = false;
     gQuickAccessMutex.Unlock();
@@ -396,13 +389,13 @@ static void CollectHomeEntries(Vec<NavFileEntry>& out) {
 
 // Built on a worker thread: listing + filtering + sorting a folder of tens of
 // thousands of files must not freeze the UI (discussion #6014).
-static void CollectNavEntriesForDir(Str dir, Vec<NavFileEntry>& out) {
+void CollectNavEntriesForDir(Str dir, Vec<NavFileEntry>& out) {
     if (len(dir) == 0) {
         CollectHomeEntries(out);
         return;
     }
     // ".." also in a drive root, where it leads to the home view
-    AppendParentEntry(out);
+    AppendNavParentEntry(out);
     int firstIdx = 1; // keep ".." at the top when sorting
 
     DirIter di{dir};
@@ -555,7 +548,7 @@ static TempStr NavEntryPathTemp(NavFilesInFolderWnd* wnd, NavFileEntry& e) {
 }
 
 // entry display name without a trailing path separator (dirs use "name\\")
-static Str NavEntryBaseName(const NavFileEntry& e) {
+Str NavEntryBaseName(const NavFileEntry& e) {
     Str name = e.name;
     if (e.isDir && name.len > 0 && path::IsSep(name.s[name.len - 1])) {
         return Str(name.s, name.len - 1);
@@ -759,7 +752,7 @@ void NavFilesInFolderWnd::SetDir(Str dir, Str selectPath, int selectIdx, NavList
         // show ".." immediately so the window is usable while the listing runs
         ClearNavModel(m);
         if (!IsHome()) {
-            AppendParentEntry(m->all);
+            AppendNavParentEntry(m->all);
         }
         FilterNavEntries(m, filterWords);
         listBox->SetModel(m);
@@ -823,7 +816,7 @@ void NavFilesInFolderWnd::GoUp() {
     if (IsHome()) {
         return;
     }
-    if (!DirHasParent(currDir)) {
+    if (!NavDirHasParent(currDir)) {
         GoHome();
         return;
     }

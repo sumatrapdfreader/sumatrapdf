@@ -201,6 +201,7 @@ export const sharedFiles = [
   "src/shared/MarkdownToc.h",
   "src/shared/MobiDoc.cpp",
   "src/shared/MobiDoc.h",
+  "src/shared/NavFilesInFolder.h",
   "src/shared/PagePosition.cpp",
   "src/shared/PagePosition.h",
   "src/shared/PalmDbReader.cpp",

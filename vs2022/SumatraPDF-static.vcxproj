@@ -1411,7 +1411,6 @@
     <ClInclude Include="..\src\MainWindow.h" />
     <ClInclude Include="..\src\Menu.h" />
     <ClInclude Include="..\src\MergePdf.h" />
-    <ClInclude Include="..\src\NavFilesInFolder.h" />
     <ClInclude Include="..\src\Notifications.h" />
     <ClInclude Include="..\src\OverlayScrollbar.h" />
     <ClInclude Include="..\src\PageThumbnails.h" />
@@ -1508,6 +1507,7 @@
     <ClInclude Include="..\src\shared\MarkdownModel.h" />
     <ClInclude Include="..\src\shared\MarkdownToc.h" />
     <ClInclude Include="..\src\shared\MobiDoc.h" />
+    <ClInclude Include="..\src\shared\NavFilesInFolder.h" />
     <ClInclude Include="..\src\shared\PagePosition.h" />
     <ClInclude Include="..\src\shared\PalmDbReader.h" />
     <ClInclude Include="..\src\shared\PdfCad.h" />
