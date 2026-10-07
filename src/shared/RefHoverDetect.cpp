@@ -328,8 +328,7 @@ RectF LandscapeBox(RectF mediabox, float destX, float destY, WStr text, const Re
                 pageRightX = std::max(rx, pageRightX);
             }
             // A paragraph gap or a transition from short to full-width lines ends the caption.
-            int captionEndY = capStartY + capLineH;
-            int prevLineBottom = capStartY + capLineH - 1;
+            int prevLineBottom = capStartY + capLineH;
             bool seenShortLine = false;
             for (int lineIdx = 0; lineIdx < 3; lineIdx++) {
                 int capTop, capBot;
@@ -369,13 +368,12 @@ RectF LandscapeBox(RectF mediabox, float destX, float destY, WStr text, const Re
                         break;
                     }
                 }
-                captionEndY = lineBottomY;
                 prevLineBottom = lineBottomY;
                 if (isShort) {
                     seenShortLine = true;
                 }
             }
-            float extendedH = (float)captionEndY + kAnchorTopMarginPt - ty;
+            float extendedH = (float)prevLineBottom + kAnchorTopMarginPt - ty;
             h = std::max(extendedH, h);
         }
     }
