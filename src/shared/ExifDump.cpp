@@ -17,13 +17,8 @@ static void DumpExifFile(Str path) {
     WriteStdoutLn(fmt("Opening: %s", path));
     Str data = file::ReadFile(path);
     AutoFree dataOwner(data.s);
-    if (len(data) == 0) {
-        WriteStdoutLn(StrL("No EXIF information found"));
-        return;
-    }
-
     ExifParser parser;
-    if (!parser.Parse(data)) {
+    if (len(data) == 0 || !parser.Parse(data)) {
         WriteStdoutLn(StrL("No EXIF information found"));
         return;
     }
