@@ -116,70 +116,6 @@ static bool QueryAntiGravityModels(Str exePath, StrVec& models) {
 
 // --- Session history ---
 
-static TempStr EncodeAntiGravityDirTemp(Str dir) {
-    str::Builder buf;
-    for (int i = 0; i < dir.len; i++) {
-        char c = dir.s[i];
-        if (c == ':' || c == '\\' || c == '/' || c == '_' || c == ' ') {
-            buf.AppendChar('-');
-        } else {
-            buf.AppendChar(c);
-        }
-    }
-    if (len(buf) > 0 && buf.LastChar() == '-') {
-        buf.RemoveLast();
-    }
-    return ToStrTemp(buf);
-}
-
-static TempStr ExtractUserTextTemp(Str line) {
-    if (!str::Contains(line, StrL("\"role\":\"user\""))) {
-        return {};
-    }
-    if (str::Contains(line, StrL("\"tool_result\""))) {
-        return {};
-    }
-    if (str::Contains(line, StrL("\"content\":\""))) {
-        TempStr content = AIChatJsonStrTemp(line, StrL("content"));
-        if (!str::Contains(content, StrL("<command-"))) {
-            return content;
-        }
-    }
-    if (str::Contains(line, StrL("\"content\":["))) {
-        bool hasText =
-            str::Contains(line, StrL("\"type\":\"text\",\"text\":\"")) || str::Contains(line, StrL("\"text\":\""));
-        if (hasText) {
-            TempStr text = AIChatJsonStrTemp(line, StrL("text"));
-            if (!str::Contains(text, StrL("<command-"))) {
-                return text;
-            }
-        }
-    }
-    return {};
-}
-
-static Str GetSessionDescription(Str sessionPath) {
-    Str data = file::ReadFile(sessionPath);
-    if (len(data) == 0) {
-        return str::Dup(StrL("(empty)"));
-    }
-    Str rest = data;
-    Str result;
-    Str line;
-
-    while (len(result) == 0 && str::NextLine(rest, line, rest)) {
-        if (len(line) == 0) {
-            continue;
-        }
-        TempStr userText = ExtractUserTextTemp(str::DupTemp(line));
-        if (userText) {
-            result = str::Dup(userText);
-        }
-    }
-    str::Free(data);
-    return result ? result : str::Dup(StrL("(no description)"));
-}
-
 static void CollectAntiGravitySessionsFromDir(Str projectDir, Str dir, Vec<AIChatSessionInfo>& sessions) {
     if (!dir::Exists(projectDir)) {
         return;
@@ -209,7 +145,7 @@ static void CollectAntiGravitySessionsFromDir(Str projectDir, Str dir, Vec<AICha
             continue;
         }
 
-        Str desc = GetSessionDescription(de->filePath);
+        Str desc = AIChatSessionDescription(de->filePath);
         AIChatSessionInfo si;
         si.sessionId = str::Dup(sessionId);
         si.display = desc;
@@ -224,7 +160,7 @@ static void CollectAntiGravitySessions(Str dir, Vec<AIChatSessionInfo>& sessions
     if (len(userProfile) == 0) {
         return;
     }
-    TempStr encodedDir = EncodeAntiGravityDirTemp(dir);
+    TempStr encodedDir = AIChatEncodeSessionDirTemp(dir);
 
     // Try ~/.gemini/antigravity/projects/<encoded-dir>/
     TempStr projectDir1 = fmt("%s\\.gemini\\antigravity\\projects\\%s", userProfile, encodedDir);
@@ -246,7 +182,7 @@ static void LoadAntiGravitySessionHistory(MainWindow* win, Str sessionId, Str di
     if (len(userProfile) == 0) {
         return;
     }
-    TempStr encodedDir = EncodeAntiGravityDirTemp(dir);
+    TempStr encodedDir = AIChatEncodeSessionDirTemp(dir);
 
     TempStr sessionPath = fmt("%s\\.gemini\\antigravity\\projects\\%s\\%s.jsonl", userProfile, encodedDir, sessionId);
     if (!file::Exists(sessionPath)) {
@@ -259,54 +195,7 @@ static void LoadAntiGravitySessionHistory(MainWindow* win, Str sessionId, Str di
         return;
     }
 
-    Str data = file::ReadFile(sessionPath);
-    if (len(data) == 0) {
-        return;
-    }
-
-    Str rest = data;
-    Str lineRaw;
-
-    while (str::NextLine(rest, lineRaw, rest)) {
-        if (len(lineRaw) == 0) {
-            continue;
-        }
-        TempStr line = str::DupTemp(lineRaw);
-
-        TempStr userText = ExtractUserTextTemp(line);
-        if (userText) {
-            AIChatHistoryAddUser(win, userText);
-            continue;
-        }
-        if (!str::Contains(line, StrL("\"role\":\"assistant\"")) ||
-            str::Contains(line, StrL("\"type\":\"thinking\""))) {
-            continue;
-        }
-        if (str::Contains(line, StrL("\"type\":\"text\""))) {
-            TempStr text = AIChatJsonStrTemp(line, StrL("text"));
-            if (len(text) > 0) {
-                AIChatHistoryAppendText(win, text);
-                AIChatHistoryFlushBlock(win);
-            }
-            continue;
-        }
-        if (!str::Contains(line, StrL("\"type\":\"tool_use\""))) {
-            continue;
-        }
-        TempStr toolName = AIChatJsonStrTemp(line, StrL("name"));
-        if (len(toolName) == 0) {
-            continue;
-        }
-        TempStr fp = AIChatJsonStrTemp(line, StrL("file_path"));
-        str::Builder desc;
-        desc.Append(fmt("Tool: %s", toolName));
-        if (fp) {
-            desc.Append(fmt(" (%s)", fp));
-        }
-        AIChatHistoryAddTool(win, ToStr(desc));
-    }
-
-    str::Free(data);
+    AIChatLoadSessionHistory(win, sessionPath);
 }
 
 // --- The provider ---

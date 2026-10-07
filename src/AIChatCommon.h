@@ -131,6 +131,10 @@ bool IsAIChatSupportedForTab(WindowTab* tab);
 
 TempStr AIChatJsEscapeTemp(Str s);
 TempStr AIChatJsonStrTemp(Str json, Str key);
+TempStr AIChatEncodeSessionDirTemp(Str dir);
+TempStr AIChatExtractUserTextTemp(Str line);
+Str AIChatSessionDescription(Str sessionPath);
+void AIChatLoadSessionHistory(MainWindow* win, Str sessionPath);
 
 MainWindow* AIChatFindMainWindowByFrame(HWND hwndFrame);
 TempStr AIChatHomeDirTemp();

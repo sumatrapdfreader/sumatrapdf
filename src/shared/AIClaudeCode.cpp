@@ -59,9 +59,9 @@ static AIChatLogger gClaudeCodeLogger = {&gClaudeCodeLogMutex, StrL("claude-code
 
 // Compute the encoded project dir path that Claude uses:
 // E:\foo_bar -> E--foo-bar (: removed, \ -> -, _ -> -)
-static TempStr EncodeClaudeDirTemp(Str dir) {
+TempStr AIChatEncodeSessionDirTemp(Str dir) {
     str::Builder buf;
-    for (int i = 0; i < dir.len; i++) {
+    for (int i = 0; i < len(dir); i++) {
         char c = dir.s[i];
         if (c == ':' || c == '\\' || c == '/' || c == '_' || c == ' ') {
             buf.AppendChar('-');
@@ -78,7 +78,7 @@ static TempStr EncodeClaudeDirTemp(Str dir) {
 
 // Extract user message text from a JSON line.
 // Handles both "content":"string" and "content":[{"type":"text","text":"..."}] formats.
-static TempStr ExtractUserTextTemp(Str line) {
+TempStr AIChatExtractUserTextTemp(Str line) {
     if (!str::Contains(line, StrL("\"role\":\"user\""))) {
         return {};
     }
@@ -109,7 +109,7 @@ static TempStr ExtractUserTextTemp(Str line) {
 }
 
 // Read the first user message from a session JSONL as description
-static Str GetSessionDescription(Str sessionPath) {
+Str AIChatSessionDescription(Str sessionPath) {
     Str data = file::ReadFile(sessionPath);
     if (len(data) == 0) {
         return str::Dup(StrL("(empty)"));
@@ -122,7 +122,7 @@ static Str GetSessionDescription(Str sessionPath) {
         if (len(line) == 0) {
             continue;
         }
-        TempStr userText = ExtractUserTextTemp(str::DupTemp(line));
+        TempStr userText = AIChatExtractUserTextTemp(line);
         if (userText) {
             result = str::Dup(userText);
         }
@@ -137,7 +137,7 @@ static void CollectClaudeSessions(Str dir, Vec<AIChatSessionInfo>& sessions) {
     if (len(userProfile) == 0) {
         return;
     }
-    TempStr encodedDir = EncodeClaudeDirTemp(dir);
+    TempStr encodedDir = AIChatEncodeSessionDirTemp(dir);
     TempStr projectDir = path::JoinTemp(userProfile, StrL(".claude"), StrL("projects"));
     projectDir = path::JoinTemp(projectDir, encodedDir);
     if (!dir::Exists(projectDir)) {
@@ -158,7 +158,7 @@ static void CollectClaudeSessions(Str dir, Vec<AIChatSessionInfo>& sessions) {
         }
         // extract session ID (remove .jsonl extension)
         TempStr sessionId = str::DupTemp(Str(de->name.s, nameLen - 6));
-        Str desc = GetSessionDescription(de->filePath);
+        Str desc = AIChatSessionDescription(de->filePath);
 
         AIChatSessionInfo si;
         si.sessionId = str::Dup(sessionId);
@@ -172,18 +172,7 @@ static void CollectClaudeSessions(Str dir, Vec<AIChatSessionInfo>& sessions) {
 }
 
 // Load conversation history from a session's JSONL file
-static void LoadClaudeSessionHistory(MainWindow* win, Str sessionId, Str dir) {
-    TempStr userProfile = AIChatHomeDirTemp();
-    if (len(userProfile) == 0) {
-        return;
-    }
-    TempStr encodedDir = EncodeClaudeDirTemp(dir);
-    TempStr sessionPath = fmt("%s\\.claude\\projects\\%s\\%s.jsonl", userProfile, encodedDir, sessionId);
-
-    if (!file::Exists(sessionPath)) {
-        return;
-    }
-
+void AIChatLoadSessionHistory(MainWindow* win, Str sessionPath) {
     Str data = file::ReadFile(sessionPath);
     if (len(data) == 0) {
         return;
@@ -198,11 +187,7 @@ static void LoadClaudeSessionHistory(MainWindow* win, Str sessionId, Str dir) {
         }
         TempStr line = str::DupTemp(lineRaw);
 
-        // Session JSONL format:
-        // User messages: content can be string or array
-        // Assistant messages: content is always array
-
-        TempStr userText = ExtractUserTextTemp(line);
+        TempStr userText = AIChatExtractUserTextTemp(line);
         if (userText) {
             AIChatHistoryAddUser(win, userText);
             continue;
@@ -236,6 +221,18 @@ static void LoadClaudeSessionHistory(MainWindow* win, Str sessionId, Str dir) {
     }
 
     str::Free(data);
+}
+
+static void LoadClaudeSessionHistory(MainWindow* win, Str sessionId, Str dir) {
+    TempStr userProfile = AIChatHomeDirTemp();
+    if (len(userProfile) == 0) {
+        return;
+    }
+    TempStr encodedDir = AIChatEncodeSessionDirTemp(dir);
+    TempStr sessionPath = fmt("%s\\.claude\\projects\\%s\\%s.jsonl", userProfile, encodedDir, sessionId);
+    if (file::Exists(sessionPath)) {
+        AIChatLoadSessionHistory(win, sessionPath);
+    }
 }
 
 // --- The provider ---
