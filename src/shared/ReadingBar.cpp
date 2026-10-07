@@ -76,10 +76,7 @@ static WindowTab* ActiveBarTab(MainWindow* win) {
 
 static int HeightPx() {
     int h = (gSettings && gSettings->readingBar.height > 0) ? gSettings->readingBar.height : kDefaultHeight96;
-    if (h < kMinHeight96) {
-        h = kMinHeight96;
-    }
-    return DpiScale(h);
+    return DpiScale(std::max(h, kMinHeight96));
 }
 
 static void SetHeightPx(int px, bool save) {
@@ -88,19 +85,10 @@ static void SetHeightPx(int px, bool save) {
     }
     int dpi = DpiGet();
     int unscaled = (dpi > 0) ? (px * 96) / dpi : px;
-    if (unscaled < kMinHeight96) {
-        unscaled = kMinHeight96;
+    unscaled = limitValue(unscaled, kMinHeight96, 400);
+    if (gSettings->readingBar.height != unscaled) {
+        gSettings->readingBar.height = unscaled;
     }
-    if (unscaled > 400) {
-        unscaled = 400;
-    }
-    if (gSettings->readingBar.height == unscaled) {
-        if (save) {
-            ScheduleSaveSettings();
-        }
-        return;
-    }
-    gSettings->readingBar.height = unscaled;
     if (save) {
         ScheduleSaveSettings();
     }
@@ -114,6 +102,11 @@ static Rect CanvasRect(MainWindow* win) {
     return Rect{0, 0, vp.dx, vp.dy};
 }
 
+static int MaxHeight(int canvasDy) {
+    int maxH = canvasDy * 4 / 5;
+    return maxH < DpiScale(kMinHeight96) ? canvasDy : maxH;
+}
+
 static Rect BandRect(MainWindow* win) {
     WindowTab* tab = ActiveBarTab(win);
     if (!tab) {
@@ -123,35 +116,9 @@ static Rect BandRect(MainWindow* win) {
     if (canvas.dy <= 0 || canvas.dx <= 0) {
         return {};
     }
-    int h = HeightPx();
-    int maxH = canvas.dy * 4 / 5;
-    if (maxH < DpiScale(kMinHeight96)) {
-        maxH = canvas.dy;
-    }
-    if (h > maxH) {
-        h = maxH;
-    }
-    if (h < 1) {
-        return {};
-    }
-    float frac = tab->readingBar.yFrac;
-    if (frac < 0) {
-        frac = 0;
-    }
-    if (frac > 1) {
-        frac = 1;
-    }
-    int y = (int)(frac * (float)canvas.dy + 0.5f);
-    if (y < 0) {
-        y = 0;
-    }
-    if (y + h > canvas.dy) {
-        y = canvas.dy - h;
-    }
-    if (y < 0) {
-        y = 0;
-        h = canvas.dy;
-    }
+    int h = std::min(HeightPx(), MaxHeight(canvas.dy));
+    float frac = limitValue(tab->readingBar.yFrac, 0.f, 1.f);
+    int y = limitValue((int)(frac * (float)canvas.dy + 0.5f), 0, canvas.dy - h);
     return {0, y, canvas.dx, h};
 }
 
@@ -159,12 +126,7 @@ static void SetBandY(WindowTab* tab, int y, int canvasDy) {
     if (!tab || canvasDy <= 0) {
         return;
     }
-    if (y < 0) {
-        y = 0;
-    }
-    if (y > canvasDy) {
-        y = canvasDy;
-    }
+    y = limitValue(y, 0, canvasDy);
     tab->readingBar.yFrac = (float)y / (float)canvasDy;
 }
 
@@ -186,13 +148,7 @@ static ReadingBarHit HitTest(MainWindow* win, Point pt) {
     if (!close.IsEmpty() && close.Contains(pt)) {
         return ReadingBarHit::Close;
     }
-    int edge = DpiScale(kEdgeHit96);
-    if (edge > band.dy / 3) {
-        edge = band.dy / 3;
-    }
-    if (edge < 1) {
-        edge = 1;
-    }
+    int edge = std::min(DpiScale(kEdgeHit96), std::max(1, band.dy / 3));
     if (pt.y < band.y + edge) {
         return ReadingBarHit::ResizeTop;
     }
@@ -390,13 +346,7 @@ static void ApplyMove(MainWindow* win, int y) {
     if (!tab || canvas.dy <= 0 || band.IsEmpty()) {
         return;
     }
-    int newY = y - win->readingBarDragOff;
-    if (newY < 0) {
-        newY = 0;
-    }
-    if (newY + band.dy > canvas.dy) {
-        newY = canvas.dy - band.dy;
-    }
+    int newY = limitValue(y - win->readingBarDragOff, 0, canvas.dy - band.dy);
     SetBandY(tab, newY, canvas.dy);
     InvalidateCanvas(win);
 }
@@ -409,25 +359,10 @@ static void ApplyResizeTop(MainWindow* win, int y) {
         return;
     }
     int bottom = band.Bottom();
-    int newY = y - win->readingBarDragOff;
-    int minH = DpiScale(kMinHeight96);
-    if (newY < 0) {
-        newY = 0;
-    }
-    int newH = bottom - newY;
-    if (newH < minH) {
-        newY = bottom - minH;
-        newH = minH;
-    }
-    int maxH = canvas.dy * 4 / 5;
-    if (newH > maxH) {
-        newH = maxH;
-        newY = bottom - newH;
-        if (newY < 0) {
-            newY = 0;
-            newH = bottom;
-        }
-    }
+    int maxH = std::min(bottom, MaxHeight(canvas.dy));
+    int minH = std::min(DpiScale(kMinHeight96), maxH);
+    int newH = limitValue(bottom - (y - win->readingBarDragOff), minH, maxH);
+    int newY = bottom - newH;
     SetBandY(tab, newY, canvas.dy);
     SetHeightPx(newH, false);
     InvalidateCanvas(win);
@@ -441,19 +376,9 @@ static void ApplyResizeBottom(MainWindow* win, int y) {
         return;
     }
     int newBottom = y - win->readingBarDragOff;
-    int minH = DpiScale(kMinHeight96);
-    int newH = newBottom - band.y;
-    if (newH < minH) {
-        newH = minH;
-    }
-    int maxH = canvas.dy - band.y;
-    int cap = canvas.dy * 4 / 5;
-    if (maxH > cap) {
-        maxH = cap;
-    }
-    if (newH > maxH) {
-        newH = maxH;
-    }
+    int maxH = std::min(canvas.dy - band.y, MaxHeight(canvas.dy));
+    int minH = std::min(DpiScale(kMinHeight96), maxH);
+    int newH = limitValue(newBottom - band.y, minH, maxH);
     SetHeightPx(newH, false);
     InvalidateCanvas(win);
 }
@@ -609,15 +534,9 @@ static void NudgeHeight(MainWindow* win, int dir) {
         return;
     }
     int step = DpiScale(8);
-    int newH = band.dy + (dir * step);
-    int minH = DpiScale(kMinHeight96);
-    if (newH < minH) {
-        newH = minH;
-    }
-    int maxH = canvas.dy * 4 / 5;
-    if (newH > maxH) {
-        newH = maxH;
-    }
+    int maxH = MaxHeight(canvas.dy);
+    int minH = std::min(DpiScale(kMinHeight96), maxH);
+    int newH = limitValue(band.dy + (dir * step), minH, maxH);
     SetHeightPx(newH, true);
     InvalidateCanvas(win);
 }
