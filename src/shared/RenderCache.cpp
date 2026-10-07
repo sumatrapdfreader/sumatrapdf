@@ -38,12 +38,6 @@
 #endif
 
 #if defined(SUMATRA_NG)
-#define NG_HAS_UI 0
-#else
-#define NG_HAS_UI 1
-#endif
-
-#if defined(SUMATRA_NG)
 bool ShowTransparencyGrid();
 #endif
 
@@ -1689,7 +1683,7 @@ void RenderCache::LogCacheSize() {
 
 extern RenderCache* gRenderCache;
 
-#if NG_HAS_UI // ng: both debug windows are win32 VirtCtrl windows (step 6)
+#if !defined(SUMATRA_NG)
 
 struct DebugTextWnd : WindowBase {
     Edit* edit = nullptr;
@@ -1847,7 +1841,7 @@ void ToggleCacheInfoWindow() {
     gOnCachedObjectsChanged = UpdateCacheInfo;
 }
 
-#endif // NG_HAS_UI
+#endif
 
 static void SerializePredictive(str::Builder& s, int originPageNo, int nPred, const int* pred) {
     if (nPred <= 0) {
@@ -1951,7 +1945,7 @@ void RenderCache::SerializeQueueState(str::Builder& s) {
     }
 }
 
-#if NG_HAS_UI
+#if !defined(SUMATRA_NG)
 
 static void SetRenderInfoTextOnUI(Str* s) {
     if (gRenderInfoWnd) {
@@ -2074,4 +2068,4 @@ void UpdateCacheInfo() {
     uitask::Post(MkFunc0<Str>(SetDebugTextOnUI, new Str(str::Dup(ToStr(s)))), "CacheInfo");
 }
 
-#endif // NG_HAS_UI
+#endif
