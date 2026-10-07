@@ -5,18 +5,18 @@
 /* Copyright 2022 the SumatraPDF project authors (see AUTHORS file).
    License: Simplified BSD (see COPYING.BSD) */
 
-// ng: orig also rasterizes these with mupdf into a Pixmap cache
-// (GetCachedPixmapForSvg); gpui draws the SVG itself (gp::SvgDrawXml, through
-// component::Icon), so only the icon data is ported.
-//
-// ng: every tabler icon starts with a transparent 24x24 background element
-// (`stroke="none"`, no fill) that only exists to make the whole box clickable
-// in a browser. gpui's SVG parser does not understand `none` as a paint, so it
-// strokes those with the icon color and every icon came out in a box. They are
-// dropped here; see "gpui gaps".
-
 #include "base/Base.h"
+#if !defined(SUMATRA_NG)
+#include "base/Pixmap.h"
 
+extern "C" {
+#include <mupdf/fitz.h>
+}
+
+#include "ImageReader.h"
+#include "EmbeddedResources.h"
+#include "Theme.h"
+#endif
 #include "SvgIcons.h"
 
 // https://github.com/tabler/tabler-icons/blob/main/icons/outline/folder.svg
@@ -283,6 +283,18 @@ const char* gIconHomeList =
   <line x1="5" y1="18" x2="5" y2="18.01" />
 </svg>)";
 
+// https://github.com/tabler/tabler-icons/blob/main/icons/outline/bookmark.svg
+const char* gIconSidebarBookmarks =
+    R"(<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" stroke-width="1" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
+  <path d="M18 7v14l-6 -4l-6 4v-14a4 4 0 0 1 4 -4h4a4 4 0 0 1 4 4z" />
+</svg>)";
+
+// https://github.com/tabler/tabler-icons/blob/main/icons/outline/star.svg
+const char* gIconSidebarFavorites =
+    R"(<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" stroke-width="1" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
+  <path d="M12 17.75l-6.172 3.245l1.179 -6.873l-5 -4.867l6.9 -1l3.086 -6.253l3.086 6.253l6.9 1l-5 4.867l1.179 6.873z" />
+</svg>)";
+
 // https://github.com/tabler/tabler-icons/blob/main/icons/outline/layout-grid.svg
 const char* gIconHomeThumbnails =
     R"(<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" stroke-width="1" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
@@ -440,10 +452,174 @@ const char* gIconTrash =
   <path d="M9 7v-3a1 1 0 0 1 1 -1h4a1 1 0 0 1 1 1v3" />
 </svg>)";
 
+#if !defined(SUMATRA_NG)
+// A custom ToolbarSvgIcon comes from the settings file, so it can be malformed:
+// a typo, or the file caught half-written by the settings watcher while the user
+// is editing it. mupdf signals that by throwing, and an uncaught mupdf exception
+// aborts the whole process, so everything here has to be inside fz_try.
+static fz_pixmap* RenderSvgToFzPixmap(fz_context* ctx, Str svgData, int dx, int dy, Color fgCol) {
+    TempStr strokeCol = SerializeColorTemp(fgCol);
+    TempStr svg = str::ReplaceTemp(svgData, StrL("currentColor"), strokeCol);
+
+    fz_buffer* buf = nullptr;
+    fz_display_list* list = nullptr;
+    fz_device* dev = nullptr;
+    fz_pixmap* pixmap = nullptr;
+    fz_var(buf);
+    fz_var(list);
+    fz_var(dev);
+    fz_var(pixmap);
+    fz_try(ctx) {
+        buf = fz_new_buffer_from_copied_data(ctx, (u8*)svg.s, svg.len);
+        float svgWidth = 0;
+        float svgHeight = 0;
+        list = fz_new_display_list_from_svg(ctx, buf, nullptr, nullptr, &svgWidth, &svgHeight);
+        pixmap = fz_new_pixmap_with_bbox(ctx, fz_device_rgb(ctx), fz_make_irect(0, 0, dx, dy), nullptr, 1);
+        fz_clear_pixmap(ctx, pixmap);
+        dev = fz_new_draw_device(ctx, fz_scale((float)dx / svgWidth, (float)dy / svgHeight), pixmap);
+        fz_run_display_list(ctx, list, dev, fz_identity, fz_infinite_rect, nullptr);
+        fz_close_device(ctx, dev);
+        fz_drop_device(ctx, dev);
+        dev = nullptr;
+    }
+    fz_always(ctx) {
+        fz_drop_device(ctx, dev);
+        fz_drop_display_list(ctx, list);
+        fz_drop_buffer(ctx, buf);
+    }
+    fz_catch(ctx) {
+        fz_drop_pixmap(ctx, pixmap);
+        fz_report_error(ctx);
+        logf("GetCachedPixmapForSvg: rendering svg icon failed with: '%s'\n", Str(fz_caught_message(ctx)));
+        return nullptr;
+    }
+    return pixmap;
+}
+
+static void BlitFzPixmapBgra(u8* dstSamples, ptrdiff_t dstStride, fz_pixmap* src) {
+    int dx = src->w;
+    int dy = src->h;
+    int srcN = src->n;
+    int srcAlpha = src->alpha;
+    auto srcStride = src->stride;
+    for (size_t y = 0; y < (size_t)dy; y++) {
+        u8* s = src->samples + (srcStride * y);
+        u8* d = dstSamples + (dstStride * y);
+        for (int x = 0; x < dx; x++) {
+            d[0] = s[2];
+            d[1] = s[1];
+            d[2] = s[0];
+            d[3] = srcAlpha ? s[srcN - 1] : 0xff;
+            d += 4;
+            s += srcN;
+        }
+    }
+}
+
+// BGRA DIB, alpha-premultiplied, transparent where the SVG left the background.
+static Pixmap* RenderSvgToPixmap(Str svgData, int dx, int dy, Color fgCol) {
+    Pixmap* px = AllocPixmapDIB(dx, dy);
+    if (!px) {
+        return nullptr;
+    }
+    memset(px->data, 0, (size_t)px->stride * (size_t)dy);
+    px->premultiplied = true;
+
+    // an icon with a <text> needs a base14 font, which mupdf only gets from the
+    // embedded archive; without the loader the render throws and the icon comes
+    // out blank (#6186). EngineMupdf installs it too, but not until a document
+    // is opened, long after the toolbar renders its icons.
+    static fz_context* ctx = nullptr;
+    if (!ctx) {
+        InstallEmbeddedFontLoader();
+        ctx = fz_new_context_windows();
+    }
+    fz_pixmap* pixmap = RenderSvgToFzPixmap(ctx, svgData, dx, dy, fgCol);
+    if (pixmap) {
+        BlitFzPixmapBgra(px->data, px->stride, pixmap);
+        u8* row = px->data;
+        for (int y = 0; y < dy; y++) {
+            u8* d = row;
+            for (int x = 0; x < dx; x++) {
+                if (d[3] == 0) {
+                    d[0] = d[1] = d[2] = 0;
+                }
+                d += 4;
+            }
+            row += px->stride;
+        }
+        fz_drop_pixmap(ctx, pixmap);
+    }
+    return px;
+}
+
+// Super-set of the old GetPixmapForIcon / SelToolbarIcon caches: keyed by
+// SVG bytes (built-in gIcon* or a user-provided string), size, and colors.
+struct SvgPixmapCacheEntry {
+    SvgPixmapCacheEntry* next = nullptr;
+    Str svg; // owned
+    int dx = 0;
+    int dy = 0;
+    Color fg = 0;
+    Color bg = 0;
+    Pixmap* pixmap = nullptr; // owned
+
+    ~SvgPixmapCacheEntry() {
+        str::Free(svg);
+        FreePixmap(pixmap);
+    }
+};
+
+static SvgPixmapCacheEntry* gSvgPixmapCache = nullptr;
+
+// Render `svg` at dx×dy in fg/bg (theme text/control colors if unset).
+// The Pixmap belongs to the cache and stays valid until the app exits.
+Pixmap* GetCachedPixmapForSvg(Str svg, int dx, int dy, Color fg, Color bg) {
+    if (str::IsEmptyOrWhiteSpace(svg) || dx <= 0 || dy <= 0) {
+        return nullptr;
+    }
+    if (fg == kColorUnset) {
+        fg = ThemeWindowTextColor();
+    }
+    if (bg == kColorUnset) {
+        bg = ThemeControlBackgroundColor();
+    }
+    for (SvgPixmapCacheEntry* e = gSvgPixmapCache; e; e = e->next) {
+        if (e->dx == dx && e->dy == dy && e->fg == fg && e->bg == bg && str::Eq(e->svg, svg)) {
+            return e->pixmap;
+        }
+    }
+    Pixmap* px = RenderSvgToPixmap(svg, dx, dy, fg);
+    if (!px) {
+        return nullptr;
+    }
+    auto* e = new SvgPixmapCacheEntry();
+    e->svg = str::Dup(svg);
+    e->dx = dx;
+    e->dy = dy;
+    e->fg = fg;
+    e->bg = bg;
+    e->pixmap = px;
+    ListInsertFront(&gSvgPixmapCache, e);
+    return px;
+}
+
+// Shutdown only. Toolbars, the home page and other VirtCtrls keep non-owning
+// pointers to these pixmaps, so freeing entries while the app runs leaves them
+// dangling until whatever re-binds them runs, and the next paint reads freed
+// memory (crash 2026-09-07-13-07-95c3: the home page painted its view-mode icon
+// after a theme change dropped the cache). A theme or DPI change needs no flush:
+// size and colors are part of the key, so new entries are rendered and the stale
+// ones are simply never looked up again.
+void DestroySvgPixmapIconsCache() {
+    ListDelete(gSvgPixmapCache);
+    gSvgPixmapCache = nullptr;
+}
+#endif
+
 // https://github.com/tabler/tabler-icons/blob/main/icons/outline/arrow-up.svg
 const char* gIconArrowUp =
     R"(<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" stroke-width="1" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
-  <path stroke="none" d="M0 0h24v24H0z"/>
   <path d="M12 5l0 14" />
   <path d="M18 11l-6 -6" />
   <path d="M6 11l6 -6" />
@@ -452,7 +628,6 @@ const char* gIconArrowUp =
 // https://github.com/tabler/tabler-icons/blob/main/icons/outline/home.svg
 const char* gIconHome =
     R"(<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" stroke-width="1" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
-  <path stroke="none" d="M0 0h24v24H0z"/>
   <path d="M5 12l-2 0l9 -9l9 9l-2 0" />
   <path d="M5 12v7a2 2 0 0 0 2 2h10a2 2 0 0 0 2 -2v-7" />
   <path d="M9 21v-6a2 2 0 0 1 2 -2h2a2 2 0 0 1 2 2v6" />

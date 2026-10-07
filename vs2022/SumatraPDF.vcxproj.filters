@@ -824,9 +824,6 @@
     <ClCompile Include="..\src\SumatraTest.cpp">
       <Filter>src</Filter>
     </ClCompile>
-    <ClCompile Include="..\src\SvgIcons.cpp">
-      <Filter>src</Filter>
-    </ClCompile>
     <ClCompile Include="..\src\TabGroupsManage.cpp">
       <Filter>src</Filter>
     </ClCompile>
@@ -1227,6 +1224,9 @@
       <Filter>src\shared</Filter>
     </ClCompile>
     <ClCompile Include="..\src\shared\SumatraLog.cpp">
+      <Filter>src\shared</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\shared\SvgIcons.cpp">
       <Filter>src\shared</Filter>
     </ClCompile>
     <ClCompile Include="..\src\shared\TextSearch.cpp">

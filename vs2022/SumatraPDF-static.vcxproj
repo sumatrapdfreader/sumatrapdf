@@ -1666,7 +1666,6 @@
     <ClCompile Include="..\src\SumatraDialogs.cpp" />
     <ClCompile Include="..\src\SumatraPDF.cpp" />
     <ClCompile Include="..\src\SumatraTest.cpp" />
-    <ClCompile Include="..\src\SvgIcons.cpp" />
     <ClCompile Include="..\src\TabGroupsManage.cpp" />
     <ClCompile Include="..\src\TableOfContents.cpp" />
     <ClCompile Include="..\src\Tabs.cpp" />
@@ -2160,6 +2159,7 @@
     <ClCompile Include="..\src\shared\StressTesting.cpp" />
     <ClCompile Include="..\src\shared\SumatraConfig.cpp" />
     <ClCompile Include="..\src\shared\SumatraLog.cpp" />
+    <ClCompile Include="..\src\shared\SvgIcons.cpp" />
     <ClCompile Include="..\src\shared\TextSearch.cpp">
       <Optimization Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">MaxSpeed</Optimization>
       <Optimization Condition="'$(Configuration)|$(Platform)'=='Release|x64'">MaxSpeed</Optimization>
