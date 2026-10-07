@@ -89,14 +89,8 @@ u8* GetEmbeddedFileData(Str name, int* outSize) {
         str::TransCharsInPlace(name, StrL("/"), StrL("\\"));
     }
     int idx = lzma::GetIdxFromName(&gEmbeddedArchive, name);
-    if (idx < 0) {
-        return nullptr;
-    }
     u8* data = lzma::GetFileDataByIdx(&gEmbeddedArchive, idx, nullptr);
-    if (!data) {
-        return nullptr;
-    }
-    if (outSize) {
+    if (data && outSize) {
         *outSize = (int)gEmbeddedArchive.files[idx].uncompressedSize;
     }
     return data;
