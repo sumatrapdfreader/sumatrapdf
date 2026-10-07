@@ -209,7 +209,7 @@ export async function getGitLinearVersion(): Promise<number> {
 }
 
 export function extractSumatraVersion(): string {
-  const path = join("src", "Version.h");
+  const path = join("src", "shared", "Version.h");
   const content = readFileSync(path, "utf-8");
   const prefix = "#define CURR_VERSION ";
   for (const line of content.split("\n")) {
