@@ -258,8 +258,7 @@ void FreeImages(Vec<ImageData>& images) {
 
 /* ********** EPUB ********** */
 
-EpubDoc::EpubDoc(Str fileName) {
-    str::ReplaceWithCopy(&this->fileName, fileName);
+EpubDoc::EpubDoc(Str fileName) : fileName(str::Dup(fileName)) {
     archive = OpenArchiveFromFile(fileName, /*eagerLoad=*/true, gArchiveProgressCb);
 }
 
@@ -1049,9 +1048,7 @@ Fb2Doc* Fb2Doc::CreateFromData(Str data) {
 
 /* ********** PalmDOC (and TealDoc) ********** */
 
-PalmDoc::PalmDoc(Str path) {
-    this->fileName = str::Dup(path);
-}
+PalmDoc::PalmDoc(Str path) : fileName(str::Dup(path)) {}
 
 PalmDoc::~PalmDoc() {
     str::Free(fileName);
