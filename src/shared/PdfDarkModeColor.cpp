@@ -70,10 +70,8 @@ DocumentColorsFollowTheme GetDocumentColorsFollowTheme() {
     if (gDocumentColorsFollowThemePreview >= 0) {
         return (DocumentColorsFollowTheme)gDocumentColorsFollowThemePreview;
     }
-    if (!gSettings || len(gSettings->documentColorsFollowTheme) == 0) {
-        return DocumentColorsFollowTheme::Off;
-    }
-    return DocumentColorsFollowThemeFromString(gSettings->documentColorsFollowTheme);
+    return gSettings ? DocumentColorsFollowThemeFromString(gSettings->documentColorsFollowTheme)
+                     : DocumentColorsFollowTheme::Off;
 }
 
 // Render pages as if the setting had this value, without touching gSettings,
