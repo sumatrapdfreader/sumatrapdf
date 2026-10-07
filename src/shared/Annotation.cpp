@@ -1214,7 +1214,9 @@ static PdfColor PdfColorFromFloat(fz_context* ctx, int n, float color[4]) {
     return 0;
 }
 
-PdfColor GetColor(Annotation* annot) {
+using AnnotColorReader = void (*)(fz_context*, pdf_annot*, int*, float[4]);
+
+static PdfColor GetAnnotColor(Annotation* annot, AnnotColorReader readColor) {
     if (!AnnotationIsLive(annot)) {
         return 0;
     }
@@ -1225,7 +1227,7 @@ PdfColor GetColor(Annotation* annot) {
     float color[4]{};
     int n = -1;
     fz_try(ctx) {
-        pdf_annot_color(ctx, a, &n, color);
+        readColor(ctx, a, &n, color);
     }
     fz_catch(ctx) {
         fz_report_error(ctx);
@@ -1236,6 +1238,10 @@ PdfColor GetColor(Annotation* annot) {
     }
     PdfColor res = PdfColorFromFloat(ctx, n, color);
     return res;
+}
+
+PdfColor GetColor(Annotation* annot) {
+    return GetAnnotColor(annot, pdf_annot_color);
 }
 
 // Highlight, Underline, StrikeOut and Squiggly: /C is the only thing drawn
@@ -1323,27 +1329,7 @@ bool SetColor(Annotation* annot, PdfColor c) {
 }
 
 PdfColor InteriorColor(Annotation* annot) {
-    if (!AnnotationIsLive(annot)) {
-        return 0;
-    }
-    EngineMupdf* e = annot->engine;
-    auto* a = annot->pdfannot;
-    auto* ctx = e->Ctx();
-    ScopedRecursiveMutex cs(&e->docLock);
-    float color[4]{};
-    int n = -1;
-    fz_try(ctx) {
-        pdf_annot_interior_color(ctx, a, &n, color);
-    }
-    fz_catch(ctx) {
-        fz_report_error(ctx);
-        n = -1;
-    }
-    if (n == -1) {
-        return 0;
-    }
-    PdfColor res = PdfColorFromFloat(ctx, n, color);
-    return res;
+    return GetAnnotColor(annot, pdf_annot_interior_color);
 }
 
 bool SetInteriorColor(Annotation* annot, PdfColor c) {
