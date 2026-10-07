@@ -47,7 +47,6 @@ extern "C" {
 #include "PageThumbnails.h"
 #include "TableOfContents.h"
 #include "SidebarPanel.h"
-#include "gui/win/BrowserDocView.h"
 
 #include <chm.h>
 #include "EbookBase.h"

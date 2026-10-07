@@ -45,14 +45,8 @@ struct ChmModel : DocController {
 
     static ChmModel* Create(Str fileName, DocControllerCallback* cb = nullptr);
 
-    // ng: orig's host is a win32 child window and takes an HWND; here it is a
-    // gpui WebView that belongs to a MainWindow (gui/BrowserView.h). orig's
-    // PassUIMsg() (wheel / scroll messages forwarded to the browser) has no
-    // equivalent: gpui does not route input to a native child
-    bool SetParentWindow(MainWindow* win);
-    // hide for tab switch (keep the WebView for fast re-show)
+    bool SetParentWindow(MainWindow* win, HWND hwndParent);
     void RemoveParentWindow();
-    // full teardown (tab/window close)
     void DestroyParentWindow();
 
     void PrintCurrentPage(bool showUI) const;
@@ -65,6 +59,7 @@ struct ChmModel : DocController {
     void SelectAll() const;
     void CopySelection() const;
     void GoToPageWithFind(int pageNo, Str term, bool matchCase, bool wholeWord, int idx, int gen) override;
+    LRESULT PassUIMsg(UINT msg, WPARAM wp, LPARAM lp) const;
 
     bool OnBeforeNavigate(Str url, bool newWindow);
     void OnDocumentComplete(Str url);
@@ -89,7 +84,7 @@ struct ChmModel : DocController {
     // isn't in `pages`, so it's tracked separately from currentPageNo
     Str currentPageUrl;
     BrowserView* docView = nullptr;
-    BrowserViewCallback* htmlWindowCb = nullptr;
+    BrowserViewCallback* browserCb = nullptr;
     float initZoom = kInvalidZoom;
     // intended zoom level, re-applied after every document load because the
     // hosted control resets to 100% when it's recreated (e.g. on tab switch)

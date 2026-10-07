@@ -99,7 +99,7 @@ WindowTab::~WindowTab() {
     // win->ctrl already nulled (and isBeingClosed on window close), canvas
     // re-entry must not touch a freed DisplayModel.
     if (AsChm()) {
-        AsChm()->DestroyParentHwnd();
+        AsChm()->DestroyParentWindow();
     } else if (AsMarkdown()) {
         AsMarkdown()->DestroyParentWindow();
     }

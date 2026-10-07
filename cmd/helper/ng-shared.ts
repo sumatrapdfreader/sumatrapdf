@@ -130,6 +130,8 @@ export const sharedFiles = [
   "src/shared/ChmDump.h",
   "src/shared/ChmFile.cpp",
   "src/shared/ChmFile.h",
+  "src/shared/ChmModel.cpp",
+  "src/shared/ChmModel.h",
   "src/shared/Commands.cpp",
   "src/shared/Commands.h",
   "src/shared/CrashHandlerNoOp.cpp",

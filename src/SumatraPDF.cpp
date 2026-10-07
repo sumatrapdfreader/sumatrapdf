@@ -2139,7 +2139,7 @@ static DocController* CreateControllerForChm(Str path, PasswordUI* pwdUI, MainWi
     // if the interactive backend (WebView2 / IE CLSID_WebBrowser) isn't
     // available, fall back on ChmEngine's fixed-page rendering
     DocController* ctrl = nullptr;
-    if (!chmModel->SetParentHwnd(win->hwndCanvas)) {
+    if (!chmModel->SetParentWindow(win, win->hwndCanvas)) {
         log(
             StrL("CreateControllerForChm: interactive CHM backend unavailable, falling back to ChmEngine fixed-page "
                  "view\n"));
@@ -2154,7 +2154,7 @@ static DocController* CreateControllerForChm(Str path, PasswordUI* pwdUI, MainWi
         ReportIf(!ctrl || !ctrl->AsFixed() || ctrl->AsChm());
     } else {
         // another ChmModel might still be active
-        chmModel->RemoveParentHwnd();
+        chmModel->RemoveParentWindow();
         ctrl = chmModel;
         ReportIf(!ctrl->AsChm() || ctrl->AsFixed());
     }
@@ -2674,7 +2674,7 @@ static void ReplaceDocumentInCurrentTab(LoadArgs* args, DocController* ctrl, Fil
             }
         } else if (IsBrowserDocController(win->ctrl)) {
             if (win->AsChm()) {
-                win->AsChm()->SetParentHwnd(win->hwndCanvas);
+                win->AsChm()->SetParentWindow(win, win->hwndCanvas);
             } else {
                 win->AsMarkdown()->SetParentWindow(win, win->hwndCanvas);
             }
@@ -5064,7 +5064,7 @@ void LoadModelIntoTab(WindowTab* tab) {
     // showing it earlier (at the previous tab's canvas geometry) made it
     // visibly jump when e.g. the Home tab has no toolbar or ToC sidebar
     if (win->AsChm()) {
-        win->AsChm()->SetParentHwnd(win->hwndCanvas);
+        win->AsChm()->SetParentWindow(win, win->hwndCanvas);
     } else if (win->AsMarkdown()) {
         win->AsMarkdown()->SetParentWindow(win, win->hwndCanvas);
     }
@@ -5428,7 +5428,7 @@ static void CloseDocumentInCurrentTab(MainWindow* win, bool keepUIEnabled, bool 
         FillCanvasThemeBackground(win->hwndCanvas);
     }
     if (win->AsChm()) {
-        win->AsChm()->RemoveParentHwnd();
+        win->AsChm()->RemoveParentWindow();
     } else if (win->AsMarkdown()) {
         win->AsMarkdown()->RemoveParentWindow();
     }
@@ -9187,10 +9187,7 @@ void EnterFullScreen(MainWindow* win, bool presentation) {
     // show menu bar rebar after layout positions it correctly
     ShowMenuBarRebar(win);
     if (win->AsChm()) {
-        BrowserDocView* browserView = win->AsChm()->docView;
-        if (browserView) {
-            browserView->RefreshControllerSurface();
-        }
+        BrowserViewRefreshSurface(win->AsChm()->docView);
     } else if (win->AsMarkdown()) {
         BrowserViewRefreshSurface(win->AsMarkdown()->docView);
     }

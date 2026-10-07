@@ -1403,7 +1403,6 @@
     <ClInclude Include="..\src\AnnotPlacement.h" />
     <ClInclude Include="..\src\AnnotTextPopup.h" />
     <ClInclude Include="..\src\Canvas.h" />
-    <ClInclude Include="..\src\ChmModel.h" />
     <ClInclude Include="..\src\CommandAvailability.h" />
     <ClInclude Include="..\src\CommandPalette.h" />
     <ClInclude Include="..\src\DarkMode.h" />
@@ -1481,6 +1480,7 @@
     <ClInclude Include="..\src\shared\ChapterTable.h" />
     <ClInclude Include="..\src\shared\ChmDump.h" />
     <ClInclude Include="..\src\shared\ChmFile.h" />
+    <ClInclude Include="..\src\shared\ChmModel.h" />
     <ClInclude Include="..\src\shared\Commands.h" />
     <ClInclude Include="..\src\shared\DisplayMode.h" />
     <ClInclude Include="..\src\shared\DisplayModel.h" />
@@ -1602,7 +1602,6 @@
     <ClCompile Include="..\src\ChangeLanguageDialog.cpp" />
     <ClCompile Include="..\src\ChangeScrollbarDialog.cpp" />
     <ClCompile Include="..\src\ChangeThemeDialog.cpp" />
-    <ClCompile Include="..\src\ChmModel.cpp" />
     <ClCompile Include="..\src\CommandAvailability.cpp" />
     <ClCompile Include="..\src\CommandPalette.cpp" />
     <ClCompile Include="..\src\CustomZoomDialog.cpp" />
@@ -2108,6 +2107,7 @@
     <ClCompile Include="..\src\shared\ChapterTable.cpp" />
     <ClCompile Include="..\src\shared\ChmDump.cpp" />
     <ClCompile Include="..\src\shared\ChmFile.cpp" />
+    <ClCompile Include="..\src\shared\ChmModel.cpp" />
     <ClCompile Include="..\src\shared\Commands.cpp" />
     <ClCompile Include="..\src\shared\DisplayMode.cpp" />
     <ClCompile Include="..\src\shared\DisplayModel.cpp" />

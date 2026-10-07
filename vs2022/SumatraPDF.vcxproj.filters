@@ -141,9 +141,6 @@
     <ClInclude Include="..\src\Canvas.h">
       <Filter>src</Filter>
     </ClInclude>
-    <ClInclude Include="..\src\ChmModel.h">
-      <Filter>src</Filter>
-    </ClInclude>
     <ClInclude Include="..\src\CommandAvailability.h">
       <Filter>src</Filter>
     </ClInclude>
@@ -373,6 +370,9 @@
       <Filter>src\shared</Filter>
     </ClInclude>
     <ClInclude Include="..\src\shared\ChmFile.h">
+      <Filter>src\shared</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\shared\ChmModel.h">
       <Filter>src\shared</Filter>
     </ClInclude>
     <ClInclude Include="..\src\shared\Commands.h">
@@ -648,9 +648,6 @@
       <Filter>src</Filter>
     </ClCompile>
     <ClCompile Include="..\src\ChangeThemeDialog.cpp">
-      <Filter>src</Filter>
-    </ClCompile>
-    <ClCompile Include="..\src\ChmModel.cpp">
       <Filter>src</Filter>
     </ClCompile>
     <ClCompile Include="..\src\CommandAvailability.cpp">
@@ -1095,6 +1092,9 @@
       <Filter>src\shared</Filter>
     </ClCompile>
     <ClCompile Include="..\src\shared\ChmFile.cpp">
+      <Filter>src\shared</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\shared\ChmModel.cpp">
       <Filter>src\shared</Filter>
     </ClCompile>
     <ClCompile Include="..\src\shared\Commands.cpp">

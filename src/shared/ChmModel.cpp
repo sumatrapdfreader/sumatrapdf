@@ -5,12 +5,8 @@
 #include "base/Dict.h"
 #include "base/GuessFileType.h"
 #include "base/UITask.h"
-#include "base/AutoWin.h"
-#include "base/Win.h"
-
-#include "gui/win/HtmlWindow.h"
-#include "gui/win/BrowserDocView.h"
 #include "gui/UIModels.h"
+#include "gui/BrowserView.h"
 
 #include "Settings.h"
 #include "DisplayMode.h"
@@ -23,6 +19,10 @@
 #include "Theme.h"
 #include "PagePosition.h"
 #include "ChmModel.h"
+
+static bool IsBlankUrl(Str url) {
+    return str::EqI(StrL("about:blank"), url);
+}
 
 static IPageDestination* NewChmNamedDest(Arena* arena, Str url, int pageNo) {
     if (len(url) == 0) {
@@ -50,12 +50,12 @@ static TocItem* NewChmTocItem(Arena* arena, TocItem* parent, Str title, int page
     return res;
 }
 
-class HtmlWindowHandler : public HtmlWindowCallback {
+class BrowserViewHandler : public BrowserViewCallback {
     ChmModel* cm;
 
   public:
-    explicit HtmlWindowHandler(ChmModel* cm) : cm(cm) {}
-    ~HtmlWindowHandler() override = default;
+    explicit BrowserViewHandler(ChmModel* cm) : cm(cm) {}
+    ~BrowserViewHandler() override = default;
 
     bool OnBeforeNavigate(Str url, bool newWindow) override { return cm->OnBeforeNavigate(url, newWindow); }
     void OnDocumentComplete(Str url) override { cm->OnDocumentComplete(url); }
@@ -79,8 +79,8 @@ ChmModel::ChmModel(DocControllerCallback* cb) : DocController(cb) {
 
 ChmModel::~ChmModel() {
     docAccess.Lock();
-    delete docView;
-    delete htmlWindowCb;
+    BrowserViewDelete(docView);
+    delete browserCb;
     delete doc;
     delete tocTrace;
     DestroyTocTree(tocTree);
@@ -129,88 +129,84 @@ void ChmModel::GoToPage(int pageNo, bool /*addNavPoint*/) {
 }
 
 // the following is specific to ChmModel
-bool ChmModel::SetParentHwnd(HWND hwnd) {
+bool ChmModel::SetParentWindow(MainWindow* win, HWND hwndParent) {
     // reuse the existing browser when switching back to this tab: creating a
-    // WebView2 is expensive, so we only hide it in RemoveParentHwnd
+    // WebView is expensive, so we only hide it in RemoveParentWindow
     if (docView) {
-        if (docView->GetParentHwnd() == hwnd) {
-            docView->SetVisible(true);
+        if (BrowserViewWindow(docView) == win) {
+            BrowserViewSetVisible(docView, true);
             return true;
         }
-        delete docView;
+        BrowserViewDelete(docView);
         docView = nullptr;
-        delete htmlWindowCb;
-        htmlWindowCb = nullptr;
+        delete browserCb;
+        browserCb = nullptr;
     }
-    htmlWindowCb = new HtmlWindowHandler(this);
-    docView = BrowserDocView::Create(hwnd, htmlWindowCb);
+    browserCb = new BrowserViewHandler(this);
+    docView = BrowserViewCreate(win, hwndParent, browserCb, {});
     if (!docView) {
-        delete htmlWindowCb;
-        htmlWindowCb = nullptr;
+        delete browserCb;
+        browserCb = nullptr;
         return false;
     }
-    docView->SetVisible(true);
+    BrowserViewSetVisible(docView, true);
+    if (len(currentPageUrl) > 0) {
+        DisplayPage(currentPageUrl);
+    } else if (len(pages) > 0) {
+        DisplayPage(pages[currentPageNo - 1]);
+    }
     return true;
 }
 
-void ChmModel::RemoveParentHwnd() {
+void ChmModel::RemoveParentWindow() {
     if (!docView) {
         return;
     }
     // remember where we were so it can be restored when the view is shown again
     SaveHtmlScrollPos();
     restoreHtmlScrollPos = true;
-    docView->SetVisible(false);
+    BrowserViewSetVisible(docView, false);
 }
 
-void ChmModel::DestroyParentHwnd() {
-    if (!docView && !htmlWindowCb) {
+void ChmModel::DestroyParentWindow() {
+    if (!docView && !browserCb) {
         return;
     }
     SaveHtmlScrollPos();
     restoreHtmlScrollPos = true;
-    // DestroyWindow inside ~BrowserDocView / ~WebviewWnd pumps messages
-    delete docView;
+    BrowserViewDelete(docView);
     docView = nullptr;
-    delete htmlWindowCb;
-    htmlWindowCb = nullptr;
+    delete browserCb;
+    browserCb = nullptr;
 }
 
 void ChmModel::PrintCurrentPage(bool showUI) const {
-    if (docView) {
-        docView->PrintCurrentPage(showUI);
-    }
+    BrowserViewPrint(docView, showUI);
 }
 
 void ChmModel::FindInCurrentPage() const {
-    if (docView) {
-        docView->FindInCurrentPage();
-    }
+    BrowserViewFindInPageUI(docView);
 }
 
 bool ChmModel::CanFindInPage() const {
-    return docView && docView->CanFindInPage();
+    return BrowserViewCanFindInPage(docView);
 }
 
 void ChmModel::FindStart(Str term, bool matchCase, bool wholeWord, int gen) {
-    if (docView) {
-        docView->FindStart(term, matchCase, wholeWord, gen, -1);
-    }
+    BrowserViewFindStart(docView, term, matchCase, wholeWord, gen, -1);
 }
 
 void ChmModel::FindAllPages(Str term, bool matchCase, bool wholeWord, int gen) {
     if (!docView) {
         return;
     }
-    // pages are internal chm paths; BrowserDocView::FindAllPages prefixes the
+    // pages are internal chm paths; BrowserViewFindAllPages prefixes the
     // virtual host to make them fetchable
-    docView->FindAllPages(pages, term, matchCase, wholeWord, gen);
+    BrowserViewFindAllPages(docView, pages, term, matchCase, wholeWord, gen);
 }
 
 void ChmModel::FindGoto(int idx) {
-    if (docView) {
-        docView->FindGoto(idx);
-    }
+    BrowserViewFindGoto(docView, idx);
 }
 
 // navigate to pageNo and, once it has loaded, highlight term there and make
@@ -229,9 +225,7 @@ void ChmModel::GoToPageWithFind(int pageNo, Str term, bool matchCase, bool whole
 }
 
 void ChmModel::FindClear() {
-    if (docView) {
-        docView->FindClear();
-    }
+    BrowserViewFindClear(docView);
 }
 
 void ChmModel::OnFindResult(int gen, int current, int total) {
@@ -243,26 +237,22 @@ void ChmModel::OnFindAllResult(Str payload) {
 }
 
 void ChmModel::SelectAll() const {
-    if (docView) {
-        docView->SelectAll();
-    }
+    BrowserViewSelectAll(docView);
 }
 
 void ChmModel::CopySelection() const {
-    if (docView) {
-        docView->CopySelection();
-    }
+    BrowserViewCopySelection(docView);
 }
 
-static bool gSendingHtmlWindowMsg = false;
+static bool gSendingChmBrowserMsg = false;
 
 LRESULT ChmModel::PassUIMsg(UINT msg, WPARAM wp, LPARAM lp) const {
-    if (!docView || gSendingHtmlWindowMsg) {
+    if (!docView || gSendingChmBrowserMsg) {
         return 0;
     }
-    gSendingHtmlWindowMsg = true;
-    auto res = docView->SendMsg(msg, wp, lp);
-    gSendingHtmlWindowMsg = false;
+    gSendingChmBrowserMsg = true;
+    LRESULT res = BrowserViewPassUIMsg(docView, msg, wp, lp);
+    gSendingChmBrowserMsg = false;
     return res;
 }
 
@@ -320,7 +310,7 @@ bool ChmModel::DisplayPage(Str pageUrl) {
     if (!docView) {
         return false;
     }
-    docView->NavigateToDataUrl(pageUrl);
+    BrowserViewNavigate(docView, pageUrl);
     return true;
 }
 
@@ -354,13 +344,10 @@ bool ChmModel::HandleLink(IPageDestination* link, ILinkHandler* /*linkHandler*/)
 }
 
 bool ChmModel::CanNavigate(int dir) const {
-    if (!docView) {
-        return false;
-    }
     if (dir < 0) {
-        return docView->canGoBack;
+        return BrowserViewCanGoBack(docView);
     }
-    return docView->canGoForward;
+    return BrowserViewCanGoForward(docView);
 }
 
 void ChmModel::Navigate(int dir) {
@@ -370,11 +357,11 @@ void ChmModel::Navigate(int dir) {
 
     if (dir < 0) {
         for (; dir < 0 && CanNavigate(dir); dir++) {
-            docView->GoBack();
+            BrowserViewGoBack(docView);
         }
     } else {
         for (; dir > 0 && CanNavigate(dir); dir--) {
-            docView->GoForward();
+            BrowserViewGoForward(docView);
         }
     }
 }
@@ -418,7 +405,7 @@ void ChmModel::SaveHtmlScrollPos() {
     if (!docView) {
         return;
     }
-    Point pos = docView->GetScrollPos();
+    Point pos = BrowserViewGetScrollPos(docView);
     if (pos.x < 0 && pos.y < 0) {
         return;
     }
@@ -487,20 +474,18 @@ void ChmModel::RestoreHtmlScrollPos() {
     int y = (int)htmlScrollPos.y;
     x = std::max(x, 0);
     y = std::max(y, 0);
-    docView->SetScrollPos(Point(x, y));
+    BrowserViewSetScrollPos(docView, Point(x, y));
 }
 
 void ChmModel::ZoomTo(float zoomLevel) const {
-    if (docView) {
-        docView->SetZoomPercent((int)zoomLevel);
-    }
+    BrowserViewSetZoomPercent(docView, (int)zoomLevel);
 }
 
 float ChmModel::GetZoomVirtual(bool /*absolute*/) const {
     if (!docView) {
-        return 100;
+        return zoomVirtual;
     }
-    return (float)docView->GetZoomPercent();
+    return (float)BrowserViewGetZoomPercent(docView);
 }
 
 struct ChmTocBuilder : EbookTocVisitor {
@@ -638,7 +623,8 @@ void ChmModel::OnDocumentComplete(Str url) {
     // finish a pending "jump to a match on another page": the fresh document
     // has no find state, so re-run the search and go to the requested match
     if (hasPendingFind && docView) {
-        docView->FindStart(pendingFindTerm, pendingFindMatchCase, pendingFindWholeWord, pendingFindGen, pendingFindIdx);
+        BrowserViewFindStart(docView, pendingFindTerm, pendingFindMatchCase, pendingFindWholeWord, pendingFindGen,
+                             pendingFindIdx);
         hasPendingFind = false;
         str::FreePtr(&pendingFindTerm);
     }
@@ -646,7 +632,7 @@ void ChmModel::OnDocumentComplete(Str url) {
 
 // Called before we start loading html for a given url. Will block
 // loading if returns false.
-// for HtmlWindowCallback (called through htmlWindowCb)
+// for BrowserViewCallback (called through browserCb)
 bool ChmModel::OnBeforeNavigate(Str url, bool newWindow) {
     // save scroll pos of the page we're leaving, unless DisplayPage() already
     // saved it before triggering this programmatic navigation
@@ -659,7 +645,7 @@ bool ChmModel::OnBeforeNavigate(Str url, bool newWindow) {
     }
 
     // ensure that JavaScript doesn't keep the focus
-    // in the HtmlWindow when a new page is loaded
+    // in the browser view when a new page is loaded
     if (cb) {
         cb->FocusFrame(false);
     }
@@ -749,7 +735,7 @@ static Str ChmThemeApplyToData(Str raw) {
 }
 
 Str ChmModel::GetDataForUrl(Str url) {
-    AutoUnlockMutex scope(&docAccess);
+    ScopedMutex scope(&docAccess);
     TempStr plainUrl = url::GetFullPathTemp(url);
     ChmCacheEntry* e = FindDataForUrl(plainUrl);
     if (!e) {
@@ -770,7 +756,7 @@ Str ChmModel::GetDataForUrl(Str url) {
 // regenerates when re-selected)
 void ChmModel::UpdateTheme() {
     {
-        AutoUnlockMutex scope(&docAccess);
+        ScopedMutex scope(&docAccess);
         DeleteVecMembers(urlDataCache);
         VecReset(urlDataCache);
     }
