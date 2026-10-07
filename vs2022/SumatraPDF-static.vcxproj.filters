@@ -153,9 +153,6 @@
     <ClInclude Include="..\src\FindWindow.h">
       <Filter>src</Filter>
     </ClInclude>
-    <ClInclude Include="..\src\FormFields.h">
-      <Filter>src</Filter>
-    </ClInclude>
     <ClInclude Include="..\src\HomePage.h">
       <Filter>src</Filter>
     </ClInclude>
@@ -421,6 +418,9 @@
       <Filter>src\shared</Filter>
     </ClInclude>
     <ClInclude Include="..\src\shared\Flags.h">
+      <Filter>src\shared</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\shared\FormFields.h">
       <Filter>src\shared</Filter>
     </ClInclude>
     <ClInclude Include="..\src\shared\GlobalHotkeys.h">
