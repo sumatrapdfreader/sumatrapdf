@@ -1,13 +1,12 @@
 /* Copyright 2026 the SumatraPDF project authors (see AUTHORS file).
    License: GPLv3 */
 
-// ng: orig's AIChatCommon.cpp. The chat page html, the json helpers, the model
-// list helpers and the session bookkeeping are orig's. What changed: launching
-// the provider CLI and reading its stdout has POSIX plumbing too, the "not
-// installed" TaskDialog is a gpui dialog, and the chat html asks the gpui theme
-// for its colors.
-
+#if defined(SUMATRA_NG)
 #include "gui/GpuiBridge.h"
+#else
+#include "base/Base.h"
+#include "gui/Dpi.h"
+#endif
 
 #include "base/CmdLineArgs.h"
 #include "base/File.h"
@@ -17,6 +16,12 @@
 #endif
 
 #include "gui/UIModels.h"
+#if !defined(SUMATRA_NG)
+#include "gui/Layout.h"
+#include "gui/PlatformFont.h"
+#include "gui/win/WinGui.h"
+#include "gui/win/WebView.h"
+#endif
 
 #include "Settings.h"
 #include "DocController.h"
@@ -28,10 +33,12 @@
 #include "SumatraPDF.h"
 #include "Translations.h"
 #include "Theme.h"
+#if defined(SUMATRA_NG)
 #include "Commands.h"
 #include "gui/AppShell.h"
 #include "gui/BrowserView.h"
 #include "gui/DialogWidgets.h"
+#endif
 
 #include "base/GuessFileType.h"
 
@@ -41,8 +48,11 @@
 #include "SumatraLog.h"
 
 bool IsAIChatAvailable() {
-    // the chat UI is a WebView
+#if defined(SUMATRA_NG)
     return BrowserViewAvailable();
+#else
+    return HasWebView();
+#endif
 }
 
 bool IsAIChatSupportedForFile(Str filePath, Kind engineKind) {
@@ -130,6 +140,18 @@ TempStr AIChatJsonStrTemp(Str json, Str key) {
     return ToStrTemp(buf);
 }
 
+#if !defined(SUMATRA_NG)
+MainWindow* AIChatFindMainWindowByFrame(HWND hwndFrame) {
+    for (MainWindow* w : gWindows) {
+        if (w->hwndFrame == hwndFrame) {
+            return w;
+        }
+    }
+    return nullptr;
+}
+
+#endif
+
 TempStr AIChatHomeDirTemp() {
 #if OS_WIN
     return GetSpecialFolderTemp(CSIDL_PROFILE);
@@ -183,7 +205,6 @@ TempStr AIChatDebugGetTemp() {
     return str::DupTemp(ToStr(gAIChatDbgLog));
 }
 
-// ng: orig stamps each entry with win32's GetLocalTime()
 static TempStr LocalTimeStampTemp() {
     time_t t = time(nullptr);
     struct tm lt{};
@@ -242,11 +263,9 @@ void AIChatLog(AIChatLogger* logger, Str direction, Str text) {
     logger->mutex->Unlock();
 }
 
+#if defined(SUMATRA_NG)
 // --- the "not installed" dialog ---------------------------------------------
 
-// ng: orig shows a TaskDialog with an OK and a "Learn more" button and a
-// hyperlink in its content. gpui has no task dialog, so it is one of the port's
-// Dialogs, with the same title, instruction, text and buttons.
 struct NotInstalledDlg {
     MainWindow* win = nullptr;
     bool visible = false;
@@ -341,6 +360,82 @@ gp::El* AIChatNotInstalledDialogBuild(MainWindow* win, gp::Ctx* cx) {
         ->IntoEl(gp::WindowSize(cx->win));
 }
 
+#else
+constexpr int kBtnIdAIChatLearnMore = 100;
+
+static HRESULT CALLBACK AIChatNotInstalledDialogCallback(HWND /*hwnd*/, UINT msg, WPARAM wParam, LPARAM /*lParam*/,
+                                                         LONG_PTR lpRefData) {
+    Str docUri = lpRefData ? *(Str*)lpRefData : Str{};
+    switch (msg) {
+        case TDN_HYPERLINK_CLICKED:
+            LaunchDocumentation(docUri);
+            break;
+        case TDN_BUTTON_CLICKED:
+            if ((int)wParam == kBtnIdAIChatLearnMore) {
+                LaunchDocumentation(docUri);
+                return S_FALSE;
+            }
+            break;
+    }
+    return S_OK;
+}
+
+void AIChatShowNotInstalledDialog(const AIChatNotInstalledDialogArgs& args) {
+    Str linkLabel = Tr("AI Chat documentation");
+    TempStr link = fmt(R"(<a href="#">%s</a>)", linkLabel);
+    TempStr content = fmt(Tr("See %s for setup instructions.").s, link);
+
+    TASKDIALOG_BUTTON buttons[2];
+    buttons[0].nButtonID = IDOK;
+    buttons[0].pszButtonText = CWStrTemp(Tr("OK"));
+    buttons[1].nButtonID = kBtnIdAIChatLearnMore;
+    buttons[1].pszButtonText = CWStrTemp(Tr("Learn more"));
+
+    TASKDIALOGCONFIG dialogConfig{};
+    DWORD flags = TDF_ALLOW_DIALOG_CANCELLATION | TDF_SIZE_TO_CONTENT | TDF_ENABLE_HYPERLINKS;
+    if (trans::IsCurrLangRtl()) {
+        flags |= TDF_RTL_LAYOUT;
+    }
+    dialogConfig.cbSize = sizeof(TASKDIALOGCONFIG);
+    dialogConfig.pszWindowTitle = CWStrTemp(args.windowTitle);
+    dialogConfig.pszMainInstruction = CWStrTemp(args.mainInstruction);
+    dialogConfig.pszContent = CWStrTemp(content);
+    dialogConfig.nDefaultButton = IDOK;
+    dialogConfig.dwFlags = (TASKDIALOG_FLAGS)flags;
+    dialogConfig.pfCallback = AIChatNotInstalledDialogCallback;
+    dialogConfig.lpCallbackData = (LONG_PTR)&args.docUri;
+    dialogConfig.pButtons = buttons;
+    dialogConfig.cButtons = dimof(buttons);
+    dialogConfig.pszMainIcon = TD_INFORMATION_ICON;
+
+    TaskDialogIndirect(&dialogConfig, nullptr, nullptr, nullptr);
+}
+
+#endif
+
+#if !defined(SUMATRA_NG)
+TempStr AIChatFindExecutableTemp(const StrVec& fullPathCandidates, Str searchExeName, Str searchNameNoExt) {
+#ifdef _MSC_VER
+    for (int i = 0; i < len(fullPathCandidates); i++) {
+        if (file::Exists(fullPathCandidates[i])) {
+            // copy into the temp arena: callers pass a local StrVec that is
+            // destroyed on return, so returning a view into it would dangle
+            return str::DupTemp(fullPathCandidates[i]);
+        }
+    }
+    WCHAR pathW[MAX_PATH];
+    if (searchExeName && SearchPathW(nullptr, CWStrTemp(searchExeName), nullptr, MAX_PATH, pathW, nullptr) > 0) {
+        return ToUtf8Temp(pathW);
+    }
+    if (searchNameNoExt && SearchPathW(nullptr, CWStrTemp(searchNameNoExt), L".exe", MAX_PATH, pathW, nullptr) > 0) {
+        return ToUtf8Temp(pathW);
+    }
+#endif
+    return {};
+}
+
+#endif
+
 void AIChatAppendModelUnique(StrVec& models, Str model) {
     str::TrimWsBoth(model);
     if (len(model) == 0) {
@@ -393,6 +488,24 @@ TempStr AIChatModelDisplayNameTemp(Str model, Str defaultDisplay) {
     }
     return dup;
 }
+
+#if !defined(SUMATRA_NG)
+bool AIChatGetMarkedJsResource(void* ctx, Str path, WebViewResourceResult* res) {
+    auto* data = (LoadedDataResource*)ctx;
+    if (!data || !res || len(path) == 0) {
+        return false;
+    }
+    if (!str::EqI(path, StrL("/marked.min.js")) && !str::EqI(path, StrL("marked.min.js"))) {
+        return false;
+    }
+    res->data = data->data;
+    res->dataLen = data->dataSize;
+    res->contentType = str::Dup(StrL("text/javascript"));
+    res->ownsData = false;
+    return res->dataLen > 0;
+}
+
+#endif
 
 static const char* kAIChatHtmlFmt = R"(<!DOCTYPE html><html><head><meta charset='utf-8'>
 <script src='%smarked.min.js'></script>
@@ -519,12 +632,161 @@ TempStr AIChatFormatChatHtmlTemp(Str virtualHost, Str bgColor) {
     return fmt(kAIChatHtmlFmt, host, cssVars);
 }
 
+#if !defined(SUMATRA_NG)
+void AIChatCloseProcess(HANDLE* processHandle, bool terminateIfRunning) {
+    if (!processHandle || !*processHandle) {
+        return;
+    }
+    HANDLE h = *processHandle;
+    *processHandle = nullptr;
+    if (terminateIfRunning && WaitForSingleObject(h, 0) == WAIT_TIMEOUT) {
+        TerminateProcess(h, 0);
+    }
+    CloseHandle(h);
+}
+
+bool AIChatLaunchProcessWithStdoutPipe(Str cmdLine, Str cwd, AIChatProcessLaunchResult* out) {
+    if (!out || len(cmdLine) == 0) {
+        return false;
+    }
+    *out = {};
+
+    SECURITY_ATTRIBUTES sa;
+    sa.nLength = sizeof(sa);
+    sa.lpSecurityDescriptor = nullptr;
+    sa.bInheritHandle = TRUE;
+
+    HANDLE hReadPipe;
+    HANDLE hWritePipe;
+    if (!CreatePipe(&hReadPipe, &hWritePipe, &sa, 0)) {
+        return false;
+    }
+    SetHandleInformation(hReadPipe, HANDLE_FLAG_INHERIT, 0);
+
+    STARTUPINFOW si = {};
+    si.cb = sizeof(si);
+    si.hStdOutput = hWritePipe;
+    si.hStdError = hWritePipe;
+    si.dwFlags = STARTF_USESTDHANDLES;
+
+    PROCESS_INFORMATION pi = {};
+    WCHAR* cmdLineW = CWStrTemp(cmdLine);
+    WCHAR* dirW = cwd ? CWStrTemp(cwd) : nullptr;
+
+    BOOL ok = CreateProcessW(nullptr, cmdLineW, nullptr, nullptr, TRUE, CREATE_NO_WINDOW, nullptr, cwd ? dirW : nullptr,
+                             &si, &pi);
+    CloseHandle(hWritePipe);
+
+    if (!ok) {
+        CloseHandle(hReadPipe);
+        return false;
+    }
+
+    CloseHandle(pi.hThread);
+    out->ok = true;
+    out->hProcess = pi.hProcess;
+    out->hReadPipe = hReadPipe;
+    out->processId = pi.dwProcessId;
+    return true;
+}
+
+constexpr int kAIChatMaxCaptureBytes = 1024 * 1024;
+
+// Run cmdLine and collect its stdout and stderr into out. Stops after
+// timeoutMs and kills the process if it's still running.
+bool AIChatRunCapture(Str cmdLine, int timeoutMs, str::Builder& out) {
+    AIChatProcessLaunchResult launch;
+    if (!AIChatLaunchProcessWithStdoutPipe(cmdLine, {}, &launch)) {
+        return false;
+    }
+
+    ULONGLONG deadline = GetTickCount64() + timeoutMs;
+    while (GetTickCount64() < deadline && out.len < kAIChatMaxCaptureBytes) {
+        DWORD available = 0;
+        if (!PeekNamedPipe(launch.hReadPipe, nullptr, 0, nullptr, &available, nullptr)) {
+            break;
+        }
+        if (available > 0) {
+            char buf[4096];
+            DWORD nRead = 0;
+            DWORD toRead = std::min<DWORD>(available, dimof(buf));
+            if (!ReadFile(launch.hReadPipe, buf, toRead, &nRead, nullptr) || nRead == 0) {
+                break;
+            }
+            out.Append(Str(buf, (int)nRead));
+            continue;
+        }
+        if (WaitForSingleObject(launch.hProcess, 10) != WAIT_TIMEOUT) {
+            break;
+        }
+        Sleep(10);
+    }
+    CloseHandle(launch.hReadPipe);
+    AIChatCloseProcess(&launch.hProcess, true);
+    return true;
+}
+
+constexpr int kAIChatLabelCloseBtnDx = 16;
+constexpr int kAIChatLabelCloseBtnSpaceDx = 8;
+constexpr int kAIChatLabelPadX = 2;
+
+int AIChatLabelMaxTextDx(int labelDx) {
+    int padX = DpiScale(kAIChatLabelPadX);
+    int btnDx = DpiScale(kAIChatLabelCloseBtnDx);
+    int spaceDx = DpiScale(kAIChatLabelCloseBtnSpaceDx);
+    int maxDx = labelDx - btnDx - spaceDx - (2 * padX);
+    return maxDx > 0 ? maxDx : 0;
+}
+
+TempStr AIChatFitPanelTitleTemp(PlatformFont* font, Str prefix, Str docName, int maxDx) {
+    TempStr full = str::JoinTemp(prefix, docName);
+    if (maxDx <= 0) {
+        return full;
+    }
+    Size sz = PlatformFontMeasureText(font, full);
+    if (sz.dx <= maxDx) {
+        return full;
+    }
+
+    int nRunes = utf8StrLen((u8*)docName.s);
+    if (nRunes < 0) {
+        return full;
+    }
+
+    TempStr best = str::JoinTemp(prefix, ShortenStringUtf8Temp(docName, 1));
+    int lo = 1;
+    int hi = nRunes;
+    while (lo <= hi) {
+        int mid = (lo + hi) / 2;
+        TempStr trial = str::JoinTemp(prefix, ShortenStringUtf8Temp(docName, mid));
+        sz = PlatformFontMeasureText(font, trial);
+        if (sz.dx <= maxDx) {
+            best = trial;
+            lo = mid + 1;
+        } else {
+            hi = mid - 1;
+        }
+    }
+    return best;
+}
+
+#endif
+
 TempStr AIChatGenerateSessionIdTemp() {
+#if defined(SUMATRA_NG)
     u8 b[16];
     if (!gpui::shell::SecureRandom(b, sizeof(b))) {
         return {};
     }
     return AIChatFormatSessionIdTemp(b);
+#else
+    GUID guid;
+    if (FAILED(CoCreateGuid(&guid))) {
+        return {};
+    }
+    return fmt("%08x-%04x-%04x-%02x%02x-%02x%02x%02x%02x%02x%02x", guid.Data1, guid.Data2, guid.Data3, guid.Data4[0],
+               guid.Data4[1], guid.Data4[2], guid.Data4[3], guid.Data4[4], guid.Data4[5], guid.Data4[6], guid.Data4[7]);
+#endif
 }
 
 static AIChatBackend BackendFromTabStorage(int v) {

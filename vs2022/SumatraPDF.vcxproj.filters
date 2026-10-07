@@ -599,9 +599,6 @@
     <ClCompile Include="..\ext\webview2\WebView2Loader.cpp">
       <Filter>ext\webview2</Filter>
     </ClCompile>
-    <ClCompile Include="..\src\AIChatCommon.cpp">
-      <Filter>src</Filter>
-    </ClCompile>
     <ClCompile Include="..\src\AIChatPanel.cpp">
       <Filter>src</Filter>
     </ClCompile>
@@ -1005,6 +1002,9 @@
       <Filter>src\regress</Filter>
     </ClCompile>
     <ClCompile Include="..\src\shared\AIAntiGravity.cpp">
+      <Filter>src\shared</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\shared\AIChatCommon.cpp">
       <Filter>src\shared</Filter>
     </ClCompile>
     <ClCompile Include="..\src\shared\AIClaudeCode.cpp">

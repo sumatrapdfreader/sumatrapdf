@@ -1451,6 +1451,7 @@ export const targets: Target[] = [
       "src/ng/base/CrashHandler_posix.cpp",
     ],
     perSource: [
+      { glob: "src/ng/AIChatCommon.cpp", flags: ["-DSUMATRA_NG"], msvcFlags: ["/DSUMATRA_NG"] },
       { glob: "src/ng/ExplorerQuickLook.cpp", flags: ["-DSUMATRA_NG"], msvcFlags: ["/DSUMATRA_NG"] },
       { glob: "src/ng/ExternalViewers.cpp", flags: ["-DSUMATRA_NG"], msvcFlags: ["/DSUMATRA_NG"] },
       { glob: "src/ng/GoogleLens.cpp", flags: ["-DSUMATRA_NG"], msvcFlags: ["/DSUMATRA_NG"] },
