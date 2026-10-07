@@ -818,15 +818,8 @@ void HtmlFormatter::HandleTagBr() {
 }
 
 static AlignAttr GetAlignAttr(HtmlToken* t, AlignAttr defVal) {
-    AttrInfo attr = t->GetAttrByName(StrL("align"));
-    if (!attr) {
-        return defVal;
-    }
-    AlignAttr align = FindAlignAttr(attr.val);
-    if (AlignAttr::NotFound == align) {
-        return defVal;
-    }
-    return align;
+    AlignAttr align = FindAlignAttr(t->GetAttrByName(StrL("align")).val);
+    return align == AlignAttr::NotFound ? defVal : align;
 }
 
 void HtmlFormatter::HandleTagP(HtmlToken* t, bool isDiv) {
