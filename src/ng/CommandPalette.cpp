@@ -1499,10 +1499,10 @@ static void CollectStrings(MainWindow* mainWin) {
     }
 
     StrVecCP tempCommands;
-    int cmdIdx = 0;
     int cmdId = 0;
-    for (Str name = SeqStrFirst(gCommandDescriptions); len(name) > 0; name = SeqStrNext(name), cmdIdx++) {
-        cmdId = GetCommandIdByIdx(cmdIdx);
+    for (int i = 0; i < gCommandsCount; i++) {
+        Str name = gCommands[i].description;
+        cmdId = gCommands[i].id;
         if (!AllowCommand(ctx, (i32)cmdId)) {
             continue;
         }
@@ -1516,9 +1516,9 @@ static void CollectStrings(MainWindow* mainWin) {
     }
 
     // the same command under another wording a user may search for
-    int altIdx = 0;
-    for (Str name = SeqStrFirst(gCommandAltDescs); len(name) > 0; name = SeqStrNext(name), altIdx++) {
-        cmdId = gCommandAltDescIds[altIdx];
+    for (int i = 0; i < gCommandAltDescsCount; i++) {
+        Str name = gCommandAltDescs[i].description;
+        cmdId = gCommandAltDescs[i].id;
         if (!AllowCommand(ctx, (i32)cmdId)) {
             continue;
         }

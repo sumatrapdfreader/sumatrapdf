@@ -422,13 +422,18 @@ CustomCommand* AllocCustomCommand(Str definition, Str name, Str key);
 void FreeCustomCommand(CustomCommand* cmd);
 
 extern CustomCommand* gFirstCustomCommand;
-extern SeqStrings gCommandDescriptions;
-// alternate command palette texts, parallel to gCommandAltDescIds
-extern SeqStrings gCommandAltDescs;
-extern i32 gCommandAltDescIds[];
+struct CommandInfo {
+    int id;
+    SeqStrings name; // One-entry sequence for case/whitespace-insensitive lookup.
+    Str description;
+};
+
+extern const CommandInfo gCommands[];
+extern const int gCommandsCount;
+extern const CommandInfo gCommandAltDescs[];
+extern const int gCommandAltDescsCount;
 
 int GetCommandIdByName(Str);
-int GetCommandIdByIdx(int idx);
 Str GetCommandName(int commandId);
 Str GetCommandDescription(int commandId);
 

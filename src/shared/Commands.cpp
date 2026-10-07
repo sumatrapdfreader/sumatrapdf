@@ -14,996 +14,339 @@ void MaybeDelayedWarningNotification(Str msg);
 
 // @gen-start cmd-c
 // clang-format off
-static SeqStrings gCommandNames =
-    "CmdOpenFile\0"
-    "CmdClose\0"
-    "CmdCloseCurrentDocument\0"
-    "CmdCloseOtherTabs\0"
-    "CmdCloseTabsToTheRight\0"
-    "CmdCloseTabsToTheLeft\0"
-    "CmdCloseAllTabs\0"
-    "CmdSaveAs\0"
-    "CmdPrint\0"
-    "CmdShowInFolder\0"
-    "CmdRenameFile\0"
-    "CmdDeleteFile\0"
-    "CmdExit\0"
-    "CmdReloadDocument\0"
-    "CmdCreateShortcutToFile\0"
-    "CmdSendByEmail\0"
-    "CmdProperties\0"
-    "CmdSinglePageView\0"
-    "CmdFacingView\0"
-    "CmdBookView\0"
-    "CmdToggleContinuousView\0"
-    "CmdToggleMangaMode\0"
-    "CmdRotateLeft\0"
-    "CmdRotateRight\0"
-    "CmdToggleBookmarks\0"
-    "CmdToggleTableOfContents\0"
-    "CmdToggleFullscreen\0"
-    "CmdPresentationWhiteBackground\0"
-    "CmdPresentationBlackBackground\0"
-    "CmdTogglePresentationMode\0"
-    "CmdToggleToolbar\0"
-    "CmdChangeScrollbar\0"
-    "CmdToggleMenuBar\0"
-    "CmdCopySelection\0"
-    "CmdTranslateSelectionWithGoogle\0"
-    "CmdTranslateSelectionWithDeepL\0"
-    "CmdSearchSelectionWithGoogle\0"
-    "CmdSearchSelectionWithBing\0"
-    "CmdSearchSelectionWithWikipedia\0"
-    "CmdSearchSelectionWithGoogleScholar\0"
-    "CmdSelectAll\0"
-    "CmdNewWindow\0"
-    "CmdDuplicateInNewWindow\0"
-    "CmdDuplicateInNewTab\0"
-    "CmdCopyImage\0"
-    "CmdCopyLinkTarget\0"
-    "CmdCopyComment\0"
-    "CmdCopyFilePath\0"
-    "CmdScrollUp\0"
-    "CmdScrollDown\0"
-    "CmdScrollLeft\0"
-    "CmdScrollRight\0"
-    "CmdScrollLeftPage\0"
-    "CmdScrollRightPage\0"
-    "CmdScrollUpPage\0"
-    "CmdScrollDownPage\0"
-    "CmdScrollDownHalfPage\0"
-    "CmdScrollUpHalfPage\0"
-    "CmdGoToNextPage\0"
-    "CmdGoToPrevPage\0"
-    "CmdGoToFirstPage\0"
-    "CmdGoToLastPage\0"
-    "CmdGoToPage\0"
-    "CmdFindFirst\0"
-    "CmdFindNext\0"
-    "CmdFindPrev\0"
-    "CmdFindNextSel\0"
-    "CmdFindPrevSel\0"
-    "CmdFindToggleMatchCase\0"
-    "CmdSaveAnnotations\0"
-    "CmdSaveAnnotationsNewFile\0"
-    "CmdDiscardChanges\0"
-    "CmdDeleteAnnotation\0"
-    "CmdZoomFitPage\0"
-    "CmdZoomActualSize\0"
-    "CmdZoomFitWidth\0"
-    "CmdZoomFitByOrientation\0"
-    "CmdZoom6400\0"
-    "CmdZoom3200\0"
-    "CmdZoom1600\0"
-    "CmdZoom800\0"
-    "CmdZoom400\0"
-    "CmdZoom200\0"
-    "CmdZoom150\0"
-    "CmdZoom125\0"
-    "CmdZoom100\0"
-    "CmdZoom50\0"
-    "CmdZoom25\0"
-    "CmdZoom12_5\0"
-    "CmdZoom8_33\0"
-    "CmdZoomFitContent\0"
-    "CmdZoomShrinkToFit\0"
-    "CmdZoomCustom\0"
-    "CmdZoomIn\0"
-    "CmdZoomOut\0"
-    "CmdZoomFitWidthAndContinuous\0"
-    "CmdZoomFitPageAndSinglePage\0"
-    "CmdContributeTranslation\0"
-    "CmdOpenWithExplorer\0"
-    "CmdOpenWithDirectoryOpus\0"
-    "CmdOpenWithTotalCommander\0"
-    "CmdOpenWithDoubleCommander\0"
-    "CmdOpenWithAcrobat\0"
-    "CmdOpenWithFoxit\0"
-    "CmdOpenWithFoxitPhantom\0"
-    "CmdOpenWithPdfXchange\0"
-    "CmdOpenWithXpsViewer\0"
-    "CmdOpenWithHtmlHelp\0"
-    "CmdOpenWithPdfDjvuBookmarker\0"
-    "CmdOpenSelectedDocument\0"
-    "CmdPinSelectedDocument\0"
-    "CmdForgetSelectedDocument\0"
-    "CmdExpandAll\0"
-    "CmdCollapseAll\0"
-    "CmdSaveEmbeddedFile\0"
-    "CmdOpenEmbeddedPDF\0"
-    "CmdSaveAttachment\0"
-    "CmdOpenAttachment\0"
-    "CmdOptions\0"
-    "CmdAdvancedSettings\0"
-    "CmdChangeLanguage\0"
-    "CmdCheckUpdate\0"
-    "CmdInstallPrereleaseUpdate\0"
-    "CmdTogglePdfPreviewLogging\0"
-    "CmdHelpOpenManual\0"
-    "CmdHelpOpenManualOnWebsite\0"
-    "CmdHelpOpenKeyboardShortcuts\0"
-    "CmdToggleKeyboardHelp\0"
-    "CmdHelpVisitWebsite\0"
-    "CmdHelpAbout\0"
-    "CmdMoveFrameFocus\0"
-    "CmdFavoriteAdd\0"
-    "CmdFavoriteDel\0"
-    "CmdFavoriteToggle\0"
-    "CmdToggleLinks\0"
-    "CmdToggleShowAnnotations\0"
-    "CmdShowAnnotations\0"
-    "CmdHideAnnotations\0"
-    "CmdCreateAnnotText\0"
-    "CmdCreateAnnotLink\0"
-    "CmdCreateAnnotFreeText\0"
-    "CmdCreateAnnotLine\0"
-    "CmdCreateAnnotSquare\0"
-    "CmdCreateAnnotCircle\0"
-    "CmdCreateAnnotPolygon\0"
-    "CmdCreateAnnotPolyLine\0"
-    "CmdCreateAnnotHighlight\0"
-    "CmdCreateAnnotUnderline\0"
-    "CmdCreateAnnotSquiggly\0"
-    "CmdCreateAnnotStrikeOut\0"
-    "CmdCreateAnnotRedact\0"
-    "CmdCreateAnnotStamp\0"
-    "CmdCreateAnnotCaret\0"
-    "CmdCreateAnnotInk\0"
-    "CmdCreateAnnotPopup\0"
-    "CmdCreateAnnotFileAttachment\0"
-    "CmdInvertColors\0"
-    "CmdTogglePageInfo\0"
-    "CmdToggleZoom\0"
-    "CmdNavigateBack\0"
-    "CmdNavigateForward\0"
-    "CmdToggleCursorPosition\0"
-    "CmdOpenNextFileInFolder\0"
-    "CmdOpenPrevFileInFolder\0"
-    "CmdCommandPalette\0"
-    "CmdShowLog\0"
-    "CmdShowErrors\0"
-    "CmdClearHistory\0"
-    "CmdReopenLastClosedFile\0"
-    "CmdNextTab\0"
-    "CmdPrevTab\0"
-    "CmdNextTabSmart\0"
-    "CmdPrevTabSmart\0"
-    "CmdMoveTabLeft\0"
-    "CmdMoveTabRight\0"
-    "CmdInvokeInverseSearch\0"
-    "CmdExec\0"
-    "CmdViewWithExternalViewer\0"
-    "CmdSelectionHandler\0"
-    "CmdSetTheme\0"
-    "CmdToggleInverseSearch\0"
-    "CmdDebugCorruptMemory\0"
-    "CmdDebugCrashMe\0"
-    "CmdDebugShowNotif\0"
-    "CmdDebugStartStressTest\0"
-    "CmdDebugTogglePredictiveRender\0"
-    "CmdDebugToggleRtl\0"
-    "CmdListPrinters\0"
-    "CmdToggleWindowsPreviewer\0"
-    "CmdToggleWindowsSearchFilter\0"
-    "CmdScreenshot\0"
-    "CmdCropImage\0"
-    "CmdResizeImage\0"
-    "CmdSaveImage\0"
-    "CmdPasteClipboardImage\0"
-    "CmdTabGroupSave\0"
-    "CmdTabGroupRestore\0"
-    "CmdChangeBackgroundColor\0"
-    "CmdChangeEbookSettings\0"
-    "CmdSetTabColor\0"
-    "CmdPdfCompress\0"
-    "CmdPdfDecompress\0"
-    "CmdPdfDeletePages\0"
-    "CmdPdfExtractPages\0"
-    "CmdPdfEncrypt\0"
-    "CmdPdfDecrypt\0"
-    "CmdPdfBake\0"
-    "CmdPdfShowInfo\0"
-    "CmdDocumentExtractText\0"
-    "CmdDocumentShowOutline\0"
-    "CmdSetScreenshotHotkey\0"
-    "CmdToggleReadAloud\0"
-    "CmdPauseReadAloud\0"
-    "CmdContinueReadAloud\0"
-    "CmdStopReadAloud\0"
-    "CmdReadAloudFromTopPage\0"
-    "CmdReadAloudSelection\0"
-    "CmdToggleToolbarShowReadAloud\0"
-    "CmdRemoveDeletedFilesFromHistory\0"
-    "CmdCommandPaletteTOC\0"
-    "CmdDebugToggleRenderInfo\0"
-    "CmdConvertImageToPdf\0"
-    "CmdExpandToCurrentPage\0"
-    "CmdStartAutoScroll\0"
-    "CmdAIChatWithClaudeCode\0"
-    "CmdAIChatWithGrokBuild\0"
-    "CmdAIChatWithOpenAICodex\0"
-    "CmdTranslateSelectionWithGrokBuild\0"
-    "CmdTranslateSelectionWithClaudeCode\0"
-    "CmdTranslateSelectionWithOpenAICodex\0"
-    "CmdFindToggleMatchWholeWord\0"
-    "CmdGoToNextFavorite\0"
-    "CmdGoToPrevFavorite\0"
-    "CmdCreateAnnotImageFromClipboard\0"
-    "CmdSetInverseSearch\0"
-    "CmdCommandPaletteFavorites\0"
-    "CmdNavigateFilesInFolder\0"
-    "CmdDebugToggleCacheInfo\0"
-    "CmdToggleEngineeringDrawingEnhance\0"
-    "CmdSetDocumentColorsFollowTheme\0"
-    "CmdTogglePreservePdfImages\0"
-    "CmdToggleLightDarkTheme\0"
-    "CmdChangeTheme\0"
-    "CmdTranslateSelection\0"
-    "CmdFavoriteShowInTab\0"
-    "CmdTocExpandToLevel1\0"
-    "CmdTocExpandToLevel2\0"
-    "CmdTocExpandToLevel3\0"
-    "CmdTocCollapseSameLevel\0"
-    "CmdToggleFavoritesSort\0"
-    "CmdZoomFitHeight\0"
-    "CmdDeleteFileAndOpenNext\0"
-    "CmdShowGeneratedHTML\0"
-    "CmdDeleteCachedFiles\0"
-    "CmdToggleKeyboardLinkFollowing\0"
-    "CmdDebugToggleDpiOverride\0"
-    "CmdToggleImages\0"
-    "CmdSelectTextViaKeyboard\0"
-    "CmdOpenFileWithOSFilePicker\0"
-    "CmdToggleFilePicker\0"
-    "CmdToggleBoolSetting\0"
-    "CmdFixDefaultApp\0"
-    "CmdAIChatWithAntiGravity\0"
-    "CmdTranslateSelectionWithAntiGravity\0"
-    "CmdConvertToPDF\0"
-    "CmdDebugShowFitContentArea\0"
-    "CmdExtendSelectionCharLeft\0"
-    "CmdExtendSelectionCharRight\0"
-    "CmdExtendSelectionWordLeft\0"
-    "CmdExtendSelectionWordRight\0"
-    "CmdToggleLaserPointer\0"
-    "CmdZoomToSelection\0"
-    "CmdToggleHoverPreview\0"
-    "CmdToggleDisableLinks\0"
-    "CmdSignDocument\0"
-    "CmdInsertImage\0"
-    "CmdToggleHighlightFormFields\0"
-    "CmdTogglePageBoxes\0"
-    "CmdConvertPdfToImages\0"
-    "CmdToggleUniformPageWidth\0"
-    "CmdToggleTransparencyGrid\0"
-    "CmdTogglePageGrid\0"
-    "CmdConfigurePageGrid\0"
-    "CmdToggleEditPDF\0"
-    "CmdApplyRedactions\0"
-    "CmdUndo\0"
-    "CmdRedo\0"
-    "CmdCutAnnotation\0"
-    "CmdCopyAnnotation\0"
-    "CmdPasteAnnotation\0"
-    "CmdSearchGoogleLens\0"
-    "CmdNavigateThumbnail\0"
-    "CmdShowAnnotationText\0"
-    "CmdAnnotationHighlightBrush\0"
-    "CmdFindAnnotation\0"
-    "CmdOpenFileNoHistory\0"
-    "CmdCopySelectionAsImage\0"
-    "CmdSearchGoogleLensPage\0"
-    "CmdSearchGoogleLensImage\0"
-    "CmdSaveSelectionAsImage\0"
-    "CmdToggleTrimEmptyMargins\0"
-    "CmdCopyLocationToClipboard\0"
-    "CmdToggleAutomaticallyScroll\0"
-    "CmdAutomaticallyScrollFaster\0"
-    "CmdAutomaticallyScrollSlower\0"
-    "CmdToggleReadingBar\0"
-    "CmdToggleReadingBarInvert\0"
-    "CmdGoToHomePage\0"
-    "CmdToggleFreePan\0"
-    "CmdNone\0"
-    "CmdFileHistory\0"
-    "CmdFavorite\0"
-    "CmdReadAloudFromCursorPosition\0"
-    "CmdToggleGrayscale\0"
-    "CmdPrintSelection\0"
-    "CmdAutoGenerateTOC\0"
-    "CmdOpenSettingsFile\0"
-    "CmdOpenFileWithSumatraFilePicker\0"
-    "CmdSelectCurrentPage\0"
-    "CmdZoomFitVisible\0"
-    "CmdSignWithImage\0"
-    "CmdInsertTextSnippet\0"
-    "CmdToggleThumbnails\0"
-    "CmdMergePDF\0"
-    "\0";
-
-static i32 gCommandIds[] = {
-    CmdOpenFile,
-    CmdClose,
-    CmdCloseCurrentDocument,
-    CmdCloseOtherTabs,
-    CmdCloseTabsToTheRight,
-    CmdCloseTabsToTheLeft,
-    CmdCloseAllTabs,
-    CmdSaveAs,
-    CmdPrint,
-    CmdShowInFolder,
-    CmdRenameFile,
-    CmdDeleteFile,
-    CmdExit,
-    CmdReloadDocument,
-    CmdCreateShortcutToFile,
-    CmdSendByEmail,
-    CmdProperties,
-    CmdSinglePageView,
-    CmdFacingView,
-    CmdBookView,
-    CmdToggleContinuousView,
-    CmdToggleMangaMode,
-    CmdRotateLeft,
-    CmdRotateRight,
-    CmdToggleBookmarks,
-    CmdToggleTableOfContents,
-    CmdToggleFullscreen,
-    CmdPresentationWhiteBackground,
-    CmdPresentationBlackBackground,
-    CmdTogglePresentationMode,
-    CmdToggleToolbar,
-    CmdChangeScrollbar,
-    CmdToggleMenuBar,
-    CmdCopySelection,
-    CmdTranslateSelectionWithGoogle,
-    CmdTranslateSelectionWithDeepL,
-    CmdSearchSelectionWithGoogle,
-    CmdSearchSelectionWithBing,
-    CmdSearchSelectionWithWikipedia,
-    CmdSearchSelectionWithGoogleScholar,
-    CmdSelectAll,
-    CmdNewWindow,
-    CmdDuplicateInNewWindow,
-    CmdDuplicateInNewTab,
-    CmdCopyImage,
-    CmdCopyLinkTarget,
-    CmdCopyComment,
-    CmdCopyFilePath,
-    CmdScrollUp,
-    CmdScrollDown,
-    CmdScrollLeft,
-    CmdScrollRight,
-    CmdScrollLeftPage,
-    CmdScrollRightPage,
-    CmdScrollUpPage,
-    CmdScrollDownPage,
-    CmdScrollDownHalfPage,
-    CmdScrollUpHalfPage,
-    CmdGoToNextPage,
-    CmdGoToPrevPage,
-    CmdGoToFirstPage,
-    CmdGoToLastPage,
-    CmdGoToPage,
-    CmdFindFirst,
-    CmdFindNext,
-    CmdFindPrev,
-    CmdFindNextSel,
-    CmdFindPrevSel,
-    CmdFindToggleMatchCase,
-    CmdSaveAnnotations,
-    CmdSaveAnnotationsNewFile,
-    CmdDiscardChanges,
-    CmdDeleteAnnotation,
-    CmdZoomFitPage,
-    CmdZoomActualSize,
-    CmdZoomFitWidth,
-    CmdZoomFitByOrientation,
-    CmdZoom6400,
-    CmdZoom3200,
-    CmdZoom1600,
-    CmdZoom800,
-    CmdZoom400,
-    CmdZoom200,
-    CmdZoom150,
-    CmdZoom125,
-    CmdZoom100,
-    CmdZoom50,
-    CmdZoom25,
-    CmdZoom12_5,
-    CmdZoom8_33,
-    CmdZoomFitContent,
-    CmdZoomShrinkToFit,
-    CmdZoomCustom,
-    CmdZoomIn,
-    CmdZoomOut,
-    CmdZoomFitWidthAndContinuous,
-    CmdZoomFitPageAndSinglePage,
-    CmdContributeTranslation,
-    CmdOpenWithExplorer,
-    CmdOpenWithDirectoryOpus,
-    CmdOpenWithTotalCommander,
-    CmdOpenWithDoubleCommander,
-    CmdOpenWithAcrobat,
-    CmdOpenWithFoxit,
-    CmdOpenWithFoxitPhantom,
-    CmdOpenWithPdfXchange,
-    CmdOpenWithXpsViewer,
-    CmdOpenWithHtmlHelp,
-    CmdOpenWithPdfDjvuBookmarker,
-    CmdOpenSelectedDocument,
-    CmdPinSelectedDocument,
-    CmdForgetSelectedDocument,
-    CmdExpandAll,
-    CmdCollapseAll,
-    CmdSaveEmbeddedFile,
-    CmdOpenEmbeddedPDF,
-    CmdSaveAttachment,
-    CmdOpenAttachment,
-    CmdOptions,
-    CmdAdvancedSettings,
-    CmdChangeLanguage,
-    CmdCheckUpdate,
-    CmdInstallPrereleaseUpdate,
-    CmdTogglePdfPreviewLogging,
-    CmdHelpOpenManual,
-    CmdHelpOpenManualOnWebsite,
-    CmdHelpOpenKeyboardShortcuts,
-    CmdToggleKeyboardHelp,
-    CmdHelpVisitWebsite,
-    CmdHelpAbout,
-    CmdMoveFrameFocus,
-    CmdFavoriteAdd,
-    CmdFavoriteDel,
-    CmdFavoriteToggle,
-    CmdToggleLinks,
-    CmdToggleShowAnnotations,
-    CmdShowAnnotations,
-    CmdHideAnnotations,
-    CmdCreateAnnotText,
-    CmdCreateAnnotLink,
-    CmdCreateAnnotFreeText,
-    CmdCreateAnnotLine,
-    CmdCreateAnnotSquare,
-    CmdCreateAnnotCircle,
-    CmdCreateAnnotPolygon,
-    CmdCreateAnnotPolyLine,
-    CmdCreateAnnotHighlight,
-    CmdCreateAnnotUnderline,
-    CmdCreateAnnotSquiggly,
-    CmdCreateAnnotStrikeOut,
-    CmdCreateAnnotRedact,
-    CmdCreateAnnotStamp,
-    CmdCreateAnnotCaret,
-    CmdCreateAnnotInk,
-    CmdCreateAnnotPopup,
-    CmdCreateAnnotFileAttachment,
-    CmdInvertColors,
-    CmdTogglePageInfo,
-    CmdToggleZoom,
-    CmdNavigateBack,
-    CmdNavigateForward,
-    CmdToggleCursorPosition,
-    CmdOpenNextFileInFolder,
-    CmdOpenPrevFileInFolder,
-    CmdCommandPalette,
-    CmdShowLog,
-    CmdShowErrors,
-    CmdClearHistory,
-    CmdReopenLastClosedFile,
-    CmdNextTab,
-    CmdPrevTab,
-    CmdNextTabSmart,
-    CmdPrevTabSmart,
-    CmdMoveTabLeft,
-    CmdMoveTabRight,
-    CmdInvokeInverseSearch,
-    CmdExec,
-    CmdViewWithExternalViewer,
-    CmdSelectionHandler,
-    CmdSetTheme,
-    CmdToggleInverseSearch,
-    CmdDebugCorruptMemory,
-    CmdDebugCrashMe,
-    CmdDebugShowNotif,
-    CmdDebugStartStressTest,
-    CmdDebugTogglePredictiveRender,
-    CmdDebugToggleRtl,
-    CmdListPrinters,
-    CmdToggleWindowsPreviewer,
-    CmdToggleWindowsSearchFilter,
-    CmdScreenshot,
-    CmdCropImage,
-    CmdResizeImage,
-    CmdSaveImage,
-    CmdPasteClipboardImage,
-    CmdTabGroupSave,
-    CmdTabGroupRestore,
-    CmdChangeBackgroundColor,
-    CmdChangeEbookSettings,
-    CmdSetTabColor,
-    CmdPdfCompress,
-    CmdPdfDecompress,
-    CmdPdfDeletePages,
-    CmdPdfExtractPages,
-    CmdPdfEncrypt,
-    CmdPdfDecrypt,
-    CmdPdfBake,
-    CmdPdfShowInfo,
-    CmdDocumentExtractText,
-    CmdDocumentShowOutline,
-    CmdSetScreenshotHotkey,
-    CmdToggleReadAloud,
-    CmdPauseReadAloud,
-    CmdContinueReadAloud,
-    CmdStopReadAloud,
-    CmdReadAloudFromTopPage,
-    CmdReadAloudSelection,
-    CmdToggleToolbarShowReadAloud,
-    CmdRemoveDeletedFilesFromHistory,
-    CmdCommandPaletteTOC,
-    CmdDebugToggleRenderInfo,
-    CmdConvertImageToPdf,
-    CmdExpandToCurrentPage,
-    CmdStartAutoScroll,
-    CmdAIChatWithClaudeCode,
-    CmdAIChatWithGrokBuild,
-    CmdAIChatWithOpenAICodex,
-    CmdTranslateSelectionWithGrokBuild,
-    CmdTranslateSelectionWithClaudeCode,
-    CmdTranslateSelectionWithOpenAICodex,
-    CmdFindToggleMatchWholeWord,
-    CmdGoToNextFavorite,
-    CmdGoToPrevFavorite,
-    CmdCreateAnnotImageFromClipboard,
-    CmdSetInverseSearch,
-    CmdCommandPaletteFavorites,
-    CmdNavigateFilesInFolder,
-    CmdDebugToggleCacheInfo,
-    CmdToggleEngineeringDrawingEnhance,
-    CmdSetDocumentColorsFollowTheme,
-    CmdTogglePreservePdfImages,
-    CmdToggleLightDarkTheme,
-    CmdChangeTheme,
-    CmdTranslateSelection,
-    CmdFavoriteShowInTab,
-    CmdTocExpandToLevel1,
-    CmdTocExpandToLevel2,
-    CmdTocExpandToLevel3,
-    CmdTocCollapseSameLevel,
-    CmdToggleFavoritesSort,
-    CmdZoomFitHeight,
-    CmdDeleteFileAndOpenNext,
-    CmdShowGeneratedHTML,
-    CmdDeleteCachedFiles,
-    CmdToggleKeyboardLinkFollowing,
-    CmdDebugToggleDpiOverride,
-    CmdToggleImages,
-    CmdSelectTextViaKeyboard,
-    CmdOpenFileWithOSFilePicker,
-    CmdToggleFilePicker,
-    CmdToggleBoolSetting,
-    CmdFixDefaultApp,
-    CmdAIChatWithAntiGravity,
-    CmdTranslateSelectionWithAntiGravity,
-    CmdConvertToPDF,
-    CmdDebugShowFitContentArea,
-    CmdExtendSelectionCharLeft,
-    CmdExtendSelectionCharRight,
-    CmdExtendSelectionWordLeft,
-    CmdExtendSelectionWordRight,
-    CmdToggleLaserPointer,
-    CmdZoomToSelection,
-    CmdToggleHoverPreview,
-    CmdToggleDisableLinks,
-    CmdSignDocument,
-    CmdInsertImage,
-    CmdToggleHighlightFormFields,
-    CmdTogglePageBoxes,
-    CmdConvertPdfToImages,
-    CmdToggleUniformPageWidth,
-    CmdToggleTransparencyGrid,
-    CmdTogglePageGrid,
-    CmdConfigurePageGrid,
-    CmdToggleEditPDF,
-    CmdApplyRedactions,
-    CmdUndo,
-    CmdRedo,
-    CmdCutAnnotation,
-    CmdCopyAnnotation,
-    CmdPasteAnnotation,
-    CmdSearchGoogleLens,
-    CmdNavigateThumbnail,
-    CmdShowAnnotationText,
-    CmdAnnotationHighlightBrush,
-    CmdFindAnnotation,
-    CmdOpenFileNoHistory,
-    CmdCopySelectionAsImage,
-    CmdSearchGoogleLensPage,
-    CmdSearchGoogleLensImage,
-    CmdSaveSelectionAsImage,
-    CmdToggleTrimEmptyMargins,
-    CmdCopyLocationToClipboard,
-    CmdToggleAutomaticallyScroll,
-    CmdAutomaticallyScrollFaster,
-    CmdAutomaticallyScrollSlower,
-    CmdToggleReadingBar,
-    CmdToggleReadingBarInvert,
-    CmdGoToHomePage,
-    CmdToggleFreePan,
-    CmdNone,
-    CmdFileHistory,
-    CmdFavorite,
-    CmdReadAloudFromCursorPosition,
-    CmdToggleGrayscale,
-    CmdPrintSelection,
-    CmdAutoGenerateTOC,
-    CmdOpenSettingsFile,
-    CmdOpenFileWithSumatraFilePicker,
-    CmdSelectCurrentPage,
-    CmdZoomFitVisible,
-    CmdSignWithImage,
-    CmdInsertTextSnippet,
-    CmdToggleThumbnails,
-    CmdMergePDF,
+const CommandInfo gCommands[] = {
+    {CmdOpenFile, "CmdOpenFile\0", StrL("Open File...")},
+    {CmdClose, "CmdClose\0", StrL("Close Document")},
+    {CmdCloseCurrentDocument, "CmdCloseCurrentDocument\0", StrL("Close Current Document")},
+    {CmdCloseOtherTabs, "CmdCloseOtherTabs\0", StrL("Close Other Tabs")},
+    {CmdCloseTabsToTheRight, "CmdCloseTabsToTheRight\0", StrL("Close Tabs To The Right")},
+    {CmdCloseTabsToTheLeft, "CmdCloseTabsToTheLeft\0", StrL("Close Tabs To The Left")},
+    {CmdCloseAllTabs, "CmdCloseAllTabs\0", StrL("Close All Tabs")},
+    {CmdSaveAs, "CmdSaveAs\0", StrL("Save File As...")},
+    {CmdPrint, "CmdPrint\0", StrL("Print Document...")},
+    {CmdShowInFolder, "CmdShowInFolder\0", StrL("Show File In Folder...")},
+    {CmdRenameFile, "CmdRenameFile\0", StrL("Rename File...")},
+    {CmdDeleteFile, "CmdDeleteFile\0", StrL("Delete File")},
+    {CmdExit, "CmdExit\0", StrL("Exit Application")},
+    {CmdReloadDocument, "CmdReloadDocument\0", StrL("Reload Document")},
+    {CmdCreateShortcutToFile, "CmdCreateShortcutToFile\0", StrL("Create .lnk Shortcut")},
+    {CmdSendByEmail, "CmdSendByEmail\0", StrL("Send Document By Email...")},
+    {CmdProperties, "CmdProperties\0", StrL("Document Properties...")},
+    {CmdSinglePageView, "CmdSinglePageView\0", StrL("Single Page View")},
+    {CmdFacingView, "CmdFacingView\0", StrL("Facing View")},
+    {CmdBookView, "CmdBookView\0", StrL("Book View")},
+    {CmdToggleContinuousView, "CmdToggleContinuousView\0", StrL("Toggle Continuous View")},
+    {CmdToggleMangaMode, "CmdToggleMangaMode\0", StrL("Toggle Manga Mode")},
+    {CmdRotateLeft, "CmdRotateLeft\0", StrL("Rotate Left")},
+    {CmdRotateRight, "CmdRotateRight\0", StrL("Rotate Right")},
+    {CmdToggleBookmarks, "CmdToggleBookmarks\0", StrL("Toggle Bookmarks")},
+    {CmdToggleTableOfContents, "CmdToggleTableOfContents\0", StrL("Toggle Table Of Contents")},
+    {CmdToggleFullscreen, "CmdToggleFullscreen\0", StrL("Toggle Fullscreen")},
+    {CmdPresentationWhiteBackground, "CmdPresentationWhiteBackground\0", StrL("Presentation White Background")},
+    {CmdPresentationBlackBackground, "CmdPresentationBlackBackground\0", StrL("Presentation Black Background")},
+    {CmdTogglePresentationMode, "CmdTogglePresentationMode\0", StrL("View: Presentation Mode")},
+    {CmdToggleToolbar, "CmdToggleToolbar\0", StrL("Toggle Toolbar")},
+    {CmdChangeScrollbar, "CmdChangeScrollbar\0", StrL("Change Scrollbar...")},
+    {CmdToggleMenuBar, "CmdToggleMenuBar\0", StrL("Toggle Menu Bar")},
+    {CmdCopySelection, "CmdCopySelection\0", StrL("Copy Selection")},
+    {CmdTranslateSelectionWithGoogle, "CmdTranslateSelectionWithGoogle\0", StrL("Translate Selection with Google")},
+    {CmdTranslateSelectionWithDeepL, "CmdTranslateSelectionWithDeepL\0", StrL("Translate Selection with DeepL")},
+    {CmdSearchSelectionWithGoogle, "CmdSearchSelectionWithGoogle\0", StrL("Search Selection with Google")},
+    {CmdSearchSelectionWithBing, "CmdSearchSelectionWithBing\0", StrL("Search Selection with Bing")},
+    {CmdSearchSelectionWithWikipedia, "CmdSearchSelectionWithWikipedia\0", StrL("Search Selection with Wikipedia")},
+    {CmdSearchSelectionWithGoogleScholar, "CmdSearchSelectionWithGoogleScholar\0", StrL("Search Selection with Google Scholar")},
+    {CmdSelectAll, "CmdSelectAll\0", StrL("Select All")},
+    {CmdNewWindow, "CmdNewWindow\0", StrL("New Window")},
+    {CmdDuplicateInNewWindow, "CmdDuplicateInNewWindow\0", StrL("Open Current Document In New Window")},
+    {CmdDuplicateInNewTab, "CmdDuplicateInNewTab\0", StrL("Open Current Document In New Tab")},
+    {CmdCopyImage, "CmdCopyImage\0", StrL("Copy Image")},
+    {CmdCopyLinkTarget, "CmdCopyLinkTarget\0", StrL("Copy Link Target")},
+    {CmdCopyComment, "CmdCopyComment\0", StrL("Copy Comment")},
+    {CmdCopyFilePath, "CmdCopyFilePath\0", StrL("Copy File Path")},
+    {CmdScrollUp, "CmdScrollUp\0", StrL("Scroll Up")},
+    {CmdScrollDown, "CmdScrollDown\0", StrL("Scroll Down")},
+    {CmdScrollLeft, "CmdScrollLeft\0", StrL("Scroll Left")},
+    {CmdScrollRight, "CmdScrollRight\0", StrL("Scroll Right")},
+    {CmdScrollLeftPage, "CmdScrollLeftPage\0", StrL("Scroll Left By Page")},
+    {CmdScrollRightPage, "CmdScrollRightPage\0", StrL("Scroll Right By Page")},
+    {CmdScrollUpPage, "CmdScrollUpPage\0", StrL("Scroll Up By Page")},
+    {CmdScrollDownPage, "CmdScrollDownPage\0", StrL("Scroll Down By Page")},
+    {CmdScrollDownHalfPage, "CmdScrollDownHalfPage\0", StrL("Scroll Down By Half Page")},
+    {CmdScrollUpHalfPage, "CmdScrollUpHalfPage\0", StrL("Scroll Up By Half Page")},
+    {CmdGoToNextPage, "CmdGoToNextPage\0", StrL("Next Page")},
+    {CmdGoToPrevPage, "CmdGoToPrevPage\0", StrL("Previous Page")},
+    {CmdGoToFirstPage, "CmdGoToFirstPage\0", StrL("First Page")},
+    {CmdGoToLastPage, "CmdGoToLastPage\0", StrL("Last Page")},
+    {CmdGoToPage, "CmdGoToPage\0", StrL("Go to Page...")},
+    {CmdFindFirst, "CmdFindFirst\0", StrL("Find...")},
+    {CmdFindNext, "CmdFindNext\0", StrL("Find Next")},
+    {CmdFindPrev, "CmdFindPrev\0", StrL("Find Previous")},
+    {CmdFindNextSel, "CmdFindNextSel\0", StrL("Find Next Selection")},
+    {CmdFindPrevSel, "CmdFindPrevSel\0", StrL("Find Previous Selection")},
+    {CmdFindToggleMatchCase, "CmdFindToggleMatchCase\0", StrL("Find: Toggle Match Case")},
+    {CmdSaveAnnotations, "CmdSaveAnnotations\0", StrL("Save Annotations to existing PDF")},
+    {CmdSaveAnnotationsNewFile, "CmdSaveAnnotationsNewFile\0", StrL("Save Annotations to a new PDF...")},
+    {CmdDiscardChanges, "CmdDiscardChanges\0", StrL("Discard Changes")},
+    {CmdDeleteAnnotation, "CmdDeleteAnnotation\0", StrL("Delete Annotation")},
+    {CmdZoomFitPage, "CmdZoomFitPage\0", StrL("Zoom: Fit Page")},
+    {CmdZoomActualSize, "CmdZoomActualSize\0", StrL("Zoom: Actual Size")},
+    {CmdZoomFitWidth, "CmdZoomFitWidth\0", StrL("Zoom: Fit Width")},
+    {CmdZoomFitByOrientation, "CmdZoomFitByOrientation\0", StrL("Zoom: Fit Page or Width by Orientation")},
+    {CmdZoom6400, "CmdZoom6400\0", StrL("Zoom: 6400%")},
+    {CmdZoom3200, "CmdZoom3200\0", StrL("Zoom: 3200%")},
+    {CmdZoom1600, "CmdZoom1600\0", StrL("Zoom: 1600%")},
+    {CmdZoom800, "CmdZoom800\0", StrL("Zoom: 800%")},
+    {CmdZoom400, "CmdZoom400\0", StrL("Zoom: 400%")},
+    {CmdZoom200, "CmdZoom200\0", StrL("Zoom: 200%")},
+    {CmdZoom150, "CmdZoom150\0", StrL("Zoom: 150%")},
+    {CmdZoom125, "CmdZoom125\0", StrL("Zoom: 125%")},
+    {CmdZoom100, "CmdZoom100\0", StrL("Zoom: 100%")},
+    {CmdZoom50, "CmdZoom50\0", StrL("Zoom: 50%")},
+    {CmdZoom25, "CmdZoom25\0", StrL("Zoom: 25%")},
+    {CmdZoom12_5, "CmdZoom12_5\0", StrL("Zoom: 12.5%")},
+    {CmdZoom8_33, "CmdZoom8_33\0", StrL("Zoom: 8.33%")},
+    {CmdZoomFitContent, "CmdZoomFitContent\0", StrL("Zoom: Fit Content")},
+    {CmdZoomShrinkToFit, "CmdZoomShrinkToFit\0", StrL("Zoom: Shrink To Fit")},
+    {CmdZoomCustom, "CmdZoomCustom\0", StrL("Zoom: Custom...")},
+    {CmdZoomIn, "CmdZoomIn\0", StrL("Zoom In")},
+    {CmdZoomOut, "CmdZoomOut\0", StrL("Zoom Out")},
+    {CmdZoomFitWidthAndContinuous, "CmdZoomFitWidthAndContinuous\0", StrL("Zoom: Fit Width And Continuous")},
+    {CmdZoomFitPageAndSinglePage, "CmdZoomFitPageAndSinglePage\0", StrL("Zoom: Fit Page and Single Page")},
+    {CmdContributeTranslation, "CmdContributeTranslation\0", StrL("Contribute Translation")},
+    {CmdOpenWithExplorer, "CmdOpenWithExplorer\0", StrL("Open Directory In Explorer")},
+    {CmdOpenWithDirectoryOpus, "CmdOpenWithDirectoryOpus\0", StrL("Open Directory In Directory Opus")},
+    {CmdOpenWithTotalCommander, "CmdOpenWithTotalCommander\0", StrL("Open Directory In Total Commander")},
+    {CmdOpenWithDoubleCommander, "CmdOpenWithDoubleCommander\0", StrL("Open Directory In Double Commander")},
+    {CmdOpenWithAcrobat, "CmdOpenWithAcrobat\0", StrL("Open in Adobe Acrobat")},
+    {CmdOpenWithFoxit, "CmdOpenWithFoxit\0", StrL("Open in Foxit Reader")},
+    {CmdOpenWithFoxitPhantom, "CmdOpenWithFoxitPhantom\0", StrL("Open in Foxit PhantomPDF")},
+    {CmdOpenWithPdfXchange, "CmdOpenWithPdfXchange\0", StrL("Open in PDF-XChange")},
+    {CmdOpenWithXpsViewer, "CmdOpenWithXpsViewer\0", StrL("Open in Microsoft XPS Viewer")},
+    {CmdOpenWithHtmlHelp, "CmdOpenWithHtmlHelp\0", StrL("Open in Microsoft HTML Help")},
+    {CmdOpenWithPdfDjvuBookmarker, "CmdOpenWithPdfDjvuBookmarker\0", StrL("Open With Pdf&Djvu Bookmarker")},
+    {CmdOpenSelectedDocument, "CmdOpenSelectedDocument\0", StrL("Open Selected Document")},
+    {CmdPinSelectedDocument, "CmdPinSelectedDocument\0", StrL("Pin Selected Document")},
+    {CmdForgetSelectedDocument, "CmdForgetSelectedDocument\0", StrL("Remove Selected Document From History")},
+    {CmdExpandAll, "CmdExpandAll\0", StrL("Expand All")},
+    {CmdCollapseAll, "CmdCollapseAll\0", StrL("Collapse All")},
+    {CmdSaveEmbeddedFile, "CmdSaveEmbeddedFile\0", StrL("Save Embedded File...")},
+    {CmdOpenEmbeddedPDF, "CmdOpenEmbeddedPDF\0", StrL("Open Embedded PDF")},
+    {CmdSaveAttachment, "CmdSaveAttachment\0", StrL("Save Attachment...")},
+    {CmdOpenAttachment, "CmdOpenAttachment\0", StrL("Open Attachment")},
+    {CmdOptions, "CmdOptions\0", StrL("Settings...")},
+    {CmdAdvancedSettings, "CmdAdvancedSettings\0", StrL("Advanced Settings...")},
+    {CmdChangeLanguage, "CmdChangeLanguage\0", StrL("Change Language...")},
+    {CmdCheckUpdate, "CmdCheckUpdate\0", StrL("Check For Updates")},
+    {CmdInstallPrereleaseUpdate, "CmdInstallPrereleaseUpdate\0", StrL("Install Pre-release Update")},
+    {CmdTogglePdfPreviewLogging, "CmdTogglePdfPreviewLogging\0", StrL("Toggle PDF Preview Logging")},
+    {CmdHelpOpenManual, "CmdHelpOpenManual\0", StrL("Help: Manual")},
+    {CmdHelpOpenManualOnWebsite, "CmdHelpOpenManualOnWebsite\0", StrL("Help: Manual On Website")},
+    {CmdHelpOpenKeyboardShortcuts, "CmdHelpOpenKeyboardShortcuts\0", StrL("Help: Keyboard Shortcuts")},
+    {CmdToggleKeyboardHelp, "CmdToggleKeyboardHelp\0", StrL("Show Keyboard Shortcuts")},
+    {CmdHelpVisitWebsite, "CmdHelpVisitWebsite\0", StrL("Help: SumatraPDF Website")},
+    {CmdHelpAbout, "CmdHelpAbout\0", StrL("Help: About SumatraPDF...")},
+    {CmdMoveFrameFocus, "CmdMoveFrameFocus\0", StrL("Move Frame Focus")},
+    {CmdFavoriteAdd, "CmdFavoriteAdd\0", StrL("Add Favorite")},
+    {CmdFavoriteDel, "CmdFavoriteDel\0", StrL("Delete Favorite")},
+    {CmdFavoriteToggle, "CmdFavoriteToggle\0", StrL("Toggle Favorites")},
+    {CmdToggleLinks, "CmdToggleLinks\0", StrL("Toggle Show Links")},
+    {CmdToggleShowAnnotations, "CmdToggleShowAnnotations\0", StrL("Toggle Show Annotations")},
+    {CmdShowAnnotations, "CmdShowAnnotations\0", StrL("Show Annotations")},
+    {CmdHideAnnotations, "CmdHideAnnotations\0", StrL("Hide Annotations")},
+    {CmdCreateAnnotText, "CmdCreateAnnotText\0", StrL("Create Text Annotation")},
+    {CmdCreateAnnotLink, "CmdCreateAnnotLink\0", StrL("Create Link Annotation")},
+    {CmdCreateAnnotFreeText, "CmdCreateAnnotFreeText\0", StrL("Create Free Text Annotation")},
+    {CmdCreateAnnotLine, "CmdCreateAnnotLine\0", StrL("Create Line Annotation")},
+    {CmdCreateAnnotSquare, "CmdCreateAnnotSquare\0", StrL("Create Square Annotation")},
+    {CmdCreateAnnotCircle, "CmdCreateAnnotCircle\0", StrL("Create Circle Annotation")},
+    {CmdCreateAnnotPolygon, "CmdCreateAnnotPolygon\0", StrL("Create Polygon Annotation")},
+    {CmdCreateAnnotPolyLine, "CmdCreateAnnotPolyLine\0", StrL("Create Polyline Annotation")},
+    {CmdCreateAnnotHighlight, "CmdCreateAnnotHighlight\0", StrL("Create Highlight Annotation")},
+    {CmdCreateAnnotUnderline, "CmdCreateAnnotUnderline\0", StrL("Create Underline Annotation")},
+    {CmdCreateAnnotSquiggly, "CmdCreateAnnotSquiggly\0", StrL("Create Squiggly Annotation")},
+    {CmdCreateAnnotStrikeOut, "CmdCreateAnnotStrikeOut\0", StrL("Create Strike Out Annotation")},
+    {CmdCreateAnnotRedact, "CmdCreateAnnotRedact\0", StrL("Create Redact Annotation")},
+    {CmdCreateAnnotStamp, "CmdCreateAnnotStamp\0", StrL("Create Stamp Annotation")},
+    {CmdCreateAnnotCaret, "CmdCreateAnnotCaret\0", StrL("Create Caret Annotation")},
+    {CmdCreateAnnotInk, "CmdCreateAnnotInk\0", StrL("Create Ink Annotation")},
+    {CmdCreateAnnotPopup, "CmdCreateAnnotPopup\0", StrL("Create Popup Annotation")},
+    {CmdCreateAnnotFileAttachment, "CmdCreateAnnotFileAttachment\0", StrL("Create File Attachment Annotation")},
+    {CmdInvertColors, "CmdInvertColors\0", StrL("Invert Colors")},
+    {CmdTogglePageInfo, "CmdTogglePageInfo\0", StrL("Toggle Page Info")},
+    {CmdToggleZoom, "CmdToggleZoom\0", StrL("Toggle Zoom")},
+    {CmdNavigateBack, "CmdNavigateBack\0", StrL("Navigate Back")},
+    {CmdNavigateForward, "CmdNavigateForward\0", StrL("Navigate Forward")},
+    {CmdToggleCursorPosition, "CmdToggleCursorPosition\0", StrL("Toggle Cursor Position")},
+    {CmdOpenNextFileInFolder, "CmdOpenNextFileInFolder\0", StrL("Open Next File In Folder")},
+    {CmdOpenPrevFileInFolder, "CmdOpenPrevFileInFolder\0", StrL("Open Previous File In Folder")},
+    {CmdCommandPalette, "CmdCommandPalette\0", StrL("Command Palette")},
+    {CmdShowLog, "CmdShowLog\0", StrL("Show Logs")},
+    {CmdShowErrors, "CmdShowErrors\0", StrL("Show Errors...")},
+    {CmdClearHistory, "CmdClearHistory\0", StrL("Clear History")},
+    {CmdReopenLastClosedFile, "CmdReopenLastClosedFile\0", StrL("Reopen Last Closed")},
+    {CmdNextTab, "CmdNextTab\0", StrL("Next Tab")},
+    {CmdPrevTab, "CmdPrevTab\0", StrL("Previous Tab")},
+    {CmdNextTabSmart, "CmdNextTabSmart\0", StrL("Smart Next Tab")},
+    {CmdPrevTabSmart, "CmdPrevTabSmart\0", StrL("Smart Previous Tab")},
+    {CmdMoveTabLeft, "CmdMoveTabLeft\0", StrL("Move Tab Left")},
+    {CmdMoveTabRight, "CmdMoveTabRight\0", StrL("Move Tab Right")},
+    {CmdInvokeInverseSearch, "CmdInvokeInverseSearch\0", StrL("Invoke Inverse Search")},
+    {CmdExec, "CmdExec\0", StrL("Execute a program")},
+    {CmdViewWithExternalViewer, "CmdViewWithExternalViewer\0", StrL("View With Custom External Viewer")},
+    {CmdSelectionHandler, "CmdSelectionHandler\0", StrL("Launch a browser or run command with selection")},
+    {CmdSetTheme, "CmdSetTheme\0", StrL("Set theme")},
+    {CmdToggleInverseSearch, "CmdToggleInverseSearch\0", StrL("Toggle Inverse Search")},
+    {CmdDebugCorruptMemory, "CmdDebugCorruptMemory\0", StrL("Debug: Corrupt Memory")},
+    {CmdDebugCrashMe, "CmdDebugCrashMe\0", StrL("Debug: Crash Me")},
+    {CmdDebugShowNotif, "CmdDebugShowNotif\0", StrL("Debug: Show Notification")},
+    {CmdDebugStartStressTest, "CmdDebugStartStressTest\0", StrL("Debug: Start Stress Test")},
+    {CmdDebugTogglePredictiveRender, "CmdDebugTogglePredictiveRender\0", StrL("Debug: Toggle Predictive Rendering")},
+    {CmdDebugToggleRtl, "CmdDebugToggleRtl\0", StrL("Debug: Toggle RTL")},
+    {CmdListPrinters, "CmdListPrinters\0", StrL("List Printers...")},
+    {CmdToggleWindowsPreviewer, "CmdToggleWindowsPreviewer\0", StrL("Toggle Windows Previewer")},
+    {CmdToggleWindowsSearchFilter, "CmdToggleWindowsSearchFilter\0", StrL("Toggle Windows Search Filter")},
+    {CmdScreenshot, "CmdScreenshot\0", StrL("Take Screenshot...")},
+    {CmdCropImage, "CmdCropImage\0", StrL("Crop Image...")},
+    {CmdResizeImage, "CmdResizeImage\0", StrL("Resize Image...")},
+    {CmdSaveImage, "CmdSaveImage\0", StrL("Save Image...")},
+    {CmdPasteClipboardImage, "CmdPasteClipboardImage\0", StrL("Paste Image From Clipboard")},
+    {CmdTabGroupSave, "CmdTabGroupSave\0", StrL("Save Tab Group...")},
+    {CmdTabGroupRestore, "CmdTabGroupRestore\0", StrL("Restore Tab Group...")},
+    {CmdChangeBackgroundColor, "CmdChangeBackgroundColor\0", StrL("Change Background Color...")},
+    {CmdChangeEbookSettings, "CmdChangeEbookSettings\0", StrL("Change eBook Settings...")},
+    {CmdSetTabColor, "CmdSetTabColor\0", StrL("Change Tab Color...")},
+    {CmdPdfCompress, "CmdPdfCompress\0", StrL("Compress PDF...")},
+    {CmdPdfDecompress, "CmdPdfDecompress\0", StrL("Decompress PDF...")},
+    {CmdPdfDeletePages, "CmdPdfDeletePages\0", StrL("Delete Pages From PDF...")},
+    {CmdPdfExtractPages, "CmdPdfExtractPages\0", StrL("Extract Pages From PDF...")},
+    {CmdPdfEncrypt, "CmdPdfEncrypt\0", StrL("Encrypt PDF...")},
+    {CmdPdfDecrypt, "CmdPdfDecrypt\0", StrL("Decrypt PDF...")},
+    {CmdPdfBake, "CmdPdfBake\0", StrL("Bake PDF File...")},
+    {CmdPdfShowInfo, "CmdPdfShowInfo\0", StrL("Show PDF Info...")},
+    {CmdDocumentExtractText, "CmdDocumentExtractText\0", StrL("Extract Text From Document...")},
+    {CmdDocumentShowOutline, "CmdDocumentShowOutline\0", StrL("Show Document Bookmarks...")},
+    {CmdSetScreenshotHotkey, "CmdSetScreenshotHotkey\0", StrL("Set Screenshot Hotkey...")},
+    {CmdToggleReadAloud, "CmdToggleReadAloud\0", StrL("Toggle Read Aloud")},
+    {CmdPauseReadAloud, "CmdPauseReadAloud\0", StrL("Pause Reading")},
+    {CmdContinueReadAloud, "CmdContinueReadAloud\0", StrL("Continue Reading")},
+    {CmdStopReadAloud, "CmdStopReadAloud\0", StrL("Stop Reading")},
+    {CmdReadAloudFromTopPage, "CmdReadAloudFromTopPage\0", StrL("Start Reading From Top")},
+    {CmdReadAloudSelection, "CmdReadAloudSelection\0", StrL("Start Reading Selection")},
+    {CmdToggleToolbarShowReadAloud, "CmdToggleToolbarShowReadAloud\0", StrL("Read Aloud: Show In Toolbar")},
+    {CmdRemoveDeletedFilesFromHistory, "CmdRemoveDeletedFilesFromHistory\0", StrL("Remove Deleted Files From History")},
+    {CmdCommandPaletteTOC, "CmdCommandPaletteTOC\0", StrL("Command Palette: Table Of Contents")},
+    {CmdDebugToggleRenderInfo, "CmdDebugToggleRenderInfo\0", StrL("Debug: Toggle Render Queue Info")},
+    {CmdConvertImageToPdf, "CmdConvertImageToPdf\0", StrL("Convert Image To PDF...")},
+    {CmdExpandToCurrentPage, "CmdExpandToCurrentPage\0", StrL("Expand TOC to Current Page")},
+    {CmdStartAutoScroll, "CmdStartAutoScroll\0", StrL("Start Auto-Scroll")},
+    {CmdAIChatWithClaudeCode, "CmdAIChatWithClaudeCode\0", StrL("Claude chat...")},
+    {CmdAIChatWithGrokBuild, "CmdAIChatWithGrokBuild\0", StrL("Grok chat...")},
+    {CmdAIChatWithOpenAICodex, "CmdAIChatWithOpenAICodex\0", StrL("Codex chat...")},
+    {CmdTranslateSelectionWithGrokBuild, "CmdTranslateSelectionWithGrokBuild\0", StrL("Translate Selection with Grok Build...")},
+    {CmdTranslateSelectionWithClaudeCode, "CmdTranslateSelectionWithClaudeCode\0", StrL("Translate Selection with Claude Code...")},
+    {CmdTranslateSelectionWithOpenAICodex, "CmdTranslateSelectionWithOpenAICodex\0", StrL("Translate Selection with OpenAI Codex...")},
+    {CmdFindToggleMatchWholeWord, "CmdFindToggleMatchWholeWord\0", StrL("Find: Toggle Match Whole Word")},
+    {CmdGoToNextFavorite, "CmdGoToNextFavorite\0", StrL("Go to Next Favorite")},
+    {CmdGoToPrevFavorite, "CmdGoToPrevFavorite\0", StrL("Go to Previous Favorite")},
+    {CmdCreateAnnotImageFromClipboard, "CmdCreateAnnotImageFromClipboard\0", StrL("Create Image Annotation From Clipboard")},
+    {CmdSetInverseSearch, "CmdSetInverseSearch\0", StrL("Set Inverse Search Command Line...")},
+    {CmdCommandPaletteFavorites, "CmdCommandPaletteFavorites\0", StrL("Command Palette: Favorites")},
+    {CmdNavigateFilesInFolder, "CmdNavigateFilesInFolder\0", StrL("Navigate Files in Folder...")},
+    {CmdDebugToggleCacheInfo, "CmdDebugToggleCacheInfo\0", StrL("Debug: Toggle Cache Info")},
+    {CmdToggleEngineeringDrawingEnhance, "CmdToggleEngineeringDrawingEnhance\0", StrL("Toggle Engineering Drawing Enhancement")},
+    {CmdSetDocumentColorsFollowTheme, "CmdSetDocumentColorsFollowTheme\0", StrL("Make Document Colors Follow Theme...")},
+    {CmdTogglePreservePdfImages, "CmdTogglePreservePdfImages\0", StrL("Toggle Preserve PDF Image Colors in Dark Mode")},
+    {CmdToggleLightDarkTheme, "CmdToggleLightDarkTheme\0", StrL("Toggle Light/Dark Theme")},
+    {CmdChangeTheme, "CmdChangeTheme\0", StrL("Change Theme...")},
+    {CmdTranslateSelection, "CmdTranslateSelection\0", StrL("Translate Selection...")},
+    {CmdFavoriteShowInTab, "CmdFavoriteShowInTab\0", StrL("Show Favorites in Tab")},
+    {CmdTocExpandToLevel1, "CmdTocExpandToLevel1\0", StrL("Bookmarks: Expand to Level 1")},
+    {CmdTocExpandToLevel2, "CmdTocExpandToLevel2\0", StrL("Bookmarks: Expand to Level 2")},
+    {CmdTocExpandToLevel3, "CmdTocExpandToLevel3\0", StrL("Bookmarks: Expand to Level 3")},
+    {CmdTocCollapseSameLevel, "CmdTocCollapseSameLevel\0", StrL("Bookmarks: Collapse Same Level")},
+    {CmdToggleFavoritesSort, "CmdToggleFavoritesSort\0", StrL("Sort Favorites By Name")},
+    {CmdZoomFitHeight, "CmdZoomFitHeight\0", StrL("Zoom: Fit Height")},
+    {CmdDeleteFileAndOpenNext, "CmdDeleteFileAndOpenNext\0", StrL("Delete File And Open Next")},
+    {CmdShowGeneratedHTML, "CmdShowGeneratedHTML\0", StrL("Show Generated HTML")},
+    {CmdDeleteCachedFiles, "CmdDeleteCachedFiles\0", StrL("Delete Cached Files")},
+    {CmdToggleKeyboardLinkFollowing, "CmdToggleKeyboardLinkFollowing\0", StrL("Follow Link With Keyboard")},
+    {CmdDebugToggleDpiOverride, "CmdDebugToggleDpiOverride\0", StrL("Debug: Toggle DPI Override")},
+    {CmdToggleImages, "CmdToggleImages\0", StrL("Toggle Show Images")},
+    {CmdSelectTextViaKeyboard, "CmdSelectTextViaKeyboard\0", StrL("Select Text With Keyboard")},
+    {CmdOpenFileWithOSFilePicker, "CmdOpenFileWithOSFilePicker\0", StrL("Open File With Windows File Picker...")},
+    {CmdToggleFilePicker, "CmdToggleFilePicker\0", StrL("SumatraPDF File Picker")},
+    {CmdToggleBoolSetting, "CmdToggleBoolSetting\0", StrL("Toggle Boolean Setting")},
+    {CmdFixDefaultApp, "CmdFixDefaultApp\0", StrL("Fix Default App For Extension")},
+    {CmdAIChatWithAntiGravity, "CmdAIChatWithAntiGravity\0", StrL("Antigravity chat...")},
+    {CmdTranslateSelectionWithAntiGravity, "CmdTranslateSelectionWithAntiGravity\0", StrL("Translate Selection with Antigravity...")},
+    {CmdConvertToPDF, "CmdConvertToPDF\0", StrL("Convert To PDF...")},
+    {CmdDebugShowFitContentArea, "CmdDebugShowFitContentArea\0", StrL("Debug: Show Fit Content Area")},
+    {CmdExtendSelectionCharLeft, "CmdExtendSelectionCharLeft\0", StrL("Extend Selection One Character Left")},
+    {CmdExtendSelectionCharRight, "CmdExtendSelectionCharRight\0", StrL("Extend Selection One Character Right")},
+    {CmdExtendSelectionWordLeft, "CmdExtendSelectionWordLeft\0", StrL("Extend Selection One Word Left")},
+    {CmdExtendSelectionWordRight, "CmdExtendSelectionWordRight\0", StrL("Extend Selection One Word Right")},
+    {CmdToggleLaserPointer, "CmdToggleLaserPointer\0", StrL("Toggle Laser Pointer")},
+    {CmdZoomToSelection, "CmdZoomToSelection\0", StrL("Zoom: To Selection")},
+    {CmdToggleHoverPreview, "CmdToggleHoverPreview\0", StrL("Toggle Citation Hover Preview")},
+    {CmdToggleDisableLinks, "CmdToggleDisableLinks\0", StrL("Toggle Disable Links")},
+    {CmdSignDocument, "CmdSignDocument\0", StrL("Sign Document...")},
+    {CmdInsertImage, "CmdInsertImage\0", StrL("Insert Image...")},
+    {CmdToggleHighlightFormFields, "CmdToggleHighlightFormFields\0", StrL("Toggle Highlight Form Fields")},
+    {CmdTogglePageBoxes, "CmdTogglePageBoxes\0", StrL("Toggle Page Boxes")},
+    {CmdConvertPdfToImages, "CmdConvertPdfToImages\0", StrL("Convert PDF to Images...")},
+    {CmdToggleUniformPageWidth, "CmdToggleUniformPageWidth\0", StrL("Toggle Uniform Page Width")},
+    {CmdToggleTransparencyGrid, "CmdToggleTransparencyGrid\0", StrL("Toggle Transparency Grid")},
+    {CmdTogglePageGrid, "CmdTogglePageGrid\0", StrL("Toggle Page Grid")},
+    {CmdConfigurePageGrid, "CmdConfigurePageGrid\0", StrL("Configure Page Grid...")},
+    {CmdToggleEditPDF, "CmdToggleEditPDF\0", StrL("Toggle Edit PDF")},
+    {CmdApplyRedactions, "CmdApplyRedactions\0", StrL("Apply Redactions")},
+    {CmdUndo, "CmdUndo\0", StrL("Undo")},
+    {CmdRedo, "CmdRedo\0", StrL("Redo")},
+    {CmdCutAnnotation, "CmdCutAnnotation\0", StrL("Cut Annotation")},
+    {CmdCopyAnnotation, "CmdCopyAnnotation\0", StrL("Copy Annotation")},
+    {CmdPasteAnnotation, "CmdPasteAnnotation\0", StrL("Paste Annotation")},
+    {CmdSearchGoogleLens, "CmdSearchGoogleLens\0", StrL("Search with Google Lens")},
+    {CmdNavigateThumbnail, "CmdNavigateThumbnail\0", StrL("Navigate Thumbnails")},
+    {CmdShowAnnotationText, "CmdShowAnnotationText\0", StrL("Show Comment")},
+    {CmdAnnotationHighlightBrush, "CmdAnnotationHighlightBrush\0", StrL("Highlighter")},
+    {CmdFindAnnotation, "CmdFindAnnotation\0", StrL("Find Annotation")},
+    {CmdOpenFileNoHistory, "CmdOpenFileNoHistory\0", StrL("Open File Without History...")},
+    {CmdCopySelectionAsImage, "CmdCopySelectionAsImage\0", StrL("Copy Selection As Image")},
+    {CmdSearchGoogleLensPage, "CmdSearchGoogleLensPage\0", StrL("Search Page with Google Lens")},
+    {CmdSearchGoogleLensImage, "CmdSearchGoogleLensImage\0", StrL("Search Image with Google Lens")},
+    {CmdSaveSelectionAsImage, "CmdSaveSelectionAsImage\0", StrL("Save As Image...")},
+    {CmdToggleTrimEmptyMargins, "CmdToggleTrimEmptyMargins\0", StrL("Toggle Trim Empty Margins")},
+    {CmdCopyLocationToClipboard, "CmdCopyLocationToClipboard\0", StrL("Copy Location To Clipboard")},
+    {CmdToggleAutomaticallyScroll, "CmdToggleAutomaticallyScroll\0", StrL("Automatically Scroll")},
+    {CmdAutomaticallyScrollFaster, "CmdAutomaticallyScrollFaster\0", StrL("Automatically Scroll Faster")},
+    {CmdAutomaticallyScrollSlower, "CmdAutomaticallyScrollSlower\0", StrL("Automatically Scroll Slower")},
+    {CmdToggleReadingBar, "CmdToggleReadingBar\0", StrL("Reading Bar")},
+    {CmdToggleReadingBarInvert, "CmdToggleReadingBarInvert\0", StrL("Reading Bar Invert")},
+    {CmdGoToHomePage, "CmdGoToHomePage\0", StrL("Go To Home Page")},
+    {CmdToggleFreePan, "CmdToggleFreePan\0", StrL("Toggle Free Pan")},
+    {CmdNone, "CmdNone\0", StrL("Do nothing")},
+    {CmdFileHistory, "CmdFileHistory\0", StrL("Open Recent File")},
+    {CmdFavorite, "CmdFavorite\0", StrL("Go to Favorite")},
+    {CmdReadAloudFromCursorPosition, "CmdReadAloudFromCursorPosition\0", StrL("Start Reading From Cursor Position")},
+    {CmdToggleGrayscale, "CmdToggleGrayscale\0", StrL("Toggle Grayscale")},
+    {CmdPrintSelection, "CmdPrintSelection\0", StrL("Print Selection...")},
+    {CmdAutoGenerateTOC, "CmdAutoGenerateTOC\0", StrL("Generate Table Of Contents")},
+    {CmdOpenSettingsFile, "CmdOpenSettingsFile\0", StrL("Open Advanced Settings File...")},
+    {CmdOpenFileWithSumatraFilePicker, "CmdOpenFileWithSumatraFilePicker\0", StrL("Open File With SumatraPDF File Picker...")},
+    {CmdSelectCurrentPage, "CmdSelectCurrentPage\0", StrL("Select Current Page")},
+    {CmdZoomFitVisible, "CmdZoomFitVisible\0", StrL("Zoom: Fit Visible")},
+    {CmdSignWithImage, "CmdSignWithImage\0", StrL("Sign With Image")},
+    {CmdInsertTextSnippet, "CmdInsertTextSnippet\0", StrL("Insert Text Snippet")},
+    {CmdToggleThumbnails, "CmdToggleThumbnails\0", StrL("Toggle Thumbnails")},
+    {CmdMergePDF, "CmdMergePDF\0", StrL("Merge PDF...")},
 };
+const int gCommandsCount = dimofi(gCommands);
 
-SeqStrings gCommandDescriptions =
-    "Open File...\0"
-    "Close Document\0"
-    "Close Current Document\0"
-    "Close Other Tabs\0"
-    "Close Tabs To The Right\0"
-    "Close Tabs To The Left\0"
-    "Close All Tabs\0"
-    "Save File As...\0"
-    "Print Document...\0"
-    "Show File In Folder...\0"
-    "Rename File...\0"
-    "Delete File\0"
-    "Exit Application\0"
-    "Reload Document\0"
-    "Create .lnk Shortcut\0"
-    "Send Document By Email...\0"
-    "Document Properties...\0"
-    "Single Page View\0"
-    "Facing View\0"
-    "Book View\0"
-    "Toggle Continuous View\0"
-    "Toggle Manga Mode\0"
-    "Rotate Left\0"
-    "Rotate Right\0"
-    "Toggle Bookmarks\0"
-    "Toggle Table Of Contents\0"
-    "Toggle Fullscreen\0"
-    "Presentation White Background\0"
-    "Presentation Black Background\0"
-    "View: Presentation Mode\0"
-    "Toggle Toolbar\0"
-    "Change Scrollbar...\0"
-    "Toggle Menu Bar\0"
-    "Copy Selection\0"
-    "Translate Selection with Google\0"
-    "Translate Selection with DeepL\0"
-    "Search Selection with Google\0"
-    "Search Selection with Bing\0"
-    "Search Selection with Wikipedia\0"
-    "Search Selection with Google Scholar\0"
-    "Select All\0"
-    "New Window\0"
-    "Open Current Document In New Window\0"
-    "Open Current Document In New Tab\0"
-    "Copy Image\0"
-    "Copy Link Target\0"
-    "Copy Comment\0"
-    "Copy File Path\0"
-    "Scroll Up\0"
-    "Scroll Down\0"
-    "Scroll Left\0"
-    "Scroll Right\0"
-    "Scroll Left By Page\0"
-    "Scroll Right By Page\0"
-    "Scroll Up By Page\0"
-    "Scroll Down By Page\0"
-    "Scroll Down By Half Page\0"
-    "Scroll Up By Half Page\0"
-    "Next Page\0"
-    "Previous Page\0"
-    "First Page\0"
-    "Last Page\0"
-    "Go to Page...\0"
-    "Find...\0"
-    "Find Next\0"
-    "Find Previous\0"
-    "Find Next Selection\0"
-    "Find Previous Selection\0"
-    "Find: Toggle Match Case\0"
-    "Save Annotations to existing PDF\0"
-    "Save Annotations to a new PDF...\0"
-    "Discard Changes\0"
-    "Delete Annotation\0"
-    "Zoom: Fit Page\0"
-    "Zoom: Actual Size\0"
-    "Zoom: Fit Width\0"
-    "Zoom: Fit Page or Width by Orientation\0"
-    "Zoom: 6400%\0"
-    "Zoom: 3200%\0"
-    "Zoom: 1600%\0"
-    "Zoom: 800%\0"
-    "Zoom: 400%\0"
-    "Zoom: 200%\0"
-    "Zoom: 150%\0"
-    "Zoom: 125%\0"
-    "Zoom: 100%\0"
-    "Zoom: 50%\0"
-    "Zoom: 25%\0"
-    "Zoom: 12.5%\0"
-    "Zoom: 8.33%\0"
-    "Zoom: Fit Content\0"
-    "Zoom: Shrink To Fit\0"
-    "Zoom: Custom...\0"
-    "Zoom In\0"
-    "Zoom Out\0"
-    "Zoom: Fit Width And Continuous\0"
-    "Zoom: Fit Page and Single Page\0"
-    "Contribute Translation\0"
-    "Open Directory In Explorer\0"
-    "Open Directory In Directory Opus\0"
-    "Open Directory In Total Commander\0"
-    "Open Directory In Double Commander\0"
-    "Open in Adobe Acrobat\0"
-    "Open in Foxit Reader\0"
-    "Open in Foxit PhantomPDF\0"
-    "Open in PDF-XChange\0"
-    "Open in Microsoft XPS Viewer\0"
-    "Open in Microsoft HTML Help\0"
-    "Open With Pdf&Djvu Bookmarker\0"
-    "Open Selected Document\0"
-    "Pin Selected Document\0"
-    "Remove Selected Document From History\0"
-    "Expand All\0"
-    "Collapse All\0"
-    "Save Embedded File...\0"
-    "Open Embedded PDF\0"
-    "Save Attachment...\0"
-    "Open Attachment\0"
-    "Settings...\0"
-    "Advanced Settings...\0"
-    "Change Language...\0"
-    "Check For Updates\0"
-    "Install Pre-release Update\0"
-    "Toggle PDF Preview Logging\0"
-    "Help: Manual\0"
-    "Help: Manual On Website\0"
-    "Help: Keyboard Shortcuts\0"
-    "Show Keyboard Shortcuts\0"
-    "Help: SumatraPDF Website\0"
-    "Help: About SumatraPDF...\0"
-    "Move Frame Focus\0"
-    "Add Favorite\0"
-    "Delete Favorite\0"
-    "Toggle Favorites\0"
-    "Toggle Show Links\0"
-    "Toggle Show Annotations\0"
-    "Show Annotations\0"
-    "Hide Annotations\0"
-    "Create Text Annotation\0"
-    "Create Link Annotation\0"
-    "Create Free Text Annotation\0"
-    "Create Line Annotation\0"
-    "Create Square Annotation\0"
-    "Create Circle Annotation\0"
-    "Create Polygon Annotation\0"
-    "Create Polyline Annotation\0"
-    "Create Highlight Annotation\0"
-    "Create Underline Annotation\0"
-    "Create Squiggly Annotation\0"
-    "Create Strike Out Annotation\0"
-    "Create Redact Annotation\0"
-    "Create Stamp Annotation\0"
-    "Create Caret Annotation\0"
-    "Create Ink Annotation\0"
-    "Create Popup Annotation\0"
-    "Create File Attachment Annotation\0"
-    "Invert Colors\0"
-    "Toggle Page Info\0"
-    "Toggle Zoom\0"
-    "Navigate Back\0"
-    "Navigate Forward\0"
-    "Toggle Cursor Position\0"
-    "Open Next File In Folder\0"
-    "Open Previous File In Folder\0"
-    "Command Palette\0"
-    "Show Logs\0"
-    "Show Errors...\0"
-    "Clear History\0"
-    "Reopen Last Closed\0"
-    "Next Tab\0"
-    "Previous Tab\0"
-    "Smart Next Tab\0"
-    "Smart Previous Tab\0"
-    "Move Tab Left\0"
-    "Move Tab Right\0"
-    "Invoke Inverse Search\0"
-    "Execute a program\0"
-    "View With Custom External Viewer\0"
-    "Launch a browser or run command with selection\0"
-    "Set theme\0"
-    "Toggle Inverse Search\0"
-    "Debug: Corrupt Memory\0"
-    "Debug: Crash Me\0"
-    "Debug: Show Notification\0"
-    "Debug: Start Stress Test\0"
-    "Debug: Toggle Predictive Rendering\0"
-    "Debug: Toggle RTL\0"
-    "List Printers...\0"
-    "Toggle Windows Previewer\0"
-    "Toggle Windows Search Filter\0"
-    "Take Screenshot...\0"
-    "Crop Image...\0"
-    "Resize Image...\0"
-    "Save Image...\0"
-    "Paste Image From Clipboard\0"
-    "Save Tab Group...\0"
-    "Restore Tab Group...\0"
-    "Change Background Color...\0"
-    "Change eBook Settings...\0"
-    "Change Tab Color...\0"
-    "Compress PDF...\0"
-    "Decompress PDF...\0"
-    "Delete Pages From PDF...\0"
-    "Extract Pages From PDF...\0"
-    "Encrypt PDF...\0"
-    "Decrypt PDF...\0"
-    "Bake PDF File...\0"
-    "Show PDF Info...\0"
-    "Extract Text From Document...\0"
-    "Show Document Bookmarks...\0"
-    "Set Screenshot Hotkey...\0"
-    "Toggle Read Aloud\0"
-    "Pause Reading\0"
-    "Continue Reading\0"
-    "Stop Reading\0"
-    "Start Reading From Top\0"
-    "Start Reading Selection\0"
-    "Read Aloud: Show In Toolbar\0"
-    "Remove Deleted Files From History\0"
-    "Command Palette: Table Of Contents\0"
-    "Debug: Toggle Render Queue Info\0"
-    "Convert Image To PDF...\0"
-    "Expand TOC to Current Page\0"
-    "Start Auto-Scroll\0"
-    "Claude chat...\0"
-    "Grok chat...\0"
-    "Codex chat...\0"
-    "Translate Selection with Grok Build...\0"
-    "Translate Selection with Claude Code...\0"
-    "Translate Selection with OpenAI Codex...\0"
-    "Find: Toggle Match Whole Word\0"
-    "Go to Next Favorite\0"
-    "Go to Previous Favorite\0"
-    "Create Image Annotation From Clipboard\0"
-    "Set Inverse Search Command Line...\0"
-    "Command Palette: Favorites\0"
-    "Navigate Files in Folder...\0"
-    "Debug: Toggle Cache Info\0"
-    "Toggle Engineering Drawing Enhancement\0"
-    "Make Document Colors Follow Theme...\0"
-    "Toggle Preserve PDF Image Colors in Dark Mode\0"
-    "Toggle Light/Dark Theme\0"
-    "Change Theme...\0"
-    "Translate Selection...\0"
-    "Show Favorites in Tab\0"
-    "Bookmarks: Expand to Level 1\0"
-    "Bookmarks: Expand to Level 2\0"
-    "Bookmarks: Expand to Level 3\0"
-    "Bookmarks: Collapse Same Level\0"
-    "Sort Favorites By Name\0"
-    "Zoom: Fit Height\0"
-    "Delete File And Open Next\0"
-    "Show Generated HTML\0"
-    "Delete Cached Files\0"
-    "Follow Link With Keyboard\0"
-    "Debug: Toggle DPI Override\0"
-    "Toggle Show Images\0"
-    "Select Text With Keyboard\0"
-    "Open File With Windows File Picker...\0"
-    "SumatraPDF File Picker\0"
-    "Toggle Boolean Setting\0"
-    "Fix Default App For Extension\0"
-    "Antigravity chat...\0"
-    "Translate Selection with Antigravity...\0"
-    "Convert To PDF...\0"
-    "Debug: Show Fit Content Area\0"
-    "Extend Selection One Character Left\0"
-    "Extend Selection One Character Right\0"
-    "Extend Selection One Word Left\0"
-    "Extend Selection One Word Right\0"
-    "Toggle Laser Pointer\0"
-    "Zoom: To Selection\0"
-    "Toggle Citation Hover Preview\0"
-    "Toggle Disable Links\0"
-    "Sign Document...\0"
-    "Insert Image...\0"
-    "Toggle Highlight Form Fields\0"
-    "Toggle Page Boxes\0"
-    "Convert PDF to Images...\0"
-    "Toggle Uniform Page Width\0"
-    "Toggle Transparency Grid\0"
-    "Toggle Page Grid\0"
-    "Configure Page Grid...\0"
-    "Toggle Edit PDF\0"
-    "Apply Redactions\0"
-    "Undo\0"
-    "Redo\0"
-    "Cut Annotation\0"
-    "Copy Annotation\0"
-    "Paste Annotation\0"
-    "Search with Google Lens\0"
-    "Navigate Thumbnails\0"
-    "Show Comment\0"
-    "Highlighter\0"
-    "Find Annotation\0"
-    "Open File Without History...\0"
-    "Copy Selection As Image\0"
-    "Search Page with Google Lens\0"
-    "Search Image with Google Lens\0"
-    "Save As Image...\0"
-    "Toggle Trim Empty Margins\0"
-    "Copy Location To Clipboard\0"
-    "Automatically Scroll\0"
-    "Automatically Scroll Faster\0"
-    "Automatically Scroll Slower\0"
-    "Reading Bar\0"
-    "Reading Bar Invert\0"
-    "Go To Home Page\0"
-    "Toggle Free Pan\0"
-    "Do nothing\0"
-    "Open Recent File\0"
-    "Go to Favorite\0"
-    "Start Reading From Cursor Position\0"
-    "Toggle Grayscale\0"
-    "Print Selection...\0"
-    "Generate Table Of Contents\0"
-    "Open Advanced Settings File...\0"
-    "Open File With SumatraPDF File Picker...\0"
-    "Select Current Page\0"
-    "Zoom: Fit Visible\0"
-    "Sign With Image\0"
-    "Insert Text Snippet\0"
-    "Toggle Thumbnails\0"
-    "Merge PDF...\0"
-    "\0";
-
-SeqStrings gCommandAltDescs =
-    "Browse Files In Folder...\0"
-    "Advanced Options...\0"
-    "\0";
-
-i32 gCommandAltDescIds[] = {
-    CmdNavigateFilesInFolder,
-    CmdAdvancedSettings,
+const CommandInfo gCommandAltDescs[] = {
+    {CmdNavigateFilesInFolder, "CmdNavigateFilesInFolder\0", StrL("Browse Files In Folder...")},
+    {CmdAdvancedSettings, "CmdAdvancedSettings\0", StrL("Advanced Options...")},
 };
+const int gCommandAltDescsCount = dimofi(gCommandAltDescs);
 // clang-format on
 // @gen-end cmd-c
 
@@ -1086,9 +429,10 @@ CustomCommand* gFirstCustomCommand = nullptr;
 // cmdName is "CmdOpenFile" etc.
 // returns -1 if not found
 int GetCommandIdByName(Str cmdName) {
-    int cmdId = GetCommandIdByIdx(SeqStrIndexIS(gCommandNames, cmdName));
-    if (cmdId >= 0) {
-        return cmdId;
+    for (const CommandInfo& cmd : gCommands) {
+        if (SeqStrIndexIS(cmd.name, cmdName) == 0) {
+            return cmd.id;
+        }
     }
     // backwards compatibility for old names
     if (str::EqI(cmdName, StrL("CmdFindMatch"))) {
@@ -1106,33 +450,23 @@ int GetCommandIdByName(Str cmdName) {
     return -1;
 }
 
-// gCommandIds is parallel to gCommandNames / gCommandDescriptions. Removed
-// commands keep their id but are dropped from those tables, so the id of the
-// n-th description is gCommandIds[n], not CmdFirst + 1 + n.
-// returns -1 if idx is out of range
-int GetCommandIdByIdx(int idx) {
-    if (idx < 0 || idx >= dimofi(gCommandIds)) {
-        return -1;
-    }
-    return gCommandIds[idx];
-}
-
-static Str GetCommandText(SeqStrings texts, int commandId) {
-    int idx = 0;
-    for (Str text = SeqStrFirst(texts); len(text) > 0; text = SeqStrNext(text), idx++) {
-        if (GetCommandIdByIdx(idx) == commandId) {
-            return text;
+static int FindCommandIndex(int commandId) {
+    for (int i = 0; i < gCommandsCount; i++) {
+        if (gCommands[i].id == commandId) {
+            return i;
         }
     }
-    return {};
+    return -1;
 }
 
 Str GetCommandName(int commandId) {
-    return GetCommandText(gCommandNames, commandId);
+    int idx = FindCommandIndex(commandId);
+    return idx < 0 ? Str{} : Str(gCommands[idx].name);
 }
 
 Str GetCommandDescription(int commandId) {
-    return GetCommandText(gCommandDescriptions, commandId);
+    int idx = FindCommandIndex(commandId);
+    return idx < 0 ? Str{} : gCommands[idx].description;
 }
 
 // Pack the struct and its owned, NUL-terminated strings into one allocation.

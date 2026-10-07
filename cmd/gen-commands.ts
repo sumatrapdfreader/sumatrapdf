@@ -420,48 +420,26 @@ function generateArrays(): string {
 
   lines.push("// clang-format off");
 
-  // gCommandNames: SeqStrings (null-separated, double-null terminated)
-  lines.push("static SeqStrings gCommandNames =");
-  for (const name of liveNames) {
-    lines.push(`    "${name}\\0"`);
-  }
-  lines.push(`    "\\0";`);
-  lines.push("");
-
-  // gCommandIds
-  lines.push("static i32 gCommandIds[] = {");
-  for (const name of liveNames) {
-    lines.push(`    ${name},`);
+  lines.push("const CommandInfo gCommands[] = {");
+  for (let i = 0; i < liveNames.length; i++) {
+    lines.push(`    {${liveNames[i]}, "${liveNames[i]}\\0", StrL("${liveDescs[i]}")},`);
   }
   lines.push("};");
+  lines.push("const int gCommandsCount = dimofi(gCommands);");
   lines.push("");
 
-  // gCommandDescriptions
-  lines.push("SeqStrings gCommandDescriptions =");
-  for (const desc of liveDescs) {
-    lines.push(`    "${desc}\\0"`);
-  }
-  lines.push(`    "\\0";`);
-  lines.push("");
-
-  // gCommandAltDescs / gCommandAltDescIds: parallel, like the tables above
   for (const [name] of commandAltDescs) {
     if (!liveNames.includes(name)) {
       console.error(`commandAltDescs: unknown command '${name}'`);
       process.exit(1);
     }
   }
-  lines.push("SeqStrings gCommandAltDescs =");
-  for (const [, desc] of commandAltDescs) {
-    lines.push(`    "${desc}\\0"`);
-  }
-  lines.push(`    "\\0";`);
-  lines.push("");
-  lines.push("i32 gCommandAltDescIds[] = {");
-  for (const [name] of commandAltDescs) {
-    lines.push(`    ${name},`);
+  lines.push("const CommandInfo gCommandAltDescs[] = {");
+  for (const [name, desc] of commandAltDescs) {
+    lines.push(`    {${name}, "${name}\\0", StrL("${desc}")},`);
   }
   lines.push("};");
+  lines.push("const int gCommandAltDescsCount = dimofi(gCommandAltDescs);");
   lines.push("// clang-format on");
 
   return lines.join("\n");
