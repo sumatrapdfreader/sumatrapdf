@@ -650,9 +650,6 @@
     <ClCompile Include="..\src\ChangeThemeDialog.cpp">
       <Filter>src</Filter>
     </ClCompile>
-    <ClCompile Include="..\src\CommandAvailability.cpp">
-      <Filter>src</Filter>
-    </ClCompile>
     <ClCompile Include="..\src\CommandPalette.cpp">
       <Filter>src</Filter>
     </ClCompile>
@@ -1086,6 +1083,9 @@
       <Filter>src\shared</Filter>
     </ClCompile>
     <ClCompile Include="..\src\shared\ChmModel.cpp">
+      <Filter>src\shared</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\shared\CommandAvailability.cpp">
       <Filter>src\shared</Filter>
     </ClCompile>
     <ClCompile Include="..\src\shared\Commands.cpp">

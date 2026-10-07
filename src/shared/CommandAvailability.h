@@ -43,6 +43,7 @@ struct AppCommandCtx {
     bool hasTextSelection = false;
     bool isCursorOnPage = false;
     Annotation* annotationUnderCursor = nullptr;
+    Annotation* selectedAnnotation = nullptr;
     bool cursorOnLinkTarget = false;
     bool cursorOnComment = false;
     bool cursorOnImage = false;
@@ -83,6 +84,8 @@ struct AppCommandCtx {
     bool antiGravityInstalled = false;
     bool autoScrollOn = false;
     bool readingBarOn = false;
+    bool shellIntegrationInstalled = false;
+    bool debugDpiOverrideAvailable = false;
 };
 
 using BuildMenuCtx = AppCommandCtx;

@@ -1602,7 +1602,6 @@
     <ClCompile Include="..\src\ChangeLanguageDialog.cpp" />
     <ClCompile Include="..\src\ChangeScrollbarDialog.cpp" />
     <ClCompile Include="..\src\ChangeThemeDialog.cpp" />
-    <ClCompile Include="..\src\CommandAvailability.cpp" />
     <ClCompile Include="..\src\CommandPalette.cpp" />
     <ClCompile Include="..\src\CustomZoomDialog.cpp" />
     <ClCompile Include="..\src\DarkMode.cpp" />
@@ -2106,6 +2105,7 @@
     <ClCompile Include="..\src\shared\ChmDump.cpp" />
     <ClCompile Include="..\src\shared\ChmFile.cpp" />
     <ClCompile Include="..\src\shared\ChmModel.cpp" />
+    <ClCompile Include="..\src\shared\CommandAvailability.cpp" />
     <ClCompile Include="..\src\shared\Commands.cpp" />
     <ClCompile Include="..\src\shared\DisplayMode.cpp" />
     <ClCompile Include="..\src\shared\DisplayModel.cpp" />

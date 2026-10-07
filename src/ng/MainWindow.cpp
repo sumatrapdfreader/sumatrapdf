@@ -774,6 +774,7 @@ AppCommandCtx NewAppCommandCtx(MainWindow* win, Point cursorPos) {
             ctx.isPdfEncrypted = EngineMupdfIsEncrypted(engine);
         }
         ctx.hideAnnotations = ctx.tab->hideAnnotations;
+        ctx.selectedAnnotation = ctx.tab->selectedAnnotation;
         ctx.canContinueReadAloud = CanContinueReadAloud(ctx.tab);
     }
     ctx.ttsAvailable = TtsIsAvailable();
@@ -811,12 +812,7 @@ AppCommandCtx NewAppCommandCtx(MainWindow* win, Point cursorPos) {
         if (pageNoUnderCursor > 0) {
             ctx.isCursorOnPage = true;
         }
-        // orig hit-tests the annotation the context menu was opened on; the
-        // canvas keeps the same one in win->annotationUnderCursor
         ctx.annotationUnderCursor = win->annotationUnderCursor;
-        if (!ctx.annotationUnderCursor && ctx.tab) {
-            ctx.annotationUnderCursor = ctx.tab->selectedAnnotation;
-        }
         IPageElement* pageEl = dm->GetElementAtPos(cursorPos, nullptr);
         if (pageEl) {
             Str value = pageEl->GetValue();

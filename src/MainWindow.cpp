@@ -22,6 +22,7 @@
 #include "gui/win/FrameRateWnd.h"
 
 #include "Settings.h"
+#include "DisplayMode.h"
 #include "DocController.h"
 #include "EngineBase.h"
 #include "EngineAll.h"
@@ -33,6 +34,7 @@
 #include "ReadAloud.h"
 #include "ReadingAutoScroll.h"
 #include "TextSelection.h"
+#include "Annotation.h"
 #include "TextSearch.h"
 #include "SumatraPDF.h"
 #include "AIChatCommon.h"
@@ -50,6 +52,9 @@
 #include "SidebarPanel.h"
 #include "TableOfContents.h"
 #include "StressTesting.h"
+#include "ExternalViewers.h"
+#include "Installer.h"
+#include "CommandAvailability.h"
 #include "uia/Provider.h"
 #include "Theme.h"
 #include "Canvas.h"
@@ -1024,6 +1029,137 @@ bool HasOpenedDocuments(MainWindow* win) {
         }
     }
     return false;
+}
+
+static void PopulateTabCloseFlags(AppCommandCtx& ctx) {
+    if (!ctx.win) {
+        return;
+    }
+
+    int nTabs = ctx.win->TabCount();
+    ctx.nTabs = nTabs;
+    WindowTab* currTab = ctx.tab;
+    int tabIdx = ctx.win->GetTabIdx(currTab);
+    ctx.canCloseTabsToRight = tabIdx < (nTabs - 1);
+    int nFirstDocTab = 0;
+    for (int i = 0; i < nTabs; i++) {
+        WindowTab* tab = ctx.win->GetTab(i);
+        if (tab->IsAboutTab()) {
+            nFirstDocTab = 1;
+            continue;
+        }
+        ctx.hasDocTabs = true;
+        if (tab == currTab) {
+            ctx.canCloseTabsToLeft = i > nFirstDocTab;
+            continue;
+        }
+        ctx.canCloseOtherTabs = true;
+    }
+}
+
+AppCommandCtx NewAppCommandCtx(MainWindow* win, Point cursorPos) {
+    AppCommandCtx ctx;
+    ctx.win = win;
+    ctx.cursorPos = cursorPos;
+    if (!win) {
+        return ctx;
+    }
+
+    ctx.tab = win->CurrentTab();
+    ctx.isDocLoaded = win->IsDocLoaded();
+    ctx.filePath = ctx.tab ? ctx.tab->filePath : Str();
+    ctx.hasOpenDocuments = HasOpenedDocuments(win);
+    ctx.ttsAvailable = true;
+    ctx.shellIntegrationInstalled = IsOurExeInstalled();
+    ctx.debugDpiOverrideAvailable = true;
+
+    if (ctx.tab) {
+        ctx.autoScrollOn = ctx.tab->autoScroll.on;
+        ctx.readingBarOn = ctx.tab->readingBar.on;
+        ctx.isChm = ctx.tab->AsChm() || ctx.tab->AsMarkdown();
+        Str currentPath = win->ctrl ? win->ctrl->GetFilePath() : ctx.filePath;
+        ctx.isMarkdown = str::EndsWithI(currentPath, StrL(".md")) || str::EndsWithI(currentPath, StrL(".markdown"));
+        EngineBase* engine = ctx.tab->GetEngine();
+        ctx.isCbx = engine && engine->kind == kindEngineComicBooks;
+        ctx.isImageCollection = engine && engine->isImageCollection;
+        ctx.isReflowable = engine && engine->isReflowable;
+        ctx.engineKind = ctx.tab->GetEngineType();
+        ctx.engineHasErrors = engine && engine->HasErrors();
+        ctx.canSendEmail = CanSendAsEmailAttachment(ctx.tab);
+#ifndef DISABLE_DOCUMENT_RESTRICTIONS
+        ctx.allowsPrinting = !win->AsFixed() || (engine && engine->AllowsPrinting());
+#endif
+        ctx.isPdf = IsPdfDoc(ctx.tab);
+        if (ctx.isPdf && engine) {
+            ctx.isPdfEncrypted = EngineMupdfIsEncrypted(engine);
+        }
+        ctx.canContinueReadAloud = CanContinueReadAloud(ctx.tab);
+        ctx.hideAnnotations = ctx.tab->hideAnnotations;
+        ctx.selectedAnnotation = ctx.tab->selectedAnnotation;
+    }
+
+    ctx.isSpeaking = TtsIsSpeaking();
+    ctx.clipboardHasImage = IsClipboardFormatAvailable(CF_BITMAP);
+    ctx.aiChatAvailable = IsAIChatAvailable();
+    ctx.aiChatSupported = IsAIChatSupportedForTab(ctx.tab);
+    ctx.grokInstalled = IsGrokBuildInstalled();
+    ctx.claudeInstalled = IsClaudeCodeInstalled();
+    ctx.codexInstalled = IsCodexBuildInstalled();
+    ctx.antiGravityInstalled = IsAntiGravityInstalled();
+    ctx.hasSelection = ctx.isDocLoaded && ctx.tab && win->showSelection && ctx.tab->selectionOnPage;
+
+    if (ctx.isDocLoaded && win->ctrl) {
+        ctx.isSinglePage = IsSingle(win->ctrl->GetDisplayMode());
+        ctx.pageCount = win->ctrl->PageCount();
+        ctx.hasToc = win->ctrl->HasToc();
+    }
+
+    DisplayModel* dm = win->AsFixed();
+    if (dm) {
+        ctx.isFixedPage = true;
+        EngineBase* engine = dm->GetEngine();
+        ctx.hasTextSelection = ctx.hasSelection && len(dm->textSelection->result) > 0;
+        ctx.supportsAnnots = EngineSupportsAnnotations(engine);
+        ctx.hasUnsavedAnnotations = EngineHasUnsavedAnnotations(engine);
+        ctx.hasRedactMarks = EngineHasRedactMarks(engine);
+        ctx.hasUserRedactMarks = EngineHasUserRedactMarks(engine);
+        ctx.canUndo = EngineMupdfCanUndo(engine);
+        ctx.canRedo = EngineMupdfCanRedo(engine);
+        ctx.isCursorOnPage = dm->GetPageNoByPoint(cursorPos) > 0;
+        ctx.annotationUnderCursor = dm->GetAnnotationAtPos(cursorPos, nullptr);
+        IPageElement* pageEl = dm->GetElementAtPos(cursorPos, nullptr);
+        if (pageEl) {
+            Str value = pageEl->GetValue();
+            ctx.cursorOnLinkTarget = pageEl->Is(kindPageElementDest) && PageDestHasAddress(pageEl->AsLink());
+            ctx.cursorOnComment = value && pageEl->Is(kindPageElementComment);
+            ctx.cursorOnImage = pageEl->Is(kindPageElementImage);
+        }
+        if (ctx.annotationUnderCursor) {
+            ctx.cursorOnComment = !str::IsEmptyOrWhiteSpace(Contents(ctx.annotationUnderCursor));
+        }
+    }
+
+    if (!CanAccessDisk()) {
+        ctx.supportsAnnots = false;
+        ctx.hasUnsavedAnnotations = false;
+    }
+
+    PopulateTabCloseFlags(ctx);
+    return ctx;
+}
+
+BuildMenuCtx* NewBuildMenuCtx(WindowTab* tab, Point pt) {
+    auto* ctx = new AppCommandCtx;
+    if (tab && tab->win) {
+        *ctx = NewAppCommandCtx(tab->win, pt);
+    } else if (tab) {
+        ctx->tab = tab;
+    }
+    return ctx;
+}
+
+void DeleteBuildMenuCtx(BuildMenuCtx* ctx) {
+    delete ctx;
 }
 
 // a debugging aid: flip it (in the source or the debugger) to get a small
