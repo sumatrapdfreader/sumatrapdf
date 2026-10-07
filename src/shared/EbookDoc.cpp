@@ -37,8 +37,7 @@ static T* LoadEbook(Str path, Args... args) {
     return nullptr;
 }
 
-static Str TakeArchiveData(Archive* archive, int fileId) {
-    auto* fi = archive->GetFileDataById(fileId);
+static Str TakeArchiveData(Archive::FileInfo* fi) {
     if (!fi || !fi->data) {
         return {};
     }
@@ -535,7 +534,7 @@ Str EpubDoc::GetImageData(Str fileName, Str pagePath) {
             continue;
         }
         if (len(img.base) == 0) {
-            img.base = TakeArchiveData(archive, img.fileId);
+            img.base = TakeArchiveData(archive->GetFileDataById(img.fileId));
         }
         if (len(img.base) > 0) {
             return img.base;
@@ -548,7 +547,7 @@ Str EpubDoc::GetImageData(Str fileName, Str pagePath) {
     // Images need not be registered in the manifest.
     ImageData data;
     data.fileId = archive->GetFileId(url);
-    data.base = TakeArchiveData(archive, data.fileId);
+    data.base = TakeArchiveData(archive->GetFileDataById(data.fileId));
     if (!data.base.s) {
         return {};
     }
@@ -565,7 +564,7 @@ Str EpubDoc::GetFileData(Str relPath, Str pagePath) {
 
     ScopedMutex scope(&zipAccess);
     TempStr url = NormalizeURLTemp(relPath, pagePath);
-    return TakeArchiveData(archive, archive->GetFileId(url));
+    return TakeArchiveData(archive->GetFileDataByName(url));
 }
 
 static bool ParseNavToc(Str data, Str pagePath, EbookTocVisitor* visitor) {
@@ -768,8 +767,7 @@ Str EpubCoverImageData(Str path) {
         return {};
     }
     TempStr imgPath = NormalizeURLTemp(url::DecodeTemp(href), contentPath);
-    auto* imgFi = archive->GetFileDataByName(imgPath);
-    return imgFi && imgFi->data ? str::Dup(Str(imgFi->data, imgFi->fileSizeUncompressed)) : Str{};
+    return TakeArchiveData(archive->GetFileDataByName(imgPath));
 }
 
 /* ********** FictionBook (FB2) ********** */
@@ -791,14 +789,14 @@ static Str ReadFb2Archive(Fb2Doc* doc, Archive* archive) {
         return {};
     }
     if (len(fileInfos) == 1) {
-        return TakeArchiveData(archive, 0);
+        return TakeArchiveData(archive->GetFileDataById(0));
     }
 
     // Multi-entry archives contain one FB2 and optional URL shortcuts.
     Str data;
     for (auto* info : fileInfos) {
         if (str::EndsWithI(info->name, StrL(".fb2")) && len(data) == 0) {
-            data = TakeArchiveData(archive, info->fileId);
+            data = TakeArchiveData(archive->GetFileDataById(info->fileId));
         } else if (!str::EndsWithI(info->name, StrL(".url"))) {
             str::Free(data);
             return {};
