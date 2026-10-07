@@ -15,7 +15,7 @@ const generatedCppFiles = [
   "src/shared/Commands.cpp",
   "src/Accelerators.cpp",
   "src/shared/EbookDoc.cpp",
-  "src/PdfCreator.cpp",
+  "src/shared/PdfCreator.cpp",
   "src/EngineMupdf.cpp",
   "src/Settings.h",
   "src/Settings.cpp",
@@ -318,7 +318,12 @@ const docPropMaps: PropMapTarget[] = [
       ["dc:rights", "Copyright"],
     ],
   },
-  { file: "src/PdfCreator.cpp", tag: "docprop-pdfcreator", varName: "pdfCreatorPropsMap", entries: pdfInfoNames },
+  {
+    file: "src/shared/PdfCreator.cpp",
+    tag: "docprop-pdfcreator",
+    varName: "pdfCreatorPropsMap",
+    entries: pdfInfoNames,
+  },
   {
     file: "src/EngineMupdf.cpp",
     tag: "docprop-mupdf",

@@ -1650,7 +1650,6 @@
     <ClCompile Include="..\src\OverlayScrollbar.cpp" />
     <ClCompile Include="..\src\PageGridDialog.cpp" />
     <ClCompile Include="..\src\PageThumbnails.cpp" />
-    <ClCompile Include="..\src\PdfCreator.cpp" />
     <ClCompile Include="..\src\PdfTools.cpp" />
     <ClCompile Include="..\src\Print.cpp" />
     <ClCompile Include="..\src\PrintWin11.cpp" />
@@ -2140,6 +2139,7 @@
     <ClCompile Include="..\src\shared\PagePosition.cpp" />
     <ClCompile Include="..\src\shared\PalmDbReader.cpp" />
     <ClCompile Include="..\src\shared\PdfCad.cpp" />
+    <ClCompile Include="..\src\shared\PdfCreator.cpp" />
     <ClCompile Include="..\src\shared\PdfDarkModeColor.cpp" />
     <ClCompile Include="..\src\shared\PdfDarkModeImageStats.cpp" />
     <ClCompile Include="..\src\shared\PdfDarkModeProfile.cpp" />
