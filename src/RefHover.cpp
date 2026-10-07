@@ -142,3 +142,15 @@ void RefHoverHandlePopupClick(RefHoverState* s, IPageDestination* dest) {
     RefHoverHide(s, s->hwndCanvas);
     s->ctrl->HandleLink(dest, s->linkHandler);
 }
+
+int RefHoverPopupWidthCap(RefHoverState* s, int minWidth) {
+    POINT pt = {s->pending.screenPt.x, s->pending.screenPt.y};
+    HMONITOR monitor = MonitorFromPoint(pt, MONITOR_DEFAULTTONEAREST);
+    MONITORINFO info{};
+    info.cbSize = sizeof(info);
+    if (!GetMonitorInfoW(monitor, &info)) {
+        return minWidth;
+    }
+    int monitorWidth = info.rcWork.right - info.rcWork.left;
+    return std::max(monitorWidth * 95 / 100, minWidth);
+}

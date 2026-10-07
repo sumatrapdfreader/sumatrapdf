@@ -165,6 +165,7 @@ void RefHoverScheduleHide(RefHoverState* s, int delayMs);
 void RefHoverOnHideTimer(RefHoverState* s);
 void RefHoverHandlePopupClick(RefHoverState* s, IPageDestination* dest);
 void RefHoverOnTimer(RefHoverState* s, EngineBase* engine, float pageZoom);
+int RefHoverPopupWidthCap(RefHoverState* s, int minWidth);
 bool RefHoverWheelZoom(RefHoverState* s, EngineBase* engine, int wheelDelta);
 bool RefHoverWheelScroll(RefHoverState* s, EngineBase* engine, int wheelDelta);
 // the popup element, drawn over the canvas (RefHoverPopup.cpp)

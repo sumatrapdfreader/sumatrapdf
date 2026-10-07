@@ -219,6 +219,7 @@ export const sharedFiles = [
   "src/shared/ProgressUpdateUI.h",
   "src/shared/RefHoverDetect.cpp",
   "src/shared/RefHoverInternal.cpp",
+  "src/shared/RefHoverShow.cpp",
   "src/shared/RefHoverText.cpp",
   "src/shared/RefHoverTextDetect.cpp",
   "src/shared/RegistryInstaller.cpp",

@@ -47,8 +47,7 @@ static RectF DetectRegion(EngineBase* engine, int pageNo, RectF mediabox, float 
 
 // pageZoom is the destination page's current display zoom (px-per-pt) —
 // used as the initial render zoom so popup text height matches the page.
-void RefHoverOnTimer(RefHoverState* s, HWND hwndCanvas, EngineBase* engine, float pageZoom) {
-    KillTimer(hwndCanvas, kRefHoverTimerID);
+void RefHoverOnTimer(RefHoverState* s, EngineBase* engine, float pageZoom) {
     if (!s || !engine || s->pending.destPage <= 0) {
         return;
     }
@@ -127,18 +126,7 @@ void RefHoverOnTimer(RefHoverState* s, HWND hwndCanvas, EngineBase* engine, floa
         baseZoom = pageZoom;
     }
 
-    int popupWCap = DpiScale(kRefHoverMaxPopupWidth);
-    {
-        POINT mp = {s->pending.screenPt.x, s->pending.screenPt.y};
-        HMONITOR hmon = MonitorFromPoint(mp, MONITOR_DEFAULTTONEAREST);
-        MONITORINFO mi{};
-        mi.cbSize = sizeof(mi);
-        if (GetMonitorInfoW(hmon, &mi)) {
-            int monW = mi.rcWork.right - mi.rcWork.left;
-            int dyn = monW * 95 / 100;
-            popupWCap = std::max(dyn, popupWCap);
-        }
-    }
+    int popupWCap = RefHoverPopupWidthCap(s, DpiScale(kRefHoverMaxPopupWidth));
     // Combined content extent (region stacked above continuation, if any) used
     // for sizing below; req.region itself stays just the primary crop.
     float contentDy = region.dy + (hasContinuation ? continuation.dy : 0.f);

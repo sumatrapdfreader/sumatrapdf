@@ -140,6 +140,15 @@ void RefHoverHandlePopupClick(RefHoverState* s, IPageDestination* dest) {
     s->ctrl->HandleLink(dest, s->linkHandler);
 }
 
+int RefHoverPopupWidthCap(RefHoverState* s, int minWidth) {
+    if (!s || !s->win || s->win->canvasRc.dx <= 0) {
+        return minWidth;
+    }
+    int canvasWidth = s->win->canvasRc.dx;
+    int width = std::max(canvasWidth * 95 / 100, minWidth);
+    return std::min(width, canvasWidth);
+}
+
 // ng: orig's kRefHoverTimerID / kRefHoverHideTimerID, counted down by the
 // shell's tick (RefHoverOnCanvasTimer in orig's RefHoverCanvas.cpp)
 void RefHoverTick(MainWindow* win, int elapsedMs) {

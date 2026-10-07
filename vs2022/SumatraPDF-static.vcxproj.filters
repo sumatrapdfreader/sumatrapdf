@@ -791,9 +791,6 @@
     <ClCompile Include="..\src\RefHoverRender.cpp">
       <Filter>src</Filter>
     </ClCompile>
-    <ClCompile Include="..\src\RefHoverShow.cpp">
-      <Filter>src</Filter>
-    </ClCompile>
     <ClCompile Include="..\src\RegistryPreview.cpp">
       <Filter>src</Filter>
     </ClCompile>
@@ -1215,6 +1212,9 @@
       <Filter>src\shared</Filter>
     </ClCompile>
     <ClCompile Include="..\src\shared\RefHoverInternal.cpp">
+      <Filter>src\shared</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\shared\RefHoverShow.cpp">
       <Filter>src\shared</Filter>
     </ClCompile>
     <ClCompile Include="..\src\shared\RefHoverText.cpp">

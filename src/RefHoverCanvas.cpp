@@ -130,7 +130,8 @@ bool RefHoverOnCanvasTimer(RefHoverState* s, HWND hwndCanvas, DisplayModel* dm, 
             return true;
         }
         float pageZoom = dm->GetZoomReal(destPage);
-        RefHoverOnTimer(s, hwndCanvas, dm->GetEngine(), pageZoom);
+        KillTimer(hwndCanvas, kRefHoverTimerID);
+        RefHoverOnTimer(s, dm->GetEngine(), pageZoom);
         return true;
     }
     if (timerId == kRefHoverHideTimerID) {
