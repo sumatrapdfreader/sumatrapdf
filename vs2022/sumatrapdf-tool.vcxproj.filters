@@ -14,11 +14,13 @@
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="..\src\SumatraLog.cpp" />
     <ClCompile Include="..\src\shared\CrashHandlerNoOp.cpp">
       <Filter>shared</Filter>
     </ClCompile>
     <ClCompile Include="..\src\shared\EmbeddedResources.cpp">
+      <Filter>shared</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\shared\SumatraLog.cpp">
       <Filter>shared</Filter>
     </ClCompile>
     <ClCompile Include="..\src\sumatrapdf-tool.cpp" />

@@ -1164,9 +1164,9 @@
     <ClInclude Include="..\src\shared\SumatraLog.h" />
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="..\src\SumatraLog.cpp" />
     <ClCompile Include="..\src\shared\CrashHandlerNoOp.cpp" />
     <ClCompile Include="..\src\shared\EmbeddedResources.cpp" />
+    <ClCompile Include="..\src\shared\SumatraLog.cpp" />
     <ClCompile Include="..\src\sumatrapdf-tool.cpp" />
   </ItemGroup>
   <ItemGroup>

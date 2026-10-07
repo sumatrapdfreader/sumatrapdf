@@ -1296,7 +1296,6 @@
     <ClCompile Include="..\src\PdfCreator.cpp" />
     <ClCompile Include="..\src\PdfDarkModeNoOp.cpp" />
     <ClCompile Include="..\src\RegistryPreview.cpp" />
-    <ClCompile Include="..\src\SumatraLog.cpp" />
     <ClCompile Include="..\src\base\Archive.cpp" />
     <ClCompile Include="..\src\gui\PlatformText.cpp" />
     <ClCompile Include="..\src\previewer\PdfPreview.cpp" />
@@ -1321,6 +1320,7 @@
     <ClCompile Include="..\src\shared\PalmDbReader.cpp" />
     <ClCompile Include="..\src\shared\PdfCad.cpp" />
     <ClCompile Include="..\src\shared\SumatraConfig.cpp" />
+    <ClCompile Include="..\src\shared\SumatraLog.cpp" />
     <ClCompile Include="..\src\shared\WebpReader.cpp" />
     <ClCompile Include="..\src\shared\gui\PlatformFont.cpp" />
   </ItemGroup>
