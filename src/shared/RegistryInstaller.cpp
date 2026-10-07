@@ -313,17 +313,6 @@ static bool DeleteEmptyRegKey(HKEY root, Str keyName) {
     return isEmpty;
 }
 
-// return keyName's parent key (everything before the last '\\'), or {} if there
-// is none. Returns a properly-sized view (unlike poking a NUL into the buffer,
-// which left .len stale).
-static Str RegKeyParent(Str keyName) {
-    int sep = str::LastIndexOfChar(keyName, '\\');
-    if (sep < 0) {
-        return {};
-    }
-    return Str(keyName.s, sep);
-}
-
 void RemoveInstallRegistryKeys(HKEY hkey) {
     logf("RemoveInstallRegistryKeys(%s)\n", RegKeyNameTemp(hkey));
     UnregisterFromBeingDefaultViewer(hkey);
@@ -353,10 +342,8 @@ void RemoveInstallRegistryKeys(HKEY hkey) {
         keyname = str::JoinTemp(StrL("Software\\Classes\\"), ext, openWithVal);
         if (LoggedDeleteRegKey(hkey, keyname)) {
             // remove empty parent keys that the installer might have created
-            keyname = RegKeyParent(keyname);
-            if (keyname && DeleteEmptyRegKey(hkey, keyname)) {
-                keyname = RegKeyParent(keyname);
-                if (keyname) {
+            if (str::CutCharLast(keyname, '\\', &keyname, nullptr) && keyname && DeleteEmptyRegKey(hkey, keyname)) {
+                if (str::CutCharLast(keyname, '\\', &keyname, nullptr) && keyname) {
                     DeleteEmptyRegKey(hkey, keyname);
                 }
             }
