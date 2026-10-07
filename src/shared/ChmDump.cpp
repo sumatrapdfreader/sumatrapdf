@@ -16,26 +16,14 @@
 #include "ChmDump.h"
 
 static Str ChmEntryKind(const chm_entry* e) {
-    if (e->is_dir) {
-        return StrL("dir");
-    }
-    if (e->is_file) {
-        return StrL("file");
-    }
-    return StrL("entry");
+    return e->is_dir ? StrL("dir") : e->is_file ? StrL("file") : StrL("entry");
 }
 
 static Str ChmEntryClass(const chm_entry* e) {
-    if (e->is_special) {
-        return StrL("special");
-    }
-    if (e->is_meta) {
-        return StrL("meta");
-    }
-    if (e->is_normal) {
-        return StrL("normal");
-    }
-    return StrL("unknown");
+    return e->is_special  ? StrL("special")
+           : e->is_meta   ? StrL("meta")
+           : e->is_normal ? StrL("normal")
+                          : StrL("unknown");
 }
 
 struct ChmObjectReadResult {
