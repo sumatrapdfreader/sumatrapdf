@@ -95,9 +95,6 @@ void ClearDocumentColorsFollowThemePreview() {
 }
 
 void SetDocumentColorsFollowTheme(DocumentColorsFollowTheme mode) {
-    if (mode < DocumentColorsFollowTheme::Off || mode > DocumentColorsFollowTheme::Legacy) {
-        mode = DocumentColorsFollowTheme::Off;
-    }
     if (!gSettings) {
         return;
     }
