@@ -491,8 +491,32 @@ static void PatchCreateAnnotEditAccelerators() {
 
 // The gpui view of the table: one stroke per accelerator, duplicates and
 // shortcuts gpui has no name for dropped.
+static bool StrokeDup(int cmd, Str stroke) {
+    for (int j = 0; j < gAccelStrokesCount; j++) {
+        if (gAccelStrokes[j].cmd == cmd && str::Eq(gAccelStrokes[j].stroke, stroke)) {
+            return true;
+        }
+    }
+    return false;
+}
+
+static void AddAccelStroke(int cmd, Str stroke) {
+    if (len(stroke) == 0 || StrokeDup(cmd, stroke)) {
+        return;
+    }
+    gAccelStrokes[gAccelStrokesCount].stroke = str::Dup(stroke);
+    gAccelStrokes[gAccelStrokesCount].cmd = cmd;
+    gAccelStrokesCount++;
+}
+
 static void BuildAcceleratorStrokes() {
-    gAccelStrokes = AllocArray<AccelStroke>(gAccelsCount);
+#if OS_DARWIN
+    // Command stands in for Ctrl: Command+K opens the command palette
+    int nSlots = gAccelsCount * 2;
+#else
+    int nSlots = gAccelsCount;
+#endif
+    gAccelStrokes = AllocArray<AccelStroke>(nSlots);
     gAccelStrokesCount = 0;
     for (int i = 0; i < gAccelsCount; i++) {
         TempStr stroke = ShortcutToGpuiStroke(gAccels[i].sc);
@@ -500,19 +524,13 @@ static void BuildAcceleratorStrokes() {
             logf("BuildAcceleratorStrokes: no gpui key name for vk 0x%x\n", gAccels[i].sc.vk);
             continue;
         }
-        bool dup = false;
-        for (int j = 0; j < gAccelStrokesCount; j++) {
-            if (gAccelStrokes[j].cmd == gAccels[i].cmd && str::Eq(gAccelStrokes[j].stroke, stroke)) {
-                dup = true;
-                break;
-            }
+        AddAccelStroke(gAccels[i].cmd, stroke);
+#if OS_DARWIN
+        if (str::StartsWith(stroke, StrL("ctrl-"))) {
+            TempStr asCmd = str::JoinTemp(StrL("cmd-"), Str(stroke.s + 5, stroke.len - 5));
+            AddAccelStroke(gAccels[i].cmd, asCmd);
         }
-        if (dup) {
-            continue;
-        }
-        gAccelStrokes[gAccelStrokesCount].stroke = str::Dup(stroke);
-        gAccelStrokes[gAccelStrokesCount].cmd = gAccels[i].cmd;
-        gAccelStrokesCount++;
+#endif
     }
 }
 

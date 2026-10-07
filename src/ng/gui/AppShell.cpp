@@ -2355,7 +2355,7 @@ void ShellView::OnKeyDown(ShellView* self, gp::Ctx* cx, const gp::KeyEvent* ev) 
         gp::Notify(cx);
         return;
     }
-    if (ev->ctrl || ev->alt) {
+    if (ev->ctrl || ev->alt || ev->platform) {
         return;
     }
     if (SelectTextWithKeyboardActive(win) && SelectTextWithKeyboardOnChar(win, ev->vk)) {

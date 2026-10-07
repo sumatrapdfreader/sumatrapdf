@@ -822,6 +822,30 @@ static int TypeAheadTimeoutMs() {
 #endif
 }
 
+// cap is the allocated count; len alone can point past it
+template <typename T>
+static int LiveRowCount(const Vec<T>& rows) {
+    int cap = rows.cap < 0 ? -rows.cap : rows.cap;
+    if (!rows.els || rows.len <= 0 || cap <= 0) {
+        return 0;
+    }
+    return rows.len < cap ? rows.len : cap;
+}
+
+static TocRow* TocRowPtr(SidebarUI* ui, int i) {
+    if (i < 0 || i >= LiveRowCount(ui->tocRows)) {
+        return nullptr;
+    }
+    return &ui->tocRows.els[i];
+}
+
+static FavRow* FavRowPtr(SidebarUI* ui, int i) {
+    if (i < 0 || i >= LiveRowCount(ui->favRows)) {
+        return nullptr;
+    }
+    return &ui->favRows.els[i];
+}
+
 bool SidebarOnChar(MainWindow* win, u32 ch) {
     WindowTab* tab = win ? win->CurrentTab() : nullptr;
     SidebarUI* ui = win ? win->sidebar : nullptr;
@@ -837,8 +861,8 @@ bool SidebarOnChar(MainWindow* win, u32 ch) {
     if (!isToc && content != SidebarContent::Favorites) {
         return false;
     }
-    int n = isToc ? len(ui->tocRows) : len(ui->favRows);
-    if (n == 0) {
+    int n = isToc ? LiveRowCount(ui->tocRows) : LiveRowCount(ui->favRows);
+    if (n <= 0) {
         return true;
     }
     double now = gp::TimeNow();
@@ -872,8 +896,16 @@ bool SidebarOnChar(MainWindow* win, u32 ch) {
     Str prefix{ui->typeAhead, ui->typeAheadLen};
     int idx = 0;
     for (int i = 0; i < n; i++) {
-        bool isSel = isToc ? ui->tocRows[i].item == ui->tocSel : ui->favRows[i].item == ui->favSel;
-        if (isSel) {
+        if (isToc) {
+            TocRow* row = TocRowPtr(ui, i);
+            if (row && row->item == ui->tocSel) {
+                idx = i;
+                break;
+            }
+            continue;
+        }
+        FavRow* row = FavRowPtr(ui, i);
+        if (row && row->item == ui->favSel) {
             idx = i;
             break;
         }
@@ -883,15 +915,24 @@ bool SidebarOnChar(MainWindow* win, u32 ch) {
     int start = ui->typeAheadLen > nUtf8 ? idx : idx + 1;
     for (int k = 0; k < n; k++) {
         int i = (start + k) % n;
-        Str label = isToc ? ui->tocRows[i].item->title : ui->favRows[i].item->text;
-        if (!str::StartsWithI(label, prefix)) {
-            continue;
+        if (i < 0) {
+            i += n;
         }
         if (isToc) {
-            TocTreeItemSelectedByKey(win, ui->tocRows[i].item);
-        } else {
-            FavSelectAndReveal(win, ui, ui->favRows[i].item);
+            TocRow* row = TocRowPtr(ui, i);
+            TocItem* item = row ? row->item : nullptr;
+            if (!item || !str::StartsWithI(item->title, prefix)) {
+                continue;
+            }
+            TocTreeItemSelectedByKey(win, item);
+            break;
         }
+        FavRow* row = FavRowPtr(ui, i);
+        FavTreeItem* item = row ? row->item : nullptr;
+        if (!item || !str::StartsWithI(item->text, prefix)) {
+            continue;
+        }
+        FavSelectAndReveal(win, ui, item);
         break;
     }
     return true;

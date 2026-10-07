@@ -134,6 +134,16 @@ bool ShortcutParse_UnitTestGpuiStroke() {
     int nStrokes = 0;
     const AccelStroke* strokes = GetAcceleratorStrokes(nStrokes);
     utassert(nStrokes > 0 && strokes != nullptr);
+#if OS_DARWIN
+    bool cmdK = false;
+    for (int j = 0; j < nStrokes; j++) {
+        if (strokes[j].cmd == CmdCommandPalette && str::Eq(strokes[j].stroke, StrL("cmd-k"))) {
+            cmdK = true;
+            break;
+        }
+    }
+    utassert(cmdK);
+#endif
     for (int i = 0; i < n; i++) {
         bool found = false;
         for (int j = 0; j < nStrokes; j++) {
