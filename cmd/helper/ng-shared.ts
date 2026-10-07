@@ -121,6 +121,7 @@ export const sharedFiles = [
   "src/shared/AvifReader.cpp",
   "src/shared/AvifReader.h",
   "src/shared/BuildConfig.h",
+  "src/shared/CachedObjects.cpp",
   "src/shared/CachedObjects.h",
   "src/shared/ChapterTable.cpp",
   "src/shared/ChapterTable.h",

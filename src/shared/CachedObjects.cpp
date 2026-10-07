@@ -172,12 +172,7 @@ static u64 BytesWeWantFreed(u64 newAllocationSize, bool aggressive) {
     }
 
     int level = gSaveMemory;
-    if (level < 0) {
-        level = 0;
-    }
-    if (level > 100) {
-        level = 100;
-    }
+    level = ClampI(level, 0, 100);
     if (level == 0) {
         return 0;
     }
@@ -315,7 +310,6 @@ void SerializeCachedObjects(str::Builder& s) {
     }
 
     s.Append(fmt("Cached objects: %d  (%s)  SaveMemory %d", len(snap), FormatCachedSizeTemp(total), gSaveMemory));
-    // ng: orig asks GlobalMemoryStatusEx directly
     u64 availPhys = 0;
     u64 totalPhys = 0;
     int memLoad = 0;

@@ -635,9 +635,6 @@
     <ClCompile Include="..\src\BasePch.cpp">
       <Filter>src</Filter>
     </ClCompile>
-    <ClCompile Include="..\src\CachedObjects.cpp">
-      <Filter>src</Filter>
-    </ClCompile>
     <ClCompile Include="..\src\Canvas.cpp">
       <Filter>src</Filter>
     </ClCompile>
@@ -1110,6 +1107,9 @@
       <Filter>src\shared</Filter>
     </ClCompile>
     <ClCompile Include="..\src\shared\AvifReader.cpp">
+      <Filter>src\shared</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\shared\CachedObjects.cpp">
       <Filter>src\shared</Filter>
     </ClCompile>
     <ClCompile Include="..\src\shared\ChapterTable.cpp">

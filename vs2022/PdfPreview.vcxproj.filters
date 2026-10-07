@@ -102,7 +102,6 @@
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="..\src\CachedObjects.cpp" />
     <ClCompile Include="..\src\EngineEbook.cpp" />
     <ClCompile Include="..\src\EngineMupdf.cpp" />
     <ClCompile Include="..\src\ImageReader.cpp" />
@@ -124,6 +123,9 @@
       <Filter>previewer</Filter>
     </ClCompile>
     <ClCompile Include="..\src\shared\AvifReader.cpp">
+      <Filter>shared</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\shared\CachedObjects.cpp">
       <Filter>shared</Filter>
     </ClCompile>
     <ClCompile Include="..\src\shared\ChapterTable.cpp">

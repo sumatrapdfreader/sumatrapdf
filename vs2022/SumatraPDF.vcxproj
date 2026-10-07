@@ -1612,7 +1612,6 @@
     <ClCompile Include="..\src\BasePch.cpp">
       <PrecompiledHeader>Create</PrecompiledHeader>
     </ClCompile>
-    <ClCompile Include="..\src\CachedObjects.cpp" />
     <ClCompile Include="..\src\Canvas.cpp" />
     <ClCompile Include="..\src\CanvasAboutUI.cpp" />
     <ClCompile Include="..\src\ChangeColorDialog.cpp" />
@@ -2130,6 +2129,7 @@
     <ClCompile Include="..\src\shared\AnnotSearch.cpp" />
     <ClCompile Include="..\src\shared\AppTools.cpp" />
     <ClCompile Include="..\src\shared\AvifReader.cpp" />
+    <ClCompile Include="..\src\shared\CachedObjects.cpp" />
     <ClCompile Include="..\src\shared\ChapterTable.cpp" />
     <ClCompile Include="..\src\shared\ChmDump.cpp" />
     <ClCompile Include="..\src\shared\ChmFile.cpp" />
