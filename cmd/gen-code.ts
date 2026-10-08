@@ -13,10 +13,10 @@ const generatedCppFiles = [
   "src/shared/Flags.cpp",
   "src/shared/Commands.h",
   "src/shared/Commands.cpp",
-  "src/Accelerators.cpp",
+  "src/shared/Accelerators.cpp",
   "src/shared/EbookDoc.cpp",
   "src/shared/PdfCreator.cpp",
-  "src/EngineMupdf.cpp",
+  "src/shared/EngineMupdf.cpp",
   "src/Settings.h",
   "src/Settings.cpp",
 ];
@@ -271,7 +271,7 @@ export function genVirtKeys(rootDir: string) {
   const cmdDir = join(rootDir, "cmd");
   const vkIds = fetchVkIdsFromCompiler(cmdDir);
 
-  const shortcutPath = join(rootDir, "src", "ShortcutParse.cpp");
+  const shortcutPath = join(rootDir, "src", "shared", "ShortcutParse.cpp");
   let content = readFileSync(shortcutPath, "utf-8");
   content = replaceBetweenMarkers(
     content,
@@ -280,7 +280,7 @@ export function genVirtKeys(rootDir: string) {
     generateVirtKeysNum(vkIds),
   );
   writeFileSync(shortcutPath, content, "utf-8");
-  console.log("Generated gVirtKeysNum in src/ShortcutParse.cpp");
+  console.log("Generated gVirtKeysNum in src/shared/ShortcutParse.cpp");
 }
 
 // name<->DocProp maps, previously hand-written as SeqStrNum literals with the
@@ -325,7 +325,7 @@ const docPropMaps: PropMapTarget[] = [
     entries: pdfInfoNames,
   },
   {
-    file: "src/EngineMupdf.cpp",
+    file: "src/shared/EngineMupdf.cpp",
     tag: "docprop-mupdf",
     varName: "mupdfPropsMap",
     // keys mirror mupdf's FZ_META_INFO_* ("info:Title" etc.)
@@ -339,7 +339,7 @@ const docPropMaps: PropMapTarget[] = [
       ["info:ModDate", "ModificationDate"],
     ],
   },
-  { file: "src/EngineMupdf.cpp", tag: "docprop-pdf-info", varName: "pdfPropNames", entries: pdfInfoNames },
+  { file: "src/shared/EngineMupdf.cpp", tag: "docprop-pdf-info", varName: "pdfPropNames", entries: pdfInfoNames },
 ];
 
 // parse `enum class DocProp : u8 { None = 0, Title = 1, ... }` -> { Title: 1, ... }
