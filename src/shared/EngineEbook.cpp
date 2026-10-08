@@ -1760,18 +1760,7 @@ static uint FindHttpCharsetInNode(const GumboNode* node) {
         if (cp) {
             return cp;
         }
-        const GumboVector* children = nullptr;
-        if (n->type == GUMBO_NODE_ELEMENT) {
-            children = &n->v.element.children;
-        } else if (n->type == GUMBO_NODE_DOCUMENT) {
-            children = &n->v.document.children;
-        }
-        if (children) {
-            // push in reverse so children are visited in document order
-            for (unsigned int i = children->length; i > 0; i--) {
-                VecAppend(toVisit, (const GumboNode*)children->data[i - 1]);
-            }
-        }
+        GumboPushChildren(toVisit, n);
     }
     return 0;
 }
