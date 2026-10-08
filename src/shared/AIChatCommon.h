@@ -161,6 +161,7 @@ MainWindow* AIChatFindMainWindowByFrame(HWND hwndFrame);
 TempStr AIChatHomeDirTemp();
 
 void AIChatFreeSessions(Vec<AIChatSessionInfo>& sessions);
+void AIChatCollectJsonlSessions(Str sessionDir, Str project, Vec<AIChatSessionInfo>& sessions);
 void AIChatSortSessionsByTimestampDesc(Vec<AIChatSessionInfo>& sessions);
 i64 AIChatFileTimeToMs(const FILETIME& ft);
 

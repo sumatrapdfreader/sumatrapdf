@@ -9,6 +9,7 @@
 #endif
 
 #include "base/CmdLineArgs.h"
+#include "base/DirScan.h"
 #include "base/File.h"
 #include "base/UITask.h"
 #if OS_WIN
@@ -180,6 +181,43 @@ void AIChatSortSessionsByTimestampDesc(Vec<AIChatSessionInfo>& sessions) {
                 sessions[j + 1] = tmp;
             }
         }
+    }
+}
+
+void AIChatCollectJsonlSessions(Str sessionDir, Str project, Vec<AIChatSessionInfo>& sessions) {
+    constexpr int kUuidLen = 36;
+    constexpr int kJsonlSuffixLen = 6;
+    if (!dir::Exists(sessionDir)) {
+        return;
+    }
+    DirIter di(sessionDir);
+    di.includeFiles = true;
+    di.includeDirs = false;
+    for (DirIterEntry* de : di) {
+        if (!str::EndsWithI(de->name, StrL(".jsonl"))) {
+            continue;
+        }
+        int nameLen = len(de->name);
+        if (nameLen < kUuidLen + kJsonlSuffixLen) {
+            continue;
+        }
+        TempStr sessionId = str::DupTemp(Str(de->name.s, nameLen - kJsonlSuffixLen));
+        bool duplicate = false;
+        for (const AIChatSessionInfo& session : sessions) {
+            if (str::Eq(session.sessionId, sessionId)) {
+                duplicate = true;
+                break;
+            }
+        }
+        if (duplicate) {
+            continue;
+        }
+        AIChatSessionInfo session;
+        session.sessionId = str::Dup(sessionId);
+        session.display = AIChatSessionDescription(de->filePath);
+        session.project = str::Dup(project);
+        session.timestamp = AIChatFileTimeToMs(de->modificationTime);
+        VecAppend(sessions, session);
     }
 }
 

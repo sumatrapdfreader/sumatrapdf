@@ -5,7 +5,6 @@
 
 #include "base/Base.h"
 #include "base/CmdLineArgs.h"
-#include "base/DirScan.h"
 #include "base/File.h"
 
 #include "gui/UIModels.h"
@@ -108,45 +107,6 @@ static bool QueryAntiGravityModels(Str exePath, StrVec& models) {
 
 // --- Session history ---
 
-static void CollectAntiGravitySessionsFromDir(Str projectDir, Str dir, Vec<AIChatSessionInfo>& sessions) {
-    if (!dir::Exists(projectDir)) {
-        return;
-    }
-
-    DirIter di(projectDir);
-    di.includeFiles = true;
-    di.includeDirs = false;
-    for (DirIterEntry* de : di) {
-        if (!str::EndsWithI(de->name, StrL(".jsonl"))) {
-            continue;
-        }
-        int nameLen = len(de->name);
-        if (nameLen < 42) {
-            continue;
-        }
-        TempStr sessionId = str::DupTemp(Str(de->name.s, nameLen - 6));
-
-        bool duplicate = false;
-        for (int i = 0; i < len(sessions); i++) {
-            if (str::Eq(sessions[i].sessionId, sessionId)) {
-                duplicate = true;
-                break;
-            }
-        }
-        if (duplicate) {
-            continue;
-        }
-
-        Str desc = AIChatSessionDescription(de->filePath);
-        AIChatSessionInfo si;
-        si.sessionId = str::Dup(sessionId);
-        si.display = desc;
-        si.project = str::Dup(dir);
-        si.timestamp = AIChatFileTimeToMs(de->modificationTime);
-        VecAppend(sessions, si);
-    }
-}
-
 static void CollectAntiGravitySessions(Str dir, Vec<AIChatSessionInfo>& sessions) {
     TempStr userProfile = AIChatHomeDirTemp();
     if (len(userProfile) == 0) {
@@ -156,15 +116,15 @@ static void CollectAntiGravitySessions(Str dir, Vec<AIChatSessionInfo>& sessions
 
     // Try ~/.gemini/antigravity/projects/<encoded-dir>/
     TempStr projectDir1 = fmt("%s\\.gemini\\antigravity\\projects\\%s", userProfile, encodedDir);
-    CollectAntiGravitySessionsFromDir(projectDir1, dir, sessions);
+    AIChatCollectJsonlSessions(projectDir1, dir, sessions);
 
     // Try ~/.gemini/antigravity-cli/projects/<encoded-dir>/
     TempStr projectDir2 = fmt("%s\\.gemini\\antigravity-cli\\projects\\%s", userProfile, encodedDir);
-    CollectAntiGravitySessionsFromDir(projectDir2, dir, sessions);
+    AIChatCollectJsonlSessions(projectDir2, dir, sessions);
 
     // Try ~/.gemini/projects/<encoded-dir>/
     TempStr projectDir3 = fmt("%s\\.gemini\\projects\\%s", userProfile, encodedDir);
-    CollectAntiGravitySessionsFromDir(projectDir3, dir, sessions);
+    AIChatCollectJsonlSessions(projectDir3, dir, sessions);
 
     AIChatSortSessionsByTimestampDesc(sessions);
 }

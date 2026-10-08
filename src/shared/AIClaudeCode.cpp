@@ -5,7 +5,6 @@
 
 #include "base/Base.h"
 #include "base/CmdLineArgs.h"
-#include "base/DirScan.h"
 #include "base/File.h"
 
 #include "gui/UIModels.h"
@@ -131,34 +130,7 @@ static void CollectClaudeSessions(Str dir, Vec<AIChatSessionInfo>& sessions) {
     TempStr encodedDir = AIChatEncodeSessionDirTemp(dir);
     TempStr projectDir = path::JoinTemp(userProfile, StrL(".claude"), StrL("projects"));
     projectDir = path::JoinTemp(projectDir, encodedDir);
-    if (!dir::Exists(projectDir)) {
-        return;
-    }
-
-    DirIter di(projectDir);
-    di.includeFiles = true;
-    di.includeDirs = false;
-    for (DirIterEntry* de : di) {
-        // session files are named <uuid>.jsonl
-        if (!str::EndsWithI(de->name, StrL(".jsonl"))) {
-            continue;
-        }
-        int nameLen = len(de->name);
-        if (nameLen < 42) { // uuid (36) + .jsonl (6) = 42
-            continue;
-        }
-        // extract session ID (remove .jsonl extension)
-        TempStr sessionId = str::DupTemp(Str(de->name.s, nameLen - 6));
-        Str desc = AIChatSessionDescription(de->filePath);
-
-        AIChatSessionInfo si;
-        si.sessionId = str::Dup(sessionId);
-        si.display = desc;
-        si.project = str::Dup(dir);
-        si.timestamp = AIChatFileTimeToMs(de->modificationTime);
-        VecAppend(sessions, si);
-    }
-
+    AIChatCollectJsonlSessions(projectDir, dir, sessions);
     AIChatSortSessionsByTimestampDesc(sessions);
 }
 
