@@ -163,6 +163,22 @@ struct AnnotAccess {
     explicit AnnotAccess(Annotation* a) : ctx(a->engine->Ctx()), annot(a->pdfannot), lock(&a->engine->docLock) {}
 };
 
+// Centralize the lock and MuPDF error boundary shared by annotation getters.
+template <typename T, typename Read>
+static T ReadAnnot(Annotation* annot, T fallback, Read read) {
+    if (!AnnotationIsLive(annot)) {
+        return fallback;
+    }
+    AnnotAccess access(annot);
+    fz_try(access.ctx) {
+        fallback = read(access.ctx, access.annot);
+    }
+    fz_catch(access.ctx) {
+        fz_report_error(access.ctx);
+    }
+    return fallback;
+}
+
 AnnotationType Type(Annotation* annot) {
     if (!annot) {
         return AnnotationType::Unknown;
@@ -334,19 +350,8 @@ static Str MupdfCStrTemp(const char* s) {
 
 // AnnotEditToolbar.cpp
 Str Author(Annotation* annot) {
-    if (!AnnotationIsLive(annot)) {
-        return {};
-    }
-    AnnotAccess access(annot);
-    Str res;
-    fz_try(access.ctx) {
-        res = MupdfCStrTemp(pdf_annot_author(access.ctx, access.annot));
-    }
-    fz_catch(access.ctx) {
-        fz_report_error(access.ctx);
-        res = {};
-    }
-    return res;
+    return ReadAnnot(annot, Str{},
+                     [](fz_context* ctx, pdf_annot* a) { return MupdfCStrTemp(pdf_annot_author(ctx, a)); });
 }
 
 SeqStrings gQuaddingNames = "Left\0Center\0Right\0";
@@ -358,19 +363,7 @@ int QuaddingFromName(Str s) {
 }
 
 int Quadding(Annotation* annot) {
-    if (!AnnotationIsLive(annot)) {
-        return 0;
-    }
-    AnnotAccess access(annot);
-    int res = 0;
-    fz_try(access.ctx) {
-        res = pdf_annot_quadding(access.ctx, access.annot);
-    }
-    fz_catch(access.ctx) {
-        fz_report_error(access.ctx);
-        logf("Quadding(): pdf_annot_quadding() failed\n");
-    }
-    return res;
+    return ReadAnnot(annot, 0, pdf_annot_quadding);
 }
 
 static bool IsValidQuadding(int i) {
@@ -486,41 +479,30 @@ static void UpdateFormFieldPage(fz_context* ctx, pdf_annot* a) {
 // PDF form (widget) fields. GetWidgetType returns a pdf_widget_type value
 // (PDF_WIDGET_TYPE_*), or 0 (UNKNOWN) when annot isn't a form widget.
 int GetWidgetType(Annotation* annot) {
-    if (!AnnotationIsLive(annot) || annot->type != AnnotationType::Widget) {
+    if (!annot || annot->type != AnnotationType::Widget) {
         return PDF_WIDGET_TYPE_UNKNOWN;
     }
-    AnnotAccess access(annot);
-    int wt = PDF_WIDGET_TYPE_UNKNOWN;
-    fz_try(access.ctx) {
-        wt = (int)pdf_widget_type(access.ctx, access.annot);
-    }
-    fz_catch(access.ctx) {
-        fz_report_error(access.ctx);
-    }
-    return wt;
+    return ReadAnnot(annot, (int)PDF_WIDGET_TYPE_UNKNOWN,
+                     [](fz_context* ctx, pdf_annot* a) { return (int)pdf_widget_type(ctx, a); });
 }
 
 WidgetCursorKind GetWidgetCursorKind(Annotation* annot) {
-    if (!AnnotationIsLive(annot) || annot->type != AnnotationType::Widget) {
+    if (!annot || annot->type != AnnotationType::Widget) {
         return WidgetCursorKind::None;
     }
-    AnnotAccess access(annot);
-    WidgetCursorKind kind = WidgetCursorKind::None;
-    fz_try(access.ctx) {
-        int flags = pdf_annot_field_flags(access.ctx, access.annot);
-        if (!(flags & PDF_FIELD_IS_READ_ONLY)) {
-            int wt = pdf_widget_type(access.ctx, access.annot);
-            if (wt == PDF_WIDGET_TYPE_TEXT || wt == PDF_WIDGET_TYPE_COMBOBOX || wt == PDF_WIDGET_TYPE_LISTBOX) {
-                kind = WidgetCursorKind::Text;
-            } else if (wt == PDF_WIDGET_TYPE_CHECKBOX || wt == PDF_WIDGET_TYPE_RADIOBUTTON) {
-                kind = WidgetCursorKind::Button;
-            }
+    return ReadAnnot(annot, WidgetCursorKind::None, [](fz_context* ctx, pdf_annot* a) {
+        if (pdf_annot_field_flags(ctx, a) & PDF_FIELD_IS_READ_ONLY) {
+            return WidgetCursorKind::None;
         }
-    }
-    fz_catch(access.ctx) {
-        fz_report_error(access.ctx);
-    }
-    return kind;
+        int wt = pdf_widget_type(ctx, a);
+        if (wt == PDF_WIDGET_TYPE_TEXT || wt == PDF_WIDGET_TYPE_COMBOBOX || wt == PDF_WIDGET_TYPE_LISTBOX) {
+            return WidgetCursorKind::Text;
+        }
+        if (wt == PDF_WIDGET_TYPE_CHECKBOX || wt == PDF_WIDGET_TYPE_RADIOBUTTON) {
+            return WidgetCursorKind::Button;
+        }
+        return WidgetCursorKind::None;
+    });
 }
 
 // Toggle a checkbox / radio-button form field in place. Returns true if it was
@@ -595,71 +577,42 @@ bool ToggleFormButton(Annotation* annot) {
 
 // pdf_annot_field_flags (PDF_FIELD_IS_*, PDF_TX_FIELD_IS_* bits), or 0.
 int GetWidgetFieldFlags(Annotation* annot) {
-    if (!AnnotationIsLive(annot) || annot->type != AnnotationType::Widget) {
+    if (!annot || annot->type != AnnotationType::Widget) {
         return 0;
     }
-    AnnotAccess access(annot);
-    int flags = 0;
-    fz_try(access.ctx) {
-        flags = pdf_annot_field_flags(access.ctx, access.annot);
-    }
-    fz_catch(access.ctx) {
-        fz_report_error(access.ctx);
-    }
-    return flags;
+    return ReadAnnot(annot, 0, pdf_annot_field_flags);
 }
 
 // current text value of a form field (owned temp copy), or "" .
 Str GetWidgetValue(Annotation* annot) {
-    if (!AnnotationIsLive(annot) || annot->type != AnnotationType::Widget) {
+    if (!annot || annot->type != AnnotationType::Widget) {
         return {};
     }
-    AnnotAccess access(annot);
-    Str res;
-    fz_try(access.ctx) {
-        res = MupdfCStrTemp(pdf_annot_field_value(access.ctx, access.annot));
-    }
-    fz_catch(access.ctx) {
-        fz_report_error(access.ctx);
-    }
-    return res;
+    return ReadAnnot(annot, Str{},
+                     [](fz_context* ctx, pdf_annot* a) { return MupdfCStrTemp(pdf_annot_field_value(ctx, a)); });
 }
 
 // font size from the field's /DA (in PDF points), or 0 for auto-size.
 float GetWidgetFontSize(Annotation* annot) {
-    if (!AnnotationIsLive(annot) || annot->type != AnnotationType::Widget) {
+    if (!annot || annot->type != AnnotationType::Widget) {
         return 0;
     }
-    AnnotAccess access(annot);
-    float size = 0;
-    fz_try(access.ctx) {
+    return ReadAnnot(annot, 0.f, [](fz_context* ctx, pdf_annot* a) {
         const char* fontZ = nullptr;
+        float size = 0;
         int nColor = 0;
         float color[4] = {0};
-        pdf_annot_default_appearance(access.ctx, access.annot, &fontZ, &size, &nColor, color);
-    }
-    fz_catch(access.ctx) {
-        fz_report_error(access.ctx);
-        size = 0;
-    }
-    return size;
+        pdf_annot_default_appearance(ctx, a, &fontZ, &size, &nColor, color);
+        return size;
+    });
 }
 
 // max length of a text field (chars), or 0 for unlimited.
 int GetWidgetMaxLen(Annotation* annot) {
-    if (!AnnotationIsLive(annot) || annot->type != AnnotationType::Widget) {
+    if (!annot || annot->type != AnnotationType::Widget) {
         return 0;
     }
-    AnnotAccess access(annot);
-    int maxLen = 0;
-    fz_try(access.ctx) {
-        maxLen = pdf_text_widget_max_len(access.ctx, access.annot);
-    }
-    fz_catch(access.ctx) {
-        fz_report_error(access.ctx);
-        maxLen = 0;
-    }
-    return maxLen;
+    return ReadAnnot(annot, 0, pdf_text_widget_max_len);
 }
 
 template <typename SetValue>
@@ -733,20 +686,8 @@ bool SetWidgetChoiceValue(Annotation* annot, Str value) {
 }
 
 Str Contents(Annotation* annot) {
-    if (!AnnotationIsLive(annot)) {
-        return {};
-    }
-    AnnotAccess access(annot);
-    Str res;
-    fz_try(access.ctx) {
-        res = MupdfCStrDupTemp(pdf_annot_contents(access.ctx, access.annot));
-    }
-    fz_catch(access.ctx) {
-        fz_report_error(access.ctx);
-        res = {};
-        logf("Contents(): pdf_annot_contents()\n");
-    }
-    return res;
+    return ReadAnnot(annot, Str{},
+                     [](fz_context* ctx, pdf_annot* a) { return MupdfCStrDupTemp(pdf_annot_contents(ctx, a)); });
 }
 
 bool SetContents(Annotation* annot, Str sv) {
@@ -827,37 +768,15 @@ void DeleteAnnotation(Annotation* annot) {
 
 // -1 if not exist
 int PopupId(Annotation* annot) {
-    if (!AnnotationIsLive(annot)) {
-        return -1;
-    }
-    AnnotAccess access(annot);
-    pdf_obj* obj = nullptr;
-    int res = -1;
-    fz_try(access.ctx) {
-        obj = pdf_dict_get(access.ctx, pdf_annot_obj(access.ctx, access.annot), PDF_NAME(Popup));
-        if (obj) {
-            res = pdf_to_num(access.ctx, obj);
-        }
-    }
-    fz_catch(access.ctx) {
-        fz_report_error(access.ctx);
-    }
-    return res;
+    return ReadAnnot(annot, -1, [](fz_context* ctx, pdf_annot* a) {
+        pdf_obj* obj = pdf_dict_get(ctx, pdf_annot_obj(ctx, a), PDF_NAME(Popup));
+        return obj ? pdf_to_num(ctx, obj) : -1;
+    });
 }
 
 time_t ModificationDate(Annotation* annot) {
-    if (!AnnotationIsLive(annot)) {
-        return 0;
-    }
-    AnnotAccess access(annot);
-    int64_t res = 0;
-    fz_try(access.ctx) {
-        res = pdf_annot_modification_date(access.ctx, access.annot);
-    }
-    fz_catch(access.ctx) {
-        fz_report_error(access.ctx);
-    }
-    return res;
+    return ReadAnnot(annot, (time_t)0,
+                     [](fz_context* ctx, pdf_annot* a) { return (time_t)pdf_annot_modification_date(ctx, a); });
 }
 
 // mupdf never touches /M on its own, so whoever changes an annotation has to
@@ -878,22 +797,12 @@ void SetModificationDateToNow(Annotation* annot) {
 
 // return empty if no icon
 Str IconName(Annotation* annot) {
-    if (!AnnotationIsLive(annot)) {
-        return {};
-    }
-    AnnotAccess access(annot);
-    Str iconName;
-    fz_try(access.ctx) {
-        if (pdf_annot_has_icon_name(access.ctx, access.annot)) {
-            // can only call if pdf_annot_has_icon_name() returned true
-            iconName = MupdfCStrDupTemp(pdf_annot_icon_name(access.ctx, access.annot));
+    return ReadAnnot(annot, Str{}, [](fz_context* ctx, pdf_annot* a) {
+        if (pdf_annot_has_icon_name(ctx, a)) {
+            return MupdfCStrDupTemp(pdf_annot_icon_name(ctx, a));
         }
-    }
-    fz_catch(access.ctx) {
-        fz_report_error(access.ctx);
-        iconName = {};
-    }
-    return iconName;
+        return Str{};
+    });
 }
 
 void SetIconName(Annotation* annot, Str iconName) {
@@ -1840,20 +1749,7 @@ InkEraseResult EraseAnnotationInk(Annotation* annot, PointF pt, float radius) {
 }
 
 int BorderWidth(Annotation* annot) {
-    if (!AnnotationIsLive(annot)) {
-        return 0;
-    }
-    AnnotAccess access(annot);
-    float res = 0;
-    fz_try(access.ctx) {
-        res = pdf_annot_border(access.ctx, access.annot);
-    }
-    fz_catch(access.ctx) {
-        fz_report_error(access.ctx);
-        logf("BorderWidth: pdf_annot_border() failed\n");
-    }
-
-    return (int)res;
+    return ReadAnnot(annot, 0, [](fz_context* ctx, pdf_annot* a) { return (int)pdf_annot_border(ctx, a); });
 }
 
 void SetBorderWidth(Annotation* annot, int newWidth) {
@@ -1877,19 +1773,7 @@ void SetBorderWidth(Annotation* annot, int newWidth) {
 }
 
 int Opacity(Annotation* annot) {
-    if (!AnnotationIsLive(annot)) {
-        return 0;
-    }
-    AnnotAccess access(annot);
-    float fopacity = 0;
-    fz_try(access.ctx) {
-        fopacity = pdf_annot_opacity(access.ctx, access.annot);
-    }
-    fz_catch(access.ctx) {
-        fz_report_error(access.ctx);
-        logf("Opacity: pdf_annot_opacity() failed\n");
-    }
-    return (int)(fopacity * 255.f);
+    return ReadAnnot(annot, 0, [](fz_context* ctx, pdf_annot* a) { return (int)(pdf_annot_opacity(ctx, a) * 255.f); });
 }
 
 void SetOpacity(Annotation* annot, int newOpacity) {
