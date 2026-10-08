@@ -3364,14 +3364,12 @@ static void DeInitializeEngineMupdf() {
     ReportIf(n < 0);
     ScopedMutex cs(&gPerThreadContextsCs);
     VecReset(gPerThreadContexts);
-#if !defined(SUMATRA_NG)
 }
 
 // Shutdown waits for this to hit zero before freeing the system-font cache.
 // FreeType faces alias those bytes until ~EngineMupdf drops the document.
 int EngineMupdfCount() {
     return AtomicIntGet(&gEngineCount);
-#endif
 }
 
 static fz_context* GetOrClonePerThreadContext(EngineMupdf* engine, fz_context* ctx) {
