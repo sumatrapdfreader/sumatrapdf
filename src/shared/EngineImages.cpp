@@ -1927,7 +1927,6 @@ static FileType imageEngineTypes[] = {
 // clang-format on
 
 bool IsEngineImageSupportedFileType(FileType kind) {
-    // logf("IsEngineImageSupportedFileType(%s)\n", kind);
     int n = dimofi(imageEngineTypes);
     return FileTypeIndexOf(imageEngineTypes, n, kind) >= 0;
 }

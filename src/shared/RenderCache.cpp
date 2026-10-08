@@ -303,7 +303,6 @@ bool RenderCache::DropCacheEntry(BitmapCacheEntry* entry) {
     cacheCount--;
     ReportIf(cacheCount < 0);
 
-    // LogCacheSize();
     return true;
 }
 
@@ -530,7 +529,6 @@ void RenderCache::FreeForDisplayModel(DisplayModel* dm) {
 }
 
 void RenderCache::FreeNotVisible() {
-    // rcLogf("RenderCache::FreeNotVisible\n");
     ScopedRecursiveMutex scope(&cacheAccess);
     // must go from end because freeing changes the cache
     for (int i = cacheCount - 1; i >= 0; i--) {
@@ -756,7 +754,6 @@ void RenderCache::RequestRendering(DisplayModel* dm, int pageNo) {
 /* Render a bitmap for page <pageNo> in <dm>. */
 void RenderCache::RequestRendering(DisplayModel* dm, int pageNo, TilePosition tile, bool clearQueueForPage,
                                    const PredictiveChain* chain) {
-    // rcLogf("RenderCache::RequestRendering: pageNo %d\n", pageNo);
     ScopedRecursiveMutex scope(&requestAccess);
     ReportIf(!dm);
     if (!dm || dm->pauseRendering) {

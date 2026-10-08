@@ -419,7 +419,6 @@ static bool DetectExternalViewer(ExternalViewerInfo* ev) {
         TempStr path = path::JoinTemp(dir, ev->exePartialPath);
         if (file::Exists(path)) {
             ev->exeFullPath = str::Dup(path);
-            // logf("DetectExternalViewer: cmd %d, '%s' %s\n", ev->cmdId, ev->exeFullPath, ev->launchArgs);
             return true;
         }
     }
@@ -464,7 +463,6 @@ bool CanViewWithKnownExternalViewer(WindowTab* tab, int cmdId) {
     }
     ExternalViewerInfo* ev = FindKnownExternalViewerInfoByCmdId(cmdId);
     if (!ev || len(ev->exeFullPath) == 0) {
-        // logf("CanViewWithKnownExternalViewer cmd: %d, !ev || ev->exeFullPath == nullptr\n", cmd);
         return false;
     }
     // must match file extension
@@ -472,7 +470,6 @@ bool CanViewWithKnownExternalViewer(WindowTab* tab, int cmdId) {
     if (!filterMatchesEverything(ev->exts)) {
         TempStr ext = path::GetExtTemp(tab->filePath);
         if (!str::ContainsI(ev->exts, ext)) {
-            // logf("CanViewWithKnownExternalViewer cmd: %d, !pos\n", cmd);
             return false;
         }
     }

@@ -659,9 +659,6 @@ static bool IsPointInRect(fz_rect rect, fz_point pt) {
 static fz_matrix FzCreateViewCtm(fz_rect mediabox, float zoom, int rotation) {
     fz_matrix ctm = fz_pre_scale(fz_rotate((float)rotation), zoom, zoom);
 
-    // TODO: this is happening quite often so don't report it
-    // not sure if it indicates an actual issue
-    // ReportIf(0 != mediabox.x0 || 0 != mediabox.y0);
     rotation = (rotation + 360) % 360;
     if (90 == rotation) {
         ctm = fz_pre_translate(ctm, 0, -mediabox.y1);
@@ -1983,7 +1980,6 @@ static bool RemoveHeWhoFullyContains(Vec<IPageElement*>& els) {
             }
             auto r2 = els[j]->GetRect();
             if (RectFullyContains(r1, r2)) {
-                // logf("el %d fully obscures %d\n", i, j);
                 VecRemoveAtFast(els, i);
                 return true;
             }
@@ -5897,8 +5893,6 @@ static void RebuildCommentsFromAnnotationsInner(fz_context* ctx, pdf_annot* anno
         if (len(attname) == 0 || fz_is_empty_rect(rect) || !pdf_is_embedded_file(ctx, fs)) {
             return;
         }
-
-        // logf("attachment: %s, num: %d\n", Str(attname), num);
 
         auto* dest = new PageDestination();
         dest->kind = kindDestinationLaunchEmbedded;

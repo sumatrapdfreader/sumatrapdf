@@ -283,8 +283,6 @@ bool SaveDataToFile(HWND hwndParent, Str fileName, Str data) {
         return false;
     }
 
-    // ReportIf(fileName && str::SliceFromChar(fileName, '/'));
-
     OPENFILENAME ofn{};
     ofn.lStructSize = sizeof(ofn);
     ofn.hwndOwner = hwndParent;

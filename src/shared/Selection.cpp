@@ -737,7 +737,6 @@ void UpdateTextSelection(MainWindow* win, bool select) {
     }
 
 #if !defined(SUMATRA_NG)
-    // logf("UpdateTextSelection: select: %d\n", (int)select);
 #endif
     DisplayModel* dm = win->AsFixed();
     if (select) {

@@ -2438,7 +2438,6 @@ void DisplayModel::GoToPage(int pageNo, int scrollY, bool addNavPt, int scrollX)
         }
         Relayout(zoomVirtual, rotation);
     }
-    // lf("DisplayModel::GoToPage(pageNo=%d, scrollY=%d)", pageNo, scrollY);
     PageInfo* pageInfo = GetPageInfo(pageNo);
 
     // intentionally ignore scrollX and scrollY when fitting to content
@@ -3042,7 +3041,6 @@ void DisplayModel::SetZoomVirtual(float zoomLevel, Point* fixPt) {
         ss.x = ss.y = -1;
     }
 
-    // lf("DisplayModel::SetZoomVirtual() zoomLevel=%.6f", _zoomLevel);
     // the user asked for this zoom, so make Fit Content land exactly on the
     // content. Held across SetScrollState() too: in continuous mode GoToPage()
     // relayouts again for the page it scrolls to, and that is the page whose
@@ -3117,8 +3115,6 @@ float* GetDefaultZoomLevels(int* nZoomLevelsOut) {
 
     int nCustomZooms = len(*gSettings->zoomLevels);
     if (nCustomZooms > 0) {
-        // ReportIf(((*defaultZooms)[0] < kZoomMin || defaultZooms->Last() > kZoomMax));
-        // ReportIf((*defaultZooms)[0] > defaultZooms->Last());
         zoomLevels = VecData(*gSettings->zoomLevels);
         nZoomLevels = nCustomZooms;
     }
@@ -3135,8 +3131,6 @@ float DisplayModel::GetNextZoomStep(float towardsLevel) const {
     if (MaybeGetNextZoomByIncrement(&currZoom, towardsLevel)) {
         return currZoom;
     }
-
-    // ReportIf(defaultZooms[0] != kZoomMin || defaultZooms[dimof(defaultZooms)-1] != kZoomMax);
 
     int nZoomLevels;
     float* zoomLevels = GetDefaultZoomLevels(&nZoomLevels);
@@ -3187,7 +3181,6 @@ float DisplayModel::GetNextZoomStep(float towardsLevel) const {
         }
     }
 
-    // logf("currZoom: %.2f, towardsLevel: %.2f, newZoom: %.2f\n", currZoom, towardsLevel, newZoom);
     return newZoom;
 }
 
