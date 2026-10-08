@@ -1786,11 +1786,7 @@ gp::El* HomePageBuild(MainWindow* win, gp::Ctx* cx) {
     float frameDx = (float)win->canvasRc.dx;
     bool listView = HomePageIsListView();
 
-    // orig's LayoutHomePage: the thumbnail grid is centered in the canvas and
-    // the header rows align with it; with no files at all it sits at the left
-    // margin. The unfiltered count is used so the layout stays stable when a
-    // search filters the results
-    int nFilesForLayout = CountHomePageFiles();
+    // header rows share the thumbnail grid's x, including when it is empty
     int cols = (int)((frameDx - kThumbsMarginLeft - kThumbsMarginRight + kThumbsSpaceBetweenX) /
                      (kThumbnailDx + kThumbsSpaceBetweenX));
     cols = std::max(cols, 1);
@@ -1799,8 +1795,6 @@ gp::El* HomePageBuild(MainWindow* win, gp::Ctx* cx) {
     int thumbsStartX = kThumbsMarginLeft + (((int)frameDx - contentDx - kThumbsMarginLeft - kThumbsMarginRight) / 2);
     if (thumbsStartX < kInnerPadding) {
         thumbsStartX = kInnerPadding;
-    } else if (nFilesForLayout == 0) {
-        thumbsStartX = kThumbsMarginLeft;
     }
     float startX = (float)thumbsStartX;
     float endX = std::max(0.f, frameDx - startX - (float)contentDx);
