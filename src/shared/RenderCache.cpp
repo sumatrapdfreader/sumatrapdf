@@ -99,27 +99,6 @@ static Pixmap* GrayscalePagePixmap(Pixmap* bmp) {
     return bmp;
 }
 
-// Several preserved regions in one tile -> keep the largest artwork, drop layout
-// ornaments. Always reduce to one region so patchy multi-image pages do not leave
-// dark-recolored holes between photos (#5806).
-static void FinalizeTileSkipRects(Vec<Rect>& skipRects, Size bmpSize) {
-    if (len(skipRects) <= 1 || bmpSize.dx <= 0 || bmpSize.dy <= 0) {
-        return;
-    }
-    int bestIdx = 0;
-    i64 bestArea = 0;
-    for (int i = 0; i < len(skipRects); i++) {
-        i64 a = (i64)skipRects[i].dx * skipRects[i].dy;
-        if (a > bestArea) {
-            bestArea = a;
-            bestIdx = i;
-        }
-    }
-    Rect keep = skipRects[bestIdx];
-    VecClear(skipRects);
-    VecAppend(skipRects, keep);
-}
-
 // RenderCache's verbose per-operation logging (FreePage / Paint / DropCacheEntry
 // / ...) is noisy, so it's disabled by default. Set gLogRenderCache = true to
 // re-enable it when debugging the cache.
@@ -1362,7 +1341,7 @@ static bool RenderCacheRunOne(RenderCache* cache, int threadIdx, PageRenderReque
             if (preserve) {
                 Size bmpSize(bmp->width, bmp->height);
                 engine->GetBitmapRecolorSkipRects(req.pageNo, req.zoom, req.rotation, req.pageRect, bmpSize, skipRects);
-                FinalizeTileSkipRects(skipRects, bmpSize);
+                PdfDarkModeKeepLargestRect(skipRects);
                 if (len(skipRects) > 0) {
                     skipRectsPtr = &skipRects;
                 }

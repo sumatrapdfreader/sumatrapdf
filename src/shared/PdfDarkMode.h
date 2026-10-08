@@ -58,3 +58,21 @@ RectF PdfDarkModeCapUnknownImagePageRect(const RectF& imgPage, float pageHeight)
 
 bool PdfDarkModeShouldPreserveEmbeddedImageRect(fz_context* ctx, fz_image* image, float pageCoverage, int devW,
                                                 int devH);
+inline bool PdfDarkModeKeepLargestRect(Vec<Rect>& rects) {
+    if (len(rects) <= 1) {
+        return false;
+    }
+    int bestIdx = 0;
+    i64 bestArea = 0;
+    for (int i = 0; i < len(rects); i++) {
+        i64 area = (i64)rects[i].dx * rects[i].dy;
+        if (area > bestArea) {
+            bestArea = area;
+            bestIdx = i;
+        }
+    }
+    Rect keep = rects[bestIdx];
+    VecClear(rects);
+    VecAppend(rects, keep);
+    return true;
+}

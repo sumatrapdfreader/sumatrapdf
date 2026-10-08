@@ -6722,29 +6722,6 @@ static u32 DarkLegacySkipHash(FzPageInfo* pageInfo, float zoom, int rotation) {
     return h;
 }
 
-// Illustrated pages often contain many small content-stream images alongside
-// one main artwork. Preserving all of them leaves patchy gaps that get
-// dark-recolored. Keep only the largest preserve region per page (#5806).
-static void DarkLegacySkipKeepLargestArtwork(FzPageInfo* pageInfo) {
-    Vec<Rect>& skipRects = pageInfo->darkLegacySkipDevAbs;
-    if (len(skipRects) <= 1) {
-        return;
-    }
-    int bestIdx = 0;
-    i64 bestArea = 0;
-    for (int i = 0; i < len(skipRects); i++) {
-        i64 a = (i64)skipRects[i].dx * skipRects[i].dy;
-        if (a > bestArea) {
-            bestArea = a;
-            bestIdx = i;
-        }
-    }
-    Rect keep = skipRects[bestIdx];
-    VecClear(skipRects);
-    VecAppend(skipRects, keep);
-    pageInfo->darkLegacyArtworkPageBottom = 0.f;
-}
-
 static int DarkLegacyTileFindRoot(Vec<int>& parent, int i) {
     while (parent[i] != i) {
         parent[i] = parent[parent[i]];
@@ -6756,7 +6733,7 @@ static int DarkLegacyTileFindRoot(Vec<int>& parent, int i) {
 // Some PDFs slice a single illustration into a grid of image tiles. Judged one
 // at a time each tile is just a small picture: the page-dominance rule never
 // fires, the decorative-strip rule throws away the thin edge pieces, and
-// DarkLegacySkipKeepLargestArtwork keeps only one tile of the set. Group tiles
+// PdfDarkModeKeepLargestRect keeps only one tile of the set. Group tiles
 // that touch into one region and let the rest of the code treat that region as
 // the image.
 //
@@ -6948,7 +6925,10 @@ static void BuildPageDarkLegacySkipRects(EngineMupdf* engine, FzPageInfo* pageIn
             fz_drop_image(ctx, image);
         }
     }
-    DarkLegacySkipKeepLargestArtwork(pageInfo);
+    // Keep the main artwork so smaller ornaments do not leave recolored gaps.
+    if (PdfDarkModeKeepLargestRect(pageInfo->darkLegacySkipDevAbs)) {
+        pageInfo->darkLegacyArtworkPageBottom = 0.f;
+    }
 }
 
 void EngineMupdf::GetBitmapRecolorSkipRects(int pageNo, float zoom, int rotation, const RectF& renderPageRect,
