@@ -7157,16 +7157,7 @@ Pixmap* EngineMupdf::RenderPage(RenderPageArgs& args) {
             return nullptr;
         }
 
-#if defined(SUMATRA_NG)
-        if (pageRect) {
-            pRect = ToFzRect(*pageRect);
-        } else {
-            // TODO(port): use pageInfo->mediabox?
-            pRect = fz_bound_page(ctx, page);
-        }
-#else
         pRect = ToFzRect(pageRect ? *pageRect : pageInfo->mediabox);
-#endif
         ctm = viewctm(page, zoom, rotation);
         ibounds = fz_round_rect(fz_transform_rect(pRect, ctm));
 
