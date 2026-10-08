@@ -382,6 +382,7 @@ struct HomePageUI {
     bool rdownOnEntry = false;
     Point rdown;
     gpui::Bounds pageBounds{};
+    gpui::Bounds searchBounds{};
     // the "Open..." link as laid out last frame: orig's LayoutHomePage needs
     // its width, and gpui measures text only while painting
     gpui::Bounds openGroupBounds{};
@@ -915,6 +916,27 @@ static int HomeTotalContentDy(HomePageUI* h) {
 static float HomeClampScrollY(HomePageUI* h, float y) {
     float maxY = std::max(0.f, (float)HomeTotalContentDy(h) - h->entriesView.h);
     return std::max(0.f, std::min(y, maxY));
+}
+
+// a third of a row per notch. WM_MOUSEWHEEL on the frame uses the same step:
+// the test harness posts the wheel with the cursor parked off the window.
+void HomePageOnMouseWheel(MainWindow* win, int delta) {
+    if (!win || !win->IsCurrentTabAbout() || delta == 0) {
+        return;
+    }
+    HomePageUI* h = Ui(win);
+    int thumbsRowDy = HomePageIsListView() ? kHomeListRowDy : kThumbnailDy + kThumbsSpaceBetweenY;
+    int scrollBy = thumbsRowDy / 3;
+    if (delta > 0) {
+        scrollBy = -scrollBy;
+    }
+    float newScrollY = HomeClampScrollY(h, h->scrollY + (float)scrollBy);
+    if (newScrollY == h->scrollY) {
+        return;
+    }
+    h->scrollY = newScrollY;
+    OverlayScrollbarsNotifyScroll(win);
+    AppShellInvalidate(win);
 }
 
 // orig's HomePageOnMouseWheel: a third of a row per notch
@@ -1550,7 +1572,6 @@ static gp::El* HomeThumbnailEl(MainWindow* win, gp::Ctx* cx, int idx, bool isSel
                        ->PathClick(GpuiDup(cx->a, fmt("home-thumb-%d", idx)))
                        ->OnClick(gp::ListenTo(Ui(win)->view, &HomeView::OnEntryClick, idx))
                        ->OnMouseDown(gp::ListenTo(Ui(win)->view, &HomeView::OnEntryDown, idx))
-                       ->BoundsOut(&Ui(win)->entryBounds[idx])
                        ->OnHover(gp::ListenTo(Ui(win)->view, &HomeView::OnEntryHover, idx));
 
     gp::El* page = gp::Div(cx->a)
@@ -1603,7 +1624,9 @@ static gp::El* HomeThumbnailEl(MainWindow* win, gp::Ctx* cx, int idx, bool isSel
                        ->ClipX());
     cell->Child(nameRow);
 
-    gp::El* outer = gp::Div(cx->a)->FlexCol()->Shrink0()->Pad(3)->Radius(10)->Child(cell);
+    // the selection border lives on this box, so its rect is the outline
+    gp::El* outer =
+        gp::Div(cx->a)->FlexCol()->Shrink0()->Pad(3)->Radius(10)->BoundsOut(&Ui(win)->entryBounds[idx])->Child(cell);
     if (isSelected) {
         outer->Border(2, ToGpui(kHomeSelectionColor));
     }
@@ -1777,8 +1800,10 @@ gp::El* HomePageBuild(MainWindow* win, gp::Ctx* cx) {
     while (len(h->entryBounds) < nFiles) {
         VecAppend(h->entryBounds, gpui::Bounds{});
     }
-    if (h->selIdx >= nFiles) {
-        h->selIdx = nFiles - 1;
+    // orig's homePageSelIdx starts at 0, so the first thumbnail is outlined
+    // before any key is pressed
+    if (nFiles > 0 && (h->selIdx < 0 || h->selIdx >= nFiles)) {
+        h->selIdx = 0;
     }
 
     Color colBg = ThemeMainWindowBackgroundColor();
@@ -1880,6 +1905,7 @@ gp::El* HomePageBuild(MainWindow* win, gp::Ctx* cx) {
                        ->W((float)borderDx)
                        ->Shrink0()
                        ->H((float)borderDy)
+                       ->BoundsOut(&h->searchBounds)
                        ->Child(gpc::Input::New(cx, GStrL("home-search"), h->search)
                                    ->WithSize(gp::UiSize::Small)
                                    ->W(gp::kFill)
@@ -1988,6 +2014,60 @@ gp::El* HomePageBuild(MainWindow* win, gp::Ctx* cx) {
 }
 
 // --- keyboard navigation of the file list (issue #1136) ----------------------
+
+static Rect BoundsRect(const gpui::Bounds& b) {
+    return Rect{(int)b.x, (int)b.y, (int)b.w, (int)b.h};
+}
+
+static TempStr RectCsvTemp(const Rect& r) {
+    return fmt("%d,%d,%d,%d", r.x, r.y, r.dx, r.dy);
+}
+
+// search / outline rects are window coordinates. outline is the part inside
+// the entries viewport, so a thumbnail scrolled under the search field does
+// not report a painted outline on top of it (issue #5978).
+TempStr HomeSelectionResultTemp(int* exitCodeOut) {
+    auto finish = [&](int code, TempStr s) -> TempStr {
+        if (exitCodeOut) {
+            *exitCodeOut = code;
+        }
+        return s;
+    };
+    MainWindow* win = len(gWindows) > 0 ? gWindows[0] : nullptr;
+    if (!win) {
+        return finish(2, str::DupTemp(StrL("NOTREADY no-window")));
+    }
+    HomePageUI* h = Ui(win);
+    if (!win->IsCurrentTabAbout()) {
+        return finish(2, str::DupTemp(StrL("NOTREADY no-layout")));
+    }
+    int sel = h->selIdx;
+    Str path;
+    if (sel >= 0 && sel < len(h->files)) {
+        path = h->files[sel]->filePath;
+    }
+    bool searchFocus = h->search && win->gpuiWin && gp::FocusHandleIsFocused(win->gpuiWin, h->search->focus);
+    int searchBox = h->search ? 1 : 0;
+    Rect search = BoundsRect(h->searchBounds);
+    Rect outlineFull;
+    Rect outline;
+    bool showSel = !HomePageIsListView() && !searchFocus && sel >= 0 && sel < len(h->entryBounds);
+    if (showSel) {
+        outlineFull = BoundsRect(h->entryBounds[sel]);
+        outline = outlineFull.Intersect(BoundsRect(h->entriesView));
+    }
+    Rect lastCaption;
+    if (!HomePageIsListView() && len(h->entryBounds) > 0) {
+        lastCaption = BoundsRect(h->entryBounds[len(h->entryBounds) - 1]);
+    }
+    Rect tipRect;
+    return finish(0, fmt("OK sel=%d entries=%d searchFocus=%d searchBox=%d search=%s outline=%s outlineFull=%s path=%s "
+                         "listView=%d listIcon=%s thumbsArea=%s lastCaption=%s tip=%d,%d tipRect=%s",
+                         sel, h->entryCount, searchFocus ? 1 : 0, searchBox, RectCsvTemp(search), RectCsvTemp(outline),
+                         RectCsvTemp(outlineFull), path, HomePageIsListView() ? 1 : 0, RectCsvTemp(Rect{}),
+                         RectCsvTemp(BoundsRect(h->entriesView)), RectCsvTemp(lastCaption), gSelectedIsPromo ? 1 : 0,
+                         gSelectedTipIdx, RectCsvTemp(tipRect)));
+}
 
 void HomePageSelectFirst(MainWindow* win) {
     HomePageUI* h = Ui(win);

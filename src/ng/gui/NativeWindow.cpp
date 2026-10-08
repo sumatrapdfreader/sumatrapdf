@@ -36,6 +36,7 @@
 #include "gui/OleDragDrop.h"
 #include "gui/NativeCursors.h"
 #include "gui/TouchGestures.h"
+#include "HomePage.h"
 
 #if OS_WIN
 
@@ -562,6 +563,16 @@ static LRESULT CALLBACK ShellSubclass(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp,
         case WM_HOTKEY:
             if (HandleGlobalHotkey((int)wp)) {
                 return 0;
+            }
+            break;
+        case WM_MOUSEWHEEL:
+            // the home page scrolls from a wheel posted at the frame, including
+            // when the cursor is not over the thumbnails
+            if (MainWindow* win = WinOf(hwnd)) {
+                if (win->IsCurrentTabAbout()) {
+                    HomePageOnMouseWheel(win, GET_WHEEL_DELTA_WPARAM(wp));
+                    return 0;
+                }
             }
             break;
         case WM_COMMAND:

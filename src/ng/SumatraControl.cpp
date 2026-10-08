@@ -48,6 +48,7 @@
 #include "SumatraPDF.h"
 #include "MainWindow.h"
 #include "WindowTab.h"
+#include "HomePage.h"
 #include "TextSelection.h"
 #include "TextSearch.h"
 #include "FileHistory.h"
@@ -1326,6 +1327,20 @@ static void ExecuteControlRequest(ControlRequest* req) {
             break;
         }
 #endif
+
+        case ControlCmd::TestHomeSelection: {
+            Str mode = StringArg(req, 0);
+            if (len(mode) > 0) {
+                SetHomePageListView(str::EqI(mode, StrL("list")));
+                if (MainWindow* win = FirstWindow()) {
+                    AppShellInvalidate(win);
+                }
+            }
+            int exitCode = 0;
+            Str res = HomeSelectionResultTemp(&exitCode);
+            AppendTestResult(req, exitCode, res);
+            break;
+        }
 
         case ControlCmd::StartPerfLog:
             StartPerfLog();
