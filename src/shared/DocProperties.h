@@ -77,3 +77,4 @@ void FreeProps(Props& props);
 
 TempStr PropNameTemp(DocProp prop);
 DocProp PropFromName(Str name);
+Str PdfInfoKeyFromProp(DocProp prop);

@@ -15,7 +15,7 @@ const generatedCppFiles = [
   "src/shared/Commands.cpp",
   "src/shared/Accelerators.cpp",
   "src/shared/EbookDoc.cpp",
-  "src/shared/PdfCreator.cpp",
+  "src/shared/DocProperties.cpp",
   "src/shared/EngineMupdf.cpp",
   "src/Settings.h",
   "src/Settings.cpp",
@@ -290,7 +290,7 @@ export function genVirtKeys(rootDir: string) {
 // Each entry is [format-specific name, DocProp enum member].
 type PropEntry = [string, string];
 
-// DocProp -> PDF /Info key; shared by EngineMupdf's pdfPropNames and PdfCreator.
+// DocProp -> PDF /Info key.
 const pdfInfoNames: PropEntry[] = [
   ["Title", "Title"],
   ["Author", "Author"],
@@ -318,12 +318,7 @@ const docPropMaps: PropMapTarget[] = [
       ["dc:rights", "Copyright"],
     ],
   },
-  {
-    file: "src/shared/PdfCreator.cpp",
-    tag: "docprop-pdfcreator",
-    varName: "pdfCreatorPropsMap",
-    entries: pdfInfoNames,
-  },
+  { file: "src/shared/DocProperties.cpp", tag: "docprop-pdf-info", varName: "gPdfInfoPropsMap", entries: pdfInfoNames },
   {
     file: "src/shared/EngineMupdf.cpp",
     tag: "docprop-mupdf",
@@ -339,7 +334,6 @@ const docPropMaps: PropMapTarget[] = [
       ["info:ModDate", "ModificationDate"],
     ],
   },
-  { file: "src/shared/EngineMupdf.cpp", tag: "docprop-pdf-info", varName: "pdfPropNames", entries: pdfInfoNames },
 ];
 
 // parse `enum class DocProp : u8 { None = 0, Title = 1, ... }` -> { Title: 1, ... }
@@ -403,7 +397,7 @@ function verifyPropMap(t: PropMapTarget, vals: Record<string, number>): void {
 
 export function genDocPropMaps(rootDir: string) {
   const vals = parseDocPropValues(rootDir);
-  // group targets by file (EngineMupdf.cpp has two sections)
+  // group targets by file
   const byFile = new Map<string, PropMapTarget[]>();
   for (const t of docPropMaps) {
     verifyPropMap(t, vals);
