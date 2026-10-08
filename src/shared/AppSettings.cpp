@@ -70,11 +70,11 @@
 #include "CachedObjects.h"
 #endif
 #include "AppSettings.h"
+void ReloadSettingsUpdateWindows(bool showToolbarBefore);
 #if defined(SUMATRA_NG)
 void HomePageInvalidateLayoutCache();
 int CmdIdFromVirtualZoom(float virtualZoom); // Menu.h
 void ApplySettingsToWindowsUi();
-void ReloadSettingsUpdateWindows(bool showToolbarBefore);
 #endif
 
 // workaround for OnMenuExit
@@ -1081,22 +1081,7 @@ static void ReloadSettings(bool force = false) {
         SetCurrentLanguageAndRefreshUI(gSettings->uiLanguage);
     }
 
-#if !defined(SUMATRA_NG)
-    for (MainWindow* win : gWindows) {
-        if (gSettings->showToolbar != showToolbar) {
-            ShowOrHideToolbar(win);
-        }
-        UpdateFavoritesTree(win);
-        UpdateControlsColors(win);
-        if (DisplayModel* dm = win->AsFixed()) {
-            int dpi = win->frameDpi > 0 ? win->frameDpi : DpiGetForHwnd(win->hwndFrame);
-            dm->SetUiDpi(dpi);
-        }
-        ScheduleUiUpdate(win, kUiForceRelayout | kUiToolbarDirty);
-    }
-#else
     ReloadSettingsUpdateWindows(showToolbar);
-#endif
 
     UpdateDocumentColors();
     UpdateFixedPageScrollbarsVisibility();

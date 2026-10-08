@@ -3683,6 +3683,21 @@ void UpdateAfterThemeChange() {
     UpdateDocumentColors();
 }
 
+void ReloadSettingsUpdateWindows(bool showToolbarBefore) {
+    for (MainWindow* win : gWindows) {
+        if (gSettings->showToolbar != showToolbarBefore) {
+            ShowOrHideToolbar(win);
+        }
+        UpdateFavoritesTree(win);
+        UpdateControlsColors(win);
+        if (DisplayModel* dm = win->AsFixed()) {
+            int dpi = win->frameDpi > 0 ? win->frameDpi : DpiGetForHwnd(win->hwndFrame);
+            dm->SetUiDpi(dpi);
+        }
+        ScheduleUiUpdate(win, kUiForceRelayout | kUiToolbarDirty);
+    }
+}
+
 static void RenameFileInHistory(Str oldPath, Str newPath) {
     logf("RenameFileInHistory: oldPath: '%s', newPath: '%s'\n", oldPath, newPath);
     if (path::IsSame(oldPath, newPath)) {
