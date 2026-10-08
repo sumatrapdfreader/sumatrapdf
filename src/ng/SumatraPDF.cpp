@@ -7265,8 +7265,8 @@ void ExecuteCmd(MainWindow* win, int cmdId) {
             CopyLocationToClipboard(win, tab);
             break;
 
-        // ng: orig's CopySelectionInTabToClipboard, minus the focused edit box
-        // and the annotation clipboard (steps 8b / 13)
+        // ng: orig's CopySelectionInTabToClipboard, minus the focused edit box.
+        // A text selection wins. Otherwise Ctrl+C copies the selected annotation.
         case CmdCopySelection: {
             if (!tab || !HasPermission(Perm::CopySelection)) {
                 break;
@@ -7279,6 +7279,10 @@ void ExecuteCmd(MainWindow* win, int cmdId) {
             }
             if (tab->selectionOnPage) {
                 CopySelectionToClipboard(win);
+                break;
+            }
+            if (win->pdfAnnotationsToolbarEnabled && tab->selectedAnnotation) {
+                CopyAnnotation(tab->selectedAnnotation);
             }
             break;
         }
