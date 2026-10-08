@@ -23,6 +23,8 @@ void WasmPickFile(const Func1<Str>& onPicked);
 // Hands the file's bytes to the browser as a download named after it.
 bool WasmDownloadFile(Str path);
 
+bool WasmCopyImageFile(Str path);
+
 // Opens the system share sheet with the file attached. Returns false when the
 // browser cannot share files, so callers can fall back to a URL.
 bool WasmShareFile(Str path);

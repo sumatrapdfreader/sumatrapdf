@@ -134,6 +134,46 @@ bool WasmDownloadFile(Str path) {
 }
 
 // NOLINTNEXTLINE
+EM_JS(int, WasmJsCopyImage, (const char* path, int pathLen), {
+    if (!navigator.clipboard || !navigator.clipboard.write || typeof ClipboardItem == "undefined") {
+        return 0;
+    }
+    var filePath = UTF8ToString(path, pathLen);
+    var bytes;
+    try {
+        bytes = FS.readFile(filePath);
+    } catch (e) {
+        console.error("reading " + filePath + " failed", e);
+        return 0;
+    }
+    try {
+        var blob = new Blob([bytes], {
+            type:
+                "image/png"
+        });
+        var item = new ClipboardItem({"image/png" : Promise.resolve(blob)});
+        navigator.clipboard.write([item]).catch(function(e) {
+            if (e && e.name != "NotAllowedError") {
+                console.error("copying " + filePath + " failed", e);
+            }
+        });
+    } catch (e) {
+        console.error("copying " + filePath + " failed", e);
+        return 0;
+    }
+    return 1;
+});
+
+// image/png on the browser clipboard. The write is async; false means the
+// browser has no such API, or the file could not be read.
+bool WasmCopyImageFile(Str path) {
+    if (!file::Exists(path)) {
+        return false;
+    }
+    return WasmJsCopyImage(path.s, path.len) != 0;
+}
+
+// NOLINTNEXTLINE
 EM_JS(int, WasmJsShareFile, (const char* path, int pathLen, const char* name, int nameLen), {
     if (!navigator.share || !navigator.canShare || typeof File == "undefined") return 0;
     var filePath = UTF8ToString(path, pathLen);

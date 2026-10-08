@@ -38,6 +38,9 @@
 #include "gui/DialogWidgets.h"
 #include "SumatraDialogs.h"
 #include "ImageSaveCropResize.h"
+#if OS_WASM
+#include "gui/WasmBridge.h"
+#endif
 #include "Screenshot.h"
 
 #include "SumatraLog.h"
@@ -138,9 +141,16 @@ bool CopySelectionAsImage(MainWindow* win) {
 }
 
 void TakeScreenshots(MainWindow* win) {
-    if (!IsMainWindowValidAndNotClosing(win) || !CanAccessDisk()) {
+    if (!IsMainWindowValidAndNotClosing(win)) {
         return;
     }
+    // wasm writes a temp PNG and hands it to the browser. The disk permission
+    // is about the user's files, which a tab does not have.
+#if !OS_WASM
+    if (!CanAccessDisk()) {
+        return;
+    }
+#endif
     InitImageEditHost();
     TempStr what;
     Pixmap* px = RenderScreenshotPixmap(win, &what);
@@ -148,13 +158,27 @@ void TakeScreenshots(MainWindow* win) {
         ShowWarningNotification(win, Tr("Nothing to take a screenshot of"), kNotif5SecsTimeOut);
         return;
     }
+#if OS_WASM
+    TempStr dir = GetTempDirPathTemp();
+#else
     TempStr dir = GetScreenshotSaveDirTemp();
+#endif
     dir::CreateAll(dir);
     TempStr base = path::JoinTemp(dir, StrL("screenshot.png"));
     TempStr destPath = MakeUniqueFilePathTemp(base);
     bool ok = gImageEditHost.SavePixmapAsImage && gImageEditHost.SavePixmapAsImage(px, destPath, StrL(".png"));
     if (ok) {
+#if OS_WASM
+        // MEMFS is not a folder the user can open. Download the PNG, and copy
+        // it when the browser allows an image on the clipboard.
+        ok = WasmDownloadFile(destPath);
+        if (ok) {
+            WasmCopyImageFile(destPath);
+        }
+        file::Delete(destPath);
+#else
         ImageEditCopyToClipboard(px);
+#endif
     }
     FreePixmap(px);
     logf("TakeScreenshots: %s -> '%s' %s\n", what, destPath, Str(ok ? "ok" : "FAILED"));
@@ -164,7 +188,12 @@ void TakeScreenshots(MainWindow* win) {
     args.groupId = kNotifScreenshot;
     args.timeoutMs = kNotif5SecsTimeOut;
     args.warning = !ok;
-    args.msg = ok ? fmt(Tr("Saved screenshot to '%s'").s, destPath) : Tr("Failed to save the screenshot");
+#if OS_WASM
+    TempStr shown = path::GetBaseNameTemp(destPath);
+#else
+    TempStr shown = destPath;
+#endif
+    args.msg = ok ? fmt(Tr("Saved screenshot to '%s'").s, shown) : Tr("Failed to save the screenshot");
     ShowNotification(args);
 }
 
