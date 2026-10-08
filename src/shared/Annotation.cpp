@@ -1154,23 +1154,20 @@ static PdfColor GetAnnotColor(Annotation* annot, AnnotColorReader readColor) {
     if (!AnnotationIsLive(annot)) {
         return 0;
     }
-    EngineMupdf* e = annot->engine;
-    auto* a = annot->pdfannot;
-    auto* ctx = e->Ctx();
-    ScopedRecursiveMutex cs(&e->docLock);
+    AnnotAccess access(annot);
     float color[4]{};
     int n = -1;
-    fz_try(ctx) {
-        readColor(ctx, a, &n, color);
+    fz_try(access.ctx) {
+        readColor(access.ctx, access.annot, &n, color);
     }
-    fz_catch(ctx) {
-        fz_report_error(ctx);
+    fz_catch(access.ctx) {
+        fz_report_error(access.ctx);
         n = -1;
     }
     if (n == -1) {
         return 0;
     }
-    PdfColor res = PdfColorFromFloat(ctx, n, color);
+    PdfColor res = PdfColorFromFloat(access.ctx, n, color);
     return res;
 }
 
@@ -1480,14 +1477,12 @@ static FreeTextFont ReadFreeTextFont(Annotation* annot) {
     if (!AnnotationIsLive(annot) || Type(annot) != AnnotationType::FreeText) {
         return font;
     }
-    EngineMupdf* e = annot->engine;
-    auto* ctx = e->Ctx();
-    ScopedRecursiveMutex cs(&e->docLock);
-    fz_try(ctx) {
-        ReadFreeTextFontLocked(ctx, annot->pdfannot, font.family, font.style);
+    AnnotAccess access(annot);
+    fz_try(access.ctx) {
+        ReadFreeTextFontLocked(access.ctx, access.annot, font.family, font.style);
     }
-    fz_catch(ctx) {
-        fz_report_error(ctx);
+    fz_catch(access.ctx) {
+        fz_report_error(access.ctx);
     }
     return font;
 }
@@ -1529,22 +1524,19 @@ static DefaultAppearance ReadDefaultAppearance(Annotation* annot) {
     if (!AnnotationIsLive(annot)) {
         return res;
     }
-    EngineMupdf* e = annot->engine;
-    auto* a = annot->pdfannot;
-    auto* ctx = e->Ctx();
-    ScopedRecursiveMutex cs(&e->docLock);
+    AnnotAccess access(annot);
     const char* fontNameZ = nullptr;
     float size = 0;
     int n = 0;
     float color[4]{};
-    fz_try(ctx) {
-        pdf_annot_default_appearance(ctx, a, &fontNameZ, &size, &n, color);
+    fz_try(access.ctx) {
+        pdf_annot_default_appearance(access.ctx, access.annot, &fontNameZ, &size, &n, color);
     }
-    fz_catch(ctx) {
-        fz_report_error(ctx);
+    fz_catch(access.ctx) {
+        fz_report_error(access.ctx);
     }
     res.textSize = (int)size;
-    res.textColor = PdfColorFromFloat(ctx, n, color);
+    res.textColor = PdfColorFromFloat(access.ctx, n, color);
     return res;
 }
 
@@ -1612,17 +1604,14 @@ void GetLineEndingStyles(Annotation* annot, int* start, int* end) {
     if (!AnnotationIsLive(annot)) {
         return;
     }
-    EngineMupdf* e = annot->engine;
-    auto* a = annot->pdfannot;
-    auto* ctx = e->Ctx();
-    ScopedRecursiveMutex cs(&e->docLock);
+    AnnotAccess access(annot);
     pdf_line_ending leStart = PDF_ANNOT_LE_NONE;
     pdf_line_ending leEnd = PDF_ANNOT_LE_NONE;
-    fz_try(ctx) {
-        pdf_annot_line_ending_styles(ctx, a, &leStart, &leEnd);
+    fz_try(access.ctx) {
+        pdf_annot_line_ending_styles(access.ctx, access.annot, &leStart, &leEnd);
     }
-    fz_catch(ctx) {
-        fz_report_error(ctx);
+    fz_catch(access.ctx) {
+        fz_report_error(access.ctx);
         logf("GetLineEndingStyles: pdf_annot_line_ending_styles() failed\n");
     }
     if (start) {
@@ -1640,19 +1629,16 @@ bool GetLinePoints(Annotation* annot, PointF& start, PointF& end) {
     if (!AnnotationIsLive(annot) || annot->type != AnnotationType::Line) {
         return false;
     }
-    EngineMupdf* e = annot->engine;
-    auto* a = annot->pdfannot;
-    auto* ctx = e->Ctx();
-    ScopedRecursiveMutex cs(&e->docLock);
+    AnnotAccess access(annot);
     fz_point aPt{};
     fz_point bPt{};
     bool ok = false;
-    fz_try(ctx) {
-        pdf_annot_line(ctx, a, &aPt, &bPt);
+    fz_try(access.ctx) {
+        pdf_annot_line(access.ctx, access.annot, &aPt, &bPt);
         ok = true;
     }
-    fz_catch(ctx) {
-        fz_report_error(ctx);
+    fz_catch(access.ctx) {
+        fz_report_error(access.ctx);
         logf("GetLinePoints: pdf_annot_line() failed\n");
     }
     if (!ok) {
@@ -1700,19 +1686,16 @@ Vec<PointF> GetVertices(Annotation* annot) {
     if (annot->type != AnnotationType::PolyLine && annot->type != AnnotationType::Polygon) {
         return res;
     }
-    EngineMupdf* e = annot->engine;
-    auto* a = annot->pdfannot;
-    auto* ctx = e->Ctx();
-    ScopedRecursiveMutex cs(&e->docLock);
-    fz_try(ctx) {
-        int n = pdf_annot_vertex_count(ctx, a);
+    AnnotAccess access(annot);
+    fz_try(access.ctx) {
+        int n = pdf_annot_vertex_count(access.ctx, access.annot);
         for (int i = 0; i < n; i++) {
-            fz_point p = pdf_annot_vertex(ctx, a, i);
+            fz_point p = pdf_annot_vertex(access.ctx, access.annot, i);
             VecAppend(res, {p.x, p.y});
         }
     }
-    fz_catch(ctx) {
-        fz_report_error(ctx);
+    fz_catch(access.ctx) {
+        fz_report_error(access.ctx);
         logf("GetVertices: pdf_annot_vertex() failed\n");
         VecReset(res);
     }
@@ -1763,23 +1746,20 @@ void GetInkList(Annotation* annot, Vec<int>& strokeCounts, Vec<PointF>& points) 
     if (!AnnotationIsLive(annot) || annot->type != AnnotationType::Ink) {
         return;
     }
-    EngineMupdf* e = annot->engine;
-    auto* a = annot->pdfannot;
-    auto* ctx = e->Ctx();
-    ScopedRecursiveMutex cs(&e->docLock);
-    fz_try(ctx) {
-        int nStrokes = pdf_annot_ink_list_count(ctx, a);
+    AnnotAccess access(annot);
+    fz_try(access.ctx) {
+        int nStrokes = pdf_annot_ink_list_count(access.ctx, access.annot);
         for (int i = 0; i < nStrokes; i++) {
-            int nv = pdf_annot_ink_list_stroke_count(ctx, a, i);
+            int nv = pdf_annot_ink_list_stroke_count(access.ctx, access.annot, i);
             VecAppend(strokeCounts, nv);
             for (int k = 0; k < nv; k++) {
-                fz_point p = pdf_annot_ink_list_stroke_vertex(ctx, a, i, k);
+                fz_point p = pdf_annot_ink_list_stroke_vertex(access.ctx, access.annot, i, k);
                 VecAppend(points, {p.x, p.y});
             }
         }
     }
-    fz_catch(ctx) {
-        fz_report_error(ctx);
+    fz_catch(access.ctx) {
+        fz_report_error(access.ctx);
         logf("GetInkList: pdf_annot_ink_list() failed\n");
         VecReset(strokeCounts);
         VecReset(points);
@@ -1892,16 +1872,13 @@ int BorderWidth(Annotation* annot) {
     if (!AnnotationIsLive(annot)) {
         return 0;
     }
-    EngineMupdf* e = annot->engine;
-    auto* a = annot->pdfannot;
-    auto* ctx = e->Ctx();
-    ScopedRecursiveMutex cs(&e->docLock);
+    AnnotAccess access(annot);
     float res = 0;
-    fz_try(ctx) {
-        res = pdf_annot_border(ctx, a);
+    fz_try(access.ctx) {
+        res = pdf_annot_border(access.ctx, access.annot);
     }
-    fz_catch(ctx) {
-        fz_report_error(ctx);
+    fz_catch(access.ctx) {
+        fz_report_error(access.ctx);
         logf("BorderWidth: pdf_annot_border() failed\n");
     }
 
@@ -1934,16 +1911,13 @@ int Opacity(Annotation* annot) {
     if (!AnnotationIsLive(annot)) {
         return 0;
     }
-    EngineMupdf* e = annot->engine;
-    auto* a = annot->pdfannot;
-    auto* ctx = e->Ctx();
-    ScopedRecursiveMutex cs(&e->docLock);
+    AnnotAccess access(annot);
     float fopacity = 0;
-    fz_try(ctx) {
-        fopacity = pdf_annot_opacity(ctx, a);
+    fz_try(access.ctx) {
+        fopacity = pdf_annot_opacity(access.ctx, access.annot);
     }
-    fz_catch(ctx) {
-        fz_report_error(ctx);
+    fz_catch(access.ctx) {
+        fz_report_error(access.ctx);
         logf("Opacity: pdf_annot_opacity() failed\n");
     }
     int res = (int)(fopacity * 255.f);
@@ -2569,16 +2543,14 @@ static RectF GetAnnotRect(Annotation* annot) {
     if (!AnnotationIsLive(annot)) {
         return annot ? annot->bounds : RectF{};
     }
-    EngineMupdf* e = annot->engine;
-    auto* ctx = e->Ctx();
-    ScopedRecursiveMutex cs(&e->docLock);
+    AnnotAccess access(annot);
     fz_rect rc = {};
     bool ok = true;
-    fz_try(ctx) {
-        rc = pdf_annot_rect(ctx, annot->pdfannot);
+    fz_try(access.ctx) {
+        rc = pdf_annot_rect(access.ctx, access.annot);
     }
-    fz_catch(ctx) {
-        fz_report_error(ctx);
+    fz_catch(access.ctx) {
+        fz_report_error(access.ctx);
         ok = false;
     }
     if (!ok) {
