@@ -2,7 +2,8 @@ import { existsSync, readdirSync } from "node:fs";
 import { delimiter, join } from "node:path";
 
 // Build the debug ASan executable and run it under a debugger.
-// Arguments after -- go to SumatraPDF.
+// Arguments after -- go to SumatraPDF. The launch saves and restores
+// the session; pass -- -for-testing to skip that.
 //
 // Windows defaults to cdb. macOS tries lldb then gdb; Linux tries gdb then lldb.
 
@@ -142,8 +143,8 @@ function debuggerFlags(kind: DebuggerKind): string[] {
   // failures still stop at their debug break.
   if (kind === "cdb") return ["-o", "-g", "-G", "-xi", "av", "-xi", "0xe0736172"];
   if (kind === "windbg") return ["-Q", "-o", "-G", "-c", "sxi av; sxi 0xe0736172; g"];
-  // -o run / -ex run start the program. -- / --args keep -for-testing from
-  // being read as a debugger option.
+  // -o run / -ex run start the program. -- / --args keep the app's
+  // arguments from being read as debugger options.
   if (kind === "lldb") return ["-o", "run", "--"];
   return ["-ex", "run", "--args"];
 }
@@ -224,7 +225,9 @@ async function main(): Promise<void> {
   const exeName = plat === "win" ? "SumatraPDF.exe" : "SumatraPDF";
   const exe = join(process.cwd(), "out", plat, "dbg-asan", exeName);
   if (!existsSync(exe)) throw new Error(`debug ASan executable not found: ${exe}`);
-  await run([dbg.exe, ...debuggerFlags(dbg.kind), exe, "-for-testing", ...opts.appArgs], dbg.kind, asanAbortEnv(plat));
+  // A normal launch: it saves settings and restores the session.
+  // A throwaway run passes -- -for-testing itself.
+  await run([dbg.exe, ...debuggerFlags(dbg.kind), exe, ...opts.appArgs], dbg.kind, asanAbortEnv(plat));
 }
 
 try {

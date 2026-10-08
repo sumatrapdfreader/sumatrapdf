@@ -110,10 +110,10 @@ Use `-linux`, `-mac` or `-wasm` to select a platform. Outputs are
 `out/win/<config>`, `out/linux/<config>`, `out/mac/<config>` and
 `out/wasm/<config>`, with `dbg` / `rel` and optional `-clang`, `-asan`,
 `-profile` suffixes. `-clang` has no effect on macOS output naming.
-Use `-clean`, `-all`, `-run` or a target name as needed. `-run` is a
-normal launch: it saves settings and restores the session. Pass
-`-- -for-testing` for a throwaway run. `ng-dbg` and `ng-dbg-control`
-still pass `-for-testing`. Helpers use the `ng-` prefix.
+Use `-clean`, `-all`, `-run` or a target name as needed. `-run` and
+`ng-dbg` are normal launches: they save settings and restore the
+session. Pass `-- -for-testing` for a throwaway run. `ng-dbg-control`
+still passes `-for-testing`. Helpers use the `ng-` prefix.
 
 Windows needs Visual Studio C++ tools; `-clang` selects clang-cl. Linux needs
 bun, g++/clang++, pkg-config and development packages for X11, Cairo, Pango,
