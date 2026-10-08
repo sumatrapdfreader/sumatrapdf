@@ -41,6 +41,7 @@ MenuModel* BuildMenuFromDef(MenuDef* menuDefs, BuildMenuCtx* ctx);
 // the menu bar: one top-level entry per menu, each with a submenu
 MenuModel* BuildMenu(MainWindow* win);
 TempStr MainMenuResultTemp(MainWindow* win);
+TempStr ContextMenuAtPointResultTemp(MainWindow* win, int x, int y);
 void RemoveBadMenuSeparators(MenuModel* menu);
 
 // orig edits an HMENU with these; here they edit the model

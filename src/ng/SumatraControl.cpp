@@ -469,6 +469,8 @@ enum class ControlCmd : u16 {
     TestToolWindow = 125,
     // ng: Windows; the system message boxes: on / off / state / answer <id>
     TestNativeMsgBox = 126,
+    // ng: the page context menu at a canvas point, same rows as TestMainMenu
+    TestContextMenuAt = 127,
 };
 
 enum class ControlArgType : u16 {
@@ -1490,6 +1492,20 @@ static void ExecuteControlRequest(ControlRequest* req) {
                 break;
             }
             AppendTestResult(req, 0, MainMenuResultTemp(win));
+            break;
+        }
+
+        case ControlCmd::TestContextMenuAt: {
+            MainWindow* win = FirstWindow();
+            i32 x = 0;
+            i32 y = 0;
+            if (!win) {
+                AppendTestResult(req, 2, StrL("NOTREADY no-window"));
+                break;
+            }
+            IntArg(req, 0, x);
+            IntArg(req, 1, y);
+            AppendTestResult(req, 0, ContextMenuAtPointResultTemp(win, x, y));
             break;
         }
 

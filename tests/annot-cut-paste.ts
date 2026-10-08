@@ -7,7 +7,7 @@
 import { mkdirSync, rmSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 import { ControlClient, ControlCommand } from "./control.ts";
-import { assemblePdf, cmdId, runStandalone, tmpPath } from "./util.ts";
+import { assemblePdf, cmdId, runStandalone, tmpPath, USE_NG } from "./util.ts";
 import {
   clientToScreen,
   getClientRect,
@@ -132,8 +132,52 @@ async function waitForDeselection(client: ControlClient): Promise<void> {
   }
 }
 
+// ng's menu is a gpui popup, not an HMENU. Same rows as the menu bar dump:
+// path, kind, command, disabled, checked, title, accelerator.
+function menuFromDump(raw: string): MenuItem[] {
+  const root: MenuItem[] = [];
+  const byPath = new Map<string, MenuItem>();
+  for (const line of raw.split("\n")) {
+    if (!line) {
+      continue;
+    }
+    const p = line.split("\t");
+    if (p.length < 6 || p[1] === "-") {
+      continue;
+    }
+    const path = p[0]!;
+    const item: MenuItem = { text: p[5] ?? "" };
+    if (p[1] === "S") {
+      item.items = [];
+    }
+    if (p[3] === "1") {
+      item.disabled = true;
+    }
+    if (p[6]) {
+      item.accel = p[6];
+    }
+    byPath.set(path, item);
+    const dot = path.lastIndexOf(".");
+    const parent = dot < 0 ? undefined : byPath.get(path.slice(0, dot));
+    if (parent?.items) {
+      parent.items.push(item);
+    } else {
+      root.push(item);
+    }
+  }
+  return root;
+}
+
 // the page context menu at a client point of the canvas, then dismiss it
-async function contextMenuAt(canvas: number, x: number, y: number): Promise<MenuItem[]> {
+async function contextMenuAt(client: ControlClient, canvas: number, x: number, y: number): Promise<MenuItem[]> {
+  if (USE_NG) {
+    const res = await client.request(ControlCommand.TestContextMenuAt, [x, y]);
+    const raw = String(res[1] ?? "");
+    if (res[0] !== 0) {
+      throw new Error(`annot-cut-paste: could not read the context menu\n${raw}`);
+    }
+    return menuFromDump(raw);
+  }
   const s = clientToScreen(canvas, x, y);
   openContextMenu(canvas, s.x, s.y);
   const popup = await waitForContextMenu(3000);
@@ -242,7 +286,7 @@ export async function testit(): Promise<void> {
 
     // the context menu offers Cut for the annotation under the cursor, with
     // the shortcuts that reach these commands
-    const menu = await contextMenuAt(canvas, mid.x, mid.y);
+    const menu = await contextMenuAt(client, canvas, mid.x, mid.y);
     requireEnabled(menu, "Cut Annotation");
     requireAccel(menu, "Cut Annotation", "Ctrl + X");
     requireAccel(menu, "Copy Annotation", "Ctrl + C");
@@ -267,7 +311,7 @@ export async function testit(): Promise<void> {
     }
 
     // ... and Paste once something has been cut
-    requireEnabled(await contextMenuAt(canvas, mid.x, mid.y), "Paste Annotation");
+    requireEnabled(await contextMenuAt(client, canvas, mid.x, mid.y), "Paste Annotation");
 
     const cr = getClientRect(canvas);
     const paste = {

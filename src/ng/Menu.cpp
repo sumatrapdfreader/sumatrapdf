@@ -1743,7 +1743,15 @@ MenuModel* BuildMenuFromDef(MenuDef* menuDef, BuildMenuCtx* ctx) {
             item->title = title;
             item->cmdId = cmdId;
             item->disabled = disableMenu;
-            item->accel = str::Dup(ShortcutsForCmdTemp(cmdId, 1));
+            // Ctrl+C / Ctrl+V are bound to CmdCopySelection and
+            // CmdPasteClipboardImage, which hand off to these.
+            int accelCmd = cmdId;
+            if (cmdId == CmdCopyAnnotation) {
+                accelCmd = CmdCopySelection;
+            } else if (cmdId == CmdPasteAnnotation) {
+                accelCmd = CmdPasteClipboardImage;
+            }
+            item->accel = str::Dup(ShortcutsForCmdTemp(accelCmd, 1));
         }
     }
     RemoveBadMenuSeparators(menu);
@@ -1902,6 +1910,21 @@ static void AppendMenuRows(str::Builder& out, MenuModel* menu, Str parent) {
 // Stable main-menu dump for debug-control parity checks.
 TempStr MainMenuResultTemp(MainWindow* win) {
     MenuModel* menu = BuildMenu(win);
+    str::Builder out;
+    AppendMenuRows(out, menu, {});
+    DeleteMenuModel(menu);
+    return ToStrTemp(out);
+}
+
+// The page context menu at a canvas point, in the same row format.
+TempStr ContextMenuAtPointResultTemp(MainWindow* win, int x, int y) {
+    if (!win) {
+        return StrL("NOTREADY no-window\n");
+    }
+    MenuModel* menu = BuildWindowContextMenu(win, Point{x, y});
+    if (!menu) {
+        return Str{};
+    }
     str::Builder out;
     AppendMenuRows(out, menu, {});
     DeleteMenuModel(menu);
