@@ -37,7 +37,6 @@ import {
 import {
   clickAt,
   findCanvas,
-  FRAME_CLASS,
   findChildByClass,
   killAndWait,
   launchControlled,
@@ -119,6 +118,16 @@ function chipNames(dump: string): string[] {
   return (/ items=(\S+)/.exec(dump)?.[1] ?? "").split(",");
 }
 
+// ng has no popup HWND. A posted down/up pair can have a cursor snap between
+// them, which gpui treats as a drag and the swatch never receives the click.
+async function ngClick(client: ControlClient, x: number, y: number): Promise<void> {
+  const res = await client.request(ControlCommand.TestInput, ["click", x, y, 0, 0]);
+  const raw = String(res[1] ?? "");
+  if (res[0] !== 0 || !raw.startsWith("OK")) {
+    throw new Error(`annot-color-dropdown: click failed: ${raw}`);
+  }
+}
+
 // clicks the named chip, which opens its color drop-down, and returns the
 // screen rects of the swatches in it
 export async function openChipDropdown(client: ControlClient, pid: number, kind: string): Promise<Rect[]> {
@@ -139,11 +148,7 @@ export async function openChipDropdown(client: ControlClient, pid: number, kind:
     chip = parseRect(chipRe.exec(ready));
   }
   if (USE_NG) {
-    const frame = findTopWindow(pid, FRAME_CLASS);
-    if (!frame) {
-      throw new Error("annot-color-dropdown: frame window not found");
-    }
-    await clickAt(frame, chip.x + Math.floor(chip.dx / 2), chip.y + Math.floor(chip.dy / 2), 0);
+    await ngClick(client, chip.x + Math.floor(chip.dx / 2), chip.y + Math.floor(chip.dy / 2));
   } else {
     const tbHwnd = findTopWindow(pid, TOOLBAR_CLASS);
     if (!tbHwnd) {
@@ -232,8 +237,7 @@ async function checkEditColors(pid: number, frame: number, swatches: Rect[]): Pr
 export async function pickSwatch(client: ControlClient, pid: number, swatches: Rect[], idx: number): Promise<void> {
   const sw = swatches[idx]!;
   if (USE_NG) {
-    const frame = findTopWindow(pid, FRAME_CLASS);
-    await clickAt(frame, sw.x + Math.floor(sw.dx / 2), sw.y + Math.floor(sw.dy / 2), 0);
+    await ngClick(client, sw.x + Math.floor(sw.dx / 2), sw.y + Math.floor(sw.dy / 2));
     await pollUntil(
       async () => /annotColorPopup visible=0/.test(await markupDump(client)),
       (gone) => gone,

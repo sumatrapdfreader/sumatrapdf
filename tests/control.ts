@@ -111,6 +111,9 @@ export enum ControlCommand {
   TestFrameNcStrips = 114,
   TestMergePdf = 115,
   TestWheelWhileClosing = 116,
+  // ng only. Orig's 101/102 are StartPerfLog/StopPerfLog; ng reused those
+  // numbers, so this input command is 121 there.
+  TestInput = 121,
 }
 
 export type ControlArg = number | string | Uint8Array | ControlArg[];
