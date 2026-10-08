@@ -20,7 +20,8 @@ Outputs live in `out/<platform>/<build-type>`:
 
 Compiler and sanitizer variants add suffixes, such as `dbg-clang` and
 `dbg-asan`. `-all` builds every target; `test_util -run -- -for-ai` runs the
-base unit tests. `-run` launches SumatraPDF with `-for-testing`.
+base unit tests. `-run` launches SumatraPDF as a normal session, so it
+saves and restores settings. Pass `-- -for-testing` for a throwaway run.
 
 Ng scripts use the `cmd/ng-` prefix, with build helpers under `cmd/helper/ng-`.
 Use `ng-gen-commands.ts` and `ng-gen-settings.ts` for ng generated headers;

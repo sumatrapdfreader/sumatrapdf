@@ -125,8 +125,9 @@ async function runExe(plat: Platform, exe: string, args: string[], env: Record<s
     });
     return p.exited;
   }
+  // A normal launch saves and restores the session. Throwaway runs pass
+  // -- -for-testing themselves (ng-dbg and ng-dbg-control already do).
   console.log(`running ${relative(root, exe)} ${args.join(" ")}`);
-  if (basename(exe) === "SumatraPDF.exe" || basename(exe) === "SumatraPDF") args = ["-for-testing", ...args];
   const p = Bun.spawn([exe, ...args], { cwd: root, stdout: "inherit", stderr: "inherit" });
   return p.exited;
 }
