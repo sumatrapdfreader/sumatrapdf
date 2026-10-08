@@ -1009,6 +1009,18 @@ static PdfColor GetAnnotColor(Annotation* annot, AnnotColorReader readColor) {
     });
 }
 
+static bool AnnotColorDiffers(const float* color, int n, const float* newColor, int newN) {
+    if (n != newN) {
+        return true;
+    }
+    for (int i = 0; i < n; i++) {
+        if (color[i] != newColor[i]) {
+            return true;
+        }
+    }
+    return false;
+}
+
 PdfColor GetColor(Annotation* annot) {
     return GetAnnotColor(annot, pdf_annot_color);
 }
@@ -1037,17 +1049,7 @@ bool SetColor(Annotation* annot, PdfColor c) {
         float newColor[3];
         PdfColorToFloat(c, newColor);
         float opacity = GetOpacityFloat(c);
-        bool changed = n != 3;
-        if (!changed) {
-            for (int i = 0; i < n; i++) {
-                if (color[i] != newColor[i]) {
-                    changed = true;
-                }
-            }
-        }
-        if (opacity != oldOpacity) {
-            changed = true;
-        }
+        bool changed = AnnotColorDiffers(color, n, newColor, 3) || opacity != oldOpacity;
         if (!changed) {
             return false;
         }
@@ -1087,15 +1089,7 @@ bool SetInteriorColor(Annotation* annot, PdfColor c) {
         float newColor[3]{};
         PdfColorToFloat(c, newColor);
         int newN = (c == 0) ? 0 : 3;
-        bool changed = n != newN;
-        if (!changed) {
-            for (int i = 0; i < n; i++) {
-                if (color[i] != newColor[i]) {
-                    changed = true;
-                }
-            }
-        }
-        if (!changed) {
+        if (!AnnotColorDiffers(color, n, newColor, newN)) {
             return false;
         }
         pdf_set_annot_interior_color(ctx, a, newN, newColor);
