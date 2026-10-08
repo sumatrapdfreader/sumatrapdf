@@ -143,58 +143,6 @@ static SeqStrNum gVirtKeysNum =
 // clang-format on
 // @gen-end virt-keys-num
 
-// TOOD: add those as well?
-// #define VK_OEM_5          0xDC  //  '\|' for US
-// #define VK_OEM_7          0xDE  //  ''"' for US
-// #define VK_OEM_102        0xE2  //  "<>" or "\|" on RT 102-key kbd.
-// #define VK_OEM_PLUS       0xBB   // '+' any country
-// #define VK_OEM_COMMA      0xBC   // ',' any country
-// #define VK_OEM_MINUS      0xBD   // '-' any country
-// #define VK_OEM_PERIOD     0xBE   // '.' any country
-// #define VK_OEM_2          0xBF   // '/?' for US
-// #define VK_BROWSER_BACK        0xA6
-// #define VK_BROWSER_FORWARD     0xA7
-// #define VK_BROWSER_REFRESH     0xA8
-// #define VK_BROWSER_STOP        0xA9
-// #define VK_BROWSER_SEARCH      0xAA
-// #define VK_BROWSER_FAVORITES   0xAB
-// #define VK_BROWSER_HOME        0xAC
-// #define VK_VOLUME_MUTE         0xAD
-// #define VK_MEDIA_NEXT_TRACK    0xB0
-// #define VK_MEDIA_PREV_TRACK    0xB1
-// #define VK_MEDIA_STOP          0xB2
-// #define VK_MEDIA_PLAY_PAUSE    0xB3
-// #define VK_LAUNCH_MAIL         0xB4
-// #define VK_LAUNCH_MEDIA_SELECT 0xB5
-// #define VK_LAUNCH_APP1         0xB6
-// #define VK_LAUNCH_APP2         0xB7
-// #define VK_OEM_8          0xDF
-// #define VK_OEM_AX         0xE1  //  'AX' key on Japanese AX kbd
-// #define VK_ICO_HELP       0xE3  //  Help key on ICO
-// #define VK_ICO_00         0xE4  //  00 key on ICO
-// #define VK_PROCESSKEY     0xE5
-// #define VK_OEM_RESET      0xE9
-// #define VK_OEM_JUMP       0xEA
-// #define VK_OEM_PA1        0xEB
-// #define VK_OEM_PA2        0xEC
-// #define VK_OEM_PA3        0xED
-// #define VK_OEM_WSCTRL     0xEE
-// #define VK_OEM_CUSEL      0xEF
-// #define VK_OEM_ATTN       0xF0
-// #define VK_OEM_FINISH     0xF1
-// #define VK_OEM_COPY       0xF2
-// #define VK_OEM_AUTO       0xF3
-// #define VK_OEM_ENLW       0xF4
-// #define VK_OEM_BACKTAB    0xF5
-// #define VK_ATTN           0xF6
-// #define VK_CRSEL          0xF7
-// #define VK_EXSEL          0xF8
-// #define VK_EREOF          0xF9
-// #define VK_PLAY           0xFA
-// #define VK_ZOOM           0xFB
-// #define VK_NONAME         0xFC
-// #define VK_PA1            0xFD
-
 static bool skipVirtKey(Str& s, Str key) {
     if (!str::StartsWithI(s, key)) {
         return false;
