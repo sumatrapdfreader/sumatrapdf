@@ -1818,6 +1818,26 @@ static fz_pixmap* FzConvertPixmap2(fz_context* ctx, fz_pixmap* pix, fz_colorspac
     return cvt;
 }
 
+static fz_pixmap* NewBgrPixmap(fz_context* ctx, fz_pixmap* pixmap) {
+    fz_pixmap* res = nullptr;
+    fz_var(res);
+
+    fz_try(ctx) {
+        res = FzConvertPixmap2(ctx, pixmap, fz_device_bgr(ctx), nullptr, nullptr, fz_default_color_params, 1);
+    }
+    fz_catch(ctx) {
+        fz_report_error(ctx);
+        return nullptr;
+    }
+    if (!res || !res->samples) {
+        if (res) {
+            fz_drop_pixmap(ctx, res);
+        }
+        return nullptr;
+    }
+    return res;
+}
+
 #if OS_WIN
 // preserveAlpha: palettizing drops the alpha channel, so skip it when the
 // caller needs transparent holes to composite over the canvas (issue #1809).
@@ -1834,29 +1854,8 @@ static RenderedBitmap* NewRenderedFzPixmap(fz_context* ctx, fz_pixmap* pixmap, b
 
     auto* bmi = (BITMAPINFO*)AllocArrayTemp<u8>(sizeofi(BITMAPINFO) + (255 * sizeofi(RGBQUAD)));
 
-    fz_pixmap* bgrPixmap = nullptr;
-    fz_colorspace* csdest = nullptr;
-    fz_color_params cp;
-
-    fz_var(bgrPixmap);
-    fz_var(csdest);
-    fz_var(cp);
-
-    /* BGRA is a GDI compatible format */
-    fz_try(ctx) {
-        csdest = fz_device_bgr(ctx);
-        cp = fz_default_color_params;
-        bgrPixmap = FzConvertPixmap2(ctx, pixmap, csdest, nullptr, nullptr, cp, 1);
-    }
-    fz_catch(ctx) {
-        fz_report_error(ctx);
-        return nullptr;
-    }
-
-    if (!bgrPixmap || !bgrPixmap->samples) {
-        if (bgrPixmap) {
-            fz_drop_pixmap(ctx, bgrPixmap);
-        }
+    fz_pixmap* bgrPixmap = NewBgrPixmap(ctx, pixmap);
+    if (!bgrPixmap) {
         return nullptr;
     }
 
@@ -1904,20 +1903,8 @@ static Pixmap* NewPixmapFromFzPixmap(fz_context* ctx, fz_pixmap* pixmap, bool pr
 #if OS_WIN
     return PixmapFromRenderedBitmap(NewRenderedFzPixmap(ctx, pixmap, preserveAlpha));
 #else
-    fz_pixmap* bgrPixmap = nullptr;
-    fz_var(bgrPixmap);
-
-    fz_try(ctx) {
-        bgrPixmap = FzConvertPixmap2(ctx, pixmap, fz_device_bgr(ctx), nullptr, nullptr, fz_default_color_params, 1);
-    }
-    fz_catch(ctx) {
-        fz_report_error(ctx);
-        return nullptr;
-    }
-    if (!bgrPixmap || !bgrPixmap->samples) {
-        if (bgrPixmap) {
-            fz_drop_pixmap(ctx, bgrPixmap);
-        }
+    fz_pixmap* bgrPixmap = NewBgrPixmap(ctx, pixmap);
+    if (!bgrPixmap) {
         return nullptr;
     }
 
