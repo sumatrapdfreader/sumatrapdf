@@ -74,6 +74,10 @@
 #include "gui/Sidebar.h"
 #include "SumatraDialogs.h"
 #include "NavFilesInFolder.h"
+#include "EngineAll.h"
+#include "Annotation.h"
+#include "AnnotEditToolbar.h"
+#include "AnnotPlacement.h"
 #include "AnnotFilterToolbar.h"
 #include "PerfLog.h"
 #include "ReadAloud.h"
@@ -733,6 +737,225 @@ static MainWindow* FirstWindow() {
     return len(gWindows) > 0 ? gWindows[0] : nullptr;
 }
 
+static Str MarkupTypeName(AnnotationType tp) {
+    switch (tp) {
+        case AnnotationType::Highlight:
+            return StrL("Highlight");
+        case AnnotationType::Underline:
+            return StrL("Underline");
+        case AnnotationType::Squiggly:
+            return StrL("Squiggly");
+        case AnnotationType::StrikeOut:
+            return StrL("StrikeOut");
+        case AnnotationType::Square:
+            return StrL("Square");
+        case AnnotationType::Circle:
+            return StrL("Circle");
+        case AnnotationType::Polygon:
+            return StrL("Polygon");
+        case AnnotationType::PolyLine:
+            return StrL("PolyLine");
+        case AnnotationType::Ink:
+            return StrL("Ink");
+        case AnnotationType::Stamp:
+            return StrL("Stamp");
+        case AnnotationType::Redact:
+            return StrL("Redact");
+        case AnnotationType::FileAttachment:
+            return StrL("FileAttachment");
+        case AnnotationType::FreeText:
+            return StrL("FreeText");
+        default:
+            return StrL("other");
+    }
+}
+
+float CanvasScale(MainWindow* win);
+
+// CvtToScreen is canvas space. Tests post the rect at the frame, and ToDoc
+// subtracts the canvas origin, so the reported point has to include it.
+static Rect FrameScreenRect(MainWindow* win, Rect r) {
+    float s = CanvasScale(win);
+    if (s <= 0.f) {
+        s = 1.f;
+    }
+    r.x += (int)((float)win->canvasRc.x / s + 0.5f);
+    r.y += (int)((float)win->canvasRc.y / s + 0.5f);
+    return r;
+}
+
+// Screen rects and undo state of the annotations the tests edit.
+static TempStr MarkupAnnotsResultTemp(Str action, int x, int y, int* exitCodeOut) {
+    str::Builder out;
+    auto finish = [&](Str msg, int code) -> TempStr {
+        out.Append(msg);
+        if (exitCodeOut) {
+            *exitCodeOut = code;
+        }
+        return ToStrTemp(out);
+    };
+    if (len(gWindows) == 0 || !gWindows[0]) {
+        return finish(StrL("NOTREADY no-window\n"), 2);
+    }
+    MainWindow* win = gWindows[0];
+    WindowTab* tab = win->CurrentTab();
+    DisplayModel* dm = tab ? tab->AsFixed() : nullptr;
+    EngineBase* engine = dm ? dm->GetEngine() : nullptr;
+    if (!engine) {
+        return finish(StrL("NOTREADY no-engine\n"), 2);
+    }
+    if (str::Eq(action, StrL("erase-ink"))) {
+        AnnotationPlacementEraseAt(win, Point(x, y));
+    }
+    if (str::Eq(action, StrL("finish-ink"))) {
+        FinishInkAnnotationPlacement(win);
+    }
+    if (str::Eq(action, StrL("cancel-ink"))) {
+        CancelAnnotationPlacement(win);
+    }
+    if (str::Eq(action, StrL("open-embedded"))) {
+        int pageNo = dm->CurrentPageNo();
+        Vec<IPageElement*> els = engine->GetElements(pageNo);
+        IPageDestination* dest = nullptr;
+        for (IPageElement* el : els) {
+            if (!el || !el->Is(kindPageElementDest)) {
+                continue;
+            }
+            IPageDestination* d = el->AsLink();
+            if (d && d->GetKind() == kindDestinationLaunchEmbedded) {
+                dest = d;
+                break;
+            }
+        }
+        if (!dest) {
+            return finish(StrL("ERROR no-embedded-dest\n"), 1);
+        }
+        win->ctrl->HandleLink(dest, win->linkHandler);
+        return finish(StrL("OK\n"), 0);
+    }
+    Vec<Annotation*> annots;
+    EngineMupdfGetLoadedAnnotations(engine, annots);
+    int n = 0;
+    for (Annotation* a : annots) {
+        AnnotationType tp = Type(a);
+        bool isMarkup = tp == AnnotationType::Highlight || tp == AnnotationType::Underline ||
+                        tp == AnnotationType::Squiggly || tp == AnnotationType::StrikeOut;
+        bool isShape = tp == AnnotationType::Square || tp == AnnotationType::Circle || tp == AnnotationType::Polygon ||
+                       tp == AnnotationType::PolyLine || tp == AnnotationType::Ink;
+        bool isStamp = tp == AnnotationType::Stamp;
+        bool isRedact = tp == AnnotationType::Redact;
+        bool isFileAttachment = tp == AnnotationType::FileAttachment;
+        bool isFreeText = tp == AnnotationType::FreeText;
+        if (!isMarkup && !isShape && !isStamp && !isRedact && !isFileAttachment && !isFreeText) {
+            continue;
+        }
+        Str typeName = MarkupTypeName(tp);
+        if (isRedact) {
+            Vec<RectF> quads = GetQuadPointsAsRect(a);
+            RectF r = GetRect(a);
+            Rect screen = FrameScreenRect(win, dm->CvtToScreen(PageNo(a), r));
+            out.Append(fmt("type=%s page=%d quads=%d rect=%g,%g,%g,%g screen=%d,%d,%d,%d\n", typeName, PageNo(a),
+                           len(quads), r.x, r.y, r.dx, r.dy, screen.x, screen.y, screen.dx, screen.dy));
+            for (int i = 0; i < len(quads); i++) {
+                RectF qr = quads[i];
+                out.Append(fmt("rect=%g,%g,%g,%g\n", qr.x, qr.y, qr.dx, qr.dy));
+            }
+            n++;
+            continue;
+        }
+        if (isShape || isStamp || isFileAttachment || isFreeText) {
+            RectF r = GetRect(a);
+            Rect screen = FrameScreenRect(win, dm->CvtToScreen(PageNo(a), r));
+            out.Append(fmt("type=%s page=%d rect=%g,%g,%g,%g screen=%d,%d,%d,%d\n", typeName, PageNo(a), r.x, r.y, r.dx,
+                           r.dy, screen.x, screen.y, screen.dx, screen.dy));
+            if (tp == AnnotationType::PolyLine || tp == AnnotationType::Polygon) {
+                Vec<PointF> pts = GetVertices(a);
+                bool closed = len(pts) > 2 && pts[0] == VecLast(pts);
+                out.Append(fmt("polyline vertices=%d closed=%d pts=", len(pts), closed ? 1 : 0));
+                for (int i = 0; i < len(pts); i++) {
+                    out.Append(fmt(i == 0 ? "%g,%g" : ";%g,%g", pts[i].x, pts[i].y));
+                }
+                out.Append(StrL("\n"));
+            }
+            if (tp == AnnotationType::Ink) {
+                Vec<int> strokeCounts;
+                Vec<PointF> points;
+                GetInkList(a, strokeCounts, points);
+                out.Append(fmt("ink strokes=%d points=%d opacity=%d width=%d\n", len(strokeCounts), len(points),
+                               Opacity(a), BorderWidth(a)));
+                if (len(points) > 0) {
+                    float x0 = points[0].x;
+                    float y0 = points[0].y;
+                    float x1 = x0;
+                    float y1 = y0;
+                    for (PointF p : points) {
+                        if (p.x < x0) {
+                            x0 = p.x;
+                        }
+                        if (p.y < y0) {
+                            y0 = p.y;
+                        }
+                        if (p.x > x1) {
+                            x1 = p.x;
+                        }
+                        if (p.y > y1) {
+                            y1 = p.y;
+                        }
+                    }
+                    out.Append(fmt("inkRect=%g,%g,%g,%g\n", x0, y0, x1 - x0, y1 - y0));
+                }
+            }
+            n++;
+            continue;
+        }
+        Vec<RectF> quads = GetQuadPointsAsRect(a);
+        out.Append(fmt("type=%s page=%d quads=%d\n", typeName, PageNo(a), len(quads)));
+        out.Append(StrL("color="));
+        SerializePdfColor(GetColor(a), out);
+        out.Append(StrL("\n"));
+        for (int i = 0; i < len(quads); i++) {
+            RectF r = quads[i];
+            out.Append(fmt("rect=%g,%g,%g,%g\n", r.x, r.y, r.dx, r.dy));
+            Rect screen = FrameScreenRect(win, dm->CvtToScreen(PageNo(a), r));
+            out.Append(fmt("screen=%d,%d,%d,%d\n", screen.x, screen.y, screen.dx, screen.dy));
+        }
+        n++;
+    }
+    out.Append(fmt("n=%d\n", n));
+    out.Append(fmt("annotations=%d\n", len(annots)));
+    {
+        Str pageText = engine->GetTextForPage(1);
+        str::Builder collapsed;
+        bool space = false;
+        for (int i = 0; i < len(pageText); i++) {
+            char c = pageText.s[i];
+            if (c == '\r' || c == '\n' || c == '\t') {
+                if (!space && len(collapsed) > 0) {
+                    collapsed.AppendChar(' ');
+                    space = true;
+                }
+                continue;
+            }
+            collapsed.AppendChar(c);
+            space = false;
+        }
+        out.Append(fmt("page1text=%s\n", ToStrTemp(collapsed)));
+    }
+    int canUndo = EngineMupdfCanUndo(engine) ? 1 : 0;
+    int canRedo = EngineMupdfCanRedo(engine) ? 1 : 0;
+    int modified = EngineHasUnsavedAnnotations(engine) ? 1 : 0;
+    out.Append(fmt("undo canUndo=%d canRedo=%d modified=%d\n", canUndo, canRedo, modified));
+    bool selectedHover = tab->selectedAnnotation && tab->selectedAnnotation == win->annotationUnderCursor;
+    out.Append(fmt("state selected=%d hover=%d editToolbar=%d notification=%d selectedHover=%d\n",
+                   tab->selectedAnnotation ? 1 : 0, win->annotationUnderCursor ? 1 : 0,
+                   win->pdfAnnotationsToolbarEnabled ? 1 : 0, 0, selectedHover ? 1 : 0));
+    out.Append(AnnotEditToolbarStateTemp(win));
+    out.Append(AnnotFilterToolbarStateTemp(win));
+    out.Append(AnnotationHoverOverlayStateTemp(win));
+    out.Append(AnnotationPlacementStateTemp(win));
+    return finish({}, 0);
+}
+
 static void ExecuteControlRequest(ControlRequest* req) {
     switch ((ControlCmd)req->cmd) {
         case ControlCmd::Ping:
@@ -1327,6 +1550,27 @@ static void ExecuteControlRequest(ControlRequest* req) {
             break;
         }
 #endif
+
+        case ControlCmd::TestToolbarButtons: {
+            int exitCode = 0;
+            Str res = ToolbarButtonsResultTemp(&exitCode);
+            AppendTestResult(req, exitCode, res);
+            break;
+        }
+
+        case ControlCmd::TestMarkupAnnots: {
+            Str action = StringArg(req, 0);
+            i32 x = 0;
+            i32 y = 0;
+            if (len(action) > 0 && (!IntArg(req, 1, x) || !IntArg(req, 2, y))) {
+                AppendError(req, StrL("TestMarkupAnnots expects action, x, y"));
+                break;
+            }
+            int exitCode = 0;
+            Str res = MarkupAnnotsResultTemp(action, x, y, &exitCode);
+            AppendTestResult(req, exitCode, res);
+            break;
+        }
 
         case ControlCmd::TestHomeSelection: {
             Str mode = StringArg(req, 0);

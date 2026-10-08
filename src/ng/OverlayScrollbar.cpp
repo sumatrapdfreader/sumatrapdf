@@ -767,23 +767,32 @@ void ScrollbarView::OnWinExit(ScrollbarView*, gp::Ctx* cx, const gp::MouseExitEv
     TrackStartPageMouse(cx->win, 0, 0, false);
 }
 
-void ScrollbarView::OnWinMove(ScrollbarView*, gp::Ctx* cx, const gp::MouseMoveEvent* ev) {
+void OverlayScrollbarOnWindowMove(gp::Window* gw, float x, float y) {
     if (!gCapture) {
-        TrackStartPageMouse(cx->win, ev->x, ev->y, true);
+        TrackStartPageMouse(gw, x, y, true);
     }
     OverlayScrollbar* sb = gCapture;
     if (!IsLive(sb) || !sb->isDragging) {
         return;
     }
-    OnDragMove(sb, (int)((IsVert(sb) ? ev->y : ev->x) / sb->k));
+    OnDragMove(sb, (int)((IsVert(sb) ? y : x) / sb->k));
 }
 
-void ScrollbarView::OnWinUp(ScrollbarView*, gp::Ctx*, const gp::MouseUpEvent* ev) {
+void OverlayScrollbarOnWindowUp(gp::Window* gw, gp::MouseButton button) {
+    (void)gw;
     OverlayScrollbar* sb = gCapture;
-    if (!IsLive(sb) || ev->button != gp::MouseButton::Left) {
+    if (!IsLive(sb) || button != gp::MouseButton::Left) {
         return;
     }
     OnLeftButtonUp(sb);
+}
+
+void ScrollbarView::OnWinMove(ScrollbarView*, gp::Ctx* cx, const gp::MouseMoveEvent* ev) {
+    OverlayScrollbarOnWindowMove(cx->win, ev->x, ev->y);
+}
+
+void ScrollbarView::OnWinUp(ScrollbarView*, gp::Ctx* cx, const gp::MouseUpEvent* ev) {
+    OverlayScrollbarOnWindowUp(cx->win, ev->button);
 }
 
 // ng: a gpui menu item's action is dispatched from the focused element, which
@@ -805,8 +814,8 @@ void ScrollbarView::OnMenu(ScrollbarView*, gp::Ctx*, const gp::ClickEvent*, int6
 
 void OverlayScrollbarHookWindow(gp::Window* gw) {
     gp::Entity<ScrollbarView> view = View(gw->app);
-    gp::WindowOnMouseMove(gw, gp::ListenTo(view, &ScrollbarView::OnWinMove));
-    gp::WindowOnMouseUp(gw, gp::ListenTo(view, &ScrollbarView::OnWinUp));
+    // move and up are owned by the canvas, which forwards here: a window has
+    // one of each listener, and a resize drag has to see the ones the canvas misses
     gp::WindowOnMouseExit(gw, gp::ListenTo(view, &ScrollbarView::OnWinExit));
 }
 

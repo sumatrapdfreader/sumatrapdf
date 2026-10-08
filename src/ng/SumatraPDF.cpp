@@ -7940,6 +7940,8 @@ void ExecuteCmdAtPoint(MainWindow* win, int cmdId, Point pt) {
             return;
         }
     }
+    // paste reads dragPrevPos; a command sent with a point pastes there
+    win->dragPrevPos = pt;
     ExecuteCmd(win, cmdId);
 }
 

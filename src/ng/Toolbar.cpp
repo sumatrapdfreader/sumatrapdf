@@ -898,6 +898,116 @@ void UpdateToolbarFindText(MainWindow* win) {
     FindBarReposition(win);
 }
 
+// One line per toolbar button and one per Edit PDF button, same shape as
+// orig's dump. The harness matches `annotation-idx` for Undo, Redo and Save.
+TempStr ToolbarButtonsResultTemp(int* exitCodeOut) {
+    str::Builder out;
+    MainWindow* win = len(gWindows) == 0 ? nullptr : gWindows[0];
+    if (!win || !win->toolbar) {
+        *exitCodeOut = 1;
+        out.Append(StrL("ERROR no-toolbar\n"));
+        return ToStrTemp(out);
+    }
+    PopulateToolbarLayout();
+    PopulateCustomToolbarButtons();
+    ToolbarUI* ui = win->toolbar->ui;
+    auto* ctx = NewBuildMenuCtx(win->CurrentTab(), Point{0, 0});
+    AutoCall delCtx(DeleteBuildMenuCtx, ctx);
+
+    int n = TotalButtonsCount();
+    Vec<bool> hidden;
+    for (int i = 0; i < n; i++) {
+        const ToolbarButtonInfo& bi = GetToolbarButtonInfoByIdx(i);
+        bool hide = false;
+        if (bi.cmdId != WarningMsgId && bi.cmdId != 0) {
+            hide = !IsCmdAvailable(win, bi.cmdId, ctx);
+        }
+        VecAppend(hidden, hide);
+    }
+    bool prevVisibleNonSep = false;
+    int lastSep = -1;
+    for (int i = 0; i < n; i++) {
+        const ToolbarButtonInfo& bi = GetToolbarButtonInfoByIdx(i);
+        if (bi.cmdId == 0) {
+            hidden[i] = !prevVisibleNonSep;
+            prevVisibleNonSep = false;
+            if (!hidden[i]) {
+                lastSep = i;
+            }
+            continue;
+        }
+        if (!hidden[i]) {
+            prevVisibleNonSep = true;
+            lastSep = -1;
+        }
+    }
+    if (lastSep >= 0) {
+        hidden[lastSep] = true;
+    }
+
+    int nTools = 0;
+    for (int i = 0; i < n; i++) {
+        const ToolbarButtonInfo& bi = GetToolbarButtonInfoByIdx(i);
+        if (!hidden[i] && bi.cmdId != 0 && bi.cmdId != PageInfoId && len(bi.toolTip) > 0) {
+            nTools++;
+        }
+    }
+    out.Append(fmt("buttons=%d tooltipTools=%d\n", n, nTools));
+
+    int slot = 0;
+    int toolIdx = 0;
+    for (int i = 0; i < n; i++) {
+        const ToolbarButtonInfo& bi = GetToolbarButtonInfoByIdx(i);
+        bool isSep = bi.cmdId == 0 || !HasToolbarButtonContent(bi);
+        Rect r{};
+        if (!hidden[i] && !isSep && ui && slot < len(ui->btnBounds)) {
+            r = FromGpui(ui->btnBounds[slot]);
+        }
+        if (!hidden[i] && !isSep) {
+            slot++;
+        }
+        Str text = bi.toolTip;
+        out.Append(fmt("idx=%d cmd=%d hidden=%d rect=%d,%d,%d,%d text=%s\n", i, bi.cmdId, hidden[i] ? 1 : 0, r.x, r.y,
+                       r.x + r.dx, r.y + r.dy, text));
+        if (!hidden[i] && bi.cmdId != 0 && bi.cmdId != PageInfoId && len(bi.toolTip) > 0) {
+            out.Append(fmt("tool=%d uid=%d rect=%d,%d,%d,%d\n", toolIdx, bi.cmdId, r.x, r.y, r.x + r.dx, r.y + r.dy));
+            toolIdx++;
+        }
+    }
+
+    bool annotationsVisible = AnnotRowVisible(win);
+    bool buttonsEnabled = !IsPlacingAnnotation(win);
+    out.Append(fmt("annotationButtons=%d visible=%d\n", kPdfAnnotationButtonsCount, annotationsVisible ? 1 : 0));
+    WindowTab* tab = win->CurrentTab();
+    TempStr base = tab ? path::GetBaseNameTemp(tab->filePath) : TempStr{};
+    for (int i = 0; i < kPdfAnnotationButtonsCount; i++) {
+        const ToolbarButtonInfo& bi = gPdfAnnotationButtons[i];
+        bool isSep = bi.cmdId == 0 || !HasToolbarButtonContent(bi);
+        bool available = !isSep && IsCmdAvailable(win, bi.cmdId, ctx);
+        bool shown = annotationsVisible && available;
+        bool enabled = shown && buttonsEnabled && IsCmdEnabled(win, bi.cmdId, ctx);
+        Rect r{};
+        if (shown) {
+            r = GetToolbarButtonRect(win, bi.cmdId);
+        }
+        Str tip{};
+        if (len(bi.toolTip) > 0) {
+            if (bi.cmdId == CmdSaveAnnotations && len(base) > 0) {
+                tip = ToolbarTipTemp(bi.cmdId, fmt(Tr("Save changes to %s").s, base), false);
+            } else {
+                tip = ToolbarTipTemp(bi.cmdId, bi.toolTip, true);
+            }
+        }
+        out.Append(fmt("annotation-idx=%d cmd=%d hidden=%d enabled=%d rect=%d,%d,%d,%d text=%s tip=%s\n", i, bi.cmdId,
+                       shown ? 0 : 1, enabled ? 1 : 0, r.x, r.y, r.x + r.dx, r.y + r.dy, bi.toolTip, tip));
+    }
+    out.Append(AnnotFilterToolbarStateTemp(win));
+    int hoverCmd = win->toolbar->hoverCmdId;
+    out.Append(fmt("dropdown cmd=%d items=0\n", hoverCmd));
+    *exitCodeOut = 0;
+    return ToStrTemp(out);
+}
+
 Rect GetToolbarButtonRect(MainWindow* win, int cmdId) {
     if (!win || !win->toolbar || !win->toolbar->ui) {
         return {};

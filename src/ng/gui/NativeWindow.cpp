@@ -529,6 +529,8 @@ void AppShellApplyNativeCursor(MainWindow* win) {
     }
 }
 
+float CanvasScale(MainWindow* win);
+
 static LRESULT CALLBACK ShellSubclass(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp, UINT_PTR, DWORD_PTR) {
     switch (msg) {
         case WM_SETCURSOR:
@@ -583,7 +585,23 @@ static LRESULT CALLBACK ShellSubclass(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp,
                 if (MainWindow* win = WinOf(hwnd)) {
                     int cmdId = (int)LOWORD(wp);
                     if (cmdId > 0) {
-                        ExecuteCmd(win, cmdId);
+                        // lParam is a frame client point. ExecuteCmdAtPoint
+                        // wants the document point ToDoc would produce.
+                        if (lp != 0) {
+                            int px = (int)(short)LOWORD(lp);
+                            int py = (int)(short)HIWORD(lp);
+                            float s = CanvasScale(win);
+                            if (s <= 0.f) {
+                                s = 1.f;
+                            }
+                            float dipX = (float)px * s;
+                            float dipY = (float)py * s;
+                            Point pt{(int)((dipX - (float)win->canvasRc.x) / s),
+                                     (int)((dipY - (float)win->canvasRc.y) / s)};
+                            ExecuteCmdAtPoint(win, cmdId, pt);
+                        } else {
+                            ExecuteCmd(win, cmdId);
+                        }
                         AppShellInvalidate(win);
                         return 0;
                     }

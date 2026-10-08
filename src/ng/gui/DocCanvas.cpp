@@ -2962,18 +2962,19 @@ static void OnMouseLeftButtonDown(MainWindow* win, int x, int y) {
 // turns the double-click inverse search off for a session
 bool gDisableInteractiveInverseSearch = false;
 
-// orig's OnMouseLeftButtonDblClk
-static void OnMouseLeftButtonDblClk(MainWindow* win, int x, int y) {
+// orig's OnMouseLeftButtonDblClk. False when the press was not a double-click
+// action, so the caller can still treat it as an ordinary click.
+static bool OnMouseLeftButtonDblClk(MainWindow* win, int x, int y) {
     DisplayModel* dm = win->AsFixed();
     if (!dm) {
-        return;
+        return false;
     }
     if (AnnotationPlacementOnLeftDblClk(win, Point{x, y})) {
-        return;
+        return true;
     }
     if (win->pressOnlyDeselected) {
         win->pressOnlyDeselected = false;
-        return;
+        return true;
     }
     // while an annotation is selected, double-clicking it (to edit free text in
     // place) is the only double-click there is
@@ -2983,16 +2984,16 @@ static void OnMouseLeftButtonDblClk(MainWindow* win, int x, int y) {
         if (onLocked && Type(locked) == AnnotationType::FreeText) {
             StartFreeTextInPlaceEdit(win, locked);
         }
-        return;
+        return true;
     }
     // a double-click on free text edits its text where it sits on the page
     if (!IsPlacingHighlighterAnnotation(win) && StartFreeTextInPlaceEditAt(win, Point{x, y})) {
-        return;
+        return true;
     }
     if (gSettings->enableTeXEnhancements && !gDisableInteractiveInverseSearch) {
         bool dontSelect = OnInverseSearch(win, x, y);
         if (dontSelect) {
-            return;
+            return true;
         }
     }
 
@@ -3005,7 +3006,7 @@ static void OnMouseLeftButtonDblClk(MainWindow* win, int x, int y) {
         Rect r = dm->GetViewPort();
         if (!isOverText && (x >= (r.dx - kCornerSize)) && (y < kCornerSize)) {
             ExitFullScreen(win);
-            return;
+            return true;
         }
     }
 
@@ -3029,15 +3030,15 @@ static void OnMouseLeftButtonDblClk(MainWindow* win, int x, int y) {
             CanvasSetCapture(win, true);
             AppShellInvalidate(win);
         }
-        return;
+        return true;
     }
 
     if (!pageEl) {
-        return;
+        return false;
     }
     if (pageEl->Is(kindPageElementDest)) {
         if (gSettings->disableLinks) {
-            return;
+            return true;
         }
         // speed up navigation in a file where navigation links are in a fixed position
         OnMouseLeftButtonDown(win, x, y);
@@ -3050,6 +3051,7 @@ static void OnMouseLeftButtonDblClk(MainWindow* win, int x, int y) {
         win->showSelection = win->CurrentTab()->selectionOnPage != nullptr;
         AppShellInvalidate(win);
     }
+    return true;
 }
 
 // orig's OnMouseLeftButtonUp, minus the annotation, touch, presentation and
@@ -3795,7 +3797,12 @@ void DocCanvasView::OnDown(DocCanvasView* self, gp::Ctx* cx, const gp::MouseDown
         // every second press is a WM_LBUTTONDBLCLK, so a 4th click selects
         // the word again; the 3rd goes through the whole press handler
         if (ev->clickCount > 0 && (ev->clickCount % 2) == 0) {
-            OnMouseLeftButtonDblClk(win, pt.x, pt.y);
+            // gpui counts a later WM_LBUTTONDOWN at this point as a double-click.
+            // Orig only does that for WM_LBUTTONDBLCLK. A press that picked
+            // nothing still selects an annotation.
+            if (!OnMouseLeftButtonDblClk(win, pt.x, pt.y)) {
+                OnMouseLeftButtonDown(win, pt.x, pt.y);
+            }
         } else {
             if (ev->clickCount <= 1) {
                 gWordSelectedByDblClk = false;
@@ -3808,7 +3815,30 @@ void DocCanvasView::OnDown(DocCanvasView* self, gp::Ctx* cx, const gp::MouseDown
     gp::Notify(cx);
 }
 
+// The window listener handles a drag first. The canvas element then sees the
+// same point and must not run the gesture a second time.
+static float gRoutedX = 1e30f;
+static float gRoutedY = 1e30f;
+static bool gRouteHandled = false;
+
+static bool RoutedPoint(float x, float y) {
+    return x == gRoutedX && y == gRoutedY;
+}
+
+static bool SkipRouted(float x, float y) {
+    if (!gRouteHandled || !RoutedPoint(x, y)) {
+        return false;
+    }
+    gRouteHandled = false;
+    gRoutedX = 1e30f;
+    gRoutedY = 1e30f;
+    return true;
+}
+
 void DocCanvasView::OnUp(DocCanvasView* self, gp::Ctx* cx, const gp::MouseUpEvent* ev) {
+    if (SkipRouted(ev->x, ev->y)) {
+        return;
+    }
     MainWindow* win = self->win;
     if (!IsMainWindowValid(win) || !win->AsFixed()) {
         return;
@@ -3851,6 +3881,9 @@ void DocCanvasView::OnHover(DocCanvasView* self, gp::Ctx*, const gp::HoverEvent*
 }
 
 void DocCanvasView::OnMove(DocCanvasView* self, gp::Ctx* cx, const gp::MouseMoveEvent* ev) {
+    if (SkipRouted(ev->x, ev->y)) {
+        return;
+    }
     MainWindow* win = self->win;
     if (!IsMainWindowValid(win) || !win->AsFixed()) {
         return;
@@ -3896,6 +3929,44 @@ bool DocCanvasWantsRepaint(MainWindow* win) {
     return res;
 }
 
+// gpui delivers a move to the element under the pointer, and a press does not
+// capture it. A resize that crosses the edit toolbar (or leaves the canvas)
+// would otherwise never update. While a gesture is active, the window sees
+// every move and up first.
+static bool CanvasGestureActive(MainWindow* win) {
+    if (!IsMainWindowValid(win) || !win->AsFixed()) {
+        return false;
+    }
+    return win->mouseAction != MouseAction::None || win->annotPlacement.mouseDown;
+}
+
+static void OnWindowMove(DocCanvasView* self, gp::Ctx* cx, const gp::MouseMoveEvent* ev) {
+    OverlayScrollbarOnWindowMove(cx->win, ev->x, ev->y);
+    MainWindow* win = self->win;
+    if (!CanvasGestureActive(win)) {
+        gRouteHandled = false;
+        return;
+    }
+    gRoutedX = ev->x;
+    gRoutedY = ev->y;
+    gRouteHandled = false;
+    DocCanvasView::OnMove(self, cx, ev);
+    gRouteHandled = true;
+}
+
+static void OnWindowUp(DocCanvasView* self, gp::Ctx* cx, const gp::MouseUpEvent* ev) {
+    OverlayScrollbarOnWindowUp(cx->win, ev->button);
+    MainWindow* win = self->win;
+    if (!CanvasGestureActive(win)) {
+        return;
+    }
+    gRoutedX = ev->x;
+    gRoutedY = ev->y;
+    gRouteHandled = false;
+    DocCanvasView::OnUp(self, cx, ev);
+    gRouteHandled = true;
+}
+
 void DocCanvasHookWindow(MainWindow* win, gp::Window* gw) {
     gUiThread = GetCurrentThreadId();
     gp::App* app = gw->app;
@@ -3903,6 +3974,8 @@ void DocCanvasHookWindow(MainWindow* win, gp::Window* gw) {
     ui->view = gp::EntityNewState<DocCanvasView>(app);
     auto* view = (DocCanvasView*)gp::EntityGet(app, ui->view.id);
     view->win = win;
+    gw->onMouseMove = gp::ListenTo(ui->view, &OnWindowMove);
+    gw->onMouseUp = gp::ListenTo(ui->view, &OnWindowUp);
     UpdateDeltaPerLine();
 }
 

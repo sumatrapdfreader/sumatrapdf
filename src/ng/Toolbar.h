@@ -98,6 +98,7 @@ int ToolbarDy(MainWindow*);
 // ng: orig's GetToolbarButtonScreenRect is in screen coordinates, for the
 // popup windows it anchors; here everything is drawn in the frame
 Rect GetToolbarButtonRect(MainWindow*, int cmdId);
+TempStr ToolbarButtonsResultTemp(int* exitCodeOut);
 // the overlay's hide countdown and the drop-down's open delay
 void ToolbarTick(MainWindow*, int elapsedMs);
 // Ctrl+G: focus the page box when the toolbar is up, else say so and let the

@@ -122,6 +122,8 @@ gpui::El* OverlayScrollbarBuild(gpui::Ctx* cx, OverlayScrollbar* sb, Str id, int
                                 const gpui::Listener* onWheel);
 // a thumb drag and the auto-repeat end wherever the button comes up
 void OverlayScrollbarHookWindow(gpui::Window* gw);
+void OverlayScrollbarOnWindowMove(gpui::Window* gw, float x, float y);
+void OverlayScrollbarOnWindowUp(gpui::Window* gw, gpui::MouseButton button);
 // what the whole window does on a mouse move / a scroll / a tick
 void OverlayScrollbarsOnMouse(MainWindow* win, int x, int y, bool onCanvas);
 void OverlayScrollbarsNotifyScroll(MainWindow* win);
