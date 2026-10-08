@@ -307,11 +307,7 @@ static Rect NormalizeScreenRect(Rect r) {
 }
 
 static void RepaintSelection(MainWindow* win) {
-#if defined(SUMATRA_NG)
-    AppShellInvalidate(win);
-#else
-    ScheduleRepaint(win, 0);
-#endif
+    win->RedrawCanvas();
 }
 
 static void StartSelectionCapture(MainWindow* win) {
@@ -630,7 +626,7 @@ void HideTouchSelHandles(MainWindow* win) {
     }
     win->touchSelHandles = false;
     win->touchSelDragging = TouchSelHandle::None;
-    ScheduleRepaint(win, 0);
+    win->RedrawCanvas();
 }
 
 static void PaintTouchSelHandles(MainWindow* win, Gfx* gfx) {
@@ -1240,7 +1236,6 @@ void OnSelectionStop(MainWindow* win, int x, int y, bool aborted) {
     }
     win->selectingByWord = false;
 #if defined(SUMATRA_NG)
-    AppShellInvalidate(win);
     {
         DisplayModel* dmLog = win->AsFixed();
         WindowTab* tabLog = win->CurrentTab();
@@ -1254,8 +1249,8 @@ void OnSelectionStop(MainWindow* win, int x, int y, bool aborted) {
     // finalized, rather than on every repaint while dragging (UpdateTextSelection
     // runs from PaintSelection on each frame, which flickered the toolbar)
     ToolbarUpdateStateForWindow(win, false);
-    ScheduleRepaint(win, 0);
 #endif
+    win->RedrawCanvas();
 
     // show the floating selection toolbar for a finished text selection
     // (self-guards: needs a non-empty on-screen text selection)

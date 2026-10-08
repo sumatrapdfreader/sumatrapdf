@@ -43,7 +43,6 @@
 #include "Translations.h"
 #if defined(SUMATRA_NG)
 #include "VirtKeys.h"
-#include "gui/AppShell.h"
 #include "gui/DocCanvas.h"
 #endif
 #include "SelectTextKeyboard.h"
@@ -67,11 +66,7 @@ static int CaretBlinkMs() {
 #endif
 
 static void RepaintTextSelect(MainWindow* win) {
-#if defined(SUMATRA_NG)
-    AppShellInvalidate(win);
-#else
-    ScheduleRepaint(win, 0);
-#endif
+    win->RedrawCanvas();
 }
 
 // Keyboard text selection, a.k.a. caret browsing: F7 puts a text caret in the

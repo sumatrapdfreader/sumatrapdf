@@ -232,12 +232,10 @@ bool StopKeyboardLinkFollowing(MainWindow* win) {
     win->linkFollowActive = false;
     VecReset(win->linkFollowTargets);
     win->linkFollowInputLen = 0;
-#if defined(SUMATRA_NG)
-    AppShellInvalidate(win);
-#else
+#if !defined(SUMATRA_NG)
     KillTimer(win->hwndCanvas, kLinkFollowTimerID);
-    ScheduleRepaint(win, 0);
 #endif
+    win->RedrawCanvas();
     return true;
 }
 
@@ -261,11 +259,7 @@ void ToggleKeyboardLinkFollowing(MainWindow* win) {
         ShowNotification(args);
         return;
     }
-#if defined(SUMATRA_NG)
-    AppShellInvalidate(win);
-#else
-    ScheduleRepaint(win, 0);
-#endif
+    win->RedrawCanvas();
 }
 
 // Recomputing on every scroll step would re-enumerate every visible page's
@@ -348,11 +342,7 @@ bool KeyboardLinkFollowingOnChar(MainWindow* win, int key) {
             StopKeyboardLinkFollowing(win);
         } else {
             win->linkFollowInputLen--;
-#if defined(SUMATRA_NG)
-            AppShellInvalidate(win);
-#else
-            ScheduleRepaint(win, 0);
-#endif
+            win->RedrawCanvas();
         }
         return true;
     }
@@ -390,11 +380,7 @@ bool KeyboardLinkFollowingOnChar(MainWindow* win, int key) {
         return true;
     }
     if (exactMatch < 0) {
-#if defined(SUMATRA_NG)
-        AppShellInvalidate(win);
-#else
-        ScheduleRepaint(win, 0);
-#endif
+        win->RedrawCanvas();
         return true;
     }
 
