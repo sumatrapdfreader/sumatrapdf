@@ -20,9 +20,7 @@
 
 #include "gui/Dpi.h"
 #include "gui/UIModels.h"
-#if OS_WIN
 #include "gui/PlatformFont.h"
-#endif
 
 #include "Settings.h"
 #include "AppSettings.h"
@@ -1218,7 +1216,6 @@ static void PropsToolOnMoved(MainWindow*, Rect) {
     }
 }
 
-#if OS_WIN
 static gp::El* PropsToolBuild(MainWindow* win, gp::Ctx* cx);
 
 static ToolWindowDesc PropsToolDesc() {
@@ -1243,14 +1240,8 @@ static ToolWindowDesc PropsToolDesc() {
 // text only while it paints, and the window has to have its size before it is
 // shown
 static Size PropsToolWindowSize(MainWindow* win) {
-    HWND hwndFrame = AppShellNativeHwnd(win);
-    int dpi = AppShellWindowDpi(win);
-    if (dpi <= 0) {
-        dpi = 96;
-    }
-    HDC hdc = GetDC(hwndFrame);
-    PlatformFont* propsFont = HdcCreateSimpleFont(hdc, StrL("Consolas"), 14);
-    ReleaseDC(hwndFrame, hdc);
+    int dpi = std::max(AppShellWindowDpi(win), 96);
+    PlatformFont* propsFont = GetUserGuiFont(StrL("Consolas"), MulDiv(14, dpi, 96));
 
     int maxLineDx = 0;
     int nLines = 0;
@@ -1273,68 +1264,63 @@ static Size PropsToolWindowSize(MainWindow* win) {
     // a bit of slack so the longest lines don't touch the right edge
     maxLineDx += 4 * charDx;
 
-    UINT udpi = (UINT)dpi;
     int pad = MulDiv((int)kPropsToolPad, dpi, 96);
-    int editPadding = GetSystemMetricsForDpi(SM_CXVSCROLL, udpi) + (2 * GetSystemMetricsForDpi(SM_CXEDGE, udpi)) + 16;
-    int frameDx = GetSystemMetricsForDpi(SM_CXFRAME, udpi) * 2;
+    // scrollbar + the edit's edges, as orig added them around the text
+    int editPadding = MulDiv(16 + 4, dpi, 96) + 16;
     Size btnText = PlatformFontMeasureText(GetDefaultGuiFont(), Tr("Copy To Clipboard"));
     int btnDx = std::max(btnText.dx + MulDiv(2 * (int)kPropsBtnPadDx, dpi, 96), MulDiv((int)kPropsBtnMinDx, dpi, 96));
     int btnDy = btnText.dy + MulDiv(2 * 5, dpi, 96);
     int wantedClientDx = std::max(maxLineDx + editPadding, btnDx + (2 * pad));
-    int wantedDx = wantedClientDx + frameDx;
 
-    int editBorderDy = 2 * GetSystemMetricsForDpi(SM_CYEDGE, udpi);
-    int frameDy = (GetSystemMetricsForDpi(SM_CYFRAME, udpi) * 2) + GetSystemMetricsForDpi(SM_CYCAPTION, udpi);
+    int editBorderDy = MulDiv(4, dpi, 96);
     int btnAreaDy = std::max(MulDiv(40, dpi, 96), btnDy + (2 * pad));
-    int wantedDy = ((nLines + kPropsExtraLines) * lineHeight) + editBorderDy + btnAreaDy + pad + frameDy;
+    int wantedClientDy = ((nLines + kPropsExtraLines) * lineHeight) + editBorderDy + btnAreaDy + pad;
+    Size outer = ToolWindowOuterSize(PropsToolDesc(), win, Size(wantedClientDx, wantedClientDy));
 
-    // cap at 80% of screen
-    Rect work = GetWorkAreaRect(HwndWindowRect(hwndFrame), hwndFrame);
-    wantedDx = std::min(wantedDx, (work.dx * 80) / 100);
-    wantedDy = std::min(wantedDy, (work.dy * 80) / 100);
-    return Size(wantedDx, wantedDy);
+    // cap at 80% of the work area
+    Rect work = AppShellWorkArea(win);
+    if (work.dx > 0) {
+        outer.dx = std::min(outer.dx, (work.dx * 80) / 100);
+    }
+    if (work.dy > 0) {
+        outer.dy = std::min(outer.dy, (work.dy * 80) / 100);
+    }
+    return outer;
 }
 
 // orig's placement: at PropWinPos or centered on the frame, kept on screen
 static Rect PropsToolRect(MainWindow* win, Size outer) {
-    HWND hwndFrame = AppShellNativeHwnd(win);
-    Rect frame = HwndWindowRect(hwndFrame);
+    Rect frame = AppShellWindowScreenRect(win);
     Point saved = gSettings->propWinPos;
     Rect r{saved.x, saved.y, outer.dx, outer.dy};
     if (saved.IsEmpty()) {
         r.x = frame.x + (frame.dx - outer.dx) / 2;
         r.y = frame.y + (frame.dy - outer.dy) / 2;
     }
-    return ShiftRectToWorkArea(r, hwndFrame, true);
+    return AppShellShiftToWorkArea(r, win, true);
 }
-#endif
 
 static void PropsOpenToolWindow(MainWindow* win) {
     if (gProps.tw || !ToolWindowsAvailable()) {
         return;
     }
-#if OS_WIN
     Rect r = PropsToolRect(win, PropsToolWindowSize(win));
     gProps.initialPos = {r.x, r.y};
     gProps.toolSized = true;
     gProps.tw = ToolWindowOpen(PropsToolDesc(), win, r);
-#endif
 }
 
 // the text changed (the fonts arrived): orig sizes the window again, where
 // it is
 static void PropsToolSizeToContent() {
-#if OS_WIN
     if (!gProps.visible || !gProps.tw || !IsMainWindowValid(gProps.win)) {
         return;
     }
     Rect cur = ToolWindowRect(gProps.tw);
     Size sz = PropsToolWindowSize(gProps.win);
     ToolWindowMove(gProps.tw, Rect(cur.x, cur.y, sz.dx, sz.dy));
-#endif
 }
 
-#if OS_WIN
 // orig's themed button, in the window's rem (see PropsToolBuild)
 static gp::El* PropsToolButton(gp::Ctx* cx, gp::Str id, Str label, gp::Listener onClick, float fontPx,
                                bool disabled = false) {
@@ -1391,6 +1377,7 @@ static gp::El* PropsToolBuild(MainWindow*, gp::Ctx* cx) {
     gp::El* footer = gp::Div(cx->a)->FlexRow()->JustifyEnd()->ItemsEnd()->Gap(kPropsToolPad)->H(btnRowDy)->Shrink0();
     footer->Child(PropsToolButton(cx, GStrL("props-copy"), Tr("Copy To Clipboard"),
                                   gp::ListenTo(gPropertiesView, &PropertiesView::OnCopy), btnFont));
+#if OS_WIN
     if (gProps.certs) {
         gProps.certSelect.PollChanged(cx->app);
         if (gProps.certs->next) {
@@ -1402,6 +1389,7 @@ static gp::El* PropsToolBuild(MainWindow*, gp::Ctx* cx) {
                                       gp::ListenTo(gPropertiesView, &PropertiesView::OnUpdateEutl), btnFont,
                                       gProps.eutlUpdating));
     }
+#endif
     return gp::Div(cx->a)
         ->FlexCol()
         ->W(gp::kFill)
@@ -1412,7 +1400,6 @@ static gp::El* PropsToolBuild(MainWindow*, gp::Ctx* cx) {
         ->Child(edit)
         ->Child(footer);
 }
-#endif
 
 gp::El* PropertiesDialogBuild(MainWindow* win, gp::Ctx* cx) {
     if (!gProps.visible || gProps.tw || gProps.win != win) {

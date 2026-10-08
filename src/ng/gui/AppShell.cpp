@@ -70,6 +70,9 @@
 #include "gui/Sidebar.h"
 #include "gui/NavFilesUI.h"
 #include "gui/ToolWindow.h"
+#if !OS_WIN && !OS_WASM
+#include "gui/ToolWindowPlat.h"
+#endif
 #include "HomePage.h"
 #include "DocumentProperties.h"
 #include "TabGroupsManage.h"
@@ -729,6 +732,16 @@ void AppShellSetFullScreen(MainWindow* win, bool fullScreen, bool) {
     }
 }
 
+bool AppShellNormalWindowRect(MainWindow*, Rect*) {
+    return false;
+}
+
+int AppShellWindowDpi(MainWindow*) {
+    return 96;
+}
+
+#if OS_WASM
+
 Rect AppShellWindowScreenRect(MainWindow* win) {
     return win ? win->frameRc : Rect{};
 }
@@ -737,18 +750,99 @@ Rect AppShellCanvasScreenRect(MainWindow*) {
     return {};
 }
 
-// ng: gpui has no window position API (see "gpui gaps")
 bool AppShellPlaceWindow(MainWindow*, Rect, bool) {
     return false;
 }
 
-bool AppShellNormalWindowRect(MainWindow*, Rect*) {
-    return false;
+Rect AppShellWorkArea(MainWindow*) {
+    return {};
 }
 
-int AppShellWindowDpi(MainWindow*) {
-    return 96;
+Rect AppShellMonitorRect(MainWindow*) {
+    return {};
 }
+
+Rect AppShellShiftToWorkArea(Rect rect, MainWindow*, bool) {
+    return rect;
+}
+
+#else // macOS, Linux
+
+// same rules as ShiftRectToWorkArea
+static Rect ShiftIntoWorkArea(Rect rect, Rect monitor, bool fully) {
+    if (monitor.IsEmpty()) {
+        return rect;
+    }
+    if (rect.y + rect.dy <= monitor.y || (fully && rect.y < monitor.y)) {
+        rect.Offset(0, monitor.y - rect.y);
+    } else if (rect.y >= monitor.y + monitor.dy || (fully && rect.y + rect.dy > monitor.y + monitor.dy)) {
+        rect.Offset(0, monitor.y - rect.y + monitor.dy - rect.dy);
+    }
+    if (rect.x + rect.dx <= monitor.x || (fully && rect.x < monitor.x)) {
+        rect.Offset(monitor.x - rect.x, 0);
+    } else if (rect.x >= monitor.x + monitor.dx || (fully && rect.x + rect.dx > monitor.x + monitor.dx)) {
+        rect.Offset(monitor.x - rect.x + monitor.dx - rect.dx, 0);
+    }
+    return rect;
+}
+
+static bool MainWindowTitled(gp::Window* gw) {
+    return gw && !gw->opts.borderless && !gw->opts.clientTitleBar;
+}
+
+Rect AppShellWindowScreenRect(MainWindow* win) {
+    if (!win || !win->gpuiWin) {
+        return {};
+    }
+    Rect r = ToolWinNativeFrame(win->gpuiWin);
+    return r.IsEmpty() ? win->frameRc : r;
+}
+
+Rect AppShellCanvasScreenRect(MainWindow* win) {
+    if (!win || !win->gpuiWin || win->canvasRc.IsEmpty()) {
+        return {};
+    }
+    Rect content = ToolWinNativeContentRect(win->gpuiWin);
+    if (content.IsEmpty()) {
+        return {};
+    }
+    Rect c = win->canvasRc;
+    return Rect{content.x + c.x, content.y + c.y, c.dx, c.dy};
+}
+
+bool AppShellPlaceWindow(MainWindow* win, Rect r, bool maximize) {
+    gp::Window* gw = win ? win->gpuiWin : nullptr;
+    if (!gw) {
+        return false;
+    }
+    bool titled = MainWindowTitled(gw);
+    if (!r.IsEmpty()) {
+        ToolWinNativeSetFrame(gw, r, titled);
+    }
+    if (maximize) {
+        Rect work = ToolWinNativeWorkArea(gw);
+        if (!work.IsEmpty()) {
+            ToolWinNativeSetFrame(gw, work, titled);
+        }
+        win->isMaximized = true;
+        gw->maximized = true;
+    }
+    return true;
+}
+
+Rect AppShellWorkArea(MainWindow* win) {
+    return ToolWinNativeWorkArea(win ? win->gpuiWin : nullptr);
+}
+
+Rect AppShellMonitorRect(MainWindow* win) {
+    return ToolWinNativeMonitor(win ? win->gpuiWin : nullptr);
+}
+
+Rect AppShellShiftToWorkArea(Rect rect, MainWindow* win, bool fully) {
+    return ShiftIntoWorkArea(rect, AppShellWorkArea(win), fully);
+}
+
+#endif // macOS, Linux
 
 void AppShellShowCursor(MainWindow* win, bool show) {
     if (win && win->gpuiWin) {

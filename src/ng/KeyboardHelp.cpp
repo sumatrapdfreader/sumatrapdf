@@ -27,6 +27,7 @@
 #include "SumatraConfig.h"
 #include "SumatraPDF.h"
 #include "Translations.h"
+#include "gui/Dpi.h"
 #include "gui/AppShell.h"
 #include "gui/ToolWindow.h"
 #include "Commands.h"
@@ -445,7 +446,6 @@ static bool KbHelpIsClientPoint(MainWindow*, Point pt) {
     return scrolls && v.Contains(p) && p.x >= v.x + v.w - kScrollbarDx;
 }
 
-#if OS_WIN
 // ng: gpui has no table whose columns take the width of their widest cell,
 // and the window has to have its size before it is made, so the texts are
 // measured here the way orig measures them (DirectWrite, rounded up) in
@@ -542,18 +542,21 @@ static ToolWindowDesc KbHelpToolDesc() {
 // next to the frame on whichever side has more room, or at the right edge of
 // the work area when the frame is fullscreen / maximized
 static Rect KbHelpToolRect(MainWindow* win, const KbHelpDims& dims) {
-    HWND hwndFrame = AppShellNativeHwnd(win);
     float dx = 2 * kKbHelpPad + dims.columnDx[0] + kKbColumnGap + dims.columnDx[1];
     float dy = 2 * kKbHelpPad + dims.headerDy + kKbHelpSepGapTop + 1 + kKbHelpSepGapBottom + dims.columnsDy;
     Size size = ToolWindowOuterSize(KbHelpToolDesc(), win, Size((int)(dx + 0.5f), (int)(dy + 0.5f)));
-    Rect frame = HwndWindowRect(hwndFrame);
-    Rect work = GetWorkAreaRect(frame, hwndFrame);
+    Rect frame = AppShellWindowScreenRect(win);
+    Rect work = AppShellWorkArea(win);
     if (size.dy > work.dy) {
-        size.dx += GetSystemMetricsForDpi(SM_CXVSCROLL, GetDpiForWindow(hwndFrame));
+        size.dx += MulDiv(16, std::max(AppShellWindowDpi(win), 96), 96);
     }
     size.dx = std::min(size.dx, work.dx);
     size.dy = std::min(size.dy, work.dy);
-    if (gKbHelp.parentFullscreen || IsZoomed(hwndFrame)) {
+    bool maximized = win->isMaximized || (win->gpuiWin && win->gpuiWin->maximized);
+#if OS_WIN
+    maximized = maximized || IsZoomed(AppShellNativeHwnd(win));
+#endif
+    if (gKbHelp.parentFullscreen || maximized) {
         int x = std::max(work.x, work.Right() - size.dx);
         int y = limitValue(work.y + ((work.dy - size.dy) / 2), work.y, std::max(work.y, work.Bottom() - size.dy));
         return {x, y, size.dx, size.dy};
@@ -565,13 +568,11 @@ static Rect KbHelpToolRect(MainWindow* win, const KbHelpDims& dims) {
     int y = limitValue(frame.y, work.y, std::max(work.y, work.Bottom() - size.dy));
     return {x, y, size.dx, size.dy};
 }
-#endif
 
 static void KbHelpOpenToolWindow(MainWindow* win) {
     if (gKbHelp.tw || !ToolWindowsAvailable()) {
         return;
     }
-#if OS_WIN
     KbSection sections[kMaxKbSections];
     int nSections = CollectKbSections(gKbHelp.dataSource, sections);
     KbHelpDims dims;
@@ -579,10 +580,8 @@ static void KbHelpOpenToolWindow(MainWindow* win) {
     gKbHelp.closeBounds = {};
     gKbHelp.columnsDy = dims.columnsDy;
     gKbHelp.tw = ToolWindowOpen(KbHelpToolDesc(), win, KbHelpToolRect(win, dims));
-#endif
 }
 
-#if OS_WIN
 static gp::El* KbHelpToolBuild(MainWindow* win, gp::Ctx* cx) {
     if (!gKbHelp.visible || !gKbHelp.tw) {
         return nullptr;
@@ -680,7 +679,6 @@ static gp::El* KbHelpToolBuild(MainWindow* win, gp::Ctx* cx) {
         ->Child(gp::Div(cx->a)->W(gp::kFill)->H(kKbHelpSepGapBottom)->Shrink0())
         ->Child(content);
 }
-#endif
 
 // the dialog in the frame: fixed columns
 gp::El* KeyboardHelpBuild(MainWindow* win, gp::Ctx* cx) {

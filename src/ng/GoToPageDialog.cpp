@@ -277,7 +277,6 @@ static void GoToPageOpenToolWindow(MainWindow* win) {
     if (gGoToPage.tw || !ToolWindowsAvailable()) {
         return;
     }
-#if OS_WIN
     ToolWindowDesc desc = ToolWindowModalDesc("gotopage", GoToPageToolTitle);
     desc.build = GoToPageToolBuild;
     desc.onKey = GoToPageToolOnKey;
@@ -298,9 +297,6 @@ static void GoToPageOpenToolWindow(MainWindow* win) {
     float dy =
         2 * kGoToPadY + (float)rows * kGoToEditDy + (float)(rows - 1) * kGoToRowGap + kGoToBtnDy + 2 * kGoToRowGap;
     gGoToPage.tw = ToolWindowOpen(desc, win, ToolWindowCenteredRect(desc, win, Size(kGoToWinDx, (int)dy)));
-#else
-    (void)win;
-#endif
 }
 
 static gp::El* FieldRow(gp::Ctx* cx, Str label, gp::InputState* edit, Str id, int ofCount) {

@@ -45,9 +45,7 @@
 #include "base/UITask.h"
 #include "gui/AppShell.h"
 #include "gui/ToolWindow.h"
-#if OS_WIN
 #include "gui/PlatformFont.h"
-#endif
 #include "gui/DocCanvas.h"
 #include "SvgIcons.h"
 #include "gui/DialogWidgets.h"
@@ -1236,7 +1234,6 @@ static void AboutToolOnOwnerClosed(MainWindow* newOwner) {
     gAboutWin = newOwner;
 }
 
-#if OS_WIN
 // orig's AboutCtrl::UpdateLayout, in dips: the box (title band, two-column
 // table, button) as GDI measures its texts in orig's fonts. ng: the window
 // has to have its size before it is made
@@ -1411,7 +1408,6 @@ static ToolWindowDesc AboutToolDesc() {
     desc.onOwnerClosed = AboutToolOnOwnerClosed;
     return desc;
 }
-#endif
 
 // orig's ShowAboutWindow: the client area is the box plus kAboutRectPadding
 // around, the window is centered on the frame (HwndPositionInCenterOf)
@@ -1419,18 +1415,15 @@ static void AboutOpenToolWindow(MainWindow* win) {
     if (gAboutTw || !ToolWindowsAvailable()) {
         return;
     }
-#if OS_WIN
     AboutDims d;
     MeasureAbout(win, d);
     int dx = (int)(d.box.dx + 0.5f) + 2 * kAboutRectPadding;
     int dy = (int)(d.box.dy + 0.5f) + 2 * kAboutRectPadding;
     ToolWindowDesc desc = AboutToolDesc();
     Size outer = ToolWindowOuterSize(desc, win, Size(dx, dy));
-    HWND hwndFrame = AppShellNativeHwnd(win);
-    Rect frame = HwndWindowRect(hwndFrame);
+    Rect frame = AppShellWindowScreenRect(win);
     Rect r{frame.x + (frame.dx - outer.dx) / 2, frame.y + (frame.dy - outer.dy) / 2, outer.dx, outer.dy};
-    gAboutTw = ToolWindowOpen(desc, win, ShiftRectToWorkArea(r, hwndFrame, true));
-#endif
+    gAboutTw = ToolWindowOpen(desc, win, AppShellShiftToWorkArea(r, win, true));
 }
 
 gp::El* AboutDialogBuild(MainWindow* win, gp::Ctx* cx) {

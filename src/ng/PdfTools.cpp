@@ -44,6 +44,7 @@
 #include "Translations.h"
 #include "Commands.h"
 #include "Menu.h"
+#include "gui/Dpi.h"
 #include "gui/AppShell.h"
 #include "gui/DialogWidgets.h"
 #include "gui/PlatformFont.h"
@@ -3075,10 +3076,11 @@ static float ToolWinClientDx(MainWindow* win, Str srcPath) {
     int dpi = std::max(AppShellWindowDpi(win), 96);
     float pathDx = (float)PlatformFontMeasureText(GetDefaultGuiFont(), srcPath).dx * 96.f / (float)dpi;
     float dx = std::max(pathDx + kPathExtraDx, kMinDx);
-#if OS_WIN
-    float screenDx = (float)GetSystemMetrics(SM_CXSCREEN) * 96.f / (float)dpi;
-    dx = std::min(dx, (float)(int)(screenDx * 80 / 100));
-#endif
+    Rect mon = AppShellMonitorRect(win);
+    if (mon.dx > 0) {
+        float screenDx = (float)mon.dx * 96.f / (float)dpi;
+        dx = std::min(dx, (float)(int)(screenDx * 80 / 100));
+    }
     return dx;
 }
 
@@ -3998,7 +4000,6 @@ static void MergeToolOnClosed(MainWindow*) {
     ClosePdfToolDialog();
 }
 
-#if OS_WIN
 static ToolWindowDesc MergeToolDesc() {
     // orig: WS_OVERLAPPEDWINDOW owned by the frame, a drop target for PDFs
     ToolWindowDesc desc;
@@ -4018,24 +4019,20 @@ static ToolWindowDesc MergeToolDesc() {
 // orig: most of the work area of the document's monitor (kDialogDx wide, 85%
 // of its height), centered on the frame, kept on screen
 static Rect MergeToolRect(MainWindow* win) {
-    HWND hwndFrame = AppShellNativeHwnd(win);
-    Rect frame = HwndWindowRect(hwndFrame);
-    Rect work = GetWorkAreaRect(frame, hwndFrame);
+    Rect frame = AppShellWindowScreenRect(win);
+    Rect work = AppShellWorkArea(win);
     int dpi = std::max(AppShellWindowDpi(win), 96);
     int dx = std::min(work.dx, MulDiv(kMergeDialogDx, dpi, 96));
     int dy = work.dy * 85 / 100;
     Rect r{frame.x + (frame.dx - dx) / 2, frame.y + (frame.dy - dy) / 2, dx, dy};
-    return ShiftRectToWorkArea(r, hwndFrame, true);
+    return AppShellShiftToWorkArea(r, win, true);
 }
-#endif
 
 static void MergeOpenToolWindow(MainWindow* win) {
     if (gTool.tw || !ToolWindowsAvailable()) {
         return;
     }
-#if OS_WIN
     gTool.tw = ToolWindowOpen(MergeToolDesc(), win, MergeToolRect(win));
-#endif
 }
 
 // --- orig's layout, for a tool in a window of its own -----------------------

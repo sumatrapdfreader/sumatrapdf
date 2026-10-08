@@ -1034,18 +1034,15 @@ static void AdvToolOnClosed(MainWindow*) {
     CloseAdvancedSettingsDialog();
 }
 
-#if OS_WIN
 // orig remembers the client size the window was dragged to (#5804)
-static void AdvToolOnMoved(MainWindow* win, Rect) {
-    HWND hwnd = ToolWindowHwnd(gAdv.tw);
-    if (!gAdv.visible || !hwnd) {
+static void AdvToolOnMoved(MainWindow*, Rect) {
+    gp::Window* gw = ToolWindowGpui(gAdv.tw);
+    if (!gAdv.visible || !gw) {
         return;
     }
-    Rect cr = HwndClientRect(hwnd);
-    int dpi = std::max(AppShellWindowDpi(win), 96);
-    gAdvLastClient = Size(MulDiv(cr.dx, 96, dpi), MulDiv(cr.dy, 96, dpi));
+    gp::WinSize ws = gp::WindowSize(gw);
+    gAdvLastClient = Size((int)ws.dipW, (int)ws.dipH);
 }
-#endif
 
 // orig's Create: as wide as the frame's client area less 128 (760..1100) and
 // as tall as it less 72 (480..900), or the size it had earlier this session;
@@ -1054,7 +1051,6 @@ static void AdvOpenToolWindow(MainWindow* win) {
     if (gAdv.tw || !ToolWindowsAvailable()) {
         return;
     }
-#if OS_WIN
     // orig: WS_POPUPWINDOW | WS_CAPTION | WS_THICKFRAME, no owner
     ToolWindowDesc desc;
     desc.name = "advsettings";
@@ -1070,17 +1066,14 @@ static void AdvOpenToolWindow(MainWindow* win) {
     desc.onOwnerClosed = AdvToolOnOwnerClosed;
     desc.onMoved = AdvToolOnMoved;
 
-    HWND hwndFrame = AppShellNativeHwnd(win);
-    int dpi = std::max(AppShellWindowDpi(win), 96);
-    Rect rc = HwndClientRect(hwndFrame);
-    int dy = gAdvLastClient.dy > 0 ? gAdvLastClient.dy : limitValue(MulDiv(rc.dy, 96, dpi) - 72, 480, 900);
-    int dx = gAdvLastClient.dx > 0 ? gAdvLastClient.dx : limitValue(MulDiv(rc.dx, 96, dpi) - 128, 760, 1100);
+    gp::WinSize client = win->gpuiWin ? gp::WindowSize(win->gpuiWin) : gp::WinSize{};
+    int dy = gAdvLastClient.dy > 0 ? gAdvLastClient.dy : limitValue((int)client.dipH - 72, 480, 900);
+    int dx = gAdvLastClient.dx > 0 ? gAdvLastClient.dx : limitValue((int)client.dipW - 128, 760, 1100);
     dx = std::max(dx, kAdvSettingsMinClientDx);
     Size size = ToolWindowOuterSize(desc, win, Size(dx, dy));
-    Rect frame = HwndWindowRect(hwndFrame);
+    Rect frame = AppShellWindowScreenRect(win);
     Rect r{frame.x + (frame.dx / 2) - (size.dx / 2), frame.y + (frame.dy / 2) - (size.dy / 2), size.dx, size.dy};
-    gAdv.tw = ToolWindowOpen(desc, win, ShiftRectToWorkArea(r, hwndFrame, true));
-#endif
+    gAdv.tw = ToolWindowOpen(desc, win, AppShellShiftToWorkArea(r, win, true));
 }
 
 static gp::El* AdvContentEl(gp::Ctx* cx) {

@@ -74,6 +74,7 @@
 #include "MainWindow.h"
 #include "WindowTab.h"
 #include "Tabs.h"
+#include "gui/Dpi.h"
 #include "gui/AppShell.h"
 #include "gui/NativeFileDlg.h"
 #include "gui/OleDragDrop.h"
@@ -812,31 +813,28 @@ static TempStr DocURIToWebUrlTemp(Str docURI) {
     return fmt("https://www.sumatrapdfreader.org/docs/%s", docURI);
 }
 
-#if OS_WIN
 // Shrink to the work area if needed (saved size from a bigger monitor, or a
 // resolution change) and shift so the window is fully visible.
-static Rect ClampHelpWindowRect(Rect r, HWND hwndForMonitor) {
+static Rect ClampHelpWindowRect(Rect r, MainWindow* win) {
     if (r.dx <= 0 || r.dy <= 0) {
         return r;
     }
-    Rect work = GetWorkAreaRect(r, hwndForMonitor);
-    if (work.IsEmpty()) {
-        return r;
+    Rect work = AppShellWorkArea(win);
+    if (!work.IsEmpty()) {
+        r.dx = std::min(r.dx, work.dx);
+        r.dy = std::min(r.dy, work.dy);
     }
-    r.dx = std::min(r.dx, work.dx);
-    r.dy = std::min(r.dy, work.dy);
-    return ShiftRectToWorkArea(r, hwndForMonitor, true);
+    return AppShellShiftToWorkArea(r, win, true);
 }
 
 // First open: upper half of the parent, on the side with more leftover space.
 // Wide enough for the manual's table-of-contents sidebar, which the page CSS
 // shows only from a 950px viewport (docs/manual.shell.html).
 static Rect DefaultHelpWindowRect(MainWindow* win) {
-    HWND parent = AppShellNativeHwnd(win);
     int dpi = std::max(AppShellWindowDpi(win), 96);
     Size size{MulDiv(1000, dpi, 96), MulDiv(860, dpi, 96)};
-    Rect frame = HwndWindowRect(parent);
-    Rect work = GetWorkAreaRect(frame, parent);
+    Rect frame = AppShellWindowScreenRect(win);
+    Rect work = AppShellWorkArea(win);
     if (work.IsEmpty()) {
         work = {0, 0, std::max(size.dx, 1920), std::max(size.dy, 1080)};
     }
@@ -846,19 +844,18 @@ static Rect DefaultHelpWindowRect(MainWindow* win) {
     int leftSpace = frame.x - work.x;
     int x = (rightSpace >= leftSpace) ? frame.Right() : frame.x - size.dx;
     int y = frame.y;
-    return ClampHelpWindowRect({x, y, size.dx, size.dy}, parent);
+    return ClampHelpWindowRect({x, y, size.dx, size.dy}, win);
 }
 
 static Rect ManualBrowserPlacementRect(MainWindow* win) {
     Rect saved = gSettings->helpWindowPos;
     if (!saved.IsEmpty()) {
-        // nullptr: nearest monitor to the saved rect (a disconnected display
-        // then maps to the nearest remaining one)
+        // null: the primary work area. A saved rect from a disconnected
+        // display is shifted back on screen.
         return ClampHelpWindowRect(saved, nullptr);
     }
     return DefaultHelpWindowRect(win);
 }
-#endif
 
 // orig's SaveManualBrowserPos
 static void SaveManualBrowserPos(Rect r) {
@@ -885,9 +882,7 @@ void LaunchDocumentation(Str docURI) {
     if (win && BrowserViewAvailable() && haveManual) {
         SimpleBrowserCreateArgs args;
         args.win = win;
-#if OS_WIN
         args.pos = ManualBrowserPlacementRect(win);
-#endif
         args.onPosChanged = SaveManualBrowserPos;
         args.title = StrL("SumatraPDF Documentation");
         args.url = DocURIToLocalManualUrlTemp(docURI);

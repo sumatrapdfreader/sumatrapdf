@@ -1329,7 +1329,6 @@ static void TranslateToolOnClosed(MainWindow*) {
     CloseSelectionTranslateDialog();
 }
 
-#if OS_WIN
 // orig's ideal size (which is its minimum too), from its controls' ideal
 // sizes: the source edit is as wide as the selection's longest line, between
 // 40 and 120 average characters; the language row needs its two combos
@@ -1345,6 +1344,9 @@ static Size TranslateToolClientSize(MainWindow* win, Str selText) {
         off += lineLen + (nl >= 0 ? 1 : 0);
     }
     int acw = font->averageCharWidth;
+    if (acw <= 0) {
+        acw = std::max(PlatformFontMeasureText(font, StrL("x")).dx, 1);
+    }
     int editDx = std::clamp(textDx, kTrEditIdealChars * acw, kTrEditMaxChars * acw) + MulDiv(kTrEditExtraDx, dpi, 96);
     int fromDx = PlatformFontMeasureText(font, Tr("From:")).dx;
     int toDx = PlatformFontMeasureText(font, Tr("To:")).dx;
@@ -1352,13 +1354,11 @@ static Size TranslateToolClientSize(MainWindow* win, Str selText) {
     int dx = std::max(editDx, langRowDx);
     return Size(MulDiv(dx, 96, dpi) + 2 * (int)kTrPad, kTrBaseDy);
 }
-#endif
 
 static void TranslateOpenToolWindow(MainWindow* win, Str selText) {
     if (gTranslate.tw || !ToolWindowsAvailable()) {
         return;
     }
-#if OS_WIN
     // orig: WS_OVERLAPPED | WS_CAPTION | WS_SYSMENU | WS_THICKFRAME, no owner,
     // the main window disabled while it is up, centered on it
     ToolWindowDesc desc;
@@ -1376,10 +1376,6 @@ static void TranslateOpenToolWindow(MainWindow* win, Str selText) {
     desc.minClient = gTranslate.toolClient;
     gTranslate.toolWantsFocus = true;
     gTranslate.tw = ToolWindowOpen(desc, win, ToolWindowCenteredRect(desc, win, gTranslate.toolClient));
-#else
-    (void)win;
-    (void)selText;
-#endif
 }
 
 gp::El* SelectionTranslateDialogBuild(MainWindow* win, gp::Ctx* cx) {

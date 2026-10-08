@@ -21,6 +21,7 @@
 #include "SumatraConfig.h"
 #include "SumatraPDF.h"
 #include "MainWindow.h"
+#include "gui/Dpi.h"
 #include "gui/AppShell.h"
 #include "gui/DialogWidgets.h"
 #if OS_WIN
@@ -28,6 +29,9 @@
 #endif
 #include "SumatraDialogs.h"
 #include "gui/ToolWindow.h"
+#if !OS_WIN && !OS_WASM
+#include "gui/ToolWindowPlat.h"
+#endif
 
 #include "SumatraLog.h"
 
@@ -51,6 +55,15 @@ struct ToolWindow {
     Rect outer;
     // ToolWindowClose() was called: onClosed is not wanted
     bool closing = false;
+    // ToolWindowSetVisible(false)
+    bool hidden = false;
+    // the user is dragging or sizing it; onExitSizeMove runs when that ends
+    bool userSizing = false;
+    // a no-activate window gave the key back to its owner after it was shown
+    bool focusedBack = false;
+    // the native frame has matched the rect we set; later deltas are the user
+    bool frameSettled = false;
+    int settleFrames = 0;
     Str title; // owned; what the caption shows
 #if OS_WIN
     HWND hwnd = nullptr;
@@ -58,16 +71,22 @@ struct ToolWindow {
     int darkCaption = -1;
     // the main window's handle while this modal window keeps it disabled
     HWND hwndDisabled = nullptr;
-    // ToolWindowSetVisible(false)
-    bool hidden = false;
 #endif
 };
 
 // open or about to be made; a closed one leaves at once and is deleted from
 // the ui task queue
 static Vec<ToolWindow*> gToolWindows;
-// TestToolWindow off: draw in the frame on Windows too, to test the fallback
+// TestToolWindow off: draw in the frame too, to test the overlay fallback
 static bool gToolWindowsOff = false;
+
+bool ToolWindowsAvailable() {
+#if OS_WASM
+    return false;
+#else
+    return !gToolWindowsOff && !gPluginMode;
+#endif
+}
 
 static bool IsLive(ToolWindow* tw) {
     return tw && VecContains(gToolWindows, tw);
@@ -188,10 +207,6 @@ static void Forget(ToolWindow* tw) {
 constexpr UINT_PTR kToolSubclassId = 2;
 // gpui's win32 window class (ext/gpui/gpui.cpp)
 static const WCHAR* kGpuiToolWndClass = L"GpuiSystemMonitor";
-
-bool ToolWindowsAvailable() {
-    return !gToolWindowsOff && !gPluginMode;
-}
 
 bool ToolWindowOwnsHwnd(HWND hwnd) {
     for (ToolWindow* tw : gToolWindows) {
@@ -674,11 +689,9 @@ static void SyncTitle(ToolWindow* tw) {
     gp::AppSetTitle(tw->gw, ToGpui(tw->title));
 }
 
-#else
+#else // !OS_WIN
 
-bool ToolWindowsAvailable() {
-    return false;
-}
+#if OS_WASM
 
 Size ToolWindowOuterSize(const ToolWindowDesc&, MainWindow*, Size clientDip) {
     return clientDip;
@@ -732,7 +745,304 @@ static void DestroyNow(ToolWindow* tw) {
 
 static void SyncTitle(ToolWindow*) {}
 
-#endif
+static void NoteFrame(ToolWindow*) {}
+
+#else // macOS, Linux
+
+static bool TitledFrame(const ToolWindowDesc& desc) {
+    return desc.frame != ToolWinFrame::None;
+}
+
+static void EndModalNative(ToolWindow* tw) {
+    if (!tw || tw->desc.modal != ToolWinModal::Yes) {
+        return;
+    }
+    gp::Window* owner = tw->owner ? tw->owner->gpuiWin : nullptr;
+    ToolWinNativeSetModal(tw->gw, owner, false);
+}
+
+static bool NearPx(int a, int b) {
+    return a - b < 4 && b - a < 4;
+}
+
+static bool FrameNear(Rect a, Rect b) {
+    return NearPx(a.x, b.x) && NearPx(a.y, b.y) && NearPx(a.dx, b.dx) && NearPx(a.dy, b.dy);
+}
+
+static void PlaceFrame(ToolWindow* tw, Rect outer, bool titled) {
+    tw->outer = outer;
+    tw->frameSettled = false;
+    tw->settleFrames = 0;
+    ToolWinNativeSetFrame(tw->gw, outer, titled);
+}
+
+static void NoteFrame(ToolWindow* tw) {
+    if (!tw->gw) {
+        return;
+    }
+    Rect now = ToolWinNativeFrame(tw->gw);
+    if (now.IsEmpty()) {
+        return;
+    }
+    bool moved = !FrameNear(now, tw->outer);
+    // a window manager can land a few pixels off the rect we asked for; that
+    // is not the user dragging, and must not overwrite a saved position
+    bool reportMove = false;
+    if (!tw->frameSettled) {
+        if (!moved) {
+            tw->frameSettled = true;
+        } else if (ToolWinNativeMouseDown() || ++tw->settleFrames > 8) {
+            tw->outer = now;
+            tw->frameSettled = true;
+        }
+    } else if (moved) {
+        reportMove = true;
+    }
+    if (reportMove) {
+        tw->outer = now;
+        tw->userSizing = true;
+        if (tw->desc.onMoved && IsMainWindowValid(tw->owner)) {
+            tw->desc.onMoved(tw->owner, now);
+        }
+    }
+    if (tw->userSizing && !ToolWinNativeMouseDown()) {
+        tw->userSizing = false;
+        if (tw->desc.onExitSizeMove && IsMainWindowValid(tw->owner)) {
+            tw->desc.onExitSizeMove(tw->owner, tw->outer);
+        }
+    }
+    // gpui shows a new window as the key window; a bar must not take the keys
+    if (tw->desc.activate == ToolWinActivate::No && !tw->focusedBack && ToolWinNativeIsActive(tw->gw) && tw->owner &&
+        tw->owner->gpuiWin) {
+        tw->focusedBack = true;
+        ToolWinNativeActivate(tw->owner->gpuiWin);
+    }
+}
+
+static bool ToolShouldClose(void* data, gp::Window*) {
+    auto* tw = (ToolWindow*)data;
+    if (!IsLive(tw)) {
+        return true;
+    }
+    if (!tw->closing) {
+        EndModalNative(tw);
+        Forget(tw);
+    }
+    return true;
+}
+
+static void ApplyNative(ToolWindow* tw) {
+    bool titled = TitledFrame(tw->desc);
+    bool utility = tw->desc.style == ToolWinStyle::Tool;
+    bool resizable = tw->desc.resize == ToolWinResize::Resizable;
+    ToolWinNativeApplyStyle(tw->gw, titled, resizable, utility, !titled);
+    PlaceFrame(tw, tw->outer, titled);
+    gp::Window* owner = tw->owner ? tw->owner->gpuiWin : nullptr;
+    ToolWinNativeSetOwner(tw->gw, owner, tw->desc.owner == ToolWinOwner::Owned);
+    if (!tw->desc.minClient.IsEmpty()) {
+        ToolWinNativeSetMinClient(tw->gw, tw->desc.minClient.dx, tw->desc.minClient.dy);
+    }
+    if (tw->desc.modal == ToolWinModal::Yes && !tw->hidden && owner) {
+        ToolWinNativeSetModal(tw->gw, owner, true);
+    }
+    if (tw->hidden) {
+        ToolWinNativeShow(tw->gw, false, false);
+    }
+}
+
+Size ToolWindowOuterSize(const ToolWindowDesc& desc, MainWindow*, Size clientDip) {
+    bool titled = TitledFrame(desc);
+    Size chrome =
+        ToolWinNativeChrome(titled, desc.resize == ToolWinResize::Resizable, desc.style == ToolWinStyle::Tool);
+    return Size(clientDip.dx + chrome.dx, clientDip.dy + chrome.dy);
+}
+
+Rect ToolWindowCenteredOuter(MainWindow* owner, Size sz) {
+    Rect fr = AppShellWindowScreenRect(owner);
+    Rect r{fr.x + (fr.dx - sz.dx) / 2, fr.y + (fr.dy - sz.dy) / 2, sz.dx, sz.dy};
+    return AppShellShiftToWorkArea(r, owner, true);
+}
+
+Rect ToolWindowCenteredRect(const ToolWindowDesc& desc, MainWindow* owner, Size clientDip) {
+    return ToolWindowCenteredOuter(owner, ToolWindowOuterSize(desc, owner, clientDip));
+}
+
+Rect ToolWindowRect(ToolWindow* tw) {
+    if (!IsLive(tw)) {
+        return {};
+    }
+    Rect r = tw->gw ? ToolWinNativeFrame(tw->gw) : Rect{};
+    return r.IsEmpty() ? tw->outer : r;
+}
+
+void ToolWindowMove(ToolWindow* tw, Rect outer) {
+    if (!IsLive(tw) || outer.IsEmpty()) {
+        return;
+    }
+    if (tw->gw) {
+        PlaceFrame(tw, outer, TitledFrame(tw->desc));
+    } else {
+        tw->outer = outer;
+    }
+}
+
+void ToolWindowActivate(ToolWindow* tw) {
+    if (IsLive(tw) && tw->gw) {
+        ToolWinNativeActivate(tw->gw);
+    }
+}
+
+bool ToolWindowIsActive(ToolWindow* tw) {
+    return IsLive(tw) && tw->gw && ToolWinNativeIsActive(tw->gw);
+}
+
+void ToolWindowDragMove(ToolWindow*) {}
+
+bool ToolWindowIsVisible(ToolWindow* tw) {
+    return IsLive(tw) && !tw->hidden;
+}
+
+void ToolWindowSetVisible(ToolWindow* tw, bool visible) {
+    if (!IsLive(tw) || tw->closing || tw->hidden == !visible) {
+        return;
+    }
+    tw->hidden = !visible;
+    if (!tw->gw) {
+        return;
+    }
+    if (!visible) {
+        EndModalNative(tw);
+        ToolWinNativeShow(tw->gw, false, false);
+        return;
+    }
+    gp::Window* owner = tw->owner ? tw->owner->gpuiWin : nullptr;
+    if (tw->desc.modal == ToolWinModal::Yes && owner) {
+        ToolWinNativeSetModal(tw->gw, owner, true);
+    }
+    ToolWinNativeShow(tw->gw, true, tw->desc.activate == ToolWinActivate::Yes);
+    ToolWindowInvalidate(tw);
+}
+
+static void FollowOne(ToolWindow* tw) {
+    if (!tw->desc.place || tw->closing || !tw->gw || !IsMainWindowValid(tw->owner)) {
+        return;
+    }
+    Rect r = tw->hidden ? Rect{} : tw->desc.place(tw->owner, tw);
+    if (r.IsEmpty()) {
+        ToolWinNativeShow(tw->gw, false, false);
+        return;
+    }
+    PlaceFrame(tw, r, TitledFrame(tw->desc));
+    ToolWinNativeShow(tw->gw, true, false);
+}
+
+void ToolWindowsFollow(MainWindow* win) {
+    Vec<ToolWindow*> wins = gToolWindows;
+    for (ToolWindow* tw : wins) {
+        if (tw->owner == win && IsLive(tw)) {
+            FollowOne(tw);
+        }
+    }
+}
+
+Rect ToolWindowDockedBarRect(MainWindow* owner, int marginDip, float barDyDip) {
+    Rect canvas = AppShellCanvasScreenRect(owner);
+    if (canvas.IsEmpty()) {
+        return {};
+    }
+    int dpi = std::max(AppShellWindowDpi(owner), 96);
+    int margin = MulDiv(marginDip, dpi, 96);
+    int barDx = std::max(canvas.dx - (2 * margin), 0);
+    int barDy = (int)(barDyDip * (float)dpi / 96.f + 0.5f);
+    if (barDx <= 0 || barDy <= 0) {
+        return {};
+    }
+    int x = canvas.x + margin;
+    int y = canvas.y + canvas.dy - barDy - margin;
+    if (y < canvas.y + margin) {
+        y = canvas.y + margin;
+    }
+    return Rect{x, y, barDx, barDy};
+}
+
+Point ToolWindowOffsetInOwner(ToolWindow* tw) {
+    if (!IsLive(tw) || !tw->gw) {
+        return {};
+    }
+    Rect owner = AppShellWindowScreenRect(tw->owner);
+    Rect mine = ToolWindowRect(tw);
+    int dpi = std::max(AppShellWindowDpi(tw->owner), 96);
+    return Point{MulDiv(mine.x - owner.x, 96, dpi), MulDiv(mine.y - owner.y, 96, dpi)};
+}
+
+static void CreateNow(ToolWindow* tw) {
+    if (!IsLive(tw) || tw->gw) {
+        return;
+    }
+    if (!IsMainWindowValidAndNotClosing(tw->owner)) {
+        Forget(tw);
+        return;
+    }
+    gp::App* app = AppShellGetApp();
+    tw->view = gp::EntityNew<ToolRootView>(app);
+    auto* view = (ToolRootView*)gp::EntityGet(app, tw->view.id);
+    view->tw = tw;
+    str::ReplaceWithCopy(&tw->title, tw->desc.title ? tw->desc.title() : Str{});
+
+    bool titled = TitledFrame(tw->desc);
+    Size chrome =
+        ToolWinNativeChrome(titled, tw->desc.resize == ToolWinResize::Resizable, tw->desc.style == ToolWinStyle::Tool);
+    int dipW = std::max(tw->outer.dx - chrome.dx, 1);
+    int dipH = std::max(tw->outer.dy - chrome.dy, 1);
+    gp::WinOpts opts;
+    opts.borderless = !titled;
+    gp::Window* gw = gp::WindowOpenView(app, ToGpui(tw->title), dipW, dipH, tw->view.id, opts);
+    if (!gw) {
+        logf("ToolWindow: could not create '%s'\n", Str(tw->desc.name));
+        if (IsLive(tw)) {
+            Forget(tw);
+        }
+        return;
+    }
+    tw->gw = gw;
+    gp::WindowOnShouldClose(gw, ToolShouldClose, tw);
+    ApplyNative(tw);
+    if (tw->desc.onTick) {
+        gp::WindowSetInterval(gw, tw->desc.tickMs, gp::ListenTo(tw->view, &ToolRootView::OnTick));
+    }
+    logf("ToolWindow: '%s' at %d,%d %dx%d\n", Str(tw->desc.name), tw->outer.x, tw->outer.y, tw->outer.dx, tw->outer.dy);
+    gp::AppInvalidate(gw);
+}
+
+static void DestroyNow(ToolWindow* tw) {
+    if (!IsLive(tw)) {
+        return;
+    }
+    EndModalNative(tw);
+    if (tw->gw) {
+        gp::Window* gw = tw->gw;
+        gp::AppQuit(gw);
+        if (IsLive(tw)) {
+            Forget(tw);
+        }
+        return;
+    }
+    Forget(tw);
+}
+
+static void SyncTitle(ToolWindow* tw) {
+    Str title = tw->desc.title ? tw->desc.title() : Str{};
+    if (str::Eq(title, tw->title)) {
+        return;
+    }
+    str::ReplaceWithCopy(&tw->title, title);
+    if (tw->gw) {
+        gp::AppSetTitle(tw->gw, ToGpui(tw->title));
+    }
+}
+
+#endif // macOS, Linux
+#endif // !OS_WIN
 
 // gpui's size for the text of an input or a button
 constexpr float kGpuiUiFontPx = 14;
@@ -789,6 +1099,10 @@ void ToolWindowSetOwner(ToolWindow* tw, MainWindow* owner) {
     if (tw->hwnd && tw->styled && tw->desc.owner == ToolWinOwner::Owned && hwndOwner) {
         SetWindowLongPtrW(tw->hwnd, GWLP_HWNDPARENT, (LONG_PTR)hwndOwner);
     }
+#elif !OS_WASM
+    if (tw->gw) {
+        ToolWinNativeSetOwner(tw->gw, owner ? owner->gpuiWin : nullptr, tw->desc.owner == ToolWinOwner::Owned);
+    }
 #endif
     ToolWindowInvalidate(tw);
 }
@@ -832,6 +1146,8 @@ gp::El* ToolRootView::Render(ToolRootView* self, gp::Ctx* cx) {
     SyncTitle(tw);
 #if OS_WIN
     SyncCaptionTheme(tw);
+#else
+    NoteFrame(tw);
 #endif
     root->OnKeyDown(gp::Listen(cx, &ToolRootView::OnKeyDown));
     root->CaptureKeyDown(gp::Listen(cx, &ToolRootView::OnCaptureKey));

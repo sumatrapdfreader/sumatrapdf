@@ -4,8 +4,9 @@
 // ng: orig's FindWindow.cpp - the floating variant of the find UI, chosen with
 // SearchUIFloating (the pin button switches between the two). orig makes it an
 // owned WS_POPUP | WS_CAPTION | WS_THICKFRAME tool window with a DropDown, a
-// pages Edit and a VirtListBox; here it is one gpui card inside the frame,
-// dragged by its header and remembered in gSettings->searchUIWindowPos. Same
+// pages Edit and a VirtListBox. On wasm it is a gpui card inside the frame,
+// dragged by its header; elsewhere it is that tool window. Position is
+// remembered in gSettings->searchUIWindowPos. Same
 // contents and order: find box, "n / m" status, previous, next, match case,
 // match whole word, dock, close, the "Limit to pages 1-N:" row and the
 // snippet results list with the matched term highlighted and the page label in
@@ -552,22 +553,19 @@ static void FindToolOnMoved(MainWindow* win, Rect outer) {
     ScheduleSaveSettings();
 }
 
-#if OS_WIN
 // orig's FindWindowPlacementRect: the saved position, or a default size near
 // the top-right of the frame
 static Rect FindWindowPlacementRect(MainWindow* win) {
-    HWND hwndFrame = AppShellNativeHwnd(win);
     Rect r = gSettings->searchUIWindowPos;
     if (r.IsEmpty()) {
-        Rect fr = HwndWindowRect(hwndFrame);
+        Rect fr = AppShellWindowScreenRect(win);
         int dpi = std::max(AppShellWindowDpi(win), 96);
         int dx = MulDiv(520, dpi, 96);
         int dy = MulDiv(360, dpi, 96);
         r = {fr.x + fr.dx - dx - MulDiv(40, dpi, 96), fr.y + MulDiv(80, dpi, 96), dx, dy};
     }
-    return ShiftRectToWorkArea(r, hwndFrame, true);
+    return AppShellShiftToWorkArea(r, win, true);
 }
-#endif
 
 // orig's FindWindowWnd::Create: WS_POPUP | WS_CAPTION | WS_SYSMENU |
 // WS_THICKFRAME, WS_EX_TOOLWINDOW, owned by the frame
@@ -580,7 +578,6 @@ static void FindWindowOpenToolWindow(MainWindow* win) {
         ToolWindowActivate(w->tw);
         return;
     }
-#if OS_WIN
     ToolWindowDesc desc;
     desc.name = "find";
     desc.title = FindToolTitle;
@@ -595,7 +592,6 @@ static void FindWindowOpenToolWindow(MainWindow* win) {
     desc.onClosed = FindToolOnClosed;
     desc.onMoved = FindToolOnMoved;
     w->tw = ToolWindowOpen(desc, win, FindWindowPlacementRect(win));
-#endif
 }
 
 // --- the gpui card ----------------------------------------------------------

@@ -305,6 +305,24 @@ int AppShellWindowDpi(MainWindow* win) {
     return hwnd ? DpiGetForHwnd(hwnd) : 96;
 }
 
+Rect AppShellWorkArea(MainWindow* win) {
+    HWND hwnd = win ? AppShellNativeHwnd(win) : nullptr;
+    Rect r = hwnd ? HwndWindowRect(hwnd) : Rect{};
+    return GetWorkAreaRect(r, hwnd);
+}
+
+Rect AppShellMonitorRect(MainWindow* win) {
+    HWND hwnd = win ? AppShellNativeHwnd(win) : nullptr;
+    if (!hwnd) {
+        return {0, 0, GetSystemMetrics(SM_CXSCREEN), GetSystemMetrics(SM_CYSCREEN)};
+    }
+    return HwndGetFullscreenRect(hwnd);
+}
+
+Rect AppShellShiftToWorkArea(Rect rect, MainWindow* win, bool fully) {
+    return ShiftRectToWorkArea(rect, win ? AppShellNativeHwnd(win) : nullptr, fully);
+}
+
 // ng: gpui's WM_SETCURSOR falls back to IDC_ARROW when it has no cursor, so
 // there is no way to ask it for no cursor at all; ShowCursor is independent
 // of it (see "gpui gaps")

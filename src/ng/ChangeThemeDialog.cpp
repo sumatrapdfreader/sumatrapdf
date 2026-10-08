@@ -2,8 +2,8 @@
    License: GPLv3 */
 
 // ng: orig's ChangeThemeDialog.cpp is a WS_POPUPWINDOW placed beside the main
-// window so the page stays visible while the theme is previewed. gpui cannot
-// place a window, so this is a gpui Dialog with the same rows: the theme list
+// window so the page stays visible while the theme is previewed. On wasm this
+// is a gpui Dialog with the same rows: the theme list
 // ("Follow Windows" first), the "Document colors follow theme" label and its
 // drop-down, and Cancel / Change. The 300 ms preview debounce is orig's, run
 // off the shell's tick instead of a WM_TIMER.
@@ -26,6 +26,7 @@
 #include "SumatraConfig.h"
 #include "SumatraPDF.h"
 #include "Translations.h"
+#include "gui/Dpi.h"
 #include "gui/AppShell.h"
 #include "gui/DialogWidgets.h"
 #include "gui/ToolWindow.h"
@@ -420,7 +421,6 @@ static void ChangeThemeOpenToolWindow(MainWindow* win) {
     if (gChangeTheme.tw || !ToolWindowsAvailable()) {
         return;
     }
-#if OS_WIN
     // orig: WS_POPUPWINDOW | WS_CAPTION, no owner
     ToolWindowDesc desc;
     desc.name = "changetheme";
@@ -440,9 +440,8 @@ static void ChangeThemeOpenToolWindow(MainWindow* win) {
     }
     Size size = ToolWindowOuterSize(desc, win, Size(kThemeWinDx, (int)(clientDy + 0.5f)));
 
-    HWND hwndRelative = AppShellNativeHwnd(win);
-    Rect rRelative = HwndWindowRect(hwndRelative);
-    Rect work = GetWorkAreaRect(rRelative, hwndRelative);
+    Rect rRelative = AppShellWindowScreenRect(win);
+    Rect work = AppShellWorkArea(win);
     int gap = MulDiv(8, std::max(AppShellWindowDpi(win), 96), 96);
     int spaceLeft = rRelative.x - work.x;
     int spaceRight = work.Right() - rRelative.Right();
@@ -458,9 +457,8 @@ static void ChangeThemeOpenToolWindow(MainWindow* win) {
     }
     // vertically centered on the main window
     int y = rRelative.y + ((rRelative.dy - size.dy) / 2);
-    Rect r = ShiftRectToWorkArea({x, y, size.dx, size.dy}, hwndRelative, true);
+    Rect r = AppShellShiftToWorkArea({x, y, size.dx, size.dy}, win, true);
     gChangeTheme.tw = ToolWindowOpen(desc, win, r);
-#endif
 }
 
 static void ShowThemeDialog(MainWindow* win, bool documentColorsFollowThemeOnly) {

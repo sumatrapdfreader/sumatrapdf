@@ -2397,7 +2397,6 @@ static void PaletteOpenToolWindow(MainWindow* win, CommandPaletteWnd* wnd) {
     if (!ToolWindowsAvailable()) {
         return;
     }
-#if OS_WIN
     ToolWindowDesc desc;
     desc.name = "palette";
     desc.title = PaletteToolTitle;
@@ -2416,16 +2415,11 @@ static void PaletteOpenToolWindow(MainWindow* win, CommandPaletteWnd* wnd) {
     outer.dx += 2 * kPaletteBorder;
     outer.dy += 2 * kPaletteBorder;
     Rect r = ToolWindowCenteredOuter(win, outer);
-    HWND frame = AppShellNativeHwnd(win);
-    RECT frameRc{};
-    if (frame && GetWindowRect(frame, &frameRc)) {
-        r.y = frameRc.top + (int)kPaletteTopMargin;
+    Rect frame = AppShellWindowScreenRect(win);
+    if (!frame.IsEmpty()) {
+        r.y = frame.y + (int)kPaletteTopMargin;
     }
     wnd->tw = ToolWindowOpen(desc, win, r);
-#else
-    (void)win;
-    (void)wnd;
-#endif
 }
 
 gpui::Window* CommandPaletteInputWindow(MainWindow* win) {

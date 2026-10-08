@@ -104,22 +104,26 @@ void AppShellApplyNativeCursor(MainWindow* win);
 // gpui saw begin: tell gpui the button is up
 void AppShellAfterNativeDrag(MainWindow* win);
 void AppShellForgetNativeHwnd(MainWindow* win);
-// ng: gpui has no fullscreen window state and no way to move or resize a
-// window (see "gpui gaps"). On Windows this is orig's EnterFullScreen /
-// ExitFullScreen window work on the native frame (src/gui/NativeWindow.cpp);
-// elsewhere the window is maximized as a best effort (in AppShell.cpp).
+// ng: gpui has no fullscreen window state (see "gpui gaps"). On Windows this
+// is orig's EnterFullScreen / ExitFullScreen on the native frame
+// (src/gui/NativeWindow.cpp); elsewhere WindowSetFullScreen.
 // `restoreMaximized` re-maximizes on the way out (orig: the window was
 // maximized before presentation mode).
 void AppShellSetFullScreen(MainWindow* win, bool fullScreen, bool restoreMaximized);
-// screen rect of the window, for the -dbg-control layout snapshot; the frame
-// size at 0,0 where the platform doesn't tell us
+// screen rect of the window, for the -dbg-control layout snapshot. On wasm,
+// the frame size at 0,0.
 Rect AppShellWindowScreenRect(MainWindow* win);
-// the canvas (MainWindow::canvasRc) in screen pixels; empty where the platform
-// does not say where a window is
+// the canvas (MainWindow::canvasRc) in screen pixels; empty on wasm
 Rect AppShellCanvasScreenRect(MainWindow* win);
 // moves / sizes the frame to `r` (outer rectangle, screen pixels; empty: leave
-// it) and maximizes it. False where the platform cannot place a window
+// it) and maximizes it. False on wasm.
 bool AppShellPlaceWindow(MainWindow* win, Rect r, bool maximize);
+// work area of the monitor the frame is on. Primary work area when win is null.
+Rect AppShellWorkArea(MainWindow* win);
+// full bounds of that monitor, including the dock or taskbar
+Rect AppShellMonitorRect(MainWindow* win);
+// shift rect into the work area. fully: the whole rect must be inside
+Rect AppShellShiftToWorkArea(Rect rect, MainWindow* win, bool fully);
 // the frame's rectangle while it is not maximized. False when it is not known
 // (minimized, fullscreen, no native handle, or not Windows)
 bool AppShellNormalWindowRect(MainWindow* win, Rect* out);

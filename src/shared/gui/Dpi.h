@@ -19,6 +19,19 @@ extern int gDpiOverride;
 extern int dpiX;
 extern int dpiY;
 
+#if !OS_WIN
+// win32's MulDiv: a * b / c, rounded to nearest
+inline int MulDiv(int a, int b, int c) {
+    if (c == 0) {
+        return -1;
+    }
+    long long n = (long long)a * (long long)b;
+    long long half = (long long)(c < 0 ? -c : c) / 2;
+    n = n >= 0 ? n + half : n - half;
+    return (int)(n / c);
+}
+#endif
+
 int DpiGetForHwnd(HWND);
 int DpiGetForPoint(int x, int y);
 int DpiGet();

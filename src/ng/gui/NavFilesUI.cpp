@@ -3,9 +3,9 @@
 
 // ng: the window half of orig's NavFilesInFolder.cpp. Orig's
 // NavFilesInFolderWnd is a resizable top-level window built out of virtual
-// controls and docked beside the main window. gpui has no positionable owned
-// window, so the picker is a column at the right edge of the frame, like the
-// AI chat panel, and "which window is active" is a flag: gNav.hasKeyboard.
+// controls and docked beside the main window. On wasm the picker is a column
+// at the right edge of the frame, like the AI chat panel, and "which window
+// is active" is a flag: gNav.hasKeyboard.
 // The functions keep orig's names (they are its methods there) and its
 // comments; the listing itself is the model half in NavFilesInFolder.cpp.
 
@@ -1270,16 +1270,14 @@ static void NavToolOnActivate(MainWindow*, bool active) {
     NavInvalidate();
 }
 
-#if OS_WIN
 // orig's NavDockedClientSize + PositionNavFilesWnd: beside the main window
 // when the work area has a strip wide enough there (as tall as the main
 // window), else centered over it. The window rectangle, in screen pixels
 static Rect NavToolWindowRect(MainWindow* win, const ToolWindowDesc& desc) {
-    HWND hwndMain = AppShellNativeHwnd(win);
     int dpi = std::max(AppShellWindowDpi(win), 96);
     auto scale = [dpi](int v) { return MulDiv(v, dpi, 96); };
-    Rect main = HwndWindowRect(hwndMain);
-    Rect work = GetWorkAreaRect(main, hwndMain);
+    Rect main = AppShellWindowScreenRect(win);
+    Rect work = AppShellWorkArea(win);
     int freeLeft = std::max(main.x - work.x, 0);
     int freeRight = std::max((work.x + work.dx) - (main.x + main.dx), 0);
     Size chrome = ToolWindowOuterSize(desc, win, Size(0, 0));
@@ -1308,9 +1306,11 @@ static Rect NavToolWindowRect(MainWindow* win, const ToolWindowDesc& desc) {
         dx = std::max(outerDx - chrome.dx, scale(kNavMinClientDx));
         dy = std::max(main.dy - chrome.dy, scale(kNavMinClientDy));
     } else {
-        Rect rc = HwndClientRect(hwndMain);
-        dy = std::max(rc.dy - scale(kNavFallbackMainDyMargin), scale(kNavFallbackMinDy));
-        dx = limitValue(rc.dx - scale(kNavFallbackMainDxMargin), scale(kNavFallbackMinDx), scale(kNavFallbackMaxDx));
+        gp::WinSize client = win->gpuiWin ? gp::WindowSize(win->gpuiWin) : gp::WinSize{};
+        int rcDy = scale((int)client.dipH);
+        int rcDx = scale((int)client.dipW);
+        dy = std::max(rcDy - scale(kNavFallbackMainDyMargin), scale(kNavFallbackMinDy));
+        dx = limitValue(rcDx - scale(kNavFallbackMainDxMargin), scale(kNavFallbackMinDx), scale(kNavFallbackMaxDx));
     }
     Rect r{0, 0, dx + chrome.dx, dy + chrome.dy};
     if (docked) {
@@ -1320,9 +1320,8 @@ static Rect NavToolWindowRect(MainWindow* win, const ToolWindowDesc& desc) {
         r.x = main.x + (main.dx / 2) - (r.dx / 2);
         r.y = main.y + scale(kNavFallbackYOffset);
     }
-    return ShiftRectToWorkArea(r, hwndMain, true);
+    return AppShellShiftToWorkArea(r, win, true);
 }
-#endif
 
 // orig's NavFilesInFolderWnd::Create: a regular resizable top-level window
 // (no owner, so Alt-Tab switches between it and the main window)
@@ -1330,7 +1329,6 @@ static void NavOpenToolWindow(MainWindow* win) {
     if (gNavTw || !ToolWindowsAvailable()) {
         return;
     }
-#if OS_WIN
     ToolWindowDesc desc;
     desc.name = "navfiles";
     desc.title = NavToolTitle;
@@ -1344,7 +1342,6 @@ static void NavOpenToolWindow(MainWindow* win) {
     desc.onOwnerClosed = NavToolOnOwnerClosed;
     desc.onActivate = NavToolOnActivate;
     gNavTw = ToolWindowOpen(desc, win, NavToolWindowRect(win, desc));
-#endif
 }
 
 // --- showing ------------------------------------------------------------------

@@ -4,10 +4,10 @@
 // ng: orig shows a number of things in top-level windows of their own (Browse
 // Files In Folder, the find window, Document Properties, ...). gpui opens a
 // window at a size and nothing else (see "gpui gaps": no owner, no style, no
-// position), so where the native handle can be configured (Windows) such a
-// window is a second gpui window described by a ToolWindowDesc; everywhere
-// else ToolWindowsAvailable() is false and the caller draws the same content
-// inside the frame.
+// position). On Windows, macOS and Linux the native frame is configured, and
+// such a window is a second gpui window described by a ToolWindowDesc. On
+// wasm, and in plugin mode, ToolWindowsAvailable() is false and the caller
+// draws the same content inside the frame.
 
 namespace gpui {
 struct Ctx;

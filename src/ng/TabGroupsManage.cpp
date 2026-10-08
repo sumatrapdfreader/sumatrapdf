@@ -591,7 +591,6 @@ static void TabGroupsOpenToolWindow(MainWindow* win) {
     if (gTg->tw || !ToolWindowsAvailable()) {
         return;
     }
-#if OS_WIN
     // orig: WS_OVERLAPPEDWINDOW, no owner, 400 x 350, centered on the frame
     ToolWindowDesc desc;
     bool isSave = gTg->mode == TabGroupDialogMode::Save;
@@ -608,9 +607,6 @@ static void TabGroupsOpenToolWindow(MainWindow* win) {
     Size outer{MulDiv(kTgWinDx, dpi, 96), MulDiv(kTgWinDy, dpi, 96)};
     gTg->listViewDy = 0;
     gTg->tw = ToolWindowOpen(desc, win, ToolWindowCenteredOuter(win, outer));
-#else
-    (void)win;
-#endif
 }
 
 gp::El* TabGroupsDialogBuild(MainWindow* win, gp::Ctx* cx) {

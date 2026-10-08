@@ -36,6 +36,7 @@
 #include "SumatraPDF.h"
 #include "Translations.h"
 #include "Commands.h"
+#include "gui/Dpi.h"
 #include "gui/AppShell.h"
 #include "gui/DocCanvas.h"
 #include "gui/DialogWidgets.h"
@@ -1381,7 +1382,6 @@ static float ImageEditControlAreaDy() {
     return dy;
 }
 
-#if OS_WIN
 // orig's CalcImageEditWindowSizeEx: the window for the image at 100% with its
 // padding and the control strip, at least kMinWindowWidth wide and no larger
 // than the work area. Screen pixels
@@ -1391,13 +1391,11 @@ static Size ImageEditToolWindowSize(MainWindow* win, const ToolWindowDesc& desc,
     int clientDy = imgH + 2 * (int)kImgPadding + (int)ImageEditControlAreaDy();
     Size sz = ToolWindowOuterSize(desc, win, Size(clientDx, clientDy));
     sz.dx = std::max(sz.dx, MulDiv(kImgMinWindowDx, dpi, 96));
-    HWND hwndFrame = AppShellNativeHwnd(win);
-    Rect work = GetWorkAreaRect(HwndWindowRect(hwndFrame), hwndFrame);
+    Rect work = AppShellWorkArea(win);
     sz.dx = std::min(sz.dx, work.dx);
     sz.dy = std::min(sz.dy, work.dy);
     return sz;
 }
-#endif
 
 static Str ImageEditToolTitle();
 static ToolWindowDesc ImageEditToolDesc();
@@ -1410,7 +1408,6 @@ static void ImageEditToolSizeToImage(int prevW, int prevH) {
     if (!w.tw || !IsMainWindowValid(w.win)) {
         return;
     }
-#if OS_WIN
     int layoutW = w.imgW;
     int layoutH = w.imgH;
     if (w.imgW < prevW || w.imgH < prevH) {
@@ -1419,10 +1416,6 @@ static void ImageEditToolSizeToImage(int prevW, int prevH) {
     }
     Size sz = ImageEditToolWindowSize(w.win, ImageEditToolDesc(), layoutW, layoutH);
     ToolWindowMove(w.tw, ToolWindowCenteredOuter(w.win, sz));
-#else
-    (void)prevW;
-    (void)prevH;
-#endif
 }
 
 static DragEdge gImgGrowEdge = DragEdge::None;
@@ -1455,7 +1448,6 @@ static void ImageEditToolGrowNow() {
     if (!w.visible || !w.tw || w.mode != ImageEditMode::Resize || !IsMainWindowValid(w.win)) {
         return;
     }
-#if OS_WIN
     gp::Window* gw = ToolWindowGpui(w.tw);
     if (!gw) {
         return;
@@ -1470,7 +1462,7 @@ static void ImageEditToolGrowNow() {
         return;
     }
     Rect winRc = ToolWindowRect(w.tw);
-    Rect work = GetWorkAreaRect(winRc, ToolWindowHwnd(w.tw));
+    Rect work = AppShellWorkArea(w.win);
     int newW = std::min(winRc.dx + extraW, work.dx);
     int newH = std::min(winRc.dy + extraH, work.dy);
     int deltaW = newW - winRc.dx;
@@ -1493,9 +1485,6 @@ static void ImageEditToolGrowNow() {
         newY = std::max(work.Bottom() - newH, work.y);
     }
     ToolWindowMove(w.tw, Rect(newX, newY, newW, newH));
-#else
-    (void)edge;
-#endif
 }
 
 static TempStr InfoTextTemp();
@@ -1680,13 +1669,9 @@ static void ImageEditOpenToolWindow(MainWindow* win) {
     if (gImgEdit.tw || !ToolWindowsAvailable()) {
         return;
     }
-#if OS_WIN
     ToolWindowDesc desc = ImageEditToolDesc();
     Size sz = ImageEditToolWindowSize(win, desc, gImgEdit.imgW, gImgEdit.imgH);
     gImgEdit.tw = ToolWindowOpen(desc, win, ToolWindowCenteredOuter(win, sz));
-#else
-    (void)win;
-#endif
 }
 
 gp::El* ImageEditWindowBuild(MainWindow* win, gp::Ctx* cx) {

@@ -1138,7 +1138,6 @@ static void AnnotFilterToolOnExitSizeMove(MainWindow* win, Rect outer) {
     }
 }
 
-#if OS_WIN
 static ToolWindowDesc AnnotFilterToolDesc() {
     // orig: WS_POPUP | WS_CAPTION | WS_SYSMENU | WS_THICKFRAME,
     // WS_EX_TOOLWINDOW, owned by the frame
@@ -1159,16 +1158,19 @@ static ToolWindowDesc AnnotFilterToolDesc() {
 }
 
 static bool FrameIsMaxOrFullscreen(MainWindow* win) {
-    return win->isFullScreen || win->presentation || IsZoomed(AppShellNativeHwnd(win));
+    bool zoomed = win->isMaximized || (win->gpuiWin && win->gpuiWin->maximized);
+#if OS_WIN
+    zoomed = zoomed || IsZoomed(AppShellNativeHwnd(win));
+#endif
+    return win->isFullScreen || win->presentation || zoomed;
 }
 
 // orig's AnnotFilterDefaultRect: beside the frame on the side with more room,
 // at its top; at the right edge of the screen when the frame fills it
 static Rect AnnotFilterDefaultRect(MainWindow* win, int dx, int dy) {
-    HWND hwnd = AppShellNativeHwnd(win);
-    Rect fr = HwndWindowRect(hwnd);
+    Rect fr = AppShellWindowScreenRect(win);
     int gap = MulDiv(kFloatWinGap, std::max(AppShellWindowDpi(win), 96), 96);
-    Rect area = (win->isFullScreen || win->presentation) ? HwndGetFullscreenRect(hwnd) : GetWorkAreaRect(fr, nullptr);
+    Rect area = (win->isFullScreen || win->presentation) ? AppShellMonitorRect(win) : AppShellWorkArea(win);
     dx = std::min(dx, std::max(area.dx, 1));
     dy = std::min(dy, std::max(area.dy, 1));
 
@@ -1181,7 +1183,7 @@ static Rect AnnotFilterDefaultRect(MainWindow* win, int dx, int dy) {
     int spaceRight = area.x + area.dx - (fr.x + fr.dx);
     int spaceLeft = fr.x - area.x;
     int x = spaceRight >= spaceLeft ? fr.x + fr.dx + gap : fr.x - gap - dx;
-    return ShiftRectToWorkArea({x, fr.y, dx, dy}, nullptr, true);
+    return AppShellShiftToWorkArea({x, fr.y, dx, dy}, nullptr, true);
 }
 
 // orig's AnnotFilterWindowPlacementRect
@@ -1197,24 +1199,21 @@ static Rect AnnotFilterToolRect(MainWindow* win) {
         dy = saved.dy;
     }
     if (win->annotListFloatPosUserSet && !saved.IsEmpty()) {
-        return ShiftRectToWorkArea(saved, nullptr, true);
+        return AppShellShiftToWorkArea(saved, nullptr, true);
     }
     if (FrameIsMaxOrFullscreen(win) || saved.IsEmpty()) {
         return AnnotFilterDefaultRect(win, dx, dy);
     }
-    return ShiftRectToWorkArea(saved, nullptr, true);
+    return AppShellShiftToWorkArea(saved, nullptr, true);
 }
-#endif
 
 static void AnnotFilterOpenToolWindow(AnnotFilterToolbar* f) {
     if (f->tw || !ToolWindowsAvailable()) {
         return;
     }
-#if OS_WIN
     Rect r = AnnotFilterToolRect(f->win);
     f->win->annotListFloatPos = r;
     f->tw = ToolWindowOpen(AnnotFilterToolDesc(), f->win, r);
-#endif
 }
 
 static gp::El* AnnotFilterContentEl(MainWindow* win, gp::Ctx* cx, bool ownWindow) {
