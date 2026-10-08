@@ -21,11 +21,16 @@ EM_JS(void, WasmJsPickFile, (const char* dir, int dirLen, char* out, int outCap)
     input.type = "file";
     input.style.display = "none";
     document.body.appendChild(input);
+    var settled = false;
     var done = function(path) {
+        if (settled) return;
+        settled = true;
         input.remove();
         stringToUTF8(path ? path : "", out, outCap);
         _sumatra_wasm_file_picked();
+        if (Module.sumatraFocusCanvas) Module.sumatraFocusCanvas();
     };
+    input.addEventListener("cancel", function() { done(null); });
     input.addEventListener(
         "change", function() {
             var file = input.files && input.files[0];
@@ -282,6 +287,21 @@ EM_JS(void, WasmJsQueryFile, (char* out, int outCap), {
     var file = new URLSearchParams(location.search).get("file");
     stringToUTF8(file ? file : "", out, outCap);
 });
+
+// NOLINTNEXTLINE
+EM_JS(void, WasmJsFocusCanvas, (), {
+    if (Module.sumatraFocusCanvas) {
+        Module.sumatraFocusCanvas();
+        return;
+    }
+    var canvas = document.getElementById("gpui-canvas");
+    if (canvas) canvas.focus();
+});
+
+// #gpui-canvas is the only element whose keys gpui receives.
+void WasmFocusCanvas() {
+    WasmJsFocusCanvas();
+}
 
 TempStr WasmQueryFileTemp() {
     char buf[1024];

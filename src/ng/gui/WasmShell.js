@@ -308,6 +308,30 @@
     });
   });
 
+  // gpui delivers keys only to #gpui-canvas, and its mousedown handler cancels
+  // the click, which is what would have focused the canvas. The control inside
+  // the frame still shows a caret and a ring; the key goes to the page.
+  function focusCanvas() {
+    var canvas = document.getElementById("gpui-canvas");
+    if (!canvas || document.activeElement === canvas) return;
+    canvas.focus();
+  }
+  Module.sumatraFocusCanvas = focusCanvas;
+  document.addEventListener(
+    "pointerdown",
+    function (e) {
+      var t = e.target;
+      if (t && t.tagName === "INPUT") return;
+      focusCanvas();
+    },
+    true,
+  );
+  var onRuntimeInitialized = Module.onRuntimeInitialized;
+  Module.onRuntimeInitialized = function () {
+    if (onRuntimeInitialized) onRuntimeInitialized();
+    focusCanvas();
+  };
+
   // Ctrl+K focuses the address bar in Chrome and Firefox (Cmd+K on mac). gpui
   // leaves that chord with the browser, so the page takes it and asks the app
   // to open the command palette. The native menu is the same kind of clash
@@ -325,8 +349,7 @@
       e.preventDefault();
       e.stopPropagation();
       if (e.repeat) return;
-      var canvas = document.getElementById("gpui-canvas");
-      if (canvas) canvas.focus();
+      focusCanvas();
       var open = Module._sumatra_wasm_command_palette;
       if (open) open();
     },

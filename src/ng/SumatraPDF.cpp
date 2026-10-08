@@ -2249,6 +2249,11 @@ MainWindow* LoadDocument(MainWindow* win, Str path, LoadPrefs prefs, LoadReuse r
     // keep / restore the page-info tip after a load or reload (issue #4454)
     ShowPageInfoIfWanted(win);
     ShowLoadWarnings(win, tab);
+#if OS_WASM
+    // opening a file should leave the keyboard on the document, the way the
+    // frame HWND has it. A click that opened the file focused a button instead.
+    AppShellFocusFrame(win);
+#endif
     if (prefs == LoadPrefs::Save) {
         ScheduleSaveSettings();
     }

@@ -699,6 +699,11 @@ void AppShellFocusFrame(MainWindow* win) {
     }
     gp::FocusHandleFocus(gw, win->shell->frameFocus);
     AppShellInvalidate(win);
+#if OS_WASM
+    // gpui's key listener is on the canvas element. Focusing the frame inside
+    // the window does not focus that element, so the keys never arrive.
+    WasmFocusCanvas();
+#endif
 }
 
 void AppShellQuit() {

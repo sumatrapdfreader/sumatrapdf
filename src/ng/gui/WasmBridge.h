@@ -40,4 +40,6 @@ void WasmPersistSettings();
 // version of a file name on the command line.
 TempStr WasmQueryFileTemp();
 
+void WasmFocusCanvas();
+
 #endif
