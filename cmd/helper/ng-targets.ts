@@ -65,6 +65,8 @@ export type Target = {
   platforms?: Platform[];
   /** Windows import libraries */
   winLibs?: string[];
+  /** native libraries needed only by the archive packer */
+  systemDeps?: "archive";
   /** true: our code, /W4 /WX; false: third-party, warnings relaxed */
   strict: boolean;
   /** -profile: compile with /callcap so orig's PerfLog sees every function */
@@ -555,6 +557,7 @@ export const targets: Target[] = [
     defines: ["_7ZIP_ST"],
     deps: ["base"],
     winLibs: archiveWinLibs,
+    systemDeps: "archive",
     strict: false,
     exceptions: true,
   },

@@ -48,6 +48,9 @@ export async function testit(): Promise<void> {
     "ng accepted conflicting configs",
   );
 
+  const makeLzsa = targets.find((target) => target.name === "MakeLZSA");
+  check(makeLzsa?.systemDeps === "archive", "MakeLZSA pulls desktop system dependencies");
+
   const flags: BuildFlags = { debug: true, asan: false, clang: false, clean: false, verbose: false };
   for (const plat of ["win", "mac", "linux", "wasm"] as Platform[]) {
     check(outDirName(plat, flags) === `${plat}/dbg`, `wrong ng debug directory for ${plat}`);

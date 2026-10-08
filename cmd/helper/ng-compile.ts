@@ -333,7 +333,7 @@ function gccCflags(tc: Toolchain, t: Target, f: BuildFlags, cpp: boolean): strin
   if (f.asan) flags.push("-fsanitize=address", "-fno-omit-frame-pointer");
   for (const d of definesOf(t, f)) flags.push(`-D${d}`);
   for (const i of t.includes ?? []) flags.push("-I", join(root, i));
-  if (tc.plat === "linux") {
+  if (tc.plat === "linux" && t.systemDeps !== "archive") {
     // after the target's own -I dirs, and as -isystem so they are searched
     // last: pkg-config's -I/usr/include/freetype2 would otherwise shadow
     // ext/a-freetype's <freetype/*.h> from inside its own internal headers
@@ -856,10 +856,15 @@ function linkCmd(
   {
     const ld: string[] = [];
     if (tc.plat === "mac") {
-      for (const fw of macFrameworks) ld.push("-framework", fw);
-      ld.push(...macLibs);
+      if (t.systemDeps === "archive") {
+        ld.push("-liconv");
+      } else {
+        for (const fw of macFrameworks) ld.push("-framework", fw);
+        ld.push(...macLibs);
+      }
     } else {
-      ld.push(...linuxDeps().libs, "-lm", "-lpthread");
+      if (t.systemDeps !== "archive") ld.push(...linuxDeps().libs);
+      ld.push("-lm", "-lpthread");
     }
     if (f.asan) ld.push("-fsanitize=address");
     // GNU ld scans each archive once, in order, so a symbol an earlier lib
@@ -895,8 +900,9 @@ export async function buildTarget(tc: Toolchain, t: Target, f: BuildFlags, fail:
   const libs: string[] = [];
   if (t.kind !== "staticlib") {
     for (const d of depsOf(t, fail)) {
-      const objs = await compileTarget(tc, d, f, dir, fail);
-      libs.push(await archive(tc, d, dir, objs, fail));
+      const dep = t.systemDeps ? { ...d, systemDeps: t.systemDeps } : d;
+      const objs = await compileTarget(tc, dep, f, dir, fail);
+      libs.push(await archive(tc, dep, dir, objs, fail));
     }
   }
   const objs = await compileTarget(tc, t, f, dir, fail);
