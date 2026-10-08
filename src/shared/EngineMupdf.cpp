@@ -10187,8 +10187,29 @@ Str EngineMupdfLoadAnnotAttachment(EngineBase* engine, int objNum) {
     return PdfLoadAnnotationAttachment(epdf->Ctx(), epdf->pdfdoc, objNum);
 }
 
-// if an elements fully obscures another, remove it from the list
-// padding (in page units) grows each annotation's bounds
+static Annotation* FindAnnotAtPos(const Vec<Annotation*>& annots, PointF pos, float padding,
+                                  Annotation* preferred = nullptr) {
+    Annotation* best = nullptr;
+    float bestArea = 0;
+    for (Annotation* annot : annots) {
+        RectF hitBounds = annot->bounds;
+        hitBounds.Inflate(padding, padding);
+        if (!hitBounds.Contains(pos)) {
+            continue;
+        }
+        if (annot == preferred) {
+            return annot;
+        }
+        RectF bounds = annot->bounds;
+        float area = bounds.dx * bounds.dy;
+        if (!best || area < bestArea) {
+            best = annot;
+            bestArea = area;
+        }
+    }
+    return best;
+}
+
 Annotation* EngineMupdfGetAnnotationAtPos(EngineBase* engine, int pageNo, PointF pos, float padding,
                                           Annotation* preferredAnnot) {
     EngineMupdf* epdf = AsEngineMupdf(engine);
@@ -10201,40 +10222,7 @@ Annotation* EngineMupdfGetAnnotationAtPos(EngineBase* engine, int pageNo, PointF
     }
 
     ScopedRecursiveMutex cs(&epdf->docLock);
-    Vec<Annotation*> els;
-    for (auto& annot : pi->annotations) {
-        auto& atp = annot->type;
-        RectF bounds = annot->bounds;
-        bounds.Inflate(padding, padding);
-        if (!bounds.Contains(pos)) {
-            continue;
-        }
-        VecAppend(els, annot);
-    }
-    if (len(els) == 0) {
-        return nullptr;
-    }
-    for (const auto& a : els) {
-        if (a == preferredAnnot) {
-            return preferredAnnot;
-        }
-    }
-
-    // pick the annotation with the smallest rect: if the click lands inside
-    // a big highlight that also wraps a smaller annotation, the smaller one
-    // is almost always what the user meant
-    Annotation* best = els[0];
-    RectF br = best->bounds;
-    float bestArea = br.dx * br.dy;
-    for (int i = 1; i < len(els); i++) {
-        RectF r = els[i]->bounds;
-        float area = r.dx * r.dy;
-        if (area < bestArea) {
-            best = els[i];
-            bestArea = area;
-        }
-    }
-    return best;
+    return FindAnnotAtPos(pi->annotations, pos, padding, preferredAnnot);
 }
 
 // Like EngineMupdfGetAnnotationAtPos but for form fields (widgets), which live
@@ -10249,20 +10237,7 @@ Annotation* EngineMupdfGetWidgetAtPos(EngineBase* engine, int pageNo, PointF pos
         return nullptr;
     }
     ScopedRecursiveMutex cs(&epdf->docLock);
-    Annotation* best = nullptr;
-    float bestArea = 0;
-    for (auto& w : pi->widgets) {
-        RectF bounds = w->bounds;
-        if (!bounds.Contains(pos)) {
-            continue;
-        }
-        float area = bounds.dx * bounds.dy;
-        if (!best || area < bestArea) {
-            best = w;
-            bestArea = area;
-        }
-    }
-    return best;
+    return FindAnnotAtPos(pi->widgets, pos, 0);
 }
 
 // Next/previous editable (text/choice, non-read-only) widget on the same page
