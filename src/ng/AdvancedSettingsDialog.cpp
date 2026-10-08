@@ -689,11 +689,7 @@ void AdvancedSettingsView::OnSave(AdvancedSettingsView*, gp::Ctx* cx, const gp::
 }
 
 void AdvancedSettingsView::OnOpenFile(AdvancedSettingsView*, gp::Ctx* cx, const gp::ClickEvent*) {
-    if (CanAccessDisk()) {
-        TempStr path = GetSettingsPathTemp();
-        logf("AdvancedSettings: opening '%s'\n", path);
-        LaunchFileIfExists(path);
-    }
+    OpenSettingsFile();
     gp::Notify(cx);
 }
 

@@ -7467,7 +7467,7 @@ void ExecuteCmd(MainWindow* win, int cmdId) {
             break;
 
         case CmdOpenSettingsFile:
-            LaunchFileIfExists(GetSettingsPathTemp());
+            OpenSettingsFile();
             break;
 
         case CmdTogglePageGrid:

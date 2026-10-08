@@ -674,14 +674,15 @@ static void RememberSessionState() {
 // called whenever global preferences change or a file is
 // added or removed from the file history (in order to keep
 // the list of recently opened documents in sync)
-static bool SaveSettings() {
+// force: Open Settings File. -for-testing and exit skip every other save.
+static bool SaveSettings(bool force) {
     gSaveSettingsPending = false;
-    if (gForTesting) {
+    if (!force && gForTesting) {
         // started with -for-testing for ad-hoc testing: don't modify
         // the settings of the tester
         return true;
     }
-    if (gDontSaveSettings) {
+    if (!force && gDontSaveSettings) {
         // if we are exiting the application by File->Exit,
         // OnMenuExit will have called SaveSettings() already
         // and we skip the call here to avoid saving incomplete session info
@@ -734,6 +735,9 @@ static bool SaveSettings() {
     if (len(path) == 0) {
         return false;
     }
+    // startup save is skipped under -for-testing, so the file can be missing
+    // while these bytes still match the last in-memory snapshot
+    bool missing = !file::Exists(path);
     TempStr prevPrefs = file::ReadFileWithArena(path, GetTempArena());
     Str prefs = SerializeSettings(gSettings, prevPrefs);
     AutoCall freePrefs((void (*)(Str))str::Free, prefs);
@@ -743,7 +747,7 @@ static bool SaveSettings() {
     }
     UpdateCrashHandlerSettings();
 
-    if (IsLastSavedPrefs(prefs) || (prevPrefs.len == prefs.len && str::Eq(prefs, prevPrefs))) {
+    if (!missing && (IsLastSavedPrefs(prefs) || (prevPrefs.len == prefs.len && str::Eq(prefs, prevPrefs)))) {
         RememberLastSavedPrefs(prefs);
         return true;
     }
@@ -763,6 +767,10 @@ static bool SaveSettings() {
     }
     WatchedFileSetIgnore(gWatchedSettingsFile, false);
     return ok;
+}
+
+static bool SaveSettings() {
+    return SaveSettings(false);
 }
 
 static void SaveSettingsPosted() {
@@ -1102,6 +1110,29 @@ static void ReloadSettingsFromWatcher() {
 static void SchedulePrefsReload() {
     auto fn = MkFunc0Void(ReloadSettingsFromWatcher);
     uitask::Post(fn, "TaskReloadSettings");
+}
+
+// Write the file when it does not exist yet, then open it in the default
+// .txt app (ShellExecute on Windows, open / xdg-open on macOS and Linux).
+void OpenSettingsFile() {
+    if (!CanAccessDisk()) {
+        return;
+    }
+    TempStr path = GetSettingsPathTemp();
+    if (len(path) == 0) {
+        return;
+    }
+    if (!file::Exists(path)) {
+        if (!SaveSettings(true) || !file::Exists(path)) {
+            logf("OpenSettingsFile: could not create '%s'\n", path);
+            return;
+        }
+        // subscribe failed at startup because the file was not there yet
+        if (!gWatchedSettingsFile) {
+            RegisterSettingsForFileChanges();
+        }
+    }
+    LaunchFileIfExists(path);
 }
 
 void RegisterSettingsForFileChanges() {
