@@ -5987,41 +5987,15 @@ static void RebuildCommentsFromAnnotations(fz_context* ctx, FzPageInfo* pageInfo
     VecReverse(comments);
 }
 
-/* SumatraPDF */
-static fz_stext_page* fz_new_stext_page_from_page2(fz_context* ctx, fz_page* page, const fz_stext_options* options,
-                                                   fz_cookie* cookie) {
-    fz_stext_page* text;
-    fz_device* dev = nullptr;
+enum class StextRun {
+    Contents,
+    WholePage
+};
 
-    fz_var(dev);
-
-    if (page == nullptr) return nullptr;
-
-    text = fz_new_stext_page(ctx, fz_bound_page(ctx, page));
-    fz_try(ctx) {
-        dev = fz_new_stext_device(ctx, text, options);
-        fz_run_page_contents(ctx, page, dev, fz_identity, cookie);
-        fz_close_device(ctx, dev);
-    }
-    fz_always(ctx) {
-        fz_drop_device(ctx, dev);
-    }
-    fz_catch(ctx) {
-        fz_drop_stext_page(ctx, text);
-        fz_rethrow(ctx);
-    }
-
-    return text;
-}
-
-// Like fz_new_stext_page_from_page() but runs the *whole* page - contents plus
-// annotations and form-field widgets - instead of only the page contents. This
-// makes free-text annotations and form-field values part of the extracted text
-// so they can be selected and searched, matching Acrobat (and SumatraPDF <=3.1).
-// mupdf's fz_new_stext_page_from_page() runs only fz_run_page_contents() (issue #1649).
-static fz_stext_page* fz_new_stext_page_from_whole_page(fz_context* ctx, fz_page* page,
-                                                        const fz_stext_options* options) {
-    if (page == nullptr) {
+// WholePage includes annotations and widgets so their text can be selected and searched (issue #1649).
+static fz_stext_page* NewStextPage(fz_context* ctx, fz_page* page, const fz_stext_options* options, fz_cookie* cookie,
+                                   StextRun run) {
+    if (!page) {
         return nullptr;
     }
     fz_stext_page* text = fz_new_stext_page(ctx, fz_bound_page(ctx, page));
@@ -6029,7 +6003,11 @@ static fz_stext_page* fz_new_stext_page_from_whole_page(fz_context* ctx, fz_page
     fz_var(dev);
     fz_try(ctx) {
         dev = fz_new_stext_device(ctx, text, options);
-        fz_run_page(ctx, page, dev, fz_identity, nullptr);
+        if (run == StextRun::Contents) {
+            fz_run_page_contents(ctx, page, dev, fz_identity, cookie);
+        } else {
+            fz_run_page(ctx, page, dev, fz_identity, cookie);
+        }
         fz_close_device(ctx, dev);
     }
     fz_always(ctx) {
@@ -6125,7 +6103,7 @@ static FzPageInfo* GetFzPageInfoLocked(EngineMupdf* e, Location loc, bool loadQu
     fz_var(stext);
     fz_stext_options opts = NewTextPageOptions(FZ_STEXT_PRESERVE_IMAGES);
     fz_try(ctx) {
-        stext = fz_new_stext_page_from_page2(ctx, page, &opts, cookie);
+        stext = NewStextPage(ctx, page, &opts, cookie, StextRun::Contents);
     }
     fz_catch(ctx) {
         fz_report_error(ctx);
@@ -7713,7 +7691,7 @@ static PageText ExtractPageTextLocked(EngineMupdf* e, FzPageInfo* pageInfo) {
     fz_var(stext);
     fz_stext_options opts = NewTextPageOptions();
     fz_try(ctx) {
-        stext = fz_new_stext_page_from_whole_page(ctx, pageInfo->page, &opts);
+        stext = NewStextPage(ctx, pageInfo->page, &opts, nullptr, StextRun::WholePage);
     }
     fz_catch(ctx) {
         fz_report_error(ctx);
