@@ -1662,10 +1662,8 @@ static void ApplyHomeLayoutCache(HomePageLayout& l, int scrollY) {
     hdr->SetBounds(c.rcFreqRead);
     l.freqRead = hdr;
 
-    TempStr openTxt = str::DupTemp(Tr("&Open..."));
-    str::RemoveCharsInPlace(openTxt, StrL("&"));
     VirtText* openDoc = chrome->openDoc->text;
-    openDoc->SetText(openTxt);
+    openDoc->SetText(Tr("Open..."));
     openDoc->font = fontText;
     openDoc->isRtl = isRtl;
     openDoc->withUnderline = true;
@@ -1764,10 +1762,8 @@ static void LayoutHomePage(HomePageLayout& l) {
     Rect rcIconOpen(0, 0, 0, 0);
     rcIconOpen.dx = rcIconOpen.dy = HomePageIconSize();
 
-    TempStr openTxt = str::DupTemp(Tr("&Open..."));
-    str::RemoveCharsInPlace(openTxt, StrL("&"));
     VirtText* openDoc = chrome->openDoc->text;
-    openDoc->SetText(openTxt);
+    openDoc->SetText(Tr("Open..."));
     openDoc->font = fontText;
     openDoc->isRtl = isRtl;
     openDoc->withUnderline = true;

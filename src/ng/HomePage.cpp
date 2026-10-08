@@ -1827,8 +1827,7 @@ gp::El* HomePageBuild(MainWindow* win, gp::Ctx* cx) {
     root->Child(gp::Div(cx->a)->FlexRow()->W(gp::kFill)->Shrink0()->PadL(startX)->PadT(8)->Child(logoRow));
 
     // [open] "Open..."      search box      [thumbnails] [list]
-    TempStr openTxt = str::DupTemp(Tr("&Open..."));
-    str::RemoveCharsInPlace(openTxt, StrL("&"));
+    Str openTxt = Tr("Open...");
     gp::El* openGroup = gp::Div(cx->a)
                             ->FlexRow()
                             ->ItemsCenter()
