@@ -17,12 +17,26 @@ namespace lzsa {
 
 constexpr int kLzmaMagicId = 0x41537a4c;
 constexpr int kLzmaHeaderSize = 1 + LZMA_PROPS_SIZE;
+// first byte of an entry stored as is
+constexpr u8 kStoredMarker = (u8)-1;
 
-static bool Compress(const char* uncompressed, size_t uncompressedSize, char* compressed, size_t* compressedSize) {
+// Store: for an archive that is compressed as a whole later, e.g. inside
+// a .wasm the web server sends with brotli. Compressing twice gains nothing.
+enum class Packing {
+    Lzma,
+    Store
+};
+
+static bool IsStored(const lzma::FileInfo* fi) {
+    return fi->compressedSize > 0 && fi->compressedData[0] == kStoredMarker;
+}
+
+static bool Compress(const char* uncompressed, size_t uncompressedSize, char* compressed, size_t* compressedSize,
+                     Packing packing) {
     ReportIf(*compressedSize < uncompressedSize + 1);
     if (*compressedSize < uncompressedSize + 1) return false;
 
-    if (*compressedSize >= kLzmaHeaderSize) {
+    if (packing == Packing::Lzma && *compressedSize >= kLzmaHeaderSize) {
         ISzAlloc lzmaAlloc{[](void*, size_t size) { return malloc(size); }, [](void*, void* ptr) { free(ptr); }};
         CLzmaEncProps props;
         LzmaEncProps_Init(&props);
@@ -49,13 +63,13 @@ static bool Compress(const char* uncompressed, size_t uncompressedSize, char* co
         }
     }
 
-    compressed[0] = (char)(u8)-1;
+    compressed[0] = (char)kStoredMarker;
     memcpy(compressed + 1, uncompressed, uncompressedSize);
     *compressedSize = uncompressedSize + 1;
     return true;
 }
 
-static bool AppendEntry(str::Builder& data, str::Builder& content, Str filePath, Str inArchiveName,
+static bool AppendEntry(str::Builder& data, str::Builder& content, Str filePath, Str inArchiveName, Packing packing,
                         lzma::FileInfo* fi = nullptr) {
     size_t nameLen = (size_t)len(inArchiveName);
     ReportIf(nameLen > UINT32_MAX - 25);
@@ -74,12 +88,14 @@ static bool AppendEntry(str::Builder& data, str::Builder& content, Str filePath,
     size_t compressedSize = (size_t)len(fileData) + 1;
     AutoFree<char> buffer;
     const char* compressed = nullptr;
-    if (fi && fi->uncompressedCrc32 == fileDataCrc && fi->uncompressedSize == (size_t)len(fileData)) {
+    // the previous archive could have been made with different packing
+    bool samePacking = fi && IsStored(fi) == (packing == Packing::Store);
+    if (samePacking && fi->uncompressedCrc32 == fileDataCrc && fi->uncompressedSize == (size_t)len(fileData)) {
         compressedSize = fi->compressedSize;
         compressed = (const char*)fi->compressedData;
     } else {
         buffer.Set((char*)malloc(compressedSize));
-        if (!buffer || !Compress(fileData.s, (size_t)len(fileData), buffer, &compressedSize)) {
+        if (!buffer || !Compress(fileData.s, (size_t)len(fileData), buffer, &compressedSize, packing)) {
             return false;
         }
         compressed = buffer;
@@ -103,7 +119,7 @@ static bool AppendEntry(str::Builder& data, str::Builder& content, Str filePath,
 // file paths may be relative to the current directory or absolute and
 // may end in a colon followed by the desired path in the archive
 // (this is required for absolute paths)
-bool CreateArchive(Str archivePath, StrVec& files, size_t skipFiles = 0) {
+bool CreateArchive(Str archivePath, StrVec& files, Packing packing, size_t skipFiles = 0) {
     Str prevData = file::ReadFile(archivePath);
     lzma::SimpleArchive prevArchive;
     if (!lzma::ParseSimpleArchive((const u8*)prevData.s, prevData.len, &prevArchive)) {
@@ -137,7 +153,7 @@ bool CreateArchive(Str archivePath, StrVec& files, size_t skipFiles = 0) {
         int idx = GetIdxFromName(&prevArchive, utf8Name);
         lzma::FileInfo* fi = nullptr;
         if (idx != -1) fi = &prevArchive.files[idx];
-        if (!AppendEntry(data, content, filePath, utf8Name, fi)) return false;
+        if (!AppendEntry(data, content, filePath, utf8Name, packing, fi)) return false;
     }
 
     Str hdr = ToStr(data);
@@ -160,7 +176,7 @@ bool CreateArchive(Str archivePath, StrVec& files, size_t skipFiles = 0) {
 
 // packs every file under dir (named relative to dir, e.g. dir/a/b.txt => a\b.txt)
 // plus extraFiles given as <path>[:<in-archive name>]
-bool CreateArchiveFromDir(Str archivePath, Str dir, StrVec& extraFiles) {
+bool CreateArchiveFromDir(Str archivePath, Str dir, StrVec& extraFiles, Packing packing) {
     StrVec files;
     int n = dir.len;
     DirIter di{dir};
@@ -179,7 +195,7 @@ bool CreateArchiveFromDir(Str archivePath, Str dir, StrVec& extraFiles) {
     for (Str f : extraFiles) {
         files.Append(f);
     }
-    return CreateArchive(archivePath, files, 0);
+    return CreateArchive(archivePath, files, packing, 0);
 }
 
 } // namespace lzsa
@@ -227,10 +243,11 @@ int mainVerify(Str archivePath) {
 int printUsage(Str exeName) {
     int errorStep = 0;
     FailIf(true,
-           "Usage:\n  %s <archive.lzsa>\n    verify archive\n  %s <archive.lzsa> <filename>[:<in-archive name>] "
-           "[...]\n    "
-           "create archive from files\n  %s <archive.lzsa> <dir> [<filename>[:<in-archive name>] ...]\n    create "
-           "archive from directory (names relative to it) plus optional extra files",
+           "Usage:\n  %s <archive.lzsa>\n    verify archive\n  %s [-store] <archive.lzsa> <filename>[:<in-archive "
+           "name>] [...]\n    "
+           "create archive from files\n  %s [-store] <archive.lzsa> <dir> [<filename>[:<in-archive name>] ...]\n    "
+           "create archive from directory (names relative to it) plus optional extra files\n  -store: don't compress "
+           "the files",
            exeName.s, exeName.s, exeName.s);
 }
 
@@ -253,6 +270,13 @@ int main(__unused int argc, __unused char** argv) {
     int errorStep = 1;
 
     auto exeName = path::GetBaseNameTemp(args[0]);
+
+    // MakeLZSA -store ...
+    lzsa::Packing packing = lzsa::Packing::Lzma;
+    if (len(args) > 1 && str::Eq(args[1], StrL("-store"))) {
+        packing = lzsa::Packing::Store;
+        args.RemoveAt(1);
+    }
 
     int nArgs = len(args);
     // first arg is exe path, the rest is
@@ -277,12 +301,12 @@ int main(__unused int argc, __unused char** argv) {
         for (int i = 3; i < nArgs; i++) {
             extraFiles.Append(args[i]);
         }
-        bool ok = lzsa::CreateArchiveFromDir(archiveName, dir, extraFiles);
+        bool ok = lzsa::CreateArchiveFromDir(archiveName, dir, extraFiles, packing);
         FailIf(!ok, "Failed to create \"%s\" from directory \"%s\"", archiveName.s, dir.s);
         return 0;
     }
 
-    bool ok = lzsa::CreateArchive(archiveName, args, 2);
+    bool ok = lzsa::CreateArchive(archiveName, args, packing, 2);
     FailIf(!ok, "Failed to create \"%s\"", args[1].s);
 
     return 0;

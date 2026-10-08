@@ -877,6 +877,11 @@ static MainWindow* ManualBrowserParentWindow() {
 }
 
 void LaunchDocumentation(Str docURI) {
+#if OS_WASM
+    // the wasm build embeds no manual (cmd/ng-build.ts)
+    SumatraLaunchBrowser(DocURIToWebUrlTemp(docURI));
+    return;
+#endif
     MainWindow* win = ManualBrowserParentWindow();
     bool haveManual = len(ManualFileData(StrL("manual.shell.html"))) > 0;
     if (win && BrowserViewAvailable() && haveManual) {

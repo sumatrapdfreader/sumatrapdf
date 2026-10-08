@@ -78,6 +78,21 @@ export async function testit(): Promise<void> {
     await packEmbedded(tc, packer, output, fixture);
     if (old.equals(readFileSync(archive))) fail("changed translations did not update the archive");
     if (!existsSync(join(output, "embedded", "translations.txt"))) fail("translations were not staged");
+
+    // what the wasm build asks for: no manual, files stored as is
+    const marker = "compressible ".repeat(64);
+    put(".work/docs/nested/index.md", "manual");
+    put(".work/translations.txt", marker);
+    const forWeb = { manual: false, compress: false };
+    archive = await packEmbedded(tc, packer, output, fixture, forWeb);
+    if (names(archive).some((name) => name.endsWith(".md"))) fail("manual was packed without being asked for");
+    if (!readFileSync(archive).includes(marker)) fail("-store compressed a file");
+    run([packer, archive]);
+    // same files, different packing: entries of the previous archive can't be reused
+    archive = await packEmbedded(tc, packer, output, fixture);
+    if (readFileSync(archive).includes(marker)) fail("stored entry was reused in a compressed archive");
+    archive = await packEmbedded(tc, packer, output, fixture, forWeb);
+    if (!readFileSync(archive).includes(marker)) fail("compressed entry was reused in a stored archive");
   } finally {
     if (!resolve(fixture).startsWith(workDir + sep)) fail(`invalid fixture path: ${fixture}`);
     rmSync(fixture, { recursive: true, force: true });

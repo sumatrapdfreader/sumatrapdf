@@ -244,13 +244,17 @@ async function main(): Promise<void> {
   stageShared(outDir(plat, flags));
 
   if (targets.some((t) => t.embedded || depsOf(t, fail).some((d) => d.embedded))) {
-    await genDocsForBuild();
+    // The .wasm is a download, so it carries no manual: help opens the
+    // website. The web server compresses it, so the archive inside is stored:
+    // no smaller compressed twice, and nothing to decompress at startup.
+    const web = plat === "wasm";
+    if (!web) await genDocsForBuild();
     const host = hostPlatform();
     const packFlags: BuildFlags = { debug: false, asan: false, clang: false, clean: false, verbose: flags.verbose };
     const packTc = findToolchain(root, host, false, fail);
     stageShared(outDir(host, packFlags));
     const packer = await buildTarget(packTc, findTarget("MakeLZSA")!, packFlags, fail);
-    await packEmbedded(packTc, packer, outDir(plat, flags));
+    await packEmbedded(packTc, packer, outDir(plat, flags), root, { manual: !web, compress: !web });
   }
 
   const started = performance.now();

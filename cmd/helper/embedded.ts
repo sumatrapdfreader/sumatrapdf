@@ -53,13 +53,30 @@ async function run(tc: Toolchain, args: string[], cwd = root): Promise<void> {
   if ((await proc.exited) !== 0) throw new Error(`${args[0]} failed`);
 }
 
+export type PackOptions = {
+  /** the in-app manual (.work/docs); without it help opens the website */
+  manual: boolean;
+  /** false stores the files as is, for an archive that is compressed as a whole later */
+  compress: boolean;
+};
+
+const packDefaults: PackOptions = { manual: true, compress: true };
+
 // Match pack-embedded-prebuild.cmd: manual at the root, fonts in fonts\, and the shared translation snapshot.
-export async function packEmbedded(tc: Toolchain, packer: string, dir: string, inputRoot = root): Promise<string> {
+export async function packEmbedded(
+  tc: Toolchain,
+  packer: string,
+  dir: string,
+  inputRoot = root,
+  opts: PackOptions = packDefaults,
+): Promise<string> {
   const staging = join(dir, "embedded");
   const archive = join(dir, "embedded.lzsa");
   const inputs = new Map<string, string>();
   const docs = join(inputRoot, ".work/docs");
-  for (const src of filesUnder(docs)) inputs.set(relative(docs, src), src);
+  if (opts.manual) {
+    for (const src of filesUnder(docs)) inputs.set(relative(docs, src), src);
+  }
   const translations = join(inputRoot, ".work/translations.txt");
   if (!existsSync(translations)) writeChanged(translations, "");
   inputs.set("translations.txt", translations);
@@ -84,7 +101,8 @@ export async function packEmbedded(tc: Toolchain, packer: string, dir: string, i
     const st = statSync(src);
     utimesSync(dst, st.atime, st.mtime);
   }
-  await run(tc, [packer, archive, staging]);
+  const packerArgs = opts.compress ? [] : ["-store"];
+  await run(tc, [packer, ...packerArgs, archive, staging]);
   return archive;
 }
 
