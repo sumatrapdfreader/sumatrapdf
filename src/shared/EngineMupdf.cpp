@@ -4621,7 +4621,6 @@ static void LoadPdfPageMediaboxes(EngineMupdf* e) {
     }
 }
 
-#if !defined(SUMATRA_NG)
 // Caller holds docLock
 static void LoadPdfPageLabels(EngineMupdf* e) {
     auto* ctx = e->Ctx();
@@ -4657,7 +4656,6 @@ static void LoadPdfPageLabels(EngineMupdf* e) {
     e->logicalPageCount = maxN;
 }
 
-#endif
 static void InitChapterPagesFlat(EngineMupdf* e) {
     VecResize(e->chapterPages, 1);
     auto* v = New<Vec<FzPageInfo*>>(e->arena);
@@ -4970,34 +4968,7 @@ bool EngineMupdf::FinishLoading() {
         pdfInfo = nullptr;
     }
 
-#if defined(SUMATRA_NG)
-    pdf_obj* labels = nullptr;
-    fz_var(labels);
-    fz_try(ctx) {
-        labels = pdf_dict_getp(ctx, pdf_trailer(ctx, pdfdoc), "Root/PageLabels");
-        if (labels) {
-            pageLabels = BuildPageLabelVec(arena, ctx, labels, PageCount());
-        }
-    }
-    fz_catch(ctx) {
-        fz_report_error(ctx);
-        fz_warn(ctx, "Couldn't load page labels");
-    }
-    if (pageLabels) {
-        hasPageLabels = true;
-        int maxN = 0;
-        int n = len(*pageLabels);
-        for (int i = 0; i < n; i++) {
-            int v = 0;
-            if (str::Parse((*pageLabels)[i], "%d%$", &v).s && v > maxN) {
-                maxN = v;
-            }
-        }
-        logicalPageCount = maxN;
-    }
-#else
     LoadPdfPageLabels(this);
-#endif
 
     // enable mupdf's JavaScript engine so form-field calculate / validate /
     // format actions run (e.g. auto-summed totals on a fillable form). mujs is
