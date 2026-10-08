@@ -155,6 +155,14 @@ bool AnnotationIsLive(Annotation* annot) {
     return IsAnnotationInEngine(annot->engine, annot);
 }
 
+struct AnnotAccess {
+    fz_context* ctx;
+    pdf_annot* annot;
+    ScopedRecursiveMutex lock;
+
+    explicit AnnotAccess(Annotation* a) : ctx(a->engine->Ctx()), annot(a->pdfannot), lock(&a->engine->docLock) {}
+};
+
 AnnotationType Type(Annotation* annot) {
     if (!annot) {
         return AnnotationType::Unknown;
@@ -175,17 +183,14 @@ RectF GetBounds(Annotation* annot) {
     if (!AnnotationIsLive(annot)) {
         return annot ? annot->bounds : RectF{};
     }
-    EngineMupdf* e = annot->engine;
-    auto* a = annot->pdfannot;
-    auto* ctx = e->Ctx();
-    ScopedRecursiveMutex cs(&e->docLock);
+    AnnotAccess access(annot);
     RectF rc;
 
-    fz_try(ctx) {
-        rc = PdfAnnotBounds(ctx, a);
+    fz_try(access.ctx) {
+        rc = PdfAnnotBounds(access.ctx, access.annot);
     }
-    fz_catch(ctx) {
-        fz_report_error(ctx);
+    fz_catch(access.ctx) {
+        fz_report_error(access.ctx);
         logf("GetBounds(): pdf_bound_annot() failed\n");
     }
     annot->bounds = rc;
@@ -332,17 +337,13 @@ Str Author(Annotation* annot) {
     if (!AnnotationIsLive(annot)) {
         return {};
     }
-    EngineMupdf* e = annot->engine;
-    auto* a = annot->pdfannot;
-    auto* ctx = e->Ctx();
-    ScopedRecursiveMutex cs(&e->docLock);
-
+    AnnotAccess access(annot);
     Str res;
-    fz_try(ctx) {
-        res = MupdfCStrTemp(pdf_annot_author(ctx, a));
+    fz_try(access.ctx) {
+        res = MupdfCStrTemp(pdf_annot_author(access.ctx, access.annot));
     }
-    fz_catch(ctx) {
-        fz_report_error(ctx);
+    fz_catch(access.ctx) {
+        fz_report_error(access.ctx);
         res = {};
     }
     return res;
@@ -360,16 +361,13 @@ int Quadding(Annotation* annot) {
     if (!AnnotationIsLive(annot)) {
         return 0;
     }
-    EngineMupdf* e = annot->engine;
-    auto* a = annot->pdfannot;
-    auto* ctx = e->Ctx();
-    ScopedRecursiveMutex cs(&e->docLock);
+    AnnotAccess access(annot);
     int res = 0;
-    fz_try(ctx) {
-        res = pdf_annot_quadding(ctx, a);
+    fz_try(access.ctx) {
+        res = pdf_annot_quadding(access.ctx, access.annot);
     }
-    fz_catch(ctx) {
-        fz_report_error(ctx);
+    fz_catch(access.ctx) {
+        fz_report_error(access.ctx);
         logf("Quadding(): pdf_annot_quadding() failed\n");
     }
     return res;
@@ -462,18 +460,16 @@ Vec<RectF> GetQuadPointsAsRect(Annotation* annot) {
     if (!AnnotationIsLive(annot)) {
         return res;
     }
-    EngineMupdf* e = annot->engine;
-    auto* ctx = e->Ctx();
-    ScopedRecursiveMutex cs(&e->docLock);
-    fz_try(ctx) {
-        int n = pdf_annot_quad_point_count(ctx, annot->pdfannot);
+    AnnotAccess access(annot);
+    fz_try(access.ctx) {
+        int n = pdf_annot_quad_point_count(access.ctx, access.annot);
         for (int i = 0; i < n; i++) {
-            fz_quad q = pdf_annot_quad_point(ctx, annot->pdfannot, i);
+            fz_quad q = pdf_annot_quad_point(access.ctx, access.annot, i);
             VecAppend(res, ToRectF(fz_rect_from_quad(q)));
         }
     }
-    fz_catch(ctx) {
-        fz_report_error(ctx);
+    fz_catch(access.ctx) {
+        fz_report_error(access.ctx);
     }
     return res;
 }
@@ -497,16 +493,13 @@ int GetWidgetType(Annotation* annot) {
     if (!AnnotationIsLive(annot) || annot->type != AnnotationType::Widget) {
         return PDF_WIDGET_TYPE_UNKNOWN;
     }
-    EngineMupdf* e = annot->engine;
-    auto* a = annot->pdfannot;
-    auto* ctx = e->Ctx();
-    ScopedRecursiveMutex cs(&e->docLock);
+    AnnotAccess access(annot);
     int wt = PDF_WIDGET_TYPE_UNKNOWN;
-    fz_try(ctx) {
-        wt = (int)pdf_widget_type(ctx, a);
+    fz_try(access.ctx) {
+        wt = (int)pdf_widget_type(access.ctx, access.annot);
     }
-    fz_catch(ctx) {
-        fz_report_error(ctx);
+    fz_catch(access.ctx) {
+        fz_report_error(access.ctx);
     }
     return wt;
 }
@@ -515,15 +508,12 @@ WidgetCursorKind GetWidgetCursorKind(Annotation* annot) {
     if (!AnnotationIsLive(annot) || annot->type != AnnotationType::Widget) {
         return WidgetCursorKind::None;
     }
-    EngineMupdf* e = annot->engine;
-    auto* a = annot->pdfannot;
-    auto* ctx = e->Ctx();
-    ScopedRecursiveMutex cs(&e->docLock);
+    AnnotAccess access(annot);
     WidgetCursorKind kind = WidgetCursorKind::None;
-    fz_try(ctx) {
-        int flags = pdf_annot_field_flags(ctx, a);
+    fz_try(access.ctx) {
+        int flags = pdf_annot_field_flags(access.ctx, access.annot);
         if (!(flags & PDF_FIELD_IS_READ_ONLY)) {
-            int wt = pdf_widget_type(ctx, a);
+            int wt = pdf_widget_type(access.ctx, access.annot);
             if (wt == PDF_WIDGET_TYPE_TEXT || wt == PDF_WIDGET_TYPE_COMBOBOX || wt == PDF_WIDGET_TYPE_LISTBOX) {
                 kind = WidgetCursorKind::Text;
             } else if (wt == PDF_WIDGET_TYPE_CHECKBOX || wt == PDF_WIDGET_TYPE_RADIOBUTTON) {
@@ -531,8 +521,8 @@ WidgetCursorKind GetWidgetCursorKind(Annotation* annot) {
             }
         }
     }
-    fz_catch(ctx) {
-        fz_report_error(ctx);
+    fz_catch(access.ctx) {
+        fz_report_error(access.ctx);
     }
     return kind;
 }
@@ -612,16 +602,13 @@ int GetWidgetFieldFlags(Annotation* annot) {
     if (!AnnotationIsLive(annot) || annot->type != AnnotationType::Widget) {
         return 0;
     }
-    EngineMupdf* e = annot->engine;
-    auto* a = annot->pdfannot;
-    auto* ctx = e->Ctx();
-    ScopedRecursiveMutex cs(&e->docLock);
+    AnnotAccess access(annot);
     int flags = 0;
-    fz_try(ctx) {
-        flags = pdf_annot_field_flags(ctx, a);
+    fz_try(access.ctx) {
+        flags = pdf_annot_field_flags(access.ctx, access.annot);
     }
-    fz_catch(ctx) {
-        fz_report_error(ctx);
+    fz_catch(access.ctx) {
+        fz_report_error(access.ctx);
     }
     return flags;
 }
@@ -631,16 +618,13 @@ Str GetWidgetValue(Annotation* annot) {
     if (!AnnotationIsLive(annot) || annot->type != AnnotationType::Widget) {
         return {};
     }
-    EngineMupdf* e = annot->engine;
-    auto* a = annot->pdfannot;
-    auto* ctx = e->Ctx();
-    ScopedRecursiveMutex cs(&e->docLock);
+    AnnotAccess access(annot);
     Str res;
-    fz_try(ctx) {
-        res = MupdfCStrTemp(pdf_annot_field_value(ctx, a));
+    fz_try(access.ctx) {
+        res = MupdfCStrTemp(pdf_annot_field_value(access.ctx, access.annot));
     }
-    fz_catch(ctx) {
-        fz_report_error(ctx);
+    fz_catch(access.ctx) {
+        fz_report_error(access.ctx);
     }
     return res;
 }
@@ -650,19 +634,16 @@ float GetWidgetFontSize(Annotation* annot) {
     if (!AnnotationIsLive(annot) || annot->type != AnnotationType::Widget) {
         return 0;
     }
-    EngineMupdf* e = annot->engine;
-    auto* a = annot->pdfannot;
-    auto* ctx = e->Ctx();
-    ScopedRecursiveMutex cs(&e->docLock);
+    AnnotAccess access(annot);
     float size = 0;
-    fz_try(ctx) {
+    fz_try(access.ctx) {
         const char* fontZ = nullptr;
         int nColor = 0;
         float color[4] = {0};
-        pdf_annot_default_appearance(ctx, a, &fontZ, &size, &nColor, color);
+        pdf_annot_default_appearance(access.ctx, access.annot, &fontZ, &size, &nColor, color);
     }
-    fz_catch(ctx) {
-        fz_report_error(ctx);
+    fz_catch(access.ctx) {
+        fz_report_error(access.ctx);
         size = 0;
     }
     return size;
@@ -673,16 +654,13 @@ int GetWidgetMaxLen(Annotation* annot) {
     if (!AnnotationIsLive(annot) || annot->type != AnnotationType::Widget) {
         return 0;
     }
-    EngineMupdf* e = annot->engine;
-    auto* a = annot->pdfannot;
-    auto* ctx = e->Ctx();
-    ScopedRecursiveMutex cs(&e->docLock);
+    AnnotAccess access(annot);
     int maxLen = 0;
-    fz_try(ctx) {
-        maxLen = pdf_text_widget_max_len(ctx, a);
+    fz_try(access.ctx) {
+        maxLen = pdf_text_widget_max_len(access.ctx, access.annot);
     }
-    fz_catch(ctx) {
-        fz_report_error(ctx);
+    fz_catch(access.ctx) {
+        fz_report_error(access.ctx);
         maxLen = 0;
     }
     return maxLen;
@@ -732,23 +710,20 @@ void GetWidgetChoiceOptions(Annotation* annot, StrVec& out) {
     if (!AnnotationIsLive(annot) || annot->type != AnnotationType::Widget) {
         return;
     }
-    EngineMupdf* e = annot->engine;
-    auto* a = annot->pdfannot;
-    auto* ctx = e->Ctx();
-    ScopedRecursiveMutex cs(&e->docLock);
-    fz_try(ctx) {
-        int n = pdf_choice_widget_options(ctx, a, 0, nullptr);
+    AnnotAccess access(annot);
+    fz_try(access.ctx) {
+        int n = pdf_choice_widget_options(access.ctx, access.annot, 0, nullptr);
         if (n > 0) {
-            const char** opts = (const char**)fz_malloc(ctx, n * sizeof(char*));
-            pdf_choice_widget_options(ctx, a, 0, opts);
+            const char** opts = (const char**)fz_malloc(access.ctx, n * sizeof(char*));
+            pdf_choice_widget_options(access.ctx, access.annot, 0, opts);
             for (int i = 0; i < n; i++) {
                 out.Append(Str(opts[i] ? opts[i] : ""));
             }
-            fz_free(ctx, (void*)opts);
+            fz_free(access.ctx, (void*)opts);
         }
     }
-    fz_catch(ctx) {
-        fz_report_error(ctx);
+    fz_catch(access.ctx) {
+        fz_report_error(access.ctx);
     }
 }
 
@@ -765,16 +740,13 @@ Str Contents(Annotation* annot) {
     if (!AnnotationIsLive(annot)) {
         return {};
     }
-    EngineMupdf* e = annot->engine;
-    auto* a = annot->pdfannot;
-    auto* ctx = e->Ctx();
-    ScopedRecursiveMutex cs(&e->docLock);
+    AnnotAccess access(annot);
     Str res;
-    fz_try(ctx) {
-        res = MupdfCStrDupTemp(pdf_annot_contents(ctx, a));
+    fz_try(access.ctx) {
+        res = MupdfCStrDupTemp(pdf_annot_contents(access.ctx, access.annot));
     }
-    fz_catch(ctx) {
-        fz_report_error(ctx);
+    fz_catch(access.ctx) {
+        fz_report_error(access.ctx);
         res = {};
         logf("Contents(): pdf_annot_contents()\n");
     }
@@ -864,20 +836,17 @@ int PopupId(Annotation* annot) {
     if (!AnnotationIsLive(annot)) {
         return -1;
     }
-    EngineMupdf* e = annot->engine;
-    auto* a = annot->pdfannot;
-    auto* ctx = e->Ctx();
-    ScopedRecursiveMutex cs(&e->docLock);
+    AnnotAccess access(annot);
     pdf_obj* obj = nullptr;
     int res = -1;
-    fz_try(ctx) {
-        obj = pdf_dict_get(ctx, pdf_annot_obj(ctx, a), PDF_NAME(Popup));
+    fz_try(access.ctx) {
+        obj = pdf_dict_get(access.ctx, pdf_annot_obj(access.ctx, access.annot), PDF_NAME(Popup));
         if (obj) {
-            res = pdf_to_num(ctx, obj);
+            res = pdf_to_num(access.ctx, obj);
         }
     }
-    fz_catch(ctx) {
-        fz_report_error(ctx);
+    fz_catch(access.ctx) {
+        fz_report_error(access.ctx);
     }
     return res;
 }
@@ -886,16 +855,13 @@ time_t ModificationDate(Annotation* annot) {
     if (!AnnotationIsLive(annot)) {
         return 0;
     }
-    EngineMupdf* e = annot->engine;
-    auto* a = annot->pdfannot;
-    auto* ctx = e->Ctx();
-    ScopedRecursiveMutex cs(&e->docLock);
+    AnnotAccess access(annot);
     int64_t res = 0;
-    fz_try(ctx) {
-        res = pdf_annot_modification_date(ctx, a);
+    fz_try(access.ctx) {
+        res = pdf_annot_modification_date(access.ctx, access.annot);
     }
-    fz_catch(ctx) {
-        fz_report_error(ctx);
+    fz_catch(access.ctx) {
+        fz_report_error(access.ctx);
     }
     return res;
 }
@@ -924,19 +890,16 @@ Str IconName(Annotation* annot) {
     if (!AnnotationIsLive(annot)) {
         return {};
     }
-    EngineMupdf* e = annot->engine;
-    auto* a = annot->pdfannot;
-    auto* ctx = e->Ctx();
-    ScopedRecursiveMutex cs(&e->docLock);
+    AnnotAccess access(annot);
     Str iconName;
-    fz_try(ctx) {
-        if (pdf_annot_has_icon_name(ctx, a)) {
+    fz_try(access.ctx) {
+        if (pdf_annot_has_icon_name(access.ctx, access.annot)) {
             // can only call if pdf_annot_has_icon_name() returned true
-            iconName = MupdfCStrDupTemp(pdf_annot_icon_name(ctx, a));
+            iconName = MupdfCStrDupTemp(pdf_annot_icon_name(access.ctx, access.annot));
         }
     }
-    fz_catch(ctx) {
-        fz_report_error(ctx);
+    fz_catch(access.ctx) {
+        fz_report_error(access.ctx);
         iconName = {};
     }
     return iconName;
@@ -991,17 +954,14 @@ bool HasEmbeddedFile(Annotation* annot) {
     if (!AnnotationIsLive(annot)) {
         return false;
     }
-    EngineMupdf* e = annot->engine;
-    auto* a = annot->pdfannot;
-    auto* ctx = e->Ctx();
-    ScopedRecursiveMutex cs(&e->docLock);
+    AnnotAccess access(annot);
     bool ok = false;
-    fz_try(ctx) {
-        pdf_obj* fs = FilespecDict(ctx, a);
-        ok = fs && pdf_is_embedded_file(ctx, fs);
+    fz_try(access.ctx) {
+        pdf_obj* fs = FilespecDict(access.ctx, access.annot);
+        ok = fs && pdf_is_embedded_file(access.ctx, fs);
     }
-    fz_catch(ctx) {
-        fz_ignore_error(ctx);
+    fz_catch(access.ctx) {
+        fz_ignore_error(access.ctx);
     }
     return ok;
 }
@@ -1010,23 +970,20 @@ Str EmbeddedFileNameTemp(Annotation* annot) {
     if (!AnnotationIsLive(annot)) {
         return {};
     }
-    EngineMupdf* e = annot->engine;
-    auto* a = annot->pdfannot;
-    auto* ctx = e->Ctx();
-    ScopedRecursiveMutex cs(&e->docLock);
+    AnnotAccess access(annot);
     Str name;
-    fz_try(ctx) {
-        pdf_obj* fs = FilespecDict(ctx, a);
+    fz_try(access.ctx) {
+        pdf_obj* fs = FilespecDict(access.ctx, access.annot);
         if (fs) {
             pdf_filespec_params params{};
-            pdf_get_filespec_params(ctx, fs, &params);
+            pdf_get_filespec_params(access.ctx, fs, &params);
             if (params.filename) {
                 name = str::DupTemp(Str(params.filename));
             }
         }
     }
-    fz_catch(ctx) {
-        fz_ignore_error(ctx);
+    fz_catch(access.ctx) {
+        fz_ignore_error(access.ctx);
         name = {};
     }
     return name;
@@ -1037,23 +994,20 @@ Str LoadEmbeddedFile(Annotation* annot) {
     if (!AnnotationIsLive(annot)) {
         return {};
     }
-    EngineMupdf* e = annot->engine;
-    auto* a = annot->pdfannot;
-    auto* ctx = e->Ctx();
-    ScopedRecursiveMutex cs(&e->docLock);
+    AnnotAccess access(annot);
     Str res;
-    fz_try(ctx) {
-        pdf_obj* fs = FilespecDict(ctx, a);
-        if (fs && pdf_is_embedded_file(ctx, fs)) {
-            fz_buffer* buf = pdf_load_embedded_file_contents(ctx, fs);
+    fz_try(access.ctx) {
+        pdf_obj* fs = FilespecDict(access.ctx, access.annot);
+        if (fs && pdf_is_embedded_file(access.ctx, fs)) {
+            fz_buffer* buf = pdf_load_embedded_file_contents(access.ctx, fs);
             if (buf) {
                 res = str::Dup(Str((char*)buf->data, (int)buf->len));
-                fz_drop_buffer(ctx, buf);
+                fz_drop_buffer(access.ctx, buf);
             }
         }
     }
-    fz_catch(ctx) {
-        fz_report_error(ctx);
+    fz_catch(access.ctx) {
+        fz_report_error(access.ctx);
         logf("LoadEmbeddedFile() failed\n");
     }
     return res;
