@@ -5817,6 +5817,16 @@ static Str WidgetTooltipTemp(fz_context* ctx, pdf_annot* annot) {
     return Str(s);
 }
 
+// must be called inside fz_try
+static Str GetAnnotAuthor(fz_context* ctx, pdf_annot* annot) {
+    if (!gShowAnnotAuthorInTooltip || !pdf_annot_has_author(ctx, annot)) {
+        return {};
+    }
+
+    Str author = Str(pdf_annot_author(ctx, annot));
+    return str::IsEmptyOrWhiteSpace(author) ? Str{} : author;
+}
+
 // FreeText already draws its contents on the page, so its tip only has the
 // optional author.
 // must be called inside fz_try
@@ -5824,13 +5834,7 @@ static IPageElement* MakePdfCommentFromPdfAnnot(fz_context* ctx, int pageNo, pdf
     fz_rect rect = pdf_bound_annot(ctx, annot);
     auto tp = pdf_annot_type(ctx, annot);
     Str contents = NormalizeCommentNewlinesTemp(Str(pdf_annot_contents(ctx, annot)));
-    Str author;
-    if (gShowAnnotAuthorInTooltip && pdf_annot_has_author(ctx, annot)) {
-        author = Str(pdf_annot_author(ctx, annot));
-        if (str::IsEmptyOrWhiteSpace(author)) {
-            author = {};
-        }
-    }
+    Str author = GetAnnotAuthor(ctx, annot);
     if (str::IsEmptyOrWhiteSpace(contents)) {
         contents = {};
     }
@@ -5858,13 +5862,7 @@ static void RebuildCommentsFromAnnotationsInner(fz_context* ctx, pdf_annot* anno
     // MakePdfCommentFromPdfAnnot() below re-reads the contents in full
     Str contents = Str(pdf_annot_contents(ctx, annot)); // don't free
     bool isContentsEmpty = len(contents) == 0;
-    Str author;
-    if (gShowAnnotAuthorInTooltip && pdf_annot_has_author(ctx, annot)) {
-        author = Str(pdf_annot_author(ctx, annot));
-        if (str::IsEmptyOrWhiteSpace(author)) {
-            author = {};
-        }
-    }
+    Str author = GetAnnotAuthor(ctx, annot);
     bool isEmpty = isContentsEmpty && len(author) == 0;
 
     if (PDF_ANNOT_FILE_ATTACHMENT == tp) {
