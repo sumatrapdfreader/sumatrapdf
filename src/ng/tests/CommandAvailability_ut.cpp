@@ -98,9 +98,9 @@ void CommandAvailability_UnitTests() {
     doc.ttsAvailable = true;
     doc.engineKind = kindEngineMupdf;
     utassert(PaletteVis(CmdReadAloudFromCursorPosition, doc) == CommandVisibility::Show);
-    doc.engineKind = kindEngineImage;
+    doc.isImageCollection = true;
     utassert(PaletteVis(CmdReadAloudFromCursorPosition, doc) == CommandVisibility::Hide);
-    doc.engineKind = kindEngineMupdf;
+    doc.isImageCollection = false;
 
     // annotations need an engine that supports them
     utassert(MenuVis(CmdSaveAnnotations, doc) == CommandVisibility::Hide);

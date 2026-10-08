@@ -30,7 +30,6 @@ extern bool AnnotSearch_UnitTests();
 extern void ChapterTable_UnitTests();
 extern void MobiDoc_UnitTests();
 extern void LitDoc_UnitTests();
-extern bool PdfDarkModeImageStats_UnitTest();
 extern void PdfSync_UnitTests();
 extern void TextSelection_UnitTests();
 extern void PagePosition_UnitTests();
@@ -54,6 +53,7 @@ extern bool MarkdownToc_UnitTestHtmlLinks();
 extern bool MarkdownToc_UnitTestHtmlHeadings();
 extern bool MarkdownToc_UnitTestMermaid();
 #if IS_DEBUG
+extern bool PdfDarkModeImageStats_UnitTest();
 extern bool EbookDoc_UnitTestLoading();
 bool GumboHtmlParser_UnitTest();
 bool DisplayMode_UnitTestZoom();
@@ -162,7 +162,6 @@ int main(int argc, char** argv) {
     ChapterTable_UnitTests();
     MobiDoc_UnitTests();
     LitDoc_UnitTests();
-    utassert(PdfDarkModeImageStats_UnitTest());
     PdfSync_UnitTests();
     TextSelection_UnitTests();
     PagePosition_UnitTests();
@@ -185,6 +184,7 @@ int main(int argc, char** argv) {
     utassert(MarkdownToc_UnitTestHtmlHeadings());
     utassert(MarkdownToc_UnitTestMermaid());
 #if IS_DEBUG
+    utassert(PdfDarkModeImageStats_UnitTest());
     utassert(Accelerators_UnitTestFolderNavIsSafe());
     utassert(EbookDoc_UnitTestLoading());
     utassert(GumboHtmlParser_UnitTest());
