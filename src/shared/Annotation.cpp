@@ -179,6 +179,30 @@ static T ReadAnnot(Annotation* annot, T fallback, Read read) {
     return fallback;
 }
 
+template <typename Update>
+static bool UpdateAnnot(Annotation* annot, Update update) {
+    if (!AnnotationIsLive(annot)) {
+        return false;
+    }
+    EngineMupdf* engine = annot->engine;
+    bool ok = false;
+    {
+        AnnotAccess access(annot);
+        fz_try(access.ctx) {
+            update(access.ctx, access.annot);
+            pdf_update_annot(access.ctx, access.annot);
+            ok = true;
+        }
+        fz_catch(access.ctx) {
+            fz_report_error(access.ctx);
+        }
+    }
+    if (ok) {
+        MarkNotificationAsModified(engine, annot);
+    }
+    return ok;
+}
+
 AnnotationType Type(Annotation* annot) {
     if (!annot) {
         return AnnotationType::Unknown;
@@ -692,27 +716,14 @@ Str Contents(Annotation* annot) {
 
 bool SetContents(Annotation* annot, Str sv) {
     ReportIf(!annot);
-    if (!AnnotationIsLive(annot)) {
-        return false;
-    }
-    EngineMupdf* e = annot->engine;
     Str currValue = Contents(annot);
     if (str::Eq(sv, currValue)) {
         return false;
     }
     TempStr valueZ = str::DupTemp(sv);
-    {
-        AnnotAccess access(annot);
-        fz_try(access.ctx) {
-            pdf_set_annot_contents(access.ctx, access.annot, len(valueZ) == 0 ? "" : valueZ.s);
-            pdf_update_annot(access.ctx, access.annot);
-        }
-        fz_catch(access.ctx) {
-            fz_report_error(access.ctx);
-        }
-    }
-    MarkNotificationAsModified(e, annot);
-    return true;
+    return UpdateAnnot(annot, [valueZ](fz_context* ctx, pdf_annot* a) {
+        pdf_set_annot_contents(ctx, a, len(valueZ) == 0 ? "" : valueZ.s);
+    });
 }
 
 void DeleteAnnotation(Annotation* annot) {
@@ -806,26 +817,14 @@ Str IconName(Annotation* annot) {
 }
 
 void SetIconName(Annotation* annot, Str iconName) {
-    if (!AnnotationIsLive(annot)) {
-        return;
-    }
-    EngineMupdf* e = annot->engine;
     Str curr = IconName(annot);
     if (str::Eq(curr, iconName)) {
         return;
     }
     TempStr nameZ = str::DupTemp(iconName);
-    {
-        AnnotAccess access(annot);
-        fz_try(access.ctx) {
-            pdf_set_annot_icon_name(access.ctx, access.annot, len(nameZ) == 0 ? "" : nameZ.s);
-            pdf_update_annot(access.ctx, access.annot);
-        }
-        fz_catch(access.ctx) {
-            fz_report_error(access.ctx);
-        }
-    }
-    MarkNotificationAsModified(e, annot);
+    UpdateAnnot(annot, [nameZ](fz_context* ctx, pdf_annot* a) {
+        pdf_set_annot_icon_name(ctx, a, len(nameZ) == 0 ? "" : nameZ.s);
+    });
 }
 
 static i64 FileTimeToUnixSeconds(FILETIME ft) {
@@ -958,39 +957,14 @@ bool SetEmbeddedFileFromPath(Annotation* annot, Str path) {
 }
 
 void SetLineEndStyles(Annotation* annot, int end) {
-    if (!AnnotationIsLive(annot)) {
-        return;
-    }
-    EngineMupdf* e = annot->engine;
-    {
-        AnnotAccess access(annot);
-        fz_try(access.ctx) {
-            pdf_set_annot_line_end_style(access.ctx, access.annot, (pdf_line_ending)end);
-            pdf_update_annot(access.ctx, access.annot);
-        }
-        fz_catch(access.ctx) {
-            fz_report_error(access.ctx);
-        }
-    }
-    MarkNotificationAsModified(e, annot);
+    UpdateAnnot(annot,
+                [end](fz_context* ctx, pdf_annot* a) { pdf_set_annot_line_end_style(ctx, a, (pdf_line_ending)end); });
 }
 
 void SetLineStartStyles(Annotation* annot, int start) {
-    if (!AnnotationIsLive(annot)) {
-        return;
-    }
-    EngineMupdf* e = annot->engine;
-    {
-        AnnotAccess access(annot);
-        fz_try(access.ctx) {
-            pdf_set_annot_line_start_style(access.ctx, access.annot, (pdf_line_ending)start);
-            pdf_update_annot(access.ctx, access.annot);
-        }
-        fz_catch(access.ctx) {
-            fz_report_error(access.ctx);
-        }
-    }
-    MarkNotificationAsModified(e, annot);
+    UpdateAnnot(annot, [start](fz_context* ctx, pdf_annot* a) {
+        pdf_set_annot_line_start_style(ctx, a, (pdf_line_ending)start);
+    });
 }
 
 static void PdfColorToFloat(PdfColor c, float rgb[3]) {
@@ -1370,21 +1344,11 @@ int FreeTextFontStyle(Annotation* annot) {
 }
 
 void SetFreeTextFont(Annotation* annot, Str family, int style) {
-    if (!AnnotationIsLive(annot) || Type(annot) != AnnotationType::FreeText || len(family) == 0) {
+    if (Type(annot) != AnnotationType::FreeText || len(family) == 0) {
         return;
     }
-    EngineMupdf* e = annot->engine;
-    {
-        AnnotAccess access(annot);
-        fz_try(access.ctx) {
-            WriteFreeTextFontLocked(access.ctx, access.annot, family, style);
-            pdf_update_annot(access.ctx, access.annot);
-        }
-        fz_catch(access.ctx) {
-            fz_report_error(access.ctx);
-        }
-    }
-    MarkNotificationAsModified(e, annot);
+    UpdateAnnot(annot,
+                [family, style](fz_context* ctx, pdf_annot* a) { WriteFreeTextFontLocked(ctx, a, family, style); });
 }
 
 struct DefaultAppearance {
@@ -1404,39 +1368,27 @@ static DefaultAppearance ReadDefaultAppearance(Annotation* annot) {
 }
 
 static void SetDefaultAppearance(Annotation* annot, const int* textSize, const PdfColor* textColor) {
-    if (!AnnotationIsLive(annot)) {
-        return;
-    }
-    EngineMupdf* e = annot->engine;
-    {
-        AnnotAccess access(annot);
+    UpdateAnnot(annot, [textSize, textColor](fz_context* ctx, pdf_annot* a) {
         const char* fontNameZ = nullptr;
         float size = 0;
         int n = 0;
         float color[4]{};
         Str family;
         int style = 0;
-        fz_try(access.ctx) {
-            ReadFreeTextFontLocked(access.ctx, access.annot, family, style);
-            pdf_annot_default_appearance(access.ctx, access.annot, &fontNameZ, &size, &n, color);
-            if (textSize) {
-                size = (float)*textSize;
-            }
-            if (textColor) {
-                PdfColorToFloat(*textColor, color);
-                n = 3;
-            }
-            pdf_set_annot_default_appearance(access.ctx, access.annot, fontNameZ, size, n, color);
-            if (IsCustomFreeTextFont(family, style)) {
-                WriteFreeTextFontLocked(access.ctx, access.annot, family, style);
-            }
-            pdf_update_annot(access.ctx, access.annot);
+        ReadFreeTextFontLocked(ctx, a, family, style);
+        pdf_annot_default_appearance(ctx, a, &fontNameZ, &size, &n, color);
+        if (textSize) {
+            size = (float)*textSize;
         }
-        fz_catch(access.ctx) {
-            fz_report_error(access.ctx);
+        if (textColor) {
+            PdfColorToFloat(*textColor, color);
+            n = 3;
         }
-    }
-    MarkNotificationAsModified(e, annot);
+        pdf_set_annot_default_appearance(ctx, a, fontNameZ, size, n, color);
+        if (IsCustomFreeTextFont(family, style)) {
+            WriteFreeTextFontLocked(ctx, a, family, style);
+        }
+    });
 }
 
 int DefaultAppearanceTextSize(Annotation* annot) {
@@ -1729,22 +1681,8 @@ int BorderWidth(Annotation* annot) {
 
 void SetBorderWidth(Annotation* annot, int newWidth) {
     ReportIf(!annot);
-    if (!AnnotationIsLive(annot)) {
-        return;
-    }
-    EngineMupdf* e = annot->engine;
-    {
-        AnnotAccess access(annot);
-        fz_try(access.ctx) {
-            pdf_set_annot_border_width(access.ctx, access.annot, (float)newWidth);
-            pdf_update_annot(access.ctx, access.annot);
-        }
-        fz_catch(access.ctx) {
-            fz_report_error(access.ctx);
-            logf("SetBorderWidth: SetBorderWidth() or pdf_update_annot() failed\n");
-        }
-    }
-    MarkNotificationAsModified(e, annot);
+    UpdateAnnot(annot,
+                [newWidth](fz_context* ctx, pdf_annot* a) { pdf_set_annot_border_width(ctx, a, (float)newWidth); });
 }
 
 int Opacity(Annotation* annot) {
@@ -1752,27 +1690,10 @@ int Opacity(Annotation* annot) {
 }
 
 void SetOpacity(Annotation* annot, int newOpacity) {
-    if (!AnnotationIsLive(annot)) {
-        return;
-    }
-    EngineMupdf* e = annot->engine;
-    {
-        AnnotAccess access(annot);
-        ReportIf(newOpacity < 0);
-        ReportIf(newOpacity > 255);
-        newOpacity = setMinMax(newOpacity, 0, 255);
-        float fopacity = (float)newOpacity / 255.f;
-
-        fz_try(access.ctx) {
-            pdf_set_annot_opacity(access.ctx, access.annot, fopacity);
-            pdf_update_annot(access.ctx, access.annot);
-        }
-        fz_catch(access.ctx) {
-            fz_report_error(access.ctx);
-            logf("SetOpacity: pdf_set_annot_opacity() or pdf_update_annot() failed\n");
-        }
-    }
-    MarkNotificationAsModified(e, annot);
+    ReportIf(newOpacity < 0);
+    ReportIf(newOpacity > 255);
+    float opacity = (float)setMinMax(newOpacity, 0, 255) / 255.f;
+    UpdateAnnot(annot, [opacity](fz_context* ctx, pdf_annot* a) { pdf_set_annot_opacity(ctx, a, opacity); });
 }
 
 static Str GetUserTemp() {
