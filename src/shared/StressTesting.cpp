@@ -91,8 +91,7 @@ static bool IsFullRange(Vec<PageRange>& ranges) {
         return false;
     }
     auto&& range = ranges[0];
-    bool isFull = range.start == 1 && range.end == INT_MAX;
-    return isFull;
+    return range.start == 1 && range.end == INT_MAX;
 }
 
 static void BenchLoadRender(EngineBase* engine, int pagenum) {
@@ -375,8 +374,7 @@ struct FilesProvider : TestFileProvider {
         if (provided >= len(files)) {
             return {};
         }
-        TempStr res = files[provided++];
-        return res;
+        return files[provided++];
     }
 
     void Restart() override { provided = 0; }
@@ -491,8 +489,7 @@ T RemoveRandomElementFromVec(Vec<T>& v) {
     auto n = len(v);
     ReportIf(n <= 0);
     int idx = rand() % n;
-    int res = VecPopAt(v, idx);
-    return res;
+    return VecPopAt(v, idx);
 }
 
 static void LimitPagesToRender(Vec<int>& pages, int maxPages) {

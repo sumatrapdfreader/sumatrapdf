@@ -970,8 +970,7 @@ IPageElement* EngineImages::GetElementAtPos(int pageNo, PointF pt) {
     if (len(els) == 0) {
         return nullptr;
     }
-    IPageElement* el = els[0];
-    return el;
+    return els[0];
 }
 
 RenderedBitmap* EngineImages::GetImageForPageElement(IPageElement* pel) {

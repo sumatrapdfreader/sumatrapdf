@@ -203,8 +203,7 @@ TempStr AppendAccelKeyToMenuStringTemp(TempStr menuStr, int cmdId) {
     for (int i = 0; i < gAccelsCount; i++) {
         const Accel& a = gAccels[i];
         if (AccelIsForCmd(a, cmdId)) {
-            TempStr res = AppendAccelKeyToMenuStringTemp(menuStr, a.sc);
-            return res;
+            return AppendAccelKeyToMenuStringTemp(menuStr, a.sc);
         }
     }
     return menuStr;

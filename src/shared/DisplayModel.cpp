@@ -1073,8 +1073,7 @@ PageInfo* DisplayModel::GetPageInfo(int pageNo) const {
         return nullptr;
     }
     ReportIf(!pagesInfo);
-    PageInfo* pi = &(pagesInfo[pageNo - 1]);
-    return pi;
+    return &pagesInfo[pageNo - 1];
 }
 
 static DocumentLayoutMargin ToDocumentLayoutMargin(WindowMargin margin) {

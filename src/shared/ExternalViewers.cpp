@@ -620,8 +620,7 @@ bool PathMatchFilter(Str path, Str filter) {
     if (filterMatchesEverything(filter)) {
         return true;
     }
-    bool matches = path::Match(path, filter);
-    return matches;
+    return path::Match(path, filter);
 }
 
 // TODO: find a better file for this?

@@ -1152,8 +1152,7 @@ static PdfColor GetAnnotColor(Annotation* annot, AnnotColorReader readColor) {
     if (n == -1) {
         return 0;
     }
-    PdfColor res = PdfColorFromFloat(access.ctx, n, color);
-    return res;
+    return PdfColorFromFloat(access.ctx, n, color);
 }
 
 PdfColor GetColor(Annotation* annot) {
@@ -1890,8 +1889,7 @@ int Opacity(Annotation* annot) {
         fz_report_error(access.ctx);
         logf("Opacity: pdf_annot_opacity() failed\n");
     }
-    int res = (int)(fopacity * 255.f);
-    return res;
+    return (int)(fopacity * 255.f);
 }
 
 void SetOpacity(Annotation* annot, int newOpacity) {

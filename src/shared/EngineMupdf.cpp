@@ -644,8 +644,7 @@ struct LinkRectList {
 };
 
 fz_rect ToFzRect(RectF rect) {
-    fz_rect result = {rect.x, rect.y, rect.x + rect.dx, rect.y + rect.dy};
-    return result;
+    return {rect.x, rect.y, rect.x + rect.dx, rect.y + rect.dy};
 }
 
 RectF ToRectF(fz_rect rect) {
@@ -8010,8 +8009,7 @@ TempStr EngineMupdf::GetPropertyTemp(DocProp prop) {
     }
     TempWStr ws = PdfToWStrTemp(ctx, obj);
     PdfCleanStringInPlace(ws);
-    TempStr res = ToUtf8Temp(ws);
-    return res;
+    return ToUtf8Temp(ws);
 };
 
 static TempStr LookupMetadataTemp(fz_context* ctx, fz_document* doc, Str key) {
@@ -8621,8 +8619,7 @@ bool EngineMupdf::SaveFileAs(Str dstPath) {
     if (len(srcPath) == 0) {
         return false;
     }
-    bool ok = file::Copy(dstPath, srcPath, false);
-    return ok;
+    return file::Copy(dstPath, srcPath, false);
 }
 
 extern const pdf_write_options gPdfDefaultWriteOptions = [] {
@@ -10132,8 +10129,7 @@ Str EngineMupdfLoadAttachment(EngineBase* engine, int attachmentNo) {
         return {};
     }
 
-    Str res = PdfLoadAttachment(epdf->Ctx(), epdf->pdfdoc, attachmentNo);
-    return res;
+    return PdfLoadAttachment(epdf->Ctx(), epdf->pdfdoc, attachmentNo);
 }
 
 Str EngineMupdfLoadAnnotAttachment(EngineBase* engine, int objNum) {

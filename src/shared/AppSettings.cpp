@@ -1823,9 +1823,7 @@ Str SerializeSettings(Settings* prefs, Str prevData) {
         return serialized;
     }
 
-    Str serialized = SerializeStruct(&gSettingsInfo, prefs, prevData);
-
-    return serialized;
+    return SerializeStruct(&gSettingsInfo, prefs, prevData);
 }
 
 void DeleteSettings(Settings* gp) {

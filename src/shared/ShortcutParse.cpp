@@ -453,8 +453,7 @@ TempStr AppendAccelKeyToMenuStringTemp(TempStr menuStr, const KeyShortcut& sc) {
     ReportIf(true);
     return menuStr;
 Exit:
-    TempStr res = str::JoinTemp(menuStr, ToStr(str));
-    return res;
+    return str::JoinTemp(menuStr, ToStr(str));
 }
 
 static const struct {
