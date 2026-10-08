@@ -77,9 +77,7 @@ int PlatformTextRender::StringLenForWidth(Str s, float dx, float sWidth) {
     return 0;
 }
 
-// guesses sizes from the font size instead of asking the platform, and draws
-// nothing. Used by tests and as the fallback where there is no platform text
-// engine
+// Guesses sizes and draws nothing when there is no platform text engine.
 struct StubTextRender : PlatformTextRender {
     PlatformFont* currFont = nullptr;
 
@@ -110,22 +108,19 @@ struct StubTextRender : PlatformTextRender {
 
 #if OS_WIN
 // defined in the OS_WIN section below
-PlatformTextRender* CreateNativeTextRender(PlatformTextMeasureMethod method);
+PlatformTextRender* CreateNativeTextRender();
 #elif OS_LINUX
-PlatformTextRender* CreateNativeTextRender(PlatformTextMeasureMethod method);
+PlatformTextRender* CreateNativeTextRender();
 #elif OS_DARWIN
-PlatformTextRender* CreateNativeTextRender(PlatformTextMeasureMethod method);
+PlatformTextRender* CreateNativeTextRender();
 #endif
 
-PlatformTextRender* CreatePlatformTextRender(PlatformTextMeasureMethod method) {
+PlatformTextRender* CreatePlatformTextRender() {
 #if OS_WIN || OS_LINUX || OS_DARWIN
-    if (method != PlatformTextMeasureMethod::Stub) {
-        return CreateNativeTextRender(method);
-    }
+    return CreateNativeTextRender();
 #else
-    (void)method;
-#endif
     return new StubTextRender();
+#endif
 }
 
 #if OS_LINUX
@@ -194,7 +189,7 @@ struct PangoTextRender : PlatformTextRender {
     }
 };
 
-PlatformTextRender* CreateNativeTextRender(PlatformTextMeasureMethod) {
+PlatformTextRender* CreateNativeTextRender() {
     return new PangoTextRender(nullptr);
 }
 
@@ -264,7 +259,7 @@ struct CoreTextRender : PlatformTextRender {
     }
 };
 
-PlatformTextRender* CreateNativeTextRender(PlatformTextMeasureMethod) {
+PlatformTextRender* CreateNativeTextRender() {
     return new CoreTextRender(nullptr);
 }
 
@@ -426,7 +421,7 @@ void PlatformFontDestroy() {
 
 // --- the renderers
 
-// what all three implementations have in common: the Graphics they draw to (or,
+// What both implementations have in common: the Graphics they draw to (or,
 // when only measuring, the cached one they borrowed), the current font and the
 // colors. Line spacing comes from the font, so it's the same everywhere too
 struct WinTextRender : PlatformTextRender {
@@ -573,7 +568,6 @@ void TextRenderGdi::Draw(Str s, const RectF bb, bool isRtl) {
 
 // draws with gdi+, straight to the Graphics
 struct TextRenderGdiplus : WinTextRender {
-    TextMeasureAlgorithm measureAlgo = nullptr;
     Gdiplus::Brush* textColorBrush = nullptr;
 
     ~TextRenderGdiplus() override { delete textColorBrush; }
@@ -597,7 +591,7 @@ RectF TextRenderGdiplus::Measure(Str s) {
         ReportIf(true);
         return {};
     }
-    return MeasureText(gfx, currFont->gdiFont, ToWStrTemp(s), measureAlgo);
+    return MeasureTextAccurate(gfx, currFont->gdiFont, ToWStrTemp(s));
 }
 
 void TextRenderGdiplus::SetTextColor(Color col) {
@@ -626,88 +620,6 @@ void TextRenderGdiplus::Draw(Str s, const RectF bb, bool isRtl) {
     }
 }
 
-// Note: this is not meant to be used, just exists so that I can see perf
-// compared to the other implementations. Draws with gdi into a bitmap of its
-// own, which Unlock() blits onto the Graphics
-struct TextRenderHdc : WinTextRender {
-    BITMAPINFO bmi{};
-
-    HDC hdc = nullptr;
-    HBITMAP bmp = nullptr;
-    void* bmpData = nullptr;
-
-    ~TextRenderHdc() override;
-
-    void SetFont(PlatformFont* font) override;
-    RectF Measure(Str s) override;
-    void SetTextColor(Color col) override;
-    void SetTextBgColor(Color col) override;
-    void Lock() override;
-    void Unlock() override;
-    void Draw(Str s, RectF bb, bool isRtl) override;
-};
-
-TextRenderHdc::~TextRenderHdc() {
-    DeleteObject(bmp);
-    DeleteDC(hdc);
-}
-
-void TextRenderHdc::SetFont(PlatformFont* font) {
-    ReportIf(!hdc);
-    // I'm not sure how expensive SelectFont() is so avoid it just in case
-    if (currFont == font) {
-        return;
-    }
-    currFont = font;
-    SelectFont(hdc, font->GetHFont());
-}
-
-RectF TextRenderHdc::Measure(Str s) {
-    ReportIf(!currFont);
-    ReportIf(!hdc);
-    Size size = HdcGetTextExtentPoint32(hdc, s);
-    RectF res(0.0f, 0.0f, (float)size.dx, (float)size.dy);
-    return res;
-}
-
-void TextRenderHdc::SetTextColor(Color col) {
-    ReportIf(!hdc);
-    if (textColor == col) {
-        return;
-    }
-    textColor = col;
-    ::SetTextColor(hdc, col);
-}
-
-void TextRenderHdc::SetTextBgColor(Color col) {
-    ReportIf(!hdc);
-    if (textBgColor == col) {
-        return;
-    }
-    textBgColor = col;
-    ::SetBkColor(hdc, textBgColor);
-}
-
-void TextRenderHdc::Lock() {
-    int dx = bmi.bmiHeader.biWidth;
-    int dy = bmi.bmiHeader.biHeight;
-    ZeroMemory(bmpData, (size_t)dx * dy * 4);
-}
-
-void TextRenderHdc::Unlock() {
-    Bitmap* b = Bitmap::FromBITMAPINFO(&bmi, bmpData);
-    gfx->DrawImage(b, 0, 0);
-    delete b;
-}
-
-void TextRenderHdc::Draw(Str s, const RectF bb, bool /* isRtl */) {
-    ReportIf(!hdc);
-    int x = (int)bb.x;
-    int y = (int)bb.y;
-    uint opts = ETO_OPAQUE;
-    HdcExTextOut(hdc, Point(x, y), opts, Rect(), s);
-}
-
 // --- creating them
 
 static TextRenderGdi* NewTextRenderGdi(Graphics* gfx) {
@@ -720,80 +632,23 @@ static TextRenderGdi* NewTextRenderGdi(Graphics* gfx) {
     return res;
 }
 
-static TextRenderGdiplus* NewTextRenderGdiplus(Graphics* gfx, TextMeasureAlgorithm measureAlgo) {
+static TextRenderGdiplus* NewTextRenderGdiplus(Graphics* gfx) {
     TextRenderGdiplus* res = new TextRenderGdiplus();
     res->gfx = gfx;
-    res->measureAlgo = measureAlgo ? measureAlgo : MeasureTextAccurate;
-    // default to red to make mistakes stand out
-    res->SetTextColor(kColRed);
-    return res;
-}
-
-static TextRenderHdc* NewTextRenderHdc(Graphics* gfx, int dx, int dy) {
-    TextRenderHdc* res = new TextRenderHdc();
-    res->gfx = gfx;
-
-    HDC hdc = gfx->GetHDC();
-    res->hdc = CreateCompatibleDC(hdc);
-    gfx->ReleaseHDC(hdc);
-
-    res->bmi.bmiHeader.biSize = sizeof(res->bmi.bmiHeader);
-    res->bmi.bmiHeader.biWidth = dx;
-    res->bmi.bmiHeader.biHeight = dy;
-    res->bmi.bmiHeader.biPlanes = 1;
-    res->bmi.bmiHeader.biBitCount = 32;
-    res->bmi.bmiHeader.biCompression = BI_RGB;
-    res->bmi.bmiHeader.biSizeImage = dx * dy * 4; // doesn't seem necessary?
-
-    res->bmp = CreateDIBSection(res->hdc, &res->bmi, DIB_RGB_COLORS, &res->bmpData, nullptr, 0);
-    if (!res->bmp) {
-        delete res;
-        return nullptr;
-    }
-
-    if (res->bmpData) {
-        size_t n = (size_t)dx * (size_t)dy * 4;
-        ZeroMemory(res->bmpData, n);
-    }
-    SelectObject(res->hdc, res->bmp);
-
     // default to red to make mistakes stand out
     res->SetTextColor(kColRed);
     return res;
 }
 
 PlatformTextRender* CreateGdiplusTextRender(Graphics* gfx) {
-    return NewTextRenderGdiplus(gfx, nullptr);
+    return NewTextRenderGdiplus(gfx);
 }
 
 // called by CreatePlatformTextRender() in PlatformText.cpp. That caller only
 // measures, so the Graphics comes from the per-thread cache
-PlatformTextRender* CreateNativeTextRender(PlatformTextMeasureMethod method) {
+PlatformTextRender* CreateNativeTextRender() {
     Graphics* gfx = AllocGraphicsForMeasureText();
-    // only matters for the hdc renderer, which is not meant to be used
-    constexpr int kDx = 10;
-    constexpr int kDy = 10;
-    WinTextRender* res = nullptr;
-    switch (method) {
-        case PlatformTextMeasureMethod::Gdiplus:
-            res = NewTextRenderGdiplus(gfx, nullptr);
-            break;
-        case PlatformTextMeasureMethod::GdiplusQuick:
-            res = NewTextRenderGdiplus(gfx, MeasureTextQuick);
-            break;
-        case PlatformTextMeasureMethod::Gdi:
-            res = NewTextRenderGdi(gfx);
-            break;
-        case PlatformTextMeasureMethod::Hdc:
-            res = NewTextRenderHdc(gfx, kDx, kDy);
-            break;
-        case PlatformTextMeasureMethod::Stub:
-            break;
-    }
-    if (!res) {
-        ReportIf(true);
-        res = NewTextRenderGdiplus(gfx, nullptr);
-    }
+    WinTextRender* res = NewTextRenderGdi(gfx);
     res->ownsGfx = true;
     return res;
 }

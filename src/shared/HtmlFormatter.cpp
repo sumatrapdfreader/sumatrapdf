@@ -113,7 +113,7 @@ HtmlFormatter::HtmlFormatter(HtmlFormatterArgs* args)
     htmlParser->SetCurrPosOff(currReparseIdx);
     ReportIf(!ValidReparseIdx(currReparseIdx, htmlParser));
 
-    textMeasure = CreatePlatformTextRender(PlatformTextMeasureMethod::Gdi);
+    textMeasure = CreatePlatformTextRender();
     defaultFontName = str::Dup(ToUtf8Temp(args->GetFontName()));
     defaultFontSize = args->fontSize;
     overrideFontName = args->overrideFontName;

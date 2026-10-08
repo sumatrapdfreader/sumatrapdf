@@ -7,14 +7,6 @@
 
 // PlatformFont lives in gui/PlatformFont.h; include it before this header
 
-enum class PlatformTextMeasureMethod {
-    Gdiplus,      // uses MeasureTextAccurate, which is slower than MeasureTextQuick
-    GdiplusQuick, // uses MeasureTextQuick
-    Gdi,
-    Hdc,
-    Stub,
-};
-
 struct PlatformTextRender {
     virtual void SetFont(PlatformFont* font) = 0;
     virtual float GetCurrFontLineSpacing() = 0;
@@ -49,7 +41,7 @@ struct PlatformTextRender {
 
 // measures (and draws) with resources of its own, created on demand, so there
 // is nothing to initialize first
-PlatformTextRender* CreatePlatformTextRender(PlatformTextMeasureMethod method);
+PlatformTextRender* CreatePlatformTextRender();
 
 #if OS_WIN
 // draws into a Graphics owned by the caller
