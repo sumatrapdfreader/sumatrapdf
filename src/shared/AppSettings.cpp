@@ -288,6 +288,13 @@ static void setMin(int& i, int minVal) {
     i = std::max(i, minVal);
 }
 
+static void AddStringArgIfSet(CommandArg** args, Str name, Str value) {
+    if (str::IsEmptyOrWhiteSpace(value)) {
+        return;
+    }
+    InsertArg(args, NewStringArg(name, value));
+}
+
 /* for every selection handler defined by user in advanced settings, create
     a command that will be inserted into a menu item */
 static void CreateSelectionHandlerCommands() {
@@ -316,23 +323,15 @@ static void CreateSelectionHandlerCommands() {
         // a handler with just URL/Name/Key behaves exactly as it did before
         Str definition = hasExe ? sh->exe : sh->url;
         CommandArg* args = hasExe ? NewStringArg(kCmdArgExe, sh->exe) : NewStringArg(kCmdArgURL, sh->url);
-        auto addArg = [&args](Str name, Str val) {
-            if (str::IsEmptyOrWhiteSpace(val)) {
-                return;
-            }
-            CommandArg* a = NewStringArg(name, val);
-            a->next = args;
-            args = a;
-        };
         if (!hasExe) {
-            addArg(kCmdArgMethod, sh->method);
-            addArg(kCmdArgBody, sh->body);
-            addArg(kCmdArgContentType, sh->contentType);
-            addArg(kCmdArgHeaders, sh->headers);
+            AddStringArgIfSet(&args, kCmdArgMethod, sh->method);
+            AddStringArgIfSet(&args, kCmdArgBody, sh->body);
+            AddStringArgIfSet(&args, kCmdArgContentType, sh->contentType);
+            AddStringArgIfSet(&args, kCmdArgHeaders, sh->headers);
         }
-        addArg(kCmdArgSelectToolbar, sh->selectToolbarNameOrSvg);
-        addArg(kCmdArgToolbarText, sh->toolbarText);
-        addArg(kCmdArgToolbarSvgIcon, sh->toolbarSvgIcon);
+        AddStringArgIfSet(&args, kCmdArgSelectToolbar, sh->selectToolbarNameOrSvg);
+        AddStringArgIfSet(&args, kCmdArgToolbarText, sh->toolbarText);
+        AddStringArgIfSet(&args, kCmdArgToolbarSvgIcon, sh->toolbarSvgIcon);
         CreateCustomCommand(definition, CmdSelectionHandler, args, sh->name, sh->key);
     }
 }
@@ -356,18 +355,9 @@ static void CreateExternalViewersCommands() {
             continue;
         }
         CommandArg* args = NewStringArg(kCmdArgCommandLine, ev->commandLine);
-        if (!str::IsEmptyOrWhiteSpace(ev->filter)) {
-            auto* arg = NewStringArg(kCmdArgFilter, ev->filter);
-            InsertArg(&args, arg);
-        }
-        if (!str::IsEmptyOrWhiteSpace(ev->toolbarText)) {
-            auto* arg = NewStringArg(kCmdArgToolbarText, ev->toolbarText);
-            InsertArg(&args, arg);
-        }
-        if (!str::IsEmptyOrWhiteSpace(ev->toolbarSvgIcon)) {
-            auto* arg = NewStringArg(kCmdArgToolbarSvgIcon, ev->toolbarSvgIcon);
-            InsertArg(&args, arg);
-        }
+        AddStringArgIfSet(&args, kCmdArgFilter, ev->filter);
+        AddStringArgIfSet(&args, kCmdArgToolbarText, ev->toolbarText);
+        AddStringArgIfSet(&args, kCmdArgToolbarSvgIcon, ev->toolbarSvgIcon);
         CreateCustomCommand(StrL(""), CmdViewWithExternalViewer, args, ev->name, ev->key);
     }
 }
