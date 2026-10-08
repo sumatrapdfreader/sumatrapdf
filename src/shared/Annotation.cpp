@@ -759,21 +759,19 @@ bool SetContents(Annotation* annot, Str sv) {
         return false;
     }
     EngineMupdf* e = annot->engine;
-    auto* a = annot->pdfannot;
     Str currValue = Contents(annot);
     if (str::Eq(sv, currValue)) {
         return false;
     }
     TempStr valueZ = str::DupTemp(sv);
     {
-        auto* ctx = e->Ctx();
-        ScopedRecursiveMutex cs(&e->docLock);
-        fz_try(ctx) {
-            pdf_set_annot_contents(ctx, a, len(valueZ) == 0 ? "" : valueZ.s);
-            pdf_update_annot(ctx, a);
+        AnnotAccess access(annot);
+        fz_try(access.ctx) {
+            pdf_set_annot_contents(access.ctx, access.annot, len(valueZ) == 0 ? "" : valueZ.s);
+            pdf_update_annot(access.ctx, access.annot);
         }
-        fz_catch(ctx) {
-            fz_report_error(ctx);
+        fz_catch(access.ctx) {
+            fz_report_error(access.ctx);
         }
     }
     MarkNotificationAsModified(e, annot);
@@ -873,15 +871,12 @@ void SetModificationDateToNow(Annotation* annot) {
     if (!AnnotationIsLive(annot)) {
         return;
     }
-    EngineMupdf* e = annot->engine;
-    auto* a = annot->pdfannot;
-    auto* ctx = e->Ctx();
-    ScopedRecursiveMutex cs(&e->docLock);
-    fz_try(ctx) {
-        pdf_set_annot_modification_date(ctx, a, time(nullptr));
+    AnnotAccess access(annot);
+    fz_try(access.ctx) {
+        pdf_set_annot_modification_date(access.ctx, access.annot, time(nullptr));
     }
-    fz_catch(ctx) {
-        fz_report_error(ctx);
+    fz_catch(access.ctx) {
+        fz_report_error(access.ctx);
     }
 }
 
@@ -910,21 +905,19 @@ void SetIconName(Annotation* annot, Str iconName) {
         return;
     }
     EngineMupdf* e = annot->engine;
-    auto* a = annot->pdfannot;
     Str curr = IconName(annot);
     if (str::Eq(curr, iconName)) {
         return;
     }
     TempStr nameZ = str::DupTemp(iconName);
     {
-        auto* ctx = e->Ctx();
-        ScopedRecursiveMutex cs(&e->docLock);
-        fz_try(ctx) {
-            pdf_set_annot_icon_name(ctx, a, len(nameZ) == 0 ? "" : nameZ.s);
-            pdf_update_annot(ctx, a);
+        AnnotAccess access(annot);
+        fz_try(access.ctx) {
+            pdf_set_annot_icon_name(access.ctx, access.annot, len(nameZ) == 0 ? "" : nameZ.s);
+            pdf_update_annot(access.ctx, access.annot);
         }
-        fz_catch(ctx) {
-            fz_report_error(ctx);
+        fz_catch(access.ctx) {
+            fz_report_error(access.ctx);
         }
     }
     MarkNotificationAsModified(e, annot);
@@ -1064,16 +1057,14 @@ void SetLineEndStyles(Annotation* annot, int end) {
         return;
     }
     EngineMupdf* e = annot->engine;
-    auto* a = annot->pdfannot;
     {
-        auto* ctx = e->Ctx();
-        ScopedRecursiveMutex cs(&e->docLock);
-        fz_try(ctx) {
-            pdf_set_annot_line_end_style(ctx, a, (pdf_line_ending)end);
-            pdf_update_annot(ctx, a);
+        AnnotAccess access(annot);
+        fz_try(access.ctx) {
+            pdf_set_annot_line_end_style(access.ctx, access.annot, (pdf_line_ending)end);
+            pdf_update_annot(access.ctx, access.annot);
         }
-        fz_catch(ctx) {
-            fz_report_error(ctx);
+        fz_catch(access.ctx) {
+            fz_report_error(access.ctx);
         }
     }
     MarkNotificationAsModified(e, annot);
@@ -1084,16 +1075,14 @@ void SetLineStartStyles(Annotation* annot, int start) {
         return;
     }
     EngineMupdf* e = annot->engine;
-    auto* a = annot->pdfannot;
     {
-        auto* ctx = e->Ctx();
-        ScopedRecursiveMutex cs(&e->docLock);
-        fz_try(ctx) {
-            pdf_set_annot_line_start_style(ctx, a, (pdf_line_ending)start);
-            pdf_update_annot(ctx, a);
+        AnnotAccess access(annot);
+        fz_try(access.ctx) {
+            pdf_set_annot_line_start_style(access.ctx, access.annot, (pdf_line_ending)start);
+            pdf_update_annot(access.ctx, access.annot);
         }
-        fz_catch(ctx) {
-            fz_report_error(ctx);
+        fz_catch(access.ctx) {
+            fz_report_error(access.ctx);
         }
     }
     MarkNotificationAsModified(e, annot);
@@ -1891,16 +1880,14 @@ void SetBorderWidth(Annotation* annot, int newWidth) {
         return;
     }
     EngineMupdf* e = annot->engine;
-    auto* a = annot->pdfannot;
     {
-        auto* ctx = e->Ctx();
-        ScopedRecursiveMutex cs(&e->docLock);
-        fz_try(ctx) {
-            pdf_set_annot_border_width(ctx, a, (float)newWidth);
-            pdf_update_annot(ctx, a);
+        AnnotAccess access(annot);
+        fz_try(access.ctx) {
+            pdf_set_annot_border_width(access.ctx, access.annot, (float)newWidth);
+            pdf_update_annot(access.ctx, access.annot);
         }
-        fz_catch(ctx) {
-            fz_report_error(ctx);
+        fz_catch(access.ctx) {
+            fz_report_error(access.ctx);
             logf("SetBorderWidth: SetBorderWidth() or pdf_update_annot() failed\n");
         }
     }
@@ -1929,21 +1916,19 @@ void SetOpacity(Annotation* annot, int newOpacity) {
         return;
     }
     EngineMupdf* e = annot->engine;
-    auto* a = annot->pdfannot;
     {
-        auto* ctx = e->Ctx();
-        ScopedRecursiveMutex cs(&e->docLock);
+        AnnotAccess access(annot);
         ReportIf(newOpacity < 0);
         ReportIf(newOpacity > 255);
         newOpacity = setMinMax(newOpacity, 0, 255);
         float fopacity = (float)newOpacity / 255.f;
 
-        fz_try(ctx) {
-            pdf_set_annot_opacity(ctx, a, fopacity);
-            pdf_update_annot(ctx, a);
+        fz_try(access.ctx) {
+            pdf_set_annot_opacity(access.ctx, access.annot, fopacity);
+            pdf_update_annot(access.ctx, access.annot);
         }
-        fz_catch(ctx) {
-            fz_report_error(ctx);
+        fz_catch(access.ctx) {
+            fz_report_error(access.ctx);
             logf("SetOpacity: pdf_set_annot_opacity() or pdf_update_annot() failed\n");
         }
     }
