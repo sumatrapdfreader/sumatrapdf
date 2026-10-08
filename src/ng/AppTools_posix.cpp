@@ -53,7 +53,7 @@ void SetAppDataDir(Str dir) {
 }
 
 // $XDG_CONFIG_HOME/SumatraPDF on Linux, ~/Library/Application Support/SumatraPDF
-// on mac, /settings on wasm (IDBFS)
+// on mac, /settings on wasm (OPFS, mirrored in MEMFS)
 static TempStr DefaultAppDataDirTemp() {
 #if OS_WASM
     return str::DupTemp(StrL("/settings"));

@@ -4,7 +4,7 @@
 // ng: what a browser tab offers in place of the desktop's file services.
 // gpui's wasm backend has no PromptForPathTemp and no downloads, so these are
 // ours (src/gui/WasmBridge_wasm.cpp): a <input type=file> that lands the bytes
-// in IDBFS, blob download / sharing, and IndexedDB write-back.
+// in MEMFS, blob download / sharing, and OPFS write-back.
 
 #if OS_WASM
 
@@ -12,7 +12,7 @@
 // sample documents live
 constexpr const char* kWasmUploadDir = "/uploads";
 constexpr const char* kWasmDocsDir = "/docs";
-// mounted on IndexedDB by src/gui/WasmShell.js; GetAppDataDirTemp() answers it
+// loaded from OPFS by src/gui/WasmShell.js; GetAppDataDirTemp() answers it
 constexpr const char* kWasmSettingsDir = "/settings";
 
 // Opens the browser's file picker. The file is written to kWasmUploadDir and
@@ -32,8 +32,8 @@ bool WasmShareFile(Str path);
 // Opens the browser print dialog for a PDF in the virtual file system.
 bool WasmPrintPdf(Str path);
 
-// Schedules a write-back of kWasmSettingsDir to IndexedDB. Coalesces: many
-// calls in a row cost one sync.
+// Schedules a write-back of /uploads and /settings to OPFS. Coalesces: many
+// calls in a row cost one sync. Unchanged files are not rewritten.
 void WasmPersistSettings();
 
 // The page's `?file=` query parameter, a path in MEMFS. It is the browser's

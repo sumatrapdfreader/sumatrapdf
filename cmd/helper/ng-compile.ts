@@ -709,7 +709,7 @@ async function archive(tc: Toolchain, t: Target, dir: string, objs: string[], fa
 
 // ext/gpui/web/shell.html is vendored, so the page we serve is written into
 // the output dir: gpui's shell with src/gui/WasmShell.js spliced in ahead of
-// the module script, which is what mounts IDBFS before main() runs.
+// the module script, which is what loads OPFS into MEMFS before main() runs.
 function wasmShellFile(dir: string): string {
   const shell = readFileSync(join(root, "ext", "gpui", "web", "shell.html"), "utf8");
   const js = readFileSync(join(root, "src", "ng", "gui", "WasmShell.js"), "utf8");
@@ -856,12 +856,12 @@ function linkCmd(
     // by path, so their content goes into the key
     let extraKey = "";
     if (t.kind === "app") {
-      // IDBFS holds the settings directory; the page mounts it before main(),
-      // which is what FS/IDBFS/addRunDependency on Module are for (a page
-      // script is outside the module's scope, where they are plain locals).
+      // OPFS is loaded by the page before main(). FS and the run-dependency
+      // pair have to be on Module: a page script is outside the module's
+      // scope, where they are plain locals.
       // MINIFY_HTML=0: the -O2 minifier drops the script the shell carries
-      ld.push("-sENVIRONMENT=web,worker", "-lidbfs.js", "-sFORCE_FILESYSTEM=1", "-sMINIFY_HTML=0");
-      ld.push("-sEXPORTED_RUNTIME_METHODS=HEAPU8,HEAP32,HEAPF32,FS,IDBFS,addRunDependency,removeRunDependency");
+      ld.push("-sENVIRONMENT=web,worker", "-sFORCE_FILESYSTEM=1", "-sMINIFY_HTML=0");
+      ld.push("-sEXPORTED_RUNTIME_METHODS=HEAPU8,HEAP32,HEAPF32,FS,addRunDependency,removeRunDependency");
       const shell = wasmShellFile(dir);
       ld.push("--shell-file", shell);
       const preload = wasmPreloadArgs(t, fail);

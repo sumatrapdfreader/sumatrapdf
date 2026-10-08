@@ -759,8 +759,8 @@ static bool SaveSettings(bool force) {
         gSettings->lastPrefUpdate = file::GetModificationTime(path);
 #if defined(SUMATRA_NG)
 #if OS_WASM
-        // the settings directory is a MEMFS mount of IndexedDB; a write only
-        // outlives the tab once it is synced back
+        // the settings directory is MEMFS; a write only outlives the tab once
+        // it is copied back to OPFS
         WasmPersistSettings();
 #endif
 #endif

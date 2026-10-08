@@ -227,7 +227,7 @@ void SaveThumbnail(FileState* fs) {
     }
     logf("SaveThumbnail: '%s' -> '%s'\n", fs->filePath, thumbnailPath);
 #if OS_WASM
-    // the cache lives under the app data directory, which is IndexedDB
+    // the cache lives under the app data directory, which is stored in OPFS
     WasmPersistSettings();
 #endif
 }

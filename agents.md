@@ -133,7 +133,7 @@ on first use; other hosts need an installed SDK. The toolchain also checks
 `$EMSDK`, `~/emsdk`, `C:\emsdk`, `/opt/emsdk` and `/usr/local/emsdk`.
 `-wasm -rel -run` serves the app at `http://localhost:8085/`, with GPUI's web
 shell and `src/ng/gui/WasmShell.js`. Sample documents live in MEMFS `/docs`,
-settings in IndexedDB `/settings`; fonts are embedded. Wasm embeds no manual
+settings in OPFS `/settings` (mirrored in MEMFS); fonts are embedded. Wasm embeds no manual
 (help opens the website) and stores the embedded archive uncompressed
 (`MakeLZSA -store`): the web server compresses the `.wasm`. Wasm has no pthreads:
 `StartThread()` runs inline and render loops drain in main-thread slices.

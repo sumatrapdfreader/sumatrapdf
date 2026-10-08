@@ -43,13 +43,18 @@ EM_JS(void, WasmJsPickFile, (const char* dir, int dirLen, char* out, int outCap)
                         done(null);
                         return;
                     }
-                    FS.syncfs(
-                        false, function(err) {
-                            if (err) {
-                                console.error("saving " + path + " to IndexedDB failed", err);
-                            }
-                            done(path);
-                        });
+                    var save = Module.sumatraStorageSave;
+                    if (!save) {
+                        console.error("saving " + path + " to OPFS failed", "storage is not initialized");
+                        done(path);
+                        return;
+                    }
+                    save(function(err) {
+                        if (err) {
+                            console.error("saving " + path + " to OPFS failed", err);
+                        }
+                        done(path);
+                    });
                 },
                 function(e) {
                     console.error("reading the picked file failed", e);
@@ -93,12 +98,16 @@ EM_JS(void, WasmJsPersist, (const char* dir, int dirLen), {
     Module.__persistTimer = setTimeout(
         function() {
             Module.__persistTimer = 0;
-            FS.syncfs(
-                false, function(err) {
-                    if (err) {
-                        console.error("saving " + dirPath + " to IndexedDB failed", err);
-                    }
-                });
+            var save = Module.sumatraStorageSave;
+            if (!save) {
+                console.error("saving " + dirPath + " to OPFS failed", "storage is not initialized");
+                return;
+            }
+            save(function(err) {
+                if (err) {
+                    console.error("saving " + dirPath + " to OPFS failed", err);
+                }
+            });
         },
         500);
 });

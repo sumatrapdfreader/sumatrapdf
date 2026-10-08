@@ -1,9 +1,9 @@
 /* Copyright 2026 the SumatraPDF project authors (see AUTHORS file).
    License: Simplified BSD (see COPYING.BSD) */
 
-// ng: browser file systems do not expose change notifications. Poll MEMFS /
-// IDBFS metadata on the browser event loop so open documents still reload when
-// JavaScript or a synchronized persistent file changes underneath them.
+// ng: browser file systems do not expose change notifications. Poll MEMFS
+// metadata on the browser event loop so open documents still reload when
+// JavaScript or a file copied in from OPFS changes underneath them.
 
 #include "base/Base.h"
 #include "base/File.h"
