@@ -63,6 +63,7 @@ bool IsTrackedPopupOpenInApp(gpui::App* app);
 // so the wrapped element stops that press (gpui::WindowStopPropagation) and
 // the port opens the popup itself; x / y are relative to the wrapped element
 void OpenPopupMenuAt(gpui::Ctx* cx, gpui::Entity<gpui::PopupMenuState> menu, float x, float y);
+bool IsContextClick(gpui::MouseButton button, gpui::Modifiers mods);
 
 // A tooltip asked for from an element's hover listener. gpui hides the
 // window's tooltip right after it ran the hover listeners of an element

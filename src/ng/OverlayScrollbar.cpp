@@ -681,7 +681,7 @@ void ScrollbarView::OnDown(ScrollbarView*, gp::Ctx* cx, const gp::MouseDownEvent
     }
     // the press is the bar's: not the canvas', not gpui's ContextMenu's
     gp::WindowStopPropagation(cx);
-    if (ev->button != gp::MouseButton::Left) {
+    if (IsContextClick(ev->button, ev->modifiers) || ev->button != gp::MouseButton::Left) {
         return;
     }
     int mx = (int)((ev->x - ev->el.x) / sb->k);
@@ -696,7 +696,7 @@ void ScrollbarView::OnDown(ScrollbarView*, gp::Ctx* cx, const gp::MouseDownEvent
 
 void ScrollbarView::OnUp(ScrollbarView*, gp::Ctx* cx, const gp::MouseUpEvent* ev, int64_t arg) {
     OverlayScrollbar* sb = FromArg(arg);
-    if (!sb || ev->button != gp::MouseButton::Right || sb->mode != OverlayScrollbar::Mode::Windows) {
+    if (!sb || !IsContextClick(ev->button, ev->modifiers) || sb->mode != OverlayScrollbar::Mode::Windows) {
         return;
     }
     gp::Entity<gp::PopupMenuState> popup;

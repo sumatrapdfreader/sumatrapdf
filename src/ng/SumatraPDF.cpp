@@ -2171,7 +2171,13 @@ MainWindow* LoadDocument(MainWindow* win, Str path, LoadPrefs prefs, LoadReuse r
 
     if (dm) {
         dm->Relayout(zoomVirtual, rotation);
-        dm->SetScrollState(ss);
+        // canvas not sized yet: the first real layout applies this (orig does the same)
+        if (dm->pendingRelayout) {
+            dm->pendingScroll = ss;
+            dm->hasPendingScroll = true;
+        } else {
+            dm->SetScrollState(ss);
+        }
         if (engine) {
             engine->StartBackgroundChapterLayout();
         }
@@ -4796,9 +4802,9 @@ void CloseWindow(MainWindow* win, bool quitIfLast, bool) {
     AbortPrinting(win);
     UpdateTabFileDisplayStateForTab(win->CurrentTab());
     RememberDefaultWindowPosition(win);
-    // the session snapshot is taken from gWindows, so it has to happen while
-    // this window is still in it (orig saves in DeleteMainWindow's caller)
-    if (!gDontSaveSettings && len(gWindows) > 1) {
+    // snapshot the last window before it leaves gWindows; an empty list wipes the session
+    bool lastWindow = len(gWindows) == 1;
+    if (!gDontSaveSettings && lastWindow) {
         ScheduleSaveSettings();
         FlushScheduledSaveSettings();
     }
@@ -4807,7 +4813,14 @@ void CloseWindow(MainWindow* win, bool quitIfLast, bool) {
     VecRemove(gWindows, win);
     AppShellCloseWindow(win);
     delete win;
+    // the closed window is no longer part of the session
+    if (!gDontSaveSettings && !lastWindow) {
+        ScheduleSaveSettings();
+        FlushScheduledSaveSettings();
+    }
     if (quitIfLast && len(gWindows) == 0) {
+        // the exit flush must not snapshot the empty window list
+        gDontSaveSettings = true;
         AppShellQuit();
     }
 }

@@ -129,6 +129,10 @@ static void SyncInitialSessionData() {
 }
 
 static void RememberSessionState() {
+    // the last window already wrote the session; an empty list must not wipe it
+    if (len(gWindows) == 0) {
+        return;
+    }
     Vec<SessionData*>* sessionState = gSettings->sessionData;
     FreeSessionDataVec(sessionState);
 
@@ -286,7 +290,12 @@ void SetTabState(WindowTab* tab, TabState* state) {
             // legacy plain int stays flat by design; only a bookmark restores by Location
             scrollState.loc = ctrl->LocationFromPageNo(pageNo);
         }
-        dm->SetScrollState(scrollState);
+        if (dm->pendingRelayout) {
+            dm->pendingScroll = scrollState;
+            dm->hasPendingScroll = true;
+        } else {
+            dm->SetScrollState(scrollState);
+        }
     } else {
         ctrl->GoToPage(pageNo, true);
     }

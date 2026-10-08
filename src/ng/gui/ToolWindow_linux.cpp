@@ -189,7 +189,7 @@ void ToolWinNativeSetFrame(gp::Window* gw, Rect outer, bool titled) {
     XFlush(dpy);
 }
 
-void ToolWinNativeApplyStyle(gp::Window*, bool, bool, bool, bool) {}
+void ToolWinNativeApplyStyle(gp::Window*, bool, bool, bool, bool, bool) {}
 
 void ToolWinNativeSetOwner(gp::Window* gw, gp::Window* owner, bool owned) {
     Display* dpy = Dpy();
@@ -203,6 +203,8 @@ void ToolWinNativeSetOwner(gp::Window* gw, gp::Window* owner, bool owned) {
     }
     XFlush(dpy);
 }
+
+void ToolWinNativeInjectKey(gp::Window*, int) {}
 
 void ToolWinNativeShow(gp::Window* gw, bool visible, bool activate) {
     Display* dpy = Dpy();

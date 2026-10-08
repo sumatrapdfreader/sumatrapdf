@@ -835,7 +835,8 @@ static void ApplyNative(ToolWindow* tw) {
     bool titled = TitledFrame(tw->desc);
     bool utility = tw->desc.style == ToolWinStyle::Tool;
     bool resizable = tw->desc.resize == ToolWinResize::Resizable;
-    ToolWinNativeApplyStyle(tw->gw, titled, resizable, utility, !titled);
+    bool wantsKey = !titled && tw->desc.activate == ToolWinActivate::Yes;
+    ToolWinNativeApplyStyle(tw->gw, titled, resizable, utility, !titled, wantsKey);
     PlaceFrame(tw, tw->outer, titled);
     gp::Window* owner = tw->owner ? tw->owner->gpuiWin : nullptr;
     ToolWinNativeSetOwner(tw->gw, owner, tw->desc.owner == ToolWinOwner::Owned);
@@ -1330,6 +1331,12 @@ TempStr ToolWindowTestTemp(Str action, Str name, Str kind, int a, int b, int c, 
         return StrL("NOTREADY");
     }
     if (str::Eq(action, StrL("input"))) {
+#if !OS_WIN && !OS_WASM
+        if (str::Eq(kind, StrL("mackey"))) {
+            ToolWinNativeInjectKey(tw->gw, a);
+            return StrL("OK");
+        }
+#endif
         TempStr res = AppShellTestInputGpui(tw->gw, kind, a, b, c, d);
         ToolWindowInvalidate(tw);
         return res;

@@ -174,8 +174,8 @@ void TabsView::OnTabDown(TabsView* self, gp::Ctx* cx, const gp::MouseDownEvent* 
         gp::Notify(cx);
         return;
     }
-    if (ev->button != gp::MouseButton::Left) {
-        // the context menu opens when the right button comes up (OnTabUp)
+    if (IsContextClick(ev->button, ev->modifiers) || ev->button != gp::MouseButton::Left) {
+        // the context menu opens when the button comes up (OnTabUp)
         return;
     }
     TabsSelect(win, (int)idx);
@@ -185,7 +185,7 @@ void TabsView::OnTabDown(TabsView* self, gp::Ctx* cx, const gp::MouseDownEvent* 
 // orig's TabsContextMenu, from the right button going up over a tab; the tab
 // is not selected
 void TabsView::OnTabUp(TabsView* self, gp::Ctx* cx, const gp::MouseUpEvent* ev, int64_t idx) {
-    if (ev->button != gp::MouseButton::Right) {
+    if (!IsContextClick(ev->button, ev->modifiers)) {
         return;
     }
     MainWindow* win = self->win;
@@ -203,7 +203,7 @@ void TabsView::OnTabUp(TabsView* self, gp::Ctx* cx, const gp::MouseUpEvent* ev, 
 
 // ng: keeps a right press from gpui's ContextMenu, which would open from it
 void TabsView::OnBarDown(TabsView*, gp::Ctx* cx, const gp::MouseDownEvent* ev) {
-    if (ev->button == gp::MouseButton::Right) {
+    if (IsContextClick(ev->button, ev->modifiers)) {
         gp::WindowStopPropagation(cx);
     }
 }

@@ -3767,7 +3767,7 @@ void DocCanvasView::OnDown(DocCanvasView* self, gp::Ctx* cx, const gp::MouseDown
         return;
     }
     SetCanvasModifiers(ev->modifiers);
-    if (ev->button == gp::MouseButton::Right) {
+    if (IsContextClick(ev->button, ev->modifiers)) {
         // ng: gpui's ContextMenu would open from this press; orig's menu
         // opens when the button comes up without having dragged
         gp::WindowStopPropagation(cx);
@@ -3818,10 +3818,10 @@ void DocCanvasView::OnUp(DocCanvasView* self, gp::Ctx* cx, const gp::MouseUpEven
     SetCanvasModifiers(ev->modifiers);
     if (ev->button == gp::MouseButton::Middle) {
         OnMouseMiddleButtonUp(win);
+    } else if (IsContextClick(ev->button, ev->modifiers)) {
+        OnMouseRightButtonUp(win, cx, pt.x, pt.y, ev->modifiers.control, ev->modifiers.shift);
     } else if (ev->button == gp::MouseButton::Left) {
         OnMouseLeftButtonUp(win, pt.x, pt.y);
-    } else if (ev->button == gp::MouseButton::Right) {
-        OnMouseRightButtonUp(win, cx, pt.x, pt.y, ev->modifiers.control, ev->modifiers.shift);
     }
     gp::Notify(cx);
 }

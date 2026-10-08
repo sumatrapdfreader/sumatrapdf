@@ -1960,7 +1960,8 @@ void ToolbarView::OnButton(ToolbarView* self, gp::Ctx* cx, const gp::ClickEvent*
 // orig's OnToolbarButtonClicked fires for any mouse button: a right click
 // opens the button's drop-down when it has one, anything else runs the command
 void ToolbarView::OnButtonUp(ToolbarView* self, gp::Ctx* cx, const gp::MouseUpEvent* ev, int64_t idx) {
-    if (ev->button != gp::MouseButton::Right && ev->button != gp::MouseButton::Middle) {
+    bool context = IsContextClick(ev->button, ev->modifiers);
+    if (!context && ev->button != gp::MouseButton::Middle) {
         return;
     }
     MainWindow* win = self->win;
@@ -1973,11 +1974,11 @@ void ToolbarView::OnButtonUp(ToolbarView* self, gp::Ctx* cx, const gp::MouseUpEv
     }
     int cmdId = ui->btnCmds[(int)idx];
     // right-click: the drop-down, not the button's command
-    if (ev->button == gp::MouseButton::Right && cmdId == CmdToggleReadAloud) {
+    if (context && cmdId == CmdToggleReadAloud) {
         ShowTtsVoiceMenu(win, cx);
         return;
     }
-    if (ev->button == gp::MouseButton::Right && CmdHasHoverDropdown(cmdId)) {
+    if (context && CmdHasHoverDropdown(cmdId)) {
         Toolbar* tb = Tb(win);
         tb->hoverCmdId = cmdId;
         tb->hoverPendingCmdId = 0;

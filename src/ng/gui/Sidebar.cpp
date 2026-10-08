@@ -1085,7 +1085,7 @@ void SidebarView::OnTocRowClick(SidebarView* self, gp::Ctx* cx, const gp::ClickE
 }
 
 void SidebarView::OnTocRowDown(SidebarView* self, gp::Ctx* cx, const gp::MouseDownEvent* ev, int64_t rowIdx) {
-    if (ev->button != gp::MouseButton::Right) {
+    if (!IsContextClick(ev->button, ev->modifiers)) {
         return;
     }
     SidebarUI* ui = Ui(self->win);
@@ -1097,7 +1097,7 @@ void SidebarView::OnTocRowDown(SidebarView* self, gp::Ctx* cx, const gp::MouseDo
 // ng: gpui's ContextMenu would open from the press; orig's tree shows its menu
 // from WM_CONTEXTMENU, when the button comes up
 void SidebarView::OnTreeDown(SidebarView* self, gp::Ctx* cx, const gp::MouseDownEvent* ev, int64_t isToc) {
-    if (ev->button != gp::MouseButton::Right) {
+    if (!IsContextClick(ev->button, ev->modifiers)) {
         return;
     }
     gp::WindowStopPropagation(cx);
@@ -1116,7 +1116,7 @@ void SidebarView::OnTreeDown(SidebarView* self, gp::Ctx* cx, const gp::MouseDown
 // orig's TocContextMenu / FavTreeContextMenu via GetOrSelectTreeItemAtPos: the
 // context menu acts on this item so select it for better visual feedback
 void SidebarView::OnTreeUp(SidebarView* self, gp::Ctx* cx, const gp::MouseUpEvent* ev, int64_t isToc) {
-    if (ev->button != gp::MouseButton::Right) {
+    if (!IsContextClick(ev->button, ev->modifiers)) {
         return;
     }
     MainWindow* win = self->win;
@@ -1288,7 +1288,7 @@ void SidebarView::OnFavRowClick(SidebarView* self, gp::Ctx* cx, const gp::ClickE
 }
 
 void SidebarView::OnFavRowDown(SidebarView* self, gp::Ctx* cx, const gp::MouseDownEvent* ev, int64_t rowIdx) {
-    if (ev->button != gp::MouseButton::Right) {
+    if (!IsContextClick(ev->button, ev->modifiers)) {
         return;
     }
     SidebarUI* ui = Ui(self->win);

@@ -723,7 +723,7 @@ void HomeView::OnEntryHover(HomeView* self, gp::Ctx* cx, const gp::HoverEvent* e
 // the entry the right button went down on; OnPageDown, which runs after it for
 // the same press, takes it from here
 void HomeView::OnEntryDown(HomeView* self, gp::Ctx*, const gp::MouseDownEvent* ev, int64_t idx) {
-    if (ev->button != gp::MouseButton::Right) {
+    if (!IsContextClick(ev->button, ev->modifiers)) {
         return;
     }
     HomePageUI* h = Ui(self->win);
@@ -733,7 +733,7 @@ void HomeView::OnEntryDown(HomeView* self, gp::Ctx*, const gp::MouseDownEvent* e
 
 // orig's OnMouseRightButtonDownAbout
 void HomeView::OnPageDown(HomeView* self, gp::Ctx* cx, const gp::MouseDownEvent* ev) {
-    if (ev->button != gp::MouseButton::Right) {
+    if (!IsContextClick(ev->button, ev->modifiers)) {
         return;
     }
     // ng: gpui's ContextMenu would open from this press; orig's opens when
@@ -775,7 +775,7 @@ static void OnAboutContextMenu(MainWindow* win, gp::Ctx* cx, int idx, float x, f
 
 // orig's OnMouseRightButtonUpAbout
 void HomeView::OnPageUp(HomeView* self, gp::Ctx* cx, const gp::MouseUpEvent* ev) {
-    if (ev->button != gp::MouseButton::Right) {
+    if (!IsContextClick(ev->button, ev->modifiers)) {
         return;
     }
     MainWindow* win = self->win;

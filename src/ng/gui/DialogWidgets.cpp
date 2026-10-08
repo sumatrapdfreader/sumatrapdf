@@ -129,6 +129,16 @@ void OpenPopupMenuAt(gp::Ctx* cx, gp::Entity<gp::PopupMenuState> menu, float x, 
     gFitPopupFrames = 0;
 }
 
+// macOS control-click is the context click. It arrives as the left button.
+bool IsContextClick(gp::MouseButton button, gp::Modifiers mods) {
+#if OS_DARWIN
+    if (button == gp::MouseButton::Left && mods.control && !mods.shift && !mods.alt && !mods.platform) {
+        return true;
+    }
+#endif
+    return button == gp::MouseButton::Right;
+}
+
 // the tooltip HoverTooltipShow() was asked for and has not shown yet
 static gp::App* gHoverTipApp = nullptr;
 static gp::Window* gHoverTipWin = nullptr;

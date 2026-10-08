@@ -12,11 +12,81 @@
 #pragma push_macro("defer")
 #undef defer
 #import <AppKit/AppKit.h>
+#import <objc/runtime.h>
+
+// A pure borderless NSWindow refuses to become key. The command palette is one,
+// and keystrokes for a child window can still be delivered to its owner.
+// These overrides sit inside the BOOL remap: NSWindow was parsed with it.
+@interface ToolKeyWindow : NSWindow
+@end
+
+@implementation ToolKeyWindow
+- (BOOL)canBecomeKeyWindow {
+    return YES;
+}
+- (BOOL)canBecomeMainWindow {
+    return NO;
+}
+@end
+
 #pragma pop_macro("defer")
 #undef BOOL
 #include "base/MacTypesShow.h"
 
 #include "gui/ToolWindowPlat.h"
+
+static id gKeyMonitor = nil;
+static bool gInKeyForward = false;
+
+static NSEvent* KeyEventInWindow(NSEvent* event, NSWindow* window) {
+    if (event.windowNumber == window.windowNumber) {
+        return event;
+    }
+    return [NSEvent keyEventWithType:event.type
+                            location:event.locationInWindow
+                       modifierFlags:event.modifierFlags
+                           timestamp:event.timestamp
+                        windowNumber:window.windowNumber
+                             context:nil
+                          characters:event.characters ?: @""
+         charactersIgnoringModifiers:event.charactersIgnoringModifiers ?: @""
+                           isARepeat:event.isARepeat
+                             keyCode:event.keyCode];
+}
+
+static void EnsureKeyMonitor() {
+    if (gKeyMonitor) {
+        return;
+    }
+    gKeyMonitor = [NSEvent addLocalMonitorForEventsMatchingMask:(NSEventMaskKeyDown | NSEventMaskKeyUp)
+                                                         handler:^NSEvent*(NSEvent* event) {
+                                                           NSWindow* key = NSApp.keyWindow;
+                                                           if (![key isKindOfClass:[ToolKeyWindow class]] || gInKeyForward) {
+                                                               return event;
+                                                           }
+                                                           // already on its way to the content view
+                                                           if (event.window == key && key.firstResponder == key.contentView) {
+                                                               return event;
+                                                           }
+                                                           // command shortcuts stay with the menu (paste, quit)
+                                                           if (event.modifierFlags & NSEventModifierFlagCommand) {
+                                                               return event;
+                                                           }
+                                                           NSView* view = key.contentView;
+                                                           if (!view) {
+                                                               return event;
+                                                           }
+                                                           NSEvent* rewritten = KeyEventInWindow(event, key);
+                                                           gInKeyForward = true;
+                                                           if (event.type == NSEventTypeKeyDown) {
+                                                               [view keyDown:rewritten];
+                                                           } else {
+                                                               [view keyUp:rewritten];
+                                                           }
+                                                           gInKeyForward = false;
+                                                           return nil;
+                                                         }];
+}
 
 static NSWindow* NsWin(gp::Window* gw) {
     NSView* view = (__bridge NSView*)gp::PlatWindowHandle(gw);
@@ -116,7 +186,7 @@ void ToolWinNativeSetFrame(gp::Window* gw, Rect outer, bool) {
     [w setFrame:ToMac(outer) display:YES];
 }
 
-void ToolWinNativeApplyStyle(gp::Window* gw, bool titled, bool resizable, bool utility, bool borderless) {
+void ToolWinNativeApplyStyle(gp::Window* gw, bool titled, bool resizable, bool utility, bool borderless, bool wantsKey) {
     NSWindow* w = NsWin(gw);
     if (!w) {
         return;
@@ -125,6 +195,11 @@ void ToolWinNativeApplyStyle(gp::Window* gw, bool titled, bool resizable, bool u
     if (borderless || !titled) {
         [w setHasShadow:YES];
         [w setMovableByWindowBackground:NO];
+    }
+    if (borderless && wantsKey) {
+        object_setClass(w, [ToolKeyWindow class]);
+        [w makeFirstResponder:w.contentView];
+        EnsureKeyMonitor();
     }
 }
 
@@ -143,6 +218,30 @@ void ToolWinNativeSetOwner(gp::Window* gw, gp::Window* owner, bool owned) {
     }
 }
 
+// -dbg-control. keyCode 0 is the letter a; anything else is a bare virtual key.
+void ToolWinNativeInjectKey(gp::Window* gw, int keyCode) {
+    NSWindow* w = NsWin(gw);
+    if (!w) {
+        return;
+    }
+    [w makeFirstResponder:w.contentView];
+    NSString* chars = keyCode == 0 ? @"a" : @"";
+    auto event = ^(NSEventType type, NSString* text) {
+      return [NSEvent keyEventWithType:type
+                              location:NSZeroPoint
+                         modifierFlags:0
+                             timestamp:[NSProcessInfo processInfo].systemUptime
+                          windowNumber:w.windowNumber
+                               context:nil
+                            characters:text
+           charactersIgnoringModifiers:chars
+                             isARepeat:NO
+                               keyCode:(unsigned short)keyCode];
+    };
+    [NSApp sendEvent:event(NSEventTypeKeyDown, chars)];
+    [NSApp sendEvent:event(NSEventTypeKeyUp, @"")];
+}
+
 void ToolWinNativeShow(gp::Window* gw, bool visible, bool activate) {
     NSWindow* w = NsWin(gw);
     if (!w) {
@@ -153,6 +252,9 @@ void ToolWinNativeShow(gp::Window* gw, bool visible, bool activate) {
         return;
     }
     if (activate) {
+        if ([w isKindOfClass:[ToolKeyWindow class]]) {
+            [w makeFirstResponder:w.contentView];
+        }
         [w makeKeyAndOrderFront:nil];
     } else {
         [w orderFront:nil];
