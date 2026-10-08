@@ -8172,6 +8172,37 @@ static int PageNoForSigField(fz_context* ctx, pdf_document* pdfdoc, pdf_obj* fie
     int pageNo = pdf_lookup_page_number(ctx, pdfdoc, page);
     return pageNo >= 0 ? pageNo + 1 : 0;
 }
+
+static void AppendSigDictText(fz_context* ctx, str::Builder& out, pdf_obj* sigDict, Str label, pdf_obj* key) {
+    const char* value = nullptr;
+    fz_try(ctx) {
+        pdf_obj* obj = pdf_dict_get(ctx, sigDict, key);
+        if (obj) {
+            value = pdf_to_text_string(ctx, obj);
+        }
+    }
+    fz_catch(ctx) {
+        fz_report_error(ctx);
+        value = nullptr;
+    }
+    if (value && *value) {
+        out.Append(fmt("  %s: %s\n", label, Str(value)));
+    }
+}
+
+static void AppendSigValidation(str::Builder& out, pdf_signature_error certErr, pdf_signature_error digestErr,
+                                int edits) {
+    if (certErr != PDF_SIGNATURE_ERROR_OKAY) {
+        out.Append(fmt("  Certificate: %s\n", Str(pdf_signature_error_description(certErr))));
+    }
+    if (digestErr != PDF_SIGNATURE_ERROR_OKAY) {
+        out.Append(fmt("  Digest: %s\n", Str(pdf_signature_error_description(digestErr))));
+    } else if (edits) {
+        out.Append(StrL("  The document was changed since the signature was applied.\n"));
+    } else {
+        out.Append(StrL("  The document wasn't changed since the signature was applied.\n"));
+    }
+}
 #endif
 
 #if OS_WIN
@@ -8233,23 +8264,6 @@ static TempStr FormatPdfDateRawTemp(fz_context* ctx, pdf_obj* obj) {
         }
     }
     return str::DupTemp(Str(buf));
-}
-
-static void AppendSigDictText(fz_context* ctx, str::Builder& s, pdf_obj* sigDict, Str label, pdf_obj* key) {
-    const char* val = nullptr;
-    fz_try(ctx) {
-        pdf_obj* obj = pdf_dict_get(ctx, sigDict, key);
-        if (obj) {
-            val = pdf_to_text_string(ctx, obj);
-        }
-    }
-    fz_catch(ctx) {
-        fz_report_error(ctx);
-        val = nullptr;
-    }
-    if (val && *val) {
-        s.Append(fmt("  %s: %s\n", label, Str(val)));
-    }
 }
 
 static bool PdfHasDssRevocation(fz_context* ctx, pdf_document* pdfdoc) {
@@ -8413,16 +8427,7 @@ static void AppendSignatureFieldInfo(fz_context* ctx, str::Builder& s, pdf_pkcs7
         fz_report_error(ctx);
     }
     if (!isDocTs) {
-        if (certErr) {
-            s.Append(fmt("  Certificate: %s\n", Str(pdf_signature_error_description(certErr))));
-        }
-        if (digErr) {
-            s.Append(fmt("  Digest: %s\n", Str(pdf_signature_error_description(digErr))));
-        } else if (edits) {
-            s.Append(StrL("  The document was changed since the signature was applied.\n"));
-        } else {
-            s.Append(StrL("  The document wasn't changed since the signature was applied.\n"));
-        }
+        AppendSigValidation(s, certErr, digErr, edits);
     }
 
     bool ltv = docHasDss;
@@ -8568,36 +8573,15 @@ static void AppendOpenSslSigText(fz_context* ctx, str::Builder& out, pdf_pkcs7_v
     pdf_signature_error certErr = pdf_check_certificate(ctx, verifier, pdfdoc, field);
     pdf_signature_error digestErr = pdf_check_digest(ctx, verifier, pdfdoc, field);
     int edits = pdf_signature_incremental_change_since_signing(ctx, pdfdoc, field);
-    if (certErr != PDF_SIGNATURE_ERROR_OKAY) {
-        out.Append(fmt("  Certificate: %s\n", Str(pdf_signature_error_description(certErr))));
-    }
-    if (digestErr != PDF_SIGNATURE_ERROR_OKAY) {
-        out.Append(fmt("  Digest: %s\n", Str(pdf_signature_error_description(digestErr))));
-    } else if (edits) {
-        out.Append(StrL("  The document was changed since the signature was applied.\n"));
-    } else {
-        out.Append(StrL("  The document wasn't changed since the signature was applied.\n"));
-    }
+    AppendSigValidation(out, certErr, digestErr, edits);
 
     pdf_obj* value = pdf_dict_get(ctx, field, PDF_NAME(V));
     if (!value) {
         value = field;
     }
-    struct {
-        pdf_obj* key;
-        Str label;
-    } values[] = {
-        {PDF_NAME(Reason), StrL("reason")},
-        {PDF_NAME(Location), StrL("location")},
-        {PDF_NAME(ContactInfo), StrL("contact")},
-    };
-    for (const auto& it : values) {
-        pdf_obj* obj = pdf_dict_get(ctx, value, it.key);
-        const char* text = obj ? pdf_to_text_string(ctx, obj) : nullptr;
-        if (text && *text) {
-            out.Append(fmt("  %s: %s\n", it.label, Str(text)));
-        }
-    }
+    AppendSigDictText(ctx, out, value, StrL("reason"), PDF_NAME(Reason));
+    AppendSigDictText(ctx, out, value, StrL("location"), PDF_NAME(Location));
+    AppendSigDictText(ctx, out, value, StrL("contact"), PDF_NAME(ContactInfo));
 }
 #endif
 
