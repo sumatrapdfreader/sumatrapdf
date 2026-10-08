@@ -179,6 +179,7 @@ struct DisplayModel : DocController {
 
     int GetRotation() const;
     float GetZoomReal(int pageNo) const;
+    float GetRenderZoom(int pageNo) const;
     float ComputeZoomReal(int pageNo) const;
     float MaxZoomForDocument() const;
     void Relayout(float zoomVirtual, int rotation);
@@ -336,6 +337,7 @@ struct DisplayModel : DocController {
        except for kZoomFitPage, kZoomFitWidth and kZoomFitContent */
     float zoomReal{kInvalidZoom};
     float zoomVirtual{kInvalidZoom};
+    float renderScale = 1;
     // set while SetZoomVirtual() applies an explicit Fit Content request, to skip
     // the zoom-in damping in CalcZoomReal() (see the comment there)
     bool exactFitContent = false;

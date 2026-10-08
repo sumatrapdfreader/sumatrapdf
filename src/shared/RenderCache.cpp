@@ -684,7 +684,7 @@ void RenderCache::Invalidate(DisplayModel* dm, int pageNo, RectF rect) {
 u16 RenderCache::GetTileRes(DisplayModel* dm, int pageNo) const {
     auto* engine = dm->GetEngine();
     RectF mediabox = dm->PageMediaBoxForLayout(pageNo);
-    float zoom = dm->GetZoomReal(pageNo);
+    float zoom = dm->GetRenderZoom(pageNo);
     float zoomVirt = dm->GetZoomVirtual();
     Rect viewPort = dm->GetViewPort();
     int rotation = dm->GetRotation();
@@ -700,8 +700,8 @@ u16 RenderCache::GetTileRes(DisplayModel* dm, int pageNo) const {
     // use larger tiles when fitting page or width or when a page is smaller
     // than the visible canvas width/height or when rendering pages
     // without clipping optimizations
-    if (zoomVirt == kZoomFitPage || zoomVirt == kZoomFitWidth || pixelbox.dx <= (float)viewPort.dx ||
-        pixelbox.dy < (float)viewPort.dy || !engine->HasClipOptimizations(pageNo)) {
+    if (zoomVirt == kZoomFitPage || zoomVirt == kZoomFitWidth || pixelbox.dx <= (float)viewPort.dx * dm->renderScale ||
+        pixelbox.dy < (float)viewPort.dy * dm->renderScale || !engine->HasClipOptimizations(pageNo)) {
         factorAvg /= 2.0;
     }
 
@@ -798,7 +798,7 @@ void RenderCache::RequestRendering(DisplayModel* dm, int pageNo, TilePosition ti
     }
 
     int rotation = NormalizeRotation(dm->GetRotation());
-    float zoom = dm->GetZoomReal(pageNo);
+    float zoom = dm->GetRenderZoom(pageNo);
 
     for (int i = 0; i < nRenderThreads; i++) {
         auto* cr = curReqs[i];
@@ -837,6 +837,7 @@ void RenderCache::RequestRendering(DisplayModel* dm, int pageNo, TilePosition ti
                    zoom or rotation, so only replace this request */
                 req->zoom = zoom;
                 req->rotation = rotation;
+                req->pageRect = GetTileRectUser(dm, pageNo, rotation, zoom, tile);
             }
             return;
         }
@@ -876,7 +877,7 @@ void RenderCache::RequestPredictiveRendering(DisplayModel* dm, int originPageNo,
         if (!dm->ValidPageNo(pageNo) || !dm->ShouldCacheRendering(pageNo)) {
             continue;
         }
-        float zoom = dm->GetZoomReal(pageNo);
+        float zoom = dm->GetRenderZoom(pageNo);
         if (zoom <= 0) {
             continue;
         }
@@ -1218,7 +1219,7 @@ bool RenderCache::VisibleTargetTilesReady(DisplayModel* dm, Str* whyNot) {
             }
             if (tile.res == targetRes) {
                 sawTarget = true;
-                if (!Exists(dm, pageNo, rotation, zoom, &tile)) {
+                if (!Exists(dm, pageNo, rotation, dm->GetRenderZoom(pageNo), &tile)) {
                     return no(fmt("p%d miss res=%d r%d,c%d", pageNo, (int)tile.res, (int)tile.row, (int)tile.col));
                 }
                 continue;
@@ -1468,7 +1469,7 @@ int RenderCache::PaintTile(
 #endif
     Rect bounds, DisplayModel* dm, int pageNo, TilePosition tile, Rect tileOnScreen, bool renderMissing,
     bool* renderOutOfDateCue, bool* renderedReplacement) {
-    float zoom = dm->GetZoomReal(pageNo);
+    float zoom = dm->GetRenderZoom(pageNo);
     BitmapCacheEntry* entry = Find(dm, pageNo, dm->GetRotation(), zoom, &tile);
     int renderDelay = 0;
 

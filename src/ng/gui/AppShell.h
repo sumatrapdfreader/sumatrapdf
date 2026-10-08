@@ -125,6 +125,9 @@ bool AppShellPlaceWindow(MainWindow* win, Rect r, bool maximize);
 bool AppShellNormalWindowRect(MainWindow* win, Rect* out);
 // dpi of the monitor the frame is on; 96 where it is not known
 int AppShellWindowDpi(MainWindow* win);
+#if OS_DARWIN
+float AppShellRenderScale(gpui::Window* win);
+#endif
 // presentation mode's auto-hidden cursor (orig hides it with SetCursor(null))
 void AppShellShowCursor(MainWindow* win, bool show);
 // Fullscreen.PreventSleep: keep the display awake (Windows only for now)

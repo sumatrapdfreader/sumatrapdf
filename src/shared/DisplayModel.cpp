@@ -566,7 +566,7 @@ void DisplayModel::RenderFinished(PageRenderRequest* req) {
         }
         RepaintDisplay();
     } else if (PageVisible(req->pageNo)) {
-        float currentZoom = GetZoomReal(req->pageNo);
+        float currentZoom = GetRenderZoom(req->pageNo);
         float largerZoom = currentZoom > req->zoom ? currentZoom : req->zoom;
         bool staleZoom = currentZoom > 0 && largerZoom > 0 && fabsf(currentZoom - req->zoom) > 0.02f * largerZoom;
         if (!staleZoom) {
@@ -1674,6 +1674,11 @@ float DisplayModel::GetZoomReal(int pageNo) const {
         return zoom;
     }
     return pageInfo->zoomReal;
+}
+
+// Render at backing resolution without changing layout or hit testing.
+float DisplayModel::GetRenderZoom(int pageNo) const {
+    return GetZoomReal(pageNo) * renderScale;
 }
 
 float DisplayModel::ComputeZoomReal(int pageNo) const {

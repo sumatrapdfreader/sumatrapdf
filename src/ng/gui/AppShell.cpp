@@ -2560,6 +2560,11 @@ gp::El* ShellView::Render(ShellView* self, gp::Ctx* cx) {
     int navFilesDx = NavFilesPanelDx(win);
     int bodyDx = win->frameRc.dx - 2 * border;
     win->canvasRc = Rect{border + sidebarDx, border + chromeDy, bodyDx - sidebarDx - aiChatDx - navFilesDx, bodyDy};
+#if OS_DARWIN
+    if (DisplayModel* dm = win->AsFixed()) {
+        dm->renderScale = AppShellRenderScale(win->gpuiWin);
+    }
+#endif
     // only when it really changed: SetViewPortSize relayouts, which repaints,
     // which would come straight back here
     Size vps = win->GetViewPortSize();
