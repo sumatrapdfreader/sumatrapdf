@@ -281,21 +281,6 @@ void PlatformFontDestroy() {
 
 #if OS_WIN
 
-/*
-TODO:
- - text drawing is still too slow. each html page takes ~20ms to draw, which is
-   terrible and much slower than what I think the test render was doing (~1ms)
-   Is it beacuase it draws to gfx->GetHDC() instead of e.g. natural or bitmap
-   HDC? In which case maybe I should render text to bitmap hdc and then
-   blit that once to Graphics?
- - figure out a way to get rid of Lock()/Unlock(). One way is to turn
-   PlatformTextRender into a full-blown IGraphics abstraction (add drawing calls
-   to it) and then the GDI+-based implementation could track locking state
-   internally, so that the caller doesn't have to.
-   Another options would be to figure out a way to draw to a bitmap and blit
-   that bitmap to Graphics object.
-*/
-
 using Gdiplus::Bitmap;
 using Gdiplus::Graphics;
 using Gdiplus::Image;

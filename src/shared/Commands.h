@@ -351,19 +351,6 @@ enum {
 // clang-format on
 // @gen-end cmd-enum
 
-// order of CreateAnnot* must be the same as enum AnnotationType
-/*
-TOOD: maybe add commands for those annotations
-Sound,
-Movie,
-Widget,
-Screen,
-PrinterMark,
-TrapNet,
-Watermark,
-ThreeD,
-*/
-
 struct CommandArg {
     enum class Type : u16 {
         None,
