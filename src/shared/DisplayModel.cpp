@@ -566,7 +566,7 @@ void DisplayModel::RenderFinished(PageRenderRequest* req) {
         }
         RepaintDisplay();
     } else if (PageVisible(req->pageNo)) {
-        float currentZoom = GetZoomReal(req->pageNo);
+        float currentZoom = GetRenderZoom(req->pageNo);
         float largerZoom = currentZoom > req->zoom ? currentZoom : req->zoom;
         bool staleZoom = currentZoom > 0 && largerZoom > 0 && fabsf(currentZoom - req->zoom) > 0.02f * largerZoom;
         if (!staleZoom) {
@@ -1657,6 +1657,17 @@ void DisplayModel::CalcZoomReal(float newZoomVirtual) {
 
 // A viewport narrower than the window margins (squeezed or DPI-changed window)
 // has no fit zoom; keep the zoom the pages were last laid out with.
+// Tile bitmaps on a scaled framebuffer (macOS backing scale, wasm device
+// pixel ratio). Layout, hit testing and the zoom label stay on GetZoomReal.
+float DisplayModel::GetRenderZoom(int pageNo) const {
+    float zoom = GetZoomReal(pageNo);
+    float scale = renderScale;
+    if (!(scale > 0)) {
+        scale = 1;
+    }
+    return zoom * scale;
+}
+
 float DisplayModel::GetZoomReal(int pageNo) const {
     float zoom = ComputeZoomReal(pageNo);
     if (zoom > 0) {

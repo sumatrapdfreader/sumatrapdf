@@ -2540,6 +2540,22 @@ void ShellView::OnKeyUp(ShellView* self, gp::Ctx* cx, const gp::KeyEvent* ev) {
 
 // drains the ui task queue, runs middle-button auto-scroll and repaints while
 // a page is still rendering
+#if OS_DARWIN || OS_WASM
+// The framebuffer is a scaled copy of the logical canvas. Tiles have to be
+// rendered at that scale or the page is stretched.
+static void ApplyRenderScale(MainWindow* win) {
+    DisplayModel* dm = win->AsFixed();
+    if (!dm) {
+        return;
+    }
+    float scale = AppShellRenderScale(win->gpuiWin);
+    if (!(scale > 0)) {
+        scale = 1;
+    }
+    dm->renderScale = scale;
+}
+#endif
+
 void ShellView::OnTick(ShellView* self, gp::Ctx* cx, const gp::TickEvent* ev) {
     uitask::DrainQueue();
     AppShellReapClosedWindows();
@@ -2548,6 +2564,9 @@ void ShellView::OnTick(ShellView* self, gp::Ctx* cx, const gp::TickEvent* ev) {
     if (!IsMainWindowValidAndNotClosing(win)) {
         return;
     }
+#if OS_DARWIN || OS_WASM
+    ApplyRenderScale(win);
+#endif
     // ng: gpui reports the interval asked for, not the time that passed; a
     // WM_TIMER comes about every 27 ms for a 16 ms interval and slower still
     // in a background window, so timeouts are counted in real time
@@ -2654,6 +2673,9 @@ gp::El* ShellView::Render(ShellView* self, gp::Ctx* cx) {
     int navFilesDx = NavFilesPanelDx(win);
     int bodyDx = win->frameRc.dx - 2 * border;
     win->canvasRc = Rect{border + sidebarDx, border + chromeDy, bodyDx - sidebarDx - aiChatDx - navFilesDx, bodyDy};
+#if OS_DARWIN || OS_WASM
+    ApplyRenderScale(win);
+#endif
     // only when it really changed: SetViewPortSize relayouts, which repaints,
     // which would come straight back here
     Size vps = win->GetViewPortSize();

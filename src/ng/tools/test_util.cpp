@@ -36,6 +36,7 @@ extern void PagePosition_UnitTests();
 extern void CommandPaletteModel_UnitTests();
 extern void SumatraPDF_UnitTests();
 extern void DocumentLayout_UnitTests();
+extern void RenderScale_UnitTests();
 extern void CommandAvailability_UnitTests();
 extern void MergePdf_UnitTests();
 extern void Annotation_UnitTests();
@@ -167,6 +168,7 @@ int main(int argc, char** argv) {
     PagePosition_UnitTests();
     SumatraPDF_UnitTests();
     DocumentLayout_UnitTests();
+    RenderScale_UnitTests();
     CommandAvailability_UnitTests();
     MergePdf_UnitTests();
     Annotation_UnitTests();

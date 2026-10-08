@@ -179,6 +179,7 @@ struct DisplayModel : DocController {
 
     int GetRotation() const;
     float GetZoomReal(int pageNo) const;
+    float GetRenderZoom(int pageNo) const;
     float ComputeZoomReal(int pageNo) const;
     float MaxZoomForDocument() const;
     void Relayout(float zoomVirtual, int rotation);
@@ -343,6 +344,8 @@ struct DisplayModel : DocController {
     /* dpi correction factor by which _zoomVirtual has to be multiplied in
        order to get _zoomReal */
     float dpiFactor{1.0f};
+    // tile bitmaps are GetZoomReal() times this; layout stays on GetZoomReal()
+    float renderScale = 1;
     float presZoomVirtual{kInvalidZoom};
     DisplayMode presDisplayMode{DisplayMode::Automatic};
     DisplayMode fsSavedDisplayMode{DisplayMode::Automatic};

@@ -6,7 +6,8 @@
 
 namespace gpui {
 struct App;
-}
+struct Window;
+} // namespace gpui
 
 struct MainWindow;
 
@@ -129,6 +130,9 @@ Rect AppShellShiftToWorkArea(Rect rect, MainWindow* win, bool fully);
 bool AppShellNormalWindowRect(MainWindow* win, Rect* out);
 // dpi of the monitor the frame is on; 96 where it is not known
 int AppShellWindowDpi(MainWindow* win);
+#if OS_DARWIN || OS_WASM
+float AppShellRenderScale(gpui::Window* win);
+#endif
 // presentation mode's auto-hidden cursor (orig hides it with SetCursor(null))
 void AppShellShowCursor(MainWindow* win, bool show);
 // Fullscreen.PreventSleep: keep the display awake (Windows only for now)
