@@ -139,8 +139,9 @@ Ng unit tests are the `test_util` target:
 `bun cmd/ng-build.ts -dbg test_util -run -- -for-ai`.
 `test_engines` opens documents and renders pages; `test_mupdf` probes MuPDF;
 `plugin-test` hosts plugin mode. Use `cmd/ng-dbg-control.ts` with
-`-dbg-control <pipe>` for automation and `cmd/ng-dbg.ts` for Windows ASan
-debugging. Format ng C/C++ with `bun cmd/ng-format.ts`; format TypeScript
+`-dbg-control <pipe>` for automation and `cmd/ng-dbg.ts` for a debug ASan
+build under a debugger (cdb or WinDbg on Windows, lldb or gdb on macOS
+and Linux). Format ng C/C++ with `bun cmd/ng-format.ts`; format TypeScript
 with `bun cmd/format.ts -ts`.
 
 Use `cmd/ng-gen-commands.ts` and `cmd/ng-gen-settings.ts` for ng generated

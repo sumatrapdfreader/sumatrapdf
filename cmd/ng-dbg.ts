@@ -1,21 +1,29 @@
 import { existsSync, readdirSync } from "node:fs";
-import { join } from "node:path";
+import { delimiter, join } from "node:path";
 
-// Build the debug ASan executable and run it under the Windows debugger.
+// Build the debug ASan executable and run it under a debugger.
 // Arguments after -- go to SumatraPDF.
+//
+// Windows defaults to cdb. macOS tries lldb then gdb; Linux tries gdb then lldb.
 
-const usage = `Usage: bun cmd/ng-dbg.ts [-cdb|-windbg] [-clean] [-- <SumatraPDF args>]
+const usage = `Usage: bun cmd/ng-dbg.ts [-cdb|-windbg|-lldb|-gdb] [-clean] [-- <SumatraPDF args>]
 
-  -cdb      use cdb.exe (default)
-  -windbg   use WinDbg
-  -clean    delete the debug ASan output directory first`;
+  -cdb      Windows: cdb.exe (default)
+  -windbg   Windows: WinDbg
+  -lldb     macOS/Linux: lldb
+  -gdb      macOS/Linux: gdb
+  -clean    delete the debug ASan output directory first
+
+With no debugger flag, macOS uses lldb if it is installed and otherwise gdb.
+Linux uses gdb if it is installed and otherwise lldb.`;
 
 class CliError extends Error {}
 
-type DebuggerKind = "cdb" | "windbg";
+type DebuggerKind = "cdb" | "windbg" | "lldb" | "gdb";
+type HostPlat = "win" | "mac" | "linux";
 
 type Options = {
-  debugger: DebuggerKind;
+  debugger: DebuggerKind | null;
   clean: boolean;
   appArgs: string[];
 };
@@ -26,15 +34,13 @@ function parseArgs(args: string[]): Options | null {
   const sep = args.indexOf("--");
   const ours = sep < 0 ? args : args.slice(0, sep);
   const appArgs = sep < 0 ? [] : args.slice(sep + 1);
-  let debuggerKind: DebuggerKind = "cdb";
-  let debuggerSet = false;
+  let debuggerKind: DebuggerKind | null = null;
   let clean = false;
   for (const arg of ours) {
-    if (arg === "-cdb" || arg === "-windbg") {
+    if (arg === "-cdb" || arg === "-windbg" || arg === "-lldb" || arg === "-gdb") {
       const next = arg.slice(1) as DebuggerKind;
-      if (debuggerSet) throw new CliError("debugger option can only be specified once");
+      if (debuggerKind) throw new CliError("debugger option can only be specified once");
       debuggerKind = next;
-      debuggerSet = true;
     } else if (arg === "-clean") {
       if (clean) throw new CliError("-clean can only be specified once");
       clean = true;
@@ -45,10 +51,18 @@ function parseArgs(args: string[]): Options | null {
   return { debugger: debuggerKind, clean, appArgs };
 }
 
+function hostPlat(): HostPlat {
+  if (process.platform === "win32") return "win";
+  if (process.platform === "darwin") return "mac";
+  if (process.platform === "linux") return "linux";
+  throw new Error(`cmd/ng-dbg.ts does not support ${process.platform}`);
+}
+
 function findOnPath(name: string): string | null {
-  for (const dir of (process.env.PATH ?? "").split(";")) {
+  for (const dir of (process.env.PATH ?? "").split(delimiter)) {
     const clean = dir.replaceAll('"', "");
-    if (!clean || clean.toLowerCase().includes("\\windowsapps")) continue;
+    if (!clean) continue;
+    if (process.platform === "win32" && clean.toLowerCase().includes("\\windowsapps")) continue;
     const path = join(clean, name);
     if (existsSync(path)) return path;
   }
@@ -122,9 +136,54 @@ function findWinDbg(): string | null {
   );
 }
 
-async function run(command: string[], description: string): Promise<void> {
+function debuggerFlags(kind: DebuggerKind): string[] {
+  // ASan maps shadow memory with first-chance access violations. Ignore those;
+  // e0736172 is another handled exception emitted during startup. ASan
+  // failures still stop at their debug break.
+  if (kind === "cdb") return ["-o", "-g", "-G", "-xi", "av", "-xi", "0xe0736172"];
+  if (kind === "windbg") return ["-Q", "-o", "-G", "-c", "sxi av; sxi 0xe0736172; g"];
+  // -o run / -ex run start the program. -- / --args keep -for-testing from
+  // being read as a debugger option.
+  if (kind === "lldb") return ["-o", "run", "--"];
+  return ["-ex", "run", "--args"];
+}
+
+function findDebuggerExe(kind: DebuggerKind): string | null {
+  if (kind === "cdb") return findCdb();
+  if (kind === "windbg") return findWinDbg();
+  return findOnPath(kind);
+}
+
+function pickDebugger(plat: HostPlat, requested: DebuggerKind | null): { kind: DebuggerKind; exe: string } {
+  const windowsOnly = (kind: DebuggerKind) => kind === "cdb" || kind === "windbg";
+  if (requested) {
+    if (plat === "win" && !windowsOnly(requested))
+      throw new Error(`-${requested} is only available on macOS and Linux`);
+    if (plat !== "win" && windowsOnly(requested)) throw new Error(`-${requested} is only available on Windows`);
+    const exe = findDebuggerExe(requested);
+    if (!exe) throw new Error(`${requested} debugger not found`);
+    return { kind: requested, exe };
+  }
+  const order: DebuggerKind[] = plat === "win" ? ["cdb"] : plat === "mac" ? ["lldb", "gdb"] : ["gdb", "lldb"];
+  for (const kind of order) {
+    const exe = findDebuggerExe(kind);
+    if (exe) return { kind, exe };
+  }
+  throw new Error(`no debugger found (looked for ${order.join(" and ")})`);
+}
+
+// ASan prints the report and then calls _exit, so the debugger never stops.
+// abort_on_error turns that into SIGABRT. Leave a value the user already set.
+function asanAbortEnv(plat: HostPlat): NodeJS.ProcessEnv | undefined {
+  if (plat === "win") return undefined;
+  const cur = process.env.ASAN_OPTIONS ?? "";
+  if (/(^|:)abort_on_error(=|:|$)/.test(cur)) return undefined;
+  return { ...process.env, ASAN_OPTIONS: cur ? `${cur}:abort_on_error=1` : "abort_on_error=1" };
+}
+
+async function run(command: string[], description: string, env?: NodeJS.ProcessEnv): Promise<void> {
   console.log(`> ${command.join(" ")}`);
-  const proc = Bun.spawn(command, { stdin: "inherit", stdout: "inherit", stderr: "inherit" });
+  const proc = Bun.spawn(command, { stdin: "inherit", stdout: "inherit", stderr: "inherit", env });
   const code = await proc.exited;
   if (code !== 0) throw new Error(`${description} failed with exit code ${code}`);
 }
@@ -144,24 +203,17 @@ async function main(): Promise<void> {
     console.log(usage);
     return;
   }
-  if (process.platform !== "win32") throw new Error("cmd/ng-dbg.ts only supports Windows");
+  const plat = hostPlat();
+  const dbg = pickDebugger(plat, opts.debugger);
 
   const buildArgs = ["bun", join(import.meta.dir, "ng-build.ts"), "-dbg", "-asan"];
   if (opts.clean) buildArgs.push("-clean");
   await run(buildArgs, "build");
 
-  const debuggerExe = opts.debugger === "cdb" ? findCdb() : findWinDbg();
-  if (!debuggerExe) throw new Error(`${opts.debugger} debugger not found`);
-
-  // ASan maps shadow memory with first-chance access violations. Ignore those;
-  // e0736172 is another handled exception emitted during startup. ASan
-  // failures still stop at their debug break.
-  const flags =
-    opts.debugger === "cdb"
-      ? ["-o", "-g", "-G", "-xi", "av", "-xi", "0xe0736172"]
-      : ["-Q", "-o", "-G", "-c", "sxi av; sxi 0xe0736172; g"];
-  const exe = join(process.cwd(), "out", "win", "dbg-asan", "SumatraPDF.exe");
-  await run([debuggerExe, ...flags, exe, "-for-testing", ...opts.appArgs], opts.debugger);
+  const exeName = plat === "win" ? "SumatraPDF.exe" : "SumatraPDF";
+  const exe = join(process.cwd(), "out", plat, "dbg-asan", exeName);
+  if (!existsSync(exe)) throw new Error(`debug ASan executable not found: ${exe}`);
+  await run([dbg.exe, ...debuggerFlags(dbg.kind), exe, "-for-testing", ...opts.appArgs], dbg.kind, asanAbortEnv(plat));
 }
 
 try {

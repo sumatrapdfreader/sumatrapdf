@@ -742,6 +742,20 @@ function wasmPreloadArgs(t: Target, fail: Fail): string[] {
 
 const winNoDefaultLibs = ["msvcrt.lib", "msvcrtd.lib", "ucrt.lib", "ucrtd.lib", "vcruntime.lib", "vcruntimed.lib"];
 
+// ld64 stores a debug map that points at the .o files and does not copy DWARF
+// into the executable. The clang driver only runs dsymutil when it compiled
+// and linked in one invocation, so a .dSYM has to be written here.
+async function writeMacDsym(tc: Toolchain, out: string, fail: Fail): Promise<void> {
+  const dsymutil = existsSync("/usr/bin/dsymutil") ? "/usr/bin/dsymutil" : "dsymutil";
+  const cmd = [dsymutil, out, "-o", `${out}.dSYM`];
+  console.log(`  dsymutil ${relative(root, out)}`);
+  const r = await spawn(tc, cmd);
+  if (r.code !== 0) {
+    console.error(r.out);
+    fail(`dsymutil failed: ${formatCmd(cmd)}`);
+  }
+}
+
 // Frameworks required by the mac app and GPUI's speech and webview backends.
 const macFrameworks = [
   "AudioToolbox",
@@ -775,20 +789,26 @@ async function link(
   // the command line itself is an input: a changed flag relinks
   const cmdStamp = join(dir, `${t.name}-link.txt`);
   const cmdChanged = !existsSync(cmdStamp) || readFileSync(cmdStamp, "utf8") !== key;
-  if (!cmdChanged && existsSync(out) && inputs.every((o) => mtime(o) <= mtime(out))) {
+  const needLink = cmdChanged || !existsSync(out) || inputs.some((o) => mtime(o) > mtime(out));
+  const dsym = `${out}.dSYM`;
+  const needDsym = tc.plat === "mac" && f.debug && (needLink || !existsSync(dsym) || mtime(dsym) < mtime(out));
+  if (!needLink && !needDsym) {
     console.log(`  ${t.name}: link up to date`);
     return out;
   }
-  console.log(`  ${t.name}: linking ${relative(root, out)}`);
-  if (f.verbose) console.log(`> ${formatCmd(cmd)}`);
-  const r = await spawn(tc, cmd);
-  if (r.code !== 0) {
-    console.error(r.out);
-    fail(`linking ${t.name} failed: ${formatCmd(cmd)}`);
+  if (needLink) {
+    console.log(`  ${t.name}: linking ${relative(root, out)}`);
+    if (f.verbose) console.log(`> ${formatCmd(cmd)}`);
+    const r = await spawn(tc, cmd);
+    if (r.code !== 0) {
+      console.error(r.out);
+      fail(`linking ${t.name} failed: ${formatCmd(cmd)}`);
+    }
+    const text = r.out.trim();
+    if (text) console.log(text);
+    writeFileSync(cmdStamp, key);
   }
-  const text = r.out.trim();
-  if (text) console.log(text);
-  writeFileSync(cmdStamp, key);
+  if (tc.plat === "mac" && f.debug) await writeMacDsym(tc, out, fail);
   return out;
 }
 
@@ -815,7 +835,9 @@ function linkCmd(
       ...winNoDefaultLibs.map((l) => `/NODEFAULTLIB:${l}`),
       ...inputs,
       ...(t.winLibs ?? []),
-      "/DEBUG",
+      // FULL copies debug info into the PDB. Bare /DEBUG is that on current
+      // link.exe; FASTLINK only indexed the .obj files and is gone in VS 2026.
+      f.debug ? "/DEBUG:FULL" : "/DEBUG",
       `/PDB:${join(dir, `${t.name}.pdb`)}`,
       ...(f.debug ? [] : ["/INCREMENTAL:NO", "/OPT:REF", "/OPT:ICF"]),
       ...(f.asan ? ["/INCREMENTAL:NO"] : []),
