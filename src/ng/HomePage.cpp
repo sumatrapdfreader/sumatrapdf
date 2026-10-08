@@ -1043,10 +1043,13 @@ void HomeView::OnCopyInfo(HomeView* self, gp::Ctx* cx, const gp::ClickEvent*) {
 
 // the app name, each letter in a different color (orig's SumatraLogo)
 // fontFamily: "Arial" for orig's "Arial Black"; empty for the UI font in bold
-static gp::El* SumatraLogoEl(gp::Ctx* cx, float fontSize, Str fontFamily = {}) {
+// name: empty draws kAppName
+static gp::El* SumatraLogoEl(gp::Ctx* cx, float fontSize, Str fontFamily = {}, Str name = {}) {
     static Color cols[] = {kCol1, kCol2, kCol3, kCol4, kCol5, kCol5, kCol4, kCol3, kCol2, kCol1};
     gp::El* row = gp::Div(cx->a)->FlexRow()->ItemsCenter();
-    Str name = StrL(kAppName);
+    if (len(name) == 0) {
+        name = StrL(kAppName);
+    }
     for (int i = 0; i < len(name); i++) {
         gp::El* ch = gp::TextEl(cx->a, GpuiDup(cx->a, Str(name.s + i, 1)))
                          ->Font(fontSize)
@@ -1814,8 +1817,13 @@ gp::El* HomePageBuild(MainWindow* win, gp::Ctx* cx) {
     // orig's chrome-less About dropdown under the logo: shown after the tooltip
     // delay, it stays up while the cursor is over the logo or the box, so its
     // links stay clickable
+#if OS_WIN
+    Str logoName = StrL("SumatraPDF NG");
+#else
+    Str logoName = StrL(kAppName);
+#endif
     logoRow->Child(gpc::HoverCard::New(cx, GStrL("home-about-hover"))
-                       ->Trigger(SumatraLogoEl(cx, (float)kSumatraTxtFontSize))
+                       ->Trigger(SumatraLogoEl(cx, (float)kSumatraTxtFontSize, {}, logoName))
                        ->Content(AboutBoxEl(win, cx, false))
                        ->OpenDelay(kAboutHoverShowDelayMs)
                        ->CloseDelay(kAboutHoverHideDelayMs)
