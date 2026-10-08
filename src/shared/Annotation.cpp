@@ -400,72 +400,44 @@ static void WriteFreeTextFontLocked(fz_context* ctx, pdf_annot* a, Str family, i
 
 // return true if changed
 bool SetQuadding(Annotation* annot, int newQuadding) {
-    if (!AnnotationIsLive(annot)) {
+    ReportIf(!IsValidQuadding(newQuadding));
+    if (!AnnotationIsLive(annot) || Quadding(annot) == newQuadding) {
         return false;
     }
-    EngineMupdf* e = annot->engine;
-    {
-        AnnotAccess access(annot);
-        ReportIf(!IsValidQuadding(newQuadding));
-        bool didChange = Quadding(annot) != newQuadding;
-        if (!didChange) {
-            return false;
-        }
-        fz_try(access.ctx) {
-            pdf_set_annot_quadding(access.ctx, access.annot, newQuadding);
-            // /DS has its own text-align, which wins over /Q
-            if (Type(annot) == AnnotationType::FreeText) {
-                Str family;
-                int style = 0;
-                ReadFreeTextFontLocked(access.ctx, access.annot, family, style);
-                if (IsCustomFreeTextFont(family, style)) {
-                    WriteFreeTextFontLocked(access.ctx, access.annot, family, style);
-                }
+    return UpdateAnnot(annot, [annot, newQuadding](fz_context* ctx, pdf_annot* a) {
+        pdf_set_annot_quadding(ctx, a, newQuadding);
+        // /DS has its own text-align, which wins over /Q.
+        if (Type(annot) == AnnotationType::FreeText) {
+            Str family;
+            int style = 0;
+            ReadFreeTextFontLocked(ctx, a, family, style);
+            if (IsCustomFreeTextFont(family, style)) {
+                WriteFreeTextFontLocked(ctx, a, family, style);
             }
-            pdf_update_annot(access.ctx, access.annot);
         }
-        fz_catch(access.ctx) {
-            fz_report_error(access.ctx);
-            logf("SetQuadding(): pdf_set_annot_quadding or pdf_update_annot() failed\n");
-        }
-    }
-    MarkNotificationAsModified(e, annot);
-    return true;
+    });
 }
 
 void SetQuadPointsAsRect(Annotation* annot, const Vec<RectF>& rects) {
     if (!AnnotationIsLive(annot)) {
         return;
     }
-    EngineMupdf* e = annot->engine;
-    {
-        AnnotAccess access(annot);
-        int n = len(rects);
-        if (n == 0) {
-            return;
-        }
-        fz_quad* quads = AllocArray<fz_quad>(n);
-        if (!quads) {
-            return;
-        }
-        AutoFree<fz_quad> freeQuads(quads);
-        for (int i = 0; i < n; i++) {
-            RectF rect = rects[i];
-            fz_rect r = ToFzRect(rect);
-            fz_quad q = fz_quad_from_rect(r);
-            quads[i] = q;
-        }
-        fz_try(access.ctx) {
-            pdf_clear_annot_quad_points(access.ctx, access.annot);
-            pdf_set_annot_quad_points(access.ctx, access.annot, n, quads);
-            pdf_update_annot(access.ctx, access.annot);
-        }
-        fz_catch(access.ctx) {
-            fz_report_error(access.ctx);
-            logf("SetQuadPointsAsRect(): mupdf calls failed\n");
-        }
+    int n = len(rects);
+    if (n == 0) {
+        return;
     }
-    MarkNotificationAsModified(e, annot);
+    fz_quad* quads = AllocArray<fz_quad>(n);
+    if (!quads) {
+        return;
+    }
+    AutoFree<fz_quad> freeQuads(quads);
+    for (int i = 0; i < n; i++) {
+        quads[i] = fz_quad_from_rect(ToFzRect(rects[i]));
+    }
+    UpdateAnnot(annot, [n, quads](fz_context* ctx, pdf_annot* a) {
+        pdf_clear_annot_quad_points(ctx, a);
+        pdf_set_annot_quad_points(ctx, a, n, quads);
+    });
 }
 
 Vec<RectF> GetQuadPointsAsRect(Annotation* annot) {
