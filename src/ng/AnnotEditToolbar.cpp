@@ -1880,11 +1880,15 @@ void AnnotEditView::OnSliderStep(AnnotEditView* self, gp::Ctx* cx, const gp::Cli
 // text box takes Enter before the shell's key handler sees it, so this one
 // runs in the capture phase
 void AnnotEditView::OnContentsKey(AnnotEditView* self, gp::Ctx* cx, const gp::KeyEvent* ev) {
-    if (ev->vk != VK_RETURN || !ev->ctrl) {
+    // The text box takes Enter and Escape before the shell sees them.
+    bool accept = ev->vk == VK_RETURN && ev->ctrl;
+    bool cancel = ev->vk == VK_ESCAPE;
+    if (!accept && !cancel) {
         return;
     }
     const_cast<gp::KeyEvent*>(ev)->propagate = false;
-    EndAnnotContentsEdit(true);
+    EndAnnotContentsEdit(accept);
+    AppShellFocusFrame(self->win);
     AppShellInvalidate(self->win);
     gp::Notify(cx);
 }

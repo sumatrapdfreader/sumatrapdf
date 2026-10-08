@@ -1060,6 +1060,8 @@ static void ExecuteControlRequest(ControlRequest* req) {
                              Rect{0, topDy, sidebarDx, canvas.dy});
             AppendLayoutRect(out, SidebarContentToStr(win->sidebarBottomContent), win->uiState.favVisible,
                              Rect{0, topDy, sidebarDx, canvas.dy});
+            // dips per document pixel; click tests scale canvas points by this
+            out.Append(fmt("canvasScale=%.3f\n", (double)CanvasScale(win)));
             DisplayModel* dm = win->AsFixed();
             if (dm) {
                 out.Append(

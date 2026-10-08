@@ -899,9 +899,10 @@ static void AppendCertsText(str::Builder& out, PdfSigCert* certs) {
 
 // --- the dialog -------------------------------------------------------------
 
-// the dialog in the frame; a window of its own is not the frame's business
+// Open as an overlay or as its own window. The frame builder skips the
+// overlay when tw is set; accelerators and Escape still belong to it.
 bool IsPropertiesDialogVisible() {
-    return gProps.visible && !gProps.tw;
+    return gProps.visible;
 }
 
 // orig's SavePropertiesWindowPos: only a window the user moved is remembered

@@ -650,7 +650,7 @@ CommandVisibility GetCommandVisibility(int cmdId, const AppCommandCtx& ctx, Comm
         }
     }
 
-    if (!ctx.annotationUnderCursor && cmdId == CmdDeleteAnnotation) {
+    if (cmdId == CmdDeleteAnnotation && !ctx.annotationUnderCursor && !ctx.selectedAnnotation) {
         return MapForSurface(CommandVisibility::Disable, surface);
     }
 

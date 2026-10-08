@@ -816,7 +816,13 @@ AppCommandCtx NewAppCommandCtx(MainWindow* win, Point cursorPos) {
         if (pageNoUnderCursor > 0) {
             ctx.isCursorOnPage = true;
         }
-        ctx.annotationUnderCursor = win->annotationUnderCursor;
+        // (0, 0) is "no point": keep the hover. A real point is hit-tested
+        // and must not reuse a stale hover.
+        if (cursorPos.IsEmpty()) {
+            ctx.annotationUnderCursor = win->annotationUnderCursor;
+        } else {
+            ctx.annotationUnderCursor = dm->GetAnnotationAtPos(cursorPos, win->annotationUnderCursor);
+        }
         IPageElement* pageEl = dm->GetElementAtPos(cursorPos, nullptr);
         if (pageEl) {
             Str value = pageEl->GetValue();

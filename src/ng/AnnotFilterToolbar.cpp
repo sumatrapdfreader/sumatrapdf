@@ -708,7 +708,12 @@ static bool AnnotFilterKey(AnnotFilterToolbar* f, int vkey, bool isCtrl, bool is
         ListOnKeyDown(f, vkey, isCtrl, isShift, isAlt);
         return true;
     }
-    if (vkey == VK_DELETE) {
+    // macOS Delete is Backspace. The filter box returned above; this is the list.
+    bool macDelete = false;
+#if OS_DARWIN
+    macDelete = vkey == VK_BACK && !isCtrl && !isAlt;
+#endif
+    if (vkey == VK_DELETE || macDelete) {
         DeleteListSelection(f);
         return true;
     }

@@ -1059,20 +1059,40 @@ bool AppShellPromptForFiles(MainWindow* win, Str filter, StrVec* pathsOut) {
 
 // --- key bindings -----------------------------------------------------------
 
+static void AddKeyBinding(gp::KeyBinding* bindings, int& nBind, const AccelStroke& s) {
+    if (len(s.stroke) == 0) {
+        return;
+    }
+    gp::KeyBinding& b = bindings[nBind++];
+    b.stroke = s.stroke.s;
+    b.action = ActSumatraCmd();
+    b.context = kShellKeyContext;
+    b.arg = (intptr_t)s.cmd;
+}
+
 static void BindKeys() {
     int n = 0;
     const AccelStroke* strokes = GetAcceleratorStrokes(n);
     auto* bindings = AllocArrayTemp<gp::KeyBinding>(n);
     int nBind = 0;
-    for (int i = 0; i < n; i++) {
-        if (len(strokes[i].stroke) == 0) {
-            continue;
+    // gpui keeps 256 bindings and has already used part of them. Plain keys
+    // first (bare A, Shift+A), then Command, then the Ctrl duplicates.
+    for (int pass = 0; pass < 3; pass++) {
+        for (int i = 0; i < n; i++) {
+            Str s = strokes[i].stroke;
+            bool cmd = str::StartsWith(s, StrL("cmd-"));
+            bool ctrl = str::StartsWith(s, StrL("ctrl-"));
+            if (pass == 0 && (cmd || ctrl)) {
+                continue;
+            }
+            if (pass == 1 && !cmd) {
+                continue;
+            }
+            if (pass == 2 && !ctrl) {
+                continue;
+            }
+            AddKeyBinding(bindings, nBind, strokes[i]);
         }
-        gp::KeyBinding& b = bindings[nBind++];
-        b.stroke = strokes[i].stroke.s;
-        b.action = ActSumatraCmd();
-        b.context = kShellKeyContext;
-        b.arg = (intptr_t)strokes[i].cmd;
     }
     gp::KeymapBind(bindings, nBind);
     logf("BindKeys: %d shortcuts bound\n", nBind);
@@ -2099,7 +2119,9 @@ void ShellView::OnKeyDown(ShellView* self, gp::Ctx* cx, const gp::KeyEvent* ev) 
     // orig's dialogs are windows of their own with no accelerator table, so
     // no shortcut reaches the document while one is up (Properties keeps the
     // edit table)
-    DialogAccels dlgAccels = self->dialogUp ? DialogsAccelTable(win) : DialogAccels::All;
+    // A tool window (Properties) is not self->dialogUp, but it still owns
+    // the accelerators, the way orig's dialog window did.
+    DialogAccels dlgAccels = DialogsAccelTable(win);
     if (dlgAccels == DialogAccels::None) {
         gCmdSuppressed = true;
     } else if (dlgAccels == DialogAccels::Edit) {
@@ -2439,8 +2461,20 @@ void ShellView::OnKeyDown(ShellView* self, gp::Ctx* cx, const gp::KeyEvent* ev) 
         return;
     }
     // orig's FrameOnKeydown: Shift + arrows extend a text selection, numpad
-    // * and / rotate, Delete removes the selected annotation
-    if (FrameOnKeydown(win, (int)ev->vk, ev->ctrl, ev->shift, ev->alt)) {
+    // * and / rotate, Delete removes the selected annotation. Not while a
+    // dialog or the palette is up.
+    bool frameKeys = !self->overlayUp && DialogsAccelTable(win) == DialogAccels::All;
+#if OS_DARWIN
+    // macOS Delete is Backspace. A contents editor returned above.
+    if (frameKeys && ev->vk == VK_BACK && !ev->ctrl && !ev->shift && !ev->alt && !ev->platform) {
+        if (FrameOnKeydown(win, VK_DELETE, false, false, false)) {
+            mut->propagate = false;
+            gp::Notify(cx);
+            return;
+        }
+    }
+#endif
+    if (frameKeys && FrameOnKeydown(win, (int)ev->vk, ev->ctrl, ev->shift, ev->alt)) {
         mut->propagate = false;
         gp::Notify(cx);
         return;

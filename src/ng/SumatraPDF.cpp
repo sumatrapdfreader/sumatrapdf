@@ -3233,6 +3233,14 @@ static void AddUniquePageNo(Vec<int>& pageNos, int pageNo) {
     }
 }
 
+static RectF SelectionRectsUnion(const Vec<RectF>& rects) {
+    RectF covered;
+    for (const RectF& r : rects) {
+        covered = covered.IsEmpty() ? r : covered.Union(r);
+    }
+    return covered;
+}
+
 static Annotation* MakeAnnotationsFromSelection(WindowTab* tab, AnnotCreateArgs* args) {
     DisplayModel* dm = tab->AsFixed();
     if (!dm) {
@@ -3297,6 +3305,11 @@ static Annotation* MakeAnnotationsFromSelection(WindowTab* tab, AnnotCreateArgs*
         }
         SetQuadPointsAsRect(annot, rects);
         annot->bounds = GetBounds(annot);
+        // Hit testing uses this cache. pdf_bound_annot can miss the quads.
+        RectF covered = SelectionRectsUnion(rects);
+        if (!covered.IsEmpty() && (annot->bounds.IsEmpty() || annot->bounds.Intersect(covered).IsEmpty())) {
+            annot->bounds = covered;
+        }
         VecAppend(created, annot);
     }
 
@@ -3423,12 +3436,16 @@ void ExecuteAnnotCreateCmd(MainWindow* win, int invokedCmdId, bool isPlacementCo
         if (isPlacementCommit || tab->selectionOnPage) {
             AnnotCreateArgs args{AnnotationType::Highlight};
             SetAnnotCreateArgs(args, cmd);
-            if (MakeAnnotationsFromSelection(tab, &args)) {
+            Annotation* created = MakeAnnotationsFromSelection(tab, &args);
+            if (created) {
                 StopSelectTextWithKeyboard(win);
                 DeleteOldSelectionInfo(win, true);
                 RefreshAnnotationLists(tab);
                 MainWindowRerender(win);
                 ToolbarUpdateStateForWindow(win, true);
+                if (!win->pdfAnnotationsToolbarEnabled) {
+                    SetSelectedAnnotation(tab, created);
+                }
             }
         }
         if (!isPlacementCommit) {
@@ -3504,9 +3521,9 @@ void ExecuteAnnotCreateCmd(MainWindow* win, int invokedCmdId, bool isPlacementCo
     MainWindowRerender(win);
     ToolbarUpdateStateForWindow(win, true);
 
-    // in Edit PDF a new annotation is selected, so it can be moved, resized or
-    // edited from the property row; outside it selection is only a blue border
-    if (win->pdfAnnotationsToolbarEnabled) {
+    // Select a new annotation in Edit PDF, and text markup even when that
+    // toolbar is off, so Delete has a target.
+    if (win->pdfAnnotationsToolbarEnabled || AnnotationIsTextMarkup(lastCreatedAnnot->type)) {
         SetSelectedAnnotation(tab, lastCreatedAnnot);
     }
     // a new free text annotation is a box of placeholder text: put the caret
@@ -6636,7 +6653,16 @@ void ExecuteCmd(MainWindow* win, int cmdId) {
             break;
 
         case CmdDeleteAnnotation:
-            DeleteSelectedAnnotation(win);
+            // A dialog owns the keyboard. Delete removes the selection, or
+            // the annotation under the cursor when nothing is selected.
+            if (DialogsAccelTable(win) != DialogAccels::All) {
+                break;
+            }
+            if (tab && tab->selectedAnnotation) {
+                DeleteAnnotationAndUpdateUI(tab, tab->selectedAnnotation);
+            } else if (tab && win->annotationUnderCursor) {
+                DeleteAnnotationAndUpdateUI(tab, win->annotationUnderCursor);
+            }
             break;
 
         case CmdCreateAnnotHighlight:
@@ -7880,6 +7906,9 @@ void ExecuteCmdAtPoint(MainWindow* win, int cmdId, Point pt) {
         Annotation* annot = dm->GetAnnotationAtPos(pt, nullptr);
         if (annot) {
             SetSelectedAnnotation(tab, annot);
+        } else if (origId == CmdDeleteAnnotation) {
+            // A miss must not delete the selection or the hover.
+            return;
         }
     }
     ExecuteCmd(win, cmdId);
