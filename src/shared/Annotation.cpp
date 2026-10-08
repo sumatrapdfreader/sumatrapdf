@@ -1045,23 +1045,12 @@ static PdfColor PdfColorFromFloat(fz_context* ctx, int n, float color[4]) {
 using AnnotColorReader = void (*)(fz_context*, pdf_annot*, int*, float[4]);
 
 static PdfColor GetAnnotColor(Annotation* annot, AnnotColorReader readColor) {
-    if (!AnnotationIsLive(annot)) {
-        return 0;
-    }
-    AnnotAccess access(annot);
-    float color[4]{};
-    int n = -1;
-    fz_try(access.ctx) {
-        readColor(access.ctx, access.annot, &n, color);
-    }
-    fz_catch(access.ctx) {
-        fz_report_error(access.ctx);
-        n = -1;
-    }
-    if (n == -1) {
-        return 0;
-    }
-    return PdfColorFromFloat(access.ctx, n, color);
+    return ReadAnnot(annot, (PdfColor)0, [readColor](fz_context* ctx, pdf_annot* a) {
+        float color[4]{};
+        int n = 0;
+        readColor(ctx, a, &n, color);
+        return PdfColorFromFloat(ctx, n, color);
+    });
 }
 
 PdfColor GetColor(Annotation* annot) {
@@ -1362,18 +1351,14 @@ struct FreeTextFont {
 };
 
 static FreeTextFont ReadFreeTextFont(Annotation* annot) {
-    FreeTextFont font;
-    if (!AnnotationIsLive(annot) || Type(annot) != AnnotationType::FreeText) {
+    if (!annot || Type(annot) != AnnotationType::FreeText) {
+        return {};
+    }
+    return ReadAnnot(annot, FreeTextFont{}, [](fz_context* ctx, pdf_annot* a) {
+        FreeTextFont font;
+        ReadFreeTextFontLocked(ctx, a, font.family, font.style);
         return font;
-    }
-    AnnotAccess access(annot);
-    fz_try(access.ctx) {
-        ReadFreeTextFontLocked(access.ctx, access.annot, font.family, font.style);
-    }
-    fz_catch(access.ctx) {
-        fz_report_error(access.ctx);
-    }
-    return font;
+    });
 }
 
 Str FreeTextFontFamily(Annotation* annot) {
@@ -1408,24 +1393,14 @@ struct DefaultAppearance {
 };
 
 static DefaultAppearance ReadDefaultAppearance(Annotation* annot) {
-    DefaultAppearance res;
-    if (!AnnotationIsLive(annot)) {
-        return res;
-    }
-    AnnotAccess access(annot);
-    const char* fontNameZ = nullptr;
-    float size = 0;
-    int n = 0;
-    float color[4]{};
-    fz_try(access.ctx) {
-        pdf_annot_default_appearance(access.ctx, access.annot, &fontNameZ, &size, &n, color);
-    }
-    fz_catch(access.ctx) {
-        fz_report_error(access.ctx);
-    }
-    res.textSize = (int)size;
-    res.textColor = PdfColorFromFloat(access.ctx, n, color);
-    return res;
+    return ReadAnnot(annot, DefaultAppearance{}, [](fz_context* ctx, pdf_annot* a) {
+        const char* fontNameZ = nullptr;
+        float size = 0;
+        int n = 0;
+        float color[4]{};
+        pdf_annot_default_appearance(ctx, a, &fontNameZ, &size, &n, color);
+        return DefaultAppearance{(int)size, PdfColorFromFloat(ctx, n, color)};
+    });
 }
 
 static void SetDefaultAppearance(Annotation* annot, const int* textSize, const PdfColor* textColor) {
