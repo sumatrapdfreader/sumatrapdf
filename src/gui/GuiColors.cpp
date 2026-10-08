@@ -3,8 +3,6 @@
 
 #include "base/Base.h"
 
-#include "DarkMode.h"
-#include "Theme.h"
 #include "gui/GuiColors.h"
 
 Color gColsText[kColTextCount];
@@ -129,71 +127,4 @@ void GuiSetDefaultColorsFromSystem() {
     gColsWin[kColWinBg] = winBg;
 
     gColsEdit[kColEditBottomBorder] = edge;
-}
-
-void ThemeStartPlatformColors() {
-    DarkModeApplyThemeColors();
-}
-
-void ThemeApplyPlatformColors() {
-    GuiColorsInitIfNeeded();
-    gGuiColorsFromSystem = false;
-
-    Color text = ThemeWindowTextColor();
-    Color disabled = ThemeWindowTextDisabledColor();
-    Color link = ThemeWindowLinkColor();
-    Color ctlBg = ThemeWindowControlBackgroundColor();
-    Color edge = ThemeEdgeColor();
-    Color hotEdge = ThemeHotEdgeColor();
-
-    gColsText[kColText] = text;
-    gColsLink[kColText] = link;
-
-    gColsBtn[kColBtnText] = text;
-    gColsBtn[kColBtnBg] = AccentColor(ctlBg, 14);
-    gColsBtn[kColBtnBgHover] = AccentColor(ctlBg, 28);
-    gColsBtn[kColBtnBorder] = edge;
-    gColsBtn[kColBtnTextDisabled] = disabled;
-
-    gColsBtnDefault[kColBtnText] = text;
-    gColsBtnDefault[kColBtnBg] = AccentColor(ctlBg, 26);
-    gColsBtnDefault[kColBtnBgHover] = AccentColor(ctlBg, 40);
-    gColsBtnDefault[kColBtnBorder] = hotEdge;
-    gColsBtnDefault[kColBtnTextDisabled] = disabled;
-
-    gColsIconBtn[kColIconBtnBgHover] = AccentColor(ctlBg, 20);
-    gColsIconBtn[kColIconBtnBgSelected] = AccentColor(ctlBg, 36);
-    gColsIconBtn[kColIconBtnChevron] = text;
-    gColsIconBtn[kColIconBtnChevronDisabled] = disabled;
-
-    gColsListBox[kColListText] = text;
-    gColsListBox[kColListBg] = ctlBg;
-    gColsListBox[kColListSel] = AccentColor(ctlBg, 25);
-    gColsListBox[kColListSelFocused] = AccentColor(ctlBg, 45);
-    gColsListBox[kColListScrollbar] = AccentColor(ctlBg, 60);
-
-    gColsSplitter[kColSplitterBg] = ctlBg;
-    gColsFill[kColFillBg] = ctlBg;
-    gColsLine[kColLineFg] = edge;
-
-    gColsSlider[kColSliderTrack] = AccentColor(ctlBg, 40);
-    gColsSlider[kColSliderFill] = text;
-    gColsSlider[kColSliderThumb] = text;
-    gColsSlider[kColSliderThumbHover] = AccentColor(text, 20);
-
-    gColsRichText[kColRichText] = text;
-    gColsRichText[kColRichLink] = link;
-    gColsRichText[kColRichBg] = ctlBg;
-
-    gColsTab[kColTabText] = text;
-    gColsTab[kColTabBg] = ThemeActiveTabBackgroundColor();
-    gColsTab[kColTabInactiveBg] = ThemeInactiveTabBackgroundColor();
-
-    gColsWin[kColWinText] = text;
-    gColsWin[kColWinBg] = ctlBg;
-    gColsEdit[kColEditBottomBorder] = edge;
-}
-
-void ThemeFinishPlatformColors() {
-    DarkModeRememberTreeViewStyle();
 }
