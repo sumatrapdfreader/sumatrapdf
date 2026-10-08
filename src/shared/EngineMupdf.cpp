@@ -3019,18 +3019,11 @@ static Str PdfLoadAttachment(fz_context* ctx, pdf_document* doc, int no) {
         int n = pdf_dict_len(ctx, dict);
         for (int i = 0; i < n; i++) {
             pdf_obj* fs = pdf_dict_get_val(ctx, dict, i);
-
-            // https://github.com/sumatrapdfreader/sumatrapdf/issues/1666
-            // the `false &&` disable is deliberate; silence /analyze C6237
-#pragma warning(suppress : 6237)
-            if (false && !pdf_is_embedded_file(ctx, fs)) {
-                continue;
-            }
             if (no == i + 1) {
                 fz_buffer* buf = pdf_load_embedded_file_contents(ctx, fs);
                 res = str::Dup(Str((char*)buf->data, (int)buf->len));
                 fz_drop_buffer(ctx, buf);
-                i = n + 1; // exit for loop
+                break;
             }
         }
     }
@@ -3085,13 +3078,6 @@ static fz_outline* PdfLoadAttachments(fz_context* ctx, pdf_document* doc, Str pa
         fz_outline* curr = &root;
         for (int i = 0; i < pdf_dict_len(ctx, dict); i++) {
             pdf_obj* fs = pdf_dict_get_val(ctx, dict, i);
-
-            // https://github.com/sumatrapdfreader/sumatrapdf/issues/1666
-            // the `false &&` disable is deliberate; silence /analyze C6237
-#pragma warning(suppress : 6237)
-            if (false && !pdf_is_embedded_file(ctx, fs)) {
-                continue;
-            }
             pdf_filespec_params fileParams = {};
             pdf_get_filespec_params(ctx, fs, &fileParams);
             const char* nameStr = fileParams.filename;
