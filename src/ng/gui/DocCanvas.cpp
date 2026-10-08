@@ -3183,13 +3183,16 @@ static void OnMouseLeftButtonUp(MainWindow* win, int x, int y) {
         return;
     }
 
+    if (clickedAnnot && tab && AnnotationIsTextMarkup(clickedAnnot->type)) {
+        SetSelectedAnnotation(tab, clickedAnnot);
+    }
+
     IPageDestination* dest = link ? link->AsLink() : nullptr;
     Kind destKind = dest ? dest->GetKind() : nullptr;
     // FileAttachment is also a dest; open it instead of the #4790 comment card.
     bool openEmbedded = destKind == kindDestinationLaunchEmbedded;
 
-    // Outside Edit PDF mode a click on an annotation did nothing. Show its
-    // text, so a long comment can be read without the editing UI (issue #4790)
+    // Outside Edit PDF, show annotation comments without the editing UI (issue #4790).
     if (!openEmbedded && clickedAnnot && tab && !CanvasCtrlPressed() && AnnotationHasText(clickedAnnot)) {
         if (ShowAnnotationTextPopup(win, clickedAnnot)) {
             return;

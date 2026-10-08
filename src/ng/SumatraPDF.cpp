@@ -3302,6 +3302,17 @@ static Annotation* MakeAnnotationsFromSelection(WindowTab* tab, AnnotCreateArgs*
         }
         SetQuadPointsAsRect(annot, rects);
         annot->bounds = GetBounds(annot);
+        // QuadPoints draw the mark; an empty or unrelated /Rect misses hit tests,
+        // so a just-made highlight cannot be clicked or deleted.
+        if (len(rects) > 0) {
+            RectF wanted = rects[0];
+            for (int i = 1; i < len(rects); i++) {
+                wanted = wanted.Union(rects[i]);
+            }
+            if (annot->bounds.IsEmpty() || annot->bounds.Intersect(wanted).IsEmpty()) {
+                annot->bounds = wanted;
+            }
+        }
         VecAppend(created, annot);
     }
 
@@ -3428,12 +3439,17 @@ void ExecuteAnnotCreateCmd(MainWindow* win, int invokedCmdId, bool isPlacementCo
         if (isPlacementCommit || tab->selectionOnPage) {
             AnnotCreateArgs args{AnnotationType::Highlight};
             SetAnnotCreateArgs(args, cmd);
-            if (MakeAnnotationsFromSelection(tab, &args)) {
+            if (Annotation* created = MakeAnnotationsFromSelection(tab, &args)) {
                 StopSelectTextWithKeyboard(win);
                 DeleteOldSelectionInfo(win, true);
                 RefreshAnnotationLists(tab);
                 MainWindowRerender(win);
                 ToolbarUpdateStateForWindow(win, true);
+                // edit mode locks the next press; outside it the mark stays
+                // selected so Delete can remove it
+                if (!win->pdfAnnotationsToolbarEnabled) {
+                    SetSelectedAnnotation(tab, created);
+                }
             }
         }
         if (!isPlacementCommit) {
@@ -3510,8 +3526,10 @@ void ExecuteAnnotCreateCmd(MainWindow* win, int invokedCmdId, bool isPlacementCo
     ToolbarUpdateStateForWindow(win, true);
 
     // in Edit PDF a new annotation is selected, so it can be moved, resized or
-    // edited from the property row; outside it selection is only a blue border
-    if (win->pdfAnnotationsToolbarEnabled) {
+    // edited from the property row; outside it selection is only a blue border.
+    // Text markup is selected either way: otherwise a new highlight has no
+    // target for Delete (Mac's Delete key is Backspace, not the forward-delete).
+    if (win->pdfAnnotationsToolbarEnabled || AnnotationIsTextMarkup(lastCreatedAnnot->type)) {
         SetSelectedAnnotation(tab, lastCreatedAnnot);
     }
     // a new free text annotation is a box of placeholder text: put the caret
@@ -6104,7 +6122,7 @@ bool FrameOnKeydown(MainWindow* win, int key, bool isCtrl, bool isShift, bool is
         if (!tab || !tab->selectedAnnotation) {
             return false;
         }
-        DeleteAnnotationAndUpdateUI(tab, tab->selectedAnnotation);
+        DeleteSelectedAnnotation(win);
     } else {
         return false;
     }
@@ -6640,9 +6658,14 @@ void ExecuteCmd(MainWindow* win, int cmdId) {
             ApplyRedactionsInTab(tab);
             break;
 
-        case CmdDeleteAnnotation:
-            DeleteSelectedAnnotation(win);
+        case CmdDeleteAnnotation: {
+            if (DialogsAccelTable(win) != DialogAccels::All) {
+                break;
+            }
+            Annotation* annot = tab && tab->selectedAnnotation ? tab->selectedAnnotation : win->annotationUnderCursor;
+            DeleteAnnotationAndUpdateUI(tab, annot);
             break;
+        }
 
         case CmdCreateAnnotHighlight:
         case CmdCreateAnnotSquiggly:
@@ -7883,6 +7906,9 @@ void ExecuteCmdAtPoint(MainWindow* win, int cmdId, Point pt) {
     DisplayModel* dm = win->AsFixed();
     if (tab && dm) {
         Annotation* annot = dm->GetAnnotationAtPos(pt, nullptr);
+        if (!annot && origId == CmdDeleteAnnotation) {
+            return;
+        }
         if (annot) {
             SetSelectedAnnotation(tab, annot);
         }

@@ -1044,6 +1044,7 @@ static void ExecuteControlRequest(ControlRequest* req) {
             int sidebarDx = (win->uiState.tocVisible || win->uiState.favVisible) ? win->sidebarDx : 0;
             AppendLayoutRect(out, StrL("frame"), true, frame);
             AppendLayoutRect(out, StrL("canvas"), true, canvas);
+            out.Append(fmt("canvasScale=%.3f\n", CanvasScale(win)));
             Rect menuRc{0, 0, frame.dx, menuDy};
             Rect tabsRc{0, menuDy, frame.dx, tabsDy};
             int topDy = menuDy + tabsDy;

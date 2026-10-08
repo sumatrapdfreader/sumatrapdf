@@ -965,6 +965,22 @@ bool AppShellPromptForFiles(MainWindow* win, Str filter, StrVec* pathsOut) {
 
 // --- key bindings -----------------------------------------------------------
 
+#if OS_DARWIN
+// GPUI's fixed keymap can drop late bindings after adding macOS aliases.
+static int BareLetterAccel(u16 vk, bool shift) {
+    int n = 0;
+    const Accel* accels = GetAcceleratorTable(n);
+    for (int i = 0; i < n; i++) {
+        const Accel& a = accels[i];
+        if (!a.sc.isVirt || a.sc.ctrl || a.sc.alt || a.sc.vk != vk || a.sc.shift != shift) {
+            continue;
+        }
+        return a.cmd;
+    }
+    return 0;
+}
+#endif
+
 static void BindKeys() {
     int n = 0;
     const AccelStroke* strokes = GetAcceleratorStrokes(n);
@@ -2344,9 +2360,19 @@ void ShellView::OnKeyDown(ShellView* self, gp::Ctx* cx, const gp::KeyEvent* ev) 
         gp::Notify(cx);
         return;
     }
+    bool frameKeys = !self->overlayUp && DialogsAccelTable(win) == DialogAccels::All;
+#if OS_DARWIN
+    // Mac labels Backspace "Delete"; selected annotations take it before navigation.
+    if (frameKeys && ev->vk == VK_BACK && !ev->ctrl && !ev->shift && !ev->alt && !ev->platform &&
+        FrameOnKeydown(win, VK_DELETE, false, false, false)) {
+        mut->propagate = false;
+        gp::Notify(cx);
+        return;
+    }
+#endif
     // orig's FrameOnKeydown: Shift + arrows extend a text selection, numpad
     // * and / rotate, Delete removes the selected annotation
-    if (FrameOnKeydown(win, (int)ev->vk, ev->ctrl, ev->shift, ev->alt)) {
+    if (frameKeys && FrameOnKeydown(win, (int)ev->vk, ev->ctrl, ev->shift, ev->alt)) {
         mut->propagate = false;
         gp::Notify(cx);
         return;
@@ -2371,6 +2397,17 @@ void ShellView::OnKeyDown(ShellView* self, gp::Ctx* cx, const gp::KeyEvent* ev) 
         gp::Notify(cx);
         return;
     }
+#if OS_DARWIN
+    if (!gCmdSuppressed && frameKeys && ev->vk >= 'A' && ev->vk <= 'Z') {
+        int cmd = BareLetterAccel((u16)ev->vk, ev->shift);
+        if (cmd) {
+            ExecuteCmd(win, cmd);
+            mut->propagate = false;
+            gp::Notify(cx);
+            return;
+        }
+    }
+#endif
     // orig's FrameOnChar: + = - / b. gpui hands the typed character on in a
     // key event of its own, without a virtual key
     if (ev->vk == 0 && ev->ch != 0) {

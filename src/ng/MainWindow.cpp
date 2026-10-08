@@ -816,7 +816,13 @@ AppCommandCtx NewAppCommandCtx(MainWindow* win, Point cursorPos) {
         if (pageNoUnderCursor > 0) {
             ctx.isCursorOnPage = true;
         }
-        ctx.annotationUnderCursor = win->annotationUnderCursor;
+        // A given point is the target. Last-move hover is only the fallback when
+        // no point was given; otherwise an empty point reuses a stale hover.
+        if (!cursorPos.IsEmpty()) {
+            ctx.annotationUnderCursor = dm->GetAnnotationAtPos(cursorPos, win->annotationUnderCursor);
+        } else {
+            ctx.annotationUnderCursor = win->annotationUnderCursor;
+        }
         IPageElement* pageEl = dm->GetElementAtPos(cursorPos, nullptr);
         if (pageEl) {
             Str value = pageEl->GetValue();
