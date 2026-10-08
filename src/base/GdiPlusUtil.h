@@ -16,12 +16,8 @@ Gdiplus::Bitmap* WrapPixmapGdiplus(const Pixmap* px);
 Pixmap* PixmapFromGdiplus(Gdiplus::Bitmap* bmp);
 Pixmap* PixmapApplyExifOrientation(Pixmap* px, int orientation);
 
-typedef RectF (*TextMeasureAlgorithm)(Gdiplus::Graphics* g, Gdiplus::Font* f, WStr s);
-
 RectF MeasureTextAccurate(Gdiplus::Graphics* g, Gdiplus::Font* f, WStr s);
 RectF MeasureTextStandard(Gdiplus::Graphics* g, Gdiplus::Font* f, WStr s);
-RectF MeasureTextQuick(Gdiplus::Graphics* g, Gdiplus::Font* f, WStr s);
-RectF MeasureText(Gdiplus::Graphics* g, Gdiplus::Font* f, WStr s, TextMeasureAlgorithm algo = nullptr);
 
 void GetBaseTransform(Gdiplus::Matrix& m, Gdiplus::RectF pageRect, float zoom, int rotation);
 
