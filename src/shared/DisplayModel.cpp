@@ -2873,6 +2873,20 @@ void DisplayModel::ScrollXBy(int dx) {
     }
 }
 
+static void FinishYScroll(DisplayModel* dm, int prevPageNo) {
+    dm->RecalcVisibleParts();
+    dm->EnsureMediaBoxesForVisiblePages();
+    dm->EnsureTrimEmptyMarginsForVisiblePages();
+    dm->RenderVisibleParts();
+    dm->cb->UpdateScrollbars(dm, dm->canvasSize);
+    int pageNo = dm->CurrentPageNo();
+    if (pageNo != prevPageNo) {
+        dm->cb->PageNoChanged(dm, pageNo);
+    }
+    dm->RepaintDisplay();
+    RememberStableNavPointCandidateAfterViewChange(dm, dm->GetScrollState());
+}
+
 void DisplayModel::ScrollYTo(int yOff) {
     if (ShouldCommitStableNavPointBeforeViewChange(this, GetScrollState())) {
         AddNavPoint();
@@ -2880,19 +2894,7 @@ void DisplayModel::ScrollYTo(int yOff) {
 
     int currPageNo = CurrentPageNo();
     viewPort.y = yOff;
-    RecalcVisibleParts();
-    EnsureMediaBoxesForVisiblePages();
-    EnsureTrimEmptyMarginsForVisiblePages();
-    RenderVisibleParts();
-    // Match ScrollXTo: keep scrollbar thumb (and smart overlay reveal) in sync.
-    cb->UpdateScrollbars(this, canvasSize);
-
-    int newPageNo = CurrentPageNo();
-    if (newPageNo != currPageNo) {
-        cb->PageNoChanged(this, newPageNo);
-    }
-    RepaintDisplay();
-    RememberStableNavPointCandidateAfterViewChange(this, GetScrollState());
+    FinishYScroll(this, currPageNo);
 }
 
 /* Scroll the doc in y-axis by 'dy'. If 'changePage' is TRUE, automatically
@@ -2945,17 +2947,7 @@ void DisplayModel::ScrollYBy(int dy, bool changePage) {
 
     currPageNo = CurrentPageNo();
     viewPort.y = newYOff;
-    RecalcVisibleParts();
-    EnsureMediaBoxesForVisiblePages();
-    EnsureTrimEmptyMarginsForVisiblePages();
-    RenderVisibleParts();
-    cb->UpdateScrollbars(this, canvasSize);
-    newPageNo = CurrentPageNo();
-    if (newPageNo != currPageNo) {
-        cb->PageNoChanged(this, newPageNo);
-    }
-    RepaintDisplay();
-    RememberStableNavPointCandidateAfterViewChange(this, GetScrollState());
+    FinishYScroll(this, currPageNo);
 }
 
 int DisplayModel::yOffset() {
