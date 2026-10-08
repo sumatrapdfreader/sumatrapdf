@@ -387,30 +387,28 @@ bool SetQuadding(Annotation* annot, int newQuadding) {
         return false;
     }
     EngineMupdf* e = annot->engine;
-    auto* a = annot->pdfannot;
     {
-        auto* ctx = e->Ctx();
-        ScopedRecursiveMutex cs(&e->docLock);
+        AnnotAccess access(annot);
         ReportIf(!IsValidQuadding(newQuadding));
         bool didChange = Quadding(annot) != newQuadding;
         if (!didChange) {
             return false;
         }
-        fz_try(ctx) {
-            pdf_set_annot_quadding(ctx, a, newQuadding);
+        fz_try(access.ctx) {
+            pdf_set_annot_quadding(access.ctx, access.annot, newQuadding);
             // /DS has its own text-align, which wins over /Q
             if (Type(annot) == AnnotationType::FreeText) {
                 Str family;
                 int style = 0;
-                ReadFreeTextFontLocked(ctx, a, family, style);
+                ReadFreeTextFontLocked(access.ctx, access.annot, family, style);
                 if (IsCustomFreeTextFont(family, style)) {
-                    WriteFreeTextFontLocked(ctx, a, family, style);
+                    WriteFreeTextFontLocked(access.ctx, access.annot, family, style);
                 }
             }
-            pdf_update_annot(ctx, a);
+            pdf_update_annot(access.ctx, access.annot);
         }
-        fz_catch(ctx) {
-            fz_report_error(ctx);
+        fz_catch(access.ctx) {
+            fz_report_error(access.ctx);
             logf("SetQuadding(): pdf_set_annot_quadding or pdf_update_annot() failed\n");
         }
     }
@@ -423,10 +421,8 @@ void SetQuadPointsAsRect(Annotation* annot, const Vec<RectF>& rects) {
         return;
     }
     EngineMupdf* e = annot->engine;
-    auto* a = annot->pdfannot;
     {
-        auto* ctx = e->Ctx();
-        ScopedRecursiveMutex cs(&e->docLock);
+        AnnotAccess access(annot);
         int n = len(rects);
         if (n == 0) {
             return;
@@ -442,13 +438,13 @@ void SetQuadPointsAsRect(Annotation* annot, const Vec<RectF>& rects) {
             fz_quad q = fz_quad_from_rect(r);
             quads[i] = q;
         }
-        fz_try(ctx) {
-            pdf_clear_annot_quad_points(ctx, a);
-            pdf_set_annot_quad_points(ctx, a, n, quads);
-            pdf_update_annot(ctx, a);
+        fz_try(access.ctx) {
+            pdf_clear_annot_quad_points(access.ctx, access.annot);
+            pdf_set_annot_quad_points(access.ctx, access.annot, n, quads);
+            pdf_update_annot(access.ctx, access.annot);
         }
-        fz_catch(ctx) {
-            fz_report_error(ctx);
+        fz_catch(access.ctx) {
+            fz_report_error(access.ctx);
             logf("SetQuadPointsAsRect(): mupdf calls failed\n");
         }
     }
@@ -1183,20 +1179,18 @@ bool SetColor(Annotation* annot, PdfColor c) {
         return false;
     }
     EngineMupdf* e = annot->engine;
-    auto* a = annot->pdfannot;
     {
-        auto* ctx = e->Ctx();
-        ScopedRecursiveMutex cs(&e->docLock);
+        AnnotAccess access(annot);
         bool didChange = false;
         float color[4]{};
         int n = -1;
         float oldOpacity = 0;
-        fz_try(ctx) {
-            pdf_annot_color(ctx, a, &n, color);
-            oldOpacity = pdf_annot_opacity(ctx, a);
+        fz_try(access.ctx) {
+            pdf_annot_color(access.ctx, access.annot, &n, color);
+            oldOpacity = pdf_annot_opacity(access.ctx, access.annot);
         }
-        fz_catch(ctx) {
-            fz_report_error(ctx);
+        fz_catch(access.ctx) {
+            fz_report_error(access.ctx);
             n = -1;
         }
         if (n == -1) {
@@ -1219,9 +1213,9 @@ bool SetColor(Annotation* annot, PdfColor c) {
         if (!didChange) {
             return false;
         }
-        fz_try(ctx) {
+        fz_try(access.ctx) {
             if (c == 0) {
-                pdf_set_annot_color(ctx, a, 0, newColor);
+                pdf_set_annot_color(access.ctx, access.annot, 0, newColor);
                 // For text markup /C is the only ink, so an empty one doesn't
                 // make the annotation invisible: mupdf synthesizes Acrobat's
                 // default yellow for Highlight and a black line for the rest
@@ -1230,18 +1224,18 @@ bool SetColor(Annotation* annot, PdfColor c) {
                 // stroke still shows /IC, and a FreeText with a transparent
                 // background still shows its text.
                 if (AnnotationIsTextMarkup(Type(annot))) {
-                    pdf_set_annot_opacity(ctx, a, 0.f);
+                    pdf_set_annot_opacity(access.ctx, access.annot, 0.f);
                 }
             } else {
-                pdf_set_annot_color(ctx, a, 3, newColor);
+                pdf_set_annot_color(access.ctx, access.annot, 3, newColor);
                 if (oldOpacity != opacity) {
-                    pdf_set_annot_opacity(ctx, a, opacity);
+                    pdf_set_annot_opacity(access.ctx, access.annot, opacity);
                 }
             }
-            pdf_update_annot(ctx, a);
+            pdf_update_annot(access.ctx, access.annot);
         }
-        fz_catch(ctx) {
-            fz_report_error(ctx);
+        fz_catch(access.ctx) {
+            fz_report_error(access.ctx);
         }
     }
     MarkNotificationAsModified(e, annot);
@@ -1257,18 +1251,16 @@ bool SetInteriorColor(Annotation* annot, PdfColor c) {
         return false;
     }
     EngineMupdf* e = annot->engine;
-    auto* a = annot->pdfannot;
     {
-        auto* ctx = e->Ctx();
-        ScopedRecursiveMutex cs(&e->docLock);
+        AnnotAccess access(annot);
         bool didChange = false;
         float color[4]{};
         int n = -1;
-        fz_try(ctx) {
-            pdf_annot_interior_color(ctx, a, &n, color);
+        fz_try(access.ctx) {
+            pdf_annot_interior_color(access.ctx, access.annot, &n, color);
         }
-        fz_catch(ctx) {
-            fz_report_error(ctx);
+        fz_catch(access.ctx) {
+            fz_report_error(access.ctx);
             n = -1;
         }
         float newColor[3]{};
@@ -1285,12 +1277,12 @@ bool SetInteriorColor(Annotation* annot, PdfColor c) {
         if (!didChange) {
             return false;
         }
-        fz_try(ctx) {
-            pdf_set_annot_interior_color(ctx, a, newN, newColor);
-            pdf_update_annot(ctx, a);
+        fz_try(access.ctx) {
+            pdf_set_annot_interior_color(access.ctx, access.annot, newN, newColor);
+            pdf_update_annot(access.ctx, access.annot);
         }
-        fz_catch(ctx) {
-            fz_report_error(ctx);
+        fz_catch(access.ctx) {
+            fz_report_error(access.ctx);
         }
     }
     MarkNotificationAsModified(e, annot);
@@ -1490,14 +1482,13 @@ void SetFreeTextFont(Annotation* annot, Str family, int style) {
     }
     EngineMupdf* e = annot->engine;
     {
-        auto* ctx = e->Ctx();
-        ScopedRecursiveMutex cs(&e->docLock);
-        fz_try(ctx) {
-            WriteFreeTextFontLocked(ctx, annot->pdfannot, family, style);
-            pdf_update_annot(ctx, annot->pdfannot);
+        AnnotAccess access(annot);
+        fz_try(access.ctx) {
+            WriteFreeTextFontLocked(access.ctx, access.annot, family, style);
+            pdf_update_annot(access.ctx, access.annot);
         }
-        fz_catch(ctx) {
-            fz_report_error(ctx);
+        fz_catch(access.ctx) {
+            fz_report_error(access.ctx);
         }
     }
     MarkNotificationAsModified(e, annot);
@@ -1534,19 +1525,17 @@ static void SetDefaultAppearance(Annotation* annot, const int* textSize, const P
         return;
     }
     EngineMupdf* e = annot->engine;
-    auto* a = annot->pdfannot;
     {
-        auto* ctx = e->Ctx();
-        ScopedRecursiveMutex cs(&e->docLock);
+        AnnotAccess access(annot);
         const char* fontNameZ = nullptr;
         float size = 0;
         int n = 0;
         float color[4]{};
         Str family;
         int style = 0;
-        fz_try(ctx) {
-            ReadFreeTextFontLocked(ctx, a, family, style);
-            pdf_annot_default_appearance(ctx, a, &fontNameZ, &size, &n, color);
+        fz_try(access.ctx) {
+            ReadFreeTextFontLocked(access.ctx, access.annot, family, style);
+            pdf_annot_default_appearance(access.ctx, access.annot, &fontNameZ, &size, &n, color);
             if (textSize) {
                 size = (float)*textSize;
             }
@@ -1554,14 +1543,14 @@ static void SetDefaultAppearance(Annotation* annot, const int* textSize, const P
                 PdfColorToFloat(*textColor, color);
                 n = 3;
             }
-            pdf_set_annot_default_appearance(ctx, a, fontNameZ, size, n, color);
+            pdf_set_annot_default_appearance(access.ctx, access.annot, fontNameZ, size, n, color);
             if (IsCustomFreeTextFont(family, style)) {
-                WriteFreeTextFontLocked(ctx, a, family, style);
+                WriteFreeTextFontLocked(access.ctx, access.annot, family, style);
             }
-            pdf_update_annot(ctx, a);
+            pdf_update_annot(access.ctx, access.annot);
         }
-        fz_catch(ctx) {
-            fz_report_error(ctx);
+        fz_catch(access.ctx) {
+            fz_report_error(access.ctx);
         }
     }
     MarkNotificationAsModified(e, annot);
@@ -1644,17 +1633,15 @@ void SetLinePoints(Annotation* annot, PointF start, PointF end) {
         return;
     }
     EngineMupdf* e = annot->engine;
-    auto* a = annot->pdfannot;
     bool failed = false;
     {
-        auto* ctx = e->Ctx();
-        ScopedRecursiveMutex cs(&e->docLock);
-        fz_try(ctx) {
-            pdf_set_annot_line(ctx, a, fz_point{start.x, start.y}, fz_point{end.x, end.y});
-            pdf_update_annot(ctx, a);
+        AnnotAccess access(annot);
+        fz_try(access.ctx) {
+            pdf_set_annot_line(access.ctx, access.annot, fz_point{start.x, start.y}, fz_point{end.x, end.y});
+            pdf_update_annot(access.ctx, access.annot);
         }
-        fz_catch(ctx) {
-            fz_report_error(ctx);
+        fz_catch(access.ctx) {
+            fz_report_error(access.ctx);
             failed = true;
             logf("SetLinePoints: pdf_set_annot_line() failed\n");
         }
@@ -1703,21 +1690,19 @@ void SetVertices(Annotation* annot, const Vec<PointF>& points) {
         return;
     }
     EngineMupdf* e = annot->engine;
-    auto* a = annot->pdfannot;
     Vec<fz_point> pts;
     for (int i = 0; i < len(points); i++) {
         VecAppend(pts, {points[i].x, points[i].y});
     }
     bool failed = false;
     {
-        auto* ctx = e->Ctx();
-        ScopedRecursiveMutex cs(&e->docLock);
-        fz_try(ctx) {
-            pdf_set_annot_vertices(ctx, a, len(pts), pts.els);
-            pdf_update_annot(ctx, a);
+        AnnotAccess access(annot);
+        fz_try(access.ctx) {
+            pdf_set_annot_vertices(access.ctx, access.annot, len(pts), pts.els);
+            pdf_update_annot(access.ctx, access.annot);
         }
-        fz_catch(ctx) {
-            fz_report_error(ctx);
+        fz_catch(access.ctx) {
+            fz_report_error(access.ctx);
             failed = true;
             logf("SetVertices: pdf_set_annot_vertices() failed\n");
         }
@@ -1834,17 +1819,15 @@ InkEraseResult EraseAnnotationInk(Annotation* annot, PointF pt, float radius) {
         VecAppend(pts, {p.x, p.y});
     }
     EngineMupdf* e = annot->engine;
-    auto* a = annot->pdfannot;
     bool failed = false;
     {
-        auto* ctx = e->Ctx();
-        ScopedRecursiveMutex cs(&e->docLock);
-        fz_try(ctx) {
-            pdf_set_annot_ink_list(ctx, a, len(strokeCounts), strokeCounts.els, pts.els);
-            pdf_update_annot(ctx, a);
+        AnnotAccess access(annot);
+        fz_try(access.ctx) {
+            pdf_set_annot_ink_list(access.ctx, access.annot, len(strokeCounts), strokeCounts.els, pts.els);
+            pdf_update_annot(access.ctx, access.annot);
         }
-        fz_catch(ctx) {
-            fz_report_error(ctx);
+        fz_catch(access.ctx) {
+            fz_report_error(access.ctx);
             failed = true;
             logf("EraseAnnotationInk: pdf_set_annot_ink_list() failed\n");
         }
