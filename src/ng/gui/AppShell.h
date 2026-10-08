@@ -71,11 +71,16 @@ bool AppShellPickFileAsync(MainWindow* win, Str title, Str filter, const Func1<S
 // File / Open style prompt taking several files where the platform can
 bool AppShellPromptForFiles(MainWindow* win, Str filter, StrVec* pathsOut);
 void AppShellSetTitle(MainWindow* win, Str title);
-// ng: gpui has no file-drop event for its own windows (see "gpui gaps"), so
-// this is a per-platform hook that ends up calling OpenDroppedFiles(). It also
-// claims the window's native handle for the services that need one
-// (src/gui/NativeWindow.cpp)
+// claims the native handle for hotkeys and the other win32 services. OS file
+// drops are gpui ExternalPaths drops on the shell root. No-op off Windows; on
+// Windows it also registers the WM_DROPFILES fallback.
 void AppShellEnableFileDrop(MainWindow* win);
+enum class FileDropPhase {
+    Hover,
+    Drop,
+    Leave
+};
+bool AppShellAcceptDrop(MainWindow* win, float x, float y, const Str* paths, int n, FileDropPhase phase);
 // orig's SetTabsInTitlebar: whether the frame has the port's caption (tab
 // strip, menu button, caption buttons) in place of the system's title bar
 void SetTabsInTitlebar(MainWindow* win, bool inTitleBar);

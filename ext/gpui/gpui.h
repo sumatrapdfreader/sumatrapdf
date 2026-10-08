@@ -3639,6 +3639,23 @@ struct DropEvent {
     float y = 0;
 
     Bounds el = {};
+
+    Str externalPaths = {};
+};
+
+enum class FileDropPhase : uint8_t {
+    Entered,
+    Pending,
+    Submit,
+    Exited
+};
+
+struct FileDropEvent {
+    FileDropPhase phase = FileDropPhase::Pending;
+    float x = 0;
+    float y = 0;
+
+    Str paths = {};
 };
 
 struct MouseExitEvent {
@@ -3673,6 +3690,8 @@ struct LongPressEvent {
     TouchPhase phase = TouchPhase::Moved;
     Point startPosition = {};
     Point position = {};
+
+    Bounds el = {};
 };
 
 enum class PlatformInputKind : uint8_t {
@@ -3682,7 +3701,8 @@ enum class PlatformInputKind : uint8_t {
     MouseExited,
     ScrollWheel,
     TouchDrag,
-    LongPress
+    LongPress,
+    FileDrop
 };
 
 struct PlatformInput {
@@ -3695,6 +3715,7 @@ struct PlatformInput {
         ScrollWheelEvent scrollWheel;
         TouchDragEvent touchDrag;
         LongPressEvent longPress;
+        FileDropEvent fileDrop;
     };
 };
 
@@ -4697,6 +4718,8 @@ struct Style {
     uint8_t hasFocusLineColor : 1 = false;
 
     uint8_t fontFamily = 0;
+
+    int tooltipShowDelayMs = -1;
 };
 
 enum : uint8_t {
@@ -4725,7 +4748,7 @@ enum : uint16_t {
     kRelGap = kRelGapX | kRelGapY,
 };
 
-static_assert(sizeof(Style) <= 432, "keep Style members packed by alignment");
+static_assert(sizeof(Style) <= 440, "keep Style members packed by alignment");
 
 struct ActionSlot {
     uint32_t action = 0;
@@ -5124,6 +5147,8 @@ struct El {
     Listener onMouseDown;
     Listener onMouseUp;
 
+    Listener onLongPress;
+
     Listener onDragMove;
 
     Listener onMouseDownOut;
@@ -5292,6 +5317,8 @@ struct El {
 
     unsigned int selectable : 1 = false;
     unsigned int selJoin : 1 = false;
+
+    unsigned int selBlockPlugin : 1 = false;
     unsigned int caretLineEndAffinity : 1 = false;
 
     unsigned int imageGrayscale : 1 = false;
@@ -5473,6 +5500,7 @@ struct El {
     El* OnHover(Listener l);
     El* OnMouseMove(Listener l);
     El* OnMouseDown(Listener l, DispatchPhase phase = DispatchPhase::Bubble);
+    El* OnLongPress(Listener l);
     El* OnMouseUp(Listener l, DispatchPhase phase = DispatchPhase::Bubble);
     El* OnDragMove(Listener l);
     El* OnDrag(Str dragKind, int ix = 0, void* data = nullptr);
@@ -5545,6 +5573,8 @@ struct El {
     El* Selectable();
     El* SelectionOwner(EntityId owner);
 
+    El* BlockPluginSelection(Str plain);
+
     El* SelSrc(const SelSource* s, bool join);
     El* SelMap(const SelSourceMap* m);
     El* Wrap();
@@ -5615,6 +5645,8 @@ struct El {
     El* Tip(Str s);
 
     El* TipPlacement(int placement);
+
+    El* TipShowDelay(int ms);
     El* Id(Str s);
 };
 
@@ -5622,10 +5654,10 @@ static_assert(sizeof(unsigned int) == 4,
               "El flags require a four-byte unsigned int");
 
 #ifdef NDEBUG
-static_assert(sizeof(El) <= 1888,
+static_assert(sizeof(El) <= 1920,
               "keep El flags packed and members alignment-ordered");
 #else
-static_assert(sizeof(El) <= 1904,
+static_assert(sizeof(El) <= 1936,
               "keep El flags packed and members alignment-ordered");
 #endif
 
@@ -5685,6 +5717,7 @@ struct HitRect {
     Listener onMouseMove;
     Listener onMouseDown;
     Listener onMouseUp;
+    Listener onLongPress;
 
     DispatchPhase mouseDownPhase = DispatchPhase::Bubble;
     DispatchPhase mouseUpPhase = DispatchPhase::Bubble;
@@ -5702,6 +5735,7 @@ struct HitRect {
 
     Str tooltip = {};
     int8_t tooltipPlacement = -1;
+    int tooltipShowDelayMs = -1;
 
     bool rootTooltip = false;
     SliderState* slider = nullptr;
@@ -5805,6 +5839,8 @@ struct TextHit {
     bool join = false;
 
     bool atom = false;
+
+    bool blockPlugin = false;
 
     int scope = 0;
 
@@ -5969,6 +6005,14 @@ struct PaintCtx {
     int selB = -1;
 
     int selScope = -1;
+
+    float selX0 = 0;
+    float selY0 = 0;
+    float selX1 = 0;
+    float selY1 = 0;
+    bool selPoints = false;
+
+    int blockPluginDepth = 0;
     TextMeasCache textCache;
 
     PaintCtx() = default;
@@ -6525,7 +6569,20 @@ struct CompletionItem {
     int nAdditionalEdits = 0;
 };
 
+enum class CompletionTriggerKind : uint8_t {
+    Invoked = 1,
+    TriggerCharacter = 2,
+    TriggerForIncompleteCompletions = 3,
+};
+
+struct CompletionContext {
+    CompletionTriggerKind triggerKind = CompletionTriggerKind::Invoked;
+
+    Str triggerCharacter = {};
+};
+
 using CompletionFn = int (*)(void* data, Str text, int offset, Str query,
+                             const CompletionContext* context,
                              CompletionItem* out, int cap);
 
 struct DocumentColor {
@@ -6772,6 +6829,10 @@ struct InputState {
     LayoutMode mode = {};
 
     FocusHandle focus = {};
+
+    FocusHandle selectionFocus = {};
+    void SetSelectionFocus(FocusHandle popup);
+    bool HasSelectionFocus(const Window* win) const;
 
     FocusHandle frameFocus = {};
 
@@ -7121,6 +7182,8 @@ void InputMergeOverlappingCursors(InputState* s);
 
 void InputAddCursorAt(InputState* s, App* app, Window* win, int offset);
 
+void InputAddSelection(InputState* s, App* app, Window* win, int a, int b);
+
 void InputBuildColumnarSelection(InputState* s, App* app, Window* win,
                                  InputState::ColumnarPoint start,
                                  InputState::ColumnarPoint end);
@@ -7185,6 +7248,8 @@ enum class InputAction : uint8_t {
 
     ToggleCodeActions,
 
+    ShowCompletions,
+
     ActivateToken
 };
 
@@ -7196,7 +7261,9 @@ bool InputPerform(InputState* s, App* app, Window* win, InputAction action,
 
 Str InputCompletionQuery(const InputState* s, int* startOut);
 
-void InputRequestCompletion(InputState* s, App* app, Window* win, bool force);
+void InputRequestCompletion(
+    InputState* s, App* app, Window* win, bool force,
+    CompletionTriggerKind kind = CompletionTriggerKind::TriggerCharacter);
 
 void InputDismissCompletion(InputState* s);
 
@@ -7541,6 +7608,8 @@ int TextHitOffsetIn(PaintCtx* ctx, float x, float y, bool nearest, int scope,
                     int* outScope, int minLayer = 0);
 int CopyTextHits(PaintCtx* ctx, int selA, int selB, char* out, int cap);
 
+bool CustomBlockIsSelected(Bounds bounds, Point start, Point end);
+
 int CopyTextHitsIn(PaintCtx* ctx, int selA, int selB, int scope, char* out,
                    int cap, SelectionFormat fmt = SelectionFormat::Plain);
 int CopyTextHitsInEntity(PaintCtx* ctx, int selA, int selB, int scope,
@@ -7810,6 +7879,9 @@ struct Window {
 
     DragPayload activeDrag = {};
     int dragOverId = 0;
+
+    bool fileDrop = false;
+    Str fileDropPaths = {};
 
     float dragOffX = 0;
     float dragOffY = 0;
@@ -10648,6 +10720,10 @@ struct SharedHandleState {
     Listener nextUp;
     Listener nextDrag;
 
+    Listener nextHover;
+    Listener nextDouble;
+    Listener nextCallerDrag;
+
     ResizeHandleState Get() const { return state; }
 
     bool Set(ResizeHandleState next) {
@@ -10711,6 +10787,10 @@ struct ResizeHandle {
     Str dragKind = {};
     int dragIx = 0;
 
+    Listener onHover = {};
+    Listener onDoubleClick = {};
+    Listener onDragMove = {};
+
     Listener onRelease = {};
     void* appearanceUser = nullptr;
     ResizeHandleRenderer appearance = nullptr;
@@ -10724,6 +10804,10 @@ struct ResizeHandle {
 
     ResizeHandle* OnDrag(Str kind, int ix, Listener listener);
     ResizeHandle* OnRelease(Listener listener);
+
+    ResizeHandle* OnHover(Listener listener);
+    ResizeHandle* OnDoubleClick(Listener listener);
+    ResizeHandle* OnDragMove(Listener listener);
     ResizeHandle* WithAppearance(void* user, ResizeHandleRenderer renderer);
     ResizeHandle* Colors(Rgba rest, Rgba active);
     El* IntoEl();
@@ -10868,6 +10952,8 @@ ResizablePanel* resizable_panel(Ctx* cx);
 }
 
 #line 1 "src/base/dock.h"
+
+#include <stdlib.h>
 
 namespace gpui {
 
@@ -11037,6 +11123,8 @@ struct DockPanelDef {
     void (*setZoomed)(Ctx* cx, void* data, bool zoomed) = nullptr;
     void (*onAddedTo)(Ctx* cx, void* data, int node) = nullptr;
     void (*onRemoved)(Ctx* cx, void* data) = nullptr;
+
+    FocusHandle focus = {};
     bool canZoom = true;
     DockPanelControl zoomable = DockPanelControl::Menu;
 
@@ -11053,6 +11141,56 @@ enum class PanelEvent : uint8_t {
     ZoomOut,
     LayoutChanged
 };
+
+struct TabRevealBox {
+    float left = 0;
+    float right = 0;
+};
+
+struct TabRevealRun {
+    bool active = false;
+    float to = 0;
+    bool hasLast = false;
+    float last = 0;
+};
+
+struct TabRevealPlan {
+    bool travel = false;
+    bool seed = false;
+    float target = 0;
+};
+
+TabRevealPlan TabRevealPlanFor(TabRevealRun* run, float current);
+void TabRevealCommit(TabRevealRun* run, float sprung);
+
+float TabRevealOffset(float offset, float maxOffset, TabRevealBox viewport,
+                      TabRevealBox tab, bool hasPrev, TabRevealBox prev,
+                      bool hasNext, TabRevealBox next, float peek);
+
+float TabRevealStep(Ctx* cx, uint32_t key, TabRevealRun* run, float scrollX,
+                    const Spring& spring);
+
+struct DockTabGeom {
+    Bounds* tabs = nullptr;
+    int cap = 0;
+    int slots = 0;
+    int panelOf[64] = {};
+    Bounds strip = {};
+    float contentW = 0;
+
+    float scrollX = 0;
+    bool hasStrip = false;
+
+    double pass = -1;
+};
+
+const int kDockTabSlots = 64;
+
+struct DockState;
+
+DockTabGeom* DockTabGeomGet(DockState* s, int node);
+
+bool DockArmTabReveal(DockState* s, Ctx* cx, int node, int panelIx);
 
 struct DockNode {
     DockNode() = default;
@@ -11071,6 +11209,8 @@ struct DockNode {
 
     float tabScrollX = 0;
     int pendingScrollIx = -1;
+
+    TabRevealRun tabReveal = {};
     Bounds tabStripBounds = {};
     Bounds activeTabBounds = {};
 
@@ -11166,6 +11306,8 @@ struct DockState {
 
     Listener onEvent;
 
+    Vec<DockTabGeom> tabGeom;
+
     static void OnTabClick(DockState* self, Ctx* cx, const ClickEvent* ev,
                            int64_t nodeAndIx);
     static void OnCloseClick(DockState* self, Ctx* cx, const ClickEvent* ev,
@@ -11194,6 +11336,11 @@ struct DockState {
     static void OnResizeEnd(DockState* self, Ctx* cx, const MouseUpEvent* ev);
 
     ~DockState() {
+        for (int i = 0; i < len(tabGeom); i++) {
+            free(tabGeom[i].tabs);
+            tabGeom[i].tabs = nullptr;
+        }
+        VecReset(tabGeom);
         for (int i = 0; i < len(nodes); i++) {
             VecReset(nodes[i].child);
             VecReset(nodes[i].size);
@@ -13385,6 +13532,7 @@ uint32_t SelectUp();
 uint32_t Undo();
 uint32_t Enter();
 uint32_t ToggleCodeActions();
+uint32_t ShowCompletions();
 
 }
 
@@ -14504,6 +14652,37 @@ struct ScrollableMask {
     El* IntoEl();
 };
 
+struct CornerNotch {
+    float x = 0;
+    float y = 0;
+    float w = 0;
+    float h = 0;
+    float cx = 0;
+    float cy = 0;
+    float radius = 0;
+    float a0 = 0;
+    float a1 = 0;
+    bool clockwise = false;
+};
+
+CornerNotch CornerNotchGeometry(float cornerX, float cornerY, float xDir,
+                                float yDir, float radius);
+
+struct RoundedFrameCover {
+    Arena* a = nullptr;
+
+    El* viewport = nullptr;
+    Corners radii = {};
+    Rgba backdrop = {};
+    bool hasBackdrop = false;
+    float frameBorder = 0;
+
+    static RoundedFrameCover* Uniform(Ctx* cx, float radius);
+    RoundedFrameCover* FrameBorder(float width);
+    RoundedFrameCover* Backdrop(Rgba color);
+    El* IntoEl();
+};
+
 El* HorizontalScrollArea(Ctx* cx, Str id, El* viewport);
 
 }
@@ -15144,6 +15323,8 @@ void WindowSelectionPress(Window* win, float x, float y, int clickCount,
                           bool extend);
 
 bool WindowSelectionLongPressStart(Window* win, float x, float y);
+
+bool TextSelectionIsSelectableAt(Window* win, float x, float y);
 
 void WindowSelectionDrag(Window* win, float x, float y);
 
@@ -17117,7 +17298,7 @@ struct TextViewStyle {
 
     Rgba border = {};
 
-    float paragraphGap = 16;
+    float paragraphGap = 12;
 
     HeadingStyleFn heading = nullptr;
     void* headingData = nullptr;
@@ -17567,7 +17748,7 @@ struct TextView {
 
     float codeFont = 13;
 
-    float paragraphGap = 16;
+    float paragraphGap = 12;
 
     bool selectable = true;
 
@@ -17616,6 +17797,11 @@ struct TextView {
     bool motionSet = false;
 
     int blockDepth = 0;
+
+    uint8_t flowPrev = 0;
+    int flowPrevLevel = 0;
+
+    float flowPrevSpace = 0;
 
     const StreamFadeRange* streamFades = nullptr;
     int nStreamFades = 0;
@@ -17677,6 +17863,9 @@ struct TextView {
     El* IntoEl();
 
   private:
+    void AppendTableCells(El* row, MdNode* r, const float* maxW,
+                          const float* minW, int nCols,
+                          const uint8_t* colAlign);
 
     Rgba blockFg = {};
     bool blockFgSet = false;
@@ -17716,6 +17905,9 @@ struct TextView {
     Str BlockText(MdNode* n);
     El* PluginBlock(MdNode* n);
 
+    El* MarkBlockPlugin(El* el, Str plain, Str markdown, bool hasSpan,
+                        Span span);
+
     El* ScrollTable(MdNode* n);
 
     El* Block(MdNode* n, int depth, bool inList, bool isLast);
@@ -17743,7 +17935,7 @@ struct TextView {
 
     void RevealFrame(TextViewState* managed);
     static void PrepareInheritedColor(PaintCtx* ctx, El* element,
-                                       Rgba inherited, void* data);
+                                      Rgba inherited, void* data);
     static void RevealPainted(PaintCtx* ctx, El* element, void* data);
 
     bool RevealIn(const MdNode* leaf, int* offset) const;
@@ -17815,6 +18007,9 @@ Str MdDecodeEntity(Arena* a, Str e);
 
 TextView* MarkdownView(Ctx* cx, Str source);
 TextView* HtmlView(Ctx* cx, Str source);
+
+void TableRowCornerRadii(const Style& table, uint32_t fields, bool first,
+                         bool last, float* tl, float* tr, float* br, float* bl);
 
 }
 
@@ -18437,6 +18632,19 @@ constexpr float kTooltipWindowMargin = 4.f;
 constexpr int kTooltipGracePeriodMs = 300;
 constexpr int kTooltipShowDelayMs = 500;
 
+struct TooltipDefaults {
+    int showDelayMs = kTooltipShowDelayMs;
+    int gracePeriodMs = kTooltipGracePeriodMs;
+
+    static TooltipDefaults New() { return {}; }
+    TooltipDefaults& WithShowDelay(int ms);
+    TooltipDefaults& WithGracePeriod(int ms);
+    int ShowDelay() const { return showDelayMs; }
+    int GracePeriod() const { return gracePeriodMs; }
+    void Install(App* app) const;
+    static TooltipDefaults Global(const App* app);
+};
+
 struct Tooltip {
     static El* New(Ctx* cx, Str id);
 };
@@ -18469,12 +18677,18 @@ struct TooltipRequest {
     Bounds triggerBounds = {};
     gpui::Placement preferredPlacement = gpui::Placement::Top;
     bool hasPreferredPlacement = false;
+
+    bool hasShowDelay = false;
+    int showDelayMs = 0;
     Str text = {};
 
     static TooltipRequest New(Bounds triggerBounds, TooltipBuilder build,
                               void* data = nullptr);
     static TooltipRequest Text(Bounds triggerBounds, Str text);
+
+    TooltipRequest& WithPlacement(gpui::Placement value);
     TooltipRequest& Placement(gpui::Placement value);
+    TooltipRequest& WithShowDelay(int ms);
 };
 
 struct TooltipOverlay {
@@ -18517,7 +18731,8 @@ struct TooltipPositioner {
 };
 
 void TooltipRequestShow(Window* win, Str text, Bounds triggerBounds,
-                        int placement = -1, bool rootLayer = false);
+                        int placement = -1, bool rootLayer = false,
+                        int showDelayMs = -1);
 void TooltipRequestHide(Window* win);
 void TooltipHide(Window* win);
 const TooltipOverlay* TooltipShowing(Window* win);
@@ -20980,6 +21195,8 @@ struct Button {
     Str tooltip = {};
 
     int8_t tooltipPlacement = -1;
+
+    int tooltipShowDelayMs = -1;
     Str accessibilityLabel = {};
     Str accessibilityId = {};
     AccessibilityRole accessibilityRole = AccessibilityRole::None;
@@ -21059,6 +21276,8 @@ struct Button {
     Button* Tooltip(Str s);
 
     Button* TooltipPlacement(gpui::Placement placement);
+
+    Button* TooltipShowDelay(int ms);
     Button* AccessibilityLabel(Str s);
     Button* AccessibilityId(Str s);
     Button* Role(AccessibilityRole role);
@@ -21093,6 +21312,7 @@ struct Toggle {
     Str id = {};
     Str label = {};
     Str tooltip = {};
+    int tooltipShowDelayMs = -1;
     IconName icon = IconName::None;
     ArenaVec<El*> children;
     bool checked = false;
@@ -21105,6 +21325,7 @@ struct Toggle {
 
     static Toggle* New(Ctx* cx, Str id);
     Toggle* Tooltip(Str value);
+    Toggle* TooltipShowDelay(int ms);
     Toggle* Label(Str value);
     Toggle* Icon(IconName value);
     Toggle* Child(El* value);
@@ -21171,12 +21392,16 @@ struct DropdownButton {
     bool anchorRight = true;
     bool anchorAbove = false;
 
+    Str menuAccessibilityLabel = {};
+
     static DropdownButton* New(Ctx* cx, Str id);
     DropdownButton* Button_(component::Button* b);
     DropdownButton* Menu(PopupMenu* m);
     DropdownButton* Selected(bool v);
     DropdownButton* Disabled(bool v);
     DropdownButton* Outline();
+
+    DropdownButton* MenuAccessibilityLabel(Str label);
     DropdownButton* WithVariant(ButtonVariant v);
     DropdownButton* Primary();
     DropdownButton* Secondary();
@@ -22375,6 +22600,7 @@ struct Checkbox {
     bool disabled = false;
     UiSize size = UiSize::Medium;
     Str tooltip = {};
+    int tooltipShowDelayMs = -1;
     bool focusRing = true;
     AccessibilityRole accessibilityRole = AccessibilityRole::CheckBox;
     int tabIndex = 0;
@@ -22398,6 +22624,7 @@ struct Checkbox {
     Checkbox* TabIndex(int v);
     Checkbox* TabStop(bool v);
     Checkbox* Tooltip(Str s);
+    Checkbox* TooltipShowDelay(int ms);
     Checkbox* OnClick(Listener fn);
 
     Checkbox* OnChange(Listener fn);
@@ -22434,6 +22661,7 @@ struct Clipboard {
     Str id = {};
     Str value = {};
     Str tooltipText = {};
+    int tooltipShowDelayMs = -1;
     Str accessibilityLabel = {};
     Listener onCopied;
     UiSize size = UiSize::XSmall;
@@ -22441,6 +22669,7 @@ struct Clipboard {
     static Clipboard* New(Ctx* cx, Str id);
     Clipboard* Value(Str v);
     Clipboard* Tooltip(Str t);
+    Clipboard* TooltipShowDelay(int ms);
 
     Clipboard* AccessibilityLabel(Str label);
     Clipboard* OnCopied(Listener fn);
@@ -24164,6 +24393,16 @@ namespace component {
 
 constexpr float ANIMATION_DURATION = 250.f;
 
+enum class DialogEntrance : uint8_t {
+    SlideDown,
+    Fade,
+    FadeSlide,
+    None,
+};
+
+float DialogFadeSlideOffset(float top, float topLimit, float travel,
+                            float progress);
+
 struct DialogButtonProps {
     Str okText = {};
     ButtonVariant okVariant = ButtonVariant::Primary;
@@ -24269,6 +24508,11 @@ struct Dialog {
     float width = 448;
     float height = 0;
 
+    bool hasMarginTop = false;
+    float marginTop = 0;
+
+    DialogEntrance entrance = DialogEntrance::SlideDown;
+
     bool overlay = true;
     bool overlayClosable = true;
 
@@ -24308,6 +24552,8 @@ struct Dialog {
     Dialog* Surface(El* e);
     Dialog* W(float px);
     Dialog* H(float px);
+    Dialog* MarginTop(float px);
+    Dialog* Entrance(DialogEntrance value);
     Dialog* Overlay(bool v);
     Dialog* OverlayClosable(bool v);
     Dialog* Keyboard(bool v);
@@ -24355,6 +24601,10 @@ struct AlertDialog {
     AlertDialog* Surface(El* value);
     AlertDialog* W(float value);
     AlertDialog* H(float value);
+
+    AlertDialog* MarginTop(float value);
+
+    AlertDialog* Entrance(DialogEntrance value);
     AlertDialog* Overlay(bool value);
     AlertDialog* Keyboard(bool value);
     AlertDialog* Layer(int value);
@@ -24384,6 +24634,520 @@ struct AlertDialog {
 };
 
 }
+}
+
+#line 1 "src/ui/diff.h"
+
+namespace gpui {
+namespace component {
+
+enum class DiffSide : uint8_t {
+    Original,
+    Modified
+};
+enum class DiffMode : uint8_t {
+    Split,
+    Unified
+};
+enum class DiffFileStatus : uint8_t {
+    Added,
+    Deleted,
+    Modified,
+    Renamed,
+    Copied,
+    Unchanged,
+    Conflicted,
+};
+enum class DiffInlineUnit : uint8_t {
+    Word,
+    Character
+};
+enum class DiffHoverHighlight : uint8_t {
+    None,
+    Line,
+    LineNumber,
+    Both
+};
+enum class DiffHunkSeparator : uint8_t {
+    Metadata,
+    LineInfo,
+    Simple
+};
+enum class DiffChangeIndicator : uint8_t {
+    Signs,
+    Bars,
+    None
+};
+enum class DiffConflictResolution : uint8_t {
+    Current,
+    Incoming,
+    Both
+};
+enum class DiffConflictPart : uint8_t {
+    Current,
+    Base,
+    Incoming
+};
+enum class DiffFoldExpansion : uint8_t {
+    Up,
+    Down,
+    All
+};
+
+enum class DiffEventKind : uint8_t {
+    SelectionStarted,
+    SelectionChanged,
+    SelectionEnded,
+    FileExpanded,
+    FileCollapsed,
+    ConflictResolved,
+};
+
+struct DiffEvent {
+    DiffEventKind kind = DiffEventKind::SelectionChanged;
+
+    bool hasRange = false;
+    Str path = {};
+    DiffSide side = DiffSide::Original;
+    DiffSide endSide = DiffSide::Original;
+    int start = 1;
+    int end = 1;
+    int conflict = 0;
+};
+
+struct DiffParseError {
+    int line = 0;
+    Str message = {};
+    int Line() const { return line; }
+    Str Message() const { return message; }
+};
+
+struct DiffLinePosition {
+    Str path = {};
+    DiffSide side = DiffSide::Original;
+    int line = 1;
+    static DiffLinePosition New(Str path, DiffSide side, int line);
+    Str Path() const { return path; }
+    DiffSide Side() const { return side; }
+    int Line() const { return line; }
+};
+
+struct DiffLineRange {
+    Str path = {};
+    DiffSide side = DiffSide::Original;
+    int start = 1;
+    DiffSide endSide = DiffSide::Original;
+    int end = 1;
+    static DiffLineRange New(Str path, DiffSide side, int start, int end);
+    DiffLineRange WithEndSide(DiffSide side) const;
+    Str Path() const { return path; }
+    DiffSide Side() const { return side; }
+    int Start() const { return start; }
+    DiffSide EndSide() const { return endSide; }
+    int End() const { return end; }
+    bool IsSingleSide() const { return side == endSide; }
+};
+
+struct DiffAnnotation {
+    Str id = {};
+    Str path = {};
+    bool hasPosition = false;
+    DiffLinePosition position = {};
+    static DiffAnnotation Line(Str id, DiffLinePosition position);
+    static DiffAnnotation File(Str id, Str path);
+    Str Id() const { return id; }
+    Str Path() const { return path; }
+    const DiffLinePosition* Position() const {
+        return hasPosition ? &position : nullptr;
+    }
+};
+
+struct DiffConflict {
+    int currentStart = 0;
+    int currentEnd = 0;
+    bool hasBase = false;
+    int baseStart = 0;
+    int baseEnd = 0;
+    int incomingStart = 0;
+    int incomingEnd = 0;
+    int linesStart = 1;
+    int linesEnd = 1;
+    int currentLinesStart = 1;
+    int currentLinesEnd = 1;
+    bool hasBaseLines = false;
+    int baseLinesStart = 1;
+    int baseLinesEnd = 1;
+    int incomingLinesStart = 1;
+    int incomingLinesEnd = 1;
+    Str currentLabel = {};
+    Str baseLabel = {};
+    Str incomingLabel = {};
+    int SourceLinesStart() const { return currentStart; }
+    int SourceLinesEnd() const { return incomingEnd; }
+    void Lines(int* start, int* end) const;
+    void CurrentLines(int* start, int* end) const;
+    bool BaseLines(int* start, int* end) const;
+    void IncomingLines(int* start, int* end) const;
+    Str CurrentLabel() const { return currentLabel; }
+
+    bool BaseLabel(Str* out) const;
+    Str IncomingLabel() const { return incomingLabel; }
+    bool Part(DiffConflictPart part, int* start, int* end) const;
+    Str Label(DiffConflictPart part) const;
+    DiffConflictPart PartOf(int ix) const;
+    bool HasPart(int ix) const;
+};
+
+struct DiffSourceLine {
+    int lineNumber = 0;
+    Str text = {};
+    Str display = {};
+    int sourceStart = 0;
+    int sourceEnd = 0;
+    int contentEnd = 0;
+    int counterpart = -1;
+    int tabBegin = 0;
+    int tabCount = 0;
+    int chunkBegin = 0;
+    int chunkCount = 0;
+};
+
+struct DiffDisplayTab {
+    int sourceOffset = 0;
+    int displayOffset = 0;
+    int width = 0;
+};
+
+struct DiffChunk {
+    int start = 0;
+    int end = 0;
+};
+
+struct DiffLinePair {
+    int original = -1;
+    int modified = -1;
+    bool changed = false;
+    int Original() const { return original; }
+    int Modified() const { return modified; }
+    bool IsChanged() const { return changed; }
+};
+
+struct DiffHunk {
+    int pairsStart = 0;
+    int pairsEnd = 0;
+    int originalStart = 0;
+    int originalEnd = 0;
+    int modifiedStart = 0;
+    int modifiedEnd = 0;
+    Str label = {};
+    int originalLinesStart = 0;
+    int originalLinesEnd = 0;
+    int HiddenLinesBefore(const DiffHunk* previous) const;
+    Str Label() const { return label; }
+};
+
+struct DiffPatchLine {
+    int original = -1;
+    int modified = -1;
+    int Line(DiffSide side) const {
+        return side == DiffSide::Original ? original : modified;
+    }
+};
+
+struct DiffFileSide {
+    bool hasPath = false;
+    Str path = {};
+    Str source = {};
+    Vec<DiffSourceLine> lines;
+    Vec<DiffDisplayTab> tabs;
+    Vec<DiffChunk> chunks;
+};
+
+struct DiffRun {
+    int start = 0;
+    int end = 0;
+};
+
+struct DiffFile {
+    Arena* arena = nullptr;
+    DiffFileStatus status = DiffFileStatus::Modified;
+    Str path = {};
+    bool hasLanguage = false;
+    Str language = {};
+    DiffFileSide original;
+    DiffFileSide modified;
+    Vec<DiffLinePair> pairs;
+    Vec<DiffHunk> hunks;
+    Vec<Str> extendedHeaders;
+    bool binary = false;
+    int additions = 0;
+    int deletions = 0;
+    int lineNumberDigits = 1;
+    Vec<DiffPatchLine> patchLines;
+    Vec<int> patchIxs[2];
+    Vec<DiffConflict> conflicts;
+    Vec<DiffRun> inlineRuns[2];
+    Vec<int> inlineStarts[2];
+
+    DiffFile() = default;
+    ~DiffFile();
+    DiffFile(const DiffFile&) = delete;
+    DiffFile& operator=(const DiffFile&) = delete;
+
+    static bool Parse(Str patch, Vec<DiffFile*>* out, DiffParseError* error);
+    static DiffFile* Unchanged(Str path, Str text);
+    static DiffFile* ParseConflicts(Str path, Str text, DiffParseError* error);
+    DiffFile* WithLanguage(Str language);
+    Str Language() const;
+    DiffFileStatus Status() const { return status; }
+    Str Path() const { return path; }
+    bool OriginalPath(Str* out) const;
+    bool ModifiedPath(Str* out) const;
+    int ExtendedHeaderCount() const { return len(extendedHeaders); }
+    Str ExtendedHeader(int ix) const { return extendedHeaders[ix]; }
+    bool IsBinary() const { return binary; }
+    int Additions() const { return additions; }
+    int Deletions() const { return deletions; }
+    bool HasChanges() const;
+    bool IsSingleColumn() const;
+    int ConflictCount() const { return len(conflicts); }
+    const DiffConflict* Conflicts() const { return conflicts.els; }
+    int LinesCount(DiffSide side) const;
+    Str Source(DiffSide side) const;
+    const DiffSourceLine* Lines(DiffSide side) const;
+
+    Str TextForLines(Arena* a, DiffSide side, int start, int end) const;
+    int LineNumber(DiffSide side, int index) const;
+    int LineIndex(DiffSide side, int line) const;
+    const DiffLinePair* Pairs() const { return pairs.els; }
+    int PairCount() const { return len(pairs); }
+    const DiffHunk* Hunks() const { return hunks.els; }
+    int HunkCount() const { return len(hunks); }
+    int LineNumberDigits() const { return lineNumberDigits; }
+    int PatchCount() const { return len(patchLines); }
+    const DiffPatchLine* PatchLines() const { return patchLines.els; }
+    int PatchIx(DiffSide side, int ix) const;
+    void PrepareInline(DiffInlineUnit unit, int maxLineLength);
+    int InlineCount(DiffSide side, int line) const;
+    const DiffRun* InlineAt(DiffSide side, int line, int* count) const;
+};
+
+enum class DiffRowKind : uint8_t {
+    File,
+    Notice,
+    Hunk,
+    Fold,
+    Conflict,
+    Code,
+};
+
+struct DiffRow {
+    DiffRowKind kind = DiffRowKind::File;
+    int file = 0;
+    int hunk = 0;
+    int conflict = 0;
+    DiffConflictPart part = DiffConflictPart::Current;
+    int pairsStart = 0;
+    int pairsEnd = 0;
+    int original = -1;
+    int modified = -1;
+    bool changed = false;
+    int File() const { return file; }
+};
+
+struct DiffFoldRange {
+    int file = 0;
+    int start = 0;
+    int end = 0;
+};
+
+struct DiffResolution {
+    Str path = {};
+    int ix = 0;
+    DiffConflictResolution kind = DiffConflictResolution::Current;
+};
+
+struct DiffState {
+    App* app = nullptr;
+    Vec<DiffFile*> files;
+    DiffMode mode = DiffMode::Unified;
+    bool hasContext = true;
+    int contextLines = 3;
+    int expansionLines = 20;
+    int minCollapsedLines = 2;
+    Vec<Str> collapsed;
+    Vec<DiffResolution> resolutions;
+    Vec<DiffFoldRange> expanded;
+    Vec<DiffRow> rows;
+    Vec<int> headerRows;
+    Vec<int> changeRows;
+    Vec<int> rowOfOriginal;
+    Vec<int> rowOfModified;
+    Vec<int> rowFileBase;
+    int scrollItem = 0;
+    VirtualListScrollHandle listScroll = {};
+    FocusHandle focus = {};
+    bool hasSelection = false;
+    DiffLineRange selected = {};
+    bool hasAnchor = false;
+    DiffLinePosition anchor = {};
+    bool hasCursor = false;
+    DiffLinePosition cursor = {};
+    bool selecting = false;
+    bool inlineOn = true;
+    DiffInlineUnit inlineUnit = DiffInlineUnit::Word;
+    int inlineMaxLineLength = 1000;
+    int syntaxMaxLineLength = 1000;
+    Vec<DiffEvent> emitted;
+    Entity<DiffState> self = {};
+
+    DiffState() = default;
+    ~DiffState();
+    DiffState(const DiffState&) = delete;
+    DiffState& operator=(const DiffState&) = delete;
+
+    static El* Render(DiffState* self, Ctx* cx);
+    void Bind(App* app, Entity<DiffState> self);
+    void SetFiles(DiffFile** files, int count, Ctx* cx);
+    DiffState* WithMode(DiffMode mode);
+    DiffState* WithContextLines(bool has, int lines);
+    DiffState* WithExpansionLines(int lines);
+    DiffState* WithMinCollapsedLines(int lines);
+    DiffState* WithInlineUnit(bool on, DiffInlineUnit unit);
+    DiffState* WithInlineMaxLineLength(int length);
+    DiffState* WithSyntaxMaxLineLength(int length);
+    DiffFile** Files(int* count) const;
+    int FileCount() const { return len(files); }
+    DiffFile* FileAt(int ix) const { return files[ix]; }
+    DiffMode Mode() const { return mode; }
+    bool HasContextLines() const { return hasContext; }
+    int ContextLines() const { return contextLines; }
+    int ExpansionLines() const { return expansionLines; }
+    int MinCollapsedLines() const { return minCollapsedLines; }
+    bool HasInlineUnit() const { return inlineOn; }
+    DiffInlineUnit InlineUnit() const { return inlineUnit; }
+    int InlineMaxLineLength() const { return inlineMaxLineLength; }
+    int SyntaxMaxLineLength() const { return syntaxMaxLineLength; }
+    bool HasSelectedLines() const { return hasSelection; }
+    DiffLineRange SelectedLines() const { return selected; }
+    bool IsFileCollapsed(Str path) const;
+    void SetMode(DiffMode mode, Ctx* cx);
+    void SetContextLines(bool has, int lines, Ctx* cx);
+    void SetExpansionLines(int lines, Ctx* cx);
+    void SetMinCollapsedLines(int lines, Ctx* cx);
+    void SetInlineUnit(bool on, DiffInlineUnit unit, Ctx* cx);
+    void SetInlineMaxLineLength(int length, Ctx* cx);
+    void SetSyntaxMaxLineLength(int length, Ctx* cx);
+    void ExpandUnchanged(Ctx* cx);
+    void CollapseUnchanged(Ctx* cx);
+    void SetFileCollapsed(Str path, bool collapsed, Ctx* cx);
+    bool ConflictResolution(Str path, int ix,
+                            DiffConflictResolution* out) const;
+    void ResolveConflict(Str path, int ix, bool has,
+                         DiffConflictResolution kind, Ctx* cx);
+
+    bool ResolvedText(Arena* a, Str path, Str* out) const;
+    void SetSelectedLines(bool has, DiffLineRange range, Ctx* cx);
+    Str SelectedText(Arena* a) const;
+    void ScrollToLine(DiffLinePosition position, Ctx* cx);
+    void ScrollToFile(Str path, Ctx* cx);
+    void NextChange(Ctx* cx);
+    void PreviousChange(Ctx* cx);
+    void ExpandFold(int file, int start, int end, DiffFoldExpansion how,
+                    Ctx* cx);
+    void ChooseConflict(int file, int ix, bool has, DiffConflictResolution kind,
+                        Ctx* cx);
+    void ToggleFileCollapsed(int file, Ctx* cx);
+    void BeginLineSelection(DiffLinePosition position, bool extend, Ctx* cx);
+    void DragLineSelection(DiffLinePosition position, Ctx* cx);
+    void EndLineSelection(Ctx* cx);
+    void EnsurePresentation();
+    int RowCount() const { return len(rows); }
+    const DiffRow* Rows() const { return rows.els; }
+    int ScrollItem() const { return scrollItem; }
+};
+
+void DiffChangedRuns(Str oldText, Str newText, DiffInlineUnit unit,
+                     Vec<DiffRun>* oldRuns, Vec<DiffRun>* newRuns);
+
+void DiffDisplayChunks(Str text, Vec<DiffChunk>* out);
+
+struct Diff {
+    Arena* a = nullptr;
+    Ctx* cx = nullptr;
+    Entity<DiffState> state = {};
+    bool lineNumber = true;
+    bool syntaxHighlight = true;
+    bool headerVisible = true;
+    DiffHoverHighlight hoverHighlight = DiffHoverHighlight::None;
+    DiffHunkSeparator hunkSeparator = DiffHunkSeparator::Metadata;
+    DiffChangeIndicator changeIndicator = DiffChangeIndicator::Signs;
+    bool changeBackground = true;
+    bool softWrap = false;
+
+    const DiffAnnotation* annotations = nullptr;
+    int annotationCount = 0;
+    El* (*annotationContent)(Ctx*, const DiffAnnotation*, void*) = nullptr;
+    void* annotationUser = nullptr;
+    El* (*header)(Ctx*, const DiffFile*, void*) = nullptr;
+    El* (*headerPrefix)(Ctx*, const DiffFile*, void*) = nullptr;
+    El* (*headerTitleSuffix)(Ctx*, const DiffFile*, void*) = nullptr;
+    El* (*headerSuffix)(Ctx*, const DiffFile*, void*) = nullptr;
+    void* headerUser = nullptr;
+    void (*onAddAnnotation)(Ctx*, const DiffLineRange*, void*) = nullptr;
+    void* addUser = nullptr;
+    void (*onLineClick)(Ctx*, const DiffLinePosition*, const ClickEvent*,
+                        void*) = nullptr;
+    void* clickUser = nullptr;
+    void (*onLineHover)(Ctx*, const DiffLinePosition*, bool, void*) = nullptr;
+    void* hoverUser = nullptr;
+    static Diff* New(Ctx* cx, Entity<DiffState> state);
+    Diff* LineNumber(bool v);
+    Diff* SyntaxHighlight(bool v);
+    Diff* HeaderVisible(bool v);
+    Diff* HoverHighlight(DiffHoverHighlight v);
+    Diff* HunkSeparator(DiffHunkSeparator v);
+    Diff* ChangeIndicator(DiffChangeIndicator v);
+    Diff* ChangeBackground(bool v);
+    Diff* SoftWrap(bool v);
+    Diff* Annotations(const DiffAnnotation* items, int count);
+    Diff* RenderAnnotation(El* (*fn)(Ctx*, const DiffAnnotation*, void*),
+                           void* user);
+    Diff* RenderHeader(El* (*fn)(Ctx*, const DiffFile*, void*), void* user);
+    Diff* RenderHeaderPrefix(El* (*fn)(Ctx*, const DiffFile*, void*),
+                             void* user);
+    Diff* RenderHeaderTitleSuffix(El* (*fn)(Ctx*, const DiffFile*, void*),
+                                  void* user);
+    Diff* RenderHeaderSuffix(El* (*fn)(Ctx*, const DiffFile*, void*),
+                             void* user);
+
+    Diff* AnnotationContent(El* (*fn)(Ctx*, const DiffAnnotation*, void*),
+                            void* user);
+    Diff* Header(El* (*fn)(Ctx*, const DiffFile*, void*), void* user);
+    Diff* HeaderPrefix(El* (*fn)(Ctx*, const DiffFile*, void*), void* user);
+    Diff* HeaderTitleSuffix(El* (*fn)(Ctx*, const DiffFile*, void*),
+                            void* user);
+    Diff* HeaderSuffix(El* (*fn)(Ctx*, const DiffFile*, void*), void* user);
+    Diff* OnAddAnnotation(void (*fn)(Ctx*, const DiffLineRange*, void*),
+                          void* user);
+    Diff* OnLineClick(void (*fn)(Ctx*, const DiffLinePosition*,
+                                 const ClickEvent*, void*),
+                      void* user);
+    Diff* OnLineHover(void (*fn)(Ctx*, const DiffLinePosition*, bool, void*),
+                      void* user);
+    El* IntoEl();
+};
+
+void DiffInitKeys();
+
+bool DiffHasLineEndingChange(const DiffFile* file, DiffSide side, int ix,
+                             int counterpart);
+
+}
+
+template <>
+struct EventEmitter<component::DiffState, component::DiffEvent> {};
+
 }
 
 #line 1 "src/ui/dock.h"
@@ -25468,6 +26232,7 @@ struct InputGroupButton {
     InputGroupButton* Icon(IconName n);
     InputGroupButton* Icon(Str path);
     InputGroupButton* Tooltip(Str s);
+    InputGroupButton* TooltipShowDelay(int ms);
     InputGroupButton* AriaLabel(Str s);
     InputGroupButton* WithSize(UiSize s);
     InputGroupButton* WithVariant(ButtonVariant v);
@@ -26080,6 +26845,8 @@ struct ContextMenuState {
 
     static void OnMouseDown(ContextMenuState* self, Ctx* cx,
                             const MouseDownEvent* ev);
+    static void OnLongPress(ContextMenuState* self, Ctx* cx,
+                            const LongPressEvent* ev);
 };
 
 struct ContextMenu {
@@ -27167,6 +27934,8 @@ struct Radio {
 
     Str accessibilityLabel = {};
     Str hint = {};
+    Str tooltip = {};
+    int tooltipShowDelayMs = -1;
     bool checked = false;
     bool disabled = false;
     UiSize size = UiSize::Medium;
@@ -27185,6 +27954,8 @@ struct Radio {
 
     Radio* AccessibilityLabel(Str s);
     Radio* Hint(Str s);
+    Radio* Tooltip(Str s);
+    Radio* TooltipShowDelay(int ms);
     Radio* Checked(bool v);
     Radio* Disabled(bool v);
     Radio* WithSize(UiSize s);
@@ -27293,6 +28064,11 @@ El* RenderResizeHandle(void* user, const ResizeHandleContext* handle, Ctx* cx);
 
 inline ResizeHandleRenderer ResizeHandleAppearance() {
     return &RenderResizeHandle;
+}
+
+inline gpui::ResizeHandle* resize_handle(Ctx* cx, Str id, Axis axis) {
+    return gpui::resize_handle(cx, id, axis)
+        ->WithAppearance(nullptr, &RenderResizeHandle);
 }
 
 struct Resizable {
@@ -28453,13 +29229,20 @@ struct SpeechAudioConverter {
     void Convert(const float* input, int n, Vec<int16_t>& out);
 };
 
-const int kSpeechLevelIntervalMs = 25;
+const int kSpeechLevelIntervalMs = 80;
 
 const int kSpeechLevelHistory = 256;
 
+const double kSpeechPlayheadLag = 1.75;
+
+const double kSpeechPlayheadPhaseGain = 0.1;
+const double kSpeechPlayheadPaceGain = 0.01;
+
+const float kSpeechPlayheadMaxLead = 3.f;
+
 struct LevelMeter {
 
-    int window = 400;
+    int window = 1280;
     double sum = 0;
     int count = 0;
     float smoothed = 0;
@@ -28468,16 +29251,26 @@ struct LevelMeter {
     int first = 0;
     int nLevels = 0;
 
-    double lastLevelAt = -1;
+    uint64_t recorded = 0;
+
+    double anchor = -1;
+
+    double pace = 0.080;
 
     void Reset(uint32_t sampleRate, uint16_t channels);
 
     bool Push(const int16_t* samples, int n);
+
+    bool PushAt(const int16_t* samples, int n, double now);
     int LevelsLen() const { return nLevels; }
 
     float LevelAt(int ix) const {
         return levels[(first + ix) % kSpeechLevelHistory];
     }
+
+    bool LeadAt(double now, float* out) const;
+
+    void AlignPlayhead(double now);
 };
 
 int SpeechLevelWindowFor(uint32_t sampleRate, uint16_t channels);
@@ -28597,7 +29390,10 @@ struct SpeechState {
 
     int LevelsLen() const { return meter.LevelsLen(); }
     float LevelAt(int ix) const { return meter.LevelAt(ix); }
-    double LastLevelAt() const { return meter.lastLevelAt; }
+
+    bool LevelLeadAt(double now, float* out) const {
+        return meter.LeadAt(now, out);
+    }
 
     void Start(Ctx* cx);
 
@@ -28829,6 +29625,7 @@ struct Switch {
     Rgba color = {};
 
     Str tooltip = {};
+    int tooltipShowDelayMs = -1;
     bool hasColor = false;
     bool focusRing = true;
     int tabIndex = 0;
@@ -28844,6 +29641,7 @@ struct Switch {
     Switch* WithSize(UiSize s);
     Switch* Color(Rgba c);
     Switch* Tooltip(Str s);
+    Switch* TooltipShowDelay(int ms);
 
     Switch* FocusRing(bool v);
     Switch* TabIndex(int v);
@@ -28868,7 +29666,8 @@ enum class TabVariant : uint8_t {
     Outline,
     Pill,
     Segmented,
-    Underline
+    Underline,
+    Folder
 };
 
 float TabHeight(TabVariant v, UiSize size);
@@ -28886,6 +29685,16 @@ float TabBarPadX(TabVariant v, UiSize size);
 float TabBarRadius(TabVariant v, UiSize size, float radius, float radiusLg);
 float TabRadius(TabVariant v, UiSize size, float radius, float radiusLg);
 float TabInnerRadius(TabVariant v, UiSize size, float radius, float radiusLg);
+
+struct FolderTabMetrics {
+    float topPadding = 0;
+    float radius = 0;
+    float paddingX = 0;
+    float separatorHeight = 0;
+};
+FolderTabMetrics FolderTabMetricsFor(UiSize size, float radius, float radiusLg);
+
+float TabOverhang(TabVariant v, UiSize size, float radius, float radiusLg);
 
 struct Tab {
     Arena* a = nullptr;
@@ -28926,6 +29735,7 @@ struct Tab {
     Tab* Pill();
     Tab* Segmented();
     Tab* Underline();
+    Tab* Folder();
     Tab* WithSize(UiSize value);
     Tab* Flex1();
     Tab* MaxWidth(float value);
@@ -28981,6 +29791,7 @@ struct TabBar {
     TabBar* Pill();
     TabBar* Segmented();
     TabBar* Underline();
+    TabBar* Folder();
     TabBar* Size(UiSize v);
     TabBar* WithSize(UiSize v);
     TabBar* MaxWidth(float v);
@@ -29174,6 +29985,9 @@ struct TableState {
 
     static void OnCellMouseDown(TableState* self, Ctx* cx,
                                 const MouseDownEvent* ev, int64_t packed);
+
+    static void OnRightClickOutside(TableState* self, Ctx* cx,
+                                    const MouseDownEvent* ev);
     static void OnHeadClick(TableState* self, Ctx* cx, const ClickEvent* ev,
                             int64_t col);
     static void OnSortClick(TableState* self, Ctx* cx, const ClickEvent* ev,
@@ -29214,8 +30028,8 @@ inline int TableCellCol(int64_t packed) {
     return (int)(packed & 0xfff);
 }
 
-bool TableVisibleRowsChanged(TableState* s, int first, int end);
-bool TableVisibleColsChanged(TableState* s, int first, int end);
+bool TableVisibleRowsChanged(TableState* s, int first, int end, int items);
+bool TableVisibleColsChanged(TableState* s, int first, int end, int items);
 
 void TableVisibleCols(const TableState* s, int* first, int* end);
 
@@ -29388,6 +30202,7 @@ struct TableDelegate {
     int (*loadMoreThreshold)(void* data) = nullptr;
     void (*loadMore)(Ctx* cx, void* data) = nullptr;
     El* (*renderLastEmptyCol)(Ctx* cx, void* data) = nullptr;
+
     void (*visibleRowsChanged)(Ctx* cx, void* data, int first,
                                int end) = nullptr;
     void (*visibleColumnsChanged)(Ctx* cx, void* data, int first,
@@ -29859,6 +30674,8 @@ struct Toolbar {
 namespace gpui {
 
 namespace component {
+
+using TooltipDefaults = ::gpui::TooltipDefaults;
 
 struct Tooltip {
     Arena* a = nullptr;
@@ -31480,6 +32297,7 @@ bool RegisterLayoutResizable(shell::ComponentRegistry*, shell::RegistryError*);
 
 bool RegisterMediaImage(shell::ComponentRegistry*, shell::RegistryError*);
 bool RegisterMediaEditor(shell::ComponentRegistry*, shell::RegistryError*);
+bool RegisterMediaDiff(shell::ComponentRegistry*, shell::RegistryError*);
 
 bool RegisterScrollScroll(shell::ComponentRegistry*, shell::RegistryError*);
 
@@ -31789,6 +32607,12 @@ struct EditorStateValue {
 
     const char* language = nullptr;
 };
+
+bool RequireLeaf(int children, Str* error);
+
+}
+
+namespace gpui::component_shell::media::diff {
 
 bool RequireLeaf(int children, Str* error);
 
@@ -32771,6 +33595,10 @@ PlatformInput InputScrollWheel(float x, float y, float deltaX, float deltaY,
                                TouchPhase phase);
 PlatformInput InputTouchDrag(TouchPhase phase, Point start, Point position);
 PlatformInput InputLongPress(TouchPhase phase, Point start, Point position);
+
+PlatformInput InputFileDrop(FileDropPhase phase, float x, float y, Str paths);
+
+Str FileUriListToPaths(Arena* a, Str list);
 
 void WindowTouchBegin(Window* win, float x, float y);
 void WindowTouchMove(Window* win, float x, float y);
@@ -38580,6 +39408,12 @@ bool WebViewFocusParent(WebView* webview);
 
 bool WebViewZoom(WebView* webview, double scaleFactor);
 
+bool WebViewMatchPageScale(WebView* webview, float gpuiScale);
+
+typedef void (*WebViewPageClick)(void* user, int button, float x, float y,
+                                 float gdkScale);
+void WebViewSetPageClick(WebView* webview, WebViewPageClick fn, void* user);
+
 bool WebViewSetBackgroundColor(WebView* webview, Rgba color);
 
 bool WebViewSetTheme(WebView* webview, Theme theme);
@@ -38689,12 +39523,22 @@ struct WebView {
     Bounds applied = {};
     bool hasApplied = false;
 
+    float pageScale = 0;
+    bool hasPageScale = false;
+
+    Window* window = nullptr;
+    App* app = nullptr;
+    EntityId selfId = {};
+
     bool subscribed = false;
 
     ~WebView();
 
     static void OnWindowMouseDown(WebView* self, Ctx* cx,
                                   const MouseDownEvent* ev);
+
+    static void OnPageClick(void* user, int button, float x, float y,
+                            float gdkScale);
 };
 
 Entity<WebView> WebViewNew(Ctx* cx, const wry::WebViewAttributes* attrs);
@@ -38708,6 +39552,8 @@ Bounds WebViewBounds(const WebView* self);
 void WebViewLoadUrl(WebView* self, Str url);
 
 void WebViewBack(WebView* self);
+
+void WebViewForward(WebView* self);
 
 wry::WebView* WebViewRaw(const WebView* self);
 

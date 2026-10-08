@@ -143,6 +143,7 @@ struct ShellView {
     static void OnKeyDown(ShellView* self, gp::Ctx* cx, const gp::KeyEvent* ev);
     static void OnKeyUp(ShellView* self, gp::Ctx* cx, const gp::KeyEvent* ev);
     static void OnCaptureKey(ShellView* self, gp::Ctx* cx, const gp::KeyEvent* ev);
+    static void OnExternalDrop(ShellView* self, gp::Ctx* cx, const gp::DropEvent* ev);
     static void OnNotifClose(ShellView* self, gp::Ctx* cx, const gp::ClickEvent*, int64_t key);
     static void OnNotifLink(ShellView* self, gp::Ctx* cx, const gp::ClickEvent*, int64_t packed);
 };
@@ -1952,6 +1953,43 @@ static bool IsFocusInKeyContext(gp::Window* win, gp::Str name) {
     return false;
 }
 
+// gpui delivers an OS file drop as one newline-separated path list.
+void ShellView::OnExternalDrop(ShellView* self, gp::Ctx*, const gp::DropEvent* ev) {
+    if (!self || !self->win || !ev) {
+        return;
+    }
+    Str all = FromGpui(ev->externalPaths);
+    if (len(all) <= 0) {
+        return;
+    }
+
+    constexpr int kMaxDropped = 64;
+    Str paths[kMaxDropped];
+    int n = 0;
+    int i = 0;
+    while (i < len(all) && n < kMaxDropped) {
+        int start = i;
+        while (i < len(all) && all.s[i] != '\n' && all.s[i] != '\r') {
+            i++;
+        }
+        int lineLen = i - start;
+        while (lineLen > 0 && (all.s[start] == ' ' || all.s[start] == '\t')) {
+            start++;
+            lineLen--;
+        }
+        if (lineLen > 0) {
+            paths[n++] = Str(all.s + start, lineLen);
+        }
+        if (i < len(all) && all.s[i] == '\r') {
+            i++;
+        }
+        if (i < len(all) && all.s[i] == '\n') {
+            i++;
+        }
+    }
+    AppShellAcceptDrop(self->win, ev->x, ev->y, paths, n, FileDropPhase::Drop);
+}
+
 void ShellView::OnCmd(ShellView* self, gp::Ctx* cx, const gp::ActionEvent* ev) {
     if (gChordKey && !gCmdSuppressed) {
         gIgnoreRepeatKey = gChordKey;
@@ -2716,7 +2754,8 @@ gp::El* ShellView::Render(ShellView* self, gp::Ctx* cx) {
                        ->CaptureKeyDown(gp::Listen(cx, &ShellView::OnCaptureKey))
                        ->OnKeyDown(gp::Listen(cx, &ShellView::OnKeyDown))
                        ->OnKeyUp(gp::Listen(cx, &ShellView::OnKeyUp))
-                       ->OnAction(ActSumatraCmd(), gp::Listen(cx, &ShellView::OnCmd));
+                       ->OnAction(ActSumatraCmd(), gp::Listen(cx, &ShellView::OnCmd))
+                       ->OnDrop(GStrL("ExternalPaths"), gp::Listen(cx, &ShellView::OnExternalDrop));
     if (border > 0) {
         root->Pad((float)border)->Bg(ToGpui(ThemeControlBackgroundColor()));
     }
