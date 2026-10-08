@@ -15,6 +15,8 @@ import { join, resolve } from "node:path";
 const repoUrl = "https://github.com/kjk/gpui-kit-cpp-dist";
 const root = resolve(import.meta.dir, "..");
 const cloneDir = join(root, "out", "gpui-dist");
+// ext/gpui is committed as-is: a clone under core.autocrlf=true would vendor CRLF
+const kKeepLf = ["-c", "core.autocrlf=false"];
 const extDir = join(root, "ext", "gpui");
 
 const vendoredFiles = ["gpui.h", "gpui.cpp", "mac-window-place.m", "readme.md"];
@@ -54,11 +56,11 @@ function clone(commit: string | null): void {
   rmSync(cloneDir, { recursive: true, force: true });
   mkdirSync(join(root, "out"), { recursive: true });
   if (commit) {
-    run(["git", "clone", "-q", "--filter=blob:none", repoUrl, cloneDir]);
+    run(["git", "clone", "-q", ...kKeepLf, "--filter=blob:none", repoUrl, cloneDir]);
     run(["git", "checkout", "-q", commit], cloneDir);
     return;
   }
-  run(["git", "clone", "-q", "--depth", "1", repoUrl, cloneDir]);
+  run(["git", "clone", "-q", ...kKeepLf, "--depth", "1", repoUrl, cloneDir]);
 }
 
 function vendor(): string {
