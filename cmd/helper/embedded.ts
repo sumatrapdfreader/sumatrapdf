@@ -58,9 +58,11 @@ export type PackOptions = {
   manual: boolean;
   /** false stores the files as is, for an archive that is compressed as a whole later */
   compress: boolean;
+  /** false leaves the fonts out; the app downloads them (see cmd/upload-fonts.ts) */
+  fonts: boolean;
 };
 
-const packDefaults: PackOptions = { manual: true, compress: true };
+const packDefaults: PackOptions = { manual: true, compress: true, fonts: true };
 
 // Match pack-embedded-prebuild.cmd: manual at the root, fonts in fonts\, and the shared translation snapshot.
 export async function packEmbedded(
@@ -81,12 +83,14 @@ export async function packEmbedded(
   if (!existsSync(translations)) writeChanged(translations, "");
   inputs.set("translations.txt", translations);
   for (const name of ["marked.min.js", "mermaid.min.js"]) inputs.set(name, join(inputRoot, "ext", name));
-  for (const [forge, patterns] of fontPatterns) {
-    const fontDir = join(inputRoot, "ext/mupdf/resources/fonts", forge);
-    for (const pattern of patterns) {
-      const names = [...new Glob(pattern).scanSync({ cwd: fontDir })].sort();
-      if (names.length === 0) throw new Error(`missing font: ${forge}/${pattern}`);
-      for (const name of names) inputs.set(join("fonts", name), join(fontDir, name));
+  if (opts.fonts) {
+    for (const [forge, patterns] of fontPatterns) {
+      const fontDir = join(inputRoot, "ext/mupdf/resources/fonts", forge);
+      for (const pattern of patterns) {
+        const names = [...new Glob(pattern).scanSync({ cwd: fontDir })].sort();
+        if (names.length === 0) throw new Error(`missing font: ${forge}/${pattern}`);
+        for (const name of names) inputs.set(join("fonts", name), join(fontDir, name));
+      }
     }
   }
   for (const dst of filesUnder(staging)) {

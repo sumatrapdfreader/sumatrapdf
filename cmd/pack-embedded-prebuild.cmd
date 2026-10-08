@@ -14,8 +14,9 @@ REM Staged (in-archive names are relative to the staging dir):
 REM   .work\translations.txt  (created empty when trans-dl.ts never ran)
 REM   ext\marked.min.js, ext\mermaid.min.js
 REM   fonts\*                 mupdf's built-in fonts, picked from
-REM                           ext\mupdf\resources\fonts (see :fonts below);
-REM                           src\mupdf\noto_sumatra.c loads them by file name
+REM                           ext\mupdf\resources\fonts (see :fonts below).
+REM                           Skipped when SUMATRA_NO_EMBED_FONTS=1; the app
+REM                           then downloads them (cmd\upload-fonts.ts).
 REM   .work\docs\**           (in-app manual from gen-docs.ts; skipped when missing)
 REM
 REM Only cmd + MakeLZSA so MSBuild need not have bun on PATH. The archive is kept
@@ -77,7 +78,9 @@ copy /y "%ROOT%\ext\mermaid.min.js" "%STAGING%\mermaid.min.js" >nul || exit /b 1
 
 REM base 14 (URW), CJK fallback (Droid), Charis SIL for EPUB, a few Noto for
 REM math / music / symbols / emoji. Not packed: NimbusBoxes, Source Han and the
-REM per-script Noto fonts (font-table.h entries without a file are skipped).
+REM per-script Noto fonts; those download on first use. SUMATRA_NO_EMBED_FONTS=1
+REM packs none of them.
+if "%SUMATRA_NO_EMBED_FONTS%"=="1" goto no_fonts
 call :fonts urw Dingbats.cff NimbusMonoPS-*.cff NimbusRoman-*.cff NimbusSans-*.cff StandardSymbolsPS.cff
 if errorlevel 1 exit /b 1
 call :fonts droid DroidSansFallbackFull.ttf
@@ -88,6 +91,12 @@ call :fonts noto NotoSans-Regular.otf NotoSerif-Regular.otf NotoSansMath-Regular
 if errorlevel 1 exit /b 1
 call :fonts noto NotoSansSymbols-Regular.otf NotoSansSymbols2-Regular.otf NotoEmoji-Regular.ttf
 if errorlevel 1 exit /b 1
+goto pack
+
+:no_fonts
+if exist "%STAGING%\fonts\" rmdir /s /q "%STAGING%\fonts"
+
+:pack
 
 "%ROOT%\bin\MakeLZSA.exe" "%ARCHIVE%" "%STAGING%" %EXTRA%
 exit /b %ERRORLEVEL%

@@ -21,11 +21,10 @@
 // CA 94129, USA, for further information.
 
 // SumatraPDF: compiled instead of source/fitz/noto.c. Same font table
-// (font-table.h), but no font data is linked into the binary: it comes from a
-// loader set with fz_set_builtin_font_loader(), which SumatraPDF serves from the
-// fonts\ entries of its embedded archive (src/EmbeddedResources.cpp). A table
-// entry the loader has no file for is skipped, so the set of built-in fonts is
-// whatever cmd/pack-embedded-prebuild.cmd packs, not a TOFU_* define.
+// (font-table.h), but no font data is linked into the binary. A loader set with
+// fz_set_builtin_font_loader() supplies the bytes (src/shared/EmbeddedResources.cpp):
+// the embedded archive, then the on-disk cache, then the URL in fonts_map.c.
+// A table entry the loader cannot get is skipped.
 
 #include "mupdf/fitz.h"
 #include "mupdf/ucdn.h"

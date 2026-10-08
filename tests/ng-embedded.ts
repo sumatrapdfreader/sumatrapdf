@@ -62,6 +62,7 @@ export async function testit(): Promise<void> {
     put(".work/translations.txt", ":test\nde:Test\n");
     archive = await packEmbedded(tc, packer, output, fixture);
     if (!names(archive).includes("nested\\index.md")) fail("manual was not packed at the archive root");
+    if (!names(archive).includes("fonts\\NotoSans-Regular.otf")) fail("fonts were not packed");
     run([packer, archive]);
     const before = statSync(archive).mtimeMs;
     await packEmbedded(tc, packer, output, fixture);
@@ -79,13 +80,16 @@ export async function testit(): Promise<void> {
     if (old.equals(readFileSync(archive))) fail("changed translations did not update the archive");
     if (!existsSync(join(output, "embedded", "translations.txt"))) fail("translations were not staged");
 
-    // what the wasm build asks for: no manual, files stored as is
+    // what the wasm build asks for: no manual, no fonts, files stored as is
     const marker = "compressible ".repeat(64);
     put(".work/docs/nested/index.md", "manual");
     put(".work/translations.txt", marker);
-    const forWeb = { manual: false, compress: false };
+    const forWeb = { manual: false, compress: false, fonts: false };
     archive = await packEmbedded(tc, packer, output, fixture, forWeb);
     if (names(archive).some((name) => name.endsWith(".md"))) fail("manual was packed without being asked for");
+    if (names(archive).some((name) => name.startsWith("fonts\\") || name.startsWith("fonts/"))) {
+      fail("fonts were packed for the web");
+    }
     if (!readFileSync(archive).includes(marker)) fail("-store compressed a file");
     run([packer, archive]);
     // same files, different packing: entries of the previous archive can't be reused

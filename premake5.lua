@@ -927,8 +927,8 @@ workspace "SumatraPDF"
     -- so we can't double-define it
     defines { "USE_JPIP", "OPJ_EXPORTS", "HAVE_LCMS2MT=1", "HAVE_WEBP=1" }
     defines { "OPJ_STATIC", "SHARE_JPEG" }
-    -- built-in fonts come from IDR_EMBEDDED_PAK (src/mupdf/noto_sumatra.c);
-    -- Source Han is not packed, so skip its table entries and per-language retries
+    -- built-in fonts come from the loader (embedded pak, then cache, then
+    -- fonts_map.c). Source Han is not packed, so skip its table entries
     defines { "TOFU_CJK_LANG" }
     defines { "FZ_ENABLE_PDF=1", "FZ_ENABLE_SVG=1", "FZ_ENABLE_BROTLI=1", "FZ_ENABLE_BARCODE=0", "FZ_ENABLE_JS=1", "FZ_ENABLE_HYPHEN=0", "FZ_ENABLE_MD=1" }
     defines { "HAVE_LIBARCHIVE", "LIBARCHIVE_STATIC" }

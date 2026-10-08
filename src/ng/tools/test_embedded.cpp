@@ -10,6 +10,11 @@
 
 void fz_set_builtin_font_loader(__unused fz_builtin_font_loader loader) {}
 
+// this tool links the loader but not mupdf, where fonts_map.c defines it
+extern "C" const char* sumatra_lookup_font_url(const char*) {
+    return nullptr;
+}
+
 int main(int argc, char** argv) {
     if (argc != 3) {
         fprintf(stderr, "usage: test_embedded <archive> <staging dir>\n");

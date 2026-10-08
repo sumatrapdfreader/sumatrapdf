@@ -9,6 +9,8 @@ typedef const unsigned char* (*fz_builtin_font_loader)(const char* file_name, in
 
 void fz_set_builtin_font_loader(fz_builtin_font_loader loader);
 
+const char* sumatra_lookup_font_url(const char* name);
+
 #ifdef __cplusplus
 }
 #endif

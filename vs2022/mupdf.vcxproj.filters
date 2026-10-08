@@ -1196,6 +1196,9 @@
     <ClCompile Include="..\ext\mupdf\source\xps\xps-zip.c">
       <Filter>ext\mupdf\source\xps</Filter>
     </ClCompile>
+    <ClCompile Include="..\src\shared\mupdf\fonts_map.c">
+      <Filter>src\shared\mupdf</Filter>
+    </ClCompile>
     <ClCompile Include="..\src\shared\mupdf\load-jxl.cpp">
       <Filter>src\shared\mupdf</Filter>
     </ClCompile>

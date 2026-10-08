@@ -834,8 +834,8 @@ export const targets: Target[] = [
       "HAVE_LCMS2MT=1",
       "HAVE_WEBP=1",
       "SHARE_JPEG",
-      // built-in fonts come from the embedded pak (src/mupdf/noto_sumatra.c),
-      // Source Han is not packed: skip its table entries
+      // built-in fonts come from the loader (embedded pak, then cache, then
+      // fonts_map.c). Source Han is not packed: skip its table entries
       "TOFU_CJK_LANG",
       "FZ_ENABLE_PDF=1",
       "FZ_ENABLE_SVG=1",

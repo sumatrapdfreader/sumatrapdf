@@ -4,10 +4,17 @@
 #include "base/Base.h"
 #if OS_WIN
 #include "base/Win.h"
-#include "base/File.h"
 #endif
+#include "base/File.h"
+#include "base/Http.h"
 #include "base/LzmaSimpleArchive.h"
 
+#include "Version.h"
+#if OS_WASM
+#include <emscripten/emscripten.h>
+
+#include "gui/WasmBridge.h"
+#endif
 #include "mupdf/noto_sumatra.h"
 
 #if OS_WIN
@@ -106,9 +113,140 @@ struct EmbeddedFont {
 static Mutex gFontsMutex;
 static EmbeddedFont* gFonts = nullptr;
 
-// mupdf's built-in fonts, from fonts\<name> in the archive (src/mupdf/noto_sumatra.c).
-// Each is unpacked once and kept for the life of the process: mupdf holds on to
-// the pointer. Misses are remembered too, as the table names fonts we don't pack.
+#if OS_WASM
+// Sync so a font lookup, which mupdf makes on the calling thread, can wait.
+// The response is buffered in JS and written whole, so a failed request leaves
+// no half file. /fonts is an OPFS root (src/gui/WasmShell.js).
+EM_JS(int, WasmDownloadFont, (const char* url, int urlLen, const char* path, int pathLen), {
+    var u = UTF8ToString(url, urlLen);
+    var p = UTF8ToString(path, pathLen);
+    try {
+        var xhr = new XMLHttpRequest();
+        xhr.open("GET", u, false);
+        xhr.overrideMimeType("text/plain; charset=x-user-defined");
+        xhr.send(null);
+        if (xhr.status != 200) {
+            console.error("font download failed", xhr.status, u);
+            return 0;
+        }
+        var text = xhr.responseText;
+        var bytes = new Uint8Array(text.length);
+        for (var i = 0; i < text.length; i++) {
+            bytes[i] = text.charCodeAt(i) & 255;
+        }
+        FS.writeFile(p, bytes);
+        return bytes.length;
+    } catch (e) {
+        console.error("font download failed", u, e);
+        try {
+            FS.unlink(p);
+        } catch (e2) {
+        }
+        return 0;
+    }
+});
+#endif
+
+// %LOCALAPPDATA%\SumatraPDF\fonts, or the XDG / macOS equivalent. Not the
+// settings directory: a portable exe and the preview dll share this cache.
+// Wasm uses /fonts, which the page mirrors to OPFS.
+static TempStr FontCacheDirTemp() {
+#if OS_WASM
+    return str::DupTemp(StrL("/fonts"));
+#elif OS_WIN
+    TempStr dir = GetSpecialFolderTemp(CSIDL_LOCAL_APPDATA, true);
+    if (len(dir) == 0) {
+        dir = GetTempDirTemp();
+    }
+    return path::JoinTemp(dir, StrL(kAppName), StrL("fonts"));
+#else
+    const char* home = getenv("HOME");
+#if OS_DARWIN
+    if (home && *home) {
+        TempStr dir = path::JoinTemp(Str((char*)home), StrL("Library/Application Support"));
+        dir = path::JoinTemp(dir, StrL(kAppName));
+        return path::JoinTemp(dir, StrL("fonts"));
+    }
+#else
+    const char* xdg = getenv("XDG_CONFIG_HOME");
+    if (xdg && *xdg) {
+        return path::JoinTemp(Str((char*)xdg), StrL(kAppName), StrL("fonts"));
+    }
+    if (home && *home) {
+        TempStr dir = path::JoinTemp(Str((char*)home), StrL(".config"));
+        dir = path::JoinTemp(dir, StrL(kAppName));
+        return path::JoinTemp(dir, StrL("fonts"));
+    }
+#endif
+    const char* tmp = getenv("TMPDIR");
+    TempStr dir = path::JoinTemp(Str((char*)(tmp && *tmp ? tmp : "/tmp")), StrL(kAppName));
+    return path::JoinTemp(dir, StrL("fonts"));
+#endif
+}
+
+static Str ReadKeptFont(Str path) {
+    Str data = file::ReadFile(path);
+    if (len(data) <= 0) {
+        str::Free(data);
+        return {};
+    }
+    return data;
+}
+
+static bool DownloadFont(Str url, Str dest) {
+    if (!dir::CreateForFile(dest)) {
+        logf("font cache: cannot create '%s'\n", dest);
+        return false;
+    }
+#if OS_WASM
+    if (WasmDownloadFont(url.s, len(url), dest.s, len(dest)) <= 0) {
+        return false;
+    }
+    WasmPersistSettings();
+    return true;
+#else
+    TempStr part = str::JoinTemp(dest, StrL(".part"));
+    Func1<HttpProgress*> progress;
+    if (!HttpGetToFile(url, part, progress)) {
+        file::Delete(part);
+        return false;
+    }
+    if (!file::RenameReplace(dest, part)) {
+        file::Delete(part);
+        return false;
+    }
+    return true;
+#endif
+}
+
+// Embedded archive first, then the cache file named by the URL, then a download
+// into that cache. The bytes are kept for the process: mupdf holds the pointer.
+// A miss is remembered too, so a font we cannot get is not retried.
+static void LoadFontFromCacheOrNet(Str name, EmbeddedFont* f) {
+    const char* url = sumatra_lookup_font_url(CStrTemp(name));
+    if (!url || !url[0]) {
+        return;
+    }
+    const char* slash = strrchr(url, '/');
+    const char* file = slash ? slash + 1 : url;
+    if (!file[0]) {
+        return;
+    }
+    TempStr path = path::JoinTemp(FontCacheDirTemp(), Str(file));
+    Str data = ReadKeptFont(path);
+    if (len(data) == 0) {
+        logf("font '%s': downloading\n", name);
+        if (!DownloadFont(Str(url), path)) {
+            logf("font '%s': download failed\n", name);
+            return;
+        }
+        data = ReadKeptFont(path);
+    }
+    f->data = (u8*)data.s;
+    f->size = len(data);
+}
+
+// mupdf's built-in fonts (src/mupdf/noto_sumatra.c). Each is loaded once.
 static const u8* LoadEmbeddedFont(const char* fileName, int* size) {
     Str name(fileName);
     AutoUnlockMutex lock(&gFontsMutex);
@@ -121,6 +259,9 @@ static const u8* LoadEmbeddedFont(const char* fileName, int* size) {
     EmbeddedFont* f = AllocStruct<EmbeddedFont>();
     f->name = str::Dup(name);
     f->data = GetEmbeddedFileData(fmt("fonts\\%s", name), &f->size);
+    if (!f->data) {
+        LoadFontFromCacheOrNet(name, f);
+    }
     ListInsertFront(&gFonts, f);
     *size = f->size;
     return f->data;

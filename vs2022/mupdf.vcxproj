@@ -1542,6 +1542,7 @@
     <ClCompile Include="..\ext\mupdf\source\xps\xps-tile.c" />
     <ClCompile Include="..\ext\mupdf\source\xps\xps-util.c" />
     <ClCompile Include="..\ext\mupdf\source\xps\xps-zip.c" />
+    <ClCompile Include="..\src\shared\mupdf\fonts_map.c" />
     <ClCompile Include="..\src\shared\mupdf\load-jxl.cpp" />
     <ClCompile Include="..\src\shared\mupdf\mupdf_load_system_font.c" />
     <ClCompile Include="..\src\shared\mupdf\noto_sumatra.c" />

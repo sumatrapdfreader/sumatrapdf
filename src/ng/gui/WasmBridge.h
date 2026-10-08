@@ -32,8 +32,8 @@ bool WasmShareFile(Str path);
 // Opens the browser print dialog for a PDF in the virtual file system.
 bool WasmPrintPdf(Str path);
 
-// Schedules a write-back of /uploads and /settings to OPFS. Coalesces: many
-// calls in a row cost one sync. Unchanged files are not rewritten.
+// Schedules a write-back of /uploads, /settings and /fonts to OPFS. Coalesces:
+// many calls in a row cost one sync. Unchanged files are not rewritten.
 void WasmPersistSettings();
 
 // The page's `?file=` query parameter, a path in MEMFS. It is the browser's

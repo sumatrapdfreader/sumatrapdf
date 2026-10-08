@@ -5,8 +5,8 @@
 // MEMFS calls; writes are copied back to OPFS. The sync OPFS API only exists
 // in a worker, and this page runs on the main thread.
 //
-// Everything else the app reads (the fonts, the sample documents) is in the
-// preloaded MEMFS image.
+// Sample documents are in the preloaded MEMFS image. Built-in fonts that were
+// not packed in the archive are cached under /fonts, also mirrored to OPFS.
 //
 // This runs as a page script, outside the module's own scope, so FS and the
 // run-dependency pair are reached through Module. window.__sumatraStorage
@@ -15,7 +15,7 @@
   var Module = (window.Module = window.Module || {});
   // OPFS directories at the origin root. Same names as the MEMFS mounts, so
   // another page on this origin can open the same files.
-  var roots = ["/uploads", "/settings"];
+  var roots = ["/uploads", "/settings", "/fonts"];
   // path -> "size:mtime" for files already stored in OPFS. Unchanged files
   // are not rewritten; a settings save must not copy every PDF again.
   var stamp = {};
@@ -294,6 +294,7 @@
     try {
       fs().mkdir("/settings");
       fs().mkdir("/uploads");
+      fs().mkdir("/fonts");
     } catch (e) {
       window.__sumatraStorage = "mount failed: " + e;
       console.error("creating storage directories failed", e);

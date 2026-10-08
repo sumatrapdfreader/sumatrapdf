@@ -45,6 +45,8 @@ Options:
   -profile          Windows, cl.exe: orig's Profile build (PerfLog, /callcap);
                     run with -start-perf-log -log-perf-file <path>
   -clean            delete the output directory first
+  -no-embed-fonts   leave built-in fonts out of the archive; they download on use.
+                    wasm always does this
   -all              build every target for this platform
   -run              run the (single) built target afterwards; args after --
   -v                echo every compiler and linker command
@@ -60,6 +62,7 @@ type Options = {
   targets: string[];
   all: boolean;
   run: boolean;
+  noEmbedFonts: boolean;
   runArgs: string[];
 };
 
@@ -70,6 +73,7 @@ function parseArgs(args: string[]): Options {
   const targets: string[] = [];
   let all = false;
   let run = false;
+  let noEmbedFonts = false;
   let runArgs: string[] = [];
   for (let i = 0; i < args.length; i++) {
     const a = args[i]!;
@@ -87,6 +91,7 @@ function parseArgs(args: string[]): Options {
     else if (a === "-asan") flags.asan = true;
     else if (a === "-profile") flags.profile = true;
     else if (a === "-clean") flags.clean = true;
+    else if (a === "-no-embed-fonts") noEmbedFonts = true;
     else if (a === "-all") all = true;
     else if (a === "-run") run = true;
     else if (a === "-v") flags.verbose = true;
@@ -97,7 +102,7 @@ function parseArgs(args: string[]): Options {
   if (!config) throw new CliError("missing -dbg or -rel");
   flags.debug = config === "dbg";
   if (run && (all || targets.length > 1)) throw new CliError("-run needs exactly one target");
-  return { flags, plat, targets, all, run, runArgs };
+  return { flags, plat, targets, all, run, noEmbedFonts, runArgs };
 }
 
 function printUsage(plat: Platform): void {
@@ -248,13 +253,20 @@ async function main(): Promise<void> {
     // website. The web server compresses it, so the archive inside is stored:
     // no smaller compressed twice, and nothing to decompress at startup.
     const web = plat === "wasm";
+    // wasm has no room for the font set; it caches downloads in OPFS
+    const embedFonts = !web && !opts.noEmbedFonts;
+    if (!embedFonts) console.log("not embedding built-in fonts");
     if (!web) await genDocsForBuild();
     const host = hostPlatform();
     const packFlags: BuildFlags = { debug: false, asan: false, clang: false, clean: false, verbose: flags.verbose };
     const packTc = findToolchain(root, host, false, fail);
     stageShared(outDir(host, packFlags));
     const packer = await buildTarget(packTc, findTarget("MakeLZSA")!, packFlags, fail);
-    await packEmbedded(packTc, packer, outDir(plat, flags), root, { manual: !web, compress: !web });
+    await packEmbedded(packTc, packer, outDir(plat, flags), root, {
+      manual: !web,
+      compress: !web,
+      fonts: embedFonts,
+    });
   }
 
   const started = performance.now();
