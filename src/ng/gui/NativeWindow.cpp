@@ -530,6 +530,8 @@ void AppShellApplyNativeCursor(MainWindow* win) {
 }
 
 float CanvasScale(MainWindow* win);
+bool FreeTextInPlaceSetText(MainWindow* win, const WCHAR* text);
+bool FreeTextInPlaceCommitOnChar(MainWindow* win, int ch);
 
 static LRESULT CALLBACK ShellSubclass(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp, UINT_PTR, DWORD_PTR) {
     switch (msg) {
@@ -573,6 +575,20 @@ static LRESULT CALLBACK ShellSubclass(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp,
             if (MainWindow* win = WinOf(hwnd)) {
                 if (win->IsCurrentTabAbout()) {
                     HomePageOnMouseWheel(win, GET_WHEEL_DELTA_WPARAM(wp));
+                    return 0;
+                }
+            }
+            break;
+        case WM_SETTEXT:
+            if (MainWindow* win = WinOf(hwnd)) {
+                if (FreeTextInPlaceSetText(win, (const WCHAR*)lp)) {
+                    return TRUE;
+                }
+            }
+            break;
+        case WM_CHAR:
+            if (MainWindow* win = WinOf(hwnd)) {
+                if (FreeTextInPlaceCommitOnChar(win, (int)wp)) {
                     return 0;
                 }
             }

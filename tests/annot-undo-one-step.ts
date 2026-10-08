@@ -7,7 +7,7 @@ import { mkdirSync, rmSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 import { openChipDropdown, pickSwatch } from "./annot-color-dropdown.ts";
 import { ControlClient, ControlCommand } from "./control.ts";
-import { assemblePdf, cmdId, runStandalone, SLOW_BUILD_FACTOR, tmpPath } from "./util.ts";
+import { assemblePdf, cmdId, runStandalone, SLOW_BUILD_FACTOR, tmpPath, USE_NG } from "./util.ts";
 import {
   enumChildWindows,
   getClassName,
@@ -216,7 +216,8 @@ async function testFreeText(): Promise<void> {
     const canvas = findCanvas(frame);
     sendMessage(frame, WM_COMMAND, cmdId("CmdCreateAnnotFreeText"), packCoords(120, 250));
     await waitFor(client, (st) => st.editActive, "creating a free text did not open the in-place editor");
-    const box = findEditBox(canvas);
+    // ng edits in a gpui text area on the frame. Orig's box is an Edit child.
+    const box = USE_NG ? frame : findEditBox(canvas);
     if (!box) {
       throw new Error("annot-undo-one-step: no in-place edit box");
     }

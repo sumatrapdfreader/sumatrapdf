@@ -897,6 +897,47 @@ bool IsEditingFreeTextInPlace(MainWindow* win) {
     return !win || gInPlace.win == win;
 }
 
+// The tests set the win32 edit with WM_SETTEXT and commit with WM_CHAR LF.
+// ng's box is a gpui textarea on the frame, so those messages land here.
+bool FreeTextInPlaceSetText(MainWindow* win, const WCHAR* text) {
+    if (!IsEditingFreeTextInPlace(win) || !gInPlace.edit || !text) {
+        return false;
+    }
+    gp::InputSetValue(gInPlace.edit, ToGpui(ToUtf8Temp(text)));
+    AppShellInvalidate(win);
+    return true;
+}
+
+bool FreeTextInPlaceCommitOnChar(MainWindow* win, int ch) {
+    if (ch != '\n' || !IsEditingFreeTextInPlace(win)) {
+        return false;
+    }
+    EndFreeTextInPlaceEdit(true);
+    return true;
+}
+
+TempStr FreeTextInPlaceEditStateTemp(MainWindow* win) {
+    if (!IsEditingFreeTextInPlace(win) || !gInPlace.edit) {
+        return StrL("freeTextEdit active=0 rect=0,0,0,0 text=\n");
+    }
+    Rect r{};
+    DisplayModel* dm = win ? win->AsFixed() : nullptr;
+    Annotation* annot = gInPlace.annot;
+    if (dm && annot) {
+        r = dm->CvtToScreen(PageNo(annot), GetRect(annot));
+        float s = CanvasScale(win);
+        if (s <= 0.f) {
+            s = 1.f;
+        }
+        r.x += (int)((float)win->canvasRc.x / s);
+        r.y += (int)((float)win->canvasRc.y / s);
+    }
+    TempStr text = str::DupTemp(FromGpui(gp::InputValue(gInPlace.edit)));
+    text = str::ReplaceTemp(text, StrL("\r\n"), StrL("|"));
+    text = str::ReplaceTemp(text, StrL("\n"), StrL("|"));
+    return fmt("freeTextEdit active=1 rect=%d,%d,%d,%d text=%s\n", r.x, r.y, r.dx, r.dy, text);
+}
+
 void EndFreeTextInPlaceEdit(bool accept) {
     if (!gInPlace.annot) {
         return;

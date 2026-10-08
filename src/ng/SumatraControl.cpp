@@ -953,6 +953,8 @@ static TempStr MarkupAnnotsResultTemp(Str action, int x, int y, int* exitCodeOut
     out.Append(AnnotFilterToolbarStateTemp(win));
     out.Append(AnnotationHoverOverlayStateTemp(win));
     out.Append(AnnotationPlacementStateTemp(win));
+    TempStr FreeTextInPlaceEditStateTemp(MainWindow * win);
+    out.Append(FreeTextInPlaceEditStateTemp(win));
     return finish({}, 0);
 }
 
