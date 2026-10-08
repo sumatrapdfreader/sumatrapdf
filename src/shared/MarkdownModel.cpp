@@ -481,16 +481,7 @@ void MarkdownModel::OnDocumentComplete(Str url) {
     } else if (GetSavedHtmlScrollPosForUrl(plainUrl, &htmlScrollPos)) {
         restoreHtmlScrollPos = true;
     }
-    BrowserViewSetZoomPercent(docView, (int)zoomVirtual);
-    RestoreHtmlScrollPos();
-
-    if (cb && pageNo > 0) {
-        cb->PageNoChanged(this, pageNo);
-    }
-
-    // finish a pending "jump to a match on another page": the fresh document
-    // has no find state, so re-run the search and go to the requested match
-    FinishPendingFind();
+    FinishDocumentLoad(pageNo);
 }
 
 Str MarkdownModel::GetDataForUrl(Str url) {

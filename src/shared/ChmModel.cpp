@@ -276,16 +276,7 @@ void ChmModel::OnDocumentComplete(Str url) {
         zoomVirtual = initZoom;
         initZoom = kInvalidZoom;
     }
-    BrowserViewSetZoomPercent(docView, (int)zoomVirtual);
-    RestoreHtmlScrollPos();
-
-    if (cb && pageNo > 0) {
-        cb->PageNoChanged(this, pageNo);
-    }
-
-    // finish a pending "jump to a match on another page": the fresh document
-    // has no find state, so re-run the search and go to the requested match
-    FinishPendingFind();
+    FinishDocumentLoad(pageNo);
 }
 
 // Called before we start loading html for a given url. Will block

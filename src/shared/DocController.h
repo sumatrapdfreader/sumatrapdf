@@ -222,6 +222,7 @@ struct BrowserDocController : DocController {
     void SelectAll() const;
     void CopySelection() const;
     LRESULT PassUIMsg(UINT msg, WPARAM wp, LPARAM lp) const;
+    void FinishDocumentLoad(int pageNo);
     void FinishPendingFind();
     void OnFindResult(int gen, int current, int total);
     void OnFindAllResult(Str payload);

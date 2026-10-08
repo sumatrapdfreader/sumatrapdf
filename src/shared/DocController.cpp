@@ -296,6 +296,15 @@ void BrowserDocController::FinishPendingFind() {
     str::FreePtr(&pendingFindTerm);
 }
 
+void BrowserDocController::FinishDocumentLoad(int pageNo) {
+    BrowserViewSetZoomPercent(docView, (int)zoomVirtual);
+    RestoreHtmlScrollPos();
+    if (cb && pageNo > 0) {
+        cb->PageNoChanged(this, pageNo);
+    }
+    FinishPendingFind();
+}
+
 void BrowserDocController::OnFindResult(int gen, int current, int total) {
     cb->FindResultReceived(gen, current, total);
 }
