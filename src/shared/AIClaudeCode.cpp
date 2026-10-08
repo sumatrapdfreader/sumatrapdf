@@ -114,19 +114,6 @@ Str AIChatSessionDescription(Str sessionPath) {
     return str::Dup(StrL("(no description)"));
 }
 
-// Scan ~/.claude/projects/<encoded-dir>/ for .jsonl session files
-static void CollectClaudeSessions(Str dir, Vec<AIChatSessionInfo>& sessions) {
-    TempStr userProfile = AIChatHomeDirTemp();
-    if (len(userProfile) == 0) {
-        return;
-    }
-    TempStr encodedDir = AIChatEncodeSessionDirTemp(dir);
-    TempStr projectDir = path::JoinTemp(userProfile, StrL(".claude"), StrL("projects"));
-    projectDir = path::JoinTemp(projectDir, encodedDir);
-    AIChatCollectJsonlSessions(projectDir, dir, sessions);
-    AIChatSortSessionsByTimestampDesc(sessions);
-}
-
 // Load conversation history from a session's JSONL file
 void AIChatLoadSessionHistory(MainWindow* win, Str sessionPath) {
     AIChatJsonlReader jsonl(sessionPath);
@@ -166,17 +153,7 @@ void AIChatLoadSessionHistory(MainWindow* win, Str sessionPath) {
     }
 }
 
-static void LoadClaudeSessionHistory(MainWindow* win, Str sessionId, Str dir) {
-    TempStr userProfile = AIChatHomeDirTemp();
-    if (len(userProfile) == 0) {
-        return;
-    }
-    TempStr encodedDir = AIChatEncodeSessionDirTemp(dir);
-    TempStr sessionPath = fmt("%s\\.claude\\projects\\%s\\%s.jsonl", userProfile, encodedDir, sessionId);
-    if (file::Exists(sessionPath)) {
-        AIChatLoadSessionHistory(win, sessionPath);
-    }
-}
+static const Str kClaudeSessionRoots[] = {StrL(".claude/projects")};
 
 // --- The provider ---
 
@@ -228,10 +205,15 @@ struct ClaudeCodeProvider : AIChatProvider {
     void SetFlag(bool flag) override { gSettings->claudeCode.skipPermissions = flag; }
     Str GetBgColor() override { return gSettings->claudeCode.bgColor.s; }
 
-    void CollectSessions(Str dir, Vec<AIChatSessionInfo>& sessions) override { CollectClaudeSessions(dir, sessions); }
+    void CollectSessions(Str dir, Vec<AIChatSessionInfo>& sessions) override {
+        AIChatCollectProjectSessions(dir, kClaudeSessionRoots, dimof(kClaudeSessionRoots), sessions);
+    }
 
     void LoadSessionHistory(MainWindow* win, Str sessionId, Str dir) override {
-        LoadClaudeSessionHistory(win, sessionId, dir);
+        TempStr path = AIChatFindProjectSessionTemp(dir, sessionId, kClaudeSessionRoots, dimof(kClaudeSessionRoots));
+        if (path) {
+            AIChatLoadSessionHistory(win, path);
+        }
     }
 
     TempStr BuildCmdLineTemp(const AIChatCmdArgs& args) override {

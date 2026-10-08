@@ -239,6 +239,38 @@ void AIChatCollectJsonlSessions(Str sessionDir, Str project, Vec<AIChatSessionIn
     }
 }
 
+static TempStr AIChatProjectDirTemp(Str home, Str encodedDir, Str root) {
+    return path::JoinTemp(path::JoinTemp(home, root), encodedDir);
+}
+
+void AIChatCollectProjectSessions(Str dir, const Str* roots, int rootCount, Vec<AIChatSessionInfo>& sessions) {
+    TempStr home = AIChatHomeDirTemp();
+    if (len(home) == 0) {
+        return;
+    }
+    TempStr encodedDir = AIChatEncodeSessionDirTemp(dir);
+    for (int i = 0; i < rootCount; i++) {
+        AIChatCollectJsonlSessions(AIChatProjectDirTemp(home, encodedDir, roots[i]), dir, sessions);
+    }
+    AIChatSortSessionsByTimestampDesc(sessions);
+}
+
+TempStr AIChatFindProjectSessionTemp(Str dir, Str sessionId, const Str* roots, int rootCount) {
+    TempStr home = AIChatHomeDirTemp();
+    if (len(home) == 0) {
+        return {};
+    }
+    TempStr encodedDir = AIChatEncodeSessionDirTemp(dir);
+    TempStr fileName = fmt("%s.jsonl", sessionId);
+    for (int i = 0; i < rootCount; i++) {
+        TempStr path = path::JoinTemp(AIChatProjectDirTemp(home, encodedDir, roots[i]), fileName);
+        if (file::Exists(path)) {
+            return path;
+        }
+    }
+    return {};
+}
+
 i64 AIChatFileTimeToMs(const FILETIME& ft) {
     return (i64)(FileTimeToU64(ft) / 10000);
 }

@@ -107,48 +107,8 @@ static bool QueryAntiGravityModels(Str exePath, StrVec& models) {
 
 // --- Session history ---
 
-static void CollectAntiGravitySessions(Str dir, Vec<AIChatSessionInfo>& sessions) {
-    TempStr userProfile = AIChatHomeDirTemp();
-    if (len(userProfile) == 0) {
-        return;
-    }
-    TempStr encodedDir = AIChatEncodeSessionDirTemp(dir);
-
-    // Try ~/.gemini/antigravity/projects/<encoded-dir>/
-    TempStr projectDir1 = fmt("%s\\.gemini\\antigravity\\projects\\%s", userProfile, encodedDir);
-    AIChatCollectJsonlSessions(projectDir1, dir, sessions);
-
-    // Try ~/.gemini/antigravity-cli/projects/<encoded-dir>/
-    TempStr projectDir2 = fmt("%s\\.gemini\\antigravity-cli\\projects\\%s", userProfile, encodedDir);
-    AIChatCollectJsonlSessions(projectDir2, dir, sessions);
-
-    // Try ~/.gemini/projects/<encoded-dir>/
-    TempStr projectDir3 = fmt("%s\\.gemini\\projects\\%s", userProfile, encodedDir);
-    AIChatCollectJsonlSessions(projectDir3, dir, sessions);
-
-    AIChatSortSessionsByTimestampDesc(sessions);
-}
-
-static void LoadAntiGravitySessionHistory(MainWindow* win, Str sessionId, Str dir) {
-    TempStr userProfile = AIChatHomeDirTemp();
-    if (len(userProfile) == 0) {
-        return;
-    }
-    TempStr encodedDir = AIChatEncodeSessionDirTemp(dir);
-
-    TempStr sessionPath = fmt("%s\\.gemini\\antigravity\\projects\\%s\\%s.jsonl", userProfile, encodedDir, sessionId);
-    if (!file::Exists(sessionPath)) {
-        sessionPath = fmt("%s\\.gemini\\antigravity-cli\\projects\\%s\\%s.jsonl", userProfile, encodedDir, sessionId);
-    }
-    if (!file::Exists(sessionPath)) {
-        sessionPath = fmt("%s\\.gemini\\projects\\%s\\%s.jsonl", userProfile, encodedDir, sessionId);
-    }
-    if (!file::Exists(sessionPath)) {
-        return;
-    }
-
-    AIChatLoadSessionHistory(win, sessionPath);
-}
+static const Str kAntiGravitySessionRoots[] = {StrL(".gemini/antigravity/projects"),
+                                               StrL(".gemini/antigravity-cli/projects"), StrL(".gemini/projects")};
 
 // --- The provider ---
 
@@ -208,11 +168,15 @@ struct AntiGravityProvider : AIChatProvider {
     Str GetBgColor() override { return gSettings->antiGravity.bgColor.s; }
 
     void CollectSessions(Str dir, Vec<AIChatSessionInfo>& sessions) override {
-        CollectAntiGravitySessions(dir, sessions);
+        AIChatCollectProjectSessions(dir, kAntiGravitySessionRoots, dimof(kAntiGravitySessionRoots), sessions);
     }
 
     void LoadSessionHistory(MainWindow* win, Str sessionId, Str dir) override {
-        LoadAntiGravitySessionHistory(win, sessionId, dir);
+        TempStr path =
+            AIChatFindProjectSessionTemp(dir, sessionId, kAntiGravitySessionRoots, dimof(kAntiGravitySessionRoots));
+        if (path) {
+            AIChatLoadSessionHistory(win, path);
+        }
     }
 
     TempStr BuildCmdLineTemp(const AIChatCmdArgs& args) override {

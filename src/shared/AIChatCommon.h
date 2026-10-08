@@ -173,6 +173,8 @@ TempStr AIChatHomeDirTemp();
 
 void AIChatFreeSessions(Vec<AIChatSessionInfo>& sessions);
 void AIChatCollectJsonlSessions(Str sessionDir, Str project, Vec<AIChatSessionInfo>& sessions);
+void AIChatCollectProjectSessions(Str dir, const Str* roots, int rootCount, Vec<AIChatSessionInfo>& sessions);
+TempStr AIChatFindProjectSessionTemp(Str dir, Str sessionId, const Str* roots, int rootCount);
 void AIChatSortSessionsByTimestampDesc(Vec<AIChatSessionInfo>& sessions);
 i64 AIChatFileTimeToMs(const FILETIME& ft);
 
