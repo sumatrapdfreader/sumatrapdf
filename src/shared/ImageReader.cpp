@@ -1516,7 +1516,7 @@ Vec<Pixmap*> PixmapsFromData(Str bmpData) {
             return frames;
         }
     }
-#if OS_LINUX
+#if OS_LINUX || OS_WASM
     if (kind == FileType::Gif) {
         Vec<Pixmap*> frames = PixmapsFromGifData(bmpData);
         if (len(frames) > 0) {
@@ -1526,13 +1526,6 @@ Vec<Pixmap*> PixmapsFromData(Str bmpData) {
 #elif OS_DARWIN
     if (kind == FileType::Gif) {
         Vec<Pixmap*> frames = PixmapsFromImageIo(bmpData);
-        if (len(frames) > 0) {
-            return frames;
-        }
-    }
-#elif OS_WASM
-    if (kind == FileType::Gif) {
-        Vec<Pixmap*> frames = PixmapsFromGifData(bmpData);
         if (len(frames) > 0) {
             return frames;
         }
