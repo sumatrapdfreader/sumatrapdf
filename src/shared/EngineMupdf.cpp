@@ -9945,7 +9945,6 @@ static void SyncPagesAfterUndoRedo(EngineMupdf* e, Vec<Annotation*>& removedOut)
         InvalidateFzPageAfterContentChange(e, pi);
         e->InvalidateTextForPage(pi->pageNo);
     });
-#if !defined(SUMATRA_NG)
 }
 
 //--- merging PDFs
@@ -9969,7 +9968,7 @@ static pdf_document* OpenPdfForMerge(fz_context* ctx, const PdfMergeSource& src)
 // copies only the content).
 bool EngineMupdfMergePdfs(const Vec<PdfMergeSource>& srcs, const Vec<PdfMergePage>& pages, Str destPath) {
     int nPages = len(pages);
-    if (len(srcs) == 0 || nPages == 0) {
+    if (len(srcs) == 0 || nPages == 0 || len(destPath) == 0) {
         return false;
     }
     fz_context* ctx = fz_new_context(nullptr, nullptr, FZ_STORE_DEFAULT);
@@ -10041,7 +10040,6 @@ bool EngineMupdfMergePdfs(const Vec<PdfMergeSource>& srcs, const Vec<PdfMergePag
     }
     fz_drop_context(ctx);
     return ok;
-#endif
 }
 
 // Step one operation back (or forward with redo). Returns false if there was
@@ -10087,92 +10085,6 @@ bool EngineMupdfUndo(EngineBase* engine, Vec<Annotation*>& removedOut) {
 
 bool EngineMupdfRedo(EngineBase* engine, Vec<Annotation*>& removedOut) {
     return EngineMupdfUndoRedo(engine, true, removedOut);
-#if defined(SUMATRA_NG)
-}
-
-static pdf_document* OpenPdfForMerge(fz_context* ctx, const PdfMergeSource& src) {
-    pdf_document* doc = pdf_open_document(ctx, CStrTemp(src.path));
-    if (!pdf_needs_password(ctx, doc)) {
-        return doc;
-    }
-    const char* password = len(src.password) > 0 ? CStrTemp(src.password) : "";
-    if (!pdf_authenticate_password(ctx, doc, password)) {
-        pdf_drop_document(ctx, doc);
-        fz_throw(ctx, FZ_ERROR_ARGUMENT, "the PDF is password protected");
-    }
-    return doc;
-}
-
-// Writes pages in the requested order, keeping the base PDF's structure.
-bool EngineMupdfMergePdfs(const Vec<PdfMergeSource>& srcs, const Vec<PdfMergePage>& pages, Str destPath) {
-    int nPages = len(pages);
-    if (len(srcs) == 0 || nPages == 0 || len(destPath) == 0) {
-        return false;
-    }
-    fz_context* ctx = fz_new_context(nullptr, nullptr, FZ_STORE_DEFAULT);
-    if (!ctx) {
-        return false;
-    }
-    Vec<int> order;
-    VecAppendBlanks(order, nPages);
-    pdf_document* doc = nullptr;
-    pdf_document* src = nullptr;
-    pdf_graft_map* map = nullptr;
-    bool ok = false;
-    fz_var(doc);
-    fz_var(src);
-    fz_var(map);
-    fz_var(ok);
-    fz_try(ctx) {
-        doc = OpenPdfForMerge(ctx, srcs[0]);
-        int nBase = pdf_count_pages(ctx, doc);
-        for (int i = 0; i < nPages; i++) {
-            if (pages[i].src == 0) {
-                if (pages[i].pageNo < 1 || pages[i].pageNo > nBase) {
-                    fz_throw(ctx, FZ_ERROR_ARGUMENT, "no page %d", pages[i].pageNo);
-                }
-                order[i] = pages[i].pageNo - 1;
-            }
-        }
-        for (int sourceNo = 1; sourceNo < len(srcs); sourceNo++) {
-            src = OpenPdfForMerge(ctx, srcs[sourceNo]);
-            pdf_bake_document(ctx, src, 1, 1);
-            int nSrc = pdf_count_pages(ctx, src);
-            map = pdf_new_graft_map(ctx, doc);
-            for (int i = 0; i < nPages; i++) {
-                if (pages[i].src != sourceNo) {
-                    continue;
-                }
-                if (pages[i].pageNo < 1 || pages[i].pageNo > nSrc) {
-                    fz_throw(ctx, FZ_ERROR_ARGUMENT, "no page %d", pages[i].pageNo);
-                }
-                order[i] = pdf_count_pages(ctx, doc);
-                pdf_graft_mapped_page(ctx, map, -1, src, pages[i].pageNo - 1);
-            }
-            pdf_drop_graft_map(ctx, map);
-            map = nullptr;
-            pdf_drop_document(ctx, src);
-            src = nullptr;
-        }
-        pdf_rearrange_pages(ctx, doc, nPages, order.els, PDF_CLEAN_STRUCTURE_KEEP);
-        pdf_write_options opts = pdf_default_write_options2;
-        opts.do_compress = 1;
-        opts.do_garbage = 3;
-        pdf_save_document(ctx, doc, CStrTemp(destPath), &opts);
-        ok = true;
-    }
-    fz_always(ctx) {
-        pdf_drop_graft_map(ctx, map);
-        pdf_drop_document(ctx, src);
-        pdf_drop_document(ctx, doc);
-    }
-    fz_catch(ctx) {
-        fz_report_error(ctx);
-        logf("EngineMupdfMergePdfs: saving '%s' failed: '%s'\n", destPath, Str(fz_caught_message(ctx)));
-    }
-    fz_drop_context(ctx);
-    return ok;
-#endif
 }
 
 // The journal knows exactly whether the document differs from the file, which
