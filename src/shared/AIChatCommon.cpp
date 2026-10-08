@@ -492,33 +492,26 @@ TempStr AIChatFindExecutableTemp(const StrVec& fullPathCandidates, Str searchExe
 
 #endif
 
-void AIChatAppendModelUnique(StrVec& models, Str model) {
-    str::TrimWsBoth(model);
-    if (len(model) == 0) {
-        return;
-    }
-    TempStr norm = str::DupTemp(model);
-    str::ToLowerInPlace(norm);
-    for (int i = 0; i < len(models); i++) {
-        if (str::EqI(models[i], norm)) {
-            return;
-        }
-    }
-    models.Append(norm);
-}
-
 int AIChatFindModelInList(const StrVec& models, Str model) {
     if (len(model) == 0) {
         return -1;
     }
-    TempStr norm = str::DupTemp(model);
-    str::ToLowerInPlace(norm);
     for (int i = 0; i < len(models); i++) {
-        if (str::EqI(models[i], norm)) {
+        if (str::EqI(models[i], model)) {
             return i;
         }
     }
     return -1;
+}
+
+void AIChatAppendModelUnique(StrVec& models, Str model) {
+    str::TrimWsBoth(model);
+    if (len(model) == 0 || AIChatFindModelInList(models, model) >= 0) {
+        return;
+    }
+    TempStr norm = str::DupTemp(model);
+    str::ToLowerInPlace(norm);
+    models.Append(norm);
 }
 
 // the saved model if it's in the list, else defaultModel
