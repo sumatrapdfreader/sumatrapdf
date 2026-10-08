@@ -3454,8 +3454,10 @@ void ExecuteAnnotCreateCmd(MainWindow* win, int invokedCmdId, bool isPlacementCo
             SetAnnotCreateArgs(args, cmd);
             Annotation* created = MakeAnnotationsFromSelection(tab, &args);
             if (created) {
-                StopSelectTextWithKeyboard(win);
-                DeleteOldSelectionInfo(win, true);
+                if (!KeepCaretAfterMarkup(win)) {
+                    StopSelectTextWithKeyboard(win);
+                    DeleteOldSelectionInfo(win, true);
+                }
                 RefreshAnnotationLists(tab);
                 MainWindowRerender(win);
                 ToolbarUpdateStateForWindow(win, true);
@@ -3531,8 +3533,12 @@ void ExecuteAnnotCreateCmd(MainWindow* win, int invokedCmdId, bool isPlacementCo
     }
     // The text selection has done its job: it would sit on top of the markup
     // annotation it just made and keep the selection toolbar open over it.
-    StopSelectTextWithKeyboard(win);
-    DeleteOldSelectionInfo(win, true);
+    // Keyboard caret mode stays on, at the free end of that markup.
+    bool keptCaret = AnnotationIsTextMarkup(lastCreatedAnnot->type) && KeepCaretAfterMarkup(win);
+    if (!keptCaret) {
+        StopSelectTextWithKeyboard(win);
+        DeleteOldSelectionInfo(win, true);
+    }
     RefreshAnnotationLists(tab);
     MainWindowRerender(win);
     ToolbarUpdateStateForWindow(win, true);

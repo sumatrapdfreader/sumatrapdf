@@ -15,6 +15,8 @@ bool CanSelectTextWithKeyboard(MainWindow*);
 void ToggleSelectTextWithKeyboard(MainWindow*);
 bool SelectTextWithKeyboardActive(MainWindow*);
 bool StopSelectTextWithKeyboard(MainWindow*);
+bool KeepCaretAfterMarkup(MainWindow*);
+void SelectTextWithKeyboardOnKeyUp(MainWindow*, int key);
 bool SelectTextWithKeyboardOnKeyDown(MainWindow*, int key);
 bool SelectTextWithKeyboardOnKeyDown(MainWindow*, int key, bool ctrl, bool shift, bool alt);
 bool SelectTextWithKeyboardOnChar(MainWindow*, int key);

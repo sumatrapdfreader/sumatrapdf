@@ -50,6 +50,11 @@ async function waitForState(client: ControlClient, pred: (s: State) => boolean, 
 // text selection (a rectangular Select All does not mark up text).
 async function selectLineWithKeyboard(client: ControlClient, frame: number): Promise<void> {
   const deadline = Date.now() + 4_000 * SLOW_BUILD_FACTOR;
+  // F7 toggles. A highlight leaves caret mode on, so turn it off before entering.
+  const cur = String((await client.request(ControlCommand.TestSelectTextKeyboard, []))[1] ?? "");
+  if (/active=1/.test(cur)) {
+    sendCommandSync(frame, cmdId("CmdSelectTextViaKeyboard"));
+  }
   sendCommandSync(frame, cmdId("CmdSelectTextViaKeyboard"));
   let dump = "";
   while (Date.now() < deadline) {

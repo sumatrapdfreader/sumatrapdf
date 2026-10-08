@@ -575,8 +575,11 @@ void StartAnnotationPlacement(MainWindow* win, int cmdId) {
         p.rect = {0, 0, size.dx, size.dy};
     }
 
-    StopSelectTextWithKeyboard(win);
-    DeleteOldSelectionInfo(win, true);
+    // the highlighter works on a keyboard selection; other modes take the pointer
+    if (!(kind == AnnotPlacementKind::Highlighter && SelectTextWithKeyboardActive(win))) {
+        StopSelectTextWithKeyboard(win);
+        DeleteOldSelectionInfo(win, true);
+    }
     if (tab->selectedAnnotation) {
         SetSelectedAnnotation(tab, nullptr);
     }

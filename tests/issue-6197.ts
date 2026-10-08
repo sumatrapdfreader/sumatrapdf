@@ -40,6 +40,11 @@ async function selectLineWithKeyboard(client: ControlClient, frame: number): Pro
     }
     throw new Error(`issue-6197: keyboard selection did not reach ${re}\n${dump}`);
   };
+  // F7 toggles. A highlight leaves caret mode on, so turn it off before entering.
+  const cur = String((await client.request(ControlCommand.TestSelectTextKeyboard, []))[1] ?? "");
+  if (/active=1/.test(cur)) {
+    sendCommandSync(frame, cmdId("CmdSelectTextViaKeyboard"));
+  }
   sendCommandSync(frame, cmdId("CmdSelectTextViaKeyboard"));
   await waitFor(/active=1/);
   await postChar(frame, "v");

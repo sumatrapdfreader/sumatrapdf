@@ -36,6 +36,7 @@
 #include "Commands.h"
 #include "Accelerators.h"
 #include "Selection.h"
+#include "AnnotPlacement.h"
 #if !defined(SUMATRA_NG)
 #include "Toolbar.h"
 #endif
@@ -336,6 +337,46 @@ static void ShowModeNotification(MainWindow* win) {
     ShowNotification(args);
 }
 
+static bool HasTextSelection(MainWindow* win) {
+    DisplayModel* dm = win ? win->AsFixed() : nullptr;
+    return dm && dm->textSelection && len(dm->textSelection->result) > 0;
+}
+
+// Mouse-up of a highlighter selection. A keyboard selection finishes when Shift
+// is released, or when visual mode is turned off.
+static void CommitHighlighterSelection(MainWindow* win) {
+    if (!SelectTextWithKeyboardActive(win) || !IsPlacingHighlighterAnnotation(win) || !HasTextSelection(win)) {
+        return;
+    }
+    AnnotationPlacementOnSelectionStop(win);
+}
+
+// The selection was turned into markup. Leave the caret at its free end so the
+// next selection continues from there.
+bool KeepCaretAfterMarkup(MainWindow* win) {
+    if (!SelectTextWithKeyboardActive(win)) {
+        return false;
+    }
+    win->textSelectAnchorPage = win->textSelectPage;
+    win->textSelectAnchorGlyph = win->textSelectGlyph;
+    bool wasVisual = win->textSelectModeVisual;
+    win->textSelectModeVisual = false;
+    ApplySelection(win, false);
+    if (wasVisual) {
+        ShowModeNotification(win);
+    }
+    RestartCaretBlink(win);
+    RepaintTextSelect(win);
+    return true;
+}
+
+void SelectTextWithKeyboardOnKeyUp(MainWindow* win, int key) {
+    if (!win || (key != VK_SHIFT && key != VK_LSHIFT && key != VK_RSHIFT)) {
+        return;
+    }
+    CommitHighlighterSelection(win);
+}
+
 void ToggleSelectTextWithKeyboard(MainWindow* win) {
     if (StopSelectTextWithKeyboard(win)) {
         return;
@@ -509,7 +550,9 @@ bool SelectTextWithKeyboardOnKeyDown(MainWindow* win, int key) {
     }
     bool selecting = shift || win->textSelectModeVisual;
     if (!selecting) {
-        // a plain move drops the old selection and re-anchors here
+        // a finished selection under the highlighter becomes a highlight before
+        // the caret moves on; otherwise a plain move just drops it
+        CommitHighlighterSelection(win);
         win->textSelectAnchorPage = win->textSelectPage;
         win->textSelectAnchorGlyph = win->textSelectGlyph;
     }
@@ -532,8 +575,11 @@ bool SelectTextWithKeyboardOnChar(MainWindow* win, int key) {
         return false;
     }
     if (key == 'v' || key == 'V') {
-        win->textSelectModeVisual = !win->textSelectModeVisual;
         if (win->textSelectModeVisual) {
+            CommitHighlighterSelection(win);
+            win->textSelectModeVisual = false;
+        } else {
+            win->textSelectModeVisual = true;
             // start selecting from where the caret is now
             win->textSelectAnchorPage = win->textSelectPage;
             win->textSelectAnchorGlyph = win->textSelectGlyph;

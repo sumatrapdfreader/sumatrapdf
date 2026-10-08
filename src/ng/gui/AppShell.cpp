@@ -2592,6 +2592,9 @@ void ShellView::OnKeyUp(ShellView* self, gp::Ctx* cx, const gp::KeyEvent* ev) {
     if (CommandPaletteOnKeyUp(win, ev->vk)) {
         gp::Notify(cx);
     }
+    // releasing Shift finishes a keyboard selection; the highlighter turns it
+    // into a highlight the way a mouse-up does
+    SelectTextWithKeyboardOnKeyUp(win, (int)ev->vk);
     // ng: Windows sends no key-down for PrtSc, only the key-up; orig's hotkey
     // dialog sees it through a low-level keyboard hook
     if (ev->vk == VK_SNAPSHOT && SetScreenshotHotkeyOnKey(win, VK_SNAPSHOT, ev->ctrl, ev->shift, ev->alt)) {

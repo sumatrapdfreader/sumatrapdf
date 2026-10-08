@@ -13755,9 +13755,11 @@ static LRESULT FrameOnCommand(MainWindow* win, HWND hwnd, UINT msg, WPARAM wp, L
                 SetAnnotCreateArgs(args, cmd);
                 if (MakeAnnotationsFromSelection(tab, &args)) {
                     // not selected: that would take the next press, which is
-                    // meant to select more text
-                    StopSelectTextWithKeyboard(win);
-                    DeleteOldSelectionInfo(win, true);
+                    // meant to select more text. A keyboard caret stays put.
+                    if (!KeepCaretAfterMarkup(win)) {
+                        StopSelectTextWithKeyboard(win);
+                        DeleteOldSelectionInfo(win, true);
+                    }
                     RefreshAnnotationLists(tab);
                     MainWindowRerender(win);
                     ToolbarUpdateStateForWindow(win, true);
@@ -13983,8 +13985,12 @@ static LRESULT FrameOnCommand(MainWindow* win, HWND hwnd, UINT msg, WPARAM wp, L
     }
     // The text selection has done its job: it would sit on top of the markup
     // annotation it just made and keep the selection toolbar open over it.
-    StopSelectTextWithKeyboard(win);
-    DeleteOldSelectionInfo(win, true);
+    // Keyboard caret mode stays on, at the free end of that markup.
+    bool keptCaret = AnnotationIsTextMarkup(lastCreatedAnnot->type) && KeepCaretAfterMarkup(win);
+    if (!keptCaret) {
+        StopSelectTextWithKeyboard(win);
+        DeleteOldSelectionInfo(win, true);
+    }
     RefreshAnnotationLists(tab);
     // Drop the cached page bitmap. SetSelectedAnnotation only ScheduleRepaint
     // (selection handles); without this the new annot is invisible until a
@@ -16333,6 +16339,11 @@ static bool MaybeTranslateAccelerator(MSG& msg) {
     if (msg.message == WM_KEYUP || msg.message == WM_SYSKEYUP) {
         if (gIgnoreRepeatKey && msg.wParam == gIgnoreRepeatKey) {
             gIgnoreRepeatKey = 0;
+        }
+        // releasing Shift finishes a keyboard selection; the highlighter turns it
+        // into a highlight the way a mouse-up does
+        if (msg.wParam == VK_SHIFT || msg.wParam == VK_LSHIFT || msg.wParam == VK_RSHIFT) {
+            SelectTextWithKeyboardOnKeyUp(FindMainWindowByHwnd(msg.hwnd), (int)msg.wParam);
         }
     } else if (msg.message == WM_KEYDOWN || msg.message == WM_SYSKEYDOWN) {
         if (gIgnoreRepeatKey && msg.wParam == gIgnoreRepeatKey) {
