@@ -4643,6 +4643,27 @@ static void InitChapterPagesLazy(EngineMupdf* e, int nCh, int n1) {
     }
 }
 
+template <typename Load>
+static fz_rect LoadPageBounds(fz_context* ctx, Load load) {
+    fz_rect bounds{};
+    fz_page* page = nullptr;
+    fz_var(page);
+    fz_var(bounds);
+
+    fz_try(ctx) {
+        page = load();
+        bounds = fz_bound_page(ctx, page);
+    }
+    fz_always(ctx) {
+        fz_drop_page(ctx, page);
+    }
+    fz_catch(ctx) {
+        fz_report_error(ctx);
+        bounds = {};
+    }
+    return bounds;
+}
+
 static void FinishNonPDFLoading(EngineMupdf* e) {
     ScopedRecursiveMutex scope(&e->docLock);
 
@@ -4660,21 +4681,7 @@ static void FinishNonPDFLoading(EngineMupdf* e) {
         // every page of a reflow layout shares one mediabox; load only page
         // {1,1} to learn it instead of fz_load_page-ing (and laying out) every
         // page, which for a chaptered doc would lay out every chapter
-        fz_rect mbox{};
-        fz_page* page = nullptr;
-        fz_var(page);
-        fz_var(mbox);
-        fz_try(ctx) {
-            page = fz_load_chapter_page(ctx, e->_doc, 0, 0);
-            mbox = fz_bound_page(ctx, page);
-        }
-        fz_always(ctx) {
-            fz_drop_page(ctx, page);
-        }
-        fz_catch(ctx) {
-            fz_report_error(ctx);
-            mbox = {};
-        }
+        fz_rect mbox = LoadPageBounds(ctx, [ctx, e]() { return fz_load_chapter_page(ctx, e->_doc, 0, 0); });
         if (fz_is_empty_rect(mbox)) {
             fz_warn(ctx, "cannot find page size for reflowable document");
             mbox.x0 = 0;
@@ -4688,21 +4695,7 @@ static void FinishNonPDFLoading(EngineMupdf* e) {
     } else {
         Vec<FzPageInfo*>* v = e->chapterPages[0];
         for (int i = 0; i < e->pageCount; i++) {
-            fz_rect mbox{};
-            fz_page* page = nullptr;
-            fz_var(page);
-            fz_var(mbox);
-            fz_try(ctx) {
-                page = fz_load_page(ctx, e->_doc, i);
-                mbox = fz_bound_page(ctx, page);
-            }
-            fz_always(ctx) {
-                fz_drop_page(ctx, page);
-            }
-            fz_catch(ctx) {
-                fz_report_error(ctx);
-                mbox = {};
-            }
+            fz_rect mbox = LoadPageBounds(ctx, [ctx, e, i]() { return fz_load_page(ctx, e->_doc, i); });
             if (fz_is_empty_rect(mbox)) {
                 fz_warn(ctx, "cannot find page size for page %d", i);
                 mbox.x0 = 0;
