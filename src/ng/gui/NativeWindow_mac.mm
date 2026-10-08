@@ -15,6 +15,15 @@
 
 #include "gui/AppShell.h"
 
+// AppKit turns automatic termination back on at the end of launch when it
+// still counts zero windows. Under lldb the app never becomes frontmost, so
+// that quits the process with status 0.
+void AppShellDisableAutoTermination() {
+    NSProcessInfo* info = [NSProcessInfo processInfo];
+    info.automaticTerminationSupportEnabled = NO;
+    [info disableAutomaticTermination:@"SumatraPDF"];
+}
+
 // Backing pixels per point. The canvas is drawn in points, so a tile rendered
 // at GetZoomReal is upscaled on a Retina display.
 float AppShellRenderScale(gpui::Window* win) {

@@ -173,12 +173,23 @@ function pickDebugger(plat: HostPlat, requested: DebuggerKind | null): { kind: D
 }
 
 // ASan prints the report and then calls _exit, so the debugger never stops.
-// abort_on_error turns that into SIGABRT. Leave a value the user already set.
+// abort_on_error turns that into SIGABRT. On macOS the nano allocator holds
+// the address range ASan needs (malloc: nano zone abandoned). Leave values
+// the user already set.
 function asanAbortEnv(plat: HostPlat): NodeJS.ProcessEnv | undefined {
   if (plat === "win") return undefined;
-  const cur = process.env.ASAN_OPTIONS ?? "";
-  if (/(^|:)abort_on_error(=|:|$)/.test(cur)) return undefined;
-  return { ...process.env, ASAN_OPTIONS: cur ? `${cur}:abort_on_error=1` : "abort_on_error=1" };
+  const env = { ...process.env };
+  let changed = false;
+  const cur = env.ASAN_OPTIONS ?? "";
+  if (!/(^|:)abort_on_error(=|:|$)/.test(cur)) {
+    env.ASAN_OPTIONS = cur ? `${cur}:abort_on_error=1` : "abort_on_error=1";
+    changed = true;
+  }
+  if (plat === "mac" && env.MallocNanoZone === undefined) {
+    env.MallocNanoZone = "0";
+    changed = true;
+  }
+  return changed ? env : undefined;
 }
 
 async function run(command: string[], description: string, env?: NodeJS.ProcessEnv): Promise<void> {

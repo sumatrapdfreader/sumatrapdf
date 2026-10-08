@@ -8454,6 +8454,9 @@ static void UpdateSettings(const Flags& i) {
 
 int GpuiMain(int argc, char** argv) {
     gAppStartTime = TimeGet();
+#if OS_DARWIN
+    AppShellDisableAutoTermination();
+#endif
 #if OS_WIN
     // ng: orig's WinMain does this; without it WIC and GDI+ decode nothing, so
     // e.g. reading a cached thumbnail back fails

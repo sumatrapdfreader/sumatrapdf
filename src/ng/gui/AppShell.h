@@ -130,6 +130,9 @@ int AppShellWindowDpi(MainWindow* win);
 #if OS_DARWIN || OS_WASM
 float AppShellRenderScale(gpui::Window* win);
 #endif
+#if OS_DARWIN
+void AppShellDisableAutoTermination();
+#endif
 // presentation mode's auto-hidden cursor (orig hides it with SetCursor(null))
 void AppShellShowCursor(MainWindow* win, bool show);
 // Fullscreen.PreventSleep: keep the display awake (Windows only for now)

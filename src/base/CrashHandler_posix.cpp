@@ -19,6 +19,12 @@
 #else
 #include <execinfo.h>
 #endif
+#if OS_DARWIN
+#include <sys/sysctl.h>
+#include <sys/types.h>
+#elif OS_LINUX
+#include <fcntl.h>
+#endif
 
 static Arena* gCrashHandlerArena = nullptr;
 static CrashHandlerConfig gCfg{};
@@ -123,8 +129,45 @@ NO_INLINE void _uploadDebugReport(Str condStr, Str fileLine, bool isCrash) {
     }
 }
 
+// lldb/gdb are already attached when ng-dbg launches the process. Leave the
+// signal to them so the stop is the fault, not this handler.
+static bool DebuggerAttached() {
+#if OS_DARWIN
+    struct kinfo_proc info{};
+    int mib[4] = {CTL_KERN, KERN_PROC, KERN_PROC_PID, getpid()};
+    size_t size = sizeof(info);
+    if (sysctl(mib, 4, &info, &size, nullptr, 0) != 0) {
+        return false;
+    }
+    return (info.kp_proc.p_flag & P_TRACED) != 0;
+#elif OS_LINUX
+    int fd = open("/proc/self/status", O_RDONLY);
+    if (fd < 0) {
+        return false;
+    }
+    char buf[4096];
+    int n = (int)read(fd, buf, sizeof(buf) - 1);
+    close(fd);
+    if (n <= 0) {
+        return false;
+    }
+    buf[n] = 0;
+    const char* p = strstr(buf, "TracerPid:");
+    if (!p) {
+        return false;
+    }
+    p += 10;
+    while (*p == ' ' || *p == '\t') {
+        p++;
+    }
+    return *p != '0';
+#else
+    return false;
+#endif
+}
+
 void InstallCrashHandler(const CrashHandlerConfig& cfg) {
-    if (gCrashHandlerArena) {
+    if (gCrashHandlerArena || DebuggerAttached()) {
         return;
     }
     gCrashHandlerArena = ArenaNew();
