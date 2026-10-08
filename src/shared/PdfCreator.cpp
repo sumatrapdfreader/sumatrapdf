@@ -21,6 +21,7 @@ extern "C" {
 
 // EngineImages.cpp — avoid including EngineAll.h (needs full FileType for defaults)
 Str EngineImagesGetImageData(EngineBase*, int pageNo);
+extern const pdf_write_options gPdfDefaultWriteOptions;
 
 static Str gPdfProducer;
 
@@ -353,26 +354,6 @@ bool PdfCreator::CopyProperties(EngineBase* engine) const {
     return true;
 }
 
-const pdf_write_options pdf_default_write_options2 = {
-    0,  /* do_incremental */
-    0,  /* do_pretty */
-    0,  /* do_ascii */
-    0,  /* do_compress */
-    0,  /* do_compress_images */
-    0,  /* do_compress_fonts */
-    0,  /* do_decompress */
-    0,  /* do_garbage */
-    0,  /* do_linear */
-    0,  /* do_clean */
-    0,  /* do_sanitize */
-    0,  /* do_appearance */
-    0,  /* do_encrypt */
-    0,  /* dont_regenerate_id */
-    ~0, /* permissions */
-    "", /* opwd_utf8[128] */
-    "", /* upwd_utf8[128] */
-};
-
 bool PdfCreator::SaveToFile(Str filePath) const {
     if (!ctx || !doc) {
         return false;
@@ -383,7 +364,7 @@ bool PdfCreator::SaveToFile(Str filePath) const {
     }
 
     fz_try(ctx) {
-        pdf_write_options opts = pdf_default_write_options2;
+        pdf_write_options opts = gPdfDefaultWriteOptions;
         opts.do_compress = 1;
         opts.do_compress_images = 1;
         pdf_save_document(ctx, doc, CStrTemp(filePath), &opts);

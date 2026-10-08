@@ -8710,25 +8710,11 @@ bool EngineMupdf::SaveFileAs(Str dstPath) {
     return ok;
 }
 
-const pdf_write_options pdf_default_write_options2 = {
-    0,  /* do_incremental */
-    0,  /* do_pretty */
-    0,  /* do_ascii */
-    0,  /* do_compress */
-    0,  /* do_compress_images */
-    0,  /* do_compress_fonts */
-    0,  /* do_decompress */
-    0,  /* do_garbage */
-    0,  /* do_linear */
-    0,  /* do_clean */
-    0,  /* do_sanitize */
-    0,  /* do_appearance */
-    0,  /* do_encrypt */
-    0,  /* dont_regenerate_id */
-    ~0, /* permissions */
-    "", /* opwd_utf8[128] */
-    "", /* upwd_utf8[128] */
-};
+extern const pdf_write_options gPdfDefaultWriteOptions = [] {
+    pdf_write_options opts{};
+    opts.permissions = ~0;
+    return opts;
+}();
 
 bool EngineMupdfIsEncrypted(EngineBase* engine) {
     EngineMupdf* epdf = AsEngineMupdf(engine);
@@ -9099,7 +9085,7 @@ bool EngineMupdfSaveUpdated(EngineBase* engine, Str path, const ShowErrorCb& sho
     ScopedRecursiveMutex scope(&epdf->docLock);
 
     pdf_write_options save_opts{};
-    save_opts = pdf_default_write_options2;
+    save_opts = gPdfDefaultWriteOptions;
     // TODO: if saving to a new file, don't do incremental and linearlize?
     // save_opts.do_linear = 1;
     save_opts.do_incremental = pdf_can_be_saved_incrementally(ctx, epdf->pdfdoc);
@@ -9156,7 +9142,7 @@ bool EngineMupdfSaveCopy(EngineBase* engine, Str path) {
     auto* ctx = epdf->Ctx();
     ScopedRecursiveMutex scope(&epdf->docLock);
     pdf_write_options save_opts{};
-    save_opts = pdf_default_write_options2;
+    save_opts = gPdfDefaultWriteOptions;
     save_opts.do_incremental = 0;
     save_opts.do_compress = 1;
     bool ok = false;
@@ -9991,7 +9977,7 @@ bool EngineMupdfMergePdfs(const Vec<PdfMergeSource>& srcs, const Vec<PdfMergePag
         // drops the pages not in order and fixes bookmarks and links to them
         pdf_rearrange_pages(ctx, doc, nPages, order.els, PDF_CLEAN_STRUCTURE_KEEP);
 
-        pdf_write_options opts = pdf_default_write_options2;
+        pdf_write_options opts = gPdfDefaultWriteOptions;
         opts.do_compress = 1;
         // the dropped pages' objects
         opts.do_garbage = 3;
