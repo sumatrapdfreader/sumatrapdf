@@ -374,10 +374,7 @@ static bool RenderCacheCanFree(WindowTab* currTab, CachedObject* o) {
     if (!gRenderCache->IsCached(entry) || entry->refs > 1) {
         return false;
     }
-    if (entry->dm && entry->dm->PageVisibleNearbyLocked(entry->pageNo)) {
-        return false;
-    }
-    return true;
+    return !(entry->dm && entry->dm->PageVisibleNearbyLocked(entry->pageNo));
 }
 
 static bool RenderCacheFree(WindowTab* currTab, CachedObject* o) {

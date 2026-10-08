@@ -990,10 +990,7 @@ static bool IsUnicodeScalar(int rune) {
         return false;
     }
     // UTF-16 surrogates are not valid Unicode scalar values
-    if (c >= 0xD800 && c <= 0xDFFF) {
-        return false;
-    }
-    return true;
+    return c < 0xD800 || c > 0xDFFF;
 }
 
 // True if this space is only tracking/justification between syllables, not a
@@ -1149,10 +1146,7 @@ static bool IsSoftLineBreak(const fz_stext_line* line, const fz_stext_line* next
     }
     // New paragraphs often start with a larger left indent (text-indent).
     float dx = nextLine->bbox.x0 - line->bbox.x0;
-    if (dx > h * 0.4f) {
-        return false;
-    }
-    return true;
+    return dx <= h * 0.4f;
 }
 
 // Unicode hyphens MuPDF treats as dehyphenation candidates (fz_is_unicode_hyphen).
@@ -1442,10 +1436,7 @@ static bool LinkifyCheckMultiline(Utf8PageText pageText, int startOff, int posOf
     if ((float)next.x < (float)first.x - slack) {
         return false;
     }
-    if ((float)next.dy < (float)last.dy * 0.85f || (float)next.dy > (float)last.dy * 1.2f) {
-        return false;
-    }
-    return true;
+    return (float)next.dy >= (float)last.dy * 0.85f && (float)next.dy <= (float)last.dy * 1.2f;
 }
 
 static bool EndsURL(int c) {
@@ -1454,10 +1445,7 @@ static bool EndsURL(int c) {
     }
     // https://github.com/sumatrapdfreader/sumatrapdf/issues/1313
     // 0xff0c is ","
-    if (c == 0xff0c) {
-        return true;
-    }
-    return false;
+    return c == 0xff0c;
 }
 
 // Trim trailing punctuation that likely belongs to surrounding sentence text, not
@@ -5360,10 +5348,7 @@ static bool IsHeadingTitle(Str s) {
         return false;
     }
     unsigned char c = (unsigned char)s.s[i];
-    if (c >= 'a' && c <= 'z') {
-        return false;
-    }
-    return true;
+    return c < 'a' || c > 'z';
 }
 
 // sioyek is_title_parent_of: walk until the parent hits a space. Same title if

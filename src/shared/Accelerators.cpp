@@ -633,10 +633,7 @@ bool Accelerators_UnitTestFolderNavIsSafe() {
         return false;
     }
     // a bare arrow still belongs to the control, so it can scroll / move the selection
-    if (SafeAcceleratorCmd(VK_RIGHT, false, false, false) != 0) {
-        return false;
-    }
-    return true;
+    return SafeAcceleratorCmd(VK_RIGHT, false, false, false) == 0;
 }
 
 // bookmarks / favorites tree: letter shortcuts run the command (e.g. t bound
@@ -659,10 +656,7 @@ bool Accelerators_UnitTestTreeTakesLetters() {
         return false;
     }
     Accel ctrlUp{{kCtrl | kVirt, VK_UP}, CmdScrollUpPage};
-    if (!IsSafeTreeAccel(ctrlUp)) {
-        return false;
-    }
-    return true;
+    return IsSafeTreeAccel(ctrlUp);
 }
 
 bool Accelerators_UnitTestCreateAnnotEdit() {

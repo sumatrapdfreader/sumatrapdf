@@ -334,10 +334,7 @@ static bool IsCodexInjectedUserText(Str text) {
     if (str::Contains(text, StrL("<turn_aborted>"))) {
         return true;
     }
-    if (str::Contains(text, StrL("<INSTRUCTIONS>"))) {
-        return true;
-    }
-    return false;
+    return str::Contains(text, StrL("<INSTRUCTIONS>"));
 }
 
 static TempStr ExtractCodexRolloutUserTextTemp(Str line) {

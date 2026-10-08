@@ -282,10 +282,7 @@ static bool IsStressTestSupportedFile(Str filePath, Str filter) {
     if (IsSupportedFileType(kindSniffed, true)) {
         return true;
     }
-    if (ChmModel::IsSupportedFileType(kindSniffed)) {
-        return true;
-    }
-    return false;
+    return ChmModel::IsSupportedFileType(kindSniffed);
 }
 
 static int SecsSinceTime(TimeStamp time) {

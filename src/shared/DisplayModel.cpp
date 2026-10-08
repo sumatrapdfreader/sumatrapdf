@@ -1239,10 +1239,7 @@ bool DisplayModel::FirstBookPageVisible() const {
     if (!IsBookView(GetDisplayMode())) {
         return false;
     }
-    if (CurrentPageNo() != 1) {
-        return false;
-    }
-    return true;
+    return CurrentPageNo() == 1;
 }
 
 /* Return true if the last page is fully visible and alone on a line in
@@ -1259,10 +1256,7 @@ bool DisplayModel::LastBookPageVisible() const {
     if (GetPageInfo(count)->visibleRatio < 1.0) {
         return false;
     }
-    if (FirstPageInRow(count) < count) {
-        return false;
-    }
-    return true;
+    return FirstPageInRow(count) >= count;
 }
 
 // ComicBookUI / ImageUI LimitToWindowWidth / LimitToWindowHeight (issue #2197).
@@ -1715,10 +1709,7 @@ bool DisplayModel::ViewportReadyForRelayout() const {
     if (dx <= windowMargin.left + windowMargin.right) {
         return false;
     }
-    if (dy <= windowMargin.top + windowMargin.bottom) {
-        return false;
-    }
-    return true;
+    return dy > windowMargin.top + windowMargin.bottom;
 }
 
 /* Given zoom and rotation, calculate the position of each page on a

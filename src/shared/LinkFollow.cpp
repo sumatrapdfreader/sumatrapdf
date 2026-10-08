@@ -149,10 +149,7 @@ bool KeyboardLinkFollowingCapturesKey(MainWindow* win, int vk) {
     if (vk >= 'A' && vk <= 'Z') {
         return true;
     }
-    if (vk >= 'a' && vk <= 'z') {
-        return true;
-    }
-    return false;
+    return vk >= 'a' && vk <= 'z';
 }
 
 struct ScreenTarget {

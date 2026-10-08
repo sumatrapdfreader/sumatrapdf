@@ -73,10 +73,7 @@ static bool IsExeInProgramFiles() {
         return true;
     }
     dir = GetSpecialFolderTemp(CSIDL_PROGRAM_FILESX86);
-    if (IsPathInDirSmart(exePath, dir)) {
-        return true;
-    }
-    return false;
+    return IsPathInDirSmart(exePath, dir);
 }
 
 /* Return false if this program has been started from "Program Files" directory
