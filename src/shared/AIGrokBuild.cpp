@@ -253,35 +253,21 @@ static void LoadGrokSessionHistory(MainWindow* win, Str sessionId, Str dir) {
         return;
     }
     TempStr sessionPath = fmt("%s\\%s\\chat_history.jsonl", projectDir, sessionId);
-    if (!file::Exists(sessionPath)) {
-        return;
-    }
-
-    Str data = file::ReadFile(sessionPath);
-    if (len(data) == 0) {
-        return;
-    }
-
-    Str rest = data;
+    AIChatJsonlReader jsonl(sessionPath);
     Str line;
-
-    while (str::NextLine(rest, line, rest)) {
-        if (len(line) > 0) {
-            TempStr userText = ExtractGrokChatUserTextTemp(line);
-            if (userText) {
-                AIChatHistoryAddUser(win, userText);
-            } else if (str::Contains(line, StrL("\"type\":\"assistant\""))) {
-                TempStr text = AIChatJsonStrTemp(line, StrL("content"));
-                if (len(text) > 0) {
-                    AIChatHistoryAppendText(win, text);
-                }
-                AppendGrokHistoryTools(win, line);
-                AIChatHistoryFlushBlock(win);
+    while (jsonl.Next(line)) {
+        TempStr userText = ExtractGrokChatUserTextTemp(line);
+        if (userText) {
+            AIChatHistoryAddUser(win, userText);
+        } else if (str::Contains(line, StrL("\"type\":\"assistant\""))) {
+            TempStr text = AIChatJsonStrTemp(line, StrL("content"));
+            if (len(text) > 0) {
+                AIChatHistoryAppendText(win, text);
             }
+            AppendGrokHistoryTools(win, line);
+            AIChatHistoryFlushBlock(win);
         }
     }
-
-    str::Free(data);
 }
 
 // --- The provider ---

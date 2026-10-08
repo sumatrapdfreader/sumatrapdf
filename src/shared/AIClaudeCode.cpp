@@ -100,25 +100,18 @@ TempStr AIChatExtractUserTextTemp(Str line) {
 
 // Read the first user message from a session JSONL as description
 Str AIChatSessionDescription(Str sessionPath) {
-    Str data = file::ReadFile(sessionPath);
-    if (len(data) == 0) {
+    AIChatJsonlReader jsonl(sessionPath);
+    if (jsonl.IsEmpty()) {
         return str::Dup(StrL("(empty)"));
     }
-    Str rest = data;
-    Str result;
     Str line;
-
-    while (len(result) == 0 && str::NextLine(rest, line, rest)) {
-        if (len(line) == 0) {
-            continue;
-        }
+    while (jsonl.Next(line)) {
         TempStr userText = AIChatExtractUserTextTemp(line);
         if (userText) {
-            result = str::Dup(userText);
+            return str::Dup(userText);
         }
     }
-    str::Free(data);
-    return result ? result : str::Dup(StrL("(no description)"));
+    return str::Dup(StrL("(no description)"));
 }
 
 // Scan ~/.claude/projects/<encoded-dir>/ for .jsonl session files
@@ -136,19 +129,9 @@ static void CollectClaudeSessions(Str dir, Vec<AIChatSessionInfo>& sessions) {
 
 // Load conversation history from a session's JSONL file
 void AIChatLoadSessionHistory(MainWindow* win, Str sessionPath) {
-    Str data = file::ReadFile(sessionPath);
-    if (len(data) == 0) {
-        return;
-    }
-
-    Str rest = data;
+    AIChatJsonlReader jsonl(sessionPath);
     Str line;
-
-    while (str::NextLine(rest, line, rest)) {
-        if (len(line) == 0) {
-            continue;
-        }
-
+    while (jsonl.Next(line)) {
         TempStr userText = AIChatExtractUserTextTemp(line);
         if (userText) {
             AIChatHistoryAddUser(win, userText);
@@ -181,8 +164,6 @@ void AIChatLoadSessionHistory(MainWindow* win, Str sessionPath) {
         }
         AIChatHistoryAddTool(win, ToStr(desc));
     }
-
-    str::Free(data);
 }
 
 static void LoadClaudeSessionHistory(MainWindow* win, Str sessionId, Str dir) {

@@ -162,6 +162,24 @@ TempStr AIChatHomeDirTemp() {
 #endif
 }
 
+AIChatJsonlReader::AIChatJsonlReader(Str path) {
+    data = file::ReadFile(path);
+    rest = data;
+}
+
+AIChatJsonlReader::~AIChatJsonlReader() {
+    str::Free(data);
+}
+
+bool AIChatJsonlReader::Next(Str& line) {
+    while (str::NextLine(rest, line, rest)) {
+        if (len(line) > 0) {
+            return true;
+        }
+    }
+    return false;
+}
+
 void AIChatFreeSessions(Vec<AIChatSessionInfo>& sessions) {
     for (int i = 0; i < len(sessions); i++) {
         str::Free(sessions[i].sessionId);

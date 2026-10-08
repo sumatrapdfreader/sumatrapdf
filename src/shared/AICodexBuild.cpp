@@ -392,36 +392,25 @@ static void AppendCodexRolloutTools(MainWindow* win, Str line) {
 // Load conversation history from Codex rollout JSONL
 static void LoadCodexSessionHistory(MainWindow* win, Str sessionId, Str /*dir*/) {
     TempStr sessionPath = FindCodexRolloutPathTemp(sessionId);
-    if (len(sessionPath) == 0 || !file::Exists(sessionPath)) {
+    if (len(sessionPath) == 0) {
         return;
     }
-
-    Str data = file::ReadFile(sessionPath);
-    if (len(data) == 0) {
-        return;
-    }
-
-    Str rest = data;
+    AIChatJsonlReader jsonl(sessionPath);
     Str line;
-
-    while (str::NextLine(rest, line, rest)) {
-        if (len(line) > 0) {
-            TempStr userText = ExtractCodexRolloutUserTextTemp(line);
-            if (userText) {
-                AIChatHistoryAddUser(win, userText);
+    while (jsonl.Next(line)) {
+        TempStr userText = ExtractCodexRolloutUserTextTemp(line);
+        if (userText) {
+            AIChatHistoryAddUser(win, userText);
+        } else {
+            TempStr assistantText = ExtractCodexRolloutAssistantTextTemp(line);
+            if (len(assistantText) > 0) {
+                AIChatHistoryAppendText(win, assistantText);
+                AIChatHistoryFlushBlock(win);
             } else {
-                TempStr assistantText = ExtractCodexRolloutAssistantTextTemp(line);
-                if (len(assistantText) > 0) {
-                    AIChatHistoryAppendText(win, assistantText);
-                    AIChatHistoryFlushBlock(win);
-                } else {
-                    AppendCodexRolloutTools(win, line);
-                }
+                AppendCodexRolloutTools(win, line);
             }
         }
     }
-
-    str::Free(data);
 }
 
 // --- The provider ---

@@ -28,6 +28,17 @@ struct AIChatSessionInfo {
     i64 timestamp;
 };
 
+class AIChatJsonlReader : NonCopyable {
+    Str data;
+    Str rest;
+
+  public:
+    explicit AIChatJsonlReader(Str path);
+    ~AIChatJsonlReader();
+    bool Next(Str& line);
+    bool IsEmpty() const { return len(data) == 0; }
+};
+
 struct AIChatLogger {
     Mutex* mutex;
     Str logFileName;
