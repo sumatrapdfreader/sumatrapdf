@@ -151,6 +151,11 @@ struct AnnotEditToolbar {
     float fontScrollY = 0;
     Vec<Color> popupColors;
     Color popupColorNow = kColorUnset;
+    // swatch rects from the last frame, in window dips. [0] is "none" when shown
+    gp::Bounds swatchBounds[32];
+    Color swatchColor[32];
+    bool swatchNone[32];
+    int nSwatches = 0;
     bool popupWithNone = false;
     // >= 0: the drop-down also carries a thickness slider
     int popupThickness = -1;
@@ -2124,6 +2129,7 @@ static gp::El* BuildContentsEditor(AnnotEditToolbar* tb, gp::Ctx* cx, int annotD
 
 // the color grid / slider / list a chip opened, drawn under the row
 static gp::El* BuildPopup(AnnotEditToolbar* tb, gp::Ctx* cx) {
+    tb->nSwatches = 0;
     if (tb->popupKind == AnnotPopupKind::None) {
         return nullptr;
     }
@@ -2141,28 +2147,33 @@ static gp::El* BuildPopup(AnnotEditToolbar* tb, gp::Ctx* cx) {
     if (tb->popupKind == AnnotPopupKind::Colors) {
         gp::El* grid = gp::Div(cx->a)->FlexRow()->Wrap()->Gap(4)->MaxW((float)DpiScale(220));
         float d = (float)DpiScale(20);
+        auto addSwatch = [&](bool none, Color c, int clickIdx) {
+            if (tb->nSwatches >= (int)dimof(tb->swatchBounds)) {
+                return;
+            }
+            int slot = tb->nSwatches++;
+            tb->swatchNone[slot] = none;
+            tb->swatchColor[slot] = c;
+            TempStr id = none ? StrL("annot-col-none") : fmt("annot-col-%d", clickIdx);
+            gp::El* dot = gp::Div(cx->a)
+                              ->W(d)
+                              ->H(d)
+                              ->Radius(d / 2)
+                              ->Border(1, ToGpui(BarMutedTextColor()))
+                              ->Cursor(gp::CursorKind::Pointer)
+                              ->BoundsOut(&tb->swatchBounds[slot])
+                              ->PathClick(GpuiDup(cx->a, id))
+                              ->OnClick(gp::ListenTo(gAnnotEditView, &AnnotEditView::OnSwatch, (intptr_t)clickIdx));
+            if (!none) {
+                dot->Bg(ToGpui(c));
+            }
+            grid->Child(dot);
+        };
         if (tb->popupWithNone) {
-            grid->Child(gp::Div(cx->a)
-                            ->W(d)
-                            ->H(d)
-                            ->Radius(d / 2)
-                            ->Border(1, ToGpui(BarMutedTextColor()))
-                            ->Cursor(gp::CursorKind::Pointer)
-                            ->PathClick(GStrL("annot-col-none"))
-                            ->OnClick(gp::ListenTo(gAnnotEditView, &AnnotEditView::OnSwatch, (intptr_t)-1)));
+            addSwatch(true, kColorUnset, -1);
         }
         for (int i = 0; i < len(tb->popupColors); i++) {
-            Color c = tb->popupColors[i];
-            TempStr id = fmt("annot-col-%d", i);
-            grid->Child(gp::Div(cx->a)
-                            ->W(d)
-                            ->H(d)
-                            ->Radius(d / 2)
-                            ->Bg(ToGpui(c))
-                            ->Border(1, ToGpui(BarMutedTextColor()))
-                            ->Cursor(gp::CursorKind::Pointer)
-                            ->PathClick(GpuiDup(cx->a, id))
-                            ->OnClick(gp::ListenTo(gAnnotEditView, &AnnotEditView::OnSwatch, (intptr_t)i)));
+            addSwatch(false, tb->popupColors[i], i);
         }
         card->Child(grid);
     }
@@ -2427,11 +2438,45 @@ TempStr AnnotEditToolbarStateTemp(MainWindow* win) {
     }
     Annotation* annot = LiveToolbarAnnot(tb);
     gp::Bounds b = tb->measured;
+    str::Builder chips;
+    int nChips = std::min(tb->nChips, (int)dimof(tb->chipBounds));
+    for (int i = 0; i < nChips; i++) {
+        if (i > 0) {
+            chips.AppendChar(';');
+        }
+        gp::Bounds c = tb->chipBounds[i];
+        Str name = i < len(tb->items) ? KindName(tb->items[i].kind) : StrL("?");
+        chips.Append(fmt("%s:%d,%d,%d,%d:", name, (int)c.x, (int)c.y, (int)c.w, (int)c.h));
+    }
     return fmt(
         "annotEditToolbar visible=1 n=%d items=%s placed=%d,%d,%d,%d editing=%d popup=%d "
-        "fontStyle=%d font=%s\n",
+        "fontStyle=%d font=%s chips=%s\n",
         len(tb->items), ToStrTemp(items), (int)b.x, (int)b.y, (int)b.w, (int)b.h, tb->editingContents ? 1 : 0,
-        (int)tb->popupKind, FreeTextFontStyle(annot), FreeTextFontFamily(annot));
+        (int)tb->popupKind, FreeTextFontStyle(annot), FreeTextFontFamily(annot), ToStrTemp(chips));
+}
+
+TempStr AnnotColorPopupStateTemp(MainWindow* win) {
+    AnnotEditToolbar* tb = win ? win->annotEditToolbar : nullptr;
+    if (!tb || tb->popupKind != AnnotPopupKind::Colors) {
+        return StrL("annotColorPopup visible=0 n=0 thickness= swatches=\n");
+    }
+    str::Builder swatches;
+    int n = 0;
+    for (int i = 0; i < tb->nSwatches && i < (int)dimof(tb->swatchBounds); i++) {
+        gp::Bounds b = tb->swatchBounds[i];
+        if (b.w < 1.f || b.h < 1.f) {
+            continue;
+        }
+        if (n > 0) {
+            swatches.AppendChar(';');
+        }
+        bool none = tb->swatchNone[i];
+        bool current = none ? tb->popupColorNow == kColorUnset : tb->swatchColor[i] == tb->popupColorNow;
+        Str name = none ? StrL("none") : fmt("#%08x", (unsigned)tb->swatchColor[i]);
+        swatches.Append(fmt("%s:%d,%d,%d,%d:%d", name, (int)b.x, (int)b.y, (int)b.w, (int)b.h, current ? 1 : 0));
+        n++;
+    }
+    return fmt("annotColorPopup visible=1 n=%d placed=0,0,0,0 thickness= swatches=%s\n", n, ToStrTemp(swatches));
 }
 
 // --- selection and the annotation lists -------------------------------------

@@ -955,6 +955,8 @@ static TempStr MarkupAnnotsResultTemp(Str action, int x, int y, int* exitCodeOut
     out.Append(AnnotationPlacementStateTemp(win));
     TempStr FreeTextInPlaceEditStateTemp(MainWindow * win);
     out.Append(FreeTextInPlaceEditStateTemp(win));
+    TempStr AnnotColorPopupStateTemp(MainWindow * win);
+    out.Append(AnnotColorPopupStateTemp(win));
     return finish({}, 0);
 }
 

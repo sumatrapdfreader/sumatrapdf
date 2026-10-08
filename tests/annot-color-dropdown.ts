@@ -10,7 +10,7 @@
 import { mkdirSync, rmSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 import { ControlClient, ControlCommand } from "./control.ts";
-import { assemblePdf, cmdId, pollUntil, runStandalone, tmpPath } from "./util.ts";
+import { assemblePdf, cmdId, pollUntil, runStandalone, tmpPath, USE_NG } from "./util.ts";
 import {
   clientToScreen,
   enumWindows,
@@ -37,6 +37,7 @@ import {
 import {
   clickAt,
   findCanvas,
+  FRAME_CLASS,
   findChildByClass,
   killAndWait,
   launchControlled,
@@ -126,20 +127,38 @@ export async function openChipDropdown(client: ControlClient, pid: number, kind:
     throw new Error(`annot-color-dropdown: no ${kind} chip: ${dump}`);
   }
   const placed = parseRect(/ placed=(-?\d+),(-?\d+),(\d+),(\d+)/.exec(dump));
-  const chip = parseRect(new RegExp(`[=;]${kind}:(-?\\d+),(-?\\d+),(\\d+),(\\d+)`).exec(dump));
-  const tbHwnd = findTopWindow(pid, TOOLBAR_CLASS);
-  if (!tbHwnd) {
-    throw new Error("annot-color-dropdown: annotation toolbar window not found");
+  const chipRe = new RegExp(`[=;]${kind}:(-?\\d+),(-?\\d+),(\\d+),(\\d+)`);
+  let chip = parseRect(chipRe.exec(dump));
+  // ng lays the chips out a frame after the row appears
+  if (USE_NG && chip.dx <= 0) {
+    const ready = await pollUntil(
+      async () => toolbarDump(client),
+      (d) => parseRect(chipRe.exec(d)).dx > 0,
+      { error: `annot-color-dropdown: ${kind} chip has no rect: ${dump}` },
+    );
+    chip = parseRect(chipRe.exec(ready));
   }
-  await clickAt(tbHwnd, chip.x - placed.x + Math.floor(chip.dx / 2), chip.y - placed.y + Math.floor(chip.dy / 2), 0);
+  if (USE_NG) {
+    const frame = findTopWindow(pid, FRAME_CLASS);
+    if (!frame) {
+      throw new Error("annot-color-dropdown: frame window not found");
+    }
+    await clickAt(frame, chip.x + Math.floor(chip.dx / 2), chip.y + Math.floor(chip.dy / 2), 0);
+  } else {
+    const tbHwnd = findTopWindow(pid, TOOLBAR_CLASS);
+    if (!tbHwnd) {
+      throw new Error("annot-color-dropdown: annotation toolbar window not found");
+    }
+    await clickAt(tbHwnd, chip.x - placed.x + Math.floor(chip.dx / 2), chip.y - placed.y + Math.floor(chip.dy / 2), 0);
 
-  await pollUntil(
-    () => findTopWindow(pid, POPUP_CLASS),
-    (popup) => popup !== 0 && isWindowVisible(popup),
-    {
-      error: `annot-color-dropdown: the ${kind} drop-down did not open, chip at ${JSON.stringify(chip)} of ${dump}`,
-    },
-  );
+    await pollUntil(
+      () => findTopWindow(pid, POPUP_CLASS),
+      (popup) => popup !== 0 && isWindowVisible(popup),
+      {
+        error: `annot-color-dropdown: the ${kind} drop-down did not open, chip at ${JSON.stringify(chip)} of ${dump}`,
+      },
+    );
+  }
   const line = await pollUntil(
     async () => /annotColorPopup .*/.exec(await markupDump(client))?.[0] ?? "",
     (s) => /annotColorPopup visible=1/.test(s),
@@ -211,15 +230,25 @@ async function checkEditColors(pid: number, frame: number, swatches: Rect[]): Pr
 
 // picks one of the swatches of the open drop-down
 export async function pickSwatch(client: ControlClient, pid: number, swatches: Rect[], idx: number): Promise<void> {
-  const popup = findTopWindow(pid, POPUP_CLASS);
-  const r = getWindowRect(popup);
   const sw = swatches[idx]!;
-  await clickAt(popup, sw.x - r.left + Math.floor(sw.dx / 2), sw.y - r.top + Math.floor(sw.dy / 2), 0);
-  await pollUntil(
-    () => findTopWindow(pid, POPUP_CLASS),
-    (hwnd) => hwnd === 0 || !isWindowVisible(hwnd),
-    { error: "annot-color-dropdown: the drop-down stayed up after picking a color" },
-  );
+  if (USE_NG) {
+    const frame = findTopWindow(pid, FRAME_CLASS);
+    await clickAt(frame, sw.x + Math.floor(sw.dx / 2), sw.y + Math.floor(sw.dy / 2), 0);
+    await pollUntil(
+      async () => /annotColorPopup visible=0/.test(await markupDump(client)),
+      (gone) => gone,
+      { error: "annot-color-dropdown: the drop-down stayed up after picking a color" },
+    );
+  } else {
+    const popup = findTopWindow(pid, POPUP_CLASS);
+    const r = getWindowRect(popup);
+    await clickAt(popup, sw.x - r.left + Math.floor(sw.dx / 2), sw.y - r.top + Math.floor(sw.dy / 2), 0);
+    await pollUntil(
+      () => findTopWindow(pid, POPUP_CLASS),
+      (hwnd) => hwnd === 0 || !isWindowVisible(hwnd),
+      { error: "annot-color-dropdown: the drop-down stayed up after picking a color" },
+    );
+  }
   await client.waitForRenderIdle();
 }
 
