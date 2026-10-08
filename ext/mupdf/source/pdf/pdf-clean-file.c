@@ -287,6 +287,8 @@ static void pdf_rearrange_pages_imp(fz_context *ctx, pdf_document *doc, int coun
 		ostructparents = pdf_dict_get(ctx, structtreeroot, PDF_NAME(ParentTree));
 		if (structtreeroot)
 			structparents = pdf_new_dict(ctx, doc, 3);
+		/* Replaced in structtreeroot below, yet read by retainpage. */
+		pdf_keep_obj(ctx, ostructparents);
 	}
 
 	fz_var(root);
@@ -447,6 +449,7 @@ static void pdf_rearrange_pages_imp(fz_context *ctx, pdf_document *doc, int coun
 		pdf_drop_obj(ctx, root);
 		pdf_drop_obj(ctx, kids);
 		pdf_drop_obj(ctx, structparents);
+		pdf_drop_obj(ctx, ostructparents);
 		pdf_drop_obj(ctx, olddests);
 	}
 	fz_catch(ctx)
