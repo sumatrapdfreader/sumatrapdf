@@ -79,7 +79,6 @@ struct TabsView {
     static void OnTabClose(TabsView* self, gp::Ctx* cx, const gp::ClickEvent*, int64_t idx);
     static void OnBarLeave(TabsView* self, gp::Ctx* cx, const gp::HoverEvent* ev);
     static void OnBarUpOut(TabsView* self, gp::Ctx* cx, const gp::MouseUpEvent* ev);
-    static void OnMenuButton(TabsView* self, gp::Ctx* cx, const gp::ClickEvent*);
     static void OnMenuAction(TabsView* self, gp::Ctx* cx, const gp::ActionEvent* ev);
 };
 
@@ -385,11 +384,6 @@ void TabsView::OnTabClose(TabsView* self, gp::Ctx* cx, const gp::ClickEvent*, in
     gp::Notify(cx);
 }
 
-void TabsView::OnMenuButton(TabsView* self, gp::Ctx* cx, const gp::ClickEvent*) {
-    AppShellShowMenuBarTemp(self->win);
-    gp::Notify(cx);
-}
-
 // ng: orig's TrackPopupMenu returns the command only after the menu is gone.
 // gpui's popup is still up when the action fires, and it holds the keyboard and
 // the mouse, so a command that opens a dialog would open it behind a layer that
@@ -509,25 +503,96 @@ static gp::El* BuildTab(MainWindow* win, gp::Ctx* cx, int idx, int tabDx) {
     return el;
 }
 
+// the same action the menu bar rows use, so a pick runs through the shell
+static uint32_t ActMenuCmd() {
+    static uint32_t id = gp::ActionOf(GStrL("sumatra::Cmd"));
+    return id;
+}
+
+// "Underline access keys when available" (off until Alt, by default)
+static bool MenuCuesOn() {
+#if OS_WIN
+    BOOL on = FALSE;
+    SystemParametersInfoW(SPI_GETKEYBOARDCUES, 0, &on, 0);
+    return on != FALSE;
+#else
+    return false;
+#endif
+}
+
+static void SetMenuCue(gp::Ctx* cx, gpc::PopupMenu* menu, gp::Str label, const MenuAccelText& at, bool disabled) {
+    if (at.underlineOff < 0 || menu->items.len == 0) {
+        return;
+    }
+    const gp::Theme& th = gp::ThemeNow(cx->app);
+    gp::Rgba fg = disabled ? th.mutedFg : th.foreground;
+    auto* span = gp::ArenaNew<gp::TextSpan>(cx->a);
+    span->lo = at.underlineOff;
+    span->hi = at.underlineOff + at.underlineLen;
+    span->color = fg;
+    menu->items[menu->items.len - 1].element = gp::TextEl(cx->a, label)->Font(14)->Fg(fg)->Underlines(span, 1);
+}
+
+// one MenuModel level as a popup. A menu-bar entry is itself a submenu, so the
+// button's menu is File, View, ... each opening the menu it names.
+static gpc::PopupMenu* MenuPopupFromModel(gp::Ctx* cx, MenuModel* model, Str id, bool cues) {
+    gpc::PopupMenu* menu = gpc::PopupMenu::New(cx, GpuiDup(cx->a, id))->MinW(220);
+    if (!model) {
+        return menu;
+    }
+    int i = -1;
+    for (const MenuItemModel& it : model->items) {
+        i++;
+        if (it.separator) {
+            menu->Separator();
+            continue;
+        }
+        MenuAccelText at = ParseMenuAccelTextTemp(it.title);
+        gp::Str label = GpuiDup(cx->a, at.display);
+        if (it.submenu) {
+            TempStr subId = fmt("%s-%d", id, i);
+            menu->Submenu(label, MenuPopupFromModel(cx, it.submenu, subId, cues));
+            menu->Disabled(it.disabled);
+        } else {
+            menu->MenuWithAction(label, ActMenuCmd(), (intptr_t)it.cmdId);
+            // a row without a hint asks the keymap, which answers with some
+            // other command's shortcut (every command is one action)
+            menu->Kbd(len(it.accel) > 0 ? GpuiDup(cx->a, it.accel) : GStrL(""));
+            menu->Disabled(it.disabled);
+            menu->Checked(it.checked);
+        }
+        if (cues) {
+            SetMenuCue(cx, menu, label, at, it.disabled);
+        }
+    }
+    return menu;
+}
+
 // orig's CB_MENU caption button. The strip puts it before its tabs; a window
 // without tabs has no strip, so the caption asks for it alone. Null while the
-// menu bar is showing
+// menu bar is showing. A click opens the bar's menus as one drop-down.
 gp::El* TabsUIMenuButton(MainWindow* win, gp::Ctx* cx) {
-    if (win->isMenuBarVisible || AppShellNativeMenu()) {
+    if (win->isMenuBarVisible || AppShellNativeMenu() || !win->menu) {
         return nullptr;
     }
-    TabsUI* ui = Ui(win);
-    if (!ui->view.IsValid()) {
-        ui->view = gp::EntityNewState<TabsView>(cx->app);
-    }
-    ui->view.Get(cx)->win = win;
-    return gpc::Button::New(cx, GStrL("sumatra-tab-menu"))
-        ->Icon(gp::IconName::Menu)
-        ->Ghost()
-        ->Compact()
-        ->WithSize(gp::UiSize::Small)
-        ->OnClick(gp::ListenTo(ui->view, &TabsView::OnMenuButton))
-        ->IntoEl();
+    gpc::PopupMenu* popup = MenuPopupFromModel(cx, win->menu, StrL("sumatra-menu-btn"), MenuCuesOn());
+    popup->MinW(160);
+    TrackPopup(cx, popup);
+
+    gp::El* btn = gpc::Button::New(cx, GStrL("sumatra-tab-menu"))
+                      ->Icon(gp::IconName::Menu)
+                      ->Ghost()
+                      ->Compact()
+                      ->WithSize(gp::UiSize::Small)
+                      ->IntoEl();
+    // the cell is the whole tab-row height, so the menu opens under the row
+    btn->H(gp::kFill);
+    auto* dd = gpc::DropdownMenu::New(cx, GStrL("sumatra-menu-btn-dd"));
+    // flush under the button, as orig's TrackCaptionPopupMenu
+    dd->gap = 0;
+    gp::El* el = dd->Trigger(btn)->Menu(popup)->IntoEl();
+    el->H(gp::kFill);
+    return el;
 }
 
 gp::El* TabsUIBuild(MainWindow* win, gp::Ctx* cx, int barDy) {
@@ -568,8 +633,7 @@ gp::El* TabsUIBuild(MainWindow* win, gp::Ctx* cx, int barDy) {
                       ->BoundsOut(&ui->barBounds)
                       ->OnMouseUpOut(gp::ListenTo(Ui(win)->view, &TabsView::OnBarUpOut));
     // orig's caption has a menu button left of the tabs while the menu bar is
-    // hidden (CB_MENU); ng: it shows the bar until the menu mode ends, where
-    // orig opens the whole menu as one popup
+    // hidden (CB_MENU); a click opens the bar's menus as one drop-down
     if (gp::El* menuBtn = TabsUIMenuButton(win, cx)) {
         bar->Child(menuBtn);
     }

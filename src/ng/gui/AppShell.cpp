@@ -121,7 +121,7 @@ struct ShellView {
     int menuKey = 0;
     int menuArmedIdx = -1;
     bool menuBarTemp = false;
-    // the press that armed the bar (the menu button) is still being dispatched
+    // a click that armed the bar is still being dispatched
     bool menuArmedByClick = false;
     // a dialog, the palette or the annotation list was built last frame: orig
     // gives each a window of its own, which has the keyboard while it is up
@@ -660,22 +660,6 @@ TempStr AppShellUiStateTemp(MainWindow* win) {
     out.Append(fmt(" popup=%d dialog=%d overlay=%d", IsTrackedPopupOpenInApp(gw->app) ? 1 : 0, dialogUp ? 1 : 0,
                    paletteWin || (view && view->overlayUp) ? 1 : 0));
     return ToStrTemp(out);
-}
-
-void AppShellShowMenuBarTemp(MainWindow* win) {
-    if (!win || !win->gpuiWin || !win->shell || gp::AppHasMenuBar()) {
-        return;
-    }
-    auto* view = (ShellView*)gp::EntityGet(win->gpuiWin->app, win->shell->view.id);
-    if (!view || !win->menu) {
-        return;
-    }
-    if (!win->isMenuBarVisible) {
-        view->menuBarTemp = true;
-    }
-    view->menuArmedIdx = 0;
-    view->menuCues = true;
-    AppShellInvalidate(win);
 }
 
 void AppShellSuppressAltMenu(MainWindow* win) {
@@ -2035,7 +2019,7 @@ void ShellView::OnMouseDown(ShellView* self, gp::Ctx* cx, const gp::MouseDownEve
     // a click ends the menu bar's keyboard mode, and the Alt that is down is
     // no longer alone
     self->menuKey = 0;
-    // (a click on the bar itself opens a menu; one on the menu button armed it)
+    // (a click on the bar itself opens a menu)
     bool onMenuBar =
         (self->win->isMenuBarVisible || self->menuBarTemp) && !gp::AppHasMenuBar() && ev->y < (float)kMenuBarDy;
     if (self->menuArmedIdx >= 0 && !onMenuBar && !self->menuArmedByClick) {

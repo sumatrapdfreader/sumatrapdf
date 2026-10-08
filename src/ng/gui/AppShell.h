@@ -44,9 +44,6 @@ TempStr AppShellUiStateTemp(MainWindow* win);
 // orig's gSupressNextAltMenuTrigger: the Alt that is down was used for
 // something (Alt + wheel), so its release must not enter the menu bar
 void AppShellSuppressAltMenu(MainWindow* win);
-// orig's caption menu button (CB_MENU), shown while the menu bar is hidden: the
-// mouse's way to the menus. Shows the bar until the menu mode ends
-void AppShellShowMenuBarTemp(MainWindow* win);
 void AppShellQuit();
 // brings the window to the foreground (orig's MainWindow::Focus())
 void AppShellActivateWindow(MainWindow* win);
