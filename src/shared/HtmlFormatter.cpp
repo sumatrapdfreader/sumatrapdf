@@ -1025,6 +1025,20 @@ void HtmlFormatter::HandleTagStyle(HtmlToken* t) {
     UpdateTagNesting(t);
 }
 
+void HtmlFormatter::HandlePagebreakPath(HtmlToken* t, Str& pagePath) {
+    AttrInfo attr = t->GetAttrByName(StrL("page_path"));
+    if (!attr || pagePath) {
+        ForceNewPage();
+    }
+    if (!attr) {
+        return;
+    }
+    RectF bbox(0, currY, pageDx, 0);
+    VecAppend(currPage->instructions, DrawInstr::PageMarkerAnchor(str::Dup(textAllocator, attr.val), bbox));
+    str::ReplaceWithCopy(&pagePath, attr.val);
+    VecReset(styleRules);
+}
+
 // returns true if prev can't contain curr and should thus be closed
 static bool AutoCloseOnOpen(HtmlTag curr, HtmlTag prev) {
     ReportIf(IsInlineTag(curr));

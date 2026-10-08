@@ -141,6 +141,7 @@ struct HtmlFormatter {
     void HandleTagList(HtmlToken* t);
     void HandleTagPre(HtmlToken* t);
     void HandleTagStyle(HtmlToken* t);
+    void HandlePagebreakPath(HtmlToken* t, Str& pagePath);
 
     void HandleAnchorAttr(HtmlToken* t, bool idsOnly = false);
     void HandleDirAttr(HtmlToken* t);

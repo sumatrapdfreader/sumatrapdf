@@ -1663,19 +1663,7 @@ void ChmFormatter::HandleTagImg(HtmlToken* t) {
 }
 
 void ChmFormatter::HandleTagPagebreak(HtmlToken* t) {
-    AttrInfo attr = t->GetAttrByName(StrL("page_path"));
-    if (!attr || pagePath) {
-        ForceNewPage();
-    }
-    if (attr) {
-        RectF bbox(0, currY, pageDx, 0);
-        // attr.val is owned by the gumbo parse tree which doesn't outlive
-        // the formatter, so copy it into textAllocator
-        VecAppend(currPage->instructions, DrawInstr::PageMarkerAnchor(str::Dup(textAllocator, attr.val), bbox));
-        str::ReplaceWithCopy(&pagePath, attr.val);
-        // reset CSS style rules for the new document
-        VecReset(styleRules);
-    }
+    HandlePagebreakPath(t, pagePath);
 }
 
 void ChmFormatter::HandleTagLink(HtmlToken* t) {
