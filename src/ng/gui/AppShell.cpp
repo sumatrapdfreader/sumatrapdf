@@ -2092,6 +2092,7 @@ void ShellView::OnMouseDown(ShellView* self, gp::Ctx* cx, const gp::MouseDownEve
 // frame WndProc: Escape cancels a drag and drops the selection, and the
 // keyboard link-hint mode eats plain letters while it is on.
 void ShellView::OnKeyDown(ShellView* self, gp::Ctx* cx, const gp::KeyEvent* ev) {
+    CanvasSetKeyModifiers(ev->shift, ev->ctrl);
     MainWindow* win = self->win;
     if (!IsMainWindowValidAndNotClosing(win)) {
         return;

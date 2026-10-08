@@ -397,6 +397,13 @@ bool CanvasShiftPressed() {
     return gShiftPressed;
 }
 
+// A key replaces the mouse event's modifiers. Orig asks GetKeyState, which is
+// the keys held now, not whichever button was down on the last click.
+void CanvasSetKeyModifiers(bool shift, bool ctrl) {
+    gShiftPressed = shift;
+    gCtrlPressed = ctrl;
+}
+
 // ng: gpui captures the mouse for the window itself while a button is down
 // (and releases it on the up), so orig's SetCapture / ReleaseCapture in the
 // selection code has nothing to do. Doing it anyway makes win32 send
@@ -2540,7 +2547,7 @@ static void UpdateAnnotationResize(MainWindow* win, int x, int y, bool isShift) 
 
 // --- the annotation markers on the page -------------------------------------
 
-constexpr Color kAnnotMarkBlue = 0x0050c8; // 0, 80, 200
+constexpr Color kAnnotMarkBlue = MkRgb(0, 80, 200);
 constexpr int kAnnotHandleSize = 6;
 
 static void PaintHoveredAnnotationMark(MainWindow* win, gp::PaintCtx* ctx, DisplayModel* dm) {

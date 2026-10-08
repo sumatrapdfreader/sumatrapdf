@@ -942,6 +942,68 @@ static bool RemoveSelectedItem() {
     return true;
 }
 
+#if OS_WIN
+// orig's list-box dump. exit 2 when the palette is not open.
+TempStr CommandPaletteStateTemp(int* exitCodeOut) {
+    str::Builder out;
+    auto finish = [&](int code) -> TempStr {
+        if (exitCodeOut) {
+            *exitCodeOut = code;
+        }
+        return ToStrTemp(out);
+    };
+    CommandPaletteWnd* wnd = gCommandPaletteWnd;
+    if (!wnd || !wnd->visible) {
+        out.Append(StrL("NOTREADY no-palette\n"));
+        return finish(2);
+    }
+    int sel = wnd->sel;
+    int n = len(wnd->items);
+    int selectedCmdId = 0;
+    int annotPage = 0;
+    Str selText;
+    Str selValue;
+    if (sel >= 0 && sel < n) {
+        selText = wnd->items[sel];
+        ItemDataCP* data = wnd->items.AtData(sel);
+        if (data) {
+            selectedCmdId = data->cmdId;
+            if (data->annot) {
+                annotPage = data->annot->pageNo;
+            }
+            if (IsSettingRow(data) && len(data->settingPath) == 0) {
+                selValue = FormatSettingValueTemp(data->settingType, SettingRowPtr(data));
+            }
+        }
+    }
+    int qPos = 0;
+    int qLen = 0;
+    if (wnd->editQuery) {
+        qLen = len(FromGpui(gp::InputValue(wnd->editQuery)));
+        qPos = gp::InputCursor(wnd->editQuery);
+    }
+    int rendered = 0;
+    if (wnd->thumbCache) {
+        for (PaletteThumb& th : wnd->thumbCache->thumbs) {
+            if (th.img) {
+                rendered++;
+            }
+        }
+    }
+    int nAnnots = len(wnd->annotations);
+    EngineBase* engine = wnd->win && wnd->win->CurrentTab() ? wnd->win->CurrentTab()->GetEngine() : nullptr;
+    int annotsDone = EngineMupdfAnnotsLoadDone(engine) ? 1 : 0;
+    out.Append(
+        fmt("OK sel=%d items=%d querySel=%d,%d queryLen=%d cmd=%d rtl=%d thumb=%d page=%d rendered=%d annots=%d "
+            "annotPage=%d annotsDone=%d ",
+            sel, n, qPos, qPos, qLen, selectedCmdId, IsUIRtl() ? 1 : 0, wnd->thumbnailMode ? 1 : 0, wnd->selectedPage,
+            rendered, nAnnots, annotPage, annotsDone));
+    int editFocus = wnd->editQuery && wnd->editQuery->focused ? 1 : 0;
+    out.Append(fmt("settingHelp=0 selValue=%s selText=%s editFocus=%d\n", selValue, selText, editFocus));
+    return finish(0);
+}
+#endif
+
 // --- keyboard ---------------------------------------------------------------
 
 bool CommandPaletteOnKeyDown(MainWindow* win, int vkey, bool ctrl, bool shift) {

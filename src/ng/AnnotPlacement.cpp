@@ -78,7 +78,7 @@ constexpr float kFreeTextAvgAdvance = 0.5f;
 constexpr float kFreeTextWidthSlack = 1.02f;
 
 // the preview and the selection markers, orig's colors
-constexpr Color kPreviewBlue = 0x0050c8; // 0, 80, 200
+constexpr Color kPreviewBlue = MkRgb(0, 80, 200);
 constexpr Color kPreviewWhite = 0xffffff;
 
 // The same values the create path will use, so the preview shows what the
@@ -961,7 +961,7 @@ static void PaintPointPlacement(MainWindow* win, gp::PaintCtx* ctx, DisplayModel
         return;
     }
     if (kind == AnnotPlacementKind::Caret) {
-        Color blue = 0x0050c8;
+        Color blue = MkRgb(0, 80, 200);
         float w = (float)std::max(DpiScale(2), 1);
         int xMid = r.x + (r.dx / 2);
         CanvasDrawLine(ctx, Point{r.x, r.y + r.dy}, Point{xMid, r.y}, blue, w);
@@ -1233,22 +1233,142 @@ bool AnnotationPlacementFillCreate(MainWindow* win, AnnotationType type, Point& 
     return dm->ValidPageNo(pageNo);
 }
 
-TempStr AnnotationPlacementStateTemp(MainWindow* win) {
+// orig compares GetCursor() to IDC_CROSS or the SVG cursor. ng records the
+// cursor it asked for: the note and the ink tool are native cursors on
+// Windows, everything else is the cross.
+static bool PlacementDumpCursor(MainWindow* win, AnnotPlacementKind kind, bool active) {
+    if (!win || !active) {
+        return false;
+    }
+    if (kind == AnnotPlacementKind::Text && win->nativeCursor == NativeCursor::TextAnnotationPlacement) {
+        return true;
+    }
+    if (kind == AnnotPlacementKind::Ink && win->nativeCursor == NativeCursor::InkAnnotationPlacement) {
+        return true;
+    }
+    return win->canvasCursor == (int)gp::CursorKind::Crosshair;
+}
+
+static TempStr PointPlacementDumpLineTemp(MainWindow* win, AnnotPlacementKind kind, Str key, bool svgCursor) {
+    bool active = KindOf(win) == kind;
     if (!win) {
-        return str::DupTemp(StrL("placement active=0\n"));
+        if (svgCursor) {
+            return fmt("%s active=0 notification=0 cursor=0 cmd=0 message=\n", key);
+        }
+        return fmt("%s active=0 notification=0 cursor=0 preview=0 cmd=0 message=\n", key);
     }
+    NotificationWnd* notif = active ? GetNotificationForGroup(win, NotifGroupForKind(kind)) : nullptr;
+    Str message = NotificationGetMessageTemp(notif);
+    bool cursor = PlacementDumpCursor(win, kind, active);
+    int cmdOut = active ? win->annotPlacement.cmdId : 0;
+    if (svgCursor) {
+        return fmt("%s active=%d notification=%d cursor=%d cmd=%d message=%s\n", key, active ? 1 : 0, notif ? 1 : 0,
+                   cursor ? 1 : 0, cmdOut, message);
+    }
+    DisplayModel* dm = active ? win->AsFixed() : nullptr;
+    Point pt = win->annotPlacement.pos;
+    int pageNo = dm ? dm->GetPageNoByPoint(pt) : -1;
+    bool preview = active && dm && dm->ValidPageNo(pageNo);
+    return fmt("%s active=%d notification=%d cursor=%d preview=%d cmd=%d message=%s\n", key, active ? 1 : 0,
+               notif ? 1 : 0, cursor ? 1 : 0, preview ? 1 : 0, cmdOut, message);
+}
+
+// Same lines as orig's AnnotationPlacementStateTemp. Tests match on the name.
+TempStr AnnotationPlacementStateTemp(MainWindow* win) {
+    str::Builder out;
+    out.Append(PointPlacementDumpLineTemp(win, AnnotPlacementKind::Text, StrL("textPlacement"), true));
+    out.Append(PointPlacementDumpLineTemp(win, AnnotPlacementKind::FreeText, StrL("freeTextPlacement"), false));
+    out.Append(PointPlacementDumpLineTemp(win, AnnotPlacementKind::Stamp, StrL("stampPlacement"), false));
+    out.Append(PointPlacementDumpLineTemp(win, AnnotPlacementKind::Caret, StrL("caretPlacement"), false));
+    out.Append(
+        PointPlacementDumpLineTemp(win, AnnotPlacementKind::FileAttachment, StrL("fileAttachmentPlacement"), false));
+
+    if (!win) {
+        out.Append(StrL("freeTextPreview rect=0,0,0,0\n"));
+        out.Append(
+            StrL("linePlacement active=0 notification=0 cursor=0 started=0 cmd=0 page=-1 start=0,0 end=0,0 "
+                 "message=\n"));
+        out.Append(
+            StrL("polyLinePlacement active=0 notification=0 cursor=0 points=0 cmd=0 page=-1 end=0,0 "
+                 "message=\n"));
+        out.Append(
+            StrL("shapePlacement active=0 notification=0 cursor=0 circle=0 mouseDown=0 dragged=0 constrain=0 "
+                 "cmd=0 page=-1 preview=0,0,0,0 message=\n"));
+        out.Append(
+            StrL("inkPlacement active=0 notification=0 cursor=0 mouseDown=0 strokes=0 points=0 cmd=0 page=-1 "
+                 "message=\n"));
+        out.Append(StrL("highlighterPlacement active=0 notification=0 cmd=0 message=\n"));
+        return ToStrTemp(out);
+    }
+
     AnnotPlacement& p = win->annotPlacement;
-    bool active = p.kind != AnnotPlacementKind::None;
-    Rect preview;
-    DisplayModel* dm = win->AsFixed();
-    if (active && dm && p.kind == AnnotPlacementKind::FreeText) {
-        preview = FreeTextPlacementScreenRect(win, dm);
-    } else if (active && dm && p.kind == AnnotPlacementKind::Shape && dm->ValidPageNo(p.pageNo)) {
-        preview = ShapePlacementScreenRect(p, dm);
+    {
+        Rect preview;
+        if (KindOf(win) == AnnotPlacementKind::FreeText) {
+            preview = FreeTextPlacementScreenRect(win, win->AsFixed());
+        }
+        out.Append(fmt("freeTextPreview rect=%d,%d,%d,%d\n", preview.x, preview.y, preview.dx, preview.dy));
     }
-    return fmt(
-        "placement active=%d kind=%d cmd=%d page=%d points=%d strokes=%d circle=%d mouseDown=%d "
-        "preview=%d,%d,%d,%d\n",
-        active ? 1 : 0, (int)p.kind, p.cmdId, p.pageNo, len(p.points), len(p.strokeCounts), p.circle ? 1 : 0,
-        p.mouseDown ? 1 : 0, preview.x, preview.y, preview.dx, preview.dy);
+    bool line = IsPlacingLineAnnotation(win);
+    bool poly = IsPlacingPolyLineAnnotation(win);
+    bool shape = IsPlacingShapeAnnotation(win);
+    bool ink = IsPlacingInkAnnotation(win);
+    {
+        NotificationWnd* notif = line ? GetNotificationForGroup(win, kNotifLineAnnotationPlacement) : nullptr;
+        Str message = NotificationGetMessageTemp(notif);
+        bool cursor = PlacementDumpCursor(win, AnnotPlacementKind::Line, line);
+        bool started = line && p.pageNo > 0;
+        PointF start = line ? p.start : PointF{};
+        Point end = line ? p.end : Point{};
+        out.Append(
+            fmt("linePlacement active=%d notification=%d cursor=%d started=%d cmd=%d page=%d start=%g,%g "
+                "end=%d,%d message=%s\n",
+                line ? 1 : 0, notif ? 1 : 0, cursor ? 1 : 0, started ? 1 : 0, line ? p.cmdId : 0, line ? p.pageNo : -1,
+                start.x, start.y, end.x, end.y, message));
+    }
+    {
+        NotificationWnd* notif = poly ? GetNotificationForGroup(win, kNotifPolyLineAnnotationPlacement) : nullptr;
+        Str message = NotificationGetMessageTemp(notif);
+        bool cursor = PlacementDumpCursor(win, AnnotPlacementKind::PolyLine, poly);
+        Point end = poly ? p.end : Point{};
+        out.Append(
+            fmt("polyLinePlacement active=%d notification=%d cursor=%d points=%d cmd=%d page=%d end=%d,%d "
+                "message=%s\n",
+                poly ? 1 : 0, notif ? 1 : 0, cursor ? 1 : 0, poly ? len(p.points) : 0, poly ? p.cmdId : 0,
+                poly ? p.pageNo : -1, end.x, end.y, message));
+    }
+    {
+        NotificationWnd* notif = shape ? GetNotificationForGroup(win, kNotifShapeAnnotationPlacement) : nullptr;
+        Str message = NotificationGetMessageTemp(notif);
+        bool cursor = PlacementDumpCursor(win, AnnotPlacementKind::Shape, shape);
+        Rect preview;
+        DisplayModel* dm = win->AsFixed();
+        if (shape && dm && dm->ValidPageNo(p.pageNo)) {
+            preview = ShapePlacementScreenRect(p, dm);
+        }
+        out.Append(
+            fmt("shapePlacement active=%d notification=%d cursor=%d circle=%d mouseDown=%d dragged=%d "
+                "constrain=%d cmd=%d page=%d preview=%d,%d,%d,%d message=%s\n",
+                shape ? 1 : 0, notif ? 1 : 0, cursor ? 1 : 0, shape && p.circle ? 1 : 0, shape && p.mouseDown ? 1 : 0,
+                shape && p.didDrag ? 1 : 0, shape && p.constrain ? 1 : 0, shape ? p.cmdId : 0, shape ? p.pageNo : -1,
+                preview.x, preview.y, preview.dx, preview.dy, message));
+    }
+    {
+        NotificationWnd* notif = ink ? GetNotificationForGroup(win, kNotifInkAnnotationPlacement) : nullptr;
+        Str message = NotificationGetMessageTemp(notif);
+        bool cursor = PlacementDumpCursor(win, AnnotPlacementKind::Ink, ink);
+        out.Append(
+            fmt("inkPlacement active=%d notification=%d cursor=%d mouseDown=%d strokes=%d points=%d cmd=%d "
+                "page=%d message=%s\n",
+                ink ? 1 : 0, notif ? 1 : 0, cursor ? 1 : 0, ink && p.mouseDown ? 1 : 0, ink ? len(p.strokeCounts) : 0,
+                ink ? len(p.points) : 0, ink ? p.cmdId : 0, ink ? p.pageNo : -1, message));
+    }
+    {
+        bool on = KindOf(win) == AnnotPlacementKind::Highlighter;
+        NotificationWnd* notif = on ? GetNotificationForGroup(win, kNotifHighlighterPlacement) : nullptr;
+        Str message = NotificationGetMessageTemp(notif);
+        out.Append(fmt("highlighterPlacement active=%d notification=%d cmd=%d message=%s\n", on ? 1 : 0, notif ? 1 : 0,
+                       on ? p.cmdId : 0, message));
+    }
+    return ToStrTemp(out);
 }
