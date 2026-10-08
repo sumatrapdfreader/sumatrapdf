@@ -8468,7 +8468,72 @@ static void UpdateSettings(const Flags& i) {
     }
 }
 
+extern "C" {
+int muconvert_main(int argc, char** argv);
+int mudraw_main(int argc, char** argv);
+int mutrace_main(int argc, char** argv);
+int murun_main(int argc, char** argv);
+int pdfclean_main(int argc, char** argv);
+int pdfextract_main(int argc, char** argv);
+int pdfinfo_main(int argc, char** argv);
+int pdfposter_main(int argc, char** argv);
+int pdfshow_main(int argc, char** argv);
+int pdfpages_main(int argc, char** argv);
+int pdfcreate_main(int argc, char** argv);
+int pdfmerge_main(int argc, char** argv);
+int pdfsign_main(int argc, char** argv);
+int pdfrecolor_main(int argc, char** argv);
+int pdftrim_main(int argc, char** argv);
+int pdfbake_main(int argc, char** argv);
+int mugrep_main(int argc, char** argv);
+int pdfaudit_main(int argc, char** argv);
+int fz_redirect_io_to_existing_console();
+}
+
+// won't collide with a tool's own exit code
+constexpr int kNoCliTool = -1234321;
+
+struct CliTool {
+    const char* name;
+    int (*fn)(int argc, char** argv);
+};
+
+// same names as orig's `SumatraPDF <tool>` (src/sumatrapdf-tool.cpp)
+static CliTool gCliTools[] = {
+    {"run", murun_main},          {"draw", mudraw_main},    {"convert", muconvert_main}, {"audit", pdfaudit_main},
+    {"bake", pdfbake_main},       {"clean", pdfclean_main}, {"create", pdfcreate_main},  {"extract", pdfextract_main},
+    {"info", pdfinfo_main},       {"merge", pdfmerge_main}, {"pages", pdfpages_main},    {"poster", pdfposter_main},
+    {"recolor", pdfrecolor_main}, {"show", pdfshow_main},   {"sign", pdfsign_main},      {"trim", pdftrim_main},
+    {"grep", mugrep_main},        {"trace", mutrace_main},
+};
+
+// `SumatraPDF draw file.pdf` is a mupdf tool. Run it before any window exists,
+// or the GUI stays up and a caller such as jpeg-xl-pdf times out.
+static int MaybeRunCliTool(int argc, char** argv) {
+    if (argc < 2) {
+        return kNoCliTool;
+    }
+    Str name(argv[1]);
+    int (*fn)(int, char**) = nullptr;
+    for (const CliTool& t : gCliTools) {
+        if (str::EqI(name, Str(t.name))) {
+            fn = t.fn;
+            break;
+        }
+    }
+    if (!fn) {
+        return kNoCliTool;
+    }
+    fz_redirect_io_to_existing_console();
+    InstallEmbeddedFontLoader();
+    return fn(argc - 1, argv + 1);
+}
+
 int GpuiMain(int argc, char** argv) {
+    int toolRes = MaybeRunCliTool(argc, argv);
+    if (toolRes != kNoCliTool) {
+        return toolRes;
+    }
     gAppStartTime = TimeGet();
 #if OS_DARWIN
     AppShellDisableAutoTermination();
