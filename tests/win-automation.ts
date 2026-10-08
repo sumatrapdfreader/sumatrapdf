@@ -12,7 +12,7 @@
 // These are for *ad-hoc* tests (not checked in). Put reusable helpers here, not
 // in the individual ad-hoc scripts.
 
-import { cmdId, drainProcStderr, EXE, setFailureContext } from "./util.ts";
+import { cmdId, drainProcStderr, EXE, setFailureContext, USE_NG } from "./util.ts";
 import {
   testWindowPos,
   waitForWindowIdle,
@@ -128,7 +128,9 @@ export async function killAndWait(proc: Bun.Subprocess): Promise<void> {
   await killAndWaitProcess(proc);
 }
 
-export const FRAME_CLASS = "SUMATRA_PDF_FRAME";
+// ng's frame is gpui's window. Tests import this binding, so the assignment
+// is visible to them.
+export let FRAME_CLASS = USE_NG ? "GpuiSystemMonitor" : "SUMATRA_PDF_FRAME";
 export const CANVAS_CLASS = "SUMATRA_PDF_CANVAS";
 
 // -window-pos for the right half of the screen (see testWindowPos)
@@ -272,7 +274,12 @@ export function waitForFrame(pid: number, timeoutMs = 12000): Promise<number> {
 
 // the document canvas (child of the frame)
 export function findCanvas(frame: number): number {
-  return findChildWindow(frame, CANVAS_CLASS);
+  const canvas = findChildWindow(frame, CANVAS_CLASS);
+  // ng draws the page in the frame; there is no canvas child
+  if (!canvas && USE_NG) {
+    return frame;
+  }
+  return canvas;
 }
 
 export function findChildByClass(parent: number, className: string): number {

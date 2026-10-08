@@ -1,6 +1,6 @@
 // Full regular suite: run-almost-all (fast) then the tests whose time is the test.
 //
-// Run:  bun tests/run-all.ts [--no-build] [-silent] [-exe <SumatraPDF.exe>]
+// Run:  bun tests/run-all.ts [--no-build] [-silent] [-ng] [-exe <SumatraPDF.exe>]
 //
 // Register a new test in run-almost-all.ts unless it cannot be made faster
 // (print-to-PDF, LaTeX, a measured wait, high-zoom tile settle, a huge

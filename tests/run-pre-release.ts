@@ -2,7 +2,7 @@
 // slow WebView TOC check, so a failure there shows up before the fast suite.
 // Then the fast tests, issue-6003, and LaTeX / SyncTeX.
 //
-// Run:  bun tests/run-pre-release.ts [--no-build] [-silent] [-exe <SumatraPDF.exe>]
+// Run:  bun tests/run-pre-release.ts [--no-build] [-silent] [-ng] [-exe <SumatraPDF.exe>]
 
 import {
   formatDuration,

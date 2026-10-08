@@ -22,13 +22,20 @@ import { ensureModifierKeysUp, enumWindows, getWindowPid, getWindowText, hasInte
 
 export const ROOT = join(import.meta.dir, "..");
 
+// `-ng` builds and runs the ng Windows app (out/win/dbg) instead of out/dbg64.
 // `-exe <path>` runs the tests against an executable that is already built,
 // e.g. a release or an ASan one, or a build from another checkout. Validated
 // here so a typo fails immediately instead of every test timing out.
+export const USE_NG = process.argv.includes("-ng");
+
 function exeFromArgv(argv: string[]): string {
   const i = argv.indexOf("-exe");
   if (i < 0) {
     return "";
+  }
+  if (argv.includes("-ng")) {
+    console.error("-ng and -exe cannot be used together");
+    process.exit(1);
   }
   const bail = (why: string): never => {
     console.error(`-exe: ${why}`);
@@ -61,7 +68,11 @@ function exeFromArgv(argv: string[]): string {
 // debug ASan build (out/dbg64_asan/SumatraPDF-static.exe), which is the same app
 // plus ASan. Both are read at import time, before any test runs.
 export const EXE_FROM_ARGV = exeFromArgv(process.argv);
-const SOURCE_EXE = EXE_FROM_ARGV || process.env.SUMATRA_TEST_EXE || join(ROOT, "out", "dbg64", "SumatraPDF.exe");
+const SOURCE_EXE =
+  EXE_FROM_ARGV ||
+  (USE_NG ? join(ROOT, "out", "win", "dbg", "SumatraPDF.exe") : "") ||
+  process.env.SUMATRA_TEST_EXE ||
+  join(ROOT, "out", "dbg64", "SumatraPDF.exe");
 
 // Keep the executable and its portable settings file in a fresh directory for
 // every test run. This prevents a manual run, or an earlier test that saves
@@ -131,7 +142,14 @@ export function runAppUnitTests(): Promise<void> {
   }
 
   appUnitTests = (async () => {
-    const proc = Bun.spawn([EXE, "-unit-tests", "-for-ai"], { stdout: "pipe", stderr: "pipe" });
+    // ng's unit tests are the test_util target, not SumatraPDF.exe -unit-tests
+    const unitExe = USE_NG ? join(dirname(resolve(SOURCE_EXE)), "test_util.exe") : EXE;
+    const unitArgs = USE_NG ? ["-for-ai"] : ["-unit-tests", "-for-ai"];
+    const proc = Bun.spawn([unitExe, ...unitArgs], {
+      cwd: USE_NG ? ROOT : undefined,
+      stdout: "pipe",
+      stderr: "pipe",
+    });
     const [stdout, stderr, exitCode] = await Promise.all([
       new Response(proc.stdout).text(),
       new Response(proc.stderr).text(),
@@ -656,13 +674,16 @@ export async function runSuiteMain(testit: (opts: SuiteOptions) => Promise<void>
   process.exit(0);
 }
 
-// build SumatraPDF.exe the same way cmd/build.ts does
+// build SumatraPDF.exe the same way cmd/build.ts does.
+// -ng builds the ng Windows app and its test_util target.
 export function buildApp(opts?: { silent?: boolean }): void {
+  const script = USE_NG ? "ng-build.ts" : "build.ts";
+  const args = USE_NG ? ["-dbg", "SumatraPDF", "test_util"] : ["-dbg"];
   if (!opts?.silent) {
-    console.log("• building SumatraPDF.exe (cmd/build.ts) ...");
+    console.log(`• building SumatraPDF.exe (cmd/${script}) ...`);
   }
   const p = Bun.spawnSync({
-    cmd: ["bun", join(ROOT, "cmd", "build.ts"), "-dbg"],
+    cmd: ["bun", join(ROOT, "cmd", script), ...args],
     cwd: ROOT,
     stdout: "inherit",
     stderr: "inherit",

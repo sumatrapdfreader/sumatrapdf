@@ -564,6 +564,21 @@ static LRESULT CALLBACK ShellSubclass(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp,
                 return 0;
             }
             break;
+        case WM_COMMAND:
+            // a posted command id (the test harness, and anything else that
+            // used to send WM_COMMAND to the frame). Control notifications
+            // have a non-zero HIWORD and are not commands.
+            if (HIWORD(wp) == 0) {
+                if (MainWindow* win = WinOf(hwnd)) {
+                    int cmdId = (int)LOWORD(wp);
+                    if (cmdId > 0) {
+                        ExecuteCmd(win, cmdId);
+                        AppShellInvalidate(win);
+                        return 0;
+                    }
+                }
+            }
+            break;
         case WM_APPCOMMAND:
             // both keyboard and mouse drivers should produce WM_APPCOMMAND
             // messages for their special keys, so handle these here and return
