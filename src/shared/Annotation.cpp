@@ -180,27 +180,37 @@ static T ReadAnnot(Annotation* annot, T fallback, Read read) {
 }
 
 template <typename Update>
-static bool UpdateAnnot(Annotation* annot, Update update) {
+static bool UpdateAnnotIf(Annotation* annot, Update update) {
     if (!AnnotationIsLive(annot)) {
         return false;
     }
     EngineMupdf* engine = annot->engine;
-    bool ok = false;
+    bool changed = false;
     {
         AnnotAccess access(annot);
         fz_try(access.ctx) {
-            update(access.ctx, access.annot);
-            pdf_update_annot(access.ctx, access.annot);
-            ok = true;
+            changed = update(access.ctx, access.annot);
+            if (changed) {
+                pdf_update_annot(access.ctx, access.annot);
+            }
         }
         fz_catch(access.ctx) {
             fz_report_error(access.ctx);
+            changed = false;
         }
     }
-    if (ok) {
+    if (changed) {
         MarkNotificationAsModified(engine, annot);
     }
-    return ok;
+    return changed;
+}
+
+template <typename Update>
+static bool UpdateAnnot(Annotation* annot, Update update) {
+    return UpdateAnnotIf(annot, [update](fz_context* ctx, pdf_annot* a) {
+        update(ctx, a);
+        return true;
+    });
 }
 
 AnnotationType Type(Annotation* annot) {
@@ -1018,71 +1028,50 @@ bool AnnotationIsTextMarkup(AnnotationType tp) {
 
 // return true if color changed
 bool SetColor(Annotation* annot, PdfColor c) {
-    if (!AnnotationIsLive(annot)) {
-        return false;
-    }
-    EngineMupdf* e = annot->engine;
-    {
-        AnnotAccess access(annot);
-        bool didChange = false;
+    return UpdateAnnotIf(annot, [annot, c](fz_context* ctx, pdf_annot* a) {
         float color[4]{};
-        int n = -1;
-        float oldOpacity = 0;
-        fz_try(access.ctx) {
-            pdf_annot_color(access.ctx, access.annot, &n, color);
-            oldOpacity = pdf_annot_opacity(access.ctx, access.annot);
-        }
-        fz_catch(access.ctx) {
-            fz_report_error(access.ctx);
-            n = -1;
-        }
-        if (n == -1) {
-            return false;
-        }
+        int n = 0;
+        pdf_annot_color(ctx, a, &n, color);
+        float oldOpacity = pdf_annot_opacity(ctx, a);
+
         float newColor[3];
         PdfColorToFloat(c, newColor);
         float opacity = GetOpacityFloat(c);
-        didChange = (n != 3);
-        if (!didChange) {
+        bool changed = n != 3;
+        if (!changed) {
             for (int i = 0; i < n; i++) {
                 if (color[i] != newColor[i]) {
-                    didChange = true;
+                    changed = true;
                 }
             }
         }
         if (opacity != oldOpacity) {
-            didChange = true;
+            changed = true;
         }
-        if (!didChange) {
+        if (!changed) {
             return false;
         }
-        fz_try(access.ctx) {
-            if (c == 0) {
-                pdf_set_annot_color(access.ctx, access.annot, 0, newColor);
-                // For text markup /C is the only ink, so an empty one doesn't
-                // make the annotation invisible: mupdf synthesizes Acrobat's
-                // default yellow for Highlight and a black line for the rest
-                // (issue #1994). Opacity 0 is what "transparent" has to mean.
-                // Other types keep their opacity: a Square with a transparent
-                // stroke still shows /IC, and a FreeText with a transparent
-                // background still shows its text.
-                if (AnnotationIsTextMarkup(Type(annot))) {
-                    pdf_set_annot_opacity(access.ctx, access.annot, 0.f);
-                }
-            } else {
-                pdf_set_annot_color(access.ctx, access.annot, 3, newColor);
-                if (oldOpacity != opacity) {
-                    pdf_set_annot_opacity(access.ctx, access.annot, opacity);
-                }
+
+        if (c == 0) {
+            pdf_set_annot_color(ctx, a, 0, newColor);
+            // For text markup /C is the only ink, so an empty one doesn't
+            // make the annotation invisible: mupdf synthesizes Acrobat's
+            // default yellow for Highlight and a black line for the rest
+            // (issue #1994). Opacity 0 is what "transparent" has to mean.
+            // Other types keep their opacity: a Square with a transparent
+            // stroke still shows /IC, and a FreeText with a transparent
+            // background still shows its text.
+            if (AnnotationIsTextMarkup(Type(annot))) {
+                pdf_set_annot_opacity(ctx, a, 0.f);
             }
-            pdf_update_annot(access.ctx, access.annot);
+        } else {
+            pdf_set_annot_color(ctx, a, 3, newColor);
+            if (oldOpacity != opacity) {
+                pdf_set_annot_opacity(ctx, a, opacity);
+            }
         }
-        fz_catch(access.ctx) {
-            fz_report_error(access.ctx);
-        }
-    }
-    MarkNotificationAsModified(e, annot);
-    return true;
+        return true;
+    });
 }
 
 PdfColor InteriorColor(Annotation* annot) {
@@ -1090,46 +1079,28 @@ PdfColor InteriorColor(Annotation* annot) {
 }
 
 bool SetInteriorColor(Annotation* annot, PdfColor c) {
-    if (!AnnotationIsLive(annot)) {
-        return false;
-    }
-    EngineMupdf* e = annot->engine;
-    {
-        AnnotAccess access(annot);
-        bool didChange = false;
+    return UpdateAnnotIf(annot, [c](fz_context* ctx, pdf_annot* a) {
         float color[4]{};
-        int n = -1;
-        fz_try(access.ctx) {
-            pdf_annot_interior_color(access.ctx, access.annot, &n, color);
-        }
-        fz_catch(access.ctx) {
-            fz_report_error(access.ctx);
-            n = -1;
-        }
+        int n = 0;
+        pdf_annot_interior_color(ctx, a, &n, color);
+
         float newColor[3]{};
         PdfColorToFloat(c, newColor);
         int newN = (c == 0) ? 0 : 3;
-        didChange = (n != newN);
-        if (!didChange) {
+        bool changed = n != newN;
+        if (!changed) {
             for (int i = 0; i < n; i++) {
                 if (color[i] != newColor[i]) {
-                    didChange = true;
+                    changed = true;
                 }
             }
         }
-        if (!didChange) {
+        if (!changed) {
             return false;
         }
-        fz_try(access.ctx) {
-            pdf_set_annot_interior_color(access.ctx, access.annot, newN, newColor);
-            pdf_update_annot(access.ctx, access.annot);
-        }
-        fz_catch(access.ctx) {
-            fz_report_error(access.ctx);
-        }
-    }
-    MarkNotificationAsModified(e, annot);
-    return true;
+        pdf_set_annot_interior_color(ctx, a, newN, newColor);
+        return true;
+    });
 }
 
 // clang-format off
