@@ -6644,10 +6644,10 @@ void ExecuteCmd(MainWindow* win, int cmdId) {
             break;
 
         case CmdCutAnnotation:
+            // The original stays until paste. CutAnnotation only marks it.
             if (tab && tab->selectedAnnotation && HasPermission(Perm::CopySelection)) {
-                Annotation* a = tab->selectedAnnotation;
-                if (CutAnnotation(a)) {
-                    DeleteAnnotationAndUpdateUI(tab, a);
+                if (CutAnnotation(tab->selectedAnnotation)) {
+                    ShowTemporaryNotification(tab->win, Tr("Annotation cut. Paste to move it."));
                 }
             }
             break;
