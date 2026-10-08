@@ -10147,13 +10147,17 @@ static Annotation* FindAnnotAtPos(const Vec<Annotation*>& annots, PointF pos, fl
     return best;
 }
 
+static FzPageInfo* GetPdfPageInfo(EngineMupdf* engine, int pageNo) {
+    if (!engine || !engine->pdfdoc) {
+        return nullptr;
+    }
+    return engine->GetFzPageInfoCanFail(pageNo);
+}
+
 Annotation* EngineMupdfGetAnnotationAtPos(EngineBase* engine, int pageNo, PointF pos, float padding,
                                           Annotation* preferredAnnot) {
     EngineMupdf* epdf = AsEngineMupdf(engine);
-    if (!epdf->pdfdoc) {
-        return nullptr;
-    }
-    FzPageInfo* pi = epdf->GetFzPageInfoCanFail(pageNo);
+    FzPageInfo* pi = GetPdfPageInfo(epdf, pageNo);
     if (!pi) {
         return nullptr;
     }
@@ -10166,10 +10170,7 @@ Annotation* EngineMupdfGetAnnotationAtPos(EngineBase* engine, int pageNo, PointF
 // in their own list. Returns the smallest widget containing pos, or null.
 Annotation* EngineMupdfGetWidgetAtPos(EngineBase* engine, int pageNo, PointF pos) {
     EngineMupdf* epdf = AsEngineMupdf(engine);
-    if (!epdf->pdfdoc) {
-        return nullptr;
-    }
-    FzPageInfo* pi = epdf->GetFzPageInfoCanFail(pageNo);
+    FzPageInfo* pi = GetPdfPageInfo(epdf, pageNo);
     if (!pi) {
         return nullptr;
     }
@@ -10183,10 +10184,10 @@ Annotation* EngineMupdfGetWidgetAtPos(EngineBase* engine, int pageNo, PointF pos
 // take it), so it must not be called while docLock is held.
 Annotation* EngineMupdfGetAdjacentWidget(EngineBase* engine, Annotation* cur, bool forward) {
     EngineMupdf* epdf = AsEngineMupdf(engine);
-    if (!epdf->pdfdoc || !cur) {
+    if (!cur) {
         return nullptr;
     }
-    FzPageInfo* pi = epdf->GetFzPageInfoCanFail(cur->pageNo);
+    FzPageInfo* pi = GetPdfPageInfo(epdf, cur->pageNo);
     if (!pi) {
         return nullptr;
     }
@@ -10239,10 +10240,7 @@ static bool FormFieldValueIsEmpty(int wt, const char* val) {
 void EngineMupdfGetPageWidgets(EngineBase* engine, int pageNo, Vec<Annotation*>& out) {
     VecClear(out);
     EngineMupdf* epdf = AsEngineMupdf(engine);
-    if (!epdf || !epdf->pdfdoc) {
-        return;
-    }
-    FzPageInfo* pi = epdf->GetFzPageInfoCanFail(pageNo);
+    FzPageInfo* pi = GetPdfPageInfo(epdf, pageNo);
     if (!pi) {
         return;
     }
@@ -10257,10 +10255,7 @@ void EngineMupdfGetPageWidgets(EngineBase* engine, int pageNo, Vec<Annotation*>&
 // the field currently being edited, if any, so its overlay isn't double-tinted.
 void EngineMupdfGetFormFieldHighlightRects(EngineBase* engine, int pageNo, Annotation* skip, Vec<RectF>& out) {
     EngineMupdf* epdf = AsEngineMupdf(engine);
-    if (!epdf || !epdf->pdfdoc) {
-        return;
-    }
-    FzPageInfo* pi = epdf->GetFzPageInfoCanFail(pageNo);
+    FzPageInfo* pi = GetPdfPageInfo(epdf, pageNo);
     if (!pi) {
         return;
     }
