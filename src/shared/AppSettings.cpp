@@ -288,6 +288,18 @@ static void setMin(int& i, int minVal) {
     i = std::max(i, minVal);
 }
 
+static void ClampNonNegative(WindowMargin& m) {
+    setMin(m.bottom, 0);
+    setMin(m.top, 0);
+    setMin(m.left, 0);
+    setMin(m.right, 0);
+}
+
+static void ClampNonNegative(Size& size) {
+    setMin(size.dx, 0);
+    setMin(size.dy, 0);
+}
+
 static void AddStringArgIfSet(CommandArg** args, Str name, Str value) {
     if (str::IsEmptyOrWhiteSpace(value)) {
         return;
@@ -861,30 +873,10 @@ bool LoadSettings() {
 
     // sanitize WindowMargin and PageSpacing values
     // https://github.com/sumatrapdfreader/sumatrapdf/issues/1899
-    {
-        auto&& m = gprefs->fixedPageUI.windowMargin;
-        setMin(m.bottom, 0);
-        setMin(m.top, 0);
-        setMin(m.left, 0);
-        setMin(m.right, 0);
-    }
-    {
-        auto&& m = gprefs->comicBookUI.windowMargin;
-        setMin(m.bottom, 0);
-        setMin(m.top, 0);
-        setMin(m.left, 0);
-        setMin(m.right, 0);
-    }
-    {
-        auto&& s = gprefs->fixedPageUI.pageSpacing;
-        setMin(s.dx, 0);
-        setMin(s.dy, 0);
-    }
-    {
-        auto&& s = gprefs->comicBookUI.pageSpacing;
-        setMin(s.dx, 0);
-        setMin(s.dy, 0);
-    }
+    ClampNonNegative(gprefs->fixedPageUI.windowMargin);
+    ClampNonNegative(gprefs->comicBookUI.windowMargin);
+    ClampNonNegative(gprefs->fixedPageUI.pageSpacing);
+    ClampNonNegative(gprefs->comicBookUI.pageSpacing);
     // 0 means "not set, use system DPI"; users have been seen setting -1,
     // which would propagate as a negative DPI and break zoom calculations
     setMin(gprefs->customScreenDPI, 0);
