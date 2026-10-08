@@ -402,11 +402,10 @@ static void LoadCodexSessionHistory(MainWindow* win, Str sessionId, Str /*dir*/)
     }
 
     Str rest = data;
-    Str lineRaw;
+    Str line;
 
-    while (str::NextLine(rest, lineRaw, rest)) {
-        if (len(lineRaw) > 0) {
-            TempStr line = str::DupTemp(lineRaw);
+    while (str::NextLine(rest, line, rest)) {
+        if (len(line) > 0) {
             TempStr userText = ExtractCodexRolloutUserTextTemp(line);
             if (userText) {
                 AIChatHistoryAddUser(win, userText);

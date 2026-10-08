@@ -142,13 +142,12 @@ void AIChatLoadSessionHistory(MainWindow* win, Str sessionPath) {
     }
 
     Str rest = data;
-    Str lineRaw;
+    Str line;
 
-    while (str::NextLine(rest, lineRaw, rest)) {
-        if (len(lineRaw) == 0) {
+    while (str::NextLine(rest, line, rest)) {
+        if (len(line) == 0) {
             continue;
         }
-        TempStr line = str::DupTemp(lineRaw);
 
         TempStr userText = AIChatExtractUserTextTemp(line);
         if (userText) {
