@@ -479,8 +479,50 @@ static TempStr PageBoxesResultTemp(int pageNo, int* exitCodeOut) {
     return finish(ToStrTemp(line), 0);
 }
 
-// Same result as orig's SumatraTest.cpp. The dest is a copy so the signature
-// can be written incrementally.
+static TempStr PageCommentsResultTemp(Str path, int pageNo, int* exitCodeOut) {
+    str::Builder out;
+    EngineBase* engine = CreateEngineFromFile(path, nullptr, false);
+    if (!engine) {
+        if (exitCodeOut) {
+            *exitCodeOut = 1;
+        }
+        out.Append(fmt("ERROR engine-create-failed path=%s\n", path));
+        return ToStrTemp(out);
+    }
+
+    if (!engine->BenchLoadPage(pageNo)) {
+        if (exitCodeOut) {
+            *exitCodeOut = 1;
+        }
+        out.Append(fmt("ERROR page-load-failed page=%d\n", pageNo));
+        SafeEngineRelease(&engine);
+        return ToStrTemp(out);
+    }
+
+    int nComments = 0;
+    Vec<IPageElement*> els = engine->GetElements(pageNo);
+    for (IPageElement* el : els) {
+        if (!el || !el->Is(kindPageElementComment)) {
+            continue;
+        }
+        Str value = el->GetValue();
+        TempStr flat = str::ReplaceTemp(value, StrL("\n"), StrL("|"));
+        nComments++;
+        out.Append(fmt("comment=%s\n", flat));
+    }
+    if (nComments == 0) {
+        if (exitCodeOut) {
+            *exitCodeOut = 1;
+        }
+        out.Append(fmt("ERROR no-comments page=%d\n", pageNo));
+    } else if (exitCodeOut) {
+        *exitCodeOut = 0;
+    }
+    SafeEngineRelease(&engine);
+    return ToStrTemp(out);
+}
+
+// The dest is a copy so the signature can be written incrementally.
 static TempStr SignDocumentResultTemp(Str pdfPath, Str destPath, Str thumbprint, Str certPath, Str certPassword,
                                       Str imagePath, int appearanceFlags, int* exitCodeOut) {
     str::Builder out;
@@ -2140,6 +2182,19 @@ static void ExecuteControlRequest(ControlRequest* req) {
             IntArg(req, 0, pageNo);
             int exitCode = 0;
             Str res = PageBoxesResultTemp(pageNo, &exitCode);
+            AppendTestResult(req, exitCode, res);
+            break;
+        }
+
+        case ControlCmd::TestPageComments: {
+            Str path = StringArg(req, 0);
+            i32 pageNo = 1;
+            if (len(path) == 0 || !IntArg(req, 1, pageNo)) {
+                AppendError(req, StrL("TestPageComments expects string path, int pageNo"));
+                break;
+            }
+            int exitCode = 0;
+            Str res = PageCommentsResultTemp(path, pageNo, &exitCode);
             AppendTestResult(req, exitCode, res);
             break;
         }
