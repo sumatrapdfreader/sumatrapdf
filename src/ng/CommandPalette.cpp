@@ -144,6 +144,10 @@ struct CommandPaletteWnd {
     // orig's popup window, where the platform can have one; null: an overlay
     // in the frame
     ToolWindow* tw = nullptr;
+#if OS_WIN
+    // tests look for a focused Edit whose root is not the frame
+    HWND queryEdit = nullptr;
+#endif
 
     StrVecCP tabs;
     StrVecCP fileHistory;
@@ -523,6 +527,13 @@ void CloseCommandPalette() {
     }
     gCommandPaletteWnd = nullptr;
     MainWindow* win = wnd->win;
+#if OS_WIN
+    if (wnd->queryEdit) {
+        HWND edit = wnd->queryEdit;
+        wnd->queryEdit = nullptr;
+        DestroyWindow(edit);
+    }
+#endif
     if (wnd->tw) {
         ToolWindowClose(wnd->tw);
         wnd->tw = nullptr;
@@ -2428,6 +2439,57 @@ static Size PaletteWindowSize(MainWindow* win, CommandPaletteWnd* wnd) {
     return Size(dx, dy);
 }
 
+#if OS_WIN
+constexpr UINT_PTR kPaletteQuerySubclassId = 7;
+
+// WM_SETTEXT and the keys tests post at the query Edit. The box they see is
+// this control; the text they filter is the gpui input.
+static LRESULT CALLBACK PaletteQueryProc(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp, UINT_PTR, DWORD_PTR dw) {
+    auto* win = (MainWindow*)dw;
+    if (msg == WM_SETTEXT && lp) {
+        CommandPaletteSetText(win, (const WCHAR*)lp);
+    }
+    if (msg == WM_KEYDOWN || msg == WM_SYSKEYDOWN) {
+        bool ctrl = (GetKeyState(VK_CONTROL) & 0x8000) != 0;
+        bool shift = (GetKeyState(VK_SHIFT) & 0x8000) != 0;
+        if (CommandPaletteOnKeyDown(win, (int)wp, ctrl, shift)) {
+            return 0;
+        }
+    }
+    if (msg == WM_KEYUP) {
+        CommandPaletteOnKeyUp(win, (int)wp);
+    }
+    if (msg == WM_NCDESTROY) {
+        RemoveWindowSubclass(hwnd, PaletteQueryProc, kPaletteQuerySubclassId);
+    }
+    return DefSubclassProc(hwnd, msg, wp, lp);
+}
+
+static void PaletteAttachQueryEdit(CommandPaletteWnd* wnd) {
+    if (!wnd || wnd->queryEdit) {
+        return;
+    }
+    HWND parent = wnd->tw ? ToolWindowHwnd(wnd->tw) : nullptr;
+    if (!parent) {
+        return;
+    }
+    HWND edit = CreateWindowExW(0, L"EDIT", L"", WS_CHILD | WS_VISIBLE | ES_AUTOHSCROLL, 0, 0, 1, 1, parent, nullptr,
+                                GetModuleHandleW(nullptr), nullptr);
+    if (!edit) {
+        return;
+    }
+    SetWindowSubclass(edit, PaletteQueryProc, kPaletteQuerySubclassId, (DWORD_PTR)wnd->win);
+    wnd->queryEdit = edit;
+}
+
+static void PaletteFocusQueryEdit(CommandPaletteWnd* wnd) {
+    if (!wnd || !wnd->queryEdit || GetFocus() == wnd->queryEdit) {
+        return;
+    }
+    SetFocus(wnd->queryEdit);
+}
+#endif
+
 static gp::El* PaletteToolBuild(MainWindow* win, gp::Ctx* cx) {
     CommandPaletteWnd* wnd = gCommandPaletteWnd;
     if (!wnd || !wnd->visible || wnd->win != win || !wnd->tw || ToolWindowGpui(wnd->tw) != cx->win) {
@@ -2441,7 +2503,12 @@ static gp::El* PaletteToolBuild(MainWindow* win, gp::Ctx* cx) {
     }
     wnd->wasActive = active;
     gp::WinSize ws = gp::WindowSize(cx->win);
-    return PaletteCard(wnd, cx, RectF(0, 0, ws.dipW, ws.dipH));
+    gp::El* card = PaletteCard(wnd, cx, RectF(0, 0, ws.dipW, ws.dipH));
+#if OS_WIN
+    PaletteAttachQueryEdit(wnd);
+    PaletteFocusQueryEdit(wnd);
+#endif
+    return card;
 }
 
 static bool PaletteToolOnKey(MainWindow* win, gp::Ctx*, const gp::KeyEvent* ev) {
