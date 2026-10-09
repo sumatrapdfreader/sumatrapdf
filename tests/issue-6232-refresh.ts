@@ -16,7 +16,8 @@ async function navState(client: ControlClient, action = "", idx = -1): Promise<N
   const res = await client.request(ControlCommand.TestNavFiles, [action, idx]);
   const raw = String(res[1] ?? "").trim();
   lastNavRaw = raw;
-  const m = /^OK scan=(\d) sel=(-?\d+) items=(\d+) back=\d fwd=\d dir="[^"]*" name="([^"]*)"$/.exec(raw);
+  // ng appends keyboard, dx and filter fields after orig's name
+  const m = /^OK scan=(\d) sel=(-?\d+) items=(\d+) back=\d fwd=\d dir="[^"]*" name="([^"]*)"/.exec(raw);
   if (res[0] !== 0 || !m) {
     throw new Error(`navigate files: could not parse state: ${raw}`);
   }
