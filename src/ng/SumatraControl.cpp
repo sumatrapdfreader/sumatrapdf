@@ -1761,6 +1761,13 @@ static void ExecuteControlRequest(ControlRequest* req) {
                 AppendTestResult(req, 2, StrL("NOTREADY no-window"));
                 break;
             }
+            Str action = StringArg(req, 0);
+            if (str::Eq(action, StrL("set")) || str::Eq(action, StrL("caret")) || str::Eq(action, StrL("enter"))) {
+                int exitCode = 0;
+                Str res = FindEditTestTemp(win, action, StringArg(req, 1), &exitCode);
+                AppendTestResult(req, exitCode, res);
+                break;
+            }
             AppendTestResult(req, 0, FindStateResultTemp(win));
             break;
         }

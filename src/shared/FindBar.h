@@ -67,6 +67,9 @@ void FindEditSetText(MainWindow* win, Str s);
 bool FindEditIsModified(MainWindow* win);
 void FindEditSetModified(MainWindow* win, bool modified);
 bool IsFindEditFocused(MainWindow* win);
+#if defined(SUMATRA_NG)
+TempStr FindEditTestTemp(MainWindow* win, Str action, Str arg, int* exitCodeOut = nullptr);
+#endif
 
 #if OS_WIN
 FindBarWnd* CreateFindBar(MainWindow* win);

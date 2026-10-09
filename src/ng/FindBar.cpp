@@ -125,6 +125,58 @@ bool IsFindEditFocused(MainWindow* win) {
     return gp::FocusHandleIsFocused(host, win->findEdit->focus);
 }
 
+// The find box is a gpui input. Tests set the text, place the caret, and
+// press Enter through the same path as the bar.
+TempStr FindEditTestTemp(MainWindow* win, Str action, Str arg, int* exitCodeOut) {
+    auto fail = [&](Str msg) -> TempStr {
+        if (exitCodeOut) {
+            *exitCodeOut = 1;
+        }
+        return msg;
+    };
+    if (!win) {
+        return fail(StrL("NOTREADY no-window"));
+    }
+    if (str::Eq(action, StrL("set"))) {
+        if (!IsFindUIVisible(win)) {
+            ShowFindBar(win);
+        }
+        FindEditSetText(win, arg);
+    } else if (str::Eq(action, StrL("caret"))) {
+        gp::InputState* edit = win->findEdit;
+        if (!edit) {
+            return fail(StrL("no find edit"));
+        }
+        int n = ParseInt(arg);
+        int nChars = FindEditTextLen(win);
+        if (n < 0) {
+            n = 0;
+        }
+        if (n > nChars) {
+            n = nChars;
+        }
+        edit->selectedRange = gp::Selection{n, n};
+        edit->selectionReversed = false;
+    } else if (str::Eq(action, StrL("enter"))) {
+        // same as FindBarView::OnInput on PressEnter
+        if (!FindFlushPendingSearch(win)) {
+            FindNext(win);
+        }
+    } else {
+        return fail(StrL("bad action"));
+    }
+
+    gp::InputState* edit = win->findEdit;
+    int caret = edit ? gp::InputCursor(edit) : -1;
+    int selStart = edit ? edit->selectedRange.start : -1;
+    int selEnd = edit ? edit->selectedRange.end : -1;
+    if (exitCodeOut) {
+        *exitCodeOut = 0;
+    }
+    return fmt("text='%s' caret=%d sel=%d,%d visible=%d", FindEditTextTemp(win), caret, selStart, selEnd,
+               IsFindUIVisible(win) ? 1 : 0);
+}
+
 // focus the find edit and select all text (Ctrl+F when find UI is already open)
 void FocusFindEditSelectAll(MainWindow* win) {
     if (!win || !win->findBar) {
