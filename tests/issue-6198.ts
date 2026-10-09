@@ -6,7 +6,7 @@
 import { existsSync, mkdirSync, readFileSync, rmSync, statSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 import { ControlClient, ControlCommand } from "./control.ts";
-import { assemblePdf, cmdId, runStandalone, tmpPath } from "./util.ts";
+import { assemblePdf, cmdId, runStandalone, tmpPath, USE_NG } from "./util.ts";
 import { findTopWindow, sleep } from "./winapi.ts";
 import { clickAt, findCanvas, killAndWait, launchControlled, sendCommand } from "./win-automation.ts";
 
@@ -59,6 +59,15 @@ async function clickChip(pid: number, line: string, name: string): Promise<void>
   const chip = parseRect(new RegExp(`[=;]${name}:(-?\\d+),(-?\\d+),(\\d+),(\\d+)`).exec(line));
   if (chip.dx === 0) {
     throw new Error(`issue-6198: no "${name}" chip in ${line}`);
+  }
+  // ng draws the property row in the frame. Chip rects are frame client pixels.
+  if (USE_NG) {
+    const frame = findTopWindow(pid, "GpuiSystemMonitor");
+    if (!frame) {
+      throw new Error("issue-6198: frame window not found");
+    }
+    await clickAt(frame, chip.x + Math.floor(chip.dx / 2), chip.y + Math.floor(chip.dy / 2));
+    return;
   }
   const tbHwnd = findTopWindow(pid, "SumatraAnnotEditToolbar");
   if (!tbHwnd) {
