@@ -821,7 +821,24 @@ export function isZoomed(hwnd: number): boolean {
   return user32.symbols.IsZoomed(hwnd);
 }
 
+function macWarpCursor(x: number, y: number): boolean {
+  try {
+    const cg = dlopen("/System/Library/Frameworks/CoreGraphics.framework/CoreGraphics", {
+      CGWarpMouseCursorPosition: {
+        args: [{ x: FFIType.f64, y: FFIType.f64 }],
+        returns: FFIType.i32,
+      },
+    });
+    return cg.symbols.CGWarpMouseCursorPosition({ x, y }) === 0;
+  } catch {
+    return false;
+  }
+}
+
 export function setCursorPos(x: number, y: number): boolean {
+  if (IS_MAC) {
+    return macWarpCursor(x, y);
+  }
   return user32.symbols.SetCursorPos(x, y);
 }
 
