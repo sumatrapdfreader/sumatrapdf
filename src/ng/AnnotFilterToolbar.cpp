@@ -1421,9 +1421,13 @@ TempStr AnnotFilterToolbarStateTemp(MainWindow* win) {
     int nAll = f ? len(f->annotations) : 0;
     int nVisible = f ? len(f->visibleAnnots) : 0;
     int sel = f ? f->sel : -1;
+    Rect wr;
+    if (visible && f->tw) {
+        wr = ToolWindowRect(f->tw);
+    }
     str::Builder out;
-    out.Append(fmt("annotFilter floatVisible=%d nAll=%d nVisible=%d sel=%d filter=%s\n", visible ? 1 : 0, nAll,
-                   nVisible, sel, f ? f->filterText : Str{}));
+    out.Append(fmt("annotFilter floatVisible=%d floatRect=%d,%d,%d,%d nAll=%d nVisible=%d sel=%d filter=%s\n",
+                   visible ? 1 : 0, wr.x, wr.y, wr.dx, wr.dy, nAll, nVisible, sel, f ? f->filterText : Str{}));
     if (!f) {
         return ToStrTemp(out);
     }

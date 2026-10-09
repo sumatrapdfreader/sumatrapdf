@@ -6,8 +6,16 @@
 import { mkdirSync, rmSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 import { ControlClient, ControlCommand } from "./control.ts";
-import { assemblePdf, cmdId, runStandalone, SLOW_BUILD_FACTOR, tmpPath } from "./util.ts";
-import { findTopWindow, getWindowPid, getWindowRect, getWorkArea, sleep } from "./winapi.ts";
+import { assemblePdf, cmdId, runStandalone, SLOW_BUILD_FACTOR, tmpPath, USE_NG } from "./util.ts";
+import {
+  enumWindows,
+  findTopWindow,
+  getWindowPid,
+  getWindowRect,
+  getWindowText,
+  getWorkArea,
+  sleep,
+} from "./winapi.ts";
 import { killAndWait, launchControlled, sendCommandSync } from "./win-automation.ts";
 
 const FLOAT_CLASS = "SUMATRA_ANNOT_FILTER_WND";
@@ -107,7 +115,20 @@ export async function testit(): Promise<void> {
     }
 
     const pid = getWindowPid(frame);
-    if (!findTopWindow(pid, FLOAT_CLASS)) {
+    // ng's tool windows use gpui's class. The list's title is Annotations.
+    let listHwnd = 0;
+    if (USE_NG) {
+      enumWindows((hwnd) => {
+        if (getWindowPid(hwnd) === pid && getWindowText(hwnd) === "Annotations") {
+          listHwnd = hwnd;
+          return false;
+        }
+        return true;
+      });
+    } else {
+      listHwnd = findTopWindow(pid, FLOAT_CLASS);
+    }
+    if (!listHwnd) {
       throw new Error("annot-list-placement: floating window hwnd not found");
     }
   } finally {
