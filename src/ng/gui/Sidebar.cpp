@@ -976,6 +976,11 @@ static TempStr TocProbeRows(MainWindow* win, TocItem* root) {
 
 // count / select / expand the bookmarks the native tree drives with TVM_*
 TempStr SidebarTestToc(MainWindow* win, Str op, int arg) {
+    // the bookmarks tree has no window of its own; tests focus it from here
+    if (str::Eq(op, StrL("focus"))) {
+        SidebarFocusPanel(win, true);
+        return SidebarPanelHasFocus(win, true) ? StrL("ok") : StrL("ERR no-focus");
+    }
     TocTree* tree = win ? CurrentTocTree(win) : nullptr;
     TocItem* root = tree && tree->root ? tree->root->child : nullptr;
     if (!root) {

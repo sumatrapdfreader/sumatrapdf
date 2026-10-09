@@ -8,9 +8,9 @@
 // Run: bun tests/issue-1841.ts [--no-build]   (or via tests/run-almost-all.ts)
 
 import { writeFileSync } from "node:fs";
-import { ControlClient } from "./control.ts";
+import { ControlClient, ControlCommand } from "./control.ts";
 import { makeBookmarkedPdf } from "./toc-tree-sent-click.ts";
-import { pollUntil, runStandalone, tmpPath } from "./util.ts";
+import { pollUntil, runStandalone, tmpPath, USE_NG } from "./util.ts";
 import { killAndWait, launchControlled } from "./win-automation.ts";
 import { findVisibleChildWindow, postMessage, WM_KEYDOWN } from "./winapi.ts";
 
@@ -18,7 +18,11 @@ const VK_PRIOR = 0x21;
 const VK_NEXT = 0x22;
 
 async function pageAfterKey(client: ControlClient, tree: number, vk: number, want: number): Promise<number> {
-  postMessage(tree, WM_KEYDOWN, vk, 0);
+  if (USE_NG) {
+    await client.request(ControlCommand.TestInput, ["key", vk, 0]);
+  } else {
+    postMessage(tree, WM_KEYDOWN, vk, 0);
+  }
   return pollUntil(
     async () => (await client.chapterInfo()).page,
     (page) => page === want,
@@ -35,9 +39,18 @@ export async function testit(): Promise<void> {
   try {
     await client.waitForRenderIdle();
     await client.setNotificationsEnabled(false);
-    const tree = findVisibleChildWindow(frame, "SysTreeView32");
-    if (!tree) {
-      throw new Error("issue-1841: bookmarks tree not found");
+    let tree = 0;
+    if (USE_NG) {
+      // the tree is drawn in the frame; focus it, then the key goes to the frame
+      const focused = await client.request(ControlCommand.TestUiState, ["focus"]);
+      if (String(focused[1] ?? "") !== "ok") {
+        throw new Error(`issue-1841: bookmarks tree not focused (${String(focused[1] ?? "")})`);
+      }
+    } else {
+      tree = findVisibleChildWindow(frame, "SysTreeView32");
+      if (!tree) {
+        throw new Error("issue-1841: bookmarks tree not found");
+      }
     }
     const down = await pageAfterKey(client, tree, VK_NEXT, 2);
     if (down !== 2) {
