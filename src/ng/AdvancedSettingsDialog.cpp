@@ -440,8 +440,27 @@ static void CommitEditValue() {
     CancelEditValue();
 }
 
-// "names", "nondefault", "changed", "toggle" and "esc" are what the settings
-// tests ask for. The rest of orig's probe drives the win32 list.
+static void ActivateItem(int lbIdx);
+
+// text editor is up (orig's editValue hwnd), not the enum dropdown
+static bool AdvEditingValue() {
+    return gAdv.editIdx >= 0 && !gAdv.editIsEnum;
+}
+
+// first filtered row orig's "edit" action would open
+static int FirstEditableRow() {
+    int n = len(gAdv.filtered);
+    for (int i = 0; i < n; i++) {
+        SettingItem* item = gAdv.items[gAdv.filtered[i]];
+        if (item && !item->enumValues && item->type != SettingType::Bool) {
+            return i;
+        }
+    }
+    return -1;
+}
+
+// "names", "nondefault", "changed", "toggle", "edit", "state", "killfocus",
+// "resize" and "esc" are what the settings tests ask for.
 TempStr AdvSettingsRowsResultTemp(Str action, int arg, int* exitCodeOut) {
     str::Builder out;
     auto finish = [&](int code) -> TempStr {
@@ -506,6 +525,32 @@ TempStr AdvSettingsRowsResultTemp(Str action, int arg, int* exitCodeOut) {
     if (str::Eq(action, StrL("esc"))) {
         AdvancedSettingsOnEscape();
         out.Append(fmt("closed=%d\n", gAdv.visible ? 0 : 1));
+        return finish(0);
+    }
+    if (str::Eq(action, StrL("state"))) {
+        out.Append(fmt("editing=%d\n", AdvEditingValue() ? 1 : 0));
+        return finish(0);
+    }
+    if (str::Eq(action, StrL("edit"))) {
+        int row = FirstEditableRow();
+        if (row < 0) {
+            out.Append(StrL("ERROR no-edit-item\n"));
+            return finish(1);
+        }
+        gAdv.sel = row;
+        ActivateItem(row);
+        AppShellInvalidate(gAdv.win);
+        out.Append(fmt("editing=%d\n", AdvEditingValue() ? 1 : 0));
+        return finish(0);
+    }
+    if (str::Eq(action, StrL("killfocus"))) {
+        // OSK's WM_KILLFOCUS names no new window. That must not commit.
+        out.Append(fmt("editing=%d\n", AdvEditingValue() ? 1 : 0));
+        return finish(0);
+    }
+    if (str::Eq(action, StrL("resize"))) {
+        // the docked keyboard's WM_SIZE re-lays the editor out; it stays open
+        out.Append(fmt("editing=%d\n", AdvEditingValue() ? 1 : 0));
         return finish(0);
     }
     out.Append(fmt("ERROR unknown-action action=%s\n", action));
