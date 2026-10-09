@@ -31,16 +31,18 @@ const VK_NEXT = 0x22;
 const SRC_PDF = join(ROOT, "ext", "a-zlib", "zlib.3.pdf");
 const TERM = "the";
 
-// The Find window has no class of its own; it's an owned popup with the
-// default window class, so pick it out by title.
+// Orig's Find window is an owned popup with the default class. Ng's is the
+// gpui tool window of the same title. Either way, pick it out by title.
 function findFindWindow(pid: number): number {
   let found = 0;
   enumWindows((hwnd) => {
     if (getWindowPid(hwnd) !== pid || !isWindowVisible(hwnd)) {
       return true;
     }
+    const cls = getClassName(hwnd);
+    const findClass = cls === "SumatraWgDefaultWinClass" || cls === "GpuiSystemMonitor";
     const r = getWindowRect(hwnd);
-    if (getClassName(hwnd) === "SumatraWgDefaultWinClass" && getWindowText(hwnd) === "Find" && r.bottom - r.top > 120) {
+    if (findClass && getWindowText(hwnd) === "Find" && r.bottom - r.top > 120) {
       found = hwnd;
       return false;
     }

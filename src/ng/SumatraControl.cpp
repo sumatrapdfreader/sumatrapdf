@@ -1119,6 +1119,19 @@ static void ExecuteControlRequest(ControlRequest* req) {
             break;
         }
 
+        case ControlCmd::TestFindResultsOrder: {
+            Str term = StringArg(req, 0);
+            i32 startPage = 0;
+            if (len(term) == 0 || !IntArg(req, 1, startPage)) {
+                AppendError(req, StrL("TestFindResultsOrder expects string term, int startPage"));
+                break;
+            }
+            int exitCode = 0;
+            Str res = FindResultsOrderResultTemp(term, startPage, &exitCode);
+            AppendTestResult(req, exitCode, res);
+            break;
+        }
+
         case ControlCmd::TestFindWindowContents: {
             i32 maxRows = 0;
             IntArg(req, 0, maxRows);

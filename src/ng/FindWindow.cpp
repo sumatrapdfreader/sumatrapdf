@@ -509,9 +509,34 @@ static gp::El* FindToolBuild(MainWindow* win, gp::Ctx* cx) {
     return FindWindowContentEl(win, cx, true);
 }
 
-// orig's FindWindowWnd::OnKeyDown, the keys taken before the search edit
+static bool PagesEditFocused(MainWindow* win) {
+    gp::Window* host = FindWindowHostGpui(win);
+    if (!win || !win->findPagesEdit || !host) {
+        return false;
+    }
+    return gp::FocusHandleIsFocused(host, win->findPagesEdit->focus);
+}
+
+// Keys for this window. PageUp/PageDown page the results list when neither
+// edit is focused. The frame only borrows those keys from the search edit.
 static bool FindToolOnCaptureKey(MainWindow* win, gp::Ctx*, const gp::KeyEvent* ev) {
-    return FindWindowOnKeyDown(win, ev->vk, ev->ctrl, ev->shift, ev->alt);
+    if (FindWindowOnKeyDown(win, ev->vk, ev->ctrl, ev->shift, ev->alt)) {
+        return true;
+    }
+    if (ev->ctrl || ev->alt || IsFindEditFocused(win) || PagesEditFocused(win)) {
+        return false;
+    }
+    switch (ev->vk) {
+        case VK_UP:
+        case VK_DOWN:
+        case VK_NEXT:
+        case VK_PRIOR:
+        case VK_HOME:
+        case VK_END:
+            return MoveResultSelection(win, ev->vk);
+        default:
+            return false;
+    }
 }
 
 // and the ones the edit leaves: Esc hides, Ctrl + F selects the term
@@ -949,6 +974,63 @@ static gp::El* FindWindowContentEl(MainWindow* win, gp::Ctx* cx, bool ownWindow)
         }
     }
     return card;
+}
+
+// term the pending / finished FindResultsOrderResultTemp scan was started for
+static Str gFindOrderTerm;
+
+// Test hook: run a search from startPage and report the results list order.
+// The scan is async, so the first call starts it and reports NOTREADY.
+TempStr FindResultsOrderResultTemp(Str term, int startPage, int* exitCodeOut) {
+    auto finish = [&](int code, Str msg) -> TempStr {
+        if (exitCodeOut) {
+            *exitCodeOut = code;
+        }
+        return str::JoinTemp(msg, StrL("\n"));
+    };
+
+    if (str::IsEmptyOrWhiteSpace(term)) {
+        return finish(1, StrL("ERROR missing term"));
+    }
+    MainWindow* win = len(gWindows) > 0 ? gWindows[0] : nullptr;
+    if (!win || !win->AsFixed()) {
+        return finish(1, StrL("NOTREADY no-doc"));
+    }
+    if (!str::Eq(gFindOrderTerm, term)) {
+        str::ReplaceWithCopy(&gFindOrderTerm, term);
+        gSettings->searchUIFloating = true;
+        if (startPage > 0 && win->ctrl) {
+            win->ctrl->GoToPage(startPage, false);
+        }
+        ShowFindWindow(win);
+        FindEditSetText(win, term);
+        OnFindBarTextChanged(win);
+        FindFlushPendingSearch(win);
+        return finish(1, StrL("NOTREADY scan-started"));
+    }
+    if (!win->findCountValid) {
+        return finish(1, StrL("NOTREADY scanning"));
+    }
+    FindWindowWnd* fw = win->findWindow;
+    if (!fw || !fw->visible) {
+        return finish(1, StrL("ERROR no-find-window"));
+    }
+
+    int n = len(win->findMatches);
+    for (int i = 0; i < n; i++) {
+        if (str::ContainsChar(win->findMatches[i].snippet, '\0')) {
+            return finish(1, fmt("ERROR embedded-nul snippet=%d", i));
+        }
+    }
+    str::Builder out;
+    out.Append(fmt("OK n=%d sel=%d pages=", n, fw->sel));
+    for (int i = 0; i < n; i++) {
+        if (i > 0) {
+            out.AppendChar(',');
+        }
+        out.Append(fmt("%d", win->findMatches[i].startPage));
+    }
+    return finish(0, ToStrTemp(out));
 }
 
 // ng: what the scripted tests read back (orig's TestFindWindowContents)
