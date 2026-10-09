@@ -326,6 +326,77 @@ void ToggleFloatingFindUI(MainWindow* win) {
     }
 }
 
+// rebuild the bar's gpui view (theme change) without dropping the hidden term
+void RecreateFindBar(MainWindow* win) {
+    if (!win || !win->findBar) {
+        return;
+    }
+    AbortFinding(win, true);
+    bool wasVisible = win->findBar->visible;
+    delete win->findBar->ui;
+    win->findBar->ui = nullptr;
+    if (wasVisible) {
+        ShowFindBar(win);
+    }
+}
+
+// tests/find-ui-state.ts: every open find UI follows SearchUIFloating
+TempStr FindUiStateResultTemp(Str action, int* exitCodeOut) {
+    str::Builder out;
+    auto finish = [&](int code) -> Str {
+        if (exitCodeOut) {
+            *exitCodeOut = code;
+        }
+        return ToStrTemp(out);
+    };
+    if (len(gWindows) == 0) {
+        out.Append(StrL("ERROR no-window\n"));
+        return finish(1);
+    }
+    if (str::Eq(action, StrL("show-all"))) {
+        for (MainWindow* w : gWindows) {
+            ShowFindBar(w);
+        }
+    } else if (str::Eq(action, StrL("toggle-first"))) {
+        ToggleFloatingFindUI(gWindows[0]);
+    } else if (str::Eq(action, StrL("set-first-text"))) {
+        FindEditSetText(gWindows[0], StrL("stale-term"));
+    } else if (str::Eq(action, StrL("clear-first"))) {
+        FindEditSetText(gWindows[0], StrL(""));
+    } else if (str::Eq(action, StrL("hide-first"))) {
+        HideFindBar(gWindows[0]);
+    } else if (str::Eq(action, StrL("theme-recreate-first"))) {
+        RecreateFindBar(gWindows[0]);
+    } else if (!str::Eq(action, StrL("state"))) {
+        out.Append(StrL("ERROR invalid action\n"));
+        return finish(1);
+    }
+    int docs = 0;
+    int compact = 0;
+    int floating = 0;
+    for (MainWindow* w : gWindows) {
+        docs += w->IsDocLoaded() ? 1 : 0;
+        compact += IsFindBarVisible(w) ? 1 : 0;
+        floating += IsFindWindowVisible(w) ? 1 : 0;
+    }
+    MainWindow* first = gWindows[0];
+    int firstTextLen = first->findEdit ? FindEditTextLen(first) : -1;
+    int matches = len(first->findMatches);
+    int hitPage = 0;
+    DisplayModel* dm = first->AsFixed();
+    if (dm && dm->textSearch && len(dm->textSearch->result) > 0) {
+        hitPage = dm->textSearch->result[0].pageNo;
+    }
+    bool busy = first->findThread || first->findCountThread || first->findDebouncePending;
+    int page = first->ctrl ? first->ctrl->CurrentPageNo() : 0;
+    out.Append(
+        fmt("OK windows=%d docs=%d pref=%d compact=%d floating=%d firstTextLen=%d matches=%d hitPage=%d "
+            "busy=%d page=%d\n",
+            len(gWindows), docs, gSettings->searchUIFloating ? 1 : 0, compact, floating, firstTextLen, matches, hitPage,
+            busy ? 1 : 0, page));
+    return finish(0);
+}
+
 // the current document may not support find (e.g. switched to an image-only
 // doc); don't leave an orphaned, inert bar floating
 void FindBarReposition(MainWindow* win) {

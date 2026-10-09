@@ -2724,6 +2724,12 @@ static void ExecuteControlRequest(ControlRequest* req) {
                 AppendTestResult(req, exitCode, res);
                 break;
             }
+            if (len(action) > 0) {
+                int exitCode = 0;
+                Str res = FindUiStateResultTemp(action, &exitCode);
+                AppendTestResult(req, exitCode, res);
+                break;
+            }
             AppendTestResult(req, 0, FindStateResultTemp(win));
             break;
         }

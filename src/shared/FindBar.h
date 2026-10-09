@@ -57,6 +57,8 @@ void FocusFindEditSelectAll(MainWindow* win);
 gpui::InputState* EnsureFindEdit(MainWindow* win);
 // switch between the compact bar and the floating window (SearchUIFloating)
 void ToggleFloatingFindUI(MainWindow* win);
+void RecreateFindBar(MainWindow* win);
+TempStr FindUiStateResultTemp(Str action, int* exitCodeOut = nullptr);
 
 // ng: orig talks to the find box through the win32 combo box helpers
 // (CbGetTextLen, CbEditSetModified, ...); these are the same operations on the
@@ -73,7 +75,6 @@ TempStr FindEditTestTemp(MainWindow* win, Str action, Str arg, int* exitCodeOut 
 
 #if OS_WIN
 FindBarWnd* CreateFindBar(MainWindow* win);
-void RecreateFindBar(MainWindow* win);
 void FindBarUpdateDpi(MainWindow* win);
 int FindBarFontHeight(MainWindow* win);
 int FindBarWindowHeight(MainWindow* win);
@@ -82,5 +83,4 @@ void StartPickedFindTerm(MainWindow* win, Str term);
 void FindBarSetMatchCaseChecked(MainWindow* win, bool checked);
 void FindBarSetMatchWholeWordChecked(MainWindow* win, bool checked);
 void FindBarSyncHistory(MainWindow* win);
-TempStr FindUiStateResultTemp(Str action, int* exitCodeOut = nullptr);
 #endif
