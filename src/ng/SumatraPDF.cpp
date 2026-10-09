@@ -1091,9 +1091,37 @@ void UpdateTabFileDisplayStateForTab(WindowTab* tab) {
 // On Windows the frame's own rectangle is read from its HWND, as orig does;
 // elsewhere x/y keep whatever the settings file had and only the size is
 // refreshed.
+static bool WindowHasDocumentLoading(MainWindow* win) {
+    for (WindowTab* tab : win->Tabs()) {
+        if (tab->loadState == WindowTab::LoadState::Loading || tab->loadState == WindowTab::LoadState::LoadedPending) {
+            return true;
+        }
+    }
+    return false;
+}
+
 void RememberDefaultWindowPosition(MainWindow* win) {
     if (!win) {
         return;
+    }
+    // A slow open shows the restored frame before maximize. Do not write that
+    // over a maximized preference. A home window with nothing loading still
+    // records normal (fixes #5529).
+    if (!win->IsDocLoaded() && WindowHasDocumentLoading(win)) {
+        int intended = gSettings->windowState;
+        bool zoomed = win->isMaximized;
+#if OS_WIN
+        HWND hwnd = AppShellNativeHwnd(win);
+        if (hwnd && IsZoomed(hwnd)) {
+            zoomed = true;
+        }
+#endif
+        if (intended == WIN_STATE_MAXIMIZED && !zoomed) {
+            return;
+        }
+        if (intended == WIN_STATE_FULLSCREEN && !win->isFullScreen) {
+            return;
+        }
     }
     if (win->InPresentation()) {
         gSettings->windowState = win->windowStateBeforePresentation;
@@ -1127,6 +1155,100 @@ void RememberDefaultWindowPosition(MainWindow* win) {
         gSettings->windowPos.dy = win->frameRc.dy;
     }
 #endif
+}
+
+TempStr WindowStateDuringLoadResultTemp(int* exitCodeOut) {
+    str::Builder out;
+    auto fail = [&](Str msg, int code = 1) -> TempStr {
+        out.Append(msg);
+        out.AppendChar('\n');
+        if (exitCodeOut) {
+            *exitCodeOut = code;
+        }
+        return ToStrTemp(out);
+    };
+
+    if (len(gWindows) == 0) {
+        return fail(StrL("NOTREADY no-window"), 2);
+    }
+    MainWindow* win = gWindows[0];
+    if (!win) {
+        return fail(StrL("NOTREADY window-not-visible"), 2);
+    }
+    if (win->IsDocLoaded()) {
+        return fail(StrL("NOTREADY doc-already-loaded"), 2);
+    }
+
+    int prevState = gSettings->windowState;
+    win->isMaximized = false;
+    if (win->gpuiWin) {
+        win->gpuiWin->maximized = false;
+    }
+#if OS_WIN
+    HWND hwnd = AppShellNativeHwnd(win);
+    if (hwnd && IsZoomed(hwnd)) {
+        ShowWindow(hwnd, SW_RESTORE);
+    }
+#endif
+
+    gSettings->windowState = WIN_STATE_MAXIMIZED;
+    WindowTab* tab = win->CurrentTab();
+    if (!tab && win->TabCount() > 0) {
+        tab = win->GetTab(0);
+    }
+    bool createdTempTab = false;
+    WindowTab::LoadState prevLoad = WindowTab::LoadState::None;
+    if (!tab) {
+        tab = new WindowTab(win);
+        tab->SetFilePath(StrL("C:\\__sumatra_issue_5529_loading__.pdf"));
+        tab->loadState = WindowTab::LoadState::Loading;
+        AddTabToWindow(win, tab);
+        createdTempTab = true;
+    } else {
+        prevLoad = tab->loadState;
+        tab->loadState = WindowTab::LoadState::Loading;
+    }
+    RememberDefaultWindowPosition(win);
+    int observedLoading = gSettings->windowState;
+    if (createdTempTab) {
+        RemoveTab(tab);
+        delete tab;
+        tab = nullptr;
+    } else if (tab) {
+        tab->loadState = prevLoad;
+    }
+
+    gSettings->windowState = WIN_STATE_MAXIMIZED;
+    RememberDefaultWindowPosition(win);
+    int observedEmpty = gSettings->windowState;
+    gSettings->windowState = prevState;
+
+    bool okLoading = observedLoading == WIN_STATE_MAXIMIZED;
+    bool stillZoomed = win->isMaximized;
+#if OS_WIN
+    HWND frame = AppShellNativeHwnd(win);
+    if (frame && IsZoomed(frame)) {
+        stillZoomed = true;
+    }
+#endif
+    bool okEmpty = stillZoomed || observedEmpty == WIN_STATE_NORMAL;
+    if (okLoading && okEmpty) {
+        out.Append(StrL("OK loading preserved maximized; empty records normal\n"));
+        if (exitCodeOut) {
+            *exitCodeOut = 0;
+        }
+        return ToStrTemp(out);
+    }
+    if (!okLoading) {
+        out.Append(fmt("FAIL loading windowState=%d expected=%d\n", observedLoading, (int)WIN_STATE_MAXIMIZED));
+    }
+    if (!okEmpty) {
+        out.Append(fmt("FAIL empty windowState=%d expected=%d\n", observedEmpty, (int)WIN_STATE_NORMAL));
+    }
+    if (exitCodeOut) {
+        *exitCodeOut = 1;
+    }
+    return ToStrTemp(out);
 }
 
 // --- window title and menu --------------------------------------------------

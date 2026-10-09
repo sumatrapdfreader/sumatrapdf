@@ -69,6 +69,7 @@ DocControllerCallback* CreateControllerCallbackHandler(MainWindow* win);
 void DeleteControllerAsync(DocController* ctrl);
 void UpdateTabFileDisplayStateForTab(WindowTab* tab);
 void RememberDefaultWindowPosition(MainWindow* win);
+TempStr WindowStateDuringLoadResultTemp(int* exitCodeOut = nullptr);
 
 // orig's sidebar layout limits (SumatraPDF.cpp)
 constexpr int kSidebarMinDx = 150;
