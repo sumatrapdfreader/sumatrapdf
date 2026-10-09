@@ -81,6 +81,7 @@
 #include "DocumentProperties.h"
 #include "NavFilesInFolder.h"
 #include "EngineAll.h"
+#include <mupdf/pdf.h>
 #include "base/ByteReaderWriter.h"
 #include "PdfCreator.h"
 #include "ImageSaveCropResize.h"
@@ -479,6 +480,116 @@ static TempStr PageBoxesResultTemp(int pageNo, int* exitCodeOut) {
     return finish(ToStrTemp(line), 0);
 }
 
+static TempStr ResolveUnsavedChangesResultTemp(Str action, Str path, int* exitCodeOut) {
+    str::Builder out;
+    auto fail = [&](Str msg, int code = 1) -> TempStr {
+        out.Append(msg);
+        out.AppendChar('\n');
+        if (exitCodeOut) {
+            *exitCodeOut = code;
+        }
+        return ToStrTemp(out);
+    };
+
+    if (len(gWindows) == 0) {
+        return fail(StrL("NOTREADY no-window"), 2);
+    }
+    if (str::Eq(action, StrL("save-as"))) {
+        WindowTab* tab = gWindows[0]->CurrentTab();
+        EngineBase* engine = tab ? tab->GetEngine() : nullptr;
+        if (len(path) == 0 || !tab || !engine) {
+            return fail(StrL("ERROR save-as needs a path and a document"));
+        }
+        if (EngineHasUnsavedAnnotations(engine) && !EngineMupdfSaveUpdated(engine, path, {})) {
+            return fail(fmt("ERROR save-as '%s' failed", path));
+        }
+        if (exitCodeOut) {
+            *exitCodeOut = 0;
+        }
+        out.Append(StrL("OK tabs=1\n"));
+        return ToStrTemp(out);
+    }
+
+    bool discard = str::Eq(action, StrL("discard"));
+    bool save = str::Eq(action, StrL("save"));
+    if (!discard && !save) {
+        return fail(fmt("ERROR unknown action '%s'", action));
+    }
+    int nTabs = 0;
+    for (MainWindow* win : gWindows) {
+        for (WindowTab* tab : win->Tabs()) {
+            EngineBase* engine = tab ? tab->GetEngine() : nullptr;
+            if (engine && EngineHasUnsavedAnnotations(engine)) {
+                if (discard) {
+                    tab->askedToSaveAnnotations = true;
+                } else {
+                    tab->ignoreNextAutoReload = true;
+                    if (!EngineMupdfSaveUpdated(engine, {}, {})) {
+                        return fail(fmt("ERROR save of '%s' failed", tab->filePath));
+                    }
+                }
+            }
+            nTabs++;
+        }
+    }
+    if (exitCodeOut) {
+        *exitCodeOut = 0;
+    }
+    out.Append(fmt("OK tabs=%d\n", nTabs));
+    return ToStrTemp(out);
+}
+
+static TempStr ToggleFormButtonResultTemp(int pageNo, int idx, int* exitCodeOut) {
+    str::Builder out;
+    auto fail = [&](Str msg, int code = 1) -> TempStr {
+        out.Append(msg);
+        out.AppendChar('\n');
+        if (exitCodeOut) {
+            *exitCodeOut = code;
+        }
+        return ToStrTemp(out);
+    };
+
+    if (len(gWindows) == 0) {
+        return fail(StrL("NOTREADY no-window"), 2);
+    }
+    MainWindow* win = gWindows[0];
+    DisplayModel* dm = win ? win->AsFixed() : nullptr;
+    if (!dm) {
+        return fail(StrL("NOTREADY no-doc"), 2);
+    }
+    if (!dm->ValidPageNo(pageNo)) {
+        return fail(fmt("ERROR invalid-page pageNo=%d pageCount=%d", pageNo, dm->PageCount()));
+    }
+
+    Vec<Annotation*> widgets;
+    EngineMupdfGetPageWidgets(dm->GetEngine(), pageNo, widgets);
+    Annotation* button = nullptr;
+    int nButtons = 0;
+    for (Annotation* w : widgets) {
+        int wt = GetWidgetType(w);
+        if (wt != PDF_WIDGET_TYPE_CHECKBOX && wt != PDF_WIDGET_TYPE_RADIOBUTTON) {
+            continue;
+        }
+        if (nButtons == idx) {
+            button = w;
+        }
+        nButtons++;
+    }
+    if (!button) {
+        return fail(fmt("ERROR no-button idx=%d buttons=%d", idx, nButtons));
+    }
+
+    TempStr before = str::DupTemp(GetWidgetValue(button));
+    bool toggled = ToggleFormButton(button);
+    TempStr after = str::DupTemp(GetWidgetValue(button));
+    if (exitCodeOut) {
+        *exitCodeOut = 0;
+    }
+    out.Append(fmt("OK toggled=%d before='%s' after='%s' buttons=%d\n", (int)toggled, before, after, nButtons));
+    return ToStrTemp(out);
+}
+
 static TempStr PageCommentsResultTemp(Str path, int pageNo, int* exitCodeOut) {
     str::Builder out;
     EngineBase* engine = CreateEngineFromFile(path, nullptr, false);
@@ -767,6 +878,8 @@ enum class ControlCmd : u16 {
     TestSeedTextSelection = 99,
     TestTtsEngineCrash = 100,
     TestTtsPumpOnSpeak = 107,
+    TestToggleFormButton = 109,
+    ResolveUnsavedChanges = 110,
     // orig's. 105 is TestSaveFileAs.
     TestImageOrientation = 106,
     // ng: not one of orig's; the performance snapshot cmd/port-perf.ts reads.
@@ -2182,6 +2295,28 @@ static void ExecuteControlRequest(ControlRequest* req) {
             IntArg(req, 0, pageNo);
             int exitCode = 0;
             Str res = PageBoxesResultTemp(pageNo, &exitCode);
+            AppendTestResult(req, exitCode, res);
+            break;
+        }
+
+        case ControlCmd::ResolveUnsavedChanges: {
+            Str action = StringArg(req, 0);
+            Str path = StringArg(req, 1);
+            int exitCode = 0;
+            Str res = ResolveUnsavedChangesResultTemp(action, path, &exitCode);
+            AppendTestResult(req, exitCode, res);
+            break;
+        }
+
+        case ControlCmd::TestToggleFormButton: {
+            i32 pageNo = 1;
+            i32 idx = 0;
+            if (!IntArg(req, 0, pageNo) || !IntArg(req, 1, idx)) {
+                AppendError(req, StrL("TestToggleFormButton expects int pageNo (1-based), int idx (0-based)"));
+                break;
+            }
+            int exitCode = 0;
+            Str res = ToggleFormButtonResultTemp(pageNo, idx, &exitCode);
             AppendTestResult(req, exitCode, res);
             break;
         }
