@@ -2160,6 +2160,19 @@ static void ExecuteControlRequest(ControlRequest* req) {
             break;
         }
 
+        case ControlCmd::TestCanvasFlags: {
+            Str action = StringArg(req, 0);
+            if (str::EqI(action, StrL("set-grid"))) {
+                i32 on = 0;
+                IntArg(req, 1, on);
+                SetShowPageGrid(on != 0);
+            } else if (str::EqI(action, StrL("reset-grid"))) {
+                ResetPageGridToDefaults();
+            }
+            AppendTestResult(req, 0, PageGridStateTemp());
+            break;
+        }
+
         case ControlCmd::TestInvokeCommand: {
             Str name = StringArg(req, 0);
             MainWindow* win = FirstWindow();
