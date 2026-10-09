@@ -3242,11 +3242,14 @@ LRESULT OnCopyData(HWND hwnd, WPARAM wp, LPARAM lp) {
         }
         const auto* data = (const SumatraOpenCopyData*)cds->lpData;
         size_t pathMax = cds->cbData - sizeof(SumatraOpenCopyData);
-        Str pathZ = Str((char*)(const u8*)(data + 1), (int)pathMax);
-        // require null-terminator within bounds
-        if (strnlen_s(pathZ.s, pathMax) >= pathMax) {
+        // cbData includes the trailing NUL. Counting it makes the path miss
+        // the tab that is already open (issue #4576).
+        const char* pathS = (const char*)(const u8*)(data + 1);
+        size_t pathLen = strnlen_s(pathS, pathMax);
+        if (pathLen >= pathMax) {
             return FALSE;
         }
+        Str pathZ((char*)pathS, (int)pathLen);
         // during startup the message pump can deliver COPYDATA opens; match
         // HandleOpenCmd and queue them instead of racing the command line
         if (gIsStartup) {

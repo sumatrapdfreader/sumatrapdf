@@ -1709,7 +1709,7 @@ static DocController* CreateControllerForFile(MainWindow* win, Str path, Passwor
     }
     int nPages = engine->pageCount;
     auto dur = TimeSinceInMs(timeStart);
-    logf("CreateControllerForFile: '%s', %d pages, took %.2f ms\n", path, nPages, dur);
+    logf("CreateControllerForEngineOrFile: '%s', %d pages, took %.2f ms\n", path, nPages, dur);
     if (nPages <= 0) {
         SafeEngineRelease(&engine);
         return nullptr;
@@ -2274,6 +2274,7 @@ MainWindow* LoadDocument(MainWindow* win, Str path, LoadPrefs prefs, LoadReuse r
     if (!win || len(path) == 0) {
         return nullptr;
     }
+    auto timeStart = TimeGet();
     TempStr fullPath = path::NormalizeTemp(path);
     SumatraPasswordUI pwdUI;
     DocController* ctrl = CreateControllerForFile(win, fullPath, &pwdUI);
@@ -2515,7 +2516,7 @@ MainWindow* LoadDocument(MainWindow* win, Str path, LoadPrefs prefs, LoadReuse r
         // will show previews/thumbnails for this file without security warnings
         file::DeleteZoneIdentifier(fullPath);
     }
-    logf("LoadDocument: '%s', %d pages, page %d\n", fullPath, ctrl->PageCount(), ctrl->CurrentPageNo());
+    logf("LoadDocument: %.2f ms, %d pages for '%s'\n", (float)TimeSinceInMs(timeStart), ctrl->PageCount(), fullPath);
 
     win->currPageNo = ctrl->CurrentPageNo();
     if (win->InPresentation()) {
@@ -9238,10 +9239,10 @@ int GpuiMain(int argc, char** argv) {
     MainWindow* docWin = win;
     gApplyCliViewToEbookLayout = true;
     for (Str path : gFlags->fileNames) {
-        // a file the restored session already opened is selected, not re-opened
-        WindowTab* open = restoredSession ? FindTabByFilePath(path::NormalizeTemp(path)) : nullptr;
-        if (open) {
-            TabsSelect(win, win->GetTabIdx(open));
+        // same path twice on the command line, or already restored: select it
+        TempStr fullPath = path::NormalizeTemp(path);
+        if (MainWindow* existing = FindMainWindowByFile(fullPath, true)) {
+            docWin = existing;
             continue;
         }
         if (newWindowEach && docWin->IsDocLoaded()) {
@@ -9250,7 +9251,7 @@ int GpuiMain(int argc, char** argv) {
                 docWin = next;
             }
         }
-        LoadDocument(docWin, path);
+        LoadDocument(docWin, fullPath);
         if (gFlags->printDialog) {
             PrintCurrentFile(docWin, gFlags->exitWhenDone);
         }
