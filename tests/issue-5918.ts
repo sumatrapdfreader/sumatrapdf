@@ -11,6 +11,7 @@
 import { mkdirSync, rmSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 import { ControlClient, ControlCommand } from "./control";
+import { IS_MAC } from "./host";
 import { cmdId, runStandalone, tmpPath, USE_NG } from "./util";
 import {
   findChildWindow,
@@ -106,6 +107,29 @@ async function launch(
   return { proc: launchSumatra([path]), client: null, frame: 0 };
 }
 
+// The mac frame has no HWND. The current tab's path is the window title's file.
+async function currentFile(client: ControlClient): Promise<string> {
+  const res = await client.request(ControlCommand.TestCurrentTab, []);
+  const raw = String(res[1] ?? "");
+  if (res[0] !== 0) {
+    return "";
+  }
+  return /path=(.*) page=/.exec(raw)?.[1] ?? "";
+}
+
+async function waitForFile(client: ControlClient, name: string, timeoutMs: number): Promise<void> {
+  const deadline = Date.now() + timeoutMs;
+  let last = "";
+  while (Date.now() < deadline) {
+    last = await currentFile(client);
+    if (last.endsWith(name)) {
+      return;
+    }
+    await sleep(40);
+  }
+  throw new Error(`issue-5918: current file did not become ${name} (last: '${last}')`);
+}
+
 async function waitForTocTree(frame: number, client: ControlClient | null, timeoutMs = 8000): Promise<number> {
   const deadline = Date.now() + timeoutMs;
   while (Date.now() < deadline) {
@@ -126,7 +150,11 @@ async function testTocAndNextFile(dir: string): Promise<void> {
   const wantFull = nFiles * (1 + headingsPerFile);
   try {
     const frame = launchedFrame || (await waitForFrame(proc.pid!));
-    await waitForTitle(frame, (t) => t.startsWith("page-0000.html"), 60000);
+    if (IS_MAC && client) {
+      await waitForFile(client, "page-0000.html", 60000);
+    } else {
+      await waitForTitle(frame, (t) => t.startsWith("page-0000.html"), 60000);
+    }
     sendCommand(frame, cmdId("CmdToggleBookmarks"));
     const first = await waitForTocTree(frame, client);
     if (first < nFiles) {
@@ -147,7 +175,11 @@ async function testTocAndNextFile(dir: string): Promise<void> {
       if (n !== wantFull) {
         throw new Error(`issue-5918: TOC dropped to ${n} items after next-file, want it kept at ${wantFull}`);
       }
-      if (getWindowText(frame).startsWith("page-0001.html")) {
+      const opened =
+        IS_MAC && client
+          ? (await currentFile(client)).endsWith("page-0001.html")
+          : getWindowText(frame).startsWith("page-0001.html");
+      if (opened) {
         switched = true;
         break;
       }
