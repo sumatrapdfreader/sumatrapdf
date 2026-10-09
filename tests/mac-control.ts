@@ -352,6 +352,17 @@ function geom(): Geom {
   return { scale, ox: x / scale, oy: y / scale, cx: x, cy: y, cdx: dx, cdy: dy };
 }
 
+// Frame-client dips to screen pixels. The origin is the gpui content view.
+export function macClientToScreen(x: number, y: number): { x: number; y: number } {
+  const res = macControlRequest(TestLayout, []);
+  const text = String(res[1] ?? "");
+  const c = /content origin=(-?\d+),(-?\d+)/.exec(text);
+  if (!c) {
+    return { x, y };
+  }
+  return { x: x + Number(c[1]), y: y + Number(c[2]) };
+}
+
 export function macFrameClientRect(): { left: number; top: number; right: number; bottom: number } {
   const res = macControlRequest(TestLayout, []);
   const text = String(res[1] ?? "");

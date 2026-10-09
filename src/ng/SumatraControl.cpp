@@ -4239,6 +4239,12 @@ static void ExecuteControlRequest(ControlRequest* req) {
             out.Append(fmt("window rect=%d,%d,%d,%d maximized=%d fullscreen=%d presentation=%d scale=%.4f\n", scr.x,
                            scr.y, scr.dx, scr.dy, win->isMaximized ? 1 : 0, win->isFullScreen ? 1 : 0,
                            (int)win->presentation, CanvasScale(win)));
+#if !OS_WIN && !OS_WASM
+            // frame-client dips plus this origin are screen pixels, which is
+            // what a drop-down's box is reported in
+            Rect content = ToolWinNativeContentRect(win->gpuiWin);
+            out.Append(fmt("content origin=%d,%d\n", content.x, content.y));
+#endif
             Rect sysMenu;
             if (AppShellSysMenuRect(win, &sysMenu)) {
                 // orig's caption tree: row 0, child 0 is the app icon. visibility 0 is Visible.

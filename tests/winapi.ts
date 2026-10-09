@@ -14,7 +14,7 @@
 
 import { dlopen, FFIType, JSCallback, ptr, toArrayBuffer } from "bun:ffi";
 import { IS_MAC, IS_WIN } from "./host.ts";
-import { macFrameClientRect, macSendMessage, macSendText } from "./mac-control.ts";
+import { macClientToScreen, macFrameClientRect, macSendMessage, macSendText } from "./mac-control.ts";
 
 // Windows tests talk to user32. On macOS the same helpers either use
 // CoreGraphics or throw, so importing this file does not require the DLLs.
@@ -656,7 +656,7 @@ export function getClientRect(hwnd: number): Rect {
 
 export function clientToScreen(hwnd: number, x: number, y: number): { x: number; y: number } {
   if (IS_MAC) {
-    return { x, y };
+    return macClientToScreen(x, y);
   }
   const buf = new Int32Array([x, y]);
   user32.symbols.ClientToScreen(hwnd, ptr(buf));
@@ -1184,6 +1184,9 @@ export function getSystemMetrics(index: number): number {
 // This is process-wide and cannot be undone, so only call it from tests that
 // read pixels or physical geometry, not from every test.
 export function setProcessDpiAware(): boolean {
+  if (!IS_WIN) {
+    return false;
+  }
   // DPI_AWARENESS_CONTEXT_PER_MONITOR_AWARE_V2 == (HANDLE)-4
   return user32.symbols.SetProcessDpiAwarenessContext(-4n as unknown as number);
 }

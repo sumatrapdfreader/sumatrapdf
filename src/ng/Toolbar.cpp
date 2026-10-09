@@ -733,6 +733,10 @@ struct ToolbarUI {
     gp::Bounds hoverBox{};
     // the first frame centres on a guess; the next one uses the laid-out width
     bool hoverRecenter = false;
+    // pinned once that width is known, so a later zoom cannot slide the strip
+    bool hoverPosLocked = false;
+    float hoverLockX = 0;
+    float hoverLockY = 0;
     gp::SliderState inkThickness;
     bool inkThicknessInit = false;
     // the Read Aloud button's drop-down, rebuilt every frame
@@ -778,6 +782,13 @@ static void FreeHoverItems(ToolbarUI* ui) {
     }
     VecClear(ui->hoverItems);
     ui->hoverBox = {};
+}
+
+static void ResetHoverLock(ToolbarUI* ui) {
+    if (!ui) {
+        return;
+    }
+    ui->hoverPosLocked = false;
 }
 
 ToolbarUI::~ToolbarUI() {
@@ -1271,6 +1282,7 @@ void HideToolbarHoverDropdown(MainWindow* win) {
     tb->hoverCloseLeftMs = 0;
     if (tb->ui) {
         FreeHoverItems(tb->ui);
+        ResetHoverLock(tb->ui);
     }
 }
 
@@ -1561,15 +1573,23 @@ static gp::El* BuildZoomStrip(MainWindow* win, gp::Ctx* cx) {
         rowLen = std::max(rowLen - 1, 1);
     }
 
-    // hangs off the middle of the button, so it opens around where the mouse
-    // already is (orig's centerOnButton)
-    float stripDx = laidW > 1 ? laidW : (float)(top * (DpiScale(kHoverCellPadX) * 2 + 44));
-    float x = (float)anchor.x + ((float)anchor.dx - stripDx) / 2;
-    x = limitValue(x, 0.f, std::max(0.f, (float)win->frameRc.dx - stripDx));
-    box->Left(x)->Top((float)anchor.Bottom());
-    if (!(laidW > 1)) {
-        ui->hoverRecenter = true;
+    // hangs off the middle of the button (orig's centerOnButton), then stays put
+    float x = ui->hoverLockX;
+    float y = ui->hoverLockY;
+    if (!ui->hoverPosLocked || ui->hoverRecenter) {
+        float stripDx = laidW > 1 ? laidW : (float)(top * (DpiScale(kHoverCellPadX) * 2 + 44));
+        x = (float)anchor.x + ((float)anchor.dx - stripDx) / 2;
+        x = limitValue(x, 0.f, std::max(0.f, (float)win->frameRc.dx - stripDx));
+        y = (float)anchor.Bottom();
+        if (laidW > 1) {
+            ui->hoverPosLocked = true;
+            ui->hoverLockX = x;
+            ui->hoverLockY = y;
+        } else {
+            ui->hoverRecenter = true;
+        }
     }
+    box->Left(x)->Top(y);
     return box;
 }
 
@@ -2277,6 +2297,7 @@ void ToolbarView::OnButtonUp(ToolbarView* self, gp::Ctx* cx, const gp::MouseUpEv
             bool sameStrip = tb->hoverCmdId != 0 && ZoomHoverGroup(tb->hoverAnchorCmdId) && ZoomHoverGroup(cmdId);
             if (!sameStrip) {
                 tb->hoverGen++;
+                ResetHoverLock(tb->ui);
                 tb->hoverAnchorCmdId = cmdId;
             }
             tb->hoverCmdId = cmdId;
@@ -2667,6 +2688,7 @@ void ToolbarTick(MainWindow* win, int elapsedMs) {
         if (tb->hoverOpenLeftMs <= 0) {
             tb->hoverOpenLeftMs = 0;
             tb->hoverGen++;
+            ResetHoverLock(tb->ui);
             tb->hoverCmdId = tb->hoverPendingCmdId;
             tb->hoverAnchorCmdId = tb->hoverCmdId;
             tb->hoverPendingCmdId = 0;

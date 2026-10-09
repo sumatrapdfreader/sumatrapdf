@@ -436,6 +436,25 @@ async function dropdownItems(client: ControlClient): Promise<Item[]> {
   return dropdownItemsFrom(raw);
 }
 
+// The zoom label updates in the command. The strip's box is whoever the next
+// frame builds, so one read can still show the level from before the command.
+async function waitBoxed(client: ControlClient, want: string | null): Promise<Item[]> {
+  const deadline = Date.now() + 2000 * SLOW_BUILD_FACTOR;
+  let last: Item[] = [];
+  for (;;) {
+    last = await dropdownItems(client);
+    const boxed = last.filter((it) => it.current).map((it) => it.text);
+    const ok = want === null ? boxed.length === 0 : boxed.length === 1 && boxed[0] === want;
+    if (ok) {
+      return last;
+    }
+    if (Date.now() > deadline) {
+      throw new Error(`toolbar-hover-dropdown: want ${want ?? "nothing"} boxed, got [${boxed.join()}]`);
+    }
+    await sleep(40);
+  }
+}
+
 // the cells grouped into rows, the top row first. The dump lists them smallest
 // level first whatever row they landed in, and that order is kept within a row
 function rowsOf(items: Item[]): Item[][] {
@@ -1018,26 +1037,30 @@ export async function testit(): Promise<void> {
     // stepping the zoom with the button the strip belongs to moves the box to
     // the level it lands on, without the strip itself moving out from under
     // the mouse mid-click
-    const before = items.map((it) => `${it.text}@${it.x}`).join();
+    // items above can be the frame before the strip finished centring
+    let before = "";
+    let prev = "";
+    for (let i = 0; i < 15; i++) {
+      items = await dropdownItems(client);
+      before = items.map((it) => `${it.text}@${it.x}`).join();
+      if (before === prev && before.length > 0) {
+        break;
+      }
+      prev = before;
+      await sleep(40);
+    }
     sendCommand(frame, cmdId("CmdZoomIn"));
     await waitZoom(client, "400", "the Zoom In button did not step the zoom");
-    items = await dropdownItems(client);
+    items = await waitBoxed(client, "400%");
     const after = items.map((it) => `${it.text}@${it.x}`).join();
     if (after !== before) {
       throw new Error("toolbar-hover-dropdown: the strip moved when the zoom was stepped");
-    }
-    let boxed = items.filter((it) => it.current).map((it) => it.text);
-    if (boxed.join() !== "400%") {
-      throw new Error(`toolbar-hover-dropdown: the box did not follow the zoom, it is on [${boxed.join()}]`);
     }
 
     // a zoom that is none of them leaves nothing boxed
     sendCommandSync(frame, cmdId("CmdZoomFitContent"));
     await waitZoom(client, "fit content", "could not set Fit Content zoom");
-    boxed = (await dropdownItems(client)).filter((it) => it.current).map((it) => it.text);
-    if (boxed.length !== 0) {
-      throw new Error(`toolbar-hover-dropdown: a zoom off the list still boxes [${boxed.join()}]`);
-    }
+    await waitBoxed(client, null);
     sendCommand(frame, cmdId("CmdZoom200"));
     await waitZoom(client, "200", "could not put the zoom back on a listed level");
 
