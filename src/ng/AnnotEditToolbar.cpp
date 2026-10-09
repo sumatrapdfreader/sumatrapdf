@@ -3288,11 +3288,28 @@ TempStr AnnotationHoverOverlayStateTemp(MainWindow* win) {
     if (!overlay || !overlay->visible) {
         return StrL("overlay visible=0\n");
     }
-    gp::Bounds r = overlay->measured;
+    // orig: the card is a screen rect and the anchor is canvas client coords.
+    // Tests add the frame origin to the anchor.
+    float k = CanvasScale(win);
+    if (!(k > 0.f)) {
+        k = 1.f;
+    }
+    POINT origin{0, 0};
+    HWND hwnd = MainWindowHwnd(win);
+    if (hwnd) {
+        ClientToScreen(hwnd, &origin);
+    }
+    gp::Bounds b = overlay->measured;
+    int x = origin.x + (int)(b.x / k + 0.5f);
+    int y = origin.y + (int)(b.y / k + 0.5f);
+    int dx = (int)((b.x + b.w) / k + 0.5f) - (int)(b.x / k + 0.5f);
+    int dy = (int)((b.y + b.h) / k + 0.5f) - (int)(b.y / k + 0.5f);
     Rect a = overlay->anchorRect;
+    a.x += (int)((float)win->canvasRc.x / k + 0.5f);
+    a.y += (int)((float)win->canvasRc.y / k + 0.5f);
     str::Builder out;
     out.Append(fmt("overlay visible=1 rows=%d above=%d rect=%d,%d,%d,%d anchor=%d,%d,%d,%d\n", len(overlay->rows.keys),
-                   overlay->isAbove ? 1 : 0, (int)r.x, (int)r.y, (int)r.w, (int)r.h, a.x, a.y, a.dx, a.dy));
+                   overlay->isAbove ? 1 : 0, x, y, dx, dy, a.x, a.y, a.dx, a.dy));
     for (int i = 0; i < len(overlay->rows.keys); i++) {
         out.Append(fmt("row %s=%s\n", overlay->rows.keys[i], overlay->rows.values[i]));
     }

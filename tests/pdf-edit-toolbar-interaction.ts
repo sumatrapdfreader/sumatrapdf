@@ -39,6 +39,13 @@ type AnnotState = {
   raw: string;
 };
 
+// D:20260824123400Z, shown in local time (issue #6288).
+function localAnnotDate(): string {
+  const d = new Date("2026-08-24T12:34:00Z");
+  const pad = (n: number) => String(n).padStart(2, "0");
+  return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())} ${pad(d.getHours())}:${pad(d.getMinutes())}`;
+}
+
 function makePdf(): string {
   const objs = [
     "<< /Type /Catalog /Pages 2 0 R >>",
@@ -222,7 +229,7 @@ export async function testit(): Promise<void> {
     if (!shownContents.endsWith("...") || shownContents.length !== 35) {
       throw new Error(`pdf-edit-toolbar-interaction: contents were not shortened: ${shownContents}`);
     }
-    if (!state.raw.includes("row author=Ada") || !state.raw.includes("row date=2026-08-24 12:34 UTC")) {
+    if (!state.raw.includes("row author=Ada") || !state.raw.includes(`row date=${localAnnotDate()}`)) {
       throw new Error(`pdf-edit-toolbar-interaction: annotation metadata is wrong\n${state.raw}`);
     }
     if (state.raw.includes("row page=") || /^row (?:date|rect)=.*\.\.\.$/m.test(state.raw)) {

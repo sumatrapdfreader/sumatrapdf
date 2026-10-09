@@ -611,6 +611,54 @@ static void PresentScroll(MainWindow* win, HWND hwnd) {
     }
 }
 
+// A posted click carries MK_* in wParam. gpui asks GetKeyState, which
+// SendMessage does not update, so Ctrl+click never entered Edit PDF.
+struct PostedKeyBits {
+    BYTE before[256]{};
+    bool changed = false;
+};
+
+static PostedKeyBits ApplyPostedMouseMods(WPARAM wp) {
+    PostedKeyBits bits;
+    bool wantCtrl = (GET_KEYSTATE_WPARAM(wp) & MK_CONTROL) != 0 && !IsCtrlPressed();
+    bool wantShift = (GET_KEYSTATE_WPARAM(wp) & MK_SHIFT) != 0 && !IsShiftPressed();
+    if (!wantCtrl && !wantShift) {
+        return bits;
+    }
+    if (!GetKeyboardState(bits.before)) {
+        return bits;
+    }
+    BYTE state[256];
+    memcpy(state, bits.before, sizeof(state));
+    if (wantCtrl) {
+        state[VK_CONTROL] |= 0x80;
+        state[VK_LCONTROL] |= 0x80;
+    }
+    if (wantShift) {
+        state[VK_SHIFT] |= 0x80;
+        state[VK_LSHIFT] |= 0x80;
+    }
+    if (SetKeyboardState(state)) {
+        bits.changed = true;
+    }
+    return bits;
+}
+
+static void RestorePostedMouseMods(PostedKeyBits& bits) {
+    if (!bits.changed) {
+        return;
+    }
+    SetKeyboardState(bits.before);
+    bits.changed = false;
+}
+
+static LRESULT DefSubclassWithPostedMods(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp) {
+    PostedKeyBits bits = ApplyPostedMouseMods(wp);
+    LRESULT res = DefSubclassProc(hwnd, msg, wp, lp);
+    RestorePostedMouseMods(bits);
+    return res;
+}
+
 static LRESULT CALLBACK ShellSubclass(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp, UINT_PTR, DWORD_PTR) {
     switch (msg) {
         case WM_NCCALCSIZE:
@@ -656,7 +704,7 @@ static LRESULT CALLBACK ShellSubclass(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp,
         case WM_MOUSEMOVE: {
             // gpui sets the cursor itself from inside the mouse move when the
             // kind under the pointer changed
-            LRESULT res = DefSubclassProc(hwnd, msg, wp, lp);
+            LRESULT res = DefSubclassWithPostedMods(hwnd, msg, wp, lp);
             if (HCURSOR cur = NativeCursorWanted(hwnd)) {
                 SetCursor(cur);
             }
@@ -839,6 +887,19 @@ static LRESULT CALLBACK ShellSubclass(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp,
             GlobalHotkeysOnDestroy(hwnd);
             RevokeCanvasDropTarget(hwnd);
             break;
+        case WM_LBUTTONDOWN:
+        case WM_LBUTTONUP:
+        case WM_LBUTTONDBLCLK:
+        case WM_RBUTTONDOWN:
+        case WM_RBUTTONUP:
+        case WM_RBUTTONDBLCLK:
+        case WM_MBUTTONDOWN:
+        case WM_MBUTTONUP:
+        case WM_MBUTTONDBLCLK:
+        case WM_XBUTTONDOWN:
+        case WM_XBUTTONUP:
+        case WM_XBUTTONDBLCLK:
+            return DefSubclassWithPostedMods(hwnd, msg, wp, lp);
         default:
             break;
     }

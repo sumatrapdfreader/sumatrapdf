@@ -2050,10 +2050,15 @@ static void OnSetCursor(MainWindow* win, Point pt) {
             return;
         }
     }
-    // an annotation being edited: no hover cursors for anything else
+    // an annotation being edited: hover and the cursor stay on that one only
     if (Annotation* locked = AnnotationLockingMouse(win)) {
         DisplayModel* dmLocked = win->AsFixed();
         bool onSelected = dmLocked && dmLocked->GetAnnotationAtPos(pt, locked) == locked;
+        Annotation* hover = onSelected ? locked : nullptr;
+        if (hover != win->annotationUnderCursor) {
+            win->annotationUnderCursor = hover;
+            AppShellInvalidate(win);
+        }
         CanvasSetCursor(win, onSelected ? kCurHand : kCurArrow);
         DeleteLinkTooltip(win);
         return;
@@ -3054,12 +3059,8 @@ static bool OnMouseLeftButtonDblClk(MainWindow* win, int x, int y) {
     }
     if (win->pressOnlyDeselected) {
         win->pressOnlyDeselected = false;
-        // the click that only deselected has no follow-up. A later click that
-        // gpui still counts as the second of that pair is a new press: an
-        // annotation created since then has to be deselected by it.
-        if (!AnnotationLockingMouse(win)) {
-            return true;
-        }
+        // gpui counts the next click here as a double-click. Orig still gets a
+        // WM_LBUTTONDOWN, which selects or deselects on its own.
         return false;
     }
     // free text edits in place on a double-click. Any other press still starts
