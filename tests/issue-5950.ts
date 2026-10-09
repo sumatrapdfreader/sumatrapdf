@@ -9,7 +9,8 @@
 
 import { writeFileSync } from "node:fs";
 import { crc32, deflateSync } from "node:zlib";
-import { cmdId, runStandalone, tmpPath } from "./util.ts";
+import { ControlClient, ControlCommand } from "./control.ts";
+import { cmdId, runStandalone, tmpPath, USE_NG } from "./util.ts";
 import {
   enumChildWindows,
   enumWindows,
@@ -110,8 +111,20 @@ async function waitForPropertiesEdit(pid: number, timeoutMs = 8000): Promise<{ p
   return { props: lastProps, edit: 0 };
 }
 
-async function propertiesText(frame: number, pid: number): Promise<string> {
+async function propertiesText(frame: number, pid: number, client: ControlClient): Promise<string> {
   sendCommandSync(frame, cmdId("CmdProperties"));
+  if (USE_NG) {
+    const deadline = Date.now() + 8000;
+    while (Date.now() < deadline) {
+      const res = await client.request(ControlCommand.TestDocumentProperties, ["text"]);
+      const raw = String(res[1] ?? "");
+      if (res[0] === 0 && (raw.includes("File:") || raw.includes("Image Size:"))) {
+        return raw;
+      }
+      await sleep(100);
+    }
+    throw new Error("issue-5950: Document Properties text did not appear");
+  }
   const { props, edit } = await waitForPropertiesEdit(pid);
   if (!props) {
     throw new Error("issue-5950: Document Properties window did not open");
@@ -138,7 +151,7 @@ export async function testit(): Promise<void> {
   const { proc, client, frame } = await launchControlled([pngPath]);
   try {
     await client.waitForRenderIdle();
-    const text = await propertiesText(frame, proc.pid!);
+    const text = await propertiesText(frame, proc.pid!, client);
     console.log(`issue-5950 properties text (${text.length} chars):\n${text}`);
 
     if (!/Image Size:\s*12 x 8/.test(text)) {
