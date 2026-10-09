@@ -4531,14 +4531,12 @@ static void ExecuteControlRequest(ControlRequest* req) {
             break;
         }
 
-#if OS_WIN
         case ControlCmd::TestCommandPalette: {
             int exitCode = 0;
             Str res = CommandPaletteStateTemp(&exitCode);
             AppendTestResult(req, exitCode, res);
             break;
         }
-#endif
 
         case ControlCmd::TestContextMenuAt: {
             MainWindow* win = FirstWindow();

@@ -368,8 +368,9 @@ function dips(px: number, py: number, g: Geom): { x: number; y: number } {
 
 function modsOf(w: number): number {
   let m = 0;
+  // Control-click is the context click. Command is orig's Ctrl.
   if (w & MK_CONTROL) {
-    m |= 1;
+    m |= 8;
   }
   if (w & MK_SHIFT) {
     m |= 2;

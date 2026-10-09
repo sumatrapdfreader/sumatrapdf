@@ -956,6 +956,7 @@ static bool RemoveSelectedItem() {
 
 #if OS_WIN
 static void PaletteAttachQueryEdit(CommandPaletteWnd* wnd);
+#endif
 
 // orig's list-box dump. exit 2 when the palette is not open.
 TempStr CommandPaletteStateTemp(int* exitCodeOut) {
@@ -971,6 +972,7 @@ TempStr CommandPaletteStateTemp(int* exitCodeOut) {
         out.Append(StrL("NOTREADY no-palette\n"));
         return finish(2);
     }
+#if OS_WIN
     // the query Edit appears with the tool window, after this state is first visible
     if (!wnd->queryEdit) {
         PaletteAttachQueryEdit(wnd);
@@ -979,6 +981,12 @@ TempStr CommandPaletteStateTemp(int* exitCodeOut) {
         out.Append(StrL("NOTREADY no-palette\n"));
         return finish(2);
     }
+#else
+    if (!wnd->editQuery) {
+        out.Append(StrL("NOTREADY no-palette\n"));
+        return finish(2);
+    }
+#endif
     int sel = wnd->sel;
     int n = len(wnd->items);
     int selectedCmdId = 0;
@@ -1025,7 +1033,6 @@ TempStr CommandPaletteStateTemp(int* exitCodeOut) {
     out.Append(fmt("settingHelp=%d editFocus=%d selValue=%s selText=%s\n", helpShown, editFocus, selValue, selText));
     return finish(0);
 }
-#endif
 
 // --- keyboard ---------------------------------------------------------------
 

@@ -5,6 +5,7 @@
 import { mkdirSync, rmSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 import { ControlClient, ControlCommand } from "./control.ts";
+import { IS_MAC } from "./host.ts";
 import { assemblePdf, cmdId, runStandalone, tmpPath, USE_NG } from "./util.ts";
 import {
   captureWindowPixels,
@@ -257,8 +258,9 @@ function ngMods(key: number): number {
   if (key & MK_SHIFT) {
     mods |= 2;
   }
+  // On macOS bit 1 is Control, which is the context click. Command is bit 8.
   if (key & MK_CONTROL) {
-    mods |= 1;
+    mods |= IS_MAC ? 8 : 1;
   }
   return mods;
 }
@@ -354,6 +356,27 @@ export async function testit(): Promise<void> {
   try {
     await client.waitForRenderIdle();
     const canvas = findCanvas(frame);
+
+    sendMessage(frame, WM_COMMAND, cmdId("CmdToggleEditPDF"), 0);
+    // The annotation row is visible before gpui writes button bounds.
+    const buttonDeadline = Date.now() + 5_000;
+    let button = { x: 0, y: 0, dx: 0, dy: 0 };
+    let toolbarDump = "";
+    for (;;) {
+      toolbarDump = String((await client.request(ControlCommand.TestToolbarButtons, []))[1] ?? "");
+      try {
+        button = toolbarButtonRect(toolbarDump);
+      } catch {
+        button = { x: 0, y: 0, dx: 0, dy: 0 };
+      }
+      if (button.dx > 0 && button.dy > 0) {
+        break;
+      }
+      if (Date.now() > buttonDeadline) {
+        throw new Error(`polyline-annotation-placement: toolbar button not laid out\n${toolbarDump}`);
+      }
+      await sleep(40);
+    }
     const canvasRect = getClientRect(canvas);
     const center = { x: Math.floor(canvasRect.right / 2), y: Math.floor(canvasRect.bottom / 2) };
     const p1 = { x: center.x - 120, y: center.y - 90 };
@@ -361,10 +384,6 @@ export async function testit(): Promise<void> {
     const p3 = { x: center.x - 75, y: center.y + 105 };
     const p4 = { x: center.x + 60, y: center.y + 60 };
     const outside = { x: 2, y: center.y };
-
-    sendMessage(frame, WM_COMMAND, cmdId("CmdToggleEditPDF"), 0);
-    const toolbarDump = String((await client.request(ControlCommand.TestToolbarButtons, []))[1] ?? "");
-    const button = toolbarButtonRect(toolbarDump);
     const clickToolbar = async () => {
       const x = button.x + Math.floor(button.dx / 2);
       const y = button.y + Math.floor(button.dy / 2);

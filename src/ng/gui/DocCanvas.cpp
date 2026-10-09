@@ -383,14 +383,22 @@ void CanvasDrawText(gp::PaintCtx* ctx, Str s, Point at, Color col, float fontSiz
 // the modifiers of the last mouse or key event; orig asks GetKeyState()
 static bool gCtrlPressed = false;
 static bool gShiftPressed = false;
+static bool gPlatformPressed = false;
 
 static void SetCanvasModifiers(const gp::Modifiers& m) {
     gCtrlPressed = m.control;
     gShiftPressed = m.shift;
+    gPlatformPressed = m.platform;
 }
 
+// On macOS Command is the modifier orig's Ctrl+click uses. Control-click is
+// the context click, so it never arrives here as a left click.
 bool CanvasCtrlPressed() {
+#if OS_DARWIN
+    return gPlatformPressed;
+#else
     return gCtrlPressed;
+#endif
 }
 
 bool CanvasShiftPressed() {
@@ -399,9 +407,10 @@ bool CanvasShiftPressed() {
 
 // A key replaces the mouse event's modifiers. Orig asks GetKeyState, which is
 // the keys held now, not whichever button was down on the last click.
-void CanvasSetKeyModifiers(bool shift, bool ctrl) {
+void CanvasSetKeyModifiers(bool shift, bool ctrl, bool platform) {
     gShiftPressed = shift;
     gCtrlPressed = ctrl;
+    gPlatformPressed = platform;
 }
 
 // ng: gpui captures the mouse for the window itself while a button is down

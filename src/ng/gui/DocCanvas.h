@@ -115,7 +115,7 @@ void CanvasSetClipboardText(MainWindow* win, Str s);
 // what orig reads with GetKeyState; here it is the last mouse or key event
 bool CanvasCtrlPressed();
 bool CanvasShiftPressed();
-void CanvasSetKeyModifiers(bool shift, bool ctrl);
+void CanvasSetKeyModifiers(bool shift, bool ctrl, bool platform);
 // orig's IsDragDistance: has the pointer moved far enough to be a drag?
 bool IsDragDistance(int x1, int x2, int y1, int y2);
 // the cursor the canvas shows, as a gpui CursorKind cast to int

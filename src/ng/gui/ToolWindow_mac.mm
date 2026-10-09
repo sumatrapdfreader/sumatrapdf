@@ -14,20 +14,43 @@
 #import <AppKit/AppKit.h>
 #import <objc/runtime.h>
 
-// A pure borderless NSWindow refuses to become key. The command palette is one,
-// and keystrokes for a child window can still be delivered to its owner.
-// These overrides sit inside the BOOL remap: NSWindow was parsed with it.
-@interface ToolKeyWindow : NSWindow
-@end
+// A borderless NSWindow cannot become key. Replacing its isa drops AppKit's
+// KVO subclass and throws on close. A flag plus these overrides is enough.
+static char gWantsKey;
+static BOOL (*gOrigCanBecomeKey)(id, SEL);
+static BOOL (*gOrigCanBecomeMain)(id, SEL);
 
-@implementation ToolKeyWindow
-- (BOOL)canBecomeKeyWindow {
-    return YES;
+static BOOL ToolCanBecomeKey(id self, SEL sel) {
+    if (objc_getAssociatedObject(self, &gWantsKey)) {
+        return YES;
+    }
+    return gOrigCanBecomeKey(self, sel);
 }
-- (BOOL)canBecomeMainWindow {
-    return NO;
+
+static BOOL ToolCanBecomeMain(id self, SEL sel) {
+    if (objc_getAssociatedObject(self, &gWantsKey)) {
+        return NO;
+    }
+    return gOrigCanBecomeMain(self, sel);
 }
-@end
+
+static void InstallKeyOverrides() {
+    static bool done = false;
+    if (done) {
+        return;
+    }
+    done = true;
+    Method key = class_getInstanceMethod([NSWindow class], @selector(canBecomeKeyWindow));
+    Method main = class_getInstanceMethod([NSWindow class], @selector(canBecomeMainWindow));
+    gOrigCanBecomeKey = (decltype(gOrigCanBecomeKey))method_getImplementation(key);
+    gOrigCanBecomeMain = (decltype(gOrigCanBecomeMain))method_getImplementation(main);
+    method_setImplementation(key, (IMP)ToolCanBecomeKey);
+    method_setImplementation(main, (IMP)ToolCanBecomeMain);
+}
+
+static bool WindowWantsKey(NSWindow* w) {
+    return w && objc_getAssociatedObject(w, &gWantsKey) != nil;
+}
 
 #pragma pop_macro("defer")
 #undef BOOL
@@ -61,7 +84,7 @@ static void EnsureKeyMonitor() {
     gKeyMonitor = [NSEvent addLocalMonitorForEventsMatchingMask:(NSEventMaskKeyDown | NSEventMaskKeyUp)
                                                          handler:^NSEvent*(NSEvent* event) {
                                                            NSWindow* key = NSApp.keyWindow;
-                                                           if (![key isKindOfClass:[ToolKeyWindow class]] || gInKeyForward) {
+                                                           if (!WindowWantsKey(key) || gInKeyForward) {
                                                                return event;
                                                            }
                                                            // already on its way to the content view
@@ -197,7 +220,8 @@ void ToolWinNativeApplyStyle(gp::Window* gw, bool titled, bool resizable, bool u
         [w setMovableByWindowBackground:NO];
     }
     if (borderless && wantsKey) {
-        object_setClass(w, [ToolKeyWindow class]);
+        InstallKeyOverrides();
+        objc_setAssociatedObject(w, &gWantsKey, @YES, OBJC_ASSOCIATION_RETAIN);
         [w makeFirstResponder:w.contentView];
         EnsureKeyMonitor();
     }
@@ -252,7 +276,7 @@ void ToolWinNativeShow(gp::Window* gw, bool visible, bool activate) {
         return;
     }
     if (activate) {
-        if ([w isKindOfClass:[ToolKeyWindow class]]) {
+        if (WindowWantsKey(w)) {
             [w makeFirstResponder:w.contentView];
         }
         [w makeKeyAndOrderFront:nil];

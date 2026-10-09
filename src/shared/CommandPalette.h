@@ -40,9 +40,9 @@ void PaletteCollectTabs(MainWindow* win, bool mru, Vec<WindowTab*>& out, int& cu
 // the document's annotations changed: the `*` list is stale
 void CommandPaletteOnAnnotationsChanged();
 void CommandPaletteOnSettingsReloaded();
+TempStr CommandPaletteStateTemp(int* exitCodeOut);
 
 #if OS_WIN
 HWND CommandPaletteHwndForAccelerator(HWND hwnd);
-TempStr CommandPaletteStateTemp(int* exitCodeOut);
 void CommandPaletteUpdateTheme();
 #endif

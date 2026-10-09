@@ -517,6 +517,7 @@ static gp::Modifiers TestMods(int mods) {
     m.control = (mods & 1) != 0;
     m.shift = (mods & 2) != 0;
     m.alt = (mods & 4) != 0;
+    m.platform = (mods & 8) != 0;
     return m;
 }
 
@@ -540,7 +541,8 @@ void AppShellClearEatChar(MainWindow* win) {
 
 // ng: kinds are key / keyup (a = vk, b = mods: 1 Ctrl, 2 Shift, 4 Alt,
 // 8 auto-repeat), char (a = code point), down / up / click (a, b = x, y in
-// dips; c = button: 0 left, 1 right, 2 middle; d = mods), move (c = pressed
+// dips; c = button: 0 left, 1 right, 2 middle; d = mods: 1 Ctrl, 2 Shift,
+// 4 Alt, 8 Command), move (c = pressed
 // button + 1, or 0) and wheel (c = delta in 120ths of a notch, 1000000 + delta
 // for a horizontal one)
 TempStr AppShellTestInput(MainWindow* win, Str kind, int a, int b, int c, int d) {
@@ -2208,7 +2210,7 @@ void ShellView::OnMouseDown(ShellView* self, gp::Ctx* cx, const gp::MouseDownEve
 // frame WndProc: Escape cancels a drag and drops the selection, and the
 // keyboard link-hint mode eats plain letters while it is on.
 void ShellView::OnKeyDown(ShellView* self, gp::Ctx* cx, const gp::KeyEvent* ev) {
-    CanvasSetKeyModifiers(ev->shift, ev->ctrl);
+    CanvasSetKeyModifiers(ev->shift, ev->ctrl, ev->platform);
     MainWindow* win = self->win;
     if (!IsMainWindowValidAndNotClosing(win)) {
         return;
