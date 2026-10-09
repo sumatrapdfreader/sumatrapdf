@@ -733,6 +733,67 @@ static void ApplyResize() {
     logf("ImageEdit: resized to %d x %d\n", w.imgW, w.imgH);
 }
 
+// Same ResizePixmap path as Apply Resize. Reports dest size and the RGB of
+// the left and right edge so a test can catch a shifted sample (issue #3434).
+TempStr ImageResizeEdgesResultTemp(Str imagePath, int newW, int newH, int* exitCodeOut) {
+    str::Builder out;
+    auto fail = [&](Str msg) -> TempStr {
+        out.Append(msg);
+        out.AppendChar('\n');
+        if (exitCodeOut) {
+            *exitCodeOut = 1;
+        }
+        return ToStrTemp(out);
+    };
+
+    if (len(imagePath) == 0 || !file::Exists(imagePath) || newW < 2 || newH < 1) {
+        return fail(StrL("ERROR bad-args"));
+    }
+    if (!gImageEditHost.LoadImageFile) {
+        InitImageEditHost();
+    }
+    if (!gImageEditHost.LoadImageFile) {
+        return fail(StrL("ERROR no-loader"));
+    }
+    Pixmap* src = gImageEditHost.LoadImageFile(imagePath);
+    if (!src) {
+        return fail(StrL("ERROR load-failed"));
+    }
+    Pixmap* dst = ResizePixmap(src, newW, newH);
+    FreePixmap(src);
+    if (!dst || !dst->data || dst->width < 2 || dst->height < 1) {
+        FreePixmap(dst);
+        return fail(StrL("ERROR resize-failed"));
+    }
+    int bpp = PixmapBytesPerPixel(dst->format);
+    if (bpp < 3) {
+        FreePixmap(dst);
+        return fail(fmt("ERROR pixmap-fmt=%d", (int)dst->format));
+    }
+
+    auto pixel = [&](int x, int y, int* r, int* g, int* b) {
+        const u8* px = dst->data + ((size_t)y * (size_t)dst->stride) + ((size_t)x * bpp);
+        if (dst->format == PixmapFormat::RGBA8) {
+            *r = px[0];
+            *g = px[1];
+            *b = px[2];
+        } else {
+            *b = px[0];
+            *g = px[1];
+            *r = px[2];
+        }
+    };
+    int lr, lg, lb, rr, rg, rb;
+    pixel(0, dst->height / 2, &lr, &lg, &lb);
+    pixel(dst->width - 1, dst->height / 2, &rr, &rg, &rb);
+    out.Append(fmt("size=%dx%d left=%d,%d,%d right=%d,%d,%d\n", dst->width, dst->height, lr, lg, lb, rr, rg, rb));
+    FreePixmap(dst);
+    if (exitCodeOut) {
+        *exitCodeOut = 0;
+    }
+    return ToStrTemp(out);
+}
+
 static void SwitchToMode(ImageEditMode mode) {
     gImgEdit.mode = mode;
     ResetToImageSize();

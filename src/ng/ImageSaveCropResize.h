@@ -71,6 +71,7 @@ void ImageEditOnEscape();
 
 // the crop / resize state as one line, for the log and the tests
 TempStr ImageEditStateTemp();
+TempStr ImageResizeEdgesResultTemp(Str imagePath, int newW, int newH, int* exitCodeOut = nullptr);
 
 // ng: gpui's clipboard is text only (see "gpui gaps"), so an image goes
 // through the platform's clipboard; false everywhere but Windows
