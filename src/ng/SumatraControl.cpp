@@ -4051,6 +4051,10 @@ static void ExecuteControlRequest(ControlRequest* req) {
                 AppendTestResult(req, 0, SignDocumentPlacementTemp());
                 break;
             }
+            if (str::Eq(StringArg(req, 0), StrL("sign-checks"))) {
+                AppendTestResult(req, 0, SignDocumentChecksTemp());
+                break;
+            }
             i32 a = 0, b = 0, c = 0, d = 0;
             IntArg(req, 3, a);
             IntArg(req, 4, b);

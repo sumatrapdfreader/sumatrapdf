@@ -214,6 +214,7 @@ void ShowSignDocumentDialog(MainWindow* win, Str fieldName = {}, bool hasField =
 void CloseSignDocumentDialog(MainWindow* win);
 bool IsSignDocumentDialogVisible();
 TempStr SignDocumentPlacementTemp();
+TempStr SignDocumentChecksTemp();
 gpui::El* SignDocumentDialogBuild(MainWindow* win, gpui::Ctx* cx);
 // the dialog hid itself and the next click / drag on the page places the
 // signature (issue #5967)

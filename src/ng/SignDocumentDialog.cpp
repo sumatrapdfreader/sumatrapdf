@@ -181,6 +181,20 @@ TempStr SignDocumentPlacementTemp() {
     return str::DupTemp(gSign.ddPlacement.SelText());
 }
 
+// Appearance checkboxes as "Show labels=1" lines. Empty while the dialog is down.
+TempStr SignDocumentChecksTemp() {
+    if (!gSign.visible || gSign.placing) {
+        return {};
+    }
+    str::Builder out;
+    out.Append(fmt("Show labels=%d\n", gSign.showLabels ? 1 : 0));
+    out.Append(fmt("Show name=%d\n", gSign.showName ? 1 : 0));
+    out.Append(fmt("Show DN=%d\n", gSign.showDN ? 1 : 0));
+    out.Append(fmt("Show date=%d\n", gSign.showDate ? 1 : 0));
+    out.Append(fmt("Show name as graphic=%d\n", gSign.showGraphicName ? 1 : 0));
+    return ToStrTemp(out);
+}
+
 static Str SignDocumentDlgTitle() {
     return Tr("Sign Document");
 }

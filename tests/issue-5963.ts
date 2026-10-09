@@ -10,7 +10,7 @@
 
 import { existsSync, rmSync, writeFileSync } from "node:fs";
 import { ControlCommand } from "./control.ts";
-import { cmdId, runStandalone, tmpPath } from "./util.ts";
+import { cmdId, runStandalone, tmpPath, USE_NG } from "./util.ts";
 import { killAndWait, launchControlled, sendCommand } from "./win-automation.ts";
 import {
   enumChildWindows,
@@ -166,17 +166,11 @@ export async function testit(): Promise<void> {
     const pid = getWindowPid(frame);
     sendCommand(frame, cmdId("CmdSignDocument"));
     const dlg = await waitFor("Sign Document dialog", () =>
-      findTopWindow(pid, "SumatraWgDefaultWinClass", "Sign Document"),
+      USE_NG
+        ? findTopWindow(pid, "GpuiSystemMonitor", "Sign Document")
+        : findTopWindow(pid, "SumatraWgDefaultWinClass", "Sign Document"),
     );
 
-    let boxes = new Map<string, number>();
-    for (const deadline = Date.now() + 3000; Date.now() < deadline;) {
-      boxes = checkboxTexts(dlg);
-      if ([...boxes.keys()].some((t) => /labels/i.test(t))) {
-        break;
-      }
-      await sleep(100);
-    }
     const want = [
       [/labels/i, "Show labels"],
       [/^show name$/i, "Show name"],
@@ -184,13 +178,49 @@ export async function testit(): Promise<void> {
       [/date/i, "Show date"],
       [/graphic/i, "Show name as graphic"],
     ] as const;
-    for (const [re, label] of want) {
-      const hwnd = [...boxes.entries()].find(([t]) => re.test(t))?.[1];
-      if (!hwnd) {
-        throw new Error(`issue-5963: missing '${label}' checkbox; have: ${[...boxes.keys()].join(", ")}`);
+    if (USE_NG) {
+      let raw = "";
+      for (const deadline = Date.now() + 3000; Date.now() < deadline;) {
+        const res = await client.request(ControlCommand.TestToolWindow, ["sign-checks"]);
+        raw = String(res[1] ?? "");
+        if (/labels/i.test(raw)) {
+          break;
+        }
+        await sleep(100);
       }
-      if (!isChecked(hwnd)) {
-        throw new Error(`issue-5963: '${label}' should be checked by default`);
+      const checks = new Map<string, boolean>();
+      for (const line of raw.split("\n")) {
+        const m = /^(.*)=([01])$/.exec(line.trim());
+        if (m) {
+          checks.set(m[1], m[2] === "1");
+        }
+      }
+      for (const [re, label] of want) {
+        const hit = [...checks.entries()].find(([t]) => re.test(t));
+        if (!hit) {
+          throw new Error(`issue-5963: missing '${label}' checkbox; have: ${[...checks.keys()].join(", ")}`);
+        }
+        if (!hit[1]) {
+          throw new Error(`issue-5963: '${label}' should be checked by default`);
+        }
+      }
+    } else {
+      let boxes = new Map<string, number>();
+      for (const deadline = Date.now() + 3000; Date.now() < deadline;) {
+        boxes = checkboxTexts(dlg);
+        if ([...boxes.keys()].some((t) => /labels/i.test(t))) {
+          break;
+        }
+        await sleep(100);
+      }
+      for (const [re, label] of want) {
+        const hwnd = [...boxes.entries()].find(([t]) => re.test(t))?.[1];
+        if (!hwnd) {
+          throw new Error(`issue-5963: missing '${label}' checkbox; have: ${[...boxes.keys()].join(", ")}`);
+        }
+        if (!isChecked(hwnd)) {
+          throw new Error(`issue-5963: '${label}' should be checked by default`);
+        }
       }
     }
     console.log("  Sign Document offers appearance checkboxes, all on by default ✓");
