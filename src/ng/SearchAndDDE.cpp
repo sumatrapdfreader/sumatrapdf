@@ -776,6 +776,8 @@ struct UpdateFindStatusData {
     int current;
     int total;
     bool showProgress;
+    // page the incremental find is on. Written on the UI thread.
+    int* firstPage = nullptr;
 };
 
 static void UpdateFindStatus(UpdateFindStatusData* d) {
@@ -785,11 +787,15 @@ static void UpdateFindStatus(UpdateFindStatusData* d) {
     if (!IsMainWindowValidAndNotClosing(win) || win->findCancelled) {
         return;
     }
-    if (!d->showProgress) {
-        // find-as-you-type: don't let the incremental find scan the whole
-        // document. The n/m counter is built by the count thread (which does
-        // its own full scan), so bail out early and leave it the heavy lifting.
-        win->findCancelled = true;
+    if (!d->showProgress && d->firstPage) {
+        // The first report is the page being searched. Cancelling there drops
+        // its match. Stop only when a later page is reported; the count thread
+        // still scans the whole document.
+        if (*d->firstPage == 0) {
+            *d->firstPage = d->current;
+        } else if (d->current != *d->firstPage) {
+            win->findCancelled = true;
+        }
     }
     // explicit Find Next/Prev (showProgress): keep going to completion. There's
     // no progress notification now -- the n/m counter is the only feedback.
@@ -800,6 +806,7 @@ struct FindThreadData {
     TextSearch::Direction direction = TextSearch::Direction::Forward;
     bool wasModified = false;
     bool showProgress = false;
+    int firstPage = 0;
     Str text;
     // ng: the handle is owned by MainWindow::findThread (JoinThread() closes
     // it); this is only compared, to tell whether we are still the live find
@@ -848,6 +855,7 @@ struct FindThreadData {
         data->current = current;
         data->total = total;
         data->showProgress = this->showProgress;
+        data->firstPage = &this->firstPage;
         auto fn = MkFunc0<UpdateFindStatusData>(UpdateFindStatus, data);
         uitask::Post(fn, nullptr);
     }

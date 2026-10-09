@@ -6,7 +6,7 @@
 
 import { writeFileSync } from "node:fs";
 import { ControlCommand, type ControlClient } from "./control.ts";
-import { assemblePdf, cmdId, pollUntil, runStandalone, SLOW_BUILD_FACTOR, tmpPath } from "./util.ts";
+import { assemblePdf, cmdId, pollUntil, runStandalone, SLOW_BUILD_FACTOR, tmpPath, USE_NG } from "./util.ts";
 import { launchControlled, pressKey, sendCommand, typeIntoInput, waitForFocusClass } from "./win-automation.ts";
 import { getClassName, getParentWindow, VK_ESCAPE, VK_RETURN } from "./winapi.ts";
 
@@ -56,6 +56,30 @@ async function findState(client: ControlClient): Promise<FindState> {
   };
 }
 
+async function ngFind(client: ControlClient, action: string, arg = ""): Promise<string> {
+  const res = await client.request(ControlCommand.TestFindUiState, arg ? [action, arg] : [action]);
+  if (res[0] !== 0) {
+    throw new Error(`issue-6280: ${action} failed: ${String(res[1] ?? "")}`);
+  }
+  return String(res[1] ?? "");
+}
+
+// the find box is drawn in the frame; CmdFindFirst is posted, so wait until it shows
+async function waitFindOpen(client: ControlClient): Promise<void> {
+  const deadline = Date.now() + 4000 * SLOW_BUILD_FACTOR;
+  let last = "";
+  for (;;) {
+    last = String((await client.request(ControlCommand.TestFindUiState, ["state"]))[1] ?? "");
+    if (/compact=1/.test(last) || /floating=1/.test(last)) {
+      return;
+    }
+    if (Date.now() > deadline) {
+      throw new Error(`issue-6280: find bar did not open (${last})`);
+    }
+    await new Promise((r) => setTimeout(r, 40));
+  }
+}
+
 // waits for the search to settle, then checks where it ended up
 async function expectSettled(client: ControlClient, what: string, want: Partial<FindState>): Promise<void> {
   const state = await pollUntil(
@@ -78,6 +102,30 @@ export async function testit(): Promise<void> {
   try {
     await client.waitForRenderIdle();
     await client.setNotificationsEnabled(false);
+
+    if (USE_NG) {
+      // the find box is a gpui input. "set" and "enter" follow the bar;
+      // Escape is the key the frame handles
+      sendCommand(frame, cmdId("CmdFindFirst"));
+      await waitFindOpen(client);
+      await ngFind(client, "set", kTerm);
+      await ngFind(client, "enter");
+      await expectSettled(client, "first search", { matches: 2, hitPage: kFirstHitPage });
+
+      await client.request(ControlCommand.TestInput, ["key", VK_ESCAPE, 0, 0, 0]);
+      await expectSettled(client, "after Esc", { matches: 0, hitPage: 0 });
+
+      sendCommand(frame, cmdId("CmdFindFirst"));
+      await waitFindOpen(client);
+      await expectSettled(client, "reopened find", { matches: 2, hitPage: 0, page: kFirstHitPage });
+
+      await ngFind(client, "enter");
+      await expectSettled(client, "one Enter after reopening", { matches: 2, hitPage: kFirstHitPage });
+
+      await ngFind(client, "enter");
+      await expectSettled(client, "second Enter", { hitPage: kSecondHitPage, page: kSecondHitPage });
+      return;
+    }
 
     sendCommand(frame, cmdId("CmdFindFirst"));
     const edit = await waitForFocusClass(frame, "Edit");
