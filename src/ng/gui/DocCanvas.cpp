@@ -1049,6 +1049,8 @@ void CanvasUpdateScrollbars(MainWindow* win, DisplayModel* dm, Size canvas) {
     if (!win || win->AsFixed() != dm) {
         return;
     }
+    // every viewport change; the hint recompute waits until scrolling stops
+    KeyboardLinkFollowingViewportChanged(win, -1);
     bool hideScrollbar = ScrollbarsAreHidden();
     CanvasScrollInfo si;
     Size viewPort = dm->GetViewPort().Size();
