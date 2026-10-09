@@ -564,7 +564,19 @@ TempStr SelectionToolbarLayoutDumpTemp(MainWindow* win) {
     out.Append(fmt("notif=%s\n", notif ? NotificationGetMessageTemp(notif) : StrL("")));
     if (tb && tb->visible) {
         gp::Bounds r = tb->measured;
-        out.Append(fmt("placed=%d,%d,%d,%d\n", (int)r.x, (int)r.y, (int)r.w, (int)r.h));
+        // orig's popup reports a screen rect. The card is inside the frame,
+        // so the screen point is the client origin plus this layout point.
+        int x = (int)(r.x + 0.5f);
+        int y = (int)(r.y + 0.5f);
+#if OS_WIN
+        if (HWND hwnd = AppShellNativeHwnd(win)) {
+            POINT pt{x, y};
+            ClientToScreen(hwnd, &pt);
+            x = pt.x;
+            y = pt.y;
+        }
+#endif
+        out.Append(fmt("placed=%d,%d,%d,%d\n", x, y, (int)(r.w + 0.5f), (int)(r.h + 0.5f)));
     }
     if (!tb) {
         out.Append(StrL("buttons=0\n"));
