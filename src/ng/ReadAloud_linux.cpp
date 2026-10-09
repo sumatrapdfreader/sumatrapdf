@@ -378,3 +378,5 @@ bool TtsEngineCrashed() {
 bool TtsTestEngineCrash() {
     return false;
 }
+
+void TtsTestPumpOnNextSpeak() {}

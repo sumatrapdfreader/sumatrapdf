@@ -649,6 +649,7 @@ enum class ControlCmd : u16 {
     TestReadingBar = 98,
     TestSeedTextSelection = 99,
     TestTtsEngineCrash = 100,
+    TestTtsPumpOnSpeak = 107,
     // ng: not one of orig's; the performance snapshot cmd/port-perf.ts reads.
     // Orig's 101 / 102 are StartPerfLog / StopPerfLog, which this port answers
     // at 119 / 120.
@@ -2268,6 +2269,12 @@ static void ExecuteControlRequest(ControlRequest* req) {
             }
             TempStr state = fmt("crashed=%d voice='%s'", (int)TtsEngineCrashed(), gSettings->readAloudVoiceId);
             AppendTestResult(req, 0, state);
+            break;
+        }
+
+        case ControlCmd::TestTtsPumpOnSpeak: {
+            TtsTestPumpOnNextSpeak();
+            AppendTestResult(req, 0, StrL("OK"));
             break;
         }
 

@@ -58,9 +58,8 @@ bool TtsOnEngineCrash(void* faultAddr);
 bool TtsTakeEngineCrash();
 bool TtsEngineCrashed();
 bool TtsTestEngineCrash();
-#if !defined(SUMATRA_NG)
 void TtsTestPumpOnNextSpeak();
-#else
+#if defined(SUMATRA_NG)
 bool ApplyReadAloudVoiceFromSettings();
 #endif
 

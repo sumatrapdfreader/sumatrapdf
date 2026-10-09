@@ -148,6 +148,7 @@ bool TtsEngineCrashed() {
 bool TtsTestEngineCrash() {
     return false;
 }
+void TtsTestPumpOnNextSpeak() {}
 
 #else
 
@@ -707,8 +708,45 @@ void TtsProcessEvents() {
     SapiProcessEvents();
 }
 
+static bool gTtsTestPumpOnSpeak = false;
+constexpr DWORD kTtsTestPumpMs = 3000;
+
+// -for-testing: the next TtsSpeakUtf8 dispatches window messages the way a
+// COM call's modal loop does, until the app quits or a few seconds pass
+void TtsTestPumpOnNextSpeak() {
+    gTtsTestPumpOnSpeak = gForTesting;
+}
+
+static bool TtsTestPumpMessages() {
+    if (!gTtsTestPumpOnSpeak) {
+        return false;
+    }
+    gTtsTestPumpOnSpeak = false;
+    DWORD deadline = GetTickCount() + kTtsTestPumpMs;
+    MSG msg;
+    for (;;) {
+        while (PeekMessageW(&msg, nullptr, 0, 0, PM_REMOVE)) {
+            if (msg.message == WM_QUIT) {
+                PostQuitMessage((int)msg.wParam);
+                return true;
+            }
+            TranslateMessage(&msg);
+            DispatchMessageW(&msg);
+        }
+        DWORD now = GetTickCount();
+        if (now >= deadline) {
+            return true;
+        }
+        MsgWaitForMultipleObjects(0, nullptr, FALSE, deadline - now, QS_ALLINPUT);
+    }
+}
+
 bool TtsSpeakUtf8(Str text) {
     if (len(text) == 0) {
+        return false;
+    }
+
+    if (TtsTestPumpMessages()) {
         return false;
     }
 
@@ -2026,6 +2064,7 @@ static SpeakChunkResult ReadAloudSpeakChunk(WindowTab* tab, Str errMsg) {
     // before the call returns. Its destructor has already reset the session.
     bool ok = TtsSpeakUtf8(chunk);
     if (!IsWindowTabValid(tab)) {
+        logf("tts: SpeakChunk: tab closed during speak\n");
         if (ok) {
             TtsStop();
         }
