@@ -1845,8 +1845,8 @@ static gp::El* BuildAnnotRow(MainWindow* win, gp::Ctx* cx, BuildMenuCtx* ctx) {
     ToolbarUI* ui = Ui(win);
     bool buttonsEnabled = !IsPlacingAnnotation(win);
 
+    // RTL packs this row to the right. The empty rest still drags the window.
     gp::El* row = gp::Div(cx->a)
-                      ->FlexRow()
                       ->W(gp::kFill)
                       ->H((float)tb->rowDy)
                       ->Shrink0()
@@ -1855,6 +1855,11 @@ static gp::El* BuildAnnotRow(MainWindow* win, gp::Ctx* cx, BuildMenuCtx* ctx) {
                       ->Bg(ToGpui(TbBgColor()))
                       ->OnHover(gp::ListenTo(ui->view, &ToolbarView::OnBarHover))
                       ->OnScrollWheel(gp::ListenTo(ui->view, &ToolbarView::OnBarWheel));
+    if (IsUIRtl()) {
+        row->FlexRowReverse();
+    } else {
+        row->FlexRow();
+    }
     bool prevVisibleNonSep = false;
     for (int i = 0; i < kPdfAnnotationButtonsCount; i++) {
         ToolbarButtonInfo bi = gPdfAnnotationButtons[i];
@@ -2080,8 +2085,8 @@ gp::El* ToolbarBuild(MainWindow* win, gp::Ctx* cx) {
     }
 
     const gp::Theme& th = gp::ThemeNow(cx->app);
+    // RTL packs the buttons to the right. The empty rest still drags the window.
     gp::El* row = gp::Div(cx->a)
-                      ->FlexRow()
                       ->H((float)tb->rowDy)
                       ->Shrink0()
                       ->ItemsCenter()
@@ -2089,6 +2094,11 @@ gp::El* ToolbarBuild(MainWindow* win, gp::Ctx* cx) {
                       ->Bg(ToGpui(TbBgColor()))
                       ->OnHover(gp::ListenTo(ui->view, &ToolbarView::OnBarHover))
                       ->OnScrollWheel(gp::ListenTo(ui->view, &ToolbarView::OnBarWheel));
+    if (IsUIRtl()) {
+        row->FlexRowReverse();
+    } else {
+        row->FlexRow();
+    }
     if (!floating) {
         row->W(gp::kFill);
     }

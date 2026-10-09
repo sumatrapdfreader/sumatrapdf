@@ -15,7 +15,7 @@
 import { mkdirSync, rmSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 import { ControlClient, ControlCommand } from "./control.ts";
-import { assemblePdf, cmdId, runStandalone, tmpPath } from "./util.ts";
+import { assemblePdf, cmdId, pollUntil, runStandalone, tmpPath, USE_NG } from "./util.ts";
 import { clickAt, findChildByClass, killAndWait, launchControlled, sendCommandSync } from "./win-automation.ts";
 import { getClientRect, getWindowLong, GWL_EXSTYLE } from "./winapi.ts";
 
@@ -92,6 +92,50 @@ export async function testit(): Promise<void> {
 
     sendCommandSync(frame, cmdId("CmdDebugToggleRtl"));
     await client.waitForRenderIdle();
+
+    if (USE_NG) {
+      // no toolbar HWND, and mouse x is not mirrored. The buttons pack to the
+      // right; a click there is the button, not a caption drag.
+      await pollUntil(
+        async () => String((await client.request(ControlCommand.TestUiState, []))[1] ?? ""),
+        (s) => / rtl=1/.test(s),
+        { error: (s) => `issue-6120: UI did not switch to RTL (${s})` },
+      );
+      const frameRc = getClientRect(frame);
+      const frameW = frameRc.right - frameRc.left;
+      const dump = await pollUntil(
+        () => toolbarDump(client),
+        (s) => {
+          const m = new RegExp(
+            `^idx=\\d+ cmd=${cmdId("CmdGoToNextPage")} hidden=0 rect=(-?\\d+),(-?\\d+),(-?\\d+),(-?\\d+)`,
+            "m",
+          ).exec(s);
+          if (!m) {
+            return false;
+          }
+          const x = +m[1]!;
+          const dx = +m[3]! - x;
+          return x + dx / 2 > frameW / 2;
+        },
+        { error: (s) => `issue-6120: Next Page stayed on the left in RTL\n${s}` },
+      );
+      const btn = parseBtn(dump, cmdId("CmdGoToNextPage"));
+      const clicked = await client.request(ControlCommand.TestInput, [
+        "click",
+        btn.x + Math.floor(btn.dx / 2),
+        btn.y + Math.floor(btn.dy / 2),
+        0,
+        0,
+      ]);
+      if (clicked[0] !== 0 || !String(clicked[1] ?? "").startsWith("OK")) {
+        throw new Error(`issue-6120: Next Page click failed: ${String(clicked[1] ?? "")}`);
+      }
+      const page = await currentPage(client);
+      if (page !== 2) {
+        throw new Error(`issue-6120: Next Page click did nothing in RTL (page=${page}, want 2)`);
+      }
+      return;
+    }
 
     const toolbar = findChildByClass(frame, TOOLBAR_CLASS);
     if (!toolbar) {
