@@ -1885,6 +1885,8 @@ enum class ControlCmd : u16 {
     // orig's. The thumbnail pane: hwnd, highlighted page, cell rects.
     TestSidebarThumbnails = 113,
     TestMergePdf = 115,
+    // orig's. A wheel while CloseWindow is in progress.
+    TestWheelWhileClosing = 116,
     TestMainMenu = 117,
     // ng: shows the "no longer the default app" bar for the given extensions
     // (".pdf,.epub"); the real check needs an installation and a UserChoice
@@ -3198,6 +3200,32 @@ static TempStr SelectionVarsResultTemp(Str pattern, int* exitCodeOut) {
     return finish({}, 0);
 }
 
+// Orig's canvas DefWindowProc handed this wheel back to the frame.
+static TempStr WheelWhileClosingResultTemp(int* exitCodeOut) {
+    auto finish = [exitCodeOut](int code, TempStr s) -> TempStr {
+        if (exitCodeOut) {
+            *exitCodeOut = code;
+        }
+        return s;
+    };
+    MainWindow* win = FirstWindow();
+    if (!win || !win->IsDocLoaded()) {
+        return finish(2, str::DupTemp(StrL("NOTREADY no-document")));
+    }
+#if OS_WIN
+    HWND hwnd = AppShellNativeHwnd(win);
+    if (!hwnd) {
+        return finish(2, str::DupTemp(StrL("NOTREADY no-window")));
+    }
+    win->isBeingClosed = true;
+    SendMessageW(hwnd, WM_MOUSEWHEEL, MAKEWPARAM(0, -WHEEL_DELTA), 0);
+    if (IsMainWindowValid(win)) {
+        win->isBeingClosed = false;
+    }
+#endif
+    return finish(0, str::DupTemp(StrL("OK")));
+}
+
 static void ExecuteControlRequest(ControlRequest* req) {
     switch ((ControlCmd)req->cmd) {
         case ControlCmd::Ping:
@@ -3786,6 +3814,13 @@ static void ExecuteControlRequest(ControlRequest* req) {
             IntArg(req, 2, n);
             int exitCode = 0;
             Str res = MergePdfResultTemp(action, arg, n, &exitCode);
+            AppendTestResult(req, exitCode, res);
+            break;
+        }
+
+        case ControlCmd::TestWheelWhileClosing: {
+            int exitCode = 0;
+            Str res = WheelWhileClosingResultTemp(&exitCode);
             AppendTestResult(req, exitCode, res);
             break;
         }

@@ -733,6 +733,10 @@ static LRESULT CALLBACK ShellSubclass(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp,
             // the home page scrolls from a wheel posted at the frame, including
             // when the cursor is not over the thumbnails
             if (MainWindow* win = WinOf(hwnd)) {
+                // CloseWindow is tearing the document down. Drop the wheel.
+                if (win->isBeingClosed) {
+                    return 0;
+                }
                 if (msg == WM_MOUSEWHEEL && win->IsCurrentTabAbout()) {
                     HomePageOnMouseWheel(win, GET_WHEEL_DELTA_WPARAM(wp));
                     return 0;
