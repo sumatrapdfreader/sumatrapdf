@@ -81,6 +81,7 @@
 #include "AnnotEditToolbar.h"
 #include "AnnotPlacement.h"
 #include "AnnotFilterToolbar.h"
+#include "RefHover.h"
 #include "PerfLog.h"
 #include "ReadAloud.h"
 #include "ReadingAutoScroll.h"
@@ -587,6 +588,7 @@ enum class ControlCmd : u16 {
     // orig's. The session restore the tests wait on.
     WaitSessionRestored = 103,
     TestNavFiles = 104,
+    TestRefHover = 111,
     TestMergePdf = 115,
     TestMainMenu = 117,
     // ng: shows the "no longer the default app" bar for the given extensions
@@ -916,6 +918,7 @@ static Str MarkupTypeName(AnnotationType tp) {
 }
 
 float CanvasScale(MainWindow* win);
+TempStr RefHoverResultTemp(Str action, int x, int y, int* exitCodeOut);
 
 // CvtToScreen is canvas space. Tests post the rect at the frame, and ToDoc
 // subtracts the canvas origin, so the reported point has to include it.
@@ -1717,6 +1720,18 @@ static void ExecuteControlRequest(ControlRequest* req) {
             out.Append(fmt("drawn shapes=%d\n", CanvasOverlayShapesDrawn()));
             out.Append(fmt("commandPalette=%d\n", IsCommandPaletteVisible() ? 1 : 0));
             AppendTestResult(req, 0, ToStrTemp(out));
+            break;
+        }
+
+        case ControlCmd::TestRefHover: {
+            Str action = StringArg(req, 0);
+            i32 x = 0;
+            i32 y = 0;
+            IntArg(req, 1, x);
+            IntArg(req, 2, y);
+            int exitCode = 0;
+            Str res = RefHoverResultTemp(action, x, y, &exitCode);
+            AppendTestResult(req, exitCode, res);
             break;
         }
 

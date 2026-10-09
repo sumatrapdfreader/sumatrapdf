@@ -37,6 +37,7 @@
 #include "gui/NativeCursors.h"
 #include "gui/TouchGestures.h"
 #include "HomePage.h"
+#include "RefHover.h"
 
 #if OS_WIN
 
@@ -571,11 +572,22 @@ static LRESULT CALLBACK ShellSubclass(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp,
             }
             break;
         case WM_MOUSEWHEEL:
+        case WM_MOUSEHWHEEL:
             // the home page scrolls from a wheel posted at the frame, including
             // when the cursor is not over the thumbnails
             if (MainWindow* win = WinOf(hwnd)) {
-                if (win->IsCurrentTabAbout()) {
+                if (msg == WM_MOUSEWHEEL && win->IsCurrentTabAbout()) {
                     HomePageOnMouseWheel(win, GET_WHEEL_DELTA_WPARAM(wp));
+                    return 0;
+                }
+                // posted wheels carry MK_* in the message. gpui reads GetKeyState,
+                // which a test's PostMessage does not set.
+                POINT pt{GET_X_LPARAM(lp), GET_Y_LPARAM(lp)};
+                ScreenToClient(hwnd, &pt);
+                int delta = GET_WHEEL_DELTA_WPARAM(wp);
+                bool isCtrl = ((GET_KEYSTATE_WPARAM(wp) & MK_CONTROL) != 0) || IsCtrlPressed();
+                bool isShift = ((GET_KEYSTATE_WPARAM(wp) & MK_SHIFT) != 0) || IsShiftPressed();
+                if (RefHoverTakePostedWheel(win, msg == WM_MOUSEHWHEEL, delta, isCtrl, isShift, pt.x, pt.y)) {
                     return 0;
                 }
             }
