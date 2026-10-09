@@ -3653,6 +3653,12 @@ void DocCanvasView::OnPaint(gp::PaintCtx* ctx, gp::El* e, void* user) {
     PaintKeyboardLinkTargets(win, ctx);
     PaintLaserPointer(win, ctx);
     UpdateSelectionToolbarPosition(win);
+    // The flip swapchain keeps three buffers, and an identical scene does not
+    // present. A fresh prim each paint fills every buffer with this frame.
+    static unsigned paintNonce = 0;
+    gp::Rgba mark{};
+    mark.r = (uint8_t)(++paintNonce);
+    gp::CanvasFillRect(ctx, 0, 0, 1, 1, mark);
     gp::CanvasPopClip(ctx);
     gFrame.ctx = nullptr;
 }

@@ -1695,7 +1695,11 @@ static void ExecuteControlRequest(ControlRequest* req) {
                         continue;
                     }
                     Rect p = pi->pos;
-                    Rect s = pi->pageOnScreen;
+                    // pageOnScreen is canvas space. Tests capture the frame, and
+                    // the bars sit outside the viewport, so report the visible page.
+                    Rect view(Point(), dm->GetViewPort().Size());
+                    Rect vis = pi->pageOnScreen.Intersect(view);
+                    Rect s = FrameScreenRect(win, vis.IsEmpty() ? pi->pageOnScreen : vis);
                     out.Append(fmt("page n=%d shown=%d pos=%d,%d,%d,%d screen=%d,%d,%d,%d\n", pageNo,
                                    pi->isShown ? 1 : 0, p.x, p.y, p.dx, p.dy, s.x, s.y, s.dx, s.dy));
                 }
@@ -2146,10 +2150,13 @@ static void SnapshotRenderIdle(ControlRequest* req) {
         req->done.Set();
         return;
     }
-    // ng: orig repaints the canvas here (that is what queues the missing
-    // target tiles); the shell's tick does that on its own, so we only drain
-    // the queue the finished renders come back through
-    AppShellInvalidate(win);
+    // A posted invalidate has not drawn yet. Paint so missing tiles get
+    // requested, then drain the ones that finished during that paint.
+    HWND hwnd = MainWindowHwnd(win);
+    if (hwnd) {
+        AppShellInvalidate(win);
+        UpdateWindow(hwnd);
+    }
     uitask::DrainQueue();
 
     float zoomV = dm->GetZoomVirtual(true);
@@ -2176,6 +2183,14 @@ static void SnapshotRenderIdle(ControlRequest* req) {
     if (win->scrollAnimActive) {
         whyNot = StrL("scrolling");
         ready = false;
+    }
+    // The test captures as soon as this returns. Present the ready frame into
+    // each swapchain buffer; one present leaves PrintWindow on the previous one.
+    if (ready && hwnd) {
+        for (int i = 0; i < 3; i++) {
+            AppShellInvalidate(win);
+            UpdateWindow(hwnd);
+        }
     }
     int nQ = gRenderCache ? gRenderCache->requestCount : -1;
     TempStr busyInfo = gRenderCache ? gRenderCache->BusyInfoTemp(dm) : str::DupTemp(StrL(""));
