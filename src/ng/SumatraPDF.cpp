@@ -9052,6 +9052,10 @@ int GpuiMain(int argc, char** argv) {
         win = len(gWindows) > 0 ? gWindows[0] : win;
     }
     SortNatural(&gFlags->fileNames);
+    // -new-window: each file in its own window. -new-window-tabs keeps them
+    // as tabs of the first window.
+    bool newWindowEach = gFlags->inNewWindow && !gFlags->inNewWindowTabs;
+    MainWindow* docWin = win;
     for (Str path : gFlags->fileNames) {
         // a file the restored session already opened is selected, not re-opened
         WindowTab* open = restoredSession ? FindTabByFilePath(path::NormalizeTemp(path)) : nullptr;
@@ -9059,9 +9063,15 @@ int GpuiMain(int argc, char** argv) {
             TabsSelect(win, win->GetTabIdx(open));
             continue;
         }
-        LoadDocument(win, path);
+        if (newWindowEach && docWin->IsDocLoaded()) {
+            MainWindow* next = CreateAndShowMainWindow(nullptr);
+            if (next) {
+                docWin = next;
+            }
+        }
+        LoadDocument(docWin, path);
         if (gFlags->printDialog) {
-            PrintCurrentFile(win, gFlags->exitWhenDone);
+            PrintCurrentFile(docWin, gFlags->exitWhenDone);
         }
     }
 #if OS_WIN
