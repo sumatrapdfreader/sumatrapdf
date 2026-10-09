@@ -1327,6 +1327,15 @@ TempStr AnnotationPlacementStateTemp(MainWindow* win) {
         bool started = line && p.pageNo > 0;
         PointF start = line ? p.start : PointF{};
         Point end = line ? p.end : Point{};
+        // tests click the frame; the end is stored in canvas pixels
+        if (line) {
+            float s = CanvasScale(win);
+            if (s <= 0.f) {
+                s = 1.f;
+            }
+            end.x += (int)((float)win->canvasRc.x / s + 0.5f);
+            end.y += (int)((float)win->canvasRc.y / s + 0.5f);
+        }
         out.Append(
             fmt("linePlacement active=%d notification=%d cursor=%d started=%d cmd=%d page=%d start=%g,%g "
                 "end=%d,%d message=%s\n",
