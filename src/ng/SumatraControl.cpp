@@ -1879,6 +1879,8 @@ enum class ControlCmd : u16 {
     WaitSessionRestored = 103,
     TestNavFiles = 104,
     TestRefHover = 111,
+    // orig's. The thumbnail pane: hwnd, highlighted page, cell rects.
+    TestSidebarThumbnails = 113,
     TestMergePdf = 115,
     TestMainMenu = 117,
     // ng: shows the "no longer the default app" bar for the given extensions
@@ -3873,6 +3875,13 @@ static void ExecuteControlRequest(ControlRequest* req) {
             out.Append(fmt("drawn shapes=%d\n", CanvasOverlayShapesDrawn()));
             out.Append(fmt("commandPalette=%d\n", IsCommandPaletteVisible() ? 1 : 0));
             AppendTestResult(req, 0, ToStrTemp(out));
+            break;
+        }
+
+        case ControlCmd::TestSidebarThumbnails: {
+            int exitCode = 0;
+            Str res = SidebarThumbnailsResultTemp(&exitCode);
+            AppendTestResult(req, exitCode, res);
             break;
         }
 

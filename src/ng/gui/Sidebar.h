@@ -27,6 +27,7 @@ gpui::El* SidebarBuild(MainWindow*, gpui::Ctx*);
 gpui::El* SidebarBuildFavTab(MainWindow*, gpui::Ctx*);
 void SidebarDelete(MainWindow*);
 void SidebarRefreshThumbnailPage(MainWindow*, int pageNo);
+TempStr SidebarThumbnailsResultTemp(int* exitCodeOut);
 
 // bookmarks pane
 void SidebarSetTocSelection(MainWindow*, TocItem*);

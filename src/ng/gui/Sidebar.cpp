@@ -102,6 +102,8 @@ struct SidebarUI {
     gpui::Bounds tocView{};
     gpui::Bounds favView{};
     gpui::Bounds thumbView{};
+    // one entry per page; only the cells built this frame have a size
+    Vec<gpui::Bounds> thumbBounds;
     float thumbScrollY = 0;
     int thumbRevealPage = 0;
     int thumbSelectedPage = 0;
@@ -1779,6 +1781,10 @@ static gp::El* BuildThumbPane(MainWindow* win, gp::Ctx* cx, bool top) {
     }
     SidebarThumbCache* cache = EnsureThumbCache(win);
     int pageCount = dm->PageCount();
+    VecResize(ui->thumbBounds, pageCount);
+    for (int i = 0; i < pageCount; i++) {
+        ui->thumbBounds[i] = {};
+    }
     int currentPage = dm->CurrentPageNo();
     int cols = (win->sidebarDx - kThumbGap) / (kThumbDx + kThumbGap);
     cols = limitValue(cols, 1, kThumbMaxCols);
@@ -1820,6 +1826,7 @@ static gp::El* BuildThumbPane(MainWindow* win, gp::Ctx* cx, bool top) {
                                ->JustifyCenter()
                                ->Bg(gp::Rgba{0xff, 0xff, 0xff, 0xff})
                                ->PathClick(GpuiDup(cx->a, fmt("sidebar-thumb-%d", pageNo)))
+                               ->BoundsOut(&ui->thumbBounds[pageNo - 1])
                                ->OnClick(gp::ListenTo(ui->view, &SidebarView::OnThumbClick, (intptr_t)pageNo));
             if (pageNo == ui->thumbSelectedPage) {
                 cell->Border(3, gp::Rgba{0, 120, 215, 0xff});
@@ -1863,6 +1870,51 @@ static gp::El* BuildThumbPane(MainWindow* win, gp::Ctx* cx, bool top) {
     int lastPage = std::min(pageCount, endRow * cols);
     StartSidebarThumbs(win, firstPage, lastPage);
     return pane;
+}
+
+// The thumbnail pane as orig's TestSidebarThumbnails line: frame hwnd, whether
+// thumbnails show, the highlighted page, and each cell in frame-client pixels.
+TempStr SidebarThumbnailsResultTemp(int* exitCodeOut) {
+    MainWindow* win = len(gWindows) > 0 ? gWindows[0] : nullptr;
+    if (!win) {
+        if (exitCodeOut) {
+            *exitCodeOut = 2;
+        }
+        return StrL("NOTREADY no-window");
+    }
+    DisplayModel* dm = win->AsFixed();
+    SidebarUI* ui = win->sidebar;
+    int pageCount = dm ? dm->PageCount() : 0;
+    int current = ui ? ui->thumbSelectedPage : 0;
+    int rendered = 0;
+    if (ui && ui->thumbCache) {
+        for (SidebarThumb& thumb : ui->thumbCache->thumbs) {
+            if (thumb.bitmap) {
+                rendered++;
+            }
+        }
+    }
+    bool showing = SidebarContentVisible(win, SidebarContent::Thumbnails);
+    float s = CanvasScale(win);
+    if (s <= 0.f) {
+        s = 1.f;
+    }
+    str::Builder sb;
+    sb.Append(fmt("hwnd=%d thumbnails=%d count=%d current=%d rendered=%d rects=",
+                  (int)(intptr_t)AppShellNativeHwnd(win), showing ? 1 : 0, pageCount, current, rendered));
+    int n = (showing && ui) ? std::min(pageCount, len(ui->thumbBounds)) : 0;
+    for (int pageNo = 1; pageNo <= n; pageNo++) {
+        gp::Bounds b = ui->thumbBounds[pageNo - 1];
+        int x = (int)(b.x / s + 0.5f);
+        int y = (int)(b.y / s + 0.5f);
+        int dx = (int)((b.x + b.w) / s + 0.5f) - x;
+        int dy = (int)((b.y + b.h) / s + 0.5f) - y;
+        sb.Append(fmt("%d:%d,%d,%d,%d;", pageNo, x, y, dx, dy));
+    }
+    if (exitCodeOut) {
+        *exitCodeOut = 0;
+    }
+    return ToStrTemp(sb);
 }
 
 static gp::El* BuildTocPane(MainWindow* win, gp::Ctx* cx, bool top) {
