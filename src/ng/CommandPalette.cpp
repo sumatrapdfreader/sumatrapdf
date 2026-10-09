@@ -2491,7 +2491,7 @@ static void PaletteAttachQueryEdit(CommandPaletteWnd* wnd) {
     if (!wnd || wnd->queryEdit) {
         return;
     }
-    HWND parent = wnd->tw ? ToolWindowHwnd(wnd->tw) : nullptr;
+    HWND parent = wnd->tw ? ToolWindowOrigHwnd(wnd->tw) : nullptr;
     if (!parent) {
         return;
     }
@@ -2517,8 +2517,14 @@ static gp::El* PaletteToolBuild(MainWindow* win, gp::Ctx* cx) {
     if (!wnd || !wnd->visible || wnd->win != win || !wnd->tw || ToolWindowGpui(wnd->tw) != cx->win) {
         return nullptr;
     }
-    // orig's WA_INACTIVE: the palette goes when another window is activated
+    // orig's WA_INACTIVE: the palette goes when another window is activated.
+    // The query Edit lives on the orig-class window, so focus there is still us.
     bool active = gp::WindowIsActive(cx);
+#if OS_WIN
+    if (!active && wnd->queryEdit && GetFocus() == wnd->queryEdit) {
+        active = true;
+    }
+#endif
     if (wnd->wasActive && !active) {
         CloseCommandPalette();
         return nullptr;

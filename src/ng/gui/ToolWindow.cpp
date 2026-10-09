@@ -67,6 +67,8 @@ struct ToolWindow {
     Str title; // owned; what the caption shows
 #if OS_WIN
     HWND hwnd = nullptr;
+    // orig's dialog class. gpui's window stays GpuiSystemMonitor.
+    HWND classHwnd = nullptr;
     bool styled = false;
     int darkCaption = -1;
     // the main window's handle while this modal window keeps it disabled
@@ -185,6 +187,10 @@ void ToolWindowsInvalidateFor(MainWindow* win) {
 }
 
 // the record of a window that is gone
+#if OS_WIN
+static void DestroyOrigDialogClass(ToolWindow* tw);
+#endif
+
 static void FinishClosed(ToolWindow* tw) {
     if (!tw->closing && tw->desc.onClosed) {
         tw->desc.onClosed(IsMainWindowValid(tw->owner) ? tw->owner : nullptr);
@@ -197,6 +203,9 @@ static void FinishClosed(ToolWindow* tw) {
 }
 
 static void Forget(ToolWindow* tw) {
+#if OS_WIN
+    DestroyOrigDialogClass(tw);
+#endif
     VecRemove(gToolWindows, tw);
     tw->gw = nullptr;
     uitask::Post(MkFunc0(FinishClosed, tw), "ToolWindowFinishClosed");
@@ -219,6 +228,83 @@ bool ToolWindowOwnsHwnd(HWND hwnd) {
 
 HWND ToolWindowHwnd(ToolWindow* tw) {
     return IsLive(tw) ? tw->hwnd : nullptr;
+}
+
+// Tests look up a modal dialog, and the command palette, as orig's
+// WindowBase class and post WM_CLOSE to that window.
+static const WCHAR* kOrigDialogClass = L"SumatraWgDefaultWinClass";
+
+static bool WantsOrigDialogClass(const ToolWindow* tw) {
+    if (tw->desc.modal == ToolWinModal::Yes) {
+        return true;
+    }
+    return tw->desc.name && str::Eq(Str(tw->desc.name), StrL("palette"));
+}
+
+static LRESULT CALLBACK OrigDialogProc(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp) {
+    if (msg != WM_CLOSE) {
+        return DefWindowProcW(hwnd, msg, wp, lp);
+    }
+    auto* tw = (ToolWindow*)GetWindowLongPtrW(hwnd, GWLP_USERDATA);
+    SetWindowLongPtrW(hwnd, GWLP_USERDATA, 0);
+    HWND tool = nullptr;
+    if (tw) {
+        tool = tw->hwnd;
+        tw->classHwnd = nullptr;
+    }
+    if (tool && IsWindow(tool)) {
+        SendMessageW(tool, WM_CLOSE, 0, 0);
+    }
+    DestroyWindow(hwnd);
+    return 0;
+}
+
+static void EnsureOrigDialogClass() {
+    static bool registered = false;
+    if (registered) {
+        return;
+    }
+    WNDCLASSEXW wc{};
+    wc.cbSize = sizeof(wc);
+    wc.lpfnWndProc = OrigDialogProc;
+    wc.hInstance = GetModuleHandleW(nullptr);
+    wc.lpszClassName = kOrigDialogClass;
+    registered = RegisterClassExW(&wc) != 0 || GetLastError() == ERROR_CLASS_ALREADY_EXISTS;
+}
+
+static void ShowOrigDialogClass(ToolWindow* tw) {
+    if (!WantsOrigDialogClass(tw) || tw->classHwnd) {
+        return;
+    }
+    HWND owner = AppShellNativeHwnd(tw->owner);
+    if (!owner) {
+        return;
+    }
+    EnsureOrigDialogClass();
+    HWND hwnd = CreateWindowExW(WS_EX_NOACTIVATE | WS_EX_TOOLWINDOW, kOrigDialogClass, L"", WS_POPUP | WS_VISIBLE, 0, 0,
+                                0, 0, owner, nullptr, GetModuleHandleW(nullptr), nullptr);
+    if (!hwnd) {
+        return;
+    }
+    SetWindowLongPtrW(hwnd, GWLP_USERDATA, (LONG_PTR)tw);
+    tw->classHwnd = hwnd;
+}
+
+static void DestroyOrigDialogClass(ToolWindow* tw) {
+    HWND hwnd = tw->classHwnd;
+    tw->classHwnd = nullptr;
+    if (!hwnd || !IsWindow(hwnd)) {
+        return;
+    }
+    SetWindowLongPtrW(hwnd, GWLP_USERDATA, 0);
+    DestroyWindow(hwnd);
+}
+
+HWND ToolWindowOrigHwnd(ToolWindow* tw) {
+    if (!IsLive(tw)) {
+        return nullptr;
+    }
+    return tw->classHwnd ? tw->classHwnd : tw->hwnd;
 }
 
 MainWindow* ToolWindowOwnerFromHwnd(HWND hwnd) {
@@ -685,6 +771,7 @@ static void CreateNow(ToolWindow* tw) {
     if (tw->desc.onTick) {
         gp::WindowSetInterval(gw, tw->desc.tickMs, gp::ListenTo(tw->view, &ToolRootView::OnTick));
     }
+    ShowOrigDialogClass(tw);
     logf("ToolWindow: '%s' hwnd 0x%p at %d,%d %dx%d\n", Str(tw->desc.name), (void*)tw->hwnd, tw->outer.x, tw->outer.y,
          tw->outer.dx, tw->outer.dy);
     gp::AppInvalidate(gw);

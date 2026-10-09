@@ -188,6 +188,8 @@ void ToolWindowsCloseFor(MainWindow* win);
 // NativeWindow.cpp claims gpui windows by class name; these are not frames
 bool ToolWindowOwnsHwnd(HWND hwnd);
 HWND ToolWindowHwnd(ToolWindow* tw);
+// the SumatraWgDefaultWinClass window tests post to, or the tool window
+HWND ToolWindowOrigHwnd(ToolWindow* tw);
 // the main window of the tool window with this handle
 MainWindow* ToolWindowOwnerFromHwnd(HWND hwnd);
 #endif
