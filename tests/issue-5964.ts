@@ -12,7 +12,8 @@
 // Run:  bun tests/issue-5964.ts [--no-build]   (or via tests/run-almost-all.ts)
 
 import { writeFileSync } from "node:fs";
-import { runStandalone, SLOW_BUILD_FACTOR, tmpPath } from "./util.ts";
+import { ControlCommand } from "./control.ts";
+import { runStandalone, SLOW_BUILD_FACTOR, tmpPath, USE_NG } from "./util.ts";
 import { clickAt, findCanvas, killAndWait, launchControlled } from "./win-automation.ts";
 import {
   enumChildWindows,
@@ -160,7 +161,12 @@ export async function testit(): Promise<void> {
     // filled in, so give the drop-down a moment.
     let placement = "";
     for (const deadline = Date.now() + 3000 * SLOW_BUILD_FACTOR; Date.now() < deadline;) {
-      placement = comboText(dlg);
+      if (USE_NG) {
+        const res = await client.request(ControlCommand.TestToolWindow, ["sign-placement"]);
+        placement = String(res[1] ?? "").trim();
+      } else {
+        placement = comboText(dlg);
+      }
       if (placement) {
         break;
       }

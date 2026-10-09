@@ -173,6 +173,14 @@ bool IsSignDocumentDialogVisible() {
     return gSign.visible && !gSign.placing && !gSignTw;
 }
 
+// The placement drop-down's current label. Tests read this; ng has no ComboBox.
+TempStr SignDocumentPlacementTemp() {
+    if (!gSign.visible) {
+        return {};
+    }
+    return str::DupTemp(gSign.ddPlacement.SelText());
+}
+
 static Str SignDocumentDlgTitle() {
     return Tr("Sign Document");
 }
