@@ -10,7 +10,8 @@
 
 import { copyFileSync, mkdirSync, rmSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
-import { ROOT, cmdId, runStandalone, tmpPath } from "./util.ts";
+import { ControlCommand } from "./control.ts";
+import { ROOT, cmdId, runStandalone, tmpPath, USE_NG } from "./util.ts";
 import {
   findCanvas,
   killAndWait,
@@ -20,7 +21,9 @@ import {
   waitForExit,
 } from "./win-automation.ts";
 import {
+  captureWindowPixels,
   getClientRect,
+  getSystemMetrics,
   getWindowLong,
   getWindowRect,
   getWindowText,
@@ -28,6 +31,7 @@ import {
   postMessage,
   setProcessDpiAware,
   sleep,
+  SM_CXVSCROLL,
   WM_CLOSE,
 } from "./winapi.ts";
 
@@ -39,6 +43,54 @@ function vScrollLaidOut(canvas: number): boolean {
   const cr = getClientRect(canvas);
   const styleOn = (getWindowLong(canvas, GWL_STYLE) & WS_VSCROLL) !== 0;
   return styleOn && wr.right - wr.left - cr.right >= 8;
+}
+
+// ng draws the windows-mode bar inside the canvas, not as WS_VSCROLL
+async function ngVScrollbarColorCount(
+  client: { request: (cmd: number, args?: unknown[]) => Promise<unknown[]> },
+  frame: number,
+): Promise<number> {
+  const raw = String((await client.request(ControlCommand.TestLayout, ["get"]))[1] ?? "");
+  const m = /item name=canvas visible=1 rect=(-?\d+),(-?\d+),(-?\d+),(-?\d+)/.exec(raw);
+  if (!m) {
+    return 0;
+  }
+  const scale = Number(/canvasScale=([0-9.]+)/.exec(raw)?.[1] ?? 1) || 1;
+  const cap = captureWindowPixels(frame);
+  if (!cap) {
+    return 0;
+  }
+  const px = (d: number) => Math.round(d / scale);
+  const right = px(+m[1]! + +m[3]!);
+  const y0 = Math.max(0, px(+m[2]!));
+  const y1 = Math.min(cap.h, px(+m[2]! + +m[4]!));
+  const x = Math.max(0, Math.min(cap.w - 1, right - Math.floor(getSystemMetrics(SM_CXVSCROLL) / 2)));
+  const colors = new Set<number>();
+  for (let y = y0; y < y1; y++) {
+    const i = (y * cap.w + x) * 4;
+    colors.add((cap.data[i + 2]! << 16) | (cap.data[i + 1]! << 8) | cap.data[i]!);
+  }
+  return colors.size;
+}
+
+async function assertNgVScroll(
+  client: { request: (cmd: number, args?: unknown[]) => Promise<unknown[]> },
+  frame: number,
+  label: string,
+): Promise<void> {
+  const ui = String((await client.request(ControlCommand.TestUiState, []))[1] ?? "");
+  const vis = /scrollVis=(\d)\//.exec(ui);
+  const sb = /sbV=(-?\d+)\/(-?\d+)\//.exec(ui);
+  const width = sb ? +sb[2]! : 0;
+  if (vis?.[1] !== "1" || width < 8) {
+    throw new Error(
+      `issue-6028: ${label}: vertical scrollbar not laid out (scrollVis=${vis?.[1] ?? "?"} sbW=${width})`,
+    );
+  }
+  const n = await ngVScrollbarColorCount(client, frame);
+  if (n < 2) {
+    throw new Error(`issue-6028: ${label}: vertical scrollbar not painted (${n} color(s) in the strip)`);
+  }
 }
 
 function assertVScroll(canvas: number, label: string): void {
@@ -99,7 +151,11 @@ export async function testit(): Promise<void> {
     if (!canvas1) {
       throw new Error("issue-6028: no canvas on first launch");
     }
-    assertVScroll(canvas1, "first launch");
+    if (USE_NG) {
+      await assertNgVScroll(first.client, first.frame, "first launch");
+    } else {
+      assertVScroll(canvas1, "first launch");
+    }
     postMessage(first.frame, WM_CLOSE, 0, 0);
     if (!(await waitForExit(first.proc, 8000))) {
       throw new Error("issue-6028: first instance did not exit");
@@ -117,7 +173,11 @@ export async function testit(): Promise<void> {
     if (!canvas) {
       throw new Error("issue-6028: no canvas after restore");
     }
-    assertVScroll(canvas, `restore active tab (${getWindowText(second.frame)})`);
+    if (USE_NG) {
+      await assertNgVScroll(second.client, second.frame, `restore active tab (${getWindowText(second.frame)})`);
+    } else {
+      assertVScroll(canvas, `restore active tab (${getWindowText(second.frame)})`);
+    }
 
     const title1 = getWindowText(second.frame);
     sendCommand(second.frame, cmdId("CmdNextTab"));
@@ -127,7 +187,11 @@ export async function testit(): Promise<void> {
     if (title2 === title1) {
       throw new Error(`issue-6028: NextTab did not switch tabs (still ${title2})`);
     }
-    assertVScroll(canvas, `after NextTab (${title2})`);
+    if (USE_NG) {
+      await assertNgVScroll(second.client, second.frame, `after NextTab (${title2})`);
+    } else {
+      assertVScroll(canvas, `after NextTab (${title2})`);
+    }
     console.log(`  restore "${title1}" and NextTab "${title2}" both have a vertical scrollbar ✓`);
 
     postMessage(second.frame, WM_CLOSE, 0, 0);
