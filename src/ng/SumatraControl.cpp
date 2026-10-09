@@ -224,6 +224,82 @@ static TempStr DisplayModeResultTemp(Str action, int* exitCodeOut) {
     return finish(res, 0);
 }
 
+// document order, the target-th (1-based) outline item that has a destination
+static IPageDestination* NthDestInToc(TocItem* item, int target, int& counter) {
+    for (; item; item = item->next) {
+        if (item->dest) {
+            counter++;
+            if (counter == target) {
+                return item->dest;
+            }
+        }
+        IPageDestination* d = NthDestInToc(item->child, target, counter);
+        if (d) {
+            return d;
+        }
+    }
+    return nullptr;
+}
+
+// orig's TocNavigateResultTemp: follow one outline dest and report the page
+static TempStr TocNavigateResultTemp(int destNo, int* exitCodeOut) {
+    str::Builder out;
+    auto fail = [&](Str msg, int code) -> TempStr {
+        out.Append(msg);
+        out.AppendChar('\n');
+        if (exitCodeOut) {
+            *exitCodeOut = code;
+        }
+        return ToStrTemp(out);
+    };
+
+    if (len(gWindows) == 0) {
+        return fail(StrL("NOTREADY no-window"), 2);
+    }
+    MainWindow* win = gWindows[0];
+    if (!win || !win->IsDocLoaded()) {
+        return fail(StrL("NOTREADY no-doc"), 2);
+    }
+    DisplayModel* dm = win->AsFixed();
+    if (!dm) {
+        return fail(StrL("NOTREADY not-fixed"), 2);
+    }
+    EngineBase* engine = dm->GetEngine();
+    TocTree* toc = engine ? engine->GetToc() : nullptr;
+    if (!toc || !toc->root) {
+        return fail(StrL("ERROR no-toc"), 1);
+    }
+    int counter = 0;
+    IPageDestination* dest = NthDestInToc(toc->root, destNo, counter);
+    if (!dest) {
+        return fail(fmt("ERROR no-dest destNo=%d", destNo), 1);
+    }
+    int expectPage = PageDestGetPageNo(dest);
+    if (expectPage <= 0 && dest->loc.chapter >= 1) {
+        Location loc = win->ctrl->ResolveDest(dest);
+        expectPage = win->ctrl->PageNoFromLocation(loc);
+    }
+    if (expectPage <= 0) {
+        return fail(fmt("ERROR bad-dest-page destNo=%d page=%d", destNo, expectPage), 1);
+    }
+
+    // scroll away from page 1 so a leftover offset would land on the wrong page
+    if (dm->PageCount() >= 2 && expectPage != 1) {
+        dm->GoToPage(1, 0, false);
+        dm->ScrollYBy(dm->viewPort.dy / 3, false);
+    }
+
+    win->ctrl->HandleLink(dest, win->linkHandler);
+
+    int landed = dm->CurrentPageNo();
+    bool ok = landed == expectPage;
+    out.Append(fmt("%s dest=%d expect=%d landed=%d\n", ok ? StrL("OK") : StrL("FAIL"), destNo, expectPage, landed));
+    if (exitCodeOut) {
+        *exitCodeOut = ok ? 0 : 1;
+    }
+    return ToStrTemp(out);
+}
+
 // Select the text of one page so a test can turn it into a highlight.
 static TempStr SeedTextSelectionResultTemp(int pageNo, int* exitCodeOut) {
     str::Builder out;
@@ -1105,6 +1181,18 @@ static void ExecuteControlRequest(ControlRequest* req) {
                 break;
             }
             AppendTestResult(req, 0, SelectTextKeyboardResultTemp(win));
+            break;
+        }
+
+        case ControlCmd::TestTocNavigate: {
+            i32 destNo = 1;
+            if (!IntArg(req, 0, destNo)) {
+                AppendError(req, StrL("TestTocNavigate expects int destNo (1-based)"));
+                break;
+            }
+            int exitCode = 0;
+            Str res = TocNavigateResultTemp(destNo, &exitCode);
+            AppendTestResult(req, exitCode, res);
             break;
         }
 
