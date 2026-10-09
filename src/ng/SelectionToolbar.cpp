@@ -34,6 +34,7 @@
 #include "Selection.h"
 #include "SelectionToolbar.h"
 #include "SvgIcons.h"
+#include "Toolbar.h"
 
 #include "SumatraLog.h"
 
@@ -541,23 +542,87 @@ gp::El* SelectionToolbarBuild(MainWindow* win, gp::Ctx* cx) {
     return card;
 }
 
-// what the selection toolbar offers right now, for the scripted tests
+// Parsed and laid-out selection toolbar state for -dbg-control tests.
 TempStr SelectionToolbarLayoutDumpTemp(MainWindow* win) {
-    str::Builder out;
     Vec<int> ids;
     CollectBuiltInSelectionToolbarCmds(ids);
-    out.Append(fmt("candidates=%d\n", len(ids)));
-    SelectionToolbar* tb = win ? win->selectionToolbar : nullptr;
+    str::Builder out;
+    out.Append(fmt("n=%d\n", len(ids)));
+    int nSvgIcons = 0;
+    for (int i = 0; i < len(ids); i++) {
+        out.Append(fmt("cmd=%d\n", ids[i]));
+        const SelectionToolbarButton* b = FindCandidateButton(ids[i]);
+        if (b && len(b->svgIcon) > 0) {
+            nSvgIcons++;
+        }
+    }
+    out.Append(fmt("svgIcons=%d\n", nSvgIcons));
+
+    SelectionToolbar* tb = win ? GetOrCreateToolbar(win) : nullptr;
     out.Append(fmt("visible=%d\n", IsSelectionToolbarVisible(win) ? 1 : 0));
+    NotificationWnd* notif = win ? GetNotificationForGroup(win, kNotifCopiedToClipboard) : nullptr;
+    out.Append(fmt("notif=%s\n", notif ? NotificationGetMessageTemp(notif) : StrL("")));
+    if (tb && tb->visible) {
+        gp::Bounds r = tb->measured;
+        out.Append(fmt("placed=%d,%d,%d,%d\n", (int)r.x, (int)r.y, (int)r.w, (int)r.h));
+    }
     if (!tb) {
         out.Append(StrL("buttons=0\n"));
         return ToStrTemp(out);
     }
-    out.Append(fmt("buttons=%d placed=%d,%d,%d,%d\n", len(tb->buttons), (int)tb->measured.x, (int)tb->measured.y,
-                   (int)tb->measured.w, (int)tb->measured.h));
+    InitButtons(tb, win);
+    int nSeparators = 0;
+    for (const SelectionToolbarButton& b : tb->buttons) {
+        if (b.cmdId == 0) {
+            nSeparators++;
+        }
+    }
+    int iconSize = ToolbarIconSize();
+    out.Append(fmt("buttons=%d separators=%d toolbarSize=%d,%d mainIconSize=%d\n", len(tb->buttons), nSeparators, 0, 0,
+                   iconSize));
     for (int i = 0; i < len(tb->buttons); i++) {
         const SelectionToolbarButton& b = tb->buttons[i];
-        out.Append(fmt("button=%d cmd=%d label=%s\n", i, b.cmdId, ButtonLabel(b)));
+        Str kind = b.cmdId == 0 ? StrL("separator") : (len(b.svgIcon) > 0 ? StrL("icon") : StrL("text"));
+        int iconDx = len(b.svgIcon) > 0 ? iconSize : 0;
+        out.Append(
+            fmt("button=%d cmd=%d kind=%s icon=%d,%d tooltip=%s\n", i, b.cmdId, kind, iconDx, iconDx, ButtonLabel(b)));
     }
     return ToStrTemp(out);
+}
+
+TempStr SelectionToolbarLayoutDumpTemp() {
+    MainWindow* win = len(gWindows) > 0 ? gWindows[0] : nullptr;
+    return SelectionToolbarLayoutDumpTemp(win);
+}
+
+TempStr SelectionToolbarClickTemp(Str cmdName, int* exitCodeOut) {
+    str::Builder out;
+    auto finish = [&](Str msg, int code) -> TempStr {
+        out.Append(msg);
+        if (exitCodeOut) {
+            *exitCodeOut = code;
+        }
+        return ToStrTemp(out);
+    };
+    MainWindow* win = len(gWindows) > 0 ? gWindows[0] : nullptr;
+    SelectionToolbar* tb = win ? win->selectionToolbar : nullptr;
+    if (!IsSelectionToolbarVisible(win) || !tb) {
+        return finish(StrL("ERROR toolbar-not-visible\n"), 1);
+    }
+    int cmdId = GetCommandIdByName(cmdName);
+    if (cmdId <= 0) {
+        return finish(fmt("ERROR unknown-cmd %s\n", cmdName), 1);
+    }
+    bool found = false;
+    for (const SelectionToolbarButton& b : tb->buttons) {
+        if (b.cmdId == cmdId) {
+            found = true;
+            break;
+        }
+    }
+    if (!found) {
+        return finish(fmt("ERROR no-button %s\n", cmdName), 1);
+    }
+    InvokeSelectionToolbarCommand(win, cmdId);
+    return finish(StrL("OK\n"), 0);
 }

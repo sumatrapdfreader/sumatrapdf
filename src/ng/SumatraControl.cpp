@@ -91,6 +91,7 @@ extern "C" {
 #include "AnnotEditToolbar.h"
 #include "AnnotPlacement.h"
 #include "AnnotFilterToolbar.h"
+#include "SelectionToolbar.h"
 #include "RefHover.h"
 #include "PerfLog.h"
 #include "ReadAloud.h"
@@ -2699,6 +2700,18 @@ static void ExecuteControlRequest(ControlRequest* req) {
             int exitCode = 0;
             Str res = ImageResizeEdgesResultTemp(imagePath, newW, newH, &exitCode);
             AppendTestResult(req, exitCode, res);
+            break;
+        }
+
+        case ControlCmd::TestSelectionToolbar: {
+            Str action = StringArg(req, 0);
+            if (action) {
+                int exitCode = 0;
+                Str res = SelectionToolbarClickTemp(action, &exitCode);
+                AppendTestResult(req, exitCode, res);
+                break;
+            }
+            AppendTestResult(req, 0, SelectionToolbarLayoutDumpTemp());
             break;
         }
 
