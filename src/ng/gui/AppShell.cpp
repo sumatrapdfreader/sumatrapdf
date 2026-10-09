@@ -1088,40 +1088,20 @@ bool AppShellPromptForFiles(MainWindow* win, Str filter, StrVec* pathsOut) {
 
 // --- key bindings -----------------------------------------------------------
 
-static void AddKeyBinding(gp::KeyBinding* bindings, int& nBind, const AccelStroke& s) {
-    if (len(s.stroke) == 0) {
-        return;
-    }
-    gp::KeyBinding& b = bindings[nBind++];
-    b.stroke = s.stroke.s;
-    b.action = ActSumatraCmd();
-    b.context = kShellKeyContext;
-    b.arg = (intptr_t)s.cmd;
-}
-
 static void BindKeys() {
     int n = 0;
     const AccelStroke* strokes = GetAcceleratorStrokes(n);
     auto* bindings = AllocArrayTemp<gp::KeyBinding>(n);
     int nBind = 0;
-    // gpui keeps 256 bindings and has already used part of them. Plain keys
-    // first (bare A, Shift+A), then Command, then the Ctrl duplicates.
-    for (int pass = 0; pass < 3; pass++) {
-        for (int i = 0; i < n; i++) {
-            Str s = strokes[i].stroke;
-            bool cmd = str::StartsWith(s, StrL("cmd-"));
-            bool ctrl = str::StartsWith(s, StrL("ctrl-"));
-            if (pass == 0 && (cmd || ctrl)) {
-                continue;
-            }
-            if (pass == 1 && !cmd) {
-                continue;
-            }
-            if (pass == 2 && !ctrl) {
-                continue;
-            }
-            AddKeyBinding(bindings, nBind, strokes[i]);
+    for (int i = 0; i < n; i++) {
+        if (len(strokes[i].stroke) == 0) {
+            continue;
         }
+        gp::KeyBinding& b = bindings[nBind++];
+        b.stroke = strokes[i].stroke.s;
+        b.action = ActSumatraCmd();
+        b.context = kShellKeyContext;
+        b.arg = (intptr_t)strokes[i].cmd;
     }
     gp::KeymapBind(bindings, nBind);
     logf("BindKeys: %d shortcuts bound\n", nBind);
