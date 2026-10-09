@@ -2559,11 +2559,15 @@ void ShellView::OnKeyDown(ShellView* self, gp::Ctx* cx, const gp::KeyEvent* ev) 
     if (ev->ctrl || ev->alt || ev->platform) {
         return;
     }
+#if !OS_WIN
+    // Windows takes the character from WM_CHAR instead, so a real key and the
+    // WM_CHAR that follows it do not both toggle visual mode.
     if (SelectTextWithKeyboardActive(win) && SelectTextWithKeyboardOnChar(win, ev->vk)) {
         mut->propagate = false;
         gp::Notify(cx);
         return;
     }
+#endif
     // only unmodified letters type a hint: Shift + F still toggles the mode off
     if (!ev->shift && KeyboardLinkFollowingCapturesKey(win, ev->vk) && KeyboardLinkFollowingOnChar(win, ev->vk)) {
         mut->propagate = false;

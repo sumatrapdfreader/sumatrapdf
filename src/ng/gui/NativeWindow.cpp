@@ -39,6 +39,7 @@
 #include "HomePage.h"
 #include "RefHover.h"
 #include "gui/DocCanvas.h"
+#include "SelectTextKeyboard.h"
 
 #if OS_WIN
 
@@ -723,6 +724,12 @@ static LRESULT CALLBACK ShellSubclass(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp,
         case WM_CHAR:
             if (MainWindow* win = WinOf(hwnd)) {
                 if (FreeTextInPlaceCommitOnChar(win, (int)wp)) {
+                    return 0;
+                }
+                // a posted WM_CHAR (the keyboard-selection test types 'v')
+                // never becomes a gpui keydown. Handling it there as well
+                // would toggle visual mode twice for a real key.
+                if (SelectTextWithKeyboardOnChar(win, (int)wp)) {
                     return 0;
                 }
             }

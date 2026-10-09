@@ -65,6 +65,7 @@
 #if defined(SUMATRA_NG)
 #include "gui/AppShell.h"
 #include "gui/DocCanvas.h"
+#include "SelectTextKeyboard.h"
 #else
 #include "SelectTextKeyboard.h"
 #include "Commands.h"
@@ -1154,11 +1155,9 @@ void OnSelectionStart(MainWindow* win, int x, int y, bool forceRect) {
 void OnSelectionStart(MainWindow* win, int x, int y, WPARAM /*key*/, bool forceRect) {
 #endif
     ReportIf(!win->AsFixed());
-#if !defined(SUMATRA_NG)
     // selecting with the mouse takes over: leave keyboard selection mode so its
     // caret and help bar don't linger over a mouse selection
     StopSelectTextWithKeyboard(win);
-#endif
     DeleteOldSelectionInfo(win, true);
 
     win->selectionDragEdge = SelectionDragEdge::None;
