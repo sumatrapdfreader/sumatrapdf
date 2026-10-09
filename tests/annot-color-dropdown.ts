@@ -166,7 +166,8 @@ export async function openChipDropdown(client: ControlClient, pid: number, kind:
   }
   const line = await pollUntil(
     async () => /annotColorPopup .*/.exec(await markupDump(client))?.[0] ?? "",
-    (s) => /annotColorPopup visible=1/.test(s),
+    // The popup is marked visible before the frame lays the swatches out.
+    (s) => /annotColorPopup visible=1 n=([1-9]\d*)/.test(s),
     { error: (s) => `annot-color-dropdown: the ${kind} drop-down is not in the dump: ${s}` },
   );
   if (!/annotColorPopup visible=1/.test(line)) {

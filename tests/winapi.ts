@@ -14,6 +14,7 @@
 
 import { dlopen, FFIType, JSCallback, ptr, toArrayBuffer } from "bun:ffi";
 import { IS_MAC, IS_WIN } from "./host.ts";
+import { macSendMessage, macSendText } from "./mac-control.ts";
 
 // Windows tests talk to user32. On macOS the same helpers either use
 // CoreGraphics or throw, so importing this file does not require the DLLs.
@@ -501,6 +502,9 @@ export function packCoords(x: number, y: number): number {
 }
 
 export function getClassName(hwnd: number): string {
+  if (!IS_WIN) {
+    return "";
+  }
   const buf = new Uint16Array(256);
   const n = user32.symbols.GetClassNameW(hwnd, ptr(buf), 256);
   let s = "";
@@ -533,6 +537,9 @@ export function getFocusedHwnd(hwndInSameThread: number): number {
 
 // visit returns false to stop enumeration early
 export function enumWindows(visit: (hwnd: number) => boolean): void {
+  if (!IS_WIN) {
+    return;
+  }
   const cb = new JSCallback((hwnd: number) => visit(hwnd), {
     args: [FFIType.ptr, FFIType.i64],
     returns: FFIType.bool,
@@ -545,6 +552,9 @@ export function enumWindows(visit: (hwnd: number) => boolean): void {
 }
 
 export function enumChildWindows(parent: number, visit: (hwnd: number) => boolean): void {
+  if (!IS_WIN) {
+    return;
+  }
   const cb = new JSCallback((hwnd: number) => visit(hwnd), {
     args: [FFIType.ptr, FFIType.i64],
     returns: FFIType.bool,
@@ -642,6 +652,9 @@ export function getClientRect(hwnd: number): Rect {
 }
 
 export function clientToScreen(hwnd: number, x: number, y: number): { x: number; y: number } {
+  if (IS_MAC) {
+    return { x, y };
+  }
   const buf = new Int32Array([x, y]);
   user32.symbols.ClientToScreen(hwnd, ptr(buf));
   return { x: buf[0], y: buf[1] };
@@ -672,6 +685,10 @@ export function getScrollPos(hwnd: number, bar: number = SB_VERT): number {
 }
 
 export function postMessage(hwnd: number, msg: number, wParam: number, lParam: number): boolean {
+  if (IS_MAC) {
+    macSendMessage(msg, wParam, lParam);
+    return true;
+  }
   return user32.symbols.PostMessageW(hwnd, msg, BigInt(wParam), BigInt(lParam));
 }
 
@@ -690,6 +707,9 @@ export async function postChar(hwnd: number, ch: string): Promise<boolean> {
 // LRESULT as a bigint -- TreeView messages return HTREEITEM pointers that can
 // exceed 2^53, so they must not be coerced to a JS number.
 export function sendMessage(hwnd: number, msg: number, wParam: number | bigint, lParam: number | bigint): bigint {
+  if (IS_MAC) {
+    return macSendMessage(msg, wParam, lParam);
+  }
   return user32.symbols.SendMessageW(hwnd, msg, BigInt(wParam), BigInt(lParam)) as bigint;
 }
 
@@ -835,9 +855,15 @@ function macWarpCursor(x: number, y: number): boolean {
   }
 }
 
+let macCursor = { x: 0, y: 0 };
+
 export function setCursorPos(x: number, y: number): boolean {
   if (IS_MAC) {
-    return macWarpCursor(x, y);
+    const ok = macWarpCursor(x, y);
+    if (ok) {
+      macCursor = { x, y };
+    }
+    return ok;
   }
   return user32.symbols.SetCursorPos(x, y);
 }
@@ -1162,6 +1188,9 @@ export function setProcessDpiAware(): boolean {
 // The real cursor position, in screen (physical, when this process is DPI
 // aware) coordinates.
 export function getCursorPos(): { x: number; y: number } {
+  if (IS_MAC) {
+    return macCursor;
+  }
   const buf = new Int32Array(2);
   if (!user32.symbols.GetCursorPos(ptr(buf))) {
     return { x: 0, y: 0 };
@@ -1380,6 +1409,10 @@ export function tbGetButtonIndex(toolbar: number, cmdId: number): number {
 // set a window's text via WM_SETTEXT (works on edit controls cross-process,
 // unlike SendInput typing). Synchronous, so the wide buffer stays alive.
 export function sendText(hwnd: number, text: string): void {
+  if (IS_MAC) {
+    macSendText(text);
+    return;
+  }
   const buf = wideZ(text);
   sendMessage(hwnd, WM_SETTEXT, 0, ptr(buf));
 }

@@ -1,5 +1,6 @@
 import { Socket, createConnection } from "node:net";
 import { IS_WIN } from "./host.ts";
+import { registerControlPath } from "./mac-control.ts";
 import { ensureModifierKeysUp, killAndWait, testWindowPos } from "./winapi.ts";
 import { drainProcStderr, SLOW_BUILD_FACTOR } from "./util.ts";
 
@@ -421,6 +422,7 @@ export class ControlClient {
     while (Date.now() < deadline) {
       try {
         const socket = await connectSocket(path);
+        registerControlPath(path);
         return new ControlClient(socket);
       } catch (e) {
         lastErr = e;

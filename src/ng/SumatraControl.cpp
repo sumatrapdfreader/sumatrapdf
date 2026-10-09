@@ -22,6 +22,7 @@
 #if OS_WIN
 #include "base/Win.h"
 #elif !OS_WASM
+#include <poll.h>
 #include <sys/socket.h>
 #include <sys/un.h>
 #include <unistd.h>
@@ -3544,6 +3545,10 @@ static TempStr RotatedTextMouseDragResultTemp(Str word, int* exitCodeOut) {
     return ToStrTemp(out);
 }
 
+bool FreeTextInPlaceSetText(MainWindow* win, const WCHAR* text);
+bool CommandPaletteSetText(MainWindow* win, const WCHAR* text);
+bool FreeTextInPlaceCommitOnChar(MainWindow* win, int ch);
+
 static void ExecuteControlRequest(ControlRequest* req) {
     switch ((ControlCmd)req->cmd) {
         case ControlCmd::Ping:
@@ -4564,12 +4569,29 @@ static void ExecuteControlRequest(ControlRequest* req) {
 
         case ControlCmd::TestInput: {
             MainWindow* win = FirstWindow();
+            Str kind = StringArg(req, 0);
+            // WM_SETTEXT: the edit is a gpui field, and the test's pointer is
+            // not this process's.
+            if (str::Eq(kind, StrL("text"))) {
+                bool ok = false;
+                if (win) {
+                    WStr w = ToWStrTemp(StringArg(req, 1));
+                    ok = FreeTextInPlaceSetText(win, w.s) || CommandPaletteSetText(win, w.s);
+                }
+                AppendTestResult(req, ok ? 0 : 1, ok ? StrL("OK") : StrL("ERR text"));
+                break;
+            }
             i32 a = 0, b = 0, c = 0, d = 0;
             IntArg(req, 1, a);
             IntArg(req, 2, b);
             IntArg(req, 3, c);
             IntArg(req, 4, d);
-            AppendTestResult(req, 0, AppShellTestInput(win, StringArg(req, 0), a, b, c, d));
+            // WM_CHAR LF commits the in-place editor before gpui sees it.
+            if (str::Eq(kind, StrL("char")) && a == '\n' && FreeTextInPlaceCommitOnChar(win, a)) {
+                AppendTestResult(req, 0, StrL("OK"));
+                break;
+            }
+            AppendTestResult(req, 0, AppShellTestInput(win, kind, a, b, c, d));
             break;
         }
 
@@ -5196,33 +5218,46 @@ static bool WriteControlResponse(ControlConn h, ControlRequest* req) {
     return WriteExact(h, ToStr(packet));
 }
 
-// returns true if the app is quitting, so the listener thread should exit
-// instead of blocking in ConnectNamedPipe (ASan shutdown hangs on that)
+// One request. false closes the connection. *stop ends the listener thread
+// (Quit), which otherwise blocks in ConnectNamedPipe through ASan shutdown.
+static bool HandleControlRequest(ControlConn h, bool* stop) {
+    *stop = false;
+    ControlRequest* req = ReadControlRequest(h);
+    if (!req) {
+        return false;
+    }
+    bool isQuit = (ControlCmd)req->cmd == ControlCmd::Quit;
+    if ((ControlCmd)req->cmd == ControlCmd::CrashMe) {
+        log(StrL("ControlCmd::CrashMe\n"));
+        CrashMe();
+    }
+    // WaitRenderIdle polls on this thread so the UI thread stays free to
+    // paint (and thereby request the tiles we are waiting for)
+    if ((ControlCmd)req->cmd == ControlCmd::WaitRenderIdle) {
+        RunWaitRenderIdle(req);
+    } else if ((ControlCmd)req->cmd == ControlCmd::WaitSessionRestored) {
+        RunWaitSessionRestored(req);
+    } else {
+        uitask::Post(MkFunc0<ControlRequest>(ExecuteControlRequest, req), "SumatraControl");
+        req->done.Wait();
+    }
+    bool ok = WriteControlResponse(h, req);
+    DeleteControlRequest(req);
+    if (!ok) {
+        return false;
+    }
+    if (isQuit) {
+        *stop = true;
+        return false;
+    }
+    return true;
+}
+
 static bool ProcessControlConnection(ControlConn h) {
     for (;;) {
-        ControlRequest* req = ReadControlRequest(h);
-        if (!req) {
-            return false;
-        }
-        bool isQuit = (ControlCmd)req->cmd == ControlCmd::Quit;
-        if ((ControlCmd)req->cmd == ControlCmd::CrashMe) {
-            log(StrL("ControlCmd::CrashMe\n"));
-            CrashMe();
-        }
-        // WaitRenderIdle polls on this thread so the UI thread stays free to
-        // paint (and thereby request the tiles we are waiting for)
-        if ((ControlCmd)req->cmd == ControlCmd::WaitRenderIdle) {
-            RunWaitRenderIdle(req);
-        } else if ((ControlCmd)req->cmd == ControlCmd::WaitSessionRestored) {
-            RunWaitSessionRestored(req);
-        } else {
-            uitask::Post(MkFunc0<ControlRequest>(ExecuteControlRequest, req), "SumatraControl");
-            req->done.Wait();
-        }
-        bool ok = WriteControlResponse(h, req);
-        DeleteControlRequest(req);
-        if (!ok || isQuit) {
-            return isQuit;
+        bool stop = false;
+        if (!HandleControlRequest(h, &stop)) {
+            return stop;
         }
     }
 }
@@ -5303,27 +5338,77 @@ static void SumatraControlThread(ControlThreadArg* arg) {
     }
     // a stale socket file from a run that did not clean up
     unlink(addr.sun_path);
-    if (bind(listener, (sockaddr*)&addr, sizeof(addr)) != 0 || listen(listener, 1) != 0) {
+    if (bind(listener, (sockaddr*)&addr, sizeof(addr)) != 0 || listen(listener, 4) != 0) {
         logf("bind() / listen() failed for control socket '%s', errno=%d\n", sockPath, errno);
         close(listener);
         return;
     }
-    for (;;) {
-        int conn = accept(listener, nullptr, nullptr);
-        if (conn < 0) {
+    // The async client stays connected. Window messages use a second socket,
+    // so the listener has to poll every connection instead of reading one
+    // until it disconnects.
+    constexpr int kMaxConns = 8;
+    int conns[kMaxConns];
+    int nConns = 0;
+    bool stop = false;
+    while (!stop) {
+        pollfd fds[1 + kMaxConns];
+        fds[0].fd = listener;
+        fds[0].events = POLLIN;
+        fds[0].revents = 0;
+        for (int i = 0; i < nConns; i++) {
+            fds[i + 1].fd = conns[i];
+            fds[i + 1].events = POLLIN;
+            fds[i + 1].revents = 0;
+        }
+        int pr = poll(fds, (nfds_t)(1 + nConns), -1);
+        if (pr < 0) {
             if (errno == EINTR) {
                 continue;
             }
-            logf("accept() failed for control socket, errno=%d\n", errno);
+            logf("poll() failed for control socket, errno=%d\n", errno);
             break;
         }
-        bool stop = ProcessControlConnection(conn);
-        // the client reads the reply (to Quit, too) before it sees the close
-        shutdown(conn, SHUT_WR);
-        close(conn);
-        if (stop) {
-            break;
+        if ((fds[0].revents & POLLIN) != 0) {
+            int conn = accept(listener, nullptr, nullptr);
+            if (conn >= 0) {
+                if (nConns < kMaxConns) {
+                    conns[nConns++] = conn;
+                } else {
+                    close(conn);
+                }
+            } else if (errno != EINTR) {
+                logf("accept() failed for control socket, errno=%d\n", errno);
+                break;
+            }
         }
+        for (int i = 0; i < nConns;) {
+            short rev = fds[i + 1].revents;
+            if ((rev & (POLLIN | POLLHUP | POLLERR | POLLNVAL)) == 0) {
+                i++;
+                continue;
+            }
+            bool quit = false;
+            bool keep = (rev & POLLIN) != 0 && HandleControlRequest(conns[i], &quit);
+            if (quit) {
+                stop = true;
+            }
+            if (keep && !stop) {
+                i++;
+                continue;
+            }
+            // the client reads the reply (to Quit, too) before it sees the close.
+            // fds[] still describes this slot, so the swapped connection waits
+            // for the next poll.
+            shutdown(conns[i], SHUT_WR);
+            close(conns[i]);
+            nConns--;
+            conns[i] = conns[nConns];
+            i++;
+        }
+    }
+    for (int i = 0; i < nConns; i++) {
+        shutdown(conns[i], SHUT_WR);
+        close(conns[i]);
     }
     close(listener);
     unlink(addr.sun_path);

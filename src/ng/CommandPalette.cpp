@@ -1860,7 +1860,6 @@ void CommandPaletteOnSettingsReloaded() {
     AppShellInvalidate(wnd->win);
 }
 
-#if OS_WIN
 // Tests replace the query with WM_SETTEXT on the frame. The box is a gpui
 // input, so the message has to land here.
 bool CommandPaletteSetText(MainWindow* win, const WCHAR* text) {
@@ -1873,7 +1872,6 @@ bool CommandPaletteSetText(MainWindow* win, const WCHAR* text) {
     AppShellInvalidate(win);
     return true;
 }
-#endif
 
 static void QueryChanged() {
     CommandPaletteWnd* wnd = gCommandPaletteWnd;

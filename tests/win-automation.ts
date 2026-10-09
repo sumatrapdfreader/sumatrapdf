@@ -108,6 +108,10 @@ async function lastProcStderrTail(): Promise<string> {
 setFailureContext(lastProcStderrTail);
 
 export function beginSharedControlledSession(): void {
+  // macOS has no WM_COPYDATA open, so each test launches its own process.
+  if (IS_MAC) {
+    return;
+  }
   if (sharedSession || sharedSessionRequested) {
     throw new Error("a shared controlled session is already active");
   }
@@ -287,6 +291,9 @@ export function waitForFrame(pid: number, timeoutMs = 12000): Promise<number> {
 
 // the document canvas (child of the frame)
 export function findCanvas(frame: number): number {
+  if (IS_MAC) {
+    return frame;
+  }
   const canvas = findChildWindow(frame, CANVAS_CLASS);
   if (canvas) {
     return canvas;
@@ -346,10 +353,15 @@ export async function clickAt(hwnd: number, x: number, y: number, settleMs = 350
   sendMessage(hwnd, WM_LBUTTONDOWN, MK_LBUTTON | extraMk, lp);
   sendMessage(hwnd, WM_LBUTTONUP, extraMk, lp);
 
-  // someone moving the real mouse (e.g. over RDP) mid-click turns it into a drag
-  const at = getCursorPos();
-  if (at.x !== screen.x || at.y !== screen.y) {
-    console.log(`⚠ clickAt: real mouse moved during the click (to ${at.x},${at.y}, click at ${screen.x},${screen.y})`);
+  // someone moving the real mouse (e.g. over RDP) mid-click turns it into a drag.
+  // macOS has no GetCursorPos; the click coordinates went out as TestInput.
+  if (!IS_MAC) {
+    const at = getCursorPos();
+    if (at.x !== screen.x || at.y !== screen.y) {
+      console.log(
+        `⚠ clickAt: real mouse moved during the click (to ${at.x},${at.y}, click at ${screen.x},${screen.y})`,
+      );
+    }
   }
   await sleep(settleMs);
 }
