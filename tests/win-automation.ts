@@ -13,6 +13,7 @@
 // in the individual ad-hoc scripts.
 
 import { IS_MAC } from "./host.ts";
+import { macClick } from "./mac-control.ts";
 import { cmdId, drainProcStderr, EXE, setFailureContext, USE_NG } from "./util.ts";
 import {
   testWindowPos,
@@ -347,6 +348,11 @@ export async function waitForFormEditor(canvas: number, timeoutMs = 1500): Promi
 // WM_MOUSEMOVE at the real cursor, and if that is far from (x,y) the app treats
 // the click as a drag (ClickEdgeToTurnPage and similar then no-op).
 export async function clickAt(hwnd: number, x: number, y: number, settleMs = 350, extraMk = 0): Promise<void> {
+  if (IS_MAC) {
+    macClick(x, y, extraMk);
+    await sleep(settleMs);
+    return;
+  }
   const screen = clientToScreen(hwnd, x, y);
   setCursorPos(screen.x, screen.y);
   const lp = packCoords(x, y);

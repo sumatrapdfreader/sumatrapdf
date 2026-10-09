@@ -281,7 +281,7 @@ function readExact(fd: number, len: number): Buffer {
   return out;
 }
 
-function controlRequest(cmd: number, args: ControlArg[]): ControlArg[] {
+export function macControlRequest(cmd: number, args: ControlArg[]): ControlArg[] {
   const id = gNextId++ & 0xffff;
   const packet = encodeRequest(cmd, id, args);
   let fd = ensureFd();
@@ -341,7 +341,7 @@ function sign16(v: bigint): number {
 type Geom = { scale: number; ox: number; oy: number; cx: number; cy: number; cdx: number; cdy: number };
 
 function geom(): Geom {
-  const res = controlRequest(TestLayout, []);
+  const res = macControlRequest(TestLayout, []);
   const text = String(res[1] ?? "");
   const scale = Number(/scale=([0-9.]+)/.exec(text)?.[1] ?? "1") || 1;
   const canvas = /item name=canvas visible=\d+ rect=(-?\d+),(-?\d+),(-?\d+),(-?\d+)/.exec(text);
@@ -353,7 +353,7 @@ function geom(): Geom {
 }
 
 export function macFrameClientRect(): { left: number; top: number; right: number; bottom: number } {
-  const res = controlRequest(TestLayout, []);
+  const res = macControlRequest(TestLayout, []);
   const text = String(res[1] ?? "");
   const scale = Number(/scale=([0-9.]+)/.exec(text)?.[1] ?? "1") || 1;
   const frame = /item name=frame visible=\d+ rect=(-?\d+),(-?\d+),(-?\d+),(-?\d+)/.exec(text);
@@ -402,8 +402,16 @@ function isMouseDown(msg: number): boolean {
   );
 }
 
+// One click, not down then up: the run loop can snap in a real mouse move
+// between the two and gpui treats that as a drag.
+export function macClick(px: number, py: number, wParam = 0): void {
+  const g = geom();
+  const at = dips(px, py, g);
+  input("click", at.x, at.y, 0, modsOf(wParam));
+}
+
 function input(kind: string, a: number, b: number, c: number, d: number): void {
-  const res = controlRequest(TestInput, [kind, a, b, c, d]);
+  const res = macControlRequest(TestInput, [kind, a, b, c, d]);
   const raw = String(res[1] ?? "");
   if (res[0] !== 0 || raw.startsWith("ERR")) {
     throw new Error(`TestInput ${kind} failed: ${raw}`);
@@ -412,7 +420,7 @@ function input(kind: string, a: number, b: number, c: number, d: number): void {
 
 function invoke(name: string, x?: number, y?: number): void {
   const args: ControlArg[] = x === undefined ? [name] : [name, x, y];
-  const res = controlRequest(TestInvokeCommand, args);
+  const res = macControlRequest(TestInvokeCommand, args);
   const raw = String(res[1] ?? "");
   if (res[0] !== 0 || raw.startsWith("ERR") || raw.startsWith("NOTREADY")) {
     throw new Error(`TestInvokeCommand ${name} failed: ${raw}`);
@@ -498,7 +506,7 @@ export function macSendMessage(msg: number, wParam: number | bigint, lParam: num
 }
 
 export function macSendText(text: string): void {
-  const res = controlRequest(TestInput, ["text", text]);
+  const res = macControlRequest(TestInput, ["text", text]);
   const raw = String(res[1] ?? "");
   if (res[0] !== 0 || !raw.startsWith("OK")) {
     throw new Error(`set text failed: ${raw}`);

@@ -1,6 +1,6 @@
 import { Socket, createConnection } from "node:net";
 import { IS_WIN } from "./host.ts";
-import { registerControlPath } from "./mac-control.ts";
+import { macControlRequest, registerControlPath } from "./mac-control.ts";
 import { ensureModifierKeysUp, killAndWait, testWindowPos } from "./winapi.ts";
 import { drainProcStderr, SLOW_BUILD_FACTOR } from "./util.ts";
 
@@ -323,7 +323,9 @@ async function readExactly(socket: Socket, len: number): Promise<Buffer> {
   let total = 0;
   while (total < len) {
     const chunk = socket.read(len - total) as Buffer | null;
-    if (chunk) {
+    // Bun can return an empty buffer when nothing is readable yet. Treating
+    // that as data spins and never flushes the request we just wrote.
+    if (chunk && chunk.length > 0) {
       chunks.push(chunk);
       total += chunk.length;
       continue;
@@ -433,6 +435,11 @@ export class ControlClient {
   }
 
   async request(cmd: ControlCommand, args: ControlArg[] = []): Promise<ControlArg[]> {
+    // The node socket's read loop spins on macOS once a second connection is
+    // also talking. Window messages already use that connection; use it here too.
+    if (!IS_WIN) {
+      return macControlRequest(cmd, args);
+    }
     if (this.socket.destroyed) {
       throw new Error("control pipe closed");
     }

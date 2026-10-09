@@ -2726,6 +2726,7 @@ void DetachAnnotationFromUI(Annotation* annot) {
         }
         if (win->annotationUnderCursor == annot) {
             win->annotationUnderCursor = nullptr;
+            HideAnnotationHoverOverlay(win);
         }
         HideAnnotationTextPopupFor(win, annot);
         int nTabs = win->TabCount();
@@ -2757,6 +2758,7 @@ void CloseAnnotationUiForTab(WindowTab* tab) {
         win->annotationBeingResized = false;
         win->annotationUnderCursor = nullptr;
         VecReset(win->annotationVertexPreview);
+        HideAnnotationHoverOverlay(win);
         HideAnnotationTextPopup(win);
         CommitFormFieldEdit(false);
         HideAnnotEditToolbar(win);
@@ -3366,10 +3368,12 @@ gp::El* AnnotationHoverOverlayBuild(MainWindow* win, gp::Ctx* cx) {
     Annotation* annot = overlay->annot;
     WindowTab* tab = win->CurrentTab();
     // ng: orig hides the card from every place that ends a hover; the card is
-    // rebuilt each frame here, so the conditions are checked in one place
+    // rebuilt each frame here, so the conditions are checked in one place.
+    // Compare the pointer before AnnotationIsLive: the card can still name an
+    // annotation the engine has already freed.
     bool keep = dm && tab == overlay->tab && win->pdfAnnotationsToolbarEnabled &&
-                win->mouseAction == MouseAction::None && AnnotationIsLive(annot) &&
-                annot == win->annotationUnderCursor && annot != tab->selectedAnnotation && !IsPlacingAnnotation(win) &&
+                win->mouseAction == MouseAction::None && annot == win->annotationUnderCursor &&
+                annot != tab->selectedAnnotation && !IsPlacingAnnotation(win) && AnnotationIsLive(annot) &&
                 dm->PageVisible(PageNo(annot));
     if (!keep) {
         HideAnnotationHoverOverlay(win);
