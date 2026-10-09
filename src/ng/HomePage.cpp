@@ -396,6 +396,8 @@ struct HomePageUI {
     Vec<gpui::Bounds> listSizeBounds;
     // the "show as list" button, for the click that switches the home view
     gpui::Bounds listIconBounds{};
+    // the tip band along the bottom
+    gpui::Bounds tipBounds{};
 };
 
 static HomePageUI* Ui(MainWindow* win) {
@@ -2007,8 +2009,10 @@ gp::El* HomePageBuild(MainWindow* win, gp::Ctx* cx) {
 
     // orig: thumbsBottomY = rc.dy - tipHeight - kThumbsMiddleMargin
     root->Child(gp::Div(cx->a)->W(gp::kFill)->H((float)kThumbsMiddleMargin)->Shrink0());
+    h->tipBounds = {};
     gp::El* tip = HomeTipBandEl(win, cx, startX, endX);
     if (tip) {
+        tip->BoundsOut(&h->tipBounds);
         root->Child(tip);
     }
     gp::El* wrap = gp::Div(cx->a)
@@ -2101,7 +2105,7 @@ TempStr HomeSelectionForWindowTemp(int* exitCodeOut, int winIdx) {
     if (!HomePageIsListView() && len(h->entryBounds) > 0) {
         lastCaption = BoundsRect(h->entryBounds[len(h->entryBounds) - 1]);
     }
-    Rect tipRect;
+    Rect tipRect = BoundsRect(h->tipBounds);
     return finish(0, fmt("OK sel=%d entries=%d searchFocus=%d searchBox=%d search=%s outline=%s outlineFull=%s path=%s "
                          "listView=%d listIcon=%s thumbsArea=%s lastCaption=%s tip=%d,%d tipRect=%s",
                          sel, h->entryCount, searchFocus ? 1 : 0, searchBox, RectCsvTemp(search), RectCsvTemp(outline),
