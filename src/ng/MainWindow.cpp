@@ -32,6 +32,7 @@
 #include "Notifications.h"
 #include "Translations.h"
 #include "SumatraPDF.h"
+#include "Tabs.h"
 #include "ReadingAutoScroll.h"
 #include "ReadAloud.h"
 #include "AIChatCommon.h"
@@ -76,8 +77,24 @@ struct ControllerCallbackHandler : DocControllerCallback {
     ~ControllerCallbackHandler() override = default;
 
     void Repaint() override { AppShellInvalidate(win); }
-    void PageNoChanged(DocController*, int pageNo) override {
+    void PageNoChanged(DocController* ctrl, int pageNo) override {
+        if (win->ctrl != ctrl) {
+            return;
+        }
         logf("PageNoChanged: %d\n", pageNo);
+        // each .md / .html is a page of one model. The tab path has to follow
+        // the file on screen, or next-file reloads and rebuilds the outline.
+        MarkdownModel* md = ctrl ? ctrl->AsMarkdown() : nullptr;
+        if (md && md->ValidPageNo(pageNo)) {
+            WindowTab* tab = win->CurrentTab();
+            Str pagePath = md->GetFilePath();
+            if (tab && len(pagePath) > 0 && !path::IsSame(tab->filePath, pagePath)) {
+                tab->SetFilePath(pagePath);
+                tab->SetDisplayName({});
+                TabsOnChangedDoc(win);
+                UpdateWindowTitle(win);
+            }
+        }
         win->currPageNo = pageNo;
         UpdateTocSelection(win, pageNo);
         ShowPageInfoIfWanted(win);

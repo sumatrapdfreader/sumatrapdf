@@ -3000,6 +3000,30 @@ static void ToggleCursorPositionInDoc(MainWindow* win) {
     UpdateCursorPositionHelper(win, win->dragPrevPos, notif);
 }
 
+// A sibling .md / .html is already a page of this model. The browser reports
+// the new file only after it finishes loading, so the tab title is set now.
+static bool GoToFileInBrowserView(MainWindow* win, Str path) {
+    MarkdownModel* md = win->ctrl ? win->ctrl->AsMarkdown() : nullptr;
+    if (!md) {
+        return false;
+    }
+    for (int i = 0; i < len(md->pages); i++) {
+        if (!path::IsSame(md->pages[i], path)) {
+            continue;
+        }
+        md->GoToPage(i + 1, true);
+        WindowTab* tab = win->CurrentTab();
+        if (tab && !path::IsSame(tab->filePath, path)) {
+            tab->SetFilePath(path);
+            tab->SetDisplayName({});
+            TabsOnChangedDoc(win);
+            UpdateWindowTitle(win);
+        }
+        return true;
+    }
+    return false;
+}
+
 // pathToDelete is removed from disk once another document has loaded
 void OpenNextPrevFileInFolder(MainWindow* win, bool forward, Str pathToDelete) {
     if (!win || win->IsCurrentTabAbout() || !CanAccessDisk() || gPluginMode) {
@@ -3047,6 +3071,11 @@ void OpenNextPrevFileInFolder(MainWindow* win, bool forward, Str pathToDelete) {
         return;
     }
     logf("OpenNextPrevFileInFolder: %s -> '%s'\n", Str(forward ? "next" : "prev"), chosen);
+    // a sibling .md / .html is already a page of this model. Loading it again
+    // would rebuild the outline (#5918).
+    if (len(pathToDelete) == 0 && GoToFileInBrowserView(win, chosen)) {
+        return;
+    }
     UpdateTabFileDisplayStateForTab(tab);
     TempStr chosenCopy = str::DupTemp(chosen);
     // the load resets the temp arena and may free the pending request

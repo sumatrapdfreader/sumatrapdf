@@ -603,6 +603,17 @@ void AppShellAfterNativeDrag(MainWindow* win) {
 
 static bool NotifShownNow(MainWindow* win, NotificationWnd* n);
 
+// every outline row, collapsed ones included: the native tree only inserts a
+// collapsed branch when a test expands it, then TVM_GETCOUNT sees them
+static int CountTocItems(TocItem* item) {
+    int n = 0;
+    for (; item; item = item->next) {
+        n++;
+        n += CountTocItems(item->child);
+    }
+    return n;
+}
+
 TempStr AppShellUiStateTemp(MainWindow* win) {
     gp::Window* gw = win ? win->gpuiWin : nullptr;
     if (!gw || !win->shell) {
@@ -630,7 +641,14 @@ TempStr AppShellUiStateTemp(MainWindow* win) {
                    win->ctrl ? win->ctrl->CurrentPageNo() : 0, IsFindUIVisible(win) ? 1 : 0, win->showSelection ? 1 : 0,
                    tab && tab->selectedAnnotation ? 1 : 0, (int)win->presentation, win->isFullScreen ? 1 : 0,
                    (int)win->mouseAction));
-    out.Append(fmt(" toc=%d fav=%d tabs=%d windows=%d", win->uiState.tocVisible ? 1 : 0,
+    int tocItems = 0;
+    if (win->ctrl) {
+        TocTree* tree = win->ctrl->GetToc();
+        if (tree && tree->root) {
+            tocItems = CountTocItems(tree->root->child);
+        }
+    }
+    out.Append(fmt(" toc=%d tocItems=%d fav=%d tabs=%d windows=%d", win->uiState.tocVisible ? 1 : 0, tocItems,
                    win->uiState.favVisible ? 1 : 0, win->TabCount(), len(gWindows)));
     out.Append(fmt(" pageBox=%d chapterBox=%d ", IsToolbarLocationBoxFocused(win, false) ? 1 : 0,
                    IsToolbarLocationBoxFocused(win, true) ? 1 : 0));
