@@ -6272,6 +6272,32 @@ void EnterFullScreenFromFlags(const Flags& flags, MainWindow* win) {
     SwitchToFullScreen(win, flags.enterPresentation);
 }
 
+// orig's LoadOnStartup: -view, -zoom, -page, -named-dest and -scroll win over
+// the saved view. They apply to the document the command line opened.
+static void ApplyStartupViewFlags(const Flags& flags, MainWindow* win) {
+    if (!win || !win->IsDocLoaded()) {
+        return;
+    }
+    if (len(flags.namedDest) > 0) {
+        win->linkHandler->GotoNamedDest(flags.namedDest);
+    } else if (flags.pageNumber > 0 && win->ctrl->ValidPageNo(flags.pageNumber)) {
+        win->ctrl->GoToPage(flags.pageNumber, false);
+    }
+    if (flags.startView != DisplayMode::Automatic) {
+        SwitchToDisplayMode(win, flags.startView);
+    }
+    if (flags.startZoom != kInvalidZoom) {
+        SmartZoom(win, flags.startZoom, nullptr, false);
+    }
+    if ((flags.startScroll.x != -1 || flags.startScroll.y != -1) && win->AsFixed()) {
+        DisplayModel* dm = win->AsFixed();
+        ScrollState ss = dm->GetScrollState();
+        ss.x = flags.startScroll.x;
+        ss.y = flags.startScroll.y;
+        dm->SetScrollState(ss);
+    }
+}
+
 bool gLastCmdFellThrough = false;
 
 // CmdDebugShowNotif: one of each notification the shell can draw, so the
@@ -7430,9 +7456,15 @@ void ExecuteCmd(MainWindow* win, int cmdId) {
             break;
         }
 
-        case CmdZoomCustom:
-            ShowCustomZoomDialog(win);
+        case CmdZoomCustom: {
+            // a zoom-strip level carries the percent; the menu command does not
+            if (cmd && cmd->firstArg) {
+                SmartZoom(win, cmd->firstArg->floatVal, nullptr, true);
+            } else {
+                ShowCustomZoomDialog(win);
+            }
             break;
+        }
 
         case CmdChangeScrollbar:
             ShowChangeScrollbarDialog(win);
@@ -8829,6 +8861,7 @@ int GpuiMain(int argc, char** argv) {
         EnterFullScreen(win);
     }
     EnterFullScreenFromFlags(*gFlags, win);
+    ApplyStartupViewFlags(*gFlags, win);
 #if OS_WIN
     if (gFlags->hwndPluginParent && !MaybeMakePluginWindow(win, gFlags->hwndPluginParent)) {
         logf("MaybeMakePluginWindow() failed, quitting\n");

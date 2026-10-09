@@ -52,8 +52,14 @@ struct Toolbar {
     int overlayHideLeftMs = 0;
 
     // the hover drop-down: the button it is up for, the one the mouse is
-    // resting on and how long is left before it opens
+    // resting on and how long is left before it opens. The anchor is the
+    // button it opened on: Zoom In and Zoom Out share one strip, and it stays
+    // put when the mouse crosses between them.
     int hoverCmdId = 0;
+    int hoverAnchorCmdId = 0;
+    // increments each time a drop-down opens, so a test can tell a new one
+    // from the one already up. Crossing Zoom In / Zoom Out does not.
+    int hoverGen = 0;
     int hoverPendingCmdId = 0;
     int hoverOpenLeftMs = 0;
     // > 0 while the open drop-down waits out orig's close grace

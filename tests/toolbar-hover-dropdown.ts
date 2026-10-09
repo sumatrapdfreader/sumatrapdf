@@ -15,7 +15,7 @@
 import { mkdirSync, rmSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 import { ControlClient, ControlCommand } from "./control.ts";
-import { assemblePdf, cmdId, runStandalone, SLOW_BUILD_FACTOR, tmpPath } from "./util.ts";
+import { assemblePdf, cmdId, runStandalone, SLOW_BUILD_FACTOR, tmpPath, USE_NG } from "./util.ts";
 import {
   captureWindowToPng,
   getWorkArea,
@@ -188,12 +188,55 @@ async function waitAnnotCount(client: ControlClient, want: number, what: string)
   }
 }
 
-async function waitMenu(pid: number, want: boolean, what: string): Promise<number> {
+// ng has no SUMATRA_VIRT_TOOLBAR and no SumatraToolbarHoverMenu. The buttons
+// and the drop-down are gpui elements of the frame, driven with TestInput.
+// gen changes when a new drop-down opens, not when the mouse crosses between
+// Zoom In and Zoom Out.
+type HoverBox = { x: number; y: number; x2: number; y2: number; bg: number; shade: number; gen: number };
+
+type HoverView = { items: Item[]; box: HoverBox | null; right: Set<number> };
+
+async function ngInput(client: ControlClient, args: (string | number)[]): Promise<void> {
+  const res = await client.request(ControlCommand.TestInput, args);
+  const s = String(res[1] ?? "");
+  if (!s.startsWith("OK")) {
+    throw new Error(`toolbar-hover-dropdown: input ${s}`);
+  }
+}
+
+async function readHover(client: ControlClient): Promise<HoverView> {
+  const raw = String((await client.request(ControlCommand.TestToolbarButtons, []))[1] ?? "");
+  const head = /^dropdown cmd=\d+ items=\d+ box=(-?\d+),(-?\d+),(-?\d+),(-?\d+) bg=(\d+) shade=(\d+) gen=(\d+)/m.exec(
+    raw,
+  );
+  const box = head
+    ? { x: +head[1]!, y: +head[2]!, x2: +head[3]!, y2: +head[4]!, bg: +head[5]!, shade: +head[6]!, gen: +head[7]! }
+    : null;
+  const items = dropdownItemsFrom(raw);
+  const right = new Set<number>();
+  let m: RegExpExecArray | null;
+  const re = /^dropdown-right idx=(\d+)/gm;
+  while ((m = re.exec(raw)) !== null) {
+    right.add(+m[1]!);
+  }
+  const dipRe = /^dropdown-dip idx=(\d+) rect=(-?\d+),(-?\d+),(-?\d+),(-?\d+)/gm;
+  while ((m = dipRe.exec(raw)) !== null) {
+    const it = items[+m[1]!];
+    if (it) {
+      it.dx = +m[2]!;
+      it.dy = +m[3]!;
+      it.dx2 = +m[4]!;
+      it.dy2 = +m[5]!;
+    }
+  }
+  return { items, box, right };
+}
+
+async function waitMenu(client: ControlClient, pid: number, want: boolean, what: string): Promise<number> {
   const deadline = Date.now() + 6000 * SLOW_BUILD_FACTOR;
   for (;;) {
-    const h = findTopWindow(pid, MENU_CLASS);
-    const shown = h !== 0 && isWindowVisible(h);
-    if (shown === want) {
+    const h = await menuShowing(client, pid);
+    if ((h !== 0) === want) {
       return h;
     }
     if (Date.now() > deadline) {
@@ -203,7 +246,11 @@ async function waitMenu(pid: number, want: boolean, what: string): Promise<numbe
   }
 }
 
-function menuShowing(pid: number): number {
+async function menuShowing(client: ControlClient, pid: number): Promise<number> {
+  if (USE_NG) {
+    const view = await readHover(client);
+    return view.box && view.box.x2 > view.box.x ? view.box.gen : 0;
+  }
   const h = findTopWindow(pid, MENU_CLASS);
   return h !== 0 && isWindowVisible(h) ? h : 0;
 }
@@ -211,29 +258,43 @@ function menuShowing(pid: number): number {
 // A hwnd read before an await can already be a different drop-down: the cursor
 // gets yanked, the 150ms timer closes it, and resting on the button opens
 // another. Click only when the row and the window are still the one just read.
-async function clickMenuItem(client: ControlClient, pid: number, cmd: number, what: string): Promise<void> {
+async function clickMenuItem(
+  client: ControlClient,
+  frame: number,
+  pid: number,
+  cmd: number,
+  what: string,
+): Promise<void> {
   const deadline = Date.now() + 6000 * SLOW_BUILD_FACTOR;
   let detail = "";
   let clicked = false;
   for (;;) {
-    const h = menuShowing(pid);
+    const h = await menuShowing(client, pid);
     if (clicked && h === 0) {
       return;
     }
     if (h === 0) {
       detail = "closed before the click";
     } else {
-      const it = (await dropdownItems(client)).find((x) => x.cmd === cmd);
+      const view = USE_NG ? await readHover(client) : null;
+      const it = (view ? view.items : await dropdownItems(client)).find((x) => x.cmd === cmd);
       if (!it) {
         detail = "row not in the drop-down";
-      } else if (menuShowing(pid) === h) {
-        const r = getWindowRect(h);
-        const x = Math.floor((it.x + it.x2) / 2) - r.left;
-        const y = Math.floor((it.y + it.y2) / 2) - r.top;
-        await clickAt(h, x, y, 0);
+      } else if ((await menuShowing(client, pid)) === h) {
+        if (USE_NG) {
+          const x = Math.floor((it.dx + it.dx2) / 2);
+          const y = Math.floor((it.dy + it.dy2) / 2);
+          await ngInput(client, ["click", x, y, 0, 0]);
+          detail = `${it.text} @${x},${y}`;
+        } else {
+          const r = getWindowRect(h);
+          const x = Math.floor((it.x + it.x2) / 2) - r.left;
+          const y = Math.floor((it.y + it.y2) / 2) - r.top;
+          await clickAt(h, x, y, 0);
+          detail = `${it.text} @${x},${y}`;
+        }
         clicked = true;
-        detail = `${it.text} @${x},${y}`;
-        if (menuShowing(pid) === 0) {
+        if ((await menuShowing(client, pid)) === 0) {
           return;
         }
       }
@@ -247,7 +308,11 @@ async function clickMenuItem(client: ControlClient, pid: number, cmd: number, wh
 
 // rest the mouse on a toolbar button: the real cursor has to be there (the
 // drop-down reads it) and the toolbar has to see a move
-function hoverToolbar(toolbar: number, x: number, y: number): void {
+async function hoverToolbar(client: ControlClient, toolbar: number, x: number, y: number): Promise<void> {
+  if (USE_NG) {
+    await ngInput(client, ["move", x, y, 0, 0]);
+    return;
+  }
   const s = clientToScreen(toolbar, x, y);
   setCursorPos(s.x, s.y);
   sendMessage(toolbar, WM_MOUSEMOVE, 0, packCoords(x, y));
@@ -256,7 +321,13 @@ function hoverToolbar(toolbar: number, x: number, y: number): void {
 // right-click a toolbar button. The cursor has to be there so the drop-down
 // does not close itself, but the toolbar is not sent a move: that would start
 // the hover timer, and this is the check that right-click does not wait for it
-function rightClickToolbar(toolbar: number, x: number, y: number): void {
+async function rightClickToolbar(client: ControlClient, toolbar: number, x: number, y: number): Promise<void> {
+  if (USE_NG) {
+    // button 1 is the right button. The click also moves, which arms the hover
+    // timer; the button-up opens the drop-down without waiting for it.
+    await ngInput(client, ["click", x, y, 1, 0]);
+    return;
+  }
   const s = clientToScreen(toolbar, x, y);
   setCursorPos(s.x, s.y);
   const lp = packCoords(x, y);
@@ -267,12 +338,19 @@ function rightClickToolbar(toolbar: number, x: number, y: number): void {
 // keep resting the mouse on a button until its drop-down is up: something else
 // on the machine can yank the cursor away, and the drop-down reads where it
 // actually is, so a single move is not enough to rely on
-async function hoverUntilMenu(toolbar: number, pid: number, x: number, y: number, what: string): Promise<number> {
+async function hoverUntilMenu(
+  client: ControlClient,
+  toolbar: number,
+  pid: number,
+  x: number,
+  y: number,
+  what: string,
+): Promise<number> {
   const deadline = Date.now() + 8000 * SLOW_BUILD_FACTOR;
   for (;;) {
-    hoverToolbar(toolbar, x, y);
-    const h = findTopWindow(pid, MENU_CLASS);
-    if (h !== 0 && isWindowVisible(h)) {
+    await hoverToolbar(client, toolbar, x, y);
+    const h = await menuShowing(client, pid);
+    if (h !== 0) {
       return h;
     }
     if (Date.now() > deadline) {
@@ -280,6 +358,17 @@ async function hoverUntilMenu(toolbar: number, pid: number, x: number, y: number
     }
     await sleep(100);
   }
+}
+
+function toolbarOf(frame: number): number {
+  if (USE_NG) {
+    return frame;
+  }
+  const toolbar = findChildByClass(frame, TOOLBAR_CLASS);
+  if (!toolbar) {
+    throw new Error("toolbar-hover-dropdown: no toolbar");
+  }
+  return toolbar;
 }
 
 async function zoomLabel(client: ControlClient): Promise<string> {
@@ -301,11 +390,22 @@ async function waitZoom(client: ControlClient, want: string, what: string): Prom
   }
 }
 
-type Item = { cmd: number; current: boolean; x: number; y: number; x2: number; y2: number; text: string };
+type Item = {
+  cmd: number;
+  current: boolean;
+  x: number;
+  y: number;
+  x2: number;
+  y2: number;
+  text: string;
+  // ng: the same rect in frame dips, which is where TestInput clicks
+  dx: number;
+  dy: number;
+  dx2: number;
+  dy2: number;
+};
 
-// what the drop-down that is up is showing, in screen coordinates
-async function dropdownItems(client: ControlClient): Promise<Item[]> {
-  const raw = String((await client.request(ControlCommand.TestToolbarButtons, []))[1] ?? "");
+function dropdownItemsFrom(raw: string): Item[] {
   const re = /^dropdown-item idx=\d+ cmd=(\d+) current=(\d) rect=(-?\d+),(-?\d+),(-?\d+),(-?\d+) text=(.*)$/gm;
   const res: Item[] = [];
   let m: RegExpExecArray | null;
@@ -318,9 +418,22 @@ async function dropdownItems(client: ControlClient): Promise<Item[]> {
       x2: +m[5]!,
       y2: +m[6]!,
       text: m[7]!.trim(),
+      dx: 0,
+      dy: 0,
+      dx2: 0,
+      dy2: 0,
     });
   }
   return res;
+}
+
+// what the drop-down that is up is showing, in screen coordinates
+async function dropdownItems(client: ControlClient): Promise<Item[]> {
+  if (USE_NG) {
+    return (await readHover(client)).items;
+  }
+  const raw = String((await client.request(ControlCommand.TestToolbarButtons, []))[1] ?? "");
+  return dropdownItemsFrom(raw);
 }
 
 // the cells grouped into rows, the top row first. The dump lists them smallest
@@ -430,6 +543,50 @@ function checkRightHalfShading(items: Item[], levels: string[], menu: number): {
   return { bg, shade };
 }
 
+// ng paints the pyramid in the frame, and PrintWindow does not see that, so the
+// half is the flag on each cell and the two grounds are the colours it uses.
+function checkRightHalfShadingNg(
+  items: Item[],
+  levels: string[],
+  box: HoverBox,
+  right: Set<number>,
+): { bg: number; shade: number } {
+  const rows = rowsOf(items);
+  const topLen = rows[0]!.length;
+  const rightFrom = Math.floor((levels.length - topLen) / 2) + Math.floor(topLen / 2);
+  const splits: number[] = [];
+  let shortRow = false;
+  for (const r of rows) {
+    const texts = r.map((it) => it.text).join();
+    const first = r.find((it) => levels.indexOf(it.text) >= rightFrom);
+    const split = first ? first.x : r[r.length - 1]!.x2;
+    splits.push(split);
+    for (const it of r) {
+      const onRight = levels.indexOf(it.text) >= rightFrom;
+      if (onRight !== right.has(items.indexOf(it))) {
+        throw new Error(`toolbar-hover-dropdown: the row [${texts}] shades the wrong half`);
+      }
+    }
+    // the plain ground owns the left edge. A right-half cell sitting on the
+    // border means the shade starts there instead of at the staircase. A short
+    // row's first cell can be on the larger side and still leave plain ground
+    // in the filler before it.
+    if (right.has(items.indexOf(r[0]!)) && r[0]!.x < box.x + 4) {
+      throw new Error(`toolbar-hover-dropdown: the row [${texts}] shades the space before its start`);
+    }
+    if (r[r.length - 1]!.x2 < box.x2 - 4) {
+      shortRow = true;
+    }
+  }
+  if (!shortRow) {
+    throw new Error("toolbar-hover-dropdown: no row leaves shaded space past its end");
+  }
+  if (new Set(splits).size < 2) {
+    throw new Error(`toolbar-hover-dropdown: the two grounds meet along a straight line at ${splits.join()}`);
+  }
+  return { bg: box.bg, shade: box.shade };
+}
+
 // the level in use is the one boxed, and only it
 function checkCurrentBoxed(items: Item[], want: string): void {
   const current = items.filter((it) => it.current);
@@ -455,13 +612,13 @@ async function waitCurrentZoom(
   const deadline = Date.now() + 4000 * SLOW_BUILD_FACTOR;
   let last: Item[] = [];
   for (;;) {
-    hoverToolbar(toolbar, x, y);
-    const menu = menuShowing(pid);
+    await hoverToolbar(client, toolbar, x, y);
+    const menu = await menuShowing(client, pid);
     if (menu !== 0) {
       last = await dropdownItems(client);
       const current = last.filter((it) => it.current);
-      if (current.length === 1 && current[0]!.text === want && menuShowing(pid) === menu) {
-        hoverToolbar(toolbar, x, y);
+      if (current.length === 1 && current[0]!.text === want && (await menuShowing(client, pid)) === menu) {
+        await hoverToolbar(client, toolbar, x, y);
         return { menu, items: last };
       }
     }
@@ -476,24 +633,65 @@ async function waitCurrentZoom(
 // the drop-down hangs off the middle of the button it belongs to, so it opens
 // around where the mouse already is whatever it is showing. One that would run
 // off the monitor is slid back on, which is right and takes it off centre
-function checkCentredOnButton(menu: number, btnCentreX: number): void {
-  const mr = getWindowRect(menu);
-  const centre = Math.floor((mr.left + mr.right) / 2);
+function checkCentredOnButton(left: number, right: number, btnCentreX: number): void {
+  const centre = Math.floor((left + right) / 2);
   if (Math.abs(centre - btnCentreX) <= 4) {
     return;
   }
   const wa = getWorkArea();
-  const clamped = mr.left <= wa.left + 1 || mr.right >= wa.right - 1;
+  const clamped = left <= wa.left + 1 || right >= wa.right - 1;
   if (!clamped) {
     throw new Error(
       `toolbar-hover-dropdown: the drop-down is centred at x=${centre}, not on the button at x=${btnCentreX}`,
     );
   }
   // slid back on: it went as far as it could towards the button
-  const wantLeft = mr.left <= wa.left + 1 ? wa.left : wa.right - (mr.right - mr.left);
-  if (Math.abs(mr.left - wantLeft) > 4) {
+  const wantLeft = left <= wa.left + 1 ? wa.left : wa.right - (right - left);
+  if (Math.abs(left - wantLeft) > 4) {
     throw new Error("toolbar-hover-dropdown: the drop-down is neither on the button nor against the screen edge");
   }
+}
+
+async function menuBounds(
+  client: ControlClient,
+  menu: number,
+): Promise<{ left: number; top: number; right: number; bottom: number }> {
+  if (USE_NG) {
+    const box = (await readHover(client)).box;
+    if (!box || box.gen !== menu) {
+      throw new Error("toolbar-hover-dropdown: the drop-down closed");
+    }
+    return { left: box.x, top: box.y, right: box.x2, bottom: box.y2 };
+  }
+  const r = getWindowRect(menu);
+  return { left: r.left, top: r.top, right: r.right, bottom: r.bottom };
+}
+
+async function shadingOf(
+  client: ControlClient,
+  items: Item[],
+  levels: string[],
+  menu: number,
+): Promise<{ bg: number; shade: number }> {
+  if (USE_NG) {
+    const view = await readHover(client);
+    if (!view.box) {
+      throw new Error("toolbar-hover-dropdown: the drop-down closed before its shading could be read");
+    }
+    return checkRightHalfShadingNg(view.items.length ? view.items : items, levels, view.box, view.right);
+  }
+  return checkRightHalfShading(items, levels, menu);
+}
+
+async function clickDropCell(client: ControlClient, menu: number, it: Item): Promise<void> {
+  if (USE_NG) {
+    const x = Math.floor((it.dx + it.dx2) / 2);
+    const y = Math.floor((it.dy + it.dy2) / 2);
+    await ngInput(client, ["click", x, y, 0, 0]);
+    return;
+  }
+  const r = getWindowRect(menu);
+  await clickAt(menu, Math.floor((it.x + it.x2) / 2) - r.left, Math.floor((it.y + it.y2) / 2) - r.top, 0);
 }
 
 // a second instance, this one told to use its own zoom levels and a dark theme:
@@ -518,25 +716,22 @@ async function checkCustomZoomLevels(dir: string, pdf: string): Promise<void> {
   try {
     await client.waitForRenderIdle();
     await client.setNotificationsEnabled(false);
-    const toolbar = findChildByClass(frame, TOOLBAR_CLASS);
-    if (!toolbar) {
-      throw new Error("toolbar-hover-dropdown: no toolbar");
-    }
+    const toolbar = toolbarOf(frame);
     const zoomIn = (await mainButtons(client)).find((b) => b.cmd === cmdId("CmdZoomIn") && !b.hidden && b.dx > 0);
     if (!zoomIn) {
       throw new Error("toolbar-hover-dropdown: no Zoom In button");
     }
     const zx = zoomIn.x + Math.floor(zoomIn.dx / 2);
     const zy = zoomIn.y + Math.floor(zoomIn.dy / 2);
-    rightClickToolbar(toolbar, zx, zy);
-    await waitMenu(proc.pid!, true, "right-clicking Zoom In did not open the custom drop-down");
+    await rightClickToolbar(client, toolbar, zx, zy);
+    const opened = await waitMenu(client, proc.pid!, true, "right-clicking Zoom In did not open the custom drop-down");
     await sleep(200);
     const items = await dropdownItems(client);
     if (items.map((it) => it.text).join() !== CUSTOM_ZOOM_STRIP.join()) {
       throw new Error(`toolbar-hover-dropdown: custom ZoomLevels give [${items.map((it) => it.text).join()}]`);
     }
     checkPyramid(items, CUSTOM_ZOOM_ROWS, CUSTOM_ZOOM_STRIP);
-    const dark = checkRightHalfShading(items, CUSTOM_ZOOM_STRIP, findTopWindow(proc.pid!, MENU_CLASS));
+    const dark = await shadingOf(client, items, CUSTOM_ZOOM_STRIP, opened);
     if (channels(dark.bg).some((c) => c > 128)) {
       throw new Error(`toolbar-hover-dropdown: the dark theme drop-down is not dark (${dark.bg})`);
     }
@@ -545,18 +740,13 @@ async function checkCustomZoomLevels(dir: string, pdf: string): Promise<void> {
       throw new Error("toolbar-hover-dropdown: the dark theme shades the larger half darker, not lighter");
     }
     checkCurrentBoxed(items, "100%");
-    checkCentredOnButton(findTopWindow(proc.pid!, MENU_CLASS), clientToScreen(toolbar, zx, zy).x);
+    const openedBox = await menuBounds(client, opened);
+    checkCentredOnButton(openedBox.left, openedBox.right, clientToScreen(toolbar, zx, zy).x);
 
     // and they are real commands, not just labels
-    const menu = await hoverUntilMenu(toolbar, proc.pid!, zx, zy, "the zoom drop-down closed");
-    const r = getWindowRect(menu);
+    const menu = await hoverUntilMenu(client, toolbar, proc.pid!, zx, zy, "the zoom drop-down closed");
     const cell150 = items.find((it) => it.text === "150%")!;
-    await clickAt(
-      menu,
-      Math.floor((cell150.x + cell150.x2) / 2) - r.left,
-      Math.floor((cell150.y + cell150.y2) / 2) - r.top,
-      0,
-    );
+    await clickDropCell(client, menu, cell150);
     await waitZoom(client, "150", "clicking a custom level did not zoom to it");
   } finally {
     client.close();
@@ -600,11 +790,8 @@ export async function testit(): Promise<void> {
       throw new Error("toolbar-hover-dropdown: Save to a new PDF is still its own toolbar button");
     }
 
-    const toolbar = findChildByClass(frame, TOOLBAR_CLASS);
-    if (!toolbar) {
-      throw new Error("toolbar-hover-dropdown: no toolbar");
-    }
-    if (findTopWindow(pid, MENU_CLASS)) {
+    const toolbar = toolbarOf(frame);
+    if (await menuShowing(client, pid)) {
       throw new Error("toolbar-hover-dropdown: the drop-down was up before anything was hovered");
     }
 
@@ -616,13 +803,15 @@ export async function testit(): Promise<void> {
     const save2 = await waitAnnotButton(client, cmdId("CmdSaveAnnotations"), "Save button vanished");
     const cx = save2.x + Math.floor(save2.dx / 2);
     const cy = save2.y + Math.floor(save2.dy / 2);
-    const menu = await hoverUntilMenu(toolbar, pid, cx, cy, "resting on Save did not open the drop-down");
+    const menu = await hoverUntilMenu(client, toolbar, pid, cx, cy, "resting on Save did not open the drop-down");
     await sleep(200);
-    captureWindowToPng(menu, join(dir, "dropdown.png"));
+    if (!USE_NG) {
+      captureWindowToPng(menu, join(dir, "dropdown.png"));
+    }
 
     // directly under the button (it slides left when its width would run off
     // the right edge of the screen, so only the button's centre has to be in it)
-    const mr = getWindowRect(menu);
+    const mr = await menuBounds(client, menu);
     const below = clientToScreen(toolbar, save2.x, save2.y + save2.dy);
     const centreX = below.x + Math.floor(save2.dx / 2);
     if (Math.abs(mr.top - below.y) > 2 || mr.left > centreX || mr.right < centreX) {
@@ -650,7 +839,7 @@ export async function testit(): Promise<void> {
         `toolbar-hover-dropdown: expected Discard changes on the third row, got [${saveRows.map((it) => it.text).join(" | ")}]`,
       );
     }
-    await clickMenuItem(client, pid, discard, "clicking a row did not close the drop-down");
+    await clickMenuItem(client, frame, pid, discard, "clicking a row did not close the drop-down");
     await waitAnnotCount(client, 1, "the third row did not discard the changes");
     if (!(await annotTip(client, cmdId("CmdSaveAnnotations")))) {
       throw new Error("toolbar-hover-dropdown: the button did not get its tooltip back");
@@ -659,20 +848,25 @@ export async function testit(): Promise<void> {
     // moving the mouse off it closes it too. A move message at a toolbar point
     // can hit another button and leave that button's drop-down up; a leave
     // follows the real cursor, which has to be off the frame.
-    await hoverUntilMenu(toolbar, pid, cx, cy, "the drop-down did not open a second time");
+    await hoverUntilMenu(client, toolbar, pid, cx, cy, "the drop-down did not open a second time");
     const awayDeadline = Date.now() + 6000 * SLOW_BUILD_FACTOR;
     for (;;) {
-      const menu = menuShowing(pid);
+      const menu = await menuShowing(client, pid);
       if (menu === 0) {
         break;
       }
-      parkCursorAway([getWindowRect(frame), getWindowRect(menu)]);
-      sendMessage(menu, WM_MOUSELEAVE, 0, 0);
-      sendMessage(toolbar, WM_MOUSELEAVE, 0, 0);
+      if (USE_NG) {
+        // off the toolbar, on the page. The close grace is 150ms.
+        await ngInput(client, ["move", 40, 500, 0, 0]);
+      } else {
+        parkCursorAway([getWindowRect(frame), getWindowRect(menu)]);
+        sendMessage(menu, WM_MOUSELEAVE, 0, 0);
+        sendMessage(toolbar, WM_MOUSELEAVE, 0, 0);
+      }
       const sliceEnd = Date.now() + 400;
       let gone = false;
       while (Date.now() < sliceEnd) {
-        if (menuShowing(pid) === 0) {
+        if ((await menuShowing(client, pid)) === 0) {
           gone = true;
           break;
         }
@@ -697,15 +891,18 @@ export async function testit(): Promise<void> {
     );
     const sx = save3.x + Math.floor(save3.dx / 2);
     const sy = save3.y + Math.floor(save3.dy / 2);
-    rightClickToolbar(toolbar, sx, sy);
-    await waitMenu(pid, true, "right-clicking Save did not open the drop-down before the icon click");
-    await clickAt(toolbar, sx, sy, 0);
-    await waitMenu(pid, false, "clicking the Save icon did not close the drop-down");
+    await rightClickToolbar(client, toolbar, sx, sy);
+    await waitMenu(client, pid, true, "right-clicking Save did not open the drop-down before the icon click");
+    if (USE_NG) {
+      await ngInput(client, ["click", sx, sy, 0, 0]);
+    } else {
+      await clickAt(toolbar, sx, sy, 0);
+    }
+    await waitMenu(client, pid, false, "clicking the Save icon did not close the drop-down");
     const stayClosedUntil = Date.now() + 1500;
     while (Date.now() < stayClosedUntil) {
-      hoverToolbar(toolbar, sx, sy);
-      const h = findTopWindow(pid, MENU_CLASS);
-      if (h !== 0 && isWindowVisible(h)) {
+      await hoverToolbar(client, toolbar, sx, sy);
+      if (await menuShowing(client, pid)) {
         throw new Error("toolbar-hover-dropdown: the drop-down came back while still on Save after the icon click");
       }
       await sleep(100);
@@ -726,25 +923,38 @@ export async function testit(): Promise<void> {
     const zy = zoomIn.y + Math.floor(zoomIn.dy / 2);
     const btnCentreX = clientToScreen(toolbar, zx, zy).x;
 
-    // right-click opens it at once and does not run Zoom In
-    rightClickToolbar(toolbar, zx, zy);
-    let zoomMenu = findTopWindow(pid, MENU_CLASS);
-    if (zoomMenu === 0 || !isWindowVisible(zoomMenu)) {
+    // right-click opens it at once and does not run Zoom In. ng lays the strip
+    // out on the next frame, which is still far short of the hover delay.
+    await rightClickToolbar(client, toolbar, zx, zy);
+    let zoomMenu = 0;
+    {
+      const openedBy = Date.now() + 250;
+      for (;;) {
+        zoomMenu = await menuShowing(client, pid);
+        if (zoomMenu !== 0 || Date.now() > openedBy) {
+          break;
+        }
+        await sleep(20);
+      }
+    }
+    if (zoomMenu === 0) {
       throw new Error("toolbar-hover-dropdown: right-click on Zoom In did not open the drop-down");
     }
     if ((await zoomLabel(client)) !== "100") {
       throw new Error("toolbar-hover-dropdown: right-click on Zoom In ran Zoom In");
     }
     const afterRightClick = zoomMenu;
-    rightClickToolbar(toolbar, zx, zy);
-    zoomMenu = findTopWindow(pid, MENU_CLASS);
-    if (zoomMenu !== afterRightClick || !isWindowVisible(zoomMenu)) {
+    await rightClickToolbar(client, toolbar, zx, zy);
+    zoomMenu = await menuShowing(client, pid);
+    if (zoomMenu !== afterRightClick) {
       throw new Error("toolbar-hover-dropdown: right-click recreated a drop-down that was already shown");
     }
 
-    zoomMenu = await hoverUntilMenu(toolbar, pid, zx, zy, "resting on Zoom In did not open the drop-down");
+    zoomMenu = await hoverUntilMenu(client, toolbar, pid, zx, zy, "resting on Zoom In did not open the drop-down");
     await sleep(200);
-    captureWindowToPng(zoomMenu, join(dir, "zoom-dropdown.png"));
+    if (!USE_NG) {
+      captureWindowToPng(zoomMenu, join(dir, "zoom-dropdown.png"));
+    }
 
     let items = await dropdownItems(client);
     const texts = items.map((it) => it.text);
@@ -752,17 +962,17 @@ export async function testit(): Promise<void> {
       throw new Error(`toolbar-hover-dropdown: the zoom levels are [${texts.join()}]`);
     }
     checkPyramid(items, ZOOM_ROWS, ZOOM_LEVELS);
-    const zr = getWindowRect(zoomMenu);
+    const zr = await menuBounds(client, zoomMenu);
     // and the pyramid is what keeps it narrow: all 26 in a row would be wider
     // than the window the toolbar is in
     if (zr.right - zr.left > 600) {
       throw new Error(`toolbar-hover-dropdown: the zoom drop-down is too wide ${JSON.stringify(zr)}`);
     }
     checkCurrentBoxed(items, "100%");
-    checkCentredOnButton(zoomMenu, btnCentreX);
+    checkCentredOnButton(zr.left, zr.right, btnCentreX);
     const zoomMenuRect = JSON.stringify(zr);
 
-    const grounds = checkRightHalfShading(items, ZOOM_LEVELS, zoomMenu);
+    const grounds = await shadingOf(client, items, ZOOM_LEVELS, zoomMenu);
 
     // clicking a level zooms straight to it. 300% is one of the levels the Zoom
     // menu has no command for, so it is also the check that those levels get a
@@ -770,35 +980,38 @@ export async function testit(): Promise<void> {
     const cell300 = items.find((it) => it.text === "300%")!;
     // and it is a cue rather than a highlight: a few units off the plain
     // ground, where a cell lit up under the mouse is 20 units off it
-    const cellX = cell300.x - zr.left + 3;
-    const cellY = Math.floor((cell300.y + cell300.y2) / 2) - zr.top;
-    if (readWindowDCRow(zoomMenu, cellX, cellY, 1)[0] !== grounds.shade) {
-      throw new Error("toolbar-hover-dropdown: 300% is not on the shaded half");
+    if (USE_NG) {
+      const view = await readHover(client);
+      if (!view.right.has(items.indexOf(cell300))) {
+        throw new Error("toolbar-hover-dropdown: 300% is not on the shaded half");
+      }
+    } else {
+      const cellX = cell300.x - zr.left + 3;
+      const cellY = Math.floor((cell300.y + cell300.y2) / 2) - zr.top;
+      if (readWindowDCRow(zoomMenu, cellX, cellY, 1)[0] !== grounds.shade) {
+        throw new Error("toolbar-hover-dropdown: 300% is not on the shaded half");
+      }
     }
     const step = Math.max(...channels(grounds.bg).map((c, i) => Math.abs(c - channels(grounds.shade)[i]!)));
     if (step < 3 || step > 15) {
       throw new Error(`toolbar-hover-dropdown: the shading is ${step} units off the background, want a few`);
     }
 
-    await clickAt(
-      zoomMenu,
-      Math.floor((cell300.x + cell300.x2) / 2) - zr.left,
-      Math.floor((cell300.y + cell300.y2) / 2) - zr.top,
-      0,
-    );
-    await waitMenu(pid, false, "clicking a zoom level did not close the drop-down");
+    await clickDropCell(client, zoomMenu, cell300);
+    await waitMenu(client, pid, false, "clicking a zoom level did not close the drop-down");
     await waitZoom(client, "300", "clicking the 300% cell did not zoom to it");
 
     // and now that level is the one boxed. The drop-down itself opens exactly
     // where it did before: it hangs off the button, not off the zoom
     {
-      rightClickToolbar(toolbar, zx, zy);
+      await rightClickToolbar(client, toolbar, zx, zy);
       const boxed = await waitCurrentZoom(client, toolbar, pid, zx, zy, "300%");
       zoomMenu = boxed.menu;
       items = boxed.items;
     }
-    checkCentredOnButton(zoomMenu, btnCentreX);
-    if (JSON.stringify(getWindowRect(zoomMenu)) !== zoomMenuRect) {
+    const again = await menuBounds(client, zoomMenu);
+    checkCentredOnButton(again.left, again.right, btnCentreX);
+    if (JSON.stringify(again) !== zoomMenuRect) {
       throw new Error("toolbar-hover-dropdown: the drop-down opened somewhere else once the zoom had changed");
     }
 
@@ -809,7 +1022,8 @@ export async function testit(): Promise<void> {
     sendCommand(frame, cmdId("CmdZoomIn"));
     await waitZoom(client, "400", "the Zoom In button did not step the zoom");
     items = await dropdownItems(client);
-    if (items.map((it) => `${it.text}@${it.x}`).join() !== before) {
+    const after = items.map((it) => `${it.text}@${it.x}`).join();
+    if (after !== before) {
       throw new Error("toolbar-hover-dropdown: the strip moved when the zoom was stepped");
     }
     let boxed = items.filter((it) => it.current).map((it) => it.text);
@@ -839,8 +1053,9 @@ export async function testit(): Promise<void> {
     // zoomMenu was captured when the strip opened. The awaits since then are
     // long enough for a yanked cursor to close that window and open another
     // in the same place; the cross has to be judged against the one up now.
-    if (menuShowing(pid) !== zoomMenu) {
+    if ((await menuShowing(client, pid)) !== zoomMenu) {
       zoomMenu = await hoverUntilMenu(
+        client,
         toolbar,
         pid,
         zx,
@@ -849,20 +1064,20 @@ export async function testit(): Promise<void> {
       );
     }
     const wasAt = (await dropdownItems(client)).map((it) => `${it.text}@${it.x}`).join();
-    const live = menuShowing(pid);
+    const live = await menuShowing(client, pid);
     if (live !== 0) {
       zoomMenu = live;
     }
-    const wasRect = JSON.stringify(getWindowRect(zoomMenu));
+    const wasRect = JSON.stringify(await menuBounds(client, zoomMenu));
     // the close timer is 150ms and it reads the real cursor. Keep the cursor
     // on Zoom Out across that window: one move and a long sleep loses it on a
     // busy machine, and the strip then closes
     const deadline = Date.now() + 400 * SLOW_BUILD_FACTOR;
     let stillUp = 0;
     for (;;) {
-      hoverToolbar(toolbar, ox, oy);
-      stillUp = findTopWindow(pid, MENU_CLASS);
-      if (stillUp !== zoomMenu || !isWindowVisible(stillUp)) {
+      await hoverToolbar(client, toolbar, ox, oy);
+      stillUp = await menuShowing(client, pid);
+      if (stillUp !== zoomMenu) {
         throw new Error(
           `toolbar-hover-dropdown: moving onto Zoom Out did not keep the same drop-down (hwnd ${stillUp} vs ${zoomMenu})`,
         );
@@ -875,7 +1090,7 @@ export async function testit(): Promise<void> {
     items = await dropdownItems(client);
     if (
       items.map((it) => `${it.text}@${it.x}`).join() !== wasAt ||
-      JSON.stringify(getWindowRect(stillUp)) !== wasRect
+      JSON.stringify(await menuBounds(client, stillUp)) !== wasRect
     ) {
       throw new Error("toolbar-hover-dropdown: the strip moved when the mouse crossed to Zoom Out");
     }

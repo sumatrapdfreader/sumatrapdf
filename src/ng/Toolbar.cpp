@@ -708,14 +708,30 @@ void SetAnnotPresetColor(int cmdId, Color col) {
 
 struct ToolbarView;
 
+// one row or cell of the drop-down that is up, for the -dbg-control dump.
+// `text` is owned. The vec does not run destructors, so free it by hand.
+struct HoverDumpItem {
+    gp::Bounds bounds{};
+    int cmdId = 0;
+    bool isCurrent = false;
+    bool isRight = false;
+    Str text;
+};
+
 struct ToolbarUI {
     gp::Entity<ToolbarView> view;
-    // laid-out rect of every button, indexed as GetToolbarButtonInfoByIdx does
+    // laid-out rect of each built button, parallel to btnCmds
     Vec<gp::Bounds> btnBounds;
     // the command each slot carries, so a rect can be found by command id
     Vec<int> btnCmds;
     // the zoom levels the drop-down that is up lists
     Vec<int> stripCmds;
+    // the rows/cells of the drop-down that is up, and the box around them.
+    // gpui writes the rects back through BoundsOut on the next layout.
+    Vec<HoverDumpItem> hoverItems;
+    gp::Bounds hoverBox{};
+    // the first frame centres on a guess; the next one uses the laid-out width
+    bool hoverRecenter = false;
     gp::SliderState inkThickness;
     bool inkThicknessInit = false;
     // the Read Aloud button's drop-down, rebuilt every frame
@@ -728,7 +744,7 @@ struct ToolbarUI {
     // must not also run the button
     bool ttsMenuWasOpen = false;
 
-    ~ToolbarUI() { DeleteMenuModel(ttsMenu); }
+    ~ToolbarUI();
 };
 
 struct ToolbarView {
@@ -750,6 +766,23 @@ struct ToolbarView {
     static void OnTtsButtonMove(ToolbarView* self, gp::Ctx* cx, const gp::MouseMoveEvent* ev);
     static void OnTtsButtonDown(ToolbarView* self, gp::Ctx* cx, const gp::MouseDownEvent* ev);
 };
+
+static void FreeHoverItems(ToolbarUI* ui) {
+    if (!ui) {
+        return;
+    }
+    for (HoverDumpItem& it : ui->hoverItems) {
+        str::Free(it.text);
+        it.text = {};
+    }
+    VecClear(ui->hoverItems);
+    ui->hoverBox = {};
+}
+
+ToolbarUI::~ToolbarUI() {
+    FreeHoverItems(this);
+    DeleteMenuModel(ttsMenu);
+}
 
 Toolbar::~Toolbar() {
     str::Free(pageTotal);
@@ -900,6 +933,8 @@ void UpdateToolbarFindText(MainWindow* win) {
 
 // One line per toolbar button and one per Edit PDF button, same shape as
 // orig's dump. The harness matches `annotation-idx` for Undo, Redo and Save.
+static TempStr HoverDropdownStateTemp(MainWindow* win);
+
 TempStr ToolbarButtonsResultTemp(int* exitCodeOut) {
     str::Builder out;
     MainWindow* win = len(gWindows) == 0 ? nullptr : gWindows[0];
@@ -910,7 +945,6 @@ TempStr ToolbarButtonsResultTemp(int* exitCodeOut) {
     }
     PopulateToolbarLayout();
     PopulateCustomToolbarButtons();
-    ToolbarUI* ui = win->toolbar->ui;
     auto* ctx = NewBuildMenuCtx(win->CurrentTab(), Point{0, 0});
     AutoCall delCtx(DeleteBuildMenuCtx, ctx);
 
@@ -954,19 +988,19 @@ TempStr ToolbarButtonsResultTemp(int* exitCodeOut) {
     }
     out.Append(fmt("buttons=%d tooltipTools=%d\n", n, nTools));
 
-    int slot = 0;
     int toolIdx = 0;
     for (int i = 0; i < n; i++) {
         const ToolbarButtonInfo& bi = GetToolbarButtonInfoByIdx(i);
-        bool isSep = bi.cmdId == 0 || !HasToolbarButtonContent(bi);
+        // the page box has no icon but still owns a bounds slot
         Rect r{};
-        if (!hidden[i] && !isSep && ui && slot < len(ui->btnBounds)) {
-            r = FromGpui(ui->btnBounds[slot]);
+        if (!hidden[i] && bi.cmdId != 0) {
+            r = GetToolbarButtonRect(win, bi.cmdId);
         }
-        if (!hidden[i] && !isSep) {
-            slot++;
-        }
+        // the drop-down takes its button's tooltip, so the bubble does not sit on it
         Str text = bi.toolTip;
+        if (win->toolbar->hoverCmdId == bi.cmdId) {
+            text = StrL("");
+        }
         out.Append(fmt("idx=%d cmd=%d hidden=%d rect=%d,%d,%d,%d text=%s\n", i, bi.cmdId, hidden[i] ? 1 : 0, r.x, r.y,
                        r.x + r.dx, r.y + r.dy, text));
         if (!hidden[i] && bi.cmdId != 0 && bi.cmdId != PageInfoId && len(bi.toolTip) > 0) {
@@ -991,7 +1025,8 @@ TempStr ToolbarButtonsResultTemp(int* exitCodeOut) {
             r = GetToolbarButtonRect(win, bi.cmdId);
         }
         Str tip{};
-        if (len(bi.toolTip) > 0) {
+        bool tipTaken = win->toolbar->hoverCmdId == bi.cmdId;
+        if (!tipTaken && len(bi.toolTip) > 0) {
             if (bi.cmdId == CmdSaveAnnotations && len(base) > 0) {
                 tip = ToolbarTipTemp(bi.cmdId, fmt(Tr("Save changes to %s").s, base), false);
             } else {
@@ -1002,8 +1037,7 @@ TempStr ToolbarButtonsResultTemp(int* exitCodeOut) {
                        shown ? 0 : 1, enabled ? 1 : 0, r.x, r.y, r.x + r.dx, r.y + r.dy, bi.toolTip, tip));
     }
     out.Append(AnnotFilterToolbarStateTemp(win));
-    int hoverCmd = win->toolbar->hoverCmdId;
-    out.Append(fmt("dropdown cmd=%d items=0\n", hoverCmd));
+    out.Append(HoverDropdownStateTemp(win));
     *exitCodeOut = 0;
     return ToStrTemp(out);
 }
@@ -1226,9 +1260,81 @@ static bool CmdHasHoverDropdown(int cmdId) {
 static void HideToolbarHoverDropdown(MainWindow* win) {
     Toolbar* tb = Tb(win);
     tb->hoverCmdId = 0;
+    tb->hoverAnchorCmdId = 0;
     tb->hoverPendingCmdId = 0;
     tb->hoverOpenLeftMs = 0;
     tb->hoverCloseLeftMs = 0;
+    if (tb->ui) {
+        FreeHoverItems(tb->ui);
+    }
+}
+
+static bool ZoomHoverGroup(int cmdId) {
+    return cmdId == CmdZoomIn || cmdId == CmdZoomOut;
+}
+
+// dips of the frame to screen pixels. The dump's rects are screen pixels, the
+// same as orig's VirtHost::ToScreen.
+static Rect HoverBoundsScreen(MainWindow* win, gp::Bounds b) {
+    float k = CanvasScale(win);
+    if (!(k > 0)) {
+        k = 1;
+    }
+    POINT o{0, 0};
+    HWND hwnd = AppShellNativeHwnd(win);
+    if (hwnd) {
+        ClientToScreen(hwnd, &o);
+    }
+    int x = o.x + (int)(b.x / k + 0.5f);
+    int y = o.y + (int)(b.y / k + 0.5f);
+    int x2 = o.x + (int)((b.x + b.w) / k + 0.5f);
+    int y2 = o.y + (int)((b.y + b.h) / k + 0.5f);
+    return Rect{x, y, x2 - x, y2 - y};
+}
+
+// The rows/cells of the drop-down that is up, in screen coordinates.
+static TempStr HoverDropdownStateTemp(MainWindow* win) {
+    Toolbar* tb = win ? win->toolbar : nullptr;
+    ToolbarUI* ui = tb ? tb->ui : nullptr;
+    int cmd = tb ? tb->hoverCmdId : 0;
+    if (!ui || cmd == 0 || ui->hoverBox.w < 1 || ui->hoverBox.h < 1 || len(ui->hoverItems) == 0) {
+        return fmt("dropdown cmd=%d items=0\n", cmd);
+    }
+    str::Builder out;
+    Rect box = HoverBoundsScreen(win, ui->hoverBox);
+    Color bg = TbBgColor();
+    Color shade = TbSubtleBgColor();
+    out.Append(fmt("dropdown cmd=%d items=%d box=%d,%d,%d,%d bg=%u shade=%u gen=%d\n", cmd, len(ui->hoverItems), box.x,
+                   box.y, box.Right(), box.Bottom(), (unsigned)bg, (unsigned)shade, tb->hoverGen));
+    for (int i = 0; i < len(ui->hoverItems); i++) {
+        HoverDumpItem& it = ui->hoverItems[i];
+        Rect r = HoverBoundsScreen(win, it.bounds);
+        out.Append(fmt("dropdown-item idx=%d cmd=%d current=%d rect=%d,%d,%d,%d text=%s\n", i, it.cmdId,
+                       it.isCurrent ? 1 : 0, r.x, r.y, r.Right(), r.Bottom(), it.text));
+        out.Append(fmt("dropdown-dip idx=%d rect=%d,%d,%d,%d\n", i, (int)it.bounds.x, (int)it.bounds.y,
+                       (int)(it.bounds.x + it.bounds.w), (int)(it.bounds.y + it.bounds.h)));
+        if (it.isRight) {
+            out.Append(fmt("dropdown-right idx=%d\n", i));
+        }
+    }
+    return ToStrTemp(out);
+}
+
+// Slots for the items about to be built. Reserve first so BoundsOut pointers
+// stay put while the elements are created.
+static void BeginHoverDump(ToolbarUI* ui, int n) {
+    FreeHoverItems(ui);
+    VecReserve(ui->hoverItems, n);
+}
+
+static HoverDumpItem* AddHoverDumpItem(ToolbarUI* ui, int cmdId, Str text, bool isCurrent, bool isRight) {
+    HoverDumpItem it;
+    it.cmdId = cmdId;
+    it.isCurrent = isCurrent;
+    it.isRight = isRight;
+    it.text = str::Dup(text);
+    VecAppend(ui->hoverItems, it);
+    return &ui->hoverItems[len(ui->hoverItems) - 1];
 }
 
 // orig's kCloseHoverDropdownTimerId: the drop-down stays while the cursor is on
@@ -1266,26 +1372,31 @@ static gp::El* ToolbarIcon(gp::Ctx* cx, Str svg, int iconSize, Color col);
 // orig's NewToolbarHoverMenu / ToolbarHoverRow
 static gp::El* NewToolbarHoverMenu(MainWindow* win, gp::Ctx* cx, const Vec<ToolbarHoverMenuItem>& items) {
     Toolbar* tb = Tb(win);
+    ToolbarUI* ui = Ui(win);
     const gp::Theme& th = gp::ThemeNow(cx->app);
+    BeginHoverDump(ui, len(items));
     gp::El* box = gp::Div(cx->a)
                       ->FlexCol()
                       ->ItemsStretch()
                       ->Absolute()
                       ->Bg(ToGpui(TbBgColor()))
                       ->Border(1, th.border)
-                      ->OnHover(gp::ListenTo(Ui(win)->view, &ToolbarView::OnStripHover));
+                      ->BoundsOut(&ui->hoverBox)
+                      ->OnHover(gp::ListenTo(ui->view, &ToolbarView::OnStripHover));
     for (const ToolbarHoverMenuItem& it : items) {
         Color col = it.enabled ? TbTextColor() : TbDisabledColor();
+        HoverDumpItem* slot = AddHoverDumpItem(ui, it.cmdId, it.text, false, false);
         gp::El* row = gp::Div(cx->a)
                           ->FlexRow()
                           ->ItemsCenter()
                           ->PadX((float)DpiScale(kHoverRowPadX))
                           ->PadY((float)DpiScale(kHoverRowPadY))
-                          ->Gap((float)DpiScale(kHoverRowIconGapX));
+                          ->Gap((float)DpiScale(kHoverRowIconGapX))
+                          ->BoundsOut(&slot->bounds);
         if (it.enabled) {
             row->HoverBg(ToGpui(TbHoverColor()))
                 ->PathClick(GpuiDup(cx->a, fmt("tb-hover-row-%d", it.cmdId)))
-                ->OnClick(gp::ListenTo(Ui(win)->view, &ToolbarView::OnStripCell, (intptr_t)it.cmdId));
+                ->OnClick(gp::ListenTo(ui->view, &ToolbarView::OnStripCell, (intptr_t)it.cmdId));
         }
         row->Child(ToolbarIcon(cx, it.svgIcon, tb->iconSize, col));
         row->Child(gp::TextEl(cx->a, GpuiDup(cx->a, it.text))->Font(12)->Fg(ToGpui(col)));
@@ -1341,9 +1452,10 @@ static gp::El* StripCell(MainWindow* win, gp::Ctx* cx, Str text, int cmdId, bool
     if (isRightHalf) {
         cell->Bg(ToGpui(TbSubtleBgColor()));
     }
-    if (isCurrent) {
-        cell->Border(1, ToGpui(TbTextColor()));
-    }
+    // every cell keeps the border, so boxing the current level does not change
+    // the strip's width and slide it out from under the mouse
+    Color edge = isCurrent ? TbTextColor() : (isRightHalf ? TbSubtleBgColor() : TbBgColor());
+    cell->Border(1, ToGpui(edge));
     cell->Child(gp::TextEl(cx->a, GpuiDup(cx->a, text))->Font(12)->Fg(ToGpui(TbTextColor())));
     return cell;
 }
@@ -1354,7 +1466,9 @@ static gp::El* StripCell(MainWindow* win, gp::Ctx* cx, Str text, int cmdId, bool
 // holds what surrounds the middle, down to the two extremes.
 static gp::El* BuildZoomStrip(MainWindow* win, gp::Ctx* cx) {
     Toolbar* tb = Tb(win);
-    Rect anchor = GetToolbarButtonRect(win, tb->hoverCmdId);
+    ToolbarUI* ui = Ui(win);
+    int anchorCmd = tb->hoverAnchorCmdId != 0 ? tb->hoverAnchorCmdId : tb->hoverCmdId;
+    Rect anchor = GetToolbarButtonRect(win, anchorCmd);
     if (anchor.IsEmpty() || !win->ctrl) {
         return nullptr;
     }
@@ -1365,7 +1479,14 @@ static gp::El* BuildZoomStrip(MainWindow* win, gp::Ctx* cx) {
         return nullptr;
     }
     int currentIdx = ZoomHoverCurrentIdx(win, levels);
-    VecReset(Ui(win)->stripCmds);
+    VecReset(ui->stripCmds);
+    // last frame's width. The guess below is only for the frame it first opens,
+    // before gpui has laid the pyramid out.
+    float laidW = ui->hoverBox.w;
+    BeginHoverDump(ui, n);
+    for (int i = 0; i < n; i++) {
+        AddHoverDumpItem(ui, levels[i].cmdId, ZoomLevelStrExact(levels[i].zoom), i == currentIdx, false);
+    }
 
     const gp::Theme& th = gp::ThemeNow(cx->app);
     gp::El* box = gp::Div(cx->a)
@@ -1374,7 +1495,8 @@ static gp::El* BuildZoomStrip(MainWindow* win, gp::Ctx* cx) {
                       ->Absolute()
                       ->Bg(ToGpui(TbBgColor()))
                       ->Border(1, th.border)
-                      ->OnHover(gp::ListenTo(Ui(win)->view, &ToolbarView::OnStripHover));
+                      ->BoundsOut(&ui->hoverBox)
+                      ->OnHover(gp::ListenTo(ui->view, &ToolbarView::OnStripHover));
 
     int top = HoverPyramidTopRow(n);
     int lo = (n - top) / 2;
@@ -1391,9 +1513,12 @@ static gp::El* BuildZoomStrip(MainWindow* win, gp::Ctx* cx) {
         row->Child(gp::Div(cx->a)->Flex1());
         auto addCell = [&](int i) {
             bool isRight = i >= firstRight;
-            Str text = ZoomLevelStrExact(levels[i].zoom);
-            row->Child(StripCell(win, cx, text, levels[i].cmdId, i == currentIdx, isRight));
-            VecAppend(Ui(win)->stripCmds, levels[i].cmdId);
+            ui->hoverItems[i].isRight = isRight;
+            Str text = ui->hoverItems[i].text;
+            gp::El* cell = StripCell(win, cx, text, levels[i].cmdId, i == currentIdx, isRight);
+            cell->BoundsOut(&ui->hoverItems[i].bounds);
+            row->Child(cell);
+            VecAppend(ui->stripCmds, levels[i].cmdId);
         };
         for (int i = a0; i < a1; i++) {
             addCell(i);
@@ -1419,10 +1544,13 @@ static gp::El* BuildZoomStrip(MainWindow* win, gp::Ctx* cx) {
 
     // hangs off the middle of the button, so it opens around where the mouse
     // already is (orig's centerOnButton)
-    float stripDx = (float)(top * (DpiScale(kHoverCellPadX) * 2 + 44));
+    float stripDx = laidW > 1 ? laidW : (float)(top * (DpiScale(kHoverCellPadX) * 2 + 44));
     float x = (float)anchor.x + ((float)anchor.dx - stripDx) / 2;
     x = limitValue(x, 0.f, std::max(0.f, (float)win->frameRc.dx - stripDx));
     box->Left(x)->Top((float)anchor.Bottom());
+    if (!(laidW > 1)) {
+        ui->hoverRecenter = true;
+    }
     return box;
 }
 
@@ -1461,6 +1589,7 @@ static gp::El* BuildAnnotColorStrip(MainWindow* win, gp::Ctx* cx) {
     if (len(colors) == 0) {
         return nullptr;
     }
+    BeginHoverDump(Ui(win), 0);
     VecReset(Ui(win)->stripCmds);
 
     const gp::Theme& th = gp::ThemeNow(cx->app);
@@ -2042,7 +2171,7 @@ gp::El* ToolbarOverlayBuild(MainWindow* win, gp::Ctx* cx) {
 
 void ToolbarView::OnButton(ToolbarView* self, gp::Ctx* cx, const gp::ClickEvent* ev, int64_t idx) {
     MainWindow* win = self->win;
-    if (!IsMainWindowValidAndNotClosing(win)) {
+    if (!IsMainWindowValidAndNotClosing(win) || !ev || ev->button != gp::MouseButton::Left) {
         return;
     }
     ToolbarUI* ui = Ui(win);
@@ -2063,6 +2192,11 @@ void ToolbarView::OnButton(ToolbarView* self, gp::Ctx* cx, const gp::ClickEvent*
         }
     }
     HideToolbarHoverDropdown(win);
+    // orig leaves the pending id on the button, so resting there does not open
+    // the drop-down again: a save just ended the session those rows are for
+    if (cmdId == CmdSaveAnnotations || CmdIsAnnotColorDropdown(cmdId)) {
+        Tb(win)->hoverPendingCmdId = cmdId;
+    }
     ExecuteCmd(win, cmdId);
     gp::Notify(cx);
 }
@@ -2090,7 +2224,15 @@ void ToolbarView::OnButtonUp(ToolbarView* self, gp::Ctx* cx, const gp::MouseUpEv
     }
     if (context && CmdHasHoverDropdown(cmdId)) {
         Toolbar* tb = Tb(win);
-        tb->hoverCmdId = cmdId;
+        // already up for this button: a second right-click leaves that one
+        if (tb->hoverCmdId != cmdId) {
+            bool sameStrip = tb->hoverCmdId != 0 && ZoomHoverGroup(tb->hoverAnchorCmdId) && ZoomHoverGroup(cmdId);
+            if (!sameStrip) {
+                tb->hoverGen++;
+                tb->hoverAnchorCmdId = cmdId;
+            }
+            tb->hoverCmdId = cmdId;
+        }
         tb->hoverPendingCmdId = 0;
         tb->hoverOpenLeftMs = 0;
         tb->hoverCloseLeftMs = 0;
@@ -2135,7 +2277,13 @@ void ToolbarView::OnButtonHover(ToolbarView* self, gp::Ctx* cx, const gp::HoverE
     if (CmdHasHoverDropdown(cmdId)) {
         tb->hoverCloseLeftMs = 0;
         if (tb->hoverCmdId != 0) {
+            // Zoom In and Zoom Out share the strip. The mouse's button changes
+            // (its tooltip goes); the strip stays on the button that opened it.
+            bool sameStrip = ZoomHoverGroup(tb->hoverAnchorCmdId) && ZoomHoverGroup(cmdId);
             tb->hoverCmdId = cmdId;
+            if (!sameStrip) {
+                tb->hoverAnchorCmdId = cmdId;
+            }
         } else if (tb->hoverPendingCmdId != cmdId) {
             tb->hoverPendingCmdId = cmdId;
             tb->hoverOpenLeftMs = kOpenHoverDropdownDelay;
@@ -2323,6 +2471,43 @@ void ToolbarView::OnInkThickness(ToolbarView* self, gp::Ctx* cx, const gp::Slide
     gp::Notify(cx);
 }
 
+// the pointer is on this drop-down, or on a button that shares it. A leave
+// notification can arrive after the move that landed on the other zoom button,
+// and that must not start the close.
+static bool PointKeepsHover(MainWindow* win, float x, float y) {
+    Toolbar* tb = Tb(win);
+    if (!tb || tb->hoverCmdId == 0) {
+        return false;
+    }
+    ToolbarUI* ui = tb->ui;
+    if (ui && ui->hoverBox.w > 1 && ui->hoverBox.h > 1) {
+        gp::Bounds b = ui->hoverBox;
+        if (x >= b.x && y >= b.y && x < b.x + b.w && y < b.y + b.h) {
+            return true;
+        }
+    }
+    auto onBtn = [&](int cmdId) {
+        Rect r = GetToolbarButtonRect(win, cmdId);
+        return !r.IsEmpty() && x >= (float)r.x && y >= (float)r.y && x < (float)r.x + (float)r.dx &&
+               y < (float)r.y + (float)r.dy;
+    };
+    if (onBtn(tb->hoverAnchorCmdId) || onBtn(tb->hoverCmdId)) {
+        return true;
+    }
+    if (ZoomHoverGroup(tb->hoverAnchorCmdId)) {
+        return onBtn(CmdZoomIn) || onBtn(CmdZoomOut);
+    }
+    return false;
+}
+
+static bool PointerKeepsHover(MainWindow* win) {
+    gp::Window* gw = win ? win->gpuiWin : nullptr;
+    if (!gw) {
+        return false;
+    }
+    return PointKeepsHover(win, gw->mouseX, gw->mouseY);
+}
+
 // the pointer is over the bar (or the drop-down): keep the overlay up
 void ToolbarView::OnBarHover(ToolbarView* self, gp::Ctx* cx, const gp::HoverEvent* ev) {
     MainWindow* win = self->win;
@@ -2337,8 +2522,9 @@ void ToolbarView::OnBarHover(ToolbarView* self, gp::Ctx* cx, const gp::HoverEven
     if (tb->overlayShown) {
         tb->overlayHideLeftMs = kDelayToolbarHide;
     }
-    // the pointer may be on its way to the drop-down: OnStripHover cancels
-    if (tb->hoverCmdId != 0 && tb->hoverCloseLeftMs <= 0) {
+    // the pointer may be on its way to the drop-down, or across to the other
+    // zoom button: OnStripHover cancels, and so does landing on that button
+    if (tb->hoverCmdId != 0 && tb->hoverCloseLeftMs <= 0 && !PointerKeepsHover(win)) {
         tb->hoverCloseLeftMs = kCloseHoverDropdownDelayMs;
     }
     (void)cx;
@@ -2359,7 +2545,7 @@ void ToolbarView::OnStripHover(ToolbarView* self, gp::Ctx*, const gp::HoverEvent
     if (tb->overlayShown) {
         tb->overlayHideLeftMs = kDelayToolbarHide;
     }
-    if (tb->hoverCmdId != 0) {
+    if (tb->hoverCmdId != 0 && !PointerKeepsHover(win)) {
         tb->hoverCloseLeftMs = kCloseHoverDropdownDelayMs;
     }
 }
@@ -2417,44 +2603,29 @@ void ToolbarView::OnChapterInput(ToolbarView* self, gp::Ctx* cx, const gp::Input
 
 // --- the tick ---------------------------------------------------------------
 
-// ng: orig dumps the drop-down that is up for its -dbg-control tests
-// (HoverDropdownStateTemp); the log is where this port's tests read it
-static void LogHoverDropdown(MainWindow* win) {
-    Vec<ZoomHoverLevel> levels;
-    ZoomHoverLevels(levels);
-    int currentIdx = ZoomHoverCurrentIdx(win, levels);
-    str::Builder b;
-    for (int i = 0; i < len(levels); i++) {
-        b.Append(i == 0 ? StrL("") : StrL(" "));
-        if (i == currentIdx) {
-            b.Append(StrL("["));
-        }
-        b.Append(ZoomLevelStrExact(levels[i].zoom));
-        if (i == currentIdx) {
-            b.Append(StrL("]"));
-        }
-    }
-    Str s = b.TakeStr();
-    logf("ToolbarHoverDropdown: cmd %d, %d levels: %s\n", win->toolbar->hoverCmdId, len(levels), s);
-    str::Free(s);
-}
-
 void ToolbarTick(MainWindow* win, int elapsedMs) {
     Toolbar* tb = win->toolbar;
     if (!tb) {
         return;
     }
+    // the open frame guessed the pyramid's width. Once gpui has laid it out,
+    // rebuild so it is centred on the button.
+    if (tb->ui && tb->ui->hoverRecenter && tb->hoverCmdId != 0 && tb->ui->hoverBox.w > 1) {
+        tb->ui->hoverRecenter = false;
+        AppShellInvalidate(win);
+    }
     if (tb->hoverOpenLeftMs > 0) {
         tb->hoverOpenLeftMs -= elapsedMs;
         if (tb->hoverOpenLeftMs <= 0) {
             tb->hoverOpenLeftMs = 0;
+            tb->hoverGen++;
             tb->hoverCmdId = tb->hoverPendingCmdId;
+            tb->hoverAnchorCmdId = tb->hoverCmdId;
             tb->hoverPendingCmdId = 0;
             // orig's TakeHoverButtonTooltip: the drop-down takes the tooltip's place
             if (win->gpuiWin) {
                 gp::TooltipRequestHide(win->gpuiWin);
             }
-            LogHoverDropdown(win);
             AppShellInvalidate(win);
         }
     }
