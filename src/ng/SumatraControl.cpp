@@ -1788,6 +1788,73 @@ static TempStr ImageOrientationResultTemp(Str pdfPath, int pageNo, int* exitCode
     return ToStrTemp(out);
 }
 
+// Reload a 2-page file, then a 1-page file, and report the page-info tip.
+// LoadDocument refreshes it (issue #2252).
+static TempStr PageInfoOverlayResultTemp(Str pathTwoPages, Str pathOnePage, int* exitCodeOut) {
+    str::Builder out;
+    auto fail = [&](Str msg) -> TempStr {
+        out.Append(msg);
+        out.AppendChar('\n');
+        if (exitCodeOut) {
+            *exitCodeOut = 1;
+        }
+        return ToStrTemp(out);
+    };
+
+    if (len(pathTwoPages) == 0 || len(pathOnePage) == 0) {
+        return fail(StrL("ERROR missing-paths"));
+    }
+    if (len(gWindows) == 0) {
+        return fail(StrL("NOTREADY no-window"));
+    }
+    MainWindow* win = gWindows[0];
+    if (!win) {
+        return fail(StrL("NOTREADY no-window"));
+    }
+
+    LoadDocument(win, pathTwoPages, LoadPrefs::DontSave, LoadReuse::CurrentTab);
+    if (!win->IsDocLoaded() || !win->ctrl || win->ctrl->PageCount() != 2) {
+        return fail(StrL("ERROR two-page-load"));
+    }
+
+    if (!win->pageInfoWanted) {
+        win->pageInfoWanted = true;
+        ShowPageInfoIfWanted(win);
+    }
+    NotificationWnd* wnd = GetNotificationForGroup(win, kNotifPageInfo);
+    if (!wnd) {
+        return fail(StrL("ERROR no-overlay"));
+    }
+    TempStr msg = NotificationGetMessageTemp(wnd);
+    if (!str::Contains(msg, StrL("/ 2"))) {
+        out.Append(fmt("FAIL before-reload msg=%s\n", msg));
+        if (exitCodeOut) {
+            *exitCodeOut = 1;
+        }
+        return ToStrTemp(out);
+    }
+
+    LoadDocument(win, pathOnePage, LoadPrefs::DontSave, LoadReuse::CurrentTab);
+    if (!win->IsDocLoaded() || !win->ctrl || win->ctrl->PageCount() != 1) {
+        return fail(StrL("ERROR one-page-load"));
+    }
+    wnd = GetNotificationForGroup(win, kNotifPageInfo);
+    if (!wnd) {
+        return fail(StrL("ERROR overlay-gone"));
+    }
+    msg = NotificationGetMessageTemp(wnd);
+    bool ok = str::Contains(msg, StrL("/ 1")) && !str::Contains(msg, StrL("/ 2"));
+    if (ok) {
+        out.Append(fmt("OK msg=%s\n", msg));
+    } else {
+        out.Append(fmt("FAIL after-reload msg=%s\n", msg));
+    }
+    if (exitCodeOut) {
+        *exitCodeOut = ok ? 0 : 1;
+    }
+    return ToStrTemp(out);
+}
+
 static void ExecuteControlRequest(ControlRequest* req) {
     switch ((ControlCmd)req->cmd) {
         case ControlCmd::Ping:
@@ -2558,6 +2625,19 @@ static void ExecuteControlRequest(ControlRequest* req) {
         case ControlCmd::TestSidebarLayout: {
             int exitCode = 0;
             Str res = SidebarLayoutResultTemp(&exitCode);
+            AppendTestResult(req, exitCode, res);
+            break;
+        }
+
+        case ControlCmd::TestPageInfoOverlay: {
+            Str pathTwo = StringArg(req, 0);
+            Str pathOne = StringArg(req, 1);
+            if (len(pathTwo) == 0 || len(pathOne) == 0) {
+                AppendError(req, StrL("TestPageInfoOverlay expects string pathTwoPages, string pathOnePage"));
+                break;
+            }
+            int exitCode = 0;
+            Str res = PageInfoOverlayResultTemp(pathTwo, pathOne, &exitCode);
             AppendTestResult(req, exitCode, res);
             break;
         }
