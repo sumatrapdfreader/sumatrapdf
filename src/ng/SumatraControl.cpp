@@ -479,6 +479,71 @@ static TempStr PageBoxesResultTemp(int pageNo, int* exitCodeOut) {
     return finish(ToStrTemp(line), 0);
 }
 
+// Same result as orig's SumatraTest.cpp. The dest is a copy so the signature
+// can be written incrementally.
+static TempStr SignDocumentResultTemp(Str pdfPath, Str destPath, Str thumbprint, Str certPath, Str certPassword,
+                                      Str imagePath, int appearanceFlags, int* exitCodeOut) {
+    str::Builder out;
+    auto fail = [&out, exitCodeOut](Str msg) {
+        if (exitCodeOut) {
+            *exitCodeOut = 1;
+        }
+        out.Append(msg);
+        return ToStrTemp(out);
+    };
+
+    if (len(thumbprint) == 0 && len(certPath) == 0) {
+        return fail(StrL("ERROR need thumbprint or certPath\n"));
+    }
+    if (!file::Exists(pdfPath)) {
+        return fail(fmt("ERROR pdf-missing path=%s\n", pdfPath));
+    }
+    if (!file::Copy(destPath, pdfPath, false)) {
+        return fail(fmt("ERROR copy-failed dest=%s\n", destPath));
+    }
+
+    EngineBase* engine = CreateEngineFromFile(destPath, nullptr, false);
+    if (!engine) {
+        return fail(fmt("ERROR engine-create-failed path=%s\n", destPath));
+    }
+
+    PdfSignArgs args;
+    args.certThumbprint = thumbprint;
+    args.certPath = certPath;
+    args.certPassword = certPassword;
+    args.imagePath = imagePath;
+    args.appearanceFlags = appearanceFlags;
+    args.pageNo = 1;
+    StrVec fieldNames;
+    Vec<int> fieldPages;
+    EngineMupdfGetUnsignedSignatureFields(engine, fieldNames, fieldPages);
+    if (len(fieldNames) > 0) {
+        args.fieldName = fieldNames[0];
+        args.pageNo = fieldPages[0];
+    }
+
+    Str err;
+    bool ok = EngineMupdfSignDocument(engine, args, &err);
+    if (!ok) {
+        TempStr msg = fmt("ERROR sign-failed %s\n", err ? err : StrL("(no message)"));
+        str::Free(err);
+        SafeEngineRelease(&engine);
+        return fail(msg);
+    }
+    str::Free(err);
+
+    if (!EngineMupdfSaveUpdated(engine, destPath, {})) {
+        SafeEngineRelease(&engine);
+        return fail(StrL("ERROR save-failed\n"));
+    }
+    SafeEngineRelease(&engine);
+    out.Append(StrL("ok=1\n"));
+    if (exitCodeOut) {
+        *exitCodeOut = 0;
+    }
+    return ToStrTemp(out);
+}
+
 static TempStr DocumentSignaturesResultTemp(int* exitCodeOut) {
     auto finish = [exitCodeOut](Str result, int code) -> TempStr {
         if (exitCodeOut) {
@@ -2075,6 +2140,27 @@ static void ExecuteControlRequest(ControlRequest* req) {
             IntArg(req, 0, pageNo);
             int exitCode = 0;
             Str res = PageBoxesResultTemp(pageNo, &exitCode);
+            AppendTestResult(req, exitCode, res);
+            break;
+        }
+
+        case ControlCmd::TestSignDocument: {
+            Str pdfPath = StringArg(req, 0);
+            Str destPath = StringArg(req, 1);
+            Str thumbprint = StringArg(req, 2);
+            Str certPath = StringArg(req, 3);
+            Str certPassword = StringArg(req, 4);
+            Str imagePath = StringArg(req, 5);
+            i32 appearanceFlags = -1;
+            IntArg(req, 6, appearanceFlags);
+            if (len(pdfPath) == 0 || len(destPath) == 0) {
+                AppendError(req, StrL("TestSignDocument expects string pdfPath, string destPath [, thumbprint] [, "
+                                      "certPath] [, password] [, imagePath] [, appearanceFlags]"));
+                break;
+            }
+            int exitCode = 0;
+            Str res = SignDocumentResultTemp(pdfPath, destPath, thumbprint, certPath, certPassword, imagePath,
+                                             appearanceFlags, &exitCode);
             AppendTestResult(req, exitCode, res);
             break;
         }
