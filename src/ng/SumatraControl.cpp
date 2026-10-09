@@ -1884,6 +1884,8 @@ enum class ControlCmd : u16 {
     TestPageInfo = 112,
     // orig's. The thumbnail pane: hwnd, highlighted page, cell rects.
     TestSidebarThumbnails = 113,
+    // orig's. Maximized, and the non-client strips WM_NCPAINT would fill.
+    TestFrameNcStrips = 114,
     TestMergePdf = 115,
     // orig's. A wheel while CloseWindow is in progress.
     TestWheelWhileClosing = 116,
@@ -3200,6 +3202,51 @@ static TempStr SelectionVarsResultTemp(Str pattern, int* exitCodeOut) {
     return finish({}, 0);
 }
 
+// The frame's non-client strips, in window coordinates. Maximized, DWM's
+// overhang is outside the work area and must stay unpainted.
+static TempStr FrameNcStripsResultTemp(int* exitCodeOut) {
+    auto finish = [exitCodeOut](int code, TempStr s) -> TempStr {
+        if (exitCodeOut) {
+            *exitCodeOut = code;
+        }
+        return s;
+    };
+    MainWindow* win = FirstWindow();
+    HWND hwnd = win ? AppShellNativeHwnd(win) : nullptr;
+    if (!hwnd) {
+        return finish(2, str::DupTemp(StrL("NOTREADY no-window")));
+    }
+    bool zoomed = IsZoomed(hwnd);
+    Vec<Rect> strips;
+    if (!zoomed) {
+        Rect wr = HwndWindowRect(hwnd);
+        Rect cr = HwndClientRect(hwnd);
+        Point clientScreen = HwndClientToScreen(hwnd, Point(0, 0));
+        int clientX = clientScreen.x - wr.x;
+        int clientY = clientScreen.y - wr.y;
+        int bottomNcTop = clientY + cr.dy;
+        int rightNcLeft = clientX + cr.dx;
+        if (clientY > 0) {
+            VecAppend(strips, Rect{0, 0, wr.dx, clientY});
+        }
+        if (bottomNcTop < wr.dy) {
+            VecAppend(strips, Rect{0, bottomNcTop, wr.dx, wr.dy - bottomNcTop});
+        }
+        if (clientX > 0) {
+            VecAppend(strips, Rect{0, clientY, clientX, bottomNcTop - clientY});
+        }
+        if (rightNcLeft < wr.dx) {
+            VecAppend(strips, Rect{rightNcLeft, clientY, wr.dx - rightNcLeft, bottomNcTop - clientY});
+        }
+    }
+    str::Builder sb;
+    sb.Append(fmt("zoomed=%d strips=%d", zoomed ? 1 : 0, len(strips)));
+    for (Rect& r : strips) {
+        sb.Append(fmt(" %d,%d,%d,%d", r.x, r.y, r.dx, r.dy));
+    }
+    return finish(0, ToStrTemp(sb));
+}
+
 // Orig's canvas DefWindowProc handed this wheel back to the frame.
 static TempStr WheelWhileClosingResultTemp(int* exitCodeOut) {
     auto finish = [exitCodeOut](int code, TempStr s) -> TempStr {
@@ -3814,6 +3861,13 @@ static void ExecuteControlRequest(ControlRequest* req) {
             IntArg(req, 2, n);
             int exitCode = 0;
             Str res = MergePdfResultTemp(action, arg, n, &exitCode);
+            AppendTestResult(req, exitCode, res);
+            break;
+        }
+
+        case ControlCmd::TestFrameNcStrips: {
+            int exitCode = 0;
+            Str res = FrameNcStripsResultTemp(&exitCode);
             AppendTestResult(req, exitCode, res);
             break;
         }
