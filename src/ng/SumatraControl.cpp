@@ -3506,7 +3506,9 @@ static void ExecuteControlRequest(ControlRequest* req) {
         case ControlCmd::Quit:
             AppendArgInt(req->results, 0);
             AppendArgEnd(req->results);
-            AppShellQuit();
+            // Same path as CmdExit. AppShellQuit() drops the tabs first, and
+            // the shutdown save then writes an empty session.
+            uitask::Post(MkFunc0Void(OnMenuExit), "ControlQuit");
             break;
 
         // A notification covers part of the document for a couple of seconds,
