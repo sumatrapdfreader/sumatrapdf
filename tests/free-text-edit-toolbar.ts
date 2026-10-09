@@ -6,7 +6,7 @@
 import { mkdirSync, rmSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 import { ControlClient, ControlCommand } from "./control.ts";
-import { cmdId, runStandalone, tmpPath, assemblePdf } from "./util.ts";
+import { assemblePdf, cmdId, runStandalone, tmpPath, USE_NG } from "./util.ts";
 import {
   clientToScreen,
   findTopWindow,
@@ -212,11 +212,16 @@ export async function testit(): Promise<void> {
 
     const placed = parseRect(/ placed=(-?\d+),(-?\d+),(\d+),(\d+)/.exec(dump));
     const del = chipRect(dump, "delete");
-    const tbHwnd = findTopWindow(proc.pid!, "SumatraAnnotEditToolbar");
-    if (!tbHwnd) {
-      throw new Error("free-text-edit-toolbar: property row window not found");
+    // ng draws the property row in the frame. Chip rects are frame client pixels.
+    if (USE_NG) {
+      await clickAt(frame, del.x + Math.floor(del.dx / 2), del.y + Math.floor(del.dy / 2), 0);
+    } else {
+      const tbHwnd = findTopWindow(proc.pid!, "SumatraAnnotEditToolbar");
+      if (!tbHwnd) {
+        throw new Error("free-text-edit-toolbar: property row window not found");
+      }
+      await clickAt(tbHwnd, del.x - placed.x + Math.floor(del.dx / 2), del.y - placed.y + Math.floor(del.dy / 2), 0);
     }
-    await clickAt(tbHwnd, del.x - placed.x + Math.floor(del.dx / 2), del.y - placed.y + Math.floor(del.dy / 2), 0);
     const deadline = Date.now() + 5_000;
     let n = await annotCount(client);
     while (n !== 0 && Date.now() < deadline) {

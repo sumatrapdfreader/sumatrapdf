@@ -2638,13 +2638,22 @@ TempStr AnnotEditToolbarStateTemp(MainWindow* win) {
     gp::Bounds b = tb->measured;
     str::Builder chips;
     int nChips = std::min(tb->nChips, (int)dimof(tb->chipBounds));
+    float s = CanvasScale(win);
+    if (s <= 0.f) {
+        s = 1.f;
+    }
     for (int i = 0; i < nChips; i++) {
         if (i > 0) {
             chips.AppendChar(';');
         }
         gp::Bounds c = tb->chipBounds[i];
         Str name = i < len(tb->items) ? KindName(tb->items[i].kind) : StrL("?");
-        chips.Append(fmt("%s:%d,%d,%d,%d:", name, (int)c.x, (int)c.y, (int)c.w, (int)c.h));
+        Str tip = i < len(tb->items) ? tb->items[i].tooltip : Str{};
+        int x = (int)(c.x / s + 0.5f);
+        int y = (int)(c.y / s + 0.5f);
+        int dx = (int)((c.x + c.w) / s + 0.5f) - x;
+        int dy = (int)((c.y + c.h) / s + 0.5f) - y;
+        chips.Append(fmt("%s:%d,%d,%d,%d:%s", name, x, y, dx, dy, tip));
     }
     return fmt(
         "annotEditToolbar visible=1 n=%d items=%s placed=%d,%d,%d,%d editing=%d popup=%d "
