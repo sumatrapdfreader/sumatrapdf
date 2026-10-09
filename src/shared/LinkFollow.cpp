@@ -425,6 +425,18 @@ TempStr KeyboardLinkFollowResultTemp(Str action, Str chars, int* exitCodeOut) {
     for (int i = 0; i < n; i++) {
         const KeyboardLinkTarget& t = win->linkFollowTargets[i];
         Rect r = dm ? dm->CvtToScreen(t.pageNo, t.rect) : Rect{};
+#if defined(SUMATRA_NG)
+        // tests click the frame; CvtToScreen is canvas pixels and ToDoc
+        // subtracts the canvas origin
+        if (dm) {
+            float s = CanvasScale(win);
+            if (s <= 0.f) {
+                s = 1.f;
+            }
+            r.x += (int)((float)win->canvasRc.x / s + 0.5f);
+            r.y += (int)((float)win->canvasRc.y / s + 0.5f);
+        }
+#endif
         Str hint(t.hint, t.hintLen);
         out.Append(fmt("link=%d page=%d rect=%d,%d,%d,%d hint=%s\n", i + 1, t.pageNo, r.x, r.y, r.dx, r.dy, hint));
     }
