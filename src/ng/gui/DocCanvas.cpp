@@ -3593,6 +3593,13 @@ static void OnMouseMove(MainWindow* win, int x, int y) {
     }
 }
 
+void DocCanvasMouseMove(MainWindow* win, int x, int y) {
+    if (!IsMainWindowValid(win) || !win->AsFixed()) {
+        return;
+    }
+    OnMouseMove(win, x, y);
+}
+
 // orig's kHideCursorTimerID. A laser pointer that disappears when you stop
 // moving it would be useless, so it opts out of the hiding.
 void CanvasTickPresentation(MainWindow* win, int elapsedMs) {

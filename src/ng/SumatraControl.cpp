@@ -3344,6 +3344,119 @@ static TempStr DpiResultTemp(Str action, int* exitCodeOut) {
 }
 #endif
 
+// Mouse-drag text selection of rotated glyphs (issue #4839). Finds `word`,
+// presses the first glyph and drags to the last.
+static TempStr RotatedTextMouseDragResultTemp(Str word, int* exitCodeOut) {
+    str::Builder out;
+    auto fail = [&](Str msg) -> TempStr {
+        out.Append(msg);
+        out.AppendChar('\n');
+        if (exitCodeOut) {
+            *exitCodeOut = 1;
+        }
+        return ToStrTemp(out);
+    };
+
+    if (str::IsEmptyOrWhiteSpace(word)) {
+        return fail(StrL("ERROR missing word"));
+    }
+    if (len(gWindows) == 0) {
+        return fail(StrL("NOTREADY no-window"));
+    }
+    MainWindow* win = gWindows[0];
+    DisplayModel* dm = win ? win->AsFixed() : nullptr;
+    if (!dm) {
+        return fail(StrL("NOTREADY no-doc"));
+    }
+    EngineBase* engine = dm->GetEngine();
+    const int pageNo = 1;
+    Rect* coords = nullptr;
+    QuadF* quads = nullptr;
+    int textLen = 0;
+    Str text = engine->GetTextForPage(pageNo, &textLen, &coords, &quads);
+    if (len(text) == 0 || !coords) {
+        return fail(StrL("ERROR no-page-text"));
+    }
+    int startGlyph = -1;
+    int endGlyph = -1;
+    int wordLen = Utf8CodepointCount(word);
+    for (int i = 0; i <= textLen - wordLen; i++) {
+        if (str::Eq(Utf8SliceByCodepoints(text, i, wordLen), word)) {
+            startGlyph = i;
+            endGlyph = i + wordLen;
+            break;
+        }
+    }
+    if (startGlyph < 0) {
+        return fail(StrL("ERROR word-not-found"));
+    }
+    int first = startGlyph;
+    int last = endGlyph - 1;
+    for (; first < endGlyph && !coords[first].x && !coords[first].dx; first++) {
+    }
+    for (; last > first && !coords[last].x && !coords[last].dx; last--) {
+    }
+    if (first >= endGlyph) {
+        return fail(StrL("ERROR empty-glyph-boxes"));
+    }
+    bool firstTilted = quads && quads[first].IsRotated();
+    out.Append(fmt("quads=%d firstTilted=%d start=%d end=%d\n", quads ? 1 : 0, firstTilted ? 1 : 0, first, last));
+
+    PointF p0{(float)(coords[first].x + (coords[first].dx / 2.0)), (float)(coords[first].y + (coords[first].dy / 2.0))};
+    PointF p1{(float)(coords[last].x + coords[last].dx), (float)(coords[last].y + (coords[last].dy / 2.0))};
+    if (quads) {
+        p0 = quads[first].Center();
+        // past the last glyph along its baseline so the final letter is included
+        p1 = {(quads[last].ur.x + quads[last].lr.x) / 2.f, (quads[last].ur.y + quads[last].lr.y) / 2.f};
+    }
+    Point s0 = dm->CvtToScreen(pageNo, p0);
+    Point s1 = dm->CvtToScreen(pageNo, p1);
+    out.Append(fmt("screen0=%d,%d screen1=%d,%d overText0=%d overText1=%d\n", s0.x, s0.y, s1.x, s1.y,
+                   dm->IsOverText(s0) ? 1 : 0, dm->IsOverText(s1) ? 1 : 0));
+    if (!dm->IsOverText(s0)) {
+        return fail(StrL("ERROR start-not-over-text"));
+    }
+
+    DeleteOldSelectionInfo(win, true);
+    DocCanvasMouseDown(win, s0.x, s0.y);
+    int actionDown = (int)win->mouseAction;
+    DocCanvasMouseMove(win, s1.x, s1.y);
+    DocCanvasMouseUp(win, s1.x, s1.y);
+    int actionUp = (int)win->mouseAction;
+
+    WindowTab* tab = win->CurrentTab();
+    bool isTextOnly = false;
+    TempStr selected = tab ? GetSelectedTextTemp(tab, StrL(" "), isTextOnly) : TempStr{};
+    int nrects = (tab && tab->selectionOnPage) ? len(*tab->selectionOnPage) : 0;
+    int nQuads = 0;
+    int nTilted = 0;
+    if (tab && tab->selectionOnPage) {
+        for (SelectionOnPage& onPage : *tab->selectionOnPage) {
+            if (onPage.HasQuad()) {
+                nQuads++;
+                if (onPage.quad.IsRotated()) {
+                    nTilted++;
+                }
+            }
+        }
+    }
+    out.Append(fmt("actionDown=%d actionUp=%d isTextOnly=%d nrects=%d nQuads=%d nTilted=%d selected=%s\n", actionDown,
+                   actionUp, isTextOnly ? 1 : 0, nrects, nQuads, nTilted, selected));
+
+    bool ok =
+        (actionDown == (int)MouseAction::SelectingText) && isTextOnly && nTilted > 0 && str::ContainsI(selected, word);
+    if (!ok) {
+        if (exitCodeOut) {
+            *exitCodeOut = 1;
+        }
+        return ToStrTemp(out);
+    }
+    if (exitCodeOut) {
+        *exitCodeOut = 0;
+    }
+    return ToStrTemp(out);
+}
+
 static void ExecuteControlRequest(ControlRequest* req) {
     switch ((ControlCmd)req->cmd) {
         case ControlCmd::Ping:
@@ -4562,6 +4675,18 @@ static void ExecuteControlRequest(ControlRequest* req) {
             Str pattern = StringArg(req, 0);
             int exitCode = 0;
             Str res = SelectionVarsResultTemp(pattern, &exitCode);
+            AppendTestResult(req, exitCode, res);
+            break;
+        }
+
+        case ControlCmd::TestRotatedTextMouseDrag: {
+            Str word = StringArg(req, 0);
+            if (len(word) == 0) {
+                AppendError(req, StrL("TestRotatedTextMouseDrag expects string word"));
+                break;
+            }
+            int exitCode = 0;
+            Str res = RotatedTextMouseDragResultTemp(word, &exitCode);
             AppendTestResult(req, exitCode, res);
             break;
         }

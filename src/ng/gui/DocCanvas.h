@@ -57,6 +57,7 @@ void DocCanvasWheelFromFrame(MainWindow* win, gpui::Ctx* cx, const gpui::ScrollW
 void DocCanvasPostedWheel(MainWindow* win, int delta, bool isCtrl, bool isShift);
 void DocCanvasMouseDown(MainWindow* win, int x, int y);
 void DocCanvasMouseUp(MainWindow* win, int x, int y);
+void DocCanvasMouseMove(MainWindow* win, int x, int y);
 void DocCanvasClick(MainWindow* win, int x, int y);
 // gpui lays out in dips, the document model in pixels: dips per document pixel
 float CanvasScale(MainWindow* win);
