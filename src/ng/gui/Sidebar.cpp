@@ -1018,10 +1018,16 @@ TempStr SidebarStateTemp(MainWindow* win) {
     if (!ui) {
         return StrL("sidebar=none");
     }
-    return fmt("tocRows=%d tocSel='%s' tocFilter='%s' favRows=%d favSel='%s' panelFocus=%d%d", len(ui->tocRows),
-               ui->tocSel ? ui->tocSel->title : Str{}, ui->tocFilter ? SidebarTocFilterTextTemp(win) : Str{},
-               len(ui->favRows), ui->favSel ? ui->favSel->text : Str{}, SidebarPanelHasFocus(win, true) ? 1 : 0,
-               SidebarPanelHasFocus(win, false) ? 1 : 0);
+    gp::Bounds fv = ui->favView;
+    WindowTab* tab = win->CurrentTab();
+    return fmt(
+        "tocRows=%d tocSel='%s' tocFilter='%s' favRows=%d favSel='%s' panelFocus=%d%d top=%s bottom=%s "
+        "favView=%d,%d,%d,%d",
+        len(ui->tocRows), ui->tocSel ? ui->tocSel->title : Str{}, ui->tocFilter ? SidebarTocFilterTextTemp(win) : Str{},
+        len(ui->favRows), ui->favSel ? ui->favSel->text : Str{}, SidebarPanelHasFocus(win, true) ? 1 : 0,
+        SidebarPanelHasFocus(win, false) ? 1 : 0,
+        SidebarContentToStr(tab ? tab->sidebarContent : SidebarContent::Bookmarks),
+        SidebarContentToStr(win->sidebarBottomContent), (int)fv.x, (int)fv.y, (int)fv.w, (int)fv.h);
 }
 
 // orig's WndProcTocFilterEdit / WndProcFavFilterEdit: Down moves into the
