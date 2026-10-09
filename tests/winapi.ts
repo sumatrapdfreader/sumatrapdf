@@ -14,7 +14,7 @@
 
 import { dlopen, FFIType, JSCallback, ptr, toArrayBuffer } from "bun:ffi";
 import { IS_MAC, IS_WIN } from "./host.ts";
-import { macSendMessage, macSendText } from "./mac-control.ts";
+import { macFrameClientRect, macSendMessage, macSendText } from "./mac-control.ts";
 
 // Windows tests talk to user32. On macOS the same helpers either use
 // CoreGraphics or throw, so importing this file does not require the DLLs.
@@ -646,6 +646,9 @@ export async function waitForChildWindow(parent: number, className: string, time
 }
 
 export function getClientRect(hwnd: number): Rect {
+  if (IS_MAC) {
+    return macFrameClientRect();
+  }
   const buf = new Int32Array(4);
   user32.symbols.GetClientRect(hwnd, ptr(buf));
   return { left: buf[0], top: buf[1], right: buf[2], bottom: buf[3] };

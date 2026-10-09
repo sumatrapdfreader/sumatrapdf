@@ -352,6 +352,16 @@ function geom(): Geom {
   return { scale, ox: x / scale, oy: y / scale, cx: x, cy: y, cdx: dx, cdy: dy };
 }
 
+export function macFrameClientRect(): { left: number; top: number; right: number; bottom: number } {
+  const res = controlRequest(TestLayout, []);
+  const text = String(res[1] ?? "");
+  const scale = Number(/scale=([0-9.]+)/.exec(text)?.[1] ?? "1") || 1;
+  const frame = /item name=frame visible=\d+ rect=(-?\d+),(-?\d+),(-?\d+),(-?\d+)/.exec(text);
+  const dx = frame ? Number(frame[3]) : 0;
+  const dy = frame ? Number(frame[4]) : 0;
+  return { left: 0, top: 0, right: Math.round(dx / scale), bottom: Math.round(dy / scale) };
+}
+
 function dips(px: number, py: number, g: Geom): { x: number; y: number } {
   return { x: Math.round(px * g.scale), y: Math.round(py * g.scale) };
 }
