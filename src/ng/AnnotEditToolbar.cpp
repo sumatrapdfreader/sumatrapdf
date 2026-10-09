@@ -2637,6 +2637,7 @@ TempStr AnnotEditToolbarStateTemp(MainWindow* win) {
     Annotation* annot = LiveToolbarAnnot(tb);
     gp::Bounds b = tb->measured;
     str::Builder chips;
+    Str iconName;
     int nChips = std::min(tb->nChips, (int)dimof(tb->chipBounds));
     float s = CanvasScale(win);
     if (s <= 0.f) {
@@ -2654,12 +2655,15 @@ TempStr AnnotEditToolbarStateTemp(MainWindow* win) {
         int dx = (int)((c.x + c.w) / s + 0.5f) - x;
         int dy = (int)((c.y + c.h) / s + 0.5f) - y;
         chips.Append(fmt("%s:%d,%d,%d,%d:%s", name, x, y, dx, dy, tip));
+        if (i < len(tb->items) && tb->items[i].kind == AnnotEditKind::Icon) {
+            iconName = tb->items[i].iconName;
+        }
     }
     return fmt(
-        "annotEditToolbar visible=1 n=%d items=%s placed=%d,%d,%d,%d editing=%d popup=%d "
+        "annotEditToolbar visible=1 n=%d items=%s placed=%d,%d,%d,%d editing=%d popup=%d iconName=%s "
         "fontStyle=%d font=%s chips=%s\n",
         len(tb->items), ToStrTemp(items), (int)b.x, (int)b.y, (int)b.w, (int)b.h, tb->editingContents ? 1 : 0,
-        (int)tb->popupKind, FreeTextFontStyle(annot), FreeTextFontFamily(annot), ToStrTemp(chips));
+        (int)tb->popupKind, iconName, FreeTextFontStyle(annot), FreeTextFontFamily(annot), ToStrTemp(chips));
 }
 
 TempStr AnnotColorPopupStateTemp(MainWindow* win) {

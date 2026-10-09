@@ -6,7 +6,7 @@
 import { mkdirSync, rmSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 import { ControlClient, ControlCommand } from "./control.ts";
-import { assemblePdf, cmdId, runStandalone, tmpPath } from "./util.ts";
+import { assemblePdf, cmdId, runStandalone, tmpPath, USE_NG } from "./util.ts";
 import { captureWindowPixels, findTopWindow, packCoords, sendMessage, sleep, WM_COMMAND } from "./winapi.ts";
 import { findCanvas, killAndWait, launchControlled, sendCommandSync } from "./win-automation.ts";
 
@@ -123,15 +123,23 @@ export async function testit(): Promise<void> {
     if (icon.dx < 8) {
       throw new Error(`issue-6112: no icon chip: ${dump}`);
     }
-    const tbHwnd = findTopWindow(proc.pid!, TOOLBAR_CLASS);
-    if (!tbHwnd) {
-      throw new Error("issue-6112: property row window not found");
+    // ng draws the property row in the frame. Chip rects are frame client pixels.
+    let cap: { w: number; h: number; data: Uint8Array } | null;
+    let local: { x: number; y: number; dx: number; dy: number };
+    if (USE_NG) {
+      cap = captureWindowPixels(frame);
+      local = icon;
+    } else {
+      const tbHwnd = findTopWindow(proc.pid!, TOOLBAR_CLASS);
+      if (!tbHwnd) {
+        throw new Error("issue-6112: property row window not found");
+      }
+      cap = captureWindowPixels(tbHwnd);
+      local = { x: icon.x - placed.x, y: icon.y - placed.y, dx: icon.dx, dy: icon.dy };
     }
-    const cap = captureWindowPixels(tbHwnd);
     if (!cap) {
       throw new Error("issue-6112: could not capture property row");
     }
-    const local = { x: icon.x - placed.x, y: icon.y - placed.y, dx: icon.dx, dy: icon.dy };
     const { center, sides } = topBandCenterInk(cap, local);
     if (center <= sides) {
       throw new Error(`issue-6112: icon looks upside-down (topCenter=${center} topSides=${sides})`);
