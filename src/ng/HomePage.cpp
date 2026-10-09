@@ -388,6 +388,8 @@ struct HomePageUI {
     gpui::Bounds openGroupBounds{};
     // the entries as laid out last frame, for the hover tooltip
     Vec<gpui::Bounds> entryBounds;
+    // list-view size column, measured while painting (issue #5870)
+    Vec<gpui::Bounds> listSizeBounds;
 };
 
 static HomePageUI* Ui(MainWindow* win) {
@@ -1682,7 +1684,8 @@ static gp::El* HomeListRowEl(MainWindow* win, gp::Ctx* cx, int idx, bool isSelec
         row->Child(gp::TextEl(cx->a, GpuiDup(cx->a, str::FormatSizeShortTemp(size)))
                        ->Font(12)
                        ->Fg(ToGpui(colText))
-                       ->Shrink0());
+                       ->Shrink0()
+                       ->BoundsOut(&Ui(win)->listSizeBounds[idx]));
     }
     if (gSettings->showHomePageReadingProgress) {
         TempStr progress = FormatFileStateProgressTemp(fs);
@@ -1799,6 +1802,9 @@ gp::El* HomePageBuild(MainWindow* win, gp::Ctx* cx) {
     // to exist (and keep their address) before the entries are built
     while (len(h->entryBounds) < nFiles) {
         VecAppend(h->entryBounds, gpui::Bounds{});
+    }
+    while (len(h->listSizeBounds) < nFiles) {
+        VecAppend(h->listSizeBounds, gpui::Bounds{});
     }
     // orig's homePageSelIdx starts at 0, so the first thumbnail is outlined
     // before any key is pressed
@@ -2071,6 +2077,63 @@ TempStr HomeSelectionForWindowTemp(int* exitCodeOut, int winIdx) {
 
 TempStr HomeSelectionResultTemp(int* exitCodeOut) {
     return HomeSelectionForWindowTemp(exitCodeOut, 0);
+}
+
+// What the list view drew for each row. NOTREADY until the size column has
+// been measured, which is the paint after the row is built.
+TempStr HomeListRowsResultTemp(int* exitCodeOut) {
+    str::Builder out;
+    auto finish = [&](int code) -> TempStr {
+        if (exitCodeOut) {
+            *exitCodeOut = code;
+        }
+        return ToStrTemp(out);
+    };
+
+    MainWindow* win = len(gWindows) > 0 ? gWindows[0] : nullptr;
+    if (!win) {
+        out.Append(StrL("NOTREADY no-window\n"));
+        return finish(2);
+    }
+    if (!win->IsCurrentTabAbout()) {
+        out.Append(StrL("NOTREADY no-layout\n"));
+        return finish(2);
+    }
+    if (!HomePageIsListView()) {
+        out.Append(StrL("ERROR not-list-view\n"));
+        return finish(1);
+    }
+    HomePageUI* h = Ui(win);
+    int n = len(h->files);
+    if (n > 0 && len(h->listSizeBounds) < n) {
+        out.Append(StrL("NOTREADY no-layout\n"));
+        return finish(2);
+    }
+    for (int i = 0; i < n; i++) {
+        i64 size = file::GetSize(h->files[i]->filePath);
+        gpui::Bounds& b = h->listSizeBounds[i];
+        if (size >= 0 && (b.w <= 0 || b.h <= 0)) {
+            out.Append(StrL("NOTREADY no-layout\n"));
+            return finish(2);
+        }
+    }
+    out.Append(fmt("OK rows=%d\n", n));
+    for (int i = 0; i < n; i++) {
+        FileState* fs = h->files[i];
+        i64 size = file::GetSize(fs->filePath);
+        TempStr sizeText = size < 0 ? str::DupTemp(StrL("")) : str::FormatSizeShortTemp(size);
+        Rect r = size < 0 ? Rect{} : BoundsRect(h->listSizeBounds[i]);
+        TempStr progress;
+        if (gSettings && gSettings->showHomePageReadingProgress) {
+            progress = FormatFileStateProgressTemp(fs);
+        }
+        if (str::IsNull(progress)) {
+            progress = StrL("");
+        }
+        out.Append(fmt("row=%d size='%s' sizeRect=%d,%d,%d,%d progress='%s' path=%s\n", i, sizeText, r.x, r.y, r.dx,
+                       r.dy, progress, fs->filePath));
+    }
+    return finish(0);
 }
 
 void HomePageSelectFirst(MainWindow* win) {

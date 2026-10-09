@@ -1828,6 +1828,13 @@ static void ExecuteControlRequest(ControlRequest* req) {
             break;
         }
 
+        case ControlCmd::TestHomeListRows: {
+            int exitCode = 0;
+            Str res = HomeListRowsResultTemp(&exitCode);
+            AppendTestResult(req, exitCode, res);
+            break;
+        }
+
         case ControlCmd::StartPerfLog:
             StartPerfLog();
             AppendTestResult(req, 0, StrL("OK"));
