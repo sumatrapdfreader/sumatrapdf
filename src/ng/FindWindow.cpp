@@ -1096,29 +1096,47 @@ TempStr FindResultsOrderResultTemp(Str term, int startPage, int* exitCodeOut) {
     return finish(0, ToStrTemp(out));
 }
 
-// ng: what the scripted tests read back (orig's TestFindWindowContents)
+// ng: what the scripted tests read back (orig's TestFindWindowContents).
+// Shows the floating window so a CLI -search builds snippets, then reports them.
 TempStr FindWindowContentsResultTemp(int maxRows, int* exitCodeOut) {
-    auto finish = [&](int code, TempStr s) -> TempStr {
+    (void)maxRows;
+    str::Builder out;
+    auto finish = [&](int code, Str msg) -> TempStr {
+        out.Append(msg);
+        out.AppendChar('\n');
         if (exitCodeOut) {
             *exitCodeOut = code;
         }
-        return s;
+        return ToStrTemp(out);
     };
-    MainWindow* win = len(gWindows) > 0 ? gWindows[0] : nullptr;
-    if (!win) {
-        return finish(2, str::DupTemp(StrL("NOTREADY no-window")));
+    if (len(gWindows) == 0) {
+        return finish(2, StrL("NOTREADY no-window"));
     }
-    FindWindowWnd* w = Wnd(win);
-    str::Builder out;
-    out.Append(fmt("OK visible=%d sel=%d n=%d status=%s\n", w && w->visible ? 1 : 0, w ? w->sel : -1,
-                   len(win->findMatches), w ? Str(w->status) : StrL("")));
+    MainWindow* win = gWindows[0];
+    if (!win || !win->AsFixed()) {
+        return finish(2, StrL("NOTREADY no-doc"));
+    }
+    gSettings->searchUIFloating = true;
+    ShowFindWindow(win);
+    TempStr term = FindEditTextTemp(win);
+    if (len(term) == 0) {
+        return finish(1, StrL("ERROR empty-term"));
+    }
+    if (win->findThread || win->findCountThread || !win->findCountValid || !win->findCountHasSnippets) {
+        return finish(2, StrL("NOTREADY snippets"));
+    }
     int n = len(win->findMatches);
-    if (maxRows > 0) {
-        n = std::min(n, maxRows);
-    }
+    int nSnippets = 0;
     for (int i = 0; i < n; i++) {
-        const FindMatch& fm = win->findMatches[i];
-        out.Append(fmt("%d\t%d\t%s\n", i, fm.startPage, fm.snippet));
+        if (len(win->findMatches[i].snippet) > 0) {
+            nSnippets++;
+        }
     }
-    return finish(0, ToStrTemp(out));
+    if (n == 0) {
+        return finish(1, StrL("ERROR no-matches"));
+    }
+    if (nSnippets == 0) {
+        return finish(1, StrL("ERROR empty-snippets"));
+    }
+    return finish(0, fmt("OK term=%s n=%d snippets=%d first=%s", term, n, nSnippets, win->findMatches[0].snippet));
 }
