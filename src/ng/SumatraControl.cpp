@@ -3333,10 +3333,12 @@ static TempStr DpiResultTemp(Str action, int* exitCodeOut) {
         findH = FindBarFontHeight(win);
     }
     int findBarDy = FindBarWindowHeight(win);
+    // the header's view icons and its close button share one pixel size
+    int iconDy = SidebarIconDy(win);
     out.Append(
         fmt("frame=%d current=%d home=%d tocIcon=%d tocEdit=%d tocClose=%d favClose=%d aiLabel=%d aiInput=%d "
             "aiCheckbox=%d aiClose=%d find=%d findBarDy=%d\n",
-            AppShellFrameDpi(win), DpiGet(), HomeSearchFontPx(win), SidebarIconDy(win), SidebarFilterFont(win), 0, 0, 0,
+            AppShellFrameDpi(win), DpiGet(), HomeSearchFontPx(win), iconDy, SidebarFilterFont(win), iconDy, iconDy, 0,
             0, 0, 0, findH, findBarDy));
     return finish(0);
 }
