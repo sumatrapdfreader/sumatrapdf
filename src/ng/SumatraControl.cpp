@@ -1865,6 +1865,7 @@ enum class ControlCmd : u16 {
     TestSeedTextSelection = 99,
     TestTtsEngineCrash = 100,
     TestTtsPumpOnSpeak = 107,
+    TestRenderSelections = 108,
     TestToggleFormButton = 109,
     ResolveUnsavedChanges = 110,
     // orig's. 105 is TestSaveFileAs.
@@ -2940,6 +2941,54 @@ static TempStr CmykImageSaveResultTemp(Str jpegPath, Str tiffPath, int* exitCode
     return ToStrTemp(out);
 }
 
+// A blank strip of pages 1 and 2 as one selection image, and how many of its
+// pixels are white. tests/render-selections-8bpp.ts.
+static TempStr RenderSelectionsResultTemp(int* exitCodeOut) {
+    auto fail = [&](Str msg, int code) -> TempStr {
+        if (exitCodeOut) {
+            *exitCodeOut = code;
+        }
+        return msg;
+    };
+
+    if (len(gWindows) == 0) {
+        return fail(StrL("NOTREADY no-window"), 2);
+    }
+    MainWindow* win = gWindows[0];
+    DisplayModel* dm = win ? win->AsFixed() : nullptr;
+    if (!dm || dm->PageCount() < 2) {
+        return fail(StrL("NOTREADY need-two-pages"), 2);
+    }
+
+    Vec<SelectionOnPage> sels;
+    RectF r(72, 300, 200, 40);
+    VecAppend(sels, SelectionOnPage(1, &r, nullptr));
+    VecAppend(sels, SelectionOnPage(2, &r, nullptr));
+    Pixmap* px = RenderSelectionsAsPixmap(dm, sels);
+    if (!px || !px->data) {
+        FreePixmap(px);
+        return fail(StrL("ERROR no-bitmap"), 1);
+    }
+    int white = 0;
+    int total = px->width * px->height;
+    if (px->format == PixmapFormat::BGRA8) {
+        for (int y = 0; y < px->height; y++) {
+            const u32* row = (const u32*)(px->data + ((size_t)y * px->stride));
+            for (int x = 0; x < px->width; x++) {
+                if ((row[x] & 0xffffff) == 0xffffff) {
+                    white++;
+                }
+            }
+        }
+    }
+    TempStr res = fmt("OK w=%d h=%d format=%d white=%d total=%d", px->width, px->height, (int)px->format, white, total);
+    FreePixmap(px);
+    if (exitCodeOut) {
+        *exitCodeOut = 0;
+    }
+    return res;
+}
+
 static TempStr PixmapRgbHexTemp(Pixmap* px, int x, int y) {
     int bpp = PixmapBytesPerPixel(px->format);
     u8* p = px->data + ((size_t)y * (size_t)px->stride) + ((size_t)x * (size_t)bpp);
@@ -3381,6 +3430,13 @@ static void ExecuteControlRequest(ControlRequest* req) {
             }
             int exitCode = 0;
             Str res = MarkdownTocNavigateResultTemp(destNo, minScrollY, &exitCode);
+            AppendTestResult(req, exitCode, res);
+            break;
+        }
+
+        case ControlCmd::TestRenderSelections: {
+            int exitCode = 0;
+            Str res = RenderSelectionsResultTemp(&exitCode);
             AppendTestResult(req, exitCode, res);
             break;
         }
