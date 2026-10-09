@@ -441,6 +441,7 @@ static void CommitEditValue() {
 }
 
 static void ActivateItem(int lbIdx);
+static void ApplyChangesAndSave();
 
 // text editor is up (orig's editValue hwnd), not the enum dropdown
 static bool AdvEditingValue() {
@@ -460,7 +461,7 @@ static int FirstEditableRow() {
 }
 
 // "names", "nondefault", "changed", "toggle", "edit", "state", "killfocus",
-// "resize" and "esc" are what the settings tests ask for.
+// "resize", "save" and "esc" are what the settings tests ask for.
 TempStr AdvSettingsRowsResultTemp(Str action, int arg, int* exitCodeOut) {
     str::Builder out;
     auto finish = [&](int code) -> TempStr {
@@ -520,6 +521,13 @@ TempStr AdvSettingsRowsResultTemp(Str action, int arg, int* exitCodeOut) {
         AppShellInvalidate(gAdv.win);
         int n = CountChangedSettings();
         out.Append(fmt("toggled=%s changed=%d banner=%d\n", target->name, n, n > 0 ? 1 : 0));
+        return finish(0);
+    }
+    if (str::Eq(action, StrL("save"))) {
+        CommitEditValue();
+        ApplyChangesAndSave();
+        CloseAdvancedSettingsDialog();
+        out.Append(StrL("saved=1\n"));
         return finish(0);
     }
     if (str::Eq(action, StrL("esc"))) {
