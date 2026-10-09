@@ -1,7 +1,8 @@
 // PR #6167: collapsed TOC branches stay unloaded across tab switches.
 import { strict as assert } from "node:assert";
 import { writeFileSync } from "node:fs";
-import { assemblePdf, cmdId, runStandalone, tmpPath, writeAppdata } from "./util";
+import { ControlClient, ControlCommand } from "./control";
+import { assemblePdf, cmdId, runStandalone, tmpPath, USE_NG, writeAppdata } from "./util";
 import { killAndWait, launchControlled, sendCommandSync } from "./win-automation";
 import {
   countVisibleTreeRows,
@@ -46,12 +47,79 @@ export function makeTocPdf(width = 3): Buffer {
   return Buffer.from(assemblePdf(objects), "latin1");
 }
 
+async function tocRows(client: ControlClient): Promise<number> {
+  const raw = String((await client.request(ControlCommand.TestUiState, ["count"]))[1] ?? "");
+  const m = /tocRows=(-?\d+)/.exec(raw);
+  if (!m) {
+    throw new Error(`issue-6167: ${raw}`);
+  }
+  return +m[1]!;
+}
+
+async function tocOp(client: ControlClient, op: string, arg?: number) {
+  const raw = String((await client.request(ControlCommand.TestUiState, arg === undefined ? [op] : [op, arg]))[1] ?? "");
+  if (raw.startsWith("ERR")) {
+    throw new Error(`issue-6167: ${op} ${raw}`);
+  }
+}
+
+// ng has no SysTreeView32. Visible rows are the expanded TocItem branches.
+async function testNg(pdf: string, other: string, appdata: string): Promise<void> {
+  const { proc, client, frame } = await launchControlled(["-appdata", appdata, pdf, other]);
+  try {
+    await client.waitForRenderIdle();
+    const rows = () => tocRows(client);
+    const switchBack = () => {
+      sendCommandSync(frame, cmdId("CmdNextTab"));
+      sendCommandSync(frame, cmdId("CmdNextTab"));
+    };
+    assert.equal(await rows(), 3, "initially only the collapsed roots are visible");
+    await tocOp(client, "sel", 0);
+    await tocOp(client, "expand");
+    assert.equal(await rows(), 6, "expand inserts one level");
+    await tocOp(client, "sel", 1);
+    await tocOp(client, "expand");
+    assert.equal(await rows(), 9, "nested expansion inserts its children");
+    await tocOp(client, "sel", 0);
+    await tocOp(client, "collapse");
+
+    switchBack();
+    assert.equal(await rows(), 3, "tab switch keeps collapsed branches hidden");
+    switchBack();
+    assert.equal(await rows(), 3, "saving expansion state does not show collapsed branches");
+    await tocOp(client, "sel", 0);
+    await tocOp(client, "expand");
+    assert.equal(await rows(), 9, "hidden child keeps its saved expansion");
+    await tocOp(client, "sel", 1);
+    await tocOp(client, "collapse");
+    await tocOp(client, "expand");
+    assert.equal(await rows(), 9, "repeated expansion does not duplicate items");
+
+    sendCommandSync(frame, cmdId("CmdExpandAll"));
+    assert.equal(await rows(), 39, "expand all shows the entire outline");
+    sendCommandSync(frame, cmdId("CmdCollapseAll"));
+    switchBack();
+    assert.equal(await rows(), 3, "collapse to level one survives a rebuild");
+    sendCommandSync(frame, cmdId("CmdGoToLastPage"));
+    sendCommandSync(frame, cmdId("CmdExpandToCurrentPage"));
+    assert.ok((await rows()) > 3, "navigation expands an unloaded destination");
+    console.log("issue-6167: OK");
+  } finally {
+    client.close();
+    await killAndWait(proc);
+  }
+}
+
 export async function testit(): Promise<void> {
   const pdf = tmpPath("issue-6167.pdf");
   const other = tmpPath("issue-6167-other.pdf");
   writeFileSync(pdf, makeTocPdf());
   writeFileSync(other, makeTocPdf());
   const appdata = writeAppdata("issue-6167-settings", "NoHomeTab = true\nShowToc = true\n");
+  if (USE_NG) {
+    await testNg(pdf, other, appdata);
+    return;
+  }
   const { proc, client, frame } = await launchControlled(["-appdata", appdata, pdf, other]);
   try {
     await client.waitForRenderIdle();

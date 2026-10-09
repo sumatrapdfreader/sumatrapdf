@@ -54,6 +54,7 @@ bool SidebarOnChar(MainWindow*, u32 ch);
 bool SidebarContextMenuFromKey(MainWindow*, gpui::Ctx* cx);
 // for -dbg-control's TestUiState
 TempStr SidebarStateTemp(MainWindow*);
+TempStr SidebarTestToc(MainWindow*, Str op, int arg);
 // orig's sidebarTop / sidebarBottom panels: where the keyboard goes in one
 // (its tree, or the panel for thumbnails) and whether it is there
 bool SidebarPanelVisible(MainWindow*, bool top);

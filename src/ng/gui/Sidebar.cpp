@@ -938,6 +938,71 @@ bool SidebarOnChar(MainWindow* win, u32 ch) {
     return true;
 }
 
+static int CountVisibleToc(TocItem* item) {
+    int n = 0;
+    for (; item; item = item->next) {
+        n++;
+        if (item->child && item->IsExpanded()) {
+            n += CountVisibleToc(item->child);
+        }
+    }
+    return n;
+}
+
+static TocItem* VisibleTocAt(TocItem* item, int& idx) {
+    for (; item; item = item->next) {
+        if (idx == 0) {
+            return item;
+        }
+        idx--;
+        if (item->child && item->IsExpanded()) {
+            TocItem* found = VisibleTocAt(item->child, idx);
+            if (found) {
+                return found;
+            }
+        }
+    }
+    return nullptr;
+}
+
+// count / select / expand the bookmarks the native tree drives with TVM_*
+TempStr SidebarTestToc(MainWindow* win, Str op, int arg) {
+    TocTree* tree = win ? CurrentTocTree(win) : nullptr;
+    TocItem* root = tree && tree->root ? tree->root->child : nullptr;
+    if (!root) {
+        if (str::Eq(op, StrL("count"))) {
+            return StrL("tocRows=0");
+        }
+        return StrL("ERR no-toc");
+    }
+    if (str::Eq(op, StrL("count"))) {
+        return fmt("tocRows=%d", CountVisibleToc(root));
+    }
+    SidebarUI* ui = Ui(win);
+    if (str::Eq(op, StrL("sel"))) {
+        int idx = arg;
+        TocItem* item = VisibleTocAt(root, idx);
+        if (!item) {
+            return StrL("ERR no-row");
+        }
+        SidebarSetTocSelection(win, item);
+        return StrL("ok");
+    }
+    TocItem* sel = ui->tocSel;
+    if (!sel) {
+        return StrL("ERR no-sel");
+    }
+    if (str::Eq(op, StrL("expand"))) {
+        TocSetExpanded(sel, true);
+    } else if (str::Eq(op, StrL("collapse"))) {
+        TocSetExpanded(sel, false);
+    } else {
+        return StrL("ERR op");
+    }
+    AppShellInvalidate(win);
+    return fmt("tocRows=%d", CountVisibleToc(root));
+}
+
 TempStr SidebarStateTemp(MainWindow* win) {
     SidebarUI* ui = win ? win->sidebar : nullptr;
     if (!ui) {

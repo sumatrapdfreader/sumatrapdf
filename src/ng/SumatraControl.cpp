@@ -1715,9 +1715,17 @@ static void ExecuteControlRequest(ControlRequest* req) {
             break;
         }
 
-        case ControlCmd::TestUiState:
+        case ControlCmd::TestUiState: {
+            Str op = StringArg(req, 0);
+            if (len(op) > 0) {
+                i32 arg = 0;
+                IntArg(req, 1, arg);
+                AppendTestResult(req, 0, SidebarTestToc(FirstWindow(), op, arg));
+                break;
+            }
             AppendTestResult(req, 0, AppShellUiStateTemp(FirstWindow()));
             break;
+        }
 
         case ControlCmd::TestToolWindow: {
             i32 a = 0, b = 0, c = 0, d = 0;
