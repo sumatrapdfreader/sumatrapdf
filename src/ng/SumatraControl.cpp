@@ -908,6 +908,110 @@ static TempStr NamedDestResultTemp(Str pdfPath, Str destName) {
     return ToStrTemp(out);
 }
 
+// stamp an image onto page 1 and count red pixels. tests/issue-1744.ts.
+static TempStr ImageInsertResultTemp(Str pdfPath, Str imagePath, int* exitCodeOut) {
+    str::Builder out;
+    auto fail = [&out, exitCodeOut](Str msg) {
+        if (exitCodeOut) {
+            *exitCodeOut = 1;
+        }
+        out.Append(msg);
+        return ToStrTemp(out);
+    };
+
+    EngineBase* engine = CreateEngineFromFile(pdfPath, nullptr, false);
+    if (!engine) {
+        return fail(fmt("ERROR engine-create-failed path=%s\n", pdfPath));
+    }
+    if (!EngineSupportsAnnotations(engine)) {
+        SafeEngineRelease(&engine);
+        return fail(StrL("ERROR annots-not-supported\n"));
+    }
+    Str data = file::ReadFile(imagePath);
+    Pixmap* image = PixmapFromData(data);
+    str::Free(data);
+    if (!image) {
+        SafeEngineRelease(&engine);
+        return fail(fmt("ERROR image-load-failed path=%s\n", imagePath));
+    }
+    if (!engine->BenchLoadPage(1)) {
+        FreePixmap(image);
+        SafeEngineRelease(&engine);
+        return fail(StrL("ERROR page-load-failed\n"));
+    }
+
+    AnnotCreateArgs args{AnnotationType::Stamp};
+    args.stampImage = image;
+    Annotation* annot = EngineMupdfCreateAnnotation(engine, 1, PointF{72.f, 100.f}, &args);
+    if (!annot) {
+        TempStr msg = fmt("ERROR stamp-create-failed fmt=%d %dx%d\n", (int)image->format, image->width, image->height);
+        FreePixmap(image);
+        SafeEngineRelease(&engine);
+        return fail(msg);
+    }
+    FreePixmap(image);
+
+    Vec<Annotation*> annots;
+    EngineGetAnnotations(engine, annots);
+    int nAnnots = len(annots);
+    RectF ar = GetRect(annot);
+    out.Append(fmt("annot=%s rect=%g,%g,%g,%g\n", AnnotationReadableNameTemp(Type(annot)), ar.x, ar.y, ar.dx, ar.dy));
+
+    RenderPageArgs rargs(1, 1.f, 0, nullptr, RenderTarget::Export);
+    Pixmap* bmp = engine->RenderPage(rargs);
+    if (!bmp || !bmp->data) {
+        FreePixmap(bmp);
+        SafeEngineRelease(&engine);
+        return fail(StrL("ERROR render-failed\n"));
+    }
+    Pixmap* rgb = (bmp->format == PixmapFormat::BGRA8) ? bmp : PixmapCopyAs32bppDIB(bmp);
+    if (!rgb || !rgb->data) {
+        FreePixmap(bmp);
+        SafeEngineRelease(&engine);
+        return fail(fmt("ERROR pixmap-convert-failed fmt=%d\n", (int)bmp->format));
+    }
+    int bpp = PixmapBytesPerPixel(rgb->format);
+    int red = 0;
+    int nonWhite = 0;
+    if (bpp >= 3) {
+        for (int y = 0; y < rgb->height; y++) {
+            const u8* row = rgb->data + ((size_t)y * (size_t)rgb->stride);
+            for (int x = 0; x < rgb->width; x++) {
+                const u8* px = row + ((size_t)x * bpp);
+                int r, g, b;
+                if (rgb->format == PixmapFormat::RGBA8) {
+                    r = px[0];
+                    g = px[1];
+                    b = px[2];
+                } else {
+                    b = px[0];
+                    g = px[1];
+                    r = px[2];
+                }
+                if (r < 250 || g < 250 || b < 250) {
+                    nonWhite++;
+                }
+                if (r > 180 && g < 80 && b < 80) {
+                    red++;
+                }
+            }
+        }
+    }
+    out.Append(fmt("annots=%d red=%d nonwhite=%d size=%dx%d\n", nAnnots, red, nonWhite, rgb->width, rgb->height));
+    if (rgb != bmp) {
+        FreePixmap(rgb);
+    }
+    FreePixmap(bmp);
+    SafeEngineRelease(&engine);
+    if (exitCodeOut) {
+        *exitCodeOut = (nAnnots >= 1 && red > 50) ? 0 : 1;
+    }
+    if (nAnnots < 1 || red <= 50) {
+        out.Append(StrL("ERROR stamp-not-visible\n"));
+    }
+    return ToStrTemp(out);
+}
+
 // Color histogram of a page rendered with the CAD enhancement forced on.
 // tests/issue-5937.ts.
 static TempStr CadEnhanceColorsResultTemp(Str path, int pageNo, int zoomPercent, int* exitCodeOut) {
@@ -2799,6 +2903,19 @@ static void ExecuteControlRequest(ControlRequest* req) {
                 break;
             }
             AppendTestResult(req, 0, NamedDestResultTemp(pdf, name));
+            break;
+        }
+
+        case ControlCmd::TestInsertImage: {
+            Str pdfPath = StringArg(req, 0);
+            Str imagePath = StringArg(req, 1);
+            if (len(pdfPath) == 0 || len(imagePath) == 0) {
+                AppendError(req, StrL("TestInsertImage expects string pdfPath, string imagePath"));
+                break;
+            }
+            int exitCode = 0;
+            Str res = ImageInsertResultTemp(pdfPath, imagePath, &exitCode);
+            AppendTestResult(req, exitCode, res);
             break;
         }
 
