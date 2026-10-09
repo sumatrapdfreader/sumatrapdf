@@ -2,6 +2,7 @@
    License: Simplified BSD (see COPYING.BSD) */
 
 #include "base/Base.h"
+#include <locale.h>
 
 // must be last due to assert() over-write
 #include "base/tests/UtAssert.h"
@@ -1153,12 +1154,18 @@ void StrTest() {
     }
 
     {
+        // libarchive sets LC_CTYPE to the user locale. On macOS that makes
+        // isspace(0xA0) true; IsWs is the C-locale ASCII set.
+        const char* cur = setlocale(LC_CTYPE, nullptr);
+        TempStr saved = str::DupTemp(cur ? Str(cur) : StrL("C"));
+        setlocale(LC_CTYPE, "C");
         for (int c = 0x00; c < 0x100; c++) {
             utassert(!!isspace((u8)c) == str::IsWs((char)c));
         }
         for (int c = 0x00; c < 0x10000; c++) {
             utassert(!!iswspace((WCHAR)c) == wstr::IsWs((WCHAR)c));
         }
+        setlocale(LC_CTYPE, CStrTemp(saved));
     }
 
     strStrTest();
