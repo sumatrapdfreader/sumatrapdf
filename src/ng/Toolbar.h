@@ -111,6 +111,8 @@ void ToolbarTick(MainWindow*, int elapsedMs);
 // caller open the Go To Page dialog
 bool ToolbarFocusPageBox(MainWindow*);
 bool IsToolbarPageBoxFocused(MainWindow*);
+TempStr ToolbarPageBoxTextTemp(MainWindow*);
+void ClearToolbarLocationEdits(MainWindow*);
 // the two boxes apart, for orig's AdvanceFocus
 bool ToolbarHasChapterBox(MainWindow*);
 bool IsToolbarLocationBoxFocused(MainWindow*, bool chapter);

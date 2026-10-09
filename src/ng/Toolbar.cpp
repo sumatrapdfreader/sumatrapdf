@@ -2669,6 +2669,30 @@ void ToolbarTick(MainWindow* win, int elapsedMs) {
 
 // --- the page box -----------------------------------------------------------
 
+// The page box is a gpui input, so tests cannot read it as a child Edit.
+TempStr ToolbarPageBoxTextTemp(MainWindow* win) {
+    Toolbar* tb = win ? win->toolbar : nullptr;
+    if (!tb || !tb->pageEdit) {
+        return StrL("");
+    }
+    return str::DupTemp(FromGpui(gp::InputValue(tb->pageEdit)));
+}
+
+// Last document closed, window kept: the boxes still hold the old number.
+void ClearToolbarLocationEdits(MainWindow* win) {
+    Toolbar* tb = win ? win->toolbar : nullptr;
+    if (!tb) {
+        return;
+    }
+    if (tb->pageEdit) {
+        SetEditText(tb->pageEdit, {});
+    }
+    if (tb->chapterEdit) {
+        SetEditText(tb->chapterEdit, {});
+    }
+    UpdateToolbarPageText(win, 0);
+}
+
 bool IsToolbarPageBoxFocused(MainWindow* win) {
     Toolbar* tb = win ? win->toolbar : nullptr;
     if (!tb || !win->gpuiWin) {

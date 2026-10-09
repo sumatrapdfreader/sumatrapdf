@@ -4965,6 +4965,17 @@ void CloseWindow(MainWindow* win, bool quitIfLast, bool) {
     }
     RemoveNotificationsForWindow(win);
     TabsOnCloseWindow(win);
+    // Last window, and this is not a quit: orig keeps the frame as an empty
+    // window and drops the page number and the scrollbars (issue #6062).
+    if (lastWindow && !quitIfLast) {
+        ClearToolbarLocationEdits(win);
+        CanvasHideScrollbars(win);
+        UpdateWindowTitle(win);
+        RebuildMenuBar(win);
+        win->isBeingClosed = false;
+        AppShellInvalidate(win);
+        return;
+    }
     VecRemove(gWindows, win);
     AppShellCloseWindow(win);
     delete win;

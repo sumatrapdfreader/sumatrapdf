@@ -7,7 +7,8 @@
 
 import { copyFileSync, mkdirSync, rmSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
-import { ROOT, cmdId, runStandalone, tmpPath } from "./util.ts";
+import { ControlCommand } from "./control.ts";
+import { ROOT, cmdId, runStandalone, tmpPath, USE_NG } from "./util.ts";
 import { findCanvas, killAndWait, launchControlled, sendCommand, sendCommandSync } from "./win-automation.ts";
 import {
   captureWindowPixels,
@@ -114,6 +115,34 @@ async function runCloseLastFile(scrollbars: string): Promise<void> {
     sendCommand(frame, cmdId("CmdGoToLastPage"));
     await client.waitForRenderIdle();
     await sleep(150);
+
+    // ng draws the page box and the bars in the frame. There is no Edit child
+    // and no WS_VSCROLL; the control pipe reports both.
+    if (USE_NG) {
+      const before = String((await client.request(ControlCommand.TestUiState, []))[1] ?? "");
+      const pageBefore = /pageText='([^']*)'/.exec(before)?.[1]?.trim() ?? "";
+      if (!/^\d+$/.test(pageBefore)) {
+        throw new Error(`issue-6062 (${scrollbars}): no page number in the toolbar before close (${before})`);
+      }
+      if (scrollbars === "windows" && !/scrollVis=1\//.test(before)) {
+        throw new Error(`issue-6062 (${scrollbars}): expected a vertical scrollbar before close (${before})`);
+      }
+
+      sendCommandSync(frame, cmdId("CmdClose"));
+      await sleep(250);
+
+      const after = String((await client.request(ControlCommand.TestUiState, []))[1] ?? "");
+      const pageAfter = /pageText='([^']*)'/.exec(after)?.[1]?.trim() ?? "";
+      if (/^\d+$/.test(pageAfter)) {
+        throw new Error(
+          `issue-6062 (${scrollbars}): page box still shows '${pageAfter}' after closing the last file (${after})`,
+        );
+      }
+      if (!/scrollVis=0\/0/.test(after)) {
+        throw new Error(`issue-6062 (${scrollbars}): scrollbar still up after closing the last file (${after})`);
+      }
+      return;
+    }
 
     const before = toolbarEdits(frame);
     const pageBefore = before.find((e) => /^\d+$/.test(e.text));

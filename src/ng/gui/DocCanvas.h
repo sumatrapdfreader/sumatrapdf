@@ -72,6 +72,7 @@ int CanvasScrollPosV(MainWindow* win);
 
 // DocControllerCallback, forwarded by MainWindow.cpp
 void CanvasUpdateScrollbars(MainWindow* win, DisplayModel* dm, Size canvas);
+void CanvasHideScrollbars(MainWindow* win);
 
 // RenderCache::PaintTile blits a cached tile through these (RenderCache lives
 // in the `app` lib, which knows nothing about gpui)

@@ -654,8 +654,9 @@ TempStr AppShellUiStateTemp(MainWindow* win) {
     }
     out.Append(fmt(" toc=%d tocItems=%d fav=%d tabs=%d windows=%d", win->uiState.tocVisible ? 1 : 0, tocItems,
                    win->uiState.favVisible ? 1 : 0, win->TabCount(), len(gWindows)));
-    out.Append(fmt(" pageBox=%d chapterBox=%d ", IsToolbarLocationBoxFocused(win, false) ? 1 : 0,
-                   IsToolbarLocationBoxFocused(win, true) ? 1 : 0));
+    out.Append(fmt(" pageBox=%d chapterBox=%d pageText='%s'", IsToolbarLocationBoxFocused(win, false) ? 1 : 0,
+                   IsToolbarLocationBoxFocused(win, true) ? 1 : 0, ToolbarPageBoxTextTemp(win)));
+    out.Append(fmt(" scrollVis=%d/%d", win->scrollV.visible ? 1 : 0, win->scrollH.visible ? 1 : 0));
     out.Append(SidebarStateTemp(win));
     DisplayModel* dm = win->AsFixed();
     if (dm) {

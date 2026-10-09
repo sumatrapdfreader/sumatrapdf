@@ -1114,6 +1114,18 @@ static int ClampScrollPos(const CanvasScrollInfo& si, int pos) {
     return limitValue(pos, si.nMin, std::max(si.nMin, maxPos));
 }
 
+// Empty window: the last document's range would keep a windows-mode bar up.
+void CanvasHideScrollbars(MainWindow* win) {
+    if (!win) {
+        return;
+    }
+    win->scrollV = {};
+    win->scrollH = {};
+    OverlayScrollbarHide(win->overlayScrollV);
+    OverlayScrollbarHide(win->overlayScrollH);
+    AppShellInvalidate(win);
+}
+
 int CanvasScrollPosV(MainWindow* win) {
     return win->scrollV.nPos;
 }
