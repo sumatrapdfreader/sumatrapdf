@@ -2182,15 +2182,13 @@ void ShellView::OnKeyDown(ShellView* self, gp::Ctx* cx, const gp::KeyEvent* ev) 
     bool editFocused = IsTextFieldFocused(cx);
     gCmdSuppressed = editFocused && SafeAcceleratorCmd((u16)ev->vk, ev->ctrl, ev->shift, ev->alt) == 0;
     // orig's dialogs are windows of their own with no accelerator table, so
-    // no shortcut reaches the document while one is up (Properties keeps the
-    // edit table)
-    // A tool window (Properties) is not self->dialogUp, but it still owns
-    // the accelerators, the way orig's dialog window did.
+    // no shortcut reaches the document while one is up. Properties keeps the
+    // edit table only in its own window: Home and End on the frame still
+    // navigate while it stays open (issue #5971). A focused field in the
+    // frame already suppressed the unsafe keys above.
     DialogAccels dlgAccels = DialogsAccelTable(win);
     if (dlgAccels == DialogAccels::None) {
         gCmdSuppressed = true;
-    } else if (dlgAccels == DialogAccels::Edit) {
-        gCmdSuppressed = SafeAcceleratorCmd((u16)ev->vk, ev->ctrl, ev->shift, ev->alt) == 0;
     }
     // a win32 menu runs a modal loop that takes every key while it is open;
     // an open gpui popup has the focus, so its keys (Esc, arrows, Enter) are
