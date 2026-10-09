@@ -8726,6 +8726,49 @@ static int MaybeRunCliTool(int argc, char** argv) {
     return fn(argc - 1, argv + 1);
 }
 
+#if IS_DEBUG
+// -extract-text: print one page as hex and exit. Orig does this before any
+// window; leaving it to the GUI never returns.
+static void ExtractPageTextToStdout(EngineBase* engine, int pageNo) {
+    PageText pageText = engine->ExtractPageText(pageNo);
+    if (len(pageText.text) == 0) {
+        FreePageText(&pageText);
+        return;
+    }
+    TempStr s = str::ReplaceTemp(pageText.text, StrL("\n"), StrL("_"));
+    printf("text on page %d: '", pageNo);
+    for (int i = 0; i < len(s); i++) {
+        printf("%02x ", (u8)s.s[i]);
+    }
+    printf("'\n");
+    FreePageText(&pageText);
+}
+
+static void TestExtractPages(const Flags& ci) {
+#if OS_WIN
+    RedirectIOToExistingConsole();
+#endif
+    gLogToConsole = false;
+    for (Str fileName : ci.fileNames) {
+        EngineBase* engine = CreateEngineFromFile(fileName, nullptr, true);
+        if (!engine) {
+            printf("failed to create engine for file '%s'\n", CStrTemp(fileName));
+            continue;
+        }
+        if (ci.pageNumber < 0) {
+            int nPages = engine->PageCount();
+            for (int i = 1; i <= nPages; i++) {
+                ExtractPageTextToStdout(engine, i);
+            }
+        } else {
+            ExtractPageTextToStdout(engine, ci.pageNumber);
+        }
+        SafeEngineRelease(&engine);
+    }
+    fflush(stdout);
+}
+#endif
+
 int GpuiMain(int argc, char** argv) {
     int toolRes = MaybeRunCliTool(argc, argv);
     if (toolRes != kNoCliTool) {
@@ -8853,6 +8896,13 @@ int GpuiMain(int argc, char** argv) {
         }
     }
     LoadSettings();
+#if IS_DEBUG
+    if (gFlags->testExtractPage) {
+        TestExtractPages(*gFlags);
+        uitask::Destroy();
+        return 0;
+    }
+#endif
     if (len(gFlags->lang) > 0) {
         SetCurrentLang(gFlags->lang);
     }
