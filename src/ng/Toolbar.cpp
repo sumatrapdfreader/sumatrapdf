@@ -1017,9 +1017,10 @@ TempStr ToolbarButtonsResultTemp(int* exitCodeOut) {
     for (int i = 0; i < kPdfAnnotationButtonsCount; i++) {
         const ToolbarButtonInfo& bi = gPdfAnnotationButtons[i];
         bool isSep = bi.cmdId == 0 || !HasToolbarButtonContent(bi);
-        bool available = !isSep && IsCmdAvailable(win, bi.cmdId, ctx);
-        bool shown = annotationsVisible && available;
-        bool enabled = shown && buttonsEnabled && IsCmdEnabled(win, bi.cmdId, ctx);
+        CommandVisibility v =
+            isSep ? CommandVisibility::Hide : GetCommandVisibility(bi.cmdId, *ctx, CommandSurface::Toolbar);
+        bool shown = annotationsVisible && !CommandShouldRemove(v);
+        bool enabled = shown && buttonsEnabled && !CommandShouldDisable(v);
         Rect r{};
         if (shown) {
             r = GetToolbarButtonRect(win, bi.cmdId);
@@ -1864,10 +1865,12 @@ static gp::El* BuildAnnotRow(MainWindow* win, gp::Ctx* cx, BuildMenuCtx* ctx) {
             prevVisibleNonSep = false;
             continue;
         }
-        if (!IsCmdAvailable(win, bi.cmdId, ctx)) {
+        // toolbar surface: Apply Redactions is omitted until this session has a mark
+        CommandVisibility v = GetCommandVisibility(bi.cmdId, *ctx, CommandSurface::Toolbar);
+        if (CommandShouldRemove(v)) {
             continue;
         }
-        bool enabled = buttonsEnabled && IsCmdEnabled(win, bi.cmdId, ctx);
+        bool enabled = buttonsEnabled && !CommandShouldDisable(v);
         VecAppend(ui->btnCmds, bi.cmdId);
         row->Child(ToolbarButton(win, cx, len(ui->btnCmds) - 1, bi, enabled, IsCmdChecked(win, bi.cmdId)));
         prevVisibleNonSep = true;
