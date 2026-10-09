@@ -2231,6 +2231,17 @@ static Rect FrameScreenRect(MainWindow* win, Rect r) {
     return r;
 }
 
+// the inverse: a visibility probe hands back the frame point FrameScreenRect reported
+static Point FramePointToCanvas(MainWindow* win, Point pt) {
+    float s = CanvasScale(win);
+    if (s <= 0.f) {
+        s = 1.f;
+    }
+    pt.x -= (int)((float)win->canvasRc.x / s + 0.5f);
+    pt.y -= (int)((float)win->canvasRc.y / s + 0.5f);
+    return pt;
+}
+
 // Screen rects and undo state of the annotations the tests edit.
 static TempStr MarkupAnnotsResultTemp(Str action, int x, int y, int* exitCodeOut) {
     str::Builder out;
@@ -4182,7 +4193,7 @@ static void ExecuteControlRequest(ControlRequest* req) {
             i32 x = 0;
             i32 y = 0;
             if (IntArg(req, 2, x) && IntArg(req, 3, y)) {
-                pt = Point{x, y};
+                pt = FramePointToCanvas(win, Point{x, y});
             }
             AppCommandCtx ctx = NewAppCommandCtx(win, pt);
             CommandVisibility vis = GetCommandVisibility(cmdId, ctx, surface);
