@@ -1303,9 +1303,16 @@ TempStr AnnotationPlacementStateTemp(MainWindow* win) {
 
     AnnotPlacement& p = win->annotPlacement;
     {
+        // tests click the frame; the preview is stored in canvas pixels
         Rect preview;
         if (KindOf(win) == AnnotPlacementKind::FreeText) {
+            float s = CanvasScale(win);
+            if (s <= 0.f) {
+                s = 1.f;
+            }
             preview = FreeTextPlacementScreenRect(win, win->AsFixed());
+            preview.x += (int)((float)win->canvasRc.x / s + 0.5f);
+            preview.y += (int)((float)win->canvasRc.y / s + 0.5f);
         }
         out.Append(fmt("freeTextPreview rect=%d,%d,%d,%d\n", preview.x, preview.y, preview.dx, preview.dy));
     }
