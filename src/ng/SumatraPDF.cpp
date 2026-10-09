@@ -1987,6 +1987,54 @@ bool DismissNotificationsOnEsc(MainWindow* win) {
     return RemoveNotificationsForGroup(win, kNotifZoomOrView);
 }
 
+// A failed open still gets a tab: the canvas shows the error, and the file
+// stays available to "show in folder" (issue #3595). Page number stays 0.
+static void ShowLoadErrorTab(MainWindow* win, Str fullPath, LoadReuse reuse) {
+    WindowTab* tab = nullptr;
+    if (reuse == LoadReuse::CurrentTab) {
+        tab = win->CurrentTab();
+        if (tab && tab->IsNonDocumentTab()) {
+            tab = nullptr;
+        }
+    }
+    if (tab) {
+        HideFindBar(win);
+        HideSelectionToolbar(win);
+        bool hadReading = GetReadAloudSourceTab() == tab || CanContinueReadAloud(tab);
+        ResetReadAloudStateForTab(tab);
+        if (hadReading) {
+            ShowTemporaryNotification(win, Tr("Reading stopped"), 2000);
+        }
+        ReadingAutoScrollHideBar(win);
+        ReadingBarCancelDrag(win);
+        DeleteOldSelectionInfo(win, true);
+        DocController* prev = tab->ctrl;
+        tab->ctrl = nullptr;
+        win->ctrl = nullptr;
+        win->currentTabTemp = nullptr;
+        DeleteControllerAsync(prev);
+        tab->SetFilePath(fullPath);
+        tab->everPaintedPage = false;
+        tab->loadState = WindowTab::LoadState::Error;
+        win->currentTabTemp = tab;
+    } else {
+        SaveCurrentWindowTab(win);
+        tab = new WindowTab(win);
+        tab->SetFilePath(fullPath);
+        tab->loadState = WindowTab::LoadState::Error;
+        AddTabToWindow(win, tab);
+        win->currentTabTemp = tab;
+    }
+    win->ctrl = nullptr;
+    win->currPageNo = 0;
+    ClearTocBox(win);
+    InvalidateFindForDocumentChange(win);
+    UpdateWindowTitle(win);
+    RebuildMenuBar(win);
+    TabsUIOnTabsChanged(win);
+    AppShellInvalidate(win);
+}
+
 // ng: orig's LoadDocumentFinish, the half that puts the remembered FileState
 // back on screen. What it drops is the window placement (gpui cannot move a
 // window), the UIA notification and the browser-hosted (chm / markdown)
@@ -2012,7 +2060,7 @@ MainWindow* LoadDocument(MainWindow* win, Str path, LoadPrefs prefs, LoadReuse r
         }
         TempStr msg = fmt(Tr("Error loading %s").s, fullPath);
         ShowWarningNotification(win, msg, kNotif5SecsTimeOut);
-        AppShellInvalidate(win);
+        ShowLoadErrorTab(win, fullPath, reuse);
         return nullptr;
     }
 

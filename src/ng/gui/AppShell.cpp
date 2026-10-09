@@ -1676,6 +1676,11 @@ static gp::El* BuildCanvas(ShellView* self, gp::Ctx* cx, bool overlayUp) {
     WindowTab* tab = win->CurrentTab();
     DocController* ctrl = tab ? tab->ctrl : nullptr;
     if (!ctrl) {
+        if (tab && tab->loadState == WindowTab::LoadState::Error && len(tab->filePath) > 0) {
+            TempStr msg = fmt(Tr("Error loading %s").s, tab->filePath);
+            canvas->Child(gp::TextEl(cx->a, GpuiDup(cx->a, msg))->Font(16)->Fg(th.foreground));
+            return canvas;
+        }
         canvas->Child(gp::TextEl(cx->a, GStrL("SumatraPDF is a PDF reader"))->Font(16)->Fg(th.mutedFg));
         return canvas;
     }
