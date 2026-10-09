@@ -3067,6 +3067,11 @@ static TempStr PageInfoOverlayResultTemp(Str pathTwoPages, Str pathOnePage, int*
     return ToStrTemp(out);
 }
 
+// orig posts WM_CLOSE. There is no frame wndproc, so post the same close.
+static void TestPostCloseWindow(MainWindow* win) {
+    CloseWindowIfCan(win, true);
+}
+
 // Expand SelectionHandlers placeholders against the current tab's selection.
 static TempStr SelectionVarsResultTemp(Str pattern, int* exitCodeOut) {
     str::Builder out;
@@ -3706,6 +3711,11 @@ static void ExecuteControlRequest(ControlRequest* req) {
             MainWindow* win = FirstWindow();
             if (!win) {
                 AppendTestResult(req, 2, StrL("NOTREADY no-window"));
+                break;
+            }
+            if (str::EqI(name, StrL("WM_CLOSE"))) {
+                uitask::Post(MkFunc0(TestPostCloseWindow, win), "TestWM_CLOSE");
+                AppendTestResult(req, 0, StrL("OK"));
                 break;
             }
             int cmdId = GetCommandIdByName(name);
