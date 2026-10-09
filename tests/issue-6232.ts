@@ -18,7 +18,8 @@ async function navState(client: ControlClient, action = "", idx = -1): Promise<N
   if (res[0] !== 0 || raw === "OK closed") {
     return null;
   }
-  const m = /^OK scan=(\d) sel=(-?\d+) items=(\d+) back=(\d) fwd=(\d) dir="([^"]*)" name="([^"]*)"$/.exec(raw);
+  // ng appends keyboard, dx and filter fields after orig's name
+  const m = /^OK scan=(\d) sel=(-?\d+) items=(\d+) back=(\d) fwd=(\d) dir="([^"]*)" name="([^"]*)"/.exec(raw);
   if (!m) {
     throw new Error(`navigate files: could not parse state: ${raw}`);
   }
