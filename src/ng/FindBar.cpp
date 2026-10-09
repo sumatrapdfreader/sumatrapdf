@@ -53,6 +53,9 @@ struct FindBarUI {
     gp::Bounds cardBounds{};
     // where in the grip the drag started, so the edge does not jump to the cursor
     float gripGrabDx = 0;
+    // Small-input font and the bar's pixel height at the current frame DPI
+    int editFontPx = 14;
+    int barDy = 0;
 };
 
 FindBar::~FindBar() {
@@ -431,6 +434,9 @@ void FindBarSetStatus(MainWindow* win, Str s, int totalHits) {
 
 constexpr int kFindBarPadding = 6;
 constexpr int kFindBarGap = 4;
+// gpui's Small input font, and the Small icon button (1.5rem) at 96 DPI
+constexpr int kFindBarFontPx = 14;
+constexpr int kFindBarRowPx = 24;
 constexpr int kFindBarDefaultEditDx = 220;
 constexpr int kFindBarMinEditDx = 80;
 // how wide the drag zone along the left edge is
@@ -584,12 +590,44 @@ static TempStr AppendCmdAccel(Str base, int cmd) {
     return str::JoinTemp(base, fmt(" (%s)", Str(accel.s + 1, len(accel) - 1))); // +1 skips the leading \t
 }
 
+void FindBarApplyDpi(MainWindow* win) {
+    if (!win || !win->findBar) {
+        return;
+    }
+    FindBar* bar = win->findBar;
+    if (!bar->ui) {
+        bar->ui = new FindBarUI();
+    }
+    int row = AppShellDpiPx(win, kFindBarRowPx);
+    int pad = AppShellDpiPx(win, kFindBarPadding);
+    bar->ui->editFontPx = AppShellDpiPx(win, kFindBarFontPx);
+    // 1px border on each side stays 1px; gpui does not scale Border()
+    bar->ui->barDy = row + (2 * pad) + 2;
+}
+
+int FindBarFontHeight(MainWindow* win) {
+    if (!IsFindBarVisible(win)) {
+        return 0;
+    }
+    FindBarApplyDpi(win);
+    return win->findBar->ui->editFontPx;
+}
+
+int FindBarWindowHeight(MainWindow* win) {
+    if (!IsFindBarVisible(win)) {
+        return 0;
+    }
+    FindBarApplyDpi(win);
+    return win->findBar->ui->barDy;
+}
+
 static gp::El* BarButton(FindBar* bar, gp::Ctx* cx, Str id, gp::IconName icon, Str label, Str tooltip, int cmdId,
-                         bool selected, const char* svg = nullptr) {
+                         bool selected, int rowPx, const char* svg = nullptr) {
     gpc::Button* b = gpc::Button::New(cx, GpuiDup(cx->a, id))
                          ->Ghost()
                          ->Compact()
                          ->WithSize(gp::UiSize::Small)
+                         ->Size((float)rowPx)
                          ->Selected(selected)
                          ->Tooltip(GpuiDup(cx->a, tooltip))
                          ->OnClick(gp::ListenTo(bar->ui->view, &FindBarView::OnCmd, (intptr_t)cmdId));
@@ -622,8 +660,10 @@ gp::El* FindBarBuild(MainWindow* win, gp::Ctx* cx) {
     edit->onChange = gp::ListenTo(bar->ui->view, &FindBarView::OnInput);
 
     const gp::Theme& th = gp::ThemeNow(cx->app);
-    float pad = (float)DpiScale(kFindBarPadding);
-    float gap = (float)DpiScale(kFindBarGap);
+    FindBarApplyDpi(win);
+    int rowPx = AppShellDpiPx(win, kFindBarRowPx);
+    float pad = (float)AppShellDpiPx(win, kFindBarPadding);
+    float gap = (float)AppShellDpiPx(win, kFindBarGap);
     gp::El* card =
         gp::Div(cx->a)->FlexRow()->ItemsCenter()->Gap(gap)->Pad(pad)->Bg(th.tokens.popover)->Border(1, th.border);
 
@@ -648,26 +688,27 @@ gp::El* FindBarBuild(MainWindow* win, gp::Ctx* cx) {
         FindFlushPendingSearch(win);
     }
     ui->ddHistory.TakeComboPicked();
-    card->Child(ui->ddHistory.BuildCombo(cx, StrL("find-edit"), edit, (float)FindBarEditDx(bar)));
+    card->Child(ui->ddHistory.BuildCombo(cx, StrL("find-edit"), edit, (float)FindBarEditDx(bar), false, (float)rowPx,
+                                         (float)ui->editFontPx));
 
     float statusDx = FindStatusDx(bar->statusTotalHits, bar->statusCapped);
     card->Child(gp::Div(cx->a)->MinW(statusDx)->Child(
         gp::TextEl(cx->a, GpuiDup(cx->a, bar->status))->Font(12)->Fg(th.mutedFg)));
 
     card->Child(BarButton(bar, cx, StrL("find-prev"), gp::IconName::ChevronUp, {},
-                          AppendCmdAccel(Tr("Find Previous"), CmdFindPrev), CmdFindPrev, false));
+                          AppendCmdAccel(Tr("Find Previous"), CmdFindPrev), CmdFindPrev, false, rowPx));
     card->Child(BarButton(bar, cx, StrL("find-next"), gp::IconName::ChevronDown, {},
-                          AppendCmdAccel(Tr("Find Next"), CmdFindNext), CmdFindNext, false));
+                          AppendCmdAccel(Tr("Find Next"), CmdFindNext), CmdFindNext, false, rowPx));
     card->Child(BarButton(bar, cx, StrL("find-case"), gp::IconName::None, {},
                           AppendCmdAccel(Tr("Match Case"), CmdFindToggleMatchCase), CmdFindToggleMatchCase,
-                          win->findMatchCase, gIconMatchCase));
+                          win->findMatchCase, rowPx, gIconMatchCase));
     card->Child(BarButton(bar, cx, StrL("find-word"), gp::IconName::None, {},
                           AppendCmdAccel(Tr("Match Whole Word"), CmdFindToggleMatchWholeWord),
-                          CmdFindToggleMatchWholeWord, win->findMatchWholeWord, gIconMatchWholeWord));
+                          CmdFindToggleMatchWholeWord, win->findMatchWholeWord, rowPx, gIconMatchWholeWord));
     card->Child(BarButton(bar, cx, StrL("find-pin"), gp::IconName::ExternalLink, {}, Tr("Open in a window"),
-                          kFindBarPinCmdId, false));
+                          kFindBarPinCmdId, false, rowPx));
     card->Child(
-        BarButton(bar, cx, StrL("find-close"), gp::IconName::Close, {}, Tr("Close"), kFindBarCloseCmdId, false));
+        BarButton(bar, cx, StrL("find-close"), gp::IconName::Close, {}, Tr("Close"), kFindBarCloseCmdId, false, rowPx));
 
     // orig's PositionFindBar: the right edge of the frame's client area, and
     // vertically centered on the toolbar's search button when there is one
@@ -675,14 +716,14 @@ gp::El* FindBarBuild(MainWindow* win, gp::Ctx* cx) {
     Rect btn = GetToolbarButtonRect(win, CmdFindFirst);
     if (!btn.IsEmpty()) {
         // the bar is one row of small controls plus its padding
-        float barDy = (float)DpiScale(24) + (2 * pad);
+        float barDy = (float)bar->ui->barDy;
         top = (float)btn.y + ((float)btn.dy / 2) - (barDy / 2);
     }
     card->Absolute()->Right(pad)->Top(top)->BoundsOut(&bar->ui->cardBounds);
 
     // orig's HTLEFT strip: the left edge is a sizing border
     gp::El* grip = gp::Div(cx->a)
-                       ->W((float)DpiScale(kFindBarResizeGripDx))
+                       ->W((float)AppShellDpiPx(win, kFindBarResizeGripDx))
                        ->H(gp::kFill)
                        ->Cursor(gp::CursorKind::ResizeLeftRight)
                        ->PathClick(GStrL("find-grip"))

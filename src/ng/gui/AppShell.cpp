@@ -199,6 +199,7 @@ void AppShellOnDpiChanged(MainWindow* win, int dpi) {
     win->frameDpi = dpi;
     SidebarApplyDpi(win);
     FindWindowApplyDpi(win);
+    FindBarApplyDpi(win);
     AppShellInvalidate(win);
 }
 

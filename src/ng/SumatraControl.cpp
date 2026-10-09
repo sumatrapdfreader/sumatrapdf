@@ -3329,11 +3329,15 @@ static TempStr DpiResultTemp(Str action, int* exitCodeOut) {
     }
     MainWindow* win = gWindows[0];
     int findH = FindWindowFontHeight(win);
+    if (findH <= 0) {
+        findH = FindBarFontHeight(win);
+    }
+    int findBarDy = FindBarWindowHeight(win);
     out.Append(
         fmt("frame=%d current=%d home=%d tocIcon=%d tocEdit=%d tocClose=%d favClose=%d aiLabel=%d aiInput=%d "
             "aiCheckbox=%d aiClose=%d find=%d findBarDy=%d\n",
             AppShellFrameDpi(win), DpiGet(), HomeSearchFontPx(win), SidebarIconDy(win), SidebarFilterFont(win), 0, 0, 0,
-            0, 0, 0, findH, 0));
+            0, 0, 0, findH, findBarDy));
     return finish(0);
 }
 #endif
