@@ -16,6 +16,7 @@
 #include "base/UITask.h"
 
 #include "gui/Dpi.h"
+#include "gui/PlatformFont.h"
 #include "gui/UIModels.h"
 
 #include "Settings.h"
@@ -886,9 +887,9 @@ void StartSelectedAnnotContentsEdit(MainWindow* win) {
 // the rendered annotation and whatever is underneath. Enter makes a new line;
 // Ctrl+Enter, Esc or clicking away ends it and the rendered annotation comes
 // back.
-// ng: orig's box is a win32 edit that does not wrap and grows with its text;
-// this one is a gpui text area as wide as the annotation that wraps where
-// mupdf will and grows downwards
+// ng: orig's box is a win32 edit that does not wrap and grows with its text.
+// This one is a gpui text area sized the same way, so a line shown whole is
+// still one line after MuPDF lays it out. It grows downwards for new lines.
 struct FreeTextInPlaceEdit {
     MainWindow* win = nullptr;
     WindowTab* tab = nullptr;
@@ -934,6 +935,80 @@ bool FreeTextInPlaceCommitOnChar(MainWindow* win, int ch) {
     }
     EndFreeTextInPlaceEdit(true);
     return true;
+}
+
+// GDI's Arial is not quite MuPDF's Helvetica. Orig leaves this much room so
+// the annotation does not wrap a line the box showed whole.
+constexpr float kInPlaceWidthSlack = 1.03f;
+constexpr float kInPlaceLineHeight = 1.2f;
+
+static Str InPlaceMeasureFamily(Str family) {
+#if OS_WIN
+    if (str::EqI(family, StrL("Courier"))) {
+        return StrL("Courier New");
+    }
+    if (str::EqI(family, StrL("Times")) || str::EqI(family, StrL("TimesRoman"))) {
+        return StrL("Times New Roman");
+    }
+    if (len(family) == 0 || str::EqI(family, StrL("Helvetica"))) {
+        return StrL("Arial");
+    }
+#else
+    if (len(family) == 0) {
+        return StrL("Helvetica");
+    }
+#endif
+    return family;
+}
+
+// Screen pixels `text` needs. Width is the longest line; height is one row
+// per newline. The caller keeps the annotation's own size as a minimum.
+static Size MeasureInPlaceText(Annotation* annot, Str text, float scale) {
+    int textSize = DefaultAppearanceTextSize(annot);
+    if (textSize <= 0) {
+        textSize = 12;
+    }
+    int fontPx = std::max(6, (int)lroundf((float)textSize * scale));
+    int styleBits = FreeTextFontStyle(annot);
+    PlatformFontStyle style = PlatformFontStyle::Regular;
+    if (styleBits & kFreeTextBold) {
+        style = style | PlatformFontStyle::Bold;
+    }
+    if (styleBits & kFreeTextItalic) {
+        style = style | PlatformFontStyle::Italic;
+    }
+    float sizePt = (float)fontPx * 72.f / 96.f;
+    PlatformFont* font = GetPlatformFont(InPlaceMeasureFamily(FreeTextFontFamily(annot)), sizePt, style);
+
+    int maxPx = 0;
+    int nLines = 1;
+    int start = 0;
+    for (int i = 0; i <= len(text); i++) {
+        if (i < len(text) && text.s[i] != '\n') {
+            continue;
+        }
+        int n = i - start;
+        if (n > 0 && text.s[start + n - 1] == '\r') {
+            n--;
+        }
+        Size ts = PlatformFontMeasureText(font, Str(text.s + start, n));
+        if (ts.dx > maxPx) {
+            maxPx = ts.dx;
+        }
+        if (i < len(text)) {
+            nLines++;
+        }
+        start = i + 1;
+    }
+
+    int border = std::max(BorderWidth(annot), 0);
+    float emDx = fontPx > 0 ? (float)maxPx / (float)fontPx : 0.f;
+    // MuPDF pads by twice the border width on each side
+    float padPts = 4.f * (float)border;
+    int caret = std::max(DpiScale(3), 2);
+    int dx = (int)((emDx * (float)textSize * kInPlaceWidthSlack + padPts) * scale) + caret;
+    int dy = (int)((((float)nLines * kInPlaceLineHeight * (float)textSize) + padPts) * scale);
+    return {dx, dy};
 }
 
 TempStr FreeTextInPlaceEditStateTemp(MainWindow* win) {
@@ -983,16 +1058,26 @@ void EndFreeTextInPlaceEdit(bool accept) {
         };
         DisplayModel* dm = winOk ? win->AsFixed() : nullptr;
         int pageNo = PageNo(annot);
-        if (dm && dm->ValidPageNo(pageNo) && box.h > 0) {
+        if (dm && dm->ValidPageNo(pageNo)) {
             // the box grew with the text while typing; keep that room so
-            // MuPDF doesn't clip what was just written. Compare in screen
-            // pixels: converting the box back to page coordinates biases it
-            // half a pixel up and to the left, so a page-space union always
-            // looks bigger and would grow the annotation on every edit.
+            // MuPDF doesn't clip or wrap what was just written. Compare in
+            // screen pixels: converting the box back to page coordinates
+            // biases it half a pixel up and to the left, so a page-space
+            // union always looks bigger and would grow the annotation on
+            // every edit.
             RectF cur = GetRect(annot);
             Rect curScreen = dm->CvtToScreen(pageNo, cur);
-            float k = CanvasScale(win);
-            Rect editRect{curScreen.x, curScreen.y, (int)lroundf(box.w / k), (int)lroundf(box.h / k)};
+            float scale = cur.dy > 0 ? ((float)curScreen.dy / cur.dy) : 1.f;
+            Size fit = MeasureInPlaceText(annot, text, scale);
+            Rect editRect{curScreen.x, curScreen.y, std::max(curScreen.dx, fit.dx), std::max(curScreen.dy, fit.dy)};
+            if (box.h > 0) {
+                float k = CanvasScale(win);
+                if (k <= 0.f) {
+                    k = 1.f;
+                }
+                Rect painted{curScreen.x, curScreen.y, (int)lroundf(box.w / k), (int)lroundf(box.h / k)};
+                editRect = editRect.Union(painted);
+            }
             Rect wanted = curScreen.Union(editRect);
             if (wanted != curScreen) {
                 SetRect(annot, cur.Union(dm->CvtFromScreen(wanted, pageNo)));
@@ -2425,6 +2510,10 @@ gp::El* FreeTextInPlaceEditBuild(MainWindow* win, gp::Ctx* cx) {
     }
     float fontPx = std::max(6.f, roundf((float)textSize * scale)) * k;
     float pad = kFreeTextPadPerBorder * (float)std::max(BorderWidth(annot), 0) * scale * k;
+    Str shown = str::DupTemp(FromGpui(gp::InputValue(gInPlace.edit)));
+    Size fit = MeasureInPlaceText(annot, shown, scale);
+    int boxDx = std::max(rc.dx, fit.dx);
+    int boxDy = std::max(rc.dy, fit.dy);
 
     // the annotation's text color on white, as orig's FreeTextInPlaceEditCtlColor
     Color textCol = kColBlack;
@@ -2444,8 +2533,8 @@ gp::El* FreeTextInPlaceEditBuild(MainWindow* win, gp::Ctx* cx) {
                       ->Absolute()
                       ->Left((float)rc.x * k)
                       ->Top((float)rc.y * k)
-                      ->W((float)rc.dx * k)
-                      ->MinH((float)rc.dy * k)
+                      ->W((float)boxDx * k)
+                      ->MinH((float)boxDy * k)
                       ->Pad(pad)
                       ->Bg(ToGpui(kColWhite))
                       // a frame in the annotation's text color

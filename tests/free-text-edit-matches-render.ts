@@ -7,7 +7,7 @@
 import { mkdirSync, rmSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 import { ControlClient, ControlCommand } from "./control.ts";
-import { assemblePdf, cmdId, runStandalone, SLOW_BUILD_FACTOR, tmpPath } from "./util.ts";
+import { assemblePdf, cmdId, runStandalone, SLOW_BUILD_FACTOR, tmpPath, USE_NG } from "./util.ts";
 import {
   captureWindowPixels,
   enumChildWindows,
@@ -44,9 +44,23 @@ async function selectedRect(client: ControlClient): Promise<Rect> {
   return { x: +m[1]!, y: +m[2]!, dx: +m[3]!, dy: +m[4]! };
 }
 
-async function editActive(client: ControlClient): Promise<boolean> {
+async function markupDump(client: ControlClient): Promise<string> {
   const res = await client.request(ControlCommand.TestMarkupAnnots, []);
-  return /freeTextEdit active=1/.test(String(res[1] ?? ""));
+  return String(res[1] ?? "");
+}
+
+async function editActive(client: ControlClient): Promise<boolean> {
+  return /freeTextEdit active=1/.test(await markupDump(client));
+}
+
+// ng's editor is a gpui text area on the frame, so WM_GETTEXT on that hwnd is
+// the window title. The control dump is the text being edited.
+async function boxText(client: ControlClient, box: number): Promise<string> {
+  if (!USE_NG) {
+    return getControlText(box);
+  }
+  const m = /freeTextEdit active=\d rect=-?\d+,-?\d+,-?\d+,-?\d+ text=([^\r\n]*)/.exec(await markupDump(client));
+  return m?.[1] ?? "";
 }
 
 async function waitForEdit(client: ControlClient, active: boolean): Promise<void> {
@@ -143,7 +157,8 @@ export async function testit(): Promise<void> {
     // creating a free text annotation opens the in-place editor on it
     sendMessage(frame, WM_COMMAND, cmdId("CmdCreateAnnotFreeText"), packCoords(120, 250));
     await waitForEdit(client, true);
-    const box = findBox(canvas, (t) => t.startsWith("This is a text"));
+    // ng edits in a gpui text area on the frame. Orig's box is an Edit child.
+    const box = USE_NG ? frame : findBox(canvas, (t) => t.startsWith("This is a text"));
     if (!box) {
       throw new Error("free-text-edit-matches-render: placing a free text annotation did not open the editor");
     }
@@ -151,11 +166,13 @@ export async function testit(): Promise<void> {
     // replace the placeholder with one long line
     sendText(box, TEXT);
     const deadline = Date.now() + 5_000 * SLOW_BUILD_FACTOR;
-    while (getControlText(box) !== TEXT) {
+    let shown = await boxText(client, box);
+    while (shown !== TEXT) {
       if (Date.now() > deadline) {
-        throw new Error(`free-text-edit-matches-render: box text is "${getControlText(box)}"`);
+        throw new Error(`free-text-edit-matches-render: box text is "${shown}"`);
       }
       await sleep(40);
+      shown = await boxText(client, box);
     }
 
     sendMessage(box, WM_CHAR, 0x0a, 0); // Ctrl+Enter
