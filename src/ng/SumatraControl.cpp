@@ -4231,8 +4231,9 @@ static void ExecuteControlRequest(ControlRequest* req) {
             // ng: the window's screen rect and the two modes that hide the
             // chrome, so a sweep can check fullscreen without a screenshot
             Rect scr = AppShellWindowScreenRect(win);
-            out.Append(fmt("window rect=%d,%d,%d,%d maximized=%d fullscreen=%d presentation=%d\n", scr.x, scr.y, scr.dx,
-                           scr.dy, win->isMaximized ? 1 : 0, win->isFullScreen ? 1 : 0, (int)win->presentation));
+            out.Append(fmt("window rect=%d,%d,%d,%d maximized=%d fullscreen=%d presentation=%d scale=%.4f\n", scr.x,
+                           scr.y, scr.dx, scr.dy, win->isMaximized ? 1 : 0, win->isFullScreen ? 1 : 0,
+                           (int)win->presentation, CanvasScale(win)));
             Rect sysMenu;
             if (AppShellSysMenuRect(win, &sysMenu)) {
                 // orig's caption tree: row 0, child 0 is the app icon. visibility 0 is Visible.
