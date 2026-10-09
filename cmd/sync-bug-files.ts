@@ -1,4 +1,14 @@
-import { readdirSync, renameSync, copyFileSync, statSync, existsSync, unlinkSync } from "fs";
+import {
+  readdirSync,
+  renameSync,
+  copyFileSync,
+  statSync,
+  existsSync,
+  unlinkSync,
+  openSync,
+  readSync,
+  closeSync,
+} from "fs";
 import { join } from "path";
 
 function dot() {
@@ -63,6 +73,35 @@ interface BugFileInfo {
 
 const reBugFile = /^bug-(\d+)(.*)/i;
 
+const kPrefixCmpChunk = 1024 * 1024;
+
+// True when prefixPath is a byte-for-byte prefix of fullPath.
+function fileIsPrefix(prefixPath: string, prefixSize: number, fullPath: string): boolean {
+  if (prefixSize === 0) {
+    return true;
+  }
+  const a = Buffer.alloc(Math.min(kPrefixCmpChunk, prefixSize));
+  const b = Buffer.alloc(a.length);
+  const fa = openSync(prefixPath, "r");
+  const fb = openSync(fullPath, "r");
+  try {
+    let off = 0;
+    while (off < prefixSize) {
+      const n = Math.min(a.length, prefixSize - off);
+      const na = readSync(fa, a, 0, n, off);
+      const nb = readSync(fb, b, 0, n, off);
+      if (na !== n || nb !== n || !a.subarray(0, n).equals(b.subarray(0, n))) {
+        return false;
+      }
+      off += n;
+    }
+    return true;
+  } finally {
+    closeSync(fa);
+    closeSync(fb);
+  }
+}
+
 function collectBugFiles(dir: string): BugFileInfo[] {
   console.log(`collectBugFiles: ${dir}`);
   if (!existsSync(dir)) {
@@ -105,6 +144,7 @@ function syncDirs(dirs: string[]) {
   }
 
   let nCopied = 0;
+  let nOverwritten = 0;
   // for each directory, check each file against all other directories
   for (const srcDir of dirs) {
     console.log(`syncDirs: processing srcDir ${srcDir}`);
@@ -164,16 +204,36 @@ function syncDirs(dirs: string[]) {
           continue;
         }
         // check if a file with the same name already exists (different size = conflict)
+        const srcPath = join(srcDir, srcFile.fileName);
         const dstPath = join(dstDir, srcFile.fileName);
         if (existsSync(dstPath)) {
           const dstSt = statSync(dstPath);
+          if (dstSt.isFile() && dstSt.size < srcFile.fileSize && fileIsPrefix(dstPath, dstSt.size, srcPath)) {
+            const copyStart = performance.now();
+            copyFileSync(srcPath, dstPath);
+            const copyMs = (performance.now() - copyStart).toFixed(0);
+            console.log(
+              `overwrite truncated: ${srcFile.fileName} in ${dstDir} (${dstSt.size} -> ${srcFile.fileSize}, ${copyMs}ms)`,
+            );
+            const existing = dstFiles.find((f) => f.fileName.toLowerCase() === srcFile.fileName.toLowerCase());
+            if (existing) {
+              existing.fileSize = srcFile.fileSize;
+            } else {
+              dstFiles.push({
+                bugNumber: srcFile.bugNumber,
+                fileName: srcFile.fileName,
+                fileSize: srcFile.fileSize,
+              });
+            }
+            nOverwritten++;
+            continue;
+          }
           console.log(
             `conflict: ${srcFile.fileName} exists in ${dstDir} with different size (${srcFile.fileSize} vs ${dstSt.size}), skipping`,
           );
           continue;
         }
         // copy the file
-        const srcPath = join(srcDir, srcFile.fileName);
         const copyStart = performance.now();
         copyFileSync(srcPath, dstPath);
         const copyMs = (performance.now() - copyStart).toFixed(0);
@@ -188,7 +248,7 @@ function syncDirs(dirs: string[]) {
       }
     }
   }
-  console.log(`sync: copied ${nCopied} files`);
+  console.log(`sync: copied ${nCopied} files, overwrote ${nOverwritten} truncated`);
 }
 
 export function run() {
