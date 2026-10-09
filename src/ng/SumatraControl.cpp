@@ -1106,6 +1106,36 @@ static TempStr MarkupAnnotsResultTemp(Str action, int x, int y, int* exitCodeOut
 
 TempStr HomeSelectionForWindowTemp(int* exitCodeOut, int winIdx);
 
+// Navigate to {chapter, page} (clamped) and report where it landed.
+static TempStr GoToLocationResultTemp(int chapter, int page, int* exitCodeOut) {
+    str::Builder out;
+    auto fail = [&](Str msg, int code) -> TempStr {
+        out.Append(msg);
+        out.AppendChar('\n');
+        if (exitCodeOut) {
+            *exitCodeOut = code;
+        }
+        return ToStrTemp(out);
+    };
+
+    MainWindow* win = len(gWindows) > 0 ? gWindows[0] : nullptr;
+    if (!win) {
+        return fail(StrL("NOTREADY no-window"), 2);
+    }
+    if (!win->IsDocLoaded() || !win->ctrl) {
+        return fail(StrL("NOTREADY no-doc"), 2);
+    }
+    DocController* ctrl = win->ctrl;
+    Location want = ctrl->ClampLocation({chapter, page});
+    ctrl->GoToLocation(want, true);
+    Location got = ctrl->CurrentLocation();
+    out.Append(fmt("OK chapter=%d page=%d\n", got.chapter, got.page));
+    if (exitCodeOut) {
+        *exitCodeOut = 0;
+    }
+    return ToStrTemp(out);
+}
+
 static void ExecuteControlRequest(ControlRequest* req) {
     switch ((ControlCmd)req->cmd) {
         case ControlCmd::Ping:
@@ -1831,6 +1861,19 @@ static void ExecuteControlRequest(ControlRequest* req) {
         case ControlCmd::TestHomeListRows: {
             int exitCode = 0;
             Str res = HomeListRowsResultTemp(&exitCode);
+            AppendTestResult(req, exitCode, res);
+            break;
+        }
+
+        case ControlCmd::TestGoToLocation: {
+            i32 chapter = 0;
+            i32 page = 0;
+            if (!IntArg(req, 0, chapter) || !IntArg(req, 1, page)) {
+                AppendError(req, StrL("TestGoToLocation expects int chapter, int page"));
+                break;
+            }
+            int exitCode = 0;
+            Str res = GoToLocationResultTemp(chapter, page, &exitCode);
             AppendTestResult(req, exitCode, res);
             break;
         }
