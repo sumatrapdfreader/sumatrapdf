@@ -251,6 +251,8 @@ struct MainWindow {
     // the viewport size the controller was last given, so a frame that didn't
     // resize the window doesn't relayout the document
     Size lastViewPortSize;
+    // background chapter count starts once the canvas has a real size
+    bool chapterLayoutStarted = false;
 
     // what the canvas last told the scrollbars; also what OnVScroll steps from
     CanvasScrollInfo scrollV;

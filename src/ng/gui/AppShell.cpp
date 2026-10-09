@@ -2796,6 +2796,13 @@ gp::El* ShellView::Render(ShellView* self, gp::Ctx* cx) {
         win->lastViewPortSize = vps;
         win->ctrl->SetViewPortSize(vps);
     }
+    DisplayModel* dm = win->AsFixed();
+    EngineBase* engine = dm ? dm->GetEngine() : nullptr;
+    if (engine && !dm->pendingRelayout && !win->chapterLayoutStarted && engine->HasChapters() &&
+        engine->ChaptersLaidOut() < engine->ChapterCount()) {
+        win->chapterLayoutStarted = true;
+        engine->StartBackgroundChapterLayout();
+    }
 
     gp::El* root = gp::Div(cx->a)
                        ->FlexCol()

@@ -2285,9 +2285,8 @@ MainWindow* LoadDocument(MainWindow* win, Str path, LoadPrefs prefs, LoadReuse r
         } else {
             dm->SetScrollState(ss);
         }
-        if (engine) {
-            engine->StartBackgroundChapterLayout();
-        }
+        // the canvas may still be 0x0; AppShell starts the count once it has a size
+        win->chapterLayoutStarted = false;
     } else if (ctrl->PageCount() > 0) {
         ctrl->SetZoomVirtual(zoomVirtual, nullptr);
         ChmModel* chm = ctrl->AsChm();
