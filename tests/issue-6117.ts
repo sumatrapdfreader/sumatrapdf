@@ -10,6 +10,7 @@
 import { copyFileSync, mkdirSync, rmSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 import { ControlClient, ControlCommand } from "./control";
+import { IS_MAC } from "./host.ts";
 import { ROOT, cmdId, runStandalone, SLOW_BUILD_FACTOR, tmpPath } from "./util";
 import {
   enumWindows,
@@ -80,6 +81,81 @@ async function waitForSel(client: ControlClient, pred: (sel: number) => boolean,
   return sel;
 }
 
+async function toolReq(client: ControlClient, args: (string | number)[]): Promise<string> {
+  const res = await client.request(ControlCommand.TestToolWindow, args);
+  const raw = String(res[1] ?? "");
+  if (res[0] !== 0 || raw.startsWith("ERR") || raw.startsWith("NOTREADY")) {
+    throw new Error(`issue-6117: ${args.join(" ")} failed: ${raw}`);
+  }
+  return raw;
+}
+
+// The first results-list row: a wide click target under the two edits.
+function resultRow(layout: string): { x: number; y: number } | null {
+  for (const m of layout.matchAll(/hit rect=([0-9.-]+),([0-9.-]+),([0-9.-]+),([0-9.-]+) click=1 input=0 focusId=0/g)) {
+    const y = Number(m[2]);
+    const w = Number(m[3]);
+    const h = Number(m[4]);
+    if (y < 60 || w < 100 || h < 8) {
+      continue;
+    }
+    return { x: Math.round(Number(m[1]) + 12), y: Math.round(y + h / 2) };
+  }
+  return null;
+}
+
+// The Find window is a gpui tool window. PageUp / PageDown go to it, which is
+// what the results list sees once the search edit no longer has the click.
+async function macPageResults(client: ControlClient, frame: number): Promise<void> {
+  sendCommand(frame, cmdId("CmdFindFirst"));
+  const openBy = Date.now() + 5000 * SLOW_BUILD_FACTOR;
+  let state = "";
+  while (Date.now() < openBy) {
+    const res = await client.request(ControlCommand.TestToolWindow, ["state", "find"]);
+    state = String(res[1] ?? "");
+    if (state.startsWith("OK ")) {
+      break;
+    }
+    await sleep(100);
+  }
+  if (!state.startsWith("OK ")) {
+    throw new Error(`issue-6117: the Find window did not open\n${state}`);
+  }
+  for (const ch of TERM) {
+    await toolReq(client, ["input", "find", "char", ch.charCodeAt(0), 0, 0, 0]);
+  }
+  await resultsSel(client);
+
+  const laidBy = Date.now() + 5000 * SLOW_BUILD_FACTOR;
+  let row: { x: number; y: number } | null = null;
+  let layout = "";
+  while (Date.now() < laidBy) {
+    layout = await toolReq(client, ["layout", "find"]);
+    row = resultRow(layout);
+    if (row) {
+      break;
+    }
+    await sleep(100);
+  }
+  if (!row) {
+    throw new Error(`issue-6117: no result row\n${layout}`);
+  }
+  await toolReq(client, ["input", "find", "click", row.x, row.y, 0, 0]);
+  const start = await resultsSel(client);
+  if (start < 0) {
+    throw new Error("issue-6117: clicking a result did not select it");
+  }
+
+  await toolReq(client, ["input", "find", "key", VK_NEXT, 0, 0, 0]);
+  const afterDown = await waitForSel(
+    client,
+    (sel) => sel > start + 1,
+    `PageDown did not move a whole page from ${start}`,
+  );
+  await toolReq(client, ["input", "find", "key", VK_PRIOR, 0, 0, 0]);
+  await waitForSel(client, (sel) => sel < afterDown, `PageUp did not move back from ${afterDown}`);
+}
+
 export async function testit(): Promise<void> {
   const appData = tmpPath("issue-6117");
   rmSync(appData, { recursive: true, force: true });
@@ -98,6 +174,10 @@ export async function testit(): Promise<void> {
   try {
     await client.waitForRenderIdle();
     await client.setNotificationsEnabled(false);
+    if (IS_MAC) {
+      await macPageResults(client, frame);
+      return;
+    }
     const pid = getWindowPid(frame);
 
     sendCommand(frame, cmdId("CmdFindFirst"));
