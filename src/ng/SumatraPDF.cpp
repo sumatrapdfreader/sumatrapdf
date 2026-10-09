@@ -9223,7 +9223,7 @@ int GpuiMain(int argc, char** argv) {
         // the first one, as orig does
         win = len(gWindows) > 0 ? gWindows[0] : win;
     }
-    SortNatural(&gFlags->fileNames);
+    // Command-line order is the tab order. The last file stays current, as orig.
     // -new-window: each file in its own window. -new-window-tabs keeps them
     // as tabs of the first window.
     bool newWindowEach = gFlags->inNewWindow && !gFlags->inNewWindowTabs;
