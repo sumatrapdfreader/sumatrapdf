@@ -11,6 +11,7 @@
 import { mkdirSync, rmSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 import { ControlClient, ControlCommand } from "./control.ts";
+import { IS_MAC } from "./host.ts";
 import { assemblePdf, cmdId, pollUntil, runStandalone, tmpPath, USE_NG } from "./util.ts";
 import {
   clientToScreen,
@@ -79,6 +80,11 @@ function annotButtonRect(raw: string, cmd: number): Rect | null {
 // ng has no popup HWND. A posted down/up pair can have a cursor snap between
 // them, which gpui treats as a drag and the control never receives the click.
 async function ngClick(client: ControlClient, x: number, y: number, button = 0): Promise<void> {
+  // The drop-down closes when the real cursor is somewhere else.
+  if (IS_MAC) {
+    const at = clientToScreen(0, x, y);
+    setCursorPos(at.x, at.y);
+  }
   const res = await client.request(ControlCommand.TestInput, ["click", x, y, button, 0]);
   const raw = String(res[1] ?? "");
   if (res[0] !== 0 || !raw.startsWith("OK")) {
@@ -242,10 +248,11 @@ export async function testit(): Promise<void> {
     const toolbar = findChildByClass(frame, MAIN_TOOLBAR_CLASS);
     const canvas = findCanvas(frame);
 
-    const btn = annotButtonRect(await toolbarDump(client), cmdId("CmdCreateAnnotInk"));
-    if (!btn) {
-      throw new Error("ink-thickness: no ink button on the Edit PDF toolbar");
-    }
+    const btn = await pollUntil(
+      async () => annotButtonRect(await toolbarDump(client), cmdId("CmdCreateAnnotInk")),
+      (b) => !!b && b.dx > 0 && b.dy > 0,
+      { error: "ink-thickness: no ink button on the Edit PDF toolbar" },
+    );
     let cx = 0;
     let cy = 0;
     if (USE_NG) {
