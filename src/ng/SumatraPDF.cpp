@@ -82,6 +82,7 @@
 #include "gui/Sidebar.h"
 #include "gui/WasmBridge.h"
 #include "gui/DocCanvas.h"
+#include "gui/DialogWidgets.h"
 #include "gui/TabsUI.h"
 #include "Selection.h"
 #include "SelectionToolbar.h"
@@ -1738,6 +1739,12 @@ void AutoReloadTick(MainWindow* win, int elapsedMs) {
         // consume the save-triggered watcher event
         tab->ignoreNextAutoReload = false;
         tab->reloadOnFocus = false;
+        return;
+    }
+    // an open menu still holds the page element it was built from. Reload
+    // once it is gone, as orig does while TrackPopupMenu is running.
+    if (win->gpuiWin && IsTrackedPopupOpenInApp(win->gpuiWin->app)) {
+        tab->autoReloadLeftMs = kAutoReloadDelayInMs;
         return;
     }
     if (AutoReloadFileStillChanging(tab)) {

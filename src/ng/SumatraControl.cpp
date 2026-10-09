@@ -1720,6 +1720,11 @@ static void ExecuteControlRequest(ControlRequest* req) {
             if (len(op) > 0) {
                 i32 arg = 0;
                 IntArg(req, 1, arg);
+                if (str::Eq(op, StrL("ctxcmd"))) {
+                    WindowContextMenuCommand(FirstWindow(), arg);
+                    AppendTestResult(req, 0, StrL("ok"));
+                    break;
+                }
                 AppendTestResult(req, 0, SidebarTestToc(FirstWindow(), op, arg));
                 break;
             }
