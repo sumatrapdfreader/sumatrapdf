@@ -15,6 +15,7 @@
 // "NOTPORTED <n>" instead of silently doing nothing.
 
 #include "base/Base.h"
+#include "base/Pixmap.h"
 #include "base/UITask.h"
 #include "base/File.h"
 #include "base/GuessFileType.h"
@@ -1136,6 +1137,101 @@ static TempStr GoToLocationResultTemp(int chapter, int page, int* exitCodeOut) {
     return ToStrTemp(out);
 }
 
+// clipKind values match SumatraTest.cpp ImageRenderEdgesResultTemp
+constexpr int kClipSelection = 1;
+constexpr int kClipRightHalfTile = 2;
+constexpr int kClipFullPageTile = 3;
+
+// Render an image page and report dest size plus the RGB of the left and right
+// edge pixels. clipKind 1 is the copy-selection rect, 2 a right-half tile
+// after a full-page render, 3 the page/pixel round trip.
+static TempStr ImageRenderEdgesResultTemp(Str path, int zoomPercent, int clipKind, int* exitCodeOut) {
+    str::Builder out;
+    auto fail = [&](Str msg) -> TempStr {
+        if (exitCodeOut) {
+            *exitCodeOut = 1;
+        }
+        out.Append(msg);
+        return ToStrTemp(out);
+    };
+
+    EngineBase* engine = CreateEngineFromFile(path, nullptr, false);
+    if (!engine) {
+        return fail(fmt("ERROR engine-create-failed path=%s\n", path));
+    }
+    RectF box = engine->PageMediabox(1);
+    float zoom = (float)zoomPercent / 100.f;
+    RectF clip;
+    RectF* pageRect = nullptr;
+    if (clipKind == kClipSelection) {
+        // same half-pixel pull-back CvtFromScreen applies to a pixel-aligned
+        // selection of the whole image
+        clip = RectF(-0.499f, -0.499f, box.dx, box.dy);
+        pageRect = &clip;
+    }
+    if (clipKind == kClipRightHalfTile) {
+        // full render first so mupdf caches the whole decoded image, then a
+        // tile of the right half
+        RenderPageArgs full(1, zoom, 0, nullptr, RenderTarget::Export);
+        FreePixmap(engine->RenderPage(full));
+        clip = RectF(box.dx / 2, 0, box.dx / 2, box.dy);
+        pageRect = &clip;
+    }
+    Rect tile;
+    if (clipKind == kClipFullPageTile) {
+        tile = engine->Transform(box, 1, zoom, 0).Round();
+        clip = engine->Transform(ToRectF(tile), 1, zoom, 0, true);
+        pageRect = &clip;
+    }
+    RenderPageArgs args(1, zoom, 0, pageRect, RenderTarget::Export);
+    Pixmap* bmp = engine->RenderPage(args);
+    if (!bmp) {
+        SafeEngineRelease(&engine);
+        return fail(fmt("ERROR render-failed box=%gx%g zoom=%g\n", box.dx, box.dy, zoom));
+    }
+    if (bmp->width < 2 || bmp->height < 1 || !bmp->data) {
+        TempStr msg = fmt("ERROR pixmap-too-small bmp=%dx%d fmt=%d box=%gx%g\n", bmp->width, bmp->height,
+                          (int)bmp->format, box.dx, box.dy);
+        FreePixmap(bmp);
+        SafeEngineRelease(&engine);
+        return fail(msg);
+    }
+    int bpp = PixmapBytesPerPixel(bmp->format);
+    if (bpp < 3) {
+        FreePixmap(bmp);
+        SafeEngineRelease(&engine);
+        return fail(fmt("ERROR pixmap-fmt=%d\n", (int)bmp->format));
+    }
+
+    auto pixel = [&](int x, int y, int* r, int* g, int* b) {
+        const u8* px = bmp->data + ((size_t)y * (size_t)bmp->stride) + ((size_t)x * bpp);
+        if (bmp->format == PixmapFormat::RGBA8) {
+            *r = px[0];
+            *g = px[1];
+            *b = px[2];
+        } else {
+            *b = px[0];
+            *g = px[1];
+            *r = px[2];
+        }
+    };
+    int lr, lg, lb, rr, rg, rb;
+    pixel(0, bmp->height / 2, &lr, &lg, &lb);
+    pixel(bmp->width - 1, bmp->height / 2, &rr, &rg, &rb);
+    out.Append(fmt("size=%dx%d left=%d,%d,%d right=%d,%d,%d", bmp->width, bmp->height, lr, lg, lb, rr, rg, rb));
+    if (clipKind == kClipFullPageTile) {
+        out.Append(fmt(" tile=%dx%d", tile.dx, tile.dy));
+    }
+    out.Append(StrL("\n"));
+
+    FreePixmap(bmp);
+    SafeEngineRelease(&engine);
+    if (exitCodeOut) {
+        *exitCodeOut = 0;
+    }
+    return ToStrTemp(out);
+}
+
 static void ExecuteControlRequest(ControlRequest* req) {
     switch ((ControlCmd)req->cmd) {
         case ControlCmd::Ping:
@@ -1861,6 +1957,22 @@ static void ExecuteControlRequest(ControlRequest* req) {
         case ControlCmd::TestHomeListRows: {
             int exitCode = 0;
             Str res = HomeListRowsResultTemp(&exitCode);
+            AppendTestResult(req, exitCode, res);
+            break;
+        }
+
+        case ControlCmd::TestImageRenderEdges: {
+            Str path = StringArg(req, 0);
+            i32 zoomPercent = 100;
+            i32 clipKind = 0;
+            if (len(path) == 0) {
+                AppendError(req, StrL("TestImageRenderEdges expects string path [, int zoomPercent] [, int clipKind]"));
+                break;
+            }
+            IntArg(req, 1, zoomPercent);
+            IntArg(req, 2, clipKind);
+            int exitCode = 0;
+            Str res = ImageRenderEdgesResultTemp(path, zoomPercent, clipKind, &exitCode);
             AppendTestResult(req, exitCode, res);
             break;
         }
