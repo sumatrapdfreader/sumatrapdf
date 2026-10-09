@@ -3833,6 +3833,79 @@ static void OnWindowContextMenu(MainWindow* win, gp::Ctx* cx, int x, int y) {
     OpenPopupMenuAt(cx, ui->ctxPopup, (float)x * k, (float)y * k);
 }
 
+#if OS_WIN
+// A posted WM_CONTEXTMENU looks for a Win32 popup (#32768) and types its
+// access key. A gpui menu is not that window.
+static HMENU HmenuFromModel(MenuModel* m) {
+    if (!m) {
+        return nullptr;
+    }
+    HMENU menu = CreatePopupMenu();
+    for (MenuItemModel& it : m->items) {
+        if (it.separator) {
+            AppendMenuW(menu, MF_SEPARATOR, 0, nullptr);
+            continue;
+        }
+        UINT flags = MF_STRING;
+        if (it.disabled) {
+            flags |= MF_GRAYED;
+        }
+        if (it.checked) {
+            flags |= MF_CHECKED;
+        }
+        WStr label = len(it.accel) > 0 ? ToWStrTemp(fmt("%s\t%s", it.title, it.accel)) : ToWStrTemp(it.title);
+        if (it.submenu) {
+            AppendMenuW(menu, flags | MF_POPUP, (UINT_PTR)HmenuFromModel(it.submenu), label.s);
+            continue;
+        }
+        AppendMenuW(menu, flags, (UINT_PTR)it.cmdId, label.s);
+    }
+    return menu;
+}
+
+void DocCanvasOnWmContextMenu(MainWindow* win, int screenX, int screenY) {
+    if (!IsMainWindowValid(win) || !win->AsFixed()) {
+        return;
+    }
+    HWND hwnd = AppShellNativeHwnd(win);
+    if (!hwnd) {
+        return;
+    }
+    POINT sp{(LONG)screenX, (LONG)screenY};
+    if (screenX == -1 && screenY == -1) {
+        GetCursorPos(&sp);
+    }
+    POINT client = sp;
+    ScreenToClient(hwnd, &client);
+    float k = CanvasScale(win);
+    Point doc;
+    ToDoc(win, (float)client.x * k, (float)client.y * k, &doc);
+    if (doc.x < 0) {
+        doc.x = 0;
+    }
+    if (doc.y < 0) {
+        doc.y = 0;
+    }
+
+    MenuModel* model = BuildWindowContextMenu(win, doc);
+    if (!model) {
+        return;
+    }
+    HMENU popup = HmenuFromModel(model);
+    int cmdId = (int)TrackPopupMenu(popup, TPM_RETURNCMD | TPM_RIGHTBUTTON, sp.x, sp.y, 0, hwnd, nullptr);
+    DestroyMenu(popup);
+    DeleteMenuModel(model);
+    if (!IsMainWindowValidAndNotClosing(win)) {
+        return;
+    }
+    if (cmdId == 0) {
+        win->contextMenuHighlightPageNo = 0;
+        return;
+    }
+    WindowContextMenuCommand(win, cmdId);
+}
+#endif
+
 void DocCanvasContextMenuFromKey(MainWindow* win, gp::Ctx* cx) {
     if (!IsMainWindowValid(win) || !win->AsFixed() || !cx->win) {
         return;
