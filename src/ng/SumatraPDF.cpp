@@ -7251,6 +7251,10 @@ void ExecuteCmd(MainWindow* win, int cmdId) {
         }
 
         case CmdGoToFirstPage:
+            if (win->IsCurrentTabAbout()) {
+                HomePageOnVScroll(win, ScrollMsg::Top, 0);
+                break;
+            }
             if (win->IsDocLoaded()) {
                 ctrl->GoToFirstPage();
                 OnDocumentVerticalScrollIntent(win, false);
@@ -7258,6 +7262,10 @@ void ExecuteCmd(MainWindow* win, int cmdId) {
             break;
 
         case CmdGoToLastPage:
+            if (win->IsCurrentTabAbout()) {
+                HomePageOnVScroll(win, ScrollMsg::Bottom, 0);
+                break;
+            }
             if (win->IsDocLoaded()) {
                 if (!ctrl->GoToLastPage()) {
                     CanvasOnVScroll(win, ScrollMsg::Bottom);

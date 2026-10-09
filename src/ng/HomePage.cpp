@@ -361,6 +361,10 @@ struct HomePageUI {
     gpui::InputState* search = nullptr;
     Str searchQuery;
     float scrollY = 0;
+    // scrollY the last laid-out frame used, so a bottom scroll can measure
+    // the caption against the bounds that scroll produced
+    float scrollYLaidOut = 0;
+    bool scrollToEnd = false;
     int selIdx = -1;
     int searchReturnCol = 0;
     int gridCols = 1;
@@ -936,6 +940,7 @@ void HomePageOnMouseWheel(MainWindow* win, int delta) {
     if (newScrollY == h->scrollY) {
         return;
     }
+    h->scrollToEnd = false;
     h->scrollY = newScrollY;
     OverlayScrollbarsNotifyScroll(win);
     AppShellInvalidate(win);
@@ -955,6 +960,7 @@ void HomeView::OnWheel(HomeView* self, gp::Ctx* cx, const gp::ScrollWheelEvent* 
     float newScrollY = HomeClampScrollY(h, h->scrollY + (float)scrollBy);
     const_cast<gp::ScrollWheelEvent*>(ev)->propagate = false;
     if (newScrollY != h->scrollY) {
+        h->scrollToEnd = false;
         h->scrollY = newScrollY;
         // orig's OverlayScrollbarSetInfo re-reveals the bar on a scroll
         OverlayScrollbarsNotifyScroll(self->win);
@@ -966,6 +972,8 @@ void HomePageOnVScroll(MainWindow* win, ScrollMsg msg, int nTrackPos) {
     HomePageUI* h = Ui(win);
     int lineDy = HomePageIsListView() ? kHomeListRowDy : kThumbnailDy + kThumbsSpaceBetweenY;
     int pageDy = lineDy * 3;
+    bool toEnd = msg == ScrollMsg::Bottom;
+    h->scrollToEnd = toEnd;
 
     int newScrollY = (int)h->scrollY;
     switch (msg) {
@@ -994,14 +1002,20 @@ void HomePageOnVScroll(MainWindow* win, ScrollMsg msg, int nTrackPos) {
             break;
     }
     float y = HomeClampScrollY(h, (float)newScrollY);
-    if (y != h->scrollY) {
+    // a previous End may already sit past the row-pitch estimate
+    if (toEnd && h->scrollY > y) {
+        y = h->scrollY;
+    }
+    if (toEnd || y != h->scrollY) {
         h->scrollY = y;
         AppShellInvalidate(win);
     }
 }
 
 void HomeView::OnScroll(HomeView* self, gp::Ctx* cx, const gp::ScrollEvent* ev) {
-    Ui(self->win)->scrollY = ev->offsetY;
+    HomePageUI* h = Ui(self->win);
+    h->scrollY = ev->offsetY;
+    h->scrollYLaidOut = ev->offsetY;
     HomeNotify(self->win, cx);
 }
 
@@ -1822,6 +1836,21 @@ gp::El* HomePageBuild(MainWindow* win, gp::Ctx* cx) {
                      (kThumbnailDx + kThumbsSpaceBetweenX));
     cols = std::max(cols, 1);
     h->gridCols = cols;
+    // End: the row pitch stops short of the last caption, so step from the
+    // caption's laid-out bottom (issue #6234)
+    if (h->scrollToEnd) {
+        h->scrollToEnd = false;
+        if (!listView && nFiles > 0 && h->entriesView.h > 0) {
+            gp::Bounds last = h->entryBounds[nFiles - 1];
+            if (last.h > 1.f) {
+                float viewBottom = h->entriesView.y + h->entriesView.h;
+                float maxScroll = last.y + last.h + h->scrollYLaidOut - viewBottom;
+                if (maxScroll > h->scrollY + 0.5f) {
+                    h->scrollY = maxScroll;
+                }
+            }
+        }
+    }
     int contentDx = (cols * kThumbnailDx) + ((cols - 1) * kThumbsSpaceBetweenX);
     int thumbsStartX = kThumbsMarginLeft + (((int)frameDx - contentDx - kThumbsMarginLeft - kThumbsMarginRight) / 2);
     if (thumbsStartX < kInnerPadding) {
@@ -1955,6 +1984,7 @@ gp::El* HomePageBuild(MainWindow* win, gp::Ctx* cx) {
             content->Child(rowEl);
         }
     }
+    h->scrollYLaidOut = h->scrollY;
     root->Child(gp::Div(cx->a)
                     ->Id(GStrL("home-entries"))
                     ->FlexCol()
