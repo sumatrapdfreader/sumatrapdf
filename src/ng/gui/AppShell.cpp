@@ -129,6 +129,8 @@ struct ShellView {
     bool dialogUp = false;
     // the sidebar splitter is being dragged past where it may go
     bool splitterRefused = false;
+    // the app icon moved far enough to drag the window, so the release is not a click
+    bool sysMenuDragged = false;
     // when the last tick ran (gp::TimeNow) and the sub-millisecond carry
     double lastTickTime = 0;
     double tickMsRest = 0;
@@ -138,6 +140,8 @@ struct ShellView {
     static void OnSidebarResize(ShellView* self, gp::Ctx* cx, const gp::DragMoveEvent* ev);
     static void OnSidebarResized(ShellView* self, gp::Ctx* cx, const gp::MouseUpEvent*);
     static void OnSystemMenu(ShellView* self, gp::Ctx* cx, const gp::ClickEvent*);
+    static void OnSystemMenuDown(ShellView* self, gp::Ctx* cx, const gp::MouseDownEvent*);
+    static void OnSystemMenuDrag(ShellView* self, gp::Ctx* cx, const gp::DragMoveEvent* ev);
     static void OnTick(ShellView* self, gp::Ctx* cx, const gp::TickEvent* ev);
     static void OnMouseDown(ShellView* self, gp::Ctx* cx, const gp::MouseDownEvent* ev);
     static void OnKeyDown(ShellView* self, gp::Ctx* cx, const gp::KeyEvent* ev);
@@ -368,6 +372,9 @@ static gp::El* CaptionSystemMenuButton(ShellView* self, gp::Ctx* cx, int size) {
                     ->JustifyCenter()
                     ->BoundsOut(&self->sysMenuBtn)
                     ->PathClick(GStrL("sumatra-sys-menu"))
+                    ->OnDrag(GStrL("sumatra-sys-menu"))
+                    ->OnMouseDown(gp::Listen(cx, &ShellView::OnSystemMenuDown))
+                    ->OnDragMove(gp::Listen(cx, &ShellView::OnSystemMenuDrag))
                     ->OnClick(gp::Listen(cx, &ShellView::OnSystemMenu));
 #if OS_WIN
     if (Pixmap* px = AppShellAppIconPixmap(win)) {
@@ -2073,11 +2080,57 @@ void ShellView::OnSidebarResize(ShellView* self, gp::Ctx* cx, const gp::DragMove
     gp::Notify(cx);
 }
 
+// The app icon in the caption, in window dips. Empty until it has been laid out.
+bool AppShellSysMenuRect(MainWindow* win, Rect* out) {
+    if (!out) {
+        return false;
+    }
+    *out = {};
+    if (!win || !win->shell || !win->gpuiWin) {
+        return false;
+    }
+    auto* view = (ShellView*)gp::EntityGet(win->gpuiWin->app, win->shell->view.id);
+    if (!view || view->sysMenuBtn.w < 1.f || view->sysMenuBtn.h < 1.f) {
+        return false;
+    }
+    gp::Bounds b = view->sysMenuBtn;
+    *out = Rect{(int)b.x, (int)b.y, (int)b.w, (int)b.h};
+    return true;
+}
+
+void ShellView::OnSystemMenuDown(ShellView* self, gp::Ctx*, const gp::MouseDownEvent*) {
+    self->sysMenuDragged = false;
+}
+
+// orig's caption: past the drag threshold the icon moves the window, and the
+// release is not a click. OnDrag is what stops gpui turning that release into one.
+void ShellView::OnSystemMenuDrag(ShellView* self, gp::Ctx*, const gp::DragMoveEvent* ev) {
+    MainWindow* win = self->win;
+    if (self->sysMenuDragged || !IsMainWindowValidAndNotClosing(win) || !win->gpuiWin) {
+        return;
+    }
+    int x0 = (int)win->gpuiWin->pressedX;
+    int y0 = (int)win->gpuiWin->pressedY;
+    if (!IsDragDistance(x0, (int)ev->event.x, y0, (int)ev->event.y)) {
+        return;
+    }
+    self->sysMenuDragged = true;
+#if OS_WIN
+    HWND hwnd = AppShellNativeHwnd(win);
+    if (!hwnd) {
+        return;
+    }
+    ReleaseCapture();
+    PostMessageW(hwnd, WM_SYSCOMMAND, SC_MOVE | HTCAPTION, 0);
+#endif
+}
+
 // orig's HandleCaptionClick(CB_SYSTEM_MENU)
 void ShellView::OnSystemMenu(ShellView* self, gp::Ctx*, const gp::ClickEvent*) {
-    if (IsMainWindowValidAndNotClosing(self->win)) {
-        AppShellOpenSystemMenu(self->win, FromGpui(self->sysMenuBtn));
+    if (self->sysMenuDragged || !IsMainWindowValidAndNotClosing(self->win)) {
+        return;
     }
+    AppShellOpenSystemMenu(self->win, FromGpui(self->sysMenuBtn));
 }
 
 void ShellView::OnSidebarResized(ShellView* self, gp::Ctx* cx, const gp::MouseUpEvent*) {

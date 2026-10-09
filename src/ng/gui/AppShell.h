@@ -88,6 +88,7 @@ void SetTabsInTitlebar(MainWindow* win, bool inTitleBar);
 // where the caption puts the menu bar and the tab strip, and how tall it is;
 // false when the frame has no caption of the port's (TestLayout)
 bool AppShellCaptionRects(MainWindow* win, Rect* menuOut, Rect* tabsOut, int* dyOut);
+bool AppShellSysMenuRect(MainWindow* win, Rect* out);
 // the border the frame keeps around its content while it has the caption
 int AppShellFrameBorder(MainWindow* win);
 // gpui's client-side title bar for the frame, without touching the flag

@@ -3953,6 +3953,12 @@ static void ExecuteControlRequest(ControlRequest* req) {
             Rect scr = AppShellWindowScreenRect(win);
             out.Append(fmt("window rect=%d,%d,%d,%d maximized=%d fullscreen=%d presentation=%d\n", scr.x, scr.y, scr.dx,
                            scr.dy, win->isMaximized ? 1 : 0, win->isFullScreen ? 1 : 0, (int)win->presentation));
+            Rect sysMenu;
+            if (AppShellSysMenuRect(win, &sysMenu)) {
+                // orig's caption tree: row 0, child 0 is the app icon. visibility 0 is Visible.
+                out.Append(fmt("layout path=%s kind=%s visibility=%d rect=%d,%d,%d,%d\n", StrL("caption/0/0"),
+                               StrL("captionBtn"), 0, sysMenu.x, sysMenu.y, sysMenu.dx, sysMenu.dy));
+            }
             Rect frame = win->frameRc;
             Rect canvas = win->canvasRc;
             int menuDy = (win->isMenuBarVisible && !AppShellNativeMenu()) ? kMenuBarDy : 0;
