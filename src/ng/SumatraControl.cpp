@@ -1880,6 +1880,8 @@ enum class ControlCmd : u16 {
     WaitSessionRestored = 103,
     TestNavFiles = 104,
     TestRefHover = 111,
+    // orig's. Page widths and bookmark targets.
+    TestPageInfo = 112,
     // orig's. The thumbnail pane: hwnd, highlighted page, cell rects.
     TestSidebarThumbnails = 113,
     TestMergePdf = 115,
@@ -2989,6 +2991,35 @@ static TempStr RenderSelectionsResultTemp(int* exitCodeOut) {
     return res;
 }
 
+// Each page's width, and where the top-level bookmarks point.
+// tests/sidebar-thumbnails.ts gives every page a unique width.
+static TempStr PageInfoResultTemp(int* exitCodeOut) {
+    MainWindow* win = len(gWindows) > 0 ? gWindows[0] : nullptr;
+    WindowTab* tab = win ? win->CurrentTab() : nullptr;
+    DisplayModel* dm = tab ? tab->AsFixed() : nullptr;
+    if (!dm) {
+        if (exitCodeOut) {
+            *exitCodeOut = 2;
+        }
+        return str::DupTemp(StrL("NOTREADY no-document"));
+    }
+    str::Builder out;
+    EngineBase* engine = dm->GetEngine();
+    out.Append(fmt("pages=%d widths=", engine->PageCount()));
+    for (int i = 1; i <= engine->PageCount(); i++) {
+        out.Append(fmt(i == 1 ? "%d" : ",%d", (int)lroundf(engine->PageMediabox(i).dx)));
+    }
+    out.Append(StrL(" toc="));
+    TocTree* toc = engine->GetToc();
+    for (TocItem* it = toc && toc->root ? toc->root->child : nullptr; it; it = it->next) {
+        out.Append(fmt("%s:%d;", it->title, it->pageNo));
+    }
+    if (exitCodeOut) {
+        *exitCodeOut = 0;
+    }
+    return fmt("OK %s", ToStrTemp(out));
+}
+
 static TempStr PixmapRgbHexTemp(Pixmap* px, int x, int y) {
     int bpp = PixmapBytesPerPixel(px->format);
     u8* p = px->data + ((size_t)y * (size_t)px->stride) + ((size_t)x * (size_t)bpp);
@@ -3430,6 +3461,13 @@ static void ExecuteControlRequest(ControlRequest* req) {
             }
             int exitCode = 0;
             Str res = MarkdownTocNavigateResultTemp(destNo, minScrollY, &exitCode);
+            AppendTestResult(req, exitCode, res);
+            break;
+        }
+
+        case ControlCmd::TestPageInfo: {
+            int exitCode = 0;
+            Str res = PageInfoResultTemp(&exitCode);
             AppendTestResult(req, exitCode, res);
             break;
         }

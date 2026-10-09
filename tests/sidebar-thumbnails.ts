@@ -8,8 +8,9 @@
 import { mkdirSync, rmSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 import { ControlClient, ControlCommand } from "./control.ts";
-import { cmdId, makePdf, runStandalone, tmpPath } from "./util.ts";
+import { USE_NG, cmdId, makePdf, runStandalone, tmpPath } from "./util.ts";
 import {
+  captureWindowPixels,
   clientToScreen,
   getFocusedHwnd,
   MK_LBUTTON,
@@ -157,12 +158,36 @@ function isFrameBlue(c: number): boolean {
 // Whether the screen shows the current page's thumbnail framed on both sides.
 // Read from the window DC, not PrintWindow (which paints afresh): a view switch
 // that doesn't repaint leaves the bookmarks tree on screen
+function bgraBlue(data: Uint8Array, i: number): boolean {
+  const b = data[i]!;
+  const g = data[i + 1]!;
+  const r = data[i + 2]!;
+  return r < 60 && g > 90 && g < 150 && b > 180;
+}
+
 function frameOnScreen(s: Sidebar): boolean {
   const r = s.rects.get(s.current);
   if (!r || r.dx <= 0) {
     return false;
   }
   const edge = 8;
+  // ng paints in the frame, not a panel window DC
+  if (USE_NG) {
+    const shot = captureWindowPixels(s.hwnd);
+    if (!shot) {
+      return false;
+    }
+    const y = r.y + Math.floor(r.dy / 2);
+    const blueAt = (x: number) => {
+      if (x < 0 || y < 0 || x >= shot.w || y >= shot.h) {
+        return false;
+      }
+      return bgraBlue(shot.data, (y * shot.w + x) * 4);
+    };
+    const left = Array.from({ length: edge }, (_, d) => blueAt(r.x - 2 + d)).some(Boolean);
+    const right = Array.from({ length: edge }, (_, d) => blueAt(r.x + r.dx + 2 - d)).some(Boolean);
+    return left && right;
+  }
   const row = readWindowDCRow(s.hwnd, r.x - 2, r.y + Math.floor(r.dy / 2), r.dx + 4);
   return row.slice(0, edge).some(isFrameBlue) && row.slice(-edge).some(isFrameBlue);
 }
@@ -277,9 +302,25 @@ export async function testit(): Promise<void> {
     await waitFor("the click didn't frame page 3", async () => frameOnScreen(await sidebar(client)));
     s = await sidebar(client);
     const r3 = s.rects.get(3)!;
-    const row = readWindowDCRow(s.hwnd, r3.x - 12, r3.y + Math.floor(r3.dy / 2), 12);
-    if (!row.slice(8, 11).every((c) => c === row[0])) {
-      throw new Error(`sidebar-thumbnails: the current page has a selection border: ${row.map((c) => c.toString(16))}`);
+    if (USE_NG) {
+      const shot = captureWindowPixels(s.hwnd);
+      const y = r3.y + Math.floor(r3.dy / 2);
+      const px = (dx: number) => {
+        const x = r3.x - 12 + dx;
+        const i = (y * shot!.w + x) * 4;
+        return (shot!.data[i + 2]! << 16) | (shot!.data[i + 1]! << 8) | shot!.data[i]!;
+      };
+      const bg = px(0);
+      if (![8, 9, 10].every((dx) => px(dx) === bg)) {
+        throw new Error("sidebar-thumbnails: the current page has a selection border");
+      }
+    } else {
+      const row = readWindowDCRow(s.hwnd, r3.x - 12, r3.y + Math.floor(r3.dy / 2), 12);
+      if (!row.slice(8, 11).every((c) => c === row[0])) {
+        throw new Error(
+          `sidebar-thumbnails: the current page has a selection border: ${row.map((c) => c.toString(16))}`,
+        );
+      }
     }
 
     // dragging a page doesn't move it, even in Edit PDF mode

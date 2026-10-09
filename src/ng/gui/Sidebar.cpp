@@ -108,6 +108,8 @@ struct SidebarUI {
     int thumbRevealPage = 0;
     int thumbSelectedPage = 0;
     bool thumbSelectionPinned = false;
+    // view icons, Bookmarks / Thumbnails / Favorites, for each panel
+    gpui::Bounds viewIconBounds[2][3]{};
     SidebarThumbCache* thumbCache = nullptr;
 
     TocItem* tocSel = nullptr;
@@ -491,6 +493,9 @@ static void ToggleContent(MainWindow* win, SidebarContent content) {
     SetSidebarVisibility(win, useTop || win->uiState.tocVisible, !useTop || win->uiState.favVisible);
     if (content == SidebarContent::Favorites) {
         SidebarFocusFavorites(win);
+    } else if (content == SidebarContent::Thumbnails) {
+        // showing the pane puts the keyboard there, same as the favorites tree
+        SidebarFocusPanel(win, useTop);
     }
     ScheduleSaveSettings();
 }
@@ -1533,7 +1538,7 @@ static gp::El* PaneHeader(MainWindow* win, gp::Ctx* cx, bool selectors, bool top
                                ->Disabled(!ContentAvailable(win, contents[i]))
                                ->Tooltip(ToGpui(tips[i]))
                                ->OnClick(gp::ListenTo(Ui(win)->view, &SidebarView::OnPanelView, arg));
-            row->Child(button->IntoEl());
+            row->Child(button->IntoEl()->BoundsOut(&Ui(win)->viewIconBounds[top ? 0 : 1][i]));
         }
         row->Child(gp::Div(cx->a)->Flex1());
     } else {
@@ -1919,9 +1924,38 @@ TempStr SidebarThumbnailsResultTemp(int* exitCodeOut) {
     if (s <= 0.f) {
         s = 1.f;
     }
+    WindowTab* tab = win->CurrentTab();
+    bool thumbsTop = tab && win->uiState.tocVisible && tab->sidebarContent == SidebarContent::Thumbnails;
+    bool thumbsBottom = win->uiState.favVisible && win->sidebarBottomContent == SidebarContent::Thumbnails;
+    bool ring = (thumbsTop && SidebarPanelHasFocus(win, true)) || (thumbsBottom && SidebarPanelHasFocus(win, false));
+    int hwnd = (int)(intptr_t)AppShellNativeHwnd(win);
     str::Builder sb;
-    sb.Append(fmt("hwnd=%d thumbnails=%d count=%d current=%d rendered=%d rects=",
-                  (int)(intptr_t)AppShellNativeHwnd(win), showing ? 1 : 0, pageCount, current, rendered));
+    sb.Append(fmt("hwnd=%d thumbnails=%d count=%d current=%d rendered=%d ring=%d", hwnd, showing ? 1 : 0, pageCount,
+                  current, rendered, ring ? 1 : 0));
+    SidebarContent icons[] = {SidebarContent::Bookmarks, SidebarContent::Thumbnails, SidebarContent::Favorites};
+    bool panelVis[] = {win->uiState.tocVisible, win->uiState.favVisible};
+    SidebarContent panelContent[] = {tab ? tab->sidebarContent : SidebarContent::Bookmarks, win->sidebarBottomContent};
+    Str panelName[] = {StrL("top"), StrL("bottom")};
+    for (int p = 0; p < 2; p++) {
+        sb.Append(fmt(" %s=%d,%d,%s,", panelName[p], hwnd, panelVis[p] ? 1 : 0, SidebarContentToStr(panelContent[p])));
+        for (int i = 0; i < 3; i++) {
+            sb.Append(fmt("%d", ContentAvailable(win, icons[i]) ? 1 : 0));
+        }
+        sb.Append(StrL(","));
+        for (int i = 0; i < 3; i++) {
+            sb.Append(fmt("%d", panelContent[p] == icons[i] ? 1 : 0));
+        }
+        sb.Append(StrL(":"));
+        for (int i = 0; i < 3; i++) {
+            gp::Bounds b = panelVis[p] && ui ? ui->viewIconBounds[p][i] : gp::Bounds{};
+            int x = (int)(b.x / s + 0.5f);
+            int y = (int)(b.y / s + 0.5f);
+            int dx = (int)((b.x + b.w) / s + 0.5f) - x;
+            int dy = (int)((b.y + b.h) / s + 0.5f) - y;
+            sb.Append(fmt(i == 0 ? "%d,%d,%d,%d" : ";%d,%d,%d,%d", x, y, dx, dy));
+        }
+    }
+    sb.Append(StrL(" rects="));
     int n = (showing && ui) ? std::min(pageCount, len(ui->thumbBounds)) : 0;
     for (int pageNo = 1; pageNo <= n; pageNo++) {
         gp::Bounds b = ui->thumbBounds[pageNo - 1];
