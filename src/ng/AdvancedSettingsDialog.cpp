@@ -440,10 +440,9 @@ static void CommitEditValue() {
     CancelEditValue();
 }
 
-// "names", "nondefault" and "esc" are what the settings tests ask for.
-// The rest of orig's probe drives the win32 list; this dialog has no list box.
+// "names", "nondefault", "changed", "toggle" and "esc" are what the settings
+// tests ask for. The rest of orig's probe drives the win32 list.
 TempStr AdvSettingsRowsResultTemp(Str action, int arg, int* exitCodeOut) {
-    (void)arg;
     str::Builder out;
     auto finish = [&](int code) -> TempStr {
         if (exitCodeOut) {
@@ -473,6 +472,35 @@ TempStr AdvSettingsRowsResultTemp(Str action, int arg, int* exitCodeOut) {
                 fmt("%s=%s default=%s\n", item->name, FormatSettingValueTemp(item), FormatSettingDefaultTemp(item)));
         }
         out.Append(fmt("count=%d\n", n));
+        return finish(0);
+    }
+    if (str::Eq(action, StrL("changed"))) {
+        int n = CountChangedSettings();
+        out.Append(fmt("changed=%d banner=%d\n", n, n > 0 ? 1 : 0));
+        return finish(0);
+    }
+    if (str::Eq(action, StrL("toggle"))) {
+        int nBool = 0;
+        SettingItem* target = nullptr;
+        for (SettingItem* item : gAdv.items) {
+            if (item->type != SettingType::Bool) {
+                continue;
+            }
+            if (nBool == arg) {
+                target = item;
+                break;
+            }
+            nBool++;
+        }
+        if (!target) {
+            out.Append(StrL("ERROR no-bool\n"));
+            return finish(1);
+        }
+        target->boolVal = !target->boolVal;
+        SetItemChanged(target);
+        AppShellInvalidate(gAdv.win);
+        int n = CountChangedSettings();
+        out.Append(fmt("toggled=%s changed=%d banner=%d\n", target->name, n, n > 0 ? 1 : 0));
         return finish(0);
     }
     if (str::Eq(action, StrL("esc"))) {
