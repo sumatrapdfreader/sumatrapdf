@@ -394,6 +394,8 @@ struct HomePageUI {
     Vec<gpui::Bounds> entryBounds;
     // list-view size column, measured while painting (issue #5870)
     Vec<gpui::Bounds> listSizeBounds;
+    // the "show as list" button, for the click that switches the home view
+    gpui::Bounds listIconBounds{};
 };
 
 static HomePageUI* Ui(MainWindow* win) {
@@ -1564,6 +1566,9 @@ static gp::El* HomeViewModeBtn(MainWindow* win, gp::Ctx* cx, bool listView) {
                       ->HoverBg(th.tokens.muted)
                       ->PathClick(listView ? GStrL("home-view-list") : GStrL("home-view-thumbs"))
                       ->OnClick(gp::ListenTo(Ui(win)->view, &HomeView::OnViewMode, listView ? 1 : 0));
+    if (listView) {
+        btn->BoundsOut(&Ui(win)->listIconBounds);
+    }
     if (selected) {
         btn->Bg(th.tokens.accent)->Border(1, th.border);
     }
@@ -2100,9 +2105,9 @@ TempStr HomeSelectionForWindowTemp(int* exitCodeOut, int winIdx) {
     return finish(0, fmt("OK sel=%d entries=%d searchFocus=%d searchBox=%d search=%s outline=%s outlineFull=%s path=%s "
                          "listView=%d listIcon=%s thumbsArea=%s lastCaption=%s tip=%d,%d tipRect=%s",
                          sel, h->entryCount, searchFocus ? 1 : 0, searchBox, RectCsvTemp(search), RectCsvTemp(outline),
-                         RectCsvTemp(outlineFull), path, HomePageIsListView() ? 1 : 0, RectCsvTemp(Rect{}),
-                         RectCsvTemp(BoundsRect(h->entriesView)), RectCsvTemp(lastCaption), gSelectedIsPromo ? 1 : 0,
-                         gSelectedTipIdx, RectCsvTemp(tipRect)));
+                         RectCsvTemp(outlineFull), path, HomePageIsListView() ? 1 : 0,
+                         RectCsvTemp(BoundsRect(h->listIconBounds)), RectCsvTemp(BoundsRect(h->entriesView)),
+                         RectCsvTemp(lastCaption), gSelectedIsPromo ? 1 : 0, gSelectedTipIdx, RectCsvTemp(tipRect)));
 }
 
 TempStr HomeSelectionResultTemp(int* exitCodeOut) {
