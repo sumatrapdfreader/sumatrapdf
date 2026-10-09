@@ -4661,6 +4661,12 @@ void CloseTab(WindowTab* tab, bool quitIfLast) {
     if (!IsMainWindowValid(win)) {
         return;
     }
+    // only the home tab left, and another window is open: this one goes away
+    WindowTab* lastTab = (win->TabCount() == 1) ? win->GetTab(0) : nullptr;
+    if (lastTab && lastTab->IsAboutTab() && len(gWindows) > 1) {
+        CloseWindow(win, false, false);
+        return;
+    }
     UpdateWindowTitle(win);
     RebuildMenuBar(win);
     ScheduleSaveSettings();

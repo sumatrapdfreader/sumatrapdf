@@ -1114,6 +1114,44 @@ static TempStr MarkupAnnotsResultTemp(Str action, int x, int y, int* exitCodeOut
 
 TempStr HomeSelectionForWindowTemp(int* exitCodeOut, int winIdx);
 
+// Current chapter/page and chapter table state of the first window's doc.
+static TempStr ChapterInfoResultTemp(int* exitCodeOut) {
+    str::Builder out;
+    auto fail = [&](Str msg, int code) -> TempStr {
+        out.Append(msg);
+        out.AppendChar('\n');
+        if (exitCodeOut) {
+            *exitCodeOut = code;
+        }
+        return ToStrTemp(out);
+    };
+
+    MainWindow* win = len(gWindows) > 0 ? gWindows[0] : nullptr;
+    if (!win) {
+        return fail(StrL("NOTREADY no-window"), 2);
+    }
+    if (!win->IsDocLoaded() || !win->ctrl) {
+        return fail(StrL("NOTREADY no-doc"), 2);
+    }
+    DocController* ctrl = win->ctrl;
+    Location cur = ctrl->CurrentLocation();
+    int laidOut = 0;
+    DisplayModel* dm = ctrl->AsFixed();
+    if (dm && dm->GetEngine()) {
+        laidOut = dm->GetEngine()->ChaptersLaidOut();
+    }
+    bool chapterUi = ShowChapterUi(ctrl);
+    out.Append(
+        fmt("OK chapter=%d page=%d chapterCount=%d chapterPageCount=%d pageCount=%d hasChapters=%d "
+            "laidOut=%d chapterUi=%d\n",
+            cur.chapter, cur.page, ctrl->ChapterCount(), ctrl->ChapterPageCount(cur.chapter), ctrl->PageCount(),
+            ctrl->HasChapters() ? 1 : 0, laidOut, chapterUi ? 1 : 0));
+    if (exitCodeOut) {
+        *exitCodeOut = 0;
+    }
+    return ToStrTemp(out);
+}
+
 // Navigate to {chapter, page} (clamped) and report where it landed.
 static TempStr GoToLocationResultTemp(int chapter, int page, int* exitCodeOut) {
     str::Builder out;
@@ -2039,6 +2077,13 @@ static void ExecuteControlRequest(ControlRequest* req) {
             IntArg(req, 2, clipKind);
             int exitCode = 0;
             Str res = ImageRenderEdgesResultTemp(path, zoomPercent, clipKind, &exitCode);
+            AppendTestResult(req, exitCode, res);
+            break;
+        }
+
+        case ControlCmd::TestChapterInfo: {
+            int exitCode = 0;
+            Str res = ChapterInfoResultTemp(&exitCode);
             AppendTestResult(req, exitCode, res);
             break;
         }

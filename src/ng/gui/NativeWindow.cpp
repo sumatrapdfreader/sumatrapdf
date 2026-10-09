@@ -634,7 +634,10 @@ static LRESULT CALLBACK ShellSubclass(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp,
                         } else {
                             ExecuteCmd(win, cmdId);
                         }
-                        AppShellInvalidate(win);
+                        // close deletes the window before ExecuteCmd returns
+                        if (IsMainWindowValid(win)) {
+                            AppShellInvalidate(win);
+                        }
                         return 0;
                     }
                 }
