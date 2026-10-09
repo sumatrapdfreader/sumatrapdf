@@ -863,6 +863,30 @@ static TempStr SearchResultTemp(Str pdfPath, Str needle, Str password) {
     return ToStrTemp(out);
 }
 
+// the destNo-th outline destination as "page=P zoom=Z". zoom 0 retains the
+// current zoom. tests/issue-5537.ts.
+static TempStr DestResultTemp(Str pdfPath, int destNo) {
+    str::Builder out;
+    EngineBase* engine = CreateEngineFromFile(pdfPath, nullptr, false);
+    if (!engine) {
+        out.Append(fmt("ERROR engine-create-failed pdf=%s\n", pdfPath));
+    } else {
+        TocTree* toc = engine->GetToc();
+        IPageDestination* dest = nullptr;
+        if (toc && toc->root) {
+            int counter = 0;
+            dest = NthDestInToc(toc->root, destNo, counter);
+        }
+        if (dest) {
+            out.Append(fmt("dest=%d page=%d zoom=%g\n", destNo, PageDestGetPageNo(dest), dest->GetZoom()));
+        } else {
+            out.Append(fmt("dest=%d NODEST\n", destNo));
+        }
+        SafeEngineRelease(&engine);
+    }
+    return ToStrTemp(out);
+}
+
 // Color histogram of a page rendered with the CAD enhancement forced on.
 // tests/issue-5937.ts.
 static TempStr CadEnhanceColorsResultTemp(Str path, int pageNo, int zoomPercent, int* exitCodeOut) {
@@ -2732,6 +2756,17 @@ static void ExecuteControlRequest(ControlRequest* req) {
                 break;
             }
             AppendTestResult(req, 0, SearchResultTemp(pdf, needle, password));
+            break;
+        }
+
+        case ControlCmd::TestDest: {
+            i32 destNo = 0;
+            Str pdf = StringArg(req, 0);
+            if (len(pdf) == 0 || !IntArg(req, 1, destNo)) {
+                AppendError(req, StrL("TestDest expects string pdf, int destinationNumber"));
+                break;
+            }
+            AppendTestResult(req, 0, DestResultTemp(pdf, destNo));
             break;
         }
 
