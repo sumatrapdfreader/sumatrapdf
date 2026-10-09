@@ -65,6 +65,25 @@ constexpr int kFindWinPagesDx = 160;
 constexpr int kFindWinRowDy = 20;
 constexpr int kFindWinPageColDx = 40;
 
+static int DecimalDigits(int n) {
+    int digits = 1;
+    while (n >= 10) {
+        n /= 10;
+        digits++;
+    }
+    return digits;
+}
+
+// "n / m" slot, wide enough for the full count so the search box stays put
+static float FindStatusSlotDx(int totalHits, bool capped) {
+    int digits = DecimalDigits(std::max(totalHits, 0));
+    int nChars = (2 * digits) + 3;
+    if (capped) {
+        nChars++;
+    }
+    return (float)nChars * 7.f;
+}
+
 struct FindWindowView;
 
 struct FindWindowUI {
@@ -974,7 +993,10 @@ static gp::El* FindWindowContentEl(MainWindow* win, gp::Ctx* cx, bool ownWindow)
     ui->ddHistory.TakeComboPicked();
     header->Child(
         gp::Div(cx->a)->Flex1()->MinW(0)->Child(ui->ddHistory.BuildCombo(cx, StrL("find-win-edit"), edit, gp::kFill)));
-    header->Child(gp::TextEl(cx->a, GpuiDup(cx->a, w->status))->Font(12)->Fg(th.mutedFg)->Shrink0());
+    header->Child(gp::Div(cx->a)
+                      ->W(FindStatusSlotDx(w->statusTotalHits, w->statusCapped))
+                      ->Shrink0()
+                      ->Child(gp::TextEl(cx->a, GpuiDup(cx->a, w->status))->Font(12)->Fg(th.mutedFg)));
     header->Child(
         WinButton(w, cx, StrL("find-win-prev"), gp::IconName::ChevronUp, {}, Tr("Find Previous"), CmdFindPrev, false));
     header->Child(

@@ -1352,8 +1352,10 @@ TempStr ToolWindowTestTemp(Str action, Str name, Str kind, int a, int b, int c, 
         out.Append(
             fmt("OK size=%d,%d focusId=%d edit=%d", (int)ws.dipW, (int)ws.dipH, gp::WindowFocusedId(gw), edit ? 1 : 0));
         if (edit) {
-            gp::Str v = gp::InputValue(gw->input);
-            out.Append(fmt(" editText='%s'", Str{(char*)v.s, (int)v.len}));
+            gp::InputState* in = gw->input;
+            gp::Str v = gp::InputValue(in);
+            out.Append(fmt(" editText='%s' caret=%d sel=%d,%d", Str{(char*)v.s, (int)v.len}, gp::InputCursor(in),
+                           (int)in->selectedRange.start, (int)in->selectedRange.end));
         }
         out.Append(fmt(" popup=%d active=%d", IsTrackedPopupOpenInApp(gw->app) ? 1 : 0, gw->active ? 1 : 0));
         return ToStrTemp(out);

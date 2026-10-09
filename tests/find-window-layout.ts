@@ -2,7 +2,7 @@
 // hit count, so moving to the last result cannot resize the search combo box.
 import { writeFileSync } from "node:fs";
 import { ControlCommand, type ControlClient } from "./control.ts";
-import { runStandalone, tmpPath } from "./util.ts";
+import { runStandalone, tmpPath, USE_NG } from "./util.ts";
 import { killAndWait, launchControlled } from "./win-automation.ts";
 import {
   enumWindows,
@@ -140,6 +140,100 @@ async function waitForEditSelection(edit: number, expected: number, timeoutMs = 
   throw new Error(`find-window-layout: page-range caret stayed at ${selection}, expected ${expected}`);
 }
 
+async function toolReq(client: ControlClient, args: (string | number)[]): Promise<string> {
+  const res = await client.request(ControlCommand.TestToolWindow, args);
+  return String(res[1] ?? "");
+}
+
+function fieldRect(layout: string, value: string): { x: number; y: number; w: number } | null {
+  const re = new RegExp(`node rect=([0-9.]+),([0-9.]+),([0-9.]+),[0-9.]+ role=\\d+ label='[^']*' value='${value}'`);
+  const m = re.exec(layout);
+  if (!m) {
+    return null;
+  }
+  return { x: Number(m[1]), y: Number(m[2]), w: Number(m[3]) };
+}
+
+function inputHits(layout: string): { x: number; y: number; w: number; h: number }[] {
+  const hits: { x: number; y: number; w: number; h: number }[] = [];
+  for (const m of layout.matchAll(/hit rect=([0-9.]+),([0-9.]+),([0-9.]+),([0-9.]+) click=\d+ input=1/g)) {
+    hits.push({ x: Number(m[1]), y: Number(m[2]), w: Number(m[3]), h: Number(m[4]) });
+  }
+  return hits;
+}
+
+async function findLayout(client: ControlClient): Promise<string> {
+  const deadline = Date.now() + 4000;
+  let raw = "";
+  while (Date.now() < deadline) {
+    raw = await toolReq(client, ["layout", "find"]);
+    if (raw.startsWith("OK ") && raw.includes("value='needle'")) {
+      return raw;
+    }
+    await sleep(50);
+  }
+  throw new Error(`find-window-layout: find window layout not ready:\n${raw}`);
+}
+
+async function clickHit(client: ControlClient, hit: { x: number; y: number; w: number; h: number }): Promise<void> {
+  await toolReq(client, ["input", "find", "click", Math.round(hit.x + hit.w / 2), Math.round(hit.y + hit.h / 2), 0, 0]);
+}
+
+async function keyFind(client: ControlClient, vk: number): Promise<void> {
+  await toolReq(client, ["input", "find", "key", vk, 0, 0, 0]);
+}
+
+// ng draws the find window in GPUI, so there is no ComboBox hwnd. The search
+// field's laid-out width is the same measurement: it must not change when the
+// current match gains digits.
+async function testNg(client: ControlClient): Promise<void> {
+  const initialLayout = await findLayout(client);
+  const search = fieldRect(initialLayout, "needle");
+  const hits = inputHits(initialLayout);
+  const pages = hits.filter((h) => !search || Math.abs(h.w - search.w) > 8).sort((a, b) => a.w - b.w)[0];
+  if (!search || !pages) {
+    throw new Error(`find-window-layout: find controls not found\n${initialLayout}`);
+  }
+  const initialWidth = Math.round(search.w);
+
+  await clickHit(client, pages);
+  for (const ch of "1-9") {
+    await toolReq(client, ["input", "find", "char", ch.charCodeAt(0), 0, 0, 0]);
+  }
+  await keyFind(client, VK_HOME);
+  const afterHome = await toolReq(client, ["state", "find"]);
+  const caret = /caret=(\d+)/.exec(afterHome);
+  if (!caret || Number(caret[1]) !== 0) {
+    throw new Error(`find-window-layout: page-range caret stayed at ${caret?.[1] ?? "none"}, expected 0\n${afterHome}`);
+  }
+  await waitForSelection(client, 0);
+
+  const searchHit = hits.find((h) => search && Math.abs(h.w - search.w) <= 8);
+  if (!searchHit) {
+    throw new Error(`find-window-layout: search field hit not found\n${initialLayout}`);
+  }
+  await clickHit(client, searchHit);
+  await keyFind(client, VK_RETURN);
+  await sleep(50);
+  await waitForSelection(client, 0);
+  await keyFind(client, VK_END);
+  await keyFind(client, VK_END);
+  await waitForSelection(client, hitCount - 1);
+  await waitForPage(client, pageCount);
+
+  const after = fieldRect(await findLayout(client), "needle");
+  if (!after) {
+    throw new Error("find-window-layout: search field missing after navigation");
+  }
+  const afterWidth = Math.round(after.w);
+  if (afterWidth !== initialWidth) {
+    throw new Error(`find-window-layout: combo width changed from ${initialWidth} to ${afterWidth}`);
+  }
+  console.log(
+    `find-window-layout: combo width stayed ${initialWidth}px for 1 / ${hitCount} and ${hitCount} / ${hitCount}`,
+  );
+}
+
 export async function testit(): Promise<void> {
   const pdf = tmpPath("find-window-layout.pdf");
   writeFileSync(pdf, buildPdf());
@@ -148,6 +242,10 @@ export async function testit(): Promise<void> {
   try {
     await client.waitForRenderIdle();
     await waitForSelection(client, 0);
+    if (USE_NG) {
+      await testNg(client);
+      return;
+    }
 
     const findWindow = findWindowByTitle(getWindowPid(frame), "Find");
     const combo = findWindow ? findChildWindow(findWindow, "ComboBox") : 0;
