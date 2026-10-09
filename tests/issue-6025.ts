@@ -9,11 +9,12 @@
 
 import { mkdirSync, rmSync } from "node:fs";
 import { basename } from "node:path";
-import { EXE, runStandalone, SLOW_BUILD_FACTOR, tmpPath } from "./util.ts";
+import { EXE, runStandalone, SLOW_BUILD_FACTOR, tmpPath, USE_NG } from "./util.ts";
 import { killAndWait } from "./win-automation.ts";
 import {
   captureWindowDCToPng,
   captureWindowDCRegionPixels,
+  captureWindowPixels,
   clientToScreen,
   getClientRect,
   getWindowRect,
@@ -23,7 +24,7 @@ import {
   WM_CLOSE,
 } from "./winapi.ts";
 
-const INSTALLER_CLASS = "SUMATRA_PDF_INSTALLER_FRAME";
+const INSTALLER_CLASS = USE_NG ? "GpuiSystemMonitor" : "SUMATRA_PDF_INSTALLER_FRAME";
 
 function isInstallerYellow(b: number, g: number, r: number): boolean {
   return r > 230 && g > 210 && b < 50;
@@ -73,6 +74,15 @@ function lettersFit(label: string, data: Uint8Array, w: number, h: number): bool
 }
 
 async function captureLogoBand(hwnd: number): Promise<{ w: number; h: number; data: Uint8Array }> {
+  // the ng frame has no redirection bitmap, so GetWindowDC is empty
+  if (USE_NG) {
+    const shot = captureWindowPixels(hwnd, "client");
+    if (!shot) {
+      throw new Error("issue-6025: failed to capture installer logo band");
+    }
+    const bandH = Math.max(40, Math.round(shot.h * 0.35));
+    return { w: shot.w, h: bandH, data: shot.data.slice(0, shot.w * bandH * 4) };
+  }
   const wr = getWindowRect(hwnd);
   const cr = getClientRect(hwnd);
   const origin = clientToScreen(hwnd, 0, 0);

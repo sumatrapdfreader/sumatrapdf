@@ -629,7 +629,7 @@ struct InstallerView {
 static gp::Entity<InstallerView> gInstallerView;
 
 // one letter of the logo: the shadow behind and the letter itself, rotated
-static gp::El* BuildLetter(gp::Ctx* cx, const LetterInfo& li, float fontSize) {
+static gp::El* BuildLetter(gp::Ctx* cx, const LetterInfo& li, float fontSize, float scale) {
     char buf[2] = {li.c == ' ' ? 'X' : li.c, 0};
     gp::Str s = gp::StrDup(cx->a, gp::Str{buf, 1});
     gp::El* d = gp::Div(cx->a);
@@ -650,20 +650,23 @@ static gp::El* BuildLetter(gp::Ctx* cx, const LetterInfo& li, float fontSize) {
                  ->FontFamily(GStrL("Impact"))
                  ->Weight(gp::FontWeight::Black)
                  ->Fg(ToGpui(li.col)));
-    d->MarginT(li.dyOff);
+    d->MarginT(li.dyOff * scale);
     return d->Rotate(li.rotation / 360.f);
 }
 
 gp::El* BuildInstallerLogo(gp::Ctx* cx) {
-    float fontSize = 40.f * 96.f / 72.f;
+    // orig draws 40pt in pixels of the frame DPI. This frame is 1 dip = 1 px,
+    // so the logo takes the same scale the window size does.
+    float scale = (float)DpiGet() / 96.f;
+    float fontSize = 40.f * scale * 96.f / 72.f;
     gp::El* row = gp::Div(cx->a)->FlexRow()->W(gp::kFill)->JustifyCenter()->ItemsStart();
     for (const LetterInfo& li : gLetters) {
-        row->Child(BuildLetter(cx, li, fontSize));
+        row->Child(BuildLetter(cx, li, fontSize, scale));
     }
     TempStr ver = fmt("v%s", StrL(CURR_VERSION_STRA));
     row->Child(
         gp::Div(cx->a)->Absolute()->Right(8)->Top(2)->Rotate(0.125f)->Child(gp::TextEl(cx->a, GpuiDup(cx->a, ver))
-                                                                                ->Font(16.f * 96.f / 72.f)
+                                                                                ->Font(16.f * scale * 96.f / 72.f)
                                                                                 ->Weight(gp::FontWeight::Black)
                                                                                 ->Fg(ToGpui(kColWhite))));
     return row;
@@ -970,6 +973,11 @@ static bool CreateInstallerWindow(Flags* cli) {
     }
     gp::WindowSetInterval(gWnd->win, 33, gp::ListenTo(gInstallerView, &InstallerView::OnTick));
     InstallerAttachProbe();
+    if (gInstallerHwnd) {
+        DpiSetFromHwnd(gInstallerHwnd);
+        DpiScale(dx, dy);
+        HwndResizeClientSize(gInstallerHwnd, dx, dy);
+    }
     SetDefaultMsg();
     RevealingLettersAnimStart();
 
