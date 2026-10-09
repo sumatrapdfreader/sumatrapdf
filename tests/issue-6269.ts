@@ -5,6 +5,7 @@
 // Run: bun tests/issue-6269.ts [--no-build]
 
 import { dlopen, FFIType } from "bun:ffi";
+import { IS_WIN } from "./host.ts";
 import { runStandalone } from "./util.ts";
 import {
   captureWindowPixels,
@@ -29,28 +30,36 @@ import {
 } from "./winapi.ts";
 import { findCanvas, killAndWait, launchControlled } from "./win-automation.ts";
 
-const user32 = dlopen("user32.dll", {
-  GetWindowThreadProcessId: { args: [FFIType.ptr, FFIType.ptr], returns: FFIType.u32 },
-  AttachThreadInput: { args: [FFIType.u32, FFIType.u32, FFIType.bool], returns: FFIType.bool },
-  BringWindowToTop: { args: [FFIType.ptr], returns: FFIType.bool },
-});
-const kernel32 = dlopen("kernel32.dll", {
-  GetCurrentThreadId: { args: [], returns: FFIType.u32 },
-});
+// Loaded only on Windows: this file is imported by the suite on every host.
+const win32 = IS_WIN
+  ? {
+      user32: dlopen("user32.dll", {
+        GetWindowThreadProcessId: { args: [FFIType.ptr, FFIType.ptr], returns: FFIType.u32 },
+        AttachThreadInput: { args: [FFIType.u32, FFIType.u32, FFIType.bool], returns: FFIType.bool },
+        BringWindowToTop: { args: [FFIType.ptr], returns: FFIType.bool },
+      }).symbols,
+      kernel32: dlopen("kernel32.dll", {
+        GetCurrentThreadId: { args: [], returns: FFIType.u32 },
+      }).symbols,
+    }
+  : null;
 
 // SetForegroundWindow alone is ignored when another process is in front.
 // The Copy bug only shows while the frame is the foreground window.
 function forceForeground(hwnd: number): void {
+  if (!win32) {
+    throw new Error("issue-6269: Win32 only");
+  }
   if (getForegroundWindow() === hwnd) {
     return;
   }
   const fg = getForegroundWindow();
-  const fgThread = user32.symbols.GetWindowThreadProcessId(fg, null);
-  const me = kernel32.symbols.GetCurrentThreadId();
-  user32.symbols.AttachThreadInput(me, fgThread, true);
+  const fgThread = win32.user32.GetWindowThreadProcessId(fg, null);
+  const me = win32.kernel32.GetCurrentThreadId();
+  win32.user32.AttachThreadInput(me, fgThread, true);
   setForegroundWindow(hwnd);
-  user32.symbols.BringWindowToTop(hwnd);
-  user32.symbols.AttachThreadInput(me, fgThread, false);
+  win32.user32.BringWindowToTop(hwnd);
+  win32.user32.AttachThreadInput(me, fgThread, false);
   if (getForegroundWindow() !== hwnd) {
     throw new Error("issue-6269: could not bring SumatraPDF to the foreground");
   }
@@ -206,6 +215,12 @@ async function clickCopy(hover: number, from: { x: number; y: number }): Promise
 }
 
 export async function testit(): Promise<void> {
+  // ng draws About as a gpui hover card. There is no WS_EX_NOACTIVATE popup
+  // whose SetFocus closes it on mouse-down.
+  if (!IS_WIN) {
+    console.log("SKIP issue-6269: About hover is a Win32 no-activate popup");
+    return;
+  }
   setClipboard("issue-6269-sentinel");
   const { proc, frame } = await launchControlled([]);
   try {
