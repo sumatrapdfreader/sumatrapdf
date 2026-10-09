@@ -45,6 +45,8 @@ enum class ImageEditMode {
 
 // Canonical save extension for encoded image bytes (.jpg/.png/…); empty if unknown.
 Str ImageSaveExtFromData(Str data);
+// CMYK JPEG (Adobe polarity) to a CMYK TIFF. False when the bytes are not CMYK.
+bool TrySaveOriginalAsCmykTiff(Str originalData, Str destPath);
 
 // win is the window the editor is shown in and centred on. Either filePath
 // names an image to load or rbmp holds one already rendered; with neither
