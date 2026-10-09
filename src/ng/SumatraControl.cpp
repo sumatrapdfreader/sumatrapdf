@@ -61,6 +61,7 @@
 #include "PagePosition.h"
 #include "SelectionTranslate.h"
 #include "SearchAndDDE.h"
+#include "PdfSync.h"
 #include "FindBar.h"
 #include "FindWindow.h"
 #include "LinkFollow.h"
@@ -819,6 +820,35 @@ static TempStr ClickClearsSelectionResultTemp(Str word, int* exitCodeOut) {
     }
     if (exitCodeOut) {
         *exitCodeOut = cleared ? 0 : 1;
+    }
+    return ToStrTemp(out);
+}
+
+// inverse search: page point -> source file. tests/security-ghsa-jf4v-rw66-j4w2.ts.
+static TempStr InverseSearchResultTemp(Str pdfPath, int pageNo, int x, int y) {
+    str::Builder out;
+    EngineBase* engine = CreateEngineFromFile(pdfPath, nullptr, false);
+    if (!engine) {
+        out.Append(fmt("ERROR engine-create-failed pdf=%s\n", pdfPath));
+    } else {
+        Synchronizer* sync = nullptr;
+        int err = Synchronizer::Create(pdfPath, engine, &sync);
+        if (err != PDFSYNCERR_SUCCESS || !sync) {
+            out.Append(fmt("ERROR sync-create-failed err=%d\n", err));
+        } else {
+            Str srcfilepath;
+            int line = 0, col = 0;
+            Point pt(x, y);
+            int ret = sync->DocToSource(pageNo, pt, srcfilepath, &line, &col);
+            if (ret != PDFSYNCERR_SUCCESS) {
+                out.Append(fmt("ERROR doctosource-failed err=%d\n", ret));
+            } else {
+                out.Append(fmt("ret=%d srcfile=%s line=%d col=%d\n", ret, srcfilepath, line, col));
+            }
+            str::Free(srcfilepath);
+            delete sync;
+        }
+        SafeEngineRelease(&engine);
     }
     return ToStrTemp(out);
 }
@@ -3036,6 +3066,17 @@ static void ExecuteControlRequest(ControlRequest* req) {
             }
             SetNotificationsEnabled(enabled != 0);
             AppendTestResult(req, 0, enabled ? StrL("OK enabled") : StrL("OK disabled"));
+            break;
+        }
+
+        case ControlCmd::TestInverseSearch: {
+            i32 page = 0, x = 0, y = 0;
+            Str pdf = StringArg(req, 0);
+            if (len(pdf) == 0 || !IntArg(req, 1, page) || !IntArg(req, 2, x) || !IntArg(req, 3, y)) {
+                AppendError(req, StrL("TestInverseSearch expects string pdf, int page, int x, int y"));
+                break;
+            }
+            AppendTestResult(req, 0, InverseSearchResultTemp(pdf, page, x, y));
             break;
         }
 
