@@ -370,6 +370,111 @@ static TempStr MarkdownFollowLinkResultTemp(Str href, bool follow, int* exitCode
     return ToStrTemp(out);
 }
 
+// first [start, end) glyph range of `word` on a page
+static bool FindWordGlyphRange(EngineBase* engine, int pageNo, Str word, int* startOut, int* endOut) {
+    if (!engine || len(word) == 0 || !startOut || !endOut) {
+        return false;
+    }
+    int textLen = 0;
+    Str text = engine->GetTextForPage(pageNo, &textLen);
+    if (len(text) == 0) {
+        return false;
+    }
+    int wordLen = Utf8CodepointCount(word);
+    if (wordLen <= 0) {
+        return false;
+    }
+    for (int i = 0; i <= textLen - wordLen; i++) {
+        if (str::Eq(Utf8SliceByCodepoints(text, i, wordLen), word)) {
+            *startOut = i;
+            *endOut = i + wordLen;
+            return true;
+        }
+    }
+    return false;
+}
+
+// tests/issue-find-match-select.ts: GoToFindMatch must scroll to the match
+// and keep it as the current find result when the typed text differs in case.
+static TempStr GoToFindMatchResultTemp(Str word, Str typed, int* exitCodeOut) {
+    str::Builder out;
+    auto fail = [&](Str msg) -> Str {
+        out.Append(msg);
+        out.AppendChar('\n');
+        if (exitCodeOut) {
+            *exitCodeOut = 1;
+        }
+        return ToStrTemp(out);
+    };
+
+    if (str::IsEmptyOrWhiteSpace(word) || str::IsEmptyOrWhiteSpace(typed)) {
+        return fail(StrL("ERROR missing word or typed"));
+    }
+    if (len(gWindows) == 0) {
+        return fail(StrL("NOTREADY no-window"));
+    }
+    MainWindow* win = gWindows[0];
+    DisplayModel* dm = win ? win->AsFixed() : nullptr;
+    if (!dm) {
+        return fail(StrL("NOTREADY no-doc"));
+    }
+    EngineBase* engine = dm->GetEngine();
+    int pageNo = 0;
+    int startGlyph = 0, endGlyph = 0;
+    for (int p = 1; p <= engine->PageCount(); p++) {
+        if (FindWordGlyphRange(engine, p, word, &startGlyph, &endGlyph)) {
+            pageNo = p;
+            break;
+        }
+    }
+    if (pageNo == 0) {
+        return fail(StrL("ERROR word-not-found"));
+    }
+
+    dm->textSearch->SetText(typed);
+    win->ctrl->GoToPage(1, false);
+    DeleteOldSelectionInfo(win, true);
+    GoToFindMatch(win, pageNo, startGlyph, pageNo, endGlyph);
+
+    TextSearch* ts = dm->textSearch;
+    int curPage = ts->startPage;
+    int curStart = ts->startGlyph;
+    int curEnd = ts->endGlyph;
+
+    TempStr matched;
+    Rect* coords = nullptr;
+    int pageTextLen = 0;
+    Str pageTxt = engine->GetTextForPage(pageNo, &pageTextLen, &coords);
+    if (pageTxt && coords && curPage == pageNo && curStart >= 0 && curEnd <= pageTextLen && curStart < curEnd) {
+        matched = Utf8SliceByCodepoints(pageTxt, curStart, curEnd - curStart);
+    }
+
+    bool visible = false;
+    if (coords && curPage == pageNo && curStart >= 0 && curEnd <= pageTextLen && curStart < curEnd) {
+        Rect pr = coords[curStart];
+        for (int i = curStart + 1; i < curEnd; i++) {
+            pr = pr.Union(coords[i]);
+        }
+        Rect sr = dm->CvtToScreen(pageNo, ToRectF(pr));
+        Rect vp = Rect(Point(), dm->viewPort.Size());
+        visible = !vp.Intersect(sr).IsEmpty();
+    }
+
+    bool hasResult = len(ts->result) > 0;
+    bool matchOk = (curPage == pageNo) && (curStart == startGlyph) && (curEnd == endGlyph) && str::Eq(matched, word);
+    bool ok = matchOk && visible && hasResult;
+    if (ok) {
+        out.Append(fmt("OK match=%s page=%d visible=1 highlighted=1\n", matched, pageNo));
+    } else {
+        out.Append(fmt("FAIL expected=%s match=%s page=%d visible=%d highlighted=%d\n", word,
+                       matched ? matched : StrL("(none)"), pageNo, visible ? 1 : 0, hasResult ? 1 : 0));
+    }
+    if (exitCodeOut) {
+        *exitCodeOut = ok ? 0 : 1;
+    }
+    return ToStrTemp(out);
+}
+
 // orig's TocNavigateResultTemp: follow one outline dest and report the page
 static TempStr TocNavigateResultTemp(int destNo, int* exitCodeOut) {
     str::Builder out;
@@ -2560,6 +2665,19 @@ static void ExecuteControlRequest(ControlRequest* req) {
         case ControlCmd::TestFindResultPageColumnClip: {
             int exitCode = 0;
             Str res = FindResultPageColumnClipResultTemp(&exitCode);
+            AppendTestResult(req, exitCode, res);
+            break;
+        }
+
+        case ControlCmd::TestGoToFindMatch: {
+            Str word = StringArg(req, 0);
+            Str typed = StringArg(req, 1);
+            if (len(word) == 0 || len(typed) == 0) {
+                AppendError(req, StrL("TestGoToFindMatch expects string word, string typed"));
+                break;
+            }
+            int exitCode = 0;
+            Str res = GoToFindMatchResultTemp(word, typed, &exitCode);
             AppendTestResult(req, exitCode, res);
             break;
         }
