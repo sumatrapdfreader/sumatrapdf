@@ -17,7 +17,7 @@ function dot() {
   if (typeof Bun !== "undefined") Bun.stdout.flush?.();
 }
 
-const dirs = ["X:\\sumtest\\bugs\\", "C:\\Users\\kjk\\OneDrive\\!sumatra\\bugs\\"];
+const dirs = ["X:\\backup\\sumtest\\bugs\\", "C:\\Users\\kjk\\OneDrive\\!sumatra\\bugs\\"];
 
 // --- Step 1: rename "bug<number><rest>" to "bug-<number><rest>" ---
 
