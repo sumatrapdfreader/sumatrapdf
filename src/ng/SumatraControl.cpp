@@ -738,6 +738,90 @@ static TempStr ContextMenuSelectionResultTemp(Str word1, Str word2, Str cursorWo
     return ToStrTemp(out);
 }
 
+// a spot on pageNo with no text under it, in canvas pixels
+static Point FindEmptySpotOnPage(MainWindow* win, DisplayModel* dm, int pageNo) {
+    Rect client = Rect(0, 0, win->canvasRc.dx, win->canvasRc.dy);
+    constexpr int kStep = 8;
+    for (int y = client.y + kStep; y < client.y + client.dy; y += kStep) {
+        for (int x = client.x + kStep; x < client.x + client.dx; x += kStep) {
+            Point pt{x, y};
+            if (dm->GetPageNoByPoint(pt) != pageNo) {
+                continue;
+            }
+            if (dm->IsOverText(pt)) {
+                continue;
+            }
+            if (dm->GetElementAtPos(pt, nullptr)) {
+                continue;
+            }
+            return pt;
+        }
+    }
+    return Point{};
+}
+
+// tests/issue-5881.ts: a click on empty page drops the text selection
+static TempStr ClickClearsSelectionResultTemp(Str word, int* exitCodeOut) {
+    str::Builder out;
+    auto fail = [&](Str msg) -> Str {
+        out.Append(msg);
+        out.AppendChar('\n');
+        if (exitCodeOut) {
+            *exitCodeOut = 1;
+        }
+        return ToStrTemp(out);
+    };
+
+    if (str::IsEmptyOrWhiteSpace(word)) {
+        return fail(StrL("ERROR missing word"));
+    }
+    if (len(gWindows) == 0) {
+        return fail(StrL("NOTREADY no-window"));
+    }
+    MainWindow* win = gWindows[0];
+    DisplayModel* dm = win ? win->AsFixed() : nullptr;
+    if (!dm) {
+        return fail(StrL("NOTREADY no-doc"));
+    }
+    const int pageNo = 1;
+    double wx = 0, wy = 0;
+    if (!FindWordCenter(dm->GetEngine(), pageNo, word, &wx, &wy)) {
+        return fail(StrL("ERROR word-not-found"));
+    }
+
+    WindowTab* tab = win->CurrentTab();
+    DeleteOldSelectionInfo(win, true);
+    dm->textSelection->StartAt(pageNo, wx, wy);
+    dm->textSelection->SelectUpTo(pageNo, wx, wy);
+    dm->textSelection->SelectWordAt(pageNo, wx, wy);
+    tab->selectionOnPage = SelectionOnPage::FromTextSelect(&dm->textSelection->result);
+    win->showSelection = tab->selectionOnPage != nullptr;
+
+    bool isTextOnly = false;
+    TempStr selected = str::DupTemp(GetSelectedTextTemp(tab, StrL(" "), isTextOnly));
+    if (len(selected) == 0) {
+        return fail(StrL("ERROR empty-selection"));
+    }
+
+    Point pt = FindEmptySpotOnPage(win, dm, pageNo);
+    if (pt.IsEmpty()) {
+        return fail(StrL("ERROR no-empty-spot"));
+    }
+    DocCanvasClick(win, pt.x, pt.y);
+
+    TempStr after = GetSelectedTextTemp(tab, StrL(" "), isTextOnly);
+    bool cleared = (len(after) == 0) && !win->showSelection;
+    if (cleared) {
+        out.Append(fmt("OK selected=%s cleared at %d,%d\n", selected, pt.x, pt.y));
+    } else {
+        out.Append(fmt("FAIL selected=%s still=%s showSelection=%d\n", selected, after, (int)win->showSelection));
+    }
+    if (exitCodeOut) {
+        *exitCodeOut = cleared ? 0 : 1;
+    }
+    return ToStrTemp(out);
+}
+
 static TempStr ResolveUnsavedChangesResultTemp(Str action, Str path, int* exitCodeOut) {
     str::Builder out;
     auto fail = [&](Str msg, int code = 1) -> TempStr {
@@ -2441,6 +2525,13 @@ static void ExecuteControlRequest(ControlRequest* req) {
             IntArg(req, 1, pageNo);
             int exitCode = 0;
             Str res = FavoriteNavResultTemp(StringArg(req, 0), pageNo, &exitCode);
+            AppendTestResult(req, exitCode, res);
+            break;
+        }
+
+        case ControlCmd::TestClickClearsSelection: {
+            int exitCode = 0;
+            Str res = ClickClearsSelectionResultTemp(StringArg(req, 0), &exitCode);
             AppendTestResult(req, exitCode, res);
             break;
         }
