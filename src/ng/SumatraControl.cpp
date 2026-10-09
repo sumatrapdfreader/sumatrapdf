@@ -77,6 +77,7 @@
 #include "gui/DocCanvas.h"
 #include "gui/Sidebar.h"
 #include "SumatraDialogs.h"
+#include "DocumentProperties.h"
 #include "NavFilesInFolder.h"
 #include "EngineAll.h"
 #include "Annotation.h"
@@ -2006,7 +2007,9 @@ static void ExecuteControlRequest(ControlRequest* req) {
 
         case ControlCmd::TestDocumentProperties: {
             int exitCode = 0;
-            Str res = DocumentPropertiesResultTemp(&exitCode);
+            Str action = StringArg(req, 0);
+            Str res = str::Eq(action, StrL("buttons")) ? PropertiesDialogButtonsTemp(&exitCode)
+                                                       : DocumentPropertiesResultTemp(&exitCode);
             AppendTestResult(req, exitCode, res);
             break;
         }

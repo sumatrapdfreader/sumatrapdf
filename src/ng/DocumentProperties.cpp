@@ -905,6 +905,28 @@ bool IsPropertiesDialogVisible() {
     return gProps.visible;
 }
 
+// Which action buttons the open properties dialog has.
+TempStr PropertiesDialogButtonsTemp(int* exitCodeOut) {
+    if (!gProps.visible) {
+        if (exitCodeOut) {
+            *exitCodeOut = 2;
+        }
+        return str::DupTemp(StrL("NOTREADY no-properties-window"));
+    }
+    int viewCert = 0;
+    int updateEutl = 0;
+#if OS_WIN
+    if (gProps.certs) {
+        viewCert = 1;
+        updateEutl = 1;
+    }
+#endif
+    if (exitCodeOut) {
+        *exitCodeOut = 0;
+    }
+    return fmt("copy=1 viewCert=%d updateEutl=%d", viewCert, updateEutl);
+}
+
 // orig's SavePropertiesWindowPos: only a window the user moved is remembered
 static void SavePropertiesWindowPos() {
     Rect rc = ToolWindowRect(gProps.tw);
