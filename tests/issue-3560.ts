@@ -9,7 +9,8 @@
 // is blue, then reads the colours of the bookmarks tree straight off the screen.
 
 import { writeFileSync } from "node:fs";
-import { tmpPath, assemblePdf } from "./util";
+import { ControlCommand } from "./control";
+import { tmpPath, assemblePdf, USE_NG } from "./util";
 import { launchControlled, killAndWait } from "./win-automation";
 import { captureWindowPixels, findChildWindow, isZoomed, moveWindow, showWindow, sleep, SW_RESTORE } from "./winapi";
 
@@ -29,20 +30,20 @@ function makePdf(): string {
 }
 
 type Tally = { red: number; blue: number };
+type Px = { w: number; h: number; data: Uint8Array };
+type Box = { x: number; y: number; dx: number; dy: number };
 
-// count clearly red and clearly blue pixels in the bookmarks tree
-function countColoredText(tree: number): Tally {
-  const cap = captureWindowPixels(tree);
-  if (!cap) {
-    throw new Error("could not capture the bookmarks tree");
-  }
+// count clearly red and clearly blue pixels. The right half is skipped: page
+// numbers there are drawn in the theme's accent colour.
+function countColoredText(cap: Px, box?: Box): Tally {
   const res: Tally = { red: 0, blue: 0 };
-  const { w, h, data } = cap;
-  // only the left half: the page numbers on the right are drawn in the theme's
-  // accent colour and would be counted as coloured text
-  const maxX = Math.floor(w / 2);
-  for (let y = 0; y < h; y++) {
-    for (let x = 0; x < maxX; x++) {
+  const x0 = Math.max(0, box?.x ?? 0);
+  const y0 = Math.max(0, box?.y ?? 0);
+  const x1 = Math.min(cap.w, x0 + Math.floor((box?.dx ?? cap.w) / 2));
+  const y1 = Math.min(cap.h, y0 + (box?.dy ?? cap.h));
+  const { w, data } = cap;
+  for (let y = y0; y < y1; y++) {
+    for (let x = x0; x < x1; x++) {
       const i = (y * w + x) * 4;
       const b = data[i]!;
       const g = data[i + 1]!;
@@ -57,6 +58,30 @@ function countColoredText(tree: number): Tally {
     }
   }
   return res;
+}
+
+function treeColors(tree: number): Tally {
+  const cap = captureWindowPixels(tree);
+  if (!cap) {
+    throw new Error("could not capture the bookmarks tree");
+  }
+  return countColoredText(cap);
+}
+
+// ng draws the outline in the frame. The layout rect is in dips.
+async function ngBookmarkColors(client: { request: Function }, frame: number): Promise<Tally | null> {
+  const raw = String((await client.request(ControlCommand.TestLayout, ["get"]))[1] ?? "");
+  const m = /item name=bookmarks visible=1 rect=(-?\d+),(-?\d+),(-?\d+),(-?\d+)/.exec(raw);
+  if (!m || +m[3]! <= 0 || +m[4]! <= 0) {
+    return null;
+  }
+  const scale = Number(/canvasScale=([0-9.]+)/.exec(raw)?.[1] ?? 1) || 1;
+  const px = (d: number) => Math.round(d / scale);
+  const cap = captureWindowPixels(frame);
+  if (!cap) {
+    throw new Error("could not capture the bookmarks tree");
+  }
+  return countColoredText(cap, { x: px(+m[1]!), y: px(+m[2]!), dx: px(+m[3]!), dy: px(+m[4]!) });
 }
 
 export async function testit(): Promise<void> {
@@ -76,11 +101,22 @@ export async function testit(): Promise<void> {
     let tree = 0;
     let n = { red: 0, blue: 0 };
     while (Date.now() < deadline) {
-      tree = findChildWindow(frame, "SysTreeView32");
-      if (tree) {
-        n = countColoredText(tree);
-        if (n.red >= 40 && n.blue >= 40) {
-          break;
+      if (USE_NG) {
+        const colors = await ngBookmarkColors(client, frame);
+        if (colors) {
+          tree = frame;
+          n = colors;
+          if (n.red >= 40 && n.blue >= 40) {
+            break;
+          }
+        }
+      } else {
+        tree = findChildWindow(frame, "SysTreeView32");
+        if (tree) {
+          n = treeColors(tree);
+          if (n.red >= 40 && n.blue >= 40) {
+            break;
+          }
         }
       }
       await sleep(40);
