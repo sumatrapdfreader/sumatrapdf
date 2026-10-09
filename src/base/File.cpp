@@ -1536,14 +1536,23 @@ bool Delete(Str filePath) {
 }
 
 bool DeleteFileToTrash(Str path) {
-    TempWStr pathW = ToWStrTemp(path);
+    // SHFileOperation pumps messages. A temp-arena path is wiped when that
+    // pumps a frame, and the shell then reports the file as missing.
+    WStr pathW = ToWStr(path);
     int n = len(pathW) + 2;
-    TempWStr pathDoubleTerminated = WStr(AllocArrayTemp<WCHAR>(n), n);
-    wstr::BufSet(pathDoubleTerminated, pathW);
+    WCHAR* buf = AllocArray<WCHAR>(nullptr, n);
+    if (buf && pathW.s && len(pathW) > 0) {
+        memcpy(buf, pathW.s, (size_t)len(pathW) * sizeof(WCHAR));
+    }
+    wstr::Free(pathW);
+    if (!buf) {
+        return false;
+    }
     FILEOP_FLAGS flags = FOF_NO_UI | FOF_ALLOWUNDO;
     uint op = FO_DELETE;
-    SHFILEOPSTRUCTW shfo = {nullptr, op, pathDoubleTerminated.s, nullptr, flags, FALSE, nullptr, nullptr};
+    SHFILEOPSTRUCTW shfo = {nullptr, op, buf, nullptr, flags, FALSE, nullptr, nullptr};
     int res = SHFileOperationW(&shfo);
+    Free(nullptr, buf);
     return res == 0;
 }
 
