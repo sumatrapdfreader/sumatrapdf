@@ -784,9 +784,11 @@ TempStr ReadingAutoScrollBarStateTemp(int* exitCodeOut) {
         out.Append(fmt("NOTREADY no-bar on=%d scrollY=%d\n", (int)on, scrollY));
         return finish(2);
     }
-    out.Append(fmt("OK visible=1 paused=%d atEnd=%d dir=%d speed=%d scrollY=%d page=%d pages=%d\n",
+    // ng draws the bar in the frame, so this is the frame hwnd
+    HWND hwnd = MainWindowHwnd(win);
+    out.Append(fmt("OK visible=1 paused=%d atEnd=%d dir=%d speed=%d scrollY=%d page=%d pages=%d hwnd=%d\n",
                    (int)tab->autoScroll.paused, (int)tab->autoScroll.atEnd, tab->autoScroll.dir,
-                   (int)(CurrentSpeed() + 0.5f), scrollY, page, pages));
+                   (int)(CurrentSpeed() + 0.5f), scrollY, page, pages, (int)(uintptr_t)hwnd));
     out.Append(fmt("speedIdx=%d speedCount=%d label=%s\n", ClosestSpeedIdx(CurrentSpeed()), SpeedCount(),
                    SpeedLabelTemp(tab)));
     out.Append(fmt("status=%s\n", StatusTextTemp(tab)));
