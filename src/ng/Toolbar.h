@@ -117,3 +117,5 @@ bool IsToolbarLocationBoxFocused(MainWindow*, bool chapter);
 void ToolbarFocusLocationBox(MainWindow*, bool chapter);
 // Escape leaves the page box; the shell asks before it does anything else
 bool ToolbarOnEscape(MainWindow*);
+// orig's canvas press: a pinned hover menu closes when the page is clicked
+void HideToolbarHoverDropdown(MainWindow*);

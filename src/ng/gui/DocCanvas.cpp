@@ -2752,6 +2752,8 @@ static bool IsTripleClick() {
 }
 
 static void OnMouseLeftButtonDown(MainWindow* win, int x, int y) {
+    // orig closes a pinned hover menu when the page is pressed
+    HideToolbarHoverDropdown(win);
     win->pressOnlyDeselected = false;
     RefHoverOnCanvasLeftButtonDown(win->refHover);
     if (ReadingBarOnLeftDown(win, x, y)) {

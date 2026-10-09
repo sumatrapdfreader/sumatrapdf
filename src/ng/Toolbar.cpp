@@ -1257,8 +1257,11 @@ static bool CmdHasHoverDropdown(int cmdId) {
     return cmdId == CmdZoomIn || cmdId == CmdZoomOut || cmdId == CmdSaveAnnotations || CmdIsAnnotColorDropdown(cmdId);
 }
 
-static void HideToolbarHoverDropdown(MainWindow* win) {
-    Toolbar* tb = Tb(win);
+void HideToolbarHoverDropdown(MainWindow* win) {
+    Toolbar* tb = win ? win->toolbar : nullptr;
+    if (!tb) {
+        return;
+    }
     tb->hoverCmdId = 0;
     tb->hoverAnchorCmdId = 0;
     tb->hoverPendingCmdId = 0;
@@ -1590,15 +1593,26 @@ static gp::El* BuildAnnotColorStrip(MainWindow* win, gp::Ctx* cx) {
         return nullptr;
     }
     ToolbarUI* ui = Ui(win);
-    BeginHoverDump(ui, len(colors));
+    bool hasThickness = cmdId == CmdCreateAnnotInk;
+    int width = 0;
+    if (hasThickness) {
+        width = limitValue(gSettings->annotations.inkBorderWidth, kInkThicknessMin, kInkThicknessMax);
+    }
+    // the slider is one more slot; reserving after the swatches would move the
+    // bounds the swatches already point at
+    BeginHoverDump(ui, len(colors) + (hasThickness ? 1 : 0));
     for (int i = 0; i < len(colors); i++) {
         bool on = SameColorAndAlpha(colors[i], current);
         AddHoverDumpItem(ui, cmdId, SerializeColorTemp(colors[i]), on, false);
     }
+    int sliderIdx = -1;
+    if (hasThickness) {
+        sliderIdx = len(ui->hoverItems);
+        AddHoverDumpItem(ui, cmdId, fmt("thickness=%d", width), false, false);
+    }
     VecReset(ui->stripCmds);
 
     const gp::Theme& th = gp::ThemeNow(cx->app);
-    bool hasThickness = cmdId == CmdCreateAnnotInk;
     gp::El* box = gp::Div(cx->a)
                       ->FlexCol()
                       ->Gap(6)
@@ -1654,7 +1668,6 @@ static gp::El* BuildAnnotColorStrip(MainWindow* win, gp::Ctx* cx) {
     box->Child(colorRow);
     float stripDx = (float)(len(colors) * (DpiScale(20) + 4) + 2 * DpiScale(6)) + (float)tb->iconSize + 2 * pad;
     if (hasThickness) {
-        int width = limitValue(gSettings->annotations.inkBorderWidth, kInkThicknessMin, kInkThicknessMax);
         if (!ui->inkThicknessInit) {
             ui->inkThickness = gp::SliderStateNew(kInkThicknessMin, kInkThicknessMax, gp::SliderSingle((float)width));
             ui->inkThicknessInit = true;
@@ -1668,7 +1681,8 @@ static gp::El* BuildAnnotColorStrip(MainWindow* win, gp::Ctx* cx) {
         sliderRow->Child(gpc::Slider::New(cx, GStrL("tb-ink-thickness"), &ui->inkThickness)
                              ->OnChange(gp::ListenTo(ui->view, &ToolbarView::OnInkThickness))
                              ->W(160)
-                             ->IntoEl());
+                             ->IntoEl()
+                             ->BoundsOut(&ui->hoverItems[sliderIdx].bounds));
         sliderRow->Child(gp::TextEl(cx->a, GpuiDup(cx->a, fmt("%d", width)))->Font(12)->Fg(th.foreground)->MinW(16));
         box->Child(sliderRow);
         stripDx = std::max(stripDx, (float)DpiScale(240));

@@ -63,6 +63,8 @@ constexpr int kCornerRadius = 10;
 constexpr int kButtonRadius = 6;
 // ranges of the number sliders; widths and sizes are in PDF points
 constexpr int kBorderWidthMax = 12;
+// orig's ink Thickness slider stops at 16, including on a selected stroke
+constexpr int kInkThicknessMax = 16;
 constexpr int kFreeTextSizeMin = 6;
 constexpr int kFreeTextSizeMax = 72;
 constexpr int kOpacityPercentMin = 10;
@@ -163,6 +165,10 @@ struct AnnotEditToolbar {
     int popupThickness = -1;
     int popupThicknessMin = 1;
     Str popupThicknessLabel; // owned
+    gp::SliderState popupSlider{};
+    bool popupSliderLive = false;
+    // the thickness slider, in window dips; 0 until it has been laid out
+    gp::Bounds thicknessBounds{};
     int sliderMin = 0;
     int sliderMax = 100;
     int sliderValue = 0;
@@ -688,6 +694,9 @@ static void ClosePopup(AnnotEditToolbar* tb) {
     tb->popupOtherFontIdx = -1;
     VecReset(tb->popupColors);
     tb->editBounds = {};
+    tb->thicknessBounds = {};
+    tb->popupSliderLive = false;
+    tb->popupThickness = -1;
 }
 
 // defined with the color chips: the pencil's dialog
@@ -1848,7 +1857,7 @@ struct AnnotEditView {
     static void OnListItem(AnnotEditView* self, gp::Ctx* cx, const gp::ClickEvent*, int64_t idx);
     static void OnFontItem(AnnotEditView* self, gp::Ctx* cx, const gp::ClickEvent*, int64_t idx);
     static void OnFontScroll(AnnotEditView* self, gp::Ctx* cx, const gp::ScrollEvent* ev);
-    static void OnSliderStep(AnnotEditView* self, gp::Ctx* cx, const gp::ClickEvent*, int64_t step);
+    static void OnPopupSlider(AnnotEditView* self, gp::Ctx* cx, const gp::SliderEvent* ev);
     static void OnContentsKey(AnnotEditView* self, gp::Ctx* cx, const gp::KeyEvent* ev);
     static void OnInPlaceKey(AnnotEditView* self, gp::Ctx* cx, const gp::KeyEvent* ev);
     static void OnInPlaceDownOut(AnnotEditView* self, gp::Ctx* cx, const gp::MouseDownEvent* ev);
@@ -1962,21 +1971,28 @@ void AnnotEditView::OnFontScroll(AnnotEditView* self, gp::Ctx* cx, const gp::Scr
     gp::Notify(cx);
 }
 
-void AnnotEditView::OnSliderStep(AnnotEditView* self, gp::Ctx* cx, const gp::ClickEvent*, int64_t step) {
+void AnnotEditView::OnPopupSlider(AnnotEditView* self, gp::Ctx* cx, const gp::SliderEvent* ev) {
     AnnotEditToolbar* tb = self->win ? self->win->annotEditToolbar : nullptr;
-    if (!tb) {
+    if (!tb || !ev) {
         return;
     }
-    if (tb->popupKind == AnnotPopupKind::Colors) {
-        int v = limitValue(tb->popupThickness + (int)step, tb->popupThicknessMin, kBorderWidthMax);
+    int minV = (int)tb->popupSlider.min;
+    int maxV = (int)tb->popupSlider.max;
+    int v = limitValue((int)(ev->value.End() + 0.5f), minV, maxV);
+    bool thickness = tb->popupKind == AnnotPopupKind::Colors;
+    if (thickness) {
         tb->popupThickness = v;
-        ChipThicknessPicked(tb, v);
-        gp::Notify(cx);
-        return;
+    } else {
+        tb->sliderValue = v;
     }
-    int v = limitValue(tb->sliderValue + (int)step, tb->sliderMin, tb->sliderMax);
-    tb->sliderValue = v;
-    SliderValuePicked(tb, v);
+    // orig rewrites the annotation when the slider is let go
+    if (ev->kind == gp::SliderEventKind::Release) {
+        if (thickness) {
+            ChipThicknessPicked(tb, v);
+        } else {
+            SliderValuePicked(tb, v);
+        }
+    }
     gp::Notify(cx);
 }
 
@@ -2253,28 +2269,36 @@ static gp::El* BuildPopup(AnnotEditToolbar* tb, gp::Ctx* cx) {
         grid->Child(editBtn);
         card->Child(grid);
     }
-    // a slider is "- value +": gpui's Slider reports through an entity
-    // subscription a per-use popup cannot hold (see "gpui gaps")
     bool hasSlider = tb->popupKind == AnnotPopupKind::Slider || tb->popupThickness >= 0;
     if (hasSlider) {
         bool thickness = tb->popupKind == AnnotPopupKind::Colors;
         int value = thickness ? tb->popupThickness : tb->sliderValue;
+        int minV = thickness ? tb->popupThicknessMin : tb->sliderMin;
+        int maxV = thickness ? kInkThicknessMax : tb->sliderMax;
         Str label = thickness ? tb->popupThicknessLabel : Str{};
+        if (!tb->popupSliderLive) {
+            tb->popupSlider = gp::SliderStateNew((float)minV, (float)maxV, gp::SliderSingle((float)value));
+            tb->popupSliderLive = true;
+        } else {
+            gp::SliderSetLimits(&tb->popupSlider, (float)minV, (float)maxV);
+            if (!tb->popupSlider.dragging) {
+                gp::SliderSetValue(&tb->popupSlider, gp::SliderSingle((float)value));
+            }
+        }
+        int shown = (int)(tb->popupSlider.value.End() + 0.5f);
         gp::El* row = gp::Div(cx->a)->FlexRow()->ItemsCenter()->Gap(6);
         if (len(label) > 0) {
             row->Child(gp::TextEl(cx->a, GpuiDup(cx->a, label))->Font(12)->Fg(ToGpui(BarMutedTextColor())));
         }
-        row->Child(gpc::Button::New(cx, GStrL("annot-slider-dn"))
-                       ->Label(GStrL("-"))
-                       ->WithSize(gp::UiSize::Small)
-                       ->OnClick(gp::ListenTo(gAnnotEditView, &AnnotEditView::OnSliderStep, (intptr_t)-1))
-                       ->IntoEl());
-        row->Child(gp::TextEl(cx->a, GpuiDup(cx->a, fmt("%d", value)))->Font(13)->Fg(ToGpui(fg))->W(32));
-        row->Child(gpc::Button::New(cx, GStrL("annot-slider-up"))
-                       ->Label(GStrL("+"))
-                       ->WithSize(gp::UiSize::Small)
-                       ->OnClick(gp::ListenTo(gAnnotEditView, &AnnotEditView::OnSliderStep, (intptr_t)1))
-                       ->IntoEl());
+        gp::El* slider = gpc::Slider::New(cx, GStrL("annot-popup-slider"), &tb->popupSlider)
+                             ->OnChange(gp::ListenTo(gAnnotEditView, &AnnotEditView::OnPopupSlider))
+                             ->W(160)
+                             ->IntoEl();
+        if (thickness) {
+            slider->BoundsOut(&tb->thicknessBounds);
+        }
+        row->Child(slider);
+        row->Child(gp::TextEl(cx->a, GpuiDup(cx->a, fmt("%d", shown)))->Font(13)->Fg(ToGpui(fg))->MinW(16));
         card->Child(row);
     }
     if (tb->popupKind == AnnotPopupKind::List) {
@@ -2553,8 +2577,13 @@ TempStr AnnotColorPopupStateTemp(MainWindow* win) {
         n++;
     }
     gp::Bounds e = tb->editBounds;
-    return fmt("annotColorPopup visible=1 n=%d placed=0,0,0,0 thickness= edit=%d,%d,%d,%d swatches=%s\n", n, (int)e.x,
-               (int)e.y, (int)e.w, (int)e.h, ToStrTemp(swatches));
+    Str thickness = StrL("");
+    gp::Bounds th = tb->thicknessBounds;
+    if (tb->popupThickness >= 0 && th.w >= 1.f && th.h >= 1.f) {
+        thickness = fmt("%d:%d,%d,%d,%d", tb->popupThickness, (int)th.x, (int)th.y, (int)th.w, (int)th.h);
+    }
+    return fmt("annotColorPopup visible=1 n=%d placed=0,0,0,0 thickness=%s edit=%d,%d,%d,%d swatches=%s\n", n,
+               thickness, (int)e.x, (int)e.y, (int)e.w, (int)e.h, ToStrTemp(swatches));
 }
 
 // --- selection and the annotation lists -------------------------------------
