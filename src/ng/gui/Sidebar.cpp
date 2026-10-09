@@ -967,18 +967,33 @@ static TocItem* VisibleTocAt(TocItem* item, int& idx) {
     return nullptr;
 }
 
+// visible rows, and whether a bookmark is selected (the native tree's caret)
+static TempStr TocProbeRows(MainWindow* win, TocItem* root) {
+    SidebarUI* ui = win ? win->sidebar : nullptr;
+    int sel = ui && ui->tocSel ? 1 : 0;
+    return fmt("tocRows=%d tocSel=%d", root ? CountVisibleToc(root) : 0, sel);
+}
+
 // count / select / expand the bookmarks the native tree drives with TVM_*
 TempStr SidebarTestToc(MainWindow* win, Str op, int arg) {
     TocTree* tree = win ? CurrentTocTree(win) : nullptr;
     TocItem* root = tree && tree->root ? tree->root->child : nullptr;
     if (!root) {
         if (str::Eq(op, StrL("count"))) {
-            return StrL("tocRows=0");
+            return TocProbeRows(win, nullptr);
         }
         return StrL("ERR no-toc");
     }
     if (str::Eq(op, StrL("count"))) {
-        return fmt("tocRows=%d", CountVisibleToc(root));
+        return TocProbeRows(win, root);
+    }
+    // TVE_COLLAPSE on each top-level item; children stay expanded underneath
+    if (str::Eq(op, StrL("collapse-roots"))) {
+        for (TocItem* item = root; item; item = item->next) {
+            TocSetExpanded(item, false);
+        }
+        AppShellInvalidate(win);
+        return TocProbeRows(win, root);
     }
     SidebarUI* ui = Ui(win);
     if (str::Eq(op, StrL("sel"))) {

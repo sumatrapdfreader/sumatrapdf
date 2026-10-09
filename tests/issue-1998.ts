@@ -18,7 +18,8 @@
 
 import { copyFileSync, existsSync, mkdirSync, rmSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
-import { cmdId, tmpPath } from "./util";
+import { ControlCommand } from "./control";
+import { cmdId, tmpPath, USE_NG } from "./util";
 import { launchControlled, sendCommandSync, killAndWait } from "./win-automation";
 import { collapseTreeRoots, countVisibleTreeRows, findChildWindow, sleep, treeGetSelection } from "./winapi";
 
@@ -42,6 +43,33 @@ const SETTINGS = [
   ``,
 ].join("\n");
 
+// ng draws the outline in the sidebar; there is no SysTreeView32 to message
+async function ngToc(client: Awaited<ReturnType<typeof launchControlled>>["client"], op: string) {
+  const raw = String((await client.request(ControlCommand.TestUiState, [op]))[1] ?? "");
+  const m = /tocRows=(-?\d+) tocSel=(\d)/.exec(raw);
+  if (!m) {
+    throw new Error(`toc state: ${raw}`);
+  }
+  return { rows: +m[1]!, sel: m[2] === "1" };
+}
+
+function checkExpanded(collapsed: number, after: number, hasSelection: boolean) {
+  console.log(`  collapsed rows=${collapsed}, after-expand rows=${after}, hasSelection=${hasSelection}`);
+  if (collapsed <= 0) {
+    throw new Error(`baseline collapsed tree has no rows (${collapsed}) -- test setup wrong`);
+  }
+  if (!hasSelection) {
+    throw new Error(`CmdExpandToCurrentPage did not select a TOC entry`);
+  }
+  if (after <= collapsed) {
+    throw new Error(
+      `CmdExpandToCurrentPage did not expand the tree to the current page ` +
+        `(visible rows ${collapsed} -> ${after}; expected an increase)`,
+    );
+  }
+  console.log(`  expanded TOC to current page: ${collapsed} -> ${after} visible rows ✓`);
+}
+
 export async function testit(): Promise<void> {
   if (!existsSync(TOC_PDF)) {
     console.log(`  SKIP: TOC test PDF not found: ${TOC_PDF}`);
@@ -63,6 +91,36 @@ export async function testit(): Promise<void> {
   const { proc, client, frame } = await launchControlled(["-appdata", appdata, pdf]);
   try {
     await client.waitForRenderIdle();
+
+    if (USE_NG) {
+      const deadline = Date.now() + 8000;
+      let loaded = await ngToc(client, "count");
+      while (Date.now() < deadline && loaded.rows <= 0) {
+        await sleep(40);
+        loaded = await ngToc(client, "count");
+      }
+      if (loaded.rows <= 0) {
+        throw new Error("could not find the TOC tree window");
+      }
+      sendCommandSync(frame, CmdGoToLastPage);
+      await client.waitForRenderIdle();
+      const collapsed = (await ngToc(client, "collapse-roots")).rows;
+      sendCommandSync(frame, CmdExpandToCurrentPage);
+      const afterDeadline = Date.now() + 3000;
+      let after = collapsed;
+      let hasSelection = false;
+      while (Date.now() < afterDeadline) {
+        const state = await ngToc(client, "count");
+        after = state.rows;
+        hasSelection = state.sel;
+        if (after > collapsed && hasSelection) {
+          break;
+        }
+        await sleep(30);
+      }
+      checkExpanded(collapsed, after, hasSelection);
+      return;
+    }
 
     // wait for the TOC tree to load with items
     const deadline = Date.now() + 8000;
@@ -98,22 +156,7 @@ export async function testit(): Promise<void> {
       await sleep(30);
     }
     const hasSelection = treeGetSelection(tree) !== 0n;
-
-    console.log(`  collapsed rows=${collapsed}, after-expand rows=${after}, hasSelection=${hasSelection}`);
-
-    if (collapsed <= 0) {
-      throw new Error(`baseline collapsed tree has no rows (${collapsed}) -- test setup wrong`);
-    }
-    if (!hasSelection) {
-      throw new Error(`CmdExpandToCurrentPage did not select a TOC entry`);
-    }
-    if (after <= collapsed) {
-      throw new Error(
-        `CmdExpandToCurrentPage did not expand the tree to the current page ` +
-          `(visible rows ${collapsed} -> ${after}; expected an increase)`,
-      );
-    }
-    console.log(`  expanded TOC to current page: ${collapsed} -> ${after} visible rows ✓`);
+    checkExpanded(collapsed, after, hasSelection);
   } finally {
     client.close();
     await killAndWait(proc);
