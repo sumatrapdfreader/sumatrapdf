@@ -2257,6 +2257,20 @@ static void ExecuteControlRequest(ControlRequest* req) {
             break;
         }
 
+        case ControlCmd::TestTtsEngineCrash: {
+            Str action = StringArg(req, 0);
+            if (str::EqI(action, StrL("crash"))) {
+                str::ReplaceWithCopy(&gSettings->readAloudVoiceId, StrL("test-voice"));
+                if (!TtsTestEngineCrash()) {
+                    AppendTestResult(req, 1, StrL("FAIL could not start the crashing thread"));
+                    break;
+                }
+            }
+            TempStr state = fmt("crashed=%d voice='%s'", (int)TtsEngineCrashed(), gSettings->readAloudVoiceId);
+            AppendTestResult(req, 0, state);
+            break;
+        }
+
         case ControlCmd::StartPerfLog:
             StartPerfLog();
             AppendTestResult(req, 0, StrL("OK"));
