@@ -601,6 +601,8 @@ void AppShellAfterNativeDrag(MainWindow* win) {
     AppShellInvalidate(win);
 }
 
+static bool NotifShownNow(MainWindow* win, NotificationWnd* n);
+
 TempStr AppShellUiStateTemp(MainWindow* win) {
     gp::Window* gw = win ? win->gpuiWin : nullptr;
     if (!gw || !win->shell) {
@@ -660,6 +662,20 @@ TempStr AppShellUiStateTemp(MainWindow* win) {
     bool dialogUp = dlgWin || DialogsAccelTable(win) != DialogAccels::All;
     out.Append(fmt(" popup=%d dialog=%d overlay=%d", IsTrackedPopupOpenInApp(gw->app) ? 1 : 0, dialogUp ? 1 : 0,
                    paletteWin || (view && view->overlayUp) ? 1 : 0));
+    // the toast is drawn in the frame, so a test cannot find it as a child window
+    int nNotif = 0;
+    str::Builder notifs;
+    for (NotificationWnd* n : GetNotifications()) {
+        if (!NotifShownNow(win, n)) {
+            continue;
+        }
+        if (nNotif > 0) {
+            notifs.AppendChar('|');
+        }
+        notifs.Append(n->msg);
+        nNotif++;
+    }
+    out.Append(fmt(" notif=%d notifMsg='%s' rtl=%d", nNotif, ToStrTemp(notifs), IsUIRtl() ? 1 : 0));
     return ToStrTemp(out);
 }
 

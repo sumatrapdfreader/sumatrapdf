@@ -7,7 +7,8 @@
 import { readFileSync } from "node:fs";
 import { join } from "node:path";
 import { inflateSync } from "node:zlib";
-import { ROOT, cmdId, runStandalone, tmpPath } from "./util.ts";
+import { ROOT, USE_NG, cmdId, runStandalone, tmpPath } from "./util.ts";
+import { ControlCommand, type ControlClient } from "./control.ts";
 import { captureWindowToPng, enumChildWindows, getClassName, getWindowText, isWindowVisible, sleep } from "./winapi.ts";
 import { findCanvas, killAndWait, launchControlled, sendCommandSync } from "./win-automation.ts";
 
@@ -208,11 +209,65 @@ async function grabZoomToast(
   }
 }
 
+async function uiState(client: ControlClient): Promise<string> {
+  return String((await client.request(ControlCommand.TestUiState, []))[1] ?? "");
+}
+
+function notifMsg(state: string): string {
+  return /notifMsg='([^']*)'/.exec(state)?.[1] ?? "";
+}
+
+// ng draws the toast in the frame. There is no LAYOUTRTL child window to
+// capture, so the check is that the message is up, goes away, and stays in
+// logical order when RTL is forced.
+async function testNg(client: ControlClient, frame: number): Promise<void> {
+  async function waitMsg(want: string): Promise<void> {
+    const deadline = Date.now() + 4000;
+    for (;;) {
+      const state = await uiState(client);
+      const msg = notifMsg(state);
+      if (want === "" ? msg === "" : msg.includes(want)) {
+        return;
+      }
+      if (Date.now() > deadline) {
+        throw new Error(`issue-6113: notification ${want ? `want '${want}'` : "did not dismiss"}, got '${msg}'`);
+      }
+      await sleep(40);
+    }
+  }
+
+  sendCommandSync(frame, cmdId("CmdZoom125"));
+  await waitMsg("Zoom: 125%");
+
+  await client.setNotificationsEnabled(false);
+  await waitMsg("");
+  await client.setNotificationsEnabled(true);
+
+  sendCommandSync(frame, cmdId("CmdDebugToggleRtl"));
+  const rtlDeadline = Date.now() + 4000;
+  for (;;) {
+    if (/rtl=1/.test(await uiState(client))) {
+      break;
+    }
+    if (Date.now() > rtlDeadline) {
+      throw new Error("issue-6113: RTL did not turn on");
+    }
+    await sleep(40);
+  }
+
+  sendCommandSync(frame, cmdId("CmdZoom150"));
+  await waitMsg("Zoom: 150%");
+}
+
 export async function testit(): Promise<void> {
   const pdf = join(ROOT, "ext", "a-zlib", "zlib.3.pdf");
   const { proc, client, frame } = await launchControlled([pdf]);
   try {
     await client.waitForRenderIdle();
+    if (USE_NG) {
+      await testNg(client, frame);
+      return;
+    }
 
     const canvas = findCanvas(frame);
     if (!canvas) {

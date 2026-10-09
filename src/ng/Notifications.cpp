@@ -47,6 +47,13 @@ bool AreNotificationsEnabled() {
 
 void SetNotificationsEnabled(bool enabled) {
     gNotificationsEnabled = enabled;
+    if (enabled) {
+        return;
+    }
+    // orig takes down the ones already on screen
+    while (len(gNotifications) > 0) {
+        RemoveNotification(gNotifications[0]);
+    }
 }
 
 static void FreeNotification(NotificationWnd* wnd) {
