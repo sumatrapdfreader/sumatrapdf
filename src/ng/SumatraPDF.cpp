@@ -4952,22 +4952,15 @@ void CloseCurrentTab(MainWindow* win, bool quitIfLast) {
     if (!win) {
         return;
     }
+    // Home is a tab. Closing it selects the neighbor, same as a document.
     WindowTab* tab = win->CurrentTab();
-    bool lastDocTab = !tab || tab->IsAboutTab() || !HasOpenedDocuments(win);
-    if (tab && !tab->IsAboutTab()) {
+    if (tab) {
         CloseTab(tab, quitIfLast);
-        if (!IsMainWindowValid(win)) {
-            return;
-        }
-        lastDocTab = !HasOpenedDocuments(win);
-    }
-    if (lastDocTab && quitIfLast) {
-        CloseWindow(win, true, false);
         return;
     }
-    UpdateWindowTitle(win);
-    RebuildMenuBar(win);
-    AppShellInvalidate(win);
+    if (quitIfLast) {
+        CloseWindow(win, true, false);
+    }
 }
 
 static void ReopenLastClosedFile(MainWindow* win) {
