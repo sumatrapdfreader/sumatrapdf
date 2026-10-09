@@ -1506,6 +1506,51 @@ bool ImageEditOnArrowKey(MainWindow* win, int vk, bool) {
     return true;
 }
 
+// Right arrow grows the width. The destination edit is focused first: that is
+// where Tab lands, and the arrow must still resize (issue #5734).
+TempStr ImageResizeArrowKeyResultTemp(Str imagePath, int* exitCodeOut) {
+    str::Builder out;
+    auto fail = [&](Str msg) -> TempStr {
+        out.Append(msg);
+        out.AppendChar('\n');
+        if (exitCodeOut) {
+            *exitCodeOut = 1;
+        }
+        return ToStrTemp(out);
+    };
+
+    if (len(imagePath) == 0 || !file::Exists(imagePath)) {
+        return fail(StrL("ERROR missing-image"));
+    }
+    if (len(gWindows) == 0) {
+        return fail(StrL("NOTREADY no-window"));
+    }
+    MainWindow* win = gWindows[0];
+    ShowImageEditWindow(win, ImageEditMode::Resize, imagePath);
+    if (!gImgEdit.visible || gImgEdit.mode != ImageEditMode::Resize) {
+        return fail(StrL("ERROR dialog-not-opened"));
+    }
+    if (win->gpuiWin && gImgEdit.destEdit) {
+        gp::InputFocus(gImgEdit.destEdit, win->gpuiWin->app, win->gpuiWin);
+    }
+    int wBefore = gImgEdit.newW;
+    bool handled = ImageEditOnArrowKey(win, VK_RIGHT, false);
+    int wAfter = gImgEdit.newW;
+    CloseImageEditWindow();
+    if (!handled || wAfter != wBefore + 1) {
+        out.Append(fmt("FAIL before=%d after=%d\n", wBefore, wAfter));
+        if (exitCodeOut) {
+            *exitCodeOut = 1;
+        }
+        return ToStrTemp(out);
+    }
+    out.Append(fmt("OK newW=%d\n", wAfter));
+    if (exitCodeOut) {
+        *exitCodeOut = 0;
+    }
+    return ToStrTemp(out);
+}
+
 // --- building ---------------------------------------------------------------
 
 static TempStr InfoTextTemp() {

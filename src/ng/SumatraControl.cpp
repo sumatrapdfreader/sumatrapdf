@@ -3141,6 +3141,18 @@ static void ExecuteControlRequest(ControlRequest* req) {
             break;
         }
 
+        case ControlCmd::TestImageResizeArrowKey: {
+            Str imagePath = StringArg(req, 0);
+            if (len(imagePath) == 0) {
+                AppendError(req, StrL("TestImageResizeArrowKey expects string imagePath"));
+                break;
+            }
+            int exitCode = 0;
+            Str res = ImageResizeArrowKeyResultTemp(imagePath, &exitCode);
+            AppendTestResult(req, exitCode, res);
+            break;
+        }
+
         case ControlCmd::TestImageResizeEdges: {
             Str imagePath = StringArg(req, 0);
             i32 newW = 0;
