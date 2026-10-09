@@ -510,12 +510,12 @@ static void ToggleContent(MainWindow* win, SidebarContent content) {
     bool topShows = tab && win->uiState.tocVisible && tab->sidebarContent == content;
     bool bottomShows = win->uiState.favVisible && win->sidebarBottomContent == content;
     if (topShows) {
-        SetSidebarVisibility(win, false, win->uiState.favVisible);
+        SetSidebarVisibility(win, false, win->uiState.favVisible, SidebarResizeFrame::Adjust);
         ScheduleSaveSettings();
         return;
     }
     if (bottomShows) {
-        SetSidebarVisibility(win, win->uiState.tocVisible, false);
+        SetSidebarVisibility(win, win->uiState.tocVisible, false, SidebarResizeFrame::Adjust);
         ScheduleSaveSettings();
         return;
     }
@@ -526,7 +526,8 @@ static void ToggleContent(MainWindow* win, SidebarContent content) {
         useTop = tab != nullptr;
     }
     SetPanelContent(win, useTop, content);
-    SetSidebarVisibility(win, useTop || win->uiState.tocVisible, !useTop || win->uiState.favVisible);
+    SetSidebarVisibility(win, useTop || win->uiState.tocVisible, !useTop || win->uiState.favVisible,
+                         SidebarResizeFrame::Adjust);
     if (content == SidebarContent::Favorites) {
         SidebarFocusFavorites(win);
     } else if (content == SidebarContent::Thumbnails) {

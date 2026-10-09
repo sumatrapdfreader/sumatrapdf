@@ -5263,6 +5263,24 @@ static bool FrameCanResizeForSidebar(MainWindow* win) {
 }
 #endif
 
+// The pane flags are already set. A frame that did not move still has to
+// give the canvas up (25% zoom has margin) or hand it back (hide).
+static void SyncCanvasAfterSidebar(MainWindow* win) {
+    Rect canvas = AppShellPredictCanvasRc(win, CanvasPredict::Current);
+    if (canvas.IsEmpty()) {
+        return;
+    }
+    win->canvasRc = canvas;
+    if (!win->ctrl) {
+        return;
+    }
+    Size vps = win->GetViewPortSize();
+    if (!(vps == win->lastViewPortSize)) {
+        win->lastViewPortSize = vps;
+        win->ctrl->SetViewPortSize(vps);
+    }
+}
+
 // Grow the frame by sidebar minus unused canvas margin (Fit Width has
 // none). Skip if already grown (tab switch). Hide undoes the grow.
 // ng: needs to move the window, which gpui cannot (see "gpui gaps"): done on
@@ -5342,6 +5360,7 @@ static void AdjustFrameForSidebarDeferred(SidebarFrameArgs* args) {
     bool nowSidebar = args->win->uiState.tocVisible || args->win->uiState.favVisible;
     if (nowSidebar == args->show) {
         AdjustFrameForSidebarNow(args->win, args->show);
+        SyncCanvasAfterSidebar(args->win);
     }
 }
 
@@ -5355,7 +5374,8 @@ static void AdjustFrameForSidebar(MainWindow* win, bool show) {
 // ng: orig records the wanted visibility in win->uiState and lets a deferred
 // RelayoutFrame move the sidebar HWNDs; gpui lays the panes out from the same
 // two flags on the next frame, so this only has orig's bookkeeping.
-void SetSidebarVisibility(MainWindow* win, bool tocVisible, bool showFavorites) {
+// Keep is a tab switch: the frame stays the size a toggle already grew it to.
+void SetSidebarVisibility(MainWindow* win, bool tocVisible, bool showFavorites, SidebarResizeFrame resizeFrame) {
     bool requestedFavorites = showFavorites;
     if (!CanAccessDisk()) {
         showFavorites = false;
@@ -5426,7 +5446,7 @@ void SetSidebarVisibility(MainWindow* win, bool tocVisible, bool showFavorites) 
     win->uiState.tocVisible = tocVisible;
     win->uiState.favVisible = showFavorites;
     bool nowSidebar = tocVisible || showFavorites;
-    if (wasSidebar != nowSidebar) {
+    if (resizeFrame == SidebarResizeFrame::Adjust && wasSidebar != nowSidebar) {
         AdjustFrameForSidebar(win, nowSidebar);
     }
     logf("SetSidebarVisibility: toc %d, fav %d\n", (int)tocVisible, (int)showFavorites);

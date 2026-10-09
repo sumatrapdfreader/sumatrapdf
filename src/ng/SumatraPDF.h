@@ -81,9 +81,12 @@ constexpr int kSplitterDy = 4;
 // leave at least this much canvas for the document when the sidebar is open
 constexpr int kMinDocCanvasDx = 200;
 
-// ng: orig also takes a SidebarResizeFrame telling it whether to grow the
-// window by the sidebar's width; gpui cannot move a window (see "gpui gaps")
-void SetSidebarVisibility(MainWindow* win, bool tocVisible, bool showFavorites);
+enum class SidebarResizeFrame {
+    Keep,
+    Adjust,
+};
+void SetSidebarVisibility(MainWindow* win, bool tocVisible, bool showFavorites,
+                          SidebarResizeFrame resizeFrame = SidebarResizeFrame::Keep);
 
 void UpdateWindowTitle(MainWindow* win);
 void RebuildMenuBar(MainWindow* win);

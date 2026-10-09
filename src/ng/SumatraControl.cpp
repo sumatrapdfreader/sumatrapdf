@@ -4166,10 +4166,12 @@ static void ExecuteControlRequest(ControlRequest* req) {
             bool favAsTab = tab && tab->IsFavoritesTab();
             AppendLayoutRect(out, StrL("favoritesTab"), favAsTab, favAsTab ? canvas : Rect{});
             SidebarContent topContent = tab ? tab->sidebarContent : SidebarContent::Bookmarks;
-            AppendLayoutRect(out, SidebarContentToStr(topContent), win->uiState.tocVisible,
-                             Rect{0, topDy, sidebarDx, canvas.dy});
-            AppendLayoutRect(out, SidebarContentToStr(win->sidebarBottomContent), win->uiState.favVisible,
-                             Rect{0, topDy, sidebarDx, canvas.dy});
+            Rect sideRc{0, topDy, sidebarDx, canvas.dy};
+            AppendLayoutRect(out, SidebarContentToStr(topContent), win->uiState.tocVisible, sideRc);
+            AppendLayoutRect(out, SidebarContentToStr(win->sidebarBottomContent), win->uiState.favVisible, sideRc);
+            // orig names the panes sidebarTop / sidebarBottom, whatever they show
+            AppendLayoutRect(out, StrL("sidebarTop"), win->uiState.tocVisible, sideRc);
+            AppendLayoutRect(out, StrL("sidebarBottom"), win->uiState.favVisible, sideRc);
             // dips per document pixel; click tests scale canvas points by this
             out.Append(fmt("canvasScale=%.3f\n", (double)CanvasScale(win)));
             DisplayModel* dm = win->AsFixed();
