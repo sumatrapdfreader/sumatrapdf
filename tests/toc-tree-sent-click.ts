@@ -8,9 +8,10 @@
 
 import { writeFileSync } from "node:fs";
 import { join } from "node:path";
-import { killAndWait, launchControlled } from "./win-automation.ts";
+import { ControlCommand } from "./control.ts";
+import { killAndWait, launchControlled, sendCommandSync } from "./win-automation.ts";
 import { findVisibleChildWindow, sleep, treeGetItemHeight, treeGetSelection } from "./winapi.ts";
-import { runStandalone, tmpPath } from "./util.ts";
+import { cmdId, runStandalone, tmpPath, USE_NG } from "./util.ts";
 
 // a 4-page PDF with 4 top-level bookmarks (one per page), /UseOutlines so the
 // bookmarks panel opens automatically
@@ -62,6 +63,42 @@ const CLICK_TIMEOUT_MS = 5000;
 export async function testit(): Promise<void> {
   const pdfPath = tmpPath("toc-tree-sent-click.pdf");
   writeFileSync(pdfPath, makeBookmarkedPdf());
+
+  // ng draws the outline in the frame. "go" is TocTreeItemClicked, the row click.
+  if (USE_NG) {
+    const { proc, client, frame } = await launchControlled([pdfPath]);
+    try {
+      await client.waitForRenderIdle();
+      let countRaw = String((await client.request(ControlCommand.TestUiState, ["count"]))[1] ?? "");
+      let rows = Number(/tocRows=(\d+)/.exec(countRaw)?.[1] ?? -1);
+      if (rows < 4) {
+        sendCommandSync(frame, cmdId("CmdToggleBookmarks"));
+        await client.waitForRenderIdle();
+        countRaw = String((await client.request(ControlCommand.TestUiState, ["count"]))[1] ?? "");
+        rows = Number(/tocRows=(\d+)/.exec(countRaw)?.[1] ?? -1);
+      }
+      if (rows < 4) {
+        throw new Error(`toc-tree-sent-click: bookmarks not shown (${countRaw})`);
+      }
+      const go = String((await client.request(ControlCommand.TestUiState, ["go", 2]))[1] ?? "");
+      if (go.startsWith("ERR")) {
+        throw new Error(`toc-tree-sent-click: ${go}`);
+      }
+      await client.waitForRenderIdle();
+      const info = await client.chapterInfo();
+      if (info.page !== 3) {
+        throw new Error(`toc-tree-sent-click: click did not navigate: page=${info.page} (expected 3)`);
+      }
+    } finally {
+      try {
+        await client.quit();
+      } catch {
+        /* process already gone */
+      }
+      await killAndWait(proc);
+    }
+    return;
+  }
 
   const { proc, client, frame } = await launchControlled([pdfPath]);
   let child: Bun.Subprocess | null = null;

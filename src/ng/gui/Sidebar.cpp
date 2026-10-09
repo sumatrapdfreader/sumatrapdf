@@ -988,6 +988,16 @@ TempStr SidebarTestToc(MainWindow* win, Str op, int arg) {
         SidebarSetTocSelection(win, item);
         return StrL("ok");
     }
+    // the same navigation a click on the row runs; ng has no SysTreeView32
+    if (str::Eq(op, StrL("go"))) {
+        int idx = arg;
+        TocItem* item = VisibleTocAt(root, idx);
+        if (!item) {
+            return StrL("ERR no-row");
+        }
+        TocTreeItemClicked(win, item);
+        return StrL("ok");
+    }
     TocItem* sel = ui->tocSel;
     if (!sel) {
         return StrL("ERR no-sel");
