@@ -6,7 +6,7 @@
 
 import { writeFileSync } from "node:fs";
 import { ControlCommand } from "./control.ts";
-import { assemblePdf, cmdId, runStandalone, tmpPath } from "./util.ts";
+import { assemblePdf, cmdId, runStandalone, tmpPath, USE_NG } from "./util.ts";
 import { findTopWindow, getWindowRect, isWindowVisible, sleep } from "./winapi.ts";
 import { clickAt, findCanvas, killAndWait, launchControlled, sendCommand } from "./win-automation.ts";
 
@@ -39,10 +39,19 @@ async function toolbarDx(name: string): Promise<number> {
     await clickAt(findCanvas(frame), +m[1]! + Math.floor(+m[3]! / 2), +m[2]! + Math.floor(+m[4]! / 2));
     const deadline = Date.now() + 5000;
     for (;;) {
-      const tb = findTopWindow(proc.pid!, TOOLBAR_CLASS);
-      if (tb && isWindowVisible(tb)) {
-        const r = getWindowRect(tb);
-        return r.right - r.left;
+      if (USE_NG) {
+        // the row is drawn in the frame. placed= is its last laid-out size
+        const dump = String((await client.request(ControlCommand.TestMarkupAnnots, []))[1] ?? "");
+        const p = /annotEditToolbar visible=1[^\n]*placed=(-?\d+),(-?\d+),(-?\d+),(-?\d+)/.exec(dump);
+        if (p && +p[3]! > 1) {
+          return +p[3]!;
+        }
+      } else {
+        const tb = findTopWindow(proc.pid!, TOOLBAR_CLASS);
+        if (tb && isWindowVisible(tb)) {
+          const r = getWindowRect(tb);
+          return r.right - r.left;
+        }
       }
       if (Date.now() > deadline) {
         throw new Error(`stamp-edit-toolbar-name: no edit toolbar for ${name}`);
