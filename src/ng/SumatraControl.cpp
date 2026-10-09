@@ -1254,6 +1254,58 @@ static TempStr GoToLocationResultTemp(int chapter, int page, int* exitCodeOut) {
     return ToStrTemp(out);
 }
 
+// One line per link on a page: kind, page, rects, value.
+static TempStr PageLinksResultTemp(Str path, int pageNo, int* exitCodeOut) {
+    str::Builder out;
+    EngineBase* engine = CreateEngineFromFile(path, nullptr, false);
+    if (!engine) {
+        if (exitCodeOut) {
+            *exitCodeOut = 1;
+        }
+        out.Append(fmt("ERROR engine-create-failed path=%s\n", path));
+        return ToStrTemp(out);
+    }
+    if (!engine->BenchLoadPage(pageNo)) {
+        if (exitCodeOut) {
+            *exitCodeOut = 1;
+        }
+        out.Append(fmt("ERROR page-load-failed page=%d\n", pageNo));
+        SafeEngineRelease(&engine);
+        return ToStrTemp(out);
+    }
+
+    int nLinks = 0;
+    Vec<IPageElement*> els = engine->GetElements(pageNo);
+    for (IPageElement* el : els) {
+        if (!el || !el->Is(kindPageElementDest)) {
+            continue;
+        }
+        IPageDestination* dest = el->AsLink();
+        if (!dest) {
+            continue;
+        }
+        nLinks++;
+        Str value = dest->GetValue();
+        TempStr valueShown = str::ReplaceTemp(value, StrL("\r\n"), StrL("|"));
+        valueShown = str::ReplaceTemp(valueShown, StrL("\n"), StrL("|"));
+        RectF src = el->GetRect();
+        RectF destRc = dest->GetRect();
+        out.Append(fmt("kind=%s page=%d src=%g,%g,%g,%g dest=%g,%g,%g,%g value=%s\n", Str(dest->GetKind()),
+                       PageDestGetPageNo(dest), src.x, src.y, src.dx, src.dy, destRc.x, destRc.y, destRc.dx, destRc.dy,
+                       valueShown));
+    }
+    if (nLinks == 0) {
+        if (exitCodeOut) {
+            *exitCodeOut = 1;
+        }
+        out.Append(fmt("ERROR no-links page=%d\n", pageNo));
+    } else if (exitCodeOut) {
+        *exitCodeOut = 0;
+    }
+    SafeEngineRelease(&engine);
+    return ToStrTemp(out);
+}
+
 // clipKind values match SumatraTest.cpp ImageRenderEdgesResultTemp
 constexpr int kClipSelection = 1;
 constexpr int kClipRightHalfTile = 2;
@@ -2152,6 +2204,19 @@ static void ExecuteControlRequest(ControlRequest* req) {
         case ControlCmd::TestSidebarLayout: {
             int exitCode = 0;
             Str res = SidebarLayoutResultTemp(&exitCode);
+            AppendTestResult(req, exitCode, res);
+            break;
+        }
+
+        case ControlCmd::TestPageLinks: {
+            Str path = StringArg(req, 0);
+            i32 pageNo = 1;
+            if (len(path) == 0 || !IntArg(req, 1, pageNo)) {
+                AppendError(req, StrL("TestPageLinks expects string path, int pageNo"));
+                break;
+            }
+            int exitCode = 0;
+            Str res = PageLinksResultTemp(path, pageNo, &exitCode);
             AppendTestResult(req, exitCode, res);
             break;
         }
