@@ -1405,6 +1405,9 @@ TempStr ToolWindowTestTemp(Str action, Str name, Str kind, int a, int b, int c, 
         for (ToolWindow* tw : gToolWindows) {
             Rect r = ToolWindowRect(tw);
             out.Append(fmt("\n%s made=%d rect=%d,%d,%d,%d", Str(tw->desc.name), tw->gw ? 1 : 0, r.x, r.y, r.dx, r.dy));
+#if !OS_WIN
+            out.Append(fmt(" title='%s'", tw->title));
+#endif
 #if OS_WIN
             if (tw->hwnd) {
                 Rect cr = HwndClientRect(tw->hwnd);

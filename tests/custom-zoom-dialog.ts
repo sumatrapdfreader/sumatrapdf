@@ -8,6 +8,7 @@
 
 import { join } from "node:path";
 import { ControlClient, ControlCommand, withControlledSumatra } from "./control.ts";
+import { IS_MAC } from "./host.ts";
 import { EXE, ROOT, USE_NG, cmdId, runStandalone, SLOW_BUILD_FACTOR, writeAppdata } from "./util.ts";
 import {
   ensureModifierKeysUp,
@@ -31,6 +32,33 @@ import {
 import { sendCommand, waitForFrame } from "./win-automation.ts";
 
 const DIALOG_CLASS = "SumatraWgDefaultWinClass";
+
+// The mac dialog is a tool window. 1 is only a stand-in so the key posts,
+// which the control channel delivers to the modal dialog.
+let macClient: ControlClient | null = null;
+
+type MacZoom = { title: string; rect: { left: number; top: number; right: number; bottom: number } };
+
+async function macZoom(): Promise<MacZoom | null> {
+  if (!macClient) {
+    return null;
+  }
+  const res = await macClient.request(ControlCommand.TestToolWindow, ["list"]);
+  const raw = String(res[1] ?? "");
+  const m = /customzoom made=1 rect=(-?\d+),(-?\d+),(-?\d+),(-?\d+) title='([^']*)'/.exec(raw);
+  if (!m) {
+    return null;
+  }
+  const y = Number(m[2]);
+  // opened off-screen until the first frame measures it
+  if (y < -1000) {
+    return null;
+  }
+  const x = Number(m[1]);
+  const dx = Number(m[3]);
+  const dy = Number(m[4]);
+  return { title: m[5] ?? "", rect: { left: x, top: y, right: x + dx, bottom: y + dy } };
+}
 
 // every level the dialog offers, in the order the list has them
 const ZOOM_LEVELS = [
@@ -77,9 +105,15 @@ function findDialog(pid: number, frame: number): number {
 async function waitForDialog(pid: number, frame: number): Promise<number> {
   const deadline = Date.now() + 5000 * SLOW_BUILD_FACTOR;
   for (;;) {
-    const hwnd = findDialog(pid, frame);
-    if (hwnd) {
-      return hwnd;
+    if (IS_MAC) {
+      if (await macZoom()) {
+        return 1;
+      }
+    } else {
+      const hwnd = findDialog(pid, frame);
+      if (hwnd) {
+        return hwnd;
+      }
     }
     if (Date.now() > deadline) {
       throw new Error("custom-zoom-dialog: the dialog did not open");
@@ -91,7 +125,8 @@ async function waitForDialog(pid: number, frame: number): Promise<number> {
 async function waitForDialogGone(pid: number, frame: number): Promise<void> {
   const deadline = Date.now() + 5000 * SLOW_BUILD_FACTOR;
   for (;;) {
-    if (!findDialog(pid, frame)) {
+    const open = IS_MAC ? (await macZoom()) !== null : findDialog(pid, frame) !== 0;
+    if (!open) {
       return;
     }
     if (Date.now() > deadline) {
@@ -187,12 +222,13 @@ async function checkTallList(): Promise<void> {
     async (client, proc) => {
       const pid = proc.pid!;
       const frame = await waitForFrame(pid);
+      macClient = client;
       await client.waitForRenderIdle(30000);
       await client.setNotificationsEnabled(false);
 
       sendCommand(frame, cmdId("CmdZoomCustom"));
       const dlg = await waitForDialog(pid, frame);
-      const dr = getWindowRect(dlg);
+      const dr = IS_MAC ? (await macZoom())!.rect : getWindowRect(dlg);
       const wa = getWorkArea();
       if (dr.bottom - dr.top > wa.bottom - wa.top) {
         throw new Error(
@@ -223,13 +259,14 @@ export async function testit(): Promise<void> {
     async (client, proc) => {
       const pid = proc.pid!;
       const frame = await waitForFrame(pid);
+      macClient = client;
       await client.waitForRenderIdle(30000);
       await client.setNotificationsEnabled(false);
 
       sendCommand(frame, cmdId("CmdZoomCustom"));
       const dlg = await waitForDialog(pid, frame);
 
-      const title = getWindowText(dlg);
+      const title = IS_MAC ? (await macZoom())!.title : getWindowText(dlg);
       if (title !== "Zoom") {
         throw new Error(`custom-zoom-dialog: the title is "${title}", want "Zoom"`);
       }
@@ -242,7 +279,7 @@ export async function testit(): Promise<void> {
       }
       // the list is drawn by the dialog, not a window of its own, so what says
       // it is there is the height it takes and the arrow keys below
-      const dr = getWindowRect(dlg);
+      const dr = IS_MAC ? (await macZoom())!.rect : getWindowRect(dlg);
       const rowDy = USE_NG ? 22 : getWindowRect(edit).bottom - getWindowRect(edit).top;
       if (dr.bottom - dr.top < 6 * rowDy) {
         throw new Error(`custom-zoom-dialog: the dialog is too short to hold a list ${JSON.stringify(dr)}`);
