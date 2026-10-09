@@ -278,6 +278,9 @@ struct BrowserView {
     // the element asked for a view; it is made from the shell's tick, not
     // during the frame (see BrowserViewCreatePending)
     bool wantCreate = false;
+    // WebView2's create runs a nested message loop. A control request in that
+    // loop makes the first WebViewNew fail, so the tick tries a few times.
+    int createTries = 0;
     // drawn in a tool window, which makes it from its own tick
     bool ownHost = false;
     bool visible = false;
@@ -786,9 +789,20 @@ LRESULT BrowserViewPassUIMsg(BrowserView*, UINT, WPARAM, LPARAM) {
 
 // --- the element ------------------------------------------------------------
 
+// WebView2 creation pumps the thread queue. A paint or another create from
+// that pump fails the one in progress, so both are held off until it returns.
+static int gWebViewCreateDepth = 0;
+
+bool BrowserViewCreateInProgress() {
+    return gWebViewCreateDepth > 0;
+}
+
 static void CreateWebView(BrowserView* bv, gp::Ctx* cx) {
-    bv->created = true;
+    if (gWebViewCreateDepth > 0) {
+        return;
+    }
     bv->app = cx->app;
+    bv->createTries++;
 
     wry::InitializationScript scripts[3];
     scripts[0].script = ToGpui(Str(kReportScrollJs));
@@ -832,12 +846,20 @@ static void CreateWebView(BrowserView* bv, gp::Ctx* cx) {
         attrs.url = ToGpui(bv->pendingUrl);
     }
 
+    gWebViewCreateDepth++;
     bv->view = gp::WebViewNew(cx, &attrs);
+    gWebViewCreateDepth--;
     gp::WebView* wv = bv->view.Get(cx->app);
     if (!wv || !gp::WebViewRaw(wv)) {
-        logf("BrowserView: could not create a webview (WebView2 runtime missing?)\n");
+        bv->view = {};
+        // give up and show the missing-runtime message
+        if (bv->createTries >= 3) {
+            bv->created = true;
+            logf("BrowserView: could not create a webview (WebView2 runtime missing?)\n");
+        }
         return;
     }
+    bv->created = true;
     // ng: gpui always makes the view 0 x 0 and sizes it from its element's
     // bounds on the first paint. A WebView2 that has never had a size does not
     // start loading, so give it the canvas rect right away

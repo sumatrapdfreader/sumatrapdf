@@ -13,6 +13,10 @@ bool BrowserViewAvailable() {
     return false;
 }
 
+bool BrowserViewCreateInProgress() {
+    return false;
+}
+
 BrowserView* BrowserViewCreate(MainWindow*, HWND, BrowserViewCallback*, Str) {
     return nullptr;
 }

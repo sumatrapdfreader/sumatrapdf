@@ -36,6 +36,8 @@
 #include "DisplayMode.h"
 #include "DocumentLayout.h"
 #include "DocController.h"
+#include "MarkdownModel.h"
+#include "gui/BrowserView.h"
 #include "DocProperties.h"
 #include "EngineBase.h"
 #include "DisplayModel.h"
@@ -241,6 +243,69 @@ static IPageDestination* NthDestInToc(TocItem* item, int target, int& counter) {
         }
     }
     return nullptr;
+}
+
+void GoToTocItem(MainWindow*, TocItem*);
+
+static TocItem* NthTocItemWithDest(TocItem* item, int target, int& counter) {
+    for (; item; item = item->next) {
+        if (item->dest) {
+            counter++;
+            if (counter == target) {
+                return item;
+            }
+        }
+        TocItem* found = NthTocItemWithDest(item->child, target, counter);
+        if (found) {
+            return found;
+        }
+    }
+    return nullptr;
+}
+
+// destNo > 0 starts navigation to that markdown TOC item. destNo == 0 reports
+// whether the webview has reached minScrollY. tests/issue-5842.ts.
+static TempStr MarkdownTocNavigateResultTemp(int destNo, int minScrollY, int* exitCodeOut) {
+    str::Builder out;
+    auto finish = [&](Str msg, int code) -> TempStr {
+        out.Append(msg);
+        out.AppendChar('\n');
+        if (exitCodeOut) {
+            *exitCodeOut = code;
+        }
+        return ToStrTemp(out);
+    };
+
+    if (len(gWindows) == 0) {
+        return finish(StrL("NOTREADY no-window"), 2);
+    }
+    MainWindow* win = gWindows[0];
+    if (!win || !win->IsDocLoaded()) {
+        return finish(StrL("NOTREADY no-doc"), 2);
+    }
+    MarkdownModel* mm = win->ctrl ? win->ctrl->AsMarkdown() : nullptr;
+    if (!mm || !mm->docView) {
+        return finish(StrL("NOTREADY no-markdown-webview"), 2);
+    }
+
+    if (destNo > 0) {
+        TocTree* toc = mm->GetToc();
+        int counter = 0;
+        TocItem* item = toc && toc->root ? NthTocItemWithDest(toc->root, destNo, counter) : nullptr;
+        if (!item) {
+            // headings are filled in on a background thread; the files-only
+            // stub TOC is installed first, so dest 3 may not exist yet
+            return finish(fmt("NOTREADY no-dest destNo=%d", destNo), 2);
+        }
+        GoToTocItem(win, item);
+        return finish(fmt("NAVIGATING dest=%d name=%s", destNo, item->dest->GetName()), 0);
+    }
+
+    Point pos = BrowserViewGetScrollPos(mm->docView);
+    if (pos.y < minScrollY) {
+        return finish(fmt("NOTREADY scrollY=%d min=%d", pos.y, minScrollY), 2);
+    }
+    return finish(fmt("OK scrollX=%d scrollY=%d", pos.x, pos.y), 0);
 }
 
 // orig's TocNavigateResultTemp: follow one outline dest and report the page
@@ -1405,6 +1470,19 @@ static void ExecuteControlRequest(ControlRequest* req) {
             }
             int exitCode = 0;
             Str res = TocNavigateResultTemp(destNo, &exitCode);
+            AppendTestResult(req, exitCode, res);
+            break;
+        }
+
+        case ControlCmd::TestMarkdownTocNavigate: {
+            i32 destNo = 0;
+            i32 minScrollY = 1;
+            if (!IntArg(req, 0, destNo) || !IntArg(req, 1, minScrollY)) {
+                AppendError(req, StrL("TestMarkdownTocNavigate expects int destNo, int minScrollY"));
+                break;
+            }
+            int exitCode = 0;
+            Str res = MarkdownTocNavigateResultTemp(destNo, minScrollY, &exitCode);
             AppendTestResult(req, exitCode, res);
             break;
         }

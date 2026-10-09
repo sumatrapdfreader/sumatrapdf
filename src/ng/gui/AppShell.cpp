@@ -162,6 +162,10 @@ static gp::Entity<ShellView> ShellViewOf(MainWindow* win) {
 // --- the plumbing AppShell.h promises --------------------------------------
 
 void AppShellInvalidate(MainWindow* win) {
+    // a paint from inside WebView2's create loop never finishes creating
+    if (BrowserViewCreateInProgress()) {
+        return;
+    }
     if (win && win->gpuiWin) {
         gp::AppInvalidate(win->gpuiWin);
     }

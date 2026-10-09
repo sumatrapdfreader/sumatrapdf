@@ -86,6 +86,8 @@ void BrowserViewFindGoto(BrowserView*, int idx);
 void BrowserViewFindClear(BrowserView*);
 LRESULT BrowserViewPassUIMsg(BrowserView*, UINT msg, WPARAM wp, LPARAM lp);
 
+bool BrowserViewCreateInProgress();
+
 // the element the webview is positioned over; asked once a frame by the shell
 gpui::El* BrowserViewBuild(BrowserView*, gpui::Ctx* cx);
 // the shell's tick: makes the views BrowserViewBuild() asked for
