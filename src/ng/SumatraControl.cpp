@@ -97,6 +97,7 @@ extern "C" {
 #include "PerfLog.h"
 #include "ReadAloud.h"
 #include "ReadingAutoScroll.h"
+#include "ReadingBar.h"
 #include "gui/OleDragDrop.h"
 #include "gui/NativeCursors.h"
 #include "SumatraControl.h"
@@ -2362,6 +2363,13 @@ static void ExecuteControlRequest(ControlRequest* req) {
         case ControlCmd::TestReadingAutoScroll: {
             int exitCode = 0;
             Str res = ReadingAutoScrollBarStateTemp(&exitCode);
+            AppendTestResult(req, exitCode, res);
+            break;
+        }
+
+        case ControlCmd::TestReadingBar: {
+            int exitCode = 0;
+            Str res = ReadingBarStateTemp(&exitCode);
             AppendTestResult(req, exitCode, res);
             break;
         }
