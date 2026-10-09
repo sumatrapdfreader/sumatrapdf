@@ -323,6 +323,53 @@ static TempStr MarkdownTocNavigateResultTemp(int destNo, int minScrollY, int* ex
     return finish(fmt("OK scrollX=%d scrollY=%d", pos.x, pos.y), 0);
 }
 
+// href is what the browser reports. follow == false only lists tabs.
+// tests/issue-5924.ts.
+static TempStr MarkdownFollowLinkResultTemp(Str href, bool follow, int* exitCodeOut) {
+    str::Builder out;
+    auto finish = [&](Str msg, int code) -> TempStr {
+        out.Append(msg);
+        out.AppendChar('\n');
+        if (exitCodeOut) {
+            *exitCodeOut = code;
+        }
+        return ToStrTemp(out);
+    };
+
+    if (len(gWindows) == 0) {
+        return finish(StrL("NOTREADY no-window"), 2);
+    }
+    MainWindow* win = gWindows[0];
+    if (!win || !win->IsDocLoaded()) {
+        return finish(StrL("NOTREADY no-doc"), 2);
+    }
+
+    int navigate = -1;
+    if (follow) {
+        MarkdownModel* mm = win->ctrl ? win->ctrl->AsMarkdown() : nullptr;
+        if (!mm) {
+            return finish(StrL("NOTREADY no-markdown"), 2);
+        }
+        if (len(href) == 0) {
+            return finish(StrL("ERROR no-href"), 1);
+        }
+        navigate = mm->OnBeforeNavigate(href, false) ? 1 : 0;
+    }
+    out.Append(fmt("OK navigate=%d\n", navigate));
+    for (int i = 0; i < len(gWindows); i++) {
+        MainWindow* w = gWindows[i];
+        for (WindowTab* tab : w->Tabs()) {
+            int isCurrent = tab == w->CurrentTab() ? 1 : 0;
+            int pageNo = tab->ctrl ? tab->ctrl->CurrentPageNo() : 0;
+            out.Append(fmt("tab win=%d current=%d pageNo=%d file=%s\n", i, isCurrent, pageNo, tab->filePath));
+        }
+    }
+    if (exitCodeOut) {
+        *exitCodeOut = 0;
+    }
+    return ToStrTemp(out);
+}
+
 // orig's TocNavigateResultTemp: follow one outline dest and report the page
 static TempStr TocNavigateResultTemp(int destNo, int* exitCodeOut) {
     str::Builder out;
@@ -2318,6 +2365,19 @@ static void ExecuteControlRequest(ControlRequest* req) {
             }
             int exitCode = 0;
             Str res = TocNavigateResultTemp(destNo, &exitCode);
+            AppendTestResult(req, exitCode, res);
+            break;
+        }
+
+        case ControlCmd::TestMarkdownFollowLink: {
+            Str href = StringArg(req, 0);
+            i32 follow = 0;
+            if (!IntArg(req, 1, follow)) {
+                AppendError(req, StrL("TestMarkdownFollowLink expects string href, int follow"));
+                break;
+            }
+            int exitCode = 0;
+            Str res = MarkdownFollowLinkResultTemp(href, follow != 0, &exitCode);
             AppendTestResult(req, exitCode, res);
             break;
         }
