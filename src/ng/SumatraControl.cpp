@@ -822,6 +822,71 @@ static TempStr ClickClearsSelectionResultTemp(Str word, int* exitCodeOut) {
     return ToStrTemp(out);
 }
 
+// tests/rect-selection-drag.ts: a press in a rectangle over text grabs the rect
+static TempStr RectSelectionDragResultTemp(Str word, int* exitCodeOut) {
+    str::Builder out;
+    auto fail = [&](Str msg) -> Str {
+        out.Append(msg);
+        out.AppendChar('\n');
+        if (exitCodeOut) {
+            *exitCodeOut = 1;
+        }
+        return ToStrTemp(out);
+    };
+
+    if (str::IsEmptyOrWhiteSpace(word)) {
+        return fail(StrL("ERROR missing word"));
+    }
+    if (len(gWindows) == 0) {
+        return fail(StrL("NOTREADY no-window"));
+    }
+    MainWindow* win = gWindows[0];
+    DisplayModel* dm = win ? win->AsFixed() : nullptr;
+    if (!dm) {
+        return fail(StrL("NOTREADY no-doc"));
+    }
+    const int pageNo = 1;
+    double wx = 0, wy = 0;
+    if (!FindWordCenter(dm->GetEngine(), pageNo, word, &wx, &wy)) {
+        return fail(StrL("ERROR word-not-found"));
+    }
+    Point center = dm->CvtToScreen(pageNo, PointF((float)wx, (float)wy));
+
+    WindowTab* tab = win->CurrentTab();
+    DeleteOldSelectionInfo(win, true);
+    int half = 40;
+    Rect rc(center.x - half, center.y - (half / 2), half * 2, half);
+    tab->selectionOnPage = SelectionOnPage::FromRectangle(dm, rc);
+    win->showSelection = tab->selectionOnPage != nullptr;
+    if (!win->showSelection) {
+        return fail(StrL("ERROR no-rect-selection"));
+    }
+    if (!IsRectangularSelection(win)) {
+        return fail(StrL("ERROR not-rectangular"));
+    }
+    if (!dm->IsOverText(center)) {
+        return fail(StrL("ERROR press-point-not-over-text"));
+    }
+
+    DocCanvasMouseDown(win, center.x, center.y);
+    SelectionDragEdge edge = win->selectionDragEdge;
+    bool dragging = (win->mouseAction == MouseAction::Selecting) && (edge != SelectionDragEdge::None);
+    bool textDrag = win->textDragPending;
+    DocCanvasMouseUp(win, center.x, center.y);
+
+    bool ok = dragging && !textDrag;
+    if (ok) {
+        out.Append(fmt("OK moving rect selection, edge=%d\n", (int)edge));
+    } else {
+        out.Append(
+            fmt("FAIL edge=%d mouseAction=%d textDragPending=%d\n", (int)edge, (int)win->mouseAction, (int)textDrag));
+    }
+    if (exitCodeOut) {
+        *exitCodeOut = ok ? 0 : 1;
+    }
+    return ToStrTemp(out);
+}
+
 static TempStr ResolveUnsavedChangesResultTemp(Str action, Str path, int* exitCodeOut) {
     str::Builder out;
     auto fail = [&](Str msg, int code = 1) -> TempStr {
@@ -2525,6 +2590,13 @@ static void ExecuteControlRequest(ControlRequest* req) {
             IntArg(req, 1, pageNo);
             int exitCode = 0;
             Str res = FavoriteNavResultTemp(StringArg(req, 0), pageNo, &exitCode);
+            AppendTestResult(req, exitCode, res);
+            break;
+        }
+
+        case ControlCmd::TestRectSelectionDrag: {
+            int exitCode = 0;
+            Str res = RectSelectionDragResultTemp(StringArg(req, 0), &exitCode);
             AppendTestResult(req, exitCode, res);
             break;
         }

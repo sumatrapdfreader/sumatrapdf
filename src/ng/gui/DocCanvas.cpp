@@ -3396,13 +3396,24 @@ static void OnMouseLeftButtonUp(MainWindow* win, int x, int y) {
     }
 }
 
-// a click in canvas pixels: down and up at the same point, so it is not a drag
-void DocCanvasClick(MainWindow* win, int x, int y) {
+void DocCanvasMouseDown(MainWindow* win, int x, int y) {
     if (!IsMainWindowValid(win) || !win->AsFixed()) {
         return;
     }
     OnMouseLeftButtonDown(win, x, y);
+}
+
+void DocCanvasMouseUp(MainWindow* win, int x, int y) {
+    if (!IsMainWindowValid(win) || !win->AsFixed()) {
+        return;
+    }
     OnMouseLeftButtonUp(win, x, y);
+}
+
+// a click in canvas pixels: down and up at the same point, so it is not a drag
+void DocCanvasClick(MainWindow* win, int x, int y) {
+    DocCanvasMouseDown(win, x, y);
+    DocCanvasMouseUp(win, x, y);
 }
 
 // orig's CancelDrag: Escape abandons whatever the mouse was doing

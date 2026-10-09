@@ -52,6 +52,8 @@ void DocCanvasContextMenuFromKey(MainWindow* win, gpui::Ctx* cx);
 // document scrolls with the wheel over the tab strip or the toolbar
 void DocCanvasWheelFromFrame(MainWindow* win, gpui::Ctx* cx, const gpui::ScrollWheelEvent* ev);
 void DocCanvasPostedWheel(MainWindow* win, int delta, bool isCtrl, bool isShift);
+void DocCanvasMouseDown(MainWindow* win, int x, int y);
+void DocCanvasMouseUp(MainWindow* win, int x, int y);
 void DocCanvasClick(MainWindow* win, int x, int y);
 // gpui lays out in dips, the document model in pixels: dips per document pixel
 float CanvasScale(MainWindow* win);
