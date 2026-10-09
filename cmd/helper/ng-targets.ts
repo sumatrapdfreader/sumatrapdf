@@ -1457,7 +1457,7 @@ export const targets: Target[] = [
       "src/ng/base/CrashHandler.cpp",
       "src/ng/base/CrashHandler_posix.cpp",
     ],
-    includes: ["src/ng", "ext/gpui", "ext/mupdf/include"],
+    includes: ["src/ng", "ext/gpui", "ext/mupdf/include", "src"],
     // the app icon, the document-type icons, the version resource and the
     // compatibility manifest (Windows only; other platforms ignore it)
     rc: "src/ng/SumatraPDF.rc",
@@ -1472,6 +1472,11 @@ export const targets: Target[] = [
       { from: "docs/test/zlib.3.pdf", to: kWasmDocsDir },
       { from: "docs/test/test.epub", to: kWasmDocsDir },
     ],
+    // orig's desktop screenshot picker. Win32 only; other platforms keep the
+    // page render in src/ng/Screenshot.cpp.
+    perPlatform: {
+      win: { sources: ["src/ScreenshotCapture.cpp"] },
+    },
   },
 ];
 

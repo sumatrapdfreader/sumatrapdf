@@ -959,6 +959,26 @@ TempStr ImageEditStateTemp() {
                gImgEdit.newW, gImgEdit.newH, DestPathTemp());
 }
 
+#if OS_WIN
+// The picker keeps its bitmap and deletes it. The editor takes ownership of
+// the one it is given, so hand it a copy.
+void ShowImageEditWindow(HWND parent, ImageEditMode mode, Str filePath, RenderedBitmap* rbmp, bool selectPdf,
+                         Str originalData, bool closeOnEsc) {
+    MainWindow* win = nullptr;
+    for (MainWindow* w : gWindows) {
+        if (parent && AppShellNativeHwnd(w) == parent) {
+            win = w;
+            break;
+        }
+    }
+    if (!win && len(gWindows) > 0) {
+        win = gWindows[0];
+    }
+    RenderedBitmap* owned = rbmp ? rbmp->Clone() : nullptr;
+    ShowImageEditWindow(win, mode, filePath, owned, selectPdf, originalData, closeOnEsc);
+}
+#endif
+
 void ShowImageEditWindow(MainWindow* win, ImageEditMode mode, Str filePath, RenderedBitmap* rbmp, bool selectPdf,
                          Str originalData, bool closeOnEsc) {
     if (!IsMainWindowValidAndNotClosing(win)) {

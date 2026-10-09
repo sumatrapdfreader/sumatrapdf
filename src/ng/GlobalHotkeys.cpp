@@ -196,7 +196,7 @@ static void RunGlobalHotkeyCmd(GlobalHotkeyRun* d) {
         }
         return;
     }
-    TakeScreenshots(nullptr);
+    ShowScreenshotPicker(nullptr);
 }
 
 bool HandleGlobalHotkey(int hotkeyId) {

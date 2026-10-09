@@ -7838,7 +7838,11 @@ void ExecuteCmd(MainWindow* win, int cmdId) {
             break;
 
         case CmdScreenshot:
+#if OS_WIN
+            ShowScreenshotPicker(AppShellNativeHwnd(win));
+#else
             TakeScreenshots(win);
+#endif
             break;
 
         case CmdSetScreenshotHotkey:

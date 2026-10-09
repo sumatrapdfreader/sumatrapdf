@@ -56,6 +56,11 @@ bool TrySaveOriginalAsCmykTiff(Str originalData, Str destPath);
 // extension still matches the original format. Caller keeps ownership.
 void ShowImageEditWindow(MainWindow* win, ImageEditMode mode, Str filePath = {}, RenderedBitmap* rbmp = nullptr,
                          bool selectPdf = false, Str originalData = {}, bool closeOnEsc = false);
+#if OS_WIN
+// orig's capture picker passes the owner HWND. The editor takes a copy of rbmp.
+void ShowImageEditWindow(HWND parent, ImageEditMode mode, Str filePath = {}, RenderedBitmap* rbmp = nullptr,
+                         bool selectPdf = false, Str originalData = {}, bool closeOnEsc = false);
+#endif
 // ng: the editor is a gpui dialog inside the window, not a window of its own
 void CloseImageEditWindow();
 bool IsImageEditWindowVisible();

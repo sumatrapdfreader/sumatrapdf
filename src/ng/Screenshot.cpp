@@ -42,6 +42,9 @@
 #include "gui/WasmBridge.h"
 #endif
 #include "Screenshot.h"
+#if OS_WIN
+#include "ScreenshotCapture.h"
+#endif
 
 #include "SumatraLog.h"
 
@@ -139,6 +142,28 @@ bool CopySelectionAsImage(MainWindow* win) {
     logf("CopySelectionAsImage: %s\n", Str(ok ? "ok" : "failed"));
     return ok;
 }
+
+#if OS_WIN
+static bool IsScreenshotFrame(HWND hwnd) {
+    for (MainWindow* w : gWindows) {
+        if (AppShellNativeHwnd(w) == hwnd) {
+            return true;
+        }
+    }
+    return false;
+}
+
+static HWND ScreenshotOwnerHwnd() {
+    return len(gWindows) > 0 ? AppShellNativeHwnd(gWindows[0]) : nullptr;
+}
+
+void ShowScreenshotPicker(HWND hwndRestore) {
+    gScreenshotHost.IsAppFrame = IsScreenshotFrame;
+    gScreenshotHost.GetSaveDirTemp = GetScreenshotSaveDirTemp;
+    gScreenshotHost.GetOwnerHwnd = ScreenshotOwnerHwnd;
+    TakeScreenshots(hwndRestore);
+}
+#endif
 
 void TakeScreenshots(MainWindow* win) {
     if (!IsMainWindowValidAndNotClosing(win)) {

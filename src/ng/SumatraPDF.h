@@ -166,6 +166,8 @@ void OpenNextPrevFileInFolder(MainWindow* win, bool forward, Str pathToDelete = 
 void ShowPageInfoIfWanted(MainWindow* win);
 #if OS_WIN
 void ShowDefaultAppNotification(MainWindow* win, const StrVec& missing);
+// orig's window picker. hwndRestore gets focus back when the picker closes.
+void ShowScreenshotPicker(HWND hwndRestore);
 #endif
 bool DismissNotificationsOnEsc(MainWindow* win);
 // the cursor-position tip (CmdToggleCursorPosition), refreshed on mouse move
