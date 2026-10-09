@@ -1019,7 +1019,7 @@ static bool DrawDocument(MainWindow* win, gp::PaintCtx* ctx, Rect rcArea) {
 // --- scrollbars -------------------------------------------------------------
 
 #if OS_WIN
-static void PublishScrollInfo(HWND hwnd, int bar, const CanvasScrollInfo& si) {
+static void WriteScrollInfo(HWND hwnd, int bar, const CanvasScrollInfo& si) {
     SCROLLINFO info{};
     info.cbSize = sizeof(info);
     info.fMask = SIF_RANGE | SIF_PAGE | SIF_POS;
@@ -1028,6 +1028,10 @@ static void PublishScrollInfo(HWND hwnd, int bar, const CanvasScrollInfo& si) {
     info.nPage = (UINT)si.nPage;
     info.nPos = si.nPos;
     SetScrollInfo(hwnd, bar, &info, FALSE);
+}
+
+static void PublishScrollInfo(HWND hwnd, int bar, const CanvasScrollInfo& si) {
+    WriteScrollInfo(hwnd, bar, si);
     LONG style = GetWindowLongW(hwnd, GWL_STYLE);
     if (style & (WS_HSCROLL | WS_VSCROLL)) {
         SetWindowLongW(hwnd, GWL_STYLE, style & ~(WS_HSCROLL | WS_VSCROLL));
@@ -1100,10 +1104,18 @@ void CanvasUpdateScrollbars(MainWindow* win, DisplayModel* dm, Size canvas) {
 #if OS_WIN
     // Tests read the canvas scroll with GetScrollInfo. gpui has no scroll
     // styles; publish the range and strip the styles SetScrollInfo adds.
+    // The window they query is the pixel mirror, not the frame.
     HWND hwnd = AppShellNativeHwnd(win);
     if (hwnd) {
         PublishScrollInfo(hwnd, SB_HORZ, win->scrollH);
         PublishScrollInfo(hwnd, SB_VERT, win->scrollV);
+        if (HWND canvas = TestingCanvasHwnd(hwnd)) {
+            WriteScrollInfo(canvas, SB_HORZ, win->scrollH);
+            WriteScrollInfo(canvas, SB_VERT, win->scrollV);
+            // SetWindowLong would leave the mirror client shrunk. Hiding the
+            // bars restores it and keeps the range GetScrollInfo just stored.
+            ShowScrollBar(canvas, SB_BOTH, FALSE);
+        }
     }
 #endif
 }

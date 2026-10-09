@@ -679,6 +679,11 @@ static PixelMirror* PixelMirrorForFrame(HWND frame) {
     return nullptr;
 }
 
+HWND TestingCanvasHwnd(HWND frame) {
+    PixelMirror* m = PixelMirrorForFrame(frame);
+    return m ? m->hwnd : nullptr;
+}
+
 static PixelMirror* PixelMirrorForHwnd(HWND hwnd) {
     for (PixelMirror& m : gPixelMirrors) {
         if (m.hwnd == hwnd) {

@@ -160,6 +160,7 @@ void AppShellPreventSleep(bool on);
 #if OS_WIN
 // the native handle of a window, or null; orig's MainWindow::hwndFrame
 HWND AppShellNativeHwnd(MainWindow* win);
+HWND TestingCanvasHwnd(HWND frame);
 MainWindow* AppShellWindowFromHwnd(HWND hwnd);
 // the top-level windows of another SumatraPDF process: `procId`, or with 0 any
 // process running this exe (orig: FindWindowW(kFrameClassName))
