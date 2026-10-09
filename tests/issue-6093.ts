@@ -7,7 +7,7 @@
 // Run: bun tests/issue-6093.ts [--no-build]   (or via tests/run-almost-all.ts)
 
 import { join } from "node:path";
-import { cmdId, EXE, ROOT, runStandalone, writeAppdata } from "./util.ts";
+import { cmdId, EXE, pollUntil, ROOT, runStandalone, USE_NG, writeAppdata } from "./util.ts";
 import {
   enumWindows,
   getClassName,
@@ -17,7 +17,7 @@ import {
   isWindowVisible,
   sleep,
 } from "./winapi.ts";
-import { withControlledSumatra } from "./control.ts";
+import { ControlCommand, withControlledSumatra } from "./control.ts";
 import { sendCommand, waitForFrame } from "./win-automation.ts";
 
 const SCROLLBAR_CLASS = "SUMATRA_OVERLAY_SCROLLBAR";
@@ -54,6 +54,15 @@ export async function testit(): Promise<void> {
 
       // scrolling shows the thin bar for a few seconds
       sendCommand(frame, cmdId("CmdScrollDown"));
+      if (USE_NG) {
+        // the bar is drawn in the frame, after the page, so it stays above it
+        await pollUntil(
+          async () => String((await client.request(ControlCommand.TestUiState, []))[1] ?? ""),
+          (s) => /overlayV=1/.test(s) && /overlayAbove=1/.test(s),
+          { error: (s) => `issue-6093: no visible overlay scrollbar after scrolling (${s})` },
+        );
+        return;
+      }
       await sleep(400);
 
       const bars = overlayScrollbars(proc.pid!).filter((h) => isWindowVisible(h));

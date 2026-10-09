@@ -665,6 +665,11 @@ TempStr AppShellUiStateTemp(MainWindow* win) {
     out.Append(fmt(" pageBox=%d chapterBox=%d pageText='%s'", IsToolbarLocationBoxFocused(win, false) ? 1 : 0,
                    IsToolbarLocationBoxFocused(win, true) ? 1 : 0, ToolbarPageBoxTextTemp(win)));
     out.Append(fmt(" scrollVis=%d/%d", win->scrollV.visible ? 1 : 0, win->scrollH.visible ? 1 : 0));
+    // the smart bar is a later canvas child, so it paints above the page
+    bool overlayV = win->scrollV.visible && IsOverlayScrollbarVisible(win->overlayScrollV);
+    bool overlayH = win->scrollH.visible && IsOverlayScrollbarVisible(win->overlayScrollH);
+    out.Append(fmt(" overlayV=%d overlayH=%d overlayAbove=%d", overlayV ? 1 : 0, overlayH ? 1 : 0,
+                   (overlayV || overlayH) ? 1 : 0));
     out.Append(SidebarStateTemp(win));
     DisplayModel* dm = win->AsFixed();
     if (dm) {
