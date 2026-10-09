@@ -812,6 +812,16 @@ bool AnnotContentsEditJustEnded() {
 
 static AnnotEditToolbar* gEditingTb = nullptr;
 
+// A kill-focus with no new window is the on-screen keyboard, not a click away.
+void AnnotContentsKeepOnKillFocus(MainWindow* win) {
+    AnnotEditToolbar* tb = win ? win->annotEditToolbar : nullptr;
+    if (!tb || !tb->editingContents || !tb->contentsEdit || !win->gpuiWin) {
+        return;
+    }
+    gp::InputFocus(tb->contentsEdit, win->gpuiWin->app, win->gpuiWin);
+    AppShellInvalidate(win);
+}
+
 void EndAnnotContentsEdit(bool accept) {
     AnnotEditToolbar* tb = gEditingTb;
     if (!tb || !tb->editingContents) {

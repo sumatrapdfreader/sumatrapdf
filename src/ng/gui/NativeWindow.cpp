@@ -39,6 +39,7 @@
 #include "HomePage.h"
 #include "RefHover.h"
 #include "gui/DocCanvas.h"
+#include "AnnotEditToolbar.h"
 #include "SelectTextKeyboard.h"
 
 #if OS_WIN
@@ -905,6 +906,17 @@ static LRESULT CALLBACK ShellSubclass(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp,
                 LRESULT res = DefSubclassProc(hwnd, msg, wp, lp);
                 ToolWindowsFollow(win);
                 return res;
+            }
+            break;
+        case WM_KILLFOCUS:
+            // no new focus: the on-screen keyboard. Keep the contents editor.
+            if ((HWND)wp == nullptr) {
+                if (MainWindow* win = WinOf(hwnd)) {
+                    if (IsEditingAnnotContents(win)) {
+                        AnnotContentsKeepOnKillFocus(win);
+                        return 0;
+                    }
+                }
             }
             break;
         case WM_DESTROY:
