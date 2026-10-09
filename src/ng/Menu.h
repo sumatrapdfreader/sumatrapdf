@@ -42,6 +42,7 @@ MenuModel* BuildMenuFromDef(MenuDef* menuDefs, BuildMenuCtx* ctx);
 MenuModel* BuildMenu(MainWindow* win);
 TempStr MainMenuResultTemp(MainWindow* win);
 TempStr FavoritesMenuIdsTemp(MainWindow* win);
+TempStr FileHistoryMenuIdsTemp(MainWindow* win);
 TempStr ContextMenuAtPointResultTemp(MainWindow* win, int x, int y);
 void RemoveBadMenuSeparators(MenuModel* menu);
 

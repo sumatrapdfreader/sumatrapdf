@@ -111,6 +111,8 @@ export enum ControlCommand {
   TestFrameNcStrips = 114,
   TestMergePdf = 115,
   TestWheelWhileClosing = 116,
+  // ng only: the menu model. "history" is the recent-file rows as "id=N text=...".
+  TestMainMenu = 117,
   // ng only. Orig's 101/102 are StartPerfLog/StopPerfLog; ng reused those
   // numbers, so this input command is 121 there.
   TestInput = 121,

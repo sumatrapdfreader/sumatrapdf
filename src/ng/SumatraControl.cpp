@@ -4228,6 +4228,10 @@ static void ExecuteControlRequest(ControlRequest* req) {
                 AppendTestResult(req, 2, StrL("NOTREADY no-window"));
                 break;
             }
+            if (str::EqI(StringArg(req, 0), StrL("history"))) {
+                AppendTestResult(req, 0, FileHistoryMenuIdsTemp(win));
+                break;
+            }
             AppendTestResult(req, 0, MainMenuResultTemp(win));
             break;
         }

@@ -1926,6 +1926,37 @@ static void AppendFavIds(str::Builder& out, MenuModel* menu) {
     }
 }
 
+static void AppendHistoryIds(str::Builder& out, MenuModel* menu) {
+    if (!menu) {
+        return;
+    }
+    for (int i = 0; i < len(menu->items); i++) {
+        const MenuItemModel& item = menu->items[i];
+        if (item.submenu) {
+            AppendHistoryIds(out, item.submenu);
+            continue;
+        }
+        CustomCommand* cmd = FindCustomCommand(item.cmdId);
+        if (!cmd || cmd->origId != CmdFileHistory) {
+            continue;
+        }
+        Str title = ParseMenuAccelTextTemp(item.title).display;
+        out.Append(fmt("id=%d text=%s\n", item.cmdId, title));
+    }
+}
+
+// Recent-file rows as "id=N text=1) name.pdf". Same ids a WM_COMMAND uses.
+TempStr FileHistoryMenuIdsTemp(MainWindow* win) {
+    if (!win) {
+        return {};
+    }
+    MenuModel* menu = BuildMenu(win);
+    str::Builder out;
+    AppendHistoryIds(out, menu);
+    DeleteMenuModel(menu);
+    return ToStrTemp(out);
+}
+
 // Favorite rows as "id=N text=Page 1". Ids are the custom commands a
 // WM_COMMAND uses, and a later rebuild reuses them.
 TempStr FavoritesMenuIdsTemp(MainWindow* win) {

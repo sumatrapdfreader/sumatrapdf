@@ -2,7 +2,8 @@
 // carrying the file path as an argument: each entry needs its own id, the id
 // must survive a menu rebuild, and invoking it must open that file.
 import { join } from "node:path";
-import { ROOT, cmdId, runStandalone } from "./util.ts";
+import { ControlCommand } from "./control.ts";
+import { ROOT, USE_NG, cmdId, runStandalone } from "./util.ts";
 import { killAndWait, launchControlled, pressKey, waitForContextMenu, waitForTitle } from "./win-automation.ts";
 import {
   getMenuItemCount,
@@ -24,7 +25,29 @@ const docA = join(ROOT, "tests", "issue-1189.pdf");
 const docB = join(ROOT, "tests", "issue-3219.pdf");
 
 // the ids of the File menu entries whose label contains one of `names`
-async function fileMenuIds(frame: number, names: string[]): Promise<number[]> {
+async function fileMenuIds(
+  frame: number,
+  names: string[],
+  client: { request: (cmd: ControlCommand, args: (string | number)[]) => Promise<unknown[]> },
+): Promise<number[]> {
+  if (USE_NG) {
+    const res = await client.request(ControlCommand.TestMainMenu, ["history"]);
+    if (res[0] !== 0) {
+      throw new Error(`recent files menu: ${String(res[1] ?? "")}`);
+    }
+    const ids = new Array(names.length).fill(0);
+    for (const line of String(res[1] ?? "").split("\n")) {
+      const m = /^id=(\d+) text=(.*)$/.exec(line.trim());
+      if (!m) {
+        continue;
+      }
+      const idx = names.findIndex((n) => m[2]!.includes(n));
+      if (idx >= 0) {
+        ids[idx] = Number(m[1]);
+      }
+    }
+    return ids;
+  }
   postMessage(frame, WM_COMMAND, kMenuBarCmdFirst, 0);
   const popup = await waitForContextMenu();
   const menu = getPopupMenuHandle(popup);
@@ -47,7 +70,7 @@ export async function testit(): Promise<void> {
     // the File menu only exists as a menu bar, which is off by default here
     sendMessage(frame, WM_COMMAND, cmdId("CmdToggleMenuBar"), 0);
 
-    const [idA, idB] = await fileMenuIds(frame, ["issue-1189", "issue-3219"]);
+    const [idA, idB] = await fileMenuIds(frame, ["issue-1189", "issue-3219"], client);
     if (!idA || !idB) {
       throw new Error(`recent files missing from the File menu: ${idA}, ${idB}`);
     }
@@ -55,8 +78,10 @@ export async function testit(): Promise<void> {
       throw new Error(`recent files share command id ${idA}`);
     }
 
-    await Bun.sleep(kMenuReopenMs);
-    const [idA2] = await fileMenuIds(frame, ["issue-1189"]);
+    if (!USE_NG) {
+      await Bun.sleep(kMenuReopenMs);
+    }
+    const [idA2] = await fileMenuIds(frame, ["issue-1189"], client);
     if (idA2 !== idA) {
       throw new Error(`command id changed when the menu was rebuilt: ${idA} -> ${idA2}`);
     }
