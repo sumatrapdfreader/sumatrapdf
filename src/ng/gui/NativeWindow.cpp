@@ -38,6 +38,7 @@
 #include "gui/TouchGestures.h"
 #include "HomePage.h"
 #include "RefHover.h"
+#include "gui/DocCanvas.h"
 
 #if OS_WIN
 
@@ -535,8 +536,114 @@ bool FreeTextInPlaceSetText(MainWindow* win, const WCHAR* text);
 bool CommandPaletteSetText(MainWindow* win, const WCHAR* text);
 bool FreeTextInPlaceCommitOnChar(MainWindow* win, int ch);
 
+// orig's SumatraPDF.h. Posted to the canvas; ng has no canvas child.
+constexpr int kSbHalfPageUp = WM_USER + 102;
+constexpr int kSbHalfPageDown = WM_USER + 103;
+
+static bool ScrollMsgFromSb(bool vert, UINT code, ScrollMsg* out) {
+    if (code == SB_THUMBPOSITION || code == SB_THUMBTRACK) {
+        *out = ScrollMsg::ThumbTrack;
+        return true;
+    }
+    if (code == SB_ENDSCROLL) {
+        return false;
+    }
+    if (vert) {
+        switch (code) {
+            case SB_LINEUP:
+                *out = ScrollMsg::LineUp;
+                return true;
+            case SB_LINEDOWN:
+                *out = ScrollMsg::LineDown;
+                return true;
+            case SB_PAGEUP:
+                *out = ScrollMsg::PageUp;
+                return true;
+            case SB_PAGEDOWN:
+                *out = ScrollMsg::PageDown;
+                return true;
+            case SB_TOP:
+                *out = ScrollMsg::Top;
+                return true;
+            case SB_BOTTOM:
+                *out = ScrollMsg::Bottom;
+                return true;
+            case kSbHalfPageUp:
+                *out = ScrollMsg::HalfPageUp;
+                return true;
+            case kSbHalfPageDown:
+                *out = ScrollMsg::HalfPageDown;
+                return true;
+            default:
+                return false;
+        }
+    }
+    switch (code) {
+        case SB_LINELEFT:
+            *out = ScrollMsg::LineLeft;
+            return true;
+        case SB_LINERIGHT:
+            *out = ScrollMsg::LineRight;
+            return true;
+        case SB_PAGELEFT:
+            *out = ScrollMsg::PageLeft;
+            return true;
+        case SB_PAGERIGHT:
+            *out = ScrollMsg::PageRight;
+            return true;
+        case SB_LEFT:
+            *out = ScrollMsg::Left;
+            return true;
+        case SB_RIGHT:
+            *out = ScrollMsg::Right;
+            return true;
+        default:
+            return false;
+    }
+}
+
+// One Present leaves PrintWindow on an older flip-swapchain buffer.
+static void PresentScroll(MainWindow* win, HWND hwnd) {
+    for (int i = 0; i < 3; i++) {
+        AppShellInvalidate(win);
+        UpdateWindow(hwnd);
+    }
+}
+
 static LRESULT CALLBACK ShellSubclass(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp, UINT_PTR, DWORD_PTR) {
     switch (msg) {
+        case WM_NCCALCSIZE:
+            // SetScrollInfo adds scroll styles. Keep them out of the client size.
+            if (wp) {
+                LONG style = GetWindowLongW(hwnd, GWL_STYLE);
+                if (style & (WS_VSCROLL | WS_HSCROLL)) {
+                    SetWindowLongW(hwnd, GWL_STYLE, style & ~(WS_VSCROLL | WS_HSCROLL));
+                }
+            }
+            break;
+        case WM_VSCROLL:
+        case WM_HSCROLL:
+            // Tests scroll the canvas HWND. ng draws in the frame, so the
+            // same SB_* codes land here.
+            if (MainWindow* win = WinOf(hwnd)) {
+                bool vert = msg == WM_VSCROLL;
+                ScrollMsg sm;
+                if (ScrollMsgFromSb(vert, LOWORD(wp), &sm)) {
+                    int thumb = (int)(short)HIWORD(wp);
+                    if (vert && win->IsCurrentTabAbout()) {
+                        HomePageOnVScroll(win, sm, thumb);
+                    } else if (vert) {
+                        CanvasOnVScroll(win, sm, thumb);
+                    } else {
+                        CanvasOnHScroll(win, sm, thumb);
+                    }
+                    if (IsMainWindowValid(win)) {
+                        PresentScroll(win, hwnd);
+                    }
+                }
+                return 0;
+            }
+            break;
         case WM_SETCURSOR:
             if (LOWORD(lp) == HTCLIENT) {
                 if (HCURSOR cur = NativeCursorWanted(hwnd)) {

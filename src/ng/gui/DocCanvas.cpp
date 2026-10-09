@@ -1018,6 +1018,23 @@ static bool DrawDocument(MainWindow* win, gp::PaintCtx* ctx, Rect rcArea) {
 
 // --- scrollbars -------------------------------------------------------------
 
+#if OS_WIN
+static void PublishScrollInfo(HWND hwnd, int bar, const CanvasScrollInfo& si) {
+    SCROLLINFO info{};
+    info.cbSize = sizeof(info);
+    info.fMask = SIF_RANGE | SIF_PAGE | SIF_POS;
+    info.nMin = si.nMin;
+    info.nMax = si.nMax;
+    info.nPage = (UINT)si.nPage;
+    info.nPos = si.nPos;
+    SetScrollInfo(hwnd, bar, &info, FALSE);
+    LONG style = GetWindowLongW(hwnd, GWL_STYLE);
+    if (style & (WS_HSCROLL | WS_VSCROLL)) {
+        SetWindowLongW(hwnd, GWL_STYLE, style & ~(WS_HSCROLL | WS_VSCROLL));
+    }
+}
+#endif
+
 static void MakeFullScrollbar(CanvasScrollInfo& si) {
     si.nPos = 0;
     si.nMin = 0;
@@ -1078,6 +1095,15 @@ void CanvasUpdateScrollbars(MainWindow* win, DisplayModel* dm, Size canvas) {
     // orig's OverlayScrollbarSetInfo: a changed position re-reveals the bar
     OverlayScrollbarsNotifyScroll(win);
     AppShellInvalidate(win);
+#if OS_WIN
+    // Tests read the canvas scroll with GetScrollInfo. gpui has no scroll
+    // styles; publish the range and strip the styles SetScrollInfo adds.
+    HWND hwnd = AppShellNativeHwnd(win);
+    if (hwnd) {
+        PublishScrollInfo(hwnd, SB_HORZ, win->scrollH);
+        PublishScrollInfo(hwnd, SB_VERT, win->scrollV);
+    }
+#endif
 }
 
 // what SetScrollInfo would have clamped the new position to
