@@ -81,6 +81,7 @@
 #include "DocumentProperties.h"
 #include "NavFilesInFolder.h"
 #include "EngineAll.h"
+#include "PdfCad.h"
 #include <mupdf/pdf.h>
 #include "base/ByteReaderWriter.h"
 #include "PdfCreator.h"
@@ -818,6 +819,76 @@ static TempStr ClickClearsSelectionResultTemp(Str word, int* exitCodeOut) {
     }
     if (exitCodeOut) {
         *exitCodeOut = cleared ? 0 : 1;
+    }
+    return ToStrTemp(out);
+}
+
+// Color histogram of a page rendered with the CAD enhancement forced on.
+// tests/issue-5937.ts.
+static TempStr CadEnhanceColorsResultTemp(Str path, int pageNo, int zoomPercent, int* exitCodeOut) {
+    str::Builder out;
+    auto fail = [&out, exitCodeOut](Str msg) {
+        if (exitCodeOut) {
+            *exitCodeOut = 1;
+        }
+        out.Append(msg);
+        return ToStrTemp(out);
+    };
+
+    SetEngineeringDrawingEnhanceMode(StrL("on"));
+    EngineBase* engine = CreateEngineFromFile(path, nullptr, false);
+    if (!engine) {
+        return fail(fmt("ERROR engine-create-failed path=%s\n", path));
+    }
+    if (pageNo < 1 || pageNo > engine->PageCount()) {
+        SafeEngineRelease(&engine);
+        return fail(fmt("ERROR bad-page page=%d\n", pageNo));
+    }
+    if (!EngineMupdfCadEnhanceActive(engine)) {
+        SafeEngineRelease(&engine);
+        return fail(StrL("ERROR cad-enhance-not-active\n"));
+    }
+
+    float zoom = (float)zoomPercent / 100.f;
+    RenderPageArgs args(pageNo, zoom, 0);
+    Pixmap* bmp = engine->RenderPage(args);
+    if (!bmp) {
+        SafeEngineRelease(&engine);
+        return fail(StrL("ERROR render-failed\n"));
+    }
+    Pixmap* rgb = (bmp->format == PixmapFormat::BGRA8) ? bmp : PixmapCopyAs32bppDIB(bmp);
+    if (!rgb) {
+        FreePixmap(bmp);
+        SafeEngineRelease(&engine);
+        return fail(StrL("ERROR pixmap-convert-failed\n"));
+    }
+
+    int counts[256] = {};
+    for (int y = 0; y < rgb->height; y++) {
+        const u8* row = rgb->data + ((size_t)y * (size_t)rgb->stride);
+        for (int x = 0; x < rgb->width; x++) {
+            const u8* px = row + ((size_t)x * 4);
+            if (px[0] == px[1] && px[1] == px[2]) {
+                counts[px[0]]++;
+            }
+        }
+    }
+    out.Append(fmt("size=%dx%d\n", rgb->width, rgb->height));
+    if (engine->HasErrors()) {
+        out.Append(fmt("errors=%s\n", engine->GetErrorsTextTemp()));
+    }
+    for (int i = 0; i < 256; i++) {
+        if (counts[i] >= 64) {
+            out.Append(fmt("gray=%d count=%d\n", i, counts[i]));
+        }
+    }
+    if (rgb != bmp) {
+        FreePixmap(rgb);
+    }
+    FreePixmap(bmp);
+    SafeEngineRelease(&engine);
+    if (exitCodeOut) {
+        *exitCodeOut = 0;
     }
     return ToStrTemp(out);
 }
@@ -2677,6 +2748,21 @@ static void ExecuteControlRequest(ControlRequest* req) {
                 break;
             }
             AppendTestResult(req, 0, SelectTextKeyboardResultTemp(win));
+            break;
+        }
+
+        case ControlCmd::TestCadEnhanceColors: {
+            Str path = StringArg(req, 0);
+            i32 pageNo = 0;
+            i32 zoomPercent = 100;
+            if (len(path) == 0 || !IntArg(req, 1, pageNo)) {
+                AppendError(req, StrL("TestCadEnhanceColors expects string path, int pageNo [, int zoomPercent]"));
+                break;
+            }
+            IntArg(req, 2, zoomPercent);
+            int exitCode = 0;
+            Str res = CadEnhanceColorsResultTemp(path, pageNo, zoomPercent, &exitCode);
+            AppendTestResult(req, exitCode, res);
             break;
         }
 
