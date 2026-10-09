@@ -955,6 +955,8 @@ static bool RemoveSelectedItem() {
 }
 
 #if OS_WIN
+static void PaletteAttachQueryEdit(CommandPaletteWnd* wnd);
+
 // orig's list-box dump. exit 2 when the palette is not open.
 TempStr CommandPaletteStateTemp(int* exitCodeOut) {
     str::Builder out;
@@ -966,6 +968,14 @@ TempStr CommandPaletteStateTemp(int* exitCodeOut) {
     };
     CommandPaletteWnd* wnd = gCommandPaletteWnd;
     if (!wnd || !wnd->visible) {
+        out.Append(StrL("NOTREADY no-palette\n"));
+        return finish(2);
+    }
+    // the query Edit appears with the tool window, after this state is first visible
+    if (!wnd->queryEdit) {
+        PaletteAttachQueryEdit(wnd);
+    }
+    if (!wnd->queryEdit) {
         out.Append(StrL("NOTREADY no-palette\n"));
         return finish(2);
     }
