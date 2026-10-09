@@ -122,6 +122,13 @@ Rect AppShellCanvasScreenRect(MainWindow* win);
 // moves / sizes the frame to `r` (outer rectangle, screen pixels; empty: leave
 // it) and maximizes it. False on wasm.
 bool AppShellPlaceWindow(MainWindow* win, Rect r, bool maximize);
+// Current: the canvas as the frame is now. DocumentTab: a document tab is
+// about to exist, so a UseTabs strip counts before the tab does.
+enum class CanvasPredict {
+    Current,
+    DocumentTab,
+};
+Rect AppShellPredictCanvasRc(MainWindow* win, CanvasPredict predict);
 // work area of the monitor the frame is on. Primary work area when win is null.
 Rect AppShellWorkArea(MainWindow* win);
 // full bounds of that monitor, including the dock or taskbar

@@ -244,9 +244,9 @@ int AppShellFrameBorder(MainWindow* win) {
     return ShowCaption(win) && !win->isMaximized ? kFrameBorderSize : 0;
 }
 
-static int CaptionDy(MainWindow* win, bool twoRow) {
+static int CaptionDy(MainWindow* win, bool twoRow, bool tabsVisible) {
     int dy = CaptionWinBtnDy(win, twoRow);
-    if (twoRow && TabsAreVisible(win)) {
+    if (twoRow && tabsVisible) {
         dy += kTabBarDy;
     }
     return dy;
@@ -261,7 +261,7 @@ bool AppShellCaptionRects(MainWindow* win, Rect* menuOut, Rect* tabsOut, int* dy
     bool hasTabs = TabsAreVisible(win);
     int border = AppShellFrameBorder(win);
     int dx = win->frameRc.dx - 2 * border;
-    *dyOut = border + CaptionDy(win, twoRow);
+    *dyOut = border + CaptionDy(win, twoRow, TabsAreVisible(win));
     if (twoRow) {
         *menuOut = Rect{border + kMenuBarDy, border, dx - kMenuBarDy - 3 * winBtn, kMenuBarDy};
         *tabsOut = Rect{border, border + winBtn, dx, hasTabs ? kTabBarDy : 0};
@@ -2709,6 +2709,72 @@ void ShellView::OnTick(ShellView* self, gp::Ctx* cx, const gp::TickEvent* ev) {
     }
 }
 
+// Document area under the caption, menu, tabs and toolbar.
+static Rect CanvasRcForFrame(MainWindow* win, int frameDx, int frameDy, bool menuBarShown, bool tabsVisible) {
+    int chromeDy;
+    if (ShowCaption(win)) {
+        chromeDy = CaptionDy(win, menuBarShown, tabsVisible);
+    } else {
+        chromeDy = (menuBarShown ? kMenuBarDy : 0) + (tabsVisible ? kTabBarDy : 0);
+    }
+    int toolbarDy = ToolbarDy(win);
+    int border = AppShellFrameBorder(win);
+    bool tbAtBottom = ToolbarAtBottom();
+    if (!tbAtBottom) {
+        chromeDy += toolbarDy;
+    }
+    int sidebarDx = 0;
+    if (win->uiState.tocVisible || win->uiState.favVisible) {
+        sidebarDx = win->sidebarDx + kSplitterDx;
+    }
+    int bodyDy = frameDy - 2 * border - chromeDy - (tbAtBottom ? toolbarDy : 0);
+    int aiChatDx = AIChatPanelDx(win);
+    int navFilesDx = NavFilesPanelDx(win);
+    int bodyDx = frameDx - 2 * border;
+    bool sidebarOnRight = gSettings && gSettings->sidebarOnRight;
+    int canvasX = border + (sidebarOnRight ? 0 : sidebarDx);
+    return Rect{canvasX, border + chromeDy, bodyDx - sidebarDx - aiChatDx - navFilesDx, bodyDy};
+}
+
+// Canvas the next frame will lay out, in dips. The native client is known
+// after PlaceMainWindow; canvasRc stays empty until the first paint.
+Rect AppShellPredictCanvasRc(MainWindow* win, CanvasPredict predict) {
+    if (!win) {
+        return {};
+    }
+    int frameDx = win->frameRc.dx;
+    int frameDy = win->frameRc.dy;
+    bool maximized = win->isMaximized;
+#if OS_WIN
+    HWND hwnd = AppShellNativeHwnd(win);
+    if (hwnd) {
+        RECT rc{};
+        if (GetClientRect(hwnd, &rc) && rc.right > 1 && rc.bottom > 1) {
+            int dpi = std::max((int)GetDpiForWindow(hwnd), 96);
+            frameDx = MulDiv(rc.right, 96, dpi);
+            frameDy = MulDiv(rc.bottom, 96, dpi);
+        }
+        if (IsZoomed(hwnd)) {
+            maximized = true;
+        }
+    }
+#endif
+    if (frameDx < 1 || frameDy < 1) {
+        return {};
+    }
+    bool tabsVisible = TabsAreVisible(win);
+    if (predict == CanvasPredict::DocumentTab && SettingsUseTabs() && !win->isQuickLook && !win->isFullScreen &&
+        !win->InPresentation()) {
+        tabsVisible = true;
+    }
+    bool wasMaximized = win->isMaximized;
+    win->isMaximized = maximized;
+    bool menuBarShown = win->isMenuBarVisible && !gp::AppHasMenuBar();
+    Rect canvas = CanvasRcForFrame(win, frameDx, frameDy, menuBarShown, tabsVisible);
+    win->isMaximized = wasMaximized;
+    return canvas;
+}
+
 gp::El* ShellView::Render(ShellView* self, gp::Ctx* cx) {
     // everything drawn this frame is allocated after this point
     ResetTempArena();
@@ -2751,34 +2817,12 @@ gp::El* ShellView::Render(ShellView* self, gp::Ctx* cx) {
     // orig: tabsInTitlebar follows UseTabs
     SetTabsInTitlebar(win, CanHaveTabsInTitlebar() && SettingsUseTabs() && !win->isQuickLook);
     bool showCaption = ShowCaption(win);
-    int chromeDy = (menuBarShown ? kMenuBarDy : 0) + (TabsAreVisible(win) ? kTabBarDy : 0);
-    if (showCaption) {
-        chromeDy = CaptionDy(win, menuBarShown);
-    } else {
+    if (!showCaption) {
         win->tabsAvailDx = 0;
     }
-    // with ToolbarPosition = bottom it takes a row under the canvas instead
-    int toolbarDy = ToolbarDy(win);
     int border = AppShellFrameBorder(win);
     bool tbAtBottom = ToolbarAtBottom();
-    if (!tbAtBottom) {
-        chromeDy += toolbarDy;
-    }
-    // the splitter owns the sidebar's width while it is dragged; read it back
-    // so the document relayouts with the canvas
-    int sidebarDx = 0;
-    if (win->uiState.tocVisible || win->uiState.favVisible) {
-        sidebarDx = win->sidebarDx + kSplitterDx;
-    }
-    int bodyDy = win->frameRc.dy - 2 * border - chromeDy - (tbAtBottom ? toolbarDy : 0);
-    int aiChatDx = AIChatPanelDx(win);
-    int navFilesDx = NavFilesPanelDx(win);
-    int bodyDx = win->frameRc.dx - 2 * border;
-    // BuildBody puts the sidebar on the right when SidebarOnRight is set.
-    // The canvas then starts at the frame border, not after the sidebar.
-    bool sidebarOnRight = gSettings && gSettings->sidebarOnRight;
-    int canvasX = border + (sidebarOnRight ? 0 : sidebarDx);
-    win->canvasRc = Rect{canvasX, border + chromeDy, bodyDx - sidebarDx - aiChatDx - navFilesDx, bodyDy};
+    win->canvasRc = CanvasRcForFrame(win, win->frameRc.dx, win->frameRc.dy, menuBarShown, TabsAreVisible(win));
 #if OS_DARWIN || OS_WASM
     ApplyRenderScale(win);
 #endif

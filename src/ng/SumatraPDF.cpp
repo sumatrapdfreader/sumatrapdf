@@ -1659,6 +1659,14 @@ static bool ShouldUseBrowserView(FileType kind) {
 // which case the fixed-page ChmEngine renders it, as orig falls back too.
 // Markdown / HTML fall back to their fixed-page engines the same way (orig's
 // CreateControllerForMarkdown, when SetParentWindow() fails).
+static bool IsEbookFileType(FileType ft);
+static DisplayMode DisplayModeForNewDocument(Str path, EngineBase* engine);
+static float EbookLayoutAspectForLoad(MainWindow* win, Str path);
+
+// True while the command-line file loop is loading, so -view / -zoom size
+// that ebook and not a session restored just before it.
+static bool gApplyCliViewToEbookLayout = false;
+
 static DocController* CreateControllerForFile(MainWindow* win, Str path, PasswordUI* pwdUI) {
     auto timeStart = TimeGet();
     FileType kind = GuessFileTypeFromName(path);
@@ -1675,7 +1683,11 @@ static DocController* CreateControllerForFile(MainWindow* win, Str path, Passwor
         }
     }
 
+    // A reflow page cannot change size after this. Single Page + Fit Width
+    // has to match the window or the fitted page is taller than it (#3472).
+    float prevAspect = EngineMupdfSetEbookLayoutAspect(EbookLayoutAspectForLoad(win, path));
     EngineBase* engine = CreateEngineFromFile(path, pwdUI, chmInFixedUI);
+    EngineMupdfSetEbookLayoutAspect(prevAspect);
     if (!engine) {
         // as a last resort, try to open as a chm file. Without a browser
         // view ChmEngine was the fallback and it has just failed (orig's
@@ -1700,6 +1712,44 @@ static DocController* CreateControllerForFile(MainWindow* win, Str path, Passwor
 static bool IsEbookFileType(FileType ft) {
     return ft == FileType::Epub || ft == FileType::Mobi || ft == FileType::Fb2 || ft == FileType::Fb2z ||
            ft == FileType::PalmDoc || ft == FileType::HTML || ft == FileType::Txt || ft == FileType::Lit;
+}
+
+// 0 keeps the fixed A5 page. Only Single Page + Fit Width wants one page
+// to be one screen; continuous view keeps stable pagination.
+static float EbookLayoutAspectForLoad(MainWindow* win, Str path) {
+    FileType ft = GuessFileTypeFromName(path, true);
+    if (!IsEbookFileType(ft)) {
+        return 0;
+    }
+    DisplayMode displayMode = DisplayModeForNewDocument(path, nullptr);
+    float zoom = gSettings->defaultZoomFloat;
+    FileState* fs = nullptr;
+    if (gSettings->rememberStatePerDocument) {
+        fs = FileHistoryFindByPath(path);
+        if (fs && fs->useDefaultState) {
+            fs = nullptr;
+        }
+    }
+    if (fs) {
+        displayMode = DisplayModeFromString(fs->displayMode, DisplayMode::Automatic);
+        zoom = ZoomFromString(fs->zoom, kZoomFitPage);
+    }
+    if (gApplyCliViewToEbookLayout && gFlags) {
+        if (gFlags->startView != DisplayMode::Automatic) {
+            displayMode = gFlags->startView;
+        }
+        if (gFlags->startZoom != kInvalidZoom) {
+            zoom = gFlags->startZoom;
+        }
+    }
+    if (displayMode != DisplayMode::SinglePage || zoom != kZoomFitWidth) {
+        return 0;
+    }
+    Rect rc = AppShellPredictCanvasRc(win, CanvasPredict::DocumentTab);
+    if (rc.dx < 1 || rc.dy < 1) {
+        return 0;
+    }
+    return (float)rc.dy / (float)rc.dx;
 }
 
 static DisplayMode DisplayModeForNewDocument(Str path, EngineBase* engine) {
@@ -9178,6 +9228,7 @@ int GpuiMain(int argc, char** argv) {
     // as tabs of the first window.
     bool newWindowEach = gFlags->inNewWindow && !gFlags->inNewWindowTabs;
     MainWindow* docWin = win;
+    gApplyCliViewToEbookLayout = true;
     for (Str path : gFlags->fileNames) {
         // a file the restored session already opened is selected, not re-opened
         WindowTab* open = restoredSession ? FindTabByFilePath(path::NormalizeTemp(path)) : nullptr;
@@ -9196,6 +9247,7 @@ int GpuiMain(int argc, char** argv) {
             PrintCurrentFile(docWin, gFlags->exitWhenDone);
         }
     }
+    gApplyCliViewToEbookLayout = false;
 #if OS_WIN
     LoadDdeOpenOnStartup(win);
     gIsStartup = false;
