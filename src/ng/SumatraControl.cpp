@@ -1602,6 +1602,22 @@ static TempStr PageCommentsResultTemp(Str path, int pageNo, int* exitCodeOut) {
     return ToStrTemp(out);
 }
 
+// SHA-1 thumbprints of CurrentUser\MY certs that can sign.
+static TempStr ListSigningCertsResultTemp(int* exitCodeOut) {
+    StrVec thumbs;
+    StrVec labels;
+    ListWindowsSigningCertificates(thumbs, labels);
+    str::Builder out;
+    out.Append(fmt("n=%d\n", len(thumbs)));
+    for (int i = 0; i < len(thumbs); i++) {
+        out.Append(fmt("thumb=%s\nlabel=%s\n", thumbs[i], labels[i]));
+    }
+    if (exitCodeOut) {
+        *exitCodeOut = 0;
+    }
+    return ToStrTemp(out);
+}
+
 // The dest is a copy so the signature can be written incrementally.
 static TempStr SignDocumentResultTemp(Str pdfPath, Str destPath, Str thumbprint, Str certPath, Str certPassword,
                                       Str imagePath, int appearanceFlags, int* exitCodeOut) {
@@ -3473,6 +3489,13 @@ static void ExecuteControlRequest(ControlRequest* req) {
             }
             int exitCode = 0;
             Str res = PageCommentsResultTemp(path, pageNo, &exitCode);
+            AppendTestResult(req, exitCode, res);
+            break;
+        }
+
+        case ControlCmd::TestListSigningCerts: {
+            int exitCode = 0;
+            Str res = ListSigningCertsResultTemp(&exitCode);
             AppendTestResult(req, exitCode, res);
             break;
         }
