@@ -3163,6 +3163,9 @@ static void ExecuteControlRequest(ControlRequest* req) {
                 AppendError(req, StrL("TestSearch expects string pdf, string needle, optional string password"));
                 break;
             }
+            if (len(password) == 0) {
+                password = CliPassword();
+            }
             AppendTestResult(req, 0, SearchResultTemp(pdf, needle, password));
             break;
         }

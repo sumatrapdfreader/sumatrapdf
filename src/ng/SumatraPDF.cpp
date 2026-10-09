@@ -138,6 +138,14 @@
 
 RenderCache* gRenderCache = nullptr;
 static Flags* gFlags = nullptr;
+
+// -pwd. Headless tests open a file after startup, so the window prompt never runs.
+Str CliPassword() {
+    if (!gFlags) {
+        return {};
+    }
+    return gFlags->password;
+}
 // what CmdToggleHoverPreview turns the citation hover on to (orig's value)
 constexpr int kDefaultCitationHoverDelay = 300;
 // -crash-on-open: crash while opening a document, to test the crash handler
