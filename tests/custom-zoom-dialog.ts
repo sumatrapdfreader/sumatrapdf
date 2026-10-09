@@ -8,7 +8,7 @@
 
 import { join } from "node:path";
 import { ControlClient, ControlCommand, withControlledSumatra } from "./control.ts";
-import { EXE, ROOT, cmdId, runStandalone, SLOW_BUILD_FACTOR, writeAppdata } from "./util.ts";
+import { EXE, ROOT, USE_NG, cmdId, runStandalone, SLOW_BUILD_FACTOR, writeAppdata } from "./util.ts";
 import {
   ensureModifierKeysUp,
   enumWindows,
@@ -59,7 +59,13 @@ const ZOOM_LEVELS = [
 function findDialog(pid: number, frame: number): number {
   let res = 0;
   enumWindows((hwnd) => {
-    if (hwnd !== frame && getWindowPid(hwnd) === pid && getClassName(hwnd) === DIALOG_CLASS && isWindowVisible(hwnd)) {
+    if (hwnd === frame || getWindowPid(hwnd) !== pid || !isWindowVisible(hwnd)) {
+      return true;
+    }
+    const cls = getClassName(hwnd);
+    // ng: the dialog is a gpui tool window titled Zoom, not the default class
+    const ngZoom = cls === "GpuiSystemMonitor" && getWindowText(hwnd) === "Zoom";
+    if (cls === DIALOG_CLASS || ngZoom) {
       res = hwnd;
       return false;
     }
@@ -104,11 +110,22 @@ async function pressKey(hwnd: number, vkey: number): Promise<void> {
   postMessage(hwnd, WM_KEYUP, vkey, 0);
 }
 
-async function editText(edit: number, want: string, what: string): Promise<void> {
+// orig reads the Edit child. ng has no child HWND; the field is the tool
+// window's focused edit, named customzoom on the control channel.
+async function fieldNow(client: ControlClient, edit: number): Promise<string> {
+  if (!USE_NG) {
+    return getControlText(edit);
+  }
+  const res = await client.request(ControlCommand.TestToolWindow, ["state", "customzoom"]);
+  const m = /editText='([^']*)'/.exec(String(res[1] ?? ""));
+  return m?.[1] ?? "";
+}
+
+async function editText(client: ControlClient, edit: number, want: string, what: string): Promise<void> {
   const deadline = Date.now() + 3000 * SLOW_BUILD_FACTOR;
   let got = "";
   for (;;) {
-    got = getControlText(edit);
+    got = await fieldNow(client, edit);
     if (got === want) {
       return;
     }
@@ -121,8 +138,8 @@ async function editText(edit: number, want: string, what: string): Promise<void>
 
 // hold an arrow key down until the list stops moving, and report every level
 // it stopped on along the way
-async function walk(edit: number, vkey: number): Promise<string[]> {
-  const seen: string[] = [getControlText(edit)];
+async function walk(client: ControlClient, edit: number, vkey: number): Promise<string[]> {
+  const seen: string[] = [await fieldNow(client, edit)];
   for (let i = 0; i < 40; i++) {
     await pressKey(edit, vkey);
     const before = seen[seen.length - 1]!;
@@ -130,7 +147,7 @@ async function walk(edit: number, vkey: number): Promise<string[]> {
     let now = before;
     while (now === before && Date.now() < deadline) {
       await sleep(10);
-      now = getControlText(edit);
+      now = await fieldNow(client, edit);
     }
     if (now === seen[seen.length - 1]) {
       // the end of the list: it stops there rather than wrapping round
@@ -184,11 +201,11 @@ async function checkTallList(): Promise<void> {
         );
       }
       // still usable: the field follows the list, which now scrolls
-      const edit = findChildWindow(dlg, "Edit");
-      await editText(edit, "100%", "the field did not start on the current zoom");
+      const edit = USE_NG ? dlg : findChildWindow(dlg, "Edit");
+      await editText(client, edit, "100%", "the field did not start on the current zoom");
       // the list runs largest first, so the level under 100% is 90%
       await pressKey(edit, VK_DOWN);
-      await editText(edit, "90%", "Down did not move to the next custom level");
+      await editText(client, edit, "90%", "Down did not move to the next custom level");
     },
     ["-appdata", appdata, "-window-pos", "1100x900@40x40", "-zoom", "100", pdf],
   );
@@ -216,32 +233,31 @@ export async function testit(): Promise<void> {
       if (title !== "Zoom") {
         throw new Error(`custom-zoom-dialog: the title is "${title}", want "Zoom"`);
       }
-      if (findChildWindow(dlg, "ComboBox")) {
+      if (!USE_NG && findChildWindow(dlg, "ComboBox")) {
         throw new Error("custom-zoom-dialog: the zoom is still a combo box");
       }
-      const edit = findChildWindow(dlg, "Edit");
+      const edit = USE_NG ? dlg : findChildWindow(dlg, "Edit");
       if (!edit) {
         throw new Error("custom-zoom-dialog: no edit field");
       }
       // the list is drawn by the dialog, not a window of its own, so what says
       // it is there is the height it takes and the arrow keys below
       const dr = getWindowRect(dlg);
-      const er = getWindowRect(edit);
-      const rowDy = er.bottom - er.top;
+      const rowDy = USE_NG ? 22 : getWindowRect(edit).bottom - getWindowRect(edit).top;
       if (dr.bottom - dr.top < 6 * rowDy) {
         throw new Error(`custom-zoom-dialog: the dialog is too short to hold a list ${JSON.stringify(dr)}`);
       }
 
       // the document opens at 100%, so that is what the field starts on
-      await editText(edit, "100%", "the field did not start on the current zoom");
+      await editText(client, edit, "100%", "the field did not start on the current zoom");
 
       // Down / Up move the list and the field follows, with the focus still in
       // the field. 50% and 125% are the levels either side of 100%
       await pressKey(edit, VK_DOWN);
-      await editText(edit, "50%", "Down did not move to the next level");
+      await editText(client, edit, "50%", "Down did not move to the next level");
       await pressKey(edit, VK_UP);
       await pressKey(edit, VK_UP);
-      await editText(edit, "125%", "Up did not move back up the levels");
+      await editText(client, edit, "125%", "Up did not move back up the levels");
 
       // Enter zooms to what the field says
       await pressKey(edit, VK_RETURN);
@@ -255,10 +271,10 @@ export async function testit(): Promise<void> {
       // order, with no separator row and nothing beyond the ends
       sendCommand(frame, cmdId("CmdZoomCustom"));
       const dlg2 = await waitForDialog(pid, frame);
-      const edit2 = findChildWindow(dlg2, "Edit");
-      await editText(edit2, "125%", "reopening did not show the zoom it is at");
-      const down = await walk(edit2, VK_DOWN);
-      const up = await walk(edit2, VK_UP);
+      const edit2 = USE_NG ? dlg2 : findChildWindow(dlg2, "Edit");
+      await editText(client, edit2, "125%", "reopening did not show the zoom it is at");
+      const down = await walk(client, edit2, VK_DOWN);
+      const up = await walk(client, edit2, VK_UP);
       const all = up.slice().reverse();
       if (all.join() !== ZOOM_LEVELS.join()) {
         throw new Error(`custom-zoom-dialog: the levels are [${all.join()}]`);
@@ -269,7 +285,7 @@ export async function testit(): Promise<void> {
 
       // the walk left it on the first row, which is a level with a name rather
       // than a number: the field takes the name and so does the zoom
-      await editText(edit2, "Fit Page", "the walk did not end on the first level");
+      await editText(client, edit2, "Fit Page", "the walk did not end on the first level");
       await pressKey(edit2, VK_RETURN);
       await waitForDialogGone(pid, frame);
       const zoom2 = await zoomLabel(client);

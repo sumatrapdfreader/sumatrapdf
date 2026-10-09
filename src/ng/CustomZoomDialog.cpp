@@ -101,11 +101,17 @@ static void SetEditFromSelection() {
     gp::InputSetValue(gCustomZoom.editZoom, ToGpui(ZoomLevelStrExact(gCustomZoom.zoomLevels[idx])));
 }
 
+// the tool window's rows are the shared dialog row; the in-frame card uses its own
+static float ZoomListRowDy() {
+    return gCustomZoomTw ? kDlgWinRowDy : kZoomRowDy;
+}
+
 // what orig's ListBox does when its selection changes
 static void ScrollSelIntoView() {
     int n = len(gCustomZoom.zoomLevels);
-    float viewDy = DialogListViewDy(n, kZoomRowDy, kZoomListMinDy, kZoomListMaxDy);
-    gCustomZoom.scrollY = DialogScrollToRow(gCustomZoom.scrollY, gCustomZoom.sel, n, kZoomRowDy, viewDy);
+    float rowDy = ZoomListRowDy();
+    float viewDy = DialogListViewDy(n, rowDy, kZoomListMinDy, kZoomListMaxDy);
+    gCustomZoom.scrollY = DialogScrollToRow(gCustomZoom.scrollY, gCustomZoom.sel, n, rowDy, viewDy);
 }
 
 // orig's SelectLevelFromEdit: typing a level's name puts the list on it
@@ -310,8 +316,21 @@ static gp::El* CustomZoomWinBuild(gp::Ctx* cx) {
                                ->IntoEl()
                                ->H(kDlgWinEditDy)));
 
-    gp::El* list = gp::Div(cx->a)->Id(GStrL("customzoom-list"))->FlexCol()->W(gp::kFill)->PadT(kZoomWinPadY)->Shrink0();
-    for (int i = 0; i < len(gCustomZoom.zoomLevels); i++) {
+    // more levels than the screen has room for: the list scrolls instead of
+    // growing the dialog past the monitor (orig's tall-list check)
+    int n = len(gCustomZoom.zoomLevels);
+    float viewDy = DialogListViewDy(n, kDlgWinRowDy, kZoomListMinDy, kZoomListMaxDy);
+    gp::El* list = gp::Div(cx->a)
+                       ->Id(GStrL("customzoom-list"))
+                       ->FlexCol()
+                       ->W(gp::kFill)
+                       ->H(viewDy)
+                       ->PadT(kZoomWinPadY)
+                       ->Shrink0()
+                       ->ScrollY(gCustomZoom.scrollY)
+                       ->ScrollFromPath()
+                       ->OnScroll(gp::ListenTo(gCustomZoomView, &CustomZoomView::OnScroll));
+    for (int i = 0; i < n; i++) {
         gp::El* row = gp::Div(cx->a)
                           ->FlexRow()
                           ->W(gp::kFill)

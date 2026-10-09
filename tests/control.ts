@@ -116,6 +116,8 @@ export enum ControlCommand {
   TestInput = 121,
   // ng only: frame state, including the in-frame notification text.
   TestUiState = 122,
+  // ng only. Must stay 125: ng's wire id, and 127 is TestContextMenuAt.
+  TestToolWindow = 125,
   // ng only: page context menu at a canvas point.
   TestContextMenuAt = 127,
 }
