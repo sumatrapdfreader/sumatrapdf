@@ -3129,6 +3129,9 @@ void RerenderTabPage(WindowTab* tab, int pageNo) {
     if (win->CurrentTab() != tab) {
         return;
     }
+    // the following paint queues the render; keep frames coming until it lands
+    win->repaintPending = true;
+    gRenderCache->RequestRendering(dm, pageNo);
     SidebarRefreshThumbnailPage(win, pageNo);
     AppShellInvalidate(win);
 }

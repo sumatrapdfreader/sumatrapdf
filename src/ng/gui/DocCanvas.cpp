@@ -978,6 +978,11 @@ static bool DrawDocument(MainWindow* win, gp::PaintCtx* ctx, Rect rcArea) {
             if (curTab) {
                 curTab->everPaintedPage = true;
             }
+            // Paint() drew the stale tile and queued a replacement, then
+            // returned 0. Without another frame the new bitmap never appears.
+            if (renderOutOfDateCue) {
+                win->repaintPending = true;
+            }
             continue;
         }
         if (renderDelay != kRenderDelayFailed) {
