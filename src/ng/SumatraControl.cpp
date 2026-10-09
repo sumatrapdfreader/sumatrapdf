@@ -853,6 +853,56 @@ static TempStr InverseSearchResultTemp(Str pdfPath, int pageNo, int x, int y) {
     return ToStrTemp(out);
 }
 
+// search limited to a page range. tests/issue-5694.ts.
+static TempStr FindPageRangeResultTemp(Str pdfPath, Str needle, int first, int last, Str spec, int* exitCodeOut) {
+    str::Builder out;
+    auto finish = [&](int code) -> TempStr {
+        if (exitCodeOut) {
+            *exitCodeOut = code;
+        }
+        return ToStrTemp(out);
+    };
+
+    EngineBase* engine = CreateEngineFromFile(pdfPath, nullptr, false);
+    if (!engine) {
+        out.Append(fmt("ERROR engine-create-failed pdf=%s\n", pdfPath));
+        return finish(1);
+    }
+    auto* ts = new TextSearch(engine);
+    ts->SetDirection(TextSearch::Direction::Forward);
+    ts->SetMatchCase(false);
+    Vec<bool> allowed;
+    if (spec) {
+        if (!ParseFindPageRange(spec, engine->PageCount(), allowed)) {
+            VecReset(allowed);
+        }
+    } else if (first > 0 || last > 0) {
+        int lo = first > 0 ? first : 1;
+        int hi = last > 0 ? last : ts->nPages;
+        if (lo > hi) {
+            std::swap(lo, hi);
+        }
+        VecResize(allowed, ts->nPages);
+        for (int page = 1; page <= ts->nPages; page++) {
+            allowed[page - 1] = page >= lo && page <= hi;
+        }
+    }
+    ts->SetAllowedPages(allowed);
+    int n = 0;
+    Vec<TextSel>* sel = ts->FindFirst(ts->RestrictFirst(), needle);
+    while (sel && len(*sel) > 0) {
+        out.Append(fmt("page=%d\n", (*sel)[0].pageNo));
+        n++;
+        sel = ts->FindNext();
+    }
+    if (n == 0) {
+        out.Append(fmt("NOTFOUND needle=%s first=%d last=%d\n", needle, first, last));
+    }
+    delete ts;
+    SafeEngineRelease(&engine);
+    return finish(0);
+}
+
 class TestPasswordUI : public PasswordUI {
     Str password;
     bool triedPassword = false;
@@ -3089,6 +3139,25 @@ static void ExecuteControlRequest(ControlRequest* req) {
                 break;
             }
             AppendTestResult(req, 0, SearchResultTemp(pdf, needle, password));
+            break;
+        }
+
+        case ControlCmd::TestFindPageRange: {
+            Str pdf = StringArg(req, 0);
+            Str needle = StringArg(req, 1);
+            i32 first = 0;
+            i32 last = 0;
+            IntArg(req, 2, first);
+            IntArg(req, 3, last);
+            Str spec = StringArg(req, 4);
+            if (len(pdf) == 0 || len(needle) == 0) {
+                AppendError(req, StrL("TestFindPageRange expects string pdf, string needle [, int first, int last [, "
+                                      "string spec]]"));
+                break;
+            }
+            int exitCode = 0;
+            Str res = FindPageRangeResultTemp(pdf, needle, first, last, spec, &exitCode);
+            AppendTestResult(req, exitCode, res);
             break;
         }
 
