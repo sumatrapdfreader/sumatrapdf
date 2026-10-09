@@ -561,3 +561,4 @@ bool IsMainWindowValid(MainWindow*);
 bool IsMainWindowValidAndNotClosing(MainWindow*);
 bool IsWindowTabValid(WindowTab*);
 extern Vec<MainWindow*> gWindows;
+void CleanRemoteDestNameInPlace(Str& destName);

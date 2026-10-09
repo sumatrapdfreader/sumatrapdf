@@ -887,6 +887,27 @@ static TempStr DestResultTemp(Str pdfPath, int destNo) {
     return ToStrTemp(out);
 }
 
+// named dest, including the "nameddest=" prefix a remote link carries.
+// tests/issue-5642.ts.
+static TempStr NamedDestResultTemp(Str pdfPath, Str destName) {
+    str::Builder out;
+    EngineBase* engine = CreateEngineFromFile(pdfPath, nullptr, false);
+    if (!engine) {
+        out.Append(fmt("ERROR engine-create-failed pdf=%s\n", pdfPath));
+    } else {
+        Str name = destName;
+        CleanRemoteDestNameInPlace(name);
+        IPageDestination* dest = engine->GetNamedDest(name);
+        if (dest) {
+            out.Append(fmt("name=%s page=%d\n", destName, PageDestGetPageNo(dest)));
+        } else {
+            out.Append(fmt("name=%s NOTFOUND\n", destName));
+        }
+        SafeEngineRelease(&engine);
+    }
+    return ToStrTemp(out);
+}
+
 // Color histogram of a page rendered with the CAD enhancement forced on.
 // tests/issue-5937.ts.
 static TempStr CadEnhanceColorsResultTemp(Str path, int pageNo, int zoomPercent, int* exitCodeOut) {
@@ -2767,6 +2788,17 @@ static void ExecuteControlRequest(ControlRequest* req) {
                 break;
             }
             AppendTestResult(req, 0, DestResultTemp(pdf, destNo));
+            break;
+        }
+
+        case ControlCmd::TestNamedDest: {
+            Str pdf = StringArg(req, 0);
+            Str name = StringArg(req, 1);
+            if (len(pdf) == 0 || len(name) == 0) {
+                AppendError(req, StrL("TestNamedDest expects string pdf, string name"));
+                break;
+            }
+            AppendTestResult(req, 0, NamedDestResultTemp(pdf, name));
             break;
         }
 
