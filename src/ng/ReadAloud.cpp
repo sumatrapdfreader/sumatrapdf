@@ -2805,13 +2805,24 @@ TempStr ReadAloudPlaybackBarStateTemp(int* exitCodeOut) {
     Rect speed = toPx(bar->speedBounds);
     Rect speedLab = toPx(bar->speedLabelBounds);
     int idx = ReadAloudClosestSpeedIdx();
+    TempStr speedText = ReadAloudSpeedLabelTemp(ReadAloudSpeedAt(idx));
+    gp::Window* gw = nullptr;
+#if OS_WIN
+    gw = bar->tw ? ToolWindowGpui(bar->tw) : nullptr;
+#endif
+    if (!gw) {
+        gw = win->gpuiWin;
+    }
+    gp::PaintCtx* paint = gw ? &gw->paint : nullptr;
+    int idealDip = (int)ceilf(gp::MeasureText(paint, ToGpui(speedText), 13, 0).w);
+    int idealPx = MulDiv(idealDip, dpi, 96);
     out.Append(fmt("OK visible=1 resume=%d hwnd=%d\n", (int)bar->showResume, hwndNum));
     out.Append(fmt("pause=%d,%d,%d,%d\n", pause.x, pause.y, pause.dx, pause.dy));
     out.Append(fmt("stop=%d,%d,%d,%d\n", stop.x, stop.y, stop.dx, stop.dy));
     out.Append(fmt("speed=%d,%d,%d,%d\n", speed.x, speed.y, speed.dx, speed.dy));
     out.Append(fmt("speedLabel=%d,%d,%d,%d\n", speedLab.x, speedLab.y, speedLab.dx, speedLab.dy));
-    out.Append(fmt("speedIdx=%d speedCount=%d label=%s\n", idx, ReadAloudSpeedCount(),
-                   ReadAloudSpeedLabelTemp(ReadAloudSpeedAt(idx))));
+    out.Append(fmt("speedLabelIdeal=%d\n", idealPx));
+    out.Append(fmt("speedIdx=%d speedCount=%d label=%s\n", idx, ReadAloudSpeedCount(), speedText));
     out.Append(fmt("status=%s\n", ReadAloudPlaybackBarTextTemp(bar->sessionTab)));
     return finish(0);
 }
