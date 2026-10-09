@@ -752,6 +752,20 @@ static LRESULT CALLBACK ShellSubclass(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp,
             }
             break;
         case WM_KEYDOWN:
+            if (MainWindow* win = WinOf(hwnd)) {
+                if (ForwardBrowserMsg(win, msg, wp, lp)) {
+                    return 0;
+                }
+                LRESULT res = DefSubclassProc(hwnd, msg, wp, lp);
+                // A handled key tells gpui to drop the WM_CHAR that follows.
+                // End and the arrows never send one, so the next character
+                // typed into a field would be dropped.
+                if (IsMainWindowValid(win) && MapVirtualKeyW((UINT)wp, MAPVK_VK_TO_CHAR) == 0) {
+                    AppShellClearEatChar(win);
+                }
+                return res;
+            }
+            break;
         case WM_KEYUP:
             if (MainWindow* win = WinOf(hwnd)) {
                 if (ForwardBrowserMsg(win, msg, wp, lp)) {

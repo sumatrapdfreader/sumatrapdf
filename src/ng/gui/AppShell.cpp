@@ -497,6 +497,14 @@ static gp::MouseButton TestButton(int b) {
     return gp::MouseButton::Left;
 }
 
+// A handled key tells gpui to drop the next character. Call this when that
+// key does not send a WM_CHAR, so the flag does not eat a later one.
+void AppShellClearEatChar(MainWindow* win) {
+    if (win && win->gpuiWin) {
+        win->gpuiWin->eatChar = false;
+    }
+}
+
 // ng: kinds are key / keyup (a = vk, b = mods: 1 Ctrl, 2 Shift, 4 Alt,
 // 8 auto-repeat), char (a = code point), down / up / click (a, b = x, y in
 // dips; c = button: 0 left, 1 right, 2 middle; d = mods), move (c = pressed
