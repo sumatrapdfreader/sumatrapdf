@@ -3010,6 +3010,45 @@ static TempStr RenderSelectionsResultTemp(int* exitCodeOut) {
     return res;
 }
 
+// GoToPage on a background tab so UpdateScrollbars sees a non-current dm.
+static TempStr HiddenTabGoToPageResultTemp(int* exitCodeOut) {
+    str::Builder out;
+    auto fail = [&](Str msg, int code) -> TempStr {
+        out.Append(msg);
+        out.AppendChar('\n');
+        if (exitCodeOut) {
+            *exitCodeOut = code;
+        }
+        return ToStrTemp(out);
+    };
+
+    if (len(gWindows) == 0) {
+        return fail(StrL("NOTREADY no-window"), 2);
+    }
+    MainWindow* win = gWindows[0];
+    if (!win) {
+        return fail(StrL("NOTREADY no-window"), 2);
+    }
+
+    DisplayModel* dm = nullptr;
+    for (WindowTab* tab : win->Tabs()) {
+        if (tab && tab != win->CurrentTab() && tab->AsFixed()) {
+            dm = tab->AsFixed();
+            break;
+        }
+    }
+    if (!dm) {
+        return fail(StrL("NOTREADY no-hidden-doc"), 2);
+    }
+
+    dm->GoToPage(dm->CurrentPageNo(), false);
+    out.Append(StrL("OK\n"));
+    if (exitCodeOut) {
+        *exitCodeOut = 0;
+    }
+    return ToStrTemp(out);
+}
+
 // Each page's width, and where the top-level bookmarks point.
 // tests/sidebar-thumbnails.ts gives every page a unique width.
 static TempStr PageInfoResultTemp(int* exitCodeOut) {
@@ -3746,6 +3785,13 @@ static void ExecuteControlRequest(ControlRequest* req) {
             }
             int exitCode = 0;
             Str res = SeedTextSelectionResultTemp(pageNo, &exitCode);
+            AppendTestResult(req, exitCode, res);
+            break;
+        }
+
+        case ControlCmd::TestHiddenTabGoToPage: {
+            int exitCode = 0;
+            Str res = HiddenTabGoToPageResultTemp(&exitCode);
             AppendTestResult(req, exitCode, res);
             break;
         }
