@@ -357,6 +357,12 @@ static void FinishColorDialog(CloseAction action) {
         return;
     }
     gColor.visible = false;
+    // The edit lives in this window. Blur it here so close does not use it
+    // after it is freed.
+    gp::Window* dlg = ToolWindowGpui(gColorTw);
+    if (dlg && gColor.editRgb) {
+        gp::InputBlur(gColor.editRgb, dlg->app, dlg);
+    }
     DlgWindowClose(&gColorTw);
     // its window can outlive the main window by a moment (the layer tells
     // it later): nothing of a closed main window is touched
@@ -372,7 +378,7 @@ static void FinishColorDialog(CloseAction action) {
             ApplyBackground();
         }
     }
-    if (win && win->gpuiWin && gColor.editRgb) {
+    if (!dlg && win && win->gpuiWin && gColor.editRgb) {
         gp::InputBlur(gColor.editRgb, win->gpuiWin->app, win->gpuiWin);
     }
     delete gColor.editRgb;

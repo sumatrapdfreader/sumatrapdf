@@ -10,6 +10,7 @@
 import { mkdirSync, rmSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 import { ControlClient, ControlCommand } from "./control.ts";
+import { IS_MAC } from "./host.ts";
 import { assemblePdf, cmdId, pollUntil, runStandalone, tmpPath, USE_NG } from "./util.ts";
 import {
   clientToScreen,
@@ -121,6 +122,11 @@ function chipNames(dump: string): string[] {
 // ng has no popup HWND. A posted down/up pair can have a cursor snap between
 // them, which gpui treats as a drag and the swatch never receives the click.
 async function ngClick(client: ControlClient, x: number, y: number, button = 0): Promise<void> {
+  // The toolbar drop-down closes when the real cursor is somewhere else.
+  if (IS_MAC) {
+    const at = clientToScreen(0, x, y);
+    setCursorPos(at.x, at.y);
+  }
   const res = await client.request(ControlCommand.TestInput, ["click", x, y, button, 0]);
   const raw = String(res[1] ?? "");
   if (res[0] !== 0 || !raw.startsWith("OK")) {
@@ -184,6 +190,14 @@ export async function openChipDropdown(client: ControlClient, pid: number, kind:
   return swatches;
 }
 
+// ng's color dialog is the modeless "changecolor" tool window, owned by the frame.
+async function macColorDialog(client: ControlClient): Promise<boolean> {
+  const res = await client.request(ControlCommand.TestToolWindow, ["list"]);
+  const raw = String(res[1] ?? "");
+  const m = /changecolor made=1 rect=(-?\d+),(-?\d+),(-?\d+),(-?\d+) title='([^']*)'/.exec(raw);
+  return !!m && Number(m[2]) >= -1000 && m[5] === COLOR_DIALOG_TITLE;
+}
+
 // the drop-down's visible color dialog, if it is up
 function findColorDialog(pid: number): number {
   let found = 0;
@@ -224,6 +238,27 @@ async function checkEditColors(client: ControlClient, pid: number, frame: number
     await clickAt(popup, x - r.left, last.y + Math.floor(last.dy / 2) - r.top, 0);
   }
 
+  if (IS_MAC) {
+    await pollUntil(
+      () => macColorDialog(client),
+      (up) => up,
+      {
+        error: "annot-color-dropdown: Edit colors did not open the color dialog",
+      },
+    );
+    if (!/annotColorPopup visible=0/.test(await markupDump(client))) {
+      throw new Error("annot-color-dropdown: the drop-down stayed up under the color dialog");
+    }
+    await client.request(ControlCommand.TestToolWindow, ["input", "changecolor", "key", VK_ESCAPE, 0, 0, 0]);
+    await pollUntil(
+      () => macColorDialog(client),
+      (up) => !up,
+      {
+        error: "annot-color-dropdown: the color dialog did not close",
+      },
+    );
+    return;
+  }
   const dlg = await pollUntil(
     () => findColorDialog(pid),
     (hwnd) => hwnd !== 0,
@@ -443,6 +478,14 @@ const DEFAULT_COLORS: Record<string, string> = {
   CmdCreateAnnotFileAttachment: "#ffff00",
 };
 
+async function waitAnnotButton(client: ControlClient, cmd: number, name: string): Promise<Rect> {
+  return pollUntil(
+    () => annotButtonRect(client, cmd),
+    (b) => !!b && b.dx > 0 && b.dy > 0,
+    { error: `annot-color-dropdown: no ${name} button on the Edit PDF toolbar` },
+  );
+}
+
 // the visible annotation button for a command, in toolbar client coords
 async function annotButtonRect(client: ControlClient, cmd: number): Promise<Rect | null> {
   const raw = String((await client.request(ControlCommand.TestToolbarButtons, []))[1] ?? "");
@@ -552,10 +595,7 @@ async function testToolbarButtons(): Promise<void> {
     // in use, and joins the presets when it is not one of them yet
     const presets = PRESETS.split(" ");
     for (const name of COLOR_BUTTONS) {
-      const b = await annotButtonRect(client, cmdId(name));
-      if (!b) {
-        throw new Error(`annot-color-dropdown: no ${name} button on the Edit PDF toolbar`);
-      }
+      const b = await waitAnnotButton(client, cmdId(name), name);
       await rightClickToolbar(client, toolbar, b.x + (b.dx >> 1), b.y + (b.dy >> 1));
       const def = DEFAULT_COLORS[name]!;
       if (!presets.includes(def)) {
@@ -571,7 +611,7 @@ async function testToolbarButtons(): Promise<void> {
 
     // ink offers colors of its own, translucent, and its default is the first
     {
-      const b = (await annotButtonRect(client, cmdId("CmdCreateAnnotInk")))!;
+      const b = await waitAnnotButton(client, cmdId("CmdCreateAnnotInk"), "CmdCreateAnnotInk");
       await rightClickToolbar(client, toolbar, b.x + (b.dx >> 1), b.y + (b.dy >> 1));
       const colors = (await waitForHoverColors(client, INK_DEFAULT_PRESETS)).join(" ");
       if (colors !== INK_DEFAULT_PRESETS) {
@@ -595,7 +635,7 @@ async function testToolbarButtons(): Promise<void> {
     }
 
     // picking a color is the color the next annotation of that type is made in
-    const square = (await annotButtonRect(client, cmdId("CmdCreateAnnotSquare")))!;
+    const square = await waitAnnotButton(client, cmdId("CmdCreateAnnotSquare"), "CmdCreateAnnotSquare");
     await rightClickToolbar(client, toolbar, square.x + (square.dx >> 1), square.y + (square.dy >> 1));
     const raw = await pollUntil(
       async () => hoverDump(client),
@@ -645,7 +685,7 @@ async function testToolbarButtons(): Promise<void> {
 
     // clicking the button picks the tool: its colors go away, and resting on
     // the button does not bring them back
-    const line = (await annotButtonRect(client, cmdId("CmdCreateAnnotLine")))!;
+    const line = await waitAnnotButton(client, cmdId("CmdCreateAnnotLine"), "CmdCreateAnnotLine");
     const lx = line.x + (line.dx >> 1);
     const ly = line.y + (line.dy >> 1);
     await rightClickToolbar(client, toolbar, lx, ly);
@@ -745,7 +785,7 @@ async function testCurrentColorAdded(): Promise<void> {
       // ink has colors of its own, translucent; its default 40% yellow joins them
       ["CmdCreateAnnotInk", `${INK_PRESETS} #66ffff00*`],
     ] as const) {
-      const b = (await annotButtonRect(client, cmdId(name)))!;
+      const b = await waitAnnotButton(client, cmdId(name), name);
       await rightClickToolbar(client, toolbar, b.x + (b.dx >> 1), b.y + (b.dy >> 1));
       const colors = (await waitForHoverColors(client, want)).join(" ");
       if (colors !== want) {
