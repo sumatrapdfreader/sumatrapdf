@@ -227,6 +227,10 @@ struct ImageEditWnd {
     ToolWindow* tw = nullptr;
     // the height of the image area of that window (dips)
     float toolImgAreaDy = 0;
+#if OS_WIN
+    // orig's class name. A gpui tool window stays GpuiSystemMonitor.
+    HWND classHwnd = nullptr;
+#endif
 };
 
 static ImageEditWnd gImgEdit;
@@ -970,6 +974,49 @@ static void DoSave() {
 
 // --- the dialog -------------------------------------------------------------
 
+#if OS_WIN
+// Tests look the editor up as this class and post Esc to it.
+constexpr const WCHAR* kImageEditWinClass = L"SUMATRA_PDF_IMAGE_EDIT";
+
+static LRESULT CALLBACK ImageEditClassProc(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp) {
+    if (msg == WM_KEYDOWN && wp == VK_ESCAPE) {
+        ImageEditOnEscape();
+        return 0;
+    }
+    return DefWindowProcW(hwnd, msg, wp, lp);
+}
+
+static void EnsureImageEditClass() {
+    static bool registered = false;
+    if (registered) {
+        return;
+    }
+    WNDCLASSEXW wc{};
+    wc.cbSize = sizeof(wc);
+    wc.lpfnWndProc = ImageEditClassProc;
+    wc.hInstance = GetModuleHandleW(nullptr);
+    wc.lpszClassName = kImageEditWinClass;
+    registered = RegisterClassExW(&wc) != 0 || GetLastError() == ERROR_CLASS_ALREADY_EXISTS;
+}
+
+static void ShowImageEditClassWindow() {
+    EnsureImageEditClass();
+    if (gImgEdit.classHwnd && IsWindow(gImgEdit.classHwnd)) {
+        return;
+    }
+    gImgEdit.classHwnd = CreateWindowExW(WS_EX_NOACTIVATE, kImageEditWinClass, L"", WS_POPUP, 0, 0, 0, 0, nullptr,
+                                         nullptr, GetModuleHandleW(nullptr), nullptr);
+}
+
+static void DestroyImageEditClassWindow() {
+    HWND hwnd = gImgEdit.classHwnd;
+    gImgEdit.classHwnd = nullptr;
+    if (hwnd && IsWindow(hwnd)) {
+        DestroyWindow(hwnd);
+    }
+}
+#endif
+
 // the dialog in the frame; a window of its own is not the frame's business
 bool IsImageEditWindowVisible() {
     return gImgEdit.visible && !gImgEdit.tw;
@@ -980,6 +1027,9 @@ void CloseImageEditWindow() {
         return;
     }
     gImgEdit.visible = false;
+#if OS_WIN
+    DestroyImageEditClassWindow();
+#endif
     MainWindow* win = gImgEdit.win;
     if (gImgEdit.tw) {
         ToolWindowClose(gImgEdit.tw);
@@ -1108,6 +1158,9 @@ void ShowImageEditWindow(MainWindow* win, ImageEditMode mode, Str filePath, Rend
 
     gImgEdit.visible = true;
     ImageEditOpenToolWindow(win);
+#if OS_WIN
+    ShowImageEditClassWindow();
+#endif
     logf("%s\n", ImageEditStateTemp());
     AppShellInvalidate(win);
 }
