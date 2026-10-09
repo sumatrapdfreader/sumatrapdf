@@ -4166,7 +4166,11 @@ static void ExecuteControlRequest(ControlRequest* req) {
             bool favAsTab = tab && tab->IsFavoritesTab();
             AppendLayoutRect(out, StrL("favoritesTab"), favAsTab, favAsTab ? canvas : Rect{});
             SidebarContent topContent = tab ? tab->sidebarContent : SidebarContent::Bookmarks;
-            Rect sideRc{0, topDy, sidebarDx, canvas.dy};
+            int sideX = border;
+            if (sidebarDx > 0 && gSettings && gSettings->sidebarOnRight) {
+                sideX = canvas.x + canvas.dx + kSplitterDx;
+            }
+            Rect sideRc{sideX, topDy, sidebarDx, canvas.dy};
             AppendLayoutRect(out, SidebarContentToStr(topContent), win->uiState.tocVisible, sideRc);
             AppendLayoutRect(out, SidebarContentToStr(win->sidebarBottomContent), win->uiState.favVisible, sideRc);
             // orig names the panes sidebarTop / sidebarBottom, whatever they show
