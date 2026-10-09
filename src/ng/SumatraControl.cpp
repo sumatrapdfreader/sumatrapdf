@@ -172,6 +172,8 @@ static TempStr FavoriteNavResultTemp(Str action, int pageNo, int* exitCodeOut) {
         GoToNextFavorite(win, false);
     } else if (str::EqI(action, StrL("page"))) {
         // report only
+    } else if (str::EqI(action, StrL("menu"))) {
+        return finish(FavoritesMenuIdsTemp(win), 0);
     } else {
         return finish(fmt("ERROR unknown-action action=%s", action), 1);
     }

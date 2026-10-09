@@ -4,7 +4,7 @@
 import { mkdirSync, rmSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 import { ControlCommand } from "./control.ts";
-import { assemblePdf, cmdId, runStandalone, tmpPath } from "./util.ts";
+import { assemblePdf, cmdId, runStandalone, tmpPath, USE_NG } from "./util.ts";
 import { killAndWait, launchControlled, pressKey, waitForContextMenu } from "./win-automation.ts";
 import {
   getMenuItemCount,
@@ -53,7 +53,29 @@ function collectIds(menu: bigint, names: string[], ids: number[]): void {
   }
 }
 
-async function favoritesMenuIds(frame: number, names: string[]): Promise<number[]> {
+async function favoritesMenuIds(
+  frame: number,
+  names: string[],
+  client: { request: (cmd: ControlCommand, args: (string | number)[]) => Promise<unknown[]> },
+): Promise<number[]> {
+  if (USE_NG) {
+    const res = await client.request(ControlCommand.TestFavoriteNav, ["menu", 0]);
+    if (res[0] !== 0) {
+      throw new Error(`favorites menu: ${String(res[1] ?? "")}`);
+    }
+    const ids = new Array(names.length).fill(0);
+    for (const line of String(res[1] ?? "").split("\n")) {
+      const m = /^id=(\d+) text=(.*)$/.exec(line.trim());
+      if (!m) {
+        continue;
+      }
+      const idx = names.findIndex((n) => m[2].includes(n));
+      if (idx >= 0) {
+        ids[idx] = Number(m[1]);
+      }
+    }
+    return ids;
+  }
   postMessage(frame, WM_COMMAND, kMenuBarCmdFirst + kFavoritesMenuIdx, 0);
   const popup = await waitForContextMenu();
   const ids = new Array(names.length).fill(0);
@@ -89,7 +111,7 @@ export async function testit(): Promise<void> {
     sendMessage(frame, WM_COMMAND, cmdId("CmdToggleMenuBar"), 0);
 
     const names = ["Page 1", "Page 2"];
-    const [id1, id2] = await favoritesMenuIds(frame, names);
+    const [id1, id2] = await favoritesMenuIds(frame, names, client);
     if (!id1 || !id2) {
       throw new Error(`favorites missing from the Favorites menu: ${id1}, ${id2}`);
     }
@@ -98,7 +120,7 @@ export async function testit(): Promise<void> {
     }
 
     await Bun.sleep(kMenuReopenMs);
-    const [id1Again] = await favoritesMenuIds(frame, names);
+    const [id1Again] = await favoritesMenuIds(frame, names, client);
     if (id1Again !== id1) {
       throw new Error(`command id changed when the menu was rebuilt: ${id1} -> ${id1Again}`);
     }

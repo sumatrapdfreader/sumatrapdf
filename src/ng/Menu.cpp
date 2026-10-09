@@ -1907,6 +1907,38 @@ static void AppendMenuRows(str::Builder& out, MenuModel* menu, Str parent) {
     }
 }
 
+static void AppendFavIds(str::Builder& out, MenuModel* menu) {
+    if (!menu) {
+        return;
+    }
+    for (int i = 0; i < len(menu->items); i++) {
+        const MenuItemModel& item = menu->items[i];
+        if (item.submenu) {
+            AppendFavIds(out, item.submenu);
+            continue;
+        }
+        CustomCommand* cmd = FindCustomCommand(item.cmdId);
+        if (!cmd || cmd->origId != CmdFavorite) {
+            continue;
+        }
+        Str title = ParseMenuAccelTextTemp(item.title).display;
+        out.Append(fmt("id=%d text=%s\n", item.cmdId, title));
+    }
+}
+
+// Favorite rows as "id=N text=Page 1". Ids are the custom commands a
+// WM_COMMAND uses, and a later rebuild reuses them.
+TempStr FavoritesMenuIdsTemp(MainWindow* win) {
+    if (!win) {
+        return {};
+    }
+    MenuModel* menu = BuildMenu(win);
+    str::Builder out;
+    AppendFavIds(out, menu);
+    DeleteMenuModel(menu);
+    return ToStrTemp(out);
+}
+
 // Stable main-menu dump for debug-control parity checks.
 TempStr MainMenuResultTemp(MainWindow* win) {
     MenuModel* menu = BuildMenu(win);
