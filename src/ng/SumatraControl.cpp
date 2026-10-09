@@ -54,6 +54,7 @@
 #include "HomePage.h"
 #include "TextSelection.h"
 #include "Selection.h"
+#include "SelectionHandlers.h"
 #include "TextSearch.h"
 #include "FileHistory.h"
 #include "Favorites.h"
@@ -1856,6 +1857,52 @@ static TempStr PageInfoOverlayResultTemp(Str pathTwoPages, Str pathOnePage, int*
     return ToStrTemp(out);
 }
 
+// Expand SelectionHandlers placeholders against the current tab's selection.
+static TempStr SelectionVarsResultTemp(Str pattern, int* exitCodeOut) {
+    str::Builder out;
+    auto finish = [&](Str msg, int code) -> TempStr {
+        out.Append(msg);
+        if (exitCodeOut) {
+            *exitCodeOut = code;
+        }
+        return ToStrTemp(out);
+    };
+    if (len(gWindows) == 0 || !gWindows[0]) {
+        return finish(StrL("NOTREADY no-window\n"), 2);
+    }
+    WindowTab* tab = gWindows[0]->CurrentTab();
+    bool isTextOnly = false;
+    TempStr sel = tab ? GetSelectedTextTemp(tab, StrL("\n"), isTextOnly) : TempStr{};
+    if (len(sel) == 0) {
+        sel = StrL("");
+    }
+    if (str::IsEmptyOrWhiteSpace(pattern)) {
+        pattern = StrL("${selectionPosition}");
+    }
+    TempStr expanded = ExpandSelectionVarsTemp(pattern, sel, false, 0, nullptr, tab);
+    out.Append(StrL("pattern="));
+    out.Append(pattern);
+    out.AppendChar('\n');
+    out.Append(StrL("expanded="));
+    out.Append(expanded);
+    out.AppendChar('\n');
+    if (tab && tab->selectionOnPage) {
+        out.Append(fmt("nrects=%d\n", len(*tab->selectionOnPage)));
+        for (SelectionOnPage& onPage : *tab->selectionOnPage) {
+            RectF r = onPage.rect;
+            out.Append(fmt("rect=%g,%g,%g,%g page=%d\n", r.x, r.y, r.dx, r.dy, onPage.pageNo));
+            if (onPage.HasQuad()) {
+                QuadF q = onPage.quad;
+                out.Append(fmt("quad=%g,%g %g,%g %g,%g %g,%g\n", q.ul.x, q.ul.y, q.ur.x, q.ur.y, q.ll.x, q.ll.y, q.lr.x,
+                               q.lr.y));
+            }
+        }
+    } else {
+        out.Append(StrL("nrects=0\n"));
+    }
+    return finish({}, 0);
+}
+
 static void ExecuteControlRequest(ControlRequest* req) {
     switch ((ControlCmd)req->cmd) {
         case ControlCmd::Ping:
@@ -2699,6 +2746,14 @@ static void ExecuteControlRequest(ControlRequest* req) {
             }
             int exitCode = 0;
             Str res = ImageResizeEdgesResultTemp(imagePath, newW, newH, &exitCode);
+            AppendTestResult(req, exitCode, res);
+            break;
+        }
+
+        case ControlCmd::TestSelectionVars: {
+            Str pattern = StringArg(req, 0);
+            int exitCode = 0;
+            Str res = SelectionVarsResultTemp(pattern, &exitCode);
             AppendTestResult(req, exitCode, res);
             break;
         }
