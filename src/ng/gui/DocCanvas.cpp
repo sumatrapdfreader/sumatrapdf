@@ -3017,15 +3017,16 @@ static bool OnMouseLeftButtonDblClk(MainWindow* win, int x, int y) {
         }
         return false;
     }
-    // while an annotation is selected, double-clicking it (to edit free text in
-    // place) is the only double-click there is
+    // free text edits in place on a double-click. Any other press still starts
+    // a drag: gpui counts it as a double-click right after the selection click
     Annotation* locked = AnnotationLockingMouse(win);
     if (locked) {
         bool onLocked = dm->GetAnnotationAtPos(Point{x, y}, locked) == locked;
         if (onLocked && Type(locked) == AnnotationType::FreeText) {
             StartFreeTextInPlaceEdit(win, locked);
+            return true;
         }
-        return true;
+        return false;
     }
     // a double-click on free text edits its text where it sits on the page
     if (!IsPlacingHighlighterAnnotation(win) && StartFreeTextInPlaceEditAt(win, Point{x, y})) {
