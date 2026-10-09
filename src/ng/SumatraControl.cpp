@@ -3774,6 +3774,9 @@ static void ExecuteControlRequest(ControlRequest* req) {
             AppendLayoutRect(out, StrL("toolbar"), toolbarDy > 0,
                              Rect{border, topDy, frame.dx - 2 * border, toolbarDy});
             WindowTab* tab = win->CurrentTab();
+            // the Favorites tab fills the canvas; orig reports that panel's hwnd
+            bool favAsTab = tab && tab->IsFavoritesTab();
+            AppendLayoutRect(out, StrL("favoritesTab"), favAsTab, favAsTab ? canvas : Rect{});
             SidebarContent topContent = tab ? tab->sidebarContent : SidebarContent::Bookmarks;
             AppendLayoutRect(out, SidebarContentToStr(topContent), win->uiState.tocVisible,
                              Rect{0, topDy, sidebarDx, canvas.dy});
