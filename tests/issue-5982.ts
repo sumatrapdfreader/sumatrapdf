@@ -93,7 +93,9 @@ export async function testit(): Promise<void> {
 
     const canvas = findCanvas(frame);
     const canvasRect = getClientRect(canvas);
-    await clickAt(canvas, Math.floor(canvasRect.dx / 2), Math.floor(canvasRect.dy / 2), 50);
+    const x = Math.floor((canvasRect.right - canvasRect.left) / 2);
+    const y = Math.floor((canvasRect.bottom - canvasRect.top) / 2);
+    await clickAt(canvas, x, y, 50);
     if (getFocusedHwnd(frame) !== frame) {
       throw new Error("issue-5982: document frame did not receive focus");
     }

@@ -1454,8 +1454,10 @@ static void UpdateMatchCount(MainWindow* win, Str text) {
                     str::Eq(win->findCountRangeText, win->findPageRangeText) &&
                     (!wantMatchList || (wantSnippets ? win->findCountHasSnippets : len(win->findMatches) > 0));
     if (cacheHit) {
-        // Matches are unchanged, but Find Next/Prev moved the active match
+        // Find Next/Prev moved the document match while the Find window
+        // was unfocused; the results list has to follow it
         ShowMatchCount(win);
+        FindWindowRefreshResults(win, false);
     } else {
         StartFindCount(win, text, win->findMatchCase, win->findMatchWholeWord);
     }

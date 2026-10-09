@@ -2846,6 +2846,15 @@ static void OnMouseLeftButtonDown(MainWindow* win, int x, int y) {
         return;
     }
 
+    // orig's HwndSetFocus(hwndFrame): a page click takes the keys back from
+    // a floating Find window
+    AppShellFocusFrame(win);
+#if OS_WIN
+    if (HWND hwnd = AppShellNativeHwnd(win)) {
+        SetFocus(hwnd);
+    }
+#endif
+
     DisplayModel* dm = win->AsFixed();
     if (!dm) {
         return;
