@@ -2088,7 +2088,14 @@ static gp::El* BuildList(CommandPaletteWnd* wnd, gp::Ctx* cx, float listDy) {
         if (data->indent > 0) {
             row->Child(gp::Div(cx->a)->W((float)(data->indent * 16))->Shrink0());
         }
-        gp::El* left = gp::Div(cx->a)->FlexRow()->Flex1()->MinW(0)->ItemsCenter()->ClipX();
+        // a long directory must not push the filename off the left (#6104)
+        bool fileRow = len(data->filePath) > 0;
+        gp::El* left = gp::Div(cx->a)->FlexRow()->ItemsCenter()->ClipX();
+        if (fileRow) {
+            left->Shrink0();
+        } else {
+            left->Flex1()->MinW(0);
+        }
         left->Child(FilterHighlightText(cx, itemText, wnd->filterWords, th.foreground, 13));
         if (data->annot) {
             Str contents = Contents(data->annot);
@@ -2105,7 +2112,12 @@ static gp::El* BuildList(CommandPaletteWnd* wnd, gp::Ctx* cx, float listDy) {
             bool emphasized = IsSettingRow(data) && len(data->settingPath) == 0 && SettingDiffersFromDefault(data);
             gp::Rgba rightFg = emphasized ? th.foreground : th.mutedFg;
             int boldLen = emphasized ? len(right) : 0;
-            gp::El* rightEl = FilterHighlightText(cx, right, wnd->filterWords, rightFg, 12, 0, boldLen)->Shrink0();
+            gp::El* rightEl = FilterHighlightText(cx, right, wnd->filterWords, rightFg, 12, 0, boldLen);
+            if (fileRow) {
+                rightEl->Flex1()->MinW(0)->ClipX();
+            } else {
+                rightEl->Shrink0();
+            }
             row->Child(gp::Div(cx->a)->W(8)->Shrink0());
             row->Child(rightEl);
         }
