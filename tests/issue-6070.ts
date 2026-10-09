@@ -11,7 +11,7 @@
 import { mkdirSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 import { ControlClient, ControlCommand } from "./control.ts";
-import { cmdId, makePdf, runStandalone, tmpPath } from "./util.ts";
+import { cmdId, makePdf, runStandalone, tmpPath, USE_NG } from "./util.ts";
 import {
   clientToScreen,
   enumWindows,
@@ -158,6 +158,10 @@ export async function testit(): Promise<void> {
     sendCommand(frame, cmdId("CmdMergePDF"));
     // the current page starts selected
     await wantItems(client, "0:1s,0:2,0:3,0:4", "the dialog didn't open");
+    await waitFor("page 2 has no button", async () => {
+      const b = (await merge(client)).rects.get(1)?.btn;
+      return !!b && b.dy > 1;
+    });
     let s = await merge(client);
     const hwnd = s.hwnd;
 
@@ -202,21 +206,45 @@ export async function testit(): Promise<void> {
 
     // Add PDF asks where; the page starts as the selected one (3). Esc adds nothing
     await merge(client, "askpos", other);
-    let ask = await waitForInsertQuestion(proc.pid);
-    let edit = findChildWindow(ask, "Edit");
-    if (getControlText(edit) !== "3") {
-      throw new Error(`issue-6070: want page 3 in the Add PDF question, got '${getControlText(edit)}'`);
+    if (USE_NG) {
+      // the question is a layer of the merge window, not an Edit of its own
+      let asked = "";
+      await waitFor("Add PDF didn't ask where to insert", async () => {
+        const m = /asking=1 ask=(\S*)/.exec((await merge(client)).raw);
+        if (!m) {
+          return false;
+        }
+        asked = m[1]!;
+        return true;
+      });
+      if (asked !== "3") {
+        throw new Error(`issue-6070: want page 3 in the Add PDF question, got '${asked}'`);
+      }
+      postMessage(hwnd, WM_KEYDOWN, VK_ESCAPE, 0);
+      await waitFor("Esc didn't close the Add PDF question", async () => !/asking=1/.test((await merge(client)).raw));
+    } else {
+      let ask = await waitForInsertQuestion(proc.pid);
+      let edit = findChildWindow(ask, "Edit");
+      if (getControlText(edit) !== "3") {
+        throw new Error(`issue-6070: want page 3 in the Add PDF question, got '${getControlText(edit)}'`);
+      }
+      postMessage(edit, WM_KEYDOWN, VK_ESCAPE, 0);
+      await waitFor("Esc didn't close the Add PDF question", async () => !isWindowVisible(ask));
     }
-    postMessage(edit, WM_KEYDOWN, VK_ESCAPE, 0);
-    await waitFor("Esc didn't close the Add PDF question", async () => !isWindowVisible(ask));
     await wantItems(client, "0:4,0:1,0:2rs,0:3", "a cancelled Add PDF added pages");
 
     // after page 4: at the end; its first page removed
     await merge(client, "askpos", other);
-    ask = await waitForInsertQuestion(proc.pid);
-    edit = findChildWindow(ask, "Edit");
-    sendText(edit, "4");
-    postMessage(edit, WM_KEYDOWN, VK_RETURN, 0);
+    if (USE_NG) {
+      await waitFor("Add PDF didn't ask where to insert", async () => /asking=1/.test((await merge(client)).raw));
+      await merge(client, "asktext", "4");
+      postMessage(hwnd, WM_KEYDOWN, VK_RETURN, 0);
+    } else {
+      const ask = await waitForInsertQuestion(proc.pid);
+      const edit = findChildWindow(ask, "Edit");
+      sendText(edit, "4");
+      postMessage(edit, WM_KEYDOWN, VK_RETURN, 0);
+    }
     await wantItems(client, "0:4,0:1,0:2r,0:3,1:1s,1:2s", "Add PDF after page 4");
     await merge(client, "remove", "4");
     await wantItems(client, "0:4,0:1,0:2r,0:3,1:1rs,1:2", "adding other.pdf");

@@ -499,6 +499,20 @@ static void RunOnDeactivated(ToolWindow* tw) {
     RunOnActivate(tw, false);
 }
 
+// gpui reads modifiers with GetKeyState. A posted click carries them in MK_*.
+static LRESULT MouseWithPostedMods(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp) {
+    BYTE before[256]{};
+    GetKeyboardState(before);
+    BYTE keys[256];
+    memcpy(keys, before, sizeof(keys));
+    keys[VK_CONTROL] = (GET_KEYSTATE_WPARAM(wp) & MK_CONTROL) ? 0x80 : 0;
+    keys[VK_SHIFT] = (GET_KEYSTATE_WPARAM(wp) & MK_SHIFT) ? 0x80 : 0;
+    SetKeyboardState(keys);
+    LRESULT res = DefSubclassProc(hwnd, msg, wp, lp);
+    SetKeyboardState(before);
+    return res;
+}
+
 static LRESULT CALLBACK ToolSubclass(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp, UINT_PTR, DWORD_PTR data) {
     auto* tw = (ToolWindow*)data;
     switch (msg) {
@@ -575,6 +589,15 @@ static LRESULT CALLBACK ToolSubclass(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp, 
                 tw->desc.onExitSizeMove(tw->owner, HwndWindowRect(hwnd));
             }
             break;
+        case WM_LBUTTONDOWN:
+        case WM_LBUTTONUP:
+        case WM_LBUTTONDBLCLK:
+        case WM_RBUTTONDOWN:
+        case WM_RBUTTONUP:
+        case WM_MBUTTONDOWN:
+        case WM_MBUTTONUP:
+        case WM_MOUSEMOVE:
+            return MouseWithPostedMods(hwnd, msg, wp, lp);
         case WM_NCDESTROY: {
             RemoveWindowSubclass(hwnd, ToolSubclass, kToolSubclassId);
             LRESULT res = DefSubclassProc(hwnd, msg, wp, lp);

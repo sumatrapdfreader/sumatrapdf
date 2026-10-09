@@ -2336,9 +2336,9 @@ static void OnMergeSaveAsPicked(SavePathArgs* args) {
 // Drives the Merge PDF dialog and reports it. action: "open", "add" (arg: a
 // PDF path, n: in front of that item, -1: where Add PDF... puts it), "askpos"
 // (arg: a PDF path; asks where to add it, like Add PDF...), "addprompt" (ng:
-// the Add PDF... button), "answer" (ng: n:
-// 1 OK, 0 Cancel of that question), "move" (arg: 0-based items like "0,2",
-// n: in front of that item), "remove" / "restore" (arg: items), "select"
+// the Add PDF... button), "answer" (ng: n: 1 OK, 0 Cancel of that
+// question), "asktext" (the After page field), "move" (arg: 0-based
+// items like "0,2", n: in front of that item), "remove" / "restore" (arg: items), "select"
 // (ng: arg: items), "save" / "saveas" (arg: the path), "close" or "" (report
 // only). Reports the items as src:page (r: removed, s: selected).
 // ng: for the platforms whose picker answers later (AppShellPickFileAsync)
@@ -2410,6 +2410,12 @@ TempStr MergePdfResultTemp(Str action, Str arg, int n, int* exitCodeOut) {
         MergeAskInsertPosition(paths);
     } else if (str::Eq(action, StrL("answer"))) {
         MergeAskDone(n != 0);
+    } else if (str::Eq(action, StrL("asktext"))) {
+        // the page number typed into Add PDF's "After page" field
+        if (gTool.mergeAskEdit) {
+            gp::InputSetValue(gTool.mergeAskEdit, ToGpui(arg));
+            gTool.mergeAskAt = MergeInsertAt::AfterPage;
+        }
     } else if (str::Eq(action, StrL("move"))) {
         selectItems();
         MergeMoveSelected(n);
@@ -2443,7 +2449,14 @@ TempStr MergePdfResultTemp(Str action, Str arg, int n, int* exitCodeOut) {
         }
     }
     AppShellInvalidate(gTool.win);
-    out.Append(fmt("asking=%d items=", (int)(len(gTool.mergeAskPaths) > 0)));
+    HWND hwnd = ToolWindowHwnd(gTool.tw);
+    int dpi = hwnd ? (int)GetDpiForWindow(hwnd) : 96;
+    if (dpi < 96) {
+        dpi = 96;
+    }
+    int focused = (hwnd && GetFocus() == hwnd) ? 1 : 0;
+    // orig's line, plus the Add PDF question (it is not a window of its own)
+    out.Append(fmt("hwnd=%d focused=%d items=", (int)(intptr_t)hwnd, focused));
     for (int i = 0; i < len(items); i++) {
         const MergePageDlg& it = items[i];
         out.Append(fmt(i == 0 ? "%d:%d" : ",%d:%d", it.sourceNo, it.pageNo));
@@ -2454,10 +2467,26 @@ TempStr MergePdfResultTemp(Str action, Str arg, int n, int* exitCodeOut) {
             out.AppendChar('s');
         }
     }
-    out.Append(fmt(" canSave=%d", (int)ActionEnabled()));
-    out.Append(fmt(" cols=%d focus=%d scrollY=%d view=%d,%d,%d,%d", gTool.mergeCols, gTool.mergeFocusIdx,
-                   (int)gTool.mergeScrollY, (int)gTool.mergeView.x, (int)gTool.mergeView.y, (int)gTool.mergeView.w,
-                   (int)gTool.mergeView.h));
+    out.Append(fmt(" canSave=%d rects=", (int)ActionEnabled()));
+    if (gTool.mergeView.w > 1.f && gTool.mergeView.h > 1.f) {
+        auto toPx = [&](float dip) { return MulDiv((int)lroundf(dip), dpi, 96); };
+        float ox = gTool.mergeView.x;
+        float oy = gTool.mergeView.y;
+        for (int i = 0; i < len(items); i++) {
+            RectF r = MergeCellRect(i);
+            if (r.y < 0 || r.y + r.dy > gTool.mergeView.h) {
+                continue;
+            }
+            RectF b = MergeCornerBtnRect(i);
+            out.Append(fmt("%d:%d,%d,%d,%d:%d,%d,%d,%d;", i, toPx(ox + r.x), toPx(oy + r.y), toPx(r.dx), toPx(r.dy),
+                           toPx(ox + b.x), toPx(oy + b.y), toPx(b.dx), toPx(b.dy)));
+        }
+    }
+    Str ask = StrL("");
+    if (len(gTool.mergeAskPaths) > 0 && gTool.mergeAskEdit) {
+        ask = InputTextTemp(gTool.mergeAskEdit);
+    }
+    out.Append(fmt(" asking=%d ask=%s", (int)(len(gTool.mergeAskPaths) > 0), ask));
     return finish(0, fmt("OK %s", ToStrTemp(out)));
 }
 
