@@ -1,4 +1,5 @@
 import { Socket, createConnection } from "node:net";
+import { IS_WIN } from "./host.ts";
 import { ensureModifierKeysUp, killAndWait, testWindowPos } from "./winapi.ts";
 import { drainProcStderr, SLOW_BUILD_FACTOR } from "./util.ts";
 
@@ -307,7 +308,12 @@ function decodeArg(r: PacketReader): ControlArg | undefined {
   throw new Error(`unknown control argument type ${type}`);
 }
 
+// A named pipe on Windows; elsewhere a unix domain socket, <name> being its
+// path or, without a "/", /tmp/<name>.sock (see SumatraControl.cpp).
 function pipePath(pipeName: string): string {
+  if (!IS_WIN) {
+    return pipeName.includes("/") ? pipeName : `/tmp/${pipeName}.sock`;
+  }
   return pipeName.startsWith("\\\\.\\pipe\\") ? pipeName : `\\\\.\\pipe\\${pipeName}`;
 }
 

@@ -64,6 +64,6 @@ void HomePageOnWindowActivate(MainWindow* win, bool active);
 bool HomePageOnHover(MainWindow* win, int x, int y);
 Str HomePageFilePathAtTemp(MainWindow* win, int x, int y);
 void HomePageClearActiveEntry(MainWindow* win);
+#endif
 TempStr HomeListRowsResultTemp(int* exitCodeOut);
 TempStr HomeSelectionResultTemp(int* exitCodeOut);
-#endif

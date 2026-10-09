@@ -16,24 +16,26 @@ import {
   statSync,
   writeFileSync,
 } from "node:fs";
-import { dirname, join, resolve } from "node:path";
+import { basename, dirname, join, resolve } from "node:path";
 import { inflateSync } from "node:zlib";
+import { IS_MAC, IS_WIN } from "./host.ts";
 import { ensureModifierKeysUp, enumWindows, getWindowPid, getWindowText, hasInteractiveDesktop } from "./winapi.ts";
 
 export const ROOT = join(import.meta.dir, "..");
 
 // `-ng` builds and runs the ng Windows app (out/win/dbg) instead of out/dbg64.
+// On macOS the suite is the ng debug ASan app; there is no orig build.
 // `-exe <path>` runs the tests against an executable that is already built,
 // e.g. a release or an ASan one, or a build from another checkout. Validated
 // here so a typo fails immediately instead of every test timing out.
-export const USE_NG = process.argv.includes("-ng");
+export const USE_NG = process.argv.includes("-ng") || IS_MAC;
 
 function exeFromArgv(argv: string[]): string {
   const i = argv.indexOf("-exe");
   if (i < 0) {
     return "";
   }
-  if (argv.includes("-ng")) {
+  if (argv.includes("-ng") && !IS_MAC) {
     console.error("-ng and -exe cannot be used together");
     process.exit(1);
   }
@@ -48,6 +50,9 @@ function exeFromArgv(argv: string[]): string {
   const full = resolve(path!);
   if (!existsSync(full) || !statSync(full).isFile()) {
     bail(`no such file: ${full}`);
+  }
+  if (!IS_WIN) {
+    return full;
   }
   if (!/\.exe$/i.test(full)) {
     bail(`not an executable: ${full}`);
@@ -70,6 +75,7 @@ function exeFromArgv(argv: string[]): string {
 export const EXE_FROM_ARGV = exeFromArgv(process.argv);
 const SOURCE_EXE =
   EXE_FROM_ARGV ||
+  (IS_MAC ? join(ROOT, "out", "mac", "dbg-asan", "SumatraPDF") : "") ||
   (USE_NG ? join(ROOT, "out", "win", "dbg", "SumatraPDF.exe") : "") ||
   process.env.SUMATRA_TEST_EXE ||
   join(ROOT, "out", "dbg64", "SumatraPDF.exe");
@@ -84,9 +90,9 @@ export let EXE = SOURCE_EXE;
 
 export function prepareTestEnvironment(): void {
   const sourceExe = resolve(SOURCE_EXE);
-  const exeName = sourceExe.split("\\").pop()!;
-  const sourcePdb = sourceExe.replace(/\.exe$/i, ".pdb");
-  if (!existsSync(sourcePdb)) {
+  const exeName = basename(sourceExe);
+  const sourcePdb = IS_WIN ? sourceExe.replace(/\.exe$/i, ".pdb") : "";
+  if (IS_WIN && !existsSync(sourcePdb)) {
     throw new Error(`test executable PDB not found: ${sourcePdb}`);
   }
   rmSync(TESTS_TMP_DIR, { recursive: true, force: true });
@@ -94,14 +100,16 @@ export function prepareTestEnvironment(): void {
   mkdirSync(TMP_DIR, { recursive: true });
   const testExe = join(TESTS_TMP_DIR, exeName);
   copyFileSync(sourceExe, testExe);
-  copyFileSync(sourcePdb, join(TESTS_TMP_DIR, sourcePdb.split("\\").pop()!));
-  const sourceDll = join(dirname(sourceExe), "libsumatrapdf.dll");
-  if (existsSync(sourceDll)) {
-    copyFileSync(sourceDll, join(TESTS_TMP_DIR, "libsumatrapdf.dll"));
-  }
-  const sourceTool = join(dirname(sourceExe), "sumatrapdf-tool.exe");
-  if (existsSync(sourceTool)) {
-    copyFileSync(sourceTool, join(TESTS_TMP_DIR, "sumatrapdf-tool.exe"));
+  if (IS_WIN) {
+    copyFileSync(sourcePdb, join(TESTS_TMP_DIR, basename(sourcePdb)));
+    const sourceDll = join(dirname(sourceExe), "libsumatrapdf.dll");
+    if (existsSync(sourceDll)) {
+      copyFileSync(sourceDll, join(TESTS_TMP_DIR, "libsumatrapdf.dll"));
+    }
+    const sourceTool = join(dirname(sourceExe), "sumatrapdf-tool.exe");
+    if (existsSync(sourceTool)) {
+      copyFileSync(sourceTool, join(TESTS_TMP_DIR, "sumatrapdf-tool.exe"));
+    }
   }
   EXE = testExe;
 }
@@ -143,7 +151,8 @@ export function runAppUnitTests(): Promise<void> {
 
   appUnitTests = (async () => {
     // ng's unit tests are the test_util target, not SumatraPDF.exe -unit-tests
-    const unitExe = USE_NG ? join(dirname(resolve(SOURCE_EXE)), "test_util.exe") : EXE;
+    const unitName = IS_WIN ? "test_util.exe" : "test_util";
+    const unitExe = USE_NG ? join(dirname(resolve(SOURCE_EXE)), unitName) : EXE;
     const unitArgs = USE_NG ? ["-for-ai"] : ["-unit-tests", "-for-ai"];
     const proc = Bun.spawn([unitExe, ...unitArgs], {
       cwd: USE_NG ? ROOT : undefined,
@@ -177,8 +186,14 @@ process.on("unhandledRejection", (reason) => {
 // Newlines in the harness are encoded as '_' (0x5f); those become real '\n'.
 // Throws if no "text on page" line appears (missing DEBUG build, bad path, …).
 export function extractPageText(file: string, pageNo: number = -1): string {
-  const psCmd = `& '${EXE}' -for-testing -extract-text ${pageNo} '${file}' 2>&1 | Out-String -Width 100000`;
-  const p = Bun.spawnSync(["powershell", "-NoProfile", "-Command", psCmd]);
+  const p = IS_WIN
+    ? Bun.spawnSync([
+        "powershell",
+        "-NoProfile",
+        "-Command",
+        `& '${EXE}' -for-testing -extract-text ${pageNo} '${file}' 2>&1 | Out-String -Width 100000`,
+      ])
+    : Bun.spawnSync([EXE, "-for-testing", "-extract-text", String(pageNo), file]);
   const raw = p.stdout.toString() + p.stderr.toString();
   let all = "";
   let nPages = 0;
@@ -674,13 +689,18 @@ export async function runSuiteMain(testit: (opts: SuiteOptions) => Promise<void>
   process.exit(0);
 }
 
-// build SumatraPDF.exe the same way cmd/build.ts does.
+// build SumatraPDF the same way cmd/build.ts does.
 // -ng builds the ng Windows app and its test_util target.
+// macOS builds the ng debug ASan app.
 export function buildApp(opts?: { silent?: boolean }): void {
   const script = USE_NG ? "ng-build.ts" : "build.ts";
-  const args = USE_NG ? ["-dbg", "SumatraPDF", "test_util"] : ["-dbg"];
+  const args = IS_MAC
+    ? ["-dbg", "-asan", "SumatraPDF", "test_util"]
+    : USE_NG
+      ? ["-dbg", "SumatraPDF", "test_util"]
+      : ["-dbg"];
   if (!opts?.silent) {
-    console.log(`• building SumatraPDF.exe (cmd/${script}) ...`);
+    console.log(`• building ${IS_WIN ? "SumatraPDF.exe" : "SumatraPDF"} (cmd/${script}) ...`);
   }
   const p = Bun.spawnSync({
     cmd: ["bun", join(ROOT, "cmd", script), ...args],

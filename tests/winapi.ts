@@ -13,8 +13,28 @@
 // handles in practice; do not use these helpers for arbitrary 64-bit pointers.
 
 import { dlopen, FFIType, JSCallback, ptr, toArrayBuffer } from "bun:ffi";
+import { IS_MAC, IS_WIN } from "./host.ts";
 
-const user32 = dlopen("user32.dll", {
+// Windows tests talk to user32. On macOS the same helpers either use
+// CoreGraphics or throw, so importing this file does not require the DLLs.
+function loadDll(file: string, symbols: Parameters<typeof dlopen>[1]): ReturnType<typeof dlopen> {
+  if (!IS_WIN) {
+    const stub = new Proxy(
+      {},
+      {
+        get(_target, prop) {
+          return () => {
+            throw new Error(`${String(prop)} (${file}) is Windows-only`);
+          };
+        },
+      },
+    );
+    return { symbols: stub, close() {} } as unknown as ReturnType<typeof dlopen>;
+  }
+  return dlopen(file, symbols);
+}
+
+const user32 = loadDll("user32.dll", {
   EnumWindows: { args: [FFIType.function, FFIType.i64], returns: FFIType.bool },
   EnumChildWindows: { args: [FFIType.ptr, FFIType.function, FFIType.i64], returns: FFIType.bool },
   GetClassNameW: { args: [FFIType.ptr, FFIType.ptr, FFIType.i32], returns: FFIType.i32 },
@@ -93,7 +113,7 @@ const user32 = dlopen("user32.dll", {
 // HDC/HBITMAP/HGDIOBJ handles are u64 (bigint) here, NOT ptr: Bun's ptr return
 // type sign-extends a 32-bit GDI handle whose high bit is set into a bogus
 // 64-bit value, so the handle round-trips wrong and the calls fail intermittently.
-const gdi32 = dlopen("gdi32.dll", {
+const gdi32 = loadDll("gdi32.dll", {
   CreateCompatibleDC: { args: [FFIType.u64], returns: FFIType.u64 },
   CreateCompatibleBitmap: { args: [FFIType.u64, FFIType.i32, FFIType.i32], returns: FFIType.u64 },
   SelectObject: { args: [FFIType.u64, FFIType.u64], returns: FFIType.u64 },
@@ -139,22 +159,22 @@ const gdi32 = dlopen("gdi32.dll", {
   },
 });
 
-const shell32 = dlopen("shell32.dll", {
+const shell32 = loadDll("shell32.dll", {
   SHAppBarMessage: { args: [FFIType.u32, FFIType.ptr], returns: FFIType.u64 },
 });
 
-const dwmapi = dlopen("dwmapi.dll", {
+const dwmapi = loadDll("dwmapi.dll", {
   DwmGetWindowAttribute: { args: [FFIType.ptr, FFIType.u32, FFIType.ptr, FFIType.u32], returns: FFIType.i32 },
 });
 
-const gdiplus = dlopen("gdiplus.dll", {
+const gdiplus = loadDll("gdiplus.dll", {
   GdiplusStartup: { args: [FFIType.ptr, FFIType.ptr, FFIType.ptr], returns: FFIType.u32 },
   GdipCreateBitmapFromHBITMAP: { args: [FFIType.u64, FFIType.u64, FFIType.ptr], returns: FFIType.u32 },
   GdipSaveImageToFile: { args: [FFIType.u64, FFIType.ptr, FFIType.ptr, FFIType.ptr], returns: FFIType.u32 },
   GdipDisposeImage: { args: [FFIType.u64], returns: FFIType.u32 },
 });
 
-const kernel32 = dlopen("kernel32.dll", {
+const kernel32 = loadDll("kernel32.dll", {
   CreateProcessW: {
     args: [
       FFIType.ptr,
@@ -190,7 +210,7 @@ const kernel32 = dlopen("kernel32.dll", {
 
 // Authenticode helpers (mirror src/base/Crypto.cpp GetExecutableSignerTemp / IsPEFileSigned).
 // crypt32 for embedded PKCS#7 signer name; wintrust for signature validity.
-const crypt32 = dlopen("crypt32.dll", {
+const crypt32 = loadDll("crypt32.dll", {
   CryptQueryObject: {
     args: [
       FFIType.u32,
@@ -224,7 +244,7 @@ const crypt32 = dlopen("crypt32.dll", {
   CertFreeCertificateContext: { args: [FFIType.ptr], returns: FFIType.bool },
 });
 
-const wintrust = dlopen("wintrust.dll", {
+const wintrust = loadDll("wintrust.dll", {
   WinVerifyTrust: { args: [FFIType.ptr, FFIType.ptr, FFIType.ptr], returns: FFIType.i32 },
 });
 
@@ -353,8 +373,32 @@ const SPI_GETWORKAREA = 0x0030;
 const SM_CXSCREEN = 0;
 const SM_CYSCREEN = 1;
 
+function macDisplaySize(): { w: number; h: number } {
+  try {
+    const cg = dlopen("/System/Library/Frameworks/CoreGraphics.framework/CoreGraphics", {
+      CGMainDisplayID: { args: [], returns: FFIType.u32 },
+      CGDisplayPixelsWide: { args: [FFIType.u32], returns: FFIType.u64 },
+      CGDisplayPixelsHigh: { args: [FFIType.u32], returns: FFIType.u64 },
+    });
+    const id = cg.symbols.CGMainDisplayID();
+    const w = Number(cg.symbols.CGDisplayPixelsWide(id));
+    const h = Number(cg.symbols.CGDisplayPixelsHigh(id));
+    if (w > 0 && h > 0) {
+      return { w, h };
+    }
+  } catch {
+    // headless, or the framework would not open
+  }
+  return { w: 1440, h: 900 };
+}
+
 // the desktop minus the taskbar (and any other appbar)
 export function getWorkArea(): Rect {
+  if (IS_MAC) {
+    const s = macDisplaySize();
+    // menu bar on top, dock along the bottom
+    return { left: 0, top: 25, right: s.w, bottom: Math.max(s.h - 70, 25) };
+  }
   const buf = new Int32Array(4);
   if (!user32.symbols.SystemParametersInfoW(SPI_GETWORKAREA, 0, ptr(buf), 0)) {
     // no work area to be had: fall back to the whole primary screen
@@ -835,6 +879,9 @@ function modifierNames(keys: [string, number][]): string {
 }
 
 export async function ensureModifierKeysUp(): Promise<void> {
+  if (!IS_WIN) {
+    return;
+  }
   let held = heldModifierKeys();
   if (held.length === 0) {
     unreleasedWarned = "";
@@ -1117,6 +1164,9 @@ export function getCursorPos(): { x: number; y: number } {
 // desktop happily, and a disconnected session still names "Default" as the
 // input desktop while refusing to move the pointer.
 export function hasInteractiveDesktop(): boolean {
+  if (!IS_WIN) {
+    return true;
+  }
   const at = getCursorPos();
   return user32.symbols.SetCursorPos(at.x, at.y);
 }
@@ -1744,6 +1794,18 @@ export async function killAndWait(proc: KillableProc | undefined | null, timeout
   if (proc.exitCode !== null && proc.exitCode !== undefined) {
     return true;
   }
+  if (!IS_WIN) {
+    try {
+      proc.kill?.("SIGKILL");
+    } catch {
+      /* already gone */
+    }
+    const deadline = Date.now() + timeoutMs;
+    while ((proc.exitCode === null || proc.exitCode === undefined) && Date.now() < deadline) {
+      await sleep(20);
+    }
+    return proc.exitCode !== null && proc.exitCode !== undefined;
+  }
   const pid = proc.pid ?? 0;
   try {
     proc.kill?.();
@@ -1755,6 +1817,29 @@ export async function killAndWait(proc: KillableProc | undefined | null, timeout
 
 // taskkill /F /IM <exe> replacement: terminate every matching process and wait
 export async function killProcessesNamed(exeName: string, timeoutMs = 5000): Promise<number> {
+  if (!IS_WIN) {
+    const name = exeName.replace(/\.exe$/i, "");
+    const listed = Bun.spawnSync(["pgrep", "-x", name]);
+    const pids = listed.stdout
+      .toString()
+      .trim()
+      .split(/\s+/)
+      .filter(Boolean)
+      .map((s) => parseInt(s, 10));
+    let n = 0;
+    for (const pid of pids) {
+      if (!pid || pid === process.pid) {
+        continue;
+      }
+      try {
+        process.kill(pid, "SIGKILL");
+        n++;
+      } catch {
+        /* already gone */
+      }
+    }
+    return n;
+  }
   let n = 0;
   for (const pid of listPidsByExeName(exeName)) {
     if (pid === process.pid) {

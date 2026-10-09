@@ -73,6 +73,7 @@
 #include "Tabs.h"
 #include "Toolbar.h"
 #include "gui/AppShell.h"
+#include "gui/ToolWindowPlat.h"
 #include "gui/ToolWindow.h"
 #include "gui/NativeFileDlg.h"
 #include "gui/NativeMsgBox.h"
@@ -110,6 +111,21 @@ extern "C" {
 #include "SumatraControl.h"
 
 #include "SumatraLog.h"
+
+// A BGRA8 heap pixmap is readable. A GDI DIB is readable only after a copy.
+static Pixmap* EnsureReadablePixmap(Pixmap* p) {
+    if (!p) {
+        return nullptr;
+    }
+    if (p->data && p->format == PixmapFormat::BGRA8) {
+        return p;
+    }
+#if OS_WIN
+    return PixmapCopyAs32bppDIB(p);
+#else
+    return nullptr;
+#endif
+}
 
 static void AppendLayoutRect(str::Builder& out, Str name, bool visible, Rect rect) {
     out.Append(
@@ -1050,7 +1066,7 @@ static TempStr ImageInsertResultTemp(Str pdfPath, Str imagePath, int* exitCodeOu
         SafeEngineRelease(&engine);
         return fail(StrL("ERROR render-failed\n"));
     }
-    Pixmap* rgb = (bmp->format == PixmapFormat::BGRA8) ? bmp : PixmapCopyAs32bppDIB(bmp);
+    Pixmap* rgb = EnsureReadablePixmap(bmp);
     if (!rgb || !rgb->data) {
         FreePixmap(bmp);
         SafeEngineRelease(&engine);
@@ -1192,7 +1208,7 @@ static TempStr PageRenderColorsResultTemp(Str path, int* exitCodeOut, int pageNo
     }
     Pixmap* rgb = bmp;
     if (bmp->format != PixmapFormat::BGRA8 && bmp->format != PixmapFormat::BGR8 && bmp->format != PixmapFormat::RGBA8) {
-        rgb = PixmapCopyAs32bppDIB(bmp);
+        rgb = EnsureReadablePixmap(bmp);
     }
     if (!rgb || !rgb->data) {
         FreePixmap(bmp);
@@ -1298,7 +1314,7 @@ static TempStr CadEnhanceColorsResultTemp(Str path, int pageNo, int zoomPercent,
         SafeEngineRelease(&engine);
         return fail(StrL("ERROR render-failed\n"));
     }
-    Pixmap* rgb = (bmp->format == PixmapFormat::BGRA8) ? bmp : PixmapCopyAs32bppDIB(bmp);
+    Pixmap* rgb = EnsureReadablePixmap(bmp);
     if (!rgb) {
         FreePixmap(bmp);
         SafeEngineRelease(&engine);
@@ -2746,8 +2762,8 @@ static TempStr PageRenderViewPrintResultTemp(Str path, int* exitCodeOut) {
         SafeEngineRelease(&engine);
         return fail(StrL("ERROR render-failed\n"));
     }
-    Pixmap* view = (viewRaw->format == PixmapFormat::BGRA8) ? viewRaw : PixmapCopyAs32bppDIB(viewRaw);
-    Pixmap* print = (printRaw->format == PixmapFormat::BGRA8) ? printRaw : PixmapCopyAs32bppDIB(printRaw);
+    Pixmap* view = EnsureReadablePixmap(viewRaw);
+    Pixmap* print = EnsureReadablePixmap(printRaw);
     if (!view || !view->data || !print || !print->data) {
         if (view != viewRaw) {
             FreePixmap(view);
@@ -3122,7 +3138,14 @@ static TempStr ImageOrientationResultTemp(Str pdfPath, int pageNo, int* exitCode
     if (!bmp) {
         return fail(StrL("ERROR no-image"));
     }
-    Pixmap* px = PixmapToBgra(PixmapFromRenderedBitmap(bmp));
+    Pixmap* px = nullptr;
+#if OS_WIN
+    px = PixmapToBgra(PixmapFromRenderedBitmap(bmp));
+#else
+    // GetImageForPageElement is Windows-only; this branch does not run.
+    (void)bmp;
+    return fail(StrL("ERROR no-pixmap"));
+#endif
     if (!px || !px->data) {
         FreePixmap(px);
         return fail(StrL("ERROR no-pixmap"));
@@ -3266,20 +3289,45 @@ static TempStr FrameNcStripsResultTemp(int* exitCodeOut) {
         return s;
     };
     MainWindow* win = FirstWindow();
+    Rect wr{};
+    int clientX = 0;
+    int clientY = 0;
+    int clientDx = 0;
+    int clientDy = 0;
+    bool zoomed = false;
+#if OS_WIN
     HWND hwnd = win ? AppShellNativeHwnd(win) : nullptr;
     if (!hwnd) {
         return finish(2, str::DupTemp(StrL("NOTREADY no-window")));
     }
-    bool zoomed = IsZoomed(hwnd);
-    Vec<Rect> strips;
+    zoomed = IsZoomed(hwnd);
     if (!zoomed) {
-        Rect wr = HwndWindowRect(hwnd);
+        wr = HwndWindowRect(hwnd);
         Rect cr = HwndClientRect(hwnd);
         Point clientScreen = HwndClientToScreen(hwnd, Point(0, 0));
-        int clientX = clientScreen.x - wr.x;
-        int clientY = clientScreen.y - wr.y;
-        int bottomNcTop = clientY + cr.dy;
-        int rightNcLeft = clientX + cr.dx;
+        clientX = clientScreen.x - wr.x;
+        clientY = clientScreen.y - wr.y;
+        clientDx = cr.dx;
+        clientDy = cr.dy;
+    }
+#else
+    if (!win || !win->gpuiWin) {
+        return finish(2, str::DupTemp(StrL("NOTREADY no-window")));
+    }
+    wr = ToolWinNativeFrame(win->gpuiWin);
+    Rect cr = ToolWinNativeContentRect(win->gpuiWin);
+    if (wr.IsEmpty() || cr.IsEmpty()) {
+        return finish(2, str::DupTemp(StrL("NOTREADY no-window")));
+    }
+    clientX = cr.x - wr.x;
+    clientY = cr.y - wr.y;
+    clientDx = cr.dx;
+    clientDy = cr.dy;
+#endif
+    Vec<Rect> strips;
+    if (!zoomed) {
+        int bottomNcTop = clientY + clientDy;
+        int rightNcLeft = clientX + clientDx;
         if (clientY > 0) {
             VecAppend(strips, Rect{0, 0, wr.dx, clientY});
         }
@@ -4894,11 +4942,12 @@ static void SnapshotRenderIdle(ControlRequest* req) {
     }
     // A posted invalidate has not drawn yet. Paint so missing tiles get
     // requested, then drain the ones that finished during that paint.
-    HWND hwnd = MainWindowHwnd(win);
-    if (hwnd) {
-        AppShellInvalidate(win);
+    AppShellInvalidate(win);
+#if OS_WIN
+    if (HWND hwnd = MainWindowHwnd(win)) {
         UpdateWindow(hwnd);
     }
+#endif
     uitask::DrainQueue();
 
     float zoomV = dm->GetZoomVirtual(true);
@@ -4928,11 +4977,17 @@ static void SnapshotRenderIdle(ControlRequest* req) {
     }
     // The test captures as soon as this returns. Present the ready frame into
     // each swapchain buffer; one present leaves PrintWindow on the previous one.
-    if (ready && hwnd) {
-        for (int i = 0; i < 3; i++) {
-            AppShellInvalidate(win);
-            UpdateWindow(hwnd);
+    if (ready) {
+#if OS_WIN
+        if (HWND hwnd = MainWindowHwnd(win)) {
+            for (int i = 0; i < 3; i++) {
+                AppShellInvalidate(win);
+                UpdateWindow(hwnd);
+            }
         }
+#else
+        AppShellInvalidate(win);
+#endif
     }
     int nQ = gRenderCache ? gRenderCache->requestCount : -1;
     TempStr busyInfo = gRenderCache ? gRenderCache->BusyInfoTemp(dm) : str::DupTemp(StrL(""));
@@ -4945,7 +5000,12 @@ static void SnapshotRenderIdle(ControlRequest* req) {
 
 // A tab is still coming in, or startup has not finished opening the session.
 static bool SessionRestorePending() {
-    if (gIsStartup || len(gWindows) == 0) {
+#if OS_WIN
+    if (gIsStartup) {
+        return true;
+    }
+#endif
+    if (len(gWindows) == 0) {
         return true;
     }
     for (MainWindow* win : gWindows) {
@@ -4969,7 +5029,11 @@ static void SnapshotSessionRestore(ControlRequest* req) {
     req->idleState = RenderIdleState::NotReady;
     req->idleInfo[0] = 0;
     if (SessionRestorePending()) {
+#if OS_WIN
         str::BufSet(Str(req->idleInfo, dimofi(req->idleInfo)), gIsStartup ? StrL("startup") : StrL("loading"));
+#else
+        str::BufSet(Str(req->idleInfo, dimofi(req->idleInfo)), StrL("loading"));
+#endif
         req->done.Set();
         return;
     }

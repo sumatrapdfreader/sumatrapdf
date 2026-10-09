@@ -347,8 +347,8 @@ const unrarPosix: PlatformExtra = {
 };
 
 // JPEG-XR: WIC on Windows (load-jxr-win.c), mupdf's own loader elsewhere
-// (load-jxr.c, a stub without HAVE_JPEGXR). pkcs7-windows.c is wincrypt, and
-// signature inspection is Windows-only, so no pkcs7 helper off Windows.
+// (load-jxr.c, a stub without HAVE_JPEGXR). pkcs7-windows.c is wincrypt.
+// pkcs7_stub_posix.c satisfies the calls left in murun.c and pdfsign.c.
 // unlibarchive.c reaches for a system <archive.h> off Windows; point it at
 // the vendored one instead.
 const mupdfPosix: PlatformExtra = {

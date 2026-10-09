@@ -1976,7 +1976,10 @@ TempStr SidebarThumbnailsResultTemp(int* exitCodeOut) {
     bool thumbsTop = tab && win->uiState.tocVisible && tab->sidebarContent == SidebarContent::Thumbnails;
     bool thumbsBottom = win->uiState.favVisible && win->sidebarBottomContent == SidebarContent::Thumbnails;
     bool ring = (thumbsTop && SidebarPanelHasFocus(win, true)) || (thumbsBottom && SidebarPanelHasFocus(win, false));
-    int hwnd = (int)(intptr_t)AppShellNativeHwnd(win);
+    int hwnd = 0;
+#if OS_WIN
+    hwnd = (int)(intptr_t)AppShellNativeHwnd(win);
+#endif
     str::Builder sb;
     sb.Append(fmt("hwnd=%d thumbnails=%d count=%d current=%d rendered=%d ring=%d", hwnd, showing ? 1 : 0, pageCount,
                   current, rendered, ring ? 1 : 0));

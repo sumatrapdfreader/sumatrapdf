@@ -12,6 +12,7 @@
 // These are for *ad-hoc* tests (not checked in). Put reusable helpers here, not
 // in the individual ad-hoc scripts.
 
+import { IS_MAC } from "./host.ts";
 import { cmdId, drainProcStderr, EXE, setFailureContext, USE_NG } from "./util.ts";
 import {
   testWindowPos,
@@ -151,7 +152,16 @@ export function windowPosArgs(): string[] {
 // restoring a remembered position - so the app picks the position itself.
 export function launchSumatra(args: string[], opts?: { defaultWindowPos?: boolean }): Bun.Subprocess {
   const posArgs = opts?.defaultWindowPos || args.includes("-window-pos") ? [] : windowPosArgs();
-  return Bun.spawn([EXE, "-for-testing", ...posArgs, ...args], { stdout: "ignore", stderr: "ignore" });
+  const proc = Bun.spawn([EXE, "-for-testing", ...posArgs, ...args], {
+    stdout: "ignore",
+    // ASan writes its report to stderr. "ignore" closes that pipe and the
+    // next write kills the process.
+    stderr: IS_MAC ? "pipe" : "ignore",
+  });
+  if (IS_MAC) {
+    drainStderr(proc);
+  }
+  return proc;
 }
 
 // Launch with -dbg-control so the test can wait for render-idle (and other
@@ -197,7 +207,9 @@ export async function launchControlled(
   gLastProc = proc;
   try {
     const client = await ControlClient.connect(pipe);
-    const frame = await waitForFrame(proc.pid!);
+    // macOS has no HWND. The control socket is the ready signal; 1 stands in
+    // for the frame so callers that only check it is non-zero keep going.
+    const frame = IS_MAC ? 1 : await waitForFrame(proc.pid!);
     if (!frame) {
       client.close();
       throw new Error("SumatraPDF main window did not appear");

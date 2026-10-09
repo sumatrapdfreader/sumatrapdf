@@ -2449,14 +2449,21 @@ TempStr MergePdfResultTemp(Str action, Str arg, int n, int* exitCodeOut) {
         }
     }
     AppShellInvalidate(gTool.win);
-    HWND hwnd = ToolWindowHwnd(gTool.tw);
-    int dpi = hwnd ? (int)GetDpiForWindow(hwnd) : 96;
+    int hwnd = 0;
+    int focused = 0;
+#if OS_WIN
+    HWND native = ToolWindowHwnd(gTool.tw);
+    hwnd = (int)(intptr_t)native;
+    int dpi = native ? (int)GetDpiForWindow(native) : 96;
+    focused = (native && GetFocus() == native) ? 1 : 0;
+#else
+    int dpi = AppShellWindowDpi(gTool.win);
+#endif
     if (dpi < 96) {
         dpi = 96;
     }
-    int focused = (hwnd && GetFocus() == hwnd) ? 1 : 0;
     // orig's line, plus the Add PDF question (it is not a window of its own)
-    out.Append(fmt("hwnd=%d focused=%d items=", (int)(intptr_t)hwnd, focused));
+    out.Append(fmt("hwnd=%d focused=%d items=", hwnd, focused));
     for (int i = 0; i < len(items); i++) {
         const MergePageDlg& it = items[i];
         out.Append(fmt(i == 0 ? "%d:%d" : ",%d:%d", it.sourceNo, it.pageNo));

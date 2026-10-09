@@ -37,6 +37,7 @@
 #include "WindowTab.h"
 #include "gui/AppShell.h"
 #include "gui/DocCanvas.h"
+#include "gui/ToolWindowPlat.h"
 #include "SearchAndDDE.h"
 #include "FindBar.h"
 #include "SvgIcons.h"
@@ -1284,15 +1285,29 @@ static Rect HoverBoundsScreen(MainWindow* win, gp::Bounds b) {
     if (!(k > 0)) {
         k = 1;
     }
+    int ox = 0;
+    int oy = 0;
+#if OS_WIN
     POINT o{0, 0};
-    HWND hwnd = AppShellNativeHwnd(win);
-    if (hwnd) {
+    if (HWND hwnd = AppShellNativeHwnd(win)) {
         ClientToScreen(hwnd, &o);
     }
-    int x = o.x + (int)(b.x / k + 0.5f);
-    int y = o.y + (int)(b.y / k + 0.5f);
-    int x2 = o.x + (int)((b.x + b.w) / k + 0.5f);
-    int y2 = o.y + (int)((b.y + b.h) / k + 0.5f);
+    ox = o.x;
+    oy = o.y;
+#else
+    // content rect and gpui bounds are both points; CanvasScale is dips per pixel
+    k = 1;
+    Rect content = win && win->gpuiWin ? ToolWinNativeContentRect(win->gpuiWin) : Rect{};
+    if (content.IsEmpty()) {
+        content = AppShellWindowScreenRect(win);
+    }
+    ox = content.x;
+    oy = content.y;
+#endif
+    int x = ox + (int)(b.x / k + 0.5f);
+    int y = oy + (int)(b.y / k + 0.5f);
+    int x2 = ox + (int)((b.x + b.w) / k + 0.5f);
+    int y2 = oy + (int)((b.y + b.h) / k + 0.5f);
     return Rect{x, y, x2 - x, y2 - y};
 }
 

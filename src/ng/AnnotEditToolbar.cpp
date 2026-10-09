@@ -41,6 +41,7 @@
 #include "SumatraDialogs.h"
 #include "gui/AppShell.h"
 #include "gui/DocCanvas.h"
+#include "gui/ToolWindowPlat.h"
 #include "gui/WasmBridge.h"
 #include "AnnotFilterToolbar.h"
 #include "AnnotTextPopup.h"
@@ -3317,14 +3318,28 @@ TempStr AnnotationHoverOverlayStateTemp(MainWindow* win) {
     if (!(k > 0.f)) {
         k = 1.f;
     }
+    int ox = 0;
+    int oy = 0;
+#if OS_WIN
     POINT origin{0, 0};
-    HWND hwnd = MainWindowHwnd(win);
-    if (hwnd) {
+    if (HWND hwnd = MainWindowHwnd(win)) {
         ClientToScreen(hwnd, &origin);
     }
+    ox = origin.x;
+    oy = origin.y;
+#else
+    // content rect and gpui bounds are both points
+    k = 1.f;
+    Rect content = win->gpuiWin ? ToolWinNativeContentRect(win->gpuiWin) : Rect{};
+    if (content.IsEmpty()) {
+        content = AppShellWindowScreenRect(win);
+    }
+    ox = content.x;
+    oy = content.y;
+#endif
     gp::Bounds b = overlay->measured;
-    int x = origin.x + (int)(b.x / k + 0.5f);
-    int y = origin.y + (int)(b.y / k + 0.5f);
+    int x = ox + (int)(b.x / k + 0.5f);
+    int y = oy + (int)(b.y / k + 0.5f);
     int dx = (int)((b.x + b.w) / k + 0.5f) - (int)(b.x / k + 0.5f);
     int dy = (int)((b.y + b.h) / k + 0.5f) - (int)(b.y / k + 0.5f);
     Rect a = overlay->anchorRect;
