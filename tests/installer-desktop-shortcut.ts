@@ -12,13 +12,15 @@
 
 import { mkdirSync, rmSync } from "node:fs";
 import { basename } from "node:path";
-import { EXE, runStandalone, tmpPath } from "./util.ts";
+import { EXE, runStandalone, tmpPath, USE_NG } from "./util.ts";
 import { killAndWait } from "./win-automation.ts";
 import {
   clientToScreen,
   enumChildWindows,
+  findChildWindow,
   getClassName,
   getClientRect,
+  getControlText,
   getWindowRect,
   getWindowLong,
   getWindowText,
@@ -32,7 +34,10 @@ import {
   type Rect,
 } from "./winapi.ts";
 
-const INSTALLER_CLASS = "SUMATRA_PDF_INSTALLER_FRAME";
+const INSTALLER_CLASS = USE_NG ? "GpuiSystemMonitor" : "SUMATRA_PDF_INSTALLER_FRAME";
+const PROBE_CLASS = "SUMATRA_INSTALLER_PROBE";
+// Installer.cpp kInstallerToggleOptions. Opens the option rows.
+const TOGGLE_OPTIONS = 0x8000 + 44;
 const BM_GETCHECK = 0x00f0;
 const BM_CLICK = 0x00f5;
 const BST_CHECKED = 1;
@@ -77,10 +82,9 @@ async function showOptions(frame: number): Promise<Ctrl[]> {
   return checks;
 }
 
-function checkLayout(frame: number, checks: Ctrl[]): void {
+function checkLayout(frame: number, checks: Ctrl[], opts: Rect): void {
   const client = getClientRect(frame);
   const origin = clientToScreen(frame, 0, 0);
-  const opts = buttons(frame).find((b) => b.text.endsWith("Options"))!;
   for (let i = 0; i < checks.length; i++) {
     const c = checks[i]!;
     if (c.r.bottom - c.r.top <= 0 || c.r.right - c.r.left <= 0) {
@@ -94,9 +98,76 @@ function checkLayout(frame: number, checks: Ctrl[]): void {
     }
   }
   const last = checks[checks.length - 1]!;
-  if (last.r.bottom > opts.r.top) {
+  if (last.r.bottom > opts.top) {
     throw new Error(`installer-desktop-shortcut: '${last.text}' overlaps the button row`);
   }
+}
+
+function parseRect(s: string): Rect {
+  const [x, y, dx, dy] = s.split(",").map((n) => Number(n));
+  return { left: x!, top: y!, right: x! + dx!, bottom: y! + dy! };
+}
+
+// opt|x,y,dx,dy|N|checked|x,y,dx,dy|label|...
+function parseProbe(text: string): { opt: Rect; checks: Array<Ctrl & { checked: boolean }> } {
+  const parts = text.split("|");
+  const opt = parseRect(parts[1] ?? "0,0,0,0");
+  const n = Number(parts[2] ?? 0);
+  const checks: Array<Ctrl & { checked: boolean }> = [];
+  let i = 3;
+  for (let k = 0; k < n; k++) {
+    checks.push({
+      hwnd: 0,
+      text: parts[i + 2] ?? "",
+      r: parseRect(parts[i + 1] ?? "0,0,0,0"),
+      checked: parts[i] === "1",
+    });
+    i += 3;
+  }
+  return { opt, checks };
+}
+
+async function ngDesktopOption(frame: number): Promise<Ctrl> {
+  let probe = 0;
+  for (let i = 0; i < 50 && !probe; i++) {
+    probe = findChildWindow(frame, PROBE_CLASS);
+    if (!probe) {
+      await sleep(100);
+    }
+  }
+  if (!probe) {
+    throw new Error("installer-desktop-shortcut: installer probe did not appear");
+  }
+  let state = parseProbe(getControlText(probe));
+  if (state.checks.length === 0) {
+    postMessage(frame, TOGGLE_OPTIONS, 0, 0);
+  }
+  for (let i = 0; i < 50; i++) {
+    state = parseProbe(getControlText(probe));
+    const ready = state.checks.filter((c) => c.r.right > c.r.left && c.r.bottom > c.r.top);
+    if (ready.length > 0 && state.opt.bottom > state.opt.top) {
+      state.checks = ready;
+      break;
+    }
+    await sleep(100);
+  }
+  const checks = state.checks.sort((a, b) => a.r.top - b.r.top);
+  if (checks.length === 0) {
+    throw new Error("installer-desktop-shortcut: Options did not show the option checkboxes");
+  }
+  const idx = checks.findIndex((c) => c.text.toLowerCase().includes(DESKTOP_LABEL));
+  if (idx < 0) {
+    throw new Error(
+      `installer-desktop-shortcut: no desktop shortcut option in ${JSON.stringify(checks.map((c) => c.text))}`,
+    );
+  }
+  if (checks.length >= 3 && idx !== 2) {
+    throw new Error(`installer-desktop-shortcut: desktop shortcut is option ${idx + 1}, not the third`);
+  }
+  checkLayout(frame, checks, state.opt);
+  const res = checks[idx]!;
+  res.text = res.checked ? "checked" : "unchecked";
+  return res;
 }
 
 // DesktopShortcut = 0 from a previous installation on this machine
@@ -127,6 +198,11 @@ async function runInstaller(installDir: string, extra: string[]): Promise<Ctrl> 
       throw new Error("installer-desktop-shortcut: installer window did not appear");
     }
     await sleep(500);
+    if (USE_NG) {
+      const res = await ngDesktopOption(frame);
+      postMessage(frame, WM_CLOSE, 0, 0);
+      return res;
+    }
     const checks = await showOptions(frame);
     const idx = checks.findIndex((c) => c.text.toLowerCase().includes(DESKTOP_LABEL));
     if (idx < 0) {
@@ -137,7 +213,11 @@ async function runInstaller(installDir: string, extra: string[]): Promise<Ctrl> 
     if (checks.length >= 3 && idx !== 2) {
       throw new Error(`installer-desktop-shortcut: desktop shortcut is option ${idx + 1}, not the third`);
     }
-    checkLayout(frame, checks);
+    const opts = buttons(frame).find((b) => b.text.endsWith("Options"));
+    if (!opts) {
+      throw new Error("installer-desktop-shortcut: no Options button");
+    }
+    checkLayout(frame, checks, opts.r);
     const res = checks[idx]!;
     res.text = Number(sendMessage(res.hwnd, BM_GETCHECK, 0, 0)) === BST_CHECKED ? "checked" : "unchecked";
     postMessage(frame, WM_CLOSE, 0, 0);

@@ -61,6 +61,11 @@ struct InstallerWnd {
     bool finished = false;
     int currProgress = 0;
     ThreadHandle hThread = nullptr;
+    // tests/installer-desktop-shortcut.ts reads these. The window has no
+    // Button children, so the probe hwnd carries the same rows.
+    gp::Bounds optionsBounds;
+    gp::Bounds allUsersBounds;
+    gp::Bounds desktopBounds;
 };
 
 static bool HasPreviousInstall() {
@@ -686,6 +691,105 @@ gp::El* BuildInstallerMessage(gp::Ctx* cx) {
     return col;
 }
 
+// WM_APP + 44. tests/installer-desktop-shortcut.ts posts this at the frame
+// to open the option rows. gpui uses WM_APP + 71 for its own notify.
+constexpr UINT kInstallerToggleOptions = WM_APP + 44;
+constexpr const WCHAR* kInstallerProbeClass = L"SUMATRA_INSTALLER_PROBE";
+
+static HWND gInstallerHwnd = nullptr;
+static HWND gProbe = nullptr;
+
+static void AppendDipRect(str::Builder& out, gp::Bounds b) {
+    float scale = 1.f;
+    if (gWnd && gWnd->win) {
+        gp::WinSize ws = gp::WindowSize(gWnd->win);
+        if (ws.dipW > 0 && ws.pxW > 0) {
+            scale = ws.dipW / (float)ws.pxW;
+        }
+    }
+    POINT origin{0, 0};
+    if (gInstallerHwnd) {
+        ClientToScreen(gInstallerHwnd, &origin);
+    }
+    int x = origin.x + (int)(b.x / scale + 0.5f);
+    int y = origin.y + (int)(b.y / scale + 0.5f);
+    int dx = (int)(b.w / scale + 0.5f);
+    int dy = (int)(b.h / scale + 0.5f);
+    out.Append(fmt("%d,%d,%d,%d", x, y, dx, dy));
+}
+
+static TempStr StripAccelTemp(Str s) {
+    str::Builder out;
+    for (int i = 0; i < len(s); i++) {
+        if (s.s[i] != '&') {
+            out.AppendChar(s.s[i]);
+        }
+    }
+    return ToStrTemp(out);
+}
+
+static void AppendCheck(str::Builder& out, bool checked, gp::Bounds b, Str label) {
+    out.Append(checked ? StrL("|1|") : StrL("|0|"));
+    AppendDipRect(out, b);
+    out.Append(StrL("|"));
+    out.Append(StripAccelTemp(label));
+}
+
+// One line the test reads with WM_GETTEXT:
+// opt|x,y,dx,dy|N|checked|x,y,dx,dy|label|...
+static void InstallerProbeRefresh() {
+    if (!gProbe || !gWnd) {
+        return;
+    }
+    str::Builder out;
+    out.Append(StrL("opt|"));
+    AppendDipRect(out, gWnd->optionsBounds);
+    if (!gWnd->showOptions) {
+        out.Append(StrL("|0"));
+    } else {
+        out.Append(StrL("|2"));
+        AppendCheck(out, gWnd->forAllUsers, gWnd->allUsersBounds, Tr("Install for all users"));
+        AppendCheck(out, gWnd->desktopShortcut, gWnd->desktopBounds, Tr("Install &desktop shortcut"));
+    }
+    SetWindowTextW(gProbe, ToWStrTemp(ToStrTemp(out)).s);
+}
+
+static LRESULT CALLBACK InstallerSubclass(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp, UINT_PTR, DWORD_PTR) {
+    if (msg == kInstallerToggleOptions && gWnd) {
+        gWnd->showOptions = !gWnd->showOptions;
+        gp::AppInvalidate(gWnd->win);
+        return 0;
+    }
+    return DefSubclassProc(hwnd, msg, wp, lp);
+}
+
+static BOOL CALLBACK FindInstallerHwnd(HWND hwnd, LPARAM lp) {
+    WCHAR cls[64]{};
+    GetClassNameW(hwnd, cls, dimof(cls));
+    if (!wstr::EqI(WStr(cls), WStrL(L"GpuiSystemMonitor"))) {
+        return TRUE;
+    }
+    *(HWND*)lp = hwnd;
+    return FALSE;
+}
+
+static void InstallerAttachProbe() {
+    HWND hwnd = nullptr;
+    EnumThreadWindows(GetCurrentThreadId(), FindInstallerHwnd, (LPARAM)&hwnd);
+    if (!hwnd) {
+        return;
+    }
+    gInstallerHwnd = hwnd;
+    WNDCLASSEXW wc{};
+    wc.cbSize = sizeof(wc);
+    wc.lpfnWndProc = DefWindowProcW;
+    wc.hInstance = GetModuleHandleW(nullptr);
+    wc.lpszClassName = kInstallerProbeClass;
+    RegisterClassExW(&wc);
+    gProbe = CreateWindowExW(0, kInstallerProbeClass, L"", WS_CHILD, 0, 0, 0, 0, hwnd, nullptr, wc.hInstance, nullptr);
+    SetWindowSubclass(hwnd, InstallerSubclass, 1, 0);
+}
+
 void InstallerView::OnTick(InstallerView*, gp::Ctx* cx, const gp::TickEvent*) {
     bool needsRedraw = IsRevealingLettersAnimRunning();
     AnimStep();
@@ -699,6 +803,7 @@ void InstallerView::OnTick(InstallerView*, gp::Ctx* cx, const gp::TickEvent*) {
     if (needsRedraw) {
         gp::Notify(cx);
     }
+    InstallerProbeRefresh();
 }
 
 void InstallerView::OnInstall(InstallerView*, gp::Ctx* cx, const gp::ClickEvent*) {
@@ -754,6 +859,9 @@ void InstallerView::OnStartSumatra(InstallerView*, gp::Ctx* cx, const gp::ClickE
 gp::El* InstallerView::Render(InstallerView*, gp::Ctx* cx) {
     InstallerWnd* wnd = gWnd;
     float margin = (float)kInstallerWinMargin;
+    wnd->optionsBounds = {};
+    wnd->allUsersBounds = {};
+    wnd->desktopBounds = {};
     DlgAccelBeginFrame(cx->win);
 
     gp::El* root = gp::Div(cx->a)
@@ -785,10 +893,12 @@ gp::El* InstallerView::Render(InstallerView*, gp::Ctx* cx) {
                         ->Label(ToGpui(Tr("Install for all users")))
                         ->Checked(wnd->forAllUsers)
                         ->OnClick(gp::ListenTo(gInstallerView, &InstallerView::OnAllUsers))
-                        ->IntoEl());
+                        ->IntoEl()
+                        ->BoundsOut(&wnd->allUsersBounds));
         opts->Child(DlgAccelEl(cx, gpc::Checkbox::New(cx, GStrL("inst-desktop"))->Checked(wnd->desktopShortcut),
                                Tr("Install &desktop shortcut"),
-                               gp::ListenTo(gInstallerView, &InstallerView::OnDesktopShortcut)));
+                               gp::ListenTo(gInstallerView, &InstallerView::OnDesktopShortcut))
+                        ->BoundsOut(&wnd->desktopBounds));
         root->Child(opts);
     }
 
@@ -801,7 +911,8 @@ gp::El* InstallerView::Render(InstallerView*, gp::Ctx* cx) {
         Str optsLabel = wnd->showOptions ? Tr("Hide &Options") : Tr("&Options");
         //] ACCESSKEY_ALTERNATIVE
         bottom->Child(DlgAccelEl(cx, gpc::Button::New(cx, GStrL("inst-options"))->WithSize(gp::UiSize::Small),
-                                 optsLabel, gp::ListenTo(gInstallerView, &InstallerView::OnOptions)));
+                                 optsLabel, gp::ListenTo(gInstallerView, &InstallerView::OnOptions))
+                          ->BoundsOut(&wnd->optionsBounds));
     }
     bottom->Child(gp::Div(cx->a)->Flex1());
     if (wnd->finished) {
@@ -858,6 +969,7 @@ static bool CreateInstallerWindow(Flags* cli) {
         return false;
     }
     gp::WindowSetInterval(gWnd->win, 33, gp::ListenTo(gInstallerView, &InstallerView::OnTick));
+    InstallerAttachProbe();
     SetDefaultMsg();
     RevealingLettersAnimStart();
 
