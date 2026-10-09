@@ -697,6 +697,9 @@ static LRESULT CALLBACK ShellSubclass(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp,
                 if (RefHoverTakePostedWheel(win, msg == WM_MOUSEHWHEEL, delta, isCtrl, isShift, pt.x, pt.y)) {
                     return 0;
                 }
+                if (ForwardBrowserWheel(win, msg, wp, lp)) {
+                    return 0;
+                }
             }
             break;
         case WM_SETTEXT:

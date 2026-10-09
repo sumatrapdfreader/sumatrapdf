@@ -1987,6 +1987,23 @@ bool DismissNotificationsOnEsc(MainWindow* win) {
     return RemoveNotificationsForGroup(win, kNotifZoomOrView);
 }
 
+// A wheel over CHM or markdown arrives at the frame. The page scrolls from
+// script; the host window does not.
+bool ForwardBrowserWheel(MainWindow* win, UINT msg, WPARAM wp, LPARAM lp) {
+    if (!win) {
+        return false;
+    }
+    BrowserDocController* doc = win->AsChm();
+    if (!doc) {
+        doc = win->AsMarkdown();
+    }
+    if (!doc) {
+        return false;
+    }
+    doc->PassUIMsg(msg, wp, lp);
+    return true;
+}
+
 // A failed open still gets a tab: the canvas shows the error, and the file
 // stays available to "show in folder" (issue #3595). Page number stays 0.
 static void ShowLoadErrorTab(MainWindow* win, Str fullPath, LoadReuse reuse) {

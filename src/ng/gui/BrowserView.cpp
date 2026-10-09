@@ -12,6 +12,7 @@
 #include "gui/GpuiBridge.h"
 
 #include "base/GuessFileType.h"
+#include "base/Win.h"
 
 #include "gui/UIModels.h"
 
@@ -783,7 +784,28 @@ void BrowserViewFindClear(BrowserView* bv) {
     Eval(bv, StrL("window.__sumatraFind && __sumatraFind.clear();"));
 }
 
-LRESULT BrowserViewPassUIMsg(BrowserView*, UINT, WPARAM, LPARAM) {
+// Chromium ignores WM_MOUSEWHEEL on the host window. A wheel that lands on the
+// frame (the browser child is not focused) scrolls the page from here.
+LRESULT BrowserViewPassUIMsg(BrowserView* bv, UINT msg, WPARAM wp, LPARAM) {
+#if OS_WIN
+    if (!bv || !Raw(bv)) {
+        return 0;
+    }
+    if (msg != WM_MOUSEWHEEL && msg != WM_MOUSEHWHEEL) {
+        return 0;
+    }
+    if ((LOWORD(wp) & MK_CONTROL) || IsCtrlPressed()) {
+        return 0;
+    }
+    short delta = GET_WHEEL_DELTA_WPARAM(wp);
+    bool horiz = (msg == WM_MOUSEHWHEEL) || (LOWORD(wp) & MK_SHIFT) || IsShiftPressed();
+    int d = -(int)delta;
+    Eval(bv, horiz ? fmt("window.scrollBy(%d, 0)", d) : fmt("window.scrollBy(0, %d)", d));
+#else
+    (void)bv;
+    (void)msg;
+    (void)wp;
+#endif
     return 0;
 }
 
