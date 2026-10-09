@@ -120,8 +120,8 @@ function chipNames(dump: string): string[] {
 
 // ng has no popup HWND. A posted down/up pair can have a cursor snap between
 // them, which gpui treats as a drag and the swatch never receives the click.
-async function ngClick(client: ControlClient, x: number, y: number): Promise<void> {
-  const res = await client.request(ControlCommand.TestInput, ["click", x, y, 0, 0]);
+async function ngClick(client: ControlClient, x: number, y: number, button = 0): Promise<void> {
+  const res = await client.request(ControlCommand.TestInput, ["click", x, y, button, 0]);
   const raw = String(res[1] ?? "");
   if (res[0] !== 0 || !raw.startsWith("OK")) {
     throw new Error(`annot-color-dropdown: click failed: ${raw}`);
@@ -202,12 +202,26 @@ function findColorDialog(pid: number): number {
 // The button at the right end of the drop-down opens the color dialog. It has
 // to end up in front of the main window, which it only does if it is owned by
 // it, and the drop-down has to be gone.
-async function checkEditColors(pid: number, frame: number, swatches: Rect[]): Promise<void> {
-  const popup = findTopWindow(pid, POPUP_CLASS);
-  const r = getWindowRect(popup);
-  const last = swatches[swatches.length - 1]!;
-  const x = last.x + last.dx + Math.floor((r.right - (last.x + last.dx)) / 2);
-  await clickAt(popup, x - r.left, last.y + Math.floor(last.dy / 2) - r.top, 0);
+async function checkEditColors(client: ControlClient, pid: number, frame: number, swatches: Rect[]): Promise<void> {
+  if (USE_NG) {
+    // ng draws the pencil in the card. Its rect arrives a frame after the swatches.
+    const line = await pollUntil(
+      async () => /annotColorPopup .*/.exec(await markupDump(client))?.[0] ?? "",
+      (s) => {
+        const m = /edit=(-?\d+),(-?\d+),(\d+),(\d+)/.exec(s);
+        return !!m && +m[3]! > 0 && +m[4]! > 0;
+      },
+      { error: "annot-color-dropdown: Edit colors has no rect" },
+    );
+    const edit = parseRect(/edit=(-?\d+),(-?\d+),(\d+),(\d+)/.exec(line));
+    await ngClick(client, edit.x + Math.floor(edit.dx / 2), edit.y + Math.floor(edit.dy / 2));
+  } else {
+    const popup = findTopWindow(pid, POPUP_CLASS);
+    const r = getWindowRect(popup);
+    const last = swatches[swatches.length - 1]!;
+    const x = last.x + last.dx + Math.floor((r.right - (last.x + last.dx)) / 2);
+    await clickAt(popup, x - r.left, last.y + Math.floor(last.dy / 2) - r.top, 0);
+  }
 
   const dlg = await pollUntil(
     () => findColorDialog(pid),
@@ -295,7 +309,7 @@ async function testMarkup(): Promise<void> {
     if (swatches.length !== 2) {
       throw new Error(`annot-color-dropdown: a markup annotation should have no "none" swatch: ${swatches.length}`);
     }
-    await checkEditColors(proc.pid!, frame, swatches);
+    await checkEditColors(client, proc.pid!, frame, swatches);
 
     swatches = await openChipDropdown(client, proc.pid!, "color");
     await pickSwatch(client, proc.pid!, swatches, 0);
@@ -467,16 +481,35 @@ async function waitForHoverColors(client: ControlClient, want?: string): Promise
 
 // right-click opens the drop-down at once, without waiting for the hover delay.
 // The real cursor stays parked off the window: on a button, its moves swap to
-// that button's drop-down.
-function rightClickToolbar(toolbar: number, x: number, y: number): void {
+// that button's drop-down. ng has no toolbar HWND; the click goes through
+// the control channel, in frame dips.
+async function rightClickToolbar(client: ControlClient, toolbar: number, x: number, y: number): Promise<void> {
+  if (USE_NG) {
+    await ngClick(client, x, y, 1);
+    return;
+  }
   const lp = packCoords(x, y);
   sendMessage(toolbar, WM_RBUTTONDOWN, MK_RBUTTON, lp);
   sendMessage(toolbar, WM_RBUTTONUP, 0, lp);
 }
 
+async function hoverDump(client: ControlClient): Promise<string> {
+  return String((await client.request(ControlCommand.TestToolbarButtons, []))[1] ?? "");
+}
+
 // Esc dismisses a right-click drop-down; moving the mouse away does not
-async function closeHoverMenu(pid: number, frame: number): Promise<void> {
+async function closeHoverMenu(client: ControlClient, pid: number, frame: number): Promise<void> {
   await pressKey(frame, VK_ESCAPE, 0);
+  if (USE_NG) {
+    await pollUntil(
+      async () => hoverDump(client),
+      (s) => /dropdown cmd=0 /.test(s),
+      {
+        error: "annot-color-dropdown: the toolbar drop-down would not close",
+      },
+    );
+    return;
+  }
   for (let i = 0; i < 30; i++) {
     const h = findTopWindow(pid, HOVER_MENU_CLASS);
     if (!h || !isWindowVisible(h)) {
@@ -522,7 +555,7 @@ async function testToolbarButtons(): Promise<void> {
       if (!b) {
         throw new Error(`annot-color-dropdown: no ${name} button on the Edit PDF toolbar`);
       }
-      rightClickToolbar(toolbar, b.x + (b.dx >> 1), b.y + (b.dy >> 1));
+      await rightClickToolbar(client, toolbar, b.x + (b.dx >> 1), b.y + (b.dy >> 1));
       const def = DEFAULT_COLORS[name]!;
       if (!presets.includes(def)) {
         presets.push(def);
@@ -532,29 +565,29 @@ async function testToolbarButtons(): Promise<void> {
       if (colors.join(" ") !== want) {
         throw new Error(`annot-color-dropdown: ${name} offers "${colors.join(" ")}", want "${want}"`);
       }
-      await closeHoverMenu(pid, frame);
+      await closeHoverMenu(client, pid, frame);
     }
 
     // ink offers colors of its own, translucent, and its default is the first
     {
       const b = (await annotButtonRect(client, cmdId("CmdCreateAnnotInk")))!;
-      rightClickToolbar(toolbar, b.x + (b.dx >> 1), b.y + (b.dy >> 1));
+      await rightClickToolbar(client, toolbar, b.x + (b.dx >> 1), b.y + (b.dy >> 1));
       const colors = (await waitForHoverColors(client, INK_DEFAULT_PRESETS)).join(" ");
       if (colors !== INK_DEFAULT_PRESETS) {
         throw new Error(`annot-color-dropdown: CmdCreateAnnotInk offers "${colors}", want "${INK_DEFAULT_PRESETS}"`);
       }
-      await closeHoverMenu(pid, frame);
+      await closeHoverMenu(client, pid, frame);
     }
 
     // a redaction mark's color is the box that covers the text, not a choice
     const redact = await annotButtonRect(client, cmdId("CmdCreateAnnotRedact"));
     if (redact) {
-      rightClickToolbar(toolbar, redact.x + (redact.dx >> 1), redact.y + (redact.dy >> 1));
+      await rightClickToolbar(client, toolbar, redact.x + (redact.dx >> 1), redact.y + (redact.dy >> 1));
       const h = findTopWindow(pid, HOVER_MENU_CLASS);
       if (h && isWindowVisible(h)) {
         throw new Error("annot-color-dropdown: Redact should have no color drop-down");
       }
-      await closeHoverMenu(pid, frame);
+      await closeHoverMenu(client, pid, frame);
       // with no drop-down the right-click picked the tool; leave its mode,
       // which disables the other buttons
       await pressKey(frame, VK_ESCAPE, 0);
@@ -562,24 +595,45 @@ async function testToolbarButtons(): Promise<void> {
 
     // picking a color is the color the next annotation of that type is made in
     const square = (await annotButtonRect(client, cmdId("CmdCreateAnnotSquare")))!;
-    rightClickToolbar(toolbar, square.x + (square.dx >> 1), square.y + (square.dy >> 1));
+    await rightClickToolbar(client, toolbar, square.x + (square.dx >> 1), square.y + (square.dy >> 1));
     const raw = await pollUntil(
-      async () => String((await client.request(ControlCommand.TestToolbarButtons, []))[1] ?? ""),
-      (s) => /^dropdown-item idx=1 /m.test(s),
+      async () => hoverDump(client),
+      (s) => {
+        if (!USE_NG) {
+          return /^dropdown-item idx=1 /m.test(s);
+        }
+        const dip = /^dropdown-dip idx=1 rect=(-?\d+),(-?\d+),(-?\d+),(-?\d+)/m.exec(s);
+        return !!dip && +dip[3]! > +dip[1]! && +dip[4]! > +dip[2]!;
+      },
     );
-    const item = /^dropdown-item idx=1 cmd=\d+ current=\d rect=(-?\d+),(-?\d+),(-?\d+),(-?\d+)/m.exec(raw);
-    if (!item) {
-      throw new Error(`annot-color-dropdown: the Square drop-down has no second swatch\n${raw}`);
+    if (USE_NG) {
+      const dip = /^dropdown-dip idx=1 rect=(-?\d+),(-?\d+),(-?\d+),(-?\d+)/m.exec(raw);
+      if (!dip) {
+        throw new Error(`annot-color-dropdown: the Square drop-down has no second swatch\n${raw}`);
+      }
+      await ngClick(client, (+dip[1]! + +dip[3]!) >> 1, (+dip[2]! + +dip[4]!) >> 1);
+      await pollUntil(
+        async () => hoverDump(client),
+        (s) => /dropdown cmd=0 /.test(s),
+        {
+          error: "annot-color-dropdown: the drop-down stayed up after picking a color",
+        },
+      );
+    } else {
+      const item = /^dropdown-item idx=1 cmd=\d+ current=\d rect=(-?\d+),(-?\d+),(-?\d+),(-?\d+)/m.exec(raw);
+      if (!item) {
+        throw new Error(`annot-color-dropdown: the Square drop-down has no second swatch\n${raw}`);
+      }
+      const menu = findTopWindow(pid, HOVER_MENU_CLASS);
+      const mr = getWindowRect(menu);
+      const cx = (+item[1]! + +item[3]!) >> 1;
+      const cy = (+item[2]! + +item[4]!) >> 1;
+      await clickAt(menu, cx - mr.left, cy - mr.top, 0);
+      await pollUntil(
+        () => findTopWindow(pid, HOVER_MENU_CLASS),
+        (hwnd) => hwnd === 0 || !isWindowVisible(hwnd),
+      );
     }
-    const menu = findTopWindow(pid, HOVER_MENU_CLASS);
-    const mr = getWindowRect(menu);
-    const cx = (+item[1]! + +item[3]!) >> 1;
-    const cy = (+item[2]! + +item[4]!) >> 1;
-    await clickAt(menu, cx - mr.left, cy - mr.top, 0);
-    await pollUntil(
-      () => findTopWindow(pid, HOVER_MENU_CLASS),
-      (hwnd) => hwnd === 0 || !isWindowVisible(hwnd),
-    );
 
     sendMessage(frame, WM_COMMAND, cmdId("CmdCreateAnnotSquare"), packCoords(300, 300));
     await client.waitForRenderIdle();
@@ -593,24 +647,43 @@ async function testToolbarButtons(): Promise<void> {
     const line = (await annotButtonRect(client, cmdId("CmdCreateAnnotLine")))!;
     const lx = line.x + (line.dx >> 1);
     const ly = line.y + (line.dy >> 1);
-    rightClickToolbar(toolbar, lx, ly);
+    await rightClickToolbar(client, toolbar, lx, ly);
     await waitForHoverColors(client);
-    await clickAt(toolbar, lx, ly, 0);
-    await pollUntil(
-      () => findTopWindow(pid, HOVER_MENU_CLASS),
-      (hwnd) => hwnd === 0 || !isWindowVisible(hwnd),
-      { error: "annot-color-dropdown: clicking the Line button left its color drop-down up" },
-    );
-    const stayClosedUntil = Date.now() + 1500;
-    while (Date.now() < stayClosedUntil) {
-      const s = clientToScreen(toolbar, lx, ly);
-      setCursorPos(s.x, s.y);
-      sendMessage(toolbar, WM_MOUSEMOVE, 0, packCoords(lx, ly));
-      const h = findTopWindow(pid, HOVER_MENU_CLASS);
-      if (h && isWindowVisible(h)) {
-        throw new Error("annot-color-dropdown: clicking the Line button left its color drop-down up");
+    if (USE_NG) {
+      await ngClick(client, lx, ly);
+      await pollUntil(
+        async () => hoverDump(client),
+        (s) => /dropdown cmd=0 /.test(s),
+        {
+          error: "annot-color-dropdown: clicking the Line button left its color drop-down up",
+        },
+      );
+      const stayClosedUntil = Date.now() + 1500;
+      while (Date.now() < stayClosedUntil) {
+        await client.request(ControlCommand.TestInput, ["move", lx, ly, 0, 0]);
+        if (!/dropdown cmd=0 /.test(await hoverDump(client))) {
+          throw new Error("annot-color-dropdown: clicking the Line button left its color drop-down up");
+        }
+        await sleep(100);
       }
-      await sleep(100);
+    } else {
+      await clickAt(toolbar, lx, ly, 0);
+      await pollUntil(
+        () => findTopWindow(pid, HOVER_MENU_CLASS),
+        (hwnd) => hwnd === 0 || !isWindowVisible(hwnd),
+        { error: "annot-color-dropdown: clicking the Line button left its color drop-down up" },
+      );
+      const stayClosedUntil = Date.now() + 1500;
+      while (Date.now() < stayClosedUntil) {
+        const s = clientToScreen(toolbar, lx, ly);
+        setCursorPos(s.x, s.y);
+        sendMessage(toolbar, WM_MOUSEMOVE, 0, packCoords(lx, ly));
+        const h = findTopWindow(pid, HOVER_MENU_CLASS);
+        if (h && isWindowVisible(h)) {
+          throw new Error("annot-color-dropdown: clicking the Line button left its color drop-down up");
+        }
+        await sleep(100);
+      }
     }
   } finally {
     client.close();
@@ -672,12 +745,12 @@ async function testCurrentColorAdded(): Promise<void> {
       ["CmdCreateAnnotInk", `${INK_PRESETS} #66ffff00*`],
     ] as const) {
       const b = (await annotButtonRect(client, cmdId(name)))!;
-      rightClickToolbar(toolbar, b.x + (b.dx >> 1), b.y + (b.dy >> 1));
+      await rightClickToolbar(client, toolbar, b.x + (b.dx >> 1), b.y + (b.dy >> 1));
       const colors = (await waitForHoverColors(client, want)).join(" ");
       if (colors !== want) {
         throw new Error(`annot-color-dropdown: ${name} offers "${colors}", want "${want}"`);
       }
-      await closeHoverMenu(pid, frame);
+      await closeHoverMenu(client, pid, frame);
     }
   } finally {
     client.close();

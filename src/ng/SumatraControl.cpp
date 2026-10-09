@@ -50,6 +50,7 @@
 #include "WindowTab.h"
 #include "HomePage.h"
 #include "TextSelection.h"
+#include "Selection.h"
 #include "TextSearch.h"
 #include "FileHistory.h"
 #include "Favorites.h"
@@ -221,6 +222,66 @@ static TempStr DisplayModeResultTemp(Str action, int* exitCodeOut) {
                       win->isFullScreen ? 1 : 0, zoomLabel);
     str::Free(zoomLabel);
     return finish(res, 0);
+}
+
+// Select the text of one page so a test can turn it into a highlight.
+static TempStr SeedTextSelectionResultTemp(int pageNo, int* exitCodeOut) {
+    str::Builder out;
+    auto fail = [&](Str msg, int code) -> TempStr {
+        out.Append(msg);
+        out.AppendChar('\n');
+        if (exitCodeOut) {
+            *exitCodeOut = code;
+        }
+        return ToStrTemp(out);
+    };
+
+    if (len(gWindows) == 0) {
+        return fail(StrL("NOTREADY no-window"), 2);
+    }
+    MainWindow* win = gWindows[0];
+    DisplayModel* dm = win ? win->AsFixed() : nullptr;
+    if (!dm || !dm->textSelection) {
+        return fail(StrL("NOTREADY no-doc"), 2);
+    }
+    WindowTab* tab = win->CurrentTab();
+    if (!tab) {
+        return fail(StrL("ERROR no-tab"), 1);
+    }
+    if (!dm->ValidPageNo(pageNo)) {
+        return fail(fmt("ERROR invalid-page pageNo=%d pageCount=%d", pageNo, dm->PageCount()), 1);
+    }
+
+    int textLen = 0;
+    dm->GetEngine()->GetTextForPage(pageNo, &textLen);
+    if (textLen < 2) {
+        return fail(fmt("ERROR no-text pageNo=%d", pageNo), 1);
+    }
+
+    DeleteOldSelectionInfo(win, true);
+    dm->textSelection->StartAt(pageNo, 0);
+    dm->textSelection->SelectUpTo(pageNo, textLen - 1);
+    tab->selectionOnPage = SelectionOnPage::FromTextSelect(&dm->textSelection->result);
+    win->showSelection = tab->selectionOnPage != nullptr;
+    if (!tab->selectionOnPage) {
+        return fail(fmt("ERROR empty-selection pageNo=%d", pageNo), 1);
+    }
+
+    int first = (*tab->selectionOnPage)[0].pageNo;
+    int last = VecLast(*tab->selectionOnPage).pageNo;
+    int quads = 0;
+    for (SelectionOnPage& sel : *tab->selectionOnPage) {
+        if (sel.HasQuad()) {
+            quads++;
+        }
+    }
+    out.Append(fmt("OK parts=%d quads=%d first=%d last=%d pageCount=%d\n", len(*tab->selectionOnPage), quads, first,
+                   last, dm->PageCount()));
+    if (exitCodeOut) {
+        *exitCodeOut = 0;
+    }
+    AppShellInvalidate(win);
+    return ToStrTemp(out);
 }
 
 // Boxes the current page actually declares (issue #814). Optional int arg is pageNo.
@@ -1044,6 +1105,18 @@ static void ExecuteControlRequest(ControlRequest* req) {
                 break;
             }
             AppendTestResult(req, 0, SelectTextKeyboardResultTemp(win));
+            break;
+        }
+
+        case ControlCmd::TestSeedTextSelection: {
+            i32 pageNo = 1;
+            if (!IntArg(req, 0, pageNo)) {
+                AppendError(req, StrL("TestSeedTextSelection expects int pageNo (1-based)"));
+                break;
+            }
+            int exitCode = 0;
+            Str res = SeedTextSelectionResultTemp(pageNo, &exitCode);
+            AppendTestResult(req, exitCode, res);
             break;
         }
 

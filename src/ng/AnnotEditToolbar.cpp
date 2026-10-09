@@ -156,6 +156,8 @@ struct AnnotEditToolbar {
     Color swatchColor[32];
     bool swatchNone[32];
     int nSwatches = 0;
+    // the pencil at the end of the swatch row, in window dips
+    gp::Bounds editBounds{};
     bool popupWithNone = false;
     // >= 0: the drop-down also carries a thickness slider
     int popupThickness = -1;
@@ -685,7 +687,11 @@ static void ClosePopup(AnnotEditToolbar* tb) {
     tb->popupCurrentFontIdx = -1;
     tb->popupOtherFontIdx = -1;
     VecReset(tb->popupColors);
+    tb->editBounds = {};
 }
+
+// defined with the color chips: the pencil's dialog
+static void OpenAnnotColorsDialog(AnnotEditToolbar* tb);
 
 void HideAnnotEditToolbar(MainWindow* win) {
     AnnotEditToolbar* tb = win ? win->annotEditToolbar : nullptr;
@@ -1096,6 +1102,44 @@ static void ChipColorPicked(AnnotEditToolbar* tb, Color col) {
             return;
     }
     AnnotChanged(tab);
+}
+
+// the dialog the pencil opens. cmdId 0 is the annotation preset list, not a
+// toolbar button's (orig's ShowAnnotColorsDialog).
+struct AnnotColorDlgTarget {
+    AnnotEditToolbar* tb = nullptr;
+};
+
+static void AnnotColorDlgPicked(AnnotColorDlgTarget* target, ChangeColorsArgs* args) {
+    if (args->colorsChanged && gSettings) {
+        str::ReplaceWithCopy(&gSettings->annotations.presetColors, SerializeColorList(args->colors));
+        ScheduleSaveSettings();
+    }
+    if (args->didSelect && args->color != kColorUnset && target->tb) {
+        ChipColorPicked(target->tb, args->color);
+    }
+    delete target;
+}
+
+static void OpenAnnotColorsDialog(AnnotEditToolbar* tb) {
+    MainWindow* win = tb->win;
+    Color current = tb->popupColorNow;
+    ClosePopup(tb);
+    if (!IsMainWindowValidAndNotClosing(win)) {
+        return;
+    }
+    auto* target = new AnnotColorDlgTarget();
+    target->tb = tb;
+
+    auto* args = new ChangeColorsArgs();
+    args->win = win;
+    args->title = Tr("Annotation Colors");
+    args->color = current;
+    args->withOpacity = true;
+    AnnotPresetColors(0, args->colors);
+    args->onClose = MkFunc1(AnnotColorDlgPicked, target);
+    ShowChangeColorsDialog(args);
+    AppShellInvalidate(win);
 }
 
 // how wide the stroke of an ink annotation is, from the Thickness slider of
@@ -1800,6 +1844,7 @@ struct AnnotEditView {
     static void OnChip(AnnotEditView* self, gp::Ctx* cx, const gp::ClickEvent*, int64_t idx);
     static void OnChipHover(AnnotEditView* self, gp::Ctx* cx, const gp::HoverEvent* ev, int64_t idx);
     static void OnSwatch(AnnotEditView* self, gp::Ctx* cx, const gp::ClickEvent*, int64_t idx);
+    static void OnEditColors(AnnotEditView* self, gp::Ctx* cx, const gp::ClickEvent*);
     static void OnListItem(AnnotEditView* self, gp::Ctx* cx, const gp::ClickEvent*, int64_t idx);
     static void OnFontItem(AnnotEditView* self, gp::Ctx* cx, const gp::ClickEvent*, int64_t idx);
     static void OnFontScroll(AnnotEditView* self, gp::Ctx* cx, const gp::ScrollEvent* ev);
@@ -1851,6 +1896,19 @@ void AnnotEditView::OnSwatch(AnnotEditView* self, gp::Ctx* cx, const gp::ClickEv
     ClosePopup(tb);
     ChipColorPicked(tb, col);
     gp::Notify(cx);
+}
+
+// orig's OnAnnotColorPopupEdit: the pencil opens the color dialog on this
+// annotation's presets. The drop-down goes first, as on orig, so it cannot
+// cover the dialog.
+void AnnotEditView::OnEditColors(AnnotEditView* self, gp::Ctx* cx, const gp::ClickEvent*) {
+    AnnotEditToolbar* tb = self->win ? self->win->annotEditToolbar : nullptr;
+    if (!tb || tb->popupKind != AnnotPopupKind::Colors) {
+        return;
+    }
+    OpenAnnotColorsDialog(tb);
+    gp::Notify(cx);
+    AppShellInvalidate(self->win);
 }
 
 void AnnotEditView::OnListItem(AnnotEditView* self, gp::Ctx* cx, const gp::ClickEvent*, int64_t idx) {
@@ -2130,6 +2188,7 @@ static gp::El* BuildContentsEditor(AnnotEditToolbar* tb, gp::Ctx* cx, int annotD
 // the color grid / slider / list a chip opened, drawn under the row
 static gp::El* BuildPopup(AnnotEditToolbar* tb, gp::Ctx* cx) {
     tb->nSwatches = 0;
+    tb->editBounds = {};
     if (tb->popupKind == AnnotPopupKind::None) {
         return nullptr;
     }
@@ -2175,6 +2234,23 @@ static gp::El* BuildPopup(AnnotEditToolbar* tb, gp::Ctx* cx) {
         for (int i = 0; i < len(tb->popupColors); i++) {
             addSwatch(false, tb->popupColors[i], i);
         }
+        // orig's pencil, to the right of the swatches
+        constexpr int kAnnotEditPad = 5;
+        float pad = (float)DpiScale(kAnnotEditPad);
+        gp::El* editBtn = gp::Div(cx->a)
+                              ->Pad(pad)
+                              ->HoverBg(ToGpui(BarHoverBg()))
+                              ->Cursor(gp::CursorKind::Pointer)
+                              ->Tip(ToGpui(Tr("Edit colors")))
+                              ->BoundsOut(&tb->editBounds)
+                              ->PathClick(GStrL("annot-col-edit"))
+                              ->OnClick(gp::ListenTo(gAnnotEditView, &AnnotEditView::OnEditColors));
+        editBtn->Child(gpc::Icon::New(cx, gp::IconName::None)
+                           ->Data(ToGpui(Str(gIconEditAnnotations)))
+                           ->Size((float)DpiScale(16))
+                           ->Color(ToGpui(fg))
+                           ->IntoEl());
+        grid->Child(editBtn);
         card->Child(grid);
     }
     // a slider is "- value +": gpui's Slider reports through an entity
@@ -2476,7 +2552,9 @@ TempStr AnnotColorPopupStateTemp(MainWindow* win) {
         swatches.Append(fmt("%s:%d,%d,%d,%d:%d", name, (int)b.x, (int)b.y, (int)b.w, (int)b.h, current ? 1 : 0));
         n++;
     }
-    return fmt("annotColorPopup visible=1 n=%d placed=0,0,0,0 thickness= swatches=%s\n", n, ToStrTemp(swatches));
+    gp::Bounds e = tb->editBounds;
+    return fmt("annotColorPopup visible=1 n=%d placed=0,0,0,0 thickness= edit=%d,%d,%d,%d swatches=%s\n", n, (int)e.x,
+               (int)e.y, (int)e.w, (int)e.h, ToStrTemp(swatches));
 }
 
 // --- selection and the annotation lists -------------------------------------

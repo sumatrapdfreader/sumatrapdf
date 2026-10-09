@@ -1589,8 +1589,13 @@ static gp::El* BuildAnnotColorStrip(MainWindow* win, gp::Ctx* cx) {
     if (len(colors) == 0) {
         return nullptr;
     }
-    BeginHoverDump(Ui(win), 0);
-    VecReset(Ui(win)->stripCmds);
+    ToolbarUI* ui = Ui(win);
+    BeginHoverDump(ui, len(colors));
+    for (int i = 0; i < len(colors); i++) {
+        bool on = SameColorAndAlpha(colors[i], current);
+        AddHoverDumpItem(ui, cmdId, SerializeColorTemp(colors[i]), on, false);
+    }
+    VecReset(ui->stripCmds);
 
     const gp::Theme& th = gp::ThemeNow(cx->app);
     bool hasThickness = cmdId == CmdCreateAnnotInk;
@@ -1601,7 +1606,8 @@ static gp::El* BuildAnnotColorStrip(MainWindow* win, gp::Ctx* cx) {
                       ->Absolute()
                       ->Bg(ToGpui(TbBgColor()))
                       ->Border(1, th.border)
-                      ->OnHover(gp::ListenTo(Ui(win)->view, &ToolbarView::OnStripHover));
+                      ->BoundsOut(&ui->hoverBox)
+                      ->OnHover(gp::ListenTo(ui->view, &ToolbarView::OnStripHover));
     // a note's color fills its icon, behind the note
     Str label = (cmdId == CmdCreateAnnotText) ? Tr("Background Color") : Tr("Color");
     gp::El* labelRow = gp::Div(cx->a)->FlexRow()->ItemsCenter()->JustifyBetween()->Gap((float)DpiScale(16));
@@ -1624,8 +1630,9 @@ static gp::El* BuildAnnotColorStrip(MainWindow* win, gp::Ctx* cx) {
                          ->Radius(d / 2)
                          ->Bg(ToGpui(c))
                          ->Cursor(gp::CursorKind::Pointer)
+                         ->BoundsOut(&ui->hoverItems[i].bounds)
                          ->PathClick(GpuiDup(cx->a, fmt("tb-annot-col-%d", i)))
-                         ->OnClick(gp::ListenTo(Ui(win)->view, &ToolbarView::OnAnnotSwatch, (intptr_t)i));
+                         ->OnClick(gp::ListenTo(ui->view, &ToolbarView::OnAnnotSwatch, (intptr_t)i));
         if (SameColorAndAlpha(c, current)) {
             sw->Border(2, ToGpui(TbTextColor()));
         } else {
@@ -1641,13 +1648,12 @@ static gp::El* BuildAnnotColorStrip(MainWindow* win, gp::Ctx* cx) {
                           ->Cursor(gp::CursorKind::Pointer)
                           ->Tip(ToGpui(Tr("Edit colors")))
                           ->PathClick(GStrL("tb-annot-col-edit"))
-                          ->OnClick(gp::ListenTo(Ui(win)->view, &ToolbarView::OnAnnotColorsEdit, (intptr_t)cmdId));
+                          ->OnClick(gp::ListenTo(ui->view, &ToolbarView::OnAnnotColorsEdit, (intptr_t)cmdId));
     editBtn->Child(ToolbarIcon(cx, Str(gIconEditAnnotations), tb->iconSize, TbTextColor()));
     colorRow->Child(editBtn);
     box->Child(colorRow);
     float stripDx = (float)(len(colors) * (DpiScale(20) + 4) + 2 * DpiScale(6)) + (float)tb->iconSize + 2 * pad;
     if (hasThickness) {
-        ToolbarUI* ui = Ui(win);
         int width = limitValue(gSettings->annotations.inkBorderWidth, kInkThicknessMin, kInkThicknessMax);
         if (!ui->inkThicknessInit) {
             ui->inkThickness = gp::SliderStateNew(kInkThicknessMin, kInkThicknessMax, gp::SliderSingle((float)width));
