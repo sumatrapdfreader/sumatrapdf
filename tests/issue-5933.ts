@@ -5,6 +5,7 @@
 import { mkdirSync, readFileSync, rmSync } from "node:fs";
 import { join } from "node:path";
 import { ControlClient, ControlCommand } from "./control";
+import { IS_MAC } from "./host.ts";
 import { ROOT, cmdId, runStandalone, tmpPath } from "./util";
 import {
   captureWindowToPng,
@@ -27,6 +28,32 @@ import { findCanvas, killAndWait, launchControlled } from "./win-automation";
 
 function hover(canvas: number, x: number, y: number) {
   sendMessage(canvas, WM_MOUSEMOVE, 0, packCoords(x, y));
+}
+
+// Canvas pixels, as the canvas HWND reports them. On mac the control channel
+// wants the same point in frame pixels.
+async function framePt(client: ControlClient, x: number, y: number): Promise<{ x: number; y: number }> {
+  if (!IS_MAC) {
+    return { x, y };
+  }
+  const o = await canvasFrame(client);
+  return { x: x + o.x, y: y + o.y };
+}
+
+async function canvasFrame(client: ControlClient): Promise<{ x: number; y: number; dx: number; dy: number }> {
+  const layout = String((await client.request(ControlCommand.TestLayout, []))[1] ?? "");
+  const scale = Number(/scale=([0-9.]+)/.exec(layout)?.[1] ?? "1") || 1;
+  const m = /item name=canvas visible=\d+ rect=(-?\d+),(-?\d+),(-?\d+),(-?\d+)/.exec(layout);
+  const x = m ? Number(m[1]) : 0;
+  const y = m ? Number(m[2]) : 0;
+  const dx = m ? Number(m[3]) : 0;
+  const dy = m ? Number(m[4]) : 0;
+  return {
+    x: Math.round(x / scale),
+    y: Math.round(y / scale),
+    dx: Math.round(dx / scale),
+    dy: Math.round(dy / scale),
+  };
 }
 
 function clickAt(canvas: number, x: number, y: number) {
@@ -135,10 +162,17 @@ export async function testit(): Promise<void> {
     const cr = getClientRect(canvas);
     const stampX = 80;
     const stampY = 80;
-    const awayX = Math.max(40, cr.right - 40);
-    const awayY = Math.max(40, cr.bottom - 40);
+    const stamp = await framePt(client, stampX, stampY);
+    // getClientRect is the canvas on Windows and the whole frame on mac
+    let awayX = Math.max(40, cr.right - 40);
+    let awayY = Math.max(40, cr.bottom - 40);
+    if (IS_MAC) {
+      const page = await canvasFrame(client);
+      awayX = Math.max(40, page.x + page.dx - 40);
+      awayY = Math.max(40, page.y + page.dy - 40);
+    }
 
-    sendMessage(frame, WM_COMMAND, cmdId("CmdCreateAnnotStamp"), packCoords(stampX, stampY));
+    sendMessage(frame, WM_COMMAND, cmdId("CmdCreateAnnotStamp"), packCoords(stamp.x, stamp.y));
     await client.waitForRenderIdle();
 
     const stampBeforeRight = await selectedAnnotState(client);
@@ -196,7 +230,8 @@ export async function testit(): Promise<void> {
       );
     }
 
-    hover(canvas, stampX + 20, stampY + 20);
+    const overStamp = await framePt(client, stampX + 20, stampY + 20);
+    hover(canvas, overStamp.x, overStamp.y);
     await sleep(80);
 
     // click empty page without a hover update first — that's the regression
@@ -206,7 +241,7 @@ export async function testit(): Promise<void> {
       throw new Error("issue-5933: click away did not leave stamp size-edit mode");
     }
 
-    sendMessage(frame, WM_COMMAND, cmdId("CmdCreateAnnotStamp"), packCoords(stampX, stampY));
+    sendMessage(frame, WM_COMMAND, cmdId("CmdCreateAnnotStamp"), packCoords(stamp.x, stamp.y));
     await client.waitForRenderIdle();
     clickAwayWithJitter(canvas, awayX, awayY);
     await client.waitForRenderIdle();
@@ -218,15 +253,20 @@ export async function testit(): Promise<void> {
     // right-drag flag set. A later left-button resize then ignored button-up
     // and continued resizing as the unpressed mouse moved.
     primeRightDragState(canvas, awayX, awayY);
-    const freeTextX = 100;
-    const freeTextY = 300;
-    sendMessage(frame, WM_COMMAND, cmdId("CmdCreateAnnotFreeText"), packCoords(freeTextX, freeTextY));
+    const freeText = await framePt(client, 100, 300);
+    sendMessage(frame, WM_COMMAND, cmdId("CmdCreateAnnotFreeText"), packCoords(freeText.x, freeText.y));
     await client.waitForRenderIdle();
 
     // At fit-page zoom the default FreeText rectangle's bottom-right handle
-    // is 212x109 pixels from its placement point.
-    const resizeX = freeTextX + 212;
-    const resizeY = freeTextY + 109;
+    // is 212x109 pixels from its placement point. On mac the page is
+    // letterboxed, so that point is not the rect the model actually created.
+    let resizeX = freeText.x + 212;
+    let resizeY = freeText.y + 109;
+    if (IS_MAC) {
+      const placed = await selectedAnnotState(client);
+      resizeX = placed.rect.x + placed.rect.dx;
+      resizeY = placed.rect.y + placed.rect.dy;
+    }
     const resizedX = resizeX + 40;
     const resizedY = resizeY + 40;
     const pResize = clientToScreen(canvas, resizeX, resizeY);
@@ -237,29 +277,45 @@ export async function testit(): Promise<void> {
     sendMessage(canvas, WM_MOUSEMOVE, MK_LBUTTON, packCoords(resizedX, resizedY));
     sendMessage(canvas, WM_LBUTTONUP, 0, packCoords(resizedX, resizedY));
     await client.waitForRenderIdle();
-    const afterResizeUpPng = join(dir, "after-resize-up.png");
-    if (!captureWindowToPng(canvas, afterResizeUpPng)) {
-      throw new Error("issue-5933: capture after resize mouse-up failed");
+    if (IS_MAC) {
+      const afterUp = await selectedAnnotState(client);
+      sendMessage(canvas, WM_MOUSEMOVE, 0, packCoords(resizedX + 60, resizedY + 60));
+      await client.waitForRenderIdle();
+      const afterMove = await selectedAnnotState(client);
+      const a = afterUp.rect;
+      const b = afterMove.rect;
+      if (a.x !== b.x || a.y !== b.y || a.dx !== b.dx || a.dy !== b.dy) {
+        throw new Error(
+          `issue-5933: annotation kept resizing after the left mouse button was released: up=${afterUp.raw} move=${afterMove.raw}`,
+        );
+      }
+    } else {
+      const afterResizeUpPng = join(dir, "after-resize-up.png");
+      if (!captureWindowToPng(canvas, afterResizeUpPng)) {
+        throw new Error("issue-5933: capture after resize mouse-up failed");
+      }
+
+      sendMessage(canvas, WM_MOUSEMOVE, 0, packCoords(resizedX + 60, resizedY + 60));
+      await client.waitForRenderIdle();
+      const afterUnpressedMovePng = join(dir, "after-unpressed-move.png");
+      if (!captureWindowToPng(canvas, afterUnpressedMovePng)) {
+        throw new Error("issue-5933: capture after unpressed mouse move failed");
+      }
+      const afterResizeUp = readFileSync(afterResizeUpPng);
+      const afterUnpressedMove = readFileSync(afterUnpressedMovePng);
+      if (!afterResizeUp.equals(afterUnpressedMove)) {
+        throw new Error("issue-5933: annotation kept resizing after the left mouse button was released");
+      }
     }
 
-    sendMessage(canvas, WM_MOUSEMOVE, 0, packCoords(resizedX + 60, resizedY + 60));
-    await client.waitForRenderIdle();
-    const afterUnpressedMovePng = join(dir, "after-unpressed-move.png");
-    if (!captureWindowToPng(canvas, afterUnpressedMovePng)) {
-      throw new Error("issue-5933: capture after unpressed mouse move failed");
-    }
-    const afterResizeUp = readFileSync(afterResizeUpPng);
-    const afterUnpressedMove = readFileSync(afterUnpressedMovePng);
-    if (!afterResizeUp.equals(afterUnpressedMove)) {
-      throw new Error("issue-5933: annotation kept resizing after the left mouse button was released");
-    }
-
-    sendMessage(frame, WM_COMMAND, cmdId("CmdCreateAnnotCaret"), packCoords(100, 200));
+    const caretAt = await framePt(client, 100, 200);
+    sendMessage(frame, WM_COMMAND, cmdId("CmdCreateAnnotCaret"), packCoords(caretAt.x, caretAt.y));
     const caret = await selectedAnnotState(client);
     if (caret.canResize) {
       throw new Error(`issue-5933: fixed-size caret has resize handles: ${caret.raw}`);
     }
-    sendMessage(frame, WM_COMMAND, cmdId("CmdCreateAnnotFileAttachment"), packCoords(100, 240));
+    const attachmentAt = await framePt(client, 100, 240);
+    sendMessage(frame, WM_COMMAND, cmdId("CmdCreateAnnotFileAttachment"), packCoords(attachmentAt.x, attachmentAt.y));
     const attachment = await selectedAnnotState(client);
     if (attachment.canResize) {
       throw new Error(`issue-5933: fixed-size file attachment has resize handles: ${attachment.raw}`);
