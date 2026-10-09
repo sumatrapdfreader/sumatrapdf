@@ -553,9 +553,10 @@ TempStr PageGridStateTemp() {
     if (!pg) {
         return str::DupTemp(StrL("ERROR no-settings"));
     }
-    return fmt("show=%d width=%g height=%g subdiv=%d ox=%g oy=%g color=%s style=%s units=%s\n", ShowPageGrid() ? 1 : 0,
-               pg->width, pg->height, pg->subdivisions, pg->offsetX, pg->offsetY, pg->color.s ? pg->color.s : StrL(""),
-               pg->style.s ? pg->style : StrL(""), pg->units.s ? pg->units : StrL(""));
+    return fmt("show=%d width=%g height=%g subdiv=%d ox=%g oy=%g color=%s style=%s units=%s checker=%d\n",
+               ShowPageGrid() ? 1 : 0, pg->width, pg->height, pg->subdivisions, pg->offsetX, pg->offsetY,
+               pg->color.s ? pg->color.s : StrL(""), pg->style.s ? pg->style : StrL(""),
+               pg->units.s ? pg->units : StrL(""), ShowTransparencyGrid() ? 1 : 0);
 }
 
 // orig's window (modeless, as orig's), where the platform can have one (DlgWindowOpen); null: a
