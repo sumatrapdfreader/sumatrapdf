@@ -331,7 +331,7 @@ void LoadLazyTabIfNeeded(WindowTab* tab) {
     if (gRestoringSession || !gSettings->lazyLoading || !tab || tab->ctrl || tab->IsNonDocumentTab()) {
         return;
     }
-    if (tab->loadState != WindowTab::LoadState::None || !tab->tabState) {
+    if (tab->loadState != WindowTab::LoadState::None || len(tab->filePath) == 0) {
         return;
     }
     MainWindow* win = tab->win;
@@ -342,13 +342,17 @@ void LoadLazyTabIfNeeded(WindowTab* tab) {
     if (!DocumentPathExists(tab->filePath)) {
         return;
     }
+    // RememberOpenedFiles = false frees the borrowed TabState on save.
+    // The file still has to load; there is just no remembered view.
     TabState* state = tab->tabState;
     logf("LoadLazyTabIfNeeded: '%s'\n", tab->filePath);
     tab->loadState = WindowTab::LoadState::Loading;
     ReloadDocument(win, false);
     WindowTab* curr = win->CurrentTab();
     if (curr && curr->ctrl) {
-        SetTabState(curr, state);
+        if (state) {
+            SetTabState(curr, state);
+        }
     } else if (curr == tab) {
         tab->loadState = WindowTab::LoadState::Error;
     }
