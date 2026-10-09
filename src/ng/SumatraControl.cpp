@@ -483,6 +483,109 @@ static TempStr PageBoxesResultTemp(int pageNo, int* exitCodeOut) {
     return finish(ToStrTemp(line), 0);
 }
 
+static bool FindWordCenter(EngineBase* engine, int pageNo, Str word, double* xOut, double* yOut) {
+    if (!engine || len(word) == 0 || !xOut || !yOut) {
+        return false;
+    }
+    Rect* coords = nullptr;
+    int textLen = 0;
+    Str text = engine->GetTextForPage(pageNo, &textLen, &coords);
+    if (len(text) == 0) {
+        return false;
+    }
+    int wordLen = Utf8CodepointCount(word);
+    if (wordLen <= 0) {
+        return false;
+    }
+    for (int i = 0; i <= textLen - wordLen; i++) {
+        if (!str::Eq(Utf8SliceByCodepoints(text, i, wordLen), word)) {
+            continue;
+        }
+        int mid = i + (wordLen / 2);
+        int midByte = Utf8CodepointToByteIndex(text, mid);
+        for (; mid < textLen && !coords[mid].x && !coords[mid].dx; mid++) {
+            int nextByte = midByte;
+            if (Utf8CodepointNext(text, nextByte) == '\n') {
+                return false;
+            }
+            midByte = nextByte;
+        }
+        if (mid >= textLen) {
+            return false;
+        }
+        *xOut = coords[mid].x + (coords[mid].dx / 2.0);
+        *yOut = coords[mid].y + (coords[mid].dy / 2.0);
+        return true;
+    }
+    return false;
+}
+
+// Opening the context menu over text must not move an existing selection.
+static TempStr ContextMenuSelectionResultTemp(Str word1, Str word2, Str cursorWord, int* exitCodeOut) {
+    str::Builder out;
+    auto fail = [&](Str msg) -> Str {
+        out.Append(msg);
+        out.AppendChar('\n');
+        if (exitCodeOut) {
+            *exitCodeOut = 1;
+        }
+        return ToStrTemp(out);
+    };
+
+    if (str::IsEmptyOrWhiteSpace(word1) || str::IsEmptyOrWhiteSpace(word2) || str::IsEmptyOrWhiteSpace(cursorWord)) {
+        return fail(StrL("ERROR missing word1, word2 or cursorWord"));
+    }
+    if (len(gWindows) == 0) {
+        return fail(StrL("NOTREADY no-window"));
+    }
+    MainWindow* win = gWindows[0];
+    DisplayModel* dm = win ? win->AsFixed() : nullptr;
+    if (!dm) {
+        return fail(StrL("NOTREADY no-doc"));
+    }
+    EngineBase* engine = dm->GetEngine();
+    const int pageNo = 1;
+    double x1 = 0, y1 = 0, x2 = 0, y2 = 0, xc = 0, yc = 0;
+    if (!FindWordCenter(engine, pageNo, word1, &x1, &y1)) {
+        return fail(StrL("ERROR word1-not-found"));
+    }
+    if (!FindWordCenter(engine, pageNo, word2, &x2, &y2)) {
+        return fail(StrL("ERROR word2-not-found"));
+    }
+    if (!FindWordCenter(engine, pageNo, cursorWord, &xc, &yc)) {
+        return fail(StrL("ERROR cursorWord-not-found"));
+    }
+
+    dm->textSelection->StartAt(pageNo, x1, y1);
+    dm->textSelection->SelectUpTo(pageNo, x2, y2);
+    WindowTab* tab = win->CurrentTab();
+    DeleteOldSelectionInfo(win);
+    tab->selectionOnPage = SelectionOnPage::FromTextSelect(&dm->textSelection->result);
+    win->showSelection = tab->selectionOnPage != nullptr;
+
+    bool isTextOnly = false;
+    TempStr original = GetSelectedTextTemp(tab, StrL(" "), isTextOnly);
+    if (len(original) == 0) {
+        return fail(StrL("ERROR empty-selection"));
+    }
+    original = str::DupTemp(original);
+
+    Point screenPt = dm->CvtToScreen(pageNo, PointF((float)xc, (float)yc));
+    ReadAloudCanReadFromCursor(dm, screenPt);
+
+    TempStr after = GetSelectedTextTemp(tab, StrL(" "), isTextOnly);
+    bool ok = str::Eq(original, after);
+    if (ok) {
+        out.Append(fmt("OK selected=%s\n", original));
+    } else {
+        out.Append(fmt("FAIL original=%s after=%s\n", original, after));
+    }
+    if (exitCodeOut) {
+        *exitCodeOut = ok ? 0 : 1;
+    }
+    return ToStrTemp(out);
+}
+
 static TempStr ResolveUnsavedChangesResultTemp(Str action, Str path, int* exitCodeOut) {
     str::Builder out;
     auto fail = [&](Str msg, int code = 1) -> TempStr {
@@ -2298,6 +2401,21 @@ static void ExecuteControlRequest(ControlRequest* req) {
             IntArg(req, 0, pageNo);
             int exitCode = 0;
             Str res = PageBoxesResultTemp(pageNo, &exitCode);
+            AppendTestResult(req, exitCode, res);
+            break;
+        }
+
+        case ControlCmd::TestContextMenuSelection: {
+            Str word1 = StringArg(req, 0);
+            Str word2 = StringArg(req, 1);
+            Str cursorWord = StringArg(req, 2);
+            if (len(word1) == 0 || len(word2) == 0 || len(cursorWord) == 0) {
+                AppendError(req,
+                            StrL("TestContextMenuSelection expects string word1, string word2, string cursorWord"));
+                break;
+            }
+            int exitCode = 0;
+            Str res = ContextMenuSelectionResultTemp(word1, word2, cursorWord, &exitCode);
             AppendTestResult(req, exitCode, res);
             break;
         }
