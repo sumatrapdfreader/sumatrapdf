@@ -3857,9 +3857,9 @@ void ExecuteAnnotCreateCmd(MainWindow* win, int invokedCmdId, bool isPlacementCo
     MainWindowRerender(win);
     ToolbarUpdateStateForWindow(win, true);
 
-    // Select a new annotation in Edit PDF, and text markup even when that
-    // toolbar is off, so Delete has a target.
-    if (win->pdfAnnotationsToolbarEnabled || AnnotationIsTextMarkup(lastCreatedAnnot->type)) {
+    // In Edit PDF a new annotation is selected. Outside it, selection is only
+    // a blue border, including text markup.
+    if (win->pdfAnnotationsToolbarEnabled) {
         SetSelectedAnnotation(tab, lastCreatedAnnot);
     }
     // a new free text annotation is a box of placeholder text: put the caret
