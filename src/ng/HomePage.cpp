@@ -2026,14 +2026,14 @@ static TempStr RectCsvTemp(const Rect& r) {
 // search / outline rects are window coordinates. outline is the part inside
 // the entries viewport, so a thumbnail scrolled under the search field does
 // not report a painted outline on top of it (issue #5978).
-TempStr HomeSelectionResultTemp(int* exitCodeOut) {
+TempStr HomeSelectionForWindowTemp(int* exitCodeOut, int winIdx) {
     auto finish = [&](int code, TempStr s) -> TempStr {
         if (exitCodeOut) {
             *exitCodeOut = code;
         }
         return s;
     };
-    MainWindow* win = len(gWindows) > 0 ? gWindows[0] : nullptr;
+    MainWindow* win = (winIdx >= 0 && winIdx < len(gWindows)) ? gWindows[winIdx] : nullptr;
     if (!win) {
         return finish(2, str::DupTemp(StrL("NOTREADY no-window")));
     }
@@ -2067,6 +2067,10 @@ TempStr HomeSelectionResultTemp(int* exitCodeOut) {
                          RectCsvTemp(outlineFull), path, HomePageIsListView() ? 1 : 0, RectCsvTemp(Rect{}),
                          RectCsvTemp(BoundsRect(h->entriesView)), RectCsvTemp(lastCaption), gSelectedIsPromo ? 1 : 0,
                          gSelectedTipIdx, RectCsvTemp(tipRect)));
+}
+
+TempStr HomeSelectionResultTemp(int* exitCodeOut) {
+    return HomeSelectionForWindowTemp(exitCodeOut, 0);
 }
 
 void HomePageSelectFirst(MainWindow* win) {

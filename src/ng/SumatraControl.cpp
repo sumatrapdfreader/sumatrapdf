@@ -1104,6 +1104,8 @@ static TempStr MarkupAnnotsResultTemp(Str action, int x, int y, int* exitCodeOut
     return finish({}, 0);
 }
 
+TempStr HomeSelectionForWindowTemp(int* exitCodeOut, int winIdx);
+
 static void ExecuteControlRequest(ControlRequest* req) {
     switch ((ControlCmd)req->cmd) {
         case ControlCmd::Ping:
@@ -1807,15 +1809,21 @@ static void ExecuteControlRequest(ControlRequest* req) {
         }
 
         case ControlCmd::TestHomeSelection: {
+            // a window index selects which frame to describe. It follows the
+            // view-mode string when that is present.
             Str mode = StringArg(req, 0);
+            i32 winIdx = 0;
             if (len(mode) > 0) {
                 SetHomePageListView(str::EqI(mode, StrL("list")));
                 if (MainWindow* win = FirstWindow()) {
                     AppShellInvalidate(win);
                 }
+                IntArg(req, 1, winIdx);
+            } else {
+                IntArg(req, 0, winIdx);
             }
             int exitCode = 0;
-            Str res = HomeSelectionResultTemp(&exitCode);
+            Str res = HomeSelectionForWindowTemp(&exitCode, winIdx);
             AppendTestResult(req, exitCode, res);
             break;
         }

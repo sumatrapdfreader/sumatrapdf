@@ -513,8 +513,19 @@ export class ControlClient {
   // What the home page's keyboard navigation is doing: the selected entry, how
   // many entries the search box currently leaves, and whether it has the focus.
   // Wait on this after sending a key rather than sleeping.
-  async homeSelection(mode?: "list" | "thumbnails"): Promise<HomeSelection> {
-    const res = await this.request(ControlCommand.TestHomeSelection, mode ? [mode] : []);
+  async homeSelection(mode?: "list" | "thumbnails", winIdx = 0): Promise<HomeSelection> {
+    // a window index follows the view-mode string when that is present, and
+    // is the only argument otherwise. Window 0 is the historical request.
+    const args: (string | number)[] = [];
+    if (mode) {
+      args.push(mode);
+      if (winIdx) {
+        args.push(winIdx);
+      }
+    } else if (winIdx) {
+      args.push(winIdx);
+    }
+    const res = await this.request(ControlCommand.TestHomeSelection, args);
     const code = typeof res[0] === "number" ? res[0] : -1;
     const raw = String(res[1] ?? "").trim();
     if (code !== 0) {

@@ -5,7 +5,7 @@
 // rebuilt, freed thumbs vector).
 import { copyFileSync, mkdirSync, rmSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
-import { cmdId, ROOT, runStandalone, tmpPath } from "./util";
+import { cmdId, ROOT, runStandalone, tmpPath, USE_NG } from "./util";
 import {
   enumChildWindows,
   enumWindows,
@@ -78,15 +78,19 @@ function homeSearchDx(frame: number): number {
   return dx;
 }
 
-async function searchRect(client: ControlClient, timeoutMs = 8000): Promise<number[]> {
+async function searchRect(client: ControlClient, winIdx = 0, timeoutMs = 8000): Promise<number[]> {
   const deadline = Date.now() + timeoutMs;
+  let raw = "";
   for (;;) {
-    const h = await client.homeSelection();
-    if (h.ready) {
+    const h = await client.homeSelection(undefined, winIdx);
+    raw = h.raw;
+    // ng has no search Edit. The box width is the per-window layout, so wait
+    // until that width is real before treating the page as laid out.
+    if (h.ready && (!USE_NG || h.search[2] > 0)) {
       return h.search;
     }
     if (Date.now() > deadline) {
-      throw new Error(`home-two-windows: home page never laid out (${h.raw})`);
+      throw new Error(`home-two-windows: home page never laid out (${raw})`);
     }
     await sleep(50);
   }
@@ -101,8 +105,8 @@ export async function testit(): Promise<void> {
   const { proc, client, frame } = await launchControlled(["-appdata", dir]);
   try {
     // the control commands report the first window, so this is its layout
-    const first = await searchRect(client);
-    const firstDx = homeSearchDx(frame);
+    const first = await searchRect(client, 0);
+    const firstDx = USE_NG ? first[2] : homeSearchDx(frame);
 
     // second window: its home page lays out at a clearly different width
     sendCommand(frame, cmdId("CmdNewWindow"));
@@ -119,7 +123,12 @@ export async function testit(): Promise<void> {
     repaintWindow(second);
     let secondDx = 0;
     while (Date.now() < deadline) {
-      secondDx = homeSearchDx(second);
+      if (USE_NG) {
+        const h = await client.homeSelection(undefined, 1);
+        secondDx = h.ready ? h.search[2] : 0;
+      } else {
+        secondDx = homeSearchDx(second);
+      }
       if (secondDx > 0 && secondDx !== firstDx) {
         break;
       }
@@ -136,13 +145,14 @@ export async function testit(): Promise<void> {
       throw new Error(`home-two-windows: no ${CANVAS_CLASS} in the first window`);
     }
     repaintWindow(canvas);
-    const back = await searchRect(client);
+    const back = await searchRect(client, 0);
     if (!same(back, first)) {
       throw new Error(
         `home-two-windows: first window painted with the second window's layout: search=${back}, expected ${first}`,
       );
     }
-    if (homeSearchDx(frame) !== firstDx) {
+    const firstDxNow = USE_NG ? back[2] : homeSearchDx(frame);
+    if (firstDxNow !== firstDx) {
       throw new Error(`home-two-windows: first window's search box was moved by the second window's layout`);
     }
   } finally {
