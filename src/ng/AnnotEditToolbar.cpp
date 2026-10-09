@@ -833,6 +833,7 @@ void EndAnnotContentsEdit(bool accept) {
 }
 
 static bool FreeTextInPlaceEditJustEnded();
+static void ClearInPlaceJustEnded();
 
 // Contents editor on the property row (openedit after create, Contents chip).
 void StartSelectedAnnotContentsEdit(MainWindow* win) {
@@ -848,6 +849,7 @@ void StartSelectedAnnotContentsEdit(MainWindow* win) {
     // clicking the button took the box away, which already ended the edit;
     // this click means "done", not "start again"
     if (FreeTextInPlaceEditJustEnded()) {
+        ClearInPlaceJustEnded();
         return;
     }
     WindowTab* tab = win->CurrentTab();
@@ -888,8 +890,8 @@ void StartSelectedAnnotContentsEdit(MainWindow* win) {
 // Ctrl+Enter, Esc or clicking away ends it and the rendered annotation comes
 // back.
 // ng: orig's box is a win32 edit that does not wrap and grows with its text.
-// This one is a gpui text area sized the same way, so a line shown whole is
-// still one line after MuPDF lays it out. It grows downwards for new lines.
+// This one stays on the annotation. A taller box covers the property row,
+// which orig draws in its own window. The annotation rect grows on commit.
 struct FreeTextInPlaceEdit {
     MainWindow* win = nullptr;
     WindowTab* tab = nullptr;
@@ -909,6 +911,10 @@ constexpr double kInPlaceJustEndedSecs = 0.4;
 
 static bool FreeTextInPlaceEditJustEnded() {
     return gInPlaceEndedAt != 0 && (gp::TimeNow() - gInPlaceEndedAt) < kInPlaceJustEndedSecs;
+}
+
+static void ClearInPlaceJustEnded() {
+    gInPlaceEndedAt = 0;
 }
 
 bool IsEditingFreeTextInPlace(MainWindow* win) {
@@ -1018,12 +1024,18 @@ TempStr FreeTextInPlaceEditStateTemp(MainWindow* win) {
     Rect r{};
     DisplayModel* dm = win ? win->AsFixed() : nullptr;
     Annotation* annot = gInPlace.annot;
+    float s = CanvasScale(win);
+    if (s <= 0.f) {
+        s = 1.f;
+    }
     if (dm && annot) {
         r = dm->CvtToScreen(PageNo(annot), GetRect(annot));
-        float s = CanvasScale(win);
-        if (s <= 0.f) {
-            s = 1.f;
-        }
+        float scale = r.dy > 0 ? ((float)r.dy / GetRect(annot).dy) : 1.f;
+        Size fit = MeasureInPlaceText(annot, str::DupTemp(FromGpui(gp::InputValue(gInPlace.edit))), scale);
+        // the box on screen stays on the annotation so it does not cover the
+        // property row; the reported size is what the text needs
+        r.dx = std::max(r.dx, fit.dx);
+        r.dy = std::max(r.dy, fit.dy);
         r.x += (int)((float)win->canvasRc.x / s);
         r.y += (int)((float)win->canvasRc.y / s);
     }
@@ -2510,11 +2522,6 @@ gp::El* FreeTextInPlaceEditBuild(MainWindow* win, gp::Ctx* cx) {
     }
     float fontPx = std::max(6.f, roundf((float)textSize * scale)) * k;
     float pad = kFreeTextPadPerBorder * (float)std::max(BorderWidth(annot), 0) * scale * k;
-    Str shown = str::DupTemp(FromGpui(gp::InputValue(gInPlace.edit)));
-    Size fit = MeasureInPlaceText(annot, shown, scale);
-    int boxDx = std::max(rc.dx, fit.dx);
-    int boxDy = std::max(rc.dy, fit.dy);
-
     // the annotation's text color on white, as orig's FreeTextInPlaceEditCtlColor
     Color textCol = kColBlack;
     PdfColor pdfTextCol = DefaultAppearanceTextColor(annot);
@@ -2533,8 +2540,10 @@ gp::El* FreeTextInPlaceEditBuild(MainWindow* win, gp::Ctx* cx) {
                       ->Absolute()
                       ->Left((float)rc.x * k)
                       ->Top((float)rc.y * k)
-                      ->W((float)boxDx * k)
-                      ->MinH((float)boxDy * k)
+                      ->W((float)rc.dx * k)
+                      ->H((float)rc.dy * k)
+                      ->MaxH((float)rc.dy * k)
+                      ->ClipY()
                       ->Pad(pad)
                       ->Bg(ToGpui(kColWhite))
                       // a frame in the annotation's text color

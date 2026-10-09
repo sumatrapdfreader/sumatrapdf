@@ -3054,10 +3054,18 @@ static bool OnMouseLeftButtonDblClk(MainWindow* win, int x, int y) {
     // a drag: gpui counts it as a double-click right after the selection click
     Annotation* locked = AnnotationLockingMouse(win);
     if (locked) {
-        bool onLocked = dm->GetAnnotationAtPos(Point{x, y}, locked) == locked;
-        if (onLocked && Type(locked) == AnnotationType::FreeText) {
+        Annotation* hit = dm->GetAnnotationAtPos(Point{x, y}, locked);
+        if (hit == locked && Type(locked) == AnnotationType::FreeText) {
             StartFreeTextInPlaceEdit(win, locked);
             return true;
+        }
+        // the page's annot list can miss the selected free text, so a click
+        // inside its rect still edits it
+        if (Type(locked) == AnnotationType::FreeText) {
+            PointF p = dm->CvtFromScreen(Point{x, y}, PageNo(locked));
+            if (GetRect(locked).Contains(p) && StartFreeTextInPlaceEdit(win, locked)) {
+                return true;
+            }
         }
         return false;
     }

@@ -6,7 +6,7 @@
 import { mkdirSync, rmSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 import { ControlClient, ControlCommand } from "./control.ts";
-import { assemblePdf, cmdId, runStandalone, SLOW_BUILD_FACTOR, tmpPath } from "./util.ts";
+import { assemblePdf, cmdId, runStandalone, SLOW_BUILD_FACTOR, tmpPath, USE_NG } from "./util.ts";
 import {
   clientToScreen,
   enumChildWindows,
@@ -112,6 +112,22 @@ function doubleClickAt(canvas: number, x: number, y: number): void {
   sendMessage(canvas, WM_LBUTTONUP, 0, packCoords(x, y));
 }
 
+// ng's frame turns a posted double-click into dips with the window DPI.
+// TestInput is already in that space, same as the property-row chip.
+async function doubleClickAnnot(client: ControlClient, canvas: number, x: number, y: number): Promise<void> {
+  if (!USE_NG) {
+    doubleClickAt(canvas, x, y);
+    return;
+  }
+  const first = await client.request(ControlCommand.TestInput, ["click", x, y, 0, 0]);
+  const second = await client.request(ControlCommand.TestInput, ["click", x, y, 0, 0]);
+  if (first[0] !== 0 || second[0] !== 0) {
+    throw new Error(
+      `free-text-in-place-edit: double-click failed: ${String(first[1] ?? "")} ${String(second[1] ?? "")}`,
+    );
+  }
+}
+
 // the canvas can have other Edit children; pick the one showing `pred`
 function findBox(canvas: number, pred: (text: string) => boolean): number {
   let found = 0;
@@ -137,6 +153,39 @@ function setBoxText(hwnd: number, text: string): void {
 function pressKey(hwnd: number, vk: number): void {
   sendMessage(hwnd, WM_KEYDOWN, vk, 0);
   sendMessage(hwnd, WM_KEYUP, vk, 0);
+}
+
+// ng edits in a gpui text area on the frame. Orig's box is an Edit child.
+function editBox(frame: number, canvas: number, pred: (text: string) => boolean): number {
+  if (USE_NG) {
+    return frame;
+  }
+  return findBox(canvas, pred);
+}
+
+async function clickContentsChip(client: ControlClient, procPid: number): Promise<void> {
+  // the row moves when the in-place editor opens, so read it at the click
+  const raw = await dump(client);
+  const chip = /[=;]contents:(-?\d+),(-?\d+),(\d+),(\d+)/.exec(raw);
+  const placed = / placed=(-?\d+),(-?\d+),(\d+),(\d+)/.exec(raw);
+  if (!chip || !placed || +chip[3]! <= 0) {
+    throw new Error(`free-text-in-place-edit: no Contents chip on the property row
+${raw}`);
+  }
+  const x = +chip[1]! + Math.floor(+chip[3]! / 2);
+  const y = +chip[2]! + Math.floor(+chip[4]! / 2);
+  if (USE_NG) {
+    const res = await client.request(ControlCommand.TestInput, ["click", x, y, 0, 0]);
+    if (res[0] !== 0 || !String(res[1] ?? "").startsWith("OK")) {
+      throw new Error(`free-text-in-place-edit: contents click failed: ${String(res[1] ?? "")}`);
+    }
+    return;
+  }
+  const tb = findTopWindow(procPid, "SumatraAnnotEditToolbar");
+  if (!tb) {
+    throw new Error("free-text-in-place-edit: property row window not found");
+  }
+  await clickAt(tb, x - +placed[1]!, y - +placed[2]!);
 }
 
 export async function testit(): Promise<void> {
@@ -185,7 +234,7 @@ export async function testit(): Promise<void> {
           `at ${annotRect.x},${annotRect.y}\n${s.raw}`,
       );
     }
-    const box = findBox(canvas, (t) => t.startsWith("This is a text"));
+    const box = editBox(frame, canvas, (t) => t.startsWith("This is a text"));
     if (!box) {
       throw new Error("free-text-in-place-edit: the edit control is not a child of the canvas");
     }
@@ -226,38 +275,21 @@ export async function testit(): Promise<void> {
 
     // the Contents button on the property row opens the same editor, and it
     // shows the text that was written back
-    const after = await dump(client);
-    const chip = /[=;]contents:(-?\d+),(-?\d+),(\d+),(\d+)/.exec(after);
-    const placed = / placed=(-?\d+),(-?\d+),(\d+),(\d+)/.exec(after);
-    if (!chip || !placed) {
-      throw new Error(`free-text-in-place-edit: no Contents chip on the property row
-${after}`);
-    }
-    const tb = findTopWindow(proc.pid!, "SumatraAnnotEditToolbar");
-    if (!tb) {
-      throw new Error("free-text-in-place-edit: property row window not found");
-    }
-    await clickAt(
-      tb,
-      +chip[1]! - +placed[1]! + Math.floor(+chip[3]! / 2),
-      +chip[2]! - +placed[2]! + Math.floor(+chip[4]! / 2),
-    );
-    const chipX = +chip[1]! - +placed[1]! + Math.floor(+chip[3]! / 2);
-    const chipY = +chip[2]! - +placed[2]! + Math.floor(+chip[4]! / 2);
+    await clickContentsChip(client, proc.pid!);
     const reopened = await waitForEdit(client, true);
     if (!reopened.text.includes("second line")) {
       throw new Error(`free-text-in-place-edit: the typed text was not written back: "${reopened.text}"`);
     }
 
     // ... and the same button ends the edit
-    await clickAt(tb, chipX, chipY);
+    await clickContentsChip(client, proc.pid!);
     await waitForEdit(client, false);
     await client.waitForRenderIdle();
 
     // reopen it to check that Esc throws away what was typed since
-    await clickAt(tb, chipX, chipY);
+    await clickContentsChip(client, proc.pid!);
     await waitForEdit(client, true);
-    const box2 = findBox(canvas, (t) => t.includes("second line"));
+    const box2 = editBox(frame, canvas, (t) => t.includes("second line"));
     if (!box2) {
       throw new Error("free-text-in-place-edit: the reopened edit control was not found");
     }
@@ -271,12 +303,12 @@ ${after}`);
     await client.waitForRenderIdle();
 
     const annotRect2 = await selectedRect(client);
-    doubleClickAt(canvas, annotRect2.x + 20, annotRect2.y + 10);
+    await doubleClickAnnot(client, canvas, annotRect2.x + 20, annotRect2.y + 10);
     const reopened2 = await waitForEdit(client, true);
     if (reopened2.text.includes("throw this away")) {
       throw new Error(`free-text-in-place-edit: Esc kept the discarded text: "${reopened2.text}"`);
     }
-    const box3 = findBox(canvas, (t) => t.length > 0);
+    const box3 = editBox(frame, canvas, (t) => t.length > 0);
     pressKey(box3 || canvas, VK_ESCAPE);
     await waitForEdit(client, false);
   } finally {
