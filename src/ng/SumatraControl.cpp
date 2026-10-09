@@ -823,6 +823,46 @@ static TempStr ClickClearsSelectionResultTemp(Str word, int* exitCodeOut) {
     return ToStrTemp(out);
 }
 
+class TestPasswordUI : public PasswordUI {
+    Str password;
+    bool triedPassword = false;
+
+  public:
+    explicit TestPasswordUI(Str password) : password(password) {}
+
+    Str GetPassword(Str /*path*/, u8* /*fileDigest*/, u8 /*decryptionKeyOut*/[32], bool* saveKey) override {
+        *saveKey = false;
+        if (triedPassword || len(password) == 0) {
+            return {};
+        }
+        triedPassword = true;
+        return str::Dup(password);
+    }
+};
+
+// case-insensitive search. tests/issue-933.ts.
+static TempStr SearchResultTemp(Str pdfPath, Str needle, Str password) {
+    str::Builder out;
+    TestPasswordUI pwdUI(password);
+    EngineBase* engine = CreateEngineFromFile(pdfPath, password ? &pwdUI : nullptr, false);
+    if (!engine) {
+        out.Append(fmt("ERROR engine-create-failed pdf=%s\n", pdfPath));
+    } else {
+        auto* ts = new TextSearch(engine);
+        ts->SetDirection(TextSearch::Direction::Forward);
+        ts->SetMatchCase(false);
+        Vec<TextSel>* sel = ts->FindFirst(1, needle);
+        if (sel && len(*sel) > 0) {
+            out.Append(fmt("FOUND needle=%s page=%d\n", needle, (*sel)[0].pageNo));
+        } else {
+            out.Append(fmt("NOTFOUND needle=%s\n", needle));
+        }
+        delete ts;
+        SafeEngineRelease(&engine);
+    }
+    return ToStrTemp(out);
+}
+
 // Color histogram of a page rendered with the CAD enhancement forced on.
 // tests/issue-5937.ts.
 static TempStr CadEnhanceColorsResultTemp(Str path, int pageNo, int zoomPercent, int* exitCodeOut) {
@@ -2680,6 +2720,18 @@ static void ExecuteControlRequest(ControlRequest* req) {
             }
             SetNotificationsEnabled(enabled != 0);
             AppendTestResult(req, 0, enabled ? StrL("OK enabled") : StrL("OK disabled"));
+            break;
+        }
+
+        case ControlCmd::TestSearch: {
+            Str pdf = StringArg(req, 0);
+            Str needle = StringArg(req, 1);
+            Str password = StringArg(req, 2);
+            if (len(pdf) == 0 || len(needle) == 0) {
+                AppendError(req, StrL("TestSearch expects string pdf, string needle, optional string password"));
+                break;
+            }
+            AppendTestResult(req, 0, SearchResultTemp(pdf, needle, password));
             break;
         }
 
