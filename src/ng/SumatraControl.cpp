@@ -1023,7 +1023,13 @@ static TempStr MarkupAnnotsResultTemp(Str action, int x, int y, int* exitCodeOut
         return finish(StrL("NOTREADY no-engine\n"), 2);
     }
     if (str::Eq(action, StrL("erase-ink"))) {
-        AnnotationPlacementEraseAt(win, Point(x, y));
+        // the test's point is a frame client point; the eraser wants canvas space
+        float s = CanvasScale(win);
+        if (s <= 0.f) {
+            s = 1.f;
+        }
+        Point pt((int)(((float)x - (float)win->canvasRc.x) / s), (int)(((float)y - (float)win->canvasRc.y) / s));
+        AnnotationPlacementEraseAt(win, pt);
     }
     if (str::Eq(action, StrL("finish-ink"))) {
         FinishInkAnnotationPlacement(win);
