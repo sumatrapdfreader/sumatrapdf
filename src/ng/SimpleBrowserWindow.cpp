@@ -102,7 +102,25 @@ bool IsSimpleBrowserWindowVisible() {
     return gBrowser.visible && !gBrowser.tw;
 }
 
+// WM_CLOSE destroys the HWND before the posted onClosed runs. Drop that
+// record so the next open does not reuse it or toggle it shut.
+static void DropBrowserIfWindowGone() {
+    if (!gBrowser.visible || !gBrowser.tw || ToolWindowIsLive(gBrowser.tw)) {
+        return;
+    }
+    gBrowser.tw = nullptr;
+    gBrowser.visible = false;
+    if (gBrowser.view) {
+        BrowserViewDelete(gBrowser.view);
+        gBrowser.view = nullptr;
+    }
+    str::FreePtr(&gBrowser.title);
+    str::FreePtr(&gBrowser.currentUrl);
+    gBrowser.onPosChanged = nullptr;
+}
+
 bool IsSimpleBrowserWindowOpen() {
+    DropBrowserIfWindowGone();
     return gBrowser.visible;
 }
 
@@ -150,6 +168,7 @@ void SimpleBrowserWindowClose() {
 static void SimpleBrowserOpenToolWindow(Rect pos);
 
 void SimpleBrowserWindowShow(const SimpleBrowserCreateArgs& args) {
+    DropBrowserIfWindowGone();
     if (!args.win || len(args.url) == 0) {
         return;
     }
@@ -269,6 +288,10 @@ static bool SimpleBrowserToolOnKey(MainWindow*, gp::Ctx*, const gp::KeyEvent* ev
 }
 
 static void SimpleBrowserToolOnClosed(MainWindow*) {
+    // A reopen may already own gBrowser.tw. This close is the previous window.
+    if (ToolWindowIsLive(gBrowser.tw)) {
+        return;
+    }
     gBrowser.tw = nullptr;
     SimpleBrowserWindowClose();
 }
