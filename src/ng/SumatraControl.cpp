@@ -440,13 +440,14 @@ enum class ControlCmd : u16 {
     TestReadingBar = 98,
     TestSeedTextSelection = 99,
     TestTtsEngineCrash = 100,
-    // ng: not one of orig's; the performance snapshot cmd/port-perf.ts reads
+    // ng: not one of orig's; the performance snapshot cmd/port-perf.ts reads.
+    // Orig's 101 / 102 are StartPerfLog / StopPerfLog, which this port answers
+    // at 119 / 120.
     TestPerfStats = 101,
     // ng: not one of orig's; the state of the six canvas overlays
     TestOverlayState = 102,
-    // ng: not one of orig's; answers the open save-path dialog, which orig
-    // does not have (it uses GetSaveFileNameW, which no script can drive)
-    TestSavePathDialog = 103,
+    // orig's. The session restore the tests wait on.
+    WaitSessionRestored = 103,
     TestNavFiles = 104,
     TestMergePdf = 115,
     TestMainMenu = 117,
@@ -471,6 +472,10 @@ enum class ControlCmd : u16 {
     TestNativeMsgBox = 126,
     // ng: the page context menu at a canvas point, same rows as TestMainMenu
     TestContextMenuAt = 127,
+    // ng: not one of orig's; answers the open save-path dialog, which orig
+    // does not have (it uses GetSaveFileNameW, which no script can drive).
+    // 103 is WaitSessionRestored.
+    TestSavePathDialog = 128,
 };
 
 enum class ControlArgType : u16 {
@@ -1700,6 +1705,65 @@ static void SnapshotRenderIdle(ControlRequest* req) {
     req->done.Set();
 }
 
+// A tab is still coming in, or startup has not finished opening the session.
+static bool SessionRestorePending() {
+    if (gIsStartup || len(gWindows) == 0) {
+        return true;
+    }
+    for (MainWindow* win : gWindows) {
+        if (!win) {
+            continue;
+        }
+        for (WindowTab* tab : win->Tabs()) {
+            if (!tab) {
+                continue;
+            }
+            if (tab->loadState == WindowTab::LoadState::Loading ||
+                tab->loadState == WindowTab::LoadState::LoadedPending) {
+                return true;
+            }
+        }
+    }
+    return false;
+}
+
+static void SnapshotSessionRestore(ControlRequest* req) {
+    req->idleState = RenderIdleState::NotReady;
+    req->idleInfo[0] = 0;
+    if (SessionRestorePending()) {
+        str::BufSet(Str(req->idleInfo, dimofi(req->idleInfo)), gIsStartup ? StrL("startup") : StrL("loading"));
+        req->done.Set();
+        return;
+    }
+    req->idleState = RenderIdleState::Idle;
+    str::BufSet(Str(req->idleInfo, dimofi(req->idleInfo)), StrL("restored"));
+    req->done.Set();
+}
+
+// Block on the control thread until the restored session's tabs have loaded.
+static void RunWaitSessionRestored(ControlRequest* req) {
+    i32 timeoutMs = 15000;
+    IntArg(req, 0, timeoutMs);
+    if (timeoutMs < 1) {
+        timeoutMs = 1;
+    }
+    u64 deadline = GetTickCount64() + (u64)timeoutMs;
+    for (;;) {
+        req->done.Reset();
+        uitask::Post(MkFunc0<ControlRequest>(SnapshotSessionRestore, req), "WaitSessionRestored");
+        req->done.Wait();
+        if (req->idleState == RenderIdleState::Idle) {
+            AppendTestResult(req, 0, req->idleInfo[0] ? Str(req->idleInfo) : StrL("restored"));
+            return;
+        }
+        if (GetTickCount64() >= deadline) {
+            AppendTestResult(req, 1, req->idleInfo[0] ? fmt("timeout %s", Str(req->idleInfo)) : StrL("timeout"));
+            return;
+        }
+        SleepInMs(20);
+    }
+}
+
 // Block on the control thread until visible tiles are cached at target
 // resolution, or until timeoutMs. Optional first int arg is the timeout.
 static void RunWaitRenderIdle(ControlRequest* req) {
@@ -1846,6 +1910,8 @@ static bool ProcessControlConnection(ControlConn h) {
         // paint (and thereby request the tiles we are waiting for)
         if ((ControlCmd)req->cmd == ControlCmd::WaitRenderIdle) {
             RunWaitRenderIdle(req);
+        } else if ((ControlCmd)req->cmd == ControlCmd::WaitSessionRestored) {
+            RunWaitSessionRestored(req);
         } else {
             uitask::Post(MkFunc0<ControlRequest>(ExecuteControlRequest, req), "SumatraControl");
             req->done.Wait();

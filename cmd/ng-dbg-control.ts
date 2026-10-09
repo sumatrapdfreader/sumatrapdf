@@ -45,7 +45,7 @@ export const controlCommands: Record<string, number> = {
   TestInvokeCommand: 87,
   TestPerfStats: 101,
   TestOverlayState: 102,
-  TestSavePathDialog: 103,
+  WaitSessionRestored: 103,
   TestNavFiles: 104,
   TestMergePdf: 115,
   TestCurrentTab: 88,
@@ -65,6 +65,8 @@ export const controlCommands: Record<string, number> = {
   TestNativeFileDlg: 124,
   TestToolWindow: 125,
   TestNativeMsgBox: 126,
+  TestContextMenuAt: 127,
+  TestSavePathDialog: 128,
 };
 
 const argTypeEnd = 0;
