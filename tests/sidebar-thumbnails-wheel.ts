@@ -6,7 +6,7 @@
 import { mkdirSync, rmSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 import { ControlClient, ControlCommand } from "./control.ts";
-import { cmdId, makePdf, runStandalone, tmpPath } from "./util.ts";
+import { cmdId, makePdf, runStandalone, tmpPath, USE_NG } from "./util.ts";
 import { clientToScreen, getScrollPos, packCoords, sendMessage, SB_HORZ, SB_VERT, sleep } from "./winapi.ts";
 import { findCanvas, killAndWait, launchControlled, sendCommand } from "./win-automation.ts";
 
@@ -16,16 +16,24 @@ const WHEEL_DELTA = 120;
 // a precision touchpad sends many small deltas instead of 120 per notch
 const TOUCHPAD_DELTA = 30;
 
-type Thumbs = { hwnd: number; shown: boolean; page1Y: number; raw: string };
+type Thumbs = {
+  hwnd: number;
+  shown: boolean;
+  page1Y: number;
+  page1: { x: number; y: number; dx: number; dy: number } | null;
+  raw: string;
+};
 
 async function thumbs(client: ControlClient): Promise<Thumbs> {
   const res = await client.request(ControlCommand.TestSidebarThumbnails, []);
   const raw = String(res[1] ?? "");
-  const m = /hwnd=(\d+) thumbnails=(\d).* rects=1:-?\d+,(-?\d+),/.exec(raw);
+  const m = /hwnd=(\d+) thumbnails=(\d)/.exec(raw);
   if (res[0] !== 0 || !m) {
     throw new Error(`sidebar-thumbnails-wheel: TestSidebarThumbnails: ${raw}`);
   }
-  return { hwnd: +m[1]!, shown: m[2] === "1", page1Y: +m[3]!, raw };
+  const r = /rects=1:(-?\d+),(-?\d+),(-?\d+),(-?\d+)/.exec(raw);
+  const page1 = r ? { x: +r[1]!, y: +r[2]!, dx: +r[3]!, dy: +r[4]! } : null;
+  return { hwnd: +m[1]!, shown: m[2] === "1", page1Y: page1?.y ?? 0, page1, raw };
 }
 
 async function waitFor(what: string, f: () => Promise<boolean>) {
@@ -38,9 +46,10 @@ async function waitFor(what: string, f: () => Promise<boolean>) {
   }
 }
 
-// a wheel message as Windows sends it: delta in the high word, cursor in screen coords
-function wheel(hwnd: number, msg: number, delta: number) {
-  const pt = clientToScreen(hwnd, 40, 60);
+// a wheel message as Windows sends it: delta in the high word, cursor in screen coords.
+// orig's thumbnail hwnd has its list at (40, 60). ng reports the frame, so aim at a cell.
+function wheel(hwnd: number, msg: number, delta: number, x = 40, y = 60) {
+  const pt = clientToScreen(hwnd, x, y);
   const wp = BigInt((delta & 0xffff) << 16);
   sendMessage(hwnd, msg, wp, packCoords(pt.x, pt.y));
 }
@@ -58,7 +67,10 @@ export async function testit(): Promise<void> {
     await client.waitForRenderIdle();
     await client.setNotificationsEnabled(false);
     sendCommand(frame, cmdId("CmdToggleThumbnails"));
-    await waitFor("Thumbnails didn't show", async () => (await thumbs(client)).shown);
+    await waitFor("Thumbnails didn't show", async () => {
+      const s = await thumbs(client);
+      return s.shown && !!s.page1 && s.page1.dy > 1;
+    });
     const canvas = findCanvas(frame);
     const x0 = getScrollPos(canvas, SB_HORZ);
     const y0 = getScrollPos(canvas, SB_VERT);
@@ -71,8 +83,13 @@ export async function testit(): Promise<void> {
     };
 
     let t = await thumbs(client);
+    const spot = { x: 40, y: 60 };
+    if (USE_NG && t.page1 && t.page1.dy > 1) {
+      spot.x = t.page1.x + Math.floor(t.page1.dx / 2);
+      spot.y = t.page1.y + Math.min(30, Math.floor(t.page1.dy / 2));
+    }
     for (let i = 0; i < 4; i++) {
-      wheel(t.hwnd, WM_MOUSEWHEEL, -TOUCHPAD_DELTA);
+      wheel(t.hwnd, WM_MOUSEWHEEL, -TOUCHPAD_DELTA, spot.x, spot.y);
     }
     await sleep(200);
     docMoved("a touchpad scroll");
@@ -81,13 +98,13 @@ export async function testit(): Promise<void> {
       throw new Error(`sidebar-thumbnails-wheel: a touchpad scroll didn't scroll the thumbnails: ${after.raw}`);
     }
 
-    wheel(t.hwnd, WM_MOUSEHWHEEL, WHEEL_DELTA);
+    wheel(t.hwnd, WM_MOUSEHWHEEL, WHEEL_DELTA, spot.x, spot.y);
     await sleep(200);
     docMoved("a horizontal wheel");
 
     // at the end of the list, more wheel stays in it
     for (let i = 0; i < 30; i++) {
-      wheel(t.hwnd, WM_MOUSEWHEEL, -WHEEL_DELTA);
+      wheel(t.hwnd, WM_MOUSEWHEEL, -WHEEL_DELTA, spot.x, spot.y);
     }
     await sleep(200);
     docMoved("the wheel past the end of the thumbnails");
