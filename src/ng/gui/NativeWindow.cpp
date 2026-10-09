@@ -654,6 +654,253 @@ static void RestorePostedMouseMods(PostedKeyBits& bits) {
     bits.changed = false;
 }
 
+// GetPixel cannot read the frame: it is a flip swapchain created with
+// WS_EX_NOREDIRECTIONBITMAP. Tests sample SUMATRA_PDF_CANVAS. This owned
+// popup is a real GDI window, so the sample sees the page.
+static const WCHAR* kPixelMirrorClass = L"SUMATRA_PDF_CANVAS";
+
+struct PixelMirror {
+    HWND frame = nullptr;
+    HWND hwnd = nullptr;
+    HBITMAP dib = nullptr;
+};
+
+static Vec<PixelMirror> gPixelMirrors;
+static bool gPixelMirrorBusy = false;
+
+static LRESULT CALLBACK PixelMirrorProc(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp);
+
+static PixelMirror* PixelMirrorForFrame(HWND frame) {
+    for (PixelMirror& m : gPixelMirrors) {
+        if (m.frame == frame) {
+            return &m;
+        }
+    }
+    return nullptr;
+}
+
+static PixelMirror* PixelMirrorForHwnd(HWND hwnd) {
+    for (PixelMirror& m : gPixelMirrors) {
+        if (m.hwnd == hwnd) {
+            return &m;
+        }
+    }
+    return nullptr;
+}
+
+static bool MirrorInputMsg(UINT msg) {
+    switch (msg) {
+        case WM_MOUSEMOVE:
+        case WM_LBUTTONDOWN:
+        case WM_LBUTTONUP:
+        case WM_LBUTTONDBLCLK:
+        case WM_RBUTTONDOWN:
+        case WM_RBUTTONUP:
+        case WM_RBUTTONDBLCLK:
+        case WM_MBUTTONDOWN:
+        case WM_MBUTTONUP:
+        case WM_MBUTTONDBLCLK:
+        case WM_XBUTTONDOWN:
+        case WM_XBUTTONUP:
+        case WM_XBUTTONDBLCLK:
+        case WM_MOUSEWHEEL:
+        case WM_MOUSEHWHEEL:
+        case WM_CONTEXTMENU:
+        case WM_VSCROLL:
+        case WM_HSCROLL:
+        case WM_KEYDOWN:
+        case WM_KEYUP:
+        case WM_CHAR:
+        case WM_SYSKEYDOWN:
+        case WM_SYSKEYUP:
+        case WM_SYSCHAR:
+            return true;
+    }
+    return false;
+}
+
+static void RegisterPixelMirrorClass() {
+    static bool registered = false;
+    if (registered) {
+        return;
+    }
+    WNDCLASSEXW wc{sizeof(wc)};
+    wc.lpfnWndProc = PixelMirrorProc;
+    wc.hInstance = GetModuleHandleW(nullptr);
+    wc.lpszClassName = kPixelMirrorClass;
+    registered = RegisterClassExW(&wc) != 0 || GetLastError() == ERROR_CLASS_ALREADY_EXISTS;
+}
+
+static void BlitDib(HWND hwnd, HBITMAP dib, int w, int h) {
+    HDC dc = GetWindowDC(hwnd);
+    if (!dc) {
+        return;
+    }
+    HDC mem = CreateCompatibleDC(dc);
+    HGDIOBJ old = SelectObject(mem, dib);
+    BitBlt(dc, 0, 0, w, h, mem, 0, 0, SRCCOPY);
+    SelectObject(mem, old);
+    DeleteDC(mem);
+    ReleaseDC(hwnd, dc);
+}
+
+static void PlacePixelMirror(PixelMirror* m) {
+    if (!m || !m->hwnd || !IsWindow(m->frame)) {
+        return;
+    }
+    RECT rc{};
+    GetClientRect(m->frame, &rc);
+    POINT origin{0, 0};
+    ClientToScreen(m->frame, &origin);
+    // leave z-order alone: an owned popup already sits above its frame, and
+    // raising it here would cover a dialog opened after it
+    SetWindowPos(m->hwnd, nullptr, origin.x, origin.y, rc.right - rc.left, rc.bottom - rc.top,
+                 SWP_NOACTIVATE | SWP_NOZORDER | SWP_SHOWWINDOW);
+}
+
+// PrintWindow of the frame, then into the popup. The popup is hidden for the
+// capture so it is not what the frame's thumbnail shows.
+static void UpdatePixelMirror(HWND frame) {
+    if (!gForTesting || gPixelMirrorBusy) {
+        return;
+    }
+    PixelMirror* m = PixelMirrorForFrame(frame);
+    if (!m || !m->hwnd) {
+        return;
+    }
+    RECT rc{};
+    GetClientRect(frame, &rc);
+    int w = rc.right - rc.left;
+    int h = rc.bottom - rc.top;
+    if (w <= 0 || h <= 0) {
+        return;
+    }
+
+    gPixelMirrorBusy = true;
+    PlacePixelMirror(m);
+    SetWindowPos(m->hwnd, nullptr, 0, 0, 0, 0,
+                 SWP_NOMOVE | SWP_NOSIZE | SWP_NOZORDER | SWP_NOACTIVATE | SWP_HIDEWINDOW);
+
+    BITMAPINFO bi{};
+    bi.bmiHeader.biSize = sizeof(bi.bmiHeader);
+    bi.bmiHeader.biWidth = w;
+    bi.bmiHeader.biHeight = -h;
+    bi.bmiHeader.biPlanes = 1;
+    bi.bmiHeader.biBitCount = 32;
+    bi.bmiHeader.biCompression = BI_RGB;
+    void* bits = nullptr;
+    HDC screen = GetDC(frame);
+    HBITMAP dib = CreateDIBSection(screen, &bi, DIB_RGB_COLORS, &bits, nullptr, 0);
+    bool ok = false;
+    if (dib) {
+        HDC mem = CreateCompatibleDC(screen);
+        HGDIOBJ old = SelectObject(mem, dib);
+        ok = PrintWindow(frame, mem, PW_CLIENTONLY | PW_RENDERFULLCONTENT) != FALSE;
+        SelectObject(mem, old);
+        DeleteDC(mem);
+    }
+    ReleaseDC(frame, screen);
+
+    if (!ok) {
+        if (dib) {
+            DeleteObject(dib);
+        }
+        PlacePixelMirror(m);
+        gPixelMirrorBusy = false;
+        return;
+    }
+    if (m->dib) {
+        DeleteObject(m->dib);
+    }
+    m->dib = dib;
+    PlacePixelMirror(m);
+    BlitDib(m->hwnd, dib, w, h);
+    gPixelMirrorBusy = false;
+}
+
+static void EnsurePixelMirror(HWND frame) {
+    if (!gForTesting || !frame || PixelMirrorForFrame(frame)) {
+        return;
+    }
+    RegisterPixelMirrorClass();
+    PixelMirror m;
+    m.frame = frame;
+    m.hwnd = CreateWindowExW(WS_EX_NOACTIVATE | WS_EX_TOOLWINDOW | WS_EX_NOPARENTNOTIFY, kPixelMirrorClass, L"",
+                             WS_POPUP, 0, 0, 0, 0, frame, nullptr, GetModuleHandleW(nullptr), frame);
+    if (!m.hwnd) {
+        return;
+    }
+    VecAppend(gPixelMirrors, m);
+    UpdatePixelMirror(frame);
+}
+
+static void ForgetPixelMirror(HWND frame) {
+    for (int i = 0; i < len(gPixelMirrors); i++) {
+        if (gPixelMirrors[i].frame != frame) {
+            continue;
+        }
+        HWND hwnd = gPixelMirrors[i].hwnd;
+        HBITMAP dib = gPixelMirrors[i].dib;
+        gPixelMirrors[i].hwnd = nullptr;
+        gPixelMirrors[i].dib = nullptr;
+        gPixelMirrors[i].frame = nullptr;
+        if (dib) {
+            DeleteObject(dib);
+        }
+        if (hwnd) {
+            DestroyWindow(hwnd);
+        }
+        VecRemoveAt(gPixelMirrors, i);
+        return;
+    }
+}
+
+static LRESULT CALLBACK PixelMirrorProc(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp) {
+    if (msg == WM_NCCREATE) {
+        auto* cs = (CREATESTRUCTW*)lp;
+        SetWindowLongPtrW(hwnd, GWLP_USERDATA, (LONG_PTR)cs->lpCreateParams);
+        return DefWindowProcW(hwnd, msg, wp, lp);
+    }
+    HWND frame = (HWND)GetWindowLongPtrW(hwnd, GWLP_USERDATA);
+    if (msg == WM_ERASEBKGND) {
+        return 1;
+    }
+    if (msg == WM_PAINT) {
+        PAINTSTRUCT ps{};
+        HDC dc = BeginPaint(hwnd, &ps);
+        PixelMirror* m = PixelMirrorForHwnd(hwnd);
+        if (m && m->dib && dc) {
+            BITMAP bm{};
+            if (GetObject(m->dib, sizeof(bm), &bm) == sizeof(bm)) {
+                HDC mem = CreateCompatibleDC(dc);
+                HGDIOBJ old = SelectObject(mem, m->dib);
+                BitBlt(dc, 0, 0, bm.bmWidth, bm.bmHeight, mem, 0, 0, SRCCOPY);
+                SelectObject(mem, old);
+                DeleteDC(mem);
+            }
+        }
+        EndPaint(hwnd, &ps);
+        return 0;
+    }
+    if (msg == WM_MOUSEACTIVATE) {
+        return MA_NOACTIVATE;
+    }
+    if (msg == WM_SETFOCUS) {
+        if (frame) {
+            SetFocus(frame);
+        }
+        return 0;
+    }
+    if (msg == WM_NCDESTROY) {
+        SetWindowLongPtrW(hwnd, GWLP_USERDATA, 0);
+        return 0;
+    }
+    if (frame && MirrorInputMsg(msg)) {
+        return SendMessageW(frame, msg, wp, lp);
+    }
+    return DefWindowProcW(hwnd, msg, wp, lp);
+}
+
 static LRESULT DefSubclassWithPostedMods(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp) {
     PostedKeyBits bits = ApplyPostedMouseMods(wp);
     LRESULT res = DefSubclassProc(hwnd, msg, wp, lp);
@@ -922,9 +1169,17 @@ static LRESULT CALLBACK ShellSubclass(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp,
                 // gpui has laid the frame out for its new size
                 LRESULT res = DefSubclassProc(hwnd, msg, wp, lp);
                 ToolWindowsFollow(win);
+                if (PixelMirror* m = PixelMirrorForFrame(hwnd)) {
+                    PlacePixelMirror(m);
+                }
                 return res;
             }
             break;
+        case WM_PAINT: {
+            LRESULT res = DefSubclassProc(hwnd, msg, wp, lp);
+            UpdatePixelMirror(hwnd);
+            return res;
+        }
         case WM_KILLFOCUS:
             // no new focus: the on-screen keyboard. Keep the contents editor.
             if ((HWND)wp == nullptr) {
@@ -937,6 +1192,7 @@ static LRESULT CALLBACK ShellSubclass(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp,
             }
             break;
         case WM_DESTROY:
+            ForgetPixelMirror(hwnd);
             GlobalHotkeysOnDestroy(hwnd);
             RevokeCanvasDropTarget(hwnd);
             break;
@@ -1052,6 +1308,7 @@ void AppShellEnableFileDrop(MainWindow* win) {
     // orig's CanvasDropTarget: files, image URLs, and where a dragged file is
     RegisterCanvasDropTarget(hwnd);
     SetWindowSubclass(hwnd, ShellSubclass, 1, 0);
+    EnsurePixelMirror(hwnd);
     RegisterGlobalHotkeys(hwnd);
     // SAPI posts its word-boundary / end-of-stream events to a window
     TtsSetNotifyWindow(hwnd, kWmTtsEvent, 0, 0);

@@ -512,6 +512,22 @@ export function enumChildWindows(parent: number, visit: (hwnd: number) => boolea
   }
 }
 
+// an owned top-level window (not a child) of a given class. 0 if none.
+export function findOwnedWindow(owner: number, className: string): number {
+  if (!owner) {
+    return 0;
+  }
+  let found = 0;
+  enumWindows((hwnd) => {
+    if (getWindowOwner(hwnd) === owner && getClassName(hwnd) === className) {
+      found = hwnd;
+      return false;
+    }
+    return true;
+  });
+  return found;
+}
+
 // find a top-level window of a given process and window class (0 if none)
 export function findTopWindow(pid: number, className: string): number {
   let found = 0;

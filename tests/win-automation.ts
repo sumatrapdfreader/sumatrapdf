@@ -19,6 +19,7 @@ import {
   enumWindows,
   getClassName,
   findChildWindow,
+  findOwnedWindow,
   findVisibleChildWindow,
   waitForTopWindow,
   packCoords,
@@ -275,8 +276,16 @@ export function waitForFrame(pid: number, timeoutMs = 12000): Promise<number> {
 // the document canvas (child of the frame)
 export function findCanvas(frame: number): number {
   const canvas = findChildWindow(frame, CANVAS_CLASS);
-  // ng draws the page in the frame; there is no canvas child
-  if (!canvas && USE_NG) {
+  if (canvas) {
+    return canvas;
+  }
+  // ng's frame swapchain has no redirection bitmap, so GetPixel on it is
+  // CLR_INVALID. The page copy is an owned top-level window of this class.
+  if (USE_NG) {
+    const owned = findOwnedWindow(frame, CANVAS_CLASS);
+    if (owned) {
+      return owned;
+    }
     return frame;
   }
   return canvas;

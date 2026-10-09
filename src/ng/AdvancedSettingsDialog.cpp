@@ -440,7 +440,7 @@ static void CommitEditValue() {
     CancelEditValue();
 }
 
-// "nondefault" and "esc" are what tests/command-palette-settings.ts asks for.
+// "names", "nondefault" and "esc" are what the settings tests ask for.
 // The rest of orig's probe drives the win32 list; this dialog has no list box.
 TempStr AdvSettingsRowsResultTemp(Str action, int arg, int* exitCodeOut) {
     (void)arg;
@@ -454,6 +454,13 @@ TempStr AdvSettingsRowsResultTemp(Str action, int arg, int* exitCodeOut) {
     if (!gAdv.visible) {
         out.Append(StrL("NOTREADY no-dialog\n"));
         return finish(2);
+    }
+    if (str::Eq(action, StrL("names"))) {
+        for (SettingItem* item : gAdv.items) {
+            out.Append(item->name);
+            out.AppendChar('\n');
+        }
+        return finish(0);
     }
     if (str::Eq(action, StrL("nondefault"))) {
         int n = 0;
