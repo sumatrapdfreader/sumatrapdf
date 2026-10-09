@@ -118,6 +118,7 @@ bool CanvasSetNativeCursor(MainWindow* win, NativeCursor cursor);
 void CanvasCancelDrag(MainWindow* win);
 bool NudgeSelectedAnnotation(MainWindow*, int vkey, bool shift);
 void AnnotationNudgeTick(MainWindow*, int elapsedMs);
+void AnnotationResizeRerenderTick(MainWindow*, int elapsedMs);
 void DeleteLinkTooltip(MainWindow* win);
 // presentation mode: count the auto-hide cursor timer down (shell tick)
 void CanvasTickPresentation(MainWindow* win, int ms);

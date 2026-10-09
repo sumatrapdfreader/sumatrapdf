@@ -2675,6 +2675,7 @@ void ShellView::OnTick(ShellView* self, gp::Ctx* cx, const gp::TickEvent* ev) {
     SelectTextWithKeyboardBlinkTick(win, ms);
     AnnotFilterTick(win, ms);
     AnnotationNudgeTick(win, ms);
+    AnnotationResizeRerenderTick(win, ms);
     RefHoverTick(win, ms);
     ForwardSearchMarkTick(win, ms);
     ExpireNotifications(win, ms);

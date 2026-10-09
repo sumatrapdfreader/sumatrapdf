@@ -494,6 +494,8 @@ struct MainWindow {
     WindowTab* annotationNudgeTab = nullptr;
     int annotationNudgePageNo = 0;
     int annotationNudgeLeftMs = 0;
+    // page bitmap follows a rectangle resize once the pointer pauses
+    int annotationResizeRerenderLeftMs = 0;
     // a press that only deselected an annotation; the click must do nothing
     bool pressOnlyDeselected = false;
     // an engine edit operation is open: everything until it closes is one

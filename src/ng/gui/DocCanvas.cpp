@@ -2322,6 +2322,22 @@ void AnnotationNudgeTick(MainWindow* win, int elapsedMs) {
     }
 }
 
+// orig's kAnnotationResizeRerenderDelayMs: the bounds follow the pointer,
+// the page bitmap waits until the drag pauses
+constexpr int kAnnotationResizeRerenderDelayMs = 125;
+
+void AnnotationResizeRerenderTick(MainWindow* win, int elapsedMs) {
+    if (!win || win->annotationResizeRerenderLeftMs <= 0) {
+        return;
+    }
+    win->annotationResizeRerenderLeftMs -= elapsedMs;
+    if (win->annotationResizeRerenderLeftMs > 0) {
+        return;
+    }
+    win->annotationResizeRerenderLeftMs = 0;
+    MainWindowRerender(win);
+}
+
 // Helper function to calculate new rectangle during resize
 static RectF CalculateResizedRect(MainWindow* win, int x, int y) {
     DisplayModel* dm = win->AsFixed();
@@ -2412,8 +2428,11 @@ static RectF CalculateResizedRect(MainWindow* win, int x, int y) {
 }
 
 static void StartAnnotationResize(MainWindow* win, Annotation* annot, Point pt, ResizeHandle handle) {
+    win->annotationResizeRerenderLeftMs = 0;
     // the drag rewrites the annotation on every mouse move; one undo step
     BeginPdfEditOperation(win, "Resize annotation");
+    // a finished right-click leaves dragRightClick set; this is a left drag
+    win->dragRightClick = false;
     win->annotationBeingDragged = annot;
     win->annotationBeingResized = true;
     win->resizeHandle = (int)handle;
@@ -2462,6 +2481,7 @@ static bool StopAnnotationResize(MainWindow* win, bool aborted) {
     win->annotationBeingResized = false;
     win->annotationResizeOutlineOnly = false;
     win->annotationBeingDragged = nullptr;
+    win->annotationResizeRerenderLeftMs = 0;
     CanvasSetCursor(win, kCurArrow);
 
     if (aborted || !annot) {
@@ -2540,7 +2560,7 @@ static void UpdateAnnotationResize(MainWindow* win, int x, int y, bool isShift) 
         RectF newRect = CalculateResizedRect(win, x, y);
         SetRect(annot, newRect);
         win->annotationResizePreviewRect = newRect;
-        MainWindowRerender(win);
+        win->annotationResizeRerenderLeftMs = kAnnotationResizeRerenderDelayMs;
     }
     AppShellInvalidate(win);
 }
@@ -2981,7 +3001,13 @@ static bool OnMouseLeftButtonDblClk(MainWindow* win, int x, int y) {
     }
     if (win->pressOnlyDeselected) {
         win->pressOnlyDeselected = false;
-        return true;
+        // the click that only deselected has no follow-up. A later click that
+        // gpui still counts as the second of that pair is a new press: an
+        // annotation created since then has to be deselected by it.
+        if (!AnnotationLockingMouse(win)) {
+            return true;
+        }
+        return false;
     }
     // while an annotation is selected, double-clicking it (to edit free text in
     // place) is the only double-click there is
