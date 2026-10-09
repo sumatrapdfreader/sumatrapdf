@@ -749,6 +749,16 @@ static LRESULT CALLBACK ShellSubclass(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp,
                 if (ForwardBrowserMsg(win, msg, wp, lp)) {
                     return 0;
                 }
+                // lParam is screen coords. A message aimed at the window rather
+                // than a point (tests post 0) is outside the client; orig's
+                // canvas window still scrolls.
+                RECT rc{};
+                GetClientRect(hwnd, &rc);
+                bool inside = pt.x >= 0 && pt.y >= 0 && pt.x < rc.right && pt.y < rc.bottom;
+                if (!inside && msg == WM_MOUSEWHEEL && win->AsFixed()) {
+                    DocCanvasPostedWheel(win, delta, isCtrl, isShift);
+                    return 0;
+                }
             }
             break;
         case WM_KEYDOWN:

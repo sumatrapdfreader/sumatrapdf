@@ -1749,6 +1749,18 @@ static void CanvasOnMouseWheel(MainWindow* win, int delta, bool isCtrl, bool isS
     Ui(win)->wheelDidTurnPage = true;
 }
 
+// A wheel sent straight at the frame (a test, or a point outside the client)
+// never hit-tests an element. Orig delivers that message to the canvas window.
+void DocCanvasPostedWheel(MainWindow* win, int delta, bool isCtrl, bool isShift) {
+    if (!IsMainWindowValid(win) || !win->AsFixed()) {
+        return;
+    }
+    gInMouseWheelScroll = true;
+    CanvasOnMouseWheel(win, delta, isCtrl, isShift, false, Point{1, 1});
+    gInMouseWheelScroll = false;
+    AppShellInvalidate(win);
+}
+
 // --- mouse ------------------------------------------------------------------
 
 // how much slower the document moves than the cursor during middle-button

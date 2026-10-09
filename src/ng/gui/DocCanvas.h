@@ -51,6 +51,7 @@ void DocCanvasContextMenuFromKey(MainWindow* win, gpui::Ctx* cx);
 // orig's frame passes a WM_MOUSEWHEEL no child took to the canvas, so the
 // document scrolls with the wheel over the tab strip or the toolbar
 void DocCanvasWheelFromFrame(MainWindow* win, gpui::Ctx* cx, const gpui::ScrollWheelEvent* ev);
+void DocCanvasPostedWheel(MainWindow* win, int delta, bool isCtrl, bool isShift);
 // gpui lays out in dips, the document model in pixels: dips per document pixel
 float CanvasScale(MainWindow* win);
 // the mouse handlers live on the window, not the element, so a drag that
