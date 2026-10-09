@@ -8,7 +8,8 @@
 
 import { existsSync } from "node:fs";
 import { join } from "node:path";
-import { cmdId, EXE, runStandalone } from "./util.ts";
+import { ControlCommand } from "./control.ts";
+import { cmdId, EXE, runStandalone, USE_NG } from "./util.ts";
 import {
   enumChildWindows,
   enumWindows,
@@ -86,6 +87,23 @@ function getEditText(hwnd: number): string {
   return s;
 }
 
+function assertProps(text: string): void {
+  if (!text.includes("Annotation Prop Test")) {
+    throw new Error(`issue-2254: missing Title in properties:\n${text}`);
+  }
+  if (!/Subject:\s*Unique annotation marker for issue 2254/.test(text)) {
+    throw new Error(`issue-2254: missing Subject from FB2 annotation:\n${text}`);
+  }
+  // every <author> in <title-info>, and only the name parts: the fixture's
+  // first author also carries <home-page> and <email>, which are not the name
+  if (!/Author:\s*Test Author, Second Writer/.test(text)) {
+    throw new Error(`issue-2254: want both authors and only their names:\n${text}`);
+  }
+  if (/example\.org/.test(text)) {
+    throw new Error(`issue-2254: the author's home-page/email leaked into a property:\n${text}`);
+  }
+}
+
 export async function testit(): Promise<void> {
   if (!existsSync(FB2)) {
     throw new Error(`fixture missing: ${FB2}`);
@@ -99,6 +117,25 @@ export async function testit(): Promise<void> {
     await client.waitForRenderIdle();
 
     sendCommandSync(frame, cmdId("CmdProperties"));
+    if (USE_NG) {
+      let text = "";
+      const deadline = Date.now() + 8000;
+      while (Date.now() < deadline) {
+        const res = await client.request(ControlCommand.TestDocumentProperties, ["text"]);
+        const raw = String(res[1] ?? "");
+        if (res[0] === 0 && (raw.includes("Title:") || raw.includes("Author:"))) {
+          text = raw;
+          break;
+        }
+        await sleep(100);
+      }
+      if (!text) {
+        throw new Error("issue-2254: Document Properties text did not appear");
+      }
+      console.log(`issue-2254 properties text (${text.length} chars):\n${text.slice(0, 800)}`);
+      assertProps(text);
+      return;
+    }
     const { props, edit } = await waitForPropertiesEdit(proc.pid!);
     if (!props) {
       throw new Error("issue-2254: Document Properties window did not open");
@@ -117,20 +154,7 @@ export async function testit(): Promise<void> {
     }
     console.log(`issue-2254 properties text (${text.length} chars):\n${text.slice(0, 800)}`);
 
-    if (!text.includes("Annotation Prop Test")) {
-      throw new Error(`issue-2254: missing Title in properties:\n${text}`);
-    }
-    if (!/Subject:\s*Unique annotation marker for issue 2254/.test(text)) {
-      throw new Error(`issue-2254: missing Subject from FB2 annotation:\n${text}`);
-    }
-    // every <author> in <title-info>, and only the name parts: the fixture's
-    // first author also carries <home-page> and <email>, which are not the name
-    if (!/Author:\s*Test Author, Second Writer/.test(text)) {
-      throw new Error(`issue-2254: want both authors and only their names:\n${text}`);
-    }
-    if (/example\.org/.test(text)) {
-      throw new Error(`issue-2254: the author's home-page/email leaked into a property:\n${text}`);
-    }
+    assertProps(text);
 
     postMessage(props, WM_CLOSE, 0, 0);
   } finally {

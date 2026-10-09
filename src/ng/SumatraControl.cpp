@@ -4008,8 +4008,12 @@ static void ExecuteControlRequest(ControlRequest* req) {
         case ControlCmd::TestDocumentProperties: {
             int exitCode = 0;
             Str action = StringArg(req, 0);
-            Str res = str::Eq(action, StrL("buttons")) ? PropertiesDialogButtonsTemp(&exitCode)
-                                                       : DocumentPropertiesResultTemp(&exitCode);
+            Str res = DocumentPropertiesResultTemp(&exitCode);
+            if (str::Eq(action, StrL("buttons"))) {
+                res = PropertiesDialogButtonsTemp(&exitCode);
+            } else if (str::Eq(action, StrL("text"))) {
+                res = PropertiesDialogTextTemp(&exitCode);
+            }
             AppendTestResult(req, exitCode, res);
             break;
         }

@@ -927,6 +927,20 @@ TempStr PropertiesDialogButtonsTemp(int* exitCodeOut) {
     return fmt("copy=1 viewCert=%d updateEutl=%d", viewCert, updateEutl);
 }
 
+// the text the dialog shows. tests/issue-2254.ts.
+TempStr PropertiesDialogTextTemp(int* exitCodeOut) {
+    if (!gProps.visible) {
+        if (exitCodeOut) {
+            *exitCodeOut = 2;
+        }
+        return str::DupTemp(StrL("NOTREADY no-properties-window"));
+    }
+    if (exitCodeOut) {
+        *exitCodeOut = 0;
+    }
+    return str::DupTemp(ToStr(gProps.propsText));
+}
+
 // orig's SavePropertiesWindowPos: only a window the user moved is remembered
 static void SavePropertiesWindowPos() {
     Rect rc = ToolWindowRect(gProps.tw);
