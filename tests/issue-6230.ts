@@ -3,7 +3,7 @@
 import { mkdirSync, rmSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 import { ControlCommand, type ControlClient } from "./control.ts";
-import { cmdId, runStandalone, tmpPath } from "./util.ts";
+import { SLOW_BUILD_FACTOR, USE_NG, cmdId, runStandalone, tmpPath } from "./util.ts";
 import { launchControlled, sendCommand, waitForFocusClass, killAndWait, pressKey } from "./win-automation.ts";
 import { sendMessage, VK_RETURN, WM_CHAR } from "./winapi.ts";
 
@@ -84,6 +84,29 @@ async function expectPage(client: ControlClient, expected: number, what: string)
   }
 }
 
+// the find box is drawn in the frame, so there is no Edit to focus
+async function ngFind(client: ControlClient, action: string, arg = ""): Promise<void> {
+  const res = await client.request(ControlCommand.TestFindUiState, arg ? [action, arg] : [action]);
+  if (res[0] !== 0) {
+    throw new Error(`issue-6230: ${action} failed: ${String(res[1] ?? "")}`);
+  }
+}
+
+async function waitFindOpen(client: ControlClient): Promise<void> {
+  const deadline = Date.now() + 4000 * SLOW_BUILD_FACTOR;
+  let last = "";
+  for (;;) {
+    last = String((await client.request(ControlCommand.TestFindUiState, ["state"]))[1] ?? "");
+    if (/compact=1/.test(last) || /floating=1/.test(last)) {
+      return;
+    }
+    if (Date.now() > deadline) {
+      throw new Error(`issue-6230: find bar did not open (${last})`);
+    }
+    await new Promise((r) => setTimeout(r, 40));
+  }
+}
+
 export async function testit(): Promise<void> {
   const dir = tmpPath("issue-6230");
   rmSync(dir, { recursive: true, force: true });
@@ -105,14 +128,25 @@ export async function testit(): Promise<void> {
     await expectPage(client, startPage, "go to start page");
 
     sendCommand(frame, cmdId("CmdFindFirst"));
-    const edit = await waitForFocusClass(frame, "Edit");
-    // Run both incremental searches so each moves the view.
-    sendMessage(edit, WM_CHAR, "x".charCodeAt(0), 0);
-    await pressKey(edit, VK_RETURN, 0);
-    await expectPage(client, firstMatchPage, "search for 'x'");
-    sendMessage(edit, WM_CHAR, "y".charCodeAt(0), 0);
-    await pressKey(edit, VK_RETURN, 0);
-    await expectPage(client, secondMatchPage, "search for 'xy'");
+    if (USE_NG) {
+      // "x" then "xy": each set arms find-as-you-type, Enter starts it
+      await waitFindOpen(client);
+      await ngFind(client, "set", "x");
+      await ngFind(client, "enter");
+      await expectPage(client, firstMatchPage, "search for 'x'");
+      await ngFind(client, "set", "xy");
+      await ngFind(client, "enter");
+      await expectPage(client, secondMatchPage, "search for 'xy'");
+    } else {
+      const edit = await waitForFocusClass(frame, "Edit");
+      // Run both incremental searches so each moves the view.
+      sendMessage(edit, WM_CHAR, "x".charCodeAt(0), 0);
+      await pressKey(edit, VK_RETURN, 0);
+      await expectPage(client, firstMatchPage, "search for 'x'");
+      sendMessage(edit, WM_CHAR, "y".charCodeAt(0), 0);
+      await pressKey(edit, VK_RETURN, 0);
+      await expectPage(client, secondMatchPage, "search for 'xy'");
+    }
 
     sendCommand(frame, cmdId("CmdNavigateBack"));
     await expectPage(client, startPage, "Back after search");
