@@ -784,11 +784,46 @@ void BrowserViewFindClear(BrowserView* bv) {
     Eval(bv, StrL("window.__sumatraFind && __sumatraFind.clear();"));
 }
 
-// Chromium ignores WM_MOUSEWHEEL on the host window. A wheel that lands on the
-// frame (the browser child is not focused) scrolls the page from here.
+// one arrow key, in CSS pixels. A page key uses the window height instead.
+constexpr int kBrowserArrowStep = 40;
+
+// Chromium ignores WM_MOUSEWHEEL on the host window, and an arrow key sent to
+// the frame never reaches the page. Both scroll from here.
 LRESULT BrowserViewPassUIMsg(BrowserView* bv, UINT msg, WPARAM wp, LPARAM) {
 #if OS_WIN
     if (!bv || !Raw(bv)) {
+        return 0;
+    }
+    if (msg == WM_KEYDOWN) {
+        switch ((int)wp) {
+            case VK_DOWN:
+                Eval(bv, fmt("window.scrollBy(0, %d)", kBrowserArrowStep));
+                break;
+            case VK_UP:
+                Eval(bv, fmt("window.scrollBy(0, %d)", -kBrowserArrowStep));
+                break;
+            case VK_RIGHT:
+                Eval(bv, fmt("window.scrollBy(%d, 0)", kBrowserArrowStep));
+                break;
+            case VK_LEFT:
+                Eval(bv, fmt("window.scrollBy(%d, 0)", -kBrowserArrowStep));
+                break;
+            case VK_NEXT:
+                Eval(bv, StrL("window.scrollBy(0, window.innerHeight || 400)"));
+                break;
+            case VK_PRIOR:
+                Eval(bv, StrL("window.scrollBy(0, -(window.innerHeight || 400))"));
+                break;
+            case VK_HOME:
+                Eval(bv, StrL("window.scrollTo(0, 0)"));
+                break;
+            case VK_END:
+                Eval(bv, StrL("window.scrollTo(0, document.documentElement.scrollHeight)"));
+                break;
+        }
+        return 0;
+    }
+    if (msg == WM_KEYUP) {
         return 0;
     }
     if (msg != WM_MOUSEWHEEL && msg != WM_MOUSEHWHEEL) {

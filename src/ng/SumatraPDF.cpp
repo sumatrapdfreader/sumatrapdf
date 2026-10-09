@@ -1987,10 +1987,40 @@ bool DismissNotificationsOnEsc(MainWindow* win) {
     return RemoveNotificationsForGroup(win, kNotifZoomOrView);
 }
 
-// A wheel over CHM or markdown arrives at the frame. The page scrolls from
-// script; the host window does not.
-bool ForwardBrowserWheel(MainWindow* win, UINT msg, WPARAM wp, LPARAM lp) {
-    if (!win) {
+// Keys and wheels the browser page handles itself. Anything else stays with
+// the frame (accelerators, find, and so on).
+static bool BrowserNavMsg(UINT msg, WPARAM wp) {
+#if OS_WIN
+    if (msg == WM_MOUSEWHEEL || msg == WM_MOUSEHWHEEL) {
+        return true;
+    }
+    if (msg != WM_KEYDOWN && msg != WM_KEYUP) {
+        return false;
+    }
+    switch ((int)wp) {
+        case VK_LEFT:
+        case VK_RIGHT:
+        case VK_UP:
+        case VK_DOWN:
+        case VK_HOME:
+        case VK_END:
+        case VK_PRIOR:
+        case VK_NEXT:
+        case VK_MULTIPLY:
+        case VK_DIVIDE:
+            return true;
+    }
+#else
+    (void)msg;
+    (void)wp;
+#endif
+    return false;
+}
+
+// A wheel or an arrow key over CHM or markdown arrives at the frame. The page
+// scrolls from script; the host window does not.
+bool ForwardBrowserMsg(MainWindow* win, UINT msg, WPARAM wp, LPARAM lp) {
+    if (!win || !BrowserNavMsg(msg, wp)) {
         return false;
     }
     BrowserDocController* doc = win->AsChm();

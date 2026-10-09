@@ -156,7 +156,7 @@ void PlaceMainWindow(MainWindow* win, SessionData* data, PlaceWindowWhen when);
 void PlaceMainWindowLater(MainWindow* win, Rect pos, bool maximize);
 void DuplicateTabInNewWindow(WindowTab* tab);
 void ReloadDocument(MainWindow* win, bool autoRefresh);
-bool ForwardBrowserWheel(MainWindow* win, UINT msg, WPARAM wp, LPARAM lp);
+bool ForwardBrowserMsg(MainWindow* win, UINT msg, WPARAM wp, LPARAM lp);
 // the shell's tick: the delayed reload the file watcher asked for
 void AutoReloadTick(MainWindow* win, int elapsedMs);
 // next / prev openable file in the current document's folder (no wrap)
