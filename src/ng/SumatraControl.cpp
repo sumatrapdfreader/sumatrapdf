@@ -1012,6 +1012,45 @@ static TempStr ImageInsertResultTemp(Str pdfPath, Str imagePath, int* exitCodeOu
     return ToStrTemp(out);
 }
 
+static void AppendTocItems(str::Builder& out, TocItem* item, int depth = 0) {
+    for (; item; item = item->next) {
+        if (item->title) {
+            for (int i = 0; i < depth; i++) {
+                out.Append(StrL("  "));
+            }
+            out.Append(fmt("%s|page=%d\n", item->title, item->pageNo));
+        }
+        AppendTocItems(out, item->child, depth + 1);
+    }
+}
+
+// one line per TOC entry: "title|page=N". tests/issue-1201.ts.
+static TempStr GetTocResultTemp(Str path, int* exitCodeOut) {
+    str::Builder out;
+    EngineBase* engine = CreateEngineFromFile(path, nullptr, false);
+    if (!engine) {
+        if (exitCodeOut) {
+            *exitCodeOut = 1;
+        }
+        out.Append(fmt("ERROR engine-create-failed path=%s\n", path));
+    } else {
+        TocTree* toc = engine->GetToc();
+        if (!toc || !toc->root || !toc->root->child) {
+            if (exitCodeOut) {
+                *exitCodeOut = 1;
+            }
+            out.Append(StrL("ERROR no-toc\n"));
+        } else {
+            if (exitCodeOut) {
+                *exitCodeOut = 0;
+            }
+            AppendTocItems(out, toc->root->child);
+        }
+        SafeEngineRelease(&engine);
+    }
+    return ToStrTemp(out);
+}
+
 // render one page and count red / non-white pixels. tests/issue-3415.ts.
 static TempStr PageRenderColorsResultTemp(Str path, int* exitCodeOut, int pageNo) {
     str::Builder out;
@@ -3057,6 +3096,18 @@ static void ExecuteControlRequest(ControlRequest* req) {
             IntArg(req, 1, pageNo);
             int exitCode = 0;
             Str res = PageRenderColorsResultTemp(path, &exitCode, pageNo);
+            AppendTestResult(req, exitCode, res);
+            break;
+        }
+
+        case ControlCmd::TestGetToc: {
+            Str path = StringArg(req, 0);
+            if (len(path) == 0) {
+                AppendError(req, StrL("TestGetToc expects string path"));
+                break;
+            }
+            int exitCode = 0;
+            Str res = GetTocResultTemp(path, &exitCode);
             AppendTestResult(req, exitCode, res);
             break;
         }
