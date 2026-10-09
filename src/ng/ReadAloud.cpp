@@ -2783,12 +2783,29 @@ TempStr ReadAloudPlaybackBarStateTemp(int* exitCodeOut) {
         return finish(2);
     }
 
-    Rect pause = FromGpui(bar->pauseBounds);
-    Rect stop = FromGpui(bar->stopBounds);
-    Rect speed = FromGpui(bar->speedBounds);
-    Rect speedLab = FromGpui(bar->speedLabelBounds);
+    // the bar is its own window. BoundsOut is dips; the test clicks client pixels.
+#if OS_WIN
+    HWND barHwnd = bar->tw ? ToolWindowHwnd(bar->tw) : nullptr;
+    if (!barHwnd) {
+        out.Append(StrL("NOTREADY no-bar\n"));
+        return finish(2);
+    }
+    int dpi = DpiGetForHwnd(barHwnd);
+    int hwndNum = (int)(intptr_t)barHwnd;
+#else
+    int dpi = 96;
+    int hwndNum = 0;
+#endif
+    auto toPx = [&](gp::Bounds b) {
+        Rect r = FromGpui(b);
+        return Rect{MulDiv(r.x, dpi, 96), MulDiv(r.y, dpi, 96), MulDiv(r.dx, dpi, 96), MulDiv(r.dy, dpi, 96)};
+    };
+    Rect pause = toPx(bar->pauseBounds);
+    Rect stop = toPx(bar->stopBounds);
+    Rect speed = toPx(bar->speedBounds);
+    Rect speedLab = toPx(bar->speedLabelBounds);
     int idx = ReadAloudClosestSpeedIdx();
-    out.Append(fmt("OK visible=1 resume=%d\n", (int)bar->showResume));
+    out.Append(fmt("OK visible=1 resume=%d hwnd=%d\n", (int)bar->showResume, hwndNum));
     out.Append(fmt("pause=%d,%d,%d,%d\n", pause.x, pause.y, pause.dx, pause.dy));
     out.Append(fmt("stop=%d,%d,%d,%d\n", stop.x, stop.y, stop.dx, stop.dy));
     out.Append(fmt("speed=%d,%d,%d,%d\n", speed.x, speed.y, speed.dx, speed.dy));
