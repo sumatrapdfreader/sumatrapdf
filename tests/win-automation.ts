@@ -283,7 +283,12 @@ export function findCanvas(frame: number): number {
 }
 
 export function findChildByClass(parent: number, className: string): number {
-  return findChildWindow(parent, className);
+  const child = findChildWindow(parent, className);
+  // ng draws the toolbar in the frame; there is no SUMATRA_VIRT_TOOLBAR child
+  if (!child && USE_NG && className === "SUMATRA_VIRT_TOOLBAR") {
+    return parent;
+  }
+  return child;
 }
 
 // the floating in-place form-field editor: a visible "Edit" child of the canvas
