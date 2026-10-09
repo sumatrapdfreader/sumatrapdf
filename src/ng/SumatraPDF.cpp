@@ -6781,8 +6781,17 @@ void ExecuteCmd(MainWindow* win, int cmdId) {
             break;
 
         case CmdDuplicateInNewTab:
-            if (tab && !tab->IsAboutTab()) {
-                LoadDocument(win, tab->filePath);
+            // the new tab is the same document at the same page. Loading the
+            // path alone opens it at page 1 (#6168).
+            if (tab && !tab->IsAboutTab() && win->IsDocLoaded() && len(tab->filePath) > 0) {
+                TabState* state = NewTabStateFromTab(tab);
+                TempStr path = str::DupTemp(tab->filePath);
+                if (LoadDocument(win, path) && state) {
+                    SetTabState(win->CurrentTab(), state);
+                }
+                if (state) {
+                    DeleteTabState(state);
+                }
             }
             break;
 
