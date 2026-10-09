@@ -4,7 +4,7 @@
 import { mkdirSync, rmSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 import { ControlClient, ControlCommand } from "./control.ts";
-import { cmdId, runStandalone, tmpPath, assemblePdf, SLOW_BUILD_FACTOR, USE_NG } from "./util.ts";
+import { cmdId, pollUntil, runStandalone, tmpPath, assemblePdf, SLOW_BUILD_FACTOR, USE_NG } from "./util.ts";
 import {
   clientToScreen,
   getClassName,
@@ -63,7 +63,8 @@ function makeBlankPdf(): string {
   return assemblePdf(objects);
 }
 
-async function placementState(client: ControlClient): Promise<PlacementState> {
+// null while the tab has no engine yet. The caller waits that out.
+async function placementState(client: ControlClient): Promise<PlacementState | null> {
   const res = await client.request(ControlCommand.TestMarkupAnnots, []);
   const raw = String(res[1] ?? "");
   const count = /annotations=(\d+)/.exec(raw);
@@ -72,6 +73,9 @@ async function placementState(client: ControlClient): Promise<PlacementState> {
       raw,
     );
   if (res[0] !== 0 || !count || !state) {
+    if (raw.includes("NOTREADY")) {
+      return null;
+    }
     throw new Error(`ink-annotation-placement: could not read state\n${raw}`);
   }
   return {
@@ -91,25 +95,27 @@ async function placementState(client: ControlClient): Promise<PlacementState> {
 
 async function waitForPlacement(client: ControlClient, active: boolean, step: string): Promise<PlacementState> {
   const deadline = Date.now() + 5_000 * SLOW_BUILD_FACTOR;
-  let state: PlacementState;
+  let state: PlacementState | null = null;
   for (;;) {
     state = await placementState(client);
-    if (state.active === active) {
+    if (state && state.active === active) {
       return state;
     }
     if (Date.now() > deadline) {
-      throw new Error(`ink-annotation-placement: ${step}: active did not become ${active}\n${state.raw}`);
+      throw new Error(
+        `ink-annotation-placement: ${step}: active did not become ${active}\n${state?.raw ?? "NOTREADY"}`,
+      );
     }
     await sleep(40);
   }
 }
 
-function toolbarButtonRect(dump: string): { x: number; y: number; dx: number; dy: number } {
+function toolbarButtonRect(dump: string): { x: number; y: number; dx: number; dy: number } | null {
   const id = cmdId("CmdCreateAnnotInk");
   const re = new RegExp(`annotation-idx=\\d+ cmd=${id} hidden=0 enabled=1 rect=(-?\\d+),(-?\\d+),(-?\\d+),(-?\\d+)`);
   const m = re.exec(dump);
   if (!m) {
-    throw new Error(`ink-annotation-placement: Ink toolbar button not found\n${dump}`);
+    return null;
   }
   const x = +m[1]!;
   const y = +m[2]!;
@@ -324,8 +330,17 @@ export async function testit(): Promise<void> {
     const outside = { x: 2, y: center.y };
 
     sendCommandSync(frame, cmdId("CmdToggleEditPDF"));
-    const toolbarDump = String((await client.request(ControlCommand.TestToolbarButtons, []))[1] ?? "");
-    const button = toolbarButtonRect(toolbarDump);
+    // The annotation row reports a 0,0 rect until it lays out. A click there
+    // is the frame origin and drops the document.
+    const toolbarDump = await pollUntil(
+      async () => String((await client.request(ControlCommand.TestToolbarButtons, []))[1] ?? ""),
+      (dump) => {
+        const b = toolbarButtonRect(dump);
+        return !!b && b.dx > 0 && b.dy > 0;
+      },
+      { error: "ink-annotation-placement: Ink toolbar button not found" },
+    );
+    const button = toolbarButtonRect(toolbarDump)!;
     const clickInkToolbar = async () => {
       const x = button.x + Math.floor(button.dx / 2);
       const y = button.y + Math.floor(button.dy / 2);
@@ -344,6 +359,7 @@ export async function testit(): Promise<void> {
     await moveMouse(client, canvas, center);
     state = await placementState(client);
     if (
+      !state ||
       !state.notification ||
       !state.cursor ||
       state.mouseDown ||
@@ -353,7 +369,9 @@ export async function testit(): Promise<void> {
       state.command !== cmdId("CmdCreateAnnotInk") ||
       state.message !== "Draw ink annotation. Release to finish. **Esc** to cancel."
     ) {
-      throw new Error(`ink-annotation-placement: toolbar did not start clean placement mode\n${state.raw}`);
+      throw new Error(
+        `ink-annotation-placement: toolbar did not start clean placement mode\n${state?.raw ?? "NOTREADY"}`,
+      );
     }
 
     if (USE_NG) {
@@ -370,8 +388,8 @@ export async function testit(): Promise<void> {
     state = await waitForPlacement(client, true, "palette");
     await moveMouse(client, canvas, center);
     state = await placementState(client);
-    if (!state.notification || !state.cursor || state.annotations !== 0) {
-      throw new Error(`ink-annotation-placement: palette did not start placement mode\n${state.raw}`);
+    if (!state || !state.notification || !state.cursor || state.annotations !== 0) {
+      throw new Error(`ink-annotation-placement: palette did not start placement mode\n${state?.raw ?? "NOTREADY"}`);
     }
 
     await client.setNotificationsEnabled(false);
@@ -383,8 +401,10 @@ export async function testit(): Promise<void> {
 
     await drawStroke(client, canvas, stroke2);
     state = await placementState(client);
-    if (!state.active || state.annotations !== 2) {
-      throw new Error(`ink-annotation-placement: second stroke did not commit as its own ink\n${state.raw}`);
+    if (!state || !state.active || state.annotations !== 2) {
+      throw new Error(
+        `ink-annotation-placement: second stroke did not commit as its own ink\n${state?.raw ?? "NOTREADY"}`,
+      );
     }
 
     postMessage(frame, WM_KEYDOWN, VK_ESCAPE, 0);
@@ -415,8 +435,10 @@ export async function testit(): Promise<void> {
 
     sendMessage(frame, WM_COMMAND, cmdId("CmdCreateAnnotInk"), packCoords(stroke1[0]!.x, stroke1[0]!.y));
     state = await placementState(client);
-    if (state.active || state.annotations !== 4) {
-      throw new Error(`ink-annotation-placement: a supplied context point did not place immediately\n${state.raw}`);
+    if (!state || state.active || state.annotations !== 4) {
+      throw new Error(
+        `ink-annotation-placement: a supplied context point did not place immediately\n${state?.raw ?? "NOTREADY"}`,
+      );
     }
   } finally {
     client.close();
