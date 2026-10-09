@@ -531,6 +531,7 @@ void AppShellApplyNativeCursor(MainWindow* win) {
 
 float CanvasScale(MainWindow* win);
 bool FreeTextInPlaceSetText(MainWindow* win, const WCHAR* text);
+bool CommandPaletteSetText(MainWindow* win, const WCHAR* text);
 bool FreeTextInPlaceCommitOnChar(MainWindow* win, int ch);
 
 static LRESULT CALLBACK ShellSubclass(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp, UINT_PTR, DWORD_PTR) {
@@ -582,6 +583,9 @@ static LRESULT CALLBACK ShellSubclass(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp,
         case WM_SETTEXT:
             if (MainWindow* win = WinOf(hwnd)) {
                 if (FreeTextInPlaceSetText(win, (const WCHAR*)lp)) {
+                    return TRUE;
+                }
+                if (CommandPaletteSetText(win, (const WCHAR*)lp)) {
                     return TRUE;
                 }
             }

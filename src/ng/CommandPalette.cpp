@@ -194,6 +194,7 @@ static gp::Entity<PaletteView> gPaletteView;
 static void FilterStringsForQuery(Str filter, StrVecCP& strings);
 static void CollectStrings(MainWindow* mainWin);
 static void QueryChanged();
+static bool ShowsSettingHelp(CommandPaletteWnd* wnd);
 static void ExecuteCurrentSelection();
 static void StartThumbnailRendering();
 static void ThumbSelectPage(int pageNo);
@@ -999,7 +1000,8 @@ TempStr CommandPaletteStateTemp(int* exitCodeOut) {
             sel, n, qPos, qPos, qLen, selectedCmdId, IsUIRtl() ? 1 : 0, wnd->thumbnailMode ? 1 : 0, wnd->selectedPage,
             rendered, nAnnots, annotPage, annotsDone));
     int editFocus = wnd->editQuery && wnd->editQuery->focused ? 1 : 0;
-    out.Append(fmt("settingHelp=0 selValue=%s selText=%s editFocus=%d\n", selValue, selText, editFocus));
+    int helpShown = (!wnd->thumbnailMode && ShowsSettingHelp(wnd)) ? 1 : 0;
+    out.Append(fmt("settingHelp=%d selValue=%s selText=%s editFocus=%d\n", helpShown, selValue, selText, editFocus));
     return finish(0);
 }
 #endif
@@ -1836,6 +1838,21 @@ void CommandPaletteOnSettingsReloaded() {
     SetCurrentSelection(n == 0 ? -1 : std::min(currSel, n - 1));
     AppShellInvalidate(wnd->win);
 }
+
+#if OS_WIN
+// Tests replace the query with WM_SETTEXT on the frame. The box is a gpui
+// input, so the message has to land here.
+bool CommandPaletteSetText(MainWindow* win, const WCHAR* text) {
+    CommandPaletteWnd* wnd = gCommandPaletteWnd;
+    if (!wnd || !wnd->visible || wnd->win != win || !wnd->editQuery || !text) {
+        return false;
+    }
+    gp::InputSetValue(wnd->editQuery, ToGpui(ToUtf8Temp(text)));
+    QueryChanged();
+    AppShellInvalidate(win);
+    return true;
+}
+#endif
 
 static void QueryChanged() {
     CommandPaletteWnd* wnd = gCommandPaletteWnd;
