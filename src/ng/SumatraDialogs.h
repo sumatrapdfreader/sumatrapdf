@@ -205,6 +205,7 @@ bool AdvancedSettingsMoveSelection(int dir);
 bool AdvancedSettingsOnEnter();
 void AdvancedSettingsOnEscape();
 void CloseAdvancedSettingsDialog();
+TempStr AdvSettingsRowsResultTemp(Str action, int arg, int* exitCodeOut);
 bool IsAdvancedSettingsDialogVisible();
 gpui::El* AdvancedSettingsDialogBuild(MainWindow* win, gpui::Ctx* cx);
 

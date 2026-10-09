@@ -1022,7 +1022,7 @@ TempStr CommandPaletteStateTemp(int* exitCodeOut) {
             rendered, nAnnots, annotPage, annotsDone));
     int editFocus = wnd->editQuery && wnd->editQuery->focused ? 1 : 0;
     int helpShown = (!wnd->thumbnailMode && ShowsSettingHelp(wnd)) ? 1 : 0;
-    out.Append(fmt("settingHelp=%d selValue=%s selText=%s editFocus=%d\n", helpShown, selValue, selText, editFocus));
+    out.Append(fmt("settingHelp=%d editFocus=%d selValue=%s selText=%s\n", helpShown, editFocus, selValue, selText));
     return finish(0);
 }
 #endif

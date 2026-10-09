@@ -147,6 +147,19 @@ static bool SettingDiffersFromDefault(SettingItem* item) {
     }
 }
 
+static TempStr FormatSettingDefaultTemp(SettingItem* item) {
+    switch (item->type) {
+        case SettingType::Bool:
+            return str::DupTemp(item->defBool ? StrL("true") : StrL("false"));
+        case SettingType::Int:
+            return fmt("%d", item->defInt);
+        case SettingType::Float:
+            return fmt("%g", item->defFloat);
+        default:
+            return str::DupTemp(item->defStr);
+    }
+}
+
 // value of the setting formatted for display; the result is temp-allocated
 static TempStr FormatSettingValueTemp(SettingItem* item) {
     switch (item->type) {
@@ -425,6 +438,43 @@ static void CommitEditValue() {
     SetItemChanged(item);
     PreviewSettingChange(item);
     CancelEditValue();
+}
+
+// "nondefault" and "esc" are what tests/command-palette-settings.ts asks for.
+// The rest of orig's probe drives the win32 list; this dialog has no list box.
+TempStr AdvSettingsRowsResultTemp(Str action, int arg, int* exitCodeOut) {
+    (void)arg;
+    str::Builder out;
+    auto finish = [&](int code) -> TempStr {
+        if (exitCodeOut) {
+            *exitCodeOut = code;
+        }
+        return ToStrTemp(out);
+    };
+    if (!gAdv.visible) {
+        out.Append(StrL("NOTREADY no-dialog\n"));
+        return finish(2);
+    }
+    if (str::Eq(action, StrL("nondefault"))) {
+        int n = 0;
+        for (SettingItem* item : gAdv.items) {
+            if (!SettingDiffersFromDefault(item)) {
+                continue;
+            }
+            n++;
+            out.Append(
+                fmt("%s=%s default=%s\n", item->name, FormatSettingValueTemp(item), FormatSettingDefaultTemp(item)));
+        }
+        out.Append(fmt("count=%d\n", n));
+        return finish(0);
+    }
+    if (str::Eq(action, StrL("esc"))) {
+        AdvancedSettingsOnEscape();
+        out.Append(fmt("closed=%d\n", gAdv.visible ? 0 : 1));
+        return finish(0);
+    }
+    out.Append(fmt("ERROR unknown-action action=%s\n", action));
+    return finish(1);
 }
 
 void CloseAdvancedSettingsDialog() {

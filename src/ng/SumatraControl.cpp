@@ -4222,6 +4222,20 @@ static void ExecuteControlRequest(ControlRequest* req) {
         }
 #endif
 
+        case ControlCmd::TestAdvSettingsRows: {
+            Str action = StringArg(req, 0);
+            i32 arg = 0;
+            IntArg(req, 1, arg);
+            if (len(action) == 0) {
+                AppendError(req, StrL("TestAdvSettingsRows expects string action [, int rows]"));
+                break;
+            }
+            int exitCode = 0;
+            Str res = AdvSettingsRowsResultTemp(action, arg, &exitCode);
+            AppendTestResult(req, exitCode, res);
+            break;
+        }
+
         case ControlCmd::TestMainMenu: {
             MainWindow* win = FirstWindow();
             if (!win) {
