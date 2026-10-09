@@ -7,8 +7,8 @@
 import { mkdirSync, rmSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 import { ControlClient, ControlCommand } from "./control.ts";
-import { assemblePdf, cmdId, runStandalone, SLOW_BUILD_FACTOR, tmpPath } from "./util.ts";
-import { captureWindowToPng, findTopWindow, getWindowPid, sleep } from "./winapi.ts";
+import { assemblePdf, cmdId, runStandalone, SLOW_BUILD_FACTOR, tmpPath, USE_NG } from "./util.ts";
+import { captureWindowToPng, enumWindows, findTopWindow, getWindowPid, getWindowText, sleep } from "./winapi.ts";
 import { killAndWait, launchControlled, sendCommand } from "./win-automation.ts";
 
 const FLOAT_CLASS = "SUMATRA_ANNOT_FILTER_WND";
@@ -47,12 +47,28 @@ async function annotDump(client: ControlClient): Promise<string> {
   return String(res[1] ?? "");
 }
 
+function findAnnotList(pid: number): number {
+  // ng's tool windows use gpui's class. The list's title is Annotations.
+  if (USE_NG) {
+    let found = 0;
+    enumWindows((hwnd) => {
+      if (getWindowPid(hwnd) === pid && getWindowText(hwnd) === "Annotations") {
+        found = hwnd;
+        return false;
+      }
+      return true;
+    });
+    return found;
+  }
+  return findTopWindow(pid, FLOAT_CLASS);
+}
+
 async function waitFloat(client: ControlClient, pid: number): Promise<{ dump: string; hwnd: number }> {
   const deadline = Date.now() + 8000 * SLOW_BUILD_FACTOR;
   let dump = "";
   for (;;) {
     dump = await annotDump(client);
-    const hwnd = findTopWindow(pid, FLOAT_CLASS);
+    const hwnd = findAnnotList(pid);
     if (/annotFilter floatVisible=1/.test(dump) && hwnd && parseSaveNew(dump).dy > 0) {
       return { dump, hwnd };
     }

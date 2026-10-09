@@ -105,6 +105,7 @@ struct AnnotFilterToolbar {
     int viewRows = kMaxListLines;
     gp::Bounds listBounds{};
     gp::Bounds cardBounds{};
+    gp::Bounds saveNewBounds{};
     int selectPendingMs = -1;
 
     ~AnnotFilterToolbar() { str::Free(filterText); }
@@ -1336,6 +1337,10 @@ static gp::El* AnnotFilterContentEl(MainWindow* win, gp::Ctx* cx, bool ownWindow
         card->Child(list);
     }
 
+    // orig's VirtButton: disabled text is ThemeWindowTextDisabledColor on the
+    // lifted button fill, then EnsureContrast so it does not vanish (issue #6123)
+    Color btnBg = AccentColor(colBg, 14);
+    Color btnDisabled = EnsureContrast(ThemeWindowTextDisabledColor(), btnBg);
     auto button = [&](Str id, Str label, int cmdId, bool enabled) {
         gpc::Button* b = gpc::Button::New(cx, GpuiDup(cx->a, id))
                              ->Label(GpuiDup(cx->a, label))
@@ -1343,6 +1348,11 @@ static gp::El* AnnotFilterContentEl(MainWindow* win, gp::Ctx* cx, bool ownWindow
                              ->Disabled(!enabled);
         if (enabled) {
             b->OnClick(gp::ListenTo(gAnnotFilterView, &AnnotFilterView::OnCmd, (intptr_t)cmdId));
+        } else {
+            gp::StateStyle dis;
+            dis.Bg(ToGpui(btnBg));
+            dis.Fg(ToGpui(btnDisabled));
+            b->DisabledStyle(dis);
         }
         gp::El* el = b->IntoEl()->W(gp::kFill);
         if (ownWindow) {
@@ -1364,7 +1374,10 @@ static gp::El* AnnotFilterContentEl(MainWindow* win, gp::Ctx* cx, bool ownWindow
     card->Child(button(StrL("annot-del"), delLabel, CmdDeleteAnnotation, nSel > 0));
     card->Child(button(StrL("annot-discard"), Tr("Discard changes"), CmdDiscardChanges, dirty));
     card->Child(button(StrL("annot-save"), saveLabel, CmdSaveAnnotations, dirty));
-    card->Child(button(StrL("annot-save-new"), Tr("Save changes to a new PDF"), CmdSaveAnnotationsNewFile, dirty));
+    gp::El* saveNewEl =
+        button(StrL("annot-save-new"), Tr("Save changes to a new PDF"), CmdSaveAnnotationsNewFile, dirty);
+    saveNewEl->BoundsOut(&f->saveNewBounds);
+    card->Child(saveNewEl);
     card->Child(BuildFilterHelp(cx, muted, fontScale));
 
     if (f->wantFocus) {
@@ -1435,11 +1448,17 @@ TempStr AnnotFilterToolbarStateTemp(MainWindow* win) {
     int dirty = tab && tab->AsFixed() && EngineHasUnsavedAnnotations(tab->AsFixed()->GetEngine()) ? 1 : 0;
     int pageSel = tab && tab->selectedAnnotation ? VecFind(f->visibleAnnots, tab->selectedAnnotation) : -1;
     // ng: the first four are orig's; it also reports pixel rectangles
+    Color btnBg = AccentColor(ThemeWindowControlBackgroundColor(), 14);
+    Color saveNewTxt = dirty ? ThemeWindowTextColor() : EnsureContrast(ThemeWindowTextDisabledColor(), btnBg);
+    Rect saveNewRc = FromGpui(f->saveNewBounds);
     out.Append(
         fmt("deleteEnabled=%d discardEnabled=%d saveEnabled=%d nSel=%d deleteCount=%d anchor=%d scrollY=%d "
             "viewRows=%d listFocused=%d filterFocused=%d pending=%d pageSel=%d\n",
             DeleteCount(f) > 0 ? 1 : 0, dirty, dirty, SelectedCount(f), DeleteCount(f), f->anchor, (int)f->scrollY,
             f->viewRows, f->listFocused ? 1 : 0, IsFilterFocused(f) ? 1 : 0, f->selectPendingMs >= 0 ? 1 : 0, pageSel));
+    // a second fmt: one call's instruction list tops out at 32
+    out.Append(fmt("saveNewRect=%d,%d,%d,%d saveNewText=%s saveNewBg=%s\n", saveNewRc.x, saveNewRc.y, saveNewRc.dx,
+                   saveNewRc.dy, SerializeColorTemp(saveNewTxt), SerializeColorTemp(btnBg)));
     for (int i = 0; i < nVisible; i++) {
         out.Append(fmt("annot=%d sel=%d page=%d %s\n", i, IsSelected(f, i) ? 1 : 0, f->visibleAnnots[i]->pageNo,
                        AnnotationListRowTextTemp(f->visibleAnnots[i])));
