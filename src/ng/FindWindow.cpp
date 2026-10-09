@@ -91,6 +91,10 @@ struct FindWindowUI {
     gp::Bounds listView;
     gp::Bounds prevBtn;
     gp::Bounds nextBtn;
+#if OS_WIN
+    // orig's find combo is an Edit. Tests type into whichever Edit has focus.
+    HWND queryEdit = nullptr;
+#endif
     // orig's edit is a combo box: the list under it is the search history
     DialogSelect ddHistory;
     int historyLen = -1;
@@ -102,6 +106,11 @@ FindWindowWnd::~FindWindowWnd() {
     if (ui) {
         ui->ddHistory.Free();
         str::Free(ui->historyFirst);
+#if OS_WIN
+        if (ui->queryEdit && IsWindow(ui->queryEdit)) {
+            DestroyWindow(ui->queryEdit);
+        }
+#endif
     }
     delete ui;
 }
@@ -558,6 +567,63 @@ void FindWindowSetStatus(MainWindow* win, Str s, int totalHits) {
 // --- a window of its own (Windows) ------------------------------------------
 
 static gp::El* FindWindowContentEl(MainWindow* win, gp::Ctx* cx, bool ownWindow);
+
+#if OS_WIN
+constexpr UINT_PTR kFindQuerySubclassId = 8;
+
+// The Edit is what tests type into. Mirror its text into the gpui field and
+// mark it modified, the way orig's EN_CHANGE does.
+static LRESULT CALLBACK FindQueryProc(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp, UINT_PTR, DWORD_PTR dw) {
+    auto* win = (MainWindow*)dw;
+    if (msg == WM_CHAR && IsMainWindowValidAndNotClosing(win)) {
+        LRESULT res = DefSubclassProc(hwnd, msg, wp, lp);
+        WCHAR buf[1024];
+        int n = GetWindowTextW(hwnd, buf, dimof(buf));
+        FindEditSetText(win, ToUtf8Temp(WStr(buf, n)));
+        FindEditSetModified(win, true);
+        return res;
+    }
+    if ((msg == WM_KEYDOWN || msg == WM_SYSKEYDOWN) && wp == VK_ESCAPE) {
+        if (IsMainWindowValidAndNotClosing(win)) {
+            HideFindBar(win);
+        }
+        return 0;
+    }
+    if (msg == WM_NCDESTROY) {
+        RemoveWindowSubclass(hwnd, FindQueryProc, kFindQuerySubclassId);
+    }
+    return DefSubclassProc(hwnd, msg, wp, lp);
+}
+
+static void FindAttachQueryEdit(MainWindow* win) {
+    FindWindowWnd* w = Wnd(win);
+    if (!w || !w->ui) {
+        return;
+    }
+    if (w->ui->queryEdit && IsWindow(w->ui->queryEdit)) {
+        return;
+    }
+    w->ui->queryEdit = nullptr;
+    HWND parent = w->tw ? ToolWindowHwnd(w->tw) : nullptr;
+    if (!parent) {
+        return;
+    }
+    HWND edit = CreateWindowExW(0, L"EDIT", L"", WS_CHILD | WS_VISIBLE | ES_AUTOHSCROLL, 0, 0, 1, 1, parent, nullptr,
+                                GetModuleHandleW(nullptr), nullptr);
+    if (!edit) {
+        return;
+    }
+    SetWindowSubclass(edit, FindQueryProc, kFindQuerySubclassId, (DWORD_PTR)win);
+    w->ui->queryEdit = edit;
+}
+
+static void FindSyncQueryEdit(MainWindow* win, HWND edit, bool selectAll) {
+    SetWindowTextW(edit, CWStrTemp(ToWStrTemp(FindEditTextTemp(win))));
+    if (selectAll) {
+        SendMessageW(edit, EM_SETSEL, 0, -1);
+    }
+}
+#endif
 
 static Str FindToolTitle() {
     return Tr("Find");
@@ -1035,10 +1101,20 @@ static gp::El* FindWindowContentEl(MainWindow* win, gp::Ctx* cx, bool ownWindow)
     if (w->wantFocus) {
         w->wantFocus = false;
         gp::InputFocus(edit, cx->app, cx->win);
-        if (w->wantSelectAll) {
+        bool selectAll = w->wantSelectAll;
+        if (selectAll) {
             w->wantSelectAll = false;
             gp::InputSelectAll(edit, cx->app, cx->win);
         }
+#if OS_WIN
+        FindAttachQueryEdit(win);
+        if (w->ui->queryEdit) {
+            FindSyncQueryEdit(win, w->ui->queryEdit, selectAll);
+            if (GetFocus() != w->ui->queryEdit) {
+                SetFocus(w->ui->queryEdit);
+            }
+        }
+#endif
     }
     return card;
 }
