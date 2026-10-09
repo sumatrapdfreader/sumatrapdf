@@ -7991,6 +7991,12 @@ void ExecuteCmd(MainWindow* win, int cmdId) {
         // ng: orig flips WS_EX_LAYOUTRTL on every window, which gpui has no
         // equivalent for. What asks IsUIRtl() (text runs, the toolbar and the
         // sidebar order) flips; the rest of the layout does not
+        case CmdDebugToggleDpiOverride:
+#if OS_WIN
+            AppShellToggleDpiOverride();
+#endif
+            break;
+
         case CmdDebugToggleRtl:
             gForceRtl = !gForceRtl;
             for (MainWindow* w : gWindows) {

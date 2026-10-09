@@ -86,11 +86,15 @@ static float FindStatusSlotDx(int totalHits, bool capped) {
 
 struct FindWindowView;
 
+// gpui's Small input font. The DPI probe reports this height.
+constexpr int kFindEditFontPx = 14;
+
 struct FindWindowUI {
     gp::Entity<FindWindowView> view;
     gp::Bounds listView;
     gp::Bounds prevBtn;
     gp::Bounds nextBtn;
+    int editFontPx = kFindEditFontPx;
 #if OS_WIN
     // orig's find combo is an Edit. Tests type into whichever Edit has focus.
     HWND queryEdit = nullptr;
@@ -437,6 +441,28 @@ bool FindWindowOnKeyDown(MainWindow* win, int vk, bool ctrl, bool shift, bool al
 
 bool IsFindWindowVisible(MainWindow* win) {
     return win && win->findWindow && win->findWindow->visible;
+}
+
+void FindWindowApplyDpi(MainWindow* win) {
+    FindWindowWnd* w = Wnd(win);
+    if (!w || !w->ui) {
+        return;
+    }
+    w->ui->editFontPx = AppShellDpiPx(win, kFindEditFontPx);
+}
+
+int FindWindowFontHeight(MainWindow* win) {
+    if (!IsFindWindowVisible(win)) {
+        return 0;
+    }
+    FindWindowWnd* w = Wnd(win);
+    if (!w || !w->ui) {
+        return 0;
+    }
+    if (w->ui->editFontPx <= 0) {
+        FindWindowApplyDpi(win);
+    }
+    return w->ui->editFontPx;
 }
 
 // The page label is a sibling of the clipped snippet, so a match highlight
@@ -1059,8 +1085,9 @@ static gp::El* FindWindowContentEl(MainWindow* win, gp::Ctx* cx, bool ownWindow)
         FindFlushPendingSearch(win);
     }
     ui->ddHistory.TakeComboPicked();
-    header->Child(
-        gp::Div(cx->a)->Flex1()->MinW(0)->Child(ui->ddHistory.BuildCombo(cx, StrL("find-win-edit"), edit, gp::kFill)));
+    FindWindowApplyDpi(win);
+    header->Child(gp::Div(cx->a)->Flex1()->MinW(0)->Child(
+        ui->ddHistory.BuildCombo(cx, StrL("find-win-edit"), edit, gp::kFill, false, 0, (float)ui->editFontPx)));
     header->Child(gp::Div(cx->a)
                       ->W(FindStatusSlotDx(w->statusTotalHits, w->statusCapped))
                       ->Shrink0()

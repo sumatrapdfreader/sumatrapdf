@@ -177,6 +177,31 @@ void AppShellInvalidate(MainWindow* win) {
     ToolWindowsInvalidateFor(win);
 }
 
+int AppShellFrameDpi(MainWindow* win) {
+    if (win && win->frameDpi > 0) {
+        return win->frameDpi;
+    }
+    int dpi = AppShellWindowDpi(win);
+    return dpi > 0 ? dpi : 96;
+}
+
+int AppShellDpiPx(MainWindow* win, int px) {
+    return MulDiv(px, AppShellFrameDpi(win), 96);
+}
+
+// gpui paints at 96 DPI, so a frame DPI other than 96 has to change the
+// font and icon pixel sizes. Remember it, then rebuild.
+void AppShellOnDpiChanged(MainWindow* win, int dpi) {
+    if (!win || dpi <= 0) {
+        return;
+    }
+    DpiSet(dpi, dpi);
+    win->frameDpi = dpi;
+    SidebarApplyDpi(win);
+    FindWindowApplyDpi(win);
+    AppShellInvalidate(win);
+}
+
 // gpui keeps the last kFrameTraceCap frames per window; the cursor makes each
 // call report only what was drawn since the previous one
 // --- the caption (orig's tabsInTitlebar) -------------------------------------

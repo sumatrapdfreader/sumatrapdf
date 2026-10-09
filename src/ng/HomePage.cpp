@@ -315,6 +315,8 @@ constexpr int kHomeListThumbDy = 40;
 constexpr int kHomeListRowDy = 46;
 constexpr int kHomeListRowGapDx = 8;
 constexpr int kSearchEditDy = 28;
+// gpui's Small input font. The DPI probe reports this height.
+constexpr int kHomeSearchFontPx = 14;
 constexpr int kSearchThumbnailsGapY = 12;
 constexpr int kThumbsMiddleMargin = 32;
 // orig's HomePageIconSize: the icons follow ToolbarSize (dips here)
@@ -405,6 +407,14 @@ static HomePageUI* Ui(MainWindow* win) {
         win->homePage = new HomePageUI();
     }
     return win->homePage;
+}
+
+int HomeSearchFontPx(MainWindow* win) {
+    HomePageUI* h = win ? win->homePage : nullptr;
+    if (!h || !h->search) {
+        return 0;
+    }
+    return AppShellDpiPx(win, kHomeSearchFontPx);
 }
 
 void HomePageDelete(MainWindow* win) {
@@ -1935,7 +1945,7 @@ gp::El* HomePageBuild(MainWindow* win, gp::Ctx* cx) {
     int borderDx = contentDx - (2 * flankDx);
     borderDx = std::max(borderDx, 200);
     int borderX = (contentDx - borderDx) / 2;
-    int borderDy = kSearchEditDy + 2; // 1px border on each side
+    int borderDy = AppShellDpiPx(win, kSearchEditDy) + 2; // 1px border on each side
     int rowDy = std::max(HomePageIconSize(), borderDy);
 
     // every row item (link, search box, view icons) is centered on the row's
@@ -1952,6 +1962,7 @@ gp::El* HomePageBuild(MainWindow* win, gp::Ctx* cx) {
                                    ->WithSize(gp::UiSize::Small)
                                    ->W(gp::kFill)
                                    ->IntoEl()
+                                   ->Font((float)AppShellDpiPx(win, kHomeSearchFontPx))
                                    ->H((float)borderDy)));
     gp::El* viewBtns = gp::Div(cx->a)->FlexRow()->ItemsCenter()->Gap((float)iconGap)->Shrink0();
     viewBtns->Child(HomeViewModeBtn(win, cx, false));

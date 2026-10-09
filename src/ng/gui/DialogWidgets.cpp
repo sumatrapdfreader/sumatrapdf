@@ -493,7 +493,8 @@ bool DialogSelect::TakeComboPicked() {
     return res;
 }
 
-gp::El* DialogSelect::BuildCombo(gp::Ctx* cx, Str id, gp::InputState* edit, float w, bool disabled, float dy) {
+gp::El* DialogSelect::BuildCombo(gp::Ctx* cx, Str id, gp::InputState* edit, float w, bool disabled, float dy,
+                                 float fontPx) {
     const gp::Theme& th = gp::ThemeNow(cx->app);
     comboEdit = edit;
     comboWin = cx->win;
@@ -517,6 +518,9 @@ gp::El* DialogSelect::BuildCombo(gp::Ctx* cx, Str id, gp::InputState* edit, floa
                         ->IntoEl();
     if (dy > 0) {
         field->H(dy);
+    }
+    if (fontPx > 0) {
+        field->Font(fontPx);
     }
     box->Child(gp::Div(cx->a)->Flex1()->MinW(0)->Child(field));
     gpc::Button* arrow = gpc::Button::New(cx, GpuiDup(cx->a, fmt("%s-arrow", id)))

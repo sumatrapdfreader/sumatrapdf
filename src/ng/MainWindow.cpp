@@ -769,6 +769,7 @@ AppCommandCtx NewAppCommandCtx(MainWindow* win, Point cursorPos) {
     ctx.filePath = ctx.tab ? ctx.tab->filePath : Str();
     ctx.allowToggleMenuBar = true;
     ctx.hasOpenDocuments = HasOpenedDocuments(win);
+    ctx.debugDpiOverrideAvailable = true;
 
     if (ctx.tab) {
         ctx.autoScrollOn = ctx.tab->autoScroll.on;

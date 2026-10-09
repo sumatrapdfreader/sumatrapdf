@@ -47,6 +47,8 @@ bool IsFindWindowVisible(MainWindow* win);
 void FindWindowSetStatus(MainWindow* win, Str s, int totalHits = -1);
 void FindWindowRefreshResults(MainWindow* win, bool allowNavigation = true);
 void FindWindowSaveSelectedMatch(MainWindow* win);
+int FindWindowFontHeight(MainWindow* win);
+void FindWindowApplyDpi(MainWindow* win);
 // Enter / F3 / the Next-Prev buttons walk the results list when it is for the
 // current term; otherwise a new search starts. Returns false if not handled.
 bool FindWindowNextOrPrev(MainWindow* win, bool forward);

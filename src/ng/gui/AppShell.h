@@ -141,6 +141,12 @@ Rect AppShellShiftToWorkArea(Rect rect, MainWindow* win, bool fully);
 bool AppShellNormalWindowRect(MainWindow* win, Rect* out);
 // dpi of the monitor the frame is on; 96 where it is not known
 int AppShellWindowDpi(MainWindow* win);
+int AppShellFrameDpi(MainWindow* win);
+int AppShellDpiPx(MainWindow* win, int px);
+void AppShellOnDpiChanged(MainWindow* win, int dpi);
+#if OS_WIN
+void AppShellToggleDpiOverride();
+#endif
 #if OS_DARWIN || OS_WASM
 float AppShellRenderScale(gpui::Window* win);
 #endif

@@ -247,6 +247,8 @@ struct MainWindow {
     // gone, and the settings are written after it closes
     Rect frameRc;
     bool isMaximized = false;
+    // last WM_DPICHANGED, rounded to 4. 0: not seen yet (use the monitor)
+    int frameDpi = 0;
 
     // the viewport size the controller was last given, so a frame that didn't
     // resize the window doesn't relayout the document

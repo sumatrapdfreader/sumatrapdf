@@ -78,6 +78,10 @@
 #include "gui/NativeMsgBox.h"
 #include "gui/DocCanvas.h"
 #include "gui/Sidebar.h"
+#if OS_WIN
+#include "gui/Dpi.h"
+#include "gui/PlatformFont.h"
+#endif
 #include "SumatraDialogs.h"
 #include "DocumentProperties.h"
 #include "NavFilesInFolder.h"
@@ -3284,6 +3288,56 @@ static TempStr WheelWhileClosingResultTemp(int* exitCodeOut) {
     return finish(0, str::DupTemp(StrL("OK")));
 }
 
+int HomeSearchFontPx(MainWindow* win);
+
+#if OS_WIN
+static int DpiFontHeight(PlatformFont* font) {
+    return font ? PlatformFontLineHeight(font) : 0;
+}
+
+// orig's DpiResultTemp. The hidden window is created after DpiSet, so a
+// not-yet-visible root reports that layout DPI instead of the monitor.
+static TempStr DpiResultTemp(Str action, int* exitCodeOut) {
+    str::Builder out;
+    auto finish = [&](int code) -> TempStr {
+        if (exitCodeOut) {
+            *exitCodeOut = code;
+        }
+        return ToStrTemp(out);
+    };
+
+    if (str::Eq(action, StrL("hidden"))) {
+        int prevX = dpiX;
+        int prevY = dpiY;
+        DpiSet(240, 240);
+        HWND hwnd = CreateWindowExW(0, L"STATIC", L"DPI test", WS_POPUP, 0, 0, 10, 10, nullptr, nullptr,
+                                    GetModuleHandleW(nullptr), nullptr);
+        int layoutDpi = DpiGet();
+        int windowDpi = hwnd ? RoundUp(DpiGetForHwnd(hwnd), 4) : 0;
+        int fontDy = DpiFontHeight(GetDefaultGuiFont());
+        if (hwnd) {
+            DestroyWindow(hwnd);
+        }
+        DpiSet(prevX, prevY);
+        out.Append(fmt("layout=%d window=%d font=%d\n", layoutDpi, windowDpi, fontDy));
+        return finish(layoutDpi == 240 && windowDpi == 240 && fontDy >= 24 ? 0 : 1);
+    }
+
+    if (!str::Eq(action, StrL("state")) || len(gWindows) == 0) {
+        out.Append(StrL("ERROR TestDpi expects hidden or state\n"));
+        return finish(1);
+    }
+    MainWindow* win = gWindows[0];
+    int findH = FindWindowFontHeight(win);
+    out.Append(
+        fmt("frame=%d current=%d home=%d tocIcon=%d tocEdit=%d tocClose=%d favClose=%d aiLabel=%d aiInput=%d "
+            "aiCheckbox=%d aiClose=%d find=%d findBarDy=%d\n",
+            AppShellFrameDpi(win), DpiGet(), HomeSearchFontPx(win), SidebarIconDy(win), SidebarFilterFont(win), 0, 0, 0,
+            0, 0, 0, findH, 0));
+    return finish(0);
+}
+#endif
+
 static void ExecuteControlRequest(ControlRequest* req) {
     switch ((ControlCmd)req->cmd) {
         case ControlCmd::Ping:
@@ -4603,6 +4657,18 @@ static void ExecuteControlRequest(ControlRequest* req) {
             int exitCode = 0;
             Str res = PageRenderViewPrintResultTemp(path, &exitCode);
             AppendTestResult(req, exitCode, res);
+            break;
+        }
+
+        case ControlCmd::TestDpi: {
+#if OS_WIN
+            Str action = StringArg(req, 0);
+            int exitCode = 0;
+            Str res = DpiResultTemp(action, &exitCode);
+            AppendTestResult(req, exitCode, res);
+#else
+            AppendTestResult(req, 1, StrL("NOTPORTED 71"));
+#endif
             break;
         }
 

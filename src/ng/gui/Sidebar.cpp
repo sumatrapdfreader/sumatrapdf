@@ -53,6 +53,9 @@ constexpr float kChevronDx = 19;
 constexpr float kRowPadL = 4;
 constexpr float kTreeFontSize = 12;
 constexpr float kPaneHeaderDy = 24;
+// gpui XSmall icon button at 96 DPI (1.25rem) and Small input font
+constexpr int kSidebarIconPx = 20;
+constexpr int kSidebarFilterFontPx = 14;
 constexpr int kThumbDx = 120;
 constexpr int kThumbDy = 170;
 constexpr int kThumbGap = 16;
@@ -110,6 +113,9 @@ struct SidebarUI {
     bool thumbSelectionPinned = false;
     // view icons, Bookmarks / Thumbnails / Favorites, for each panel
     gpui::Bounds viewIconBounds[2][3]{};
+    // pixel sizes at the current frame DPI (96 DPI keeps the constants above)
+    int viewIconPx = kSidebarIconPx;
+    int filterFontPx = kSidebarFilterFontPx;
     SidebarThumbCache* thumbCache = nullptr;
 
     TocItem* tocSel = nullptr;
@@ -184,6 +190,8 @@ static uint32_t ActFavMenu() {
 // --- state ------------------------------------------------------------------
 
 static SidebarUI* Ui(MainWindow* win);
+static gp::App* WinApp(MainWindow* win);
+static gp::InputState* EnsureInput(MainWindow* win, gpui::InputState** slot, Str placeholder);
 
 static void EnsureView(MainWindow* win, gp::Ctx* cx) {
     SidebarUI* ui = Ui(win);
@@ -201,6 +209,34 @@ static SidebarUI* Ui(MainWindow* win) {
         win->sidebar = new SidebarUI();
     }
     return win->sidebar;
+}
+
+void SidebarApplyDpi(MainWindow* win) {
+    if (!win) {
+        return;
+    }
+    SidebarUI* ui = Ui(win);
+    ui->viewIconPx = AppShellDpiPx(win, kSidebarIconPx);
+    ui->filterFontPx = AppShellDpiPx(win, kSidebarFilterFontPx);
+    if (WinApp(win)) {
+        EnsureInput(win, &ui->tocFilter, Tr("Search Bookmarks"));
+    }
+}
+
+int SidebarIconDy(MainWindow* win) {
+    if (!win) {
+        return 0;
+    }
+    SidebarApplyDpi(win);
+    return win->sidebar->viewIconPx;
+}
+
+int SidebarFilterFont(MainWindow* win) {
+    if (!win) {
+        return 0;
+    }
+    SidebarApplyDpi(win);
+    return win->sidebar->filterFontPx;
 }
 
 static gp::App* WinApp(MainWindow* win) {
@@ -1520,7 +1556,16 @@ static gpc::PopupMenu* PopupFromModel(gp::Ctx* cx, MenuModel* model, Str id, uin
 static gp::El* PaneHeader(MainWindow* win, gp::Ctx* cx, bool selectors, bool top, Str title, Str closeId,
                           gp::Listener onClose) {
     const gp::Theme& th = gp::ThemeNow(cx->app);
-    gp::El* row = gp::Div(cx->a)->FlexRow()->W(gp::kFill)->H(kPaneHeaderDy)->Shrink0()->ItemsCenter()->PadX(6)->Gap(4);
+    SidebarApplyDpi(win);
+    int iconPx = Ui(win)->viewIconPx;
+    gp::El* row = gp::Div(cx->a)
+                      ->FlexRow()
+                      ->W(gp::kFill)
+                      ->H(std::max(kPaneHeaderDy, (float)iconPx))
+                      ->Shrink0()
+                      ->ItemsCenter()
+                      ->PadX(6)
+                      ->Gap(4);
     if (selectors) {
         SidebarContent selected =
             top && win->CurrentTab() ? win->CurrentTab()->sidebarContent : win->sidebarBottomContent;
@@ -1534,6 +1579,7 @@ static gp::El* PaneHeader(MainWindow* win, gp::Ctx* cx, bool selectors, bool top
                                ->Ghost()
                                ->Compact()
                                ->WithSize(gp::UiSize::XSmall)
+                               ->Size((float)iconPx)
                                ->Selected(selected == contents[i])
                                ->Disabled(!ContentAvailable(win, contents[i]))
                                ->Tooltip(ToGpui(tips[i]))
@@ -1549,6 +1595,7 @@ static gp::El* PaneHeader(MainWindow* win, gp::Ctx* cx, bool selectors, bool top
                    ->Ghost()
                    ->Compact()
                    ->WithSize(gp::UiSize::XSmall)
+                   ->Size((float)iconPx)
                    ->Tooltip(ToGpui(Tr("Close")))
                    ->OnClick(onClose)
                    ->IntoEl());
@@ -2004,7 +2051,11 @@ static gp::El* BuildTocPane(MainWindow* win, gp::Ctx* cx, bool top) {
     filter->onChange = gp::ListenTo(Ui(win)->view, &SidebarView::OnTocFilter);
     pane->CaptureKeyDown(gp::ListenTo(Ui(win)->view, &SidebarView::OnFilterKey));
     pane->Child(gp::Div(cx->a)->W(gp::kFill)->Shrink0()->PadX(6)->PadB(4)->Child(
-        gpc::Input::New(cx, GStrL("toc-filter"), filter)->WithSize(gp::UiSize::Small)->W(gp::kFill)->IntoEl()));
+        gpc::Input::New(cx, GStrL("toc-filter"), filter)
+            ->WithSize(gp::UiSize::Small)
+            ->W(gp::kFill)
+            ->IntoEl()
+            ->Font((float)ui->filterFontPx)));
 
     // the rows that fit the pane, plus spacers for the ones above and below
     float viewH = ui->tocView.h > 0 ? ui->tocView.h : 400;

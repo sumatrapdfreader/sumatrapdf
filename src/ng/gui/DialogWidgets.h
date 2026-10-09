@@ -30,7 +30,8 @@ struct DialogSelect {
     // and picking a row puts its text into the field; Up / Down in the field
     // step through the items, F4 and Alt + Down open the list.
     // dy: the box's height, for orig's 23 in a dialog window; 0: gpui's
-    gpui::El* BuildCombo(gpui::Ctx* cx, Str id, gpui::InputState* edit, float w, bool disabled = false, float dy = 0);
+    gpui::El* BuildCombo(gpui::Ctx* cx, Str id, gpui::InputState* edit, float w, bool disabled = false, float dy = 0,
+                         float fontPx = 0);
     // set once a row was picked, until asked; lets a dialog react to a pick
     bool TakeComboPicked();
     // the same for a pick with the mouse out of the dropped list only

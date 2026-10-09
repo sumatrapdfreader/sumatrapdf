@@ -37,6 +37,7 @@
 #include "gui/NativeCursors.h"
 #include "gui/TouchGestures.h"
 #include "HomePage.h"
+#include "SumatraConfig.h"
 #include "RefHover.h"
 #include "gui/DocCanvas.h"
 #include "AnnotEditToolbar.h"
@@ -900,6 +901,18 @@ static LRESULT CALLBACK ShellSubclass(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp,
                 return 0;
             }
             break;
+        case WM_DPICHANGED:
+            // gpui only moves the window to the suggested rect. The font sizes
+            // follow frameDpi, which AppShellOnDpiChanged stores first.
+            if (MainWindow* win = WinOf(hwnd)) {
+                int dpi = RoundUp((int)LOWORD(wp), 4);
+                if (dpi < 72) {
+                    dpi = 96;
+                }
+                AppShellOnDpiChanged(win, dpi);
+                return DefSubclassProc(hwnd, msg, wp, lp);
+            }
+            break;
         case WM_WINDOWPOSCHANGED:
             // moved, sized, maximized or restored: remember where it is
             if (MainWindow* win = WinOf(hwnd)) {
@@ -969,6 +982,54 @@ static BOOL CALLBACK FindGpuiWnd(HWND hwnd, LPARAM lp) {
     }
     *(HWND*)lp = hwnd;
     return FALSE;
+}
+
+struct DpiToggleWindows {
+    Vec<HWND>* hwnds;
+};
+
+static BOOL CALLBACK CollectDpiToggleWindows(HWND hwnd, LPARAM lp) {
+    auto* ctx = (DpiToggleWindows*)lp;
+    if (IsWindowVisible(hwnd)) {
+        VecAppend(*ctx->hwnds, hwnd);
+    }
+    return TRUE;
+}
+
+// orig's ToggleDpiOverride: 0 -> 125% -> 150% -> 75% -> 0, then a
+// WM_DPICHANGED whose suggested rect is scaled by the DPI ratio.
+void AppShellToggleDpiOverride() {
+    if (!gIsDebugBuild) {
+        return;
+    }
+    int next = 125;
+    if (gDpiOverride == 125) {
+        next = 150;
+    } else if (gDpiOverride == 150) {
+        next = 75;
+    } else if (gDpiOverride == 75) {
+        next = 0;
+    }
+
+    Vec<HWND> hwnds;
+    DpiToggleWindows ctx{&hwnds};
+    EnumThreadWindows(GetCurrentThreadId(), CollectDpiToggleWindows, (LPARAM)&ctx);
+
+    Vec<Rect> rects;
+    Vec<int> dpis;
+    for (HWND hwnd : hwnds) {
+        VecAppend(rects, HwndWindowRect(hwnd));
+        VecAppend(dpis, DpiGetForHwnd(hwnd));
+    }
+
+    gDpiOverride = next;
+    int newDpi = len(hwnds) > 0 ? DpiGetForHwnd(hwnds[0]) : DpiGet();
+    for (int i = 0; i < len(hwnds); i++) {
+        int oldDpi = dpis[i] > 0 ? dpis[i] : 96;
+        Rect r = rects[i];
+        RECT suggested{r.x, r.y, r.x + MulDiv(r.dx, newDpi, oldDpi), r.y + MulDiv(r.dy, newDpi, oldDpi)};
+        SendMessageW(hwnds[i], WM_DPICHANGED, MAKEWPARAM(newDpi, newDpi), (LPARAM)&suggested);
+    }
 }
 
 void AppShellEnableFileDrop(MainWindow* win) {
