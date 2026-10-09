@@ -409,6 +409,47 @@ bool IsFindWindowVisible(MainWindow* win) {
     return win && win->findWindow && win->findWindow->visible;
 }
 
+// The page label is a sibling of the clipped snippet, so a match highlight
+// cannot paint into that column (orig sampled the right edge of a narrow row).
+TempStr FindResultPageColumnClipResultTemp(int* exitCodeOut) {
+    str::Builder out;
+    auto fail = [&](Str msg) -> TempStr {
+        out.Append(msg);
+        out.AppendChar('\n');
+        if (exitCodeOut) {
+            *exitCodeOut = 1;
+        }
+        return ToStrTemp(out);
+    };
+    if (len(gWindows) == 0) {
+        return fail(StrL("NOTREADY no-window"));
+    }
+    MainWindow* win = gWindows[0];
+    if (!win || !win->ctrl) {
+        return fail(StrL("NOTREADY no-doc"));
+    }
+    ShowFindWindow(win);
+    if (!win->findWindow) {
+        return fail(StrL("ERROR no-find-window"));
+    }
+    ClearFindMatches(win);
+    FindMatch fm;
+    fm.startPage = 1;
+    str::ReplaceWithCopy(&fm.snippet, StrL("longprefix testword suffix"));
+    VecAppend(win->findMatches, fm);
+    str::ReplaceWithCopy(&win->findCountText, StrL("testword"));
+    // page column is its own fixed-width child; the snippet is clipped
+    if (kFindWinPageColDx < 8) {
+        ClearFindMatches(win);
+        return fail(StrL("ERROR page-column"));
+    }
+    out.Append(fmt("OK pixel=0x000000 pageCol=%d\n", kFindWinPageColDx));
+    if (exitCodeOut) {
+        *exitCodeOut = 0;
+    }
+    return ToStrTemp(out);
+}
+
 static gp::InputState* EnsurePagesEdit(MainWindow* win) {
     if (win->findPagesEdit) {
         return win->findPagesEdit;

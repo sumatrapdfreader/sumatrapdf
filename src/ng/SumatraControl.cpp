@@ -2490,6 +2490,13 @@ static void ExecuteControlRequest(ControlRequest* req) {
             break;
         }
 
+        case ControlCmd::TestFindResultPageColumnClip: {
+            int exitCode = 0;
+            Str res = FindResultPageColumnClipResultTemp(&exitCode);
+            AppendTestResult(req, exitCode, res);
+            break;
+        }
+
         case ControlCmd::TestFindResultsOrder: {
             Str term = StringArg(req, 0);
             i32 startPage = 0;

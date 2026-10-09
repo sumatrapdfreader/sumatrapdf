@@ -57,4 +57,5 @@ gpui::Window* FindWindowHostGpui(MainWindow* win);
 bool FindWindowHasKeyboard(MainWindow* win);
 // what the scripted tests read back (orig's TestFindWindowContents)
 TempStr FindWindowContentsResultTemp(int maxRows, int* exitCodeOut);
+TempStr FindResultPageColumnClipResultTemp(int* exitCodeOut = nullptr);
 TempStr FindResultsOrderResultTemp(Str term, int startPage, int* exitCodeOut = nullptr);
