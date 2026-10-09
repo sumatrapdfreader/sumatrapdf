@@ -2789,6 +2789,12 @@ static void OnMouseLeftButtonDown(MainWindow* win, int x, int y) {
     Point pt{x, y};
     WindowTab* tab = win->CurrentTab();
 
+    // orig's WM_KILLFOCUS: a click on the page is "done", and that click
+    // must not also drop the annotation the text was written to
+    if (IsEditingAnnotContents(win)) {
+        EndAnnotContentsEdit(true);
+    }
+
     // Edit PDF with an annotation selected: a press anywhere but on that
     // annotation or its resize handles only deselects it
     Annotation* locked = AnnotationLockingMouse(win);

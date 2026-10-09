@@ -5,7 +5,7 @@
 import { mkdirSync, rmSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 import { ControlClient, ControlCommand } from "./control.ts";
-import { assemblePdf, cmdId, runStandalone, tmpPath } from "./util.ts";
+import { assemblePdf, cmdId, pollUntil, runStandalone, tmpPath, USE_NG } from "./util.ts";
 import { findTopWindow, getControlText, packCoords, sendMessage, WM_COMMAND } from "./winapi.ts";
 import {
   clickAt,
@@ -92,42 +92,98 @@ export async function testit(): Promise<void> {
     await client.waitForRenderIdle();
 
     let dump = await toolbarDump(client);
+    const chipRe = /[=;]contents:(-?\d+),(-?\d+),(\d+),(\d+)/;
+    if (USE_NG && parseRect(chipRe.exec(dump)).dx === 0) {
+      dump = await pollUntil(
+        async () => toolbarDump(client),
+        (s) => parseRect(chipRe.exec(s)).dx > 0,
+        {
+          error: (s) => `annot-contents-click-away: no contents chip: ${s}`,
+        },
+      );
+    }
     const placed = parseRect(/ placed=(-?\d+),(-?\d+),(\d+),(\d+)/.exec(dump));
-    const contentsChip = parseRect(/[=;]contents:(-?\d+),(-?\d+),(\d+),(\d+)/.exec(dump));
+    const contentsChip = parseRect(chipRe.exec(dump));
     if (contentsChip.dx === 0) {
       throw new Error(`annot-contents-click-away: no contents chip: ${dump}`);
     }
-    const tbHwnd = findTopWindow(proc.pid!, TOOLBAR_CLASS);
-    if (!tbHwnd) {
-      throw new Error("annot-contents-click-away: property row window not found");
-    }
 
-    await clickAt(
-      tbHwnd,
-      contentsChip.x - placed.x + Math.floor(contentsChip.dx / 2),
-      contentsChip.y - placed.y + Math.floor(contentsChip.dy / 2),
-      0,
-    );
-    dump = await toolbarDump(client);
-    if (!/ editing=1/.test(dump)) {
-      throw new Error(`annot-contents-click-away: contents editor did not open: ${dump}`);
-    }
+    let typed = "";
+    if (USE_NG) {
+      // the row is drawn in the frame. There is no edit HWND; the focused
+      // text area takes the characters.
+      const res = await client.request(ControlCommand.TestInput, [
+        "click",
+        contentsChip.x + Math.floor(contentsChip.dx / 2),
+        contentsChip.y + Math.floor(contentsChip.dy / 2),
+        0,
+        0,
+      ]);
+      if (res[0] !== 0 || !String(res[1] ?? "").startsWith("OK")) {
+        throw new Error(`annot-contents-click-away: contents click failed: ${String(res[1] ?? "")}`);
+      }
+      await pollUntil(
+        async () => toolbarDump(client),
+        (s) => / editing=1/.test(s),
+        {
+          error: (s) => `annot-contents-click-away: contents editor did not open: ${s}`,
+        },
+      );
+      await pollUntil(
+        async () => String((await client.request(ControlCommand.TestUiState, []))[1] ?? ""),
+        (s) => /edit=1/.test(s),
+        { error: "annot-contents-click-away: contents edit did not take focus" },
+      );
+      for (const ch of TEXT) {
+        await client.request(ControlCommand.TestInput, ["char", ch.charCodeAt(0), 0, 0, 0]);
+      }
+      const state = await pollUntil(
+        async () => String((await client.request(ControlCommand.TestUiState, []))[1] ?? ""),
+        (s) => /editText='[^']*kept-on-click-away/.test(s),
+        { error: (s) => `annot-contents-click-away: edit box holds "${s}", want "${TEXT}"` },
+      );
+      typed = /editText='([^']*)'/.exec(state)?.[1] ?? "";
+    } else {
+      const tbHwnd = findTopWindow(proc.pid!, TOOLBAR_CLASS);
+      if (!tbHwnd) {
+        throw new Error("annot-contents-click-away: property row window not found");
+      }
 
-    const edit = findChildByClass(tbHwnd, "Edit");
-    if (!edit) {
-      throw new Error("annot-contents-click-away: contents edit box not found");
-    }
-    await typeIntoInput(edit, TEXT, false);
+      await clickAt(
+        tbHwnd,
+        contentsChip.x - placed.x + Math.floor(contentsChip.dx / 2),
+        contentsChip.y - placed.y + Math.floor(contentsChip.dy / 2),
+        0,
+      );
+      dump = await toolbarDump(client);
+      if (!/ editing=1/.test(dump)) {
+        throw new Error(`annot-contents-click-away: contents editor did not open: ${dump}`);
+      }
 
-    // a stray real keystroke can land in the focused box; the check is that
-    // whatever it holds survives the click away
-    const typed = getControlText(edit);
+      const edit = findChildByClass(tbHwnd, "Edit");
+      if (!edit) {
+        throw new Error("annot-contents-click-away: contents edit box not found");
+      }
+      await typeIntoInput(edit, TEXT, false);
+
+      // a stray real keystroke can land in the focused box; the check is that
+      // whatever it holds survives the click away
+      typed = getControlText(edit);
+    }
     if (!typed.includes(TEXT)) {
       throw new Error(`annot-contents-click-away: edit box holds "${typed}", want "${TEXT}"`);
     }
 
-    // click the page well away from the annotation
-    await clickAt(canvas, 420, 620, 0);
+    // click the page well away from the annotation. ng's frame is the canvas,
+    // so a canvas-relative point can land inside the open editor.
+    if (USE_NG) {
+      const box = parseRect(/ placed=(-?\d+),(-?\d+),(\d+),(\d+)/.exec(await toolbarDump(client)));
+      const x = box.x > 80 ? 24 : box.x + box.dx + 24;
+      const y = box.y + Math.floor(box.dy / 2);
+      await client.request(ControlCommand.TestInput, ["click", x, y, 0, 0]);
+    } else {
+      await clickAt(canvas, 420, 620, 0);
+    }
     await client.waitForRenderIdle();
 
     dump = await toolbarDump(client);
