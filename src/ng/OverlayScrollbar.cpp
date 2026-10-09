@@ -217,6 +217,10 @@ static void HideScrollbarWindow(OverlayScrollbar* sb) {
 }
 
 void OverlayScrollbarHide(OverlayScrollbar* sb) {
+    // Created on the first overlay tick. Close still hides them before that.
+    if (!sb) {
+        return;
+    }
     HideScrollbarWindow(sb);
 }
 
