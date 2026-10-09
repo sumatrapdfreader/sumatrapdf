@@ -89,6 +89,8 @@ struct FindWindowView;
 struct FindWindowUI {
     gp::Entity<FindWindowView> view;
     gp::Bounds listView;
+    gp::Bounds prevBtn;
+    gp::Bounds nextBtn;
     // orig's edit is a combo box: the list under it is the search history
     DialogSelect ddHistory;
     int historyLen = -1;
@@ -998,9 +1000,11 @@ static gp::El* FindWindowContentEl(MainWindow* win, gp::Ctx* cx, bool ownWindow)
                       ->Shrink0()
                       ->Child(gp::TextEl(cx->a, GpuiDup(cx->a, w->status))->Font(12)->Fg(th.mutedFg)));
     header->Child(
-        WinButton(w, cx, StrL("find-win-prev"), gp::IconName::ChevronUp, {}, Tr("Find Previous"), CmdFindPrev, false));
+        WinButton(w, cx, StrL("find-win-prev"), gp::IconName::ChevronUp, {}, Tr("Find Previous"), CmdFindPrev, false)
+            ->BoundsOut(&w->ui->prevBtn));
     header->Child(
-        WinButton(w, cx, StrL("find-win-next"), gp::IconName::ChevronDown, {}, Tr("Find Next"), CmdFindNext, false));
+        WinButton(w, cx, StrL("find-win-next"), gp::IconName::ChevronDown, {}, Tr("Find Next"), CmdFindNext, false)
+            ->BoundsOut(&w->ui->nextBtn));
     header->Child(WinButton(w, cx, StrL("find-win-case"), gp::IconName::None, {}, Tr("Match Case"),
                             CmdFindToggleMatchCase, win->findMatchCase, gIconMatchCase));
     header->Child(WinButton(w, cx, StrL("find-win-word"), gp::IconName::None, {}, Tr("Match Whole Word"),
@@ -1093,6 +1097,24 @@ TempStr FindResultsOrderResultTemp(Str term, int startPage, int* exitCodeOut) {
         }
         out.Append(fmt("%d", win->findMatches[i].startPage));
     }
+    // client pixels of the prev/next buttons
+    Rect prev{};
+    Rect next{};
+    if (fw->ui) {
+        prev = FromGpui(fw->ui->prevBtn);
+        next = FromGpui(fw->ui->nextBtn);
+#if OS_WIN
+        HWND hwnd = fw->tw ? ToolWindowHwnd(fw->tw) : nullptr;
+        int dpi = hwnd ? DpiGetForHwnd(hwnd) : 96;
+        auto toPx = [&](Rect r) {
+            return Rect{MulDiv(r.x, dpi, 96), MulDiv(r.y, dpi, 96), MulDiv(r.dx, dpi, 96), MulDiv(r.dy, dpi, 96)};
+        };
+        prev = toPx(prev);
+        next = toPx(next);
+#endif
+    }
+    out.Append(
+        fmt(" prev=%d,%d,%d,%d next=%d,%d,%d,%d", prev.x, prev.y, prev.dx, prev.dy, next.x, next.y, next.dx, next.dy));
     return finish(0, ToStrTemp(out));
 }
 
