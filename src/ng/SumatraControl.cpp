@@ -1012,6 +1012,134 @@ static TempStr ImageInsertResultTemp(Str pdfPath, Str imagePath, int* exitCodeOu
     return ToStrTemp(out);
 }
 
+// render one page and count red / non-white pixels. tests/issue-3415.ts.
+static TempStr PageRenderColorsResultTemp(Str path, int* exitCodeOut, int pageNo) {
+    str::Builder out;
+    auto fail = [&out, exitCodeOut](Str msg) {
+        if (exitCodeOut) {
+            *exitCodeOut = 1;
+        }
+        out.Append(msg);
+        return ToStrTemp(out);
+    };
+
+    EngineBase* engine = nullptr;
+    bool ownEngine = true;
+    if (len(gWindows) > 0 && gWindows[0]) {
+        WindowTab* tab = gWindows[0]->CurrentTab();
+        if (tab && tab->filePath && str::EqI(tab->filePath, path)) {
+            DisplayModel* dm = tab->AsFixed();
+            engine = dm ? dm->GetEngine() : nullptr;
+            ownEngine = false;
+        }
+    }
+    if (!engine) {
+        engine = CreateEngineFromFile(path, nullptr, false);
+    }
+    if (!engine) {
+        return fail(fmt("ERROR engine-create-failed path=%s\n", path));
+    }
+    if (pageNo < 1) {
+        pageNo = 1;
+    }
+    auto release = [&]() {
+        if (ownEngine) {
+            SafeEngineRelease(&engine);
+        }
+    };
+    if (pageNo > engine->PageCount()) {
+        int nPages = engine->PageCount();
+        release();
+        return fail(fmt("ERROR bad-page page=%d pages=%d\n", pageNo, nPages));
+    }
+    if (!engine->BenchLoadPage(pageNo)) {
+        release();
+        return fail(StrL("ERROR page-load-failed\n"));
+    }
+
+    RenderPageArgs rargs(pageNo, 1.f, 0, nullptr, RenderTarget::Export);
+    Pixmap* bmp = engine->RenderPage(rargs);
+    if (!bmp || !bmp->data) {
+        FreePixmap(bmp);
+        int nPages = engine->PageCount();
+        release();
+        return fail(fmt("ERROR render-failed page=%d pages=%d\n", pageNo, nPages));
+    }
+    Pixmap* rgb = bmp;
+    if (bmp->format != PixmapFormat::BGRA8 && bmp->format != PixmapFormat::BGR8 && bmp->format != PixmapFormat::RGBA8) {
+        rgb = PixmapCopyAs32bppDIB(bmp);
+    }
+    if (!rgb || !rgb->data) {
+        FreePixmap(bmp);
+        release();
+        return fail(fmt("ERROR pixmap-convert-failed fmt=%d\n", (int)bmp->format));
+    }
+    int bpp = PixmapBytesPerPixel(rgb->format);
+    int red = 0;
+    int blue = 0;
+    int nonWhite = 0;
+    int rMin = 255, rMax = 0, gMin = 255, gMax = 0, bMin = 255, bMax = 0;
+    if (bpp >= 3) {
+        for (int y = 0; y < rgb->height; y++) {
+            const u8* row = rgb->data + ((size_t)y * (size_t)rgb->stride);
+            for (int x = 0; x < rgb->width; x++) {
+                const u8* px = row + ((size_t)x * bpp);
+                int r, g, b;
+                if (rgb->format == PixmapFormat::RGBA8) {
+                    r = px[0];
+                    g = px[1];
+                    b = px[2];
+                } else {
+                    b = px[0];
+                    g = px[1];
+                    r = px[2];
+                }
+                if (r < 250 || g < 250 || b < 250) {
+                    nonWhite++;
+                }
+                if (r > 180 && g < 80 && b < 80) {
+                    red++;
+                }
+                if (b > 180 && r < 80 && g < 80) {
+                    blue++;
+                }
+                if (r < rMin) {
+                    rMin = r;
+                }
+                if (r > rMax) {
+                    rMax = r;
+                }
+                if (g < gMin) {
+                    gMin = g;
+                }
+                if (g > gMax) {
+                    gMax = g;
+                }
+                if (b < bMin) {
+                    bMin = b;
+                }
+                if (b > bMax) {
+                    bMax = b;
+                }
+            }
+        }
+    }
+    int spread = (rMax - rMin) + (gMax - gMin) + (bMax - bMin);
+    out.Append(fmt("red=%d nonwhite=%d size=%dx%d pages=%d page=%d blue=%d spread=%d\n", red, nonWhite, rgb->width,
+                   rgb->height, engine->PageCount(), pageNo, blue, spread));
+    if (rgb != bmp) {
+        FreePixmap(rgb);
+    }
+    FreePixmap(bmp);
+    if (ownEngine) {
+        SafeEngineRelease(&engine);
+    }
+    if (exitCodeOut) {
+        *exitCodeOut = 0;
+    }
+    return ToStrTemp(out);
+}
+
 // Color histogram of a page rendered with the CAD enhancement forced on.
 // tests/issue-5937.ts.
 static TempStr CadEnhanceColorsResultTemp(Str path, int pageNo, int zoomPercent, int* exitCodeOut) {
@@ -2915,6 +3043,20 @@ static void ExecuteControlRequest(ControlRequest* req) {
             }
             int exitCode = 0;
             Str res = ImageInsertResultTemp(pdfPath, imagePath, &exitCode);
+            AppendTestResult(req, exitCode, res);
+            break;
+        }
+
+        case ControlCmd::TestRenderPageColors: {
+            Str path = StringArg(req, 0);
+            if (len(path) == 0) {
+                AppendError(req, StrL("TestRenderPageColors expects string path [, int pageNo]"));
+                break;
+            }
+            i32 pageNo = 1;
+            IntArg(req, 1, pageNo);
+            int exitCode = 0;
+            Str res = PageRenderColorsResultTemp(path, &exitCode, pageNo);
             AppendTestResult(req, exitCode, res);
             break;
         }
