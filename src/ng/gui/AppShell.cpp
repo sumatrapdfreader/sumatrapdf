@@ -2772,7 +2772,11 @@ gp::El* ShellView::Render(ShellView* self, gp::Ctx* cx) {
     int aiChatDx = AIChatPanelDx(win);
     int navFilesDx = NavFilesPanelDx(win);
     int bodyDx = win->frameRc.dx - 2 * border;
-    win->canvasRc = Rect{border + sidebarDx, border + chromeDy, bodyDx - sidebarDx - aiChatDx - navFilesDx, bodyDy};
+    // BuildBody puts the sidebar on the right when SidebarOnRight is set.
+    // The canvas then starts at the frame border, not after the sidebar.
+    bool sidebarOnRight = gSettings && gSettings->sidebarOnRight;
+    int canvasX = border + (sidebarOnRight ? 0 : sidebarDx);
+    win->canvasRc = Rect{canvasX, border + chromeDy, bodyDx - sidebarDx - aiChatDx - navFilesDx, bodyDy};
 #if OS_DARWIN || OS_WASM
     ApplyRenderScale(win);
 #endif

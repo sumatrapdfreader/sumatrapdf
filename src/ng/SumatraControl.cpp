@@ -1232,6 +1232,46 @@ static TempStr ImageRenderEdgesResultTemp(Str path, int zoomPercent, int clipKin
     return ToStrTemp(out);
 }
 
+// Sidebar column vs canvas, in frame coordinates. Hidden panels report x=-1,
+// matching orig's invisible child windows.
+static TempStr SidebarLayoutResultTemp(int* exitCodeOut) {
+    str::Builder out;
+    auto finish = [&](Str msg, int code) -> TempStr {
+        out.Append(msg);
+        out.AppendChar('\n');
+        if (exitCodeOut) {
+            *exitCodeOut = code;
+        }
+        return ToStrTemp(out);
+    };
+
+    MainWindow* win = len(gWindows) > 0 ? gWindows[0] : nullptr;
+    if (!win) {
+        return finish(StrL("NOTREADY no-window"), 2);
+    }
+    bool pref = gSettings && gSettings->sidebarOnRight;
+    bool topVis = win->uiState.tocVisible;
+    bool bottomVis = win->uiState.favVisible;
+    WindowTab* tab = win->CurrentTab();
+    Str topView = tab ? SidebarContentToStr(tab->sidebarContent) : StrL("none");
+    Str bottomView = SidebarContentToStr(win->sidebarBottomContent);
+    int topX = -1;
+    int bottomX = -1;
+    int canvasX = win->canvasRc.x;
+    if (topVis || bottomVis) {
+        int sideX = pref ? canvasX + win->canvasRc.dx + kSplitterDx : AppShellFrameBorder(win);
+        if (topVis) {
+            topX = sideX;
+        }
+        if (bottomVis) {
+            bottomX = sideX;
+        }
+    }
+    return finish(fmt("OK pref=%d topVis=%d bottomVis=%d topX=%d bottomX=%d canvasX=%d topView=%s bottomView=%s",
+                      pref ? 1 : 0, topVis ? 1 : 0, bottomVis ? 1 : 0, topX, bottomX, canvasX, topView, bottomView),
+                  0);
+}
+
 static void ExecuteControlRequest(ControlRequest* req) {
     switch ((ControlCmd)req->cmd) {
         case ControlCmd::Ping:
@@ -1957,6 +1997,13 @@ static void ExecuteControlRequest(ControlRequest* req) {
         case ControlCmd::TestHomeListRows: {
             int exitCode = 0;
             Str res = HomeListRowsResultTemp(&exitCode);
+            AppendTestResult(req, exitCode, res);
+            break;
+        }
+
+        case ControlCmd::TestSidebarLayout: {
+            int exitCode = 0;
+            Str res = SidebarLayoutResultTemp(&exitCode);
             AppendTestResult(req, exitCode, res);
             break;
         }
