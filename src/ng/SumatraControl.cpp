@@ -657,6 +657,8 @@ enum class ControlCmd : u16 {
     TestSeedTextSelection = 99,
     TestTtsEngineCrash = 100,
     TestTtsPumpOnSpeak = 107,
+    // orig's. 105 is TestSaveFileAs.
+    TestImageOrientation = 106,
     // ng: not one of orig's; the performance snapshot cmd/port-perf.ts reads.
     // Orig's 101 / 102 are StartPerfLog / StopPerfLog, which this port answers
     // at 119 / 120.
@@ -1726,6 +1728,66 @@ static TempStr CmykImageSaveResultTemp(Str jpegPath, Str tiffPath, int* exitCode
     return ToStrTemp(out);
 }
 
+static TempStr PixmapRgbHexTemp(Pixmap* px, int x, int y) {
+    int bpp = PixmapBytesPerPixel(px->format);
+    u8* p = px->data + ((size_t)y * (size_t)px->stride) + ((size_t)x * (size_t)bpp);
+    // BGRA in memory
+    return fmt("%02x%02x%02x", (int)p[2], (int)p[1], (int)p[0]);
+}
+
+// Corners of the image Copy Image / Save Image would hand out, after the
+// page's transform (issue #6214).
+static TempStr ImageOrientationResultTemp(Str pdfPath, int pageNo, int* exitCodeOut) {
+    str::Builder out;
+    auto fail = [&](Str msg) -> TempStr {
+        if (exitCodeOut) {
+            *exitCodeOut = 1;
+        }
+        out.Append(msg);
+        out.AppendChar('\n');
+        return ToStrTemp(out);
+    };
+    EngineBase* engine = CreateEngineFromFile(pdfPath, nullptr, false);
+    if (!engine) {
+        return fail(StrL("ERROR engine-create-failed"));
+    }
+    if (!engine->BenchLoadPage(pageNo)) {
+        SafeEngineRelease(&engine);
+        return fail(StrL("ERROR page-load-failed"));
+    }
+    IPageElement* imgEl = nullptr;
+    Vec<IPageElement*> els = engine->GetElements(pageNo);
+    for (IPageElement* el : els) {
+        if (el && el->Is(kindPageElementImage)) {
+            imgEl = el;
+            break;
+        }
+    }
+    if (!imgEl) {
+        SafeEngineRelease(&engine);
+        return fail(StrL("ERROR no-image-element"));
+    }
+    RenderedBitmap* bmp = engine->GetImageForPageElement(imgEl);
+    SafeEngineRelease(&engine);
+    if (!bmp) {
+        return fail(StrL("ERROR no-image"));
+    }
+    Pixmap* px = PixmapToBgra(PixmapFromRenderedBitmap(bmp));
+    if (!px || !px->data) {
+        FreePixmap(px);
+        return fail(StrL("ERROR no-pixmap"));
+    }
+    int w = px->width;
+    int h = px->height;
+    out.Append(fmt("w=%d h=%d tl=%s tr=%s bl=%s br=%s\n", w, h, PixmapRgbHexTemp(px, 0, 0),
+                   PixmapRgbHexTemp(px, w - 1, 0), PixmapRgbHexTemp(px, 0, h - 1), PixmapRgbHexTemp(px, w - 1, h - 1)));
+    FreePixmap(px);
+    if (exitCodeOut) {
+        *exitCodeOut = 0;
+    }
+    return ToStrTemp(out);
+}
+
 static void ExecuteControlRequest(ControlRequest* req) {
     switch ((ControlCmd)req->cmd) {
         case ControlCmd::Ping:
@@ -2578,6 +2640,19 @@ static void ExecuteControlRequest(ControlRequest* req) {
             StopPerfLog();
             AppendTestResult(req, 0, StrL("OK"));
             break;
+
+        case ControlCmd::TestImageOrientation: {
+            Str pdfPath = StringArg(req, 0);
+            i32 pageNo = 0;
+            if (len(pdfPath) == 0 || !IntArg(req, 1, pageNo) || pageNo < 1) {
+                AppendError(req, StrL("TestImageOrientation expects string pdfPath, int pageNo"));
+                break;
+            }
+            int exitCode = 0;
+            Str res = ImageOrientationResultTemp(pdfPath, pageNo, &exitCode);
+            AppendTestResult(req, exitCode, res);
+            break;
+        }
 
         case ControlCmd::TestCmykImageSave: {
             Str jpegPath = StringArg(req, 0);
