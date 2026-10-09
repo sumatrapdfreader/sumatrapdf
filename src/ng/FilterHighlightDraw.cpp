@@ -7,7 +7,7 @@
 #include "FilterHighlightDraw.h"
 #include "FilterUtil.h"
 
-// the underlay orig paints behind a matched run
+// non-default themes: a light yellow still readable on a dark row
 constexpr Color kFilterMatchBg = MkRgb(0xff, 0xee, 0x70);
 
 // approximate "is this UTF-8 byte part of a word character?": any byte >= 0x80
@@ -99,7 +99,9 @@ gp::El* FilterHighlightText(gp::Ctx* cx, Str text, const StrVec& filterWords, gp
             span->Bold();
         }
         if (hl) {
-            span->Bg(ToGpui(kFilterMatchBg))->Fg(ToGpui(kColBlack));
+            // default theme uses the same yellow as orig's filter underlay
+            Color bg = IsCurrentThemeDefault() ? kColYellow : kFilterMatchBg;
+            span->Bg(ToGpui(bg))->Fg(ToGpui(kColBlack));
         }
         row->Child(span);
         i = j;
