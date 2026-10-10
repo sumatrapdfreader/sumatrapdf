@@ -4239,6 +4239,9 @@ static void ExecuteControlRequest(ControlRequest* req) {
             out.Append(fmt("window rect=%d,%d,%d,%d maximized=%d fullscreen=%d presentation=%d scale=%.4f\n", scr.x,
                            scr.y, scr.dx, scr.dy, win->isMaximized ? 1 : 0, win->isFullScreen ? 1 : 0,
                            (int)win->presentation, CanvasScale(win)));
+            WindowTab* titleTab = win->CurrentTab();
+            Str frameTitle = titleTab ? titleTab->frameTitle : Str{};
+            out.Append(fmt("windowTitle=%s\n", frameTitle));
 #if !OS_WIN && !OS_WASM
             // frame-client dips plus this origin are screen pixels, which is
             // what a drop-down's box is reported in

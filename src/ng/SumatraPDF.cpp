@@ -5090,7 +5090,17 @@ bool OpenDocumentFromMemory(MainWindow* win, Str data, Str nameHint) {
         return false;
     }
     logf("OpenDocumentFromMemory: '%s' -> '%s'\n", name, filePath);
-    return LoadDocument(win, filePath) != nullptr;
+    MainWindow* opened = LoadDocument(win, filePath);
+    if (!opened) {
+        return false;
+    }
+    // the temp file is uniquified; the tab keeps the attachment's name
+    WindowTab* tab = opened->CurrentTab();
+    if (tab) {
+        tab->SetDisplayName(name);
+        UpdateWindowTitle(opened);
+    }
+    return true;
 }
 
 void CopyFilePath(WindowTab* tab) {

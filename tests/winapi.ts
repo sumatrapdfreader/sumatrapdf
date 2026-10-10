@@ -1021,6 +1021,10 @@ export function tryDeleteFile(path: string): { ok: boolean; error: number } {
 }
 
 export function getWindowText(hwnd: number): string {
+  if (IS_MAC) {
+    const text = String(macControlRequest(TestLayout, [])[1] ?? "");
+    return /^windowTitle=(.*)$/m.exec(text)?.[1] ?? "";
+  }
   const buf = new Uint16Array(512);
   const n = user32.symbols.GetWindowTextW(hwnd, ptr(buf), 512);
   let s = "";
