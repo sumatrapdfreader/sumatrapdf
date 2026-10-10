@@ -1438,6 +1438,7 @@
     <ClInclude Include="..\src\shared\Accelerators.h" />
     <ClInclude Include="..\src\shared\AdvancedSettingsDialogCommon.h" />
     <ClInclude Include="..\src\shared\AnnotEditToolbar.h" />
+    <ClInclude Include="..\src\shared\AnnotEditToolbarCommon.h" />
     <ClInclude Include="..\src\shared\AnnotFilterToolbar.h" />
     <ClInclude Include="..\src\shared\AnnotPlacement.h" />
     <ClInclude Include="..\src\shared\AnnotSearch.h" />
@@ -2075,6 +2076,7 @@
     <ClCompile Include="..\src\shared\AIGrokBuild.cpp" />
     <ClCompile Include="..\src\shared\Accelerators.cpp" />
     <ClCompile Include="..\src\shared\AdvancedSettingsDialogCommon.cpp" />
+    <ClCompile Include="..\src\shared\AnnotEditToolbarCommon.cpp" />
     <ClCompile Include="..\src\shared\AnnotSearch.cpp" />
     <ClCompile Include="..\src\shared\Annotation.cpp" />
     <ClCompile Include="..\src\shared\AppSettings.cpp" />

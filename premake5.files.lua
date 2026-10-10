@@ -296,6 +296,7 @@ function sumatrapdf_files()
     "AnnotPlacement.*",
     "AnnotTextPopup.*",
     "AnnotEditToolbar.*",
+    "AnnotEditToolbarCommon.*",
     "AnnotFilterToolbar.*",
     "AnnotSearch.*",
     "PdfDate.*",

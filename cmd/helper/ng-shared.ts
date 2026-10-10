@@ -111,6 +111,8 @@ export const sharedFiles = [
   "src/base/tests/Win_ut.cpp",
   "src/shared/AdvancedSettingsDialogCommon.cpp",
   "src/shared/AdvancedSettingsDialogCommon.h",
+  "src/shared/AnnotEditToolbarCommon.cpp",
+  "src/shared/AnnotEditToolbarCommon.h",
   "src/shared/DocumentPropertiesCommon.cpp",
   "src/shared/DocumentPropertiesCommon.h",
   "src/shared/FavoritesCommon.cpp",
