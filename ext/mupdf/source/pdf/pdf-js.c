@@ -1086,6 +1086,18 @@ static pdf_js *pdf_new_js(fz_context *ctx, pdf_document *doc)
 	return js;
 }
 
+/* SumatraPDF: js->ctx may have no fz_try on the calling thread, so the event
+ * results below must not throw. NULL means out of memory; the callers in
+ * pdf-form.c throw that on their own context. */
+static char *js_strdup_no_throw(pdf_js *js, const char *s)
+{
+	size_t n = strlen(s) + 1;
+	char *copy = fz_malloc_no_throw(js->ctx, n);
+	if (copy)
+		memcpy(copy, s, n);
+	return copy;
+}
+
 static void pdf_js_load_document_level(pdf_js *js)
 {
 	fz_context *ctx = js->ctx;
@@ -1177,7 +1189,7 @@ int pdf_js_event_result_validate(pdf_js *js, char **newtext)
 		if (rc)
 		{
 			js_getproperty(js->imp, -1, "value");
-			*newtext = fz_strdup(js->ctx, js_trystring(js->imp, -1, ""));
+			*newtext = js_strdup_no_throw(js, js_trystring(js->imp, -1, ""));
 			js_pop(js->imp, 1);
 		}
 		js_pop(js->imp, 1);
@@ -1216,10 +1228,10 @@ int pdf_js_event_result_keystroke(pdf_js *js, pdf_keystroke_event *evt)
 			if (rc)
 			{
 				js_getproperty(js->imp, -1, "change");
-				evt->newChange = fz_strdup(js->ctx, js_trystring(js->imp, -1, ""));
+				evt->newChange = js_strdup_no_throw(js, js_trystring(js->imp, -1, ""));
 				js_pop(js->imp, 1);
 				js_getproperty(js->imp, -1, "value");
-				evt->newValue = fz_strdup(js->ctx, js_trystring(js->imp, -1, ""));
+				evt->newValue = js_strdup_no_throw(js, js_trystring(js->imp, -1, ""));
 				js_pop(js->imp, 1);
 				js_getproperty(js->imp, -1, "selStart");
 				evt->selStart = js_tryinteger(js->imp, -1, 0);
@@ -1241,7 +1253,7 @@ char *pdf_js_event_value(pdf_js *js)
 	{
 		js_getglobal(js->imp, "event");
 		js_getproperty(js->imp, -1, "value");
-		value = fz_strdup(js->ctx, js_trystring(js->imp, -1, "undefined"));
+		value = js_strdup_no_throw(js, js_trystring(js->imp, -1, "undefined"));
 		js_pop(js->imp, 2);
 	}
 	return value;

@@ -24,6 +24,12 @@ export async function testit(): Promise<void> {
   writeFileSync(pdf, makePdf('console.println("x");'));
   const probe = join(ROOT, "out", tc.plat, "rel", tc.msvcStyle ? "test_mupdf.exe" : "test_mupdf");
   run([probe, "-js-throw", pdf]);
+
+  // copying a script's event.value out of the JS engine runs out of memory:
+  // -js-oom fails the allocation of a 5000 character value
+  const oomPdf = tmpPath("form-js-oom.pdf");
+  writeFileSync(oomPdf, makePdf('event.value = new Array(5001).join("x");'));
+  run([probe, "-js-oom", oomPdf]);
 }
 
 if (import.meta.main) {

@@ -2235,6 +2235,13 @@ void pdf_annot_event_page_invisible(fz_context *ctx, pdf_annot *annot)
 	annot_execute_action(ctx, annot, "AA/PI");
 }
 
+/* SumatraPDF: the pdf_js_event_* results come back NULL when out of memory */
+static void throw_if_js_oom(fz_context *ctx, int oom)
+{
+	if (oom)
+		fz_throw(ctx, FZ_ERROR_SYSTEM, "out of memory reading a JavaScript event result");
+}
+
 int pdf_field_event_keystroke(fz_context *ctx, pdf_document *doc, pdf_obj *field, pdf_keystroke_event *evt)
 {
 	pdf_js *js = doc->js;
@@ -2245,7 +2252,9 @@ int pdf_field_event_keystroke(fz_context *ctx, pdf_document *doc, pdf_obj *field
 		{
 			pdf_js_event_init_keystroke(js, field, evt);
 			pdf_execute_js_action(ctx, doc, field, "AA/K/JS", action);
-			return pdf_js_event_result_keystroke(js, evt);
+			int rc = pdf_js_event_result_keystroke(js, evt);
+			throw_if_js_oom(ctx, rc && (!evt->newChange || !evt->newValue));
+			return rc;
 		}
 	}
 	evt->newChange = fz_strdup(ctx, evt->change);
@@ -2280,7 +2289,9 @@ char *pdf_field_event_format(fz_context *ctx, pdf_document *doc, pdf_obj *field)
 			const char *value = pdf_field_value(ctx, field);
 			pdf_js_event_init(js, field, value, 1);
 			pdf_execute_js_action(ctx, doc, field, "AA/F/JS", action);
-			return pdf_js_event_value(js);
+			char *formatted = pdf_js_event_value(js);
+			throw_if_js_oom(ctx, !formatted);
+			return formatted;
 		}
 	}
 	return NULL;
@@ -2298,7 +2309,9 @@ int pdf_field_event_validate(fz_context *ctx, pdf_document *doc, pdf_obj *field,
 		{
 			pdf_js_event_init(js, field, value, 1);
 			pdf_execute_js_action(ctx, doc, field, "AA/V/JS", action);
-			return pdf_js_event_result_validate(js, newvalue);
+			int rc = pdf_js_event_result_validate(js, newvalue);
+			throw_if_js_oom(ctx, rc && !*newvalue);
+			return rc;
 		}
 	}
 	return 1;
@@ -2322,6 +2335,7 @@ void pdf_field_event_calculate(fz_context *ctx, pdf_document *doc, pdf_obj *fiel
 				if (pdf_js_event_result(js))
 				{
 					new_value = pdf_js_event_value(js);
+					throw_if_js_oom(ctx, !new_value);
 					if (strcmp(old_value, new_value))
 						pdf_set_field_value(ctx, doc, field, new_value, 0);
 				}

@@ -52,6 +52,7 @@ relative to `ext/mupdf`, so `-p1` from inside that directory.
 | `0049-merge-catch-bad-write-options` | `merge -O` reports an unknown option instead of aborting with no `fz_try` |
 | `0050-rearrange-pages-keep-old-parent-tree` | `pdf_rearrange_pages` keeps the old structure `/ParentTree` alive while it is still read; Merge PDF on a tagged PDF used freed memory |
 | `0051-js-execute-contain-errors` | `pdf_js_execute` reports an error instead of rethrowing it on the JS context, which has no `fz_try` on a render thread |
+| `0052-js-event-results-no-throw` | `pdf_js_event_*` results return NULL when out of memory and the `pdf-form.c` callers throw on their own context |
 
 That is the whole list: `ext/mupdf` is byte-for-byte `1.28.5` plus these
 patches, and nothing else.
