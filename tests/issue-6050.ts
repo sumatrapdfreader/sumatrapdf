@@ -13,6 +13,7 @@ import { deflateRawSync, deflateSync } from "node:zlib";
 import { mkdirSync, rmSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 import { withControlledSumatra } from "./control.ts";
+import { IS_MAC } from "./host.ts";
 import { cmdId, EXE, runStandalone, tmpPath } from "./util.ts";
 import { captureWindowPixels } from "./winapi.ts";
 import { findCanvas, sendCommand, waitForFrame } from "./win-automation.ts";
@@ -200,6 +201,11 @@ function assertRedImage(
 }
 
 export async function testit(): Promise<void> {
+  // legacy mode inverts the painted bitmap. An engine render does not.
+  if (IS_MAC) {
+    console.log("SKIP issue-6050: the check reads canvas pixels with GetWindowDC");
+    return;
+  }
   const dir = tmpPath("issue-6050");
   rmSync(dir, { recursive: true, force: true });
   mkdirSync(dir, { recursive: true });
