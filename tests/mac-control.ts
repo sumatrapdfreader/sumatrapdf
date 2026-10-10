@@ -39,6 +39,7 @@ const MK_LBUTTON = 0x0001;
 const MK_RBUTTON = 0x0002;
 const MK_SHIFT = 0x0004;
 const MK_CONTROL = 0x0008;
+const MK_ALT = 0x0020;
 const MK_MBUTTON = 0x0010;
 
 const AF_UNIX = 1;
@@ -398,12 +399,15 @@ function dips(px: number, py: number, g: Geom): { x: number; y: number } {
 
 function modsOf(w: number): number {
   let m = 0;
-  // Control-click is the context click. Command is orig's Ctrl.
+  // Control-click is the context click. Command is orig's Ctrl. Alt is bit 4.
   if (w & MK_CONTROL) {
     m |= 8;
   }
   if (w & MK_SHIFT) {
     m |= 2;
+  }
+  if (w & MK_ALT) {
+    m |= 4;
   }
   return m;
 }
