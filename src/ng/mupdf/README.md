@@ -22,6 +22,9 @@ so the tools we patch inside `ext/mupdf` include them by bare name
   CryptoAPI instead of OpenSSL (patch `0003` makes mupdf's `pdfsign` / `murun`
   call it)
 
+- `pkcs7_mac.[ch]` — PDF signing with a .pfx through the macOS Security
+  framework (ng only; no verification yet)
+
 - `load-jxl.cpp` / `load-jxl.h` - JPEG XL metadata and pixel decoding through
   jxldec for MuPDF images and PDF `/JXLDecode` streams
 

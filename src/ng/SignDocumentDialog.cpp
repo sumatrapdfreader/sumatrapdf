@@ -7,7 +7,8 @@
 // file + browse, password, reason, location, where to sign, the appearance
 // check boxes and the optional image), and the same "hide the dialog and let
 // the user click or drag on the page" placement mode.
-// Signing uses wincrypt on Windows and OpenSSL with a certificate file on Linux.
+// Signing uses wincrypt on Windows; with a certificate file, the Security
+// framework on macOS and OpenSSL on Linux.
 
 #include "gui/GpuiBridge.h"
 #include "base/File.h"
@@ -507,6 +508,12 @@ static TempStr SignErrorMessageTemp(Str err) {
         }
         return fmt(Tr("Could not read the certificate file: %s").s, err);
     }
+    if (str::Contains(err, StrL("SecPKCS12Import"))) {
+        if (str::Contains(err, StrL("wrong password"))) {
+            return Tr("Wrong password for the certificate file.");
+        }
+        return fmt(Tr("Could not read the certificate file: %s").s, err);
+    }
     if (str::Contains(err, StrL("not found in the Windows certificate store")) ||
         str::Contains(err, StrL("invalid certificate thumbprint"))) {
         return Tr("Could not use that certificate from the Windows certificate store.");
@@ -527,7 +534,7 @@ static void DoSign(const PdfSignArgs& args) {
     }
     Str err;
     bool ok = false;
-#if OS_WIN || defined(SUMATRA_HAVE_OPENSSL)
+#if OS_WIN || OS_DARWIN || defined(SUMATRA_HAVE_OPENSSL)
     ok = EngineMupdfSignDocument(engine, args, &err);
 #else
     (void)args;

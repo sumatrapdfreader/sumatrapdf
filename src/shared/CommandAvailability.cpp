@@ -353,7 +353,7 @@ CommandVisibility GetCommandVisibility(int cmdId, const AppCommandCtx& ctx, Comm
     if (cmdId == CmdDebugToggleDpiOverride && !ctx.debugDpiOverrideAvailable) {
         return CommandVisibility::Hide;
     }
-#if !OS_WIN && !defined(SUMATRA_HAVE_OPENSSL)
+#if !OS_WIN && !OS_DARWIN && !defined(SUMATRA_HAVE_OPENSSL)
     if (cmdId == CmdSignDocument) {
         return CommandVisibility::Hide;
     }

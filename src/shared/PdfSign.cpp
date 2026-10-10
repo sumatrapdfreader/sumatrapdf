@@ -23,6 +23,8 @@ extern "C" {
 #include <mupdf/pdf.h>
 #if OS_WIN
 #include "mupdf/pkcs7-windows.h"
+#elif OS_DARWIN
+#include "mupdf/pkcs7_mac.h"
 #elif defined(SUMATRA_HAVE_OPENSSL)
 #include "mupdf/helpers/pkcs7-openssl.h"
 #endif
@@ -127,7 +129,7 @@ void EngineMupdfGetUnsignedSignatureFields(EngineBase* engine, StrVec& names, Ve
     }
 }
 
-#if OS_WIN || defined(SUMATRA_HAVE_OPENSSL)
+#if OS_WIN || OS_DARWIN || defined(SUMATRA_HAVE_OPENSSL)
 
 // Finds the unsigned signature widget named name; returns a kept reference the
 // caller drops. The page that owns it is left loaded and returned in pageOut
@@ -240,7 +242,11 @@ bool EngineMupdfSignDocument(EngineBase* engine, const PdfSignArgs& args, Str* e
         if (args.certThumbprint) {
             fz_throw(ctx, FZ_ERROR_ARGUMENT, "the system certificate store is unavailable");
         }
+#if OS_DARWIN
+        signer = pkcs7_mac_read_pfx(ctx, CStrTemp(args.certPath), CStrTemp(args.certPassword));
+#else
         signer = pkcs7_openssl_read_pfx(ctx, CStrTemp(args.certPath), CStrTemp(args.certPassword));
+#endif
 #endif
         if (args.fieldName) {
             widget = FindUnsignedSignatureWidget(ctx, epdf->pdfdoc, args.fieldName, &pageNo, &page);
