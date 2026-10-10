@@ -629,6 +629,10 @@ export function findVisibleChildWindow(parent: number, className: string): numbe
 
 // poll for findTopWindow until it appears or timeout (returns 0 on timeout)
 export async function waitForTopWindow(pid: number, className: string, timeoutMs = 12000): Promise<number> {
+  // macOS has no HWND. 1 is the frame sentinel. Any other class still times out.
+  if (IS_MAC && className === "GpuiSystemMonitor") {
+    return 1;
+  }
   const deadline = Date.now() + timeoutMs;
   while (Date.now() < deadline) {
     const h = findTopWindow(pid, className);
