@@ -10,6 +10,7 @@
 import { existsSync, rmSync } from "node:fs";
 import { join } from "node:path";
 import { tmpdir } from "node:os";
+import { IS_MAC } from "./host.ts";
 import { EXE, runStandalone } from "./util.ts";
 import { ControlCommand, runControlCommand } from "./control.ts";
 
@@ -35,8 +36,9 @@ export async function testit(): Promise<void> {
 
   // Command-line tools must run through cmd.exe when invoked from PowerShell
   // with redirected output; see SumatraPDF.cpp's PowerShell pipe guard.
+  const cleanArgs = ["clean", "-E", "aes-256", "-U", PASSWORD, "-O", PASSWORD, SRC_PDF, encryptedPdf];
   const enc = Bun.spawnSync({
-    cmd: ["cmd.exe", "/c", EXE, "clean", "-E", "aes-256", "-U", PASSWORD, "-O", PASSWORD, SRC_PDF, encryptedPdf],
+    cmd: IS_MAC ? [EXE, ...cleanArgs] : ["cmd.exe", "/c", EXE, ...cleanArgs],
     stdout: "pipe",
     stderr: "pipe",
   });
