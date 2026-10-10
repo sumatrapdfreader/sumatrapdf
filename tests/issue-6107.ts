@@ -5,6 +5,7 @@
 
 import { join } from "node:path";
 import { ControlClient, ControlCommand } from "./control.ts";
+import { IS_MAC } from "./host.ts";
 import { ROOT, cmdId, runStandalone, SLOW_BUILD_FACTOR } from "./util.ts";
 import { MK_LBUTTON, packCoords, sendMessage, sleep, WM_LBUTTONDOWN, WM_LBUTTONUP } from "./winapi.ts";
 import { killAndWait, launchControlled, sendCommand } from "./win-automation.ts";
@@ -70,9 +71,19 @@ async function barState(client: ControlClient): Promise<BarState | null> {
   };
 }
 
-function clickSpeed(st: BarState, t: number): void {
+async function clickSpeed(client: ControlClient, st: BarState, t: number): Promise<void> {
   const x = st.speed.x + Math.max(2, Math.floor(st.speed.dx * t));
   const y = st.speed.y + Math.floor(st.speed.dy / 2);
+  if (IS_MAC) {
+    for (const kind of ["down", "up"] as const) {
+      const res = await client.request(ControlCommand.TestToolWindow, ["input", "readaloudbar", kind, x, y, 0, 0]);
+      const raw = String(res[1] ?? "");
+      if ((res[0] as number) !== 0 || raw.startsWith("ERR")) {
+        throw new Error(`issue-6107: speed slider ${kind}: ${raw}`);
+      }
+    }
+    return;
+  }
   const lp = packCoords(x, y);
   sendMessage(st.hwnd, WM_LBUTTONDOWN, MK_LBUTTON, lp);
   sendMessage(st.hwnd, WM_LBUTTONUP, 0, lp);
@@ -108,7 +119,7 @@ export async function testit(): Promise<void> {
       throw new Error(`issue-6107: expected 12 speeds, got ${st.speedCount}`);
     }
     const startIdx = st.speedIdx;
-    clickSpeed(st, 0.92);
+    await clickSpeed(client, st, 0.92);
     const moveDeadline = Date.now() + 3_000 * SLOW_BUILD_FACTOR;
     for (;;) {
       st = await barState(client);
@@ -120,13 +131,18 @@ export async function testit(): Promise<void> {
       }
       await sleep(40);
     }
-    if (!/^\d+(\.\d+)?x$/.test(st.label)) {
-      throw new Error(`issue-6107: bad speed label '${st.label}'`);
-    }
-    if (st.speedLabel.dx + 1 < st.speedLabelIdeal) {
-      throw new Error(
-        `issue-6107: speed label bounds ${st.speedLabel.dx} narrower than text ${st.speedLabelIdeal} (paints over status)`,
-      );
+    const fitDeadline = Date.now() + 3_000 * SLOW_BUILD_FACTOR;
+    for (;;) {
+      st = await barState(client);
+      if (st && st.visible && /^\d+(\.\d+)?x$/.test(st.label) && st.speedLabel.dx + 1 >= st.speedLabelIdeal) {
+        break;
+      }
+      if (Date.now() > fitDeadline) {
+        throw new Error(
+          `issue-6107: speed label bounds ${st?.speedLabel.dx} narrower than text ${st?.speedLabelIdeal} ('${st?.label}')`,
+        );
+      }
+      await sleep(40);
     }
     sendCommand(frame, cmdId("CmdStopReadAloud"));
     console.log("issue-6107: OK");
