@@ -358,7 +358,7 @@ void RefHoverView::OnWheel(RefHoverView* self, gp::Ctx* cx, const gp::ScrollWhee
     if (delta == 0) {
         return;
     }
-    if (ev->modifiers.control) {
+    if (ev->modifiers.control || ev->modifiers.platform) {
         RefHoverWheelZoom(s, s->hitEngine, delta);
     } else {
         RefHoverWheelScroll(s, s->hitEngine, delta);

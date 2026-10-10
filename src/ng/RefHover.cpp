@@ -378,6 +378,13 @@ TempStr RefHoverResultTemp(Str action, int x, int y, int* exitCodeOut) {
         return str::DupTemp(StrL("OK visible=0"));
     }
     auto& d = s->displayed;
-    return fmt("OK visible=1 hwnd=%d page=%d y=%d zoom=%d", RefHoverPopupHwndInt(s), d.destPage, (int)d.region.y,
-               (int)(d.userZoom * 100));
+    // center of the popup in frame pixels, so a test wheel can land on it
+    float k = CanvasScale(win);
+    if (k <= 0.f) {
+        k = 1.f;
+    }
+    int popX = (int)((float)win->canvasRc.x / k + (float)s->popupRc.x + (float)s->popupRc.dx / 2.f);
+    int popY = (int)((float)win->canvasRc.y / k + (float)s->popupRc.y + (float)s->popupRc.dy / 2.f);
+    return fmt("OK visible=1 hwnd=%d page=%d y=%d zoom=%d pop=%d,%d", RefHoverPopupHwndInt(s), d.destPage,
+               (int)d.region.y, (int)(d.userZoom * 100), popX, popY);
 }

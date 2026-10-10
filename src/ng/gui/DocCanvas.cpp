@@ -3801,7 +3801,8 @@ void DocCanvasView::OnWheel(DocCanvasView* self, gp::Ctx* cx, const gp::ScrollWh
     gInMouseWheelScroll = true;
     // orig's CanvasOnMouseHWheel scrolls sideways whatever the modifiers:
     // Ctrl + a horizontal wheel does not zoom
-    bool isCtrl = ev->modifiers.control && ev->deltaY != 0;
+    // Command is Ctrl. A posted MK_CONTROL arrives as the platform modifier.
+    bool isCtrl = (ev->modifiers.control || ev->modifiers.platform) && ev->deltaY != 0;
     // orig: isZooming = isCtrl || isRightButton. ng: the wheel event has no
     // button state; the window knows which button is down
     bool isRightButton = cx->win && cx->win->mouseDown && cx->win->pressedButton == gp::MouseButton::Right;

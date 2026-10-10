@@ -9,6 +9,7 @@
 import { mkdirSync, rmSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 import { ControlClient, ControlCommand } from "./control";
+import { IS_MAC } from "./host";
 import { assemblePdf, runStandalone, tmpPath } from "./util";
 import { clientToScreen, getClientRect, postMessage, sleep } from "./winapi";
 import { findCanvas, killAndWait, launchControlled } from "./win-automation";
@@ -41,7 +42,14 @@ function makePdf(): string {
   ]);
 }
 
-type Popup = { visible: boolean; hwnd: number; page: number; y: number; zoom: number };
+type Popup = {
+  visible: boolean;
+  hwnd: number;
+  page: number;
+  y: number;
+  zoom: number;
+  pop: { x: number; y: number } | null;
+};
 
 // scrolling down moves to a later page or further down the same page
 function below(q: Popup, p: Popup): boolean {
@@ -52,13 +60,21 @@ async function popupState(client: ControlClient): Promise<Popup> {
   const res = await client.request(ControlCommand.TestRefHover, []);
   const raw = String(res[1] ?? "");
   if (/visible=0/.test(raw)) {
-    return { visible: false, hwnd: 0, page: 0, y: 0, zoom: 0 };
+    return { visible: false, hwnd: 0, page: 0, y: 0, zoom: 0, pop: null };
   }
   const m = /visible=1 hwnd=(-?\d+) page=(-?\d+) y=(-?\d+) zoom=(\d+)/.exec(raw);
   if (!m) {
     throw new Error(`issue-6252: TestRefHover failed: ${raw}`);
   }
-  return { visible: true, hwnd: +m[1]!, page: +m[2]!, y: +m[3]!, zoom: +m[4]! };
+  const popM = / pop=(-?\d+),(-?\d+)/.exec(raw);
+  return {
+    visible: true,
+    hwnd: +m[1]!,
+    page: +m[2]!,
+    y: +m[3]!,
+    zoom: +m[4]!,
+    pop: popM ? { x: +popM[1]!, y: +popM[2]! } : null,
+  };
 }
 
 async function waitFor(client: ControlClient, what: string, pred: (p: Popup) => boolean): Promise<Popup> {
@@ -101,7 +117,8 @@ export async function testit(): Promise<void> {
     const rc = getClientRect(canvas);
     const x = Math.floor((rc.right - rc.left) / 2);
     const y = Math.floor((rc.bottom - rc.top) / 3);
-    const onLink = clientToScreen(canvas, x, y);
+    // mac wheel points are frame pixels. Windows wants the screen point.
+    const onLink = IS_MAC ? { x, y } : clientToScreen(canvas, x, y);
     const res = await client.request(ControlCommand.TestRefHover, ["show", x, y]);
     if (res[0] !== 0) {
       throw new Error(`issue-6252: could not show the popup: ${res[1]}`);
@@ -120,10 +137,12 @@ export async function testit(): Promise<void> {
     postWheel(canvas, WM_MOUSEWHEEL, WHEEL_DELTA, MK_CONTROL, onLink);
     p = await waitFor(client, "Ctrl + wheel on the link did not zoom", (q) => q.zoom > p.zoom);
 
-    // over the popup: plain wheel scrolls, Ctrl + wheel zooms
-    postWheel(p.hwnd, WM_MOUSEWHEEL, -WHEEL_DELTA, 0, onLink);
+    // over the popup: plain wheel scrolls, Ctrl + wheel zooms.
+    // mac has no popup HWND. pop is the popup's center in frame pixels.
+    const onPopup = IS_MAC && p.pop ? p.pop : onLink;
+    postWheel(p.hwnd, WM_MOUSEWHEEL, -WHEEL_DELTA, 0, onPopup);
     p = await waitFor(client, "wheel on the popup did not scroll", (q) => below(q, p));
-    postWheel(p.hwnd, WM_MOUSEWHEEL, WHEEL_DELTA, MK_CONTROL, onLink);
+    postWheel(p.hwnd, WM_MOUSEWHEEL, WHEEL_DELTA, MK_CONTROL, onPopup);
     await waitFor(client, "Ctrl + wheel on the popup did not zoom", (q) => q.zoom > p.zoom);
     console.log("issue-6252: OK");
   } finally {
