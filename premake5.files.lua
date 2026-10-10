@@ -380,6 +380,7 @@ function sumatrapdf_files()
     "RefHoverDetect.cpp",
     "RefHoverInternal.cpp",
     "RefHoverPopup.cpp",
+    "RefHoverPopupCommon.*",
     "RefHoverRender.cpp",
     "RefHoverShow.cpp",
     "RefHoverText.cpp",

@@ -1521,6 +1521,7 @@
     <ClInclude Include="..\src\shared\ReadingAutoScrollCommon.h" />
     <ClInclude Include="..\src\shared\ReadingBar.h" />
     <ClInclude Include="..\src\shared\RefHover.h" />
+    <ClInclude Include="..\src\shared\RefHoverPopupCommon.h" />
     <ClInclude Include="..\src\shared\RenderCache.h" />
     <ClInclude Include="..\src\shared\Screenshot.h" />
     <ClInclude Include="..\src\shared\SearchAndDDECommon.h" />
@@ -2178,6 +2179,7 @@
     </ClCompile>
     <ClCompile Include="..\src\shared\RefHoverDetect.cpp" />
     <ClCompile Include="..\src\shared\RefHoverInternal.cpp" />
+    <ClCompile Include="..\src\shared\RefHoverPopupCommon.cpp" />
     <ClCompile Include="..\src\shared\RefHoverRender.cpp" />
     <ClCompile Include="..\src\shared\RefHoverShow.cpp" />
     <ClCompile Include="..\src\shared\RefHoverText.cpp" />

@@ -1397,6 +1397,7 @@ export const targets: Target[] = [
       "src/ng/RefHover.cpp",
       "src/ng/RefHoverCanvas.cpp",
       "src/ng/RefHoverPopup.cpp",
+      "src/ng/RefHoverPopupCommon.cpp",
       "src/ng/RefHoverRender.cpp",
       "src/ng/RefHoverShow.cpp",
       "src/ng/FormFields.cpp",

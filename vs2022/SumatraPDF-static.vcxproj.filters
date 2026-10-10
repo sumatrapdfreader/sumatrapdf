@@ -495,6 +495,9 @@
     <ClInclude Include="..\src\shared\RefHover.h">
       <Filter>src\shared</Filter>
     </ClInclude>
+    <ClInclude Include="..\src\shared\RefHoverPopupCommon.h">
+      <Filter>src\shared</Filter>
+    </ClInclude>
     <ClInclude Include="..\src\shared\RenderCache.h">
       <Filter>src\shared</Filter>
     </ClInclude>
@@ -1284,6 +1287,9 @@
       <Filter>src\shared</Filter>
     </ClCompile>
     <ClCompile Include="..\src\shared\RefHoverInternal.cpp">
+      <Filter>src\shared</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\shared\RefHoverPopupCommon.cpp">
       <Filter>src\shared</Filter>
     </ClCompile>
     <ClCompile Include="..\src\shared\RefHoverRender.cpp">
