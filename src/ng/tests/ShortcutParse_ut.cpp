@@ -16,6 +16,10 @@
 constexpr u8 kVirt = KeyShortcut::kVirtKey;
 constexpr u8 kShift = KeyShortcut::kShiftKey;
 constexpr u8 kCtrl = KeyShortcut::kCtrlKey;
+#if OS_DARWIN
+constexpr u8 kAlt = KeyShortcut::kAltKey;
+constexpr u8 kCmd = KeyShortcut::kCmdKey;
+#endif
 
 static bool AccelShowsAs(u8 mods, u16 key, Str expected) {
     KeyShortcut a(mods, key);
@@ -32,7 +36,11 @@ bool ShortcutParse_UnitTestShiftedPunct() {
 
     utassert(AccelShowsAs(kShift | kVirt, VK_OEM_2, StrL("?")));
     utassert(AccelShowsAs(kVirt, VK_OEM_2, StrL("/")));
+#if OS_DARWIN
+    utassert(AccelShowsAs(kCtrl | kShift | kVirt, VK_OEM_2, StrL("\u2303?")));
+#else
     utassert(AccelShowsAs(kCtrl | kShift | kVirt, VK_OEM_2, StrL("Ctrl + ?")));
+#endif
     utassert(AccelShowsAs(kShift | kVirt, VK_OEM_COMMA, StrL("<")));
     utassert(AccelShowsAs(kShift | kVirt, VK_OEM_PERIOD, StrL(">")));
     utassert(AccelShowsAs(kShift | kVirt, VK_OEM_4, StrL("{")));
@@ -41,11 +49,21 @@ bool ShortcutParse_UnitTestShiftedPunct() {
     utassert(AccelShowsAs(kShift | kVirt, VK_OEM_1, StrL(":")));
     utassert(AccelShowsAs(kShift | kVirt, VK_OEM_7, StrL("\"")));
     utassert(AccelShowsAs(kShift | kVirt, VK_OEM_3, StrL("~")));
-    utassert(AccelShowsAs(kShift | kVirt, 'A', StrL("Shift + A")));
     // VK codes that equal a punctuation char ('\'' is VK_RIGHT) aren't punctuation
+#if OS_DARWIN
+    utassert(AccelShowsAs(kShift | kVirt, 'A',
+                          StrL("\u21e7"
+                               "A")));
+    utassert(AccelShowsAs(kCtrl | kShift | kVirt, VK_RIGHT, StrL("\u2303\u21e7\u2192")));
+    utassert(AccelShowsAs(kShift | kVirt, VK_DELETE, StrL("\u21e7\u2326")));
+    utassert(AccelShowsAs(kShift | kVirt, VK_SNAPSHOT, StrL("\u21e7PrtSc")));
+    utassert(AccelShowsAs(kAlt | kShift | kCmd | kVirt, 'G', StrL("\u2325\u21e7\u2318G")));
+#else
+    utassert(AccelShowsAs(kShift | kVirt, 'A', StrL("Shift + A")));
     utassert(AccelShowsAs(kCtrl | kShift | kVirt, VK_RIGHT, StrL("Ctrl + Shift + Right")));
     utassert(AccelShowsAs(kShift | kVirt, VK_DELETE, StrL("Shift + Del")));
     utassert(AccelShowsAs(kShift | kVirt, VK_SNAPSHOT, StrL("Shift + PrtSc")));
+#endif
 
     KeyShortcut a{};
     utassert(ParseShortcutString(StrL("<"), a));
@@ -114,6 +132,11 @@ bool ShortcutParse_UnitTestGpuiStroke() {
     utassert(StrokeIs(StrL("Ctrl + Numpad0"), StrL("ctrl-numpad0")));
     utassert(StrokeIs(StrL("Numpad9"), StrL("numpad9")));
     utassert(StrokeIs(StrL("Ctrl + ["), StrL("ctrl-[")));
+#if !OS_WIN
+    utassert(StrokeIs(StrL("Cmd + K"), StrL("cmd-k")));
+    utassert(StrokeIs(StrL("Ctrl + Cmd + F"), StrL("ctrl-cmd-f")));
+    utassert(StrokeIs(StrL("Super + Shift + Left"), StrL("cmd-shift-left")));
+#endif
     // the keyboard-help accelerator: Shift + '/' on a US layout
     utassert(str::Eq(ShortcutToGpuiStroke(KeyShortcut(kShift | kVirt, VK_OEM_2)), StrL("shift-/")));
     // a lowercase letter parses as an unshifted virtual key
@@ -255,10 +278,90 @@ static const struct {
     {StrL("Ctrl + Shift + Z"), CmdRedo},
     {StrL("Ctrl + Shift + S"), CmdSaveAnnotations},
 };
+
+// What a platform binds differently. A documented shortcut whose key is here
+// is checked against this table instead.
+static const struct {
+    Str shortcut;
+    int cmd;
+} gPlatformShortcuts[] = {
+#if OS_DARWIN
+    {StrL("Cmd + G"), CmdFindNext},
+    {StrL("Cmd + Shift + G"), CmdFindPrev},
+    {StrL("Cmd + Alt + G"), CmdGoToPage},
+    {StrL("Cmd + ,"), CmdOptions},
+    {StrL("Cmd + I"), CmdProperties},
+    {StrL("Cmd + D"), CmdFavoriteAdd},
+    {StrL("Cmd + 0"), CmdZoomActualSize},
+    {StrL("Cmd + 9"), CmdZoomFitPage},
+    {StrL("Ctrl + Cmd + F"), CmdToggleFullscreen},
+    {StrL("Cmd + Shift + F"), CmdTogglePresentationMode},
+    {StrL("Ctrl + Cmd + S"), CmdToggleBookmarks},
+    {StrL("Cmd + Alt + T"), CmdToggleToolbar},
+    {StrL("Cmd + {"), CmdPrevTab},
+    {StrL("Cmd + }"), CmdNextTab},
+    {StrL("Cmd + ["), CmdNavigateBack},
+    {StrL("Cmd + ]"), CmdNavigateForward},
+    {StrL("Cmd + Up"), CmdGoToFirstPage},
+    {StrL("Cmd + Down"), CmdGoToLastPage},
+    {StrL("Alt + Up"), CmdScrollUpPage},
+    {StrL("Alt + Down"), CmdScrollDownPage},
+    {StrL("Cmd + Backspace"), CmdDeleteAnnotation},
+#elif OS_LINUX
+    {StrL("Ctrl + ,"), CmdOptions},
+#else
+    {StrL("Ctrl + O"), CmdOpenFile},
+#endif
+};
 // clang-format on
 
 static bool SameShortcut(const KeyShortcut& a, const KeyShortcut& b) {
     return a.vk == b.vk && a.Mods() == b.Mods();
+}
+
+static bool IsPlatformShortcut(const KeyShortcut& sc) {
+    for (auto& d : gPlatformShortcuts) {
+        KeyShortcut psc{};
+        if (ParseShortcutString(d.shortcut, psc) && SameShortcut(psc, sc)) {
+            return true;
+        }
+    }
+    return false;
+}
+
+// a documented (Windows) shortcut as this platform binds it; false when the
+// platform has no such binding
+static bool ToPlatformDocumented(KeyShortcut& sc) {
+#if OS_DARWIN
+    bool isArrowLR = sc.vk == VK_LEFT || sc.vk == VK_RIGHT;
+    if (sc.alt && !sc.ctrl && isArrowLR) {
+        return false;
+    }
+    if (sc.ctrl && sc.vk == VK_F4) {
+        return false;
+    }
+    bool isTabKey = sc.vk == VK_TAB || sc.vk == VK_NEXT || sc.vk == VK_PRIOR;
+    if (sc.ctrl && !isTabKey) {
+        sc.ctrl = false;
+        sc.cmd = true;
+    }
+#endif
+    return !IsPlatformShortcut(sc);
+}
+
+static bool IsBoundTo(const Accel* accels, int n, const KeyShortcut& sc, int cmd) {
+    for (int i = 0; i < n; i++) {
+        if (!SameShortcut(accels[i].sc, sc)) {
+            continue;
+        }
+        // Shift + a / Shift + u are clones that add "openedit"
+        CustomCommand* custom = FindCustomCommand(accels[i].cmd);
+        int cmdId = custom ? custom->origId : accels[i].cmd;
+        if (cmdId == cmd) {
+            return true;
+        }
+    }
+    return false;
 }
 
 // ng: orig has no such test. The port builds one table where orig builds three
@@ -298,24 +401,30 @@ bool ShortcutParse_UnitTestAccelTable() {
             logf("can't parse '%s'\n", d.shortcut);
         }
         utassert(ParseShortcutString(d.shortcut, sc));
-        bool found = false;
-        for (int i = 0; i < n; i++) {
-            if (!SameShortcut(accels[i].sc, sc)) {
-                continue;
-            }
-            // Shift + a / Shift + u are clones that add "openedit"
-            CustomCommand* custom = FindCustomCommand(accels[i].cmd);
-            int cmdId = custom ? custom->origId : accels[i].cmd;
-            if (cmdId == d.cmd) {
-                found = true;
-                break;
-            }
+        if (!ToPlatformDocumented(sc)) {
+            continue;
         }
+        bool found = IsBoundTo(accels, n, sc, d.cmd);
         if (!found) {
             logf("'%s' is not bound to %s\n", d.shortcut, GetCommandName(d.cmd));
         }
         utassert(found);
     }
+
+    for (auto& d : gPlatformShortcuts) {
+        KeyShortcut sc{};
+        utassert(ParseShortcutString(d.shortcut, sc));
+        bool found = IsBoundTo(accels, n, sc, d.cmd);
+        if (!found) {
+            logf("'%s' is not bound to %s\n", d.shortcut, GetCommandName(d.cmd));
+        }
+        utassert(found);
+    }
+
+#if OS_DARWIN
+    // "?" parses as Shift + numpad Divide, so this one is spelled as a key
+    utassert(IsBoundTo(accels, n, KeyShortcut(kShift | kCmd | kVirt, VK_OEM_2), CmdHelpOpenManual));
+#endif
 
     gLogToConsole = prevLogToConsole;
     gShortcutLangCode = prevLang;

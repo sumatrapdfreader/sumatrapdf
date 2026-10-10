@@ -26,6 +26,43 @@ Compiler and sanitizer variants add suffixes, such as `dbg-clang` and
 base unit tests. `-run` launches SumatraPDF as a normal session, so it
 saves and restores settings. Pass `-- -for-testing` for a throwaway run.
 
+## Keyboard shortcuts
+
+`src/shared/Accelerators.cpp` holds the Windows defaults and a per-platform
+layer over them. Shortcut strings in the settings take `Cmd` (also `Command`,
+`Super`, `Meta`) off Windows: Command on macOS, Super on Linux.
+
+macOS: `Ctrl` in a default becomes `Cmd`, except for switching tabs
+(`Ctrl + Tab`, `Ctrl + Page Up / Down`). `Alt + Left / Right`, `Ctrl + F4` and
+`Ctrl + Insert` are dropped. These differ or are added:
+
+| Shortcut              | Command             | Windows default         |
+| --------------------- | ------------------- | ----------------------- |
+| `Cmd + G`             | Find next           | `F3`                    |
+| `Cmd + Shift + G`     | Find previous       | `Shift + F3`            |
+| `Cmd + Alt + G`       | Go to page          | `Ctrl + G`              |
+| `Cmd + ,`             | Settings            | none                    |
+| `Cmd + I`             | Properties          | `Ctrl + D`              |
+| `Cmd + D`             | Add favorite        | `Ctrl + B`              |
+| `Cmd + ?`             | Manual              | `F1`                    |
+| `Cmd + 0`             | Actual size         | `Ctrl + 1`              |
+| `Cmd + 9`             | Fit page            | `Ctrl + 0`              |
+| `Ctrl + Cmd + F`      | Fullscreen          | `F11`                   |
+| `Cmd + Shift + F`     | Presentation        | `F5`                    |
+| `Ctrl + Cmd + S`      | Bookmarks sidebar   | `F12`                   |
+| `Cmd + Alt + T`       | Toolbar             | `F8`                    |
+| `Cmd + {` / `Cmd + }` | Previous / next tab | `Ctrl + Page Up / Down` |
+| `Cmd + [` / `Cmd + ]` | Back / forward      | `Alt + Left / Right`    |
+| `Cmd + Up` / `Down`   | First / last page   | `Home` / `End`          |
+| `Alt + Up` / `Down`   | Page up / down      | `Ctrl + Up / Down`      |
+| `Cmd + Backspace`     | Delete annotation   | `Ctrl + Delete`         |
+
+The Windows default keeps working where its key is still free (`F3`, `F11`,
+`Cmd + B`, `Cmd + 1`). Shortcuts are shown as the menu bar writes them (`⇧⌘G`).
+
+Linux: the Windows defaults already follow GNOME and KDE; `Ctrl + ,` opens
+Settings.
+
 Ng scripts use the `cmd/ng-` prefix, with build helpers under `cmd/helper/ng-`.
 Use `ng-gen-commands.ts` and `ng-gen-settings.ts` for ng generated headers;
 the original generators still write the original app's files. Format ng

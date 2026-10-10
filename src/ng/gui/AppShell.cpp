@@ -619,14 +619,14 @@ TempStr AppShellTestInputGpui(gp::Window* gw, Str kind, int a, int b, int c, int
     if (str::Eq(kind, StrL("key"))) {
         gp::KeyDownFlags flags;
         flags.held = (b & 8) != 0;
-        bool eaten = gp::WindowKeyDown(gw, a, (b & 2) != 0, (b & 1) != 0, (b & 4) != 0, false, false, flags);
+        bool eaten = gp::WindowKeyDown(gw, a, (b & 2) != 0, (b & 1) != 0, (b & 4) != 0, (b & 16) != 0, false, flags);
         // a handled key makes gpui drop the WM_CHAR that follows it. None
         // follows here, so the next "char" - another keystroke - was dropped
         gw->eatChar = false;
         return fmt("OK eaten=%d", eaten ? 1 : 0);
     }
     if (str::Eq(kind, StrL("keyup"))) {
-        gp::WindowKeyUp(gw, a, (b & 2) != 0, (b & 1) != 0, (b & 4) != 0);
+        gp::WindowKeyUp(gw, a, (b & 2) != 0, (b & 1) != 0, (b & 4) != 0, (b & 16) != 0);
         return StrL("OK");
     }
     if (str::Eq(kind, StrL("char"))) {
@@ -1202,7 +1202,9 @@ static void BindKeys() {
     const AccelStroke* strokes = GetAcceleratorStrokes(n);
     auto* bindings = AllocArrayTemp<gp::KeyBinding>(n);
     int nBind = 0;
-    for (int i = 0; i < n; i++) {
+    // last to first: the native menu bar shows the binding added last, and
+    // the table lists a command's preferred shortcut first
+    for (int i = n - 1; i >= 0; i--) {
         if (len(strokes[i].stroke) == 0) {
             continue;
         }
@@ -2289,8 +2291,8 @@ void ShellView::OnKeyDown(ShellView* self, gp::Ctx* cx, const gp::KeyEvent* ev) 
             gIgnoreRepeatKey = 0;
         }
     }
-    bool isChordKey =
-        (ev->ctrl || ev->alt) && ev->vk != 0 && ev->vk != VK_CONTROL && ev->vk != VK_MENU && ev->vk != VK_SHIFT;
+    bool isChordKey = (ev->ctrl || ev->alt || ev->platform) && ev->vk != 0 && ev->vk != VK_CONTROL &&
+                      ev->vk != VK_MENU && ev->vk != VK_SHIFT;
     if (isChordKey) {
         gChordKey = ev->vk;
     }
@@ -2322,7 +2324,7 @@ void ShellView::OnKeyDown(ShellView* self, gp::Ctx* cx, const gp::KeyEvent* ev) 
         self->menuKey = 0;
     }
     bool editFocused = IsTextFieldFocused(cx);
-    gCmdSuppressed = editFocused && SafeAcceleratorCmd((u16)ev->vk, ev->ctrl, ev->shift, ev->alt) == 0;
+    gCmdSuppressed = editFocused && SafeAcceleratorCmd((u16)ev->vk, ev->ctrl, ev->shift, ev->alt, ev->platform) == 0;
     // orig's dialogs are windows of their own with no accelerator table, so
     // no shortcut reaches the document while one is up. Properties keeps the
     // edit table only in its own window: Home and End on the frame still
@@ -2405,7 +2407,7 @@ void ShellView::OnKeyDown(ShellView* self, gp::Ctx* cx, const gp::KeyEvent* ev) 
     if (navRes == NavKeyResult::Typed) {
         // its filter box has the focus now: the character goes there and the
         // key must not also run a command
-        gCmdSuppressed = SafeAcceleratorCmd((u16)ev->vk, ev->ctrl, ev->shift, ev->alt) == 0;
+        gCmdSuppressed = SafeAcceleratorCmd((u16)ev->vk, ev->ctrl, ev->shift, ev->alt, ev->platform) == 0;
         gp::Notify(cx);
         return;
     }
@@ -2541,7 +2543,7 @@ void ShellView::OnKeyDown(ShellView* self, gp::Ctx* cx, const gp::KeyEvent* ev) 
     // orig's FrameOnKeydown / FrameOnChar: a black or white presentation screen
     // swallows a key that is not an accelerator and goes back to the slide
     if (PM_BLACK_SCREEN == win->presentation || PM_WHITE_SCREEN == win->presentation) {
-        if (SafeAcceleratorCmd((u16)ev->vk, ev->ctrl, ev->shift, ev->alt) == 0) {
+        if (SafeAcceleratorCmd((u16)ev->vk, ev->ctrl, ev->shift, ev->alt, ev->platform) == 0) {
             if (ev->vk == VK_ESCAPE || (ev->vk == 0 && ev->ch != 0)) {
                 win->ChangePresentationMode(PM_ENABLED);
             }

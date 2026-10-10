@@ -78,14 +78,22 @@ static void KeyAndKbd() {
     TipSpansParse(spans, StrL("(Kbd/(Key/CmdOpenFile)) open"));
     utassert(len(spans) == 2);
     utassert(spans[0].kind == TipSpanKind::Kbd);
+#if OS_DARWIN
+    utassert(str::Eq(spans[0].text, StrL("\u2318O")));
+#else
     utassert(str::Eq(spans[0].text, StrL("Ctrl + O")));
+#endif
     CheckSpan(spans, 1, TipSpanKind::Text, StrL(" open"), {});
     TipSpansFree(spans);
 
     TipSpansParse(spans, StrL("press (Key/CmdSaveAs)"));
     utassert(len(spans) == 2);
     utassert(spans[1].kind == TipSpanKind::Kbd);
+#if OS_DARWIN
+    utassert(str::Eq(spans[1].text, StrL("\u2318S")));
+#else
     utassert(str::Eq(spans[1].text, StrL("Ctrl + S")));
+#endif
     TipSpansFree(spans);
 
     // not a command: the markup stays literal

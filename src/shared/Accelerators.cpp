@@ -15,6 +15,7 @@ constexpr u8 kVirt = KeyShortcut::kVirtKey;
 constexpr u8 kShift = KeyShortcut::kShiftKey;
 constexpr u8 kCtrl = KeyShortcut::kCtrlKey;
 constexpr u8 kAlt = KeyShortcut::kAltKey;
+constexpr u8 kCmd = KeyShortcut::kCmdKey;
 
 // note: even letter shortcuts like 'k' are marked as FVIRTKEY so that they
 // work even on non-english keyboards (cyrillic, hebrew)
@@ -177,7 +178,86 @@ static Accel gBuiltInAccelerators[] = {
     {{kVirt | kShift, 'A'}, CmdCreateAnnotHighlight},
     {{kVirt | kShift, 'U'}, CmdCreateAnnotUnderline},
 };
+
+// Per-platform layer over the table above:
+//
+//   gPlatformAccelerators   added first, so they win a key over a built-in
+//                           and are the shortcut menus show for the command
+//   IsDroppedOnPlatform()   built-ins that mean nothing on this platform
+//   ToPlatformShortcut()    a built-in's key as this platform spells it
+#if OS_DARWIN
+static Accel gPlatformAccelerators[] = {
+    // Find Next / Previous own Command+G; Go to Page moves where Preview has it
+    {{kCmd | kVirt, 'G'}, CmdFindNext},
+    {{kShift | kCmd | kVirt, 'G'}, CmdFindPrev},
+    {{kAlt | kCmd | kVirt, 'G'}, CmdGoToPage},
+
+    {{kCmd | kVirt, VK_OEM_COMMA}, CmdOptions},
+    {{kCmd | kVirt, 'I'}, CmdProperties},
+    {{kCmd | kVirt, 'D'}, CmdFavoriteAdd},
+    {{kShift | kCmd | kVirt, VK_OEM_2}, CmdHelpOpenManual},
+
+    {{kCmd | kVirt, '0'}, CmdZoomActualSize},
+    {{kCmd | kVirt, VK_NUMPAD0}, CmdZoomActualSize},
+    {{kCmd | kVirt, '9'}, CmdZoomFitPage},
+    {{kCmd | kVirt, VK_NUMPAD9}, CmdZoomFitPage},
+
+    {{kCtrl | kCmd | kVirt, 'F'}, CmdToggleFullscreen},
+    {{kShift | kCmd | kVirt, 'F'}, CmdTogglePresentationMode},
+    {{kCtrl | kCmd | kVirt, 'S'}, CmdToggleBookmarks},
+    {{kAlt | kCmd | kVirt, 'T'}, CmdToggleToolbar},
+
+    // '{' and '}'
+    {{kShift | kCmd | kVirt, VK_OEM_4}, CmdPrevTab},
+    {{kShift | kCmd | kVirt, VK_OEM_6}, CmdNextTab},
+    {{kCmd | kVirt, VK_OEM_4}, CmdNavigateBack},
+    {{kCmd | kVirt, VK_OEM_6}, CmdNavigateForward},
+
+    {{kCmd | kVirt, VK_UP}, CmdGoToFirstPage},
+    {{kCmd | kVirt, VK_DOWN}, CmdGoToLastPage},
+    {{kAlt | kVirt, VK_UP}, CmdScrollUpPage},
+    {{kAlt | kVirt, VK_DOWN}, CmdScrollDownPage},
+
+    // the key above Return is Backspace; a Mac calls it Delete
+    {{kCmd | kVirt, VK_BACK}, CmdDeleteAnnotation},
+};
+#elif OS_LINUX
+static Accel gPlatformAccelerators[] = {
+    {{kCtrl | kVirt, VK_OEM_COMMA}, CmdOptions},
+};
+#else
+// a zero-length array is not C++
+static Accel gPlatformAccelerators[] = {
+    {{0, 0}, 0},
+};
+#endif
 // NOLINTEND(modernize-use-designated-initializers)
+
+static bool IsDroppedOnPlatform(const KeyShortcut& sc) {
+#if OS_DARWIN
+    // Option+arrows move by word in a text field
+    if (sc.alt && !sc.ctrl && (sc.vk == VK_LEFT || sc.vk == VK_RIGHT)) {
+        return true;
+    }
+    // Windows idioms: Ctrl+F4 closes, Ctrl+Insert copies
+    return sc.ctrl && (sc.vk == VK_F4 || sc.vk == VK_INSERT);
+#else
+    (void)sc;
+    return false;
+#endif
+}
+
+static KeyShortcut ToPlatformShortcut(KeyShortcut sc) {
+#if OS_DARWIN
+    // Command is what Ctrl is elsewhere. Switching tabs stays on Control.
+    bool isTabKey = sc.vk == VK_TAB || sc.vk == VK_NEXT || sc.vk == VK_PRIOR;
+    if (sc.ctrl && !isTabKey) {
+        sc.ctrl = false;
+        sc.cmd = true;
+    }
+#endif
+    return sc;
+}
 
 static Accel* gAccels = nullptr;
 static int gAccelsCount = 0;
@@ -306,7 +386,7 @@ bool IsSafeAccel(const Accel& a) {
         }
     }
 
-    if ((mods == (kCtrl | kVirt)) && (k == 'V')) {
+    if ((mods == (kCtrl | kVirt) || mods == (kCmd | kVirt)) && (k == 'V')) {
         // Ctrl+V should work normally in edit controls (paste text)
         return false;
     }
@@ -328,7 +408,7 @@ static bool isSafeOutsideEditAccel(const Accel& a) {
         return true;
     }
     // a plain arrow rebound to the command still has to move in the tree
-    bool isChord = a.sc.ctrl || a.sc.alt;
+    bool isChord = a.sc.ctrl || a.sc.alt || a.sc.cmd;
     if (!isChord) {
         return false;
     }
@@ -346,7 +426,7 @@ static bool isTreeNavKey(u16 k) {
 // tree: letter shortcuts (and everything else) run the command; only the
 // navigation keys above, without Ctrl/Alt, are left for the tree
 bool IsSafeTreeAccel(const Accel& a) {
-    if (a.sc.ctrl || a.sc.alt) {
+    if (a.sc.ctrl || a.sc.alt || a.sc.cmd) {
         return true;
     }
     return !isTreeNavKey(a.sc.vk);
@@ -356,8 +436,11 @@ bool IsSafeTreeAccel(const Accel& a) {
 // process while a custom control (edit / tree / WebView2-hosted CHM) has focus.
 // Returns the command id, or 0 if none. Used to forward app shortcuts that a
 // focused control would otherwise swallow.
-int SafeAcceleratorCmd(u16 vk, bool ctrl, bool shift, bool alt) {
+int SafeAcceleratorCmd(u16 vk, bool ctrl, bool shift, bool alt, bool cmd) {
     u8 mods = kVirt;
+    if (cmd) {
+        mods |= kCmd;
+    }
     if (ctrl) {
         mods |= kCtrl;
     }
@@ -486,13 +569,7 @@ static void AddAccelStroke(int cmd, Str stroke) {
 }
 
 static void BuildAcceleratorStrokes() {
-#if OS_DARWIN
-    // Command stands in for Ctrl: Command+K opens the command palette
-    int nSlots = gAccelsCount * 2;
-#else
-    int nSlots = gAccelsCount;
-#endif
-    gAccelStrokes = AllocArray<AccelStroke>(nSlots);
+    gAccelStrokes = AllocArray<AccelStroke>(gAccelsCount);
     gAccelStrokesCount = 0;
     for (int i = 0; i < gAccelsCount; i++) {
         TempStr stroke = ShortcutToGpuiStroke(gAccels[i].sc);
@@ -501,12 +578,6 @@ static void BuildAcceleratorStrokes() {
             continue;
         }
         AddAccelStroke(gAccels[i].cmd, stroke);
-#if OS_DARWIN
-        if (str::StartsWith(stroke, StrL("ctrl-"))) {
-            TempStr asCmd = str::JoinTemp(StrL("cmd-"), Str(stroke.s + 5, stroke.len - 5));
-            AddAccelStroke(gAccels[i].cmd, asCmd);
-        }
-#endif
     }
 }
 
@@ -552,7 +623,7 @@ void CreateSumatraAcceleratorTable() {
 
     // an upper bound: Add() appends at most one entry per call, and it's called
     // once per built-in and once per custom shortcut
-    int nMax = dimofi(gBuiltInAccelerators) + CountCustomShortcuts();
+    int nMax = dimofi(gBuiltInAccelerators) + dimofi(gPlatformAccelerators) + CountCustomShortcuts();
 
     AccelTablesBuilder b;
     // accels outlives us in gAccels, so it has to be a real allocation
@@ -560,7 +631,16 @@ void CreateSumatraAcceleratorTable() {
 
     AddCustomShortcuts(b);
     // add built-in but only if the shortcut doesn't conflict with custom shortcut
+    for (Accel accel : gPlatformAccelerators) {
+        if (accel.cmd != 0) {
+            b.Add(accel);
+        }
+    }
     for (Accel accel : gBuiltInAccelerators) {
+        if (IsDroppedOnPlatform(accel.sc)) {
+            continue;
+        }
+        accel.sc = ToPlatformShortcut(accel.sc);
         b.Add(accel);
     }
 
@@ -623,13 +703,15 @@ HACCEL* GetAcceleratorTables() {
 bool Accelerators_UnitTestFolderNavIsSafe() {
     int n = 0;
     GetAcceleratorTable(n); // builds gAccels if it isn't built yet
-    if (SafeAcceleratorCmd(VK_RIGHT, true, true, false) != CmdOpenNextFileInFolder) {
+    bool cmd = ToPlatformShortcut(KeyShortcut(kCtrl | kVirt, VK_RIGHT)).cmd;
+    bool ctrl = !cmd;
+    if (SafeAcceleratorCmd(VK_RIGHT, ctrl, true, false, cmd) != CmdOpenNextFileInFolder) {
         return false;
     }
-    if (SafeAcceleratorCmd(VK_LEFT, true, true, false) != CmdOpenPrevFileInFolder) {
+    if (SafeAcceleratorCmd(VK_LEFT, ctrl, true, false, cmd) != CmdOpenPrevFileInFolder) {
         return false;
     }
-    if (SafeAcceleratorCmd(VK_UP, true, true, false) != CmdNavigateFilesInFolder) {
+    if (SafeAcceleratorCmd(VK_UP, ctrl, true, false, cmd) != CmdNavigateFilesInFolder) {
         return false;
     }
     // a bare arrow still belongs to the control, so it can scroll / move the selection
@@ -711,6 +793,11 @@ bool Accelerators_UnitTestCustomShortcutShown() {
     FreeAcceleratorTables();
     CreateSumatraAcceleratorTable();
     TempStr keys = ShortcutsForCmdTemp(CmdOpenFile, 8);
+#if OS_DARWIN
+    return str::Contains(keys, StrL("\u2303\u21e7"
+                                    "F24"));
+#else
     return str::Contains(keys, StrL("Ctrl + Shift + F24"));
+#endif
 }
 #endif

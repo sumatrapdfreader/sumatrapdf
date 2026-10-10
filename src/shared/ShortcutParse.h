@@ -10,12 +10,15 @@ struct KeyShortcut {
         kShiftKey = 4,
         kCtrlKey = 8,
         kAltKey = 16,
+        // Command on macOS, Super on Linux
+        kCmdKey = 32,
     };
 
     u16 vk = 0;
     bool ctrl = false;
     bool shift = false;
     bool alt = false;
+    bool cmd = false;
     bool isVirt = false;
 
     constexpr KeyShortcut() = default;
@@ -24,6 +27,7 @@ struct KeyShortcut {
           ctrl((mods & kCtrlKey) != 0),
           shift((mods & kShiftKey) != 0),
           alt((mods & kAltKey) != 0),
+          cmd((mods & kCmdKey) != 0),
           isVirt((mods & kVirtKey) != 0) {}
 
     u8 Mods() const;

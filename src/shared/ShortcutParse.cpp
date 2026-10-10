@@ -17,12 +17,14 @@ constexpr u8 kVirt = KeyShortcut::kVirtKey;
 constexpr u8 kShift = KeyShortcut::kShiftKey;
 constexpr u8 kCtrl = KeyShortcut::kCtrlKey;
 constexpr u8 kAlt = KeyShortcut::kAltKey;
+constexpr u8 kCmd = KeyShortcut::kCmdKey;
 
 u8 KeyShortcut::Mods() const {
     u8 res = isVirt ? kVirt : 0;
     res |= shift ? kShift : 0;
     res |= ctrl ? kCtrl : 0;
     res |= alt ? kAlt : 0;
+    res |= cmd ? kCmd : 0;
     return res;
 }
 
@@ -164,6 +166,29 @@ static TempStr getVirtTemp(u8 key, bool isEng) {
                 return StrL("->");
         }
     }
+#if OS_DARWIN
+    // the glyphs the menu bar draws for these keys
+    switch (key) {
+        case VK_LEFT:
+            return StrL("\u2190");
+        case VK_UP:
+            return StrL("\u2191");
+        case VK_RIGHT:
+            return StrL("\u2192");
+        case VK_DOWN:
+            return StrL("\u2193");
+        case VK_BACK:
+            return StrL("\u232b");
+        case VK_DELETE:
+            return StrL("\u2326");
+        case VK_RETURN:
+            return StrL("\u21a9");
+        case VK_TAB:
+            return StrL("\u21e5");
+        case VK_ESCAPE:
+            return StrL("\u238b");
+    }
+#endif
     return SeqStrNumStrByNumber(gVirtKeysNum, key);
 }
 
@@ -216,6 +241,14 @@ again:
         fVirt |= (kCtrl | kVirt);
         goto again;
     }
+#if !OS_WIN
+    // an ACCEL has no bit for the Windows key
+    if (skipVirtKey(cursor, StrL("cmd")) || skipVirtKey(cursor, StrL("command")) ||
+        skipVirtKey(cursor, StrL("super")) || skipVirtKey(cursor, StrL("meta"))) {
+        fVirt |= (kCmd | kVirt);
+        goto again;
+    }
+#endif
     if (skipVirtKey(cursor, StrL("global"))) {
         goto again;
     }
@@ -391,6 +424,24 @@ TempStr AppendAccelKeyToMenuStringTemp(TempStr menuStr, const KeyShortcut& sc) {
     u8 key = (u8)sc.vk;
     bool isVirt = sc.isVirt;
     char shiftedPunct = sc.shift ? ShiftedPunctGlyph(key) : 0;
+#if OS_DARWIN
+    // the menu bar's notation: ⌃⌥⇧⌘ in that order, nothing between them
+    if (sc.ctrl) {
+        str.Append(StrL("\u2303"));
+    }
+    if (sc.alt) {
+        str.Append(StrL("\u2325"));
+    }
+    if (sc.shift && !shiftedPunct) {
+        str.Append(StrL("\u21e7"));
+    }
+    if (sc.cmd) {
+        str.Append(StrL("\u2318"));
+    }
+#else
+    if (sc.cmd) {
+        str.Append(StrL("Super + "));
+    }
     if (sc.alt && sc.ctrl) {
         // same bits as AltGr on Windows; keep the name the user would type
         str.Append(StrL("AltGr + "));
@@ -414,6 +465,7 @@ TempStr AppendAccelKeyToMenuStringTemp(TempStr menuStr, const KeyShortcut& sc) {
         }
         str.Append(s);
     }
+#endif
     if (shiftedPunct) {
         str.AppendChar(shiftedPunct);
         goto Exit;
@@ -522,6 +574,9 @@ TempStr ShortcutToGpuiStroke(const KeyShortcut& sc) {
     TempStr res = str::DupTemp(StrL(""));
     if (sc.ctrl) {
         res = str::JoinTemp(res, StrL("ctrl-"));
+    }
+    if (sc.cmd) {
+        res = str::JoinTemp(res, StrL("cmd-"));
     }
     if (sc.alt) {
         res = str::JoinTemp(res, StrL("alt-"));
