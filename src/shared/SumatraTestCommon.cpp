@@ -25,6 +25,7 @@ extern "C" {
 #include "ImageReader.h"
 #include "ImageSaveCropResize.h"
 #include "PdfCreator.h"
+#include "PdfCad.h"
 #include "DisplayModel.h"
 #include "PdfSync.h"
 #include "ProgressUpdateUI.h"
@@ -1169,6 +1170,452 @@ TempStr ToggleFormButtonResultTemp(int pageNo, int idx, int* exitCodeOut) {
         *exitCodeOut = 0;
     }
     out.Append(fmt("OK toggled=%d before='%s' after='%s' buttons=%d\n", (int)toggled, before, after, nButtons));
+    return ToStrTemp(out);
+}
+
+// A BGRA8 heap pixmap is readable. A GDI DIB is readable only after a copy.
+Pixmap* EnsureReadablePixmap(Pixmap* p) {
+    if (!p) {
+        return nullptr;
+    }
+    if (p->data && p->format == PixmapFormat::BGRA8) {
+        return p;
+    }
+#if OS_WIN
+    return PixmapCopyAs32bppDIB(p);
+#else
+    return nullptr;
+#endif
+}
+
+// a spot on pageNo with no text under it, in canvas pixels
+Point FindEmptySpotOnPage(MainWindow* win, DisplayModel* dm, int pageNo) {
+    Rect client = Rect(0, 0, win->canvasRc.dx, win->canvasRc.dy);
+    constexpr int kStep = 8;
+    for (int y = client.y + kStep; y < client.y + client.dy; y += kStep) {
+        for (int x = client.x + kStep; x < client.x + client.dx; x += kStep) {
+            Point pt{x, y};
+            if (dm->GetPageNoByPoint(pt) != pageNo) {
+                continue;
+            }
+            if (dm->IsOverText(pt)) {
+                continue;
+            }
+            if (dm->GetElementAtPos(pt, nullptr)) {
+                continue;
+            }
+            return pt;
+        }
+    }
+    return Point{};
+}
+
+// Color histogram of a page rendered with the CAD enhancement forced on.
+// tests/issue-5937.ts.
+TempStr CadEnhanceColorsResultTemp(Str path, int pageNo, int zoomPercent, int* exitCodeOut) {
+    str::Builder out;
+    auto fail = [&out, exitCodeOut](Str msg) {
+        if (exitCodeOut) {
+            *exitCodeOut = 1;
+        }
+        out.Append(msg);
+        return ToStrTemp(out);
+    };
+
+    SetEngineeringDrawingEnhanceMode(StrL("on"));
+    EngineBase* engine = CreateEngineFromFile(path, nullptr, false);
+    if (!engine) {
+        return fail(fmt("ERROR engine-create-failed path=%s\n", path));
+    }
+    if (pageNo < 1 || pageNo > engine->PageCount()) {
+        SafeEngineRelease(&engine);
+        return fail(fmt("ERROR bad-page page=%d\n", pageNo));
+    }
+    if (!EngineMupdfCadEnhanceActive(engine)) {
+        SafeEngineRelease(&engine);
+        return fail(StrL("ERROR cad-enhance-not-active\n"));
+    }
+
+    float zoom = (float)zoomPercent / 100.f;
+    RenderPageArgs args(pageNo, zoom, 0);
+    Pixmap* bmp = engine->RenderPage(args);
+    if (!bmp) {
+        SafeEngineRelease(&engine);
+        return fail(StrL("ERROR render-failed\n"));
+    }
+    Pixmap* rgb = EnsureReadablePixmap(bmp);
+    if (!rgb) {
+        FreePixmap(bmp);
+        SafeEngineRelease(&engine);
+        return fail(StrL("ERROR pixmap-convert-failed\n"));
+    }
+
+    int counts[256] = {};
+    for (int y = 0; y < rgb->height; y++) {
+        const u8* row = rgb->data + ((size_t)y * (size_t)rgb->stride);
+        for (int x = 0; x < rgb->width; x++) {
+            const u8* px = row + ((size_t)x * 4);
+            if (px[0] == px[1] && px[1] == px[2]) {
+                counts[px[0]]++;
+            }
+        }
+    }
+    out.Append(fmt("size=%dx%d\n", rgb->width, rgb->height));
+    if (engine->HasErrors()) {
+        out.Append(fmt("errors=%s\n", engine->GetErrorsTextTemp()));
+    }
+    for (int i = 0; i < 256; i++) {
+        if (counts[i] >= 64) {
+            out.Append(fmt("gray=%d count=%d\n", i, counts[i]));
+        }
+    }
+    if (rgb != bmp) {
+        FreePixmap(rgb);
+    }
+    FreePixmap(bmp);
+    SafeEngineRelease(&engine);
+    if (exitCodeOut) {
+        *exitCodeOut = 0;
+    }
+    return ToStrTemp(out);
+}
+
+// Render an image page and report dest size plus the RGB of the left and right
+// edge pixels. clipKind=1 uses the slightly-off page rect that Copy Selection
+// produces after CvtFromScreen (issue #3434).
+// clipKind values of ImageRenderEdgesResultTemp
+constexpr int kClipSelection = 1;
+
+constexpr int kClipRightHalfTile = 2;
+
+constexpr int kClipFullPageTile = 3;
+
+// Render an image page and report dest size plus the RGB of the left and right
+// edge pixels. clipKind 1 is the copy-selection rect, 2 a right-half tile
+// after a full-page render, 3 the page/pixel round trip.
+TempStr ImageRenderEdgesResultTemp(Str path, int zoomPercent, int clipKind, int* exitCodeOut) {
+    str::Builder out;
+    auto fail = [&](Str msg) -> TempStr {
+        if (exitCodeOut) {
+            *exitCodeOut = 1;
+        }
+        out.Append(msg);
+        return ToStrTemp(out);
+    };
+
+    EngineBase* engine = CreateEngineFromFile(path, nullptr, false);
+    if (!engine) {
+        return fail(fmt("ERROR engine-create-failed path=%s\n", path));
+    }
+    RectF box = engine->PageMediabox(1);
+    float zoom = (float)zoomPercent / 100.f;
+    RectF clip;
+    RectF* pageRect = nullptr;
+    if (clipKind == kClipSelection) {
+        // same half-pixel pull-back CvtFromScreen applies to a pixel-aligned
+        // selection of the whole image
+        clip = RectF(-0.499f, -0.499f, box.dx, box.dy);
+        pageRect = &clip;
+    }
+    if (clipKind == kClipRightHalfTile) {
+        // full render first so mupdf caches the whole decoded image, then a
+        // tile of the right half
+        RenderPageArgs full(1, zoom, 0, nullptr, RenderTarget::Export);
+        FreePixmap(engine->RenderPage(full));
+        clip = RectF(box.dx / 2, 0, box.dx / 2, box.dy);
+        pageRect = &clip;
+    }
+    Rect tile;
+    if (clipKind == kClipFullPageTile) {
+        tile = engine->Transform(box, 1, zoom, 0).Round();
+        clip = engine->Transform(ToRectF(tile), 1, zoom, 0, true);
+        pageRect = &clip;
+    }
+    RenderPageArgs args(1, zoom, 0, pageRect, RenderTarget::Export);
+    Pixmap* bmp = engine->RenderPage(args);
+    if (!bmp) {
+        SafeEngineRelease(&engine);
+        return fail(fmt("ERROR render-failed box=%gx%g zoom=%g\n", box.dx, box.dy, zoom));
+    }
+    if (bmp->width < 2 || bmp->height < 1 || !bmp->data) {
+        TempStr msg = fmt("ERROR pixmap-too-small bmp=%dx%d fmt=%d box=%gx%g\n", bmp->width, bmp->height,
+                          (int)bmp->format, box.dx, box.dy);
+        FreePixmap(bmp);
+        SafeEngineRelease(&engine);
+        return fail(msg);
+    }
+    int bpp = PixmapBytesPerPixel(bmp->format);
+    if (bpp < 3) {
+        int srcFmt = (int)bmp->format;
+        FreePixmap(bmp);
+        SafeEngineRelease(&engine);
+        return fail(fmt("ERROR pixmap-fmt=%d\n", srcFmt));
+    }
+
+    auto pixel = [&](int x, int y, int* r, int* g, int* b) {
+        const u8* px = bmp->data + ((size_t)y * (size_t)bmp->stride) + ((size_t)x * bpp);
+        if (bmp->format == PixmapFormat::RGBA8) {
+            *r = px[0];
+            *g = px[1];
+            *b = px[2];
+        } else {
+            *b = px[0];
+            *g = px[1];
+            *r = px[2];
+        }
+    };
+    int lr, lg, lb, rr, rg, rb;
+    pixel(0, bmp->height / 2, &lr, &lg, &lb);
+    pixel(bmp->width - 1, bmp->height / 2, &rr, &rg, &rb);
+    out.Append(fmt("size=%dx%d left=%d,%d,%d right=%d,%d,%d", bmp->width, bmp->height, lr, lg, lb, rr, rg, rb));
+    if (clipKind == kClipFullPageTile) {
+        out.Append(fmt(" tile=%dx%d", tile.dx, tile.dy));
+    }
+    out.Append(StrL("\n"));
+
+    FreePixmap(bmp);
+    SafeEngineRelease(&engine);
+    if (exitCodeOut) {
+        *exitCodeOut = 0;
+    }
+    return ToStrTemp(out);
+}
+
+// stamp an image onto page 1 and count red pixels. tests/issue-1744.ts.
+TempStr ImageInsertResultTemp(Str pdfPath, Str imagePath, int* exitCodeOut) {
+    str::Builder out;
+    auto fail = [&out, exitCodeOut](Str msg) {
+        if (exitCodeOut) {
+            *exitCodeOut = 1;
+        }
+        out.Append(msg);
+        return ToStrTemp(out);
+    };
+
+    EngineBase* engine = CreateEngineFromFile(pdfPath, nullptr, false);
+    if (!engine) {
+        return fail(fmt("ERROR engine-create-failed path=%s\n", pdfPath));
+    }
+    if (!EngineSupportsAnnotations(engine)) {
+        SafeEngineRelease(&engine);
+        return fail(StrL("ERROR annots-not-supported\n"));
+    }
+    Str data = file::ReadFile(imagePath);
+    Pixmap* image = PixmapFromData(data);
+    str::Free(data);
+    if (!image) {
+        SafeEngineRelease(&engine);
+        return fail(fmt("ERROR image-load-failed path=%s\n", imagePath));
+    }
+    if (!engine->BenchLoadPage(1)) {
+        FreePixmap(image);
+        SafeEngineRelease(&engine);
+        return fail(StrL("ERROR page-load-failed\n"));
+    }
+
+    AnnotCreateArgs args{AnnotationType::Stamp};
+    args.stampImage = image;
+    Annotation* annot = EngineMupdfCreateAnnotation(engine, 1, PointF{72.f, 100.f}, &args);
+    if (!annot) {
+        TempStr msg = fmt("ERROR stamp-create-failed fmt=%d %dx%d\n", (int)image->format, image->width, image->height);
+        FreePixmap(image);
+        SafeEngineRelease(&engine);
+        return fail(msg);
+    }
+    FreePixmap(image);
+
+    Vec<Annotation*> annots;
+    EngineGetAnnotations(engine, annots);
+    int nAnnots = len(annots);
+    RectF ar = GetRect(annot);
+    out.Append(fmt("annot=%s rect=%g,%g,%g,%g\n", AnnotationReadableNameTemp(Type(annot)), ar.x, ar.y, ar.dx, ar.dy));
+
+    RenderPageArgs rargs(1, 1.f, 0, nullptr, RenderTarget::Export);
+    Pixmap* bmp = engine->RenderPage(rargs);
+    if (!bmp || !bmp->data) {
+        FreePixmap(bmp);
+        SafeEngineRelease(&engine);
+        return fail(StrL("ERROR render-failed\n"));
+    }
+    Pixmap* rgb = EnsureReadablePixmap(bmp);
+    if (!rgb || !rgb->data) {
+        int srcFmt = (int)bmp->format;
+        FreePixmap(bmp);
+        SafeEngineRelease(&engine);
+        return fail(fmt("ERROR pixmap-convert-failed fmt=%d\n", srcFmt));
+    }
+    int bpp = PixmapBytesPerPixel(rgb->format);
+    int red = 0;
+    int nonWhite = 0;
+    if (bpp >= 3) {
+        for (int y = 0; y < rgb->height; y++) {
+            const u8* row = rgb->data + ((size_t)y * (size_t)rgb->stride);
+            for (int x = 0; x < rgb->width; x++) {
+                const u8* px = row + ((size_t)x * bpp);
+                int r, g, b;
+                if (rgb->format == PixmapFormat::RGBA8) {
+                    r = px[0];
+                    g = px[1];
+                    b = px[2];
+                } else {
+                    b = px[0];
+                    g = px[1];
+                    r = px[2];
+                }
+                if (r < 250 || g < 250 || b < 250) {
+                    nonWhite++;
+                }
+                if (r > 180 && g < 80 && b < 80) {
+                    red++;
+                }
+            }
+        }
+    }
+    out.Append(fmt("annots=%d red=%d nonwhite=%d size=%dx%d\n", nAnnots, red, nonWhite, rgb->width, rgb->height));
+    if (rgb != bmp) {
+        FreePixmap(rgb);
+    }
+    FreePixmap(bmp);
+    SafeEngineRelease(&engine);
+    if (exitCodeOut) {
+        *exitCodeOut = (nAnnots >= 1 && red > 50) ? 0 : 1;
+    }
+    if (nAnnots < 1 || red <= 50) {
+        out.Append(StrL("ERROR stamp-not-visible\n"));
+    }
+    return ToStrTemp(out);
+}
+
+// View vs print ink. A print-only OCG must still paint for print (issue #6101).
+TempStr PageRenderViewPrintResultTemp(Str path, int* exitCodeOut) {
+    str::Builder out;
+    auto fail = [&out, exitCodeOut](Str msg) {
+        if (exitCodeOut) {
+            *exitCodeOut = 1;
+        }
+        out.Append(msg);
+        return ToStrTemp(out);
+    };
+
+    EngineBase* engine = CreateEngineFromFile(path, nullptr, false);
+    if (!engine) {
+        return fail(fmt("ERROR engine-create-failed path=%s\n", path));
+    }
+    if (!engine->BenchLoadPage(1)) {
+        SafeEngineRelease(&engine);
+        return fail(StrL("ERROR page-load-failed\n"));
+    }
+
+    RenderPageArgs viewArgs(1, 1.f, 0, nullptr, RenderTarget::View);
+    RenderPageArgs printArgs(1, 1.f, 0, nullptr, RenderTarget::Print);
+    Pixmap* viewRaw = engine->RenderPage(viewArgs);
+    Pixmap* printRaw = engine->RenderPage(printArgs);
+    if (!viewRaw || !viewRaw->data || !printRaw || !printRaw->data) {
+        FreePixmap(viewRaw);
+        FreePixmap(printRaw);
+        SafeEngineRelease(&engine);
+        return fail(StrL("ERROR render-failed\n"));
+    }
+    Pixmap* view = EnsureReadablePixmap(viewRaw);
+    Pixmap* print = EnsureReadablePixmap(printRaw);
+    if (!view || !view->data || !print || !print->data) {
+        if (view != viewRaw) {
+            FreePixmap(view);
+        }
+        if (print != printRaw) {
+            FreePixmap(print);
+        }
+        FreePixmap(viewRaw);
+        FreePixmap(printRaw);
+        SafeEngineRelease(&engine);
+        return fail(StrL("ERROR pixmap-convert-failed\n"));
+    }
+
+    int viewN = CountNonWhitePixels(view);
+    int printN = CountNonWhitePixels(print);
+    out.Append(fmt("viewNonwhite=%d printNonwhite=%d viewSize=%dx%d printSize=%dx%d\n", viewN, printN, view->width,
+                   view->height, print->width, print->height));
+    if (view != viewRaw) {
+        FreePixmap(view);
+    }
+    if (print != printRaw) {
+        FreePixmap(print);
+    }
+    FreePixmap(viewRaw);
+    FreePixmap(printRaw);
+    SafeEngineRelease(&engine);
+    if (exitCodeOut) {
+        *exitCodeOut = 0;
+    }
+    return ToStrTemp(out);
+}
+
+// Navigate to {chapter, page} (clamped) and report where it landed.
+TempStr GoToLocationResultTemp(int chapter, int page, int* exitCodeOut) {
+    str::Builder out;
+    auto fail = [&](Str msg, int code) -> TempStr {
+        out.Append(msg);
+        out.AppendChar('\n');
+        if (exitCodeOut) {
+            *exitCodeOut = code;
+        }
+        return ToStrTemp(out);
+    };
+
+    MainWindow* win = len(gWindows) > 0 ? gWindows[0] : nullptr;
+    if (!win) {
+        return fail(StrL("NOTREADY no-window"), 2);
+    }
+    if (!win->IsDocLoaded() || !win->ctrl) {
+        return fail(StrL("NOTREADY no-doc"), 2);
+    }
+    DocController* ctrl = win->ctrl;
+    Location want = ctrl->ClampLocation({chapter, page});
+    ctrl->GoToLocation(want, true);
+    Location got = ctrl->CurrentLocation();
+    out.Append(fmt("OK chapter=%d page=%d\n", got.chapter, got.page));
+    if (exitCodeOut) {
+        *exitCodeOut = 0;
+    }
+    return ToStrTemp(out);
+}
+
+// GoToPage on a background tab so UpdateScrollbars sees a non-current dm.
+TempStr HiddenTabGoToPageResultTemp(int* exitCodeOut) {
+    str::Builder out;
+    auto fail = [&](Str msg, int code) -> TempStr {
+        out.Append(msg);
+        out.AppendChar('\n');
+        if (exitCodeOut) {
+            *exitCodeOut = code;
+        }
+        return ToStrTemp(out);
+    };
+
+    if (len(gWindows) == 0) {
+        return fail(StrL("NOTREADY no-window"), 2);
+    }
+    MainWindow* win = gWindows[0];
+    if (!win) {
+        return fail(StrL("NOTREADY no-window"), 2);
+    }
+
+    DisplayModel* dm = nullptr;
+    for (WindowTab* tab : win->Tabs()) {
+        if (tab && tab != win->CurrentTab() && tab->AsFixed()) {
+            dm = tab->AsFixed();
+            break;
+        }
+    }
+    if (!dm) {
+        return fail(StrL("NOTREADY no-hidden-doc"), 2);
+    }
+
+    dm->GoToPage(dm->CurrentPageNo(), false);
+    out.Append(StrL("OK\n"));
+    if (exitCodeOut) {
+        *exitCodeOut = 0;
+    }
     return ToStrTemp(out);
 }
 

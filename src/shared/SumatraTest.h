@@ -57,3 +57,5 @@ TocItem* NthTocItemWithDest(TocItem* item, int target, int& counter);
 bool FindWordCenter(EngineBase* engine, int pageNo, Str word, double* xOut, double* yOut);
 int CountNonWhitePixels(Pixmap* bmp);
 TempStr PixmapRgbHexTemp(Pixmap* px, int x, int y);
+Pixmap* EnsureReadablePixmap(Pixmap* p);
+Point FindEmptySpotOnPage(MainWindow* win, DisplayModel* dm, int pageNo);
