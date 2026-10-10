@@ -895,6 +895,8 @@ struct PdfToolDlg {
     gp::Bounds mergeView{};
     float mergeLayoutDx = 0;
     float mergeLayoutDy = 0;
+    // width the columns were laid out for; bounds are filled in only while painting
+    float mergeGeomDx = 0;
     int mergeCols = 1;
     // scroll the keyboard's page into view once the grid has a size
     bool mergeEnsureFocus = false;
@@ -1832,7 +1834,8 @@ static int MergeColsForDx(float dx) {
 // x of the first column, local coords: the grid is centered
 static float MergeGridLeft() {
     float sbDx = MergeMaxScrollY() > 0 ? (float)kMergeScrollbarDx : 0;
-    float itemsDx = gTool.mergeView.w - 2 * MergePad() - sbDx;
+    float w = gTool.mergeGeomDx > 1.f ? gTool.mergeGeomDx : gTool.mergeView.w;
+    float itemsDx = w - 2 * MergePad() - sbDx;
     float gridDx = (float)(gTool.mergeCols * kMergeThumbDx + (gTool.mergeCols - 1) * kMergeGap);
     return MergePad() + std::max(0.f, (itemsDx - gridDx) / 2);
 }
@@ -3353,6 +3356,7 @@ void ShowMergePdfDialog(MainWindow* win) {
     gTool.mergeView = {};
     gTool.mergeLayoutDx = 0;
     gTool.mergeLayoutDy = 0;
+    gTool.mergeGeomDx = 0;
     gTool.mergeCols = 1;
     gTool.mergeHoverIdx = -1;
     MergeEndPress();
@@ -3564,16 +3568,19 @@ static void MergeInvalidateLater() {
 // buttons (ToolWindowSetUiFontPx), and the grid's font sizes are in that rem
 static float gMergeFontScale = 1;
 
-static gp::El* MergeGridEl(gp::Ctx* cx, float viewDy) {
+static gp::El* MergeGridEl(gp::Ctx* cx, float viewDx, float viewDy) {
     const gp::Theme& th = gp::ThemeNow(cx->app);
-    // the column count follows the width gpui gave the grid on the last frame
+    // Last frame's bounds, or the width the caller already knows: gpui fills
+    // bounds while painting, and this window may not be built again.
+    float dx = gTool.mergeView.w > 1.f ? gTool.mergeView.w : viewDx;
     if (gTool.mergeView.w != gTool.mergeLayoutDx || gTool.mergeView.h != gTool.mergeLayoutDy) {
         gTool.mergeLayoutDx = gTool.mergeView.w;
         gTool.mergeLayoutDy = gTool.mergeView.h;
         uitask::Post(MkFunc0Void(MergeInvalidateLater), "MergeGridLayout");
     }
-    if (gTool.mergeView.w > 0) {
-        gTool.mergeCols = MergeColsForDx(gTool.mergeView.w);
+    if (dx > 1.f) {
+        gTool.mergeGeomDx = dx;
+        gTool.mergeCols = MergeColsForDx(dx);
         if (gTool.mergeEnsureFocus) {
             gTool.mergeEnsureFocus = false;
             MergeEnsureVisible(gTool.mergeFocusIdx / gTool.mergeCols);
@@ -3887,8 +3894,8 @@ static TempStr MergeInfoTemp() {
 }
 
 // the page grid with its context menu
-static gp::El* MergePagesEl(gp::Ctx* cx, float viewDy) {
-    gp::El* pages = MergeGridEl(cx, viewDy);
+static gp::El* MergePagesEl(gp::Ctx* cx, float viewDx, float viewDy) {
+    gp::El* pages = MergeGridEl(cx, viewDx, viewDy);
     int nSel = MergeSelectedCount();
     int nSelRemoved = MergeSelectedRemovedCount();
     gpc::PopupMenu* menu = gpc::PopupMenu::New(cx, GStrL("merge-ctx-menu"))->MinW(200);
@@ -3951,6 +3958,7 @@ static gp::El* MergeToolBuild(MainWindow* win, gp::Ctx* cx) {
     gp::WinSize ws = gp::WindowSize(cx->win);
     gMergeFontScale = ToolWindowSetUiFontPx(cx, kMergeWinFontPx);
     StartMergeThumbs();
+    float viewDx = std::max(0.f, ws.dipW - 2 * kMergeWinPad);
     float viewDy = std::max(100.f, ws.dipH - 3 * kMergeWinPad - kMergeBtnDy);
 
     int nSel = MergeSelectedCount();
@@ -3986,7 +3994,7 @@ static gp::El* MergeToolBuild(MainWindow* win, gp::Ctx* cx) {
                       ->MinH(0)
                       ->Pad(kMergeWinPad)
                       ->Gap(kMergeWinPad)
-                      ->Child(MergePagesEl(cx, viewDy))
+                      ->Child(MergePagesEl(cx, viewDx, viewDy))
                       ->Child(bottom);
     if (len(gTool.mergeAskPaths) == 0) {
         return col;
@@ -4304,7 +4312,7 @@ static gp::El* PdfToolBuildCurrent(MainWindow* win, gp::Ctx* cx) {
         // orig's window is 85% of the work area tall; the grid gets what the
         // frame leaves after the dialog's title and button rows
         float viewDy = std::max(240.f, gp::WindowSize(cx->win).dipH - 260);
-        body->Child(MergePagesEl(cx, viewDy));
+        body->Child(MergePagesEl(cx, 0, viewDy));
         body->Child(gpc::Button::New(cx, GStrL("merge-add"))
                         ->Label(ToGpui(Tr("Add PDF...")))
                         ->WithSize(gp::UiSize::Small)

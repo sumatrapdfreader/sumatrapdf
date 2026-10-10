@@ -11,6 +11,7 @@
 import { mkdirSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 import { ControlClient, ControlCommand } from "./control.ts";
+import { IS_MAC } from "./host.ts";
 import { cmdId, makePdf, runStandalone, tmpPath, USE_NG } from "./util.ts";
 import {
   clientToScreen,
@@ -104,11 +105,46 @@ async function pageState(client: ControlClient): Promise<string> {
   return m ? `${m[1]} ${m[2]}` : "";
 }
 
-function mouse(hwnd: number, msg: number, mk: number, pt: { x: number; y: number }) {
+function macMods(mk: number): number {
+  // Command is the control modifier the merge grid reads.
+  return mk & MK_CONTROL ? 8 : 0;
+}
+
+async function mouse(client: ControlClient, hwnd: number, msg: number, mk: number, pt: { x: number; y: number }) {
+  if (IS_MAC) {
+    const kind = msg === WM_MOUSEMOVE ? "move" : msg === WM_LBUTTONDOWN ? "down" : "up";
+    const button = msg === WM_MOUSEMOVE && mk & MK_LBUTTON ? 1 : 0;
+    const res = await client.request(ControlCommand.TestToolWindow, [
+      "input",
+      "mergepdf",
+      kind,
+      pt.x,
+      pt.y,
+      button,
+      macMods(mk),
+    ]);
+    const raw = String(res[1] ?? "");
+    if ((res[0] as number) !== 0 || raw.startsWith("ERR")) {
+      throw new Error(`issue-6070: merge input ${kind}: ${raw}`);
+    }
+    return;
+  }
   // SetCapture injects a WM_MOUSEMOVE at the real cursor: keep it where we are
   const screen = clientToScreen(hwnd, pt.x, pt.y);
   setCursorPos(screen.x, screen.y);
   sendMessage(hwnd, msg, mk, packCoords(pt.x, pt.y));
+}
+
+async function key(client: ControlClient, hwnd: number, vk: number) {
+  if (IS_MAC) {
+    const res = await client.request(ControlCommand.TestToolWindow, ["input", "mergepdf", "key", vk, 0, 0, 0]);
+    const raw = String(res[1] ?? "");
+    if ((res[0] as number) !== 0 || raw.startsWith("ERR")) {
+      throw new Error(`issue-6070: merge key ${vk}: ${raw}`);
+    }
+    return;
+  }
+  postMessage(hwnd, WM_KEYDOWN, vk, 0);
 }
 
 // the "where to insert" question Add PDF... asks
@@ -167,9 +203,9 @@ export async function testit(): Promise<void> {
 
     // page 2's corner button, shown on hover, removes it
     const btn = center(s.rects.get(1)!.btn);
-    mouse(hwnd, WM_MOUSEMOVE, 0, btn);
-    mouse(hwnd, WM_LBUTTONDOWN, MK_LBUTTON, btn);
-    mouse(hwnd, WM_LBUTTONUP, 0, btn);
+    await mouse(client, hwnd, WM_MOUSEMOVE, 0, btn);
+    await mouse(client, hwnd, WM_LBUTTONDOWN, MK_LBUTTON, btn);
+    await mouse(client, hwnd, WM_LBUTTONUP, 0, btn);
     await wantItems(client, "0:1s,0:2r,0:3,0:4", "the corner button didn't remove page 2");
 
     // page 4 dragged in front of page 1
@@ -177,30 +213,30 @@ export async function testit(): Promise<void> {
     const from = center(pageRect(s, 3));
     const r0 = pageRect(s, 0);
     const to = { x: r0.x + Math.floor(r0.dx / 8), y: r0.y + Math.floor(r0.dy / 2) };
-    mouse(hwnd, WM_LBUTTONDOWN, MK_LBUTTON, from);
-    mouse(hwnd, WM_MOUSEMOVE, MK_LBUTTON, to);
-    mouse(hwnd, WM_LBUTTONUP, 0, to);
+    await mouse(client, hwnd, WM_LBUTTONDOWN, MK_LBUTTON, from);
+    await mouse(client, hwnd, WM_MOUSEMOVE, MK_LBUTTON, to);
+    await mouse(client, hwnd, WM_LBUTTONUP, 0, to);
     await wantItems(client, "0:4s,0:1,0:2r,0:3", "dragging didn't move page 4 to the front");
 
     // Ctrl click adds a page to the selection
     s = await merge(client);
-    mouse(hwnd, WM_LBUTTONDOWN, MK_LBUTTON | MK_CONTROL, center(pageRect(s, 3)));
-    mouse(hwnd, WM_LBUTTONUP, MK_CONTROL, center(pageRect(s, 3)));
+    await mouse(client, hwnd, WM_LBUTTONDOWN, MK_LBUTTON | MK_CONTROL, center(pageRect(s, 3)));
+    await mouse(client, hwnd, WM_LBUTTONUP, MK_CONTROL, center(pageRect(s, 3)));
     await wantItems(client, "0:4s,0:1,0:2r,0:3s", "Ctrl click didn't add to the selection");
 
     // a rubber band from the gap above the first page to the middle of the third
     s = await merge(client);
     const bandFrom = { x: pageRect(s, 0).x - 4, y: pageRect(s, 0).y - 4 };
     const bandTo = center(pageRect(s, 2));
-    mouse(hwnd, WM_LBUTTONDOWN, MK_LBUTTON, bandFrom);
-    mouse(hwnd, WM_MOUSEMOVE, MK_LBUTTON, bandTo);
-    mouse(hwnd, WM_LBUTTONUP, 0, bandTo);
+    await mouse(client, hwnd, WM_LBUTTONDOWN, MK_LBUTTON, bandFrom);
+    await mouse(client, hwnd, WM_MOUSEMOVE, MK_LBUTTON, bandTo);
+    await mouse(client, hwnd, WM_LBUTTONUP, 0, bandTo);
     await wantItems(client, "0:4s,0:1s,0:2rs,0:3", "the rubber band didn't select pages 1-3");
 
     // Delete removes the selected pages; with all of them removed, restores them
-    postMessage(hwnd, WM_KEYDOWN, VK_DELETE, 0);
+    await key(client, hwnd, VK_DELETE);
     await wantItems(client, "0:4rs,0:1rs,0:2rs,0:3", "Delete didn't remove the selected pages");
-    postMessage(hwnd, WM_KEYDOWN, VK_DELETE, 0);
+    await key(client, hwnd, VK_DELETE);
     await wantItems(client, "0:4s,0:1s,0:2s,0:3", "Delete didn't restore the removed pages");
     await merge(client, "remove", "2");
 
@@ -220,7 +256,7 @@ export async function testit(): Promise<void> {
       if (asked !== "3") {
         throw new Error(`issue-6070: want page 3 in the Add PDF question, got '${asked}'`);
       }
-      postMessage(hwnd, WM_KEYDOWN, VK_ESCAPE, 0);
+      await key(client, hwnd, VK_ESCAPE);
       await waitFor("Esc didn't close the Add PDF question", async () => !/asking=1/.test((await merge(client)).raw));
     } else {
       let ask = await waitForInsertQuestion(proc.pid);
@@ -238,7 +274,7 @@ export async function testit(): Promise<void> {
     if (USE_NG) {
       await waitFor("Add PDF didn't ask where to insert", async () => /asking=1/.test((await merge(client)).raw));
       await merge(client, "asktext", "4");
-      postMessage(hwnd, WM_KEYDOWN, VK_RETURN, 0);
+      await key(client, hwnd, VK_RETURN);
     } else {
       const ask = await waitForInsertQuestion(proc.pid);
       const edit = findChildWindow(ask, "Edit");

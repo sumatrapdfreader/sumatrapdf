@@ -330,7 +330,11 @@ function cmdName(id: number): string {
     const re = /\b(Cmd\w+)\s*=\s*(\d+)\b/g;
     let m: RegExpExecArray | null;
     while ((m = re.exec(src)) !== null) {
-      cmdNames.set(parseInt(m[2]!, 10), m[1]!);
+      const id = parseInt(m[2]!, 10);
+      // CmdLast shares CmdMergePDF's number. Keep the real command name.
+      if (!cmdNames.has(id)) {
+        cmdNames.set(id, m[1]!);
+      }
     }
   }
   // A favorite or another custom command is not in Commands.h. The app
