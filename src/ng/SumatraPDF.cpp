@@ -5239,7 +5239,6 @@ void OnMenuExit() {
 
 // --- the sidebar ------------------------------------------------------------
 
-#if OS_WIN
 static int SidebarExtraDx(MainWindow* win) {
     int dx = win->sidebarDx;
     if (dx <= 0 && gSettings) {
@@ -5251,6 +5250,7 @@ static int SidebarExtraDx(MainWindow* win) {
     return dx + kSplitterDx;
 }
 
+#if OS_WIN
 // SidebarWindowSize = grow opts in; by default the window keeps its size (#6205)
 static bool FrameCanResizeForSidebar(MainWindow* win) {
     HWND hwnd = win ? AppShellNativeHwnd(win) : nullptr;
@@ -5281,9 +5281,7 @@ static void SyncCanvasAfterSidebar(MainWindow* win) {
 
 // Grow the frame by sidebar minus unused canvas margin (Fit Width has
 // none). Skip if already grown (tab switch). Hide undoes the grow.
-// ng: needs to move the window, which gpui cannot (see "gpui gaps"): done on
-// the HWND on Windows, nothing elsewhere. The sidebar and the canvas margin
-// are in dips, the frame in pixels
+// The sidebar and the canvas margin are in dips, the frame in pixels.
 static void AdjustFrameForSidebarNow(MainWindow* win, bool show) {
 #if OS_WIN
     if (!FrameCanResizeForSidebar(win)) {
@@ -5339,8 +5337,73 @@ static void AdjustFrameForSidebarNow(MainWindow* win, bool show) {
     wr = ShiftRectToWorkArea(wr, hwnd, true);
     HwndMoveWindow(hwnd, &wr);
 #else
-    (void)win;
-    (void)show;
+    if (!win || !win->gpuiWin || gPluginMode) {
+        return;
+    }
+    if (!gSettings || !str::EqI(gSettings->sidebarWindowSize, StrL("grow"))) {
+        if (!show) {
+            win->sidebarGrewFrameDx = 0;
+        }
+        return;
+    }
+    if (win->isFullScreen || win->presentation || win->isMaximized) {
+        if (!show) {
+            win->sidebarGrewFrameDx = 0;
+        }
+        return;
+    }
+
+    Rect wr = AppShellWindowScreenRect(win);
+    if (wr.IsEmpty()) {
+        return;
+    }
+    Rect work = AppShellWorkArea(win);
+    bool onRight = gSettings->sidebarOnRight;
+    int dpi = AppShellWindowDpi(win);
+
+    if (show) {
+        if (win->sidebarGrewFrameDx > 0) {
+            return;
+        }
+        int extra = SidebarExtraDx(win);
+        int unused = 0;
+        if (DisplayModel* dm = win->AsFixed()) {
+            unused = dm->UnusedCanvasDx();
+        }
+        int spare = work.IsEmpty() ? 0 : work.dx - wr.dx;
+        int grow = limitValue(MulDiv(extra - unused, dpi, 96), 0, std::max(spare, 0));
+        if (grow <= 0) {
+            win->sidebarGrewFrameDx = 0;
+            return;
+        }
+        wr.dx += grow;
+        if (!onRight) {
+            wr.x -= grow;
+        }
+        wr = AppShellShiftToWorkArea(wr, win, true);
+        win->sidebarGrewFrameDx = grow;
+        if (win->sidebarDx < kSidebarMinDx) {
+            win->sidebarDx = extra - kSplitterDx;
+        }
+        AppShellPlaceWindow(win, wr, false);
+        // the native frame is already the new size; frameRc updates on the
+        // next draw, and the layout read in between would still see the old one
+        win->frameRc.dx += grow;
+        return;
+    }
+
+    int shrunk = win->sidebarGrewFrameDx;
+    win->sidebarGrewFrameDx = 0;
+    if (shrunk <= 0 || wr.dx <= shrunk) {
+        return;
+    }
+    if (!onRight) {
+        wr.x += shrunk;
+    }
+    wr.dx -= shrunk;
+    wr = AppShellShiftToWorkArea(wr, win, true);
+    AppShellPlaceWindow(win, wr, false);
+    win->frameRc.dx -= shrunk;
 #endif
 }
 
