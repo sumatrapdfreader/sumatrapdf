@@ -6,6 +6,7 @@
 import { mkdirSync, rmSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 import { ControlClient, ControlCommand } from "./control.ts";
+import { IS_MAC } from "./host.ts";
 import { assemblePdf, cmdId, runStandalone, tmpPath } from "./util.ts";
 import {
   getClassName,
@@ -96,9 +97,16 @@ export async function testit(): Promise<void> {
     const openDeadline = Date.now() + 8_000;
     let handles = { palette: 0, edit: 0 };
     while (Date.now() < openDeadline) {
-      handles = findPalette(frame);
-      if (handles.palette && handles.edit) {
-        break;
+      if (IS_MAC) {
+        if (await paletteState(client)) {
+          handles = { palette: frame, edit: frame };
+          break;
+        }
+      } else {
+        handles = findPalette(frame);
+        if (handles.palette && handles.edit) {
+          break;
+        }
       }
       await sleep(50);
     }
