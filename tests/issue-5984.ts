@@ -3,7 +3,8 @@
 import { mkdirSync, rmSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 import { ControlCommand, type ControlClient } from "./control.ts";
-import { cmdId, runStandalone, tmpPath } from "./util.ts";
+import { IS_MAC } from "./host.ts";
+import { cmdId, runStandalone, SLOW_BUILD_FACTOR, tmpPath } from "./util.ts";
 import { launchControlled, pressEscape, sendCommand, waitForFocusClass, killAndWait } from "./win-automation.ts";
 import { getControlText, sendMessage, WM_CHAR } from "./winapi.ts";
 
@@ -78,6 +79,72 @@ function typeRapidly(edit: number, text: string): void {
   }
 }
 
+const VK_ESCAPE = 0x1b;
+
+async function macFindState(client: ControlClient): Promise<string> {
+  const res = await client.request(ControlCommand.TestToolWindow, ["state", "find"]);
+  return String(res[1] ?? "");
+}
+
+// The floating find box is the "find" tool window. There is no Edit HWND.
+async function waitMacFindEdit(client: ControlClient, selectAll: boolean): Promise<void> {
+  const deadline = Date.now() + 5000 * SLOW_BUILD_FACTOR;
+  let raw = "";
+  while (Date.now() < deadline) {
+    raw = await macFindState(client);
+    const text = /editText='([^']*)'/.exec(raw)?.[1];
+    const sel = /sel=(-?\d+),(-?\d+)/.exec(raw);
+    const focused = / edit=1/.test(raw);
+    const all = !!text && !!sel && Number(sel[1]) === 0 && Number(sel[2]) === text.length;
+    if (focused && text !== undefined && (!selectAll || all)) {
+      return;
+    }
+    await Bun.sleep(40);
+  }
+  throw new Error(`issue-5984: focus did not move to the find edit (${raw})`);
+}
+
+async function macType(client: ControlClient, text: string): Promise<void> {
+  for (const ch of text) {
+    const res = await client.request(ControlCommand.TestToolWindow, [
+      "input",
+      "find",
+      "char",
+      ch.charCodeAt(0),
+      0,
+      0,
+      0,
+    ]);
+    const raw = String(res[1] ?? "");
+    if (raw.startsWith("ERR") || raw === "NOTREADY") {
+      throw new Error(`issue-5984: char '${ch}': ${raw}`);
+    }
+  }
+}
+
+async function macFindText(client: ControlClient): Promise<string> {
+  const raw = await macFindState(client);
+  return /editText='([^']*)'/.exec(raw)?.[1] ?? "";
+}
+
+async function macHideFind(client: ControlClient): Promise<void> {
+  const key = await client.request(ControlCommand.TestToolWindow, ["input", "find", "key", VK_ESCAPE, 0, 0, 0]);
+  const keyRaw = String(key[1] ?? "");
+  if (keyRaw.startsWith("ERR")) {
+    throw new Error(`issue-5984: escape: ${keyRaw}`);
+  }
+  const deadline = Date.now() + 2000 * SLOW_BUILD_FACTOR;
+  let last = "";
+  while (Date.now() < deadline) {
+    last = String((await client.request(ControlCommand.TestFindUiState, ["state"]))[1] ?? "");
+    if (/floating=0/.test(last)) {
+      return;
+    }
+    await Bun.sleep(40);
+  }
+  throw new Error(`issue-5984: find did not close (${last.trim()})`);
+}
+
 export async function testit(): Promise<void> {
   const dir = tmpPath("issue-5984");
   rmSync(dir, { recursive: true, force: true });
@@ -94,14 +161,24 @@ export async function testit(): Promise<void> {
     await client.waitForRenderIdle();
 
     sendCommand(frame, cmdId("CmdFindFirst"));
-    let edit = await waitForFocusClass(frame, "Edit");
-    typeRapidly(edit, query);
+    let edit = 0;
+    if (IS_MAC) {
+      await waitMacFindEdit(client, false);
+      await macType(client, query);
+    } else {
+      edit = await waitForFocusClass(frame, "Edit");
+      typeRapidly(edit, query);
+    }
     let page = await waitForPage(client, firstMatchPage);
     if (page !== firstMatchPage) {
       throw new Error(`issue-5984: initial search landed on page ${page}, want ${firstMatchPage}`);
     }
 
-    await pressEscape(edit);
+    if (IS_MAC) {
+      await macHideFind(client);
+    } else {
+      await pressEscape(edit);
+    }
     await client.request(ControlCommand.TestFavoriteNav, ["goto", 1]);
     page = await waitForPage(client, 1);
     if (page !== 1) {
@@ -109,9 +186,16 @@ export async function testit(): Promise<void> {
     }
 
     sendCommand(frame, cmdId("CmdFindFirst"));
-    edit = await waitForFocusClass(frame, "Edit");
-    typeRapidly(edit, query);
-    const repeatedText = getControlText(edit);
+    let repeatedText = "";
+    if (IS_MAC) {
+      await waitMacFindEdit(client, true);
+      await macType(client, query);
+      repeatedText = await macFindText(client);
+    } else {
+      edit = await waitForFocusClass(frame, "Edit");
+      typeRapidly(edit, query);
+      repeatedText = getControlText(edit);
+    }
     if (repeatedText !== query) {
       throw new Error(`issue-5984: repeated typing produced '${repeatedText}', want '${query}'`);
     }
