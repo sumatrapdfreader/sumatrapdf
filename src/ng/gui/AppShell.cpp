@@ -804,9 +804,29 @@ void AppShellQuit() {
 // ng: the Windows versions drive the native frame from NativeWindow.cpp.
 void AppShellSetFullScreen(MainWindow* win, bool fullScreen, bool) {
     gp::Window* gw = win ? win->gpuiWin : nullptr;
-    if (gw) {
-        gp::WindowSetFullScreen(gw, fullScreen);
+    if (!gw) {
+        return;
     }
+#if OS_DARWIN
+    // toggleFullScreen refuses a client-titlebar window and can close it.
+    // Cover the monitor, and put the old frame back on the way out.
+    if (fullScreen) {
+        Rect cur = ToolWinNativeFrame(gw);
+        if (!cur.IsEmpty()) {
+            win->normalWindowRc = cur;
+        }
+        Rect mon = ToolWinNativeMonitor(gw);
+        if (!mon.IsEmpty()) {
+            ToolWinNativeSetFrame(gw, mon, false);
+        }
+        return;
+    }
+    if (!win->normalWindowRc.IsEmpty()) {
+        ToolWinNativeSetFrame(gw, win->normalWindowRc, false);
+    }
+#else
+    gp::WindowSetFullScreen(gw, fullScreen);
+#endif
 }
 
 bool AppShellNormalWindowRect(MainWindow*, Rect*) {

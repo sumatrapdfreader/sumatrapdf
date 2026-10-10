@@ -4,6 +4,7 @@
 import { copyFileSync, mkdirSync, rmSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 import { ControlClient, ControlCommand } from "./control";
+import { IS_MAC } from "./host";
 import { pollUntil, ROOT, runStandalone, tmpPath } from "./util";
 import { getFocusedHwnd, isWindowVisible, postMessage, WM_KEYDOWN } from "./winapi";
 import { killAndWait, launchControlled } from "./win-automation";
@@ -24,9 +25,22 @@ async function displayMode(client: ControlClient, action: string): Promise<Mode>
   return { presentation: m[1] === "1", fullscreen: m[2] === "1" };
 }
 
-// only WM_KEYDOWN: the app's message loop makes the WM_CHAR
+// only WM_KEYDOWN: the app's message loop makes the WM_CHAR.
+// On mac the frame is a sentinel and the key goes through TestInput.
 function pressEsc(frame: number): void {
-  postMessage(getFocusedHwnd(frame), WM_KEYDOWN, VK_ESCAPE, 0);
+  postMessage(IS_MAC ? frame : getFocusedHwnd(frame), WM_KEYDOWN, VK_ESCAPE, 0);
+}
+
+async function windowOpen(client: ControlClient, frame: number): Promise<boolean> {
+  if (!IS_MAC) {
+    return isWindowVisible(frame);
+  }
+  try {
+    await client.request(ControlCommand.Ping, []);
+    return true;
+  } catch {
+    return false;
+  }
 }
 
 async function escLeavesMode(client: ControlClient, frame: number, action: string): Promise<void> {
@@ -35,7 +49,7 @@ async function escLeavesMode(client: ControlClient, frame: number, action: strin
     throw new Error(`issue-6250: could not enter ${action} mode`);
   }
   pressEsc(frame);
-  if (!isWindowVisible(frame)) {
+  if (!(await windowOpen(client, frame))) {
     throw new Error(`issue-6250: Esc in ${action} mode closed the window`);
   }
   const off = await pollUntil(
@@ -70,7 +84,7 @@ export async function testit(): Promise<void> {
     // out of both modes, EscToExit still closes
     pressEsc(frame);
     await pollUntil(
-      () => isWindowVisible(frame),
+      () => windowOpen(client, frame),
       (visible) => !visible,
       {
         error: "issue-6250: EscToExit stopped working outside presentation / fullscreen",
