@@ -12,6 +12,7 @@
 
 import { mkdirSync, rmSync } from "node:fs";
 import { basename } from "node:path";
+import { IS_MAC } from "./host.ts";
 import { EXE, runStandalone, tmpPath, USE_NG } from "./util.ts";
 import { killAndWait } from "./win-automation.ts";
 import {
@@ -228,6 +229,10 @@ async function runInstaller(installDir: string, extra: string[]): Promise<Ctrl> 
 }
 
 export async function testit(): Promise<void> {
+  if (IS_MAC) {
+    console.log("SKIP installer-desktop-shortcut: the installer is a Win32 window of option checkboxes");
+    return;
+  }
   if (/static/i.test(basename(EXE))) {
     console.log("skip installer-desktop-shortcut: static exe has no installer payload");
     return;
