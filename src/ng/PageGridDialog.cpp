@@ -148,7 +148,7 @@ static bool PageGridIsMajor(float v, float origin, float minorPt, int subdiv) {
 // coordinates, which is what CanvasFillRects takes. Style "dots" puts a 1px /
 // 3px square at each intersection; "dotted" and "solid" draw the lines (major
 // heavier), dotted as a dashed run of short pieces. Skips comics, as orig does.
-void PaintPageGrid(DisplayModel* dm, gpui::PaintCtx* ctx) {
+static void CollectPageGridMarks(DisplayModel* dm, Vec<Rect>& rects) {
     EngineBase* engine = dm->GetEngine();
     if (!engine || engine->isImageCollection) {
         return;
@@ -160,7 +160,6 @@ void PaintPageGrid(DisplayModel* dm, gpui::PaintCtx* ctx) {
         return;
     }
     Rect viewPort(Point(), dm->GetViewPort().Size());
-    Vec<Rect> rects;
 
     for (int pageNo = 1; pageNo <= dm->PageCount(); pageNo++) {
         PageInfo* pi = dm->GetPageInfo(pageNo);
@@ -230,9 +229,37 @@ void PaintPageGrid(DisplayModel* dm, gpui::PaintCtx* ctx) {
             }
         }
     }
-    if (len(rects) > 0) {
-        CanvasFillRects(ctx, rects.els, len(rects), g.color, 255, 0);
+}
+
+// Overlay on, for a paginated document that is not a blank presentation screen.
+bool PageGridCovers(MainWindow* win) {
+    if (!win || !ShowPageGrid() || !win->AsFixed()) {
+        return false;
     }
+    return win->presentation != PM_BLACK_SCREEN && win->presentation != PM_WHITE_SCREEN;
+}
+
+void PaintPageGrid(DisplayModel* dm, gpui::PaintCtx* ctx) {
+    Vec<Rect> rects;
+    CollectPageGridMarks(dm, rects);
+    if (len(rects) > 0) {
+        CanvasFillRects(ctx, rects.els, len(rects), GetPageGridDraw().color, 255, 0);
+    }
+}
+
+int PageGridMarkPixels(MainWindow* win) {
+    if (!PageGridCovers(win)) {
+        return 0;
+    }
+    Vec<Rect> rects;
+    CollectPageGridMarks(win->AsFixed(), rects);
+    int n = 0;
+    for (Rect r : rects) {
+        if (r.dx > 0 && r.dy > 0) {
+            n += r.dx * r.dy;
+        }
+    }
+    return n;
 }
 
 // --- the dialog -------------------------------------------------------------

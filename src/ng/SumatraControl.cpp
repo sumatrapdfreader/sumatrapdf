@@ -4174,6 +4174,10 @@ static void ExecuteControlRequest(ControlRequest* req) {
                 SetShowPageGrid(on != 0);
             } else if (str::EqI(action, StrL("reset-grid"))) {
                 ResetPageGridToDefaults();
+            } else if (str::EqI(action, StrL("grid-marks"))) {
+                MainWindow* win = FirstWindow();
+                AppendTestResult(req, 0, fmt("marks=%d", PageGridMarkPixels(win)));
+                break;
             }
             AppendTestResult(req, 0, PageGridStateTemp());
             break;

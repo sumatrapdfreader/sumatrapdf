@@ -3744,7 +3744,7 @@ void DocCanvasView::OnPaint(gp::PaintCtx* ctx, gp::El* e, void* user) {
         return;
     }
     DrawDocument(win, ctx, Rect(0, 0, vp.dx, vp.dy));
-    if (ShowPageGrid()) {
+    if (PageGridCovers(win)) {
         PaintPageGrid(win->AsFixed(), ctx);
     }
     PaintFormFieldHighlights(win, ctx);

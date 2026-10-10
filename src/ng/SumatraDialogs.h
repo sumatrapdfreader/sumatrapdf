@@ -240,6 +240,8 @@ namespace gpui {
 struct PaintCtx;
 }
 void PaintPageGrid(DisplayModel* dm, gpui::PaintCtx* ctx);
+bool PageGridCovers(MainWindow* win);
+int PageGridMarkPixels(MainWindow* win);
 
 // --- print options ----------------------------------------------------------
 

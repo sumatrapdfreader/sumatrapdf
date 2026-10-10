@@ -5,7 +5,8 @@
 
 import { mkdirSync, rmSync } from "node:fs";
 import { join } from "node:path";
-import { withControlledSumatra } from "./control.ts";
+import { ControlCommand, withControlledSumatra } from "./control.ts";
+import { IS_MAC } from "./host.ts";
 import { EXE, ROOT, cmdId, runStandalone, tmpPath } from "./util.ts";
 import { captureWindowPixels, sleep } from "./winapi.ts";
 import { findCanvas, sendCommand, waitForFrame } from "./win-automation.ts";
@@ -36,6 +37,25 @@ export async function testit(): Promise<void> {
       const frame = await waitForFrame(proc.pid!);
       await client.waitForRenderIdle(30_000);
       await client.setNotificationsEnabled(false);
+      if (IS_MAC) {
+        const readMarks = async () => {
+          const res = String((await client.request(ControlCommand.TestCanvasFlags, ["grid-marks"]))[1] ?? "");
+          const m = /marks=(\d+)/.exec(res);
+          if (!m) {
+            throw new Error(`issue-6039: grid-marks: ${res}`);
+          }
+          return Number(m[1]);
+        };
+        const nBefore = await readMarks();
+        sendCommand(frame, cmdId("CmdTogglePageGrid"));
+        await client.waitForRenderIdle(30_000);
+        const nAfter = await readMarks();
+        if (nAfter < nBefore + 40) {
+          throw new Error(`issue-6039: EPUB page grid did not show (grid pixels before=${nBefore} after=${nAfter})`);
+        }
+        console.log(`  EPUB grid pixels ${nBefore} -> ${nAfter} ✓`);
+        return;
+      }
       const canvas = findCanvas(frame);
       if (!canvas) {
         throw new Error("issue-6039: no EPUB canvas");
