@@ -375,6 +375,8 @@ struct HomePageUI {
     // the entries' height is only known once they were painted: the first
     // frame asks for a second one so the scrollbar can be there
     bool askedForMeasure = false;
+    // false from invalidate until the next HomePageBuild refills files
+    bool filesLaidOut = false;
     Vec<FileState*> files;
     Vec<TipSpan> tipSpans;
     // orig's OnAboutContextMenu: the file the menu is for and the menu built
@@ -477,6 +479,7 @@ void HomePageInvalidateLayoutCache() {
         }
         VecReset(h->files);
         h->entryCount = 0;
+        h->filesLaidOut = false;
     }
 }
 
@@ -1819,6 +1822,7 @@ gp::El* HomePageBuild(MainWindow* win, gp::Ctx* cx) {
     bool showStartPage = HasPermission(Perm::SavePreferences | Perm::DiskAccess) && gSettings &&
                          SettingsRememberOpenedFiles() && gSettings->showStartPage;
     if (!showStartPage) {
+        Ui(win)->filesLaidOut = true;
         return AboutPageBuild(win, cx);
     }
     EnsureTipsParsed();
@@ -1827,6 +1831,7 @@ gp::El* HomePageBuild(MainWindow* win, gp::Ctx* cx) {
     VecReset(h->files);
     StrVec filterWords;
     CollectHomePageFiles(win, h->files, filterWords);
+    h->filesLaidOut = true;
     int nFiles = len(h->files);
     h->entryCount = nFiles;
     // gpui writes each entry's rect back through BoundsOut, so the slots have
@@ -2097,6 +2102,9 @@ TempStr HomeSelectionForWindowTemp(int* exitCodeOut, int winIdx) {
     if (!win->IsCurrentTabAbout()) {
         return finish(2, str::DupTemp(StrL("NOTREADY no-layout")));
     }
+    if (!h->filesLaidOut) {
+        return finish(2, str::DupTemp(StrL("NOTREADY no-layout")));
+    }
     int sel = h->selIdx;
     Str path;
     if (sel >= 0 && sel < len(h->files)) {
@@ -2154,6 +2162,10 @@ TempStr HomeListRowsResultTemp(int* exitCodeOut) {
         return finish(1);
     }
     HomePageUI* h = Ui(win);
+    if (!h->filesLaidOut) {
+        out.Append(StrL("NOTREADY no-layout\n"));
+        return finish(2);
+    }
     int n = len(h->files);
     if (n > 0 && len(h->listSizeBounds) < n) {
         out.Append(StrL("NOTREADY no-layout\n"));
