@@ -2,6 +2,8 @@
 // -new-window-tabs opens one window and loads the files as tabs.
 
 import { join } from "node:path";
+import { ControlCommand } from "./control.ts";
+import { IS_MAC } from "./host.ts";
 import { ROOT, runStandalone } from "./util.ts";
 import { FRAME_CLASS, killAndWait, launchControlled } from "./win-automation.ts";
 import { enumWindows, getClassName, getWindowPid, isWindowVisible, sleep } from "./winapi.ts";
@@ -37,10 +39,34 @@ async function waitForStableFrameCount(pid: number, timeoutMs = 8000): Promise<n
   return last;
 }
 
+async function macWindowCount(
+  client: { request: (cmd: number, args: unknown[]) => Promise<unknown[]> },
+  timeoutMs = 8000,
+): Promise<number> {
+  const deadline = Date.now() + timeoutMs;
+  let last = 0;
+  let stableAt = 0;
+  while (Date.now() < deadline) {
+    const raw = String((await client.request(ControlCommand.TestUiState, []))[1] ?? "");
+    const n = Number(/windows=(\d+)/.exec(raw)?.[1] ?? "0");
+    if (n !== last) {
+      last = n;
+      stableAt = Date.now();
+    } else if (n > 0 && Date.now() - stableAt >= 400) {
+      return n;
+    }
+    await sleep(50);
+  }
+  return last;
+}
+
 async function countFramesForFlags(flags: string[]): Promise<number> {
   const { proc, client } = await launchControlled([...flags, PDF_A, PDF_B]);
   try {
     await client.waitForRenderIdle();
+    if (IS_MAC) {
+      return await macWindowCount(client);
+    }
     return await waitForStableFrameCount(proc.pid!);
   } finally {
     client.close();
