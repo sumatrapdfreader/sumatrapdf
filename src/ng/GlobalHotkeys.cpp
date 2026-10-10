@@ -233,6 +233,7 @@ bool HandleGlobalHotkey(int hotkeyId) {
 #include <X11/Xlib.h>
 #undef Pixmap
 #include <X11/keysym.h>
+#include <errno.h>
 #include <fcntl.h>
 #include <poll.h>
 #include <unistd.h>
@@ -558,7 +559,10 @@ void ReRegisterGlobalHotkeys() {
         return;
     }
     char wake = 1;
-    write(gLinuxHotkeyWake[1], &wake, 1);
+    // Non-blocking. EAGAIN means a wake byte is already queued.
+    if (write(gLinuxHotkeyWake[1], &wake, 1) < 0 && errno != EAGAIN) {
+        logf("GlobalHotkeys: couldn't wake the hotkey thread\n");
+    }
 }
 
 #else
