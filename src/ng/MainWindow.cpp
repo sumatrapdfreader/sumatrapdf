@@ -412,15 +412,25 @@ void LinkHandler::LaunchFile(Str pathOrig, IPageDestination* remoteLink) {
         return;
     }
 
+#if OS_WIN
     TempStr path = str::ReplaceTemp(pathOrig, StrL("/"), StrL("\\"));
     str::TrimPrefix(path, StrL(".\\"));
+#else
+    // A native absolute path. Rewriting '/' to '\\' makes it miss the file.
+    TempStr path = str::DupTemp(pathOrig);
+    str::TrimPrefix(path, StrL("./"));
+#endif
 
     TempStr fullPath = path;
+#if OS_WIN
     bool isAbsPath = str::StartsWith(path, StrL("\\"));
     if (len(path) >= 2 && path.s[1] == ':') {
         /* technically c: is not abs, only c:\\ */
         isAbsPath = true;
     }
+#else
+    bool isAbsPath = path::IsAbsolute(path);
+#endif
     if (!isAbsPath) {
         auto dir = path::GetDirTemp(win->ctrl->GetFilePath());
         fullPath = path::JoinTemp(dir, path);

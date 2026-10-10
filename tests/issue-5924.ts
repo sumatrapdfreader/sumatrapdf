@@ -51,6 +51,11 @@ function makeFolder(): string {
 }
 
 type Tab = { win: number; current: boolean; pageNo: number; file: string };
+
+function endsWithFile(file: string, suffix: string): boolean {
+  const norm = (s: string) => s.replaceAll("\\", "/").toLowerCase();
+  return norm(file).endsWith(norm(suffix));
+}
 // `tabs` are the tabs holding a document; the app also has an empty start tab
 type Result = { navigate: boolean; tabs: Tab[]; dump: string };
 
@@ -124,7 +129,7 @@ export async function testit(): Promise<void> {
 
       // the actual report: the linked PDF opens in SumatraPDF
       r = await follow("sub/deep.pdf");
-      const deep = r.tabs.find((t) => t.file.toLowerCase().endsWith("\\sub\\deep.pdf"));
+      const deep = r.tabs.find((t) => endsWithFile(t.file, "/sub/deep.pdf"));
       if (r.navigate || !deep || !deep.current) {
         fail("a link to sub/deep.pdf must open it as the current tab", r);
       }
@@ -139,7 +144,7 @@ export async function testit(): Promise<void> {
       let markdownCurrent = false;
       while (Date.now() < closeDeadline) {
         const closed = parse(String((await client.request(ControlCommand.TestMarkdownFollowLink, ["", 0]))[1] ?? ""));
-        if (closed.tabs.length === 1 && closed.tabs[0]!.file.toLowerCase().endsWith("\\index.md")) {
+        if (closed.tabs.length === 1 && endsWithFile(closed.tabs[0]!.file, "/index.md")) {
           markdownCurrent = true;
           break;
         }
@@ -156,12 +161,12 @@ export async function testit(): Promise<void> {
       while (Date.now() < deadline) {
         const res2 = await client.request(ControlCommand.TestMarkdownFollowLink, ["", 0]);
         settled = parse(String(res2[1] ?? ""));
-        if (settled.tabs.some((t) => t.file.toLowerCase().endsWith("\\doc.pdf"))) {
+        if (settled.tabs.some((t) => endsWithFile(t.file, "/doc.pdf"))) {
           break;
         }
         await sleep(30);
       }
-      const doc = settled.tabs.find((t) => t.file.toLowerCase().endsWith("\\doc.pdf"));
+      const doc = settled.tabs.find((t) => endsWithFile(t.file, "/doc.pdf"));
       if (clicked.navigate || !doc || !doc.current || settled.tabs.length !== 2) {
         throw new Error(
           `issue-5924: a link to ./doc.pdf must open it as the current tab\noutput:\n${clicked.dump}${settled.dump}`,
