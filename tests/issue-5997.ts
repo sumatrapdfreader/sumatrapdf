@@ -3,7 +3,9 @@
 // clipboard got the author instead of the annotation's /Contents string.
 import { mkdirSync, rmSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
-import { runStandalone, tmpPath } from "./util";
+import { ControlCommand, type ControlClient } from "./control";
+import { IS_MAC } from "./host";
+import { cmdId, runStandalone, SLOW_BUILD_FACTOR, tmpPath } from "./util";
 import { clientToScreen, getClientRect, postMessage, sleep, VK_ESCAPE, WM_CHAR, WM_KEYDOWN } from "./winapi";
 import { findCanvas, killAndWait, launchControlled, openContextMenu, waitForContextMenu } from "./win-automation";
 
@@ -38,7 +40,31 @@ function makePdf(): Buffer {
   return Buffer.from(pdf, "latin1");
 }
 
+function setClipboard(value: string): void {
+  if (IS_MAC) {
+    const res = Bun.spawnSync(["pbcopy"], { stdin: Buffer.from(value), stdout: "pipe", stderr: "pipe" });
+    if (res.exitCode !== 0) {
+      throw new Error(`issue-5997: pbcopy failed: ${res.stderr.toString()}`);
+    }
+    return;
+  }
+  const res = Bun.spawnSync(["powershell.exe", "-NoProfile", "-Command", `Set-Clipboard -Value '${value}'`], {
+    stdout: "pipe",
+    stderr: "pipe",
+  });
+  if (res.exitCode !== 0) {
+    throw new Error(`issue-5997: Set-Clipboard failed: ${res.stderr.toString()}`);
+  }
+}
+
 function clipboardText(): string {
+  if (IS_MAC) {
+    const res = Bun.spawnSync(["pbpaste"], { stdout: "pipe", stderr: "pipe" });
+    if (res.exitCode !== 0) {
+      throw new Error(`issue-5997: pbpaste failed: ${res.stderr.toString()}`);
+    }
+    return res.stdout.toString().replace(/\r?\n$/, "");
+  }
   const res = Bun.spawnSync(["powershell.exe", "-NoProfile", "-Command", "Get-Clipboard -Raw"], {
     stdout: "pipe",
     stderr: "pipe",
@@ -47,6 +73,33 @@ function clipboardText(): string {
     throw new Error(`issue-5997: Get-Clipboard failed: ${res.stderr.toString()}`);
   }
   return res.stdout.toString().trim();
+}
+
+// screen= is the frame point TestContextMenuAt and ctxcmd use.
+async function freeTextCenter(client: ControlClient): Promise<{ x: number; y: number }> {
+  const deadline = Date.now() + 5000 * SLOW_BUILD_FACTOR;
+  let raw = "";
+  while (Date.now() < deadline) {
+    raw = String((await client.request(ControlCommand.TestMarkupAnnots, []))[1] ?? "");
+    const m = /type=FreeText[^\n]*screen=(-?\d+),(-?\d+),(-?\d+),(-?\d+)/.exec(raw);
+    if (m && +m[3]! > 0 && +m[4]! > 0) {
+      return { x: +m[1]! + Math.floor(+m[3]! / 2), y: +m[2]! + Math.floor(+m[4]! / 2) };
+    }
+    await sleep(40);
+  }
+  throw new Error(`issue-5997: FreeText screen rect missing\n${raw}`);
+}
+
+async function copyCommentAt(client: ControlClient, x: number, y: number): Promise<void> {
+  const menu = await client.request(ControlCommand.TestContextMenuAt, [x, y]);
+  const raw = String(menu[1] ?? "");
+  if (!raw.includes("Copy Comment")) {
+    throw new Error(`issue-5997: annotation context menu did not offer Copy Comment\n${raw}`);
+  }
+  const ran = await client.request(ControlCommand.TestUiState, ["ctxcmd", cmdId("CmdCopyComment")]);
+  if (String(ran[1] ?? "") !== "ok") {
+    throw new Error(`issue-5997: Copy Comment failed: ${String(ran[1] ?? "")}`);
+  }
 }
 
 export async function testit(): Promise<void> {
@@ -61,13 +114,7 @@ export async function testit(): Promise<void> {
   writeFileSync(pdf, makePdf());
 
   const sentinel = "issue-5997 clipboard sentinel";
-  const set = Bun.spawnSync(["powershell.exe", "-NoProfile", "-Command", `Set-Clipboard -Value '${sentinel}'`], {
-    stdout: "pipe",
-    stderr: "pipe",
-  });
-  if (set.exitCode !== 0) {
-    throw new Error(`issue-5997: Set-Clipboard failed: ${set.stderr.toString()}`);
-  }
+  setClipboard(sentinel);
 
   const { proc, client, frame } = await launchControlled([
     "-appdata",
@@ -80,6 +127,23 @@ export async function testit(): Promise<void> {
   ]);
   try {
     await client.waitForRenderIdle();
+    if (IS_MAC) {
+      const at = await freeTextCenter(client);
+      await copyCommentAt(client, at.x, at.y);
+      const deadline = Date.now() + 5000 * SLOW_BUILD_FACTOR;
+      let copied = sentinel;
+      while (copied === sentinel && Date.now() < deadline) {
+        await sleep(50);
+        copied = clipboardText();
+      }
+      if (copied !== CONTENTS) {
+        throw new Error(
+          `issue-5997: copied ${JSON.stringify(copied)}, expected ${JSON.stringify(CONTENTS)} (author was ${AUTHOR})`,
+        );
+      }
+      console.log("issue-5997: copied the FreeText contents");
+      return;
+    }
     const canvas = findCanvas(frame);
     const cr = getClientRect(canvas);
     const pt = clientToScreen(canvas, Math.floor(cr.right / 2), Math.floor(cr.bottom / 4));
