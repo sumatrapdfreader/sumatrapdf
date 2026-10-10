@@ -23,6 +23,7 @@
 #include "Settings.h"
 #include "DocController.h"
 #include "EngineBase.h"
+#include "DocProperties.h"
 #include "base/GuessFileType.h"
 #include "EngineAll.h"
 #include "AppSettings.h"
@@ -125,10 +126,11 @@ static RectF SelectionBounds(const Vec<SelectionOnPage>& selection, int pageNo) 
     return bounds;
 }
 
-// renders every page, or the selected part of its pages, into a new PDF
+// renders every page, or the selected part of its pages, into a new PDF.
+// docName is -print-settings docname=; the file records it as the title.
 static bool PrintEngineToPdf(EngineBase* engine, Str destPath, const Vec<SelectionOnPage>* selection = nullptr,
                              int rotation = 0, const Vec<int>* pages = nullptr, float dpi = kPrintToPdfDpi,
-                             int orientation = 0) {
+                             int orientation = 0, Str docName = {}) {
     EnsureFullLayout(engine);
     PdfCreator c;
     float zoom = dpi / engine->fileDPI;
@@ -179,10 +181,24 @@ static bool PrintEngineToPdf(EngineBase* engine, Str destPath, const Vec<Selecti
         return false;
     }
     c.CopyProperties(engine);
+    if (len(docName) > 0) {
+        c.SetProperty(DocProp::Title, docName);
+    }
     return c.SaveToFile(destPath);
 }
 
 // `output=<path>` of -print-settings, the only token this path understands
+static TempStr DocNameFromSettingsTemp(Str settings) {
+    StrVec list;
+    Split(&list, settings, StrL(","), true);
+    for (Str s : list) {
+        if (str::TrimPrefixI(s, StrL("docname="))) {
+            return str::DupTemp(s);
+        }
+    }
+    return {};
+}
+
 static TempStr OutputPathFromSettingsTemp(Str settings) {
     if (len(settings) == 0) {
         return {};
@@ -381,7 +397,8 @@ PrintResult PrintFile2(EngineBase* engine, Str printerName, bool displayErrors, 
     int rotation = 0;
     int orientation = 0;
     ApplyRenderSettings(settings, engine->PageCount(), pages, dpi, rotation, orientation);
-    if (!PrintEngineToPdf(engine, destPath, nullptr, rotation, &pages, dpi, orientation)) {
+    TempStr docName = DocNameFromSettingsTemp(settings);
+    if (!PrintEngineToPdf(engine, destPath, nullptr, rotation, &pages, dpi, orientation, docName)) {
         if (sendToPrinter) {
             file::Delete(destPath);
         }
