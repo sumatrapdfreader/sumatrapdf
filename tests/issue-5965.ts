@@ -14,6 +14,7 @@
 import { existsSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { ControlCommand, withControlledSumatra } from "./control.ts";
+import { IS_MAC } from "./host.ts";
 import { EXE, ROOT, runStandalone, tmpPath } from "./util.ts";
 
 const kCertSubject = "CN=SumatraPDF StoreSignTest";
@@ -122,6 +123,10 @@ function verifySignedPdf(path: string): void {
 }
 
 export async function testit(): Promise<void> {
+  if (IS_MAC) {
+    console.log("SKIP issue-5965: signing uses the Windows certificate store");
+    return;
+  }
   const thumb = makeTestCert();
   if (!thumb) {
     return;
