@@ -1,6 +1,7 @@
 // #5988: Esc must close the image editor opened after choosing a screenshot.
 
 import { mkdirSync, rmSync } from "node:fs";
+import { IS_MAC } from "./host.ts";
 import { cmdId, runStandalone, tmpPath } from "./util.ts";
 import { findTopWindow, postMessage, sleep, VK_ESCAPE, VK_RETURN, waitForTopWindow, WM_KEYDOWN } from "./winapi.ts";
 import { killAndWait, launchControlled, sendCommand } from "./win-automation.ts";
@@ -20,6 +21,10 @@ async function waitForGone(pid: number, className: string, timeoutMs = 3000): Pr
 }
 
 export async function testit(): Promise<void> {
+  if (IS_MAC) {
+    console.log("SKIP issue-5988: the screenshot picker overlay is Win32-only; macOS saves the page");
+    return;
+  }
   const appData = tmpPath("issue-5988");
   rmSync(appData, { recursive: true, force: true });
   mkdirSync(appData, { recursive: true });
