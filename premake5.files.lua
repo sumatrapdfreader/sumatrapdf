@@ -274,6 +274,7 @@ function sumatrapdf_files()
     "DarkMode.*",
     "AddFavoriteDialog.*",
     "AdvancedSettingsDialog.*",
+    "AdvancedSettingsDialogCommon.*",
     "ChangeColorDialog.*",
     "ChangeLanguageDialog.*",
     "ChangeScrollbarDialog.*",

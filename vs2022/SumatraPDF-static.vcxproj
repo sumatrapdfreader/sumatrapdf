@@ -1436,6 +1436,7 @@
     <ClInclude Include="..\src\shared\AIChatCommon.h" />
     <ClInclude Include="..\src\shared\AIChatPanel.h" />
     <ClInclude Include="..\src\shared\Accelerators.h" />
+    <ClInclude Include="..\src\shared\AdvancedSettingsDialogCommon.h" />
     <ClInclude Include="..\src\shared\AnnotEditToolbar.h" />
     <ClInclude Include="..\src\shared\AnnotFilterToolbar.h" />
     <ClInclude Include="..\src\shared\AnnotPlacement.h" />
@@ -2072,6 +2073,7 @@
     <ClCompile Include="..\src\shared\AICodexBuild.cpp" />
     <ClCompile Include="..\src\shared\AIGrokBuild.cpp" />
     <ClCompile Include="..\src\shared\Accelerators.cpp" />
+    <ClCompile Include="..\src\shared\AdvancedSettingsDialogCommon.cpp" />
     <ClCompile Include="..\src\shared\AnnotSearch.cpp" />
     <ClCompile Include="..\src\shared\Annotation.cpp" />
     <ClCompile Include="..\src\shared\AppSettings.cpp" />

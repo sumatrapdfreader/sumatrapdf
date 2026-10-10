@@ -1405,6 +1405,7 @@ export const targets: Target[] = [
       "src/ng/EbookSettingsDialog.cpp",
       "src/ng/SettingsDialog.cpp",
       "src/ng/AdvancedSettingsDialog.cpp",
+      "src/ng/AdvancedSettingsDialogCommon.cpp",
       "src/ng/PageGridDialog.cpp",
       "src/ng/KeyboardHelp.cpp",
       "src/ng/SignDocumentDialog.cpp",

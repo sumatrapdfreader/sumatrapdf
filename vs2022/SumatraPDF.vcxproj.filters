@@ -240,6 +240,9 @@
     <ClInclude Include="..\src\shared\Accelerators.h">
       <Filter>src\shared</Filter>
     </ClInclude>
+    <ClInclude Include="..\src\shared\AdvancedSettingsDialogCommon.h">
+      <Filter>src\shared</Filter>
+    </ClInclude>
     <ClInclude Include="..\src\shared\AnnotEditToolbar.h">
       <Filter>src\shared</Filter>
     </ClInclude>
@@ -1002,6 +1005,9 @@
       <Filter>src\shared</Filter>
     </ClCompile>
     <ClCompile Include="..\src\shared\Accelerators.cpp">
+      <Filter>src\shared</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\shared\AdvancedSettingsDialogCommon.cpp">
       <Filter>src\shared</Filter>
     </ClCompile>
     <ClCompile Include="..\src\shared\AnnotSearch.cpp">

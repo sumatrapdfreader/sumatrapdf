@@ -109,6 +109,8 @@ export const sharedFiles = [
   "src/base/tests/UtAssert.h",
   "src/base/tests/Vec_ut.cpp",
   "src/base/tests/Win_ut.cpp",
+  "src/shared/AdvancedSettingsDialogCommon.cpp",
+  "src/shared/AdvancedSettingsDialogCommon.h",
   "src/shared/DocumentPropertiesCommon.cpp",
   "src/shared/DocumentPropertiesCommon.h",
   "src/shared/FavoritesCommon.cpp",
