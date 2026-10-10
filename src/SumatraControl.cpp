@@ -758,83 +758,7 @@ enum class ControlCmd : u16 {
     TestWheelWhileClosing = 116,
 };
 
-enum class RenderIdleState : u8 {
-    NotReady = 0,
-    Busy = 1,
-    Idle = 2,
-};
-
-struct ControlRequest {
-    u16 cmd = 0;
-    u16 reqId = 0;
-    Vec<ControlArg*> args;
-    str::Builder results;
-    HANDLE done = nullptr;
-    RenderIdleState idleState = RenderIdleState::NotReady;
-    char idleInfo[320]{};
-};
-
-static void DeleteControlRequest(ControlRequest* req) {
-    if (!req) {
-        return;
-    }
-    for (ControlArg* arg : req->args) {
-        DeleteControlArg(arg);
-    }
-    SafeCloseHandle(&req->done);
-    delete req;
-}
-
-struct PacketReader {
-    const u8* data = nullptr;
-    size_t size = 0;
-    size_t pos = 0;
-
-    bool ReadU16(u16& v) {
-        if (pos + 2 > size) {
-            return false;
-        }
-        v = (u16)(data[pos] | (data[pos + 1] << 8));
-        pos += 2;
-        return true;
-    }
-
-    bool ReadU32(u32& v) {
-        if (pos + 4 > size) {
-            return false;
-        }
-        v = (u32)data[pos] | ((u32)data[pos + 1] << 8) | ((u32)data[pos + 2] << 16) | ((u32)data[pos + 3] << 24);
-        pos += 4;
-        return true;
-    }
-
-    bool ReadBytes(u8* dst, size_t n) {
-        if (pos + n > size) {
-            return false;
-        }
-        memcpy(dst, data + pos, n);
-        pos += n;
-        return true;
-    }
-};
-
-static bool ParseArg(PacketReader& r, ControlArg** argOut);
-
-static bool ParseArgList(PacketReader& r, Vec<ControlArg*>* args, bool explicitCount, u16 count = 0) {
-    for (u16 i = 0; !explicitCount || i < count; i++) {
-        ControlArg* arg = nullptr;
-        if (!ParseArg(r, &arg)) {
-            return false;
-        }
-        if (!arg) {
-            return !explicitCount;
-        }
-        VecAppend(*args, arg);
-    }
-    return true;
-}
-
-static bool ParseArg(PacketReader& r, ControlArg** argOut) {
+bool ParseArg(PacketReader& r, ControlArg** argOut) {
     u16 typeRaw = 0;
     if (!r.ReadU16(typeRaw)) {
         return false;
@@ -900,44 +824,6 @@ static bool ParseArg(PacketReader& r, ControlArg** argOut) {
     }
     *argOut = arg;
     return true;
-}
-
-static ControlArg* ArgAt(ControlRequest* req, size_t idx, ControlArgType type) {
-    if (idx >= (size_t)len(req->args)) {
-        return nullptr;
-    }
-    ControlArg* arg = req->args[(int)idx];
-    if (arg->type != type) {
-        return nullptr;
-    }
-    return arg;
-}
-
-static Str StringArg(ControlRequest* req, size_t idx) {
-    ControlArg* arg = ArgAt(req, idx, ControlArgType::String);
-    return arg ? arg->str : Str{};
-}
-
-static bool IntArg(ControlRequest* req, size_t idx, i32& valOut) {
-    ControlArg* arg = ArgAt(req, idx, ControlArgType::Int32);
-    if (!arg) {
-        return false;
-    }
-    valOut = arg->intVal;
-    return true;
-}
-
-static void AppendError(ControlRequest* req, Str msg) {
-    req->results.Reset();
-    AppendArgInt(req->results, -1);
-    AppendArgString(req->results, msg);
-    AppendArgEnd(req->results);
-}
-
-static void AppendTestResult(ControlRequest* req, int exitCode, Str result) {
-    AppendArgInt(req->results, exitCode);
-    AppendArgString(req->results, result);
-    AppendArgEnd(req->results);
 }
 
 static void ExecuteControlRequest(ControlRequest* req) {
@@ -2151,31 +2037,31 @@ static void ExecuteControlRequest(ControlRequest* req) {
             AppendError(req, StrL("unknown control command"));
             break;
     }
-    SetEvent(req->done);
+    req->done.Set();
 }
 
 // Snapshot for WaitRenderIdle. Must run on the UI thread: window/doc state
 // and the cache walk both belong there. Does not block; the control thread
 // polls so WM_PAINT can still request missing tiles.
-static void SnapshotRenderIdle(ControlRequest* req) {
+void SnapshotRenderIdle(ControlRequest* req) {
     req->idleState = RenderIdleState::NotReady;
     req->idleInfo[0] = 0;
     if (gIsStartup) {
         // LoadOnStartup applies -zoom after the first paint; a snapshot
         // during that window would see the default-zoom tiles as "done"
         str::BufSet(Str(req->idleInfo, dimof(req->idleInfo)), StrL("startup"));
-        SetEvent(req->done);
+        req->done.Set();
         return;
     }
     if (len(gWindows) == 0) {
         str::BufSet(Str(req->idleInfo, dimof(req->idleInfo)), StrL("no-window"));
-        SetEvent(req->done);
+        req->done.Set();
         return;
     }
     MainWindow* win = gWindows[0];
     if (!win || !win->IsDocLoaded()) {
         str::BufSet(Str(req->idleInfo, dimof(req->idleInfo)), StrL("no-doc"));
-        SetEvent(req->done);
+        req->done.Set();
         return;
     }
     DisplayModel* dm = win->AsFixed();
@@ -2183,7 +2069,7 @@ static void SnapshotRenderIdle(ControlRequest* req) {
         // ebook / CHM / etc.: nothing in RenderCache to wait for
         req->idleState = RenderIdleState::Idle;
         str::BufSet(Str(req->idleInfo, dimof(req->idleInfo)), StrL("no-fixed"));
-        SetEvent(req->done);
+        req->done.Set();
         return;
     }
     // Paint first: that's what queues missing target tiles. Checking the
@@ -2230,79 +2116,30 @@ static void SnapshotRenderIdle(ControlRequest* req) {
                 fmt("zoomV=%.1f zoomR=%.3f res=%d vp=%dx%d ready=%d q=%d why=%s %s", zoomV, zoomR, (int)res, vp.dx,
                     vp.dy, ready ? 1 : 0, nQ, whyNot, busyInfo));
     req->idleState = ready ? RenderIdleState::Idle : (gRenderCache ? RenderIdleState::Busy : RenderIdleState::NotReady);
-    SetEvent(req->done);
+    req->done.Set();
 }
 
-// Block on the control thread until visible tiles are cached at target
-// resolution, or until timeoutMs. Optional first int arg is the timeout.
-static void RunWaitRenderIdle(ControlRequest* req) {
-    i32 timeoutMs = 15000;
-    IntArg(req, 0, timeoutMs);
-    if (timeoutMs < 1) {
-        timeoutMs = 1;
-    }
-    u64 deadline = GetTickCount64() + (u64)timeoutMs;
-    for (;;) {
-        ResetEvent(req->done);
-        uitask::Post(MkFunc0<ControlRequest>(SnapshotRenderIdle, req), "WaitRenderIdle");
-        WaitForSingleObject(req->done, INFINITE);
-        if (req->idleState == RenderIdleState::Idle) {
-            AppendTestResult(req, 0, req->idleInfo[0] ? Str(req->idleInfo) : StrL("idle"));
-            return;
-        }
-        if (GetTickCount64() >= deadline) {
-            Str kind = req->idleState == RenderIdleState::NotReady ? StrL("timeout-notready") : StrL("timeout-busy");
-            AppendTestResult(req, 1, req->idleInfo[0] ? fmt("%s %s", kind, Str(req->idleInfo)) : kind);
-            return;
-        }
-        Sleep(20);
-    }
-}
-
-static void SnapshotSessionRestore(ControlRequest* req) {
+void SnapshotSessionRestore(ControlRequest* req) {
     req->idleState = RenderIdleState::NotReady;
     req->idleInfo[0] = 0;
     if (!IsSessionRestoreFinished() || gIsStartup) {
         str::BufSet(Str(req->idleInfo, dimof(req->idleInfo)), StrL("startup"));
-        SetEvent(req->done);
+        req->done.Set();
         return;
     }
     if (HasPendingDocumentLoads()) {
         str::BufSet(Str(req->idleInfo, dimof(req->idleInfo)), StrL("loading"));
-        SetEvent(req->done);
+        req->done.Set();
         return;
     }
     if (len(gWindows) > 0 && gWindows[0] && gWindows[0]->uiState.updatePending) {
         str::BufSet(Str(req->idleInfo, dimof(req->idleInfo)), StrL("ui-pending"));
-        SetEvent(req->done);
+        req->done.Set();
         return;
     }
     req->idleState = RenderIdleState::Idle;
     str::BufSet(Str(req->idleInfo, dimof(req->idleInfo)), StrL("restored"));
-    SetEvent(req->done);
-}
-
-static void RunWaitSessionRestored(ControlRequest* req) {
-    i32 timeoutMs = 15000;
-    IntArg(req, 0, timeoutMs);
-    if (timeoutMs < 1) {
-        timeoutMs = 1;
-    }
-    u64 deadline = GetTickCount64() + (u64)timeoutMs;
-    for (;;) {
-        ResetEvent(req->done);
-        uitask::Post(MkFunc0<ControlRequest>(SnapshotSessionRestore, req), "WaitSessionRestored");
-        WaitForSingleObject(req->done, INFINITE);
-        if (req->idleState == RenderIdleState::Idle) {
-            AppendTestResult(req, 0, req->idleInfo[0] ? Str(req->idleInfo) : StrL("restored"));
-            return;
-        }
-        if (GetTickCount64() >= deadline) {
-            AppendTestResult(req, 1, req->idleInfo[0] ? fmt("timeout %s", Str(req->idleInfo)) : StrL("timeout"));
-            return;
-        }
-        Sleep(20);
-    }
+    req->done.Set();
 }
 
 static bool ReadExact(HANDLE h, void* data, DWORD n) {
@@ -2352,7 +2189,6 @@ static ControlRequest* ReadControlRequest(HANDLE h) {
         free(data);
         return nullptr;
     }
-    req->done = CreateEventW(nullptr, TRUE, FALSE, nullptr);
     free(data);
     return req;
 }
@@ -2389,7 +2225,7 @@ static bool ProcessControlConnection(HANDLE h) {
             RunWaitSessionRestored(req);
         } else {
             uitask::Post(MkFunc0<ControlRequest>(ExecuteControlRequest, req), "SumatraControl");
-            WaitForSingleObject(req->done, INFINITE);
+            req->done.Wait();
         }
         bool ok = WriteControlResponse(h, req);
         DeleteControlRequest(req);

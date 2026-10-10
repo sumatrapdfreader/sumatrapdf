@@ -286,4 +286,116 @@ void AppendArgString(str::Builder& s, Str str) {
     s.AppendChar(0);
 }
 
+void DeleteControlRequest(ControlRequest* req) {
+    if (!req) {
+        return;
+    }
+    for (ControlArg* arg : req->args) {
+        DeleteControlArg(arg);
+    }
+    delete req;
+}
+
+static ControlArg* ArgAt(ControlRequest* req, size_t idx, ControlArgType type) {
+    if (idx >= (size_t)len(req->args)) {
+        return nullptr;
+    }
+    ControlArg* arg = req->args[(int)idx];
+    if (arg->type != type) {
+        return nullptr;
+    }
+    return arg;
+}
+
+Str StringArg(ControlRequest* req, size_t idx) {
+    ControlArg* arg = ArgAt(req, idx, ControlArgType::String);
+    return arg ? arg->str : Str{};
+}
+
+bool IntArg(ControlRequest* req, size_t idx, i32& valOut) {
+    ControlArg* arg = ArgAt(req, idx, ControlArgType::Int32);
+    if (!arg) {
+        return false;
+    }
+    valOut = arg->intVal;
+    return true;
+}
+
+void AppendError(ControlRequest* req, Str msg) {
+    req->results.Reset();
+    AppendArgInt(req->results, -1);
+    AppendArgString(req->results, msg);
+    AppendArgEnd(req->results);
+}
+
+void AppendTestResult(ControlRequest* req, int exitCode, Str result) {
+    AppendArgInt(req->results, exitCode);
+    AppendArgString(req->results, result);
+    AppendArgEnd(req->results);
+}
+
+bool ParseArgList(PacketReader& r, Vec<ControlArg*>* args, bool explicitCount, u16 count) {
+    for (u16 i = 0; !explicitCount || i < count; i++) {
+        ControlArg* arg = nullptr;
+        if (!ParseArg(r, &arg)) {
+            return false;
+        }
+        if (!arg) {
+            return !explicitCount;
+        }
+        VecAppend(*args, arg);
+    }
+    return true;
+}
+
+// Block on the control thread until visible tiles are cached at target
+// resolution, or until timeoutMs. Optional first int arg is the timeout.
+void RunWaitRenderIdle(ControlRequest* req) {
+    i32 timeoutMs = 15000;
+    IntArg(req, 0, timeoutMs);
+    if (timeoutMs < 1) {
+        timeoutMs = 1;
+    }
+    u64 deadline = GetTickCount64() + (u64)timeoutMs;
+    for (;;) {
+        req->done.Reset();
+        uitask::Post(MkFunc0<ControlRequest>(SnapshotRenderIdle, req), "WaitRenderIdle");
+        req->done.Wait();
+        if (req->idleState == RenderIdleState::Idle) {
+            AppendTestResult(req, 0, req->idleInfo[0] ? Str(req->idleInfo) : StrL("idle"));
+            return;
+        }
+        if (GetTickCount64() >= deadline) {
+            Str kind = req->idleState == RenderIdleState::NotReady ? StrL("timeout-notready") : StrL("timeout-busy");
+            AppendTestResult(req, 1, req->idleInfo[0] ? fmt("%s %s", kind, Str(req->idleInfo)) : kind);
+            return;
+        }
+        SleepInMs(20);
+    }
+}
+
+// Block on the control thread until the restored session's tabs have loaded.
+void RunWaitSessionRestored(ControlRequest* req) {
+    i32 timeoutMs = 15000;
+    IntArg(req, 0, timeoutMs);
+    if (timeoutMs < 1) {
+        timeoutMs = 1;
+    }
+    u64 deadline = GetTickCount64() + (u64)timeoutMs;
+    for (;;) {
+        req->done.Reset();
+        uitask::Post(MkFunc0<ControlRequest>(SnapshotSessionRestore, req), "WaitSessionRestored");
+        req->done.Wait();
+        if (req->idleState == RenderIdleState::Idle) {
+            AppendTestResult(req, 0, req->idleInfo[0] ? Str(req->idleInfo) : StrL("restored"));
+            return;
+        }
+        if (GetTickCount64() >= deadline) {
+            AppendTestResult(req, 1, req->idleInfo[0] ? fmt("timeout %s", Str(req->idleInfo)) : StrL("timeout"));
+            return;
+        }
+        SleepInMs(20);
+    }
+}
+
 #endif // !OS_WASM

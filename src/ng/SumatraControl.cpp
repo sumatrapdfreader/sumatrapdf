@@ -905,108 +905,7 @@ enum class ControlCmd : u16 {
     TestDdeExecute = 129,
 };
 
-enum class RenderIdleState : u8 {
-    NotReady = 0,
-    Busy = 1,
-    Idle = 2,
-};
-
-// ng: orig's manual-reset event (CreateEventW), from the portable primitives
-struct DoneEvent {
-    Mutex mutex;
-    ConditionVariable cond;
-    bool isSet = false;
-
-    void Set() {
-        mutex.Lock();
-        isSet = true;
-        mutex.Unlock();
-        cond.WakeAll();
-    }
-    void Reset() {
-        mutex.Lock();
-        isSet = false;
-        mutex.Unlock();
-    }
-    void Wait() {
-        mutex.Lock();
-        while (!isSet) {
-            cond.Wait(&mutex);
-        }
-        mutex.Unlock();
-    }
-};
-
-struct ControlRequest {
-    u16 cmd = 0;
-    u16 reqId = 0;
-    Vec<ControlArg*> args;
-    str::Builder results;
-    DoneEvent done;
-    RenderIdleState idleState = RenderIdleState::NotReady;
-    char idleInfo[320]{};
-};
-
-static void DeleteControlRequest(ControlRequest* req) {
-    if (!req) {
-        return;
-    }
-    for (ControlArg* arg : req->args) {
-        DeleteControlArg(arg);
-    }
-    delete req;
-}
-
-struct PacketReader {
-    const u8* data = nullptr;
-    size_t size = 0;
-    size_t pos = 0;
-
-    bool ReadU16(u16& v) {
-        if (pos + 2 > size) {
-            return false;
-        }
-        v = (u16)(data[pos] | (data[pos + 1] << 8));
-        pos += 2;
-        return true;
-    }
-
-    bool ReadU32(u32& v) {
-        if (pos + 4 > size) {
-            return false;
-        }
-        v = (u32)data[pos] | ((u32)data[pos + 1] << 8) | ((u32)data[pos + 2] << 16) | ((u32)data[pos + 3] << 24);
-        pos += 4;
-        return true;
-    }
-
-    bool ReadBytes(u8* dst, size_t n) {
-        if (pos + n > size) {
-            return false;
-        }
-        memcpy(dst, data + pos, n);
-        pos += n;
-        return true;
-    }
-};
-
-static bool ParseArg(PacketReader& r, ControlArg** argOut);
-
-static bool ParseArgList(PacketReader& r, Vec<ControlArg*>* args, bool explicitCount, u16 count = 0) {
-    for (u16 i = 0; !explicitCount || i < count; i++) {
-        ControlArg* arg = nullptr;
-        if (!ParseArg(r, &arg)) {
-            return false;
-        }
-        if (!arg) {
-            return !explicitCount;
-        }
-        VecAppend(*args, arg);
-    }
-    return true;
-}
-
-static bool ParseArg(PacketReader& r, ControlArg** argOut) {
+bool ParseArg(PacketReader& r, ControlArg** argOut) {
     u16 typeRaw = 0;
     if (!r.ReadU16(typeRaw)) {
         return false;
@@ -1068,44 +967,6 @@ static bool ParseArg(PacketReader& r, ControlArg** argOut) {
     }
     DeleteControlArg(arg);
     return false;
-}
-
-static ControlArg* ArgAt(ControlRequest* req, size_t idx, ControlArgType type) {
-    if (idx >= (size_t)len(req->args)) {
-        return nullptr;
-    }
-    ControlArg* arg = req->args[(int)idx];
-    if (arg->type != type) {
-        return nullptr;
-    }
-    return arg;
-}
-
-static Str StringArg(ControlRequest* req, size_t idx) {
-    ControlArg* arg = ArgAt(req, idx, ControlArgType::String);
-    return arg ? arg->str : Str{};
-}
-
-static bool IntArg(ControlRequest* req, size_t idx, i32& valOut) {
-    ControlArg* arg = ArgAt(req, idx, ControlArgType::Int32);
-    if (!arg) {
-        return false;
-    }
-    valOut = arg->intVal;
-    return true;
-}
-
-static void AppendError(ControlRequest* req, Str msg) {
-    req->results.Reset();
-    AppendArgInt(req->results, -1);
-    AppendArgString(req->results, msg);
-    AppendArgEnd(req->results);
-}
-
-static void AppendTestResult(ControlRequest* req, int exitCode, Str result) {
-    AppendArgInt(req->results, exitCode);
-    AppendArgString(req->results, result);
-    AppendArgEnd(req->results);
 }
 
 static MainWindow* FirstWindow() {
@@ -3470,7 +3331,7 @@ static void ExecuteControlRequest(ControlRequest* req) {
     req->done.Set();
 }
 
-static void SnapshotRenderIdle(ControlRequest* req) {
+void SnapshotRenderIdle(ControlRequest* req) {
     req->idleState = RenderIdleState::NotReady;
     req->idleInfo[0] = 0;
 #if OS_WIN
@@ -3581,7 +3442,7 @@ static bool SessionRestorePending() {
     return false;
 }
 
-static void SnapshotSessionRestore(ControlRequest* req) {
+void SnapshotSessionRestore(ControlRequest* req) {
     req->idleState = RenderIdleState::NotReady;
     req->idleInfo[0] = 0;
     if (SessionRestorePending()) {
@@ -3596,56 +3457,6 @@ static void SnapshotSessionRestore(ControlRequest* req) {
     req->idleState = RenderIdleState::Idle;
     str::BufSet(Str(req->idleInfo, dimofi(req->idleInfo)), StrL("restored"));
     req->done.Set();
-}
-
-// Block on the control thread until the restored session's tabs have loaded.
-static void RunWaitSessionRestored(ControlRequest* req) {
-    i32 timeoutMs = 15000;
-    IntArg(req, 0, timeoutMs);
-    if (timeoutMs < 1) {
-        timeoutMs = 1;
-    }
-    u64 deadline = GetTickCount64() + (u64)timeoutMs;
-    for (;;) {
-        req->done.Reset();
-        uitask::Post(MkFunc0<ControlRequest>(SnapshotSessionRestore, req), "WaitSessionRestored");
-        req->done.Wait();
-        if (req->idleState == RenderIdleState::Idle) {
-            AppendTestResult(req, 0, req->idleInfo[0] ? Str(req->idleInfo) : StrL("restored"));
-            return;
-        }
-        if (GetTickCount64() >= deadline) {
-            AppendTestResult(req, 1, req->idleInfo[0] ? fmt("timeout %s", Str(req->idleInfo)) : StrL("timeout"));
-            return;
-        }
-        SleepInMs(20);
-    }
-}
-
-// Block on the control thread until visible tiles are cached at target
-// resolution, or until timeoutMs. Optional first int arg is the timeout.
-static void RunWaitRenderIdle(ControlRequest* req) {
-    i32 timeoutMs = 15000;
-    IntArg(req, 0, timeoutMs);
-    if (timeoutMs < 1) {
-        timeoutMs = 1;
-    }
-    u64 deadline = GetTickCount64() + (u64)timeoutMs;
-    for (;;) {
-        req->done.Reset();
-        uitask::Post(MkFunc0<ControlRequest>(SnapshotRenderIdle, req), "WaitRenderIdle");
-        req->done.Wait();
-        if (req->idleState == RenderIdleState::Idle) {
-            AppendTestResult(req, 0, req->idleInfo[0] ? Str(req->idleInfo) : StrL("idle"));
-            return;
-        }
-        if (GetTickCount64() >= deadline) {
-            Str kind = req->idleState == RenderIdleState::NotReady ? StrL("timeout-notready") : StrL("timeout-busy");
-            AppendTestResult(req, 1, req->idleInfo[0] ? fmt("%s %s", kind, Str(req->idleInfo)) : kind);
-            return;
-        }
-        SleepInMs(20);
-    }
 }
 
 #if OS_WIN
