@@ -29,6 +29,7 @@ gpui::Window* CommandPaletteInputWindow(MainWindow* win);
 // routes the keys it owns. True when the palette consumed the key
 bool CommandPaletteOnKeyDown(MainWindow* win, int vkey, bool ctrl, bool shift);
 bool CommandPaletteOnKeyUp(MainWindow* win, int vkey);
+bool CommandPaletteHandleCommand(MainWindow* win, int cmdId);
 bool CommandPaletteOnMouseDown(MainWindow* win, float x, float y);
 // smart-tab mode: the tab the list points at, so the strip can preview it
 WindowTab* CommandPaletteHighlightedTab(MainWindow* win);

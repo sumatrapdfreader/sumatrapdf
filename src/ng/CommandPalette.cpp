@@ -1006,11 +1006,15 @@ TempStr CommandPaletteStateTemp(int* exitCodeOut) {
             }
         }
     }
-    int qPos = 0;
+    int qStart = 0;
+    int qEnd = 0;
     int qLen = 0;
     if (wnd->editQuery) {
-        qLen = len(FromGpui(gp::InputValue(wnd->editQuery)));
-        qPos = gp::InputCursor(wnd->editQuery);
+        gp::Str q = gp::InputValue(wnd->editQuery);
+        qLen = len(FromGpui(q));
+        gp::Selection sel = wnd->editQuery->selectedRange;
+        qStart = (int)sel.start;
+        qEnd = (int)sel.end;
     }
     int rendered = 0;
     if (wnd->thumbCache) {
@@ -1026,7 +1030,7 @@ TempStr CommandPaletteStateTemp(int* exitCodeOut) {
     out.Append(
         fmt("OK sel=%d items=%d querySel=%d,%d queryLen=%d cmd=%d rtl=%d thumb=%d page=%d rendered=%d annots=%d "
             "annotPage=%d annotsDone=%d ",
-            sel, n, qPos, qPos, qLen, selectedCmdId, IsUIRtl() ? 1 : 0, wnd->thumbnailMode ? 1 : 0, wnd->selectedPage,
+            sel, n, qStart, qEnd, qLen, selectedCmdId, IsUIRtl() ? 1 : 0, wnd->thumbnailMode ? 1 : 0, wnd->selectedPage,
             rendered, nAnnots, annotPage, annotsDone));
     int editFocus = wnd->editQuery && wnd->editQuery->focused ? 1 : 0;
     int helpShown = (!wnd->thumbnailMode && ShowsSettingHelp(wnd)) ? 1 : 0;
@@ -1865,6 +1869,45 @@ void CommandPaletteOnSettingsReloaded() {
     int n = len(wnd->items);
     SetCurrentSelection(n == 0 ? -1 : std::min(currSel, n - 1));
     AppShellInvalidate(wnd->win);
+}
+
+// orig's CommandPaletteWnd::OnCommand: Ctrl+A and Ctrl+C are accelerators
+// delivered to the palette, so they edit the query rather than the document.
+bool CommandPaletteHandleCommand(MainWindow* win, int cmdId) {
+    CommandPaletteWnd* wnd = gCommandPaletteWnd;
+    if (!wnd || !wnd->visible || wnd->win != win || !wnd->editQuery) {
+        return false;
+    }
+    if (cmdId == CmdSelectAll) {
+        gp::Window* gw = CommandPaletteInputWindow(win);
+        if (!gw) {
+            gw = win->gpuiWin;
+        }
+        gp::InputSelectAll(wnd->editQuery, win->gpuiWin->app, gw);
+        AppShellInvalidate(win);
+        return true;
+    }
+    if (cmdId != CmdCopySelection) {
+        return false;
+    }
+    Str full = FromGpui(gp::InputValue(wnd->editQuery));
+    int a = (int)wnd->editQuery->selectedRange.start;
+    int b = (int)wnd->editQuery->selectedRange.end;
+    if (b < a) {
+        int t = a;
+        a = b;
+        b = t;
+    }
+    if (a < 0) {
+        a = 0;
+    }
+    if (b > len(full)) {
+        b = len(full);
+    }
+    if (a < b) {
+        CopyTextToClipboard(win, Str{full.s + a, b - a});
+    }
+    return true;
 }
 
 // Tests replace the query with WM_SETTEXT on the frame. The box is a gpui

@@ -7731,6 +7731,9 @@ void ExecuteCmd(MainWindow* win, int cmdId) {
         // ng: orig's CopySelectionInTabToClipboard, minus the focused edit box.
         // A text selection wins. Otherwise Ctrl+C copies the selected annotation.
         case CmdCopySelection: {
+            if (CommandPaletteHandleCommand(win, cmdId)) {
+                break;
+            }
             if (!tab || !HasPermission(Perm::CopySelection)) {
                 break;
             }
@@ -7751,7 +7754,9 @@ void ExecuteCmd(MainWindow* win, int cmdId) {
         }
 
         case CmdSelectAll:
-            OnSelectAll(win);
+            if (!CommandPaletteHandleCommand(win, cmdId)) {
+                OnSelectAll(win);
+            }
             break;
 
         case CmdSelectCurrentPage:
