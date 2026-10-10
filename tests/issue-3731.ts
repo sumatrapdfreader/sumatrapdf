@@ -14,6 +14,7 @@
 import { mkdirSync, rmSync, writeFileSync, existsSync } from "node:fs";
 import { join } from "node:path";
 import { ControlCommand, withControlledSumatra } from "./control.ts";
+import { IS_MAC } from "./host.ts";
 import { EXE, runStandalone, tmpPath } from "./util.ts";
 
 // build a PDF whose only image is an external-file stream (/F + /FFilter), with
@@ -101,16 +102,20 @@ export async function testit(): Promise<void> {
   const w = 320;
   const h = 240;
   const jpg = join(dir, "imagestream.jpg");
-  const psMakeJpg =
-    "Add-Type -AssemblyName System.Drawing; " +
-    `$b=New-Object System.Drawing.Bitmap ${w},${h}; $g=[System.Drawing.Graphics]::FromImage($b); ` +
-    "$r=New-Object System.Random 7; for($i=0;$i -lt 200;$i++){$br=New-Object System.Drawing.SolidBrush " +
-    "([System.Drawing.Color]::FromArgb($r.Next(255),$r.Next(255),$r.Next(255)));" +
-    `$g.FillRectangle($br,$r.Next(${w}),$r.Next(${h}),40,40)}; $g.Dispose();` +
-    `$b.Save('${jpg.split("\\").join("\\\\")}',[System.Drawing.Imaging.ImageFormat]::Jpeg); $b.Dispose()`;
-  const mk = Bun.spawnSync(["powershell", "-NoProfile", "-Command", psMakeJpg]);
-  if (!mk.success || !existsSync(jpg)) {
-    throw new Error(`failed to create test JPEG: ${mk.stderr.toString()}`);
+  if (IS_MAC) {
+    writeColorJpeg(jpg, w, h);
+  } else {
+    const psMakeJpg =
+      "Add-Type -AssemblyName System.Drawing; " +
+      `$b=New-Object System.Drawing.Bitmap ${w},${h}; $g=[System.Drawing.Graphics]::FromImage($b); ` +
+      "$r=New-Object System.Random 7; for($i=0;$i -lt 200;$i++){$br=New-Object System.Drawing.SolidBrush " +
+      "([System.Drawing.Color]::FromArgb($r.Next(255),$r.Next(255),$r.Next(255)));" +
+      `$g.FillRectangle($br,$r.Next(${w}),$r.Next(${h}),40,40)}; $g.Dispose();` +
+      `$b.Save('${jpg.split("\\").join("\\\\")}',[System.Drawing.Imaging.ImageFormat]::Jpeg); $b.Dispose()`;
+    const mk = Bun.spawnSync(["powershell", "-NoProfile", "-Command", psMakeJpg]);
+    if (!mk.success || !existsSync(jpg)) {
+      throw new Error(`failed to create test JPEG: ${mk.stderr.toString()}`);
+    }
   }
   const pdf = join(dir, "imagestream.pdf");
   writeFileSync(pdf, makeExternalImagePdf("imagestream.jpg", w, h));
@@ -134,6 +139,36 @@ export async function testit(): Promise<void> {
   }
   if (onSpread < 80) {
     throw new Error(`external image did NOT render with the setting ON (spread=${onSpread}); #3731 not working`);
+  }
+}
+
+// System.Drawing is Windows-only. A gradient BMP converted by sips is enough:
+// the check only cares that the rendered page is colorful.
+function writeColorJpeg(jpg: string, w: number, h: number): void {
+  const row = w * 3;
+  const pixels = Buffer.alloc(row * h);
+  for (let y = 0; y < h; y++) {
+    for (let x = 0; x < w; x++) {
+      const i = y * row + x * 3;
+      pixels[i] = Math.floor((x * 255) / (w - 1));
+      pixels[i + 1] = Math.floor((y * 255) / (h - 1));
+      pixels[i + 2] = (x * 17 + y * 13) & 255;
+    }
+  }
+  const header = Buffer.alloc(54);
+  header.write("BM", 0);
+  header.writeUInt32LE(54 + pixels.length, 2);
+  header.writeUInt32LE(54, 10);
+  header.writeUInt32LE(40, 14);
+  header.writeInt32LE(w, 18);
+  header.writeInt32LE(h, 22);
+  header.writeUInt16LE(1, 26);
+  header.writeUInt16LE(24, 28);
+  const bmp = jpg + ".bmp";
+  writeFileSync(bmp, Buffer.concat([header, pixels]));
+  const mk = Bun.spawnSync(["sips", "-s", "format", "jpeg", bmp, "--out", jpg]);
+  if (!mk.success || !existsSync(jpg)) {
+    throw new Error(`failed to create test JPEG: ${mk.stderr.toString()}`);
   }
 }
 
