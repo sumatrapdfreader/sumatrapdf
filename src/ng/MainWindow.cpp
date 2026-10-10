@@ -234,36 +234,6 @@ void LinkHandler::GotoLink(IPageDestination* dest) {
     logf("LinkHandler::GotoLink: unhandled kind %s\n", Str(kind));
 }
 
-void LinkHandler::ScrollTo(IPageDestination* dest) {
-    ReportIf(!win || !win->ctrl || win->linkHandler != this);
-    if (!dest || !win || !win->ctrl || !win->IsDocLoaded()) {
-        return;
-    }
-    // TODO: this seems like a hack, there should be a better way
-    // https://github.com/sumatrapdfreader/sumatrapdf/issues/3499
-    ChmModel* chm = win->ctrl->AsChm();
-    if (chm) {
-        chm->HandleLink(dest, nullptr);
-        return;
-    }
-    MarkdownModel* md = win->ctrl->AsMarkdown();
-    if (md) {
-        md->HandleLink(dest, nullptr);
-        return;
-    }
-    Location loc = win->ctrl->ResolveDest(dest);
-    if (!loc.IsValid()) {
-        return;
-    }
-    int pageNo = win->ctrl->PageNoFromLocation(loc);
-    if (!win->ctrl->ValidPageNo(pageNo)) {
-        return;
-    }
-    RectF rect = dest->GetRect();
-    float zoom = dest->GetZoom();
-    ScrollTo(pageNo, rect, zoom);
-}
-
 // for safety, only handle relative paths and only open them in SumatraPDF
 // (unless they're of an allowed perceived type)
 void LinkHandler::LaunchFile(Str pathOrig, IPageDestination* remoteLink) {
@@ -495,13 +465,6 @@ void MainWindow::MoveDocBy(int dx, int dy) const {
     }
 }
 
-void MainWindow::ToggleZoom() const {
-    WindowTab* tab = CurrentTab();
-    if (tab) {
-        tab->ToggleZoom();
-    }
-}
-
 void MainWindow::ChangePresentationMode(PresentationMode mode) {
     presentation = mode;
     if (PM_BLACK_SCREEN == mode || PM_WHITE_SCREEN == mode) {
@@ -665,22 +628,6 @@ MainWindow* FindMainWindowByGpuiWindow(gpui::Window* gw) {
     for (MainWindow* win : gWindows) {
         if (win->gpuiWin == gw) {
             return win;
-        }
-    }
-    return nullptr;
-}
-
-// Find MainWindow using WindowTab. Different than WindowTab->win in that
-// it validates that WindowTab is still valid
-MainWindow* FindMainWindowByTab(WindowTab* tabToFind) {
-    if (!tabToFind) {
-        return nullptr;
-    }
-    for (MainWindow* win : gWindows) {
-        for (WindowTab* tab : win->Tabs()) {
-            if (tab == tabToFind) {
-                return win;
-            }
         }
     }
     return nullptr;
