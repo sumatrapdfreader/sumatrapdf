@@ -3,6 +3,7 @@
 
 import { join } from "node:path";
 import { ControlCommand } from "./control.ts";
+import { IS_MAC } from "./host.ts";
 import { cmdId, pollUntil, ROOT, runStandalone, SLOW_BUILD_FACTOR } from "./util.ts";
 import { killAndWait, launchControlled, sendCommandSync } from "./win-automation.ts";
 
@@ -57,6 +58,10 @@ function expectButtons(got: Buttons, want: { copy: number; viewCert: number; upd
 export async function testit(): Promise<void> {
   expectButtons(await propertiesButtons(UNSIGNED_PDF), { copy: 1, viewCert: 0, updateEutl: 0 }, "unsigned PDF");
   expectButtons(await propertiesButtons(CBZ), { copy: 1, viewCert: 0, updateEutl: 0 }, "comic book");
+  if (IS_MAC) {
+    console.log("SKIP issue-5993 signed PDF: View Certificate uses the Windows certificate store and CryptUI");
+    return;
+  }
   expectButtons(await propertiesButtons(SIGNED_PDF), { copy: 1, viewCert: 1, updateEutl: 1 }, "signed PDF");
   console.log("PASS: PDF certification actions only when the PDF has certificates (issue #5993)");
 }
