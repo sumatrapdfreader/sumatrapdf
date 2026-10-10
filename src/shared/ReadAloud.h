@@ -61,6 +61,7 @@ bool TtsTestEngineCrash();
 void TtsTestPumpOnNextSpeak();
 #if defined(SUMATRA_NG)
 bool ApplyReadAloudVoiceFromSettings();
+void ReadAloudFreeVoiceCache();
 #endif
 
 // --- highlight of the words being spoken ---

@@ -1172,6 +1172,9 @@
     <ClCompile Include="..\src\shared\ReadAloudHighlight.cpp">
       <Filter>src\shared</Filter>
     </ClCompile>
+    <ClCompile Include="..\src\shared\ReadAloud_win.cpp">
+      <Filter>src\shared</Filter>
+    </ClCompile>
     <ClCompile Include="..\src\shared\ReadingBar.cpp">
       <Filter>src\shared</Filter>
     </ClCompile>
