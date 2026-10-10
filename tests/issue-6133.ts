@@ -1,6 +1,7 @@
 // #6133: global shortcuts in settings, window MRU targeting, and fallback.
 import { mkdirSync, rmSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
+import { IS_MAC } from "./host";
 import { ROOT, cmdId, runStandalone, tmpPath } from "./util";
 import { FRAME_CLASS, killAndWait, launchControlled, sendCommandSync } from "./win-automation";
 import { enumWindows, getClassName, getWindowPid, isWindowVisible, sendMessage, sleep } from "./winapi";
@@ -36,6 +37,10 @@ function getFrames(pid: number): number[] {
 }
 
 export async function testit(): Promise<void> {
+  if (IS_MAC) {
+    console.log("SKIP issue-6133: global hotkeys are RegisterHotKey and WM_HOTKEY; mac has no Cocoa hotkey path");
+    return;
+  }
   // needs at least 3 pages: the hotkey advances a page three times
   const pdf = join(ROOT, "tests", "issue-6132.pdf");
   const dir = tmpPath("issue-6133");
