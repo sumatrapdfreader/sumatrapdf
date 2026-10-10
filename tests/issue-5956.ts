@@ -10,6 +10,7 @@
 
 import { join } from "node:path";
 import { ControlClient, ControlCommand } from "./control.ts";
+import { IS_MAC } from "./host.ts";
 import { ROOT, cmdId, runStandalone, tmpPath } from "./util.ts";
 import {
   captureWindowPixels,
@@ -18,8 +19,11 @@ import {
   getFocusedHwnd,
   getRootWindow,
   postMessage,
+  sendMessage,
   sleep,
+  VK_ESCAPE,
   WM_CLOSE,
+  WM_KEYDOWN,
 } from "./winapi.ts";
 import { findCanvas, killAndWait, launchControlled, sendCommandSync } from "./win-automation.ts";
 
@@ -66,9 +70,14 @@ function findPalette(frame: number): number {
 }
 
 async function closePalette(client: ControlClient, frame: number): Promise<void> {
-  const palette = findPalette(frame);
-  if (palette) {
-    postMessage(palette, WM_CLOSE, 0, 0);
+  if (IS_MAC) {
+    // the palette is not a separate HWND; Escape closes it
+    sendMessage(frame, WM_KEYDOWN, VK_ESCAPE, 0);
+  } else {
+    const palette = findPalette(frame);
+    if (palette) {
+      postMessage(palette, WM_CLOSE, 0, 0);
+    }
   }
   const deadline = Date.now() + 3_000;
   while (Date.now() < deadline) {
@@ -131,6 +140,25 @@ export async function testit(): Promise<void> {
       throw new Error(`issue-5956: expected rtl=0 in LTR UI, got ${ltr}`);
     }
     await closePalette(client, frame);
+
+    if (IS_MAC) {
+      sendCommandSync(frame, cmdId("CmdDebugToggleRtl"));
+      sendCommandSync(frame, cmdId("CmdCommandPalette"));
+      const rtl = await waitRtl(client);
+      if (rtl !== 1) {
+        throw new Error(`issue-5956: expected rtl=1 after CmdDebugToggleRtl, got ${rtl}`);
+      }
+      await closePalette(client, frame);
+      sendCommandSync(frame, cmdId("CmdDebugToggleRtl"));
+      sendCommandSync(frame, cmdId("CmdCommandPalette"));
+      const back = await waitRtl(client);
+      if (back !== 0) {
+        throw new Error(`issue-5956: expected rtl=0 after leaving RTL, got ${back}`);
+      }
+      await closePalette(client, frame);
+      console.log("SKIP issue-5956: page pixel mirror check needs a window DC capture");
+      return;
+    }
 
     const canvas = findCanvas(frame);
     if (!canvas) {
