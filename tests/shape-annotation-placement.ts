@@ -6,7 +6,7 @@ import { mkdirSync, rmSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 import { ControlClient, ControlCommand } from "./control.ts";
 import { IS_MAC } from "./host.ts";
-import { assemblePdf, cmdId, runStandalone, SLOW_BUILD_FACTOR, tmpPath, USE_NG } from "./util.ts";
+import { cmdId, runStandalone, SLOW_BUILD_FACTOR, tmpPath, USE_NG, makeBlankPdf } from "./util.ts";
 import {
   captureWindowPixels,
   clientToScreen,
@@ -39,6 +39,9 @@ import {
   pressEscape,
   sendCommand,
   sendCommandSync,
+  ngKey,
+  ngType,
+  countPreviewBlue,
 } from "./win-automation.ts";
 
 type Point = { x: number; y: number };
@@ -58,15 +61,6 @@ type PlacementState = {
   message: string;
   raw: string;
 };
-
-function makeBlankPdf(): string {
-  const objects = [
-    "<< /Type /Catalog /Pages 2 0 R >>",
-    "<< /Type /Pages /Count 1 /Kids [3 0 R] >>",
-    "<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] >>",
-  ];
-  return assemblePdf(objects);
-}
 
 async function placementState(client: ControlClient): Promise<PlacementState> {
   const res = await client.request(ControlCommand.TestMarkupAnnots, []);
@@ -121,24 +115,6 @@ function toolbarButtonRect(dump: string, command: string): { x: number; y: numbe
   const x = +m[1]!;
   const y = +m[2]!;
   return { x, y, dx: +m[3]! - x, dy: +m[4]! - y };
-}
-
-async function ngType(client: ControlClient, text: string): Promise<void> {
-  for (const ch of text) {
-    const res = await client.request(ControlCommand.TestInput, ["char", ch.codePointAt(0)!]);
-    const raw = String(res[1] ?? "");
-    if (res[0] !== 0 || !raw.startsWith("OK")) {
-      throw new Error(`shape-annotation-placement: palette type failed: ${raw}`);
-    }
-  }
-}
-
-async function ngKey(client: ControlClient, vk: number): Promise<void> {
-  const res = await client.request(ControlCommand.TestInput, ["key", vk, 0]);
-  const raw = String(res[1] ?? "");
-  if (res[0] !== 0 || !raw.startsWith("OK")) {
-    throw new Error(`shape-annotation-placement: palette key failed: ${raw}`);
-  }
 }
 
 async function executeFromCommandPaletteNg(client: ControlClient, frame: number, command: string): Promise<void> {
@@ -260,29 +236,6 @@ async function drag(canvas: number, start: Point, end: Point, keys = 0): Promise
 
 function releaseDrag(canvas: number, end: Point, keys = 0): void {
   sendMessage(canvas, WM_LBUTTONUP, keys, packCoords(end.x, end.y));
-}
-
-function countPreviewBlue(shot: { w: number; h: number; data: Uint8Array } | null, start: Point, end: Point): number {
-  if (!shot) {
-    return 0;
-  }
-  const left = Math.max(0, Math.min(start.x, end.x) - 8);
-  const right = Math.min(shot.w - 1, Math.max(start.x, end.x) + 8);
-  const top = Math.max(0, Math.min(start.y, end.y) - 8);
-  const bottom = Math.min(shot.h - 1, Math.max(start.y, end.y) + 8);
-  let count = 0;
-  for (let y = top; y <= bottom; y++) {
-    for (let x = left; x <= right; x++) {
-      const off = (y * shot.w + x) * 4;
-      const b = shot.data[off]!;
-      const g = shot.data[off + 1]!;
-      const r = shot.data[off + 2]!;
-      if (b > 150 && b > g + 50 && g > r + 30 && r < 80) {
-        count++;
-      }
-    }
-  }
-  return count;
 }
 
 function shapeScreenRect(raw: string, type: "Square" | "Circle"): { x: number; y: number; dx: number; dy: number } {

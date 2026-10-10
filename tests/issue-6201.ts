@@ -8,7 +8,7 @@
 // Run:  bun tests/issue-6201.ts [--no-build]
 
 import { writeFileSync, mkdirSync, rmSync } from "node:fs";
-import { runStandalone, tmpPath } from "./util.ts";
+import { runStandalone, tmpPath, makeTopBottomPdf } from "./util.ts";
 import { ControlClient, ControlCommand } from "./control.ts";
 import { launchControlled, findCanvas, killAndWait, ensureModifierKeysUp } from "./win-automation.ts";
 import { sendMessage, getScrollPos, sleep, SB_VERT } from "./winapi.ts";
@@ -18,39 +18,6 @@ const WHEEL_DOWN = 0xff880000n;
 const WHEEL_UP = 0x00780000n;
 
 const PAGE_COUNT = 3;
-
-function buildPdf(): Buffer {
-  const objs: string[] = [];
-  objs[1] = "<< /Type /Catalog /Pages 2 0 R >>";
-  objs[3] = "<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica /Encoding /WinAnsiEncoding >>";
-  const kids: number[] = [];
-  let objNum = 4;
-  for (let page = 1; page <= PAGE_COUNT; page++) {
-    const pageNum = objNum++;
-    const contentNum = objNum++;
-    kids.push(pageNum);
-    const content = `BT /F1 24 Tf 72 720 Td (page ${page} top) Tj ET BT /F1 24 Tf 72 72 Td (page ${page} bottom) Tj ET`;
-    objs[pageNum] =
-      `<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] ` +
-      `/Resources << /Font << /F1 3 0 R >> >> /Contents ${contentNum} 0 R >>`;
-    objs[contentNum] = `<< /Length ${content.length} >>\nstream\n${content}\nendstream`;
-  }
-  objs[2] = `<< /Type /Pages /Kids [${kids.map((k) => `${k} 0 R`).join(" ")}] /Count ${PAGE_COUNT} >>`;
-  const maxN = objNum - 1;
-  let pdf = "%PDF-1.5\n";
-  const offsets: number[] = [];
-  for (let i = 1; i <= maxN; i++) {
-    offsets.push(Buffer.byteLength(pdf, "latin1"));
-    pdf += `${i} 0 obj\n${objs[i]}\nendobj\n`;
-  }
-  const xrefPos = Buffer.byteLength(pdf, "latin1");
-  pdf += `xref\n0 ${maxN + 1}\n0000000000 65535 f \n`;
-  for (const off of offsets) {
-    pdf += off.toString().padStart(10, "0") + " 00000 n \n";
-  }
-  pdf += `trailer\n<< /Size ${maxN + 1} /Root 1 0 R >>\nstartxref\n${xrefPos}\n%%EOF\n`;
-  return Buffer.from(pdf, "latin1");
-}
 
 async function currentPage(client: ControlClient): Promise<number> {
   const deadline = Date.now() + 10_000;
@@ -74,7 +41,7 @@ async function wheel(canvas: number, wp: bigint): Promise<void> {
 
 export async function testit(): Promise<void> {
   const pdfPath = tmpPath("issue-6201.pdf");
-  writeFileSync(pdfPath, buildPdf());
+  writeFileSync(pdfPath, makeTopBottomPdf(PAGE_COUNT));
   const appdata = tmpPath("issue-6201-appdata");
   rmSync(appdata, { recursive: true, force: true });
   mkdirSync(appdata, { recursive: true });

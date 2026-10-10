@@ -10,8 +10,8 @@
 import { writeFileSync } from "node:fs";
 import { ControlClient, ControlCommand, withControlledSumatra } from "./control";
 import { EXE, cmdId, runStandalone, SLOW_BUILD_FACTOR, tmpPath } from "./util";
-import { FRAME_CLASS, sendCommandSync } from "./win-automation";
-import { WM_KEYDOWN, WM_KEYUP, postMessage, sleep, waitForTopWindow, postChar } from "./winapi";
+import { FRAME_CLASS, sendCommandSync, pressVKey } from "./win-automation";
+import { sleep, waitForTopWindow, postChar } from "./winapi";
 
 const VK_RIGHT = 0x27;
 const VK_END = 0x23;
@@ -126,11 +126,6 @@ async function waitForState(
     await sleep(25);
   }
   throw new Error(`keyboard-selection state did not match in time\n${last.dump}`);
-}
-
-function pressVKey(hwnd: number, vk: number): void {
-  postMessage(hwnd, WM_KEYDOWN, vk, 0);
-  postMessage(hwnd, WM_KEYUP, vk, 0);
 }
 
 async function testTextPdf(client: ControlClient, frame: number): Promise<void> {

@@ -9,23 +9,11 @@
 
 import { mkdirSync, rmSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
-import { cmdId, runStandalone, tmpPath } from "./util.ts";
+import { cmdId, runStandalone, tmpPath, crc32 } from "./util.ts";
 import { ControlCommand } from "./control.ts";
 import { IS_MAC } from "./host.ts";
 import { findCanvas, killAndWait, launchControlled, sendCommandSync } from "./win-automation.ts";
 import { readWindowDCColumn, setProcessDpiAware, sleep } from "./winapi.ts";
-
-function crc32(buf: Buffer): number {
-  let crc = 0xffffffff;
-  for (let n = 0; n < buf.length; n++) {
-    let c = (crc ^ buf[n]!) & 0xff;
-    for (let k = 0; k < 8; k++) {
-      c = c & 1 ? 0xedb88320 ^ (c >>> 1) : c >>> 1;
-    }
-    crc = (crc >>> 8) ^ c;
-  }
-  return (crc ^ 0xffffffff) >>> 0;
-}
 
 // Lossless 400x51 solid-color WebP (VP8L). WebP used EngineImages' GDI+ scale
 // path then (#6245 moved it to mupdf's), which is what left a 1-2px dark seam

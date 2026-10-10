@@ -16,7 +16,7 @@
 
 import { mkdirSync, rmSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
-import { cmdId, tmpPath, assemblePdf } from "./util";
+import { cmdId, tmpPath, makeBlankPdf } from "./util";
 import { findCanvas, launchControlled, sendCommandSync, killAndWait } from "./win-automation";
 import {
   getScrollInfo,
@@ -32,19 +32,6 @@ import {
 const WM_HSCROLL = 0x0114;
 const SB_PAGERIGHT = 3;
 
-// minimal, valid N-page PDF (Letter-size blank pages), ASCII only so string
-// length == byte length (keeps the xref offsets correct).
-function makePdf(nPages: number): string {
-  const objs: string[] = [];
-  objs.push(`<< /Type /Catalog /Pages 2 0 R >>`);
-  const kids = Array.from({ length: nPages }, (_, i) => `${3 + i} 0 R`).join(" ");
-  objs.push(`<< /Type /Pages /Count ${nPages} /Kids [${kids}] >>`);
-  for (let i = 0; i < nPages; i++) {
-    objs.push(`<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] >>`);
-  }
-  return assemblePdf(objs);
-}
-
 const SETTINGS = [
   `DefaultDisplayMode = book view`,
   `DefaultZoom = 400`,
@@ -57,7 +44,7 @@ const SETTINGS = [
 
 export async function testit(): Promise<void> {
   const pdf = tmpPath("issue-3591.pdf");
-  writeFileSync(pdf, makePdf(6), "latin1");
+  writeFileSync(pdf, makeBlankPdf(6), "latin1");
 
   const appdata = tmpPath("issue-3591-appdata");
   rmSync(appdata, { recursive: true, force: true });

@@ -37,6 +37,8 @@ import {
   WM_LBUTTONDOWN,
   WM_LBUTTONUP,
   WM_KEYDOWN,
+  WM_KEYUP,
+  getRootWindow,
   WM_CONTEXTMENU,
   WM_COMMAND,
   MK_LBUTTON,
@@ -59,7 +61,7 @@ import {
 } from "./winapi.ts";
 
 export { ensureModifierKeysUp };
-import { ControlClient, uniquePipeName } from "./control.ts";
+import { ControlClient, ControlCommand, uniquePipeName } from "./control.ts";
 
 export { captureWindowToPng, killProcessesNamed };
 
@@ -552,4 +554,65 @@ export function findSubMenu(items: MenuItem[], label: string): MenuItem | null {
     }
   }
   return null;
+}
+
+// The Command Palette window and its edit, found through the focused control.
+export function findPalette(frame: number): { palette: number; edit: number } {
+  const edit = getFocusedHwnd(frame);
+  if (!edit || getClassName(edit) !== "Edit") {
+    return { palette: 0, edit: 0 };
+  }
+  const palette = getRootWindow(edit);
+  return { palette: palette === frame ? 0 : palette, edit };
+}
+
+// A posted, unmodified key press that doesn't wait for the app.
+export function pressVKey(hwnd: number, vk: number): void {
+  postMessage(hwnd, WM_KEYDOWN, vk, 0);
+  postMessage(hwnd, WM_KEYUP, vk, 0);
+}
+
+async function ngInput(client: ControlClient, args: (string | number)[]): Promise<void> {
+  const res = await client.request(ControlCommand.TestInput, args);
+  const raw = String(res[1] ?? "");
+  if (res[0] !== 0 || !raw.startsWith("OK")) {
+    throw new Error(`TestInput ${args.join(" ")} failed: ${raw}`);
+  }
+}
+
+// ng has no window to post keys to: they go through TestInput.
+export function ngKey(client: ControlClient, vk: number): Promise<void> {
+  return ngInput(client, ["key", vk, 0]);
+}
+
+export async function ngType(client: ControlClient, text: string): Promise<void> {
+  for (const ch of text) {
+    await ngInput(client, ["char", ch.codePointAt(0)!]);
+  }
+}
+
+type Pt = { x: number; y: number };
+
+// Pixels in the placement-preview blue within 8px of the start-end box.
+export function countPreviewBlue(shot: { w: number; h: number; data: Uint8Array } | null, start: Pt, end: Pt): number {
+  if (!shot) {
+    return 0;
+  }
+  const left = Math.max(0, Math.min(start.x, end.x) - 8);
+  const right = Math.min(shot.w - 1, Math.max(start.x, end.x) + 8);
+  const top = Math.max(0, Math.min(start.y, end.y) - 8);
+  const bottom = Math.min(shot.h - 1, Math.max(start.y, end.y) + 8);
+  let count = 0;
+  for (let y = top; y <= bottom; y++) {
+    for (let x = left; x <= right; x++) {
+      const off = (y * shot.w + x) * 4;
+      const b = shot.data[off]!;
+      const g = shot.data[off + 1]!;
+      const r = shot.data[off + 2]!;
+      if (b > 150 && b > g + 50 && g > r + 30 && r < 80) {
+        count++;
+      }
+    }
+  }
+  return count;
 }

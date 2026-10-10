@@ -8,27 +8,7 @@ import { mkdirSync, rmSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 import { deflateRawSync } from "node:zlib";
 import { ControlCommand, runControlCommand } from "./control.ts";
-import { EXE, runStandalone, tmpPath } from "./util.ts";
-
-const CRC_TABLE = (() => {
-  const t = new Uint32Array(256);
-  for (let i = 0; i < 256; i++) {
-    let c = i;
-    for (let k = 0; k < 8; k++) {
-      c = c & 1 ? 0xedb88320 ^ (c >>> 1) : c >>> 1;
-    }
-    t[i] = c >>> 0;
-  }
-  return t;
-})();
-
-function crc32(buf: Uint8Array): number {
-  let c = 0xffffffff;
-  for (let i = 0; i < buf.length; i++) {
-    c = CRC_TABLE[(c ^ buf[i]!) & 0xff]! ^ (c >>> 8);
-  }
-  return (c ^ 0xffffffff) >>> 0;
-}
+import { EXE, runStandalone, tmpPath, crc32 } from "./util.ts";
 
 type ZipEntry = { name: string; data: Uint8Array; store?: boolean };
 

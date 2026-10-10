@@ -9,44 +9,13 @@
 // they do for a selection made with the mouse.
 import { writeFileSync } from "node:fs";
 import { ControlClient, ControlCommand, withControlledSumatra } from "./control";
-import { EXE, cmdId, runStandalone, SLOW_BUILD_FACTOR, tmpPath } from "./util";
+import { EXE, cmdId, runStandalone, SLOW_BUILD_FACTOR, tmpPath, makeTextPdf } from "./util";
 import { FRAME_CLASS, sendCommandSync } from "./win-automation";
 import { WM_KEYDOWN, WM_KEYUP, postMessage, sleep, waitForTopWindow, postChar } from "./winapi";
 
 const VK_RIGHT = 0x27;
 
 const LINE = "The quick brown fox jumps over the lazy dog";
-
-function makeTextPdf(): Buffer {
-  const enc = (s: string) => Buffer.from(s, "latin1");
-  const body: Record<number, Buffer> = {};
-  body[1] = enc("<< /Type /Catalog /Pages 2 0 R >>");
-  body[2] = enc("<< /Type /Pages /Kids [3 0 R] /Count 1 >>");
-  body[6] = enc("<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica /Encoding /WinAnsiEncoding >>");
-  const stream = `BT /F1 18 Tf 72 700 Td (${LINE}) Tj ET`;
-  body[10] = enc(`<< /Length ${stream.length} >>\nstream\n${stream}\nendstream`);
-  body[3] = enc(
-    `<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] ` +
-      `/Resources << /Font << /F1 6 0 R >> >> /Contents 10 0 R >>`,
-  );
-
-  const maxN = 12;
-  const parts: Buffer[] = [enc("%PDF-1.7\n%\xe2\xe3\xcf\xd3\n")];
-  const offsets: Record<number, number> = {};
-  let pos = parts[0]!.length;
-  for (let n = 1; n <= maxN; n++) {
-    offsets[n] = pos;
-    const obj = Buffer.concat([enc(`${n} 0 obj\n`), body[n] ?? enc("null"), enc("\nendobj\n")]);
-    parts.push(obj);
-    pos += obj.length;
-  }
-  let xref = `xref\n0 ${maxN + 1}\n0000000000 65535 f \n`;
-  for (let n = 1; n <= maxN; n++) {
-    xref += `${String(offsets[n]).padStart(10, "0")} 00000 n \n`;
-  }
-  parts.push(enc(`${xref}trailer\n<< /Size ${maxN + 1} /Root 1 0 R >>\nstartxref\n${pos}\n%%EOF\n`));
-  return Buffer.concat(parts);
-}
 
 type State = { active: boolean; selRects: number; text: string; dump: string };
 
@@ -80,7 +49,7 @@ async function waitForState(
 
 export async function testit(): Promise<void> {
   const pdf = tmpPath("issue-5922.pdf");
-  writeFileSync(pdf, makeTextPdf());
+  writeFileSync(pdf, makeTextPdf(LINE));
 
   await withControlledSumatra(
     EXE,

@@ -7,7 +7,7 @@ import { mkdirSync, rmSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 import { openChipDropdown, pickSwatch } from "./annot-color-dropdown.ts";
 import { ControlClient, ControlCommand } from "./control.ts";
-import { assemblePdf, cmdId, runStandalone, SLOW_BUILD_FACTOR, tmpPath, USE_NG } from "./util.ts";
+import { assemblePdf, cmdId, runStandalone, SLOW_BUILD_FACTOR, tmpPath, USE_NG, makeBlankPdf } from "./util.ts";
 import {
   enumChildWindows,
   getClassName,
@@ -53,14 +53,6 @@ function makeRedactPdf(): string {
     pageObj(6),
     redactObj(3),
     redactObj(4),
-  ]);
-}
-
-function makeBlankPdf(): string {
-  return assemblePdf([
-    "<< /Type /Catalog /Pages 2 0 R >>",
-    "<< /Type /Pages /Count 1 /Kids [3 0 R] >>",
-    "<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] >>",
   ]);
 }
 

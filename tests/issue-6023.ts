@@ -7,8 +7,8 @@
 import { writeFileSync } from "node:fs";
 import { ControlClient, ControlCommand, withControlledSumatra } from "./control.ts";
 import { EXE, cmdId, runStandalone, SLOW_BUILD_FACTOR, tmpPath } from "./util.ts";
-import { FRAME_CLASS, sendCommandSync } from "./win-automation.ts";
-import { WM_KEYDOWN, WM_KEYUP, postMessage, sleep, waitForTopWindow, postChar } from "./winapi.ts";
+import { FRAME_CLASS, sendCommandSync, pressVKey } from "./win-automation.ts";
+import { sleep, waitForTopWindow, postChar } from "./winapi.ts";
 
 const VK_END = 0x23;
 const PAGE_H = 792;
@@ -44,11 +44,6 @@ function makeTextPdf(): Buffer {
   }
   parts.push(enc(`${xref}trailer\n<< /Size ${maxN + 1} /Root 1 0 R >>\nstartxref\n${pos}\n%%EOF\n`));
   return Buffer.concat(parts);
-}
-
-function pressVKey(hwnd: number, vk: number): void {
-  postMessage(hwnd, WM_KEYDOWN, vk, 0);
-  postMessage(hwnd, WM_KEYUP, vk, 0);
 }
 
 async function annotationCount(client: ControlClient): Promise<{ count: number; raw: string }> {

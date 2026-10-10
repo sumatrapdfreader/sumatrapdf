@@ -7,8 +7,8 @@
 import { writeFileSync } from "node:fs";
 import { ControlClient, ControlCommand } from "./control.ts";
 import { cmdId, runStandalone, SLOW_BUILD_FACTOR, tmpPath } from "./util.ts";
-import { killAndWait, launchControlled, sendCommandSync } from "./win-automation.ts";
-import { WM_KEYDOWN, WM_KEYUP, postMessage, sleep, postChar } from "./winapi.ts";
+import { killAndWait, launchControlled, sendCommandSync, pressVKey } from "./win-automation.ts";
+import { sleep, postChar } from "./winapi.ts";
 
 const VK_END = 0x23;
 const PAGE_H = 792;
@@ -44,11 +44,6 @@ function makeTextPdf(): Buffer {
   }
   parts.push(enc(`${xref}trailer\n<< /Size ${maxN + 1} /Root 1 0 R >>\nstartxref\n${pos}\n%%EOF\n`));
   return Buffer.concat(parts);
-}
-
-function pressVKey(hwnd: number, vk: number): void {
-  postMessage(hwnd, WM_KEYDOWN, vk, 0);
-  postMessage(hwnd, WM_KEYUP, vk, 0);
 }
 
 function parseExpanded(raw: string): string {

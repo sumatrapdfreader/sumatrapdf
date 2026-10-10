@@ -9,8 +9,6 @@ import { ROOT, cmdId, runStandalone, tmpPath } from "./util.ts";
 import {
   enumWindows,
   getClassName,
-  getFocusedHwnd,
-  getRootWindow,
   getWindowPid,
   isWindowVisible,
   postMessage,
@@ -20,7 +18,14 @@ import {
   VK_DOWN,
   WM_KEYDOWN,
 } from "./winapi.ts";
-import { FRAME_CLASS, killAndWait, launchControlled, sendCommand, sendCommandSync } from "./win-automation.ts";
+import {
+  FRAME_CLASS,
+  killAndWait,
+  launchControlled,
+  sendCommand,
+  sendCommandSync,
+  findPalette,
+} from "./win-automation.ts";
 
 const SETTINGS = `UiLanguage = en
 Theme = Light
@@ -42,15 +47,6 @@ async function paletteState(client: ControlClient): Promise<Palette> {
     throw new Error(`command-palette-delete-tab: TestCommandPalette failed: ${out}`);
   }
   return { open: true, items: +m[1]! };
-}
-
-function findPalette(frame: number): { palette: number; edit: number } {
-  const edit = getFocusedHwnd(frame);
-  if (!edit || getClassName(edit) !== "Edit") {
-    return { palette: 0, edit: 0 };
-  }
-  const palette = getRootWindow(edit);
-  return { palette: palette === frame ? 0 : palette, edit };
 }
 
 async function frameCount(client: ControlClient, pid: number): Promise<number> {

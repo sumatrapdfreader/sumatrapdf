@@ -11,11 +11,11 @@
 //
 // Run:  bun tests/issue-5965.ts [--no-build]   (or via tests/run-almost-all.ts)
 
-import { existsSync, readFileSync, rmSync, writeFileSync } from "node:fs";
+import { existsSync, readFileSync, rmSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { ControlCommand, withControlledSumatra } from "./control.ts";
 import { IS_MAC } from "./host.ts";
-import { EXE, ROOT, runStandalone, tmpPath } from "./util.ts";
+import { EXE, ROOT, runStandalone, tmpPath, writePdfWithEmptySigField, removeTestCert, runPowerShell } from "./util.ts";
 
 const kCertSubject = "CN=SumatraPDF StoreSignTest";
 
@@ -28,16 +28,11 @@ function findToolExe(): string | null {
   return candidates.find((p) => existsSync(p)) ?? null;
 }
 
-function ps(script: string): { ok: boolean; out: string } {
-  const r = Bun.spawnSync(["powershell.exe", "-NoProfile", "-NonInteractive", "-Command", script]);
-  return { ok: r.exitCode === 0, out: r.stdout.toString() + r.stderr.toString() };
-}
-
 // Uses .NET CertificateRequest so it works even when the Cert: PSDrive is missing
 // (New-SelfSignedCertificate needs that drive). PersistKeySet keeps the private
 // key in the user store after this process exits.
 function makeTestCert(): string | null {
-  const created = ps(`
+  const created = runPowerShell(`
     $rsa = [System.Security.Cryptography.RSA]::Create(2048)
     $req = [System.Security.Cryptography.X509Certificates.CertificateRequest]::new(
       '${kCertSubject}', $rsa,
@@ -60,45 +55,6 @@ function makeTestCert(): string | null {
     return null;
   }
   return thumb.toUpperCase();
-}
-
-function removeTestCert(thumbprint: string): void {
-  ps(`
-    $store = New-Object System.Security.Cryptography.X509Certificates.X509Store('My','CurrentUser')
-    $store.Open('ReadWrite')
-    foreach ($c in $store.Certificates.Find('FindByThumbprint', '${thumbprint}', $false)) {
-      $store.Remove($c)
-    }
-    $store.Close()
-  `);
-}
-
-function writePdfWithEmptySigField(path: string): void {
-  const objs: string[] = [];
-  objs[1] = "<< /Type /Catalog /Pages 2 0 R /AcroForm << /Fields [6 0 R] /SigFlags 3 >> >>";
-  objs[2] = "<< /Type /Pages /Kids [3 0 R] /Count 1 >>";
-  objs[3] =
-    "<< /Type /Page /Parent 2 0 R /MediaBox [0 0 300 200] /Resources << /Font << /F1 5 0 R >> >> " +
-    "/Contents 4 0 R /Annots [6 0 R] >>";
-  const content = "BT /F1 14 Tf 30 150 Td (please sign below) Tj ET";
-  objs[4] = `<< /Length ${content.length} >>\nstream\n${content}\nendstream`;
-  objs[5] = "<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica >>";
-  objs[6] =
-    "<< /Type /Annot /Subtype /Widget /FT /Sig /T (CEO) /Rect [30 40 220 100] /F 4 /P 3 0 R /DA (/F1 0 Tf 0 g) >>";
-
-  let pdf = "%PDF-1.7\n";
-  const offsets: number[] = [];
-  for (let i = 1; i < objs.length; i++) {
-    offsets[i] = pdf.length;
-    pdf += `${i} 0 obj\n${objs[i]}\nendobj\n`;
-  }
-  const xrefAt = pdf.length;
-  pdf += `xref\n0 ${objs.length}\n0000000000 65535 f \n`;
-  for (let i = 1; i < objs.length; i++) {
-    pdf += String(offsets[i]).padStart(10, "0") + " 00000 n \n";
-  }
-  pdf += `trailer\n<< /Size ${objs.length} /Root 1 0 R >>\nstartxref\n${xrefAt}\n%%EOF\n`;
-  writeFileSync(path, pdf, "latin1");
 }
 
 // CI's ASan job only builds SumatraPDF-static.exe, so the tool may be missing.

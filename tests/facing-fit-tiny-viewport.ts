@@ -7,7 +7,7 @@
 import { mkdirSync, rmSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 import { IS_MAC } from "./host";
-import { assemblePdf, runStandalone, tmpPath } from "./util";
+import { runStandalone, tmpPath, makeBlankPdf } from "./util";
 import { killAndWait, launchControlled } from "./win-automation";
 import {
   getWindowRect,
@@ -21,17 +21,6 @@ import {
   SWP_NOSENDCHANGING,
   SWP_NOZORDER,
 } from "./winapi";
-
-function makePdf(nPages: number): string {
-  const objs: string[] = [];
-  objs.push(`<< /Type /Catalog /Pages 2 0 R >>`);
-  const kids = Array.from({ length: nPages }, (_, i) => `${3 + i} 0 R`).join(" ");
-  objs.push(`<< /Type /Pages /Count ${nPages} /Kids [${kids}] >>`);
-  for (let i = 0; i < nPages; i++) {
-    objs.push(`<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] >>`);
-  }
-  return assemblePdf(objs);
-}
 
 const SETTINGS = [
   `DefaultDisplayMode = facing`,
@@ -47,7 +36,7 @@ const kTinyFrameDx = 8;
 
 export async function testit(): Promise<void> {
   const pdf = tmpPath("facing-fit-tiny-viewport.pdf");
-  writeFileSync(pdf, makePdf(6), "latin1");
+  writeFileSync(pdf, makeBlankPdf(6), "latin1");
 
   const appdata = tmpPath("facing-fit-tiny-viewport-appdata");
   rmSync(appdata, { recursive: true, force: true });

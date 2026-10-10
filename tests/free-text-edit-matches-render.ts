@@ -8,7 +8,7 @@ import { mkdirSync, rmSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 import { ControlClient, ControlCommand } from "./control.ts";
 import { IS_MAC } from "./host.ts";
-import { assemblePdf, cmdId, runStandalone, SLOW_BUILD_FACTOR, tmpPath, USE_NG } from "./util.ts";
+import { cmdId, runStandalone, SLOW_BUILD_FACTOR, tmpPath, USE_NG, makeBlankPdf } from "./util.ts";
 import {
   captureWindowPixels,
   enumChildWindows,
@@ -26,14 +26,6 @@ import { findCanvas, killAndWait, launchControlled, pressEscape, sendCommandSync
 type Rect = { x: number; y: number; dx: number; dy: number };
 
 const TEXT = "This is a text... and I'm here for it, with enough words to outgrow the box it started in";
-
-function makeBlankPdf(): string {
-  return assemblePdf([
-    "<< /Type /Catalog /Pages 2 0 R >>",
-    "<< /Type /Pages /Count 1 /Kids [3 0 R] >>",
-    "<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] >>",
-  ]);
-}
 
 async function selectedRect(client: ControlClient): Promise<Rect> {
   const res = await client.request(ControlCommand.TestAnnotEditorLayout, [0, 0]);

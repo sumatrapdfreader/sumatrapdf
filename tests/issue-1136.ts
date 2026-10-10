@@ -9,9 +9,9 @@
 // control has focus) rather than pixels, so it doesn't depend on the drawing.
 import { copyFileSync, mkdirSync, rmSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
-import { ControlCommand, type ControlClient, type HomeSelection } from "./control.ts";
+import { ControlCommand, type ControlClient, waitForHome } from "./control.ts";
 import { ROOT, USE_NG, cmdId, runStandalone, tmpPath } from "./util";
-import { sendMessage, setCursorPos, sleep } from "./winapi";
+import { sendMessage, setCursorPos } from "./winapi";
 import {
   findCanvas,
   findChildByClass,
@@ -65,30 +65,6 @@ async function typeChar(client: ControlClient, target: number, ch: string): Prom
     return;
   }
   sendMessage(target, WM_CHAR, ch.charCodeAt(0), 0);
-}
-
-// Waits for the home page to report the state a key was supposed to produce.
-// Polling the app beats sleeping after each key: a key posted while the focus
-// is still moving lands on the wrong window and is silently lost, which is what
-// made this test flaky ("focus did not move", or the wrong file opened).
-async function waitForHome(
-  client: ControlClient,
-  pred: (h: HomeSelection) => boolean,
-  what: string,
-  timeoutMs = 8000,
-): Promise<HomeSelection> {
-  const deadline = Date.now() + timeoutMs;
-  let last: HomeSelection | null = null;
-  for (;;) {
-    last = await client.homeSelection();
-    if (last.ready && pred(last)) {
-      return last;
-    }
-    if (Date.now() > deadline) {
-      throw new Error(`issue-1136: ${what} (last: ${last.raw})`);
-    }
-    await sleep(50);
-  }
 }
 
 async function withHomePage(

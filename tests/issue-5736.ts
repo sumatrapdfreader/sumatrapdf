@@ -5,32 +5,7 @@
 
 import { writeFileSync } from "node:fs";
 import { ControlClient, ControlCommand, withControlledSumatra } from "./control.ts";
-import { EXE, runStandalone, tmpPath } from "./util.ts";
-
-function buildPdf(line: string): Buffer {
-  const content = `BT /F1 24 Tf 72 720 Td (${line}) Tj ET`;
-  const objs = [
-    "<< /Type /Catalog /Pages 2 0 R >>",
-    "<< /Type /Pages /Kids [3 0 R] /Count 1 >>",
-    "<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Resources << /Font << /F1 4 0 R >> >> /Contents 5 0 R >>",
-    "<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica /Encoding /WinAnsiEncoding >>",
-    `<< /Length ${content.length} >>\nstream\n${content}\nendstream`,
-  ];
-
-  let pdf = "%PDF-1.5\n";
-  const offsets: number[] = [];
-  for (let i = 0; i < objs.length; i++) {
-    offsets.push(Buffer.byteLength(pdf, "latin1"));
-    pdf += `${i + 1} 0 obj\n${objs[i]}\nendobj\n`;
-  }
-  const xrefPos = Buffer.byteLength(pdf, "latin1");
-  pdf += `xref\n0 ${objs.length + 1}\n0000000000 65535 f \n`;
-  for (const off of offsets) {
-    pdf += off.toString().padStart(10, "0") + " 00000 n \n";
-  }
-  pdf += `trailer\n<< /Size ${objs.length + 1} /Root 1 0 R >>\nstartxref\n${xrefPos}\n%%EOF\n`;
-  return Buffer.from(pdf, "latin1");
-}
+import { EXE, runStandalone, tmpPath, makeOneLinePdf } from "./util.ts";
 
 async function requestWithRetry(client: ControlClient): Promise<string> {
   const deadline = Date.now() + 10_000;
@@ -53,7 +28,7 @@ async function requestWithRetry(client: ControlClient): Promise<string> {
 
 export async function testit(): Promise<void> {
   const pdfPath = tmpPath("issue-5736.pdf");
-  writeFileSync(pdfPath, buildPdf("hello world"));
+  writeFileSync(pdfPath, makeOneLinePdf("hello world"));
 
   const result = await withControlledSumatra(EXE, (client) => requestWithRetry(client), [pdfPath]);
   console.log(`issue-5736: ${result}`);

@@ -5,16 +5,8 @@ import { join } from "node:path";
 import { ControlClient, ControlCommand } from "./control.ts";
 import { IS_MAC } from "./host.ts";
 import { ROOT, cmdId, runStandalone, tmpPath } from "./util.ts";
-import {
-  captureWindowPixels,
-  captureWindowToPng,
-  getClassName,
-  getFocusedHwnd,
-  getRootWindow,
-  sendText,
-  sleep,
-} from "./winapi.ts";
-import { killAndWait, launchControlled, sendCommand } from "./win-automation.ts";
+import { captureWindowPixels, captureWindowToPng, sendText, sleep } from "./winapi.ts";
+import { killAndWait, launchControlled, sendCommand, findPalette } from "./win-automation.ts";
 
 const SETTINGS = `UiLanguage = en
 Theme = Light
@@ -40,15 +32,6 @@ async function paletteState(client: ControlClient): Promise<PaletteState | null>
     throw new Error(`command-palette-shortcut-filter: could not parse: ${out}`);
   }
   return { items: +m[1]!, queryLen: +m[2]!, selectedCmdId: +m[3]! };
-}
-
-function findPalette(frame: number): { palette: number; edit: number } {
-  const edit = getFocusedHwnd(frame);
-  if (!edit || getClassName(edit) !== "Edit") {
-    return { palette: 0, edit: 0 };
-  }
-  const palette = getRootWindow(edit);
-  return { palette: palette === frame ? 0 : palette, edit };
 }
 
 function countYellowInRightHalf(palette: number): number {

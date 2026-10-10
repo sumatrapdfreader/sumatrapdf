@@ -6,9 +6,6 @@ import { ROOT, cmdId, runStandalone, tmpPath } from "./util.ts";
 import {
   findChildWindow,
   findTopWindow,
-  getClassName,
-  getFocusedHwnd,
-  getRootWindow,
   isWindowVisible,
   postMessage,
   sendText,
@@ -18,7 +15,7 @@ import {
   VK_RETURN,
   WM_KEYDOWN,
 } from "./winapi.ts";
-import { killAndWait, launchControlled, sendCommand } from "./win-automation.ts";
+import { killAndWait, launchControlled, sendCommand, findPalette } from "./win-automation.ts";
 
 const THUMBNAIL_CLASS = "SumatraPDF_ThumbnailNavigation";
 const SETTINGS = `UiLanguage = en
@@ -27,15 +24,6 @@ CheckForUpdates = false
 RestoreSession = false
 RememberOpenedFiles = false
 `;
-
-function findPalette(frame: number): { palette: number; edit: number } {
-  const edit = getFocusedHwnd(frame);
-  if (!edit || getClassName(edit) !== "Edit") {
-    return { palette: 0, edit: 0 };
-  }
-  const palette = getRootWindow(edit);
-  return { palette: palette === frame ? 0 : palette, edit };
-}
 
 type ThumbnailState = { active: boolean; page: number; rendered: number };
 

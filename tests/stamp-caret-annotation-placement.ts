@@ -6,7 +6,7 @@
 import { mkdirSync, rmSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 import { ControlClient, ControlCommand } from "./control.ts";
-import { assemblePdf, cmdId, runStandalone, SLOW_BUILD_FACTOR, tmpPath, USE_NG } from "./util.ts";
+import { cmdId, runStandalone, SLOW_BUILD_FACTOR, tmpPath, USE_NG, makeBlankPdf } from "./util.ts";
 import {
   clientToScreen,
   getClassName,
@@ -34,6 +34,8 @@ import {
   launchControlled,
   pressKey,
   sendCommand,
+  ngKey,
+  ngType,
 } from "./win-automation.ts";
 
 type Kind = "stamp" | "caret" | "file";
@@ -48,15 +50,6 @@ type PlacementState = {
   message: string;
   raw: string;
 };
-
-function makeBlankPdf(): string {
-  const objects = [
-    "<< /Type /Catalog /Pages 2 0 R >>",
-    "<< /Type /Pages /Count 1 /Kids [3 0 R] >>",
-    "<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] >>",
-  ];
-  return assemblePdf(objects);
-}
 
 function cmdName(kind: Kind): string {
   if (kind === "stamp") {
@@ -146,24 +139,6 @@ function toolbarRect(dump: string, kind: Kind): { x: number; y: number; dx: numb
   const x = +m[1]!;
   const y = +m[2]!;
   return { x, y, dx: +m[3]! - x, dy: +m[4]! - y };
-}
-
-async function ngType(client: ControlClient, text: string): Promise<void> {
-  for (const ch of text) {
-    const res = await client.request(ControlCommand.TestInput, ["char", ch.codePointAt(0)!]);
-    const raw = String(res[1] ?? "");
-    if (res[0] !== 0 || !raw.startsWith("OK")) {
-      throw new Error(`stamp-caret-annotation-placement: palette type failed: ${raw}`);
-    }
-  }
-}
-
-async function ngKey(client: ControlClient, vk: number): Promise<void> {
-  const res = await client.request(ControlCommand.TestInput, ["key", vk, 0]);
-  const raw = String(res[1] ?? "");
-  if (res[0] !== 0 || !raw.startsWith("OK")) {
-    throw new Error(`stamp-caret-annotation-placement: palette key failed: ${raw}`);
-  }
 }
 
 async function executeFromCommandPaletteNg(client: ControlClient, frame: number, kind: Kind): Promise<void> {

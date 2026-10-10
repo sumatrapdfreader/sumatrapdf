@@ -6,7 +6,7 @@
 import { mkdirSync, rmSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 import { ControlClient, ControlCommand } from "./control.ts";
-import { assemblePdf, cmdId, runStandalone, tmpPath, USE_NG } from "./util.ts";
+import { cmdId, runStandalone, tmpPath, USE_NG, makeBlankPdf } from "./util.ts";
 import {
   clientToScreen,
   findTopWindow,
@@ -30,15 +30,6 @@ type AnnotState = {
   rerenderPending: boolean;
   raw: string;
 };
-
-function makeBlankPdf(): string {
-  const objects = [
-    "<< /Type /Catalog /Pages 2 0 R >>",
-    "<< /Type /Pages /Count 1 /Kids [3 0 R] >>",
-    "<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] >>",
-  ];
-  return assemblePdf(objects);
-}
 
 function parseRect(m: RegExpExecArray | null): Rect {
   if (!m) {

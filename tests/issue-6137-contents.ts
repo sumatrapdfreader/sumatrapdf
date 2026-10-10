@@ -7,7 +7,7 @@
 import { mkdirSync, rmSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 import { ControlClient, ControlCommand } from "./control.ts";
-import { assemblePdf, cmdId, pollUntil, runStandalone, tmpPath, USE_NG } from "./util.ts";
+import { cmdId, pollUntil, runStandalone, tmpPath, USE_NG, makeBlankPdf } from "./util.ts";
 import { findTopWindow, packCoords, sendMessage, WM_COMMAND, WM_KILLFOCUS } from "./winapi.ts";
 import {
   clickAt,
@@ -23,14 +23,6 @@ const TEXT = "kept-through-osk-focus";
 const TOOLBAR_CLASS = "SumatraAnnotEditToolbar";
 
 type Rect = { x: number; y: number; dx: number; dy: number };
-
-function makeBlankPdf(): string {
-  return assemblePdf([
-    "<< /Type /Catalog /Pages 2 0 R >>",
-    "<< /Type /Pages /Count 1 /Kids [3 0 R] >>",
-    "<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] >>",
-  ]);
-}
 
 function parseRect(m: RegExpExecArray | null): Rect {
   if (!m) {

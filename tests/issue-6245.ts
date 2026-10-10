@@ -22,7 +22,7 @@ import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 import { deflateSync } from "node:zlib";
 import { ControlCommand, withControlledSumatra, type ControlClient } from "./control.ts";
-import { EXE, runStandalone, tmpPath } from "./util.ts";
+import { EXE, runStandalone, tmpPath, pngChunk } from "./util.ts";
 
 const DATA = join(dirname(fileURLToPath(import.meta.url)), "issue-6245-data");
 
@@ -50,27 +50,6 @@ const EDGES: Edges[] = [
   { file: "halves-rot90.webp", zoom: 100, w: 32, h: 64 },
 ];
 const COLOR_TOLERANCE = 6;
-
-function crc32(buf: Buffer): number {
-  let crc = 0xffffffff;
-  for (let n = 0; n < buf.length; n++) {
-    let c = (crc ^ buf[n]!) & 0xff;
-    for (let k = 0; k < 8; k++) {
-      c = c & 1 ? 0xedb88320 ^ (c >>> 1) : c >>> 1;
-    }
-    crc = (crc >>> 8) ^ c;
-  }
-  return (crc ^ 0xffffffff) >>> 0;
-}
-
-function pngChunk(type: string, data: Buffer): Buffer {
-  const len = Buffer.alloc(4);
-  len.writeUInt32BE(data.length);
-  const body = Buffer.concat([Buffer.from(type, "latin1"), data]);
-  const crc = Buffer.alloc(4);
-  crc.writeUInt32BE(crc32(body));
-  return Buffer.concat([len, body, crc]);
-}
 
 function makeSolidPng(w: number, h: number, rgb: number[]): Buffer {
   const rowLen = w * 3 + 1;

@@ -5,7 +5,7 @@ import { join } from "node:path";
 import { ROOT, cmdId, runStandalone, tmpPath } from "./util";
 import { setCursorPos, sleep } from "./winapi";
 import { launchControlled, killAndWait, sendCommand } from "./win-automation";
-import type { ControlClient, HomeSelection } from "./control.ts";
+import { waitForHome } from "./control.ts";
 
 const nFiles = 12;
 
@@ -30,26 +30,6 @@ function makeAppDir(): string {
 
 function sameRect(a: number[], b: number[]): boolean {
   return a.length === b.length && a.every((v, i) => v === b[i]);
-}
-
-async function waitForHome(
-  client: ControlClient,
-  pred: (h: HomeSelection) => boolean,
-  what: string,
-  timeoutMs = 8000,
-): Promise<HomeSelection> {
-  const deadline = Date.now() + timeoutMs;
-  let last: HomeSelection | null = null;
-  for (;;) {
-    last = await client.homeSelection();
-    if (last.ready && pred(last)) {
-      return last;
-    }
-    if (Date.now() > deadline) {
-      throw new Error(`issue-6234: ${what} (last: ${last.raw})`);
-    }
-    await sleep(50);
-  }
 }
 
 export async function testit(): Promise<void> {

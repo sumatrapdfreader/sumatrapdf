@@ -7,9 +7,9 @@
 //
 // Run:  bun tests/ad-hoc-sign-document.ts [--no-build]
 
-import { copyFileSync, existsSync, rmSync, writeFileSync } from "node:fs";
+import { copyFileSync, existsSync, rmSync } from "node:fs";
 import { dirname, join } from "node:path";
-import { EXE, cmdId, runStandalone, tmpPath } from "./util.ts";
+import { EXE, cmdId, runStandalone, tmpPath, writePdfWithEmptySigField, runPowerShell } from "./util.ts";
 import { clickAt, findCanvas, launchSumatra, pressEnter, sendCommand, waitForFrame } from "./win-automation.ts";
 import {
   captureWindowToPng,
@@ -30,16 +30,11 @@ const kPassword = "sumatra-test-pw";
 const kCertSubject = "CN=SumatraPDF SignTest";
 const kToolExe = join(dirname(EXE), "sumatrapdf-tool.exe");
 
-function ps(script: string): { ok: boolean; out: string } {
-  const r = Bun.spawnSync(["powershell.exe", "-NoProfile", "-NonInteractive", "-Command", script]);
-  return { ok: r.exitCode === 0, out: r.stdout.toString() + r.stderr.toString() };
-}
-
 // Creates a signing certificate and exports it as a .pfx. Returns null (with a
 // printed reason) when the machine won't let us, so the test can skip.
 function makeTestCert(pfxPath: string): string | null {
   rmSync(pfxPath, { force: true });
-  const created = ps(
+  const created = runPowerShell(
     `(New-SelfSignedCertificate -Subject '${kCertSubject}' -CertStoreLocation Cert:\\CurrentUser\\My ` +
       `-KeyUsage DigitalSignature -Type Custom -KeySpec Signature).Thumbprint`,
   );
@@ -48,7 +43,7 @@ function makeTestCert(pfxPath: string): string | null {
     console.log(`\nSKIP sign-document: could not create a test certificate:\n${created.out}`);
     return null;
   }
-  const exported = ps(
+  const exported = runPowerShell(
     `$pw = ConvertTo-SecureString -String '${kPassword}' -Force -AsPlainText; ` +
       `Export-PfxCertificate -Cert Cert:\\CurrentUser\\My\\${thumb} -FilePath '${pfxPath}' -Password $pw | Out-Null`,
   );
@@ -61,36 +56,7 @@ function makeTestCert(pfxPath: string): string | null {
 }
 
 function removeTestCert(thumbprint: string): void {
-  ps(`Remove-Item -Path Cert:\\CurrentUser\\My\\${thumbprint} -Force -ErrorAction SilentlyContinue`);
-}
-
-// A one-page PDF whose only interesting feature is an empty signature field.
-function writePdfWithEmptySigField(path: string): void {
-  const objs: string[] = [];
-  objs[1] = "<< /Type /Catalog /Pages 2 0 R /AcroForm << /Fields [6 0 R] /SigFlags 3 >> >>";
-  objs[2] = "<< /Type /Pages /Kids [3 0 R] /Count 1 >>";
-  objs[3] =
-    "<< /Type /Page /Parent 2 0 R /MediaBox [0 0 300 200] /Resources << /Font << /F1 5 0 R >> >> " +
-    "/Contents 4 0 R /Annots [6 0 R] >>";
-  const content = "BT /F1 14 Tf 30 150 Td (please sign below) Tj ET";
-  objs[4] = `<< /Length ${content.length} >>\nstream\n${content}\nendstream`;
-  objs[5] = "<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica >>";
-  objs[6] =
-    "<< /Type /Annot /Subtype /Widget /FT /Sig /T (CEO) /Rect [30 40 220 100] /F 4 /P 3 0 R /DA (/F1 0 Tf 0 g) >>";
-
-  let pdf = "%PDF-1.7\n";
-  const offsets: number[] = [];
-  for (let i = 1; i < objs.length; i++) {
-    offsets[i] = pdf.length;
-    pdf += `${i} 0 obj\n${objs[i]}\nendobj\n`;
-  }
-  const xrefAt = pdf.length;
-  pdf += `xref\n0 ${objs.length}\n0000000000 65535 f \n`;
-  for (let i = 1; i < objs.length; i++) {
-    pdf += String(offsets[i]).padStart(10, "0") + " 00000 n \n";
-  }
-  pdf += `trailer\n<< /Size ${objs.length} /Root 1 0 R >>\nstartxref\n${xrefAt}\n%%EOF\n`;
-  writeFileSync(path, pdf, "latin1");
+  runPowerShell(`Remove-Item -Path Cert:\\CurrentUser\\My\\${thumbprint} -Force -ErrorAction SilentlyContinue`);
 }
 
 function findTopWindow(pid: number, className: string, title?: string): number {

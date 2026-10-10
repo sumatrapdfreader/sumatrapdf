@@ -6,7 +6,7 @@ import { IS_MAC } from "./host";
 import { ROOT, runStandalone, tmpPath } from "./util";
 import { postMessage, setCursorPos, sleep } from "./winapi";
 import { findCanvas, launchControlled, killAndWait, ensureModifierKeysUp } from "./win-automation";
-import { ControlCommand, type ControlClient, type HomeSelection } from "./control.ts";
+import { ControlCommand, type HomeSelection, waitForHome } from "./control.ts";
 
 const WM_MOUSEWHEEL = 0x020a;
 const WHEEL_DELTA = 120;
@@ -40,26 +40,6 @@ function rectsOverlap(a: number[], b: number[]): boolean {
     return false;
   }
   return a[0]! < b[0]! + b[2]! && a[0]! + a[2]! > b[0]! && a[1]! < b[1]! + b[3]! && a[1]! + a[3]! > b[1]!;
-}
-
-async function waitForHome(
-  client: ControlClient,
-  pred: (h: HomeSelection) => boolean,
-  what: string,
-  timeoutMs = 8000,
-): Promise<HomeSelection> {
-  const deadline = Date.now() + timeoutMs;
-  let last: HomeSelection | null = null;
-  for (;;) {
-    last = await client.homeSelection();
-    if (last.ready && pred(last)) {
-      return last;
-    }
-    if (Date.now() > deadline) {
-      throw new Error(`issue-5978: ${what} (last: ${last.raw})`);
-    }
-    await sleep(50);
-  }
 }
 
 export async function testit(): Promise<void> {

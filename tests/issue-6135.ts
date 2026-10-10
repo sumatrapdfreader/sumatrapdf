@@ -4,7 +4,7 @@
 import { mkdirSync, rmSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 import { ControlClient, ControlCommand } from "./control.ts";
-import { assemblePdf, cmdId, runStandalone, SLOW_BUILD_FACTOR, tmpPath } from "./util.ts";
+import { cmdId, runStandalone, SLOW_BUILD_FACTOR, tmpPath, makeBlankPdf } from "./util.ts";
 import {
   clientToScreen,
   getClientRect,
@@ -30,14 +30,6 @@ type InkState = {
   savedPoints: number;
   raw: string;
 };
-
-function makeBlankPdf(): string {
-  return assemblePdf([
-    "<< /Type /Catalog /Pages 2 0 R >>",
-    "<< /Type /Pages /Count 1 /Kids [3 0 R] >>",
-    "<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] >>",
-  ]);
-}
 
 async function inkState(client: ControlClient, args: (string | number)[] = []): Promise<InkState> {
   const res = await client.request(ControlCommand.TestMarkupAnnots, args);

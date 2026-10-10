@@ -6,17 +6,15 @@ import { join } from "node:path";
 import { ControlClient, ControlCommand } from "./control";
 import { IS_MAC } from "./host";
 import { ROOT, cmdId, runStandalone, SLOW_BUILD_FACTOR } from "./util";
+import { postMessage, sendText, sleep, WM_CLOSE, WM_KEYDOWN } from "./winapi";
 import {
-  getClassName,
-  getFocusedHwnd,
-  getRootWindow,
-  postMessage,
-  sendText,
-  sleep,
-  WM_CLOSE,
-  WM_KEYDOWN,
-} from "./winapi";
-import { killAndWait, launchControlled, sendCommand, sendCommandSync, waitForExit } from "./win-automation";
+  killAndWait,
+  launchControlled,
+  sendCommand,
+  sendCommandSync,
+  waitForExit,
+  findPalette,
+} from "./win-automation";
 
 const VK_END = 0x23;
 const VK_HOME = 0x24;
@@ -90,15 +88,6 @@ async function waitPalette(client: ControlClient): Promise<PaletteState> {
     }
     await sleep(50);
   }
-}
-
-function findPalette(frame: number): { palette: number; edit: number } {
-  const edit = getFocusedHwnd(frame);
-  if (!edit || getClassName(edit) !== "Edit") {
-    return { palette: 0, edit: 0 };
-  }
-  const palette = getRootWindow(edit);
-  return { palette: palette === frame ? 0 : palette, edit };
 }
 
 export async function testit(): Promise<void> {

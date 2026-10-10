@@ -897,3 +897,23 @@ if (import.meta.main) {
   const res = await runControlCommand(exe, cmd, args);
   console.log(JSON.stringify(res));
 }
+
+// Polls the home page until it is ready and `pred` holds; `what` names the failure.
+export async function waitForHome(
+  client: ControlClient,
+  pred: (h: HomeSelection) => boolean,
+  what: string,
+  timeoutMs = 8000,
+): Promise<HomeSelection> {
+  const deadline = Date.now() + timeoutMs;
+  for (;;) {
+    const last = await client.homeSelection();
+    if (last.ready && pred(last)) {
+      return last;
+    }
+    if (Date.now() > deadline) {
+      throw new Error(`${what} (last: ${last.raw})`);
+    }
+    await new Promise((r) => setTimeout(r, 50));
+  }
+}

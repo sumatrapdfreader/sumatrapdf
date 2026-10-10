@@ -4,61 +4,15 @@
 // must land on page 2, not far ahead.
 
 import { mkdirSync, rmSync, writeFileSync } from "node:fs";
-import { deflateSync } from "node:zlib";
 import { join } from "node:path";
 import { ControlClient, ControlCommand } from "./control.ts";
-import { runStandalone, tmpPath } from "./util.ts";
+import { runStandalone, tmpPath, crc32, makePng } from "./util.ts";
 import { findCanvas, launchControlled, killAndWait, ensureModifierKeysUp } from "./win-automation.ts";
 import { clientToScreen, getClientRect, packCoords, sendMessage, setCursorPos, sleep } from "./winapi.ts";
 
 const WM_MOUSEWHEEL = 0x020a;
 const WHEEL_DELTA = 120;
 const PAGE_COUNT = 12;
-
-function crc32(buf: Buffer): number {
-  let crc = 0xffffffff;
-  for (let n = 0; n < buf.length; n++) {
-    let c = (crc ^ buf[n]!) & 0xff;
-    for (let k = 0; k < 8; k++) {
-      c = c & 1 ? 0xedb88320 ^ (c >>> 1) : c >>> 1;
-    }
-    crc = (crc >>> 8) ^ c;
-  }
-  return (crc ^ 0xffffffff) >>> 0;
-}
-
-function pngChunk(type: string, data: Buffer): Buffer {
-  const len = Buffer.alloc(4);
-  len.writeUInt32BE(data.length);
-  const body = Buffer.concat([Buffer.from(type, "latin1"), data]);
-  const crc = Buffer.alloc(4);
-  crc.writeUInt32BE(crc32(body));
-  return Buffer.concat([len, body, crc]);
-}
-
-function makePng(w: number, h: number, rgb: [number, number, number]): Buffer {
-  const raw = Buffer.alloc((w * 3 + 1) * h);
-  for (let y = 0; y < h; y++) {
-    const row = y * (w * 3 + 1);
-    raw[row] = 0;
-    for (let x = 0; x < w; x++) {
-      raw[row + 1 + x * 3] = rgb[0];
-      raw[row + 2 + x * 3] = rgb[1];
-      raw[row + 3 + x * 3] = rgb[2];
-    }
-  }
-  const ihdr = Buffer.alloc(13);
-  ihdr.writeUInt32BE(w, 0);
-  ihdr.writeUInt32BE(h, 4);
-  ihdr[8] = 8;
-  ihdr[9] = 2;
-  return Buffer.concat([
-    Buffer.from("89504e470d0a1a0a", "hex"),
-    pngChunk("IHDR", ihdr),
-    pngChunk("IDAT", deflateSync(raw)),
-    pngChunk("IEND", Buffer.alloc(0)),
-  ]);
-}
 
 function makeZip(entries: { name: string; data: Buffer }[]): Buffer {
   const locals: Buffer[] = [];

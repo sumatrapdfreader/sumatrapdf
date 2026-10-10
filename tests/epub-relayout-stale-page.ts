@@ -29,11 +29,10 @@
 //
 // Run: bun tests/epub-relayout-stale-page.ts [--no-build]
 
-import { deflateRawSync } from "node:zlib";
 import { mkdirSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 import { ControlClient, withControlledSumatra } from "./control.ts";
-import { cmdId, EXE, runStandalone, tmpPath, writeAppdata } from "./util.ts";
+import { cmdId, EXE, runStandalone, tmpPath, writeAppdata, makeZip, type ZipEntry } from "./util.ts";
 import { sendCommandSync, waitForFrame } from "./win-automation.ts";
 
 // the crash doc had 36+ chapters and reached flat page 95
@@ -54,78 +53,6 @@ const LAYOUTS: Layout[] = [
   { name: "default", fontSize: 0, margin: "" },
   { name: "big-font-big-margin", fontSize: 18, margin: "60" },
 ];
-
-type ZipEntry = { name: string; data: Uint8Array; store?: boolean };
-
-let crcTable: Uint32Array | undefined;
-
-function crc32(data: Uint8Array): number {
-  if (!crcTable) {
-    crcTable = new Uint32Array(256);
-    for (let i = 0; i < 256; i++) {
-      let c = i;
-      for (let k = 0; k < 8; k++) {
-        c = c & 1 ? 0xedb88320 ^ (c >>> 1) : c >>> 1;
-      }
-      crcTable[i] = c >>> 0;
-    }
-  }
-  let crc = 0xffffffff;
-  for (const b of data) {
-    crc = crcTable[(crc ^ b) & 0xff]! ^ (crc >>> 8);
-  }
-  return (crc ^ 0xffffffff) >>> 0;
-}
-
-function zip(entries: ZipEntry[]): Buffer {
-  const chunks: Uint8Array[] = [];
-  const central: Uint8Array[] = [];
-  let offset = 0;
-  for (const e of entries) {
-    const name = new TextEncoder().encode(e.name);
-    const store = e.store === true;
-    const body = store ? e.data : new Uint8Array(deflateRawSync(e.data));
-    const crc = crc32(e.data);
-    const local = new DataView(new ArrayBuffer(30));
-    local.setUint32(0, 0x04034b50, true);
-    local.setUint16(4, 20, true);
-    local.setUint16(8, store ? 0 : 8, true);
-    local.setUint32(14, crc, true);
-    local.setUint32(18, body.length, true);
-    local.setUint32(22, e.data.length, true);
-    local.setUint16(26, name.length, true);
-    chunks.push(new Uint8Array(local.buffer), name, body);
-
-    const cd = new DataView(new ArrayBuffer(46));
-    cd.setUint32(0, 0x02014b50, true);
-    cd.setUint16(4, 20, true);
-    cd.setUint16(6, 20, true);
-    cd.setUint16(10, store ? 0 : 8, true);
-    cd.setUint32(16, crc, true);
-    cd.setUint32(20, body.length, true);
-    cd.setUint32(24, e.data.length, true);
-    cd.setUint16(28, name.length, true);
-    cd.setUint32(42, offset, true);
-    central.push(new Uint8Array(cd.buffer), name);
-    offset += 30 + name.length + body.length;
-  }
-  const cdSize = central.reduce((n, c) => n + c.length, 0);
-  const end = new DataView(new ArrayBuffer(22));
-  end.setUint32(0, 0x06054b50, true);
-  end.setUint16(8, entries.length, true);
-  end.setUint16(10, entries.length, true);
-  end.setUint32(12, cdSize, true);
-  end.setUint32(16, offset, true);
-  const all = [...chunks, ...central, new Uint8Array(end.buffer)];
-  const total = all.reduce((n, c) => n + c.length, 0);
-  const out = Buffer.alloc(total);
-  let p = 0;
-  for (const c of all) {
-    out.set(c, p);
-    p += c.length;
-  }
-  return out;
-}
 
 // each chapter must be several pages so the flat page count grows well past
 // the per-chapter placeholder count a restyle collapses it to
@@ -180,7 +107,7 @@ export function makeEpub(opts?: { chapterCount?: number; parasPerChapter?: numbe
 
   entries.push({ name: "OEBPS/nav.xhtml", data: enc.encode(nav) });
   entries.push({ name: "OEBPS/content.opf", data: enc.encode(opf) });
-  return zip(entries);
+  return makeZip(entries);
 }
 
 // DocumentColorsFollowTheme must be on: with the default `off` the page colors

@@ -10,42 +10,17 @@
 //
 // Run: bun tests/issue-6266.ts [--no-build]
 
-import { deflateRawSync, deflateSync } from "node:zlib";
+import { deflateSync } from "node:zlib";
 import { mkdirSync, rmSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 import { ControlClient, ControlCommand, withControlledSumatra } from "./control.ts";
 import { IS_MAC } from "./host.ts";
-import { cmdId, EXE, runStandalone, tmpPath } from "./util.ts";
+import { cmdId, EXE, runStandalone, tmpPath, pngChunk, makeZip } from "./util.ts";
 import { captureWindowPixels } from "./winapi.ts";
 import { findCanvas, sendCommand, waitForFrame } from "./win-automation.ts";
 
 const IMG_W = 480;
 const IMG_H = 960;
-
-function crc32(buf: Uint8Array): number {
-  const table = new Uint32Array(256);
-  for (let i = 0; i < 256; i++) {
-    let c = i;
-    for (let k = 0; k < 8; k++) {
-      c = c & 1 ? 0xedb88320 ^ (c >>> 1) : c >>> 1;
-    }
-    table[i] = c >>> 0;
-  }
-  let c = 0xffffffff;
-  for (let i = 0; i < buf.length; i++) {
-    c = table[(c ^ buf[i]!) & 0xff]! ^ (c >>> 8);
-  }
-  return (c ^ 0xffffffff) >>> 0;
-}
-
-function pngChunk(type: string, data: Buffer): Buffer {
-  const len = Buffer.alloc(4);
-  len.writeUInt32BE(data.length, 0);
-  const body = Buffer.concat([Buffer.from(type, "ascii"), data]);
-  const crc = Buffer.alloc(4);
-  crc.writeUInt32BE(crc32(body), 0);
-  return Buffer.concat([len, body, crc]);
-}
 
 // Top half red, bottom half blue. A blank page has neither.
 function makeSplitPng(): Buffer {
@@ -76,58 +51,6 @@ function makeSplitPng(): Buffer {
     pngChunk("IDAT", deflateSync(raw)),
     pngChunk("IEND", Buffer.alloc(0)),
   ]);
-}
-
-type ZipEntry = { name: string; data: Uint8Array; store?: boolean };
-
-function zip(entries: ZipEntry[]): Buffer {
-  const chunks: Uint8Array[] = [];
-  const central: Uint8Array[] = [];
-  let offset = 0;
-  for (const e of entries) {
-    const name = new TextEncoder().encode(e.name);
-    const store = e.store === true;
-    const body = store ? e.data : new Uint8Array(deflateRawSync(e.data));
-    const crc = crc32(e.data);
-    const local = new DataView(new ArrayBuffer(30));
-    local.setUint32(0, 0x04034b50, true);
-    local.setUint16(4, 20, true);
-    local.setUint16(8, store ? 0 : 8, true);
-    local.setUint32(14, crc, true);
-    local.setUint32(18, body.length, true);
-    local.setUint32(22, e.data.length, true);
-    local.setUint16(26, name.length, true);
-    chunks.push(new Uint8Array(local.buffer), name, body);
-
-    const cd = new DataView(new ArrayBuffer(46));
-    cd.setUint32(0, 0x02014b50, true);
-    cd.setUint16(4, 20, true);
-    cd.setUint16(6, 20, true);
-    cd.setUint16(10, store ? 0 : 8, true);
-    cd.setUint32(16, crc, true);
-    cd.setUint32(20, body.length, true);
-    cd.setUint32(24, e.data.length, true);
-    cd.setUint16(28, name.length, true);
-    cd.setUint32(42, offset, true);
-    central.push(new Uint8Array(cd.buffer), name);
-    offset += 30 + name.length + body.length;
-  }
-  const cdSize = central.reduce((n, c) => n + c.length, 0);
-  const end = new DataView(new ArrayBuffer(22));
-  end.setUint32(0, 0x06054b50, true);
-  end.setUint16(8, entries.length, true);
-  end.setUint16(10, entries.length, true);
-  end.setUint32(12, cdSize, true);
-  end.setUint32(16, offset, true);
-  const all = [...chunks, ...central, new Uint8Array(end.buffer)];
-  const total = all.reduce((n, c) => n + c.length, 0);
-  const out = Buffer.alloc(total);
-  let p = 0;
-  for (const c of all) {
-    out.set(c, p);
-    p += c.length;
-  }
-  return out;
 }
 
 function chapterHtml(n: number): string {
@@ -161,7 +84,7 @@ function makeEpub(png: Buffer): Buffer {
     `<item id="c2" href="text/c2.xhtml" media-type="application/xhtml+xml"/>` +
     `<item id="img" href="images/split.png" media-type="image/png"/>` +
     `</manifest><spine><itemref idref="c1"/><itemref idref="c2"/></spine></package>`;
-  return zip([
+  return makeZip([
     { name: "mimetype", data: enc.encode("application/epub+zip"), store: true },
     { name: "META-INF/container.xml", data: enc.encode(container) },
     { name: "OPS/standard.opf", data: enc.encode(opf) },

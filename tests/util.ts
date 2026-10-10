@@ -17,7 +17,7 @@ import {
   writeFileSync,
 } from "node:fs";
 import { basename, dirname, join, resolve } from "node:path";
-import { inflateSync } from "node:zlib";
+import { deflateRawSync, deflateSync, inflateSync } from "node:zlib";
 import { IS_MAC, IS_WIN } from "./host.ts";
 import { ensureModifierKeysUp, enumWindows, getWindowPid, getWindowText, hasInteractiveDesktop } from "./winapi.ts";
 
@@ -298,7 +298,7 @@ export function makeOnePagePdf(opts?: { annots?: string[]; mediaBox?: string; he
 // A valid one-page PDF with no content, for tests that only need a document the
 // app can open (a link target, a tab to switch to, ...). The xref offsets are
 // computed, so mupdf loads it without running its repair pass. For a PDF with
-// actual text on the page see makeTextPdf in tests/issue-5922.ts.
+// actual text on the page see makeTextPdf.
 export function makeMinimalPdf(title: string): Buffer {
   return Buffer.from(
     assemblePdf(
@@ -312,6 +312,81 @@ export function makeMinimalPdf(title: string): Buffer {
     ),
     "latin1",
   );
+}
+
+// US-letter pages with no content.
+export function makeBlankPdf(nPages = 1): string {
+  const kids = Array.from({ length: nPages }, (_, i) => `${3 + i} 0 R`).join(" ");
+  const objs = ["<< /Type /Catalog /Pages 2 0 R >>", `<< /Type /Pages /Count ${nPages} /Kids [${kids}] >>`];
+  for (let i = 0; i < nPages; i++) {
+    objs.push("<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] >>");
+  }
+  return assemblePdf(objs);
+}
+
+const HELVETICA = "<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica /Encoding /WinAnsiEncoding >>";
+
+function contentStream(content: string): string {
+  return `<< /Length ${content.length} >>\nstream\n${content}\nendstream`;
+}
+
+// One page with `line` in 24pt Helvetica at (72, 720).
+export function makeOneLinePdf(line: string): Buffer {
+  const objs = [
+    "<< /Type /Catalog /Pages 2 0 R >>",
+    "<< /Type /Pages /Kids [3 0 R] /Count 1 >>",
+    "<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Resources << /Font << /F1 4 0 R >> >> /Contents 5 0 R >>",
+    HELVETICA,
+    contentStream(`BT /F1 24 Tf 72 720 Td (${line}) Tj ET`),
+  ];
+  return Buffer.from(assemblePdf(objs, { header: "%PDF-1.5\n" }), "latin1");
+}
+
+// Pages labelled "page N top" and "page N bottom", to tell scroll positions apart.
+export function makeTopBottomPdf(pageCount: number): Buffer {
+  const objs = ["<< /Type /Catalog /Pages 2 0 R >>", "", HELVETICA];
+  const kids: string[] = [];
+  for (let page = 1; page <= pageCount; page++) {
+    const pageNum = objs.length + 1;
+    kids.push(`${pageNum} 0 R`);
+    const content = `BT /F1 24 Tf 72 720 Td (page ${page} top) Tj ET BT /F1 24 Tf 72 72 Td (page ${page} bottom) Tj ET`;
+    objs.push(
+      `<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] ` +
+        `/Resources << /Font << /F1 3 0 R >> >> /Contents ${pageNum + 1} 0 R >>`,
+    );
+    objs.push(contentStream(content));
+  }
+  objs[1] = `<< /Type /Pages /Kids [${kids.join(" ")}] /Count ${pageCount} >>`;
+  return Buffer.from(assemblePdf(objs, { header: "%PDF-1.5\n" }), "latin1");
+}
+
+// One page with `line` in 18pt Helvetica at (72, 700). Objects 4, 5, 7-9, 11
+// and 12 are null: tests that add annotations rely on the object numbering.
+export function makeTextPdf(line: string): Buffer {
+  const objs: string[] = new Array(12).fill("null");
+  objs[0] = "<< /Type /Catalog /Pages 2 0 R >>";
+  objs[1] = "<< /Type /Pages /Kids [3 0 R] /Count 1 >>";
+  objs[2] =
+    `<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] ` +
+    `/Resources << /Font << /F1 6 0 R >> >> /Contents 10 0 R >>`;
+  objs[5] = HELVETICA;
+  objs[9] = contentStream(`BT /F1 18 Tf 72 700 Td (${line}) Tj ET`);
+  return Buffer.from(assemblePdf(objs, { header: "%PDF-1.7\n%\xe2\xe3\xcf\xd3\n" }), "latin1");
+}
+
+// One page with an unsigned /Sig field named CEO.
+export function writePdfWithEmptySigField(path: string): void {
+  const content = "BT /F1 14 Tf 30 150 Td (please sign below) Tj ET";
+  const objs = [
+    "<< /Type /Catalog /Pages 2 0 R /AcroForm << /Fields [6 0 R] /SigFlags 3 >> >>",
+    "<< /Type /Pages /Kids [3 0 R] /Count 1 >>",
+    "<< /Type /Page /Parent 2 0 R /MediaBox [0 0 300 200] /Resources << /Font << /F1 5 0 R >> >> " +
+      "/Contents 4 0 R /Annots [6 0 R] >>",
+    contentStream(content),
+    "<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica >>",
+    "<< /Type /Annot /Subtype /Widget /FT /Sig /T (CEO) /Rect [30 40 220 100] /F 4 /P 3 0 R /DA (/F1 0 Tf 0 g) >>",
+  ];
+  writeFileSync(path, assemblePdf(objs, { header: "%PDF-1.7\n" }), "latin1");
 }
 
 // Fresh -appdata directory with SumatraPDF-settings.txt. Tests that need extra
@@ -427,7 +502,7 @@ export function tmpPath(name: string): string {
   return join(TMP_DIR, name);
 }
 
-function zipCrc32(buf: Uint8Array): number {
+export function crc32(buf: Uint8Array): number {
   let c = 0xffffffff;
   for (const b of buf) {
     c ^= b;
@@ -439,13 +514,13 @@ function zipCrc32(buf: Uint8Array): number {
 }
 
 // Store-only (uncompressed) zip, e.g. a .cbz. Names may include '/' for folders.
-export function writeStoredZip(path: string, files: { name: string; data: Buffer }[]): void {
+export function makeStoredZip(files: { name: string; data: Buffer }[]): Buffer {
   const locals: Buffer[] = [];
   const centrals: Buffer[] = [];
   let offset = 0;
   for (const f of files) {
     const name = Buffer.from(f.name, "utf8");
-    const crc = zipCrc32(f.data);
+    const crc = crc32(f.data);
     const lh = Buffer.alloc(30);
     lh.writeUInt32LE(0x04034b50, 0);
     lh.writeUInt16LE(20, 4);
@@ -474,7 +549,107 @@ export function writeStoredZip(path: string, files: { name: string; data: Buffer
   end.writeUInt16LE(files.length, 10);
   end.writeUInt32LE(central.length, 12);
   end.writeUInt32LE(offset, 16);
-  writeFileSync(path, Buffer.concat([...locals, central, end]));
+  return Buffer.concat([...locals, central, end]);
+}
+
+export function writeStoredZip(path: string, files: { name: string; data: Buffer }[]): void {
+  writeFileSync(path, makeStoredZip(files));
+}
+
+export type ZipEntry = { name: string; data: Uint8Array; store?: boolean };
+
+// Zip with deflated entries; `store` keeps one uncompressed (an EPUB mimetype).
+export function makeZip(entries: ZipEntry[]): Buffer {
+  const chunks: Uint8Array[] = [];
+  const central: Uint8Array[] = [];
+  let offset = 0;
+  for (const e of entries) {
+    const name = new TextEncoder().encode(e.name);
+    const store = e.store === true;
+    const body = store ? e.data : new Uint8Array(deflateRawSync(e.data));
+    const crc = crc32(e.data);
+    const local = new DataView(new ArrayBuffer(30));
+    local.setUint32(0, 0x04034b50, true);
+    local.setUint16(4, 20, true);
+    local.setUint16(8, store ? 0 : 8, true);
+    local.setUint32(14, crc, true);
+    local.setUint32(18, body.length, true);
+    local.setUint32(22, e.data.length, true);
+    local.setUint16(26, name.length, true);
+    chunks.push(new Uint8Array(local.buffer), name, body);
+
+    const cd = new DataView(new ArrayBuffer(46));
+    cd.setUint32(0, 0x02014b50, true);
+    cd.setUint16(4, 20, true);
+    cd.setUint16(6, 20, true);
+    cd.setUint16(10, store ? 0 : 8, true);
+    cd.setUint32(16, crc, true);
+    cd.setUint32(20, body.length, true);
+    cd.setUint32(24, e.data.length, true);
+    cd.setUint16(28, name.length, true);
+    cd.setUint32(42, offset, true);
+    central.push(new Uint8Array(cd.buffer), name);
+    offset += 30 + name.length + body.length;
+  }
+  const cdSize = central.reduce((n, c) => n + c.length, 0);
+  const end = new DataView(new ArrayBuffer(22));
+  end.setUint32(0, 0x06054b50, true);
+  end.setUint16(8, entries.length, true);
+  end.setUint16(10, entries.length, true);
+  end.setUint32(12, cdSize, true);
+  end.setUint32(16, offset, true);
+  return Buffer.concat([...chunks, ...central, new Uint8Array(end.buffer)]);
+}
+
+export function pngChunk(type: string, data: Buffer): Buffer {
+  const len = Buffer.alloc(4);
+  len.writeUInt32BE(data.length);
+  const body = Buffer.concat([Buffer.from(type, "latin1"), data]);
+  const crc = Buffer.alloc(4);
+  crc.writeUInt32BE(crc32(body));
+  return Buffer.concat([len, body, crc]);
+}
+
+// Solid-color 8-bit RGB PNG.
+export function makePng(w: number, h: number, rgb: [number, number, number]): Buffer {
+  const raw = Buffer.alloc((w * 3 + 1) * h);
+  for (let y = 0; y < h; y++) {
+    const row = y * (w * 3 + 1);
+    raw[row] = 0;
+    for (let x = 0; x < w; x++) {
+      raw[row + 1 + x * 3] = rgb[0];
+      raw[row + 2 + x * 3] = rgb[1];
+      raw[row + 3 + x * 3] = rgb[2];
+    }
+  }
+  const ihdr = Buffer.alloc(13);
+  ihdr.writeUInt32BE(w, 0);
+  ihdr.writeUInt32BE(h, 4);
+  ihdr[8] = 8;
+  ihdr[9] = 2;
+  return Buffer.concat([
+    Buffer.from("89504e470d0a1a0a", "hex"),
+    pngChunk("IHDR", ihdr),
+    pngChunk("IDAT", deflateSync(raw)),
+    pngChunk("IEND", Buffer.alloc(0)),
+  ]);
+}
+
+export function runPowerShell(script: string): { ok: boolean; out: string } {
+  const r = Bun.spawnSync(["powershell.exe", "-NoProfile", "-NonInteractive", "-Command", script]);
+  return { ok: r.exitCode === 0, out: r.stdout.toString() + r.stderr.toString() };
+}
+
+// Removes a signing-test certificate from the CurrentUser\My store.
+export function removeTestCert(thumbprint: string): void {
+  runPowerShell(`
+    $store = New-Object System.Security.Cryptography.X509Certificates.X509Store('My','CurrentUser')
+    $store.Open('ReadWrite')
+    foreach ($c in $store.Certificates.Find('FindByThumbprint', '${thumbprint}', $false)) {
+      $store.Remove($c)
+    }
+    $store.Close()
+  `);
 }
 
 // path of an installed Ghostscript console exe, "" when none

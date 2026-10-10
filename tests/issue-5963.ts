@@ -11,7 +11,7 @@
 import { existsSync, rmSync, writeFileSync } from "node:fs";
 import { ControlCommand } from "./control.ts";
 import { IS_MAC } from "./host.ts";
-import { cmdId, runStandalone, tmpPath, USE_NG } from "./util.ts";
+import { cmdId, runStandalone, tmpPath, USE_NG, removeTestCert, runPowerShell } from "./util.ts";
 import { killAndWait, launchControlled, sendCommand } from "./win-automation.ts";
 import {
   enumChildWindows,
@@ -32,13 +32,8 @@ const BST_CHECKED = 1;
 // dn | date | text name — no labels, no graphic name
 const kNoLabelsFlags = 2 | 4 | 8;
 
-function ps(script: string): { ok: boolean; out: string } {
-  const r = Bun.spawnSync(["powershell.exe", "-NoProfile", "-NonInteractive", "-Command", script]);
-  return { ok: r.exitCode === 0, out: r.stdout.toString() + r.stderr.toString() };
-}
-
 function makeTestCert(): string | null {
-  const created = ps(`
+  const created = runPowerShell(`
     $rsa = [System.Security.Cryptography.RSA]::Create(2048)
     $req = [System.Security.Cryptography.X509Certificates.CertificateRequest]::new(
       '${kCertSubject}', $rsa,
@@ -61,17 +56,6 @@ function makeTestCert(): string | null {
     return null;
   }
   return thumb.toUpperCase();
-}
-
-function removeTestCert(thumbprint: string): void {
-  ps(`
-    $store = New-Object System.Security.Cryptography.X509Certificates.X509Store('My','CurrentUser')
-    $store.Open('ReadWrite')
-    foreach ($c in $store.Certificates.Find('FindByThumbprint', '${thumbprint}', $false)) {
-      $store.Remove($c)
-    }
-    $store.Close()
-  `);
 }
 
 function writePlainPdf(path: string): void {

@@ -8,59 +8,13 @@ import { mkdirSync, rmSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 import { ControlClient, ControlCommand } from "./control.ts";
 import { IS_MAC } from "./host.ts";
-import { cmdId, runStandalone, SLOW_BUILD_FACTOR, tmpPath } from "./util.ts";
-import { killAndWait, launchControlled, sendCommandSync } from "./win-automation.ts";
-import {
-  SWP_NOACTIVATE,
-  SWP_NOZORDER,
-  WM_KEYDOWN,
-  WM_KEYUP,
-  getWindowRect,
-  moveWindow,
-  postChar,
-  postMessage,
-  setWindowPos,
-  sleep,
-} from "./winapi.ts";
+import { cmdId, runStandalone, SLOW_BUILD_FACTOR, tmpPath, makeTextPdf } from "./util.ts";
+import { killAndWait, launchControlled, sendCommandSync, pressVKey } from "./win-automation.ts";
+import { SWP_NOACTIVATE, SWP_NOZORDER, getWindowRect, moveWindow, postChar, setWindowPos, sleep } from "./winapi.ts";
 
 const VK_END = 0x23;
 
 const LINE = "The quick brown fox jumps over the lazy dog";
-
-function makeTextPdf(): Buffer {
-  const enc = (s: string) => Buffer.from(s, "latin1");
-  const body: Record<number, Buffer> = {};
-  body[1] = enc("<< /Type /Catalog /Pages 2 0 R >>");
-  body[2] = enc("<< /Type /Pages /Kids [3 0 R] /Count 1 >>");
-  body[6] = enc("<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica /Encoding /WinAnsiEncoding >>");
-  const stream = `BT /F1 18 Tf 72 700 Td (${LINE}) Tj ET`;
-  body[10] = enc(`<< /Length ${stream.length} >>\nstream\n${stream}\nendstream`);
-  body[3] = enc(
-    `<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] ` +
-      `/Resources << /Font << /F1 6 0 R >> >> /Contents 10 0 R >>`,
-  );
-  const maxN = 12;
-  const parts: Buffer[] = [enc("%PDF-1.7\n%\xe2\xe3\xcf\xd3\n")];
-  const offsets: Record<number, number> = {};
-  let pos = parts[0]!.length;
-  for (let n = 1; n <= maxN; n++) {
-    offsets[n] = pos;
-    const obj = Buffer.concat([enc(`${n} 0 obj\n`), body[n] ?? enc("null"), enc("\nendobj\n")]);
-    parts.push(obj);
-    pos += obj.length;
-  }
-  let xref = `xref\n0 ${maxN + 1}\n0000000000 65535 f \n`;
-  for (let n = 1; n <= maxN; n++) {
-    xref += `${String(offsets[n]).padStart(10, "0")} 00000 n \n`;
-  }
-  parts.push(enc(`${xref}trailer\n<< /Size ${maxN + 1} /Root 1 0 R >>\nstartxref\n${pos}\n%%EOF\n`));
-  return Buffer.concat(parts);
-}
-
-function pressVKey(hwnd: number, vk: number): void {
-  postMessage(hwnd, WM_KEYDOWN, vk, 0);
-  postMessage(hwnd, WM_KEYUP, vk, 0);
-}
 
 function writeAppData(dir: string): string {
   rmSync(dir, { recursive: true, force: true });
@@ -103,7 +57,7 @@ async function waitForToolbarVisible(client: ControlClient): Promise<string> {
 
 export async function testit(): Promise<void> {
   const pdf = tmpPath("selection-toolbar-move.pdf");
-  writeFileSync(pdf, makeTextPdf());
+  writeFileSync(pdf, makeTextPdf(LINE));
   const dir = writeAppData(tmpPath("selection-toolbar-move-appdata"));
 
   const { proc, client, frame } = await launchControlled(["-appdata", dir, pdf]);

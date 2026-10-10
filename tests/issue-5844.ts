@@ -20,31 +20,9 @@ import { writeFileSync } from "node:fs";
 import { deflateSync } from "node:zlib";
 import { ControlCommand } from "./control.ts";
 import { IS_MAC } from "./host.ts";
-import { cmdId, tmpPath, USE_NG } from "./util.ts";
+import { cmdId, tmpPath, USE_NG, pngChunk } from "./util.ts";
 import { findCanvas, launchControlled, killAndWait, sendCommandSync } from "./win-automation.ts";
 import { captureWindowPixels, getClientRect } from "./winapi.ts";
-
-function crc32(buf: Buffer): number {
-  let c: number;
-  let crc = 0xffffffff;
-  for (let n = 0; n < buf.length; n++) {
-    c = (crc ^ buf[n]!) & 0xff;
-    for (let k = 0; k < 8; k++) {
-      c = c & 1 ? 0xedb88320 ^ (c >>> 1) : c >>> 1;
-    }
-    crc = (crc >>> 8) ^ c;
-  }
-  return (crc ^ 0xffffffff) >>> 0;
-}
-
-function pngChunk(type: string, data: Buffer): Buffer {
-  const len = Buffer.alloc(4);
-  len.writeUInt32BE(data.length);
-  const body = Buffer.concat([Buffer.from(type, "latin1"), data]);
-  const crc = Buffer.alloc(4);
-  crc.writeUInt32BE(crc32(body));
-  return Buffer.concat([len, body, crc]);
-}
 
 // RGBA PNG: opaque red on the left half, alpha = 0 on the right half
 function makeHalfTransparentPng(w: number, h: number): Buffer {

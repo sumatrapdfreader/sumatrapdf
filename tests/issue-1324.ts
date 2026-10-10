@@ -13,102 +13,17 @@
 // Run: bun tests/issue-1324.ts [--no-build]
 
 import { mkdirSync, rmSync, writeFileSync } from "node:fs";
-import { deflateSync } from "node:zlib";
 import { join } from "node:path";
-import { cmdId, runStandalone, tmpPath } from "./util.ts";
+import { cmdId, runStandalone, tmpPath, makePng, makeStoredZip } from "./util.ts";
 import { launchControlled, sendCommandSync, killAndWait } from "./win-automation.ts";
 import { ControlClient, ControlCommand } from "./control.ts";
 import { sleep } from "./winapi.ts";
-
-function crc32(buf: Buffer): number {
-  let c;
-  let crc = 0xffffffff;
-  for (let n = 0; n < buf.length; n++) {
-    c = (crc ^ buf[n]!) & 0xff;
-    for (let k = 0; k < 8; k++) {
-      c = c & 1 ? 0xedb88320 ^ (c >>> 1) : c >>> 1;
-    }
-    crc = (crc >>> 8) ^ c;
-  }
-  return (crc ^ 0xffffffff) >>> 0;
-}
-
-function pngChunk(type: string, data: Buffer): Buffer {
-  const len = Buffer.alloc(4);
-  len.writeUInt32BE(data.length);
-  const body = Buffer.concat([Buffer.from(type, "latin1"), data]);
-  const crc = Buffer.alloc(4);
-  crc.writeUInt32BE(crc32(body));
-  return Buffer.concat([len, body, crc]);
-}
-
-function makePng(w: number, h: number, rgb: [number, number, number]): Buffer {
-  const raw = Buffer.alloc((w * 3 + 1) * h);
-  for (let y = 0; y < h; y++) {
-    const row = y * (w * 3 + 1);
-    raw[row] = 0;
-    for (let x = 0; x < w; x++) {
-      raw[row + 1 + x * 3] = rgb[0];
-      raw[row + 2 + x * 3] = rgb[1];
-      raw[row + 3 + x * 3] = rgb[2];
-    }
-  }
-  const ihdr = Buffer.alloc(13);
-  ihdr.writeUInt32BE(w, 0);
-  ihdr.writeUInt32BE(h, 4);
-  ihdr[8] = 8;
-  ihdr[9] = 2;
-  return Buffer.concat([
-    Buffer.from("89504e470d0a1a0a", "hex"),
-    pngChunk("IHDR", ihdr),
-    pngChunk("IDAT", deflateSync(raw)),
-    pngChunk("IEND", Buffer.alloc(0)),
-  ]);
-}
-
-function makeZip(entries: { name: string; data: Buffer }[]): Buffer {
-  const locals: Buffer[] = [];
-  const centrals: Buffer[] = [];
-  let offset = 0;
-  for (const e of entries) {
-    const name = Buffer.from(e.name, "latin1");
-    const crc = crc32(e.data);
-    const lh = Buffer.alloc(30);
-    lh.writeUInt32LE(0x04034b50, 0);
-    lh.writeUInt16LE(20, 4);
-    lh.writeUInt32LE(crc, 14);
-    lh.writeUInt32LE(e.data.length, 18);
-    lh.writeUInt32LE(e.data.length, 22);
-    lh.writeUInt16LE(name.length, 26);
-    locals.push(lh, name, e.data);
-    const ch = Buffer.alloc(46);
-    ch.writeUInt32LE(0x02014b50, 0);
-    ch.writeUInt16LE(20, 4);
-    ch.writeUInt16LE(20, 6);
-    ch.writeUInt32LE(crc, 16);
-    ch.writeUInt32LE(e.data.length, 20);
-    ch.writeUInt32LE(e.data.length, 24);
-    ch.writeUInt16LE(name.length, 28);
-    ch.writeUInt32LE(offset, 42);
-    centrals.push(ch, name);
-    offset += 30 + name.length + e.data.length;
-  }
-  const localBuf = Buffer.concat(locals);
-  const centralBuf = Buffer.concat(centrals);
-  const end = Buffer.alloc(22);
-  end.writeUInt32LE(0x06054b50, 0);
-  end.writeUInt16LE(entries.length, 8);
-  end.writeUInt16LE(entries.length, 10);
-  end.writeUInt32LE(centralBuf.length, 12);
-  end.writeUInt32LE(localBuf.length, 16);
-  return Buffer.concat([localBuf, centralBuf, end]);
-}
 
 const PORTRAIT = makePng(80, 100, [40, 80, 180]);
 const LANDSCAPE = makePng(160, 100, [200, 40, 40]);
 
 function mixedCbz(): Buffer {
-  return makeZip([
+  return makeStoredZip([
     { name: "001.png", data: PORTRAIT },
     { name: "002.png", data: PORTRAIT },
     { name: "003.png", data: LANDSCAPE },
@@ -119,7 +34,7 @@ function mixedCbz(): Buffer {
 }
 
 function portraitsCbz(): Buffer {
-  return makeZip([
+  return makeStoredZip([
     { name: "001.png", data: PORTRAIT },
     { name: "002.png", data: PORTRAIT },
     { name: "003.png", data: PORTRAIT },

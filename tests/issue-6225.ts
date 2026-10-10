@@ -9,7 +9,7 @@ import { deflateSync } from "node:zlib";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 import { IS_MAC } from "./host.ts";
-import { runStandalone, tmpPath } from "./util.ts";
+import { runStandalone, tmpPath, pngChunk, makeStoredZip } from "./util.ts";
 import { findCanvas, killAndWait, launchControlled } from "./win-automation.ts";
 import { captureWindowPixels } from "./winapi.ts";
 
@@ -21,27 +21,6 @@ const N_SHORT = 11;
 const TALL_PAGE = N_SHORT + 1;
 // PAGE_W x TALL_H, bands BAND_H high; regenerate with tests/issue-6225-make-fixture.py
 const TALL_JPG = join(dirname(fileURLToPath(import.meta.url)), "issue-6225.jpg");
-
-function crc32(buf: Buffer): number {
-  let crc = 0xffffffff;
-  for (let n = 0; n < buf.length; n++) {
-    let c = (crc ^ buf[n]!) & 0xff;
-    for (let k = 0; k < 8; k++) {
-      c = c & 1 ? 0xedb88320 ^ (c >>> 1) : c >>> 1;
-    }
-    crc = (crc >>> 8) ^ c;
-  }
-  return (crc ^ 0xffffffff) >>> 0;
-}
-
-function pngChunk(type: string, data: Buffer): Buffer {
-  const len = Buffer.alloc(4);
-  len.writeUInt32BE(data.length);
-  const body = Buffer.concat([Buffer.from(type, "latin1"), data]);
-  const crc = Buffer.alloc(4);
-  crc.writeUInt32BE(crc32(body));
-  return Buffer.concat([len, body, crc]);
-}
 
 // 8-bit RGB PNG; rowColor picks the color of each row
 function makePng(w: number, h: number, rowColor: (y: number) => [number, number, number]): Buffer {
@@ -66,44 +45,6 @@ function makePng(w: number, h: number, rowColor: (y: number) => [number, number,
     pngChunk("IDAT", deflateSync(raw)),
     pngChunk("IEND", Buffer.alloc(0)),
   ]);
-}
-
-function makeZip(entries: { name: string; data: Buffer }[]): Buffer {
-  const locals: Buffer[] = [];
-  const centrals: Buffer[] = [];
-  let offset = 0;
-  for (const e of entries) {
-    const name = Buffer.from(e.name, "latin1");
-    const crc = crc32(e.data);
-    const lh = Buffer.alloc(30);
-    lh.writeUInt32LE(0x04034b50, 0);
-    lh.writeUInt16LE(20, 4);
-    lh.writeUInt32LE(crc, 14);
-    lh.writeUInt32LE(e.data.length, 18);
-    lh.writeUInt32LE(e.data.length, 22);
-    lh.writeUInt16LE(name.length, 26);
-    locals.push(lh, name, e.data);
-    const ch = Buffer.alloc(46);
-    ch.writeUInt32LE(0x02014b50, 0);
-    ch.writeUInt16LE(20, 4);
-    ch.writeUInt16LE(20, 6);
-    ch.writeUInt32LE(crc, 16);
-    ch.writeUInt32LE(e.data.length, 20);
-    ch.writeUInt32LE(e.data.length, 24);
-    ch.writeUInt16LE(name.length, 28);
-    ch.writeUInt32LE(offset, 42);
-    centrals.push(ch, name);
-    offset += 30 + name.length + e.data.length;
-  }
-  const localBuf = Buffer.concat(locals);
-  const centralBuf = Buffer.concat(centrals);
-  const end = Buffer.alloc(22);
-  end.writeUInt32LE(0x06054b50, 0);
-  end.writeUInt16LE(entries.length, 8);
-  end.writeUInt16LE(entries.length, 10);
-  end.writeUInt32LE(centralBuf.length, 12);
-  end.writeUInt32LE(localBuf.length, 16);
-  return Buffer.concat([localBuf, centralBuf, end]);
 }
 
 // height in pixels of the first complete red/blue band down the middle column,
@@ -171,7 +112,7 @@ export async function testit(): Promise<void> {
   // render asked for the estimated (shorter) box gets just the top of the page.
   // A PNG is decoded whole and squashed into the box, which hides the bug.
   entries.push({ name: `${String(TALL_PAGE).padStart(3, "0")}.jpg`, data: readFileSync(TALL_JPG) });
-  writeFileSync(cbz, makeZip(entries));
+  writeFileSync(cbz, makeStoredZip(entries));
   writeFileSync(
     join(dir, "SumatraPDF-settings.txt"),
     ["ReuseInstance = false", "RestoreSession = false", "ShowStartPage = false", "CheckForUpdates = false"].join("\n"),
