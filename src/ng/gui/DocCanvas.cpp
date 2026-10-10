@@ -3268,7 +3268,9 @@ static void OnMouseLeftButtonUp(MainWindow* win, int x, int y) {
                 return;
             }
         } else {
-            StopMouseDrag(win, x, y);
+            // A click starts a drag so the page can pan. Abort it when the
+            // pointer did not move, or the nudge lands off the link.
+            StopMouseDrag(win, x, y, !didDragMouse);
         }
     } else {
         OnSelectionStop(win, x, y, !didDragMouse);
@@ -3323,6 +3325,14 @@ static void OnMouseLeftButtonUp(MainWindow* win, int x, int y) {
         return;
     }
 
+    // Mouse-down hit testing gives up when text extraction holds the page
+    // lock. The move before this click started that extraction.
+    if (!link && !gSettings->disableLinks) {
+        IPageElement* again = EngineMupdfElementAtPosWait(dm->GetEngine(), pageNo, ptPage);
+        if (again && again->Is(kindPageElementDest)) {
+            link = again;
+        }
+    }
     IPageDestination* dest = link ? link->AsLink() : nullptr;
     Kind destKind = dest ? dest->GetKind() : nullptr;
     // FileAttachment is also a dest; open it instead of the #4790 comment card.

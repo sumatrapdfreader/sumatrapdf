@@ -189,6 +189,7 @@ PdfSigCert* EngineMupdfGetSignatureCerts(EngineBase*);
 void FreePdfSigCerts(PdfSigCert*);
 #endif
 Annotation* EngineMupdfGetAnnotationAtPos(EngineBase*, int pageNo, PointF pos, float padding, Annotation*);
+IPageElement* EngineMupdfElementAtPosWait(EngineBase* engine, int pageNo, PointF pt);
 Annotation* EngineMupdfGetWidgetAtPos(EngineBase*, int pageNo, PointF pos);
 void EngineMupdfGetPageWidgets(EngineBase*, int pageNo, Vec<Annotation*>& out);
 Annotation* EngineMupdfGetAdjacentWidget(EngineBase*, Annotation* cur, bool forward);

@@ -7206,6 +7206,18 @@ IPageElement* EngineMupdf::GetElementAtPos(int pageNo, PointF pt) {
     return FzGetElementAtPos(pageInfo, pt);
 }
 
+// GetElementAtPos uses TryLock and returns null while text extraction (started
+// by the mouse-move that precedes a click) holds the page lock. Callers that
+// must not miss the element wait instead.
+IPageElement* EngineMupdfElementAtPosWait(EngineBase* engine, int pageNo, PointF pt) {
+    EngineMupdf* epdf = AsEngineMupdf(engine);
+    if (!epdf) {
+        return nullptr;
+    }
+    FzPageInfo* pageInfo = epdf->GetFzPageInfo(pageNo, true, nullptr);
+    return FzGetElementAtPos(pageInfo, pt);
+}
+
 Vec<IPageElement*> EngineMupdf::GetElements(int pageNo) {
     auto* pageInfo = GetFzPageInfoFast(pageNo);
     if (!pageInfo) {
