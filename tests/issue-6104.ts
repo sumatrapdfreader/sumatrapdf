@@ -11,6 +11,7 @@
 import { mkdirSync, rmSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 import { ControlClient, ControlCommand } from "./control.ts";
+import { IS_MAC } from "./host.ts";
 import { ROOT, cmdId, runStandalone, tmpPath } from "./util.ts";
 import {
   captureWindowPixels,
@@ -24,8 +25,10 @@ import {
 import { killAndWait, launchControlled, sendCommand } from "./win-automation.ts";
 
 const FILE_NAME = "issue6104.pdf";
-const LONG_DIR = ["C:", ...Array(30).fill("zzzzzzzzzzzzzzzzzzzz")].join("\\");
-const LONG_PATH = `${LONG_DIR}\\${FILE_NAME}`;
+const LONG_DIR = IS_MAC
+  ? `/${Array(30).fill("zzzzzzzzzzzzzzzzzzzz").join("/")}`
+  : ["C:", ...Array(30).fill("zzzzzzzzzzzzzzzzzzzz")].join("\\");
+const LONG_PATH = IS_MAC ? `${LONG_DIR}/${FILE_NAME}` : `${LONG_DIR}\\${FILE_NAME}`;
 
 const SETTINGS = `UiLanguage = en
 Theme = Light
@@ -104,9 +107,16 @@ export async function testit(): Promise<void> {
     const openDeadline = Date.now() + 8_000;
     let handles = { palette: 0, edit: 0 };
     while (Date.now() < openDeadline) {
-      handles = findPalette(frame);
-      if (handles.palette && handles.edit) {
-        break;
+      if (IS_MAC) {
+        if (await paletteState(client)) {
+          handles = { palette: frame, edit: frame };
+          break;
+        }
+      } else {
+        handles = findPalette(frame);
+        if (handles.palette && handles.edit) {
+          break;
+        }
       }
       await sleep(50);
     }
@@ -129,18 +139,22 @@ export async function testit(): Promise<void> {
       throw new Error(`issue-6104: file history query failed: ${JSON.stringify(state)}`);
     }
 
-    const paintDeadline = Date.now() + 3_000;
-    let yellow = 0;
-    while (Date.now() < paintDeadline) {
-      yellow = countYellowInLeftHalf(handles.palette);
-      if (yellow > 20) {
-        break;
+    if (IS_MAC) {
+      console.log("SKIP issue-6104 filename highlight: macOS has no window DC");
+    } else {
+      const paintDeadline = Date.now() + 3_000;
+      let yellow = 0;
+      while (Date.now() < paintDeadline) {
+        yellow = countYellowInLeftHalf(handles.palette);
+        if (yellow > 20) {
+          break;
+        }
+        await sleep(40);
       }
-      await sleep(40);
-    }
-    if (yellow <= 20) {
-      captureWindowToPng(handles.palette, tmpPath("issue-6104.png"));
-      throw new Error(`issue-6104: filename highlight not painted on the left; yellow=${yellow}`);
+      if (yellow <= 20) {
+        captureWindowToPng(handles.palette, tmpPath("issue-6104.png"));
+        throw new Error(`issue-6104: filename highlight not painted on the left; yellow=${yellow}`);
+      }
     }
 
     console.log("issue-6104: OK");
