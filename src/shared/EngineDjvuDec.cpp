@@ -732,8 +732,10 @@ IPageElement* EngineDjvuDec::GetElementAtPos(int pageNo, PointF pt) {
 }
 
 bool EngineDjvuDec::HandleLink(IPageDestination* dest, ILinkHandler* linkHandler) {
+    // e.g. the scroll-to snapshot a TOC click navigates with
     if (dest->GetKind() != kindDestinationDjVu) {
-        return false;
+        linkHandler->GotoLink(dest);
+        return true;
     }
     auto* ddest = (PageDestinationDjvuDec*)dest;
     Str link = ddest->link;

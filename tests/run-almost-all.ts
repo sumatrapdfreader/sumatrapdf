@@ -374,6 +374,7 @@ import { testit as issue6184 } from "./issue-6184.ts";
 import { testit as issue6220 } from "./issue-6220.ts";
 import { testit as sessionRestoreTabState } from "./session-restore-tab-state.ts";
 import { testit as issue6239 } from "./issue-6239.ts";
+import { testit as issue6312 } from "./issue-6312.ts";
 import { testit as toolPoster } from "./tool-poster.ts";
 import { testit as toolMerge } from "./tool-merge.ts";
 import { testit as mergeStructParents } from "./merge-struct-parents.ts";
@@ -749,6 +750,7 @@ export const tests: NamedTest[] = [
   ["trim-empty-margins-restore", trimEmptyMarginsRestore],
   ["issue-6220", issue6220],
   ["issue-6239", issue6239],
+  ["issue-6312", issue6312],
   ["tool-poster", toolPoster],
   ["tool-merge", toolMerge],
   ["merge-struct-parents", mergeStructParents],
