@@ -175,6 +175,7 @@ import { testit as lazyTabStateAfterSave } from "./lazy-tab-state-after-save.ts"
 import { testit as lazyTabSelectPaint } from "./lazy-tab-select-paint.ts";
 import { testit as pendingTabFreedSessionState } from "./pending-tab-freed-session-state.ts";
 import { testit as formJsNoStderr } from "./form-js-no-stderr.ts";
+import { testit as formJsThrow } from "./form-js-throw.ts";
 import { testit as closeTabDuringPlacement } from "./close-tab-during-placement.ts";
 import { testit as toggleZoomFailedTab } from "./toggle-zoom-failed-tab.ts";
 import { testit as restoreChmMissingTab } from "./restore-chm-missing-tab.ts";
@@ -463,6 +464,7 @@ export const tests: NamedTest[] = [
   ["lazy-tab-select-paint", lazyTabSelectPaint],
   ["pending-tab-freed-session-state", pendingTabFreedSessionState],
   ["form-js-no-stderr", formJsNoStderr],
+  ["form-js-throw", formJsThrow],
   ["close-tab-during-placement", closeTabDuringPlacement],
   ["toggle-zoom-failed-tab", toggleZoomFailedTab],
   ["restore-chm-missing-tab", restoreChmMissingTab],

@@ -12,8 +12,8 @@ import { testWindowPos } from "./winapi.ts";
 
 const enc = (s: string) => Buffer.from(s, "latin1");
 
-// a text field with no appearance stream and a format action that throws
-function makePdf(): Buffer {
+// a text field with no appearance stream and a format action running js
+export function makePdf(js: string): Buffer {
   const body: Record<number, Buffer> = {};
   body[1] = enc(
     "<< /Type /Catalog /Pages 2 0 R /AcroForm << /Fields [4 0 R] /NeedAppearances true " +
@@ -23,7 +23,7 @@ function makePdf(): Buffer {
   body[3] = enc("<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Annots [4 0 R] >>");
   body[4] = enc(
     "<< /Type /Annot /Subtype /Widget /FT /Tx /T (total) /V (12) /Rect [72 700 272 730] /P 3 0 R " +
-      "/DA (/Helv 12 Tf 0 g) /AA << /F << /S /JavaScript /JS (noSuchFunction\\(\\);) >> >> >>",
+      `/DA (/Helv 12 Tf 0 g) /AA << /F << /S /JavaScript /JS (${js.replace(/[\\()]/g, "\\$&")}) >> >> >>`,
   );
   body[5] = enc("<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica >>");
 
@@ -47,7 +47,7 @@ function makePdf(): Buffer {
 
 export async function testit(): Promise<void> {
   const pdf = tmpPath("form-js-no-stderr.pdf");
-  writeFileSync(pdf, makePdf());
+  writeFileSync(pdf, makePdf("noSuchFunction();"));
 
   const pipeName = uniquePipeName();
   const p = testWindowPos();

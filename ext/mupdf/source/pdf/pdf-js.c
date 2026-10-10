@@ -1284,8 +1284,19 @@ void pdf_js_execute(pdf_js *js, const char *name, const char *source, char **res
 	}
 	fz_catch(ctx)
 	{
-		pdf_abandon_operation(ctx, js->doc);
-		fz_rethrow(ctx);
+		/* SumatraPDF: js->ctx is the context JS was enabled with. When a
+		 * render thread's clone got us here it has no fz_try, so a rethrow
+		 * would be uncaught. Abandoning throws inside a local xref. */
+		fz_report_error(ctx);
+		fz_try(ctx)
+		{
+			if (js->doc->local_xref_nesting == 0)
+				pdf_abandon_operation(ctx, js->doc);
+			else
+				pdf_end_operation(ctx, js->doc);
+		}
+		fz_catch(ctx)
+			fz_report_error(ctx);
 	}
 }
 
