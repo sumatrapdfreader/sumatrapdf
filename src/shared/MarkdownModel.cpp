@@ -255,7 +255,7 @@ TempStr MarkdownModel::VirtualUrlToFileTemp(Str url) const {
         pathPart = Str(pathPart.s, (int)(fragment.s - pathPart.s));
     }
     // url path -> file path: decode first, a '/' or '\' can't be in a file name
-    TempStr rel = str::ReplaceTemp(url::DecodeTemp(pathPart), StrL("/"), StrL("\\"));
+    TempStr rel = str::ReplaceTemp(url::DecodeTemp(pathPart), StrL("/"), StrL(kPathSep));
     if (isHtml) {
         // page urls keep their real name; images/links resolve against baseDir too
         return path::JoinTemp(baseDir, rel);
@@ -310,7 +310,7 @@ TempStr MarkdownModel::LinkedDocPathTemp(Str url) const {
     if (len(urlPath) == 0 || !str::TrimPrefix(urlPath, Str(kMdVirtualHost)) || IsBrowserViewableExt(urlPath)) {
         return {};
     }
-    TempStr rel = str::ReplaceTemp(url::DecodeTemp(urlPath), StrL("/"), StrL("\\"));
+    TempStr rel = str::ReplaceTemp(url::DecodeTemp(urlPath), StrL("/"), StrL(kPathSep));
     return path::NormalizeTemp(path::JoinTemp(baseDir, rel));
 }
 

@@ -7,7 +7,7 @@
 // position reported back from the page, the zoom percent and the in-page find
 // scripts. What differs is the plumbing: wry takes a custom protocol instead of
 // a WebView2 resource filter, and the notifications come back through
-// chrome.webview.postMessage instead of orig's JS bridge object.
+// chrome.webview.postMessage (window.ipc on mac and Linux).
 
 #include "gui/GpuiBridge.h"
 
@@ -41,11 +41,12 @@ constexpr const char* kDefaultVirtualHost = "https://sumatrapdf.chm/";
 static const char* kReportScrollJs = R"JS((function(){
   var post = function() {
     try {
-      var wv = window.chrome && window.chrome.webview;
-      if (!wv) { return; }
       var x = Math.round(window.scrollX || window.pageXOffset || 0);
       var y = Math.round(window.scrollY || window.pageYOffset || 0);
-      wv.postMessage("scroll " + x + " " + y);
+      var s = "scroll " + x + " " + y;
+      var wv = window.chrome && window.chrome.webview;
+      if (wv && wv.postMessage) { wv.postMessage(s); return; }
+      if (window.ipc && window.ipc.postMessage) { window.ipc.postMessage(s); }
     } catch (e) {}
   };
   if (!window.__sumatraScrollHooked) {
@@ -55,6 +56,13 @@ static const char* kReportScrollJs = R"JS((function(){
     window.addEventListener("load", post);
     window.addEventListener("resize", post);
   }
+  try {
+    var h = location.hash;
+    if (h && h.length > 1) {
+      var el = document.getElementById(decodeURIComponent(h.slice(1)));
+      if (el) { el.scrollIntoView(); }
+    }
+  } catch (e2) {}
   post();
   setTimeout(post, 0);
   setTimeout(post, 50);
@@ -68,7 +76,12 @@ static const char* kJsNotifyJs = R"JS((function(){
   var S = {};
   S.notify = function(method) {
     var params = Array.prototype.slice.call(arguments, 1);
-    try { window.chrome.webview.postMessage("notify " + method + " " + JSON.stringify(params)); } catch (e) {}
+    try {
+      var s = "notify " + method + " " + JSON.stringify(params);
+      var wv = window.chrome && window.chrome.webview;
+      if (wv && wv.postMessage) { wv.postMessage(s); return; }
+      if (window.ipc && window.ipc.postMessage) { window.ipc.postMessage(s); }
+    } catch (e) {}
   };
   window.__sumatra__ = S;
 })();)JS";
@@ -99,7 +112,11 @@ var gen = 0;
 var styleDone = false;
 var kMaxMatches = 5000;
 function send(s) {
-  try { window.chrome.webview.postMessage(s); } catch (e) {}
+  try {
+    var wv = window.chrome && window.chrome.webview;
+    if (wv && wv.postMessage) { wv.postMessage(s); return; }
+    if (window.ipc && window.ipc.postMessage) { window.ipc.postMessage(s); }
+  } catch (e) {}
 }
 function ensureStyle() {
   if (styleDone) { return; }
@@ -408,6 +425,8 @@ static TempStr UrlForEventTemp(BrowserView* bv, Str uri) {
     if (len(uri) == 0) {
         return {};
     }
+    // A mac load is sumatrapdf://…; the model speaks the https virtual host.
+    uri = FromProtocolUrlTemp(uri);
     if (str::StartsWith(uri, bv->virtualHost)) {
         return UriPathFromPrefixTemp(uri, bv->virtualHost, true);
     }
@@ -439,6 +458,8 @@ static void NoteHistoryNavigation(BrowserView* bv, Str url) {
     VecAppend(bv->history, str::Dup(url));
     bv->historyIdx++;
 }
+
+static void ScrollToFragment(BrowserView* bv, Str url);
 
 static bool OnNavigationStarting(void* ctx, gp::Str url) {
     auto* bv = (BrowserView*)ctx;
@@ -482,6 +503,7 @@ static void OnPageLoad(void* ctx, wry::PageLoadEvent ev, gp::Str url) {
     bv->cb->OnDocumentComplete(u);
     // after zoom / restore have applied: the init scripts may have missed this
     // document, and hash navigation often never fires a 'scroll' event
+    ScrollToFragment(bv, u);
     Eval(bv, Str(kReportScrollJs));
     AppShellInvalidate(bv->win);
 }
@@ -589,6 +611,34 @@ void BrowserViewRefreshSurface(BrowserView*) {}
 
 // --- navigation -------------------------------------------------------------
 
+// WKWebView only delivers a scheme we registered. The app still speaks
+// https://sumatrapdf.* ; the view is asked for sumatrapdf://* instead.
+static TempStr ToWebViewUrlTemp(Str url) {
+#if OS_DARWIN
+    Str prefix(kHostPrefix);
+    if (str::StartsWith(url, prefix)) {
+        Str rest(url.s + prefix.len, url.len - prefix.len);
+        return str::JoinTemp(Str(kProtocolPrefix), rest);
+    }
+#endif
+    return str::DupTemp(url);
+}
+
+static TempStr JsEscapeTemp(Str s);
+
+// A custom-scheme load often ignores #fragment. Scroll once the node exists.
+static void ScrollToFragment(BrowserView* bv, Str url) {
+    Str frag = str::SliceFromChar(url, '#');
+    if (len(frag) < 2) {
+        return;
+    }
+    TempStr id = url::DecodeTemp(Str(frag.s + 1, frag.len - 1));
+    if (len(id) == 0) {
+        return;
+    }
+    Eval(bv, fmt("var el=document.getElementById('%s'); if (el) el.scrollIntoView();", JsEscapeTemp(id)));
+}
+
 static TempStr FullUrlTemp(BrowserView* bv, Str url) {
     if (str::StartsWith(url, bv->virtualHost)) {
         return str::DupTemp(url);
@@ -604,7 +654,7 @@ void BrowserViewNavigate(BrowserView* bv, Str url) {
     if (!bv || len(url) == 0) {
         return;
     }
-    TempStr fullUrl = FullUrlTemp(bv, url);
+    TempStr fullUrl = ToWebViewUrlTemp(FullUrlTemp(bv, url));
     wry::WebView* raw = Raw(bv);
     if (!raw) {
         // the webview is made in the first frame that shows it; go there then
@@ -613,6 +663,7 @@ void BrowserViewNavigate(BrowserView* bv, Str url) {
         return;
     }
     wry::WebViewLoadUrl(raw, ToGpui(fullUrl));
+    ScrollToFragment(bv, fullUrl);
 }
 
 void BrowserViewGoBack(BrowserView* bv) {
@@ -642,6 +693,11 @@ bool BrowserViewCanGoForward(BrowserView* bv) {
 void BrowserViewSetZoomPercent(BrowserView* bv, int zoom) {
     if (!bv) {
         return;
+    }
+    // Fit-page modes are negative. pageZoom is a scale, and a negative one
+    // inverts the viewport (innerWidth becomes width / zoom).
+    if (zoom <= 0) {
+        zoom = 100;
     }
     bv->zoomPercent = zoom;
     wry::WebView* raw = Raw(bv);
@@ -757,7 +813,7 @@ void BrowserViewFindAllPages(BrowserView* bv, const StrVec& pageUrls, Str term, 
         }
         // page urls may be internal document paths (e.g. chm pages); prefix the
         // virtual host like BrowserViewNavigate() does to make them fetchable
-        TempStr fullUrl = FullUrlTemp(bv, pageUrls.At(i));
+        TempStr fullUrl = ToWebViewUrlTemp(FullUrlTemp(bv, pageUrls.At(i)));
         js.AppendChar('\'');
         js.Append(JsEscapeTemp(fullUrl));
         js.AppendChar('\'');
@@ -900,7 +956,7 @@ static void CreateWebView(BrowserView* bv, gp::Ctx* cx) {
     }
 #endif
     if (len(bv->pendingUrl) > 0) {
-        attrs.url = ToGpui(bv->pendingUrl);
+        attrs.url = ToGpui(ToWebViewUrlTemp(bv->pendingUrl));
     }
 
     gWebViewCreateDepth++;
