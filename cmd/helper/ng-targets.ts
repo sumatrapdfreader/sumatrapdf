@@ -1353,6 +1353,7 @@ export const targets: Target[] = [
     callcap: true,
     sources: [
       "src/ng/SumatraPDF.cpp",
+      "src/ng/SumatraPDFCommon.cpp",
       "src/ng/MainWindow.cpp",
       "src/ng/WindowTab.cpp",
       "src/ng/Tabs.cpp",

@@ -393,6 +393,7 @@ function sumatrapdf_files()
     "SumatraControl.*",
     "SumatraDialogs.*",
     "SumatraPDF.cpp",
+    "SumatraPDFCommon.*",
     "SumatraPDF.h",
     "SumatraPDF.rc",
     "DocumentProperties.*",
