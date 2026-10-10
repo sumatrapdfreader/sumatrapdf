@@ -1463,6 +1463,7 @@ export const targets: Target[] = [
       "src/ng/RegistryInstaller.cpp",
       "src/ng/StressTesting.cpp",
       "src/ng/SumatraControl.cpp",
+      "src/ng/SumatraTestCommon.cpp",
       "src/ng/gui/GpuiLog.cpp",
       "src/ng/SumatraLog.cpp",
       // ng: what the shell still owes the layers below it (step 9/12/14/17)

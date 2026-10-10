@@ -50,3 +50,10 @@ TempStr PageInfoResultTemp(int* exitCodeOut = nullptr);
 TempStr SidebarThumbnailsResultTemp(int* exitCodeOut = nullptr);
 TempStr FrameNcStripsResultTemp(int* exitCodeOut = nullptr);
 TempStr WheelWhileClosingResultTemp(int* exitCodeOut = nullptr);
+
+// helpers shared with each app's test commands
+IPageDestination* NthDestInToc(TocItem* item, int target, int& counter);
+TocItem* NthTocItemWithDest(TocItem* item, int target, int& counter);
+bool FindWordCenter(EngineBase* engine, int pageNo, Str word, double* xOut, double* yOut);
+int CountNonWhitePixels(Pixmap* bmp);
+TempStr PixmapRgbHexTemp(Pixmap* px, int x, int y);

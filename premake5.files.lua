@@ -398,6 +398,7 @@ function sumatrapdf_files()
     "EutlTrust.*",
     "SumatraLog.*",
     "SumatraTest.*",
+    "SumatraTestCommon.*",
     "SvgIcons.*",
     "SidebarPanel.*",
     "TableOfContents.*",

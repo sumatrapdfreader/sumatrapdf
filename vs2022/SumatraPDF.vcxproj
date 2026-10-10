@@ -1430,7 +1430,6 @@
     <ClInclude Include="..\src\SimpleBrowserWindow.h" />
     <ClInclude Include="..\src\SumatraDialogs.h" />
     <ClInclude Include="..\src\SumatraPDF.h" />
-    <ClInclude Include="..\src\SumatraTest.h" />
     <ClInclude Include="..\src\Toolbar.h" />
     <ClInclude Include="..\src\base\Archive.h" />
     <ClInclude Include="..\src\base\CrashHandler.h" />
@@ -1535,6 +1534,7 @@
     <ClInclude Include="..\src\shared\StressTesting.h" />
     <ClInclude Include="..\src\shared\SumatraControl.h" />
     <ClInclude Include="..\src\shared\SumatraLog.h" />
+    <ClInclude Include="..\src\shared\SumatraTest.h" />
     <ClInclude Include="..\src\shared\SvgIcons.h" />
     <ClInclude Include="..\src\shared\TabGroupsManage.h" />
     <ClInclude Include="..\src\shared\TableOfContents.h" />
@@ -2180,6 +2180,7 @@
     <ClCompile Include="..\src\shared\StressTesting.cpp" />
     <ClCompile Include="..\src\shared\SumatraConfig.cpp" />
     <ClCompile Include="..\src\shared\SumatraLog.cpp" />
+    <ClCompile Include="..\src\shared\SumatraTestCommon.cpp" />
     <ClCompile Include="..\src\shared\SvgIcons.cpp" />
     <ClCompile Include="..\src\shared\TextSearch.cpp">
       <Optimization Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">MaxSpeed</Optimization>
