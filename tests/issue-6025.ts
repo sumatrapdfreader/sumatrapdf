@@ -9,6 +9,7 @@
 
 import { mkdirSync, rmSync } from "node:fs";
 import { basename } from "node:path";
+import { IS_MAC } from "./host.ts";
 import { EXE, runStandalone, SLOW_BUILD_FACTOR, tmpPath, USE_NG } from "./util.ts";
 import { killAndWait } from "./win-automation.ts";
 import {
@@ -146,6 +147,10 @@ async function runAtDpi(dpiPercent: number, installDir: string, legacy = false):
 }
 
 export async function testit(): Promise<void> {
+  if (IS_MAC) {
+    console.log("SKIP issue-6025: the installer is a Win32 window and the check reads its logo pixels");
+    return;
+  }
   if (/static/i.test(basename(EXE))) {
     console.log("skip issue-6025: static exe has no installer payload (libsumatrapdf.dll)");
     return;
