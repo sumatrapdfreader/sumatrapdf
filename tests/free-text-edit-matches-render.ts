@@ -7,6 +7,7 @@
 import { mkdirSync, rmSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 import { ControlClient, ControlCommand } from "./control.ts";
+import { IS_MAC } from "./host.ts";
 import { assemblePdf, cmdId, runStandalone, SLOW_BUILD_FACTOR, tmpPath, USE_NG } from "./util.ts";
 import {
   captureWindowPixels,
@@ -183,6 +184,11 @@ export async function testit(): Promise<void> {
     // deselect, so the marker and its handles are not counted as text
     await pressEscape(frame);
     await client.waitForRenderIdle();
+
+    if (IS_MAC) {
+      console.log("SKIP free-text-edit-matches-render: rendered line count needs a window DC capture");
+      return;
+    }
 
     const lines = countTextLines(canvas, rendered);
     if (lines !== 1) {
