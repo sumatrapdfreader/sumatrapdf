@@ -52,3 +52,10 @@ void ShowMatchCount(MainWindow* win);
 void UpdateMatchCount(MainWindow* win, Str text);
 bool HasFindText(MainWindow* win);
 void FindEndTask(FindEndTaskData* d);
+
+void HighlightRestoredFindTerm(MainWindow* win);
+
+// implemented by each app
+void CancelPendingFind(MainWindow* win);
+void AbortCount(MainWindow* win);
+bool JoinFindThread(MainWindow* win, bool hideMessage);

@@ -871,3 +871,204 @@ Str HandleGetOpenFilesCmd(Str cmd, bool* ack, str::Builder& res) {
     }
     return next;
 }
+
+// start a new find in the browser-hosted (chm / markdown) webview for the find
+// bar's text: highlight the current page and sweep all pages for the match
+// list. Results arrive asynchronously via BrowserFindResultReceived() /
+// BrowserFindAllResultReceived()
+void BrowserFindStartSearch(MainWindow* win, DocController* md) {
+    TempStr term = FindEditTextTemp(win);
+    if (len(term) == 0) {
+        return;
+    }
+    RememberFindQuery(term);
+    MarkSearchStart(win);
+    str::ReplaceWithCopy(&win->browserFindTerm, term);
+    ClearFindMatches(win); // also resets browserFindPageCurrent / browserFindCurrent / browserFindTotal
+    win->browserFindGen++;
+    md->FindStart(term, win->findMatchCase, win->findMatchWholeWord, win->browserFindGen);
+    md->FindAllPages(term, win->findMatchCase, win->findMatchWholeWord, win->browserFindGen);
+}
+
+// True when the find box holds a different term than the current results /
+// last search, so Enter / Find Next should start a new search instead of
+// stepping a stale list (issue #893).
+bool FindTermDiffersFromLast(MainWindow* win) {
+    if (!win) {
+        return false;
+    }
+    TempStr term = FindEditTextTemp(win);
+    Str searchText = FindTermWithoutWordStartSpace(term);
+    if (len(searchText) == 0) {
+        return false;
+    }
+    if (win->findCountText && len(win->findCountText) > 0) {
+        return !str::Eq(searchText, FindTermWithoutWordStartSpace(win->findCountText));
+    }
+    if (DisplayModel* dm = win->AsFixed()) {
+        if (dm->textSearch && dm->textSearch->lastText) {
+            return !str::Eq(searchText, dm->textSearch->lastText);
+        }
+    }
+    if (win->browserFindTerm) {
+        return !str::Eq(searchText, FindTermWithoutWordStartSpace(win->browserFindTerm));
+    }
+    return true;
+}
+
+// Ctrl+F with a term left in the box: highlight its matches on the pages in
+// view without moving to one; Enter is what restarts the search
+void HighlightRestoredFindTerm(MainWindow* win) {
+    if (!HasFindText(win)) {
+        return;
+    }
+    // typing (or a copied selection) is about to start its own search
+    if (win->findDebouncePending || len(win->findMatches) > 0) {
+        return;
+    }
+    EnsureFindSnippets(win);
+}
+
+bool HasFindText(MainWindow* win) {
+    return FindEditTextLen(win) > 0;
+}
+
+void FindSelection(MainWindow* win, TextSearch::Direction direction) {
+    if (!win->IsDocLoaded() || !NeedsFindUI(win) || !win->AsFixed()) {
+        return;
+    }
+    DisplayModel* dm = win->AsFixed();
+    if (!win->CurrentTab()->selectionOnPage || 0 == len(dm->textSelection->result)) {
+        return;
+    }
+
+    TempStr selection = dm->textSelection->ExtractTextTemp(StrL(" "));
+    selection.len -= str::NormalizeWSInPlace(selection);
+    if (len(selection) == 0) {
+        return;
+    }
+
+    FindEditSetText(win, selection);
+    FindEditSetModified(win, false);
+    AbortFinding(win, false); // cancel "find as you type"
+    dm->textSearch->SetLastResult(dm->textSelection);
+
+    // wasModified stays false so FindNext continues from the selection; this
+    // selection begins a new find session.
+    win->searchStartMarked = false;
+    MarkSearchStart(win);
+    FindTextOnThread(win, direction, true);
+}
+
+// Term currently being searched: the find edit if it has text, else the last
+// completed count / TextSearch.
+TempStr CurrentFindTermTemp(MainWindow* win) {
+    if (!win) {
+        return {};
+    }
+    TempStr s = FindEditTextTemp(win);
+    if (len(s) > 0) {
+        return s;
+    }
+    if (win->findCountText && len(win->findCountText) > 0) {
+        return str::DupTemp(win->findCountText);
+    }
+    if (DisplayModel* dm = win->AsFixed()) {
+        if (dm->textSearch && dm->textSearch->lastText) {
+            return str::DupTemp(dm->textSearch->lastText);
+        }
+    }
+    return {};
+}
+
+// navigate to a match chosen from the floating results list and select it, so
+// Find Next/Prev and the n/m counter continue from there
+// navigate to and select a match chosen from the floating results list
+void GoToFindMatch(MainWindow* win, int startPage, int startGlyph, int endPage, int endGlyph) {
+    if (!win->IsDocLoaded()) {
+        return;
+    }
+    DocController* md = BrowserFindCtrl(win);
+    if (md) {
+        // for markdown, startGlyph is the in-page match index (see
+        // BrowserFindAllResultReceived)
+        win->browserFindCurrent = BrowserFindGlobalMatchIdx(win, startPage, startGlyph + 1);
+        BrowserFindGotoMatch(win, md, startPage, startGlyph);
+        return;
+    }
+    if (!win->AsFixed()) {
+        return;
+    }
+    // Join an in-flight interactive find first: it drives dm->textSearch, which
+    // we're about to mutate. Deliberately not AbortFinding(): the counting scan
+    // has its own TextSearch and reads page text through the engine's locked
+    // text cache, so picking a match doesn't have to stop the rest of the
+    // document from being searched - that only happens when the find window is
+    // closed. Skip the join when idle so stepping through the floating results
+    // list stays responsive.
+    if (win->findThread || win->findDebouncePending) {
+        CancelPendingFind(win);
+        JoinFindThread(win, true);
+    }
+    DisplayModel* dm = win->AsFixed();
+    TextSearch* ts = dm->textSearch;
+    ts->Reset();
+    ts->StartAt(startPage, startGlyph);
+    ts->SelectUpTo(endPage, endGlyph);
+    if (len(ts->result) == 0) {
+        return;
+    }
+    // navigate to the match while ts->result is still populated. SetLastResult()
+    // below calls SetText(), which clears ts->result whenever the matched text
+    // differs from the last search text (e.g. a case-insensitive find where
+    // "the" matched "The"), so ShowSearchResult() must run first
+    ShowSearchResult(win, &ts->result, true);
+    // hand the selection to TextSearch as its "last result" so Find Next/Prev
+    // continue from here; SetLastResult owns the findPage/findIndex/pageText
+    // bookkeeping (so we don't poke internals or leave pageText null). The match's
+    // glyph range (start/end) survives this, so the bookkeeping stays correct.
+    ts->SetLastResult(ts);
+    // ...and put the result back if SetText() dropped it. PaintAllFindMatches
+    // only treats a match as the current one (selection color) when ts->result
+    // is populated, so without this the match we just navigated to paints as a
+    // plain match - and with the find UI closed it isn't highlighted at all.
+    // Only bites when the document text differs from what was typed, which is
+    // why it looked intermittent (issue #5889)
+    if (len(ts->result) == 0) {
+        ts->StartAt(startPage, startGlyph);
+        ts->SelectUpTo(endPage, endGlyph);
+    }
+    ShowMatchCount(win);
+}
+
+bool AbortFinding(MainWindow* win, bool hideMessage) {
+    CancelPendingFind(win);
+    AbortCount(win);
+    return JoinFindThread(win, hideMessage);
+}
+
+// A command-line search can target a session-restored tab that is not loaded
+// yet (a lazy tab). Keep the newest request on that tab and start it once
+// the controller is attached.
+void StartSearchFromCommandLine(MainWindow* win, Str text) {
+    if (!win || len(text) == 0) {
+        return;
+    }
+    if (!win->IsDocLoaded()) {
+        WindowTab* tab = win->CurrentTab();
+        if (tab && tab->type == WindowTab::Type::Document) {
+            str::ReplaceWithCopy(&tab->pendingFindText, text);
+        }
+        return;
+    }
+    // Command-line search should leave the same find UI visible as Ctrl+F,
+    // with the search term ready for another search or navigation (#6067).
+    ShowFindBar(win);
+    win->searchStartMarked = false;
+    FindEditSetText(win, text);
+    if (DocController* browser = BrowserFindCtrl(win)) {
+        BrowserFindStartSearch(win, browser);
+        return;
+    }
+    FindTextOnThread(win, TextSearch::Direction::Forward, text, true, true);
+}

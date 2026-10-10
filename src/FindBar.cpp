@@ -802,6 +802,33 @@ bool IsFindUIVisible(MainWindow* win) {
 }
 
 // focus the find edit and select all text (Ctrl+F when find UI is already open)
+// The find box under the names ng uses for its text field (FindBar.h).
+TempStr FindEditTextTemp(MainWindow* win) {
+    if (!win || !win->findEdit) {
+        return {};
+    }
+    return win->findEdit->GetTextTemp();
+}
+
+int FindEditTextLen(MainWindow* win) {
+    if (!win || !win->findEdit) {
+        return 0;
+    }
+    return CbGetTextLen(win->findEdit);
+}
+
+void FindEditSetText(MainWindow* win, Str s) {
+    if (win && win->findEdit) {
+        win->findEdit->SetText(s);
+    }
+}
+
+void FindEditSetModified(MainWindow* win, bool modified) {
+    if (win && win->findEdit) {
+        CbEditSetModified(win->findEdit, modified);
+    }
+}
+
 void FocusFindEditSelectAll(MainWindow* win) {
     if (!win->findEdit) {
         return;
