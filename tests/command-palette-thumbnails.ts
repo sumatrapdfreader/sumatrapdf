@@ -1,6 +1,7 @@
 import { mkdirSync, rmSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 import { ControlClient, ControlCommand } from "./control.ts";
+import { IS_MAC } from "./host.ts";
 import { ROOT, cmdId, runStandalone, tmpPath } from "./util.ts";
 import {
   findChildWindow,
@@ -71,6 +72,11 @@ async function waitForPage(client: ControlClient, page: number): Promise<boolean
   return false;
 }
 
+async function paletteOpen(client: ControlClient): Promise<boolean> {
+  const res = await client.request(ControlCommand.TestCommandPalette, []);
+  return (res[0] as number) === 0;
+}
+
 async function currentPage(client: ControlClient): Promise<number> {
   const res = await client.request(ControlCommand.TestFavoriteNav, ["page", 0]);
   const m = /OK page=(\d+)/.exec(String(res[1] ?? ""));
@@ -92,9 +98,16 @@ export async function testit(): Promise<void> {
     const deadline = Date.now() + 8_000;
     let handles = { palette: 0, edit: 0 };
     while (Date.now() < deadline) {
-      handles = findPalette(frame);
-      if (handles.palette && handles.edit) {
-        break;
+      if (IS_MAC) {
+        if (await paletteOpen(client)) {
+          handles = { palette: frame, edit: frame };
+          break;
+        }
+      } else {
+        handles = findPalette(frame);
+        if (handles.palette && handles.edit) {
+          break;
+        }
       }
       await sleep(50);
     }
@@ -120,29 +133,37 @@ export async function testit(): Promise<void> {
     if ((await waitForThumbnail(client, false))?.active !== false) {
       throw new Error("command-palette-thumbnails: thumbnail grid remained in command view");
     }
-    const commandView = findPalette(frame);
-    if (commandView.palette !== handles.palette) {
-      throw new Error("command-palette-thumbnails: switching views replaced the palette");
-    }
-    if (!isWindowVisible(handles.palette)) {
-      throw new Error("command-palette-thumbnails: switching to command view closed the palette");
+    if (IS_MAC) {
+      if (!(await paletteOpen(client))) {
+        throw new Error("command-palette-thumbnails: switching to command view closed the palette");
+      }
+      console.log("SKIP command-palette-thumbnails window identity: macOS palette is not an HWND");
+    } else {
+      const commandView = findPalette(frame);
+      if (commandView.palette !== handles.palette) {
+        throw new Error("command-palette-thumbnails: switching views replaced the palette");
+      }
+      if (!isWindowVisible(handles.palette)) {
+        throw new Error("command-palette-thumbnails: switching to command view closed the palette");
+      }
     }
 
-    sendText(commandView.edit, "&");
+    sendText(IS_MAC ? frame : findPalette(frame).edit, "&");
     const returned = await waitForThumbnail(client, true);
     if (!returned?.active || returned.page !== 2) {
       throw new Error(`command-palette-thumbnails: thumbnail grid did not return: ${JSON.stringify(returned)}`);
     }
-    if (findPalette(frame).palette !== handles.palette) {
+    if (!IS_MAC && findPalette(frame).palette !== handles.palette) {
       throw new Error("command-palette-thumbnails: switching views replaced the palette");
     }
 
     postMessage(handles.palette, WM_KEYDOWN, VK_RETURN, 0);
     const navigateDeadline = Date.now() + 3_000;
-    while (Date.now() < navigateDeadline && (isWindowVisible(handles.palette) || (await currentPage(client)) !== 2)) {
+    const paletteVisible = async () => (IS_MAC ? await paletteOpen(client) : isWindowVisible(handles.palette));
+    while (Date.now() < navigateDeadline && ((await paletteVisible()) || (await currentPage(client)) !== 2)) {
       await sleep(40);
     }
-    if (isWindowVisible(handles.palette) || (await currentPage(client)) !== 2) {
+    if ((await paletteVisible()) || (await currentPage(client)) !== 2) {
       throw new Error("command-palette-thumbnails: Enter did not open page 2 and close the palette");
     }
 

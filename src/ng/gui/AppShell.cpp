@@ -590,8 +590,8 @@ TempStr AppShellTestInput(MainWindow* win, Str kind, int a, int b, int c, int d)
         return res;
     }
     // the command palette's popup window takes the keyboard while it is up.
-    // The query field can eat Escape before the palette's capture handler.
-    if (str::Eq(kind, StrL("key")) && a == VK_ESCAPE && CommandPaletteOnKeyDown(win, a, (b & 2) != 0, (b & 1) != 0)) {
+    // The query field eats Home, arrows and Escape before the palette's handler.
+    if (str::Eq(kind, StrL("key")) && CommandPaletteOnKeyDown(win, a, (b & 2) != 0, (b & 1) != 0)) {
         return StrL("OK eaten=1");
     }
     if (gp::Window* paletteWin = CommandPaletteInputWindow(win)) {
