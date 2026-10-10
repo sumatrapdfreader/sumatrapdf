@@ -16,6 +16,9 @@
 #if OS_WIN
 #include "base/Win.h"
 #endif
+#if OS_DARWIN
+#include <sys/sysctl.h>
+#endif
 
 #include "gui/UIModels.h"
 
@@ -692,6 +695,56 @@ static DWORD MaybeStartUpdateDownload(MainWindow* win, HttpRsp* rsp, UpdateCheck
     return 0;
 }
 
+#if OS_DARWIN
+// "mac-15.6.1"
+static TempStr OsNameTemp() {
+    char ver[32]{};
+    size_t n = sizeof(ver) - 1;
+    if (sysctlbyname("kern.osproductversion", ver, &n, nullptr, 0) != 0 || !ver[0]) {
+        return StrL("mac");
+    }
+    return fmt("mac-%s", Str(ver));
+}
+#elif OS_LINUX
+// The distribution's ID from os-release, e.g. "ubuntu" for ID=ubuntu or ID="ubuntu".
+static TempStr OsNameTemp() {
+    FILE* f = fopen("/etc/os-release", "r");
+    if (!f) {
+        f = fopen("/usr/lib/os-release", "r");
+    }
+    if (!f) {
+        return StrL("linux");
+    }
+    constexpr Str kKey = StrL("ID=");
+    TempStr res = StrL("linux");
+    char line[256];
+    while (fgets(line, sizeof(line), f)) {
+        Str s(line);
+        if (!str::StartsWith(s, kKey)) {
+            continue;
+        }
+        // keep what is safe in a url; that drops the quotes and the newline
+        str::Builder id;
+        for (int i = len(kKey); i < len(s); i++) {
+            char c = s.s[i];
+            if (isalnum((unsigned char)c) || c == '.' || c == '_' || c == '-') {
+                id.AppendChar(c);
+            }
+        }
+        if (len(id) > 0) {
+            res = str::DupTemp(ToStr(id));
+        }
+        break;
+    }
+    fclose(f);
+    return res;
+}
+#elif !OS_WIN
+static TempStr OsNameTemp() {
+    return StrL("posix");
+}
+#endif
+
 // Shared by update check and minidump upload: v, os, 64bit, arm, lang, store, simd.
 void AppendClientInfoQuery(str::Builder& url) {
     url.Append(StrL("?v="));
@@ -700,7 +753,7 @@ void AppendClientInfoQuery(str::Builder& url) {
 #if OS_WIN
     url.Append(GetWindowsVerTemp());
 #else
-    url.Append(StrL("posix"));
+    url.Append(OsNameTemp());
 #endif
     url.Append(StrL("&64bit="));
     url.Append(Str(IsProcess64() ? "yes" : "no"));
