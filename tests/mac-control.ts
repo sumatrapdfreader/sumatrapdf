@@ -9,6 +9,8 @@ import { dlopen, FFIType, ptr, toArrayBuffer } from "bun:ffi";
 export const TestLayout = 70;
 const TestInvokeCommand = 87;
 const TestInput = 121;
+const TestDdeExecute = 129;
+const kCopyDataDdeW = 0x44646557;
 
 const WM_CLOSE = 0x0010;
 const WM_KEYDOWN = 0x0100;
@@ -437,6 +439,18 @@ function invoke(name: string, x?: number, y?: number): void {
   if (res[0] !== 0 || raw.startsWith("ERR") || raw.startsWith("NOTREADY")) {
     throw new Error(`TestInvokeCommand ${name} failed: ${raw}`);
   }
+}
+
+// UTF-16 WM_COPYDATA 'DdeW' is a DDE command string. Returns the LRESULT.
+export function macDdeExecute(dataId: number, text: string): bigint {
+  if (dataId !== kCopyDataDdeW) {
+    throw new Error(`macOS sendCopyDataW does not handle data id 0x${dataId.toString(16)}`);
+  }
+  const res = macControlRequest(TestDdeExecute, [text]);
+  if (res[0] !== 0) {
+    return 0n;
+  }
+  return String(res[1] ?? "") === "1" ? 1n : 0n;
 }
 
 // Frame-client pixels, as WM_COMMAND and WM_*BUTTON lParam carry on Windows.

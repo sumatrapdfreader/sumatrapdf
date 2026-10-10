@@ -1936,6 +1936,9 @@ enum class ControlCmd : u16 {
     // does not have (it uses GetSaveFileNameW, which no script can drive).
     // 103 is WaitSessionRestored.
     TestSavePathDialog = 128,
+    // ng: DDE execute grammar ([GotoPageWord], [Open], ...). Orig receives
+    // these as WM_COPYDATA; macOS has no such message.
+    TestDdeExecute = 129,
 };
 
 enum class ControlArgType : u16 {
@@ -4445,6 +4448,13 @@ static void ExecuteControlRequest(ControlRequest* req) {
                 AnnotFilterTestAction(win, action, arg, mods);
             }
             AppendTestResult(req, 0, AnnotFilterToolbarStateTemp(win));
+            break;
+        }
+
+        case ControlCmd::TestDdeExecute: {
+            Str cmd = StringArg(req, 0);
+            bool ok = ExecuteDdeCmds(cmd);
+            AppendTestResult(req, ok ? 0 : 1, ok ? StrL("1") : StrL("0"));
             break;
         }
 

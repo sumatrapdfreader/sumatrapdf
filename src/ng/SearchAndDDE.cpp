@@ -4,7 +4,8 @@
 // ng: the search half of orig's SearchAndDDE.cpp - find-as-you-type, the
 // interactive find worker (FindThread), the full-document match counter
 // (CountThread), the all-match highlights, inverse search and the
-// forward-search mark. The DDE server below is Windows only. `Gfx*` is
+// forward-search mark. The DDE command grammar below runs everywhere; the
+// DDE window messages stay Windows only. `Gfx*` is
 // `gpui::PaintCtx*` and the debounce / progress timers are the shell's tick.
 
 #include "gui/GpuiBridge.h"
@@ -2393,17 +2394,24 @@ TempStr FindStateResultTemp(MainWindow* win) {
     return ToStrTemp(out);
 }
 
-#if OS_WIN
-
-// ─── DDE commands handling (orig's, Windows only) ─────────────────────────
+// ─── DDE command grammar (orig's). Window messages stay Windows-only. ───
 
 bool gIsStartup = false;
 StrVec gDdeOpenOnStartup;
 
+static MainWindow* WindowFromHwnd(HWND hwnd) {
+#if OS_WIN
+    return AppShellWindowFromHwnd(hwnd);
+#else
+    (void)hwnd;
+    return len(gWindows) > 0 ? gWindows[0] : nullptr;
+#endif
+}
+
 // Prefer the MainWindow that owns hwnd when it already has pdfFile open
 // (any tab); otherwise fall back to the global FindMainWindowByFile.
 static MainWindow* FindDdeTargetWindow(HWND hwnd, Str pdfFile, bool focusTab) {
-    MainWindow* prefer = AppShellWindowFromHwnd(hwnd);
+    MainWindow* prefer = WindowFromHwnd(hwnd);
     if (prefer) {
         WindowTab* tab = FindTabByFilePath(pdfFile, prefer);
         if (tab) {
@@ -2419,11 +2427,15 @@ static MainWindow* FindDdeTargetWindow(HWND hwnd, Str pdfFile, bool focusTab) {
 // ng: orig tracks the window the user last worked in with gLastActiveFrameHwnd;
 // here the foreground window answers the same question
 static MainWindow* LastActiveWindow() {
+#if OS_WIN
     MainWindow* win = AppShellWindowFromHwnd(GetForegroundWindow());
     if (!win && len(gWindows) > 0) {
         win = gWindows[0];
     }
     return win;
+#else
+    return len(gWindows) > 0 ? gWindows[0] : nullptr;
+#endif
 }
 
 // the window an Open with newWindow set should land in: an existing empty one,
@@ -2995,7 +3007,7 @@ static Str HandleCmdCommand(HWND hwnd, Str cmd, bool* ack) {
     if (cmdId < 0) {
         return {};
     }
-    MainWindow* win = AppShellWindowFromHwnd(hwnd);
+    MainWindow* win = WindowFromHwnd(hwnd);
     if (!win) {
         logf("HandleCmdCommand: not executing DDE because MainWindow for hwnd 0x%p not found\n", hwnd);
         return {};
@@ -3061,6 +3073,20 @@ static bool HandleExecuteCmds(HWND hwnd, Str cmd) {
     }
     return didHandle;
 }
+
+// [Open] / [GotoPageWord] / the rest of the DDE execute grammar.
+bool ExecuteDdeCmds(Str cmd) {
+    MainWindow* win = len(gWindows) > 0 ? gWindows[0] : nullptr;
+    HWND hwnd = nullptr;
+#if OS_WIN
+    hwnd = win ? AppShellNativeHwnd(win) : nullptr;
+#else
+    (void)win;
+#endif
+    return HandleExecuteCmds(hwnd, cmd);
+}
+
+#if OS_WIN
 
 static bool HandleRequestCmds(Str cmd, str::Builder& rsp) {
     bool didHandle = false;

@@ -66,6 +66,11 @@ const StrVec& FindHistory();
 // what the find state is, for the scripted tests
 TempStr FindStateResultTemp(MainWindow* win);
 
+bool ExecuteDdeCmds(Str cmd);
+
+extern bool gIsStartup;
+extern StrVec gDdeOpenOnStartup;
+
 #if OS_WIN
 // ng: orig's DDE half of this file, Windows only. The commands, their grammar
 // and the WM_COPYDATA fast paths are orig's.
@@ -104,10 +109,6 @@ LRESULT OnDDERequest(HWND hwnd, WPARAM wp, LPARAM lp);
 LRESULT OnDDETerminate(HWND hwnd, WPARAM wp, LPARAM lp);
 LRESULT OnCopyData(HWND hwnd, WPARAM wp, LPARAM lp);
 
-// true while the command line is still being opened, so a DDE / COPYDATA open
-// is queued instead of racing it
-extern bool gIsStartup;
-extern StrVec gDdeOpenOnStartup;
 // loads what arrived while gIsStartup was set and clears the queue
 void LoadDdeOpenOnStartup(MainWindow* win);
 #endif

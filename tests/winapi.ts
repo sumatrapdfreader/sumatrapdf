@@ -18,6 +18,7 @@ import { IS_MAC, IS_WIN } from "./host.ts";
 import {
   macClientToScreen,
   macControlRequest,
+  macDdeExecute,
   macFrameClientRect,
   macSendMessage,
   macSendText,
@@ -741,6 +742,9 @@ export function sendMessage(hwnd: number, msg: number, wParam: number | bigint, 
 // Send a null-terminated UTF-16 WM_COPYDATA payload. COPYDATASTRUCT is 24
 // bytes on x64: ULONG_PTR dwData, DWORD cbData + padding, PVOID lpData.
 export function sendCopyDataW(hwnd: number, dataId: number, text: string): bigint {
+  if (IS_MAC) {
+    return macDdeExecute(dataId, text);
+  }
   const payload = wideZ(text);
   const cds = new Uint8Array(24);
   const view = new DataView(cds.buffer);
