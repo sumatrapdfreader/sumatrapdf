@@ -1376,6 +1376,7 @@ export const targets: Target[] = [
       "src/ng/OverlayScrollbar.cpp",
       "src/ng/ReadingBar.cpp",
       "src/ng/ReadingAutoScroll.cpp",
+      "src/ng/ReadingAutoScrollCommon.cpp",
       "src/ng/ReadAloud.cpp",
       "src/ng/ReadAloud_linux.cpp",
       "src/ng/ReadAloudSession.cpp",

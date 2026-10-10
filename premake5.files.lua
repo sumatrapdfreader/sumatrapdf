@@ -366,6 +366,7 @@ function sumatrapdf_files()
     "ReadAloudSession.*",
     "ReadAloud_win.*",
     "ReadingAutoScroll.*",
+    "ReadingAutoScrollCommon.*",
     "ReadingBar.*",
     "RefHover.h",
     "RefHover.cpp",

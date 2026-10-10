@@ -1528,6 +1528,7 @@
     <ClInclude Include="..\src\shared\ProgressUpdateUI.h" />
     <ClInclude Include="..\src\shared\ReadAloud.h" />
     <ClInclude Include="..\src\shared\ReadingAutoScroll.h" />
+    <ClInclude Include="..\src\shared\ReadingAutoScrollCommon.h" />
     <ClInclude Include="..\src\shared\ReadingBar.h" />
     <ClInclude Include="..\src\shared\RefHover.h" />
     <ClInclude Include="..\src\shared\RenderCache.h" />
@@ -2176,6 +2177,7 @@
     <ClCompile Include="..\src\shared\ReadAloudHighlight.cpp" />
     <ClCompile Include="..\src\shared\ReadAloudSession.cpp" />
     <ClCompile Include="..\src\shared\ReadAloud_win.cpp" />
+    <ClCompile Include="..\src\shared\ReadingAutoScrollCommon.cpp" />
     <ClCompile Include="..\src\shared\ReadingBar.cpp">
       <PrecompiledHeader>NotUsing</PrecompiledHeader>
     </ClCompile>

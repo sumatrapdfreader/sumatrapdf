@@ -471,6 +471,9 @@
     <ClInclude Include="..\src\shared\ReadingAutoScroll.h">
       <Filter>src\shared</Filter>
     </ClInclude>
+    <ClInclude Include="..\src\shared\ReadingAutoScrollCommon.h">
+      <Filter>src\shared</Filter>
+    </ClInclude>
     <ClInclude Include="..\src\shared\ReadingBar.h">
       <Filter>src\shared</Filter>
     </ClInclude>
@@ -1239,6 +1242,9 @@
       <Filter>src\shared</Filter>
     </ClCompile>
     <ClCompile Include="..\src\shared\ReadAloud_win.cpp">
+      <Filter>src\shared</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\shared\ReadingAutoScrollCommon.cpp">
       <Filter>src\shared</Filter>
     </ClCompile>
     <ClCompile Include="..\src\shared\ReadingBar.cpp">

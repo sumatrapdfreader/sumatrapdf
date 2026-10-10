@@ -126,6 +126,8 @@ export const sharedFiles = [
   "src/shared/PdfToolsCommon.h",
   "src/shared/ReadAloudSession.cpp",
   "src/shared/ReadAloud_win.cpp",
+  "src/shared/ReadingAutoScrollCommon.cpp",
+  "src/shared/ReadingAutoScrollCommon.h",
   "src/shared/SearchAndDDECommon.cpp",
   "src/shared/SearchAndDDECommon.h",
   "src/shared/SelectionTranslateCommon.cpp",
