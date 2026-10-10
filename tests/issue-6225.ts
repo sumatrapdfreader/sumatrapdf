@@ -8,6 +8,7 @@ import { mkdirSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { deflateSync } from "node:zlib";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
+import { IS_MAC } from "./host.ts";
 import { runStandalone, tmpPath } from "./util.ts";
 import { findCanvas, killAndWait, launchControlled } from "./win-automation.ts";
 import { captureWindowPixels } from "./winapi.ts";
@@ -152,6 +153,12 @@ function measureBand(canvas: number): { bandPx: number; pageWidthPx: number; h: 
 }
 
 export async function testit(): Promise<void> {
+  // The bug is a cached bitmap blitted stretched. GetWindowDC is what reads
+  // those painted pixels. A fresh engine render would not show it.
+  if (IS_MAC) {
+    console.log("SKIP issue-6225: the check reads canvas pixels with GetWindowDC");
+    return;
+  }
   const dir = tmpPath("issue-6225");
   rmSync(dir, { recursive: true, force: true });
   mkdirSync(dir, { recursive: true });
