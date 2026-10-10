@@ -120,6 +120,8 @@ export const sharedFiles = [
   "src/shared/FavoritesCommon.cpp",
   "src/shared/ReadAloudSession.cpp",
   "src/shared/ReadAloud_win.cpp",
+  "src/shared/SearchAndDDECommon.cpp",
+  "src/shared/SearchAndDDECommon.h",
   "src/shared/SelectionTranslateCommon.cpp",
   "src/shared/SelectionTranslateCommon.h",
   "src/shared/SumatraPDFCommon.cpp",

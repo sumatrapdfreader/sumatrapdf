@@ -1529,6 +1529,7 @@
     <ClInclude Include="..\src\shared\RefHover.h" />
     <ClInclude Include="..\src\shared\RenderCache.h" />
     <ClInclude Include="..\src\shared\Screenshot.h" />
+    <ClInclude Include="..\src\shared\SearchAndDDECommon.h" />
     <ClInclude Include="..\src\shared\SelectTextKeyboard.h" />
     <ClInclude Include="..\src\shared\Selection.h" />
     <ClInclude Include="..\src\shared\SelectionHandlers.h" />
@@ -2180,6 +2181,7 @@
     <ClCompile Include="..\src\shared\RefHoverTextDetect.cpp" />
     <ClCompile Include="..\src\shared\RegistryInstaller.cpp" />
     <ClCompile Include="..\src\shared\RenderCache.cpp" />
+    <ClCompile Include="..\src\shared\SearchAndDDECommon.cpp" />
     <ClCompile Include="..\src\shared\SelectTextKeyboard.cpp">
       <PrecompiledHeader>NotUsing</PrecompiledHeader>
     </ClCompile>

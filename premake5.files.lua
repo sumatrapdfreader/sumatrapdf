@@ -380,6 +380,7 @@ function sumatrapdf_files()
     "RenderCache.*",
     "resource.h",
     "SearchAndDDE.*",
+    "SearchAndDDECommon.*",
     "OverlayScrollbar.*",
     "ExplorerQuickLook.*",
     "Screenshot.*",
