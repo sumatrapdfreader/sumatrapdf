@@ -3559,6 +3559,9 @@ static void ExecuteControlRequest(ControlRequest* req) {
             break;
 
         case ControlCmd::Quit:
+            // Orig discards first. A dirty tab otherwise waits on the unsaved
+            // dialog, and a test that wants the changes saved already did.
+            ResolveUnsavedChangesResultTemp(StrL("discard"), {}, nullptr);
             AppendArgInt(req->results, 0);
             AppendArgEnd(req->results);
             // Same path as CmdExit. AppShellQuit() drops the tabs first, and
