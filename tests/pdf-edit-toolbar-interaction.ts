@@ -7,7 +7,8 @@
 import { mkdirSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 import { ControlClient, ControlCommand } from "./control";
-import { assemblePdf, runStandalone, tmpPath } from "./util";
+import { IS_MAC } from "./host";
+import { assemblePdf, runStandalone, SLOW_BUILD_FACTOR, tmpPath } from "./util";
 import {
   captureWindowToPng,
   clientToScreen,
@@ -134,6 +135,27 @@ async function moveAndWaitForHover(
   }
 }
 
+// gpui measures the card while painting. The frame before that parks it at
+// Left/Top -10000 and still reports visible=1.
+function cardPlaced(state: AnnotState): boolean {
+  const r = state.overlay.rect;
+  return !!r && r.x > -1000 && r.y > -1000 && r.dx > 20 && r.dy > 20;
+}
+
+async function moveAndWaitForCard(client: ControlClient, canvas: number, x: number, y: number): Promise<AnnotState> {
+  const deadline = Date.now() + 2_000 * SLOW_BUILD_FACTOR;
+  let state = await moveAndWaitForHover(client, canvas, x, y, true);
+  while (!cardPlaced(state)) {
+    if (Date.now() > deadline) {
+      throw new Error(`pdf-edit-toolbar-interaction: hover card was not placed\n${state.raw}`);
+    }
+    moveMouse(canvas, x, y);
+    await sleep(40);
+    state = await annotState(client);
+  }
+  return state;
+}
+
 export async function testit(): Promise<void> {
   const dir = tmpPath("pdf-edit-toolbar-interaction");
   rmSync(dir, { recursive: true, force: true });
@@ -216,7 +238,7 @@ export async function testit(): Promise<void> {
     }
     const editCenterX = state.screen.x + Math.floor(state.screen.dx / 2);
     const editCenterY = state.screen.y + Math.floor(state.screen.dy / 2);
-    state = await moveAndWaitForHover(client, canvas, editCenterX, editCenterY, true);
+    state = await moveAndWaitForCard(client, canvas, editCenterX, editCenterY);
     if (!state.hover || state.notification || !state.overlay.visible || !state.overlay.rect || !state.overlay.anchor) {
       throw new Error(`pdf-edit-toolbar-interaction: edit-mode hover state is wrong (${JSON.stringify(state)})`);
     }
@@ -260,12 +282,11 @@ export async function testit(): Promise<void> {
     if (!bottomAnnot) {
       throw new Error(`pdf-edit-toolbar-interaction: bottom annotation was not loaded\n${state.raw}`);
     }
-    state = await moveAndWaitForHover(
+    state = await moveAndWaitForCard(
       client,
       canvas,
       bottomAnnot.x + Math.floor(bottomAnnot.dx / 2),
       bottomAnnot.y + Math.floor(bottomAnnot.dy / 2),
-      true,
     );
     const bottomOverlay = state.overlay.rect;
     const bottomAnchor = state.overlay.anchor;
@@ -291,17 +312,21 @@ export async function testit(): Promise<void> {
     // Remove unrelated startup/zoom notifications before comparing pixels.
     await client.setNotificationsEnabled(false);
     await moveAndWaitForHover(client, canvas, Math.max(5, cr.right - 10), Math.max(5, cr.bottom - 10), false);
-    const plainPng = join(dir, "plain.png");
-    if (!captureWindowToPng(canvas, plainPng)) {
-      throw new Error("pdf-edit-toolbar-interaction: plain capture failed");
-    }
-    await moveAndWaitForHover(client, canvas, editCenterX, editCenterY, true);
-    const hoverPng = join(dir, "hover.png");
-    if (!captureWindowToPng(canvas, hoverPng)) {
-      throw new Error("pdf-edit-toolbar-interaction: hover capture failed");
-    }
-    if (readFileSync(plainPng).equals(readFileSync(hoverPng))) {
-      throw new Error("pdf-edit-toolbar-interaction: hover did not draw an annotation bounding box");
+    if (IS_MAC) {
+      console.log("SKIP pdf-edit-toolbar-interaction: hover outline pixels are read from a window DC");
+    } else {
+      const plainPng = join(dir, "plain.png");
+      if (!captureWindowToPng(canvas, plainPng)) {
+        throw new Error("pdf-edit-toolbar-interaction: plain capture failed");
+      }
+      await moveAndWaitForHover(client, canvas, editCenterX, editCenterY, true);
+      const hoverPng = join(dir, "hover.png");
+      if (!captureWindowToPng(canvas, hoverPng)) {
+        throw new Error("pdf-edit-toolbar-interaction: hover capture failed");
+      }
+      if (readFileSync(plainPng).equals(readFileSync(hoverPng))) {
+        throw new Error("pdf-edit-toolbar-interaction: hover did not draw an annotation bounding box");
+      }
     }
 
     await clickAt(canvas, editCenterX, editCenterY, 0, MK_CONTROL);

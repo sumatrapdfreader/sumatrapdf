@@ -3345,8 +3345,6 @@ TempStr AnnotationHoverOverlayStateTemp(MainWindow* win) {
     ox = origin.x;
     oy = origin.y;
 #else
-    // content rect and gpui bounds are both points
-    k = 1.f;
     Rect content = win->gpuiWin ? ToolWinNativeContentRect(win->gpuiWin) : Rect{};
     if (content.IsEmpty()) {
         content = AppShellWindowScreenRect(win);
@@ -3354,6 +3352,8 @@ TempStr AnnotationHoverOverlayStateTemp(MainWindow* win) {
     ox = content.x;
     oy = content.y;
 #endif
+    // measured is window dips. screen= is frame pixels, and tests add the
+    // content origin on top of that.
     gp::Bounds b = overlay->measured;
     int x = ox + (int)(b.x / k + 0.5f);
     int y = oy + (int)(b.y / k + 0.5f);
