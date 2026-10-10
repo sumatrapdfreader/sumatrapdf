@@ -19,6 +19,7 @@
 import { mkdirSync, rmSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 import { ControlCommand } from "./control.ts";
+import { IS_MAC } from "./host.ts";
 import { ROOT, tmpPath, USE_NG } from "./util.ts";
 import { launchControlled, waitForExit, findCanvas, vScrollbarColorCount, killAndWait } from "./win-automation.ts";
 import {
@@ -74,6 +75,11 @@ async function ngVScrollbarColorCount(
 }
 
 export async function testit(): Promise<void> {
+  // The bug is a blank painted scrollbar. Scroll metrics stay valid either way.
+  if (IS_MAC) {
+    console.log("SKIP issue-5850: the check reads scrollbar pixels with GetWindowDC");
+    return;
+  }
   // window rects and window-DC pixel coordinates must agree; no-op at 100% DPI
   setProcessDpiAware();
 
