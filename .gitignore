@@ -12,7 +12,6 @@ ext/mupdf/generated/
 .vs/
 .vscode/db/
 .vscode/ipch/
-# src/base/BuildConfig.h
 artifacts/
 .idea/
 src/.vscode

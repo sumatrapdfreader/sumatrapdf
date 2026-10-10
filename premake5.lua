@@ -138,6 +138,15 @@ function winver_defines()
   -- winver_latest_defines()
 end
 
+-- Build scripts pass PRE_RELEASE_VER, GIT_COMMIT_ID, BUILT_ON etc. (see
+-- src/shared/Version.h) as msbuild /p:SumatraBuildDefines=A=1%3BB=2
+-- Unescape turns %3B back into the ";" that splits the defines.
+function build_defines()
+  filter { "action:vs*" }
+  defines { "$([MSBuild]::Unescape($(SumatraBuildDefines)))" }
+  filter {}
+end
+
 -- WebView2 (manual viewer, SimpleBrowserWindow, BrowserDocView). gui/*.cpp is
 -- included via gui_files() in premake5.files.lua.
 -- ext/webview2 has the SDK headers plus our own replacement for the NuGet
@@ -988,6 +997,7 @@ workspace "SumatraPDF"
     defines { "_UCRT_NOISY_NAN", "CMARK_GFM_STATIC_DEFINE" }
 
   project "libsumatrapdf"
+    build_defines()
     dll_shared_lib_dirs()
     kind "SharedLib"
     language "C"
@@ -1198,6 +1208,7 @@ workspace "SumatraPDF"
   -- links libsumatrapdf.dll for everything, so the exe itself is tiny. It's embedded
   -- in SumatraPDF.exe's IDR_EMBEDDED_PAK (see the embedded.lzsa prebuild).
   project "sumatrapdf-tool"
+    build_defines()
     dll_app_objdir()
     dll_linker_intermediates()
     kind "ConsoleApp"
@@ -1212,6 +1223,7 @@ workspace "SumatraPDF"
     links { "shell32" }
 
   project "PdfFilter"
+    build_defines()
     dll_shared_lib_dirs()
     kind "SharedLib"
     language "C++"
@@ -1252,6 +1264,7 @@ workspace "SumatraPDF"
   --   links { "comctl32", "gdiplus", "msimg32", "shlwapi", "version", "wininet", "wintrust", "crypt32" }
 
   project "PdfPreview"
+    build_defines()
     dll_shared_lib_dirs()
     kind "SharedLib"
     language "C++"
@@ -1276,6 +1289,7 @@ workspace "SumatraPDF"
 
   -- a single static executable
   project "SumatraPDF-static"
+    build_defines()
     static_app_objdir()
     static_linker_intermediates()
     kind "WindowedApp"
@@ -1380,6 +1394,7 @@ workspace "SumatraPDF"
 
   -- a dll version where most functionality is in libsumatrapdf.dll
   project "SumatraPDF"
+    build_defines()
     dll_app_objdir()
     dll_linker_intermediates()
     kind "WindowedApp"

@@ -135,9 +135,7 @@ static void GetProgramInfo(str::Builder& b) {
     b.Append(fmt("Exe: %s %s\n", exePath, GetFileSizeAsStrTemp(exePath)));
     TempStr signer = GetExecutableSignerTemp(exePath);
     b.Append(fmt("Signer: %s\n", signer ? signer : StrL("(not signed)")));
-    if (len(gBuiltOn) > 0) {
-        b.Append(fmt("BuiltOn: %s\n", gBuiltOn));
-    }
+    b.Append(fmt("BuiltOn: %s\n", BuiltOnDate()));
     Str instType = IsRunningInPortableMode() ? StrL("portable") : StrL("installed");
     b.Append(fmt("ExeType: %s\n", instType));
     b.Append(fmt("Ver: %s", currentVersion));

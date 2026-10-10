@@ -10,8 +10,6 @@ export type NgVersion = {
   ver: string;
   /** 26,10,3,1: FILEVERSION of a Windows version resource */
   rc: string;
-  /** 2026-10-03 */
-  builtOn: string;
   /** "" outside a git checkout */
   gitSha1: string;
 };
@@ -37,7 +35,6 @@ export function ngVersion(rev = 0): NgVersion {
   res = {
     ver: `${pad2(yy)}.${pad2(mm)}.${pad2(dd)}` + (rev > 0 ? `.${rev}` : ""),
     rc: `${yy},${mm},${dd},${rev}`,
-    builtOn: `${yyyy}-${pad2(mm)}-${pad2(dd)}`,
     gitSha1: gitSha1(),
   };
   memo.set(rev, res);
@@ -46,7 +43,7 @@ export function ngVersion(rev = 0): NgVersion {
 
 /** defines for the one source file that turns the version into variables */
 export function versionDefines(v: NgVersion): string[] {
-  const res = [`SUMATRA_VER=${v.ver}`, `BUILT_ON=${v.builtOn}`];
+  const res = [`SUMATRA_VER=${v.ver}`];
   if (v.gitSha1) res.push(`GIT_COMMIT_ID=${v.gitSha1}`);
   return res;
 }

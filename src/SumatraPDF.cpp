@@ -17913,9 +17913,7 @@ static void GetProgramInfo(str::Builder& b) {
     b.Append(fmt("WebView2: %s\n", len(wv2Ver) > 0 ? wv2Ver : StrL("not installed")));
     TempStr signer = GetExecutableSignerTemp(exePath);
     b.Append(fmt("Signer: %s\n", signer ? signer : StrL("(not signed)")));
-    if (len(gBuiltOn) > 0) {
-        b.Append(fmt("BuiltOn: %s\n", gBuiltOn));
-    }
+    b.Append(fmt("BuiltOn: %s\n", BuiltOnDate()));
     Str exeType = IsDllBuild() ? StrL("dll") : StrL("static");
     Str instType = IsRunningInPortableMode() ? StrL("portable") : StrL("installed");
     b.Append(fmt("ExeType: %s, %s\n", exeType, instType));

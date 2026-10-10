@@ -13,8 +13,6 @@ const VERBOSE = process.argv.includes("-v");
 const SKIP_HEADERS = new Set([
   "Settings.h", // generated
   "Commands.h", // generated
-  "BuildConfig.h",
-  "BuildConfig_default.h",
   "Dia2Subset.h", // third-party COM headers under tools/efi
   "nsWindowsDllInterceptor.h", // vendored
   "parg.h",

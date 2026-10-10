@@ -166,6 +166,19 @@ export async function runLogged(cmd: string, args: string[], cwd?: string): Prom
 
 // Visual Studio ships clang-format on Windows; elsewhere it is on PATH or,
 // on mac, inside the Xcode toolchain.
+// msbuild arg passing #defines (PRE_RELEASE_VER, GIT_COMMIT_ID; see
+// src/shared/Version.h) to the projects calling build_defines() in premake5.lua
+// e.g. /p:SumatraBuildDefines=GIT_COMMIT_ID=70cdc0%3BPRE_RELEASE_VER=10175
+export function msbuildDefinesArg(defines: Record<string, string>): string {
+  const pairs = Object.entries(defines).map(([name, value]) => `${name}=${value}`);
+  // %3B: a raw ";" would start the next msbuild property
+  return "/p:SumatraBuildDefines=" + pairs.join("%3B");
+}
+
+export function preReleaseDefines(sha1: string, preRelVer: string): Record<string, string> {
+  return { GIT_COMMIT_ID: sha1, PRE_RELEASE_VER: preRelVer };
+}
+
 export function findClangFormat(): string {
   if (process.platform === "win32") {
     const { clangFormatPath } = detectVisualStudio();

@@ -150,10 +150,9 @@ with `bun cmd/format.ts -ts`.
 
 Ng's version is the day of the build, `yy.mm.dd[.n]` (`26.10.03.1`), not
 orig's `3.7.1`; `-rev <n>` sets `.n`. `cmd/helper/ng-version.ts` computes it
-and the build passes it as defines (`SUMATRA_VER`, `BUILT_ON`,
-`GIT_COMMIT_ID`) to `SumatraConfig.cpp` alone, so a new day recompiles one
-file. Ng has no `BuildConfig.h`; code reads `currentVersion`, `gBuiltOn` and
-`gitCommidId`. `src/ng/Version.h` is ng's own. The macOS release script is
+and the build passes it as defines (`SUMATRA_VER`, `GIT_COMMIT_ID`) to
+`SumatraConfig.cpp` alone, so a new day recompiles one file. Code reads
+`currentVersion`, `BuiltOnDate()` (from `__DATE__`) and `gitCommidId`. `src/ng/Version.h` is ng's own. The macOS release script is
 `build-ng-mac.ts` in `../hack/sumatrapdf/build`: it uploads the app and its
 `.dSYM` to R2 `software/sumatrapdfng/mac/<ver>/`.
 

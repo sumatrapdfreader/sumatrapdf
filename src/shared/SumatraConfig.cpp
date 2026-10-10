@@ -16,11 +16,26 @@ bool gIsPreReleaseBuild = true;
 bool gIsPreReleaseBuild = false;
 #endif
 
-#ifdef BUILT_ON
-Str gBuiltOn = Str(QM(BUILT_ON));
-#else
-Str gBuiltOn;
-#endif
+// Day this file was compiled, e.g. "2026-10-03" for a __DATE__ of "Oct  3 2026".
+TempStr BuiltOnDate() {
+    const int kMonthLen = 3;
+    const int kDayPos = 4;
+    const int kYearPos = 7;
+    const int kYearLen = 4;
+    const char* months = "JanFebMarAprMayJunJulAugSepOctNovDec";
+    const char* d = __DATE__;
+
+    int month = 1;
+    while (month < 12 && memcmp(d, months + (month - 1) * kMonthLen, kMonthLen) != 0) {
+        month++;
+    }
+
+    // day is space-padded
+    int tens = d[kDayPos] == ' ' ? 0 : d[kDayPos] - '0';
+    int day = tens * 10 + (d[kDayPos + 1] - '0');
+
+    return fmt("%s-%02d-%02d", Str(d + kYearPos, kYearLen), month, day);
+}
 
 Str currentVersion = Str(CURR_VERSION_STRA);
 

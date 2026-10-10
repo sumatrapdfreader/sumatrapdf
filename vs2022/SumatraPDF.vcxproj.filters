@@ -270,9 +270,6 @@
     <ClInclude Include="..\src\shared\AvifReader.h">
       <Filter>src\shared</Filter>
     </ClInclude>
-    <ClInclude Include="..\src\shared\BuildConfig.h">
-      <Filter>src\shared</Filter>
-    </ClInclude>
     <ClInclude Include="..\src\shared\CachedObjects.h">
       <Filter>src\shared</Filter>
     </ClInclude>

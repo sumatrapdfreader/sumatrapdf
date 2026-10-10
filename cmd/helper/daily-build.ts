@@ -1,4 +1,4 @@
-import { existsSync, writeFileSync } from "node:fs";
+import { existsSync } from "node:fs";
 import { join } from "node:path";
 import { $ } from "bun";
 import {
@@ -8,6 +8,8 @@ import {
   isGitClean,
   getGitSha1,
   detectVisualStudio2026,
+  msbuildDefinesArg,
+  preReleaseDefines,
 } from "../util";
 
 //const { msbuildPath } = detectVisualStudio();
@@ -40,22 +42,6 @@ async function isGithubMyMasterBranch(): Promise<boolean> {
   return event === "push" || event === "repository_dispatch" || event === "schedule" || event === "workflow_dispatch";
 }
 
-function buildConfigPath(): string {
-  return join("src", "shared", "BuildConfig.h");
-}
-
-function setBuildConfigPreRelease(sha1: string, preRelVer: string): void {
-  const todayDate = new Date().toISOString().slice(0, 10);
-  let s = `#define GIT_COMMIT_ID ${sha1}\n`;
-  s += `#define BUILT_ON ${todayDate}\n`;
-  s += `#define PRE_RELEASE_VER ${preRelVer}\n`;
-  writeFileSync(buildConfigPath(), s, "utf-8");
-}
-
-async function revertBuildConfig(): Promise<void> {
-  await $`git checkout ${buildConfigPath()}`;
-}
-
 export async function buildDaily() {
   if (!(await isGithubMyMasterBranch())) {
     console.log("buildCiDaily: skipping build because not on master branch");
@@ -78,21 +64,17 @@ export async function buildDaily() {
   const { main: genDocs } = await import("../gen-docs");
   await genDocs();
 
-  setBuildConfigPreRelease(sha1, preRelVer);
+  const defines = msbuildDefinesArg(preReleaseDefines(sha1, preRelVer));
 
   const allStart = performance.now();
-  try {
-    for (const plat of platforms) {
-      const platStart = performance.now();
-      console.log(`buidling pre-release ${plat.vsplatform} version ${preRelVer}`);
-      const p = `/p:Configuration=Release;Platform=${plat.vsplatform}`;
-      const t = `/t:SumatraPDF;SumatraPDF-static`;
-      await runLogged(msbuildPath, [slnPath, t, p, `/m`]);
-      const platElapsed = ((performance.now() - platStart) / 1000).toFixed(1);
-      console.log(`buidling pre-release ${plat.vsplatform} version ${preRelVer} took ${platElapsed}s`);
-    }
-  } finally {
-    await revertBuildConfig();
+  for (const plat of platforms) {
+    const platStart = performance.now();
+    console.log(`buidling pre-release ${plat.vsplatform} version ${preRelVer}`);
+    const p = `/p:Configuration=Release;Platform=${plat.vsplatform}`;
+    const t = `/t:SumatraPDF;SumatraPDF-static`;
+    await runLogged(msbuildPath, [slnPath, t, p, defines, `/m`]);
+    const platElapsed = ((performance.now() - platStart) / 1000).toFixed(1);
+    console.log(`buidling pre-release ${plat.vsplatform} version ${preRelVer} took ${platElapsed}s`);
   }
   const allElapsed = ((performance.now() - allStart) / 1000).toFixed(1);
   console.log(`all builds took ${allElapsed}s`);
