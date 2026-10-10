@@ -343,7 +343,9 @@ static void PopulateToolbarLayout() {
 }
 
 static ToolbarButtonInfo& GetToolbarButtonInfoByIdx(int idx) {
-    if (idx < gLayoutButtonsCount) return gLayoutButtons[idx];
+    if (idx < gLayoutButtonsCount) {
+        return gLayoutButtons[idx];
+    }
     return gCustomButtons[idx - gLayoutButtonsCount];
 }
 

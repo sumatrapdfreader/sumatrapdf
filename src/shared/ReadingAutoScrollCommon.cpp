@@ -155,3 +155,57 @@ void ReadingAutoScrollForgetTab(WindowTab* tab) {
         ReadingAutoScrollHideBar(win);
     }
 }
+
+// Acrobat maps 0 (slowest) .. 9 (fastest) onto these.
+static const float kDigitSpeeds[] = {8, 12, 16, 24, 36, 48, 72, 108, 160, 240};
+
+TempStr SpeedLabelTemp(WindowTab* tab) {
+    const char* arrow = (!tab || tab->autoScroll.dir >= 0) ? "\xE2\x86\x93" : "\xE2\x86\x91";
+    return fmt("%s %d px/s", Str(arrow), (int)(CurrentSpeed() + 0.5f));
+}
+
+void ReadingAutoScrollStop(MainWindow* win) {
+    WindowTab* tab = ActiveTab(win);
+    if (!tab) {
+        ReadingAutoScrollHideBar(win);
+        return;
+    }
+    ClearTabScroll(tab);
+    logf("ReadingAutoScroll: stop\n");
+    ReadingAutoScrollHideBar(win);
+}
+
+void ReadingAutoScrollFaster(MainWindow* win) {
+    if (!ActiveTab(win)) {
+        return;
+    }
+    StepSpeed(1);
+    BarUpdate(win);
+}
+
+void ReadingAutoScrollSlower(MainWindow* win) {
+    if (!ActiveTab(win)) {
+        return;
+    }
+    StepSpeed(-1);
+    BarUpdate(win);
+}
+
+void ApplyArrowSpeed(MainWindow* win, WindowTab* tab, int keyDir) {
+    // Acrobat: the arrow that matches the pan direction speeds up; the other slows.
+    if (keyDir == tab->autoScroll.dir) {
+        StepSpeed(1);
+    } else {
+        StepSpeed(-1);
+    }
+    BarUpdate(win);
+}
+
+void ApplyDigitSpeed(MainWindow* win, int digit) {
+    if (digit < 0 || digit > 9) {
+        return;
+    }
+    SetSpeed(kDigitSpeeds[digit]);
+    logf("ReadingAutoScroll: digit %d -> %d px/s\n", digit, (int)CurrentSpeed());
+    BarUpdate(win);
+}

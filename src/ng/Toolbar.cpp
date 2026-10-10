@@ -356,7 +356,8 @@ bool ShouldShowToolbar(MainWindow* win) {
     if (win->presentation || win->isQuickLook) {
         return false;
     }
-    return ToolbarModeForWindow(win) == kToolbarShow;
+    int mode = ToolbarModeForWindow(win);
+    return mode == kToolbarShow;
 }
 
 bool ShouldOverlayToolbar(MainWindow* win) {
@@ -366,8 +367,12 @@ bool ShouldOverlayToolbar(MainWindow* win) {
     if (ToolbarModeForWindow(win) != kToolbarOverlay) {
         return false;
     }
-    // don't float the overlay toolbar over the home / about page
-    return !win->IsCurrentTabAbout();
+    // don't float the overlay toolbar over the home / about page (only the
+    // pinned "show" mode shows a toolbar there)
+    if (win->IsCurrentTabAbout()) {
+        return false;
+    }
+    return true;
 }
 
 // --- annotation colors (orig's) ---------------------------------------------

@@ -17,3 +17,10 @@ WindowTab* ActiveTab(MainWindow* win);
 WindowTab* SessionTab(MainWindow* win);
 bool AtScrollLimit(DisplayModel* dm, int dir);
 void ClearTabScroll(WindowTab* tab);
+
+TempStr SpeedLabelTemp(WindowTab* tab);
+void ApplyArrowSpeed(MainWindow* win, WindowTab* tab, int keyDir);
+void ApplyDigitSpeed(MainWindow* win, int digit);
+
+// implemented by each app
+void BarUpdate(MainWindow* win, bool forceLayout = false);

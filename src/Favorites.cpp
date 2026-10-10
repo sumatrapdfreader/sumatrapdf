@@ -494,6 +494,7 @@ void ApplyAddFavorite(MainWindow* win, Str filePath, int pageNo, Str pageLabel, 
     TempStr storedPos = StoredPagePosForPageTemp(ctrl, pageNo);
     Location loc = (ctrl && ctrl->HasChapters()) ? ctrl->LocationFromPageNo(pageNo) : kInvalidLocation;
 
+    logf("ApplyAddFavorite: '%s' page %d label '%s' name '%s'\n", filePath, pageNo, pageLabel, name);
     AddOrReplaceFav(filePath, storedPos, name, pl, CurrentFavoriteScrollPos(win, pageNo), loc);
     // expand newly added favorites by default
     FileState* fav = GetFavByFilePath(filePath);

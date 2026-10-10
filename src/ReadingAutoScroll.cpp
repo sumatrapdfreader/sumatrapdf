@@ -78,14 +78,6 @@ constexpr int kBtnGap = 8;
 constexpr int kBtnPadX = 10;
 constexpr int kBtnPadY = 3;
 
-// Acrobat maps 0 (slowest) .. 9 (fastest) onto these.
-static const float kDigitSpeeds[] = {8, 12, 16, 24, 36, 48, 72, 108, 160, 240};
-
-static TempStr SpeedLabelTemp(WindowTab* tab) {
-    const char* arrow = (!tab || tab->autoScroll.dir >= 0) ? "\xE2\x86\x93" : "\xE2\x86\x91";
-    return fmt("%s %d px/s", Str(arrow), (int)lroundf(CurrentSpeed()));
-}
-
 static void StopMiddleClickScroll(MainWindow* win) {
     if (!win || win->mouseAction != MouseAction::Scrolling) {
         return;
@@ -118,21 +110,10 @@ static void ArmReadingTimer(MainWindow* win, WindowTab* tab) {
 
 static ReadingAutoScrollBar* BarEnsure(MainWindow* win);
 static void BarHide(MainWindow* win);
-static void BarUpdate(MainWindow* win, bool forceLayout = false);
 
 void ReadingAutoScrollHideBar(MainWindow* win) {
     KillReadingTimer(win);
     BarHide(win);
-}
-
-void ReadingAutoScrollStop(MainWindow* win) {
-    WindowTab* tab = ActiveTab(win);
-    if (!tab) {
-        ReadingAutoScrollHideBar(win);
-        return;
-    }
-    ClearTabScroll(tab);
-    ReadingAutoScrollHideBar(win);
 }
 
 static void ReadingAutoScrollStart(MainWindow* win) {
@@ -155,6 +136,7 @@ static void ReadingAutoScrollStart(MainWindow* win) {
     if (bar) {
         bar->sessionTab = tab;
     }
+    logf("ReadingAutoScroll: start, speed %d px/s, atEnd %d\n", (int)CurrentSpeed(), (int)tab->autoScroll.atEnd);
     BarUpdate(win, true);
 }
 
@@ -199,6 +181,7 @@ void ReadingAutoScrollPause(MainWindow* win) {
         return;
     }
     tab->autoScroll.paused = !tab->autoScroll.paused;
+    logf("ReadingAutoScroll: paused %d\n", (int)tab->autoScroll.paused);
     if (tab->autoScroll.paused) {
         KillReadingTimer(win);
         tab->autoScroll.accum = 0;
@@ -213,28 +196,13 @@ void ReadingAutoScrollPause(MainWindow* win) {
     BarUpdate(win, true);
 }
 
-void ReadingAutoScrollFaster(MainWindow* win) {
-    if (!ActiveTab(win)) {
-        return;
-    }
-    StepSpeed(1);
-    BarUpdate(win);
-}
-
-void ReadingAutoScrollSlower(MainWindow* win) {
-    if (!ActiveTab(win)) {
-        return;
-    }
-    StepSpeed(-1);
-    BarUpdate(win);
-}
-
 void ReadingAutoScrollReverse(MainWindow* win) {
     WindowTab* tab = ActiveTab(win);
     if (!tab) {
         return;
     }
     tab->autoScroll.dir = tab->autoScroll.dir >= 0 ? -1 : 1;
+    logf("ReadingAutoScroll: dir %d\n", tab->autoScroll.dir);
     tab->autoScroll.atEnd = AtScrollLimit(ScrollModel(tab), tab->autoScroll.dir);
     if (tab->autoScroll.atEnd) {
         tab->autoScroll.paused = true;
@@ -243,24 +211,6 @@ void ReadingAutoScrollReverse(MainWindow* win) {
         ArmReadingTimer(win, tab);
     }
     BarUpdate(win, true);
-}
-
-static void ApplyArrowSpeed(MainWindow* win, WindowTab* tab, int keyDir) {
-    // Acrobat: the arrow that matches the pan direction speeds up; the other slows.
-    if (keyDir == tab->autoScroll.dir) {
-        StepSpeed(1);
-    } else {
-        StepSpeed(-1);
-    }
-    BarUpdate(win);
-}
-
-static void ApplyDigitSpeed(MainWindow* win, int digit) {
-    if (digit < 0 || digit > 9) {
-        return;
-    }
-    SetSpeed(kDigitSpeeds[digit]);
-    BarUpdate(win);
 }
 
 bool ReadingAutoScrollOnKey(MainWindow* win, WPARAM key) {
@@ -627,7 +577,7 @@ static void BarHide(MainWindow* win) {
                  SWP_HIDEWINDOW | SWP_NOACTIVATE | SWP_NOMOVE | SWP_NOSIZE | SWP_NOZORDER);
 }
 
-static void BarUpdate(MainWindow* win, bool forceLayout) {
+void BarUpdate(MainWindow* win, bool forceLayout) {
     if (!win || !win->readingAutoScrollBar || !win->readingAutoScrollBar->hwnd) {
         return;
     }

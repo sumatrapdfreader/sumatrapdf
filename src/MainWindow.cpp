@@ -429,8 +429,9 @@ void MainWindow::Focus() const {
 }
 
 void MainWindow::ToggleZoom() const {
-    if (CurrentTab()) {
-        CurrentTab()->ToggleZoom();
+    WindowTab* tab = CurrentTab();
+    if (tab) {
+        tab->ToggleZoom();
     }
 }
 
@@ -994,10 +995,12 @@ MainWindow* FindMainWindowByHwnd(HWND hwnd) {
     return nullptr;
 }
 
-// Find MainWindow using WindowTab. Diffrent than WindowTab->win in that
+// Find MainWindow using WindowTab. Different than WindowTab->win in that
 // it validates that WindowTab is still valid
 MainWindow* FindMainWindowByTab(WindowTab* tabToFind) {
-    if (!tabToFind) return nullptr;
+    if (!tabToFind) {
+        return nullptr;
+    }
     for (MainWindow* win : gWindows) {
         for (WindowTab* tab : win->Tabs()) {
             if (tab == tabToFind) {
