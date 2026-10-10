@@ -5,6 +5,7 @@
 import { mkdirSync, rmSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 import { ControlCommand } from "./control";
+import { IS_MAC } from "./host";
 import { assemblePdf, cmdId, runStandalone, tmpPath, USE_NG } from "./util";
 import {
   captureWindowPixels,
@@ -248,6 +249,10 @@ async function testTheme(theme: "Light" | "Dark"): Promise<void> {
 }
 
 export async function testit(): Promise<void> {
+  if (IS_MAC) {
+    console.log("SKIP issue-6043: bold favorite text is counted from a window DC");
+    return;
+  }
   await testTheme("Light");
   await testTheme("Dark");
 }
