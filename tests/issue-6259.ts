@@ -8,6 +8,7 @@
 // Run: bun tests/issue-6259.ts [--no-build]
 
 import { ControlClient, ControlCommand } from "./control.ts";
+import { IS_MAC } from "./host.ts";
 import { makeOnePagePdf, runStandalone, tmpPath } from "./util.ts";
 import {
   clientToScreen,
@@ -34,6 +35,10 @@ async function isZoomed(client: ControlClient): Promise<boolean> {
 }
 
 export async function testit(): Promise<void> {
+  if (IS_MAC) {
+    console.log("SKIP issue-6259: macOS has no DWM frame bounds");
+    return;
+  }
   const pdf = tmpPath("issue-6259.pdf");
   writeFileSync(pdf, makeOnePagePdf(), "latin1");
   const { proc, client, frame } = await launchControlled([pdf]);
