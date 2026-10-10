@@ -7,6 +7,7 @@
 import { mkdirSync, rmSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 import { ControlClient, ControlCommand } from "./control.ts";
+import { IS_MAC } from "./host.ts";
 import { assemblePdf, cmdId, runStandalone, tmpPath } from "./util.ts";
 import { getClassName, getFocusedHwnd, getRootWindow, postMessage, sendText, sleep, WM_KEYDOWN } from "./winapi.ts";
 import { killAndWait, launchControlled, sendCommand } from "./win-automation.ts";
@@ -47,6 +48,24 @@ async function paletteItems(client: ControlClient, queryLen: number): Promise<nu
 // types query into a new palette; Enter runs the only match, else Esc closes it
 async function runFromPalette(client: ControlClient, frame: number, query: string): Promise<number> {
   sendCommand(frame, cmdId("CmdCommandPalette"));
+  if (IS_MAC) {
+    const deadline = Date.now() + 5000;
+    for (;;) {
+      const res = await client.request(ControlCommand.TestCommandPalette, []);
+      if (res[0] === 0) {
+        break;
+      }
+      if (Date.now() > deadline) {
+        throw new Error("text-snippets: palette did not open");
+      }
+      await sleep(50);
+    }
+    sendText(0, query);
+    const n = await paletteItems(client, query.length);
+    postMessage(frame, WM_KEYDOWN, n === 1 ? VK_RETURN : VK_ESCAPE, 0);
+    await sleep(300);
+    return n;
+  }
   let edit = 0;
   for (let i = 0; i < 100 && !edit; i++) {
     const h = getFocusedHwnd(frame);
