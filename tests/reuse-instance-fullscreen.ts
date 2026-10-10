@@ -3,6 +3,7 @@
 import { mkdirSync, rmSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 import { ControlClient, ControlCommand, withControlledSumatra } from "./control.ts";
+import { IS_MAC } from "./host.ts";
 import { EXE, ROOT, runStandalone, tmpPath } from "./util.ts";
 import { sleep } from "./winapi.ts";
 
@@ -44,6 +45,10 @@ async function openInRunning(appdata: string, flag: string): Promise<void> {
 }
 
 export async function testit(): Promise<void> {
+  if (IS_MAC) {
+    console.log("SKIP reuse-instance-fullscreen: -reuse-instance forwards through a Win32 mutex and DDE");
+    return;
+  }
   const dir = tmpPath("reuse-instance-fullscreen");
   rmSync(dir, { recursive: true, force: true });
   mkdirSync(dir, { recursive: true });
