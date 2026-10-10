@@ -21,6 +21,7 @@
 #include "Translations.h"
 #include "gui/AppShell.h"
 #include "gui/DialogWidgets.h"
+#include "gui/ToolWindow.h"
 #include "Favorites.h"
 #include "SumatraDialogs.h"
 
@@ -72,13 +73,16 @@ void CloseAddFavoriteDialog() {
         return;
     }
     gAddFav.visible = false;
-    DlgWindowClose(&gAddFavoriteTw);
     MainWindow* win = gAddFav.win;
-    if (win && win->gpuiWin && gAddFav.editName) {
-        gp::InputBlur(gAddFav.editName, win->gpuiWin->app, win->gpuiWin);
+    // Blur the window that holds the field before freeing it. The tool
+    // window's close otherwise blurs the freed input.
+    gp::Window* host = gAddFavoriteTw ? ToolWindowGpui(gAddFavoriteTw) : (win ? win->gpuiWin : nullptr);
+    if (host && gAddFav.editName) {
+        gp::InputBlur(gAddFav.editName, host->app, host);
     }
     delete gAddFav.editName;
     gAddFav.editName = nullptr;
+    DlgWindowClose(&gAddFavoriteTw);
     str::Free(gAddFav.pageLabel);
     gAddFav.pageLabel = {};
     str::Free(gAddFav.filePath);
