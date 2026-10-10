@@ -1391,6 +1391,9 @@
     <ClCompile Include="..\src\shared\TableOfContentsCommon.cpp">
       <Filter>src\shared</Filter>
     </ClCompile>
+    <ClCompile Include="..\src\shared\TabsCommon.cpp">
+      <Filter>src\shared</Filter>
+    </ClCompile>
     <ClCompile Include="..\src\shared\TextSearch.cpp">
       <Filter>src\shared</Filter>
     </ClCompile>

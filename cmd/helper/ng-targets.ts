@@ -1360,6 +1360,7 @@ export const targets: Target[] = [
       "src/ng/MainWindowCommon.cpp",
       "src/ng/WindowTab.cpp",
       "src/ng/Tabs.cpp",
+      "src/ng/TabsCommon.cpp",
       "src/ng/TabGroupsManage.cpp",
       "src/ng/SessionState.cpp",
       "src/ng/Menu.cpp",

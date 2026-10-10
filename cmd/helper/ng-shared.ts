@@ -164,6 +164,7 @@ export const sharedFiles = [
   "src/shared/SumatraTestCommon.cpp",
   "src/shared/TableOfContentsCommon.cpp",
   "src/shared/TableOfContentsCommon.h",
+  "src/shared/TabsCommon.cpp",
   "src/shared/ToolbarCommon.cpp",
   "src/shared/ToolbarCommon.h",
   "src/shared/tests/SumatraCommon_ut.cpp",

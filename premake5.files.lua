@@ -432,6 +432,7 @@ function sumatrapdf_files()
     "TableOfContents.*",
     "TableOfContentsCommon.*",
     "Tabs.*",
+    "TabsCommon.*",
     "TabGroupsManage.*",
     "Tester.*",
     "Tests.cpp",

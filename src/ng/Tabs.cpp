@@ -52,46 +52,6 @@
 
 #include "SumatraLog.h"
 
-// always full path (FullPathInTitle only affects tab/window title text).
-// Append size when GetSize succeeds (may fail for offline network paths).
-// full path + size (if available); optional dirty suffix for unsaved annotations
-TempStr MakeTabTooltipTemp(Str path, bool dirty) {
-    if (len(path) == 0) {
-        return Str{};
-    }
-    TempStr tip;
-    i64 size = file::GetSize(path);
-    if (size >= 0) {
-        tip = fmt("%s  %s", path, str::FormatSizeShortTemp(size, nullptr));
-    } else {
-        tip = path;
-    }
-    if (dirty) {
-        tip = str::JoinTemp(tip, StrL(" "), Tr("(unsaved annotations)"));
-    }
-    return tip;
-}
-
-TempStr TabPageSuffixTemp(WindowTab* tab) {
-    if (!gSettings || !gSettings->showPageNumberInTabs) {
-        return {};
-    }
-    if (!tab || !tab->IsDocLoaded() || !tab->ctrl) {
-        return {};
-    }
-    int curr = tab->ctrl->CurrentPageNo();
-    int count = tab->ctrl->PageCount();
-    if (count <= 0 || curr < 1) {
-        return {};
-    }
-    if (ShowChapterUi(tab->ctrl)) {
-        Location loc = tab->ctrl->CurrentLocation();
-        int chapterPages = tab->ctrl->ChapterPageCount(loc.chapter);
-        return fmt(" %d/%d · %d/%d", loc.chapter, tab->ctrl->ChapterCount(), loc.page, chapterPages);
-    }
-    return fmt(" %d/%d", curr, count);
-}
-
 // ng: orig pushes the text into the TabsCtrl; the gpui strip reads it back on
 // every frame, so this only has to ask for a repaint
 void UpdateTabPageText(WindowTab* tab) {
@@ -436,24 +396,6 @@ void CollectTabsToClose(MainWindow* win, WindowTab* currTab, Vec<WindowTab*>& to
         } else {
             VecAppend(toCloseLeft, tab);
         }
-    }
-}
-
-void CloseCollectedTabs(MainWindow* win, const Vec<WindowTab*>& toClose) {
-    // CloseTab can pump. A nested close may have already freed some of these
-    // pointers; GetTabIdx is pointer identity and does not dereference a freed
-    // WindowTab.
-    if (!win) {
-        return;
-    }
-    for (WindowTab* t : toClose) {
-        if (!IsMainWindowValid(win) || win->isBeingClosed) {
-            return;
-        }
-        if (win->GetTabIdx(t) < 0) {
-            continue;
-        }
-        CloseTab(t, false);
     }
 }
 
