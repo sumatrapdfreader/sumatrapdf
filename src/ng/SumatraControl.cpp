@@ -4286,6 +4286,11 @@ static void ExecuteControlRequest(ControlRequest* req) {
             AppendLayoutRect(out, StrL("sidebarBottom"), win->uiState.favVisible, sideRc);
             // dips per document pixel; click tests scale canvas points by this
             out.Append(fmt("canvasScale=%.3f\n", (double)CanvasScale(win)));
+            // same range GetScrollInfo reads off the canvas HWND on Windows
+            out.Append(fmt("scrollV pos=%d min=%d max=%d page=%d\n", win->scrollV.nPos, win->scrollV.nMin,
+                           win->scrollV.nMax, win->scrollV.nPage));
+            out.Append(fmt("scrollH pos=%d min=%d max=%d page=%d\n", win->scrollH.nPos, win->scrollH.nMin,
+                           win->scrollH.nMax, win->scrollH.nPage));
             DisplayModel* dm = win->AsFixed();
             if (dm) {
                 out.Append(

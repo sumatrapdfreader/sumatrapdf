@@ -9,6 +9,7 @@
 import { mkdirSync, rmSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 import { ControlClient, ControlCommand } from "./control.ts";
+import { IS_MAC } from "./host.ts";
 import { runStandalone, tmpPath } from "./util.ts";
 import { findCanvas, launchControlled, killAndWait, ensureModifierKeysUp } from "./win-automation.ts";
 import {
@@ -74,10 +75,15 @@ async function waitScrollable(canvas: number, timeoutMs = 8000): Promise<void> {
 
 async function wheelDown(canvas: number, notches: number): Promise<void> {
   await ensureModifierKeysUp();
-  const cr = getClientRect(canvas);
-  const mid = clientToScreen(canvas, Math.floor(cr.right / 2), Math.floor(cr.bottom / 2));
-  setCursorPos(mid.x, mid.y);
-  const lp = packCoords(mid.x, mid.y);
+  // mac treats a wheel lParam of 0 as the canvas center. A screen point is
+  // not a frame-client point, so it misses the document.
+  let lp = 0;
+  if (!IS_MAC) {
+    const cr = getClientRect(canvas);
+    const mid = clientToScreen(canvas, Math.floor(cr.right / 2), Math.floor(cr.bottom / 2));
+    setCursorPos(mid.x, mid.y);
+    lp = packCoords(mid.x, mid.y);
+  }
   const wp = (-WHEEL_DELTA << 16) >>> 0;
   for (let i = 0; i < notches; i++) {
     sendMessage(canvas, WM_MOUSEWHEEL, wp, lp);

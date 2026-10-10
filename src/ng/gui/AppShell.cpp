@@ -539,6 +539,35 @@ void AppShellClearEatChar(MainWindow* win) {
     }
 }
 
+// A posted wheel while CHM or markdown is current. The web view is a native
+// child and does not see it; the frame scrolls the page from script.
+static bool ForwardTestWheelToBrowser(MainWindow* win, int delta, int mods) {
+    if (!win) {
+        return false;
+    }
+    BrowserDocController* doc = win->AsChm();
+    if (!doc) {
+        doc = win->AsMarkdown();
+    }
+    if (!doc || !doc->docView) {
+        return false;
+    }
+    bool horizontal = delta >= 500000;
+    if (horizontal) {
+        delta -= 1000000;
+    }
+    // Command is Ctrl. Ctrl+wheel is zoom, which this page does not do.
+    if ((mods & 1) || (mods & 8)) {
+        return true;
+    }
+    if ((mods & 2) != 0) {
+        horizontal = true;
+    }
+    int d = -delta;
+    BrowserViewEval(doc->docView, horizontal ? fmt("window.scrollBy(%d, 0)", d) : fmt("window.scrollBy(0, %d)", d));
+    return true;
+}
+
 // ng: kinds are key / keyup (a = vk, b = mods: 1 Ctrl, 2 Shift, 4 Alt,
 // 8 auto-repeat), char (a = code point), down / up / click (a, b = x, y in
 // dips; c = button: 0 left, 1 right, 2 middle; d = mods: 1 Ctrl, 2 Shift,
@@ -565,6 +594,9 @@ TempStr AppShellTestInput(MainWindow* win, Str kind, int a, int b, int c, int d)
         TempStr res = AppShellTestInputGpui(paletteWin, kind, a, b, c, d);
         gp::AppInvalidate(paletteWin);
         return res;
+    }
+    if (str::Eq(kind, StrL("wheel")) && ForwardTestWheelToBrowser(win, c, d)) {
+        return StrL("OK");
     }
     return AppShellTestInputGpui(win ? win->gpuiWin : nullptr, kind, a, b, c, d);
 }

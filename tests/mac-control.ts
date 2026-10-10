@@ -6,7 +6,7 @@ import { readFileSync } from "node:fs";
 import { join } from "node:path";
 import { dlopen, FFIType, ptr, toArrayBuffer } from "bun:ffi";
 
-const TestLayout = 70;
+export const TestLayout = 70;
 const TestInvokeCommand = 87;
 const TestInput = 121;
 

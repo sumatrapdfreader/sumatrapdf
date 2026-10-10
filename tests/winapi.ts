@@ -14,7 +14,14 @@
 
 import { dlopen, FFIType, JSCallback, ptr, toArrayBuffer } from "bun:ffi";
 import { IS_MAC, IS_WIN } from "./host.ts";
-import { macClientToScreen, macFrameClientRect, macSendMessage, macSendText } from "./mac-control.ts";
+import {
+  macClientToScreen,
+  macControlRequest,
+  macFrameClientRect,
+  macSendMessage,
+  macSendText,
+  TestLayout,
+} from "./mac-control.ts";
 
 // Windows tests talk to user32. On macOS the same helpers either use
 // CoreGraphics or throw, so importing this file does not require the DLLs.
@@ -668,6 +675,16 @@ export function getScrollInfo(
   hwnd: number,
   bar: number = SB_VERT,
 ): { min: number; max: number; page: number; pos: number; trackPos: number } {
+  if (IS_MAC) {
+    const text = String(macControlRequest(TestLayout, [])[1] ?? "");
+    const key = bar === SB_HORZ ? "scrollH" : "scrollV";
+    const m = new RegExp(`${key} pos=(-?\\d+) min=(-?\\d+) max=(-?\\d+) page=(-?\\d+)`).exec(text);
+    if (!m) {
+      throw new Error(`GetScrollInfo: no ${key} in layout`);
+    }
+    const pos = Number(m[1]);
+    return { pos, min: Number(m[2]), max: Number(m[3]), page: Number(m[4]), trackPos: pos };
+  }
   const buf = new Uint8Array(28);
   const dv = new DataView(buf.buffer);
   dv.setUint32(0, 28, true); // cbSize
