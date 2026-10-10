@@ -10,6 +10,7 @@
 // F4 to CmdOpenWithPdfXchange and presses it.
 import { existsSync, mkdirSync, rmSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
+import { IS_MAC } from "./host";
 import { ROOT, runStandalone, tmpPath } from "./util";
 import { findCanvas, killAndWait, launchControlled, pressKey } from "./win-automation";
 import { sleep, VK_F4 } from "./winapi";
@@ -48,6 +49,10 @@ Shortcuts [
 }
 
 export async function testit(): Promise<void> {
+  if (IS_MAC) {
+    console.log("SKIP issue-6184: the stand-in viewer is an HKCU App Paths entry and a .cmd");
+    return;
+  }
   if (realPdfXchangeInstalled()) {
     console.log("skipping: PDF-XChange is installed, the test would launch it for real");
     return;
