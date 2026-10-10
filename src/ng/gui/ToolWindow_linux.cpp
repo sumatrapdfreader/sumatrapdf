@@ -4,8 +4,14 @@
 // X11 frames for tool windows. A second display connection moves the window
 // gpui created; gpui keeps receiving its events.
 
+#include "gui/GpuiBridge.h"
+
+#include "gui/ToolWindowPlat.h"
+
+// X11 after gpui: True, False, and Always are macros that break gpui.h.
 #include <X11/Xatom.h>
 #include <X11/Xlib.h>
+#include <X11/Xutil.h>
 
 typedef Window XWin;
 
@@ -13,10 +19,6 @@ typedef Window XWin;
 #undef Bool
 #undef Status
 #undef None
-
-#include "gui/GpuiBridge.h"
-
-#include "gui/ToolWindowPlat.h"
 
 static Display* Dpy() {
     static Display* dpy = XOpenDisplay(nullptr);
