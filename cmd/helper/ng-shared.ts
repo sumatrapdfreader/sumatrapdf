@@ -140,6 +140,8 @@ export const sharedFiles = [
   "src/shared/SearchAndDDECommon.h",
   "src/shared/SelectionTranslateCommon.cpp",
   "src/shared/SelectionTranslateCommon.h",
+  "src/shared/SignDocumentDialogCommon.cpp",
+  "src/shared/SignDocumentDialogCommon.h",
   "src/shared/SumatraPDFCommon.cpp",
   "src/shared/SumatraPDFCommon.h",
   "src/shared/SumatraTest.h",

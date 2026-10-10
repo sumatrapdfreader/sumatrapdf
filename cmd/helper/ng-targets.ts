@@ -1418,6 +1418,7 @@ export const targets: Target[] = [
       "src/ng/PageGridDialogCommon.cpp",
       "src/ng/KeyboardHelp.cpp",
       "src/ng/SignDocumentDialog.cpp",
+      "src/ng/SignDocumentDialogCommon.cpp",
       "src/ng/ImageSaveCropResize.cpp",
       "src/ng/ImageSaveCropResizeCommon.cpp",
       "src/ng/ImageEditHostSumatra.cpp",

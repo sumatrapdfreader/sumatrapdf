@@ -522,6 +522,9 @@
     <ClInclude Include="..\src\shared\ShortcutParse.h">
       <Filter>src\shared</Filter>
     </ClInclude>
+    <ClInclude Include="..\src\shared\SignDocumentDialogCommon.h">
+      <Filter>src\shared</Filter>
+    </ClInclude>
     <ClInclude Include="..\src\shared\StressTesting.h">
       <Filter>src\shared</Filter>
     </ClInclude>
@@ -1311,6 +1314,9 @@
       <Filter>src\shared</Filter>
     </ClCompile>
     <ClCompile Include="..\src\shared\ShortcutParse.cpp">
+      <Filter>src\shared</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\shared\SignDocumentDialogCommon.cpp">
       <Filter>src\shared</Filter>
     </ClCompile>
     <ClCompile Include="..\src\shared\StressTesting.cpp">

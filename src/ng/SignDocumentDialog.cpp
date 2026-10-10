@@ -36,13 +36,9 @@
 #include "gui/ToolWindow.h"
 #include "Menu.h"
 #include "SumatraDialogs.h"
+#include "SignDocumentDialogCommon.h"
 
 #include "SumatraLog.h"
-
-// Default size of a new signature when the user clicks rather than dragging
-// a rectangle. 2" x 0.75" at 72 pt/in - enough for name, date and reason.
-constexpr float kDefaultSignatureDx = 144;
-constexpr float kDefaultSignatureDy = 54;
 
 static Kind kNotifSignPlacement = "notifSignPlacement";
 
@@ -113,41 +109,6 @@ constexpr float kSignWinLabelGap = 8;
 constexpr float kSignWinFileEditDx = 290;
 constexpr float kSignWinCheckGap = 2;
 constexpr float kSignWinButtonsGap = 12;
-
-static EngineBase* GetPdfEngine(MainWindow* win) {
-    if (!IsMainWindowValidAndNotClosing(win) || !win->IsDocLoaded()) {
-        return nullptr;
-    }
-    DisplayModel* dm = win->AsFixed();
-    EngineBase* engine = dm ? dm->GetEngine() : nullptr;
-    if (!engine || !EngineMupdfSupportsAnnotations(engine)) {
-        return nullptr;
-    }
-    return engine;
-}
-
-// Bounding box of the current selection. Sets pageNoOut to the page of the
-// first non-empty piece. Empty if nothing is selected.
-static RectF SelectionRect(WindowTab* tab, int* pageNoOut) {
-    RectF res;
-    if (!tab || !tab->selectionOnPage) {
-        return res;
-    }
-    for (auto& sel : *tab->selectionOnPage) {
-        if (sel.rect.IsEmpty()) {
-            continue;
-        }
-        if (res.IsEmpty()) {
-            if (pageNoOut) {
-                *pageNoOut = sel.pageNo;
-            }
-            res = sel.rect;
-        } else if (!pageNoOut || sel.pageNo == *pageNoOut) {
-            res = res.Union(sel.rect);
-        }
-    }
-    return res;
-}
 
 static void ClearSignaturePlacementNotif(MainWindow* win) {
     if (win) {
@@ -300,42 +261,6 @@ static void StartSignaturePlacement() {
     DeleteOldSelectionInfo(win, true);
     ShowSignaturePlacementNotif(win);
     AppShellInvalidate(win);
-}
-
-static RectF ClampRectToPage(RectF r, RectF page) {
-    if (page.IsEmpty()) {
-        return r;
-    }
-    if (r.dx > page.dx) {
-        r.dx = page.dx;
-    }
-    if (r.dy > page.dy) {
-        r.dy = page.dy;
-    }
-    if (r.x < page.x) {
-        r.x = page.x;
-    }
-    if (r.y < page.y) {
-        r.y = page.y;
-    }
-    if (r.x + r.dx > page.x + page.dx) {
-        r.x = page.x + page.dx - r.dx;
-    }
-    if (r.y + r.dy > page.y + page.dy) {
-        r.y = page.y + page.dy - r.dy;
-    }
-    return r;
-}
-
-// A default-size box centered on the click, kept on the page.
-static RectF DefaultSignatureRectAt(DisplayModel* dm, int pageNo, PointF pt) {
-    RectF r(pt.x - (kDefaultSignatureDx / 2), pt.y - (kDefaultSignatureDy / 2), kDefaultSignatureDx,
-            kDefaultSignatureDy);
-    PageInfo* pi = dm ? dm->GetPageInfo(pageNo) : nullptr;
-    if (!pi || !IsMediaBoxKnown(pi->mediaBox)) {
-        return r;
-    }
-    return ClampRectToPage(r, pi->mediaBox);
 }
 
 static void CollectFields(MainWindow* win) {

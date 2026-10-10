@@ -283,6 +283,7 @@ function sumatrapdf_files()
     "PageGridDialog.*",
     "PageGridDialogCommon.*",
     "SignDocumentDialog.*",
+    "SignDocumentDialogCommon.*",
     "EbookSettingsDialog.*",
     "GetPasswordDialog.*",
     "GoToPageDialog.*",
