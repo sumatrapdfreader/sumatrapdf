@@ -1433,6 +1433,7 @@ export const targets: Target[] = [
       "src/ng/Favorites.cpp",
       "src/ng/FavoritesCommon.cpp",
       "src/ng/TableOfContents.cpp",
+      "src/ng/TableOfContentsCommon.cpp",
       "src/ng/gui/AppShell.cpp",
       "src/ng/gui/GpuiTheme.cpp",
       "src/ng/gui/DocCanvas.cpp",

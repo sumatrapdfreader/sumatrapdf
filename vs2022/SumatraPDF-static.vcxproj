@@ -1527,6 +1527,7 @@
     <ClInclude Include="..\src\shared\SvgIcons.h" />
     <ClInclude Include="..\src\shared\TabGroupsManage.h" />
     <ClInclude Include="..\src\shared\TableOfContents.h" />
+    <ClInclude Include="..\src\shared\TableOfContentsCommon.h" />
     <ClInclude Include="..\src\shared\Tabs.h" />
     <ClInclude Include="..\src\shared\TextSearch.h" />
     <ClInclude Include="..\src\shared\TextSelection.h" />
@@ -2175,6 +2176,7 @@
     <ClCompile Include="..\src\shared\SumatraPDFCommon.cpp" />
     <ClCompile Include="..\src\shared\SumatraTestCommon.cpp" />
     <ClCompile Include="..\src\shared\SvgIcons.cpp" />
+    <ClCompile Include="..\src\shared\TableOfContentsCommon.cpp" />
     <ClCompile Include="..\src\shared\TextSearch.cpp">
       <Optimization Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">MaxSpeed</Optimization>
       <Optimization Condition="'$(Configuration)|$(Platform)'=='Release|x64'">MaxSpeed</Optimization>

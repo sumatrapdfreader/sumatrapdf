@@ -407,6 +407,7 @@ function sumatrapdf_files()
     "SvgIcons.*",
     "SidebarPanel.*",
     "TableOfContents.*",
+    "TableOfContentsCommon.*",
     "Tabs.*",
     "TabGroupsManage.*",
     "Tester.*",

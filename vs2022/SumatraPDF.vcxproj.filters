@@ -513,6 +513,9 @@
     <ClInclude Include="..\src\shared\TableOfContents.h">
       <Filter>src\shared</Filter>
     </ClInclude>
+    <ClInclude Include="..\src\shared\TableOfContentsCommon.h">
+      <Filter>src\shared</Filter>
+    </ClInclude>
     <ClInclude Include="..\src\shared\Tabs.h">
       <Filter>src\shared</Filter>
     </ClInclude>
@@ -1260,6 +1263,9 @@
       <Filter>src\shared</Filter>
     </ClCompile>
     <ClCompile Include="..\src\shared\SvgIcons.cpp">
+      <Filter>src\shared</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\shared\TableOfContentsCommon.cpp">
       <Filter>src\shared</Filter>
     </ClCompile>
     <ClCompile Include="..\src\shared\TextSearch.cpp">
