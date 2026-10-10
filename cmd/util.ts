@@ -164,12 +164,26 @@ export async function runLogged(cmd: string, args: string[], cwd?: string): Prom
   }
 }
 
+// Visual Studio ships clang-format on Windows; elsewhere it is on PATH or,
+// on mac, inside the Xcode toolchain.
+export function findClangFormat(): string {
+  if (process.platform === "win32") {
+    const { clangFormatPath } = detectVisualStudio();
+    if (clangFormatPath) return clangFormatPath;
+  }
+  const onPath = Bun.which("clang-format");
+  if (onPath) return onPath;
+  if (process.platform === "darwin") {
+    const r = Bun.spawnSync(["xcrun", "--find", "clang-format"], { stdout: "pipe", stderr: "ignore" });
+    const path = r.stdout.toString().trim();
+    if (r.exitCode === 0 && path) return path;
+  }
+  throw new Error("couldn't find clang-format (install LLVM or the Visual Studio C++ Clang tools)");
+}
+
 // clang-format every generated C++ file so gen-code output matches cmd/format.ts
 export async function clangFormatFiles(rootDir: string, relativePaths: string[]): Promise<void> {
-  const { clangFormatPath } = detectVisualStudio();
-  if (!clangFormatPath) {
-    throw new Error("couldn't find clang-format.exe");
-  }
+  const clangFormatPath = findClangFormat();
   for (const rel of [...new Set(relativePaths)]) {
     const path = join(rootDir, rel);
     await runLogged(clangFormatPath, ["-i", "-style=file", path]);
