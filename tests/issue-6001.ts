@@ -4,6 +4,7 @@
 import { mkdirSync, rmSync } from "node:fs";
 import { join } from "node:path";
 import { ControlCommand } from "./control.ts";
+import { IS_MAC } from "./host.ts";
 import { ROOT, cmdId, runStandalone, tmpPath } from "./util.ts";
 import {
   enumWindows,
@@ -152,6 +153,10 @@ async function openScreenshotFromPalette(
 }
 
 export async function testit(): Promise<void> {
+  if (IS_MAC) {
+    console.log("SKIP issue-6001: modal ownership is a Win32 owner HWND and EnableWindow");
+    return;
+  }
   const appData = tmpPath("issue-6001");
   rmSync(appData, { recursive: true, force: true });
   mkdirSync(appData, { recursive: true });
