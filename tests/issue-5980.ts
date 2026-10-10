@@ -4,9 +4,11 @@
 // underline; the fixed link-kind filter draws exactly one blue component.
 import { mkdirSync, rmSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
-import { EXE, runStandalone, tmpPath } from "./util.ts";
+import { ControlCommand } from "./control.ts";
+import { IS_MAC } from "./host.ts";
+import { cmdId, EXE, runStandalone, SLOW_BUILD_FACTOR, tmpPath } from "./util.ts";
 import { captureWindowPixels, sleep } from "./winapi.ts";
-import { findCanvas, launchControlled, killAndWait } from "./win-automation.ts";
+import { findCanvas, launchControlled, killAndWait, sendCommand } from "./win-automation.ts";
 
 const SETTINGS = `UiLanguage = en
 CheckForUpdates = false
@@ -109,6 +111,36 @@ export async function testit(): Promise<void> {
   try {
     await client.setNotificationsEnabled(false);
     await client.waitForRenderIdle();
+
+    if (IS_MAC) {
+      // Each outlined element is one drawn shape (TestOverlayState, ng wire 102).
+      // Windows 102 is StopPerfLog. Two toggles force a paint with links back on.
+      sendCommand(frame, cmdId("CmdToggleLinks"));
+      sendCommand(frame, cmdId("CmdToggleLinks"));
+      const kNgTestOverlayState = 102 as ControlCommand;
+      let shapes = -1;
+      let links = -1;
+      let raw = "";
+      const deadline = Date.now() + 3000 * SLOW_BUILD_FACTOR;
+      while (Date.now() < deadline) {
+        const res = await client.request(kNgTestOverlayState, []);
+        raw = String(res[1] ?? "");
+        shapes = Number(/drawn shapes=(\d+)/.exec(raw)?.[1] ?? "-1");
+        links = Number(/links=(\d+)/.exec(raw)?.[1] ?? "-1");
+        if (links === 1 && shapes > 0) {
+          break;
+        }
+        await sleep(50);
+      }
+      if (links !== 1 || shapes !== 1) {
+        throw new Error(
+          `issue-5980: Show Links drew ${shapes} shapes, expected only the link (links=${links})\n${raw}`,
+        );
+      }
+      console.log(`issue-5980: one link outline (drawn shapes=${shapes}), underline ignored`);
+      return;
+    }
+
     const canvas = findCanvas(frame);
     if (!canvas) {
       throw new Error("issue-5980: no canvas");
