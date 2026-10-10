@@ -94,7 +94,7 @@ SizeF FreeTextPlacementPageSize(const AnnotCreateArgs& args) {
 // their SVG icon, every other mode a cross
 // ng: the icon cursors exist on Windows only (see "gpui gaps": no cursor from
 // an image); elsewhere all modes use the cross
-static void SetPlacementCursor(MainWindow* win) {
+void SetPlacementCursor(MainWindow* win) {
     switch (KindOf(win)) {
         case AnnotPlacementKind::Text:
             if (CanvasSetNativeCursor(win, NativeCursor::TextAnnotationPlacement)) {
@@ -130,7 +130,7 @@ bool CancelAnnotationPlacement(MainWindow* win) {
 
 // orig posts WM_COMMAND with kAnnotationPlacementCommandCode; here the command
 // path takes the same two flags as arguments
-static void CommitPlacementCommand(MainWindow* win, Point pt) {
+void CommitPlacementCommand(MainWindow* win, Point pt) {
     int cmdId = win->annotPlacement.cmdId;
     ExecuteAnnotCreateCmd(win, cmdId, true, pt);
     CancelAnnotationPlacement(win);
@@ -230,45 +230,6 @@ void StartAnnotationPlacement(MainWindow* win, int cmdId) {
     SetPlacementCursor(win);
     logf("StartAnnotationPlacement: kind %d, cmd %d\n", (int)kind, cmdId);
     win->RedrawAll(true);
-}
-
-static bool CommitShapePlacement(MainWindow* win) {
-    DisplayModel* dm = win ? win->AsFixed() : nullptr;
-    AnnotPlacement& p = win->annotPlacement;
-    if (!IsPlacingShapeAnnotation(win) || !dm || !dm->ValidPageNo(p.pageNo)) {
-        return false;
-    }
-    Rect screenRect = ShapePlacementScreenRect(p, dm);
-    int minSize = std::max(DpiScale(4), 2);
-    if (screenRect.dx < minSize || screenRect.dy < minSize) {
-        return false;
-    }
-    RectF pageRect = dm->CvtFromScreen(screenRect, p.pageNo);
-    if (pageRect.IsEmpty()) {
-        return false;
-    }
-
-    p.rect = pageRect;
-    Point pt = ShapePlacementEnd(p, dm);
-    CommitPlacementCommand(win, pt);
-    return true;
-}
-
-// A click outside every page is consumed but leaves the mode active. A valid
-// click re-enters the command path with the original command id so custom
-// color/openEdit arguments are retained.
-static bool PlacePointAnnotationAt(MainWindow* win, Point pt) {
-    if (!IsPlacingPointAnnotation(win)) {
-        return false;
-    }
-    DisplayModel* dm = win->AsFixed();
-    int pageNo = dm ? dm->GetPageNoByPoint(pt) : -1;
-    if (!dm || !dm->ValidPageNo(pageNo)) {
-        return true;
-    }
-    win->annotPlacement.pos = pt;
-    CommitPlacementCommand(win, pt);
-    return true;
 }
 
 // The first page click anchors the preview. A second click on that page
@@ -631,14 +592,6 @@ bool AnnotationPlacementOnMouseMove(MainWindow* win, Point pt, bool isShift, boo
         default:
             break;
     }
-    return true;
-}
-
-bool AnnotationPlacementOnSetCursor(MainWindow* win) {
-    if (!IsPlacingAnnotation(win) || KindOf(win) == AnnotPlacementKind::Highlighter) {
-        return false;
-    }
-    SetPlacementCursor(win);
     return true;
 }
 

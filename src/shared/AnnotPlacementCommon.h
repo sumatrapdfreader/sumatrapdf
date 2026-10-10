@@ -25,3 +25,10 @@ Rect ShapePlacementScreenRect(const AnnotPlacement& p, DisplayModel* dm);
 float PxPerPagePt(DisplayModel* dm, int pageNo);
 Rect PlacementPreviewScreenRect(DisplayModel* dm, int pageNo, Point pt, PointF pagePt, RectF pageRect);
 Rect FreeTextPlacementScreenRect(MainWindow* win, DisplayModel* dm);
+
+bool CommitShapePlacement(MainWindow* win);
+bool PlacePointAnnotationAt(MainWindow* win, Point pt);
+
+// implemented by each app
+void CommitPlacementCommand(MainWindow* win, Point pt);
+void SetPlacementCursor(MainWindow* win);

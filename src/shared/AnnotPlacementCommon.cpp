@@ -420,3 +420,50 @@ bool AnnotationPlacementFillCreate(MainWindow* win, AnnotationType type, Point& 
     }
     return dm->ValidPageNo(pageNo);
 }
+
+bool CommitShapePlacement(MainWindow* win) {
+    DisplayModel* dm = win ? win->AsFixed() : nullptr;
+    AnnotPlacement& p = win->annotPlacement;
+    if (!IsPlacingShapeAnnotation(win) || !dm || !dm->ValidPageNo(p.pageNo)) {
+        return false;
+    }
+    Rect screenRect = ShapePlacementScreenRect(p, dm);
+    int minSize = std::max(DpiScale(4), 2);
+    if (screenRect.dx < minSize || screenRect.dy < minSize) {
+        return false;
+    }
+    RectF pageRect = dm->CvtFromScreen(screenRect, p.pageNo);
+    if (pageRect.IsEmpty()) {
+        return false;
+    }
+
+    p.rect = pageRect;
+    Point pt = ShapePlacementEnd(p, dm);
+    CommitPlacementCommand(win, pt);
+    return true;
+}
+
+// A click outside every page is consumed but leaves the mode active. A valid
+// click re-enters the command path with the original command id so custom
+// color/openEdit arguments are retained.
+bool PlacePointAnnotationAt(MainWindow* win, Point pt) {
+    if (!IsPlacingPointAnnotation(win)) {
+        return false;
+    }
+    DisplayModel* dm = win->AsFixed();
+    int pageNo = dm ? dm->GetPageNoByPoint(pt) : -1;
+    if (!dm || !dm->ValidPageNo(pageNo)) {
+        return true;
+    }
+    win->annotPlacement.pos = pt;
+    CommitPlacementCommand(win, pt);
+    return true;
+}
+
+bool AnnotationPlacementOnSetCursor(MainWindow* win) {
+    if (!IsPlacingAnnotation(win) || KindOf(win) == AnnotPlacementKind::Highlighter) {
+        return false;
+    }
+    SetPlacementCursor(win);
+    return true;
+}
