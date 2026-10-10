@@ -7,6 +7,7 @@
 // Run: bun tests/issue-6136.ts [--no-build]
 
 import { writeFileSync } from "node:fs";
+import { IS_MAC } from "./host.ts";
 import { assemblePdf, cmdId, runStandalone, tmpPath } from "./util.ts";
 import { ControlCommand } from "./control.ts";
 import { captureWindowPixels, getClientRect, getScrollInfo, sendMessage, sleep, SB_HORZ } from "./winapi.ts";
@@ -82,6 +83,11 @@ function intersectsCanvas(p: PageScreen, w: number, h: number): boolean {
 }
 
 export async function testit(): Promise<void> {
+  // The bug is a stale double-buffer on the painted canvas when no page intersects it.
+  if (IS_MAC) {
+    console.log("SKIP issue-6136: the check reads canvas pixels with GetWindowDC");
+    return;
+  }
   const pdf = tmpPath("issue-6136.pdf");
   writeFileSync(pdf, makePdf("1 0 0"), "latin1");
 
