@@ -15,6 +15,8 @@
 // keyboard state doesn't stick on the test machine).
 
 import { writeFileSync } from "node:fs";
+import { ControlCommand, type ControlClient } from "./control.ts";
+import { IS_MAC } from "./host.ts";
 import { cmdId, tmpPath, assemblePdf } from "./util";
 import { findCanvas, launchControlled, killAndWait } from "./win-automation";
 import {
@@ -136,6 +138,80 @@ function textRectOnScreen(canvas: number): { x: number; y: number; dx: number; d
   return { x: x0, y: y0, dx: x1 - x0 + 1, dy: y1 - y0 + 1 };
 }
 
+type PageBox = { x: number; y: number; dx: number; dy: number; canvasDx: number; canvasDy: number; scrollY: number };
+
+async function zoomReal(client: ControlClient): Promise<number> {
+  const raw = String((await client.request(ControlCommand.TestDisplayMode, ["zoom-real"]))[1] ?? "");
+  const m = /zoomReal=([0-9.eE+-]+)/.exec(raw);
+  if (!m) {
+    throw new Error(`issue-1699: no zoom: ${raw}`);
+  }
+  return Number(m[1]);
+}
+
+async function pageBox(client: ControlClient): Promise<PageBox> {
+  const raw = String((await client.request(ControlCommand.TestLayout, []))[1] ?? "");
+  const canvas = /item name=canvas visible=\d+ rect=(-?\d+),(-?\d+),(-?\d+),(-?\d+)/.exec(raw);
+  const page = /page n=1 shown=1 pos=(-?\d+),(-?\d+),(-?\d+),(-?\d+)/.exec(raw);
+  const scroll = /scrollV pos=(-?\d+)/.exec(raw);
+  if (!canvas || !page || !scroll) {
+    throw new Error(`issue-1699: layout missing the page: ${raw}`);
+  }
+  return {
+    x: Number(page[1]),
+    y: Number(page[2]),
+    dx: Number(page[3]),
+    dy: Number(page[4]),
+    canvasDx: Number(canvas[3]),
+    canvasDy: Number(canvas[4]),
+    scrollY: Number(scroll[1]),
+  };
+}
+
+// No window DC on macOS. The page box is in zoomed canvas pixels, so a zoom
+// into the top-left text grows it and keeps the scroll near the top.
+async function checkZoomToSelection(client: ControlClient, frame: number): Promise<void> {
+  sendMessage(frame, WM_COMMAND, BigInt(cmdId("CmdZoomFitPage")), 0n);
+  await client.waitForRenderIdle();
+  const before = await pageBox(client);
+  const z0 = await zoomReal(client);
+  if (before.dx < before.canvasDx * 0.4 || before.dy < before.canvasDy * 0.4) {
+    throw new Error(`the whole page should be visible at fit page, got ${JSON.stringify(before)} zoom ${z0}`);
+  }
+
+  sendMessage(frame, WM_COMMAND, BigInt(cmdId("CmdSelectTextViaKeyboard")), 0n);
+  for (let i = 0; i < 3; i++) {
+    sendMessage(frame, WM_COMMAND, BigInt(cmdId("CmdExtendSelectionWordRight")), 0n);
+  }
+  sendMessage(frame, WM_COMMAND, BigInt(cmdId("CmdZoomToSelection")), 0n);
+  await client.waitForRenderIdle();
+
+  const after = await pageBox(client);
+  const z1 = await zoomReal(client);
+  if (z1 < z0 * 2 || after.dx < before.dx * 2 || after.dy < before.dy * 2) {
+    throw new Error(
+      `Zoom To Selection did not zoom into the selection: ` +
+        `${JSON.stringify(after)} zoom ${z1} (before ${JSON.stringify(before)} zoom ${z0})`,
+    );
+  }
+  // the line is in the top-left quadrant, so the scroll stays in the top half
+  if (after.scrollY > after.dy * 0.45) {
+    throw new Error(`Zoom To Selection scrolled away from the top-left text: ${JSON.stringify(after)}`);
+  }
+
+  sendMessage(frame, WM_COMMAND, BigInt(cmdId("CmdNavigateBack")), 0n);
+  await client.waitForRenderIdle();
+  const back = await pageBox(client);
+  const z2 = await zoomReal(client);
+  if (z2 > z0 * 1.25 || back.dx > before.dx * 1.5) {
+    throw new Error(
+      `Back did not return to the view before Zoom To Selection: ` +
+        `${JSON.stringify(back)} zoom ${z2} (before ${JSON.stringify(before)} zoom ${z0})`,
+    );
+  }
+  console.log(`  zoom to selection: zoom ${z0.toFixed(2)} -> ${z1.toFixed(2)}, Back restored ${z2.toFixed(2)}`);
+}
+
 async function dragSelect(canvas: number, x0: number, y0: number, x1: number, y1: number): Promise<void> {
   postMessage(canvas, WM_LBUTTONDOWN, MK_LBUTTON, packCoords(x0, y0));
   await sleep(150);
@@ -157,6 +233,10 @@ export async function testit(): Promise<void> {
   const { proc, client, frame } = await launchControlled([pdf]);
   try {
     await client.waitForRenderIdle();
+    if (IS_MAC) {
+      await checkZoomToSelection(client, frame);
+      return;
+    }
     const canvas = findCanvas(frame);
     if (!canvas) {
       throw new Error("could not find the canvas window");
