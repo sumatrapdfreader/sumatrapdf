@@ -316,6 +316,7 @@ function sumatrapdf_files()
     "AIGrokBuild.*",
     "CommandAvailability.*",
     "CommandPalette.*",
+    "CommandPaletteCommon.*",
     "FilterUtil.*",
     "FilterHighlightDraw.*",
     "Commands.*",

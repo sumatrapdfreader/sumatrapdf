@@ -1446,6 +1446,7 @@ export const targets: Target[] = [
       "src/ng/gui/TabsUI.cpp",
       "src/ng/gui/TabSwitcher.cpp",
       "src/ng/CommandPalette.cpp",
+      "src/ng/CommandPaletteCommon.cpp",
       "src/ng/gui/BrowserView.cpp",
       "src/ng/gui/NavFilesUI.cpp",
       "src/ng/gui/ToolWindow.cpp",

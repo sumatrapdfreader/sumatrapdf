@@ -297,6 +297,9 @@
     <ClInclude Include="..\src\shared\CommandPalette.h">
       <Filter>src\shared</Filter>
     </ClInclude>
+    <ClInclude Include="..\src\shared\CommandPaletteCommon.h">
+      <Filter>src\shared</Filter>
+    </ClInclude>
     <ClInclude Include="..\src\shared\Commands.h">
       <Filter>src\shared</Filter>
     </ClInclude>
@@ -1062,6 +1065,9 @@
       <Filter>src\shared</Filter>
     </ClCompile>
     <ClCompile Include="..\src\shared\CommandAvailability.cpp">
+      <Filter>src\shared</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\shared\CommandPaletteCommon.cpp">
       <Filter>src\shared</Filter>
     </ClCompile>
     <ClCompile Include="..\src\shared\Commands.cpp">
