@@ -6,6 +6,7 @@
 
 import { join } from "node:path";
 import { ControlClient, ControlCommand } from "./control.ts";
+import { IS_MAC } from "./host.ts";
 import { ROOT, cmdId, runStandalone } from "./util.ts";
 import { MK_LBUTTON, packCoords, sendMessage, sleep, WM_LBUTTONDOWN, WM_LBUTTONUP } from "./winapi.ts";
 import { killAndWait, launchControlled, sendCommand } from "./win-automation.ts";
@@ -56,11 +57,23 @@ async function barState(client: ControlClient): Promise<BarState | null> {
   };
 }
 
-function clickPause(st: BarState): void {
+async function clickBar(client: ControlClient, st: BarState, kind: "down" | "up"): Promise<void> {
   const x = st.pause.x + Math.floor(st.pause.dx / 2);
   const y = st.pause.y + Math.floor(st.pause.dy / 2);
-  const lp = packCoords(x, y);
-  sendMessage(st.hwnd, WM_LBUTTONDOWN, MK_LBUTTON, lp);
+  if (IS_MAC) {
+    const res = await client.request(ControlCommand.TestToolWindow, ["input", "readaloudbar", kind, x, y, 0, 0]);
+    const raw = String(res[1] ?? "");
+    if ((res[0] as number) !== 0 || raw.startsWith("ERR")) {
+      throw new Error(`issue-6106: playback bar ${kind}: ${raw}`);
+    }
+    return;
+  }
+  sendMessage(
+    st.hwnd,
+    kind === "down" ? WM_LBUTTONDOWN : WM_LBUTTONUP,
+    kind === "down" ? MK_LBUTTON : 0,
+    packCoords(x, y),
+  );
 }
 
 export async function testit(): Promise<void> {
@@ -100,14 +113,9 @@ export async function testit(): Promise<void> {
     }
 
     // leave a gap between down and up so a SAPI word-boundary can relayout
-    clickPause(st);
+    await clickBar(client, st, "down");
     await sleep(250);
-    sendMessage(
-      st.hwnd,
-      WM_LBUTTONUP,
-      0,
-      packCoords(st.pause.x + Math.floor(st.pause.dx / 2), st.pause.y + Math.floor(st.pause.dy / 2)),
-    );
+    await clickBar(client, st, "up");
 
     const pauseDeadline = Date.now() + 3_000;
     for (;;) {
