@@ -561,6 +561,9 @@
     <ClInclude Include="..\src\shared\SumatraControlCommon.h">
       <Filter>src\shared</Filter>
     </ClInclude>
+    <ClInclude Include="..\src\shared\SumatraCrashCommon.h">
+      <Filter>src\shared</Filter>
+    </ClInclude>
     <ClInclude Include="..\src\shared\SumatraLog.h">
       <Filter>src\shared</Filter>
     </ClInclude>
@@ -1268,6 +1271,9 @@
     <ClCompile Include="..\src\shared\OleDragDropCommon_win.cpp">
       <Filter>src\shared</Filter>
     </ClCompile>
+    <ClCompile Include="..\src\shared\OpenFileFilters_win.cpp">
+      <Filter>src\shared</Filter>
+    </ClCompile>
     <ClCompile Include="..\src\shared\PageGridDialogCommon.cpp">
       <Filter>src\shared</Filter>
     </ClCompile>
@@ -1386,6 +1392,9 @@
       <Filter>src\shared</Filter>
     </ClCompile>
     <ClCompile Include="..\src\shared\SumatraControlCommon.cpp">
+      <Filter>src\shared</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\shared\SumatraCrashCommon.cpp">
       <Filter>src\shared</Filter>
     </ClCompile>
     <ClCompile Include="..\src\shared\SumatraLog.cpp">

@@ -28,6 +28,7 @@
 #include "ChapterTable.h"
 #include "ReadAloud.h"
 #include "SumatraCrashHandler.h"
+#include "SumatraCrashCommon.h"
 
 #include "SumatraLog.h"
 
@@ -50,10 +51,6 @@
 // where InstallCrashHandler() writes the .dmp, in the crash arena
 static Str gCrashDumpPath;
 
-// serialized settings, minus FileStates; lives in the crash arena so the
-// minidump comment can use it without allocating
-static Str gSettingsFile;
-
 // ng: orig has GetSumatraBuildSpecificDirTemp(); here the crash info goes next
 // to the screenshots, under the application data directory
 TempStr GetCrashInfoDirTemp() {
@@ -64,25 +61,9 @@ TempStr GetCrashInfoDirTemp() {
     return path::JoinTemp(dir, StrL("crashinfo"));
 }
 
-void CrashHandlerSetSettings(Str settings) {
-    Arena* a = CrashHandlerArena();
-    if (!a) {
-        return;
-    }
-    gSettingsFile = {};
-    if (len(settings) == 0) {
-        return;
-    }
-    gSettingsFile = str::Dup(a, settings);
-    // The file is UTF-8 BOM + CRLF. This comment is LF text; a BOM or CR
-    // here shows up as a blank line after every settings line.
-    str::TrimPrefix(gSettingsFile, StrL(kUtf8Bom));
-    str::NormalizeNewlinesToLFInPlace(gSettingsFile);
-}
-
 // Message from MuPDF's uncaught-throw abort (error.c). Looked up at crash time
 // so we do not need a hard link for every tool that builds CrashHandlerNoOp.
-static const char* LookupUncaughtMupdfError() {
+const char* LookupUncaughtMupdfError() {
 #if OS_WIN
     using Fn = const char* (*)();
     HMODULE h = GetModuleHandleW(nullptr);
@@ -97,37 +78,6 @@ static const char* LookupUncaughtMupdfError() {
     }
 #endif
     return nullptr;
-}
-
-static void AppendUncaughtMupdfError(Arena* a, str::Builder& b) {
-    const char* msg = LookupUncaughtMupdfError();
-    if (!msg || !msg[0]) {
-        return;
-    }
-    // High-visibility: a crash with nothing interesting on the stack (the
-    // intentional null-write) still needs to explain the real failure
-    // (MuPDF throw with no fz_try).
-    b.Append(str::Format(a, "Uncaught MuPDF error: %s\n\n", Str(msg)));
-}
-
-static void AppendLogAndSettings(str::Builder& b) {
-    b.Append(StrL("\n-------- Log -----------------\n\n"));
-    if (gLogBuf) {
-        b.Append(ToStr(*gLogBuf));
-    } else {
-        b.Append(StrL("(no log - crashed before initializing logging)\n"));
-    }
-    if (len(gSettingsFile) == 0) {
-        return;
-    }
-    b.Append(StrL("\n--- settings ---\n"));
-    b.Append(gSettingsFile);
-    b.Append(StrL("\n"));
-}
-
-static TempStr GetFileSizeAsStrTemp(Str path) {
-    i64 fileSize = file::GetSize(path);
-    return str::FormatFileSizeTemp(fileSize);
 }
 
 static void GetProgramInfo(str::Builder& b) {
@@ -224,10 +174,6 @@ static Str GetCrashComment(Arena* a, Str condStr, Str fileLine, bool isCrash) {
     }
     AppendLogAndSettings(b);
     return ToStr(b);
-}
-
-static void OnCrashBegin() {
-    gReducedLogging = true;
 }
 
 // FileStates are the largest part and we don't need them in a crash report

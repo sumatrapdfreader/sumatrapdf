@@ -1558,6 +1558,7 @@
     <ClInclude Include="..\src\shared\StressTesting.h" />
     <ClInclude Include="..\src\shared\SumatraControl.h" />
     <ClInclude Include="..\src\shared\SumatraControlCommon.h" />
+    <ClInclude Include="..\src\shared\SumatraCrashCommon.h" />
     <ClInclude Include="..\src\shared\SumatraLog.h" />
     <ClInclude Include="..\src\shared\SumatraPDFCommon.h" />
     <ClInclude Include="..\src\shared\SumatraTest.h" />
@@ -2185,6 +2186,7 @@
     <ClCompile Include="..\src\shared\MobiDoc.cpp" />
     <ClCompile Include="..\src\shared\NavFilesInFolderCommon.cpp" />
     <ClCompile Include="..\src\shared\OleDragDropCommon_win.cpp" />
+    <ClCompile Include="..\src\shared\OpenFileFilters_win.cpp" />
     <ClCompile Include="..\src\shared\PageGridDialogCommon.cpp" />
     <ClCompile Include="..\src\shared\PagePosition.cpp" />
     <ClCompile Include="..\src\shared\PalmDbReader.cpp" />
@@ -2233,6 +2235,7 @@
     <ClCompile Include="..\src\shared\StressTesting.cpp" />
     <ClCompile Include="..\src\shared\SumatraConfig.cpp" />
     <ClCompile Include="..\src\shared\SumatraControlCommon.cpp" />
+    <ClCompile Include="..\src\shared\SumatraCrashCommon.cpp" />
     <ClCompile Include="..\src\shared\SumatraLog.cpp" />
     <ClCompile Include="..\src\shared\SumatraPDFCommon.cpp" />
     <ClCompile Include="..\src\shared\SumatraTestCommon.cpp" />

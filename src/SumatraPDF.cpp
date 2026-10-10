@@ -143,6 +143,8 @@
 #include "SumatraPDF.h"
 #include "PerfLog.h"
 #include "SumatraPDFCommon.h"
+#include "SumatraCrashCommon.h"
+#include "OpenFileFilters.h"
 #include "SumatraLog.h"
 
 using Gdiplus::Graphics;
@@ -6150,80 +6152,6 @@ static void DuplicateInNewTab(MainWindow* win) {
         SetTabState(win->CurrentTab(), state);
         DeleteTabState(state);
     }
-}
-
-// File-type filters for IFileOpenDialog. Heap-owned wide strings stay alive
-// for the whole Show() call (modal dialog pumps messages / temp arena).
-struct OpenFileFilterList {
-    Vec<WStr> names;
-    Vec<WStr> patterns;
-    Vec<COMDLG_FILTERSPEC> specs;
-
-    ~OpenFileFilterList() {
-        for (int i = 0; i < len(names); i++) {
-            wstr::Free(names[i]);
-        }
-        for (int i = 0; i < len(patterns); i++) {
-            wstr::Free(patterns[i]);
-        }
-    }
-
-    void Add(Str name, Str pattern) {
-        WStr nw = ToWStr(name);
-        WStr pw = ToWStr(pattern);
-        VecAppend(names, nw);
-        VecAppend(patterns, pw);
-        COMDLG_FILTERSPEC s{};
-        s.pszName = nw.s;
-        s.pszSpec = pw.s;
-        VecAppend(specs, s);
-    }
-};
-
-static void BuildOpenFileFilters(OpenFileFilterList& out) {
-    const struct {
-        Str name;
-        Str filter;
-        bool available;
-    } fileFormats[] = {
-        {Tr("PDF documents"), StrL("*.pdf;*.p7m"), true},
-        {Tr("XPS documents"), StrL("*.xps;*.oxps"), true},
-        {Tr("DjVu documents"), StrL("*.djvu"), true},
-        {Tr("PostScript documents"), StrL("*.ps;*.eps"), IsEnginePsAvailable()},
-        {Tr("DVI documents"), StrL("*.dvi"), IsEngineDviAvailable()},
-        {Tr("Comic books"), StrL("*.cbz;*.cbr;*.cb7;*.cbt"), true},
-        {Tr("CHM documents"), StrL("*.chm"), true},
-        {Tr("SVG documents"), StrL("*.svg"), true},
-        {Tr("EPUB ebooks"), StrL("*.epub"), true},
-        {Tr("Microsoft Reader ebooks"), StrL("*.lit"), true},
-        {Tr("Markdown documents"), StrL("*.md;*.markdown"), true},
-        {Tr("Mobi documents"), StrL("*.mobi"), true},
-        {Tr("FictionBook documents"), StrL("*.fb2;*.fb2z;*.zfb2;*.fb2.zip"), true},
-        {Tr("PalmDoc documents"), StrL("*.pdb;*.prc"), true},
-        {Tr("Images"),
-         StrL("*.bmp;*.dib;*.gif;*.jpg;*.jpeg;*.jfif;*.jxr;*.hdp;*.wdp;*.png;*.tga;*.tif;*.tiff;*.webp;*.heic;*.heif;"
-              "*.avif;*.jxl;*.jp2;*.j2k;*.jpx;*.jpf;*.jpm;*.j2c;*.ico"),
-         true},
-        {Tr("Text documents"), StrL("*.txt;*.log;*.nfo;file_id.diz;read.me;*.tcr"), true},
-    };
-
-    str::Builder allPat;
-    for (const auto& ff : fileFormats) {
-        if (!ff.available) {
-            continue;
-        }
-        if (len(allPat) > 0) {
-            allPat.AppendChar(';');
-        }
-        allPat.Append(ff.filter);
-    }
-    out.Add(Tr("All supported documents"), ToStr(allPat));
-    for (const auto& ff : fileFormats) {
-        if (ff.available && ff.name) {
-            out.Add(ff.name, ff.filter);
-        }
-    }
-    out.Add(Tr("All files"), StrL("*.*"));
 }
 
 // Standard Windows IFileOpenDialog multi-select open.
@@ -16319,11 +16247,6 @@ static void LogOsInfo() {
         (int)IsArmBuild(), CpuCoreCount(), (int)IsRunningOnWine());
 }
 
-static TempStr GetFileSizeAsStrTemp(Str path) {
-    i64 fileSize = file::GetSize(path);
-    return str::FormatFileSizeTemp(fileSize);
-}
-
 static void GetProgramInfo(str::Builder& b) {
     TempStr exePath = GetSelfExePathTemp();
     auto fileSizeExe = GetFileSizeAsStrTemp(exePath);
@@ -16404,30 +16327,10 @@ static void ShowCrashHandlerMessage() {
 // where InstallCrashHandler() writes the .dmp, in the crash arena
 static Str gCrashDumpPath;
 
-// serialized settings, minus FileStates; lives in the crash arena so the
-// minidump comment can use it without allocating
-static Str gSettingsFile;
-
-void CrashHandlerSetSettings(Str settings) {
-    Arena* a = CrashHandlerArena();
-    if (!a) {
-        return;
-    }
-    gSettingsFile = {};
-    if (len(settings) == 0) {
-        return;
-    }
-    gSettingsFile = str::Dup(a, settings);
-    // The file is UTF-8 BOM + CRLF. This comment is LF text; a BOM or CR
-    // here shows up as a blank line after every settings line.
-    str::TrimPrefix(gSettingsFile, StrL(kUtf8Bom));
-    str::NormalizeNewlinesToLFInPlace(gSettingsFile);
-}
-
 // Message from MuPDF's uncaught-throw abort (error.c). Looked up at crash time
 // so we do not need a hard link for every tool that builds CrashHandlerNoOp.
 // libsumatrapdf.dll (or the static main module) exports fz_last_uncaught_error.
-static const char* LookupUncaughtMupdfError() {
+const char* LookupUncaughtMupdfError() {
     using Fn = const char* (*)();
     HMODULE modules[2] = {
         GetModuleHandleW(L"libsumatrapdf.dll"),
@@ -16446,32 +16349,6 @@ static const char* LookupUncaughtMupdfError() {
         }
     }
     return nullptr;
-}
-
-static void AppendUncaughtMupdfError(Arena* a, str::Builder& b) {
-    const char* msg = LookupUncaughtMupdfError();
-    if (!msg || !msg[0]) {
-        return;
-    }
-    // High-visibility: a crash with nothing interesting on the stack (the
-    // intentional null-write) still needs to explain the real failure
-    // (MuPDF throw with no fz_try).
-    b.Append(str::Format(a, "Uncaught MuPDF error: %s\n\n", Str(msg)));
-}
-
-static void AppendLogAndSettings(str::Builder& b) {
-    b.Append(StrL("\n-------- Log -----------------\n\n"));
-    if (gLogBuf) {
-        b.Append(ToStr(*gLogBuf));
-    } else {
-        b.Append(StrL("(no log - crashed before initializing logging)\n"));
-    }
-    if (len(gSettingsFile) == 0) {
-        return;
-    }
-    b.Append(StrL("\n--- settings ---\n"));
-    b.Append(gSettingsFile);
-    b.Append(StrL("\n"));
 }
 
 // The .dmp we write alongside this already has the stacks, the modules and the
@@ -16512,10 +16389,6 @@ static Str GetCrashComment(Arena* a, Str condStr, Str fileLine, bool isCrash) {
     }
     AppendLogAndSettings(b);
     return ToStr(b);
-}
-
-static void OnCrashBegin() {
-    gReducedLogging = true;
 }
 
 // FileStates are the largest part and we don't need them in a crash report

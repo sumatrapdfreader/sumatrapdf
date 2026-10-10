@@ -1473,6 +1473,7 @@ export const targets: Target[] = [
       "src/ng/gui/OleDragDrop_win.cpp",
       "src/ng/OleDragDropCommon_win.cpp",
       "src/ng/gui/NativeFileDlg_win.cpp",
+      "src/ng/OpenFileFilters_win.cpp",
       "src/ng/gui/NativeMsgBox_win.cpp",
       "src/ng/gui/NativeCursors_win.cpp",
       "src/ng/LaserPointerCursor_win.cpp",
@@ -1499,6 +1500,7 @@ export const targets: Target[] = [
       // ng: what the shell still owes the layers below it (step 9/12/14/17)
       "src/ng/ShellStubs.cpp",
       "src/ng/SumatraCrashHandler.cpp",
+      "src/ng/SumatraCrashCommon.cpp",
       // the app links the real crash handler; the console tools link
       // src/CrashHandlerNoOp.cpp instead, as orig does
       "src/ng/base/CrashHandler.cpp",

@@ -420,6 +420,8 @@ function sumatrapdf_files()
     "SumatraControlCommon.*",
     "SumatraDialogs.*",
     "SumatraPDF.cpp",
+    "OpenFileFilters_win.*",
+    "SumatraCrashCommon.*",
     "SumatraPDFCommon.*",
     "SumatraPDF.h",
     "SumatraPDF.rc",
