@@ -409,6 +409,7 @@ function sumatrapdf_files()
     "Selection.*",
     "SelectionHandlers.*",
     "SelectionToolbar.*",
+    "SelectionToolbarCommon.*",
     "SelectionTranslate.*",
     "SelectionTranslateCommon.*",
     "Settings.*",

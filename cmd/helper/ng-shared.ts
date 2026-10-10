@@ -154,6 +154,8 @@ export const sharedFiles = [
   "src/shared/RefHoverPopupCommon.h",
   "src/shared/SearchAndDDECommon.cpp",
   "src/shared/SearchAndDDECommon.h",
+  "src/shared/SelectionToolbarCommon.cpp",
+  "src/shared/SelectionToolbarCommon.h",
   "src/shared/SelectionTranslateCommon.cpp",
   "src/shared/SelectionTranslateCommon.h",
   "src/shared/SignDocumentDialogCommon.cpp",

@@ -35,6 +35,7 @@
 #include "SelectionToolbar.h"
 #include "SvgIcons.h"
 #include "Toolbar.h"
+#include "SelectionToolbarCommon.h"
 
 #include "SumatraLog.h"
 
@@ -42,16 +43,6 @@ static Kind kNotifCopiedToClipboard = "notifCopiedToClipboard";
 constexpr int kCopiedNotifTimeoutMs = 1500;
 // orig's kSelectionToolbarShowDelayInMs (Canvas.h)
 constexpr int kShowDelayInMs = 500;
-
-struct SelectionToolbarButton {
-    int cmdId = 0;
-    Str label; // English literal, translated for the button text
-    // a SelectionHandlers entry's own label (SelectToolbarNameOrSvg / its name),
-    // shown verbatim. `label` is empty then
-    Str userLabel;
-    Str svgIcon;
-    bool enabled = true;
-};
 
 struct SelectionToolbar {
     MainWindow* win = nullptr;
@@ -67,88 +58,9 @@ struct SelectionToolbar {
     gp::Bounds measured;
 };
 
-// candidate buttons; per-window visibility/enabled state comes from
-// GetCommandVisibility (hidden buttons are dropped)
-static const SelectionToolbarButton gCandidateButtons[] = {
-    {CmdCopySelection, TrN("Copy to clipboard"), {}, Str(gIconCopy)},
-    {CmdTranslateSelection, StrL("Translate"), {}, Str(gIconTranslate)},
-    {CmdReadAloudSelection, StrL("Read Aloud"), {}, Str(gIconSpeak)},
-    {CmdCreateAnnotHighlight, StrL("Highlight"), {}, Str(gIconAnnotHighlight)},
-    {CmdCreateAnnotUnderline, StrL("Underline"), {}, Str(gIconAnnotUnderline)},
-    {CmdCreateAnnotSquiggly, StrL("Squiggly"), {}, Str(gIconAnnotSquiggly)},
-    {CmdCreateAnnotStrikeOut, StrL("Strike Out"), {}, Str(gIconAnnotStrikeOut)},
-    {CmdCreateAnnotText, TrN("Add text annotation"), {}, Str(gIconAnnotText)},
-};
-
 // a selection handler shows its own label; a built-in one the translated one
 static Str ButtonLabel(const SelectionToolbarButton& b) {
     return len(b.userLabel) > 0 ? b.userLabel : Tr(b.label);
-}
-
-static const SelectionToolbarButton* FindCandidateButton(int cmdId) {
-    if (cmdId <= 0) {
-        return nullptr;
-    }
-    for (const SelectionToolbarButton& cand : gCandidateButtons) {
-        if (cand.cmdId == cmdId) {
-            return &cand;
-        }
-    }
-    return nullptr;
-}
-
-// Built-in buttons the selection toolbar should offer, in order.
-// Empty SelectionToolbarLayout is the standard set; otherwise the setting
-// lists command names (discussion #6015).
-static void CollectBuiltInSelectionToolbarCmds(Vec<int>& out) {
-    VecReset(out);
-    auto addDefault = [&out]() {
-        for (const SelectionToolbarButton& cand : gCandidateButtons) {
-            VecAppend(out, cand.cmdId);
-        }
-    };
-    Str setting = gSettings ? gSettings->selectionToolbarLayout : Str{};
-    if (str::IsEmptyOrWhiteSpace(setting)) {
-        addDefault();
-        return;
-    }
-    TempStr normalized = str::ReplaceTemp(setting, StrL(","), StrL(" "));
-    normalized = str::ReplaceTemp(normalized, StrL(";"), StrL(" "));
-    StrVec names;
-    Split(&names, normalized, StrL(" "), true);
-    int nButtons = 0;
-    for (Str name : names) {
-        Str tok = name;
-        str::TrimWSInPlace(tok, str::TrimOpt::Both);
-        if (len(tok) == 0) {
-            continue;
-        }
-        if (str::Eq(tok, StrL("|")) || str::EqI(tok, StrL("Separator"))) {
-            VecAppend(out, 0);
-            continue;
-        }
-        const SelectionToolbarButton* found = FindCandidateButton(GetCommandIdByName(tok));
-        if (!found) {
-            logf("SelectionToolbarLayout: no selection-toolbar button for '%s'\n", tok);
-            continue;
-        }
-        bool already = false;
-        for (int i = 0; i < len(out); i++) {
-            if (out[i] == found->cmdId) {
-                already = true;
-                break;
-            }
-        }
-        if (!already) {
-            VecAppend(out, found->cmdId);
-            nButtons++;
-        }
-    }
-    if (nButtons == 0) {
-        logf("SelectionToolbarLayout: nothing usable in '%s', using the standard layout\n", setting);
-        VecReset(out);
-        addDefault();
-    }
 }
 
 // selection handlers that asked for a button with SelectToolbarNameOrSvg
@@ -180,26 +92,6 @@ static void AppendSelectionHandlerButtons(SelectionToolbar* tb, const AppCommand
     }
 }
 
-// Remove separators that would be leading, trailing, or adjacent after
-// unavailable commands have been dropped.
-static void NormalizeSelectionToolbarSeparators(Vec<SelectionToolbarButton>& buttons) {
-    int dst = 0;
-    bool separatorPending = false;
-    for (int i = 0; i < len(buttons); i++) {
-        SelectionToolbarButton b = buttons[i];
-        if (b.cmdId == 0) {
-            separatorPending = dst > 0;
-            continue;
-        }
-        if (separatorPending) {
-            buttons[dst++] = {};
-            separatorPending = false;
-        }
-        buttons[dst++] = b;
-    }
-    buttons.len = dst;
-}
-
 static void InitButtons(SelectionToolbar* tb, MainWindow* win) {
     AppCommandCtx ctx = NewAppCommandCtx(win);
     VecReset(tb->buttons);
@@ -224,11 +116,6 @@ static void InitButtons(SelectionToolbar* tb, MainWindow* win) {
     }
     AppendSelectionHandlerButtons(tb, ctx);
     NormalizeSelectionToolbarSeparators(tb->buttons);
-}
-
-static bool IsActivelySelecting(MainWindow* win) {
-    MouseAction ma = win->mouseAction;
-    return ma == MouseAction::Selecting || ma == MouseAction::SelectingText;
 }
 
 static SelectionToolbar* GetOrCreateToolbar(MainWindow* win) {
@@ -403,13 +290,6 @@ void HideSelectionToolbar(MainWindow* win) {
     tb->visible = false;
     tb->tab = nullptr;
     AppShellInvalidate(win);
-}
-
-// The selection changed or went away: a new one gets the toolbar again.
-void ResetSelectionToolbarDismissed(MainWindow* win) {
-    if (win && win->selectionToolbar) {
-        win->selectionToolbar->dismissed = false;
-    }
 }
 
 void DeleteSelectionToolbar(MainWindow* win) {
@@ -637,4 +517,11 @@ TempStr SelectionToolbarClickTemp(Str cmdName, int* exitCodeOut) {
     }
     InvokeSelectionToolbarCommand(win, cmdId);
     return finish(StrL("OK\n"), 0);
+}
+
+// The selection changed or went away: a new one gets the toolbar again.
+void ResetSelectionToolbarDismissed(MainWindow* win) {
+    if (win && win->selectionToolbar) {
+        win->selectionToolbar->dismissed = false;
+    }
 }

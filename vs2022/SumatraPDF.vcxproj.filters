@@ -537,6 +537,9 @@
     <ClInclude Include="..\src\shared\SelectionToolbar.h">
       <Filter>src\shared</Filter>
     </ClInclude>
+    <ClInclude Include="..\src\shared\SelectionToolbarCommon.h">
+      <Filter>src\shared</Filter>
+    </ClInclude>
     <ClInclude Include="..\src\shared\SelectionTranslate.h">
       <Filter>src\shared</Filter>
     </ClInclude>
@@ -1362,6 +1365,9 @@
       <Filter>src\shared</Filter>
     </ClCompile>
     <ClCompile Include="..\src\shared\SelectionHandlers.cpp">
+      <Filter>src\shared</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\shared\SelectionToolbarCommon.cpp">
       <Filter>src\shared</Filter>
     </ClCompile>
     <ClCompile Include="..\src\shared\SelectionTranslateCommon.cpp">
