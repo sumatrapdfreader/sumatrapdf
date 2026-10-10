@@ -19,6 +19,7 @@
 import { writeFileSync } from "node:fs";
 import { deflateSync } from "node:zlib";
 import { ControlCommand } from "./control.ts";
+import { IS_MAC } from "./host.ts";
 import { cmdId, tmpPath, USE_NG } from "./util.ts";
 import { findCanvas, launchControlled, killAndWait, sendCommandSync } from "./win-automation.ts";
 import { captureWindowPixels, getClientRect } from "./winapi.ts";
@@ -208,6 +209,10 @@ function isRed(c: Color): boolean {
 }
 
 export async function testit(): Promise<void> {
+  if (IS_MAC) {
+    console.log("SKIP issue-5844: transparent-image colors are read from a window DC");
+    return;
+  }
   const png = tmpPath("issue-5844.png");
   writeFileSync(png, makeHalfTransparentPng(400, 400));
 
