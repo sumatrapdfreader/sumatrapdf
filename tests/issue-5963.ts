@@ -10,6 +10,7 @@
 
 import { existsSync, rmSync, writeFileSync } from "node:fs";
 import { ControlCommand } from "./control.ts";
+import { IS_MAC } from "./host.ts";
 import { cmdId, runStandalone, tmpPath, USE_NG } from "./util.ts";
 import { killAndWait, launchControlled, sendCommand } from "./win-automation.ts";
 import {
@@ -163,13 +164,17 @@ export async function testit(): Promise<void> {
   const { proc, client, frame } = await launchControlled([pdf]);
   try {
     await client.waitForRenderIdle();
-    const pid = getWindowPid(frame);
     sendCommand(frame, cmdId("CmdSignDocument"));
-    const dlg = await waitFor("Sign Document dialog", () =>
-      USE_NG
-        ? findTopWindow(pid, "GpuiSystemMonitor", "Sign Document")
-        : findTopWindow(pid, "SumatraWgDefaultWinClass", "Sign Document"),
-    );
+    // macOS has no HWND for the dialog. The checks below read it over control.
+    let dlg = 0;
+    if (!IS_MAC) {
+      const pid = getWindowPid(frame);
+      dlg = await waitFor("Sign Document dialog", () =>
+        USE_NG
+          ? findTopWindow(pid, "GpuiSystemMonitor", "Sign Document")
+          : findTopWindow(pid, "SumatraWgDefaultWinClass", "Sign Document"),
+      );
+    }
 
     const want = [
       [/labels/i, "Show labels"],
@@ -224,8 +229,17 @@ export async function testit(): Promise<void> {
       }
     }
     console.log("  Sign Document offers appearance checkboxes, all on by default ✓");
-    postMessage(dlg, WM_CLOSE, 0, 0);
+    if (IS_MAC) {
+      await client.request(ControlCommand.TestToolWindow, ["close", "signdocument"]);
+    } else {
+      postMessage(dlg, WM_CLOSE, 0, 0);
+    }
     await sleep(200);
+
+    if (IS_MAC) {
+      console.log("SKIP issue-5963 sign: the test certificate is created in the Windows certificate store");
+      return;
+    }
 
     const thumb = makeTestCert();
     if (!thumb) {
