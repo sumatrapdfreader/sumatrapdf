@@ -11,6 +11,7 @@ import { mkdirSync, rmSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 import { cmdId, runStandalone, tmpPath } from "./util.ts";
 import { ControlCommand } from "./control.ts";
+import { IS_MAC } from "./host.ts";
 import { findCanvas, killAndWait, launchControlled, sendCommandSync } from "./win-automation.ts";
 import { readWindowDCColumn, setProcessDpiAware, sleep } from "./winapi.ts";
 
@@ -177,26 +178,30 @@ export async function testit(): Promise<void> {
     }
 
     await c0.setNotificationsEnabled(false);
-    const canvas = findCanvas(f0);
-    if (!canvas) {
-      throw new Error("issue-6018: canvas not found");
-    }
-    const p1 = z.pages.find((p) => p.n === 1)!;
-    const x = p1.sx + Math.floor(p1.sdx / 2);
-    const y = p1.sy + p1.sdy - 2;
-    const col = readWindowDCColumn(canvas, x, y, 5);
-    const hex = col.map((c) => c.toString(16)).join(",");
-    const isBlack = (c: number) => c === 0;
-    if (col.slice(1, 4).some(isBlack)) {
-      throw new Error(`issue-6018: 1px canvas seam between pages at y=${y}: ${hex}\n${z.raw}`);
-    }
-    // last pixel of page 1 / first of page 2: GDI+ bicubic without wrap-mode
-    // darkens these toward the black canvas (issue #6018 follow-up)
-    if (colorDist(col[1]!, kPage1Color) > 80) {
-      throw new Error(`issue-6018: page 1 edge darkened at y=${y + 1}: ${hex}\n${z.raw}`);
-    }
-    if (colorDist(col[2]!, kPage2Color) > 80) {
-      throw new Error(`issue-6018: page 2 edge darkened at y=${y + 2}: ${hex}\n${z.raw}`);
+    if (IS_MAC) {
+      console.log("SKIP issue-6018 page-edge pixels: macOS has no window DC");
+    } else {
+      const canvas = findCanvas(f0);
+      if (!canvas) {
+        throw new Error("issue-6018: canvas not found");
+      }
+      const p1 = z.pages.find((p) => p.n === 1)!;
+      const x = p1.sx + Math.floor(p1.sdx / 2);
+      const y = p1.sy + p1.sdy - 2;
+      const col = readWindowDCColumn(canvas, x, y, 5);
+      const hex = col.map((c) => c.toString(16)).join(",");
+      const isBlack = (c: number) => c === 0;
+      if (col.slice(1, 4).some(isBlack)) {
+        throw new Error(`issue-6018: 1px canvas seam between pages at y=${y}: ${hex}\n${z.raw}`);
+      }
+      // last pixel of page 1 / first of page 2: GDI+ bicubic without wrap-mode
+      // darkens these toward the black canvas (issue #6018 follow-up)
+      if (colorDist(col[1]!, kPage1Color) > 80) {
+        throw new Error(`issue-6018: page 1 edge darkened at y=${y + 1}: ${hex}\n${z.raw}`);
+      }
+      if (colorDist(col[2]!, kPage2Color) > 80) {
+        throw new Error(`issue-6018: page 2 edge darkened at y=${y + 2}: ${hex}\n${z.raw}`);
+      }
     }
 
     sendCommandSync(f0, cmdId("CmdAdvancedSettings"));
