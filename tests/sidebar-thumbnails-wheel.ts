@@ -6,6 +6,7 @@
 import { mkdirSync, rmSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 import { ControlClient, ControlCommand } from "./control.ts";
+import { IS_MAC } from "./host.ts";
 import { cmdId, makePdf, runStandalone, tmpPath, USE_NG } from "./util.ts";
 import { clientToScreen, getScrollPos, packCoords, sendMessage, SB_HORZ, SB_VERT, sleep } from "./winapi.ts";
 import { findCanvas, killAndWait, launchControlled, sendCommand } from "./win-automation.ts";
@@ -49,7 +50,8 @@ async function waitFor(what: string, f: () => Promise<boolean>) {
 // a wheel message as Windows sends it: delta in the high word, cursor in screen coords.
 // orig's thumbnail hwnd has its list at (40, 60). ng reports the frame, so aim at a cell.
 function wheel(hwnd: number, msg: number, delta: number, x = 40, y = 60) {
-  const pt = clientToScreen(hwnd, x, y);
+  // Windows lParam is screen coordinates. macOS sendMessage takes frame pixels.
+  const pt = IS_MAC ? { x, y } : clientToScreen(hwnd, x, y);
   const wp = BigInt((delta & 0xffff) << 16);
   sendMessage(hwnd, msg, wp, packCoords(pt.x, pt.y));
 }
