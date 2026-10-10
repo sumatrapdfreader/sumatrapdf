@@ -336,6 +336,7 @@ function sumatrapdf_files()
     "FavoritesCommon.*",
     "FileHistory.*",
     "FileThumbnails.*",
+    "FileThumbnailsCommon.*",
     "Flags.*",
     "FindBar.*",
     "FindWindow.*",

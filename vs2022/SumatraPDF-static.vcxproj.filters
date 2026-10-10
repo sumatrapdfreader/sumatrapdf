@@ -363,6 +363,9 @@
     <ClInclude Include="..\src\shared\FileThumbnails.h">
       <Filter>src\shared</Filter>
     </ClInclude>
+    <ClInclude Include="..\src\shared\FileThumbnailsCommon.h">
+      <Filter>src\shared</Filter>
+    </ClInclude>
     <ClInclude Include="..\src\shared\FilterHighlightDraw.h">
       <Filter>src\shared</Filter>
     </ClInclude>
@@ -1155,6 +1158,9 @@
       <Filter>src\shared</Filter>
     </ClCompile>
     <ClCompile Include="..\src\shared\FileHistory.cpp">
+      <Filter>src\shared</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\shared\FileThumbnailsCommon.cpp">
       <Filter>src\shared</Filter>
     </ClCompile>
     <ClCompile Include="..\src\shared\FilterUtil.cpp">

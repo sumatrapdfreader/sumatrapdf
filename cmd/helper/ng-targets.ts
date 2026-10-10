@@ -490,6 +490,7 @@ const appSources = [
   "src/ng/EmbeddedResources.cpp",
   "src/ng/FileHistory.cpp",
   "src/ng/FileThumbnails.cpp",
+  "src/ng/FileThumbnailsCommon.cpp",
   "src/ng/Flags.cpp",
   "src/ng/MarkdownModel.cpp",
   "src/ng/MarkdownToc.cpp",

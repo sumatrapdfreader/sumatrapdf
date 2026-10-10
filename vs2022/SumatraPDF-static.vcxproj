@@ -1477,6 +1477,7 @@
     <ClInclude Include="..\src\shared\Favorites.h" />
     <ClInclude Include="..\src\shared\FileHistory.h" />
     <ClInclude Include="..\src\shared\FileThumbnails.h" />
+    <ClInclude Include="..\src\shared\FileThumbnailsCommon.h" />
     <ClInclude Include="..\src\shared\FilterHighlightDraw.h" />
     <ClInclude Include="..\src\shared\FilterUtil.h" />
     <ClInclude Include="..\src\shared\FindBar.h" />
@@ -2131,6 +2132,7 @@
     <ClCompile Include="..\src\shared\ExternalViewers.cpp" />
     <ClCompile Include="..\src\shared\FavoritesCommon.cpp" />
     <ClCompile Include="..\src\shared\FileHistory.cpp" />
+    <ClCompile Include="..\src\shared\FileThumbnailsCommon.cpp" />
     <ClCompile Include="..\src\shared\FilterUtil.cpp" />
     <ClCompile Include="..\src\shared\Flags.cpp" />
     <ClCompile Include="..\src\shared\GoogleLens.cpp" />
