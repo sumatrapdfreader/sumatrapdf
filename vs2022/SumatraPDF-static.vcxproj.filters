@@ -477,6 +477,9 @@
     <ClInclude Include="..\src\shared\SelectionTranslate.h">
       <Filter>src\shared</Filter>
     </ClInclude>
+    <ClInclude Include="..\src\shared\SelectionTranslateCommon.h">
+      <Filter>src\shared</Filter>
+    </ClInclude>
     <ClInclude Include="..\src\shared\ShortcutParse.h">
       <Filter>src\shared</Filter>
     </ClInclude>
@@ -1218,6 +1221,9 @@
       <Filter>src\shared</Filter>
     </ClCompile>
     <ClCompile Include="..\src\shared\SelectionHandlers.cpp">
+      <Filter>src\shared</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\shared\SelectionTranslateCommon.cpp">
       <Filter>src\shared</Filter>
     </ClCompile>
     <ClCompile Include="..\src\shared\ShortcutParse.cpp">

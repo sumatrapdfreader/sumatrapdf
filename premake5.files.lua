@@ -386,6 +386,7 @@ function sumatrapdf_files()
     "SelectionHandlers.*",
     "SelectionToolbar.*",
     "SelectionTranslate.*",
+    "SelectionTranslateCommon.*",
     "Settings.*",
     "SimpleBrowserWindow.*",
     "StressTesting.*",

@@ -1530,6 +1530,7 @@
     <ClInclude Include="..\src\shared\SelectionHandlers.h" />
     <ClInclude Include="..\src\shared\SelectionToolbar.h" />
     <ClInclude Include="..\src\shared\SelectionTranslate.h" />
+    <ClInclude Include="..\src\shared\SelectionTranslateCommon.h" />
     <ClInclude Include="..\src\shared\ShortcutParse.h" />
     <ClInclude Include="..\src\shared\StressTesting.h" />
     <ClInclude Include="..\src\shared\SumatraControl.h" />
@@ -2178,6 +2179,7 @@
     <ClCompile Include="..\src\shared\SelectionHandlers.cpp">
       <PrecompiledHeader>NotUsing</PrecompiledHeader>
     </ClCompile>
+    <ClCompile Include="..\src\shared\SelectionTranslateCommon.cpp" />
     <ClCompile Include="..\src\shared\ShortcutParse.cpp" />
     <ClCompile Include="..\src\shared\StressTesting.cpp" />
     <ClCompile Include="..\src\shared\SumatraConfig.cpp" />
