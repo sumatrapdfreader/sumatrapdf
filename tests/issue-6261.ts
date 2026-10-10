@@ -5,6 +5,7 @@
 // Run: bun tests/issue-6261.ts [--no-build]
 
 import { writeFileSync } from "node:fs";
+import { IS_MAC } from "./host.ts";
 import { makeOnePagePdf, runStandalone, tmpPath } from "./util.ts";
 import {
   clientToScreen,
@@ -40,6 +41,10 @@ function mouse(frame: number, msg: number, mk: number, pt: { x: number; y: numbe
 }
 
 export async function testit(): Promise<void> {
+  if (IS_MAC) {
+    console.log("SKIP issue-6261: macOS has no caption system menu");
+    return;
+  }
   const pdf = tmpPath("issue-6261.pdf");
   writeFileSync(pdf, makeOnePagePdf(), "latin1");
   const { proc, client, frame } = await launchControlled([pdf]);
