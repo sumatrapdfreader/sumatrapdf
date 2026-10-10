@@ -6,6 +6,7 @@
 import { mkdirSync, rmSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 import type { ControlClient, HomeSelection } from "./control.ts";
+import { IS_MAC } from "./host.ts";
 import { runStandalone, tmpPath, USE_NG } from "./util.ts";
 import { captureWindowDCRegionPixels, captureWindowPixels, postMessage, sleep } from "./winapi.ts";
 import { findCanvas, killAndWait, launchControlled } from "./win-automation.ts";
@@ -64,7 +65,7 @@ export async function testit(): Promise<void> {
       }
       return out;
     };
-    const beforePixels = tipPixels();
+    const beforePixels = IS_MAC ? null : tipPixels();
 
     postMessage(canvas, WM_LBUTTONDOWN, MK_LBUTTON, at);
     postMessage(canvas, WM_LBUTTONUP, 0, at);
@@ -88,12 +89,16 @@ export async function testit(): Promise<void> {
       throw new Error(`home-tip-double-click: a double-click didn't change the tip ${before.tip}`);
     }
     // and the band shows it
-    const drawnDeadline = Date.now() + 3000;
-    while (Buffer.compare(tipPixels(), beforePixels) === 0) {
-      if (Date.now() > drawnDeadline) {
-        throw new Error(`home-tip-double-click: the tip changed ${before.tip} -> ${after.tip} but wasn't redrawn`);
+    if (IS_MAC) {
+      console.log("SKIP home-tip-double-click redraw: macOS has no window DC");
+    } else {
+      const drawnDeadline = Date.now() + 3000;
+      while (Buffer.compare(tipPixels(), beforePixels!) === 0) {
+        if (Date.now() > drawnDeadline) {
+          throw new Error(`home-tip-double-click: the tip changed ${before.tip} -> ${after.tip} but wasn't redrawn`);
+        }
+        await sleep(50);
       }
-      await sleep(50);
     }
     console.log("home-tip-double-click: OK");
   } finally {
