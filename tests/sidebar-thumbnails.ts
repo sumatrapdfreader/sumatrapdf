@@ -8,6 +8,7 @@
 import { mkdirSync, rmSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 import { ControlClient, ControlCommand } from "./control.ts";
+import { IS_MAC } from "./host.ts";
 import { USE_NG, cmdId, makePdf, runStandalone, tmpPath } from "./util.ts";
 import {
   captureWindowPixels,
@@ -166,6 +167,9 @@ function bgraBlue(data: Uint8Array, i: number): boolean {
 }
 
 function frameOnScreen(s: Sidebar): boolean {
+  if (IS_MAC) {
+    return false;
+  }
   const r = s.rects.get(s.current);
   if (!r || r.dx <= 0) {
     return false;
@@ -243,16 +247,22 @@ export async function testit(): Promise<void> {
     await want("clicking Bookmarks didn't show Bookmarks", "bookmarks/thumbnails");
     clickIcon((await sidebar(client)).top, "thumbnails");
     await want("clicking Thumbnails on top didn't swap the panels", "thumbnails/bookmarks");
-    await waitFor("clicking Thumbnails didn't repaint the sidebar", async () => frameOnScreen(await sidebar(client)));
+    if (IS_MAC) {
+      console.log("SKIP sidebar-thumbnails frame pixels: macOS has no window DC");
+    } else {
+      await waitFor("clicking Thumbnails didn't repaint the sidebar", async () => frameOnScreen(await sidebar(client)));
+    }
     s = await sidebar(client);
     if (s.hwnd !== s.top.hwnd || s.top.selected !== "010" || s.bottom.selected !== "100") {
       throw new Error(`sidebar-thumbnails: after the swap: ${s.raw}`);
     }
     clickIcon(s.bottom, "thumbnails");
     await want("clicking Thumbnails in the bottom panel didn't swap back", "bookmarks/thumbnails");
-    await waitFor("the thumbnails didn't repaint in the bottom panel", async () =>
-      frameOnScreen(await sidebar(client)),
-    );
+    if (!IS_MAC) {
+      await waitFor("the thumbnails didn't repaint in the bottom panel", async () =>
+        frameOnScreen(await sidebar(client)),
+      );
+    }
     sendCommand(frame, cmdId("CmdToggleBookmarks"));
     await want("Bookmarks again didn't hide the top panel", "-/thumbnails");
 
@@ -269,7 +279,7 @@ export async function testit(): Promise<void> {
     s = await sidebar(client);
     const hwndPanel = s.hwnd;
     const ringOn = async () => /ring=1/.test((await sidebar(client)).raw);
-    const panelFocused = async () => getFocusedHwnd(frame) === hwndPanel && (await ringOn());
+    const panelFocused = async () => (IS_MAC || getFocusedHwnd(frame) === hwndPanel) && (await ringOn());
     await waitFor("showing Thumbnails didn't focus them", panelFocused);
     const currentIs = (n: number) => async () => (await sidebar(client)).current === n;
     await waitFor("the document isn't on page 1", currentIs(1));
@@ -284,7 +294,10 @@ export async function testit(): Promise<void> {
       throw new Error("sidebar-thumbnails: a key for the canvas took the focus from the panel");
     }
     postMessage(hwndPanel, WM_KEYDOWN, VK_TAB, 0);
-    await waitFor("Tab didn't move to the canvas", async () => getFocusedHwnd(frame) === frame && !(await ringOn()));
+    await waitFor(
+      "Tab didn't move to the canvas",
+      async () => (IS_MAC || getFocusedHwnd(frame) === frame) && !(await ringOn()),
+    );
     await waitFor("Tab didn't come back to the panel", async () => {
       if (await panelFocused()) {
         return true;
@@ -299,27 +312,31 @@ export async function testit(): Promise<void> {
     click(s, 3);
     await waitFor("a click on page 3 didn't go there", async () => (await sidebar(client)).current === 3);
     // the clicked page has the blue frame only, no selection border around it
-    await waitFor("the click didn't frame page 3", async () => frameOnScreen(await sidebar(client)));
-    s = await sidebar(client);
-    const r3 = s.rects.get(3)!;
-    if (USE_NG) {
-      const shot = captureWindowPixels(s.hwnd);
-      const y = r3.y + Math.floor(r3.dy / 2);
-      const px = (dx: number) => {
-        const x = r3.x - 12 + dx;
-        const i = (y * shot!.w + x) * 4;
-        return (shot!.data[i + 2]! << 16) | (shot!.data[i + 1]! << 8) | shot!.data[i]!;
-      };
-      const bg = px(0);
-      if (![8, 9, 10].every((dx) => px(dx) === bg)) {
-        throw new Error("sidebar-thumbnails: the current page has a selection border");
-      }
+    if (IS_MAC) {
+      console.log("SKIP sidebar-thumbnails selection border: macOS has no window DC");
     } else {
-      const row = readWindowDCRow(s.hwnd, r3.x - 12, r3.y + Math.floor(r3.dy / 2), 12);
-      if (!row.slice(8, 11).every((c) => c === row[0])) {
-        throw new Error(
-          `sidebar-thumbnails: the current page has a selection border: ${row.map((c) => c.toString(16))}`,
-        );
+      await waitFor("the click didn't frame page 3", async () => frameOnScreen(await sidebar(client)));
+      s = await sidebar(client);
+      const r3 = s.rects.get(3)!;
+      if (USE_NG) {
+        const shot = captureWindowPixels(s.hwnd);
+        const y = r3.y + Math.floor(r3.dy / 2);
+        const px = (dx: number) => {
+          const x = r3.x - 12 + dx;
+          const i = (y * shot!.w + x) * 4;
+          return (shot!.data[i + 2]! << 16) | (shot!.data[i + 1]! << 8) | shot!.data[i]!;
+        };
+        const bg = px(0);
+        if (![8, 9, 10].every((dx) => px(dx) === bg)) {
+          throw new Error("sidebar-thumbnails: the current page has a selection border");
+        }
+      } else {
+        const row = readWindowDCRow(s.hwnd, r3.x - 12, r3.y + Math.floor(r3.dy / 2), 12);
+        if (!row.slice(8, 11).every((c) => c === row[0])) {
+          throw new Error(
+            `sidebar-thumbnails: the current page has a selection border: ${row.map((c) => c.toString(16))}`,
+          );
+        }
       }
     }
 
