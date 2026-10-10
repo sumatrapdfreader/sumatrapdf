@@ -3129,6 +3129,9 @@ MainWindow* AppShellCreateWindow(gp::App* app, int dipW, int dipH) {
     opts.clientTitleBar = CanHaveTabsInTitlebar() && SettingsUseTabs();
     gp::Window* gw = gp::WindowOpenView(app, GStrL("SumatraPDF"), dipW, dipH, ui->view.id, opts);
     auto* win = new MainWindow(gw);
+    // The first paint replaces this. Ebook layout runs before that paint and
+    // needs the size the window was opened at (#3472).
+    win->frameRc = Rect{0, 0, dipW, dipH};
     win->shell = ui;
     win->tabsInTitlebar = opts.clientTitleBar;
     // orig's IsMenubarVisible()

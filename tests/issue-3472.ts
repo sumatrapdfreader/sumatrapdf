@@ -8,6 +8,8 @@
 // GUI automation rather than -dbg-control: the whole point is what the layout
 // does with the real window size.
 
+import { ControlCommand } from "./control.ts";
+import { IS_MAC } from "./host.ts";
 import { findCanvas, launchControlled, killAndWait } from "./win-automation.ts";
 import { getClientRect, getScrollInfo, setForegroundWindow, SB_VERT } from "./winapi.ts";
 import { runStandalone } from "./util.ts";
@@ -18,6 +20,29 @@ export async function testit(): Promise<void> {
   const { proc, client, frame } = await launchControlled(["-view", "single page", "-zoom", "fit width", EPUB]);
   try {
     await client.waitForRenderIdle();
+    // macOS has no scrollbar HWND. TestLayout reports the same scroll range
+    // the canvas computed from this window.
+    if (IS_MAC) {
+      const raw = String((await client.request(ControlCommand.TestLayout, []))[1] ?? "");
+      const canvas = /item name=canvas visible=\d+ rect=(-?\d+),(-?\d+),(-?\d+),(-?\d+)/.exec(raw);
+      const si = /scrollV pos=(-?\d+) min=(-?\d+) max=(-?\d+) page=(-?\d+)/.exec(raw);
+      if (!canvas || !si) {
+        throw new Error(`issue-3472: layout missing the scroll range: ${raw}`);
+      }
+      const page = Number(si[4]);
+      const max = Number(si[3]);
+      const overflow = max + 1 - page;
+      const dx = Number(canvas[3]);
+      const dy = Number(canvas[4]);
+      if (page < 100) {
+        throw new Error(`issue-3472: document didn't load (scroll page ${page}, max ${max})`);
+      }
+      if (overflow > 8) {
+        throw new Error(`issue-3472: Fit Width page overflows the window by ${overflow}px (canvas ${dx}x${dy})`);
+      }
+      console.log(`issue-3472: canvas ${dx}x${dy}, Fit Width page overflow ${overflow}px`);
+      return;
+    }
     setForegroundWindow(frame);
     const canvas = findCanvas(frame);
     if (!canvas) {
