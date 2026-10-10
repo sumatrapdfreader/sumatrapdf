@@ -3503,7 +3503,12 @@ static TempStr RotatedTextMouseDragResultTemp(Str word, int* exitCodeOut) {
     PointF p0{(float)(coords[first].x + (coords[first].dx / 2.0)), (float)(coords[first].y + (coords[first].dy / 2.0))};
     PointF p1{(float)(coords[last].x + coords[last].dx), (float)(coords[last].y + (coords[last].dy / 2.0))};
     if (quads) {
-        p0 = quads[first].Center();
+        // Left of the midline. The center round-trips through integer screen
+        // pixels and can land in the next glyph.
+        PointF ul = quads[first].ul;
+        PointF ur = quads[first].ur;
+        PointF c = quads[first].Center();
+        p0 = {c.x - ((ur.x - ul.x) * 0.25f), c.y - ((ur.y - ul.y) * 0.25f)};
         // past the last glyph along its baseline so the final letter is included
         p1 = {(quads[last].ur.x + quads[last].lr.x) / 2.f, (quads[last].ur.y + quads[last].lr.y) / 2.f};
     }
