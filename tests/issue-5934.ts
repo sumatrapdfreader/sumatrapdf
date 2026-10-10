@@ -5,6 +5,8 @@
 // covered by code review / manual check rather than this script.
 
 import { writeFileSync } from "node:fs";
+import { IS_MAC } from "./host.ts";
+import { ControlCommand } from "./control.ts";
 import { cmdId, tmpPath } from "./util";
 import { launchControlled, killAndWait } from "./win-automation";
 import {
@@ -111,6 +113,43 @@ async function testTranslateEscCloses(): Promise<void> {
     }
 
     sendMessage(frame, WM_COMMAND, BigInt(cmdId("CmdTranslateSelection")), 0n);
+    if (IS_MAC) {
+      // The translate UI is a tool window. enumWindows does not see it.
+      const deadline = Date.now() + 4000;
+      let list = "";
+      while (Date.now() < deadline) {
+        list = String((await client.request(ControlCommand.TestToolWindow, ["list"]))[1] ?? "");
+        if (/(^|\n)translate /.test(list)) {
+          break;
+        }
+        await sleep(100);
+      }
+      if (!/(^|\n)translate /.test(list)) {
+        throw new Error(`translate: dialog did not appear (selection empty?)\n${list}`);
+      }
+      const key = await client.request(ControlCommand.TestToolWindow, [
+        "input",
+        "translate",
+        "key",
+        VK_ESCAPE,
+        0,
+        0,
+        0,
+      ]);
+      if (String(key[1] ?? "").startsWith("ERR")) {
+        throw new Error(`translate: Esc: ${key[1]}`);
+      }
+      const closeBy = Date.now() + 3000;
+      while (Date.now() < closeBy) {
+        list = String((await client.request(ControlCommand.TestToolWindow, ["list"]))[1] ?? "");
+        if (!/(^|\n)translate /.test(list)) {
+          console.log("  translate: Esc closes ✓");
+          return;
+        }
+        await sleep(30);
+      }
+      throw new Error(`translate: Esc did not close the translate dialog\n${list}`);
+    }
     const tw = await waitForSecondary(proc.pid!, frame, "translate", 4000);
     if (!tw) {
       throw new Error("translate: dialog did not appear (selection empty?)");
