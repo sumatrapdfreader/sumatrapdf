@@ -9,6 +9,8 @@
 
 import { mkdirSync, rmSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
+import { ControlCommand } from "./control.ts";
+import { IS_MAC } from "./host.ts";
 import { runStandalone, tmpPath } from "./util.ts";
 import { findCanvas, killAndWait, launchControlled } from "./win-automation.ts";
 import { getScrollInfo } from "./winapi.ts";
@@ -69,8 +71,8 @@ function writeSettings(appdata: string, pdf: string, trim: boolean): void {
   );
 }
 
-// the height of the whole document at the current zoom, in canvas pixels
-async function scrollExtent(dir: string, pdf: string, trim: boolean): Promise<number> {
+// scroll extent, and the first page's height/width
+async function pageLayout(dir: string, pdf: string, trim: boolean): Promise<{ extent: number; aspect: number }> {
   const appdata = join(dir, `appdata-${trim ? "on" : "off"}`);
   rmSync(appdata, { recursive: true, force: true });
   writeSettings(appdata, pdf, trim);
@@ -88,7 +90,17 @@ async function scrollExtent(dir: string, pdf: string, trim: boolean): Promise<nu
     if (!canvas) {
       throw new Error("trim-empty-margins-restore: no canvas");
     }
-    return getScrollInfo(canvas).max;
+    const layout = String((await client.request(ControlCommand.TestLayout, []))[1] ?? "");
+    const pos = /page n=1 .* pos=-?\d+,-?\d+,(-?\d+),(-?\d+)/.exec(layout);
+    if (!pos) {
+      throw new Error(`trim-empty-margins-restore: no page rect:\n${layout}`);
+    }
+    const dx = Number(pos[1]);
+    const dy = Number(pos[2]);
+    if (dx <= 0 || dy <= 0) {
+      throw new Error(`trim-empty-margins-restore: empty page rect ${dx}x${dy}`);
+    }
+    return { extent: getScrollInfo(canvas).max, aspect: dy / dx };
   } finally {
     client.close();
     await killAndWait(proc);
@@ -102,17 +114,24 @@ export async function testit(): Promise<void> {
   const pdf = join(dir, "doc.pdf");
   writeFileSync(pdf, buildPdf());
 
-  const off = await scrollExtent(dir, pdf, false);
-  const on = await scrollExtent(dir, pdf, true);
-  if (off <= 0 || on <= 0) {
-    throw new Error(`trim-empty-margins-restore: no scroll range (off ${off}, on ${on})`);
+  const off = await pageLayout(dir, pdf, false);
+  const on = await pageLayout(dir, pdf, true);
+  if (off.extent <= 0 || on.extent <= 0) {
+    throw new Error(`trim-empty-margins-restore: no scroll range (off ${off.extent}, on ${on.extent})`);
   }
-  // the content is a small block on a letter page, so trimming has to shrink
-  // the layout dramatically; anything less means the remembered flag was lost
-  if (on > off / 2) {
-    throw new Error(`trim-empty-margins-restore: TrimEmptyMargins had no effect (extent ${off} -> ${on})`);
+  // the content is a small wide block on a letter page, so trimming has to
+  // change the page shape. Fit page then scales that shape to the window, so
+  // the scroll extent is not comparable across window sizes.
+  const notShrunk = IS_MAC ? on.aspect > off.aspect / 2 : on.extent > off.extent / 2;
+  if (notShrunk) {
+    throw new Error(
+      `trim-empty-margins-restore: TrimEmptyMargins had no effect ` +
+        `(extent ${off.extent} -> ${on.extent}, aspect ${off.aspect.toFixed(3)} -> ${on.aspect.toFixed(3)})`,
+    );
   }
-  console.log(`trim-empty-margins-restore: OK (extent ${off} -> ${on})`);
+  console.log(
+    `trim-empty-margins-restore: OK (extent ${off.extent} -> ${on.extent}, aspect ${off.aspect.toFixed(3)} -> ${on.aspect.toFixed(3)})`,
+  );
 }
 
 if (import.meta.main) {
