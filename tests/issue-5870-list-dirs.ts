@@ -9,9 +9,11 @@
 // render, ~0-120 (just the row separator lines) when they don't.
 import { copyFileSync, mkdirSync, rmSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
-import { ROOT, runStandalone, tmpPath } from "./util";
+import { ControlClient, ControlCommand } from "./control";
+import { IS_MAC } from "./host";
+import { ROOT, runStandalone, SLOW_BUILD_FACTOR, tmpPath } from "./util";
 import { getWindowRect, postMessage, readWindowDCColumn, sleep, waitForWindowIdle } from "./winapi";
-import { findCanvas, launchSumatra, waitForFrame, killAndWait } from "./win-automation";
+import { findCanvas, launchControlled, launchSumatra, waitForFrame, killAndWait } from "./win-automation";
 
 const WM_VSCROLL = 0x0115;
 const SB_PAGEDOWN = 3;
@@ -51,6 +53,78 @@ function dirColumnTextPixels(hwnd: number, yFrac: number, h: number): number {
   return px.filter((p) => p !== bg).length;
 }
 
+type ListRow = { path: string; pathRect: [number, number, number, number] };
+
+// pathRect is the directory text measured while that row was painted.
+// A row that was never measured stays 0x0.
+function parseListRows(dump: string): ListRow[] {
+  const rows: ListRow[] = [];
+  let path = "";
+  for (const line of dump.split("\n")) {
+    const row = /^row=\d+ size='[^']*' sizeRect=-?\d+,-?\d+,-?\d+,-?\d+ progress='[^']*' path=(.*)$/.exec(line);
+    if (row) {
+      path = row[1]!;
+      continue;
+    }
+    const rc = /^pathRect=(-?\d+),(-?\d+),(-?\d+),(-?\d+)$/.exec(line);
+    if (rc) {
+      rows.push({ path, pathRect: [+rc[1]!, +rc[2]!, +rc[3]!, +rc[4]!] });
+    }
+  }
+  return rows;
+}
+
+function measuredDirs(rows: ListRow[], dirPath: string): number {
+  return rows.filter((r) => r.path.includes(dirPath) && r.pathRect[2] > 0 && r.pathRect[3] > 0).length;
+}
+
+async function homeRows(client: ControlClient): Promise<ListRow[] | null> {
+  const res = await client.request(ControlCommand.TestHomeListRows, []);
+  if (res[0] !== 0) {
+    return null;
+  }
+  return parseListRows(String(res[1] ?? ""));
+}
+
+async function macListDirs(dir: string, dirPath: string): Promise<void> {
+  const { proc, client, frame } = await launchControlled([...WINDOW_POS, "-appdata", dir]);
+  try {
+    const deadline = Date.now() + 8000 * SLOW_BUILD_FACTOR;
+    let rows: ListRow[] | null = null;
+    let measured = 0;
+    while (Date.now() < deadline) {
+      rows = await homeRows(client);
+      measured = rows ? measuredDirs(rows, dirPath) : 0;
+      if (measured > 0) {
+        break;
+      }
+      await sleep(40);
+    }
+    if (!rows || measured === 0) {
+      throw new Error(`no directory text in the initial rows (${measured})`);
+    }
+
+    postMessage(frame, WM_VSCROLL, SB_PAGEDOWN, 0);
+    const deadline2 = Date.now() + 8000 * SLOW_BUILD_FACTOR;
+    let after = measured;
+    while (Date.now() < deadline2) {
+      rows = await homeRows(client);
+      after = rows ? measuredDirs(rows, dirPath) : 0;
+      // every row is built, including ones that start below the fold
+      if (rows && after === rows.length && rows.length >= nFiles) {
+        break;
+      }
+      await sleep(40);
+    }
+    if (!rows || after !== rows.length || rows.length < nFiles) {
+      throw new Error(`rows scrolled into view show no directory path (${after}/${rows?.length ?? 0})`);
+    }
+  } finally {
+    client.close();
+    await killAndWait(proc);
+  }
+}
+
 export async function testit(): Promise<void> {
   const dir = tmpPath("issue-5870-list-dirs");
   rmSync(dir, { recursive: true, force: true });
@@ -67,6 +141,12 @@ export async function testit(): Promise<void> {
     `UiLanguage = en\nCheckForUpdates = false\nRestoreSession = false\nRememberOpenedFiles = true\n` +
       `HomePageViewMode = list\nFileStates [\n${states.join("\n")}\n]\n`,
   );
+
+  const dirPath = join(dir, "sub");
+  if (IS_MAC) {
+    await macListDirs(dir, dirPath);
+    return;
+  }
 
   const proc = launchSumatra([...WINDOW_POS, "-appdata", dir]);
   try {

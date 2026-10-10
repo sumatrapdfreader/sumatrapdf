@@ -398,6 +398,8 @@ struct HomePageUI {
     Vec<gpui::Bounds> entryBounds;
     // list-view size column, measured while painting (issue #5870)
     Vec<gpui::Bounds> listSizeBounds;
+    // list-view directory column, same paint (issue #5870)
+    Vec<gpui::Bounds> listPathBounds;
     // the "show as list" button, for the click that switches the home view
     gpui::Bounds listIconBounds{};
     // the tip band along the bottom
@@ -1712,7 +1714,8 @@ static gp::El* HomeListRowEl(MainWindow* win, gp::Ctx* cx, int idx, bool isSelec
                    ->Fg(ToGpui(colDim))
                    ->Flex1()
                    ->MinW(0)
-                   ->Truncate());
+                   ->Truncate()
+                   ->BoundsOut(&Ui(win)->listPathBounds[idx]));
     i64 size = file::GetSize(fs->filePath);
     if (size >= 0) {
         row->Child(gp::TextEl(cx->a, GpuiDup(cx->a, str::FormatSizeShortTemp(size)))
@@ -1841,6 +1844,9 @@ gp::El* HomePageBuild(MainWindow* win, gp::Ctx* cx) {
     }
     while (len(h->listSizeBounds) < nFiles) {
         VecAppend(h->listSizeBounds, gpui::Bounds{});
+    }
+    while (len(h->listPathBounds) < nFiles) {
+        VecAppend(h->listPathBounds, gpui::Bounds{});
     }
     // orig's homePageSelIdx starts at 0, so the first thumbnail is outlined
     // before any key is pressed
@@ -2194,6 +2200,8 @@ TempStr HomeListRowsResultTemp(int* exitCodeOut) {
         }
         out.Append(fmt("row=%d size='%s' sizeRect=%d,%d,%d,%d progress='%s' path=%s\n", i, sizeText, r.x, r.y, r.dx,
                        r.dy, progress, fs->filePath));
+        Rect pathRc = BoundsRect(h->listPathBounds[i]);
+        out.Append(fmt("pathRect=%d,%d,%d,%d\n", pathRc.x, pathRc.y, pathRc.dx, pathRc.dy));
     }
     return finish(0);
 }
