@@ -429,6 +429,9 @@
     <ClInclude Include="..\src\shared\NavFilesInFolderCommon.h">
       <Filter>src\shared</Filter>
     </ClInclude>
+    <ClInclude Include="..\src\shared\PageGridDialogCommon.h">
+      <Filter>src\shared</Filter>
+    </ClInclude>
     <ClInclude Include="..\src\shared\PagePosition.h">
       <Filter>src\shared</Filter>
     </ClInclude>
@@ -1194,6 +1197,9 @@
       <Filter>src\shared</Filter>
     </ClCompile>
     <ClCompile Include="..\src\shared\NavFilesInFolderCommon.cpp">
+      <Filter>src\shared</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\shared\PageGridDialogCommon.cpp">
       <Filter>src\shared</Filter>
     </ClCompile>
     <ClCompile Include="..\src\shared\PagePosition.cpp">

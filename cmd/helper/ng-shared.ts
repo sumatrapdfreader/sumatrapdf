@@ -124,6 +124,8 @@ export const sharedFiles = [
   "src/shared/MainWindowCommon.h",
   "src/shared/NavFilesInFolderCommon.cpp",
   "src/shared/NavFilesInFolderCommon.h",
+  "src/shared/PageGridDialogCommon.cpp",
+  "src/shared/PageGridDialogCommon.h",
   "src/shared/PdfToolsCommon.cpp",
   "src/shared/PdfToolsCommon.h",
   "src/shared/ReadAloudSession.cpp",
