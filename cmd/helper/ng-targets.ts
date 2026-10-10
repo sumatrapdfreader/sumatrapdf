@@ -1417,6 +1417,7 @@ export const targets: Target[] = [
       "src/ng/ImageEditHostSumatra.cpp",
       "src/ng/Screenshot.cpp",
       "src/ng/PdfTools.cpp",
+      "src/ng/PdfToolsCommon.cpp",
       "src/ng/SelectionHandlers.cpp",
       "src/ng/SelectionTranslate.cpp",
       "src/ng/SelectionTranslateCommon.cpp",

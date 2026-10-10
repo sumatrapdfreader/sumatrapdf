@@ -354,6 +354,7 @@ function sumatrapdf_files()
     "Notifications.*",
     "PdfSync.*",
     "PdfTools.*",
+    "PdfToolsCommon.*",
     "PngOptimizer.*",
     "Print.*",
     "PrintWin11.*",

@@ -1504,6 +1504,7 @@
     <ClInclude Include="..\src\shared\PdfDate.h" />
     <ClInclude Include="..\src\shared\PdfSync.h" />
     <ClInclude Include="..\src\shared\PdfTools.h" />
+    <ClInclude Include="..\src\shared\PdfToolsCommon.h" />
     <ClInclude Include="..\src\shared\PngOptimizer.h" />
     <ClInclude Include="..\src\shared\Print.h" />
     <ClInclude Include="..\src\shared\PrintWin11.h" />
@@ -2148,6 +2149,7 @@
     <ClCompile Include="..\src\shared\PdfDate.cpp" />
     <ClCompile Include="..\src\shared\PdfSign.cpp" />
     <ClCompile Include="..\src\shared\PdfSync.cpp" />
+    <ClCompile Include="..\src\shared\PdfToolsCommon.cpp" />
     <ClCompile Include="..\src\shared\PngOptimizer.cpp" />
     <ClCompile Include="..\src\shared\Print.cpp" />
     <ClCompile Include="..\src\shared\PrintWin11.cpp" />

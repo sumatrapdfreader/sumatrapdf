@@ -444,6 +444,9 @@
     <ClInclude Include="..\src\shared\PdfTools.h">
       <Filter>src\shared</Filter>
     </ClInclude>
+    <ClInclude Include="..\src\shared\PdfToolsCommon.h">
+      <Filter>src\shared</Filter>
+    </ClInclude>
     <ClInclude Include="..\src\shared\PngOptimizer.h">
       <Filter>src\shared</Filter>
     </ClInclude>
@@ -1203,6 +1206,9 @@
       <Filter>src\shared</Filter>
     </ClCompile>
     <ClCompile Include="..\src\shared\PdfSync.cpp">
+      <Filter>src\shared</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\shared\PdfToolsCommon.cpp">
       <Filter>src\shared</Filter>
     </ClCompile>
     <ClCompile Include="..\src\shared\PngOptimizer.cpp">
