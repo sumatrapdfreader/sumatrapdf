@@ -1,6 +1,7 @@
 // #5979: UI created or retained on a high-DPI monitor must use the new
 // monitor's fonts after the frame moves to a lower-DPI monitor.
 import { join } from "node:path";
+import { IS_MAC } from "./host.ts";
 import { cmdId, dpiRequest, requireDpiShrank, ROOT, runStandalone, waitForDpiFrame, writeAppdata } from "./util.ts";
 import { killAndWait, launchControlled, sendCommandSync } from "./win-automation.ts";
 
@@ -14,6 +15,10 @@ function toggleTo75(frame: number): void {
 }
 
 export async function testit(): Promise<void> {
+  if (IS_MAC) {
+    console.log("SKIP issue-5979: per-monitor DPI uses a Win32 hidden window and WM_DPICHANGED");
+    return;
+  }
   const dir = writeAppdata(
     "issue-5979",
     "UiLanguage = en\nCheckForUpdates = false\nRestoreSession = false\nShowToc = true\nSearchUIFloating = true\n",

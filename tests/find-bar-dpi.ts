@@ -2,6 +2,7 @@
 // heap-corrupted when a nested 96/120 change arrived during DestroyWindow
 // (DameWare / RDP).
 import { join } from "node:path";
+import { IS_MAC } from "./host.ts";
 import {
   cmdId,
   dpiRequest,
@@ -15,6 +16,10 @@ import {
 import { killAndWait, launchControlled, sendCommandSync } from "./win-automation.ts";
 
 export async function testit(): Promise<void> {
+  if (IS_MAC) {
+    console.log("SKIP find-bar-dpi: compact find bar DPI follows WM_DPICHANGED");
+    return;
+  }
   const dir = writeAppdata(
     "find-bar-dpi",
     "UiLanguage = en\nCheckForUpdates = false\nRestoreSession = false\nSearchUIFloating = false\n",

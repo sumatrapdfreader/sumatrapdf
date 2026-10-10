@@ -1,9 +1,14 @@
 // #6032: Bookmarks/Favorites header close button must follow the frame DPI
 // (it stayed at the previous monitor's size after a DPI change).
+import { IS_MAC } from "./host.ts";
 import { cmdId, requireDpiShrank, runStandalone, waitForDpiFrame, writeAppdata } from "./util.ts";
 import { killAndWait, launchControlled, sendCommandSync } from "./win-automation.ts";
 
 export async function testit(): Promise<void> {
+  if (IS_MAC) {
+    console.log("SKIP issue-6032: header close-button DPI follows WM_DPICHANGED");
+    return;
+  }
   const dir = writeAppdata(
     "issue-6032",
     "UiLanguage = en\nCheckForUpdates = false\nRestoreSession = false\nShowToc = true\nShowFavorites = true\n",
