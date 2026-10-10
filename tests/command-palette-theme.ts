@@ -3,6 +3,8 @@
 // text ("Enter run command", "Esc close").
 import { mkdirSync, rmSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
+import { ControlClient, ControlCommand } from "./control.ts";
+import { IS_MAC } from "./host.ts";
 import { cmdId, runStandalone, tmpPath } from "./util.ts";
 import { captureWindowPixels, getClassName, getFocusedHwnd, getParentWindow, getRootWindow, sleep } from "./winapi.ts";
 import { killAndWait, launchControlled, sendCommand, sendCommandSync } from "./win-automation.ts";
@@ -50,13 +52,24 @@ function paletteLook(hwnd: number): Look | null {
   return { bgLuma, hintInk };
 }
 
-async function openPalette(frame: number): Promise<number> {
+async function paletteOpen(client: ControlClient): Promise<boolean> {
+  const res = await client.request(ControlCommand.TestCommandPalette, []);
+  return (res[0] as number) === 0;
+}
+
+async function openPalette(client: ControlClient, frame: number): Promise<number> {
   sendCommand(frame, cmdId("CmdCommandPalette"));
   const deadline = Date.now() + 8_000;
   while (Date.now() < deadline) {
-    const edit = getFocusedHwnd(frame);
-    if (edit && getClassName(edit) === "Edit" && getRootWindow(edit) !== frame) {
-      return getParentWindow(edit);
+    if (IS_MAC) {
+      if (await paletteOpen(client)) {
+        return frame;
+      }
+    } else {
+      const edit = getFocusedHwnd(frame);
+      if (edit && getClassName(edit) === "Edit" && getRootWindow(edit) !== frame) {
+        return getParentWindow(edit);
+      }
     }
     await sleep(50);
   }
@@ -85,7 +98,25 @@ export async function testit(): Promise<void> {
 
   const { proc, client, frame } = await launchControlled(["-appdata", appdata]);
   try {
-    const palette = await openPalette(frame);
+    const palette = await openPalette(client, frame);
+    if (IS_MAC) {
+      console.log("SKIP command-palette-theme pixels: macOS has no window DC");
+      sendCommandSync(frame, cmdId("CmdToggleLightDarkTheme"));
+      const deadline = Date.now() + 3_000;
+      let open = false;
+      while (Date.now() < deadline) {
+        open = await paletteOpen(client);
+        if (open) {
+          break;
+        }
+        await sleep(50);
+      }
+      if (!open) {
+        throw new Error("command-palette-theme: theme toggle closed the palette");
+      }
+      console.log("command-palette-theme: OK");
+      return;
+    }
     const light = await waitForLook(palette, "palette is not light", (l) => l.bgLuma > 160 && l.hintInk > 20);
 
     sendCommandSync(frame, cmdId("CmdToggleLightDarkTheme"));
