@@ -4,6 +4,7 @@
 import { mkdirSync, rmSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 import { ControlClient, ControlCommand } from "./control.ts";
+import { IS_MAC } from "./host.ts";
 import { ROOT, SLOW_BUILD_FACTOR, cmdId, runStandalone, tmpPath } from "./util.ts";
 import { enumWindows, findChildWindow, getWindowPid, isWindowVisible, sendText, sleep } from "./winapi.ts";
 import { killAndWait, launchControlled, sendCommand } from "./win-automation.ts";
@@ -72,7 +73,8 @@ async function querySelectedCommand(client: ControlClient, pid: number, frame: n
       sent = false;
       state = await paletteState(client);
     }
-    const edit = findPaletteEdit(pid, frame);
+    // mac has no palette edit HWND; TestInput sets the query.
+    const edit = IS_MAC ? 1 : findPaletteEdit(pid, frame);
     if (state && edit && !sent) {
       sendText(edit, text);
       sent = true;
@@ -102,7 +104,7 @@ async function checkDocument(file: string, shouldShow: boolean, appData: string)
     await client.waitForRenderIdle();
     sendCommand(frame, cmdId("CmdCommandPalette"));
     await waitForPalette(client);
-    if (!findPaletteEdit(proc.pid!, frame)) {
+    if (!IS_MAC && !findPaletteEdit(proc.pid!, frame)) {
       throw new Error("image-only-palette-items: no command palette edit");
     }
 
