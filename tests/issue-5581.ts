@@ -12,6 +12,7 @@
 import { existsSync, rmSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 import { ControlCommand, withControlledSumatra } from "./control.ts";
+import { IS_MAC } from "./host.ts";
 import { EXE, ROOT, runStandalone, tmpPath } from "./util.ts";
 
 const kCertSubject = "CN=SumatraPDF SigPropsTest";
@@ -119,6 +120,10 @@ async function signaturesOf(pdf: string): Promise<string> {
 }
 
 export async function testit(): Promise<void> {
+  if (IS_MAC) {
+    console.log("SKIP issue-5581: signature properties use the Windows PKCS#7 verifier");
+    return;
+  }
   const padesDir = join(ROOT, "tests", "issue-5581-data");
   const bt = join(padesDir, "test_sign_PAdES_B-T.pdf");
   const lta = join(padesDir, "test_sign_PAdES_B-LTA.pdf");
