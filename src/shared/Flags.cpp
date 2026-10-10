@@ -388,6 +388,33 @@ FileArgs* ParseFileArgs(Str path) {
     return res;
 }
 
+// Spaces separate tokens ("1, 3, odd"). Spaces inside a token stay
+// ("bin=Tray 1", "docname=Test Job").
+static void TrimPrintSettingSpaces(Str& s) {
+    if (!s.s || len(s) == 0) {
+        return;
+    }
+    int dst = 0;
+    int i = 0;
+    while (i < len(s)) {
+        while (i < len(s) && s.s[i] == ' ') {
+            i++;
+        }
+        int start = dst;
+        while (i < len(s) && s.s[i] != ',') {
+            s.s[dst++] = s.s[i++];
+        }
+        while (dst > start && s.s[dst - 1] == ' ') {
+            dst--;
+        }
+        if (i < len(s) && s.s[i] == ',') {
+            s.s[dst++] = s.s[i++];
+        }
+    }
+    s.s[dst] = 0;
+    s.len = dst;
+}
+
 /* parse argument list. we assume that all unrecognized arguments are file names. */
 // ng: the body is portable; only turning the platform's command line into an
 // argument list differs (ParseFlags on Windows, ParseFlagsArgv off it)
@@ -651,8 +678,8 @@ static void ParseFlagNodes(Arena* a, StrNode* firstArg, Flags& i, Str toolNames)
             // disable-auto-rotation; page numbers can be negative (-1 = last page)
             // e.g. -print-settings "1-3,5,10-8,odd,fit" or "last" or "-1"
             i.printSettings = str::Dup(a, param);
-            str::RemoveCharsInPlace(i.printSettings, StrL(" "));
             str::TransCharsInPlace(i.printSettings, StrL(";"), StrL(","));
+            TrimPrintSettingSpaces(i.printSettings);
             continue;
         }
         if (arg == Arg::InverseSearch) {
