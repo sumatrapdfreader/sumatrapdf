@@ -120,7 +120,6 @@ void PaintReadAloudHighlight(MainWindow* win, Gfx* gfx);
 
 bool ReadAloudSentenceRange(Str text, int pos, int* startOut, int* endOut);
 
-#if defined(SUMATRA_NG)
 bool IsReadAloudLowerAscii(char c);
 bool IsReadAloudLineBreak(char c);
 bool IsReadAloudHorizontalSpace(char c);
@@ -131,7 +130,6 @@ Rect ReadAloudByteLocToRect(const ReadAloudByteLoc& loc);
 void ReadAloudClampVisual(ReadAloudHighlightMap* map, int wordStartAbs, int wordEndAbs, int* startAbs, int* endAbs);
 void ReadAloudAppendUnderlines(DisplayModel* dm, Rect canvasRc, ReadAloudHighlightMap* map, int startAbs, int endAbs,
                                int minThick, int thickDiv, Vec<Rect>& out);
-#endif
 
 // --- playback bar shown over the canvas while reading ---
 

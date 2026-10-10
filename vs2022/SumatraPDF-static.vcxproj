@@ -2137,6 +2137,7 @@
     <ClCompile Include="..\src\shared\PngOptimizer.cpp" />
     <ClCompile Include="..\src\shared\Print.cpp" />
     <ClCompile Include="..\src\shared\PrintWin11.cpp" />
+    <ClCompile Include="..\src\shared\ReadAloudHighlight.cpp" />
     <ClCompile Include="..\src\shared\ReadingBar.cpp">
       <PrecompiledHeader>NotUsing</PrecompiledHeader>
     </ClCompile>

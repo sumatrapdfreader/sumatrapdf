@@ -15,10 +15,10 @@
 
 #include "SumatraLog.h"
 
-// ng: the "spoken text -> page positions" half of orig's ReadAloud.cpp. It only
-// needs the engine and the display model, so it links into test_util, where
-// ReadAloudHighlight_ut runs. The TTS backend, the playback bar and the session
-// stay in ReadAloud.cpp.
+// The "spoken text -> page positions" half of read aloud, shared by orig and ng.
+// It only needs the engine and the display model, so it links into ng's
+// test_util, where ReadAloudHighlight_ut runs. The TTS backend, the playback
+// bar and the session stay in each app's ReadAloud.cpp.
 
 struct ReadAloudRawByte {
     char c = 0;
@@ -458,6 +458,8 @@ bool ReadAloudHighlightBuildFromDocument(DisplayModel* dm, int startPage, int st
         return false;
     }
 
+    // walk in the engine's numbering: extracting a placeholder chapter's text
+    // lays it out, which grows engine->PageCount() past the view's page count
     int enginePage = engine->PageNoFromLocation(dm->GetPageInfo(startPage)->loc);
     Vec<ReadAloudRawByte> raw;
     dbgtts("BuildFromDocument: startPage=%d enginePage=%d startGlyph=%d\n", startPage, enginePage, startGlyph);
@@ -645,15 +647,8 @@ static void ReadAloudFlushLine(DisplayModel* dm, Rect canvasRc, const ReadAloudL
         return;
     }
     int thick = thickDiv > 0 ? sr.dy / thickDiv : minThick;
-    if (thick < minThick) {
-        thick = minThick;
-    }
-    if (thick > sr.dy) {
-        thick = sr.dy;
-    }
-    if (thick < 1) {
-        thick = 1;
-    }
+    // a line cut by the canvas edge can be thinner than minThick: then it's sr.dy
+    thick = std::max(ClampI(thick, std::min(minThick, sr.dy), sr.dy), 1);
     Rect u = {sr.x, sr.y + sr.dy - thick, sr.dx, thick};
     if (!u.IsEmpty()) {
         VecAppend(out, u);

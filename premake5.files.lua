@@ -355,6 +355,7 @@ function sumatrapdf_files()
     "PrintWin11.*",
     "ProgressUpdateUI.*",
     "ReadAloud.*",
+    "ReadAloudHighlight.*",
     "ReadingAutoScroll.*",
     "ReadingBar.*",
     "RefHover.h",
