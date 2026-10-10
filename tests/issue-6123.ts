@@ -7,6 +7,7 @@
 import { mkdirSync, rmSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 import { ControlClient, ControlCommand } from "./control.ts";
+import { IS_MAC } from "./host.ts";
 import { assemblePdf, cmdId, runStandalone, SLOW_BUILD_FACTOR, tmpPath, USE_NG } from "./util.ts";
 import { captureWindowToPng, enumWindows, findTopWindow, getWindowPid, getWindowText, sleep } from "./winapi.ts";
 import { killAndWait, launchControlled, sendCommand } from "./win-automation.ts";
@@ -68,7 +69,8 @@ async function waitFloat(client: ControlClient, pid: number): Promise<{ dump: st
   let dump = "";
   for (;;) {
     dump = await annotDump(client);
-    const hwnd = findAnnotList(pid);
+    // macOS has no HWND. The dump already carries the button colors.
+    const hwnd = IS_MAC ? 1 : findAnnotList(pid);
     if (/annotFilter floatVisible=1/.test(dump) && hwnd && parseSaveNew(dump).dy > 0) {
       return { dump, hwnd };
     }
@@ -111,14 +113,16 @@ export async function testit(): Promise<void> {
     sendCommand(frame, cmdId("CmdToggleEditPDF"));
     await sleep(300);
     sendCommand(frame, cmdId("CmdFindAnnotation"));
-    const pid = getWindowPid(frame) || proc.pid!;
+    const pid = IS_MAC ? (proc.pid ?? 0) : getWindowPid(frame) || proc.pid!;
     const { dump, hwnd } = await waitFloat(client, pid);
     if (/saveEnabled=1/.test(dump)) {
       throw new Error(`issue-6123: save buttons should be disabled with no edits\n${dump}`);
     }
 
     const rc = parseSaveNew(dump);
-    captureWindowToPng(hwnd, join(dir, "annot-list.png"));
+    if (!IS_MAC) {
+      captureWindowToPng(hwnd, join(dir, "annot-list.png"));
+    }
     const [tr, tg, tb] = parseRgb(rc.text);
     const [br, bg, bb] = parseRgb(rc.bg);
     const delta = Math.abs(lightness(tr, tg, tb) - lightness(br, bg, bb));
