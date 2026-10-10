@@ -12,6 +12,7 @@
 // Handles (HWND) are represented as JS `number`s here. That's fine for window
 // handles in practice; do not use these helpers for arbitrary 64-bit pointers.
 
+import { unlinkSync } from "node:fs";
 import { dlopen, FFIType, JSCallback, ptr, toArrayBuffer } from "bun:ffi";
 import { IS_MAC, IS_WIN } from "./host.ts";
 import {
@@ -1001,7 +1002,13 @@ const FILE_ATTRIBUTE_NORMAL = 0x80;
 
 // CreateFileW with dwShareMode=0: what OneNote does when it tries to rewrite
 // an extracted attachment. ok=false means another process is still holding it.
+// Unix open() has no share mode, so a held fd is reported by lsof instead.
 export function tryOpenExclusive(path: string): { ok: boolean; error: number } {
+  if (!IS_WIN) {
+    const listed = Bun.spawnSync(["lsof", "-t", path], { stdout: "pipe", stderr: "ignore" });
+    const held = listed.stdout.toString().trim().length > 0;
+    return held ? { ok: false, error: 32 } : { ok: true, error: 0 };
+  }
   const w = wideZ(path);
   const h = kernel32.symbols.CreateFileW(ptr(w), GENERIC_WRITE, 0, null, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, 0n);
   if (h === 0xffffffffffffffffn || h === -1n) {
@@ -1012,6 +1019,15 @@ export function tryOpenExclusive(path: string): { ok: boolean; error: number } {
 }
 
 export function tryDeleteFile(path: string): { ok: boolean; error: number } {
+  if (!IS_WIN) {
+    try {
+      unlinkSync(path);
+      return { ok: true, error: 0 };
+    } catch (e) {
+      const err = e as NodeJS.ErrnoException;
+      return { ok: false, error: err.errno ?? 1 };
+    }
+  }
   const w = wideZ(path);
   const ok = kernel32.symbols.DeleteFileW(ptr(w));
   if (ok) {
