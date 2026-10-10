@@ -294,6 +294,8 @@ function sumatrapdf_files()
     "PagePosition.*",
     "AppTools.*",
     "Canvas.*",
+    "OleDragDropCommon.h",
+    "OleDragDropCommon_win.cpp",
     "PageThumbnails.*",
     "MergePdf.*",
     "AnnotPlacement.*",

@@ -1517,6 +1517,7 @@
     <ClInclude Include="..\src\shared\MobiDoc.h" />
     <ClInclude Include="..\src\shared\NavFilesInFolder.h" />
     <ClInclude Include="..\src\shared\NavFilesInFolderCommon.h" />
+    <ClInclude Include="..\src\shared\OleDragDropCommon.h" />
     <ClInclude Include="..\src\shared\PageGridDialogCommon.h" />
     <ClInclude Include="..\src\shared\PagePosition.h" />
     <ClInclude Include="..\src\shared\PalmDbReader.h" />
@@ -2172,6 +2173,7 @@
     <ClCompile Include="..\src\shared\MarkdownToc.cpp" />
     <ClCompile Include="..\src\shared\MobiDoc.cpp" />
     <ClCompile Include="..\src\shared\NavFilesInFolderCommon.cpp" />
+    <ClCompile Include="..\src\shared\OleDragDropCommon_win.cpp" />
     <ClCompile Include="..\src\shared\PageGridDialogCommon.cpp" />
     <ClCompile Include="..\src\shared\PagePosition.cpp" />
     <ClCompile Include="..\src\shared\PalmDbReader.cpp" />

@@ -438,6 +438,9 @@
     <ClInclude Include="..\src\shared\NavFilesInFolderCommon.h">
       <Filter>src\shared</Filter>
     </ClInclude>
+    <ClInclude Include="..\src\shared\OleDragDropCommon.h">
+      <Filter>src\shared</Filter>
+    </ClInclude>
     <ClInclude Include="..\src\shared\PageGridDialogCommon.h">
       <Filter>src\shared</Filter>
     </ClInclude>
@@ -1224,6 +1227,9 @@
       <Filter>src\shared</Filter>
     </ClCompile>
     <ClCompile Include="..\src\shared\NavFilesInFolderCommon.cpp">
+      <Filter>src\shared</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\shared\OleDragDropCommon_win.cpp">
       <Filter>src\shared</Filter>
     </ClCompile>
     <ClCompile Include="..\src\shared\PageGridDialogCommon.cpp">
