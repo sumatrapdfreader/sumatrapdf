@@ -1433,6 +1433,7 @@ export const targets: Target[] = [
       "src/ng/GoogleLens.cpp",
       "src/ng/AIChatCommon.cpp",
       "src/ng/AIChatPanel.cpp",
+      "src/ng/AIChatPanelCommon.cpp",
       "src/ng/AIClaudeCode.cpp",
       "src/ng/AIGrokBuild.cpp",
       "src/ng/AICodexBuild.cpp",

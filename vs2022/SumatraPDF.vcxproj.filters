@@ -237,6 +237,9 @@
     <ClInclude Include="..\src\shared\AIChatPanel.h">
       <Filter>src\shared</Filter>
     </ClInclude>
+    <ClInclude Include="..\src\shared\AIChatPanelCommon.h">
+      <Filter>src\shared</Filter>
+    </ClInclude>
     <ClInclude Include="..\src\shared\Accelerators.h">
       <Filter>src\shared</Filter>
     </ClInclude>
@@ -1056,6 +1059,9 @@
       <Filter>src\shared</Filter>
     </ClCompile>
     <ClCompile Include="..\src\shared\AIChatCommon.cpp">
+      <Filter>src\shared</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\shared\AIChatPanelCommon.cpp">
       <Filter>src\shared</Filter>
     </ClCompile>
     <ClCompile Include="..\src\shared\AIClaudeCode.cpp">
