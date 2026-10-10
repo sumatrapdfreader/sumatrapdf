@@ -3365,8 +3365,9 @@ void OpenNextPrevFileInFolder(MainWindow* win, bool forward, Str pathToDelete) {
     // the load resets the temp arena and may free the pending request
     Str toDelete = str::Dup(pathToDelete);
     if (!LoadDocument(win, chosenCopy, LoadPrefs::Save, LoadReuse::CurrentTab)) {
-        // remember the failure so the next step skips this file
+        // orig advances from the load callback. Stay put when this was the last file.
         gFilesFailedToOpen.Append(chosenCopy);
+        OpenNextPrevFileInFolder(win, forward, toDelete);
         str::Free(toDelete);
         return;
     }
