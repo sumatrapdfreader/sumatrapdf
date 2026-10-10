@@ -3,6 +3,7 @@
 import { mkdirSync, rmSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 import { ControlClient, ControlCommand } from "./control.ts";
+import { IS_MAC } from "./host.ts";
 import { ROOT, cmdId, runStandalone, tmpPath } from "./util.ts";
 import {
   captureWindowPixels,
@@ -85,9 +86,16 @@ export async function testit(): Promise<void> {
     const openDeadline = Date.now() + 8_000;
     let handles = { palette: 0, edit: 0 };
     while (Date.now() < openDeadline) {
-      handles = findPalette(frame);
-      if (handles.palette && handles.edit) {
-        break;
+      if (IS_MAC) {
+        if (await paletteState(client)) {
+          handles = { palette: 1, edit: 1 };
+          break;
+        }
+      } else {
+        handles = findPalette(frame);
+        if (handles.palette && handles.edit) {
+          break;
+        }
       }
       await sleep(50);
     }
@@ -111,18 +119,22 @@ export async function testit(): Promise<void> {
       throw new Error(`command-palette-shortcut-filter: shortcut query failed: ${JSON.stringify(state)}`);
     }
 
-    const paintDeadline = Date.now() + 3_000;
-    let yellow = 0;
-    while (Date.now() < paintDeadline) {
-      yellow = countYellowInRightHalf(handles.palette);
-      if (yellow > 20) {
-        break;
+    if (IS_MAC) {
+      console.log("SKIP command-palette-shortcut-filter highlight: macOS has no palette window to sample");
+    } else {
+      const paintDeadline = Date.now() + 3_000;
+      let yellow = 0;
+      while (Date.now() < paintDeadline) {
+        yellow = countYellowInRightHalf(handles.palette);
+        if (yellow > 20) {
+          break;
+        }
+        await sleep(40);
       }
-      await sleep(40);
-    }
-    if (yellow <= 20) {
-      captureWindowToPng(handles.palette, tmpPath("command-palette-shortcut-filter.png"));
-      throw new Error(`command-palette-shortcut-filter: shortcut highlight not painted; yellow=${yellow}`);
+      if (yellow <= 20) {
+        captureWindowToPng(handles.palette, tmpPath("command-palette-shortcut-filter.png"));
+        throw new Error(`command-palette-shortcut-filter: shortcut highlight not painted; yellow=${yellow}`);
+      }
     }
 
     console.log("command-palette-shortcut-filter: OK");
