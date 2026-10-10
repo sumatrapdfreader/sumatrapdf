@@ -1084,9 +1084,10 @@ static TempStr ImageInsertResultTemp(Str pdfPath, Str imagePath, int* exitCodeOu
     }
     Pixmap* rgb = EnsureReadablePixmap(bmp);
     if (!rgb || !rgb->data) {
+        int srcFmt = (int)bmp->format;
         FreePixmap(bmp);
         SafeEngineRelease(&engine);
-        return fail(fmt("ERROR pixmap-convert-failed fmt=%d\n", (int)bmp->format));
+        return fail(fmt("ERROR pixmap-convert-failed fmt=%d\n", srcFmt));
     }
     int bpp = PixmapBytesPerPixel(rgb->format);
     int red = 0;
@@ -1227,9 +1228,10 @@ static TempStr PageRenderColorsResultTemp(Str path, int* exitCodeOut, int pageNo
         rgb = EnsureReadablePixmap(bmp);
     }
     if (!rgb || !rgb->data) {
+        int srcFmt = (int)bmp->format;
         FreePixmap(bmp);
         release();
-        return fail(fmt("ERROR pixmap-convert-failed fmt=%d\n", (int)bmp->format));
+        return fail(fmt("ERROR pixmap-convert-failed fmt=%d\n", srcFmt));
     }
     int bpp = PixmapBytesPerPixel(rgb->format);
     int red = 0;
@@ -2651,9 +2653,10 @@ static TempStr ImageRenderEdgesResultTemp(Str path, int zoomPercent, int clipKin
     }
     int bpp = PixmapBytesPerPixel(bmp->format);
     if (bpp < 3) {
+        int srcFmt = (int)bmp->format;
         FreePixmap(bmp);
         SafeEngineRelease(&engine);
-        return fail(fmt("ERROR pixmap-fmt=%d\n", (int)bmp->format));
+        return fail(fmt("ERROR pixmap-fmt=%d\n", srcFmt));
     }
 
     auto pixel = [&](int x, int y, int* r, int* g, int* b) {

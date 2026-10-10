@@ -771,8 +771,9 @@ TempStr ImageResizeEdgesResultTemp(Str imagePath, int newW, int newH, int* exitC
     }
     int bpp = PixmapBytesPerPixel(dst->format);
     if (bpp < 3) {
+        int srcFmt = (int)dst->format;
         FreePixmap(dst);
-        return fail(fmt("ERROR pixmap-fmt=%d", (int)dst->format));
+        return fail(fmt("ERROR pixmap-fmt=%d", srcFmt));
     }
 
     auto pixel = [&](int x, int y, int* r, int* g, int* b) {
