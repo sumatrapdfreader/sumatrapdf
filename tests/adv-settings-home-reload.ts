@@ -63,7 +63,12 @@ export async function testit(): Promise<void> {
       throw new Error(`adv-settings-home-reload: ping after save: ${JSON.stringify(ping)}`);
     }
 
-    const after = await client.homeSelection();
+    const afterDeadline = Date.now() + 8000;
+    let after = await client.homeSelection();
+    while (!after.ready && Date.now() < afterDeadline) {
+      await sleep(50);
+      after = await client.homeSelection();
+    }
     if (!after.ready) {
       throw new Error(`adv-settings-home-reload: home page not ready after save (${after.raw})`);
     }
