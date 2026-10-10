@@ -6,6 +6,7 @@
 import { mkdirSync, rmSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 import { ControlClient, ControlCommand } from "./control.ts";
+import { IS_MAC } from "./host.ts";
 import { assemblePdf, cmdId, runStandalone, SLOW_BUILD_FACTOR, tmpPath, USE_NG } from "./util.ts";
 import {
   enumWindows,
@@ -49,6 +50,25 @@ async function waitFloat(
   }
 }
 
+async function frameScreenRect(
+  client: ControlClient,
+  frame: number,
+): Promise<{ left: number; top: number; right: number; bottom: number }> {
+  if (!IS_MAC) {
+    return getWindowRect(frame);
+  }
+  const text = String((await client.request(ControlCommand.TestLayout, []))[1] ?? "");
+  const m = /window rect=(-?\d+),(-?\d+),(-?\d+),(-?\d+)/.exec(text);
+  if (!m) {
+    throw new Error(`annot-list-placement: no window rect\n${text}`);
+  }
+  const x = +m[1]!;
+  const y = +m[2]!;
+  const dx = +m[3]!;
+  const dy = +m[4]!;
+  return { left: x, top: y, right: x + dx, bottom: y + dy };
+}
+
 export async function testit(): Promise<void> {
   const dir = tmpPath("annot-list-placement");
   rmSync(dir, { recursive: true, force: true });
@@ -65,7 +85,7 @@ export async function testit(): Promise<void> {
 
     sendCommandSync(frame, cmdId("CmdFindAnnotation"));
     const first = await waitFloat(client, true);
-    const fr = getWindowRect(frame);
+    const fr = await frameScreenRect(client, frame);
     const wa = getWorkArea();
     const spaceRight = wa.right - fr.right;
     const spaceLeft = fr.left - wa.left;
@@ -100,7 +120,7 @@ export async function testit(): Promise<void> {
     await sleep(200);
     sendCommandSync(frame, cmdId("CmdFindAnnotation"));
     const fs = await waitFloat(client, true);
-    const fsFr = getWindowRect(frame);
+    const fsFr = await frameScreenRect(client, frame);
     if (Math.abs(fs.x + fs.dx - fsFr.right) > 8) {
       throw new Error(
         `annot-list-placement: fullscreen list not on right edge: list=${JSON.stringify(fs)} frame=${JSON.stringify(fsFr)}`,
@@ -114,22 +134,27 @@ export async function testit(): Promise<void> {
       );
     }
 
-    const pid = getWindowPid(frame);
-    // ng's tool windows use gpui's class. The list's title is Annotations.
-    let listHwnd = 0;
-    if (USE_NG) {
-      enumWindows((hwnd) => {
-        if (getWindowPid(hwnd) === pid && getWindowText(hwnd) === "Annotations") {
-          listHwnd = hwnd;
-          return false;
-        }
-        return true;
-      });
+    if (IS_MAC) {
+      // floatRect is the tool window. There is no HWND to enumerate.
+      console.log("annot-list-placement: mac checks the list through floatRect");
     } else {
-      listHwnd = findTopWindow(pid, FLOAT_CLASS);
-    }
-    if (!listHwnd) {
-      throw new Error("annot-list-placement: floating window hwnd not found");
+      const pid = getWindowPid(frame);
+      // ng's tool windows use gpui's class. The list's title is Annotations.
+      let listHwnd = 0;
+      if (USE_NG) {
+        enumWindows((hwnd) => {
+          if (getWindowPid(hwnd) === pid && getWindowText(hwnd) === "Annotations") {
+            listHwnd = hwnd;
+            return false;
+          }
+          return true;
+        });
+      } else {
+        listHwnd = findTopWindow(pid, FLOAT_CLASS);
+      }
+      if (!listHwnd) {
+        throw new Error("annot-list-placement: floating window hwnd not found");
+      }
     }
   } finally {
     client.close();
