@@ -1,6 +1,7 @@
 // #5989: cancelling the screenshot picker must restore document keyboard focus.
 
 import { mkdirSync, rmSync } from "node:fs";
+import { IS_MAC } from "./host.ts";
 import { cmdId, runStandalone, tmpPath } from "./util.ts";
 import {
   findTopWindow,
@@ -42,6 +43,10 @@ async function waitForDocumentFocus(frame: number, timeoutMs = 3000): Promise<vo
 }
 
 export async function testit(): Promise<void> {
+  if (IS_MAC) {
+    console.log("SKIP issue-5989: screenshot picker is a Win32 overlay; macOS saves the page instead");
+    return;
+  }
   const appData = tmpPath("issue-5989");
   rmSync(appData, { recursive: true, force: true });
   mkdirSync(appData, { recursive: true });
