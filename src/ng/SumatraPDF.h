@@ -271,6 +271,7 @@ void SetFullscreenToolbarMode(int mode);
 struct Flags;
 void EnterFullScreen(MainWindow* win, bool presentation = false);
 void ExitFullScreen(MainWindow* win);
+void LayoutProbeNote(MainWindow* win);
 void ToggleFullScreen(MainWindow* win, bool presentation = false);
 void AdvanceFocus(MainWindow* win, bool isShift);
 bool FrameOnKeydown(MainWindow* win, int key, bool isCtrl, bool isShift, bool isAlt);

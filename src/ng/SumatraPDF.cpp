@@ -1055,6 +1055,8 @@ static void OnMenuViewShowHideToolbar(MainWindow* win) {
     }
     for (MainWindow* w : gWindows) {
         ShowOrHideToolbar(w);
+        AppShellSyncCanvasSize(w);
+        LayoutProbeNote(w);
     }
     ScheduleSaveSettings();
 }
@@ -6345,6 +6347,8 @@ void EnterFullScreen(MainWindow* win, bool presentation) {
         AppShellPreventSleep(true);
     }
     logf("EnterFullScreen: presentation %d\n", (int)presentation);
+    AppShellSyncCanvasSize(win);
+    LayoutProbeNote(win);
     win->RedrawAll(true);
 }
 
@@ -6386,6 +6390,8 @@ void ExitFullScreen(MainWindow* win) {
     AppShellSetFullScreen(win, false, wasMaximized);
     RebuildMenuBar(win);
     logf("ExitFullScreen: was presentation %d\n", (int)wasPresentation);
+    AppShellSyncCanvasSize(win);
+    LayoutProbeNote(win);
     win->RedrawAll(true);
 }
 
@@ -7312,6 +7318,8 @@ void ExecuteCmd(MainWindow* win, int cmdId) {
                 }
                 for (MainWindow* w : gWindows) {
                     ShowOrHideToolbar(w);
+                    AppShellSyncCanvasSize(w);
+                    LayoutProbeNote(w);
                 }
                 ScheduleSaveSettings();
             } else {

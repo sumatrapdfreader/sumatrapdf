@@ -133,6 +133,21 @@ static void AppendLayoutRect(str::Builder& out, Str name, bool visible, Rect rec
         fmt("item name=%s visible=%d rect=%d,%d,%d,%d\n", name, visible ? 1 : 0, rect.x, rect.y, rect.dx, rect.dy));
 }
 
+// One note per fullscreen or toolbar command. A paint is not a relayout.
+struct LayoutProbeState {
+    MainWindow* win = nullptr;
+    int count = 0;
+    bool active = false;
+};
+
+static LayoutProbeState gLayoutProbe;
+
+void LayoutProbeNote(MainWindow* win) {
+    if (gLayoutProbe.active && gLayoutProbe.win == win) {
+        gLayoutProbe.count++;
+    }
+}
+
 // ng: the channel needs a listener thread, which wasm does not have
 #if !OS_WASM
 
@@ -4335,8 +4350,22 @@ static void ExecuteControlRequest(ControlRequest* req) {
                 AppendTestResult(req, 2, StrL("NOTREADY no-window"));
                 break;
             }
+            Str action = StringArg(req, 0);
+            if (len(action) == 0 || str::EqI(action, StrL("get"))) {
+                // report only
+            } else if (str::EqI(action, StrL("start")) || str::EqI(action, StrL("reset"))) {
+                gLayoutProbe.win = win;
+                gLayoutProbe.count = 0;
+                gLayoutProbe.active = true;
+            } else if (str::EqI(action, StrL("stop"))) {
+                gLayoutProbe.active = false;
+            } else {
+                AppendError(req, fmt("ERROR unknown-action action=%s", action));
+                break;
+            }
             str::Builder out;
-            out.Append(StrL("OK count=0 watching=0\n"));
+            bool watching = gLayoutProbe.active && gLayoutProbe.win == win;
+            out.Append(fmt("OK count=%d watching=%d\n", gLayoutProbe.count, watching ? 1 : 0));
             // ng: the window's screen rect and the two modes that hide the
             // chrome, so a sweep can check fullscreen without a screenshot
             Rect scr = AppShellWindowScreenRect(win);
