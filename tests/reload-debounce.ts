@@ -8,6 +8,7 @@
 // Uses -appdata so it never touches the user's real settings.
 import { copyFileSync, mkdirSync, openSync, readFileSync, rmSync, writeFileSync, writeSync, closeSync } from "node:fs";
 import { join } from "node:path";
+import { IS_MAC } from "./host.ts";
 import { EXE, ROOT, runStandalone, tmpPath } from "./util";
 import { windowPosArgs } from "./win-automation";
 import { sleep, killAndWait } from "./winapi";
@@ -36,25 +37,49 @@ export async function testit(): Promise<void> {
   copyFileSync(src, doc);
   writeFileSync(join(dir, "SumatraPDF-settings.txt"), SETTINGS);
 
-  const proc = Bun.spawn([EXE, "-for-testing", ...windowPosArgs(), "-appdata", dir, doc], {
-    stdout: "pipe",
-    stderr: "ignore",
-  });
+  const logPath = join(dir, "reload.log");
+  const proc = Bun.spawn(
+    [EXE, "-for-testing", ...windowPosArgs(), "-appdata", dir, ...(IS_MAC ? ["-log-to-file", logPath] : []), doc],
+    {
+      stdout: "pipe",
+      // ASan writes its report to stderr. "ignore" closes that pipe and the
+      // next write kills the process.
+      stderr: IS_MAC ? "pipe" : "ignore",
+    },
+  );
   let out = "";
   const pump = (async () => {
     for await (const chunk of proc.stdout as ReadableStream) {
       out += new TextDecoder().decode(chunk);
     }
   })();
+  if (IS_MAC && proc.stderr) {
+    void (async () => {
+      for await (const _chunk of proc.stderr as ReadableStream) {
+        // drain
+      }
+    })();
+  }
+  const appLog = (): string => {
+    if (!IS_MAC) {
+      return out;
+    }
+    try {
+      return readFileSync(logPath, "utf8");
+    } catch {
+      return "";
+    }
+  };
   try {
     const loadedUntil = Date.now() + 15000;
-    while (!/LoadDocument: .* pages for /.test(out)) {
+    while (!/LoadDocument: .* pages for /.test(appLog())) {
       if (Date.now() > loadedUntil) {
         throw new Error("reload-debounce: document never finished the initial load");
       }
       await sleep(40);
     }
-    out = ""; // don't count the initial load
+    let seen = appLog().length; // don't count the initial load
+    const fresh = (): string => appLog().slice(seen);
 
     // rewrite the way pdflatex does: truncate, then keep the size changing
     // so AUTO_RELOAD_TIMER re-arms instead of loading a half-written file
@@ -69,23 +94,23 @@ export async function testit(): Promise<void> {
     closeSync(fd);
 
     const reloadUntil = Date.now() + 4000;
-    while (reloadCount(out) < 1) {
-      if (brokenCount(out) > 0) {
-        throw new Error(`reloaded a half-written file (reloads: ${reloadCount(out)})`);
+    while (reloadCount(fresh()) < 1) {
+      if (brokenCount(fresh()) > 0) {
+        throw new Error(`reloaded a half-written file (reloads: ${reloadCount(fresh())})`);
       }
       if (Date.now() > reloadUntil) {
-        throw new Error(`expected exactly 1 reload of the finished file, got ${reloadCount(out)}`);
+        throw new Error(`expected exactly 1 reload of the finished file, got ${reloadCount(fresh())}`);
       }
       await sleep(40);
     }
     // one more debounce window so a second reload would still show up
     const quietUntil = Date.now() + 700;
     while (Date.now() < quietUntil) {
-      if (brokenCount(out) > 0) {
-        throw new Error(`reloaded a half-written file (reloads: ${reloadCount(out)})`);
+      if (brokenCount(fresh()) > 0) {
+        throw new Error(`reloaded a half-written file (reloads: ${reloadCount(fresh())})`);
       }
-      if (reloadCount(out) !== 1) {
-        throw new Error(`expected exactly 1 reload of the finished file, got ${reloadCount(out)}`);
+      if (reloadCount(fresh()) !== 1) {
+        throw new Error(`expected exactly 1 reload of the finished file, got ${reloadCount(fresh())}`);
       }
       await sleep(40);
     }
