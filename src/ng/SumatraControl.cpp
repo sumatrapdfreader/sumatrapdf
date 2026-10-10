@@ -4203,12 +4203,13 @@ static void ExecuteControlRequest(ControlRequest* req) {
             i32 x = 0;
             i32 y = 0;
             // ng: an optional fourth argument is the index of the main window
-            // the command is for (with -1 -1 for "no point")
+            // the command is for. (-1, -1) means no point; any other point,
+            // including one above the canvas, is delivered as on Windows.
             i32 winIdx = 0;
             if (IntArg(req, 3, winIdx) && winIdx > 0 && winIdx < len(gWindows)) {
                 win = gWindows[winIdx];
             }
-            if (IntArg(req, 1, x) && IntArg(req, 2, y) && x >= 0 && y >= 0) {
+            if (IntArg(req, 1, x) && IntArg(req, 2, y) && !(x == -1 && y == -1)) {
                 ExecuteCmdAtPoint(win, cmdId, Point{x, y});
             } else {
                 ExecuteCmd(win, cmdId);
