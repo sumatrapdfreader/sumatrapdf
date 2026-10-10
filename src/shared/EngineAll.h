@@ -209,6 +209,11 @@ Str EngineMupdfLoadAttachment(EngineBase*, int attachmentNo);
 Str EngineMupdfLoadAnnotAttachment(EngineBase*, int objNum);
 TempStr EngineMupdfGetPdfInfo(Str path);
 TempStr EngineMupdfGetPdfOutline(Str path);
+#if !OS_WIN
+struct Pixmap;
+struct IPageElement;
+Pixmap* EngineMupdfPageImagePixmap(EngineBase*, IPageElement*);
+#endif
 
 bool IsEnginePsAvailable();
 bool IsEnginePsSupportedFileType(FileType);

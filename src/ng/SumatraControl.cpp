@@ -3134,18 +3134,20 @@ static TempStr ImageOrientationResultTemp(Str pdfPath, int pageNo, int* exitCode
         SafeEngineRelease(&engine);
         return fail(StrL("ERROR no-image-element"));
     }
+    Pixmap* px = nullptr;
+#if OS_WIN
     RenderedBitmap* bmp = engine->GetImageForPageElement(imgEl);
     SafeEngineRelease(&engine);
     if (!bmp) {
         return fail(StrL("ERROR no-image"));
     }
-    Pixmap* px = nullptr;
-#if OS_WIN
     px = PixmapToBgra(PixmapFromRenderedBitmap(bmp));
 #else
-    // GetImageForPageElement is Windows-only; this branch does not run.
-    (void)bmp;
-    return fail(StrL("ERROR no-pixmap"));
+    px = EngineMupdfPageImagePixmap(engine, imgEl);
+    SafeEngineRelease(&engine);
+    if (!px) {
+        return fail(StrL("ERROR no-image"));
+    }
 #endif
     if (!px || !px->data) {
         FreePixmap(px);

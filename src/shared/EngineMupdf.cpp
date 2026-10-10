@@ -7525,16 +7525,11 @@ static fz_pixmap* FzOrientPixmap(fz_context* ctx, fz_pixmap* src, fz_matrix ctm)
     return dst;
 }
 
-RenderedBitmap* EngineMupdf::GetPageImage(int pageNo, RectF rect, int imageIdx) {
-#if !OS_WIN
-    (void)pageNo;
-    (void)rect;
-    (void)imageIdx;
-    return nullptr;
-#else
-    auto* ctx = Ctx();
+// Owned pixmap in the orientation the page draws the image. Caller drops it.
+static fz_pixmap* FzLoadOrientedImage(EngineMupdf* engine, int pageNo, RectF rect, int imageIdx) {
+    auto* ctx = engine->Ctx();
 
-    FzPageInfo* pageInfo = GetFzPageInfo(pageNo, false);
+    FzPageInfo* pageInfo = engine->GetFzPageInfo(pageNo, false);
     if (!pageInfo->page) {
         return nullptr;
     }
@@ -7551,7 +7546,7 @@ RenderedBitmap* EngineMupdf::GetPageImage(int pageNo, RectF rect, int imageIdx) 
         return nullptr;
     }
 
-    ScopedRecursiveMutex scope(&docLock);
+    ScopedRecursiveMutex scope(&engine->docLock);
 
     fz_matrix imgCtm = fz_identity;
     fz_image* image = FzFindImageAtIdx(ctx, pageInfo, imageIdx, &imgCtm);
@@ -7560,14 +7555,12 @@ RenderedBitmap* EngineMupdf::GetPageImage(int pageNo, RectF rect, int imageIdx) 
         return nullptr;
     }
 
-    RenderedBitmap* bmp = nullptr;
     fz_pixmap* pixmap = nullptr;
     fz_pixmap* mask = nullptr;
     fz_pixmap* oriented = nullptr;
     fz_var(pixmap);
     fz_var(mask);
     fz_var(oriented);
-    fz_var(bmp);
 
     fz_try(ctx) {
         pixmap = fz_get_pixmap_from_image(ctx, image, nullptr, nullptr, nullptr, nullptr);
@@ -7605,12 +7598,64 @@ RenderedBitmap* EngineMupdf::GetPageImage(int pageNo, RectF rect, int imageIdx) 
             }
         }
         oriented = FzOrientPixmap(ctx, pixmap, imgCtm);
-        bmp = NewRenderedFzPixmap(ctx, oriented ? oriented : pixmap);
     }
     fz_always(ctx) {
-        fz_drop_pixmap(ctx, oriented);
         fz_drop_pixmap(ctx, mask);
+        if (oriented) {
+            fz_drop_pixmap(ctx, pixmap);
+            pixmap = nullptr;
+        }
+    }
+    fz_catch(ctx) {
+        fz_report_error(ctx);
+        fz_drop_pixmap(ctx, oriented);
         fz_drop_pixmap(ctx, pixmap);
+        oriented = nullptr;
+        pixmap = nullptr;
+    }
+    return oriented ? oriented : pixmap;
+}
+
+#if !OS_WIN
+// Same pixels Copy Image returns on Windows, without a GDI bitmap.
+Pixmap* EngineMupdfPageImagePixmap(EngineBase* engineBase, IPageElement* ipel) {
+    EngineMupdf* engine = AsEngineMupdf(engineBase);
+    if (!engine || !ipel || ipel->GetKind() != kindPageElementImage) {
+        return nullptr;
+    }
+    auto* pel = (PageElementImage*)ipel;
+    int pageNo = pel->loc.IsValid() ? engine->PageNoFromLocation(pel->loc) : pel->pageNo;
+    auto* ctx = engine->Ctx();
+    fz_pixmap* pix = FzLoadOrientedImage(engine, pageNo, pel->rect, pel->imageID);
+    if (!pix) {
+        return nullptr;
+    }
+    Pixmap* res = NewPixmapFromFzPixmap(ctx, pix);
+    fz_drop_pixmap(ctx, pix);
+    return res;
+}
+#endif
+
+RenderedBitmap* EngineMupdf::GetPageImage(int pageNo, RectF rect, int imageIdx) {
+#if !OS_WIN
+    (void)pageNo;
+    (void)rect;
+    (void)imageIdx;
+    return nullptr;
+#else
+    auto* ctx = Ctx();
+    fz_pixmap* pix = FzLoadOrientedImage(this, pageNo, rect, imageIdx);
+    if (!pix) {
+        return nullptr;
+    }
+
+    RenderedBitmap* bmp = nullptr;
+    fz_var(bmp);
+    fz_try(ctx) {
+        bmp = NewRenderedFzPixmap(ctx, pix);
+    }
+    fz_always(ctx) {
+        fz_drop_pixmap(ctx, pix);
     }
     fz_catch(ctx) {
         fz_report_error(ctx);
@@ -7618,7 +7663,6 @@ RenderedBitmap* EngineMupdf::GetPageImage(int pageNo, RectF rect, int imageIdx) 
         delete bmp;
         bmp = nullptr;
     }
-
     return bmp;
 #endif
 }
