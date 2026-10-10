@@ -681,3 +681,97 @@ TempStr GetInstalledExePathTemp() {
     TempStr dir = gCli->installDir;
     return path::JoinTemp(dir, Str(kExeName));
 }
+
+// Copy the running installer to installDir\SumatraPDF.exe. Retries and uses
+// temp+rename like WriteInstallerFileRobust: a single CopyFileW often fails
+// with ACCESS_DENIED (AV / Controlled Folder Access) or a sharing race after
+// TerminateProcess of the previous instance.
+bool CopySelfToDir(Str destDir) {
+    logf("CopySelfToDir(%s)\n", destDir);
+    TempStr exePath = GetSelfExePathTemp();
+    TempStr dstPath = path::JoinTemp(destDir, Str(kExeName));
+    TempStr tmpPath = str::JoinTemp(dstPath, StrL(".tmp"));
+    DWORD lastErr = 0;
+
+    auto tryDirectCopy = [&]() -> bool {
+        ClearReadOnly(dstPath);
+        BOOL ok = CopyFileW(CWStrTemp(exePath), CWStrTemp(dstPath), FALSE);
+        if (!ok) {
+            lastErr = GetLastError();
+            logf("  CopyFileW('%s' -> '%s') failed lastError=%u\n", exePath, dstPath, lastErr);
+            LogLastError(lastErr);
+            return false;
+        }
+        return true;
+    };
+
+    auto tryTempCopyRename = [&]() -> bool {
+        ClearReadOnly(tmpPath);
+        file::Delete(tmpPath);
+        BOOL ok = CopyFileW(CWStrTemp(exePath), CWStrTemp(tmpPath), FALSE);
+        if (!ok) {
+            lastErr = GetLastError();
+            logf("  CopyFileW('%s' -> '%s') failed lastError=%u\n", exePath, tmpPath, lastErr);
+            LogLastError(lastErr);
+            return false;
+        }
+        ClearReadOnly(dstPath);
+        if (!MoveFileExW(CWStrTemp(tmpPath), CWStrTemp(dstPath), MOVEFILE_REPLACE_EXISTING | MOVEFILE_WRITE_THROUGH)) {
+            lastErr = GetLastError();
+            logf("  MoveFileExW('%s' -> '%s') failed lastError=%u\n", tmpPath, dstPath, lastErr);
+            LogLastError(lastErr);
+            file::Delete(tmpPath);
+            return false;
+        }
+        return true;
+    };
+
+    for (int attempt = 1; attempt <= 4; attempt++) {
+        logf("  attempt %d/4\n", attempt);
+        if (tryDirectCopy() || tryTempCopyRename()) {
+            // strip zone identifier (if exists) to avoid windows
+            // complaining when launching the file
+            // https://github.com/sumatrapdfreader/sumatrapdf/issues/1782
+            file::DeleteZoneIdentifier(dstPath);
+            logf("  copied '%s' to '%s'\n", exePath, dstPath);
+            return true;
+        }
+        int killed = KillProcessesWithModule(dstPath, true);
+        logf("  KillProcessesWithModule('%s') killed=%d\n", dstPath, killed);
+        if (file::Exists(dstPath)) {
+            ClearReadOnly(dstPath);
+            bool delOk = file::Delete(dstPath);
+            logf("  Delete('%s') => %d\n", dstPath, (int)delOk);
+            if (!delOk) {
+                LogLastError();
+            }
+        }
+        file::Delete(tmpPath);
+        if (attempt < 4) {
+            DWORD sleepMs = 300u * (DWORD)attempt;
+            logf("  sleep %u ms before retry\n", sleepMs);
+            Sleep(sleepMs);
+        }
+    }
+
+    logf("  failed to copy '%s' to '%s' lastError=%u\n", exePath, dstPath, lastErr);
+    if (lastErr == ERROR_ACCESS_DENIED) {
+        NotifyFailed(
+            Tr("Couldn't copy SumatraPDF.exe to the installation directory (access denied). "
+               "Temporarily disable antivirus or Controlled Folder Access for this folder, "
+               "run the installer as administrator, or choose a different install folder. "
+               "See https://www.sumatrapdfreader.org/docs/Installation"));
+    } else if (lastErr == ERROR_SHARING_VIOLATION || lastErr == ERROR_LOCK_VIOLATION) {
+        NotifyFailed(
+            Tr("Couldn't copy SumatraPDF.exe to the installation directory (file in use). "
+               "Close all SumatraPDF windows and Explorer PDF previews, then try again. "
+               "See https://www.sumatrapdfreader.org/docs/Installation"));
+    } else if (IsDiskFullError(lastErr)) {
+        NotifyFailed(
+            Tr("Not enough free disk space to copy SumatraPDF.exe to the installation directory.\n\n"
+               "Free up space on this drive and try again."));
+    } else {
+        NotifyFailed(Tr("Couldn't copy SumatraPDF.exe to the installation directory"));
+    }
+    return false;
+}

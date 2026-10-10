@@ -23,3 +23,4 @@ void InitSelfDelete();
 void RemoveInstallDirFromPath(bool allUsers, Str installDir);
 TempStr GetInstalledExePathTemp();
 Str GetEnvRegKey(bool allUsers);
+bool CopySelfToDir(Str destDir);
