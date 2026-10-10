@@ -6,7 +6,7 @@
 import { mkdirSync, rmSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 import { ControlClient, ControlCommand } from "./control.ts";
-import { cmdId, runStandalone, tmpPath, assemblePdf } from "./util.ts";
+import { assemblePdf, cmdId, runStandalone, SLOW_BUILD_FACTOR, tmpPath, USE_NG } from "./util.ts";
 import {
   clientToScreen,
   getClassName,
@@ -121,7 +121,77 @@ function toolbarRect(dump: string): Rect {
   return { x, y, dx: +m[3]! - x, dy: +m[4]! - y };
 }
 
+async function ngType(client: ControlClient, text: string): Promise<void> {
+  for (const ch of text) {
+    const res = await client.request(ControlCommand.TestInput, ["char", ch.codePointAt(0)!]);
+    const raw = String(res[1] ?? "");
+    if (res[0] !== 0 || !raw.startsWith("OK")) {
+      throw new Error(`free-text-annotation-placement: palette type failed: ${raw}`);
+    }
+  }
+}
+
+async function ngKey(client: ControlClient, vk: number): Promise<void> {
+  const res = await client.request(ControlCommand.TestInput, ["key", vk, 0]);
+  const raw = String(res[1] ?? "");
+  if (res[0] !== 0 || !raw.startsWith("OK")) {
+    throw new Error(`free-text-annotation-placement: palette key failed: ${raw}`);
+  }
+}
+
+async function executeFromCommandPaletteNg(client: ControlClient, frame: number): Promise<void> {
+  sendCommand(frame, cmdId("CmdCommandPalette"));
+  const openDeadline = Date.now() + 8_000 * SLOW_BUILD_FACTOR;
+  let raw = "";
+  for (;;) {
+    const res = await client.request(ControlCommand.TestCommandPalette, []);
+    raw = String(res[1] ?? "");
+    if (res[0] === 0 && raw.startsWith("OK") && raw.includes("editFocus=1")) {
+      break;
+    }
+    if (Date.now() > openDeadline) {
+      throw new Error(`free-text-annotation-placement: command palette did not open\n${raw}`);
+    }
+    await sleep(50);
+  }
+
+  const query = ">Create Free Text Annotation";
+  await ngType(client, query);
+  const filterDeadline = Date.now() + 3_000 * SLOW_BUILD_FACTOR;
+  let itemCount = 0;
+  for (;;) {
+    const res = await client.request(ControlCommand.TestCommandPalette, []);
+    raw = String(res[1] ?? "");
+    const m = /items=(\d+) querySel=-?\d+,-?\d+ queryLen=(\d+) cmd=(-?\d+)/.exec(raw);
+    if (res[0] === 0 && m && +m[2]! === query.length) {
+      itemCount = +m[1]!;
+      break;
+    }
+    if (Date.now() > filterDeadline) {
+      throw new Error(`free-text-annotation-placement: palette did not filter\n${raw}`);
+    }
+    await sleep(40);
+  }
+
+  const want = cmdId("CmdCreateAnnotFreeText");
+  for (let i = 0; i < itemCount; i++) {
+    const res = await client.request(ControlCommand.TestCommandPalette, []);
+    raw = String(res[1] ?? "");
+    const m = /cmd=(-?\d+)/.exec(raw);
+    if (res[0] === 0 && m && +m[1]! === want) {
+      await ngKey(client, VK_RETURN);
+      return;
+    }
+    await ngKey(client, VK_DOWN);
+  }
+  throw new Error("free-text-annotation-placement: command was not in the filtered palette");
+}
+
 async function executeFromCommandPalette(client: ControlClient, frame: number): Promise<void> {
+  if (USE_NG) {
+    await executeFromCommandPaletteNg(client, frame);
+    return;
+  }
   sendCommand(frame, cmdId("CmdCommandPalette"));
   const openDeadline = Date.now() + 8_000;
   let palette = 0;
@@ -204,10 +274,36 @@ export async function testit(): Promise<void> {
     const pagePoint = { x: Math.floor(canvasRect.right / 2), y: Math.floor(canvasRect.bottom / 2) };
     const wantCmd = cmdId("CmdCreateAnnotFreeText");
 
-    const toolbarDump = String((await client.request(ControlCommand.TestToolbarButtons, []))[1] ?? "");
-    const button = toolbarRect(toolbarDump);
-    const toolbar = findChildByClass(frame, "SUMATRA_VIRT_TOOLBAR");
-    await clickAt(toolbar, button.x + Math.floor(button.dx / 2), button.y + Math.floor(button.dy / 2), 0);
+    const buttonDeadline = Date.now() + 5_000 * SLOW_BUILD_FACTOR;
+    let button = { x: 0, y: 0, dx: 0, dy: 0 };
+    let toolbarDump = "";
+    for (;;) {
+      toolbarDump = String((await client.request(ControlCommand.TestToolbarButtons, []))[1] ?? "");
+      try {
+        button = toolbarRect(toolbarDump);
+      } catch {
+        button = { x: 0, y: 0, dx: 0, dy: 0 };
+      }
+      if (button.dx > 0 && button.dy > 0) {
+        break;
+      }
+      if (Date.now() > buttonDeadline) {
+        throw new Error(`free-text-annotation-placement: Free Text toolbar button not laid out\n${toolbarDump}`);
+      }
+      await sleep(40);
+    }
+    const bx = button.x + Math.floor(button.dx / 2);
+    const by = button.y + Math.floor(button.dy / 2);
+    if (USE_NG) {
+      const res = await client.request(ControlCommand.TestInput, ["click", bx, by, 0, 0]);
+      const raw = String(res[1] ?? "");
+      if (res[0] !== 0 || !raw.startsWith("OK")) {
+        throw new Error(`free-text-annotation-placement: toolbar click failed: ${raw}`);
+      }
+    } else {
+      const toolbar = findChildByClass(frame, "SUMATRA_VIRT_TOOLBAR");
+      await clickAt(toolbar, bx, by, 0);
+    }
 
     let state = await waitForPlacement(client, true);
     if (!state.notification || state.annotations !== 0 || state.message !== kExpectedMessage) {

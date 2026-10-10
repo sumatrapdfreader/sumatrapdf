@@ -385,6 +385,14 @@ void StartAnnotationPlacement(MainWindow* win, int cmdId) {
         return;
     }
 
+    // placement owns Esc; the editor of the annotation just created would take it
+    if (IsEditingFreeTextInPlace(win)) {
+        EndFreeTextInPlaceEdit(true);
+    }
+    if (IsEditingAnnotContents(win)) {
+        EndAnnotContentsEdit(true);
+    }
+
     EndCurrentPlacement(win);
 
     AnnotPlacement& p = win->annotPlacement;
