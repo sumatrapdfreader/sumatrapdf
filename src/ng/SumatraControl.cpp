@@ -111,6 +111,7 @@ extern "C" {
 #include "gui/OleDragDrop.h"
 #include "gui/NativeCursors.h"
 #include "SumatraControl.h"
+#include "SumatraControlCommon.h"
 
 #include "SumatraLog.h"
 
@@ -127,11 +128,6 @@ static Pixmap* EnsureReadablePixmap(Pixmap* p) {
 #else
     return nullptr;
 #endif
-}
-
-static void AppendLayoutRect(str::Builder& out, Str name, bool visible, Rect rect) {
-    out.Append(
-        fmt("item name=%s visible=%d rect=%d,%d,%d,%d\n", name, visible ? 1 : 0, rect.x, rect.y, rect.dx, rect.dy));
 }
 
 // One note per fullscreen or toolbar command. A paint is not a relayout.
@@ -403,47 +399,6 @@ TempStr SeedTextSelectionResultTemp(int pageNo, int* exitCodeOut) {
     }
     AppShellInvalidate(win);
     return ToStrTemp(out);
-}
-
-// Boxes the current page actually declares (issue #814). Optional int arg is pageNo.
-static TempStr PageBoxesResultTemp(int pageNo, int* exitCodeOut) {
-    str::Builder out;
-    auto finish = [&](Str msg, int code) -> TempStr {
-        out.Append(msg);
-        out.AppendChar('\n');
-        if (exitCodeOut) {
-            *exitCodeOut = code;
-        }
-        return ToStrTemp(out);
-    };
-
-    if (len(gWindows) == 0) {
-        return finish(StrL("NOTREADY no-window"), 2);
-    }
-    MainWindow* win = gWindows[0];
-    if (!win || !win->IsDocLoaded() || !win->ctrl) {
-        return finish(StrL("NOTREADY no-doc"), 2);
-    }
-    DisplayModel* dm = win->AsFixed();
-    EngineBase* engine = dm ? dm->GetEngine() : nullptr;
-    if (!engine) {
-        return finish(StrL("ERROR not-fixed-page"), 1);
-    }
-    if (pageNo < 1) {
-        pageNo = win->ctrl->CurrentPageNo();
-    }
-    if (!win->ctrl->ValidPageNo(pageNo)) {
-        return finish(fmt("ERROR bad-page page=%d", pageNo), 1);
-    }
-    Vec<PdfPageBox> boxes;
-    engine->GetPdfPageBoxes(pageNo, boxes);
-    str::Builder line;
-    line.Append(fmt("OK page=%d show=%d", pageNo, win->showPageBoxes ? 1 : 0));
-    for (const PdfPageBox& box : boxes) {
-        line.Append(fmt(" %s=%.2f,%.2f,%.2f,%.2f", Str(PdfPageBoxName(box.kind)), box.rect.x, box.rect.y, box.rect.dx,
-                        box.rect.dy));
-    }
-    return finish(ToStrTemp(line), 0);
 }
 
 // Opening the context menu over text must not move an existing selection.
@@ -1013,93 +968,6 @@ TempStr ResolveUnsavedChangesResultTemp(Str action, Str path, int* exitCodeOut) 
     return ToStrTemp(out);
 }
 
-static TempStr DocumentSignaturesResultTemp(int* exitCodeOut) {
-    auto finish = [exitCodeOut](Str result, int code) -> TempStr {
-        if (exitCodeOut) {
-            *exitCodeOut = code;
-        }
-        return str::DupTemp(result);
-    };
-    if (len(gWindows) == 0) {
-        return finish(StrL("NOTREADY no-window"), 2);
-    }
-    MainWindow* win = gWindows[0];
-    DisplayModel* dm = win ? win->AsFixed() : nullptr;
-    EngineBase* engine = dm ? dm->GetEngine() : nullptr;
-    if (!engine) {
-        return finish(StrL("NOTREADY no-fixed-document"), 2);
-    }
-    EutlRegisterLookup();
-    Props props;
-    engine->GetProperties(props);
-    Str sigs = GetPropValueTemp(props, DocProp::Signatures);
-    if (len(sigs) == 0) {
-        return finish(StrL("ERROR no-signatures"), 1);
-    }
-    return finish(str::DupTemp(sigs), 0);
-}
-
-static TempStr DocumentFontListResultTemp(int* exitCodeOut) {
-    auto finish = [exitCodeOut](Str result, int code) -> TempStr {
-        if (exitCodeOut) {
-            *exitCodeOut = code;
-        }
-        return str::DupTemp(result);
-    };
-    if (len(gWindows) == 0) {
-        return finish(StrL("NOTREADY no-window"), 2);
-    }
-    MainWindow* win = gWindows[0];
-    DisplayModel* dm = win ? win->AsFixed() : nullptr;
-    EngineBase* engine = dm ? dm->GetEngine() : nullptr;
-    if (!engine) {
-        return finish(StrL("NOTREADY no-fixed-document"), 2);
-    }
-    TempStr fonts = engine->GetPropertyTemp(DocProp::FontList);
-    if (len(fonts) == 0) {
-        return finish(StrL("ERROR no-fonts"), 1);
-    }
-    return finish(fmt("OK fonts=%s", fonts), 0);
-}
-
-static TempStr DocumentPropertiesResultTemp(int* exitCodeOut) {
-    auto finish = [exitCodeOut](Str result, int code) -> TempStr {
-        if (exitCodeOut) {
-            *exitCodeOut = code;
-        }
-        return str::DupTemp(result);
-    };
-    if (len(gWindows) == 0) {
-        return finish(StrL("NOTREADY no-window"), 2);
-    }
-    MainWindow* win = gWindows[0];
-    DisplayModel* dm = win ? win->AsFixed() : nullptr;
-    EngineBase* engine = dm ? dm->GetEngine() : nullptr;
-    if (!engine) {
-        return finish(StrL("NOTREADY no-fixed-document"), 2);
-    }
-    Props props;
-    engine->GetProperties(props);
-    str::Builder out;
-    out.Append(StrL("OK"));
-    int n = len(props);
-    for (int i = 0; i < n; i++) {
-        TempStr name = PropNameTemp(props[i].prop);
-        if (len(name) == 0) {
-            continue;
-        }
-        out.Append(StrL("\n"));
-        out.Append(name);
-        out.Append(StrL("="));
-        out.Append(props[i].val);
-    }
-    // what Save As offers, and the sniffed type Properties shows
-    out.Append(fmt("\ndefaultExt=%s", engine->defaultExt));
-    FileType ft = GuessFileTypeFromFile(engine->FilePath());
-    out.Append(fmt("\nfileTypeExt=%s", GetExtForFileTypeTemp(ft)));
-    return finish(ToStrTemp(out), 0);
-}
-
 enum class ControlCmd : u16 {
     Ping = 1,
     Quit = 2,
@@ -1249,38 +1117,6 @@ enum class ControlCmd : u16 {
     TestDdeExecute = 129,
 };
 
-enum class ControlArgType : u16 {
-    End = 0,
-    Int32 = 1,
-    Bytes = 2,
-    String = 3,
-    List = 4,
-};
-
-struct ControlArg {
-    ControlArgType type = ControlArgType::End;
-    i32 intVal = 0;
-    u8* bytes = nullptr;
-    u32 bytesLen = 0;
-    Str str;
-    Vec<ControlArg*>* list = nullptr;
-};
-
-static void DeleteControlArg(ControlArg* arg) {
-    if (!arg) {
-        return;
-    }
-    free(arg->bytes);
-    str::FreePtr(&arg->str);
-    if (arg->list) {
-        for (ControlArg* el : *arg->list) {
-            DeleteControlArg(el);
-        }
-        delete arg->list;
-    }
-    delete arg;
-}
-
 enum class RenderIdleState : u8 {
     NotReady = 0,
     Busy = 1,
@@ -1365,36 +1201,6 @@ struct PacketReader {
         return true;
     }
 };
-
-static void AppendU16(str::Builder& s, u16 v) {
-    u8 buf[2] = {(u8)(v & 0xff), (u8)((v >> 8) & 0xff)};
-    s.Append(Str((char*)buf, (int)sizeof(buf)));
-}
-
-static void AppendU32(str::Builder& s, u32 v) {
-    u8 buf[4] = {(u8)(v & 0xff), (u8)((v >> 8) & 0xff), (u8)((v >> 16) & 0xff), (u8)((v >> 24) & 0xff)};
-    s.Append(Str((char*)buf, (int)sizeof(buf)));
-}
-
-static void AppendArgEnd(str::Builder& s) {
-    AppendU16(s, (u16)ControlArgType::End);
-}
-
-static void AppendArgInt(str::Builder& s, i32 v) {
-    AppendU16(s, (u16)ControlArgType::Int32);
-    AppendU32(s, (u32)v);
-}
-
-static void AppendArgString(str::Builder& s, Str str) {
-    if (len(str) == 0) {
-        str = StrL("");
-    }
-    size_t n = (size_t)str.len;
-    AppendU16(s, (u16)ControlArgType::String);
-    AppendU32(s, (u32)n);
-    s.Append(str);
-    s.AppendChar(0);
-}
 
 static bool ParseArg(PacketReader& r, ControlArg** argOut);
 
@@ -1481,12 +1287,15 @@ static ControlArg* ArgAt(ControlRequest* req, size_t idx, ControlArgType type) {
         return nullptr;
     }
     ControlArg* arg = req->args[(int)idx];
-    return arg->type == type ? arg : nullptr;
+    if (arg->type != type) {
+        return nullptr;
+    }
+    return arg;
 }
 
 static Str StringArg(ControlRequest* req, size_t idx) {
     ControlArg* arg = ArgAt(req, idx, ControlArgType::String);
-    return arg ? arg->str : Str();
+    return arg ? arg->str : Str{};
 }
 
 static bool IntArg(ControlRequest* req, size_t idx, i32& valOut) {
@@ -2274,52 +2083,6 @@ static TempStr PageInfoOverlayResultTemp(Str pathTwoPages, Str pathOnePage, int*
 // orig posts WM_CLOSE. There is no frame wndproc, so post the same close.
 static void TestPostCloseWindow(MainWindow* win) {
     CloseWindowIfCan(win, true);
-}
-
-// Expand SelectionHandlers placeholders against the current tab's selection.
-static TempStr SelectionVarsResultTemp(Str pattern, int* exitCodeOut) {
-    str::Builder out;
-    auto finish = [&](Str msg, int code) -> TempStr {
-        out.Append(msg);
-        if (exitCodeOut) {
-            *exitCodeOut = code;
-        }
-        return ToStrTemp(out);
-    };
-    if (len(gWindows) == 0 || !gWindows[0]) {
-        return finish(StrL("NOTREADY no-window\n"), 2);
-    }
-    WindowTab* tab = gWindows[0]->CurrentTab();
-    bool isTextOnly = false;
-    TempStr sel = tab ? GetSelectedTextTemp(tab, StrL("\n"), isTextOnly) : TempStr{};
-    if (len(sel) == 0) {
-        sel = StrL("");
-    }
-    if (str::IsEmptyOrWhiteSpace(pattern)) {
-        pattern = StrL("${selectionPosition}");
-    }
-    TempStr expanded = ExpandSelectionVarsTemp(pattern, sel, false, 0, nullptr, tab);
-    out.Append(StrL("pattern="));
-    out.Append(pattern);
-    out.AppendChar('\n');
-    out.Append(StrL("expanded="));
-    out.Append(expanded);
-    out.AppendChar('\n');
-    if (tab && tab->selectionOnPage) {
-        out.Append(fmt("nrects=%d\n", len(*tab->selectionOnPage)));
-        for (SelectionOnPage& onPage : *tab->selectionOnPage) {
-            RectF r = onPage.rect;
-            out.Append(fmt("rect=%g,%g,%g,%g page=%d\n", r.x, r.y, r.dx, r.dy, onPage.pageNo));
-            if (onPage.HasQuad()) {
-                QuadF q = onPage.quad;
-                out.Append(fmt("quad=%g,%g %g,%g %g,%g %g,%g\n", q.ul.x, q.ul.y, q.ur.x, q.ur.y, q.ll.x, q.ll.y, q.lr.x,
-                               q.lr.y));
-            }
-        }
-    } else {
-        out.Append(StrL("nrects=0\n"));
-    }
-    return finish({}, 0);
 }
 
 // The frame's non-client strips, in window coordinates. Maximized, DWM's

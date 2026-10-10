@@ -146,6 +146,8 @@ export const sharedFiles = [
   "src/shared/SelectionTranslateCommon.h",
   "src/shared/SignDocumentDialogCommon.cpp",
   "src/shared/SignDocumentDialogCommon.h",
+  "src/shared/SumatraControlCommon.cpp",
+  "src/shared/SumatraControlCommon.h",
   "src/shared/SumatraPDFCommon.cpp",
   "src/shared/SumatraPDFCommon.h",
   "src/shared/SumatraTest.h",

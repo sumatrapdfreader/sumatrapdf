@@ -407,6 +407,7 @@ function sumatrapdf_files()
     "StressTesting.*",
     "SumatraConfig.cpp",
     "SumatraControl.*",
+    "SumatraControlCommon.*",
     "SumatraDialogs.*",
     "SumatraPDF.cpp",
     "SumatraPDFCommon.*",

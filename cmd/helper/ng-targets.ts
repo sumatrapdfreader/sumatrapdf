@@ -1484,6 +1484,7 @@ export const targets: Target[] = [
       "src/ng/RegistryInstaller.cpp",
       "src/ng/StressTesting.cpp",
       "src/ng/SumatraControl.cpp",
+      "src/ng/SumatraControlCommon.cpp",
       "src/ng/SumatraTestCommon.cpp",
       "src/ng/gui/GpuiLog.cpp",
       "src/ng/SumatraLog.cpp",
