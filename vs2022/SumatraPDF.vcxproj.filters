@@ -255,6 +255,9 @@
     <ClInclude Include="..\src\shared\AnnotPlacement.h">
       <Filter>src\shared</Filter>
     </ClInclude>
+    <ClInclude Include="..\src\shared\AnnotPlacementCommon.h">
+      <Filter>src\shared</Filter>
+    </ClInclude>
     <ClInclude Include="..\src\shared\AnnotSearch.h">
       <Filter>src\shared</Filter>
     </ClInclude>
@@ -1017,6 +1020,9 @@
       <Filter>src\shared</Filter>
     </ClCompile>
     <ClCompile Include="..\src\shared\AnnotEditToolbarCommon.cpp">
+      <Filter>src\shared</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\shared\AnnotPlacementCommon.cpp">
       <Filter>src\shared</Filter>
     </ClCompile>
     <ClCompile Include="..\src\shared\AnnotSearch.cpp">
