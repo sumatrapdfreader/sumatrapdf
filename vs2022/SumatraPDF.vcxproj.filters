@@ -279,6 +279,9 @@
     <ClInclude Include="..\src\shared\CachedObjects.h">
       <Filter>src\shared</Filter>
     </ClInclude>
+    <ClInclude Include="..\src\shared\CanvasCommon.h">
+      <Filter>src\shared</Filter>
+    </ClInclude>
     <ClInclude Include="..\src\shared\ChapterTable.h">
       <Filter>src\shared</Filter>
     </ClInclude>
@@ -1089,6 +1092,9 @@
       <Filter>src\shared</Filter>
     </ClCompile>
     <ClCompile Include="..\src\shared\CachedObjects.cpp">
+      <Filter>src\shared</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\shared\CanvasCommon.cpp">
       <Filter>src\shared</Filter>
     </ClCompile>
     <ClCompile Include="..\src\shared\ChapterTable.cpp">

@@ -61,6 +61,7 @@
 #include "Menu.h"
 #include "gui/DialogWidgets.h"
 #include "gui/DocCanvas.h"
+#include "CanvasCommon.h"
 
 #include "SumatraLog.h"
 
@@ -552,44 +553,6 @@ static void PaintVerticalGradient(gp::PaintCtx* ctx, Rect rc, Color top, Color b
 
 // --- the canvas overlays (orig Canvas.cpp) ---------------------------------
 
-// CmdToggleImages. Like showLinks this is a debug aid (both live in the debug
-// menu, so both are debug / pre-release only), and like it the outlines are
-// only drawn, never saved
-static bool gShowImages = false;
-
-// CmdToggleImages: outline images the way showLinks outlines links (debug aid)
-bool ShowImageOutlines() {
-    return gShowImages;
-}
-
-void ToggleShowImageOutlines() {
-    gShowImages = !gShowImages;
-}
-
-// CmdToggleTransparencyGrid: Acrobat-style checkerboard under the page so
-// transparent PDFs (white art on a hole) are visible. Session-only, not saved.
-static bool gShowTransparencyGrid = false;
-
-bool ShowTransparencyGrid() {
-    return gShowTransparencyGrid;
-}
-
-void ToggleTransparencyGrid() {
-    gShowTransparencyGrid = !gShowTransparencyGrid;
-}
-
-// CmdDebugShowFitContentArea. Like gShowImages, a debug-only visualization that
-// is drawn but never saved to settings
-static bool gShowFitContentArea = false;
-
-void ToggleShowFitContentArea() {
-    gShowFitContentArea = !gShowFitContentArea;
-}
-
-bool ShowFitContentArea() {
-    return gShowFitContentArea;
-}
-
 // ng: what the last paint drew, so a scripted run can tell an overlay that is
 // on from one that is on and draws nothing (-dbg-control's TestOverlayState)
 static int gOverlayShapes = 0;
@@ -640,40 +603,6 @@ static void DebugShowLinks(DisplayModel* dm, gp::PaintCtx* ctx) {
         return;
     }
     DebugOutlinePageElements(dm, ctx, false);
-}
-
-static Color ColorForPdfPageBox(PdfPageBoxKind kind) {
-    switch (kind) {
-        case PdfPageBoxKind::Media:
-            return MkRgb(0x20, 0x20, 0x20);
-        case PdfPageBoxKind::Crop:
-            return MkRgb(0xc0, 0x20, 0x20);
-        case PdfPageBoxKind::Bleed:
-            return MkRgb(0x20, 0x40, 0xc0);
-        case PdfPageBoxKind::Trim:
-            return MkRgb(0x10, 0x90, 0x20);
-        case PdfPageBoxKind::Art:
-            return MkRgb(0xc0, 0x80, 0x00);
-    }
-    return kColBlack;
-}
-
-// Place the label so coincident boxes (crop == media, etc.) stay readable.
-static Point PdfPageBoxLabelPos(const Rect& r, PdfPageBoxKind kind) {
-    constexpr int kPad = 3;
-    switch (kind) {
-        case PdfPageBoxKind::Media:
-            return Point(r.x + kPad, r.y + kPad);
-        case PdfPageBoxKind::Crop:
-            return Point(r.x + r.dx - kPad, r.y + kPad);
-        case PdfPageBoxKind::Bleed:
-            return Point(r.x + kPad, r.y + r.dy - kPad);
-        case PdfPageBoxKind::Trim:
-            return Point(r.x + r.dx - kPad, r.y + r.dy - kPad);
-        case PdfPageBoxKind::Art:
-            return Point(r.x + (r.dx / 2), r.y + kPad);
-    }
-    return r.TL();
 }
 
 // ng: orig passes DT_LEFT / DT_RIGHT / DT_CENTER to DrawText; there is no
@@ -1149,10 +1078,6 @@ void CanvasHideScrollbars(MainWindow* win) {
 
 int CanvasScrollPosV(MainWindow* win) {
     return win->scrollV.nPos;
-}
-
-static int ScrollLineAmount(int configuredAmount) {
-    return configuredAmount > 0 ? configuredAmount : 16;
 }
 
 // Smooth wheel scrolling: frame-rate-independent exponential chase of the
@@ -1860,18 +1785,7 @@ void StartAutoScrollAtCursor(MainWindow* win) {
 
 // --- laser pointer (CmdToggleLaserPointer) ----------------------------------
 
-// A laser pointer is a session mode, not a setting: it's turned on to point at
-// something during a presentation and off again.
-// ng: orig makes a HCURSOR out of it. gpui has a fixed set of cursor shapes and
-// no way to supply a bitmap (see "gpui gaps"), so the dot is painted on the
-// canvas and the system cursor is hidden under it.
-static bool gLaserPointer = false;
-
 constexpr int kLaserPointerSize = 32;
-
-bool IsLaserPointerActive() {
-    return gLaserPointer;
-}
 
 // ng: where the system cursor can be a bitmap (Windows) the dot is orig's
 // cursor; elsewhere it is painted on the canvas under a hidden cursor
@@ -1970,9 +1884,7 @@ static void SetTextOrArrowCursor(MainWindow* win, DisplayModel* dm, Point pt) {
 }
 
 // defined with the annotation half below
-static ResizeHandle GetResizeHandleAt(MainWindow* win, Point pt, Annotation* annot);
 static int CursorForResizeHandle(ResizeHandle handle);
-static Annotation* AnnotationLockingMouse(MainWindow* win);
 
 // orig's OnSetCursorMouseNone: the cursor and the link tooltip while no mouse
 // button is down. The laser-pointer branch is step 14.
@@ -2133,116 +2045,6 @@ static void OnSetCursor(MainWindow* win, Point pt) {
 
 // --- annotations (step 13a; orig's Canvas.cpp half) -------------------------
 
-// Size of resize handle hit area (in pixels)
-constexpr int kResizeHandleSize = 8;
-
-static bool IsLineEndpointHandle(ResizeHandle handle) {
-    return handle == ResizeHandle::LineStart || handle == ResizeHandle::LineEnd;
-}
-
-static bool IsVertexHandle(ResizeHandle handle) {
-    return handle == ResizeHandle::Vertex;
-}
-
-static bool IsPolyVertexType(AnnotationType tp) {
-    return tp == AnnotationType::PolyLine || tp == AnnotationType::Polygon;
-}
-
-// Line annotations: hit-test the two endpoints, not the bounding-box handles.
-static ResizeHandle GetLineEndpointHandleAt(DisplayModel* dm, Point pt, Annotation* annot) {
-    PointF start, end;
-    if (!GetLinePoints(annot, start, end)) {
-        return ResizeHandle::None;
-    }
-    Point startPt = dm->CvtToScreen(annot->pageNo, start);
-    Point endPt = dm->CvtToScreen(annot->pageNo, end);
-    int hs = kResizeHandleSize;
-    auto dist = [&](Point p) { return std::max(abs(pt.x - p.x), abs(pt.y - p.y)); };
-    int dStart = dist(startPt);
-    int dEnd = dist(endPt);
-    if (dStart <= hs && dStart <= dEnd) {
-        return ResizeHandle::LineStart;
-    }
-    if (dEnd <= hs) {
-        return ResizeHandle::LineEnd;
-    }
-    return ResizeHandle::None;
-}
-
-// PolyLine / Polygon: hit-test each vertex. Returns index, or -1.
-static int GetPolyVertexAt(DisplayModel* dm, Point pt, Annotation* annot) {
-    if (!annot || !IsPolyVertexType(annot->type)) {
-        return -1;
-    }
-    Vec<PointF> pts = GetVertices(annot);
-    int n = len(pts);
-    if (n == 0) {
-        return -1;
-    }
-    int hs = kResizeHandleSize;
-    int best = -1;
-    int bestDist = hs + 1;
-    for (int i = 0; i < n; i++) {
-        Point p = dm->CvtToScreen(annot->pageNo, pts[i]);
-        int d = std::max(abs(pt.x - p.x), abs(pt.y - p.y));
-        if (d <= hs && d < bestDist) {
-            best = i;
-            bestDist = d;
-        }
-    }
-    return best;
-}
-
-// Get the resize handle at the given point for the selected annotation
-static ResizeHandle GetResizeHandleAt(MainWindow* win, Point pt, Annotation* annot) {
-    if (!annot) {
-        return ResizeHandle::None;
-    }
-    DisplayModel* dm = win->AsFixed();
-    if (!dm) {
-        return ResizeHandle::None;
-    }
-    int pageNo = annot->pageNo;
-    if (!dm->PageVisible(pageNo)) {
-        return ResizeHandle::None;
-    }
-    if (annot->type == AnnotationType::Line) {
-        return GetLineEndpointHandleAt(dm, pt, annot);
-    }
-    if (IsPolyVertexType(annot->type)) {
-        return GetPolyVertexAt(dm, pt, annot) >= 0 ? ResizeHandle::Vertex : ResizeHandle::None;
-    }
-    if (annot->type == AnnotationType::Redact && len(GetQuadPointsAsRect(annot)) > 0) {
-        // text-selection marks are a set of quads, not a stretchable rect
-        return ResizeHandle::None;
-    }
-
-    Rect rect = dm->CvtToScreen(pageNo, GetRect(annot));
-    int hs = kResizeHandleSize;
-
-    bool nearLeft = pt.x >= rect.x - hs && pt.x <= rect.x + hs;
-    bool nearRight = pt.x >= rect.x + rect.dx - hs && pt.x <= rect.x + rect.dx + hs;
-    bool nearTop = pt.y >= rect.y - hs && pt.y <= rect.y + hs;
-    bool nearBottom = pt.y >= rect.y + rect.dy - hs && pt.y <= rect.y + rect.dy + hs;
-    bool betweenX = pt.x >= rect.x + hs && pt.x <= rect.x + rect.dx - hs;
-    bool betweenY = pt.y >= rect.y + hs && pt.y <= rect.y + rect.dy - hs;
-
-    // clang-format off
-    // corners have priority over edges
-    if (nearLeft  && nearTop)    return ResizeHandle::TopLeft;
-    if (nearRight && nearTop)    return ResizeHandle::TopRight;
-    if (nearRight && nearBottom) return ResizeHandle::BottomRight;
-    if (nearLeft  && nearBottom) return ResizeHandle::BottomLeft;
-    // edges
-    if (betweenX  && nearTop)    return ResizeHandle::Top;
-    if (nearRight && betweenY)   return ResizeHandle::Right;
-    if (betweenX  && nearBottom) return ResizeHandle::Bottom;
-    if (nearLeft  && betweenY)   return ResizeHandle::Left;
-    // clang-format on
-
-    return ResizeHandle::None;
-}
-
 static int CursorForResizeHandle(ResizeHandle handle) {
     switch (handle) {
         case ResizeHandle::TopLeft:
@@ -2264,17 +2066,6 @@ static int CursorForResizeHandle(ResizeHandle handle) {
         default:
             return kCurArrow;
     }
-}
-
-// Edit PDF with an annotation selected (its toolbar is up): the mouse works
-// only on that annotation, and a click anywhere else just deselects it
-static Annotation* AnnotationLockingMouse(MainWindow* win) {
-    WindowTab* tab = win ? win->CurrentTab() : nullptr;
-    Annotation* annot = tab ? tab->selectedAnnotation : nullptr;
-    if (!win || !win->pdfAnnotationsToolbarEnabled || !AnnotationIsLive(annot)) {
-        return nullptr;
-    }
-    return annot;
 }
 
 static void StartAnnotationDrag(MainWindow* win, Annotation* annot, Point pt) {
@@ -2419,95 +2210,6 @@ void AnnotationResizeRerenderTick(MainWindow* win, int elapsedMs) {
     }
     win->annotationResizeRerenderLeftMs = 0;
     MainWindowRerender(win);
-}
-
-// Helper function to calculate new rectangle during resize
-static RectF CalculateResizedRect(MainWindow* win, int x, int y) {
-    DisplayModel* dm = win->AsFixed();
-    Annotation* annot = win->annotationBeingDragged;
-    int pageNo = PageNo(annot);
-
-    Rect screenPt{x, y, 1, 1};
-    RectF pagePt = dm->CvtFromScreen(screenPt, pageNo);
-
-    RectF orig = win->annotationOriginalRect;
-    RectF r = orig;
-
-    Point startPt = win->dragStart;
-    Rect startScreen{startPt.x, startPt.y, 1, 1};
-    RectF startPage = dm->CvtFromScreen(startScreen, pageNo);
-
-    float deltaX = pagePt.x - startPage.x;
-    float deltaY = pagePt.y - startPage.y;
-
-    const float minSize = 10.0F;
-    auto handle = (ResizeHandle)win->resizeHandle;
-
-    bool moveLeft =
-        handle == ResizeHandle::TopLeft || handle == ResizeHandle::Left || handle == ResizeHandle::BottomLeft;
-    bool moveRight =
-        handle == ResizeHandle::TopRight || handle == ResizeHandle::Right || handle == ResizeHandle::BottomRight;
-    bool moveTop = handle == ResizeHandle::TopLeft || handle == ResizeHandle::Top || handle == ResizeHandle::TopRight;
-    bool moveBottom =
-        handle == ResizeHandle::BottomLeft || handle == ResizeHandle::Bottom || handle == ResizeHandle::BottomRight;
-
-    if (moveLeft) {
-        r.x = orig.x + deltaX;
-        r.dx = orig.dx - deltaX;
-        if (r.dx < minSize) {
-            r.x = orig.x + orig.dx - minSize;
-            r.dx = minSize;
-        }
-    }
-    if (moveRight) {
-        r.dx = orig.dx + deltaX;
-        r.dx = std::max(r.dx, minSize);
-    }
-    if (moveTop) {
-        r.y = orig.y + deltaY;
-        r.dy = orig.dy - deltaY;
-        if (r.dy < minSize) {
-            r.y = orig.y + orig.dy - minSize;
-            r.dy = minSize;
-        }
-    }
-    if (moveBottom) {
-        r.dy = orig.dy + deltaY;
-        r.dy = std::max(r.dy, minSize);
-    }
-
-    float aspect = win->annotationResizeAspectRatio;
-    if (aspect > 0) {
-        bool widthDriven = moveLeft || moveRight;
-        if (widthDriven && (moveTop || moveBottom)) {
-            float widthChange = orig.dx > 0 ? fabsf(r.dx - orig.dx) / orig.dx : 0;
-            float heightChange = orig.dy > 0 ? fabsf(r.dy - orig.dy) / orig.dy : 0;
-            widthDriven = widthChange >= heightChange;
-        }
-        if (widthDriven) {
-            r.dx = std::max(r.dx, minSize * aspect);
-            r.dy = r.dx / aspect;
-        } else {
-            r.dy = std::max(r.dy, minSize);
-            r.dx = r.dy * aspect;
-        }
-
-        if (moveLeft) {
-            r.x = orig.x + orig.dx - r.dx;
-        } else if (moveRight) {
-            r.x = orig.x;
-        } else {
-            r.x = orig.x + ((orig.dx - r.dx) / 2);
-        }
-        if (moveTop) {
-            r.y = orig.y + orig.dy - r.dy;
-        } else if (moveBottom) {
-            r.y = orig.y;
-        } else {
-            r.y = orig.y + ((orig.dy - r.dy) / 2);
-        }
-    }
-    return r;
 }
 
 static void StartAnnotationResize(MainWindow* win, Annotation* annot, Point pt, ResizeHandle handle) {
@@ -2801,24 +2503,6 @@ static bool IsFullPageImage(DisplayModel* dm, IPageElement* el, int pageNo) {
     return imgArea >= 0.8f * pageArea;
 }
 #endif
-
-static bool IsPointInSelection(MainWindow* win, Point pt) {
-    WindowTab* tab = win->CurrentTab();
-    if (!tab || !tab->selectionOnPage) {
-        return false;
-    }
-    DisplayModel* dm = win->AsFixed();
-    if (!dm) {
-        return false;
-    }
-    for (SelectionOnPage& sel : *tab->selectionOnPage) {
-        Rect r = sel.GetRect(dm);
-        if (r.Contains(pt)) {
-            return true;
-        }
-    }
-    return false;
-}
 
 // --- left button ------------------------------------------------------------
 

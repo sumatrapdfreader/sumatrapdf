@@ -1464,6 +1464,7 @@
     <ClInclude Include="..\src\shared\AppTools.h" />
     <ClInclude Include="..\src\shared\AvifReader.h" />
     <ClInclude Include="..\src\shared\CachedObjects.h" />
+    <ClInclude Include="..\src\shared\CanvasCommon.h" />
     <ClInclude Include="..\src\shared\ChapterTable.h" />
     <ClInclude Include="..\src\shared\ChmDump.h" />
     <ClInclude Include="..\src\shared\ChmFile.h" />
@@ -2117,6 +2118,7 @@
     <ClCompile Include="..\src\shared\AppTools.cpp" />
     <ClCompile Include="..\src\shared\AvifReader.cpp" />
     <ClCompile Include="..\src\shared\CachedObjects.cpp" />
+    <ClCompile Include="..\src\shared\CanvasCommon.cpp" />
     <ClCompile Include="..\src\shared\ChapterTable.cpp" />
     <ClCompile Include="..\src\shared\ChmDump.cpp" />
     <ClCompile Include="..\src\shared\ChmFile.cpp" />
