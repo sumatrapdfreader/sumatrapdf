@@ -8,6 +8,7 @@
 
 import { join } from "node:path";
 import { ControlCommand, withControlledSumatra } from "./control.ts";
+import { IS_MAC } from "./host.ts";
 import { EXE, ROOT, runStandalone } from "./util.ts";
 
 async function signaturesOf(pdf: string): Promise<string> {
@@ -37,6 +38,10 @@ async function signaturesOf(pdf: string): Promise<string> {
 }
 
 export async function testit(): Promise<void> {
+  if (IS_MAC) {
+    console.log("SKIP issue-6132: signature time and policy come from the Windows PKCS#7 verifier");
+    return;
+  }
   const pdf = join(ROOT, "tests", "issue-6132.pdf");
   const raw = await signaturesOf(pdf);
 
