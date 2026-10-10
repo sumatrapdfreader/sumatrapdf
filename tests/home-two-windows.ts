@@ -5,6 +5,8 @@
 // rebuilt, freed thumbs vector).
 import { copyFileSync, mkdirSync, rmSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
+import { ControlCommand } from "./control.ts";
+import { IS_MAC } from "./host.ts";
 import { cmdId, ROOT, runStandalone, tmpPath, USE_NG } from "./util";
 import {
   enumChildWindows,
@@ -113,14 +115,27 @@ export async function testit(): Promise<void> {
     const deadline = Date.now() + 8000;
     let second = 0;
     while (!second && Date.now() < deadline) {
-      second = frames(proc.pid!).find((h) => h !== frame) ?? 0;
+      if (IS_MAC) {
+        const raw = String((await client.request(ControlCommand.TestUiState, []))[1] ?? "");
+        const n = / windows=(\d+)/.exec(raw);
+        second = n && +n[1] >= 2 ? 1 : 0;
+      } else {
+        second = frames(proc.pid!).find((h) => h !== frame) ?? 0;
+      }
       await sleep(100);
     }
     if (!second) {
       throw new Error("home-two-windows: second window never appeared");
     }
-    moveWindow(second, 40, 40, 700, 620);
-    repaintWindow(second);
+    if (IS_MAC) {
+      const placed = await client.request(ControlCommand.TestUiState, ["place", 40, 40, 700, 620, 1]);
+      if (placed[0] !== 0) {
+        throw new Error(`home-two-windows: could not resize the second window (${placed[1]})`);
+      }
+    } else {
+      moveWindow(second, 40, 40, 700, 620);
+      repaintWindow(second);
+    }
     let secondDx = 0;
     while (Date.now() < deadline) {
       if (USE_NG) {
@@ -140,20 +155,29 @@ export async function testit(): Promise<void> {
 
     // the first window keeps its own layout: repainting it must not adopt the
     // second window's
-    const canvas = findCanvas(frame);
-    if (!canvas) {
-      throw new Error(`home-two-windows: no ${CANVAS_CLASS} in the first window`);
+    if (!IS_MAC) {
+      const canvas = findCanvas(frame);
+      if (!canvas) {
+        throw new Error(`home-two-windows: no ${CANVAS_CLASS} in the first window`);
+      }
+      repaintWindow(canvas);
     }
-    repaintWindow(canvas);
-    const back = await searchRect(client, 0);
-    if (!same(back, first)) {
-      throw new Error(
-        `home-two-windows: first window painted with the second window's layout: search=${back}, expected ${first}`,
-      );
-    }
-    const firstDxNow = USE_NG ? back[2] : homeSearchDx(frame);
-    if (firstDxNow !== firstDx) {
-      throw new Error(`home-two-windows: first window's search box was moved by the second window's layout`);
+    // mac has no canvas HWND to invalidate. A few frames is the repaint.
+    const checks = IS_MAC ? 8 : 1;
+    for (let i = 0; i < checks; i++) {
+      if (i > 0) {
+        await sleep(50);
+      }
+      const back = await searchRect(client, 0);
+      if (!same(back, first)) {
+        throw new Error(
+          `home-two-windows: first window painted with the second window's layout: search=${back}, expected ${first}`,
+        );
+      }
+      const firstDxNow = USE_NG ? back[2] : homeSearchDx(frame);
+      if (firstDxNow !== firstDx) {
+        throw new Error(`home-two-windows: first window's search box was moved by the second window's layout`);
+      }
     }
   } finally {
     client.close();

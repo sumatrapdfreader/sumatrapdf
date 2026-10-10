@@ -4609,6 +4609,22 @@ static void ExecuteControlRequest(ControlRequest* req) {
                     AppendTestResult(req, 0, StrL("ok"));
                     break;
                 }
+                // mac has no HWND to MoveWindow. x,y,dx,dy then the window index.
+                if (str::Eq(op, StrL("place"))) {
+                    i32 y = 0, dx = 0, dy = 0, winIdx = 0;
+                    IntArg(req, 2, y);
+                    IntArg(req, 3, dx);
+                    IntArg(req, 4, dy);
+                    IntArg(req, 5, winIdx);
+                    MainWindow* placed = (winIdx >= 0 && winIdx < len(gWindows)) ? gWindows[winIdx] : nullptr;
+                    if (!placed || dx <= 0 || dy <= 0) {
+                        AppendTestResult(req, 2, StrL("NOTREADY no-window"));
+                        break;
+                    }
+                    AppShellPlaceWindow(placed, Rect{arg, y, dx, dy}, false);
+                    AppendTestResult(req, 0, StrL("OK"));
+                    break;
+                }
                 AppendTestResult(req, 0, SidebarTestToc(FirstWindow(), op, arg));
                 break;
             }
