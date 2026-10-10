@@ -66,7 +66,8 @@ export async function testit(): Promise<void> {
   writeFileSync(pdf, attachmentPdf());
 
   const logPath = join(dir, "log.txt");
-  const env = { TMP: tempDir, TEMP: tempDir };
+  // Windows reads TMP/TEMP. macOS and Linux read TMPDIR.
+  const env = { TMP: tempDir, TEMP: tempDir, TMPDIR: tempDir };
   const { proc, client, frame } = await launchControlled(["-log-to-file", logPath, pdf], { env });
   const before = explorerWindows();
   try {
