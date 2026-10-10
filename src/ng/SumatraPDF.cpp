@@ -6625,6 +6625,15 @@ static void ApplyStartupViewFlags(const Flags& flags, MainWindow* win) {
     if (len(flags.namedDest) > 0) {
         win->linkHandler->GotoNamedDest(flags.namedDest);
     } else if (flags.pageNumber > 0 && win->ctrl->ValidPageNo(flags.pageNumber)) {
+        // Load stored page 1 while the canvas was still 0x0. The first real
+        // layout applies that pending scroll and would undo GoToPage.
+        DisplayModel* dm = win->AsFixed();
+        if (dm && dm->hasPendingScroll) {
+            dm->pendingScroll.page = flags.pageNumber;
+            dm->pendingScroll.x = -1;
+            dm->pendingScroll.y = -1;
+            dm->pendingScroll.loc = {};
+        }
         win->ctrl->GoToPage(flags.pageNumber, false);
     }
     if (flags.startView != DisplayMode::Automatic) {
