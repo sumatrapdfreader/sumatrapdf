@@ -5276,19 +5276,7 @@ static bool FrameCanResizeForSidebar(MainWindow* win) {
 // The pane flags are already set. A frame that did not move still has to
 // give the canvas up (25% zoom has margin) or hand it back (hide).
 static void SyncCanvasAfterSidebar(MainWindow* win) {
-    Rect canvas = AppShellPredictCanvasRc(win, CanvasPredict::Current);
-    if (canvas.IsEmpty()) {
-        return;
-    }
-    win->canvasRc = canvas;
-    if (!win->ctrl) {
-        return;
-    }
-    Size vps = win->GetViewPortSize();
-    if (!(vps == win->lastViewPortSize)) {
-        win->lastViewPortSize = vps;
-        win->ctrl->SetViewPortSize(vps);
-    }
+    AppShellSyncCanvasSize(win);
 }
 
 // Grow the frame by sidebar minus unused canvas margin (Fit Width has

@@ -2203,26 +2203,35 @@ static bool ChipIsCustomPainted(AnnotEditKind kind) {
     }
 }
 
+static int ChipWidthPx(const AnnotEditItem& item, int rowDy) {
+    int w = rowDy;
+    if (item.kind == AnnotEditKind::LineStart || item.kind == AnnotEditKind::LineEnd) {
+        w = rowDy * 2;
+    }
+    TempStr label = ChipLabelTemp(item);
+    bool custom = ChipIsCustomPainted(item.kind);
+    bool svg = ChipSvgIcon(item.kind) != nullptr;
+    bool glyph = item.kind == AnnotEditKind::Icon && item.mupdfIcon;
+    if (!custom && !svg && !glyph && len(label) > 0) {
+        w = len(label) * 8 + 2 * DpiScale(kBtnPadX);
+    }
+    return w;
+}
+
 static gp::El* BuildChip(AnnotEditToolbar* tb, gp::Ctx* cx, int idx, int rowDy) {
     const AnnotEditItem& item = tb->items[idx];
     Color fg = BarTextColor();
-    float w = (float)rowDy;
-    if (item.kind == AnnotEditKind::LineStart || item.kind == AnnotEditKind::LineEnd) {
-        w = (float)(rowDy * 2);
-    }
+    int w = ChipWidthPx(item, rowDy);
     TempStr label = ChipLabelTemp(item);
     bool custom = ChipIsCustomPainted(item.kind);
     const char* svg = ChipSvgIcon(item.kind);
     bool glyph = item.kind == AnnotEditKind::Icon && item.mupdfIcon;
-    if (!custom && !svg && !glyph && len(label) > 0) {
-        w = (float)(len(label) * 8 + 2 * DpiScale(kBtnPadX));
-    }
     TempStr id = fmt("annot-chip-%d", idx);
     gp::El* chip = gp::Div(cx->a)
                        ->FlexRow()
                        ->ItemsCenter()
                        ->JustifyCenter()
-                       ->W(w)
+                       ->W((float)w)
                        ->H((float)rowDy)
                        ->Shrink0()
                        ->Radius((float)DpiScale(kButtonRadius))
@@ -2598,7 +2607,13 @@ gp::El* AnnotEditToolbarBuild(MainWindow* win, gp::Ctx* cx) {
     gp::El* row = gp::Div(cx->a)->FlexRow()->ItemsCenter()->Gap((float)DpiScale(kBtnGap));
     int n = std::min(len(tb->items), kMaxChips);
     tb->nChips = n;
+    int chipsW = 0;
+    int gapPx = DpiScale(kBtnGap);
     for (int i = 0; i < n; i++) {
+        if (i > 0) {
+            chipsW += gapPx;
+        }
+        chipsW += ChipWidthPx(tb->items[i], rowDy);
         row->Child(BuildChip(tb, cx, i, rowDy));
     }
     card->Child(row);
@@ -2612,8 +2627,8 @@ gp::El* AnnotEditToolbarBuild(MainWindow* win, gp::Ctx* cx) {
 
     // orig places the row under the annotation, above it when there is no room
     float k = CanvasScale(win);
-    float w = tb->measured.w > 0 ? tb->measured.w : (float)(n * (rowDy + 2) + 2 * (int)margin);
-    float h = tb->measured.h > 0 ? tb->measured.h : (float)(rowDy + 2 * (int)margin);
+    float w = (float)chipsW + 2 * margin + 2;
+    float h = tb->measured.h > 0 ? tb->measured.h : (float)(rowDy + 2 * (int)margin + 2);
     float gap = (float)DpiScale(6);
     float canvasW = (float)win->canvasRc.dx;
     float canvasH = (float)win->canvasRc.dy;

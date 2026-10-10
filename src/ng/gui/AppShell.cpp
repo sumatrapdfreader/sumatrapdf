@@ -2877,6 +2877,25 @@ static Rect CanvasRcForFrame(MainWindow* win, int frameDx, int frameDy, bool men
     return Rect{canvasX, border + chromeDy, bodyDx - sidebarDx - aiChatDx - navFilesDx, bodyDy};
 }
 
+// Chrome that changes the canvas (the Edit PDF row, the sidebar) has to
+// relayout before the command returns, or fit-page jumps a frame later.
+void AppShellSyncCanvasSize(MainWindow* win) {
+    Rect canvas = AppShellPredictCanvasRc(win, CanvasPredict::Current);
+    if (canvas.IsEmpty()) {
+        return;
+    }
+    win->canvasRc = canvas;
+    if (!win->ctrl) {
+        return;
+    }
+    Size vps = win->GetViewPortSize();
+    if (vps == win->lastViewPortSize) {
+        return;
+    }
+    win->lastViewPortSize = vps;
+    win->ctrl->SetViewPortSize(vps);
+}
+
 // Canvas the next frame will lay out, in dips. The native client is known
 // after PlaceMainWindow; canvasRc stays empty until the first paint.
 Rect AppShellPredictCanvasRc(MainWindow* win, CanvasPredict predict) {

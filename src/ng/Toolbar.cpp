@@ -879,6 +879,7 @@ static void SetPdfAnnotationsToolbarEnabled(MainWindow* win, bool enabled) {
         UpdateAnnotFilterToolbar(win);
     }
     logf("EditPDF: %s\n", enabled ? StrL("on") : StrL("off"));
+    AppShellSyncCanvasSize(win);
     AppShellInvalidate(win);
 }
 

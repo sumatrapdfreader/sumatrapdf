@@ -130,6 +130,7 @@ enum class CanvasPredict {
     DocumentTab,
 };
 Rect AppShellPredictCanvasRc(MainWindow* win, CanvasPredict predict);
+void AppShellSyncCanvasSize(MainWindow* win);
 // work area of the monitor the frame is on. Primary work area when win is null.
 Rect AppShellWorkArea(MainWindow* win);
 // full bounds of that monitor, including the dock or taskbar
