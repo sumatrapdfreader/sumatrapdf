@@ -187,6 +187,8 @@ void LoadModelIntoTab(WindowTab* tab) {
     MainWindow* win = tab->win;
     win->currentTabTemp = tab;
     win->ctrl = tab->ctrl;
+    // this canvas size was already applied to the previous document
+    win->lastViewPortSize = Size{};
     win->showSelection = tab->selectionOnPage != nullptr;
     // the bookmarks tree belongs to the tab we are leaving
     ClearTocBox(win);
