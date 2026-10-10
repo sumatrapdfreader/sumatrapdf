@@ -14,15 +14,14 @@ void log(const char* s) {
 static const struct DLLDesc {
     const char* Filename;
     IID UseCLSID;
-} msdiaDlls[] = {
-    // this list is complete as of April 2013. In the future new msdia version
-    // could be added, in which case it should be added to the top of this list
-    "msdia110.dll", __uuidof(DiaSource110), // Visual Studio 2012
-    "msdia100.dll", __uuidof(DiaSource100), // Visual Studio 2010
-    // Note: there are also older version (msdia90.dll, msdia80.dll, msdia71.dll)
-    // but they are not compatible because vtable layout for IDiaSymbol
-    // changed in msdia100.dll
-    0};
+} msdiaDlls[] = {// this list is complete as of April 2013. In the future new msdia version
+                 // could be added, in which case it should be added to the top of this list
+                 "msdia110.dll", __uuidof(DiaSource110), // Visual Studio 2012
+                 "msdia100.dll", __uuidof(DiaSource100), // Visual Studio 2010
+                 // Note: there are also older version (msdia90.dll, msdia80.dll, msdia71.dll)
+                 // but they are not compatible because vtable layout for IDiaSymbol
+                 // changed in msdia100.dll
+                 0};
 
 // note: we leak g_dia_source but who cares
 IDiaDataSource* g_dia_source = 0;
