@@ -10,6 +10,7 @@
 import { copyFileSync, mkdirSync, rmSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 import { ControlClient, ControlCommand } from "./control";
+import { IS_MAC } from "./host";
 import { ROOT, cmdId, pollUntil, runStandalone, tmpPath } from "./util";
 import { getFocusedHwnd, isWindowVisible, postMessage, WM_KEYDOWN } from "./winapi";
 import { clickAt, findChildByClass, killAndWait, launchControlled, sendCommandSync } from "./win-automation";
@@ -51,18 +52,38 @@ export async function testit(): Promise<void> {
 
     sendCommandSync(frame, cmdId("CmdToggleEditPDF"));
 
-    // start placement from the toolbar button, the way a user does
-    const dump = String((await client.request(ControlCommand.TestToolbarButtons, []))[1] ?? "");
+    // start placement from the toolbar button, the way a user does.
+    // ng lays the annotation row out on the next frame, so the rect is 0,0 until then.
     const id = cmdId("CmdCreateAnnotText");
     const re = new RegExp(`annotation-idx=\\d+ cmd=${id} hidden=0 enabled=1 rect=(-?\\d+),(-?\\d+),(-?\\d+),(-?\\d+)`);
-    const m = re.exec(dump);
-    if (!m) {
-      throw new Error(`issue-6118: Text toolbar button not found\n${dump}`);
+    const center = await pollUntil(
+      async () => {
+        const dump = String((await client.request(ControlCommand.TestToolbarButtons, []))[1] ?? "");
+        const hit = re.exec(dump);
+        if (!hit) {
+          return null;
+        }
+        const x = +hit[1]!;
+        const y = +hit[2]!;
+        const x2 = +hit[3]!;
+        const y2 = +hit[4]!;
+        if (x2 <= x || y2 <= y) {
+          return null;
+        }
+        return { x: x + Math.floor((x2 - x) / 2), y: y + Math.floor((y2 - y) / 2) };
+      },
+      (c) => c !== null,
+      { error: "issue-6118: Text toolbar button not found" },
+    );
+    if (IS_MAC) {
+      const opened = await client.request(ControlCommand.TestInput, ["click", center!.x, center!.y, 0, 0]);
+      if (opened[0] !== 0 || !String(opened[1] ?? "").startsWith("OK")) {
+        throw new Error(`issue-6118: toolbar click failed: ${String(opened[1] ?? "")}`);
+      }
+    } else {
+      const toolbar = findChildByClass(frame, "SUMATRA_VIRT_TOOLBAR");
+      await clickAt(toolbar, center!.x, center!.y, 0);
     }
-    const x = +m[1]!;
-    const y = +m[2]!;
-    const toolbar = findChildByClass(frame, "SUMATRA_VIRT_TOOLBAR");
-    await clickAt(toolbar, x + Math.floor((+m[3]! - x) / 2), y + Math.floor((+m[4]! - y) / 2), 0);
     await pollUntil(
       () => placementActive(client),
       (active) => active,

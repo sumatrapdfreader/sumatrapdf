@@ -364,6 +364,16 @@ export function macClientToScreen(x: number, y: number): { x: number; y: number 
   return { x: x + Number(c[1]), y: y + Number(c[2]) };
 }
 
+export function macFrameVisible(): boolean {
+  try {
+    const res = macControlRequest(TestLayout, []);
+    const raw = String(res[1] ?? "");
+    return res[0] === 0 && !raw.includes("no-window");
+  } catch {
+    return false;
+  }
+}
+
 export function macFrameClientRect(): { left: number; top: number; right: number; bottom: number } {
   const res = macControlRequest(TestLayout, []);
   const text = String(res[1] ?? "");

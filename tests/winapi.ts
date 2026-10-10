@@ -20,6 +20,7 @@ import {
   macControlRequest,
   macDdeExecute,
   macFrameClientRect,
+  macFrameVisible,
   macSendMessage,
   macSendText,
   TestLayout,
@@ -534,6 +535,9 @@ export function getWindowPid(hwnd: number): number {
 // GUITHREADINFO { DWORD cbSize, flags; HWND active, focus, capture, menuOwner,
 // moveSize, caret; RECT rcCaret; } = 72 bytes on x64, focus at offset 16.
 export function getFocusedHwnd(hwndInSameThread: number): number {
+  if (IS_MAC) {
+    return hwndInSameThread;
+  }
   const tid = user32.symbols.GetWindowThreadProcessId(hwndInSameThread, null);
   const buf = new ArrayBuffer(72);
   const dv = new DataView(buf);
@@ -1160,6 +1164,9 @@ export function getExtendedFrameBounds(hwnd: number): Rect {
 // control is actually on screen (e.g. layout code that collapses a control hides
 // it rather than resizing it to nothing). Ask the OS instead.
 export function isWindowVisible(hwnd: number): boolean {
+  if (IS_MAC) {
+    return macFrameVisible();
+  }
   return user32.symbols.IsWindowVisible(hwnd);
 }
 
