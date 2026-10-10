@@ -210,3 +210,30 @@ bool IsReadAloudContextSubmenu(HMENU menu);
 HMENU GetReadAloudContextSubmenu();
 void ShowTtsVoiceMenu(MainWindow* win, Rect buttonScreen);
 #endif
+
+// --- shared by ReadAloudSession.cpp and each app's ReadAloud.cpp ---
+
+enum class SpeakChunkResult {
+    Ok,
+    Failed,
+    TabGone,
+};
+
+extern int gReadAloudPaintLogState;
+extern WindowTab* gReadAloudSourceTab;
+
+void ReadAloudPaintLogOnce(int code, Str fmt);
+bool ReadAloudGetCurrentWordAbsRange(WindowTab* tab, int* startAbsOut, int* endAbsOut);
+bool ReadAloudGetSentenceAbsRange(WindowTab* tab, int wordStartAbs, int wordEndAbs, int* startAbsOut, int* endAbsOut);
+bool ReadAloudGetCurrentWordScreenRect(MainWindow* win, Rect* rectOut);
+bool ReadAloudIsWordRectFullyVisibleInViewport(MainWindow* win, const Rect& wordRect, int margin);
+TempStr ReadAloudPlaybackBarTextTemp(WindowTab* tab);
+void ReadAloudSaveVoicePref(Str voiceId);
+bool ReadAloudHasMoreChunks(WindowTab* tab);
+void ReadAloudFinishSession(WindowTab* tab, MainWindow* win);
+SpeakChunkResult ReadAloudSpeakChunk(WindowTab* tab, Str errMsg);
+void ReadAloudClearSourceTab();
+
+// implemented by each app
+void ReadAloudShowNotif(WindowTab* tab, Str msg);
+void ReadAloudSetSpeed(float speed);

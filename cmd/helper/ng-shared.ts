@@ -109,6 +109,7 @@ export const sharedFiles = [
   "src/base/tests/UtAssert.h",
   "src/base/tests/Vec_ut.cpp",
   "src/base/tests/Win_ut.cpp",
+  "src/shared/ReadAloudSession.cpp",
   "src/shared/ReadAloud_win.cpp",
   // orig's window picker. ng compiles it on Windows only.
   "src/ScreenshotCapture.cpp",
