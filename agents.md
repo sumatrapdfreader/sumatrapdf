@@ -103,6 +103,12 @@ the message must explain the context and reasoning.
   so quoted includes select ng's differing headers. Never edit staged files.
   To diverge a shared file, copy it into `src/ng/`, remove its shared entry
   and update the target in `cmd/helper/ng-targets.ts`.
+- When `src/Foo.cpp` and `src/ng/Foo.cpp` differ, the functions they have in
+  common live in `src/shared/FooCommon.cpp`, built by both. `FooCommon.h`
+  declares what crosses the split: shared helpers the apps call, and the
+  functions each app implements for the shared code (`// implemented by each
+  app`). Put a function there instead of writing it twice. A new shared file
+  goes in `premake5.files.lua`, `ng-shared.ts` and `ng-targets.ts`.
 - Ng follows the same coding and commit rules, including **no automatic commits**.
 
 Build with `bun cmd/ng-build.ts -dbg` or `-rel`; the host platform is implied.
