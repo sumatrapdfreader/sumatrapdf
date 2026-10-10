@@ -350,6 +350,7 @@ function sumatrapdf_files()
     "KeyboardHelp.*",
     "LinkFollow.*",
     "MainWindow.*",
+    "MainWindowCommon.*",
     "Menu.*",
     "NavFilesInFolder.*",
     "Notifications.*",

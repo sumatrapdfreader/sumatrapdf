@@ -61,10 +61,9 @@
 #include "gui/TabSwitcher.h"
 #include "HomePage.h"
 #include "ImageSaveCropResize.h"
+#include "MainWindowCommon.h"
 
 #include "SumatraLog.h"
-
-Vec<MainWindow*> gWindows;
 
 // the model calls back into the window: repaint, scrollbars, rendering.
 // ng: the render requests go to the shared RenderCache (the render happens on
@@ -168,27 +167,6 @@ DocControllerCallback* CreateControllerCallbackHandler(MainWindow* win) {
 // ng: orig's LinkHandler, from this file. What is not ported: the JavaScript
 // menu destination (orig's TrackPopupMenu at the cursor; the port has no popup
 // it can open from code and wait on). It is marked below.
-struct LinkHandler : ILinkHandler {
-    MainWindow* win = nullptr;
-
-    explicit LinkHandler(MainWindow* w) {
-        ReportIf(!w);
-        win = w;
-    }
-    ~LinkHandler() override = default;
-
-    void GotoLink(IPageDestination* dest) override;
-    void GotoNamedDest(Str name) override;
-    void GoToPage(int pageNo, bool addNavPoint) override;
-    bool GoToNextPage() override;
-    bool GoToPrevPage(bool toBottom = false) override;
-    void ScrollTo(IPageDestination* dest) override;
-    void ScrollTo(int pageNo, RectF rect, float zoom) override;
-    void LaunchURL(Str uri) override;
-    void LaunchFile(Str path, IPageDestination* remoteLink) override;
-    TocItem* FindTocItem(TocItem* item, Str name, bool partially) override;
-};
-
 static void LaunchEmbeddedDestination(MainWindow* win, PageDestination* pd) {
     if (pd->embedObjNum <= 0) {
         return;
@@ -286,125 +264,6 @@ void LinkHandler::ScrollTo(IPageDestination* dest) {
     ScrollTo(pageNo, rect, zoom);
 }
 
-void LinkHandler::GoToPage(int pageNo, bool addNavPoint) {
-    ReportIf(!win || !win->ctrl || win->linkHandler != this);
-    if (!win || !win->ctrl || !win->IsDocLoaded()) {
-        return;
-    }
-    win->ctrl->GoToPage(pageNo, addNavPoint);
-}
-
-bool LinkHandler::GoToNextPage() {
-    ReportIf(!win || !win->ctrl || win->linkHandler != this);
-    if (!win || !win->ctrl || !win->IsDocLoaded()) {
-        return false;
-    }
-    return win->ctrl->GoToNextPage();
-}
-
-bool LinkHandler::GoToPrevPage(bool toBottom) {
-    ReportIf(!win || !win->ctrl || win->linkHandler != this);
-    if (!win || !win->ctrl || !win->IsDocLoaded()) {
-        return false;
-    }
-    return win->ctrl->GoToPrevPage(toBottom);
-}
-
-void LinkHandler::ScrollTo(int pageNo, RectF rect, float zoom) {
-    ReportIf(!win || !win->ctrl || win->linkHandler != this);
-    if (!win || !win->ctrl || !win->IsDocLoaded()) {
-        return;
-    }
-    win->ctrl->ScrollTo(pageNo, rect, zoom);
-    ShowLinkDestHighlight(win, pageNo, rect);
-}
-
-// Convert file:// / file:/// / file: URIs to a local path (+ optional #fragment).
-// Returns false if uri is not a file: scheme.
-static bool PathFromFileUriTemp(Str uri, TempStr* pathOut, Str* fragmentOut) {
-    Str rest = uri;
-    if (!str::TrimPrefixI(rest, StrL("file:"))) {
-        return false;
-    }
-    // file://host/path or file:///path -> drop authority (// or ///)
-    if (str::TrimPrefix(rest, StrL("//"))) {
-        // empty host: next char is / of absolute path
-        if (rest && rest.s[0] == '/') {
-            // Windows drive path: /C:/foo -> C:/foo
-            if (rest.len >= 3 && rest.s[1] && rest.s[2] == ':') {
-                rest = Str(rest.s + 1, rest.len - 1);
-            }
-        }
-    }
-    TempStr path = str::DupTemp(rest);
-    Str pathStr = path;
-    Str frag = str::SliceFromChar(pathStr, '#');
-    if (frag) {
-        pathStr = Str(pathStr.s, (int)(frag.s - pathStr.s));
-        frag = Str(frag.s + 1, frag.len - 1);
-    }
-    path = url::DecodeTemp(pathStr);
-    str::TransCharsInPlace(path, StrL("/"), StrL("\\"));
-    *pathOut = path;
-    if (fragmentOut) {
-        *fragmentOut = frag ? str::DupTemp(frag) : Str{};
-    }
-    return true;
-}
-
-void LinkHandler::LaunchURL(Str uri) {
-    if (len(uri) == 0) {
-        /* ignore missing URLs */;
-        return;
-    }
-
-    TempStr path = str::DupTemp(uri);
-    int colon = str::IndexOfChar(path, ':');
-    int hash = str::IndexOfChar(path, '#');
-    if (colon < 0 || (hash >= 0 && colon > hash)) {
-        // treat relative URIs as file paths (without fragment identifier)
-        if (hash >= 0) {
-            path.len = hash;
-        }
-        str::TransCharsInPlace(path, StrL("/"), StrL("\\"));
-        path = url::DecodeTemp(path);
-        // LaunchFile will reject unsupported file types
-        this->LaunchFile(path, nullptr);
-        return;
-    }
-
-    // file://... -> open as a local document (or hand it to the shell)
-    TempStr filePath;
-    Str fragment;
-    if (PathFromFileUriTemp(uri, &filePath, &fragment)) {
-        if (len(fragment) > 0) {
-            // Carry destination name for LaunchFile scroll-to (named dest / page)
-            PageDestinationFile dest(filePath, fragment);
-            this->LaunchFile(filePath, &dest);
-        } else {
-            this->LaunchFile(filePath, nullptr);
-        }
-        return;
-    }
-
-    // LaunchBrowser will reject unsupported URI schemes
-    SumatraLaunchBrowser(path);
-}
-
-// return true if we can load the file based on sniffing file type from content
-static bool IsFileSupportedByContent(Str filePath) {
-    FileType kindSniffed = GuessFileType(filePath, true);
-    return IsSupportedFileType(kindSniffed, true);
-}
-
-// MuPDF encodes GoToR named destinations as "nameddest=<name>" in the link URI
-// fragment, but EngineBase::GetNamedDest prepends "#nameddest=" itself -- so the
-// prefix must be stripped or the lookup becomes "#nameddest=nameddest=<name>"
-// and fails, leaving the remote PDF on page 1 (issue #5642).
-void CleanRemoteDestNameInPlace(Str& destName) {
-    str::TrimPrefixI(destName, StrL("nameddest="));
-}
-
 // for safety, only handle relative paths and only open them in SumatraPDF
 // (unless they're of an allowed perceived type)
 void LinkHandler::LaunchFile(Str pathOrig, IPageDestination* remoteLink) {
@@ -464,56 +323,6 @@ void LinkHandler::LaunchFile(Str pathOrig, IPageDestination* remoteLink) {
     } else {
         ((LinkHandler*)targetWin->linkHandler)->ScrollTo(remoteLink);
     }
-}
-
-// normalizes case and whitespace in the string
-static TempStr NormalizeFuzzyTemp(Str str) {
-    TempStr dup = str::DupTemp(str);
-    str::ToLowerInPlace(dup);
-    str::NormalizeWSInPlace(dup);
-    // cf. AddTocItemToView
-    return dup;
-}
-
-static bool MatchFuzzy(Str s1, Str s2, bool partially) {
-    if (!partially) {
-        return str::Eq(s1, s2);
-    }
-
-    // only match at the start of a word (at the beginning and after a space)
-    Str rest = s1;
-    while (len(rest) > 0) {
-        int idx = str::IndexOf(rest, s2);
-        if (idx < 0) {
-            break;
-        }
-        const char* found = rest.s + idx;
-        if (found == s1.s || *(found - 1) == ' ') {
-            return true;
-        }
-        int off = idx + 1;
-        rest.s += off;
-        rest.len -= off;
-    }
-    return false;
-}
-
-// finds the first ToC entry that (partially) matches a given normalized name
-// (ignoring case and whitespace differences)
-TocItem* LinkHandler::FindTocItem(TocItem* item, Str name, bool partially) {
-    for (; item; item = item->next) {
-        if (item->title) {
-            TempStr fuzTitle = NormalizeFuzzyTemp(item->title);
-            if (MatchFuzzy(fuzTitle, name, partially)) {
-                return item;
-            }
-        }
-        TocItem* found = FindTocItem(item->child, name, partially);
-        if (found) {
-            return found;
-        }
-    }
-    return nullptr;
 }
 
 void LinkHandler::GotoNamedDest(Str name) {
@@ -627,24 +436,6 @@ MainWindow::~MainWindow() {
     VecReset(linkFollowTargets);
 }
 
-bool MainWindow::HasDocsLoaded() const {
-    int nTabs = TabCount();
-    if (nTabs == 0) {
-        return true;
-    }
-    for (int i = 0; i < nTabs; i++) {
-        auto* tab = GetTab(i);
-        if (!tab->IsAboutTab()) {
-            return true;
-        }
-    }
-    return false;
-}
-
-bool MainWindow::IsCurrentTabAbout() const {
-    return nullptr == CurrentTab() || CurrentTab()->IsAboutTab();
-}
-
 bool MainWindow::IsDocLoaded() const {
     return ctrl != nullptr;
 }
@@ -681,18 +472,6 @@ Vec<WindowTab*> MainWindow::Tabs() const {
     return res;
 }
 
-DisplayModel* MainWindow::AsFixed() const {
-    return ctrl ? ctrl->AsFixed() : nullptr;
-}
-
-ChmModel* MainWindow::AsChm() const {
-    return ctrl ? ctrl->AsChm() : nullptr;
-}
-
-MarkdownModel* MainWindow::AsMarkdown() const {
-    return ctrl ? ctrl->AsMarkdown() : nullptr;
-}
-
 Size MainWindow::GetViewPortSize() const {
     return Size{canvasRc.dx, canvasRc.dy};
 }
@@ -721,10 +500,6 @@ void MainWindow::ToggleZoom() const {
     if (tab) {
         tab->ToggleZoom();
     }
-}
-
-bool MainWindow::InPresentation() const {
-    return presentation != PM_DISABLED;
 }
 
 void MainWindow::ChangePresentationMode(PresentationMode mode) {
@@ -872,40 +647,6 @@ AppCommandCtx NewAppCommandCtx(MainWindow* win, Point cursorPos) {
     return ctx;
 }
 
-BuildMenuCtx* NewBuildMenuCtx(WindowTab* tab, Point pt) {
-    auto* ctx = new AppCommandCtx;
-    if (tab && tab->win) {
-        *ctx = NewAppCommandCtx(tab->win, pt);
-    } else if (tab) {
-        ctx->tab = tab;
-    }
-    return ctx;
-}
-
-void DeleteBuildMenuCtx(BuildMenuCtx* ctx) {
-    delete ctx;
-}
-
-bool HasOpenedDocuments(MainWindow* win) {
-    for (WindowTab* t : win->Tabs()) {
-        if (!t->IsAboutTab()) {
-            return true;
-        }
-    }
-    return false;
-}
-
-bool IsMainWindowValid(MainWindow* win) {
-    return win && VecContains(gWindows, win);
-}
-
-// True if `win` still exists and CloseWindow has not started. Use this for
-// deferred work (load finish, timers, UI updates) that must not touch a window
-// that is tearing down.
-bool IsMainWindowValidAndNotClosing(MainWindow* win) {
-    return IsMainWindowValid(win) && !win->isBeingClosed;
-}
-
 #if OS_WIN
 HWND MainWindowHwnd(MainWindow* win) {
     return AppShellNativeHwnd(win);
@@ -943,10 +684,6 @@ MainWindow* FindMainWindowByTab(WindowTab* tabToFind) {
         }
     }
     return nullptr;
-}
-
-bool IsWindowTabValid(WindowTab* tab) {
-    return FindMainWindowByTab(tab) != nullptr;
 }
 
 WindowTab* FindTabByFilePath(Str path, MainWindow* limitWin) {

@@ -411,6 +411,9 @@
     <ClInclude Include="..\src\shared\LitDoc.h">
       <Filter>src\shared</Filter>
     </ClInclude>
+    <ClInclude Include="..\src\shared\MainWindowCommon.h">
+      <Filter>src\shared</Filter>
+    </ClInclude>
     <ClInclude Include="..\src\shared\MarkdownModel.h">
       <Filter>src\shared</Filter>
     </ClInclude>
@@ -1170,6 +1173,9 @@
       <Filter>src\shared</Filter>
     </ClCompile>
     <ClCompile Include="..\src\shared\LitDoc.cpp">
+      <Filter>src\shared</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\shared\MainWindowCommon.cpp">
       <Filter>src\shared</Filter>
     </ClCompile>
     <ClCompile Include="..\src\shared\MarkdownModel.cpp">

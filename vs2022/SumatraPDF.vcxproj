@@ -1508,6 +1508,7 @@
     <ClInclude Include="..\src\shared\KeyboardHelp.h" />
     <ClInclude Include="..\src\shared\LinkFollow.h" />
     <ClInclude Include="..\src\shared\LitDoc.h" />
+    <ClInclude Include="..\src\shared\MainWindowCommon.h" />
     <ClInclude Include="..\src\shared\MarkdownModel.h" />
     <ClInclude Include="..\src\shared\MarkdownToc.h" />
     <ClInclude Include="..\src\shared\MobiDoc.h" />
@@ -2154,6 +2155,7 @@
       <PrecompiledHeader>NotUsing</PrecompiledHeader>
     </ClCompile>
     <ClCompile Include="..\src\shared\LitDoc.cpp" />
+    <ClCompile Include="..\src\shared\MainWindowCommon.cpp" />
     <ClCompile Include="..\src\shared\MarkdownModel.cpp" />
     <ClCompile Include="..\src\shared\MarkdownToc.cpp" />
     <ClCompile Include="..\src\shared\MobiDoc.cpp" />

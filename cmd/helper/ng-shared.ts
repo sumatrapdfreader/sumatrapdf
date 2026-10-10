@@ -120,6 +120,8 @@ export const sharedFiles = [
   "src/shared/DocumentPropertiesCommon.cpp",
   "src/shared/DocumentPropertiesCommon.h",
   "src/shared/FavoritesCommon.cpp",
+  "src/shared/MainWindowCommon.cpp",
+  "src/shared/MainWindowCommon.h",
   "src/shared/PdfToolsCommon.cpp",
   "src/shared/PdfToolsCommon.h",
   "src/shared/ReadAloudSession.cpp",
