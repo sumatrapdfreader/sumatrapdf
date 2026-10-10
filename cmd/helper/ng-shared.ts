@@ -130,6 +130,8 @@ export const sharedFiles = [
   "src/shared/ImageSaveCropResizeCommon.h",
   "src/shared/InstallerUtil.h",
   "src/shared/InstallerUtil_win.cpp",
+  "src/shared/LaserPointerCursor.h",
+  "src/shared/LaserPointerCursor_win.cpp",
   "src/shared/MainWindowCommon.cpp",
   "src/shared/MainWindowCommon.h",
   "src/shared/NavFilesInFolderCommon.cpp",
