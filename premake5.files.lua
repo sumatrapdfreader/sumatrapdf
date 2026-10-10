@@ -322,6 +322,7 @@ function sumatrapdf_files()
     "FilterHighlightDraw.*",
     "Commands.*",
     "ImageSaveCropResize.*",
+    "ImageSaveCropResizeCommon.*",
     "ImageEditHostSumatra.cpp",
     "DisplayMode.*",
     "DisplayModel.*",
