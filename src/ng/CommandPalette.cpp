@@ -1012,9 +1012,9 @@ TempStr CommandPaletteStateTemp(int* exitCodeOut) {
     if (wnd->editQuery) {
         gp::Str q = gp::InputValue(wnd->editQuery);
         qLen = len(FromGpui(q));
-        gp::Selection sel = wnd->editQuery->selectedRange;
-        qStart = (int)sel.start;
-        qEnd = (int)sel.end;
+        gp::Selection querySel = wnd->editQuery->selectedRange;
+        qStart = (int)querySel.start;
+        qEnd = (int)querySel.end;
     }
     int rendered = 0;
     if (wnd->thumbCache) {

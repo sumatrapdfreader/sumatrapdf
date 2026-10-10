@@ -3657,16 +3657,16 @@ static gp::El* MergeGridEl(gp::Ctx* cx, float viewDx, float viewDy) {
         if (page.removed || (i == gTool.mergeHoverIdx && !gTool.mergeDragging)) {
             gp::Rgba colBtn = ToGpui(page.removed ? kRestoreBtnColor : kRemoveBtnColor);
             colBtn.a = 230;
-            float dx = (float)kMergeCornerBtnDx;
+            float btnDx = (float)kMergeCornerBtnDx;
             float inset = (float)kMergeCornerBtnInset;
             cell->Child(
                 gp::Div(cx->a)
                     ->Absolute()
                     ->Right(inset)
                     ->Top(inset)
-                    ->W(dx)
-                    ->H(dx)
-                    ->Radius(dx / 2)
+                    ->W(btnDx)
+                    ->H(btnDx)
+                    ->Radius(btnDx / 2)
                     ->ItemsCenter()
                     ->JustifyCenter()
                     ->Bg(colBtn)
