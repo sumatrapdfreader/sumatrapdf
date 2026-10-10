@@ -36,21 +36,6 @@
 #include "SidebarPanel.h"
 #include "Favorites.h"
 
-void DelFavorite(FileState* fs, Favorite* fav) {
-    if (!fs || !fs->favorites || !fav) {
-        return;
-    }
-    RememberFavTreeExpansionStateForAllWindows();
-    VecRemove(*fs->favorites, fav);
-    DeleteFavorite(fav);
-    if (!SettingsRememberOpenedFiles() && 0 == len(*fs->favorites)) {
-        FileHistoryRemove(fs);
-        DeleteFileState(fs);
-    }
-    UpdateFavoritesTreeForAllWindows();
-    ScheduleSaveSettings();
-}
-
 // Note: those might be too big
 constexpr int kMaxFavSubmenus = 10;
 constexpr int kMaxFavMenus = 10;
@@ -478,31 +463,6 @@ void UpdateFavoritesTree(MainWindow* win) {
     } else if (FindFavoritesTab(win)) {
         ScheduleUiUpdate(win, kUiForceRelayout | kUiSidebarDirty);
     }
-}
-
-// Persist a favorite after the Add Favorite dialog's OK (name may be empty).
-void ApplyAddFavorite(MainWindow* win, Str filePath, int pageNo, Str pageLabel, Str name) {
-    if (len(filePath) == 0 || !IsMainWindowValidAndNotClosing(win)) {
-        return;
-    }
-    DocController* ctrl = win->ctrl;
-    TempStr plainLabel = fmt("%d", pageNo);
-    bool needsLabel = !str::Eq(plainLabel, pageLabel) && !(ctrl && ctrl->HasChapters());
-
-    RememberFavTreeExpansionStateForAllWindows();
-    Str pl = needsLabel ? pageLabel : Str{};
-    TempStr storedPos = StoredPagePosForPageTemp(ctrl, pageNo);
-    Location loc = (ctrl && ctrl->HasChapters()) ? ctrl->LocationFromPageNo(pageNo) : kInvalidLocation;
-
-    logf("ApplyAddFavorite: '%s' page %d label '%s' name '%s'\n", filePath, pageNo, pageLabel, name);
-    AddOrReplaceFav(filePath, storedPos, name, pl, CurrentFavoriteScrollPos(win, pageNo), loc);
-    // expand newly added favorites by default
-    FileState* fav = GetFavByFilePath(filePath);
-    if (fav && len(*fav->favorites) == 2) {
-        VecAppend(win->expandedFavorites, fav);
-    }
-    UpdateFavoritesTreeForAllWindows();
-    ScheduleSaveSettings();
 }
 
 void AddFavoriteForPage(MainWindow* win, int pageNo) {
