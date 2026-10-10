@@ -713,6 +713,55 @@ static bool FindWordCenter(EngineBase* engine, int pageNo, Str word, double* xOu
 }
 
 // Opening the context menu over text must not move an existing selection.
+// Triple-click line selection without a window (issue #5712): the TextSelection
+// steps of a double-click then a triple-click on the middle of clickWord.
+static TempStr TripleClickLineResultTemp(Str pdfPath, Str clickWord, Str expectedLine, int* exitCodeOut) {
+    *exitCodeOut = 1;
+    if (str::IsEmptyOrWhiteSpace(pdfPath) || str::IsEmptyOrWhiteSpace(clickWord) ||
+        str::IsEmptyOrWhiteSpace(expectedLine)) {
+        return StrL("ERROR missing pdf, clickWord, or expectedLine\n");
+    }
+
+    EngineBase* engine = CreateEngineFromFile(pdfPath, nullptr, false);
+    if (!engine) {
+        return fmt("ERROR engine-create-failed pdf=%s\n", pdfPath);
+    }
+
+    const int pageNo = 1;
+    double x = 0;
+    double y = 0;
+    if (!FindWordCenter(engine, pageNo, clickWord, &x, &y)) {
+        SafeEngineRelease(&engine);
+        return fmt("ERROR word-not-found word=%s\n", clickWord);
+    }
+
+    TempStr selected;
+    TempStr trimmedText;
+    {
+        TextSelection ts(engine);
+        ts.SelectWordAt(pageNo, x, y);
+        ts.SelectLineAt(pageNo, x, y);
+        selected = ts.ExtractTextTemp(StrL(" "));
+
+        // the old mouse-up bug: re-selecting to the click point trims the line
+        TextSelection trimmed(engine);
+        trimmed.SelectWordAt(pageNo, x, y);
+        trimmed.SelectLineAt(pageNo, x, y);
+        trimmed.SelectUpTo(pageNo, x, y);
+        trimmedText = trimmed.ExtractTextTemp(StrL(" "));
+    }
+    SafeEngineRelease(&engine);
+
+    if (str::Eq(trimmedText, expectedLine)) {
+        return fmt("ERROR trim-check-failed trimmed=%s\n", trimmedText);
+    }
+    if (!str::Eq(selected, expectedLine)) {
+        return fmt("FAIL selected=%s expected=%s\n", selected, expectedLine);
+    }
+    *exitCodeOut = 0;
+    return fmt("OK selected=%s\n", selected);
+}
+
 static TempStr ContextMenuSelectionResultTemp(Str word1, Str word2, Str cursorWord, int* exitCodeOut) {
     str::Builder out;
     auto fail = [&](Str msg) -> Str {
@@ -3752,6 +3801,21 @@ static void ExecuteControlRequest(ControlRequest* req) {
             IntArg(req, 1, pageNo);
             int exitCode = 0;
             Str res = FavoriteNavResultTemp(StringArg(req, 0), pageNo, &exitCode);
+            AppendTestResult(req, exitCode, res);
+            break;
+        }
+
+        case ControlCmd::TestTripleClickLineSelect: {
+            Str pdf = StringArg(req, 0);
+            Str clickWord = StringArg(req, 1);
+            Str expectedLine = StringArg(req, 2);
+            if (len(pdf) == 0 || len(clickWord) == 0 || len(expectedLine) == 0) {
+                AppendError(
+                    req, StrL("TestTripleClickLineSelect expects string pdf, string clickWord, string expectedLine"));
+                break;
+            }
+            int exitCode = 0;
+            Str res = TripleClickLineResultTemp(pdf, clickWord, expectedLine, &exitCode);
             AppendTestResult(req, exitCode, res);
             break;
         }

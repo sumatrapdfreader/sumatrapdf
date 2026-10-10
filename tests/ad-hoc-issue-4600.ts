@@ -12,14 +12,23 @@
 // elements, and user-stylesheet !important outranks inline styles in mupdf's
 // cascade. Every row must be non-zero, with and without IgnoreDocumentCSS.
 
-import { mkdirSync, rmSync, writeFileSync } from "node:fs";
+import { mkdirSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { deflateRawSync } from "node:zlib";
 import { join } from "node:path";
-import { tmpPath, crc32 } from "./util.ts";
-import { findCanvas, killAndWait, killProcessesNamed, launchSumatra, waitForFrame } from "./win-automation.ts";
-import { captureWindowPixels, moveWindow, setForegroundWindow, showWindow, sleep, SW_RESTORE } from "./winapi.ts";
+import { ControlCommand, withControlledSumatra } from "./control.ts";
+import { IS_MAC } from "./host.ts";
+import { EXE, runStandalone, tmpPath, crc32 } from "./util.ts";
 
 const EPUB_DIR = tmpPath("epub-font");
+
+// BITMAPFILEHEADER.bfOffBits, then BITMAPINFOHEADER.biWidth / biHeight / biBitCount
+const BMP_PIXELS_OFF = 10;
+const BMP_WIDTH_OFF = 18;
+const BMP_HEIGHT_OFF = 22;
+const BMP_BPP_OFF = 28;
+
+// SimSun ships with Windows only
+const CJK_FONT = IS_MAC ? "Heiti SC" : "SimSun";
 
 // --- minimal zip writer (an EPUB is a zip) --------------------------------
 
@@ -125,6 +134,7 @@ export function makeFixtures(): void {
 
 type Cfg = { fontName: string; ignoreCss: boolean };
 
+// Page 1 as the engine draws it. Not a window capture: macOS has none.
 async function render(epub: string, cfg: Cfg): Promise<Uint8Array> {
   const appdata = tmpPath("issue-4600-appdata");
   rmSync(appdata, { recursive: true, force: true });
@@ -142,24 +152,38 @@ async function render(epub: string, cfg: Cfg): Promise<Uint8Array> {
       ``,
     ].join("\n"),
   );
-  const proc = launchSumatra(["-appdata", appdata, "-view", "single page", "-zoom", "fit page", epub]);
-  try {
-    const frame = await waitForFrame(proc.pid!);
-    if (!frame) {
-      throw new Error(`no frame for ${epub}`);
-    }
-    showWindow(frame, SW_RESTORE);
-    moveWindow(frame, 40, 40, 1000, 800);
-    setForegroundWindow(frame);
-    await sleep(2500);
-    const cap = captureWindowPixels(findCanvas(frame));
-    if (!cap) {
-      throw new Error(`no capture for ${epub}`);
-    }
-    return cap.data;
-  } finally {
-    await killAndWait(proc);
+  await withControlledSumatra(
+    EXE,
+    async (client) => {
+      await client.waitForRenderIdle();
+      const res = await client.request(ControlCommand.TestConvertToImages, [join(appdata, "page-<N>.bmp"), "1"]);
+      if (res[0] !== 0 || !String(res[1]).startsWith("OK")) {
+        throw new Error(`no render for ${epub}: ${res}`);
+      }
+    },
+    ["-appdata", appdata, epub],
+  );
+  return bmpPixels(readFileSync(join(appdata, "page-1.bmp")));
+}
+
+// 4 bytes per pixel, whatever the depth: orig writes 32-bit BMPs, ng 24-bit.
+function bmpPixels(bmp: Buffer): Uint8Array {
+  const bytesPerPx = bmp.readUInt16LE(BMP_BPP_OFF) / 8;
+  if (bmp.toString("ascii", 0, 2) !== "BM" || (bytesPerPx !== 3 && bytesPerPx !== 4)) {
+    throw new Error("expected a 24-bit or 32-bit BMP");
   }
+  const w = bmp.readInt32LE(BMP_WIDTH_OFF);
+  const h = Math.abs(bmp.readInt32LE(BMP_HEIGHT_OFF));
+  const stride = (w * bytesPerPx + 3) & ~3;
+  const start = bmp.readUInt32LE(BMP_PIXELS_OFF);
+  const out = new Uint8Array(w * h * 4);
+  for (let y = 0; y < h; y++) {
+    for (let x = 0; x < w; x++) {
+      const src = start + y * stride + x * bytesPerPx;
+      out.set(bmp.subarray(src, src + 3), (y * w + x) * 4);
+    }
+  }
+  return out;
 }
 
 function diffPct(a: Uint8Array, b: Uint8Array): number {
@@ -176,10 +200,9 @@ function diffPct(a: Uint8Array, b: Uint8Array): number {
 
 export async function testit(): Promise<void> {
   makeFixtures();
-  await killProcessesNamed("SumatraPDF.exe");
   for (const v of Object.keys(VARIANTS)) {
     const epub = join(EPUB_DIR, `${v}.epub`);
-    const font = v === "cjk" ? "SimSun" : "Arial";
+    const font = v === "cjk" ? CJK_FONT : "Arial";
     const base = await render(epub, { fontName: "", ignoreCss: false });
     const set = await render(epub, { fontName: font, ignoreCss: false });
     const ign = await render(epub, { fontName: font, ignoreCss: true });
@@ -191,6 +214,5 @@ export async function testit(): Promise<void> {
 }
 
 if (import.meta.main) {
-  const { runStandalone } = await import("./util.ts");
   await runStandalone(testit);
 }
