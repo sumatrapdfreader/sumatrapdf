@@ -6645,6 +6645,12 @@ static void ApplyStartupViewFlags(const Flags& flags, MainWindow* win) {
         ScrollState ss = dm->GetScrollState();
         ss.x = flags.startScroll.x;
         ss.y = flags.startScroll.y;
+        // The page flag above zeros pendingScroll. A layout that is still
+        // waiting would apply that and drop this -scroll.
+        if (dm->hasPendingScroll) {
+            dm->pendingScroll.x = ss.x;
+            dm->pendingScroll.y = ss.y;
+        }
         dm->SetScrollState(ss);
     }
 }

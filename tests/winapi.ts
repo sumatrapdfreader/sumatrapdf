@@ -1078,6 +1078,21 @@ function readClipboardText(): string | null {
 }
 
 export async function getClipboardText(timeoutMs = 1000): Promise<string> {
+  if (IS_MAC) {
+    const deadline = Date.now() + timeoutMs;
+    let last = "";
+    for (;;) {
+      const r = Bun.spawnSync(["pbpaste"], { stdout: "pipe", stderr: "ignore" });
+      last = r.stdout.toString();
+      if (r.exitCode === 0 && last.length > 0) {
+        return last;
+      }
+      if (Date.now() >= deadline) {
+        return last;
+      }
+      await sleep(20);
+    }
+  }
   const deadline = Date.now() + timeoutMs;
   for (;;) {
     const text = readClipboardText();
