@@ -15,6 +15,7 @@ import type { Platform, Toolchain } from "./ng-toolchain";
 import { findTarget, forPlatform, sourceBuildsOn, type Target, type TargetKind } from "./ng-targets";
 import { isShared, sharedFiles, sharedPath, sharedSource } from "./ng-shared";
 import { embedLzsa } from "./embedded";
+import { ngVersion, versionDefines } from "./ng-version";
 
 export type BuildFlags = {
   debug: boolean;
@@ -24,6 +25,8 @@ export type BuildFlags = {
   clang: boolean;
   clean: boolean;
   verbose: boolean;
+  /** n-th further build of the day: the .n of version yy.mm.dd.n */
+  rev?: number;
 };
 
 export type Fail = (msg: string) => never;
@@ -48,6 +51,12 @@ export function stageShared(dir: string): void {
     if (existsSync(dst) && readFileSync(dst).equals(data)) continue;
     mkdirSync(dirname(dst), { recursive: true });
     writeFileSync(dst, data);
+  }
+  // a file that stopped being shared would still win over ng's own
+  const staged = new Set(sharedFiles.map(sharedPath));
+  if (!existsSync(sharedDir(dir))) return;
+  for (const rel of new Glob("**/*").scanSync({ cwd: sharedDir(dir) })) {
+    if (!staged.has(rel.replaceAll("\\", "/"))) rmSync(join(sharedDir(dir), rel));
   }
 }
 
@@ -240,7 +249,8 @@ function definesOf(t: Target, f: BuildFlags): string[] {
   const extra = (f.debug ? t.debugDefines : t.releaseDefines) ?? [];
   // orig's Profile configuration defines it for every project
   const profile = f.profile ? ["IS_PERF_LOG=1"] : [];
-  return [...(t.defines ?? []), ...extra, ...profile];
+  const version = t.versionDefines ? versionDefines(ngVersion(f.rev)) : [];
+  return [...(t.defines ?? []), ...extra, ...profile, ...version];
 }
 
 function msvcCflags(t: Target, f: BuildFlags, cpp: boolean): string[] {
@@ -638,13 +648,25 @@ function rcDeps(rcPath: string): string[] {
 async function compileRc(tc: Toolchain, t: Target, f: BuildFlags, dir: string, fail: Fail): Promise<string> {
   const src = join(root, t.rc!);
   const out = join(dir, `${t.name}.res`);
-  const deps = rcDeps(src);
+  // rc.exe gets the version as a header: a define with commas doesn't
+  // survive its command line
+  const v = ngVersion(f.rev);
+  const genDir = join(dir, "generated", `${t.name}-rc`);
+  const verHeader = join(genDir, "VersionRc.h");
+  const verContent = `#define VER_RESOURCE ${v.rc}\n#define VER_RESOURCE_STR "${v.ver}"\n`;
+  if (!existsSync(verHeader) || readFileSync(verHeader, "utf8") !== verContent) {
+    mkdirSync(genDir, { recursive: true });
+    writeFileSync(verHeader, verContent);
+  }
+  const deps = [...rcDeps(src), verHeader];
   if (existsSync(out) && deps.every((d) => mtime(d) <= mtime(out))) return out;
   if (!tc.rc) fail(`target ${t.name}: rc.exe not found (no Windows SDK in the toolchain)`);
   const cmd = [
     tc.rc,
     "/nologo",
     ...(f.debug ? ["/d_DEBUG"] : []),
+    "/i",
+    genDir,
     "/i",
     dirname(src),
     "/i",

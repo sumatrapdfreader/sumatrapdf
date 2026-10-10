@@ -210,20 +210,13 @@ static AboutRow gAboutRows[] = {
     {StrL("forums"), StrL("SumatraPDF forums"), StrL("https://github.com/sumatrapdfreader/sumatrapdf/discussions")},
     {StrL("licenses"), StrL("Various Open Source"),
      StrL("https://github.com/sumatrapdfreader/sumatrapdf/blob/master/AUTHORS")},
-#ifdef GIT_COMMIT_ID_STR
-    {StrL("last change"), StrL("git commit " GIT_COMMIT_ID_STR),
-     StrL("https://github.com/sumatrapdfreader/sumatrapdf/commit/" GIT_COMMIT_ID_STR)},
-#endif
-#ifdef PRE_RELEASE_VER
-    {StrL("a note"), StrL("Pre-release version, for testing only!"), {}},
-#endif
 #if IS_DEBUG
     {StrL("a note"), StrL("Debug version, for testing only!"), {}},
 #endif
     {{}, {}, {}}};
 
 static TempStr GetAppVersionTemp() {
-    TempStr s = str::DupTemp(StrL("v" CURR_VERSION_STRA));
+    TempStr s = str::JoinTemp(StrL("v"), currentVersion);
     bool is64 = sizeof(void*) == 8;
     s = str::JoinTemp(s, is64 ? StrL(" 64-bit") : StrL(" 32-bit"));
     if (gIsDebugBuild) {

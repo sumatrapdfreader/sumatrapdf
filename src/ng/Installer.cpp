@@ -663,7 +663,7 @@ gp::El* BuildInstallerLogo(gp::Ctx* cx) {
     for (const LetterInfo& li : gLetters) {
         row->Child(BuildLetter(cx, li, fontSize, scale));
     }
-    TempStr ver = fmt("v%s", StrL(CURR_VERSION_STRA));
+    TempStr ver = fmt("v%s", currentVersion);
     row->Child(
         gp::Div(cx->a)->Absolute()->Right(8)->Top(2)->Rotate(0.125f)->Child(gp::TextEl(cx->a, GpuiDup(cx->a, ver))
                                                                                 ->Font(16.f * scale * 96.f / 72.f)
@@ -964,7 +964,7 @@ static bool CreateInstallerWindow(Flags* cli) {
     gWnd->editInstallationDir->focus = gp::FocusHandleNew(app);
     gp::InputSetValue(gWnd->editInstallationDir, ToGpui(cli->installDir));
 
-    TempStr title = fmt(Tr("SumatraPDF %s Installer").s, StrL(CURR_VERSION_STRA));
+    TempStr title = fmt(Tr("SumatraPDF %s Installer").s, currentVersion);
     int dx = GetInstallerWinDx();
     int dy = kInstallerWinDy;
     gWnd->win = gp::WindowOpenView(app, ToGpui(title), dx, dy, gInstallerView.id, gp::WinOpts{});

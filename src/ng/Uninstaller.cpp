@@ -226,7 +226,7 @@ static bool CreateUninstallerWindow() {
     gWnd->app = app;
     gUninstallerView = gp::EntityNew<UninstallerView>(app);
 
-    TempStr title = fmt(Tr("SumatraPDF %s Uninstaller").s, StrL(CURR_VERSION_STRA));
+    TempStr title = fmt(Tr("SumatraPDF %s Uninstaller").s, currentVersion);
     int dx = GetInstallerWinDx();
     int dy = kInstallerWinDy;
     gWnd->win = gp::WindowOpenView(app, ToGpui(title), dx, dy, gUninstallerView.id, gp::WinOpts{});

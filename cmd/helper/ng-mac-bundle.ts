@@ -5,7 +5,7 @@
 //                          /MacOS/SumatraPDF
 //                          /Resources/SumatraPDF.icns
 
-import { constants, copyFileSync, existsSync, mkdirSync, readFileSync, rmSync, statSync, writeFileSync } from "node:fs";
+import { constants, copyFileSync, existsSync, mkdirSync, rmSync, statSync, writeFileSync } from "node:fs";
 import { basename, join } from "node:path";
 
 const bundleId = "org.sumatrapdfreader.SumatraPDF";
@@ -100,14 +100,7 @@ function makeIcon(root: string, tmpDir: string, dst: string): void {
   rmSync(iconset, { recursive: true, force: true });
 }
 
-function appVersion(root: string): string {
-  const h = readFileSync(join(root, "src/BuildConfig_default.h"), "utf8");
-  const m = h.match(/^#define CURR_VERSION\s+([\d.]+)/m);
-  if (!m) throw new Error("CURR_VERSION not found in src/BuildConfig_default.h");
-  return m[1]!;
-}
-
-export function makeMacBundle(root: string, exe: string): string {
+export function makeMacBundle(root: string, exe: string, version: string): string {
   const exeName = basename(exe);
   const outDir = join(exe, "..");
   const app = join(outDir, `${exeName}.app`);
@@ -123,7 +116,7 @@ export function makeMacBundle(root: string, exe: string): string {
     copyFileSync(exe, bundleExe, constants.COPYFILE_FICLONE);
   }
   makeIcon(root, outDir, join(resDir, iconName));
-  writeFileSync(join(app, "Contents", "Info.plist"), infoPlist(exeName, appVersion(root)));
+  writeFileSync(join(app, "Contents", "Info.plist"), infoPlist(exeName, version));
   // seals Info.plist and the icon into the signature
   run(["codesign", "--force", "--sign", "-", app]);
   return app;

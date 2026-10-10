@@ -148,12 +148,22 @@ build under a debugger (cdb or WinDbg on Windows, lldb or gdb on macOS
 and Linux). Format ng C/C++ with `bun cmd/ng-format.ts`; format TypeScript
 with `bun cmd/format.ts -ts`.
 
+Ng's version is the day of the build, `yy.mm.dd[.n]` (`26.10.03.1`), not
+orig's `3.7.1`; `-rev <n>` sets `.n`. `cmd/helper/ng-version.ts` computes it
+and the build passes it as defines (`SUMATRA_VER`, `BUILT_ON`,
+`GIT_COMMIT_ID`) to `SumatraConfig.cpp` alone, so a new day recompiles one
+file. Ng has no `BuildConfig.h`; code reads `currentVersion`, `gBuiltOn` and
+`gitCommidId`. `src/ng/Version.h` is ng's own. The macOS release script is
+`build-ng-mac.ts` in `../hack/sumatrapdf/build`: it uploads the app and its
+`.dSYM` to R2 `software/sumatrapdfng/mac/<ver>/`.
+
 Ng on macOS has no minidumps. A crash writes a text report (every thread's
 stack as module + offset, Mach-O UUIDs, log, settings) to
 `crashinfo/sumatrapdfcrash.txt` in the app data dir and uploads it on the
 next start (`src/base/CrashHandler_posix.cpp`, `CrashHandler_mac.cpp`).
 `bun cmd/ng-crashes.ts` lists, downloads and symbolicates them with `atos`
-and the build's `.dSYM`; `-file <path>` symbolicates a local report. ASan
+and the build's `.dSYM` (downloaded from R2 for an uploaded build); `-file
+<path>` symbolicates a local report. ASan
 builds and `-for-testing` runs don't upload.
 
 Use `cmd/ng-gen-commands.ts` and `cmd/ng-gen-settings.ts` for ng generated

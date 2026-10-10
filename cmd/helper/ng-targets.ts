@@ -59,6 +59,8 @@ export type Target = {
   /** defines added only in debug / only in release builds */
   debugDefines?: string[];
   releaseDefines?: string[];
+  /** also gets the build's version as defines (cmd/helper/ng-version.ts) */
+  versionDefines?: boolean;
   /** static library targets this one links (apps and console tools only) */
   deps?: string[];
   /** platforms this target builds on; all when absent */
@@ -499,7 +501,6 @@ const appSources = [
   "src/ng/RefHoverTextDetect.cpp",
   "src/ng/RenderCache.cpp",
   "src/ng/ShortcutParse.cpp",
-  "src/ng/SumatraConfig.cpp",
   "src/ng/SystemFonts.cpp",
   "src/ng/Theme.cpp",
   "src/ng/TranslationLangs.cpp",
@@ -1179,6 +1180,18 @@ export const targets: Target[] = [
     exceptions: true,
   },
   {
+    // The one file compiled with the version defines. They change with the
+    // day and the commit, and a change of flags recompiles a whole target.
+    name: "appver",
+    kind: "staticlib",
+    sources: ["src/ng/SumatraConfig.cpp"],
+    defines: ["DISABLE_DOCUMENT_RESTRICTIONS"],
+    versionDefines: true,
+    includes: ["src/ng"],
+    strict: true,
+    exceptions: true,
+  },
+  {
     // orig's application layer minus the UI: settings, commands, shortcuts,
     // translations, theme colors. Step 5b adds the document model.
     name: "app",
@@ -1198,7 +1211,7 @@ export const targets: Target[] = [
       "ext/cmark-gfm/extensions",
       "ext/mupdf/scripts/cmark-gfm",
     ],
-    deps: ["engines"],
+    deps: ["engines", "appver"],
     strict: true,
     exceptions: true,
   },

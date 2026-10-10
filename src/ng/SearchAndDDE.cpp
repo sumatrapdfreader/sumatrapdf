@@ -36,6 +36,7 @@
 #include "WindowTab.h"
 #include "Commands.h"
 #include "Version.h"
+#include "SumatraConfig.h"
 #include "ExplorerQuickLook.h"
 #include "Tabs.h"
 #include "Selection.h"
@@ -2957,7 +2958,7 @@ static Str HandleGetFileStateCmd(Str cmd, bool* ack, str::Builder& res) {
     res.Append(fmt("pageCount: %d\n", ctrl->PageCount()));
     res.Append(fmt("zoom: %g\n", zoom));
     res.Append(fmt("view: %s\n", view));
-    res.Append(fmt("sumver: %s\n", StrL(CURR_VERSION_STRA)));
+    res.Append(fmt("sumver: %s\n", currentVersion));
     return next;
 }
 

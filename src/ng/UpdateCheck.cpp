@@ -60,7 +60,7 @@ static bool IsArmBuild() {
 // ng: each platform has its own builds and update info, uploaded to
 // software/sumatrapdfng/<platform>/ in R2, and its own update check url on
 // the website, which also counts that platform's checks apart from the rest.
-// Wasm has no builds of its own to offer and still asks orig's urls.
+// Wasm has no builds of its own to offer and asks orig's release url.
 
 // clang-format off
 // tried in order; later entries are backups if earlier HTTP gets fail
@@ -76,11 +76,6 @@ static const Str updateInfoURLs[] = {
 static const Str updateInfoURLs[] = {
     StrL("https://www.sumatrapdfreader.org/update-check-ng-linux.txt"),
 };
-#elif defined(PRE_RELEASE_VER) || defined(DEBUG)
-static const Str updateInfoURLs[] = {
-    StrL("https://www.sumatrapdfreader.org/updatecheck-pre-release.txt"),
-    StrL("https://kjk-files.s3.us-west-001.backblazeb2.com/software/sumatrapdf/sumpdf-prerelease-update.txt"),
-};
 #else
 static const Str updateInfoURLs[] = {
     StrL("https://www.sumatrapdfreader.org/update-check-rel.txt"),
@@ -88,11 +83,7 @@ static const Str updateInfoURLs[] = {
 #endif
 
 #ifndef kWebisteDownloadPageURL
-#ifdef PRE_RELEASE_VER
-#define kWebisteDownloadPageURL "https://www.sumatrapdfreader.org/prerelease"
-#else
 #define kWebisteDownloadPageURL "https://www.sumatrapdfreader.org/download-free-pdf-viewer"
-#endif
 #endif
 // clang-format on
 
@@ -426,8 +417,8 @@ static void NotifyUserOfUpdate(UpdateInfo* updateInfo) {
     Str mainInstr = Tr("New version available");
     Str ver = updateInfo->latestVer;
     Str fmtStr = Tr("You have version '%s' and version '%s' is available.\nDo you want to install the new version?");
-    TempStr content = fmt("%s\n\n%s", mainInstr, fmt(fmtStr.s, StrL(CURR_VERSION_STRA), ver));
-    logf("NotifyUserOfUpdate: %s -> %s\n", StrL(CURR_VERSION_STRA), ver);
+    TempStr content = fmt("%s\n\n%s", mainInstr, fmt(fmtStr.s, currentVersion, ver));
+    logf("NotifyUserOfUpdate: %s -> %s\n", currentVersion, ver);
 
     uint flags = MbYesNo | MbIconInformation;
     MsgBox(updateInfo->win, content, Tr("SumatraPDF Update"), flags,
@@ -515,11 +506,7 @@ static void ShowUpdateAvailableNotification(MainWindow* win, UpdateInfo* updateI
         return;
     }
     TempStr link = fmt("[%s](CmdInstallPrereleaseUpdate)", Tr("Update"));
-    // pre-release "Latest" is a build number (e.g. 17616); show as 3.7.17616
-    TempStr displayVer = updateInfo->latestVer;
-    if (!str::ContainsChar(displayVer, '.')) {
-        displayVer = fmt("%s.%s", StrL(CURR_VERSION_MAJOR_STRA), displayVer);
-    }
+    Str displayVer = updateInfo->latestVer;
     TempStr msg;
     if (updateInfo->builtOn) {
         msg = fmt(Tr("Version %s from %s available. %s").s, displayVer, updateInfo->builtOn, link);
@@ -574,13 +561,7 @@ static bool ShouldDownloadUpdate(UpdateInfo* updateInfo) {
         return false;
     }
     Str latestVer = updateInfo->latestVer;
-    Str myVer = StrL(UPDATE_CHECK_VERA);
-    if (gIsDebugBuild) {
-        // in debug build we compare against pre-rel version, like "17616"
-        // but our version is like "3.6" so it triggers update
-        myVer = StrL("50000");
-    }
-    return CompareProgramVersion(latestVer, myVer) > 0;
+    return CompareProgramVersion(latestVer, currentVersion) > 0;
 }
 
 static void OnVisitWebsiteAnswer(int res) {
@@ -646,7 +627,7 @@ static DWORD MaybeStartUpdateDownload(MainWindow* win, HttpRsp* rsp, UpdateCheck
     updateInfo->win = win;
 
     if (!ShouldDownloadUpdate(updateInfo)) {
-        Str myVer = StrL(UPDATE_CHECK_VERA);
+        Str myVer = currentVersion;
         logf("MaybeStartUpdateDownload: myVer >= latestVer ('%s' >= '%s')\n", myVer, updateInfo->latestVer);
         /* if automated => don't notify that there is no new version */
         if (updateCheckType == UpdateCheck::UserInitiated) {
@@ -748,7 +729,7 @@ static TempStr OsNameTemp() {
 // Shared by update check and minidump upload: v, os, 64bit, arm, lang, store, simd.
 void AppendClientInfoQuery(str::Builder& url) {
     url.Append(StrL("?v="));
-    url.Append(StrL(UPDATE_CHECK_VERA));
+    url.Append(currentVersion);
     url.Append(StrL("&os="));
 #if OS_WIN
     url.Append(GetWindowsVerTemp());

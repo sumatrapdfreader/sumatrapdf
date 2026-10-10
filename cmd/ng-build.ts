@@ -28,6 +28,7 @@ import {
 import { defaultTarget, findTarget, targetsFor } from "./helper/ng-targets";
 import { runBuildInWsl } from "./helper/ng-wsl";
 import { makeMacBundle } from "./helper/ng-mac-bundle";
+import { maxRev, ngVersion } from "./helper/ng-version";
 import { genDocsForBuild } from "./gen-docs";
 import { packEmbedded } from "./helper/embedded";
 
@@ -46,6 +47,7 @@ Options:
   -profile          Windows, cl.exe: orig's Profile build (PerfLog, /callcap);
                     run with -start-perf-log -log-perf-file <path>
   -clean            delete the output directory first
+  -rev <n>          n-th further build of the day: version yy.mm.dd.n (1-${maxRev})
   -no-embed-fonts   leave built-in fonts out of the archive; they download on use.
                     wasm always does this
   -all              build every target for this platform
@@ -92,7 +94,12 @@ function parseArgs(args: string[]): Options {
     else if (a === "-asan") flags.asan = true;
     else if (a === "-profile") flags.profile = true;
     else if (a === "-clean") flags.clean = true;
-    else if (a === "-no-embed-fonts") noEmbedFonts = true;
+    else if (a === "-rev") {
+      flags.rev = Number(args[++i]);
+      if (!Number.isInteger(flags.rev) || flags.rev < 1 || flags.rev > maxRev) {
+        throw new CliError(`-rev needs a number from 1 to ${maxRev}`);
+      }
+    } else if (a === "-no-embed-fonts") noEmbedFonts = true;
     else if (a === "-all") all = true;
     else if (a === "-run") run = true;
     else if (a === "-v") flags.verbose = true;
@@ -245,7 +252,7 @@ async function main(): Promise<void> {
     if (t.platforms && !t.platforms.includes(plat)) fail(`target ${t.name} does not support ${plat}`);
   }
   const tc = findToolchain(root, plat, flags.clang, fail);
-  console.log(`${tc.label} -> out/${outDirName(plat, flags)} (${cpus().length} jobs)`);
+  console.log(`${tc.label} -> out/${outDirName(plat, flags)} (${cpus().length} jobs), ver ${ngVersion(flags.rev).ver}`);
   if (flags.clean) cleanOutDir(plat, flags);
   stageShared(outDir(plat, flags));
 
@@ -275,7 +282,7 @@ async function main(): Promise<void> {
   for (const t of targets) {
     last = await buildTarget(tc, t, flags, fail);
     if (plat === "mac" && t.name === defaultTarget) {
-      console.log(`bundle ${relative(root, makeMacBundle(root, last))}`);
+      console.log(`bundle ${relative(root, makeMacBundle(root, last, ngVersion(flags.rev).ver))}`);
     }
   }
   console.log(`done in ${((performance.now() - started) / 1000).toFixed(1)} s`);

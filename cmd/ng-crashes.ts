@@ -8,9 +8,10 @@
 //
 // A report has each frame as "module + offset" and each module's Mach-O UUID
 // (src/base/CrashHandler_mac.cpp). Symbolication is atos against the .dSYM
-// with that UUID, found via Spotlight, out/mac/*/ or .work/ng-crashes/symbols/.
+// with that UUID, found via Spotlight, out/mac/*/ or .work/ng-crashes/symbols/,
+// where the .dSYM.zip of an uploaded build (build-ng-mac.ts) is downloaded to.
 // Reports are cached as .work/ng-crashes/<id>.crash, symbolicated as <id>.txt.
-import { existsSync, mkdirSync, readdirSync, readFileSync, writeFileSync } from "node:fs";
+import { existsSync, mkdirSync, readdirSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { basename, join, resolve } from "node:path";
 import { spawnSync } from "node:child_process";
 
@@ -20,6 +21,7 @@ const SYMBOLS_DIR = join(CACHE_DIR, "symbols");
 const PROD_SERVER = "https://www.sumatrapdfreader.org";
 const LOCAL_SERVER = "http://127.0.0.1:9321";
 const APP = "sumatrapdfng-mac";
+const FILES_HOST = "https://files.sumatrapdfreader.org/software/sumatrapdfng/mac";
 const SECRETS_GO = resolve(ROOT, "..", "hack", "webapps", "sumatra-website", "server", "secrets.go");
 
 type Frame = { lineNo: number; idx: number; addr: bigint; module: string };
@@ -44,6 +46,11 @@ function dsymCandidates(uuid: string): string[] {
     .split("\n")
     .filter(Boolean);
   const dirs = [SYMBOLS_DIR];
+  if (existsSync(SYMBOLS_DIR)) {
+    for (const e of readdirSync(SYMBOLS_DIR, { withFileTypes: true })) {
+      if (e.isDirectory()) dirs.push(join(SYMBOLS_DIR, e.name));
+    }
+  }
   const macOut = join(ROOT, "out", "mac");
   if (existsSync(macOut)) {
     for (const cfg of readdirSync(macOut)) dirs.push(join(macOut, cfg));
@@ -69,6 +76,40 @@ function findDwarfFile(uuid: string): string {
   }
   dwarfCache.set(uuid, res);
   return res;
+}
+
+// Symbols of the uploaded build that wrote the report, into
+// .work/ng-crashes/symbols/<ver>-<arch>/SumatraPDF.dSYM. A report of a build
+// that was never uploaded has none.
+async function downloadSymbols(report: string): Promise<void> {
+  // "Ver: 26.10.03.1" or "Ver: 26.10.03.1 (dbg)"
+  const ver = report.match(/^Ver: (\d+(?:\.\d+)*)/m)?.[1];
+  const arch = report.match(/^Arch: (\S+)$/m)?.[1] === "x86_64" ? "x64" : "arm64";
+  if (!ver) return;
+  const dir = join(SYMBOLS_DIR, `${ver}-${arch}`);
+  if (existsSync(dir)) return;
+  const url = `${FILES_HOST}/${ver}/SumatraPDF-mac-${arch}.dSYM.zip`;
+  const rsp = await fetch(url);
+  if (!rsp.ok) return;
+  mkdirSync(dir, { recursive: true });
+  const zip = join(dir, "symbols.zip");
+  await Bun.write(zip, rsp);
+  run("ditto", ["-x", "-k", zip, dir]);
+  rmSync(zip);
+  console.error(`downloaded ${url}`);
+}
+
+function hasSumatraSymbols(report: string): boolean {
+  const mod = parseModules(report.split("\n")).get("SumatraPDF");
+  return !mod || findDwarfFile(mod.uuid) !== "";
+}
+
+async function symbolicate(report: string): Promise<string> {
+  if (!hasSumatraSymbols(report)) {
+    await downloadSymbols(report);
+    dwarfCache.clear();
+  }
+  return symbolicateWith(report);
 }
 
 function parseModules(lines: string[]): Map<string, Module> {
@@ -98,7 +139,7 @@ function atos(dwarf: string, arch: string, loadAddr: string, addrs: bigint[]): s
   return addrs.map((_, i) => (out[i] ?? "").replace(/ \(in [^)]+\)/, ""));
 }
 
-function symbolicate(report: string): string {
+function symbolicateWith(report: string): string {
   const lines = report.split("\n");
   const modules = parseModules(lines);
   const frames = parseFrames(lines);
@@ -150,7 +191,7 @@ async function ensureReport(server: string, id: string): Promise<string> {
     writeFileSync(rawPath, await rsp.text());
   }
   if (!existsSync(symPath)) {
-    writeFileSync(symPath, symbolicate(readFileSync(rawPath, "utf8")));
+    writeFileSync(symPath, await symbolicate(readFileSync(rawPath, "utf8")));
   }
   return symPath;
 }
@@ -199,7 +240,7 @@ async function main(): Promise<void> {
     else id = a;
   }
   if (file) {
-    console.log(symbolicate(readFileSync(file, "utf8")));
+    console.log(await symbolicate(readFileSync(file, "utf8")));
     return;
   }
   if (id) {

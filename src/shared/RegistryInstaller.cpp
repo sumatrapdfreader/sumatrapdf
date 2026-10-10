@@ -105,7 +105,7 @@ bool WriteUninstallerRegistryInfo(HKEY hkey, bool allUsers, Str installDir) {
     ok &= LoggedWriteRegStr(hkey, regPathUninst, StrL("DisplayIcon"), installedExePath);
     ok &= LoggedWriteRegStr(hkey, regPathUninst, StrL("DisplayName"), StrL(kAppName));
     // version format: "1.2"
-    ok &= LoggedWriteRegStr(hkey, regPathUninst, StrL("DisplayVersion"), StrL(CURR_VERSION_STRA));
+    ok &= LoggedWriteRegStr(hkey, regPathUninst, StrL("DisplayVersion"), currentVersion);
     // non-recursive because we don't want to count space used for thumbnails
     // which is in installDir for local install
     DWORD size = GetDirSize(installDir) / 1024;

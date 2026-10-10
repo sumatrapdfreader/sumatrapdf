@@ -4,6 +4,7 @@
 
 #include "resource.h"
 #include "Version.h"
+#include "VersionRc.h"
 
 #define APSTUDIO_HIDDEN_SYMBOLS
 #include "windows.h"
