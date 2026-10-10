@@ -13,6 +13,7 @@
 
 import { writeFileSync } from "node:fs";
 import { ControlCommand } from "./control.ts";
+import { IS_MAC } from "./host.ts";
 import { runStandalone, SLOW_BUILD_FACTOR, tmpPath, USE_NG } from "./util.ts";
 import { clickAt, findCanvas, killAndWait, launchControlled } from "./win-automation.ts";
 import {
@@ -117,22 +118,70 @@ export async function testit(): Promise<void> {
   try {
     await client.setNotificationsEnabled(false);
     await client.waitForRenderIdle();
-    const canvas = findCanvas(frame);
-    if (!canvas) {
-      throw new Error("issue-5964: could not find the canvas window");
-    }
-    const pid = getWindowPid(frame);
-    if (findWindowByTitle(pid, "Sign Document")) {
-      throw new Error("issue-5964: Sign Document was already open before the click");
-    }
 
-    // click the middle of the canvas, which is inside the signature field
-    const cr = getClientRect(canvas);
-    if (cr.right < 100 || cr.bottom < 100) {
-      throw new Error(`issue-5964: canvas is ${cr.right}x${cr.bottom}, too small to click into the field`);
+    const signDialogOpen = async (): Promise<boolean> => {
+      const raw = String((await client.request(ControlCommand.TestToolWindow, ["list"]))[1] ?? "");
+      return /signdocument made=1 /.test(raw);
+    };
+    const waitForSignDialog = async (winPid: number): Promise<number> => {
+      const timeoutMs = 1500 * SLOW_BUILD_FACTOR;
+      if (!IS_MAC) {
+        return waitForWindowByTitle(winPid, "Sign Document", timeoutMs);
+      }
+      const deadline = Date.now() + timeoutMs;
+      while (Date.now() < deadline) {
+        if (await signDialogOpen()) {
+          return 1;
+        }
+        await sleep(100);
+      }
+      return 0;
+    };
+
+    let canvas = frame;
+    let pid = 0;
+    let cx = 0;
+    let cy = 0;
+    if (IS_MAC) {
+      if (await signDialogOpen()) {
+        throw new Error("issue-5964: Sign Document was already open before the click");
+      }
+      const layout = String((await client.request(ControlCommand.TestLayout, []))[1] ?? "");
+      const scale = Number(/scale=([0-9.]+)/.exec(layout)?.[1] ?? "1") || 1;
+      const m = /item name=canvas visible=\d+ rect=(-?\d+),(-?\d+),(-?\d+),(-?\d+)/.exec(layout);
+      if (!m) {
+        throw new Error("issue-5964: no canvas rect");
+      }
+      const dx = Number(m[3]);
+      const dy = Number(m[4]);
+      if (dx < 100 || dy < 100) {
+        throw new Error(`issue-5964: canvas is ${dx}x${dy}, too small to click into the field`);
+      }
+      const page = /page n=1 shown=1 .*screen=(-?\d+),(-?\d+),(-?\d+),(-?\d+)/.exec(layout);
+      if (!page) {
+        throw new Error("issue-5964: page is not on screen");
+      }
+      // TestInput is in the same dips ToDoc hit-tests. The page rect is
+      // canvas pixels plus the canvas origin in dips.
+      cx = Math.round(scale * (Number(page[1]) + Number(page[3]) / 2));
+      cy = Math.round(scale * (Number(page[2]) + Number(page[4]) / 2));
+    } else {
+      canvas = findCanvas(frame);
+      if (!canvas) {
+        throw new Error("issue-5964: could not find the canvas window");
+      }
+      pid = getWindowPid(frame);
+      if (findWindowByTitle(pid, "Sign Document")) {
+        throw new Error("issue-5964: Sign Document was already open before the click");
+      }
+      // click the middle of the canvas, which is inside the signature field
+      const cr = getClientRect(canvas);
+      if (cr.right < 100 || cr.bottom < 100) {
+        throw new Error(`issue-5964: canvas is ${cr.right}x${cr.bottom}, too small to click into the field`);
+      }
+      cx = Math.floor(cr.right / 2);
+      cy = Math.floor(cr.bottom / 2);
     }
-    const cx = Math.floor(cr.right / 2);
-    const cy = Math.floor(cr.bottom / 2);
 
     // A click is hit-tested against the page's widgets through
     // EngineMupdf::GetFzPageInfoCanFail(), which TryLocks the engine's page and
@@ -148,12 +197,26 @@ export async function testit(): Promise<void> {
         await client.waitForRenderIdle();
         await sleep(500);
       }
-      await clickAt(canvas, cx, cy, 0);
+      if (IS_MAC) {
+        const res = await client.request(ControlCommand.TestInput, ["click", cx, cy, 0, 0]);
+        const raw = String(res[1] ?? "");
+        if (res[0] !== 0 || raw.startsWith("ERR")) {
+          throw new Error(`issue-5964: click failed: ${raw || res[0]}`);
+        }
+      } else {
+        await clickAt(canvas, cx, cy, 0);
+      }
       clicks++;
-      dlg = await waitForWindowByTitle(pid, "Sign Document", 1500 * SLOW_BUILD_FACTOR);
+      dlg = await waitForSignDialog(pid);
     }
     if (!dlg) {
-      throw new Error(`issue-5964: ${clicks} clicks on the empty signature field didn't open Sign Document`);
+      let extra = "";
+      if (IS_MAC) {
+        const list = String((await client.request(ControlCommand.TestToolWindow, ["list"]))[1] ?? "");
+        const place = String((await client.request(ControlCommand.TestToolWindow, ["sign-placement"]))[1] ?? "");
+        extra = ` click=${cx},${cy} placement='${place.trim()}' list=${list.trim()}`;
+      }
+      throw new Error(`issue-5964: ${clicks} clicks on the empty signature field didn't open Sign Document.${extra}`);
     }
 
     // and it has to be aimed at the field that was clicked, not at "new
@@ -177,7 +240,11 @@ export async function testit(): Promise<void> {
     }
     console.log(`  clicking the empty signature field opened Sign Document on '${placement}' ✓`);
 
-    postMessage(dlg, WM_CLOSE, 0, 0);
+    if (IS_MAC) {
+      await client.request(ControlCommand.TestToolWindow, ["close", "signdocument"]);
+    } else {
+      postMessage(dlg, WM_CLOSE, 0, 0);
+    }
     await sleep(200);
   } finally {
     client.close();

@@ -348,9 +348,7 @@ static void CollectFields(MainWindow* win) {
     if (win->ctrl) {
         gSign.currPageNo = win->ctrl->CurrentPageNo();
     }
-#if OS_WIN || defined(SUMATRA_HAVE_OPENSSL)
     EngineMupdfGetUnsignedSignatureFields(engine, gSign.fieldNames, gSign.fieldPages);
-#endif
 }
 
 static bool UsingCertFile() {

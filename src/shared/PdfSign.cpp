@@ -38,8 +38,6 @@ extern "C" {
 #include "EngineAll.h"
 #include "EngineMupdf.h"
 
-#if OS_WIN || defined(SUMATRA_HAVE_OPENSSL)
-
 // True when this widget is a signature field the document's author left for
 // someone to sign, i.e. a signature field with no signature in it yet. Its
 // field name (which may legitimately be empty) goes to fieldNameOut, so the
@@ -128,6 +126,8 @@ void EngineMupdfGetUnsignedSignatureFields(EngineBase* engine, StrVec& names, Ve
         fz_report_error(ctx);
     }
 }
+
+#if OS_WIN || defined(SUMATRA_HAVE_OPENSSL)
 
 // Finds the unsigned signature widget named name; returns a kept reference the
 // caller drops. The page that owns it is left loaded and returned in pageOut
@@ -364,15 +364,6 @@ void ListWindowsSigningCertificates(StrVec&, StrVec&) {}
 #endif
 
 #else
-
-bool IsUnsignedSignatureWidget(Annotation*, TempStr* fieldNameOut) {
-    if (fieldNameOut) {
-        *fieldNameOut = {};
-    }
-    return false;
-}
-
-void EngineMupdfGetUnsignedSignatureFields(EngineBase*, StrVec&, Vec<int>&) {}
 
 bool EngineMupdfSignDocument(EngineBase*, const PdfSignArgs&, Str* errOut) {
     if (errOut) {
