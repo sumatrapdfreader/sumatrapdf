@@ -328,11 +328,9 @@ function cmdName(id: number): string {
       cmdNames.set(parseInt(m[2]!, 10), m[1]!);
     }
   }
-  const name = cmdNames.get(id);
-  if (!name) {
-    throw new Error(`no command name for id ${id}`);
-  }
-  return name;
+  // A favorite or another custom command is not in Commands.h. The app
+  // accepts the id as "#123".
+  return cmdNames.get(id) ?? `#${id}`;
 }
 
 function sign16(v: bigint): number {

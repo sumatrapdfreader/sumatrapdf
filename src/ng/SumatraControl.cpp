@@ -4201,7 +4201,15 @@ static void ExecuteControlRequest(ControlRequest* req) {
                 AppendTestResult(req, 0, StrL("OK"));
                 break;
             }
-            int cmdId = GetCommandIdByName(name);
+            // A favorite or another custom command has no name in Commands.h.
+            // Tests send its id as "#123".
+            int cmdId = 0;
+            if (len(name) > 1 && name.s[0] == '#') {
+                str::Parse(Str(name.s + 1, name.len - 1), "%d", &cmdId);
+            }
+            if (cmdId <= 0) {
+                cmdId = GetCommandIdByName(name);
+            }
             if (cmdId <= 0 && str::IndexOfChar(name, ' ') >= 0) {
                 CustomCommand* custom = CreateCommandFromDefinition(name);
                 if (custom) {
