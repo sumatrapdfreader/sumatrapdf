@@ -13,7 +13,8 @@
 import { deflateRawSync, deflateSync } from "node:zlib";
 import { mkdirSync, rmSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
-import { ControlClient, withControlledSumatra } from "./control.ts";
+import { ControlClient, ControlCommand, withControlledSumatra } from "./control.ts";
+import { IS_MAC } from "./host.ts";
 import { cmdId, EXE, runStandalone, tmpPath } from "./util.ts";
 import { captureWindowPixels } from "./winapi.ts";
 import { findCanvas, sendCommand, waitForFrame } from "./win-automation.ts";
@@ -196,6 +197,25 @@ function countRed(data: Uint8Array): number {
   return n;
 }
 
+async function renderPageColors(
+  client: ControlClient,
+  path: string,
+  pageNo: number,
+): Promise<{ red: number; blue: number; w: number; h: number }> {
+  const res = await client.request(ControlCommand.TestRenderPageColors, [path, pageNo]);
+  const raw = String(res[1] ?? "");
+  if (res[0] !== 0) {
+    throw new Error(`issue-6266: render failed: ${raw.trim()}`);
+  }
+  const size = /size=(\d+)x(\d+)/.exec(raw);
+  return {
+    red: Number(/red=(\d+)/.exec(raw)?.[1] ?? 0),
+    blue: Number(/blue=(\d+)/.exec(raw)?.[1] ?? 0),
+    w: Number(size?.[1] ?? 0),
+    h: Number(size?.[2] ?? 0),
+  };
+}
+
 async function showPage(
   client: ControlClient,
   frame: number,
@@ -232,6 +252,24 @@ export async function testit(): Promise<void> {
         throw new Error("issue-6266: no frame");
       }
       sendCommand(frame, cmdId("CmdZoomFitPageAndSinglePage"));
+      // macOS has no window DC. A skipped SVG image leaves the engine page blank.
+      if (IS_MAC) {
+        for (const pageNo of [1, 2]) {
+          const page = await renderPageColors(client, epubPath, pageNo);
+          console.log(`issue-6266 page ${pageNo}: red=${page.red} blue=${page.blue} ${page.w}x${page.h}`);
+          if (page.red < 200) {
+            throw new Error(
+              `issue-6266: page ${pageNo} did not paint the red half (red=${page.red} blue=${page.blue})`,
+            );
+          }
+          if (page.blue < 200) {
+            throw new Error(
+              `issue-6266: page ${pageNo} did not paint the blue half (red=${page.red} blue=${page.blue})`,
+            );
+          }
+        }
+        return;
+      }
       const page1 = await showPage(client, frame, null);
       console.log(`issue-6266 page 1: red=${page1.red} blue=${page1.blue} ${page1.w}x${page1.h}`);
       if (page1.red < 200) {
