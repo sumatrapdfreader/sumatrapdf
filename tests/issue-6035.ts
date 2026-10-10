@@ -6,6 +6,7 @@
 
 import { writeFileSync } from "node:fs";
 import { ControlClient, ControlCommand } from "./control.ts";
+import { IS_MAC } from "./host.ts";
 import { runStandalone, tmpPath } from "./util.ts";
 import { clickAt, killAndWait, launchControlled } from "./win-automation.ts";
 import {
@@ -116,6 +117,32 @@ async function waitForSel(client: ControlClient, expected: number, timeoutMs = 8
   throw new Error(`issue-6035: selected is ${state?.selected ?? "not ready"}, want ${expected}`);
 }
 
+async function clickFindNext(
+  client: ControlClient,
+  findWin: number,
+  x: number,
+  y: number,
+  dbl: boolean,
+): Promise<void> {
+  if (IS_MAC) {
+    // The floating find UI is the "find" tool window. A second click inside
+    // the double-click interval is what WM_LBUTTONDBLCLK is on Windows.
+    const res = await client.request(ControlCommand.TestToolWindow, ["input", "find", "click", x, y, 0, 0]);
+    const raw = String(res[1] ?? "");
+    if (raw.startsWith("ERR") || raw === "NOTREADY") {
+      throw new Error(`issue-6035: find next ${dbl ? "double-click" : "click"}: ${raw}`);
+    }
+    return;
+  }
+  if (!dbl) {
+    await clickAt(findWin, x, y, 50);
+    return;
+  }
+  const lp = packCoords(x, y);
+  sendMessage(findWin, WM_LBUTTONDBLCLK, MK_LBUTTON, lp);
+  sendMessage(findWin, WM_LBUTTONUP, 0, lp);
+}
+
 function findFindWindow(pid: number, frame: number): number {
   let found = 0;
   enumWindows((hwnd) => {
@@ -143,20 +170,18 @@ export async function testit(): Promise<void> {
       throw new Error(`issue-6035: result pages are ${state.pages.join(",")}, want ${matchPages.join(",")}`);
     }
 
-    const findWin = findFindWindow(proc.pid!, frame);
+    const findWin = IS_MAC ? 1 : findFindWindow(proc.pid!, frame);
     if (!findWin) {
       throw new Error("issue-6035: Find window not found");
     }
 
     const nx = state.next.x + Math.floor(state.next.dx / 2);
     const ny = state.next.y + Math.floor(state.next.dy / 2);
-    await clickAt(findWin, nx, ny, 50);
+    await clickFindNext(client, findWin, nx, ny, false);
     state = await waitForSel(client, 1);
 
     // second physical click, as Windows would send it (DBLCLK, not DOWN)
-    const lp = packCoords(nx, ny);
-    sendMessage(findWin, WM_LBUTTONDBLCLK, MK_LBUTTON, lp);
-    sendMessage(findWin, WM_LBUTTONUP, 0, lp);
+    await clickFindNext(client, findWin, nx, ny, true);
     state = await waitForSel(client, 2);
     console.log(`issue-6035: ${state.raw}`);
   } finally {
