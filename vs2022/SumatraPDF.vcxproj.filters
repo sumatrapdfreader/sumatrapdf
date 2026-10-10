@@ -309,6 +309,9 @@
     <ClInclude Include="..\src\shared\DocumentProperties.h">
       <Filter>src\shared</Filter>
     </ClInclude>
+    <ClInclude Include="..\src\shared\DocumentPropertiesCommon.h">
+      <Filter>src\shared</Filter>
+    </ClInclude>
     <ClInclude Include="..\src\shared\EbookDoc.h">
       <Filter>src\shared</Filter>
     </ClInclude>
@@ -1050,6 +1053,9 @@
       <Filter>src\shared</Filter>
     </ClCompile>
     <ClCompile Include="..\src\shared\DocumentLayout.cpp">
+      <Filter>src\shared</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\shared\DocumentPropertiesCommon.cpp">
       <Filter>src\shared</Filter>
     </ClCompile>
     <ClCompile Include="..\src\shared\EbookDoc.cpp">
