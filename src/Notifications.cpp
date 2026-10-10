@@ -794,7 +794,11 @@ static NotificationWnd* NotifsGetForGroup(NotificationWnd** wnds, int nWnds, Kin
     return nullptr;
 }
 
-NotificationWnd* ShowNotification(const NotificationCreateArgs& args) {
+NotificationWnd* ShowNotification(const NotificationCreateArgs& argsIn) {
+    NotificationCreateArgs args = argsIn;
+    if (!args.hwndParent && args.win) {
+        args.hwndParent = args.win->hwndCanvas;
+    }
     ReportIf(!args.hwndParent);
     if (!gNotificationsEnabled) {
         // callers already handle a null (Create() / NotifsAdd() can fail)
@@ -955,6 +959,34 @@ NotificationWnd* GetNotificationForGroup(HWND hwnd, Kind kind) {
     NotificationWnd* wnds[kMaxNotifs];
     int nWnds = GetForHwnd(hwnd, wnds);
     return NotifsGetForGroup(wnds, nWnds, kind);
+}
+
+static HWND CanvasOf(MainWindow* win) {
+    return win ? win->hwndCanvas : nullptr;
+}
+
+bool RemoveNotificationsForGroup(MainWindow* win, Kind kind) {
+    return RemoveNotificationsForGroup(CanvasOf(win), kind);
+}
+
+NotificationWnd* GetNotificationForGroup(MainWindow* win, Kind kind) {
+    return GetNotificationForGroup(CanvasOf(win), kind);
+}
+
+NotificationWnd* ShowTemporaryNotification(MainWindow* win, Str msg, int timeoutMs) {
+    return ShowTemporaryNotification(CanvasOf(win), msg, timeoutMs);
+}
+
+NotificationWnd* ShowWarningNotification(MainWindow* win, Str msg, int timeoutMs) {
+    return ShowWarningNotification(CanvasOf(win), msg, timeoutMs);
+}
+
+NotificationWnd* ShowPlainNotification(MainWindow* win, Str msg, int timeoutMs) {
+    return ShowPlainNotification(CanvasOf(win), msg, timeoutMs);
+}
+
+NotificationWnd* ShowPlainWarningNotification(MainWindow* win, Str msg, int timeoutMs) {
+    return ShowPlainWarningNotification(CanvasOf(win), msg, timeoutMs);
 }
 
 void MaybeDelayedWarningNotification(Str msg) {

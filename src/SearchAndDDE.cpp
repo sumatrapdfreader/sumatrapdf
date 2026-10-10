@@ -1304,7 +1304,7 @@ static bool JoinFindThread(MainWindow* win, bool hideMessage) {
     win->findCancelled = false;
 
     if (hideMessage) {
-        bool didRemove = RemoveNotificationsForGroup(win->hwndCanvas, kNotifFindProgress);
+        bool didRemove = RemoveNotificationsForGroup(win, kNotifFindProgress);
         if (didRemove) {
             res = true;
         }
@@ -1678,7 +1678,7 @@ bool OnInverseSearch(MainWindow* win, int x, int y) {
         }
         if (err != PDFSYNCERR_SUCCESS) {
             NotificationCreateArgs args;
-            args.hwndParent = win->hwndCanvas;
+            args.win = win;
             args.msg = Tr("Synchronization file cannot be opened");
             ShowNotification(args);
             return true;
@@ -1697,7 +1697,7 @@ bool OnInverseSearch(MainWindow* win, int x, int y) {
     int err = dm->pdfSync->DocToSource(pageNo, pt, srcfilepath, &line, &col);
     if (err != PDFSYNCERR_SUCCESS) {
         NotificationCreateArgs args;
-        args.hwndParent = win->hwndCanvas;
+        args.win = win;
         args.msg = Tr("No synchronization info at this position");
         ShowNotification(args);
         return true;
@@ -1719,7 +1719,7 @@ bool OnInverseSearch(MainWindow* win, int x, int y) {
     str::Free(srcfilepath);
 
     NotificationCreateArgs args;
-    args.hwndParent = win->hwndCanvas;
+    args.win = win;
     args.msg = Tr("Cannot start the inverse search command. Check its command line in Settings.");
     if (len(cmdLine) > 0) {
         // resolve relative paths with relation to SumatraPDF.exe's directory
@@ -1801,7 +1801,7 @@ void ShowForwardSearchResult(MainWindow* win, Str fileName, int line, int /* col
 
     TempStr buf;
     NotificationCreateArgs args{};
-    args.hwndParent = win->hwndCanvas;
+    args.win = win;
     // several of these embed a file name read from the .synctex / .pdfsync file
     args.plainText = true;
     if (ret == PDFSYNCERR_SYNCFILE_NOTFOUND) {

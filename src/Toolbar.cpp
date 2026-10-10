@@ -729,7 +729,7 @@ static void SetPdfAnnotationsToolbarEnabled(MainWindow* win, bool enabled) {
     win->pdfAnnotationsToolbarEnabled = enabled;
     ToolbarUpdateStateForWindow(win, true);
     if (enabled) {
-        RemoveNotificationsForGroup(win->hwndCanvas, kNotifAnnotation);
+        RemoveNotificationsForGroup(win, kNotifAnnotation);
         UpdateAnnotationHoverOverlay(win);
     } else {
         // leaving the mode leaves no editing UI behind: without this the

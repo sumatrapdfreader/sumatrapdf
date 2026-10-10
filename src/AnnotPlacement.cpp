@@ -258,7 +258,7 @@ bool CancelAnnotationPlacement(MainWindow* win) {
     Kind group = NotifGroupForKind(p.kind);
     p.Reset();
     if (group) {
-        RemoveNotificationsForGroup(win->hwndCanvas, group);
+        RemoveNotificationsForGroup(win, group);
     }
     HideAnnotationHoverOverlay(win);
     ScheduleRepaint(win, 0);
@@ -332,7 +332,7 @@ bool CloseAnnotationPlacementHint(MainWindow* win) {
     if (!group) {
         return false;
     }
-    NotificationWnd* notif = GetNotificationForGroup(win->hwndCanvas, group);
+    NotificationWnd* notif = GetNotificationForGroup(win, group);
     if (!notif) {
         return false;
     }
@@ -385,7 +385,7 @@ void StartAnnotationPlacement(MainWindow* win, int cmdId) {
     ToolbarUpdateStateForWindow(win, false);
 
     NotificationCreateArgs args;
-    args.hwndParent = win->hwndCanvas;
+    args.win = win;
     args.msg = PlacementNotification(kind, p.circle, cmdId);
     args.timeoutMs = kNotifNoTimeout;
     args.groupId = NotifGroupForKind(kind);
@@ -1137,8 +1137,7 @@ static TempStr PointPlacementDumpLineTemp(MainWindow* win, AnnotPlacementKind ki
         }
         return fmt("%s active=0 notification=0 cursor=0 preview=0 cmd=0 message=\n", key);
     }
-    NotificationWnd* notif =
-        active ? GetNotificationForGroup(win->hwndCanvas, kNotifPointAnnotationPlacement) : nullptr;
+    NotificationWnd* notif = active ? GetNotificationForGroup(win, kNotifPointAnnotationPlacement) : nullptr;
     Str message = NotificationGetMessageTemp(notif);
     bool cursor = PointDumpCursor(kind, active);
     int cmdOut = active ? win->annotPlacement.cmdId : 0;
@@ -1194,7 +1193,7 @@ TempStr AnnotationPlacementStateTemp(MainWindow* win) {
     bool shape = IsPlacingShapeAnnotation(win);
     bool ink = IsPlacingInkAnnotation(win);
     {
-        NotificationWnd* notif = GetNotificationForGroup(win->hwndCanvas, kNotifLineAnnotationPlacement);
+        NotificationWnd* notif = GetNotificationForGroup(win, kNotifLineAnnotationPlacement);
         Str message = NotificationGetMessageTemp(notif);
         bool crossCursor = GetCursor() == GetCachedCursor(IDC_CROSS);
         bool started = line && p.pageNo > 0;
@@ -1207,7 +1206,7 @@ TempStr AnnotationPlacementStateTemp(MainWindow* win) {
                 line ? p.pageNo : -1, start.x, start.y, end.x, end.y, message));
     }
     {
-        NotificationWnd* notif = GetNotificationForGroup(win->hwndCanvas, kNotifPolyLineAnnotationPlacement);
+        NotificationWnd* notif = GetNotificationForGroup(win, kNotifPolyLineAnnotationPlacement);
         Str message = NotificationGetMessageTemp(notif);
         bool crossCursor = GetCursor() == GetCachedCursor(IDC_CROSS);
         Point end = poly ? p.end : Point{};
@@ -1218,7 +1217,7 @@ TempStr AnnotationPlacementStateTemp(MainWindow* win) {
                 poly ? p.pageNo : -1, end.x, end.y, message));
     }
     {
-        NotificationWnd* notif = GetNotificationForGroup(win->hwndCanvas, kNotifShapeAnnotationPlacement);
+        NotificationWnd* notif = GetNotificationForGroup(win, kNotifShapeAnnotationPlacement);
         Str message = NotificationGetMessageTemp(notif);
         bool crossCursor = GetCursor() == GetCachedCursor(IDC_CROSS);
         Rect preview;
@@ -1234,7 +1233,7 @@ TempStr AnnotationPlacementStateTemp(MainWindow* win) {
                 shape ? p.cmdId : 0, shape ? p.pageNo : -1, preview.x, preview.y, preview.dx, preview.dy, message));
     }
     {
-        NotificationWnd* notif = GetNotificationForGroup(win->hwndCanvas, kNotifInkAnnotationPlacement);
+        NotificationWnd* notif = GetNotificationForGroup(win, kNotifInkAnnotationPlacement);
         Str message = NotificationGetMessageTemp(notif);
         bool penCursor = gCursorInkAnnotationPlacement && GetCursor() == gCursorInkAnnotationPlacement;
         out.Append(fmt(
@@ -1245,7 +1244,7 @@ TempStr AnnotationPlacementStateTemp(MainWindow* win) {
     }
     {
         bool on = KindOf(win) == AnnotPlacementKind::Highlighter;
-        NotificationWnd* notif = GetNotificationForGroup(win->hwndCanvas, kNotifHighlighterPlacement);
+        NotificationWnd* notif = GetNotificationForGroup(win, kNotifHighlighterPlacement);
         Str message = NotificationGetMessageTemp(notif);
         out.Append(fmt("highlighterPlacement active=%d notification=%d cmd=%d message=%s\n", on ? 1 : 0, notif ? 1 : 0,
                        on ? p.cmdId : 0, message));

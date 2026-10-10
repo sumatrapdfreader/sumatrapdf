@@ -52,6 +52,8 @@ constexpr const int kNotifDefaultMargin = 8;
 
 struct NotificationCreateArgs {
     HWND hwndParent = nullptr;
+    // as in ng: used when hwndParent isn't set, shows over win's canvas
+    MainWindow* win = nullptr;
     PlatformFont* font = nullptr;
     Kind groupId = kNotifActionResponse;
     bool warning = false;
@@ -106,6 +108,14 @@ NotificationWnd* ShowWarningNotification(HWND hwndParent, Str msg, int timeoutMs
 // same, for a message that isn't fully app-authored: shown verbatim, no markup
 NotificationWnd* ShowPlainNotification(HWND hwnd, Str msg, int timeoutMs = kNotifDefaultTimeOut);
 NotificationWnd* ShowPlainWarningNotification(HWND hwndParent, Str msg, int timeoutMs);
+
+// as in ng: address the notifications of win's canvas
+bool RemoveNotificationsForGroup(MainWindow*, Kind);
+NotificationWnd* GetNotificationForGroup(MainWindow*, Kind);
+NotificationWnd* ShowTemporaryNotification(MainWindow* win, Str msg, int timeoutMs = kNotifDefaultTimeOut);
+NotificationWnd* ShowWarningNotification(MainWindow* win, Str msg, int timeoutMs);
+NotificationWnd* ShowPlainNotification(MainWindow* win, Str msg, int timeoutMs = kNotifDefaultTimeOut);
+NotificationWnd* ShowPlainWarningNotification(MainWindow* win, Str msg, int timeoutMs);
 
 void MaybeDelayedWarningNotification(Str msg);
 void ShowMaybeDelayedNotifications(HWND hwndParent);

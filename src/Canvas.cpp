@@ -1963,7 +1963,7 @@ static void OnMouseMove(MainWindow* win, int x, int y, WPARAM key) {
         dm->GetEngine()->RequestTextExtraction(pageNo);
     }
 
-    NotificationWnd* cursorPosNotif = GetNotificationForGroup(win->hwndCanvas, kNotifCursorPos);
+    NotificationWnd* cursorPosNotif = GetNotificationForGroup(win, kNotifCursorPos);
 
     if (win->textDragPending) {
         if (!IsDragDistance(x, win->dragStart.x, y, win->dragStart.y)) {
@@ -2014,7 +2014,7 @@ static void OnMouseMove(MainWindow* win, int x, int y, WPARAM key) {
                 if (win->annotationUnderCursor != prev) {
                     ScheduleRepaint(win, 0);
                 }
-                RemoveNotificationsForGroup(win->hwndCanvas, kNotifAnnotation);
+                RemoveNotificationsForGroup(win, kNotifAnnotation);
                 HideAnnotationHoverOverlay(win);
                 break;
             }
@@ -2033,7 +2033,7 @@ static void OnMouseMove(MainWindow* win, int x, int y, WPARAM key) {
                     ScheduleRepaint(win, 0);
                 }
             }
-            RemoveNotificationsForGroup(win->hwndCanvas, kNotifAnnotation);
+            RemoveNotificationsForGroup(win, kNotifAnnotation);
             win->annotationUnderCursor = annot;
             if (editPdf) {
                 UpdateAnnotationHoverOverlay(win);
@@ -4224,7 +4224,7 @@ static LRESULT OnSetCursorMouseNone(MainWindow* win, HWND hwnd) {
         win->DeleteToolTip();
         return FALSE;
     }
-    if (GetNotificationForGroup(win->hwndCanvas, kNotifCursorPos)) {
+    if (GetNotificationForGroup(win, kNotifCursorPos)) {
         SetCursorCached(IDC_CROSS);
         return TRUE;
     }

@@ -1739,7 +1739,7 @@ void SaveSelectionAsImageDialog::DoIt(VirtMouseEvent*) {
     work->win = win;
 
     NotificationCreateArgs nargs;
-    nargs.hwndParent = win->hwndCanvas;
+    nargs.win = win;
     nargs.msg = Tr("Saving image...");
     nargs.groupId = kNotifSaveSelectionAsImage;
     nargs.timeoutMs = kNotifNoTimeout;

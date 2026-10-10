@@ -482,7 +482,7 @@ static void ShowUpdateAvailableNotification(MainWindow* win, UpdateInfo* updateI
         msg = fmt(Tr("Version %s available. %s").s, displayVer, link);
     }
     NotificationCreateArgs args;
-    args.hwndParent = win->hwndCanvas;
+    args.win = win;
     args.msg = msg;
     args.warning = true; // yellowish background so it stands out
     args.groupId = kNotifUpdateAvailable;
@@ -724,14 +724,14 @@ static DWORD MaybeStartUpdateDownload(HWND hwndParent, HttpRsp* rsp, UpdateCheck
     if (len(updateInfo->dlURL) == 0) {
         // currently for release builds we don't set this and redirecto to a website instead
         logf("ShowAutoUpdateDialog: didn't find download url. Auto update data:\n%s\n", ToStr(*data));
-        RemoveNotificationsForGroup(win->hwndCanvas, kNotifUpdateCheckInProgress);
+        RemoveNotificationsForGroup(win, kNotifUpdateCheckInProgress);
         NotifyUserOfUpdate(updateInfo);
         delete updateInfo;
         return 0;
     }
 
     if (!IsTrustedUpdateDlUrl(updateInfo->dlURL)) {
-        RemoveNotificationsForGroup(win->hwndCanvas, kNotifUpdateCheckInProgress);
+        RemoveNotificationsForGroup(win, kNotifUpdateCheckInProgress);
         NotifySuspiciousUpdate(hwndParent, updateInfo->dlURL);
         delete updateInfo;
         return 0;
@@ -824,7 +824,7 @@ static void UpdateCheckFinish(UpdateCheckAsyncData* data) {
     HWND hwnd = win->hwndFrame;
     DWORD err = MaybeStartUpdateDownload(hwnd, rsp, updateCheckType);
     if ((err != 0) && (updateCheckType == UpdateCheck::UserInitiated)) {
-        RemoveNotificationsForGroup(win->hwndCanvas, kNotifUpdateCheckInProgress);
+        RemoveNotificationsForGroup(win, kNotifUpdateCheckInProgress);
         // a manual check that couldn't fetch update info: tell the user and point
         // them at the website so they can update manually
         NotifyUpdateCheckFailed(hwnd, err);
@@ -867,7 +867,7 @@ void StartAsyncUpdateCheck(MainWindow* win, UpdateCheck updateCheckType) {
     logf("StartAsyncUpdateCheck: updateCheckType=%d\n", (int)updateCheckType);
     if (UpdateCheck::UserInitiated == updateCheckType) {
         NotificationCreateArgs args;
-        args.hwndParent = win->hwndCanvas;
+        args.win = win;
         args.msg = Tr("Checking for update...");
         args.warning = true;
         args.timeoutMs = 0;

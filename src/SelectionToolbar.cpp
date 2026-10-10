@@ -403,12 +403,12 @@ static void InvokeSelectionToolbarCommand(SelectionToolbar* tb, int cmdId) {
         return;
     }
     NotificationCreateArgs args;
-    args.hwndParent = win->hwndCanvas;
+    args.win = win;
     args.groupId = kNotifCopiedToClipboard;
     args.timeoutMs = kCopiedNotifTimeoutMs;
     args.corner = NotifCorner::BottomLeft;
     args.msg = Tr("Copied to clipboard");
-    RemoveNotificationsForGroup(win->hwndCanvas, kNotifCopiedToClipboard);
+    RemoveNotificationsForGroup(win, kNotifCopiedToClipboard);
     ShowNotification(args);
 }
 
@@ -622,7 +622,7 @@ TempStr SelectionToolbarLayoutDumpTemp() {
     SelectionToolbar* tb = win ? GetOrCreateToolbar(win) : nullptr;
     bool visible = tb && tb->host && tb->host->IsVisible();
     out.Append(fmt("visible=%d\n", visible ? 1 : 0));
-    NotificationWnd* notif = win ? GetNotificationForGroup(win->hwndCanvas, kNotifCopiedToClipboard) : nullptr;
+    NotificationWnd* notif = win ? GetNotificationForGroup(win, kNotifCopiedToClipboard) : nullptr;
     out.Append(fmt("notif=%s\n", notif ? NotificationGetMessageTemp(notif) : TempStr(StrL(""))));
     if (visible) {
         Rect r = tb->host->ScreenRect();

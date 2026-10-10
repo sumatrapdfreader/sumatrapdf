@@ -132,7 +132,7 @@ void CloseSignDocumentDialog(MainWindow* win) {
 
 static void ClearSignaturePlacementNotif(MainWindow* win) {
     if (win && win->hwndCanvas) {
-        RemoveNotificationsForGroup(win->hwndCanvas, kNotifSignPlacement);
+        RemoveNotificationsForGroup(win, kNotifSignPlacement);
     }
 }
 
@@ -141,7 +141,7 @@ static void ShowSignaturePlacementNotif(MainWindow* win) {
         return;
     }
     NotificationCreateArgs args;
-    args.hwndParent = win->hwndCanvas;
+    args.win = win;
     args.msg = Tr("Click or drag on the page to place the signature. Esc to cancel.");
     args.timeoutMs = kNotifNoTimeout;
     args.groupId = kNotifSignPlacement;

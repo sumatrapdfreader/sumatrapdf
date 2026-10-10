@@ -705,7 +705,7 @@ void ReadAloudSetSpeed(float speed) {
 
 void ReadAloudShowNotif(WindowTab* tab, Str msg) {
     NotificationCreateArgs args;
-    args.hwndParent = tab->win->hwndCanvas;
+    args.win = tab->win;
     args.msg = msg;
     args.timeoutMs = 2000;
     ShowNotification(args);

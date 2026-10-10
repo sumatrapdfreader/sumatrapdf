@@ -1551,13 +1551,13 @@ static void ShowPageInfoIfWanted(MainWindow* win) {
     if (!win || !win->pageInfoWanted || !win->IsDocLoaded() || !win->ctrl) {
         return;
     }
-    NotificationWnd* wnd = GetNotificationForGroup(win->hwndCanvas, kNotifPageInfo);
+    NotificationWnd* wnd = GetNotificationForGroup(win, kNotifPageInfo);
     if (wnd) {
         UpdatePageInfoHelper(win->ctrl, wnd, -1);
         return;
     }
     NotificationCreateArgs args;
-    args.hwndParent = win->hwndCanvas;
+    args.win = win;
     args.timeoutMs = 0;
     args.msg = StrL("");
     args.groupId = kNotifPageInfo;
@@ -1573,7 +1573,7 @@ static void TogglePageInfoHelper(MainWindow* win) {
     }
     if (win->pageInfoWanted) {
         win->pageInfoWanted = false;
-        RemoveNotificationsForGroup(win->hwndCanvas, kNotifPageInfo);
+        RemoveNotificationsForGroup(win, kNotifPageInfo);
         return;
     }
     win->pageInfoWanted = true;
@@ -1586,7 +1586,7 @@ void ControllerCallbackHandler::ZoomChanged(DocController* ctrl, float /*zoomVir
     if (win->ctrl != ctrl) {
         return;
     }
-    NotificationWnd* wnd = GetNotificationForGroup(win->hwndCanvas, kNotifPageInfo);
+    NotificationWnd* wnd = GetNotificationForGroup(win, kNotifPageInfo);
     if (!wnd) {
         return;
     }
@@ -1651,7 +1651,7 @@ void ControllerCallbackHandler::PageNoChanged(DocController* ctrl, int pageNo) {
         }
     }
 
-    NotificationWnd* wnd = GetNotificationForGroup(win->hwndCanvas, kNotifPageInfo);
+    NotificationWnd* wnd = GetNotificationForGroup(win, kNotifPageInfo);
     if (!pageChanged) {
         if (wnd) {
             UpdatePageInfoHelper(win->ctrl, wnd, pageNo);
@@ -2390,7 +2390,7 @@ static void ReplaceDocumentInCurrentTab(LoadArgs* args, DocController* ctrl, Fil
         Str s = Tr("%s not supported");
         TempStr msg = fmt(s.s, unsupported);
         NotificationCreateArgs nargs;
-        nargs.hwndParent = win->hwndCanvas;
+        nargs.win = win;
         nargs.warning = true;
         nargs.timeoutMs = 16 * 1000; // auto-dismiss after 16 seconds
         nargs.groupId = kNotifPersistentWarning;
@@ -2412,7 +2412,7 @@ static void ReplaceDocumentInCurrentTab(LoadArgs* args, DocController* ctrl, Fil
     if (engineErr && engineErr->HasErrors()) {
         TempStr msg = fmt("[%s](CmdShowErrors) %s", Tr("Errors"), Tr("in document"));
         NotificationCreateArgs nargs;
-        nargs.hwndParent = win->hwndCanvas;
+        nargs.win = win;
         nargs.warning = true;
         nargs.timeoutMs = 16 * 1000; // auto-dismiss after 16 seconds
         nargs.groupId = kNotifDocErrors;
@@ -2434,7 +2434,7 @@ static void ReplaceDocumentInCurrentTab(LoadArgs* args, DocController* ctrl, Fil
         Str s = Tr("Font \"%s\" not found, using the default font");
         TempStr msg = fmt(s.s, missingFont);
         NotificationCreateArgs nargs;
-        nargs.hwndParent = win->hwndCanvas;
+        nargs.win = win;
         nargs.warning = true;
         nargs.timeoutMs = 16 * 1000; // auto-dismiss after 16 seconds
         nargs.groupId = kNotifPersistentWarning;
@@ -3103,7 +3103,7 @@ static void MaybeShowDefaultAppNotification(MainWindow* win) {
     StrVec missing;
     CollectNonDefaultRegisteredExtensions(missing);
     if (len(missing) == 0) {
-        RemoveNotificationsForGroup(win->hwndCanvas, kNotifDefaultApp);
+        RemoveNotificationsForGroup(win, kNotifDefaultApp);
         return;
     }
 
@@ -3126,7 +3126,7 @@ static void MaybeShowDefaultAppNotification(MainWindow* win) {
     sb.Append(StrL(". Click a link to fix."));
 
     NotificationCreateArgs args;
-    args.hwndParent = win->hwndCanvas;
+    args.win = win;
     args.msg = ToStrTemp(sb);
     args.timeoutMs = kNotifNoTimeout;
     args.groupId = kNotifDefaultApp;
@@ -3443,7 +3443,7 @@ static void SetTabLoadError(WindowTab* tab, Str path) {
 
 static void ShowFileNotFound(MainWindow* win, Str path, bool noSavePrefs, bool showWin) {
     NotificationCreateArgs nargs;
-    nargs.hwndParent = win->hwndCanvas;
+    nargs.win = win;
     nargs.warning = true;
     nargs.msg = fmt(Tr("File %s not found").s, path);
     nargs.plainText = true; // `path` is not ours, don't parse it as tip markup
@@ -3508,7 +3508,7 @@ static void ShowLoadErrorInTab(MainWindow* win, LoadArgs* args, Str path) {
 void ShowErrorLoadingNotification(MainWindow* win, Str path, bool noSavePrefs, bool showWin) {
     // Same translation as Canvas OnPaintError ("Error loading %s").
     NotificationCreateArgs nargs;
-    nargs.hwndParent = win->hwndCanvas;
+    nargs.win = win;
     nargs.msg = fmt("%s: %s", fmt(Tr("Error loading %s").s, path), FileLoadErrorReasonTemp(path));
     // `path` is attacker-controlled, so the message must not be parsed as tip
     // markup: a "[x](CmdExec ...)" in it would become a clickable command link
@@ -4503,7 +4503,7 @@ void LoadModelIntoTab(WindowTab* tab) {
     if (gSettings->lazyLoading && win->ctrl && !tab->ctrl && !tab->IsNonDocumentTab() &&
         tab->loadState == WindowTab::LoadState::None) {
         NotificationCreateArgs args;
-        args.hwndParent = win->hwndCanvas;
+        args.win = win;
         args.msg = fmt(Tr("Loading...").s);
         args.warning = true;
         ShowNotification(args);
@@ -4977,7 +4977,7 @@ static void CloseDocumentInCurrentTab(MainWindow* win, bool keepUIEnabled, bool 
         ResetReadAloudStateForTab(currentTab);
         if (hadReading && win->hwndCanvas) {
             NotificationCreateArgs args;
-            args.hwndParent = win->hwndCanvas;
+            args.win = win;
             args.msg = Tr("Reading stopped");
             args.timeoutMs = 2000;
             ShowNotification(args);
@@ -4998,10 +4998,10 @@ static void CloseDocumentInCurrentTab(MainWindow* win, bool keepUIEnabled, bool 
     } else {
         win->currentTabTemp = nullptr;
     }
-    RemoveNotificationsForGroup(win->hwndCanvas, kNotifActionResponse);
-    RemoveNotificationsForGroup(win->hwndCanvas, kNotifPageInfo);
-    RemoveNotificationsForGroup(win->hwndCanvas, kNotifCursorPos);
-    RemoveNotificationsForGroup(win->hwndCanvas, kNotifZoomOrView);
+    RemoveNotificationsForGroup(win, kNotifActionResponse);
+    RemoveNotificationsForGroup(win, kNotifPageInfo);
+    RemoveNotificationsForGroup(win, kNotifCursorPos);
+    RemoveNotificationsForGroup(win, kNotifZoomOrView);
 
     // Tab/document change aborts any in-progress drag/select. Without releasing
     // capture, LoadModelIntoTab left the canvas capturing the mouse after the
@@ -5450,9 +5450,9 @@ void CloseTab(WindowTab* tab, bool quitIfLast) {
             return;
         }
     }
-    RemoveNotificationsForGroup(win->hwndCanvas, kNotifPageInfo);
-    RemoveNotificationsForGroup(win->hwndCanvas, kNotifAnnotation);
-    RemoveNotificationsForGroup(win->hwndCanvas, kNotifZoomOrView);
+    RemoveNotificationsForGroup(win, kNotifPageInfo);
+    RemoveNotificationsForGroup(win, kNotifAnnotation);
+    RemoveNotificationsForGroup(win, kNotifZoomOrView);
     RemoveNotificationsForTab(tab);
 
     RememberRecentlyClosedDocument(tab->filePath);
@@ -5725,7 +5725,7 @@ static void SaveCurrentFileAs(MainWindow* win) {
     }
 
     if (len(srcFileName) == 0) {
-        ShowTemporaryNotification(win->hwndCanvas, Tr("File path not available"), kNotif5SecsTimeOut);
+        ShowTemporaryNotification(win, Tr("File path not available"), kNotif5SecsTimeOut);
         return;
     }
 
@@ -5828,7 +5828,7 @@ static bool SaveDocAs(MainWindow* win, Str dstPath) {
         }
     }
     if (len(srcFileName) == 0) {
-        ShowTemporaryNotification(win->hwndCanvas, Tr("File path not available"), kNotif5SecsTimeOut);
+        ShowTemporaryNotification(win, Tr("File path not available"), kNotif5SecsTimeOut);
         return false;
     }
     DisplayModel* dm = win->AsFixed();
@@ -6103,7 +6103,7 @@ static void RenameCurrentFile(MainWindow* win) {
         args.forceReuse = true;
         LoadDocument(&args);
         NotificationCreateArgs nargs;
-        nargs.hwndParent = win->hwndCanvas;
+        nargs.win = win;
         nargs.msg = Tr("Failed to rename the file!");
         nargs.warning = true;
         nargs.timeoutMs = 0;
@@ -6643,7 +6643,7 @@ static StrVec* GetNextPrevFilesReady(Str path) {
 // at folder ends: forward = last file (next), !forward = first file (prev)
 static void ShowNoFileToOpenNotif(MainWindow* win, bool forward) {
     NotificationCreateArgs nargs;
-    nargs.hwndParent = win->hwndCanvas;
+    nargs.win = win;
     nargs.timeoutMs = kNotifDefaultTimeOut;
     nargs.corner = NotifCorner::BottomRight;
     Str tip = forward ? Tr("Last file in folder.") : Tr("First file in folder.");
@@ -6700,7 +6700,7 @@ void DismissNextFileScrollHint(MainWindow* win) {
     if (!win || !win->hwndCanvas) {
         return;
     }
-    RemoveNotificationsForGroup(win->hwndCanvas, kNotifNextFileHint);
+    RemoveNotificationsForGroup(win, kNotifNextFileHint);
 }
 
 static void MaybeShowNextFileScrollHint(MainWindow* win) {
@@ -6731,7 +6731,7 @@ static void MaybeShowNextFileScrollHint(MainWindow* win) {
     // leading space so the "·" doesn't abut the file name
     ParseTipInto(rich, fmt(" · %d/%d · [%s](CmdNavigateFilesInFolder)", n, m, Tr("browse")));
     NotificationCreateArgs args;
-    args.hwndParent = win->hwndCanvas;
+    args.win = win;
     args.groupId = kNotifNextFileHint;
     args.corner = NotifCorner::BottomRight;
     args.timeoutMs = kNotifNoTimeout;
@@ -6823,7 +6823,7 @@ static void OpenNextPrevFileInFolder(MainWindow* win, bool forward, Str pathToDe
     }
 
     // dismiss document error notifications from the previous document
-    RemoveNotificationsForGroup(win->hwndCanvas, kNotifDocErrors);
+    RemoveNotificationsForGroup(win, kNotifDocErrors);
     DismissNextFileScrollHint(win);
 
     WindowTab* tab = win->CurrentTab();
@@ -8141,20 +8141,20 @@ static Point GetSmartZoomPos(MainWindow* win, Point suggestdPoint) {
 
 static void ShowZoomNotification(MainWindow* win, float zoomLevel) {
     // don't show zoom info if showing page info
-    NotificationWnd* wnd = GetNotificationForGroup(win->hwndCanvas, kNotifPageInfo);
+    NotificationWnd* wnd = GetNotificationForGroup(win, kNotifPageInfo);
     if (wnd) {
         return;
     }
     NotificationCreateArgs args;
     args.groupId = kNotifZoomOrView;
     args.timeoutMs = 2000;
-    args.hwndParent = win->hwndCanvas;
+    args.win = win;
     args.msg = BuildZoomString(zoomLevel);
     ShowNotification(args);
 }
 
 static void ShowViewModeNotification(MainWindow* win, int cmdId) {
-    NotificationWnd* wnd = GetNotificationForGroup(win->hwndCanvas, kNotifPageInfo);
+    NotificationWnd* wnd = GetNotificationForGroup(win, kNotifPageInfo);
     if (wnd) {
         return;
     }
@@ -8172,7 +8172,7 @@ static void ShowViewModeNotification(MainWindow* win, int cmdId) {
     NotificationCreateArgs args;
     args.groupId = kNotifZoomOrView;
     args.timeoutMs = 2000;
-    args.hwndParent = win->hwndCanvas;
+    args.win = win;
     args.msg = msg;
     ShowNotification(args);
 }
@@ -8884,17 +8884,17 @@ static void OnFrameKeyEsc(MainWindow* win) {
     if (AbortFinding(win, true)) {
         return;
     }
-    if (RemoveNotificationsForGroup(win->hwndCanvas, kNotifPersistentWarning)) {
+    if (RemoveNotificationsForGroup(win, kNotifPersistentWarning)) {
         return;
     }
-    if (RemoveNotificationsForGroup(win->hwndCanvas, kNotifPageInfo)) {
+    if (RemoveNotificationsForGroup(win, kNotifPageInfo)) {
         win->pageInfoWanted = false;
         return;
     }
-    if (RemoveNotificationsForGroup(win->hwndCanvas, kNotifCursorPos)) {
+    if (RemoveNotificationsForGroup(win, kNotifCursorPos)) {
         return;
     }
-    if (RemoveNotificationsForGroup(win->hwndCanvas, kNotifZoomOrView)) {
+    if (RemoveNotificationsForGroup(win, kNotifZoomOrView)) {
         return;
     }
     if (win->showSelection) {
@@ -9065,7 +9065,7 @@ Str NextCursorPositionUnitName(MainWindow* win) {
     if (!win || !win->AsFixed()) {
         return {};
     }
-    if (!GetNotificationForGroup(win->hwndCanvas, kNotifCursorPos)) {
+    if (!GetNotificationForGroup(win, kNotifCursorPos)) {
         return StrL("pt");
     }
     if (cursorPosUnit == MeasurementUnit::pt) {
@@ -9083,10 +9083,10 @@ static void ToggleCursorPositionInDoc(MainWindow* win) {
     if (!win->AsFixed()) {
         return;
     }
-    auto* notif = GetNotificationForGroup(win->hwndCanvas, kNotifCursorPos);
+    auto* notif = GetNotificationForGroup(win, kNotifCursorPos);
     if (!notif) {
         NotificationCreateArgs args;
-        args.hwndParent = win->hwndCanvas;
+        args.win = win;
         args.groupId = kNotifCursorPos;
         args.shrinkLimit = 0.7f;
         args.timeoutMs = 0;
@@ -9099,7 +9099,7 @@ static void ToggleCursorPositionInDoc(MainWindow* win) {
             cursorPosUnit = MeasurementUnit::in;
         } else if (cursorPosUnit == MeasurementUnit::in) {
             cursorPosUnit = MeasurementUnit::pt;
-            RemoveNotificationsForGroup(win->hwndCanvas, kNotifCursorPos);
+            RemoveNotificationsForGroup(win, kNotifCursorPos);
             return;
         } else {
             ReportIf(true);
@@ -9458,7 +9458,7 @@ static void NotifyUrlSelectionTruncated(WindowTab* tab) {
         return;
     }
     NotificationCreateArgs args;
-    args.hwndParent = tab->win->hwndCanvas;
+    args.win = tab->win;
     args.tab = tab;
     args.warning = true;
     args.timeoutMs = 5000;
@@ -9602,7 +9602,7 @@ static bool CopyOrCutAnnotationInTab(WindowTab* tab, LPARAM lp, bool cut) {
         // a cut annotation stays on the page until the paste removes it, so
         // without this Ctrl+X looks like it did nothing
         NotificationCreateArgs args;
-        args.hwndParent = tab->win->hwndCanvas;
+        args.win = tab->win;
         args.msg = Tr("Annotation cut. Paste to move it.");
         args.timeoutMs = 3000;
         ShowNotification(args);
@@ -9638,7 +9638,7 @@ static void CopySelectionInTabToClipboard(WindowTab* tab) {
     }
     if (tab->AsFixed()) {
         NotificationCreateArgs args;
-        args.hwndParent = tab->win->hwndCanvas;
+        args.win = tab->win;
         args.msg = Tr("Select content with Ctrl+left mouse button");
         args.timeoutMs = 2000;
         ShowNotification(args);
@@ -10040,10 +10040,10 @@ static void ClearHistoryFinish(ClearHistoryData* d) {
     if (!IsMainWindowValidAndNotClosing(win)) {
         return;
     }
-    RemoveNotificationsForGroup(win->hwndCanvas, kNotifClearHistory);
+    RemoveNotificationsForGroup(win, kNotifClearHistory);
     HwndRepaintNow(win->hwndCanvas);
     TempStr msg2 = fmt(Tr("Cleared history of %d files, deleted thumbnails.").s, d->nFiles);
-    ShowTemporaryNotification(win->hwndCanvas, msg2, kNotif5SecsTimeOut);
+    ShowTemporaryNotification(win, msg2, kNotif5SecsTimeOut);
 }
 
 static void ClearHistoryAsync(ClearHistoryData* d) {
@@ -10076,7 +10076,7 @@ static void ClearHistory(MainWindow* win) {
 
     NotificationCreateArgs args;
     args.groupId = kNotifClearHistory;
-    args.hwndParent = win->hwndCanvas;
+    args.win = win;
     args.timeoutMs = kNotif5SecsTimeOut;
     args.msg = Tr("Clearing history...");
     ShowNotification(args);
@@ -10129,7 +10129,7 @@ static void RemoveDeletedFilesFromHistory(MainWindow* win) {
         MaybeRedrawHomePage();
     }
     TempStr msg = fmt(Tr("Deleted files removed from history: %d").s, nRemoved);
-    ShowTemporaryNotification(win->hwndCanvas, msg, kNotif5SecsTimeOut);
+    ShowTemporaryNotification(win, msg, kNotif5SecsTimeOut);
 }
 
 // Unconditionally delete all local copies of comic-book archives that were
@@ -10174,7 +10174,7 @@ static void DeleteCachedFiles(MainWindow* win) {
     } else {
         msg = fmt(Tr("Deleted %d cached comic book files, %d failed.").s, nDeleted, nFailed);
     }
-    ShowTemporaryNotification(win->hwndCanvas, msg, kNotif5SecsTimeOut);
+    ShowTemporaryNotification(win, msg, kNotif5SecsTimeOut);
 }
 
 // CmdDebugCorruptMemory, the only caller, is behind #if IS_DEBUG, so
@@ -10832,8 +10832,7 @@ static void UndoRedoInTab(WindowTab* tab, bool redo) {
     ToolbarUpdateStateForWindow(win, true);
     MainWindowRerender(win, true);
     if (!ok) {
-        ShowWarningNotification(win->hwndCanvas, redo ? Tr("Nothing to redo") : Tr("Nothing to undo"),
-                                kNotif5SecsTimeOut);
+        ShowWarningNotification(win, redo ? Tr("Nothing to redo") : Tr("Nothing to undo"), kNotif5SecsTimeOut);
     }
 }
 
@@ -10855,7 +10854,7 @@ static void ApplyRedactionsInTab(WindowTab* tab) {
     CancelDrag(win);
 
     if (!EngineHasRedactMarks(engine)) {
-        ShowTemporaryNotification(win->hwndCanvas, Tr("No redaction marks to apply"));
+        ShowTemporaryNotification(win, Tr("No redaction marks to apply"));
         return;
     }
     if (gRenderCache) {
@@ -10872,11 +10871,11 @@ static void ApplyRedactionsInTab(WindowTab* tab) {
     RefreshAnnotationLists(tab);
     ToolbarUpdateStateForWindow(win, true);
     if (!ok) {
-        ShowWarningNotification(win->hwndCanvas, Tr("Failed to apply redactions"), kNotif5SecsTimeOut);
+        ShowWarningNotification(win, Tr("Failed to apply redactions"), kNotif5SecsTimeOut);
         return;
     }
     MainWindowRerender(win);
-    ShowTemporaryNotification(win->hwndCanvas, Tr("Redactions applied."), kNotif5SecsTimeOut);
+    ShowTemporaryNotification(win, Tr("Redactions applied."), kNotif5SecsTimeOut);
 }
 
 static LRESULT FrameOnCommand(MainWindow* win, HWND hwnd, UINT msg, WPARAM wp, LPARAM lp) {
@@ -11258,7 +11257,7 @@ static LRESULT FrameOnCommand(MainWindow* win, HWND hwnd, UINT msg, WPARAM wp, L
 
         case CmdListPrinters: {
             NotificationCreateArgs nargs;
-            nargs.hwndParent = win->hwndCanvas;
+            nargs.win = win;
             nargs.msg = Tr("Collecting list of printers");
             ShowNotification(nargs);
             auto* data = new HWND(win->hwndCanvas);
@@ -11956,7 +11955,7 @@ static LRESULT FrameOnCommand(MainWindow* win, HWND hwnd, UINT msg, WPARAM wp, L
                 notifMsg = str::DupTemp(StrL("PDF preview logging disabled."));
             }
             NotificationCreateArgs nargs;
-            nargs.hwndParent = win->hwndCanvas;
+            nargs.win = win;
             nargs.msg = notifMsg;
             nargs.timeoutMs = 8000;
             ShowNotification(nargs);
@@ -12354,7 +12353,7 @@ static LRESULT FrameOnCommand(MainWindow* win, HWND hwnd, UINT msg, WPARAM wp, L
         case CmdDebugShowNotif: {
             {
                 NotificationCreateArgs args;
-                args.hwndParent = win->hwndCanvas;
+                args.win = win;
                 args.groupId = kNotifPersistentWarning;
                 args.msg = StrL("This is a second notification\nMy friend.");
                 args.warning = false;
@@ -12363,7 +12362,7 @@ static LRESULT FrameOnCommand(MainWindow* win, HWND hwnd, UINT msg, WPARAM wp, L
             }
             {
                 NotificationCreateArgs args;
-                args.hwndParent = win->hwndCanvas;
+                args.win = win;
                 args.groupId = kNotifAdHoc;
                 args.msg = StrL("This is a second notification\nMy friend.");
                 args.warning = false;
@@ -12373,7 +12372,7 @@ static LRESULT FrameOnCommand(MainWindow* win, HWND hwnd, UINT msg, WPARAM wp, L
 
             {
                 NotificationCreateArgs args;
-                args.hwndParent = win->hwndCanvas;
+                args.win = win;
                 args.msg = StrL("This is a notification");
                 args.groupId = kNotifAdHoc;
                 args.warning = true;
@@ -12383,7 +12382,7 @@ static LRESULT FrameOnCommand(MainWindow* win, HWND hwnd, UINT msg, WPARAM wp, L
 
             {
                 NotificationCreateArgs args;
-                args.hwndParent = win->hwndCanvas;
+                args.win = win;
                 args.groupId = kNotifAdHoc;
                 args.warning = false;
                 args.timeoutMs = 0;
@@ -12781,7 +12780,7 @@ static LRESULT FrameOnCommand(MainWindow* win, HWND hwnd, UINT msg, WPARAM wp, L
             str::Free(data);
             if (!image) {
                 NotificationCreateArgs nargs;
-                nargs.hwndParent = win->hwndCanvas;
+                nargs.win = win;
                 nargs.timeoutMs = 3000;
                 nargs.msg = fmt(Tr("Couldn't load image '%s'").s, path::GetBaseNameTemp(path));
                 ShowNotification(nargs);
@@ -14344,7 +14343,7 @@ TempStr PageInfoOverlayResultTemp(Str pathTwoPages, Str pathOnePage, int* exitCo
     }
 
     TogglePageInfoHelper(win);
-    NotificationWnd* wnd = GetNotificationForGroup(win->hwndCanvas, kNotifPageInfo);
+    NotificationWnd* wnd = GetNotificationForGroup(win, kNotifPageInfo);
     if (!wnd) {
         return fail(StrL("ERROR no-overlay"));
     }
@@ -14372,7 +14371,7 @@ TempStr PageInfoOverlayResultTemp(Str pathTwoPages, Str pathOnePage, int* exitCo
     if (!win->IsDocLoaded() || win->ctrl->PageCount() != 1) {
         return fail(StrL("ERROR one-page-load"));
     }
-    wnd = GetNotificationForGroup(win->hwndCanvas, kNotifPageInfo);
+    wnd = GetNotificationForGroup(win, kNotifPageInfo);
     if (!wnd) {
         return fail(StrL("ERROR overlay-gone"));
     }
