@@ -276,6 +276,7 @@ function sumatrapdf_files()
     "AdvancedSettingsDialog.*",
     "AdvancedSettingsDialogCommon.*",
     "ChangeColorDialog.*",
+    "ChangeColorDialogCommon.*",
     "ChangeLanguageDialog.*",
     "ChangeScrollbarDialog.*",
     "ChangeThemeDialog.*",
