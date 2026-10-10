@@ -12,3 +12,9 @@ void AppendFileType(str::Builder& out, Str path);
 void AppendReadingDirection(str::Builder& out, DisplayModel* dm);
 void EndWithSingleNewline(str::Builder& b);
 void AlignPropertiesText(str::Builder& text);
+
+TempStr AddTimeZone(TempStr s, int timeZone);
+void GetPropsText(DocController* ctrl, str::Builder& out);
+
+// implemented by each app
+void AppendDateProp(str::Builder& out, Str key, Str val, bool isPdfDate);

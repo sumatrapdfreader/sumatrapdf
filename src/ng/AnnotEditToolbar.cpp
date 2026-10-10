@@ -174,25 +174,37 @@ static Color BarHoverBg() {
 // --- PdfColor helpers (orig's) ----------------------------------------------
 
 static Color PdfToWinColor(PdfColor c) {
-    u8 r, g, b, a;
+    u8 r;
+    u8 g;
+    u8 b;
+    u8 a;
     UnpackPdfColor(c, r, g, b, a);
     return MkRgb(r, g, b);
 }
 
 static u8 PdfColorAlpha(PdfColor c) {
-    u8 r, g, b, a;
+    u8 r;
+    u8 g;
+    u8 b;
+    u8 a;
     UnpackPdfColor(c, r, g, b, a);
     return a;
 }
 
 static Color PdfToWinColorWithAlpha(PdfColor c) {
-    u8 r, g, b, a;
+    u8 r;
+    u8 g;
+    u8 b;
+    u8 a;
     UnpackPdfColor(c, r, g, b, a);
     return MkRgba(r, g, b, a);
 }
 
 static PdfColor WinToPdfColor(Color c) {
-    u8 r, g, b, a;
+    u8 r;
+    u8 g;
+    u8 b;
+    u8 a;
     UnpackColor(c, r, g, b, a);
     // in a Color alpha 0 means opaque, in a PdfColor it means transparent
     return MkPdfColor(r, g, b, a == 0 ? 0xff : a);
@@ -203,7 +215,10 @@ static PdfColor OpaquePdfColor(PdfColor c) {
     if (c == 0) {
         return 0;
     }
-    u8 r, g, b, a;
+    u8 r;
+    u8 g;
+    u8 b;
+    u8 a;
     UnpackPdfColor(c, r, g, b, a);
     return MkPdfColor(r, g, b, 0xff);
 }
@@ -211,9 +226,13 @@ static PdfColor OpaquePdfColor(PdfColor c) {
 // a chip shows a color the way the page does: with the annotation's opacity
 static PdfColor ColorWithOpacity(PdfColor c, Annotation* annot, bool withOpacity) {
     if (c == 0 || !withOpacity) {
+        // no color at all; there is no opacity to show
         return c;
     }
-    u8 r, g, b, a;
+    u8 r;
+    u8 g;
+    u8 b;
+    u8 a;
     UnpackPdfColor(c, r, g, b, a);
     return MkPdfColor(r, g, b, (u8)Opacity(annot));
 }
@@ -996,7 +1015,10 @@ static void OpenAnnotColorsDialog(AnnotEditToolbar* tb) {
 static void ChipThicknessPicked(AnnotEditToolbar* tb, int width) {
     WindowTab* tab = tb->tab;
     Annotation* annot = tab ? tab->selectedAnnotation : nullptr;
-    if (!AnnotationIsLive(annot) || annot != tb->annot || BorderWidth(annot) == width) {
+    if (!AnnotationIsLive(annot) || annot != tb->annot) {
+        return;
+    }
+    if (BorderWidth(annot) == width) {
         return;
     }
     SetBorderWidth(annot, width);
@@ -1020,7 +1042,10 @@ static void ChipOpacityPicked(AnnotEditToolbar* tb, int percent) {
 static void ChipTextSizePicked(AnnotEditToolbar* tb, int size) {
     WindowTab* tab = tb->tab;
     Annotation* annot = tab ? tab->selectedAnnotation : nullptr;
-    if (!AnnotationIsLive(annot) || annot != tb->annot || DefaultAppearanceTextSize(annot) == size) {
+    if (!AnnotationIsLive(annot) || annot != tb->annot) {
+        return;
+    }
+    if (DefaultAppearanceTextSize(annot) == size) {
         return;
     }
     SetDefaultAppearanceTextSize(annot, size);
@@ -2541,17 +2566,24 @@ void SetSelectedAnnotation(WindowTab* tab, Annotation* annot) {
 }
 
 static void AddAnnotPage(Vec<int>& pages, int pageNo, int pageCount) {
-    if (pageNo < 1 || pageNo > pageCount || VecContains(pages, pageNo)) {
+    if (pageNo < 1 || pageNo > pageCount) {
+        return;
+    }
+    if (VecContains(pages, pageNo)) {
         return;
     }
     VecAppend(pages, pageNo);
 }
 
-// Pages the background loader should finish first: current page, every page
-// overlapping the viewport, and a context-menu annotation's page.
+// Pages the background loader should finish first: current page (toolbar page
+// even when visibleRatio is still 0), every page overlapping the viewport, and
+// a context-menu annotation's page.
 static void CollectPriorityAnnotPages(WindowTab* tab, Annotation* extra, Vec<int>& pages) {
     VecReset(pages);
-    DisplayModel* dm = tab ? tab->AsFixed() : nullptr;
+    if (!tab) {
+        return;
+    }
+    DisplayModel* dm = tab->AsFixed();
     if (!dm) {
         return;
     }

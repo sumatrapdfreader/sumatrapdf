@@ -197,20 +197,6 @@ static bool IsoDateParse(Str date, PropDate* timeOut, int* timeZoneOut) {
     // don't bother about the day of week, we won't display it anyway
 }
 
-static TempStr AddTimeZone(TempStr s, int timeZone) {
-    // timeZone 0 means UTC or unspecified: nothing to append, return the date as-is
-    // (returning {} here would drop the whole formatted date, e.g. for "D:...Z" dates)
-    if (timeZone == 0) {
-        return s;
-    }
-
-    Str tzSign = (timeZone > 0) ? StrL("+") : StrL("-");
-    int abs = (timeZone > 0) ? timeZone : -timeZone;
-    int hours = abs / 100;
-    int mins = abs % 100;
-    return fmt("%s %s%02d:%02d", s, tzSign, hours, mins);
-}
-
 static TempStr FormatDateTemp(const PropDate& date, int timeZone) {
 #if OS_WIN
     SYSTEMTIME st{};
@@ -264,94 +250,9 @@ static TempStr FormatDateTemp(const PropDate& date, int timeZone) {
 #endif
 }
 
-// clang-format off
-struct PropLabel {
-    DocProp prop;
-    Str label;
-};
-
-static const PropLabel propToName[] = {
-    {DocProp::Title, TrN("Title:")},
-    {DocProp::Subject, TrN("Subject:")},
-    {DocProp::Author, TrN("Author:")},
-    {DocProp::Copyright, TrN("Copyright:")},
-    {DocProp::CreatorApp, TrN("Application:")},
-    {DocProp::PdfProducer, TrN("PDF Producer:")},
-    {DocProp::PdfVersion, TrN("PDF Version:")},
-    {DocProp::Files, TrN("Files:")},
-    {DocProp::Keywords, TrN("Keywords:")},
-    {DocProp::Encryption, TrN("Encryption:")},
-    {DocProp::Signatures, TrN("Signatures:")},
-    {DocProp::ImageSize, TrN("Image Size:")},
-    {DocProp::Dpi, TrN("DPI:")},
-    {DocProp::Comment, TrN("Comment:")},
-    {DocProp::CameraMake, TrN("Camera Make:")},
-    {DocProp::CameraModel, TrN("Camera Model:")},
-    {DocProp::DateOriginal, TrN("Date Original:")},
-    {DocProp::ExposureTime, TrN("Exposure Time:")},
-    {DocProp::FNumber, TrN("F-Number:")},
-    {DocProp::IsoSpeed, TrN("ISO Speed:")},
-    {DocProp::FocalLength, TrN("Focal Length:")},
-    {DocProp::FocalLength35mm, TrN("Focal Length (35mm):")},
-    {DocProp::Flash, TrN("Flash:")},
-    {DocProp::Orientation, TrN("Orientation:")},
-    {DocProp::ExposureProgram, TrN("Exposure Program:")},
-    {DocProp::MeteringMode, TrN("Metering Mode:")},
-    {DocProp::WhiteBalance, TrN("White Balance:")},
-    {DocProp::ExposureBias, TrN("Exposure Bias:")},
-    {DocProp::BitsPerSample, TrN("Bits Per Sample:")},
-    {DocProp::ResolutionUnit, TrN("Resolution Unit:")},
-    {DocProp::Software, TrN("Software:")},
-    {DocProp::DateTime, TrN("Date/Time:")},
-    {DocProp::YCbCrPositioning, TrN("YCbCr Positioning:")},
-    {DocProp::ExifVersion, TrN("Exif Version:")},
-    {DocProp::DateTimeDigitized, TrN("Date/Time Digitized:")},
-    {DocProp::ComponentsConfig, TrN("Components Configuration:")},
-    {DocProp::CompressedBpp, TrN("Compressed Bits/Pixel:")},
-    {DocProp::MaxAperture, TrN("Max Aperture:")},
-    {DocProp::LightSource, TrN("Light Source:")},
-    {DocProp::UserComment, TrN("User Comment:")},
-    {DocProp::FlashpixVersion, TrN("Flashpix Version:")},
-    {DocProp::ColorSpace, TrN("Color Space:")},
-    {DocProp::PixelXDimension, TrN("Pixel X Dimension:")},
-    {DocProp::PixelYDimension, TrN("Pixel Y Dimension:")},
-    {DocProp::FileSource, TrN("File Source:")},
-    {DocProp::SceneType, TrN("Scene Type:")},
-    {DocProp::ImageFileSize, TrN("Image File Size:")},
-    {DocProp::ImagePath, TrN("Path:")},
-    {DocProp::None, {}},
-};
 // clang-format on
 
-static void AppendPropTranslated(str::Builder& out, DocProp prop, Str val) {
-    if (prop == DocProp::None || len(val) == 0) {
-        return;
-    }
-    if (prop == DocProp::ImageFileSize) {
-        TempStr valFormatted = FormatFileSizeTransTemp(ParseInt64(val));
-        AppendProp(out, Tr("File Size:"), valFormatted);
-        return;
-    }
-    Str s;
-    for (int i = 0; propToName[i].prop != DocProp::None; i++) {
-        if (propToName[i].prop == prop) {
-            s = propToName[i].label;
-            break;
-        }
-    }
-    if (len(s) > 0) {
-        // found a display label (e.g. "Application:"); show its translation
-        Str trans = trans::GetTranslation(s);
-        AppendProp(out, trans, val);
-        return;
-    }
-    // no display label: fall back to the raw property name
-    TempStr propName = PropNameTemp(prop);
-    TempStr label = fmt("%s:", propName);
-    AppendProp(out, label, val);
-}
-
-static void AppendDateProp(str::Builder& out, Str key, Str val, bool isPdfDate) {
+void AppendDateProp(str::Builder& out, Str key, Str val, bool isPdfDate) {
     PropDate date;
     int timeZone = 0;
     bool ok = false;
@@ -368,130 +269,6 @@ static void AppendDateProp(str::Builder& out, Str key, Str val, bool isPdfDate) 
     }
     TempStr dateStr = FormatDateTemp(date, timeZone);
     AppendProp(out, key, dateStr);
-}
-
-static void AddImageProperties(EngineBase* engine, int pageNo, str::Builder& out) {
-    // for image engines, show EXIF properties for the current image
-    ReportIf(!IsEngineImages(engine));
-    Props imageProps;
-    EngineImagesGetImageProperties(engine, pageNo, imageProps);
-    int nImageProps = len(imageProps);
-    if (nImageProps == 0) {
-        return;
-    }
-    out.AppendChar('\n');
-    TempStr header = fmt(Tr("Current Image (%d):").s, pageNo);
-    out.Append(header);
-    out.AppendChar('\n');
-    for (int i = 0; i < nImageProps; i++) {
-        AppendPropTranslated(out, imageProps[i].prop, imageProps[i].val);
-    }
-}
-
-static void GetPropsText(DocController* ctrl, str::Builder& out) {
-    ReportIf(!ctrl);
-
-    Str path = gPluginMode ? gPluginURL : Str(ctrl->GetFilePath());
-    AppendProp(out, Tr("File:"), len(path) == 0 ? StrL("(not available)") : path);
-
-    DisplayModel* dm = ctrl->AsFixed();
-    i64 fileSize = file::GetSize(path); // can be gPluginURL
-    if (-1 == fileSize && dm) {
-        EngineBase* engine = dm->GetEngine();
-        Str d = engine->GetFileData();
-        if (len(d) > 0) {
-            fileSize = d.len;
-        }
-        str::Free(d);
-    }
-    TempStr strTemp;
-    if (-1 != fileSize) {
-        strTemp = FormatFileSizeTransTemp(fileSize);
-        AppendProp(out, Tr("File Size:"), strTemp);
-    }
-    AppendFileType(out, path);
-    AppendReadingDirection(out, dm);
-
-    Props props;
-    GetAllProps(ctrl, props);
-
-    AppendPropTranslated(out, DocProp::Title, GetPropValueTemp(props, DocProp::Title));
-    AppendPropTranslated(out, DocProp::Subject, GetPropValueTemp(props, DocProp::Subject));
-    AppendPropTranslated(out, DocProp::Author, GetPropValueTemp(props, DocProp::Author));
-    AppendPropTranslated(out, DocProp::Copyright, GetPropValueTemp(props, DocProp::Copyright));
-
-    bool isPdfDate = dm && kindEngineMupdf == dm->engineType;
-    Str val = GetPropValueTemp(props, DocProp::CreationDate);
-    AppendDateProp(out, Tr("Created:"), val, isPdfDate);
-    val = GetPropValueTemp(props, DocProp::ModificationDate);
-    AppendDateProp(out, Tr("Modified:"), val, isPdfDate);
-
-    AppendPropTranslated(out, DocProp::CreatorApp, GetPropValueTemp(props, DocProp::CreatorApp));
-    AppendPropTranslated(out, DocProp::PdfProducer, GetPropValueTemp(props, DocProp::PdfProducer));
-    AppendPropTranslated(out, DocProp::PdfVersion, GetPropValueTemp(props, DocProp::PdfVersion));
-    strTemp = FormatPermissionsTemp(ctrl);
-    AppendProp(out, Tr("Denied Permissions:"), strTemp);
-
-    AppendPdfFileStructure(out, GetPropValueTemp(props, DocProp::PdfFileStructure), ctrl->GetFilePath());
-
-    int pageNo = ctrl->CurrentPageNo();
-    bool isImages = false;
-    if (dm) {
-        EngineBase* engine = dm->GetEngine();
-        isImages = IsEngineImages(engine);
-    }
-
-    strTemp = fmt("%d", ctrl->PageCount());
-    if (isImages) {
-        AppendProp(out, Tr("Number of Images:"), strTemp);
-    } else {
-        AppendProp(out, Tr("Number of Pages:"), strTemp);
-    }
-
-    if (dm && !isImages) { // we show image size below
-        strTemp = FormatPageSizeTemp(dm->GetEngine(), pageNo, dm->GetRotation());
-        TempStr s = fmt(Tr("Current Page (%d) Size:").s, pageNo);
-        AppendProp(out, s, strTemp);
-    }
-    if (isImages) {
-        AddImageProperties(dm->GetEngine(), pageNo, out);
-    }
-
-    // clang-format off
-    // properties already shown above, skip when appending remaining
-    static const DocProp handledProps[] = {
-        DocProp::Title, DocProp::Subject, DocProp::Author, DocProp::Copyright,
-        DocProp::CreationDate, DocProp::ModificationDate,
-        DocProp::CreatorApp, DocProp::PdfProducer, DocProp::PdfVersion,
-        DocProp::PdfFileStructure, DocProp::Files,
-        DocProp::UnsupportedFeatures, DocProp::FontList,
-        DocProp::None,
-    };
-    // clang-format on
-
-    // append any remaining properties not already shown
-    int nProps = len(props);
-    for (int i = 0; i < nProps; i++) {
-        DocProp prop = props[i].prop;
-        Str propVal = props[i].val;
-        if (len(propVal) == 0) {
-            continue;
-        }
-        bool handled = false;
-        for (int j = 0; handledProps[j] != DocProp::None; j++) {
-            if (prop == handledProps[j]) {
-                handled = true;
-                break;
-            }
-        }
-        if (handled) {
-            continue;
-        }
-        AppendPropTranslated(out, prop, propVal);
-    }
-
-    out.AppendChar('\n');
-    AppendPropTranslated(out, DocProp::Files, GetPropValueTemp(props, DocProp::Files));
 }
 
 #if OS_WIN
@@ -523,7 +300,7 @@ static TempStr HexBytesTemp(const BYTE* p, int n, bool reverse) {
     char* buf = AllocArrayTemp<char>((n * 2) + 1);
     for (int i = 0; i < n; i++) {
         BYTE v = reverse ? p[n - 1 - i] : p[i];
-        buf[i * 2] = "0123456789ABCDEF"[v >> 4];
+        buf[(size_t)i * 2] = "0123456789ABCDEF"[v >> 4];
         buf[(i * 2) + 1] = "0123456789ABCDEF"[v & 0xf];
     }
     return Str(buf, n * 2);
@@ -725,7 +502,8 @@ static void EutlUpdateThread(EutlUpdateJob* job) {
     TempStr msg = job->ok ? EutlCacheInfoTemp() : (err ? str::DupTemp(err) : StrL("update failed"));
     job->msg = str::Dup(msg);
     str::Free(err);
-    uitask::Post(MkFunc0<EutlUpdateJob>(OnEutlUpdateDone, job), "EutlUpdateDone");
+    auto fn = MkFunc0<EutlUpdateJob>(OnEutlUpdateDone, job);
+    uitask::Post(fn, "EutlUpdateDone");
 }
 
 void PropertiesView::OnUpdateEutl(PropertiesView*, gp::Ctx* cx, const gp::ClickEvent*) {
