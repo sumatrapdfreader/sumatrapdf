@@ -28,6 +28,8 @@ const WM_RBUTTONDBLCLK = 0x0206;
 const WM_MBUTTONDOWN = 0x0207;
 const WM_MBUTTONUP = 0x0208;
 const WM_MBUTTONDBLCLK = 0x0209;
+const WM_SYSCOMMAND = 0x0112;
+const SC_CLOSE = 0xf060;
 const WM_HSCROLL = 0x0114;
 const WM_VSCROLL = 0x0115;
 const WM_MOUSEWHEEL = 0x020a;
@@ -484,6 +486,13 @@ export function macSendMessage(msg: number, wParam: number | bigint, lParam: num
   }
   if (msg === WM_CLOSE) {
     invoke("WM_CLOSE");
+    return 0n;
+  }
+  // The caption close button. DefWindowProc turns it into WM_CLOSE.
+  if (msg === WM_SYSCOMMAND) {
+    if ((wp & 0xfff0n) === BigInt(SC_CLOSE)) {
+      invoke("WM_CLOSE");
+    }
     return 0n;
   }
   // wParam 0 is the on-screen keyboard: no window took the focus.
