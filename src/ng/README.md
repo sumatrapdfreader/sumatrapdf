@@ -18,6 +18,9 @@ Outputs live in `out/<platform>/<build-type>`:
 | Linux    | `out/linux/dbg` | `out/linux/rel` |
 | Wasm     | `out/wasm/dbg`  | `out/wasm/rel`  |
 
+On macOS the build also wraps the executable in `SumatraPDF.app`, which
+declares the document types Finder offers it for (`cmd/helper/ng-mac-bundle.ts`).
+
 Compiler and sanitizer variants add suffixes, such as `dbg-clang` and
 `dbg-asan`. `-all` builds every target; `test_util -run -- -for-ai` runs the
 base unit tests. `-run` launches SumatraPDF as a normal session, so it

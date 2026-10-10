@@ -9311,6 +9311,9 @@ int GpuiMain(int argc, char** argv) {
     gRenderCache = new RenderCache();
 
     gp::App* app = gp::AppNew();
+#if OS_DARWIN
+    AppShellHandleOpenDocs();
+#endif
     gpc::Init(app);
     // the current theme's colors become gpui's before the first element is built
     AppShellSetApp(app);
@@ -9374,6 +9377,9 @@ int GpuiMain(int argc, char** argv) {
         }
     }
     gApplyCliViewToEbookLayout = false;
+#if OS_DARWIN
+    AppShellOpenDocsReady();
+#endif
 #if OS_WIN
     LoadDdeOpenOnStartup(win);
     gIsStartup = false;

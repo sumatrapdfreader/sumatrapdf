@@ -27,6 +27,7 @@ import {
 } from "./helper/ng-compile";
 import { defaultTarget, findTarget, targetsFor } from "./helper/ng-targets";
 import { runBuildInWsl } from "./helper/ng-wsl";
+import { makeMacBundle } from "./helper/ng-mac-bundle";
 import { genDocsForBuild } from "./gen-docs";
 import { packEmbedded } from "./helper/embedded";
 
@@ -273,6 +274,9 @@ async function main(): Promise<void> {
   let last = "";
   for (const t of targets) {
     last = await buildTarget(tc, t, flags, fail);
+    if (plat === "mac" && t.name === defaultTarget) {
+      console.log(`bundle ${relative(root, makeMacBundle(root, last))}`);
+    }
   }
   console.log(`done in ${((performance.now() - started) / 1000).toFixed(1)} s`);
 

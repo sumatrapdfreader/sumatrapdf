@@ -153,6 +153,8 @@ float AppShellRenderScale(gpui::Window* win);
 #endif
 #if OS_DARWIN
 void AppShellDisableAutoTermination();
+void AppShellHandleOpenDocs();
+void AppShellOpenDocsReady();
 #endif
 // presentation mode's auto-hidden cursor (orig hides it with SetCursor(null))
 void AppShellShowCursor(MainWindow* win, bool show);
