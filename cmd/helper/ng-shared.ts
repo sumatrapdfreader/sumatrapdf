@@ -119,6 +119,8 @@ export const sharedFiles = [
   "src/shared/CommandPaletteCommon.h",
   "src/shared/DocumentPropertiesCommon.cpp",
   "src/shared/DocumentPropertiesCommon.h",
+  "src/shared/EbookSettingsDialogCommon.cpp",
+  "src/shared/EbookSettingsDialogCommon.h",
   "src/shared/FavoritesCommon.cpp",
   "src/shared/FileThumbnailsCommon.cpp",
   "src/shared/FileThumbnailsCommon.h",

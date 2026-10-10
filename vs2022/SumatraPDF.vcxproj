@@ -1481,6 +1481,7 @@
     <ClInclude Include="..\src\shared\DocumentPropertiesCommon.h" />
     <ClInclude Include="..\src\shared\EbookDoc.h" />
     <ClInclude Include="..\src\shared\EbookFormatter.h" />
+    <ClInclude Include="..\src\shared\EbookSettingsDialogCommon.h" />
     <ClInclude Include="..\src\shared\EmbeddedResources.h" />
     <ClInclude Include="..\src\shared\EngineAll.h" />
     <ClInclude Include="..\src\shared\EngineBase.h" />
@@ -2127,6 +2128,7 @@
     <ClCompile Include="..\src\shared\DocumentPropertiesCommon.cpp" />
     <ClCompile Include="..\src\shared\EbookDoc.cpp" />
     <ClCompile Include="..\src\shared\EbookFormatter.cpp" />
+    <ClCompile Include="..\src\shared\EbookSettingsDialogCommon.cpp" />
     <ClCompile Include="..\src\shared\EmbeddedResources.cpp" />
     <ClCompile Include="..\src\shared\EngineBase.cpp" />
     <ClCompile Include="..\src\shared\EngineCreate.cpp" />

@@ -330,6 +330,9 @@
     <ClInclude Include="..\src\shared\EbookFormatter.h">
       <Filter>src\shared</Filter>
     </ClInclude>
+    <ClInclude Include="..\src\shared\EbookSettingsDialogCommon.h">
+      <Filter>src\shared</Filter>
+    </ClInclude>
     <ClInclude Include="..\src\shared\EmbeddedResources.h">
       <Filter>src\shared</Filter>
     </ClInclude>
@@ -1119,6 +1122,9 @@
       <Filter>src\shared</Filter>
     </ClCompile>
     <ClCompile Include="..\src\shared\EbookFormatter.cpp">
+      <Filter>src\shared</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\shared\EbookSettingsDialogCommon.cpp">
       <Filter>src\shared</Filter>
     </ClCompile>
     <ClCompile Include="..\src\shared\EmbeddedResources.cpp">

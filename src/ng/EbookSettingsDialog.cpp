@@ -30,6 +30,7 @@
 #include "gui/AppShell.h"
 #include "gui/DialogWidgets.h"
 #include "SumatraDialogs.h"
+#include "EbookSettingsDialogCommon.h"
 
 #include "SumatraLog.h"
 
@@ -97,11 +98,6 @@ struct EbookSettingsView {
 
 static gp::Entity<EbookSettingsView> gEbookView;
 
-// the dropdown's first entry: no font of our own, whatever the engine picks
-static Str FontDefaultLabel() {
-    return Tr("(default)");
-}
-
 // orig's window (modeless, as orig's), where the platform can have one (DlgWindowOpen); null: a
 // dialog in the frame
 static ToolWindow* gEbookSettingsTw = nullptr;
@@ -136,63 +132,6 @@ void CloseEbookSettingsDialog() {
     str::Free(gEbook.customCssText);
     gEbook.customCssText = {};
     AppShellInvalidate(win);
-}
-
-// the margin is typed as CSS writes it: one number for all four sides, two for
-// top/bottom and left/right, or four in top-right-bottom-left order. anything
-// else (or out of range) is left empty, i.e. unset. orig's ParseMargin
-static void ParseMargin(Str s, Vec<float>& out) {
-    VecReset(out);
-    if (len(s) == 0) {
-        return;
-    }
-    StrVec parts;
-    Split(&parts, s, StrL(" "), true);
-    bool ok = true;
-    for (Str part : parts) {
-        if (len(part) == 0) {
-            continue;
-        }
-        const char* cs = CStrTemp(part);
-        char* end = nullptr;
-        float v = strtof(cs, &end);
-        if (end == cs || (end && *end != 0)) {
-            ok = false;
-            break;
-        }
-        VecAppend(out, v);
-    }
-    int n = len(out);
-    ok = ok && (n == 1 || n == 2 || n == 4);
-    for (int i = 0; ok && i < n; i++) {
-        ok = out[i] >= 0 && out[i] <= 200;
-    }
-    if (!ok) {
-        VecReset(out);
-    }
-}
-
-static TempStr MarginTextTemp(const Vec<float>* margin) {
-    int n = margin ? len(*margin) : 0;
-    TempStr res;
-    for (int i = 0; i < n; i++) {
-        TempStr one = fmt("%g", (*margin)[i]);
-        res = res ? str::JoinTemp(res, StrL(" "), one) : one;
-    }
-    return res;
-}
-
-static bool MarginEq(const Vec<float>& a, const Vec<float>* b) {
-    int n = len(a);
-    if (n != (b ? len(*b) : 0)) {
-        return false;
-    }
-    for (int i = 0; i < n; i++) {
-        if (a[i] != (*b)[i]) {
-            return false;
-        }
-    }
-    return true;
 }
 
 static TempStr EditTextTemp(gp::InputState* e) {
