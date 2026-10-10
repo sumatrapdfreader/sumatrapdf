@@ -14,8 +14,17 @@
 
 import { mkdirSync, rmSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
+import { ControlClient, ControlCommand } from "./control.ts";
+import { IS_MAC } from "./host.ts";
 import { ROOT, cmdId, tmpPath } from "./util.ts";
-import { launchSumatra, sendCommandSync, waitForExit, waitForFrame, killAndWait } from "./win-automation.ts";
+import {
+  launchControlled,
+  launchSumatra,
+  sendCommandSync,
+  waitForExit,
+  waitForFrame,
+  killAndWait,
+} from "./win-automation.ts";
 import {
   getWindowRect,
   isZoomed,
@@ -57,6 +66,53 @@ function nearlySameSize(a: { w: number; h: number }, b: { w: number; h: number }
   return Math.abs(a.w - b.w) <= tol && Math.abs(a.h - b.h) <= tol;
 }
 
+async function layoutGeom(
+  client: ControlClient,
+): Promise<{ w: number; h: number; maximized: boolean; fullscreen: boolean }> {
+  const raw = String((await client.request(ControlCommand.TestLayout, []))[1] ?? "");
+  const m = /window rect=(-?\d+),(-?\d+),(-?\d+),(-?\d+) maximized=(\d+) fullscreen=(\d+)/.exec(raw);
+  if (!m) {
+    throw new Error(`issue-1106: no window rect\n${raw}`);
+  }
+  return { w: +m[3]!, h: +m[4]!, maximized: m[5] === "1", fullscreen: m[6] === "1" };
+}
+
+async function testMac(appDataDir: string): Promise<void> {
+  const { proc, client, frame } = await launchControlled(["-appdata", appDataDir, PDF], { defaultWindowPos: true });
+  try {
+    await client.waitForRenderIdle();
+    const maximizedBefore = await layoutGeom(client);
+    if (!maximizedBefore.maximized) {
+      throw new Error("expected window to start maximized (WindowState = 2)");
+    }
+
+    sendCommandSync(frame, cmdId("CmdToggleFullscreen"));
+    await client.waitForRenderIdle();
+    const fsSize = await layoutGeom(client);
+    if (!fsSize.fullscreen || fsSize.w < 640 || fsSize.h < 480) {
+      throw new Error(`fullscreen did not expand the frame: ${fsSize.w}x${fsSize.h} fullscreen=${fsSize.fullscreen}`);
+    }
+
+    sendCommandSync(frame, cmdId("CmdToggleFullscreen"));
+    await client.waitForRenderIdle();
+    const afterExit = await layoutGeom(client);
+    if (!afterExit.maximized) {
+      throw new Error("after leaving fullscreen, window should be maximized again");
+    }
+    if (!nearlySameSize(afterExit, maximizedBefore)) {
+      throw new Error(
+        `restored maximize size wrong: got ${afterExit.w}x${afterExit.h}, expected ~${maximizedBefore.w}x${maximizedBefore.h}`,
+      );
+    }
+    // ng does not handle WM_DISPLAYCHANGE. That message is Windows-only.
+    console.log("SKIP issue-1106 display-change: macOS has no WM_DISPLAYCHANGE");
+  } finally {
+    client.close();
+    await killAndWait(proc);
+    rmSync(appDataDir, { recursive: true, force: true });
+  }
+}
+
 export async function testit(): Promise<void> {
   setProcessDpiAware();
 
@@ -64,6 +120,10 @@ export async function testit(): Promise<void> {
   rmSync(appDataDir, { recursive: true, force: true });
   mkdirSync(appDataDir, { recursive: true });
   writeFileSync(join(appDataDir, "SumatraPDF-settings.txt"), SETTINGS);
+  if (IS_MAC) {
+    await testMac(appDataDir);
+    return;
+  }
 
   const proc = launchSumatra(["-appdata", appDataDir, PDF], { defaultWindowPos: true });
   let frame = 0;
