@@ -4201,6 +4201,14 @@ static void ExecuteControlRequest(ControlRequest* req) {
                 AppendTestResult(req, 0, StrL("OK"));
                 break;
             }
+            // No new focus: the on-screen keyboard. Keep the contents editor.
+            if (str::EqI(name, StrL("WM_KILLFOCUS"))) {
+                if (IsEditingAnnotContents(win)) {
+                    AnnotContentsKeepOnKillFocus(win);
+                }
+                AppendTestResult(req, 0, StrL("OK"));
+                break;
+            }
             // A favorite or another custom command has no name in Commands.h.
             // Tests send its id as "#123".
             int cmdId = 0;

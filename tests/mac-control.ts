@@ -12,6 +12,7 @@ const TestInput = 121;
 const TestDdeExecute = 129;
 const kCopyDataDdeW = 0x44646557;
 
+const WM_KILLFOCUS = 0x0008;
 const WM_CLOSE = 0x0010;
 const WM_KEYDOWN = 0x0100;
 const WM_KEYUP = 0x0101;
@@ -471,6 +472,13 @@ export function macSendMessage(msg: number, wParam: number | bigint, lParam: num
   }
   if (msg === WM_CLOSE) {
     invoke("WM_CLOSE");
+    return 0n;
+  }
+  // wParam 0 is the on-screen keyboard: no window took the focus.
+  if (msg === WM_KILLFOCUS) {
+    if (wp === 0n) {
+      invoke("WM_KILLFOCUS");
+    }
     return 0n;
   }
   if (msg === WM_KEYDOWN || msg === WM_KEYUP) {
