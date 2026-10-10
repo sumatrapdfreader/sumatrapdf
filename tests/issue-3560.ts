@@ -10,6 +10,7 @@
 
 import { writeFileSync } from "node:fs";
 import { ControlCommand } from "./control";
+import { IS_MAC } from "./host";
 import { tmpPath, assemblePdf, USE_NG } from "./util";
 import { launchControlled, killAndWait } from "./win-automation";
 import { captureWindowPixels, findChildWindow, isZoomed, moveWindow, showWindow, sleep, SW_RESTORE } from "./winapi";
@@ -85,6 +86,11 @@ async function ngBookmarkColors(client: { request: Function }, frame: number): P
 }
 
 export async function testit(): Promise<void> {
+  // Outline color is painted in the bookmarks tree. An engine page render is blank.
+  if (IS_MAC) {
+    console.log("SKIP issue-3560: the check reads bookmark pixels with GetWindowDC");
+    return;
+  }
   const pdf = tmpPath("issue-3560.pdf");
   writeFileSync(pdf, makePdf(), "latin1");
 
