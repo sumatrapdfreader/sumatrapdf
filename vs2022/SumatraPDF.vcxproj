@@ -1507,6 +1507,7 @@
     <ClInclude Include="..\src\shared\HtmlFormatter.h" />
     <ClInclude Include="..\src\shared\ImageReader.h" />
     <ClInclude Include="..\src\shared\ImageSaveCropResizeCommon.h" />
+    <ClInclude Include="..\src\shared\InstallerUtil.h" />
     <ClInclude Include="..\src\shared\JxlReader.h" />
     <ClInclude Include="..\src\shared\KeyboardHelp.h" />
     <ClInclude Include="..\src\shared\LinkFollow.h" />
@@ -2163,6 +2164,7 @@
     <ClCompile Include="..\src\shared\HtmlFormatter.cpp" />
     <ClCompile Include="..\src\shared\ImageReader.cpp" />
     <ClCompile Include="..\src\shared\ImageSaveCropResizeCommon.cpp" />
+    <ClCompile Include="..\src\shared\InstallerUtil_win.cpp" />
     <ClCompile Include="..\src\shared\JxlReader.cpp" />
     <ClCompile Include="..\src\shared\LinkFollow.cpp">
       <PrecompiledHeader>NotUsing</PrecompiledHeader>

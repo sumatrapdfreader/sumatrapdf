@@ -42,6 +42,7 @@
 #include "Translations.h"
 #include "EmbeddedResources.h"
 #include "Installer.h"
+#include "InstallerUtil.h"
 #include "UpdateCheck.h"
 #include "SumatraLog.h"
 
@@ -54,9 +55,6 @@ static lzma::SimpleArchive* gArchive = nullptr;
 static bool gInstallStarted = false; // a bit of a hack
 static bool gInstallFailed = false;
 static bool gInstallAborted = false; // the user gave up in the move-aside dialog
-
-static PreviousInstallationInfo gPrevInstall;
-static Flags gCliNew;
 
 struct InstallerWnd {
     HWND hwnd = nullptr;
@@ -87,12 +85,6 @@ struct InstallerWnd {
     ThreadHandle hThread = nullptr;
 };
 
-static bool HasPreviousInstall() {
-    bool hasPrev = (gPrevInstall.typ != PreviousInstallationType::None);
-    logf("HasPreviousInstall(): hasPrev: %d\n", hasPrev);
-    return hasPrev;
-}
-
 static void ProgressStep() {
     if (!gWnd) {
         // when extracting with -x we don't create window
@@ -117,30 +109,8 @@ static Checkbox* CreateCheckbox(HWND hwndParent, Str s, bool isChecked) {
     return w;
 }
 
-constexpr const char* kLogFileName = "sumatra-install-log.txt";
-// caller has to free()
-Str GetInstallerLogPath() {
-    TempStr dir = GetTempDirTemp();
-    if (len(dir) == 0) {
-        return str::Dup(Str(kLogFileName));
-    }
-    return path::Join(dir, Str(kLogFileName));
-}
-
-static void ClearReadOnly(Str path) {
-    DWORD attrs = file::GetAttributes(path);
-    if (attrs != INVALID_FILE_ATTRIBUTES && (attrs & FILE_ATTRIBUTE_READONLY)) {
-        logf("  clearing READONLY on '%s'\n", path);
-        file::SetAttributes(path, attrs & ~FILE_ATTRIBUTE_READONLY);
-    }
-}
-
 // Last Win32 error from WriteInstallerFileRobust (for user-facing messages).
 static DWORD gLastWriteInstallerErr = 0;
-
-static bool IsDiskFullError(DWORD err) {
-    return err == ERROR_DISK_FULL || err == ERROR_HANDLE_DISK_FULL;
-}
 
 // Write a file during install/upgrade. libsumatrapdf.dll is often locked by
 // SumatraPDF.exe, dllhost/prevhost (preview), or PdfFilter; a plain
@@ -1093,126 +1063,6 @@ static bool CopySelfToDir(Str destDir) {
     return false;
 }
 
-static void CopySettingsFile() {
-    log(StrL("CopySettingsFile()\n"));
-    // Settings moved from %APPDATA% to %LOCALAPPDATA% in 3.2; copy from the old location on upgrade.
-
-    // seen a crash when running elevated
-    TempStr srcDir = GetSpecialFolderTemp(CSIDL_APPDATA, false);
-    if (len(srcDir) == 0) {
-        return;
-    }
-    TempStr dstDir = GetSpecialFolderTemp(CSIDL_LOCAL_APPDATA, false);
-    if (len(dstDir) == 0) {
-        return;
-    }
-
-    TempStr prefsFileName = GetSettingsFileNameTemp();
-    TempStr srcPath = path::JoinTemp(srcDir, StrL(kAppName), prefsFileName);
-    TempStr dstPath = path::JoinTemp(dstDir, StrL(kAppName), prefsFileName);
-
-    // don't over-write
-    bool failIfExists = true;
-    // don't care if it fails or not
-    file::Copy(dstPath, srcPath, failIfExists);
-    logf("  copied '%s' to '%s'\n", srcPath, dstPath);
-}
-
-static bool CreateAppShortcut(int csidl, Str installedExePath) {
-    TempStr shortcutPath = GetShortcutPathTemp(csidl);
-    if (len(shortcutPath) == 0) {
-        log(StrL("CreateAppShortcut() failed\n"));
-        return false;
-    }
-    logf("CreateAppShortcut(csidl=%d), path=%s\n", csidl, shortcutPath);
-    return CreateShortcut(shortcutPath, installedExePath);
-}
-
-// https://docs.microsoft.com/en-us/windows/win32/shell/csidl
-// CSIDL_COMMON_DESKTOPDIRECTORY - files and folders on desktop for all users. C:\Documents and Settings\All
-// Users\Desktop
-// CSIDL_COMMON_PROGRAMS - Programs item in Start menu for all users, C:\Documents and Settings\All Users\Start
-// Menu\Programs
-// CSIDL_DESKTOP - virtual folder, desktop for current user
-// CSIDL_PROGRAMS - Programs item in Start menu for current user. Settings\username\Start Menu\Programs
-static int shortcutDirs[] = {CSIDL_COMMON_DESKTOPDIRECTORY, CSIDL_COMMON_PROGRAMS, CSIDL_DESKTOP, CSIDL_PROGRAMS};
-
-static void CreateAppShortcuts(bool forAllUsers, bool withDesktop, Str installedExePath) {
-    logf("CreateAppShortcuts(forAllUsers=%d, withDesktop=%d)\n", (int)forAllUsers, (int)withDesktop);
-    size_t start = forAllUsers ? 0 : 2;
-    size_t end = forAllUsers ? 2 : dimof(shortcutDirs);
-    for (size_t i = start; i < end; i++) {
-        int csidl = shortcutDirs[i];
-        bool isDesktop = csidl == CSIDL_COMMON_DESKTOPDIRECTORY || csidl == CSIDL_DESKTOP;
-        if (isDesktop && !withDesktop) {
-            continue;
-        }
-        CreateAppShortcut(csidl, installedExePath);
-    }
-}
-
-static void RemoveShortcutFile(int csidl) {
-    TempStr path = GetShortcutPathTemp(csidl);
-    if (len(path) == 0 || !file::Exists(path)) {
-        return;
-    }
-    file::Delete(path);
-    logf("RemoveShortcutFile: deleted '%s'\n", path);
-}
-
-// those are shortcuts created by versions before 3.4
-static int shortcutDirsPre34[] = {CSIDL_COMMON_PROGRAMS, CSIDL_PROGRAMS, CSIDL_DESKTOP};
-
-// those are shortcuts created by versions 3.4 through 3.6
-static int shortcutDirs34To36[] = {CSIDL_COMMON_DESKTOPDIRECTORY, CSIDL_COMMON_STARTMENU, CSIDL_DESKTOP,
-                                   CSIDL_STARTMENU};
-
-// Installer.cpp
-void RemoveAppShortcuts() {
-    for (int csidl : shortcutDirs) {
-        RemoveShortcutFile(csidl);
-    }
-    for (int csidl : shortcutDirsPre34) {
-        RemoveShortcutFile(csidl);
-    }
-    for (int csidl : shortcutDirs34To36) {
-        RemoveShortcutFile(csidl);
-    }
-}
-
-static Str GetEnvRegKey(bool allUsers) {
-    if (allUsers) {
-        return StrL(R"(SYSTEM\CurrentControlSet\Control\Session Manager\Environment)");
-    }
-    return StrL("Environment");
-}
-
-static void AddInstallDirToPath(bool allUsers, Str installDir) {
-    HKEY root = allUsers ? HKEY_LOCAL_MACHINE : HKEY_CURRENT_USER;
-    Str keyName = GetEnvRegKey(allUsers);
-    TempStr currPath = ReadRegStrTemp(root, keyName, StrL("Path"));
-    // check if installDir is already in PATH (case-insensitive)
-    if (currPath && IsDirInPath(currPath, installDir)) {
-        logf("AddInstallDirToPath: '%s' already in PATH\n", installDir);
-        return;
-    }
-    str::Builder newPath;
-    if (len(currPath) > 0) {
-        newPath.Append(currPath);
-        if (newPath.LastChar() != ';') {
-            newPath.Append(StrL(";"));
-        }
-    }
-    newPath.Append(installDir);
-
-    if (!WriteRegExpandSz(root, keyName, StrL("Path"), ToStr(newPath))) {
-        return;
-    }
-    logf("AddInstallDirToPath: added '%s' to PATH\n", installDir);
-    // notify other processes that environment has changed
-    SendMessageTimeoutW(HWND_BROADCAST, WM_SETTINGCHANGE, 0, (LPARAM)L"Environment", SMTO_ABORTIFHUNG, 5000, nullptr);
-}
-
 static void InstallerThread(Flags* cli) {
     bool ok;
 
@@ -1356,15 +1206,6 @@ static void RestartElevatedForAllUsers(Flags* cli) {
     }
 }
 
-// in pre-release the window is wider to accommodate bigger version number
-// TODO: instead of changing size of the window, change how we draw version number
-int GetInstallerWinDx() {
-    if (gIsPreReleaseBuild) {
-        return 492;
-    }
-    return 420;
-}
-
 static void StartInstallation(InstallerWnd* wnd) {
     gInstallStarted = true;
 
@@ -1413,11 +1254,6 @@ static void StartInstallation(InstallerWnd* wnd) {
 }
 
 static void OnButtonOptions(InstallerWnd* wnd);
-
-static TempStr GetInstalledExePathTemp(Flags* cli) {
-    TempStr dir = cli->installDir;
-    return path::JoinTemp(dir, Str(kExeName));
-}
 
 static void OnButtonInstall(InstallerWnd* wnd) {
     // gInstallStarted is set in StartInstallation because we might not proceed here
@@ -1487,11 +1323,6 @@ static void OnButtonExit() {
     } else {
         log(StrL("OnButtonExit: gWnd is null\n"));
     }
-}
-
-static void StartSumatra() {
-    TempStr exePath = GetInstalledExePathTemp(&gCliNew);
-    RunNonElevated(exePath);
 }
 
 static void OnButtonStartSumatra() {
@@ -1609,30 +1440,6 @@ static Size SetButtonTextAndResize(Button* b, Str s) {
     uint flags = SWP_NOMOVE | SWP_NOZORDER | SWP_NOACTIVATE | SWP_FRAMECHANGED;
     SetWindowPos(b->hwnd, nullptr, 0, 0, size.dx, size.dy, flags);
     return size;
-}
-
-static TempStr GetDefaultInstallationDirTemp(bool forAllUsers, bool ignorePrev) {
-    logf("GetDefaultInstallationDir(forAllUsers=%d, ignorePrev=%d)\n", (int)forAllUsers, (int)ignorePrev);
-
-    Str dirPrevInstall = gPrevInstall.installationDir;
-
-    if (dirPrevInstall && !ignorePrev) {
-        logf("  using %s from previous install\n", dirPrevInstall);
-        return dirPrevInstall;
-    }
-
-    if (forAllUsers) {
-        TempStr dirAll = GetSpecialFolderTemp(CSIDL_PROGRAM_FILES, false);
-        TempStr dir = path::JoinTemp(dirAll, StrL(kAppName));
-        logf("  using '%s' from GetSpecialFolderTemp(CSIDL_PROGRAM_FILES)\n", dir);
-        return dir;
-    }
-
-    // %APPLOCALDATA%\SumatraPDF
-    TempStr dirUser = GetSpecialFolderTemp(CSIDL_LOCAL_APPDATA, false);
-    TempStr dir = path::JoinTemp(dirUser, StrL(kAppName));
-    logf("  using '%s' from GetSpecialFolderTemp(CSIDL_LOCAL_APPDATA)\n", dir);
-    return dir;
 }
 
 static void SetInstallButtonElevationState() {

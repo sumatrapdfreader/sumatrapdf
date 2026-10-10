@@ -353,6 +353,8 @@ function sumatrapdf_files()
     "HomePage.*",
     "Installer.*",
     "InstallerCommon.cpp",
+    "InstallerUtil.h",
+    "InstallerUtil_win.cpp",
     "JxlReader.*",
     "KeyboardHelp.*",
     "LinkFollow.*",

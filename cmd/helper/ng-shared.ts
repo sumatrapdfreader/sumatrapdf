@@ -126,6 +126,8 @@ export const sharedFiles = [
   "src/shared/FileThumbnailsCommon.h",
   "src/shared/ImageSaveCropResizeCommon.cpp",
   "src/shared/ImageSaveCropResizeCommon.h",
+  "src/shared/InstallerUtil.h",
+  "src/shared/InstallerUtil_win.cpp",
   "src/shared/MainWindowCommon.cpp",
   "src/shared/MainWindowCommon.h",
   "src/shared/NavFilesInFolderCommon.cpp",

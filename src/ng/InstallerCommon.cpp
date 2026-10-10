@@ -26,12 +26,11 @@
 #include "AppTools.h"
 
 #include "Installer.h"
+#include "InstallerUtil.h"
 
 #include "SumatraLog.h"
 
 #include <tlhelp32.h>
-
-constexpr DWORD kTenSecondsInMs = 10 * 1000;
 
 constexpr Color gCol1 = MkRgb(196, 64, 50);
 constexpr Color gCol1Shadow = MkRgb(134, 48, 39);
@@ -49,7 +48,6 @@ Color kColorMsgOk = gCol5;
 Color kColorMsgInstallation = gCol5;
 Color kColorMsgFailed = gCol1;
 
-Str gFirstError;
 Str gMsgError;
 Str gMsg;
 Color gMsgColor = gCol5;
@@ -57,42 +55,6 @@ Color gMsgColor = gCol5;
 Flags* gCli = nullptr;
 
 Str gDefaultMsg; // Note: translation, not freeing
-
-// case-insensitive check whether dir is a ';'-delimited component of a PATH-like
-// string. substring matching would wrongly match a longer sibling entry (e.g.
-// "...\SumatraPDFViewer" contains "...\SumatraPDF"), so compare whole entries.
-bool IsDirInPath(Str path, Str dir) {
-    StrVec parts;
-    Split(&parts, path, StrL(";"));
-    for (Str part : parts) {
-        if (str::EqI(part, dir)) {
-            return true;
-        }
-    }
-    return false;
-}
-
-// write value as REG_EXPAND_SZ (PATH may contain %vars%) under root\keyName:valueName
-bool WriteRegExpandSz(HKEY root, Str keyName, Str valueName, Str value) {
-    WCHAR* keyNameW = CWStrTemp(keyName);
-    WCHAR* valueNameW = CWStrTemp(valueName);
-    int cch;
-    WCHAR* valueW = CWStrTemp(value, cch);
-    DWORD cbData = (DWORD)(cch + 1) * sizeof(WCHAR);
-    HKEY hKey;
-    LONG res = RegOpenKeyExW(root, keyNameW, 0, KEY_SET_VALUE, &hKey);
-    if (res != ERROR_SUCCESS) {
-        logf("WriteRegExpandSz: RegOpenKeyExW('%s') failed with %d\n", keyName, (int)res);
-        return false;
-    }
-    res = RegSetValueExW(hKey, valueNameW, 0, REG_EXPAND_SZ, (const BYTE*)valueW, cbData);
-    RegCloseKey(hKey);
-    if (res != ERROR_SUCCESS) {
-        logf("WriteRegExpandSz: RegSetValueExW failed with %d\n", (int)res);
-        return false;
-    }
-    return true;
-}
 
 // ng: with -install-reg-root the shortcuts go here instead of the Desktop /
 // Start Menu, so a test run can't overwrite the ones of a real installation
@@ -132,24 +94,6 @@ bool SetInstallRegistryTestRoot(Str keyName) {
 
 static StrVec gProcessesToClose;
 
-PreviousInstallationInfo::~PreviousInstallationInfo() {
-    str::Free(installationDir);
-}
-
-// This is in HKLM. Note that on 64bit windows, if installing 32bit app
-// the installer has to be 32bit as well, so that it goes into proper
-// place in registry (under Software\Wow6432Node\Microsoft\Windows\...
-TempStr GetRegPathUninstTemp(Str appName) {
-    return str::JoinTemp(StrL("Software\\Microsoft\\Windows\\CurrentVersion\\Uninstall\\"), appName);
-}
-
-void NotifyFailed(Str msg) {
-    if (len(gFirstError) == 0) {
-        gFirstError = str::Dup(msg);
-    }
-    logf("NotifyFailed: %s\n", msg);
-}
-
 void SetMsg(Str msg, Color color) {
     gMsg = str::Dup(GetPermArena(), msg);
     gMsgColor = color;
@@ -157,119 +101,6 @@ void SetMsg(Str msg, Color color) {
 
 void SetDefaultMsg() {
     SetMsg(gDefaultMsg, kColorMsgWelcome);
-}
-
-static Str gCachedExistingInstallationDir;
-
-// the result is borrowed (perm-arena cache): callers must dup to persist it
-TempStr GetExistingInstallationDirTemp() {
-    if (gCachedExistingInstallationDir) {
-        // no logging if returning cached
-        return gCachedExistingInstallationDir;
-    }
-    log(StrL("GetExistingInstallationDir()\n"));
-    TempStr regPathUninst = GetRegPathUninstTemp(StrL(kAppName));
-    TempStr dir = LoggedReadRegStr2Temp(regPathUninst, StrL("InstallLocation"));
-    if (len(dir) == 0) {
-        return {};
-    }
-    if (str::EndsWithI(dir, StrL(".exe"))) {
-        dir = path::GetDirTemp(dir);
-    }
-    if (len(dir) > 0 && dir::Exists(dir)) {
-        gCachedExistingInstallationDir = str::Dup(GetPermArena(), dir);
-        return gCachedExistingInstallationDir;
-    }
-    return {};
-}
-
-bool IsOurExeInstalled() {
-    TempStr installedDir = GetExistingInstallationDirTemp();
-    if (len(installedDir) == 0) {
-        return false;
-    }
-    TempStr exeDir = GetSelfExeDirTemp();
-    return str::EqI(installedDir, exeDir);
-}
-
-// Walk path and parents; true if any component equals dir (junction-aware via path::IsSame).
-static bool IsPathUnderOrEqualDir(Str path, Str dir) {
-    if (len(path) == 0 || len(dir) == 0) {
-        return false;
-    }
-    TempStr cur = str::DupTemp(path);
-    while (cur) {
-        if (path::IsSame(dir, cur)) {
-            return true;
-        }
-        TempStr parent = path::GetDirTemp(cur);
-        if (len(parent) == 0 || len(parent) >= len(cur)) {
-            break;
-        }
-        cur = parent;
-    }
-    return false;
-}
-
-// true if path is under Program Files / Program Files (x86)
-bool IsPathUnderProgramFiles(Str path) {
-    if (len(path) == 0) {
-        return false;
-    }
-    TempStr pf = GetSpecialFolderTemp(CSIDL_PROGRAM_FILES);
-    if (IsPathUnderOrEqualDir(path, pf)) {
-        return true;
-    }
-    TempStr pfx86 = GetSpecialFolderTemp(CSIDL_PROGRAM_FILESX86);
-    if (IsPathUnderOrEqualDir(path, pfx86)) {
-        return true;
-    }
-    return false;
-}
-
-// Probe whether the current process can create a file under dir (or a parent that exists).
-static bool CanWriteToDirectory(Str dir) {
-    if (len(dir) == 0) {
-        return false;
-    }
-    TempStr probeDir = str::DupTemp(dir);
-    while (probeDir && !dir::Exists(probeDir)) {
-        TempStr parent = path::GetDirTemp(probeDir);
-        if (len(parent) == 0 || len(parent) >= len(probeDir)) {
-            break;
-        }
-        probeDir = parent;
-    }
-    if (len(probeDir) == 0 || !dir::Exists(probeDir)) {
-        return false;
-    }
-    TempStr probe = path::JoinTemp(probeDir, fmt("sumatra-write-test-%u.tmp", GetCurrentProcessId()));
-    HANDLE h = CreateFileW(CWStrTemp(probe), GENERIC_WRITE, 0, nullptr, CREATE_NEW,
-                           FILE_ATTRIBUTE_TEMPORARY | FILE_FLAG_DELETE_ON_CLOSE, nullptr);
-    if (h == INVALID_HANDLE_VALUE) {
-        logf("CanWriteToDirectory: CreateFile failed for '%s' err=%u\n", probe, GetLastError());
-        return false;
-    }
-    CloseHandle(h);
-    return true;
-}
-
-// true if install needs a UAC elevation (all-users, Program Files, or not writable)
-bool InstallNeedsElevation(Str installDir, bool allUsers) {
-    if (allUsers) {
-        return true;
-    }
-    if (IsPathUnderProgramFiles(installDir)) {
-        return true;
-    }
-    // Already admin: no further elevation needed even if write probe is odd.
-    if (IsProcessRunningElevated()) {
-        return false;
-    }
-    if (!CanWriteToDirectory(installDir)) {
-        return true;
-    }
-    return false;
 }
 
 void GetPreviousInstallInfo(PreviousInstallationInfo* info) {
@@ -306,12 +137,6 @@ void GetPreviousInstallInfo(PreviousInstallationInfo* info) {
     logf("GetPreviousInstallInfo: desktop shortcut: %d\n", (int)info->desktopShortcut);
     logf("GetPreviousInstallInfo: dir '%s', typ: %d, needsElevation: %d\n", info->installationDir, (int)info->typ,
          (int)info->allUsers);
-}
-
-TempStr GetInstallationFilePathTemp(Str installDir, Str name) {
-    TempStr res = path::JoinTemp(installDir, name);
-    logf("GetInstallationFilePath(%s) = > %s\n", name, res);
-    return res;
 }
 
 TempStr GetShortcutPathTemp(int csidl) {
@@ -354,46 +179,6 @@ static bool IsProcessUsingFiles(DWORD procId, Str file1, Str file2) {
         cont = Module32NextW(snap, &mod);
     }
     return false;
-}
-
-static bool IsProcWithModule(DWORD processId, Str modulePath) {
-    AutoCloseHandle hModSnapshot(CreateToolhelp32Snapshot(TH32CS_SNAPMODULE, processId));
-    if (!hModSnapshot.IsValid()) {
-        return false;
-    }
-
-    MODULEENTRY32W me32{};
-    me32.dwSize = sizeof(me32);
-    BOOL ok = Module32FirstW(hModSnapshot, &me32);
-    while (ok) {
-        TempStr path = ToUtf8Temp(me32.szExePath);
-        if (path::IsSame(modulePath, path)) {
-            return true;
-        }
-        ok = Module32NextW(hModSnapshot, &me32);
-    }
-    return false;
-}
-
-static bool KillProcWithId(DWORD processId, bool waitUntilTerminated) {
-    logf("KillProcWithId(processId=%d)\n", (int)processId);
-    BOOL inheritHandle = FALSE;
-    DWORD dwAccess = PROCESS_QUERY_INFORMATION | PROCESS_VM_READ | PROCESS_TERMINATE;
-    AutoCloseHandle hProcess = OpenProcess(dwAccess, inheritHandle, processId);
-    if (!hProcess.IsValid()) {
-        return false;
-    }
-
-    BOOL killed = TerminateProcess(hProcess, 0);
-    if (!killed) {
-        return false;
-    }
-
-    if (waitUntilTerminated) {
-        WaitForSingleObject(hProcess, kTenSecondsInMs);
-    }
-
-    return true;
 }
 
 // Kill a process with given <processId> if it has a module (dll or exe) <modulePath>.
@@ -514,25 +299,7 @@ static void ProcessesUsingInstallation(StrVec& names) {
     }
 }
 
-// clang-format off
-static Str readableProcessNames[] = {
-    Str(), Str(), // to be filled with our process
-    StrL("prevhost.exe"), StrL("Windows Explorer"),
-    StrL("dllhost.exe"), StrL("Windows Explorer")
-};
 // clang-format on
-
-static Str ReadableProcName(Str procPath) {
-    readableProcessNames[0] = Str(kExeName);
-    readableProcessNames[1] = StrL(kAppName);
-    TempStr procName = path::GetBaseNameTemp(procPath);
-    for (size_t i = 0; i < dimof(readableProcessNames); i += 2) {
-        if (str::EqI(procName, readableProcessNames[i])) {
-            return readableProcessNames[i + 1];
-        }
-    }
-    return procName;
-}
 
 static void SetCloseProcessMsg() {
     int n = len(gProcessesToClose);

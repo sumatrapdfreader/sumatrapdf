@@ -17,6 +17,7 @@
 #include "Flags.h"
 #include "SumatraPDF.h"
 #include "Installer.h"
+#include "InstallerUtil.h"
 #include "AppTools.h"
 #include "Translations.h"
 #include "Version.h"
@@ -61,47 +62,6 @@ const char* gInstalledFiles[] = {
 // clang-format on
 #endif
 
-static Str GetEnvRegKey(bool allUsers) {
-    if (allUsers) {
-        return StrL(R"(SYSTEM\CurrentControlSet\Control\Session Manager\Environment)");
-    }
-    return StrL("Environment");
-}
-
-static void RemoveInstallDirFromPath(bool allUsers, Str installDir) {
-    HKEY root = allUsers ? HKEY_LOCAL_MACHINE : HKEY_CURRENT_USER;
-    Str keyName = GetEnvRegKey(allUsers);
-    TempStr currPath = ReadRegStrTemp(root, keyName, StrL("Path"));
-    if (len(currPath) == 0) {
-        return;
-    }
-    if (!IsDirInPath(currPath, installDir)) {
-        logf("RemoveInstallDirFromPath: '%s' not found in PATH\n", installDir);
-        return;
-    }
-
-    str::Builder newPath;
-    StrVec parts;
-    Split(&parts, currPath, StrL(";"));
-    for (Str entry : parts) {
-        // skip empty entries and the one matching installDir (case-insensitive)
-        if (len(entry) == 0 || str::EqI(entry, installDir)) {
-            continue;
-        }
-        if (len(newPath) > 0) {
-            newPath.Append(StrL(";"));
-        }
-        newPath.Append(entry);
-    }
-
-    if (!WriteRegExpandSz(root, keyName, StrL("Path"), ToStr(newPath))) {
-        return;
-    }
-    logf("RemoveInstallDirFromPath: removed '%s' from PATH\n", installDir);
-    // notify other processes that environment has changed
-    SendMessageTimeoutW(HWND_BROADCAST, WM_SETTINGCHANGE, 0, (LPARAM)L"Environment", SMTO_ABORTIFHUNG, 5000, nullptr);
-}
-
 static void RemoveInstalledFiles() {
     // can't use GetExistingInstallationDir() anymore because we
     // delete registry entries
@@ -120,11 +80,6 @@ static void RemoveInstalledFiles() {
 #endif
     bool ok = dir::RemoveAll(dir);
     logf("RemoveInstalledFiles(): removed dir '%s', ok = %d\n", dir, (int)ok);
-}
-
-static TempStr GetInstalledExePathTemp() {
-    TempStr dir = gCli->installDir;
-    return path::JoinTemp(dir, Str(kExeName));
 }
 
 static void UninstallerThread() {
@@ -361,189 +316,6 @@ static int RunApp() {
             t = TimeGet();
         }
     }
-}
-
-static TempStr GetUninstallerPathInTemp() {
-    WCHAR tempDir[MAX_PATH + 14]{};
-    DWORD res = ::GetTempPathW(dimof(tempDir), tempDir);
-    ReportIf(res == 0 || res >= dimof(tempDir));
-    TempStr dirA = ToUtf8Temp(tempDir);
-    return path::JoinTemp(dirA, StrL("Sumatra-Uninstaller.exe"));
-}
-
-// %SystemRoot%\Temp, used instead of the per-user temp directory for the
-// elevated copy. A file an elevated process creates there is owned by
-// Administrators, so a non-elevated process running as the same user can't
-// swap it for something else before we launch it.
-static TempStr GetUninstallerPathInSystemTemp() {
-    WCHAR winDir[MAX_PATH]{};
-    UINT n = GetWindowsDirectoryW(winDir, dimof(winDir));
-    if (n == 0 || n >= dimof(winDir)) {
-        return {};
-    }
-    TempStr dir = path::JoinTemp(ToUtf8Temp(winDir), StrL("Temp"));
-    return path::JoinTemp(dir, StrL("Sumatra-Uninstaller.exe"));
-}
-
-// to be able to delete installation directory we must copy
-// ourselves to temp directory and re-launch
-static void RelaunchMaybeElevatedFromTempDirectory(Flags* cli) {
-    log(StrL("RelaunchMaybeElevatedFromTempDirectory()\n"));
-    if (gIsDebugBuild) {
-        // for easier debugging, debug build doesn't need
-        // to be copied / re-launched
-        return;
-    }
-
-    TempStr ownPath = GetSelfExePathTemp();
-    // TODO: should extract cmd-line from GetCommandLineW() by skipping the first
-    // item, which is path to the executable
-    str::Builder cmdLine;
-    cmdLine.Append(StrL("-uninstall"));
-    if (cli->silent) {
-        cmdLine.Append(StrL(" -silent"));
-    }
-    if (cli->log) {
-        cmdLine.Append(StrL(" -log"));
-    }
-    if (cli->allUsers) {
-        cmdLine.Append(StrL(" -all-users"));
-    }
-    Str cl = ToStr(cmdLine);
-
-    if (cli->allUsers) {
-        if (!IsProcessRunningElevated()) {
-            // Elevate the installed executable directly. Copying it to a
-            // user-writable temporary path before elevation would let another
-            // process replace it between the copy and ShellExecute.
-            logf("LaunchElevated('%s', '%s')\n", ownPath, cl);
-            bool okElev = LaunchElevated(ownPath, cl);
-            if (!okElev) {
-                logf("LaunchElevated() failed to launch '%s' '%s'\n", ownPath, cl);
-                LogLastError();
-            } else {
-                logf("LaunchElevated() launched '%s' '%s' ok!\n", ownPath, cl);
-            }
-            ::ExitProcess(0);
-        }
-
-        // Elevated, but still running out of the directory we're about to
-        // delete. Windows keeps a running image's file open, so dir::RemoveAll()
-        // fails on our own exe and leaves the whole installation directory
-        // behind (issue #5904). Re-launch from somewhere else first.
-        //
-        // Not the per-user temp directory: a copy there can be swapped for
-        // something else before it runs, which is the elevation hole that
-        // launching the installed exe directly closed. Use %SystemRoot%\Temp,
-        // where a non-elevated process can create a file but cannot list the
-        // directory or delete what's in it.
-        //
-        // "Can create" is enough for an attacker to plant a file at our path
-        // ahead of time and keep write access to it through CREATOR OWNER, so
-        // getting the directory right isn't sufficient on its own:
-        //  - delete anything already there (we're elevated, they can't)
-        //  - copy with dontOverwrite, so we only continue if we created it
-        //  - hold it open denying writers while we launch it
-        TempStr sysTempPath = GetUninstallerPathInSystemTemp();
-        if (str::IsEmptyOrWhiteSpace(sysTempPath) || str::EqI(sysTempPath, ownPath)) {
-            log(StrL("  already running from the system temp dir (or couldn't find it)\n"));
-            return;
-        }
-        file::Delete(sysTempPath);
-        logf("  copying uninstaller '%s' to '%s'\n", ownPath, sysTempPath);
-        if (!file::Copy(sysTempPath, ownPath, true)) {
-            // best effort: uninstalling from the install dir still removes the
-            // registry entries and most files, it just can't remove the folder
-            logf("  failed to copy uninstaller to '%s', uninstalling in place\n", sysTempPath);
-            return;
-        }
-        // deny writers for as long as the path is a launch target
-        HANDLE hLock = CreateFileW(CWStrTemp(sysTempPath), GENERIC_READ, FILE_SHARE_READ, nullptr, OPEN_EXISTING,
-                                   FILE_ATTRIBUTE_NORMAL, nullptr);
-        logf("LaunchProcessWithCmdLine('%s' '%s')\n", sysTempPath, cl);
-        HANDLE hElev = LaunchProcessWithCmdLine(sysTempPath, cl);
-        if (hLock != INVALID_HANDLE_VALUE) {
-            CloseHandle(hLock);
-        }
-        if (!hElev) {
-            logf("LaunchProcessWithCmdLine() failed to launch '%s' '%s'\n", sysTempPath, cl);
-            LogLastError();
-            // the copy never ran, so keep going here rather than doing nothing
-            return;
-        }
-        logf("LaunchProcessWithCmdLine() launched '%s' '%s' ok!\n", sysTempPath, cl);
-        ::ExitProcess(0);
-    }
-
-    TempStr installerTempPath = GetUninstallerPathInTemp();
-    if (str::EqI(installerTempPath, ownPath)) {
-        log(StrL("  already running from temp dir\n"));
-        return;
-    }
-    logf("  copying installer '%s' to '%s'\n", ownPath, installerTempPath);
-    bool ok = file::Copy(installerTempPath, ownPath, false);
-    if (!ok) {
-        logf("  failed to copy installer\n");
-        return;
-    }
-    logf("LaunchProcessWithCmdLine('%s' '%s')\n", installerTempPath, cl);
-    HANDLE h = LaunchProcessWithCmdLine(installerTempPath, cl);
-    if (!h) {
-        logf("LaunchProcessWithCmdLine() failed to launch '%s' '%s'\n", installerTempPath, cl);
-        LogLastError();
-    } else {
-        logf("LaunchProcessWithCmdLine() launched '%s' '%s' ok!\n", installerTempPath, cl);
-    }
-    ::ExitProcess(0);
-}
-
-static TempStr GetSystem32PathTemp(Str exeName) {
-    WCHAR sysDir[MAX_PATH]{};
-    UINT n = GetSystemDirectoryW(sysDir, dimof(sysDir));
-    if (n == 0 || n >= dimof(sysDir)) {
-        return {};
-    }
-    return path::JoinTemp(ToUtf8Temp(sysDir), exeName);
-}
-
-// A process can't delete its own executable: Windows keeps the image file open
-// for as long as it runs, and even a POSIX-semantics unlink
-// (FileDispositionInfoEx) is refused with ERROR_ACCESS_DENIED. Something else
-// has to do it once we've exited.
-//
-// That something used to be a batch file written to the per-user temp directory
-// and run with cmd.exe. When the uninstaller is elevated that's an escalation:
-// a non-elevated process can rewrite the script between our write and cmd.exe
-// reading it, and its contents then run as admin. 699acf313 closed that by
-// scheduling the delete for the next reboot instead, which is safe but means
-// the uninstaller is still sitting there afterwards.
-//
-// Put the commands on cmd.exe's command line instead. There's no intermediate
-// file for anyone to tamper with, cmd.exe comes from System32 by absolute path
-// so PATH can't redirect it, and the file goes away seconds after we exit
-// rather than at the next boot. Same code path elevated or not.
-static void InitSelfDelete() {
-    log(StrL("InitSelfDelete()\n"));
-    TempStr exePath = GetSelfExePathTemp();
-    TempStr cmdExe = GetSystem32PathTemp(StrL("cmd.exe"));
-    if (str::IsEmptyOrWhiteSpace(cmdExe)) {
-        log(StrL("InitSelfDelete(): couldn't find cmd.exe\n"));
-        return;
-    }
-    // ping, not timeout: timeout.exe exits immediately with "Input redirection
-    // is not supported" whenever stdin isn't a console, which is exactly what a
-    // child of a windowless process gets - the del then ran while we were still
-    // running and failed. 3 pings to loopback is ~2s, enough for us to exit.
-    TempStr cmdLine = fmt("\"%s\" /C ping -n 3 127.0.0.1 >nul & del \"%s\"", cmdExe, exePath);
-    logf("InitSelfDelete(): '%s'\n", cmdLine);
-    HANDLE h = LaunchProcessInDir(cmdLine, {}, CREATE_NO_WINDOW);
-    if (!h) {
-        logf("InitSelfDelete(): failed to launch, scheduling delete for next reboot\n");
-        LogLastError();
-        MoveFileExW(CWStrTemp(exePath), nullptr, MOVEFILE_DELAY_UNTIL_REBOOT);
-        return;
-    }
-    CloseHandle(h);
 }
 
 int RunUninstaller() {
