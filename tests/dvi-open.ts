@@ -8,11 +8,19 @@
 
 import { existsSync, mkdirSync, readFileSync, rmSync, statSync, unlinkSync, utimesSync, writeFileSync } from "node:fs";
 import { dirname, join } from "node:path";
+import { IS_WIN } from "./host.ts";
 import { findGhostscript, runStandalone, tmpPath } from "./util.ts";
 import { killAndWait, launchControlled } from "./win-automation.ts";
 
+const kExe = IS_WIN ? ".exe" : "";
+
 function whereExe(name: string): string {
-  const r = Bun.spawnSync(["where.exe", name], { stdout: "pipe", stderr: "ignore" });
+  let r: ReturnType<typeof Bun.spawnSync>;
+  try {
+    r = Bun.spawnSync([IS_WIN ? "where.exe" : "which", name], { stdout: "pipe", stderr: "ignore" });
+  } catch {
+    return "";
+  }
   if (r.exitCode !== 0) {
     return "";
   }
@@ -33,25 +41,25 @@ function exeBeside(bin: string, name: string): string {
 // Same tools EngineDvi looks for: dvipdfmx / xdvipdfmx on PATH or beside a
 // TeX engine, otherwise dvips plus Ghostscript.
 function dviConverterAvailable(): boolean {
-  if (whereExe("dvipdfmx.exe") || whereExe("xdvipdfmx.exe")) {
+  if (whereExe(`dvipdfmx${kExe}`) || whereExe(`xdvipdfmx${kExe}`)) {
     return true;
   }
-  const bins = ["pdflatex.exe", "xelatex.exe", "lualatex.exe", "latex.exe"];
+  const bins = [`pdflatex${kExe}`, `xelatex${kExe}`, `lualatex${kExe}`, `latex${kExe}`];
   for (const binName of bins) {
     const bin = whereExe(binName);
     if (!bin) {
       continue;
     }
-    if (exeBeside(bin, "dvipdfmx.exe") || exeBeside(bin, "xdvipdfmx.exe")) {
+    if (exeBeside(bin, `dvipdfmx${kExe}`) || exeBeside(bin, `xdvipdfmx${kExe}`)) {
       return true;
     }
   }
-  const dvips = whereExe("dvips.exe");
-  const gs = whereExe("gswin64c.exe") || whereExe("gswin32c.exe") || findGhostscript();
+  const dvips = whereExe(`dvips${kExe}`);
+  const gs = whereExe(`gswin64c${kExe}`) || whereExe(`gswin32c${kExe}`) || whereExe("gs") || findGhostscript();
   if (!dvips) {
     for (const binName of bins) {
       const bin = whereExe(binName);
-      if (bin && exeBeside(bin, "dvips.exe") && gs) {
+      if (bin && exeBeside(bin, `dvips${kExe}`) && gs) {
         return true;
       }
     }
