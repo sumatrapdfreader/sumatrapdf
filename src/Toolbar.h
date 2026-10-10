@@ -107,11 +107,7 @@ TempStr AnnotColorPopupStateTemp();
 
 //--- internal to Toolbar.cpp, not meant for anyone else
 
-// those are not real commands but we have to refer to toolbar buttons
-// is by a command. those are just background for area to be
-// covered by other HWNDs. They need the right size
-constexpr int PageInfoId = (int)CmdLast + 16;
-constexpr int WarningMsgId = (int)CmdLast + 17;
+void AnnotPresetColors(int cmdId, Vec<Color>& out);
 
 // the overlay toolbar's delayed-hide timer, on the toolbar's own host
 constexpr int kHideOverlayToolbarTimerId = 0x101;

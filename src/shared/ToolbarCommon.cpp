@@ -402,3 +402,170 @@ bool SameColorAndAlpha(Color a, Color b) {
     }
     return ((a & 0xffffff) == (b & 0xffffff)) && (aa == ab);
 }
+
+static ToolbarButtonInfo gToolbarButtons[] = {
+    {gIconFileOpen, CmdOpenFile, TrN("Open")},
+    {gIconPrint, CmdPrint, TrN("Print")},
+    {nullptr, 0, {}},          // separator
+    {nullptr, PageInfoId, {}}, // text box for page number + show current page / no of pages
+    {gIconPagePrev, CmdGoToPrevPage, TrN("Previous Page")},
+    {gIconPageNext, CmdGoToNextPage, TrN("Next Page")},
+    {nullptr, 0, {}}, // separator
+    {gIconNavigateBack, CmdNavigateBack, TrN("Back")},
+    {gIconNavigateForward, CmdNavigateForward, TrN("Forward")},
+    {nullptr, 0, {}}, // separator
+    {gIconSpeak, CmdToggleReadAloud, TrN("Read Aloud")},
+    {nullptr, 0, {}}, // separator
+    {gIconLayoutContinuous, CmdZoomFitWidthAndContinuous, TrN("Fit Width and Show Pages Continuously")},
+    {gIconLayoutSinglePage, CmdZoomFitPageAndSinglePage, TrN("Fit a Single Page")},
+    {gIconRotateLeft, CmdRotateLeft, TrN("Rotate &Left")},
+    {gIconRotateRight, CmdRotateRight, TrN("Rotate &Right")},
+    {gIconZoomOut, CmdZoomOut, TrN("Zoom Out")},
+    {gIconZoomIn, CmdZoomIn, TrN("Zoom In")},
+    {nullptr, 0, {}}, // separator
+    {gIconSearch, CmdFindFirst, TrN("Find")},
+    {nullptr, 0, {}}, // separator
+    {gIconEditAnnotations, CmdToggleEditPDF, TrN("Edit PDF")},
+};
+
+constexpr int kButtonsCount = dimof(gToolbarButtons);
+
+// The built-in buttons actually on the toolbar, which is gToolbarButtons unless
+// ToolbarCustomLayout asks for a different set / order (issue #5095). A layout
+// can repeat a button, so allow for more than the default count.
+
+ToolbarButtonInfo gLayoutButtons[kMaxLayoutButtons];
+
+static Str gLayoutParsedFrom;
+
+bool gLayoutParsed = false;
+
+// Work out which built-in buttons the toolbar has, and in which order. Empty
+// ToolbarCustomLayout (the default) means the standard layout; otherwise the
+// setting lists the buttons the user wants: a command name puts that button
+// there, `|` a separator, `PageInfo` the page number box, and leaving a button
+// out is how you hide it (issue #5095).
+void PopulateToolbarLayout() {
+    Str setting = gSettings->toolbarCustomLayout;
+    if (gLayoutParsed && str::Eq(setting, gLayoutParsedFrom)) {
+        return;
+    }
+    str::Free(gLayoutParsedFrom);
+    gLayoutParsedFrom = str::Dup(setting);
+    gLayoutParsed = true;
+    gLayoutButtonsCount = 0;
+
+    auto addButton = [](const ToolbarButtonInfo& tbi) {
+        if (gLayoutButtonsCount < kMaxLayoutButtons) {
+            gLayoutButtons[gLayoutButtonsCount++] = tbi;
+        }
+    };
+    auto useDefaultLayout = [&addButton]() {
+        for (const ToolbarButtonInfo& tbi : gToolbarButtons) {
+            addButton(tbi);
+        }
+    };
+
+    if (str::IsEmptyOrWhiteSpace(setting)) {
+        useDefaultLayout();
+        return;
+    }
+
+    // commas and semicolons are a natural way to write a list, so accept them
+    TempStr normalized = str::ReplaceTemp(setting, StrL(","), StrL(" "));
+    normalized = str::ReplaceTemp(normalized, StrL(";"), StrL(" "));
+    StrVec names;
+    Split(&names, normalized, StrL(" "), true);
+    for (Str name : names) {
+        Str tok = name;
+        str::TrimWSInPlace(tok, str::TrimOpt::Both);
+        if (len(tok) == 0) {
+            continue;
+        }
+        if (str::Eq(tok, StrL("|")) || str::EqI(tok, StrL("Separator"))) {
+            addButton({nullptr, 0, {}});
+            continue;
+        }
+        if (str::EqI(tok, StrL("PageInfo"))) {
+            addButton({nullptr, PageInfoId, {}});
+            continue;
+        }
+        int cmdId = GetCommandIdByName(tok);
+        const ToolbarButtonInfo* found = nullptr;
+        for (int i = 0; i < kButtonsCount && cmdId != CmdNone; i++) {
+            if (gToolbarButtons[i].cmdId == cmdId) {
+                found = &gToolbarButtons[i];
+                break;
+            }
+        }
+        if (!found) {
+            logf("ToolbarCustomLayout: no built-in toolbar button for '%s'\n", tok);
+            continue;
+        }
+        addButton(*found);
+    }
+    if (gLayoutButtonsCount == 0) {
+        logf("ToolbarCustomLayout: nothing usable in '%s', using the standard layout\n", setting);
+        useDefaultLayout();
+    }
+}
+
+ToolbarButtonInfo& GetToolbarButtonInfoByIdx(int idx) {
+    if (idx < gLayoutButtonsCount) {
+        return gLayoutButtons[idx];
+    }
+    return gCustomButtons[idx - gLayoutButtonsCount];
+}
+
+void TogglePdfAnnotationsToolbar(MainWindow* win) {
+    if (!win) {
+        return;
+    }
+    SetPdfAnnotationsToolbarEnabled(win, !win->pdfAnnotationsToolbarEnabled);
+}
+
+void EnablePdfAnnotationsToolbar(MainWindow* win) {
+    SetPdfAnnotationsToolbarEnabled(win, true);
+}
+
+bool ShouldShowToolbar(MainWindow* win) {
+    if (win->presentation || win->isQuickLook) {
+        return false;
+    }
+    int mode = ToolbarModeForWindow(win);
+    return mode == kToolbarShow;
+}
+
+bool ShouldOverlayToolbar(MainWindow* win) {
+    if (win->presentation || win->isQuickLook) {
+        return false;
+    }
+    if (ToolbarModeForWindow(win) != kToolbarOverlay) {
+        return false;
+    }
+    // don't float the overlay toolbar over the home / about page (only the
+    // pinned "show" mode shows a toolbar there)
+    if (win->IsCurrentTabAbout()) {
+        return false;
+    }
+    return true;
+}
+
+// the color a button makes annotations in is always one of the presets, so
+// its drop-down can show it; one set some other way joins the list
+void EnsureAnnotPresetColor(int cmdId, Color col) {
+    Str* list = AnnotPresetColorList(cmdId);
+    if (!list || col == kColorUnset) {
+        return;
+    }
+    Vec<Color> colors;
+    AnnotPresetColors(cmdId, colors);
+    for (Color c : colors) {
+        if (SameColorAndAlpha(c, col)) {
+            return;
+        }
+    }
+    VecAppend(colors, col);
+    str::ReplaceWithCopy(list, SerializeColorList(colors));
+    ScheduleSaveSettings();
+}

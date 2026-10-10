@@ -56,40 +56,11 @@
 
 // those are not real commands but we have to refer to toolbar buttons
 // is by a command
-constexpr int PageInfoId = (int)CmdLast + 16;
-constexpr int WarningMsgId = (int)CmdLast + 17;
 
 constexpr int kButtonSpacingX = 4;
 
 // distance between label and edit field
 constexpr int kTextPaddingRight = 6;
-
-static ToolbarButtonInfo gToolbarButtons[] = {
-    {gIconFileOpen, CmdOpenFile, TrN("Open")},
-    {gIconPrint, CmdPrint, TrN("Print")},
-    {nullptr, 0, {}},          // separator
-    {nullptr, PageInfoId, {}}, // text box for page number + show current page / no of pages
-    {gIconPagePrev, CmdGoToPrevPage, TrN("Previous Page")},
-    {gIconPageNext, CmdGoToNextPage, TrN("Next Page")},
-    {nullptr, 0, {}}, // separator
-    {gIconNavigateBack, CmdNavigateBack, TrN("Back")},
-    {gIconNavigateForward, CmdNavigateForward, TrN("Forward")},
-    {nullptr, 0, {}}, // separator
-    {gIconSpeak, CmdToggleReadAloud, TrN("Read Aloud")},
-    {nullptr, 0, {}}, // separator
-    {gIconLayoutContinuous, CmdZoomFitWidthAndContinuous, TrN("Fit Width and Show Pages Continuously")},
-    {gIconLayoutSinglePage, CmdZoomFitPageAndSinglePage, TrN("Fit a Single Page")},
-    {gIconRotateLeft, CmdRotateLeft, TrN("Rotate &Left")},
-    {gIconRotateRight, CmdRotateRight, TrN("Rotate &Right")},
-    {gIconZoomOut, CmdZoomOut, TrN("Zoom Out")},
-    {gIconZoomIn, CmdZoomIn, TrN("Zoom In")},
-    {nullptr, 0, {}}, // separator
-    {gIconSearch, CmdFindFirst, TrN("Find")},
-    {nullptr, 0, {}}, // separator
-    {gIconEditAnnotations, CmdToggleEditPDF, TrN("Edit PDF")},
-};
-
-constexpr int kButtonsCount = dimof(gToolbarButtons);
 
 // orig's gPdfAnnotationButtons: the "Edit PDF" row under the toolbar
 static ToolbarButtonInfo gPdfAnnotationButtons[] = {
@@ -126,96 +97,11 @@ static ToolbarButtonInfo gPdfAnnotationButtons[] = {
 
 constexpr int kPdfAnnotationButtonsCount = dimof(gPdfAnnotationButtons);
 
-// The built-in buttons actually on the toolbar, which is gToolbarButtons unless
-// ToolbarCustomLayout asks for a different set / order (issue #5095). A layout
-// can repeat a button, so allow for more than the default count.
-constexpr int kMaxLayoutButtons = 64;
-static ToolbarButtonInfo gLayoutButtons[kMaxLayoutButtons];
-static Str gLayoutParsedFrom;
-static bool gLayoutParsed = false;
-
 // --- colors -----------------------------------------------------------------
 
 // --- sizes ------------------------------------------------------------------
 
 // --- the button tables ------------------------------------------------------
-
-// Work out which built-in buttons the toolbar has, and in which order. Empty
-// ToolbarCustomLayout (the default) means the standard layout; otherwise the
-// setting lists the buttons the user wants: a command name puts that button
-// there, `|` a separator, `PageInfo` the page number box, and leaving a button
-// out is how you hide it (issue #5095).
-static void PopulateToolbarLayout() {
-    Str setting = gSettings->toolbarCustomLayout;
-    if (gLayoutParsed && str::Eq(setting, gLayoutParsedFrom)) {
-        return;
-    }
-    str::Free(gLayoutParsedFrom);
-    gLayoutParsedFrom = str::Dup(setting);
-    gLayoutParsed = true;
-    gLayoutButtonsCount = 0;
-
-    auto addButton = [](const ToolbarButtonInfo& tbi) {
-        if (gLayoutButtonsCount < kMaxLayoutButtons) {
-            gLayoutButtons[gLayoutButtonsCount++] = tbi;
-        }
-    };
-    auto useDefaultLayout = [&addButton]() {
-        for (const ToolbarButtonInfo& tbi : gToolbarButtons) {
-            addButton(tbi);
-        }
-    };
-
-    if (str::IsEmptyOrWhiteSpace(setting)) {
-        useDefaultLayout();
-        return;
-    }
-
-    // commas and semicolons are a natural way to write a list, so accept them
-    TempStr normalized = str::ReplaceTemp(setting, StrL(","), StrL(" "));
-    normalized = str::ReplaceTemp(normalized, StrL(";"), StrL(" "));
-    StrVec names;
-    Split(&names, normalized, StrL(" "), true);
-    for (Str name : names) {
-        Str tok = name;
-        str::TrimWSInPlace(tok, str::TrimOpt::Both);
-        if (len(tok) == 0) {
-            continue;
-        }
-        if (str::Eq(tok, StrL("|")) || str::EqI(tok, StrL("Separator"))) {
-            addButton({nullptr, 0, {}});
-            continue;
-        }
-        if (str::EqI(tok, StrL("PageInfo"))) {
-            addButton({nullptr, PageInfoId, {}});
-            continue;
-        }
-        int cmdId = GetCommandIdByName(tok);
-        const ToolbarButtonInfo* found = nullptr;
-        for (int i = 0; i < kButtonsCount && cmdId != CmdNone; i++) {
-            if (gToolbarButtons[i].cmdId == cmdId) {
-                found = &gToolbarButtons[i];
-                break;
-            }
-        }
-        if (!found) {
-            logf("ToolbarCustomLayout: no built-in toolbar button for '%s'\n", tok);
-            continue;
-        }
-        addButton(*found);
-    }
-    if (gLayoutButtonsCount == 0) {
-        logf("ToolbarCustomLayout: nothing usable in '%s', using the standard layout\n", setting);
-        useDefaultLayout();
-    }
-}
-
-static ToolbarButtonInfo& GetToolbarButtonInfoByIdx(int idx) {
-    if (idx < gLayoutButtonsCount) {
-        return gLayoutButtons[idx];
-    }
-    return gCustomButtons[idx - gLayoutButtonsCount];
-}
 
 // --- availability and enabled state -----------------------------------------
 
@@ -352,29 +238,6 @@ static bool IsCmdChecked(MainWindow* win, int cmdId) {
 
 // --- toolbar mode -----------------------------------------------------------
 
-bool ShouldShowToolbar(MainWindow* win) {
-    if (win->presentation || win->isQuickLook) {
-        return false;
-    }
-    int mode = ToolbarModeForWindow(win);
-    return mode == kToolbarShow;
-}
-
-bool ShouldOverlayToolbar(MainWindow* win) {
-    if (win->presentation || win->isQuickLook) {
-        return false;
-    }
-    if (ToolbarModeForWindow(win) != kToolbarOverlay) {
-        return false;
-    }
-    // don't float the overlay toolbar over the home / about page (only the
-    // pinned "show" mode shows a toolbar there)
-    if (win->IsCurrentTabAbout()) {
-        return false;
-    }
-    return true;
-}
-
 // --- annotation colors (orig's) ---------------------------------------------
 
 // the color the button's next annotation is made in
@@ -390,25 +253,6 @@ void AnnotPresetColors(int cmdId, Vec<Color>& out) {
         return;
     }
     ParseColorList(*list, out, 0);
-}
-
-// the color a button makes annotations in is always one of the presets, so
-// its drop-down can show it; one set some other way joins the list
-static void EnsureAnnotPresetColor(int cmdId, Color col) {
-    Str* list = AnnotPresetColorList(cmdId);
-    if (!list || col == kColorUnset) {
-        return;
-    }
-    Vec<Color> colors;
-    AnnotPresetColors(cmdId, colors);
-    for (Color c : colors) {
-        if (SameColorAndAlpha(c, col)) {
-            return;
-        }
-    }
-    VecAppend(colors, col);
-    str::ReplaceWithCopy(list, SerializeColorList(colors));
-    ScheduleSaveSettings();
 }
 
 // --- the gpui view ----------------------------------------------------------
@@ -560,7 +404,7 @@ static bool AnnotRowVisible(MainWindow* win) {
     return EngineMupdfIsPdf(engine) && EngineSupportsAnnotations(engine);
 }
 
-static void SetPdfAnnotationsToolbarEnabled(MainWindow* win, bool enabled) {
+void SetPdfAnnotationsToolbarEnabled(MainWindow* win, bool enabled) {
     if (!win || win->pdfAnnotationsToolbarEnabled == enabled) {
         return;
     }
@@ -587,17 +431,6 @@ static void SetPdfAnnotationsToolbarEnabled(MainWindow* win, bool enabled) {
     logf("EditPDF: %s\n", enabled ? StrL("on") : StrL("off"));
     AppShellSyncCanvasSize(win);
     AppShellInvalidate(win);
-}
-
-void TogglePdfAnnotationsToolbar(MainWindow* win) {
-    if (!win) {
-        return;
-    }
-    SetPdfAnnotationsToolbarEnabled(win, !win->pdfAnnotationsToolbarEnabled);
-}
-
-void EnablePdfAnnotationsToolbar(MainWindow* win) {
-    SetPdfAnnotationsToolbarEnabled(win, true);
 }
 
 // ng: the shell asks for this before it builds the frame, so this is also

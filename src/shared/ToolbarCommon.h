@@ -11,6 +11,13 @@ struct ToolbarButtonInfo {
     bool isText = false;
 };
 constexpr int kMaxCustomButtons = 127;
+constexpr int kMaxLayoutButtons = 64;
+
+// those are not real commands but we have to refer to toolbar buttons
+// is by a command. those are just background for area to be
+// covered by other HWNDs. They need the right size
+constexpr int PageInfoId = (int)CmdLast + 16;
+constexpr int WarningMsgId = (int)CmdLast + 17;
 
 extern int gLayoutButtonsCount;
 extern ToolbarButtonInfo gCustomButtons[kMaxCustomButtons + 1];
@@ -42,3 +49,12 @@ Str* AnnotPresetColorList(int cmdId);
 void SetAnnotPresetColor(int cmdId, Color col);
 bool CanCreateAnnotFromSelection(MainWindow* win, int cmdId);
 bool SameColorAndAlpha(Color a, Color b);
+
+extern ToolbarButtonInfo gLayoutButtons[kMaxLayoutButtons];
+extern bool gLayoutParsed;
+void PopulateToolbarLayout();
+ToolbarButtonInfo& GetToolbarButtonInfoByIdx(int idx);
+void EnsureAnnotPresetColor(int cmdId, Color col);
+
+// implemented by each app
+void SetPdfAnnotationsToolbarEnabled(MainWindow* win, bool enabled);
