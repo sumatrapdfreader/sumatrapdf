@@ -71,3 +71,15 @@ Color AnnotationHoverText();
 bool SameRectF(RectF a, RectF b);
 void OnAnnotsProgress(WindowTab* tab);
 TempStr ColorDumpTemp(PdfColor c);
+
+Color PdfToWinColor(PdfColor c);
+u8 PdfColorAlpha(PdfColor c);
+Color PdfToWinColorWithAlpha(PdfColor c);
+PdfColor WinToPdfColor(Color c);
+PdfColor OpaquePdfColor(PdfColor c);
+void CollectItems(Annotation* annot, Vec<AnnotEditItem>& out);
+void ScheduleShowSelectedAnnotationView(WindowTab* tab);
+void CollectPriorityAnnotPages(WindowTab* tab, Annotation* extra, Vec<int>& pages);
+
+// implemented by each app
+void ShowSelectedAnnotationView(WindowTab* tab);

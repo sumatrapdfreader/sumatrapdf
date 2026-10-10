@@ -173,224 +173,9 @@ static Color BarHoverBg() {
 
 // --- PdfColor helpers (orig's) ----------------------------------------------
 
-static Color PdfToWinColor(PdfColor c) {
-    u8 r;
-    u8 g;
-    u8 b;
-    u8 a;
-    UnpackPdfColor(c, r, g, b, a);
-    return MkRgb(r, g, b);
-}
-
-static u8 PdfColorAlpha(PdfColor c) {
-    u8 r;
-    u8 g;
-    u8 b;
-    u8 a;
-    UnpackPdfColor(c, r, g, b, a);
-    return a;
-}
-
-static Color PdfToWinColorWithAlpha(PdfColor c) {
-    u8 r;
-    u8 g;
-    u8 b;
-    u8 a;
-    UnpackPdfColor(c, r, g, b, a);
-    return MkRgba(r, g, b, a);
-}
-
-static PdfColor WinToPdfColor(Color c) {
-    u8 r;
-    u8 g;
-    u8 b;
-    u8 a;
-    UnpackColor(c, r, g, b, a);
-    // in a Color alpha 0 means opaque, in a PdfColor it means transparent
-    return MkPdfColor(r, g, b, a == 0 ? 0xff : a);
-}
-
-// the same color, made fully opaque
-static PdfColor OpaquePdfColor(PdfColor c) {
-    if (c == 0) {
-        return 0;
-    }
-    u8 r;
-    u8 g;
-    u8 b;
-    u8 a;
-    UnpackPdfColor(c, r, g, b, a);
-    return MkPdfColor(r, g, b, 0xff);
-}
-
-// a chip shows a color the way the page does: with the annotation's opacity
-static PdfColor ColorWithOpacity(PdfColor c, Annotation* annot, bool withOpacity) {
-    if (c == 0 || !withOpacity) {
-        // no color at all; there is no opacity to show
-        return c;
-    }
-    u8 r;
-    u8 g;
-    u8 b;
-    u8 a;
-    UnpackPdfColor(c, r, g, b, a);
-    return MkPdfColor(r, g, b, (u8)Opacity(annot));
-}
-
 // --- which chips an annotation gets (orig's CollectItems) --------------------
 
 // clang-format on
-
-static void CollectItems(Annotation* annot, Vec<AnnotEditItem>& out) {
-    VecReset(out);
-    if (!AnnotationIsLive(annot)) {
-        return;
-    }
-    AnnotationType type = Type(annot);
-    bool isFreeText = type == AnnotationType::FreeText;
-
-    if (type == AnnotationType::FileAttachment) {
-        Str fileName;
-        bool hasFile = HasEmbeddedFile(annot);
-        if (hasFile) {
-            fileName = EmbeddedFileNameTemp(annot);
-            if (fileName) {
-                fileName = path::GetBaseNameTemp(fileName);
-            }
-            if (len(fileName) == 0) {
-                fileName = StrL("file");
-            }
-        }
-        {
-            AnnotEditItem it;
-            it.kind = AnnotEditKind::AttachFile;
-            it.tooltip = hasFile ? fmt(Tr("Replace %s with...").s, fileName) : Tr("Attach File");
-            VecAppend(out, it);
-        }
-        if (hasFile) {
-            AnnotEditItem it;
-            it.kind = AnnotEditKind::SaveAttachment;
-            it.tooltip = fmt(Tr("Save %s to disk").s, fileName);
-            VecAppend(out, it);
-        }
-    }
-
-    // free text is about its text, so the text's color leads
-    if (isFreeText) {
-        AnnotEditItem it;
-        it.kind = AnnotEditKind::TextColor;
-        it.color = ColorWithOpacity(DefaultAppearanceTextColor(annot), annot, AnnotationSupportsOpacity(type));
-        it.tooltip = Tr("Text Color");
-        VecAppend(out, it);
-    }
-    // a color chip is also the opacity chip: it shows the color as it looks on
-    // the page and picking one sets the annotation's opacity too, so there is
-    // no separate Opacity chip when there is a color to carry it
-    bool colorCarriesOpacity = AnnotationSupportsOpacity(type) && AnnotationSupportsColor(type);
-    if (AnnotationSupportsColor(type)) {
-        AnnotEditItem it;
-        it.kind = AnnotEditKind::Color;
-        it.color = ColorWithOpacity(GetColor(annot), annot, colorCarriesOpacity);
-        it.tooltip = AnnotationColorIsBackground(type) ? Tr("Background Color") : Tr("Color");
-        if (AnnotationBorderInColorChip(type)) {
-            it.tooltip = Tr("Border Color and Width");
-        }
-        VecAppend(out, it);
-    }
-    if (AnnotationSupportsInteriorColor(type)) {
-        AnnotEditItem it;
-        it.kind = AnnotEditKind::InteriorColor;
-        it.color = ColorWithOpacity(InteriorColor(annot), annot, colorCarriesOpacity);
-        it.tooltip = Tr("Interior Color");
-        VecAppend(out, it);
-    }
-    if (AnnotationSupportsOpacity(type) && !colorCarriesOpacity) {
-        AnnotEditItem it;
-        it.kind = AnnotEditKind::Opacity;
-        it.number = Opacity(annot);
-        it.tooltip = Tr("Opacity");
-        VecAppend(out, it);
-    }
-    // ink has no Border Width chip of its own: the stroke's width is the
-    // Thickness slider of its color chip's drop-down. Same for the shapes.
-    if (AnnotationSupportsBorder(type) && type != AnnotationType::Ink && !AnnotationBorderInColorChip(type)) {
-        AnnotEditItem it;
-        it.kind = AnnotEditKind::Border;
-        it.number = BorderWidth(annot);
-        it.tooltip = Tr("Border Width");
-        VecAppend(out, it);
-    }
-    if (isFreeText) {
-        {
-            AnnotEditItem it;
-            it.kind = AnnotEditKind::FontName;
-            it.text = FontFamilyLabel(FreeTextFontFamily(annot));
-            it.tooltip = Tr("Font");
-            VecAppend(out, it);
-        }
-        int style = FreeTextFontStyle(annot);
-        AppendStyleToggle(out, AnnotEditKind::Bold, style, Tr("Bold"));
-        AppendStyleToggle(out, AnnotEditKind::Italic, style, Tr("Italic"));
-        AppendStyleToggle(out, AnnotEditKind::Underline, style, Tr("Underline"));
-        {
-            AnnotEditItem it;
-            it.kind = AnnotEditKind::TextSize;
-            it.number = DefaultAppearanceTextSize(annot);
-            it.tooltip = Tr("Text Size");
-            VecAppend(out, it);
-        }
-        {
-            AnnotEditItem it;
-            it.kind = AnnotEditKind::Alignment;
-            it.number = Quadding(annot);
-            it.tooltip = Tr("Text Alignment");
-            VecAppend(out, it);
-        }
-    }
-    SeqStrings icons = AnnotationIconNames(annot);
-    if (icons) {
-        AnnotEditItem it;
-        it.kind = AnnotEditKind::Icon;
-        it.iconName = ResolvedAnnotIconName(annot);
-        it.mupdfIcon = type != AnnotationType::Stamp;
-        it.tooltip = Tr("Icon");
-        VecAppend(out, it);
-    }
-    if (type == AnnotationType::Line) {
-        int start = 0;
-        int end = 0;
-        GetLineEndingStyles(annot, &start, &end);
-        {
-            AnnotEditItem it;
-            it.kind = AnnotEditKind::LineStart;
-            it.lineEnding = start;
-            it.lineIsStart = true;
-            it.tooltip = Tr("Line Start");
-            VecAppend(out, it);
-        }
-        {
-            AnnotEditItem it;
-            it.kind = AnnotEditKind::LineEnd;
-            it.lineEnding = end;
-            it.lineIsStart = false;
-            it.tooltip = Tr("Line End");
-            VecAppend(out, it);
-        }
-    }
-    if (type != AnnotationType::Widget) {
-        AnnotEditItem it;
-        it.kind = AnnotEditKind::Contents;
-        it.tooltip = isFreeText ? Tr("Edit text") : Tr("Edit Note");
-        VecAppend(out, it);
-    }
-    if (type != AnnotationType::Widget) {
-        // last, so a mis-aimed click lands on a harmless chip, not on delete
-        AnnotEditItem it;
-        it.kind = AnnotEditKind::Delete;
-        it.tooltip = Tr("Delete");
-        VecAppend(out, it);
-    }
-}
 
 // --- the names each list drop-down offers -----------------------------------
 
@@ -2499,7 +2284,7 @@ void DeleteAnnotationAndUpdateUI(WindowTab* tab, Annotation* annot) {
 
 // GoToPage / canvas scroll for the current selection. Posted so holding
 // arrows in the annot list can keep moving the caret (issue #6009).
-static void ShowSelectedAnnotationView(WindowTab* tab) {
+void ShowSelectedAnnotationView(WindowTab* tab) {
     if (!tab) {
         return;
     }
@@ -2533,14 +2318,6 @@ static void ShowSelectedAnnotationView(WindowTab* tab) {
     ToolbarUpdateStateForWindow(win, false);
 }
 
-static void ScheduleShowSelectedAnnotationView(WindowTab* tab) {
-    if (!tab || tab->pendingShowSelectedAnnotation) {
-        return;
-    }
-    tab->pendingShowSelectedAnnotation = true;
-    uitask::Post(MkFunc0(ShowSelectedAnnotationView, tab), "ShowSelectedAnnot");
-}
-
 void SetSelectedAnnotation(WindowTab* tab, Annotation* annot) {
     if (!tab) {
         return;
@@ -2562,45 +2339,6 @@ void SetSelectedAnnotation(WindowTab* tab, Annotation* annot) {
         UpdateAnnotEditToolbar(win);
         UpdateAnnotFilterToolbar(win);
         AppShellInvalidate(win);
-    }
-}
-
-static void AddAnnotPage(Vec<int>& pages, int pageNo, int pageCount) {
-    if (pageNo < 1 || pageNo > pageCount) {
-        return;
-    }
-    if (VecContains(pages, pageNo)) {
-        return;
-    }
-    VecAppend(pages, pageNo);
-}
-
-// Pages the background loader should finish first: current page (toolbar page
-// even when visibleRatio is still 0), every page overlapping the viewport, and
-// a context-menu annotation's page.
-static void CollectPriorityAnnotPages(WindowTab* tab, Annotation* extra, Vec<int>& pages) {
-    VecReset(pages);
-    if (!tab) {
-        return;
-    }
-    DisplayModel* dm = tab->AsFixed();
-    if (!dm) {
-        return;
-    }
-    int n = dm->PageCount();
-    int curr = dm->CurrentPageNo();
-    if (curr < 1 || curr > n) {
-        curr = 1;
-    }
-    AddAnnotPage(pages, curr, n);
-    AddAnnotPage(pages, dm->FirstVisiblePageNo(), n);
-    for (int i = 1; i <= n; i++) {
-        if (dm->PageVisible(i)) {
-            AddAnnotPage(pages, i, n);
-        }
-    }
-    if (extra) {
-        AddAnnotPage(pages, extra->pageNo, n);
     }
 }
 
