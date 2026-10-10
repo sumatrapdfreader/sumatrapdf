@@ -54,12 +54,26 @@ static bool IsArmBuild() {
 }
 #endif
 
-// certificate on www.sumatrapdfreader.org is not supported by win7 and win8.1
-// (doesn't have the ciphers they understand) so we have a backup on backblaze
+// ng: each platform has its own builds and update info, uploaded to
+// software/sumatrapdfng/<platform>/ in R2, and its own update check url on
+// the website, which also counts that platform's checks apart from the rest.
+// Wasm has no builds of its own to offer and still asks orig's urls.
 
 // clang-format off
 // tried in order; later entries are backups if earlier HTTP gets fail
-#if defined(PRE_RELEASE_VER) || defined(DEBUG)
+#if OS_WIN
+static const Str updateInfoURLs[] = {
+    StrL("https://www.sumatrapdfreader.org/update-check-ng-win.txt"),
+};
+#elif OS_DARWIN
+static const Str updateInfoURLs[] = {
+    StrL("https://www.sumatrapdfreader.org/update-check-ng-mac.txt"),
+};
+#elif OS_LINUX
+static const Str updateInfoURLs[] = {
+    StrL("https://www.sumatrapdfreader.org/update-check-ng-linux.txt"),
+};
+#elif defined(PRE_RELEASE_VER) || defined(DEBUG)
 static const Str updateInfoURLs[] = {
     StrL("https://www.sumatrapdfreader.org/updatecheck-pre-release.txt"),
     StrL("https://kjk-files.s3.us-west-001.backblazeb2.com/software/sumatrapdf/sumpdf-prerelease-update.txt"),
@@ -107,6 +121,8 @@ struct UpdateInfo {
     Str dlURL;
     Str installerPath;
     Str builtOn; // optional "yyyy-mm-dd" from the update-check file
+    // ng: optional, where the browser gets this build when we can't install it
+    Str downloadPage;
 
     UpdateInfo() = default;
     ~UpdateInfo() {
@@ -120,6 +136,7 @@ struct UpdateInfo {
         str::Free(dlURL);
         str::Free(installerPath);
         str::Free(builtOn);
+        str::Free(downloadPage);
     }
 };
 
@@ -143,6 +160,11 @@ Latest: 14276
 BuiltOn: 2026-08-21
 Installer64: https://www.sumatrapdfreader.org/dl/prerel/14276/SumatraPDF-prerel-64-install.exe
 ...
+
+ng: macOS and Linux have no installer to run, so their info names what the
+browser should open instead:
+
+DownloadPage: https://www.sumatrapdfreader.org/dlng/mac/14276/SumatraPDF-mac-arm64.zip
 */
 static UpdateInfo* ParseUpdateInfo(Str d) {
     // if a user configures os-wide proxy that is not a regular ie proxy
@@ -188,6 +210,7 @@ static UpdateInfo* ParseUpdateInfo(Str d) {
     res->portable64 = str::Dup(node->GetValue(StrL("PortableExe64")));
     res->portableArm64 = str::Dup(node->GetValue(StrL("PortableExeArm64")));
     res->portable32 = str::Dup(node->GetValue(StrL("PortableExe32")));
+    res->downloadPage = str::Dup(node->GetValue(StrL("DownloadPage")));
 
     // figure out which executable to download
     Str dlURL;
@@ -340,6 +363,21 @@ void UpdateSelfTo(Str, int) {}
 
 #endif
 
+static const Str kExpectedDlHost = StrL("https://www.sumatrapdfreader.org/");
+
+static bool IsTrustedUpdateDlUrl(Str dlURL) {
+    return str::StartsWith(dlURL, kExpectedDlHost);
+}
+
+// The build's own download when the update info names a trusted one.
+static void OpenDownloadPage(UpdateInfo* updateInfo) {
+    Str page = updateInfo->downloadPage;
+    if (len(page) == 0 || !IsTrustedUpdateDlUrl(page)) {
+        page = StrL(kWebisteDownloadPageURL);
+    }
+    OpenWebPage(page);
+}
+
 static void OnInstallAnswer(UpdateInfo* updateInfo, int res) {
     AutoDelete delInfo(updateInfo);
     Str installerPath = updateInfo->installerPath;
@@ -354,7 +392,7 @@ static void OnInstallAnswer(UpdateInfo* updateInfo, int res) {
     }
     // if installer not downloaded tell user to download from website
     if (!didDownloadInstaller) {
-        OpenWebPage(StrL(kWebisteDownloadPageURL));
+        OpenDownloadPage(updateInfo);
         return;
     }
     StartInstallerAutoUpgrade(installerPath);
@@ -376,6 +414,7 @@ static void NotifyUserOfUpdate(UpdateInfo* updateInfo) {
             ExitAfterStartingUpdater();
         } else {
             logf("NotifyUserOfUpdate: auto-install requested but installer not downloaded\n");
+            OpenDownloadPage(updateInfo);
         }
         delete updateInfo;
         return;
@@ -539,12 +578,6 @@ static bool ShouldDownloadUpdate(UpdateInfo* updateInfo) {
         myVer = StrL("50000");
     }
     return CompareProgramVersion(latestVer, myVer) > 0;
-}
-
-static const Str kExpectedDlHost = StrL("https://www.sumatrapdfreader.org/");
-
-static bool IsTrustedUpdateDlUrl(Str dlURL) {
-    return str::StartsWith(dlURL, kExpectedDlHost);
 }
 
 static void OnVisitWebsiteAnswer(int res) {
