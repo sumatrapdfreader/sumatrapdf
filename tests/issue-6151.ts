@@ -3,6 +3,7 @@
 import { mkdirSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 import { ControlCommand, withControlledSumatra } from "./control.ts";
+import { IS_MAC } from "./host.ts";
 import { findCanvas, sendCommandSync, waitForFrame } from "./win-automation.ts";
 import { captureWindowPixels } from "./winapi.ts";
 import { assemblePdf, cmdId, EXE, runStandalone, tmpPath } from "./util.ts";
@@ -62,7 +63,7 @@ async function testZoomSteps(): Promise<void> {
   await withControlledSumatra(
     EXE,
     async (client, proc) => {
-      const frame = await waitForFrame(proc.pid!);
+      const frame = IS_MAC ? 1 : await waitForFrame(proc.pid!);
       if (!frame) {
         throw new Error("issue-6151: no frame");
       }
@@ -90,6 +91,10 @@ async function testZoomSteps(): Promise<void> {
 }
 
 async function testSharpTiles(): Promise<void> {
+  if (IS_MAC) {
+    console.log("SKIP issue-6151 tiles: the sharpness check reads canvas pixels with GetWindowDC");
+    return;
+  }
   const pdf = tmpPath("issue-6151-sharp.pdf");
   const checkerStep = 12;
   const checkerInset = 12.3;
