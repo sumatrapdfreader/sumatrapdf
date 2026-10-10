@@ -16,6 +16,7 @@
 
 import { join } from "node:path";
 import { ControlClient, ControlCommand, withControlledSumatra } from "./control.ts";
+import { IS_MAC } from "./host.ts";
 import { EXE, ROOT, runStandalone, writeAppdata } from "./util.ts";
 import { captureWindowPixels } from "./winapi.ts";
 import { findCanvas, waitForFrame } from "./win-automation.ts";
@@ -54,6 +55,11 @@ async function followToc(client: ControlClient, destNo: number): Promise<void> {
 }
 
 export async function testit(): Promise<void> {
+  // The clip is ink in the first rows of the painted view, at a fixed window size.
+  if (IS_MAC) {
+    console.log("SKIP issue-6095: the check reads canvas pixels with GetWindowDC");
+    return;
+  }
   const appdata = writeAppdata(
     "issue-6095",
     ["UiLanguage = en", "RestoreSession = false", "ShowStartPage = false", "CheckForUpdates = false"].join("\n"),
