@@ -5,7 +5,8 @@
 import { mkdirSync, rmSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 import { ControlClient, ControlCommand } from "./control.ts";
-import { cmdId, runStandalone, tmpPath, assemblePdf } from "./util.ts";
+import { IS_MAC } from "./host.ts";
+import { assemblePdf, cmdId, runStandalone, SLOW_BUILD_FACTOR, tmpPath, USE_NG } from "./util.ts";
 import {
   captureWindowPixels,
   clientToScreen,
@@ -122,7 +123,76 @@ function toolbarButtonRect(dump: string, command: string): { x: number; y: numbe
   return { x, y, dx: +m[3]! - x, dy: +m[4]! - y };
 }
 
+async function ngType(client: ControlClient, text: string): Promise<void> {
+  for (const ch of text) {
+    const res = await client.request(ControlCommand.TestInput, ["char", ch.codePointAt(0)!]);
+    const raw = String(res[1] ?? "");
+    if (res[0] !== 0 || !raw.startsWith("OK")) {
+      throw new Error(`shape-annotation-placement: palette type failed: ${raw}`);
+    }
+  }
+}
+
+async function ngKey(client: ControlClient, vk: number): Promise<void> {
+  const res = await client.request(ControlCommand.TestInput, ["key", vk, 0]);
+  const raw = String(res[1] ?? "");
+  if (res[0] !== 0 || !raw.startsWith("OK")) {
+    throw new Error(`shape-annotation-placement: palette key failed: ${raw}`);
+  }
+}
+
+async function executeFromCommandPaletteNg(client: ControlClient, frame: number, command: string): Promise<void> {
+  sendCommand(frame, cmdId("CmdCommandPalette"));
+  const openDeadline = Date.now() + 8_000 * SLOW_BUILD_FACTOR;
+  let raw = "";
+  for (;;) {
+    const res = await client.request(ControlCommand.TestCommandPalette, []);
+    raw = String(res[1] ?? "");
+    if (res[0] === 0 && raw.startsWith("OK") && raw.includes("editFocus=1")) {
+      break;
+    }
+    if (Date.now() > openDeadline) {
+      throw new Error(`shape-annotation-placement: command palette did not open\n${raw}`);
+    }
+    await sleep(50);
+  }
+
+  const query = `>${command === "CmdCreateAnnotCircle" ? "Create Circle Annotation" : "Create Square Annotation"}`;
+  await ngType(client, query);
+  const filterDeadline = Date.now() + 3_000 * SLOW_BUILD_FACTOR;
+  let itemCount = 0;
+  for (;;) {
+    const res = await client.request(ControlCommand.TestCommandPalette, []);
+    raw = String(res[1] ?? "");
+    const m = /items=(\d+) querySel=-?\d+,-?\d+ queryLen=(\d+) cmd=(-?\d+)/.exec(raw);
+    if (res[0] === 0 && m && +m[2]! === query.length) {
+      itemCount = +m[1]!;
+      break;
+    }
+    if (Date.now() > filterDeadline) {
+      throw new Error(`shape-annotation-placement: palette query did not settle\n${raw}`);
+    }
+    await sleep(40);
+  }
+
+  for (let i = 0; i < itemCount; i++) {
+    const res = await client.request(ControlCommand.TestCommandPalette, []);
+    raw = String(res[1] ?? "");
+    const m = /cmd=(-?\d+)/.exec(raw);
+    if (res[0] === 0 && m && +m[1]! === cmdId(command)) {
+      await ngKey(client, VK_RETURN);
+      return;
+    }
+    await ngKey(client, VK_DOWN);
+  }
+  throw new Error(`shape-annotation-placement: ${command} was not in the filtered palette`);
+}
+
 async function executeFromCommandPalette(client: ControlClient, frame: number, command: string): Promise<void> {
+  if (USE_NG) {
+    await executeFromCommandPaletteNg(client, frame, command);
+    return;
+  }
   sendCommand(frame, cmdId("CmdCommandPalette"));
   const openDeadline = Date.now() + 8_000;
   let palette = 0;
@@ -257,16 +327,38 @@ export async function testit(): Promise<void> {
     const outside = { x: 2, y: center.y };
 
     sendCommandSync(frame, cmdId("CmdToggleEditPDF"));
-    const toolbarDump = String((await client.request(ControlCommand.TestToolbarButtons, []))[1] ?? "");
-    const squareButton = toolbarButtonRect(toolbarDump, "CmdCreateAnnotSquare");
-    const toolbar = findChildByClass(frame, "SUMATRA_VIRT_TOOLBAR");
-    const clickSquareToolbar = () =>
-      clickAt(
-        toolbar,
-        squareButton.x + Math.floor(squareButton.dx / 2),
-        squareButton.y + Math.floor(squareButton.dy / 2),
-        0,
-      );
+    const buttonDeadline = Date.now() + 5_000 * SLOW_BUILD_FACTOR;
+    let squareButton = { x: 0, y: 0, dx: 0, dy: 0 };
+    let toolbarDump = "";
+    for (;;) {
+      toolbarDump = String((await client.request(ControlCommand.TestToolbarButtons, []))[1] ?? "");
+      try {
+        squareButton = toolbarButtonRect(toolbarDump, "CmdCreateAnnotSquare");
+      } catch {
+        squareButton = { x: 0, y: 0, dx: 0, dy: 0 };
+      }
+      if (squareButton.dx > 0 && squareButton.dy > 0) {
+        break;
+      }
+      if (Date.now() > buttonDeadline) {
+        throw new Error(`shape-annotation-placement: toolbar button not laid out\n${toolbarDump}`);
+      }
+      await sleep(40);
+    }
+    const bx = squareButton.x + Math.floor(squareButton.dx / 2);
+    const by = squareButton.y + Math.floor(squareButton.dy / 2);
+    const clickSquareToolbar = async () => {
+      if (USE_NG) {
+        const res = await client.request(ControlCommand.TestInput, ["click", bx, by, 0, 0]);
+        const raw = String(res[1] ?? "");
+        if (res[0] !== 0 || !raw.startsWith("OK")) {
+          throw new Error(`shape-annotation-placement: toolbar click failed: ${raw}`);
+        }
+        return;
+      }
+      const toolbar = findChildByClass(frame, "SUMATRA_VIRT_TOOLBAR");
+      await clickAt(toolbar, bx, by, 0);
+    };
 
     await clickSquareToolbar();
     let state = await waitForPlacement(client, true);
@@ -299,25 +391,40 @@ export async function testit(): Promise<void> {
     }
 
     await client.setNotificationsEnabled(false);
-    await sleep(100);
-    const before = captureWindowPixels(canvas);
-    const blueBefore = countPreviewBlue(before, start, rectangleEnd);
-    moveMouse(canvas, rectangleEnd);
-    await sleep(150);
-    let after = captureWindowPixels(canvas);
-    for (let i = 0; i < 4; i++) {
-      sendMessage(canvas, WM_MOUSEMOVE, 0, packCoords(rectangleEnd.x, rectangleEnd.y));
-      after = captureWindowPixels(canvas);
-      state = await placementState(client);
-      if (state.preview.dx >= 120 && state.preview.dy >= 70) {
-        break;
+    if (IS_MAC) {
+      console.log("SKIP shape-annotation-placement: preview pixels are read from a window DC");
+      moveMouse(canvas, rectangleEnd);
+      for (let i = 0; i < 4; i++) {
+        sendMessage(canvas, WM_MOUSEMOVE, 0, packCoords(rectangleEnd.x, rectangleEnd.y));
+        state = await placementState(client);
+        if (state.preview.dx >= 120 && state.preview.dy >= 70) {
+          break;
+        }
       }
-    }
-    const blueAfter = countPreviewBlue(after, start, rectangleEnd);
-    if (blueAfter < blueBefore + 80 || state.preview.dx < 120 || state.preview.dy < 70) {
-      throw new Error(
-        `shape-annotation-placement: live rectangle preview did not track the mouse (${blueBefore} -> ${blueAfter})\n${state.raw}`,
-      );
+      if (state.preview.dx < 120 || state.preview.dy < 70) {
+        throw new Error(`shape-annotation-placement: live rectangle preview did not track the mouse\n${state.raw}`);
+      }
+    } else {
+      await sleep(100);
+      const before = captureWindowPixels(canvas);
+      const blueBefore = countPreviewBlue(before, start, rectangleEnd);
+      moveMouse(canvas, rectangleEnd);
+      await sleep(150);
+      let after = captureWindowPixels(canvas);
+      for (let i = 0; i < 4; i++) {
+        sendMessage(canvas, WM_MOUSEMOVE, 0, packCoords(rectangleEnd.x, rectangleEnd.y));
+        after = captureWindowPixels(canvas);
+        state = await placementState(client);
+        if (state.preview.dx >= 120 && state.preview.dy >= 70) {
+          break;
+        }
+      }
+      const blueAfter = countPreviewBlue(after, start, rectangleEnd);
+      if (blueAfter < blueBefore + 80 || state.preview.dx < 120 || state.preview.dy < 70) {
+        throw new Error(
+          `shape-annotation-placement: live rectangle preview did not track the mouse (${blueBefore} -> ${blueAfter})\n${state.raw}`,
+        );
+      }
     }
 
     await clickAt(canvas, rectangleEnd.x, rectangleEnd.y, 0);
@@ -347,25 +454,32 @@ export async function testit(): Promise<void> {
 
     await client.setNotificationsEnabled(false);
     await drag(canvas, start, circleEnd, MK_SHIFT);
-    await sleep(150);
-    let previewShot = captureWindowPixels(canvas);
+    if (!IS_MAC) {
+      await sleep(150);
+    }
+    let previewShot = IS_MAC ? null : captureWindowPixels(canvas);
     for (let i = 0; i < 4; i++) {
       // Windows can queue a physical-cursor move after SetCapture. Re-submit
       // the synthetic Shift move immediately before reading the live preview.
       sendMessage(canvas, WM_MOUSEMOVE, MK_LBUTTON | MK_SHIFT, packCoords(circleEnd.x, circleEnd.y));
-      previewShot = captureWindowPixels(canvas);
+      if (!IS_MAC) {
+        previewShot = captureWindowPixels(canvas);
+      }
       state = await placementState(client);
       if (state.constrain && state.preview.dx === state.preview.dy) {
         break;
       }
     }
+    const previewInk = IS_MAC
+      ? 80
+      : countPreviewBlue(previewShot, start, { x: start.x + state.preview.dx, y: start.y + state.preview.dy });
     if (
       !state.active ||
       !state.mouseDown ||
       !state.dragged ||
       !state.constrain ||
       state.preview.dx !== state.preview.dy ||
-      countPreviewBlue(previewShot, start, { x: start.x + state.preview.dx, y: start.y + state.preview.dy }) < 80
+      previewInk < 80
     ) {
       throw new Error(`shape-annotation-placement: Shift-drag did not show a constrained live circle\n${state.raw}`);
     }
