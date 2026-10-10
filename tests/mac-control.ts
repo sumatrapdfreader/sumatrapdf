@@ -28,6 +28,8 @@ const WM_RBUTTONDBLCLK = 0x0206;
 const WM_MBUTTONDOWN = 0x0207;
 const WM_MBUTTONUP = 0x0208;
 const WM_MBUTTONDBLCLK = 0x0209;
+const WM_HSCROLL = 0x0114;
+const WM_VSCROLL = 0x0115;
 const WM_MOUSEWHEEL = 0x020a;
 const WM_MOUSEHWHEEL = 0x020e;
 
@@ -498,6 +500,10 @@ export function macSendMessage(msg: number, wParam: number | bigint, lParam: num
   }
   if (msg === WM_CHAR) {
     input("char", Number(wp & 0xffffn), 0, 0, 0);
+    return 0n;
+  }
+  if (msg === WM_HSCROLL || msg === WM_VSCROLL) {
+    invoke(msg === WM_VSCROLL ? "WM_VSCROLL" : "WM_HSCROLL", Number(wp & 0xffffn), Number((wp >> 16n) & 0xffffn));
     return 0n;
   }
   if (msg === WM_MOUSEWHEEL || msg === WM_MOUSEHWHEEL) {

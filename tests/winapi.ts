@@ -822,6 +822,10 @@ export function repaintWindow(hwnd: number): void {
 }
 
 export function moveWindow(hwnd: number, x: number, y: number, w: number, h: number, repaint = true): boolean {
+  if (IS_MAC) {
+    const res = macControlRequest(122, ["place", x, y, w, h, 0]);
+    return res[0] === 0;
+  }
   return user32.symbols.MoveWindow(hwnd, x, y, w, h, repaint);
 }
 
@@ -867,10 +871,20 @@ export function setWindowPos(
 }
 
 export function showWindow(hwnd: number, cmd: number): boolean {
+  if (IS_MAC) {
+    if (cmd === SW_RESTORE && isZoomed(hwnd)) {
+      return moveWindow(hwnd, 80, 80, 1200, 900);
+    }
+    return true;
+  }
   return user32.symbols.ShowWindow(hwnd, cmd);
 }
 
 export function isZoomed(hwnd: number): boolean {
+  if (IS_MAC) {
+    const text = String(macControlRequest(TestLayout, [])[1] ?? "");
+    return /maximized=1/.test(text);
+  }
   return user32.symbols.IsZoomed(hwnd);
 }
 
@@ -1146,6 +1160,16 @@ export function getWindowTextFull(hwnd: number, maxChars = 16384): string {
 
 // window rectangle in screen coordinates (vs getClientRect's client-relative one)
 export function getWindowRect(hwnd: number): Rect {
+  if (IS_MAC) {
+    const text = String(macControlRequest(TestLayout, [])[1] ?? "");
+    const m = /window rect=(-?\d+),(-?\d+),(-?\d+),(-?\d+)/.exec(text);
+    if (!m) {
+      return { left: 0, top: 0, right: 0, bottom: 0 };
+    }
+    const x = Number(m[1]);
+    const y = Number(m[2]);
+    return { left: x, top: y, right: x + Number(m[3]), bottom: y + Number(m[4]) };
+  }
   const buf = new Int32Array(4);
   user32.symbols.GetWindowRect(hwnd, ptr(buf));
   return { left: buf[0], top: buf[1], right: buf[2], bottom: buf[3] };

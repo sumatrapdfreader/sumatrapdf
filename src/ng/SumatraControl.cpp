@@ -4201,6 +4201,71 @@ static void ExecuteControlRequest(ControlRequest* req) {
                 AppendTestResult(req, 0, StrL("OK"));
                 break;
             }
+            // SB_* codes, same as the canvas wndproc. There is no scrollbar HWND.
+            if (str::EqI(name, StrL("WM_HSCROLL")) || str::EqI(name, StrL("WM_VSCROLL"))) {
+                bool vert = str::EqI(name, StrL("WM_VSCROLL"));
+                i32 code = 0;
+                i32 thumb = 0;
+                IntArg(req, 1, code);
+                IntArg(req, 2, thumb);
+                ScrollMsg sm = ScrollMsg::None;
+                if (code == 4 || code == 5) {
+                    sm = ScrollMsg::ThumbTrack;
+                } else if (vert) {
+                    switch (code) {
+                        case 0:
+                            sm = ScrollMsg::LineUp;
+                            break;
+                        case 1:
+                            sm = ScrollMsg::LineDown;
+                            break;
+                        case 2:
+                            sm = ScrollMsg::PageUp;
+                            break;
+                        case 3:
+                            sm = ScrollMsg::PageDown;
+                            break;
+                        case 6:
+                            sm = ScrollMsg::Top;
+                            break;
+                        case 7:
+                            sm = ScrollMsg::Bottom;
+                            break;
+                    }
+                } else {
+                    switch (code) {
+                        case 0:
+                            sm = ScrollMsg::LineLeft;
+                            break;
+                        case 1:
+                            sm = ScrollMsg::LineRight;
+                            break;
+                        case 2:
+                            sm = ScrollMsg::PageLeft;
+                            break;
+                        case 3:
+                            sm = ScrollMsg::PageRight;
+                            break;
+                        case 6:
+                            sm = ScrollMsg::Left;
+                            break;
+                        case 7:
+                            sm = ScrollMsg::Right;
+                            break;
+                    }
+                }
+                if (sm != ScrollMsg::None) {
+                    if (vert && win->IsCurrentTabAbout()) {
+                        HomePageOnVScroll(win, sm, thumb);
+                    } else if (vert) {
+                        CanvasOnVScroll(win, sm, thumb);
+                    } else {
+                        CanvasOnHScroll(win, sm, thumb);
+                    }
+                }
+                AppendTestResult(req, 0, StrL("OK"));
+                break;
+            }
             // No new focus: the on-screen keyboard. Keep the contents editor.
             if (str::EqI(name, StrL("WM_KILLFOCUS"))) {
                 if (IsEditingAnnotContents(win)) {
