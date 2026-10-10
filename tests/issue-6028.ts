@@ -11,6 +11,7 @@
 import { copyFileSync, mkdirSync, rmSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 import { ControlCommand } from "./control.ts";
+import { IS_MAC } from "./host.ts";
 import { ROOT, cmdId, runStandalone, tmpPath, USE_NG } from "./util.ts";
 import {
   findCanvas,
@@ -110,6 +111,11 @@ function assertVScroll(canvas: number, label: string): void {
 }
 
 export async function testit(): Promise<void> {
+  // A missing bar still has a scroll range. The check counts colors in the painted strip.
+  if (IS_MAC) {
+    console.log("SKIP issue-6028: the check reads scrollbar pixels with GetWindowDC");
+    return;
+  }
   setProcessDpiAware();
   const appData = tmpPath("issue-6028-appdata");
   rmSync(appData, { recursive: true, force: true });
