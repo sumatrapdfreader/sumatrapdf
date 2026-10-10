@@ -148,6 +148,14 @@ build under a debugger (cdb or WinDbg on Windows, lldb or gdb on macOS
 and Linux). Format ng C/C++ with `bun cmd/ng-format.ts`; format TypeScript
 with `bun cmd/format.ts -ts`.
 
+Ng on macOS has no minidumps. A crash writes a text report (every thread's
+stack as module + offset, Mach-O UUIDs, log, settings) to
+`crashinfo/sumatrapdfcrash.txt` in the app data dir and uploads it on the
+next start (`src/base/CrashHandler_posix.cpp`, `CrashHandler_mac.cpp`).
+`bun cmd/ng-crashes.ts` lists, downloads and symbolicates them with `atos`
+and the build's `.dSYM`; `-file <path>` symbolicates a local report. ASan
+builds and `-for-testing` runs don't upload.
+
 Use `cmd/ng-gen-commands.ts` and `cmd/ng-gen-settings.ts` for ng generated
 files. `ng-gen-embedded.ts` generates ignored `src/ng/EmbeddedData*.cpp`;
 `ng-gen-translations.ts` completes the checked-in translation snapshot into

@@ -1127,6 +1127,7 @@ export const targets: Target[] = [
       // not in orig's base project: the app links one of CrashHandler.cpp /
       // CrashHandlerNoOp.cpp and one of SumatraLog.cpp / LogNoOp.cpp
       "src/ng/base/CrashHandler.cpp",
+      "src/ng/base/CrashHandler_mac.cpp",
       "src/ng/base/CrashHandler_posix.cpp",
       "src/base/LogNoOp.cpp",
     ],
@@ -1455,6 +1456,7 @@ export const targets: Target[] = [
       // the app links the real crash handler; the console tools link
       // src/CrashHandlerNoOp.cpp instead, as orig does
       "src/ng/base/CrashHandler.cpp",
+      "src/ng/base/CrashHandler_mac.cpp",
       "src/ng/base/CrashHandler_posix.cpp",
     ],
     includes: ["src/ng", "ext/gpui", "ext/mupdf/include", "src"],

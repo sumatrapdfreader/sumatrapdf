@@ -32,9 +32,19 @@
 #include "SumatraLog.h"
 
 #if IS_DEBUG
-#define kMinidumpSubmitUrl "http://127.0.0.1:9321/app/sumatrapdf/uploadminidump"
+#define kCrashServer "http://127.0.0.1:9321"
 #else
-#define kMinidumpSubmitUrl "https://www.sumatrapdfreader.org/app/sumatrapdf/uploadminidump"
+#define kCrashServer "https://www.sumatrapdfreader.org"
+#endif
+
+// Windows POSTs a minidump, macOS a text report; each has its own store on
+// the server. Empty: nothing to upload to.
+#if OS_WIN
+#define kCrashSubmitUrl kCrashServer "/app/sumatrapdfng-win/uploadminidump"
+#elif OS_DARWIN
+#define kCrashSubmitUrl kCrashServer "/app/sumatrapdfng-mac/uploadcrash"
+#else
+#define kCrashSubmitUrl ""
 #endif
 
 // where InstallCrashHandler() writes the .dmp, in the crash arena
@@ -183,12 +193,16 @@ static void ShowCrashHandlerMessage() {
 static Str GetCrashComment(Arena* a, Str condStr, Str fileLine, bool isCrash) {
     str::Builder b(a);
     b.Reserve(16 * 1024);
+#if OS_WIN
     if (isCrash) {
         b.Append(StrL("Type: crash (minidump)\n"));
     } else {
         b.Append(StrL("Type: debug report (not crash)\n"));
     }
     b.Append(str::Format(a, "Minidump: %s\n", gCrashDumpPath));
+#else
+    b.Append(isCrash ? StrL("Type: crash\n") : StrL("Type: debug report (not crash)\n"));
+#endif
     if (condStr) {
         b.Append(str::Format(a, "Cond: %s @ %s\n", condStr, fileLine));
     }
@@ -239,8 +253,11 @@ static void CaptureSettings() {
 // the client info is the same as for the update check and doesn't change while
 // we run, so build the url now rather than at crash time
 static TempStr BuildSubmitUrlTemp() {
+    if (sizeof(kCrashSubmitUrl) == 1) {
+        return {};
+    }
     str::Builder url(GetTempArena());
-    url.Append(StrL(kMinidumpSubmitUrl));
+    url.Append(StrL(kCrashSubmitUrl));
     AppendClientInfoQuery(url);
     return ToStr(url);
 }
@@ -249,8 +266,13 @@ static TempStr BuildSubmitUrlTemp() {
 
 // crashes from third-party builds (forks, distro rebuilds) aren't ours to fix
 static bool IsOfficialBuild() {
+#if OS_DARWIN
+    // the mac build is ad-hoc signed, so there is no signer to tell builds apart
+    return true;
+#else
     TempStr signer = GetExecutableSignerTemp(GetSelfExePathTemp());
     return str::Eq(signer, StrL(kOfficialSigner));
+#endif
 }
 
 void InstallSumatraCrashHandler(bool localOnly) {

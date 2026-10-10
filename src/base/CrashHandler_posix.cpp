@@ -3,13 +3,15 @@
 
 // ng: base/CrashHandler.cpp is win32 minidumps + dbghelp. POSIX has no
 // equivalent, so this is the same API backed by a signal handler that writes
-// the crash report (the app's getCrashComment plus a backtrace) next to where
-// the .dmp would have gone, and logs it. No upload: the minidump service only
-// takes Windows dumps.
+// a text crash report (the app's getCrashComment plus the stacks) next to
+// where the .dmp would have gone, and logs it. A report meant for the server
+// is also left as a pending file and POSTed to submitUrl on the next start:
+// a crashed process is in no state to talk to the network.
 
 #include "base/Base.h"
 
 #include "base/File.h"
+#include "base/Http.h"
 #include "base/CrashHandler.h"
 
 #include <csignal>
@@ -39,6 +41,23 @@ Str CrashHandlerSystemInfo() {
 }
 
 constexpr int kMaxFrames = 64;
+
+// first line of every report; the crash server rejects a body without it
+#define kCrashReportMagic "Crash report v1\n"
+
+constexpr int kAltStackSize = 128 * 1024;
+// a handler stuck on a lock the faulting code held must still end the process
+constexpr int kHandlerTimeoutSecs = 20;
+#define kPendingSuffix "-pending.txt"
+constexpr int kPendingMaxAgeSecs = 7 * 24 * 60 * 60;
+constexpr int kHttpClientErrorMin = 400;
+constexpr int kHttpClientErrorMax = 499;
+
+#if OS_DARWIN
+void MacAppendSignalInfo(str::Builder& b, int sig, void* sigInfo);
+void MacAppendStacks(str::Builder& b, void* uctx);
+TempStr MacSysInfoTemp();
+#endif
 
 #if OS_WASM
 
@@ -75,7 +94,7 @@ static void AppendBacktrace(str::Builder& b) {
 
 // the report path is the .dmp path with the extension swapped: a POSIX crash
 // has no minidump, only text
-static TempStr ReportPathTemp() {
+static TempStr ReportPathTemp(Str suffix) {
     if (len(gCfg.crashDumpPath) == 0) {
         return {};
     }
@@ -85,33 +104,59 @@ static TempStr ReportPathTemp() {
         path.len -= ext.len;
         path.s[path.len] = 0;
     }
-    return str::JoinTemp(path, StrL(".txt"));
+    return str::JoinTemp(path, suffix);
 }
 
-static void WriteCrashReport(Str condStr, Str fileLine, bool isCrash) {
+static bool ShouldUpload(bool isCrash) {
+    if (gCfg.localOnly || len(gCfg.submitUrl) == 0) {
+        return false;
+    }
+    return isCrash ? gCfg.uploadCrashes : gCfg.uploadDebugReports;
+}
+
+// sig, sigInfo and uctx are the signal handler's arguments; 0 / null for a debug report
+static void WriteCrashReport(Str condStr, Str fileLine, bool isCrash, int sig, void* sigInfo, void* uctx) {
     str::Builder b(gCrashHandlerArena);
     b.Reserve(16 * 1024);
+    b.Append(StrL(kCrashReportMagic));
+#if OS_DARWIN
+    if (sig != 0) {
+        MacAppendSignalInfo(b, sig, sigInfo);
+    }
+#else
+    (void)sig;
+    (void)sigInfo;
+    (void)uctx;
+#endif
     if (gCfg.getCrashComment) {
         b.Append(gCfg.getCrashComment(gCrashHandlerArena, condStr, fileLine, isCrash));
     }
+#if OS_DARWIN
+    MacAppendStacks(b, uctx);
+#else
     b.Append(StrL("\n--- backtrace ---\n"));
     AppendBacktrace(b);
+#endif
     Str report = ToStr(b);
-    TempStr path = ReportPathTemp();
+    TempStr path = ReportPathTemp(StrL(".txt"));
     if (len(path) > 0) {
         dir::CreateForFile(path);
         file::WriteFile(path, report);
+        if (ShouldUpload(isCrash)) {
+            file::WriteFile(ReportPathTemp(StrL(kPendingSuffix)), report);
+        }
     }
     logf("crash report written to '%s'\n%s\n", path, report);
 }
 
-static void SignalHandler(int sig) {
+static void SignalHandler(int sig, siginfo_t* info, void* uctx) {
     // restore the default so a fault while reporting terminates us
     signal(sig, SIG_DFL);
+    alarm(kHandlerTimeoutSecs);
     if (gCfg.onCrashBegin) {
         gCfg.onCrashBegin();
     }
-    WriteCrashReport(fmt("signal %d", sig), {}, true);
+    WriteCrashReport(fmt("signal %d", sig), {}, true, sig, info, uctx);
     if (gCfg.showCrashMessage && !gCfg.localOnly) {
         gCfg.showCrashMessage();
     }
@@ -122,7 +167,7 @@ NO_INLINE void _uploadDebugReport(Str condStr, Str fileLine, bool isCrash) {
     if (!gCrashHandlerArena) {
         return;
     }
-    WriteCrashReport(condStr, fileLine, isCrash);
+    WriteCrashReport(condStr, fileLine, isCrash, 0, nullptr, nullptr);
     if (gCfg.forTesting && !isCrash) {
         // a ReportIf() under -for-testing must fail the test run
         _exit(105);
@@ -166,6 +211,73 @@ static bool DebuggerAttached() {
 #endif
 }
 
+static const int kSignals[] = {SIGSEGV, SIGBUS, SIGILL, SIGFPE, SIGABRT, SIGTRAP};
+
+static void SetSignalHandlers() {
+    struct sigaction sa{};
+    sa.sa_sigaction = SignalHandler;
+    sa.sa_flags = SA_SIGINFO;
+    sigemptyset(&sa.sa_mask);
+#if !OS_WASM
+    // a stack overflow leaves no room on the thread's own stack
+    static char altStack[kAltStackSize];
+    stack_t ss{};
+    ss.ss_sp = altStack;
+    ss.ss_size = kAltStackSize;
+    if (sigaltstack(&ss, nullptr) == 0) {
+        sa.sa_flags |= SA_ONSTACK;
+    }
+#endif
+    for (int sig : kSignals) {
+        sigaction(sig, &sa, nullptr);
+    }
+}
+
+#if !OS_WASM
+struct PendingUpload {
+    Str path;
+    Str url;
+};
+
+static bool IsHttpClientError(int status) {
+    return status >= kHttpClientErrorMin && status <= kHttpClientErrorMax;
+}
+
+static void UploadPendingThread(PendingUpload* d) {
+    Str report = file::ReadFile(d->path);
+    HttpRsp rsp;
+    bool ok = len(report) > 0 && HttpPostUrl(d->url, StrL("text/plain"), {}, report, &rsp);
+    int status = (int)rsp.httpStatusCode;
+    logf("UploadPendingThread: ok=%d status=%d bytes=%d url=%s\n", (int)ok, status, len(report), d->url);
+    // a report the server refused stays refused; an unreachable server gets another try
+    FILETIME now;
+    GetSystemTimeAsFileTime(&now);
+    bool isOld = FileTimeDiffInSecs(now, file::GetModificationTime(d->path)) > kPendingMaxAgeSecs;
+    if (ok || IsHttpClientError(status) || isOld || len(report) == 0) {
+        file::Delete(d->path);
+    }
+    str::Free(report);
+    str::Free(d->path);
+    str::Free(d->url);
+    delete d;
+}
+
+// sends the report the previous run left behind
+static void UploadPendingReport() {
+    if (gCfg.localOnly || len(gCfg.submitUrl) == 0) {
+        return;
+    }
+    TempStr path = ReportPathTemp(StrL(kPendingSuffix));
+    if (!file::Exists(path)) {
+        return;
+    }
+    auto d = new PendingUpload();
+    d->path = str::Dup(path);
+    d->url = str::Dup(gCfg.submitUrl);
+    RunAsync(MkFunc0<PendingUpload>(UploadPendingThread, d), StrL("UploadCrashReport"));
+}
+#endif
+
 void InstallCrashHandler(const CrashHandlerConfig& cfg) {
     if (gCrashHandlerArena || DebuggerAttached()) {
         return;
@@ -175,19 +287,22 @@ void InstallCrashHandler(const CrashHandlerConfig& cfg) {
     gCfg.crashDumpPath = str::Dup(gCrashHandlerArena, cfg.crashDumpPath);
     gCfg.submitUrl = str::Dup(gCrashHandlerArena, cfg.submitUrl);
     gCfg.fullDumpEnvVar = str::Dup(gCrashHandlerArena, cfg.fullDumpEnvVar);
+#if OS_DARWIN
+    gSysInfo = str::Dup(gCrashHandlerArena, MacSysInfoTemp());
+#else
     gSysInfo = str::Dup(gCrashHandlerArena, StrL("Os: posix\n"));
+#endif
 
-    static const int kSignals[] = {SIGSEGV, SIGBUS, SIGILL, SIGFPE, SIGABRT};
-    for (int sig : kSignals) {
-        signal(sig, SignalHandler);
-    }
+    SetSignalHandlers();
+#if !OS_WASM
+    UploadPendingReport();
+#endif
 }
 
 void UninstallCrashHandler() {
     if (!gCrashHandlerArena) {
         return;
     }
-    static const int kSignals[] = {SIGSEGV, SIGBUS, SIGILL, SIGFPE, SIGABRT};
     for (int sig : kSignals) {
         signal(sig, SIG_DFL);
     }

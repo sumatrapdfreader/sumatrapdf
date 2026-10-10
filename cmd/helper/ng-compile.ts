@@ -791,7 +791,7 @@ async function link(
   const cmdChanged = !existsSync(cmdStamp) || readFileSync(cmdStamp, "utf8") !== key;
   const needLink = cmdChanged || !existsSync(out) || inputs.some((o) => mtime(o) > mtime(out));
   const dsym = `${out}.dSYM`;
-  const needDsym = tc.plat === "mac" && f.debug && (needLink || !existsSync(dsym) || mtime(dsym) < mtime(out));
+  const needDsym = tc.plat === "mac" && (needLink || !existsSync(dsym) || mtime(dsym) < mtime(out));
   if (!needLink && !needDsym) {
     console.log(`  ${t.name}: link up to date`);
     return out;
@@ -808,7 +808,7 @@ async function link(
     if (text) console.log(text);
     writeFileSync(cmdStamp, key);
   }
-  if (tc.plat === "mac" && f.debug) await writeMacDsym(tc, out, fail);
+  if (tc.plat === "mac") await writeMacDsym(tc, out, fail);
   return out;
 }
 
