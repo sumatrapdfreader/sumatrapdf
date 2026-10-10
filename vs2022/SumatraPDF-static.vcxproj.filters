@@ -1088,6 +1088,9 @@
     <ClCompile Include="..\src\shared\ExternalViewers.cpp">
       <Filter>src\shared</Filter>
     </ClCompile>
+    <ClCompile Include="..\src\shared\FavoritesCommon.cpp">
+      <Filter>src\shared</Filter>
+    </ClCompile>
     <ClCompile Include="..\src\shared\FileHistory.cpp">
       <Filter>src\shared</Filter>
     </ClCompile>

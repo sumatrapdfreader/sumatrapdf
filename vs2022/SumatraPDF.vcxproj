@@ -2124,6 +2124,7 @@
     <ClCompile Include="..\src\shared\ExifDump.cpp" />
     <ClCompile Include="..\src\shared\ExplorerQuickLook.cpp" />
     <ClCompile Include="..\src\shared\ExternalViewers.cpp" />
+    <ClCompile Include="..\src\shared\FavoritesCommon.cpp" />
     <ClCompile Include="..\src\shared\FileHistory.cpp" />
     <ClCompile Include="..\src\shared\FilterUtil.cpp" />
     <ClCompile Include="..\src\shared\Flags.cpp" />

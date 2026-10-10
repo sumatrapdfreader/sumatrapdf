@@ -1427,6 +1427,7 @@ export const targets: Target[] = [
       "src/ng/HomePage.cpp",
       "src/ng/AddFavoriteDialog.cpp",
       "src/ng/Favorites.cpp",
+      "src/ng/FavoritesCommon.cpp",
       "src/ng/TableOfContents.cpp",
       "src/ng/gui/AppShell.cpp",
       "src/ng/gui/GpuiTheme.cpp",

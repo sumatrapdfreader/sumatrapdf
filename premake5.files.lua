@@ -327,6 +327,7 @@ function sumatrapdf_files()
     "ExifDump.*",
     "ExternalViewers.*",
     "Favorites.*",
+    "FavoritesCommon.*",
     "FileHistory.*",
     "FileThumbnails.*",
     "Flags.*",

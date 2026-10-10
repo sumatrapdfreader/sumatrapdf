@@ -23,6 +23,7 @@ struct DocController;
 struct MainWindow;
 struct MenuModel;
 struct CustomCommand;
+struct Location;
 
 // one row of the favorites tree: a file node with its favorites under it, or a
 // single favorite when the file has only one
@@ -98,3 +99,33 @@ void JumpToFavorite(MainWindow* win, Favorite* fav);
 void SetSearchStartFavorite(MainWindow* win);
 
 void ToggleSortFavoritesByName();
+
+// --- shared by FavoritesCommon.cpp and each app's Favorites.cpp ---
+
+struct FavMenuEntry {
+    Str filePath;
+    Str pageNo;
+    int cmdId;
+};
+
+struct GoToFavoritePageData {
+    MainWindow* win;
+    Str pageNo; // owned
+    PointF scrollPos;
+};
+
+FileState* GetByFavorite(Favorite* fn);
+FileState* GetFavByFilePath(Str filePath);
+PointF CurrentFavoriteScrollPos(MainWindow* win, int pageNo);
+void ApplyFavoriteView(MainWindow* win, Str pageNoStr, PointF scrollPos, bool addNavPt);
+void AddOrReplaceFav(Str filePath, Str storedPagePos, Str name, Str pageLabel, PointF scrollPos, Location loc);
+void RemoveAllFavForFile(Str filePath);
+TempStr FavCompactReadableNameTemp(FileState* fav, Favorite* fn, bool isCurrent = false);
+void SetFavCmdIds(Vec<FavMenuEntry>& favs);
+void GetSortedFilePaths(StrVec& filePathsSortedOut, FileState* toIgnore = nullptr);
+void GoToFavoritePage(GoToFavoritePageData* d);
+// implemented by each app
+void GoToFavoritePage(MainWindow* win, Str pageNo, PointF scrollPos);
+FavTreeModel* BuildFavTreeModel(MainWindow* win, Str filter);
+TocItem* TocItemForPageNo(TocItem* item, int pageNo);
+void RememberFavTreeExpansionStateForAllWindows();
