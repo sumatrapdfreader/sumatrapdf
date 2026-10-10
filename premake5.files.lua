@@ -353,6 +353,7 @@ function sumatrapdf_files()
     "MainWindowCommon.*",
     "Menu.*",
     "NavFilesInFolder.*",
+    "NavFilesInFolderCommon.*",
     "Notifications.*",
     "PdfSync.*",
     "PdfTools.*",

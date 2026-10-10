@@ -494,6 +494,7 @@ const appSources = [
   "src/ng/MarkdownModel.cpp",
   "src/ng/MarkdownToc.cpp",
   "src/ng/NavFilesInFolder.cpp",
+  "src/ng/NavFilesInFolderCommon.cpp",
   "src/ng/PagePosition.cpp",
   "src/ng/RefHoverDetect.cpp",
   "src/RefHoverInternal.cpp",
