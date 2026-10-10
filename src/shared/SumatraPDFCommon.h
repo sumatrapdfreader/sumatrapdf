@@ -96,3 +96,17 @@ bool SetPointToVisiblePage(DisplayModel* dm, Point& pt, int& pageNo);
 // implemented by each app
 void ShowPageInfoIfWanted(MainWindow* win);
 void ToggleCursorPositionInDoc(MainWindow* win);
+
+extern Str gNextPrevDir;
+extern StrVec gNextPrevDirCache;
+extern bool gNextPrevDirReady;
+extern bool gNextPrevDirScanning;
+void ScheduleReloadTab(WindowTab* tab);
+bool AutoReloadFileStillChanging(WindowTab* tab);
+void EnsureNextPrevDirScan(Str filePath);
+StrVec* GetNextPrevFilesReady(Str path);
+
+// implemented by each app
+void ReloadTab(WindowTab* tab);
+void StartNextPrevDirScan(Str dir);
+void RemoveFailedFiles(StrVec& files);

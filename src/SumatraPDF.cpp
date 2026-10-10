@@ -238,16 +238,7 @@ static void LogRedraw(Str what, HWND hwnd, const RECT* rc = nullptr) {
     }
 }
 
-// Openable files in one directory, for next/prev and the end-of-document hint.
-// Built on a background thread: a folder of tens of thousands of files must
-// not freeze the UI (discussion #6014).
-static Str gNextPrevDir = {};
-static StrVec gNextPrevDirCache;
 static int gNextPrevDirScanGen = 0;
-static bool gNextPrevDirReady = false;
-static bool gNextPrevDirScanning = false;
-
-static void EnsureNextPrevDirScan(Str filePath);
 
 static void CloseDocumentInCurrentTab(MainWindow* /*win*/, bool keepUIEnabled, bool deleteModel);
 static void SetFrameTitleForTab(WindowTab* tab, bool needRefresh);
@@ -3167,7 +3158,7 @@ void ReloadSettingsUpdateWindows(bool showToolbarBefore) {
     }
 }
 
-static void ReloadTab(WindowTab* tab) {
+void ReloadTab(WindowTab* tab) {
     // tab might have been closed, so first ensure it's still valid
     // https://github.com/sumatrapdfreader/sumatrapdf/issues/1958
     MainWindow* win = FindMainWindowByTab(tab);
@@ -3179,53 +3170,6 @@ static void ReloadTab(WindowTab* tab) {
         // delay the reload slightly, in case we get another request immediately after this one
         SetTimer(win->hwndCanvas, kAutoReloadTimerID, kAutoReloadDelayInMs, nullptr);
     }
-}
-
-static void ScheduleReloadTab(WindowTab* tab) {
-    auto fn = MkFunc0<WindowTab>(ReloadTab, tab);
-    uitask::Post(fn, "ReloadTab");
-}
-
-// Called from the AUTO_RELOAD_TIMER tick. Returns true if the file changed
-// since the previous tick, i.e. whoever is writing it isn't done: the caller
-// then re-arms the timer instead of reloading a half-written document.
-//
-// The first tick after a notification always reports "changing" (there's no
-// previous state to compare against), so a reload happens one interval later
-// than it used to. That's deliberate: a LaTeX run used to produce two reloads,
-// one of a truncated file ("document has no pages") and one of the finished
-// file.
-//
-// Gives up after kAutoReloadMaxWaitMs so a file that is appended to
-// continuously (a log being tailed) still reloads.
-//
-// Note: file::GetSize()/GetModificationTime() go through the 1-hour network
-// attribute cache, so on a network drive both values look stable right away
-// and we reload immediately, as before.
-bool AutoReloadFileStillChanging(WindowTab* tab) {
-    if (!tab || len(tab->filePath) == 0) {
-        return false;
-    }
-    u64 now = GetTickCount64();
-    if (tab->autoReloadStartMs == 0) {
-        tab->autoReloadStartMs = now;
-    } else if (now - tab->autoReloadStartMs > kAutoReloadMaxWaitMs) {
-        logf("AutoReloadFileStillChanging: '%s' still changing after %d ms, reloading anyway\n", tab->filePath,
-             (int)(now - tab->autoReloadStartMs));
-        AutoReloadResetFileState(tab);
-        return false;
-    }
-
-    i64 size = file::GetSize(tab->filePath);
-    FILETIME modTime = file::GetModificationTime(tab->filePath);
-    bool changed = (size != tab->autoReloadSize) || !FileTimeEq(modTime, tab->autoReloadModTime);
-    tab->autoReloadSize = size;
-    tab->autoReloadModTime = modTime;
-    if (changed) {
-        return true;
-    }
-    AutoReloadResetFileState(tab);
-    return false;
 }
 
 // return true if adjustd path
@@ -6376,7 +6320,7 @@ static void OpenFile(MainWindow* win, bool skipHistory = false) {
     OpenFileWithOSFilePicker(win, skipHistory);
 }
 
-static void RemoveFailedFiles(StrVec& files) {
+void RemoveFailedFiles(StrVec& files) {
     StrNode* curr = gFilesFailedToOpen;
     while (curr) {
         int idx = files.Find(curr->s);
@@ -6502,7 +6446,7 @@ static void NextPrevDirScanThread(NextPrevDirScanReq* req) {
     uitask::Post(fn, "FinishNextPrevDirScan");
 }
 
-static void StartNextPrevDirScan(Str dir) {
+void StartNextPrevDirScan(Str dir) {
     gNextPrevDirScanGen++;
     gNextPrevDirReady = false;
     gNextPrevDirScanning = true;
@@ -6518,32 +6462,6 @@ static void StartNextPrevDirScan(Str dir) {
          len(req->extraFromHistory), (int)uitask::IsMainUIThread());
     auto fn = MkFunc0(NextPrevDirScanThread, req);
     RunAsync(fn, StrL("NextPrevDirScan"));
-}
-
-static void EnsureNextPrevDirScan(Str filePath) {
-    if (len(filePath) == 0 || !CanAccessDisk() || gPluginMode) {
-        return;
-    }
-    TempStr dir = path::GetDirTemp(filePath);
-    if (path::IsSame(dir, gNextPrevDir) && (gNextPrevDirReady || gNextPrevDirScanning)) {
-        return;
-    }
-    StartNextPrevDirScan(dir);
-}
-
-// nullptr if the background listing is still running. Do not copy the vector.
-static StrVec* GetNextPrevFilesReady(Str path) {
-    EnsureNextPrevDirScan(path);
-    if (!gNextPrevDirReady) {
-        return nullptr;
-    }
-    RemoveFailedFiles(gNextPrevDirCache);
-    // `path` itself is often one of the removed ones: it's the file we're
-    // navigating away from and it may have just failed to load (the error page)
-    // or be an unsupported type opened explicitly. Callers locate it in the list
-    // to know where to continue from, so it has to be there (#5917)
-    InsertSortedNatural(&gNextPrevDirCache, path);
-    return &gNextPrevDirCache;
 }
 
 // at folder ends: forward = last file (next), !forward = first file (prev)

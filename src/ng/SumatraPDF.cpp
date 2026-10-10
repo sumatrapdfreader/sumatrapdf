@@ -1259,43 +1259,9 @@ static void ApplyPageAspect(EngineBase* engine, DisplayMode* modeOut, float* zoo
 
 // --- reload on file change (orig's file watcher half) -----------------------
 
-// orig re-arms a WM_TIMER on the canvas; the shell's tick counts this down
-constexpr int kAutoReloadDelayInMs = 100;
-// give up waiting for a writer to go quiet after this long
-constexpr u64 kAutoReloadMaxWaitMs = 4000;
-
-// orig's AutoReloadFileStillChanging: true while the file keeps changing, i.e.
-// whoever writes it isn't done. The caller waits instead of reloading a
-// half-written document.
-static bool AutoReloadFileStillChanging(WindowTab* tab) {
-    if (!tab || len(tab->filePath) == 0) {
-        return false;
-    }
-    u64 now = GetTickCount64();
-    if (tab->autoReloadStartMs == 0) {
-        tab->autoReloadStartMs = now;
-    } else if (now - tab->autoReloadStartMs > kAutoReloadMaxWaitMs) {
-        logf("AutoReloadFileStillChanging: '%s' still changing after %d ms, reloading anyway\n", tab->filePath,
-             (int)(now - tab->autoReloadStartMs));
-        AutoReloadResetFileState(tab);
-        return false;
-    }
-
-    i64 size = file::GetSize(tab->filePath);
-    FILETIME modTime = file::GetModificationTime(tab->filePath);
-    bool changed = (size != tab->autoReloadSize) || !FileTimeEq(modTime, tab->autoReloadModTime);
-    tab->autoReloadSize = size;
-    tab->autoReloadModTime = modTime;
-    if (changed) {
-        return true;
-    }
-    AutoReloadResetFileState(tab);
-    return false;
-}
-
 // orig's ReloadTab: runs on the UI thread, arms the delay, reloads when the
 // tab is the current one
-static void ReloadTab(WindowTab* tab) {
+void ReloadTab(WindowTab* tab) {
     MainWindow* win = FindMainWindowByTab(tab);
     if (!win) {
         return;
@@ -1305,11 +1271,6 @@ static void ReloadTab(WindowTab* tab) {
     if (tab == win->CurrentTab()) {
         tab->autoReloadLeftMs = kAutoReloadDelayInMs;
     }
-}
-
-static void ScheduleReloadTab(WindowTab* tab) {
-    auto fn = MkFunc0<WindowTab>(ReloadTab, tab);
-    uitask::Post(fn, "ReloadTab");
 }
 
 // orig's FileWatcherSubscribe from LoadDocumentFinish
@@ -2120,17 +2081,10 @@ void DuplicateTabInNewWindow(WindowTab* tab) {
 
 // --- next / prev file in folder ---------------------------------------------
 
-// orig scans the folder on a worker and caches the listing; a second Ctrl +
-// Shift + Right is then instant even in a folder with tens of thousands of
-// files
-static Str gNextPrevDir = {};
-static StrVec gNextPrevDirCache;
 static int gNextPrevDirScanGen = 0;
-static bool gNextPrevDirReady = false;
-static bool gNextPrevDirScanning = false;
 static StrVec gFilesFailedToOpen;
 
-static void RemoveFailedFiles(StrVec& files) {
+void RemoveFailedFiles(StrVec& files) {
     for (Str s : gFilesFailedToOpen) {
         int idx = files.Find(s);
         if (idx >= 0) {
@@ -2186,7 +2140,7 @@ static void NextPrevDirScanThread(NextPrevDirScan* req) {
     uitask::Post(MkFunc0<NextPrevDirScan>(FinishNextPrevDirScan, req), "FinishNextPrevDirScan");
 }
 
-static void StartNextPrevDirScan(Str dir) {
+void StartNextPrevDirScan(Str dir) {
     gNextPrevDirScanGen++;
     gNextPrevDirReady = false;
     gNextPrevDirScanning = true;
@@ -2199,30 +2153,6 @@ static void StartNextPrevDirScan(Str dir) {
     CollectHistoryFilesInDir(dir, req->extraFromHistory);
     logf("NextPrevDirScan: start '%s'\n", dir);
     RunAsync(MkFunc0<NextPrevDirScan>(NextPrevDirScanThread, req), StrL("NextPrevDirScan"));
-}
-
-static void EnsureNextPrevDirScan(Str filePath) {
-    if (len(filePath) == 0 || !CanAccessDisk() || gPluginMode) {
-        return;
-    }
-    TempStr dir = path::GetDirTemp(filePath);
-    if (path::IsSame(dir, gNextPrevDir) && (gNextPrevDirReady || gNextPrevDirScanning)) {
-        return;
-    }
-    StartNextPrevDirScan(dir);
-}
-
-// null if the background listing is still running. Do not copy the vector.
-StrVec* GetNextPrevFilesReady(Str path) {
-    EnsureNextPrevDirScan(path);
-    if (!gNextPrevDirReady) {
-        return nullptr;
-    }
-    RemoveFailedFiles(gNextPrevDirCache);
-    // `path` is the file we are navigating away from and may itself have been
-    // removed above; callers locate it to know where to continue from (#5917)
-    InsertSortedNatural(&gNextPrevDirCache, path);
-    return &gNextPrevDirCache;
 }
 
 static void ShowNoFileToOpenNotif(MainWindow* win, bool forward) {

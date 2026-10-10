@@ -73,6 +73,11 @@ TempStr WindowStateDuringLoadResultTemp(int* exitCodeOut = nullptr);
 Str CliPassword();
 
 // orig's sidebar layout limits (SumatraPDF.cpp)
+// orig re-arms a WM_TIMER on the canvas; the shell's tick counts this down
+constexpr int kAutoReloadDelayInMs = 100;
+// give up waiting for a writer to go quiet after this long
+constexpr u64 kAutoReloadMaxWaitMs = 4000;
+
 constexpr int kSidebarMinDx = 150;
 constexpr int kTocMinDy = 100;
 constexpr int kSplitterDx = 5;
