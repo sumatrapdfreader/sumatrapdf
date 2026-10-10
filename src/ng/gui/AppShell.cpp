@@ -598,6 +598,11 @@ TempStr AppShellTestInput(MainWindow* win, Str kind, int a, int b, int c, int d)
     if (str::Eq(kind, StrL("wheel")) && ForwardTestWheelToBrowser(win, c, d)) {
         return StrL("OK");
     }
+    // a posted WM_CHAR never becomes a gpui keydown. Windows eats it in the
+    // subclass proc; a real key still toggles from OnKeyDown.
+    if (str::Eq(kind, StrL("char")) && SelectTextWithKeyboardOnChar(win, a)) {
+        return StrL("OK");
+    }
     return AppShellTestInputGpui(win ? win->gpuiWin : nullptr, kind, a, b, c, d);
 }
 
