@@ -4892,6 +4892,17 @@ static void ExecuteControlRequest(ControlRequest* req) {
 
         case ControlCmd::TestTtsPumpOnSpeak: {
             TtsTestPumpOnNextSpeak();
+            // mac sendMessage runs at once, so the close would be sent only
+            // after speak returned. Queue it, then speak, and the pump runs it.
+            if (str::Eq(StringArg(req, 0), StrL("close-during-speak"))) {
+                MainWindow* win = FirstWindow();
+                if (!win) {
+                    AppendTestResult(req, 2, StrL("NOTREADY no-window"));
+                    break;
+                }
+                uitask::Post(MkFunc0(TestPostCloseWindow, win), "TestWM_CLOSE");
+                ExecuteCmd(win, CmdReadAloudFromTopPage);
+            }
             AppendTestResult(req, 0, StrL("OK"));
             break;
         }

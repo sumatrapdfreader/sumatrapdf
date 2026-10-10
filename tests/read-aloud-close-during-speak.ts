@@ -8,6 +8,7 @@
 import { readFileSync } from "node:fs";
 import { join } from "node:path";
 import { ControlCommand, DEBUG_REPORT_EXIT_CODE } from "./control.ts";
+import { IS_MAC } from "./host.ts";
 import { cmdId, ROOT, runStandalone, SLOW_BUILD_FACTOR, tmpPath } from "./util.ts";
 import { postMessage, WM_CLOSE } from "./winapi.ts";
 import { killAndWait, launchControlled, sendCommand, waitForExit } from "./win-automation.ts";
@@ -21,10 +22,18 @@ export async function testit(): Promise<void> {
   let exited = false;
   try {
     await client.waitForRenderIdle();
-    await client.request(ControlCommand.TestTtsPumpOnSpeak, []);
-    // queued in this order, so the close is dispatched from inside the speak call
-    sendCommand(frame, cmdId("CmdReadAloudFromTopPage"));
-    postMessage(frame, WM_CLOSE, 0, 0);
+    if (IS_MAC) {
+      try {
+        await client.request(ControlCommand.TestTtsPumpOnSpeak, ["close-during-speak"]);
+      } catch {
+        // the close runs inside speak and can drop the socket
+      }
+    } else {
+      await client.request(ControlCommand.TestTtsPumpOnSpeak, []);
+      // queued in this order, so the close is dispatched from inside the speak call
+      sendCommand(frame, cmdId("CmdReadAloudFromTopPage"));
+      postMessage(frame, WM_CLOSE, 0, 0);
+    }
     exited = await waitForExit(proc, 20000 * SLOW_BUILD_FACTOR);
   } finally {
     client.close();
