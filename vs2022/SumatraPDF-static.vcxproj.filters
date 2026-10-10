@@ -534,6 +534,9 @@
     <ClInclude Include="..\src\shared\Theme.h">
       <Filter>src\shared</Filter>
     </ClInclude>
+    <ClInclude Include="..\src\shared\ToolbarCommon.h">
+      <Filter>src\shared</Filter>
+    </ClInclude>
     <ClInclude Include="..\src\shared\Translations.h">
       <Filter>src\shared</Filter>
     </ClInclude>
@@ -1284,6 +1287,9 @@
       <Filter>src\shared</Filter>
     </ClCompile>
     <ClCompile Include="..\src\shared\Theme.cpp">
+      <Filter>src\shared</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\shared\ToolbarCommon.cpp">
       <Filter>src\shared</Filter>
     </ClCompile>
     <ClCompile Include="..\src\shared\TranslationLangs.cpp">

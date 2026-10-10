@@ -50,6 +50,7 @@
 #include "gui/DialogWidgets.h"
 #include "SumatraDialogs.h"
 #include "Toolbar.h"
+#include "ToolbarCommon.h"
 
 #include "SumatraLog.h"
 
@@ -62,14 +63,6 @@ constexpr int kButtonSpacingX = 4;
 
 // distance between label and edit field
 constexpr int kTextPaddingRight = 6;
-
-struct ToolbarButtonInfo {
-    const char* icon = nullptr; // gIcon*, or null for a separator / page box / text
-    int cmdId = 0;
-    Str toolTip;
-    Str svgIcon; // custom SVG from settings
-    bool isText = false;
-};
 
 static ToolbarButtonInfo gToolbarButtons[] = {
     {gIconFileOpen, CmdOpenFile, TrN("Open")},
@@ -138,73 +131,12 @@ constexpr int kPdfAnnotationButtonsCount = dimof(gPdfAnnotationButtons);
 // can repeat a button, so allow for more than the default count.
 constexpr int kMaxLayoutButtons = 64;
 static ToolbarButtonInfo gLayoutButtons[kMaxLayoutButtons];
-static int gLayoutButtonsCount = 0;
 static Str gLayoutParsedFrom;
 static bool gLayoutParsed = false;
 
-// 128 should be more than enough
-constexpr int kMaxCustomButtons = 127;
-static ToolbarButtonInfo gCustomButtons[kMaxCustomButtons + 1];
-static int gCustomButtonsCount = 0;
-
 // --- colors -----------------------------------------------------------------
 
-// Light theme ControlBackgroundColor is white, which is what the old themed
-// rebar/toolbar painted. Other themes use their control background.
-static Color TbBgColor() {
-    return ThemeControlBackgroundColor();
-}
-
-static Color TbTextColor() {
-    if (IsCurrentThemeDefault() && !ThemeColorizeControls()) {
-        return SysControlTextColor();
-    }
-    return ThemeWindowTextColor();
-}
-
-static Color TbDisabledColor() {
-    if (IsCurrentThemeDefault() && !ThemeColorizeControls()) {
-        return SysDisabledTextColor();
-    }
-    return ThemeWindowTextDisabledColor();
-}
-
-static Color TbHoverColor() {
-    return ThemeHotBackgroundColor();
-}
-
-// orig's TbSubtleBgColor: a cue, well short of the hover highlight
-static Color TbSubtleBgColor() {
-    return AccentColor(TbBgColor(), 8);
-}
-
-static Color TbSelectedColor() {
-    return AccentColor(TbBgColor(), 28);
-}
-
-static Color TbEdgeColor() {
-    return ThemeEdgeColor();
-}
-
 // --- sizes ------------------------------------------------------------------
-
-// Old Win32 toolbar: TBMETRICS.cyPad defaults to 6, then we added DpiScale(2).
-// TB_SETBUTTONSIZE cannot go below image + 2*cyPad, so that was the bar height.
-static int ToolbarCyPad() {
-    return 6 + DpiScale(2);
-}
-
-static int ToolbarRowDy(int iconSize) {
-    return iconSize + (2 * ToolbarCyPad());
-}
-
-int ToolbarIconSize() {
-    return RoundUp(DpiScale(gSettings->toolbarSize), 4);
-}
-
-static bool HasToolbarButtonContent(const ToolbarButtonInfo& tbi) {
-    return tbi.icon || tbi.isText || !str::IsEmptyOrWhiteSpace(tbi.svgIcon);
-}
 
 // --- the button tables ------------------------------------------------------
 
@@ -278,104 +210,11 @@ static void PopulateToolbarLayout() {
     }
 }
 
-static TempStr ShortcutToolbarToolTipTemp(Shortcut* shortcut) {
-    if (!str::IsEmptyOrWhiteSpace(shortcut->name)) {
-        return shortcut->name;
-    }
-    CustomCommand* cmd = FindCustomCommand(shortcut->cmdId);
-    if (cmd && cmd->name) {
-        return cmd->name;
-    }
-    int origId = cmd ? cmd->origId : shortcut->cmdId;
-    if (origId > 0 && origId < CmdLast) {
-        Str desc = GetCommandDescription(origId);
-        if (desc) {
-            return desc;
-        }
-    }
-    return shortcut->cmd;
-}
-
-static TempStr CustomCommandToolbarToolTipTemp(CustomCommand* cmd, Str fallback) {
-    if (cmd && !str::IsEmptyOrWhiteSpace(cmd->name)) {
-        return cmd->name;
-    }
-    if (!str::IsEmptyOrWhiteSpace(fallback)) {
-        return fallback;
-    }
-    return StrL("External Viewer");
-}
-
-static void PopulateCustomToolbarButtons() {
-    gCustomButtonsCount = 0;
-    for (Shortcut* shortcut : *gSettings->shortcuts) {
-        if (gCustomButtonsCount >= kMaxCustomButtons) {
-            break;
-        }
-        if (!str::IsEmptyOrWhiteSpace(shortcut->toolbarSvgIcon)) {
-            ToolbarButtonInfo tbi;
-            tbi.cmdId = shortcut->cmdId;
-            tbi.svgIcon = shortcut->toolbarSvgIcon;
-            tbi.toolTip = ShortcutToolbarToolTipTemp(shortcut);
-            gCustomButtons[gCustomButtonsCount++] = tbi;
-            continue;
-        }
-        if (!str::IsEmptyOrWhiteSpace(shortcut->toolbarText)) {
-            ToolbarButtonInfo tbi;
-            tbi.cmdId = shortcut->cmdId;
-            tbi.toolTip = shortcut->toolbarText;
-            tbi.isText = true;
-            gCustomButtons[gCustomButtonsCount++] = tbi;
-        }
-    }
-
-    // add toolbar buttons from custom commands with toolbar settings (e.g.
-    // ExternalViewers). gFirstCustomCommand is a prepend-only list, so walking
-    // it directly yields the commands in reverse creation order (#5869)
-    Vec<CustomCommand*> customCmds;
-    for (auto* cc = gFirstCustomCommand; cc; cc = cc->next) {
-        VecAppend(customCmds, cc);
-    }
-    VecReverse(customCmds);
-    for (CustomCommand* cc : customCmds) {
-        if (gCustomButtonsCount >= kMaxCustomButtons) {
-            break;
-        }
-        Str svgIcon = GetCommandStringArg(cc, kCmdArgToolbarSvgIcon, {});
-        Str tbText = GetCommandStringArg(cc, kCmdArgToolbarText, {});
-        if (!str::IsEmptyOrWhiteSpace(svgIcon)) {
-            ToolbarButtonInfo tbi;
-            tbi.cmdId = cc->id;
-            tbi.svgIcon = svgIcon;
-            tbi.toolTip = CustomCommandToolbarToolTipTemp(cc, tbText);
-            gCustomButtons[gCustomButtonsCount++] = tbi;
-            continue;
-        }
-        if (str::IsEmptyOrWhiteSpace(tbText)) {
-            continue;
-        }
-        ToolbarButtonInfo tbi;
-        tbi.cmdId = cc->id;
-        tbi.toolTip = tbText;
-        tbi.isText = true;
-        gCustomButtons[gCustomButtonsCount++] = tbi;
-    }
-}
-
-static int TotalButtonsCount() {
-    return gLayoutButtonsCount + gCustomButtonsCount;
-}
-
 static ToolbarButtonInfo& GetToolbarButtonInfoByIdx(int idx) {
     if (idx < gLayoutButtonsCount) {
         return gLayoutButtons[idx];
     }
     return gCustomButtons[idx - gLayoutButtonsCount];
-}
-
-static int OriginalCommandId(int cmdId) {
-    CustomCommand* cmd = FindCustomCommand(cmdId);
-    return cmd ? cmd->origId : cmdId;
 }
 
 // --- availability and enabled state -----------------------------------------
@@ -511,25 +350,7 @@ static bool IsCmdChecked(MainWindow* win, int cmdId) {
     }
 }
 
-static TempStr ToolbarTipTemp(int cmdId, Str tip, bool translate) {
-    TempStr s = translate ? trans::GetTranslation(tip) : TempStr(tip);
-    TempStr accelStr = AppendAccelKeyToMenuStringTemp({}, cmdId);
-    if (accelStr) {
-        Str accel = accelStr.len > 1 ? Str(accelStr.s + 1, accelStr.len - 1) : accelStr;
-        s = str::JoinTemp(s, fmt(" (%s)", accel));
-    }
-    return s;
-}
-
 // --- toolbar mode -----------------------------------------------------------
-
-// toolbar mode for this window: Fullscreen.Toolbar in fullscreen, else Toolbar
-static int ToolbarModeForWindow(MainWindow* win) {
-    if (win->isFullScreen) {
-        return FullscreenToolbarModeFromPrefs();
-    }
-    return ToolbarModeFromPrefs();
-}
 
 bool ShouldShowToolbar(MainWindow* win) {
     if (win->presentation || win->isQuickLook) {
@@ -551,89 +372,11 @@ bool ShouldOverlayToolbar(MainWindow* win) {
 
 // --- annotation colors (orig's) ---------------------------------------------
 
-static ParsedColor* AnnotPresetColorSetting(int cmdId) {
-    if (!gSettings) {
-        return nullptr;
-    }
-    Annotations& a = gSettings->annotations;
-    switch (cmdId) {
-        // the highlighter makes highlight annotations
-        case CmdAnnotationHighlightBrush:
-        case CmdCreateAnnotHighlight:
-            return &a.highlightColor;
-        case CmdCreateAnnotUnderline:
-            return &a.underlineColor;
-        case CmdCreateAnnotSquiggly:
-            return &a.squigglyColor;
-        case CmdCreateAnnotStrikeOut:
-            return &a.strikeOutColor;
-        case CmdCreateAnnotText:
-            return &a.textIconColor;
-        case CmdCreateAnnotFreeText:
-            // the text's color; the box behind it is FreeTextBackgroundColor
-            return &a.freeTextColor;
-        case CmdCreateAnnotLine:
-            return &a.lineColor;
-        case CmdCreateAnnotPolyLine:
-            return &a.polyLineColor;
-        case CmdCreateAnnotSquare:
-            return &a.squareColor;
-        case CmdCreateAnnotCircle:
-            return &a.circleColor;
-        case CmdCreateAnnotPolygon:
-            return &a.polygonColor;
-        case CmdCreateAnnotInk:
-            return &a.inkColor;
-        case CmdCreateAnnotStamp:
-            return &a.stampColor;
-        case CmdCreateAnnotCaret:
-            return &a.caretColor;
-        case CmdCreateAnnotFileAttachment:
-            return &a.fileAttachmentColor;
-    }
-    return nullptr;
-}
-
-// What an annotation is made in when its setting is empty: MuPDF's defaults,
-// which are also what Acrobat, PDF-XChange and Foxit use
-static Color AnnotDefaultColor(int cmdId) {
-    switch (cmdId) {
-        case CmdCreateAnnotText:
-        case CmdCreateAnnotFileAttachment:
-            return MkRgb(0xff, 0xff, 0);
-        case CmdCreateAnnotFreeText:
-            return MkRgb(0, 0, 0);
-        case CmdCreateAnnotCaret:
-            return MkRgb(0, 0, 0xff);
-        case CmdCreateAnnotLine:
-        case CmdCreateAnnotPolyLine:
-        case CmdCreateAnnotSquare:
-        case CmdCreateAnnotCircle:
-        case CmdCreateAnnotPolygon:
-        case CmdCreateAnnotStamp:
-            return MkRgb(0xff, 0, 0);
-        case CmdCreateAnnotInk:
-            // 40% yellow, Annotations.InkColor's default
-            return 0x6600ffff;
-    }
-    return kColorUnset;
-}
-
 // the color the button's next annotation is made in
 Color AnnotColorForCmd(int cmdId) {
     ParsedColor* setting = AnnotPresetColorSetting(cmdId);
     Color col = setting ? GetParsedColor(*setting, kColorUnset) : kColorUnset;
     return col != kColorUnset ? col : AnnotDefaultColor(cmdId);
-}
-
-// The colors a button offers. Ink has its own, translucent ones: they are
-// exactly what it paints. cmdId 0 is not a button, and gets the presets
-static Str* AnnotPresetColorList(int cmdId) {
-    if (!gSettings) {
-        return nullptr;
-    }
-    Annotations& a = gSettings->annotations;
-    return (cmdId == CmdCreateAnnotInk) ? &a.inkColors : &a.presetColors;
 }
 
 void AnnotPresetColors(int cmdId, Vec<Color>& out) {
@@ -642,20 +385,6 @@ void AnnotPresetColors(int cmdId, Vec<Color>& out) {
         return;
     }
     ParseColorList(*list, out, 0);
-}
-
-// alpha 0 and 0xff both mean opaque, so a palette color matches an
-// annotation's even when only one of the two spells the alpha out
-static bool SameColorAndAlpha(Color a, Color b) {
-    u8 aa = GetAlpha(a);
-    u8 ab = GetAlpha(b);
-    if (aa == 0) {
-        aa = 0xff;
-    }
-    if (ab == 0) {
-        ab = 0xff;
-    }
-    return ((a & 0xffffff) == (b & 0xffffff)) && (aa == ab);
 }
 
 // the color a button makes annotations in is always one of the presets, so
@@ -674,34 +403,6 @@ static void EnsureAnnotPresetColor(int cmdId, Color col) {
     }
     VecAppend(colors, col);
     str::ReplaceWithCopy(list, SerializeColorList(colors));
-    ScheduleSaveSettings();
-}
-
-// whether the button's annotation can be made out of the text selected right now
-static bool CanCreateAnnotFromSelection(MainWindow* win, int cmdId) {
-    switch (cmdId) {
-        case CmdCreateAnnotHighlight:
-        case CmdCreateAnnotUnderline:
-        case CmdCreateAnnotSquiggly:
-        case CmdCreateAnnotStrikeOut:
-            break;
-        default:
-            return false;
-    }
-    WindowTab* tab = win ? win->CurrentTab() : nullptr;
-    if (!tab || !win->showSelection || !tab->selectionOnPage) {
-        return false;
-    }
-    DisplayModel* dm = win->AsFixed();
-    return dm && dm->textSelection && dm->textSelection->result.len > 0;
-}
-
-void SetAnnotPresetColor(int cmdId, Color col) {
-    ParsedColor* setting = AnnotPresetColorSetting(cmdId);
-    if (!setting) {
-        return;
-    }
-    SetColorText(*setting, SerializeColorTemp(col));
     ScheduleSaveSettings();
 }
 
@@ -936,12 +637,6 @@ void UpdateToolbarAfterThemeChange(MainWindow* win) {
 
 void UpdateFindbox(MainWindow* win) {
     AppShellInvalidate(win);
-}
-
-// the find UI is a floating Chrome-style bar (see FindBar.cpp). When the
-// toolbar moves/resizes we keep the bar centered over the search icon.
-void UpdateToolbarFindText(MainWindow* win) {
-    FindBarReposition(win);
 }
 
 // One line per toolbar button and one per Edit PDF button, same shape as
@@ -1216,53 +911,6 @@ void ShowOrHideToolbar(MainWindow* win) {
 
 // --- the zoom drop-down -----------------------------------------------------
 
-struct ZoomHoverLevel {
-    float zoom;
-    int cmdId;
-};
-
-// What the zoom strip lists: the levels the zoom buttons step through, plus the
-// two fit modes where 100% is.
-static void ZoomHoverLevels(Vec<ZoomHoverLevel>& out) {
-    int n = 0;
-    float* levels = GetDefaultZoomLevels(&n);
-    Vec<int>* cmdIds = GetZoomStepCmdIds();
-    if (!levels || !cmdIds || len(*cmdIds) != n) {
-        return;
-    }
-    bool addedFits = false;
-    for (int i = 0; i < n; i++) {
-        if (!addedFits && levels[i] > 100) {
-            VecAppend(out, ZoomHoverLevel{kZoomFitPage, CmdZoomFitPage});
-            VecAppend(out, ZoomHoverLevel{kZoomFitWidth, CmdZoomFitWidth});
-            addedFits = true;
-        }
-        VecAppend(out, ZoomHoverLevel{levels[i], (*cmdIds)[i]});
-    }
-    if (!addedFits) {
-        VecAppend(out, ZoomHoverLevel{kZoomFitPage, CmdZoomFitPage});
-        VecAppend(out, ZoomHoverLevel{kZoomFitWidth, CmdZoomFitWidth});
-    }
-}
-
-// which of the levels the document is at, exact match only
-static int ZoomHoverCurrentIdx(MainWindow* win, const Vec<ZoomHoverLevel>& levels) {
-    DocController* ctrl = win ? win->ctrl : nullptr;
-    if (!ctrl) {
-        return -1;
-    }
-    float current = ctrl->GetZoomVirtual(false);
-    // the same fuzz DisplayModel::GetNextZoomStep uses to match a level
-    constexpr float kZoomFuzz = 0.01f;
-    for (int i = 0; i < len(levels); i++) {
-        float zl = levels[i].zoom;
-        if (current + kZoomFuzz >= zl && current - kZoomFuzz <= zl) {
-            return i;
-        }
-    }
-    return -1;
-}
-
 static bool CmdIsAnnotColorDropdown(int cmdId) {
     return AnnotPresetColorSetting(cmdId) != nullptr;
 }
@@ -1372,16 +1020,6 @@ static HoverDumpItem* AddHoverDumpItem(ToolbarUI* ui, int cmdId, Str text, bool 
 // orig's kCloseHoverDropdownTimerId: the drop-down stays while the cursor is on
 // its button or on it, and for this long after it left both
 constexpr int kCloseHoverDropdownDelayMs = 150;
-
-// The widest row of the pyramid: the smallest w with 1+2+...+w >= n, so the
-// rows w, w-1, ... w-k hold every item with only the last one part-full.
-static int HoverPyramidTopRow(int n) {
-    int w = 1;
-    while (((w * (w + 1)) / 2) < n) {
-        w++;
-    }
-    return w;
-}
 
 // A row of NewToolbarHoverMenu(): an icon on the left, text on the right, and a
 // background that lights up under the mouse, like a menu item.

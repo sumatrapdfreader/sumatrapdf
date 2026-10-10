@@ -128,6 +128,8 @@ export const sharedFiles = [
   "src/shared/SumatraTestCommon.cpp",
   "src/shared/TableOfContentsCommon.cpp",
   "src/shared/TableOfContentsCommon.h",
+  "src/shared/ToolbarCommon.cpp",
+  "src/shared/ToolbarCommon.h",
   // orig's window picker. ng compiles it on Windows only.
   "src/ScreenshotCapture.cpp",
   "src/ScreenshotCapture.h",

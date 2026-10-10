@@ -1370,6 +1370,7 @@ export const targets: Target[] = [
       "src/ng/FindBar.cpp",
       "src/ng/FindWindow.cpp",
       "src/ng/Toolbar.cpp",
+      "src/ng/ToolbarCommon.cpp",
       "src/ng/OverlayScrollbar.cpp",
       "src/ng/ReadingBar.cpp",
       "src/ng/ReadingAutoScroll.cpp",

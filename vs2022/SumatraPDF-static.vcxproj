@@ -1534,6 +1534,7 @@
     <ClInclude Include="..\src\shared\TextSearch.h" />
     <ClInclude Include="..\src\shared\TextSelection.h" />
     <ClInclude Include="..\src\shared\Theme.h" />
+    <ClInclude Include="..\src\shared\ToolbarCommon.h" />
     <ClInclude Include="..\src\shared\Translations.h" />
     <ClInclude Include="..\src\shared\UpdateCheck.h" />
     <ClInclude Include="..\src\shared\UpdateTemp.h" />
@@ -2191,6 +2192,7 @@
     </ClCompile>
     <ClCompile Include="..\src\shared\TextSelection.cpp" />
     <ClCompile Include="..\src\shared\Theme.cpp" />
+    <ClCompile Include="..\src\shared\ToolbarCommon.cpp" />
     <ClCompile Include="..\src\shared\TranslationLangs.cpp" />
     <ClCompile Include="..\src\shared\Translations.cpp" />
     <ClCompile Include="..\src\shared\UpdateTemp.cpp" />
