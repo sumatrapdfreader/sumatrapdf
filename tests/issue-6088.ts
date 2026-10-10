@@ -14,6 +14,7 @@ import { deflateSync } from "node:zlib";
 import { mkdirSync, rmSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 import { withControlledSumatra } from "./control.ts";
+import { IS_MAC } from "./host.ts";
 import { EXE, runStandalone, tmpPath } from "./util.ts";
 import { captureWindowPixels } from "./winapi.ts";
 import { findCanvas, waitForFrame } from "./win-automation.ts";
@@ -122,6 +123,11 @@ function countMidtone(data: Uint8Array): number {
 }
 
 export async function testit(): Promise<void> {
+  // Smart recolor of the painted figure. An engine render keeps the light backdrop.
+  if (IS_MAC) {
+    console.log("SKIP issue-6088: the check reads canvas pixels with GetWindowDC");
+    return;
+  }
   const dir = tmpPath("issue-6088");
   rmSync(dir, { recursive: true, force: true });
   mkdirSync(dir, { recursive: true });
