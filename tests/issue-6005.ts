@@ -7,6 +7,7 @@
 
 import { writeFileSync } from "node:fs";
 import { ControlCommand, withControlledSumatra } from "./control.ts";
+import { IS_MAC } from "./host.ts";
 import { captureWindowPixels, captureWindowToPng } from "./winapi.ts";
 import { findCanvas, sendCommandSync, waitForFrame } from "./win-automation.ts";
 import { cmdId, EXE, runStandalone, tmpPath } from "./util.ts";
@@ -45,6 +46,10 @@ function isTrimGreen(b: number, g: number, r: number): boolean {
 }
 
 export async function testit(): Promise<void> {
+  if (IS_MAC) {
+    console.log("SKIP issue-6005: the trim-label check reads canvas pixels with GetWindowDC");
+    return;
+  }
   const pdf = tmpPath("issue-6005.pdf");
   writeFileSync(pdf, makePdf());
 
