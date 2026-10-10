@@ -1220,6 +1220,8 @@ static TempStr PageRenderColorsResultTemp(Str path, int* exitCodeOut, int pageNo
     int red = 0;
     int blue = 0;
     int nonWhite = 0;
+    int darkLeft = 0;
+    int leftX = (rgb->width * 45) / 100;
     int rMin = 255, rMax = 0, gMin = 255, gMax = 0, bMin = 255, bMax = 0;
     if (bpp >= 3) {
         for (int y = 0; y < rgb->height; y++) {
@@ -1245,6 +1247,9 @@ static TempStr PageRenderColorsResultTemp(Str path, int* exitCodeOut, int pageNo
                 if (b > 180 && r < 80 && g < 80) {
                     blue++;
                 }
+                if (x < leftX && r < 80 && g < 80 && b < 80) {
+                    darkLeft++;
+                }
                 if (r < rMin) {
                     rMin = r;
                 }
@@ -1267,8 +1272,8 @@ static TempStr PageRenderColorsResultTemp(Str path, int* exitCodeOut, int pageNo
         }
     }
     int spread = (rMax - rMin) + (gMax - gMin) + (bMax - bMin);
-    out.Append(fmt("red=%d nonwhite=%d size=%dx%d pages=%d page=%d blue=%d spread=%d\n", red, nonWhite, rgb->width,
-                   rgb->height, engine->PageCount(), pageNo, blue, spread));
+    out.Append(fmt("red=%d nonwhite=%d size=%dx%d pages=%d page=%d blue=%d spread=%d darkLeft=%d\n", red, nonWhite,
+                   rgb->width, rgb->height, engine->PageCount(), pageNo, blue, spread, darkLeft));
     if (rgb != bmp) {
         FreePixmap(rgb);
     }

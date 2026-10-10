@@ -12,6 +12,7 @@
 import { existsSync } from "node:fs";
 import { join } from "node:path";
 import { ControlCommand, withControlledSumatra } from "./control.ts";
+import { IS_MAC } from "./host.ts";
 import { captureWindowPixels, captureWindowToPng } from "./winapi.ts";
 import { findCanvas, sendCommandSync, waitForFrame } from "./win-automation.ts";
 import { cmdId, EXE, runStandalone, tmpPath } from "./util.ts";
@@ -91,6 +92,17 @@ export async function testit(): Promise<void> {
       await client.waitForRenderIdle();
       sendCommandSync(frame, cmdId("CmdZoomFitPage"));
       await client.waitForRenderIdle();
+
+      if (IS_MAC) {
+        // Same dark-pixel count as the canvas shot, from the page render.
+        const res = await client.request(ControlCommand.TestRenderPageColors, [PDF, 1]);
+        const raw = String(res[1] ?? "");
+        const n = Number(/darkLeft=(\d+)/.exec(raw)?.[1] ?? "-1");
+        if ((res[0] as number) !== 0 || n < 80) {
+          throw new Error(`issue-4655: matrix bracket pieces did not draw (${n} dark pixels)\n${raw.trim()}`);
+        }
+        return;
+      }
 
       const canvas = findCanvas(frame);
       if (!canvas) {
