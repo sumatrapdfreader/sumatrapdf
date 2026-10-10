@@ -3295,9 +3295,19 @@ static void fz_print_cb(void* user, const char* msg) {
     engine->AppendError(msgStr);
 }
 
+static void FzDbgWrite(fz_context*, void*, const void* data, size_t n) {
+    log(Str((const char*)data, (int)n));
+}
+
+// unbuffered and stateless, so every context can share it
+static fz_output gFzDbgOut = {nullptr, FzDbgWrite};
+
 static void InstallFitzErrorCallbacks(EngineMupdf* engine, fz_context* ctx) {
     fz_set_warning_callback(ctx, fz_print_cb, (void*)engine);
     fz_set_error_callback(ctx, fz_print_cb, (void*)engine);
+    // mupdf's debug output (form JavaScript errors, console.println) defaults
+    // to stderr, which a GUI app doesn't have: the failed write throws
+    fz_set_stddbg(ctx, &gFzDbgOut);
 }
 
 struct ContextThreadID {
