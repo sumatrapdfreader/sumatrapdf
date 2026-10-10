@@ -4,6 +4,7 @@
 import { copyFileSync, mkdirSync, rmSync } from "node:fs";
 import { join } from "node:path";
 import { ControlCommand, type ControlClient } from "./control.ts";
+import { IS_MAC } from "./host.ts";
 import { runStandalone, tmpPath } from "./util.ts";
 import { clickAt, killAndWait, launchControlled } from "./win-automation.ts";
 import { enumWindows, getWindowText, sleep } from "./winapi.ts";
@@ -102,8 +103,18 @@ export async function testit(): Promise<void> {
     if (!rm) {
       throw new Error(`navigate files: could not parse label rect: ${rectStr}`);
     }
-    const hwnd = findNavWindow();
-    await clickAt(hwnd, Number(rm[1]) + Number(rm[3]) / 2, Number(rm[2]) + Number(rm[4]) / 2);
+    const x = Math.round(Number(rm[1]) + Number(rm[3]) / 2);
+    const y = Math.round(Number(rm[2]) + Number(rm[4]) / 2);
+    if (IS_MAC) {
+      // the picker is a tool window. Its label rect is already in client dips.
+      const clicked = await client.request(ControlCommand.TestToolWindow, ["input", "navfiles", "click", x, y, 0, 0]);
+      if (clicked[0] !== 0 || !String(clicked[1] ?? "").startsWith("OK")) {
+        throw new Error(`navigate files: label click failed: ${String(clicked[1] ?? "")}`);
+      }
+    } else {
+      const hwnd = findNavWindow();
+      await clickAt(hwnd, x, y);
+    }
     const e = await expectEdit(client, "path-state", 1, "begin by click");
     if (!sameDir(e.text, root)) {
       throw new Error(`navigate files: edit should start with the current dir, got ${JSON.stringify(e)}`);
