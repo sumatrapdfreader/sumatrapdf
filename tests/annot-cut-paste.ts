@@ -7,7 +7,7 @@
 import { mkdirSync, rmSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 import { ControlClient, ControlCommand } from "./control.ts";
-import { assemblePdf, cmdId, runStandalone, tmpPath, USE_NG } from "./util.ts";
+import { assemblePdf, cmdId, runStandalone, shortcutLabel, tmpPath, USE_NG } from "./util.ts";
 import {
   clientToScreen,
   getClientRect,
@@ -288,9 +288,9 @@ export async function testit(): Promise<void> {
     // the shortcuts that reach these commands
     const menu = await contextMenuAt(client, canvas, mid.x, mid.y);
     requireEnabled(menu, "Cut Annotation");
-    requireAccel(menu, "Cut Annotation", "Ctrl + X");
-    requireAccel(menu, "Copy Annotation", "Ctrl + C");
-    requireAccel(menu, "Paste Annotation", "Ctrl + V");
+    requireAccel(menu, "Cut Annotation", shortcutLabel("Ctrl + X"));
+    requireAccel(menu, "Copy Annotation", shortcutLabel("Ctrl + C"));
+    requireAccel(menu, "Paste Annotation", shortcutLabel("Ctrl + V"));
     for (const name of ["Apply Redactions", "Save changes", "Save to new file", "Discard changes"]) {
       if (!findMenuItem(menu, name)) {
         throw new Error(`annot-cut-paste: "${name}" is not in the Annotations submenu`);

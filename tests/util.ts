@@ -180,6 +180,28 @@ process.on("unhandledRejection", (reason) => {
   console.error("unhandledRejection:", reason);
 });
 
+// A default shortcut as this OS's menus show it: "Ctrl + X" is "⌘X" on macOS.
+// Covers what Accelerators.cpp converts: Ctrl becomes Cmd, glyphs replace names.
+export function shortcutLabel(win: string): string {
+  if (!IS_MAC) {
+    return win;
+  }
+  const parts = win.split(" + ");
+  const key = parts.pop()!;
+  const glyphs: [string, string][] = [
+    ["Alt", "⌥"],
+    ["Shift", "⇧"],
+    ["Ctrl", "⌘"],
+  ];
+  let res = "";
+  for (const [mod, glyph] of glyphs) {
+    if (parts.includes(mod)) {
+      res += glyph;
+    }
+  }
+  return res + key;
+}
+
 // Extract page text via the debug -extract-text harness (hex-encoded UTF-8).
 // The GUI exe's stdout often does not reach a Bun pipe on Windows; PowerShell
 // (a console app) relays it. pageNo -1 means all pages (same as the flag).

@@ -8,7 +8,7 @@
 // Hint letters and Esc go through TestKeyboardLinkFollow actions; posted keys miss.
 import { writeFileSync } from "node:fs";
 import { ControlClient, ControlCommand, withControlledSumatra } from "./control";
-import { EXE, cmdId, runStandalone, SLOW_BUILD_FACTOR, tmpPath } from "./util";
+import { EXE, cmdId, runStandalone, shortcutLabel, SLOW_BUILD_FACTOR, tmpPath } from "./util";
 import { FRAME_CLASS, sendCommandSync } from "./win-automation";
 import { WM_KEYDOWN, WM_KEYUP, postMessage, sleep, waitForTopWindow } from "./winapi";
 
@@ -201,8 +201,9 @@ async function testLinkedPdf(): Promise<void> {
       }
       // the shortcut itself can't be pressed from here (posted key messages
       // carry no modifier state), so check what it is bound to
-      if (state.accel !== "Shift + F") {
-        fail(`expected the Shift + F shortcut, got '${state.accel}'`, dump);
+      const accel = shortcutLabel("Shift + F");
+      if (state.accel !== accel) {
+        fail(`expected the ${accel} shortcut, got '${state.accel}'`, dump);
       }
 
       // turn the mode on
