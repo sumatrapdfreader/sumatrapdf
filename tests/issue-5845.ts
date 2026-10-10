@@ -6,8 +6,10 @@
 
 import { copyFileSync, existsSync, mkdirSync, rmSync } from "node:fs";
 import { join } from "node:path";
+import type { ControlClient } from "./control.ts";
+import { IS_MAC } from "./host.ts";
 import { cmdId, tmpPath } from "./util.ts";
-import { launchSumatra, sendCommand, waitForFrame, killAndWait } from "./win-automation.ts";
+import { launchControlled, launchSumatra, sendCommand, waitForFrame, killAndWait } from "./win-automation.ts";
 import { getWindowText, sleep } from "./winapi.ts";
 
 const SRC_PDF = join(import.meta.dir, "issue-3219.pdf");
@@ -36,12 +38,25 @@ export async function testit(): Promise<void> {
   copyFileSync(SRC_PDF, bbb);
   copyFileSync(SRC_PDF, ccc);
 
-  const proc = launchSumatra([aaa]);
-  try {
-    const frame = await waitForFrame(proc.pid!);
-    if (!frame) {
+  // macOS commands go through the control socket, which launchSumatra does not open.
+  let proc;
+  let frame: number;
+  let client: ControlClient | undefined;
+  if (IS_MAC) {
+    const launched = await launchControlled([aaa]);
+    proc = launched.proc;
+    frame = launched.frame;
+    client = launched.client;
+    await client.waitForRenderIdle();
+  } else {
+    proc = launchSumatra([aaa]);
+    const found = await waitForFrame(proc.pid!);
+    if (!found) {
       throw new Error("SumatraPDF frame window not found");
     }
+    frame = found;
+  }
+  try {
     const command = cmdId("CmdDeleteFileAndOpenNext");
 
     sendCommand(frame, command);
@@ -60,7 +75,15 @@ export async function testit(): Promise<void> {
       await sleep(30);
     }
   } finally {
-    await killAndWait(proc);
+    if (client && proc.exitCode === null) {
+      try {
+        await client.quit();
+      } catch {
+        await killAndWait(proc);
+      }
+    } else {
+      await killAndWait(proc);
+    }
     rmSync(dir, { recursive: true, force: true });
   }
 }
