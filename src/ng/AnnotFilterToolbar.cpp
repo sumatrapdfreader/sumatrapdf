@@ -207,9 +207,12 @@ static void FocusList(AnnotFilterToolbar* f) {
     f->listFocused = true;
 }
 
-// orig's HwndSetFocus(hwndCanvas): the document takes the keys
+// orig's HwndSetFocus(hwndCanvas): the document takes the keys. The list
+// stays open; the filter edit must not keep them.
 static void FocusDocument(AnnotFilterToolbar* f) {
-    if (f->tw) {
+    gp::Window* host = HostWindow(f);
+    if (f->tw && host && host->input) {
+        gp::InputBlur(host->input, host->app, host);
         AppShellActivateWindow(f->win);
     }
     AppShellFocusFrame(f->win);

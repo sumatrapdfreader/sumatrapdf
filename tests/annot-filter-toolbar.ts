@@ -9,6 +9,7 @@
 import { mkdirSync, rmSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 import { ControlClient, ControlCommand } from "./control";
+import { IS_MAC } from "./host";
 import { assemblePdf, cmdId, runStandalone, SLOW_BUILD_FACTOR, tmpPath } from "./util";
 import {
   captureWindowToPng,
@@ -25,6 +26,7 @@ import {
   sleep,
   VK_DELETE,
   VK_DOWN,
+  VK_ESCAPE,
   WM_KEYDOWN,
   WM_LBUTTONDBLCLK,
   WM_LBUTTONDOWN,
@@ -171,6 +173,114 @@ function floatEditHwnd(floatWnd: number): number {
   return e;
 }
 
+async function annotAction(client: ControlClient, args: (string | number)[]): Promise<string> {
+  const res = await client.request(ControlCommand.TestAnnotFilter, args);
+  const raw = String(res[1] ?? "");
+  if (res[0] !== 0) {
+    throw new Error(`annot-filter-toolbar: TestAnnotFilter ${args.join(" ")}: ${raw}`);
+  }
+  return raw;
+}
+
+// The filter edit is an input hit in the annotlist tool window. Keys clear
+// the text only while that edit has the host focus.
+async function annotListState(client: ControlClient): Promise<string> {
+  return String((await client.request(ControlCommand.TestToolWindow, ["state", "annotlist"]))[1] ?? "");
+}
+
+// filterFocused also requires the native window to be key. The edit having
+// the gpui focus is what sends Escape to the filter.
+async function focusFilterEdit(client: ControlClient): Promise<void> {
+  const deadline = Date.now() + 4000 * SLOW_BUILD_FACTOR;
+  let last = "";
+  while (Date.now() < deadline) {
+    last = String((await client.request(ControlCommand.TestToolWindow, ["layout", "annotlist"]))[1] ?? "");
+    const hit = /hit rect=(-?\d+),(-?\d+),(-?\d+),(-?\d+) click=\d+ input=1/.exec(last);
+    if (hit) {
+      const x = Math.floor(+hit[1]! + +hit[3]! / 2);
+      const y = Math.floor(+hit[2]! + +hit[4]! / 2);
+      const clicked = String(
+        (await client.request(ControlCommand.TestToolWindow, ["input", "annotlist", "click", x, y, 0, 0]))[1] ?? "",
+      );
+      if (clicked.startsWith("ERR") || clicked === "NOTREADY") {
+        throw new Error(`annot-filter-toolbar: filter click: ${clicked}`);
+      }
+      const focused = Date.now() + 2000 * SLOW_BUILD_FACTOR;
+      let state = "";
+      while (Date.now() < focused) {
+        state = await annotListState(client);
+        if (/ edit=1/.test(state)) {
+          return;
+        }
+        await sleep(40);
+      }
+      throw new Error(`annot-filter-toolbar: filter edit did not focus\n${state}`);
+    }
+    await sleep(50);
+  }
+  throw new Error(`annot-filter-toolbar: filter input not in layout\n${last}`);
+}
+
+async function macAnnotFilter(client: ControlClient, frame: number): Promise<void> {
+  sendCommandSync(frame, cmdId("CmdToggleEditPDF"));
+  const closed = await toolbarDump(client);
+  if (/annotFilter floatVisible=1/.test(closed)) {
+    throw new Error(`annot-filter-toolbar: annotation list opened without being asked for\n${closed}`);
+  }
+
+  sendCommandSync(frame, cmdId("CmdFindAnnotation"));
+  let st = await waitFilter(client, (s) => s.floatVisible && s.nAll >= 2, 8000);
+  if (st.discardEnabled || st.saveEnabled) {
+    throw new Error(`annot-filter-toolbar: save/discard should be disabled with no changes\n${st.raw}`);
+  }
+  const opened = String((await client.request(ControlCommand.TestToolWindow, ["state", "annotlist"]))[1] ?? "");
+  if (!opened.startsWith("OK size=")) {
+    throw new Error(`annot-filter-toolbar: annotation list window not visible\n${opened}`);
+  }
+
+  await focusFilterEdit(client);
+  await annotAction(client, ["key", VK_DOWN, 0]);
+  await waitFilter(client, (s) => s.sel >= 0);
+  await waitPageSelected(client, "arrow did not select annotation on the page");
+  await waitFilter(client, (s) => s.deleteEnabled);
+
+  await annotAction(client, ["set", "unique"]);
+  await waitFilter(client, (s) => s.nVisible === 1 && s.floatVisible);
+
+  await annotAction(client, ["key", VK_ESCAPE, 0]);
+  await waitFilter(client, (s) => s.nVisible >= 2 && s.floatVisible);
+  await annotAction(client, ["key", VK_ESCAPE, 0]);
+  const left = Date.now() + 4000 * SLOW_BUILD_FACTOR;
+  let state = "";
+  let raw = "";
+  for (;;) {
+    raw = await toolbarDump(client);
+    state = await annotListState(client);
+    const st = parseFilter(raw);
+    if (st?.floatVisible && /listFocused=0/.test(raw) && / edit=0/.test(state)) {
+      break;
+    }
+    if (Date.now() > left) {
+      throw new Error(`annot-filter-toolbar: Esc with an empty filter did not focus the document\n${state}\n${raw}`);
+    }
+    await sleep(50);
+  }
+
+  await annotAction(client, ["click", 0]);
+  await waitFilter(client, (s) => s.sel >= 0);
+  await annotAction(client, ["dblclick", 0]);
+  await waitPageSelected(client, "double-click did not select the annotation");
+
+  await waitFilter(client, (s) => s.nSel >= 1 && s.deleteEnabled);
+  await annotAction(client, ["click", 1, 1]);
+  await waitFilter(client, (s) => s.nSel >= 2);
+  await annotAction(client, ["key", VK_DELETE, 0]);
+  await waitFilter(client, (s) => s.nAll === 0 && s.nSel === 0 && !s.deleteEnabled);
+
+  sendCommandSync(frame, cmdId("CmdFindAnnotation"));
+  await waitFilter(client, (s) => !s.floatVisible);
+}
+
 export async function testit(): Promise<void> {
   const dir = tmpPath("annot-filter-toolbar");
   rmSync(dir, { recursive: true, force: true });
@@ -182,6 +292,10 @@ export async function testit(): Promise<void> {
   try {
     await client.waitForRenderIdle();
     await client.setNotificationsEnabled(false);
+    if (IS_MAC) {
+      await macAnnotFilter(client, frame);
+      return;
+    }
     const pid = getWindowPid(frame);
     sendCommandSync(frame, cmdId("CmdToggleEditPDF"));
 
