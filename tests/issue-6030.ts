@@ -9,6 +9,7 @@
 import { mkdirSync, rmSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 import { withControlledSumatra } from "./control.ts";
+import { IS_MAC } from "./host.ts";
 import { EXE, runStandalone, tmpPath } from "./util.ts";
 import { captureWindowPixels } from "./winapi.ts";
 import { findCanvas, waitForFrame } from "./win-automation.ts";
@@ -34,6 +35,11 @@ function countNear(data: Uint8Array, r: number, g: number, b: number, slop: numb
 }
 
 export async function testit(): Promise<void> {
+  // The recolor shows up in the painted page. A fresh engine render stays white.
+  if (IS_MAC) {
+    console.log("SKIP issue-6030: the check reads canvas pixels with GetWindowDC");
+    return;
+  }
   const appData = tmpPath("issue-6030-appdata");
   rmSync(appData, { recursive: true, force: true });
   mkdirSync(appData, { recursive: true });
