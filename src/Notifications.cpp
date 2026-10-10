@@ -1016,6 +1016,7 @@ void ShowMaybeDelayedNotifications(HWND hwndParent) {
     gDelayedNotifications = nullptr;
 }
 
+// the window half of orig's ShowChapterLayoutProgress (DisplayModel.cpp)
 static void ShowChapterLayoutNotif(DisplayModel* dm, Str msg, bool finished) {
     MainWindow* found = nullptr;
     WindowTab* tab = nullptr;
@@ -1034,16 +1035,14 @@ static void ShowChapterLayoutNotif(DisplayModel* dm, Str msg, bool finished) {
     if (!found) {
         return;
     }
-
     int timeout = finished ? kNotif5SecsTimeOut : kNotifNoTimeout;
-    NotificationWnd* wnd = GetNotificationForGroup(found->hwndCanvas, kNotifChapterLayout);
+    NotificationWnd* wnd = GetNotificationForGroup(found, kNotifChapterLayout);
     if (wnd) {
         NotificationUpdateMessage(wnd, msg, timeout);
         return;
     }
-
     NotificationCreateArgs args;
-    args.hwndParent = found->hwndCanvas;
+    args.win = found;
     args.groupId = kNotifChapterLayout;
     args.timeoutMs = timeout;
     args.corner = NotifCorner::BottomLeft;
@@ -1053,14 +1052,14 @@ static void ShowChapterLayoutNotif(DisplayModel* dm, Str msg, bool finished) {
     ShowNotification(args);
 }
 
+// the window half of orig's NotifyMediaBoxRelayout (DisplayModel.cpp)
 static void ShowLazyLayoutNotif(DisplayModel* dm, Str msg) {
     for (MainWindow* win : gWindows) {
         if (win->AsFixed() != dm) {
             continue;
         }
-
         NotificationCreateArgs args;
-        args.hwndParent = win->hwndCanvas;
+        args.win = win;
         args.groupId = kNotifLazyLayout;
         args.timeoutMs = kNotif5SecsTimeOut;
         args.corner = NotifCorner::BottomLeft;

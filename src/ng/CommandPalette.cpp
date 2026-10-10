@@ -1239,23 +1239,6 @@ static TempStr UpdateCommandNameTemp(MainWindow* win, int cmdId, Str s) {
     return s;
 }
 
-static void AppendTab(StrVecCP& tabs, WindowTab* tab, WindowTab* currTab, int& currTabIdx) {
-    ItemDataCP data;
-    data.tab = tab;
-    if (tab->IsAboutTab()) {
-        tabs.Append(Tr("Home"), data);
-    } else {
-        auto name = path::GetBaseNameTemp(tab->filePath);
-        if (len(name) == 0) {
-            return;
-        }
-        tabs.Append(name, data);
-    }
-    if (tab == currTab) {
-        currTabIdx = len(tabs) - 1;
-    }
-}
-
 // orig's CollectTabsRegular / CollectTabsMru, as a list of tabs so the Ctrl+Tab
 // switcher can use the same order
 void PaletteCollectTabs(MainWindow* win, bool mru, Vec<WindowTab*>& out, int& currTabIdx) {

@@ -1622,24 +1622,6 @@ static TempStr UpdateCommandNameTemp(MainWindow* win, int cmdId, Str s) {
     return s;
 }
 
-static void AppendTab(StrVecCP& tabs, WindowTab* tab, WindowTab* currTab, int& currTabIdx) {
-    ItemDataCP data;
-    data.tab = tab;
-    if (tab->IsAboutTab()) {
-        tabs.Append(Tr("Home"), data);
-    } else {
-        auto name = path::GetBaseNameTemp(tab->filePath);
-        if (len(name) == 0) {
-            return;
-        }
-        tabs.Append(name, data);
-    }
-    if (tab == currTab) {
-        currTabIdx = len(tabs) - 1;
-        logf("currTabIdx: %d\n", currTabIdx);
-    }
-}
-
 void CommandPaletteWnd::CollectTabsRegular(MainWindow* /*mainWin*/, WindowTab* currTab) {
     currTabIdx = 0;
     tabs.Reset();

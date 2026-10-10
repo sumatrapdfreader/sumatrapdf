@@ -60,3 +60,5 @@ void CollectSettingRows(StrVecCP& out);
 TempStr CommandPaletteShortcutTemp(i32 cmdId);
 void FilterStrings(StrVecCP& strs, const StrVec& words, StrVecCP& matchedOut);
 bool SplitSettingValueQuery(Str query, Str& path, Str& value);
+
+void AppendTab(StrVecCP& tabs, WindowTab* tab, WindowTab* currTab, int& currTabIdx);
