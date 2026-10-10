@@ -77,3 +77,22 @@ Str CurrentImageTabPathTemp(MainWindow* win);
 void PrintCurrentFileDeferred(MainWindow* win);
 void PrintSelectionDeferred(MainWindow* win);
 void ReplaceColor(ParsedColor& col, Str maybeColor);
+
+bool WindowHasDocumentLoading(MainWindow* win);
+TempStr FindCoverImageTemp(Str docPath);
+void TogglePageInfoHelper(MainWindow* win);
+void RenameFileInHistory(Str oldPath, Str newPath);
+extern MeasurementUnit cursorPosUnit;
+extern Kind kNotifNextFileHint;
+void ToggleContinuousView(MainWindow* win);
+void ShowZoomNotification(MainWindow* win, float zoomLevel);
+void ShowViewModeNotification(MainWindow* win, int cmdId);
+void ZoomToSelection(MainWindow* win);
+bool IsManualDocHtmlPage(Str path);
+Str ManualInjectThemeCss(Str html);
+TempStr DocURIToWebUrlTemp(Str docURI);
+bool SetPointToVisiblePage(DisplayModel* dm, Point& pt, int& pageNo);
+
+// implemented by each app
+void ShowPageInfoIfWanted(MainWindow* win);
+void ToggleCursorPositionInDoc(MainWindow* win);

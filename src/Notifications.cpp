@@ -32,6 +32,7 @@ void SetNotifWindow(NotificationCreateArgs& args, MainWindow* win) {
     args.hwndParent = win ? win->hwndCanvas : nullptr;
 }
 
+Kind kNotifZoomOrView = "zoomOrView";
 Kind kNotifCursorPos = "cursorPosHelper";
 Kind kNotifActionResponse = "responseToAction";
 Kind kNotifPageInfo = "pageInfoHelper";

@@ -1246,3 +1246,332 @@ void ReplaceColor(ParsedColor& col, Str maybeColor) {
         SetColorText(col, SerializeColorTemp(c.col));
     }
 }
+
+EBookUI* GetEBookUI() {
+    if (!gSettings) return nullptr;
+    return &gSettings->eBookUI;
+}
+
+// ok for tab to be null
+void SelectTabInWindow(WindowTab* tab) {
+    if (!tab || !tab->win) {
+        return;
+    }
+    auto* win = tab->win;
+    if (tab == win->CurrentTab()) {
+        return;
+    }
+    TabsSelect(win, win->GetTabIdx(tab));
+}
+
+// True while a tab is mid-load (async open). Used so we don't treat a plain
+// home/empty window as "still loading" for WindowState bookkeeping.
+bool WindowHasDocumentLoading(MainWindow* win) {
+    if (!win) {
+        return false;
+    }
+    for (WindowTab* tab : win->Tabs()) {
+        if (tab->loadState == WindowTab::LoadState::Loading || tab->loadState == WindowTab::LoadState::LoadedPending) {
+            return true;
+        }
+    }
+    return false;
+}
+
+// an image next to the document with the same base name (Calibre puts a
+// "Title.jpg" cover next to "Title.epub") beats page 1 as the thumbnail
+TempStr FindCoverImageTemp(Str docPath) {
+    static const char* kCoverExts[] = {".jpg", ".jpeg", ".png"};
+    TempStr noExt = path::GetPathNoExtTemp(docPath);
+    for (const char* ext : kCoverExts) {
+        TempStr cover = str::JoinTemp(noExt, Str(ext));
+        if (str::EqI(cover, docPath)) {
+            continue;
+        }
+        if (file::Exists(cover)) {
+            return cover;
+        }
+    }
+    return {};
+}
+
+void TogglePageInfoHelper(MainWindow* win) {
+    if (!win) {
+        return;
+    }
+    if (win->pageInfoWanted) {
+        win->pageInfoWanted = false;
+        RemoveNotificationsForGroup(win, kNotifPageInfo);
+        return;
+    }
+    win->pageInfoWanted = true;
+    ShowPageInfoIfWanted(win);
+}
+
+void RenameFileInHistory(Str oldPath, Str newPath) {
+    logf("RenameFileInHistory: oldPath: '%s', newPath: '%s'\n", oldPath, newPath);
+    if (path::IsSame(oldPath, newPath)) {
+        return;
+    }
+    FileState* fs = FileHistoryFindByPath(newPath);
+    bool oldIsPinned = false;
+    int oldOpenCount = 0;
+    if (fs) {
+        oldIsPinned = fs->isPinned;
+        oldOpenCount = fs->openCount;
+        FileHistoryRemove(fs);
+        // TODO: merge favorites as well?
+        if (len(*fs->favorites) > 0) {
+            UpdateFavoritesTreeForAllWindows();
+        }
+        DeleteFileState(fs);
+    }
+    fs = FileHistoryFindByPath(oldPath);
+    if (fs) {
+        SetFileStatePath(fs, newPath);
+        // merge Frequently Read data, so that a file
+        // doesn't accidentally vanish from there
+        fs->isPinned = fs->isPinned || oldIsPinned;
+        fs->openCount += oldOpenCount;
+        // the thumbnail is recreated by LoadDocument
+        FreePixmap(fs->thumbnail);
+        fs->thumbnail = nullptr;
+    }
+}
+
+MeasurementUnit cursorPosUnit = MeasurementUnit::pt;
+
+// end-of-document hint for "open next file in folder" discoverability
+Kind kNotifNextFileHint = "nextFileHint";
+
+void DismissNextFileScrollHint(MainWindow* win) {
+    if (!win) {
+        return;
+    }
+    RemoveNotificationsForGroup(win, kNotifNextFileHint);
+}
+
+void ToggleContinuousView(MainWindow* win) {
+    if (!win->IsDocLoaded()) {
+        return;
+    }
+    DisplayMode newMode = win->ctrl->GetDisplayMode();
+    switch (newMode) {
+        case DisplayMode::SinglePage:
+        case DisplayMode::Continuous:
+            newMode = IsContinuous(newMode) ? DisplayMode::SinglePage : DisplayMode::Continuous;
+            break;
+        case DisplayMode::Facing:
+        case DisplayMode::ContinuousFacing:
+            newMode = IsContinuous(newMode) ? DisplayMode::Facing : DisplayMode::ContinuousFacing;
+            break;
+        case DisplayMode::BookView:
+        case DisplayMode::ContinuousBookView:
+            newMode = IsContinuous(newMode) ? DisplayMode::BookView : DisplayMode::ContinuousBookView;
+            break;
+        default:
+            break;
+    }
+    SwitchToDisplayMode(win, newMode);
+}
+
+void ShowZoomNotification(MainWindow* win, float zoomLevel) {
+    // don't show zoom info if showing page info
+    NotificationWnd* wnd = GetNotificationForGroup(win, kNotifPageInfo);
+    if (wnd) {
+        return;
+    }
+    NotificationCreateArgs args;
+    args.groupId = kNotifZoomOrView;
+    args.timeoutMs = 2000;
+    args.win = win;
+    args.msg = BuildZoomString(zoomLevel);
+    ShowNotification(args);
+}
+
+void ShowViewModeNotification(MainWindow* win, int cmdId) {
+    NotificationWnd* wnd = GetNotificationForGroup(win, kNotifPageInfo);
+    if (wnd) {
+        return;
+    }
+    Str viewName;
+    if (cmdId == CmdSinglePageView) {
+        viewName = Tr("Single Page");
+    } else if (cmdId == CmdFacingView) {
+        viewName = Tr("Facing");
+    } else if (cmdId == CmdBookView) {
+        viewName = Tr("Book View");
+    } else {
+        return;
+    }
+    TempStr msg = fmt("%s: %s", Tr("View"), viewName);
+    NotificationCreateArgs args;
+    args.groupId = kNotifZoomOrView;
+    args.timeoutMs = 2000;
+    args.win = win;
+    args.msg = msg;
+    ShowNotification(args);
+}
+
+// Zoom so that the current selection (Ctrl + drag rectangle or selected text)
+// fills the window, and centre it. The selection itself is left alone so it can
+// still be copied afterwards, and a navigation point is added first so Back
+// returns to the view you zoomed from (issue #1699).
+void ZoomToSelection(MainWindow* win) {
+    DisplayModel* dm = win->AsFixed();
+    WindowTab* tab = win->CurrentTab();
+    if (!dm || !tab || !win->showSelection || !tab->selectionOnPage) {
+        return;
+    }
+
+    // the selection doesn't move in page coordinates while we zoom, so remember
+    // it there and map it back to the screen once the new zoom is applied
+    int pageNo = 0;
+    RectF selPage;
+    Rect selScreen;
+    bool isFirst = true;
+    for (SelectionOnPage& sel : *tab->selectionOnPage) {
+        Rect rc = sel.GetRect(dm);
+        if (rc.IsEmpty()) {
+            continue;
+        }
+        if (isFirst) {
+            pageNo = sel.pageNo;
+            selPage = sel.rect;
+            selScreen = rc;
+            isFirst = false;
+            continue;
+        }
+        selScreen = selScreen.Union(rc);
+        if (sel.pageNo == pageNo) {
+            selPage = selPage.Union(sel.rect);
+        }
+    }
+    Rect viewPort = dm->GetViewPort();
+    if (isFirst || selScreen.dx <= 0 || selScreen.dy <= 0 || viewPort.dx <= 0 || viewPort.dy <= 0) {
+        return;
+    }
+
+    float fx = (float)viewPort.dx / (float)selScreen.dx;
+    float fy = (float)viewPort.dy / (float)selScreen.dy;
+    float newZoom = dm->GetZoomVirtual(true) * std::min(fx, fy);
+    newZoom = limitValue(newZoom, kZoomMin, kZoomMax);
+
+    // remember the zoom too, so Back undoes the whole "zoom to selection"
+    dm->AddNavPoint(true);
+    SmartZoom(win, newZoom, nullptr, false);
+
+    // put the middle of the selection in the middle of the window
+    Rect rc = dm->CvtToScreen(pageNo, selPage);
+    viewPort = dm->GetViewPort();
+    // the selection can already be centered on either axis, in which case
+    // there's nothing to scroll (ScrollYBy asserts on a 0 delta)
+    int dx = rc.x + (rc.dx / 2) - (viewPort.dx / 2);
+    int dy = rc.y + (rc.dy / 2) - (viewPort.dy / 2);
+    if (0 != dx) {
+        dm->ScrollXBy(dx);
+    }
+    if (0 != dy) {
+        dm->ScrollYBy(dy, false);
+    }
+}
+
+// what CmdToggleCursorPosition would switch to. The tip cycles pt -> mm -> in
+// and then closes, so the command palette can't say true / false; naming the
+// next unit here keeps it in step with ToggleCursorPositionInDoc() below
+// next state of the cursor-position tip, for the command palette
+Str NextCursorPositionUnitName(MainWindow* win) {
+    if (!win || !win->AsFixed()) {
+        return {};
+    }
+    if (!GetNotificationForGroup(win, kNotifCursorPos)) {
+        return StrL("pt");
+    }
+    if (cursorPosUnit == MeasurementUnit::pt) {
+        return StrL("mm");
+    }
+    if (cursorPosUnit == MeasurementUnit::mm) {
+        return StrL("in");
+    }
+    return StrL("off");
+}
+
+bool IsManualDocHtmlPage(Str path) {
+    if (len(path) == 0 || !str::EndsWithI(path, StrL(".html"))) {
+        return false;
+    }
+    if (str::EqI(path, StrL("manual.shell.html"))) {
+        return false;
+    }
+    return true;
+}
+
+// The manual's theme switch (docs/theme.js) has a third option that follows the
+// app: announce the app's scheme and the HelpTheme setting before the script
+// runs, and hand the exact window colors to manual.css so "app" mode matches
+// the native window.
+Str ManualInjectThemeCss(Str html) {
+    TempStr bg = SerializeColorTemp(ThemeWindowBackgroundColor());
+    TempStr fg = SerializeColorTemp(ThemeWindowTextColor());
+    Str scheme = IsLightColor(ThemeWindowBackgroundColor()) ? StrL("light") : StrL("dark");
+    // theme.js calls the follow-the-app option "system"
+    Str pref = HelpThemePref();
+    if (str::Eq(pref, StrL("app"))) {
+        pref = StrL("system");
+    }
+    TempStr script =
+        fmt("<script>window.SumatraAppTheme=\"%s\";window.SumatraManualTheme=\"%s\"</script>", scheme, pref);
+    TempStr css =
+        fmt("<style id=\"sumatra-manual-theme\">"
+            "html[data-theme-pref=\"system\"]{--bg-primary:%s;--bg-elevated:%s;--text-primary:%s;--link-color:%s}"
+            "</style>",
+            bg, bg, fg, fg);
+
+    int scriptAt = str::IndexOfI(html, StrL("<head>"));
+    scriptAt = scriptAt < 0 ? 0 : scriptAt + len(StrL("<head>"));
+    int cssAt = str::IndexOfI(html, StrL("</head>"));
+    if (cssAt < scriptAt) {
+        cssAt = scriptAt;
+    }
+    str::Builder result;
+    result.Reserve(len(html) + len(script) + len(css));
+    result.Append(Str(html.s, scriptAt));
+    result.Append(script);
+    result.Append(Str(html.s + scriptAt, cssAt - scriptAt));
+    result.Append(css);
+    result.Append(Str(html.s + cssAt, len(html) - cssAt));
+    return result.TakeStr();
+}
+
+TempStr DocURIToWebUrlTemp(Str docURI) {
+    if (len(docURI) == 0) {
+        docURI = Str(kManualDefaultDocURI);
+    }
+    if (len(docURI) > 0 && docURI.s[0] == '/') {
+        return fmt("https://www.sumatrapdfreader.org/docs%s", docURI);
+    }
+    return fmt("https://www.sumatrapdfreader.org/docs/%s", docURI);
+}
+
+// Pick the center of the visible part of the current page when a command has
+// no usable canvas point, as happens after clicking an annotation-toolbar button.
+bool SetPointToVisiblePage(DisplayModel* dm, Point& pt, int& pageNo) {
+    pageNo = dm->FirstVisiblePageNo();
+    if (!dm->ValidPageNo(pageNo)) {
+        pageNo = dm->CurrentPageNo();
+    }
+    if (!dm->ValidPageNo(pageNo)) {
+        return false;
+    }
+    PageInfo* pi = dm->GetPageInfo(pageNo);
+    Size viewport = dm->GetViewPort().Size();
+    Rect visible = pi->pageOnScreen.Intersect(Rect{0, 0, viewport.dx, viewport.dy});
+    if (visible.IsEmpty()) {
+        visible = pi->pageOnScreen;
+    }
+    if (visible.IsEmpty()) {
+        return false;
+    }
+    pt = Point(visible.x + (visible.dx / 2), visible.y + (visible.dy / 2));
+    return true;
+}

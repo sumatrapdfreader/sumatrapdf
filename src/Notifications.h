@@ -9,6 +9,7 @@ struct VirtRichText;
 struct ILayout;
 struct PlatformFont;
 
+extern Kind kNotifZoomOrView;
 extern Kind kNotifCursorPos;
 extern Kind kNotifActionResponse;
 extern Kind kNotifPageInfo;
