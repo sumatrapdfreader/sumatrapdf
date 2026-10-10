@@ -9,6 +9,7 @@
 import { writeFileSync } from "node:fs";
 import { join } from "node:path";
 import { withControlledSumatra } from "./control.ts";
+import { IS_MAC } from "./host.ts";
 import { assemblePdf, EXE, runStandalone, tmpPath, writeAppdata } from "./util.ts";
 import { captureWindowPixels, captureWindowToPng } from "./winapi.ts";
 import { findCanvas, waitForFrame } from "./win-automation.ts";
@@ -101,6 +102,11 @@ function urlBandStats(
 }
 
 export async function testit(): Promise<void> {
+  // Smart recolor runs on the painted bitmap. An engine render stays uncolored.
+  if (IS_MAC) {
+    console.log("SKIP issue-5911: the check reads canvas pixels with GetWindowDC");
+    return;
+  }
   const dir = writeAppdata(
     "issue-5911-appdata",
     [
