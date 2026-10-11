@@ -92,6 +92,13 @@ static Accel gBuiltInAccelerators[] = {
     {{kVirt, 'G'}, CmdGoToPage},
     {{kCtrl | kVirt, 'K'}, CmdCommandPalette},
     //{{kAlt | kVirt, 'K'}, CmdCommandPaletteOnlyTabs}, // removed in 3.6
+    // the palette's mode prefixes, typed as ASCII accelerators (any layout)
+    {{0, '>'}, CmdCommandPalette},
+    {{0, '@'}, CmdNavigateTabs},
+    {{0, '#'}, CmdNavigateHistory},
+    {{0, '$'}, CmdNavigateFavorites},
+    {{0, '%'}, CmdNavigateTableOfContents},
+    {{0, '&'}, CmdNavigateThumbnail},
     {{kShift | kCtrl | kVirt, 'S'}, CmdSaveAnnotations},
     {{kCtrl | kVirt, 'P'}, CmdPrint},
     {{kCtrl | kVirt, 'Q'}, CmdExit},
@@ -134,7 +141,7 @@ static Accel gBuiltInAccelerators[] = {
     {{kVirt, VK_F11}, CmdToggleFullscreen},
     {{kShift | kCtrl | kVirt, 'H'}, CmdToggleAutomaticallyScroll},
     {{kVirt, VK_F12}, CmdToggleBookmarks},
-    {{kShift | kVirt, VK_F12}, CmdCommandPaletteTOC},
+    {{kShift | kVirt, VK_F12}, CmdNavigateTableOfContents},
     {{kShift | kCtrl | kVirt, VK_SUBTRACT}, CmdRotateLeft},
     {{kShift | kCtrl | kVirt, VK_OEM_MINUS}, CmdRotateLeft},
     {{kShift | kCtrl | kVirt, 'T'}, CmdReopenLastClosedFile},
@@ -459,6 +466,18 @@ int SafeAcceleratorCmd(u16 vk, bool ctrl, bool shift, bool alt, bool cmd) {
     return 0;
 }
 
+// the command of an ASCII accelerator ({0, ch}, no modifiers): it matches
+// the typed character, so it works on any keyboard layout
+int AsciiAcceleratorCmd(u32 ch) {
+    for (int i = 0; i < gAccelsCount; i++) {
+        const Accel& a = gAccels[i];
+        if (!a.sc.isVirt && a.sc.Mods() == 0 && a.sc.vk == ch) {
+            return a.cmd;
+        }
+    }
+    return 0;
+}
+
 static Str CurrentLangCode() {
     return trans::GetCurrentLangCode();
 }
@@ -572,6 +591,11 @@ static void BuildAcceleratorStrokes() {
     gAccelStrokes = AllocArray<AccelStroke>(gAccelsCount);
     gAccelStrokesCount = 0;
     for (int i = 0; i < gAccelsCount; i++) {
+        // an ASCII accelerator matches the typed character (AsciiAcceleratorCmd),
+        // not a key gpui could name
+        if (!gAccels[i].sc.isVirt) {
+            continue;
+        }
         TempStr stroke = ShortcutToGpuiStroke(gAccels[i].sc);
         if (len(stroke) == 0) {
             logf("BuildAcceleratorStrokes: no gpui key name for vk 0x%x\n", gAccels[i].sc.vk);

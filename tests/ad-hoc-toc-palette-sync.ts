@@ -22,7 +22,7 @@ import {
 } from "./win-automation.ts";
 import { sleep, moveWindow, treeGetSelection, enumWindows, getWindowPid, findChildWindow, sendText } from "./winapi.ts";
 
-const CmdCommandPaletteTOC = cmdId("CmdCommandPaletteTOC");
+const CmdNavigateTableOfContents = cmdId("CmdNavigateTableOfContents");
 
 // a 4-page PDF with 4 top-level bookmarks (one per page), /UseOutlines so the
 // bookmarks panel opens automatically
@@ -101,7 +101,7 @@ export async function testit(): Promise<void> {
 
     // open the palette in TOC ("*") mode, filter to Chapter Four, navigate to it
     const before = new Set(topWindows(proc.pid));
-    sendCommand(frame, CmdCommandPaletteTOC);
+    sendCommand(frame, CmdNavigateTableOfContents);
     await sleep(700);
     const palette = topWindows(proc.pid).find((h) => !before.has(h) && findChildWindow(h, "Edit")) ?? 0;
     if (!palette) {

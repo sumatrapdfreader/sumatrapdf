@@ -235,7 +235,7 @@ const commandsRaw = [
     "CmdReadAloudSelection", "Start Reading Selection",
     "CmdToggleToolbarShowReadAloud", "Read Aloud: Show In Toolbar",
     "CmdRemoveDeletedFilesFromHistory", "Remove Deleted Files From History",
-    "CmdCommandPaletteTOC", "Command Palette: Table Of Contents",
+    "CmdNavigateTableOfContents", "Navigate Table Of Contents",
     "CmdDebugToggleRenderInfo", "Debug: Toggle Render Queue Info",
     "CmdConvertImageToPdf", "Convert Image To PDF...",
     "CmdExpandToCurrentPage", "Expand TOC to Current Page",
@@ -251,7 +251,7 @@ const commandsRaw = [
     "CmdGoToPrevFavorite", "Go to Previous Favorite",
     "CmdCreateAnnotImageFromClipboard", "Create Image Annotation From Clipboard",
     "CmdSetInverseSearch", "Set Inverse Search Command Line...",
-    "CmdCommandPaletteFavorites", "Command Palette: Favorites",
+    "CmdNavigateFavorites", "Navigate Favorites",
     "CmdNavigateFilesInFolder", "Navigate Files in Folder...",
     "CmdDebugToggleCacheInfo", "Debug: Toggle Cache Info",
     "CmdToggleEngineeringDrawingEnhance", "Toggle Engineering Drawing Enhancement",
@@ -341,6 +341,9 @@ const commandsRaw = [
     "CmdToggleThumbnails", "Toggle Thumbnails",
     "CmdMergePDF", "Merge PDF...",
     "CmdToggleAutoRotateWidePages", "Toggle Auto-Rotate Wide Pages",
+    "CmdNavigateTabs", "Navigate Tabs",
+    "CmdNavigateHistory", "Navigate History",
+    "CmdQuickEditSettings", "Quick Edit Settings",
 ];
 
 // removed slots are dropped: nothing outside the generators should see them

@@ -10071,14 +10071,26 @@ static LRESULT FrameOnCommand(MainWindow* win, HWND hwnd, UINT msg, WPARAM wp, L
             RunCommandPalette(win, mode, 0);
         } break;
 
-        case CmdCommandPaletteTOC:
+        case CmdNavigateTableOfContents:
             // alias for `CmdCommandPalette %`: open the palette in TOC mode
             RunCommandPalette(win, Str(kPalettePrefixTOC), 0);
             break;
 
-        case CmdCommandPaletteFavorites:
+        case CmdNavigateFavorites:
             // alias for `CmdCommandPalette $`: open the palette in favorites mode
             RunCommandPalette(win, Str(kPalettePrefixFavorites), 0);
+            break;
+
+        case CmdNavigateTabs:
+            RunCommandPalette(win, Str(kPalettePrefixTabs), 0);
+            break;
+
+        case CmdNavigateHistory:
+            RunCommandPalette(win, Str(kPalettePrefixFileHistory), 0);
+            break;
+
+        case CmdQuickEditSettings:
+            RunCommandPalette(win, Str(kPalettePrefixBoolSettings), 0);
             break;
 
         case CmdAIChatWithClaudeCode:

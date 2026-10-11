@@ -228,7 +228,7 @@ enum {
     CmdReadAloudSelection = 422,
     CmdToggleToolbarShowReadAloud = 423,
     CmdRemoveDeletedFilesFromHistory = 424,
-    CmdCommandPaletteTOC = 425,
+    CmdNavigateTableOfContents = 425,
     CmdDebugToggleRenderInfo = 426,
     CmdConvertImageToPdf = 427,
     CmdExpandToCurrentPage = 428,
@@ -244,7 +244,7 @@ enum {
     CmdGoToPrevFavorite = 438,
     CmdCreateAnnotImageFromClipboard = 439,
     CmdSetInverseSearch = 440,
-    CmdCommandPaletteFavorites = 441,
+    CmdNavigateFavorites = 441,
     CmdNavigateFilesInFolder = 442,
     CmdDebugToggleCacheInfo = 443,
     CmdToggleEngineeringDrawingEnhance = 444,
@@ -334,8 +334,11 @@ enum {
     CmdToggleThumbnails = 528,
     CmdMergePDF = 529,
     CmdToggleAutoRotateWidePages = 530,
+    CmdNavigateTabs = 531,
+    CmdNavigateHistory = 532,
+    CmdQuickEditSettings = 533,
 
-    CmdLast = 530,
+    CmdLast = 533,
     CmdFirstCustom = CmdLast + 100,
 
     // aliases, at the end to not mess ordering

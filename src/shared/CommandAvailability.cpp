@@ -284,8 +284,11 @@ static const i32 removeIfChm[] = {
 static const i32 gBlacklistCommandsFromPalette[] = {
     CmdNone,
     CmdCommandPalette,
-    CmdCommandPaletteTOC,
-    CmdCommandPaletteFavorites,
+    CmdNavigateTableOfContents,
+    CmdNavigateFavorites,
+    CmdNavigateTabs,
+    CmdNavigateHistory,
+    CmdQuickEditSettings,
     CmdNextTabSmart,
     CmdPrevTabSmart,
     CmdSetTheme,

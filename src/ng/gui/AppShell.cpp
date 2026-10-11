@@ -2720,6 +2720,14 @@ void ShellView::OnKeyDown(ShellView* self, gp::Ctx* cx, const gp::KeyEvent* ev) 
     // orig's FrameOnChar: + = - / b. gpui hands the typed character on in a
     // key event of its own, without a virtual key
     if (ev->vk == 0 && ev->ch != 0) {
+        // orig's TranslateAccelerator on WM_CHAR: '.', the palette prefixes
+        int cmd = frameKeys && !IsTextFieldFocused(cx) ? AsciiAcceleratorCmd(ev->ch) : 0;
+        if (cmd != 0) {
+            ExecuteCmd(win, cmd);
+            mut->propagate = false;
+            gp::Notify(cx);
+            return;
+        }
         if (SidebarOnChar(win, ev->ch) || FrameOnChar(win, ev->ch, ev->shift)) {
             mut->propagate = false;
             gp::Notify(cx);

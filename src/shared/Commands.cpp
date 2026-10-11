@@ -234,7 +234,7 @@ const CommandInfo gCommands[] = {
     {CmdReadAloudSelection, "CmdReadAloudSelection\0", StrL("Start Reading Selection")},
     {CmdToggleToolbarShowReadAloud, "CmdToggleToolbarShowReadAloud\0", StrL("Read Aloud: Show In Toolbar")},
     {CmdRemoveDeletedFilesFromHistory, "CmdRemoveDeletedFilesFromHistory\0", StrL("Remove Deleted Files From History")},
-    {CmdCommandPaletteTOC, "CmdCommandPaletteTOC\0", StrL("Command Palette: Table Of Contents")},
+    {CmdNavigateTableOfContents, "CmdNavigateTableOfContents\0", StrL("Navigate Table Of Contents")},
     {CmdDebugToggleRenderInfo, "CmdDebugToggleRenderInfo\0", StrL("Debug: Toggle Render Queue Info")},
     {CmdConvertImageToPdf, "CmdConvertImageToPdf\0", StrL("Convert Image To PDF...")},
     {CmdExpandToCurrentPage, "CmdExpandToCurrentPage\0", StrL("Expand TOC to Current Page")},
@@ -250,7 +250,7 @@ const CommandInfo gCommands[] = {
     {CmdGoToPrevFavorite, "CmdGoToPrevFavorite\0", StrL("Go to Previous Favorite")},
     {CmdCreateAnnotImageFromClipboard, "CmdCreateAnnotImageFromClipboard\0", StrL("Create Image Annotation From Clipboard")},
     {CmdSetInverseSearch, "CmdSetInverseSearch\0", StrL("Set Inverse Search Command Line...")},
-    {CmdCommandPaletteFavorites, "CmdCommandPaletteFavorites\0", StrL("Command Palette: Favorites")},
+    {CmdNavigateFavorites, "CmdNavigateFavorites\0", StrL("Navigate Favorites")},
     {CmdNavigateFilesInFolder, "CmdNavigateFilesInFolder\0", StrL("Navigate Files in Folder...")},
     {CmdDebugToggleCacheInfo, "CmdDebugToggleCacheInfo\0", StrL("Debug: Toggle Cache Info")},
     {CmdToggleEngineeringDrawingEnhance, "CmdToggleEngineeringDrawingEnhance\0", StrL("Toggle Engineering Drawing Enhancement")},
@@ -340,6 +340,9 @@ const CommandInfo gCommands[] = {
     {CmdToggleThumbnails, "CmdToggleThumbnails\0", StrL("Toggle Thumbnails")},
     {CmdMergePDF, "CmdMergePDF\0", StrL("Merge PDF...")},
     {CmdToggleAutoRotateWidePages, "CmdToggleAutoRotateWidePages\0", StrL("Toggle Auto-Rotate Wide Pages")},
+    {CmdNavigateTabs, "CmdNavigateTabs\0", StrL("Navigate Tabs")},
+    {CmdNavigateHistory, "CmdNavigateHistory\0", StrL("Navigate History")},
+    {CmdQuickEditSettings, "CmdQuickEditSettings\0", StrL("Quick Edit Settings")},
 };
 const int gCommandsCount = dimofi(gCommands);
 
