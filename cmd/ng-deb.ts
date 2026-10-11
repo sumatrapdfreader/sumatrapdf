@@ -216,6 +216,8 @@ async function main(): Promise<void> {
   // staged on the local disk: a mounted checkout may not keep modes or symlinks
   const stage = mkdtempSync(join(tmpdir(), "sumatrapdf-deb-"));
   try {
+    // mkdtemp makes it 0700; the package root must be world-readable
+    chmodSync(stage, 0o755);
     const usr = join(stage, "usr");
     stageExe(exe, join(usr, "bin", binName), debug);
     symlinkSync(binName, join(usr, "bin", binAlias));

@@ -6,6 +6,6 @@ Comment=View PDF, ePub, MOBI, CHM, XPS, DjVu, CBZ and CBR documents
 Exec=sumatrapdf %F
 Icon=sumatrapdf
 Terminal=false
-Categories=Office;Viewer;Graphics;
+Categories=Office;Viewer;
 Keywords=pdf;epub;mobi;chm;xps;djvu;comic;cbz;cbr;ebook;viewer;
 MimeType=application/pdf;application/epub+zip;application/x-mobipocket-ebook;application/vnd.amazon.ebook;application/vnd.amazon.mobi8-ebook;application/x-fictionbook+xml;application/x-zip-compressed-fb2;application/vnd.palm;application/vnd.ms-htmlhelp;application/oxps;application/vnd.ms-xpsdocument;image/vnd.djvu;image/vnd.djvu+multipage;application/vnd.comicbook+zip;application/vnd.comicbook-rar;application/x-cb7;application/x-cbt;text/markdown;image/svg+xml;image/png;image/jpeg;image/gif;image/bmp;image/tiff;image/webp;image/avif;image/heif;image/jxl;image/jxr;image/jp2;image/x-tga;image/vnd.microsoft.icon;
