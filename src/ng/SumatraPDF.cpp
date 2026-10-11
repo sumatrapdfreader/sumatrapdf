@@ -1143,9 +1143,7 @@ void ReloadDocument(MainWindow* win, bool autoRefresh) {
         return;
     }
     if (!tab->IsDocLoaded()) {
-        if (!autoRefresh) {
-            LoadDocument(win, path, LoadPrefs::DontSave, LoadReuse::CurrentTab);
-        }
+        LoadDocument(win, path, LoadPrefs::DontSave, LoadReuse::CurrentTab);
         return;
     }
     logf("ReloadDocument: %s, auto refresh: %d\n", path, (int)autoRefresh);
@@ -1734,7 +1732,11 @@ MainWindow* LoadDocument(MainWindow* win, Str path, LoadPrefs prefs, LoadReuse r
 static void StartLoadDocuments(StrVec& paths, MainWindow* win, bool skipHistory) {
     StrVec pathsToLoad;
     for (Str path : paths) {
-        if (SettingsUseTabs() && FindMainWindowByFile(path, true, win)) {
+        MainWindow* existing = SettingsUseTabs() ? FindMainWindowByFile(path, true, win) : nullptr;
+        if (existing) {
+            if (!existing->IsDocLoaded()) {
+                ReloadDocument(existing, false);
+            }
             continue;
         }
         AppendIfNotExists(&pathsToLoad, path);
