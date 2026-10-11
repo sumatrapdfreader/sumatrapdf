@@ -199,54 +199,13 @@ bool IsScrollToLink(IPageDestination* link) {
     return kind == kindDestinationScrollTo;
 }
 
-void visitTree(VistorForPageNoData* d, TreeItemVisitorData* vd) {
-    auto* tocItem = (TocItem*)vd->item;
-    if (!tocItem) {
-        return;
-    }
-    if (!d->bestMatch) {
-        // if nothing else matches, match the root node
-        d->bestMatch = tocItem;
-    }
-    ++d->nItems;
-    int page = tocItem->pageNo;
-    if ((page <= d->pageNo) && (page >= d->bestMatchPageNo) && (page >= 1)) {
-        d->bestMatch = tocItem;
-        d->bestMatchPageNo = page;
-        if (d->pageNo == d->bestMatchPageNo) {
-            // we can stop earlier if we found the exact match
-            vd->stopTraversal = true;
-            return;
+// the bookmarks that point at pageNo, in tree order
+void CollectTocItemsOnPage(TreeModel* tm, int pageNo, Vec<TocItem*>& out) {
+    for (TreeItem ti : TreeModelItems(tm)) {
+        auto* tocItem = (TocItem*)ti;
+        if (tocItem && tocItem->pageNo == pageNo && pageNo >= 1) {
+            VecAppend(out, tocItem);
         }
-    }
-}
-
-void visitTreeForChapter(VisitorForChapterData* d, TreeItemVisitorData* vd) {
-    auto* tocItem = (TocItem*)vd->item;
-    if (!tocItem || tocItem->loc.chapter != d->chapter) {
-        return;
-    }
-    if (!d->match) {
-        d->match = tocItem;
-        d->matchPageNo = tocItem->pageNo;
-    }
-    int page = tocItem->pageNo;
-    if (page >= 1 && page <= d->pageNo && page >= d->matchPageNo) {
-        d->match = tocItem;
-        d->matchPageNo = page;
-        if (page == d->pageNo) {
-            vd->stopTraversal = true;
-        }
-    }
-}
-
-void visitCollectSamePage(CollectSamePageData* d, TreeItemVisitorData* vd) {
-    auto* tocItem = (TocItem*)vd->item;
-    if (!tocItem || tocItem->pageNo < 1) {
-        return;
-    }
-    if (tocItem->pageNo == d->pageNo) {
-        VecAppend(*d->out, tocItem);
     }
 }
 
@@ -461,16 +420,35 @@ TocItem* TreeItemForPageNo(TreeModel* tm, int pageNo) {
     if (!tm) {
         return nullptr;
     }
-    VistorForPageNoData d;
-    d.pageNo = pageNo;
-    auto fn = MkFunc1<VistorForPageNoData, TreeItemVisitorData*>(visitTree, &d);
-    VisitTreeModelItems(tm, fn);
+    TocItem* bestMatch = nullptr;
+    int bestMatchPageNo = 0;
+    int nItems = 0;
+    for (TreeItem ti : TreeModelItems(tm)) {
+        auto* tocItem = (TocItem*)ti;
+        if (!tocItem) {
+            continue;
+        }
+        if (!bestMatch) {
+            // if nothing else matches, match the root node
+            bestMatch = tocItem;
+        }
+        ++nItems;
+        int page = tocItem->pageNo;
+        if ((page <= pageNo) && (page >= bestMatchPageNo) && (page >= 1)) {
+            bestMatch = tocItem;
+            bestMatchPageNo = page;
+            if (pageNo == bestMatchPageNo) {
+                // we can stop earlier if we found the exact match
+                break;
+            }
+        }
+    }
     // if there's only one item, we want to unselect it so that it can
     // be selected by the user
-    if (d.nItems < 2) {
+    if (nItems < 2) {
         return nullptr;
     }
-    return d.bestMatch;
+    return bestMatch;
 }
 
 // closest item (in tree order) whose loc.chapter matches, preferring an exact
@@ -480,12 +458,27 @@ TocItem* TreeItemForChapter(TreeModel* tm, int chapter, int pageNo) {
     if (!tm || chapter < 1) {
         return nullptr;
     }
-    VisitorForChapterData d;
-    d.chapter = chapter;
-    d.pageNo = pageNo;
-    auto fn = MkFunc1<VisitorForChapterData, TreeItemVisitorData*>(visitTreeForChapter, &d);
-    VisitTreeModelItems(tm, fn);
-    return d.match;
+    TocItem* match = nullptr;
+    int matchPageNo = 0;
+    for (TreeItem ti : TreeModelItems(tm)) {
+        auto* tocItem = (TocItem*)ti;
+        if (!tocItem || tocItem->loc.chapter != chapter) {
+            continue;
+        }
+        if (!match) {
+            match = tocItem;
+            matchPageNo = tocItem->pageNo;
+        }
+        int page = tocItem->pageNo;
+        if (page >= 1 && page <= pageNo && page >= matchPageNo) {
+            match = tocItem;
+            matchPageNo = page;
+            if (page == pageNo) {
+                break;
+            }
+        }
+    }
+    return match;
 }
 
 void OpenAttachment(WindowTab* tab, Str fileName, int attachmentNo) {

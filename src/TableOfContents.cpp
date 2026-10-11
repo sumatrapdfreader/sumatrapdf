@@ -202,11 +202,7 @@ static void SetTocMultiHighlight(MainWindow* win, TreeView* treeView, TocItem* b
         // All bookmarks that point at the same page as the best match (the issue's
         // "subsequent" same-page entries that TreeView single-select cannot show).
         if (bestMatch->pageNo >= 1 && treeView->treeModel) {
-            CollectSamePageData d;
-            d.pageNo = bestMatch->pageNo;
-            d.out = &next;
-            auto fn = MkFunc1<CollectSamePageData, TreeItemVisitorData*>(visitCollectSamePage, &d);
-            VisitTreeModelItems(treeView->treeModel, fn);
+            CollectTocItemsOnPage(treeView->treeModel, bestMatch->pageNo, next);
         }
 
         // Ancestor chain (chapter → section → subsection), including bestMatch.

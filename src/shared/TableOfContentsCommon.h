@@ -25,26 +25,7 @@ struct GoToTocLinkData {
 };
 GoToTocLinkData* NewGoToTocLinkData(MainWindow* win, TocItem* tocItem, bool selectInTree);
 bool IsScrollToLink(IPageDestination* link);
-struct VistorForPageNoData {
-    int pageNo = -1;
-
-    TocItem* bestMatch = nullptr;
-    int bestMatchPageNo = 0;
-    int nItems = 0;
-};
-void visitTree(VistorForPageNoData* d, TreeItemVisitorData* vd);
-struct VisitorForChapterData {
-    int chapter = -1;
-    int pageNo = 0;
-    TocItem* match = nullptr;
-    int matchPageNo = 0;
-};
-void visitTreeForChapter(VisitorForChapterData* d, TreeItemVisitorData* vd);
-struct CollectSamePageData {
-    int pageNo = 0;
-    Vec<TocItem*>* out = nullptr;
-};
-void visitCollectSamePage(CollectSamePageData* d, TreeItemVisitorData* vd);
+void CollectTocItemsOnPage(TreeModel* tm, int pageNo, Vec<TocItem*>& out);
 bool TocMatchingItemsContains(const Vec<TocItem*>& items, TocItem* item);
 bool TocMatchingItemsEq(const Vec<TocItem*>& a, const Vec<TocItem*>& b);
 void GetLeftRightCounts(TocItem* node, int& l2r, int& r2l);

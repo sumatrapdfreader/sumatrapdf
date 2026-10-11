@@ -156,11 +156,7 @@ static void SetTocMultiHighlight(MainWindow* win, TocTree* tm, TocItem* bestMatc
         // All bookmarks that point at the same page as the best match (the issue's
         // "subsequent" same-page entries that a single selection cannot show).
         if (bestMatch->pageNo >= 1) {
-            CollectSamePageData d;
-            d.pageNo = bestMatch->pageNo;
-            d.out = &next;
-            auto fn = MkFunc1<CollectSamePageData, TreeItemVisitorData*>(visitCollectSamePage, &d);
-            VisitTreeModelItems(tm, fn);
+            CollectTocItemsOnPage(tm, bestMatch->pageNo, next);
         }
 
         // Ancestor chain (chapter -> section -> subsection), including bestMatch.

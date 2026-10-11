@@ -63,12 +63,29 @@ struct TreeModel {
     virtual uintptr_t GetUserData(TreeItem) = 0;
 };
 
-struct TreeItemVisitorData {
-    TreeItem item = 0;
-    bool stopTraversal = false;
+// every item of a TreeModel in pre-order (the root first), for range-for:
+//   for (TreeItem ti : TreeModelItems(tm)) { ... }
+// break leaves the walk early
+struct TreeModelItems {
+    TreeModel* tm = nullptr;
+
+    struct iterator {
+        TreeModel* tm = nullptr;
+        TreeItem curr = TreeModel::kNullItem;
+        // an ancestor of curr and the index of its child to go to next
+        struct Frame {
+            TreeItem item;
+            int nextChild;
+        };
+        Vec<Frame> stack;
+
+        iterator(TreeModel* tm, TreeItem curr);
+        TreeItem operator*() const;
+        iterator& operator++(); // ++it
+        friend bool operator==(const iterator& a, const iterator& b);
+        friend bool operator!=(const iterator& a, const iterator& b);
+    };
+    explicit TreeModelItems(TreeModel* tm);
+    iterator begin() const;
+    iterator end() const;
 };
-
-// Set stopTraversal to stop visiting items.
-using TreeItemVisitor = Func1<TreeItemVisitorData*>;
-
-bool VisitTreeModelItems(TreeModel*, const TreeItemVisitor& visitor);
