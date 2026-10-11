@@ -423,6 +423,10 @@ const dav1dArmCpu: PlatformExtra = {
   exclude: ["ext/dav1d/src/x86/cpu.c"],
 };
 
+// dav1d's own build defines it on Linux: lib.c needs RTLD_DEFAULT, which
+// glibc 2.35 (Ubuntu 22.04) only exposes with it
+const dav1dLinux: PlatformExtra = { defines: ["_GNU_SOURCE"] };
+
 // orig premake5.files.lua engines_files() plus the ebook / document-model
 // sources it needs. Listed one by one because src/ will hold the UI too.
 const enginesSources = [
@@ -1054,7 +1058,8 @@ export const targets: Target[] = [
         defines: ["ARCH_X86_32=0", "ARCH_X86_64=1", "HAVE_ASM=1"],
         includes: ["ext/dav1d/include/compat/msvc"],
       },
-      ...(hostArm64 ? { linux: dav1dArmCpu, mac: dav1dArmCpu } : {}),
+      linux: hostArm64 ? { ...dav1dArmCpu, ...dav1dLinux } : dav1dLinux,
+      ...(hostArm64 ? { mac: dav1dArmCpu } : {}),
     },
   },
   {
