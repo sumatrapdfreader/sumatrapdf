@@ -47,7 +47,6 @@ struct ReadingAutoScrollBar : WindowBase {
     void UpdateLayout(bool forceLayout = false);
     void OnPaint(WindowBase::PaintEvent* ev);
 
-    WindowTab* sessionTab = nullptr;
     HWND hwndCanvas = nullptr;
     VirtButton* btnPause = nullptr;
     VirtButton* btnStop = nullptr;
@@ -63,13 +62,6 @@ struct ReadingAutoScrollBar : WindowBase {
     int lastDy = 0;
     Func1List<MainWindow*> onWindowMoved;
 };
-
-WindowTab* SessionTab(MainWindow* win) {
-    if (!win || !win->readingAutoScrollBar) {
-        return nullptr;
-    }
-    return win->readingAutoScrollBar->sessionTab;
-}
 
 constexpr int kBarMargin = 8;
 constexpr int kBarPadX = 12;
@@ -108,15 +100,7 @@ void ArmReadingTimer(MainWindow* win, WindowTab* tab) {
     SetTimer(win->hwndCanvas, kReadingAutoScrollTimerID, USER_TIMER_MINIMUM, nullptr);
 }
 
-static ReadingAutoScrollBar* BarEnsure(MainWindow* win);
-
-// creates the bar if needed and ties it to the tab being scrolled
-void BarSetSessionTab(MainWindow* win, WindowTab* tab) {
-    ReadingAutoScrollBar* bar = BarEnsure(win);
-    if (bar) {
-        bar->sessionTab = tab;
-    }
-}
+ReadingAutoScrollBar* BarEnsure(MainWindow* win);
 
 // Seconds since the previous tick of this run, 0 on its first: orig times its
 // own timer.
@@ -160,7 +144,7 @@ static void OnReverseClickedBar(ReadingAutoScrollBar* bar, VirtMouseEvent*) {
 }
 
 static void SyncSpeedLabel(ReadingAutoScrollBar* bar) {
-    bar->speedLabel->SetText(SpeedLabelTemp(bar->sessionTab));
+    bar->speedLabel->SetText(SpeedLabelTemp(SessionTab(WinFromBar(bar))));
 }
 
 static void OnSpeedSliderDrag(ReadingAutoScrollBar* bar) {
@@ -279,7 +263,7 @@ void ReadingAutoScrollBar::BuildLayout() {
 }
 
 void ReadingAutoScrollBar::SyncLabels() {
-    WindowTab* tab = sessionTab;
+    WindowTab* tab = SessionTab(WinFromBar(this));
     bool paused = tab && (tab->autoScroll.paused || tab->autoScroll.atEnd);
     btnPause->SetText(paused ? Tr("Resume") : Tr("Pause"));
     if (speedSlider && !speedSlider->IsAdjusting()) {
@@ -368,7 +352,7 @@ static void BarOnWindowMoved(ReadingAutoScrollBar* bar, MainWindow*) {
     bar->UpdateLayout();
 }
 
-static ReadingAutoScrollBar* BarEnsure(MainWindow* win) {
+ReadingAutoScrollBar* BarEnsure(MainWindow* win) {
     if (!win || !win->hwndCanvas) {
         return nullptr;
     }
@@ -390,7 +374,7 @@ void BarHide(MainWindow* win) {
     if (!win || !win->readingAutoScrollBar || !win->readingAutoScrollBar->hwnd) {
         return;
     }
-    win->readingAutoScrollBar->sessionTab = nullptr;
+    win->readingAutoScrollTab = nullptr;
     SetWindowPos(win->readingAutoScrollBar->hwnd, nullptr, 0, 0, 0, 0,
                  SWP_HIDEWINDOW | SWP_NOACTIVATE | SWP_NOMOVE | SWP_NOSIZE | SWP_NOZORDER);
 }
@@ -422,6 +406,7 @@ void ReadingAutoScrollDestroy(MainWindow* win) {
     win->UnregisterOnWindowMoved(&win->readingAutoScrollBar->onWindowMoved);
     delete win->readingAutoScrollBar;
     win->readingAutoScrollBar = nullptr;
+    win->readingAutoScrollTab = nullptr;
 }
 
 TempStr ReadingAutoScrollBarStateTemp(int* exitCodeOut) {

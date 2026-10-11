@@ -728,6 +728,8 @@ struct MainWindow { // NOLINT(clang-analyzer-optin.performance.Padding)
 
     ReadAloudPlaybackBar* readAloudPlaybackBar = nullptr;
     ReadingAutoScrollBar* readingAutoScrollBar = nullptr;
+    // the tab the bar scrolls, null while it is hidden
+    WindowTab* readingAutoScrollTab = nullptr;
 
     ReadingBarDrag readingBarDrag = ReadingBarDrag::None;
     int readingBarDragOff = 0;
@@ -736,6 +738,8 @@ struct MainWindow { // NOLINT(clang-analyzer-optin.performance.Padding)
     // small floating toolbar shown after a text selection in fixed-page
     // floating selection actions bar (controlled by the SelectionToolbar setting)
     SelectionToolbar* selectionToolbar = nullptr;
+    // an action was picked for the current selection: stay hidden until it changes
+    bool selectionToolbarDismissed = false;
     // a debounced show of the selection toolbar is waiting on its timer
     bool selectionToolbarShowPending = false;
 

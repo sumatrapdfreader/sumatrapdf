@@ -39,3 +39,4 @@ void KillReadingTimer(MainWindow* win);
 void BarUpdate(MainWindow* win, bool forceLayout);
 void StopMiddleClickScroll(MainWindow* win);
 float ReadingTickSeconds(WindowTab* tab, int elapsedMs);
+ReadingAutoScrollBar* BarEnsure(MainWindow* win);

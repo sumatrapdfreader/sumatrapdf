@@ -57,8 +57,6 @@ struct SelectionToolbar {
     Rect lastPlaced;    // last screen rect we moved the window to (avoids redundant SetWindowPos)
     Rect lastSelBounds; // last canvas-space selection bounds used for placement
     DWORD lastPositionUpdateTick = 0;
-    // an action was picked for the current selection: stay hidden until it changes
-    bool dismissed = false;
     Vec<SelectionToolbarButton> buttons;
     Func1List<MainWindow*> onWindowMoved;
 };
@@ -242,7 +240,7 @@ void InvokeSelectionToolbarCommand(MainWindow* win, int cmdId) {
         DeleteOldSelectionInfo(win, true);
     }
     HideSelectionToolbar(win);
-    tb->dismissed = true;
+    win->selectionToolbarDismissed = true;
 
     if (cmdId != CmdCopySelection) {
         HwndPostCommand(win->hwndFrame, cmdId, commandPoint);
@@ -544,7 +542,7 @@ void ShowSelectionToolbar(MainWindow* win, SelToolbarShow when) {
     if (!win || !win->hwndCanvas || !gSettings->selectionToolbar) {
         return;
     }
-    if (win->selectionToolbar && win->selectionToolbar->dismissed) {
+    if (win->selectionToolbar && win->selectionToolbarDismissed) {
         return;
     }
     if (when == SelToolbarShow::Now) {
@@ -691,13 +689,7 @@ void DeleteSelectionToolbar(MainWindow* win) {
     delete tb->host;
     delete tb;
     win->selectionToolbar = nullptr;
-}
-
-// The selection changed or went away: a new one gets the toolbar again.
-void ResetSelectionToolbarDismissed(MainWindow* win) {
-    if (win && win->selectionToolbar) {
-        win->selectionToolbar->dismissed = false;
-    }
+    win->selectionToolbarDismissed = false;
 }
 
 Vec<SelectionToolbarButton>* SelectionToolbarButtons(MainWindow* win) {

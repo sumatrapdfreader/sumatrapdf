@@ -222,3 +222,10 @@ TempStr SelectionToolbarClickTemp(Str cmdName, int* exitCodeOut) {
     InvokeSelectionToolbarCommand(win, cmdId);
     return finish(StrL("OK\n"), 0);
 }
+
+// The selection changed or went away: a new one gets the toolbar again.
+void ResetSelectionToolbarDismissed(MainWindow* win) {
+    if (win && win->selectionToolbar) {
+        win->selectionToolbarDismissed = false;
+    }
+}

@@ -407,3 +407,17 @@ void ReadingAutoScrollTick(MainWindow* win, int elapsedMs) {
         BarUpdate(win, true);
     }
 }
+
+// the tab the bar scrolls; null when the bar is hidden or doesn't exist
+WindowTab* SessionTab(MainWindow* win) {
+    if (!win || !win->readingAutoScrollBar) {
+        return nullptr;
+    }
+    return win->readingAutoScrollTab;
+}
+
+void BarSetSessionTab(MainWindow* win, WindowTab* tab) {
+    if (BarEnsure(win)) {
+        win->readingAutoScrollTab = tab;
+    }
+}

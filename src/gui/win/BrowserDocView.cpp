@@ -701,12 +701,6 @@ MainWindow* BrowserViewWindow(BrowserView* bv) {
     return bv ? bv->win : nullptr;
 }
 
-void BrowserViewSetWindow(BrowserView* bv, MainWindow* win) {
-    if (bv) {
-        bv->win = win;
-    }
-}
-
 void BrowserViewSetVisible(BrowserView* bv, bool visible) {
     if (bv) {
         bv->view->SetVisible(visible);

@@ -292,6 +292,8 @@ struct MainWindow {
     int readingBarDragOff = 0;
     bool readingBarHover = false;
     ReadingAutoScrollBar* readingAutoScrollBar = nullptr;
+    // the tab the bar scrolls, null while it is hidden
+    WindowTab* readingAutoScrollTab = nullptr;
 
     void MoveDocBy(int dx, int dy) const;
 
@@ -343,6 +345,8 @@ struct MainWindow {
     int linkFollowInputLen = 0;
 
     SelectionToolbar* selectionToolbar = nullptr;
+    // an action was picked for the current selection: stay hidden until it changes
+    bool selectionToolbarDismissed = false;
 
     // --- find (step 8b) ------------------------------------------------------
 

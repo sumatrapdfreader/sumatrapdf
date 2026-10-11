@@ -48,8 +48,6 @@ struct SelectionToolbar {
     MainWindow* win = nullptr;
     WindowTab* tab = nullptr; // tab the current selection belongs to
     bool visible = false;
-    // an action was picked for the current selection: stay hidden until it changes
-    bool dismissed = false;
     // ms still to wait before the debounced show
     int showPendingMs = -1;
     Vec<SelectionToolbarButton> buttons;
@@ -147,7 +145,7 @@ void ShowSelectionToolbar(MainWindow* win, SelToolbarShow when) {
         return;
     }
     SelectionToolbar* tb = GetOrCreateToolbar(win);
-    if (tb->dismissed) {
+    if (win->selectionToolbarDismissed) {
         return;
     }
     if (when == SelToolbarShow::Now) {
@@ -239,6 +237,7 @@ void DeleteSelectionToolbar(MainWindow* win) {
         return;
     }
     win->selectionToolbar = nullptr;
+    win->selectionToolbarDismissed = false;
     delete tb;
 }
 
@@ -250,7 +249,7 @@ void InvokeSelectionToolbarCommand(MainWindow* win, int cmdId) {
         return;
     }
     HideSelectionToolbar(win);
-    tb->dismissed = true;
+    win->selectionToolbarDismissed = true;
 
     ExecuteCmd(win, cmdId);
     if (cmdId != CmdCopySelection || !HasPermission(Perm::CopySelection)) {
@@ -426,13 +425,6 @@ TempStr SelectionToolbarLayoutDumpTemp(MainWindow* win) {
 TempStr SelectionToolbarLayoutDumpTemp() {
     MainWindow* win = len(gWindows) > 0 ? gWindows[0] : nullptr;
     return SelectionToolbarLayoutDumpTemp(win);
-}
-
-// The selection changed or went away: a new one gets the toolbar again.
-void ResetSelectionToolbarDismissed(MainWindow* win) {
-    if (win && win->selectionToolbar) {
-        win->selectionToolbar->dismissed = false;
-    }
 }
 
 Vec<SelectionToolbarButton>* SelectionToolbarButtons(MainWindow* win) {

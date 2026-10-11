@@ -39,7 +39,6 @@
 struct ReadingAutoScrollView;
 
 struct ReadingAutoScrollBar {
-    WindowTab* sessionTab = nullptr;
     gp::Entity<ReadingAutoScrollView> view;
     gp::SliderState speedSlider;
     // the slider reports a float; remember what we last pushed into it so a
@@ -51,13 +50,6 @@ struct ReadingAutoScrollBar {
     // the row in that window, as of its last frame
     gp::Bounds rowBounds{};
 };
-
-WindowTab* SessionTab(MainWindow* win) {
-    if (!win || !win->readingAutoScrollBar) {
-        return nullptr;
-    }
-    return win->readingAutoScrollBar->sessionTab;
-}
 
 constexpr int kBarMargin = 8;
 constexpr int kBarPadX = 12;
@@ -89,15 +81,7 @@ void ArmReadingTimer(MainWindow*, WindowTab* tab) {
 
 void KillReadingTimer(MainWindow*) {}
 
-static ReadingAutoScrollBar* BarEnsure(MainWindow* win);
-
-// creates the bar if needed and ties it to the tab being scrolled
-void BarSetSessionTab(MainWindow* win, WindowTab* tab) {
-    ReadingAutoScrollBar* bar = BarEnsure(win);
-    if (bar) {
-        bar->sessionTab = tab;
-    }
-}
+ReadingAutoScrollBar* BarEnsure(MainWindow* win);
 
 // Seconds since the previous tick of this run, 0 on its first: the shell's
 // tick hands us the elapsed time. lastQpc == 0 marks the first tick.
@@ -198,7 +182,7 @@ void ReadingAutoScrollView::OnSpeedHover(ReadingAutoScrollView* self, gp::Ctx* c
     HoverTooltipHide(cx);
 }
 
-static ReadingAutoScrollBar* BarEnsure(MainWindow* win) {
+ReadingAutoScrollBar* BarEnsure(MainWindow* win) {
     if (!win) {
         return nullptr;
     }
@@ -220,7 +204,7 @@ constexpr float kBarGuessDy = 38;
 static bool BarIsShown(MainWindow* win) {
     WindowTab* tab = ActiveTab(win);
     ReadingAutoScrollBar* bar = win ? win->readingAutoScrollBar : nullptr;
-    return tab && bar && bar->sessionTab == tab;
+    return tab && bar && SessionTab(win) == tab;
 }
 
 // orig's ReadingAutoScrollBar::UpdateLayout
@@ -252,7 +236,7 @@ static void BarSyncWindow(MainWindow* win) {
     if (!bar) {
         return;
     }
-    bool want = bar->sessionTab != nullptr && ToolWindowsAvailable();
+    bool want = SessionTab(win) != nullptr && ToolWindowsAvailable();
     if (!want) {
         if (bar->tw) {
             ToolWindowClose(bar->tw);
@@ -277,7 +261,7 @@ static void BarSyncWindow(MainWindow* win) {
 
 void BarHide(MainWindow* win) {
     if (win && win->readingAutoScrollBar) {
-        win->readingAutoScrollBar->sessionTab = nullptr;
+        win->readingAutoScrollTab = nullptr;
     }
     BarSyncWindow(win);
     AppShellInvalidate(win);
@@ -297,6 +281,7 @@ void ReadingAutoScrollDestroy(MainWindow* win) {
     }
     delete win->readingAutoScrollBar;
     win->readingAutoScrollBar = nullptr;
+    win->readingAutoScrollTab = nullptr;
 }
 
 static gp::El* BarButton(ReadingAutoScrollBar* bar, gp::Ctx* cx, Str id, Str label, int cmdId) {
@@ -319,7 +304,7 @@ gp::El* ReadingAutoScrollBarBuild(MainWindow* win, gp::Ctx* cx) {
 static gp::El* BarRowBuild(MainWindow* win, gp::Ctx* cx, bool ownWindow) {
     WindowTab* tab = ActiveTab(win);
     ReadingAutoScrollBar* bar = win ? win->readingAutoScrollBar : nullptr;
-    if (!tab || !bar || bar->sessionTab != tab) {
+    if (!tab || !bar || SessionTab(win) != tab) {
         return nullptr;
     }
     if (!bar->view.IsValid()) {
@@ -401,7 +386,7 @@ TempStr ReadingAutoScrollBarStateTemp(int* exitCodeOut) {
     int pages = dm ? dm->PageCount() : 0;
     ReadingAutoScrollBar* bar = win->readingAutoScrollBar;
     bool on = tab != nullptr;
-    if (!on || !bar || bar->sessionTab != tab) {
+    if (!on || !bar || SessionTab(win) != tab) {
         out.Append(fmt("NOTREADY no-bar on=%d scrollY=%d\n", (int)on, scrollY));
         return finish(2);
     }
