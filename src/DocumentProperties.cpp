@@ -556,12 +556,7 @@ bool PropertiesWnd::Create(HWND parent) {
     return true;
 }
 
-struct GetFontsResult {
-    HWND hwnd;
-    str::Builder fontsText;
-};
-
-static void OnGetFontsFinished(GetFontsResult* result) {
+void OnGetFontsFinished(GetFontsResult* result) {
     PropertiesWnd* w = FindPropertyWindowByHwnd(result->hwnd);
     if (w) {
         Str marker = Tr("Getting font information...");
@@ -577,28 +572,6 @@ static void OnGetFontsFinished(GetFontsResult* result) {
         w->SizeToContent();
     }
     delete result;
-}
-
-struct GetFontsData {
-    HWND hwnd;
-    EngineBase* engine;
-};
-
-static void GetFontsThread(GetFontsData* data) {
-    TempStr val = data->engine->GetPropertyTemp(DocProp::FontList);
-    auto* result = new GetFontsResult;
-    result->hwnd = data->hwnd;
-    if (val) {
-        result->fontsText.Append(StrL("\n"));
-        result->fontsText.Append(Tr("Fonts:"));
-        result->fontsText.Append(StrL("\n"));
-        result->fontsText.Append(val);
-    }
-    auto fn = MkFunc0<GetFontsResult>(OnGetFontsFinished, result);
-    uitask::Post(fn, "GetFontsFinished");
-    data->engine->Release();
-    delete data;
-    DestroyTempArena();
 }
 
 void ShowProperties(HWND parent, DocController* ctrl) {

@@ -443,12 +443,7 @@ void PropertiesView::OnClose(PropertiesView*, gp::Ctx* cx, const gp::ClickEvent*
 
 static void PropsToolSizeToContent();
 
-struct GetFontsResult {
-    MainWindow* win;
-    str::Builder fontsText;
-};
-
-static void OnGetFontsFinished(GetFontsResult* result) {
+void OnGetFontsFinished(GetFontsResult* result) {
     if (gProps.visible && gProps.win == result->win) {
         Str marker = Tr("Getting font information...");
         Str props = ToStr(gProps.propsText);
@@ -466,28 +461,6 @@ static void OnGetFontsFinished(GetFontsResult* result) {
     }
     result->fontsText.Reset();
     delete result;
-}
-
-struct GetFontsData {
-    MainWindow* win;
-    EngineBase* engine;
-};
-
-static void GetFontsThread(GetFontsData* data) {
-    TempStr val = data->engine->GetPropertyTemp(DocProp::FontList);
-    auto* result = new GetFontsResult;
-    result->win = data->win;
-    if (val) {
-        result->fontsText.Append(StrL("\n"));
-        result->fontsText.Append(Tr("Fonts:"));
-        result->fontsText.Append(StrL("\n"));
-        result->fontsText.Append(val);
-    }
-    auto fn = MkFunc0<GetFontsResult>(OnGetFontsFinished, result);
-    uitask::Post(fn, "GetFontsFinished");
-    data->engine->Release();
-    delete data;
-    DestroyTempArena();
 }
 
 static void PropsOpenToolWindow(MainWindow* win);

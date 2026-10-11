@@ -147,3 +147,13 @@ Str HandleOpenCmd(Str cmd, bool* ack);
 void FindDebounceStop(MainWindow* win);
 void BrowserFindStatusShown(MainWindow* win);
 TempStr FindPagesEditTextTemp(MainWindow* win);
+
+// what find marks are painted on: GDI+ in orig, gpui in ng
+#if defined(SUMATRA_NG)
+using PaintRef = gpui::PaintCtx*;
+#else
+using PaintRef = Gfx*;
+#endif
+Rect FindPaintClipRc(MainWindow* win, DisplayModel* dm);
+
+void PaintCurrentFindMatch(MainWindow* win, DisplayModel* dm, TextSearch* ts, PaintRef ctx);

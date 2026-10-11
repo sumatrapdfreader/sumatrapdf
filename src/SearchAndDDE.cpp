@@ -254,20 +254,9 @@ __unused static TempStr ReverseTextTemp(Str s) {
     return ToUtf8Temp(ws);
 }
 
-static void PaintCurrentFindMatch(MainWindow* win, DisplayModel* dm, TextSearch* ts, Gfx* gfx) {
-    if (!ts || len(ts->result) == 0) {
-        return;
-    }
-    ParsedColor* parsedCol = GetPrefsColor(gSettings->fixedPageUI.selectionColor);
-    u8 alpha = GetAlpha(parsedCol->col);
-    if (alpha == 0) {
-        alpha = kSelectionDefaultAlpha;
-    }
-    Vec<Rect> currentRects;
-    AppendTextSelScreenRects(dm, win->canvasRc, &ts->result, currentRects);
-    if (len(currentRects) > 0) {
-        PaintTransparentRectangles(gfx, win->canvasRc, currentRects, parsedCol->col, alpha);
-    }
+// the canvas area find marks are clipped to
+Rect FindPaintClipRc(MainWindow* win, DisplayModel*) {
+    return win->canvasRc;
 }
 
 void PaintAllFindMatches(MainWindow* win, Gfx* gfx) {
@@ -348,39 +337,6 @@ void PaintAllFindMatches(MainWindow* win, Gfx* gfx) {
     if (len(currentRects) > 0) {
         PaintTransparentRectangles(gfx, win->canvasRc, currentRects, parsedCol->col, alpha);
     }
-}
-
-void PaintForwardSearchMark(MainWindow* win, Gfx* gfx) {
-    ReportIf(!win->AsFixed());
-    DisplayModel* dm = win->AsFixed();
-    int pageNo = win->fwdSearchMark.page;
-    PageInfo* pageInfo = dm->GetPageInfo(pageNo);
-    if (!pageInfo || 0.0 == pageInfo->visibleRatio) {
-        return;
-    }
-
-    int hiLiWidth = gSettings->forwardSearch.highlightWidth;
-    int hiLiOff = gSettings->forwardSearch.highlightOffset;
-
-    // Draw the rectangles highlighting the forward search results
-    Vec<Rect> rects;
-    for (int i = 0; i < len(win->fwdSearchMark.rects); i++) {
-        Rect rect = win->fwdSearchMark.rects[i];
-        rect = dm->CvtToScreen(pageNo, ToRectF(rect));
-        if (hiLiOff > 0) {
-            float zoom = dm->GetZoomReal(pageNo);
-            rect.x = std::max(pageInfo->pageOnScreen.x, 0) + (int)((float)hiLiOff * zoom);
-            rect.dx = (int)((hiLiWidth > 0 ? hiLiWidth : 15.0) * zoom);
-            rect.y -= 4;
-            rect.dy += 8;
-        }
-        VecAppend(rects, rect);
-    }
-
-    u8 alpha =
-        (u8)(0x5f * 1.0f * (float)(kHideFwdSearchMarkSteps - win->fwdSearchMark.hideStep) / kHideFwdSearchMarkSteps);
-    ParsedColor* parsedCol = GetPrefsColor(gSettings->forwardSearch.highlightColor);
-    PaintTransparentRectangles(gfx, win->canvasRc, rects, parsedCol->col, alpha);
 }
 
 // starts fading the forward search mark after delayMs

@@ -35,3 +35,19 @@ struct EutlUpdateJob {
 void EutlUpdateThread(EutlUpdateJob* job);
 // implemented by each app
 void OnEutlUpdateDone(EutlUpdateJob* job);
+
+// the properties window the fonts are for: an HWND in orig, the main window in ng
+struct GetFontsResult {
+    HWND hwnd = nullptr;
+    MainWindow* win = nullptr;
+    str::Builder fontsText;
+};
+
+struct GetFontsData {
+    HWND hwnd = nullptr;
+    MainWindow* win = nullptr;
+    EngineBase* engine = nullptr;
+};
+void GetFontsThread(GetFontsData* data);
+// implemented by each app
+void OnGetFontsFinished(GetFontsResult* result);

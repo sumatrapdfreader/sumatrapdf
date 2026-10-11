@@ -631,3 +631,21 @@ void EutlUpdateThread(EutlUpdateJob* job) {
     uitask::Post(fn, "EutlUpdateDone");
 }
 #endif
+
+void GetFontsThread(GetFontsData* data) {
+    TempStr val = data->engine->GetPropertyTemp(DocProp::FontList);
+    auto* result = new GetFontsResult;
+    result->hwnd = data->hwnd;
+    result->win = data->win;
+    if (val) {
+        result->fontsText.Append(StrL("\n"));
+        result->fontsText.Append(Tr("Fonts:"));
+        result->fontsText.Append(StrL("\n"));
+        result->fontsText.Append(val);
+    }
+    auto fn = MkFunc0<GetFontsResult>(OnGetFontsFinished, result);
+    uitask::Post(fn, "GetFontsFinished");
+    data->engine->Release();
+    delete data;
+    DestroyTempArena();
+}
