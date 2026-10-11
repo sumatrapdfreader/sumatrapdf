@@ -118,26 +118,9 @@ void BarSetSessionTab(MainWindow* win, WindowTab* tab) {
     }
 }
 
-void ReadingAutoScrollTick(MainWindow* win) {
-    WindowTab* tab = ActiveTab(win);
-    if (!tab || tab != SessionTab(win) || tab->autoScroll.paused) {
-        KillReadingTimer(win);
-        return;
-    }
-    DisplayModel* dm = ScrollModel(tab);
-    if (!dm) {
-        ReadingAutoScrollStop(win);
-        return;
-    }
-    int dir = tab->autoScroll.dir >= 0 ? 1 : -1;
-    if (AtScrollLimit(dm, dir)) {
-        tab->autoScroll.atEnd = true;
-        tab->autoScroll.paused = true;
-        KillReadingTimer(win);
-        BarUpdate(win, true);
-        return;
-    }
-
+// Seconds since the previous tick of this run, 0 on its first: orig times its
+// own timer.
+float ReadingTickSeconds(WindowTab* tab, int) {
     TimeStamp now = TimeGet();
     float dt = 0;
     if (tab->autoScroll.lastQpc != 0) {
@@ -146,26 +129,11 @@ void ReadingAutoScrollTick(MainWindow* win) {
         dt = (float)(TimeSinceInMs(start) / 1000.0);
     }
     tab->autoScroll.lastQpc = now.QuadPart;
-    if (dt <= 0) {
-        return;
-    }
-    if (dt > 0.1f) {
-        dt = 0.1f;
-    }
+    return dt;
+}
 
-    tab->autoScroll.accum += CurrentSpeed() * (float)dir * dt;
-    int dy = (int)tab->autoScroll.accum;
-    tab->autoScroll.accum -= (float)dy;
-    if (dy == 0) {
-        return;
-    }
-    dm->ScrollYBy(dy, true);
-    if (AtScrollLimit(dm, dir)) {
-        tab->autoScroll.atEnd = true;
-        tab->autoScroll.paused = true;
-        KillReadingTimer(win);
-        BarUpdate(win, true);
-    }
+void ReadingAutoScrollTick(MainWindow* win) {
+    ReadingAutoScrollTick(win, 0);
 }
 
 static MainWindow* WinFromBar(ReadingAutoScrollBar* bar) {

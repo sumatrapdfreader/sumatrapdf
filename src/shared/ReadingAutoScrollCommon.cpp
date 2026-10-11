@@ -363,3 +363,47 @@ bool ReadingAutoScrollOnKey(MainWindow* win, int key, bool ctrl, bool shift, boo
     }
     return false;
 }
+
+void ReadingAutoScrollTick(MainWindow* win, int elapsedMs) {
+    WindowTab* tab = ActiveTab(win);
+    if (!tab || tab != SessionTab(win) || tab->autoScroll.paused) {
+        KillReadingTimer(win);
+        return;
+    }
+    DisplayModel* dm = ScrollModel(tab);
+    if (!dm) {
+        ReadingAutoScrollStop(win);
+        return;
+    }
+    int dir = tab->autoScroll.dir >= 0 ? 1 : -1;
+    if (AtScrollLimit(dm, dir)) {
+        tab->autoScroll.atEnd = true;
+        tab->autoScroll.paused = true;
+        KillReadingTimer(win);
+        BarUpdate(win, true);
+        return;
+    }
+
+    float dt = ReadingTickSeconds(tab, elapsedMs);
+    if (dt <= 0) {
+        return;
+    }
+    if (dt > 0.1f) {
+        dt = 0.1f;
+    }
+
+    tab->autoScroll.accum += CurrentSpeed() * (float)dir * dt;
+    int dy = (int)tab->autoScroll.accum;
+    tab->autoScroll.accum -= (float)dy;
+    if (dy == 0) {
+        return;
+    }
+    dm->ScrollYBy(dy, true);
+    ScheduleRepaint(win, 0);
+    if (AtScrollLimit(dm, dir)) {
+        tab->autoScroll.atEnd = true;
+        tab->autoScroll.paused = true;
+        KillReadingTimer(win);
+        BarUpdate(win, true);
+    }
+}

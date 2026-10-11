@@ -99,54 +99,15 @@ void BarSetSessionTab(MainWindow* win, WindowTab* tab) {
     }
 }
 
-void ReadingAutoScrollTick(MainWindow* win, int elapsedMs) {
-    WindowTab* tab = ActiveTab(win);
-    if (!tab || tab != SessionTab(win) || tab->autoScroll.paused) {
-        KillReadingTimer(win);
-        return;
-    }
-    DisplayModel* dm = ScrollModel(tab);
-    if (!dm) {
-        ReadingAutoScrollStop(win);
-        return;
-    }
-    int dir = tab->autoScroll.dir >= 0 ? 1 : -1;
-    if (AtScrollLimit(dm, dir)) {
-        tab->autoScroll.atEnd = true;
-        tab->autoScroll.paused = true;
-        KillReadingTimer(win);
-        BarUpdate(win, true);
-        return;
-    }
-
-    // ng: orig reads the QPC delta since its 10 ms timer last fired; the tick
-    // hands us the same number. lastQpc == 0 marks the first tick of a run.
+// Seconds since the previous tick of this run, 0 on its first: the shell's
+// tick hands us the elapsed time. lastQpc == 0 marks the first tick.
+float ReadingTickSeconds(WindowTab* tab, int elapsedMs) {
     float dt = 0;
     if (tab->autoScroll.lastQpc != 0) {
         dt = (float)elapsedMs / 1000.0f;
     }
     tab->autoScroll.lastQpc = 1;
-    if (dt <= 0) {
-        return;
-    }
-    if (dt > 0.1f) {
-        dt = 0.1f;
-    }
-
-    tab->autoScroll.accum += CurrentSpeed() * (float)dir * dt;
-    int dy = (int)tab->autoScroll.accum;
-    tab->autoScroll.accum -= (float)dy;
-    if (dy == 0) {
-        return;
-    }
-    dm->ScrollYBy(dy, true);
-    AppShellInvalidate(win);
-    if (AtScrollLimit(dm, dir)) {
-        tab->autoScroll.atEnd = true;
-        tab->autoScroll.paused = true;
-        KillReadingTimer(win);
-        BarUpdate(win, true);
-    }
+    return dt;
 }
 
 // --- the control bar --------------------------------------------------------
