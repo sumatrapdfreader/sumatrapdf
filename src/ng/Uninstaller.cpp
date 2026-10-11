@@ -45,18 +45,6 @@ static bool gSuccess = false;
 static volatile LONG gUninstallFinished = 0;
 static Str gUninstallerLogPath;
 
-static void RemoveInstalledFiles() {
-    // can't use GetExistingInstallationDir() anymore because we
-    // delete registry entries
-    Str dir = gCli->installDir;
-    if (len(dir) == 0) {
-        log(StrL("RemoveInstalledFiles(): dir is empty\n"));
-        return;
-    }
-    bool ok = dir::RemoveAll(dir);
-    logf("RemoveInstalledFiles(): removed dir '%s', ok = %d\n", dir, (int)ok);
-}
-
 static void UninstallerThread() {
     log(StrL("UninstallerThread started\n"));
     // also kill the original uninstaller, if it's just spawned

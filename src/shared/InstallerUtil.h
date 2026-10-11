@@ -30,3 +30,16 @@ bool KillProcessesUsingInstallation();
 bool KillProcWithIdAndModule(DWORD processId, Str modulePath, bool waitUntilTerminated);
 bool KillProcessesUsingInstallationDir(Str dir);
 bool IsProcessUsingFiles(DWORD procId, Str file1, Str file2);
+void GetPrevInstallShellExt(PreviousInstallationInfo* info);
+void InstallerRepaintNow();
+bool InstallerAllUsersChecked();
+TempStr InstallerShellExtArgsTemp(Flags* cli);
+void ProcessesUsingInstallation(StrVec& names);
+
+// --- shared by InstallerUtil_win.cpp and each app's Installer.cpp ---
+
+void RestartElevatedForAllUsers(Flags* cli);
+
+// --- shared by InstallerUtil_win.cpp and each app's Uninstaller.cpp ---
+
+void RemoveInstalledFiles();

@@ -154,40 +154,13 @@ Exit:
     InterlockedExchange(&gInstallFinished, 1);
 }
 
-static void RestartElevatedForAllUsers(Flags* cli) {
-    TempStr exePath = GetSelfExePathTemp();
-    TempStr cmdLine = StrL("-run-install-now");
-    bool allUsersChecked = gWnd && gWnd->forAllUsers;
-    bool allUsers = cli->allUsers || allUsersChecked;
-    logf("RestartElevatedForAllUsers: cli->allUsers: %d, allUsersChecked: %d, allUsers: %d\n", (int)cli->allUsers,
-         (int)allUsersChecked, (int)allUsers);
-    if (allUsers) {
-        cmdLine = str::JoinTemp(cmdLine, StrL(" -all-users"));
-    }
-    if (cli->noDesktopShortcut) {
-        cmdLine = str::JoinTemp(cmdLine, StrL(" -no-desktop-shortcut"));
-    }
-    if (cli->silent) {
-        cmdLine = str::JoinTemp(cmdLine, StrL(" -silent"));
-    }
-    if (cli->fastInstall) {
-        cmdLine = str::JoinTemp(cmdLine, StrL(" -fast-install"));
-    }
-    if (cli->log) {
-        cmdLine = str::JoinTemp(cmdLine, StrL(" -log"));
-    }
-    Str dir = cli->installDir;
-    cmdLine = str::JoinTemp(cmdLine, StrL(" -install-dir \""), dir);
-    cmdLine = str::JoinTemp(cmdLine, StrL("\""));
-    logf("LaunchElevated('%s', '%s')\n", exePath, cmdLine);
-    bool ok = LaunchElevated(exePath, cmdLine);
-    if (!ok) {
-        logf("LaunchElevated('%s', '%s') failed!\n", exePath, cmdLine);
-        LogLastError();
-    } else {
-        logf("LaunchElevated() ok!\n");
-        NoteTempInstallerRelaunch();
-    }
+bool InstallerAllUsersChecked() {
+    return gWnd && gWnd->forAllUsers;
+}
+
+// ng has no shell extensions to pass on
+TempStr InstallerShellExtArgsTemp(Flags*) {
+    return str::DupTemp(StrL(""));
 }
 
 static Str InstallDirFromUiTemp() {

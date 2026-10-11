@@ -73,55 +73,20 @@ int gButtonDy = 0;
 
 Flags* gCli = nullptr;
 
-Str gDefaultMsg; // Note: translation, not freeing
-
 static Str gMsg;
 static Gdiplus::Color gMsgColor;
-
-static StrVec gProcessesToClose;
 
 void SetMsg(Str msg, Gdiplus::Color color) {
     gMsg = str::Dup(GetPermArena(), msg);
     gMsgColor = color;
 }
 
-void GetPreviousInstallInfo(PreviousInstallationInfo* info) {
-    info->installationDir = str::Dup(GetExistingInstallationDirTemp());
-    if (len(info->installationDir) == 0) {
-        info->typ = PreviousInstallationType::None;
-        log(StrL("GetPreviousInstallInfo: not installed\n"));
-        return;
-    }
+// whether the previous installation registered the search filter / previewer
+void GetPrevInstallShellExt(PreviousInstallationInfo* info) {
     info->searchFilterInstalled = IsSearchFilterInstalled();
     info->previewInstalled = IsPreviewInstalled();
-    TempStr regPathUninst = GetRegPathUninstTemp(StrL(kAppName));
-    TempStr dirLM = LoggedReadRegStrTemp(HKEY_LOCAL_MACHINE, regPathUninst, StrL("InstallLocation"));
-    TempStr dirCU = LoggedReadRegStrTemp(HKEY_CURRENT_USER, regPathUninst, StrL("InstallLocation"));
-    if (dirLM && dirCU) {
-        info->typ = PreviousInstallationType::Both;
-        info->allUsers = true;
-    } else if (dirLM) {
-        info->typ = PreviousInstallationType::Machine;
-        info->allUsers = true;
-    } else {
-        info->typ = PreviousInstallationType::User;
-        info->allUsers = false;
-    }
-    // HKCU-only uninstall key can still point at Program Files (broken / partial state).
-    // Treat as machine-style so upgrades elevate and write HKLM correctly.
-    if (!info->allUsers && IsPathUnderProgramFiles(info->installationDir)) {
-        logf("GetPreviousInstallInfo: dir under Program Files with only HKCU key; forcing allUsers\n");
-        info->allUsers = true;
-    }
-    DWORD desktopShortcut = 1;
-    HKEY hkey = dirLM ? HKEY_LOCAL_MACHINE : HKEY_CURRENT_USER;
-    if (ReadRegDWORD(hkey, regPathUninst, StrL(kRegDesktopShortcut), desktopShortcut)) {
-        info->desktopShortcut = desktopShortcut != 0;
-    }
-    logf("GetPreviousInstallInfo: desktop shortcut: %d\n", (int)info->desktopShortcut);
-    logf("GetPreviousInstallInfo: dir '%s', search filter: %d, preview: %d, typ: %d, needsElevation: %d\n",
-         info->installationDir, (int)info->searchFilterInstalled, (int)info->previewInstalled, (int)info->typ,
-         (int)info->allUsers);
+    logf("GetPrevInstallShellExt: search filter: %d, preview: %d\n", (int)info->searchFilterInstalled,
+         (int)info->previewInstalled);
 }
 
 static TempStr GetExistingInstallationFilePathTemp(Str name) {
@@ -340,7 +305,7 @@ void RestoreShellExtensions(const ShellExtInstallState& state) {
 
 // return names of processes that are running part of the installation
 // (i.e. have libsumatrapdf.dll, PdfFilter.dll, or PdfPreview.dll loaded)
-static void ProcessesUsingInstallation(StrVec& names) {
+void ProcessesUsingInstallation(StrVec& names) {
     log(StrL("ProcessesUsingInstallation()\n"));
     TempStr dir = GetExistingInstallationDirTemp();
     if (len(dir) == 0) {
@@ -377,52 +342,13 @@ static void ProcessesUsingInstallation(StrVec& names) {
 
 // clang-format on
 
-static void SetCloseProcessMsg() {
-    int n = len(gProcessesToClose);
-    Str procNames = ReadableProcName(gProcessesToClose[0]);
-    for (int i = 1; i < n; i++) {
-        Str name = ReadableProcName(gProcessesToClose[i]);
-        if (i < n - 1) {
-            procNames = str::JoinTemp(procNames, StrL(", "), name);
-        } else {
-            procNames = str::JoinTemp(procNames, StrL(" and "), name);
-        }
-    }
-    TempStr s = fmt(Tr("Close %s to continue.").s, procNames);
-    SetMsg(s, kColorMsgFailed);
-}
-
-void SetDefaultMsg() {
-    SetMsg(gDefaultMsg, kColorMsgWelcome);
-}
-
 static void InvalidateFrame() {
     HwndRepaintNow(gHwndFrame);
 }
 
-bool CheckInstallUninstallPossible(HWND hwnd, bool silent) {
-    logf("CheckInstallUninstallPossible(silent=%d)\n", silent);
-    KillProcessesUsingInstallation();
-    // logf("CheckInstallUninstallPossible: KillProcessesUsingInstallation() returned %d\n", ok);
-
-    // now determine which processes are using installation files
-    // and ask user to close them.
-    // shouldn't be necessary given KillProcessesUsingInstallation(), we
-    // do it just in case
-    gProcessesToClose.Reset();
-    ProcessesUsingInstallation(gProcessesToClose);
-
-    bool possible = len(gProcessesToClose) == 0;
-    if (possible) {
-        SetDefaultMsg();
-    } else {
-        SetCloseProcessMsg();
-        if (!silent) {
-            MessageBeep(MB_ICONEXCLAMATION);
-        }
-    }
-    HwndRepaintNow(hwnd);
-    return possible;
+// shows a changed message before a long operation blocks the message loop
+void InstallerRepaintNow() {
+    HwndRepaintNow(gHwndFrame);
 }
 
 // This display is inspired by http://letteringjs.com/

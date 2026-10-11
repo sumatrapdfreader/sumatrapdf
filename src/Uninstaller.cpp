@@ -62,26 +62,6 @@ const char* gInstalledFiles[] = {
 // clang-format on
 #endif
 
-static void RemoveInstalledFiles() {
-    // can't use GetExistingInstallationDir() anymore because we
-    // delete registry entries
-    Str dir = gCli->installDir;
-    if (len(dir) == 0) {
-        log(StrL("RemoveInstalledFiles(): dir is empty\n"));
-    }
-#if 0
-    for (const char* s : gInstalledFiles) {
-        TempStr path = path::JoinTemp(dir, s);
-        bool ok = file::Delete(path);
-        if (ok) {
-            logf("RemoveInstalledFiles(): removed '%s'\n", path);
-        }
-    }
-#endif
-    bool ok = dir::RemoveAll(dir);
-    logf("RemoveInstalledFiles(): removed dir '%s', ok = %d\n", dir, (int)ok);
-}
-
 static void UninstallerThread() {
     log(StrL("UninstallerThread started\n"));
     // also kill the original uninstaller, if it's just spawned
@@ -124,7 +104,7 @@ static void UninstallerThread() {
 }
 
 static void OnButtonUninstall() {
-    if (!CheckInstallUninstallPossible(gHwndFrame)) {
+    if (!CheckInstallUninstallPossible()) {
         return;
     }
 
@@ -312,7 +292,7 @@ static int RunApp() {
         // only before (un)installation starts.
         auto dur = TimeSinceInMs(t);
         if (dur > 10000 && gButtonUninstaller && gButtonUninstaller->IsEnabled()) {
-            CheckInstallUninstallPossible(gHwndFrame, true);
+            CheckInstallUninstallPossible(true);
             t = TimeGet();
         }
     }

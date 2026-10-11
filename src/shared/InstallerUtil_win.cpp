@@ -18,6 +18,7 @@
 #include "Version.h"
 #include "AppTools.h"
 #include "SumatraPDF.h"
+#include "UpdateTemp.h"
 #include "Installer.h"
 #include "InstallerUtil.h"
 
@@ -840,4 +841,137 @@ int KillProcessesWithModule(Str modulePath, bool waitUntilTerminated) {
 bool KillProcessesUsingInstallation() {
     TempStr dir = GetExistingInstallationDirTemp();
     return KillProcessesUsingInstallationDir(dir);
+}
+
+Str gDefaultMsg; // Note: translation, not freeing
+
+static StrVec gProcessesToClose;
+
+void GetPreviousInstallInfo(PreviousInstallationInfo* info) {
+    info->installationDir = str::Dup(GetExistingInstallationDirTemp());
+    if (len(info->installationDir) == 0) {
+        info->typ = PreviousInstallationType::None;
+        log(StrL("GetPreviousInstallInfo: not installed\n"));
+        return;
+    }
+    GetPrevInstallShellExt(info);
+    TempStr regPathUninst = GetRegPathUninstTemp(StrL(kAppName));
+    TempStr dirLM = LoggedReadRegStrTemp(HKEY_LOCAL_MACHINE, regPathUninst, StrL("InstallLocation"));
+    TempStr dirCU = LoggedReadRegStrTemp(HKEY_CURRENT_USER, regPathUninst, StrL("InstallLocation"));
+    if (dirLM && dirCU) {
+        info->typ = PreviousInstallationType::Both;
+        info->allUsers = true;
+    } else if (dirLM) {
+        info->typ = PreviousInstallationType::Machine;
+        info->allUsers = true;
+    } else {
+        info->typ = PreviousInstallationType::User;
+        info->allUsers = false;
+    }
+    // HKCU-only uninstall key can still point at Program Files (broken / partial state).
+    // Treat as machine-style so upgrades elevate and write HKLM correctly.
+    if (!info->allUsers && IsPathUnderProgramFiles(info->installationDir)) {
+        logf("GetPreviousInstallInfo: dir under Program Files with only HKCU key; forcing allUsers\n");
+        info->allUsers = true;
+    }
+    DWORD desktopShortcut = 1;
+    HKEY hkey = dirLM ? HKEY_LOCAL_MACHINE : HKEY_CURRENT_USER;
+    if (ReadRegDWORD(hkey, regPathUninst, StrL(kRegDesktopShortcut), desktopShortcut)) {
+        info->desktopShortcut = desktopShortcut != 0;
+    }
+    logf("GetPreviousInstallInfo: desktop shortcut: %d\n", (int)info->desktopShortcut);
+    logf("GetPreviousInstallInfo: dir '%s', typ: %d, needsElevation: %d\n", info->installationDir, (int)info->typ,
+         (int)info->allUsers);
+}
+
+static void SetCloseProcessMsg() {
+    int n = len(gProcessesToClose);
+    Str procNames = ReadableProcName(gProcessesToClose[0]);
+    for (int i = 1; i < n; i++) {
+        Str name = ReadableProcName(gProcessesToClose[i]);
+        if (i < n - 1) {
+            procNames = str::JoinTemp(procNames, StrL(", "), name);
+        } else {
+            procNames = str::JoinTemp(procNames, StrL(" and "), name);
+        }
+    }
+    TempStr s = fmt(Tr("Close %s to continue.").s, procNames);
+    SetMsg(s, kColorMsgFailed);
+}
+
+void SetDefaultMsg() {
+    SetMsg(gDefaultMsg, kColorMsgWelcome);
+}
+
+bool CheckInstallUninstallPossible(bool silent) {
+    logf("CheckInstallUninstallPossible(silent=%d)\n", silent);
+    KillProcessesUsingInstallation();
+
+    // now determine which processes are using installation files
+    // and ask user to close them.
+    // shouldn't be necessary given KillProcessesUsingInstallation(), we
+    // do it just in case
+    gProcessesToClose.Reset();
+    ProcessesUsingInstallation(gProcessesToClose);
+
+    bool possible = len(gProcessesToClose) == 0;
+    if (possible) {
+        SetDefaultMsg();
+    } else {
+        SetCloseProcessMsg();
+        if (!silent) {
+            MessageBeep(MB_ICONEXCLAMATION);
+        }
+    }
+    InstallerRepaintNow();
+    return possible;
+}
+
+void RestartElevatedForAllUsers(Flags* cli) {
+    TempStr exePath = GetSelfExePathTemp();
+    TempStr cmdLine = StrL("-run-install-now");
+    bool allUsersChecked = InstallerAllUsersChecked();
+    bool allUsers = cli->allUsers || allUsersChecked;
+    logf("RestartElevatedForAllUsers: cli->allUsers: %d, allUsersChecked: %d, allUsers: %d\n", (int)cli->allUsers,
+         (int)allUsersChecked, (int)allUsers);
+    if (allUsers) {
+        cmdLine = str::JoinTemp(cmdLine, StrL(" -all-users"));
+    }
+    cmdLine = str::JoinTemp(cmdLine, InstallerShellExtArgsTemp(cli));
+    if (cli->noDesktopShortcut) {
+        cmdLine = str::JoinTemp(cmdLine, StrL(" -no-desktop-shortcut"));
+    }
+    if (cli->silent) {
+        cmdLine = str::JoinTemp(cmdLine, StrL(" -silent"));
+    }
+    if (cli->fastInstall) {
+        cmdLine = str::JoinTemp(cmdLine, StrL(" -fast-install"));
+    }
+    if (cli->log) {
+        cmdLine = str::JoinTemp(cmdLine, StrL(" -log"));
+    }
+    Str dir = cli->installDir;
+    cmdLine = str::JoinTemp(cmdLine, StrL(" -install-dir \""), dir);
+    cmdLine = str::JoinTemp(cmdLine, StrL("\""));
+    logf("LaunchElevated('%s', '%s')\n", exePath, cmdLine);
+    bool ok = LaunchElevated(exePath, cmdLine);
+    if (!ok) {
+        logf("LaunchElevated('%s', '%s') failed!\n", exePath, cmdLine);
+        LogLastError();
+    } else {
+        logf("LaunchElevated() ok!\n");
+        NoteTempInstallerRelaunch();
+    }
+}
+
+void RemoveInstalledFiles() {
+    // can't use GetExistingInstallationDir() anymore because we
+    // delete registry entries
+    Str dir = gCli->installDir;
+    if (len(dir) == 0) {
+        log(StrL("RemoveInstalledFiles(): dir is empty\n"));
+        return;
+    }
+    bool ok = dir::RemoveAll(dir);
+    logf("RemoveInstalledFiles(): removed dir '%s', ok = %d\n", dir, (int)ok);
 }

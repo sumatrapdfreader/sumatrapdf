@@ -54,8 +54,6 @@ Color gMsgColor = gCol5;
 
 Flags* gCli = nullptr;
 
-Str gDefaultMsg; // Note: translation, not freeing
-
 // ng: with -install-reg-root the shortcuts go here instead of the Desktop /
 // Start Menu, so a test run can't overwrite the ones of a real installation
 static Str gShortcutTestDir;
@@ -92,52 +90,13 @@ bool SetInstallRegistryTestRoot(Str keyName) {
     return true;
 }
 
-static StrVec gProcessesToClose;
-
 void SetMsg(Str msg, Color color) {
     gMsg = str::Dup(GetPermArena(), msg);
     gMsgColor = color;
 }
 
-void SetDefaultMsg() {
-    SetMsg(gDefaultMsg, kColorMsgWelcome);
-}
-
-void GetPreviousInstallInfo(PreviousInstallationInfo* info) {
-    info->installationDir = str::Dup(GetExistingInstallationDirTemp());
-    if (len(info->installationDir) == 0) {
-        info->typ = PreviousInstallationType::None;
-        log(StrL("GetPreviousInstallInfo: not installed\n"));
-        return;
-    }
-    TempStr regPathUninst = GetRegPathUninstTemp(StrL(kAppName));
-    TempStr dirLM = LoggedReadRegStrTemp(HKEY_LOCAL_MACHINE, regPathUninst, StrL("InstallLocation"));
-    TempStr dirCU = LoggedReadRegStrTemp(HKEY_CURRENT_USER, regPathUninst, StrL("InstallLocation"));
-    if (dirLM && dirCU) {
-        info->typ = PreviousInstallationType::Both;
-        info->allUsers = true;
-    } else if (dirLM) {
-        info->typ = PreviousInstallationType::Machine;
-        info->allUsers = true;
-    } else {
-        info->typ = PreviousInstallationType::User;
-        info->allUsers = false;
-    }
-    // HKCU-only uninstall key can still point at Program Files (broken / partial state).
-    // Treat as machine-style so upgrades elevate and write HKLM correctly.
-    if (!info->allUsers && IsPathUnderProgramFiles(info->installationDir)) {
-        logf("GetPreviousInstallInfo: dir under Program Files with only HKCU key; forcing allUsers\n");
-        info->allUsers = true;
-    }
-    DWORD desktopShortcut = 1;
-    HKEY hkey = dirLM ? HKEY_LOCAL_MACHINE : HKEY_CURRENT_USER;
-    if (ReadRegDWORD(hkey, regPathUninst, StrL(kRegDesktopShortcut), desktopShortcut)) {
-        info->desktopShortcut = desktopShortcut != 0;
-    }
-    logf("GetPreviousInstallInfo: desktop shortcut: %d\n", (int)info->desktopShortcut);
-    logf("GetPreviousInstallInfo: dir '%s', typ: %d, needsElevation: %d\n", info->installationDir, (int)info->typ,
-         (int)info->allUsers);
-}
+// ng installs no search filter or previewer
+void GetPrevInstallShellExt(PreviousInstallationInfo*) {}
 
 TempStr GetShortcutPathTemp(int csidl) {
     if (gShortcutTestDir) {
@@ -205,7 +164,7 @@ bool KillProcessesUsingInstallationDir(Str dir) {
 }
 
 // return names of processes that are running part of the installation
-static void ProcessesUsingInstallation(StrVec& names) {
+void ProcessesUsingInstallation(StrVec& names) {
     log(StrL("ProcessesUsingInstallation()\n"));
     TempStr dir = GetExistingInstallationDirTemp();
     if (len(dir) == 0) {
@@ -235,43 +194,8 @@ static void ProcessesUsingInstallation(StrVec& names) {
 
 // clang-format on
 
-static void SetCloseProcessMsg() {
-    int n = len(gProcessesToClose);
-    Str procNames = ReadableProcName(gProcessesToClose[0]);
-    for (int i = 1; i < n; i++) {
-        Str name = ReadableProcName(gProcessesToClose[i]);
-        if (i < n - 1) {
-            procNames = str::JoinTemp(procNames, StrL(", "), name);
-        } else {
-            procNames = str::JoinTemp(procNames, StrL(" and "), name);
-        }
-    }
-    TempStr s = fmt(Tr("Close %s to continue.").s, procNames);
-    SetMsg(s, kColorMsgFailed);
-}
-
-bool CheckInstallUninstallPossible(bool silent) {
-    logf("CheckInstallUninstallPossible(silent=%d)\n", silent);
-    KillProcessesUsingInstallation();
-
-    // now determine which processes are using installation files
-    // and ask user to close them.
-    // shouldn't be necessary given KillProcessesUsingInstallation(), we
-    // do it just in case
-    gProcessesToClose.Reset();
-    ProcessesUsingInstallation(gProcessesToClose);
-
-    bool possible = len(gProcessesToClose) == 0;
-    if (possible) {
-        SetDefaultMsg();
-    } else {
-        SetCloseProcessMsg();
-        if (!silent) {
-            MessageBeep(MB_ICONEXCLAMATION);
-        }
-    }
-    return possible;
-}
+// ng repaints on its next frame
+void InstallerRepaintNow() {}
 
 // clang-format off
 LetterInfo gLetters[kSumatraLettersCount] = {

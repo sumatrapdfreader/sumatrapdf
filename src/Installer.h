@@ -100,7 +100,7 @@ struct ShellExtInstallState {
 void FreeInstallationFilesInUse(Str installDir, bool allUsers, ShellExtInstallState* removedOut = nullptr);
 void RestoreShellExtensions(const ShellExtInstallState& state);
 
-bool CheckInstallUninstallPossible(HWND hwnd, bool silent = false);
+bool CheckInstallUninstallPossible(bool silent = false);
 Str GetInstallerLogPath();
 
 bool IsDirInPath(Str path, Str dir);

@@ -1070,46 +1070,20 @@ Exit:
     }
 }
 
-static void RestartElevatedForAllUsers(Flags* cli) {
-    TempStr exePath = GetSelfExePathTemp();
-    TempStr cmdLine = StrL("-run-install-now");
-    bool allUsersChecked = gWnd && gWnd->checkboxForAllUsers && gWnd->checkboxForAllUsers->IsChecked();
-    bool allUsers = cli->allUsers || allUsersChecked;
-    logf("RestartElevatedForAllUsers: cli->allUsers: %d, allUsersChecked: %d, allUsers: %d\n", (int)cli->allUsers,
-         (int)allUsersChecked, (int)allUsers);
-    if (allUsers) {
-        cmdLine = str::JoinTemp(cmdLine, StrL(" -all-users"));
-    }
+bool InstallerAllUsersChecked() {
+    return gWnd && gWnd->checkboxForAllUsers && gWnd->checkboxForAllUsers->IsChecked();
+}
+
+// the shell extension choices, passed on to the elevated installer
+TempStr InstallerShellExtArgsTemp(Flags* cli) {
+    TempStr args = str::DupTemp(StrL(""));
     if (cli->withFilter) {
-        cmdLine = str::JoinTemp(cmdLine, StrL(" -with-filter"));
+        args = str::JoinTemp(args, StrL(" -with-filter"));
     }
     if (cli->withPreview) {
-        cmdLine = str::JoinTemp(cmdLine, StrL(" -with-preview"));
+        args = str::JoinTemp(args, StrL(" -with-preview"));
     }
-    if (cli->noDesktopShortcut) {
-        cmdLine = str::JoinTemp(cmdLine, StrL(" -no-desktop-shortcut"));
-    }
-    if (cli->silent) {
-        cmdLine = str::JoinTemp(cmdLine, StrL(" -silent"));
-    }
-    if (cli->fastInstall) {
-        cmdLine = str::JoinTemp(cmdLine, StrL(" -fast-install"));
-    }
-    if (cli->log) {
-        cmdLine = str::JoinTemp(cmdLine, StrL(" -log"));
-    }
-    Str dir = cli->installDir;
-    cmdLine = str::JoinTemp(cmdLine, StrL(" -install-dir \""), dir);
-    cmdLine = str::JoinTemp(cmdLine, StrL("\""));
-    logf("LaunchElevated('%s', '%s')\n", exePath, cmdLine);
-    bool ok = LaunchElevated(exePath, cmdLine);
-    if (!ok) {
-        logf("LaunchElevated('%s', '%s') failed!\n", exePath, cmdLine);
-        LogLastError();
-    } else {
-        logf("LaunchElevated() ok!\n");
-        NoteTempInstallerRelaunch();
-    }
+    return args;
 }
 
 static void StartInstallation(InstallerWnd* wnd) {
@@ -1185,7 +1159,7 @@ static void OnButtonInstall(InstallerWnd* wnd) {
     }
 
     logf("OnButtonInstall: before CheckInstallUninstallPossible()\n");
-    if (!CheckInstallUninstallPossible(wnd->hwnd)) {
+    if (!CheckInstallUninstallPossible()) {
         wnd->btnInstall->SetIsEnabled(true);
         return;
     }
@@ -1860,7 +1834,7 @@ static int RunApp() {
         // only before (un)installation starts.
         auto dur = TimeSinceInMs(t);
         if (!gInstallStarted && dur > 10000) {
-            CheckInstallUninstallPossible(gWnd->hwnd, true);
+            CheckInstallUninstallPossible(true);
             t = TimeGet();
         }
     }
