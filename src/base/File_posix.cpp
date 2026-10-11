@@ -16,6 +16,19 @@
 #elif OS_LINUX
 #include <linux/magic.h>
 #include <sys/vfs.h>
+// kernel headers before 6.x (Ubuntu 22.04) lack these
+#ifndef CIFS_SUPER_MAGIC
+#define CIFS_SUPER_MAGIC 0xFF534D42
+#endif
+#ifndef SMB2_SUPER_MAGIC
+#define SMB2_SUPER_MAGIC 0xFE534D42
+#endif
+#ifndef CEPH_SUPER_MAGIC
+#define CEPH_SUPER_MAGIC 0x00C36400
+#endif
+#ifndef FUSE_SUPER_MAGIC
+#define FUSE_SUPER_MAGIC 0x65735546
+#endif
 #endif
 
 #include "base/File.h"
