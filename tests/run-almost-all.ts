@@ -164,6 +164,7 @@ import { testit as issue6093 } from "./issue-6093.ts";
 import { testit as toolbarHoverDropdown } from "./toolbar-hover-dropdown.ts";
 import { testit as issue6095 } from "./issue-6095.ts";
 import { testit as epubRelayoutStalePage } from "./epub-relayout-stale-page.ts";
+import { testit as epubQuitDuringLayout } from "./epub-quit-during-layout.ts";
 import { testit as epubThemeRestyle } from "./epub-theme-restyle.ts";
 import { testit as showChaptersInEbooks } from "./show-chapters-in-ebooks.ts";
 import { testit as embeddedImageAttachment } from "./embedded-image-attachment.ts";
@@ -640,6 +641,7 @@ export const tests: NamedTest[] = [
   ["epub-theme-restyle", epubThemeRestyle],
   ["show-chapters-in-ebooks", showChaptersInEbooks],
   ["epub-relayout-stale-page", epubRelayoutStalePage],
+  ["epub-quit-during-layout", epubQuitDuringLayout],
   ["issue-5943", issue5943],
   ["issue-6118", issue6118],
   ["issue-6120", issue6120],

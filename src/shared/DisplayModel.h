@@ -97,6 +97,7 @@ struct DisplayModel : DocController {
     DisplayModel& operator=(DisplayModel const&) = delete;
 
     ~DisplayModel() override;
+    void Retire();
 
     // meta data
     Str GetFilePath() const override;

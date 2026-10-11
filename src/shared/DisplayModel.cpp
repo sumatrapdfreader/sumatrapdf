@@ -932,6 +932,14 @@ void DisplayModel::SetUiDpi(int dpi) {
 #endif
 }
 
+// The window gave the model up but a render in flight delays its delete. Its
+// callback dies with the window, so UI tasks posted for the model (chapter
+// layout progress, render finished, ...) must stop running on it.
+void DisplayModel::Retire() {
+    VecRemove(gLiveDisplayModels, this);
+    pauseRendering = true;
+}
+
 DisplayModel::~DisplayModel() {
     logf("~DisplayModel: 0x%p\n", this);
     VecRemove(gLiveDisplayModels, this);

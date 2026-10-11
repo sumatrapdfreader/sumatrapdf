@@ -1071,7 +1071,7 @@ void DeleteControllerAsync(DocController* ctrl) {
         return;
     }
     // no new requests for this model from here on
-    dm->pauseRendering = true;
+    dm->Retire();
     gRenderCache->AbortRendering(dm);
     if (!gRenderCache->IsRenderingFor(dm)) {
         // nothing to wait for, the common case
