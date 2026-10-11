@@ -22131,8 +22131,14 @@ static bool PageScrollBy(Window* win, int dir) {
     return true;
 }
 
+enum class ScrollbarPressKind : uint8_t {
+    Mouse,
+    ShiftMouse,
+    Touch,
+};
+
 static bool ScrollbarPress(Window* win, ScrollRect* s, float x, float y,
-                           bool horizontal, bool thumbOnly = false) {
+                           bool horizontal, ScrollbarPressKind kind) {
     float track = horizontal ? s->bounds.w : s->bounds.h;
     float content = horizontal ? s->contentW : s->contentH;
     float origin = horizontal ? s->bounds.x : s->bounds.y;
@@ -22192,9 +22198,16 @@ static bool ScrollbarPress(Window* win, ScrollRect* s, float x, float y,
                            horizontal ? s->scrollY : off, true);
         return true;
     }
-    if (thumbOnly) return false;
+    if (kind == ScrollbarPressKind::Touch) return false;
 
-    float off = geometry.DragOffset(at, geometry.length * .5f, current);
+    float off;
+    if (kind == ScrollbarPressKind::ShiftMouse) {
+        off = geometry.DragOffset(at, geometry.length * .5f, current);
+    } else {
+        float direction = at < thumbStart ? -1.f : 1.f;
+        float viewport = horizontal ? s->bounds.w : s->bounds.h;
+        off = current + direction * viewport;
+    }
     ScrollbarEmit(win, s, horizontal ? off : s->scrollX,
                   horizontal ? s->scrollY : off);
     return false;
@@ -22733,7 +22746,10 @@ static void DispatchMouseDown(Window* win, const MouseDownEvent& in) {
     ScrollRect* bar = ScrollbarAt(&win->paint, x, y, &barHorizontal);
     if (bar) {
         SetMouseDown(win, true);
-        (void)ScrollbarPress(win, bar, x, y, barHorizontal);
+        ScrollbarPressKind kind = in.modifiers.shift
+                                      ? ScrollbarPressKind::ShiftMouse
+                                      : ScrollbarPressKind::Mouse;
+        (void)ScrollbarPress(win, bar, x, y, barHorizontal, kind);
         DispatchMouseDownOut(win, in);
 
         ClearPendingClick(win);
@@ -23179,9 +23195,9 @@ void WindowDispatchInput(Window* win, const PlatformInput* input) {
                     ScrollbarAt(&win->paint, touch.startPosition.x,
                                 touch.startPosition.y, &horizontal);
                 win->touchScrollbarDrag =
-                    bar &&
-                    ScrollbarPress(win, bar, touch.startPosition.x,
-                                   touch.startPosition.y, horizontal, true);
+                    bar && ScrollbarPress(win, bar, touch.startPosition.x,
+                                          touch.startPosition.y, horizontal,
+                                          ScrollbarPressKind::Touch);
                 if (win->touchScrollbarDrag &&
                     (touch.position.x != touch.startPosition.x ||
                      touch.position.y != touch.startPosition.y)) {
@@ -111505,6 +111521,9 @@ bool HttpAsyncLaunchHosted(HttpAsyncJob* job) {
 
 bool HttpSendAsync(const HttpReq& req, Func1<HttpAsyncResult> done) {
     if (!done.IsValid()) {
+        return false;
+    }
+    if (req.readBody || req.onBody) {
         return false;
     }
     HttpAsyncJob* job = HttpAsyncJobNew(req, done);
@@ -237261,9 +237280,27 @@ static void TrimMediaType(Str* s) {
     }
 }
 
+struct CurlTransfer {
+    const HttpReq* req = nullptr;
+    HttpRsp* out = nullptr;
+    CURL* curl = nullptr;
+    int64_t sent = 0;
+};
+
 static size_t OnBody(char* data, size_t size, size_t n, void* userp) {
-    HttpRsp* out = (HttpRsp*)userp;
+    CurlTransfer* t = (CurlTransfer*)userp;
+    HttpRsp* out = t->out;
     size_t want = size * n;
+    if (t->req->onBody && want > 0) {
+        long status = 0;
+        curl_easy_getinfo(t->curl, CURLINFO_RESPONSE_CODE, &status);
+        if (status >= 200 && status < 300) {
+            return t->req->onBody(t->req->onBodyCtx, (const uint8_t*)data,
+                                  (int)want)
+                       ? want
+                       : 0;
+        }
+    }
     if ((int64_t)len(out->body) + (int64_t)want > (int64_t)kHttpMaxBody) {
         return 0;
     }
@@ -237273,6 +237310,25 @@ static size_t OnBody(char* data, size_t size, size_t n, void* userp) {
     }
     memcpy(dst, data, want);
     return want;
+}
+
+static size_t OnReadBody(char* buf, size_t size, size_t n, void* userp) {
+    CurlTransfer* t = (CurlTransfer*)userp;
+    int64_t left = t->req->bodyLen - t->sent;
+    int64_t room = (int64_t)(size * n);
+    int cap = (int)(left < room ? left : room);
+    if (cap > 1024 * 1024) {
+        cap = 1024 * 1024;
+    }
+    if (cap <= 0) {
+        return 0;
+    }
+    int got = t->req->readBody(t->req->readBodyCtx, (uint8_t*)buf, cap);
+    if (got <= 0 || got > cap) {
+        return CURL_READFUNC_ABORT;
+    }
+    t->sent += got;
+    return (size_t)got;
 }
 
 bool HttpSend(const HttpReq& req, HttpRsp* out) {
@@ -237297,12 +237353,24 @@ bool HttpSend(const HttpReq& req, HttpRsp* out) {
     curl_easy_setopt(c, CURLOPT_URL, u);
     curl_easy_setopt(c, CURLOPT_FOLLOWLOCATION, noRedirect ? 0L : 1L);
     curl_easy_setopt(c, CURLOPT_MAXREDIRS, 5L);
-    curl_easy_setopt(c, CURLOPT_TIMEOUT_MS, (long)kHttpTimeoutMs);
+    CurlTransfer transfer;
+    transfer.req = &req;
+    transfer.out = out;
+    transfer.curl = c;
+    bool streamed = req.readBody || req.onBody;
+    if (streamed) {
+
+        curl_easy_setopt(c, CURLOPT_CONNECTTIMEOUT_MS, (long)kHttpTimeoutMs);
+        curl_easy_setopt(c, CURLOPT_LOW_SPEED_LIMIT, 1L);
+        curl_easy_setopt(c, CURLOPT_LOW_SPEED_TIME, 60L);
+    } else {
+        curl_easy_setopt(c, CURLOPT_TIMEOUT_MS, (long)kHttpTimeoutMs);
+    }
     curl_easy_setopt(c, CURLOPT_USERAGENT, "gpui/1.0");
 
     curl_easy_setopt(c, CURLOPT_NOSIGNAL, 1L);
     curl_easy_setopt(c, CURLOPT_WRITEFUNCTION, OnBody);
-    curl_easy_setopt(c, CURLOPT_WRITEDATA, out);
+    curl_easy_setopt(c, CURLOPT_WRITEDATA, &transfer);
 
 #if LIBCURL_VERSION_NUM >= 0x075500
     curl_easy_setopt(c, CURLOPT_PROTOCOLS_STR, "http,https");
@@ -237323,12 +237391,22 @@ bool HttpSend(const HttpReq& req, HttpRsp* out) {
         verb[len(req.method)] = 0;
         curl_easy_setopt(c, CURLOPT_CUSTOMREQUEST, verb);
     }
-    if (len(req.body) > 0) {
+    struct curl_slist* headers = nullptr;
+    bool headersReady = true;
+    if (req.readBody) {
+
+        curl_easy_setopt(c, CURLOPT_POST, 1L);
+        curl_easy_setopt(c, CURLOPT_POSTFIELDSIZE_LARGE,
+                         (curl_off_t)req.bodyLen);
+        curl_easy_setopt(c, CURLOPT_READFUNCTION, OnReadBody);
+        curl_easy_setopt(c, CURLOPT_READDATA, &transfer);
+
+        headers = curl_slist_append(headers, "Expect:");
+        headersReady = headers != nullptr && req.bodyLen >= 0;
+    } else if (len(req.body) > 0) {
         curl_easy_setopt(c, CURLOPT_POSTFIELDS, req.body.s);
         curl_easy_setopt(c, CURLOPT_POSTFIELDSIZE, (long)len(req.body));
     }
-    struct curl_slist* headers = nullptr;
-    bool headersReady = true;
     for (int i = 0; i < req.nHeaders && headersReady; i++) {
         StrBuilder line;
         line.Append(req.headers[i].name);
@@ -237446,6 +237524,99 @@ bool HttpGetNoRedirect(Str url, HttpRsp* out) {
 }
 @end
 
+@interface GpuiStreamDelegate : NSObject <NSURLSessionDataDelegate> {
+  @public
+    const gpui::HttpReq* request;
+    gpui::HttpRsp* out;
+    NSHTTPURLResponse* response;
+    dispatch_semaphore_t done;
+    bool ok;
+    bool refused;
+}
+@end
+
+@implementation GpuiStreamDelegate
+- (void)URLSession:(NSURLSession*)session
+                          task:(NSURLSessionTask*)task
+    willPerformHTTPRedirection:(NSHTTPURLResponse*)redirect
+                    newRequest:(NSURLRequest*)newRequest
+             completionHandler:(void (^)(NSURLRequest*))completionHandler {
+    (void)session;
+    (void)task;
+    (void)redirect;
+
+    bool follow = !request->noRedirect && !request->readBody;
+    completionHandler(follow ? newRequest : nil);
+}
+
+- (void)URLSession:(NSURLSession*)session
+                 task:(NSURLSessionTask*)task
+    needNewBodyStream:(void (^)(NSInputStream*))completionHandler {
+    (void)session;
+    refused = true;
+    [task cancel];
+    completionHandler(nil);
+}
+
+- (void)URLSession:(NSURLSession*)session
+              dataTask:(NSURLSessionDataTask*)task
+    didReceiveResponse:(NSURLResponse*)rsp
+     completionHandler:
+         (void (^)(NSURLSessionResponseDisposition))completionHandler {
+    (void)session;
+    (void)task;
+    if ([rsp isKindOfClass:[NSHTTPURLResponse class]]) {
+        response = (NSHTTPURLResponse*)rsp;
+    }
+    completionHandler(NSURLSessionResponseAllow);
+}
+
+- (void)URLSession:(NSURLSession*)session
+          dataTask:(NSURLSessionDataTask*)task
+    didReceiveData:(NSData*)data {
+    (void)session;
+    if (refused) {
+        return;
+    }
+    NSInteger status = response ? [response statusCode] : 0;
+    bool stream = request->onBody && status >= 200 && status < 300;
+    [data enumerateByteRangesUsingBlock:^(const void* bytes, NSRange range,
+                                          BOOL* stop) {
+      int n = (int)range.length;
+      if (stream) {
+          if (!request->onBody(request->onBodyCtx, (const uint8_t*)bytes, n)) {
+              refused = true;
+          }
+      } else if ((int64_t)gpui::len(out->body) + n >
+                 (int64_t)gpui::kHttpMaxBody) {
+          refused = true;
+      } else {
+          uint8_t* dst = gpui::VecAppendBlanks(out->body, n);
+          if (dst) {
+              memcpy(dst, bytes, (size_t)n);
+          } else {
+              refused = true;
+          }
+      }
+      if (refused) {
+          *stop = YES;
+      }
+    }];
+    if (refused) {
+        [task cancel];
+    }
+}
+
+- (void)URLSession:(NSURLSession*)session
+                    task:(NSURLSessionTask*)task
+    didCompleteWithError:(NSError*)error {
+    (void)session;
+    (void)task;
+    ok = !error && !refused && response != nil;
+    dispatch_semaphore_signal(done);
+}
+@end
+
 namespace gpui {
 
 static void TrimMediaType(Str* s) {
@@ -237481,11 +237652,124 @@ static NSString* NSFromStr(Str s) {
                                   encoding:NSUTF8StringEncoding];
 }
 
+static bool HttpSendStreamed(const HttpReq& request, HttpRsp* out) {
+    @autoreleasepool {
+        NSURL* u = [NSURL URLWithString:NSFromStr(request.url)];
+        if (!u || request.bodyLen < 0) {
+            return false;
+        }
+
+        NSMutableURLRequest* req = [NSMutableURLRequest
+             requestWithURL:u
+                cachePolicy:NSURLRequestUseProtocolCachePolicy
+            timeoutInterval:(NSTimeInterval)kHttpTimeoutMs / 1000.0];
+        [req setHTTPMethod:len(request.method) > 0 ? NSFromStr(request.method)
+                                                   : @"GET"];
+        [req setValue:@"gpui/1.0" forHTTPHeaderField:@"User-Agent"];
+        for (int i = 0; i < request.nHeaders; i++) {
+            NSString* name = NSFromStr(request.headers[i].name);
+            NSString* value = NSFromStr(request.headers[i].value);
+            if (name && value) {
+                [req setValue:value forHTTPHeaderField:name];
+            }
+        }
+        NSInputStream* bodyIn = nil;
+        NSOutputStream* bodyOut = nil;
+        if (request.readBody) {
+            [NSStream getBoundStreamsWithBufferSize:64 * 1024
+                                        inputStream:&bodyIn
+                                       outputStream:&bodyOut];
+            if (!bodyIn || !bodyOut) {
+                return false;
+            }
+            [req setHTTPBodyStream:bodyIn];
+
+            [req setValue:[NSString stringWithFormat:@"%lld", (long long)request
+                                                                  .bodyLen]
+                forHTTPHeaderField:@"Content-Length"];
+        }
+
+        GpuiStreamDelegate* delegate = [[GpuiStreamDelegate alloc] init];
+        delegate->request = &request;
+        delegate->out = out;
+        delegate->response = nil;
+        delegate->done = dispatch_semaphore_create(0);
+        delegate->ok = false;
+        delegate->refused = false;
+        NSURLSession* session = [NSURLSession
+            sessionWithConfiguration:[NSURLSessionConfiguration
+                                         defaultSessionConfiguration]
+                            delegate:delegate
+                       delegateQueue:nil];
+        NSURLSessionDataTask* task = [session dataTaskWithRequest:req];
+        [task resume];
+
+        bool finished = false;
+        if (bodyOut) {
+            [bodyOut open];
+            uint8_t* buf = AllocArray<uint8_t>(64 * 1024);
+            bool sent = buf != nullptr;
+            for (int64_t left = request.bodyLen;
+                 sent && !finished && left > 0;) {
+                int cap = left < 64 * 1024 ? (int)left : 64 * 1024;
+                int n = request.readBody(request.readBodyCtx, buf, cap);
+                sent = n > 0 && n <= cap;
+                for (int at = 0; sent && !finished && at < n;) {
+
+                    while (!finished && ![bodyOut hasSpaceAvailable]) {
+                        dispatch_time_t tick = dispatch_time(
+                            DISPATCH_TIME_NOW, 10 * NSEC_PER_MSEC);
+                        finished =
+                            dispatch_semaphore_wait(delegate->done, tick) == 0;
+                    }
+                    if (finished) {
+                        break;
+                    }
+                    NSInteger wrote =
+                        [bodyOut write:buf + at maxLength:(NSUInteger)(n - at)];
+                    sent = wrote > 0;
+                    at += (int)wrote;
+                }
+                left -= n;
+            }
+            Free(nullptr, buf);
+            [bodyOut close];
+            if (!sent && !finished) {
+                [task cancel];
+            }
+        }
+        if (!finished) {
+            dispatch_semaphore_wait(delegate->done, DISPATCH_TIME_FOREVER);
+        }
+        [session finishTasksAndInvalidate];
+        NSHTTPURLResponse* rsp = delegate->response;
+        if (!delegate->ok || !rsp) {
+            VecReset(out->body);
+            return false;
+        }
+        out->status = (int)[rsp statusCode];
+        if (request.noRedirect && out->status >= 300 && out->status < 400) {
+            NSString* location = [rsp valueForHTTPHeaderField:@"Location"];
+            NSURL* target = location ? [NSURL URLWithString:location
+                                              relativeToURL:[rsp URL]]
+                                     : nil;
+            out->redirectUrl = StrFromNS([[target absoluteURL] absoluteString]);
+        }
+        Str ct = StrFromNS([rsp valueForHTTPHeaderField:@"Content-Type"]);
+        TrimMediaType(&ct);
+        out->contentType = ct;
+        return true;
+    }
+}
+
 bool HttpSend(const HttpReq& request, HttpRsp* out) {
     Str url = request.url;
     bool noRedirect = request.noRedirect;
     if (!out || !HttpUrlIsRemote(url)) {
         return false;
+    }
+    if (request.readBody || request.onBody) {
+        return HttpSendStreamed(request, out);
     }
     @autoreleasepool {
         NSString* s = [[NSString alloc] initWithBytes:url.s
@@ -237956,8 +238240,54 @@ static void ReadRedirect(HINTERNET req, const wchar_t* base, HttpRsp* out) {
     Free(nullptr, location);
 }
 
-static bool ReadResponse(HINTERNET req, const wchar_t* base, bool noRedirect,
-                         HttpRsp* out) {
+constexpr int kStreamBuf = 64 * 1024;
+
+static bool WriteBody(HINTERNET req, const HttpReq& request) {
+    uint8_t* buf = AllocArray<uint8_t>(kStreamBuf);
+    if (!buf) {
+        return false;
+    }
+    bool ok = true;
+    for (int64_t left = request.bodyLen; ok && left > 0;) {
+        int cap = left < kStreamBuf ? (int)left : kStreamBuf;
+        int n = request.readBody(request.readBodyCtx, buf, cap);
+        ok = n > 0 && n <= cap;
+        for (int at = 0; ok && at < n;) {
+            DWORD wrote = 0;
+            ok = WinHttpWriteData(req, buf + at, (DWORD)(n - at), &wrote) &&
+                 wrote > 0;
+            at += (int)wrote;
+        }
+        left -= n;
+    }
+    Free(nullptr, buf);
+    return ok;
+}
+
+static bool StreamBody(HINTERNET req, const HttpReq& request) {
+    uint8_t* buf = AllocArray<uint8_t>(kStreamBuf);
+    if (!buf) {
+        return false;
+    }
+    bool ok = true;
+    for (;;) {
+        DWORD got = 0;
+        ok = WinHttpReadData(req, buf, kStreamBuf, &got);
+        if (!ok || got == 0) {
+            break;
+        }
+        ok = request.onBody(request.onBodyCtx, buf, (int)got);
+        if (!ok) {
+            break;
+        }
+    }
+    Free(nullptr, buf);
+    return ok;
+}
+
+static bool ReadResponse(HINTERNET req, const wchar_t* base,
+                         const HttpReq& request, HttpRsp* out) {
+    bool noRedirect = request.noRedirect;
     DWORD status = 0;
     DWORD size = sizeof(status);
     if (!WinHttpQueryHeaders(
@@ -237979,6 +238309,10 @@ static bool ReadResponse(HINTERNET req, const wchar_t* base, bool noRedirect,
         Str ct = FromWide(ctype);
         TrimMediaType(&ct);
         out->contentType = ct;
+    }
+
+    if (request.onBody && status >= 200 && status < 300) {
+        return StreamBody(req, request);
     }
 
     for (;;) {
@@ -238063,13 +238397,20 @@ bool HttpSend(const HttpReq& req, HttpRsp* out) {
 
                 wchar_t* headers = nullptr;
                 bool headersReady = true;
-                if (req.nHeaders > 0) {
+
+                bool streamed = req.readBody != nullptr;
+                bool hugeBody = streamed && req.bodyLen > 0xffffffffLL;
+                if (req.nHeaders > 0 || hugeBody) {
                     StrBuilder block;
                     for (int i = 0; i < req.nHeaders; i++) {
                         block.Append(req.headers[i].name);
                         block.Append(StrL(": "));
                         block.Append(req.headers[i].value);
                         block.Append(StrL("\r\n"));
+                    }
+                    if (hugeBody) {
+                        block.Append(fmt("Content-Length: %v\r\n",
+                                         (long long)req.bodyLen));
                     }
                     Str text = block.TakeStr();
                     headers = text.s ? ToWide(text) : nullptr;
@@ -238088,16 +238429,21 @@ bool HttpSend(const HttpReq& req, HttpRsp* out) {
                     (request.h &&
                      WinHttpSetOption(request.h, WINHTTP_OPTION_REDIRECT_POLICY,
                                       &redirectPolicy, sizeof(redirectPolicy)));
+                bool hasBody = !streamed && len(req.body) > 0;
+                DWORD total = hugeBody   ? WINHTTP_IGNORE_REQUEST_TOTAL_LENGTH
+                              : streamed ? (DWORD)req.bodyLen
+                                         : (DWORD)len(req.body);
                 if (request.h && redirectReady && headersReady &&
+                    (!streamed || req.bodyLen >= 0) &&
                     WinHttpSendRequest(
                         request.h,
                         headers ? headers : WINHTTP_NO_ADDITIONAL_HEADERS,
                         headers ? (DWORD)-1 : 0,
-                        len(req.body) > 0 ? (void*)req.body.s
-                                          : WINHTTP_NO_REQUEST_DATA,
-                        (DWORD)len(req.body), (DWORD)len(req.body), 0) &&
+                        hasBody ? (void*)req.body.s : WINHTTP_NO_REQUEST_DATA,
+                        hasBody ? (DWORD)len(req.body) : 0, total, 0) &&
+                    (!streamed || WriteBody(request.h, req)) &&
                     WinHttpReceiveResponse(request.h, nullptr)) {
-                    ok = ReadResponse(request.h, wurl, noRedirect, out);
+                    ok = ReadResponse(request.h, wurl, req, out);
                 }
                 Free(nullptr, headers);
                 Free(nullptr, verb);

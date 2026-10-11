@@ -36961,6 +36961,10 @@ struct HttpHeader {
     Str value;
 };
 
+using HttpReadBodyFn = int (*)(void* ctx, uint8_t* buf, int cap);
+
+using HttpOnBodyFn = bool (*)(void* ctx, const uint8_t* data, int n);
+
 struct HttpReq {
     Str url;
     Str method;
@@ -36969,6 +36973,13 @@ struct HttpReq {
     Str body;
 
     bool noRedirect = false;
+
+    HttpReadBodyFn readBody = nullptr;
+    void* readBodyCtx = nullptr;
+    int64_t bodyLen = 0;
+
+    HttpOnBodyFn onBody = nullptr;
+    void* onBodyCtx = nullptr;
 };
 
 bool HttpSend(const HttpReq& req, HttpRsp* out);
