@@ -95,6 +95,11 @@ struct DocCanvasUI {
     // the last wheel page turn, so queued notches don't skip unread comic pages
     TimeStamp wheelPageTurnTime{};
     bool wheelDidTurnPage = false;
+    // travel since the last wheel scroll that moved; turns the page at an edge
+    int wheelEdgeAccumDelta = 0;
+    // last wheel delta that was a fraction of a notch (a precision touchpad)
+    TimeStamp wheelFineDeltaTime{};
+    bool wheelFineDeltaSeen = false;
     // the page context menu, built when it is opened (orig's
     // OnWindowContextMenu), and the popup that shows it
     MenuModel* ctxMenu = nullptr;
@@ -1364,6 +1369,58 @@ static int WheelScrollPosOrTarget(MainWindow* win) {
     return win->scrollV.nPos;
 }
 
+// a fractional delta keeps the wheel "fine" this long, so the odd whole notch
+// in a touchpad swipe doesn't turn a page by itself
+constexpr double kWheelFineDeltaMs = 500;
+
+// A mouse wheel reports whole notches (kWheelDelta). A precision touchpad
+// reports finger travel in fractions of a notch and a swipe adds up to many
+// notches, so a page per notch races through a document (#3755)
+static bool IsFineWheel(MainWindow* win, int delta) {
+    DocCanvasUI* ui = Ui(win);
+    if (delta % kWheelDelta != 0) {
+        ui->wheelFineDeltaTime = TimeGet();
+        ui->wheelFineDeltaSeen = true;
+        return true;
+    }
+    return ui->wheelFineDeltaSeen && TimeSinceInMs(ui->wheelFineDeltaTime) < kWheelFineDeltaMs;
+}
+
+// the wheel travel that turns a page: a notch, or for a fine wheel as much as
+// scrolling a window's height takes in continuous mode
+static int WheelPageTurnDelta(MainWindow* win, int delta) {
+    if (!IsFineWheel(win, delta)) {
+        return kWheelDelta;
+    }
+    int perLine = gDeltaPerLine > 0 ? gDeltaPerLine : kWheelDelta / 3;
+    int lineHeight = std::max(DpiScale(ScrollLineAmount(gSettings->scrollLineAmount)), 1);
+    int lines = (int)win->scrollV.nPage / lineHeight;
+    return std::max(kWheelDelta, lines * perLine);
+}
+
+// accumulates wheel travel; 1 to turn to the previous page, -1 to the next, 0 to stay
+static int WheelPageTurnDir(MainWindow* win, int delta) {
+    win->wheelAccumDelta += delta;
+    int turnDelta = WheelPageTurnDelta(win, delta);
+    if (win->wheelAccumDelta >= turnDelta) {
+        win->wheelAccumDelta -= turnDelta;
+        return 1;
+    }
+    if (win->wheelAccumDelta <= -turnDelta) {
+        win->wheelAccumDelta += turnDelta;
+        return -1;
+    }
+    return 0;
+}
+
+static void WheelTurnPage(MainWindow* win, int dir) {
+    if (dir > 0) {
+        win->ctrl->GoToPrevPage();
+    } else if (dir < 0) {
+        win->ctrl->GoToNextPage();
+    }
+}
+
 // this does zooming via mouse wheel (with ctrl or the right mouse button)
 static void ZoomByMouseWheel(MainWindow* win, int delta, Point pt) {
     StopSmoothScroll(win);
@@ -1518,27 +1575,13 @@ static void CanvasOnMouseWheel(MainWindow* win, int delta, bool isCtrl, bool isS
     // MouseWheelTurnsPage: a wheel notch is a page turn, not a scroll, even
     // when the page is zoomed past the window. Alt + wheel still scrolls
     if (vScroll && !isAlt && gSettings->mouseWheelTurnsPage) {
-        win->wheelAccumDelta += delta;
-        if (win->wheelAccumDelta >= kWheelDelta) {
-            win->ctrl->GoToPrevPage();
-            win->wheelAccumDelta -= kWheelDelta;
-        } else if (win->wheelAccumDelta <= -kWheelDelta) {
-            win->ctrl->GoToNextPage();
-            win->wheelAccumDelta += kWheelDelta;
-        }
+        WheelTurnPage(win, WheelPageTurnDir(win, delta));
         return;
     }
 
     // fit content: flip page on wheel, regardless of scrollbar state
     if (vScroll && dm && FitContentWheelFlipsPage(dm) && IsSingle(dm->GetDisplayMode())) {
-        win->wheelAccumDelta += delta;
-        if (win->wheelAccumDelta >= kWheelDelta) {
-            win->ctrl->GoToPrevPage();
-            win->wheelAccumDelta -= kWheelDelta;
-        } else if (win->wheelAccumDelta <= -kWheelDelta) {
-            win->ctrl->GoToNextPage();
-            win->wheelAccumDelta += kWheelDelta;
-        }
+        WheelTurnPage(win, WheelPageTurnDir(win, delta));
         return;
     }
 
@@ -1547,14 +1590,7 @@ static void CanvasOnMouseWheel(MainWindow* win, int delta, bool isCtrl, bool isS
 
     // in SinglePage mode a document that fits the viewport pages instead
     if (isSinglePageMode && vScroll && (!dm || !dm->NeedVScroll())) {
-        win->wheelAccumDelta += delta;
-        if (win->wheelAccumDelta >= kWheelDelta) {
-            win->ctrl->GoToPrevPage();
-            win->wheelAccumDelta -= kWheelDelta;
-        } else if (win->wheelAccumDelta <= -kWheelDelta) {
-            win->ctrl->GoToNextPage();
-            win->wheelAccumDelta += kWheelDelta;
-        }
+        WheelTurnPage(win, WheelPageTurnDir(win, delta));
         return;
     }
 
@@ -1567,17 +1603,8 @@ static void CanvasOnMouseWheel(MainWindow* win, int delta, bool isCtrl, bool isS
             // if the page(s) fully fit in the window, flip the whole page
             flipPage = true;
         }
-        // fit content/page: one wheel click = one page; otherwise 3 clicks
-        int pageFlipDelta = flipPage ? kWheelDelta : kWheelDelta * 3;
         if (flipPage) {
-            win->wheelAccumDelta += delta;
-            if (win->wheelAccumDelta >= pageFlipDelta) {
-                win->ctrl->GoToPrevPage();
-                win->wheelAccumDelta -= pageFlipDelta;
-            } else if (win->wheelAccumDelta <= -pageFlipDelta) {
-                win->ctrl->GoToNextPage();
-                win->wheelAccumDelta += pageFlipDelta;
-            }
+            WheelTurnPage(win, WheelPageTurnDir(win, delta));
             return;
         }
     }
@@ -1672,13 +1699,23 @@ static void CanvasOnMouseWheel(MainWindow* win, int delta, bool isCtrl, bool isS
     if (!vScroll || !isCont || !gSettings->scrollEdgeTurnsPage) {
         return;
     }
-    if (!didScrollByLine) {
-        return;
-    }
+    DocCanvasUI* ui = Ui(win);
     if (WheelScrollPosOrTarget(win) != prevScrollPos) {
         // we don't flip a page if we did scroll by line
+        ui->wheelEdgeAccumDelta = 0;
         return;
     }
+    // at an edge: a notch that moved nothing turns the page; a fine wheel
+    // turns it after a window's height of travel, like a page that fits
+    ui->wheelEdgeAccumDelta += delta;
+    if (IsFineWheel(win, delta)) {
+        if (std::abs(ui->wheelEdgeAccumDelta) < WheelPageTurnDelta(win, delta)) {
+            return;
+        }
+    } else if (!didScrollByLine) {
+        return;
+    }
+    ui->wheelEdgeAccumDelta = 0;
     if (!WheelMayTurnPage(win)) {
         win->wheelAccumDelta = 0;
         return;

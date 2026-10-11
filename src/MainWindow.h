@@ -608,6 +608,10 @@ struct MainWindow { // NOLINT(clang-analyzer-optin.performance.Padding)
     struct OverlayScrollbar* overlayScrollH = nullptr;
 
     int wheelAccumDelta = 0;
+    // travel since the last wheel scroll that moved; turns the page at an edge
+    int wheelEdgeAccumDelta = 0;
+    // last wheel delta that was a fraction of a notch (a precision touchpad)
+    LARGE_INTEGER wheelFineDeltaTime{};
     LARGE_INTEGER wheelPageTurnTime{};
     UINT_PTR delayedRepaintTimer = 0;
 

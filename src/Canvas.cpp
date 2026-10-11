@@ -3338,6 +3338,59 @@ static int WheelScrollPosOrTarget(MainWindow* win) {
     return GetScrollPos(win->hwndCanvas, SB_VERT);
 }
 
+// a fractional delta keeps the wheel "fine" this long, so the odd whole notch
+// in a touchpad swipe doesn't turn a page by itself
+constexpr double kWheelFineDeltaMs = 500;
+
+// A mouse wheel reports whole notches (WHEEL_DELTA). A precision touchpad
+// reports finger travel in fractions of a notch and a swipe adds up to many
+// notches, so a page per notch races through a document (#3755)
+static bool IsFineWheel(MainWindow* win, int delta) {
+    if (delta % WHEEL_DELTA != 0) {
+        win->wheelFineDeltaTime = TimeGet();
+        return true;
+    }
+    return win->wheelFineDeltaTime.QuadPart != 0 && TimeSinceInMs(win->wheelFineDeltaTime) < kWheelFineDeltaMs;
+}
+
+// the wheel travel that turns a page: a notch, or for a fine wheel as much as
+// scrolling a window's height takes in continuous mode
+static int WheelPageTurnDelta(MainWindow* win, int delta) {
+    if (!IsFineWheel(win, delta)) {
+        return WHEEL_DELTA;
+    }
+    int perLine = gDeltaPerLine > 0 ? gDeltaPerLine : WHEEL_DELTA / 3;
+    int lineHeight = std::max(DpiScale(ScrollLineAmount(gSettings->scrollLineAmount)), 1);
+    int lines = win->canvasRc.dy / lineHeight;
+    return std::max(WHEEL_DELTA, lines * perLine);
+}
+
+// accumulates wheel travel; 1 to turn to the previous page, -1 to the next, 0 to stay
+static int WheelPageTurnDir(MainWindow* win, int delta) {
+    win->wheelAccumDelta += delta;
+    int turnDelta = WheelPageTurnDelta(win, delta);
+    if (win->wheelAccumDelta >= turnDelta) {
+        win->wheelAccumDelta -= turnDelta;
+        return 1;
+    }
+    if (win->wheelAccumDelta <= -turnDelta) {
+        win->wheelAccumDelta += turnDelta;
+        return -1;
+    }
+    return 0;
+}
+
+static void WheelTurnPage(MainWindow* win, int dir) {
+    if (dir > 0) {
+        win->ctrl->GoToPrevPage();
+    } else if (dir < 0) {
+        win->ctrl->GoToNextPage();
+    }
+    if (dir != 0) {
+        ReadAloudOnUserViewChanged(win);
+    }
+}
+
 // Fit Content used to turn the mouse wheel into page flipping in every view mode.
 // That is right when a whole page is on screen - there is nothing to scroll to -
 // but in the continuous modes it silently replaced continuous scrolling with
@@ -3500,31 +3553,13 @@ static LRESULT CanvasOnMouseWheel(MainWindow* win, UINT msg, WPARAM wp, LPARAM l
     // the keyboard. Alt + wheel still scrolls, so the rest of the page is
     // reachable; Shift + wheel and Ctrl + wheel are unchanged
     if (vScroll && !isAlt && gSettings->mouseWheelTurnsPage) {
-        win->wheelAccumDelta += delta;
-        if (win->wheelAccumDelta >= WHEEL_DELTA) {
-            win->ctrl->GoToPrevPage();
-            win->wheelAccumDelta -= WHEEL_DELTA;
-            ReadAloudOnUserViewChanged(win);
-        } else if (win->wheelAccumDelta <= -WHEEL_DELTA) {
-            win->ctrl->GoToNextPage();
-            win->wheelAccumDelta += WHEEL_DELTA;
-            ReadAloudOnUserViewChanged(win);
-        }
+        WheelTurnPage(win, WheelPageTurnDir(win, delta));
         return 0;
     }
 
     // fit content: flip page on wheel, regardless of scrollbar state
     if (vScroll && dm && FitContentWheelFlipsPage(dm) && IsSingle(dm->GetDisplayMode())) {
-        win->wheelAccumDelta += delta;
-        if (win->wheelAccumDelta >= WHEEL_DELTA) {
-            win->ctrl->GoToPrevPage();
-            win->wheelAccumDelta -= WHEEL_DELTA;
-            ReadAloudOnUserViewChanged(win);
-        } else if (win->wheelAccumDelta <= -WHEEL_DELTA) {
-            win->ctrl->GoToNextPage();
-            win->wheelAccumDelta += WHEEL_DELTA;
-            ReadAloudOnUserViewChanged(win);
-        }
+        WheelTurnPage(win, WheelPageTurnDir(win, delta));
         return 0;
     }
 
@@ -3539,20 +3574,7 @@ static LRESULT CanvasOnMouseWheel(MainWindow* win, UINT msg, WPARAM wp, LPARAM l
             // Fall through to the default scrolling behavior below
         } else {
             // Content fits in viewport, use page-by-page navigation
-            int pageFlipDelta = WHEEL_DELTA; // One wheel click = one page
-            win->wheelAccumDelta += delta;
-            if (win->wheelAccumDelta >= pageFlipDelta) {
-                win->ctrl->GoToPrevPage();
-                win->wheelAccumDelta -= pageFlipDelta;
-                ReadAloudOnUserViewChanged(win);
-                return 0;
-            }
-            if (win->wheelAccumDelta <= -pageFlipDelta) {
-                win->ctrl->GoToNextPage();
-                win->wheelAccumDelta += pageFlipDelta;
-                ReadAloudOnUserViewChanged(win);
-                return 0;
-            }
+            WheelTurnPage(win, WheelPageTurnDir(win, delta));
             return 0;
         }
     }
@@ -3566,25 +3588,9 @@ static LRESULT CanvasOnMouseWheel(MainWindow* win, UINT msg, WPARAM wp, LPARAM l
             // logf("  flipping page because !dm->NeedVScroll()\n");
             flipPage = true;
         }
-        // fit content/page: one wheel click = one page; otherwise 3 clicks
-        int pageFlipDelta = flipPage ? WHEEL_DELTA : WHEEL_DELTA * 3;
-
-        // int scrolLPos = GetScrollPos(win->hwndCanvas, SB_VERT);
-        //  Note: pre 3.6 didn't care about horizontallScroll and kZoomFitPage was handled below
+        // Note: pre 3.6 didn't care about horizontallScroll and kZoomFitPage was handled below
         if (flipPage) {
-            win->wheelAccumDelta += delta;
-            if (win->wheelAccumDelta >= pageFlipDelta) {
-                win->ctrl->GoToPrevPage();
-                win->wheelAccumDelta -= pageFlipDelta;
-                ReadAloudOnUserViewChanged(win);
-                return 0;
-            }
-            if (win->wheelAccumDelta <= -pageFlipDelta) {
-                win->ctrl->GoToNextPage();
-                win->wheelAccumDelta += pageFlipDelta;
-                ReadAloudOnUserViewChanged(win);
-                return 0;
-            }
+            WheelTurnPage(win, WheelPageTurnDir(win, delta));
             return 0;
         }
     }
@@ -3693,17 +3699,24 @@ static LRESULT CanvasOnMouseWheel(MainWindow* win, UINT msg, WPARAM wp, LPARAM l
     if (!vScroll || !isCont || !gSettings->scrollEdgeTurnsPage) {
         return 0;
     }
-    if (!didScrollByLine) {
+    bool didScroll = WheelScrollPosOrTarget(win) != prevScrollPos;
+    if (didScroll) {
+        // we don't flip a page if we did scroll by line
+        win->wheelEdgeAccumDelta = 0;
+        return 0;
+    }
+    // at an edge: a notch that moved nothing turns the page; a fine wheel
+    // turns it after a window's height of travel, like a page that fits
+    win->wheelEdgeAccumDelta += delta;
+    if (IsFineWheel(win, delta)) {
+        if (std::abs(win->wheelEdgeAccumDelta) < WheelPageTurnDelta(win, delta)) {
+            return 0;
+        }
+    } else if (!didScrollByLine) {
         // we haven't reached accumulated delta to scroll by line
         return 0;
     }
-
-    int currScrollPos = WheelScrollPosOrTarget(win);
-    bool didScroll = (currScrollPos != prevScrollPos);
-    if (didScroll) {
-        // we don't flip a page if we did scroll by line
-        return 0;
-    }
+    win->wheelEdgeAccumDelta = 0;
     if (!WheelMayTurnPage(win)) {
         win->wheelAccumDelta = 0;
         return 0;
