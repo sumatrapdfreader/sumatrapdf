@@ -253,33 +253,6 @@ void CancelPendingFind(MainWindow* win) {
     win->findDebounceLeftMs = 0;
 }
 
-void FindTextOnThread(MainWindow* win, TextSearch::Direction direction, bool showProgress) {
-    TempStr s = FindEditTextTemp(win);
-    bool wasModified = FindEditIsModified(win);
-    if (!wasModified) {
-        // check if the find text differs from the current tab's cached search text
-        // this happens when switching tabs: the find edit box shows the current text
-        // but the per-tab textSearch still has the old search text cached
-        DisplayModel* dm = win->AsFixed();
-        if (dm && dm->textSearch) {
-            // compare with lastText, not findText: SetText strips a trailing
-            // space (match word end) from findText but keeps it in lastText, and
-            // strips a leading space (match word start) from both. Normalize s
-            // the same way (drop one leading space) so trailing/leading/whole-word
-            // searches don't always look "modified" and find-next can advance.
-            Str searchText = s;
-            if (searchText && searchText.s[0] == ' ') {
-                searchText = Str(searchText.s + 1, searchText.len - 1);
-            }
-            if (!str::Eq(searchText, dm->textSearch->lastText)) {
-                wasModified = true;
-            }
-        }
-    }
-    FindEditSetModified(win, false);
-    FindTextOnThread(win, direction, s, wasModified, showProgress);
-}
-
 // ng: orig's win->canvasRc is the canvas HWND's client rect, i.e. the origin
 // of document coordinates. Here canvasRc sits below the menu bar and the tab
 // strip, so the clip for document coordinates is the viewport.
@@ -610,7 +583,7 @@ valid formats:
     [Open("c:\file.pdf",1,1,0)]
     [Open("c:\file.pdf",1,1,0,1)]
 */
-static Str HandleOpenCmd(Str cmd, bool* ack) {
+Str HandleOpenCmd(Str cmd, bool* ack) {
     TempStr filePath;
     int newWindow = 0;
     int setFocus = 0;
@@ -745,48 +718,7 @@ eg: [CmdClose] or [CmdCreateAnnotHighlight #00ff00 openEdit]
 // returns true if did handle a message
 // ng: orig also has [ForwardSearch(...)], which needs the forward-search mark
 // this port doesn't draw yet
-bool HandleExecuteCmds(HWND hwnd, Str cmd) {
-    bool didHandle = false;
-    while (cmd) {
-        logf("HandleExecuteCmds: '%s'\n", cmd);
-
-        Str nextCmd = HandleOpenCmd(cmd, &didHandle);
-        if (str::IsNull(nextCmd)) {
-            nextCmd = HandleGotoCmd(hwnd, cmd, &didHandle);
-        }
-        if (str::IsNull(nextCmd)) {
-            nextCmd = HandlePageCmd(hwnd, cmd, &didHandle);
-        }
-        if (str::IsNull(nextCmd)) {
-            nextCmd = HandleSetViewCmd(hwnd, cmd, &didHandle);
-        }
-        if (str::IsNull(nextCmd)) {
-            nextCmd = HandleFullScreenCmd(hwnd, cmd, &didHandle);
-        }
-        if (str::IsNull(nextCmd)) {
-            nextCmd = HandleSearchCmd(hwnd, cmd, &didHandle);
-        }
-        if (str::IsNull(nextCmd)) {
-            nextCmd = HandleSyncCmd(cmd, &didHandle);
-        }
-        if (str::IsNull(nextCmd)) {
-            nextCmd = HandleGotoPageWordCmd(hwnd, cmd, &didHandle);
-        }
-        if (str::IsNull(nextCmd)) {
-            nextCmd = HandleCmdCommand(hwnd, cmd, &didHandle);
-        }
-        if (str::IsNull(nextCmd)) {
-            nextCmd = HandleNewWindowCmd(cmd, &didHandle);
-        }
-        if (str::IsNull(nextCmd)) {
-            // forwards compatibility: ignore unknown commands (maybe from newer version)
-            TempStr tmp;
-            nextCmd = str::Parse(cmd, "%s]", &tmp);
-        }
-        cmd = nextCmd;
-    }
-    return didHandle;
-}
+void DdeExecuteBegin() {}
 
 // [Open] / [GotoPageWord] / the rest of the DDE execute grammar.
 bool ExecuteDdeCmds(Str cmd) {

@@ -126,6 +126,7 @@ void HideFwdSearchMarkAfter(MainWindow* win, int delayMs);
 MainWindow* WindowFromHwnd(HWND hwnd);
 MainWindow* LastActiveWindow();
 Str HandleAppRequestCmd(Str cmd, bool* ack, str::Builder& res);
+void DdeExecuteBegin();
 
 struct UpdateFindStatusData {
     MainWindow* win;
@@ -142,3 +143,4 @@ void FindThread(FindThreadData* ftd);
 
 Str HandleGetFileStateCmd(Str cmd, bool* ack, str::Builder& res);
 Str HandleCmdCommand(HWND hwnd, Str cmd, bool* ack);
+Str HandleOpenCmd(Str cmd, bool* ack);

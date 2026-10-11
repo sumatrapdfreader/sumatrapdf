@@ -2493,3 +2493,80 @@ LRESULT OnDDETerminate(HWND hwnd, WPARAM wp, LPARAM) {
 }
 
 #endif // OS_WIN
+
+void FindTextOnThread(MainWindow* win, TextSearch::Direction direction, bool showProgress) {
+    if (!win->findEdit) {
+        return;
+    }
+    TempStr s = FindEditTextTemp(win);
+    // if document is rtl, need to reverse the text
+    // s = ReverseTextTemp(s);
+    bool wasModified = FindEditIsModified(win);
+    if (!wasModified) {
+        // check if the find text differs from the current tab's cached search text
+        // this happens when switching tabs: the find edit box shows the current text
+        // but the per-tab textSearch still has the old search text cached
+        DisplayModel* dm = win->AsFixed();
+        if (dm && dm->textSearch) {
+            // compare with lastText, not findText: SetText strips a trailing
+            // space (match word end) from findText but keeps it in lastText, and
+            // strips a leading space (match word start) from both. Normalize s
+            // the same way (drop one leading space) so trailing/leading/whole-word
+            // searches don't always look "modified" and find-next can advance.
+            Str searchText = s;
+            if (searchText && searchText.s[0] == ' ') {
+                searchText = Str(searchText.s + 1, searchText.len - 1);
+            }
+            if (!str::Eq(searchText, dm->textSearch->lastText)) {
+                wasModified = true;
+            }
+        }
+    }
+    FindEditSetModified(win, false);
+    FindTextOnThread(win, direction, s, wasModified, showProgress);
+}
+
+bool HandleExecuteCmds(HWND hwnd, Str cmd) {
+    DdeExecuteBegin();
+
+    bool didHandle = false;
+    while (cmd) {
+        logf("HandleExecuteCmds: '%s'\n", cmd);
+
+        Str nextCmd = HandleSyncCmd(cmd, &didHandle);
+        if (str::IsNull(nextCmd)) {
+            nextCmd = HandleOpenCmd(cmd, &didHandle);
+        }
+        if (str::IsNull(nextCmd)) {
+            nextCmd = HandleGotoCmd(hwnd, cmd, &didHandle);
+        }
+        if (str::IsNull(nextCmd)) {
+            nextCmd = HandlePageCmd(hwnd, cmd, &didHandle);
+        }
+        if (str::IsNull(nextCmd)) {
+            nextCmd = HandleSetViewCmd(hwnd, cmd, &didHandle);
+        }
+        if (str::IsNull(nextCmd)) {
+            nextCmd = HandleFullScreenCmd(hwnd, cmd, &didHandle);
+        }
+        if (str::IsNull(nextCmd)) {
+            nextCmd = HandleSearchCmd(hwnd, cmd, &didHandle);
+        }
+        if (str::IsNull(nextCmd)) {
+            nextCmd = HandleGotoPageWordCmd(hwnd, cmd, &didHandle);
+        }
+        if (str::IsNull(nextCmd)) {
+            nextCmd = HandleCmdCommand(hwnd, cmd, &didHandle);
+        }
+        if (str::IsNull(nextCmd)) {
+            nextCmd = HandleNewWindowCmd(cmd, &didHandle);
+        }
+        if (str::IsNull(nextCmd)) {
+            // forwards compatibility: ignore unknown commands (maybe from newer version)
+            TempStr tmp;
+            nextCmd = str::Parse(cmd, "%s]", &tmp);
+        }
+        cmd = nextCmd;
+    }
+    return didHandle;
+}

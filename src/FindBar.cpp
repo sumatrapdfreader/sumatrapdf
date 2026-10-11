@@ -800,6 +800,10 @@ void FindEditSetText(MainWindow* win, Str s) {
     }
 }
 
+bool FindEditIsModified(MainWindow* win) {
+    return win && win->findEdit && CbEditIsModified(win->findEdit);
+}
+
 void FindEditSetModified(MainWindow* win, bool modified) {
     if (win && win->findEdit) {
         CbEditSetModified(win->findEdit, modified);
