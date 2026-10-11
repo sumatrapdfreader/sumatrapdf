@@ -82,3 +82,5 @@ static const WORD gPrimaryLangIds[] = {
     LANG_DANISH,     LANG_FINNISH,    LANG_NORWEGIAN, LANG_HUNGARIAN, LANG_SLOVAK,  LANG_BENGALI,
 };
 #endif
+
+Str PrimaryLangIdToEnglishName(WORD primary);

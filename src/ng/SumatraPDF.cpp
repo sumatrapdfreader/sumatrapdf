@@ -856,7 +856,7 @@ MainWindow* FindMainWindowByFile(Str file, bool focusTab, MainWindow* limitWin) 
 
 // --- thumbnails (orig's, from SumatraPDF.cpp) --------------------------------
 
-static void CreateThumbnailFromFileFinish(CreateThumbnailFromFileData* d) {
+void CreateThumbnailFromFileFinish(CreateThumbnailFromFileData* d) {
     if (d->bmp) {
         FileState* fs = FileHistoryFindByPath(d->filePath);
         SetThumbnail(fs, d->bmp);
@@ -866,61 +866,9 @@ static void CreateThumbnailFromFileFinish(CreateThumbnailFromFileData* d) {
     delete d;
 }
 
-static void CreateThumbnailFromFileThread(CreateThumbnailFromFileData* d) {
-    EngineBase* engine = d->engine;
-    TempStr cover = FindCoverImageTemp(d->filePath);
-    if (len(cover) > 0) {
-        SafeEngineRelease(&d->engine);
-        engine = CreateEngineFromFile(cover, nullptr, true);
-    }
-    if (!engine && GuessFileTypeFromName(d->filePath, true) == FileType::Epub) {
-        Str coverData = EpubCoverImageData(d->filePath);
-        if (len(coverData) > 0) {
-            engine = CreateEngineImageFromData(coverData);
-        }
-        str::Free(coverData);
-    }
-    if (!engine) {
-        SetLoadThreadFileEBookUI(d->fileEBookUI);
-        engine = CreateEngineFromFile(d->filePath, nullptr, true);
-        SetLoadThreadFileEBookUI(nullptr);
-    }
-    if (!engine) {
-        delete d;
-        DestroyTempArena();
-        return;
-    }
-    RectF pageRect = engine->PageMediabox(1);
-    if (pageRect.IsEmpty()) {
-        engine->Release();
-        d->engine = nullptr;
-        delete d;
-        DestroyTempArena();
-        return;
-    }
-    pageRect = engine->Transform(pageRect, 1, 1.0f, 0);
-    float zoom = (float)kThumbnailDx / pageRect.dx;
-    pageRect.dy = std::min(pageRect.dy, (float)kThumbnailDy / zoom);
-    pageRect = engine->Transform(pageRect, 1, 1.0f, 0, true);
-    RenderPageArgs args(1, zoom, 0, &pageRect);
-    d->bmp = engine->RenderPage(args);
-    engine->Release();
-    d->engine = nullptr;
-    auto fn = MkFunc0<CreateThumbnailFromFileData>(CreateThumbnailFromFileFinish, d);
-    uitask::Post(fn, "SetThumbnailFromFile");
-    DestroyTempArena();
-}
-
-// create a thumbnail by loading the file with a temporary engine; independent
-// of the tab lifecycle, so it works even if the tab is closed before the
-// render completes
-void CreateThumbnailFromFileAsync(FileState* ds, EngineBase* engine) {
-    auto* d = new CreateThumbnailFromFileData();
-    d->filePath = str::Dup(ds->filePath);
-    d->engine = engine;
-    d->fileEBookUI = CopyFileEBookUI(ds->eBookUI);
-    auto fn = MkFunc0<CreateThumbnailFromFileData>(CreateThumbnailFromFileThread, d);
-    RunAsync(fn, StrL("CreateThumbnailFromFile"));
+// ng: a thumbnail never asks for a password
+EngineBase* CreateEngineForThumbnail(Str path) {
+    return CreateEngineFromFile(path, nullptr, true);
 }
 
 // --- loading a document -----------------------------------------------------

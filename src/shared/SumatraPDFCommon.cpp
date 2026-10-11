@@ -2515,3 +2515,60 @@ void OnFrameKeyB(MainWindow* win, bool isShift) {
         win->ChangePresentationMode(PM_BLACK_SCREEN);
     }
 }
+
+static void CreateThumbnailFromFileThread(CreateThumbnailFromFileData* d) {
+    EngineBase* engine = d->engine;
+    TempStr cover = FindCoverImageTemp(d->filePath);
+    if (len(cover) > 0) {
+        SafeEngineRelease(&d->engine);
+        engine = CreateEngineForThumbnail(cover);
+    }
+    // the cover the book itself declares, which isn't always page 1
+    if (!engine && GuessFileTypeFromName(d->filePath, true) == FileType::Epub) {
+        Str coverData = EpubCoverImageData(d->filePath);
+        if (len(coverData) > 0) {
+            engine = CreateEngineImageFromData(coverData);
+        }
+        str::Free(coverData);
+    }
+    if (!engine) {
+        SetLoadThreadFileEBookUI(d->fileEBookUI);
+        engine = CreateEngineForThumbnail(d->filePath);
+        SetLoadThreadFileEBookUI(nullptr);
+    }
+    if (!engine) {
+        delete d;
+        DestroyTempArena();
+        return;
+    }
+    RectF pageRect = engine->PageMediabox(1);
+    if (pageRect.IsEmpty()) {
+        engine->Release();
+        d->engine = nullptr;
+        delete d;
+        DestroyTempArena();
+        return;
+    }
+    pageRect = engine->Transform(pageRect, 1, 1.0f, 0);
+    float zoom = (float)kThumbnailDx / pageRect.dx;
+    pageRect.dy = std::min(pageRect.dy, (float)kThumbnailDy / zoom);
+    pageRect = engine->Transform(pageRect, 1, 1.0f, 0, true);
+    RenderPageArgs args(1, zoom, 0, &pageRect);
+    d->bmp = engine->RenderPage(args);
+    engine->Release();
+    d->engine = nullptr;
+    auto fn = MkFunc0<CreateThumbnailFromFileData>(CreateThumbnailFromFileFinish, d);
+    uitask::Post(fn, "SetThumbnailFromFile");
+    DestroyTempArena();
+}
+
+// create a thumbnail by loading the file with a temporary engine
+// used for lazy-loaded files that don't have a loaded controller
+void CreateThumbnailFromFileAsync(FileState* ds, EngineBase* engine) {
+    auto* d = new CreateThumbnailFromFileData();
+    d->filePath = str::Dup(ds->filePath);
+    d->engine = engine;
+    d->fileEBookUI = CopyFileEBookUI(ds->eBookUI);
+    auto fn = MkFunc0<CreateThumbnailFromFileData>(CreateThumbnailFromFileThread, d);
+    RunAsync(fn, StrL("CreateThumbnailFromFile"));
+}

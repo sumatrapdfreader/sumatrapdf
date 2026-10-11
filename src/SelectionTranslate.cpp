@@ -130,48 +130,7 @@ static void PopulateLanguageDropDown(DropDown* dd, Str initial, bool includeAuto
     }
 }
 
-// clang-format off
-static SeqStrings gPrimaryLangNames =
-    "English\0"
-    "Chinese (Simplified)\0"
-    "German\0"
-    "French\0"
-    "Spanish\0"
-    "Italian\0"
-    "Portuguese\0"
-    "Russian\0"
-    "Japanese\0"
-    "Korean\0"
-    "Arabic\0"
-    "Hindi\0"
-    "Turkish\0"
-    "Vietnamese\0"
-    "Polish\0"
-    "Ukrainian\0"
-    "Dutch\0"
-    "Thai\0"
-    "Indonesian\0"
-    "Czech\0"
-    "Swedish\0"
-    "Romanian\0"
-    "Greek\0"
-    "Hebrew\0"
-    "Danish\0"
-    "Finnish\0"
-    "Norwegian\0"
-    "Hungarian\0"
-    "Slovak\0"
-    "Bengali\0";
 // clang-format on
-
-static Str PrimaryLangIdToEnglishName(WORD primary) {
-    for (int i = 0; i < dimofi(gPrimaryLangIds); i++) {
-        if (gPrimaryLangIds[i] == primary) {
-            return SeqStrByIndex(gPrimaryLangNames, i);
-        }
-    }
-    return {};
-}
 
 TempStr OsDefaultDestinationLanguageTemp() {
     LANGID langId = GetUserDefaultUILanguage();

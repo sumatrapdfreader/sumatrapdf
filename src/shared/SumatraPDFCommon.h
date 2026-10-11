@@ -179,3 +179,5 @@ void OpenUsingDDE(HWND targetHwnd, Str path, Flags& i, bool isFirstWin);
 bool SetupPluginMode(Flags& i);
 
 void OnFrameKeyB(MainWindow* win, bool isShift);
+EngineBase* CreateEngineForThumbnail(Str path);
+void CreateThumbnailFromFileFinish(CreateThumbnailFromFileData* d);

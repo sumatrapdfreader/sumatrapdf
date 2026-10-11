@@ -988,7 +988,7 @@ void ControllerCallbackHandler::RenderThumbnail(DisplayModel* dm, Size size, con
     engine->disableAntiAlias = savedAntiAlias;
 }
 
-static void CreateThumbnailFromFileFinish(CreateThumbnailFromFileData* d) {
+void CreateThumbnailFromFileFinish(CreateThumbnailFromFileData* d) {
     if (d->bmp) {
         FileState* fs = FileHistoryFindByPath(d->filePath);
         SetThumbnail(fs, d->bmp);
@@ -997,59 +997,9 @@ static void CreateThumbnailFromFileFinish(CreateThumbnailFromFileData* d) {
     delete d;
 }
 
-static void CreateThumbnailFromFileThread(CreateThumbnailFromFileData* d) {
-    EngineBase* engine = d->engine;
-    TempStr cover = FindCoverImageTemp(d->filePath);
-    if (len(cover) > 0) {
-        SafeEngineRelease(&d->engine);
-        HwndPasswordUI pwdUI(nullptr);
-        engine = CreateEngineFromFile(cover, &pwdUI, true);
-    }
-    if (!engine && GuessFileTypeFromName(d->filePath, true) == FileType::Epub) {
-        // the cover the book itself declares, which isn't always page 1
-        Str coverData = EpubCoverImageData(d->filePath);
-        if (len(coverData) > 0) {
-            engine = CreateEngineImageFromData(coverData);
-        }
-        str::Free(coverData);
-    }
-    if (!engine) {
-        HwndPasswordUI pwdUI(nullptr);
-        SetLoadThreadFileEBookUI(d->fileEBookUI);
-        engine = CreateEngineFromFile(d->filePath, &pwdUI, true);
-        SetLoadThreadFileEBookUI(nullptr);
-    }
-    if (!engine) {
-        delete d;
-        return;
-    }
-    RectF pageRect = engine->PageMediabox(1);
-    if (pageRect.IsEmpty()) {
-        engine->Release();
-        delete d;
-        return;
-    }
-    pageRect = engine->Transform(pageRect, 1, 1.0f, 0);
-    float zoom = (float)kThumbnailDx / pageRect.dx;
-    pageRect.dy = std::min(pageRect.dy, (float)kThumbnailDy / zoom);
-    pageRect = engine->Transform(pageRect, 1, 1.0f, 0, true);
-    RenderPageArgs args(1, zoom, 0, &pageRect);
-    d->bmp = engine->RenderPage(args);
-    engine->Release();
-    d->engine = nullptr;
-    auto fn = MkFunc0<CreateThumbnailFromFileData>(CreateThumbnailFromFileFinish, d);
-    uitask::Post(fn, "SetThumbnailFromFile");
-}
-
-// create a thumbnail by loading the file with a temporary engine
-// used for lazy-loaded files that don't have a loaded controller
-void CreateThumbnailFromFileAsync(FileState* ds, EngineBase* engine) {
-    auto* d = new CreateThumbnailFromFileData();
-    d->filePath = str::Dup(ds->filePath);
-    d->engine = engine;
-    d->fileEBookUI = CopyFileEBookUI(ds->eBookUI);
-    auto fn = MkFunc0<CreateThumbnailFromFileData>(CreateThumbnailFromFileThread, d);
-    RunAsync(fn, StrL("CreateThumbnailFromFile"));
+EngineBase* CreateEngineForThumbnail(Str path) {
+    HwndPasswordUI pwdUI(nullptr);
+    return CreateEngineFromFile(path, &pwdUI, true);
 }
 
 /* Send the request to render a given page to a rendering thread */
