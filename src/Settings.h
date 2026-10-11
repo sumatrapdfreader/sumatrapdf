@@ -836,6 +836,9 @@ struct Settings {
     // predefined text inserted as a free text annotation from the context
     // menu or the command palette
     Vec<TextSnippet*>* textSnippets;
+    // if true, the Annotations window shows the selected annotation's note
+    // under the list
+    bool annotationsWindowShowNote;
     // zoom levels which zooming steps through in addition to Fit Page and
     // Fit Width. The largest value is also the highest zoom that can be
     // set at all, so listing levels above 6400 (up to 1000000) is how you

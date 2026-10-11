@@ -1649,6 +1649,8 @@ static void ExecuteControlRequest(ControlRequest* req) {
                 ApplyAnnotFilterText(win, StringArg(req, 1));
             } else if (str::EqI(action, StrL("paint"))) {
                 PaintAnnotFilterWindow(win);
+            } else if (str::EqI(action, StrL("note"))) {
+                ToggleAnnotFilterNote(win);
             }
             AppendTestResult(req, 0, AnnotFilterToolbarStateTemp(win));
             break;

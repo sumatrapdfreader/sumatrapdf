@@ -232,6 +232,7 @@ CustomScreenDPI = 0
 WindowState = 1
 WindowPos = 0 0 0 0
 SearchUIWindowPos = 0 0 0 0
+AnnotationsWindowShowNote = false
 HelpWindowPos = 0 0 0 0
 FileStates [
 ]

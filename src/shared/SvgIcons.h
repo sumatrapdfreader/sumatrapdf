@@ -38,6 +38,8 @@ extern const char* gIconHomeThumbnails;
 extern const char* gIconSidebarBookmarks;
 extern const char* gIconSidebarFavorites;
 extern const char* gIconPin;
+extern const char* gIconEye;
+extern const char* gIconHelpCircle;
 extern const char* gIconEditAnnotations;
 extern const char* gIconAnnotHighlight;
 extern const char* gIconAnnotHighlightBrush;

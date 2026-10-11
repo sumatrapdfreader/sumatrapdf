@@ -835,6 +835,9 @@ struct Settings {
     // predefined text inserted as a free text annotation from the context
     // menu or the command palette
     Vec<TextSnippet*>* textSnippets;
+    // if true, the Annotations window shows the selected annotation's note
+    // under the list
+    bool annotationsWindowShowNote;
     // zoom levels which zooming steps through in addition to Fit Page and
     // Fit Width. The largest value is also the highest zoom that can be
     // set at all, so listing levels above 6400 (up to 1000000) is how you
@@ -2295,6 +2298,7 @@ static const FieldInfo gSettingsFields[] = {
     {offsetof(Settings, windowState), SettingType::Int, 1, true},
     {offsetof(Settings, windowPos), SettingType::Compact, (intptr_t)&gRectInfo, true},
     {offsetof(Settings, searchUIWindowPos), SettingType::Compact, (intptr_t)&gRect_1_Info, true},
+    {offsetof(Settings, annotationsWindowShowNote), SettingType::Bool, false, true},
     {offsetof(Settings, helpWindowPos), SettingType::Compact, (intptr_t)&gRect_2_Info, true},
     {offsetof(Settings, fileStates), SettingType::Array, (intptr_t)&gFileStateInfo, true},
     {offsetof(Settings, sessionData), SettingType::Array, (intptr_t)&gSessionDataInfo, true},
@@ -2308,7 +2312,7 @@ static const FieldInfo gSettingsFields[] = {
 };
 static const StructInfo gSettingsInfo = {
     sizeof(Settings),
-    163,
+    164,
     gSettingsFields,
     "\0\0DefaultDisplayMode\0DefaultZoom\0DisableJavaScript\0AllowExternalImages\0EnableTeXEnhancements\0EscToExit\0Ful"
     "lPathInTitle\0InverseSearchCmdLine\0LazyLoading\0MainWindowBackground\0NoHomeTab\0HomePageSortByFrequentlyRead\0Ho"
@@ -2328,8 +2332,9 @@ static const StructInfo gSettingsInfo = {
     "ageUI\0\0ChmUI\0\0MarkdownUI\0\0HtmlUI\0\0ClaudeCode\0\0GrokBuild\0\0CodexBuild\0\0AntiGravity\0\0AIChatSidebarDx"
     "\0\0TranslateToLang\0TranslateFromLang\0TranslateEngine\0\0Annotations\0\0ExternalViewers\0\0ForwardSearch\0\0Prin"
     "terDefaults\0\0Fullscreen\0\0SelectionHandlers\0\0TextSnippets\0\0Shortcuts\0\0Themes\0\0TabGroups\0\0CustomScreen"
-    "DPI\0\0\0DefaultPasswords\0UiLanguage\0VersionToSkip\0WindowState\0WindowPos\0SearchUIWindowPos\0HelpWindowPos\0Fi"
-    "leStates\0SessionData\0ReopenOnce\0TimeOfLastUpdateCheck\0OpenCountWeek\0PropWinPos\0CheckForUpdates\0\0",
+    "DPI\0\0\0DefaultPasswords\0UiLanguage\0VersionToSkip\0WindowState\0WindowPos\0SearchUIWindowPos\0AnnotationsWindow"
+    "ShowNote\0HelpWindowPos\0FileStates\0SessionData\0ReopenOnce\0TimeOfLastUpdateCheck\0OpenCountWeek\0PropWinPos\0Ch"
+    "eckForUpdates\0\0",
     "\0\0default layout of pages. valid values: automatic, single page, facing, book view, continuous, continuous "
     "facing, continuous book view, page aspect. page aspect (3.7+): first open of a PDF, XPS, DjVu, PostScript or DVI "
     "file uses page 1 — taller than wide is continuous + fit width, wider than tall is single page + fit page; a "
@@ -2469,12 +2474,13 @@ static const StructInfo gSettingsInfo = {
     "protected document (passwords containing spaces must be quoted)\0[ISO code](langs.html) of the current UI "
     "language\0SumatraPDF won't offer to update to this version again\0default state of the window. 1 is normal, 2 is "
     "maximized, 3 is fullscreen, 4 is minimized\0default position (x, y) and size (width, height) of the "
-    "window\0position/size of the floating find window (see SearchUIFloating)\0position/size of the in-app Help: "
-    "Manual window\0information about opened files (in most recently used order)\0state of the last session, usage "
-    "depends on RestoreSession\0data required for reloading documents after an auto-update\0data required to determine "
-    "when SumatraPDF last checked for updates\0value required to determine recency for the OpenCount value in "
-    "FileStates\0position of the document properties window\0if true, check once a day whether an update is "
-    "available\0\0Settings below are not recognized by the current version",
+    "window\0position/size of the floating find window (see SearchUIFloating)\0if true, the Annotations window shows "
+    "the selected annotation's note under the list\0position/size of the in-app Help: Manual window\0information about "
+    "opened files (in most recently used order)\0state of the last session, usage depends on RestoreSession\0data "
+    "required for reloading documents after an auto-update\0data required to determine when SumatraPDF last checked "
+    "for updates\0value required to determine recency for the OpenCount value in FileStates\0position of the document "
+    "properties window\0if true, check once a day whether an update is available\0\0Settings below are not recognized "
+    "by the current version",
     false};
 static const FieldInfo gTheme_1_Fields[] = {
     {offsetof(Theme, name), SettingType::String, (intptr_t)""},

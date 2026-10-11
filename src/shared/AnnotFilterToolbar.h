@@ -20,6 +20,7 @@ bool AnnotFilterOnKeyDown(MainWindow*, int vk, bool ctrl, bool shift, bool alt);
 void AnnotFilterOnMouseDown(MainWindow*, float x, float y);
 bool AnnotFilterOnEscape(MainWindow*);
 void AnnotFilterTestAction(MainWindow*, Str action, int arg, int mods);
+void ToggleAnnotFilterNote(MainWindow*);
 void AnnotFilterTick(MainWindow*, int elapsedMs);
 gpui::El* AnnotFilterListBuild(MainWindow*, gpui::Ctx*);
 TempStr AnnotFilterToolbarStateTemp(MainWindow*);

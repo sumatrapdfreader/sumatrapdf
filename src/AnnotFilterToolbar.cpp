@@ -67,12 +67,17 @@ struct AnnotFilterWindow : WindowBase {
     VirtButton* btnDiscard = nullptr;
     VirtButton* btnSave = nullptr;
     VirtButton* btnSaveNew = nullptr;
+    // shows / hides the note preview; the "?" opens the search syntax in the manual
+    VirtIconButton* btnNote = nullptr;
+    VirtIconButton* btnHelp = nullptr;
+    // the selected annotation's note, under the list (AnnotationsWindowShowNote)
+    VirtFixedLinesText* notePreview = nullptr;
+    Spacer* noteGap = nullptr;
     Padding* rootPadding = nullptr;
     HBox* header = nullptr;
     Spacer* headerListGap = nullptr;
     Spacer* listButtonsGap = nullptr;
     VBox* buttonsBox = nullptr;
-    Spacer* buttonsHelpGap = nullptr;
     int layoutDpi = 96;
 
     bool Create(MainWindow* mainWin);
@@ -80,6 +85,8 @@ struct AnnotFilterWindow : WindowBase {
     void UpdateTheme() override;
     void ApplyDarkMode() override;
     void UpdateDpi(int dpi);
+    void UpdateIcons(int dpi);
+    void ApplyNoteVisibility();
     void BuildLayout();
     void OnClose(WindowBase::CloseEvent* ev);
     void OnKeyDown(KeyEvent* ev);
@@ -635,6 +642,10 @@ static void UpdateFloatButtons(AnnotFilterToolbar* f) {
     if (nSel == 0 && tab && tab->selectedAnnotation) {
         nSel = 1;
     }
+    if (w->notePreview && w->listBox) {
+        Annotation* annot = VisibleAnnotAt(f, w->listBox->GetCurrentSelection());
+        w->notePreview->SetText(annot ? Contents(annot) : Str{});
+    }
     if (w->btnDelete) {
         w->btnDelete->SetIsEnabled(nSel > 0);
         if (nSel > 1) {
@@ -666,44 +677,51 @@ static void UpdateFloatButtons(AnnotFilterToolbar* f) {
     }
 }
 
-// Cheat sheet under the buttons. The syntax itself is not translated, only the
-// explanation of what each condition does. A table so the explanations line up.
-static ILayout* NewFilterHelp(int gap) {
-    struct HelpRow {
-        Str syntax;
-        Str what;
-    };
-    HelpRow rows[] = {
-        {StrL(":a=name  :a!=name"), Tr("author is / is not")},
-        {StrL(":t=text  :t!=line"), Tr("type is / is not")},
-        {StrL(":c+  :c-"), Tr("has / has no contents")},
-    };
-    PlatformFont* font = GetAppFont();
-    Color col = EnsureContrast(ThemeWindowTextDisabledColor(), ThemeWindowControlBackgroundColor());
-    auto mkText = [&](Str s) -> ILayout* {
-        return NewVirtText({
-            .s = s,
-            .font = font,
-            .textColor = col,
-            .isRtl = IsUIRtl(),
-            .ellipsis = true,
-        });
-    };
+// the note preview and the "?" beside the filter box
+static void OnFloatToggleNote(AnnotFilterWindow* w, VirtMouseEvent*) {
+    gSettings->annotationsWindowShowNote = !gSettings->annotationsWindowShowNote;
+    ScheduleSaveSettings();
+    w->ApplyNoteVisibility();
+}
 
-    auto* box = new VBox();
-    box->alignCross = CrossAxisAlign::Stretch;
-    box->AddChild(mkText(Tr("Search syntax:")));
-    box->AddChild(new Spacer(0, gap / 2));
-    int nRows = (int)dimof(rows);
-    auto* table = new Table();
-    table->SetSize(nRows, 2);
-    table->colGap = 2 * gap;
-    for (int i = 0; i < nRows; i++) {
-        table->SetCell(i, 0, mkText(rows[i].syntax));
-        table->SetCell(i, 1, mkText(rows[i].what));
+static void OnFloatSyntaxHelp(AnnotFilterWindow*, VirtMouseEvent*) {
+    LaunchDocumentation(StrL(kAnnotSearchSyntaxDocUri));
+}
+
+static VirtIconButton* NewFloatIconButton(AnnotFilterWindow* w, Str tooltip,
+                                          void (*onClick)(AnnotFilterWindow*, VirtMouseEvent*)) {
+    auto* b = new VirtIconButton();
+    int pad = DpiScale(4);
+    b->padding = Insets{pad, pad, pad, pad};
+    b->SetTooltip(tooltip);
+    b->onClick = MkFunc1(onClick, w);
+    return b;
+}
+
+void AnnotFilterWindow::UpdateIcons(int dpi) {
+    int isz = RoundUp(DpiScaleByDpi(dpi, 16), 4);
+    if (btnNote) {
+        btnNote->pixmap = GetCachedPixmapForSvg(Str(gIconEye), isz, isz);
     }
-    box->AddChild(table);
-    return box;
+    if (btnHelp) {
+        btnHelp->pixmap = GetCachedPixmapForSvg(Str(gIconHelpCircle), isz, isz);
+    }
+}
+
+void AnnotFilterWindow::ApplyNoteVisibility() {
+    bool show = gSettings->annotationsWindowShowNote;
+    if (btnNote) {
+        btnNote->isSelected = show;
+    }
+    Visibility vis = show ? Visibility::Visible : Visibility::Collapse;
+    if (notePreview) {
+        notePreview->SetVisibility(vis);
+    }
+    if (noteGap) {
+        noteGap->SetVisibility(vis);
+    }
+    DoLayout();
+    HwndInvalidate(hwnd, true);
 }
 
 void AnnotFilterWindow::BuildLayout() {
@@ -714,6 +732,8 @@ void AnnotFilterWindow::BuildLayout() {
     header->gap = gap;
     header->rtl = IsUIRtl();
     header->AddChild(edit, 1);
+    header->AddChild(btnNote);
+    header->AddChild(btnHelp);
 
     auto* vbox = new VBox();
     vbox->alignCross = CrossAxisAlign::Stretch;
@@ -721,6 +741,9 @@ void AnnotFilterWindow::BuildLayout() {
     headerListGap = new Spacer(0, gap);
     vbox->AddChild(headerListGap);
     vbox->AddChild(listBox, 1);
+    noteGap = new Spacer(0, gap);
+    vbox->AddChild(noteGap);
+    vbox->AddChild(notePreview);
     listButtonsGap = new Spacer(0, gap);
     vbox->AddChild(listButtonsGap);
     buttonsBox = new VBox();
@@ -731,10 +754,6 @@ void AnnotFilterWindow::BuildLayout() {
     buttonsBox->AddChild(btnSave);
     buttonsBox->AddChild(btnSaveNew);
     vbox->AddChild(buttonsBox);
-
-    buttonsHelpGap = new Spacer(0, gap);
-    vbox->AddChild(buttonsHelpGap);
-    vbox->AddChild(NewFilterHelp(gap));
 
     rootPadding = new Padding(vbox, Insets{pad, pad, pad, pad});
     layout = rootPadding;
@@ -802,7 +821,20 @@ bool AnnotFilterWindow::Create(MainWindow* mainWin) {
     btnSaveNew = NewFloatActionButton(hwnd, Tr("Save changes to a new PDF"), false);
     btnSaveNew->onClick = MkFunc1(OnFloatSaveNew, this);
 
+    btnNote = NewFloatIconButton(this, Tr("Show the selected annotation's note"), OnFloatToggleNote);
+    btnHelp = NewFloatIconButton(this, Tr("Search syntax"), OnFloatSyntaxHelp);
+    UpdateIcons(GetDpi());
+    {
+        auto* c = new VirtFixedLinesText();
+        c->font = GetAppFont();
+        c->nLines = kAnnotNotePreviewLines;
+        c->borderCol = ThemeEdgeColor();
+        c->padding = DpiScaledInsets(4);
+        notePreview = c;
+    }
+
     BuildLayout();
+    ApplyNoteVisibility();
     DarkModeApplyToPopupWindow(hwnd);
     return true;
 }
@@ -827,6 +859,9 @@ void AnnotFilterWindow::UpdateTheme() {
         edit->SetColors(colTxt, colBg);
     }
     ApplyListColorsTo(listBox);
+    if (notePreview) {
+        notePreview->borderCol = ThemeEdgeColor();
+    }
     AnnotFilterToolbar* f = win ? win->annotFilterToolbar : nullptr;
     UpdateFloatButtons(f);
 }
@@ -842,6 +877,11 @@ void AnnotFilterWindow::UpdateDpi(int dpi) {
     edit->SetFont(appFont);
     listBox->font = appFont;
     listBox->dpi = dpi;
+    UpdateIcons(dpi);
+    if (notePreview) {
+        notePreview->font = appFont;
+        notePreview->padding = DpiScaledInsets(4);
+    }
     int pad = DpiScaleByDpi(dpi, kFloatWinPadding);
     int gap = DpiScaleByDpi(dpi, kFloatWinGap);
     if (header) {
@@ -998,6 +1038,15 @@ void ShowAnnotFilterWindow(MainWindow* win) {
     }
 }
 
+// what the eye button does; tests call it over -dbg-control
+void ToggleAnnotFilterNote(MainWindow* win) {
+    AnnotFilterToolbar* f = win ? win->annotFilterToolbar : nullptr;
+    if (!f || !f->floatWnd) {
+        return;
+    }
+    OnFloatToggleNote(f->floatWnd, nullptr);
+}
+
 void HideAnnotFilterWindow(MainWindow* win) {
     AnnotFilterToolbar* f = win ? win->annotFilterToolbar : nullptr;
     if (!f || !f->floatWnd || !f->floatWnd->hwnd) {
@@ -1134,6 +1183,11 @@ TempStr AnnotFilterToolbarStateTemp(MainWindow* win) {
     str::Builder out;
     out.Append(fmt("annotFilter floatVisible=%d floatRect=%d,%d,%d,%d nAll=%d nVisible=%d sel=%d\n",
                    floatVisible ? 1 : 0, wr.x, wr.y, wr.dx, wr.dy, nAll, nVisible, sel));
+    if (f && f->floatWnd && f->floatWnd->notePreview) {
+        VirtFixedLinesText* np = f->floatWnd->notePreview;
+        bool shown = np->GetVisibility() == Visibility::Visible;
+        out.Append(fmt("note=%d noteText=%s\n", shown ? 1 : 0, np->PlainTextTemp()));
+    }
     int deleteOn = 0;
     int discardOn = 0;
     int saveOn = 0;

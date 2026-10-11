@@ -37,6 +37,7 @@
 #include "Theme.h"
 #include "Translations.h"
 #include "Commands.h"
+#include "SvgIcons.h"
 #include "SumatraPDF.h"
 #include "MainWindow.h"
 #include "WindowTab.h"
@@ -60,8 +61,10 @@ constexpr int kRowDy = 19;
 constexpr float kListFontSize = 12;
 constexpr float kEditDy = 17;
 constexpr float kBtnDy = 19;
-constexpr float kHelpLineDy = 15;
-constexpr int kHelpLines = 4;
+constexpr float kNoteLineDy = 15;
+// the eye and "?" beside the filter; not commands, so OnCmd tells them apart
+constexpr int kNoteToggleCmdId = -2;
+constexpr int kSyntaxHelpCmdId = -3;
 constexpr float kListBorderDx = 1;
 // orig's window: 360 x 540 beside the frame, never smaller than its content
 constexpr int kFloatWinDx = 360;
@@ -934,6 +937,10 @@ void AnnotFilterView::OnCmd(AnnotFilterView* self, gp::Ctx* cx, const gp::ClickE
     }
     if (cmdId == CmdDeleteAnnotation) {
         DeleteListSelection(f);
+    } else if (cmdId == kNoteToggleCmdId) {
+        ToggleAnnotFilterNote(win);
+    } else if (cmdId == kSyntaxHelpCmdId) {
+        LaunchDocumentation(StrL(kAnnotSearchSyntaxDocUri));
     } else {
         ExecuteCmd(win, (int)cmdId);
     }
@@ -945,33 +952,42 @@ void AnnotFilterView::OnClose(AnnotFilterView* self, gp::Ctx* cx, const gp::Clic
     gp::Notify(cx);
 }
 
-// the cheat sheet under the buttons; the syntax itself is not translated
-static gp::El* BuildFilterHelp(gp::Ctx* cx, Color muted, float fontScale) {
-    struct HelpRow {
-        Str syntax;
-        Str what;
-    };
-    HelpRow rows[] = {
-        {StrL(":a=name  :a!=name"), Tr("author is / is not")},
-        {StrL(":t=text  :t!=line"), Tr("type is / is not")},
-        {StrL(":c+  :c-"), Tr("has / has no contents")},
-    };
-    float font = kListFontSize * fontScale;
-    float gap = (float)kFloatWinGap;
-    gp::El* box = gp::Div(cx->a)->FlexCol()->W(gp::kFill)->Shrink0();
-    box->Child(gp::Div(cx->a)
-                   ->FlexRow()
-                   ->ItemsCenter()
-                   ->H(kHelpLineDy + gap / 2)
-                   ->PadB(gap / 2)
-                   ->Child(gp::TextEl(cx->a, ToGpui(Tr("Search syntax:")))->Font(font)->Fg(ToGpui(muted))));
-    for (const HelpRow& r : rows) {
-        gp::El* row = gp::Div(cx->a)->FlexRow()->ItemsCenter()->H(kHelpLineDy)->Gap(2 * gap)->W(gp::kFill);
-        row->Child(gp::TextEl(cx->a, GpuiDup(cx->a, r.syntax))->Font(font)->Fg(ToGpui(muted))->W(102)->Shrink0());
-        row->Child(gp::TextEl(cx->a, GpuiDup(cx->a, r.what))->Font(font)->Fg(ToGpui(muted))->Flex1()->Truncate());
-        box->Child(row);
-    }
-    return box;
+// orig's VirtIconButton beside the filter: the eye (a toggle) and the "?"
+static gp::El* NoteIconButton(gp::Ctx* cx, Str id, const char* svg, Str tooltip, int cmdId, bool selected,
+                              float sizePx) {
+    gpc::Button* b = gpc::Button::New(cx, GpuiDup(cx->a, id))
+                         ->Ghost()
+                         ->Compact()
+                         ->WithSize(gp::UiSize::Small)
+                         ->Size(sizePx)
+                         ->Selected(selected)
+                         ->Tooltip(GpuiDup(cx->a, tooltip))
+                         ->OnClick(gp::ListenTo(gAnnotFilterView, &AnnotFilterView::OnCmd, (intptr_t)cmdId));
+    b->Icon(gpc::ButtonIcon::New(cx, gpc::Icon::Empty(cx)->Data(ToGpui(Str(svg)))));
+    return b->IntoEl()->Shrink0();
+}
+
+static float NotePreviewDy() {
+    return (float)kAnnotNotePreviewLines * kNoteLineDy + 8;
+}
+
+// orig's VirtFixedLinesText: the selected annotation's note, always
+// kAnnotNotePreviewLines tall, cut off past the last line
+static gp::El* BuildNotePreview(AnnotFilterToolbar* f, gp::Ctx* cx, Color colText, float fontScale) {
+    Annotation* annot = VisibleAnnotAt(f, f->sel);
+    Str text = annot ? Contents(annot) : Str{};
+    return gp::Div(cx->a)
+        ->W(gp::kFill)
+        ->H(NotePreviewDy())
+        ->Shrink0()
+        ->Pad(4)
+        ->Border(1, ToGpui(ThemeEdgeColor()))
+        ->ClipY()
+        ->Child(gp::TextEl(cx->a, GpuiDup(cx->a, text))
+                    ->Font(kListFontSize * fontScale)
+                    ->Fg(ToGpui(colText))
+                    ->Wrap()
+                    ->W(gp::kFill));
 }
 
 // orig's DrawAnnotationListRow: type on the left, the contents in a muted
@@ -1218,7 +1234,19 @@ static gp::El* AnnotFilterContentEl(MainWindow* win, gp::Ctx* cx, bool ownWindow
     if (ownWindow) {
         editEl->H(kEditDy);
     }
-    card->Child(gp::Div(cx->a)->W(gp::kFill)->Shrink0()->Child(editEl));
+    bool showNote = gSettings->annotationsWindowShowNote;
+    float iconPx = ownWindow ? kEditDy : 22;
+    card->Child(gp::Div(cx->a)
+                    ->FlexRow()
+                    ->ItemsCenter()
+                    ->Gap(gap / 2)
+                    ->W(gp::kFill)
+                    ->Shrink0()
+                    ->Child(editEl->Flex1()->MinW(0))
+                    ->Child(NoteIconButton(cx, StrL("annot-note"), gIconEye, Tr("Show the selected annotation's note"),
+                                           kNoteToggleCmdId, showNote, iconPx))
+                    ->Child(NoteIconButton(cx, StrL("annot-help"), gIconHelpCircle, Tr("Search syntax"),
+                                           kSyntaxHelpCmdId, false, iconPx)));
 
     // ng: only the rows in view are built, between two spacers that stand in
     // for the rest
@@ -1226,8 +1254,8 @@ static gp::El* AnnotFilterContentEl(MainWindow* win, gp::Ctx* cx, bool ownWindow
     int viewRows = limitValue((int)((ws.dipH - (float)kCardChromeDy) / rowDy), kMinListLines, kMaxListLines);
     if (ownWindow) {
         // the list takes what the window has left, in whole rows
-        float helpDy = (float)kHelpLines * kHelpLineDy + gap / 2;
-        float chromeDy = 2 * pad + kEditDy + 4 * kBtnDy + 6 * gap + helpDy + 2 * kListBorderDx;
+        float noteDy = showNote ? NotePreviewDy() + gap : 0;
+        float chromeDy = 2 * pad + kEditDy + 4 * kBtnDy + 5 * gap + noteDy + 2 * kListBorderDx;
         viewRows = std::max((int)((ws.dipH - chromeDy) / rowDy), 1);
     }
     if (viewRows != f->viewRows) {
@@ -1272,6 +1300,9 @@ static gp::El* AnnotFilterContentEl(MainWindow* win, gp::Ctx* cx, bool ownWindow
     } else {
         card->Child(list);
     }
+    if (showNote) {
+        card->Child(BuildNotePreview(f, cx, colText, fontScale));
+    }
 
     // orig's VirtButton: disabled text is ThemeWindowTextDisabledColor on the
     // lifted button fill, then EnsureContrast so it does not vanish (issue #6123)
@@ -1314,7 +1345,6 @@ static gp::El* AnnotFilterContentEl(MainWindow* win, gp::Ctx* cx, bool ownWindow
         button(StrL("annot-save-new"), Tr("Save changes to a new PDF"), CmdSaveAnnotationsNewFile, dirty);
     saveNewEl->BoundsOut(&f->saveNewBounds);
     card->Child(saveNewEl);
-    card->Child(BuildFilterHelp(cx, muted, fontScale));
 
     if (f->wantFocus) {
         // orig's edit has selectAllOnFocus
@@ -1360,7 +1390,16 @@ void AnnotFilterTestAction(MainWindow* win, Str action, int arg, int mods) {
         DeleteListSelection(f);
     } else if (str::EqI(action, StrL("scroll"))) {
         ScrollTo(f, (float)arg);
+    } else if (str::EqI(action, StrL("note"))) {
+        ToggleAnnotFilterNote(win);
     }
+    AppShellInvalidate(win);
+}
+
+// what the eye button does; tests call it over -dbg-control
+void ToggleAnnotFilterNote(MainWindow* win) {
+    gSettings->annotationsWindowShowNote = !gSettings->annotationsWindowShowNote;
+    ScheduleSaveSettings();
     AppShellInvalidate(win);
 }
 
@@ -1379,6 +1418,11 @@ TempStr AnnotFilterToolbarStateTemp(MainWindow* win) {
                    visible ? 1 : 0, wr.x, wr.y, wr.dx, wr.dy, nAll, nVisible, sel, f ? f->filterText : Str{}));
     if (!f) {
         return ToStrTemp(out);
+    }
+    if (visible) {
+        bool showNote = gSettings->annotationsWindowShowNote;
+        Annotation* noteAnnot = showNote ? VisibleAnnotAt(f, f->sel) : nullptr;
+        out.Append(fmt("note=%d noteText=%s\n", showNote ? 1 : 0, noteAnnot ? Contents(noteAnnot) : Str{}));
     }
     WindowTab* tab = FilterTab(f);
     int dirty = tab && tab->AsFixed() && EngineHasUnsavedAnnotations(tab->AsFixed()->GetEngine()) ? 1 : 0;

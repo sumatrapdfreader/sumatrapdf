@@ -168,6 +168,11 @@ bool ShortcutParse_UnitTestGpuiStroke() {
     utassert(cmdK);
 #endif
     for (int i = 0; i < n; i++) {
+        // an ASCII accelerator is matched on the typed character
+        // (AsciiAcceleratorCmd), not bound as a stroke
+        if (!accels[i].sc.isVirt) {
+            continue;
+        }
         bool found = false;
         for (int j = 0; j < nStrokes; j++) {
             if (strokes[j].cmd == accels[i].cmd) {

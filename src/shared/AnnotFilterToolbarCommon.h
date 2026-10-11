@@ -26,3 +26,7 @@ constexpr int kMaxListLines = 12;
 constexpr int kFloatWinPadding = 8;
 
 constexpr int kFloatWinGap = 6;
+
+// the note preview under the list, and where the "?" sends for the filter syntax
+constexpr int kAnnotNotePreviewLines = 6;
+constexpr const char* kAnnotSearchSyntaxDocUri = "/Editing-annotations#search-syntax";

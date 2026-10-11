@@ -1963,6 +1963,12 @@ const globalPrefs: Field[] = [
     windowPos,
     "position/size of the floating find window (see SearchUIFloating)",
   ).structName("Rect"),
+  field(
+    "AnnotationsWindowShowNote",
+    Bool,
+    false,
+    "if true, the Annotations window shows the selected annotation's note under the list",
+  ).ver("3.7"),
   compactStruct("HelpWindowPos", windowPos, "position/size of the in-app Help: Manual window")
     .structName("Rect")
     .ver("3.7")
