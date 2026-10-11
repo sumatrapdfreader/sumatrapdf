@@ -202,7 +202,186 @@ void FillSelectionRects(Vec<TextSel>* result, int pageNo, Rect* coords, int text
     }
 }
 
-static void FillResultRects(TextSelection* ts, int pageNo, int glyph, int length, StrVec* lines = nullptr) {
+// A visual line of page text: glyph range plus the box of its first printable
+// glyph. mono: every printable glyph has the same advance, i.e. a code listing,
+// where indentation and blank lines carry meaning.
+struct PageLine {
+    int start = 0;
+    int end = 0; // [start, end), excludes the newline glyph
+    int x0 = 0;
+    int y0 = 0;
+    int h = 0;
+    float glyphW = 0;
+    int nGlyphs = 0; // printable glyphs
+    bool hasContent = false;
+    bool mono = false;
+    bool code = false;
+};
+
+// Glyph boxes are page units rounded to int, so a monospace advance of 5.4
+// shows up as 5 and 6.
+constexpr int kMonoWidthTolerance = 1;
+constexpr int kMaxBlankLines = 2;
+// Digits share one width in most fonts and one glyph always does, so a lone
+// page number looks monospace. A block of mono lines is code only when one
+// of them has this many equal-width glyphs; short lines like "}" follow it.
+constexpr int kMinCodeGlyphs = 6;
+
+// Flags runs of consecutive monospace lines as code when one of them is long
+// enough to prove the font is monospace (see kMinCodeGlyphs).
+static void MarkCodeLines(Vec<PageLine>& lines) {
+    int n = len(lines);
+    int i = 0;
+    while (i < n) {
+        if (!lines[i].hasContent || !lines[i].mono) {
+            i++;
+            continue;
+        }
+        int runEnd = i;
+        bool isCode = false;
+        while (runEnd < n && lines[runEnd].hasContent && lines[runEnd].mono) {
+            isCode = isCode || lines[runEnd].nGlyphs >= kMinCodeGlyphs;
+            runEnd++;
+        }
+        for (int j = i; j < runEnd; j++) {
+            lines[j].code = isCode;
+        }
+        i = runEnd;
+    }
+}
+
+// Splits page text into visual lines at the empty-box newline glyphs.
+static void CollectPageLines(Str text, Rect* coords, int textLen, Vec<PageLine>& lines) {
+    PageLine cur;
+    int minW = 0;
+    int maxW = 0;
+    int nW = 0;
+    float sumW = 0;
+    auto finish = [&](int end) {
+        cur.end = end;
+        if (nW > 0) {
+            cur.glyphW = sumW / (float)nW;
+            cur.nGlyphs = nW;
+            cur.mono = (maxW - minW) <= kMonoWidthTolerance;
+        }
+        VecAppend(lines, cur);
+        cur = PageLine{};
+        cur.start = end + 1;
+        minW = maxW = nW = 0;
+        sumW = 0;
+    };
+
+    int byteIdx = 0;
+    for (int i = 0; i < textLen; i++) {
+        int cp = Utf8CodepointNext(text, byteIdx);
+        Rect& r = coords[i];
+        if (!r.x && !r.dx) {
+            // newline or soft-join space from FzTextPageToUtf8
+            if (cp == '\n' || cp == '\r') {
+                finish(i);
+            }
+            continue;
+        }
+        if (cp == ' ' || cp == '\t') {
+            continue;
+        }
+        if (!cur.hasContent) {
+            cur.hasContent = true;
+            cur.x0 = r.x;
+            cur.y0 = r.y;
+            cur.h = r.dy;
+        }
+        minW = nW == 0 ? r.dx : std::min(minW, r.dx);
+        maxW = std::max(maxW, r.dx);
+        sumW += (float)r.dx;
+        nW++;
+    }
+    if (cur.start < textLen) {
+        finish(textLen);
+    }
+    MarkCodeLines(lines);
+}
+
+// Smallest vertical step between consecutive lines on the page. Glyph box
+// height is no substitute: Courier's box is ~0.8em but its pitch ~1.2em.
+static int PageLinePitch(const Vec<PageLine>& lines, int minPitch) {
+    int pitch = 0;
+    const PageLine* prev = nullptr;
+    for (const PageLine& l : lines) {
+        if (!l.hasContent) {
+            continue;
+        }
+        if (prev) {
+            int d = l.y0 - prev->y0;
+            if (d >= minPitch && (pitch == 0 || d < pitch)) {
+                pitch = d;
+            }
+        }
+        prev = &l;
+    }
+    return pitch;
+}
+
+// Text of the selected glyph range, one entry per visual line. With layout,
+// code lines get their indentation back as spaces, measured from the leftmost
+// selected code line, and the vertical gaps between them become blank lines
+// (#2423). Prose is left alone: centered titles and first-line indents would
+// otherwise sprout leading spaces.
+static void AppendSelectedLines(Str text, Rect* coords, int textLen, int glyph, int length, StrVec* out, bool layout) {
+    Vec<PageLine> lines;
+    CollectPageLines(text, coords, textLen, lines);
+    int selEnd = glyph + length;
+    auto selected = [&](const PageLine& l) { return l.end > glyph && l.start < selEnd; };
+
+    int refX0 = -1;
+    if (layout) {
+        for (const PageLine& l : lines) {
+            if (selected(l) && l.code && (refX0 < 0 || l.x0 < refX0)) {
+                refX0 = l.x0;
+            }
+        }
+    }
+
+    const PageLine* prev = nullptr;
+    for (const PageLine& l : lines) {
+        if (!selected(l)) {
+            continue;
+        }
+        int from = std::max(l.start, glyph);
+        int to = std::min(l.end, selEnd);
+        str::Builder b;
+        if (layout && l.code) {
+            if (prev && prev->code) {
+                int gap = l.y0 - prev->y0;
+                int pitch = PageLinePitch(lines, l.h / 2);
+                int nBlank = (gap > 0 && pitch > 0) ? ((gap + (pitch / 2)) / pitch) - 1 : 0;
+                nBlank = std::clamp(nBlank, 0, kMaxBlankLines);
+                for (int i = 0; i < nBlank; i++) {
+                    out->Append(StrL(""));
+                }
+            }
+            // a selection starting mid-line has no column to restore
+            if (from == l.start && l.glyphW > 0) {
+                int nSpaces = (int)roundf((float)(l.x0 - refX0) / l.glyphW);
+                for (int i = 0; i < nSpaces; i++) {
+                    b.AppendChar(' ');
+                }
+            }
+        }
+        if (to > from) {
+            b.Append(Utf8SliceByCodepoints(text, from, to - from));
+        }
+        if (len(b) > 0) {
+            out->Append(ToStr(b));
+        }
+        if (l.hasContent) {
+            prev = &l;
+        }
+    }
+}
+
+static void FillResultRects(TextSelection* ts, int pageNo, int glyph, int length, StrVec* lines = nullptr,
+                            bool layout = false) {
     Rect* coords;
     QuadF* quads = nullptr;
     int textLen = 0;
@@ -226,27 +405,7 @@ static void FillResultRects(TextSelection* ts, int pageNo, int glyph, int length
     // Copy soft-join spaces inside a line; only empty-box newlines split it.
     // Highlighting below still splits at every empty box.
     if (lines) {
-        int runStart = glyph;
-        int endGlyph = glyph + length;
-        auto appendLine = [&](int runEnd) {
-            if (runEnd > runStart) {
-                Str s = Utf8SliceByCodepoints(text, runStart, runEnd - runStart);
-                lines->AppendNonEmpty(s);
-            }
-        };
-        for (int i = glyph; i < endGlyph; i++) {
-            Rect& r = coords[i];
-            if (r.x || r.dx) {
-                continue;
-            }
-            int byteIdx = Utf8CodepointToByteIndex(text, i);
-            int cp = Utf8CodepointNext(text, byteIdx);
-            if (cp == '\n' || cp == '\r') {
-                appendLine(i);
-                runStart = i + 1;
-            }
-        }
-        appendLine(endGlyph);
+        AppendSelectedLines(text, coords, textLen, glyph, length, lines, layout);
         return;
     }
 
@@ -521,13 +680,15 @@ TempStr TextSelection::ExtractTextTemp(Str lineSep) {
     int fromPage, fromGlyph, toPage, toGlyph;
     GetGlyphRange(&fromPage, &fromGlyph, &toPage, &toGlyph);
 
+    // callers joining with " " want one flat line, not restored indentation
+    bool layout = str::ContainsChar(lineSep, '\n');
     for (int page = fromPage; page <= toPage; page++) {
         int textLen;
         engine->GetTextForPage(page, &textLen);
         int glyph = page == fromPage ? fromGlyph : 0;
         int length = (page == toPage ? toGlyph : textLen) - glyph;
         if (length > 0) {
-            FillResultRects(this, page, glyph, length, &lines);
+            FillResultRects(this, page, glyph, length, &lines, layout);
         }
     }
 

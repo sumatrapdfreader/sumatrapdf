@@ -314,6 +314,7 @@ import { testit as issue6107 } from "./issue-6107.ts";
 
 import { testit as issue5968 } from "./issue-5968.ts";
 import { testit as issue5978 } from "./issue-5978.ts";
+import { testit as issue2423 } from "./issue-2423.ts";
 import { testit as issue6167 } from "./issue-6167.ts";
 import { testit as issue6168 } from "./issue-6168.ts";
 import { testit as issue5918 } from "./issue-5918.ts";
@@ -410,6 +411,7 @@ export const tests: NamedTest[] = [
   // first: it drives the home page, whose thumbnail selection follows the
   // mouse, so it is the one test that cares what the machine was doing before
   ["issue-5978", issue5978],
+  ["issue-2423", issue2423],
   ["jpeg-xl-pdf", jpegXlPdf],
   ["annotation clipboard tests", annotationClipboardTests],
   ["issue-6276", issue6276],
