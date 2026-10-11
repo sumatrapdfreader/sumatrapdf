@@ -160,7 +160,14 @@ and the build passes it as defines (`SUMATRA_VER`, `GIT_COMMIT_ID`) to
 `SumatraConfig.cpp` alone, so a new day recompiles one file. Code reads
 `currentVersion`, `BuiltOnDate()` (from `__DATE__`) and `gitCommidId`. `src/ng/Version.h` is ng's own. The macOS release script is
 `build-ng-mac.ts` in `../hack/sumatrapdf/build`: it uploads the app and its
-`.dSYM` to R2 `software/sumatrapdfng/mac/<ver>/`.
+`.dSYM` to R2 `software/sumatrapdfng/mac/<ver>/`. The Linux release script
+is `build-ng-linux.ts` there: it builds a `.deb` per Ubuntu release (22.04,
+24.04, 26.04) in containers (`wslc` on Windows, Apple `container` on macOS,
+docker on Linux; images cached in `~/data/sumatra-build`) by running
+`cmd/ng-deb.ts` in each, and uploads them with their `.debug` symbols to
+`software/sumatrapdfng/linux/<ver>/`. The package's desktop entry, MIME
+types and icons live in `src/ng/linux/`; `cmd/update-linux-icons.ts`
+regenerates the icons from the Windows artwork.
 
 Ng on macOS has no minidumps. A crash writes a text report (every thread's
 stack as module + offset, Mach-O UUIDs, log, settings) to

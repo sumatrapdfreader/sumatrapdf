@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- Types and globs the freedesktop database lacks but SumatraPDF opens.
+     Installed to /usr/share/mime/packages; existing types are merged. -->
+<mime-info xmlns="http://www.freedesktop.org/standards/shared-mime-info">
+  <mime-type type="application/x-zip-compressed-fb2">
+    <comment>Zip-compressed FictionBook document</comment>
+    <sub-class-of type="application/zip"/>
+    <glob pattern="*.fb2z"/>
+    <glob pattern="*.zfb2"/>
+    <glob pattern="*.fb2.zip"/>
+  </mime-type>
+  <mime-type type="application/vnd.amazon.mobi8-ebook">
+    <glob pattern="*.azw4"/>
+  </mime-type>
+</mime-info>
