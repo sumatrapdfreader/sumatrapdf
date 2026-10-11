@@ -117,9 +117,6 @@ Str HandleSyncCmd(Str cmd, bool* ack);
 // implemented by each app
 struct UpdateFindStatusData;
 void UpdateFindStatus(UpdateFindStatusData* d);
-void FindTaskCloseThread(ThreadHandle* h);
-void FindWinCloseThread(ThreadHandle* h);
-void FindJoinThread(ThreadHandle* h);
 void FindSetToolbarBusy(MainWindow* win, bool busy);
 void FindWindowDocChanged(MainWindow* win);
 void FindResultsInstalled(MainWindow* win, bool gotSnippets);

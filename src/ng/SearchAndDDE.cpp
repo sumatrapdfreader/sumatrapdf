@@ -201,19 +201,6 @@ bool FindFlushPendingSearch(MainWindow* win) {
     return true;
 }
 
-// ng: MainWindow owns a find thread's handle, a find task only compares its copy
-void FindTaskCloseThread(ThreadHandle* h) {
-    *h = nullptr;
-}
-
-void FindWinCloseThread(ThreadHandle* h) {
-    SafeCloseThreadHandle(h);
-}
-
-void FindJoinThread(ThreadHandle* h) {
-    JoinThread(h, -1);
-}
-
 // ng's find buttons read the find state on every frame
 void FindSetToolbarBusy(MainWindow*, bool) {}
 

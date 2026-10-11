@@ -577,6 +577,51 @@ int CpuCoreCount() {
     return n < 1 ? 1 : n;
 }
 
+#if !OS_WIN && !OS_WASM
+// Waits for the thread to finish, up to timeoutMs (forever if negative).
+// Called with h->mutex held.
+static bool WaitFinishedLocked(ThreadHandlePosix* h, int timeoutMs) {
+    int err = 0;
+    if (timeoutMs < 0) {
+        while (!h->finished && err == 0) {
+            err = pthread_cond_wait(&h->cond, &h->mutex);
+        }
+    } else {
+        struct timespec deadline;
+        clock_gettime(CLOCK_REALTIME, &deadline);
+        deadline.tv_sec += timeoutMs / 1000;
+        deadline.tv_nsec += (long)(timeoutMs % 1000) * 1000000L;
+        if (deadline.tv_nsec >= 1000000000L) {
+            deadline.tv_sec++;
+            deadline.tv_nsec -= 1000000000L;
+        }
+        while (!h->finished && err == 0) {
+            err = pthread_cond_timedwait(&h->cond, &h->mutex, &deadline);
+        }
+    }
+    return h->finished;
+}
+#endif
+
+// Waits up to timeoutMs (forever if negative) for the thread to finish. Unlike
+// JoinThread() the handle stays open, for whoever owns it to close.
+bool WaitThread(ThreadHandle h, int timeoutMs) {
+    if (!h) {
+        return false;
+    }
+#if OS_WIN
+    return WaitForSingleObject(h, (DWORD)timeoutMs) == WAIT_OBJECT_0;
+#elif OS_WASM
+    // it already ran to completion inside StartThread()
+    return true;
+#else
+    pthread_mutex_lock(&h->mutex);
+    bool finished = WaitFinishedLocked(h, timeoutMs);
+    pthread_mutex_unlock(&h->mutex);
+    return finished;
+#endif
+}
+
 bool JoinThread(ThreadHandle* hPtr, int timeoutMs) {
 #if OS_WIN
     ThreadHandle h = *hPtr;
@@ -598,25 +643,8 @@ bool JoinThread(ThreadHandle* hPtr, int timeoutMs) {
     return true;
 #else
     pthread_mutex_lock(&h->mutex);
+    bool finished = WaitFinishedLocked(h, timeoutMs);
     int err = 0;
-    if (timeoutMs < 0) {
-        while (!h->finished && err == 0) {
-            err = pthread_cond_wait(&h->cond, &h->mutex);
-        }
-    } else {
-        struct timespec deadline;
-        clock_gettime(CLOCK_REALTIME, &deadline);
-        deadline.tv_sec += timeoutMs / 1000;
-        deadline.tv_nsec += (long)(timeoutMs % 1000) * 1000000L;
-        if (deadline.tv_nsec >= 1000000000L) {
-            deadline.tv_sec++;
-            deadline.tv_nsec -= 1000000000L;
-        }
-        while (!h->finished && err == 0) {
-            err = pthread_cond_timedwait(&h->cond, &h->mutex, &deadline);
-        }
-    }
-    bool finished = h->finished;
     if (!finished) {
         h->abandoned = true;
         pthread_detach(h->thread);

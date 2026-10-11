@@ -411,7 +411,42 @@ static void TimedJoinTest() {
 }
 #endif
 
+#if !OS_WASM
+static AtomicBool gWaitThreadFinished;
+
+static void WaitThreadWorker() {
+    SleepInMs(50);
+    AtomicBoolSet(&gWaitThreadFinished, true);
+}
+
+// WaitThread() leaves the handle open: it can be waited on again and is closed
+// by its owner, before or after the thread ends.
+static void WaitThreadTest() {
+    AtomicBoolSet(&gWaitThreadFinished, false);
+    ThreadHandle thread = StartThread(MkFunc0Void(WaitThreadWorker), StrL("wait-thread-test"));
+    utassert(thread != nullptr);
+    utassert(!WaitThread(thread, 1));
+    utassert(thread != nullptr);
+    utassert(WaitThread(thread, -1));
+    utassert(AtomicBoolGet(&gWaitThreadFinished));
+    utassert(WaitThread(thread, 0));
+    utassert(SafeCloseThreadHandle(&thread));
+    utassert(thread == nullptr);
+    utassert(!WaitThread(nullptr, 0));
+
+    // closed while still running
+    AtomicBoolSet(&gWaitThreadFinished, false);
+    thread = StartThread(MkFunc0Void(WaitThreadWorker), StrL("wait-thread-test"));
+    utassert(SafeCloseThreadHandle(&thread));
+    SleepInMs(150);
+    utassert(AtomicBoolGet(&gWaitThreadFinished));
+}
+#endif
+
 void BaseUtilTest() {
+#if !OS_WASM
+    WaitThreadTest();
+#endif
     ListTest();
     Func0Test();
     Func1Test();

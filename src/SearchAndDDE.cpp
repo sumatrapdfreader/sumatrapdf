@@ -206,20 +206,6 @@ bool FindFlushPendingSearch(MainWindow* win) {
     return true;
 }
 
-// orig: a find task owns its thread's handle, MainWindow keeps a copy to wait on
-void FindTaskCloseThread(ThreadHandle* h) {
-    SafeCloseThreadHandle(h);
-}
-
-void FindWinCloseThread(ThreadHandle* h) {
-    *h = nullptr;
-}
-
-void FindJoinThread(ThreadHandle* h) {
-    WaitForSingleObject(*h, INFINITE);
-    *h = nullptr;
-}
-
 // the find buttons are disabled while a find runs
 void FindSetToolbarBusy(MainWindow* win, bool busy) {
     SetToolbarButtonEnableState(win, CmdFindPrev, !busy);

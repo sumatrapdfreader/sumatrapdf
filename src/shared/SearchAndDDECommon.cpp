@@ -1413,7 +1413,7 @@ struct FindThreadData {
     bool showProgress = false;
     int firstPage = 0;
     Str text;
-    // who owns the handle differs per app, see FindTaskCloseThread
+    // owned here, closed by the destructor; MainWindow keeps a copy to wait on
     ThreadHandle thread = nullptr;
 
     FindThreadData(MainWindow* win, TextSearch::Direction direction, Str text, bool wasModified) {
@@ -1424,7 +1424,7 @@ struct FindThreadData {
     }
     ~FindThreadData() {
         str::Free(text);
-        FindTaskCloseThread(&thread);
+        SafeCloseThreadHandle(&thread);
     }
 
     void ShowUI(bool showProgressIn) {
@@ -1535,7 +1535,7 @@ struct CountThreadData {
     int startPage = 1;          // scan from here (the current page), wrapping around
     Str rangeSpec;              // Pages box text (issue #5694)
     int epoch = 0;
-    // who owns the handle differs per app, see FindTaskCloseThread
+    // owned here, closed by the destructor; MainWindow keeps a copy to wait on
     ThreadHandle thread = nullptr;
     // worker-thread only: drive the "<found>... <page>" progress status
     int nFoundSoFar = 0;
@@ -1558,7 +1558,7 @@ struct CountThreadData {
     ~CountThreadData() {
         str::Free(text);
         str::Free(rangeSpec);
-        FindTaskCloseThread(&thread);
+        SafeCloseThreadHandle(&thread);
     }
 };
 
@@ -1586,7 +1586,7 @@ static void CountEndTask(CountEndTaskData* d) {
     if (win->findCountThread != ctd->thread) {
         return; // superseded (or already joined by AbortCount)
     }
-    FindWinCloseThread(&win->findCountThread);
+    win->findCountThread = nullptr;
     if (win->findCountEpoch == ctd->epoch) {
         // not canceled: install the freshly built cache (steal text from ctd)
         str::FreePtr(&win->findCountText);
@@ -1837,7 +1837,8 @@ void AbortCount(MainWindow* win) {
     AtomicIntInc(&win->findCountEpoch);
     str::FreePtr(&win->findCountPendingText);
     if (win->findCountThread) {
-        FindJoinThread(&win->findCountThread);
+        WaitThread(win->findCountThread, -1);
+        win->findCountThread = nullptr;
     }
 }
 
@@ -1943,7 +1944,7 @@ void FindEndTask(FindEndTaskData* d) {
         ftd->HideUI(false, !wasModifiedCanceled);
         UpdateMatchCount(win, ftd->text);
     }
-    FindWinCloseThread(&win->findThread);
+    win->findThread = nullptr;
 }
 
 static void UpdateSearchProgress(FindThreadData* ftd, ProgressUpdateData* data) {
@@ -2022,7 +2023,8 @@ bool JoinFindThread(MainWindow* win, bool hideMessage) {
         res = true;
         logf("JoinFindThread: setting win->findCancelled to true\n");
         win->findCancelled = true;
-        FindJoinThread(&win->findThread);
+        WaitThread(win->findThread, -1);
+        win->findThread = nullptr;
     }
     win->findCancelled = false;
 

@@ -1214,6 +1214,7 @@ int CpuCoreCount();
 // ng: waits up to timeoutMs for the thread to finish, then closes the handle.
 // Returns false on timeout.
 bool JoinThread(ThreadHandle*, int timeoutMs);
+bool WaitThread(ThreadHandle, int timeoutMs);
 #if OS_WIN
 inline bool SafeCloseThreadHandle(ThreadHandle* hPtr) {
     ThreadHandle h = *hPtr;
