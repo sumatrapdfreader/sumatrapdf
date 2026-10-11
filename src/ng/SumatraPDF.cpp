@@ -136,6 +136,7 @@
 #include "PrintWin11.h"
 #include "TextViewWnd.h"
 #include "SumatraPDFCommon.h"
+#include "VirtualDesktop.h"
 
 RenderCache* gRenderCache = nullptr;
 static Flags* gFlags = nullptr;

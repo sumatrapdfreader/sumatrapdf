@@ -1572,6 +1572,7 @@
     <ClInclude Include="..\src\shared\UpdateCheckCommon.h" />
     <ClInclude Include="..\src\shared\UpdateTemp.h" />
     <ClInclude Include="..\src\shared\Version.h" />
+    <ClInclude Include="..\src\shared\VirtualDesktop.h" />
     <ClInclude Include="..\src\shared\WebpReader.h" />
     <ClInclude Include="..\src\shared\WindowTab.h" />
     <ClInclude Include="..\src\shared\gui\PlatformFont.h" />

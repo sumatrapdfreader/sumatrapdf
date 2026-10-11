@@ -143,6 +143,7 @@
 #include "SumatraPDF.h"
 #include "PerfLog.h"
 #include "SumatraPDFCommon.h"
+#include "VirtualDesktop.h"
 #include "SumatraCrashCommon.h"
 #include "OpenFileFilters.h"
 #include "SumatraLog.h"
@@ -16027,6 +16028,9 @@ ContinueOpenWindow:
     }
 
     if (restoreSession) {
+        // each window goes back to the virtual desktop it was on (#6271)
+        ISumatraVirtualDesktopManager* vdm = CreateVirtualDesktopManager();
+        MainWindow* winOnCurrentDesktop = nullptr;
         for (SessionData* data : *gInitialSessionData) {
             // create window hidden to avoid flashing the about page
             win = CreateAndShowMainWindow(data, false);
@@ -16095,6 +16099,10 @@ ContinueOpenWindow:
                 ReloadDocument(win, false);
             }
             ShowMainWindow(win, data->windowState);
+            MoveWindowToVirtualDesktop(vdm, win->hwndFrame, data->virtualDesktopId);
+            if (IsWindowOnCurrentDesktop(vdm, win->hwndFrame)) {
+                winOnCurrentDesktop = win;
+            }
             // Docs were loaded while the frame was hidden (normal windowPos size).
             // After maximize / fullscreen, force DisplayModel to match the
             // final canvas so scroll isn't stuck on the pre-show viewport
@@ -16105,6 +16113,15 @@ ContinueOpenWindow:
                 win->canvasRc = {};
                 win->UpdateCanvasSize();
             }
+        }
+        if (vdm) {
+            vdm->Release();
+        }
+        // the last window shown took the foreground; if it went to another
+        // desktop, a window that stayed gets it and the cmd-line files instead
+        if (winOnCurrentDesktop && winOnCurrentDesktop != win) {
+            win = winOnCurrentDesktop;
+            SetForegroundWindow(win->hwndFrame);
         }
     }
 

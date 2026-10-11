@@ -13,7 +13,7 @@
 // handles in practice; do not use these helpers for arbitrary 64-bit pointers.
 
 import { unlinkSync } from "node:fs";
-import { dlopen, FFIType, JSCallback, ptr, toArrayBuffer } from "bun:ffi";
+import { CFunction, dlopen, FFIType, JSCallback, ptr, read, toArrayBuffer } from "bun:ffi";
 import { IS_MAC, IS_WIN } from "./host.ts";
 import {
   macClientToScreen,
@@ -176,6 +176,11 @@ const shell32 = loadDll("shell32.dll", {
 
 const dwmapi = loadDll("dwmapi.dll", {
   DwmGetWindowAttribute: { args: [FFIType.ptr, FFIType.u32, FFIType.ptr, FFIType.u32], returns: FFIType.i32 },
+});
+
+const ole32 = loadDll("ole32.dll", {
+  CoInitializeEx: { args: [FFIType.ptr, FFIType.u32], returns: FFIType.i32 },
+  CoCreateInstance: { args: [FFIType.ptr, FFIType.ptr, FFIType.u32, FFIType.ptr, FFIType.ptr], returns: FFIType.i32 },
 });
 
 const gdiplus = loadDll("gdiplus.dll", {
@@ -2095,4 +2100,64 @@ export function readMenuTree(hmenu: bigint): MenuItem[] {
     }
   }
   return out;
+}
+
+// --- virtual desktops: the shell's IVirtualDesktopManager over raw COM ---
+
+const COINIT_APARTMENTTHREADED = 2;
+const CLSCTX_ALL = 23;
+const CLSID_VIRTUAL_DESKTOP_MANAGER = "AA509086-5CA9-4C25-8F95-589D3C07B48A";
+const IID_VIRTUAL_DESKTOP_MANAGER = "A5CD92FF-29BE-454C-8D04-D82879FB3F1B";
+// vtable slots after IUnknown's QueryInterface / AddRef / Release
+const VTBL_RELEASE = 2;
+const VTBL_GET_WINDOW_DESKTOP_ID = 4;
+
+// "AA509086-5CA9-4C25-..." -> the 16 bytes of a GUID struct (Data1..3 little-endian)
+function guidBytes(s: string): Uint8Array {
+  const hex = s.replace(/[{}-]/g, "");
+  const b = new Uint8Array(16);
+  const dv = new DataView(b.buffer);
+  dv.setUint32(0, parseInt(hex.slice(0, 8), 16), true);
+  dv.setUint16(4, parseInt(hex.slice(8, 12), 16), true);
+  dv.setUint16(6, parseInt(hex.slice(12, 16), 16), true);
+  for (let i = 0; i < 8; i++) {
+    b[8 + i] = parseInt(hex.slice(16 + i * 2, 18 + i * 2), 16);
+  }
+  return b;
+}
+
+// GUID struct bytes -> "{AA509086-5CA9-4C25-8F95-589D3C07B48A}", as StringFromGUID2 prints it
+function guidString(b: Uint8Array): string {
+  const dv = new DataView(b.buffer, b.byteOffset);
+  const hex = (v: number, digits: number) => v.toString(16).toUpperCase().padStart(digits, "0");
+  const tail = Array.from(b.subarray(8), (x) => hex(x, 2));
+  return `{${hex(dv.getUint32(0, true), 8)}-${hex(dv.getUint16(4, true), 4)}-${hex(dv.getUint16(6, true), 4)}-${tail.slice(0, 2).join("")}-${tail.slice(2).join("")}}`;
+}
+
+// the virtual desktop a top-level window is on, as "{GUID}"; "" when the shell
+// can't tell (no virtual desktop support in this session, hidden window)
+export function getWindowVirtualDesktopId(hwnd: number): string {
+  ole32.symbols.CoInitializeEx(null, COINIT_APARTMENTTHREADED);
+  const clsid = guidBytes(CLSID_VIRTUAL_DESKTOP_MANAGER);
+  const iid = guidBytes(IID_VIRTUAL_DESKTOP_MANAGER);
+  const out = new BigUint64Array(1);
+  const hr = ole32.symbols.CoCreateInstance(ptr(clsid), null, CLSCTX_ALL, ptr(iid), ptr(out));
+  const obj = Number(out[0]);
+  if (hr < 0 || !obj) {
+    return "";
+  }
+  const vtbl = read.ptr(obj, 0);
+  const getDesktopId = new CFunction({
+    ptr: read.ptr(vtbl, VTBL_GET_WINDOW_DESKTOP_ID * 8),
+    args: [FFIType.ptr, FFIType.ptr, FFIType.ptr],
+    returns: FFIType.i32,
+  });
+  const release = new CFunction({ ptr: read.ptr(vtbl, VTBL_RELEASE * 8), args: [FFIType.ptr], returns: FFIType.u32 });
+  const guid = new Uint8Array(16);
+  const hr2 = getDesktopId(obj, hwnd, ptr(guid));
+  release(obj);
+  if (hr2 < 0 || guid.every((x) => x === 0)) {
+    return "";
+  }
+  return guidString(guid);
 }

@@ -37,6 +37,7 @@
 #include "WindowTab.h"
 #include "MainWindow.h"
 #include "DisplayModel.h"
+#include "VirtualDesktop.h"
 #endif
 #include "AppTools.h"
 #if !defined(SUMATRA_NG)
@@ -509,6 +510,7 @@ static SessionData* CloneSessionData(const SessionData* src) {
     dst->windowState = src->windowState;
     dst->windowPos = src->windowPos;
     dst->sidebarDx = src->sidebarDx;
+    str::ReplaceWithCopy(&dst->virtualDesktopId, src->virtualDesktopId);
     for (TabState* ts : *src->tabStates) {
         VecAppend(*dst->tabStates, CloneTabState(ts));
     }
@@ -608,6 +610,8 @@ static void RememberSessionState() {
         return;
     }
 
+    // which virtual desktop each window is on, so restoring puts it back (#6271)
+    ISumatraVirtualDesktopManager* vdm = CreateVirtualDesktopManager();
     for (auto* win : gWindows) {
         if (win->isQuickLook) {
             continue;
@@ -646,6 +650,7 @@ static void RememberSessionState() {
             FreeSessionData(windowState);
             continue;
         }
+        str::ReplaceWithCopy(&windowState->virtualDesktopId, GetWindowDesktopIdTemp(vdm, win->hwndFrame));
         // 1-based index among document tabs only (home / about tab is omitted
         // from TabStates above). Using the UI tab index would mis-restore when
         // the home tab was closed at save time but recreated on the next start.
@@ -667,6 +672,9 @@ static void RememberSessionState() {
         windowState->windowPos = gSettings->windowPos;
         windowState->sidebarDx = gSettings->sidebarDx;
         VecAppend(*sessionState, windowState);
+    }
+    if (vdm) {
+        vdm->Release();
     }
 }
 #endif

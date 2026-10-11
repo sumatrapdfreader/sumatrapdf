@@ -200,6 +200,7 @@ export const sharedFiles = [
   "src/shared/SumatraCrashCommon.h",
   "src/shared/SumatraPDFCommon.cpp",
   "src/shared/SumatraPDFCommon.h",
+  "src/shared/VirtualDesktop.h",
   "src/shared/SumatraTest.h",
   "src/shared/SumatraTestCommon.cpp",
   "src/shared/TableOfContentsCommon.cpp",

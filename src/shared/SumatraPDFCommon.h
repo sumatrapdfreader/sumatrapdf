@@ -114,21 +114,6 @@ void RemoveFailedFiles(StrVec& files);
 
 TempStr PeekNextFileInFolderTemp(MainWindow* win, int* outN = nullptr, int* outM = nullptr);
 
-#if OS_WIN
-// Minimal redeclaration of the shell's IVirtualDesktopManager (Windows 10 1607+),
-// to tell whether a window is on the user's current virtual desktop. We use a
-// distinct name (and don't include <shobjidl.h>) to avoid clashing with the SDK
-// declaration; the vtable layout matches so COM calls dispatch correctly. Lets
-// reusing an existing instance avoid yanking focus to another desktop (#5630).
-struct ISumatraVirtualDesktopManager : public IUnknown {
-    virtual HRESULT STDMETHODCALLTYPE IsWindowOnCurrentVirtualDesktop(HWND topLevelWindow, BOOL* onCurrentDesktop) = 0;
-    virtual HRESULT STDMETHODCALLTYPE GetWindowDesktopId(HWND topLevelWindow, GUID* desktopId) = 0;
-    virtual HRESULT STDMETHODCALLTYPE MoveWindowToDesktop(HWND topLevelWindow, REFGUID desktopId) = 0;
-};
-ISumatraVirtualDesktopManager* CreateVirtualDesktopManager();
-bool IsWindowOnCurrentDesktop(ISumatraVirtualDesktopManager* vdm, HWND hwnd);
-#endif
-
 struct CreateThumbnailFromFileData {
     Str filePath;
     // when set, render from this clone of the open document instead of loading

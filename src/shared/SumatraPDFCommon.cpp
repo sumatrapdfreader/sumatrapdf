@@ -112,6 +112,7 @@
 #include "SumatraPDF.h"
 #include "PerfLog.h"
 #include "SumatraPDFCommon.h"
+#include "VirtualDesktop.h"
 
 #include "SumatraLog.h"
 
@@ -1690,11 +1691,11 @@ static const GUID kClsidVirtualDesktopManager = {0xAA509086,
                                                  0x4C25,
                                                  {0x8F, 0x95, 0x58, 0x9D, 0x3C, 0x07, 0xB4, 0x8A}};
 
-// {A5CD92FF-29BE-454C-8D04-D42879C3B837}
+// {A5CD92FF-29BE-454C-8D04-D82879FB3F1B}
 static const GUID kIidVirtualDesktopManager = {0xA5CD92FF,
                                                0x29BE,
                                                0x454C,
-                                               {0x8D, 0x04, 0xD4, 0x28, 0x79, 0xC3, 0xB8, 0x37}};
+                                               {0x8D, 0x04, 0xD8, 0x28, 0x79, 0xFB, 0x3F, 0x1B}};
 
 // returns nullptr on Windows without virtual desktops (e.g. Win7) or on failure.
 // COM is already initialized (AutoOleUninitialize in WinMain) by the time we call this.
@@ -1717,6 +1718,42 @@ bool IsWindowOnCurrentDesktop(ISumatraVirtualDesktopManager* vdm, HWND hwnd) {
         return true;
     }
     return onCurrent != FALSE;
+}
+
+// the virtual desktop hwnd is on, as "{GUID}". Empty when the shell can't
+// tell (no manager, hidden window).
+TempStr GetWindowDesktopIdTemp(ISumatraVirtualDesktopManager* vdm, HWND hwnd) {
+    if (!vdm || !hwnd) {
+        return {};
+    }
+    GUID id{};
+    HRESULT hr = vdm->GetWindowDesktopId(hwnd, &id);
+    if (FAILED(hr) || IsEqualGUID(id, GUID{})) {
+        return {};
+    }
+    WCHAR buf[40];
+    if (StringFromGUID2(id, buf, dimofi(buf)) == 0) {
+        return {};
+    }
+    return ToUtf8Temp(WStr(buf));
+}
+
+// puts hwnd on the virtual desktop a session saved it on. False when that
+// desktop is gone or there's no manager: the window stays where it is.
+bool MoveWindowToVirtualDesktop(ISumatraVirtualDesktopManager* vdm, HWND hwnd, Str desktopId) {
+    if (!vdm || !hwnd || len(desktopId) == 0) {
+        return false;
+    }
+    GUID id{};
+    if (FAILED(CLSIDFromString(desktopId, &id))) {
+        logf("MoveWindowToVirtualDesktop: invalid desktop id '%s'\n", desktopId);
+        return false;
+    }
+    HRESULT hr = vdm->MoveWindowToDesktop(hwnd, id);
+    bool ok = SUCCEEDED(hr);
+    logf("MoveWindowToVirtualDesktop: %s, hwnd: 0x%p, desktop: %s, hr: 0x%x\n", ok ? StrL("ok") : StrL("failed"), hwnd,
+         desktopId, (int)hr);
+    return ok;
 }
 
 #endif // OS_WIN

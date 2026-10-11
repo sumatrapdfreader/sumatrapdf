@@ -437,6 +437,7 @@ function sumatrapdf_files()
     "OpenFileFilters_win.*",
     "SumatraCrashCommon.*",
     "SumatraPDFCommon.*",
+    "VirtualDesktop.h",
     "SumatraPDF.h",
     "SumatraPDF.rc",
     "DocumentProperties.*",

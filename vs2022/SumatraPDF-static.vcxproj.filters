@@ -648,6 +648,9 @@
     <ClInclude Include="..\src\shared\Version.h">
       <Filter>src\shared</Filter>
     </ClInclude>
+    <ClInclude Include="..\src\shared\VirtualDesktop.h">
+      <Filter>src\shared</Filter>
+    </ClInclude>
     <ClInclude Include="..\src\shared\WebpReader.h">
       <Filter>src\shared</Filter>
     </ClInclude>

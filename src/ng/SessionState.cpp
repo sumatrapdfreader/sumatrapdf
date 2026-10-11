@@ -29,6 +29,7 @@
 #include "Tabs.h"
 #include "TableOfContents.h"
 #include "gui/Sidebar.h"
+#include "VirtualDesktop.h"
 #include "SessionState.h"
 #include "SumatraLog.h"
 
@@ -47,6 +48,7 @@ static TabState* CloneSessionTabState(const TabState* src) {
 
 static SessionData* CloneSessionData(const SessionData* src) {
     SessionData* dst = NewSessionData();
+    str::ReplaceWithCopy(&dst->virtualDesktopId, src->virtualDesktopId);
     dst->tabIndex = src->tabIndex;
     dst->windowState = src->windowState;
     dst->windowPos = src->windowPos;
@@ -140,6 +142,10 @@ static void RememberSessionState() {
         return;
     }
 
+#if OS_WIN
+    // which virtual desktop each window is on, so restoring puts it back (#6271)
+    ISumatraVirtualDesktopManager* vdm = CreateVirtualDesktopManager();
+#endif
     for (auto* win : gWindows) {
         if (win->isQuickLook) {
             continue;
@@ -197,8 +203,16 @@ static void RememberSessionState() {
         windowState->windowState = gSettings->windowState;
         windowState->windowPos = gSettings->windowPos;
         windowState->sidebarDx = gSettings->sidebarDx;
+#if OS_WIN
+        str::ReplaceWithCopy(&windowState->virtualDesktopId, GetWindowDesktopIdTemp(vdm, MainWindowHwnd(win)));
+#endif
         VecAppend(*sessionState, windowState);
     }
+#if OS_WIN
+    if (vdm) {
+        vdm->Release();
+    }
+#endif
 }
 
 // ng: what orig's SaveSettings() does inline; installed as
@@ -427,6 +441,10 @@ bool RestoreSession(MainWindow* firstWin) {
     }
     int nRestored = 0;
     int nWindows = 0;
+#if OS_WIN
+    // each window goes back to the virtual desktop it was on (#6271)
+    ISumatraVirtualDesktopManager* vdm = CreateVirtualDesktopManager();
+#endif
     for (SessionData* data : *gInitialSessionData) {
         MainWindow* win = nWindows == 0 ? firstWin : CreateAndShowMainWindow(data);
         if (!win) {
@@ -467,9 +485,17 @@ bool RestoreSession(MainWindow* firstWin) {
         if (data->windowState == WIN_STATE_FULLSCREEN) {
             EnterFullScreen(win);
         }
+#if OS_WIN
+        MoveWindowToVirtualDesktop(vdm, MainWindowHwnd(win), data->virtualDesktopId);
+#endif
         nRestored += nInWindow;
         nWindows++;
     }
+#if OS_WIN
+    if (vdm) {
+        vdm->Release();
+    }
+#endif
     logf("RestoreSession: restored %d tabs in %d windows\n", nRestored, nWindows);
     return nRestored > 0;
 }

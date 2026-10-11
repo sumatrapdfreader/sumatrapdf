@@ -845,15 +845,17 @@ static const FieldInfo gSessionDataFields[] = {
     {offsetof(SessionData, windowState), SettingType::Int, 0},
     {offsetof(SessionData, windowPos), SettingType::Compact, (intptr_t)&gRect_4_Info},
     {offsetof(SessionData, sidebarDx), SettingType::Int, 0},
+    {offsetof(SessionData, virtualDesktopId), SettingType::String, 0},
 };
 const StructInfo gSessionDataInfo = {
     sizeof(SessionData),
-    5,
+    6,
     gSessionDataFields,
-    "TabStates\0TabIndex\0WindowState\0WindowPos\0SidebarDx",
+    "TabStates\0TabIndex\0WindowState\0WindowPos\0SidebarDx\0VirtualDesktopId",
     "data required for restoring the view state of a single tab\0index of the currently selected tab (1-based)\0state "
     "of the window. 1 is normal, 2 is maximized, 3 is fullscreen, 4 is minimized\0position of the window (can be on "
-    "any monitor)\0width of the favorites / bookmarks sidebar in screen pixels (0 if it wasn't shown)",
+    "any monitor)\0width of the favorites / bookmarks sidebar in screen pixels (0 if it wasn't shown)\0GUID of the "
+    "virtual desktop the window was on; the window is restored there (Windows 10+)",
     false};
 
 static const FieldInfo gFILETIMEFields[] = {

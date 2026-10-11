@@ -390,6 +390,9 @@ struct SessionData {
     // width of the favorites / bookmarks sidebar in screen pixels (0 if it
     // wasn't shown)
     int sidebarDx;
+    // GUID of the virtual desktop the window was on; the window is
+    // restored there (Windows 10+)
+    Str virtualDesktopId;
 };
 
 // customization options for CHM UI. UseFixedPageUI switches to the
