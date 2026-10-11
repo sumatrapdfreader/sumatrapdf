@@ -14,7 +14,6 @@ int gDpiOverride = 0;
 int dpiX = 96;
 int dpiY = 96;
 
-static int gWineDpiOverride = 0;
 static bool gDpiOverrideLegacy = false;
 
 static void DpiMaybeReadEnvOverride() {
@@ -43,14 +42,6 @@ static void DpiMaybeReadEnvOverride() {
     }
 }
 
-void DpiSetWineOverride(int dpi) {
-    gWineDpiOverride = dpi;
-}
-
-static int DpiApplyWineOverride(int dpi) {
-    return std::max(dpi, gWineDpiOverride);
-}
-
 static bool DpiIsDesktopHwnd(HWND hwnd) {
     return !hwnd || hwnd == HWND_DESKTOP || hwnd == GetDesktopWindow();
 }
@@ -64,8 +55,8 @@ static bool DpiFromMonitor(HMONITOR h, int* outX, int* outY) {
     if (hr != S_OK || monX < 72) {
         return false;
     }
-    *outX = DpiApplyWineOverride((int)monX);
-    *outY = DpiApplyWineOverride((int)(monY >= 72 ? monY : monX));
+    *outX = (int)monX;
+    *outY = (int)(monY >= 72 ? monY : monX);
     return true;
 }
 
@@ -118,7 +109,7 @@ static void DpiQueryForHwnd(HWND hwnd, int& x, int& y) {
         if (DynGetDpiForWindow) {
             uint dpiWin = DynGetDpiForWindow(hwnd);
             if (dpiWin >= 72) {
-                x = y = DpiApplyWineOverride((int)dpiWin);
+                x = y = (int)dpiWin;
                 return;
             }
         }
@@ -148,8 +139,6 @@ static void DpiQueryForHwnd(HWND hwnd, int& x, int& y) {
     if (y < 72) {
         y = x;
     }
-    x = DpiApplyWineOverride(x);
-    y = DpiApplyWineOverride(y);
 }
 
 int DpiGetForHwnd(HWND hwnd) {

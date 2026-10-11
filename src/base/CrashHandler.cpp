@@ -701,13 +701,6 @@ void InstallCrashHandler(const CrashHandlerConfig& cfg) {
     gDumpThreadId = 0;
     AtomicBoolSet(&gCrashHandlerStarted, false);
 
-    // don't bother sending crash reports when running under Wine
-    // as they're not helpful
-    if (IsRunningOnWine()) {
-        log(StrL("InstallCrashHandler: skipping because isWine\n"));
-        return;
-    }
-
     BuildSystemInfo();
     // do it now so that a crash doesn't have to load dbghelp and its symbols
     InitializeDbgHelp();

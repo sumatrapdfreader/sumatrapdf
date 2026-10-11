@@ -579,9 +579,6 @@ static void AppendBugReportInfo(str::Builder& s) {
     if (theme) {
         s.Append(fmt("Theme: %s\n", theme));
     }
-    if (IsRunningOnWine()) {
-        s.Append(StrL("Wine: yes\n"));
-    }
 }
 
 static void CopyAboutInfoToClipboard() {

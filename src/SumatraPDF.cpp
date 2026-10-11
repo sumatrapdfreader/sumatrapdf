@@ -2113,15 +2113,6 @@ static void ReplaceDocumentInCurrentTab(LoadArgs* args, DocController* ctrl, Fil
         }
         if (args->showWin) {
             ShowWindow(win->hwndFrame, showType);
-            if (IsRunningOnWine()) {
-                Rect wr = HwndWindowRect(win->hwndFrame);
-                Rect cr = HwndClientRect(win->hwndFrame);
-                logf(
-                    "LoadDocument: showWin windowRect=(%d,%d,%d,%d) clientRect=(%d,%d,%d,%d) "
-                    "captionRect=(%d,%d,%d,%d)\n",
-                    wr.x, wr.y, wr.dx, wr.dy, cr.x, cr.y, cr.dx, cr.dy, win->captionRect.x, win->captionRect.y,
-                    win->captionRect.dx, win->captionRect.dy);
-            }
         }
 
         // Fire deferred SWP_FRAMECHANGED for custom caption so the
@@ -2683,9 +2674,7 @@ static MainWindow* CreateMainWindow() {
         return nullptr;
     }
     // WM_NCCALCSIZE returning 0 disables DWM rounded corners; re-enable them.
-    if (!IsRunningOnWine()) {
-        SetWindowRoundedCorners(hwndFrame, true);
-    }
+    SetWindowRoundedCorners(hwndFrame, true);
 
     ReportIf(nullptr != FindMainWindowByHwnd(hwndFrame));
     MainWindow* win = new MainWindow(hwndFrame);
@@ -2847,14 +2836,6 @@ void ShowMainWindow(MainWindow* win, int windowState) {
     UpdateWindow(win->hwndFrame);
     UpdateToolbarFindText(win);
     HwndEnsureOnScreen(win->hwndFrame);
-
-    if (IsRunningOnWine()) {
-        Rect wr = HwndWindowRect(win->hwndFrame);
-        Rect cr = HwndClientRect(win->hwndFrame);
-        logf("ShowMainWindow: windowRect=(%d,%d,%d,%d) clientRect=(%d,%d,%d,%d) captionRect=(%d,%d,%d,%d)\n", wr.x,
-             wr.y, wr.dx, wr.dy, cr.x, cr.y, cr.dx, cr.dy, win->captionRect.x, win->captionRect.y, win->captionRect.dx,
-             win->captionRect.dy);
-    }
 
     // the `true ||` is deliberate (always foreground); silence /analyze C6286/C6240
 #pragma warning(suppress : 6286 6240)
@@ -6701,12 +6682,9 @@ static bool RelayoutFrame(MainWindow* win, bool updateToolbars, int sidebarDx) {
     // inset by border for resize hit-testing (only with custom caption, not when maximized/fullscreen)
     if (win->tabsInTitlebar && !IsZoomed(win->hwndFrame) && !win->isFullScreen && !win->presentation) {
         rc.x += kFrameBorderSize;
-        // on Wine top border is kFrameBorderSize - 1 because 1px is already NC area
-        // (WM_NCCALCSIZE keeps 1px NC to prevent DWM transparent flash)
-        int topBorder = IsRunningOnWine() ? kFrameBorderSize - 1 : kFrameBorderSize;
-        rc.y += topBorder;
+        rc.y += kFrameBorderSize;
         rc.dx -= 2 * kFrameBorderSize;
-        rc.dy -= kFrameBorderSize + topBorder;
+        rc.dy -= 2 * kFrameBorderSize;
     }
 
     // hide overlay scrollbars before relayout so they don't appear at
@@ -6918,18 +6896,9 @@ static bool RelayoutFrame(MainWindow* win, bool updateToolbars, int sidebarDx) {
 
     if (showCaption) {
         win->captionRect = win->captionLayout->lastBounds;
-        if (IsRunningOnWine()) {
-            logf(
-                "RelayoutFrame: tabsInTitlebar tabHeight=%d captionHeight=%d captionRect=(%d,%d,%d,%d) "
-                "showingMenuBar=%d\n",
-                tabHeight, captionHeight, win->captionRect.x, win->captionRect.y, win->captionRect.dx,
-                win->captionRect.dy, (int)showingMenuBar);
-        }
         if (updateToolbars) {
             RelayoutCaption(win);
         }
-    } else if (showTabsBar && IsRunningOnWine()) {
-        logf("RelayoutFrame: tabsVisible tabHeight=%d\n", tabHeight);
     }
 
     // in overlay mode the toolbar floats over the canvas and is positioned
@@ -7075,9 +7044,7 @@ static void EndFrameRedrawSuppression(MainWindow* win) {
     RedrawWindow(win->hwndFrame, nullptr, nullptr,
                  RDW_ERASE | RDW_INVALIDATE | RDW_ALLCHILDREN | RDW_FRAME | RDW_UPDATENOW);
     GdiFlush();
-    if (!IsRunningOnWine()) {
-        DwmFlush();
-    }
+    DwmFlush();
 }
 
 static void UpdateOverlayScrollbarPositions(MainWindow* win) {
@@ -7815,9 +7782,7 @@ void EnterFullScreen(MainWindow* win, bool presentation) {
 
     UpdateWindowFrameBorderColor(win);
     // disable DWM rounded corners and border for true edge-to-edge fullscreen
-    if (!IsRunningOnWine()) {
-        SetWindowRoundedCorners(win->hwndFrame, false);
-    }
+    SetWindowRoundedCorners(win->hwndFrame, false);
 
     SetWindowLong(win->hwndFrame, GWL_STYLE, ws);
     uint flags = SWP_FRAMECHANGED | SWP_NOACTIVATE | SWP_NOZORDER;
@@ -7947,9 +7912,7 @@ void ExitFullScreen(MainWindow* win) {
     }
 
     // restore DWM rounded corners and border
-    if (!IsRunningOnWine()) {
-        SetWindowRoundedCorners(win->hwndFrame, true);
-    }
+    SetWindowRoundedCorners(win->hwndFrame, true);
     UpdateWindowFrameBorderColor(win);
 
     // If we were maximized before fullscreen, re-maximize against the current
@@ -11976,10 +11939,6 @@ void RelayoutCaption(MainWindow* win) {
     BindSlot(win->capTabsRow2, nullptr, nullptr, false);
     dh.End();
     UpdateTabWidth(win);
-    if (IsRunningOnWine()) {
-        logf("RelayoutCaption: captionRect=(%d,%d,%d,%d) twoRow=%d hasFileTabs=%d\n", win->captionRect.x,
-             win->captionRect.y, win->captionRect.dx, win->captionRect.dy, (int)twoRow, (int)hasFileTabs);
-    }
 }
 
 enum class CaptionSysButtonKind {
@@ -12381,22 +12340,7 @@ static LRESULT CustomCaptionFrameProc(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp,
             }
             // painting the non-client area ourselves turns off DWM frame rendering:
             // the maximized window's overhang then counts as visible (#6259)
-            if (!IsRunningOnWine()) {
-                break;
-            }
-            Vec<Rect> strips;
-            GetFrameNcStrips(win, strips);
-            HDC hdc = len(strips) > 0 ? GetWindowDC(hwnd) : nullptr;
-            if (hdc) {
-                HBRUSH br = CreateSolidBrush(ThemeControlBackgroundColor());
-                for (Rect& rc : strips) {
-                    HdcFillRect(hdc, rc, br);
-                }
-                DeleteObject(br);
-                ReleaseDC(hwnd, hdc);
-            }
-            *callDef = false;
-            return 0;
+            break;
         }
 
         case WM_PAINT: {
@@ -12485,10 +12429,6 @@ static LRESULT CustomCaptionFrameProc(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp,
 
         case WM_NCCALCSIZE: {
             RECT* r = wp == TRUE ? &((NCCALCSIZE_PARAMS*)lp)->rgrc[0] : (RECT*)lp;
-            if (IsRunningOnWine()) {
-                logf("WM_NCCALCSIZE: before=(%ld,%ld,%ld,%ld) zoomed=%d\n", r->left, r->top, r->right, r->bottom,
-                     (int)IsZoomed(hwnd));
-            }
             bool isFullScreen = win->isFullScreen || win->presentation;
             if (IsZoomed(hwnd) && !isFullScreen) {
                 // The maximized outer frame extends beyond the work area. Global
@@ -12511,21 +12451,12 @@ static LRESULT CustomCaptionFrameProc(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp,
                     r->right -= frameX;
                     r->bottom -= frameY;
                 }
-            } else if (!isFullScreen && IsRunningOnWine()) {
-                // keep 1px non-client area at top so DWM preserves content
-                // during resize (returning 0 makes DWM clear the surface)
-                r->top += 1;
             } else if (!isFullScreen) {
                 // keep the standard side / bottom borders, DWM draws them as invisible
                 // resize borders; the caption is ours
                 int top = r->top;
                 DefWindowProcW(hwnd, msg, wp, lp);
                 r->top = top;
-            }
-            if (IsRunningOnWine()) {
-                logf("WM_NCCALCSIZE: after=(%ld,%ld,%ld,%ld) clientDy=%ld cyFrame=%d cyCaption=%d\n", r->left, r->top,
-                     r->right, r->bottom, r->bottom - r->top, GetSystemMetrics(SM_CYFRAME),
-                     GetSystemMetrics(SM_CYCAPTION));
             }
             *callDef = false;
             return 0;
@@ -14960,51 +14891,6 @@ static void LayoutAndFocusOnStartup(MainWindow* win) {
     NotifySessionRestoreFinished();
 }
 
-static int WineDpiFromEnv() {
-    static Str scaleVars[] = {StrL("GDK_SCALE"), StrL("QT_SCALE_FACTOR"), StrL("ELM_SCALE")};
-    int bestDpi = 0;
-    for (Str var : scaleVars) {
-        Str val = Str(getenv(var.s));
-        if (len(val) == 0) {
-            continue;
-        }
-        float scale = (float)atof(val.s);
-        if (scale < 1.f) {
-            continue;
-        }
-        int dpi = (int)lroundf(96.f * scale);
-        bestDpi = std::max(dpi, bestDpi);
-    }
-    return bestDpi;
-}
-
-static void LogWineDpiInfo() {
-    if (!IsRunningOnWine()) {
-        return;
-    }
-    HDC screenDC = GetDC(nullptr);
-    int screenDpi = screenDC ? GetDeviceCaps(screenDC, LOGPIXELSX) : 0;
-    if (screenDC) {
-        ReleaseDC(nullptr, screenDC);
-    }
-    uint monitorDpiX = 0, monitorDpiY = 0;
-    HMONITOR mon = MonitorFromWindow(nullptr, MONITOR_DEFAULTTOPRIMARY);
-    HRESULT hr = E_FAIL;
-    if (mon && DynGetDpiForMonitor) {
-        hr = DynGetDpiForMonitor(mon, 0, &monitorDpiX, &monitorDpiY);
-    }
-    int envDpi = WineDpiFromEnv();
-    if (envDpi > 0) {
-        DpiSetWineOverride(envDpi);
-    }
-    logf(
-        "WineDpi: screenDpi=%d monitorDpi=(%u,%u) GetDpiForMonitor hr=0x%lx envDpi=%d overrideDpi=%d "
-        "SM_CYCAPTION=%d SM_CYFRAME=%d SM_CXPADDEDBORDER=%d screen=(%d,%d)\n",
-        screenDpi, monitorDpiX, monitorDpiY, (unsigned long)hr, envDpi, DpiGetForHwnd(HWND_DESKTOP),
-        GetSystemMetrics(SM_CYCAPTION), GetSystemMetrics(SM_CYFRAME), GetSystemMetrics(SM_CXPADDEDBORDER),
-        GetSystemMetrics(SM_CXSCREEN), GetSystemMetrics(SM_CYSCREEN));
-}
-
 // in mupdf_load_system_font.c
 extern "C" void destroy_system_font_list();
 
@@ -15352,10 +15238,10 @@ static void LogOsInfo() {
     bool gotUbr = ReadRegDWORD(HKEY_LOCAL_MACHINE, key, StrL("UBR"), ubr);
     logf(
         "os: version=%u.%u.%d (%s) product='%s' display='%s' ubr=%s%d "
-        "process=%dbit os=%dbit arm=%d cores=%d wine=%d\n",
+        "process=%dbit os=%dbit arm=%d cores=%d\n",
         ver.dwMajorVersion, ver.dwMinorVersion, build, gotVersion ? OsNameFromVerTemp(ver) : StrL("unknown"), product,
         displayVersion, gotUbr ? StrL("") : StrL("?"), (int)ubr, IsProcess64() ? 64 : 32, IsOs64() ? 64 : 32,
-        (int)IsArmBuild(), CpuCoreCount(), (int)IsRunningOnWine());
+        (int)IsArmBuild(), CpuCoreCount());
 }
 
 static void GetProgramInfo(str::Builder& b) {
@@ -15678,7 +15564,6 @@ int APIENTRY WinMain(_In_ HINSTANCE /*hInstance*/, _In_opt_ HINSTANCE /*hPrevIns
         // TODO: only if AttachConsole() succeeds?
         gLogToConsole = true;
     }
-    LogWineDpiInfo();
     {
         // the cursor is on the monitor the user launched from. GetForegroundWindow
         // / HWND_DESKTOP report the *primary* monitor, which made the first

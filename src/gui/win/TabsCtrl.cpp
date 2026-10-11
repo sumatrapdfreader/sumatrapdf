@@ -453,10 +453,6 @@ void TabsCtrl::LayoutTabs() {
         dx = std::min(tabDefaultDx, maxDx);
     }
     tabSize = {dx, dy};
-    if (IsRunningOnWine()) {
-        logf("TabsCtrl::LayoutTabs: hwnd=%p client=(%d,%d) tabSize=(%d,%d) nTabs=%d\n", hwnd, rect.dx, rect.dy,
-             tabSize.dx, tabSize.dy, nTabs);
-    }
 
     for (int i = 0; i < nTabs; i++) {
         tabCtrls[i]->idealSize = tabSize;

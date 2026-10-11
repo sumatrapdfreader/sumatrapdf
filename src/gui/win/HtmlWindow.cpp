@@ -1359,7 +1359,7 @@ bool HtmlWindow::CreateBrowser() {
 }
 
 // urlmon.dll is delay-loaded. On systems where it (or an export we need) can't
-// be loaded -- e.g. Wine, or a stripped-down Windows install -- calling a
+// be loaded -- e.g. a stripped-down Windows install -- calling a
 // delay-loaded urlmon function raises a fatal delay-load exception (0xC06D007E)
 // that we can't catch here. The HtmlWindow ctor calls into urlmon
 // (RegisterInternetProtocolFactory -> CoInternetGetSession), so verify urlmon is

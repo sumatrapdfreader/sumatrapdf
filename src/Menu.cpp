@@ -1861,15 +1861,9 @@ int GetMenuBarRebarHeight(MainWindow* win) {
     // RB_GETBARHEIGHT underreports by 1px without WS_BORDER
     int dy = (int)SendMessageW(hwnd, RB_GETBARHEIGHT, 0, 0) + 1;
     if (dy > 1) {
-        if (IsRunningOnWine()) {
-            logf("GetMenuBarRebarHeight: rebar=%p RB_GETBARHEIGHT=%d\n", win->hwndMenuReBar, dy);
-        }
         return dy;
     }
     int ideal = MenuBarToolbarIdealDy();
-    if (IsRunningOnWine()) {
-        logf("GetMenuBarRebarHeight: rebar=%p RB_GETBARHEIGHT=%d fallbackIdeal=%d\n", win->hwndMenuReBar, dy, ideal);
-    }
     return ideal;
 }
 

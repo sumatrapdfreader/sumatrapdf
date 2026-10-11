@@ -35,7 +35,6 @@ inline int MulDiv(int a, int b, int c) {
 int DpiGetForHwnd(HWND);
 int DpiGetForPoint(int x, int y);
 int DpiGet();
-void DpiSetWineOverride(int dpi);
 void DpiSetFromHwnd(HWND);
 void DpiSet(int x, int y);
 int DpiScaleByDpi(int dpi, int n);

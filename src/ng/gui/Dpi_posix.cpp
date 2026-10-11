@@ -8,22 +8,12 @@ int gDpiOverride = 0;
 int dpiX = 96;
 int dpiY = 96;
 
-static int gDpi = 96;
-
-void DpiSetWineOverride(int dpi) {
-    if (dpi >= 72) {
-        gDpi = dpi;
-        dpiX = dpi;
-        dpiY = dpi;
-    }
-}
-
 int DpiGetForHwnd(HWND hwnd) {
     // see the note in Dpi.h: the override doesn't apply to the desktop
     if (gDpiOverride > 0 && hwnd) {
         return (96 * gDpiOverride) / 100;
     }
-    return gDpi;
+    return DpiGet();
 }
 
 int DpiGetForPoint(int, int) {
