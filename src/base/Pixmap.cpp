@@ -702,6 +702,37 @@ static int Mul255(int a, int b) {
     return n >> 8;
 }
 
+// 0 up to `from`, 255 from `to` on, linear in between
+static int Ramp255(int v, int from, int to) {
+    if (v <= from) {
+        return 0;
+    }
+    if (v >= to) {
+        return 255;
+    }
+    return ((v - from) * 255) / (to - from);
+}
+
+// link ink is blue (a pale blue fill is not), not too dark, not near paper
+constexpr int kLinkBlueFrom = 32;
+constexpr int kLinkBlueTo = 64;
+constexpr int kLinkDarkFrom = 64;
+constexpr int kLinkDarkTo = 96;
+constexpr int kLinkLightFrom = 224;
+constexpr int kLinkLightTo = 240;
+
+// How much of a pixel (B,G,R) is link ink, 0..255. Ramps, not cutoffs: JPEG
+// noise in a pale blue fill straddled a cutoff pixel by pixel, which turned
+// the fill into a checkerboard of link and page colors (#6313)
+static int LinkWeight(const u8* pixel) {
+    int maxRG = pixel[2] > pixel[1] ? pixel[2] : pixel[1];
+    int lum = (pixel[0] + pixel[1] + pixel[2]) / 3;
+    int w = Ramp255(pixel[0] - maxRG, kLinkBlueFrom, kLinkBlueTo);
+    w = Mul255(w, Ramp255(pixel[0], kLinkDarkFrom, kLinkDarkTo));
+    w = Mul255(w, 255 - Ramp255(lum, kLinkLightFrom, kLinkLightTo));
+    return w;
+}
+
 // Maps black-on-white pixels to textColor-on-bgColor (interpolating the rest),
 // turns blue-ish "link" pixels into linkColor, and leaves skipRects alone.
 // Pixel bytes are B,G,R[,A]; rows are stride bytes apart.
@@ -714,6 +745,8 @@ static void RecolorPixels(u8* data, int w, int h, size_t stride, int bpp, Color 
     UnpackColor(bgColor, bgR, bgG, bgB);
     const int base[4] = {textB, textG, textR, 0};
     const int diff[4] = {(int)bgB - textB, (int)bgG - textG, (int)bgR - textR, 255};
+    const int linkBase[3] = {linkB, linkG, linkR};
+    const int linkDiff[3] = {(int)bgB - linkB, (int)bgG - linkG, (int)bgR - linkR};
     int nChannels = std::min(bpp, 4);
     for (int y = 0; y < h; y++) {
         u8* pixel = data + ((size_t)y * stride);
@@ -721,17 +754,16 @@ static void RecolorPixels(u8* data, int w, int h, size_t stride, int bpp, Color 
             if (SkipRecolorPixel(x, y, skipRects)) {
                 continue;
             }
-            int maxRG = pixel[2] > pixel[1] ? pixel[2] : pixel[1];
-            int lum = (pixel[0] + pixel[1] + pixel[2]) / 3;
-            if (linkColor && pixel[0] >= maxRG + 25 && pixel[0] >= 72 && lum <= 230) {
-                int rg = ((int)pixel[1] + pixel[2]) / 2;
-                pixel[0] = (u8)(linkB + Mul255(rg, (int)bgB - linkB));
-                pixel[1] = (u8)(linkG + Mul255(rg, (int)bgG - linkG));
-                pixel[2] = (u8)(linkR + Mul255(rg, (int)bgR - linkR));
-                continue;
-            }
+            int linkW = linkColor ? LinkWeight(pixel) : 0;
+            // link ink fades to bg by its R/G coverage, like text does
+            int rg = ((int)pixel[1] + pixel[2]) / 2;
             for (int i = 0; i < nChannels; i++) {
-                pixel[i] = (u8)(base[i] + Mul255(pixel[i], diff[i]));
+                int page = base[i] + Mul255(pixel[i], diff[i]);
+                if (linkW > 0 && i < 3) {
+                    int link = linkBase[i] + Mul255(rg, linkDiff[i]);
+                    page += Mul255(linkW, link - page);
+                }
+                pixel[i] = (u8)page;
             }
         }
     }
