@@ -1146,10 +1146,8 @@ void ReloadDocument(MainWindow* win, bool autoRefresh) {
         logf("ReloadDocument: tab->filePath is empty, auto refresh: %d\n", (int)autoRefresh);
         return;
     }
-    if (!tab->IsDocLoaded()) {
-        if (!autoRefresh) {
-            LoadDocument(win, path, LoadPrefs::DontSave, LoadReuse::CurrentTab);
-        }
+    if (!tab->IsDocLoaded() && !autoRefresh) {
+        LoadDocument(win, path, LoadPrefs::DontSave, LoadReuse::CurrentTab);
         return;
     }
     logf("ReloadDocument: %s, auto refresh: %d\n", path, (int)autoRefresh);
@@ -1165,6 +1163,14 @@ void ReloadDocument(MainWindow* win, bool autoRefresh) {
         if (!ctrl) {
             return;
         }
+    }
+
+    // ng: a tab showing the load error recovers once the file is whole again
+    if (!tab->IsDocLoaded()) {
+        tab->reloadOnFocus = false;
+        AutoReloadResetFileState(tab);
+        LoadDocumentFinish(win, fullPath, ctrl, LoadPrefs::DontSave, LoadReuse::CurrentTab, timeStart);
+        return;
     }
 
     // the annotation UI holds Annotation* into the engine that is about to go
@@ -1759,7 +1765,12 @@ static MainWindow* LoadDocumentFinish(MainWindow* win, Str fullPath, DocControll
 static void StartLoadDocuments(StrVec& paths, MainWindow* win, bool skipHistory) {
     StrVec pathsToLoad;
     for (Str path : paths) {
-        if (SettingsUseTabs() && FindMainWindowByFile(path, true, win)) {
+        MainWindow* existing = SettingsUseTabs() ? FindMainWindowByFile(path, true, win) : nullptr;
+        if (existing) {
+            // ng: opening a file whose tab shows the load error tries again
+            if (!existing->IsDocLoaded()) {
+                ReloadDocument(existing, false);
+            }
             continue;
         }
         AppendIfNotExists(&pathsToLoad, path);

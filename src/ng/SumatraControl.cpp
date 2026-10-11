@@ -796,6 +796,8 @@ enum class ControlCmd : u16 {
     TestQuitProcess = 130,
     // Rename File without its dialog
     TestRenameFile = 131,
+    // ng: open a file the way a drop or a Finder open does
+    TestOpenFiles = 132,
 };
 
 bool ParseArg(PacketReader& r, ControlArg** argOut) {
@@ -2056,6 +2058,18 @@ static void ExecuteControlRequest(ControlRequest* req) {
             int exitCode = 0;
             Str res = RenameFileResultTemp(dstPath, &exitCode);
             AppendTestResult(req, exitCode, res);
+            break;
+        }
+
+        case ControlCmd::TestOpenFiles: {
+            Str path = StringArg(req, 0);
+            MainWindow* win = FirstWindow();
+            if (len(path) == 0 || !win) {
+                AppendError(req, StrL("TestOpenFiles expects string path and a window"));
+                break;
+            }
+            OpenDroppedFiles(win, &path, 1);
+            AppendTestResult(req, 0, StrL("OK"));
             break;
         }
 
