@@ -941,6 +941,13 @@ read_container_and_prefix(fz_context *ctx, fz_archive *zip, char *prefix, size_t
 	return fz_read_archive_entry(ctx, zip, "META-INF/container.xml");
 }
 
+static int
+itemref_is_linear(fz_xml *itemref)
+{
+	const char *linear = fz_xml_att(itemref, "linear");
+	return !linear || strcmp(linear, "no") != 0;
+}
+
 static void
 epub_parse_header(fz_context *ctx, epub_document *doc)
 {
@@ -957,7 +964,7 @@ epub_parse_header(fz_context *ctx, epub_document *doc)
 	char ncx[2048], s[2048];
 	char *prefixed_full_path = NULL;
 	size_t prefix_len;
-	int i;
+	int i, pass;
 
 	fz_var(buf);
 	fz_var(encryption_xml);
@@ -1054,28 +1061,34 @@ epub_parse_header(fz_context *ctx, epub_document *doc)
 		}
 		doc->spine_len = i;
 
-		// load chapters
+		// load chapters: linear="no" items (footnotes, endnotes) are not
+		// part of the reading order, so they go after the linear ones,
+		// where links still reach them
 		doc->spine = fz_malloc_array(ctx, doc->spine_len, epub_chapter*);
-		itemref = fz_xml_find_down(spine, "itemref");
 		i = 0;
-		while (itemref)
+		for (pass = 0; pass < 2; ++pass)
 		{
-			if (path_from_idref(s, manifest, base_uri, fz_xml_att(itemref, "idref"), sizeof s))
+			itemref = fz_xml_find_down(spine, "itemref");
+			while (itemref)
 			{
-				fz_try(ctx)
+				if (itemref_is_linear(itemref) == (pass == 0) &&
+					path_from_idref(s, manifest, base_uri, fz_xml_att(itemref, "idref"), sizeof s))
 				{
-					doc->spine[i] = epub_load_chapter(ctx, doc, s, i);
-					i++;
+					fz_try(ctx)
+					{
+						doc->spine[i] = epub_load_chapter(ctx, doc, s, i);
+						i++;
+					}
+					fz_catch(ctx)
+					{
+						fz_rethrow_if(ctx, FZ_ERROR_TRYLATER);
+						fz_rethrow_if(ctx, FZ_ERROR_SYSTEM);
+						fz_report_error(ctx);
+						fz_warn(ctx, "ignoring chapter %s", s);
+					}
 				}
-				fz_catch(ctx)
-				{
-					fz_rethrow_if(ctx, FZ_ERROR_TRYLATER);
-					fz_rethrow_if(ctx, FZ_ERROR_SYSTEM);
-					fz_report_error(ctx);
-					fz_warn(ctx, "ignoring chapter %s", s);
-				}
+				itemref = fz_xml_find_next(itemref, "itemref");
 			}
-			itemref = fz_xml_find_next(itemref, "itemref");
 		}
 		doc->spine_len = i;
 	}

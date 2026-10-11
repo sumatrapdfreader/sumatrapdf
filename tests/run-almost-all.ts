@@ -134,6 +134,7 @@ import { testit as installerDesktopShortcut } from "./installer-desktop-shortcut
 import { testit as issue4291 } from "./issue-4291.ts";
 import { testit as issue6271 } from "./issue-6271.ts";
 import { testit as issue3755 } from "./issue-3755.ts";
+import { testit as issue5803 } from "./issue-5803.ts";
 import { testit as issue6248 } from "./issue-6248.ts";
 import { testit as issue6256 } from "./issue-6256.ts";
 import { testit as annotNudge } from "./annot-nudge.ts";
@@ -449,6 +450,7 @@ export const tests: NamedTest[] = [
   ["issue-4291", issue4291],
   ["issue-6271", issue6271],
   ["issue-3755", issue3755],
+  ["issue-5803", issue5803],
   ["issue-6248", issue6248],
   ["issue-6256", issue6256],
   ["annot-nudge", annotNudge],
