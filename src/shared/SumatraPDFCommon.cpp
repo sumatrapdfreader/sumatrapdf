@@ -846,6 +846,21 @@ void ToggleMangaMode(MainWindow* win) {
     dm->SetScrollState(state);
 }
 
+// ComicBookUI.AutoRotateWidePages, see DisplayModel::PageRotation
+void ToggleAutoRotateWidePages() {
+    gSettings->comicBookUI.autoRotateWidePages = !gSettings->comicBookUI.autoRotateWidePages;
+    for (MainWindow* win : gWindows) {
+        DisplayModel* dm = win->AsFixed();
+        if (!dm || !dm->GetEngine() || dm->GetEngine()->kind != kindEngineComicBooks) {
+            continue;
+        }
+        ScrollState state = dm->GetScrollState();
+        dm->Relayout(dm->GetZoomVirtual(), dm->GetRotation());
+        dm->SetScrollState(state);
+    }
+    ScheduleSaveSettings();
+}
+
 void OnMenuZoom(MainWindow* win, int menuId) {
     if (!win->IsDocLoaded()) {
         return;

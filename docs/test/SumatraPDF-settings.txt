@@ -120,6 +120,7 @@ ComicBookUI [
 	CbxMangaMode = false
 	LimitToWindowWidth = false
 	LimitToWindowHeight = false
+	AutoRotateWidePages = false
 	LandscapeAsSpread = true
 ]
 

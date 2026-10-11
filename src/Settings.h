@@ -625,6 +625,12 @@ struct ComicBookUI {
     // if true, absolute zoom never makes a page taller than the window
     // (each page is capped at Fit Height)
     bool limitToWindowHeight;
+    // if true, in single-page layouts a page wider than it is tall (a
+    // double-page spread) is rotated so its long side follows the
+    // window's, and Fit Page shows it as large as the other pages. With
+    // the document rotated 90 degrees the spread shows upright (issue
+    // #6305)
+    bool autoRotateWidePages;
     // default page layout for comic books; empty uses the global
     // DefaultDisplayMode. valid values: automatic, single page, facing,
     // book view, continuous, continuous facing, continuous book view

@@ -859,6 +859,7 @@ static void MenuUpdateDisplayMode(MainWindow* win) {
         bool mangaMode = dm->GetDisplayR2L();
         MenuSetChecked(win->menu, CmdToggleMangaMode, mangaMode);
         MenuSetEnabled(win->menu, CmdToggleMangaMode, true);
+        MenuSetChecked(win->menu, CmdToggleAutoRotateWidePages, gSettings->comicBookUI.autoRotateWidePages);
         MenuSetChecked(win->menu, CmdToggleUniformPageWidth, dm->GetUniformPageWidth());
         MenuSetEnabled(win->menu, CmdToggleUniformPageWidth, true);
         MenuSetChecked(win->menu, CmdToggleTrimEmptyMargins, dm->GetTrimEmptyMargins());

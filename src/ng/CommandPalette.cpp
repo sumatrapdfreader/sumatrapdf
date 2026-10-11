@@ -1121,6 +1121,10 @@ static TempStr UpdateCommandNameTemp(MainWindow* win, int cmdId, Str s) {
                 newIsOn = !dm->GetDisplayR2L();
             }
         } break;
+        case CmdToggleAutoRotateWidePages:
+            isToggle = true;
+            newIsOn = !gSettings->comicBookUI.autoRotateWidePages;
+            break;
         case CmdToggleUniformPageWidth: {
             DisplayModel* dm = win->AsFixed();
             if (dm) {

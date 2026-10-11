@@ -61,6 +61,7 @@ void ClearPendingNextPrevNav();
 bool IsAtDocumentBottom(MainWindow* win);
 void OnNextFileHintClosed(NotificationClosedEvent* ev);
 void ToggleMangaMode(MainWindow* win);
+void ToggleAutoRotateWidePages();
 void OnMenuZoom(MainWindow* win, int menuId);
 void TogglePresentationMode(MainWindow* win);
 int wrapIdx(int idx, int max);

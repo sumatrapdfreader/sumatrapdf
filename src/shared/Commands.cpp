@@ -339,6 +339,7 @@ const CommandInfo gCommands[] = {
     {CmdInsertTextSnippet, "CmdInsertTextSnippet\0", StrL("Insert Text Snippet")},
     {CmdToggleThumbnails, "CmdToggleThumbnails\0", StrL("Toggle Thumbnails")},
     {CmdMergePDF, "CmdMergePDF\0", StrL("Merge PDF...")},
+    {CmdToggleAutoRotateWidePages, "CmdToggleAutoRotateWidePages\0", StrL("Toggle Auto-Rotate Wide Pages")},
 };
 const int gCommandsCount = dimofi(gCommands);
 

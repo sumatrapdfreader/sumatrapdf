@@ -504,7 +504,7 @@ void GetPropsText(DocController* ctrl, str::Builder& out) {
     }
 
     if (dm && !isImages) { // we show image size below
-        strTemp = FormatPageSizeTemp(dm->GetEngine(), pageNo, dm->GetRotation());
+        strTemp = FormatPageSizeTemp(dm->GetEngine(), pageNo, dm->PageRotation(pageNo));
         TempStr s = fmt(Tr("Current Page (%d) Size:").s, pageNo);
         AppendProp(out, s, strTemp);
     }

@@ -621,6 +621,10 @@ CommandVisibility GetCommandVisibility(int cmdId, const AppCommandCtx& ctx, Comm
         // way the page turns and which side of the canvas advances (#1264)
     }
 
+    if (cmdId == CmdToggleAutoRotateWidePages && ctx.engineKind != kindEngineComicBooks) {
+        return CommandVisibility::Hide;
+    }
+
     if (cmdId == CmdToggleUniformPageWidth && !ctx.isFixedPage) {
         return CommandVisibility::Hide;
     }

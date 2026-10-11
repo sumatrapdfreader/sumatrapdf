@@ -5414,6 +5414,10 @@ void ExecuteCmd(MainWindow* win, int cmdId) {
             ToggleMangaMode(win);
             break;
 
+        case CmdToggleAutoRotateWidePages:
+            ToggleAutoRotateWidePages();
+            break;
+
         case CmdRotateLeft:
             if (dm) {
                 dm->RotateBy(-90);

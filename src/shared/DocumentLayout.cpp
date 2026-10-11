@@ -70,9 +70,9 @@ const DocumentLayoutPage* DocumentLayout::GetPage(int pageNo) const {
     return &pages[pageNo - 1];
 }
 
-static SizeF PageSizeAfterRotation(const DocumentLayoutPage* page, int rotation) {
+static SizeF PageSizeAfterRotation(const DocumentLayoutPage* page) {
     SizeF size = page ? page->mediaBox.Size() : SizeF();
-    rotation = NormalizeRotation(rotation);
+    int rotation = NormalizeRotation(page ? page->rotation : 0);
     if (rotation == 90 || rotation == 270) {
         std::swap(size.dx, size.dy);
     }
@@ -94,7 +94,7 @@ static float ZoomRealFromVirtualForPage(const DocumentLayout& layout, float zoom
     }
 
     int nCols = IsSingle(params.displayMode) ? 1 : 2;
-    SizeF row = PageSizeAfterRotation(layout.GetPage(pageNo), params.rotation);
+    SizeF row = PageSizeAfterRotation(layout.GetPage(pageNo));
     if (nCols > 1 && params.landscapeAsSpread && PageIsSpread(params.spreadFlags, pageNo)) {
         nCols = 1;
     }
@@ -214,8 +214,8 @@ static int CenterCanvasX(DocumentLayout& layout, int& canvasDx) {
     return offX;
 }
 
-static void SetPageDisplaySize(DocumentLayoutPage* page, int rotation, int currPosY) {
-    Size px = PagePixelSize(PageSizeAfterRotation(page, rotation), page->zoomReal);
+static void SetPageDisplaySize(DocumentLayoutPage* page, int currPosY) {
+    Size px = PagePixelSize(PageSizeAfterRotation(page), page->zoomReal);
     page->pos.dx = px.dx;
     page->pos.dy = px.dy;
     page->pos.y = currPosY;
@@ -267,7 +267,7 @@ static void RelayoutRows(DocumentLayout& layout, bool isFitContent) {
         bool cover = row.firstPage == row.lastPage && IsBookView(params.displayMode) && row.firstPage == 1;
         for (int pageNo = row.firstPage; pageNo <= row.lastPage; pageNo++) {
             DocumentLayoutPage* page = layout.GetPage(pageNo);
-            SetPageDisplaySize(page, params.rotation, currPosY);
+            SetPageDisplaySize(page, currPosY);
             rowMaxPageDy = single ? page->pos.dy : std::max(rowMaxPageDy, page->pos.dy);
             if (single || row.isSpread) {
                 maxFullRowWidth = std::max(maxFullRowWidth, page->pos.dx);

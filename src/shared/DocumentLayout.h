@@ -16,6 +16,8 @@ struct DocumentLayoutPage {
     Rect pageOnScreen;
     float visibleRatio = 0;
     float zoomReal = 1;
+    // the page's own display rotation (DisplayModel::PageRotation)
+    int rotation = 0;
     bool isShown = false;
 };
 

@@ -10319,6 +10319,10 @@ static LRESULT FrameOnCommand(MainWindow* win, HWND hwnd, UINT msg, WPARAM wp, L
             ToggleMangaMode(win);
             break;
 
+        case CmdToggleAutoRotateWidePages:
+            ToggleAutoRotateWidePages();
+            break;
+
         case CmdToggleUniformPageWidth:
             ToggleUniformPageWidth(win);
             break;

@@ -1317,6 +1317,13 @@ TempStr PageInfoResultTemp(int* exitCodeOut) {
     for (TocItem* it = toc && toc->root ? toc->root->child : nullptr; it; it = it->next) {
         out.Append(fmt("%s:%d;", it->title, it->pageNo));
     }
+    out.Append(StrL(" rotations="));
+    for (int i = 1; i <= engine->PageCount(); i++) {
+        out.Append(fmt(i == 1 ? "%d" : ",%d", dm->PageRotation(i)));
+    }
+    PageInfo* cur = dm->GetPageInfo(dm->CurrentPageNo());
+    Rect onScreen = cur ? cur->pageOnScreen : Rect{};
+    out.Append(fmt(" screen=%d,%d", onScreen.dx, onScreen.dy));
     return finish(0, fmt("OK %s", ToStrTemp(out)));
 }
 

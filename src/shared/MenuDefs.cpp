@@ -232,6 +232,10 @@ MenuDef menuDefView[] = {
         CmdToggleMangaMode,
     },
     {
+        TrN("Auto-Rotate Wide Pages"),
+        CmdToggleAutoRotateWidePages,
+    },
+    {
         TrN("&Uniform Page Width"),
         CmdToggleUniformPageWidth,
     },

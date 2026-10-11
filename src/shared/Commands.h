@@ -333,8 +333,9 @@ enum {
     CmdInsertTextSnippet = 527,
     CmdToggleThumbnails = 528,
     CmdMergePDF = 529,
+    CmdToggleAutoRotateWidePages = 530,
 
-    CmdLast = 529,
+    CmdLast = 530,
     CmdFirstCustom = CmdLast + 100,
 
     // aliases, at the end to not mess ordering

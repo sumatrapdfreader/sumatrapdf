@@ -3371,7 +3371,7 @@ static bool WheelMayTurnPage(MainWindow* win) {
     if (win->wheelPageTurnTime.QuadPart != 0 && TimeSinceInMs(win->wheelPageTurnTime) < kWheelPageTurnGapMs) {
         return false;
     }
-    if (gRenderCache && !gRenderCache->Exists(dm, dm->CurrentPageNo(), dm->GetRotation())) {
+    if (gRenderCache && !gRenderCache->Exists(dm, dm->CurrentPageNo(), dm->PageRotation(dm->CurrentPageNo()))) {
         return false;
     }
     return true;

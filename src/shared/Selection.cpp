@@ -826,7 +826,7 @@ Pixmap* RenderSelectionsAsPixmap(DisplayModel* dm, const Vec<SelectionOnPage>& s
         }
         float zoom = dm->GetZoomReal(selection.pageNo);
         RectF rect = selection.rect;
-        RenderPageArgs args(selection.pageNo, zoom, dm->GetRotation(), &rect, RenderTarget::Export);
+        RenderPageArgs args(selection.pageNo, zoom, dm->PageRotation(selection.pageNo), &rect, RenderTarget::Export);
         Pixmap* pixmap = PixmapToBgra(dm->GetEngine()->RenderPage(args));
         if (!pixmap) {
             continue;
@@ -895,7 +895,7 @@ static bool CopySelectionImageToOpenClipboard(WindowTab* tab, bool appendOnly) {
         return false;
     }
     float zoom = dm->GetZoomReal(selOnPage->pageNo);
-    int rotation = dm->GetRotation();
+    int rotation = dm->PageRotation(selOnPage->pageNo);
     RenderPageArgs args(selOnPage->pageNo, zoom, rotation, &selOnPage->rect, RenderTarget::Export);
     Pixmap* bmp = dm->GetEngine()->RenderPage(args);
     if (!bmp) {

@@ -473,7 +473,7 @@ static bool IsTileVisible(DisplayModel* dm, int pageNo, TilePosition tile, float
     if (!engine || !pageInfo) {
         return false;
     }
-    int rotation = dm->GetRotation();
+    int rotation = dm->PageRotation(pageNo);
     float zoom = dm->GetZoomReal(pageNo);
     Rect r = pageInfo->pageOnScreen;
     Rect tileOnScreen = GetTileOnScreen(dm, pageNo, rotation, zoom, tile, r);
@@ -655,7 +655,7 @@ u16 RenderCache::GetTileRes(DisplayModel* dm, int pageNo) const {
     float zoom = dm->GetRenderZoom(pageNo);
     float zoomVirt = dm->GetZoomVirtual();
     Rect viewPort = dm->GetViewPort();
-    int rotation = dm->GetRotation();
+    int rotation = dm->PageRotation(pageNo);
     RectF pixelbox = engine->Transform(mediabox, pageNo, zoom, rotation);
     // pixelbox is in render pixels; the viewport is in layout pixels
     float scale = dm->renderScale > 0 ? dm->renderScale : 1;
@@ -768,7 +768,7 @@ void RenderCache::RequestRendering(DisplayModel* dm, int pageNo, TilePosition ti
         }
     }
 
-    int rotation = NormalizeRotation(dm->GetRotation());
+    int rotation = NormalizeRotation(dm->PageRotation(pageNo));
     float zoom = dm->GetRenderZoom(pageNo);
 
     for (int i = 0; i < nRenderThreads; i++) {
@@ -840,7 +840,6 @@ void RenderCache::RequestPredictiveRendering(DisplayModel* dm, int originPageNo,
         return;
     }
 
-    int rotation = NormalizeRotation(dm->GetRotation());
     // find the first page that actually needs rendering (skip cached/invalid)
     int i = 0;
     for (; i < nPages; i++) {
@@ -857,7 +856,7 @@ void RenderCache::RequestPredictiveRendering(DisplayModel* dm, int originPageNo,
         if (tile.res > 1) {
             continue;
         }
-        if (!Exists(dm, pageNo, rotation, zoom, &tile)) {
+        if (!Exists(dm, pageNo, dm->PageRotation(pageNo), zoom, &tile)) {
             break;
         }
     }
@@ -1166,7 +1165,7 @@ bool RenderCache::VisibleTargetTilesReady(DisplayModel* dm, Str* whyNot) {
         if (!dm->ShouldCacheRendering(pageNo)) {
             continue;
         }
-        int rotation = dm->GetRotation();
+        int rotation = dm->PageRotation(pageNo);
         float zoom = dm->GetZoomReal(pageNo);
         float renderZoom = dm->GetRenderZoom(pageNo);
         if (zoom <= 0) {
@@ -1442,7 +1441,7 @@ int RenderCache::PaintTile(
     Rect bounds, DisplayModel* dm, int pageNo, TilePosition tile, Rect tileOnScreen, bool renderMissing,
     bool* renderOutOfDateCue, bool* renderedReplacement) {
     float zoom = dm->GetRenderZoom(pageNo);
-    BitmapCacheEntry* entry = Find(dm, pageNo, dm->GetRotation(), zoom, &tile);
+    BitmapCacheEntry* entry = Find(dm, pageNo, dm->PageRotation(pageNo), zoom, &tile);
     int renderDelay = 0;
 
     if (!entry) {
@@ -1455,7 +1454,7 @@ int RenderCache::PaintTile(
             if (renderedReplacement) {
                 *renderedReplacement = true;
             }
-            entry = Find(dm, pageNo, dm->GetRotation(), kInvalidZoom, &tile);
+            entry = Find(dm, pageNo, dm->PageRotation(pageNo), kInvalidZoom, &tile);
         }
         renderDelay = GetRenderDelay(dm, pageNo, tile);
         if (renderMissing && kRenderDelayUndefined == renderDelay && !IsRenderQueueFull()) {
@@ -1546,7 +1545,7 @@ int RenderCache::Paint(
 #if defined(SUMATRA_NG)
         return kRenderDelayFailed;
 #else
-        int rotation = dm->GetRotation();
+        int rotation = dm->PageRotation(pageNo);
         float zoom = dm->GetZoomReal(pageNo);
         bounds = pi->pageOnScreen.Intersect(bounds);
 
@@ -1574,7 +1573,7 @@ int RenderCache::Paint(
 #endif
     }
 
-    int rotation = dm->GetRotation();
+    int rotation = dm->PageRotation(pageNo);
     float zoom = dm->GetZoomReal(pageNo);
     u16 targetRes = GetTileRes(dm, pageNo);
     u16 maxRes = GetMaxTileRes(dm, pageNo, rotation);

@@ -196,9 +196,44 @@ Kind DisplayModel::GetEngineType() const {
     return engine->kind;
 }
 
+static SizeF SizeAfterDisplayRotation(SizeF size, int rotation);
+
 /* current rotation selected by user */
 int DisplayModel::GetRotation() const {
     return rotation;
+}
+
+// ComicBookUI AutoRotateWidePages (issue #6305) applies to comics in a
+// single-page layout
+bool DisplayModel::AutoRotatesWidePages() const {
+    if (!engine || engine->kind != kindEngineComicBooks || !gSettings) {
+        return false;
+    }
+    return gSettings->comicBookUI.autoRotateWidePages && IsSingle(GetDisplayMode());
+}
+
+// The rotation a page is shown with. A page wider than it is tall (a
+// double-page spread) turns so its long side follows the window's: with the
+// document rotated 90 the spread shows upright, on a portrait window an
+// unrotated spread turns 90, its first page on top (issue #6305)
+int DisplayModel::PageRotation(int pageNo) const {
+    if (!AutoRotatesWidePages()) {
+        return rotation;
+    }
+    RectF box = PageMediaBoxForLayout(pageNo);
+    if (box.dx <= box.dy) {
+        return rotation;
+    }
+    SizeF shown = SizeAfterDisplayRotation(box.Size(), rotation);
+    bool pageWide = shown.dx > shown.dy;
+    bool viewWide = viewPort.dx > viewPort.dy;
+    if (pageWide == viewWide) {
+        return rotation;
+    }
+    if (rotation == 90 || rotation == 270) {
+        return 0;
+    }
+    return NormalizeRotation(rotation + (displayR2L ? -90 : 90));
 }
 
 Rect DisplayModel::GetViewPort() const {
@@ -669,9 +704,9 @@ SizeF DisplayModel::PageSizeAfterRotation(int pageNo, bool fitToContent, float c
     // load them. Visible pages are measured later in
     // EnsureMediaBoxesForVisiblePages().
     if (useLazyMediaBoxes && !IsMediaBoxKnown(pageInfo->mediaBox)) {
-        return SizeAfterDisplayRotation(box.Size(), rotation);
+        return SizeAfterDisplayRotation(box.Size(), PageRotation(pageNo));
     }
-    return engine->Transform(box, pageNo, 1.0, rotation).Size();
+    return engine->Transform(box, pageNo, 1.0, PageRotation(pageNo)).Size();
 }
 
 /* given 'columns' and an absolute 'pageNo', return the number of the first
@@ -1446,9 +1481,9 @@ float DisplayModel::ZoomRealFromVirtualForPage(float zoomVirtual, int pageNo) co
             }
 
             RectF mbox = PageMediaBoxForLayout(i);
-            RectF pageBox = engine->Transform(mbox, i, 1.0, rotation);
+            RectF pageBox = engine->Transform(mbox, i, 1.0, PageRotation(i));
             RectF padded = PadContentBox(pageInfo->contentBox, mbox, ContentFitPadding(zoomVirtual));
-            RectF contentBox = engine->Transform(padded, i, 1.0, rotation);
+            RectF contentBox = engine->Transform(padded, i, 1.0, PageRotation(i));
             if (contentBox.IsEmpty()) {
                 contentBox = pageBox;
             }
@@ -1811,6 +1846,7 @@ void DisplayModel::Relayout(float newZoomVirtual, int newRotation) {
             // EnsureMediaBoxesForVisiblePages() fixes it up once it's on screen
             pi->usedEstimatedMediaBox = !IsMediaBoxKnown(pi->mediaBox);
             layoutPage->zoomReal = GetZoomReal(pageNo);
+            layoutPage->rotation = PageRotation(pageNo);
         }
 
         DocumentLayoutParams params;
@@ -2159,9 +2195,9 @@ Point DisplayModel::CvtToScreen(int pageNo, PointF pt) {
 
     float zoom = getZoomSafe(this, pageNo, pageInfo);
 
-    PointF p = engine->Transform(pt, pageNo, zoom, rotation);
+    PointF p = engine->Transform(pt, pageNo, zoom, PageRotation(pageNo));
     RectF pageBox = PageMediaBoxForLayout(pageNo);
-    PointF origin = engine->Transform(pageBox, pageNo, zoom, rotation).TL();
+    PointF origin = engine->Transform(pageBox, pageNo, zoom, PageRotation(pageNo)).TL();
     p.x -= origin.x;
     p.y -= origin.y;
     // don't add the full 0.5 for rounding to account for precision errors
@@ -2194,11 +2230,11 @@ PointF DisplayModel::CvtFromScreen(Point pt, int pageNo) {
     Rect r = pageInfo->pageOnScreen;
     PointF p = PointF((float)pt.x - 0.499f - (float)r.x, (float)pt.y - 0.499f - (float)r.y);
     RectF pageBox = PageMediaBoxForLayout(pageNo);
-    PointF origin = engine->Transform(pageBox, pageNo, zoom, rotation).TL();
+    PointF origin = engine->Transform(pageBox, pageNo, zoom, PageRotation(pageNo)).TL();
     p.x += origin.x;
     p.y += origin.y;
 
-    return engine->Transform(p, pageNo, zoom, rotation, true);
+    return engine->Transform(p, pageNo, zoom, PageRotation(pageNo), true);
 }
 
 RectF DisplayModel::CvtFromScreen(Rect r, int pageNo) {
@@ -2403,7 +2439,7 @@ RectF DisplayModel::GetContentBox(int pageNo, float pad) const {
     if (zoom <= 0) {
         zoom = zoomReal;
     }
-    return engine->Transform(cbox, pageNo, zoom, rotation);
+    return engine->Transform(cbox, pageNo, zoom, PageRotation(pageNo));
 }
 
 /* get the (screen) coordinates of the point where a page's actual
@@ -2990,7 +3026,8 @@ float DisplayModel::MaxZoomForDocument() const {
         RectF box = PageMediaBoxForLayout(pageNo);
         float dx = box.dx;
         float dy = box.dy;
-        if (rotation == 90 || rotation == 270) {
+        int pageRotation = PageRotation(pageNo);
+        if (pageRotation == 90 || pageRotation == 270) {
             std::swap(dx, dy);
         }
         totalDy += dy;
@@ -3586,7 +3623,7 @@ void DisplayModel::ScrollTo(int pageNo, RectF rect, float zoom) {
 
     if (rect.IsEmpty() || (rect.dx == kDestUseDefault && rect.dy == kDestUseDefault)) {
         // PDF: /XYZ, /Fit, /FitB — scroll to rect.TL() (defaults = page top)
-        PointF scrollD = engine->Transform(rect.TL(), pageNo, pageZoom, rotation);
+        PointF scrollD = engine->Transform(rect.TL(), pageNo, pageZoom, PageRotation(pageNo));
         scroll = ToPoint(scrollD);
 
         // Unspecified X: keep horizontal scroll.
@@ -3607,11 +3644,11 @@ void DisplayModel::ScrollTo(int pageNo, RectF rect, float zoom) {
         }
     } else if (rect.dx != kDestUseDefault && rect.dy != kDestUseDefault) {
         // PDF: /FitR left bottom right top
-        RectF rectD = engine->Transform(rect, pageNo, pageZoom, rotation);
+        RectF rectD = engine->Transform(rect, pageNo, pageZoom, PageRotation(pageNo));
         scroll = ToPoint(rectD.TL());
     } else if (rect.y != kDestUseDefault) {
         // PDF: /FitH top  or  /FitBH top
-        PointF scrollD = engine->Transform(rect.TL(), pageNo, pageZoom, rotation);
+        PointF scrollD = engine->Transform(rect.TL(), pageNo, pageZoom, PageRotation(pageNo));
         scroll.y = (int)scrollD.y;
     }
     // a top low on (or below) a tall page would make the next page most visible:

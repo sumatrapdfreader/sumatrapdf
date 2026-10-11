@@ -626,7 +626,7 @@ TempStr SaveSelectionAsImageResultTemp(Str destPath, int dpi, int pageNo, int x,
     RectF rect{(float)x, (float)y, (float)dx, (float)dy};
     int w = 0;
     int h = 0;
-    if (!SavePageRectAsImage(engine, dm->GetRotation(), pageNo, rect, withExt, (float)dpi, &w, &h)) {
+    if (!SavePageRectAsImage(engine, dm->PageRotation(pageNo), pageNo, rect, withExt, (float)dpi, &w, &h)) {
         return finish(1, str::DupTemp(StrL("ERROR save-failed")));
     }
     return finish(0, fmt("OK w=%d h=%d path=%s", w, h, withExt));

@@ -177,16 +177,17 @@ static const FieldInfo gComicBookUIFields[] = {
     {offsetof(ComicBookUI, windowBgCol), SettingType::Color, (intptr_t)""},
     {offsetof(ComicBookUI, limitToWindowWidth), SettingType::Bool, false},
     {offsetof(ComicBookUI, limitToWindowHeight), SettingType::Bool, false},
+    {offsetof(ComicBookUI, autoRotateWidePages), SettingType::Bool, false},
     {offsetof(ComicBookUI, defaultDisplayMode), SettingType::String, (intptr_t)""},
     {offsetof(ComicBookUI, defaultZoom), SettingType::String, (intptr_t)""},
     {offsetof(ComicBookUI, landscapeAsSpread), SettingType::Bool, true},
 };
 static const StructInfo gComicBookUIInfo = {
     sizeof(ComicBookUI),
-    9,
+    10,
     gComicBookUIFields,
-    "WindowMargin\0PageSpacing\0CbxMangaMode\0WindowBgCol\0LimitToWindowWidth\0LimitToWindowHeight\0DefaultDisplayMode"
-    "\0DefaultZoom\0LandscapeAsSpread",
+    "WindowMargin\0PageSpacing\0CbxMangaMode\0WindowBgCol\0LimitToWindowWidth\0LimitToWindowHeight\0AutoRotateWidePages"
+    "\0DefaultDisplayMode\0DefaultZoom\0LandscapeAsSpread",
     "top, right, bottom and left margin (in that order) between window and document\0horizontal and vertical gap "
     "between pages (between columns in facing/book view, between rows in continuous view)\0if true, documents that "
     "don't state their own reading direction default to manga mode, i.e. right to left. A document that states a "
@@ -194,12 +195,14 @@ static const StructInfo gComicBookUIInfo = {
     "for\0if given, sets the canvas background color for comic book files\0if true, absolute zoom never makes a page "
     "wider than the window (each page is capped at Fit Width). Useful for comics/manga with double-page spreads that "
     "are much wider than regular pages (issue #2197)\0if true, absolute zoom never makes a page taller than the window "
-    "(each page is capped at Fit Height)\0default page layout for comic books; empty uses the global "
-    "DefaultDisplayMode. valid values: automatic, single page, facing, book view, continuous, continuous facing, "
-    "continuous book view\0default zoom for comic books; empty uses fit page. valid values: fit page, fit width, fit "
-    "height, fit content, fit visible, shrink to fit or percent like 100%\0if true, in facing and book view a "
-    "landscape page (wider than tall) occupies the whole two-page row instead of pairing with the next page. For "
-    "comics that store double-page spreads as one image (issues #1324, #872)",
+    "(each page is capped at Fit Height)\0if true, in single-page layouts a page wider than it is tall (a double-page "
+    "spread) is rotated so its long side follows the window's, and Fit Page shows it as large as the other pages. With "
+    "the document rotated 90 degrees the spread shows upright (issue #6305)\0default page layout for comic books; "
+    "empty uses the global DefaultDisplayMode. valid values: automatic, single page, facing, book view, continuous, "
+    "continuous facing, continuous book view\0default zoom for comic books; empty uses fit page. valid values: fit "
+    "page, fit width, fit height, fit content, fit visible, shrink to fit or percent like 100%\0if true, in facing and "
+    "book view a landscape page (wider than tall) occupies the whole two-page row instead of pairing with the next "
+    "page. For comics that store double-page spreads as one image (issues #1324, #872)",
     false};
 
 static const FieldInfo gImageUIFields[] = {

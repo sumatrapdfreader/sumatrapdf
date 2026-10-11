@@ -524,6 +524,14 @@ const comicBookUI: Field[] = [
     "if true, absolute zoom never makes a page taller than the window (each page is capped at Fit Height)",
   ).ver("3.7"),
   field(
+    "AutoRotateWidePages",
+    Bool,
+    false,
+    "if true, in single-page layouts a page wider than it is tall (a double-page spread) is rotated so " +
+      "its long side follows the window's, and Fit Page shows it as large as the other pages. " +
+      "With the document rotated 90 degrees the spread shows upright (issue #6305)",
+  ).ver("3.7"),
+  field(
     "DefaultDisplayMode",
     Str,
     "",

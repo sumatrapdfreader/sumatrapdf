@@ -164,7 +164,7 @@ static void SearchGoogleLensSrc(WindowTab* tab, GoogleLensSrc src, IPageElement*
         if (dm->ValidPageNo(pageNo)) {
             float zoom = dm->GetZoomReal(pageNo);
             RectF pageRect = dm->GetEngine()->PageMediabox(pageNo);
-            RenderPageArgs args(pageNo, zoom, dm->GetRotation(), &pageRect, RenderTarget::Export);
+            RenderPageArgs args(pageNo, zoom, dm->PageRotation(pageNo), &pageRect, RenderTarget::Export);
             bitmap = dm->GetEngine()->RenderPage(args);
             if (bitmap && bitmap->format != PixmapFormat::BGRA8) {
 #if OS_WIN

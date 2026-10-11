@@ -179,6 +179,8 @@ struct DisplayModel : DocController {
     void StartHeadingToc(HeadingTocStart start);
 
     int GetRotation() const;
+    int PageRotation(int pageNo) const;
+    bool AutoRotatesWidePages() const;
     float GetZoomReal(int pageNo) const;
     float GetRenderZoom(int pageNo) const;
     float ComputeZoomReal(int pageNo) const;
