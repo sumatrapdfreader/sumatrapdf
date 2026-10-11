@@ -96,8 +96,6 @@ void ArmReadingTimer(MainWindow* win, WindowTab* tab) {
     SetTimer(win->hwndCanvas, kReadingAutoScrollTimerID, USER_TIMER_MINIMUM, nullptr);
 }
 
-ReadingAutoScrollBar* BarEnsure(MainWindow* win);
-
 // Seconds since the previous tick of this run, 0 on its first: orig times its
 // own timer.
 float ReadingTickSeconds(WindowTab* tab, int) {

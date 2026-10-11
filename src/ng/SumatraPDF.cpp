@@ -588,8 +588,6 @@ void ForgetFileFromFrequentlyRead(MainWindow* win, Str filePath) {
     win->RedrawAll(true);
 }
 
-SeqStrings gScrollbarModeNames = "windows\0smart\0overlay\0hidden\0";
-
 int ScrollbarModeFromPrefs() {
     int idx = SeqStrIndexIS(gScrollbarModeNames, gSettings->scrollbars);
     if (idx < 0) {

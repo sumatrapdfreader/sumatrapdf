@@ -21,14 +21,6 @@
 #include "Notifications.h"
 #include "NotificationsCommon.h"
 
-Kind kNotifCursorPos = "cursorPosHelper";
-Kind kNotifActionResponse = "responseToAction";
-Kind kNotifPageInfo = "pageInfoHelper";
-Kind kNotifAdHoc = "notifAdHoc";
-Kind kNotifLazyLayout = "notifLazyLayout";
-Kind kNotifChapterLayout = "chapterLayout";
-Kind kNotifZoomOrView = "zoomOrView";
-
 static Vec<NotificationWnd*> gNotifications;
 static Vec<Str> gDelayedNotifications;
 static u32 gNextNotifKey = 1;

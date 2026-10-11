@@ -76,8 +76,6 @@ void ArmReadingTimer(MainWindow*, WindowTab* tab) {
 
 void KillReadingTimer(MainWindow*) {}
 
-ReadingAutoScrollBar* BarEnsure(MainWindow* win);
-
 // Seconds since the previous tick of this run, 0 on its first: the shell's
 // tick hands us the elapsed time. lastQpc == 0 marks the first tick.
 float ReadingTickSeconds(WindowTab* tab, int elapsedMs) {

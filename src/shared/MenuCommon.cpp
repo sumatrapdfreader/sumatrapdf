@@ -186,3 +186,8 @@ bool CommandUsesContextMenuPoint(int cmdId) {
            cmdId == CmdSignWithImage || cmdId == CmdPasteAnnotation || cmdId == CmdCopyAnnotation ||
            cmdId == CmdCutAnnotation;
 }
+
+// note: IDM_VIEW_SINGLE_PAGE - IDM_VIEW_CONTINUOUS and also
+//       CmdZoomFIT_PAGE - CmdZoomCUSTOM must be in a continuous range!
+static_assert(CmdViewLayoutLast - CmdViewLayoutFirst == 4, "view layout ids are not in a continuous range");
+static_assert(CmdZoomLast - CmdZoomFirst == 19, "zoom ids are not in a continuous range");

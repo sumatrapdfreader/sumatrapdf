@@ -95,3 +95,15 @@ bool gNotificationsEnabled = true;
 bool AreNotificationsEnabled() {
     return gNotificationsEnabled;
 }
+
+// notification groups both apps use
+Kind kNotifZoomOrView = "zoomOrView";
+Kind kNotifCursorPos = "cursorPosHelper";
+Kind kNotifActionResponse = "responseToAction";
+Kind kNotifPageInfo = "pageInfoHelper";
+// can have multiple of those
+Kind kNotifAdHoc = "notifAdHoc";
+// debug-only: continuous layout re-done because newly visible pages got measured
+Kind kNotifLazyLayout = "notifLazyLayout";
+// debug-only: background chapter layout of an ebook
+Kind kNotifChapterLayout = "chapterLayout";

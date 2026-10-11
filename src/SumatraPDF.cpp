@@ -1183,8 +1183,6 @@ static void HideCanvasScrollbars(MainWindow* win) {
     HwndInvalidate(hwnd);
 }
 
-SeqStrings gScrollbarModeNames = "windows\0smart\0overlay\0hidden\0";
-
 int ScrollbarModeFromPrefs() {
     // embedded hosts get native scrollbars; override here, not in gSettings,
     // so the user's choice isn't written back to the settings file

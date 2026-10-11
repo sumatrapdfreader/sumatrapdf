@@ -2316,6 +2316,9 @@ void ApplyRedactionsInTab(WindowTab* tab) {
     ShowTemporaryNotification(win, Tr("Redactions applied."), kNotif5SecsTimeOut);
 }
 
+// the values of the Scrollbars setting, in ScrollbarMode order
+SeqStrings gScrollbarModeNames = "windows\0smart\0overlay\0hidden\0";
+
 // in plugin mode, the window's frame isn't drawn and closing and
 // fullscreen are disabled, so that SumatraPDF can be displayed
 // embedded (e.g. in a web browser)
