@@ -2,3 +2,4 @@
    License: GPLv3 */
 TempStr ChmMimeFromPathTemp(Str path, Str data);
 TempStr JsEscapeTemp(Str s);
+extern const char* kFindInPageJs;
