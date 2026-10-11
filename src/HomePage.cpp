@@ -177,11 +177,12 @@ static AboutRow gAboutRows[] = {
      StrL("https://github.com/sumatrapdfreader/sumatrapdf/commit/" GIT_COMMIT_ID_STR)},
 #endif
 #ifdef PRE_RELEASE_VER
-    {StrL("a note"), StrL("Pre-release version, for testing only!"), {}},
+    {StrL("a note"), StrL("Pre-release version"), {}},
 #endif
 #if IS_DEBUG
     {StrL("a note"), StrL("Debug version, for testing only!"), {}},
 #endif
+    {StrL("more software by me"), StrL("Sumatra File Manager"), StrL("https://sumatrafilemanager.com")},
     {{}, {}, {}}};
 
 // The About screen's two text columns: a Table (ILayout) whose left column
@@ -466,7 +467,7 @@ void AboutCtrl::UpdateLayout(Rect clientRc) {
     Size tableSize = table->Layout(ExpandInf());
 
     Size btnSz{};
-    int gap = DpiScale(12);
+    int gap = DpiScale(6);
     int padBottom = DpiScale(kAboutRectPadding);
     int copyBlockDy = 0;
     if (showCopy) {

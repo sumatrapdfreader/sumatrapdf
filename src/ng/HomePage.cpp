@@ -130,6 +130,7 @@ static AboutRow gAboutRows[] = {
 #if IS_DEBUG
     {StrL("a note"), StrL("Debug version, for testing only!"), {}},
 #endif
+    {StrL("more software by me"), StrL("Sumatra File Manager"), StrL("https://sumatrafilemanager.com")},
     {{}, {}, {}}};
 
 static TempStr GetAppVersionTemp() {
@@ -1058,12 +1059,12 @@ static gp::El* AboutBoxEl(MainWindow* win, gp::Ctx* cx, bool withCopyBtn) {
                    ->Child(SumatraLogoEl(cx, (float)kSumatraTxtFontSize)));
     box->Child(gp::Div(cx->a)->PadT(6)->Child(AboutTableEl(win, cx)));
     if (withCopyBtn) {
-        box->Child(gp::Div(cx->a)->PadT(12)->Child(gpc::Button::New(cx, GStrL("about-copy-info"))
-                                                       ->Label(ToGpui(Tr("Copy program and machine info to clipboard")))
-                                                       ->Outline()
-                                                       ->WithSize(gp::UiSize::Small)
-                                                       ->OnClick(gp::ListenTo(Ui(win)->view, &HomeView::OnCopyInfo))
-                                                       ->IntoEl()));
+        box->Child(gp::Div(cx->a)->PadT(6)->Child(gpc::Button::New(cx, GStrL("about-copy-info"))
+                                                      ->Label(ToGpui(Tr("Copy program and machine info to clipboard")))
+                                                      ->Outline()
+                                                      ->WithSize(gp::UiSize::Small)
+                                                      ->OnClick(gp::ListenTo(Ui(win)->view, &HomeView::OnCopyInfo))
+                                                      ->IntoEl()));
     }
     return box;
 }
@@ -1143,7 +1144,7 @@ constexpr int kAboutMarginDx = 10;
 constexpr int kAboutBoxMarginDy = 6;
 constexpr int kAboutTxtDy = 6;
 constexpr int kAboutRectPadding = 8;
-constexpr int kAboutBtnGap = 12;
+constexpr int kAboutBtnGap = 6;
 constexpr int kAboutMaxRows = 16;
 // orig's themed button: the text in the 12 px app font plus 2 x 12 by 2 x 5
 constexpr float kAboutBtnFontPx = 12;
