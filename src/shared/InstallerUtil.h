@@ -18,6 +18,7 @@ void AddInstallDirToPath(bool allUsers, Str installDir);
 TempStr GetInstalledExePathTemp(Flags* cli);
 void StartSumatra();
 TempStr GetDefaultInstallationDirTemp(bool forAllUsers, bool ignorePrev);
+TempStr InstallDirForAllUsersTemp(Str current, bool forAllUsers);
 void RelaunchMaybeElevatedFromTempDirectory(Flags* cli);
 void InitSelfDelete();
 void RemoveInstallDirFromPath(bool allUsers, Str installDir);

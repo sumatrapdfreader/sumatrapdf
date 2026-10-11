@@ -28,6 +28,8 @@
 #include "CommandAvailability.h"
 #include "AppSettings.h"
 #include "Flags.h"
+#include "Installer.h"
+#include "InstallerUtil.h"
 #include "SumatraTest.h"
 #include "SumatraPDF.h"
 #include "MainWindow.h"
@@ -639,6 +641,7 @@ enum class ControlCmd : u16 {
     TestFrameNcStrips = 114,
     TestMergePdf = 115,
     TestWheelWhileClosing = 116,
+    TestQuitProcess = 130,
 };
 
 bool ParseArg(PacketReader& r, ControlArg** argOut) {
@@ -1123,6 +1126,17 @@ static void ExecuteControlRequest(ControlRequest* req) {
         // What InitializePolicies actually granted. Used by the restrict.ini
         // GHSA test so it does not have to detect an IFileOpenDialog window
         // (that dialog is often hosted out-of-process and misses a 3s poll).
+        case ControlCmd::TestQuitProcess: {
+            i32 pid = 0;
+            if (!IntArg(req, 0, pid) || pid <= 0) {
+                AppendError(req, StrL("TestQuitProcess expects a process id"));
+                break;
+            }
+            bool gone = KillProcWithId((DWORD)pid, true);
+            AppendTestResult(req, gone ? 0 : 1, gone ? StrL("OK") : StrL("still running"));
+            break;
+        }
+
         case ControlCmd::TestGetPolicies: {
             str::Builder out;
             out.Append(fmt("restricted=%d\n", HasPermission(Perm::RestrictedUse) ? 1 : 0));

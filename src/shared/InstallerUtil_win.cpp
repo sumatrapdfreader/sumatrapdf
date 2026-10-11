@@ -224,14 +224,84 @@ bool IsProcWithModule(DWORD processId, Str modulePath) {
     return false;
 }
 
+// WM_COPYDATA id of a DDE command string, see SearchAndDDE.h
+constexpr int kCopyDataDdeW = 0x44646557;
+constexpr DWORD kQuitRequestTimeoutMs = 5 * 1000;
+
+struct ProcWindows {
+    DWORD pid = 0;
+    Vec<HWND> hwnds;
+};
+
+static BOOL CALLBACK CollectProcWindows(HWND hwnd, LPARAM lp) {
+    auto* pw = (ProcWindows*)lp;
+    DWORD pid = 0;
+    GetWindowThreadProcessId(hwnd, &pid);
+    if (pid == pw->pid && IsWindowVisible(hwnd)) {
+        VecAppend(pw->hwnds, hwnd);
+    }
+    return TRUE;
+}
+
+static bool IsSumatraProcess(HANDLE hProcess) {
+    WCHAR path[MAX_PATH]{};
+    DWORD n = dimof(path);
+    if (!QueryFullProcessImageNameW(hProcess, 0, path, &n)) {
+        return false;
+    }
+    TempStr name = path::GetBaseNameTemp(ToUtf8Temp(WStr(path, (int)n)));
+    return str::EqI(name, Str(kExeName));
+}
+
+// A running SumatraPDF is asked to quit the way File > Exit does, so it saves
+// its session first (issue #4291). [CmdExit] over WM_COPYDATA needs 3.6+;
+// older versions get WM_CLOSE on their windows. true once it exited.
+static bool QuitSumatra(HANDLE hProcess, DWORD pid) {
+    if (!IsSumatraProcess(hProcess)) {
+        return false;
+    }
+    ProcWindows pw;
+    pw.pid = pid;
+    EnumWindows(CollectProcWindows, (LPARAM)&pw);
+    if (len(pw.hwnds) == 0) {
+        return false;
+    }
+
+    WStr cmd = WStrL(L"[CmdExit]");
+    COPYDATASTRUCT cds{};
+    cds.dwData = kCopyDataDdeW;
+    cds.cbData = (DWORD)((len(cmd) + 1) * sizeof(WCHAR));
+    cds.lpData = (void*)cmd.s;
+    bool accepted = false;
+    for (HWND hwnd : pw.hwnds) {
+        DWORD_PTR res = 0;
+        SendMessageTimeoutW(hwnd, WM_COPYDATA, 0, (LPARAM)&cds, SMTO_ABORTIFHUNG, kQuitRequestTimeoutMs, &res);
+        if (res) {
+            accepted = true;
+            break;
+        }
+    }
+    logf("QuitSumatra: pid %d, %d windows, [CmdExit] %s\n", (int)pid, len(pw.hwnds),
+         accepted ? StrL("accepted") : StrL("ignored, sending WM_CLOSE"));
+    if (!accepted) {
+        for (HWND hwnd : pw.hwnds) {
+            PostMessageW(hwnd, WM_CLOSE, 0, 0);
+        }
+    }
+    return WaitForSingleObject(hProcess, kTenSecondsInMs) == WAIT_OBJECT_0;
+}
+
 bool KillProcWithId(DWORD processId, bool waitUntilTerminated) {
     logf("KillProcWithId(processId=%d)\n", (int)processId);
     BOOL inheritHandle = FALSE;
-    // Note: do I need PROCESS_QUERY_INFORMATION and PROCESS_VM_READ?
-    DWORD dwAccess = PROCESS_QUERY_INFORMATION | PROCESS_VM_READ | PROCESS_TERMINATE;
+    DWORD dwAccess = PROCESS_QUERY_INFORMATION | PROCESS_VM_READ | PROCESS_TERMINATE | SYNCHRONIZE;
     AutoCloseHandle hProcess = OpenProcess(dwAccess, inheritHandle, processId);
     if (!hProcess.IsValid()) {
         return false;
+    }
+
+    if (QuitSumatra(hProcess, processId)) {
+        return true;
     }
 
     BOOL killed = TerminateProcess(hProcess, 0);
@@ -459,6 +529,17 @@ TempStr GetDefaultInstallationDirTemp(bool forAllUsers, bool ignorePrev) {
     TempStr dir = path::JoinTemp(dirUser, StrL(kAppName));
     logf("  using '%s' from GetSpecialFolderTemp(CSIDL_LOCAL_APPDATA)\n", dir);
     return dir;
+}
+
+// The directory to show after "Install for all users" was toggled: only the
+// default of the previous state is swapped for the default of the new one,
+// a directory the user typed stays (issue #4291)
+TempStr InstallDirForAllUsersTemp(Str current, bool forAllUsers) {
+    TempStr prevDefault = GetDefaultInstallationDirTemp(!forAllUsers, true);
+    if (len(current) > 0 && !str::EqI(current, prevDefault)) {
+        return str::DupTemp(current);
+    }
+    return GetDefaultInstallationDirTemp(forAllUsers, true);
 }
 
 static TempStr GetUninstallerPathInTemp() {

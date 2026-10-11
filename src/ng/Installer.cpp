@@ -237,7 +237,7 @@ static void ForAllUsersStateChanged(InstallerWnd* wnd) {
     bool forAllUsers = wnd->forAllUsers;
     logf("ForAllUsersStateChanged() to %d\n", (int)forAllUsers);
     cli->allUsers = forAllUsers;
-    auto dir = GetDefaultInstallationDirTemp(cli->allUsers, true);
+    TempStr dir = InstallDirForAllUsersTemp(InstallDirFromUiTemp(), forAllUsers);
     str::ReplaceWithCopy(&cli->installDir, dir);
     if (wnd->editInstallationDir) {
         gp::InputSetValue(wnd->editInstallationDir, ToGpui(cli->installDir));
@@ -384,6 +384,8 @@ gp::El* BuildInstallerMessage(gp::Ctx* cx) {
 // WM_APP + 44. tests/installer-desktop-shortcut.ts posts this at the frame
 // to open the option rows. gpui uses WM_APP + 71 for its own notify.
 constexpr UINT kInstallerToggleOptions = WM_APP + 44;
+// WM_APP + 45. tests/issue-4291.ts posts this to flip "Install for all users"
+constexpr UINT kInstallerToggleAllUsers = WM_APP + 45;
 constexpr const WCHAR* kInstallerProbeClass = L"SUMATRA_INSTALLER_PROBE";
 
 static HWND gInstallerHwnd = nullptr;
@@ -441,12 +443,20 @@ static void InstallerProbeRefresh() {
         AppendCheck(out, gWnd->forAllUsers, gWnd->allUsersBounds, Tr("Install for all users"));
         AppendCheck(out, gWnd->desktopShortcut, gWnd->desktopBounds, Tr("Install &desktop shortcut"));
     }
+    out.Append(StrL("|dir|"));
+    out.Append(InstallDirFromUiTemp());
     SetWindowTextW(gProbe, ToWStrTemp(ToStrTemp(out)).s);
 }
 
 static LRESULT CALLBACK InstallerSubclass(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp, UINT_PTR, DWORD_PTR) {
     if (msg == kInstallerToggleOptions && gWnd) {
         gWnd->showOptions = !gWnd->showOptions;
+        gp::AppInvalidate(gWnd->win);
+        return 0;
+    }
+    if (msg == kInstallerToggleAllUsers && gWnd) {
+        gWnd->forAllUsers = !gWnd->forAllUsers;
+        ForAllUsersStateChanged(gWnd);
         gp::AppInvalidate(gWnd->win);
         return 0;
     }

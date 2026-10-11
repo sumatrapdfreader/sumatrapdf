@@ -163,25 +163,7 @@ bool KillProcWithIdAndModule(DWORD processId, Str modulePath, bool waitUntilTerm
         return false;
     }
     logf("KillProcWithIdAndModule() processId=%d, modulePath=%s\n", processId, modulePath);
-
-    BOOL inheritHandle = FALSE;
-    // Note: do I need PROCESS_QUERY_INFORMATION and PROCESS_VM_READ?
-    DWORD dwAccess = PROCESS_QUERY_INFORMATION | PROCESS_VM_READ | PROCESS_TERMINATE;
-    AutoCloseHandle hProcess = OpenProcess(dwAccess, inheritHandle, processId);
-    if (!hProcess.IsValid()) {
-        return false;
-    }
-
-    BOOL killed = TerminateProcess(hProcess, 0);
-    if (!killed) {
-        return false;
-    }
-
-    if (waitUntilTerminated) {
-        WaitForSingleObject(hProcess, kTenSecondsInMs);
-    }
-
-    return true;
+    return KillProcWithId(processId, waitUntilTerminated);
 }
 
 // Kill processes that have any of our install-dir modules loaded:

@@ -49,6 +49,10 @@
 #include "Menu.h"
 #include "AppSettings.h"
 #include "Flags.h"
+#if OS_WIN
+#include "Installer.h"
+#include "InstallerUtil.h"
+#endif
 #include "SumatraPDF.h"
 #include "MainWindow.h"
 #include "WindowTab.h"
@@ -788,6 +792,8 @@ enum class ControlCmd : u16 {
     // ng: DDE execute grammar ([GotoPageWord], [Open], ...). Orig receives
     // these as WM_COPYDATA; macOS has no such message.
     TestDdeExecute = 129,
+    // the installer's KillProcWithId on a process id (Windows only)
+    TestQuitProcess = 130,
 };
 
 bool ParseArg(PacketReader& r, ControlArg** argOut) {
@@ -2025,6 +2031,19 @@ static void ExecuteControlRequest(ControlRequest* req) {
             AppendTestResult(req, exitCode, res);
             break;
         }
+
+#if OS_WIN
+        case ControlCmd::TestQuitProcess: {
+            i32 pid = 0;
+            if (!IntArg(req, 0, pid) || pid <= 0) {
+                AppendError(req, StrL("TestQuitProcess expects a process id"));
+                break;
+            }
+            bool gone = KillProcWithId((DWORD)pid, true);
+            AppendTestResult(req, gone ? 0 : 1, gone ? StrL("OK") : StrL("still running"));
+            break;
+        }
+#endif
 
         case ControlCmd::TestGetPolicies: {
             str::Builder out;

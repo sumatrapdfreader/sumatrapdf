@@ -124,6 +124,9 @@ export enum ControlCommand {
   TestToolWindow = 125,
   // ng only: page context menu at a canvas point.
   TestContextMenuAt = 127,
+  // the installer's KillProcWithId on a process id: asks a SumatraPDF to quit,
+  // terminates whatever is left
+  TestQuitProcess = 130,
 }
 
 export type ControlArg = number | string | Uint8Array | ControlArg[];
@@ -712,6 +715,12 @@ export class ControlClient {
     if (code !== 0) {
       throw new Error(`TestHiddenTabGoToPage failed: ${raw || code}`);
     }
+  }
+
+  // stops another process the way the installer does; true once it is gone
+  async quitProcess(pid: number): Promise<boolean> {
+    const res = await this.request(ControlCommand.TestQuitProcess, [pid]);
+    return typeof res[0] === "number" && res[0] === 0;
   }
 
   async selectionSurvivesRenumber(
