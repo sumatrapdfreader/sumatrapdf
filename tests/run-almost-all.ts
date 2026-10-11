@@ -412,6 +412,7 @@ export const tests: NamedTest[] = [
   // first: it drives the home page, whose thumbnail selection follows the
   // mouse, so it is the one test that cares what the machine was doing before
   ["issue-5978", issue5978],
+  ["issue-4291", issue4291],
   ["issue-2423", issue2423],
   ["jpeg-xl-pdf", jpegXlPdf],
   ["annotation clipboard tests", annotationClipboardTests],
@@ -451,7 +452,6 @@ export const tests: NamedTest[] = [
   ["issue-6250", issue6250],
   ["issue-6252", issue6252],
   ["installer-desktop-shortcut", installerDesktopShortcut],
-  ["issue-4291", issue4291],
   ["issue-6271", issue6271],
   ["issue-3755", issue3755],
   ["issue-5803", issue5803],

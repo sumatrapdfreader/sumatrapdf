@@ -231,39 +231,51 @@ constexpr DWORD kQuitRequestTimeoutMs = 5 * 1000;
 struct ProcWindows {
     DWORD pid = 0;
     Vec<HWND> hwnds;
+    bool hasFrame = false;
 };
 
 static BOOL CALLBACK CollectProcWindows(HWND hwnd, LPARAM lp) {
     auto* pw = (ProcWindows*)lp;
     DWORD pid = 0;
     GetWindowThreadProcessId(hwnd, &pid);
-    if (pid == pw->pid && IsWindowVisible(hwnd)) {
-        VecAppend(pw->hwnds, hwnd);
+    if (pid != pw->pid || !IsWindowVisible(hwnd)) {
+        return TRUE;
     }
+    VecAppend(pw->hwnds, hwnd);
+#if !defined(SUMATRA_NG)
+    WCHAR cls[64]{};
+    GetClassNameW(hwnd, cls, dimof(cls));
+    if (wstr::Eq(WStr(cls), WStr(kFrameClassName))) {
+        pw->hasFrame = true;
+    }
+#endif
     return TRUE;
 }
 
-static bool IsSumatraProcess(HANDLE hProcess) {
+// named like the installed exe or like us, or showing our frame window: a
+// renamed portable copy or the static build is as much a SumatraPDF
+static bool IsSumatraProcess(HANDLE hProcess, const ProcWindows& pw) {
+    if (pw.hasFrame) {
+        return true;
+    }
     WCHAR path[MAX_PATH]{};
     DWORD n = dimof(path);
     if (!QueryFullProcessImageNameW(hProcess, 0, path, &n)) {
         return false;
     }
     TempStr name = path::GetBaseNameTemp(ToUtf8Temp(WStr(path, (int)n)));
-    return str::EqI(name, Str(kExeName));
+    TempStr selfName = path::GetBaseNameTemp(GetSelfExePathTemp());
+    return str::EqI(name, Str(kExeName)) || str::EqI(name, selfName);
 }
 
 // A running SumatraPDF is asked to quit the way File > Exit does, so it saves
 // its session first (issue #4291). [CmdExit] over WM_COPYDATA needs 3.6+;
 // older versions get WM_CLOSE on their windows. true once it exited.
 static bool QuitSumatra(HANDLE hProcess, DWORD pid) {
-    if (!IsSumatraProcess(hProcess)) {
-        return false;
-    }
     ProcWindows pw;
     pw.pid = pid;
     EnumWindows(CollectProcWindows, (LPARAM)&pw);
-    if (len(pw.hwnds) == 0) {
+    if (len(pw.hwnds) == 0 || !IsSumatraProcess(hProcess, pw)) {
         return false;
     }
 
