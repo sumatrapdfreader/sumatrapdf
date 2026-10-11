@@ -65,8 +65,10 @@ struct SignDocumentWnd : WindowBase {
     // approval or a certifying signature (discussion #6315); certifying is
     // only offered while the document has no signature yet
     DropDown* ddType = nullptr;
+    Vec<int> typeCodes; // what each ddType row means (SignatureTypeItems)
     bool docSigned = false;
     int initialCertify = 0; // what the drop-down opens on ([CmdSignDocument certify])
+    Checkbox* cbLockFields = nullptr;
     VirtButton* btnBrowse = nullptr;
     VirtButton* btnCancel = nullptr;
     VirtButton* btnSign = nullptr;
@@ -363,9 +365,11 @@ void SignDocumentWnd::FillSignatureType() {
     EngineBase* engine = GetPdfEngine(win);
     docSigned = engine && EngineMupdfCountSignedSignatures(engine) > 0;
     StrVec items;
-    SignatureTypeItems(items, docSigned);
+    VecReset(typeCodes);
+    SignatureTypeItems(items, typeCodes, docSigned);
     ddType->SetItems(items);
-    CbSetCurrentSelection(ddType, initialCertify < len(items) ? initialCertify : 0);
+    int sel = VecFind(typeCodes, initialCertify);
+    CbSetCurrentSelection(ddType, sel >= 0 ? sel : 0);
 }
 
 // Turns the dialog state into what the engine needs; false if something the
@@ -434,7 +438,9 @@ bool SignDocumentWnd::BuildSignArgs(PdfSignArgs& args) {
         flags |= kPdfSignShowLabels | kPdfSignShowTextName;
     }
     args.appearanceFlags = flags;
-    args.certifyLevel = (ddType && !docSigned) ? std::max(CbGetCurrentSelection(ddType), 0) : 0;
+    int typeIdx = ddType ? CbGetCurrentSelection(ddType) : -1;
+    ApplySignatureType(args, (typeIdx >= 0 && typeIdx < len(typeCodes)) ? typeCodes[typeIdx] : 0);
+    args.lockFields = cbLockFields && cbLockFields->IsChecked();
 
     int idx = CbGetCurrentSelection(ddPlacement);
     if (idx >= 0 && idx < len(fieldNames)) {
@@ -532,9 +538,9 @@ void SignDocumentWnd::DoSign(const PdfSignArgs& args) {
         return;
     }
 
-    if (args.certifyLevel == kPdfCertifyNoChanges) {
+    if (SignTypeLocksDocument(args)) {
         UINT flags = MB_ICONEXCLAMATION | MB_YESNO | MbRtlReadingMaybe();
-        if (IDNO == MsgBox(win->hwndFrame, CertifyNoChangesWarning(), Tr("Sign Document"), flags)) {
+        if (IDNO == MsgBox(win->hwndFrame, LockDocumentWarning(), Tr("Sign Document"), flags)) {
             SetIsVisible(true);
             HwndSetFocus(hwnd);
             return;
@@ -730,6 +736,7 @@ bool SignDocumentWnd::Create(MainWindow* mainWin) {
         vbox->AddChild(c);
         FillSignatureType();
     }
+    cbLockFields = AddCheckbox(vbox, hwnd, Tr("Lock form &fields after signing"), isRtl, 2);
 
     AddLabel(vbox, Tr("Appearance:"), f, isRtl, 8);
     cbShowLabels = AddCheckbox(vbox, hwnd, Tr("Show &labels"), isRtl, 2);

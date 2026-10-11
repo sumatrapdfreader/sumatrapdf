@@ -64,8 +64,10 @@ struct SignDocumentDlg {
     // approval or a certifying signature (discussion #6315); certifying is
     // only offered while the document has no signature yet
     DialogSelect ddType;
+    Vec<int> typeCodes; // what each ddType row means (SignatureTypeItems)
     bool docSigned = false;
     int initialCertify = 0; // what the drop-down opens on ([CmdSignDocument certify])
+    bool lockFields = false;
     gpui::InputState* editCert = nullptr;
     gpui::InputState* editPassword = nullptr;
     gpui::InputState* editReason = nullptr;
@@ -318,8 +320,10 @@ static void FillSignatureType() {
     EngineBase* engine = GetPdfEngine(gSign.win);
     gSign.docSigned = engine && EngineMupdfCountSignedSignatures(engine) > 0;
     StrVec items;
-    SignatureTypeItems(items, gSign.docSigned);
-    gSign.ddType.SetItems(items, gSign.initialCertify < len(items) ? gSign.initialCertify : 0);
+    VecReset(gSign.typeCodes);
+    SignatureTypeItems(items, gSign.typeCodes, gSign.docSigned);
+    int sel = VecFind(gSign.typeCodes, gSign.initialCertify);
+    gSign.ddType.SetItems(items, sel >= 0 ? sel : 0);
 }
 
 static void FillAppearance() {
@@ -405,7 +409,9 @@ static bool BuildSignArgs(PdfSignArgs& args) {
         flags |= kPdfSignShowLabels | kPdfSignShowTextName;
     }
     args.appearanceFlags = flags;
-    args.certifyLevel = gSign.docSigned ? 0 : std::max(gSign.ddType.sel, 0);
+    int typeIdx = gSign.ddType.sel;
+    ApplySignatureType(args, (typeIdx >= 0 && typeIdx < len(gSign.typeCodes)) ? gSign.typeCodes[typeIdx] : 0);
+    args.lockFields = gSign.lockFields;
 
     int idx = gSign.ddPlacement.sel;
     if (idx >= 0 && idx < len(gSign.fieldNames)) {
@@ -462,7 +468,7 @@ static void DoSign(const PdfSignArgs& args) {
         CloseSignDocumentDialog(win);
         return;
     }
-    if (args.certifyLevel == kPdfCertifyNoChanges && !gPendingSignConfirmed) {
+    if (SignTypeLocksDocument(args) && !gPendingSignConfirmed) {
         FreePendingSign();
         gPendingSign = args;
         gPendingSign.certPath = str::Dup(args.certPath);
@@ -472,8 +478,7 @@ static void DoSign(const PdfSignArgs& args) {
         gPendingSign.location = str::Dup(args.location);
         gPendingSign.fieldName = str::Dup(args.fieldName);
         gPendingSign.imagePath = str::Dup(args.imagePath);
-        MsgBox(win, CertifyNoChangesWarning(), Tr("Sign Document"), MbYesNo | MbIconWarning,
-               MkFunc1Void(OnCertifyAnswer));
+        MsgBox(win, LockDocumentWarning(), Tr("Sign Document"), MbYesNo | MbIconWarning, MkFunc1Void(OnCertifyAnswer));
         return;
     }
     Str err;
@@ -600,6 +605,9 @@ void SignDocumentView::OnToggle(SignDocumentView*, gp::Ctx* cx, const gp::ClickE
             break;
         case 4:
             gSign.showGraphicName = !gSign.showGraphicName;
+            break;
+        case 5:
+            gSign.lockFields = !gSign.lockFields;
             break;
         default:
             break;
@@ -785,6 +793,7 @@ static gp::El* SignDocumentWinBuild(gp::Ctx* cx, bool certFile, bool hasImage) {
     col->Child(select(gSign.ddPlacement, StrL("sign-placement")));
     col->Child(label(DlgAccelSelect(cx, Tr("Signature &type:"), &gSign.ddType), kSignWinLabelGap));
     col->Child(select(gSign.ddType, StrL("sign-type")));
+    col->Child(check(StrL("sign-lock"), Tr("Lock form &fields after signing"), gSign.lockFields, 5, false));
 
     col->Child(label(DlgAccelNone(cx, Tr("Appearance:")), kSignWinLabelGap));
     col->Child(check(StrL("sign-labels"), Tr("Show &labels"), gSign.showLabels, 0, false));
@@ -872,6 +881,7 @@ gp::El* SignDocumentDialogBuild(MainWindow* win, gp::Ctx* cx) {
     body->Child(gSign.ddPlacement.Build(cx, StrL("sign-placement"), gp::kFill));
     body->Child(LabelEl(cx, DlgAccelSelect(cx, Tr("Signature &type:"), &gSign.ddType)));
     body->Child(gSign.ddType.Build(cx, StrL("sign-type"), gp::kFill));
+    body->Child(CheckRow(cx, StrL("sign-lock"), Tr("Lock form &fields after signing"), gSign.lockFields, 5, false));
 
     body->Child(LabelEl(cx, DlgAccelNone(cx, Tr("Appearance:"))));
     body->Child(CheckRow(cx, StrL("sign-labels"), Tr("Show &labels"), gSign.showLabels, 0, false));

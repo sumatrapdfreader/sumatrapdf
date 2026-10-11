@@ -2013,6 +2013,14 @@ void pdf_signature_set_value(fz_context *ctx, pdf_document *doc, pdf_obj *field,
 		pdf_dict_put(ctx, t, PDF_NAME(Type), PDF_NAME(TransformParams));
 		pdf_dict_put(ctx, t, PDF_NAME(V), PDF_NAME(1_2));
 
+		/* SumatraPDF: PDF 2.0 "lock document after signing": the field's
+		 * /Lock /P goes into the transform too. */
+		{
+			pdf_obj *lp = pdf_dict_getp(ctx, field, "Lock/P");
+			if (lp)
+				pdf_dict_put(ctx, t, PDF_NAME(P), lp);
+		}
+
 		/* SumatraPDF: a certifying signature. The field's /SumatraCertify
 		 * holds the DocMDP permission (1..3). It has to be written here:
 		 * once the unsaved signature is stored below, later edits go into

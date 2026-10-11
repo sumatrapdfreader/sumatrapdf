@@ -19,8 +19,28 @@ const PASSWORD = "sumatra-test-pw";
 const CERTIFY_NO_CHANGES = 1;
 const CERTIFY_FORMS_SIGNING_ANNOTS = 3;
 
-async function sign(client: ControlClient, src: string, dest: string, pfx: string, certify: number): Promise<void> {
-  const res = await client.request(ControlCommand.TestSignDocument, [src, dest, "", pfx, PASSWORD, "", -1, certify]);
+const LOCK_FIELDS = 1;
+const LOCK_DOCUMENT = 2;
+
+async function sign(
+  client: ControlClient,
+  src: string,
+  dest: string,
+  pfx: string,
+  certify: number,
+  lockFlags = 0,
+): Promise<void> {
+  const res = await client.request(ControlCommand.TestSignDocument, [
+    src,
+    dest,
+    "",
+    pfx,
+    PASSWORD,
+    "",
+    -1,
+    certify,
+    lockFlags,
+  ]);
   const out = String(res[1] ?? "").trim();
   if (res[0] !== 0 || !/ok=1/.test(out)) {
     throw new Error(`sign-certify: TestSignDocument(${dest}, certify ${certify}) failed: ${out}`);
@@ -106,6 +126,40 @@ export async function testit(): Promise<void> {
       ) {
         throw new Error("sign-certify: certifying with annotations allowed did not write /P 3");
       }
+      // "lock form fields": the field keeps /Lock /Action /All and the
+      // FieldMDP transform locks all fields, as every signature used to
+      const locked = join(dir, "locked-fields.pdf");
+      await sign(client, pdf, locked, pfx, 0, LOCK_FIELDS);
+      verifyPdfSignature(locked, cert);
+      added = appended(locked, blank.length);
+      if (
+        !/\/Lock\s*<<[^>]*\/Action\s*\/All/.test(added) ||
+        !/\/TransformMethod\s*\/FieldMDP[^>]*\/TransformParams\s*<<[^>]*\/Action\s*\/All/.test(added)
+      ) {
+        throw new Error(`sign-certify: lock fields did not lock all fields:\n${added.slice(0, 2000)}`);
+      }
+      if (/\/P\s+1\b/.test(added)) {
+        throw new Error("sign-certify: lock fields must not lock the document (/P 1)");
+      }
+
+      // "lock document after signing" (PDF 2.0): /P 1 in the field's /Lock
+      // and in the FieldMDP transform; allowed on a signed document
+      const lockedDoc = join(dir, "locked-doc.pdf");
+      await sign(client, signed1, lockedDoc, pfx, 0, LOCK_DOCUMENT);
+      verifyPdfSignature(lockedDoc, cert);
+      added = appended(lockedDoc, readFileSync(signed1).length);
+      if (!/\/Lock\s*<<[^>]*\/P\s+1\b/.test(added)) {
+        throw new Error(`sign-certify: lock document did not put /P 1 in the field's /Lock:\n${added.slice(0, 2000)}`);
+      }
+      if (!/\/TransformMethod\s*\/FieldMDP[^>]*\/TransformParams\s*<<[^>]*\/P\s+1\b/.test(added)) {
+        throw new Error(
+          `sign-certify: lock document did not put /P 1 in the FieldMDP transform:\n${added.slice(0, 2000)}`,
+        );
+      }
+      if (/\/DocMDP/.test(added)) {
+        throw new Error("sign-certify: lock document is not a certification");
+      }
+
       // [CmdSignDocument certify] parses (opens the dialog set to certify)
       const inv = await client.request(ControlCommand.TestInvokeCommand, ["CmdSignDocument certify"]);
       if (inv[0] !== 0) {

@@ -1,48 +1,31 @@
-pdf_signature_set_value: certifying signatures via /SumatraCertify
+pdf_signature_set_value: certifying signatures and document locks
 
 A certifying signature needs a DocMDP transform first in the signature's
 /Reference and the catalog's /Perms pointing at the signature. Both have
 to be written here: once pdf_xref_store_unsaved_signature has run, later
 edits land in a new xref section that the signature does not cover.
 SumatraPDF puts the DocMDP permission (1..3) in the field's
-/SumatraCertify before signing; it is consumed and removed here
-(discussion #6315).
+/SumatraCertify before signing; it is consumed and removed here.
+
+The PDF 2.0 "lock document after signing" field lock (/Lock /P 1) is
+copied into the FieldMDP transform's /P as well (discussion #6315).
 ---
 diff --git a/source/pdf/pdf-form.c b/source/pdf/pdf-form.c
-index 5685e98fd..f9c85d511 100644
+index f9c85d511..4f0a2fd18 100644
 --- a/source/pdf/pdf-form.c
 +++ b/source/pdf/pdf-form.c
-@@ -2013,6 +2013,33 @@ void pdf_signature_set_value(fz_context *ctx, pdf_document *doc, pdf_obj *field,
+@@ -2013,6 +2013,14 @@ void pdf_signature_set_value(fz_context *ctx, pdf_document *doc, pdf_obj *field,
  		pdf_dict_put(ctx, t, PDF_NAME(Type), PDF_NAME(TransformParams));
  		pdf_dict_put(ctx, t, PDF_NAME(V), PDF_NAME(1_2));
  
-+		/* SumatraPDF: a certifying signature. The field's /SumatraCertify
-+		 * holds the DocMDP permission (1..3). It has to be written here:
-+		 * once the unsaved signature is stored below, later edits go into
-+		 * a new xref section and the signature would not cover them. */
++		/* SumatraPDF: PDF 2.0 "lock document after signing": the field's
++		 * /Lock /P goes into the transform too. */
 +		{
-+			int perm = pdf_to_int(ctx, pdf_dict_gets(ctx, field, "SumatraCertify"));
-+			if (perm >= 1 && perm <= 3)
-+			{
-+				pdf_obj *root = pdf_dict_get(ctx, pdf_trailer(ctx, doc), PDF_NAME(Root));
-+				pdf_obj *m = pdf_new_dict(ctx, doc, 4);
-+				pdf_obj *mt, *perms;
-+				pdf_array_insert_drop(ctx, o, m, 0);
-+				pdf_dict_put(ctx, m, PDF_NAME(Type), PDF_NAME(SigRef));
-+				pdf_dict_put(ctx, m, PDF_NAME(TransformMethod), PDF_NAME(DocMDP));
-+				pdf_dict_put(ctx, m, PDF_NAME(Data), root);
-+				mt = pdf_dict_put_dict(ctx, m, PDF_NAME(TransformParams), 3);
-+				pdf_dict_put(ctx, mt, PDF_NAME(Type), PDF_NAME(TransformParams));
-+				pdf_dict_put_int(ctx, mt, PDF_NAME(P), perm);
-+				pdf_dict_put(ctx, mt, PDF_NAME(V), PDF_NAME(1_2));
-+				perms = pdf_dict_get(ctx, root, PDF_NAME(Perms));
-+				if (!perms)
-+					perms = pdf_dict_put_dict(ctx, root, PDF_NAME(Perms), 1);
-+				pdf_dict_put(ctx, perms, PDF_NAME(DocMDP), indv);
-+			}
-+			pdf_dict_dels(ctx, field, "SumatraCertify");
++			pdf_obj *lp = pdf_dict_getp(ctx, field, "Lock/P");
++			if (lp)
++				pdf_dict_put(ctx, t, PDF_NAME(P), lp);
 +		}
 +
- 		/* Record details within the document structure so that contents
- 		* and byte_range can be updated with their correct values at
- 		* saving time */
+ 		/* SumatraPDF: a certifying signature. The field's /SumatraCertify
+ 		 * holds the DocMDP permission (1..3). It has to be written here:
+ 		 * once the unsaved signature is stored below, later edits go into

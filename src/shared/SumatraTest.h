@@ -34,7 +34,7 @@ TempStr PageRenderColorsResultTemp(Str path, int* exitCodeOut = nullptr, int pag
 TempStr PageRenderViewPrintResultTemp(Str path, int* exitCodeOut = nullptr);
 TempStr ListSigningCertsResultTemp(int* exitCodeOut = nullptr);
 TempStr SignDocumentResultTemp(Str pdfPath, Str destPath, Str thumbprint, Str certPath, Str certPassword,
-                               Str imagePath = {}, int appearanceFlags = -1, int certifyLevel = 0,
+                               Str imagePath = {}, int appearanceFlags = -1, int certifyLevel = 0, int lockFlags = 0,
                                int* exitCodeOut = nullptr);
 TempStr CmykImageSaveResultTemp(Str jpegPath, Str tiffPath, int* exitCodeOut = nullptr);
 TempStr ImageOrientationResultTemp(Str pdfPath, int pageNo, Str bmpPath = {}, int* exitCodeOut = nullptr);

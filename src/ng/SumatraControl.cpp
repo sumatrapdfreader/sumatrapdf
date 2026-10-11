@@ -2118,14 +2118,17 @@ static void ExecuteControlRequest(ControlRequest* req) {
             IntArg(req, 6, appearanceFlags);
             i32 certifyLevel = 0;
             IntArg(req, 7, certifyLevel);
+            i32 lockFlags = 0; // 1: lock fields, 2: lock document
+            IntArg(req, 8, lockFlags);
             if (len(pdfPath) == 0 || len(destPath) == 0) {
                 AppendError(req, StrL("TestSignDocument expects string pdfPath, string destPath [, thumbprint] [, "
-                                      "certPath] [, password] [, imagePath] [, appearanceFlags] [, certifyLevel]"));
+                                      "certPath] [, password] [, imagePath] [, appearanceFlags] [, certifyLevel] [, "
+                                      "lockFlags]"));
                 break;
             }
             int exitCode = 0;
             Str res = SignDocumentResultTemp(pdfPath, destPath, thumbprint, certPath, certPassword, imagePath,
-                                             appearanceFlags, certifyLevel, &exitCode);
+                                             appearanceFlags, certifyLevel, lockFlags, &exitCode);
             AppendTestResult(req, exitCode, res);
             break;
         }

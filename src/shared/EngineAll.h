@@ -173,6 +173,11 @@ struct PdfSignArgs {
     // 0: approval signature; else a certifying signature with this DocMDP
     // permission (kPdfCertify*), which must be the document's first signature
     int certifyLevel = 0;
+    // the field's /Lock /Action /All: form fields can't change after signing
+    bool lockFields = false;
+    // PDF 2.0 "lock document after signing": /Lock /P 1 and /P 1 in the
+    // FieldMDP transform; the last signer's counterpart of certifying
+    bool lockDocument = false;
 };
 
 // DocMDP /P: what a certified document still allows

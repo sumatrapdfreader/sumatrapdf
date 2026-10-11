@@ -8104,20 +8104,28 @@ static void AppendSigDictText(fz_context* ctx, str::Builder& out, pdf_obj* sigDi
 // a certifying signature: its DocMDP transform says what the document allows
 static void AppendSigCertification(fz_context* ctx, str::Builder& out, pdf_obj* sigDict) {
     int perm = 0;
+    bool locksDoc = false;
     fz_try(ctx) {
         pdf_obj* refs = pdf_dict_get(ctx, sigDict, PDF_NAME(Reference));
         int n = pdf_array_len(ctx, refs);
         for (int i = 0; i < n; i++) {
             pdf_obj* r = pdf_array_get(ctx, refs, i);
-            if (pdf_dict_get(ctx, r, PDF_NAME(TransformMethod)) == PDF_NAME(DocMDP)) {
-                perm = pdf_dict_get_int(ctx, pdf_dict_get(ctx, r, PDF_NAME(TransformParams)), PDF_NAME(P));
-                break;
+            pdf_obj* method = pdf_dict_get(ctx, r, PDF_NAME(TransformMethod));
+            pdf_obj* params = pdf_dict_get(ctx, r, PDF_NAME(TransformParams));
+            if (method == PDF_NAME(DocMDP)) {
+                perm = pdf_dict_get_int(ctx, params, PDF_NAME(P));
+            } else if (method == PDF_NAME(FieldMDP)) {
+                // PDF 2.0 field lock: the last signer locked the document
+                locksDoc = pdf_dict_get_int(ctx, params, PDF_NAME(P)) == 1;
             }
         }
     }
     fz_catch(ctx) {
         fz_report_error(ctx);
         perm = 0;
+    }
+    if (locksDoc) {
+        out.Append(StrL("  Locks the document: no changes allowed after this signature\n"));
     }
     Str allows;
     switch (perm) {

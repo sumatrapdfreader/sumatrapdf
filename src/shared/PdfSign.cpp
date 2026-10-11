@@ -296,23 +296,32 @@ bool EngineMupdfSignDocument(EngineBase* engine, const PdfSignArgs& args, Str* e
             // unlikely to collide with fields the document already has
             TempStr name = fmt("SumatraSignature%d", pdf_count_signatures(ctx, epdf->pdfdoc) + 1);
             widget = pdf_create_signature_widget(ctx, page, CStrTemp(name));
-            // mupdf gives the new field /Lock /Action /All, which makes every
-            // later signature a change this one forbids (discussion #6315);
-            // an approval signature locks nothing
-            pdf_begin_operation(ctx, epdf->pdfdoc, "Unlock signature field");
-            pdf_dict_del(ctx, pdf_annot_obj(ctx, widget), PDF_NAME(Lock));
-            pdf_end_operation(ctx, epdf->pdfdoc);
             if (!args.rect.IsEmpty()) {
                 pdf_set_annot_rect(ctx, widget, ToFzRect(args.rect));
             }
         }
-        if (args.certifyLevel > 0) {
-            // our pdf_signature_set_value patch turns this into the DocMDP
-            // transform and the catalog's /Perms, inside the signed section
-            pdf_begin_operation(ctx, epdf->pdfdoc, "Certify document");
-            pdf_dict_puts_drop(ctx, pdf_annot_obj(ctx, widget), "SumatraCertify", pdf_new_int(ctx, args.certifyLevel));
-            pdf_end_operation(ctx, epdf->pdfdoc);
+        // The field's /Lock is what the signature's FieldMDP transform locks.
+        // mupdf gives a new field /Lock /Action /All, which makes every later
+        // signature a change this one forbids (discussion #6315), so an
+        // approval signature gets none; "lock fields" keeps / adds it, and
+        // "lock document" adds the PDF 2.0 /P 1 our set_value patch copies
+        // into the transform. /SumatraCertify is the DocMDP level the same
+        // patch turns into the certification, inside the signed section.
+        pdf_begin_operation(ctx, epdf->pdfdoc, "Prepare signature");
+        pdf_obj* wobj = pdf_annot_obj(ctx, widget);
+        if (args.lockFields || args.lockDocument) {
+            pdf_obj* lock = pdf_dict_put_dict(ctx, wobj, PDF_NAME(Lock), 2);
+            pdf_dict_put(ctx, lock, PDF_NAME(Action), PDF_NAME(All));
+            if (args.lockDocument) {
+                pdf_dict_put_int(ctx, lock, PDF_NAME(P), 1);
+            }
+        } else if (len(args.fieldName) == 0) {
+            pdf_dict_del(ctx, wobj, PDF_NAME(Lock));
         }
+        if (args.certifyLevel > 0) {
+            pdf_dict_puts_drop(ctx, wobj, "SumatraCertify", pdf_new_int(ctx, args.certifyLevel));
+        }
+        pdf_end_operation(ctx, epdf->pdfdoc);
         if (args.imagePath) {
             Str imgData = file::ReadFile(args.imagePath);
             if (len(imgData) == 0) {

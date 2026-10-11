@@ -9,9 +9,15 @@ RectF DefaultSignatureRectAt(DisplayModel* dm, int pageNo, PointF pt);
 
 TempStr SignErrorMessageTemp(Str err);
 
-// the "Signature type" drop-down: index = PdfSignArgs::certifyLevel
-void SignatureTypeItems(StrVec& items, bool docSigned);
-Str CertifyNoChangesWarning();
+// the "Signature type" drop-down. A code is PdfSignArgs::certifyLevel (0..3)
+// or kSignTypeLockDocument; codes[i] is what items[i] means
+constexpr int kSignTypeLockDocument = 4;
+void SignatureTypeItems(StrVec& items, Vec<int>& codes, bool docSigned);
+void ApplySignatureType(PdfSignArgs& args, int code);
+// certifying with no changes allowed, or locking the document: the warning
+// the dialogs confirm before signing
+bool SignTypeLocksDocument(const PdfSignArgs& args);
+Str LockDocumentWarning();
 
 static Kind kNotifSignPlacement = "notifSignPlacement";
 NotifCorner SignPlacementNotifCorner();
