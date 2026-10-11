@@ -327,7 +327,11 @@ typedef struct stat la_seek_stat_t;
 #ifndef __EMSCRIPTEN__
 #define HAVE_ICONV 1
 #define HAVE_ICONV_H 1
+/* glibc got arc4random_buf in 2.36; Ubuntu 22.04 has 2.35 and libarchive
+   falls back to /dev/urandom without it */
+#if !defined(__GLIBC__) || __GLIBC__ > 2 || (__GLIBC__ == 2 && __GLIBC_MINOR__ >= 36)
 #define HAVE_ARC4RANDOM_BUF 1
+#endif
 #define HAVE_CHROOT 1
 #define HAVE_FORK 1
 #define HAVE_FUTIMES 1
