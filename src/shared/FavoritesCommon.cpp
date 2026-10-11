@@ -4,6 +4,9 @@
 #include "base/Base.h"
 #include "base/File.h"
 #include "base/UITask.h"
+#if !defined(SUMATRA_NG)
+#include "base/Win.h"
+#endif
 #include "gui/UIModels.h"
 #include "Settings.h"
 #include "DisplayMode.h"
@@ -970,4 +973,66 @@ void AddFavoriteForPage(MainWindow* win, int pageNo) {
         pageLabel = ctrl->GetPageLabeTemp(pageNo);
     }
     AddFavoriteWithLabelAndName(win, pageNo, pageLabel, name);
+}
+
+void AppendFavMenuItems(MenuRef m, FileState* f, Vec<FavMenuEntry>& favs, int& idx, bool combined, bool isCurrent) {
+    ReportIf(!f);
+    if (!f) {
+        return;
+    }
+    for (int i = 0; i < len(*f->favorites); i++) {
+        if (i >= kMaxFavMenus) {
+            return;
+        }
+        Favorite* fn = (*f->favorites)[i];
+        int cmdId = favs[idx++].cmdId;
+        TempStr s;
+        if (combined) {
+            s = FavCompactReadableNameTemp(f, fn, isCurrent);
+        } else {
+            s = FavReadableNameTemp(fn);
+        }
+        MenuAppendString(m, s, cmdId);
+    }
+}
+
+// Called when a user opens "Favorites" top-level menu. We need to construct
+// the menu:
+// - disable add/remove menu items if no document is opened
+// - if a document is opened and the page is already bookmarked,
+//   disable "add" menu item and enable "remove" menu item
+// - if a document is opened and the page is not bookmarked,
+//   enable "add" menu item and disable "remove" menu item
+void RebuildFavMenu(MainWindow* win, MenuRef menu) {
+    if (!win->IsDocLoaded()) {
+        MenuSetEnabled(menu, CmdFavoriteAdd, false);
+        MenuSetEnabled(menu, CmdFavoriteDel, false);
+        AppendFavMenus(menu, {});
+    } else {
+        DocController* ctrl = win->ctrl;
+        int pageNo = win->currPageNo;
+        bool isBookmarked = IsPageInFavorites(ctrl->GetFilePath(), pageNo, ctrl);
+
+        TempStr addText;
+        TempStr delText;
+        if (ShowChapterUi(ctrl)) {
+            Location loc = ctrl->LocationFromPageNo(pageNo);
+            addText = fmt(Tr("Add chapter %d page %d to favorites").s, loc.chapter, loc.page);
+            delText = fmt(Tr("Remove chapter %d page %d from favorites").s, loc.chapter, loc.page);
+        } else {
+            TempStr label = ctrl->GetPageLabeTemp(pageNo);
+            addText = fmt(Tr("Add page %s to favorites").s, label);
+            delText = fmt(Tr("Remove page %s from favorites").s, label);
+        }
+
+        if (isBookmarked) {
+            MenuSetEnabled(menu, CmdFavoriteAdd, false);
+            MenuSetText(menu, CmdFavoriteDel, delText);
+        } else {
+            MenuSetEnabled(menu, CmdFavoriteDel, false);
+            MenuSetText(menu, CmdFavoriteAdd, FavAddMenuTextTemp(addText));
+        }
+        AppendFavMenus(menu, ctrl->GetFilePath());
+    }
+    MenuSetEnabled(menu, CmdFavoriteToggle, HasFavorites());
 }

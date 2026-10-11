@@ -39,30 +39,11 @@
 
 // Note: those might be too big
 constexpr int kMaxFavSubmenus = 10;
-constexpr int kMaxFavMenus = 10;
 
-static void AppendFavMenuItems(HMENU m, FileState* f, Vec<FavMenuEntry>& favs, int& idx, bool combined,
-                               bool isCurrent) {
-    ReportIf(!f);
-    if (!f) {
-        return;
-    }
-    for (int i = 0; i < len(*f->favorites); i++) {
-        if (i >= kMaxFavMenus) {
-            return;
-        }
-        Favorite* fn = (*f->favorites)[i];
-        int cmdId = favs[idx++].cmdId;
-        TempStr s;
-        if (combined) {
-            s = FavCompactReadableNameTemp(f, fn, isCurrent);
-        } else {
-            s = FavReadableNameTemp(fn);
-        }
-        auto safeStr = MenuToSafeStringTemp(s);
-        WCHAR* ws = CWStrTemp(safeStr);
-        AppendMenuW(m, MF_STRING, (UINT_PTR)cmdId, ws);
-    }
+void MenuAppendString(HMENU m, Str title, int cmdId) {
+    auto safeStr = MenuToSafeStringTemp(title);
+    WCHAR* ws = CWStrTemp(safeStr);
+    AppendMenuW(m, MF_STRING, (UINT_PTR)cmdId, ws);
 }
 
 // For easy access, we try to show favorites in the menu, similar to a list of
@@ -76,7 +57,7 @@ static void AppendFavMenuItems(HMENU m, FileState* f, Vec<FavMenuEntry>& favs, i
 // Note: not sure if that's the best layout. Maybe we should always use submenu and
 // put the submenu for current file as the first one (potentially named as "Current file"
 // or some such, to make it stand out from other submenus)
-static void AppendFavMenus(HMENU m, Str currFilePath) {
+void AppendFavMenus(MenuRef m, Str currFilePath) {
     // To minimize mouse movement when navigating current file via favorites
     // menu, put favorites for current file first
     FileState* currFileFav = nullptr;
@@ -143,46 +124,9 @@ static void AppendFavMenus(HMENU m, Str currFilePath) {
     }
 }
 
-// Called when a user opens "Favorites" top-level menu. We need to construct
-// the menu:
-// - disable add/remove menu items if no document is opened
-// - if a document is opened and the page is already bookmarked,
-//   disable "add" menu item and enable "remove" menu item
-// - if a document is opened and the page is not bookmarked,
-//   enable "add" menu item and disable "remove" menu item
-void RebuildFavMenu(MainWindow* win, HMENU menu) {
-    if (!win->IsDocLoaded()) {
-        MenuSetEnabled(menu, CmdFavoriteAdd, false);
-        MenuSetEnabled(menu, CmdFavoriteDel, false);
-        AppendFavMenus(menu, {});
-    } else {
-        DocController* ctrl = win->ctrl;
-        int pageNo = win->currPageNo;
-        bool isBookmarked = IsPageInFavorites(ctrl->GetFilePath(), pageNo, ctrl);
-
-        TempStr addText;
-        TempStr delText;
-        if (ctrl->HasChapters()) {
-            Location loc = ctrl->LocationFromPageNo(pageNo);
-            addText = fmt(Tr("Add chapter %d page %d to favorites").s, loc.chapter, loc.page);
-            delText = fmt(Tr("Remove chapter %d page %d from favorites").s, loc.chapter, loc.page);
-        } else {
-            TempStr label = ctrl->GetPageLabeTemp(pageNo);
-            addText = fmt(Tr("Add page %s to favorites").s, label);
-            delText = fmt(Tr("Remove page %s from favorites").s, label);
-        }
-
-        if (isBookmarked) {
-            MenuSetEnabled(menu, CmdFavoriteAdd, false);
-            MenuSetText(menu, CmdFavoriteDel, delText);
-        } else {
-            MenuSetEnabled(menu, CmdFavoriteDel, false);
-            TempStr s = AppendAccelKeyToMenuStringTemp(addText, CmdFavoriteAdd);
-            MenuSetText(menu, CmdFavoriteAdd, s);
-        }
-        AppendFavMenus(menu, ctrl->GetFilePath());
-    }
-    MenuSetEnabled(menu, CmdFavoriteToggle, HasFavorites());
+// the menu item shows the command's shortcut
+TempStr FavAddMenuTextTemp(Str addText) {
+    return AppendAccelKeyToMenuStringTemp(addText, CmdFavoriteAdd);
 }
 
 void GoToFavoritePage(MainWindow* win, Str pageNo, PointF scrollPos) {

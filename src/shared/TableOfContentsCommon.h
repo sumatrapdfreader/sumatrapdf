@@ -60,3 +60,5 @@ void GoToTocLink(GoToTocLinkData* d);
 TocItem* TreeItemForPageNo(TreeModel* tm, int pageNo);
 TocItem* TreeItemForChapter(TreeModel* tm, int chapter, int pageNo);
 void OpenAttachment(WindowTab* tab, Str fileName, int attachmentNo);
+
+void GoToTocTreeItem(MainWindow* win, TocItem* tocItem, bool allowExternal);

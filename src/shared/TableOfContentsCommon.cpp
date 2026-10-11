@@ -500,3 +500,21 @@ void OpenAttachment(WindowTab* tab, Str fileName, int attachmentNo) {
     OpenDocumentFromMemory(tab->win, data, fileName);
     str::Free(data);
 }
+
+void GoToTocTreeItem(MainWindow* win, TocItem* tocItem, bool allowExternal) {
+    if (!tocItem) {
+        return;
+    }
+    bool validPage = (tocItem->pageNo > 0);
+    bool isScroll = IsScrollToLink(tocItem->dest);
+    bool hasChapterDest = tocItem->dest && tocItem->dest->loc.chapter >= 1;
+    if (validPage || allowExternal || isScroll || hasChapterDest) {
+        // delay changing the page until the tree messages have been handled
+        auto* data = NewGoToTocLinkData(win, tocItem, false);
+        if (!data) {
+            return;
+        }
+        auto fn = MkFunc0<GoToTocLinkData>(GoToTocLink, data);
+        uitask::Post(fn, "TaskGoToTocTreeItem");
+    }
+}

@@ -695,45 +695,8 @@ bool StartFreeTextInPlaceEdit(MainWindow* win, Annotation* annot) {
 
 // --- what the chips do ------------------------------------------------------
 
-static void ChipColorPicked(AnnotEditToolbar* tb, Color col) {
-    WindowTab* tab = tb->tab;
-    Annotation* annot = tab ? tab->selectedAnnotation : nullptr;
-    if (!AnnotationIsLive(annot) || annot != tb->annot) {
-        return;
-    }
-    AnnotationType type = Type(annot);
-    bool isNone = (col == kColorUnset);
-    PdfColor pdfCol = isNone ? 0 : WinToPdfColor(col);
-    u8 opacity = isNone ? 0 : PdfColorAlpha(pdfCol);
-    bool setsOpacity = !isNone && AnnotationSupportsOpacity(type);
-    // Color plus opacity is one undo step.
-    EngineBase* engine = tab->GetEngine();
-    EngineMupdfBeginOperation(engine, "Set color");
-    defer {
-        EngineMupdfEndOperation(engine);
-    };
-    switch (tb->popupChip) {
-        case AnnotEditKind::Color:
-            // SetColor() takes the opacity from the color's alpha
-            SetColor(annot, setsOpacity ? pdfCol : OpaquePdfColor(pdfCol));
-            break;
-        case AnnotEditKind::InteriorColor:
-            // /IC has no alpha of its own, the annotation's opacity covers it
-            SetInteriorColor(annot, OpaquePdfColor(pdfCol));
-            if (setsOpacity) {
-                SetOpacity(annot, opacity);
-            }
-            break;
-        case AnnotEditKind::TextColor:
-            SetDefaultAppearanceTextColor(annot, OpaquePdfColor(pdfCol));
-            if (setsOpacity) {
-                SetOpacity(annot, opacity);
-            }
-            break;
-        default:
-            return;
-    }
-    AnnotChanged(tab);
+AnnotEditKind ChipColorKind(AnnotEditToolbarBase* tb) {
+    return ((AnnotEditToolbar*)tb)->popupChip;
 }
 
 // the dialog the pencil opens. cmdId 0 is the annotation preset list, not a

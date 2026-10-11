@@ -169,25 +169,6 @@ void GoToTocLink(GoToTocLinkData* d) {
     }
 }
 
-static void GoToTocTreeItem(MainWindow* win, TreeItem ti, bool allowExternal) {
-    if (!ti) {
-        return;
-    }
-    TocItem* tocItem = (TocItem*)ti;
-    bool validPage = (tocItem->pageNo > 0);
-    bool isScroll = IsScrollToLink(tocItem->dest);
-    bool hasChapterDest = tocItem->dest && tocItem->dest->loc.chapter >= 1;
-    if (validPage || allowExternal || isScroll || hasChapterDest) {
-        // delay changing the page until the tree messages have been handled
-        auto* data = NewGoToTocLinkData(win, tocItem, false);
-        if (!data) {
-            return;
-        }
-        auto fn = MkFunc0<GoToTocLinkData>(GoToTocLink, data);
-        uitask::Post(fn, "TaskGoToTocTreeItem");
-    }
-}
-
 void ClearTocBox(MainWindow* win) {
     if (!win->tocLoaded) {
         return;
@@ -1004,7 +985,7 @@ static void TocTreeClick(TreeView::ClickEvent* ev) {
         ReportIf(true);
         return;
     }
-    GoToTocTreeItem(win, ev->treeItem, true);
+    GoToTocTreeItem(win, (TocItem*)ev->treeItem, true);
 }
 
 static void TocTreeSelectionChanged(TreeView::SelectionChangedEvent* ev) {
@@ -1030,7 +1011,7 @@ static void TocTreeSelectionChanged(TreeView::SelectionChangedEvent* ev) {
         gTocSelChangedByMouseClick = true;
     }
     bool allowExternal = ev->byMouse;
-    GoToTocTreeItem(win, ev->selectedItem, allowExternal);
+    GoToTocTreeItem(win, (TocItem*)ev->selectedItem, allowExternal);
 }
 
 // Tab / Ctrl+Tab focus movement (also reused by Favorites tree)

@@ -98,3 +98,5 @@ void ChipThicknessPicked(AnnotEditToolbarBase* tb, int width);
 void ChipOpacityPicked(AnnotEditToolbarBase* tb, int percent);
 void ChipTextSizePicked(AnnotEditToolbarBase* tb, int size);
 Annotation* LiveToolbarAnnot(AnnotEditToolbarBase* tb);
+AnnotEditKind ChipColorKind(AnnotEditToolbarBase* tb);
+void ChipColorPicked(AnnotEditToolbarBase* tb, Color col);

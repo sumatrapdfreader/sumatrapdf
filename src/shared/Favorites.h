@@ -69,10 +69,20 @@ void AddFavoriteForCurrentPage(MainWindow* win);
 void DelFavorite(Str filePath, int pageNo, DocController* ctrl = nullptr);
 void DelFavorite(FileState* fs, Favorite* fav);
 #if OS_WIN
-void RebuildFavMenu(MainWindow* win, HMENU menu);
 void CreateFavorites(MainWindow* win);
 #endif
-void RebuildFavMenu(MainWindow* win, MenuModel* menu);
+
+// a menu being built: HMENU in orig, gpui's model in ng
+#if defined(SUMATRA_NG)
+using MenuRef = MenuModel*;
+#else
+using MenuRef = HMENU;
+#endif
+void RebuildFavMenu(MainWindow* win, MenuRef menu);
+// implemented by each app
+void MenuAppendString(MenuRef m, Str title, int cmdId);
+TempStr FavAddMenuTextTemp(Str addText);
+void AppendFavMenus(MenuRef m, Str currFilePath);
 void ToggleFavorites(MainWindow* win); // sidebar
 // the full-window favorites list (CmdFavoriteShowInTab)
 void ToggleFavoritesTab(MainWindow* win);
@@ -129,3 +139,6 @@ void GoToFavoritePage(MainWindow* win, Str pageNo, PointF scrollPos);
 FavTreeModel* BuildFavTreeModel(MainWindow* win, Str filter);
 TocItem* TocItemForPageNo(TocItem* item, int pageNo);
 void RememberFavTreeExpansionStateForAllWindows();
+
+constexpr int kMaxFavMenus = 10;
+void AppendFavMenuItems(MenuRef m, FileState* f, Vec<FavMenuEntry>& favs, int& idx, bool combined, bool isCurrent);

@@ -91,24 +91,6 @@ void GoToTocLink(GoToTocLinkData* d) {
     AppShellInvalidate(win);
 }
 
-static void GoToTocTreeItem(MainWindow* win, TocItem* tocItem, bool allowExternal) {
-    if (!tocItem) {
-        return;
-    }
-    bool validPage = (tocItem->pageNo > 0);
-    bool isScroll = IsScrollToLink(tocItem->dest);
-    bool hasChapterDest = tocItem->dest && tocItem->dest->loc.chapter >= 1;
-    if (validPage || allowExternal || isScroll || hasChapterDest) {
-        // delay changing the page until the tree messages have been handled
-        auto* data = NewGoToTocLinkData(win, tocItem, false);
-        if (!data) {
-            return;
-        }
-        auto fn = MkFunc0<GoToTocLinkData>(GoToTocLink, data);
-        uitask::Post(fn, "TaskGoToTocTreeItem");
-    }
-}
-
 // ng: orig's TocTreeSelectionChanged + TocTreeClick; a click on a bookmark both
 // selects it and navigates (a click on the same item navigates again, #2465)
 void TocTreeItemClicked(MainWindow* win, TocItem* tocItem) {

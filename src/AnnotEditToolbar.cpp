@@ -938,43 +938,8 @@ static void PickFreeTextFont(AnnotEditToolbar* tb, Annotation* annot, Point scre
     AnnotChanged(tab);
 }
 
-// a color from the drop-down of the chip that was clicked last; its alpha is
-// the annotation's opacity, kColorUnset means no color at all
-static void ChipColorPicked(AnnotEditToolbar* tb, Color col) {
-    WindowTab* tab = tb->tab;
-    Annotation* annot = tab ? tab->selectedAnnotation : nullptr;
-    if (!AnnotationIsLive(annot) || annot != tb->annot) {
-        return;
-    }
-    AnnotationType type = Type(annot);
-    bool isNone = (col == kColorUnset);
-    PdfColor pdfCol = isNone ? 0 : WinToPdfColor(col);
-    u8 opacity = isNone ? 0 : PdfColorAlpha(pdfCol);
-    bool setsOpacity = !isNone && AnnotationSupportsOpacity(type);
-    // a color and its opacity: one undo step
-    ScopedEngineOperation op(annot->engine, "Set color");
-    switch (tb->colorPickKind) {
-        case AnnotEditKind::Color:
-            // SetColor() takes the opacity from the color's alpha
-            SetColor(annot, setsOpacity ? pdfCol : OpaquePdfColor(pdfCol));
-            break;
-        case AnnotEditKind::InteriorColor:
-            // /IC has no alpha of its own, the annotation's opacity covers it
-            SetInteriorColor(annot, OpaquePdfColor(pdfCol));
-            if (setsOpacity) {
-                SetOpacity(annot, opacity);
-            }
-            break;
-        case AnnotEditKind::TextColor:
-            SetDefaultAppearanceTextColor(annot, OpaquePdfColor(pdfCol));
-            if (setsOpacity) {
-                SetOpacity(annot, opacity);
-            }
-            break;
-        default:
-            return;
-    }
-    AnnotChanged(tab);
+AnnotEditKind ChipColorKind(AnnotEditToolbarBase* tb) {
+    return ((AnnotEditToolbar*)tb)->colorPickKind;
 }
 
 // ranges of the number sliders; widths and sizes are in PDF points
@@ -1033,7 +998,8 @@ static void OnChipClick(AnnotEditChip* chip, VirtMouseEvent*) {
                 // a shape can do without a border
                 minThickness = 0;
             }
-            ShowAnnotColorPopup(tb->win, chipScreen, current, withNone, label, MkFunc1(ChipColorPicked, tb), thickness,
+            ShowAnnotColorPopup(tb->win, chipScreen, current, withNone, label,
+                                MkFunc1(ChipColorPicked, (AnnotEditToolbarBase*)tb), thickness,
                                 MkFunc1(ChipThicknessPicked, (AnnotEditToolbarBase*)tb), thicknessLabel, minThickness);
             break;
         }
