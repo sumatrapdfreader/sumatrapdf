@@ -99,18 +99,6 @@ static void ChmDumpEntry(chm_ctx* h, chm_entry* e, ChmDumpCtx* ctx) {
                       Str(e->path)));
 }
 
-struct ChmDumpTocVisitor : EbookTocVisitor {
-    Str section;
-    bool any = false;
-
-    explicit ChmDumpTocVisitor(Str section) : section(section) {}
-
-    void Visit(Str name, Str url, int level) override {
-        any = true;
-        WriteStdoutLn(fmt("%s level=%d name=%s url=%s", section, level, name, url));
-    }
-};
-
 static bool DumpChmFileRaw(Str path) {
     Str data = file::ReadFile(path);
     AutoFree<char> freeData(data.s);
@@ -154,13 +142,19 @@ static void DumpChmFileMetadata(Str path) {
     WriteStdoutLn(fmt("metadata index=%s", doc->indexPath));
     WriteStdoutLn(fmt("metadata codepage=%u", doc->codepage));
 
-    ChmDumpTocVisitor toc(StrL("toc"));
-    if (!doc->ParseToc(&toc) || !toc.any) {
+    EbookToc toc;
+    if (!doc->ParseToc(toc) || len(toc.items) == 0) {
         WriteStdoutLn(StrL("toc: none"));
     }
-    ChmDumpTocVisitor index(StrL("index"));
-    if (!doc->ParseIndex(&index) || !index.any) {
+    for (EbookTocItem& it : toc.items) {
+        WriteStdoutLn(fmt("toc level=%d name=%s url=%s", it.level, it.name, it.url));
+    }
+    EbookToc index;
+    if (!doc->ParseIndex(index) || len(index.items) == 0) {
         WriteStdoutLn(StrL("index: none"));
+    }
+    for (EbookTocItem& it : index.items) {
+        WriteStdoutLn(fmt("index level=%d name=%s url=%s", it.level, it.name, it.url));
     }
 }
 

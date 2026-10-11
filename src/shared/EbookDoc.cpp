@@ -566,7 +566,7 @@ Str EpubDoc::GetFileData(Str relPath, Str pagePath) {
     return TakeArchiveData(archive->GetFileDataByName(url));
 }
 
-static bool ParseNavToc(Str data, Str pagePath, EbookTocVisitor* visitor) {
+static bool ParseNavToc(Str data, Str pagePath, EbookToc& toc) {
     GumboHtmlParser parser(data);
     HtmlToken* tok;
     // skip to the start of the <nav epub:type="toc">
@@ -610,13 +610,13 @@ static bool ParseNavToc(Str data, Str pagePath, EbookTocVisitor* visitor) {
             TempStr normHref = NormalizeURLTemp(href, pagePath);
             itemSrc = ResolveHtmlEntitiesTemp(normHref);
         }
-        visitor->Visit(itemText, itemSrc, level);
+        toc.Add(itemText, itemSrc, level);
     }
 
     return true;
 }
 
-static bool ParseNcxToc(Str data, Str pagePath, EbookTocVisitor* visitor) {
+static bool ParseNcxToc(Str data, Str pagePath, EbookToc& toc) {
     GumboHtmlParser parser(data);
     HtmlToken* tok;
     // skip to the start of the navMap
@@ -635,7 +635,7 @@ static bool ParseNcxToc(Str data, Str pagePath, EbookTocVisitor* visitor) {
            (!tok->IsEndTag() || !tok->NameIs(StrL("navMap"), HtmlNameMatch::Local))) {
         if (tok->IsTag() && tok->NameIs(StrL("navPoint"), HtmlNameMatch::Local)) {
             if (itemText) {
-                visitor->Visit(itemText, itemSrc, level);
+                toc.Add(itemText, itemSrc, level);
                 itemText = {};
                 itemSrc = {};
             }
@@ -664,7 +664,7 @@ static bool ParseNcxToc(Str data, Str pagePath, EbookTocVisitor* visitor) {
     return true;
 }
 
-bool EpubDoc::ParseToc(EbookTocVisitor* visitor) {
+bool EpubDoc::ParseToc(EbookToc& toc) {
     if (len(tocPath) == 0) {
         return false;
     }
@@ -682,9 +682,9 @@ bool EpubDoc::ParseToc(EbookTocVisitor* visitor) {
 
     Str pagePath = tocPath;
     if (isNcxToc) {
-        return ParseNcxToc(tocDataStr, pagePath, visitor);
+        return ParseNcxToc(tocDataStr, pagePath, toc);
     }
-    return ParseNavToc(tocDataStr, pagePath, visitor);
+    return ParseNavToc(tocDataStr, pagePath, toc);
 }
 
 // Only the spine's page-progression-direction. Loading the whole book to read
@@ -1004,7 +1004,7 @@ Str Fb2Doc::GetCoverImage() const {
     return GetImageData(coverImage);
 }
 
-bool Fb2Doc::ParseToc(EbookTocVisitor* visitor) const {
+bool Fb2Doc::ParseToc(EbookToc& toc) const {
     TempStr itemText;
     bool inTitle = false;
     int titleCount = 0;
@@ -1026,7 +1026,7 @@ bool Fb2Doc::ParseToc(EbookTocVisitor* visitor) const {
             itemText.len -= str::NormalizeWSInPlace(itemText);
             if (len(itemText) > 0) {
                 TempStr url = fmt(kFb2TocEntryMark "%d", titleCount);
-                visitor->Visit(itemText, url, level);
+                toc.Add(itemText, url, level);
                 itemText = {};
             }
             inTitle = false;
@@ -1155,11 +1155,11 @@ bool PalmDoc::Load() {
     return true;
 }
 
-bool PalmDoc::ParseToc(EbookTocVisitor* visitor) {
+bool PalmDoc::ParseToc(EbookToc& toc) {
     for (int i = 0; i < len(tocEntries); i++) {
         TempStr url = fmt(kPdbTocEntryMark "%d", i + 1);
         Str name = tocEntries[i];
-        visitor->Visit(name, url, 1);
+        toc.Add(name, url, 1);
     }
     return true;
 }

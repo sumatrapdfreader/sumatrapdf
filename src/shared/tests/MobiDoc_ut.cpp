@@ -96,10 +96,12 @@ void MobiDoc_UnitTests() {
     utassert(MobiDoc_UnitTestHeader());
 #endif
     {
-        MobiDoc toc({});
-        toc.doc.Append(StrL("<mbp:pagebreak/>"));
-        toc.docTocIndex = 0;
-        utassert(toc.ParseToc(nullptr));
+        MobiDoc mobi({});
+        mobi.doc.Append(StrL("<mbp:pagebreak/>"));
+        mobi.docTocIndex = 0;
+        EbookToc toc;
+        utassert(mobi.ParseToc(toc));
+        utassert(len(toc.items) == 0);
     }
     {
         AutoDelete<PdbReader> reader(PdbReader::CreateFromData(MkMobi(0)));

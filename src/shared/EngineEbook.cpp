@@ -880,7 +880,7 @@ static void AppendTocItem(TocItem*& root, TocItem* item, int level) {
     r2->AddSiblingAtEnd(item);
 }
 
-struct EbookTocBuilder : EbookTocVisitor {
+struct EbookTocBuilder {
     EngineEbook* engine = nullptr;
     TocItem* root = nullptr;
     int idCounter = 0;
@@ -889,13 +889,14 @@ struct EbookTocBuilder : EbookTocVisitor {
   public:
     explicit EbookTocBuilder(EngineEbook* engine) { this->engine = engine; }
 
-    void Visit(Str name, Str url, int level) override;
+    void Add(Str name, Str url, int level);
+    void AddAll(const EbookToc& toc);
 
     TocItem* GetRoot() { return root; }
     void SetIsIndex(bool value) { isIndex = value; }
 };
 
-void EbookTocBuilder::Visit(Str name, Str url, int level) {
+void EbookTocBuilder::Add(Str name, Str url, int level) {
     Arena* arena = engine->arena;
     IPageDestination* dest;
     if (len(url) == 0) {
@@ -925,6 +926,12 @@ void EbookTocBuilder::Visit(Str name, Str url, int level) {
     AppendTocItem(root, item, level);
 }
 
+void EbookTocBuilder::AddAll(const EbookToc& toc) {
+    for (const EbookTocItem& it : toc.items) {
+        Add(it.name, it.url, it.level);
+    }
+}
+
 TocTree* EngineEbook::FinishToc(EbookTocBuilder& builder) {
     TocItem* root = builder.GetRoot();
     if (!root) {
@@ -943,7 +950,9 @@ TocTree* EngineEbook::BuildToc(T* doc) {
     }
     tocBuilt = true;
     EbookTocBuilder builder(this);
-    doc->ParseToc(&builder);
+    EbookToc toc;
+    doc->ParseToc(toc);
+    builder.AddAll(toc);
     return FinishToc(builder);
 }
 
@@ -1781,7 +1790,7 @@ static uint ExtractHttpCharset(Str html) {
     return cp;
 }
 
-struct ChmHtmlCollector : EbookTocVisitor {
+struct ChmHtmlCollector {
     ChmFile* doc = nullptr;
     StrVec added;
     str::Builder html;
@@ -1796,10 +1805,14 @@ struct ChmHtmlCollector : EbookTocVisitor {
         TempStr index = doc->homePath;
         TempWStr urlW = strconv::StrCPToWStrTemp(index, doc->codepage);
         TempStr url = ToUtf8Temp(urlW);
-        Visit({}, url, 0);
+        AddPage(url);
 
         // then add all pages linked to from the table of contents
-        doc->ParseToc(this);
+        EbookToc toc;
+        doc->ParseToc(toc);
+        for (EbookTocItem& it : toc.items) {
+            AddPage(it.url);
+        }
 
         // finally add all the remaining HTML files
         StrVec paths;
@@ -1811,13 +1824,13 @@ struct ChmHtmlCollector : EbookTocVisitor {
                 }
                 urlW = ToWStrTemp(path);
                 url = ToUtf8Temp(urlW);
-                Visit({}, url, -1);
+                AddPage(url);
             }
         }
         return html.TakeStr();
     }
 
-    void Visit(Str, Str url, int) override {
+    void AddPage(Str url) {
         if (len(url) == 0 || url::IsAbsolute(url)) {
             return;
         }
@@ -1892,14 +1905,18 @@ TocTree* EngineChm::GetToc() {
     }
     tocBuilt = true;
     EbookTocBuilder builder(this);
-    doc->ParseToc(&builder);
+    EbookToc toc;
+    doc->ParseToc(toc);
+    builder.AddAll(toc);
     if (len(doc->indexPath) > 0) {
         // TODO: ToC code doesn't work too well for displaying an index,
         //       so this should really become a tree of its own (which
         //       doesn't rely on entries being in the same order as pages)
-        builder.Visit(StrL("Index"), {}, 1);
+        builder.Add(StrL("Index"), {}, 1);
         builder.SetIsIndex(true);
-        doc->ParseIndex(&builder);
+        EbookToc index;
+        doc->ParseIndex(index);
+        builder.AddAll(index);
     }
     return FinishToc(builder);
 }

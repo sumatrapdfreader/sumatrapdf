@@ -319,7 +319,7 @@ static Str StripItsProtocol(Str url) {
     return p ? p : url;
 }
 
-static bool VisitChmItem(EbookTocVisitor* visitor, const GumboNode* objNode, ChmItemKind kind, int level) {
+static bool AddChmItem(EbookToc& toc, const GumboNode* objNode, ChmItemKind kind, int level) {
     ReportIf(!GumboTagNameIs(objNode, StrL("object")));
 
     StrVec references;
@@ -359,12 +359,12 @@ static bool VisitChmItem(EbookTocVisitor* visitor, const GumboNode* objNode, Chm
 
     if (kind == ChmItemKind::Toc || len(references) == 2) {
         Str target = kind == ChmItemKind::Toc ? local : references[1];
-        visitor->Visit(label, target, level);
+        toc.Add(label, target, level);
         return true;
     }
-    visitor->Visit(label, {}, level);
+    toc.Add(label, {}, level);
     for (int i = 0; i < len(references); i += 2) {
-        visitor->Visit(references[i], references[i + 1], level + 1);
+        toc.Add(references[i], references[i + 1], level + 1);
     }
     return true;
 }
@@ -376,7 +376,7 @@ struct ChmUlFrame {
 };
 
 // Nested and sibling <ul>s belong to the preceding <li>, at level + 1.
-static void WalkChmUl(EbookTocVisitor* visitor, const GumboNode* ulNode, ChmItemKind kind) {
+static void WalkChmUl(EbookToc& toc, const GumboNode* ulNode, ChmItemKind kind) {
     if (!ulNode) {
         return;
     }
@@ -408,7 +408,7 @@ static void WalkChmUl(EbookTocVisitor* visitor, const GumboNode* ulNode, ChmItem
         if (!objNode) {
             continue;
         }
-        if (!VisitChmItem(visitor, objNode, kind, lvl)) {
+        if (!AddChmItem(toc, objNode, kind, lvl)) {
             continue;
         }
         const GumboNode* nested = GumboFindChildByTag(li, StrL("ul"));
@@ -420,9 +420,9 @@ static void WalkChmUl(EbookTocVisitor* visitor, const GumboNode* ulNode, ChmItem
 
 // Process `firstUl` and any consecutive <ul> siblings (some broken ToCs wrap
 // each <li> in its own <ul>, producing a run of sibling <ul>s).
-static void WalkChmTocOrIndex(EbookTocVisitor* visitor, const GumboNode* firstUl, ChmItemKind kind) {
+static void WalkChmTocOrIndex(EbookToc& toc, const GumboNode* firstUl, ChmItemKind kind) {
     if (!firstUl || !firstUl->parent) {
-        WalkChmUl(visitor, firstUl, kind);
+        WalkChmUl(toc, firstUl, kind);
         return;
     }
     const GumboNode* parent = firstUl->parent;
@@ -433,13 +433,13 @@ static void WalkChmTocOrIndex(EbookTocVisitor* visitor, const GumboNode* firstUl
         if (!GumboTagNameIs(sib, StrL("ul"))) {
             break;
         }
-        WalkChmUl(visitor, sib, kind);
+        WalkChmUl(toc, sib, kind);
     }
 }
 
 // Ignore any <ul><li> structure and visit every <object type="text/sitemap">
 // in document order. Used for ToCs where the list scaffolding is broken.
-static bool WalkBrokenChmTocOrIndex(EbookTocVisitor* visitor, const GumboNode* root, ChmItemKind kind) {
+static bool WalkBrokenChmTocOrIndex(EbookToc& toc, const GumboNode* root, ChmItemKind kind) {
     bool hadOne = false;
     // iterative pre-order DFS so a deeply nested document can't overflow the stack
     Vec<const GumboNode*> toVisit;
@@ -452,7 +452,7 @@ static bool WalkBrokenChmTocOrIndex(EbookTocVisitor* visitor, const GumboNode* r
         if (GumboTagNameIs(node, StrL("object"))) {
             const GumboAttribute* type = gumbo_get_attribute(&node->v.element.attributes, "type");
             if (type && str::EqI(Str(type->value), StrL("text/sitemap"))) {
-                hadOne |= VisitChmItem(visitor, node, kind, 1);
+                hadOne |= AddChmItem(toc, node, kind, 1);
                 continue; // don't recurse into the object's <param> children
             }
         }
@@ -518,17 +518,7 @@ static TempStr FixChmTocEntitiesTemp(Str s, uint codepage) {
     return SmartToUtf8Temp(ToStr(bytes), cp);
 }
 
-// Repair ToC labels before forwarding them; URLs and levels pass through.
-struct ChmTocEntityFixer : EbookTocVisitor {
-    EbookTocVisitor* inner;
-    uint codepage;
-    ChmTocEntityFixer(EbookTocVisitor* v, uint cp) : inner(v), codepage(cp) {}
-    void Visit(Str name, Str url, int level) override {
-        inner->Visit(FixChmTocEntitiesTemp(name, codepage), url, level);
-    }
-};
-
-bool ChmFile::ParseTocOrIndex(EbookTocVisitor* visitor, Str path, ChmItemKind kind) const {
+bool ChmFile::ParseTocOrIndex(EbookToc& toc, Str path, ChmItemKind kind) const {
     if (len(path) == 0) {
         return false;
     }
@@ -546,24 +536,33 @@ bool ChmFile::ParseTocOrIndex(EbookTocVisitor* visitor, Str path, ChmItemKind ki
         return false;
     }
 
-    ChmTocEntityFixer fixer(visitor, codepage);
-
     // Find <body>, then the first <ul> under it (DFS). <body> is optional.
+    int first = len(toc.items);
     const GumboNode* body = GumboFindDescendantByTag(doc.Document(), StrL("body"));
     const GumboNode* firstUl = GumboFindDescendantByTag(body ? body : doc.Document(), StrL("ul"));
+    bool ok = true;
     if (firstUl) {
-        WalkChmTocOrIndex(&fixer, firstUl, kind);
-        return true;
+        WalkChmTocOrIndex(toc, firstUl, kind);
+    } else {
+        ok = WalkBrokenChmTocOrIndex(toc, doc.Document(), kind);
     }
-    return WalkBrokenChmTocOrIndex(&fixer, doc.Document(), kind);
+    // repair the labels; urls and levels are fine as they are
+    for (int i = first; i < len(toc.items); i++) {
+        EbookTocItem& it = toc.items[i];
+        TempStr fixed = FixChmTocEntitiesTemp(it.name, codepage);
+        if (!str::Eq(fixed, it.name)) {
+            str::ReplaceWithCopy(&it.name, fixed);
+        }
+    }
+    return ok;
 }
 
-bool ChmFile::ParseToc(EbookTocVisitor* visitor) const {
-    return ParseTocOrIndex(visitor, tocPath, ChmItemKind::Toc);
+bool ChmFile::ParseToc(EbookToc& toc) const {
+    return ParseTocOrIndex(toc, tocPath, ChmItemKind::Toc);
 }
 
-bool ChmFile::ParseIndex(EbookTocVisitor* visitor) const {
-    return ParseTocOrIndex(visitor, indexPath, ChmItemKind::Index);
+bool ChmFile::ParseIndex(EbookToc& toc) const {
+    return ParseTocOrIndex(toc, indexPath, ChmItemKind::Index);
 }
 
 ChmFile* ChmFile::CreateFromFile(Str path) {

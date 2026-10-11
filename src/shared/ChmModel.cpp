@@ -174,7 +174,7 @@ TempStr ChmModel::ScrollUrlForPageTemp(int pageNo) const {
     return str::DupTemp(pages[pageNo - 1]);
 }
 
-struct ChmTocBuilder : EbookTocVisitor {
+struct ChmTocBuilder {
     ChmFile* doc = nullptr;
 
     StrVec* pages = nullptr;
@@ -216,7 +216,7 @@ struct ChmTocBuilder : EbookTocVisitor {
         }
     }
 
-    void Visit(Str name, Str url, int level) override {
+    void Add(Str name, Str url, int level) {
         Str nameDup = str::Dup(a, name);
         Str urlDup = str::Dup(a, url);
         int pageNo = CreatePageNoForURL(urlDup);
@@ -240,7 +240,11 @@ bool ChmModel::Load(Str fileName) {
     // parse the ToC here, since page numbering depends on it
     tocTrace = new Vec<BrowserTocTraceItem>();
     ChmTocBuilder tmpTocBuilder(doc, &pages, tocTrace, poolAlloc);
-    doc->ParseToc(&tmpTocBuilder);
+    EbookToc toc;
+    doc->ParseToc(toc);
+    for (EbookTocItem& it : toc.items) {
+        tmpTocBuilder.Add(it.name, it.url, it.level);
+    }
     ReportIf(len(pages) == 0);
     return len(pages) > 0;
 }

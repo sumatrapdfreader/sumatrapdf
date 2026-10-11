@@ -49,7 +49,7 @@ struct EpubDoc {
     Str GetImageData(Str fileName, Str pagePath);
     Str GetFileData(Str relPath, Str pagePath);
 
-    bool ParseToc(EbookTocVisitor* visitor);
+    bool ParseToc(EbookToc& toc);
 
     static EpubDoc* CreateFromFile(Str path);
     static EpubDoc* CreateFromData(Str data);
@@ -80,7 +80,7 @@ struct Fb2Doc {
     Str GetImageData(Str fileName) const;
     Str GetCoverImage() const;
 
-    bool ParseToc(EbookTocVisitor* visitor) const;
+    bool ParseToc(EbookToc& toc) const;
 
     static Fb2Doc* CreateFromFile(Str path);
     static Fb2Doc* CreateFromData(Str data);
@@ -100,7 +100,7 @@ struct PalmDoc {
     explicit PalmDoc(Str path);
     ~PalmDoc();
 
-    bool ParseToc(EbookTocVisitor* visitor);
+    bool ParseToc(EbookToc& toc);
 
     static PalmDoc* CreateFromFile(Str path);
 };

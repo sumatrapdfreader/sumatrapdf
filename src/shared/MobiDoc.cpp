@@ -931,7 +931,7 @@ struct MobiTocWalkItem {
 };
 
 // Walk iteratively to handle deep TOCs; stop at the first pagebreak.
-static void WalkMobiToc(const GumboNode* root, EbookTocVisitor* visitor) {
+static void WalkMobiToc(const GumboNode* root, EbookToc& toc) {
     Vec<MobiTocWalkItem> stack;
     VecAppend(stack, {root, 0});
     while (len(stack) > 0) {
@@ -955,7 +955,7 @@ static void WalkMobiToc(const GumboNode* root, EbookTocVisitor* visitor) {
                 if (attr) {
                     TempStr text = GumboTextContentTemp(node, GumboTextMode::Descendants);
                     if (len(text) > 0) {
-                        visitor->Visit(text, Str(attr->value), level);
+                        toc.Add(text, Str(attr->value), level);
                     }
                 }
                 continue; // don't descend into the <a>'s children
@@ -973,7 +973,7 @@ static void WalkMobiToc(const GumboNode* root, EbookTocVisitor* visitor) {
     }
 }
 
-bool MobiDoc::ParseToc(EbookTocVisitor* visitor) {
+bool MobiDoc::ParseToc(EbookToc& toc) {
     if (!HasToc()) {
         return false;
     }
@@ -985,12 +985,12 @@ bool MobiDoc::ParseToc(EbookTocVisitor* visitor) {
     if (pb >= 0) {
         tocSlice.len = pb;
     }
-    GumboDoc toc(tocSlice, GumboMode::Html);
-    if (!toc.Document()) {
+    GumboDoc tocDoc(tocSlice, GumboMode::Html);
+    if (!tocDoc.Document()) {
         return false;
     }
 
-    WalkMobiToc(toc.Document(), visitor);
+    WalkMobiToc(tocDoc.Document(), toc);
 
     return true;
 }

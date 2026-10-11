@@ -30,7 +30,7 @@ struct ChmFile {
 
     void ParseWindowsData();
     bool ParseSystemData();
-    bool ParseTocOrIndex(EbookTocVisitor* visitor, Str path, ChmItemKind kind) const;
+    bool ParseTocOrIndex(EbookToc& toc, Str path, ChmItemKind kind) const;
     void FixPathCodepage(Str& path, uint& fileCP);
 
     bool Load(Str path);
@@ -44,8 +44,8 @@ struct ChmFile {
     TempStr GetPropertyTemp(DocProp prop) const;
     void GetAllPaths(StrVec*) const;
 
-    bool ParseToc(EbookTocVisitor* visitor) const;
-    bool ParseIndex(EbookTocVisitor* visitor) const;
+    bool ParseToc(EbookToc& toc) const;
+    bool ParseIndex(EbookToc& toc) const;
 
     static ChmFile* CreateFromFile(Str path);
 };

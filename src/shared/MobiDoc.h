@@ -49,7 +49,7 @@ struct MobiDoc {
     TempStr GetPropertyTemp(DocProp prop);
 
     bool HasToc();
-    bool ParseToc(EbookTocVisitor* visitor);
+    bool ParseToc(EbookToc& toc);
 
     static MobiDoc* CreateFromFile(Str path);
     static MobiDoc* CreateFromData(Str data);
