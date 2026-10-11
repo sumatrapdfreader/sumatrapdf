@@ -3,6 +3,7 @@
 
 #include "base/Base.h"
 #include "base/CmdLineArgs.h"
+#include "base/File.h"
 #if OS_WIN
 #include "base/Win.h"
 #endif
@@ -16,6 +17,9 @@ void GetPrintersInfo(str::Builder& out);
 #endif
 #include "Flags.h"
 #include "SumatraLog.h"
+
+// where -x unpacks without -d
+constexpr char kExtractDirName[] = "sumatra-files";
 
 // @gen-start flags
 // clang-format off
@@ -896,11 +900,12 @@ static void ParseFlagNodes(Arena* a, StrNode* firstArg, Flags& i, Str toolNames)
     }
 
     if (i.justExtractFiles) {
-        // silently extract files to directory given if /d
-        // or current directory if no /d given
+        // silently extract files to the -d directory, else to sumatra-files
+        // under the current directory ("-d ." unpacks next to this exe)
         i.silent = true;
         if (len(i.installDir) == 0) {
-            i.installDir = str::Dup(a, StrL("."));
+            // absolute: SHCreateDirectoryEx refuses a relative path
+            i.installDir = str::Dup(a, path::NormalizeTemp(StrL(kExtractDirName)));
         }
     }
 }

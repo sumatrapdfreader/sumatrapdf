@@ -1,7 +1,8 @@
 // Installer -x extracts the payload without installing (issue #6003).
 // Copy the exe into a temp dir as SumatraPDF.exe, then check:
 //   -x -d out  writes SumatraPDF.exe plus the payload under out/
-//   -x         unpacks the payload next to the running exe and does not
+//   -x         the same under sumatra-files/ in the current directory
+//   -x -d .    unpacks the payload next to the running exe and does not
 //              overwrite that exe
 //
 // Run: bun tests/issue-6003.ts [--no-build]
@@ -70,10 +71,22 @@ export async function testit(): Promise<void> {
   }
   mustExist(outDir, ["SumatraPDF.exe", ...PAYLOAD]);
 
+  // no -d: a sumatra-files directory under the current one
+  const bare = runExtract(copied, dir, ["-x"]);
+  if (bare.exitCode !== 0) {
+    throw new Error(`issue-6003: -x exited ${bare.exitCode}:\n${bare.out}`);
+  }
+  mustExist(join(dir, "sumatra-files"), ["SumatraPDF.exe", ...PAYLOAD]);
+  for (const name of PAYLOAD) {
+    if (existsSync(join(dir, name))) {
+      throw new Error(`issue-6003: -x without -d unpacked '${name}' into the current directory`);
+    }
+  }
+
   const before = statSync(copied);
-  const inPlace = runExtract(copied, dir, ["-x"]);
+  const inPlace = runExtract(copied, dir, ["-x", "-d", "."]);
   if (inPlace.exitCode !== 0) {
-    throw new Error(`issue-6003: -x exited ${inPlace.exitCode}:\n${inPlace.out}`);
+    throw new Error(`issue-6003: -x -d . exited ${inPlace.exitCode}:\n${inPlace.out}`);
   }
   mustExist(dir, PAYLOAD);
   if (!existsSync(copied)) {
