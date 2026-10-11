@@ -68,38 +68,6 @@ static bool gUpdateAutoInstall = false;
 // the bottom-left "update available" notification (with the download link)
 static Kind kNotifUpdateAvailable = StrL("notifUpdateAvailable").s;
 
-struct UpdateInfo {
-    HWND hwndParent = nullptr;
-    Str latestVer;
-
-    Str installer64;
-    Str portable64;
-
-    Str installer32;
-    Str portable32;
-
-    Str installerArm64;
-    Str portableArm64;
-
-    Str dlURL;
-    Str installerPath;
-    Str builtOn; // optional "yyyy-mm-dd" from the update-check file
-
-    UpdateInfo() = default;
-    ~UpdateInfo() {
-        str::Free(latestVer);
-        str::Free(installer64);
-        str::Free(portable64);
-        str::Free(installer32);
-        str::Free(portable32);
-        str::Free(installerArm64);
-        str::Free(portableArm64);
-        str::Free(dlURL);
-        str::Free(installerPath);
-        str::Free(builtOn);
-    }
-};
-
 /*
 The format of update information downloaded from the server:
 
@@ -120,64 +88,6 @@ PortableZip32: https://www.sumatrapdfreader.org/dl/prerel/14276/SumatraPDF-prere
     Info = Bookmarking web application
 ]
 */
-static UpdateInfo* ParseUpdateInfo(Str d) {
-    // if a user configures os-wide proxy that is not a regular ie proxy
-    // (which we pick up) we might get garbage http response
-    // check if response looks valid
-    if (len(d) == 0) {
-        return nullptr;
-    }
-    Str prefix = (d.s[0] == '[') ? StrL("[SumatraPDF]") : StrL("SumatraPDF");
-    if (!str::StartsWith(d, prefix)) {
-        return nullptr;
-    }
-
-    SquareTreeNode* root = ParseSquareTree(d);
-    if (!root) {
-        return nullptr;
-    }
-    AutoDelete delRoot(root);
-
-    SetPromoString(SerializeSquareTreeNodeTemp(root->GetChild(StrL("Promo"))));
-
-    SquareTreeNode* node = root->GetChild(StrL("SumatraPDF"));
-    if (!node) {
-        return nullptr;
-    }
-
-    Str latestVer = node->GetValue(StrL("Latest"));
-    if (!IsValidProgramVersion(latestVer)) {
-        return nullptr;
-    }
-    auto* res = new UpdateInfo();
-    res->latestVer = str::Dup(latestVer);
-    Str onDate = node->GetValue(StrL("BuiltOn"));
-    if (onDate) {
-        res->builtOn = str::Dup(onDate);
-    }
-
-    // those are optional. if missing, we'll just tell the user to go to website to download
-    res->installer64 = str::Dup(node->GetValue(StrL("Installer64")));
-    res->installerArm64 = str::Dup(node->GetValue(StrL("InstallerArm64")));
-    res->installer32 = str::Dup(node->GetValue(StrL("Installer32")));
-
-    res->portable64 = str::Dup(node->GetValue(StrL("PortableExe64")));
-    res->portableArm64 = str::Dup(node->GetValue(StrL("PortableExeArm64")));
-    res->portable32 = str::Dup(node->GetValue(StrL("PortableExe32")));
-
-    // figure out which executable to download
-    Str dlURL;
-    bool isDll = IsDllBuild();
-    if (IsArmBuild()) {
-        dlURL = isDll ? res->installerArm64 : res->portableArm64;
-    } else if (IsProcess64()) {
-        dlURL = isDll ? res->installer64 : res->portable64;
-    } else {
-        dlURL = isDll ? res->installer32 : res->portable32;
-    }
-    res->dlURL = str::Dup(dlURL);
-    return res;
-}
 
 static bool ShouldCheckForUpdate(UpdateCheck updateCheckType) {
     if (gUpdateCheckInProgress) {
