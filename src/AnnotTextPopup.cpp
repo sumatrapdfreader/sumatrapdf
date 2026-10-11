@@ -30,6 +30,7 @@
 
 #include "AnnotTextPopup.h"
 #include "AppHelpersCommon.h"
+#include "AnnotTextPopupCommon.h"
 
 // A floating card with the annotation's whole text, opened by clicking the
 // annotation. The text sits in a read-only multi-line edit, which wraps,
@@ -38,19 +39,9 @@
 
 constexpr const WCHAR* kAnnotTextPopupClassName = L"SumatraAnnotTextPopup";
 
-constexpr int kMargin = 8;
 constexpr int kGap = 5;
 // between the author and the date on the header line
 constexpr int kHeaderGap = 12;
-// between the header line and the rule under it
-constexpr int kRuleGap = 4;
-constexpr int kCornerRadius = 6;
-// the card is as wide as the comment's longest line; lines longer than this
-// wrap, so a comment with no line breaks doesn't span the canvas
-constexpr int kMaxLineChars = 80;
-constexpr int kMinWidth = 120;
-// how much of the canvas the card may cover before the text starts scrolling
-constexpr int kMaxHeightPercent = 60;
 // a card shorter than this looks like a glitch, however short the comment
 constexpr int kMinLines = 3;
 

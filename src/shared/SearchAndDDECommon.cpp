@@ -2611,3 +2611,6 @@ bool FindFlushPendingSearch(MainWindow* win) {
     }
     return true;
 }
+
+bool gIsStartup = false;
+StrVec gDdeOpenOnStartup;

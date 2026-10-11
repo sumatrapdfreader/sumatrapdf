@@ -32,6 +32,7 @@
 #include "Selection.h"
 #include "SumatraPDF.h"
 #include "ReadAloud.h"
+#include "ReadAloudBarCommon.h"
 #include "SumatraLog.h"
 
 // Read-aloud, top to bottom:
@@ -155,10 +156,6 @@ struct ReadAloudPlaybackBar : WindowBase {
     Func1List<MainWindow*> onWindowMoved;
 };
 
-constexpr int kBarMargin = 8;
-constexpr int kBarPadX = 12;
-constexpr int kBarPadY = 6;
-constexpr int kBtnGap = 8;
 constexpr int kBtnPadX = 10;
 constexpr int kBtnPadY = 3;
 

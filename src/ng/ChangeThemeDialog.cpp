@@ -32,10 +32,10 @@
 #include "gui/ToolWindow.h"
 #include "SumatraDialogs.h"
 #include "AppHelpersCommon.h"
+#include "ChangeThemeDialogCommon.h"
 
 #include "SumatraLog.h"
 
-static constexpr int kFollowWindowsThemeListIndex = 0;
 static constexpr int kThemePreviewDebounceMs = 300;
 static constexpr float kThemeRowDy = 22;
 static constexpr float kThemeListMinDy = 180;

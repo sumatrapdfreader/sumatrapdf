@@ -8,3 +8,5 @@ RectF SelectionRect(WindowTab* tab, int* pageNoOut);
 RectF DefaultSignatureRectAt(DisplayModel* dm, int pageNo, PointF pt);
 
 TempStr SignErrorMessageTemp(Str err);
+
+static Kind kNotifSignPlacement = "notifSignPlacement";

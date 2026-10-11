@@ -47,3 +47,13 @@ void FinishSaveSelImg(SaveSelImgWork* d);
 constexpr int kMaxImageDpi = 9600;
 
 static const int kImageDpiChoices[] = {72, 96, 150, 300, 600, 1200};
+
+// rectangular selection → PNG / JPEG / BMP at a chosen DPI, independent of
+// the current zoom (issue #6127)
+static Kind kNotifSaveSelectionAsImage = "notifSaveSelectionAsImage";
+
+// entry points of the mupdf command line tools we link in
+extern "C" int pdfbake_main(int argc, char** argv);
+extern "C" int pdfclean_main(int argc, char** argv);
+extern "C" int muconvert_main(int argc, char** argv);
+extern "C" void fz_set_optind(int val);

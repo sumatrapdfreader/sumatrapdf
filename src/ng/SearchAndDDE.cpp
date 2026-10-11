@@ -475,9 +475,6 @@ TempStr FindStateResultTemp(MainWindow* win) {
 
 // ─── DDE command grammar (orig's). Window messages stay Windows-only. ───
 
-bool gIsStartup = false;
-StrVec gDdeOpenOnStartup;
-
 MainWindow* WindowFromHwnd(HWND hwnd) {
 #if OS_WIN
     return AppShellWindowFromHwnd(hwnd);

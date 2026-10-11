@@ -39,7 +39,6 @@
 
 #include "SumatraLog.h"
 
-static Kind kNotifCopiedToClipboard = "notifCopiedToClipboard";
 // orig's kSelectionToolbarShowDelayInMs (Canvas.h)
 constexpr int kShowDelayInMs = 500;
 

@@ -32,3 +32,5 @@ Str ButtonLabel(const SelectionToolbarButton& b);
 bool GetSelectionBounds(MainWindow* win, Rect& out);
 
 constexpr int kCopiedNotifTimeoutMs = 1500;
+
+static Kind kNotifCopiedToClipboard = "notifCopiedToClipboard";

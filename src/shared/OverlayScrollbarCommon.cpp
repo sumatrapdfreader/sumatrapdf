@@ -147,3 +147,5 @@ void OverlayScrollbarSetMode(OverlayScrollbar* sb, OverlayScrollbar::Mode mode) 
         SetState(sb, State::SmartThin);
     }
 }
+
+bool gOverlayScrollbarSuppressThick = false;

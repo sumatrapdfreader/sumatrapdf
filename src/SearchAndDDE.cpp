@@ -40,9 +40,6 @@
 #include "SearchAndDDE.h"
 #include "SearchAndDDECommon.h"
 
-bool gIsStartup = false;
-StrVec gDdeOpenOnStartup;
-
 void ApplyFindHistory(DropDown* dd) {
     if (dd) {
         dd->SetItemsKeepText(gFindHistory);

@@ -176,9 +176,6 @@ bool SettingsRememberOpenedFiles() {
     return gSettings->rememberOpenedFiles && !gMyWindowWasEmbedded;
 }
 
-static Kind kNotifPersistentWarning = "persistentWarning";
-static Kind kNotifDocErrors = "docErrors";
-
 HBITMAP gBitmapReloadingCue;
 RenderCache* gRenderCache;
 HCURSOR gCursorDrag;
@@ -2880,8 +2877,6 @@ void ShowMainWindow(MainWindow* win, int windowState) {
     }
 }
 
-// Kind used so only one default-app bar is shown at a time
-static Kind kNotifDefaultApp = "defaultApp";
 // On the home page: if we registered as Open With for extensions that no longer
 // open with us, show a bottom bar with per-extension fix links.
 static void MaybeShowDefaultAppNotification(MainWindow* win) {

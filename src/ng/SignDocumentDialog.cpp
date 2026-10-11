@@ -40,8 +40,6 @@
 
 #include "SumatraLog.h"
 
-static Kind kNotifSignPlacement = "notifSignPlacement";
-
 struct SignDocumentDlg {
     MainWindow* win = nullptr;
     bool visible = false;

@@ -981,3 +981,6 @@ void AnimStep() {
         RevealingLettersAnim();
     }
 }
+
+Str gMsgError;
+Flags* gCli = nullptr;

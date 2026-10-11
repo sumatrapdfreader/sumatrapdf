@@ -1239,8 +1239,6 @@ static void AskForPasswordAndLoad(MainWindow* win, Str path, LoadPrefs prefs, Lo
 }
 
 #if OS_WIN
-// Kind used so only one default-app bar is shown at a time
-static Kind kNotifDefaultApp = "defaultApp";
 // On the home page: if we registered as Open With for extensions that no longer
 // open with us, show a bottom bar with per-extension fix links.
 static void MaybeShowDefaultAppNotification(MainWindow* win) {
@@ -1298,9 +1296,6 @@ void ShowDefaultAppNotification(MainWindow* win, const StrVec& missing) {
     ShowNotification(args);
 }
 #endif
-
-static Kind kNotifPersistentWarning = "persistentWarning";
-static Kind kNotifDocErrors = "docErrors";
 
 // a warning about the document that just loaded: bottom-right, small margins,
 // 16s timeout, shown only while `tab` is current

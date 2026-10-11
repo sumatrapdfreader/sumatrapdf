@@ -44,7 +44,6 @@
 
 constexpr const WCHAR* kSelectionToolbarClassName = L"SumatraSelectionToolbar";
 
-static Kind kNotifCopiedToClipboard = "notifCopiedToClipboard";
 struct SelectionToolbar {
     MainWindow* win = nullptr;
     WindowTab* tab = nullptr; // tab the current selection belongs to

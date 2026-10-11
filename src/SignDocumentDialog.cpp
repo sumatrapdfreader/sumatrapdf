@@ -103,7 +103,6 @@ static SignDocumentWnd* gSignDocumentWnd = nullptr;
 // true while the Sign Document dialog is hidden and the next click / drag on
 // the page will place a new signature (issue #5967)
 static bool gPlacingSignature = false;
-static Kind kNotifSignPlacement = "notifSignPlacement";
 static void ClearSignaturePlacementNotif(MainWindow* win);
 
 static void SetSignDocumentOwnerEnabled(SignDocumentWnd* wnd, bool enabled) {

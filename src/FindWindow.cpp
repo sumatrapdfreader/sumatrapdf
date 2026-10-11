@@ -37,12 +37,8 @@
 #include "DarkMode.h"
 #include "FindWindow.h"
 #include "AppHelpersCommon.h"
+#include "FindWindowCommon.h"
 
-// command ids for the window's toolbar buttons (handled in OnCommand)
-constexpr int kFindWinPinCmdId = (int)CmdLast + 51;
-
-constexpr int kFindWinPadding = 8;
-constexpr int kFindWinGap = 6;
 constexpr int kFindWinMinEditDx = 48;
 
 namespace {

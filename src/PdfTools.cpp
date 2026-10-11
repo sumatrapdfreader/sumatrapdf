@@ -42,11 +42,6 @@
 #include "PdfTools.h"
 #include "PdfToolsCommon.h"
 
-extern "C" int pdfbake_main(int argc, char** argv);
-extern "C" int pdfclean_main(int argc, char** argv);
-extern "C" int muconvert_main(int argc, char** argv);
-extern "C" void fz_set_optind(int val);
-
 // compute a dialog client width that fits the source path text, clamped to a
 // minimum and to 80% of the screen width (long paths get ellipsized instead)
 static int CalcDlgWidth(PlatformFont* font, Str path, int minW, int padding) {
@@ -1482,10 +1477,6 @@ void ShowConvertPdfToImagesDialog(MainWindow* win) {
         delete dlg;
     }
 }
-
-// rectangular selection → PNG / JPEG / BMP at a chosen DPI, independent of
-// the current zoom (issue #6127)
-static Kind kNotifSaveSelectionAsImage = "notifSaveSelectionAsImage";
 
 void FinishSaveSelImg(SaveSelImgWork* d) {
     if (IsWindow(d->hwndCanvas)) {

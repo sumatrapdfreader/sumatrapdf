@@ -49,15 +49,12 @@
 #include "FindBar.h"
 #include "FindWindow.h"
 #include "AppHelpersCommon.h"
+#include "FindWindowCommon.h"
 
 #include "SumatraLog.h"
 
-// command ids for the window's toolbar buttons
-constexpr int kFindWinPinCmdId = (int)CmdLast + 51;
 constexpr int kFindWinCloseCmdId = (int)CmdLast + 52;
 
-constexpr int kFindWinPadding = 8;
-constexpr int kFindWinGap = 6;
 constexpr int kFindWinDefaultDx = 460;
 constexpr int kFindWinDefaultDy = 320;
 constexpr int kFindWinMinDx = 260;

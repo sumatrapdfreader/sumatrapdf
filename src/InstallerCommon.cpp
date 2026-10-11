@@ -67,11 +67,8 @@ Gdiplus::Color kColorMsgFailed(gCol1);
 
 HWND gHwndFrame = nullptr;
 __unused static bool gForceCrash = false;
-Str gMsgError;
 int gBottomPartDy = 0;
 int gButtonDy = 0;
-
-Flags* gCli = nullptr;
 
 static Str gMsg;
 static Gdiplus::Color gMsgColor;

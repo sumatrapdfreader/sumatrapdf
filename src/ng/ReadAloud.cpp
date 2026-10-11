@@ -30,6 +30,7 @@
 #include "gui/DialogWidgets.h"
 #include "gui/ToolWindow.h"
 #include "ReadAloud.h"
+#include "ReadAloudBarCommon.h"
 
 #include "SumatraLog.h"
 
@@ -322,11 +323,6 @@ struct ReadAloudPlaybackBar {
     // the row in that window, as of its last frame
     gp::Bounds rowBounds{};
 };
-
-constexpr int kBarMargin = 8;
-constexpr int kBarPadX = 12;
-constexpr int kBarPadY = 6;
-constexpr int kBtnGap = 8;
 
 // the bar's buttons
 constexpr int kBarCmdPause = 1;

@@ -58,11 +58,6 @@
 
 #include "SumatraLog.h"
 
-extern "C" int pdfbake_main(int argc, char** argv);
-extern "C" int pdfclean_main(int argc, char** argv);
-extern "C" int muconvert_main(int argc, char** argv);
-extern "C" void fz_set_optind(int val);
-
 // --- the page range syntax the page dialogs share ---------------------------
 
 // --- the image formats the two image dialogs offer --------------------------
@@ -121,10 +116,6 @@ bool SavePixmapAsImageFile(Pixmap* px, Str path) {
 }
 
 // --- saving a page rectangle as an image ------------------------------------
-
-// rectangular selection → PNG / JPEG / BMP at a chosen DPI, independent of
-// the current zoom (issue #6127)
-static Kind kNotifSaveSelectionAsImage = "notifSaveSelectionAsImage";
 
 void FinishSaveSelImg(SaveSelImgWork* d) {
     bool winOk = IsMainWindowValidAndNotClosing(d->win);

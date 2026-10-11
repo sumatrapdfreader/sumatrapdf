@@ -23,8 +23,6 @@
 #include "OverlayScrollbar.h"
 #include "OverlayScrollbarCommon.h"
 
-bool gOverlayScrollbarSuppressThick = false;
-
 // all live overlay scrollbars
 static Vec<OverlayScrollbar*> gAllScrollbars;
 // ng: the bar that has the mouse (orig's SetCapture) for a thumb drag or an

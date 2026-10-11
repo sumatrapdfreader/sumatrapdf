@@ -13,7 +13,6 @@ constexpr const WCHAR* kOverlayScrollbarClass = L"SUMATRA_OVERLAY_SCROLLBAR";
 
 static bool gScrollbarClassRegistered = false;
 
-bool gOverlayScrollbarSuppressThick = false;
 // if true, draw small filled triangles instead of chevrons
 static bool gThickArrows = true;
 

@@ -23,6 +23,7 @@
 #include "PdfDarkMode.h"
 #include "SumatraDialogs.h"
 #include "AppHelpersCommon.h"
+#include "ChangeThemeDialogCommon.h"
 
 // The theme list, the label and the buttons are virtual controls (VirtCtrl);
 // only the drop-down is a real HWND. They all sit in the same layout tree,
@@ -57,7 +58,6 @@ struct ChangeThemeWnd : WindowBase {
 
 static ChangeThemeWnd* gChangeThemeWnd = nullptr;
 
-static constexpr int kFollowWindowsThemeListIndex = 0;
 static constexpr UINT_PTR kThemePreviewTimerId = 1;
 static constexpr UINT kThemePreviewDebounceMs = 300;
 static SeqStrings gDocumentColorsFollowThemeNames = "off\0smart\0legacy\0";

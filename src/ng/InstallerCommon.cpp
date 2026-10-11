@@ -48,11 +48,8 @@ Color kColorMsgOk = gCol5;
 Color kColorMsgInstallation = gCol5;
 Color kColorMsgFailed = gCol1;
 
-Str gMsgError;
 Str gMsg;
 Color gMsgColor = gCol5;
-
-Flags* gCli = nullptr;
 
 // ng: with -install-reg-root the shortcuts go here instead of the Desktop /
 // Start Menu, so a test run can't overwrite the ones of a real installation
