@@ -24,26 +24,34 @@ struct JsonVerifier {
     JsonVerifier(const ExpectedValue* data, size_t dataLen) : data(data), dataLen(dataLen), idx(0) {}
     ~JsonVerifier() { utassert(dataLen == idx); }
 
-    void OnValue(json::Value* v) {
+    void OnValue(json::Value& v) {
         utassert(idx < dataLen);
         const ExpectedValue& d = data[idx];
-        utassert(v->type == d.type);
-        utassert(str::Eq(json::PathFormatTemp(v->path), d.path));
-        utassert(str::Eq(v->value, d.value));
+        utassert(v.type == d.type);
+        utassert(str::Eq(json::PathFormatTemp(v.path), d.path));
+        utassert(str::Eq(v.value, d.value));
         idx++;
     }
 };
 
-static bool ParseVerify(Str json, JsonVerifier* v) {
-    return json::Parse(json, MkMethod1<JsonVerifier, json::Value*, &JsonVerifier::OnValue>(v));
+static bool ParseVerify(Str json, JsonVerifier* verifier) {
+    json::Reader r(json);
+    for (json::Value& v : r) {
+        verifier->OnValue(v);
+    }
+    return r.Ok();
 }
 
-struct CountState {
+// how many values json has; ok tells if it was valid
+static int CountValues(Str json, bool* ok) {
     int n = 0;
-};
-
-static void CountOnValue(CountState* st, json::Value* /*v*/) {
-    st->n++;
+    json::Reader r(json);
+    for (json::Value& v : r) {
+        (void)v;
+        n++;
+    }
+    *ok = r.Ok();
+    return n;
 }
 
 void JsonTest() {
@@ -206,53 +214,50 @@ void JsonTest() {
 
     // object key with '/' is a single path segment when parsed
     {
-        struct SlashKeyState {
-            int n = 0;
-        } st;
-        auto onValue = [](SlashKeyState* st, json::Value* v) {
-            st->n++;
-            utassert(v->type == json::Type::String);
-            utassert(str::Eq(v->value, StrL("x")));
-            utassert(str::Eq(json::PathFormatTemp(v->path), StrL("/a/b/c")));
-            utassert(json::PathMatch(v->path, StrL("/a/b"), StrL("/c")));
-            utassert(!json::PathMatch(v->path, StrL("/a"), StrL("/b"), StrL("/c")));
-            utassert(str::Eq(json::PathSegKey(v->path), StrL("a/b")));
-            utassert(str::Eq(json::PathSegKey(json::PathNth(v->path, 1)), StrL("c")));
-        };
-        utassert(json::Parse(StrL("{\"a/b\":{\"c\":\"x\"}}"), MkFunc1<SlashKeyState, json::Value*>(onValue, &st)));
-        utassert(st.n == 1);
+        int n = 0;
+        json::Reader r(StrL("{\"a/b\":{\"c\":\"x\"}}"));
+        for (json::Value& v : r) {
+            n++;
+            utassert(v.type == json::Type::String);
+            utassert(str::Eq(v.value, StrL("x")));
+            utassert(str::Eq(json::PathFormatTemp(v.path), StrL("/a/b/c")));
+            utassert(json::PathMatch(v.path, StrL("/a/b"), StrL("/c")));
+            utassert(!json::PathMatch(v.path, StrL("/a"), StrL("/b"), StrL("/c")));
+            utassert(str::Eq(json::PathSegKey(v.path), StrL("a/b")));
+            utassert(str::Eq(json::PathSegKey(json::PathNth(v.path, 1)), StrL("c")));
+        }
+        utassert(r.Ok());
+        utassert(n == 1);
     }
 
-    // cancel mid-parse: Value::stop => Parse returns true, remaining values skipped
+    // stopping mid-parse: break out of the loop, the rest is never read
     {
-        struct CancelState {
-            int n = 0;
-        } st;
-        auto onValue = [](CancelState* st, json::Value* v) {
-            st->n++;
-            utassert(json::PathMatch(v->path, StrL("/a")));
-            utassert(v->type == json::Type::Number);
-            utassert(str::Eq(v->value, StrL("1")));
-            v->stop = true;
-        };
-        utassert(json::Parse(StrL("{\"a\":1,\"b\":2,\"c\":3}"), MkFunc1<CancelState, json::Value*>(onValue, &st)));
-        utassert(st.n == 1);
+        int n = 0;
+        json::Reader r(StrL("{\"a\":1,\"b\":2,\"c\":3}"));
+        for (json::Value& v : r) {
+            n++;
+            utassert(json::PathMatch(v.path, StrL("/a")));
+            utassert(v.type == json::Type::Number);
+            utassert(str::Eq(v.value, StrL("1")));
+            break;
+        }
+        utassert(r.Ok());
+        utassert(n == 1);
     }
 
-    // cancel on first array element still succeeds overall
+    // stopping on the first array element
     {
-        struct CancelState {
-            int n = 0;
-        } st;
-        auto onValue = [](CancelState* st, json::Value* v) {
-            st->n++;
-            utassert(json::PathSegIndex(v->path) == 0);
-            utassert(!v->path->next);
-            utassert(str::Eq(v->value, StrL("first")));
-            v->stop = true;
-        };
-        utassert(json::Parse(StrL("[\"first\",\"second\"]"), MkFunc1<CancelState, json::Value*>(onValue, &st)));
-        utassert(st.n == 1);
+        int n = 0;
+        json::Reader r(StrL("[\"first\",\"second\"]"));
+        for (json::Value& v : r) {
+            n++;
+            utassert(json::PathSegIndex(v.path) == 0);
+            utassert(!v.path->next);
+            utassert(str::Eq(v.value, StrL("first")));
+            break;
+        }
+        utassert(r.Ok());
+        utassert(n == 1);
     }
 
     // nesting depth limit is 128 (depth >= 128 fails)
@@ -269,13 +274,11 @@ void JsonTest() {
             return ToStrTemp(b);
         };
 
-        CountState ok;
-        utassert(json::Parse(nestArray(127), MkFunc1(CountOnValue, &ok)));
-        utassert(ok.n == 1);
-
-        CountState deep;
-        utassert(!json::Parse(nestArray(128), MkFunc1(CountOnValue, &deep)));
-        utassert(deep.n == 0);
+        bool ok = false;
+        utassert(CountValues(nestArray(127), &ok) == 1);
+        utassert(ok);
+        utassert(CountValues(nestArray(128), &ok) == 0);
+        utassert(!ok);
 
         auto nestObject = [](int depth) -> TempStr {
             str::Builder b;
@@ -289,45 +292,40 @@ void JsonTest() {
             return ToStrTemp(b);
         };
 
-        CountState okObj;
-        utassert(json::Parse(nestObject(127), MkFunc1(CountOnValue, &okObj)));
-        utassert(okObj.n == 1);
-
-        CountState deepObj;
-        utassert(!json::Parse(nestObject(128), MkFunc1(CountOnValue, &deepObj)));
-        utassert(deepObj.n == 0);
+        utassert(CountValues(nestObject(127), &ok) == 1);
+        utassert(ok);
+        utassert(CountValues(nestObject(128), &ok) == 0);
+        utassert(!ok);
     }
 
     // UTF-8 BOM is skipped
     {
-        struct BomState {
-            int n = 0;
-        } st;
-        auto onValue = [](BomState* st, json::Value* v) {
-            st->n++;
-            utassert(!v->path);
-            utassert(v->type == json::Type::Number);
-            utassert(str::Eq(v->value, StrL("7")));
-        };
+        int n = 0;
         char bomJson[] = {'\xEF', '\xBB', '\xBF', '7'};
-        utassert(json::Parse(Str(bomJson, 4), MkFunc1<BomState, json::Value*>(onValue, &st)));
-        utassert(st.n == 1);
+        json::Reader r(Str(bomJson, 4));
+        for (json::Value& v : r) {
+            n++;
+            utassert(!v.path);
+            utassert(v.type == json::Type::Number);
+            utassert(str::Eq(v.value, StrL("7")));
+        }
+        utassert(r.Ok());
+        utassert(n == 1);
     }
 
     // multi-element array path indices
     {
-        struct ArrState {
-            int n = 0;
-        } st;
-        auto onValue = [](ArrState* st, json::Value* v) {
-            utassert(v->type == json::Type::Number);
-            utassert(v->path && !v->path->next);
-            utassert(json::PathSegIndex(v->path) == st->n);
-            utassert(str::Eq(json::PathFormatTemp(v->path), fmt("[%d]", st->n)));
-            utassert(str::Eq(v->value, fmt("%d", (st->n + 1) * 10)));
-            st->n++;
-        };
-        utassert(json::Parse(StrL("[10,20,30]"), MkFunc1<ArrState, json::Value*>(onValue, &st)));
-        utassert(st.n == 3);
+        int n = 0;
+        json::Reader r(StrL("[10,20,30]"));
+        for (json::Value& v : r) {
+            utassert(v.type == json::Type::Number);
+            utassert(v.path && !v.path->next);
+            utassert(json::PathSegIndex(v.path) == n);
+            utassert(str::Eq(json::PathFormatTemp(v.path), fmt("[%d]", n)));
+            utassert(str::Eq(v.value, fmt("%d", (n + 1) * 10)));
+            n++;
+        }
+        utassert(r.Ok());
+        utassert(n == 3);
     }
 }

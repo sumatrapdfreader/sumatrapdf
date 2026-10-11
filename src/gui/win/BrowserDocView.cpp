@@ -88,12 +88,6 @@ struct NotifyArgsState {
     }
 };
 
-static void NotifyArgsOnValue(NotifyArgsState* st, json::Value* v) {
-    int idx = json::PathSegIndex(v->path);
-    if (idx >= 0 && idx < NotifyArgsState::kMaxArgs && v->path && !v->path->next) {
-        st->args[idx] = v->value;
-    }
-}
 } // namespace
 
 void BrowserWebviewWnd::OnJsNotifyCb(void* ctx, Str method, Str paramsJson) {
@@ -102,7 +96,15 @@ void BrowserWebviewWnd::OnJsNotifyCb(void* ctx, Str method, Str paramsJson) {
         return;
     }
     NotifyArgsState st;
-    if (!json::Parse(paramsJson, MkFunc1(NotifyArgsOnValue, &st))) {
+    json::Reader params(paramsJson);
+    for (json::Value& v : params) {
+        // the top-level array's elements, by index
+        int idx = json::PathSegIndex(v.path);
+        if (idx >= 0 && idx < NotifyArgsState::kMaxArgs && v.path && !v.path->next) {
+            st.args[idx] = v.value;
+        }
+    }
+    if (!params.Ok()) {
         logf("BrowserOnJsNotify: bad params for '%s': %s\n", method, paramsJson);
         return;
     }

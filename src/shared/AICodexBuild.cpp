@@ -53,27 +53,24 @@ static AIChatLogger gCodexBuildLogger = {&gCodexBuildLogMutex, StrL("gpt-5.5-log
 static bool gTriedCodexModels = false;
 static StrVec gCodexModels;
 
-struct CodexModelsState {
-    bool isModelListResponse = false;
-    StrVec models;
-};
-
-static void CodexModelsOnValue(CodexModelsState* st, json::Value* v) {
-    if (json::PathMatch(v->path, StrL("/id")) && v->type == json::Type::Number && str::Eq(v->value, StrL("2"))) {
-        st->isModelListResponse = true;
-    } else if (json::PathMatch(v->path, StrL("/result"), StrL("/data"), StrL("*"), StrL("/model")) &&
-               v->type == json::Type::String) {
-        AIChatAppendModelUnique(st->models, v->value);
-    }
-}
-
+// the line that answers the model-list request (id 2) with its models
 static bool ParseCodexModelsResponse(Str output, StrVec& models) {
     Str rest = output;
     Str line;
     while (str::NextLine(rest, line, rest)) {
-        CodexModelsState st;
-        if (json::Parse(line, MkFunc1(CodexModelsOnValue, &st)) && st.isModelListResponse && len(st.models) > 0) {
-            models = st.models;
+        bool isModelListResponse = false;
+        StrVec lineModels;
+        json::Reader r(line);
+        for (json::Value& v : r) {
+            if (json::PathMatch(v.path, StrL("/id")) && v.type == json::Type::Number && str::Eq(v.value, StrL("2"))) {
+                isModelListResponse = true;
+            } else if (json::PathMatch(v.path, StrL("/result"), StrL("/data"), StrL("*"), StrL("/model")) &&
+                       v.type == json::Type::String) {
+                AIChatAppendModelUnique(lineModels, v.value);
+            }
+        }
+        if (r.Ok() && isModelListResponse && len(lineModels) > 0) {
+            models = lineModels;
             return true;
         }
     }

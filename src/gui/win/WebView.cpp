@@ -1533,30 +1533,35 @@ static bool IsJsNotifyMessage(Str msg) {
 }
 
 namespace {
-// json::Parse hands value as a temp-arena copy; path is valid only during the callback.
+// the string members of a {"id", "method", "params"} message; false if the
+// message isn't JSON. The values are temp-arena copies.
 struct JsCallState {
     TempStr id;
     TempStr method;
     TempStr params;
 };
 
-static void JsCallOnValue(JsCallState* st, json::Value* v) {
-    if (v->type != json::Type::String) {
-        return;
+static bool ParseJsCall(Str msg, JsCallState& st) {
+    json::Reader r(msg);
+    for (json::Value& v : r) {
+        if (v.type != json::Type::String) {
+            continue;
+        }
+        if (json::PathMatch(v.path, StrL("/id"))) {
+            st.id = v.value;
+        } else if (json::PathMatch(v.path, StrL("/method"))) {
+            st.method = v.value;
+        } else if (json::PathMatch(v.path, StrL("/params"))) {
+            st.params = v.value;
+        }
     }
-    if (json::PathMatch(v->path, StrL("/id"))) {
-        st->id = v->value;
-    } else if (json::PathMatch(v->path, StrL("/method"))) {
-        st->method = v->value;
-    } else if (json::PathMatch(v->path, StrL("/params"))) {
-        st->params = v->value;
-    }
+    return r.Ok();
 }
 } // namespace
 
 void WebviewWnd::OnJsCall(Str msg) {
     JsCallState st;
-    if (!json::Parse(msg, MkFunc1(JsCallOnValue, &st))) {
+    if (!ParseJsCall(msg, st)) {
         logf("WebviewWnd::OnJsCall: failed to parse '%s'\n", msg);
         return;
     }
@@ -1577,7 +1582,7 @@ void WebviewWnd::OnJsNotify(Str msg) {
         return;
     }
     JsCallState st;
-    if (!json::Parse(msg, MkFunc1(JsCallOnValue, &st))) {
+    if (!ParseJsCall(msg, st)) {
         logf("WebviewWnd::OnJsNotify: failed to parse '%s'\n", msg);
         return;
     }

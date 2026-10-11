@@ -4,12 +4,11 @@
 #include "base/Base.h"
 #include "base/JsonParser.h"
 
-// Simple push parser for JSON (cf. http://www.json.org/).
+// Simple pull parser for JSON (cf. http://www.json.org/).
 //
-// Parse walks the input and calls onValue (Func1<Value*>) for every primitive
-// (string, number, bool, null). Put state in userData via MkFunc1 / MkMethod1.
-// Set Value::stop to cancel early; Parse then returns true (cancel is not an
-// error). Parse returns false only on invalid JSON when not canceled.
+// Reader hands out every primitive (string, number, bool, null) in document
+// order, one per Next(), with the path to it; break out of the loop to stop
+// early. Ok() is false once the input proved invalid.
 //
 // Path is a StrNode list (outermost first). Each segment's first char is the
 // kind (kSegKey '/' + key, kSegIdx 'i' + decimal index). Example for
@@ -19,10 +18,10 @@
 // Keys are not escaped; a key may contain '/' or digits without ambiguity
 // because each segment carries an explicit kind byte.
 //
-// path nodes live on the temp arena for the duration of Parse (and may be
-// mutated after the callback returns when the parser pops a segment). value is
-// a temp-arena copy valid until the temp arena resets. Keep a str::Dup of
-// value if you need it longer; do not store path pointers past the callback.
+// path nodes live on the temp arena while the reader runs (and are mutated
+// when the parser pops a segment on the next step). value is a temp-arena copy
+// valid until the temp arena resets. Keep a str::Dup of value if you need it
+// longer; do not store path pointers past the step that produced them.
 
 namespace json {
 
@@ -40,42 +39,48 @@ static inline int SkipDigits(Str data, int off) {
     return off;
 }
 
-class ParseArgs {
-  public:
-    Arena* arena = nullptr;
-    // path as outer→inner StrNode list (nodes live on arena)
-    StrNodeList path;
-    bool canceled = false;
-    VisitFn onValue;
-
-    explicit ParseArgs(const VisitFn& onValue) : arena(GetTempArena()), onValue(onValue) {}
-
-    void PushKey(Str key) {
-        char scratch[512]{};
-        str::Builder b;
-        b.UseExternalBuffer(Str(scratch, sizeofi(scratch)));
-        b.AppendChar(kSegKey);
-        b.Append(key);
-        StrNodeListPush(&path, AllocStrNode(arena, ToStr(b)));
+// the end of the number at off, kParseFail if it isn't one
+static int ScanNumber(Str data, int off) {
+    int start = off;
+    // integer part
+    if ('-' == data.s[off]) {
+        off++;
     }
-
-    void PushIdx(int idx) {
-        // "i" + decimal digits
-        StrNodeListPush(&path, AllocStrNode(arena, fmt("%c%d", kSegIdx, idx)));
+    if (off >= data.len) {
+        return kParseFail;
     }
-
-    void Pop() { StrNodeListPop(&path); }
-};
-
-static int ParseValue(ParseArgs& args, Str data, int off, int depth);
-
-static void VisitValue(ParseArgs& args, Str value, Type type) {
-    Value v;
-    v.path = args.path.head;
-    v.value = str::DupTemp(value);
-    v.type = type;
-    args.onValue.Call(&v);
-    args.canceled = v.stop;
+    if ('0' == data.s[off]) {
+        off++;
+    } else if (str::IsDigit(data.s[off])) {
+        off = SkipDigits(data, off + 1);
+    } else {
+        return kParseFail;
+    }
+    // fractional part: '.' must be followed by at least one digit
+    if (off < data.len && '.' == data.s[off]) {
+        int fracStart = off + 1;
+        off = SkipDigits(data, fracStart);
+        if (off == fracStart) {
+            return kParseFail;
+        }
+    }
+    // magnitude: 'e'/'E' and optional sign must be followed by at least one digit
+    if (off < data.len && ('e' == data.s[off] || 'E' == data.s[off])) {
+        off++;
+        if (off < data.len && ('+' == data.s[off] || '-' == data.s[off])) {
+            off++;
+        }
+        int expStart = off;
+        off = SkipDigits(data, off);
+        if (off == expStart) {
+            return kParseFail;
+        }
+    }
+    // reject empty match and a digit run that continues past our end
+    if (off <= start || (off < data.len && str::IsDigit(data.s[off]))) {
+        return kParseFail;
+    }
+    return off;
 }
 
 static int ExtractString(str::Builder& string, Str data, int off) {
@@ -138,190 +143,209 @@ static int ExtractString(str::Builder& string, Str data, int off) {
     return kParseFail;
 }
 
-static int ParseString(ParseArgs& args, Str data, int off) {
-    // Most JSON string values fit in a few hundred bytes; grow to heap if not.
-    char stringScratch[512]{};
-    str::Builder string;
-    string.UseExternalBuffer(Str(stringScratch, sizeofi(stringScratch)));
-    int end = ExtractString(string, data, off);
-    if (end >= 0) {
-        VisitValue(args, ToStr(string), Type::String);
-    }
-    return end;
+constexpr int kMaxDepth = 128;
+
+Reader::Reader(Str data) : data(data), arena(GetTempArena()) {}
+
+bool Reader::Ok() const {
+    return !failed;
 }
 
-static int ParseNumber(ParseArgs& args, Str data, int off) {
-    int start = off;
-    // integer part
-    if ('-' == data.s[off]) {
-        off++;
-    }
-    if (off >= data.len) {
-        return kParseFail;
-    }
-    if ('0' == data.s[off]) {
-        off++;
-    } else if (str::IsDigit(data.s[off])) {
-        off = SkipDigits(data, off + 1);
-    } else {
-        return kParseFail;
-    }
-    // fractional part: '.' must be followed by at least one digit
-    if (off < data.len && '.' == data.s[off]) {
-        int fracStart = off + 1;
-        off = SkipDigits(data, fracStart);
-        if (off == fracStart) {
-            return kParseFail;
-        }
-    }
-    // magnitude: 'e'/'E' and optional sign must be followed by at least one digit
-    if (off < data.len && ('e' == data.s[off] || 'E' == data.s[off])) {
-        off++;
-        if (off < data.len && ('+' == data.s[off] || '-' == data.s[off])) {
-            off++;
-        }
-        int expStart = off;
-        off = SkipDigits(data, off);
-        if (off == expStart) {
-            return kParseFail;
-        }
-    }
-    // reject empty match and a digit run that continues past our end
-    if (off <= start || (off < data.len && str::IsDigit(data.s[off]))) {
-        return kParseFail;
-    }
-
-    VisitValue(args, Str(data.s + start, off - start), Type::Number);
-    return off;
+bool Reader::Fail() {
+    failed = true;
+    done = true;
+    return false;
 }
 
-static int ParseObject(ParseArgs& args, Str data, int off, int depth) {
-    off = SkipWS(data, off + 1);
-    if (off < data.len && '}' == data.s[off]) {
-        return off + 1;
-    }
-
-    for (;;) {
-        off = SkipWS(data, off);
-        if (off >= data.len || '"' != data.s[off]) {
-            return kParseFail;
-        }
-        char keyScratch[512]{};
-        str::Builder key;
-        key.UseExternalBuffer(Str(keyScratch, sizeofi(keyScratch)));
-        off = ExtractString(key, data, off);
-        if (off < 0) {
-            return kParseFail;
-        }
-        off = SkipWS(data, off);
-        if (off >= data.len || ':' != data.s[off]) {
-            return kParseFail;
-        }
-        args.PushKey(ToStr(key));
-        off = ParseValue(args, data, off + 1, depth + 1);
-        args.Pop();
-        if (args.canceled || off < 0) {
-            return off;
-        }
-
-        off = SkipWS(data, off);
-        if (off < data.len && '}' == data.s[off]) {
-            return off + 1;
-        }
-        if (off >= data.len || ',' != data.s[off]) {
-            return kParseFail;
-        }
-        off++;
-    }
+void Reader::PushKey(Str key) {
+    char scratch[512]{};
+    str::Builder b;
+    b.UseExternalBuffer(Str(scratch, sizeofi(scratch)));
+    b.AppendChar(kSegKey);
+    b.Append(key);
+    StrNodeListPush(&path, AllocStrNode(arena, ToStr(b)));
 }
 
-static int ParseArray(ParseArgs& args, Str data, int off, int depth) {
-    off = SkipWS(data, off + 1);
-    if (off < data.len && ']' == data.s[off]) {
-        return off + 1;
-    }
-
-    for (int idx = 0;; idx++) {
-        args.PushIdx(idx);
-        off = ParseValue(args, data, off, depth + 1);
-        args.Pop();
-        if (args.canceled || off < 0) {
-            return off;
-        }
-
-        off = SkipWS(data, off);
-        if (off < data.len && ']' == data.s[off]) {
-            return off + 1;
-        }
-        if (off >= data.len || ',' != data.s[off]) {
-            return kParseFail;
-        }
-        off++;
-    }
+void Reader::PushIdx(int idx) {
+    // "i" + decimal digits
+    StrNodeListPush(&path, AllocStrNode(arena, fmt("%c%d", kSegIdx, idx)));
 }
 
-static int ParseKeyword(ParseArgs& args, Str data, int off, Str keyword, Type type) {
-    Str rest = Str(data.s + off, data.len - off);
-    if (!str::StartsWith(rest, keyword)) {
-        return kParseFail;
+// an object member's "key": and its path segment
+bool Reader::ReadKey() {
+    off = SkipWS(data, off);
+    if (off >= data.len || '"' != data.s[off]) {
+        return Fail();
     }
-    VisitValue(args, keyword, type);
-    return off + keyword.len;
-}
-
-static int ParseValue(ParseArgs& args, Str data, int off, int depth) {
-    if (depth >= 128) {
-        return kParseFail;
+    char keyScratch[512]{};
+    str::Builder key;
+    key.UseExternalBuffer(Str(keyScratch, sizeofi(keyScratch)));
+    off = ExtractString(key, data, off);
+    if (off < 0) {
+        return Fail();
     }
     off = SkipWS(data, off);
-    if (off >= data.len) {
-        return kParseFail;
+    if (off >= data.len || ':' != data.s[off]) {
+        return Fail();
     }
-    switch (data.s[off]) {
-        case '"':
-            return ParseString(args, data, off);
-        case '0':
-        case '1':
-        case '2':
-        case '3':
-        case '4':
-        case '5':
-        case '6':
-        case '7':
-        case '8':
-        case '9':
-        case '-':
-            return ParseNumber(args, data, off);
-        case '{':
-            return ParseObject(args, data, off, depth);
-        case '[':
-            return ParseArray(args, data, off, depth);
-        case 't':
-            return ParseKeyword(args, data, off, StrL("true"), Type::Bool);
-        case 'f':
-            return ParseKeyword(args, data, off, StrL("false"), Type::Bool);
-        case 'n':
-            return ParseKeyword(args, data, off, StrL("null"), Type::Null);
-        default:
-            return kParseFail;
+    off++;
+    PushKey(ToStr(key));
+    return true;
+}
+
+// the value at off: a primitive becomes the current value; a container is
+// entered and its first element read, an empty one ends like a value
+bool Reader::StepValue() {
+    for (;;) {
+        if (len(stack) >= kMaxDepth) {
+            return Fail();
+        }
+        off = SkipWS(data, off);
+        if (off >= data.len) {
+            return Fail();
+        }
+        char c = data.s[off];
+        if (c == '{' || c == '[') {
+            bool isObject = c == '{';
+            off = SkipWS(data, off + 1);
+            if (off < data.len && data.s[off] == (isObject ? '}' : ']')) {
+                off++;
+                return StepAfterValue();
+            }
+            VecAppend(stack, {isObject, 0});
+            if (isObject) {
+                if (!ReadKey()) {
+                    return false;
+                }
+            } else {
+                PushIdx(0);
+            }
+            continue;
+        }
+        if (c == '"') {
+            // most strings fit in a few hundred bytes; grow to heap if not
+            char scratch[512]{};
+            str::Builder string;
+            string.UseExternalBuffer(Str(scratch, sizeofi(scratch)));
+            off = ExtractString(string, data, off);
+            if (off < 0) {
+                return Fail();
+            }
+            value.value = str::DupTemp(ToStr(string));
+            value.type = Type::String;
+        } else if (c == '-' || str::IsDigit(c)) {
+            int end = ScanNumber(data, off);
+            if (end < 0) {
+                return Fail();
+            }
+            value.value = str::DupTemp(Str(data.s + off, end - off));
+            value.type = Type::Number;
+            off = end;
+        } else {
+            Str keyword;
+            if (c == 't') {
+                keyword = StrL("true");
+                value.type = Type::Bool;
+            } else if (c == 'f') {
+                keyword = StrL("false");
+                value.type = Type::Bool;
+            } else if (c == 'n') {
+                keyword = StrL("null");
+                value.type = Type::Null;
+            } else {
+                return Fail();
+            }
+            if (!str::StartsWith(Str(data.s + off, data.len - off), keyword)) {
+                return Fail();
+            }
+            value.value = str::DupTemp(keyword);
+            off += keyword.len;
+        }
+        value.path = path.head;
+        return true;
     }
 }
 
-// data must be UTF-8 encoded. Returns false on invalid JSON; returns true on
-// a full successful parse or if the callback set Value::stop (even if trailing
-// input was not fully validated).
-bool Parse(Str data, const VisitFn& onValue) {
-    ParseArgs args(onValue);
-    int off = 0;
+// past the value just read: close the containers that end here, then go to
+// the next element of the innermost open one
+bool Reader::StepAfterValue() {
+    for (;;) {
+        if (len(stack) == 0) {
+            // the root value is done; only whitespace may follow
+            off = SkipWS(data, off);
+            done = true;
+            if (off < data.len) {
+                return Fail();
+            }
+            return false;
+        }
+        StrNodeListPop(&path);
+        off = SkipWS(data, off);
+        if (off >= data.len) {
+            return Fail();
+        }
+        Frame& f = stack[len(stack) - 1];
+        char c = data.s[off];
+        if (c == (f.isObject ? '}' : ']')) {
+            off++;
+            VecPop(stack);
+            continue;
+        }
+        if (c != ',') {
+            return Fail();
+        }
+        off++;
+        if (f.isObject) {
+            if (!ReadKey()) {
+                return false;
+            }
+        } else {
+            PushIdx(++f.idx);
+        }
+        return StepValue();
+    }
+}
+
+bool Reader::Next() {
+    if (done) {
+        return false;
+    }
+    if (started) {
+        if (!StepAfterValue()) {
+            return false;
+        }
+        return true;
+    }
+    started = true;
     if (data.len >= 3 && str::StartsWith(data, Str(kUtf8Bom))) {
         off = 3;
     }
-    int end = ParseValue(args, data, off, 0);
-    if (end < 0) {
-        return false;
-    }
-    end = SkipWS(data, end);
-    return args.canceled || end >= data.len;
+    return StepValue();
+}
+
+Value& Reader::iterator::operator*() const {
+    return r->value;
+}
+
+Reader::iterator& Reader::iterator::operator++() {
+    atEnd = !r->Next();
+    return *this;
+}
+
+bool operator==(const Reader::iterator& a, const Reader::iterator& b) {
+    return a.atEnd == b.atEnd;
+}
+
+bool operator!=(const Reader::iterator& a, const Reader::iterator& b) {
+    return a.atEnd != b.atEnd;
+}
+
+Reader::iterator Reader::begin() {
+    return {this, !Next()};
+}
+
+Reader::iterator Reader::end() {
+    return {this, true};
 }
 
 static bool SegMatches(StrNode* seg, Str pat) {
