@@ -279,8 +279,7 @@ PropertiesWnd::~PropertiesWnd() {
     certs = nullptr;
 }
 
-// CryptUIDlgViewContext is in cryptui.dll. MSVC can pull that via
-// #pragma comment; mingw-w64 often has no import lib, so load it here.
+// CryptUIDlgViewContext lives in cryptui.dll, loaded only when a certificate is viewed
 static void ViewCertDer(HWND parent, Str der) {
     if (len(der) == 0) {
         return;

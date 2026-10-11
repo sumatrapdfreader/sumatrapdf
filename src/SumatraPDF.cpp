@@ -14185,7 +14185,7 @@ static bool IsLibsumatrapdfAvRaceError(DWORD err) {
 // Windows Application Control (WDAC / AppLocker / Smart App Control) refused
 // LoadLibrary — file is on disk but policy blocks execution. e.g. debug report
 // 8c09d3b87000001 with err=4551 ("An Application Control policy has blocked this file.").
-// Older SDKs / MinGW lack these Smart App Control / System Integrity error codes.
+// Older SDKs lack these Smart App Control / System Integrity error codes.
 #ifndef ERROR_SYSTEM_INTEGRITY_POLICY_VIOLATION
 constexpr DWORD ERROR_SYSTEM_INTEGRITY_POLICY_VIOLATION = 4551L;
 #endif
@@ -14410,7 +14410,7 @@ static void LogLibsumatrapdfLoadFailureDiagnostics(Str selfDir, Str buildDir, i6
 }
 
 static bool LoadLibsumatrapdf(bool showErrorDialog) {
-    // Static-linked builds (mingw wine cross-build, MSVC SumatraPDF-static) do
+    // Static-linked builds (SumatraPDF-static) do
     // not embed/delay-load libsumatrapdf.dll — MuPDF is already in the exe image.
     // HasEmbeddedLibsumatrapdf() is false when IDR_EMBEDDED_PAK has no libsumatrapdf.dll entry.
     if (!HasEmbeddedLibsumatrapdf()) {

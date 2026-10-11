@@ -8,7 +8,6 @@
 #include "base/Base.h"
 #include "base/AutoWin.h"
 #include "base/File.h"
-#include "base/WinDynCalls.h" // DWM corner prefs shim for mingw-w64 < 12
 #include <dwmapi.h>
 #include "base/Win.h"
 #include "gui/Dpi.h"

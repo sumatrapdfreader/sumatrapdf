@@ -918,10 +918,6 @@ IDownloadManager : public IUnknown {
                                   UINT uiCP) = 0;
 };
 
-#ifdef __GNUC__
-__CRT_UUID_DECL(IDownloadManager, 0x988934a4, 0x064b, 0x11d3, 0xbb, 0x80, 0x0, 0x10, 0x4b, 0x35, 0xe7, 0xf9)
-#endif
-
 #endif
 
 class HW_IDownloadManager : public IDownloadManager {

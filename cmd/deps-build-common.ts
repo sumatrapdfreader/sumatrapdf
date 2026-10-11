@@ -1,6 +1,6 @@
 /**
  * Shared helpers for building SumatraPDF dependency static libraries
- * (used by the macOS, Linux, and MinGW build implementations).
+ * (used by the macOS and Linux build implementations).
  */
 
 import { Glob } from "bun";

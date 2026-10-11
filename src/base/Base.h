@@ -77,12 +77,6 @@
 #define COMPILER_CLANG 0
 #endif
 
-#ifdef __MINGW32__
-#define COMPILER_MINGW 1
-#else
-#define COMPILER_MINGW 0
-#endif
-
 // Always 0 or 1 so `#if IS_DEBUG` / `#if IS_ASAN` compile under /W4 /WX (C4668).
 // The build may pass IS_DEBUG=1 / IS_ASAN=1; otherwise IS_DEBUG follows DEBUG
 // and IS_ASAN follows the compiler (/fsanitize=address, -fsanitize=address).

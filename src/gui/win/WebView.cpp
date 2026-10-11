@@ -13,21 +13,11 @@
 
 // #include "Theme.h"
 
-#ifdef _MSC_VER
 #include "WebView2EnvironmentOptions.h"
-#endif
 #include "gui/win/WebView.h"
 
 static Kind kindWebView = "webView";
 
-#ifndef _MSC_VER
-TempStr GetWebView2VersionTemp() {
-    return {};
-}
-bool HasWebView() {
-    return false;
-}
-#else
 TempStr GetWebView2VersionTemp() {
     WCHAR* ver = nullptr;
     HRESULT hr = GetAvailableCoreWebView2BrowserVersionString(nullptr, &ver);
@@ -54,9 +44,6 @@ bool HasWebView() {
     static bool hasWebView = IsWebViewAvailable();
     return hasWebView;
 }
-#endif // _MSC_VER
-
-#ifdef _MSC_VER
 
 // ICoreWebView2Controller4 (with AllowExternalDrop) was added in a WebView2 SDK
 // newer than the one we vendor, so declare it here. QueryInterface for it
@@ -2224,76 +2211,3 @@ WebviewWnd::~WebviewWnd() {
     wstr::Free(userDataFolder);
     wstr::Free(resourceUriPrefix);
 }
-
-#endif // _MSC_VER
-
-#ifndef _MSC_VER
-// stub implementations for mingw cross-compile / wine (no webview2)
-WebviewWnd::WebviewWnd() = default;
-WebviewWnd::~WebviewWnd() {
-    str::Free(dataDir);
-    wstr::Free(userDataFolder);
-    wstr::Free(resourceUriPrefix);
-}
-HWND WebviewWnd::Create(const CreateWebViewArgs&) {
-    return nullptr;
-}
-void WebviewWnd::Eval(Str) {}
-void WebviewWnd::SetHtml(Str) {}
-void WebviewWnd::Init(Str) {}
-int WebviewWnd::AddInitScript(Str) {
-    return 0;
-}
-void WebviewWnd::AddInitScriptWithToken(Str, int) {}
-int WebviewWnd::FindInitScript(int) const {
-    return -1;
-}
-void WebviewWnd::RemoveInitScript(int) {}
-void WebviewWnd::RemoveAllInitScripts() {}
-void WebviewWnd::OnInitScriptAdded(int, const WCHAR*) {}
-// makes window.<name>(...) available to page JS, returning a promise that
-// WebViewEvents::jsCall resolves via Resolve()
-void WebviewWnd::Bind(Str) {}
-void WebviewWnd::Unbind(Str) {}
-// status 0 resolves the JS promise, non-0 rejects it. resultJson must be
-// valid JSON (or empty for undefined)
-void WebviewWnd::Resolve(Str, int, Str) {}
-void WebviewWnd::OnJsCall(Str) {}
-void WebviewWnd::OnJsNotify(Str) {}
-void WebviewWnd::RebuildBindScript() {}
-void WebviewWnd::OnProcessFailed(WebViewProcessFailure) {}
-void WebviewWnd::Navigate(Str) {}
-void WebviewWnd::RegisterForwardingDropTarget() {}
-void WebviewWnd::RevokeForwardingDropTarget() {}
-void WebviewWnd::GoBack() {}
-void WebviewWnd::GoForward() {}
-void WebviewWnd::SetZoomPercent(int) {}
-int WebviewWnd::GetZoomPercent() const {
-    return 100;
-}
-bool WebviewWnd::CanGoBack() const {
-    return false;
-}
-bool WebviewWnd::CanGoForward() const {
-    return false;
-}
-void WebviewWnd::Focus() {}
-// open the WebView2 (Chromium) find-on-page bar, like a browser's Ctrl+F
-void WebviewWnd::ShowFindUI() {}
-bool WebviewWnd::Embed(WebViewMsgCb&) {
-    return false;
-}
-void WebViewShutdown() {}
-void WebviewWnd::OnControllerReady(ICoreWebView2Controller*) {}
-void WebviewWnd::FailInit() {}
-void WebviewWnd::QueuePendingOp(PendingWebViewOp::Kind, Str, int) {}
-void WebviewWnd::FlushPendingOps() {}
-void WebviewWnd::SetControllerVisible(bool) {}
-void WebviewWnd::RefreshControllerSurface() {}
-void WebviewWnd::OnBrowserMessage(Str) {}
-void WebviewWnd::OnTimer(WindowBase::TimerEvent*) {}
-void WebviewWnd::OnSize(WindowBase::SizeEvent*) {}
-void WebviewWnd::OnActivate(WindowBase::ActivateEvent*) {}
-void WebviewWnd::OnShowWindow(WindowBase::ShowWindowEvent*) {}
-void WebviewWnd::UpdateWebviewSize() {}
-#endif // !_MSC_VER
