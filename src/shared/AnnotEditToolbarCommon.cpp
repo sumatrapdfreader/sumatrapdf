@@ -909,6 +909,12 @@ void ShowSelectedAnnotationView(WindowTab* tab) {
     ToolbarUpdateStateForWindow(win, false);
 }
 
+void HideAnnotationTextPopupFor(MainWindow* win, Annotation* annot) {
+    if (IsAnnotationTextPopupShownFor(win, annot)) {
+        HideAnnotationTextPopup(win);
+    }
+}
+
 void DetachAnnotationFromUI(Annotation* annot) {
     if (!annot) {
         return;

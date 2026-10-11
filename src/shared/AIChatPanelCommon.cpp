@@ -273,3 +273,104 @@ void StopAIChat(MainWindow* win) {
         SetAIChatWorking(win, false);
     }
 }
+
+struct AIChatUpdateData {
+    // the window the update is for: orig finds it by frame, ng holds it
+    HWND hwndFrame = nullptr;
+    MainWindow* win = nullptr;
+    int providerId = 0;
+    Str text;
+    Str sessionId; // to identify which tab this belongs to
+    AIChatUpdateType updateType = AIChatUpdateType::Text;
+};
+
+static void FreeAIChatUpdateData(AIChatUpdateData* data) {
+    str::Free(data->text);
+    str::Free(data->sessionId);
+    delete data;
+}
+
+// isActiveTab: the panel currently shows this provider and this tab, so the
+// WebView reflects the update; otherwise it's only logged / recorded
+static void ApplyAIChatUpdate(MainWindow* win, AIChatProvider* p, AIChatUpdateData* data, AIChatTabState* st,
+                              bool isActiveTab) {
+    switch (data->updateType) {
+        case AIChatUpdateType::Text:
+            if (data->text) {
+                AIChatLog(p->logger, StrL("<<< text"), data->text);
+            }
+            if (isActiveTab) {
+                WebViewAppendText(win, data->text);
+            }
+            break;
+        case AIChatUpdateType::Tool:
+            if (data->text) {
+                AIChatLog(p->logger, StrL("<<< tool"), data->text);
+            }
+            if (isActiveTab) {
+                WebViewAddTool(win, data->text);
+            }
+            break;
+        case AIChatUpdateType::Error:
+            if (isActiveTab) {
+                WebViewAddError(win, data->text);
+            } else if (data->text) {
+                AIChatLog(p->logger, StrL("error"), data->text);
+            }
+            break;
+        case AIChatUpdateType::Flush:
+            if (isActiveTab) {
+                WebViewFlushBlock(win);
+            }
+            break;
+        case AIChatUpdateType::SessionId:
+            if (data->text) {
+                AIChatLog(p->logger, StrL("<<< session"), data->text);
+            }
+            if (st && data->text) {
+                str::ReplaceWithCopy(&st->sessionId, data->text);
+            }
+            break;
+        case AIChatUpdateType::Finished:
+            OnAIChatFinished(win, p, st, isActiveTab);
+            break;
+    }
+}
+
+static void OnAIChatUpdate(AIChatUpdateData* data) {
+    MainWindow* win = AIChatUpdateWindow(data->hwndFrame, data->win);
+    int pid = data->providerId;
+    AIChatProvider* p = GetAIChatProvider(pid);
+    if (!IsMainWindowValidAndNotClosing(win) || !AIChatPanelShown(win) || !p) {
+        FreeAIChatUpdateData(data);
+        return;
+    }
+    WindowTab* tab = FindAIChatUpdateTab(win, pid, data->sessionId);
+    bool isActiveTab = tab && tab == win->CurrentTab() && win->aiChatProvider == pid;
+    ApplyAIChatUpdate(win, p, data, GetTabState(tab, pid), isActiveTab);
+    FreeAIChatUpdateData(data);
+    AIChatUpdateApplied(win);
+}
+
+AIChatCaptureSink* gAIChatCapture = nullptr;
+
+void AIChatPostUpdate(AIChatStreamCtx* ctx, AIChatUpdateType type, Str text) {
+    if (gAIChatCapture) {
+        if (type == AIChatUpdateType::Text) {
+            gAIChatCapture->text.Append(text ? text : Str(""));
+        } else if (type == AIChatUpdateType::Error) {
+            gAIChatCapture->err.Append(text ? text : Str(""));
+        } else if (type == AIChatUpdateType::Finished) {
+            gAIChatCapture->finished = true;
+        }
+        return;
+    }
+    auto* data = new AIChatUpdateData();
+    data->hwndFrame = ctx->hwndFrame;
+    data->win = ctx->win;
+    data->providerId = ctx->providerId;
+    data->sessionId = ctx->sessionId ? str::Dup(ctx->sessionId) : Str{};
+    data->text = text ? str::Dup(text) : Str{};
+    data->updateType = type;
+    uitask::Post(MkFunc0(OnAIChatUpdate, data), "AIChatUpdate");
+}

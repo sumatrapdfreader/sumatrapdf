@@ -78,12 +78,6 @@ void HideAnnotationTextPopup(MainWindow* win) {
     AppShellInvalidate(win);
 }
 
-void HideAnnotationTextPopupFor(MainWindow* win, Annotation* annot) {
-    if (IsAnnotationTextPopupShownFor(win, annot)) {
-        HideAnnotationTextPopup(win);
-    }
-}
-
 void DeleteAnnotationTextPopup(MainWindow* win) {
     AnnotTextPopup* p = win ? win->annotTextPopup : nullptr;
     if (!p) {

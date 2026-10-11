@@ -448,12 +448,6 @@ bool IsAnnotationTextPopupShownFor(MainWindow* win, Annotation* annot) {
     return annot && IsAnnotationTextPopupShown(win) && win->annotTextPopup->annot == annot;
 }
 
-void HideAnnotationTextPopupFor(MainWindow* win, Annotation* annot) {
-    if (IsAnnotationTextPopupShownFor(win, annot)) {
-        HideAnnotationTextPopup(win);
-    }
-}
-
 void RepositionAnnotationTextPopup(MainWindow* win) {
     AnnotTextPopup* popup = win ? win->annotTextPopup : nullptr;
     if (!popup || !popup->host->IsVisible()) {

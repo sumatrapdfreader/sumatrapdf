@@ -35,3 +35,11 @@ struct AIChatCaptureSink {
 
 void AutoSelectRecentSession(MainWindow* win);
 void StopAIChat(MainWindow* win);
+
+// implemented by each app
+MainWindow* AIChatUpdateWindow(HWND hwndFrame, MainWindow* win);
+bool AIChatPanelShown(MainWindow* win);
+void AIChatUpdateApplied(MainWindow* win);
+void OnAIChatFinished(MainWindow* win, AIChatProvider* p, AIChatTabState* st, bool isActiveTab);
+
+extern AIChatCaptureSink* gAIChatCapture;
