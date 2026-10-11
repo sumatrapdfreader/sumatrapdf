@@ -1792,23 +1792,6 @@ void ToolbarView::OnAnnotSwatch(ToolbarView* self, gp::Ctx* cx, const gp::ClickE
     gp::Notify(cx);
 }
 
-// which button's color the generic color dialog is editing
-struct AnnotColorsTarget {
-    int cmdId = 0;
-};
-
-static void AnnotColorsPicked(AnnotColorsTarget* target, ChangeColorsArgs* args) {
-    Str* list = AnnotPresetColorList(target->cmdId);
-    if (args->colorsChanged && list) {
-        str::ReplaceWithCopy(list, SerializeColorList(args->colors));
-        ScheduleSaveSettings();
-    }
-    if (args->didSelect && args->color != kColorUnset) {
-        SetAnnotPresetColor(target->cmdId, args->color);
-    }
-    delete target;
-}
-
 // orig's OnAnnotColorsEditClicked
 void ToolbarView::OnAnnotColorsEdit(ToolbarView* self, gp::Ctx* cx, const gp::ClickEvent*, int64_t cmdId) {
     MainWindow* win = self->win;

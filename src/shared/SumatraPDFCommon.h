@@ -191,3 +191,6 @@ static Kind kNotifPersistentWarning = "persistentWarning";
 static Kind kNotifDocErrors = "docErrors";
 // Kind used so only one default-app bar is shown at a time
 static Kind kNotifDefaultApp = "defaultApp";
+int SidebarNativeDx(MainWindow* win);
+
+int SidebarExtraDx(MainWindow* win);

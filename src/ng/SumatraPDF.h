@@ -36,9 +36,7 @@ constexpr int kAutoReloadDelayInMs = 100;
 // give up waiting for a writer to go quiet after this long
 constexpr u64 kAutoReloadMaxWaitMs = 4000;
 
-constexpr int kSidebarMinDx = 150;
-constexpr int kTocMinDy = 100;
-constexpr int kSplitterDx = 5;
+#include "SidebarMetrics.h"
 // orig's kSplitterDy: the splitter between the two sidebar panels
 constexpr int kSplitterDy = 4;
 // leave at least this much canvas for the document when the sidebar is open
@@ -196,6 +194,7 @@ struct SettingsApplyState {
     bool disableAntiAlias = false;
     bool chmUseFixedPageUI = false;
     bool markdownUseFixedPageUI = false;
+    bool explorerQuickLook = false;
     // owned copy of the ebook layout inputs; ApplyChangedSettingsAndRelayout frees it
     Str ebookLayout;
 };

@@ -114,18 +114,9 @@ static void ClearSignaturePlacementNotif(MainWindow* win) {
     }
 }
 
-static void ShowSignaturePlacementNotif(MainWindow* win) {
-    if (!win) {
-        return;
-    }
-    NotificationCreateArgs args;
-    args.win = win;
-    args.msg = Tr("Click or drag on the page to place the signature. Esc to cancel.");
-    args.timeoutMs = kNotifNoTimeout;
-    args.groupId = kNotifSignPlacement;
-    args.warning = true;
-    args.tab = win->CurrentTab();
-    ShowNotification(args);
+// ng shows it where notifications go by default
+NotifCorner SignPlacementNotifCorner() {
+    return NotificationCreateArgs().corner;
 }
 
 // the dialog in the frame; a window of its own is not the frame's business

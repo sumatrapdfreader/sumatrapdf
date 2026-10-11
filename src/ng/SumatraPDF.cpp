@@ -341,19 +341,6 @@ void ReloadSettingsUpdateWindows(bool showToolbarBefore) {
     }
 }
 
-SettingsApplyState GetSettingsApplyState() {
-    Settings* p = gSettings;
-    SettingsApplyState s;
-    s.useTabs = p->useTabs;
-    s.showMenubar = p->showMenubar;
-    s.showMenubarWithTabs = p->showMenubarWithTabs;
-    s.disableAntiAlias = p->disableAntiAlias;
-    s.chmUseFixedPageUI = p->chmUI.useFixedPageUI;
-    s.markdownUseFixedPageUI = p->markdownUI.useFixedPageUI;
-    s.ebookLayout = EbookLayoutSnapshot();
-    return s;
-}
-
 // orig's, minus what this port has no service for: ExplorerQuickLook (step 14)
 // and the UseTabs <-> windows transition (it closes and reopens every window)
 void ApplyChangedSettingsAndRelayout(const SettingsApplyState& before) {
@@ -3518,15 +3505,9 @@ void OnMenuExit() {
 
 // --- the sidebar ------------------------------------------------------------
 
-static int SidebarExtraDx(MainWindow* win) {
-    int dx = win->sidebarDx;
-    if (dx <= 0 && gSettings) {
-        dx = gSettings->sidebarDx;
-    }
-    if (dx < kSidebarMinDx) {
-        dx = kSidebarMinDx;
-    }
-    return dx + kSplitterDx;
+// ng has no sidebar window to measure
+int SidebarNativeDx(MainWindow*) {
+    return 0;
 }
 
 #if OS_WIN

@@ -10,3 +10,6 @@ RectF DefaultSignatureRectAt(DisplayModel* dm, int pageNo, PointF pt);
 TempStr SignErrorMessageTemp(Str err);
 
 static Kind kNotifSignPlacement = "notifSignPlacement";
+NotifCorner SignPlacementNotifCorner();
+
+void ShowSignaturePlacementNotif(MainWindow* win);

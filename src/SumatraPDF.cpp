@@ -2398,7 +2398,6 @@ void ReloadDocument(MainWindow* win, bool autoRefresh, bool canAskForPassword) {
     DeleteFileState(fs);
 }
 
-constexpr int kSplitterDx = 5;
 constexpr int kSplitterDy = 4;
 
 // show / collapse a node of the frame's content row; a collapsed one takes no
@@ -6463,9 +6462,6 @@ void OpenNextPrevFileInFolder(MainWindow* win, bool forward, Str pathToDelete) {
     StartLoadDocument(&args);
 }
 
-constexpr int kSidebarMinDx = 150;
-constexpr int kTocMinDy = 100;
-
 constexpr int kFrameBorderSize = 1;
 // size (DIP) of the min/max/restore/close caption glyphs
 constexpr int kCaptionGlyphDip = 10;
@@ -8482,18 +8478,9 @@ static void OnPanelsSplitterMove(VirtSplitter::MoveEvent* ev) {
     ScheduleUiUpdate(win, kUiRelayout | kUiNoToolbars | kUiPanelsDrag);
 }
 
-static int SidebarExtraDx(MainWindow* win) {
-    int dx = win->sidebarDx;
-    if (dx <= 0 && gSettings) {
-        dx = gSettings->sidebarDx;
-    }
-    if (dx <= 0 && win->sidebarTop) {
-        dx = HwndClientRect(win->sidebarTop->hwnd).dx;
-    }
-    if (dx < kSidebarMinDx) {
-        dx = kSidebarMinDx;
-    }
-    return dx + kSplitterDx;
+// the width the sidebar window has now
+int SidebarNativeDx(MainWindow* win) {
+    return win->sidebarTop ? HwndClientRect(win->sidebarTop->hwnd).dx : 0;
 }
 
 // SidebarWindowSize = grow opts in; by default the window keeps its size (#6205)
@@ -9079,20 +9066,6 @@ static void ApplyMenuBarVisibility(MainWindow* win) {
     } else {
         SetMenu(win->hwndFrame, visible ? win->menu : nullptr);
     }
-}
-
-SettingsApplyState GetSettingsApplyState() {
-    Settings* p = gSettings;
-    SettingsApplyState s;
-    s.useTabs = p->useTabs;
-    s.showMenubar = p->showMenubar;
-    s.showMenubarWithTabs = p->showMenubarWithTabs;
-    s.disableAntiAlias = p->disableAntiAlias;
-    s.chmUseFixedPageUI = p->chmUI.useFixedPageUI;
-    s.markdownUseFixedPageUI = p->markdownUI.useFixedPageUI;
-    s.explorerQuickLook = p->explorerQuickLook;
-    s.ebookLayout = EbookLayoutSnapshot();
-    return s;
 }
 
 // apply settings changes that need explicit handling beyond a settings reload,

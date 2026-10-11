@@ -43,6 +43,7 @@ constexpr int kAutoReloadDelayInMs = 500;
 constexpr u64 kAutoReloadMaxWaitMs = 5000;
 
 #include "Permissions.h"
+#include "SidebarMetrics.h"
 
 struct Favorites;
 struct FileHistory;

@@ -1912,29 +1912,6 @@ static void OnAnnotColorClicked(MainWindow* win, VirtMouseEvent* ev) {
     uitask::Post(MkFunc0(PostedHideHoverDropdown, win), "HideToolbarHoverDropdown");
 }
 
-// which button's color the generic color dialog is editing; a valid onPick
-// instead means it was opened for something that is not a toolbar button
-struct AnnotColorsTarget {
-    int cmdId = 0;
-    Func1<Color> onPick;
-};
-
-static void AnnotColorsPicked(AnnotColorsTarget* target, ChangeColorsArgs* args) {
-    Str* list = AnnotPresetColorList(target->cmdId);
-    if (args->colorsChanged && list) {
-        str::ReplaceWithCopy(list, SerializeColorList(args->colors));
-        ScheduleSaveSettings();
-    }
-    if (args->didSelect && args->color != kColorUnset) {
-        if (target->onPick.IsValid()) {
-            target->onPick.Call(args->color);
-        } else {
-            SetAnnotPresetColor(target->cmdId, args->color);
-        }
-    }
-    delete target;
-}
-
 static void OnAnnotColorsEditClicked(MainWindow* win, VirtMouseEvent* ev) {
     VirtCtrl* w = ev ? ev->target : nullptr;
     if (!w) {

@@ -98,3 +98,12 @@ constexpr int kAnnotSwatchPad = 5;
 constexpr int kInkThicknessMin = 1;
 
 constexpr int kInkThicknessMax = 16;
+
+// which button's color the generic color dialog is editing; a valid onPick
+// instead means it was opened for something that is not a toolbar button
+struct AnnotColorsTarget {
+    int cmdId = 0;
+    Func1<Color> onPick;
+};
+
+void AnnotColorsPicked(AnnotColorsTarget* target, ChangeColorsArgs* args);

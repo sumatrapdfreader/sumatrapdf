@@ -2575,3 +2575,31 @@ void CreateThumbnailFromFileAsync(FileState* ds, EngineBase* engine) {
     auto fn = MkFunc0<CreateThumbnailFromFileData>(CreateThumbnailFromFileThread, d);
     RunAsync(fn, StrL("CreateThumbnailFromFile"));
 }
+
+int SidebarExtraDx(MainWindow* win) {
+    int dx = win->sidebarDx;
+    if (dx <= 0 && gSettings) {
+        dx = gSettings->sidebarDx;
+    }
+    if (dx <= 0) {
+        dx = SidebarNativeDx(win);
+    }
+    if (dx < kSidebarMinDx) {
+        dx = kSidebarMinDx;
+    }
+    return dx + kSplitterDx;
+}
+
+SettingsApplyState GetSettingsApplyState() {
+    Settings* p = gSettings;
+    SettingsApplyState s;
+    s.useTabs = p->useTabs;
+    s.showMenubar = p->showMenubar;
+    s.showMenubarWithTabs = p->showMenubarWithTabs;
+    s.disableAntiAlias = p->disableAntiAlias;
+    s.chmUseFixedPageUI = p->chmUI.useFixedPageUI;
+    s.markdownUseFixedPageUI = p->markdownUI.useFixedPageUI;
+    s.explorerQuickLook = p->explorerQuickLook;
+    s.ebookLayout = EbookLayoutSnapshot();
+    return s;
+}

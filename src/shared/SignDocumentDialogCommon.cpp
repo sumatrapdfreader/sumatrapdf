@@ -129,3 +129,18 @@ TempStr SignErrorMessageTemp(Str err) {
     }
     return str::DupTemp(err);
 }
+
+void ShowSignaturePlacementNotif(MainWindow* win) {
+    if (!win) {
+        return;
+    }
+    NotificationCreateArgs args;
+    args.win = win;
+    args.msg = Tr("Click or drag on the page to place the signature. Esc to cancel.");
+    args.timeoutMs = kNotifNoTimeout;
+    args.groupId = kNotifSignPlacement;
+    args.corner = SignPlacementNotifCorner();
+    args.warning = true;
+    args.tab = win->CurrentTab();
+    ShowNotification(args);
+}

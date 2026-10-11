@@ -722,3 +722,19 @@ bool IsCmdEnabled(MainWindow* win, int cmdId, AppCommandCtx* ctx) {
             return true;
     }
 }
+
+void AnnotColorsPicked(AnnotColorsTarget* target, ChangeColorsArgs* args) {
+    Str* list = AnnotPresetColorList(target->cmdId);
+    if (args->colorsChanged && list) {
+        str::ReplaceWithCopy(list, SerializeColorList(args->colors));
+        ScheduleSaveSettings();
+    }
+    if (args->didSelect && args->color != kColorUnset) {
+        if (target->onPick.IsValid()) {
+            target->onPick.Call(args->color);
+        } else {
+            SetAnnotPresetColor(target->cmdId, args->color);
+        }
+    }
+    delete target;
+}

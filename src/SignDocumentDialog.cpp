@@ -135,19 +135,8 @@ static void ClearSignaturePlacementNotif(MainWindow* win) {
     }
 }
 
-static void ShowSignaturePlacementNotif(MainWindow* win) {
-    if (!win || !win->hwndCanvas) {
-        return;
-    }
-    NotificationCreateArgs args;
-    args.win = win;
-    args.msg = Tr("Click or drag on the page to place the signature. Esc to cancel.");
-    args.timeoutMs = kNotifNoTimeout;
-    args.groupId = kNotifSignPlacement;
-    args.corner = NotifCorner::BottomBar;
-    args.warning = true;
-    args.tab = win->CurrentTab();
-    ShowNotification(args);
+NotifCorner SignPlacementNotifCorner() {
+    return NotifCorner::BottomBar;
 }
 
 bool IsPlacingSignature(MainWindow* win) {
