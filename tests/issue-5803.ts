@@ -3,7 +3,11 @@
 // a notes page interrupted the chapters. It now goes after the linear items,
 // where links still reach it.
 //
-// The EPUB is generated: chapter one, the notes (linear="no"), chapter two.
+// An XHTML manifest item no itemref names (an aside only a link reaches) is
+// paged after those; a nav document outside the spine is not.
+//
+// The EPUB is generated: chapter one, the notes (linear="no"), chapter two,
+// an extra page and a nav document outside the spine.
 // Run: bun tests/issue-5803.ts [--no-build]
 import { writeFileSync } from "node:fs";
 import { extractPageText, makeZip, runStandalone, tmpPath, type ZipEntry } from "./util.ts";
@@ -33,6 +37,9 @@ function makeEpub(): Buffer {
     `<item id="c1" href="c1.xhtml" media-type="application/xhtml+xml"/>` +
     `<item id="notes" href="notes.xhtml" media-type="application/xhtml+xml"/>` +
     `<item id="c2" href="c2.xhtml" media-type="application/xhtml+xml"/>` +
+    `<item id="extra" href="extra.xhtml" media-type="application/xhtml+xml"/>` +
+    `<item id="nav" href="nav.xhtml" media-type="application/xhtml+xml" properties="nav"/>` +
+    `<item id="css" href="style.css" media-type="text/css"/>` +
     `</manifest><spine>` +
     `<itemref idref="c1"/>` +
     `<itemref idref="notes" linear="no"/>` +
@@ -44,7 +51,15 @@ function makeEpub(): Buffer {
     { name: "OEBPS/content.opf", data: enc.encode(opf) },
     { name: "OEBPS/c1.xhtml", data: enc.encode(xhtml("CHAPTERONE", `<p>Text<a href="notes.xhtml#n1">1</a></p>`)) },
     { name: "OEBPS/notes.xhtml", data: enc.encode(xhtml("NOTES", `<p id="n1">A note</p>`)) },
-    { name: "OEBPS/c2.xhtml", data: enc.encode(xhtml("CHAPTERTWO", `<p>More text</p>`)) },
+    { name: "OEBPS/c2.xhtml", data: enc.encode(xhtml("CHAPTERTWO", `<p>More text<a href="extra.xhtml">*</a></p>`)) },
+    // in the manifest, not in the spine: reachable through the link only
+    { name: "OEBPS/extra.xhtml", data: enc.encode(xhtml("EXTRA", `<p>An aside</p>`)) },
+    // a nav document outside the spine is not a page
+    {
+      name: "OEBPS/nav.xhtml",
+      data: enc.encode(xhtml("NAVTOC", `<nav><ol><li><a href="c1.xhtml">1</a></li></ol></nav>`)),
+    },
+    { name: "OEBPS/style.css", data: enc.encode("p { margin: 0 }") },
   ];
   return makeZip(entries);
 }
@@ -53,12 +68,19 @@ export async function testit(): Promise<void> {
   const epub = tmpPath("issue-5803.epub");
   writeFileSync(epub, makeEpub());
 
-  const expected = ["CHAPTERONE", "CHAPTERTWO", "NOTES"];
-  for (let i = 0; i < expected.length; i++) {
-    const text = extractPageText(epub, i + 1);
-    if (!text.includes(expected[i]!)) {
-      throw new Error(`#5803: page ${i + 1} should be ${expected[i]}, got:\n${JSON.stringify(text.slice(0, 200))}`);
+  // every page, in page order
+  const text = extractPageText(epub);
+  const expected = ["CHAPTERONE", "CHAPTERTWO", "NOTES", "EXTRA"];
+  let last = -1;
+  for (const title of expected) {
+    const at = text.indexOf(title);
+    if (at <= last) {
+      throw new Error(`#5803: pages should read ${expected.join(", ")}, got:\n${JSON.stringify(text)}`);
     }
+    last = at;
+  }
+  if (text.includes("NAVTOC")) {
+    throw new Error("#5803: the nav document outside the spine became a page");
   }
 }
 

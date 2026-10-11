@@ -948,6 +948,46 @@ itemref_is_linear(fz_xml *itemref)
 	return !linear || strcmp(linear, "no") != 0;
 }
 
+/* an XHTML manifest item no itemref names; the nav document is not a page */
+static int
+item_is_unspined_page(fz_xml *item, fz_xml *spine)
+{
+	const char *id = fz_xml_att(item, "id");
+	const char *type = fz_xml_att(item, "media-type");
+	const char *props = fz_xml_att(item, "properties");
+	fz_xml *itemref;
+	if (!id || !type || strcmp(type, "application/xhtml+xml") != 0)
+		return 0;
+	if (props && strstr(props, "nav"))
+		return 0;
+	for (itemref = fz_xml_find_down(spine, "itemref"); itemref; itemref = fz_xml_find_next(itemref, "itemref"))
+	{
+		const char *idref = fz_xml_att(itemref, "idref");
+		if (idref && !strcmp(idref, id))
+			return 0;
+	}
+	return 1;
+}
+
+/* loads chapter i from path s; returns the next index, or i if it failed */
+static int
+epub_load_spine_chapter(fz_context *ctx, epub_document *doc, const char *s, int i)
+{
+	fz_try(ctx)
+	{
+		doc->spine[i] = epub_load_chapter(ctx, doc, s, i);
+		i++;
+	}
+	fz_catch(ctx)
+	{
+		fz_rethrow_if(ctx, FZ_ERROR_TRYLATER);
+		fz_rethrow_if(ctx, FZ_ERROR_SYSTEM);
+		fz_report_error(ctx);
+		fz_warn(ctx, "ignoring chapter %s", s);
+	}
+	return i;
+}
+
 static void
 epub_parse_header(fz_context *ctx, epub_document *doc)
 {
@@ -957,7 +997,7 @@ epub_parse_header(fz_context *ctx, epub_document *doc)
 	fz_xml_doc *container_xml = NULL;
 	fz_xml_doc *content_opf = NULL;
 	fz_xml *container, *rootfiles, *rootfile;
-	fz_xml *package, *manifest, *spine, *itemref, *metadata;
+	fz_xml *package, *manifest, *spine, *itemref, *item, *metadata;
 	char base_uri[2048];
 	const char *full_path;
 	const char *version;
@@ -1059,11 +1099,19 @@ epub_parse_header(fz_context *ctx, epub_document *doc)
 				++i;
 			itemref = fz_xml_find_next(itemref, "itemref");
 		}
+		item = fz_xml_find_down(manifest, "item");
+		while (item)
+		{
+			if (item_is_unspined_page(item, spine))
+				++i;
+			item = fz_xml_find_next(item, "item");
+		}
 		doc->spine_len = i;
 
 		// load chapters: linear="no" items (footnotes, endnotes) are not
 		// part of the reading order, so they go after the linear ones,
-		// where links still reach them
+		// where links still reach them; pages only the manifest names
+		// (an aside a link points at) go last
 		doc->spine = fz_malloc_array(ctx, doc->spine_len, epub_chapter*);
 		i = 0;
 		for (pass = 0; pass < 2; ++pass)
@@ -1073,22 +1121,17 @@ epub_parse_header(fz_context *ctx, epub_document *doc)
 			{
 				if (itemref_is_linear(itemref) == (pass == 0) &&
 					path_from_idref(s, manifest, base_uri, fz_xml_att(itemref, "idref"), sizeof s))
-				{
-					fz_try(ctx)
-					{
-						doc->spine[i] = epub_load_chapter(ctx, doc, s, i);
-						i++;
-					}
-					fz_catch(ctx)
-					{
-						fz_rethrow_if(ctx, FZ_ERROR_TRYLATER);
-						fz_rethrow_if(ctx, FZ_ERROR_SYSTEM);
-						fz_report_error(ctx);
-						fz_warn(ctx, "ignoring chapter %s", s);
-					}
-				}
+					i = epub_load_spine_chapter(ctx, doc, s, i);
 				itemref = fz_xml_find_next(itemref, "itemref");
 			}
+		}
+		item = fz_xml_find_down(manifest, "item");
+		while (item)
+		{
+			if (item_is_unspined_page(item, spine) &&
+				path_from_idref(s, manifest, base_uri, fz_xml_att(item, "id"), sizeof s))
+				i = epub_load_spine_chapter(ctx, doc, s, i);
+			item = fz_xml_find_next(item, "item");
 		}
 		doc->spine_len = i;
 	}
