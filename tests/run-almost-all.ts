@@ -413,6 +413,7 @@ export const tests: NamedTest[] = [
   // mouse, so it is the one test that cares what the machine was doing before
   ["issue-5978", issue5978],
   ["issue-4291", issue4291],
+  ["issue-6279", issue6279],
   ["issue-2423", issue2423],
   ["jpeg-xl-pdf", jpegXlPdf],
   ["annotation clipboard tests", annotationClipboardTests],
@@ -649,7 +650,6 @@ export const tests: NamedTest[] = [
   ["issue-6050", issue6050],
   ["issue-6265", issue6265],
   ["issue-6266", issue6266],
-  ["issue-6279", issue6279],
   ["issue-6280", issue6280],
   ["issue-6270", issue6270],
   ["issue-5911", issue5911],

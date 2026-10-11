@@ -5724,6 +5724,8 @@ static void DeleteCurrentFile(MainWindow* win) {
     }
 }
 
+static bool RenameCurrentFileTo(MainWindow* win, Str dstFilePath);
+
 static void RenameCurrentFile(MainWindow* win) {
     if (!CanAccessDisk()) {
         return;
@@ -5785,11 +5787,17 @@ static void RenameCurrentFile(MainWindow* win) {
     if (!ok) {
         return;
     }
-    TempStr dstFilePath = ToUtf8Temp(dstFilePathW);
+    RenameCurrentFileTo(win, ToUtf8Temp(dstFilePathW));
+}
+
+// the work half of Rename File: moves the open document to dstFilePath and
+// reloads it from there. false when the move failed
+static bool RenameCurrentFileTo(MainWindow* win, Str dstFilePath) {
+    TempStr srcPath = str::DupTemp(win->ctrl->GetFilePath());
     TempStr dstPathNormalized = path::NormalizeTemp(dstFilePath);
     TempStr srcPathNormalized = path::NormalizeTemp(srcPath);
     if (path::IsSame(srcPathNormalized, dstPathNormalized)) {
-        return;
+        return true;
     }
 
     UpdateTabFileDisplayStateForTab(win->CurrentTab());
@@ -5797,7 +5805,7 @@ static void RenameCurrentFile(MainWindow* win) {
     HwndSetFocus(win->hwndFrame);
 
     DWORD flags = MOVEFILE_COPY_ALLOWED | MOVEFILE_REPLACE_EXISTING;
-    BOOL moveOk = MoveFileExW(srcPathW.s, dstFilePathW, flags);
+    BOOL moveOk = MoveFileExW(CWStrTemp(srcPath), CWStrTemp(dstFilePath), flags);
     if (!moveOk) {
         LogLastError();
         LoadArgs args(srcPath, win);
@@ -5809,7 +5817,7 @@ static void RenameCurrentFile(MainWindow* win) {
         nargs.warning = true;
         nargs.timeoutMs = 0;
         ShowNotification(nargs);
-        return;
+        return false;
     }
     RenameFileInHistory(srcPath, dstPathNormalized);
 
@@ -5831,6 +5839,20 @@ static void RenameCurrentFile(MainWindow* win) {
         // tabs-in-titlebar draws into the frame non-client area
         RedrawWindow(win->hwndFrame, nullptr, nullptr, RDW_INVALIDATE | RDW_FRAME | RDW_UPDATENOW);
     }
+    return true;
+}
+
+// -dbg-control TestRenameFile: Rename File without its dialog
+TempStr RenameFileResultTemp(Str dstPath, int* exitCodeOut) {
+    *exitCodeOut = 1;
+    if (len(gWindows) == 0 || !gWindows[0] || !gWindows[0]->IsDocLoaded()) {
+        return StrL("NOTREADY no-document");
+    }
+    if (!RenameCurrentFileTo(gWindows[0], dstPath)) {
+        return StrL("FAIL rename");
+    }
+    *exitCodeOut = 0;
+    return StrL("OK");
 }
 
 static void CreateLnkShortcut(MainWindow* win) {

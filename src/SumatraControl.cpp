@@ -642,6 +642,7 @@ enum class ControlCmd : u16 {
     TestMergePdf = 115,
     TestWheelWhileClosing = 116,
     TestQuitProcess = 130,
+    TestRenameFile = 131,
 };
 
 bool ParseArg(PacketReader& r, ControlArg** argOut) {
@@ -1587,6 +1588,18 @@ static void ExecuteControlRequest(ControlRequest* req) {
             }
             int exitCode = 0;
             Str res = SaveFileAsResultTemp(dstPath, &exitCode);
+            AppendTestResult(req, exitCode, res);
+            break;
+        }
+
+        case ControlCmd::TestRenameFile: {
+            Str dstPath = StringArg(req, 0);
+            if (len(dstPath) == 0) {
+                AppendError(req, StrL("TestRenameFile expects string dstPath"));
+                break;
+            }
+            int exitCode = 0;
+            Str res = RenameFileResultTemp(dstPath, &exitCode);
             AppendTestResult(req, exitCode, res);
             break;
         }

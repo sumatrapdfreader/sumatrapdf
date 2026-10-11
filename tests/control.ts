@@ -127,6 +127,8 @@ export enum ControlCommand {
   // the installer's KillProcWithId on a process id: asks a SumatraPDF to quit,
   // terminates whatever is left
   TestQuitProcess = 130,
+  // Rename File (F2) to a path, without its dialog
+  TestRenameFile = 131,
 }
 
 export type ControlArg = number | string | Uint8Array | ControlArg[];
@@ -714,6 +716,15 @@ export class ControlClient {
     const raw = String(res[1] ?? "").trim();
     if (code !== 0) {
       throw new Error(`TestHiddenTabGoToPage failed: ${raw || code}`);
+    }
+  }
+
+  // Rename File (F2) of the current document to dstPath, without the dialog
+  async renameFile(dstPath: string): Promise<void> {
+    const res = await this.request(ControlCommand.TestRenameFile, [dstPath]);
+    const code = typeof res[0] === "number" ? res[0] : -1;
+    if (code !== 0) {
+      throw new Error(`TestRenameFile failed: ${String(res[1] ?? "").trim() || code}`);
     }
   }
 
