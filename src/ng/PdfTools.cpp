@@ -67,10 +67,6 @@ extern "C" void fz_set_optind(int val);
 
 // --- the image formats the two image dialogs offer --------------------------
 
-constexpr int kMaxImageDpi = 9600;
-
-static const int kImageDpiChoices[] = {72, 96, 150, 300, 600, 1200};
-
 // PNG / JPEG / BMP, same core formats as the Save Image dialog
 // ng: orig also carries the GDI+ mime type and the OPENFILENAME default
 // extension; the encoders here are the portable ones of the image editor

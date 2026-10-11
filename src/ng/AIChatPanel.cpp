@@ -42,7 +42,6 @@
 
 #include "SumatraLog.h"
 
-constexpr int kAIChatMinDx = 150;
 // orig defers the "pick the most recent session" pass with a 500 ms timer so
 // the page has loaded by then
 constexpr int kAutoSelectDelayMs = 500;

@@ -100,3 +100,28 @@ void ChipTextSizePicked(AnnotEditToolbarBase* tb, int size);
 Annotation* LiveToolbarAnnot(AnnotEditToolbarBase* tb);
 AnnotEditKind ChipColorKind(AnnotEditToolbarBase* tb);
 void ChipColorPicked(AnnotEditToolbarBase* tb, Color col);
+
+constexpr int kBtnPadX = 8;
+
+constexpr int kBtnPadY = 4;
+
+constexpr int kMargin = 5;
+
+constexpr int kBtnGap = 2;
+
+constexpr int kCornerRadius = 10;
+
+constexpr int kButtonRadius = 6;
+
+// ranges of the number sliders; widths and sizes are in PDF points
+constexpr int kBorderWidthMax = 12;
+
+constexpr int kFreeTextSizeMin = 6;
+
+constexpr int kFreeTextSizeMax = 72;
+
+constexpr int kOpacityPercentMin = 10;
+
+// GDI's Arial is not quite MuPDF's Helvetica; leave room rather than let the
+// annotation wrap a line the box showed whole
+constexpr float kInPlaceWidthSlack = 1.03f;

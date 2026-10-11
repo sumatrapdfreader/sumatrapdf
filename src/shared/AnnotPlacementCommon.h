@@ -59,3 +59,21 @@ void PlacementRunCreateCmd(MainWindow* win, int cmdId, Point pt);
 bool IsDragDistance(int x1, int x2, int y1, int y2);
 
 TempStr PointPlacementDumpLineTemp(MainWindow* win, AnnotPlacementKind kind, Str key, bool svgCursor);
+
+constexpr float kStampAnnotDefaultDy = 50.f;
+
+constexpr float kCaretAnnotDefaultDx = 18.f;
+
+constexpr float kCaretAnnotDefaultDy = 15.f;
+
+constexpr float kFileAttachmentAnnotDefaultDx = 16.f;
+
+constexpr float kFileAttachmentAnnotDefaultDy = 16.f;
+
+// 40% yellow, when Annotations.InkColor is not a color. How translucent a
+// stroke is comes from its color's alpha.
+constexpr Color kInkDefaultColor = 0x6600ffff;
+
+// MeasureString already includes generous side bearings; a little more keeps
+// MuPDF from wrapping the text we previewed on a single line
+constexpr float kFreeTextWidthSlack = 1.02f;

@@ -51,11 +51,6 @@ struct ReadingAutoScrollBar {
     gp::Bounds rowBounds{};
 };
 
-constexpr int kBarMargin = 8;
-constexpr int kBarPadX = 12;
-constexpr int kBarPadY = 6;
-constexpr int kBtnGap = 8;
-
 void StopMiddleClickScroll(MainWindow* win) {
     if (!win || win->mouseAction != MouseAction::Scrolling) {
         return;

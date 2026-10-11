@@ -18,3 +18,11 @@ void HideAnnotFilterWindow(MainWindow* win);
 WindowTab* FilterTab(AnnotFilterToolbarBase* f);
 void LoadAnnotations(AnnotFilterToolbarBase* f);
 Annotation* VisibleAnnotAt(AnnotFilterToolbarBase* f, int idx);
+
+constexpr int kSelectionDebounceMs = 300;
+
+constexpr int kMaxListLines = 12;
+
+constexpr int kFloatWinPadding = 8;
+
+constexpr int kFloatWinGap = 6;

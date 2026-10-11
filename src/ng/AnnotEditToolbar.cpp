@@ -58,19 +58,8 @@
 
 #include "SumatraLog.h"
 
-constexpr int kBtnPadX = 8;
-constexpr int kBtnPadY = 4;
-constexpr int kMargin = 5;
-constexpr int kBtnGap = 2;
-constexpr int kCornerRadius = 10;
-constexpr int kButtonRadius = 6;
-// ranges of the number sliders; widths and sizes are in PDF points
-constexpr int kBorderWidthMax = 12;
 // orig's ink Thickness slider stops at 16, including on a selected stroke
 constexpr int kInkThicknessMax = 16;
-constexpr int kFreeTextSizeMin = 6;
-constexpr int kFreeTextSizeMax = 72;
-constexpr int kOpacityPercentMin = 10;
 // at most this many chips; the paint state of each one has to keep its address
 constexpr int kMaxChips = 24;
 
@@ -487,9 +476,6 @@ bool FreeTextInPlaceCommitOnChar(MainWindow* win, int ch) {
     return true;
 }
 
-// GDI's Arial is not quite MuPDF's Helvetica. Orig leaves this much room so
-// the annotation does not wrap a line the box showed whole.
-constexpr float kInPlaceWidthSlack = 1.03f;
 constexpr float kInPlaceLineHeight = 1.2f;
 
 static Str InPlaceMeasureFamily(Str family) {

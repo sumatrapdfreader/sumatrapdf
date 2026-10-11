@@ -37,12 +37,6 @@
 
 #include "SumatraLog.h"
 
-static const int kNumPresets = 3;
-// custom swatches are laid out in 2 rows
-static const int kCustomInRow1 = 5;
-
-static const Color kColCheckerDark = MkRgb(204, 204, 204);
-
 // the client width of orig's window
 constexpr float kColorWinDx = 400;
 
@@ -90,11 +84,6 @@ struct ChangeColorView {
 };
 
 static gp::Entity<ChangeColorView> gColorView;
-
-// swatch ids, as in orig
-static const int kIdPreview = 1;
-static const int kIdPreset0 = 10;
-static const int kIdCustom0 = 20;
 
 // orig's window, where the platform can have one (DlgWindowOpen): modeless
 // and owned by the main window; null: a dialog in the frame

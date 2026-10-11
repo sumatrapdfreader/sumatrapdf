@@ -45,3 +45,8 @@ void RestartElevatedForAllUsers(Flags* cli);
 void RemoveInstalledFiles();
 bool IsRevealingLettersAnimRunning();
 void RevealingLettersAnim();
+
+constexpr int kInstallerWinMargin = 8;
+
+// how long the animation lasts, in seconds
+constexpr double kRevealingAnimDur = 2;

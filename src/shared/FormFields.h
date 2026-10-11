@@ -22,3 +22,8 @@ void PaintFormFieldHighlights(MainWindow* win, Gfx* gfx);
 void PaintFormFieldHighlights(MainWindow* win, gpui::PaintCtx* ctx);
 gpui::El* FormFieldEditBuild(MainWindow* win, gpui::Ctx* cx);
 TempStr FormFieldEditStateTemp();
+
+// Acrobat / Chrome pale blue, translucent so the page still shows through.
+constexpr Color kFormFieldHighlightCol = MkRgb(166, 202, 240);
+
+constexpr u8 kFormFieldHighlightAlpha = 96;

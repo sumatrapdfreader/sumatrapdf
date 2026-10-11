@@ -27,3 +27,9 @@ void SetState(OverlayScrollbar* sb, State newState);
 // implemented by each app
 bool IsAlwaysThickMode(OverlayScrollbar* sb);
 void RestartSmartThinAutoHide(OverlayScrollbar* sb);
+
+static constexpr int kMinThumbSize = 20;
+
+static constexpr u8 kAlphaThin = 180;
+
+static constexpr u8 kAlphaThick = 220;

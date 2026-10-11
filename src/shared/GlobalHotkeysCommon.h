@@ -14,3 +14,5 @@ extern Vec<GlobalHotkeyInfo> gGlobalHotkeys;
 extern HWND gGlobalHotkeysHwnd;
 extern Vec<HWND> gActiveFrameHwndMRU;
 #endif
+
+constexpr int kGlobalHotkeyBaseId = 0x6000;

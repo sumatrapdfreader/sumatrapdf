@@ -30,3 +30,5 @@ void InvokeSelectionToolbarCommand(MainWindow* win, int cmdId);
 
 Str ButtonLabel(const SelectionToolbarButton& b);
 bool GetSelectionBounds(MainWindow* win, Rect& out);
+
+constexpr int kCopiedNotifTimeoutMs = 1500;

@@ -43,3 +43,6 @@ void AIChatUpdateApplied(MainWindow* win);
 void OnAIChatFinished(MainWindow* win, AIChatProvider* p, AIChatTabState* st, bool isActiveTab);
 
 extern AIChatCaptureSink* gAIChatCapture;
+
+// --- Splitter ---
+constexpr int kAIChatMinDx = 150;

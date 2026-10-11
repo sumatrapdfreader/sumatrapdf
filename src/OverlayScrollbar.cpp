@@ -24,10 +24,6 @@ static Point gLastMousePos = {-1, -1};
 static constexpr UINT_PTR kMouseTrackTimerID = 100;
 static constexpr int kMouseTrackIntervalMs = 50;
 
-static constexpr int kMinThumbSize = 20;
-static constexpr u8 kAlphaThin = 180;
-static constexpr u8 kAlphaThick = 220;
-
 // the names ng uses for these, so the code below is the same in both
 bool IsAlwaysThickMode(OverlayScrollbar* sb) {
     return sb->mode == OverlayScrollbar::Mode::Thick;

@@ -291,3 +291,5 @@ bool RefHoverPopupCreate(RefHoverState* s, HWND hwndCanvas);
 void RefHoverShowPopup(RefHoverState* s, Point screenPt);
 void RefHoverRequestRender(RefHoverState* s, EngineBase* engine, RefHoverState::RenderRequest req);
 bool RefHoverRerenderDisplayedRegion(RefHoverState* s, EngineBase* engine, int page, RectF region);
+
+static constexpr int kRefHoverHideMinMs = 250;

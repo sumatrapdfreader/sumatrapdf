@@ -398,9 +398,6 @@ static void SetLettersSumatra() {
 
 // an animation that reveals letters one by one
 
-// how long the animation lasts, in seconds
-constexpr double kRevealingAnimDur = 2;
-
 static FrameTimeoutCalculator* gRevealingLettersAnim = nullptr;
 
 static int gRevealingLettersAnimLettersToShow;

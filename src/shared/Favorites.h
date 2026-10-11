@@ -142,3 +142,6 @@ void RememberFavTreeExpansionStateForAllWindows();
 
 constexpr int kMaxFavMenus = 10;
 void AppendFavMenuItems(MenuRef m, FileState* f, Vec<FavMenuEntry>& favs, int& idx, bool combined, bool isCurrent);
+
+// Note: those might be too big
+constexpr int kMaxFavSubmenus = 10;

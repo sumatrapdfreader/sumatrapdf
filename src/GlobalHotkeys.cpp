@@ -16,8 +16,6 @@
 #include "GlobalHotkeys.h"
 #include "GlobalHotkeysCommon.h"
 
-constexpr int kGlobalHotkeyBaseId = 0x6000;
-
 static bool IsOtherSumatraProcessRunning() {
     DWORD myPid = GetCurrentProcessId();
     HWND hwnd = nullptr;

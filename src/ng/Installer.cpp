@@ -34,8 +34,6 @@
 
 #if OS_WIN
 
-constexpr int kInstallerWinMargin = 8;
-
 struct InstallerWnd;
 
 static InstallerWnd* gWnd = nullptr;

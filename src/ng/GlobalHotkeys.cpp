@@ -23,8 +23,6 @@
 
 #include "base/Win.h"
 
-constexpr int kGlobalHotkeyBaseId = 0x6000;
-
 // ng: orig looks for another SUMATRA_PDF_FRAME window; our windows use gpui's
 // shared class name, so a named mutex decides which process owns the hotkeys
 static bool IsOtherSumatraProcessRunning() {

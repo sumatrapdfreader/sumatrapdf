@@ -181,3 +181,8 @@ bool SetupPluginMode(Flags& i);
 void OnFrameKeyB(MainWindow* win, bool isShift);
 EngineBase* CreateEngineForThumbnail(Str path);
 void CreateThumbnailFromFileFinish(CreateThumbnailFromFileData* d);
+
+constexpr const char* kSumatraWindowTitle = "SumatraPDF";
+
+// Cap how many extension links we put in the bar
+constexpr int kMaxDefaultAppLinks = 8;

@@ -153,7 +153,6 @@ using Gdiplus::SolidBrush;
 
 constexpr const WCHAR* kCanvasClassName = L"SUMATRA_PDF_CANVAS";
 
-constexpr const char* kSumatraWindowTitle = "SumatraPDF";
 constexpr const WCHAR* kSumatraWindowTitleW = L"SumatraPDF";
 
 // used to show it in debug, but is not very useful,
@@ -2885,9 +2884,6 @@ void ShowMainWindow(MainWindow* win, int windowState) {
 
 // Kind used so only one default-app bar is shown at a time
 static Kind kNotifDefaultApp = "defaultApp";
-// Cap how many extension links we put in the bar
-constexpr int kMaxDefaultAppLinks = 8;
-
 // On the home page: if we registered as Open With for extensions that no longer
 // open with us, show a bottom bar with per-extension fix links.
 static void MaybeShowDefaultAppNotification(MainWindow* win) {

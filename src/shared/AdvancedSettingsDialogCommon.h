@@ -46,3 +46,8 @@ void EndPreviewSettingChange();
 void SetItemChanged(SettingItem* item);
 void CollectSettings(Vec<SettingItem*>& items);
 void CollectFilteredSettings(Vec<SettingItem*>& items, const StrVec& words, Vec<int>& filtered);
+
+constexpr const char* kSettingsDocsUrl = "https://www.sumatrapdfreader.org/settings/settings3-7.html";
+
+// smallest client width the user can drag the dialog to (96 dpi pixels)
+constexpr int kAdvSettingsMinClientDx = 480;

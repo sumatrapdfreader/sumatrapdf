@@ -44,22 +44,10 @@
 
 #include "SumatraLog.h"
 
-constexpr float kStampAnnotDefaultDy = 50.f;
-constexpr float kCaretAnnotDefaultDx = 18.f;
-constexpr float kCaretAnnotDefaultDy = 15.f;
-constexpr float kFileAttachmentAnnotDefaultDx = 16.f;
-constexpr float kFileAttachmentAnnotDefaultDy = 16.f;
-
-// 40% yellow, when Annotations.InkColor is not a color. How translucent a
-// stroke is comes from its color's alpha.
-constexpr Color kInkDefaultColor = 0x6600ffff;
-
 // ng: orig measures the placeholder with GDI+ Arial (Helvetica's metrics).
 // There is no portable text measurement outside a paint, so the box is as wide
 // as the average Helvetica advance makes it.
 constexpr float kFreeTextAvgAdvance = 0.5f;
-constexpr float kFreeTextWidthSlack = 1.02f;
-
 // the preview and the selection markers, orig's colors
 constexpr Color kPreviewBlue = MkRgb(0, 80, 200);
 constexpr Color kPreviewWhite = 0xffffff;

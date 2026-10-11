@@ -46,10 +46,6 @@ bool IsFormFieldEditActive() {
     return gEdit.hwnd != nullptr;
 }
 
-// Acrobat / Chrome pale blue, translucent so the page still shows through.
-constexpr Color kFormFieldHighlightCol = MkRgb(166, 202, 240);
-constexpr u8 kFormFieldHighlightAlpha = 96;
-
 // Tint empty fillable fields so they are visible without hovering (issue #5966).
 void PaintFormFieldHighlights(MainWindow* win, Gfx* gfx) {
     if (!gSettings || !gSettings->highlightFormFields || !gfx) {

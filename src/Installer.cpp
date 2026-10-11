@@ -46,8 +46,6 @@
 #include "UpdateCheck.h"
 #include "SumatraLog.h"
 
-constexpr int kInstallerWinMargin = 8;
-
 struct InstallerWnd;
 
 static InstallerWnd* gWnd = nullptr;

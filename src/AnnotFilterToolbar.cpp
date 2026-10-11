@@ -45,11 +45,6 @@
 constexpr const WCHAR* kAnnotFilterListClassName = L"SumatraAnnotFilterList";
 constexpr const WCHAR* kAnnotFilterFloatClassName = L"SUMATRA_ANNOT_FILTER_WND";
 constexpr int kSelectionDebounceTimerId = 1;
-constexpr int kSelectionDebounceMs = 300;
-constexpr int kMaxListLines = 12;
-constexpr int kFloatWinPadding = 8;
-constexpr int kFloatWinGap = 6;
-
 struct AnnotFilterToolbar;
 struct AnnotFilterWindow;
 

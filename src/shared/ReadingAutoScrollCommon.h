@@ -40,3 +40,11 @@ void BarUpdate(MainWindow* win, bool forceLayout);
 void StopMiddleClickScroll(MainWindow* win);
 float ReadingTickSeconds(WindowTab* tab, int elapsedMs);
 ReadingAutoScrollBar* BarEnsure(MainWindow* win);
+
+constexpr int kBarMargin = 8;
+
+constexpr int kBarPadX = 12;
+
+constexpr int kBarPadY = 6;
+
+constexpr int kBtnGap = 8;

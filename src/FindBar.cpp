@@ -39,6 +39,7 @@
 
 // command ids for the bar's toolbar buttons; must not collide with real commands
 constexpr int kFindBarCloseCmdId = (int)CmdLast + 50;
+
 constexpr int kFindBarPinCmdId = (int)CmdLast + 52;
 
 namespace {
@@ -312,13 +313,6 @@ bool FindBarWnd::Create(MainWindow* mainWin) {
     win->RegisterOnWindowMoved(&onWindowMoved);
     return true;
 }
-
-constexpr int kFindBarPadding = 6;
-constexpr int kFindBarGap = 4;
-constexpr int kFindBarDefaultEditDx = 220;
-constexpr int kFindBarMinEditDx = 80;
-// how wide the drag zone along the left edge is
-constexpr int kFindBarResizeGripDx = 6;
 
 void FindBarWnd::BuildLayout() {
     int p = DpiScale(kFindBarPadding);

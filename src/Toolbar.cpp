@@ -57,11 +57,6 @@
 
 // https://docs.microsoft.com/en-us/windows/win32/controls/toolbar-control-reference
 
-constexpr int kButtonSpacingX = 4;
-
-// distance between label and edit field
-constexpr int kTextPaddingRight = 6;
-
 // unicode chars: https://www.compart.com/en/unicode/U+25BC
 
 static VirtHost* ToolbarHost(MainWindow* win) {
@@ -1052,21 +1047,7 @@ static void OnToolbarButtonClicked(MainWindow* win, VirtMouseEvent* ev) {
 
 //--- hover drop-down
 
-// A row of NewToolbarHoverMenu(): an icon on the left, text on the right, and a
-// background that lights up under the mouse, like a menu item.
-constexpr int kHoverRowPadY = 6;
-constexpr int kHoverRowPadX = 10;
-constexpr int kHoverRowIconGapX = 8;
-// between the label and the shortcut that sits at the right edge, as in a menu
-constexpr int kHoverRowShortcutGapX = 24;
 constexpr int kHoverMenuBorder = 1;
-// around a label in the single-row strip; less than a menu row's, it is a row
-// of them and the gaps add up
-constexpr int kHoverCellPadX = 8;
-// the mouse crosses a seam going from the button to the drop-down; don't close
-// on the frame where it is over neither
-constexpr int kCloseHoverDropdownDelayMs = 150;
-
 struct ToolbarHoverRow : VirtCtrl {
     Pixmap* pixmap = nullptr; // not owned, from GetCachedPixmapForSvg()
     Str text;                 // owned
@@ -1836,8 +1817,6 @@ static void BuildSaveHoverMenu(MainWindow* win, ToolbarHoverBuildEvent* ev) {
 // in Annotations.PresetColors: picking one becomes the color of new annotations
 // of that type, and the pencil opens the color dialog on the whole set.
 constexpr int kAnnotSwatchDx = 22;
-// ring space around the circle, where the mark on the color in use goes
-constexpr int kAnnotSwatchPad = 5;
 constexpr int kAnnotColorsPad = 10;
 
 // the buttons that offer the preset colors
@@ -2086,9 +2065,6 @@ static ILayout* MakeAnnotColorsPanel(MainWindow* win, Str label, Color current, 
 
 //--- the ink button's drop-down also sets how thick the stroke is
 
-// Annotations.InkBorderWidth is in PDF points, which is about a pixel at 100%
-constexpr int kInkThicknessMin = 1;
-constexpr int kInkThicknessMax = 16;
 constexpr int kInkPreviewDy = 44;
 constexpr int kInkSliderDx = 190;
 // how far the preview's wave swings, as a part of the room left by the stroke

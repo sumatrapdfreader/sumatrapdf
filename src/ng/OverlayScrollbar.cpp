@@ -31,10 +31,6 @@ static Vec<OverlayScrollbar*> gAllScrollbars;
 // auto-repeat
 static OverlayScrollbar* gCapture = nullptr;
 
-static constexpr int kMinThumbSize = 20;
-static constexpr u8 kAlphaThin = 180;
-static constexpr u8 kAlphaThick = 220;
-
 // ng: win32's MulDiv (a * b / c, rounded) for a positive c; the other
 // platforms have none
 static int MulDivI(int a, int b, int c) {

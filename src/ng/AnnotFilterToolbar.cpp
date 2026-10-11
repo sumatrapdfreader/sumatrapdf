@@ -50,16 +50,10 @@
 
 #include "SumatraLog.h"
 
-// orig's kSelectionDebounceMs: a row selected with the arrow keys only becomes
-// the page's selection once the caret settles
-constexpr int kSelectionDebounceMs = 300;
-constexpr int kMaxListLines = 12;
 // ng: the card gives up rows before it grows past a short frame
 constexpr int kMinListLines = 3;
 // everything in the card but the list: caption, filter, buttons, help, margins
 constexpr int kCardChromeDy = 340;
-constexpr int kFloatWinPadding = 8;
-constexpr int kFloatWinGap = 6;
 // orig's sizes: the app font (9 pt), a list row 4 taller than its text, an
 // edit, a button 2 above and below its text, a line of the cheat sheet
 constexpr int kRowDy = 19;

@@ -40,19 +40,6 @@
 #include "AnnotPlacementCommon.h"
 #include "AnnotPlacementCursors.h"
 
-constexpr float kStampAnnotDefaultDy = 50.f;
-constexpr float kCaretAnnotDefaultDx = 18.f;
-constexpr float kCaretAnnotDefaultDy = 15.f;
-constexpr float kFileAttachmentAnnotDefaultDx = 16.f;
-constexpr float kFileAttachmentAnnotDefaultDy = 16.f;
-
-// 40% yellow, when Annotations.InkColor is not a color. How translucent a
-// stroke is comes from its color's alpha.
-constexpr Color kInkDefaultColor = 0x6600ffff;
-
-// MeasureString already includes generous side bearings; a little more keeps
-// MuPDF from wrapping the text we previewed on a single line
-constexpr float kFreeTextWidthSlack = 1.02f;
 // measure at a big size and scale down: GDI+ rounds a lot at 12 px
 constexpr float kFreeTextMeasureSize = 96.f;
 

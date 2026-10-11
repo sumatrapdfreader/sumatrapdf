@@ -85,3 +85,14 @@ void StartPickedFindTerm(MainWindow* win, Str term);
 void FindBarSetMatchCaseChecked(MainWindow* win, bool checked);
 void FindBarSetMatchWholeWordChecked(MainWindow* win, bool checked);
 void FindBarSyncHistory(MainWindow* win);
+
+constexpr int kFindBarPadding = 6;
+
+constexpr int kFindBarGap = 4;
+
+constexpr int kFindBarDefaultEditDx = 220;
+
+constexpr int kFindBarMinEditDx = 80;
+
+// how wide the drag zone along the left edge is
+constexpr int kFindBarResizeGripDx = 6;

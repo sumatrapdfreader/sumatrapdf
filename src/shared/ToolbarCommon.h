@@ -66,3 +66,35 @@ extern const int kPdfAnnotationButtonsCount;
 bool IsCmdAvailable(MainWindow* win, int cmdId, AppCommandCtx* ctx);
 
 bool IsCmdEnabled(MainWindow* win, int cmdId, AppCommandCtx* ctx);
+
+constexpr int kButtonSpacingX = 4;
+
+// distance between label and edit field
+constexpr int kTextPaddingRight = 6;
+
+// A row of NewToolbarHoverMenu(): an icon on the left, text on the right, and a
+// background that lights up under the mouse, like a menu item.
+constexpr int kHoverRowPadY = 6;
+
+constexpr int kHoverRowPadX = 10;
+
+constexpr int kHoverRowIconGapX = 8;
+
+// between the label and the shortcut that sits at the right edge, as in a menu
+constexpr int kHoverRowShortcutGapX = 24;
+
+// around a label in the single-row strip; less than a menu row's, it is a row
+// of them and the gaps add up
+constexpr int kHoverCellPadX = 8;
+
+// the mouse crosses a seam going from the button to the drop-down; don't close
+// on the frame where it is over neither
+constexpr int kCloseHoverDropdownDelayMs = 150;
+
+// ring space around the circle, where the mark on the color in use goes
+constexpr int kAnnotSwatchPad = 5;
+
+// Annotations.InkBorderWidth is in PDF points, which is about a pixel at 100%
+constexpr int kInkThicknessMin = 1;
+
+constexpr int kInkThicknessMax = 16;

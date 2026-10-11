@@ -1034,10 +1034,6 @@ void ShowConvertToPdfDialog(MainWindow* win) {
 
 // --- Convert PDF to Images dialog (issue #5991) ---
 
-constexpr int kMaxImageDpi = 9600;
-
-static const int kImageDpiChoices[] = {72, 96, 150, 300, 600, 1200};
-
 // editable combo listing kImageDpiChoices; any other DPI can be typed in
 static DropDown* NewDpiCombo(HWND parent, PlatformFont* font, int dpi) {
     DropDown::CreateArgs args;

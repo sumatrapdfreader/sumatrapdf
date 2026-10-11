@@ -57,11 +57,6 @@
 // those are not real commands but we have to refer to toolbar buttons
 // is by a command
 
-constexpr int kButtonSpacingX = 4;
-
-// distance between label and edit field
-constexpr int kTextPaddingRight = 6;
-
 // --- colors -----------------------------------------------------------------
 
 // --- sizes ------------------------------------------------------------------
@@ -705,19 +700,6 @@ static HoverDumpItem* AddHoverDumpItem(ToolbarUI* ui, int cmdId, Str text, bool 
     return &ui->hoverItems[len(ui->hoverItems) - 1];
 }
 
-// orig's kCloseHoverDropdownTimerId: the drop-down stays while the cursor is on
-// its button or on it, and for this long after it left both
-constexpr int kCloseHoverDropdownDelayMs = 150;
-
-// A row of NewToolbarHoverMenu(): an icon on the left, text on the right, and a
-// background that lights up under the mouse, like a menu item.
-constexpr int kHoverRowPadY = 6;
-constexpr int kHoverRowPadX = 10;
-constexpr int kHoverRowIconGapX = 8;
-// between the label and the shortcut that sits at the right edge, as in a menu
-constexpr int kHoverRowShortcutGapX = 24;
-constexpr int kHoverCellPadX = 8;
-
 struct ToolbarHoverMenuItem {
     Str svgIcon;
     Str text;
@@ -919,12 +901,6 @@ static gp::El* BuildZoomStrip(MainWindow* win, gp::Ctx* cx) {
     box->Left(x)->Top(y);
     return box;
 }
-
-constexpr int kInkThicknessMin = 1;
-constexpr int kInkThicknessMax = 16;
-
-// ring space around a swatch, which the pencil button gets too
-constexpr int kAnnotSwatchPad = 5;
 
 // what the button is, as its tooltip says, since the drop-down takes the
 // tooltip's place

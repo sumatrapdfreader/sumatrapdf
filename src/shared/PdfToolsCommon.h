@@ -43,3 +43,7 @@ struct SaveSelImgWork {
 void SaveSelImgThread(SaveSelImgWork* d);
 // implemented by each app
 void FinishSaveSelImg(SaveSelImgWork* d);
+
+constexpr int kMaxImageDpi = 9600;
+
+static const int kImageDpiChoices[] = {72, 96, 150, 300, 600, 1200};

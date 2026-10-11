@@ -90,8 +90,6 @@ void RefHoverHide(RefHoverState* s, HWND hwndCanvas) {
 }
 
 static constexpr UINT kRefHoverHidePollMs = 150;
-static constexpr int kRefHoverHideMinMs = 250;
-
 // Like RefHoverHide but deferred: cancels any pending show immediately, then
 // hides the visible popup after delayMs. While the timer is pending, moving
 // the cursor onto the popup (e.g. to click a DOI link inside it) keeps it

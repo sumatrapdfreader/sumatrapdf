@@ -46,8 +46,6 @@
 
 #include "SumatraLog.h"
 
-constexpr const char* kSettingsDocsUrl = "https://www.sumatrapdfreader.org/settings/settings3-7.html";
-
 constexpr float kAdvRowDy = 24;
 constexpr float kAdvListDy = 360;
 constexpr float kAdvListBorderDx = 1;
@@ -83,8 +81,6 @@ static AdvancedSettingsDlg gAdv;
 // orig's gAdvSettingsLastClientDx / Dy: the size the window was dragged to
 // earlier this session (dips)
 static Size gAdvLastClient;
-// orig's kAdvSettingsMinClientDx
-constexpr int kAdvSettingsMinClientDx = 480;
 constexpr int kAdvSettingsMinClientDy = 320;
 // what is in the window besides the list, until a frame has measured it
 constexpr float kAdvWinChromeGuessDy = 230;

@@ -39,9 +39,6 @@
 #include "Favorites.h"
 #include "MenuDefs.h"
 
-// Note: those might be too big
-constexpr int kMaxFavSubmenus = 10;
-
 // For easy access, we try to show favorites in the menu, similar to a list of
 // recently opened files.
 // The first menu items are for currently opened file (up to kMaxFavMenus), based

@@ -42,6 +42,9 @@
 
 #include "SumatraLog.h"
 
+// command ids for the bar's toolbar buttons; must not collide with real commands
+constexpr int kFindBarCloseCmdId = (int)CmdLast + 50;
+
 struct FindBarView;
 
 // ng: one view entity per window (step 10b)
@@ -361,16 +364,9 @@ void FindBarSetStatus(MainWindow* win, Str s, int totalHits) {
 
 // --- the gpui card ----------------------------------------------------------
 
-constexpr int kFindBarPadding = 6;
-constexpr int kFindBarGap = 4;
 // gpui's Small input font, and the Small icon button (1.5rem) at 96 DPI
 constexpr int kFindBarFontPx = 14;
 constexpr int kFindBarRowPx = 24;
-constexpr int kFindBarDefaultEditDx = 220;
-constexpr int kFindBarMinEditDx = 80;
-// how wide the drag zone along the left edge is
-constexpr int kFindBarResizeGripDx = 6;
-
 struct FindBarView {
     MainWindow* win = nullptr;
 
@@ -420,8 +416,6 @@ void FindBarView::OnGripDrag(FindBarView* self, gp::Ctx* cx, const gp::DragMoveE
     gp::Notify(cx);
 }
 
-// the bar's toolbar buttons are the same commands orig's buttons send
-constexpr int kFindBarCloseCmdId = (int)CmdLast + 50;
 // the pop-out button: switches to the floating find window
 constexpr int kFindBarPinCmdId = (int)CmdLast + 51;
 

@@ -730,9 +730,6 @@ static LRESULT CALLBACK WndProcAIChatBox(HWND hwnd, UINT msg, WPARAM wp, LPARAM 
     return DefSubclassProc(hwnd, msg, wp, lp);
 }
 
-// --- Splitter ---
-constexpr int kAIChatMinDx = 150;
-
 static void OnAIChatSplitterMove(VirtSplitter::MoveEvent* ev) {
     MainWindow* win = FindMainWindowByHwnd(ev->w->GetHwnd());
     if (!win) {

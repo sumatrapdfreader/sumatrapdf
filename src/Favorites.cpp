@@ -37,9 +37,6 @@
 #include "Favorites.h"
 #include "MenuDefs.h"
 
-// Note: those might be too big
-constexpr int kMaxFavSubmenus = 10;
-
 void MenuAppendString(HMENU m, Str title, int cmdId) {
     auto safeStr = MenuToSafeStringTemp(title);
     WCHAR* ws = CWStrTemp(safeStr);

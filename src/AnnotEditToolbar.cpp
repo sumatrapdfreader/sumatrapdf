@@ -59,14 +59,8 @@ extern "C" {
 
 constexpr const WCHAR* kAnnotEditToolbarClassName = L"SumatraAnnotEditToolbar";
 
-constexpr int kBtnPadX = 8;
-constexpr int kBtnPadY = 4;
-constexpr int kMargin = 5;
-constexpr int kBtnGap = 2;
 // breathing room above and below the Accept / Cancel row of the contents editor
 constexpr int kContentsButtonsRowPad = 4;
-constexpr int kCornerRadius = 10;
-constexpr int kButtonRadius = 6;
 constexpr int kToolbarFontPct = 108;
 
 struct AnnotEditToolbar;
@@ -942,12 +936,6 @@ AnnotEditKind ChipColorKind(AnnotEditToolbarBase* tb) {
     return ((AnnotEditToolbar*)tb)->colorPickKind;
 }
 
-// ranges of the number sliders; widths and sizes are in PDF points
-constexpr int kBorderWidthMax = 12;
-constexpr int kFreeTextSizeMin = 6;
-constexpr int kFreeTextSizeMax = 72;
-constexpr int kOpacityPercentMin = 10;
-
 static void OnChipClick(AnnotEditChip* chip, VirtMouseEvent*) {
     if (!chip || !chip->tb) {
         return;
@@ -1706,10 +1694,6 @@ struct FreeTextInPlaceEdit {
 // MuPDF stacks free text lines 1.2 * the font size apart and wraps at the
 // rect width less 2 * (2 * border width) (pdf_write_free_text_appearance).
 constexpr float kFreeTextLineHeight = 1.2f;
-// GDI's Arial is not quite MuPDF's Helvetica; leave room rather than let the
-// annotation wrap a line the box showed whole
-constexpr float kInPlaceWidthSlack = 1.03f;
-
 static FreeTextInPlaceEdit gInPlace;
 static WNDPROC gInPlaceDefProc = nullptr;
 static bool gInPlaceEnding = false;

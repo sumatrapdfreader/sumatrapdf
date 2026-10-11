@@ -796,8 +796,6 @@ TempStr WindowStateDuringLoadResultTemp(int* exitCodeOut) {
 
 // --- window title and menu --------------------------------------------------
 
-constexpr const char* kSumatraWindowTitle = "SumatraPDF";
-
 // orig's SetFrameTitleForTab: the path (GetTabTitle() follows FullPathInTitle
 // and names an embedded file), then the document's title
 static TempStr WindowTitleTemp(MainWindow* win) {
@@ -1245,9 +1243,6 @@ static void AskForPasswordAndLoad(MainWindow* win, Str path, LoadPrefs prefs, Lo
 #if OS_WIN
 // Kind used so only one default-app bar is shown at a time
 static Kind kNotifDefaultApp = "defaultApp";
-// Cap how many extension links we put in the bar
-constexpr int kMaxDefaultAppLinks = 8;
-
 // On the home page: if we registered as Open With for extensions that no longer
 // open with us, show a bottom bar with per-extension fix links.
 static void MaybeShowDefaultAppNotification(MainWindow* win) {
