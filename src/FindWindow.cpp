@@ -1073,9 +1073,11 @@ void ShowFindWindow(MainWindow* win) {
     if (CbGetTextLen(win->findEdit) == 0 || win->findThread) {
         return;
     }
-    // finish off a completed search's rows, but don't start a new search: the
-    // term restored into the box is a starting point, not a request
-    if (len(win->findMatches) > 0 && !win->findCountHasSnippets) {
+    // finish off a completed search's rows (the compact bar built no snippets,
+    // and hiding it dropped the rows), but don't start a new search: a term
+    // merely restored into the box is a starting point, not a request
+    bool finished = len(win->findMatches) > 0 || HasFindCountFor(win, win->findEdit->GetTextTemp());
+    if (finished && !win->findCountHasSnippets) {
         EnsureFindSnippets(win);
     }
 }

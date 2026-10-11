@@ -39,6 +39,7 @@ void StartSearchFromCommandLine(MainWindow* win, Str text);
 void StartPendingSearch(MainWindow* win);
 TempStr CurrentFindTermTemp(MainWindow* win);
 void EnsureFindSnippets(MainWindow* win);
+bool HasFindCountFor(MainWindow* win, Str text);
 
 // how long the forward-search mark stays before it starts fading, and the
 // fade itself (orig's WM_TIMER constants)

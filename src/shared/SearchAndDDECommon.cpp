@@ -1179,16 +1179,22 @@ void ClearSearchResult(MainWindow* win) {
 
 // update the n/m counter after a search settles on a match: instant from cache
 // when the term/match-case/document are unchanged, otherwise rebuild it
-void UpdateMatchCount(MainWindow* win, Str text) {
+// a finished count exists for text with the current options. Its match rows
+// may be gone (HideFindBar drops them) or lack snippets (the compact bar
+// doesn't build them); the n/m total itself is still good
+bool HasFindCountFor(MainWindow* win, Str text) {
     DisplayModel* dm = win->AsFixed();
     void* engine = dm ? (void*)dm->GetEngine() : nullptr;
+    return win->findCountValid && win->findCountText && str::Eq(win->findCountText, text) &&
+           win->findCountMatchCase == win->findMatchCase && win->findCountMatchWholeWord == win->findMatchWholeWord &&
+           win->findCountEngine == engine && str::Eq(win->findCountRangeText, win->findPageRangeText);
+}
+
+void UpdateMatchCount(MainWindow* win, Str text) {
     bool wantSnippets = gSettings->searchUIFloating && IsFindWindowVisible(win);
     bool wantMatchList = true;
     ApplyFindPageRange(win);
-    bool cacheHit = win->findCountValid && win->findCountText && str::Eq(win->findCountText, text) &&
-                    win->findCountMatchCase == win->findMatchCase &&
-                    win->findCountMatchWholeWord == win->findMatchWholeWord && win->findCountEngine == engine &&
-                    str::Eq(win->findCountRangeText, win->findPageRangeText) &&
+    bool cacheHit = HasFindCountFor(win, text) &&
                     (!wantMatchList || (wantSnippets ? win->findCountHasSnippets : len(win->findMatches) > 0));
     if (cacheHit) {
         // Matches are unchanged, but Find Next/Prev may have moved the active
