@@ -1022,26 +1022,6 @@ MenuModel* BuildWindowContextMenu(MainWindow* win, Point cursorPos) {
     return popup;
 }
 
-// Commands whose handler needs the original canvas click rather than the
-// cursor's position after the context menu has closed.
-bool CommandUsesContextMenuPoint(int cmdId) {
-    CustomCommand* cmd = FindCustomCommand(cmdId);
-    if (cmd && cmd->origId == CmdInsertTextSnippet) {
-        return true;
-    }
-    if (cmdId == CmdAnnotationHighlightBrush) {
-        // a mode that highlights the text selected next, not an annotation
-        // placed at a point: dispatch it without one
-        return false;
-    }
-    if (CmdIdToAnnotationType(cmdId) != AnnotationType::Unknown) {
-        return true;
-    }
-    return cmdId == CmdDeleteAnnotation || cmdId == CmdCreateAnnotImageFromClipboard || cmdId == CmdInsertImage ||
-           cmdId == CmdSignWithImage || cmdId == CmdPasteAnnotation || cmdId == CmdCopyAnnotation ||
-           cmdId == CmdCutAnnotation;
-}
-
 // The image the context menu's Save / Crop / Resize / Convert to PDF act on:
 // a standalone image file is loaded from disk (so Save can write the original
 // bytes back), an image inside a document is rendered out of the engine.

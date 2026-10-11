@@ -135,3 +135,16 @@ void RemoveThumbnail(FileState* fs) {
     fs->thumbnail = nullptr;
     HomePageThumbnailChanged(fs);
 }
+
+// takes ownership of bmp
+void SetThumbnail(FileState* fs, Pixmap* bmp) {
+    ReportIf(bmp && PixmapIsEmpty(bmp));
+    if (!fs || len(fs->filePath) == 0 || PixmapIsEmpty(bmp)) {
+        FreePixmap(bmp);
+        return;
+    }
+    FreePixmap(fs->thumbnail);
+    fs->thumbnail = PixmapToBgr(bmp);
+    SaveThumbnail(fs);
+    HomePageThumbnailChanged(fs);
+}

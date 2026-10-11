@@ -165,8 +165,7 @@ static SeqStrings gPrimaryLangNames =
 // clang-format on
 
 static Str PrimaryLangIdToEnglishName(WORD primary) {
-    int n = dimofi(gPrimaryLangIds);
-    for (int i = 0; i < n; i++) {
+    for (int i = 0; i < dimofi(gPrimaryLangIds); i++) {
         if (gPrimaryLangIds[i] == primary) {
             return SeqStrByIndex(gPrimaryLangNames, i);
         }

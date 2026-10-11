@@ -60,17 +60,8 @@ const StrVec& FindHistory() {
 
 // update the find bar's "n / m" status from the current in-page match and the
 // all-pages sweep
-void BrowserFindUpdateStatus(MainWindow* win, DocController* md, int pageCur, int pageTotal) {
-    if (win->browserFindTotal < 0) {
-        // the all-pages sweep hasn't finished: show per-page numbers for now
-        TempStr s = fmt("%d / %d", pageCur, pageTotal);
-        FindBarSetStatus(win, s, pageTotal);
-        return;
-    }
-    win->browserFindCurrent = BrowserFindGlobalMatchIdx(win, md->CurrentPageNo(), pageCur);
-    TempStr s = fmt("%d / %d", win->browserFindCurrent + 1, win->browserFindTotal);
-    FindBarSetStatus(win, s, win->browserFindTotal);
-}
+// ng's results list reads the current match on every frame
+void BrowserFindStatusShown(MainWindow*) {}
 
 void FindFirst(MainWindow* win) {
     // Only open/focus the find UI here. The search-start favorite ("/") is set
@@ -128,20 +119,8 @@ void FindFirst(MainWindow* win) {
 constexpr int kFindDebounceDelayMs = 500;
 constexpr int kFindDebounceShortDelayMs = 1000;
 
-bool ApplyFindPageRange(MainWindow* win) {
-    TempStr spec = win->findPagesEdit ? str::DupTemp(FromGpui(gp::InputValue(win->findPagesEdit))) : TempStr{};
-    bool changed = !str::Eq(spec, win->findPageRangeText);
-    str::ReplaceWithCopy(&win->findPageRangeText, spec);
-    DisplayModel* dm = win->AsFixed();
-    if (dm && dm->textSearch) {
-        Vec<bool> allowed;
-        int nPages = dm->PageCount();
-        if (!ParseFindPageRange(spec, nPages, allowed)) {
-            VecReset(allowed);
-        }
-        dm->textSearch->SetAllowedPages(allowed);
-    }
-    return changed;
+TempStr FindPagesEditTextTemp(MainWindow* win) {
+    return win->findPagesEdit ? str::DupTemp(FromGpui(gp::InputValue(win->findPagesEdit))) : TempStr{};
 }
 
 // find-as-you-type: called when the find bar's edit text changes. Instead of
@@ -190,16 +169,8 @@ void FindDebounceTick(MainWindow* win, int elapsedMs) {
 
 // if a debounced search is pending, cancel the timer and start it now (so Enter
 // forces the search to start immediately). Returns true if one was pending.
-bool FindFlushPendingSearch(MainWindow* win) {
-    if (!win->findDebouncePending) {
-        return false;
-    }
-    win->findDebouncePending = false;
-    if (HasFindText(win)) {
-        StartIncrementalFind(win);
-    }
-    return true;
-}
+// ng's debounce is a countdown that findDebouncePending gates
+void FindDebounceStop(MainWindow*) {}
 
 // ng's find buttons read the find state on every frame
 void FindSetToolbarBusy(MainWindow*, bool) {}

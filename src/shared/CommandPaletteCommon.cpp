@@ -289,3 +289,16 @@ void AppendTab(StrVecCP& tabs, WindowTab* tab, WindowTab* currTab, int& currTabI
         currTabIdx = len(tabs) - 1;
     }
 }
+
+// commands that act at the mouse position (annotation create, read aloud from cursor).
+// Placement-mode tools (ink, line, stamp, ...) start a mode; a point would skip
+// that and create at the remembered cursor, like the context menu.
+bool CmdUsesCursorPos(int cmdId) {
+    if (CommandUsesPlacementMode(cmdId)) {
+        return false;
+    }
+    if (cmdId >= CmdCreateAnnotFirst && cmdId <= CmdCreateAnnotLast) {
+        return true;
+    }
+    return cmdId == CmdCreateAnnotImageFromClipboard || cmdId == CmdReadAloudFromCursorPosition;
+}

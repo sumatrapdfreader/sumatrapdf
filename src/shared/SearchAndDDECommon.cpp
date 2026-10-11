@@ -2570,3 +2570,44 @@ bool HandleExecuteCmds(HWND hwnd, Str cmd) {
     }
     return didHandle;
 }
+
+void BrowserFindUpdateStatus(MainWindow* win, DocController* md, int pageCur, int pageTotal) {
+    if (win->browserFindTotal < 0) {
+        // the all-pages sweep hasn't finished: show per-page numbers for now
+        TempStr s = fmt("%d / %d", pageCur, pageTotal);
+        FindBarSetStatus(win, s, pageTotal);
+        return;
+    }
+    win->browserFindCurrent = BrowserFindGlobalMatchIdx(win, md->CurrentPageNo(), pageCur);
+    TempStr s = fmt("%d / %d", win->browserFindCurrent + 1, win->browserFindTotal);
+    FindBarSetStatus(win, s, win->browserFindTotal);
+    BrowserFindStatusShown(win);
+}
+
+bool ApplyFindPageRange(MainWindow* win) {
+    TempStr spec = FindPagesEditTextTemp(win);
+    bool changed = !str::Eq(spec, win->findPageRangeText);
+    str::ReplaceWithCopy(&win->findPageRangeText, spec);
+    DisplayModel* dm = win->AsFixed();
+    if (dm && dm->textSearch) {
+        Vec<bool> allowed;
+        int nPages = dm->PageCount();
+        if (!ParseFindPageRange(spec, nPages, allowed)) {
+            VecReset(allowed);
+        }
+        dm->textSearch->SetAllowedPages(allowed);
+    }
+    return changed;
+}
+
+bool FindFlushPendingSearch(MainWindow* win) {
+    if (!win->findDebouncePending) {
+        return false;
+    }
+    win->findDebouncePending = false;
+    FindDebounceStop(win);
+    if (HasFindText(win)) {
+        StartIncrementalFind(win);
+    }
+    return true;
+}

@@ -506,19 +506,6 @@ struct PaletteExecCmd {
     Point cursorPos;
 };
 
-// commands that act at the mouse position (annotation create, read aloud from cursor).
-// Placement-mode tools (ink, line, stamp, ...) start a mode; a point would skip
-// that and create at the remembered cursor, like the context menu.
-static bool CmdUsesCursorPos(int cmdId) {
-    if (CommandUsesPlacementMode(cmdId)) {
-        return false;
-    }
-    if (cmdId >= CmdCreateAnnotFirst && cmdId <= CmdCreateAnnotLast) {
-        return true;
-    }
-    return cmdId == CmdCreateAnnotImageFromClipboard || cmdId == CmdReadAloudFromCursorPosition;
-}
-
 static void RunPaletteCmd(PaletteExecCmd* op) {
     if (IsMainWindowValidAndNotClosing(op->win)) {
         if (CmdUsesCursorPos(op->cmdId)) {

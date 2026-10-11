@@ -20,19 +20,6 @@ extern "C" {
 
 #include "SumatraLog.h"
 
-// takes ownership of bmp
-void SetThumbnail(FileState* fs, Pixmap* bmp) {
-    ReportIf(bmp && PixmapIsEmpty(bmp));
-    if (!fs || len(fs->filePath) == 0 || PixmapIsEmpty(bmp)) {
-        FreePixmap(bmp);
-        return;
-    }
-    FreePixmap(fs->thumbnail);
-    fs->thumbnail = PixmapToBgr(bmp);
-    SaveThumbnail(fs);
-    HomePageThumbnailChanged(fs);
-}
-
 // ng: orig encodes the thumbnail with GDI+ (WrapPixmapGdiplus + Save). mupdf's
 // PNG writer is already linked and portable, so the cache file has the same
 // name and format on every platform.

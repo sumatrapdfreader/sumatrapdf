@@ -166,3 +166,23 @@ bool CmdIdInList(uintptr_t cmdId, uintptr_t* idsList, int n) {
     }
     return false;
 }
+
+// Commands whose handler needs the original canvas click rather than the
+// cursor's position after the context menu has closed.
+bool CommandUsesContextMenuPoint(int cmdId) {
+    CustomCommand* cmd = FindCustomCommand(cmdId);
+    if (cmd && cmd->origId == CmdInsertTextSnippet) {
+        return true;
+    }
+    if (cmdId == CmdAnnotationHighlightBrush) {
+        // a mode that highlights the text selected next, not an annotation
+        // placed at a point: dispatch it without one
+        return false;
+    }
+    if (CmdIdToAnnotationType(cmdId) != AnnotationType::Unknown) {
+        return true;
+    }
+    return cmdId == CmdDeleteAnnotation || cmdId == CmdCreateAnnotImageFromClipboard || cmdId == CmdInsertImage ||
+           cmdId == CmdSignWithImage || cmdId == CmdPasteAnnotation || cmdId == CmdCopyAnnotation ||
+           cmdId == CmdCutAnnotation;
+}

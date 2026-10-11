@@ -21,18 +21,6 @@
 #include "FileThumbnails.h"
 #include "FileThumbnailsCommon.h"
 
-// takes ownership of bmp
-void SetThumbnail(FileState* fs, Pixmap* bmp) {
-    ReportIf(bmp && PixmapIsEmpty(bmp));
-    if (!fs || len(fs->filePath) == 0 || PixmapIsEmpty(bmp)) {
-        FreePixmap(bmp);
-        return;
-    }
-    FreePixmap(fs->thumbnail);
-    fs->thumbnail = PixmapToBgr(bmp);
-    SaveThumbnail(fs);
-}
-
 void SaveThumbnail(FileState* fs) {
     if (!fs || !fs->thumbnail || len(fs->filePath) == 0) {
         return;

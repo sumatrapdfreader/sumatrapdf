@@ -144,3 +144,6 @@ void FindThread(FindThreadData* ftd);
 Str HandleGetFileStateCmd(Str cmd, bool* ack, str::Builder& res);
 Str HandleCmdCommand(HWND hwnd, Str cmd, bool* ack);
 Str HandleOpenCmd(Str cmd, bool* ack);
+void FindDebounceStop(MainWindow* win);
+void BrowserFindStatusShown(MainWindow* win);
+TempStr FindPagesEditTextTemp(MainWindow* win);

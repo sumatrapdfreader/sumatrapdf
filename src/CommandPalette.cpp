@@ -192,19 +192,6 @@ static i32 gCommandsNoActivate[] = {
 };
 // clang-format on
 
-// commands that act at the mouse position (annotation create, read aloud from cursor).
-// Placement-mode tools (ink, line, stamp, ...) start a mode; a point would skip
-// that and create at the remembered cursor, like the context menu.
-static bool CmdUsesCursorPos(i32 cmdId) {
-    if (CommandUsesPlacementMode(cmdId)) {
-        return false;
-    }
-    if (cmdId >= CmdCreateAnnotFirst && cmdId <= CmdCreateAnnotLast) {
-        return true;
-    }
-    return cmdId == CmdCreateAnnotImageFromClipboard || cmdId == CmdReadAloudFromCursorPosition;
-}
-
 // UI language (and the debug RTL toggle), not the palette hwnd: that window
 // stays LTR so virtual-control coords and clicks are not mirrored (#5956).
 bool CommandPaletteUiRtl() {

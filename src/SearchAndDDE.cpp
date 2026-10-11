@@ -51,17 +51,9 @@ void ApplyFindHistory(DropDown* dd) {
 
 // update the find bar's "n / m" status (and the results list selection) from
 // the current in-page match and the all-pages sweep
-void BrowserFindUpdateStatus(MainWindow* win, DocController* md, int pageCur, int pageTotal) {
-    if (win->browserFindTotal < 0) {
-        // the all-pages sweep hasn't finished: show per-page numbers for now
-        TempStr s = fmt("%d / %d", pageCur, pageTotal);
-        FindBarSetStatus(win, s, pageTotal);
-        return;
-    }
-    win->browserFindCurrent = BrowserFindGlobalMatchIdx(win, md->CurrentPageNo(), pageCur);
-    TempStr s = fmt("%d / %d", win->browserFindCurrent + 1, win->browserFindTotal);
-    FindBarSetStatus(win, s, win->browserFindTotal);
-    FindWindowRefreshResults(win); // mirror the current match in the results list
+// mirrors the current match in the results list
+void BrowserFindStatusShown(MainWindow* win) {
+    FindWindowRefreshResults(win);
 }
 
 void FindFirst(MainWindow* win) {
@@ -135,20 +127,8 @@ void FindFirst(MainWindow* win) {
 constexpr UINT kFindDebounceDelayMs = 500;
 constexpr UINT kFindDebounceShortDelayMs = 1000;
 
-bool ApplyFindPageRange(MainWindow* win) {
-    TempStr spec = win->findPagesEdit ? win->findPagesEdit->GetTextTemp() : TempStr{};
-    bool changed = !str::Eq(spec, win->findPageRangeText);
-    str::ReplaceWithCopy(&win->findPageRangeText, spec);
-    DisplayModel* dm = win->AsFixed();
-    if (dm && dm->textSearch) {
-        Vec<bool> allowed;
-        int nPages = dm->PageCount();
-        if (!ParseFindPageRange(spec, nPages, allowed)) {
-            VecReset(allowed);
-        }
-        dm->textSearch->SetAllowedPages(allowed);
-    }
-    return changed;
+TempStr FindPagesEditTextTemp(MainWindow* win) {
+    return win->findPagesEdit ? win->findPagesEdit->GetTextTemp() : TempStr{};
 }
 
 // called when the user edits the find bar's text (find-as-you-type)
@@ -194,16 +174,8 @@ void FindDebounceTimerFired(MainWindow* win) {
 
 // if a debounced search is pending, cancel the timer and start it now (so Enter
 // forces the search to start immediately). Returns true if one was pending.
-bool FindFlushPendingSearch(MainWindow* win) {
-    if (!win->findDebouncePending) {
-        return false;
-    }
-    win->findDebouncePending = false;
+void FindDebounceStop(MainWindow* win) {
     KillTimer(win->hwndFrame, kFindDebounceTimerId);
-    if (HasFindText(win)) {
-        StartIncrementalFind(win);
-    }
-    return true;
 }
 
 // the find buttons are disabled while a find runs

@@ -1419,22 +1419,6 @@ void OnWindowContextMenu(MainWindow* win, int x, int y) {
     HwndSendCommand(win->hwndFrame, cmdId);
 }
 
-// Commands whose frame handler needs the original canvas click rather than
-// the cursor's position after the context menu has closed.
-bool CommandUsesContextMenuPoint(int cmdId) {
-    if (cmdId == CmdAnnotationHighlightBrush) {
-        // a mode that highlights the text selected next, not an annotation
-        // placed at a point: dispatch it without one
-        return false;
-    }
-    if (CmdIdToAnnotationType(cmdId) != AnnotationType::Unknown) {
-        return true;
-    }
-    return cmdId == CmdDeleteAnnotation || cmdId == CmdCreateAnnotImageFromClipboard || cmdId == CmdInsertImage ||
-           cmdId == CmdSignWithImage || cmdId == CmdPasteAnnotation || cmdId == CmdCopyAnnotation ||
-           cmdId == CmdCutAnnotation;
-}
-
 // so that we can do free everything at exit
 static Vec<MenuOwnerDrawInfo*> g_menuDrawInfos;
 
