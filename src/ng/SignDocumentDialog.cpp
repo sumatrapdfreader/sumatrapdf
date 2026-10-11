@@ -61,6 +61,11 @@ struct SignDocumentDlg {
     StrVec certThumbs;
     DialogSelect ddCert;
     DialogSelect ddPlacement;
+    // approval or a certifying signature (discussion #6315); certifying is
+    // only offered while the document has no signature yet
+    DialogSelect ddType;
+    bool docSigned = false;
+    int initialCertify = 0; // what the drop-down opens on ([CmdSignDocument certify])
     gpui::InputState* editCert = nullptr;
     gpui::InputState* editPassword = nullptr;
     gpui::InputState* editReason = nullptr;
@@ -203,6 +208,7 @@ static void FreeSignDialogState() {
     gSign.editImage = nullptr;
     gSign.ddCert.Free();
     gSign.ddPlacement.Free();
+    gSign.ddType.Free();
     gSign.fieldNames.Reset();
     VecReset(gSign.fieldPages);
     gSign.certThumbs.Reset();
@@ -308,6 +314,14 @@ static void FillPlacement() {
     gSign.ddPlacement.SetItems(items, sel);
 }
 
+static void FillSignatureType() {
+    EngineBase* engine = GetPdfEngine(gSign.win);
+    gSign.docSigned = engine && EngineMupdfCountSignedSignatures(engine) > 0;
+    StrVec items;
+    SignatureTypeItems(items, gSign.docSigned);
+    gSign.ddType.SetItems(items, gSign.initialCertify < len(items) ? gSign.initialCertify : 0);
+}
+
 static void FillAppearance() {
     int flags = gLastAppearanceFlags >= 0 ? gLastAppearanceFlags : kPdfSignDefaultAppearance;
     gSign.showLabels = (flags & kPdfSignShowLabels) != 0;
@@ -391,6 +405,7 @@ static bool BuildSignArgs(PdfSignArgs& args) {
         flags |= kPdfSignShowLabels | kPdfSignShowTextName;
     }
     args.appearanceFlags = flags;
+    args.certifyLevel = gSign.docSigned ? 0 : std::max(gSign.ddType.sel, 0);
 
     int idx = gSign.ddPlacement.sel;
     if (idx >= 0 && idx < len(gSign.fieldNames)) {
@@ -409,11 +424,56 @@ static bool BuildSignArgs(PdfSignArgs& args) {
     return true;
 }
 
+static void DoSign(const PdfSignArgs& args);
+
+// ng: the "no changes allowed" warning is a message box with a callback, so
+// the arguments wait here (their strings are temp-allocated by the caller)
+static PdfSignArgs gPendingSign;
+static bool gPendingSignConfirmed = false;
+
+static void FreePendingSign() {
+    str::FreePtr(&gPendingSign.certPath);
+    str::FreePtr(&gPendingSign.certPassword);
+    str::FreePtr(&gPendingSign.certThumbprint);
+    str::FreePtr(&gPendingSign.reason);
+    str::FreePtr(&gPendingSign.location);
+    str::FreePtr(&gPendingSign.fieldName);
+    str::FreePtr(&gPendingSign.imagePath);
+    gPendingSign = PdfSignArgs{};
+}
+
+static void OnCertifyAnswer(int res) {
+    if (res == MbRetYes) {
+        gPendingSignConfirmed = true;
+        DoSign(gPendingSign);
+        gPendingSignConfirmed = false;
+    } else {
+        gSign.placing = false;
+        SignDocumentSyncWindow();
+        AppShellInvalidate(gSign.win);
+    }
+    FreePendingSign();
+}
+
 static void DoSign(const PdfSignArgs& args) {
     MainWindow* win = gSign.win;
     EngineBase* engine = GetPdfEngine(win);
     if (!engine) {
         CloseSignDocumentDialog(win);
+        return;
+    }
+    if (args.certifyLevel == kPdfCertifyNoChanges && !gPendingSignConfirmed) {
+        FreePendingSign();
+        gPendingSign = args;
+        gPendingSign.certPath = str::Dup(args.certPath);
+        gPendingSign.certPassword = str::Dup(args.certPassword);
+        gPendingSign.certThumbprint = str::Dup(args.certThumbprint);
+        gPendingSign.reason = str::Dup(args.reason);
+        gPendingSign.location = str::Dup(args.location);
+        gPendingSign.fieldName = str::Dup(args.fieldName);
+        gPendingSign.imagePath = str::Dup(args.imagePath);
+        MsgBox(win, CertifyNoChangesWarning(), Tr("Sign Document"), MbYesNo | MbIconWarning,
+               MkFunc1Void(OnCertifyAnswer));
         return;
     }
     Str err;
@@ -604,7 +664,7 @@ static gpui::InputState* NewInput(MainWindow* win) {
 // fieldName selects that signature field in the placement drop-down; pass
 // hasField = false (the default) to leave the choice at the first unsigned
 // field, as the Sign Document command does.
-void ShowSignDocumentDialog(MainWindow* win, Str fieldName, bool hasField) {
+void ShowSignDocumentDialog(MainWindow* win, Str fieldName, bool hasField, int certifyLevel) {
     if (!GetPdfEngine(win)) {
         return;
     }
@@ -617,6 +677,10 @@ void ShowSignDocumentDialog(MainWindow* win, Str fieldName, bool hasField) {
             gSign.hasPreselect = true;
             FillPlacement();
         }
+        if (certifyLevel > 0) {
+            gSign.initialCertify = certifyLevel;
+            FillSignatureType();
+        }
         SignDocumentSyncWindow();
         AppShellInvalidate(win);
         return;
@@ -624,6 +688,7 @@ void ShowSignDocumentDialog(MainWindow* win, Str fieldName, bool hasField) {
     CloseSignDocumentDialog(nullptr);
 
     gSign.win = win;
+    gSign.initialCertify = certifyLevel;
     gp::App* app = win->gpuiWin ? win->gpuiWin->app : nullptr;
     gSign.editCert = NewInput(win);
     gSign.editPassword = NewInput(win);
@@ -632,6 +697,7 @@ void ShowSignDocumentDialog(MainWindow* win, Str fieldName, bool hasField) {
     gSign.editImage = NewInput(win);
     gSign.ddCert.Init(app);
     gSign.ddPlacement.Init(app);
+    gSign.ddType.Init(app);
     if (hasField) {
         str::ReplaceWithCopy(&gSign.preselectField, fieldName);
         gSign.hasPreselect = true;
@@ -639,6 +705,7 @@ void ShowSignDocumentDialog(MainWindow* win, Str fieldName, bool hasField) {
     CollectFields(win);
     FillCertificates();
     FillPlacement();
+    FillSignatureType();
     FillAppearance();
     gSign.visible = true;
     gSign.placing = false;
@@ -716,6 +783,8 @@ static gp::El* SignDocumentWinBuild(gp::Ctx* cx, bool certFile, bool hasImage) {
     col->Child(edit(GStrL("sign-location"), gSign.editLocation, false, false));
     col->Child(label(DlgAccelSelect(cx, Tr("&Where to sign:"), &gSign.ddPlacement), kSignWinLabelGap));
     col->Child(select(gSign.ddPlacement, StrL("sign-placement")));
+    col->Child(label(DlgAccelSelect(cx, Tr("Signature &type:"), &gSign.ddType), kSignWinLabelGap));
+    col->Child(select(gSign.ddType, StrL("sign-type")));
 
     col->Child(label(DlgAccelNone(cx, Tr("Appearance:")), kSignWinLabelGap));
     col->Child(check(StrL("sign-labels"), Tr("Show &labels"), gSign.showLabels, 0, false));
@@ -801,6 +870,8 @@ gp::El* SignDocumentDialogBuild(MainWindow* win, gp::Ctx* cx) {
 
     body->Child(LabelEl(cx, DlgAccelSelect(cx, Tr("&Where to sign:"), &gSign.ddPlacement)));
     body->Child(gSign.ddPlacement.Build(cx, StrL("sign-placement"), gp::kFill));
+    body->Child(LabelEl(cx, DlgAccelSelect(cx, Tr("Signature &type:"), &gSign.ddType)));
+    body->Child(gSign.ddType.Build(cx, StrL("sign-type"), gp::kFill));
 
     body->Child(LabelEl(cx, DlgAccelNone(cx, Tr("Appearance:"))));
     body->Child(CheckRow(cx, StrL("sign-labels"), Tr("Show &labels"), gSign.showLabels, 0, false));

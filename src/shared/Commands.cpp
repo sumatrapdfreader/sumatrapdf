@@ -399,6 +399,8 @@ static const ArgSpec argSpecs[] = {
 
     {CmdCommandPalette, kCmdArgMode, CommandArg::Type::String}, // default
 
+    {CmdSignDocument, kCmdArgCertify, CommandArg::Type::Bool},
+
     // toggle commands accept an optional bool to force a state (issue #5067),
     // e.g. [CmdToggleFullscreen on] / [CmdToggleToolbar state=off]
     {CmdToggleContinuousView, kCmdArgState, CommandArg::Type::Bool},   // default

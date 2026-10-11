@@ -39,7 +39,7 @@ void ShowCustomZoomDialog(MainWindow* win);
 void ShowPageGridDialog(MainWindow* win);
 void ResetPageGridToDefaults();
 TempStr PageGridStateTemp();
-void ShowSignDocumentDialog(MainWindow* win, Str fieldName = {}, bool hasField = false);
+void ShowSignDocumentDialog(MainWindow* win, Str fieldName = {}, bool hasField = false, int certifyLevel = 0);
 bool IsPlacingSignature(MainWindow* win);
 bool CancelPlacingSignature(MainWindow* win);
 void CloseSignDocumentDialog(MainWindow* win);

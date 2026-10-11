@@ -211,7 +211,7 @@ gpui::El* AdvancedSettingsDialogBuild(MainWindow* win, gpui::Ctx* cx);
 
 // orig's SignDocumentDialog. fieldName preselects a signature field in the
 // "where to sign" drop-down (hasField = false leaves the choice alone)
-void ShowSignDocumentDialog(MainWindow* win, Str fieldName = {}, bool hasField = false);
+void ShowSignDocumentDialog(MainWindow* win, Str fieldName = {}, bool hasField = false, int certifyLevel = 0);
 void CloseSignDocumentDialog(MainWindow* win);
 bool IsSignDocumentDialogVisible();
 TempStr SignDocumentPlacementTemp();

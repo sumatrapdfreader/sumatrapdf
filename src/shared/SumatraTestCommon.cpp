@@ -867,7 +867,7 @@ TempStr ListSigningCertsResultTemp(int* exitCodeOut) {
 // password), write destPath, and report ok=1 on success. The dest file is a
 // copy of the source so the signature can be saved incrementally.
 TempStr SignDocumentResultTemp(Str pdfPath, Str destPath, Str thumbprint, Str certPath, Str certPassword, Str imagePath,
-                               int appearanceFlags, int* exitCodeOut) {
+                               int appearanceFlags, int certifyLevel, int* exitCodeOut) {
     str::Builder out;
     auto fail = [&out, exitCodeOut](Str msg) {
         if (exitCodeOut) {
@@ -898,6 +898,7 @@ TempStr SignDocumentResultTemp(Str pdfPath, Str destPath, Str thumbprint, Str ce
     args.certPassword = certPassword;
     args.imagePath = imagePath;
     args.appearanceFlags = appearanceFlags;
+    args.certifyLevel = certifyLevel;
     args.pageNo = 1;
     StrVec fieldNames;
     Vec<int> fieldPages;

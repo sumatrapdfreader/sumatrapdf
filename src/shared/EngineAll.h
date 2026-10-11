@@ -170,9 +170,18 @@ struct PdfSignArgs {
     RectF rect;               // where the new field goes; empty uses mupdf's default box
     int appearanceFlags = -1; // -1 = kPdfSignDefaultAppearance
     Str imagePath;            // optional PNG/JPEG drawn on the left of the appearance
+    // 0: approval signature; else a certifying signature with this DocMDP
+    // permission (kPdfCertify*), which must be the document's first signature
+    int certifyLevel = 0;
 };
 
+// DocMDP /P: what a certified document still allows
+constexpr int kPdfCertifyNoChanges = 1;
+constexpr int kPdfCertifyFormsAndSigning = 2;
+constexpr int kPdfCertifyFormsSigningAndAnnots = 3;
+
 void EngineMupdfGetUnsignedSignatureFields(EngineBase*, StrVec& names, Vec<int>& pageNos);
+int EngineMupdfCountSignedSignatures(EngineBase*);
 bool IsUnsignedSignatureWidget(Annotation*, TempStr* fieldNameOut);
 bool EngineMupdfSignDocument(EngineBase*, const PdfSignArgs&, Str* errOut);
 void ListWindowsSigningCertificates(StrVec& thumbprints, StrVec& labels);

@@ -467,6 +467,8 @@ void GetCommandsWithOrigId(Vec<CustomCommand*>& commands, int origId);
 #define kCmdArgFilter StrL("filter")
 #define kCmdArgN StrL("n")
 #define kCmdArgMode StrL("mode")
+// [CmdSignDocument certify]: open Sign Document set to certify (no changes allowed)
+#define kCmdArgCertify StrL("certify")
 #define kCmdArgTheme StrL("theme")
 #define kCmdArgCommandLine StrL("cmdline")
 #define kCmdArgToolbarText StrL("toolbartext")

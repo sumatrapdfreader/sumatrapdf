@@ -10450,9 +10450,11 @@ static LRESULT FrameOnCommand(MainWindow* win, HWND hwnd, UINT msg, WPARAM wp, L
             break;
         }
 
-        case CmdSignDocument:
-            ShowSignDocumentDialog(win);
+        case CmdSignDocument: {
+            bool certify = cmd && GetCommandBoolArg(cmd, kCmdArgCertify, false);
+            ShowSignDocumentDialog(win, {}, false, certify ? kPdfCertifyNoChanges : 0);
             break;
+        }
 
         case CmdToggleMenuBar: {
             if (ShouldToggle(cmd, gSettings->showMenubar)) {

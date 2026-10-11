@@ -9,6 +9,10 @@ RectF DefaultSignatureRectAt(DisplayModel* dm, int pageNo, PointF pt);
 
 TempStr SignErrorMessageTemp(Str err);
 
+// the "Signature type" drop-down: index = PdfSignArgs::certifyLevel
+void SignatureTypeItems(StrVec& items, bool docSigned);
+Str CertifyNoChangesWarning();
+
 static Kind kNotifSignPlacement = "notifSignPlacement";
 NotifCorner SignPlacementNotifCorner();
 

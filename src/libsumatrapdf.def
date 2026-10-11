@@ -210,6 +210,11 @@ EXPORTS
 	pdf_obj_num_is_stream
 
 	pdf_dict_get_inheritable
+	pdf_dict_get_int
+	pdf_dict_put_int
+	pdf_dict_put_dict
+	pdf_dict_put_array
+	pdf_signature_byte_range
 
 	pdf_new_utf8_from_pdf_string_obj
 

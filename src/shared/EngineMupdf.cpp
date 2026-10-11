@@ -8101,13 +8101,84 @@ static void AppendSigDictText(fz_context* ctx, str::Builder& out, pdf_obj* sigDi
     }
 }
 
+// a certifying signature: its DocMDP transform says what the document allows
+static void AppendSigCertification(fz_context* ctx, str::Builder& out, pdf_obj* sigDict) {
+    int perm = 0;
+    fz_try(ctx) {
+        pdf_obj* refs = pdf_dict_get(ctx, sigDict, PDF_NAME(Reference));
+        int n = pdf_array_len(ctx, refs);
+        for (int i = 0; i < n; i++) {
+            pdf_obj* r = pdf_array_get(ctx, refs, i);
+            if (pdf_dict_get(ctx, r, PDF_NAME(TransformMethod)) == PDF_NAME(DocMDP)) {
+                perm = pdf_dict_get_int(ctx, pdf_dict_get(ctx, r, PDF_NAME(TransformParams)), PDF_NAME(P));
+                break;
+            }
+        }
+    }
+    fz_catch(ctx) {
+        fz_report_error(ctx);
+        perm = 0;
+    }
+    Str allows;
+    switch (perm) {
+        case kPdfCertifyNoChanges:
+            allows = StrL("no changes allowed");
+            break;
+        case kPdfCertifyFormsAndSigning:
+            allows = StrL("form filling and signing allowed");
+            break;
+        case kPdfCertifyFormsSigningAndAnnots:
+            allows = StrL("form filling, signing and annotations allowed");
+            break;
+        default:
+            return;
+    }
+    out.Append(fmt("  Certified: %s\n", allows));
+}
+
+// where the bytes a signature covers end; 0 without a byte range
+static i64 SigCoveredEnd(fz_context* ctx, pdf_document* doc, pdf_obj* field) {
+    i64 end = 0;
+    fz_try(ctx) {
+        int n = pdf_signature_byte_range(ctx, doc, field, nullptr);
+        if (n > 0) {
+            fz_range* ranges = AllocArrayTemp<fz_range>(n);
+            pdf_signature_byte_range(ctx, doc, field, ranges);
+            end = ranges[n - 1].offset + (i64)ranges[n - 1].length;
+        }
+    }
+    fz_catch(ctx) {
+        fz_report_error(ctx);
+    }
+    return end;
+}
+
+// signatures applied after this one. mupdf's "changed since signing" only
+// compares file lengths, so a chain of signatures looks like an edit of
+// every signature but the last (discussion #6315)
+static int LaterSignatures(fz_context* ctx, pdf_document* doc, const Vec<pdf_obj*>& fields, pdf_obj* field) {
+    i64 end = SigCoveredEnd(ctx, doc, field);
+    if (end <= 0) {
+        return 0;
+    }
+    int n = 0;
+    for (pdf_obj* f : fields) {
+        if (f != field && pdf_signature_is_signed(ctx, doc, f) && SigCoveredEnd(ctx, doc, f) > end) {
+            n++;
+        }
+    }
+    return n;
+}
+
 static void AppendSigValidation(str::Builder& out, pdf_signature_error certErr, pdf_signature_error digestErr,
-                                int edits) {
+                                int edits, int laterSigs) {
     if (certErr != PDF_SIGNATURE_ERROR_OKAY) {
         out.Append(fmt("  Certificate: %s\n", Str(pdf_signature_error_description(certErr))));
     }
     if (digestErr != PDF_SIGNATURE_ERROR_OKAY) {
         out.Append(fmt("  Digest: %s\n", Str(pdf_signature_error_description(digestErr))));
+    } else if (edits && laterSigs > 0) {
+        out.Append(fmt("  %d later signature(s) were added; the bytes this signature covers are intact.\n", laterSigs));
     } else if (edits) {
         out.Append(StrL("  The document was changed since the signature was applied.\n"));
     } else {
@@ -8252,7 +8323,7 @@ static void AppendPadesLevel(str::Builder& s, bool isCades, bool hasTs, bool ltv
 
 static void AppendSignatureFieldInfo(fz_context* ctx, str::Builder& s, pdf_pkcs7_verifier* verifier,
                                      pdf_document* pdfdoc, pdf_obj* sigObj, int sigNo, int pageNo, bool docHasDss,
-                                     bool docHasDocTs) {
+                                     bool docHasDocTs, int laterSigs) {
     if (len(s) > 0) {
         s.AppendChar('\n');
     }
@@ -8338,7 +8409,7 @@ static void AppendSignatureFieldInfo(fz_context* ctx, str::Builder& s, pdf_pkcs7
         fz_report_error(ctx);
     }
     if (!isDocTs) {
-        AppendSigValidation(s, certErr, digErr, edits);
+        AppendSigValidation(s, certErr, digErr, edits, laterSigs);
     }
 
     bool ltv = docHasDss;
@@ -8361,6 +8432,7 @@ static void AppendSignatureFieldInfo(fz_context* ctx, str::Builder& s, pdf_pkcs7
     AppendSigDictText(ctx, s, vDict, StrL("reason"), PDF_NAME(Reason));
     AppendSigDictText(ctx, s, vDict, StrL("location"), PDF_NAME(Location));
     AppendSigDictText(ctx, s, vDict, StrL("contact"), PDF_NAME(ContactInfo));
+    AppendSigCertification(ctx, s, vDict);
 
     for (int ti = 0; ti < info.n_ts; ti++) {
         const pkcs7_windows_ts_info& ts = info.ts[ti];
@@ -8456,7 +8528,7 @@ void FreePdfSigCerts(PdfSigCert* certs) {
 
 #if defined(SUMATRA_HAVE_OPENSSL)
 static void AppendOpenSslSigText(fz_context* ctx, str::Builder& out, pdf_pkcs7_verifier* verifier, pdf_document* pdfdoc,
-                                 pdf_obj* field, int sigNo) {
+                                 pdf_obj* field, int sigNo, int laterSigs) {
     if (len(out) > 0) {
         out.AppendChar('\n');
     }
@@ -8484,7 +8556,7 @@ static void AppendOpenSslSigText(fz_context* ctx, str::Builder& out, pdf_pkcs7_v
     pdf_signature_error certErr = pdf_check_certificate(ctx, verifier, pdfdoc, field);
     pdf_signature_error digestErr = pdf_check_digest(ctx, verifier, pdfdoc, field);
     int edits = pdf_signature_incremental_change_since_signing(ctx, pdfdoc, field);
-    AppendSigValidation(out, certErr, digestErr, edits);
+    AppendSigValidation(out, certErr, digestErr, edits, laterSigs);
 
     pdf_obj* value = pdf_dict_get(ctx, field, PDF_NAME(V));
     if (!value) {
@@ -8493,6 +8565,7 @@ static void AppendOpenSslSigText(fz_context* ctx, str::Builder& out, pdf_pkcs7_v
     AppendSigDictText(ctx, out, value, StrL("reason"), PDF_NAME(Reason));
     AppendSigDictText(ctx, out, value, StrL("location"), PDF_NAME(Location));
     AppendSigDictText(ctx, out, value, StrL("contact"), PDF_NAME(ContactInfo));
+    AppendSigCertification(ctx, out, value);
 }
 #endif
 
@@ -8531,11 +8604,13 @@ static TempStr GetSignatures(EngineMupdf* e) {
         for (pdf_obj* field : fields) {
             ++sigNo;
             int pageNo = PageNoForSigField(ctx, pdfdoc, field);
-            AppendSignatureFieldInfo(ctx, sigs, verifier, pdfdoc, field, sigNo, pageNo, hasDss, hasDocTs);
+            AppendSignatureFieldInfo(ctx, sigs, verifier, pdfdoc, field, sigNo, pageNo, hasDss, hasDocTs,
+                                     LaterSignatures(ctx, pdfdoc, fields, field));
         }
 #else
         for (int i = 0; i < len(fields); i++) {
-            AppendOpenSslSigText(ctx, sigs, verifier, pdfdoc, fields[i], i + 1);
+            AppendOpenSslSigText(ctx, sigs, verifier, pdfdoc, fields[i], i + 1,
+                                 LaterSignatures(ctx, pdfdoc, fields, fields[i]));
         }
 #endif
     }

@@ -129,6 +129,43 @@ void EngineMupdfGetUnsignedSignatureFields(EngineBase* engine, StrVec& names, Ve
     }
 }
 
+// signatures already applied; a certifying signature has to be the first one
+int EngineMupdfCountSignedSignatures(EngineBase* engine) {
+    EngineMupdf* epdf = AsEngineMupdf(engine);
+    if (!epdf || !epdf->pdfdoc) {
+        return 0;
+    }
+    fz_context* ctx = epdf->BaseCtx();
+    ScopedRecursiveMutex scope(&epdf->docLock);
+    int n = 0;
+    pdf_page* page = nullptr;
+    fz_var(page);
+    fz_var(n);
+    fz_try(ctx) {
+        if (pdf_count_signatures(ctx, epdf->pdfdoc) == 0) {
+            fz_throw(ctx, FZ_ERROR_ABORT, "no signature fields");
+        }
+        int nPages = pdf_count_pages(ctx, epdf->pdfdoc);
+        for (int pageIdx = 0; pageIdx < nPages; pageIdx++) {
+            page = pdf_load_page(ctx, epdf->pdfdoc, pageIdx);
+            for (pdf_annot* w = pdf_first_widget(ctx, page); w; w = pdf_next_widget(ctx, w)) {
+                if (pdf_widget_type(ctx, w) == PDF_WIDGET_TYPE_SIGNATURE && pdf_widget_is_signed(ctx, w)) {
+                    n++;
+                }
+            }
+            fz_drop_page(ctx, (fz_page*)page);
+            page = nullptr;
+        }
+    }
+    fz_always(ctx) {
+        fz_drop_page(ctx, (fz_page*)page);
+    }
+    fz_catch(ctx) {
+        fz_ignore_error(ctx);
+    }
+    return n;
+}
+
 #if OS_WIN || OS_DARWIN || defined(SUMATRA_HAVE_OPENSSL)
 
 // Finds the unsigned signature widget named name; returns a kept reference the
@@ -259,9 +296,22 @@ bool EngineMupdfSignDocument(EngineBase* engine, const PdfSignArgs& args, Str* e
             // unlikely to collide with fields the document already has
             TempStr name = fmt("SumatraSignature%d", pdf_count_signatures(ctx, epdf->pdfdoc) + 1);
             widget = pdf_create_signature_widget(ctx, page, CStrTemp(name));
+            // mupdf gives the new field /Lock /Action /All, which makes every
+            // later signature a change this one forbids (discussion #6315);
+            // an approval signature locks nothing
+            pdf_begin_operation(ctx, epdf->pdfdoc, "Unlock signature field");
+            pdf_dict_del(ctx, pdf_annot_obj(ctx, widget), PDF_NAME(Lock));
+            pdf_end_operation(ctx, epdf->pdfdoc);
             if (!args.rect.IsEmpty()) {
                 pdf_set_annot_rect(ctx, widget, ToFzRect(args.rect));
             }
+        }
+        if (args.certifyLevel > 0) {
+            // our pdf_signature_set_value patch turns this into the DocMDP
+            // transform and the catalog's /Perms, inside the signed section
+            pdf_begin_operation(ctx, epdf->pdfdoc, "Certify document");
+            pdf_dict_puts_drop(ctx, pdf_annot_obj(ctx, widget), "SumatraCertify", pdf_new_int(ctx, args.certifyLevel));
+            pdf_end_operation(ctx, epdf->pdfdoc);
         }
         if (args.imagePath) {
             Str imgData = file::ReadFile(args.imagePath);

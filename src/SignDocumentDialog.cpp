@@ -62,6 +62,11 @@ struct SignDocumentWnd : WindowBase {
     Edit* editReason = nullptr;
     Edit* editLocation = nullptr;
     DropDown* ddPlacement = nullptr;
+    // approval or a certifying signature (discussion #6315); certifying is
+    // only offered while the document has no signature yet
+    DropDown* ddType = nullptr;
+    bool docSigned = false;
+    int initialCertify = 0; // what the drop-down opens on ([CmdSignDocument certify])
     VirtButton* btnBrowse = nullptr;
     VirtButton* btnCancel = nullptr;
     VirtButton* btnSign = nullptr;
@@ -79,6 +84,7 @@ struct SignDocumentWnd : WindowBase {
     void CollectFields();
     void FillCertificates();
     void FillPlacement();
+    void FillSignatureType();
     void FillAppearance();
     bool UsingCertFile() const;
     void UpdateCertFileEnabled();
@@ -350,6 +356,18 @@ void SignDocumentWnd::FillPlacement() {
     CbSetCurrentSelection(ddPlacement, sel);
 }
 
+void SignDocumentWnd::FillSignatureType() {
+    if (!ddType) {
+        return;
+    }
+    EngineBase* engine = GetPdfEngine(win);
+    docSigned = engine && EngineMupdfCountSignedSignatures(engine) > 0;
+    StrVec items;
+    SignatureTypeItems(items, docSigned);
+    ddType->SetItems(items);
+    CbSetCurrentSelection(ddType, initialCertify < len(items) ? initialCertify : 0);
+}
+
 // Turns the dialog state into what the engine needs; false if something the
 // user has to fix is missing.
 bool SignDocumentWnd::BuildSignArgs(PdfSignArgs& args) {
@@ -416,6 +434,7 @@ bool SignDocumentWnd::BuildSignArgs(PdfSignArgs& args) {
         flags |= kPdfSignShowLabels | kPdfSignShowTextName;
     }
     args.appearanceFlags = flags;
+    args.certifyLevel = (ddType && !docSigned) ? std::max(CbGetCurrentSelection(ddType), 0) : 0;
 
     int idx = CbGetCurrentSelection(ddPlacement);
     if (idx >= 0 && idx < len(fieldNames)) {
@@ -511,6 +530,15 @@ void SignDocumentWnd::DoSign(const PdfSignArgs& args) {
     if (!engine) {
         ScheduleDelete();
         return;
+    }
+
+    if (args.certifyLevel == kPdfCertifyNoChanges) {
+        UINT flags = MB_ICONEXCLAMATION | MB_YESNO | MbRtlReadingMaybe();
+        if (IDNO == MsgBox(win->hwndFrame, CertifyNoChangesWarning(), Tr("Sign Document"), flags)) {
+            SetIsVisible(true);
+            HwndSetFocus(hwnd);
+            return;
+        }
     }
 
     Str err;
@@ -690,6 +718,19 @@ bool SignDocumentWnd::Create(MainWindow* mainWin) {
         FillPlacement();
     }
 
+    AddLabel(vbox, Tr("Signature &type:"), f, isRtl, 8);
+    {
+        DropDown::CreateArgs args;
+        args.parent = hwnd;
+        args.font = f;
+        args.isRtl = isRtl;
+        auto* c = new DropDown();
+        c->Create(args);
+        ddType = c;
+        vbox->AddChild(c);
+        FillSignatureType();
+    }
+
     AddLabel(vbox, Tr("Appearance:"), f, isRtl, 8);
     cbShowLabels = AddCheckbox(vbox, hwnd, Tr("Show &labels"), isRtl, 2);
     cbShowName = AddCheckbox(vbox, hwnd, Tr("Show &name"), isRtl, 2);
@@ -759,7 +800,7 @@ bool SignDocumentWnd::Create(MainWindow* mainWin) {
 // fieldName selects that signature field in the placement drop-down; pass
 // hasField = false (the default) to leave the choice at the first unsigned
 // field, as the Sign Document command does.
-void ShowSignDocumentDialog(MainWindow* win, Str fieldName, bool hasField) {
+void ShowSignDocumentDialog(MainWindow* win, Str fieldName, bool hasField, int certifyLevel) {
     if (!GetPdfEngine(win)) {
         return;
     }
@@ -772,11 +813,16 @@ void ShowSignDocumentDialog(MainWindow* win, Str fieldName, bool hasField) {
             gSignDocumentWnd->hasPreselect = true;
             gSignDocumentWnd->FillPlacement();
         }
+        if (certifyLevel > 0) {
+            gSignDocumentWnd->initialCertify = certifyLevel;
+            gSignDocumentWnd->FillSignatureType();
+        }
         gSignDocumentWnd->SetIsVisible(true);
         HwndSetFocus(gSignDocumentWnd->hwnd);
         return;
     }
     auto* wnd = new SignDocumentWnd();
+    wnd->initialCertify = certifyLevel;
     if (hasField) {
         str::ReplaceWithCopy(&wnd->preselectField, fieldName);
         wnd->hasPreselect = true;

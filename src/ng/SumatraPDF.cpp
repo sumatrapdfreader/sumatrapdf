@@ -6127,9 +6127,11 @@ void ExecuteCmd(MainWindow* win, int cmdId) {
                                 /* selectPdf */ true);
             break;
 
-        case CmdSignDocument:
-            ShowSignDocumentDialog(win);
+        case CmdSignDocument: {
+            bool certify = cmd && GetCommandBoolArg(cmd, kCmdArgCertify, false);
+            ShowSignDocumentDialog(win, {}, false, certify ? kPdfCertifyNoChanges : 0);
             break;
+        }
 
         case CmdCreateAnnotImageFromClipboard:
 #if OS_WASM

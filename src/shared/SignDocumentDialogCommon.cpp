@@ -144,3 +144,21 @@ void ShowSignaturePlacementNotif(MainWindow* win) {
     args.tab = win->CurrentTab();
     ShowNotification(args);
 }
+
+// a certifying signature must be the document's first, so a signed document
+// only gets the approval entry
+void SignatureTypeItems(StrVec& items, bool docSigned) {
+    items.Append(Tr("Approval signature"));
+    if (docSigned) {
+        return;
+    }
+    items.Append(Tr("Certify: no changes allowed"));
+    items.Append(Tr("Certify: form filling and signing allowed"));
+    items.Append(Tr("Certify: form filling, signing and annotations allowed"));
+}
+
+Str CertifyNoChangesWarning() {
+    return Tr(
+        "Certifying with no changes allowed locks the document: no further changes or signatures will be "
+        "possible. Continue?");
+}
