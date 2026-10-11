@@ -309,6 +309,7 @@ function sumatrapdf_files()
     "AnnotEditToolbar.*",
     "AnnotEditToolbarCommon.*",
     "AnnotFilterToolbar.*",
+    "AnnotFilterToolbarCommon.*",
     "AnnotSearch.*",
     "PdfDate.*",
     "CanvasAboutUI.*",

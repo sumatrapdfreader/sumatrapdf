@@ -1,0 +1,20 @@
+/* Copyright 2026 the SumatraPDF project authors (see AUTHORS file).
+   License: GPLv3 */
+
+// --- shared by AnnotFilterToolbarCommon.cpp and each app's AnnotFilterToolbar.cpp ---
+
+// what orig's and ng's annotation filter have in common
+struct AnnotFilterToolbarBase {
+    MainWindow* win = nullptr;
+    // all annotations of the document, and those the filter lets through
+    Vec<Annotation*> annotations;
+    Vec<Annotation*> visibleAnnots;
+};
+
+// implemented by each app
+void ShowAnnotFilterWindow(MainWindow* win);
+void HideAnnotFilterWindow(MainWindow* win);
+
+WindowTab* FilterTab(AnnotFilterToolbarBase* f);
+void LoadAnnotations(AnnotFilterToolbarBase* f);
+Annotation* VisibleAnnotAt(AnnotFilterToolbarBase* f, int idx);

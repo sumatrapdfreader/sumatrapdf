@@ -1397,6 +1397,7 @@ export const targets: Target[] = [
       "src/ng/AnnotEditToolbar.cpp",
       "src/ng/AnnotEditToolbarCommon.cpp",
       "src/ng/AnnotFilterToolbar.cpp",
+      "src/ng/AnnotFilterToolbarCommon.cpp",
       "src/ng/AnnotPlacement.cpp",
       "src/ng/AnnotPlacementCommon.cpp",
       "src/ng/AnnotTextPopup.cpp",

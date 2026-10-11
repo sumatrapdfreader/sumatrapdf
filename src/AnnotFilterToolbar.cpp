@@ -39,6 +39,7 @@
 #include "DarkMode.h"
 
 #include "AnnotFilterToolbar.h"
+#include "AnnotFilterToolbarCommon.h"
 #include "AppHelpersCommon.h"
 
 constexpr const WCHAR* kAnnotFilterListClassName = L"SumatraAnnotFilterList";
@@ -57,8 +58,8 @@ static void UpdateCue(AnnotFilterToolbar*);
 static void ApplySelectionNow(AnnotFilterToolbar*);
 static void ScheduleSelection(AnnotFilterToolbar*);
 static AnnotFilterToolbar* GetOrCreate(MainWindow*);
-static void ShowAnnotFilterWindow(MainWindow*);
-static void HideAnnotFilterWindow(MainWindow*);
+void ShowAnnotFilterWindow(MainWindow*);
+void HideAnnotFilterWindow(MainWindow*);
 static bool FilterHomeEndMovesList(AnnotFilterToolbar*, int vkey, bool isCtrl);
 static void KillSelectionTimer(AnnotFilterToolbar*);
 static void UpdateFloatButtons(AnnotFilterToolbar*);
@@ -93,11 +94,8 @@ struct AnnotFilterWindow : WindowBase {
     void OnGetMinMaxInfo(WindowBase::GetMinMaxInfoEvent* ev);
 };
 
-struct AnnotFilterToolbar {
-    MainWindow* win = nullptr;
+struct AnnotFilterToolbar : AnnotFilterToolbarBase {
     AnnotFilterWindow* floatWnd = nullptr;
-    Vec<Annotation*> annotations;
-    Vec<Annotation*> visibleAnnots;
     // words to highlight in the list; the ":" conditions are not among them
     StrVec filterWords;
     AnnotMatchOpts filter;
@@ -107,10 +105,6 @@ struct AnnotFilterToolbar {
     int selEpoch = 0;
     int applyEpoch = 0;
 };
-
-static WindowTab* FilterTab(AnnotFilterToolbar* f) {
-    return f && f->win ? f->win->CurrentTab() : nullptr;
-}
 
 static Edit* ActiveEdit(AnnotFilterToolbar* f) {
     return (f && f->floatWnd) ? f->floatWnd->edit : nullptr;
@@ -128,30 +122,6 @@ static void UpdateCue(AnnotFilterToolbar* f) {
         return;
     }
     EditSetCueText(f->floatWnd->edit, fmt(Tr("filter %d annotations").s, len(f->annotations)));
-}
-
-static void LoadAnnotations(AnnotFilterToolbar* f) {
-    if (!f || !f->win) {
-        return;
-    }
-    WindowTab* tab = FilterTab(f);
-    VecReset(f->annotations);
-    if (!tab) {
-        return;
-    }
-    DisplayModel* dm = tab->AsFixed();
-    EngineBase* engine = dm ? dm->GetEngine() : nullptr;
-    if (!engine) {
-        return;
-    }
-    EngineMupdfGetLoadedAnnotations(engine, f->annotations);
-}
-
-static Annotation* VisibleAnnotAt(AnnotFilterToolbar* f, int idx) {
-    if (!f || !VecIsValidIndex(f->visibleAnnots, idx)) {
-        return nullptr;
-    }
-    return f->visibleAnnots[idx];
 }
 
 static void ApplyListColorsTo(VirtListBox* lb) {
@@ -1005,7 +975,7 @@ static AnnotFilterWindow* CreateAnnotFilterWindow(MainWindow* win) {
     return w;
 }
 
-static void ShowAnnotFilterWindow(MainWindow* win) {
+void ShowAnnotFilterWindow(MainWindow* win) {
     AnnotFilterToolbar* f = GetOrCreate(win);
     if (!f) {
         return;
@@ -1033,7 +1003,7 @@ static void ShowAnnotFilterWindow(MainWindow* win) {
     }
 }
 
-static void HideAnnotFilterWindow(MainWindow* win) {
+void HideAnnotFilterWindow(MainWindow* win) {
     AnnotFilterToolbar* f = win ? win->annotFilterToolbar : nullptr;
     if (!f || !f->floatWnd || !f->floatWnd->hwnd) {
         return;
@@ -1047,17 +1017,6 @@ static void HideAnnotFilterWindow(MainWindow* win) {
 bool IsFloatingAnnotListVisible(MainWindow* win) {
     AnnotFilterToolbar* f = win ? win->annotFilterToolbar : nullptr;
     return f && f->floatWnd && f->floatWnd->hwnd && HwndIsVisible(f->floatWnd->hwnd);
-}
-
-void ToggleFloatingAnnotList(MainWindow* win) {
-    if (!win) {
-        return;
-    }
-    if (IsFloatingAnnotListVisible(win)) {
-        HideAnnotFilterWindow(win);
-        return;
-    }
-    ShowAnnotFilterWindow(win);
 }
 
 void UpdateAnnotFilterToolbar(MainWindow* win) {

@@ -45,6 +45,7 @@
 #include "gui/ToolWindow.h"
 #include "AnnotEditToolbar.h"
 #include "AnnotFilterToolbar.h"
+#include "AnnotFilterToolbarCommon.h"
 #include "AppHelpersCommon.h"
 
 #include "SumatraLog.h"
@@ -83,8 +84,7 @@ enum class AnnotListFocus {
     Filter
 };
 
-struct AnnotFilterToolbar {
-    MainWindow* win = nullptr;
+struct AnnotFilterToolbar : AnnotFilterToolbarBase {
     bool visible = false;
     bool wantFocus = false;
     // orig's list is a focusable control; here it is drawn, not focused, so
@@ -96,8 +96,6 @@ struct AnnotFilterToolbar {
     Str filterText; // owned
     AnnotMatchOpts filter;
     StrVec filterWords;
-    Vec<Annotation*> annotations;
-    Vec<Annotation*> visibleAnnots;
     // orig's VirtListBox: the caret, the Shift anchor and one flag per row
     int sel = -1;
     int anchor = -1;
@@ -124,28 +122,6 @@ static AnnotFilterToolbar* GetOrCreate(MainWindow* win) {
         win->annotFilterToolbar = f;
     }
     return win->annotFilterToolbar;
-}
-
-static WindowTab* FilterTab(AnnotFilterToolbar* f) {
-    return f && f->win ? f->win->CurrentTab() : nullptr;
-}
-
-static void LoadAnnotations(AnnotFilterToolbar* f) {
-    VecReset(f->annotations);
-    WindowTab* tab = FilterTab(f);
-    DisplayModel* dm = tab ? tab->AsFixed() : nullptr;
-    EngineBase* engine = dm ? dm->GetEngine() : nullptr;
-    if (!engine) {
-        return;
-    }
-    EngineMupdfGetLoadedAnnotations(engine, f->annotations);
-}
-
-static Annotation* VisibleAnnotAt(AnnotFilterToolbar* f, int idx) {
-    if (!f || !VecIsValidIndex(f->visibleAnnots, idx)) {
-        return nullptr;
-    }
-    return f->visibleAnnots[idx];
 }
 
 // the gpui window the list is drawn in: its own, or the frame's
@@ -568,7 +544,7 @@ bool IsFloatingAnnotListVisible(MainWindow* win) {
 
 static void AnnotFilterOpenToolWindow(AnnotFilterToolbar* f);
 
-static void ShowAnnotFilterWindow(MainWindow* win) {
+void ShowAnnotFilterWindow(MainWindow* win) {
     AnnotFilterToolbar* f = GetOrCreate(win);
     if (!f || !win->gpuiWin) {
         return;
@@ -588,7 +564,7 @@ static void ShowAnnotFilterWindow(MainWindow* win) {
     AppShellInvalidate(win);
 }
 
-static void HideAnnotFilterWindow(MainWindow* win) {
+void HideAnnotFilterWindow(MainWindow* win) {
     AnnotFilterToolbar* f = win ? win->annotFilterToolbar : nullptr;
     if (!f || !f->visible) {
         return;
@@ -609,17 +585,6 @@ static void HideAnnotFilterWindow(MainWindow* win) {
         AppShellFocusFrame(win);
     }
     AppShellInvalidate(win);
-}
-
-void ToggleFloatingAnnotList(MainWindow* win) {
-    if (!win) {
-        return;
-    }
-    if (IsFloatingAnnotListVisible(win)) {
-        HideAnnotFilterWindow(win);
-        return;
-    }
-    ShowAnnotFilterWindow(win);
 }
 
 // orig's window has closeOnEsc = gSettings->escToExit; without it Esc is the
