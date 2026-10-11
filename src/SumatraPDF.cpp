@@ -10555,10 +10555,9 @@ static LRESULT FrameOnCommand(MainWindow* win, HWND hwnd, UINT msg, WPARAM wp, L
             if (!win->IsDocLoaded()) {
                 return 0;
             }
-            bool isCont = IsContinuous(win->ctrl->GetDisplayMode());
             int currentPos = GetScrollPos(win->hwndCanvas, SB_VERT);
             SendMessageW(win->hwndCanvas, WM_VSCROLL, kSbHalfPageUp, 0);
-            if (isCont && GetScrollPos(win->hwndCanvas, SB_VERT) == currentPos) {
+            if (GetScrollPos(win->hwndCanvas, SB_VERT) == currentPos) {
                 win->ctrl->GoToPrevPage(true);
                 OnDocumentVerticalScrollIntent(win, false);
             }
@@ -10639,10 +10638,9 @@ static LRESULT FrameOnCommand(MainWindow* win, HWND hwnd, UINT msg, WPARAM wp, L
             if (!win->IsDocLoaded()) {
                 return 0;
             }
-            bool isCont = IsContinuous(win->ctrl->GetDisplayMode());
             int currentPos = GetScrollPos(win->hwndCanvas, SB_VERT);
             SendMessageW(win->hwndCanvas, WM_VSCROLL, kSbHalfPageDown, 0);
-            if (isCont && GetScrollPos(win->hwndCanvas, SB_VERT) == currentPos) {
+            if (GetScrollPos(win->hwndCanvas, SB_VERT) == currentPos) {
                 win->ctrl->GoToNextPage();
                 OnDocumentVerticalScrollIntent(win, true);
             }

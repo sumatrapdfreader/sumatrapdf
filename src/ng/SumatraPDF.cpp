@@ -5294,11 +5294,10 @@ void ExecuteCmd(MainWindow* win, int cmdId) {
             if (!win->IsDocLoaded()) {
                 break;
             }
-            bool isCont = IsContinuous(ctrl->GetDisplayMode());
             bool up = cmdId == CmdScrollUpHalfPage;
             int currentPos = CanvasScrollPosV(win);
             CanvasOnVScroll(win, up ? ScrollMsg::HalfPageUp : ScrollMsg::HalfPageDown);
-            if (isCont && CanvasScrollPosV(win) == currentPos) {
+            if (CanvasScrollPosV(win) == currentPos) {
                 if (up) {
                     ctrl->GoToPrevPage(true);
                 } else {
