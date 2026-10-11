@@ -64,6 +64,7 @@
 
 static Str sumatraPromos = StrL(R"promos(Try [Edna](https://edna.arslexis.io): a note taking web app for power users.
 Try [MarkLexis](https://marklexis.arslexis.io): a bookmarking web application.
+Try [Sumatra File Manager](https://sumatrafilemanager.com): file manager with super powers.
 )promos");
 
 static Str promoFromServer;
