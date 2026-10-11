@@ -138,3 +138,17 @@ bool TrySaveOriginalAsCmykTiff(Str originalData, Str destPath) {
     }
     return WriteCmykTiff(destPath, w, h, stride, samples.els);
 }
+
+int FormatIdxFromExt(Str ext) {
+    if (str::EqI(ext, StrL(".jpeg"))) {
+        ext = StrL(".jpg");
+    } else if (str::EqI(ext, StrL(".tiff"))) {
+        ext = StrL(".tif");
+    }
+    for (int i = 0; i < kImageFormatCount; i++) {
+        if (gImageFormats[i].available && str::EqI(gImageFormats[i].ext, ext)) {
+            return i;
+        }
+    }
+    return kDefaultFormatIdx;
+}

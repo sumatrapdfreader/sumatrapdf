@@ -31,3 +31,15 @@ bool SavePixmapAsImageFile(Pixmap* px, Str path);
 void ShowPdfPageRangeDialog(MainWindow* win, bool isExtract);
 
 bool ExtractTextViaEngine(MainWindow* win, Str destPath, Str pages);
+
+struct SaveSelImgWork {
+    Pixmap* px = nullptr;
+    Str destPath;
+    // orig drops its notification by canvas
+    HWND hwndCanvas = nullptr;
+    MainWindow* win = nullptr;
+    bool ok = false;
+};
+void SaveSelImgThread(SaveSelImgWork* d);
+// implemented by each app
+void FinishSaveSelImg(SaveSelImgWork* d);

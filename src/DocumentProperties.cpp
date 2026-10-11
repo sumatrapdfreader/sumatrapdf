@@ -340,29 +340,13 @@ void PropertiesWnd::ViewCertificate(VirtMouseEvent*) {
     }
 }
 
-struct EutlUpdateJob {
-    HWND hwnd = nullptr;
-    bool ok = false;
-    Str msg;
-};
-
-static void OnEutlUpdateDone(EutlUpdateJob* job) {
+void OnEutlUpdateDone(EutlUpdateJob* job) {
     if (job->hwnd && IsWindow(job->hwnd)) {
         MessageBoxW(job->hwnd, CWStrTemp(job->msg), L"EU Trusted List",
                     MB_OK | (job->ok ? MB_ICONINFORMATION : MB_ICONWARNING));
     }
     str::Free(job->msg);
     delete job;
-}
-
-static void EutlUpdateThread(EutlUpdateJob* job) {
-    Str err;
-    job->ok = EutlUpdate(&err);
-    TempStr msg = job->ok ? EutlCacheInfoTemp() : (err ? str::DupTemp(err) : StrL("update failed"));
-    job->msg = str::Dup(msg);
-    str::Free(err);
-    auto fn = MkFunc0<EutlUpdateJob>(OnEutlUpdateDone, job);
-    uitask::Post(fn, "EutlUpdateDone");
 }
 
 void PropertiesWnd::UpdateEutl(VirtMouseEvent*) {

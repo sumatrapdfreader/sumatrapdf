@@ -24,3 +24,14 @@ void AppendCertsText(str::Builder& out, PdfSigCert* certs);
 // implemented by each app
 TempStr FileTimeLocalTemp(const FILETIME& ft);
 #endif
+
+struct EutlUpdateJob {
+    // who asked: orig keeps the dialog's window, ng the main window
+    HWND hwnd = nullptr;
+    MainWindow* win = nullptr;
+    bool ok = false;
+    Str msg;
+};
+void EutlUpdateThread(EutlUpdateJob* job);
+// implemented by each app
+void OnEutlUpdateDone(EutlUpdateJob* job);

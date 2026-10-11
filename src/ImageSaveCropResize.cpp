@@ -91,45 +91,23 @@ constexpr int kButtonPadding = 8;
 constexpr UINT_PTR kCopyStatusTimerId = 1;
 constexpr UINT kCopyStatusTimeoutMs = 1500;
 
-struct ImageFormat {
-    Str label;
-    const GUID* containerFormat; // WIC container format GUID (null for PDF)
-    Str ext;
-    bool needsProbe; // if true, check if encoder is available before offering
-    bool available;  // set after probing
-    bool isPdf;      // PDF is created via PdfCreator, not WIC
+// clang-format off
+ImageFormat gImageFormats[kImageFormatCount] = {
+    {StrL("PNG"),  StrL(".png"),  false, true,  false},
+    {StrL("JPEG"), StrL(".jpg"),  false, true,  false},
+    {StrL("BMP"),  StrL(".bmp"),  false, true,  false},
+    {StrL("GIF"),  StrL(".gif"),  false, true,  false},
+    {StrL("TIFF"), StrL(".tif"),  false, true,  false},
+    {StrL("WebP"), StrL(".webp"), true,  false, false},
+    {StrL("PDF"),  StrL(".pdf"),  false, true,  true},
 };
 
-// clang-format off
-static ImageFormat gImageFormats[] = {
-    {StrL("PNG"),  &GUID_ContainerFormatPng,  StrL(".png"),  false, true,  false},
-    {StrL("JPEG"), &GUID_ContainerFormatJpeg, StrL(".jpg"),  false, true,  false},
-    {StrL("BMP"),  &GUID_ContainerFormatBmp,  StrL(".bmp"),  false, true,  false},
-    {StrL("GIF"),  &GUID_ContainerFormatGif,  StrL(".gif"),  false, true,  false},
-    {StrL("TIFF"), &GUID_ContainerFormatTiff, StrL(".tif"),  false, true,  false},
-    {StrL("WebP"), &GUID_ContainerFormatWebp, StrL(".webp"), true,  false, false},
-    {StrL("PDF"),  nullptr,                   StrL(".pdf"),  false, true,  true},
+// WIC container format of each gImageFormats entry (null for PDF)
+static const GUID* gImageFormatGuids[kImageFormatCount] = {
+    &GUID_ContainerFormatPng, &GUID_ContainerFormatJpeg, &GUID_ContainerFormatBmp, &GUID_ContainerFormatGif,
+    &GUID_ContainerFormatTiff, &GUID_ContainerFormatWebp, nullptr,
 };
 // clang-format on
-
-// index of the PDF entry in gImageFormats
-constexpr int kPdfFormatIdx = 6;
-
-constexpr int kDefaultFormatIdx = 0; // PNG
-
-static int FormatIdxFromExt(Str ext) {
-    if (str::EqI(ext, StrL(".jpeg"))) {
-        ext = StrL(".jpg");
-    } else if (str::EqI(ext, StrL(".tiff"))) {
-        ext = StrL(".tif");
-    }
-    for (int i = 0; i < dimofi(gImageFormats); i++) {
-        if (gImageFormats[i].available && str::EqI(gImageFormats[i].ext, ext)) {
-            return i;
-        }
-    }
-    return kDefaultFormatIdx;
-}
 
 static bool gFormatsProbed = false;
 
@@ -146,12 +124,13 @@ static void ProbeImageFormats() {
         return;
     }
 
-    for (auto& fmt : gImageFormats) {
+    for (int i = 0; i < kImageFormatCount; i++) {
+        ImageFormat& fmt = gImageFormats[i];
         if (!fmt.needsProbe) {
             continue;
         }
         IWICBitmapEncoder* pEncoder = nullptr;
-        hr = pFactory->CreateEncoder(*fmt.containerFormat, nullptr, &pEncoder);
+        hr = pFactory->CreateEncoder(*gImageFormatGuids[i], nullptr, &pEncoder);
         if (SUCCEEDED(hr) && pEncoder) {
             fmt.available = true;
             pEncoder->Release();
@@ -1348,7 +1327,7 @@ static void OnSave(ImageEditWindow* ew) {
         saved = gImageEditHost.SaveBitmapAsPdf && gImageEditHost.SaveBitmapAsPdf(result, dest);
     } else {
         TempWStr destW = ToWStrTemp(dest);
-        saved = SaveBitmapWithWIC(result, destW, gImageFormats[fmtIdx].containerFormat);
+        saved = SaveBitmapWithWIC(result, destW, gImageFormatGuids[fmtIdx]);
     }
     delete result;
 

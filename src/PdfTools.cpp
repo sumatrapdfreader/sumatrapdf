@@ -1491,15 +1491,7 @@ void ShowConvertPdfToImagesDialog(MainWindow* win) {
 // the current zoom (issue #6127)
 static Kind kNotifSaveSelectionAsImage = "notifSaveSelectionAsImage";
 
-struct SaveSelImgWork {
-    Pixmap* px = nullptr;
-    Str destPath;
-    HWND hwndCanvas = nullptr;
-    MainWindow* win = nullptr;
-    bool ok = false;
-};
-
-static void FinishSaveSelImg(SaveSelImgWork* d) {
+void FinishSaveSelImg(SaveSelImgWork* d) {
     if (IsWindow(d->hwndCanvas)) {
         RemoveNotificationsForGroup(d->hwndCanvas, kNotifSaveSelectionAsImage);
     }
@@ -1518,13 +1510,6 @@ static void FinishSaveSelImg(SaveSelImgWork* d) {
     }
     str::Free(d->destPath);
     delete d;
-}
-
-static void SaveSelImgThread(SaveSelImgWork* d) {
-    d->ok = WriteSelectionPixmap(d->px, d->destPath);
-    FreePixmap(d->px);
-    d->px = nullptr;
-    uitask::Post(MkFunc0(FinishSaveSelImg, d), "FinishSaveSelImg");
 }
 
 struct SaveSelectionAsImageDialog : PdfToolDialog {

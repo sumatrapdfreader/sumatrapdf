@@ -252,7 +252,7 @@ static void RevealingLettersAnimStop() {
     SetLettersSumatra();
 }
 
-static void RevealingLettersAnim() {
+void RevealingLettersAnim() {
     double elapsed = TimeSinceInMs(gRevealingAnimStart) / 1000.0;
     if (elapsed > kRevealingAnimDur) {
         RevealingLettersAnimStop();
@@ -264,12 +264,6 @@ static void RevealingLettersAnim() {
     }
     gRevealingLettersAnimLettersToShow = want;
     SetLettersSumatraUpTo(want);
-}
-
-void AnimStep() {
-    if (gRevealingLettersAnim) {
-        RevealingLettersAnim();
-    }
 }
 
 #endif // OS_WIN

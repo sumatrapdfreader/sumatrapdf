@@ -410,13 +410,7 @@ void PropertiesView::OnViewCert(PropertiesView*, gp::Ctx* cx, const gp::ClickEve
     }
 }
 
-struct EutlUpdateJob {
-    MainWindow* win = nullptr;
-    bool ok = false;
-    Str msg;
-};
-
-static void OnEutlUpdateDone(EutlUpdateJob* job) {
+void OnEutlUpdateDone(EutlUpdateJob* job) {
     gProps.eutlUpdating = false;
     if (IsMainWindowValidAndNotClosing(job->win)) {
         if (job->ok) {
@@ -430,22 +424,13 @@ static void OnEutlUpdateDone(EutlUpdateJob* job) {
     delete job;
 }
 
-static void EutlUpdateThread(EutlUpdateJob* job) {
-    Str err;
-    job->ok = EutlUpdate(&err);
-    TempStr msg = job->ok ? EutlCacheInfoTemp() : (err ? str::DupTemp(err) : StrL("update failed"));
-    job->msg = str::Dup(msg);
-    str::Free(err);
-    auto fn = MkFunc0<EutlUpdateJob>(OnEutlUpdateDone, job);
-    uitask::Post(fn, "EutlUpdateDone");
-}
-
 void PropertiesView::OnUpdateEutl(PropertiesView*, gp::Ctx* cx, const gp::ClickEvent*) {
     if (gProps.eutlUpdating) {
         return;
     }
     gProps.eutlUpdating = true;
-    auto* job = new EutlUpdateJob{gProps.win};
+    auto* job = new EutlUpdateJob;
+    job->win = gProps.win;
     RunAsync(MkFunc0<EutlUpdateJob>(EutlUpdateThread, job), StrL("EutlUpdate"));
     gp::Notify(cx);
 }

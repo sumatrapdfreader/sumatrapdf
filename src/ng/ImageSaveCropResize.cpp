@@ -57,16 +57,8 @@ static Str HostTr(Str s) {
     return s;
 }
 
-struct ImageFormat {
-    Str label;
-    Str ext;
-    bool needsProbe; // if true, check if an encoder is available before offering
-    bool available;  // set after probing
-    bool isPdf;
-};
-
 // clang-format off
-static ImageFormat gImageFormats[] = {
+ImageFormat gImageFormats[kImageFormatCount] = {
     {StrL("PNG"),  StrL(".png"),  false, true,  false},
     {StrL("JPEG"), StrL(".jpg"),  false, true,  false},
     {StrL("BMP"),  StrL(".bmp"),  false, true,  false},
@@ -76,10 +68,6 @@ static ImageFormat gImageFormats[] = {
     {StrL("PDF"),  StrL(".pdf"),  false, true,  true},
 };
 // clang-format on
-
-// index of the PDF entry in gImageFormats
-constexpr int kPdfFormatIdx = 6;
-constexpr int kDefaultFormatIdx = 0; // PNG
 
 static bool gFormatsProbed = false;
 
@@ -94,20 +82,6 @@ static void ProbeImageFormats() {
         }
         f.available = gImageEditHost.ImageFormatAvailable && gImageEditHost.ImageFormatAvailable(f.ext);
     }
-}
-
-static int FormatIdxFromExt(Str ext) {
-    if (str::EqI(ext, StrL(".jpeg"))) {
-        ext = StrL(".jpg");
-    } else if (str::EqI(ext, StrL(".tiff"))) {
-        ext = StrL(".tif");
-    }
-    for (int i = 0; i < dimofi(gImageFormats); i++) {
-        if (gImageFormats[i].available && str::EqI(gImageFormats[i].ext, ext)) {
-            return i;
-        }
-    }
-    return kDefaultFormatIdx;
 }
 
 struct ImageEditWnd {

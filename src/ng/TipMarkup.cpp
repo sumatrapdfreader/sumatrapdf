@@ -6,19 +6,8 @@
 #include "Commands.h"
 #include "ShortcutParse.h"
 #include "Accelerators.h"
+#include "TipLink.h"
 #include "TipMarkup.h"
-
-// orig's ResolveLinkCmdTemp
-static TempStr ResolveLinkCmdTemp(Str cmd) {
-    if (str::StartsWith(cmd, StrL("https://")) || str::StartsWith(cmd, StrL("http://"))) {
-        return str::DupTemp(cmd);
-    }
-    if (str::TrimPrefix(cmd, StrL("Help/"))) {
-        return fmt("https://www.sumatrapdfreader.org/docs/%s", cmd);
-    }
-    // Cmd* - used as-is, resolved to a command id on click
-    return str::DupTemp(cmd);
-}
 
 // the shortcut a (Key/CmdXxx) fragment stands for, orig's
 // SumatraCommandsContext::GetCommandShortcutTemp

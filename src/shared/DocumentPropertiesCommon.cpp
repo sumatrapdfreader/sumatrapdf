@@ -619,3 +619,15 @@ void AppendCertsText(str::Builder& out, PdfSigCert* certs) {
 }
 
 #endif // OS_WIN
+
+#if OS_WIN
+void EutlUpdateThread(EutlUpdateJob* job) {
+    Str err;
+    job->ok = EutlUpdate(&err);
+    TempStr msg = job->ok ? EutlCacheInfoTemp() : (err ? str::DupTemp(err) : StrL("update failed"));
+    job->msg = str::Dup(msg);
+    str::Free(err);
+    auto fn = MkFunc0<EutlUpdateJob>(OnEutlUpdateDone, job);
+    uitask::Post(fn, "EutlUpdateDone");
+}
+#endif

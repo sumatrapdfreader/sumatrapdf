@@ -130,14 +130,7 @@ bool SavePixmapAsImageFile(Pixmap* px, Str path) {
 // the current zoom (issue #6127)
 static Kind kNotifSaveSelectionAsImage = "notifSaveSelectionAsImage";
 
-struct SaveSelImgWork {
-    Pixmap* px = nullptr;
-    Str destPath;
-    MainWindow* win = nullptr;
-    bool ok = false;
-};
-
-static void FinishSaveSelImg(SaveSelImgWork* d) {
+void FinishSaveSelImg(SaveSelImgWork* d) {
     bool winOk = IsMainWindowValidAndNotClosing(d->win);
     if (winOk) {
         RemoveNotificationsForGroup(d->win, kNotifSaveSelectionAsImage);
@@ -153,13 +146,6 @@ static void FinishSaveSelImg(SaveSelImgWork* d) {
     }
     str::Free(d->destPath);
     delete d;
-}
-
-static void SaveSelImgThread(SaveSelImgWork* d) {
-    d->ok = WriteSelectionPixmap(d->px, d->destPath);
-    FreePixmap(d->px);
-    d->px = nullptr;
-    uitask::Post(MkFunc0(FinishSaveSelImg, d), "FinishSaveSelImg");
 }
 
 // --- converting an image collection to PDF ----------------------------------

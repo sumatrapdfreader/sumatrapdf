@@ -664,3 +664,10 @@ bool ExtractTextViaEngine(MainWindow* win, Str destPath, Str pages) {
     }
     return file::WriteFile(destPath, ToStr(text));
 }
+
+void SaveSelImgThread(SaveSelImgWork* d) {
+    d->ok = WriteSelectionPixmap(d->px, d->destPath);
+    FreePixmap(d->px);
+    d->px = nullptr;
+    uitask::Post(MkFunc0(FinishSaveSelImg, d), "FinishSaveSelImg");
+}

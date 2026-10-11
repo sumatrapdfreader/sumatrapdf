@@ -43,3 +43,5 @@ void RestartElevatedForAllUsers(Flags* cli);
 // --- shared by InstallerUtil_win.cpp and each app's Uninstaller.cpp ---
 
 void RemoveInstalledFiles();
+bool IsRevealingLettersAnimRunning();
+void RevealingLettersAnim();

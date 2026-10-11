@@ -975,3 +975,9 @@ void RemoveInstalledFiles() {
     bool ok = dir::RemoveAll(dir);
     logf("RemoveInstalledFiles(): removed dir '%s', ok = %d\n", dir, (int)ok);
 }
+
+void AnimStep() {
+    if (IsRevealingLettersAnimRunning()) {
+        RevealingLettersAnim();
+    }
+}

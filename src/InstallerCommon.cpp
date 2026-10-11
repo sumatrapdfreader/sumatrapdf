@@ -419,7 +419,11 @@ static void RevealingLettersAnimStop() {
     InvalidateFrame();
 }
 
-static void RevealingLettersAnim() {
+bool IsRevealingLettersAnimRunning() {
+    return gRevealingLettersAnim != nullptr;
+}
+
+void RevealingLettersAnim() {
     if (gRevealingLettersAnim->ElapsedTotal() > kRevealingAnimDur) {
         RevealingLettersAnimStop();
         return;
@@ -431,12 +435,6 @@ static void RevealingLettersAnim() {
     SetLettersSumatraUpTo(++gRevealingLettersAnimLettersToShow);
     gRevealingLettersAnim->Step();
     InvalidateFrame();
-}
-
-void AnimStep() {
-    if (gRevealingLettersAnim) {
-        RevealingLettersAnim();
-    }
 }
 
 // GDI+ Font(name, emSize) defaults to UnitPoint and converts with the Graphics
