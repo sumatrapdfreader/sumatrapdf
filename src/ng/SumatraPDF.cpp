@@ -2816,17 +2816,12 @@ struct RenameFileCtx {
     Str srcPath; // owned
 };
 
-static void OnRenameFilePathPicked(RenameFileCtx* c, SavePathArgs* args) {
-    MainWindow* win = c->win;
-    TempStr srcPath = str::DupTemp(c->srcPath);
-    str::Free(c->srcPath);
-    delete c;
-    if (len(args->path) == 0 || !IsMainWindowValidAndNotClosing(win)) {
-        return;
-    }
-    TempStr dstPath = path::NormalizeTemp(args->path);
+// the work half of Rename File: moves srcPath to dstPath and reloads the
+// document from there. false when the move failed
+static bool RenameCurrentFileTo(MainWindow* win, Str srcPath, Str dstPath) {
+    dstPath = path::NormalizeTemp(dstPath);
     if (path::IsSame(path::NormalizeTemp(srcPath), dstPath)) {
-        return;
+        return true;
     }
 
     UpdateTabFileDisplayStateForTab(win->CurrentTab());
@@ -2842,16 +2837,43 @@ static void OnRenameFilePathPicked(RenameFileCtx* c, SavePathArgs* args) {
         logf("RenameCurrentFile: '%s' -> '%s' failed\n", srcPath, dstPath);
         LoadDocument(win, srcPath, LoadPrefs::Save, LoadReuse::CurrentTab);
         ShowPlainWarningNotification(win, Tr("Failed to rename the file!"), kNotifNoTimeout);
-        return;
+        return false;
     }
     RenameFileInHistory(srcPath, dstPath);
     LoadDocument(win, dstPath, LoadPrefs::Save, LoadReuse::CurrentTab);
     if (!IsMainWindowValidAndNotClosing(win)) {
-        return;
+        return true;
     }
     // the tab and the frame carry the old name until something repaints them
     UpdateWindowTitle(win);
     TabsUIOnTabsChanged(win);
+    return true;
+}
+
+static void OnRenameFilePathPicked(RenameFileCtx* c, SavePathArgs* args) {
+    MainWindow* win = c->win;
+    TempStr srcPath = str::DupTemp(c->srcPath);
+    str::Free(c->srcPath);
+    delete c;
+    if (len(args->path) == 0 || !IsMainWindowValidAndNotClosing(win)) {
+        return;
+    }
+    RenameCurrentFileTo(win, srcPath, args->path);
+}
+
+// -dbg-control TestRenameFile: Rename File without its dialog
+TempStr RenameFileResultTemp(Str dstPath, int* exitCodeOut) {
+    *exitCodeOut = 1;
+    if (len(gWindows) == 0 || !gWindows[0] || !gWindows[0]->IsDocLoaded()) {
+        return StrL("NOTREADY no-document");
+    }
+    MainWindow* win = gWindows[0];
+    TempStr srcPath = str::DupTemp(win->ctrl->GetFilePath());
+    if (!RenameCurrentFileTo(win, srcPath, dstPath)) {
+        return StrL("FAIL rename");
+    }
+    *exitCodeOut = 0;
+    return StrL("OK");
 }
 
 static void RenameCurrentFile(MainWindow* win) {

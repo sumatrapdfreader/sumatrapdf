@@ -28,6 +28,7 @@ void DeleteControllerAsync(DocController* ctrl);
 void UpdateTabFileDisplayStateForTab(WindowTab* tab);
 void RememberDefaultWindowPosition(MainWindow* win);
 TempStr WindowStateDuringLoadResultTemp(int* exitCodeOut = nullptr);
+TempStr RenameFileResultTemp(Str dstPath, int* exitCodeOut);
 Str CliPassword();
 
 // orig's sidebar layout limits (SumatraPDF.cpp)
