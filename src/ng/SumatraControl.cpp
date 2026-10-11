@@ -2036,6 +2036,7 @@ static void ExecuteControlRequest(ControlRequest* req) {
             out.Append(fmt("printer=%d\n", HasPermission(Perm::PrinterAccess) ? 1 : 0));
             out.Append(fmt("copy=%d\n", HasPermission(Perm::CopySelection) ? 1 : 0));
             out.Append(fmt("fullscreen=%d\n", HasPermission(Perm::FullscreenAccess) ? 1 : 0));
+            out.Append(fmt("aichat=%d\n", HasPermission(Perm::AIChat) ? 1 : 0));
             AppendTestResult(req, 0, ToStrTemp(out));
             break;
         }

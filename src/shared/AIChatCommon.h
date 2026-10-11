@@ -143,7 +143,9 @@ struct AIChatProvider {
     bool IsInstalled() { return len(FindExecutableTemp()) > 0; }
 };
 
+bool IsAIChatAllowed();
 bool IsAIChatAvailable();
+bool IsBackendInstalled(AIChatBackend backend);
 bool IsAIChatSupportedForFile(Str filePath, Kind engineKind = nullptr);
 bool IsAIChatSupportedForTab(WindowTab* tab);
 

@@ -427,7 +427,11 @@ TempStr FindBackendExecutableTemp(AIChatBackend backend) {
     return {};
 }
 
-static bool IsBackendInstalled(AIChatBackend backend) {
+// the agent's CLI is on this machine and the restrict policy lets us run it
+bool IsBackendInstalled(AIChatBackend backend) {
+    if (!IsAIChatAllowed()) {
+        return false;
+    }
     if (backend == AIChatBackend::Grok) {
         return GetGrokBuildProvider()->IsInstalled();
     }

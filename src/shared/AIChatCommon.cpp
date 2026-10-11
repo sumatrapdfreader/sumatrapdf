@@ -48,7 +48,16 @@
 
 #include "SumatraLog.h"
 
+// sumatrapdfrestrict.ini: the AIChat policy, which also needs the internet
+// (the agents talk to their services) and the disk (they run as processes)
+bool IsAIChatAllowed() {
+    return HasPermission(Perm::AIChat | Perm::InternetAccess | Perm::DiskAccess);
+}
+
 bool IsAIChatAvailable() {
+    if (!IsAIChatAllowed()) {
+        return false;
+    }
 #if defined(SUMATRA_NG)
     return BrowserViewAvailable();
 #else
