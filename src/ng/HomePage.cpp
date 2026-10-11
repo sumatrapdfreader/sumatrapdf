@@ -133,6 +133,10 @@ static AboutRow gAboutRows[] = {
     {StrL("more software by me"), StrL("Sumatra File Manager"), StrL("https://sumatrafilemanager.com")},
     {{}, {}, {}}};
 
+constexpr int kAboutSoftwareRow = dimofi(gAboutRows) - 2;
+constexpr int kAboutCopyGap = 6;
+constexpr int kAboutSoftwareGap = 12;
+
 static TempStr GetAppVersionTemp() {
     TempStr s = str::JoinTemp(StrL("v"), currentVersion);
     bool is64 = sizeof(void*) == 8;
@@ -1026,14 +1030,14 @@ static gp::El* SumatraLogoEl(gp::Ctx* cx, float fontSize, Str fontFamily = {}, S
 
 // orig's two-column About table: the left column right-aligned, the right one
 // left-aligned, a vertical divider between them, links in the link color
-static gp::El* AboutTableEl(MainWindow* win, gp::Ctx* cx) {
+static gp::El* AboutTableEl(MainWindow* win, gp::Ctx* cx, int nRows = kAboutSoftwareRow + 1) {
     Color colText = ThemeWindowTextColor();
     Color colLink = ThemeWindowLinkColor();
     bool canAccessDisk = CanAccessDisk();
 
     gp::El* left = gp::Div(cx->a)->FlexCol()->ItemsEnd()->Gap(6);
     gp::El* right = gp::Div(cx->a)->FlexCol()->ItemsStart()->Gap(6);
-    for (int i = 0; gAboutRows[i].leftTxt.s; i++) {
+    for (int i = 0; i < nRows; i++) {
         AboutRow* el = &gAboutRows[i];
         left->Child(
             gp::TextEl(cx->a, GpuiDup(cx->a, el->leftTxt))->Font((float)kLeftTextFontSize)->Fg(ToGpui(colText))->H(18));
@@ -1061,6 +1065,37 @@ static gp::El* AboutTableEl(MainWindow* win, gp::Ctx* cx) {
     return row;
 }
 
+static gp::El* AboutSoftwareEl(MainWindow* win, gp::Ctx* cx, float fontScale = 1, float headerDy = gp::kAuto,
+                               float linkDy = gp::kAuto) {
+    AboutRow& software = gAboutRows[kAboutSoftwareRow];
+    bool isLink = CanAccessDisk();
+    gp::El* link = gp::TextEl(cx->a, GpuiDup(cx->a, software.rightTxt))
+                       ->FontFamily(GStrL("Arial"))
+                       ->Weight(gp::FontWeight::Black)
+                       ->Font((float)kRightTextFontSize * fontScale)
+                       ->H(linkDy)
+                       ->Fg(ToGpui(isLink ? ThemeWindowLinkColor() : ThemeWindowTextColor()))
+                       ->Shrink0();
+    if (isLink) {
+        link->Underline()
+            ->Cursor(gp::CursorKind::Pointer)
+            ->Tip(GpuiDup(cx->a, software.url))
+            ->PathClick(GStrL("about-software"))
+            ->OnClick(gp::ListenTo(Ui(win)->view, &HomeView::OnAboutLink, kAboutSoftwareRow));
+    }
+    return gp::Div(cx->a)
+        ->FlexCol()
+        ->ItemsCenter()
+        ->Gap((float)kAboutCopyGap)
+        ->Child(gp::TextEl(cx->a, GpuiDup(cx->a, software.leftTxt))
+                    ->FontFamily(GStrL("Arial"))
+                    ->Font((float)kLeftTextFontSize * fontScale)
+                    ->H(headerDy)
+                    ->Fg(ToGpui(ThemeWindowTextColor()))
+                    ->Shrink0())
+        ->Child(link);
+}
+
 // the framed About box: the logo band on top of the two columns
 static gp::El* AboutBoxEl(MainWindow* win, gp::Ctx* cx, bool withCopyBtn) {
     Color colText = ThemeWindowTextColor();
@@ -1074,7 +1109,8 @@ static gp::El* AboutBoxEl(MainWindow* win, gp::Ctx* cx, bool withCopyBtn) {
                    ->JustifyCenter()
                    ->BorderB(2, ToGpui(colText))
                    ->Child(SumatraLogoEl(cx, (float)kSumatraTxtFontSize)));
-    box->Child(gp::Div(cx->a)->PadT(6)->Child(AboutTableEl(win, cx)));
+    int nRows = kAboutSoftwareRow + (withCopyBtn ? 0 : 1);
+    box->Child(gp::Div(cx->a)->PadT(6)->Child(AboutTableEl(win, cx, nRows)));
     if (withCopyBtn) {
         box->Child(gp::Div(cx->a)->PadT(6)->Child(gpc::Button::New(cx, GStrL("about-copy-info"))
                                                       ->Label(ToGpui(Tr("Copy program and machine info to clipboard")))
@@ -1082,6 +1118,7 @@ static gp::El* AboutBoxEl(MainWindow* win, gp::Ctx* cx, bool withCopyBtn) {
                                                       ->WithSize(gp::UiSize::Small)
                                                       ->OnClick(gp::ListenTo(Ui(win)->view, &HomeView::OnCopyInfo))
                                                       ->IntoEl()));
+        box->Child(gp::Div(cx->a)->PadT((float)kAboutSoftwareGap)->Child(AboutSoftwareEl(win, cx)));
     }
     return box;
 }
@@ -1161,7 +1198,6 @@ constexpr int kAboutMarginDx = 10;
 constexpr int kAboutBoxMarginDy = 6;
 constexpr int kAboutTxtDy = 6;
 constexpr int kAboutRectPadding = 8;
-constexpr int kAboutBtnGap = 6;
 constexpr int kAboutMaxRows = 16;
 // orig's themed button: the text in the 12 px app font plus 2 x 12 by 2 x 5
 constexpr float kAboutBtnFontPx = 12;
@@ -1207,6 +1243,8 @@ struct AboutDims {
     float tableDy = 0;
     float btnDx = 0;
     float btnDy = 0;
+    float softwareHeaderDy = 0;
+    float softwareLinkDy = 0;
     // the framed box, relative to the client area
     RectF box;
 };
@@ -1232,7 +1270,7 @@ static void MeasureAbout(MainWindow* win, AboutDims& d) {
     int rightDx = 0;
     int tableDy = 0;
     int n = 0;
-    for (; gAboutRows[n].leftTxt.s && n < kAboutMaxRows; n++) {
+    for (; n < kAboutSoftwareRow && n < kAboutMaxRows; n++) {
         Size l = PlatformFontMeasureText(fontLeft, gAboutRows[n].leftTxt);
         Size r = PlatformFontMeasureText(fontRight, AboutRightText(n));
         leftDx = std::max(leftDx, l.dx);
@@ -1246,13 +1284,17 @@ static void MeasureAbout(MainWindow* win, AboutDims& d) {
     Size btnText = PlatformFontMeasureText(GetDefaultGuiFont(), Tr("Copy program and machine info to clipboard"));
     int btnDx = btnText.dx + 2 * scale(kAboutBtnPadDx);
     int btnDy = btnText.dy + 2 * scale(kAboutBtnPadDy);
-    int copyBlockDy = scale(kAboutBtnGap) + btnDy + scale(kAboutRectPadding);
+    int copyBlockDy = scale(kAboutCopyGap) + btnDy;
+    AboutRow& software = gAboutRows[kAboutSoftwareRow];
+    Size softwareHeader = PlatformFontMeasureText(fontLeft, software.leftTxt);
+    Size softwareLink = PlatformFontMeasureText(fontRight, software.rightTxt);
+    int softwareDy = softwareHeader.dy + scale(kAboutCopyGap) + softwareLink.dy;
+    int softwareBlockDy = scale(kAboutSoftwareGap) + softwareDy + scale(kAboutRectPadding);
 
     int marginDx = scale(kAboutMarginDx);
     int boxDx = std::max(tableDx + kAboutLineSepSize, headerDx) + (2 * kAboutLineOuterSize) + (2 * marginDx);
     boxDx = std::max(boxDx, btnDx + (2 * marginDx) + (2 * kAboutLineOuterSize));
-    // one extra row gap so the last row isn't flush against the frame
-    int boxDy = headerDy + tableDy + scale(kAboutTxtDy) + (2 * kAboutLineOuterSize) + 4 + copyBlockDy;
+    int boxDy = headerDy + tableDy + 4 + copyBlockDy + softwareBlockDy;
 
     d.nRows = n;
     d.headerDy = (float)headerDy * toDip;
@@ -1260,6 +1302,8 @@ static void MeasureAbout(MainWindow* win, AboutDims& d) {
     d.tableDy = (float)tableDy * toDip;
     d.btnDx = (float)btnDx * toDip;
     d.btnDy = (float)btnDy * toDip;
+    d.softwareHeaderDy = (float)softwareHeader.dy * toDip;
+    d.softwareLinkDy = (float)softwareLink.dy * toDip;
     d.box = RectF((float)kAboutRectPadding, (float)kAboutRectPadding, (float)boxDx * toDip, (float)boxDy * toDip);
 }
 
@@ -1343,7 +1387,7 @@ static gp::El* AboutToolBuild(MainWindow* win, gp::Ctx* cx) {
     root->Child(gp::Div(cx->a)
                     ->Absolute()
                     ->Left(r.x + (r.dx - d.btnDx) / 2)
-                    ->Top(r.y + r.dy - (float)kAboutRectPadding - d.btnDy)
+                    ->Top(tableY + d.tableDy + (float)kAboutCopyGap)
                     ->W(d.btnDx)
                     ->H(d.btnDy)
                     ->Child(gpc::Button::New(cx, GStrL("about-copy-info"))
@@ -1354,6 +1398,15 @@ static gp::El* AboutToolBuild(MainWindow* win, gp::Ctx* cx) {
                                 ->W(d.btnDx)
                                 ->H(d.btnDy)
                                 ->PadX(0)));
+    root->Child(gp::Div(cx->a)
+                    ->Absolute()
+                    ->Left(r.x)
+                    ->Top(tableY + d.tableDy + (float)kAboutCopyGap + d.btnDy + (float)kAboutSoftwareGap)
+                    ->W(r.dx)
+                    ->H(d.softwareHeaderDy + (float)kAboutCopyGap + d.softwareLinkDy)
+                    ->FlexCol()
+                    ->ItemsCenter()
+                    ->Child(AboutSoftwareEl(win, cx, fontScale, d.softwareHeaderDy, d.softwareLinkDy)));
     return root;
 }
 

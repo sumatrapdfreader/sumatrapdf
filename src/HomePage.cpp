@@ -140,6 +140,8 @@ constexpr int kAboutMarginDx = 10;
 constexpr int kAboutBoxMarginDy = 6;
 constexpr int kAboutTxtDy = 6;
 constexpr int kAboutRectPadding = 8;
+constexpr int kAboutCopyGap = 6;
+constexpr int kAboutSoftwareGap = 12;
 
 constexpr int kInnerPadding = 8;
 
@@ -185,6 +187,8 @@ static AboutRow gAboutRows[] = {
     {StrL("more software by me"), StrL("Sumatra File Manager"), StrL("https://sumatrafilemanager.com")},
     {{}, {}, {}}};
 
+constexpr int kAboutSoftwareRow = dimofi(gAboutRows) - 2;
+
 // The About screen's two text columns: a Table (ILayout) whose left column
 // is right-aligned and right column left-aligned. Rows with a url become
 // VirtLink (owning the hit-testing, the hand cursor and the tooltip), the rest
@@ -202,6 +206,8 @@ struct AboutCtrl : VirtCtrl {
     SumatraLogo* logo = nullptr;
     // copies version / OS / machine info for bug reports (dialog and dropdown)
     VirtButton* copyInfoBtn = nullptr;
+    VirtText* softwareHeader = nullptr;
+    VirtLink* softwareLink = nullptr;
     bool hideLogo = false;
 
     // geometry, computed by UpdateLayout()
@@ -399,6 +405,10 @@ ILayout* AboutCtrl::LayoutChildAt(int i) {
 // and the DPI. Sizing happens in UpdateLayout(), which measures what we set here
 void AboutCtrl::Sync() {
     int n = AboutRowCount();
+    bool showSoftware = GetHwnd() == gHwndAbout;
+    if (showSoftware) {
+        n = kAboutSoftwareRow;
+    }
     bool canAccessDisk = CanAccessDisk();
     if (table->rows != n) {
         table->SetSize(n, 2);
@@ -434,6 +444,26 @@ void AboutCtrl::Sync() {
     Color colText = ThemeWindowTextColor();
     Color colLink = ThemeWindowLinkColor();
 
+    if (showSoftware) {
+        AboutRow& software = gAboutRows[kAboutSoftwareRow];
+        if (!softwareHeader) {
+            softwareHeader = new VirtText(software.leftTxt);
+            AddChild(softwareHeader);
+            softwareLink = new VirtLink(software.rightTxt);
+            softwareLink->SetTarget(software.url);
+            softwareLink->SetTooltip(software.url);
+            softwareLink->underlineOffsetY = -3;
+            softwareLink->onClick = MkFunc1Void(OpenAboutUrl);
+            AddChild(softwareLink);
+        }
+        softwareHeader->font = fontLeftTxt;
+        softwareHeader->SetColor(kColText, colText);
+        softwareLink->font = fontRightTxt;
+        softwareLink->SetColor(kColText, canAccessDisk ? colLink : colText);
+        softwareLink->withUnderline = canAccessDisk;
+        softwareLink->SetFlag(vwfNoHitTest, !canAccessDisk);
+    }
+
     for (int i = 0; i < n; i++) {
         AboutRow* el = &gAboutRows[i];
         VirtText* left = LeftAt(i);
@@ -467,12 +497,24 @@ void AboutCtrl::UpdateLayout(Rect clientRc) {
     Size tableSize = table->Layout(ExpandInf());
 
     Size btnSz{};
-    int gap = DpiScale(6);
+    int gap = DpiScale(kAboutCopyGap);
     int padBottom = DpiScale(kAboutRectPadding);
     int copyBlockDy = 0;
     if (showCopy) {
         btnSz = copyInfoBtn->GetIdealSize();
         copyBlockDy = gap + btnSz.dy + padBottom;
+    }
+
+    bool showSoftware = softwareHeader != nullptr;
+    Size softwareHeaderSz{};
+    Size softwareLinkSz{};
+    int softwareBlockDy = 0;
+    if (showSoftware) {
+        copyBlockDy = gap + btnSz.dy;
+        softwareHeaderSz = softwareHeader->GetIdealSize(false);
+        softwareLinkSz = softwareLink->GetIdealSize(false);
+        softwareBlockDy =
+            DpiScale(kAboutSoftwareGap) + softwareHeaderSz.dy + aboutTxtDy + softwareLinkSz.dy + padBottom;
     }
 
     Rect r;
@@ -482,7 +524,8 @@ void AboutCtrl::UpdateLayout(Rect clientRc) {
         r.dx = std::max(r.dx, btnSz.dx + (2 * marginDx) + (2 * kAboutLineOuterSize));
     }
     // one extra row gap so the last row isn't flush against the frame
-    r.dy = headerSize.dy + tableSize.dy + aboutTxtDy + (2 * kAboutLineOuterSize) + 4 + copyBlockDy;
+    int tableBottomDy = showSoftware ? 0 : aboutTxtDy + (2 * kAboutLineOuterSize);
+    r.dy = headerSize.dy + tableSize.dy + tableBottomDy + 4 + copyBlockDy + softwareBlockDy;
     r.x = clientRc.x + ((clientRc.dx - r.dx) / 2);
     if (hideLogo) {
         r.y = clientRc.y;
@@ -504,8 +547,16 @@ void AboutCtrl::UpdateLayout(Rect clientRc) {
 
     if (showCopy) {
         int btnX = r.x + ((r.dx - btnSz.dx) / 2);
-        int btnY = r.y + r.dy - padBottom - btnSz.dy;
+        int btnY = showSoftware ? y + tableSize.dy + gap : r.y + r.dy - padBottom - btnSz.dy;
         copyInfoBtn->SetBounds({btnX, btnY, btnSz.dx, btnSz.dy});
+        if (showSoftware) {
+            int softwareY = btnY + btnSz.dy + DpiScale(kAboutSoftwareGap);
+            softwareHeader->SetBounds(
+                {r.x + (r.dx - softwareHeaderSz.dx) / 2, softwareY, softwareHeaderSz.dx, softwareHeaderSz.dy});
+            softwareY += softwareHeaderSz.dy + aboutTxtDy;
+            softwareLink->SetBounds(
+                {r.x + (r.dx - softwareLinkSz.dx) / 2, softwareY, softwareLinkSz.dx, softwareLinkSz.dy});
+        }
     }
 }
 
