@@ -204,6 +204,20 @@ bool SettingDiffersFromDefault(const ItemDataCP* d) {
     return !str::Eq(val, FormatSettingDefaultTemp(d->settingType, d->settingDefault));
 }
 
+// Delete on a "= settings" row puts the setting's default back. rowText is the
+// row's text: the setting's path in the picking stage, a candidate value once
+// settingPath names the setting. Returns the path, empty if nothing changed.
+TempStr RestorePaletteSettingDefault(const ItemDataCP* d, Str rowText) {
+    // applying the value reloads the settings, which rebuilds the rows d and
+    // rowText live in
+    TempStr path = str::DupTemp(len(d->settingPath) > 0 ? d->settingPath : rowText);
+    TempStr def = FormatSettingDefaultTemp(d->settingType, d->settingDefault);
+    if (!SetSettingsValueFromStr(path, def)) {
+        return {};
+    }
+    return path;
+}
+
 // one "= settings" row per scalar setting; compact structs and arrays need
 // the advanced settings dialog
 void CollectSettingRows(StrVecCP& out) {

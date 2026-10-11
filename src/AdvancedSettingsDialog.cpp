@@ -113,6 +113,7 @@ struct AdvancedSettingsWnd : WindowBase {
 
     Rect ValueRectForItem(int idx); // in listBox client coords
     void BeginEditValue(int idx);
+    bool RestoreSelectedDefault(bool isEditingValue, bool isEditingEnum);
     void CommitEditValue();
     void CancelEditValue();
 
@@ -723,6 +724,26 @@ bool AdvancedSettingsWnd::HandleEnterKey(bool isEditingValue, bool isEditingEnum
     return true;
 }
 
+// Delete puts the selected setting's default back; while a value is being
+// typed it edits that text instead
+bool AdvancedSettingsWnd::RestoreSelectedDefault(bool isEditingValue, bool isEditingEnum) {
+    if (isEditingValue) {
+        return false;
+    }
+    int lbIdx = listBox->GetCurrentSelection();
+    SettingItem* item = model->ItemAt(lbIdx);
+    if (!item) {
+        return false;
+    }
+    if (isEditingEnum) {
+        CloseEnumEdit(false);
+    }
+    RestoreSettingDefault(item);
+    NoteItemEdited(item);
+    listBox->Invalidate();
+    return true;
+}
+
 // up/down in the filter edit moves the list selection (wrapping)
 bool AdvancedSettingsWnd::HandleUpDownKey(const KeyEvent& ev) {
     int dir = 0;
@@ -758,6 +779,10 @@ void AdvancedSettingsWnd::OnKeyDown(KeyEvent* ev) {
     }
     if (ev->vkey == VK_RETURN) {
         ev->didHandle = HandleEnterKey(isEditingValue, isEditingEnum);
+        return;
+    }
+    if (ev->vkey == VK_DELETE) {
+        ev->didHandle = RestoreSelectedDefault(isEditingValue, isEditingEnum);
         return;
     }
     if (HandleUpDownKey(*ev)) {
@@ -976,7 +1001,7 @@ bool AdvancedSettingsWnd::Create(MainWindow* mainWin) {
         vbox->AddChild(new Padding(c, DpiScaledInsets(4, 2)));
     }
 
-    // one centered hint above the buttons
+    // one centered hint line above the buttons
     {
         auto* hbox = new HBox();
         hbox->alignMain = MainAxisAlign::MainCenter;
@@ -987,6 +1012,12 @@ bool AdvancedSettingsWnd::Create(MainWindow* mainWin) {
             .isRtl = isRtl,
         });
         hbox->AddChild(new Padding(c, DpiScaledInsets(1, 8)));
+        auto* c2 = NewVirtText({
+            .s = fmt(Tr("%s: restore default").s, StrL(kRestoreDefaultKeyName)),
+            .font = font,
+            .isRtl = isRtl,
+        });
+        hbox->AddChild(new Padding(c2, DpiScaledInsets(1, 8)));
         vbox->AddChild(hbox);
     }
 
@@ -1169,6 +1200,34 @@ TempStr AdvSettingsRowsResultTemp(Str action, int arg, int* exitCodeOut) {
         int n = wnd->CountChangedSettings();
         bool banner = wnd->changedCountRow && wnd->changedCountRow->GetVisibility() == Visibility::Visible;
         out.Append(fmt("toggled=%s changed=%d banner=%d\n", target->name, n, banner ? 1 : 0));
+        return finish(0);
+    }
+    // select the row of the arg-th bool setting (as "toggle" counts them) and
+    // press Delete on it
+    if (str::Eq(action, StrL("restore"))) {
+        int nBool = 0;
+        int lbIdx = -1;
+        int n = wnd->model ? wnd->model->ItemsCount() : 0;
+        for (int i = 0; i < len(wnd->items) && lbIdx < 0; i++) {
+            if (wnd->items[i]->type != SettingType::Bool || nBool++ != arg) {
+                continue;
+            }
+            for (int row = 0; row < n; row++) {
+                if (wnd->model->filtered[row] == i) {
+                    lbIdx = row;
+                    break;
+                }
+            }
+        }
+        if (lbIdx < 0) {
+            out.Append(StrL("ERROR no-bool\n"));
+            return finish(1);
+        }
+        wnd->listBox->SetCurrentSelection(lbIdx);
+        wnd->OnSelectionChanged();
+        bool restored = wnd->RestoreSelectedDefault(wnd->editValue != nullptr, wnd->dropDownValue != nullptr);
+        out.Append(fmt("restored=%s changed=%d\n", restored ? wnd->model->ItemAt(lbIdx)->name : StrL(""),
+                       wnd->CountChangedSettings()));
         return finish(0);
     }
     if (str::Eq(action, StrL("esc"))) {

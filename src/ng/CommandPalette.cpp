@@ -849,6 +849,15 @@ static void ExecuteCurrentSelection() {
     ScheduleDeleteAndExecCommand();
 }
 
+// what the palette shows for Delete; macOS has Cmd+Backspace instead
+static TempStr RestoreDefaultHelpTemp() {
+#if OS_DARWIN
+    return str::DupTemp(Tr("Cmd+Backspace restore default"));
+#else
+    return str::DupTemp(Tr("Del restore default"));
+#endif
+}
+
 // Delete on a removable row: a file-history entry, an open tab or a favorite.
 // Commands and TOC entries are not removable.
 static bool RemoveSelectedItem() {
@@ -860,6 +869,15 @@ static bool RemoveSelectedItem() {
     ItemDataCP* d = wnd->items.AtData(currSel);
     if (d->cmdId != 0 || d->tocItem) {
         return false;
+    }
+    // a setting goes back to its default
+    if (IsSettingRow(d)) {
+        TempStr path = RestorePaletteSettingDefault(d, wnd->items[currSel]);
+        if (len(path) == 0) {
+            return false;
+        }
+        ReturnToSettings(path);
+        return true;
     }
     WindowTab* tab = d->tab;
     Favorite* fav = d->fav;
@@ -2131,10 +2149,12 @@ static gp::El* BuildHelpRow(CommandPaletteWnd* wnd, gp::Ctx* cx) {
             break;
         case kHelpSettings:
             strings[nHelp++] = Tr("Enter change");
+            strings[nHelp++] = RestoreDefaultHelpTemp();
             strings[nHelp++] = Tr("Esc close");
             break;
         case kHelpSettingValue:
             strings[nHelp++] = Tr("Enter apply");
+            strings[nHelp++] = RestoreDefaultHelpTemp();
             strings[nHelp++] = Tr("Esc go back");
             break;
         case kHelpEverything:

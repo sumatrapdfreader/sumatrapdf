@@ -116,6 +116,8 @@ TempStr FormatSettingDefaultTemp(SettingItem* item) {
 // are rendered, and picking a value from a list is guesswork without seeing it.
 // The value is previewed without touching gSettings, so Cancel (or closing
 // the dialog) puts the saved value back - see EndPreviewSettingChange().
+void SetItemChanged(SettingItem* item);
+
 void PreviewSettingChange(SettingItem* item) {
     if (!str::EqI(item->name, StrL("DocumentColorsFollowTheme"))) {
         return;
@@ -128,6 +130,26 @@ void PreviewSettingChange(SettingItem* item) {
 void EndPreviewSettingChange() {
     ClearDocumentColorsFollowThemePreview();
     UpdateDocumentColors();
+}
+
+// the pending value goes back to the default from the settings metadata
+void RestoreSettingDefault(SettingItem* item) {
+    switch (item->type) {
+        case SettingType::Bool:
+            item->boolVal = item->defBool;
+            break;
+        case SettingType::Int:
+            item->intVal = item->defInt;
+            break;
+        case SettingType::Float:
+            item->floatVal = item->defFloat;
+            break;
+        default:
+            str::ReplaceWithCopy(&item->strVal, FormatSettingDefaultTemp(item));
+            break;
+    }
+    SetItemChanged(item);
+    PreviewSettingChange(item);
 }
 
 void SetItemChanged(SettingItem* item) {

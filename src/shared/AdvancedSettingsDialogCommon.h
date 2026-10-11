@@ -44,6 +44,7 @@ TempStr FormatSettingDefaultTemp(SettingItem* item);
 void PreviewSettingChange(SettingItem* item);
 void EndPreviewSettingChange();
 void SetItemChanged(SettingItem* item);
+void RestoreSettingDefault(SettingItem* item);
 void CollectSettings(Vec<SettingItem*>& items);
 void CollectFilteredSettings(Vec<SettingItem*>& items, const StrVec& words, Vec<int>& filtered);
 
@@ -51,3 +52,10 @@ constexpr const char* kSettingsDocsUrl = "https://www.sumatrapdfreader.org/setti
 
 // smallest client width the user can drag the dialog to (96 dpi pixels)
 constexpr int kAdvSettingsMinClientDx = 480;
+
+// the key that restores a setting's default, for the help line
+#if OS_DARWIN
+#define kRestoreDefaultKeyName "Cmd+Backspace"
+#else
+#define kRestoreDefaultKeyName "Del"
+#endif

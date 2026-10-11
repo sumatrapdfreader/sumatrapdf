@@ -57,6 +57,7 @@ void AppendFavoritesForFile(StrVecCP& favorites, FileState* fs, bool isCurrent);
 TempStr FormatSettingValueTemp(SettingType type, const u8* p);
 bool SettingDiffersFromDefault(const ItemDataCP* d);
 void CollectSettingRows(StrVecCP& out);
+TempStr RestorePaletteSettingDefault(const ItemDataCP* d, Str rowText);
 TempStr CommandPaletteShortcutTemp(i32 cmdId);
 void FilterStrings(StrVecCP& strs, const StrVec& words, StrVecCP& matchedOut);
 bool SplitSettingValueQuery(Str query, Str& path, Str& value);

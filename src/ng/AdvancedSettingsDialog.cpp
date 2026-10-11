@@ -201,8 +201,10 @@ static int FirstEditableRow() {
     return -1;
 }
 
-// "names", "nondefault", "changed", "toggle", "edit", "state", "killfocus",
-// "resize", "save" and "esc" are what the settings tests ask for.
+static bool AdvRestoreDefault();
+
+// "names", "nondefault", "changed", "toggle", "restore", "edit", "state",
+// "killfocus", "resize", "save" and "esc" are what the settings tests ask for.
 TempStr AdvSettingsRowsResultTemp(Str action, int arg, int* exitCodeOut) {
     str::Builder out;
     auto finish = [&](int code) -> TempStr {
@@ -262,6 +264,33 @@ TempStr AdvSettingsRowsResultTemp(Str action, int arg, int* exitCodeOut) {
         AppShellInvalidate(gAdv.win);
         int n = CountChangedSettings();
         out.Append(fmt("toggled=%s changed=%d banner=%d\n", target->name, n, n > 0 ? 1 : 0));
+        return finish(0);
+    }
+    // select the row of the arg-th bool setting (as "toggle" counts them) and
+    // press Delete on it
+    if (str::Eq(action, StrL("restore"))) {
+        int nBool = 0;
+        int row = -1;
+        int n = len(gAdv.filtered);
+        for (int i = 0; i < len(gAdv.items) && row < 0; i++) {
+            if (gAdv.items[i]->type != SettingType::Bool || nBool++ != arg) {
+                continue;
+            }
+            for (int r = 0; r < n; r++) {
+                if (gAdv.filtered[r] == i) {
+                    row = r;
+                    break;
+                }
+            }
+        }
+        if (row < 0) {
+            out.Append(StrL("ERROR no-bool\n"));
+            return finish(1);
+        }
+        gAdv.sel = row;
+        bool restored = AdvRestoreDefault();
+        out.Append(fmt("restored=%s changed=%d\n", restored ? gAdv.items[gAdv.filtered[row]]->name : StrL(""),
+                       CountChangedSettings()));
         return finish(0);
     }
     if (str::Eq(action, StrL("save"))) {
@@ -820,14 +849,19 @@ static gp::El* AdvToolBuild(MainWindow*, gp::Ctx* cx) {
                         ->Fg(th.foreground)
                         ->Wrap()
                         ->W(gp::kFill))));
-    col->Child(gp::Div(cx->a)
-                   ->FlexRow()
-                   ->W(gp::kFill)
-                   ->H(kAdvWinLineDy + 2)
-                   ->Shrink0()
-                   ->ItemsCenter()
-                   ->JustifyCenter()
-                   ->Child(gp::TextEl(cx->a, ToGpui(Tr("Bold: differs from default")))->Font(font)->Fg(th.foreground)));
+    col->Child(
+        gp::Div(cx->a)
+            ->FlexRow()
+            ->W(gp::kFill)
+            ->H(kAdvWinLineDy + 2)
+            ->Shrink0()
+            ->ItemsCenter()
+            ->JustifyCenter()
+            ->Gap(16)
+            ->Child(gp::TextEl(cx->a, ToGpui(Tr("Bold: differs from default")))->Font(font)->Fg(th.foreground))
+            ->Child(gp::TextEl(cx->a, GpuiDup(cx->a, fmt(Tr("%s: restore default").s, StrL(kRestoreDefaultKeyName))))
+                        ->Font(font)
+                        ->Fg(th.foreground)));
 
     // left: Save, Cancel, Open Settings File; right: Help
     auto button = [&](gp::Str id, Str label, gp::Listener onClick, bool isDefault) {
@@ -861,8 +895,44 @@ static gp::El* AdvToolBuild(MainWindow*, gp::Ctx* cx) {
 
 // orig's AdvancedSettingsWnd::OnKeyDown: Up / Down move the list from the
 // filter too, before an edit sees them
+// Delete (Cmd+Backspace on macOS) puts the selected setting's default back
+static bool AdvIsRestoreDefaultKey(const gp::KeyEvent* ev) {
+#if OS_DARWIN
+    if (ev->vk == VK_BACK && ev->platform && !ev->ctrl && !ev->alt && !ev->shift) {
+        return true;
+    }
+#endif
+    return ev->vk == VK_DELETE && !ev->ctrl && !ev->alt && !ev->shift && !ev->platform;
+}
+
+static bool AdvRestoreDefault() {
+    if (gAdv.sel < 0 || gAdv.sel >= len(gAdv.filtered)) {
+        return false;
+    }
+    // typing a value: Delete edits that text
+    if (gAdv.editIdx >= 0 && !gAdv.editIsEnum) {
+        return false;
+    }
+    SettingItem* item = gAdv.items[gAdv.filtered[gAdv.sel]];
+    CancelEditValue();
+    RestoreSettingDefault(item);
+    AppShellInvalidate(gAdv.win);
+    return true;
+}
+
 static bool AdvToolOnCaptureKey(MainWindow*, gp::Ctx*, const gp::KeyEvent* ev) {
-    if (!gAdv.visible || ev->ctrl || ev->alt || ev->shift) {
+    if (!gAdv.visible) {
+        return false;
+    }
+    if (AdvIsRestoreDefaultKey(ev)) {
+        // the filter keeps the focus; a forward Delete edits its text when there is some
+        bool filterHasText = gAdv.editFilter && len(gp::InputValue(gAdv.editFilter)) > 0;
+        if (ev->vk == VK_DELETE && filterHasText) {
+            return false;
+        }
+        return AdvRestoreDefault();
+    }
+    if (ev->ctrl || ev->alt || ev->shift) {
         return false;
     }
     if (ev->vk != VK_UP && ev->vk != VK_DOWN) {
@@ -1078,8 +1148,17 @@ static gp::El* AdvContentEl(gp::Ctx* cx) {
                                 ->Fg(th.mutedFg)
                                 ->Wrap()
                                 ->W(gp::kFill)));
-    body->Child(gp::Div(cx->a)->W(gp::kFill)->ItemsCenter()->JustifyCenter()->Child(
-        gp::TextEl(cx->a, ToGpui(Tr("Bold: differs from default")))->Font(12)->Fg(th.mutedFg)));
+    body->Child(
+        gp::Div(cx->a)
+            ->FlexRow()
+            ->W(gp::kFill)
+            ->ItemsCenter()
+            ->JustifyCenter()
+            ->Gap(16)
+            ->Child(gp::TextEl(cx->a, ToGpui(Tr("Bold: differs from default")))->Font(12)->Fg(th.mutedFg))
+            ->Child(gp::TextEl(cx->a, GpuiDup(cx->a, fmt(Tr("%s: restore default").s, StrL(kRestoreDefaultKeyName))))
+                        ->Font(12)
+                        ->Fg(th.mutedFg)));
 
     gp::El* extra = gp::Div(cx->a)->FlexRow()->ItemsCenter()->Gap(8);
     extra->Child(gpc::Button::New(cx, GStrL("adv-openfile"))

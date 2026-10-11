@@ -296,6 +296,7 @@ import { testit as paletteDeleteAnnotation } from "./palette-delete-annotation.t
 import { testit as paletteCommandAvailability } from "./palette-command-availability.ts";
 import { testit as recentFilesMenu } from "./recent-files-menu.ts";
 import { testit as commandPaletteSettings } from "./command-palette-settings.ts";
+import { testit as settingsRestoreDefault } from "./settings-restore-default.ts";
 import { testit as commandPaletteTheme } from "./command-palette-theme.ts";
 import { testit as commandPaletteDeleteTab } from "./command-palette-delete-tab.ts";
 import { testit as issue6104 } from "./issue-6104.ts";
@@ -705,6 +706,7 @@ export const tests: NamedTest[] = [
   ["palette-command-availability", paletteCommandAvailability],
   ["recent-files-menu", recentFilesMenu],
   ["command-palette-settings", commandPaletteSettings],
+  ["settings-restore-default", settingsRestoreDefault],
   ["command-palette-theme", commandPaletteTheme],
   ["command-palette-delete-tab", commandPaletteDeleteTab],
   ["issue-6104", issue6104],

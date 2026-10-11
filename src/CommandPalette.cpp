@@ -562,6 +562,16 @@ bool CommandPaletteWnd::RemoveSelectedItem() {
         return false;
     }
 
+    // a setting goes back to its default
+    if (IsSettingRow(d)) {
+        TempStr path = RestorePaletteSettingDefault(d, m->strings[currSel]);
+        if (len(path) == 0) {
+            return false;
+        }
+        ReturnToSettings(path);
+        return true;
+    }
+
     WindowTab* tab = d->tab;
     Favorite* fav = d->fav;
     FileState* favFs = d->favFs;
@@ -1010,10 +1020,12 @@ void CommandPaletteWnd::UpdateHelpRow() {
             break;
         case kHelpSettings:
             strings[nHelp++] = Tr("Enter change");
+            strings[nHelp++] = Tr("Del restore default");
             strings[nHelp++] = Tr("Esc close");
             break;
         case kHelpSettingValue:
             strings[nHelp++] = Tr("Enter apply");
+            strings[nHelp++] = Tr("Del restore default");
             strings[nHelp++] = Tr("Esc go back");
             break;
         case kHelpEverything:

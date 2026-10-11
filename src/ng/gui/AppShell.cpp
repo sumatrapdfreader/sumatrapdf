@@ -2367,7 +2367,14 @@ void ShellView::OnKeyDown(ShellView* self, gp::Ctx* cx, const gp::KeyEvent* ev) 
     }
     // the palette is a window of its own in orig and owns the keyboard while
     // it is up; here the shell hands it the keys it answers first
-    if (CommandPaletteOnKeyDown(win, ev->vk, ev->ctrl, ev->shift)) {
+    int paletteVk = ev->vk;
+#if OS_DARWIN
+    // Cmd+Backspace is the palette's Delete: close tab, forget, restore default
+    if (paletteVk == VK_BACK && ev->platform) {
+        paletteVk = VK_DELETE;
+    }
+#endif
+    if (CommandPaletteOnKeyDown(win, paletteVk, ev->ctrl, ev->shift)) {
         mut->propagate = false;
         gp::Notify(cx);
         return;
