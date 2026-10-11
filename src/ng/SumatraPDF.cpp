@@ -1129,6 +1129,9 @@ void AutoReloadTick(MainWindow* win, int elapsedMs) {
     ReloadDocument(win, true);
 }
 
+static MainWindow* LoadDocumentFinish(MainWindow* win, Str fullPath, DocController* ctrl, LoadPrefs prefs,
+                                      LoadReuse reuse, TimeStamp timeStart);
+
 // ng: orig's ReloadDocument, minus the password dialog (step 11), the
 // annotation bookkeeping (step 13) and the window placement (gpui cannot move
 // a window). The remembered state is carried over through FileState, as orig
@@ -1151,6 +1154,19 @@ void ReloadDocument(MainWindow* win, bool autoRefresh) {
     }
     logf("ReloadDocument: %s, auto refresh: %d\n", path, (int)autoRefresh);
     auto timeStart = TimeGet();
+
+    // orig: an auto-refresh can see a file that is still being written. Keep
+    // the document and let the next change retry; no password prompt (#3493).
+    TempStr fullPath = path::NormalizeTemp(path);
+    DocController* ctrl = nullptr;
+    if (autoRefresh) {
+        SumatraPasswordUI pwdUI;
+        ctrl = CreateControllerForFile(win, fullPath, &pwdUI);
+        if (!ctrl) {
+            return;
+        }
+    }
+
     // the annotation UI holds Annotation* into the engine that is about to go
     CloseAnnotationUiForTab(tab);
 
@@ -1168,8 +1184,11 @@ void ReloadDocument(MainWindow* win, bool autoRefresh) {
     TabState* state = NewTabStateFromTab(tab);
     tab->reloadOnFocus = false;
     AutoReloadResetFileState(tab);
-    TempStr pathCopy = str::DupTemp(path);
-    LoadDocument(win, pathCopy, LoadPrefs::DontSave, LoadReuse::CurrentTab);
+    if (ctrl) {
+        LoadDocumentFinish(win, fullPath, ctrl, LoadPrefs::DontSave, LoadReuse::CurrentTab, timeStart);
+    } else {
+        LoadDocument(win, fullPath, LoadPrefs::DontSave, LoadReuse::CurrentTab);
+    }
     // the annotation list was emptied above; fill it from the new engine
     RefreshEditAnnotationsAfterEngineChange(win->CurrentTab());
     if (state) {
@@ -1476,7 +1495,12 @@ MainWindow* LoadDocument(MainWindow* win, Str path, LoadPrefs prefs, LoadReuse r
         ShowLoadErrorTab(win, fullPath, reuse);
         return nullptr;
     }
+    return LoadDocumentFinish(win, fullPath, ctrl, prefs, reuse, timeStart);
+}
 
+// Puts a freshly created controller on screen.
+static MainWindow* LoadDocumentFinish(MainWindow* win, Str fullPath, DocController* ctrl, LoadPrefs prefs,
+                                      LoadReuse reuse, TimeStamp timeStart) {
     // ng: orig's ReplaceDocumentInCurrentTab, reduced to what a reload and
     // next / prev file in folder need: the tab keeps its identity, its
     // controller is swapped
