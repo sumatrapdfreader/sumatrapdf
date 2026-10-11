@@ -49,6 +49,7 @@ enum class Arg {
     WindowPos = 84, DumpExif = 85, DumpChm = 86, Control = 87,
     UnitTests = 88, ForAi = 89, NewWindowTabs = 90, HtmlBackend = 91,
     InstallRegRoot = 92, NoDesktopShortcut = 93, StartPerfLog = 94, LogPerfFile = 95,
+    RegenThumbnails = 96,
 };
 
 static SeqStrings gArgNames =
@@ -75,7 +76,8 @@ static SeqStrings gArgNames =
     "upgrade-from\0" "for-testing\0" "quicklook\0" "quicklook-agent\0"
     "window-pos\0" "dump-exif\0" "dump-chm\0" "dbg-control\0"
     "unit-tests\0" "for-ai\0" "new-window-tabs\0" "html-backend\0"
-    "install-reg-root\0" "no-desktop-shortcut\0" "start-perf-log\0" "log-perf-file\0";
+    "install-reg-root\0" "no-desktop-shortcut\0" "start-perf-log\0" "log-perf-file\0"
+    "regen-thumbnails\0";
 // clang-format on
 // @gen-end flags
 
@@ -609,6 +611,10 @@ static void ParseFlagNodes(Arena* a, StrNode* firstArg, Flags& i, Str toolNames)
         if (arg == Arg::UnitTests) {
             i.unitTests = true;
             i.exitImmediately = true;
+            continue;
+        }
+        if (arg == Arg::RegenThumbnails) {
+            i.regenThumbnails = true;
             continue;
         }
         if (arg == Arg::ForAi) {

@@ -883,6 +883,12 @@ struct Settings {
     // how the home page shows the document history: thumbnails (a grid of
     // page previews) or list (one row per file)
     Str homePageViewMode;
+    // how the home page thumbnail is made from a document's first page:
+    // legacy (the top of the page, cropped to a 212x150 frame) or full
+    // (the whole page, scaled to fit a 150x212 frame). Changing it
+    // re-creates the thumbnails of the files that still exist in a
+    // background process
+    Str thumbnailsType;
     // file open dialog used by Open File: empty or os (standard Windows
     // file picker), or sumatrapdf (Navigate Files in Folder). Toggled by
     // Settings / SumatraPDF File Picker

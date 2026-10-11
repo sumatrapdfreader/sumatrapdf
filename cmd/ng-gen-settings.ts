@@ -1324,6 +1324,16 @@ const globalPrefs: Field[] = [
     .ver("3.7")
     .doc("valid values: thumbnails, list"),
   field(
+    "ThumbnailsType",
+    Str,
+    "full",
+    "how the home page thumbnail is made from a document's first page: legacy (the top of the page, " +
+      "cropped to a 212x150 frame) or full (the whole page, scaled to fit a 150x212 frame). Changing it " +
+      "re-creates the thumbnails of the files that still exist in a background process",
+  )
+    .ver("3.7")
+    .doc("valid values: legacy, full"),
+  field(
     "FilePicker",
     Str,
     "",
@@ -2033,6 +2043,7 @@ const globalPrefsLayout = [
   "DefaultZoom",
   "InverseSearchCmdLine",
   "HomePageViewMode",
+  "ThumbnailsType",
   "ShowHomePageReadingProgress",
   "FilePicker",
   "CustomColors",

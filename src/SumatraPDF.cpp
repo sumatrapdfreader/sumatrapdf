@@ -15844,6 +15844,14 @@ int APIENTRY WinMain(_In_ HINSTANCE /*hInstance*/, _In_opt_ HINSTANCE /*hPrevIns
         return 0;
     }
 
+    // started by a running SumatraPDF whose ThumbnailsType changed; no window,
+    // no settings saved
+    if (flags.regenThumbnails) {
+        RegenerateThumbnails();
+        ShutdownCommon();
+        return 0;
+    }
+
     if (flags.showConsole) {
         RedirectIOToConsole();
     }

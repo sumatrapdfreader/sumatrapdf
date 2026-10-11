@@ -46,6 +46,7 @@
 #include "HomePage.h"
 #include "Toolbar.h"
 #endif
+#include "FileThumbnails.h"
 #include "Translations.h"
 #if defined(SUMATRA_NG)
 #include "ShortcutParse.h"
@@ -1055,6 +1056,7 @@ static void ReloadSettings(bool force = false) {
     str::Free(prefsData);
 
     TempStr uiLanguage = str::DupTemp(gSettings->uiLanguage);
+    TempStr thumbnailsType = str::DupTemp(gSettings->thumbnailsType);
     bool showToolbar = gSettings->showToolbar;
 
     // FileState* in the cache and chrome die with CleanUpSettings()
@@ -1086,6 +1088,9 @@ static void ReloadSettings(bool force = false) {
 #if defined(SUMATRA_NG)
     ReRegisterGlobalHotkeys();
 #endif
+    if (!str::EqI(thumbnailsType, gSettings->thumbnailsType)) {
+        OnThumbnailsTypeChanged();
+    }
 }
 
 void CleanUpSettings() {

@@ -6,6 +6,7 @@
 #include "base/File.h"
 #include "base/Pixmap.h"
 #include "Settings.h"
+#include "AppSettings.h"
 #include "ImageReader.h"
 #include "AppTools.h"
 #include "FileThumbnails.h"
@@ -66,6 +67,67 @@ bool PixmapIsEmpty(const Pixmap* px) {
     return !px || px->width <= 0 || px->height <= 0 || !px->data;
 }
 
+#if defined(SUMATRA_NG)
+constexpr bool kThumbnailsFullPageDefault = true;
+#else
+constexpr bool kThumbnailsFullPageDefault = false;
+#endif
+
+// ThumbnailsType: full (the whole first page) or legacy (the top of it);
+// anything else is the app's default
+bool ThumbnailsAreFullPage() {
+    Str type = gSettings ? gSettings->thumbnailsType : Str();
+    if (str::EqI(type, StrL("full"))) {
+        return true;
+    }
+    if (str::EqI(type, StrL("legacy"))) {
+        return false;
+    }
+    return kThumbnailsFullPageDefault;
+}
+
+Size ThumbnailFrameSize() {
+    if (ThumbnailsAreFullPage()) {
+        return Size(kThumbnailFullDx, kThumbnailFullDy);
+    }
+    return Size(kThumbnailLegacyDx, kThumbnailLegacyDy);
+}
+
+// the size a thumbnail is drawn at: scaled to fit the frame, keeping its aspect
+Size ThumbnailDrawSize(Size thumb, Size frame) {
+    if (thumb.dx <= 0 || thumb.dy <= 0) {
+        return frame;
+    }
+    int dx = frame.dx;
+    int dy = thumb.dy * dx / thumb.dx;
+    if (dy > frame.dy) {
+        dy = frame.dy;
+        dx = thumb.dx * dy / thumb.dy;
+    }
+    return Size(dx, dy);
+}
+
+// a legacy thumbnail is as wide as its frame, a full one fits inside its frame
+bool ThumbnailSizeMatchesType(Size sz) {
+    if (ThumbnailsAreFullPage()) {
+        return sz.dx <= kThumbnailFullDx && sz.dy <= kThumbnailFullDy;
+    }
+    return sz.dx == kThumbnailLegacyDx && sz.dy <= kThumbnailLegacyDy;
+}
+
+// width and height from the IHDR chunk that follows the 8-byte signature;
+// empty if the data isn't a PNG
+Size PngSizeFromData(Str data) {
+    constexpr int kIhdrEnd = 24;
+    static const u8 kSignature[8] = {0x89, 'P', 'N', 'G', '\r', '\n', 0x1a, '\n'};
+    if (len(data) < kIhdrEnd || memcmp(data.s, kSignature, sizeof(kSignature)) != 0) {
+        return {};
+    }
+    auto be32 = [](const u8* p) { return (int)((p[0] << 24) | (p[1] << 16) | (p[2] << 8) | p[3]); };
+    const u8* s = (const u8*)data.s;
+    return Size(be32(s + 16), be32(s + 20));
+}
+
 Pixmap* LoadThumbnail(FileState* fs) {
     if (!fs || len(fs->filePath) == 0) {
         return nullptr;
@@ -87,6 +149,13 @@ Pixmap* LoadThumbnail(FileState* fs) {
     str::Free(data);
     if (PixmapIsEmpty(px)) {
         FreePixmap(px);
+        return nullptr;
+    }
+    // made for the other ThumbnailsType: as good as missing, re-created the
+    // next time the document is opened
+    if (!ThumbnailSizeMatchesType(Size(px->width, px->height))) {
+        FreePixmap(px);
+        file::Delete(bmpPath);
         return nullptr;
     }
 

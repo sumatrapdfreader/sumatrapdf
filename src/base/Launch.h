@@ -14,3 +14,10 @@ bool LaunchBrowser(Str url);
 // shows the file's directory in the desktop file manager
 void OpenPathInDefaultFileManager(Str path);
 #endif
+
+// a program we start and later ask whether it is done (-regen-thumbnails).
+// StartChildProcess returns nullptr where there are no processes (wasm)
+struct ChildProcess;
+ChildProcess* StartChildProcess(Str cmdLine);
+bool ChildProcessHasExited(ChildProcess* p, int waitMs);
+void CloseChildProcess(ChildProcess* p);

@@ -41,3 +41,13 @@ bool LaunchBrowser(Str url) {
 void OpenPathInDefaultFileManager(Str) {
     // there is no file manager to show a path in
 }
+
+ChildProcess* StartChildProcess(Str) {
+    return nullptr;
+}
+
+bool ChildProcessHasExited(ChildProcess*, int) {
+    return true;
+}
+
+void CloseChildProcess(ChildProcess*) {}

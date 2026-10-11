@@ -146,6 +146,9 @@ void HomePageInvalidateLayoutCache() {}
 struct FileState;
 void HomePageThumbnailChanged(FileState*) {}
 
+// SumatraPDFCommon.cpp, which only the app builds
+void OnThumbnailsTypeChanged() {}
+
 // Theme.cpp asks the UI to repaint; AppSettings owns the UI fonts (step 6/12)
 void UpdateAfterThemeChange() {}
 

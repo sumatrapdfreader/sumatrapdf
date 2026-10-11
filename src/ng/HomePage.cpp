@@ -250,7 +250,8 @@ void SetHomePageListView(bool listView) {
 struct HomeThumb {
     FileState* fs = nullptr;
     gpui::RenderImage* img = nullptr;
-    Str png; // the cache file's bytes, decoded lazily on the paint thread
+    Str png;   // the cache file's bytes, decoded lazily on the paint thread
+    Size size; // from the png header
     bool tried = false;
 };
 
@@ -396,19 +397,35 @@ void HomePageDestroyChrome(MainWindow* win) {
     h->searchQuery = {};
 }
 
+// reads the cache file once, for its size at layout and its pixels at paint.
+// One made for the other ThumbnailsType is as good as missing, like
+// LoadThumbnail() treats it
+static void HomeThumbReadPng(HomeThumb* t) {
+    if (t->tried) {
+        return;
+    }
+    t->tried = true;
+    TempStr path = GetThumbnailPathTemp(t->fs->filePath);
+    if (len(path) == 0) {
+        return;
+    }
+    t->png = file::ReadFile(path);
+    t->size = PngSizeFromData(t->png);
+    if (len(t->png) > 0 && !ThumbnailSizeMatchesType(t->size)) {
+        str::Free(t->png);
+        t->png = {};
+        t->size = {};
+        file::Delete(path);
+    }
+}
+
 // the decoded thumbnail, or null while there is none. Runs on the paint
 // thread, which is where RenderImageDecode has to happen.
 static gp::ImageLoadState HomeThumbLoad(gp::PaintApp* pa, void* user, gp::RenderImage** imgOut) {
     auto* t = (HomeThumb*)user;
-    if (!t->tried) {
-        t->tried = true;
-        TempStr path = GetThumbnailPathTemp(t->fs->filePath);
-        if (len(path) > 0) {
-            t->png = file::ReadFile(path);
-        }
-        if (len(t->png) > 0) {
-            t->img = gp::RenderImageDecode(pa, (const u8*)t->png.s, t->png.len);
-        }
+    HomeThumbReadPng(t);
+    if (!t->img && len(t->png) > 0) {
+        t->img = gp::RenderImageDecode(pa, (const u8*)t->png.s, t->png.len);
     }
     *imgOut = t->img;
     return t->img ? gp::ImageLoadState::Ready : gp::ImageLoadState::Failed;
@@ -816,7 +833,7 @@ void HomeView::OnSearchKey(HomeView* self, gp::Ctx* cx, const gp::KeyEvent* ev) 
 
 // orig's totalContentDy: the height of all the rows
 static int HomeTotalContentDy(HomePageUI* h) {
-    int thumbsRowDy = HomePageIsListView() ? kHomeListRowDy : kThumbnailDy + kThumbsSpaceBetweenY;
+    int thumbsRowDy = HomePageIsListView() ? kHomeListRowDy : ThumbnailFrameSize().dy + kThumbsSpaceBetweenY;
     int cols = HomePageIsListView() ? 1 : std::max(1, h->gridCols);
     int nRows = (h->entryCount + cols - 1) / cols;
     return nRows * thumbsRowDy;
@@ -835,7 +852,7 @@ void HomePageOnMouseWheel(MainWindow* win, int delta) {
         return;
     }
     HomePageUI* h = Ui(win);
-    int thumbsRowDy = HomePageIsListView() ? kHomeListRowDy : kThumbnailDy + kThumbsSpaceBetweenY;
+    int thumbsRowDy = HomePageIsListView() ? kHomeListRowDy : ThumbnailFrameSize().dy + kThumbsSpaceBetweenY;
     int scrollBy = thumbsRowDy / 3;
     if (delta > 0) {
         scrollBy = -scrollBy;
@@ -856,7 +873,7 @@ void HomeView::OnWheel(HomeView* self, gp::Ctx* cx, const gp::ScrollWheelEvent* 
         return;
     }
     HomePageUI* h = Ui(self->win);
-    int thumbsRowDy = HomePageIsListView() ? kHomeListRowDy : kThumbnailDy + kThumbsSpaceBetweenY;
+    int thumbsRowDy = HomePageIsListView() ? kHomeListRowDy : ThumbnailFrameSize().dy + kThumbsSpaceBetweenY;
     int scrollBy = thumbsRowDy / 3;
     if (ev->deltaY > 0) {
         scrollBy = -scrollBy;
@@ -874,7 +891,7 @@ void HomeView::OnWheel(HomeView* self, gp::Ctx* cx, const gp::ScrollWheelEvent* 
 
 void HomePageOnVScroll(MainWindow* win, ScrollMsg msg, int nTrackPos) {
     HomePageUI* h = Ui(win);
-    int lineDy = HomePageIsListView() ? kHomeListRowDy : kThumbnailDy + kThumbsSpaceBetweenY;
+    int lineDy = HomePageIsListView() ? kHomeListRowDy : ThumbnailFrameSize().dy + kThumbsSpaceBetweenY;
     int pageDy = lineDy * 3;
     bool toEnd = msg == ScrollMsg::Bottom;
     h->scrollToEnd = toEnd;
@@ -1484,10 +1501,11 @@ static gp::El* HomeThumbnailEl(MainWindow* win, gp::Ctx* cx, int idx, bool isSel
     FileState* fs = Ui(win)->files[idx];
     Color colText = ThemeWindowTextColor();
     HomeThumb* t = HomeThumbFor(fs);
+    Size frame = ThumbnailFrameSize();
 
     gp::El* cell = gp::Div(cx->a)
                        ->FlexCol()
-                       ->W((float)kThumbnailDx)
+                       ->W((float)frame.dx)
                        ->Shrink0()
                        ->Gap(3)
                        ->Group()
@@ -1497,12 +1515,21 @@ static gp::El* HomeThumbnailEl(MainWindow* win, gp::Ctx* cx, int idx, bool isSel
                        ->OnMouseDown(gp::ListenTo(Ui(win)->view, &HomeView::OnEntryDown, idx))
                        ->OnHover(gp::ListenTo(Ui(win)->view, &HomeView::OnEntryHover, idx));
 
+    // a thumbnail smaller than the frame (a whole page, a cover) sits at the
+    // bottom of its slot, centered; an empty frame stands in until there is one
+    HomeThumbReadPng(t);
+    Size drawn = frame;
+    if (!t->size.IsEmpty() && t->size != frame) {
+        drawn = ThumbnailDrawSize(t->size, frame);
+    }
+    gp::El* slot = gp::Div(cx->a)->FlexCol()->W((float)frame.dx)->H((float)frame.dy)->ItemsCenter()->JustifyEnd();
     gp::El* page = gp::Div(cx->a)
-                       ->W((float)kThumbnailDx)
-                       ->H((float)kThumbnailDy)
+                       ->W((float)drawn.dx)
+                       ->H((float)drawn.dy)
                        ->Radius(10)
                        ->ClipY()
                        ->Border((float)kThumbsBorderDx, ToGpui(colText));
+    slot->Child(page);
     gp::ImageSource src = gp::ImageSource::FromCustom(HomeThumbLoad, t);
     // no alt text: orig leaves the frame empty until the thumbnail is rendered
     page->Child(gp::ImageEl(cx->a, src, GStrL(""))->SizeFull()->ObjectFitMode(gp::ObjectFit::Cover));
@@ -1534,7 +1561,7 @@ static gp::El* HomeThumbnailEl(MainWindow* win, gp::Ctx* cx, int idx, bool isSel
                             ->Bottom(5));
         }
     }
-    cell->Child(page);
+    cell->Child(slot);
 
     gp::El* nameRow = gp::Div(cx->a)->FlexRow()->W(gp::kFill)->ItemsCenter()->Gap(4);
     nameRow->Child(HomeFileIconEl(win, cx, fs, colText));
@@ -1745,8 +1772,9 @@ gp::El* HomePageBuild(MainWindow* win, gp::Ctx* cx) {
     bool listView = HomePageIsListView();
 
     // header rows share the thumbnail grid's x, including when it is empty
+    Size frame = ThumbnailFrameSize();
     int cols = (int)((frameDx - kThumbsMarginLeft - kThumbsMarginRight + kThumbsSpaceBetweenX) /
-                     (kThumbnailDx + kThumbsSpaceBetweenX));
+                     (frame.dx + kThumbsSpaceBetweenX));
     cols = std::max(cols, 1);
     h->gridCols = cols;
     // End: the row pitch stops short of the last caption, so step from the
@@ -1764,7 +1792,7 @@ gp::El* HomePageBuild(MainWindow* win, gp::Ctx* cx) {
             }
         }
     }
-    int contentDx = (cols * kThumbnailDx) + ((cols - 1) * kThumbsSpaceBetweenX);
+    int contentDx = (cols * frame.dx) + ((cols - 1) * kThumbsSpaceBetweenX);
     int thumbsStartX = kThumbsMarginLeft + (((int)frameDx - contentDx - kThumbsMarginLeft - kThumbsMarginRight) / 2);
     if (thumbsStartX < kInnerPadding) {
         thumbsStartX = kInnerPadding;

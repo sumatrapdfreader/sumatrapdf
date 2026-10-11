@@ -219,6 +219,7 @@ import { testit as issue6232Refresh } from "./issue-6232-refresh.ts";
 import { testit as issue6232PathEdit } from "./issue-6232-path-edit.ts";
 import { testit as issue6234 } from "./issue-6234.ts";
 import { testit as issue6236 } from "./issue-6236.ts";
+import { testit as issue5817 } from "./issue-5817.ts";
 import { testit as issue6238 } from "./issue-6238.ts";
 import { testit as issue1841 } from "./issue-1841.ts";
 import { testit as renderSelections8bpp } from "./render-selections-8bpp.ts";
@@ -692,6 +693,7 @@ export const tests: NamedTest[] = [
   ["issue-6232-path-edit", issue6232PathEdit],
   ["issue-6234", issue6234],
   ["issue-6236", issue6236],
+  ["issue-5817", issue5817],
   ["issue-6238", issue6238],
   ["issue-1841", issue1841],
   ["render-selections-8bpp", renderSelections8bpp],

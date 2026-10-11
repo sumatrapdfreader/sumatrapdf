@@ -15,9 +15,7 @@
 #include "base/SquareTreeParser.h"
 #include "base/UITask.h"
 #include "base/Win.h"
-#if !OS_WIN
 #include "base/Launch.h"
-#endif
 #include "base/Http.h"
 #include "base/Archive.h"
 #include "base/Timer.h"
@@ -2572,7 +2570,10 @@ void OnFrameKeyB(MainWindow* win, bool isShift) {
     }
 }
 
-static void CreateThumbnailFromFileThread(CreateThumbnailFromFileData* d) {
+// the cover, or else the first page, of d->filePath as the home page shows it:
+// ThumbnailsType legacy is the top of the page as wide as the frame, full the
+// whole page scaled to fit the frame. Releases d->engine
+static Pixmap* RenderFileThumbnail(CreateThumbnailFromFileData* d) {
     EngineBase* engine = d->engine;
     TempStr cover = FindCoverImageTemp(d->filePath);
     if (len(cover) > 0) {
@@ -2593,26 +2594,30 @@ static void CreateThumbnailFromFileThread(CreateThumbnailFromFileData* d) {
         SetLoadThreadFileEBookUI(nullptr);
     }
     if (!engine) {
-        delete d;
-        DestroyTempArena();
-        return;
+        return nullptr;
     }
+    Pixmap* bmp = nullptr;
     RectF pageRect = engine->PageMediabox(1);
-    if (pageRect.IsEmpty()) {
-        engine->Release();
-        d->engine = nullptr;
-        delete d;
-        DestroyTempArena();
-        return;
+    if (!pageRect.IsEmpty()) {
+        pageRect = engine->Transform(pageRect, 1, 1.0f, 0);
+        Size frame = ThumbnailFrameSize();
+        float zoom = (float)frame.dx / pageRect.dx;
+        if (ThumbnailsAreFullPage()) {
+            zoom = std::min(zoom, (float)frame.dy / pageRect.dy);
+        } else {
+            pageRect.dy = std::min(pageRect.dy, (float)frame.dy / zoom);
+        }
+        pageRect = engine->Transform(pageRect, 1, 1.0f, 0, true);
+        RenderPageArgs args(1, zoom, 0, &pageRect);
+        bmp = engine->RenderPage(args);
     }
-    pageRect = engine->Transform(pageRect, 1, 1.0f, 0);
-    float zoom = (float)kThumbnailDx / pageRect.dx;
-    pageRect.dy = std::min(pageRect.dy, (float)kThumbnailDy / zoom);
-    pageRect = engine->Transform(pageRect, 1, 1.0f, 0, true);
-    RenderPageArgs args(1, zoom, 0, &pageRect);
-    d->bmp = engine->RenderPage(args);
     engine->Release();
     d->engine = nullptr;
+    return bmp;
+}
+
+static void CreateThumbnailFromFileThread(CreateThumbnailFromFileData* d) {
+    d->bmp = RenderFileThumbnail(d);
     auto fn = MkFunc0<CreateThumbnailFromFileData>(CreateThumbnailFromFileFinish, d);
     uitask::Post(fn, "SetThumbnailFromFile");
     DestroyTempArena();
@@ -2627,6 +2632,148 @@ void CreateThumbnailFromFileAsync(FileState* ds, EngineBase* engine) {
     d->fileEBookUI = CopyFileEBookUI(ds->eBookUI);
     auto fn = MkFunc0<CreateThumbnailFromFileData>(CreateThumbnailFromFileThread, d);
     RunAsync(fn, StrL("CreateThumbnailFromFile"));
+}
+
+// the history entries whose files still exist, in the order the home page shows them
+static void CollectThumbnailFiles(Vec<FileState*>& list) {
+    Vec<FileState*> all;
+    if (gSettings->homePageSortByFrequentlyRead) {
+        FileHistoryGetFrequencyOrder(all);
+    } else {
+        FileHistoryGetRecentlyOpenedOrder(all);
+    }
+    for (FileState* fs : all) {
+        Str path = fs->filePath;
+        if (len(path) == 0 || path::IsCloudPlaceholder(path) || !DocumentPathExists(path)) {
+            continue;
+        }
+        VecAppend(list, fs);
+    }
+}
+
+static CreateThumbnailFromFileData* NewThumbnailData(FileState* fs) {
+    auto* d = new CreateThumbnailFromFileData();
+    d->filePath = str::Dup(fs->filePath);
+    d->fileEBookUI = CopyFileEBookUI(fs->eBookUI);
+    return d;
+}
+
+// -regen-thumbnails: re-creates the thumbnail of every history entry whose
+// file still exists, writing straight to the cache; the app that started us
+// picks them up as they appear
+void RegenerateThumbnails() {
+    Vec<FileState*> list;
+    CollectThumbnailFiles(list);
+    int nDone = 0;
+    for (FileState* fs : list) {
+        logf("RegenerateThumbnails: '%s'\n", fs->filePath);
+        CreateThumbnailFromFileData* d = NewThumbnailData(fs);
+        Pixmap* bmp = RenderFileThumbnail(d);
+        delete d;
+        if (bmp) {
+            SetThumbnail(fs, bmp);
+            nDone++;
+        }
+        ResetTempArena();
+    }
+    logf("RegenerateThumbnails: %d of %d\n", nDone, len(list));
+}
+
+struct RegenerateThumbnailsData {
+    Vec<CreateThumbnailFromFileData*> files;
+};
+
+// RegenerateThumbnails() on a thread, one file at a time
+static void RegenerateThumbnailsThread(RegenerateThumbnailsData* data) {
+    for (CreateThumbnailFromFileData* d : data->files) {
+        d->bmp = RenderFileThumbnail(d);
+        auto fn = MkFunc0<CreateThumbnailFromFileData>(CreateThumbnailFromFileFinish, d);
+        uitask::Post(fn, "SetThumbnailFromFile");
+        ResetTempArena();
+    }
+    delete data;
+    DestroyTempArena();
+}
+
+// where the app can't run itself in the background (wasm, a failed launch)
+static void RegenerateThumbnailsAsync() {
+    Vec<FileState*> list;
+    CollectThumbnailFiles(list);
+    auto* data = new RegenerateThumbnailsData();
+    for (FileState* fs : list) {
+        VecAppend(data->files, NewThumbnailData(fs));
+    }
+    auto fn = MkFunc0<RegenerateThumbnailsData>(RegenerateThumbnailsThread, data);
+    RunAsync(fn, StrL("RegenerateThumbnails"));
+}
+
+// a thumbnail the background process wrote shows up on the next paint
+static void OnThumbnailRegenTick() {
+    Vec<FileState*>* states = FileHistoryStates();
+    if (!states) {
+        return;
+    }
+    bool changed = false;
+    for (FileState* fs : *states) {
+        if (fs->thumbnail || !LoadThumbnail(fs)) {
+            continue;
+        }
+        HomePageThumbnailChanged(fs);
+        changed = true;
+    }
+    if (changed) {
+        MaybeRedrawHomePage();
+    }
+}
+
+struct ThumbnailRegenWatch {
+    ChildProcess* process = nullptr;
+};
+
+// the UI picks up what the -regen-thumbnails process wrote so far every half
+// second and once more when it exits
+static void ThumbnailRegenWatchThread(ThumbnailRegenWatch* w) {
+    constexpr int kTickMs = 500;
+    for (;;) {
+        bool exited = ChildProcessHasExited(w->process, kTickMs);
+        uitask::Post(MkFunc0Void(OnThumbnailRegenTick), "ThumbnailRegenTick");
+        if (exited) {
+            break;
+        }
+    }
+    CloseChildProcess(w->process);
+    delete w;
+    DestroyTempArena();
+}
+
+// the cached thumbnails were made for the other ThumbnailsType: drop them and
+// have a background SumatraPDF re-create those of the files that still exist
+void OnThumbnailsTypeChanged() {
+    logf("OnThumbnailsTypeChanged: '%s'\n", gSettings->thumbnailsType);
+    Vec<FileState*>* states = FileHistoryStates();
+    if (states) {
+        for (FileState* fs : *states) {
+            FreePixmap(fs->thumbnail);
+            fs->thumbnail = nullptr;
+            HomePageThumbnailChanged(fs);
+        }
+    }
+    EmptyThumbnailCacheDirectory();
+    MaybeRedrawHomePage();
+    if (!HasPermission(Perm::SavePreferences)) {
+        return;
+    }
+
+    TempStr cmdLine = fmt("\"%s\" -regen-thumbnails -appdata \"%s\"", GetSelfExePathTemp(), GetAppDataDirTemp());
+    ChildProcess* process = StartChildProcess(cmdLine);
+    if (!process) {
+        logf("OnThumbnailsTypeChanged: couldn't start '%s', regenerating in-process\n", cmdLine);
+        RegenerateThumbnailsAsync();
+        return;
+    }
+    auto* w = new ThumbnailRegenWatch();
+    w->process = process;
+    RunAsync(MkFunc0<ThumbnailRegenWatch>(ThumbnailRegenWatchThread, w), StrL("ThumbnailRegenWatch"));
 }
 
 int SidebarExtraDx(MainWindow* win) {

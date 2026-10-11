@@ -56,10 +56,11 @@ static void SplitCmdLine(Str cmdLine, StrVec& out) {
     cur.Reset();
 }
 
-static bool SpawnDetached(const StrVec& args) {
+// 0 when the program couldn't be started
+static pid_t SpawnArgs(const StrVec& args) {
     int n = len(args);
     if (n == 0) {
-        return false;
+        return 0;
     }
     auto** argv = AllocArrayTemp<char*>(n + 1);
     for (int i = 0; i < n; i++) {
@@ -69,11 +70,51 @@ static bool SpawnDetached(const StrVec& args) {
     pid_t pid = 0;
     int err = posix_spawnp(&pid, argv[0], nullptr, nullptr, argv, environ);
     if (err != 0) {
-        logf("SpawnDetached: posix_spawnp('%s') failed with %d\n", args[0], err);
-        return false;
+        logf("SpawnArgs: posix_spawnp('%s') failed with %d\n", args[0], err);
+        return 0;
     }
-    logf("SpawnDetached: launched '%s', pid %d\n", args[0], (int)pid);
-    return true;
+    logf("SpawnArgs: launched '%s', pid %d\n", args[0], (int)pid);
+    return pid;
+}
+
+static bool SpawnDetached(const StrVec& args) {
+    return SpawnArgs(args) != 0;
+}
+
+struct ChildProcess {
+    pid_t pid = 0;
+    bool exited = false;
+};
+
+ChildProcess* StartChildProcess(Str cmdLine) {
+    StrVec args;
+    SplitCmdLine(cmdLine, args);
+    pid_t pid = SpawnArgs(args);
+    if (pid == 0) {
+        return nullptr;
+    }
+    auto* p = new ChildProcess();
+    p->pid = pid;
+    return p;
+}
+
+// waitpid has no timeout, so poll it
+bool ChildProcessHasExited(ChildProcess* p, int waitMs) {
+    constexpr int kPollMs = 50;
+    for (int waited = 0; !p->exited; waited += kPollMs) {
+        int status = 0;
+        // -1: not our child any more, which is as good as exited
+        p->exited = waitpid(p->pid, &status, WNOHANG) != 0;
+        if (p->exited || waited >= waitMs) {
+            break;
+        }
+        SleepInMs(kPollMs);
+    }
+    return p->exited;
+}
+
+void CloseChildProcess(ChildProcess* p) {
+    delete p;
 }
 
 bool LaunchFileShellArgs(const StrVec& args) {

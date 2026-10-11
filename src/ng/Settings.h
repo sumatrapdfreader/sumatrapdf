@@ -880,6 +880,12 @@ struct Settings {
     // how the home page shows the document history: thumbnails (a grid of
     // page previews) or list (one row per file)
     Str homePageViewMode;
+    // how the home page thumbnail is made from a document's first page:
+    // legacy (the top of the page, cropped to a 212x150 frame) or full
+    // (the whole page, scaled to fit a 150x212 frame). Changing it
+    // re-creates the thumbnails of the files that still exist in a
+    // background process
+    Str thumbnailsType;
     // if true, show reading progress (n/N, or chapter:page for ebooks) on
     // home page thumbnails and list rows
     bool showHomePageReadingProgress;
@@ -2165,6 +2171,7 @@ static const FieldInfo gSettingsFields[] = {
     {offsetof(Settings, noHomeTab), SettingType::Bool, false},
     {offsetof(Settings, homePageSortByFrequentlyRead), SettingType::Bool, false},
     {offsetof(Settings, homePageViewMode), SettingType::String, (intptr_t)"thumbnails"},
+    {offsetof(Settings, thumbnailsType), SettingType::String, (intptr_t)"full"},
     {offsetof(Settings, filePicker), SettingType::String, (intptr_t)""},
     {offsetof(Settings, printerUI), SettingType::String, (intptr_t)""},
     {offsetof(Settings, reloadModifiedDocuments), SettingType::Bool, true},
@@ -2317,29 +2324,29 @@ static const FieldInfo gSettingsFields[] = {
 };
 static const StructInfo gSettingsInfo = {
     sizeof(Settings),
-    164,
+    165,
     gSettingsFields,
     "\0\0DefaultDisplayMode\0DefaultZoom\0DisableJavaScript\0AllowExternalImages\0EnableTeXEnhancements\0EscToExit\0Ful"
     "lPathInTitle\0InverseSearchCmdLine\0LazyLoading\0MainWindowBackground\0NoHomeTab\0HomePageSortByFrequentlyRead\0Ho"
-    "mePageViewMode\0FilePicker\0PrinterUI\0ReloadModifiedDocuments\0RememberOpenedFiles\0RememberStatePerDocument\0Res"
-    "toreSession\0ReuseInstance\0ShowMenubar\0ShowMenubarWithTabs\0ShowPageNumberInTabs\0ShowHomePageReadingProgress\0S"
-    "howChaptersInEbooks\0ShowTips\0CustomColors\0ShowToolbar\0Toolbar\0ToolbarPosition\0SearchUIFloating\0ShowFavorite"
-    "s\0SidebarBottomView\0SortFavoritesByName\0ShowToc\0AlwaysShowSidebar\0SidebarOnRight\0SidebarWindowSize\0ShowLink"
-    "s\0HighlightFormFields\0ClickEdgeToTurnPage\0DisableLinks\0ExplorerQuickLook\0RememberViewOffsetOnPageTurn\0MouseW"
-    "heelTurnsPage\0ScrollEdgeTurnsPage\0ShowDocumentFocusIndicator\0ShowAnnotationNotification\0ShowFileNavigateHint\0"
-    "ShowAnnotationAuthorInTooltip\0ShowTocPageNumbers\0AutoGenerateTOC\0ShowStartPage\0SidebarDx\0Scrollbars\0Scrollba"
-    "rInSinglePage\0SmoothScroll\0ScrollLineAmount\0SaveMemory\0PaddingAfterLastPage\0IgnoreDestinationZoom\0HighlightL"
-    "inkDestination\0CitationHoverDelay\0ReadAloudVoiceId\0ReadAloudSpeed\0ReadingAutoScrollSpeed\0ReadingBar\0FastScro"
-    "llOverScrollbar\0PreventSleepInFullscreen\0TabWidth\0Theme\0HelpTheme\0LastLightTheme\0LastDarkTheme\0DocumentColo"
-    "rsFollowTheme\0TocDy\0ToolbarCustomLayout\0ToolbarShowReadAloud\0ToolbarSize\0TreeFontName\0TreeFontSize\0UIFontSi"
-    "ze\0DisableAntiAlias\0EngineeringDrawingEnhance\0DisableAutoLinks\0UseSysColors\0UseTabs\0SelectionToolbar\0Select"
-    "ionToolbarLayout\0TabsMru\0CtrlTabSimple\0ZoomLevels\0ZoomIncrement\0\0FixedPageUI\0\0EBookUI\0\0ComicBookUI\0\0Im"
-    "ageUI\0\0ChmUI\0\0MarkdownUI\0\0HtmlUI\0\0ClaudeCode\0\0GrokBuild\0\0CodexBuild\0\0AntiGravity\0\0AIChatSidebarDx"
-    "\0\0TranslateToLang\0TranslateFromLang\0TranslateEngine\0\0Annotations\0\0ExternalViewers\0\0ForwardSearch\0\0Prin"
-    "terDefaults\0\0Fullscreen\0\0SelectionHandlers\0\0TextSnippets\0\0Shortcuts\0\0Themes\0\0TabGroups\0\0CustomScreen"
-    "DPI\0\0\0DefaultPasswords\0UiLanguage\0VersionToSkip\0WindowState\0WindowPos\0SearchUIWindowPos\0AnnotationsWindow"
-    "ShowNote\0HelpWindowPos\0FileStates\0SessionData\0ReopenOnce\0TimeOfLastUpdateCheck\0OpenCountWeek\0PropWinPos\0Ch"
-    "eckForUpdates\0\0",
+    "mePageViewMode\0ThumbnailsType\0FilePicker\0PrinterUI\0ReloadModifiedDocuments\0RememberOpenedFiles\0RememberState"
+    "PerDocument\0RestoreSession\0ReuseInstance\0ShowMenubar\0ShowMenubarWithTabs\0ShowPageNumberInTabs\0ShowHomePageRe"
+    "adingProgress\0ShowChaptersInEbooks\0ShowTips\0CustomColors\0ShowToolbar\0Toolbar\0ToolbarPosition\0SearchUIFloati"
+    "ng\0ShowFavorites\0SidebarBottomView\0SortFavoritesByName\0ShowToc\0AlwaysShowSidebar\0SidebarOnRight\0SidebarWind"
+    "owSize\0ShowLinks\0HighlightFormFields\0ClickEdgeToTurnPage\0DisableLinks\0ExplorerQuickLook\0RememberViewOffsetOn"
+    "PageTurn\0MouseWheelTurnsPage\0ScrollEdgeTurnsPage\0ShowDocumentFocusIndicator\0ShowAnnotationNotification\0ShowFi"
+    "leNavigateHint\0ShowAnnotationAuthorInTooltip\0ShowTocPageNumbers\0AutoGenerateTOC\0ShowStartPage\0SidebarDx\0Scro"
+    "llbars\0ScrollbarInSinglePage\0SmoothScroll\0ScrollLineAmount\0SaveMemory\0PaddingAfterLastPage\0IgnoreDestination"
+    "Zoom\0HighlightLinkDestination\0CitationHoverDelay\0ReadAloudVoiceId\0ReadAloudSpeed\0ReadingAutoScrollSpeed\0Read"
+    "ingBar\0FastScrollOverScrollbar\0PreventSleepInFullscreen\0TabWidth\0Theme\0HelpTheme\0LastLightTheme\0LastDarkThe"
+    "me\0DocumentColorsFollowTheme\0TocDy\0ToolbarCustomLayout\0ToolbarShowReadAloud\0ToolbarSize\0TreeFontName\0TreeFo"
+    "ntSize\0UIFontSize\0DisableAntiAlias\0EngineeringDrawingEnhance\0DisableAutoLinks\0UseSysColors\0UseTabs\0Selectio"
+    "nToolbar\0SelectionToolbarLayout\0TabsMru\0CtrlTabSimple\0ZoomLevels\0ZoomIncrement\0\0FixedPageUI\0\0EBookUI\0\0C"
+    "omicBookUI\0\0ImageUI\0\0ChmUI\0\0MarkdownUI\0\0HtmlUI\0\0ClaudeCode\0\0GrokBuild\0\0CodexBuild\0\0AntiGravity\0\0"
+    "AIChatSidebarDx\0\0TranslateToLang\0TranslateFromLang\0TranslateEngine\0\0Annotations\0\0ExternalViewers\0\0Forwar"
+    "dSearch\0\0PrinterDefaults\0\0Fullscreen\0\0SelectionHandlers\0\0TextSnippets\0\0Shortcuts\0\0Themes\0\0TabGroups"
+    "\0\0CustomScreenDPI\0\0\0DefaultPasswords\0UiLanguage\0VersionToSkip\0WindowState\0WindowPos\0SearchUIWindowPos\0A"
+    "nnotationsWindowShowNote\0HelpWindowPos\0FileStates\0SessionData\0ReopenOnce\0TimeOfLastUpdateCheck\0OpenCountWeek"
+    "\0PropWinPos\0CheckForUpdates\0\0",
     "\0\0default layout of pages. valid values: automatic, single page, facing, book view, continuous, continuous "
     "facing, continuous book view, page aspect. page aspect (3.7+): first open of a PDF, XPS, DjVu, PostScript or DVI "
     "file uses page 1 — taller than wide is continuous + fit width, wider than tall is single page + fit page; a "
@@ -2354,14 +2361,14 @@ static const StructInfo gSettingsInfo = {
     "applies to the Light theme; the default #80fff200 is a marker meaning \"use the theme's color\", so setting any "
     "other value also colorizes the toolbar and sidebars\0if true, doesn't open Home tab\0if true, the home page lists "
     "documents by how often they've been opened (the pre-3.6 behavior); if false, the most recently opened come "
-    "first\0valid values: thumbnails, list\0valid values: (empty), os, sumatrapdf\0valid values: (empty), auto, "
-    "modern, classic\0if true, a document will be reloaded automatically whenever it's changed (currently doesn't work "
-    "for documents shown in the ebook UI)\0if true, remember which documents were opened and their display "
-    "settings\0if true, store display settings for each document separately (i.e. everything after UseDefaultState in "
-    "FileStates)\0if true and SessionData isn't empty, that session will be restored at startup\0if true, open "
-    "documents in the already running SumatraPDF instead of starting a new one\0if true, show the menu bar (F9 toggles "
-    "it; the choice is remembered across sessions)\0if true, show the menu bar when using tabs (useTabs = true)\0if "
-    "true, show the current page as n/N after the file name on tabs\0if true, show reading progress (n/N, or "
+    "first\0valid values: thumbnails, list\0valid values: legacy, full\0valid values: (empty), os, sumatrapdf\0valid "
+    "values: (empty), auto, modern, classic\0if true, a document will be reloaded automatically whenever it's changed "
+    "(currently doesn't work for documents shown in the ebook UI)\0if true, remember which documents were opened and "
+    "their display settings\0if true, store display settings for each document separately (i.e. everything after "
+    "UseDefaultState in FileStates)\0if true and SessionData isn't empty, that session will be restored at startup\0if "
+    "true, open documents in the already running SumatraPDF instead of starting a new one\0if true, show the menu bar "
+    "(F9 toggles it; the choice is remembered across sessions)\0if true, show the menu bar when using tabs (useTabs = "
+    "true)\0if true, show the current page as n/N after the file name on tabs\0if true, show reading progress (n/N, or "
     "chapter:page for ebooks) on home page thumbnails and list rows\0if true, a document with chapters (EPUB, MOBI) "
     "shows the current place as a chapter and a page within that chapter, in the toolbar, Go to Page and the page-info "
     "tip. if false, those show one page number for the whole document. the saved position stays a chapter bookmark "

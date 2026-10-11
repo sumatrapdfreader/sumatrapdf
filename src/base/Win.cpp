@@ -14,6 +14,7 @@
 #include <mlang.h>
 #include "base/Pixmap.h"
 #include "base/Win.h"
+#include "base/Launch.h"
 
 //--- bool / BOOL
 
@@ -2254,6 +2255,32 @@ bool CreateProcessHelper(Str exe, Str args) {
     TempStr cmd = fmt("\"%s\" %s", exe, args);
     AutoCloseHandle process = LaunchProcessInDir(cmd);
     return process != nullptr;
+}
+
+struct ChildProcess {
+    HANDLE process = nullptr;
+};
+
+ChildProcess* StartChildProcess(Str cmdLine) {
+    HANDLE h = LaunchProcessInDir(cmdLine);
+    if (!h) {
+        return nullptr;
+    }
+    auto* p = new ChildProcess();
+    p->process = h;
+    return p;
+}
+
+bool ChildProcessHasExited(ChildProcess* p, int waitMs) {
+    return WaitForSingleObject(p->process, (DWORD)waitMs) != WAIT_TIMEOUT;
+}
+
+void CloseChildProcess(ChildProcess* p) {
+    if (!p) {
+        return;
+    }
+    CloseHandle(p->process);
+    delete p;
 }
 
 bool LaunchElevated(Str path, Str cmdline) {

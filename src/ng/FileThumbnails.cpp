@@ -99,11 +99,13 @@ void SaveThumbnail(FileState* fs) {
     if (PixmapIsEmpty(thumbnail)) {
         return;
     }
-    if (!SavePixmapAsPng(thumbnail, thumbnailPath)) {
-        // a failed encode can leave a truncated png behind, which reads back as
-        // a blank thumbnail (issue #5932)
+    // encode next to the final name and rename: a reader (the app, while a
+    // -regen-thumbnails process writes) never sees a partial png, and a failed
+    // encode leaves no truncated png that reads back blank (issue #5932)
+    TempStr tmpPath = str::JoinTemp(thumbnailPath, StrL(".tmp"));
+    if (!SavePixmapAsPng(thumbnail, tmpPath) || !file::RenameReplace(thumbnailPath, tmpPath)) {
         logf("SaveThumbnail: Save('%s') failed\n", thumbnailPath);
-        file::Delete(thumbnailPath);
+        file::Delete(tmpPath);
         return;
     }
     logf("SaveThumbnail: '%s' -> '%s'\n", fs->filePath, thumbnailPath);

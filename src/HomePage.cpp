@@ -868,6 +868,7 @@ constexpr i64 kSizeNotFetched = -2;
 constexpr i64 kSizeFetchFail = -1;
 
 struct ThumbnailLayout {
+    Rect rcCell; // the grid slot; rcPage is the thumbnail inside it
     Rect rcPage;
     Size szThumb;
     Rect rcText;
@@ -1371,6 +1372,7 @@ static void OffsetThumbnailLayouts(Vec<ThumbnailLayout>& thumbs, int dy) {
         return;
     }
     for (ThumbnailLayout& t : thumbs) {
+        t.rcCell.y += dy;
         t.rcPage.y += dy;
         t.rcText.y += dy;
         t.rcListRow.y += dy;
@@ -1598,19 +1600,20 @@ static void LayoutHomePage(HomePageLayout& l) {
     // --- Pre-compute thumbnail grid x offset so header can align with it ---
     // use unfiltered count so layout stays stable when search filters results
     int nFilesForLayout = len(allFileStates);
+    Size frame = ThumbnailFrameSize();
     int colsForLayout =
-        (rc.dx - kThumbsMarginLeft - kThumbsMarginRight + kThumbsSpaceBetweenX) / (kThumbnailDx + kThumbsSpaceBetweenX);
+        (rc.dx - kThumbsMarginLeft - kThumbsMarginRight + kThumbsSpaceBetweenX) / (frame.dx + kThumbsSpaceBetweenX);
     int thumbsColsForLayout = std::max(colsForLayout, 1);
     int thumbsStartX = rc.x + kThumbsMarginLeft +
-                       ((rc.dx - (thumbsColsForLayout * kThumbnailDx) -
-                         ((thumbsColsForLayout - 1) * kThumbsSpaceBetweenX) - kThumbsMarginLeft - kThumbsMarginRight) /
+                       ((rc.dx - (thumbsColsForLayout * frame.dx) - ((thumbsColsForLayout - 1) * kThumbsSpaceBetweenX) -
+                         kThumbsMarginLeft - kThumbsMarginRight) /
                         2);
     if (thumbsStartX < DpiScale(kInnerPadding)) {
         thumbsStartX = DpiScale(kInnerPadding);
     } else if (nFilesForLayout == 0) {
         thumbsStartX = kThumbsMarginLeft;
     }
-    int thumbsContentWidth = (thumbsColsForLayout * kThumbnailDx) + ((thumbsColsForLayout - 1) * kThumbsSpaceBetweenX);
+    int thumbsContentWidth = (thumbsColsForLayout * frame.dx) + ((thumbsColsForLayout - 1) * kThumbsSpaceBetweenX);
 
     // --- Step 1: two header rows: [palette] SumatraPDF [help] on top, then
     // [open link] [search edit] [view icons] ---
@@ -1725,7 +1728,7 @@ static void LayoutHomePage(HomePageLayout& l) {
         thumbsRows = (nFiles + thumbsColsForLayout - 1) / thumbsColsForLayout;
         if (thumbsRows > 0) {
             // the last row's caption hangs below its thumbnails (issue #6234)
-            thumbsContentDy = (thumbsRows * (kThumbnailDy + kThumbsSpaceBetweenY)) - kThumbsSpaceBetweenY +
+            thumbsContentDy = (thumbsRows * (frame.dy + kThumbsSpaceBetweenY)) - kThumbsSpaceBetweenY +
                               kThumbsCaptionGapY + kThumbsCaptionDy;
         }
     }
@@ -1802,7 +1805,7 @@ static void LayoutHomePage(HomePageLayout& l) {
             }
         }
     } else {
-        int thumbPrefetchY = kThumbnailDy + kThumbsSpaceBetweenY;
+        int thumbPrefetchY = frame.dy + kThumbsSpaceBetweenY;
         for (int row = 0; row < thumbsRows; row++) {
             for (int col = 0; col < thumbsColsForLayout; col++) {
                 if ((row * thumbsColsForLayout) + col >= nFiles) {
@@ -1815,25 +1818,30 @@ static void LayoutHomePage(HomePageLayout& l) {
                 FileState* fs = fileStates[(row * thumbsColsForLayout) + col];
                 thumb.fs = fs;
 
-                Rect rcPage(ptOff.x + (col * (kThumbnailDx + kThumbsSpaceBetweenX)),
-                            ptOff.y + (row * (kThumbnailDy + kThumbsSpaceBetweenY)), kThumbnailDx, kThumbnailDy);
+                Rect rcCell(ptOff.x + (col * (frame.dx + kThumbsSpaceBetweenX)),
+                            ptOff.y + (row * (frame.dy + kThumbsSpaceBetweenY)), frame.dx, frame.dy);
                 if (isRtl) {
-                    rcPage.x = rc.dx - rcPage.x - rcPage.dx;
+                    rcCell.x = rc.dx - rcCell.x - rcCell.dx;
                 }
-                bool onScreen = IsHomeThumbOnScreen(rcPage, l.rcThumbsArea, thumbPrefetchY);
+                bool onScreen = IsHomeThumbOnScreen(rcCell, l.rcThumbsArea, thumbPrefetchY);
+                Rect rcPage = rcCell;
                 // only use already-resident thumbnails for aspect adjust — never LoadThumbnail
                 // during layout (disk I/O dominated scroll/paint CPU)
                 if (onScreen && fs->thumbnail) {
                     Size szThumb(fs->thumbnail->width, fs->thumbnail->height);
-                    if (szThumb.dx != kThumbnailDx || szThumb.dy != kThumbnailDy) {
-                        rcPage.dy = szThumb.dy * kThumbnailDx / szThumb.dx;
-                        rcPage.y += kThumbnailDy - rcPage.dy;
+                    // a thumbnail smaller than the frame (a whole page, a cover)
+                    // sits at the bottom of its cell, centered
+                    if (szThumb != frame) {
+                        Size drawn = ThumbnailDrawSize(szThumb, frame);
+                        rcPage = Rect(rcCell.x + ((rcCell.dx - drawn.dx) / 2), rcCell.y + rcCell.dy - drawn.dy,
+                                      drawn.dx, drawn.dy);
                     }
                     thumb.szThumb = szThumb;
                 }
+                thumb.rcCell = rcCell;
                 thumb.rcPage = rcPage;
                 int iconSpace = kThumbsCaptionDy;
-                Rect rcText(rcPage.x + iconSpace, rcPage.y + rcPage.dy + kThumbsCaptionGapY, rcPage.dx - iconSpace,
+                Rect rcText(rcCell.x + iconSpace, rcCell.y + rcCell.dy + kThumbsCaptionGapY, rcCell.dx - iconSpace,
                             kThumbsCaptionDy);
                 if (isRtl) {
                     rcText.x -= iconSpace;
@@ -2131,7 +2139,9 @@ static void DrawHomeThumbnail(Gfx* gfx, ThumbnailLayout& thumb, const StrVec& fi
                              fontText, ThemeWindowTextColor());
 
     Pixmap* icon = GetFileStateIconPixmap(fs);
-    int x = isRtl ? page.x + page.dx - DpiScale(16) : page.x;
+    // the caption spans the cell, so the icon goes by the cell, not the page
+    const Rect& cell = thumb.rcCell;
+    int x = isRtl ? cell.x + cell.dx - DpiScale(16) : cell.x;
     if (icon) {
         gfx->DrawPixmap(icon, {x, rect.y, icon->width, icon->height});
     }
@@ -3238,9 +3248,9 @@ static int HomeGridColumnCount(MainWindow* win) {
     if (n == 0) {
         return 1;
     }
-    int y0 = c.thumbs[0].rcPage.y;
+    int y0 = c.thumbs[0].rcCell.y;
     int nCols = 0;
-    while (nCols < n && c.thumbs[nCols].rcPage.y == y0) {
+    while (nCols < n && c.thumbs[nCols].rcCell.y == y0) {
         nCols++;
     }
     return nCols > 0 ? nCols : 1;
@@ -3560,7 +3570,7 @@ void HomePageMoveSelection(MainWindow* win, int dCol, int dRow) {
 
 void HomePageOnVScroll(MainWindow* win, WPARAM wp) {
     USHORT msg = LOWORD(wp);
-    int lineDy = HomePageIsListView() ? kHomeListRowDy : kThumbnailDy + kThumbsSpaceBetweenY;
+    int lineDy = HomePageIsListView() ? kHomeListRowDy : ThumbnailFrameSize().dy + kThumbsSpaceBetweenY;
     int pageDy = lineDy * 3;
 
     int newScrollY = win->homePageScrollY;
@@ -3603,7 +3613,7 @@ void HomePageOnVScroll(MainWindow* win, WPARAM wp) {
 }
 
 void HomePageOnMouseWheel(MainWindow* win, int delta) {
-    int thumbsRowDy = HomePageIsListView() ? kHomeListRowDy : kThumbnailDy + kThumbsSpaceBetweenY;
+    int thumbsRowDy = HomePageIsListView() ? kHomeListRowDy : ThumbnailFrameSize().dy + kThumbsSpaceBetweenY;
 
     int scrollBy = thumbsRowDy / 3;
     if (delta > 0) {

@@ -6805,6 +6805,14 @@ int GpuiMain(int argc, char** argv) {
         SetCurrentLang(gFlags->lang);
     }
     UpdateSettings(*gFlags);
+    // started by a running SumatraPDF whose ThumbnailsType changed; no window,
+    // no settings saved
+    if (gFlags->regenThumbnails) {
+        RegenerateThumbnails();
+        CleanUpSettings();
+        uitask::Destroy();
+        return 0;
+    }
     // the console-only dump modes; orig runs them from WinMain the same way
     if (gFlags->dumpExif) {
         gLogToConsole = false;
