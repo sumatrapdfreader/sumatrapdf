@@ -15,7 +15,7 @@
 // It is ad-hoc (not in tests/run-almost-all.ts) because it needs the Visual Studio
 // command-line tools to build the client; without cl.exe it skips.
 
-import { existsSync, mkdirSync, rmSync, writeFileSync } from "node:fs";
+import { existsSync, mkdirSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 import { EXE, ROOT, tmpPath } from "./util";
 import {
@@ -146,7 +146,10 @@ export async function testit(): Promise<void> {
   writeFileSync(join(appdata, "SumatraPDF-settings.txt"), SETTINGS);
 
   await killProcessesNamed("SumatraPDF.exe");
-  const proc = Bun.spawn([EXE, "-for-testing", "-appdata", appdata, pdf], { stdout: "ignore", stderr: "ignore" });
+  const logPath = tmpPath("ad-hoc-uia-log.txt");
+  rmSync(logPath, { force: true });
+  const args = [EXE, "-for-testing", "-appdata", appdata, "-log-to-file", logPath, pdf];
+  const proc = Bun.spawn(args, { stdout: "ignore", stderr: "ignore" });
   try {
     const frame = await waitForTopWindow(proc.pid, "SUMATRA_PDF_FRAME");
     if (!frame) {
@@ -206,6 +209,16 @@ export async function testit(): Promise<void> {
     // GetText on a range half-moved onto a null selection must not reach page -1
     if (need("nullsel.hr") !== "0x00000000" || proc.exitCode !== null) {
       throw new Error(`GetText after moving onto a null selection: hr=${kv.get("nullsel.hr")}, exit=${proc.exitCode}`);
+    }
+
+    // RangeFromChild with an element that is not a page must fail, not report
+    const log = readFileSync(logPath, "utf8");
+    if (need("notchild.hr") === "0x00000000" || log.includes("_uploadDebugReport")) {
+      throw new Error(`RangeFromChild(document): hr=${kv.get("notchild.hr")}, log:\n${log.slice(-600)}`);
+    }
+
+    if (need("child.hr") !== "0x00000000" || !need("child.text").startsWith(firstLine)) {
+      throw new Error(`RangeFromChild(page 1): hr=${kv.get("child.hr")}, text='${kv.get("child.text")}'`);
     }
 
     // each Move() must land on new text, or a screen reader repeats one unit

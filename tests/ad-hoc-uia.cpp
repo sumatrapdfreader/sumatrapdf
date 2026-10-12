@@ -287,6 +287,35 @@ int main(int argc, char** argv) {
         }
     }
 
+    // the Document is not one of its own pages: RangeFromChild must refuse it
+    // instead of reading a page number out of the wrong object
+    {
+        IUIAutomationTextRange* r = nullptr;
+        HRESULT hrC = tp->RangeFromChild(doc, &r);
+        printf("notchild.hr=0x%08x\n", (unsigned)hrC);
+        if (r) {
+            r->Release();
+        }
+
+        // a real page still gives that page's range
+        IUIAutomationElement* page = nullptr;
+        raw->GetFirstChildElement(doc, &page);
+        if (page) {
+            r = nullptr;
+            hrC = tp->RangeFromChild(page, &r);
+            printf("child.hr=0x%08x\n", (unsigned)hrC);
+            if (r) {
+                BSTR s = RangeText(r, 40);
+                PrintEscaped("child.text", s);
+                if (s) {
+                    SysFreeString(s);
+                }
+                r->Release();
+            }
+            page->Release();
+        }
+    }
+
     if (docRange) {
         docRange->Release();
     }

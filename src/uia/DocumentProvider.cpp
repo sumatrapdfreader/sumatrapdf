@@ -367,10 +367,16 @@ HRESULT STDMETHODCALLTYPE SumatraUIAutomationDocumentProvider::RangeFromChild(IR
         return E_FAIL;
     }
 
-    // get page range
-    // TODO: is childElement guaranteed to be a SumatraUIAutomationPageProvider?
-    *pRetVal = new SumatraUIAutomationTextRange(this, ((SumatraUIAutomationPageProvider*)childElement)->pageNum);
-    return S_OK;
+    // a client can pass any element (e.g. the Document itself), so only
+    // accept one of our live pages
+    for (SumatraUIAutomationPageProvider* it = child_first; it; it = it->sibling_next) {
+        if (static_cast<IRawElementProviderSimple*>(it) != childElement) {
+            continue;
+        }
+        *pRetVal = new SumatraUIAutomationTextRange(this, it->pageNum);
+        return S_OK;
+    }
+    return E_INVALIDARG;
 }
 
 // The empty range at the character nearest to a point on the screen. Screen
