@@ -643,6 +643,7 @@ enum class ControlCmd : u16 {
     TestWheelWhileClosing = 116,
     TestQuitProcess = 130,
     TestRenameFile = 131,
+    TestChapterLayoutHold = 133,
 };
 
 bool ParseArg(PacketReader& r, ControlArg** argOut) {
@@ -1601,6 +1602,17 @@ static void ExecuteControlRequest(ControlRequest* req) {
             int exitCode = 0;
             Str res = RenameFileResultTemp(dstPath, &exitCode);
             AppendTestResult(req, exitCode, res);
+            break;
+        }
+
+        case ControlCmd::TestChapterLayoutHold: {
+            i32 hold = 0;
+            if (!IntArg(req, 0, hold)) {
+                AppendError(req, StrL("TestChapterLayoutHold expects int hold"));
+                break;
+            }
+            SetChapterLayoutHold(hold != 0);
+            AppendTestResult(req, 0, StrL("OK"));
             break;
         }
 

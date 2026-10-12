@@ -694,6 +694,13 @@ struct ChapterLayoutJob {
     int job = 0;
 };
 
+// test hook: holds background layout so a test can act on placeholder chapters
+static AtomicInt gChapterLayoutHold = 0;
+
+void SetChapterLayoutHold(bool hold) {
+    AtomicIntSet(&gChapterLayoutHold, hold ? 1 : 0);
+}
+
 bool EngineBase::LayoutJobCurrent(int id) {
     return AtomicIntGet(&layoutJob) == id;
 }
@@ -725,6 +732,9 @@ static void ChapterLayoutThread(ChapterLayoutJob* job) {
     {
         ChapterLayoutQuiet quiet;
         for (int c = 1; c <= total; c++) {
+            while (AtomicIntGet(&gChapterLayoutHold) && engine->LayoutJobCurrent(id)) {
+                SleepInMs(10);
+            }
             if (!engine->LayoutJobCurrent(id)) {
                 return;
             }

@@ -418,6 +418,7 @@ export const tests: NamedTest[] = [
   // mouse, so it is the one test that cares what the machine was doing before
   ["issue-5978", issue5978],
   ["pdf-script", pdfScript],
+  ["read-aloud-lazy-chapters", readAloudLazyChapters],
   ["free-text-edit-toolbar", freeTextEditToolbar],
   ["free-text-edit-zoom", freeTextEditZoom],
   ["pdf-edit-toolbar-interaction", pdfEditToolbarInteraction],
@@ -500,7 +501,6 @@ export const tests: NamedTest[] = [
   ["tts-engine-crash-recovery", ttsEngineCrashRecovery],
   ["read-aloud-close-during-speak", readAloudCloseDuringSpeak],
   ["read-aloud-restyle-stale-page", readAloudRestyleStalePage],
-  ["read-aloud-lazy-chapters", readAloudLazyChapters],
   ["lazy-tab-state-after-save", lazyTabStateAfterSave],
   ["lazy-tab-select-paint", lazyTabSelectPaint],
   ["pending-tab-freed-session-state", pendingTabFreedSessionState],

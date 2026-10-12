@@ -129,6 +129,8 @@ export enum ControlCommand {
   TestQuitProcess = 130,
   // Rename File (F2) to a path, without its dialog
   TestRenameFile = 131,
+  // holds background chapter layout (1) or lets it run (0)
+  TestChapterLayoutHold = 133,
 }
 
 export type ControlArg = number | string | Uint8Array | ControlArg[];
@@ -720,6 +722,14 @@ export class ControlClient {
   }
 
   // Rename File (F2) of the current document to dstPath, without the dialog
+  async setChapterLayoutHold(hold: boolean): Promise<void> {
+    const res = await this.request(ControlCommand.TestChapterLayoutHold, [hold ? 1 : 0]);
+    const code = typeof res[0] === "number" ? res[0] : -1;
+    if (code !== 0) {
+      throw new Error(`TestChapterLayoutHold failed: ${String(res[1] ?? "").trim() || code}`);
+    }
+  }
+
   async renameFile(dstPath: string): Promise<void> {
     const res = await this.request(ControlCommand.TestRenameFile, [dstPath]);
     const code = typeof res[0] === "number" ? res[0] : -1;

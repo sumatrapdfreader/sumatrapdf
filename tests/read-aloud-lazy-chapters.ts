@@ -45,6 +45,10 @@ async function mapState(client: ControlClient): Promise<MapState> {
 export async function testit(): Promise<void> {
   const dir = tmpPath("read-aloud-lazy-chapters-data");
   mkdirSync(dir, { recursive: true });
+  // opened first, so layout can be held before the chaptered book opens;
+  // sorts before it for CmdOpenNextFileInFolder
+  const first = join(dir, "a.epub");
+  writeFileSync(first, makeEpub({ chapterCount: 1, parasPerChapter: 1 }));
   const epub = join(dir, "chapters.epub");
   writeFileSync(epub, makeEpub({ parasPerChapter: 20 }));
 
@@ -63,17 +67,27 @@ export async function testit(): Promise<void> {
         return;
       }
 
-      // start before background layout publishes the later chapters
-      const info = await client.chapterInfo();
+      // hold background layout, so read aloud starts on placeholder chapters
+      await client.setChapterLayoutHold(true);
+      sendCommandSync(frame, cmdId("CmdOpenNextFileInFolder"));
+      const deadline = Date.now() + 30_000 * SLOW_BUILD_FACTOR;
+      let info = await client.chapterInfo();
+      while (info.chapterCount < 2) {
+        if (Date.now() > deadline) {
+          throw new Error(`read-aloud-lazy-chapters: the chaptered book did not open: ${JSON.stringify(info)}`);
+        }
+        await sleep(100);
+        info = await client.chapterInfo();
+      }
       sendCommandSync(frame, cmdId("CmdReadAloudFromTopPage"));
       if (info.laidOut >= info.chapterCount) {
         throw new Error(
           `read-aloud-lazy-chapters: all ${info.chapterCount} chapters were laid out before read aloud started`,
         );
       }
+      await client.setChapterLayoutHold(false);
 
       // compare once every chapter is laid out, so the span is in final page numbers
-      const deadline = Date.now() + 30_000 * SLOW_BUILD_FACTOR;
       for (;;) {
         const ci = await client.chapterInfo();
         if (ci.laidOut >= ci.chapterCount) {
@@ -94,7 +108,7 @@ export async function testit(): Promise<void> {
         );
       }
     },
-    ["-appdata", appdata, "-window-pos", "1000x900@40x40", "-view", "continuous", epub],
+    ["-appdata", appdata, "-window-pos", "1000x900@40x40", "-view", "continuous", first],
   );
 }
 

@@ -796,6 +796,7 @@ enum class ControlCmd : u16 {
     TestQuitProcess = 130,
     // Rename File without its dialog
     TestRenameFile = 131,
+    TestChapterLayoutHold = 133,
     // ng: open a file the way a drop or a Finder open does
     TestOpenFiles = 132,
 };
@@ -2060,6 +2061,17 @@ static void ExecuteControlRequest(ControlRequest* req) {
             break;
         }
 #endif
+
+        case ControlCmd::TestChapterLayoutHold: {
+            i32 hold = 0;
+            if (!IntArg(req, 0, hold)) {
+                AppendError(req, StrL("TestChapterLayoutHold expects int hold"));
+                break;
+            }
+            SetChapterLayoutHold(hold != 0);
+            AppendTestResult(req, 0, StrL("OK"));
+            break;
+        }
 
         case ControlCmd::TestRenameFile: {
             Str dstPath = StringArg(req, 0);

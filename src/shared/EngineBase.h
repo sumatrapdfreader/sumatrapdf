@@ -702,6 +702,7 @@ struct PdfViewerPrintPrefs {
 };
 
 bool GetPdfViewerPrintPrefs(EngineBase* engine, PdfViewerPrintPrefs& prefs);
+void SetChapterLayoutHold(bool hold);
 bool SaveFileOrData(Str srcFilePath, Str data, Str dstFilePath);
 
 template <typename T>
