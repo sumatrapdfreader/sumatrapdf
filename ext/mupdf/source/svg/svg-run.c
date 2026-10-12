@@ -1494,19 +1494,47 @@ svg_run_use(fz_context *ctx, fz_device *dev, svg_document *doc, fz_xml *root, co
 }
 
 /* SumatraPDF: load the raster an <image> points at. NULL if it cannot be read. */
+static const char *
+svg_image_data_uri(const char *href)
+{
+	static const char *jpeg_uri = "data:image/jpeg";
+	static const char *png_uri = "data:image/png";
+	const char *meta;
+	const char *comma;
+
+	if (!strncmp(href, jpeg_uri, strlen(jpeg_uri)))
+		meta = href + strlen(jpeg_uri);
+	else if (!strncmp(href, png_uri, strlen(png_uri)))
+		meta = href + strlen(png_uri);
+	else
+		return NULL;
+
+	comma = strchr(meta, ',');
+	if (!comma)
+		return NULL;
+
+	while (meta < comma)
+	{
+		const char *next;
+		if (*meta++ != ';')
+			return NULL;
+		next = strchr(meta, ';');
+		if (!next || next > comma)
+			next = comma;
+		if (next - meta == 6 && !strncmp(meta, "base64", 6))
+			return comma + 1;
+		meta = next;
+	}
+
+	return NULL;
+}
+
 static fz_image *
 svg_load_image_href(fz_context *ctx, svg_document *doc, const char *href)
 {
-	static const char *jpeg_uri = "data:image/jpeg;base64,";
-	static const char *png_uri = "data:image/png;base64,";
-	const char *data = NULL;
+	const char *data = svg_image_data_uri(href);
 	fz_buffer *buf = NULL;
 	fz_image *img = NULL;
-
-	if (!strncmp(href, jpeg_uri, strlen(jpeg_uri)))
-		data = href + strlen(jpeg_uri);
-	else if (!strncmp(href, png_uri, strlen(png_uri)))
-		data = href + strlen(png_uri);
 
 	fz_var(buf);
 	fz_var(img);

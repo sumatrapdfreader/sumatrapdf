@@ -55,6 +55,7 @@ relative to `ext/mupdf`, so `-p1` from inside that directory.
 | `0052-js-event-results-no-throw` | `pdf_js_event_*` results return NULL when out of memory and the `pdf-form.c` callers throw on their own context |
 | `0053-pdf-sign-docmdp-certify` | a signature field with `/SumatraCertify` 1..3 signs as a certifying signature: DocMDP `/Reference` and catalog `/Perms` written inside the signed section; a field's `/Lock /P` (PDF 2.0 lock after signing) is copied into the FieldMDP transform (discussion #6315) |
 | `0054-epub-linear-no-last` | EPUB spine items with `linear="no"` (footnotes, endnotes) are paged after the reading order, not where they sit in the spine; XHTML manifest items no itemref names are paged after those, so links reach them (#5803) |
+| `0055-svg-data-uri-parameters` | SVG image data URIs accept media-type parameters before `;base64` (#6322) |
 
 That is the whole list: `ext/mupdf` is byte-for-byte `1.28.5` plus these
 patches, and nothing else.
