@@ -412,6 +412,7 @@ export const tests: NamedTest[] = [
   // first: it drives the home page, whose thumbnail selection follows the
   // mouse, so it is the one test that cares what the machine was doing before
   ["issue-5978", issue5978],
+  ["sidebar-thumbnails", sidebarThumbnails],
   ["line-annotation-placement", lineAnnotationPlacement],
   ["polyline-annotation-placement", polylineAnnotationPlacement],
   ["shape-annotation-placement", shapeAnnotationPlacement],
@@ -713,7 +714,6 @@ export const tests: NamedTest[] = [
   ["command-palette-shortcut-filter", commandPaletteShortcutFilter],
   ["command-palette-alt-names", commandPaletteAltNames],
   ["command-palette-thumbnails", commandPaletteThumbnails],
-  ["sidebar-thumbnails", sidebarThumbnails],
   ["sidebar-thumbnails-close", sidebarThumbnailsClose],
   ["issue-6070", issue6070],
   ["wheel-while-closing", wheelWhileClosing],

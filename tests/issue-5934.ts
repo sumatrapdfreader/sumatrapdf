@@ -7,7 +7,7 @@
 import { writeFileSync } from "node:fs";
 import { IS_MAC } from "./host.ts";
 import { ControlCommand } from "./control.ts";
-import { cmdId, tmpPath } from "./util";
+import { cmdId, SLOW_BUILD_FACTOR, tmpPath } from "./util";
 import { launchControlled, killAndWait } from "./win-automation";
 import {
   enumWindows,
@@ -81,6 +81,8 @@ function pressEscape(hwnd: number): void {
   postMessage(hwnd, WM_KEYUP, VK_ESCAPE, 0);
 }
 
+const ESC_SETTLE_MS = 300;
+
 async function waitForSecondary(
   pid: number,
   frame: number,
@@ -127,26 +129,16 @@ async function testTranslateEscCloses(): Promise<void> {
       if (!/(^|\n)translate /.test(list)) {
         throw new Error(`translate: dialog did not appear (selection empty?)\n${list}`);
       }
-      const key = await client.request(ControlCommand.TestToolWindow, [
-        "input",
-        "translate",
-        "key",
-        VK_ESCAPE,
-        0,
-        0,
-        0,
-      ]);
-      if (String(key[1] ?? "").startsWith("ERR")) {
-        throw new Error(`translate: Esc: ${key[1]}`);
-      }
-      const closeBy = Date.now() + 3000;
+      // a key sent before the tool window's first frame is lost: press until it closes
+      const closeBy = Date.now() + 3000 * SLOW_BUILD_FACTOR;
       while (Date.now() < closeBy) {
+        await client.request(ControlCommand.TestToolWindow, ["input", "translate", "key", VK_ESCAPE, 0, 0, 0]);
+        await sleep(ESC_SETTLE_MS);
         list = String((await client.request(ControlCommand.TestToolWindow, ["list"]))[1] ?? "");
         if (!/(^|\n)translate /.test(list)) {
           console.log("  translate: Esc closes ✓");
           return;
         }
-        await sleep(30);
       }
       throw new Error(`translate: Esc did not close the translate dialog\n${list}`);
     }

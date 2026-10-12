@@ -197,11 +197,14 @@ function frameOnScreen(s: Sidebar): boolean {
 }
 
 // clicks a panel's view icon
-function clickIcon(p: Panel, view: View) {
+async function clickIcon(panel: () => Promise<Panel>, view: View) {
+  // a panel that just changed reports its icons a layout later
+  let p = await panel();
+  await waitFor(`the ${view} icon isn't visible`, async () => {
+    p = await panel();
+    return p.iconRects[views.indexOf(view)]!.dx > 0;
+  });
   const r = p.iconRects[views.indexOf(view)]!;
-  if (r.dx <= 0) {
-    throw new Error(`sidebar-thumbnails: the ${view} icon isn't visible`);
-  }
   clickPt(p.hwnd, { x: r.x + Math.floor(r.dx / 2), y: r.y + Math.floor(r.dy / 2) });
 }
 
@@ -243,9 +246,9 @@ export async function testit(): Promise<void> {
     await want("Favorites didn't replace Bookmarks on top", "favorites/thumbnails");
 
     // clicking an icon switches the panel's view; the other panel's view swaps
-    clickIcon((await sidebar(client)).top, "bookmarks");
+    await clickIcon(async () => (await sidebar(client)).top, "bookmarks");
     await want("clicking Bookmarks didn't show Bookmarks", "bookmarks/thumbnails");
-    clickIcon((await sidebar(client)).top, "thumbnails");
+    await clickIcon(async () => (await sidebar(client)).top, "thumbnails");
     await want("clicking Thumbnails on top didn't swap the panels", "thumbnails/bookmarks");
     if (IS_MAC) {
       console.log("SKIP sidebar-thumbnails frame pixels: macOS has no window DC");
@@ -256,7 +259,7 @@ export async function testit(): Promise<void> {
     if (s.hwnd !== s.top.hwnd || s.top.selected !== "010" || s.bottom.selected !== "100") {
       throw new Error(`sidebar-thumbnails: after the swap: ${s.raw}`);
     }
-    clickIcon(s.bottom, "thumbnails");
+    await clickIcon(async () => (await sidebar(client)).bottom, "thumbnails");
     await want("clicking Thumbnails in the bottom panel didn't swap back", "bookmarks/thumbnails");
     if (!IS_MAC) {
       await waitFor("the thumbnails didn't repaint in the bottom panel", async () =>
