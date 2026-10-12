@@ -367,8 +367,15 @@ export async function testit(): Promise<void> {
 
     await clickToolbar();
     let state = await waitForPlacement(client, true);
-    await moveMouse(client, canvas, center);
-    state = await placementState(client);
+    // a cursor query from another window (toolbar repaint, notification)
+    // after the move resets the cross cursor: move again until it sticks
+    const cursorDeadline = Date.now() + 2_000 * SLOW_BUILD_FACTOR;
+    for (;;) {
+      await moveMouse(client, canvas, center);
+      state = await placementState(client);
+      if (state.cursor || Date.now() > cursorDeadline) break;
+      await sleep(40);
+    }
     if (
       !state.notification ||
       !state.cursor ||

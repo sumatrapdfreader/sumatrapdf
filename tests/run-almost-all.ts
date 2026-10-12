@@ -417,9 +417,9 @@ export const tests: NamedTest[] = [
   // mouse, so it is the one test that cares what the machine was doing before
   ["issue-5978", issue5978],
   ["pdf-script", pdfScript],
-  ["sidebar-thumbnails", sidebarThumbnails],
-  ["line-annotation-placement", lineAnnotationPlacement],
   ["polyline-annotation-placement", polylineAnnotationPlacement],
+  ["line-annotation-placement", lineAnnotationPlacement],
+  ["sidebar-thumbnails", sidebarThumbnails],
   ["shape-annotation-placement", shapeAnnotationPlacement],
   ["issue-3755", issue3755],
   ["issue-6144", issue6144],
