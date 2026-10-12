@@ -417,6 +417,7 @@ export const tests: NamedTest[] = [
   // mouse, so it is the one test that cares what the machine was doing before
   ["issue-5978", issue5978],
   ["pdf-script", pdfScript],
+  ["pdf-edit-toolbar-interaction", pdfEditToolbarInteraction],
   ["polyline-annotation-placement", polylineAnnotationPlacement],
   ["line-annotation-placement", lineAnnotationPlacement],
   ["sidebar-thumbnails", sidebarThumbnails],
@@ -549,7 +550,6 @@ export const tests: NamedTest[] = [
   ["issue-6048", issue6048],
   ["issue-6053", issue6053],
   ["issue-6054", issue6054],
-  ["pdf-edit-toolbar-interaction", pdfEditToolbarInteraction],
   ["text-annotation-placement", textAnnotationPlacement],
   ["free-text-annotation-placement", freeTextAnnotationPlacement],
   ["free-text-edit-toolbar", freeTextEditToolbar],

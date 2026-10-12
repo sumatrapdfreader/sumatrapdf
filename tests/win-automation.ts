@@ -355,6 +355,9 @@ export async function clickAt(hwnd: number, x: number, y: number, settleMs = 350
     await sleep(settleMs);
     return;
   }
+  // the app also reads the live key state: a Ctrl stuck down mid-run (RDP)
+  // turns a plain click into Ctrl+click
+  await ensureModifierKeysUp();
   const screen = clientToScreen(hwnd, x, y);
   setCursorPos(screen.x, screen.y);
   const lp = packCoords(x, y);
