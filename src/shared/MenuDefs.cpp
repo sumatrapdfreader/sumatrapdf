@@ -1035,6 +1035,10 @@ MenuDef menuDefDocumentOperations[] = {
         CmdMergePDF,
     },
     {
+        TrN("Run PDF Script..."),
+        CmdRunPDFScript,
+    },
+    {
         TrN("Extract Text From Document"),
         CmdDocumentExtractText,
     },

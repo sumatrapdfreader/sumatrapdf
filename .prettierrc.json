@@ -1,4 +1,5 @@
 {
   "printWidth": 120,
-  "endOfLine": "lf"
+  "endOfLine": "lf",
+  "overrides": [{ "files": "src/pdf-scripts/*.js", "options": { "trailingComma": "none" } }]
 }

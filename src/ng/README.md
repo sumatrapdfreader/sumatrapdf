@@ -26,6 +26,13 @@ Compiler and sanitizer variants add suffixes, such as `dbg-clang` and
 base unit tests. `-run` launches SumatraPDF as a normal session, so it
 saves and restores settings. Pass `-- -for-testing` for a throwaway run.
 
+## PDF scripts
+
+`CmdRunPDFScript` uses a GPUI dialog and runs the same MuPDF JavaScript
+engine as `SumatraPDF run` in a child process. Arguments, bundled examples
+and output capture match the original. WebAssembly has no child processes,
+so the command is unavailable there.
+
 ## Keyboard shortcuts
 
 `src/shared/Accelerators.cpp` holds the Windows defaults and a per-platform

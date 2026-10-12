@@ -344,6 +344,7 @@ const CommandInfo gCommands[] = {
     {CmdNavigateHistory, "CmdNavigateHistory\0", StrL("Navigate History")},
     {CmdQuickEditSettings, "CmdQuickEditSettings\0", StrL("Quick Edit Settings")},
     {CmdConfigureRestrictedUse, "CmdConfigureRestrictedUse\0", StrL("Configure Restricted Use...")},
+    {CmdRunPDFScript, "CmdRunPDFScript\0", StrL("Run PDF Script...")},
 };
 const int gCommandsCount = dimofi(gCommands);
 

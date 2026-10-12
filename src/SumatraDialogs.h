@@ -105,3 +105,4 @@ struct Print_Advanced_Data {
 };
 
 HPROPSHEETPAGE CreatePrintAdvancedPropSheet(Print_Advanced_Data* data);
+void ShowPDFScriptDialog(MainWindow* win);

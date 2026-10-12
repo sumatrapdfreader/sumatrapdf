@@ -1532,6 +1532,7 @@
     <ClInclude Include="..\src\shared\NotificationsCommon.h" />
     <ClInclude Include="..\src\shared\OleDragDropCommon.h" />
     <ClInclude Include="..\src\shared\OverlayScrollbarCommon.h" />
+    <ClInclude Include="..\src\shared\PDFScript.h" />
     <ClInclude Include="..\src\shared\PageGridDialogCommon.h" />
     <ClInclude Include="..\src\shared\PagePosition.h" />
     <ClInclude Include="..\src\shared\PalmDbReader.h" />
@@ -1684,6 +1685,7 @@
     <ClCompile Include="..\src\NavFilesInFolder.cpp" />
     <ClCompile Include="..\src\Notifications.cpp" />
     <ClCompile Include="..\src\OverlayScrollbar.cpp" />
+    <ClCompile Include="..\src\PDFScriptDialog.cpp" />
     <ClCompile Include="..\src\PageGridDialog.cpp" />
     <ClCompile Include="..\src\PageThumbnails.cpp" />
     <ClCompile Include="..\src\PdfTools.cpp" />
@@ -2216,6 +2218,7 @@
     <ClCompile Include="..\src\shared\OverlayScrollbarCommon.cpp">
       <PrecompiledHeader>NotUsing</PrecompiledHeader>
     </ClCompile>
+    <ClCompile Include="..\src\shared\PDFScriptCommon.cpp" />
     <ClCompile Include="..\src\shared\PageGridDialogCommon.cpp" />
     <ClCompile Include="..\src\shared\PagePosition.cpp" />
     <ClCompile Include="..\src\shared\PalmDbReader.cpp" />

@@ -483,6 +483,9 @@
     <ClInclude Include="..\src\shared\OverlayScrollbarCommon.h">
       <Filter>src\shared</Filter>
     </ClInclude>
+    <ClInclude Include="..\src\shared\PDFScript.h">
+      <Filter>src\shared</Filter>
+    </ClInclude>
     <ClInclude Include="..\src\shared\PageGridDialogCommon.h">
       <Filter>src\shared</Filter>
     </ClInclude>
@@ -849,6 +852,9 @@
       <Filter>src</Filter>
     </ClCompile>
     <ClCompile Include="..\src\OverlayScrollbar.cpp">
+      <Filter>src</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\PDFScriptDialog.cpp">
       <Filter>src</Filter>
     </ClCompile>
     <ClCompile Include="..\src\PageGridDialog.cpp">
@@ -1353,6 +1359,9 @@
       <Filter>src\shared</Filter>
     </ClCompile>
     <ClCompile Include="..\src\shared\OverlayScrollbarCommon.cpp">
+      <Filter>src\shared</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\shared\PDFScriptCommon.cpp">
       <Filter>src\shared</Filter>
     </ClCompile>
     <ClCompile Include="..\src\shared\PageGridDialogCommon.cpp">

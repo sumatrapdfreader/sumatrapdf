@@ -10885,6 +10885,10 @@ static LRESULT FrameOnCommand(MainWindow* win, HWND hwnd, UINT msg, WPARAM wp, L
             ShowAdvancedSettingsDialog(win);
             break;
 
+        case CmdRunPDFScript:
+            ShowPDFScriptDialog(win);
+            break;
+
         case CmdConfigureRestrictedUse:
             ShowConfigureRestrictedUseDialog(win);
             break;

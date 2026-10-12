@@ -5927,6 +5927,10 @@ void ExecuteCmd(MainWindow* win, int cmdId) {
             ShowAdvancedSettingsDialog(win);
             break;
 
+        case CmdRunPDFScript:
+            ShowPDFScriptDialog(win);
+            break;
+
         case CmdConfigureRestrictedUse:
             ShowConfigureRestrictedUseDialog(win);
             break;

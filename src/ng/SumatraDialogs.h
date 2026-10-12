@@ -311,3 +311,7 @@ struct Print_Advanced_Data {
 // sheet, as orig's RTL template does
 HPROPSHEETPAGE CreatePrintAdvancedPropSheet(Print_Advanced_Data* data, ScopedMem<DLGTEMPLATE>& dlgTemplate);
 #endif
+void ShowPDFScriptDialog(MainWindow* win);
+void ClosePDFScriptDialog();
+bool IsPDFScriptDialogVisible();
+gpui::El* PDFScriptDialogBuild(MainWindow* win, gpui::Ctx* cx);

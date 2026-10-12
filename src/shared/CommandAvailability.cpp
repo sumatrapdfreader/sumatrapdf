@@ -190,6 +190,7 @@ static const i32 removeIfNoCopyPerms[] = {
 };
 
 static const i32 removeIfNoDiskAccessPerm[] = {
+    CmdRunPDFScript,
     CmdNewWindow,
     CmdOpenFile,
     CmdOpenFileNoHistory,
@@ -351,6 +352,9 @@ bool CmdWorksWithoutDocument(int cmdId) {
 }
 
 CommandVisibility GetCommandVisibility(int cmdId, const AppCommandCtx& ctx, CommandSurface surface) {
+#if OS_WASM
+    if (cmdId == CmdRunPDFScript) return CommandVisibility::Hide;
+#endif
     if (cmdId <= CmdFirst) {
         return CommandVisibility::Hide;
     }
@@ -559,7 +563,7 @@ CommandVisibility GetCommandVisibility(int cmdId, const AppCommandCtx& ctx, Comm
         if (cmdId == CmdPdfShowInfo || cmdId == CmdPdfBake || cmdId == CmdPdfCompress || cmdId == CmdPdfDecompress ||
             cmdId == CmdPdfEncrypt || cmdId == CmdPdfDecrypt || cmdId == CmdPdfDeletePages ||
             cmdId == CmdPdfExtractPages || cmdId == CmdTogglePageBoxes || cmdId == CmdConvertPdfToImages ||
-            cmdId == CmdToggleEditPDF || cmdId == CmdMergePDF) {
+            cmdId == CmdToggleEditPDF || cmdId == CmdMergePDF || cmdId == CmdRunPDFScript) {
             return CommandVisibility::Hide;
         }
     }
