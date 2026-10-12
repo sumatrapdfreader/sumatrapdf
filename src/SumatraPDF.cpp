@@ -15227,6 +15227,8 @@ Run the command from cmd.exe instead, e.g.:
                 goto Exit;
             }
             fz_redirect_io_to_existing_console();
+            // the tools need the base14 fonts from the embedded archive
+            InstallEmbeddedFontLoader();
             res = toolFuncs[idx](argc, argv);
             goto Exit;
         }
