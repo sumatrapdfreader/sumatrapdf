@@ -546,6 +546,9 @@
     <ClInclude Include="..\src\shared\RenderCache.h">
       <Filter>src\shared</Filter>
     </ClInclude>
+    <ClInclude Include="..\src\shared\RestrictedUseConfig.h">
+      <Filter>src\shared</Filter>
+    </ClInclude>
     <ClInclude Include="..\src\shared\Screenshot.h">
       <Filter>src\shared</Filter>
     </ClInclude>
@@ -1437,6 +1440,9 @@
       <Filter>src\shared</Filter>
     </ClCompile>
     <ClCompile Include="..\src\shared\RenderCache.cpp">
+      <Filter>src\shared</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\shared\RestrictedUseConfig.cpp">
       <Filter>src\shared</Filter>
     </ClCompile>
     <ClCompile Include="..\src\shared\ScreenshotCommon.cpp">

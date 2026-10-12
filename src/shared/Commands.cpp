@@ -343,6 +343,7 @@ const CommandInfo gCommands[] = {
     {CmdNavigateTabs, "CmdNavigateTabs\0", StrL("Navigate Tabs")},
     {CmdNavigateHistory, "CmdNavigateHistory\0", StrL("Navigate History")},
     {CmdQuickEditSettings, "CmdQuickEditSettings\0", StrL("Quick Edit Settings")},
+    {CmdConfigureRestrictedUse, "CmdConfigureRestrictedUse\0", StrL("Configure Restricted Use...")},
 };
 const int gCommandsCount = dimofi(gCommands);
 

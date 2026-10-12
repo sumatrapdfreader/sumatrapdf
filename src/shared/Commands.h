@@ -337,8 +337,9 @@ enum {
     CmdNavigateTabs = 531,
     CmdNavigateHistory = 532,
     CmdQuickEditSettings = 533,
+    CmdConfigureRestrictedUse = 534,
 
-    CmdLast = 533,
+    CmdLast = 534,
     CmdFirstCustom = CmdLast + 100,
 
     // aliases, at the end to not mess ordering

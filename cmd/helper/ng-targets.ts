@@ -509,6 +509,7 @@ const appSources = [
   "src/RefHoverInternal.cpp",
   "src/RefHoverText.cpp",
   "src/ng/RefHoverTextDetect.cpp",
+  "src/ng/RestrictedUseConfig.cpp",
   "src/ng/RenderCache.cpp",
   "src/ng/ShortcutParse.cpp",
   "src/ng/SystemFonts.cpp",

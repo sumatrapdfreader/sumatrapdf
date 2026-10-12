@@ -201,6 +201,12 @@ bool IsSettingsDialogVisible();
 gpui::El* SettingsDialogBuild(MainWindow* win, gpui::Ctx* cx);
 
 void ShowAdvancedSettingsDialog(MainWindow* win);
+void ShowConfigureRestrictedUseDialog(MainWindow* win);
+void CloseConfigureRestrictedUseDialog();
+bool ConfigureRestrictedUseMoveSelection(int dir);
+bool ConfigureRestrictedUseOnEnter();
+bool IsConfigureRestrictedUseDialogVisible();
+gpui::El* ConfigureRestrictedUseDialogBuild(MainWindow* win, gpui::Ctx* cx);
 bool AdvancedSettingsMoveSelection(int dir);
 bool AdvancedSettingsOnEnter();
 void AdvancedSettingsOnEscape();

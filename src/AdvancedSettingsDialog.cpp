@@ -9,6 +9,7 @@
 // re-computed); Cancel abandons the changes.
 
 #include "base/Base.h"
+#include "base/File.h"
 #include "base/Win.h"
 #include "gui/Dpi.h"
 #include "base/UITask.h"
@@ -37,6 +38,7 @@
 #include "Translations.h"
 #include "FilterHighlightDraw.h"
 #include "SumatraDialogs.h"
+#include "RestrictedUseConfig.h"
 #include "AdvancedSettingsDialogCommon.h"
 
 struct ListBoxModelSettings : ListBoxModel {
@@ -1339,4 +1341,264 @@ void ShowAdvancedSettingsDialog(MainWindow* win) {
         return;
     }
     gAdvancedSettingsWnd = wnd;
+}
+
+struct RestrictedUseWnd;
+
+struct RestrictedUseListBox : VirtListBox {
+    RestrictedUseWnd* owner = nullptr;
+    void OnRestrictedMouseDown(VirtMouseEvent* ev);
+};
+
+struct RestrictedUseWnd : WindowBase {
+    MainWindow* win = nullptr;
+    RestrictedUseConfig config;
+    RestrictedUseListBox* listBox = nullptr;
+    VirtFixedLinesText* commentText = nullptr;
+    VirtButton* btnSave = nullptr;
+    ILayout* saveLayout = nullptr;
+    ILayout* deleteLayout = nullptr;
+    PlatformFont* fontBold = nullptr;
+
+    bool Create(MainWindow* mainWin);
+    void ToggleSelected();
+    void UpdateSelection();
+    void UpdateButtons();
+    void DrawItem(VirtListBox::DrawItemEvent* ev);
+    void OnKeyDown(KeyEvent* ev);
+    void OnCancel(VirtMouseEvent* ev = nullptr);
+    void OnSave(VirtMouseEvent* ev = nullptr);
+    void OnDelete(VirtMouseEvent* ev = nullptr);
+    void OnHelp(VirtMouseEvent* ev = nullptr);
+};
+
+static RestrictedUseWnd* gRestrictedUseWnd = nullptr;
+
+void RestrictedUseListBox::OnRestrictedMouseDown(VirtMouseEvent* ev) {
+    int idx = ItemFromPoint(ev->pt);
+    VirtListBox::OnMouseDown(ev);
+    if (idx >= 0 && owner) {
+        owner->ToggleSelected();
+    }
+}
+
+void RestrictedUseWnd::UpdateButtons() {
+    saveLayout->SetVisibility(RestrictedUseConfigChanged(config) ? Visibility::Visible : Visibility::Collapse);
+    deleteLayout->SetVisibility(config.fileExists ? Visibility::Visible : Visibility::Collapse);
+    if (vroot) {
+        vroot->RequestLayout();
+    }
+}
+
+void RestrictedUseWnd::UpdateSelection() {
+    int idx = listBox->GetCurrentSelection();
+    commentText->SetText(idx >= 0 ? RestrictedUseFeatureDescription(idx) : Str());
+}
+
+void RestrictedUseWnd::ToggleSelected() {
+    int idx = listBox->GetCurrentSelection();
+    if (idx < 0 || idx >= RestrictedUseFeatureCount()) {
+        return;
+    }
+    config.items[idx].enabled = !config.items[idx].enabled;
+    UpdateRestrictedUseChanged(config);
+    UpdateButtons();
+    listBox->Invalidate();
+}
+
+void RestrictedUseWnd::DrawItem(VirtListBox::DrawItemEvent* ev) {
+    int idx = ev->itemIndex;
+    if (idx < 0 || idx >= RestrictedUseFeatureCount()) {
+        return;
+    }
+    Gfx* gfx = ev->gfx;
+    Rect row = ev->itemRect;
+    Color bg = listBox->GetColor(kColListBg);
+    Color text = listBox->GetColor(kColListText);
+    if (IsSpecialColor(bg)) {
+        bg = GetSysColor(COLOR_WINDOW);
+    }
+    if (IsSpecialColor(text)) {
+        text = GetSysColor(COLOR_WINDOWTEXT);
+    }
+    if (ev->selected) {
+        bg = AccentColor(bg, 30);
+    }
+    gfx->FillRect(row, bg);
+
+    int boxDx = DpiScale(13);
+    int pad = DpiScale(5);
+    Rect box{row.Right() - pad - boxDx, row.y + (row.dy - boxDx) / 2, boxDx, boxDx};
+    Rect name = row;
+    name.SubLR(pad, pad + boxDx + pad);
+    PlatformFont* itemFont = config.items[idx].changed ? fontBold : GetFont();
+    gfx->DrawText(RestrictedUseFeatureName(idx), name, gfxTextLeft | gfxTextVCenter | gfxTextEllipsis, itemFont, text);
+    gfx->DrawRect(box, text);
+    if (config.items[idx].enabled) {
+        Point p1{box.x + 2, box.y + box.dy / 2};
+        Point p2{box.x + box.dx / 2, box.y + box.dy - 3};
+        Point p3{box.x + box.dx - 2, box.y + 3};
+        gfx->DrawLineAA(p1, p2, text, 2);
+        gfx->DrawLineAA(p2, p3, text, 2);
+    }
+}
+
+void RestrictedUseWnd::OnKeyDown(KeyEvent* ev) {
+    if (ev->vkey == VK_RETURN && vroot && vroot->focused == listBox) {
+        ToggleSelected();
+        ev->didHandle = true;
+    }
+}
+
+void RestrictedUseWnd::OnCancel(VirtMouseEvent*) {
+    ScheduleDelete();
+}
+
+void RestrictedUseWnd::OnSave(VirtMouseEvent*) {
+    if (!SaveRestrictedUseConfig(config)) {
+        MsgBox(hwnd, Tr("Failed to save sumatrapdfrestrict.ini."), Tr("Error"), MB_OK | MB_ICONERROR);
+        return;
+    }
+    ScheduleDelete();
+}
+
+void RestrictedUseWnd::OnDelete(VirtMouseEvent*) {
+    int res =
+        MsgBox(hwnd, Tr("Delete sumatrapdfrestrict.ini?"), Tr("Configure Restricted Use"), MB_YESNO | MB_ICONQUESTION);
+    if (res != IDYES) {
+        return;
+    }
+    if (!DeleteRestrictedUseConfig()) {
+        MsgBox(hwnd, Tr("Failed to delete sumatrapdfrestrict.ini."), Tr("Error"), MB_OK | MB_ICONERROR);
+        return;
+    }
+    ScheduleDelete();
+}
+
+void RestrictedUseWnd::OnHelp(VirtMouseEvent*) {
+    SumatraLaunchBrowser(Str(kRestrictedUseDocsUrl));
+}
+
+bool RestrictedUseWnd::Create(MainWindow* mainWin) {
+    win = mainWin;
+    TempStr path = GetPathInExeDirTemp(Str(kRestrictionsFileName));
+    bool exists = file::Exists(path);
+    LoadRestrictedUseConfig(config, exists ? file::ReadFile(path) : Str(),
+                            exists ? RestrictedUseFile::Exists : RestrictedUseFile::Missing);
+
+    CreateCustomArgs args;
+    args.owner = win ? win->hwndFrame : nullptr;
+    args.title = Tr("Configure Restricted Use");
+    args.visible = false;
+    args.style = WS_POPUPWINDOW | WS_CAPTION;
+    args.font = GetFont();
+    args.icon = LoadIconW(GetModuleHandleW(nullptr), MAKEINTRESOURCEW(GetAppIconID()));
+    CreateCustom(args);
+    if (!hwnd) {
+        return false;
+    }
+    fontBold = GetBoldPlatformFont(GetFont());
+
+    auto* vbox = new VBox();
+    vbox->alignCross = CrossAxisAlign::Stretch;
+    auto* list = new RestrictedUseListBox();
+    list->owner = this;
+    list->dpi = GetDpi();
+    list->font = GetFont();
+    list->idealSizeLines = RestrictedUseFeatureCount();
+    auto* model = new ListBoxModelStrings();
+    for (int i = 0; i < RestrictedUseFeatureCount(); i++) {
+        model->strings.Append(RestrictedUseFeatureName(i));
+    }
+    list->SetModel(model);
+    list->SetCurrentSelection(0);
+    list->onMouseDown =
+        MkMethod1<RestrictedUseListBox, VirtMouseEvent*, &RestrictedUseListBox::OnRestrictedMouseDown>(list);
+    list->onSelectionChanged = MkMethod0<RestrictedUseWnd, &RestrictedUseWnd::UpdateSelection>(this);
+    list->onDrawItem = MkMethod1<RestrictedUseWnd, VirtListBox::DrawItemEvent*, &RestrictedUseWnd::DrawItem>(this);
+    listBox = list;
+    vbox->AddChild(list);
+
+    auto* help = new VirtFixedLinesText();
+    help->font = GetFont();
+    help->borderCol = ThemeEdgeColor();
+    help->padding = DpiScaledInsets(4);
+    commentText = help;
+    vbox->AddChild(new Padding(help, DpiScaledInsets(4, 2)));
+    UpdateSelection();
+
+    auto* buttons = new HBox();
+    buttons->alignMain = MainAxisAlign::SpaceBetween;
+    buttons->alignCross = CrossAxisAlign::CrossCenter;
+    auto* left = new HBox();
+    left->gap = GetFont()->averageCharWidth;
+    auto pad = Insets{4, 0, 4, 0};
+    btnSave = NewThemedButton(hwnd, Tr("Save"), GetFont(), true);
+    btnSave->onClick = MkMethod1<RestrictedUseWnd, VirtMouseEvent*, &RestrictedUseWnd::OnSave>(this);
+    saveLayout = new Padding(btnSave, pad);
+    left->AddChild(saveLayout);
+    auto* btnDelete = NewThemedButton(hwnd, Tr("Delete File"), GetFont(), false);
+    btnDelete->onClick = MkMethod1<RestrictedUseWnd, VirtMouseEvent*, &RestrictedUseWnd::OnDelete>(this);
+    deleteLayout = new Padding(btnDelete, pad);
+    left->AddChild(deleteLayout);
+    auto* btnCancel = NewThemedButton(hwnd, Tr("Cancel"), GetFont(), false);
+    btnCancel->onClick = MkMethod1<RestrictedUseWnd, VirtMouseEvent*, &RestrictedUseWnd::OnCancel>(this);
+    left->AddChild(new Padding(btnCancel, pad));
+    buttons->AddChild(left);
+    auto* btnHelp = NewThemedButton(hwnd, Tr("Help"), GetFont(), false);
+    btnHelp->onClick = MkMethod1<RestrictedUseWnd, VirtMouseEvent*, &RestrictedUseWnd::OnHelp>(this);
+    buttons->AddChild(new Padding(btnHelp, pad));
+    vbox->AddChild(buttons);
+
+    layout = new Padding(vbox, DpiScaledInsets(4, 8));
+    UpdateButtons();
+    LayoutAndSizeToContent(layout, DpiScale(520), 0, hwnd);
+    DoLayout(HwndClientRect(hwnd).Size());
+    HwndCenterDialog(hwnd, win ? win->hwndFrame : nullptr);
+    UpdateTheme();
+    SetIsVisible(true);
+    vroot->SetFocus(list);
+    return true;
+}
+
+static void ClearRestrictedUseWnd() {
+    gRestrictedUseWnd = nullptr;
+}
+
+static void CloseRestrictedUseWnd(WindowBase::CloseEvent*) {
+    if (gRestrictedUseWnd) {
+        gRestrictedUseWnd->ScheduleDelete();
+    }
+}
+
+void ShowConfigureRestrictedUseDialog(MainWindow* win) {
+    if (!CanWriteRestrictedUseConfig()) {
+        Str msg = Tr("SumatraPDF cannot create files in its installation folder.");
+        if (!IsProcessRunningElevated()) {
+            int res = MsgBox(win ? win->hwndFrame : nullptr, Tr("Administrator access is required. Restart elevated?"),
+                             Tr("Configure Restricted Use"), MB_YESNO | MB_ICONERROR);
+            if (res == IDYES) {
+                LaunchElevated(GetSelfExePathTemp(), StrL("-configure-restricted-use"));
+            }
+        } else {
+            MsgBox(win ? win->hwndFrame : nullptr, msg, Tr("Configure Restricted Use"), MB_OK | MB_ICONERROR);
+        }
+        return;
+    }
+    if (gRestrictedUseWnd) {
+        HwndSetFocus(gRestrictedUseWnd->hwnd);
+        return;
+    }
+    auto* wnd = new RestrictedUseWnd();
+    wnd->closeOnEsc = true;
+    wnd->onBeforeDelete = MkFunc0Void(ClearRestrictedUseWnd);
+    wnd->onClose = MkFunc1Void<WindowBase::CloseEvent*>(CloseRestrictedUseWnd);
+    wnd->onKeyDown = MkMethod1<RestrictedUseWnd, KeyEvent*, &RestrictedUseWnd::OnKeyDown>(wnd);
+    wnd->SetFont(GetAppFont());
+    if (!wnd->Create(win)) {
+        delete wnd;
+        return;
+    }
+    gRestrictedUseWnd = wnd;
+    RunModalWindow(wnd->hwnd, win ? win->hwndFrame : nullptr);
 }

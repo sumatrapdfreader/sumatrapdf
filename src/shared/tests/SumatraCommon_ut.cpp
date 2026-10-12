@@ -15,12 +15,42 @@
 #include "DisplayMode.h"
 #include "Flags.h"
 #include "Commands.h"
+#include "RestrictedUseConfig.h"
 
 // must be last to over-write assert()
 #include "base/tests/UtAssert.h"
 
 // App-level unit tests that run in both orig and ng. Each app's Sumatra_ut.cpp
 // calls them from its driver.
+
+void RestrictedUseConfigTest() {
+    RestrictedUseConfig cfg;
+    LoadRestrictedUseConfig(cfg, {}, RestrictedUseFile::Missing);
+    for (int i = 0; i < RestrictedUseFeatureCount(); i++) {
+        utassert(cfg.items[i].enabled);
+        utassert(!cfg.items[i].changed);
+    }
+
+    Str data = StrL("[Policies]\nInternetAccess = 1\nPrinterAccess = 1\nLinkProtocols = https\n");
+    LoadRestrictedUseConfig(cfg, data, RestrictedUseFile::Exists);
+    utassert(cfg.items[0].enabled);
+    utassert(!cfg.items[1].enabled);
+    utassert(cfg.items[4].enabled);
+    utassert(str::Eq(cfg.linkProtocols, StrL("https")));
+
+    cfg.items[1].enabled = true;
+    UpdateRestrictedUseChanged(cfg);
+    utassert(cfg.items[1].changed);
+    utassert(RestrictedUseConfigChanged(cfg));
+
+    TempStr saved = SerializeRestrictedUseConfigTemp(cfg);
+    RestrictedUseConfig roundTrip;
+    LoadRestrictedUseConfig(roundTrip, saved, RestrictedUseFile::Exists);
+    for (int i = 0; i < RestrictedUseFeatureCount(); i++) {
+        utassert(roundTrip.items[i].enabled == cfg.items[i].enabled);
+    }
+    utassert(str::Eq(roundTrip.linkProtocols, StrL("https")));
+}
 
 void BenchRangeTest() {
     utassert(IsBenchPagesInfo(StrL("1")));

@@ -5927,6 +5927,10 @@ void ExecuteCmd(MainWindow* win, int cmdId) {
             ShowAdvancedSettingsDialog(win);
             break;
 
+        case CmdConfigureRestrictedUse:
+            ShowConfigureRestrictedUseDialog(win);
+            break;
+
         case CmdOpenSettingsFile:
             OpenSettingsFile();
             break;
@@ -6509,7 +6513,7 @@ static bool ForwardToExistingInstance(Flags& flags, HANDLE* hMutex) {
     HWND existingInstanceHwnd = FindExistingSumatraProcessHwnd(hMutex, &openInNewWindow);
 
     HWND existingHwnd = nullptr;
-    if (flags.printDialog || gForTesting) {
+    if (flags.printDialog || flags.configureRestrictedUse || gForTesting) {
         // the print dialog and the test runs always use this process
     } else if (flags.reuseDdeInstance || flags.dde) {
         Vec<HWND> hwnds;
@@ -7020,7 +7024,7 @@ int GpuiMain(int argc, char** argv) {
     gIsStartup = true;
 #endif
     bool restoredSession = false;
-    if (len(gFlags->fileNames) == 0 || SettingsUseTabs()) {
+    if (!gFlags->configureRestrictedUse && (len(gFlags->fileNames) == 0 || SettingsUseTabs())) {
         restoredSession = RestoreSession(win);
         // the session may have opened more windows; the command line goes into
         // the first one, as orig does
@@ -7065,6 +7069,9 @@ int GpuiMain(int argc, char** argv) {
     }
     EnterFullScreenFromFlags(*gFlags, win);
     ApplyStartupViewFlags(*gFlags, win);
+    if (gFlags->configureRestrictedUse) {
+        ShowConfigureRestrictedUseDialog(win);
+    }
 #if OS_WIN
     if (gFlags->hwndPluginParent && !MaybeMakePluginWindow(win, gFlags->hwndPluginParent)) {
         logf("MaybeMakePluginWindow() failed, quitting\n");

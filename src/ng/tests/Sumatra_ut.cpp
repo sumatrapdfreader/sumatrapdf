@@ -45,6 +45,7 @@ void colorTest();
 void parseCommandsTest();
 void DocPropertiesTest();
 void ParseFileArgsTest();
+void RestrictedUseConfigTest();
 
 void CachedObjects_UnitTests();
 void CommandPaletteModel_UnitTests();
@@ -313,6 +314,7 @@ static void PageAspectViewTest() {
 }
 
 void SumatraPDF_UnitTests() {
+    RestrictedUseConfigTest();
     CachedObjects_UnitTests();
     CommandPaletteModel_UnitTests();
     ImageReader_UnitTests();

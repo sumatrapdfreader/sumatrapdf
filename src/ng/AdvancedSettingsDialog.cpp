@@ -20,6 +20,7 @@
 #endif
 
 #include "base/SettingsUtil.h"
+#include "base/File.h"
 #include "base/UITask.h"
 #include "gui/UIModels.h"
 
@@ -42,6 +43,7 @@
 #include "gui/DialogWidgets.h"
 #include "gui/ToolWindow.h"
 #include "SumatraDialogs.h"
+#include "RestrictedUseConfig.h"
 #include "AdvancedSettingsDialogCommon.h"
 
 #include "SumatraLog.h"
@@ -679,6 +681,260 @@ gp::El* AdvancedSettingsDialogBuild(MainWindow* win, gp::Ctx* cx) {
         return nullptr;
     }
     return AdvContentEl(cx);
+}
+
+struct RestrictedUseDlg {
+    MainWindow* win = nullptr;
+    RestrictedUseConfig config;
+    bool visible = false;
+    int sel = 0;
+    ToolWindow* tw = nullptr;
+};
+
+static RestrictedUseDlg gRestrictedUse;
+
+struct RestrictedUseView {
+    static void OnRow(RestrictedUseView*, gp::Ctx* cx, const gp::ClickEvent*, int64_t idx);
+    static void OnToggle(RestrictedUseView*, gp::Ctx* cx, const gp::ClickEvent*, int64_t idx);
+    static void OnSave(RestrictedUseView*, gp::Ctx* cx, const gp::ClickEvent*);
+    static void OnDelete(RestrictedUseView*, gp::Ctx* cx, const gp::ClickEvent*);
+    static void OnCancel(RestrictedUseView*, gp::Ctx* cx, const gp::ClickEvent*);
+    static void OnHelp(RestrictedUseView*, gp::Ctx* cx, const gp::ClickEvent*);
+};
+
+static gp::Entity<RestrictedUseView> gRestrictedUseView;
+
+static Str RestrictedUseTitle() {
+    return Tr("Configure Restricted Use");
+}
+
+bool IsConfigureRestrictedUseDialogVisible() {
+    return gRestrictedUse.visible && !gRestrictedUse.tw;
+}
+
+void CloseConfigureRestrictedUseDialog() {
+    if (!gRestrictedUse.visible) {
+        return;
+    }
+    gRestrictedUse.visible = false;
+    DlgWindowClose(&gRestrictedUse.tw);
+    AppShellInvalidate(gRestrictedUse.win);
+}
+
+static void ToggleRestrictedUseItem(int idx) {
+    if (idx < 0 || idx >= RestrictedUseFeatureCount()) {
+        return;
+    }
+    gRestrictedUse.sel = idx;
+    gRestrictedUse.config.items[idx].enabled = !gRestrictedUse.config.items[idx].enabled;
+    UpdateRestrictedUseChanged(gRestrictedUse.config);
+    AppShellInvalidate(gRestrictedUse.win);
+}
+
+bool ConfigureRestrictedUseMoveSelection(int dir) {
+    if (!gRestrictedUse.visible) {
+        return false;
+    }
+    int n = RestrictedUseFeatureCount();
+    if (dir < 0) {
+        gRestrictedUse.sel = gRestrictedUse.sel <= 0 ? n - 1 : gRestrictedUse.sel - 1;
+    } else {
+        gRestrictedUse.sel = gRestrictedUse.sel >= n - 1 ? 0 : gRestrictedUse.sel + 1;
+    }
+    AppShellInvalidate(gRestrictedUse.win);
+    return true;
+}
+
+bool ConfigureRestrictedUseOnEnter() {
+    if (!gRestrictedUse.visible) {
+        return false;
+    }
+    ToggleRestrictedUseItem(gRestrictedUse.sel);
+    return true;
+}
+
+static void RestrictedUseEnter() {
+    ConfigureRestrictedUseOnEnter();
+}
+
+static void OnRestrictedUseElevate(int result) {
+#if OS_WIN
+    if (result == MbRetYes) {
+        LaunchElevated(GetSelfExePathTemp(), StrL("-configure-restricted-use"));
+    }
+#else
+    (void)result;
+#endif
+}
+
+void ShowConfigureRestrictedUseDialog(MainWindow* win) {
+    if (!IsMainWindowValidAndNotClosing(win)) {
+        return;
+    }
+    if (!CanWriteRestrictedUseConfig()) {
+#if OS_WIN
+        if (!IsProcessRunningElevated()) {
+            MsgBox(win, Tr("Administrator access is required. Restart elevated?"), RestrictedUseTitle(),
+                   MbYesNo | MbIconError, MkFunc1Void(OnRestrictedUseElevate));
+            return;
+        }
+#endif
+        MsgBox(win, Tr("SumatraPDF cannot create files in its installation folder."), RestrictedUseTitle(),
+               MbOk | MbIconError);
+        return;
+    }
+
+    CloseConfigureRestrictedUseDialog();
+    TempStr path = GetPathInExeDirTemp(Str(kRestrictionsFileName));
+    bool exists = file::Exists(path);
+    LoadRestrictedUseConfig(gRestrictedUse.config, exists ? file::ReadFile(path) : Str(),
+                            exists ? RestrictedUseFile::Exists : RestrictedUseFile::Missing);
+    gRestrictedUse.win = win;
+    gRestrictedUse.sel = 0;
+    gRestrictedUse.visible = true;
+    DlgWindowSpec spec;
+    spec.name = "restricteduse";
+    spec.title = RestrictedUseTitle;
+    spec.build = ConfigureRestrictedUseDialogBuild;
+    spec.close = CloseConfigureRestrictedUseDialog;
+    spec.onArrow = [](int dir, bool) { return ConfigureRestrictedUseMoveSelection(dir); };
+    spec.onEnter = RestrictedUseEnter;
+    spec.clientDx = 520;
+    gRestrictedUse.tw = DlgWindowOpen(spec, win);
+    AppShellInvalidate(win);
+}
+
+void RestrictedUseView::OnRow(RestrictedUseView*, gp::Ctx* cx, const gp::ClickEvent*, int64_t idx) {
+    gRestrictedUse.sel = (int)idx;
+    gp::Notify(cx);
+}
+
+void RestrictedUseView::OnToggle(RestrictedUseView*, gp::Ctx* cx, const gp::ClickEvent*, int64_t idx) {
+    ToggleRestrictedUseItem((int)idx);
+    gp::Notify(cx);
+}
+
+void RestrictedUseView::OnSave(RestrictedUseView*, gp::Ctx* cx, const gp::ClickEvent*) {
+    if (!SaveRestrictedUseConfig(gRestrictedUse.config)) {
+        MsgBox(gRestrictedUse.win, Tr("Failed to save sumatrapdfrestrict.ini."), Tr("Error"), MbOk | MbIconError);
+        return;
+    }
+    CloseConfigureRestrictedUseDialog();
+    gp::Notify(cx);
+}
+
+static void OnRestrictedUseDelete(int result) {
+    if (result != MbRetYes) {
+        return;
+    }
+    if (!DeleteRestrictedUseConfig()) {
+        MsgBox(gRestrictedUse.win, Tr("Failed to delete sumatrapdfrestrict.ini."), Tr("Error"), MbOk | MbIconError);
+        return;
+    }
+    CloseConfigureRestrictedUseDialog();
+}
+
+void RestrictedUseView::OnDelete(RestrictedUseView*, gp::Ctx*, const gp::ClickEvent*) {
+    MsgBox(gRestrictedUse.win, Tr("Delete sumatrapdfrestrict.ini?"), RestrictedUseTitle(), MbYesNo | MbIconQuestion,
+           MkFunc1Void(OnRestrictedUseDelete));
+}
+
+void RestrictedUseView::OnCancel(RestrictedUseView*, gp::Ctx* cx, const gp::ClickEvent*) {
+    CloseConfigureRestrictedUseDialog();
+    gp::Notify(cx);
+}
+
+void RestrictedUseView::OnHelp(RestrictedUseView*, gp::Ctx*, const gp::ClickEvent*) {
+    SumatraLaunchBrowser(Str(kRestrictedUseDocsUrl));
+}
+
+gp::El* ConfigureRestrictedUseDialogBuild(MainWindow* win, gp::Ctx* cx) {
+    if (!gRestrictedUse.visible || gRestrictedUse.win != win) {
+        return nullptr;
+    }
+    if (gRestrictedUse.tw && !DlgWindowIsHost(cx)) {
+        return nullptr;
+    }
+    if (!gRestrictedUseView.IsValid()) {
+        gRestrictedUseView = gp::EntityNewState<RestrictedUseView>(cx->app);
+    }
+    const gp::Theme& th = gp::ThemeNow(cx->app);
+    gp::El* body = gp::Div(cx->a)->FlexCol()->Gap(6)->W(gp::kFill);
+    gp::El* list = gp::Div(cx->a)->FlexCol()->W(gp::kFill)->Border(1, th.border);
+    for (int i = 0; i < RestrictedUseFeatureCount(); i++) {
+        gp::Listener onToggle = gp::ListenTo(gRestrictedUseView, &RestrictedUseView::OnToggle, (intptr_t)i);
+        gp::El* label =
+            gp::TextEl(cx->a, GpuiDup(cx->a, RestrictedUseFeatureName(i)))->Font(13)->Fg(th.foreground)->Flex1();
+        if (gRestrictedUse.config.items[i].changed) {
+            label->Bold();
+        }
+        gp::El* row = gp::Div(cx->a)
+                          ->FlexRow()
+                          ->W(gp::kFill)
+                          ->H(28)
+                          ->Shrink0()
+                          ->ItemsCenter()
+                          ->PadX(6)
+                          ->PathClick(GpuiDup(cx->a, fmt("restricted-row-%d", i)))
+                          ->OnClick(gp::ListenTo(gRestrictedUseView, &RestrictedUseView::OnRow, (intptr_t)i));
+        if (i == gRestrictedUse.sel) {
+            row->Bg(th.selection);
+        }
+        row->Child(label);
+        row->Child(gpc::Checkbox::New(cx, GpuiDup(cx->a, fmt("restricted-check-%d", i)))
+                       ->Checked(gRestrictedUse.config.items[i].enabled)
+                       ->OnClick(onToggle)
+                       ->IntoEl());
+        list->Child(row);
+    }
+    body->Child(list);
+    body->Child(gp::Div(cx->a)
+                    ->W(gp::kFill)
+                    ->H(72)
+                    ->Shrink0()
+                    ->Pad(6)
+                    ->Border(1, th.border)
+                    ->Child(gp::TextEl(cx->a, GpuiDup(cx->a, RestrictedUseFeatureDescription(gRestrictedUse.sel)))
+                                ->Font(12)
+                                ->Fg(th.mutedFg)
+                                ->Wrap()));
+
+    gp::El* footer = gp::Div(cx->a)->FlexRow()->W(gp::kFill)->ItemsCenter()->JustifyBetween()->Gap(8);
+    gp::El* left = gp::Div(cx->a)->FlexRow()->ItemsCenter()->Gap(8);
+    if (RestrictedUseConfigChanged(gRestrictedUse.config)) {
+        left->Child(gpc::Button::New(cx, GStrL("restricted-save"))
+                        ->Label(ToGpui(Tr("Save")))
+                        ->Primary()
+                        ->WithSize(gp::UiSize::Small)
+                        ->OnClick(gp::ListenTo(gRestrictedUseView, &RestrictedUseView::OnSave))
+                        ->IntoEl());
+    }
+    if (gRestrictedUse.config.fileExists) {
+        left->Child(gpc::Button::New(cx, GStrL("restricted-delete"))
+                        ->Label(ToGpui(Tr("Delete File")))
+                        ->WithSize(gp::UiSize::Small)
+                        ->OnClick(gp::ListenTo(gRestrictedUseView, &RestrictedUseView::OnDelete))
+                        ->IntoEl());
+    }
+    left->Child(gpc::Button::New(cx, GStrL("restricted-cancel"))
+                    ->Label(ToGpui(Tr("Cancel")))
+                    ->WithSize(gp::UiSize::Small)
+                    ->OnClick(gp::ListenTo(gRestrictedUseView, &RestrictedUseView::OnCancel))
+                    ->IntoEl());
+    footer->Child(left);
+    footer->Child(gpc::Button::New(cx, GStrL("restricted-help"))
+                      ->Label(ToGpui(Tr("Help")))
+                      ->WithSize(gp::UiSize::Small)
+                      ->OnClick(gp::ListenTo(gRestrictedUseView, &RestrictedUseView::OnHelp))
+                      ->IntoEl());
+
+    return DlgIntoEl(cx, gpc::Dialog::New(cx)
+                             ->Open(true)
+                             ->Title(ToGpui(RestrictedUseTitle()))
+                             ->Body(body)
+                             ->Footer(footer)
+                             ->W(520)
+                             ->OnClose(gp::ListenTo(gRestrictedUseView, &RestrictedUseView::OnCancel)));
 }
 
 // --- a window of its own (Windows) ------------------------------------------

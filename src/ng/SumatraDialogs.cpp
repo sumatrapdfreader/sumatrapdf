@@ -665,6 +665,9 @@ gp::El* DialogsBuild(MainWindow* win, gp::Ctx* cx) {
     if (gp::El* e = AdvancedSettingsDialogBuild(win, cx)) {
         return e;
     }
+    if (gp::El* e = ConfigureRestrictedUseDialogBuild(win, cx)) {
+        return e;
+    }
     if (gp::El* e = PageGridDialogBuild(win, cx)) {
         return e;
     }
@@ -697,6 +700,9 @@ gp::El* DialogsBuild(MainWindow* win, gp::Ctx* cx) {
 
 // orig's dialogs with a list let Up / Down drive it from anywhere in the dialog
 bool DialogsOnArrowKey(MainWindow*, int dir, bool editFocused) {
+    if (ConfigureRestrictedUseMoveSelection(dir)) {
+        return true;
+    }
     if (CustomZoomMoveSelection(dir)) {
         return true;
     }
@@ -730,8 +736,9 @@ DialogAccels DialogsAccelTable(MainWindow* win) {
                IsChangeThemeDialogVisible() || IsChangeColorDialogVisible() || IsInverseSearchDialogVisible() ||
                IsSignDocumentDialogVisible() || IsPdfToolDialogVisible() || IsImageEditWindowVisible() ||
                IsSetScreenshotHotkeyDialogVisible() || IsEbookSettingsDialogVisible() || IsSettingsDialogVisible() ||
-               IsAdvancedSettingsDialogVisible() || IsPageGridDialogVisible() || IsKeyboardHelpVisible() ||
-               IsUnsavedAnnotationsDialogVisible() || IsSavePathDialogVisible();
+               IsAdvancedSettingsDialogVisible() || IsConfigureRestrictedUseDialogVisible() ||
+               IsPageGridDialogVisible() || IsKeyboardHelpVisible() || IsUnsavedAnnotationsDialogVisible() ||
+               IsSavePathDialogVisible();
     (void)win;
     return any ? DialogAccels::None : DialogAccels::All;
 }
@@ -813,6 +820,9 @@ bool DialogsOnEnter(MainWindow*) {
         return true;
     }
     if (PdfToolDialogOnEnter()) {
+        return true;
+    }
+    if (ConfigureRestrictedUseOnEnter()) {
         return true;
     }
     return AdvancedSettingsOnEnter();
@@ -1046,6 +1056,10 @@ bool DialogsOnEscape(MainWindow* win) {
     }
     if (IsAdvancedSettingsDialogVisible()) {
         AdvancedSettingsOnEscape();
+        return true;
+    }
+    if (IsConfigureRestrictedUseDialogVisible()) {
+        CloseConfigureRestrictedUseDialog();
         return true;
     }
     if (IsPageGridDialogVisible()) {

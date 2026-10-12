@@ -41,6 +41,7 @@ static const i32 gNoDocWhitelist[] = {
     CmdSetInverseSearch,
     CmdAdvancedSettings,
     CmdOpenSettingsFile,
+    CmdConfigureRestrictedUse,
     CmdChangeLanguage,
     CmdChangeTheme,
     CmdCheckUpdate,

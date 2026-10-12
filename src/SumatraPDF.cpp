@@ -10885,6 +10885,10 @@ static LRESULT FrameOnCommand(MainWindow* win, HWND hwnd, UINT msg, WPARAM wp, L
             ShowAdvancedSettingsDialog(win);
             break;
 
+        case CmdConfigureRestrictedUse:
+            ShowConfigureRestrictedUseDialog(win);
+            break;
+
         case CmdOpenSettingsFile:
             OpenSettingsFileInEditor();
             break;
@@ -15964,7 +15968,7 @@ int APIENTRY WinMain(_In_ HINSTANCE /*hInstance*/, _In_opt_ HINSTANCE /*hPrevIns
         }
     }
 
-    if (flags.printDialog || flags.stressTestPath || gPluginMode || gForTesting) {
+    if (flags.printDialog || flags.stressTestPath || flags.configureRestrictedUse || gPluginMode || gForTesting) {
         // TODO: pass print request through to previous instance?
     } else if (flags.reuseDdeInstance || flags.dde) {
         existingHwnd = FindWindowW(kFrameClassName, nullptr);
@@ -16035,8 +16039,8 @@ ContinueOpenWindow:
     gInitialSessionData = gSettings->sessionData;
     gSettings->sessionData = new Vec<SessionData*>();
 
-    restoreSession =
-        SettingsRestoreSession() && (len(*gInitialSessionData) > 0) && !NeedsWindowEmbeddingHacks() && !flags.quickLook;
+    restoreSession = SettingsRestoreSession() && (len(*gInitialSessionData) > 0) && !NeedsWindowEmbeddingHacks() &&
+                     !flags.quickLook && !flags.configureRestrictedUse;
     if (!SettingsUseTabs() && (existingInstanceHwnd != nullptr)) {
         // do not restore a session if tabs are disabled and SumatraPDF is already running
         // TODO: maybe disable restoring if tabs are disabled?
@@ -16232,6 +16236,9 @@ ContinueOpenWindow:
         if (!win) {
             goto Exit;
         }
+    }
+    if (flags.configureRestrictedUse) {
+        ShowConfigureRestrictedUseDialog(win);
     }
     if (flags.quickLook && win) {
         win->isQuickLook = true;

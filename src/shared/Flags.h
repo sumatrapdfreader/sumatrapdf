@@ -80,6 +80,7 @@ struct Flags {
     bool printDialog = false;
     bool reuseDdeInstance = false;
     bool restrictedUse = false;
+    bool configureRestrictedUse = false;
     bool enterPresentation = false;
     bool enterFullScreen = false;
     bool showConsole = false;

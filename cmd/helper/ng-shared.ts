@@ -113,6 +113,8 @@ export const sharedFiles = [
   "src/shared/AIChatPanelCommon.h",
   "src/shared/AdvancedSettingsDialogCommon.cpp",
   "src/shared/AdvancedSettingsDialogCommon.h",
+  "src/shared/RestrictedUseConfig.cpp",
+  "src/shared/RestrictedUseConfig.h",
   "src/shared/AnnotEditToolbarCommon.cpp",
   "src/shared/AnnotEditToolbarCommon.h",
   "src/shared/AnnotFilterToolbarCommon.cpp",

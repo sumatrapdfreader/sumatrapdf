@@ -519,6 +519,10 @@ MenuDef menuDefSettings[] = {
         CmdOpenSettingsFile,
     },
     {
+        TrN("Configure &Restricted Use..."),
+        CmdConfigureRestrictedUse,
+    },
+    {
         TrN("Change Language"),
         CmdChangeLanguage,
     },
