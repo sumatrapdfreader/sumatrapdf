@@ -34,6 +34,7 @@ export const excludedTests: Record<string, string> = {
   "issue-5065": "prints through Microsoft Print to PDF",
   "issue-5353": "prints through Microsoft Print to PDF",
   "issue-6150": "prints through Microsoft Print to PDF",
+  "issue-6323": "opens the system printer dialog and needs an installed printer",
   // a TeX distribution is a big install we don't want on the runner; the LaTeX
   // suite itself (tests/latex.ts) is only in run-pre-release, not here
   "issue-5040": "needs pdflatex (MiKTeX / TeX Live)",

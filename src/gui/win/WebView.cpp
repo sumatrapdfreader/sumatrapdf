@@ -1764,6 +1764,23 @@ void WebviewWnd::ShowFindUI() {
     }
 }
 
+// The host API's system dialog can switch printers; window.print() cannot in
+// some WebView2 runtimes (#6323). Older runtimes fall back at the call site.
+bool WebviewWnd::ShowPrintUI() {
+    if (!webview) {
+        return false;
+    }
+
+    ICoreWebView2_16* wv16 = nullptr;
+    HRESULT hr = webview->QueryInterface(IID_PPV_ARGS(&wv16));
+    if (FAILED(hr) || !wv16) {
+        return false;
+    }
+    hr = wv16->ShowPrintUI(COREWEBVIEW2_PRINT_DIALOG_KIND_SYSTEM);
+    wv16->Release();
+    return SUCCEEDED(hr);
+}
+
 static BOOL CALLBACK CollectChildHwnds(HWND hwnd, LPARAM lp) {
     auto* hwnds = (Vec<HWND>*)lp;
     VecAppend(*hwnds, hwnd);

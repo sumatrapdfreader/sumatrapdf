@@ -121,6 +121,7 @@ struct WebviewWnd : WindowBase {
     bool CanGoForward() const;
     void Focus();
     void ShowFindUI();
+    bool ShowPrintUI();
     void RegisterForwardingDropTarget();
     void RevokeForwardingDropTarget();
     bool Embed(WebViewMsgCb& cb);
