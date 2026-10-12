@@ -1382,8 +1382,24 @@ static void gen2_image_fb2(fz_context *ctx, struct genstate *g, fz_html_box *roo
 
 static void gen2_image_svg(fz_context *ctx, struct genstate *g, fz_html_box *root_box, fz_xml *node, int display, fz_css_style *style)
 {
+	fz_css_style local_style = *style;
+	const char *w_att = fz_xml_att(node, "width");
+	const char *h_att = fz_xml_att(node, "height");
+
+	/* SumatraPDF: resolve SVG percentages against the HTML page, not its intrinsic size (#6324). */
+	if (local_style.width.unit == N_AUTO && w_att && strchr(w_att, '%'))
+	{
+		local_style.width.value = fz_atof(w_att);
+		local_style.width.unit = N_PERCENT;
+	}
+	if (local_style.height.unit == N_AUTO && h_att && strchr(h_att, '%'))
+	{
+		local_style.height.value = fz_atof(h_att);
+		local_style.height.unit = N_PERCENT;
+	}
+
 	fz_image *img = load_svg_image(ctx, g->zip, g->base_uri, g->xml, node);
-	gen2_image_common(ctx, g, root_box, node, img, display, style);
+	gen2_image_common(ctx, g, root_box, node, img, display, &local_style);
 }
 
 static int get_heading_from_tag(fz_context *ctx, struct genstate *g, const char *tag)
