@@ -1394,7 +1394,7 @@ static int WheelPageTurnDelta(MainWindow* win, int delta) {
     }
     int perLine = gDeltaPerLine > 0 ? gDeltaPerLine : kWheelDelta / 3;
     int lineHeight = std::max(DpiScale(ScrollLineAmount(gSettings->scrollLineAmount)), 1);
-    int lines = (int)win->scrollV.nPage / lineHeight;
+    int lines = win->canvasRc.dy / lineHeight;
     return std::max(kWheelDelta, lines * perLine);
 }
 
