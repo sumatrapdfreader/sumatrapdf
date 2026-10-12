@@ -129,7 +129,8 @@ async function originalUi(pid: number) {
   await pollUntil(
     () => {
       enumWindows((h) => {
-        if (getWindowPid(h) === pid && getWindowText(h) === "Run PDF Script") dialog = h;
+        // created hidden and shown once every control exists
+        if (getWindowPid(h) === pid && getWindowText(h) === "Run PDF Script" && isWindowVisible(h)) dialog = h;
         return true;
       });
       return dialog;
