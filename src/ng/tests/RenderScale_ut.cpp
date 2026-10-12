@@ -41,6 +41,8 @@ struct NoCb : DocControllerCallback {
     void PagesRenumbered(DisplayModel*) override {}
 };
 
+const Size kTestMaxTileSize = {1920, 1080};
+
 bool Near(float a, float b) {
     return fabsf(a - b) < 0.01f;
 }
@@ -93,6 +95,9 @@ void RenderScale_UnitTests() {
 
     RenderCache cache;
     cache.maxRenderThreads = 0;
+    // the default is the primary screen, and a page at scale 2 is split
+    // into more tiles than RequestRendering() queues on a small one (CI)
+    cache.maxTileSize = kTestMaxTileSize;
 
     int widthAt1 = 0;
     float scales[] = {1, 2, 1};
