@@ -79,6 +79,9 @@ async function placementState(client: ControlClient): Promise<PlacementState> {
   };
 }
 
+const TOOLBAR_CLICK_TIMEOUT_MS = 5_000;
+const TOOLBAR_CLICK_SETTLE_MS = 300;
+
 async function waitForPlacement(client: ControlClient, active: boolean): Promise<PlacementState> {
   const deadline = Date.now() + 5_000;
   let state: PlacementState;
@@ -267,12 +270,20 @@ export async function testit(): Promise<void> {
     const by = lineButton.y + Math.floor(lineButton.dy / 2);
     const clickLineToolbar = async () => {
       if (USE_NG) {
-        const res = await client.request(ControlCommand.TestInput, ["click", bx, by, 0, 0]);
-        const raw = String(res[1] ?? "");
-        if (res[0] !== 0 || !raw.startsWith("OK")) {
-          throw new Error(`line-annotation-placement: toolbar click failed: ${raw}`);
+        // a button laid out or re-enabled this frame can't be hit until the frame
+        // is painted: click until the tool takes
+        const deadline = Date.now() + TOOLBAR_CLICK_TIMEOUT_MS * SLOW_BUILD_FACTOR;
+        for (;;) {
+          const res = await client.request(ControlCommand.TestInput, ["click", bx, by, 0, 0]);
+          const raw = String(res[1] ?? "");
+          if (res[0] !== 0 || !raw.startsWith("OK")) {
+            throw new Error(`line-annotation-placement: toolbar click failed: ${raw}`);
+          }
+          await sleep(TOOLBAR_CLICK_SETTLE_MS);
+          if ((await placementState(client)).active || Date.now() > deadline) {
+            return;
+          }
         }
-        return;
       }
       const toolbar = findChildByClass(frame, "SUMATRA_VIRT_TOOLBAR");
       await clickAt(toolbar, bx, by, 0);

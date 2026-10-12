@@ -7,6 +7,7 @@
 // Run: bun tests/issue-6271.ts [--no-build]
 import { mkdirSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
+import { IS_WIN } from "./host.ts";
 import { assemblePdf, runStandalone, tmpPath } from "./util.ts";
 import { killAndWait, killProcessesNamed, launchControlled } from "./win-automation.ts";
 import { getWindowVirtualDesktopId } from "./winapi.ts";
@@ -72,6 +73,10 @@ async function runSession(dir: string, log: string, probe: (frame: number) => vo
 }
 
 export async function testit(): Promise<void> {
+  if (!IS_WIN) {
+    console.log("SKIP issue-6271: virtual desktops are a Windows shell feature");
+    return;
+  }
   await killProcessesNamed("SumatraPDF.exe");
   const dir = tmpPath("issue-6271");
   rmSync(dir, { recursive: true, force: true });

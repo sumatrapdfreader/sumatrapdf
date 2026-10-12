@@ -12,6 +12,7 @@ MainWindowBackground = #80fff200
 NoHomeTab = false
 HomePageSortByFrequentlyRead = false
 HomePageViewMode = thumbnails
+ThumbnailsType = full
 ReloadModifiedDocuments = true
 RememberOpenedFiles = true
 RememberStatePerDocument = true

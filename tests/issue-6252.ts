@@ -117,8 +117,7 @@ export async function testit(): Promise<void> {
     const rc = getClientRect(canvas);
     const x = Math.floor((rc.right - rc.left) / 2);
     const y = Math.floor((rc.bottom - rc.top) / 3);
-    // mac wheel points are frame pixels. Windows wants the screen point.
-    const onLink = IS_MAC ? { x, y } : clientToScreen(canvas, x, y);
+    const onLink = clientToScreen(canvas, x, y);
     const res = await client.request(ControlCommand.TestRefHover, ["show", x, y]);
     if (res[0] !== 0) {
       throw new Error(`issue-6252: could not show the popup: ${res[1]}`);
@@ -139,7 +138,7 @@ export async function testit(): Promise<void> {
 
     // over the popup: plain wheel scrolls, Ctrl + wheel zooms.
     // mac has no popup HWND. pop is the popup's center in frame pixels.
-    const onPopup = IS_MAC && p.pop ? p.pop : onLink;
+    const onPopup = IS_MAC && p.pop ? clientToScreen(canvas, p.pop.x, p.pop.y) : onLink;
     postWheel(p.hwnd, WM_MOUSEWHEEL, -WHEEL_DELTA, 0, onPopup);
     p = await waitFor(client, "wheel on the popup did not scroll", (q) => below(q, p));
     postWheel(p.hwnd, WM_MOUSEWHEEL, WHEEL_DELTA, MK_CONTROL, onPopup);

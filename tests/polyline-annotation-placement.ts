@@ -6,7 +6,7 @@ import { mkdirSync, rmSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 import { ControlClient, ControlCommand } from "./control.ts";
 import { IS_MAC } from "./host.ts";
-import { cmdId, runStandalone, tmpPath, USE_NG, makeBlankPdf } from "./util.ts";
+import { cmdId, runStandalone, tmpPath, USE_NG, makeBlankPdf, SLOW_BUILD_FACTOR } from "./util.ts";
 import {
   captureWindowPixels,
   clientToScreen,
@@ -91,6 +91,9 @@ async function placementState(client: ControlClient): Promise<PlacementState> {
     raw,
   };
 }
+
+const TOOLBAR_CLICK_TIMEOUT_MS = 5_000;
+const TOOLBAR_CLICK_SETTLE_MS = 300;
 
 async function waitForPlacement(client: ControlClient, active: boolean): Promise<PlacementState> {
   const deadline = Date.now() + 5_000;
@@ -343,12 +346,20 @@ export async function testit(): Promise<void> {
       // ng draws the toolbar in the frame. A posted down/up pair can be split
       // by a cursor snap, which gpui treats as a drag.
       if (USE_NG) {
-        const res = await client.request(ControlCommand.TestInput, ["click", x, y, 0, 0]);
-        const raw = String(res[1] ?? "");
-        if (res[0] !== 0 || !raw.startsWith("OK")) {
-          throw new Error(`polyline-annotation-placement: toolbar click failed: ${raw}`);
+        // a button laid out or re-enabled this frame can't be hit until the frame
+        // is painted: click until the tool takes
+        const deadline = Date.now() + TOOLBAR_CLICK_TIMEOUT_MS * SLOW_BUILD_FACTOR;
+        for (;;) {
+          const res = await client.request(ControlCommand.TestInput, ["click", x, y, 0, 0]);
+          const raw = String(res[1] ?? "");
+          if (res[0] !== 0 || !raw.startsWith("OK")) {
+            throw new Error(`polyline-annotation-placement: toolbar click failed: ${raw}`);
+          }
+          await sleep(TOOLBAR_CLICK_SETTLE_MS);
+          if ((await placementState(client)).active || Date.now() > deadline) {
+            return;
+          }
         }
-        return;
       }
       const toolbar = findChildByClass(frame, "SUMATRA_VIRT_TOOLBAR");
       clickAt(toolbar, x, y, 0);

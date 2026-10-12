@@ -7,6 +7,7 @@
 // gets no standard handles; a directly spawned child always has a stderr.
 import { writeFileSync } from "node:fs";
 import { ControlClient, ControlCommand, uniquePipeName } from "./control.ts";
+import { IS_WIN } from "./host.ts";
 import { EXE, runStandalone, tmpPath } from "./util.ts";
 import { testWindowPos } from "./winapi.ts";
 
@@ -46,6 +47,10 @@ export function makePdf(js: string): Buffer {
 }
 
 export async function testit(): Promise<void> {
+  if (!IS_WIN) {
+    console.log("SKIP form-js-no-stderr: only an Explorer launch has no standard handles");
+    return;
+  }
   const pdf = tmpPath("form-js-no-stderr.pdf");
   writeFileSync(pdf, makePdf("noSuchFunction();"));
 

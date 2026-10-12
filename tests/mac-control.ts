@@ -525,8 +525,10 @@ export function macSendMessage(msg: number, wParam: number | bigint, lParam: num
   }
   if (msg === WM_MOUSEWHEEL || msg === WM_MOUSEHWHEEL) {
     const g = geom();
-    let px = sign16(lp);
-    let py = sign16(lp >> 16n);
+    // a wheel's lParam is in screen coordinates, unlike the other mouse messages
+    const origin = macClientToScreen(0, 0);
+    let px = sign16(lp) - origin.x;
+    let py = sign16(lp >> 16n) - origin.y;
     // A posted wheel of lParam 0 is "the document", not the corner pixel.
     if (lp === 0n && g.cdx > 0 && g.cdy > 0) {
       px = Math.round(g.ox + g.cdx / g.scale / 2);

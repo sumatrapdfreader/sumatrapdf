@@ -111,6 +111,11 @@ export function prepareTestEnvironment(): void {
       copyFileSync(sourceTool, join(TESTS_TMP_DIR, "sumatrapdf-tool.exe"));
     }
   }
+  if (!IS_WIN) {
+    // ng is portable only with a settings file next to it; without one it
+    // reads the settings of the user running the tests
+    writeFileSync(join(TESTS_TMP_DIR, "SumatraPDF-settings.txt"), "");
+  }
   EXE = testExe;
 }
 
