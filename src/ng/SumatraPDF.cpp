@@ -1870,12 +1870,26 @@ void PlaceMainWindow(MainWindow* win, SessionData* data, PlaceWindowWhen when) {
     AppShellPlaceWindow(win, pos, maximize);
 }
 
+constexpr int kMinRememberedWinSize = 100;
+constexpr int kDefaultWinDx = 1024;
+constexpr int kDefaultWinDy = 768;
+
+// The size a new frame opens at. -window-pos wins, as in PlaceMainWindow:
+// off Windows nothing moves the frame later, so its size has to be right here.
+static Size NewWindowSize(SessionData* data) {
+    Rect pos = data ? data->windowPos : gSettings->windowPos;
+    if (!data && gFlags && !gFlags->windowPos.IsEmpty()) {
+        pos = gFlags->windowPos;
+    }
+    int dx = pos.dx > kMinRememberedWinSize ? pos.dx : kDefaultWinDx;
+    int dy = pos.dy > kMinRememberedWinSize ? pos.dy : kDefaultWinDy;
+    return Size(dx, dy);
+}
+
 // orig's CreateAndShowMainWindow
 MainWindow* CreateAndShowMainWindow(SessionData* data) {
-    Rect pos = data ? data->windowPos : gSettings->windowPos;
-    int dx = pos.dx > 100 ? pos.dx : 1024;
-    int dy = pos.dy > 100 ? pos.dy : 768;
-    MainWindow* win = AppShellCreateWindow(AppShellGetApp(), dx, dy);
+    Size size = NewWindowSize(data);
+    MainWindow* win = AppShellCreateWindow(AppShellGetApp(), size.dx, size.dy);
     if (!win) {
         return nullptr;
     }
@@ -6980,9 +6994,8 @@ int GpuiMain(int argc, char** argv) {
     AppShellSetApp(app);
     SumatraUpdateTheme();
 
-    int dx = gSettings->windowPos.dx > 100 ? gSettings->windowPos.dx : 1024;
-    int dy = gSettings->windowPos.dy > 100 ? gSettings->windowPos.dy : 768;
-    MainWindow* win = AppShellCreateWindow(app, dx, dy);
+    Size size = NewWindowSize(nullptr);
+    MainWindow* win = AppShellCreateWindow(app, size.dx, size.dy);
     if (!gFlags->quickLook) {
         PlaceMainWindow(win, nullptr, PlaceWindowWhen::Now);
     }
