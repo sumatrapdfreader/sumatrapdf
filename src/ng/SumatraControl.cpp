@@ -1942,6 +1942,18 @@ static void ExecuteControlRequest(ControlRequest* req) {
             break;
         }
 
+        case ControlCmd::TestTocSidebarNav: {
+            i32 destNo = 1;
+            if (!IntArg(req, 0, destNo)) {
+                AppendError(req, StrL("TestTocSidebarNav expects int destNo (1-based)"));
+                break;
+            }
+            int exitCode = 0;
+            Str res = TocSidebarNavResultTemp(destNo, &exitCode);
+            AppendTestResult(req, exitCode, res);
+            break;
+        }
+
         case ControlCmd::TestMarkdownFollowLink: {
             Str href = StringArg(req, 0);
             i32 follow = 0;

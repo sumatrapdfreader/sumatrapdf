@@ -575,6 +575,46 @@ TempStr DestZoomNavResultTemp(int destNo, int startZoomPerc, int* exitCodeOut) {
     return ToStrTemp(out);
 }
 
+// Drives the real deferred TOC-click path (GoToTocItem, unlike
+// TocNavigateResultTemp() doesn't pre-resolve the dest); poll chapterInfo()
+// for the "NAVIGATING" result to land. Used by tests/ad-hoc-chapters.ts.
+TempStr TocSidebarNavResultTemp(int destNo, int* exitCodeOut) {
+    str::Builder out;
+    auto fail = [&](Str msg, int code = 1) -> TempStr {
+        out.Append(msg);
+        out.AppendChar('\n');
+        if (exitCodeOut) {
+            *exitCodeOut = code;
+        }
+        return ToStrTemp(out);
+    };
+
+    if (len(gWindows) == 0) {
+        return fail(StrL("NOTREADY no-window"), 2);
+    }
+    MainWindow* win = gWindows[0];
+    if (!win || !win->IsDocLoaded() || !win->ctrl) {
+        return fail(StrL("NOTREADY no-doc"), 2);
+    }
+    EngineBase* engine = win->AsFixed() ? win->AsFixed()->GetEngine() : nullptr;
+    TocTree* toc = engine ? engine->GetToc() : nullptr;
+    if (!toc || !toc->root) {
+        return fail(StrL("ERROR no-toc"));
+    }
+    int counter = 0;
+    TocItem* item = NthTocItemWithDest(toc->root, destNo, counter);
+    if (!item) {
+        return fail(fmt("ERROR no-dest destNo=%d", destNo));
+    }
+
+    GoToTocItem(win, item);
+    if (exitCodeOut) {
+        *exitCodeOut = 0;
+    }
+    out.Append(fmt("NAVIGATING dest=%d\n", destNo));
+    return ToStrTemp(out);
+}
+
 // With destNo > 0, start navigation to that Markdown TOC item through the real
 // deferred TOC path. With destNo == 0, report whether WebView has reached the
 // requested vertical scroll position. Used by tests/issue-5842.ts.

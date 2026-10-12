@@ -628,46 +628,6 @@ TempStr TocNavigateResultTemp(int destNo, int* exitCodeOut) {
     return ToStrTemp(out);
 }
 
-// Drives the real deferred TOC-click path (GoToTocItem, unlike
-// TocNavigateResultTemp() doesn't pre-resolve the dest); poll chapterInfo()
-// for the "NAVIGATING" result to land. Used by tests/ad-hoc-chapters.ts.
-TempStr TocSidebarNavResultTemp(int destNo, int* exitCodeOut) {
-    str::Builder out;
-    auto fail = [&](Str msg, int code = 1) -> TempStr {
-        out.Append(msg);
-        out.AppendChar('\n');
-        if (exitCodeOut) {
-            *exitCodeOut = code;
-        }
-        return ToStrTemp(out);
-    };
-
-    if (len(gWindows) == 0) {
-        return fail(StrL("NOTREADY no-window"), 2);
-    }
-    MainWindow* win = gWindows[0];
-    if (!win || !win->IsDocLoaded() || !win->ctrl) {
-        return fail(StrL("NOTREADY no-doc"), 2);
-    }
-    EngineBase* engine = win->AsFixed() ? win->AsFixed()->GetEngine() : nullptr;
-    TocTree* toc = engine ? engine->GetToc() : nullptr;
-    if (!toc || !toc->root) {
-        return fail(StrL("ERROR no-toc"));
-    }
-    int counter = 0;
-    TocItem* item = NthTocItemWithDest(toc->root, destNo, counter);
-    if (!item) {
-        return fail(fmt("ERROR no-dest destNo=%d", destNo));
-    }
-
-    GoToTocItem(win, item);
-    if (exitCodeOut) {
-        *exitCodeOut = 0;
-    }
-    out.Append(fmt("NAVIGATING dest=%d\n", destNo));
-    return ToStrTemp(out);
-}
-
 // Seeds a rectangle + text selection, lays out a chapter (forcing
 // SyncWithEngineLayout/PagesRenumbered), reports if both survived.
 TempStr RenumberSelResultTemp(int layoutChapter, int* exitCodeOut) {
