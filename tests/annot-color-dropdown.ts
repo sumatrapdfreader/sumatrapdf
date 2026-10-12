@@ -479,24 +479,26 @@ const DEFAULT_COLORS: Record<string, string> = {
   CmdCreateAnnotFileAttachment: "#ffff00",
 };
 
+// enabled too: a placement mode just left by a posted Esc still has the
+// buttons disabled until that key is processed
 async function waitAnnotButton(client: ControlClient, cmd: number, name: string): Promise<Rect> {
   return pollUntil(
     () => annotButtonRect(client, cmd),
-    (b) => !!b && b.dx > 0 && b.dy > 0,
-    { error: `annot-color-dropdown: no ${name} button on the Edit PDF toolbar` },
+    (b) => !!b && b.enabled && b.dx > 0 && b.dy > 0,
+    { error: `annot-color-dropdown: no enabled ${name} button on the Edit PDF toolbar` },
   );
 }
 
 // the visible annotation button for a command, in toolbar client coords
-async function annotButtonRect(client: ControlClient, cmd: number): Promise<Rect | null> {
+async function annotButtonRect(client: ControlClient, cmd: number): Promise<(Rect & { enabled: boolean }) | null> {
   const raw = String((await client.request(ControlCommand.TestToolbarButtons, []))[1] ?? "");
-  const re = /annotation-idx=\d+ cmd=(\d+) hidden=(\d) enabled=\d rect=(-?\d+),(-?\d+),(-?\d+),(-?\d+)/g;
+  const re = /annotation-idx=\d+ cmd=(\d+) hidden=(\d) enabled=(\d) rect=(-?\d+),(-?\d+),(-?\d+),(-?\d+)/g;
   let m: RegExpExecArray | null;
   while ((m = re.exec(raw)) !== null) {
     if (+m[1]! === cmd && m[2] === "0") {
-      const x = +m[3]!;
-      const y = +m[4]!;
-      return { x, y, dx: +m[5]! - x, dy: +m[6]! - y };
+      const x = +m[4]!;
+      const y = +m[5]!;
+      return { x, y, dx: +m[6]! - x, dy: +m[7]! - y, enabled: m[3] === "1" };
     }
   }
   return null;
