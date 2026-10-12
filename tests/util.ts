@@ -410,7 +410,7 @@ export async function pollUntil<T>(
   ok: (value: T) => boolean,
   opts?: { timeoutMs?: number; intervalMs?: number; error?: string | ((last: T) => string) },
 ): Promise<T> {
-  const timeoutMs = opts?.timeoutMs ?? 8000;
+  const timeoutMs = opts?.timeoutMs ?? 8000 * SLOW_BUILD_FACTOR;
   const intervalMs = opts?.intervalMs ?? 50;
   const deadline = Date.now() + timeoutMs;
   let last!: T;

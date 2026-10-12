@@ -418,6 +418,7 @@ export const tests: NamedTest[] = [
   // mouse, so it is the one test that cares what the machine was doing before
   ["issue-5978", issue5978],
   ["pdf-script", pdfScript],
+  ["annot-color-dropdown", annotColorDropdown],
   ["read-aloud-lazy-chapters", readAloudLazyChapters],
   ["free-text-edit-toolbar", freeTextEditToolbar],
   ["free-text-edit-zoom", freeTextEditZoom],
@@ -450,7 +451,6 @@ export const tests: NamedTest[] = [
   ["issue-5933", issue5933],
   ["issue-6117", issue6117],
   ["custom-zoom-dialog", customZoomDialog],
-  ["annot-color-dropdown", annotColorDropdown],
   ["annot-contents-click-away", annotContentsClickAway],
   ["issue-2799", issue2799],
   ["ink-thickness", inkThickness],

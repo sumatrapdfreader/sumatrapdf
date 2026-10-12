@@ -399,6 +399,7 @@ async function testShape(): Promise<void> {
     await pollUntil(
       () => toolbarDump(client),
       (s) => chipNames(s).includes("interiorColor"),
+      { error: (s) => `annot-color-dropdown: clicking the square showed no interiorColor chip: ${s}` },
     );
     await client.waitForRenderIdle();
 
@@ -646,6 +647,7 @@ async function testToolbarButtons(): Promise<void> {
         const dip = /^dropdown-dip idx=1 rect=(-?\d+),(-?\d+),(-?\d+),(-?\d+)/m.exec(s);
         return !!dip && +dip[3]! > +dip[1]! && +dip[4]! > +dip[2]!;
       },
+      { error: (s) => `annot-color-dropdown: right-clicking Square opened no drop-down: ${s}` },
     );
     if (USE_NG) {
       const dip = /^dropdown-dip idx=1 rect=(-?\d+),(-?\d+),(-?\d+),(-?\d+)/m.exec(raw);
@@ -673,6 +675,7 @@ async function testToolbarButtons(): Promise<void> {
       await pollUntil(
         () => findTopWindow(pid, HOVER_MENU_CLASS),
         (hwnd) => hwnd === 0 || !isWindowVisible(hwnd),
+        { error: "annot-color-dropdown: the Square drop-down stayed up after picking a color" },
       );
     }
 
