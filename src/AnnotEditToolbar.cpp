@@ -1729,6 +1729,42 @@ static Size MeasureInPlaceText(Str text) {
     return s;
 }
 
+// Font and box metrics for the annotation drawn `rc` big on screen. Called
+// again when a zoom changes that size under an open box.
+static bool SetInPlaceEditScale(Annotation* annot, RectF pageRect, Rect rc) {
+    // screen pixels per PDF point, so the box matches the rendered text
+    float scale = pageRect.dy > 0 ? ((float)rc.dy / pageRect.dy) : 1.f;
+    int textSize = DefaultAppearanceTextSize(annot);
+    if (textSize <= 0) {
+        textSize = 12;
+    }
+    int fontPx = std::max(6, (int)lroundf((float)textSize * scale));
+    int fontStyle = FreeTextFontStyle(annot);
+    int weight = (fontStyle & kFreeTextBold) ? FW_BOLD : FW_NORMAL;
+    BOOL italic = (fontStyle & kFreeTextItalic) ? TRUE : FALSE;
+    BOOL underline = (fontStyle & kFreeTextUnderline) ? TRUE : FALSE;
+    HFONT font = CreateFontW(-fontPx, 0, 0, 0, weight, italic, underline, FALSE, DEFAULT_CHARSET, OUT_DEFAULT_PRECIS,
+                             CLIP_DEFAULT_PRECIS, DEFAULT_QUALITY, DEFAULT_PITCH,
+                             WinFontFamilyTemp(FreeTextFontFamily(annot)).s);
+    if (!font) {
+        return false;
+    }
+    if (gInPlace.hwnd) {
+        SetWindowFont(gInPlace.hwnd, font, TRUE);
+    }
+    if (gInPlace.font) {
+        DeleteObject(gInPlace.font);
+    }
+    gInPlace.font = font;
+    gInPlace.size = rc.Size();
+    gInPlace.minSize = rc.Size();
+    gInPlace.textSize = textSize;
+    gInPlace.borderWidth = std::max(BorderWidth(annot), 0);
+    gInPlace.fontPx = fontPx;
+    gInPlace.scale = scale;
+    return true;
+}
+
 // The box follows what has been typed. It never shrinks below the annotation's
 // own box, so committing can only ever grow the annotation.
 static void SizeInPlaceEditToText() {
@@ -1781,8 +1817,17 @@ void RepositionFreeTextInPlaceEdit(MainWindow* win) {
     if (!dm || !AnnotationIsLive(annot) || !dm->PageVisible(PageNo(annot))) {
         return;
     }
-    Rect r = dm->CvtToScreen(PageNo(annot), GetRect(annot));
+    RectF pageRect = GetRect(annot);
+    Rect r = dm->CvtToScreen(PageNo(annot), pageRect);
     Rect cur = ChildPosWithinParent(gInPlace.hwnd);
+    if (r.Size() != gInPlace.minSize && !r.IsEmpty()) {
+        // a zoom changed the size: the box and its font follow, or accepting
+        // the box would grow the annotation to its old pixel size
+        SetWindowPos(gInPlace.hwnd, nullptr, r.x, r.y, r.dx, r.dy, SWP_NOZORDER | SWP_NOACTIVATE);
+        SetInPlaceEditScale(annot, pageRect, r);
+        SizeInPlaceEditToText();
+        return;
+    }
     if (cur.x == r.x && cur.y == r.y) {
         return;
     }
@@ -1947,25 +1992,6 @@ bool StartFreeTextInPlaceEdit(MainWindow* win, Annotation* annot) {
         return false;
     }
 
-    // screen pixels per PDF point, so the box matches the rendered text
-    float scale = pageRect.dy > 0 ? ((float)rc.dy / pageRect.dy) : 1.f;
-    int textSize = DefaultAppearanceTextSize(annot);
-    if (textSize <= 0) {
-        textSize = 12;
-    }
-    int borderWidth = std::max(BorderWidth(annot), 0);
-    int fontPx = std::max(6, (int)lroundf((float)textSize * scale));
-    int fontStyle = FreeTextFontStyle(annot);
-    int weight = (fontStyle & kFreeTextBold) ? FW_BOLD : FW_NORMAL;
-    BOOL italic = (fontStyle & kFreeTextItalic) ? TRUE : FALSE;
-    BOOL underline = (fontStyle & kFreeTextUnderline) ? TRUE : FALSE;
-    HFONT font = CreateFontW(-fontPx, 0, 0, 0, weight, italic, underline, FALSE, DEFAULT_CHARSET, OUT_DEFAULT_PRECIS,
-                             CLIP_DEFAULT_PRECIS, DEFAULT_QUALITY, DEFAULT_PITCH,
-                             WinFontFamilyTemp(FreeTextFontFamily(annot)).s);
-    if (!font) {
-        return false;
-    }
-
     // lines don't wrap: the box grows to fit them instead
     // no WS_BORDER: the 1px frame comes from WM_NCCALCSIZE / WM_NCPAINT so it
     // can be drawn in the text color
@@ -1974,12 +2000,16 @@ bool StartFreeTextInPlaceEdit(MainWindow* win, Annotation* annot) {
     HWND hwnd =
         CreateWindowExW(0, WC_EDITW, L"", style, rc.x, rc.y, rc.dx, rc.dy, win->hwndCanvas, nullptr, hmod, nullptr);
     if (!hwnd) {
-        DeleteObject(font);
+        return false;
+    }
+    gInPlace.hwnd = hwnd;
+    if (!SetInPlaceEditScale(annot, pageRect, rc)) {
+        gInPlace = {};
+        DestroyWindow(hwnd);
         return false;
     }
     // a themed edit paints its own border over the one we draw in WM_NCPAINT
     SetWindowTheme(hwnd, L"", L"");
-    SetWindowFont(hwnd, font, TRUE);
     int pad = std::max(DpiScale(2), 1);
     SendMessageW(hwnd, EM_SETMARGINS, EC_LEFTMARGIN | EC_RIGHTMARGIN, MAKELPARAM(pad, pad));
     TempStr text = str::DupTemp(Contents(annot));
@@ -1990,18 +2020,10 @@ bool StartFreeTextInPlaceEdit(MainWindow* win, Annotation* annot) {
     gInPlaceDefProc = (WNDPROC)GetWindowLongPtrW(hwnd, GWLP_WNDPROC);
     SetWindowLongPtrW(hwnd, GWLP_WNDPROC, (LONG_PTR)WndProcFreeTextInPlaceEdit);
 
-    gInPlace.hwnd = hwnd;
-    gInPlace.font = font;
     gInPlace.win = win;
     gInPlace.tab = win->CurrentTab();
     gInPlace.annot = annot;
-    gInPlace.size = rc.Size();
-    gInPlace.minSize = rc.Size();
     gInPlace.padding = pad;
-    gInPlace.textSize = textSize;
-    gInPlace.borderWidth = borderWidth;
-    gInPlace.fontPx = fontPx;
-    gInPlace.scale = scale;
     PdfColor pdfTextCol = DefaultAppearanceTextColor(annot);
     if (pdfTextCol != kColorUnset) {
         u8 r, g, b, a;

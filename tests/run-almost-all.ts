@@ -268,6 +268,7 @@ import { testit as annotUndoOneStep } from "./annot-undo-one-step.ts";
 import { testit as textAnnotationPlacement } from "./text-annotation-placement.ts";
 import { testit as freeTextAnnotationPlacement } from "./free-text-annotation-placement.ts";
 import { testit as freeTextEditToolbar } from "./free-text-edit-toolbar.ts";
+import { testit as freeTextEditZoom } from "./free-text-edit-zoom.ts";
 import { testit as issue6198 } from "./issue-6198.ts";
 import { testit as createAnnotEntersEditMode } from "./create-annot-enters-edit-mode.ts";
 import { testit as issue6111 } from "./issue-6111.ts";
@@ -417,6 +418,8 @@ export const tests: NamedTest[] = [
   // mouse, so it is the one test that cares what the machine was doing before
   ["issue-5978", issue5978],
   ["pdf-script", pdfScript],
+  ["free-text-edit-toolbar", freeTextEditToolbar],
+  ["free-text-edit-zoom", freeTextEditZoom],
   ["pdf-edit-toolbar-interaction", pdfEditToolbarInteraction],
   ["polyline-annotation-placement", polylineAnnotationPlacement],
   ["line-annotation-placement", lineAnnotationPlacement],
@@ -552,7 +555,6 @@ export const tests: NamedTest[] = [
   ["issue-6054", issue6054],
   ["text-annotation-placement", textAnnotationPlacement],
   ["free-text-annotation-placement", freeTextAnnotationPlacement],
-  ["free-text-edit-toolbar", freeTextEditToolbar],
   ["issue-6198", issue6198],
   ["create-annot-enters-edit-mode", createAnnotEntersEditMode],
   ["issue-6166", issue6166],
