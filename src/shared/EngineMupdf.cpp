@@ -27,6 +27,8 @@ extern "C" {
 #include <mupdf/pdf.h>
 #if OS_WIN
 #include "mupdf/pkcs7-windows.h"
+#elif OS_DARWIN
+#include "mupdf/pkcs7_mac.h"
 #elif defined(SUMATRA_HAVE_OPENSSL)
 #include "mupdf/helpers/pkcs7-openssl.h"
 #endif
@@ -8054,7 +8056,7 @@ static TempStr LookupMetadataTemp(fz_context* ctx, fz_document* doc, Str key) {
     return str::DupTemp(Str(buf, (int)((size_t)n - 1)));
 }
 
-#if OS_WIN || defined(SUMATRA_HAVE_OPENSSL)
+#if OS_WIN || OS_DARWIN || defined(SUMATRA_HAVE_OPENSSL)
 struct SigFieldWalk {
     Vec<pdf_obj*> fields;
 };
@@ -8534,7 +8536,7 @@ void FreePdfSigCerts(PdfSigCert* certs) {
 }
 #endif
 
-#if defined(SUMATRA_HAVE_OPENSSL)
+#if OS_DARWIN || defined(SUMATRA_HAVE_OPENSSL)
 static void AppendOpenSslSigText(fz_context* ctx, str::Builder& out, pdf_pkcs7_verifier* verifier, pdf_document* pdfdoc,
                                  pdf_obj* field, int sigNo, int laterSigs) {
     if (len(out) > 0) {
@@ -8578,7 +8580,7 @@ static void AppendOpenSslSigText(fz_context* ctx, str::Builder& out, pdf_pkcs7_v
 #endif
 
 static TempStr GetSignatures(EngineMupdf* e) {
-#if OS_WIN || defined(SUMATRA_HAVE_OPENSSL)
+#if OS_WIN || OS_DARWIN || defined(SUMATRA_HAVE_OPENSSL)
     pdf_document* pdfdoc = e->pdfdoc;
     if (!pdfdoc) {
         return {};
@@ -8594,6 +8596,8 @@ static TempStr GetSignatures(EngineMupdf* e) {
     fz_try(ctx) {
 #if OS_WIN
         verifier = pkcs7_windows_new_verifier(ctx);
+#elif OS_DARWIN
+        verifier = pkcs7_mac_new_verifier(ctx);
 #else
         verifier = pkcs7_openssl_new_verifier(ctx);
 #endif

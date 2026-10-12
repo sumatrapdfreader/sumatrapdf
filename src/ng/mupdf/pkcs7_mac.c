@@ -2,7 +2,8 @@
    License: GPLv3 */
 
 // PDF signing on the macOS Security framework instead of OpenSSL:
-// SecPKCS12Import reads the .pfx, CMSEncoder makes the detached signature.
+// SecPKCS12Import reads the .pfx, CMSEncoder makes the detached signature,
+// CMSDecoder verifies one.
 
 #include "mupdf/fitz.h"
 #include "mupdf/pdf.h"
@@ -10,6 +11,7 @@
 
 #include <Security/Security.h>
 #include <Security/CMSEncoder.h>
+#include <Security/CMSDecoder.h>
 #include <Security/SecCertificateOIDs.h>
 
 typedef struct mac_signer {
@@ -158,12 +160,8 @@ static char* subject_attr(fz_context* ctx, SecCertificateRef cert, CFStringRef a
     return res;
 }
 
-static pdf_pkcs7_distinguished_name* signer_distinguished_name(fz_context* ctx, pdf_pkcs7_signer* signer) {
-    mac_signer* ms = (mac_signer*)signer;
-    SecCertificateRef cert = NULL;
-    if (SecIdentityCopyCertificate(ms->identity, &cert) != errSecSuccess) {
-        fz_throw(ctx, FZ_ERROR_LIBRARY, "cannot read the signing certificate");
-    }
+// Takes over the caller's reference to cert.
+static pdf_pkcs7_distinguished_name* cert_distinguished_name(fz_context* ctx, SecCertificateRef cert) {
     pdf_pkcs7_distinguished_name* dn = NULL;
     fz_var(dn);
     fz_try(ctx) {
@@ -182,6 +180,15 @@ static pdf_pkcs7_distinguished_name* signer_distinguished_name(fz_context* ctx, 
         fz_rethrow(ctx);
     }
     return dn;
+}
+
+static pdf_pkcs7_distinguished_name* signer_distinguished_name(fz_context* ctx, pdf_pkcs7_signer* signer) {
+    mac_signer* ms = (mac_signer*)signer;
+    SecCertificateRef cert = NULL;
+    if (SecIdentityCopyCertificate(ms->identity, &cert) != errSecSuccess) {
+        fz_throw(ctx, FZ_ERROR_LIBRARY, "cannot read the signing certificate");
+    }
+    return cert_distinguished_name(ctx, cert);
 }
 
 // Returns the signature's size, 0 on failure. A NULL digest only measures.
@@ -342,4 +349,188 @@ pdf_pkcs7_signer* pkcs7_mac_read_pfx(fz_context* ctx, const char* pfile, const c
         fz_rethrow(ctx);
     }
     return &signer->base;
+}
+
+// The size of the DER element at sig, 0 if malformed. /Contents is padded
+// with zeros that CMSDecoder takes for more message.
+static size_t der_element_size(const unsigned char* sig, size_t sig_len) {
+    if (sig_len < 2) {
+        return 0;
+    }
+    size_t len = sig[1];
+    size_t header = 2;
+    if (len & BER_LONG_LEN) {
+        size_t n = len & ~BER_LONG_LEN;
+        if (n == 0 || n > sizeof(size_t) || sig_len < 2 + n) {
+            return 0;
+        }
+        len = 0;
+        for (size_t i = 0; i < n; i++) {
+            len = (len << 8) | sig[2 + i];
+        }
+        header += n;
+    }
+    if (len > sig_len - header) {
+        return 0;
+    }
+    return header + len;
+}
+
+// Decodes a detached signature over the bytes of `in` (NULL: only parse it).
+// NULL if it is not a CMS message.
+static CMSDecoderRef decode_signature(fz_context* ctx, fz_stream* in, const unsigned char* sig, size_t sig_len) {
+    size_t der_len = der_element_size(sig, sig_len);
+    CMSDecoderRef dec = NULL;
+    if (der_len == 0 || CMSDecoderCreate(&dec) != errSecSuccess) {
+        return NULL;
+    }
+    CFMutableDataRef content = NULL;
+    OSStatus st = CMSDecoderUpdateMessage(dec, sig, der_len);
+    fz_var(content);
+    fz_var(st);
+    fz_try(ctx) {
+        if (st == errSecSuccess && in) {
+            content = CFDataCreateMutable(NULL, 0);
+            unsigned char buf[READ_CHUNK];
+            for (;;) {
+                size_t n = fz_read(ctx, in, buf, sizeof(buf));
+                if (n == 0) {
+                    break;
+                }
+                CFDataAppendBytes(content, buf, (CFIndex)n);
+            }
+            st = CMSDecoderSetDetachedContent(dec, content);
+        }
+        if (st == errSecSuccess) {
+            st = CMSDecoderFinalizeMessage(dec);
+        }
+    }
+    fz_always(ctx) {
+        if (content) {
+            CFRelease(content);
+        }
+    }
+    fz_catch(ctx) {
+        fz_report_error(ctx);
+        st = errSecDecode;
+    }
+    if (st != errSecSuccess) {
+        CFRelease(dec);
+        return NULL;
+    }
+    return dec;
+}
+
+static pdf_signature_error verifier_check_digest(fz_context* ctx, pdf_pkcs7_verifier* verifier, fz_stream* in,
+                                                 unsigned char* sig, size_t sig_len) {
+    (void)verifier;
+    CMSDecoderRef dec = decode_signature(ctx, in, sig, sig_len);
+    if (!dec) {
+        return PDF_SIGNATURE_ERROR_UNKNOWN;
+    }
+    SecPolicyRef policy = SecPolicyCreateBasicX509();
+    CMSSignerStatus status = kCMSSignerUnsigned;
+    OSStatus st = CMSDecoderCopySignerStatus(dec, 0, policy, false, &status, NULL, NULL);
+    CFRelease(policy);
+    CFRelease(dec);
+    if (st != errSecSuccess) {
+        return PDF_SIGNATURE_ERROR_UNKNOWN;
+    }
+    switch (status) {
+        case kCMSSignerValid:
+            return PDF_SIGNATURE_ERROR_OKAY;
+        case kCMSSignerInvalidSignature:
+            return PDF_SIGNATURE_ERROR_DIGEST_FAILURE;
+        case kCMSSignerUnsigned:
+            return PDF_SIGNATURE_ERROR_NO_SIGNATURES;
+        default:
+            return PDF_SIGNATURE_ERROR_UNKNOWN;
+    }
+}
+
+static int cert_is_self_signed(SecCertificateRef cert) {
+    CFDataRef issuer = SecCertificateCopyNormalizedIssuerSequence(cert);
+    CFDataRef subject = SecCertificateCopyNormalizedSubjectSequence(cert);
+    int res = issuer && subject && CFEqual(issuer, subject);
+    if (issuer) {
+        CFRelease(issuer);
+    }
+    if (subject) {
+        CFRelease(subject);
+    }
+    return res;
+}
+
+static pdf_signature_error verifier_check_certificate(fz_context* ctx, pdf_pkcs7_verifier* verifier,
+                                                      unsigned char* sig, size_t sig_len) {
+    (void)verifier;
+    CMSDecoderRef dec = decode_signature(ctx, NULL, sig, sig_len);
+    if (!dec) {
+        return PDF_SIGNATURE_ERROR_UNKNOWN;
+    }
+    pdf_signature_error res = PDF_SIGNATURE_ERROR_UNKNOWN;
+    SecPolicyRef policy = SecPolicyCreateBasicX509();
+    SecTrustRef trust = NULL;
+    SecCertificateRef cert = NULL;
+    CFArrayRef certs = NULL;
+    // the signer's certificate leads; the message's other ones help build the chain
+    CFMutableArrayRef chain = CFArrayCreateMutable(NULL, 0, &kCFTypeArrayCallBacks);
+    if (CMSDecoderCopySignerCert(dec, 0, &cert) == errSecSuccess && cert) {
+        CFArrayAppendValue(chain, cert);
+        if (CMSDecoderCopyAllCerts(dec, &certs) == errSecSuccess && certs) {
+            CFArrayAppendArray(chain, certs, CFRangeMake(0, CFArrayGetCount(certs)));
+        }
+        if (SecTrustCreateWithCertificates(chain, policy, &trust) != errSecSuccess) {
+            trust = NULL;
+        }
+    }
+    if (trust) {
+        if (SecTrustEvaluateWithError(trust, NULL)) {
+            res = PDF_SIGNATURE_ERROR_OKAY;
+        } else if (cert_is_self_signed(cert)) {
+            res = PDF_SIGNATURE_ERROR_SELF_SIGNED;
+        } else {
+            res = PDF_SIGNATURE_ERROR_NOT_TRUSTED;
+        }
+        CFRelease(trust);
+    }
+    if (certs) {
+        CFRelease(certs);
+    }
+    if (cert) {
+        CFRelease(cert);
+    }
+    CFRelease(chain);
+    CFRelease(policy);
+    CFRelease(dec);
+    return res;
+}
+
+static pdf_pkcs7_distinguished_name* verifier_get_signatory(fz_context* ctx, pdf_pkcs7_verifier* verifier,
+                                                            unsigned char* sig, size_t sig_len) {
+    (void)verifier;
+    CMSDecoderRef dec = decode_signature(ctx, NULL, sig, sig_len);
+    if (!dec) {
+        return NULL;
+    }
+    SecCertificateRef cert = NULL;
+    OSStatus st = CMSDecoderCopySignerCert(dec, 0, &cert);
+    CFRelease(dec);
+    if (st != errSecSuccess || !cert) {
+        return NULL;
+    }
+    return cert_distinguished_name(ctx, cert);
+}
+
+static void drop_verifier(fz_context* ctx, pdf_pkcs7_verifier* verifier) {
+    fz_free(ctx, verifier);
+}
+
+pdf_pkcs7_verifier* pkcs7_mac_new_verifier(fz_context* ctx) {
+    pdf_pkcs7_verifier* verifier = fz_malloc_struct(ctx, pdf_pkcs7_verifier);
+    verifier->drop = drop_verifier;
+    verifier->check_certificate = verifier_check_certificate;
+    verifier->check_digest = verifier_check_digest;
+    verifier->get_signatory = verifier_get_signatory;
+    return verifier;
 }
