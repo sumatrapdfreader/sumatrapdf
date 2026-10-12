@@ -18,6 +18,7 @@
 #include "EngineBase.h"
 #include "MainWindow.h"
 #include "WindowTab.h"
+#include "SumatraConfig.h"
 #include "SumatraPDF.h"
 #include "Translations.h"
 #include "SumatraDialogs.h"
@@ -29,19 +30,9 @@ struct ScriptArgRow {
     Edit* edit;
 };
 
-struct ScriptArgsScroll : ScrollBox {
-    ScriptArgsScroll(ILayout* child) : ScrollBox(child) {}
-    Size Layout(Constraints bc) override {
-        bc.min.dy = bc.max.dy = DpiScale(100);
-        return ScrollBox::Layout(bc);
-    }
-    int MinIntrinsicHeight(int) override { return DpiScale(100); }
-};
-
 struct PDFScriptWnd : WindowBase {
     Vec<ScriptArgRow*> rows;
     VBox* argsBox = nullptr;
-    ScrollBox* argsScroll = nullptr;
     Edit* script = nullptr;
     Edit* output = nullptr;
     DropDown* examples = nullptr;
@@ -140,8 +131,10 @@ void PDFScriptWnd::OnAdd() {
     if (running) return;
     AddArg({});
     LayoutArgs();
-    argsScroll->ScrollTo(argsScroll->MaxScrollY());
-    rows[len(rows) - 1]->edit->SetFocus();
+    UpdateTheme();
+    auto* edit = rows[len(rows) - 1]->edit;
+    edit->SetFocus();
+    RedrawWindow(edit->hwnd, nullptr, nullptr, RDW_FRAME | RDW_INVALIDATE | RDW_ERASE | RDW_UPDATENOW);
 }
 
 static void ScriptFinished(u64* runId, PDFScriptResult* result) {
@@ -193,6 +186,7 @@ void PDFScriptWnd::Create(MainWindow* owner, Str path) {
     ca.owner = win->hwndFrame;
     ca.title = Tr("Run PDF Script");
     ca.font = GetFont();
+    ca.icon = LoadIconW(GetModuleHandleW(nullptr), MAKEINTRESOURCEW(GetAppIconID()));
     ca.style = WS_OVERLAPPEDWINDOW;
     ca.visible = false;
     CreateCustom(ca);
@@ -203,13 +197,12 @@ void PDFScriptWnd::Create(MainWindow* owner, Str path) {
     argsBox = new VBox();
     argsBox->alignCross = CrossAxisAlign::Stretch;
     argsBox->gap = DpiScale(4);
-    argsScroll = new ScriptArgsScroll(argsBox);
-    body->AddChild(argsScroll);
+    body->AddChild(argsBox);
     AddArg(path);
     AddArg(PDFScriptOutputPath(path));
     auto* addRow = new HBox();
     addRow->alignMain = MainAxisAlign::MainEnd;
-    auto* add = NewThemedButton(hwnd, Tr("Add arg"), GetFont(), false);
+    auto* add = NewThemedButton(hwnd, Tr("Add argument"), GetFont(), false);
     add->onClick = MkMethod0<PDFScriptWnd, &PDFScriptWnd::OnAdd>(this);
     addRow->AddChild(add);
     body->AddChild(addRow);

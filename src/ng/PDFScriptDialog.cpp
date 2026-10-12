@@ -31,7 +31,6 @@ static struct PDFScriptDlg {
     bool visible = false;
     bool running = false;
     bool wantFocus = false;
-    float scrollY = 0;
     int nextArg = 0;
     u64 session = 0;
 } gScript;
@@ -45,7 +44,6 @@ struct PDFScriptView {
     static void OnRun(PDFScriptView*, gp::Ctx*, const gp::ClickEvent*);
     static void OnHelp(PDFScriptView*, gp::Ctx*, const gp::ClickEvent*);
     static void OnCancel(PDFScriptView*, gp::Ctx*, const gp::ClickEvent*);
-    static void OnScroll(PDFScriptView*, gp::Ctx*, const gp::ScrollEvent*);
 };
 static gp::Entity<PDFScriptView> gScriptView;
 
@@ -100,7 +98,6 @@ void ShowPDFScriptDialog(MainWindow* win) {
     gScript.running = false;
     gScript.wantFocus = true;
     gScript.session = ++gScriptSession;
-    gScript.scrollY = 0;
     VecAppend(gScript.args, ScriptArg{++gScript.nextArg, ScriptInput(app, tab->filePath)});
     VecAppend(gScript.args, ScriptArg{++gScript.nextArg, ScriptInput(app, PDFScriptOutputPath(tab->filePath))});
     gScript.script = ScriptInput(app, PDFScriptSource(0));
@@ -185,10 +182,6 @@ void PDFScriptView::OnCancel(PDFScriptView*, gp::Ctx*, const gp::ClickEvent*) {
     ClosePDFScriptDialog();
 }
 
-void PDFScriptView::OnScroll(PDFScriptView*, gp::Ctx*, const gp::ScrollEvent* ev) {
-    gScript.scrollY = ev->offsetY;
-}
-
 gp::El* PDFScriptDialogBuild(MainWindow* win, gp::Ctx* cx) {
     if (!gScript.visible || gScript.win != win || (gScript.tw && !DlgWindowIsHost(cx))) return nullptr;
     if (!gScriptView.IsValid()) gScriptView = gp::EntityNewState<PDFScriptView>(cx->app);
@@ -196,8 +189,7 @@ gp::El* PDFScriptDialogBuild(MainWindow* win, gp::Ctx* cx) {
         gp::InputSetValue(gScript.script, ToGpui(PDFScriptSource(gScript.examples.sel)));
     }
     auto* body = gp::Div(cx->a)->FlexCol()->Gap(6);
-    constexpr float kArgScrollbarDx = 12;
-    auto* rows = gp::Div(cx->a)->FlexCol()->Gap(4)->W(gp::kFill)->PadR(kArgScrollbarDx);
+    auto* rows = gp::Div(cx->a)->FlexCol()->Gap(4)->W(gp::kFill);
     for (int i = 0; i < len(gScript.args); i++) {
         auto& arg = gScript.args[i];
         auto* row = gp::Div(cx->a)->FlexRow()->ItemsCenter()->Gap(6)->W(gp::kFill);
@@ -215,14 +207,10 @@ gp::El* PDFScriptDialogBuild(MainWindow* win, gp::Ctx* cx) {
                        ->IntoEl());
         rows->Child(row);
     }
-    body->Child(gp::Div(cx->a)
-                    ->H(100)
-                    ->ScrollY(gScript.scrollY)
-                    ->OnScroll(gp::ListenTo(gScriptView, &PDFScriptView::OnScroll))
-                    ->Child(rows));
+    body->Child(rows);
     body->Child(
         gp::Div(cx->a)->FlexRow()->JustifyEnd()->Child(gpc::Button::New(cx, GStrL("pdf-add-arg"))
-                                                           ->Label(ToGpui(Tr("Add arg")))
+                                                           ->Label(ToGpui(Tr("Add argument")))
                                                            ->Disabled(gScript.running)
                                                            ->OnClick(gp::ListenTo(gScriptView, &PDFScriptView::OnAdd))
                                                            ->IntoEl()));

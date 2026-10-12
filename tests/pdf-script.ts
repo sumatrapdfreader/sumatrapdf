@@ -17,6 +17,7 @@ import {
   isWindowVisible,
   sendText,
   clientToScreen,
+  captureWindowDCRegionPixels,
 } from "./winapi.ts";
 
 const PDF = resolve(import.meta.dir, "issue-1189.pdf");
@@ -54,13 +55,14 @@ async function checkExamples(): Promise<void> {
   }
 }
 
-type Node = { x: number; y: number; role: number; label: string; value: string };
+type Node = { x: number; y: number; h: number; role: number; label: string; value: string };
 
 function nodes(raw: string): Node[] {
   const re = /node rect=(-?\d+),(-?\d+),(-?\d+),(-?\d+) role=(\d+) label='(.*?)' value='(.*?)'\n/g;
   return [...raw.matchAll(re)].map((m) => ({
     x: Number(m[1]) + Number(m[3]) / 2,
     y: Number(m[2]) + Number(m[4]) / 2,
+    h: Number(m[4]),
     role: Number(m[5]),
     label: m[6]!,
     value: m[7]!,
@@ -75,8 +77,20 @@ async function ngUi(client: ControlClient) {
     request("input", "pdfscript", "click", Math.round(node.x), Math.round(node.y), 0, 0);
   await pollUntil(layout, (list) => list.some((n) => n.label === "Run Script"), { error: "script dialog" });
   return {
+    async argumentGap() {
+      const list = await layout();
+      const fields = list.filter((n) => n.role === 17);
+      const selector = list.find((n) => n.role === 56)!;
+      const last = fields[fields.length - 1]!;
+      return (selector.y - selector.h / 2 - (last.y + last.h / 2)) / last.h;
+    },
+    async argumentHeight() {
+      const list = await layout();
+      return list.find((n) => n.role === 56)!.y - list.find((n) => n.role === 17)!.y;
+    },
+    async checkBorder() {},
     async add() {
-      await click((await layout()).find((n) => n.label === "Add arg")!);
+      await click((await layout()).find((n) => n.label === "Add argument")!);
     },
     async remove() {
       const buttons = (await layout()).filter((n) => n.label === "x");
@@ -135,6 +149,43 @@ async function originalUi(pid: number) {
   const scriptEdit = () => edits().find((h) => getWindowLong(h, -16) & 4 && !(getWindowLong(h, -16) & 0x800))!;
   const outputEdit = () => edits().find((h) => getWindowLong(h, -16) & 0x800)!;
   return {
+    async argumentGap() {
+      let combo = 0;
+      enumChildWindows(dialog, (h) => {
+        if (getClassName(h) === "ComboBox") combo = h;
+        return true;
+      });
+      const fields = argEdits();
+      const last = getWindowRect(fields[fields.length - 1]!);
+      return (getWindowRect(combo).top - last.bottom) / (last.bottom - last.top);
+    },
+    async checkBorder() {
+      const fields = argEdits();
+      const outer = getWindowRect(dialog);
+      const sample = (h: number) => {
+        const rc = getWindowRect(h);
+        const pixels = captureWindowDCRegionPixels(
+          dialog,
+          rc.left - outer.left,
+          Math.floor((rc.top + rc.bottom) / 2) - outer.top,
+          1,
+          1,
+        );
+        if (!pixels) throw new Error("argument border capture failed");
+        return [...pixels.slice(0, 3)].join(",");
+      };
+      const initial = sample(fields[0]!);
+      const added = sample(fields[fields.length - 1]!);
+      if (initial !== added) throw new Error(`argument borders differ: initial=${initial}, added=${added}`);
+    },
+    async argumentHeight() {
+      let combo = 0;
+      enumChildWindows(dialog, (h) => {
+        if (getClassName(h) === "ComboBox") combo = h;
+        return true;
+      });
+      return getWindowRect(combo).top - getWindowRect(argEdits()[0]!).top;
+    },
     async add() {
       let combo = 0;
       enumChildWindows(dialog, (h) => {
@@ -179,6 +230,10 @@ export async function testit(): Promise<void> {
     sendCommand(frame, cmdId("CmdRunPDFScript"));
     const ui = USE_NG ? await ngUi(client) : await originalUi(proc.pid!);
     const args = await ui.args();
+    const initialHeight = await ui.argumentHeight();
+    const gap = await ui.argumentGap();
+    const maxGapRows = 2;
+    if (gap > maxGapRows) throw new Error(`argument area leaves ${gap.toFixed(2)} row heights after its last row`);
     if (args.length !== 2 || args[0] !== PDF || args[1] === PDF || existsSync(args[1]!)) {
       throw new Error(`bad default arguments: ${JSON.stringify(args)}`);
     }
@@ -204,6 +259,12 @@ export async function testit(): Promise<void> {
       (args) => args.length === 3,
       { error: "added argument" },
     );
+    await ui.checkBorder();
+    await pollUntil(
+      () => ui.argumentHeight(),
+      (height) => height > initialHeight,
+      { error: "argument area did not grow" },
+    );
     await ui.setScript('print("empty-arg", scriptArgs.length, scriptArgs[2] === "");');
     await ui.run();
     await pollUntil(
@@ -225,6 +286,11 @@ export async function testit(): Promise<void> {
       () => ui.args(),
       (args) => args.length === 2,
       { error: "deleted argument" },
+    );
+    await pollUntil(
+      () => ui.argumentHeight(),
+      (height) => height === initialHeight,
+      { error: "argument area did not shrink" },
     );
     console.log("pdf-script: examples, defaults, placeholders, stdout and stderr passed");
   } finally {
