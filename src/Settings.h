@@ -544,6 +544,22 @@ struct AntiGravity {
     ParsedColor bgColor;
 };
 
+// appearance of the AI chat sidebar, shared by all backends
+struct AIChat {
+    // font of the chat messages; empty uses Segoe UI
+    Str fontName;
+    // font size of the chat messages in pixels; 0 means the default (13)
+    int fontSize;
+    // line-height multiplier for chat text (e.g. 1.6); 0 means the default
+    // (1.5). values from 1 to 3 are accepted
+    float lineSpacing;
+    // space inside a message box in pixels; -1 means the default (8)
+    int messagePadding;
+    // if true, your questions and the replies are shown in message boxes;
+    // if false, as plain text separated by lines
+    bool bubbles;
+};
+
 // customization options for the ebook UI (EPUB, MOBI, FB2, PDB and
 // plain text)
 struct EBookUI {
@@ -1000,6 +1016,8 @@ struct Settings {
     CodexBuild codexBuild;
     // settings for the Antigravity chat sidebar
     AntiGravity antiGravity;
+    // appearance of the AI chat sidebar, shared by all backends
+    AIChat aiChat;
     // customization options for the ebook UI (EPUB, MOBI, FB2, PDB and
     // plain text)
     EBookUI eBookUI;

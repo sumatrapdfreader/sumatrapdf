@@ -2801,5 +2801,6 @@ SettingsApplyState GetSettingsApplyState() {
     s.markdownUseFixedPageUI = p->markdownUI.useFixedPageUI;
     s.explorerQuickLook = p->explorerQuickLook;
     s.ebookLayout = EbookLayoutSnapshot();
+    s.aiChatStyle = AIChatStyleSnapshot();
     return s;
 }

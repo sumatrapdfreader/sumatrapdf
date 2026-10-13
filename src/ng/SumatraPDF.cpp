@@ -389,6 +389,18 @@ void ApplyChangedSettingsAndRelayout(const SettingsApplyState& before) {
         ReloadEbookLayoutDocs();
     }
 
+    // the chat colors, font and layout are baked into the chat page: rebuild it
+    Str prevStyle = before.aiChatStyle;
+    Str nowStyle = AIChatStyleSnapshot();
+    bool aiChatStyleChanged = !str::Eq(prevStyle, nowStyle);
+    str::Free(prevStyle);
+    str::Free(nowStyle);
+    if (aiChatStyleChanged) {
+        for (MainWindow* w : gWindows) {
+            UpdateAIChatTheme(w);
+        }
+    }
+
     for (MainWindow* w : gWindows) {
         RebuildMenuBar(w);
         w->lastViewPortSize = Size{};

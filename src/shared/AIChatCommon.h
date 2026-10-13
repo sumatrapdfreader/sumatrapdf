@@ -216,6 +216,7 @@ Str AIChatResolveModel(const StrVec& models, Str model, Str defaultModel);
 TempStr AIChatModelDisplayNameTemp(Str model, Str defaultDisplay);
 
 TempStr AIChatFormatChatHtmlTemp(Str virtualHost, Str bgColor);
+Str AIChatStyleSnapshot();
 bool AIChatGetMarkedJsResource(void* ctx, Str path, WebViewResourceResult* res);
 
 void AIChatCloseProcess(void** processHandle, bool terminateIfRunning);

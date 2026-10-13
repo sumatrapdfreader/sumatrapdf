@@ -306,6 +306,8 @@ struct SettingsApplyState {
     bool explorerQuickLook = false;
     // owned copy of the ebook layout inputs; ApplyChangedSettingsAndRelayout frees it
     Str ebookLayout;
+    // owned copy of the AI chat look (AIChat section, BgColor); freed the same way
+    Str aiChatStyle;
 };
 SettingsApplyState GetSettingsApplyState();
 void ApplyChangedSettingsAndRelayout(const SettingsApplyState& before);

@@ -676,6 +676,24 @@ const antiGravity: Field[] = [
   field("BgColor", Color, "#ffffff", "background color of the Antigravity chat panel"),
 ];
 
+const aiChat: Field[] = [
+  field("FontName", Str, "", "font of the chat messages; empty uses Segoe UI"),
+  field("FontSize", Int, 0, "font size of the chat messages in pixels; 0 means the default (13)"),
+  field(
+    "LineSpacing",
+    Float,
+    0,
+    "line-height multiplier for chat text (e.g. 1.6); 0 means the default (1.5). values from 1 to 3 are accepted",
+  ),
+  field("MessagePadding", Int, -1, "space inside a message box in pixels; -1 means the default (8)"),
+  field(
+    "Bubbles",
+    Bool,
+    true,
+    "if true, your questions and the replies are shown in message boxes; if false, as plain text separated by lines",
+  ),
+];
+
 const readingBar: Field[] = [
   field(
     "Background",
@@ -1912,6 +1930,8 @@ const globalPrefs: Field[] = [
   emptyLine(),
   struct("AntiGravity", antiGravity, "settings for the Antigravity chat sidebar").ver("3.7"),
   emptyLine(),
+  struct("AIChat", aiChat, "appearance of the AI chat sidebar, shared by all backends").ver("3.7"),
+  emptyLine(),
   field(
     "AIChatSidebarDx",
     Int,
@@ -2115,6 +2135,7 @@ const globalPrefsLayout = [
   "GrokBuild",
   "CodexBuild",
   "AntiGravity",
+  "AIChat",
   "EBookUI",
   "ComicBookUI",
   "FixedPageUI",

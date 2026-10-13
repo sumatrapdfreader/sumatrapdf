@@ -597,37 +597,61 @@ bool AIChatGetMarkedJsResource(void* ctx, Str path, WebViewResourceResult* res) 
 
 #endif
 
+// no stray '%' in the CSS or JS: this goes through fmt(). Placeholders:
+// marked.min.js host, the :root css variables, the body class
 static const char* kAIChatHtmlFmt = R"(<!DOCTYPE html><html><head><meta charset='utf-8'>
 <script src='%smarked.min.js'></script>
 <style>
 :root { %s }
-* { margin: 0; padding: 0; box-sizing: border-box; }
-body { font-family: 'Segoe UI', sans-serif; font-size: 13px; margin: 0; padding: 6px;
-  background: var(--bg); color: var(--fg); line-height: 1.4; }
-p { margin: 2px 0; }
-h1,h2,h3,h4 { margin: 6px 0 2px 0; }
-ul,ol { margin: 2px 0 2px 18px; }
-li { margin: 1px 0; }
-.user { color: var(--user); font-weight: bold; margin: 8px 0 2px 0; padding: 4px 0;
-  border-top: 1px solid var(--border); }
-.tool { color: var(--muted); font-size: 11px; font-style: italic;
-  border-left: 3px solid var(--muted); padding-left: 6px; margin: 2px 0; }
-.assistant { margin: 2px 0; }
-.assistant pre { background: var(--code-bg); padding: 6px; border-radius: 4px;
-  overflow-x: auto; margin: 3px 0; font-size: 12px; }
-.assistant code { background: var(--code-bg); padding: 1px 3px; border-radius: 2px; font-size: 12px; }
-.assistant pre code { background: none; padding: 0; }
-.error { color: var(--error); font-weight: bold; margin: 4px 0; }
-</style></head><body><div id='chat'></div>
+* { box-sizing: border-box; }
+html, body { margin: 0; padding: 0; }
+body { font-family: var(--font); font-size: var(--font-size); line-height: var(--line-height);
+  background: var(--bg); color: var(--fg); padding: 8px 10px 12px 10px; overflow-wrap: anywhere; }
+#chat { display: flex; flex-direction: column; align-items: stretch; gap: 10px; }
+.user, .assistant, .error { padding: var(--pad); border-radius: 10px; }
+.user { align-self: flex-end; margin-left: 24px; background: var(--user-bg);
+  border-bottom-right-radius: 3px; white-space: pre-wrap; }
+.assistant { background: var(--assistant-bg); border: 1px solid var(--border); border-bottom-left-radius: 3px; }
+.tool { color: var(--muted); font-size: 0.85em; font-style: italic; padding: 1px 0 1px 8px;
+  border-left: 3px solid var(--border); white-space: pre-wrap; }
+.error { color: var(--error); background: var(--error-bg); border: 1px solid var(--error); }
+/* the classic look: plain text, a line before each question */
+body.plain #chat { gap: 4px; }
+body.plain .user { align-self: stretch; margin: 6px 0 0 0; padding: 6px 0 2px 0; background: none;
+  color: var(--user); font-weight: bold; border-radius: 0; border-top: 1px solid var(--border); }
+body.plain .assistant { background: none; border: none; padding: 0; border-radius: 0; }
+body.plain .error { background: none; border: none; padding: 2px 0; font-weight: bold; }
+/* markdown inside replies */
+.assistant > :first-child { margin-top: 0; }
+.assistant > :last-child { margin-bottom: 0; }
+p { margin: 0 0 0.6em 0; }
+h1, h2, h3, h4, h5, h6 { margin: 0.8em 0 0.3em 0; line-height: 1.25; }
+h1 { font-size: 1.3em; } h2 { font-size: 1.2em; } h3 { font-size: 1.1em; } h4, h5, h6 { font-size: 1em; }
+ul, ol { margin: 0 0 0.6em 0; padding-left: 1.4em; }
+li { margin: 0.15em 0; }
+li > p { margin: 0; }
+blockquote { margin: 0 0 0.6em 0; padding: 2px 0 2px 10px; border-left: 3px solid var(--border); color: var(--muted); }
+hr { border: none; border-top: 1px solid var(--border); margin: 0.8em 0; }
+a { color: var(--link); }
+pre { background: var(--code-bg); padding: 8px; border-radius: 6px; overflow-x: auto; margin: 0 0 0.6em 0;
+  font-size: 0.92em; line-height: 1.4; }
+code { font-family: Consolas, 'Cascadia Mono', monospace; background: var(--code-bg); padding: 1px 4px;
+  border-radius: 3px; font-size: 0.92em; }
+pre code { background: none; padding: 0; font-size: 1em; }
+table { border-collapse: collapse; margin: 0 0 0.6em 0; }
+th, td { border: 1px solid var(--border); padding: 3px 6px; text-align: left; vertical-align: top; }
+th { background: var(--code-bg); }
+</style></head><body class='%s'><div id='chat'></div>
 <script>
 var chatDiv = document.getElementById('chat');
+var plain = document.body.classList.contains('plain');
 var currentBlock = null;
 var currentRaw = '';
 function addUser(text) {
   flushBlock();
   var d = document.createElement('div');
   d.className = 'user';
-  d.textContent = 'You: ' + text;
+  d.textContent = plain ? 'You: ' + text : text;
   chatDiv.appendChild(d);
   scrollToBottom();
 }
@@ -702,6 +726,38 @@ function scrollToBottom() {
 }
 </script></body></html>)";
 
+constexpr int kAIChatDefaultFontSize = 13;
+constexpr float kAIChatDefaultLineSpacing = 1.5f;
+constexpr int kAIChatDefaultPadding = 8;
+constexpr const char* kAIChatDefaultFont = "Segoe UI";
+
+// a font-family value: the name in quotes, with the characters that could end
+// the quote or the declaration removed, then the default font as fallback
+static TempStr AIChatCssFontFamilyTemp(Str name) {
+    str::Builder b;
+    b.Append(StrL("'"));
+    for (int i = 0; i < len(name); i++) {
+        char c = name.s[i];
+        if (c == '\'' || c == '"' || c == ';' || c == '{' || c == '}' || c == '<' || c == '>' || c == '\\') {
+            continue;
+        }
+        b.AppendChar(c);
+    }
+    b.Append(fmt("', '%s', sans-serif", StrL(kAIChatDefaultFont)));
+    return str::DupTemp(ToStr(b));
+}
+
+// font, size, spacing, padding: the AIChat section, each with its default
+static TempStr AIChatTextCssVarsTemp() {
+    AIChat* s = &gSettings->aiChat;
+    Str font = str::IsEmptyOrWhiteSpace(s->fontName) ? Str(kAIChatDefaultFont) : s->fontName;
+    int size = s->fontSize > 0 ? limitValue(s->fontSize, 6, 72) : kAIChatDefaultFontSize;
+    float spacing = s->lineSpacing > 0 ? limitValue(s->lineSpacing, 1.f, 3.f) : kAIChatDefaultLineSpacing;
+    int pad = s->messagePadding >= 0 ? limitValue(s->messagePadding, 0, 64) : kAIChatDefaultPadding;
+    return fmt("--font:%s; --font-size:%dpx; --line-height:%g; --pad:%dpx;", AIChatCssFontFamilyTemp(font), size,
+               spacing, pad);
+}
+
 // bgColor is the per-backend BgColor setting; "#ffffff" is its default value
 // and means "follow the theme". An explicitly different color keeps the
 // classic light chat colors on top of that background.
@@ -714,12 +770,33 @@ TempStr AIChatFormatChatHtmlTemp(Str virtualHost, Str bgColor) {
     TempStr fg = dark ? ColorToCssTemp(ThemeWindowTextColor()) : str::DupTemp(StrL("#222222"));
     Str muted = dark ? StrL("#a0a0a0") : StrL("#555555");
     Str user = dark ? StrL("#7fb3d5") : StrL("#1a5276");
-    Str border = dark ? StrL("#4a4a4a") : StrL("#cccccc");
-    Str codeBg = dark ? StrL("#3a3a3a") : StrL("#f0f0f0");
+    // the boxes tint whatever the background is, so a custom BgColor still shows through
+    Str userBg = dark ? StrL("#2c4a6b") : StrL("#dce9f8");
+    Str assistantBg = dark ? StrL("rgba(255,255,255,0.06)") : StrL("rgba(0,0,0,0.035)");
+    Str border = dark ? StrL("rgba(255,255,255,0.16)") : StrL("rgba(0,0,0,0.12)");
+    Str codeBg = dark ? StrL("rgba(255,255,255,0.1)") : StrL("rgba(0,0,0,0.06)");
+    Str link = dark ? StrL("#8ab4f8") : StrL("#1a5fb4");
     Str error = dark ? StrL("#e74c3c") : StrL("#c0392b");
-    TempStr cssVars = fmt("--bg:%s; --fg:%s; --muted:%s; --user:%s; --border:%s; --code-bg:%s; --error:%s;", bg, fg,
-                          muted, user, border, codeBg, error);
-    return fmt(kAIChatHtmlFmt, host, cssVars);
+    Str errorBg = dark ? StrL("rgba(231,76,60,0.15)") : StrL("rgba(192,57,43,0.08)");
+    TempStr colorVars =
+        fmt("--bg:%s; --fg:%s; --muted:%s; --user:%s; --user-bg:%s; --assistant-bg:%s; --border:%s; --code-bg:%s; "
+            "--link:%s; --error:%s; --error-bg:%s;",
+            bg, fg, muted, user, userBg, assistantBg, border, codeBg, link, error, errorBg);
+    TempStr cssVars = fmt("%s %s", colorVars, AIChatTextCssVarsTemp());
+    Str bodyClass = gSettings->aiChat.bubbles ? StrL("bubbles") : StrL("plain");
+    return fmt(kAIChatHtmlFmt, host, cssVars, bodyClass);
+}
+
+// what a change to the chat's look has to rebuild the page for
+Str AIChatStyleSnapshot() {
+    if (!gSettings) {
+        return {};
+    }
+    AIChat* s = &gSettings->aiChat;
+    TempStr res = fmt("%s|%d|%g|%d|%d|%s|%s|%s|%s", s->fontName, s->fontSize, s->lineSpacing, s->messagePadding,
+                      s->bubbles ? 1 : 0, gSettings->claudeCode.bgColor.s, gSettings->grokBuild.bgColor.s,
+                      gSettings->codexBuild.bgColor.s, gSettings->antiGravity.bgColor.s);
+    return str::Dup(res);
 }
 
 #if !defined(SUMATRA_NG)
