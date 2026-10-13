@@ -19,6 +19,7 @@
 struct ScriptArg {
     int id;
     gp::InputState* input;
+    Str hint;
 };
 
 constexpr float kScriptListWidth = 360;
@@ -30,6 +31,7 @@ static struct PDFScriptDlg {
     ToolWindow* tw = nullptr;
     gp::InputState* script = nullptr;
     gp::InputState* output = nullptr;
+    Str input;
     bool showExamples = false;
     int example = 0;
     float exampleScrollY = 0;
@@ -75,8 +77,13 @@ void ClosePDFScriptDialog() {
     delete gScript.script;
     delete gScript.output;
     gScript.script = gScript.output = nullptr;
-    for (auto& arg : gScript.args) delete arg.input;
+    for (auto& arg : gScript.args) {
+        delete arg.input;
+        str::Free(arg.hint);
+    }
     VecClear(gScript.args);
+    str::Free(gScript.input);
+    gScript.input = {};
     ++gScriptSession;
     if (IsMainWindowValid(gScript.win)) AppShellInvalidate(gScript.win);
     gScript.win = nullptr;
@@ -94,6 +101,24 @@ static Str ScriptTitle() {
     return Tr("Run PDF Script");
 }
 
+static void LoadScriptArgs(gp::App* app) {
+    gp::Window* host = ScriptHost();
+    for (auto& arg : gScript.args) {
+        gp::InputBlur(arg.input, app, host);
+        delete arg.input;
+        str::Free(arg.hint);
+    }
+    VecClear(gScript.args);
+    StrVec values;
+    StrVec hints;
+    GetPDFScriptArgs(PDFScriptSource(gScript.example), gScript.input, values, hints);
+    for (int i = 0; i < len(values); i++) {
+        auto* input = ScriptInput(app, values[i]);
+        gp::InputSetPlaceholder(input, ToGpui(hints[i]));
+        VecAppend(gScript.args, ScriptArg{++gScript.nextArg, input, str::Dup(hints[i])});
+    }
+}
+
 void ShowPDFScriptDialog(MainWindow* win) {
     auto* tab = win ? win->CurrentTab() : nullptr;
     if (!CanAccessDisk() || !tab || !tab->GetEngine() || !str::EqI(tab->GetEngine()->defaultExt, StrL(".pdf"))) return;
@@ -103,6 +128,7 @@ void ShowPDFScriptDialog(MainWindow* win) {
     }
     gp::App* app = win->gpuiWin->app;
     gScript.win = win;
+    gScript.input = str::Dup(tab->filePath);
     gScript.visible = true;
     gScript.running = false;
     gScript.showExamples = false;
@@ -110,8 +136,7 @@ void ShowPDFScriptDialog(MainWindow* win) {
     gScript.exampleScrollY = 0;
     gScript.wantFocus = true;
     gScript.session = ++gScriptSession;
-    VecAppend(gScript.args, ScriptArg{++gScript.nextArg, ScriptInput(app, tab->filePath)});
-    VecAppend(gScript.args, ScriptArg{++gScript.nextArg, ScriptInput(app, PDFScriptOutputPath(tab->filePath))});
+    LoadScriptArgs(app);
     gScript.script = ScriptInput(app, PDFScriptSource(0), gp::InputKind::Textarea);
     gScript.output = ScriptInput(app, {}, gp::InputKind::Textarea);
     DlgWindowSpec spec;
@@ -124,7 +149,7 @@ void ShowPDFScriptDialog(MainWindow* win) {
 }
 
 void PDFScriptView::OnAdd(PDFScriptView*, gp::Ctx* cx, const gp::ClickEvent*) {
-    VecAppend(gScript.args, ScriptArg{++gScript.nextArg, ScriptInput(cx->app, {})});
+    VecAppend(gScript.args, ScriptArg{++gScript.nextArg, ScriptInput(cx->app, {}), {}});
     gp::InputFocus(gScript.args[len(gScript.args) - 1].input, cx->app, cx->win);
 }
 
@@ -134,6 +159,7 @@ void PDFScriptView::OnDelete(PDFScriptView*, gp::Ctx* cx, const gp::ClickEvent*,
         if (arg.id != id) continue;
         gp::InputBlur(arg.input, cx->app, cx->win);
         delete arg.input;
+        str::Free(arg.hint);
         VecRemoveAt(gScript.args, i);
         return;
     }
@@ -192,8 +218,10 @@ void PDFScriptView::OnExamples(PDFScriptView*, gp::Ctx* cx, const gp::ClickEvent
 }
 
 void PDFScriptView::OnExample(PDFScriptView*, gp::Ctx* cx, const gp::ClickEvent*, int64_t index) {
+    if (gScript.running) return;
     gScript.example = (int)index;
     gp::InputSetValue(gScript.script, ToGpui(PDFScriptSource(gScript.example)));
+    LoadScriptArgs(cx->app);
     gp::Notify(cx);
 }
 
@@ -213,9 +241,14 @@ gp::El* PDFScriptDialogBuild(MainWindow* win, gp::Ctx* cx) {
     auto* rows = gp::Div(cx->a)->FlexCol()->Gap(4)->W(gp::kFill);
     for (int i = 0; i < len(gScript.args); i++) {
         auto& arg = gScript.args[i];
+        auto* box = gp::Div(cx->a)->FlexCol()->Gap(2)->W(gp::kFill);
+        Str label = len(arg.hint) > 0 ? fmt("%s %d: %s", Tr("Arg"), i + 1, arg.hint) : fmt("%s %d", Tr("Arg"), i + 1);
+        box->Child(gp::TextEl(cx->a, ToGpui(label))->Truncate());
         auto* row = gp::Div(cx->a)->FlexRow()->ItemsCenter()->Gap(6)->W(gp::kFill);
-        row->Child(gp::Div(cx->a)->W(52)->Child(gp::TextEl(cx->a, GpuiDup(cx->a, fmt("%s %d", Tr("Arg"), i + 1)))));
-        row->Child(gpc::Input::New(cx, ToGpui(fmt("pdf-arg-%d", arg.id)), arg.input)->W(gp::kFill)->IntoEl());
+        row->Child(gpc::Input::New(cx, ToGpui(fmt("pdf-arg-%d", arg.id)), arg.input)
+                       ->AriaLabel(ToGpui(label))
+                       ->W(gp::kFill)
+                       ->IntoEl());
         row->Child(gpc::Button::New(cx, ToGpui(fmt("pdf-pick-%d", arg.id)))
                        ->Label(GStrL("..."))
                        ->Disabled(gScript.running)
@@ -226,7 +259,8 @@ gp::El* PDFScriptDialogBuild(MainWindow* win, gp::Ctx* cx) {
                        ->Disabled(gScript.running)
                        ->OnClick(gp::ListenTo(gScriptView, &PDFScriptView::OnDelete, arg.id))
                        ->IntoEl());
-        rows->Child(row);
+        box->Child(row);
+        rows->Child(box);
     }
     body->Child(rows);
     body->Child(

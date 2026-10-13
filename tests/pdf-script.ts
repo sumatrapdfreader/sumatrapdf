@@ -1,6 +1,7 @@
-import { existsSync, mkdirSync, readdirSync } from "node:fs";
-import { join, resolve } from "node:path";
+import { copyFileSync, existsSync, mkdirSync, readdirSync, writeFileSync } from "node:fs";
+import { basename, dirname, join, resolve } from "node:path";
 import { ControlCommand, type ControlClient } from "./control.ts";
+import { websiteDocsDir } from "../cmd/util.ts";
 import { IS_MAC } from "./host.ts";
 import { cmdId, EXE, pollUntil, runStandalone, tmpPath, USE_NG } from "./util.ts";
 import { clickAt, killAndWait, launchControlled, sendCommand } from "./win-automation.ts";
@@ -21,6 +22,7 @@ import {
   postMessage,
   WM_KEYDOWN,
   VK_DOWN,
+  VK_HOME,
 } from "./winapi.ts";
 
 const PDF = resolve(import.meta.dir, "issue-1189.pdf");
@@ -30,10 +32,19 @@ const SCRIPTS = resolve(import.meta.dir, "../src/pdf-scripts");
 async function checkExamples(): Promise<void> {
   const dir = tmpPath("pdf-script-examples");
   mkdirSync(dir, { recursive: true });
+  const websiteScripts = join(websiteDocsDir, "scripts");
+  const useWebsite = existsSync(websiteScripts);
   for (const name of readdirSync(SCRIPTS).filter((name) => name.endsWith(".js"))) {
-    const output = join(dir, `${name}.pdf`);
+    const output = join(dir, `${name}.${name === "draw-graphics-with-device.js" ? "png" : "pdf"}`);
     const extra = name === "copy-outline.js" || name === "merge-pdfs.js" ? PDF : IMAGE;
-    const proc = Bun.spawn([EXE, "run", join(SCRIPTS, name), PDF, output, extra], {
+    const source = join(useWebsite ? websiteScripts : SCRIPTS, name);
+    let args = [PDF, output, extra];
+    if (useWebsite) {
+      if (name === "create-a-pdf.js" || name === "create-pdf-low-level.js") args = [output];
+      if (name === "create-pdf.js" || name === "draw-graphics-with-device.js") args = [output, IMAGE];
+    }
+    if (name === "trace-device.js") args = useWebsite ? [PDF, "1"] : [PDF, "", "1"];
+    const proc = Bun.spawn([EXE, "run", source, ...args], {
       stdout: "pipe",
       stderr: "pipe",
     });
@@ -43,6 +54,10 @@ async function checkExamples(): Promise<void> {
       new Response(proc.stderr).text(),
     ]);
     if (code !== 0) throw new Error(`${name}: exit ${code}\n${stdout}\n${stderr}`);
+    if (useWebsite && name === "trace-device.js") {
+      const invalid = Bun.spawnSync([EXE, "run", source, PDF, "0"]);
+      if (invalid.exitCode === 0) throw new Error("trace-device.js ignored its page-number argument");
+    }
     if (name === "convert-pdf-to-images.js" && !existsSync(output + "-1.png")) {
       throw new Error(`${name}: no rendered image`);
     }
@@ -129,8 +144,7 @@ async function ngUi(client: ControlClient) {
     async examples() {
       await click((await layout()).find((n) => n.label === "Example Scripts")!);
     },
-    async pickExample() {
-      const name = "Add a free-text annotation to the first page.";
+    async pickExample(index: number, name: string) {
       const list = await pollUntil(
         layout,
         (list) => list.some((n) => n.label === name) && list.find((n) => n.role === 31)?.w === editorWidth,
@@ -236,11 +250,12 @@ async function originalUi(pid: number) {
       const editor = getWindowRect(scriptEdit());
       await clickAt(dialog, editor.left - origin.x + 70, getClientRect(dialog).bottom - 20, 0);
     },
-    async pickExample() {
+    async pickExample(index: number, name: string) {
       const origin = clientToScreen(dialog, 0, 0);
       const editor = getWindowRect(scriptEdit());
       await clickAt(dialog, editor.right - origin.x + 24, 18, 0);
-      postMessage(dialog, WM_KEYDOWN, VK_DOWN, 0);
+      postMessage(dialog, WM_KEYDOWN, VK_HOME, 0);
+      for (let i = 0; i < index; i++) postMessage(dialog, WM_KEYDOWN, VK_DOWN, 0);
     },
     async script() {
       return getControlText(scriptEdit());
@@ -250,31 +265,102 @@ async function originalUi(pid: number) {
 
 export async function testit(): Promise<void> {
   await checkExamples();
-  const { proc, client, frame } = await launchControlled([PDF]);
+  const input = tmpPath("pdf-script-hints/A 'quoted' file.v2.pdf");
+  const stem = input.slice(0, -".pdf".length);
+  mkdirSync(dirname(input), { recursive: true });
+  copyFileSync(PDF, input);
+  writeFileSync(stem + ".1.pdf", "reserved");
+  writeFileSync(stem + ".2.pdf", "reserved");
+  const { proc, client, frame } = await launchControlled([input]);
   try {
     await client.waitForRenderIdle();
     sendCommand(frame, cmdId("CmdRunPDFScript"));
     const ui = USE_NG ? await ngUi(client) : await originalUi(proc.pid!);
-    if (!(await ui.script()).includes("\n")) throw new Error("initial script lost its line breaks");
-    if (!(await ui.script()).startsWith("// Info: Print the page count of a PDF.")) {
-      throw new Error("reading script metadata changed the source");
+    if (existsSync(join(websiteDocsDir, "scripts"))) {
+      if (!(await ui.script()).includes("\n")) throw new Error("initial script lost its line breaks");
+      if (!(await ui.script()).startsWith("// Info: Print the page count of a PDF.")) {
+        throw new Error("reading script metadata changed the source");
+      }
+      const firstArgs = await ui.args();
+      if (firstArgs.length !== 1 || firstArgs[0] !== input)
+        throw new Error("initial example needs only its input argument");
+      await ui.examples();
+      await ui.pickExample(1, "Add a free-text annotation to the first page.");
+      await pollUntil(
+        () => ui.script(),
+        (s) => s.includes("Add a free-text annotation to the first page."),
+        {
+          error: (s) => `script list selection did not load the script: ${JSON.stringify(s)}`,
+        },
+      );
+      await ui.examples();
+      await ui.add();
+      await pollUntil(
+        () => ui.args(),
+        (args) => args.length === 3,
+        { error: "extra argument before changing example" },
+      );
+      await ui.setArg("discard this value");
+      await ui.examples();
+      await ui.pickExample(2, "Render every page as a PNG at 96 DPI.");
+      await pollUntil(
+        () => ui.args(),
+        (args) => args.length === 2 && args[1] === dirname(input) + "/" + basename(stem),
+        {
+          error: (args) => `DIR and BASE hints: ${JSON.stringify(args)}`,
+        },
+      );
+      await ui.pickExample(4, "Copy bookmarks from another document.");
+      await pollUntil(
+        () => ui.args(),
+        (args) => args.length === 3 && args[2] === "",
+        {
+          error: (args) => `empty hinted argument: ${JSON.stringify(args)}`,
+        },
+      );
+      await ui.pickExample(5, "Create a PDF with one blank page.");
+      await pollUntil(
+        () => ui.args(),
+        (args) => args.length === 1 && args[0] === stem + ".3.pdf",
+        {
+          error: (args) => `output-only example: ${JSON.stringify(args)}`,
+        },
+      );
+      await ui.pickExample(10, "Crop page margins using rendered content bounds.");
+      await pollUntil(
+        () => ui.args(),
+        (args) => args.length === 4 && args[2] === "6" && args[3] === "all",
+        {
+          error: (args) => `numeric and text defaults: ${JSON.stringify(args)}`,
+        },
+      );
+      await ui.pickExample(1, "Add a free-text annotation to the first page.");
+      await pollUntil(
+        () => ui.args(),
+        (args) => args.length === 2,
+        { error: "argument rows did not shrink" },
+      );
+      await ui.examples();
+    } else {
+      if ((await ui.args()).length || (await ui.script()).length)
+        throw new Error("unexpected examples without the website checkout");
+      for (const value of [input, stem + ".3.pdf"]) {
+        const count = (await ui.args()).length + 1;
+        await ui.add();
+        await pollUntil(
+          () => ui.args(),
+          (args) => args.length === count,
+          { error: "manual argument without examples" },
+        );
+        await ui.setArg(value);
+      }
     }
-    await ui.examples();
-    await ui.pickExample();
-    await pollUntil(
-      () => ui.script(),
-      (s) => s.includes("Add a free-text annotation to the first page."),
-      {
-        error: (s) => `script list selection did not load the script: ${JSON.stringify(s)}`,
-      },
-    );
-    await ui.examples();
     const args = await ui.args();
     const initialHeight = await ui.argumentHeight();
     const gap = await ui.argumentGap();
     const maxGapRows = 2;
     if (gap > maxGapRows) throw new Error(`argument area leaves ${gap.toFixed(2)} row heights after its last row`);
-    if (args.length !== 2 || args[0] !== PDF || args[1] === PDF || existsSync(args[1]!)) {
+    if (args.length !== 2 || args[0] !== input || args[1] !== stem + ".3.pdf" || existsSync(args[1]!)) {
       throw new Error(`bad default arguments: ${JSON.stringify(args)}`);
     }
     await ui.setScript(
@@ -332,7 +418,7 @@ export async function testit(): Promise<void> {
       (height) => height === initialHeight,
       { error: "argument area did not shrink" },
     );
-    console.log("pdf-script: examples, defaults, placeholders, stdout and stderr passed");
+    console.log("pdf-script: argument hints, rebuilt rows, unique paths, defaults, stdout and stderr passed");
   } finally {
     client.close();
     await killAndWait(proc);

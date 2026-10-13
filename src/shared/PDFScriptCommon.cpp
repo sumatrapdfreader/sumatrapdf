@@ -65,7 +65,42 @@ PDFScriptResult::~PDFScriptResult() {
 }
 
 TempStr PDFScriptOutputPath(Str input) {
-    return MakeUniqueFilePathTemp(fmt("%s-script.pdf", path::GetPathNoExtTemp(input)));
+    if (len(input) == 0) return {};
+    Str base = path::GetPathNoExtTemp(input);
+    Str ext = path::GetExtTemp(input);
+    for (int i = 1;; i++) {
+        TempStr output = fmt("%s.%d%s", base, i, ext);
+        if (!file::Exists(output)) return output;
+    }
+}
+
+static TempStr ExpandScriptArg(Str value, Str input, Str output) {
+    TempStr expanded = str::ReplaceTemp(value, StrL("<INPUT>"), input);
+    expanded = str::ReplaceTemp(expanded, StrL("<OUTPUT>"), output);
+    expanded = str::ReplaceTemp(expanded, StrL("<DIR>"), path::GetDirTemp(input));
+    return str::ReplaceTemp(expanded, StrL("<BASE>"), path::GetBaseNameTemp(path::GetPathNoExtTemp(input)));
+}
+
+void GetPDFScriptArgs(Str script, Str input, StrVec& values, StrVec& hints) {
+    values.Reset();
+    hints.Reset();
+    Str output = PDFScriptOutputPath(input);
+    const Str prefix = StrL("// Arg:");
+    Str line;
+    Str rest = script;
+    while (str::NextLine(rest, line, rest)) {
+        line = str::DupTemp(line);
+        str::TrimWSInPlace(line, str::TrimOpt::Both);
+        if (!str::StartsWith(line, prefix)) continue;
+        Str spec(line.s + len(prefix), len(line) - len(prefix));
+        Str value;
+        Str hint;
+        if (!str::Cut(spec, StrL(" : "), &value, &hint)) hint = spec;
+        str::TrimWSInPlace(value, str::TrimOpt::Both);
+        str::TrimWSInPlace(hint, str::TrimOpt::Both);
+        values.Append(ExpandScriptArg(value, input, output));
+        hints.Append(hint);
+    }
 }
 
 // Keep path quoting in JavaScript: "<INPUT>" also works for Windows backslashes and quotes.

@@ -30,6 +30,9 @@ constexpr int kScriptColumnGap = 6;
 struct ScriptArgRow {
     PDFScriptWnd* owner;
     Edit* edit;
+    VirtText* label;
+    Str hint;
+    ~ScriptArgRow() { str::Free(hint); }
 };
 
 struct PDFScriptWnd : WindowBase {
@@ -40,13 +43,15 @@ struct PDFScriptWnd : WindowBase {
     VirtListBox* examples = nullptr;
     VirtButton* run = nullptr;
     MainWindow* win = nullptr;
+    Str input;
     bool running = false;
     u64 runId = 0;
 
     ~PDFScriptWnd() override {
         for (auto* row : rows) delete row;
+        str::Free(input);
     }
-    void AddArg(Str value);
+    void AddArg(Str value, Str hint = {});
     void LayoutArgs();
     void OnAdd();
     void OnRun();
@@ -97,20 +102,27 @@ static void PickScriptArg(ScriptArgRow* row) {
     }
 }
 
-void PDFScriptWnd::AddArg(Str value) {
+void PDFScriptWnd::AddArg(Str value, Str hint) {
+    auto* box = new VBox();
+    box->alignCross = CrossAxisAlign::Stretch;
+    box->gap = DpiScale(2);
+    auto* label = new VirtText({}, GetFont());
+    label->ellipsis = true;
+    label->SetTooltip(hint);
+    box->AddChild(label);
     auto* row = new HBox();
     row->alignCross = CrossAxisAlign::CrossCenter;
     row->gap = DpiScale(6);
-    row->AddChild(new VirtText(fmt("%s %d", Tr("Arg"), len(rows) + 1), GetFont()));
     auto* edit = new Edit();
     Edit::CreateArgs ea;
     ea.parent = hwnd;
     ea.font = GetFont();
     ea.withBorder = true;
     ea.text = value;
+    ea.cueText = hint;
     edit->Create(ea);
     row->AddChild(edit, 1);
-    auto* arg = new ScriptArgRow{this, edit};
+    auto* arg = new ScriptArgRow{this, edit, label, str::Dup(hint)};
     VecAppend(rows, arg);
     auto* pick = NewThemedButton(hwnd, StrL("..."), GetFont(), false);
     pick->onClick = MkFunc0(PickScriptArg, arg);
@@ -118,13 +130,15 @@ void PDFScriptWnd::AddArg(Str value) {
     auto* remove = NewThemedButton(hwnd, StrL("x"), GetFont(), false);
     remove->onClick = MkFunc0(QueueDeleteScriptArg, arg);
     row->AddChild(remove);
-    argsBox->AddChild(row);
+    box->AddChild(row);
+    argsBox->AddChild(box);
 }
 
 void PDFScriptWnd::LayoutArgs() {
     for (int i = 0; i < len(rows); i++) {
-        auto* row = (HBox*)argsBox->children[i].layout;
-        ((VirtText*)row->children[0].layout)->SetText(fmt("%s %d", Tr("Arg"), i + 1));
+        auto* row = rows[i];
+        row->label->SetText(len(row->hint) > 0 ? fmt("%s %d: %s", Tr("Arg"), i + 1, row->hint)
+                                               : fmt("%s %d", Tr("Arg"), i + 1));
     }
     DoLayout();
     InvalidateRect(hwnd, nullptr, TRUE);
@@ -145,6 +159,7 @@ static void ScriptFinished(u64* runId, PDFScriptResult* result) {
         gScriptWnd->running = false;
         gScriptWnd->run->SetText(Tr("Run Script"));
         gScriptWnd->run->SetIsEnabled(true);
+        gScriptWnd->examples->SetIsEnabled(true);
         gScriptWnd->output->SetText(result->output);
         gScriptWnd->output->SetIsVisible(len(result->output) > 0);
         gScriptWnd->DoLayout();
@@ -161,13 +176,30 @@ void PDFScriptWnd::OnRun() {
     runId = ++gScriptRunId;
     run->SetText(Tr("Running..."));
     run->SetIsEnabled(false);
+    examples->SetIsEnabled(false);
     output->SetText({});
     output->SetIsVisible(false);
     StartPDFScript(script->GetTextTemp(), args, MkFunc1(ScriptFinished, new u64(runId)));
 }
 
 void PDFScriptWnd::OnExample() {
-    script->SetText(str::LFToCRLFTemp(PDFScriptSource(examples->GetCurrentSelection())));
+    if (running) return;
+    bool listFocused = vroot && vroot->focused == examples;
+    Str source = PDFScriptSource(examples->GetCurrentSelection());
+    script->SetText(str::LFToCRLFTemp(source));
+    for (auto* row : rows) delete row;
+    VecClear(rows);
+    for (auto& child : argsBox->children) delete child.layout;
+    VecClear(argsBox->children);
+    StrVec values;
+    StrVec hints;
+    GetPDFScriptArgs(source, input, values, hints);
+    for (int i = 0; i < len(values); i++) AddArg(values[i], hints[i]);
+    if (layout) {
+        LayoutArgs();
+        UpdateTheme();
+        if (listFocused) SetFocusTo(examples);
+    }
 }
 
 void PDFScriptWnd::OnExamples() {
@@ -195,6 +227,7 @@ void PDFScriptWnd::OnSize(WindowBase::SizeEvent*) {
 
 void PDFScriptWnd::Create(MainWindow* owner, Str path) {
     win = owner;
+    input = str::Dup(path);
     SetFont(GetAppFont());
     CreateCustomArgs ca;
     ca.owner = win->hwndFrame;
@@ -212,8 +245,6 @@ void PDFScriptWnd::Create(MainWindow* owner, Str path) {
     argsBox->alignCross = CrossAxisAlign::Stretch;
     argsBox->gap = DpiScale(4);
     body->AddChild(argsBox);
-    AddArg(path);
-    AddArg(PDFScriptOutputPath(path));
     auto* addRow = new HBox();
     addRow->alignMain = MainAxisAlign::MainEnd;
     auto* add = NewThemedButton(hwnd, Tr("Add argument"), GetFont(), false);
@@ -244,7 +275,6 @@ void PDFScriptWnd::Create(MainWindow* owner, Str path) {
     };
     script = makeEdit();
     body->AddChild(script, 3);
-    OnExample();
     output = makeEdit();
     SendMessageW(output->hwnd, EM_SETREADONLY, TRUE, 0);
     output->SetIsVisible(false);
@@ -272,6 +302,7 @@ void PDFScriptWnd::Create(MainWindow* owner, Str path) {
     columns->AddChild(body, 1);
     columns->AddChild(examples);
     layout = new Padding(columns, DpiScaledInsets(8));
+    OnExample();
     onSize = MkMethod1<PDFScriptWnd, WindowBase::SizeEvent*, &PDFScriptWnd::OnSize>(this);
     SetWindowPos(hwnd, nullptr, 0, 0, DpiScale(760), DpiScale(650), SWP_NOMOVE | SWP_NOZORDER);
     DoLayout();

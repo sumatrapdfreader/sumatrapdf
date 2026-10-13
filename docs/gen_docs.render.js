@@ -518,7 +518,14 @@
       const discussion = /^\/\/ Discussion #([0-9]+):/.exec(line);
       if (discussion) discussions.push(discussion[1]);
       if (line.startsWith("// Info:")) info = line.slice("// Info:".length).trim();
-      if (line.startsWith("// Arg:")) args.push(line.slice("// Arg:".length).trim());
+      if (line.startsWith("// Arg:")) {
+        const spec = line.slice("// Arg:".length);
+        const colon = spec.indexOf(" : ");
+        args.push({
+          value: colon < 0 ? "" : spec.slice(0, colon).trim(),
+          hint: (colon < 0 ? spec : spec.slice(colon + " : ".length)).trim(),
+        });
+      }
     });
     let html = info ? "<p>" + escape(info) + "</p>" : "";
     const discussion = /^discussion-([0-9]+)-/.exec(name);
@@ -548,7 +555,8 @@
         '<ol class="script-example-args" aria-label="Script arguments">' +
         args
           .map(function (arg) {
-            return "<li>" + escape(arg) + "</li>";
+            const initial = arg.value ? " (default: <code>" + escape(arg.value) + "</code>)" : "";
+            return "<li>" + escape(arg.hint) + initial + "</li>";
           })
           .join("") +
         "</ol>";
