@@ -199,6 +199,12 @@ static void MaybeMigrateTab(WindowTab* tab, MainWindow* newWin, Point releasePt)
     }
     if (nDocTabs == 1 && !newWin) return;
 
+    // migration reloads by path; a document opened from memory (an embedded
+    // attachment) has none
+    if (len(tab->filePath) == 0) {
+        return;
+    }
+
     auto* engine = tab->GetEngine();
     if (EngineHasUnsavedAnnotations(engine)) {
         return;
