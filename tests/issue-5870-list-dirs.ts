@@ -175,7 +175,9 @@ export async function testit(): Promise<void> {
     const deadline2 = Date.now() + 4000;
     let atBottom = 0;
     while (Date.now() < deadline2) {
-      atBottom = dirColumnTextPixels(frame, 0.86, 60) + dirColumnTextPixels(frame, 0.9, 60);
+      // the lower third of the window: the last rows of the band, wherever
+      // the header above leaves them
+      atBottom = dirColumnTextPixels(frame, 0.7, 150);
       if (atBottom >= kMinTextPixels) {
         break;
       }

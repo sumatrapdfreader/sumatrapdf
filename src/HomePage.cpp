@@ -108,8 +108,6 @@ Try [Sumatra File Manager](https://sumatrafilemanager.com): file manager with su
 
 static Str promoFromServer;
 
-static void FreeHomeFileIcons();
-
 static void EnsureTipsParsed() {
     if (gTipsParsed) {
         return;
@@ -129,7 +127,6 @@ void FreeHomePageTips() {
         gTipsParsed = false;
     }
     str::Free(promoFromServer);
-    FreeHomeFileIcons();
     HomePageInvalidateLayoutCache();
 }
 
@@ -147,6 +144,13 @@ constexpr int kInnerPadding = 8;
 
 static const Str kSumatraTxtFont = StrL("Arial Black");
 constexpr int kSumatraTxtFontSize = 24;
+// the home page brand: five stripes in the logo colors and the name
+static const Str kHomeBrandFont = StrL("Segoe UI Semibold");
+constexpr int kHomeBrandFontSize = 15;
+constexpr int kHomeBrandStripeDx = 3;
+constexpr int kHomeBrandStripeDy = 16;
+constexpr int kHomeBrandStripeGap = 2;
+constexpr int kHomeBrandGap = 10;
 
 constexpr int kLayoutLtr = 0;
 
@@ -260,9 +264,11 @@ static Kind kindSumatraLogo = "sumatraLogo";
 
 // the app name centered in its bounds, each letter in a different color (so it
 // can't be a VirtText). The version isn't part of it: it is the first row of
-// the About table
+// the About table. On the home page (asBrand) it is the five logo colors as
+// stripes before the name in the window's text color
 struct SumatraLogo : VirtCtrl {
     PlatformFont* font = nullptr; // not owned
+    bool asBrand = false;
 
     SumatraLogo();
     Size GetIdealSize() override;
@@ -274,9 +280,17 @@ SumatraLogo::SumatraLogo() {
     flags |= vwfNoHitTest;
 }
 
+static int HomeBrandStripesDx() {
+    return (5 * DpiScale(kHomeBrandStripeDx)) + (4 * DpiScale(kHomeBrandStripeGap));
+}
+
 Size SumatraLogo::GetIdealSize() {
     Size sz = PlatformFontMeasureText(font, StrL(kAppName));
-    HWND hwnd = GetHwnd();
+    if (asBrand) {
+        sz.dx += HomeBrandStripesDx() + DpiScale(kHomeBrandGap);
+        sz.dy = std::max(sz.dy, DpiScale(kHomeBrandStripeDy));
+        return sz;
+    }
     sz.dy += DpiScale(kAboutBoxMarginDy * 2);
     sz.dx += 2 * DpiScale(kInnerPadding);
     return sz;
@@ -286,6 +300,20 @@ void SumatraLogo::Paint(VirtPaintCtx& ctx) {
     static Color cols[] = {kCol1, kCol2, kCol3, kCol4, kCol5, kCol5, kCol4, kCol3, kCol2, kCol1};
     Size txtSize = PlatformFontMeasureText(font, StrL(kAppName));
     Rect r = ctx.bounds;
+    if (asBrand) {
+        int stripeDx = DpiScale(kHomeBrandStripeDx);
+        int stripeDy = DpiScale(kHomeBrandStripeDy);
+        int x = r.x;
+        int y = r.y + ((r.dy - stripeDy) / 2);
+        for (int i = 0; i < 5; i++) {
+            ctx.gfx->FillRect({x, y, stripeDx, stripeDy}, cols[i]);
+            x += stripeDx + DpiScale(kHomeBrandStripeGap);
+        }
+        x = r.x + HomeBrandStripesDx() + DpiScale(kHomeBrandGap);
+        Rect rcName(x, r.y + ((r.dy - txtSize.dy) / 2), txtSize.dx, txtSize.dy);
+        ctx.gfx->DrawText(StrL(kAppName), rcName, 0, font, ThemeWindowTextColor());
+        return;
+    }
     Point pt{r.x + ((r.dx - txtSize.dx) / 2), r.y + ((r.dy - txtSize.dy) / 2)};
     char buf[2] = {};
     for (int i = 0; i < len(kAppName); i++) {
@@ -902,11 +930,16 @@ constexpr int kThumbsBorderDx = 1;
 #define kThumbsMarginRight DpiScale(40)
 #define kThumbsMarginTop DpiScale(50)
 #define kThumbsMarginBottom DpiScale(40)
-#define kThumbsSpaceBetweenX DpiScale(38)
-#define kThumbsSpaceBetweenY DpiScale(58)
-// caption (file name + type icon) drawn below each thumbnail
-#define kThumbsCaptionGapY DpiScale(3)
-#define kThumbsCaptionDy DpiScale(20)
+#define kThumbsSpaceBetweenX DpiScale(24)
+#define kThumbsSpaceBetweenY DpiScale(60)
+// caption below each thumbnail: the file name over the page count
+#define kThumbsCaptionGapY DpiScale(10)
+#define kThumbsCaptionDy DpiScale(34)
+#define kThumbsCaptionLineDy DpiScale(18)
+// the reading-progress line along the bottom edge of a thumbnail
+#define kThumbsProgressDy DpiScale(3)
+// the selection ring sits this far outside the page
+#define kThumbsSelectionGap DpiScale(4)
 #define kThumbsBottomBoxDy DpiScale(50)
 #define kHomeListThumbDx DpiScale(30)
 #define kHomeListThumbDy DpiScale(40)
@@ -1031,19 +1064,9 @@ struct HomeOpenDocCtrl : VirtCtrl {
     void Paint(VirtPaintCtx&) override;
 };
 
-// white-circle home-page buttons: "?" keyboard help and the command palette
-struct HomeCircleBtnCtrl : VirtCtrl {
-    Pixmap* pixmap = nullptr; // not owned, from GetCachedPixmapForSvg(); null → glyph
-    Str glyph;                // not owned; used when pixmap is null ("?")
-
-    HomeCircleBtnCtrl();
-    Size GetIdealSize() override;
-    void Paint(VirtPaintCtx&) override;
-};
-
-// [command palette] SumatraPDF [keyboard shortcuts] along the top of the home
-// page. An HBox sizes and places the three virt controls; they are also our
-// VirtCtrl children so paint / hit-test / delete stay on this tree.
+// the brand along the top of the home page. An HBox sizes and places the virt
+// controls; they are also our VirtCtrl children so paint / hit-test / delete
+// stay on this tree.
 struct HomeLogoRow : VirtCtrl {
     HBox* box = nullptr;
 
@@ -1136,8 +1159,6 @@ struct HomeChromeCtrl : VirtCtrl {
     HomeViewIconCtrl* thumbView = nullptr;
     HomeViewIconCtrl* listView = nullptr;
     HomeOpenDocCtrl* openDoc = nullptr;
-    HomeCircleBtnCtrl* paletteBtn = nullptr;
-    HomeCircleBtnCtrl* helpBtn = nullptr;
     // chrome-less About dropdown under the logo; shown after the tooltip delay
     VirtHost* aboutHover = nullptr;
 
@@ -1165,10 +1186,12 @@ constexpr int kThumbsMiddleMargin = 32;
 // draw a gray separator line between list-view rows
 static bool gShowListSeparatorLine = false;
 constexpr int kSearchEditDy = 28;
-constexpr int kSearchThumbnailsGapY = 12;
+constexpr int kSearchThumbnailsGapY = 28;
+constexpr int kHomeHeaderTopY = 24;
+constexpr int kHomeSearchMaxDx = 340;
 
 static PlatformFont* HomePageFont(int size) {
-    return GetUserGuiFont(StrL("MS Shell Dlg"), DpiScale(size));
+    return GetUserGuiFont(StrL("Segoe UI"), DpiScale(size));
 }
 
 static void HomeSelectFromSearchReturnCol(MainWindow* win);
@@ -1607,7 +1630,7 @@ static void ApplyHomeLayoutCache(HomePageLayout& l, int scrollY) {
     openDoc->SetText(Tr("Open..."));
     openDoc->font = fontText;
     openDoc->isRtl = isRtl;
-    openDoc->withUnderline = true;
+    openDoc->withUnderline = false;
     openDoc->SetBounds(c.rcOpenDoc);
     l.openDoc = openDoc;
 }
@@ -1646,7 +1669,7 @@ static void LayoutHomePage(HomePageLayout& l) {
     }
 
     bool isRtl = IsUIRtl();
-    PlatformFont* fontText = HomePageFont(14);
+    PlatformFont* fontText = HomePageFont(13);
 
     // --- Pre-compute thumbnail grid x offset so header can align with it ---
     // use unfiltered count so layout stays stable when search filters results
@@ -1666,8 +1689,9 @@ static void LayoutHomePage(HomePageLayout& l) {
     }
     int thumbsContentWidth = (thumbsColsForLayout * frame.dx) + ((thumbsColsForLayout - 1) * kThumbsSpaceBetweenX);
 
-    // --- Step 1: two header rows: [palette] SumatraPDF [help] on top, then
-    // [open link] [search edit] [view icons] ---
+    // --- Step 1: one header row. The brand ends on the first column's right
+    // edge, the Open link and view icons end on the last column's, and the
+    // search field sits on the center line between them ---
     Rect rcIconView(0, 0, 0, 0);
     rcIconView.dx = rcIconView.dy = HomePageIconSize();
 
@@ -1681,40 +1705,22 @@ static void LayoutHomePage(HomePageLayout& l) {
     int searchThumbsGap = DpiScale(kSearchThumbnailsGapY);
     int borderDy = searchEditDy + 2; // 1px border on each side
 
-    // [command palette] SumatraPDF [keyboard shortcuts], centered like the old
-    // title. The HBox in logoRow sizes the three virt controls.
-    chrome->logo->font = GetUserGuiFont(kSumatraTxtFont, DpiScale(kSumatraTxtFontSize));
+    chrome->logo->font = GetUserGuiFont(kHomeBrandFont, DpiScale(kHomeBrandFontSize));
     Size logoRowSize = chrome->logoRow->GetIdealSize();
-    int logoY = DpiScale(8);
-    int logoX = thumbsStartX + ((thumbsContentWidth - logoRowSize.dx) / 2);
-    if (logoX < DpiScale(kInnerPadding)) {
-        logoX = DpiScale(kInnerPadding);
-    }
-    l.rcLogo = {logoX, logoY, logoRowSize.dx, logoRowSize.dy};
 
-    int hdrY = logoY + logoRowSize.dy + DpiScale(8);
+    int hdrY = DpiScale(kHomeHeaderTopY);
     int iconGap = DpiScale(4);
-    int rowDy = std::max(rcIconView.dy, borderDy);
-    // every row item (link, search box, view icons) is centered on the row's
-    // vertical centerline
+    int rowDy = std::max({rcIconView.dy, borderDy, logoRowSize.dy});
+    // every row item (brand, link, search box, view icons) is centered on the
+    // row's vertical centerline
     int centerY = hdrY + (rowDy / 2);
     int viewIconsDx = (2 * rcIconView.dx) + iconGap;
 
-    /* "Open..." link at the left edge */
-    Rect rcIconOpen(0, 0, 0, 0);
-    rcIconOpen.dx = rcIconOpen.dy = HomePageIconSize();
-
-    VirtText* openDoc = chrome->openDoc->text;
-    openDoc->SetText(Tr("Open..."));
-    openDoc->font = fontText;
-    openDoc->isRtl = isRtl;
-    openDoc->withUnderline = true;
-    Size txtSize = openDoc->GetIdealSize(true);
-    int openGroupDx = rcIconOpen.dx + 3 + txtSize.dx;
-
-    rcIconOpen.x = thumbsStartX;
-    rcIconOpen.y = centerY - (rcIconOpen.dy / 2);
-    Rect rcOpenDoc(rcIconOpen.x + rcIconOpen.dx + 3, centerY - (txtSize.dy / 2), txtSize.dx, txtSize.dy);
+    int logoX = thumbsStartX + frame.dx - logoRowSize.dx;
+    if (logoX < thumbsStartX) {
+        logoX = thumbsStartX;
+    }
+    l.rcLogo = {logoX, centerY - (logoRowSize.dy / 2), logoRowSize.dx, logoRowSize.dy};
 
     /* view-mode icons at the right edge */
     l.rcIconThumbnailView = {thumbsStartX + thumbsContentWidth - viewIconsDx, centerY - (rcIconView.dy / 2),
@@ -1722,14 +1728,32 @@ static void LayoutHomePage(HomePageLayout& l) {
     l.rcIconListView = {l.rcIconThumbnailView.x + rcIconView.dx + iconGap, l.rcIconThumbnailView.y, rcIconView.dx,
                         rcIconView.dy};
 
-    // the search box takes what is left between the link and the icons; both
-    // sides are padded to the wider of the two, so the box sits centered
+    /* "Open..." link before the icons */
+    Rect rcIconOpen(0, 0, 0, 0);
+    rcIconOpen.dx = rcIconOpen.dy = HomePageIconSize();
+
+    VirtText* openDoc = chrome->openDoc->text;
+    openDoc->SetText(Tr("Open..."));
+    openDoc->font = fontText;
+    openDoc->isRtl = isRtl;
+    openDoc->withUnderline = false;
+    Size txtSize = openDoc->GetIdealSize(true);
+    int openTextGap = DpiScale(6);
+    int openGroupDx = rcIconOpen.dx + openTextGap + txtSize.dx;
     int rowGapX = DpiScale(16);
-    int flankDx = std::max(viewIconsDx, openGroupDx) + rowGapX;
-    int borderDx = thumbsContentWidth - (2 * flankDx);
+
+    rcIconOpen.x = l.rcIconThumbnailView.x - rowGapX - openGroupDx;
+    rcIconOpen.y = centerY - (rcIconOpen.dy / 2);
+    Rect rcOpenDoc(rcIconOpen.x + rcIconOpen.dx + openTextGap, centerY - (txtSize.dy / 2), txtSize.dx, txtSize.dy);
+
+    // the search box is centered; the brand and the Open group bound its width
+    int leftDx = std::max(logoRowSize.dx, frame.dx) + rowGapX;
+    int rightDx = thumbsStartX + thumbsContentWidth - rcIconOpen.x + rowGapX;
+    int flankDx = std::max(leftDx, rightDx);
+    int borderDx = std::min(thumbsContentWidth - (2 * flankDx), DpiScale(kHomeSearchMaxDx));
     borderDx = std::max(borderDx, DpiScale(200));
     int borderX = thumbsStartX + ((thumbsContentWidth - borderDx) / 2);
-    l.rcSearchBorder = {borderX, hdrY + ((rowDy - borderDy) / 2), borderDx, borderDy};
+    l.rcSearchBorder = {borderX, centerY - (borderDy / 2), borderDx, borderDy};
 
     if (isRtl) {
         auto mirrorX = [&rc](Rect& r) { r.x = rc.dx - r.x - r.dx; };
@@ -1748,7 +1772,7 @@ static void LayoutHomePage(HomePageLayout& l) {
 
     // --- Step 2: calculate tip area at the bottom (before thumbnails) ---
     int tipHeight = 0;
-    PlatformFont* fontTip = HomePageFont(16);
+    PlatformFont* fontTip = HomePageFont(12);
     HomeTipCtrl* tipCtrl = EnsureHomeChrome(l.win)->tip;
     tipCtrl->SetTipLine(SelectedTipLine(), fontTip);
     VirtRichText* tip = tipCtrl->rich;
@@ -1891,13 +1915,7 @@ static void LayoutHomePage(HomePageLayout& l) {
                 }
                 thumb.rcCell = rcCell;
                 thumb.rcPage = rcPage;
-                int iconSpace = kThumbsCaptionDy;
-                Rect rcText(rcCell.x + iconSpace, rcCell.y + rcCell.dy + kThumbsCaptionGapY, rcCell.dx - iconSpace,
-                            kThumbsCaptionDy);
-                if (isRtl) {
-                    rcText.x -= iconSpace;
-                }
-                thumb.rcText = rcText;
+                thumb.rcText = Rect(rcCell.x, rcCell.y + rcCell.dy + kThumbsCaptionGapY, rcCell.dx, kThumbsCaptionDy);
             }
         }
     }
@@ -1919,81 +1937,10 @@ static void LayoutHomePage(HomePageLayout& l) {
     }
 }
 
-static void GetFileStateIcon(FileState* fs) {
-    if (fs->himl) {
-        return;
-    }
-    SHFILEINFO sfi{};
-    sfi.iIcon = -1;
-    uint flags = SHGFI_SYSICONINDEX | SHGFI_SMALLICON | SHGFI_USEFILEATTRIBUTES;
-    WCHAR* filePathW = CWStrTemp(fs->filePath);
-    fs->himl = (HIMAGELIST)SHGetFileInfoW(filePathW, 0, &sfi, sizeof(sfi), flags);
-    fs->iconIdx = sfi.iIcon;
-}
-
-struct HomeFileIcon {
-    HomeFileIcon* next = nullptr;
-    HIMAGELIST imageList = nullptr;
-    int iconIdx = -1;
-    Pixmap* pixmap = nullptr;
-};
-
-static HomeFileIcon* gFileIcons = nullptr;
-
-static void FreeHomeFileIcons() {
-    for (HomeFileIcon* icon = gFileIcons; icon; icon = icon->next) {
-        FreePixmap(icon->pixmap);
-    }
-    ListDelete(gFileIcons);
-    gFileIcons = nullptr;
-}
-
-// Shell image lists are Windows drawing objects. Convert each distinct icon to
-// a Pixmap once so home-page painting stays entirely within Gfx.
-static Pixmap* GetFileStateIconPixmap(FileState* fs) {
-    GetFileStateIcon(fs);
-    if (!fs->himl || fs->iconIdx < 0) {
-        return nullptr;
-    }
-    for (HomeFileIcon* icon = gFileIcons; icon; icon = icon->next) {
-        if (icon->imageList == fs->himl && icon->iconIdx == fs->iconIdx) {
-            return icon->pixmap;
-        }
-    }
-
-    HICON hicon = ImageList_GetIcon(fs->himl, fs->iconIdx, ILD_TRANSPARENT);
-    Pixmap* pixmap = nullptr;
-    if (hicon) {
-        pixmap = PixmapFromHICON(hicon);
-        DestroyIcon(hicon);
-    }
-    auto* icon = new HomeFileIcon();
-    icon->imageList = fs->himl;
-    icon->iconIdx = fs->iconIdx;
-    icon->pixmap = pixmap;
-    ListInsertFront(&gFileIcons, icon);
-    return pixmap;
-}
-
-// --- Close (✕) button for Frequently Read thumbnails (issue #283, #5745) ---
-//
-// Drawn onto the home-page canvas (over the top-right corner of the thumbnail
-// under the mouse) rather than as a separate top-level window. The separate
-// window could be left behind, drawing stray crosses over a document (#5745).
-// Styled like the tab close button (gray X on a white circle; red circle +
-// white X on hover). It is a HomeCloseBtnCtrl in the chrome tree, shown on the
-// entry the mouse is on.
-
 static void DrawHomeViewButton(Gfx* gfx, Pixmap* icon, Rect r, bool selected, bool hovered) {
     if (selected || hovered) {
-        Color bg = selected ? ThemeControlBackgroundColor() : ThemeMainWindowBackgroundColor();
-        if (hovered) {
-            bg = AccentColor(bg, 20);
-        }
-        gfx->FillRect(r, bg);
-        if (selected) {
-            gfx->DrawRect(r, AccentColor(bg, 40));
-        }
+        Color bg = AccentColor(ThemeMainWindowBackgroundColor(), selected ? 28 : 14);
+        gfx->FillRoundedRect(r, DpiScale(4), bg);
     }
     if (icon) {
         gfx->DrawPixmap(icon, {r.x, r.y, icon->width, icon->height});
@@ -2021,9 +1968,9 @@ static TempStr FileSizeForHomeListTemp(i64 size) {
     return str::FormatSizeShortTemp(size, nullptr);
 }
 
-// light blue outline marking the keyboard-selected entry (issue #1136).
+// light blue outline marking the keyboard-selected list row (issue #1136).
 // A fixed color: it has to read as "selected" against both the light and the
-// dark page background
+// dark page background. A thumbnail gets a ring in the text color instead
 constexpr Color kHomeSelectionColor = MkRgb(0x4c, 0xa6, 0xff);
 
 static void DrawHomeRoundedOutline(Gfx* gfx, const Rect& r, int radius, Color color, int thickness) {
@@ -2036,7 +1983,8 @@ static void DrawHomeRoundedOutline(Gfx* gfx, const Rect& r, int radius, Color co
 
 static void DrawHomeSelectionOutline(Gfx* gfx, const Rect& r, int radius) {
     int penDx = DpiScale(2);
-    DrawHomeRoundedOutline(gfx, r, radius, kHomeSelectionColor, penDx);
+    Color col = HomePageIsListView() ? kHomeSelectionColor : ThemeWindowTextColor();
+    DrawHomeRoundedOutline(gfx, r, radius, col, penDx);
 }
 
 // Give the file name the width it needs and put the directory path in what's
@@ -2148,10 +2096,51 @@ static void DrawHomeListRow(Gfx* gfx, ThumbnailLayout& thumb, const StrVec& filt
 
 // one thumbnail: the page image with a rounded outline, the caption (with
 // search-filter highlights) and the file-type icon
+// the reading-progress accent: the app icon's yellow, lighter on a dark page
+static Color HomeAccentColor() {
+    bool light = IsLightColor(ThemeMainWindowBackgroundColor());
+    return light ? MkRgb(0xe9, 0xb4, 0x00) : MkRgb(0xf2, 0xc5, 0x3d);
+}
+
+// a soft shadow under the page: three translucent layers, each a little
+// larger and lower than the last
+static void DrawHomeThumbnailShadow(Gfx* gfx, const Rect& page) {
+    bool light = IsLightColor(ThemeMainWindowBackgroundColor());
+    u8 alphas[] = {light ? (u8)10 : (u8)40, light ? (u8)14 : (u8)50, light ? (u8)26 : (u8)80};
+    for (int i = 0; i < 3; i++) {
+        int grow = DpiScale(3 - i);
+        Rect r(page.x - grow, page.y + DpiScale(i + 1), page.dx + (2 * grow), page.dy + grow);
+        gfx->FillRects(&r, 1, kColBlack, alphas[i]);
+    }
+}
+
+// "Page 24 of 47" while a document is being read, otherwise its page count;
+// a chapter position ("3:12") is shown as stored
+static TempStr HomeThumbnailMetaTemp(FileState* fs, float* progressOut) {
+    *progressOut = 0;
+    bool showProgress = gSettings && gSettings->showHomePageReadingProgress;
+    StoredPagePos pos = ParseStoredPagePos(fs->pageNo);
+    if (showProgress && len(pos.bookmark) > 0) {
+        return FormatFileStateProgressTemp(fs);
+    }
+    if (fs->pageCount <= 0) {
+        return {};
+    }
+    if (showProgress && pos.pageNo > 1 && pos.pageNo <= fs->pageCount) {
+        *progressOut = (float)pos.pageNo / (float)fs->pageCount;
+        return fmt(Tr("Page %d of %d").s, pos.pageNo, fs->pageCount);
+    }
+    if (fs->pageCount == 1) {
+        return str::DupTemp(Tr("1 page"));
+    }
+    return fmt(Tr("%d pages").s, fs->pageCount);
+}
+
 static void DrawHomeThumbnail(Gfx* gfx, ThumbnailLayout& thumb, const StrVec& filterWords, Vec<u8>& highlighted,
                               PlatformFont* fontText, Color backgroundColor, bool isRtl) {
     FileState* fs = thumb.fs;
     const Rect& page = thumb.rcPage;
+    DrawHomeThumbnailShadow(gfx, page);
     // disk load only first time; stays on fs->thumbnail afterwards
     Pixmap* thumbImg = LoadThumbnail(fs);
     if (thumbImg) {
@@ -2161,56 +2150,30 @@ static void DrawHomeThumbnail(Gfx* gfx, ThumbnailLayout& thumb, const StrVec& fi
         // make sense for thumbnails
         gfx->DrawPixmap(thumbImg, page);
         gfx->PopClip();
+    } else {
+        gfx->FillRect(page, ThemeControlBackgroundColor());
     }
-    DrawHomeRoundedOutline(gfx, page, 10, ThemeWindowTextColor(), kThumbsBorderDx);
+    gfx->DrawRect(page, ThemeEdgeColor());
 
-    if (gSettings && gSettings->showHomePageReadingProgress) {
-        TempStr progress = FormatFileStateProgressTemp(fs);
-        if (len(progress) > 0) {
-            PlatformFont* fontProg = HomePageFont(11);
-            Size sz = gfx->MeasureText(progress, fontProg);
-            int padX = DpiScale(5);
-            int padY = DpiScale(2);
-            int dx = sz.dx + (2 * padX);
-            int dy = sz.dy + (2 * padY);
-            int margin = DpiScale(4);
-            int x = isRtl ? page.x + margin : page.x + page.dx - dx - margin;
-            int y = page.y + page.dy - dy - margin;
-            Rect badge(x, y, dx, dy);
-            gfx->FillRects(&badge, 1, MkRgb(0, 0, 0), 160);
-            gfx->DrawText(progress, badge, gfxTextCenter | gfxTextVCenter, fontProg, kColWhite);
-        }
+    float progress = 0;
+    TempStr meta = HomeThumbnailMetaTemp(fs, &progress);
+    if (progress > 0) {
+        int dx = (int)((float)page.dx * progress);
+        int x = isRtl ? page.x + page.dx - dx : page.x;
+        gfx->FillRect({x, page.y + page.dy - kThumbsProgressDy, dx, kThumbsProgressDy}, HomeAccentColor());
     }
 
-    const Rect& rect = thumb.rcText;
+    Rect rcName = thumb.rcText;
+    rcName.dy = kThumbsCaptionLineDy;
     Str path = fs->filePath;
     TempStr fileName = path::GetBaseNameTemp(path);
     u32 fmt = gfxTextEllipsis | (isRtl ? gfxTextRight : gfxTextLeft);
-    DrawMaybeHighlightedText(gfx, rect, fileName, filterWords, highlighted, backgroundColor, isRtl, false, fmt,
+    DrawMaybeHighlightedText(gfx, rcName, fileName, filterWords, highlighted, backgroundColor, isRtl, false, fmt,
                              fontText, ThemeWindowTextColor());
-
-    Pixmap* icon = GetFileStateIconPixmap(fs);
-    // the caption spans the cell, so the icon goes by the cell, not the page
-    const Rect& cell = thumb.rcCell;
-    int x = isRtl ? cell.x + cell.dx - DpiScale(16) : cell.x;
-    if (icon) {
-        gfx->DrawPixmap(icon, {x, rect.y, icon->width, icon->height});
+    if (len(meta) > 0) {
+        Rect rcMeta(rcName.x, rcName.y + rcName.dy, rcName.dx, thumb.rcText.dy - rcName.dy);
+        gfx->DrawText(meta, rcMeta, fmt, HomePageFont(12), ThemeWindowTextDisabledColor());
     }
-}
-
-// a white circle with either a centered SVG or a black glyph ("?"). Drawn with
-// GDI+ so the disc edge is smooth; nothing is painted outside it, so the page
-// background shows through.
-static void DrawHomeCircleButton(Gfx* gfx, Rect r, Pixmap* icon, Str glyph) {
-    gfx->FillEllipse(r, kColWhite);
-    if (icon) {
-        int x = r.x + ((r.dx - icon->width) / 2);
-        int y = r.y + ((r.dy - icon->height) / 2);
-        gfx->DrawPixmap(icon, {x, y, icon->width, icon->height});
-        return;
-    }
-    PlatformFont* font = HomePageFont(14);
-    gfx->DrawText(glyph, r, gfxTextCenter | gfxTextVCenter, font, kColBlack);
 }
 
 // Slack so the first/last row's rounded outline isn't cut by rcThumbsArea.
@@ -2366,19 +2329,6 @@ void HomeOpenDocCtrl::Paint(VirtPaintCtx& ctx) {
     ctx.gfx->DrawPixmap(pixmap, r);
 }
 
-HomeCircleBtnCtrl::HomeCircleBtnCtrl() {
-    cursor = CursorId::Hand;
-}
-
-Size HomeCircleBtnCtrl::GetIdealSize() {
-    int d = DpiScale(30);
-    return {d, d};
-}
-
-void HomeCircleBtnCtrl::Paint(VirtPaintCtx& ctx) {
-    DrawHomeCircleButton(ctx.gfx, ctx.bounds, pixmap, glyph);
-}
-
 HomeLogoRow::HomeLogoRow() {
     flags |= vwfNoHitTest;
     box = new HBox();
@@ -2419,9 +2369,7 @@ HomeSearchBorderCtrl::HomeSearchBorderCtrl() {
 // border and fill around the search edit; the edit HWND sits inside, so only
 // the 1px frame and the padding around it are actually visible
 void HomeSearchBorderCtrl::Paint(VirtPaintCtx& ctx) {
-    Color bgCol = ThemeControlBackgroundColor();
-    ctx.gfx->FillRect(ctx.bounds, bgCol);
-    ctx.gfx->DrawRect(ctx.bounds, AccentColor(bgCol, 40));
+    ctx.gfx->FillRoundedRect(ctx.bounds, DpiScale(6), ThemeControlBackgroundColor(), ThemeEdgeColor());
 }
 
 //--- tip links
@@ -2451,10 +2399,8 @@ void HomeTipCtrl::SetTipLine(Str line, PlatformFont* font) {
     AddChild(rich);
 }
 
-// the band's background; the markup (VirtRichText child) paints over it
-void HomeTipCtrl::Paint(VirtPaintCtx& ctx) {
-    ctx.gfx->FillRect(ctx.bounds, ThemeControlBackgroundColor());
-}
+// no band of its own: the markup (VirtRichText child) sits on the page
+void HomeTipCtrl::Paint(VirtPaintCtx&) {}
 
 // rcTip is the whole band (its background), rcText where the markup goes
 void HomeTipCtrl::Sync(const Rect& rcTip, const Rect& rcText) {
@@ -2537,14 +2483,6 @@ static void HomeOpenDocClicked(MainWindow* win, VirtMouseEvent*) {
     HwndSendCommand(win->hwndFrame, CmdOpenFile);
 }
 
-static void HomeHelpClicked(MainWindow* win, VirtMouseEvent*) {
-    HwndSendCommand(win->hwndFrame, CmdToggleKeyboardHelp);
-}
-
-static void HomePaletteClicked(MainWindow* win, VirtMouseEvent*) {
-    HwndSendCommand(win->hwndFrame, CmdCommandPalette);
-}
-
 static void HomeTipBandDoubleClicked(MainWindow* win, VirtMouseEvent* ev) {
     ev->didHandle = true;
     PickAnotherRandomPromotion();
@@ -2588,7 +2526,7 @@ void HomeEntryCtrl::Paint(VirtPaintCtx& ctx) {
     ThumbnailLayout* t = &cache.thumbs[idx];
     Gfx* gfx = ctx.gfx;
     bool isRtl = IsUIRtl();
-    PlatformFont* fontText = HomePageFont(14);
+    PlatformFont* fontText = HomePageFont(13);
     Color backgroundColor = ThemeMainWindowBackgroundColor();
     // no selection chrome while typing in the search box
     bool isSelected = (idx == win->homePageSelIdx) && !HomeSearchHasFocus(win);
@@ -2872,15 +2810,6 @@ HomeChromeCtrl::~HomeChromeCtrl() {
     aboutHover = nullptr;
 }
 
-// e.g. "Command Palette (Ctrl + K)"
-static TempStr AppendCmdAccel(Str base, int cmd) {
-    TempStr accel = AppendAccelKeyToMenuStringTemp({}, cmd);
-    if (len(accel) == 0) {
-        return base;
-    }
-    return str::JoinTemp(base, fmt(" (%s)", Str(accel.s + 1, len(accel) - 1))); // +1 skips the leading \t
-}
-
 // created once per window so that hover / pressed state survives the repaints
 // that scrolling and filtering cause
 static HomeChromeCtrl* EnsureHomeChrome(MainWindow* win) {
@@ -2930,29 +2859,19 @@ static HomeChromeCtrl* EnsureHomeChrome(MainWindow* win) {
     chrome->hdr = new VirtText(StrL(""));
     chrome->AddChild(chrome->hdr);
 
-    // [command palette] SumatraPDF [keyboard shortcuts] in one HBox at the top.
-    // The title is hit-testable so hovering it can open the About dropdown.
+    // the brand at the top left. It is hit-testable so hovering it can open
+    // the About dropdown.
     chrome->logoRow = new HomeLogoRow();
-    chrome->paletteBtn = new HomeCircleBtnCtrl();
-    chrome->paletteBtn->glyph = StrL(">");
-    chrome->paletteBtn->SetTooltip(AppendCmdAccel(Tr("Command Palette"), CmdCommandPalette));
-    chrome->paletteBtn->onClick = MkFunc1(HomePaletteClicked, win);
     chrome->logo = new SumatraLogo();
+    chrome->logo->asBrand = true;
     chrome->logo->SetFlag(vwfNoHitTest, false);
     chrome->logo->onMouseEnter = MkFunc0(OnHomeLogoEnter, win);
     chrome->logo->onMouseLeave = MkFunc0(OnHomeLogoLeave, win);
-    chrome->helpBtn = new HomeCircleBtnCtrl();
-    chrome->helpBtn->glyph = StrL("?");
-    chrome->helpBtn->SetTooltip(AppendCmdAccel(Tr("Keyboard Shortcuts"), CmdToggleKeyboardHelp));
-    chrome->helpBtn->onClick = MkFunc1(HomeHelpClicked, win);
-    chrome->logoRow->AddItem(chrome->paletteBtn);
     chrome->logoRow->AddItem(chrome->logo);
-    chrome->logoRow->AddItem(chrome->helpBtn);
     chrome->AddChild(chrome->logoRow);
 
     chrome->openDoc = new HomeOpenDocCtrl();
     chrome->openDoc->text = new VirtText(StrL(""));
-    chrome->openDoc->text->withUnderline = true;
     chrome->openDoc->AddChild(chrome->openDoc->text);
     chrome->openDoc->onClick = MkFunc1(HomeOpenDocClicked, win);
     chrome->AddChild(chrome->openDoc);
@@ -3101,10 +3020,8 @@ static void HomePageSyncChrome(HomePageLayout& l) {
     chrome->hdr->SetBounds(l.freqRead->lastBounds);
 
     // font also set here so the cached-layout path (ApplyHomeLayoutCache)
-    // repaints the logo without a full relayout
-    chrome->logo->font = GetUserGuiFont(kSumatraTxtFont, DpiScale(kSumatraTxtFontSize));
-    int iconSz = DpiScale(16);
-    chrome->paletteBtn->pixmap = GetCachedPixmapForSvg(Str(gIconCommandPalette), iconSz, iconSz, kColBlack, kColWhite);
+    // repaints the brand without a full relayout
+    chrome->logo->font = GetUserGuiFont(kHomeBrandFont, DpiScale(kHomeBrandFontSize));
     chrome->logoRow->SetBounds(l.rcLogo);
     if (chrome->aboutHover && chrome->aboutHover->IsVisible()) {
         Size sz = chrome->aboutHover->ScreenRect().Size();
@@ -3123,8 +3040,7 @@ static void HomePageSyncChrome(HomePageLayout& l) {
     od->pixmap = GetCachedPixmapForSvg(Str(gIconFileOpen), l.rcIconOpen.dx, l.rcIconOpen.dy);
     od->SetBounds(rcOpen);
     od->rcIconLocal = {l.rcIconOpen.x - rcOpen.x, l.rcIconOpen.y - rcOpen.y, l.rcIconOpen.dx, l.rcIconOpen.dy};
-    // "Open a document" acts as a link, so it is drawn in the link color
-    od->text->SetColor(kColText, gColsLink[kColText]);
+    od->text->SetColor(kColText, ThemeWindowTextColor());
     // re-apply now that the parent moved: bounds are relative to it
     od->text->SetBounds(l.openDoc->lastBounds);
 }
@@ -3158,7 +3074,7 @@ static void DrawHomePageLayout(HomePageLayout& l) {
             Rect clip = HomeOutlinePaintClip(l.rcThumbsArea, l.rcSearchBorder, l.rcTip, l.hasTip);
             if (!clip.IsEmpty()) {
                 gfx->PushClip(clip);
-                DrawHomeSelectionOutline(gfx, HomeSelectionOutlineRect(t), 10);
+                DrawHomeSelectionOutline(gfx, HomeSelectionOutlineRect(t), DpiScale(2));
                 gfx->PopClip();
             }
         }
@@ -3393,9 +3309,9 @@ static Rect HomeSelectionOutlineRect(const ThumbnailLayout& t) {
         int pad = DpiScale(8);
         return {t.rcListRow.x - pad, t.rcListRow.y, t.rcListRow.dx + (2 * pad), t.rcListRow.dy - 1};
     }
-    // thumbnails: page ∪ name, inflated by the same amounts as paint
-    Rect sel = t.rcPage.Union(t.rcText);
-    sel.Inflate(DpiScale(4), DpiScale(3));
+    // thumbnails: a ring just outside the page
+    Rect sel = t.rcPage;
+    sel.Inflate(kThumbsSelectionGap, kThumbsSelectionGap);
     return sel;
 }
 

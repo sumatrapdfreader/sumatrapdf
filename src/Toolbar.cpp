@@ -2537,21 +2537,10 @@ static void OnToolbarMouseLeave(MainWindow* win) {
     ToolbarHoverDropdownOnMouseMove(win, nullptr);
 }
 
-static void PaintToolbarSeparator(VirtCustom*, VirtPaintCtx* ctx) {
-    Rect r = ctx->bounds;
-    int inset = DpiScale(6);
-    int dy = r.dy - (2 * inset);
-    if (dy <= 0) {
-        return;
-    }
-    int x = r.x + (r.dx / 2);
-    ctx->gfx->FillRect({x, r.y + inset, 1, dy}, ThemeEdgeColor());
-}
-
+// a separator is a gap between button groups, not a line
 static VirtCtrl* MakeToolbarSeparator(int rowDy) {
     auto* sep = new VirtCustom();
-    sep->idealSize = {DpiScale(8), rowDy};
-    sep->onPaint = MkFunc1(PaintToolbarSeparator, sep);
+    sep->idealSize = {DpiScale(12), rowDy};
     sep->SetFlag(vwfNoHitTest, true);
     return sep;
 }

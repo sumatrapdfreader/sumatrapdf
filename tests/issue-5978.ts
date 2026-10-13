@@ -31,6 +31,9 @@ function makeAppDir(): string {
   return dir;
 }
 
+const WM_KEYDOWN = 0x0100;
+const VK_RIGHT = 0x27;
+
 function sameRect(a: number[], b: number[]): boolean {
   return a.length === b.length && a.every((v, i) => v === b[i]);
 }
@@ -84,6 +87,22 @@ export async function testit(): Promise<void> {
     let sawWouldOverlap = false;
     let last = await settled();
     await ensureModifierKeysUp();
+    // the search field is centered, so select a thumbnail in a column that
+    // passes under it; the first column may sit entirely left of the field
+    const underSearch = (h: HomeSelection) =>
+      h.outlineFull[0]! < h.search[0]! + h.search[2]! && h.outlineFull[0]! + h.outlineFull[2]! > h.search[0]!;
+    for (let col = 0; col < 4 && !underSearch(last); col++) {
+      if (IS_MAC) {
+        await client.request(ControlCommand.TestInput, ["key", VK_RIGHT, 0, 0, 0]);
+      } else {
+        postMessage(canvas, WM_KEYDOWN, VK_RIGHT, 0n);
+      }
+      const sel = last.sel;
+      last = await waitForHome(client, (s) => s.ready && s.sel !== sel, "Right did not move the home selection");
+    }
+    if (!underSearch(last)) {
+      throw new Error(`issue-5978: no thumbnail column under the search field: ${last.raw}`);
+    }
     for (let i = 0; i < 12; i++) {
       if (IS_MAC) {
         const area = last.thumbsArea;
