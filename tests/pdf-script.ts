@@ -42,6 +42,7 @@ async function checkExamples(): Promise<void> {
     if (useWebsite) {
       if (name === "create-a-pdf.js" || name === "create-pdf-low-level.js") args = [output];
       if (name === "create-pdf.js" || name === "draw-graphics-with-device.js") args = [output, IMAGE];
+      if (name === "convert-pdf-to-images.js") args = [PDF, output + "-[page].png"];
     }
     if (name === "trace-device.js") args = useWebsite ? [PDF, "1"] : [PDF, "", "1"];
     const proc = Bun.spawn([EXE, "run", source, ...args], {
@@ -293,6 +294,7 @@ export async function testit(): Promise<void> {
           error: (s) => `script list selection did not load the script: ${JSON.stringify(s)}`,
         },
       );
+      if (!(await ui.script()).startsWith("// Info:")) throw new Error("example script starts with empty lines");
       await ui.examples();
       await ui.add();
       await pollUntil(
@@ -305,7 +307,7 @@ export async function testit(): Promise<void> {
       await ui.pickExample(2, "Render every page as a PNG at 96 DPI.");
       await pollUntil(
         () => ui.args(),
-        (args) => args.length === 2 && args[1] === dirname(input) + "/" + basename(stem),
+        (args) => args.length === 2 && args[1] === dirname(input) + "/" + basename(stem) + "-[page].png",
         {
           error: (args) => `DIR and BASE hints: ${JSON.stringify(args)}`,
         },

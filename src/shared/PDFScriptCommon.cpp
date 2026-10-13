@@ -26,14 +26,21 @@ static void LoadPDFScripts() {
     int size = 0;
     u8* data = GetEmbeddedFileData(StrL("scripts.js"), &size);
     if (!data) return;
-    Split(&gScriptSources, Str((char*)data, size), StrL("// ---"));
+    StrVec sources;
+    Split(&sources, Str((char*)data, size), StrL("// ---"));
     free(data);
 
     const Str prefix = StrL("// Info:");
-    for (Str source : gScriptSources) {
-        Str name;
+    for (Str source : sources) {
         Str line;
         Str rest = source;
+        while (str::NextLine(rest, line, rest) && str::IsEmptyOrWhiteSpace(line)) {
+            source = rest;
+        }
+        gScriptSources.Append(source);
+
+        Str name;
+        rest = source;
         while (str::NextLine(rest, line, rest)) {
             line = str::DupTemp(line);
             str::TrimWSInPlace(line, str::TrimOpt::Both);
