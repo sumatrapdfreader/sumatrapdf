@@ -84,6 +84,12 @@ static EngineBase* MaybeCreateCbxFromMemory(Str path) {
     if (fileSize <= 0 || fileSize > kCbxNetworkLoadInMemoryMax) {
         return nullptr;
     }
+    // in-memory archives go to libarchive, which can't unpack RAR 2.0; rar
+    // needs unrar.dll, which reads a file
+    FileType ft = GuessFileTypeFromFile(path);
+    if (ft == FileType::Rar || ft == FileType::Cbr) {
+        return nullptr;
+    }
     auto timeStart = TimeGet();
     Str data = file::ReadFile(path);
     if (len(data) == 0) {
