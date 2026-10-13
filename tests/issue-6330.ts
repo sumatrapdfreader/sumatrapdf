@@ -5,8 +5,11 @@
 // size, so zooming in scaled up a small bitmap and the page was blurry.
 //
 // The page is a 300x400 pt svg holding a 600x800 px image of 1 px black and
-// white stripes. At 200% a sharp render is 1:1 black and white, while the old
-// 400x533 raster scaled up is gray.
+// white stripes under a solid black top band. At 200% a sharp render is 1:1
+// black and white, while the old 400x533 raster scaled up is gray.
+//
+// Save Image / copy also look through the svg: the bitmap is the raster at
+// its own 600x800, upright, and the original PNG bytes are available.
 //
 // Run: bun tests/issue-6330.ts [--no-build]
 
@@ -21,8 +24,10 @@ const SVG_W = 300;
 const SVG_H = 400;
 const IMG_W = (SVG_W * ZOOM_PERCENT) / 100;
 const IMG_H = (SVG_H * ZOOM_PERCENT) / 100;
+const BAND_H = 100;
 
-// 8-bit gray PNG, columns alternate black and white
+// 8-bit gray PNG: a black band on top, below it columns alternate black and
+// white, so the corners tell a flipped bitmap from an upright one
 function makeStripesPng(w: number, h: number): Buffer {
   const ihdr = Buffer.alloc(13);
   ihdr.writeUInt32BE(w, 0);
@@ -35,7 +40,7 @@ function makeStripesPng(w: number, h: number): Buffer {
     const row = y * stride;
     raw[row] = 0;
     for (let x = 0; x < w; x++) {
-      raw[row + 1 + x] = x & 1 ? 255 : 0;
+      raw[row + 1 + x] = y >= BAND_H && x & 1 ? 255 : 0;
     }
   }
   const sig = Buffer.from([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a]);
@@ -123,6 +128,28 @@ export async function testit(): Promise<void> {
     // a blurred render is mid-gray nearly everywhere
     if (page.gray > (boxW * boxH) / 10) {
       throw new Error(`issue-6330: the page is blurry: ${page.raw}`);
+    }
+
+    const res = await client.request(ControlCommand.TestImageOrientation, [epubPath, 1]);
+    const raw = String(res[1] ?? "").trim();
+    if (res[0] !== 0) {
+      throw new Error(`issue-6330: image element failed: ${raw}`);
+    }
+    const m = /w=(\d+) h=(\d+) data=(\d+) tl=(\w+) tr=(\w+) bl=(\w+) br=(\w+)/.exec(raw);
+    if (!m) {
+      throw new Error(`issue-6330: unexpected image result: ${raw}`);
+    }
+    console.log(`issue-6330: image ${raw}`);
+    const [, w, h, data, tl, tr, bl, br] = m;
+    if (Number(w) !== IMG_W || Number(h) !== IMG_H) {
+      throw new Error(`issue-6330: want the ${IMG_W}x${IMG_H} raster, not the svg render: ${raw}`);
+    }
+    if (Number(data) === 0) {
+      throw new Error(`issue-6330: the original image bytes are not available: ${raw}`);
+    }
+    // black band on top, bottom-right is the last (white) stripe column
+    if (tl !== "000000" || tr !== "000000" || bl !== "000000" || br !== "ffffff") {
+      throw new Error(`issue-6330: the raster is not upright: ${raw}`);
     }
   });
 }

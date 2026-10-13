@@ -404,6 +404,8 @@ EXPORTS
 
 	fz_compressed_image_buffer
 
+	fz_unwrap_display_list_image
+
 	fz_open_compressed_buffer
 
 	fz_open_image_decomp_stream_from_buffer

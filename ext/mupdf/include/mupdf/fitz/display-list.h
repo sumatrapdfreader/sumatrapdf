@@ -131,6 +131,12 @@ fz_rect fz_bound_display_list(fz_context *ctx, fz_display_list *list);
 fz_image *fz_new_image_from_display_list(fz_context *ctx, float w, float h, fz_display_list *list);
 
 /**
+	SumatraPDF: the single raster a display-list image draws, or NULL.
+	ctm maps the raster's unit square to the display-list image's.
+*/
+fz_image *fz_unwrap_display_list_image(fz_context *ctx, fz_image *image, fz_matrix *ctm);
+
+/**
 	Check for a display list being empty
 
 	list: The list to check.

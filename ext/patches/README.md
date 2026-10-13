@@ -58,6 +58,7 @@ relative to `ext/mupdf`, so `-p1` from inside that directory.
 | `0055-svg-data-uri-parameters` | SVG image data URIs accept media-type parameters before `;base64` (#6322) |
 | `0056-html-svg-percent-size` | SVG percentage dimensions resolve against the HTML page viewport (#6324) |
 | `0057-scalable-image-device-size` | SVG / display-list images rasterize at the zoomed size instead of a fixed 96 dpi; fixed-layout EPUB pages were blurry (#6330) |
+| `0058-unwrap-display-list-image` | `fz_unwrap_display_list_image`: the one raster an SVG draws, so Save Image / copy keep its bytes and resolution (#6330) |
 
 That is the whole list: `ext/mupdf` is byte-for-byte `1.28.5` plus these
 patches, and nothing else.

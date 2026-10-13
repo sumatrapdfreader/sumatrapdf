@@ -2167,8 +2167,17 @@ static fz_image* FzFindImageAtIdx(fz_context* ctx, FzPageInfo* pageInfo, int idx
             // Same skip as FzFindImagePositions, so imageID stays aligned.
             if (idx == 0) {
                 image = fz_keep_image(ctx, image);
+                fz_matrix ctm = block->u.i.transform;
+                // an svg around one raster: save and copy the raster itself
+                fz_matrix inner = fz_identity;
+                fz_image* raster = fz_unwrap_display_list_image(ctx, image, &inner);
+                if (raster) {
+                    fz_drop_image(ctx, image);
+                    image = raster;
+                    ctm = fz_concat(inner, ctm);
+                }
                 if (ctmOut) {
-                    *ctmOut = block->u.i.transform;
+                    *ctmOut = ctm;
                 }
                 fz_drop_stext_page(ctx, stext);
                 return image;

@@ -1326,6 +1326,9 @@ TempStr ImageOrientationResultTemp(Str pdfPath, int pageNo, int* exitCodeOut) {
     Pixmap* px = nullptr;
 #if OS_WIN
     RenderedBitmap* bmp = engine->GetImageForPageElement(imgEl);
+    Str origData = engine->GetImageDataForPageElement(imgEl);
+    int dataLen = len(origData);
+    str::Free(origData);
     SafeEngineRelease(&engine);
     if (!bmp) {
         return fail(StrL("ERROR no-image"));
@@ -1344,7 +1347,7 @@ TempStr ImageOrientationResultTemp(Str pdfPath, int pageNo, int* exitCodeOut) {
     }
     int w = px->width;
     int h = px->height;
-    out.Append(fmt("w=%d h=%d tl=%s tr=%s bl=%s br=%s\n", w, h, PixmapRgbHexTemp(px, 0, 0),
+    out.Append(fmt("w=%d h=%d data=%d tl=%s tr=%s bl=%s br=%s\n", w, h, dataLen, PixmapRgbHexTemp(px, 0, 0),
                    PixmapRgbHexTemp(px, w - 1, 0), PixmapRgbHexTemp(px, 0, h - 1), PixmapRgbHexTemp(px, w - 1, h - 1)));
     FreePixmap(px);
     if (exitCodeOut) {

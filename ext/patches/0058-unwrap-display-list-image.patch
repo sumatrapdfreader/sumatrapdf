@@ -1,0 +1,134 @@
+fitz: look through a display-list image that is one raster (#6330)
+
+An SVG around a single <image> (a fixed-layout EPUB page) becomes a
+display-list image, so Save Image and copy got a re-rasterized bitmap
+at the layout size. fz_unwrap_display_list_image returns that raster
+and the matrix from its unit square to the display-list image's, so the
+app can save the original bytes at full resolution.
+
+diff --git a/include/mupdf/fitz/display-list.h b/include/mupdf/fitz/display-list.h
+index 957efe4c2..c8e92e656 100644
+--- a/include/mupdf/fitz/display-list.h
++++ b/include/mupdf/fitz/display-list.h
+@@ -130,6 +130,12 @@ fz_rect fz_bound_display_list(fz_context *ctx, fz_display_list *list);
+ */
+ fz_image *fz_new_image_from_display_list(fz_context *ctx, float w, float h, fz_display_list *list);
+ 
++/**
++	SumatraPDF: the single raster a display-list image draws, or NULL.
++	ctm maps the raster's unit square to the display-list image's.
++*/
++fz_image *fz_unwrap_display_list_image(fz_context *ctx, fz_image *image, fz_matrix *ctm);
++
+ /**
+ 	Check for a display list being empty
+ 
+diff --git a/source/fitz/image.c b/source/fitz/image.c
+index a66a7d49d..6a16d5175 100644
+--- a/source/fitz/image.c
++++ b/source/fitz/image.c
+@@ -1876,3 +1876,104 @@ fz_image *fz_new_image_from_display_list(fz_context *ctx, float w, float h, fz_d
+ 
+ 	return &image->super;
+ }
++
++/* SumatraPDF: a display-list image (an SVG) that is one raster and nothing
++ * else. Save Image then keeps the raster's bytes and resolution (#6330). */
++typedef struct
++{
++	fz_device super;
++	fz_image *image;
++	fz_matrix ctm;
++	int images;
++	int other;
++} unwrap_device;
++
++static void
++unwrap_fill_image(fz_context *ctx, fz_device *dev_, fz_image *img, fz_matrix ctm, float alpha, fz_color_params color_params)
++{
++	unwrap_device *dev = (unwrap_device *)dev_;
++	if (dev->images++ > 0 || alpha != 1)
++	{
++		dev->other = 1;
++		return;
++	}
++	dev->image = fz_keep_image(ctx, img);
++	dev->ctm = ctm;
++}
++
++static void
++unwrap_other(unwrap_device *dev)
++{
++	dev->other = 1;
++}
++
++static void unwrap_fill_path(fz_context *ctx, fz_device *dev, const fz_path *path, int even_odd, fz_matrix ctm, fz_colorspace *cs, const float *color, float alpha, fz_color_params cp) { unwrap_other((unwrap_device *)dev); }
++static void unwrap_stroke_path(fz_context *ctx, fz_device *dev, const fz_path *path, const fz_stroke_state *ss, fz_matrix ctm, fz_colorspace *cs, const float *color, float alpha, fz_color_params cp) { unwrap_other((unwrap_device *)dev); }
++static void unwrap_clip_path(fz_context *ctx, fz_device *dev, const fz_path *path, int even_odd, fz_matrix ctm, fz_rect scissor) { unwrap_other((unwrap_device *)dev); }
++static void unwrap_clip_stroke_path(fz_context *ctx, fz_device *dev, const fz_path *path, const fz_stroke_state *ss, fz_matrix ctm, fz_rect scissor) { unwrap_other((unwrap_device *)dev); }
++static void unwrap_fill_text(fz_context *ctx, fz_device *dev, const fz_text *text, fz_matrix ctm, fz_colorspace *cs, const float *color, float alpha, fz_color_params cp) { unwrap_other((unwrap_device *)dev); }
++static void unwrap_stroke_text(fz_context *ctx, fz_device *dev, const fz_text *text, const fz_stroke_state *ss, fz_matrix ctm, fz_colorspace *cs, const float *color, float alpha, fz_color_params cp) { unwrap_other((unwrap_device *)dev); }
++static void unwrap_clip_text(fz_context *ctx, fz_device *dev, const fz_text *text, fz_matrix ctm, fz_rect scissor) { unwrap_other((unwrap_device *)dev); }
++static void unwrap_clip_stroke_text(fz_context *ctx, fz_device *dev, const fz_text *text, const fz_stroke_state *ss, fz_matrix ctm, fz_rect scissor) { unwrap_other((unwrap_device *)dev); }
++static void unwrap_fill_shade(fz_context *ctx, fz_device *dev, fz_shade *shd, fz_matrix ctm, float alpha, fz_color_params cp) { unwrap_other((unwrap_device *)dev); }
++static void unwrap_fill_image_mask(fz_context *ctx, fz_device *dev, fz_image *img, fz_matrix ctm, fz_colorspace *cs, const float *color, float alpha, fz_color_params cp) { unwrap_other((unwrap_device *)dev); }
++static void unwrap_clip_image_mask(fz_context *ctx, fz_device *dev, fz_image *img, fz_matrix ctm, fz_rect scissor) { unwrap_other((unwrap_device *)dev); }
++static void unwrap_begin_mask(fz_context *ctx, fz_device *dev, fz_rect area, int luminosity, fz_colorspace *cs, const float *bc, fz_color_params cp) { unwrap_other((unwrap_device *)dev); }
++static void unwrap_begin_group(fz_context *ctx, fz_device *dev, fz_rect area, fz_colorspace *cs, int isolated, int knockout, int blendmode, float alpha) { unwrap_other((unwrap_device *)dev); }
++static int unwrap_begin_tile(fz_context *ctx, fz_device *dev, fz_rect area, fz_rect view, float xstep, float ystep, fz_matrix ctm, int id, int doc_id) { unwrap_other((unwrap_device *)dev); return 0; }
++
++static void
++unwrap_drop_device(fz_context *ctx, fz_device *dev_)
++{
++	unwrap_device *dev = (unwrap_device *)dev_;
++	fz_drop_image(ctx, dev->image);
++}
++
++fz_image *
++fz_unwrap_display_list_image(fz_context *ctx, fz_image *image_, fz_matrix *ctm)
++{
++	fz_display_list_image *image = (fz_display_list_image *)image_;
++	unwrap_device *dev = NULL;
++	fz_image *found = NULL;
++
++	if (!image_ || image_->get_pixmap != display_list_image_get_pixmap)
++		return NULL;
++
++	fz_var(dev);
++	fz_try(ctx)
++	{
++		dev = fz_new_derived_device(ctx, unwrap_device);
++		dev->super.drop_device = unwrap_drop_device;
++		dev->super.fill_path = unwrap_fill_path;
++		dev->super.stroke_path = unwrap_stroke_path;
++		dev->super.clip_path = unwrap_clip_path;
++		dev->super.clip_stroke_path = unwrap_clip_stroke_path;
++		dev->super.fill_text = unwrap_fill_text;
++		dev->super.stroke_text = unwrap_stroke_text;
++		dev->super.clip_text = unwrap_clip_text;
++		dev->super.clip_stroke_text = unwrap_clip_stroke_text;
++		dev->super.fill_shade = unwrap_fill_shade;
++		dev->super.fill_image = unwrap_fill_image;
++		dev->super.fill_image_mask = unwrap_fill_image_mask;
++		dev->super.clip_image_mask = unwrap_clip_image_mask;
++		dev->super.begin_mask = unwrap_begin_mask;
++		dev->super.begin_group = unwrap_begin_group;
++		dev->super.begin_tile = unwrap_begin_tile;
++		fz_run_display_list(ctx, image->list, &dev->super, fz_identity, fz_infinite_rect, NULL);
++		fz_close_device(ctx, &dev->super);
++		if (dev->image && !dev->other)
++		{
++			/* raster unit square -> list coordinates -> this image's unit square */
++			*ctm = fz_concat(dev->ctm, image->transform);
++			found = fz_keep_image(ctx, dev->image);
++		}
++	}
++	fz_always(ctx)
++		fz_drop_device(ctx, &dev->super);
++	fz_catch(ctx)
++	{
++		fz_drop_image(ctx, found);
++		fz_rethrow(ctx);
++	}
++	return found;
++}
