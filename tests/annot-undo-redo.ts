@@ -232,6 +232,7 @@ export async function testit(): Promise<void> {
       throw new Error("annot-undo-redo: no canvas");
     }
     await runCmd(client, frame, "CmdToggleEditPDF");
+    await client.waitForRenderIdle();
 
     let s = await state(client);
     want(s, "expected one square on the page", s.squares.length === 1);
@@ -251,8 +252,9 @@ export async function testit(): Promise<void> {
       throw new Error(`annot-undo-redo: Save tooltip must name the file, got "${saveBtn.tip}"`);
     }
 
-    if (IS_MAC) {
-      // Fit page keeps moving the square for a moment after the first idle.
+    // The second toolbar row shrinks the canvas and Fit page re-lays out the
+    // page on a later message, so the square keeps moving for a moment.
+    {
       let prev = s.squares[0]!;
       for (let i = 0; i < 20; i++) {
         await sleep(50);
