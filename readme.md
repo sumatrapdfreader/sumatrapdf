@@ -1,4 +1,5 @@
 [![Build](https://github.com/sumatrapdfreader/sumatrapdf/actions/workflows/build.yml/badge.svg?branch=master)](https://github.com/sumatrapdfreader/sumatrapdf/actions/workflows/build.yml)
+[![Featured on AppWK](https://appwk.cn/badges/featured-dark.svg)](https://appwk.cn/apps/sumatrapdf)
 ## SumatraPDF Reader
 
 SumatraPDF is a multi-format (PDF, EPUB, MOBI, CBZ, CBR, FB2, CHM, XPS, DjVu) reader
