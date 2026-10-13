@@ -57,6 +57,7 @@ relative to `ext/mupdf`, so `-p1` from inside that directory.
 | `0054-epub-linear-no-last` | EPUB spine items with `linear="no"` (footnotes, endnotes) are paged after the reading order, not where they sit in the spine; XHTML manifest items no itemref names are paged after those, so links reach them (#5803) |
 | `0055-svg-data-uri-parameters` | SVG image data URIs accept media-type parameters before `;base64` (#6322) |
 | `0056-html-svg-percent-size` | SVG percentage dimensions resolve against the HTML page viewport (#6324) |
+| `0057-scalable-image-device-size` | SVG / display-list images rasterize at the zoomed size instead of a fixed 96 dpi; fixed-layout EPUB pages were blurry (#6330) |
 
 That is the whole list: `ext/mupdf` is byte-for-byte `1.28.5` plus these
 patches, and nothing else.

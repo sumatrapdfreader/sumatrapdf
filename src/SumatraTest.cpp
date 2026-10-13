@@ -795,7 +795,7 @@ TempStr I18nErrorStringResultTemp(int* exitCodeOut) {
 // Open any document, render page 1, and report dest size plus how many
 // red-ish / non-white pixels it has. Used to check that a WebP inside an
 // EPUB actually paints (issue #3415) instead of the IMAGE placeholder.
-TempStr PageRenderColorsResultTemp(Str path, int* exitCodeOut, int pageNo) {
+TempStr PageRenderColorsResultTemp(Str path, int* exitCodeOut, int pageNo, int zoomPercent) {
     str::Builder out;
     auto fail = [&out, exitCodeOut](Str msg) {
         if (exitCodeOut) {
@@ -839,7 +839,8 @@ TempStr PageRenderColorsResultTemp(Str path, int* exitCodeOut, int pageNo) {
         return fail(StrL("ERROR page-load-failed\n"));
     }
 
-    RenderPageArgs rargs(pageNo, 1.f, 0, nullptr, RenderTarget::Export);
+    float zoom = zoomPercent > 0 ? (float)zoomPercent / 100.f : 1.f;
+    RenderPageArgs rargs(pageNo, zoom, 0, nullptr, RenderTarget::Export);
     Pixmap* bmp = engine->RenderPage(rargs);
     if (!bmp || !bmp->data) {
         FreePixmap(bmp);
@@ -860,6 +861,9 @@ TempStr PageRenderColorsResultTemp(Str path, int* exitCodeOut, int pageNo) {
     int red = 0;
     int blue = 0;
     int nonWhite = 0;
+    int gray = 0;
+    // bounding box of the non-white pixels
+    int bx0 = 0, by0 = 0, bx1 = 0, by1 = 0;
     int rMin = 255, rMax = 0, gMin = 255, gMax = 0, bMin = 255, bMax = 0;
     if (bpp >= 3) {
         for (int y = 0; y < rgb->height; y++) {
@@ -877,7 +881,18 @@ TempStr PageRenderColorsResultTemp(Str path, int* exitCodeOut, int pageNo) {
                     r = px[2];
                 }
                 if (r < 250 || g < 250 || b < 250) {
+                    if (nonWhite == 0) {
+                        bx0 = x, by0 = y, bx1 = x + 1, by1 = y + 1;
+                    }
+                    bx0 = std::min(bx0, x);
+                    by0 = std::min(by0, y);
+                    bx1 = std::max(bx1, x + 1);
+                    by1 = std::max(by1, y + 1);
                     nonWhite++;
+                }
+                // mid-tones: what a blurred black-and-white image is made of
+                if (r >= 64 && r <= 192 && g >= 64 && g <= 192 && b >= 64 && b <= 192) {
+                    gray++;
                 }
                 if (r > 180 && g < 80 && b < 80) {
                     red++;
@@ -907,8 +922,9 @@ TempStr PageRenderColorsResultTemp(Str path, int* exitCodeOut, int pageNo) {
         }
     }
     int spread = (rMax - rMin) + (gMax - gMin) + (bMax - bMin);
-    out.Append(fmt("red=%d nonwhite=%d size=%dx%d pages=%d page=%d blue=%d spread=%d\n", red, nonWhite, rgb->width,
-                   rgb->height, engine->PageCount(), pageNo, blue, spread));
+    out.Append(fmt("red=%d nonwhite=%d size=%dx%d pages=%d page=%d blue=%d spread=%d gray=%d box=%d,%d,%d,%d\n", red,
+                   nonWhite, rgb->width, rgb->height, engine->PageCount(), pageNo, blue, spread, gray, bx0, by0, bx1,
+                   by1));
     if (rgb != bmp) {
         FreePixmap(rgb);
     }

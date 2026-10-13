@@ -1059,9 +1059,15 @@ fz_get_pixmap_from_image(fz_context *ctx, fz_image *image, const fz_irect *subar
 		if (subarea)
 			subarea_copy = *subarea;
 		l2factor_remaining = 0;
+		/* SumatraPDF: render at the device size, not the fixed 96 dpi layout size (#6330). */
+		if (ctm)
+		{
+			w = fz_maxi(w, 1);
+			h = fz_maxi(h, 1);
+		}
 		if (dw) *dw = w;
 		if (dh) *dh = h;
-		return image->get_pixmap(ctx, image, subarea ? &subarea_copy : NULL, image->w, image->h, &l2factor_remaining);
+		return image->get_pixmap(ctx, image, subarea ? &subarea_copy : NULL, w, h, &l2factor_remaining);
 	}
 
 	/* Clamp requested image size, since we never want to magnify images here. */

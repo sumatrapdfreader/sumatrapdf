@@ -1157,13 +1157,15 @@ static void ExecuteControlRequest(ControlRequest* req) {
         case ControlCmd::TestRenderPageColors: {
             Str path = StringArg(req, 0);
             if (len(path) == 0) {
-                AppendError(req, StrL("TestRenderPageColors expects string path [, int pageNo]"));
+                AppendError(req, StrL("TestRenderPageColors expects string path [, int pageNo] [, int zoomPercent]"));
                 break;
             }
             i32 pageNo = 1;
+            i32 zoomPercent = 100;
             IntArg(req, 1, pageNo);
+            IntArg(req, 2, zoomPercent);
             int exitCode = 0;
-            Str res = PageRenderColorsResultTemp(path, &exitCode, pageNo);
+            Str res = PageRenderColorsResultTemp(path, &exitCode, pageNo, zoomPercent);
             AppendTestResult(req, exitCode, res);
             break;
         }
