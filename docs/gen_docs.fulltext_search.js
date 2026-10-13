@@ -741,7 +741,7 @@
     const prefix = widget.dataset.scriptExamplesUrl
       ? "Write SumatraPDF ecma5 javascript script. API reference: https://www.sumatrapdfreader.org/docs/Tool-run-javascript-reference.md Example scripts: " +
         widget.dataset.scriptExamplesUrl +
-        "\n"
+        "\nAdd one '// Arg: initial value : description' comment for each argument, in scriptArgs order, as in the examples.\n"
       : undefined;
     sendToAi(btn.getAttribute("data-ai"), q, prefix);
   });
