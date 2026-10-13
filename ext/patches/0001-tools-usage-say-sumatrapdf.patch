@@ -241,3 +241,23 @@ index a9fd724..3763013 100644
  	fprintf(stderr, "\t-b -\tWhich box to trim to (MediaBox(default), CropBox, BleedBox, TrimBox, ArtBox)\n");
  	fprintf(stderr, "\t-f\tFallback to mediabox if specified box not available\n");
  	fprintf(stderr, "\t-m -\tAdd margins to box (+ve for inwards, -ve outwards).\n");
+diff --git a/source/tools/mubar.c b/source/tools/mubar.c
+index e6c1f4ebe..60225693b 100644
+--- a/source/tools/mubar.c
++++ b/source/tools/mubar.c
+@@ -37,13 +37,13 @@ static int mubar_usage(void)
+ 	int i, n, c;
+ 	const char *s;
+ 	fprintf(stderr,
+-		"usage to decode: mutool barcode -d [options] input [pages]\n"
++		"usage to decode: SumatraPDF barcode -d [options] input [pages]\n"
+ 		"\t-p -\tpassword for encrypted PDF files\n"
+ 		"\t-o -\toutput file (default: stdout)\n"
+ 		"\t-r -\trotation\n"
+ 	);
+ 	fprintf(stderr,
+-		"usage to create: mutool barcode -c [options] text\n"
++		"usage to create: SumatraPDF barcode -c [options] text\n"
+ 		"\t-o -\toutput file (default: out.png)\n"
+ 		"\t-q\tadd quiet zones\n"
+ 		"\t-t\tadd human readable text (when possible)\n"

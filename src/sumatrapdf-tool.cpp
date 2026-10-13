@@ -55,7 +55,7 @@ void InstallEmbeddedFontLoader();
 // must match premake5.lua and src/SumatraPDF.cpp
 #define FZ_ENABLE_JS 1
 #define FZ_ENABLE_PDF 1
-#define FZ_ENABLE_BARCODE 0
+#define FZ_ENABLE_BARCODE 1
 
 using MutoolFunc = int (*)(int argc, char* argv[]);
 

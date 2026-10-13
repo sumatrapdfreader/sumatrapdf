@@ -1,0 +1,1248 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <Filter Include="ext">
+      <UniqueIdentifier>{7670880B-E279-887C-6BF5-9E7CD7FD937C}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="ext\mupdf">
+      <UniqueIdentifier>{81670DFD-EDD1-C173-3610-7319A2B99FC8}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="ext\mupdf\source">
+      <UniqueIdentifier>{81EE8CEC-6DE7-AB3E-9619-91C382718B4A}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="ext\mupdf\source\fitz">
+      <UniqueIdentifier>{8D634700-F9CF-02FB-C2C3-9A582EEF2463}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="ext\zint">
+      <UniqueIdentifier>{6A5D26D9-562A-81E4-7F43-6F8C6B6FB672}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="ext\zint\backend">
+      <UniqueIdentifier>{41C61BD1-2DBF-3A23-56F1-1FA842491A2F}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="ext\zxing-cpp">
+      <UniqueIdentifier>{45E246B8-B1A2-C2EE-7ADD-0B6CE65C07CB}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="ext\zxing-cpp\core">
+      <UniqueIdentifier>{DDC562A6-C9A9-23FC-320A-1E4F1E0D0E7E}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="ext\zxing-cpp\core\src">
+      <UniqueIdentifier>{742AF803-6024-2156-4991-B766352A87C2}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="ext\zxing-cpp\core\src\aztec">
+      <UniqueIdentifier>{FAD01582-E68B-052E-8F43-7E787BDD4FBE}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="ext\zxing-cpp\core\src\datamatrix">
+      <UniqueIdentifier>{92A2E125-FE10-37A5-47FA-F1A4B3A72C41}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="ext\zxing-cpp\core\src\libzint">
+      <UniqueIdentifier>{1FD4AC84-0BFA-76EB-F43F-FCB6E0049CB7}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="ext\zxing-cpp\core\src\libzueci">
+      <UniqueIdentifier>{7AC44D1A-E6A7-5C5A-EFAA-8A965B0D23AB}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="ext\zxing-cpp\core\src\maxicode">
+      <UniqueIdentifier>{6DDCD1D0-D9BF-E010-E2C2-0E4D4E25A761}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="ext\zxing-cpp\core\src\oned">
+      <UniqueIdentifier>{0912CA49-751F-F82F-FE05-F41A6A12C4E6}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="ext\zxing-cpp\core\src\pdf417">
+      <UniqueIdentifier>{99B236E6-05CB-1D10-CE77-ADA93A4FB2A9}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="ext\zxing-cpp\core\src\qrcode">
+      <UniqueIdentifier>{E18E88E9-4DA7-6F13-1654-FFAC822B04AD}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="src">
+      <UniqueIdentifier>{2DAB880B-99B4-887C-2230-9F7C8E38947C}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="src\mupdf">
+      <UniqueIdentifier>{788FB2B5-E4F9-662C-2D38-18D299E14481}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="..\ext\zint\backend\aztec.h">
+      <Filter>ext\zint\backend</Filter>
+    </ClInclude>
+    <ClInclude Include="..\ext\zint\backend\big5.h">
+      <Filter>ext\zint\backend</Filter>
+    </ClInclude>
+    <ClInclude Include="..\ext\zint\backend\bmp.h">
+      <Filter>ext\zint\backend</Filter>
+    </ClInclude>
+    <ClInclude Include="..\ext\zint\backend\channel_precalcs.h">
+      <Filter>ext\zint\backend</Filter>
+    </ClInclude>
+    <ClInclude Include="..\ext\zint\backend\code1.h">
+      <Filter>ext\zint\backend</Filter>
+    </ClInclude>
+    <ClInclude Include="..\ext\zint\backend\code128.h">
+      <Filter>ext\zint\backend</Filter>
+    </ClInclude>
+    <ClInclude Include="..\ext\zint\backend\code49.h">
+      <Filter>ext\zint\backend</Filter>
+    </ClInclude>
+    <ClInclude Include="..\ext\zint\backend\common.h">
+      <Filter>ext\zint\backend</Filter>
+    </ClInclude>
+    <ClInclude Include="..\ext\zint\backend\composite.h">
+      <Filter>ext\zint\backend</Filter>
+    </ClInclude>
+    <ClInclude Include="..\ext\zint\backend\dmatrix.h">
+      <Filter>ext\zint\backend</Filter>
+    </ClInclude>
+    <ClInclude Include="..\ext\zint\backend\dmatrix_trace.h">
+      <Filter>ext\zint\backend</Filter>
+    </ClInclude>
+    <ClInclude Include="..\ext\zint\backend\eci.h">
+      <Filter>ext\zint\backend</Filter>
+    </ClInclude>
+    <ClInclude Include="..\ext\zint\backend\eci_sb.h">
+      <Filter>ext\zint\backend</Filter>
+    </ClInclude>
+    <ClInclude Include="..\ext\zint\backend\emf.h">
+      <Filter>ext\zint\backend</Filter>
+    </ClInclude>
+    <ClInclude Include="..\ext\zint\backend\filemem.h">
+      <Filter>ext\zint\backend</Filter>
+    </ClInclude>
+    <ClInclude Include="..\ext\zint\backend\gb18030.h">
+      <Filter>ext\zint\backend</Filter>
+    </ClInclude>
+    <ClInclude Include="..\ext\zint\backend\gb2312.h">
+      <Filter>ext\zint\backend</Filter>
+    </ClInclude>
+    <ClInclude Include="..\ext\zint\backend\gbk.h">
+      <Filter>ext\zint\backend</Filter>
+    </ClInclude>
+    <ClInclude Include="..\ext\zint\backend\general_field.h">
+      <Filter>ext\zint\backend</Filter>
+    </ClInclude>
+    <ClInclude Include="..\ext\zint\backend\gridmtx.h">
+      <Filter>ext\zint\backend</Filter>
+    </ClInclude>
+    <ClInclude Include="..\ext\zint\backend\gs1.h">
+      <Filter>ext\zint\backend</Filter>
+    </ClInclude>
+    <ClInclude Include="..\ext\zint\backend\gs1_lint.h">
+      <Filter>ext\zint\backend</Filter>
+    </ClInclude>
+    <ClInclude Include="..\ext\zint\backend\hanxin.h">
+      <Filter>ext\zint\backend</Filter>
+    </ClInclude>
+    <ClInclude Include="..\ext\zint\backend\iso3166.h">
+      <Filter>ext\zint\backend</Filter>
+    </ClInclude>
+    <ClInclude Include="..\ext\zint\backend\iso4217.h">
+      <Filter>ext\zint\backend</Filter>
+    </ClInclude>
+    <ClInclude Include="..\ext\zint\backend\ksx1001.h">
+      <Filter>ext\zint\backend</Filter>
+    </ClInclude>
+    <ClInclude Include="..\ext\zint\backend\large.h">
+      <Filter>ext\zint\backend</Filter>
+    </ClInclude>
+    <ClInclude Include="..\ext\zint\backend\maxicode.h">
+      <Filter>ext\zint\backend</Filter>
+    </ClInclude>
+    <ClInclude Include="..\ext\zint\backend\output.h">
+      <Filter>ext\zint\backend</Filter>
+    </ClInclude>
+    <ClInclude Include="..\ext\zint\backend\pcx.h">
+      <Filter>ext\zint\backend</Filter>
+    </ClInclude>
+    <ClInclude Include="..\ext\zint\backend\pdf417.h">
+      <Filter>ext\zint\backend</Filter>
+    </ClInclude>
+    <ClInclude Include="..\ext\zint\backend\pdf417_tabs.h">
+      <Filter>ext\zint\backend</Filter>
+    </ClInclude>
+    <ClInclude Include="..\ext\zint\backend\pdf417_trace.h">
+      <Filter>ext\zint\backend</Filter>
+    </ClInclude>
+    <ClInclude Include="..\ext\zint\backend\qr.h">
+      <Filter>ext\zint\backend</Filter>
+    </ClInclude>
+    <ClInclude Include="..\ext\zint\backend\raster_font.h">
+      <Filter>ext\zint\backend</Filter>
+    </ClInclude>
+    <ClInclude Include="..\ext\zint\backend\reedsol.h">
+      <Filter>ext\zint\backend</Filter>
+    </ClInclude>
+    <ClInclude Include="..\ext\zint\backend\reedsol_logs.h">
+      <Filter>ext\zint\backend</Filter>
+    </ClInclude>
+    <ClInclude Include="..\ext\zint\backend\rss.h">
+      <Filter>ext\zint\backend</Filter>
+    </ClInclude>
+    <ClInclude Include="..\ext\zint\backend\sjis.h">
+      <Filter>ext\zint\backend</Filter>
+    </ClInclude>
+    <ClInclude Include="..\ext\zint\backend\tif.h">
+      <Filter>ext\zint\backend</Filter>
+    </ClInclude>
+    <ClInclude Include="..\ext\zint\backend\tif_lzw.h">
+      <Filter>ext\zint\backend</Filter>
+    </ClInclude>
+    <ClInclude Include="..\ext\zint\backend\zfiletypes.h">
+      <Filter>ext\zint\backend</Filter>
+    </ClInclude>
+    <ClInclude Include="..\ext\zint\backend\zint.h">
+      <Filter>ext\zint\backend</Filter>
+    </ClInclude>
+    <ClInclude Include="..\ext\zint\backend\zintconfig.h">
+      <Filter>ext\zint\backend</Filter>
+    </ClInclude>
+    <ClInclude Include="..\ext\zxing-cpp\core\src\Barcode.h">
+      <Filter>ext\zxing-cpp\core\src</Filter>
+    </ClInclude>
+    <ClInclude Include="..\ext\zxing-cpp\core\src\BarcodeFormat.h">
+      <Filter>ext\zxing-cpp\core\src</Filter>
+    </ClInclude>
+    <ClInclude Include="..\ext\zxing-cpp\core\src\BinaryBitmap.h">
+      <Filter>ext\zxing-cpp\core\src</Filter>
+    </ClInclude>
+    <ClInclude Include="..\ext\zxing-cpp\core\src\BitArray.h">
+      <Filter>ext\zxing-cpp\core\src</Filter>
+    </ClInclude>
+    <ClInclude Include="..\ext\zxing-cpp\core\src\BitHacks.h">
+      <Filter>ext\zxing-cpp\core\src</Filter>
+    </ClInclude>
+    <ClInclude Include="..\ext\zxing-cpp\core\src\BitMatrix.h">
+      <Filter>ext\zxing-cpp\core\src</Filter>
+    </ClInclude>
+    <ClInclude Include="..\ext\zxing-cpp\core\src\BitMatrixCursor.h">
+      <Filter>ext\zxing-cpp\core\src</Filter>
+    </ClInclude>
+    <ClInclude Include="..\ext\zxing-cpp\core\src\BitMatrixIO.h">
+      <Filter>ext\zxing-cpp\core\src</Filter>
+    </ClInclude>
+    <ClInclude Include="..\ext\zxing-cpp\core\src\BitSource.h">
+      <Filter>ext\zxing-cpp\core\src</Filter>
+    </ClInclude>
+    <ClInclude Include="..\ext\zxing-cpp\core\src\ByteArray.h">
+      <Filter>ext\zxing-cpp\core\src</Filter>
+    </ClInclude>
+    <ClInclude Include="..\ext\zxing-cpp\core\src\ByteMatrix.h">
+      <Filter>ext\zxing-cpp\core\src</Filter>
+    </ClInclude>
+    <ClInclude Include="..\ext\zxing-cpp\core\src\CharacterSet.h">
+      <Filter>ext\zxing-cpp\core\src</Filter>
+    </ClInclude>
+    <ClInclude Include="..\ext\zxing-cpp\core\src\ConcentricFinder.h">
+      <Filter>ext\zxing-cpp\core\src</Filter>
+    </ClInclude>
+    <ClInclude Include="..\ext\zxing-cpp\core\src\Content.h">
+      <Filter>ext\zxing-cpp\core\src</Filter>
+    </ClInclude>
+    <ClInclude Include="..\ext\zxing-cpp\core\src\DecodeHints.h">
+      <Filter>ext\zxing-cpp\core\src</Filter>
+    </ClInclude>
+    <ClInclude Include="..\ext\zxing-cpp\core\src\DecoderResult.h">
+      <Filter>ext\zxing-cpp\core\src</Filter>
+    </ClInclude>
+    <ClInclude Include="..\ext\zxing-cpp\core\src\DetectorResult.h">
+      <Filter>ext\zxing-cpp\core\src</Filter>
+    </ClInclude>
+    <ClInclude Include="..\ext\zxing-cpp\core\src\ECI.h">
+      <Filter>ext\zxing-cpp\core\src</Filter>
+    </ClInclude>
+    <ClInclude Include="..\ext\zxing-cpp\core\src\Error.h">
+      <Filter>ext\zxing-cpp\core\src</Filter>
+    </ClInclude>
+    <ClInclude Include="..\ext\zxing-cpp\core\src\Flags.h">
+      <Filter>ext\zxing-cpp\core\src</Filter>
+    </ClInclude>
+    <ClInclude Include="..\ext\zxing-cpp\core\src\GTIN.h">
+      <Filter>ext\zxing-cpp\core\src</Filter>
+    </ClInclude>
+    <ClInclude Include="..\ext\zxing-cpp\core\src\Generator.h">
+      <Filter>ext\zxing-cpp\core\src</Filter>
+    </ClInclude>
+    <ClInclude Include="..\ext\zxing-cpp\core\src\GenericGF.h">
+      <Filter>ext\zxing-cpp\core\src</Filter>
+    </ClInclude>
+    <ClInclude Include="..\ext\zxing-cpp\core\src\GenericGFPoly.h">
+      <Filter>ext\zxing-cpp\core\src</Filter>
+    </ClInclude>
+    <ClInclude Include="..\ext\zxing-cpp\core\src\GlobalHistogramBinarizer.h">
+      <Filter>ext\zxing-cpp\core\src</Filter>
+    </ClInclude>
+    <ClInclude Include="..\ext\zxing-cpp\core\src\GridSampler.h">
+      <Filter>ext\zxing-cpp\core\src</Filter>
+    </ClInclude>
+    <ClInclude Include="..\ext\zxing-cpp\core\src\HRI.h">
+      <Filter>ext\zxing-cpp\core\src</Filter>
+    </ClInclude>
+    <ClInclude Include="..\ext\zxing-cpp\core\src\HybridBinarizer.h">
+      <Filter>ext\zxing-cpp\core\src</Filter>
+    </ClInclude>
+    <ClInclude Include="..\ext\zxing-cpp\core\src\ImageView.h">
+      <Filter>ext\zxing-cpp\core\src</Filter>
+    </ClInclude>
+    <ClInclude Include="..\ext\zxing-cpp\core\src\LogMatrix.h">
+      <Filter>ext\zxing-cpp\core\src</Filter>
+    </ClInclude>
+    <ClInclude Include="..\ext\zxing-cpp\core\src\Matrix.h">
+      <Filter>ext\zxing-cpp\core\src</Filter>
+    </ClInclude>
+    <ClInclude Include="..\ext\zxing-cpp\core\src\MultiFormatReader.h">
+      <Filter>ext\zxing-cpp\core\src</Filter>
+    </ClInclude>
+    <ClInclude Include="..\ext\zxing-cpp\core\src\MultiFormatWriter.h">
+      <Filter>ext\zxing-cpp\core\src</Filter>
+    </ClInclude>
+    <ClInclude Include="..\ext\zxing-cpp\core\src\Pattern.h">
+      <Filter>ext\zxing-cpp\core\src</Filter>
+    </ClInclude>
+    <ClInclude Include="..\ext\zxing-cpp\core\src\PerspectiveTransform.h">
+      <Filter>ext\zxing-cpp\core\src</Filter>
+    </ClInclude>
+    <ClInclude Include="..\ext\zxing-cpp\core\src\Point.h">
+      <Filter>ext\zxing-cpp\core\src</Filter>
+    </ClInclude>
+    <ClInclude Include="..\ext\zxing-cpp\core\src\Quadrilateral.h">
+      <Filter>ext\zxing-cpp\core\src</Filter>
+    </ClInclude>
+    <ClInclude Include="..\ext\zxing-cpp\core\src\Range.h">
+      <Filter>ext\zxing-cpp\core\src</Filter>
+    </ClInclude>
+    <ClInclude Include="..\ext\zxing-cpp\core\src\ReadBarcode.h">
+      <Filter>ext\zxing-cpp\core\src</Filter>
+    </ClInclude>
+    <ClInclude Include="..\ext\zxing-cpp\core\src\Reader.h">
+      <Filter>ext\zxing-cpp\core\src</Filter>
+    </ClInclude>
+    <ClInclude Include="..\ext\zxing-cpp\core\src\ReaderOptions.h">
+      <Filter>ext\zxing-cpp\core\src</Filter>
+    </ClInclude>
+    <ClInclude Include="..\ext\zxing-cpp\core\src\ReedSolomonDecoder.h">
+      <Filter>ext\zxing-cpp\core\src</Filter>
+    </ClInclude>
+    <ClInclude Include="..\ext\zxing-cpp\core\src\ReedSolomonEncoder.h">
+      <Filter>ext\zxing-cpp\core\src</Filter>
+    </ClInclude>
+    <ClInclude Include="..\ext\zxing-cpp\core\src\RegressionLine.h">
+      <Filter>ext\zxing-cpp\core\src</Filter>
+    </ClInclude>
+    <ClInclude Include="..\ext\zxing-cpp\core\src\Result.h">
+      <Filter>ext\zxing-cpp\core\src</Filter>
+    </ClInclude>
+    <ClInclude Include="..\ext\zxing-cpp\core\src\ResultPoint.h">
+      <Filter>ext\zxing-cpp\core\src</Filter>
+    </ClInclude>
+    <ClInclude Include="..\ext\zxing-cpp\core\src\Scope.h">
+      <Filter>ext\zxing-cpp\core\src</Filter>
+    </ClInclude>
+    <ClInclude Include="..\ext\zxing-cpp\core\src\StructuredAppend.h">
+      <Filter>ext\zxing-cpp\core\src</Filter>
+    </ClInclude>
+    <ClInclude Include="..\ext\zxing-cpp\core\src\TextDecoder.h">
+      <Filter>ext\zxing-cpp\core\src</Filter>
+    </ClInclude>
+    <ClInclude Include="..\ext\zxing-cpp\core\src\TextEncoder.h">
+      <Filter>ext\zxing-cpp\core\src</Filter>
+    </ClInclude>
+    <ClInclude Include="..\ext\zxing-cpp\core\src\TextUtfEncoding.h">
+      <Filter>ext\zxing-cpp\core\src</Filter>
+    </ClInclude>
+    <ClInclude Include="..\ext\zxing-cpp\core\src\ThresholdBinarizer.h">
+      <Filter>ext\zxing-cpp\core\src</Filter>
+    </ClInclude>
+    <ClInclude Include="..\ext\zxing-cpp\core\src\TritMatrix.h">
+      <Filter>ext\zxing-cpp\core\src</Filter>
+    </ClInclude>
+    <ClInclude Include="..\ext\zxing-cpp\core\src\Utf.h">
+      <Filter>ext\zxing-cpp\core\src</Filter>
+    </ClInclude>
+    <ClInclude Include="..\ext\zxing-cpp\core\src\WhiteRectDetector.h">
+      <Filter>ext\zxing-cpp\core\src</Filter>
+    </ClInclude>
+    <ClInclude Include="..\ext\zxing-cpp\core\src\WriteBarcode.h">
+      <Filter>ext\zxing-cpp\core\src</Filter>
+    </ClInclude>
+    <ClInclude Include="..\ext\zxing-cpp\core\src\ZXAlgorithms.h">
+      <Filter>ext\zxing-cpp\core\src</Filter>
+    </ClInclude>
+    <ClInclude Include="..\ext\zxing-cpp\core\src\ZXConfig.h">
+      <Filter>ext\zxing-cpp\core\src</Filter>
+    </ClInclude>
+    <ClInclude Include="..\ext\zxing-cpp\core\src\ZXTestSupport.h">
+      <Filter>ext\zxing-cpp\core\src</Filter>
+    </ClInclude>
+    <ClInclude Include="..\ext\zxing-cpp\core\src\ZXVersion.h">
+      <Filter>ext\zxing-cpp\core\src</Filter>
+    </ClInclude>
+    <ClInclude Include="..\ext\zxing-cpp\core\src\ZXingC.h">
+      <Filter>ext\zxing-cpp\core\src</Filter>
+    </ClInclude>
+    <ClInclude Include="..\ext\zxing-cpp\core\src\ZXingCpp.h">
+      <Filter>ext\zxing-cpp\core\src</Filter>
+    </ClInclude>
+    <ClInclude Include="..\ext\zxing-cpp\core\src\aztec\AZDecoder.h">
+      <Filter>ext\zxing-cpp\core\src\aztec</Filter>
+    </ClInclude>
+    <ClInclude Include="..\ext\zxing-cpp\core\src\aztec\AZDetector.h">
+      <Filter>ext\zxing-cpp\core\src\aztec</Filter>
+    </ClInclude>
+    <ClInclude Include="..\ext\zxing-cpp\core\src\aztec\AZDetectorResult.h">
+      <Filter>ext\zxing-cpp\core\src\aztec</Filter>
+    </ClInclude>
+    <ClInclude Include="..\ext\zxing-cpp\core\src\aztec\AZEncoder.h">
+      <Filter>ext\zxing-cpp\core\src\aztec</Filter>
+    </ClInclude>
+    <ClInclude Include="..\ext\zxing-cpp\core\src\aztec\AZEncodingState.h">
+      <Filter>ext\zxing-cpp\core\src\aztec</Filter>
+    </ClInclude>
+    <ClInclude Include="..\ext\zxing-cpp\core\src\aztec\AZHighLevelEncoder.h">
+      <Filter>ext\zxing-cpp\core\src\aztec</Filter>
+    </ClInclude>
+    <ClInclude Include="..\ext\zxing-cpp\core\src\aztec\AZReader.h">
+      <Filter>ext\zxing-cpp\core\src\aztec</Filter>
+    </ClInclude>
+    <ClInclude Include="..\ext\zxing-cpp\core\src\aztec\AZToken.h">
+      <Filter>ext\zxing-cpp\core\src\aztec</Filter>
+    </ClInclude>
+    <ClInclude Include="..\ext\zxing-cpp\core\src\aztec\AZWriter.h">
+      <Filter>ext\zxing-cpp\core\src\aztec</Filter>
+    </ClInclude>
+    <ClInclude Include="..\ext\zxing-cpp\core\src\datamatrix\DMBitLayout.h">
+      <Filter>ext\zxing-cpp\core\src\datamatrix</Filter>
+    </ClInclude>
+    <ClInclude Include="..\ext\zxing-cpp\core\src\datamatrix\DMDataBlock.h">
+      <Filter>ext\zxing-cpp\core\src\datamatrix</Filter>
+    </ClInclude>
+    <ClInclude Include="..\ext\zxing-cpp\core\src\datamatrix\DMDecoder.h">
+      <Filter>ext\zxing-cpp\core\src\datamatrix</Filter>
+    </ClInclude>
+    <ClInclude Include="..\ext\zxing-cpp\core\src\datamatrix\DMDetector.h">
+      <Filter>ext\zxing-cpp\core\src\datamatrix</Filter>
+    </ClInclude>
+    <ClInclude Include="..\ext\zxing-cpp\core\src\datamatrix\DMECEncoder.h">
+      <Filter>ext\zxing-cpp\core\src\datamatrix</Filter>
+    </ClInclude>
+    <ClInclude Include="..\ext\zxing-cpp\core\src\datamatrix\DMEncoderContext.h">
+      <Filter>ext\zxing-cpp\core\src\datamatrix</Filter>
+    </ClInclude>
+    <ClInclude Include="..\ext\zxing-cpp\core\src\datamatrix\DMHighLevelEncoder.h">
+      <Filter>ext\zxing-cpp\core\src\datamatrix</Filter>
+    </ClInclude>
+    <ClInclude Include="..\ext\zxing-cpp\core\src\datamatrix\DMReader.h">
+      <Filter>ext\zxing-cpp\core\src\datamatrix</Filter>
+    </ClInclude>
+    <ClInclude Include="..\ext\zxing-cpp\core\src\datamatrix\DMSymbolInfo.h">
+      <Filter>ext\zxing-cpp\core\src\datamatrix</Filter>
+    </ClInclude>
+    <ClInclude Include="..\ext\zxing-cpp\core\src\datamatrix\DMSymbolShape.h">
+      <Filter>ext\zxing-cpp\core\src\datamatrix</Filter>
+    </ClInclude>
+    <ClInclude Include="..\ext\zxing-cpp\core\src\datamatrix\DMVersion.h">
+      <Filter>ext\zxing-cpp\core\src\datamatrix</Filter>
+    </ClInclude>
+    <ClInclude Include="..\ext\zxing-cpp\core\src\datamatrix\DMWriter.h">
+      <Filter>ext\zxing-cpp\core\src\datamatrix</Filter>
+    </ClInclude>
+    <ClInclude Include="..\ext\zxing-cpp\core\src\libzint\aztec.h">
+      <Filter>ext\zxing-cpp\core\src\libzint</Filter>
+    </ClInclude>
+    <ClInclude Include="..\ext\zxing-cpp\core\src\libzint\big5.h">
+      <Filter>ext\zxing-cpp\core\src\libzint</Filter>
+    </ClInclude>
+    <ClInclude Include="..\ext\zxing-cpp\core\src\libzint\channel_precalcs.h">
+      <Filter>ext\zxing-cpp\core\src\libzint</Filter>
+    </ClInclude>
+    <ClInclude Include="..\ext\zxing-cpp\core\src\libzint\code128.h">
+      <Filter>ext\zxing-cpp\core\src\libzint</Filter>
+    </ClInclude>
+    <ClInclude Include="..\ext\zxing-cpp\core\src\libzint\common.h">
+      <Filter>ext\zxing-cpp\core\src\libzint</Filter>
+    </ClInclude>
+    <ClInclude Include="..\ext\zxing-cpp\core\src\libzint\dmatrix.h">
+      <Filter>ext\zxing-cpp\core\src\libzint</Filter>
+    </ClInclude>
+    <ClInclude Include="..\ext\zxing-cpp\core\src\libzint\dmatrix_trace.h">
+      <Filter>ext\zxing-cpp\core\src\libzint</Filter>
+    </ClInclude>
+    <ClInclude Include="..\ext\zxing-cpp\core\src\libzint\eci.h">
+      <Filter>ext\zxing-cpp\core\src\libzint</Filter>
+    </ClInclude>
+    <ClInclude Include="..\ext\zxing-cpp\core\src\libzint\eci_sb.h">
+      <Filter>ext\zxing-cpp\core\src\libzint</Filter>
+    </ClInclude>
+    <ClInclude Include="..\ext\zxing-cpp\core\src\libzint\filemem.h">
+      <Filter>ext\zxing-cpp\core\src\libzint</Filter>
+    </ClInclude>
+    <ClInclude Include="..\ext\zxing-cpp\core\src\libzint\gb18030.h">
+      <Filter>ext\zxing-cpp\core\src\libzint</Filter>
+    </ClInclude>
+    <ClInclude Include="..\ext\zxing-cpp\core\src\libzint\gb2312.h">
+      <Filter>ext\zxing-cpp\core\src\libzint</Filter>
+    </ClInclude>
+    <ClInclude Include="..\ext\zxing-cpp\core\src\libzint\gbk.h">
+      <Filter>ext\zxing-cpp\core\src\libzint</Filter>
+    </ClInclude>
+    <ClInclude Include="..\ext\zxing-cpp\core\src\libzint\general_field.h">
+      <Filter>ext\zxing-cpp\core\src\libzint</Filter>
+    </ClInclude>
+    <ClInclude Include="..\ext\zxing-cpp\core\src\libzint\gs1.h">
+      <Filter>ext\zxing-cpp\core\src\libzint</Filter>
+    </ClInclude>
+    <ClInclude Include="..\ext\zxing-cpp\core\src\libzint\gs1_lint.h">
+      <Filter>ext\zxing-cpp\core\src\libzint</Filter>
+    </ClInclude>
+    <ClInclude Include="..\ext\zxing-cpp\core\src\libzint\iso3166.h">
+      <Filter>ext\zxing-cpp\core\src\libzint</Filter>
+    </ClInclude>
+    <ClInclude Include="..\ext\zxing-cpp\core\src\libzint\iso4217.h">
+      <Filter>ext\zxing-cpp\core\src\libzint</Filter>
+    </ClInclude>
+    <ClInclude Include="..\ext\zxing-cpp\core\src\libzint\ksx1001.h">
+      <Filter>ext\zxing-cpp\core\src\libzint</Filter>
+    </ClInclude>
+    <ClInclude Include="..\ext\zxing-cpp\core\src\libzint\large.h">
+      <Filter>ext\zxing-cpp\core\src\libzint</Filter>
+    </ClInclude>
+    <ClInclude Include="..\ext\zxing-cpp\core\src\libzint\maxicode.h">
+      <Filter>ext\zxing-cpp\core\src\libzint</Filter>
+    </ClInclude>
+    <ClInclude Include="..\ext\zxing-cpp\core\src\libzint\output.h">
+      <Filter>ext\zxing-cpp\core\src\libzint</Filter>
+    </ClInclude>
+    <ClInclude Include="..\ext\zxing-cpp\core\src\libzint\pdf417.h">
+      <Filter>ext\zxing-cpp\core\src\libzint</Filter>
+    </ClInclude>
+    <ClInclude Include="..\ext\zxing-cpp\core\src\libzint\pdf417_tabs.h">
+      <Filter>ext\zxing-cpp\core\src\libzint</Filter>
+    </ClInclude>
+    <ClInclude Include="..\ext\zxing-cpp\core\src\libzint\pdf417_trace.h">
+      <Filter>ext\zxing-cpp\core\src\libzint</Filter>
+    </ClInclude>
+    <ClInclude Include="..\ext\zxing-cpp\core\src\libzint\qr.h">
+      <Filter>ext\zxing-cpp\core\src\libzint</Filter>
+    </ClInclude>
+    <ClInclude Include="..\ext\zxing-cpp\core\src\libzint\raster_font.h">
+      <Filter>ext\zxing-cpp\core\src\libzint</Filter>
+    </ClInclude>
+    <ClInclude Include="..\ext\zxing-cpp\core\src\libzint\reedsol.h">
+      <Filter>ext\zxing-cpp\core\src\libzint</Filter>
+    </ClInclude>
+    <ClInclude Include="..\ext\zxing-cpp\core\src\libzint\reedsol_logs.h">
+      <Filter>ext\zxing-cpp\core\src\libzint</Filter>
+    </ClInclude>
+    <ClInclude Include="..\ext\zxing-cpp\core\src\libzint\rss.h">
+      <Filter>ext\zxing-cpp\core\src\libzint</Filter>
+    </ClInclude>
+    <ClInclude Include="..\ext\zxing-cpp\core\src\libzint\sjis.h">
+      <Filter>ext\zxing-cpp\core\src\libzint</Filter>
+    </ClInclude>
+    <ClInclude Include="..\ext\zxing-cpp\core\src\libzint\zfiletypes.h">
+      <Filter>ext\zxing-cpp\core\src\libzint</Filter>
+    </ClInclude>
+    <ClInclude Include="..\ext\zxing-cpp\core\src\libzint\zint.h">
+      <Filter>ext\zxing-cpp\core\src\libzint</Filter>
+    </ClInclude>
+    <ClInclude Include="..\ext\zxing-cpp\core\src\libzint\zintconfig.h">
+      <Filter>ext\zxing-cpp\core\src\libzint</Filter>
+    </ClInclude>
+    <ClInclude Include="..\ext\zxing-cpp\core\src\libzueci\zueci.h">
+      <Filter>ext\zxing-cpp\core\src\libzueci</Filter>
+    </ClInclude>
+    <ClInclude Include="..\ext\zxing-cpp\core\src\libzueci\zueci_big5.h">
+      <Filter>ext\zxing-cpp\core\src\libzueci</Filter>
+    </ClInclude>
+    <ClInclude Include="..\ext\zxing-cpp\core\src\libzueci\zueci_common.h">
+      <Filter>ext\zxing-cpp\core\src\libzueci</Filter>
+    </ClInclude>
+    <ClInclude Include="..\ext\zxing-cpp\core\src\libzueci\zueci_gb18030.h">
+      <Filter>ext\zxing-cpp\core\src\libzueci</Filter>
+    </ClInclude>
+    <ClInclude Include="..\ext\zxing-cpp\core\src\libzueci\zueci_gb2312.h">
+      <Filter>ext\zxing-cpp\core\src\libzueci</Filter>
+    </ClInclude>
+    <ClInclude Include="..\ext\zxing-cpp\core\src\libzueci\zueci_gbk.h">
+      <Filter>ext\zxing-cpp\core\src\libzueci</Filter>
+    </ClInclude>
+    <ClInclude Include="..\ext\zxing-cpp\core\src\libzueci\zueci_ksx1001.h">
+      <Filter>ext\zxing-cpp\core\src\libzueci</Filter>
+    </ClInclude>
+    <ClInclude Include="..\ext\zxing-cpp\core\src\libzueci\zueci_sb.h">
+      <Filter>ext\zxing-cpp\core\src\libzueci</Filter>
+    </ClInclude>
+    <ClInclude Include="..\ext\zxing-cpp\core\src\libzueci\zueci_sjis.h">
+      <Filter>ext\zxing-cpp\core\src\libzueci</Filter>
+    </ClInclude>
+    <ClInclude Include="..\ext\zxing-cpp\core\src\maxicode\MCBitMatrixParser.h">
+      <Filter>ext\zxing-cpp\core\src\maxicode</Filter>
+    </ClInclude>
+    <ClInclude Include="..\ext\zxing-cpp\core\src\maxicode\MCDecoder.h">
+      <Filter>ext\zxing-cpp\core\src\maxicode</Filter>
+    </ClInclude>
+    <ClInclude Include="..\ext\zxing-cpp\core\src\maxicode\MCReader.h">
+      <Filter>ext\zxing-cpp\core\src\maxicode</Filter>
+    </ClInclude>
+    <ClInclude Include="..\ext\zxing-cpp\core\src\oned\ODCodabarReader.h">
+      <Filter>ext\zxing-cpp\core\src\oned</Filter>
+    </ClInclude>
+    <ClInclude Include="..\ext\zxing-cpp\core\src\oned\ODCodabarWriter.h">
+      <Filter>ext\zxing-cpp\core\src\oned</Filter>
+    </ClInclude>
+    <ClInclude Include="..\ext\zxing-cpp\core\src\oned\ODCode128Patterns.h">
+      <Filter>ext\zxing-cpp\core\src\oned</Filter>
+    </ClInclude>
+    <ClInclude Include="..\ext\zxing-cpp\core\src\oned\ODCode128Reader.h">
+      <Filter>ext\zxing-cpp\core\src\oned</Filter>
+    </ClInclude>
+    <ClInclude Include="..\ext\zxing-cpp\core\src\oned\ODCode128Writer.h">
+      <Filter>ext\zxing-cpp\core\src\oned</Filter>
+    </ClInclude>
+    <ClInclude Include="..\ext\zxing-cpp\core\src\oned\ODCode39Reader.h">
+      <Filter>ext\zxing-cpp\core\src\oned</Filter>
+    </ClInclude>
+    <ClInclude Include="..\ext\zxing-cpp\core\src\oned\ODCode39Writer.h">
+      <Filter>ext\zxing-cpp\core\src\oned</Filter>
+    </ClInclude>
+    <ClInclude Include="..\ext\zxing-cpp\core\src\oned\ODCode93Reader.h">
+      <Filter>ext\zxing-cpp\core\src\oned</Filter>
+    </ClInclude>
+    <ClInclude Include="..\ext\zxing-cpp\core\src\oned\ODCode93Writer.h">
+      <Filter>ext\zxing-cpp\core\src\oned</Filter>
+    </ClInclude>
+    <ClInclude Include="..\ext\zxing-cpp\core\src\oned\ODDXFilmEdgeReader.h">
+      <Filter>ext\zxing-cpp\core\src\oned</Filter>
+    </ClInclude>
+    <ClInclude Include="..\ext\zxing-cpp\core\src\oned\ODDataBarCommon.h">
+      <Filter>ext\zxing-cpp\core\src\oned</Filter>
+    </ClInclude>
+    <ClInclude Include="..\ext\zxing-cpp\core\src\oned\ODDataBarExpandedBitDecoder.h">
+      <Filter>ext\zxing-cpp\core\src\oned</Filter>
+    </ClInclude>
+    <ClInclude Include="..\ext\zxing-cpp\core\src\oned\ODDataBarExpandedReader.h">
+      <Filter>ext\zxing-cpp\core\src\oned</Filter>
+    </ClInclude>
+    <ClInclude Include="..\ext\zxing-cpp\core\src\oned\ODDataBarLimitedReader.h">
+      <Filter>ext\zxing-cpp\core\src\oned</Filter>
+    </ClInclude>
+    <ClInclude Include="..\ext\zxing-cpp\core\src\oned\ODDataBarReader.h">
+      <Filter>ext\zxing-cpp\core\src\oned</Filter>
+    </ClInclude>
+    <ClInclude Include="..\ext\zxing-cpp\core\src\oned\ODEAN13Writer.h">
+      <Filter>ext\zxing-cpp\core\src\oned</Filter>
+    </ClInclude>
+    <ClInclude Include="..\ext\zxing-cpp\core\src\oned\ODEAN8Writer.h">
+      <Filter>ext\zxing-cpp\core\src\oned</Filter>
+    </ClInclude>
+    <ClInclude Include="..\ext\zxing-cpp\core\src\oned\ODITFReader.h">
+      <Filter>ext\zxing-cpp\core\src\oned</Filter>
+    </ClInclude>
+    <ClInclude Include="..\ext\zxing-cpp\core\src\oned\ODITFWriter.h">
+      <Filter>ext\zxing-cpp\core\src\oned</Filter>
+    </ClInclude>
+    <ClInclude Include="..\ext\zxing-cpp\core\src\oned\ODMultiUPCEANReader.h">
+      <Filter>ext\zxing-cpp\core\src\oned</Filter>
+    </ClInclude>
+    <ClInclude Include="..\ext\zxing-cpp\core\src\oned\ODReader.h">
+      <Filter>ext\zxing-cpp\core\src\oned</Filter>
+    </ClInclude>
+    <ClInclude Include="..\ext\zxing-cpp\core\src\oned\ODRowReader.h">
+      <Filter>ext\zxing-cpp\core\src\oned</Filter>
+    </ClInclude>
+    <ClInclude Include="..\ext\zxing-cpp\core\src\oned\ODUPCAWriter.h">
+      <Filter>ext\zxing-cpp\core\src\oned</Filter>
+    </ClInclude>
+    <ClInclude Include="..\ext\zxing-cpp\core\src\oned\ODUPCEANCommon.h">
+      <Filter>ext\zxing-cpp\core\src\oned</Filter>
+    </ClInclude>
+    <ClInclude Include="..\ext\zxing-cpp\core\src\oned\ODUPCEWriter.h">
+      <Filter>ext\zxing-cpp\core\src\oned</Filter>
+    </ClInclude>
+    <ClInclude Include="..\ext\zxing-cpp\core\src\oned\ODWriterHelper.h">
+      <Filter>ext\zxing-cpp\core\src\oned</Filter>
+    </ClInclude>
+    <ClInclude Include="..\ext\zxing-cpp\core\src\pdf417\CustomData.h">
+      <Filter>ext\zxing-cpp\core\src\pdf417</Filter>
+    </ClInclude>
+    <ClInclude Include="..\ext\zxing-cpp\core\src\pdf417\PDFBarcodeMetadata.h">
+      <Filter>ext\zxing-cpp\core\src\pdf417</Filter>
+    </ClInclude>
+    <ClInclude Include="..\ext\zxing-cpp\core\src\pdf417\PDFBarcodeValue.h">
+      <Filter>ext\zxing-cpp\core\src\pdf417</Filter>
+    </ClInclude>
+    <ClInclude Include="..\ext\zxing-cpp\core\src\pdf417\PDFBoundingBox.h">
+      <Filter>ext\zxing-cpp\core\src\pdf417</Filter>
+    </ClInclude>
+    <ClInclude Include="..\ext\zxing-cpp\core\src\pdf417\PDFCodeword.h">
+      <Filter>ext\zxing-cpp\core\src\pdf417</Filter>
+    </ClInclude>
+    <ClInclude Include="..\ext\zxing-cpp\core\src\pdf417\PDFCodewordDecoder.h">
+      <Filter>ext\zxing-cpp\core\src\pdf417</Filter>
+    </ClInclude>
+    <ClInclude Include="..\ext\zxing-cpp\core\src\pdf417\PDFCompaction.h">
+      <Filter>ext\zxing-cpp\core\src\pdf417</Filter>
+    </ClInclude>
+    <ClInclude Include="..\ext\zxing-cpp\core\src\pdf417\PDFDecoder.h">
+      <Filter>ext\zxing-cpp\core\src\pdf417</Filter>
+    </ClInclude>
+    <ClInclude Include="..\ext\zxing-cpp\core\src\pdf417\PDFDecoderResultExtra.h">
+      <Filter>ext\zxing-cpp\core\src\pdf417</Filter>
+    </ClInclude>
+    <ClInclude Include="..\ext\zxing-cpp\core\src\pdf417\PDFDetectionResult.h">
+      <Filter>ext\zxing-cpp\core\src\pdf417</Filter>
+    </ClInclude>
+    <ClInclude Include="..\ext\zxing-cpp\core\src\pdf417\PDFDetectionResultColumn.h">
+      <Filter>ext\zxing-cpp\core\src\pdf417</Filter>
+    </ClInclude>
+    <ClInclude Include="..\ext\zxing-cpp\core\src\pdf417\PDFDetector.h">
+      <Filter>ext\zxing-cpp\core\src\pdf417</Filter>
+    </ClInclude>
+    <ClInclude Include="..\ext\zxing-cpp\core\src\pdf417\PDFEncoder.h">
+      <Filter>ext\zxing-cpp\core\src\pdf417</Filter>
+    </ClInclude>
+    <ClInclude Include="..\ext\zxing-cpp\core\src\pdf417\PDFHighLevelEncoder.h">
+      <Filter>ext\zxing-cpp\core\src\pdf417</Filter>
+    </ClInclude>
+    <ClInclude Include="..\ext\zxing-cpp\core\src\pdf417\PDFModulusGF.h">
+      <Filter>ext\zxing-cpp\core\src\pdf417</Filter>
+    </ClInclude>
+    <ClInclude Include="..\ext\zxing-cpp\core\src\pdf417\PDFModulusPoly.h">
+      <Filter>ext\zxing-cpp\core\src\pdf417</Filter>
+    </ClInclude>
+    <ClInclude Include="..\ext\zxing-cpp\core\src\pdf417\PDFReader.h">
+      <Filter>ext\zxing-cpp\core\src\pdf417</Filter>
+    </ClInclude>
+    <ClInclude Include="..\ext\zxing-cpp\core\src\pdf417\PDFScanningDecoder.h">
+      <Filter>ext\zxing-cpp\core\src\pdf417</Filter>
+    </ClInclude>
+    <ClInclude Include="..\ext\zxing-cpp\core\src\pdf417\PDFWriter.h">
+      <Filter>ext\zxing-cpp\core\src\pdf417</Filter>
+    </ClInclude>
+    <ClInclude Include="..\ext\zxing-cpp\core\src\pdf417\ZXBigInteger.h">
+      <Filter>ext\zxing-cpp\core\src\pdf417</Filter>
+    </ClInclude>
+    <ClInclude Include="..\ext\zxing-cpp\core\src\pdf417\ZXNullable.h">
+      <Filter>ext\zxing-cpp\core\src\pdf417</Filter>
+    </ClInclude>
+    <ClInclude Include="..\ext\zxing-cpp\core\src\qrcode\QRBitMatrixParser.h">
+      <Filter>ext\zxing-cpp\core\src\qrcode</Filter>
+    </ClInclude>
+    <ClInclude Include="..\ext\zxing-cpp\core\src\qrcode\QRCodecMode.h">
+      <Filter>ext\zxing-cpp\core\src\qrcode</Filter>
+    </ClInclude>
+    <ClInclude Include="..\ext\zxing-cpp\core\src\qrcode\QRDataBlock.h">
+      <Filter>ext\zxing-cpp\core\src\qrcode</Filter>
+    </ClInclude>
+    <ClInclude Include="..\ext\zxing-cpp\core\src\qrcode\QRDataMask.h">
+      <Filter>ext\zxing-cpp\core\src\qrcode</Filter>
+    </ClInclude>
+    <ClInclude Include="..\ext\zxing-cpp\core\src\qrcode\QRDecoder.h">
+      <Filter>ext\zxing-cpp\core\src\qrcode</Filter>
+    </ClInclude>
+    <ClInclude Include="..\ext\zxing-cpp\core\src\qrcode\QRDetector.h">
+      <Filter>ext\zxing-cpp\core\src\qrcode</Filter>
+    </ClInclude>
+    <ClInclude Include="..\ext\zxing-cpp\core\src\qrcode\QRECB.h">
+      <Filter>ext\zxing-cpp\core\src\qrcode</Filter>
+    </ClInclude>
+    <ClInclude Include="..\ext\zxing-cpp\core\src\qrcode\QREncodeResult.h">
+      <Filter>ext\zxing-cpp\core\src\qrcode</Filter>
+    </ClInclude>
+    <ClInclude Include="..\ext\zxing-cpp\core\src\qrcode\QREncoder.h">
+      <Filter>ext\zxing-cpp\core\src\qrcode</Filter>
+    </ClInclude>
+    <ClInclude Include="..\ext\zxing-cpp\core\src\qrcode\QRErrorCorrectionLevel.h">
+      <Filter>ext\zxing-cpp\core\src\qrcode</Filter>
+    </ClInclude>
+    <ClInclude Include="..\ext\zxing-cpp\core\src\qrcode\QRFormatInformation.h">
+      <Filter>ext\zxing-cpp\core\src\qrcode</Filter>
+    </ClInclude>
+    <ClInclude Include="..\ext\zxing-cpp\core\src\qrcode\QRMaskUtil.h">
+      <Filter>ext\zxing-cpp\core\src\qrcode</Filter>
+    </ClInclude>
+    <ClInclude Include="..\ext\zxing-cpp\core\src\qrcode\QRMatrixUtil.h">
+      <Filter>ext\zxing-cpp\core\src\qrcode</Filter>
+    </ClInclude>
+    <ClInclude Include="..\ext\zxing-cpp\core\src\qrcode\QRReader.h">
+      <Filter>ext\zxing-cpp\core\src\qrcode</Filter>
+    </ClInclude>
+    <ClInclude Include="..\ext\zxing-cpp\core\src\qrcode\QRVersion.h">
+      <Filter>ext\zxing-cpp\core\src\qrcode</Filter>
+    </ClInclude>
+    <ClInclude Include="..\ext\zxing-cpp\core\src\qrcode\QRWriter.h">
+      <Filter>ext\zxing-cpp\core\src\qrcode</Filter>
+    </ClInclude>
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="..\ext\mupdf\source\fitz\zxingbarcode.cpp">
+      <Filter>ext\mupdf\source\fitz</Filter>
+    </ClCompile>
+    <ClCompile Include="..\ext\zint\backend\2of5.c">
+      <Filter>ext\zint\backend</Filter>
+    </ClCompile>
+    <ClCompile Include="..\ext\zint\backend\auspost.c">
+      <Filter>ext\zint\backend</Filter>
+    </ClCompile>
+    <ClCompile Include="..\ext\zint\backend\aztec.c">
+      <Filter>ext\zint\backend</Filter>
+    </ClCompile>
+    <ClCompile Include="..\ext\zint\backend\bc412.c">
+      <Filter>ext\zint\backend</Filter>
+    </ClCompile>
+    <ClCompile Include="..\ext\zint\backend\bmp.c">
+      <Filter>ext\zint\backend</Filter>
+    </ClCompile>
+    <ClCompile Include="..\ext\zint\backend\codablock.c">
+      <Filter>ext\zint\backend</Filter>
+    </ClCompile>
+    <ClCompile Include="..\ext\zint\backend\code.c">
+      <Filter>ext\zint\backend</Filter>
+    </ClCompile>
+    <ClCompile Include="..\ext\zint\backend\code1.c">
+      <Filter>ext\zint\backend</Filter>
+    </ClCompile>
+    <ClCompile Include="..\ext\zint\backend\code128.c">
+      <Filter>ext\zint\backend</Filter>
+    </ClCompile>
+    <ClCompile Include="..\ext\zint\backend\code16k.c">
+      <Filter>ext\zint\backend</Filter>
+    </ClCompile>
+    <ClCompile Include="..\ext\zint\backend\code49.c">
+      <Filter>ext\zint\backend</Filter>
+    </ClCompile>
+    <ClCompile Include="..\ext\zint\backend\common.c">
+      <Filter>ext\zint\backend</Filter>
+    </ClCompile>
+    <ClCompile Include="..\ext\zint\backend\composite.c">
+      <Filter>ext\zint\backend</Filter>
+    </ClCompile>
+    <ClCompile Include="..\ext\zint\backend\dllversion.c">
+      <Filter>ext\zint\backend</Filter>
+    </ClCompile>
+    <ClCompile Include="..\ext\zint\backend\dmatrix.c">
+      <Filter>ext\zint\backend</Filter>
+    </ClCompile>
+    <ClCompile Include="..\ext\zint\backend\dotcode.c">
+      <Filter>ext\zint\backend</Filter>
+    </ClCompile>
+    <ClCompile Include="..\ext\zint\backend\dxfilmedge.c">
+      <Filter>ext\zint\backend</Filter>
+    </ClCompile>
+    <ClCompile Include="..\ext\zint\backend\eci.c">
+      <Filter>ext\zint\backend</Filter>
+    </ClCompile>
+    <ClCompile Include="..\ext\zint\backend\emf.c">
+      <Filter>ext\zint\backend</Filter>
+    </ClCompile>
+    <ClCompile Include="..\ext\zint\backend\filemem.c">
+      <Filter>ext\zint\backend</Filter>
+    </ClCompile>
+    <ClCompile Include="..\ext\zint\backend\general_field.c">
+      <Filter>ext\zint\backend</Filter>
+    </ClCompile>
+    <ClCompile Include="..\ext\zint\backend\gif.c">
+      <Filter>ext\zint\backend</Filter>
+    </ClCompile>
+    <ClCompile Include="..\ext\zint\backend\gridmtx.c">
+      <Filter>ext\zint\backend</Filter>
+    </ClCompile>
+    <ClCompile Include="..\ext\zint\backend\gs1.c">
+      <Filter>ext\zint\backend</Filter>
+    </ClCompile>
+    <ClCompile Include="..\ext\zint\backend\hanxin.c">
+      <Filter>ext\zint\backend</Filter>
+    </ClCompile>
+    <ClCompile Include="..\ext\zint\backend\imail.c">
+      <Filter>ext\zint\backend</Filter>
+    </ClCompile>
+    <ClCompile Include="..\ext\zint\backend\large.c">
+      <Filter>ext\zint\backend</Filter>
+    </ClCompile>
+    <ClCompile Include="..\ext\zint\backend\library.c">
+      <Filter>ext\zint\backend</Filter>
+    </ClCompile>
+    <ClCompile Include="..\ext\zint\backend\mailmark.c">
+      <Filter>ext\zint\backend</Filter>
+    </ClCompile>
+    <ClCompile Include="..\ext\zint\backend\maxicode.c">
+      <Filter>ext\zint\backend</Filter>
+    </ClCompile>
+    <ClCompile Include="..\ext\zint\backend\medical.c">
+      <Filter>ext\zint\backend</Filter>
+    </ClCompile>
+    <ClCompile Include="..\ext\zint\backend\output.c">
+      <Filter>ext\zint\backend</Filter>
+    </ClCompile>
+    <ClCompile Include="..\ext\zint\backend\pcx.c">
+      <Filter>ext\zint\backend</Filter>
+    </ClCompile>
+    <ClCompile Include="..\ext\zint\backend\pdf417.c">
+      <Filter>ext\zint\backend</Filter>
+    </ClCompile>
+    <ClCompile Include="..\ext\zint\backend\plessey.c">
+      <Filter>ext\zint\backend</Filter>
+    </ClCompile>
+    <ClCompile Include="..\ext\zint\backend\png.c">
+      <Filter>ext\zint\backend</Filter>
+    </ClCompile>
+    <ClCompile Include="..\ext\zint\backend\postal.c">
+      <Filter>ext\zint\backend</Filter>
+    </ClCompile>
+    <ClCompile Include="..\ext\zint\backend\ps.c">
+      <Filter>ext\zint\backend</Filter>
+    </ClCompile>
+    <ClCompile Include="..\ext\zint\backend\qr.c">
+      <Filter>ext\zint\backend</Filter>
+    </ClCompile>
+    <ClCompile Include="..\ext\zint\backend\raster.c">
+      <Filter>ext\zint\backend</Filter>
+    </ClCompile>
+    <ClCompile Include="..\ext\zint\backend\reedsol.c">
+      <Filter>ext\zint\backend</Filter>
+    </ClCompile>
+    <ClCompile Include="..\ext\zint\backend\rss.c">
+      <Filter>ext\zint\backend</Filter>
+    </ClCompile>
+    <ClCompile Include="..\ext\zint\backend\svg.c">
+      <Filter>ext\zint\backend</Filter>
+    </ClCompile>
+    <ClCompile Include="..\ext\zint\backend\telepen.c">
+      <Filter>ext\zint\backend</Filter>
+    </ClCompile>
+    <ClCompile Include="..\ext\zint\backend\tif.c">
+      <Filter>ext\zint\backend</Filter>
+    </ClCompile>
+    <ClCompile Include="..\ext\zint\backend\ultra.c">
+      <Filter>ext\zint\backend</Filter>
+    </ClCompile>
+    <ClCompile Include="..\ext\zint\backend\upcean.c">
+      <Filter>ext\zint\backend</Filter>
+    </ClCompile>
+    <ClCompile Include="..\ext\zint\backend\vector.c">
+      <Filter>ext\zint\backend</Filter>
+    </ClCompile>
+    <ClCompile Include="..\ext\zxing-cpp\core\src\Barcode.cpp">
+      <Filter>ext\zxing-cpp\core\src</Filter>
+    </ClCompile>
+    <ClCompile Include="..\ext\zxing-cpp\core\src\BarcodeFormat.cpp">
+      <Filter>ext\zxing-cpp\core\src</Filter>
+    </ClCompile>
+    <ClCompile Include="..\ext\zxing-cpp\core\src\BinaryBitmap.cpp">
+      <Filter>ext\zxing-cpp\core\src</Filter>
+    </ClCompile>
+    <ClCompile Include="..\ext\zxing-cpp\core\src\BitArray.cpp">
+      <Filter>ext\zxing-cpp\core\src</Filter>
+    </ClCompile>
+    <ClCompile Include="..\ext\zxing-cpp\core\src\BitMatrix.cpp">
+      <Filter>ext\zxing-cpp\core\src</Filter>
+    </ClCompile>
+    <ClCompile Include="..\ext\zxing-cpp\core\src\BitMatrixIO.cpp">
+      <Filter>ext\zxing-cpp\core\src</Filter>
+    </ClCompile>
+    <ClCompile Include="..\ext\zxing-cpp\core\src\BitSource.cpp">
+      <Filter>ext\zxing-cpp\core\src</Filter>
+    </ClCompile>
+    <ClCompile Include="..\ext\zxing-cpp\core\src\CharacterSet.cpp">
+      <Filter>ext\zxing-cpp\core\src</Filter>
+    </ClCompile>
+    <ClCompile Include="..\ext\zxing-cpp\core\src\ConcentricFinder.cpp">
+      <Filter>ext\zxing-cpp\core\src</Filter>
+    </ClCompile>
+    <ClCompile Include="..\ext\zxing-cpp\core\src\Content.cpp">
+      <Filter>ext\zxing-cpp\core\src</Filter>
+    </ClCompile>
+    <ClCompile Include="..\ext\zxing-cpp\core\src\DecodeHints.cpp">
+      <Filter>ext\zxing-cpp\core\src</Filter>
+    </ClCompile>
+    <ClCompile Include="..\ext\zxing-cpp\core\src\Error.cpp">
+      <Filter>ext\zxing-cpp\core\src</Filter>
+    </ClCompile>
+    <ClCompile Include="..\ext\zxing-cpp\core\src\GTIN.cpp">
+      <Filter>ext\zxing-cpp\core\src</Filter>
+    </ClCompile>
+    <ClCompile Include="..\ext\zxing-cpp\core\src\GenericGF.cpp">
+      <Filter>ext\zxing-cpp\core\src</Filter>
+    </ClCompile>
+    <ClCompile Include="..\ext\zxing-cpp\core\src\GenericGFPoly.cpp">
+      <Filter>ext\zxing-cpp\core\src</Filter>
+    </ClCompile>
+    <ClCompile Include="..\ext\zxing-cpp\core\src\GlobalHistogramBinarizer.cpp">
+      <Filter>ext\zxing-cpp\core\src</Filter>
+    </ClCompile>
+    <ClCompile Include="..\ext\zxing-cpp\core\src\GridSampler.cpp">
+      <Filter>ext\zxing-cpp\core\src</Filter>
+    </ClCompile>
+    <ClCompile Include="..\ext\zxing-cpp\core\src\HRI.cpp">
+      <Filter>ext\zxing-cpp\core\src</Filter>
+    </ClCompile>
+    <ClCompile Include="..\ext\zxing-cpp\core\src\HybridBinarizer.cpp">
+      <Filter>ext\zxing-cpp\core\src</Filter>
+    </ClCompile>
+    <ClCompile Include="..\ext\zxing-cpp\core\src\MultiFormatReader.cpp">
+      <Filter>ext\zxing-cpp\core\src</Filter>
+    </ClCompile>
+    <ClCompile Include="..\ext\zxing-cpp\core\src\MultiFormatWriter.cpp">
+      <Filter>ext\zxing-cpp\core\src</Filter>
+    </ClCompile>
+    <ClCompile Include="..\ext\zxing-cpp\core\src\PerspectiveTransform.cpp">
+      <Filter>ext\zxing-cpp\core\src</Filter>
+    </ClCompile>
+    <ClCompile Include="..\ext\zxing-cpp\core\src\ReadBarcode.cpp">
+      <Filter>ext\zxing-cpp\core\src</Filter>
+    </ClCompile>
+    <ClCompile Include="..\ext\zxing-cpp\core\src\ReedSolomonDecoder.cpp">
+      <Filter>ext\zxing-cpp\core\src</Filter>
+    </ClCompile>
+    <ClCompile Include="..\ext\zxing-cpp\core\src\ReedSolomonEncoder.cpp">
+      <Filter>ext\zxing-cpp\core\src</Filter>
+    </ClCompile>
+    <ClCompile Include="..\ext\zxing-cpp\core\src\ResultPoint.cpp">
+      <Filter>ext\zxing-cpp\core\src</Filter>
+    </ClCompile>
+    <ClCompile Include="..\ext\zxing-cpp\core\src\TextDecoder.cpp">
+      <Filter>ext\zxing-cpp\core\src</Filter>
+    </ClCompile>
+    <ClCompile Include="..\ext\zxing-cpp\core\src\TextEncoder.cpp">
+      <Filter>ext\zxing-cpp\core\src</Filter>
+    </ClCompile>
+    <ClCompile Include="..\ext\zxing-cpp\core\src\TextUtfEncoding.cpp">
+      <Filter>ext\zxing-cpp\core\src</Filter>
+    </ClCompile>
+    <ClCompile Include="..\ext\zxing-cpp\core\src\Utf.cpp">
+      <Filter>ext\zxing-cpp\core\src</Filter>
+    </ClCompile>
+    <ClCompile Include="..\ext\zxing-cpp\core\src\WhiteRectDetector.cpp">
+      <Filter>ext\zxing-cpp\core\src</Filter>
+    </ClCompile>
+    <ClCompile Include="..\ext\zxing-cpp\core\src\WriteBarcode.cpp">
+      <Filter>ext\zxing-cpp\core\src</Filter>
+    </ClCompile>
+    <ClCompile Include="..\ext\zxing-cpp\core\src\ZXingC.cpp">
+      <Filter>ext\zxing-cpp\core\src</Filter>
+    </ClCompile>
+    <ClCompile Include="..\ext\zxing-cpp\core\src\ZXingCpp.cpp">
+      <Filter>ext\zxing-cpp\core\src</Filter>
+    </ClCompile>
+    <ClCompile Include="..\ext\zxing-cpp\core\src\aztec\AZDecoder.cpp">
+      <Filter>ext\zxing-cpp\core\src\aztec</Filter>
+    </ClCompile>
+    <ClCompile Include="..\ext\zxing-cpp\core\src\aztec\AZDetector.cpp">
+      <Filter>ext\zxing-cpp\core\src\aztec</Filter>
+    </ClCompile>
+    <ClCompile Include="..\ext\zxing-cpp\core\src\aztec\AZEncoder.cpp">
+      <Filter>ext\zxing-cpp\core\src\aztec</Filter>
+    </ClCompile>
+    <ClCompile Include="..\ext\zxing-cpp\core\src\aztec\AZHighLevelEncoder.cpp">
+      <Filter>ext\zxing-cpp\core\src\aztec</Filter>
+    </ClCompile>
+    <ClCompile Include="..\ext\zxing-cpp\core\src\aztec\AZReader.cpp">
+      <Filter>ext\zxing-cpp\core\src\aztec</Filter>
+    </ClCompile>
+    <ClCompile Include="..\ext\zxing-cpp\core\src\aztec\AZToken.cpp">
+      <Filter>ext\zxing-cpp\core\src\aztec</Filter>
+    </ClCompile>
+    <ClCompile Include="..\ext\zxing-cpp\core\src\aztec\AZWriter.cpp">
+      <Filter>ext\zxing-cpp\core\src\aztec</Filter>
+    </ClCompile>
+    <ClCompile Include="..\ext\zxing-cpp\core\src\datamatrix\DMBitLayout.cpp">
+      <Filter>ext\zxing-cpp\core\src\datamatrix</Filter>
+    </ClCompile>
+    <ClCompile Include="..\ext\zxing-cpp\core\src\datamatrix\DMDataBlock.cpp">
+      <Filter>ext\zxing-cpp\core\src\datamatrix</Filter>
+    </ClCompile>
+    <ClCompile Include="..\ext\zxing-cpp\core\src\datamatrix\DMDecoder.cpp">
+      <Filter>ext\zxing-cpp\core\src\datamatrix</Filter>
+    </ClCompile>
+    <ClCompile Include="..\ext\zxing-cpp\core\src\datamatrix\DMDetector.cpp">
+      <Filter>ext\zxing-cpp\core\src\datamatrix</Filter>
+    </ClCompile>
+    <ClCompile Include="..\ext\zxing-cpp\core\src\datamatrix\DMECEncoder.cpp">
+      <Filter>ext\zxing-cpp\core\src\datamatrix</Filter>
+    </ClCompile>
+    <ClCompile Include="..\ext\zxing-cpp\core\src\datamatrix\DMHighLevelEncoder.cpp">
+      <Filter>ext\zxing-cpp\core\src\datamatrix</Filter>
+    </ClCompile>
+    <ClCompile Include="..\ext\zxing-cpp\core\src\datamatrix\DMReader.cpp">
+      <Filter>ext\zxing-cpp\core\src\datamatrix</Filter>
+    </ClCompile>
+    <ClCompile Include="..\ext\zxing-cpp\core\src\datamatrix\DMSymbolInfo.cpp">
+      <Filter>ext\zxing-cpp\core\src\datamatrix</Filter>
+    </ClCompile>
+    <ClCompile Include="..\ext\zxing-cpp\core\src\datamatrix\DMVersion.cpp">
+      <Filter>ext\zxing-cpp\core\src\datamatrix</Filter>
+    </ClCompile>
+    <ClCompile Include="..\ext\zxing-cpp\core\src\datamatrix\DMWriter.cpp">
+      <Filter>ext\zxing-cpp\core\src\datamatrix</Filter>
+    </ClCompile>
+    <ClCompile Include="..\ext\zxing-cpp\core\src\libzueci\zueci.c">
+      <Filter>ext\zxing-cpp\core\src\libzueci</Filter>
+    </ClCompile>
+    <ClCompile Include="..\ext\zxing-cpp\core\src\maxicode\MCBitMatrixParser.cpp">
+      <Filter>ext\zxing-cpp\core\src\maxicode</Filter>
+    </ClCompile>
+    <ClCompile Include="..\ext\zxing-cpp\core\src\maxicode\MCDecoder.cpp">
+      <Filter>ext\zxing-cpp\core\src\maxicode</Filter>
+    </ClCompile>
+    <ClCompile Include="..\ext\zxing-cpp\core\src\maxicode\MCReader.cpp">
+      <Filter>ext\zxing-cpp\core\src\maxicode</Filter>
+    </ClCompile>
+    <ClCompile Include="..\ext\zxing-cpp\core\src\oned\ODCodabarReader.cpp">
+      <Filter>ext\zxing-cpp\core\src\oned</Filter>
+    </ClCompile>
+    <ClCompile Include="..\ext\zxing-cpp\core\src\oned\ODCodabarWriter.cpp">
+      <Filter>ext\zxing-cpp\core\src\oned</Filter>
+    </ClCompile>
+    <ClCompile Include="..\ext\zxing-cpp\core\src\oned\ODCode128Patterns.cpp">
+      <Filter>ext\zxing-cpp\core\src\oned</Filter>
+    </ClCompile>
+    <ClCompile Include="..\ext\zxing-cpp\core\src\oned\ODCode128Reader.cpp">
+      <Filter>ext\zxing-cpp\core\src\oned</Filter>
+    </ClCompile>
+    <ClCompile Include="..\ext\zxing-cpp\core\src\oned\ODCode128Writer.cpp">
+      <Filter>ext\zxing-cpp\core\src\oned</Filter>
+    </ClCompile>
+    <ClCompile Include="..\ext\zxing-cpp\core\src\oned\ODCode39Reader.cpp">
+      <Filter>ext\zxing-cpp\core\src\oned</Filter>
+    </ClCompile>
+    <ClCompile Include="..\ext\zxing-cpp\core\src\oned\ODCode39Writer.cpp">
+      <Filter>ext\zxing-cpp\core\src\oned</Filter>
+    </ClCompile>
+    <ClCompile Include="..\ext\zxing-cpp\core\src\oned\ODCode93Reader.cpp">
+      <Filter>ext\zxing-cpp\core\src\oned</Filter>
+    </ClCompile>
+    <ClCompile Include="..\ext\zxing-cpp\core\src\oned\ODCode93Writer.cpp">
+      <Filter>ext\zxing-cpp\core\src\oned</Filter>
+    </ClCompile>
+    <ClCompile Include="..\ext\zxing-cpp\core\src\oned\ODDXFilmEdgeReader.cpp">
+      <Filter>ext\zxing-cpp\core\src\oned</Filter>
+    </ClCompile>
+    <ClCompile Include="..\ext\zxing-cpp\core\src\oned\ODDataBarCommon.cpp">
+      <Filter>ext\zxing-cpp\core\src\oned</Filter>
+    </ClCompile>
+    <ClCompile Include="..\ext\zxing-cpp\core\src\oned\ODDataBarExpandedBitDecoder.cpp">
+      <Filter>ext\zxing-cpp\core\src\oned</Filter>
+    </ClCompile>
+    <ClCompile Include="..\ext\zxing-cpp\core\src\oned\ODDataBarExpandedReader.cpp">
+      <Filter>ext\zxing-cpp\core\src\oned</Filter>
+    </ClCompile>
+    <ClCompile Include="..\ext\zxing-cpp\core\src\oned\ODDataBarLimitedReader.cpp">
+      <Filter>ext\zxing-cpp\core\src\oned</Filter>
+    </ClCompile>
+    <ClCompile Include="..\ext\zxing-cpp\core\src\oned\ODDataBarReader.cpp">
+      <Filter>ext\zxing-cpp\core\src\oned</Filter>
+    </ClCompile>
+    <ClCompile Include="..\ext\zxing-cpp\core\src\oned\ODEAN13Writer.cpp">
+      <Filter>ext\zxing-cpp\core\src\oned</Filter>
+    </ClCompile>
+    <ClCompile Include="..\ext\zxing-cpp\core\src\oned\ODEAN8Writer.cpp">
+      <Filter>ext\zxing-cpp\core\src\oned</Filter>
+    </ClCompile>
+    <ClCompile Include="..\ext\zxing-cpp\core\src\oned\ODITFReader.cpp">
+      <Filter>ext\zxing-cpp\core\src\oned</Filter>
+    </ClCompile>
+    <ClCompile Include="..\ext\zxing-cpp\core\src\oned\ODITFWriter.cpp">
+      <Filter>ext\zxing-cpp\core\src\oned</Filter>
+    </ClCompile>
+    <ClCompile Include="..\ext\zxing-cpp\core\src\oned\ODMultiUPCEANReader.cpp">
+      <Filter>ext\zxing-cpp\core\src\oned</Filter>
+    </ClCompile>
+    <ClCompile Include="..\ext\zxing-cpp\core\src\oned\ODReader.cpp">
+      <Filter>ext\zxing-cpp\core\src\oned</Filter>
+    </ClCompile>
+    <ClCompile Include="..\ext\zxing-cpp\core\src\oned\ODUPCAWriter.cpp">
+      <Filter>ext\zxing-cpp\core\src\oned</Filter>
+    </ClCompile>
+    <ClCompile Include="..\ext\zxing-cpp\core\src\oned\ODUPCEANCommon.cpp">
+      <Filter>ext\zxing-cpp\core\src\oned</Filter>
+    </ClCompile>
+    <ClCompile Include="..\ext\zxing-cpp\core\src\oned\ODUPCEWriter.cpp">
+      <Filter>ext\zxing-cpp\core\src\oned</Filter>
+    </ClCompile>
+    <ClCompile Include="..\ext\zxing-cpp\core\src\oned\ODWriterHelper.cpp">
+      <Filter>ext\zxing-cpp\core\src\oned</Filter>
+    </ClCompile>
+    <ClCompile Include="..\ext\zxing-cpp\core\src\pdf417\PDFBarcodeValue.cpp">
+      <Filter>ext\zxing-cpp\core\src\pdf417</Filter>
+    </ClCompile>
+    <ClCompile Include="..\ext\zxing-cpp\core\src\pdf417\PDFBoundingBox.cpp">
+      <Filter>ext\zxing-cpp\core\src\pdf417</Filter>
+    </ClCompile>
+    <ClCompile Include="..\ext\zxing-cpp\core\src\pdf417\PDFCodewordDecoder.cpp">
+      <Filter>ext\zxing-cpp\core\src\pdf417</Filter>
+    </ClCompile>
+    <ClCompile Include="..\ext\zxing-cpp\core\src\pdf417\PDFDecoder.cpp">
+      <Filter>ext\zxing-cpp\core\src\pdf417</Filter>
+    </ClCompile>
+    <ClCompile Include="..\ext\zxing-cpp\core\src\pdf417\PDFDetectionResult.cpp">
+      <Filter>ext\zxing-cpp\core\src\pdf417</Filter>
+    </ClCompile>
+    <ClCompile Include="..\ext\zxing-cpp\core\src\pdf417\PDFDetectionResultColumn.cpp">
+      <Filter>ext\zxing-cpp\core\src\pdf417</Filter>
+    </ClCompile>
+    <ClCompile Include="..\ext\zxing-cpp\core\src\pdf417\PDFDetector.cpp">
+      <Filter>ext\zxing-cpp\core\src\pdf417</Filter>
+    </ClCompile>
+    <ClCompile Include="..\ext\zxing-cpp\core\src\pdf417\PDFEncoder.cpp">
+      <Filter>ext\zxing-cpp\core\src\pdf417</Filter>
+    </ClCompile>
+    <ClCompile Include="..\ext\zxing-cpp\core\src\pdf417\PDFHighLevelEncoder.cpp">
+      <Filter>ext\zxing-cpp\core\src\pdf417</Filter>
+    </ClCompile>
+    <ClCompile Include="..\ext\zxing-cpp\core\src\pdf417\PDFModulusGF.cpp">
+      <Filter>ext\zxing-cpp\core\src\pdf417</Filter>
+    </ClCompile>
+    <ClCompile Include="..\ext\zxing-cpp\core\src\pdf417\PDFModulusPoly.cpp">
+      <Filter>ext\zxing-cpp\core\src\pdf417</Filter>
+    </ClCompile>
+    <ClCompile Include="..\ext\zxing-cpp\core\src\pdf417\PDFReader.cpp">
+      <Filter>ext\zxing-cpp\core\src\pdf417</Filter>
+    </ClCompile>
+    <ClCompile Include="..\ext\zxing-cpp\core\src\pdf417\PDFScanningDecoder.cpp">
+      <Filter>ext\zxing-cpp\core\src\pdf417</Filter>
+    </ClCompile>
+    <ClCompile Include="..\ext\zxing-cpp\core\src\pdf417\PDFWriter.cpp">
+      <Filter>ext\zxing-cpp\core\src\pdf417</Filter>
+    </ClCompile>
+    <ClCompile Include="..\ext\zxing-cpp\core\src\pdf417\ZXBigInteger.cpp">
+      <Filter>ext\zxing-cpp\core\src\pdf417</Filter>
+    </ClCompile>
+    <ClCompile Include="..\ext\zxing-cpp\core\src\qrcode\QRBitMatrixParser.cpp">
+      <Filter>ext\zxing-cpp\core\src\qrcode</Filter>
+    </ClCompile>
+    <ClCompile Include="..\ext\zxing-cpp\core\src\qrcode\QRCodecMode.cpp">
+      <Filter>ext\zxing-cpp\core\src\qrcode</Filter>
+    </ClCompile>
+    <ClCompile Include="..\ext\zxing-cpp\core\src\qrcode\QRDataBlock.cpp">
+      <Filter>ext\zxing-cpp\core\src\qrcode</Filter>
+    </ClCompile>
+    <ClCompile Include="..\ext\zxing-cpp\core\src\qrcode\QRDecoder.cpp">
+      <Filter>ext\zxing-cpp\core\src\qrcode</Filter>
+    </ClCompile>
+    <ClCompile Include="..\ext\zxing-cpp\core\src\qrcode\QRDetector.cpp">
+      <Filter>ext\zxing-cpp\core\src\qrcode</Filter>
+    </ClCompile>
+    <ClCompile Include="..\ext\zxing-cpp\core\src\qrcode\QREncoder.cpp">
+      <Filter>ext\zxing-cpp\core\src\qrcode</Filter>
+    </ClCompile>
+    <ClCompile Include="..\ext\zxing-cpp\core\src\qrcode\QRErrorCorrectionLevel.cpp">
+      <Filter>ext\zxing-cpp\core\src\qrcode</Filter>
+    </ClCompile>
+    <ClCompile Include="..\ext\zxing-cpp\core\src\qrcode\QRFormatInformation.cpp">
+      <Filter>ext\zxing-cpp\core\src\qrcode</Filter>
+    </ClCompile>
+    <ClCompile Include="..\ext\zxing-cpp\core\src\qrcode\QRMaskUtil.cpp">
+      <Filter>ext\zxing-cpp\core\src\qrcode</Filter>
+    </ClCompile>
+    <ClCompile Include="..\ext\zxing-cpp\core\src\qrcode\QRMatrixUtil.cpp">
+      <Filter>ext\zxing-cpp\core\src\qrcode</Filter>
+    </ClCompile>
+    <ClCompile Include="..\ext\zxing-cpp\core\src\qrcode\QRReader.cpp">
+      <Filter>ext\zxing-cpp\core\src\qrcode</Filter>
+    </ClCompile>
+    <ClCompile Include="..\ext\zxing-cpp\core\src\qrcode\QRVersion.cpp">
+      <Filter>ext\zxing-cpp\core\src\qrcode</Filter>
+    </ClCompile>
+    <ClCompile Include="..\ext\zxing-cpp\core\src\qrcode\QRWriter.cpp">
+      <Filter>ext\zxing-cpp\core\src\qrcode</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\mupdf\zxing-eci.cpp">
+      <Filter>src\mupdf</Filter>
+    </ClCompile>
+  </ItemGroup>
+</Project>

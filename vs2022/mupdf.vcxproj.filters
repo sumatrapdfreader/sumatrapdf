@@ -1103,6 +1103,9 @@
     <ClCompile Include="..\ext\mupdf\source\svg\svg-run.c">
       <Filter>ext\mupdf\source\svg</Filter>
     </ClCompile>
+    <ClCompile Include="..\ext\mupdf\source\tools\mubar.c">
+      <Filter>ext\mupdf\source\tools</Filter>
+    </ClCompile>
     <ClCompile Include="..\ext\mupdf\source\tools\muconvert.c">
       <Filter>ext\mupdf\source\tools</Filter>
     </ClCompile>

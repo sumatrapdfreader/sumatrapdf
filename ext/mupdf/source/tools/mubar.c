@@ -37,13 +37,13 @@ static int mubar_usage(void)
 	int i, n, c;
 	const char *s;
 	fprintf(stderr,
-		"usage to decode: mutool barcode -d [options] input [pages]\n"
+		"usage to decode: SumatraPDF barcode -d [options] input [pages]\n"
 		"\t-p -\tpassword for encrypted PDF files\n"
 		"\t-o -\toutput file (default: stdout)\n"
 		"\t-r -\trotation\n"
 	);
 	fprintf(stderr,
-		"usage to create: mutool barcode -c [options] text\n"
+		"usage to create: SumatraPDF barcode -c [options] text\n"
 		"\t-o -\toutput file (default: out.png)\n"
 		"\t-q\tadd quiet zones\n"
 		"\t-t\tadd human readable text (when possible)\n"

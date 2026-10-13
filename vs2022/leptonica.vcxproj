@@ -1,0 +1,1323 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup Label="ProjectConfigurations">
+    <ProjectConfiguration Include="Debug|Win32">
+      <Configuration>Debug</Configuration>
+      <Platform>Win32</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Debug|x64">
+      <Configuration>Debug</Configuration>
+      <Platform>x64</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Debug|ARM64">
+      <Configuration>Debug</Configuration>
+      <Platform>ARM64</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Debug x64_asan|Win32">
+      <Configuration>Debug x64_asan</Configuration>
+      <Platform>Win32</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Debug x64_asan|x64">
+      <Configuration>Debug x64_asan</Configuration>
+      <Platform>x64</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Debug x64_asan|ARM64">
+      <Configuration>Debug x64_asan</Configuration>
+      <Platform>ARM64</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="DebugFull|Win32">
+      <Configuration>DebugFull</Configuration>
+      <Platform>Win32</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="DebugFull|x64">
+      <Configuration>DebugFull</Configuration>
+      <Platform>x64</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="DebugFull|ARM64">
+      <Configuration>DebugFull</Configuration>
+      <Platform>ARM64</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="DebugFull x64_asan|Win32">
+      <Configuration>DebugFull x64_asan</Configuration>
+      <Platform>Win32</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="DebugFull x64_asan|x64">
+      <Configuration>DebugFull x64_asan</Configuration>
+      <Platform>x64</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="DebugFull x64_asan|ARM64">
+      <Configuration>DebugFull x64_asan</Configuration>
+      <Platform>ARM64</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Release|Win32">
+      <Configuration>Release</Configuration>
+      <Platform>Win32</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Release|x64">
+      <Configuration>Release</Configuration>
+      <Platform>x64</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Release|ARM64">
+      <Configuration>Release</Configuration>
+      <Platform>ARM64</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Release x64_asan|Win32">
+      <Configuration>Release x64_asan</Configuration>
+      <Platform>Win32</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Release x64_asan|x64">
+      <Configuration>Release x64_asan</Configuration>
+      <Platform>x64</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Release x64_asan|ARM64">
+      <Configuration>Release x64_asan</Configuration>
+      <Platform>ARM64</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="ReleaseAnalyze|Win32">
+      <Configuration>ReleaseAnalyze</Configuration>
+      <Platform>Win32</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="ReleaseAnalyze|x64">
+      <Configuration>ReleaseAnalyze</Configuration>
+      <Platform>x64</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="ReleaseAnalyze|ARM64">
+      <Configuration>ReleaseAnalyze</Configuration>
+      <Platform>ARM64</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="ReleaseAnalyze x64_asan|Win32">
+      <Configuration>ReleaseAnalyze x64_asan</Configuration>
+      <Platform>Win32</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="ReleaseAnalyze x64_asan|x64">
+      <Configuration>ReleaseAnalyze x64_asan</Configuration>
+      <Platform>x64</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="ReleaseAnalyze x64_asan|ARM64">
+      <Configuration>ReleaseAnalyze x64_asan</Configuration>
+      <Platform>ARM64</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Profile|Win32">
+      <Configuration>Profile</Configuration>
+      <Platform>Win32</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Profile|x64">
+      <Configuration>Profile</Configuration>
+      <Platform>x64</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Profile|ARM64">
+      <Configuration>Profile</Configuration>
+      <Platform>ARM64</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Profile x64_asan|Win32">
+      <Configuration>Profile x64_asan</Configuration>
+      <Platform>Win32</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Profile x64_asan|x64">
+      <Configuration>Profile x64_asan</Configuration>
+      <Platform>x64</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Profile x64_asan|ARM64">
+      <Configuration>Profile x64_asan</Configuration>
+      <Platform>ARM64</Platform>
+    </ProjectConfiguration>
+  </ItemGroup>
+  <PropertyGroup Label="Globals">
+    <ProjectGuid>{A4EEBC10-1059-7187-5997-222DC5404FDC}</ProjectGuid>
+    <IgnoreWarnCompileDuplicatedFilename>true</IgnoreWarnCompileDuplicatedFilename>
+    <Keyword>Win32Proj</Keyword>
+    <RootNamespace>leptonica</RootNamespace>
+  </PropertyGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="Configuration">
+    <ConfigurationType>StaticLibrary</ConfigurationType>
+    <UseDebugLibraries>false</UseDebugLibraries>
+    <CharacterSet>Unicode</CharacterSet>
+    <PlatformToolset>v143</PlatformToolset>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'" Label="Configuration">
+    <ConfigurationType>StaticLibrary</ConfigurationType>
+    <UseDebugLibraries>false</UseDebugLibraries>
+    <CharacterSet>Unicode</CharacterSet>
+    <PlatformToolset>v143</PlatformToolset>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|ARM64'" Label="Configuration">
+    <ConfigurationType>StaticLibrary</ConfigurationType>
+    <UseDebugLibraries>false</UseDebugLibraries>
+    <CharacterSet>Unicode</CharacterSet>
+    <PlatformToolset>v145</PlatformToolset>
+    <WindowsSDKDesktopARM64Support>true</WindowsSDKDesktopARM64Support>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug x64_asan|x64'" Label="Configuration">
+    <ConfigurationType>StaticLibrary</ConfigurationType>
+    <UseDebugLibraries>false</UseDebugLibraries>
+    <CharacterSet>Unicode</CharacterSet>
+    <PlatformToolset>v143</PlatformToolset>
+    <EnableASAN>true</EnableASAN>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='DebugFull|Win32'" Label="Configuration">
+    <ConfigurationType>StaticLibrary</ConfigurationType>
+    <UseDebugLibraries>false</UseDebugLibraries>
+    <CharacterSet>Unicode</CharacterSet>
+    <PlatformToolset>v143</PlatformToolset>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='DebugFull|x64'" Label="Configuration">
+    <ConfigurationType>StaticLibrary</ConfigurationType>
+    <UseDebugLibraries>false</UseDebugLibraries>
+    <CharacterSet>Unicode</CharacterSet>
+    <PlatformToolset>v143</PlatformToolset>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='DebugFull|ARM64'" Label="Configuration">
+    <ConfigurationType>StaticLibrary</ConfigurationType>
+    <UseDebugLibraries>false</UseDebugLibraries>
+    <CharacterSet>Unicode</CharacterSet>
+    <PlatformToolset>v145</PlatformToolset>
+    <WindowsSDKDesktopARM64Support>true</WindowsSDKDesktopARM64Support>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='DebugFull x64_asan|x64'" Label="Configuration">
+    <ConfigurationType>StaticLibrary</ConfigurationType>
+    <UseDebugLibraries>false</UseDebugLibraries>
+    <CharacterSet>Unicode</CharacterSet>
+    <PlatformToolset>v143</PlatformToolset>
+    <EnableASAN>true</EnableASAN>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'" Label="Configuration">
+    <ConfigurationType>StaticLibrary</ConfigurationType>
+    <UseDebugLibraries>false</UseDebugLibraries>
+    <CharacterSet>Unicode</CharacterSet>
+    <PlatformToolset>v143</PlatformToolset>
+    <WholeProgramOptimization>true</WholeProgramOptimization>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'" Label="Configuration">
+    <ConfigurationType>StaticLibrary</ConfigurationType>
+    <UseDebugLibraries>false</UseDebugLibraries>
+    <CharacterSet>Unicode</CharacterSet>
+    <PlatformToolset>v143</PlatformToolset>
+    <WholeProgramOptimization>true</WholeProgramOptimization>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|ARM64'" Label="Configuration">
+    <ConfigurationType>StaticLibrary</ConfigurationType>
+    <UseDebugLibraries>false</UseDebugLibraries>
+    <CharacterSet>Unicode</CharacterSet>
+    <PlatformToolset>v145</PlatformToolset>
+    <WholeProgramOptimization>true</WholeProgramOptimization>
+    <WindowsSDKDesktopARM64Support>true</WindowsSDKDesktopARM64Support>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release x64_asan|x64'" Label="Configuration">
+    <ConfigurationType>StaticLibrary</ConfigurationType>
+    <UseDebugLibraries>false</UseDebugLibraries>
+    <CharacterSet>Unicode</CharacterSet>
+    <PlatformToolset>v143</PlatformToolset>
+    <EnableASAN>true</EnableASAN>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze|Win32'" Label="Configuration">
+    <ConfigurationType>StaticLibrary</ConfigurationType>
+    <UseDebugLibraries>false</UseDebugLibraries>
+    <CharacterSet>Unicode</CharacterSet>
+    <PlatformToolset>v143</PlatformToolset>
+    <WholeProgramOptimization>true</WholeProgramOptimization>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze|x64'" Label="Configuration">
+    <ConfigurationType>StaticLibrary</ConfigurationType>
+    <UseDebugLibraries>false</UseDebugLibraries>
+    <CharacterSet>Unicode</CharacterSet>
+    <PlatformToolset>v143</PlatformToolset>
+    <WholeProgramOptimization>true</WholeProgramOptimization>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze|ARM64'" Label="Configuration">
+    <ConfigurationType>StaticLibrary</ConfigurationType>
+    <UseDebugLibraries>false</UseDebugLibraries>
+    <CharacterSet>Unicode</CharacterSet>
+    <PlatformToolset>v145</PlatformToolset>
+    <WholeProgramOptimization>true</WholeProgramOptimization>
+    <WindowsSDKDesktopARM64Support>true</WindowsSDKDesktopARM64Support>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze x64_asan|x64'" Label="Configuration">
+    <ConfigurationType>StaticLibrary</ConfigurationType>
+    <UseDebugLibraries>false</UseDebugLibraries>
+    <CharacterSet>Unicode</CharacterSet>
+    <PlatformToolset>v143</PlatformToolset>
+    <EnableASAN>true</EnableASAN>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Profile|Win32'" Label="Configuration">
+    <ConfigurationType>StaticLibrary</ConfigurationType>
+    <UseDebugLibraries>false</UseDebugLibraries>
+    <CharacterSet>Unicode</CharacterSet>
+    <PlatformToolset>v143</PlatformToolset>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Profile|x64'" Label="Configuration">
+    <ConfigurationType>StaticLibrary</ConfigurationType>
+    <UseDebugLibraries>false</UseDebugLibraries>
+    <CharacterSet>Unicode</CharacterSet>
+    <PlatformToolset>v143</PlatformToolset>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Profile|ARM64'" Label="Configuration">
+    <ConfigurationType>StaticLibrary</ConfigurationType>
+    <UseDebugLibraries>false</UseDebugLibraries>
+    <CharacterSet>Unicode</CharacterSet>
+    <PlatformToolset>v145</PlatformToolset>
+    <WindowsSDKDesktopARM64Support>true</WindowsSDKDesktopARM64Support>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Profile x64_asan|x64'" Label="Configuration">
+    <ConfigurationType>StaticLibrary</ConfigurationType>
+    <UseDebugLibraries>false</UseDebugLibraries>
+    <CharacterSet>Unicode</CharacterSet>
+    <PlatformToolset>v143</PlatformToolset>
+    <EnableASAN>true</EnableASAN>
+  </PropertyGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.props" />
+  <ImportGroup Label="ExtensionSettings">
+  </ImportGroup>
+  <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+  </ImportGroup>
+  <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+  </ImportGroup>
+  <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Debug|ARM64'">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+  </ImportGroup>
+  <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Debug x64_asan|x64'">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+  </ImportGroup>
+  <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='DebugFull|Win32'">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+  </ImportGroup>
+  <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='DebugFull|x64'">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+  </ImportGroup>
+  <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='DebugFull|ARM64'">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+  </ImportGroup>
+  <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='DebugFull x64_asan|x64'">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+  </ImportGroup>
+  <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+  </ImportGroup>
+  <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+  </ImportGroup>
+  <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Release|ARM64'">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+  </ImportGroup>
+  <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Release x64_asan|x64'">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+  </ImportGroup>
+  <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze|Win32'">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+  </ImportGroup>
+  <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze|x64'">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+  </ImportGroup>
+  <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze|ARM64'">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+  </ImportGroup>
+  <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze x64_asan|x64'">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+  </ImportGroup>
+  <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Profile|Win32'">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+  </ImportGroup>
+  <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Profile|x64'">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+  </ImportGroup>
+  <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Profile|ARM64'">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+  </ImportGroup>
+  <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Profile x64_asan|x64'">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+  </ImportGroup>
+  <PropertyGroup Label="UserMacros" />
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
+    <OutDir>$(ProjectDir)..\out\dbg32\obj-s\</OutDir>
+    <IntDir>$(ProjectDir)..\out\dbg32\obj-s\leptonica\</IntDir>
+    <TargetName>leptonica</TargetName>
+    <TargetExt>.lib</TargetExt>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
+    <OutDir>$(ProjectDir)..\out\dbg64\obj-s\</OutDir>
+    <IntDir>$(ProjectDir)..\out\dbg64\obj-s\leptonica\</IntDir>
+    <TargetName>leptonica</TargetName>
+    <TargetExt>.lib</TargetExt>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|ARM64'">
+    <OutDir>$(ProjectDir)..\out\dbgarm64\obj-s\</OutDir>
+    <IntDir>$(ProjectDir)..\out\dbgarm64\obj-s\leptonica\</IntDir>
+    <TargetName>leptonica</TargetName>
+    <TargetExt>.lib</TargetExt>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug x64_asan|x64'">
+    <OutDir>$(ProjectDir)..\out\dbg64_asan\obj-s\</OutDir>
+    <IntDir>$(ProjectDir)..\out\dbg64_asan\obj-s\leptonica\</IntDir>
+    <TargetName>leptonica</TargetName>
+    <TargetExt>.lib</TargetExt>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='DebugFull|Win32'">
+    <OutDir>$(ProjectDir)..\out\dbgfull32\obj-s\</OutDir>
+    <IntDir>$(ProjectDir)..\out\dbgfull32\obj-s\leptonica\</IntDir>
+    <TargetName>leptonica</TargetName>
+    <TargetExt>.lib</TargetExt>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='DebugFull|x64'">
+    <OutDir>$(ProjectDir)..\out\dbgfull64\obj-s\</OutDir>
+    <IntDir>$(ProjectDir)..\out\dbgfull64\obj-s\leptonica\</IntDir>
+    <TargetName>leptonica</TargetName>
+    <TargetExt>.lib</TargetExt>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='DebugFull|ARM64'">
+    <OutDir>$(ProjectDir)..\out\dbgfullarm64\obj-s\</OutDir>
+    <IntDir>$(ProjectDir)..\out\dbgfullarm64\obj-s\leptonica\</IntDir>
+    <TargetName>leptonica</TargetName>
+    <TargetExt>.lib</TargetExt>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='DebugFull x64_asan|x64'">
+    <OutDir>$(ProjectDir)..\out\dbgfull64_asan\obj-s\</OutDir>
+    <IntDir>$(ProjectDir)..\out\dbgfull64_asan\obj-s\leptonica\</IntDir>
+    <TargetName>leptonica</TargetName>
+    <TargetExt>.lib</TargetExt>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
+    <OutDir>$(ProjectDir)..\out\rel32\obj-s\</OutDir>
+    <IntDir>$(ProjectDir)..\out\rel32\obj-s\leptonica\</IntDir>
+    <TargetName>leptonica</TargetName>
+    <TargetExt>.lib</TargetExt>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
+    <OutDir>$(ProjectDir)..\out\rel64\obj-s\</OutDir>
+    <IntDir>$(ProjectDir)..\out\rel64\obj-s\leptonica\</IntDir>
+    <TargetName>leptonica</TargetName>
+    <TargetExt>.lib</TargetExt>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|ARM64'">
+    <OutDir>$(ProjectDir)..\out\arm64\obj-s\</OutDir>
+    <IntDir>$(ProjectDir)..\out\arm64\obj-s\leptonica\</IntDir>
+    <TargetName>leptonica</TargetName>
+    <TargetExt>.lib</TargetExt>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release x64_asan|x64'">
+    <OutDir>$(ProjectDir)..\out\rel64_asan\obj-s\</OutDir>
+    <IntDir>$(ProjectDir)..\out\rel64_asan\obj-s\leptonica\</IntDir>
+    <TargetName>leptonica</TargetName>
+    <TargetExt>.lib</TargetExt>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze|Win32'">
+    <OutDir>$(ProjectDir)..\out\rel32_prefast\obj-s\</OutDir>
+    <IntDir>$(ProjectDir)..\out\rel32_prefast\obj-s\leptonica\</IntDir>
+    <TargetName>leptonica</TargetName>
+    <TargetExt>.lib</TargetExt>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze|x64'">
+    <OutDir>$(ProjectDir)..\out\rel64_prefast\obj-s\</OutDir>
+    <IntDir>$(ProjectDir)..\out\rel64_prefast\obj-s\leptonica\</IntDir>
+    <TargetName>leptonica</TargetName>
+    <TargetExt>.lib</TargetExt>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze|ARM64'">
+    <OutDir>$(ProjectDir)..\out\arm64_prefast\obj-s\</OutDir>
+    <IntDir>$(ProjectDir)..\out\arm64_prefast\obj-s\leptonica\</IntDir>
+    <TargetName>leptonica</TargetName>
+    <TargetExt>.lib</TargetExt>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze x64_asan|x64'">
+    <OutDir>$(ProjectDir)..\out\rel64_prefast_asan\obj-s\</OutDir>
+    <IntDir>$(ProjectDir)..\out\rel64_prefast_asan\obj-s\leptonica\</IntDir>
+    <TargetName>leptonica</TargetName>
+    <TargetExt>.lib</TargetExt>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Profile|Win32'">
+    <OutDir>$(ProjectDir)..\out\prf32\obj-s\</OutDir>
+    <IntDir>$(ProjectDir)..\out\prf32\obj-s\leptonica\</IntDir>
+    <TargetName>leptonica</TargetName>
+    <TargetExt>.lib</TargetExt>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Profile|x64'">
+    <OutDir>$(ProjectDir)..\out\prf64\obj-s\</OutDir>
+    <IntDir>$(ProjectDir)..\out\prf64\obj-s\leptonica\</IntDir>
+    <TargetName>leptonica</TargetName>
+    <TargetExt>.lib</TargetExt>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Profile|ARM64'">
+    <OutDir>$(ProjectDir)..\out\prfarm64\obj-s\</OutDir>
+    <IntDir>$(ProjectDir)..\out\prfarm64\obj-s\leptonica\</IntDir>
+    <TargetName>leptonica</TargetName>
+    <TargetExt>.lib</TargetExt>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Profile x64_asan|x64'">
+    <OutDir>$(ProjectDir)..\out\prf64_asan\obj-s\</OutDir>
+    <IntDir>$(ProjectDir)..\out\prf64_asan\obj-s\leptonica\</IntDir>
+    <TargetName>leptonica</TargetName>
+    <TargetExt>.lib</TargetExt>
+  </PropertyGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
+    <ClCompile>
+      <PrecompiledHeader>NotUsing</PrecompiledHeader>
+      <WarningLevel>TurnOffAllWarnings</WarningLevel>
+      <DisableSpecificWarnings>4127;4189;4324;4458;4522;4611;4702;4800;6319;%(DisableSpecificWarnings)</DisableSpecificWarnings>
+      <PreprocessorDefinitions>IS_TRACY=0;WIN32;_WIN32;WINVER=0x0601;_WIN32_WINNT=0x0601;NTDDI_VERSION=0x06010000;_HAS_ITERATOR_DEBUGGING=0;NDEBUG;_CRT_SECURE_NO_WARNINGS;HAVE_LEPTONICA;LEPTONICA_INTERCEPT_ALLOC=1;HAVE_LIBPNG=0;HAVE_LIBTIFF=0;HAVE_LIBJPEG=0;HAVE_LIBZ=0;HAVE_LIBGIF=0;HAVE_LIBUNGIF=0;HAVE_LIBWEBP=0;HAVE_LIBWEBP_ANIM=0;HAVE_LIBJP2K=0;_HAS_EXCEPTIONS=0;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <UndefinePreprocessorDefinitions>DEBUG;%(UndefinePreprocessorDefinitions)</UndefinePreprocessorDefinitions>
+      <AdditionalIncludeDirectories>..\ext\leptonica\src;..\ext\mupdf\include;..\ext\mupdf\scripts\tesseract;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
+      <Optimization>MinSpace</Optimization>
+      <FunctionLevelLinking>true</FunctionLevelLinking>
+      <IntrinsicFunctions>true</IntrinsicFunctions>
+      <MinimalRebuild>false</MinimalRebuild>
+      <StringPooling>true</StringPooling>
+      <RuntimeLibrary>MultiThreaded</RuntimeLibrary>
+      <ExceptionHandling>false</ExceptionHandling>
+      <RuntimeTypeInfo>false</RuntimeTypeInfo>
+      <MultiProcessorCompilation>true</MultiProcessorCompilation>
+      <AdditionalOptions>/utf-8 /we4840 %(AdditionalOptions)</AdditionalOptions>
+      <ExternalWarningLevel>Level3</ExternalWarningLevel>
+    </ClCompile>
+    <Link>
+      <SubSystem>Windows</SubSystem>
+      <FullProgramDatabaseFile>true</FullProgramDatabaseFile>
+      <GenerateDebugInformation>DebugFastLink</GenerateDebugInformation>
+      <EnableCOMDATFolding>true</EnableCOMDATFolding>
+      <OptimizeReferences>true</OptimizeReferences>
+    </Link>
+    <ProjectReference>
+    </ProjectReference>
+    <CustomBuild>
+      <BuildInParallel>true</BuildInParallel>
+    </CustomBuild>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
+    <ClCompile>
+      <PrecompiledHeader>NotUsing</PrecompiledHeader>
+      <WarningLevel>TurnOffAllWarnings</WarningLevel>
+      <DisableSpecificWarnings>4127;4189;4324;4458;4522;4611;4702;4800;6319;%(DisableSpecificWarnings)</DisableSpecificWarnings>
+      <PreprocessorDefinitions>IS_TRACY=0;WIN32;_WIN32;WINVER=0x0601;_WIN32_WINNT=0x0601;NTDDI_VERSION=0x06010000;_HAS_ITERATOR_DEBUGGING=0;NDEBUG;_CRT_SECURE_NO_WARNINGS;HAVE_LEPTONICA;LEPTONICA_INTERCEPT_ALLOC=1;HAVE_LIBPNG=0;HAVE_LIBTIFF=0;HAVE_LIBJPEG=0;HAVE_LIBZ=0;HAVE_LIBGIF=0;HAVE_LIBUNGIF=0;HAVE_LIBWEBP=0;HAVE_LIBWEBP_ANIM=0;HAVE_LIBJP2K=0;_HAS_EXCEPTIONS=0;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <UndefinePreprocessorDefinitions>DEBUG;%(UndefinePreprocessorDefinitions)</UndefinePreprocessorDefinitions>
+      <AdditionalIncludeDirectories>..\ext\leptonica\src;..\ext\mupdf\include;..\ext\mupdf\scripts\tesseract;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
+      <Optimization>MinSpace</Optimization>
+      <FunctionLevelLinking>true</FunctionLevelLinking>
+      <IntrinsicFunctions>true</IntrinsicFunctions>
+      <MinimalRebuild>false</MinimalRebuild>
+      <StringPooling>true</StringPooling>
+      <RuntimeLibrary>MultiThreaded</RuntimeLibrary>
+      <ExceptionHandling>false</ExceptionHandling>
+      <RuntimeTypeInfo>false</RuntimeTypeInfo>
+      <MultiProcessorCompilation>true</MultiProcessorCompilation>
+      <AdditionalOptions>/utf-8 /we4840 %(AdditionalOptions)</AdditionalOptions>
+      <ExternalWarningLevel>Level3</ExternalWarningLevel>
+    </ClCompile>
+    <Link>
+      <SubSystem>Windows</SubSystem>
+      <FullProgramDatabaseFile>true</FullProgramDatabaseFile>
+      <GenerateDebugInformation>DebugFastLink</GenerateDebugInformation>
+      <EnableCOMDATFolding>true</EnableCOMDATFolding>
+      <OptimizeReferences>true</OptimizeReferences>
+    </Link>
+    <ProjectReference>
+    </ProjectReference>
+    <CustomBuild>
+      <BuildInParallel>true</BuildInParallel>
+    </CustomBuild>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|ARM64'">
+    <ClCompile>
+      <PrecompiledHeader>NotUsing</PrecompiledHeader>
+      <WarningLevel>TurnOffAllWarnings</WarningLevel>
+      <DisableSpecificWarnings>4127;4189;4324;4458;4522;4611;4702;4800;6319;%(DisableSpecificWarnings)</DisableSpecificWarnings>
+      <PreprocessorDefinitions>IS_TRACY=0;WIN32;_WIN32;WINVER=0x0601;_WIN32_WINNT=0x0601;NTDDI_VERSION=0x06010000;_HAS_ITERATOR_DEBUGGING=0;NDEBUG;_CRT_SECURE_NO_WARNINGS;HAVE_LEPTONICA;LEPTONICA_INTERCEPT_ALLOC=1;HAVE_LIBPNG=0;HAVE_LIBTIFF=0;HAVE_LIBJPEG=0;HAVE_LIBZ=0;HAVE_LIBGIF=0;HAVE_LIBUNGIF=0;HAVE_LIBWEBP=0;HAVE_LIBWEBP_ANIM=0;HAVE_LIBJP2K=0;_HAS_EXCEPTIONS=0;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <UndefinePreprocessorDefinitions>DEBUG;%(UndefinePreprocessorDefinitions)</UndefinePreprocessorDefinitions>
+      <AdditionalIncludeDirectories>..\ext\leptonica\src;..\ext\mupdf\include;..\ext\mupdf\scripts\tesseract;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
+      <Optimization>MinSpace</Optimization>
+      <FunctionLevelLinking>true</FunctionLevelLinking>
+      <IntrinsicFunctions>true</IntrinsicFunctions>
+      <MinimalRebuild>false</MinimalRebuild>
+      <StringPooling>true</StringPooling>
+      <RuntimeLibrary>MultiThreaded</RuntimeLibrary>
+      <ExceptionHandling>false</ExceptionHandling>
+      <RuntimeTypeInfo>false</RuntimeTypeInfo>
+      <MultiProcessorCompilation>true</MultiProcessorCompilation>
+      <AdditionalOptions>/utf-8 /we4840 %(AdditionalOptions)</AdditionalOptions>
+      <ExternalWarningLevel>Level3</ExternalWarningLevel>
+    </ClCompile>
+    <Link>
+      <SubSystem>Windows</SubSystem>
+      <FullProgramDatabaseFile>true</FullProgramDatabaseFile>
+      <GenerateDebugInformation>DebugFastLink</GenerateDebugInformation>
+      <EnableCOMDATFolding>true</EnableCOMDATFolding>
+      <OptimizeReferences>true</OptimizeReferences>
+    </Link>
+    <ProjectReference>
+    </ProjectReference>
+    <CustomBuild>
+      <BuildInParallel>true</BuildInParallel>
+    </CustomBuild>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug x64_asan|x64'">
+    <ClCompile>
+      <PrecompiledHeader>NotUsing</PrecompiledHeader>
+      <WarningLevel>TurnOffAllWarnings</WarningLevel>
+      <DisableSpecificWarnings>4127;4189;4324;4458;4522;4611;4702;4800;6319;%(DisableSpecificWarnings)</DisableSpecificWarnings>
+      <PreprocessorDefinitions>IS_TRACY=0;WIN32;_WIN32;WINVER=0x0601;_WIN32_WINNT=0x0601;NTDDI_VERSION=0x06010000;_HAS_ITERATOR_DEBUGGING=0;NDEBUG;_CRT_SECURE_NO_WARNINGS;HAVE_LEPTONICA;LEPTONICA_INTERCEPT_ALLOC=1;HAVE_LIBPNG=0;HAVE_LIBTIFF=0;HAVE_LIBJPEG=0;HAVE_LIBZ=0;HAVE_LIBGIF=0;HAVE_LIBUNGIF=0;HAVE_LIBWEBP=0;HAVE_LIBWEBP_ANIM=0;HAVE_LIBJP2K=0;_HAS_EXCEPTIONS=0;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <UndefinePreprocessorDefinitions>DEBUG;%(UndefinePreprocessorDefinitions)</UndefinePreprocessorDefinitions>
+      <AdditionalIncludeDirectories>..\ext\leptonica\src;..\ext\mupdf\include;..\ext\mupdf\scripts\tesseract;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
+      <Optimization>MinSpace</Optimization>
+      <FunctionLevelLinking>true</FunctionLevelLinking>
+      <IntrinsicFunctions>true</IntrinsicFunctions>
+      <MinimalRebuild>false</MinimalRebuild>
+      <StringPooling>true</StringPooling>
+      <RuntimeLibrary>MultiThreaded</RuntimeLibrary>
+      <ExceptionHandling>false</ExceptionHandling>
+      <RuntimeTypeInfo>false</RuntimeTypeInfo>
+      <MultiProcessorCompilation>true</MultiProcessorCompilation>
+      <AdditionalOptions>/utf-8 /we4840 %(AdditionalOptions)</AdditionalOptions>
+      <ExternalWarningLevel>Level3</ExternalWarningLevel>
+    </ClCompile>
+    <Link>
+      <SubSystem>Windows</SubSystem>
+      <FullProgramDatabaseFile>true</FullProgramDatabaseFile>
+      <GenerateDebugInformation>DebugFastLink</GenerateDebugInformation>
+      <EnableCOMDATFolding>true</EnableCOMDATFolding>
+      <OptimizeReferences>true</OptimizeReferences>
+    </Link>
+    <ProjectReference>
+    </ProjectReference>
+    <CustomBuild>
+      <BuildInParallel>true</BuildInParallel>
+    </CustomBuild>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='DebugFull|Win32'">
+    <ClCompile>
+      <PrecompiledHeader>NotUsing</PrecompiledHeader>
+      <WarningLevel>TurnOffAllWarnings</WarningLevel>
+      <DisableSpecificWarnings>4127;4189;4324;4458;4522;4611;4702;4800;6319;%(DisableSpecificWarnings)</DisableSpecificWarnings>
+      <PreprocessorDefinitions>IS_TRACY=0;WIN32;_WIN32;WINVER=0x0601;_WIN32_WINNT=0x0601;NTDDI_VERSION=0x06010000;_HAS_ITERATOR_DEBUGGING=0;DEBUG;_CRT_SECURE_NO_WARNINGS;HAVE_LEPTONICA;LEPTONICA_INTERCEPT_ALLOC=1;HAVE_LIBPNG=0;HAVE_LIBTIFF=0;HAVE_LIBJPEG=0;HAVE_LIBZ=0;HAVE_LIBGIF=0;HAVE_LIBUNGIF=0;HAVE_LIBWEBP=0;HAVE_LIBWEBP_ANIM=0;HAVE_LIBJP2K=0;_HAS_EXCEPTIONS=0;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <AdditionalIncludeDirectories>..\ext\leptonica\src;..\ext\mupdf\include;..\ext\mupdf\scripts\tesseract;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
+      <Optimization>MinSpace</Optimization>
+      <FunctionLevelLinking>true</FunctionLevelLinking>
+      <IntrinsicFunctions>true</IntrinsicFunctions>
+      <MinimalRebuild>false</MinimalRebuild>
+      <StringPooling>true</StringPooling>
+      <RuntimeLibrary>MultiThreaded</RuntimeLibrary>
+      <ExceptionHandling>false</ExceptionHandling>
+      <RuntimeTypeInfo>false</RuntimeTypeInfo>
+      <MultiProcessorCompilation>true</MultiProcessorCompilation>
+      <AdditionalOptions>/utf-8 /we4840 %(AdditionalOptions)</AdditionalOptions>
+      <ExternalWarningLevel>Level3</ExternalWarningLevel>
+    </ClCompile>
+    <Link>
+      <SubSystem>Windows</SubSystem>
+      <FullProgramDatabaseFile>true</FullProgramDatabaseFile>
+      <GenerateDebugInformation>DebugFastLink</GenerateDebugInformation>
+      <EnableCOMDATFolding>true</EnableCOMDATFolding>
+      <OptimizeReferences>true</OptimizeReferences>
+    </Link>
+    <ProjectReference>
+    </ProjectReference>
+    <CustomBuild>
+      <BuildInParallel>true</BuildInParallel>
+    </CustomBuild>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='DebugFull|x64'">
+    <ClCompile>
+      <PrecompiledHeader>NotUsing</PrecompiledHeader>
+      <WarningLevel>TurnOffAllWarnings</WarningLevel>
+      <DisableSpecificWarnings>4127;4189;4324;4458;4522;4611;4702;4800;6319;%(DisableSpecificWarnings)</DisableSpecificWarnings>
+      <PreprocessorDefinitions>IS_TRACY=0;WIN32;_WIN32;WINVER=0x0601;_WIN32_WINNT=0x0601;NTDDI_VERSION=0x06010000;_HAS_ITERATOR_DEBUGGING=0;DEBUG;_CRT_SECURE_NO_WARNINGS;HAVE_LEPTONICA;LEPTONICA_INTERCEPT_ALLOC=1;HAVE_LIBPNG=0;HAVE_LIBTIFF=0;HAVE_LIBJPEG=0;HAVE_LIBZ=0;HAVE_LIBGIF=0;HAVE_LIBUNGIF=0;HAVE_LIBWEBP=0;HAVE_LIBWEBP_ANIM=0;HAVE_LIBJP2K=0;_HAS_EXCEPTIONS=0;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <AdditionalIncludeDirectories>..\ext\leptonica\src;..\ext\mupdf\include;..\ext\mupdf\scripts\tesseract;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
+      <Optimization>MinSpace</Optimization>
+      <FunctionLevelLinking>true</FunctionLevelLinking>
+      <IntrinsicFunctions>true</IntrinsicFunctions>
+      <MinimalRebuild>false</MinimalRebuild>
+      <StringPooling>true</StringPooling>
+      <RuntimeLibrary>MultiThreaded</RuntimeLibrary>
+      <ExceptionHandling>false</ExceptionHandling>
+      <RuntimeTypeInfo>false</RuntimeTypeInfo>
+      <MultiProcessorCompilation>true</MultiProcessorCompilation>
+      <AdditionalOptions>/utf-8 /we4840 %(AdditionalOptions)</AdditionalOptions>
+      <ExternalWarningLevel>Level3</ExternalWarningLevel>
+    </ClCompile>
+    <Link>
+      <SubSystem>Windows</SubSystem>
+      <FullProgramDatabaseFile>true</FullProgramDatabaseFile>
+      <GenerateDebugInformation>DebugFastLink</GenerateDebugInformation>
+      <EnableCOMDATFolding>true</EnableCOMDATFolding>
+      <OptimizeReferences>true</OptimizeReferences>
+    </Link>
+    <ProjectReference>
+    </ProjectReference>
+    <CustomBuild>
+      <BuildInParallel>true</BuildInParallel>
+    </CustomBuild>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='DebugFull|ARM64'">
+    <ClCompile>
+      <PrecompiledHeader>NotUsing</PrecompiledHeader>
+      <WarningLevel>TurnOffAllWarnings</WarningLevel>
+      <DisableSpecificWarnings>4127;4189;4324;4458;4522;4611;4702;4800;6319;%(DisableSpecificWarnings)</DisableSpecificWarnings>
+      <PreprocessorDefinitions>IS_TRACY=0;WIN32;_WIN32;WINVER=0x0601;_WIN32_WINNT=0x0601;NTDDI_VERSION=0x06010000;_HAS_ITERATOR_DEBUGGING=0;DEBUG;_CRT_SECURE_NO_WARNINGS;HAVE_LEPTONICA;LEPTONICA_INTERCEPT_ALLOC=1;HAVE_LIBPNG=0;HAVE_LIBTIFF=0;HAVE_LIBJPEG=0;HAVE_LIBZ=0;HAVE_LIBGIF=0;HAVE_LIBUNGIF=0;HAVE_LIBWEBP=0;HAVE_LIBWEBP_ANIM=0;HAVE_LIBJP2K=0;_HAS_EXCEPTIONS=0;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <AdditionalIncludeDirectories>..\ext\leptonica\src;..\ext\mupdf\include;..\ext\mupdf\scripts\tesseract;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
+      <Optimization>MinSpace</Optimization>
+      <FunctionLevelLinking>true</FunctionLevelLinking>
+      <IntrinsicFunctions>true</IntrinsicFunctions>
+      <MinimalRebuild>false</MinimalRebuild>
+      <StringPooling>true</StringPooling>
+      <RuntimeLibrary>MultiThreaded</RuntimeLibrary>
+      <ExceptionHandling>false</ExceptionHandling>
+      <RuntimeTypeInfo>false</RuntimeTypeInfo>
+      <MultiProcessorCompilation>true</MultiProcessorCompilation>
+      <AdditionalOptions>/utf-8 /we4840 %(AdditionalOptions)</AdditionalOptions>
+      <ExternalWarningLevel>Level3</ExternalWarningLevel>
+    </ClCompile>
+    <Link>
+      <SubSystem>Windows</SubSystem>
+      <FullProgramDatabaseFile>true</FullProgramDatabaseFile>
+      <GenerateDebugInformation>DebugFastLink</GenerateDebugInformation>
+      <EnableCOMDATFolding>true</EnableCOMDATFolding>
+      <OptimizeReferences>true</OptimizeReferences>
+    </Link>
+    <ProjectReference>
+    </ProjectReference>
+    <CustomBuild>
+      <BuildInParallel>true</BuildInParallel>
+    </CustomBuild>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='DebugFull x64_asan|x64'">
+    <ClCompile>
+      <PrecompiledHeader>NotUsing</PrecompiledHeader>
+      <WarningLevel>TurnOffAllWarnings</WarningLevel>
+      <DisableSpecificWarnings>4127;4189;4324;4458;4522;4611;4702;4800;6319;%(DisableSpecificWarnings)</DisableSpecificWarnings>
+      <PreprocessorDefinitions>IS_TRACY=0;WIN32;_WIN32;WINVER=0x0601;_WIN32_WINNT=0x0601;NTDDI_VERSION=0x06010000;_HAS_ITERATOR_DEBUGGING=0;DEBUG;_CRT_SECURE_NO_WARNINGS;HAVE_LEPTONICA;LEPTONICA_INTERCEPT_ALLOC=1;HAVE_LIBPNG=0;HAVE_LIBTIFF=0;HAVE_LIBJPEG=0;HAVE_LIBZ=0;HAVE_LIBGIF=0;HAVE_LIBUNGIF=0;HAVE_LIBWEBP=0;HAVE_LIBWEBP_ANIM=0;HAVE_LIBJP2K=0;_HAS_EXCEPTIONS=0;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <AdditionalIncludeDirectories>..\ext\leptonica\src;..\ext\mupdf\include;..\ext\mupdf\scripts\tesseract;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
+      <Optimization>MinSpace</Optimization>
+      <FunctionLevelLinking>true</FunctionLevelLinking>
+      <IntrinsicFunctions>true</IntrinsicFunctions>
+      <MinimalRebuild>false</MinimalRebuild>
+      <StringPooling>true</StringPooling>
+      <RuntimeLibrary>MultiThreaded</RuntimeLibrary>
+      <ExceptionHandling>false</ExceptionHandling>
+      <RuntimeTypeInfo>false</RuntimeTypeInfo>
+      <MultiProcessorCompilation>true</MultiProcessorCompilation>
+      <AdditionalOptions>/utf-8 /we4840 %(AdditionalOptions)</AdditionalOptions>
+      <ExternalWarningLevel>Level3</ExternalWarningLevel>
+    </ClCompile>
+    <Link>
+      <SubSystem>Windows</SubSystem>
+      <FullProgramDatabaseFile>true</FullProgramDatabaseFile>
+      <GenerateDebugInformation>DebugFastLink</GenerateDebugInformation>
+      <EnableCOMDATFolding>true</EnableCOMDATFolding>
+      <OptimizeReferences>true</OptimizeReferences>
+    </Link>
+    <ProjectReference>
+    </ProjectReference>
+    <CustomBuild>
+      <BuildInParallel>true</BuildInParallel>
+    </CustomBuild>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
+    <ClCompile>
+      <PrecompiledHeader>NotUsing</PrecompiledHeader>
+      <WarningLevel>TurnOffAllWarnings</WarningLevel>
+      <DisableSpecificWarnings>4127;4189;4324;4458;4522;4611;4702;4800;6319;%(DisableSpecificWarnings)</DisableSpecificWarnings>
+      <PreprocessorDefinitions>IS_TRACY=0;WIN32;_WIN32;WINVER=0x0601;_WIN32_WINNT=0x0601;NTDDI_VERSION=0x06010000;_HAS_ITERATOR_DEBUGGING=0;NDEBUG;_CRT_SECURE_NO_WARNINGS;HAVE_LEPTONICA;LEPTONICA_INTERCEPT_ALLOC=1;HAVE_LIBPNG=0;HAVE_LIBTIFF=0;HAVE_LIBJPEG=0;HAVE_LIBZ=0;HAVE_LIBGIF=0;HAVE_LIBUNGIF=0;HAVE_LIBWEBP=0;HAVE_LIBWEBP_ANIM=0;HAVE_LIBJP2K=0;_HAS_EXCEPTIONS=0;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <UndefinePreprocessorDefinitions>DEBUG;%(UndefinePreprocessorDefinitions)</UndefinePreprocessorDefinitions>
+      <AdditionalIncludeDirectories>..\ext\leptonica\src;..\ext\mupdf\include;..\ext\mupdf\scripts\tesseract;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
+      <Optimization>MinSpace</Optimization>
+      <FunctionLevelLinking>true</FunctionLevelLinking>
+      <IntrinsicFunctions>true</IntrinsicFunctions>
+      <MinimalRebuild>false</MinimalRebuild>
+      <StringPooling>true</StringPooling>
+      <RuntimeLibrary>MultiThreaded</RuntimeLibrary>
+      <ExceptionHandling>false</ExceptionHandling>
+      <RuntimeTypeInfo>false</RuntimeTypeInfo>
+      <MultiProcessorCompilation>true</MultiProcessorCompilation>
+      <AdditionalOptions>/utf-8 /we4840 %(AdditionalOptions)</AdditionalOptions>
+      <ExternalWarningLevel>Level3</ExternalWarningLevel>
+    </ClCompile>
+    <Link>
+      <SubSystem>Windows</SubSystem>
+      <GenerateDebugInformation>DebugFull</GenerateDebugInformation>
+      <EnableCOMDATFolding>true</EnableCOMDATFolding>
+      <OptimizeReferences>true</OptimizeReferences>
+      <LinkTimeCodeGeneration>UseLinkTimeCodeGeneration</LinkTimeCodeGeneration>
+    </Link>
+    <ProjectReference>
+    </ProjectReference>
+    <CustomBuild>
+      <BuildInParallel>true</BuildInParallel>
+    </CustomBuild>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
+    <ClCompile>
+      <PrecompiledHeader>NotUsing</PrecompiledHeader>
+      <WarningLevel>TurnOffAllWarnings</WarningLevel>
+      <DisableSpecificWarnings>4127;4189;4324;4458;4522;4611;4702;4800;6319;%(DisableSpecificWarnings)</DisableSpecificWarnings>
+      <PreprocessorDefinitions>IS_TRACY=0;WIN32;_WIN32;WINVER=0x0601;_WIN32_WINNT=0x0601;NTDDI_VERSION=0x06010000;_HAS_ITERATOR_DEBUGGING=0;NDEBUG;_CRT_SECURE_NO_WARNINGS;HAVE_LEPTONICA;LEPTONICA_INTERCEPT_ALLOC=1;HAVE_LIBPNG=0;HAVE_LIBTIFF=0;HAVE_LIBJPEG=0;HAVE_LIBZ=0;HAVE_LIBGIF=0;HAVE_LIBUNGIF=0;HAVE_LIBWEBP=0;HAVE_LIBWEBP_ANIM=0;HAVE_LIBJP2K=0;_HAS_EXCEPTIONS=0;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <UndefinePreprocessorDefinitions>DEBUG;%(UndefinePreprocessorDefinitions)</UndefinePreprocessorDefinitions>
+      <AdditionalIncludeDirectories>..\ext\leptonica\src;..\ext\mupdf\include;..\ext\mupdf\scripts\tesseract;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
+      <Optimization>MinSpace</Optimization>
+      <FunctionLevelLinking>true</FunctionLevelLinking>
+      <IntrinsicFunctions>true</IntrinsicFunctions>
+      <MinimalRebuild>false</MinimalRebuild>
+      <StringPooling>true</StringPooling>
+      <RuntimeLibrary>MultiThreaded</RuntimeLibrary>
+      <ExceptionHandling>false</ExceptionHandling>
+      <RuntimeTypeInfo>false</RuntimeTypeInfo>
+      <MultiProcessorCompilation>true</MultiProcessorCompilation>
+      <AdditionalOptions>/utf-8 /we4840 %(AdditionalOptions)</AdditionalOptions>
+      <ExternalWarningLevel>Level3</ExternalWarningLevel>
+    </ClCompile>
+    <Link>
+      <SubSystem>Windows</SubSystem>
+      <GenerateDebugInformation>DebugFull</GenerateDebugInformation>
+      <EnableCOMDATFolding>true</EnableCOMDATFolding>
+      <OptimizeReferences>true</OptimizeReferences>
+      <LinkTimeCodeGeneration>UseLinkTimeCodeGeneration</LinkTimeCodeGeneration>
+    </Link>
+    <ProjectReference>
+    </ProjectReference>
+    <CustomBuild>
+      <BuildInParallel>true</BuildInParallel>
+    </CustomBuild>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|ARM64'">
+    <ClCompile>
+      <PrecompiledHeader>NotUsing</PrecompiledHeader>
+      <WarningLevel>TurnOffAllWarnings</WarningLevel>
+      <DisableSpecificWarnings>4127;4189;4324;4458;4522;4611;4702;4800;6319;%(DisableSpecificWarnings)</DisableSpecificWarnings>
+      <PreprocessorDefinitions>IS_TRACY=0;WIN32;_WIN32;WINVER=0x0601;_WIN32_WINNT=0x0601;NTDDI_VERSION=0x06010000;_HAS_ITERATOR_DEBUGGING=0;NDEBUG;_CRT_SECURE_NO_WARNINGS;HAVE_LEPTONICA;LEPTONICA_INTERCEPT_ALLOC=1;HAVE_LIBPNG=0;HAVE_LIBTIFF=0;HAVE_LIBJPEG=0;HAVE_LIBZ=0;HAVE_LIBGIF=0;HAVE_LIBUNGIF=0;HAVE_LIBWEBP=0;HAVE_LIBWEBP_ANIM=0;HAVE_LIBJP2K=0;_HAS_EXCEPTIONS=0;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <UndefinePreprocessorDefinitions>DEBUG;%(UndefinePreprocessorDefinitions)</UndefinePreprocessorDefinitions>
+      <AdditionalIncludeDirectories>..\ext\leptonica\src;..\ext\mupdf\include;..\ext\mupdf\scripts\tesseract;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
+      <Optimization>MinSpace</Optimization>
+      <FunctionLevelLinking>true</FunctionLevelLinking>
+      <IntrinsicFunctions>true</IntrinsicFunctions>
+      <MinimalRebuild>false</MinimalRebuild>
+      <StringPooling>true</StringPooling>
+      <RuntimeLibrary>MultiThreaded</RuntimeLibrary>
+      <ExceptionHandling>false</ExceptionHandling>
+      <RuntimeTypeInfo>false</RuntimeTypeInfo>
+      <MultiProcessorCompilation>true</MultiProcessorCompilation>
+      <AdditionalOptions>/utf-8 /we4840 %(AdditionalOptions)</AdditionalOptions>
+      <ExternalWarningLevel>Level3</ExternalWarningLevel>
+    </ClCompile>
+    <Link>
+      <SubSystem>Windows</SubSystem>
+      <GenerateDebugInformation>DebugFull</GenerateDebugInformation>
+      <EnableCOMDATFolding>true</EnableCOMDATFolding>
+      <OptimizeReferences>true</OptimizeReferences>
+      <LinkTimeCodeGeneration>UseLinkTimeCodeGeneration</LinkTimeCodeGeneration>
+    </Link>
+    <ProjectReference>
+    </ProjectReference>
+    <CustomBuild>
+      <BuildInParallel>true</BuildInParallel>
+    </CustomBuild>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release x64_asan|x64'">
+    <ClCompile>
+      <PrecompiledHeader>NotUsing</PrecompiledHeader>
+      <WarningLevel>TurnOffAllWarnings</WarningLevel>
+      <DisableSpecificWarnings>4127;4189;4324;4458;4522;4611;4702;4800;6319;%(DisableSpecificWarnings)</DisableSpecificWarnings>
+      <PreprocessorDefinitions>IS_TRACY=0;WIN32;_WIN32;WINVER=0x0601;_WIN32_WINNT=0x0601;NTDDI_VERSION=0x06010000;_HAS_ITERATOR_DEBUGGING=0;NDEBUG;_CRT_SECURE_NO_WARNINGS;HAVE_LEPTONICA;LEPTONICA_INTERCEPT_ALLOC=1;HAVE_LIBPNG=0;HAVE_LIBTIFF=0;HAVE_LIBJPEG=0;HAVE_LIBZ=0;HAVE_LIBGIF=0;HAVE_LIBUNGIF=0;HAVE_LIBWEBP=0;HAVE_LIBWEBP_ANIM=0;HAVE_LIBJP2K=0;_HAS_EXCEPTIONS=0;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <UndefinePreprocessorDefinitions>DEBUG;%(UndefinePreprocessorDefinitions)</UndefinePreprocessorDefinitions>
+      <AdditionalIncludeDirectories>..\ext\leptonica\src;..\ext\mupdf\include;..\ext\mupdf\scripts\tesseract;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
+      <Optimization>MinSpace</Optimization>
+      <FunctionLevelLinking>true</FunctionLevelLinking>
+      <IntrinsicFunctions>true</IntrinsicFunctions>
+      <MinimalRebuild>false</MinimalRebuild>
+      <StringPooling>true</StringPooling>
+      <RuntimeLibrary>MultiThreaded</RuntimeLibrary>
+      <ExceptionHandling>false</ExceptionHandling>
+      <RuntimeTypeInfo>false</RuntimeTypeInfo>
+      <MultiProcessorCompilation>true</MultiProcessorCompilation>
+      <AdditionalOptions>/utf-8 /we4840 %(AdditionalOptions)</AdditionalOptions>
+      <ExternalWarningLevel>Level3</ExternalWarningLevel>
+    </ClCompile>
+    <Link>
+      <SubSystem>Windows</SubSystem>
+      <GenerateDebugInformation>DebugFull</GenerateDebugInformation>
+      <EnableCOMDATFolding>true</EnableCOMDATFolding>
+      <OptimizeReferences>true</OptimizeReferences>
+    </Link>
+    <ProjectReference>
+    </ProjectReference>
+    <CustomBuild>
+      <BuildInParallel>true</BuildInParallel>
+    </CustomBuild>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze|Win32'">
+    <ClCompile>
+      <PrecompiledHeader>NotUsing</PrecompiledHeader>
+      <WarningLevel>TurnOffAllWarnings</WarningLevel>
+      <DisableSpecificWarnings>4127;4189;4324;4458;4522;4611;4702;4800;6319;%(DisableSpecificWarnings)</DisableSpecificWarnings>
+      <PreprocessorDefinitions>IS_TRACY=0;WIN32;_WIN32;WINVER=0x0601;_WIN32_WINNT=0x0601;NTDDI_VERSION=0x06010000;_HAS_ITERATOR_DEBUGGING=0;NDEBUG;_CRT_SECURE_NO_WARNINGS;HAVE_LEPTONICA;LEPTONICA_INTERCEPT_ALLOC=1;HAVE_LIBPNG=0;HAVE_LIBTIFF=0;HAVE_LIBJPEG=0;HAVE_LIBZ=0;HAVE_LIBGIF=0;HAVE_LIBUNGIF=0;HAVE_LIBWEBP=0;HAVE_LIBWEBP_ANIM=0;HAVE_LIBJP2K=0;_HAS_EXCEPTIONS=0;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <UndefinePreprocessorDefinitions>DEBUG;%(UndefinePreprocessorDefinitions)</UndefinePreprocessorDefinitions>
+      <AdditionalIncludeDirectories>..\ext\leptonica\src;..\ext\mupdf\include;..\ext\mupdf\scripts\tesseract;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
+      <Optimization>MinSpace</Optimization>
+      <FunctionLevelLinking>true</FunctionLevelLinking>
+      <IntrinsicFunctions>true</IntrinsicFunctions>
+      <MinimalRebuild>false</MinimalRebuild>
+      <StringPooling>true</StringPooling>
+      <RuntimeLibrary>MultiThreaded</RuntimeLibrary>
+      <ExceptionHandling>false</ExceptionHandling>
+      <RuntimeTypeInfo>false</RuntimeTypeInfo>
+      <MultiProcessorCompilation>true</MultiProcessorCompilation>
+      <AdditionalOptions>/utf-8 /we4840 %(AdditionalOptions)</AdditionalOptions>
+      <ExternalWarningLevel>Level3</ExternalWarningLevel>
+    </ClCompile>
+    <Link>
+      <SubSystem>Windows</SubSystem>
+      <FullProgramDatabaseFile>true</FullProgramDatabaseFile>
+      <GenerateDebugInformation>DebugFastLink</GenerateDebugInformation>
+      <EnableCOMDATFolding>true</EnableCOMDATFolding>
+      <OptimizeReferences>true</OptimizeReferences>
+      <LinkTimeCodeGeneration>UseLinkTimeCodeGeneration</LinkTimeCodeGeneration>
+    </Link>
+    <ProjectReference>
+    </ProjectReference>
+    <CustomBuild>
+      <BuildInParallel>true</BuildInParallel>
+    </CustomBuild>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze|x64'">
+    <ClCompile>
+      <PrecompiledHeader>NotUsing</PrecompiledHeader>
+      <WarningLevel>TurnOffAllWarnings</WarningLevel>
+      <DisableSpecificWarnings>4127;4189;4324;4458;4522;4611;4702;4800;6319;%(DisableSpecificWarnings)</DisableSpecificWarnings>
+      <PreprocessorDefinitions>IS_TRACY=0;WIN32;_WIN32;WINVER=0x0601;_WIN32_WINNT=0x0601;NTDDI_VERSION=0x06010000;_HAS_ITERATOR_DEBUGGING=0;NDEBUG;_CRT_SECURE_NO_WARNINGS;HAVE_LEPTONICA;LEPTONICA_INTERCEPT_ALLOC=1;HAVE_LIBPNG=0;HAVE_LIBTIFF=0;HAVE_LIBJPEG=0;HAVE_LIBZ=0;HAVE_LIBGIF=0;HAVE_LIBUNGIF=0;HAVE_LIBWEBP=0;HAVE_LIBWEBP_ANIM=0;HAVE_LIBJP2K=0;_HAS_EXCEPTIONS=0;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <UndefinePreprocessorDefinitions>DEBUG;%(UndefinePreprocessorDefinitions)</UndefinePreprocessorDefinitions>
+      <AdditionalIncludeDirectories>..\ext\leptonica\src;..\ext\mupdf\include;..\ext\mupdf\scripts\tesseract;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
+      <Optimization>MinSpace</Optimization>
+      <FunctionLevelLinking>true</FunctionLevelLinking>
+      <IntrinsicFunctions>true</IntrinsicFunctions>
+      <MinimalRebuild>false</MinimalRebuild>
+      <StringPooling>true</StringPooling>
+      <RuntimeLibrary>MultiThreaded</RuntimeLibrary>
+      <ExceptionHandling>false</ExceptionHandling>
+      <RuntimeTypeInfo>false</RuntimeTypeInfo>
+      <MultiProcessorCompilation>true</MultiProcessorCompilation>
+      <AdditionalOptions>/utf-8 /we4840 %(AdditionalOptions)</AdditionalOptions>
+      <ExternalWarningLevel>Level3</ExternalWarningLevel>
+    </ClCompile>
+    <Link>
+      <SubSystem>Windows</SubSystem>
+      <FullProgramDatabaseFile>true</FullProgramDatabaseFile>
+      <GenerateDebugInformation>DebugFastLink</GenerateDebugInformation>
+      <EnableCOMDATFolding>true</EnableCOMDATFolding>
+      <OptimizeReferences>true</OptimizeReferences>
+      <LinkTimeCodeGeneration>UseLinkTimeCodeGeneration</LinkTimeCodeGeneration>
+    </Link>
+    <ProjectReference>
+    </ProjectReference>
+    <CustomBuild>
+      <BuildInParallel>true</BuildInParallel>
+    </CustomBuild>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze|ARM64'">
+    <ClCompile>
+      <PrecompiledHeader>NotUsing</PrecompiledHeader>
+      <WarningLevel>TurnOffAllWarnings</WarningLevel>
+      <DisableSpecificWarnings>4127;4189;4324;4458;4522;4611;4702;4800;6319;%(DisableSpecificWarnings)</DisableSpecificWarnings>
+      <PreprocessorDefinitions>IS_TRACY=0;WIN32;_WIN32;WINVER=0x0601;_WIN32_WINNT=0x0601;NTDDI_VERSION=0x06010000;_HAS_ITERATOR_DEBUGGING=0;NDEBUG;_CRT_SECURE_NO_WARNINGS;HAVE_LEPTONICA;LEPTONICA_INTERCEPT_ALLOC=1;HAVE_LIBPNG=0;HAVE_LIBTIFF=0;HAVE_LIBJPEG=0;HAVE_LIBZ=0;HAVE_LIBGIF=0;HAVE_LIBUNGIF=0;HAVE_LIBWEBP=0;HAVE_LIBWEBP_ANIM=0;HAVE_LIBJP2K=0;_HAS_EXCEPTIONS=0;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <UndefinePreprocessorDefinitions>DEBUG;%(UndefinePreprocessorDefinitions)</UndefinePreprocessorDefinitions>
+      <AdditionalIncludeDirectories>..\ext\leptonica\src;..\ext\mupdf\include;..\ext\mupdf\scripts\tesseract;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
+      <Optimization>MinSpace</Optimization>
+      <FunctionLevelLinking>true</FunctionLevelLinking>
+      <IntrinsicFunctions>true</IntrinsicFunctions>
+      <MinimalRebuild>false</MinimalRebuild>
+      <StringPooling>true</StringPooling>
+      <RuntimeLibrary>MultiThreaded</RuntimeLibrary>
+      <ExceptionHandling>false</ExceptionHandling>
+      <RuntimeTypeInfo>false</RuntimeTypeInfo>
+      <MultiProcessorCompilation>true</MultiProcessorCompilation>
+      <AdditionalOptions>/utf-8 /we4840 %(AdditionalOptions)</AdditionalOptions>
+      <ExternalWarningLevel>Level3</ExternalWarningLevel>
+    </ClCompile>
+    <Link>
+      <SubSystem>Windows</SubSystem>
+      <FullProgramDatabaseFile>true</FullProgramDatabaseFile>
+      <GenerateDebugInformation>DebugFastLink</GenerateDebugInformation>
+      <EnableCOMDATFolding>true</EnableCOMDATFolding>
+      <OptimizeReferences>true</OptimizeReferences>
+      <LinkTimeCodeGeneration>UseLinkTimeCodeGeneration</LinkTimeCodeGeneration>
+    </Link>
+    <ProjectReference>
+    </ProjectReference>
+    <CustomBuild>
+      <BuildInParallel>true</BuildInParallel>
+    </CustomBuild>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze x64_asan|x64'">
+    <ClCompile>
+      <PrecompiledHeader>NotUsing</PrecompiledHeader>
+      <WarningLevel>TurnOffAllWarnings</WarningLevel>
+      <DisableSpecificWarnings>4127;4189;4324;4458;4522;4611;4702;4800;6319;%(DisableSpecificWarnings)</DisableSpecificWarnings>
+      <PreprocessorDefinitions>IS_TRACY=0;WIN32;_WIN32;WINVER=0x0601;_WIN32_WINNT=0x0601;NTDDI_VERSION=0x06010000;_HAS_ITERATOR_DEBUGGING=0;NDEBUG;_CRT_SECURE_NO_WARNINGS;HAVE_LEPTONICA;LEPTONICA_INTERCEPT_ALLOC=1;HAVE_LIBPNG=0;HAVE_LIBTIFF=0;HAVE_LIBJPEG=0;HAVE_LIBZ=0;HAVE_LIBGIF=0;HAVE_LIBUNGIF=0;HAVE_LIBWEBP=0;HAVE_LIBWEBP_ANIM=0;HAVE_LIBJP2K=0;_HAS_EXCEPTIONS=0;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <UndefinePreprocessorDefinitions>DEBUG;%(UndefinePreprocessorDefinitions)</UndefinePreprocessorDefinitions>
+      <AdditionalIncludeDirectories>..\ext\leptonica\src;..\ext\mupdf\include;..\ext\mupdf\scripts\tesseract;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
+      <Optimization>MinSpace</Optimization>
+      <FunctionLevelLinking>true</FunctionLevelLinking>
+      <IntrinsicFunctions>true</IntrinsicFunctions>
+      <MinimalRebuild>false</MinimalRebuild>
+      <StringPooling>true</StringPooling>
+      <RuntimeLibrary>MultiThreaded</RuntimeLibrary>
+      <ExceptionHandling>false</ExceptionHandling>
+      <RuntimeTypeInfo>false</RuntimeTypeInfo>
+      <MultiProcessorCompilation>true</MultiProcessorCompilation>
+      <AdditionalOptions>/utf-8 /we4840 %(AdditionalOptions)</AdditionalOptions>
+      <ExternalWarningLevel>Level3</ExternalWarningLevel>
+    </ClCompile>
+    <Link>
+      <SubSystem>Windows</SubSystem>
+      <FullProgramDatabaseFile>true</FullProgramDatabaseFile>
+      <GenerateDebugInformation>DebugFastLink</GenerateDebugInformation>
+      <EnableCOMDATFolding>true</EnableCOMDATFolding>
+      <OptimizeReferences>true</OptimizeReferences>
+    </Link>
+    <ProjectReference>
+    </ProjectReference>
+    <CustomBuild>
+      <BuildInParallel>true</BuildInParallel>
+    </CustomBuild>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Profile|Win32'">
+    <ClCompile>
+      <PrecompiledHeader>NotUsing</PrecompiledHeader>
+      <WarningLevel>TurnOffAllWarnings</WarningLevel>
+      <DisableSpecificWarnings>4127;4189;4324;4458;4522;4611;4702;4800;6319;%(DisableSpecificWarnings)</DisableSpecificWarnings>
+      <PreprocessorDefinitions>IS_TRACY=0;IS_PERF_LOG=1;WIN32;_WIN32;WINVER=0x0601;_WIN32_WINNT=0x0601;NTDDI_VERSION=0x06010000;_HAS_ITERATOR_DEBUGGING=0;NDEBUG;_CRT_SECURE_NO_WARNINGS;HAVE_LEPTONICA;LEPTONICA_INTERCEPT_ALLOC=1;HAVE_LIBPNG=0;HAVE_LIBTIFF=0;HAVE_LIBJPEG=0;HAVE_LIBZ=0;HAVE_LIBGIF=0;HAVE_LIBUNGIF=0;HAVE_LIBWEBP=0;HAVE_LIBWEBP_ANIM=0;HAVE_LIBJP2K=0;_HAS_EXCEPTIONS=0;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <UndefinePreprocessorDefinitions>DEBUG;%(UndefinePreprocessorDefinitions)</UndefinePreprocessorDefinitions>
+      <AdditionalIncludeDirectories>..\ext\leptonica\src;..\ext\mupdf\include;..\ext\mupdf\scripts\tesseract;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
+      <Optimization>MinSpace</Optimization>
+      <FunctionLevelLinking>true</FunctionLevelLinking>
+      <IntrinsicFunctions>true</IntrinsicFunctions>
+      <MinimalRebuild>false</MinimalRebuild>
+      <StringPooling>true</StringPooling>
+      <RuntimeLibrary>MultiThreaded</RuntimeLibrary>
+      <ExceptionHandling>false</ExceptionHandling>
+      <RuntimeTypeInfo>false</RuntimeTypeInfo>
+      <MultiProcessorCompilation>true</MultiProcessorCompilation>
+      <AdditionalOptions>/utf-8 /we4840 %(AdditionalOptions)</AdditionalOptions>
+      <ExternalWarningLevel>Level3</ExternalWarningLevel>
+    </ClCompile>
+    <Link>
+      <SubSystem>Windows</SubSystem>
+      <GenerateDebugInformation>DebugFull</GenerateDebugInformation>
+      <EnableCOMDATFolding>true</EnableCOMDATFolding>
+      <OptimizeReferences>true</OptimizeReferences>
+    </Link>
+    <ProjectReference>
+    </ProjectReference>
+    <CustomBuild>
+      <BuildInParallel>true</BuildInParallel>
+    </CustomBuild>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Profile|x64'">
+    <ClCompile>
+      <PrecompiledHeader>NotUsing</PrecompiledHeader>
+      <WarningLevel>TurnOffAllWarnings</WarningLevel>
+      <DisableSpecificWarnings>4127;4189;4324;4458;4522;4611;4702;4800;6319;%(DisableSpecificWarnings)</DisableSpecificWarnings>
+      <PreprocessorDefinitions>IS_TRACY=0;IS_PERF_LOG=1;WIN32;_WIN32;WINVER=0x0601;_WIN32_WINNT=0x0601;NTDDI_VERSION=0x06010000;_HAS_ITERATOR_DEBUGGING=0;NDEBUG;_CRT_SECURE_NO_WARNINGS;HAVE_LEPTONICA;LEPTONICA_INTERCEPT_ALLOC=1;HAVE_LIBPNG=0;HAVE_LIBTIFF=0;HAVE_LIBJPEG=0;HAVE_LIBZ=0;HAVE_LIBGIF=0;HAVE_LIBUNGIF=0;HAVE_LIBWEBP=0;HAVE_LIBWEBP_ANIM=0;HAVE_LIBJP2K=0;_HAS_EXCEPTIONS=0;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <UndefinePreprocessorDefinitions>DEBUG;%(UndefinePreprocessorDefinitions)</UndefinePreprocessorDefinitions>
+      <AdditionalIncludeDirectories>..\ext\leptonica\src;..\ext\mupdf\include;..\ext\mupdf\scripts\tesseract;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
+      <Optimization>MinSpace</Optimization>
+      <FunctionLevelLinking>true</FunctionLevelLinking>
+      <IntrinsicFunctions>true</IntrinsicFunctions>
+      <MinimalRebuild>false</MinimalRebuild>
+      <StringPooling>true</StringPooling>
+      <RuntimeLibrary>MultiThreaded</RuntimeLibrary>
+      <ExceptionHandling>false</ExceptionHandling>
+      <RuntimeTypeInfo>false</RuntimeTypeInfo>
+      <MultiProcessorCompilation>true</MultiProcessorCompilation>
+      <AdditionalOptions>/utf-8 /we4840 %(AdditionalOptions)</AdditionalOptions>
+      <ExternalWarningLevel>Level3</ExternalWarningLevel>
+    </ClCompile>
+    <Link>
+      <SubSystem>Windows</SubSystem>
+      <GenerateDebugInformation>DebugFull</GenerateDebugInformation>
+      <EnableCOMDATFolding>true</EnableCOMDATFolding>
+      <OptimizeReferences>true</OptimizeReferences>
+    </Link>
+    <ProjectReference>
+    </ProjectReference>
+    <CustomBuild>
+      <BuildInParallel>true</BuildInParallel>
+    </CustomBuild>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Profile|ARM64'">
+    <ClCompile>
+      <PrecompiledHeader>NotUsing</PrecompiledHeader>
+      <WarningLevel>TurnOffAllWarnings</WarningLevel>
+      <DisableSpecificWarnings>4127;4189;4324;4458;4522;4611;4702;4800;6319;%(DisableSpecificWarnings)</DisableSpecificWarnings>
+      <PreprocessorDefinitions>IS_TRACY=0;IS_PERF_LOG=1;WIN32;_WIN32;WINVER=0x0601;_WIN32_WINNT=0x0601;NTDDI_VERSION=0x06010000;_HAS_ITERATOR_DEBUGGING=0;NDEBUG;_CRT_SECURE_NO_WARNINGS;HAVE_LEPTONICA;LEPTONICA_INTERCEPT_ALLOC=1;HAVE_LIBPNG=0;HAVE_LIBTIFF=0;HAVE_LIBJPEG=0;HAVE_LIBZ=0;HAVE_LIBGIF=0;HAVE_LIBUNGIF=0;HAVE_LIBWEBP=0;HAVE_LIBWEBP_ANIM=0;HAVE_LIBJP2K=0;_HAS_EXCEPTIONS=0;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <UndefinePreprocessorDefinitions>DEBUG;%(UndefinePreprocessorDefinitions)</UndefinePreprocessorDefinitions>
+      <AdditionalIncludeDirectories>..\ext\leptonica\src;..\ext\mupdf\include;..\ext\mupdf\scripts\tesseract;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
+      <Optimization>MinSpace</Optimization>
+      <FunctionLevelLinking>true</FunctionLevelLinking>
+      <IntrinsicFunctions>true</IntrinsicFunctions>
+      <MinimalRebuild>false</MinimalRebuild>
+      <StringPooling>true</StringPooling>
+      <RuntimeLibrary>MultiThreaded</RuntimeLibrary>
+      <ExceptionHandling>false</ExceptionHandling>
+      <RuntimeTypeInfo>false</RuntimeTypeInfo>
+      <MultiProcessorCompilation>true</MultiProcessorCompilation>
+      <AdditionalOptions>/utf-8 /we4840 %(AdditionalOptions)</AdditionalOptions>
+      <ExternalWarningLevel>Level3</ExternalWarningLevel>
+    </ClCompile>
+    <Link>
+      <SubSystem>Windows</SubSystem>
+      <GenerateDebugInformation>DebugFull</GenerateDebugInformation>
+      <EnableCOMDATFolding>true</EnableCOMDATFolding>
+      <OptimizeReferences>true</OptimizeReferences>
+    </Link>
+    <ProjectReference>
+    </ProjectReference>
+    <CustomBuild>
+      <BuildInParallel>true</BuildInParallel>
+    </CustomBuild>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Profile x64_asan|x64'">
+    <ClCompile>
+      <PrecompiledHeader>NotUsing</PrecompiledHeader>
+      <WarningLevel>TurnOffAllWarnings</WarningLevel>
+      <DisableSpecificWarnings>4127;4189;4324;4458;4522;4611;4702;4800;6319;%(DisableSpecificWarnings)</DisableSpecificWarnings>
+      <PreprocessorDefinitions>IS_TRACY=0;IS_PERF_LOG=1;WIN32;_WIN32;WINVER=0x0601;_WIN32_WINNT=0x0601;NTDDI_VERSION=0x06010000;_HAS_ITERATOR_DEBUGGING=0;NDEBUG;_CRT_SECURE_NO_WARNINGS;HAVE_LEPTONICA;LEPTONICA_INTERCEPT_ALLOC=1;HAVE_LIBPNG=0;HAVE_LIBTIFF=0;HAVE_LIBJPEG=0;HAVE_LIBZ=0;HAVE_LIBGIF=0;HAVE_LIBUNGIF=0;HAVE_LIBWEBP=0;HAVE_LIBWEBP_ANIM=0;HAVE_LIBJP2K=0;_HAS_EXCEPTIONS=0;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <UndefinePreprocessorDefinitions>DEBUG;%(UndefinePreprocessorDefinitions)</UndefinePreprocessorDefinitions>
+      <AdditionalIncludeDirectories>..\ext\leptonica\src;..\ext\mupdf\include;..\ext\mupdf\scripts\tesseract;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
+      <Optimization>MinSpace</Optimization>
+      <FunctionLevelLinking>true</FunctionLevelLinking>
+      <IntrinsicFunctions>true</IntrinsicFunctions>
+      <MinimalRebuild>false</MinimalRebuild>
+      <StringPooling>true</StringPooling>
+      <RuntimeLibrary>MultiThreaded</RuntimeLibrary>
+      <ExceptionHandling>false</ExceptionHandling>
+      <RuntimeTypeInfo>false</RuntimeTypeInfo>
+      <MultiProcessorCompilation>true</MultiProcessorCompilation>
+      <AdditionalOptions>/utf-8 /we4840 %(AdditionalOptions)</AdditionalOptions>
+      <ExternalWarningLevel>Level3</ExternalWarningLevel>
+    </ClCompile>
+    <Link>
+      <SubSystem>Windows</SubSystem>
+      <GenerateDebugInformation>DebugFull</GenerateDebugInformation>
+      <EnableCOMDATFolding>true</EnableCOMDATFolding>
+      <OptimizeReferences>true</OptimizeReferences>
+    </Link>
+    <ProjectReference>
+    </ProjectReference>
+    <CustomBuild>
+      <BuildInParallel>true</BuildInParallel>
+    </CustomBuild>
+  </ItemDefinitionGroup>
+  <ItemGroup>
+    <ClInclude Include="..\ext\leptonica\src\allheaders.h" />
+    <ClInclude Include="..\ext\leptonica\src\alltypes.h" />
+    <ClInclude Include="..\ext\leptonica\src\array.h" />
+    <ClInclude Include="..\ext\leptonica\src\array_internal.h" />
+    <ClInclude Include="..\ext\leptonica\src\arrayaccess.h" />
+    <ClInclude Include="..\ext\leptonica\src\bbuffer.h" />
+    <ClInclude Include="..\ext\leptonica\src\bilateral.h" />
+    <ClInclude Include="..\ext\leptonica\src\bmf.h" />
+    <ClInclude Include="..\ext\leptonica\src\bmfdata.h" />
+    <ClInclude Include="..\ext\leptonica\src\bmp.h" />
+    <ClInclude Include="..\ext\leptonica\src\ccbord.h" />
+    <ClInclude Include="..\ext\leptonica\src\ccbord_internal.h" />
+    <ClInclude Include="..\ext\leptonica\src\colorfill.h" />
+    <ClInclude Include="..\ext\leptonica\src\dewarp.h" />
+    <ClInclude Include="..\ext\leptonica\src\environ.h" />
+    <ClInclude Include="..\ext\leptonica\src\gplot.h" />
+    <ClInclude Include="..\ext\leptonica\src\hashmap.h" />
+    <ClInclude Include="..\ext\leptonica\src\heap.h" />
+    <ClInclude Include="..\ext\leptonica\src\imageio.h" />
+    <ClInclude Include="..\ext\leptonica\src\jbclass.h" />
+    <ClInclude Include="..\ext\leptonica\src\leptwin.h" />
+    <ClInclude Include="..\ext\leptonica\src\list.h" />
+    <ClInclude Include="..\ext\leptonica\src\morph.h" />
+    <ClInclude Include="..\ext\leptonica\src\pix.h" />
+    <ClInclude Include="..\ext\leptonica\src\pix_internal.h" />
+    <ClInclude Include="..\ext\leptonica\src\ptra.h" />
+    <ClInclude Include="..\ext\leptonica\src\queue.h" />
+    <ClInclude Include="..\ext\leptonica\src\rbtree.h" />
+    <ClInclude Include="..\ext\leptonica\src\readbarcode.h" />
+    <ClInclude Include="..\ext\leptonica\src\recog.h" />
+    <ClInclude Include="..\ext\leptonica\src\regutils.h" />
+    <ClInclude Include="..\ext\leptonica\src\stack.h" />
+    <ClInclude Include="..\ext\leptonica\src\stringcode.h" />
+    <ClInclude Include="..\ext\leptonica\src\sudoku.h" />
+    <ClInclude Include="..\ext\leptonica\src\watershed.h" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="..\ext\leptonica\src\adaptmap.c" />
+    <ClCompile Include="..\ext\leptonica\src\affine.c" />
+    <ClCompile Include="..\ext\leptonica\src\affinecompose.c" />
+    <ClCompile Include="..\ext\leptonica\src\arrayaccess.c" />
+    <ClCompile Include="..\ext\leptonica\src\baseline.c" />
+    <ClCompile Include="..\ext\leptonica\src\bbuffer.c" />
+    <ClCompile Include="..\ext\leptonica\src\bilateral.c" />
+    <ClCompile Include="..\ext\leptonica\src\bilinear.c" />
+    <ClCompile Include="..\ext\leptonica\src\binarize.c" />
+    <ClCompile Include="..\ext\leptonica\src\binexpand.c" />
+    <ClCompile Include="..\ext\leptonica\src\binreduce.c" />
+    <ClCompile Include="..\ext\leptonica\src\blend.c" />
+    <ClCompile Include="..\ext\leptonica\src\bmf.c" />
+    <ClCompile Include="..\ext\leptonica\src\bmpio.c" />
+    <ClCompile Include="..\ext\leptonica\src\bmpiostub.c" />
+    <ClCompile Include="..\ext\leptonica\src\bootnumgen1.c" />
+    <ClCompile Include="..\ext\leptonica\src\bootnumgen2.c" />
+    <ClCompile Include="..\ext\leptonica\src\bootnumgen3.c" />
+    <ClCompile Include="..\ext\leptonica\src\bootnumgen4.c" />
+    <ClCompile Include="..\ext\leptonica\src\boxbasic.c" />
+    <ClCompile Include="..\ext\leptonica\src\boxfunc1.c" />
+    <ClCompile Include="..\ext\leptonica\src\boxfunc2.c" />
+    <ClCompile Include="..\ext\leptonica\src\boxfunc3.c" />
+    <ClCompile Include="..\ext\leptonica\src\boxfunc4.c" />
+    <ClCompile Include="..\ext\leptonica\src\boxfunc5.c" />
+    <ClCompile Include="..\ext\leptonica\src\bytearray.c" />
+    <ClCompile Include="..\ext\leptonica\src\ccbord.c" />
+    <ClCompile Include="..\ext\leptonica\src\classapp.c" />
+    <ClCompile Include="..\ext\leptonica\src\colorcontent.c" />
+    <ClCompile Include="..\ext\leptonica\src\coloring.c" />
+    <ClCompile Include="..\ext\leptonica\src\colormap.c" />
+    <ClCompile Include="..\ext\leptonica\src\colormorph.c" />
+    <ClCompile Include="..\ext\leptonica\src\colorquant1.c" />
+    <ClCompile Include="..\ext\leptonica\src\colorquant2.c" />
+    <ClCompile Include="..\ext\leptonica\src\colorseg.c" />
+    <ClCompile Include="..\ext\leptonica\src\colorspace.c" />
+    <ClCompile Include="..\ext\leptonica\src\compare.c" />
+    <ClCompile Include="..\ext\leptonica\src\conncomp.c" />
+    <ClCompile Include="..\ext\leptonica\src\convertfiles.c" />
+    <ClCompile Include="..\ext\leptonica\src\convolve.c" />
+    <ClCompile Include="..\ext\leptonica\src\correlscore.c" />
+    <ClCompile Include="..\ext\leptonica\src\dewarp1.c" />
+    <ClCompile Include="..\ext\leptonica\src\dewarp2.c" />
+    <ClCompile Include="..\ext\leptonica\src\dewarp3.c" />
+    <ClCompile Include="..\ext\leptonica\src\dewarp4.c" />
+    <ClCompile Include="..\ext\leptonica\src\dnabasic.c" />
+    <ClCompile Include="..\ext\leptonica\src\dnafunc1.c" />
+    <ClCompile Include="..\ext\leptonica\src\dnahash.c" />
+    <ClCompile Include="..\ext\leptonica\src\dwacomb.2.c" />
+    <ClCompile Include="..\ext\leptonica\src\dwacomblow.2.c" />
+    <ClCompile Include="..\ext\leptonica\src\edge.c" />
+    <ClCompile Include="..\ext\leptonica\src\encoding.c" />
+    <ClCompile Include="..\ext\leptonica\src\enhance.c" />
+    <ClCompile Include="..\ext\leptonica\src\fhmtauto.c" />
+    <ClCompile Include="..\ext\leptonica\src\fhmtgenlow.1.c" />
+    <ClCompile Include="..\ext\leptonica\src\fmorphauto.c" />
+    <ClCompile Include="..\ext\leptonica\src\fmorphgen.1.c" />
+    <ClCompile Include="..\ext\leptonica\src\fmorphgenlow.1.c" />
+    <ClCompile Include="..\ext\leptonica\src\fpix1.c" />
+    <ClCompile Include="..\ext\leptonica\src\fpix2.c" />
+    <ClCompile Include="..\ext\leptonica\src\gifiostub.c" />
+    <ClCompile Include="..\ext\leptonica\src\gplot.c" />
+    <ClCompile Include="..\ext\leptonica\src\graphics.c" />
+    <ClCompile Include="..\ext\leptonica\src\graymorph.c" />
+    <ClCompile Include="..\ext\leptonica\src\grayquant.c" />
+    <ClCompile Include="..\ext\leptonica\src\hashmap.c" />
+    <ClCompile Include="..\ext\leptonica\src\heap.c" />
+    <ClCompile Include="..\ext\leptonica\src\jbclass.c" />
+    <ClCompile Include="..\ext\leptonica\src\jp2kheader.c" />
+    <ClCompile Include="..\ext\leptonica\src\jp2kheaderstub.c" />
+    <ClCompile Include="..\ext\leptonica\src\jp2kiostub.c" />
+    <ClCompile Include="..\ext\leptonica\src\jpegiostub.c" />
+    <ClCompile Include="..\ext\leptonica\src\kernel.c" />
+    <ClCompile Include="..\ext\leptonica\src\libversions.c" />
+    <ClCompile Include="..\ext\leptonica\src\list.c" />
+    <ClCompile Include="..\ext\leptonica\src\map.c" />
+    <ClCompile Include="..\ext\leptonica\src\morph.c" />
+    <ClCompile Include="..\ext\leptonica\src\morphapp.c" />
+    <ClCompile Include="..\ext\leptonica\src\morphdwa.c" />
+    <ClCompile Include="..\ext\leptonica\src\morphseq.c" />
+    <ClCompile Include="..\ext\leptonica\src\numabasic.c" />
+    <ClCompile Include="..\ext\leptonica\src\numafunc1.c" />
+    <ClCompile Include="..\ext\leptonica\src\numafunc2.c" />
+    <ClCompile Include="..\ext\leptonica\src\pageseg.c" />
+    <ClCompile Include="..\ext\leptonica\src\paintcmap.c" />
+    <ClCompile Include="..\ext\leptonica\src\partify.c" />
+    <ClCompile Include="..\ext\leptonica\src\partition.c" />
+    <ClCompile Include="..\ext\leptonica\src\pdfio1.c" />
+    <ClCompile Include="..\ext\leptonica\src\pdfio1stub.c" />
+    <ClCompile Include="..\ext\leptonica\src\pdfio2.c" />
+    <ClCompile Include="..\ext\leptonica\src\pdfio2stub.c" />
+    <ClCompile Include="..\ext\leptonica\src\pix1.c" />
+    <ClCompile Include="..\ext\leptonica\src\pix2.c" />
+    <ClCompile Include="..\ext\leptonica\src\pix3.c" />
+    <ClCompile Include="..\ext\leptonica\src\pix4.c" />
+    <ClCompile Include="..\ext\leptonica\src\pix5.c" />
+    <ClCompile Include="..\ext\leptonica\src\pixabasic.c" />
+    <ClCompile Include="..\ext\leptonica\src\pixacc.c" />
+    <ClCompile Include="..\ext\leptonica\src\pixafunc1.c" />
+    <ClCompile Include="..\ext\leptonica\src\pixafunc2.c" />
+    <ClCompile Include="..\ext\leptonica\src\pixalloc.c" />
+    <ClCompile Include="..\ext\leptonica\src\pixarith.c" />
+    <ClCompile Include="..\ext\leptonica\src\pixcomp.c" />
+    <ClCompile Include="..\ext\leptonica\src\pixconv.c" />
+    <ClCompile Include="..\ext\leptonica\src\pixlabel.c" />
+    <ClCompile Include="..\ext\leptonica\src\pixtiling.c" />
+    <ClCompile Include="..\ext\leptonica\src\pngiostub.c" />
+    <ClCompile Include="..\ext\leptonica\src\pnmio.c" />
+    <ClCompile Include="..\ext\leptonica\src\pnmiostub.c" />
+    <ClCompile Include="..\ext\leptonica\src\projective.c" />
+    <ClCompile Include="..\ext\leptonica\src\psio1.c" />
+    <ClCompile Include="..\ext\leptonica\src\psio1stub.c" />
+    <ClCompile Include="..\ext\leptonica\src\psio2.c" />
+    <ClCompile Include="..\ext\leptonica\src\psio2stub.c" />
+    <ClCompile Include="..\ext\leptonica\src\ptabasic.c" />
+    <ClCompile Include="..\ext\leptonica\src\ptafunc1.c" />
+    <ClCompile Include="..\ext\leptonica\src\ptafunc2.c" />
+    <ClCompile Include="..\ext\leptonica\src\ptra.c" />
+    <ClCompile Include="..\ext\leptonica\src\quadtree.c" />
+    <ClCompile Include="..\ext\leptonica\src\queue.c" />
+    <ClCompile Include="..\ext\leptonica\src\rank.c" />
+    <ClCompile Include="..\ext\leptonica\src\rbtree.c" />
+    <ClCompile Include="..\ext\leptonica\src\readfile.c" />
+    <ClCompile Include="..\ext\leptonica\src\regutils.c" />
+    <ClCompile Include="..\ext\leptonica\src\rop.c" />
+    <ClCompile Include="..\ext\leptonica\src\roplow.c" />
+    <ClCompile Include="..\ext\leptonica\src\rotate.c" />
+    <ClCompile Include="..\ext\leptonica\src\rotateam.c" />
+    <ClCompile Include="..\ext\leptonica\src\rotateorth.c" />
+    <ClCompile Include="..\ext\leptonica\src\rotateshear.c" />
+    <ClCompile Include="..\ext\leptonica\src\runlength.c" />
+    <ClCompile Include="..\ext\leptonica\src\sarray1.c" />
+    <ClCompile Include="..\ext\leptonica\src\sarray2.c" />
+    <ClCompile Include="..\ext\leptonica\src\scale1.c" />
+    <ClCompile Include="..\ext\leptonica\src\scale2.c" />
+    <ClCompile Include="..\ext\leptonica\src\seedfill.c" />
+    <ClCompile Include="..\ext\leptonica\src\sel1.c" />
+    <ClCompile Include="..\ext\leptonica\src\sel2.c" />
+    <ClCompile Include="..\ext\leptonica\src\selgen.c" />
+    <ClCompile Include="..\ext\leptonica\src\shear.c" />
+    <ClCompile Include="..\ext\leptonica\src\skew.c" />
+    <ClCompile Include="..\ext\leptonica\src\spixio.c" />
+    <ClCompile Include="..\ext\leptonica\src\stack.c" />
+    <ClCompile Include="..\ext\leptonica\src\stringcode.c" />
+    <ClCompile Include="..\ext\leptonica\src\strokes.c" />
+    <ClCompile Include="..\ext\leptonica\src\textops.c" />
+    <ClCompile Include="..\ext\leptonica\src\tiffiostub.c" />
+    <ClCompile Include="..\ext\leptonica\src\utils1.c" />
+    <ClCompile Include="..\ext\leptonica\src\utils2.c" />
+    <ClCompile Include="..\ext\leptonica\src\warper.c" />
+    <ClCompile Include="..\ext\leptonica\src\webpiostub.c" />
+    <ClCompile Include="..\ext\leptonica\src\writefile.c" />
+    <ClCompile Include="..\ext\leptonica\src\zlibmem.c" />
+    <ClCompile Include="..\ext\leptonica\src\zlibmemstub.c" />
+    <ClCompile Include="..\ext\mupdf\source\fitz\leptonica-wrap.c" />
+  </ItemGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
+  <ImportGroup Label="ExtensionTargets">
+  </ImportGroup>
+</Project>

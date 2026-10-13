@@ -275,7 +275,7 @@ function msvcCflags(t: Target, f: BuildFlags, cpp: boolean): string[] {
     "/DSUMATRA_NG",
   ];
   if (cpp) {
-    flags.push("/std:c++20", "/GR-");
+    flags.push("/std:c++20", t.rtti ? "/GR" : "/GR-");
     flags.push(...(t.exceptions ? ["/EHsc"] : ["/EHs-c-", "/D_HAS_EXCEPTIONS=0"]));
   }
   if (t.strict) {
@@ -320,7 +320,7 @@ function msvcCflags(t: Target, f: BuildFlags, cpp: boolean): string[] {
 function gccCflags(tc: Toolchain, t: Target, f: BuildFlags, cpp: boolean): string[] {
   const flags = ["-DIS_TRACY=0", "-DSUMATRA_NG"];
   if (cpp) {
-    flags.push("-std=c++20", "-fno-rtti");
+    flags.push("-std=c++20", t.rtti ? "-frtti" : "-fno-rtti");
     if (!t.exceptions) flags.push("-fno-exceptions");
   } else {
     flags.push("-std=gnu11");
@@ -934,13 +934,17 @@ function linkCmd(
 
 // ─── build a target and its dependencies ──────────────────────────────────
 
-/** Static-library dependencies of `t` in link order (dependencies last). */
-export function depsOf(t: Target, fail: Fail): Target[] {
+/**
+ * Static-library dependencies of `t` in link order (dependencies last). With
+ * `plat`, a dependency that does not build there is left out.
+ */
+export function depsOf(t: Target, fail: Fail, plat?: Platform): Target[] {
   const out: Target[] = [];
   const visit = (name: string) => {
     const d = findTarget(name);
     if (!d) fail(`target ${t.name}: unknown dependency ${name}`);
     if (d.kind !== "staticlib") fail(`target ${t.name}: dependency ${name} is not a static library`);
+    if (plat && d.platforms && !d.platforms.includes(plat)) return;
     for (const n of d.deps ?? []) visit(n);
     if (!out.includes(d)) out.push(d);
   };
@@ -955,7 +959,7 @@ export async function buildTarget(tc: Toolchain, t: Target, f: BuildFlags, fail:
 
   const libs: string[] = [];
   if (t.kind !== "staticlib") {
-    for (const d of depsOf(t, fail)) {
+    for (const d of depsOf(t, fail, tc.plat)) {
       const dep = t.systemDeps ? { ...d, systemDeps: t.systemDeps } : d;
       const objs = await compileTarget(tc, dep, f, dir, fail);
       libs.push(await archive(tc, dep, dir, objs, fail));

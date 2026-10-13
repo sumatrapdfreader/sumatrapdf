@@ -4,6 +4,28 @@ mupdf           1.28.5     2026-09-24
   https://github.com/ArtifexSoftware/mupdf/releases/tag/1.28.5
   our changes to the vendored tree are recorded in ext/patches/ (see its README)
 
+tesseract       5.5.2      2026-10-14
+  https://github.com/tesseract-ocr/tesseract
+  mupdf thirdparty submodule (Artifex fork), commit ad0f76d971946512a62c933f490c8111877eddaa
+  OCR for the mupdf tools (draw -F ocr.*). Only the LSTM engine and the
+  files mupdf's platform/win32/libtesseract.vcxproj compiles; headers of those
+  dirs plus include/tesseract. Needs eng.traineddata from tessdata_fast at run time
+
+leptonica       1.87.0     2026-10-14
+  https://github.com/DanBloomberg/leptonica
+  mupdf thirdparty submodule (Artifex fork), commit 7fbe9ea76d1e0c48a02b2ed371d24f92c7bac40c
+  image processing for tesseract; the files mupdf's libleptonica.vcxproj compiles, no image codecs
+
+zxing-cpp       2.3.0      2026-10-14
+  https://github.com/zxing-cpp/zxing-cpp
+  mupdf thirdparty submodule (Artifex fork), commit 742aef959e12a41eda494df78fd567c2e715ff57
+  barcode reading and writing for the mupdf tools (barcode); core/src only
+
+zint            2.13.0.9   2026-10-14
+  https://github.com/zint/zint
+  mupdf thirdparty submodule (Artifex fork), commit 7a9fdd6cd00cd5bfd0082705d934c13ef84f25e1
+  barcode writer zxing-cpp uses (ZXING_USE_ZINT); backend/ only
+
 libarchive     3.8.8      2026-06-23
   https://github.com/libarchive/libarchive
   https://github.com/libarchive/libarchive/releases/tag/v3.8.8

@@ -23,6 +23,8 @@ so the tools we patch inside `ext/mupdf` include them by bare name
 
 - `load-jxl.cpp` / `load-jxl.h` - JPEG XL metadata and pixel decoding through
   jxldec for MuPDF images and PDF `/JXLDecode` streams
+- `zxing-eci.cpp` - builds zxing-cpp's `ECI.cpp` under a name that does not
+  collide with zint's `eci.c` in the `zxing` lib (mupdf's `eci_dedup.cpp`)
 
 _Changes_ to mupdf itself still go into `ext/mupdf` in place and get recorded as
 a patch in `ext/patches/` (see its README). Put code here only when it is

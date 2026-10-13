@@ -6678,6 +6678,7 @@ int pdfrecolor_main(int argc, char** argv);
 int pdftrim_main(int argc, char** argv);
 int pdfbake_main(int argc, char** argv);
 int mugrep_main(int argc, char** argv);
+int mubar_main(int argc, char** argv);
 int pdfaudit_main(int argc, char** argv);
 int fz_redirect_io_to_existing_console();
 }
@@ -6696,7 +6697,7 @@ static CliTool gCliTools[] = {
     {"bake", pdfbake_main},       {"clean", pdfclean_main}, {"create", pdfcreate_main},  {"extract", pdfextract_main},
     {"info", pdfinfo_main},       {"merge", pdfmerge_main}, {"pages", pdfpages_main},    {"poster", pdfposter_main},
     {"recolor", pdfrecolor_main}, {"show", pdfshow_main},   {"sign", pdfsign_main},      {"trim", pdftrim_main},
-    {"grep", mugrep_main},        {"trace", mutrace_main},
+    {"grep", mugrep_main},        {"trace", mutrace_main},  {"barcode", mubar_main},
 };
 
 // `SumatraPDF draw file.pdf` is a mupdf tool. Run it before any window exists,

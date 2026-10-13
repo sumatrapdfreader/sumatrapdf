@@ -28,6 +28,8 @@ EXPORTS
 
 	mudraw_main
 
+	mubar_main
+
 	mutrace_main
 
 	murun_main

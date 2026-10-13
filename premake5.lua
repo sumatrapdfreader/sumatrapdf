@@ -920,6 +920,63 @@ workspace "SumatraPDF"
       "ext/a-extract/extract/*.h", "ext/a-extract/version.txt",
     }
 
+  -- OCR and barcodes (#5446), built the way mupdf's own win32 projects do.
+  -- leptonica: no image codecs, memory through mupdf's allocator
+  project "leptonica"
+    static_intermediate_dirs()
+    kind "StaticLib"
+    language "C"
+    optimized_conf()
+    defines {
+      "_CRT_SECURE_NO_WARNINGS", "HAVE_LEPTONICA", "LEPTONICA_INTERCEPT_ALLOC=1",
+      "HAVE_LIBPNG=0", "HAVE_LIBTIFF=0", "HAVE_LIBJPEG=0", "HAVE_LIBZ=0", "HAVE_LIBGIF=0",
+      "HAVE_LIBUNGIF=0", "HAVE_LIBWEBP=0", "HAVE_LIBWEBP_ANIM=0", "HAVE_LIBJP2K=0",
+    }
+    warnings "Off"
+    includedirs { "ext/leptonica/src", "ext/mupdf/include", "ext/mupdf/scripts/tesseract" }
+    leptonica_files()
+
+  -- tesseract: the LSTM engine only (DISABLED_LEGACY_ENGINE), no debug UI.
+  -- The SIMD kernels are picked at run time by cpuid; the x86 defines let
+  -- their files compile
+  project "tesseract"
+    static_intermediate_dirs()
+    kind "StaticLib"
+    language "C++"
+    cppdialect "C++20"
+    optimized_conf()
+    exceptionhandling "On"
+    rtti "On"
+    -- ccutil.cpp calls GetModuleFileName with a char buffer
+    characterset "MBCS"
+    defines {
+      "_CRT_SECURE_NO_WARNINGS", "HAVE_LEPTONICA", "HAVE_TESSERACT", "TESSERACT_IMAGEDATA_AS_PIX",
+      "TESSERACT_DISABLE_DEBUG_FONTS", "GRAPHICS_DISABLED", "DISABLED_LEGACY_ENGINE",
+    }
+    filter { "platforms:x86 or x64 or x64_asan" }
+    defines { "HAVE_AVX", "HAVE_AVX2", "HAVE_SSE4_1", "HAVE_FMA", "__AVX__", "__AVX2__", "__FMA__", "__SSE4_1__" }
+    filter {}
+    warnings "Off"
+    includedirs { "ext/tesseract/include", "ext/tesseract/src/api", "ext/tesseract/src/arch", "ext/tesseract/src/ccmain", "ext/tesseract/src/ccstruct", "ext/tesseract/src/ccutil", "ext/tesseract/src/classify", "ext/tesseract/src/dict", "ext/tesseract/src/lstm", "ext/tesseract/src/textord", "ext/tesseract/src/viewer", "ext/tesseract/src/wordrec", "ext/tesseract/src/cutil", "ext/leptonica/src", "ext/mupdf/include", "ext/mupdf/scripts/tesseract" }
+    tesseract_files()
+
+  -- zxing-cpp reads barcodes, zint writes them
+  project "zxing"
+    static_intermediate_dirs()
+    kind "StaticLib"
+    language "C++"
+    cppdialect "C++20"
+    optimized_conf()
+    exceptionhandling "On"
+    rtti "On"
+    defines {
+      "_CRT_SECURE_NO_WARNINGS", "ZXING_HAS_CHAR8", "ZXING_USE_ZINT", "ZXING_EXPERIMENTAL_API", "ZINT_NO_PNG",
+      "HAVE_ZXINGCPP", "FZ_ENABLE_BARCODE=1",
+    }
+    warnings "Off"
+    includedirs { "ext/zxing-cpp/core/src", "ext/mupdf/scripts/zxing-cpp", "ext/zint/backend", "ext/mupdf/include" }
+    zxing_files()
+
   project "mupdf"
     cppdialect "C++latest"
     static_intermediate_dirs()
@@ -941,8 +998,9 @@ workspace "SumatraPDF"
     -- built-in fonts come from the loader (embedded pak, then cache, then
     -- fonts_map.c). Source Han is not packed, so skip its table entries
     defines { "TOFU_CJK_LANG" }
-    defines { "FZ_ENABLE_PDF=1", "FZ_ENABLE_SVG=1", "FZ_ENABLE_BROTLI=1", "FZ_ENABLE_BARCODE=0", "FZ_ENABLE_JS=1", "FZ_ENABLE_HYPHEN=0", "FZ_ENABLE_MD=1" }
+    defines { "FZ_ENABLE_PDF=1", "FZ_ENABLE_SVG=1", "FZ_ENABLE_BROTLI=1", "FZ_ENABLE_BARCODE=1", "FZ_ENABLE_JS=1", "FZ_ENABLE_HYPHEN=0", "FZ_ENABLE_MD=1" }
     defines { "HAVE_LIBARCHIVE", "LIBARCHIVE_STATIC" }
+    defines { "HAVE_LEPTONICA", "HAVE_TESSERACT", "HAVE_ZXINGCPP" }
 
     filter { "platforms:arm64" }
     defines { "ARCH_HAS_NEON=1" }
@@ -988,6 +1046,7 @@ workspace "SumatraPDF"
     links {
       "cmark-gfm", "a-mujs", "a-extract", "a-harfbuzz", "a-freetype", "a-brotli",
       "a-lcms2", "a-openjpeg", "a-jbig2dec", "libjpeg-turbo", "a-libarchive", "a-gumbo", "jxldec",
+      "tesseract", "leptonica", "zxing",
     }
 
     -- mupdf
@@ -1005,7 +1064,7 @@ workspace "SumatraPDF"
     language "C"
     optimized_conf()
     disablewarnings { "4206", "4701", "4702" }
-    defines { "FZ_ENABLE_PDF=1", "FZ_ENABLE_SVG=1", "FZ_ENABLE_BROTLI=1", "FZ_ENABLE_BARCODE=0", "FZ_ENABLE_JS=1", "FZ_ENABLE_HYPHEN=0", "FZ_ENABLE_MD=1" }
+    defines { "FZ_ENABLE_PDF=1", "FZ_ENABLE_SVG=1", "FZ_ENABLE_BROTLI=1", "FZ_ENABLE_BARCODE=1", "FZ_ENABLE_JS=1", "FZ_ENABLE_HYPHEN=0", "FZ_ENABLE_MD=1" }
 
     filter { "platforms:arm64" }
     defines { "ARCH_HAS_NEON=1" }

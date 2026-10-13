@@ -1,0 +1,110 @@
+Zint and libzint
+----------------
+Zint is a suite of programs to allow easy encoding of data in any of the
+wide range of public domain barcode standards and to allow integration of
+this capability into your own programs.
+
+Zint is able to encode data in the following formats:
+
+Australia Post Redirect Code            GS1 DataBar Expanded
+Australia Post Reply-Paid               GS1 DataBar Expanded Stacked
+Australia Post Routing Code             GS1 DataBar Limited
+Australia Post Standard Customer        GS1 DataBar Omnidirectional
+Aztec Code (and HIBC)                   GS1 DataBar Stacked
+Aztec Runes                             GS1 DataBar Stacked Omnidirectional
+BC412 (SEMI T1-95)                      Han Xin (Chinese Sensible) Code
+Brazilian Postal Code (CEPNet)          ISBN
+Channel Code                            ITF-14
+Codabar                                 Japanese Postal Barcode
+Codablock-F (and HIBC)                  Korean Postal Barcode
+Code 11                                 LOGMARS
+Code 128 (and GS1-128 and HIBC)         MaxiCode
+Code 16K                                MicroPDF417 (and HIBC)
+Code 2 of 5 Data Logic                  Micro QR Code
+Code 2 of 5 IATA                        MSI Plessey
+Code 2 of 5 Industrial                  NVE-18 (SSCC-18)
+Code 2 of 5 Interleaved                 PDF417 (and Compact and HIBC)
+Code 2 of 5 Standard (Matrix)           Pharmacode
+Code 32 (Italian Pharmacode)            Pharmacode 2-track
+Code 39 (and HIBC)                      Pharma Zentralnummer (PZN)
+Code 39 Extended                        PLANET
+Code 49                                 POSTNET
+Code 93                                 QR Code (and HIBC)
+Code One                                Rectangular Micro QR (rMQR)
+DAFT Code                               Royal Mail 2D Mailmark (CMDM)
+Data Matrix (and HIBC)                  Royal Mail 4-state Customer Code
+Deutsche Post Identcode                 Royal Mail 4-state Mailmark
+Deutsche Post Leitcode                  Telepen
+DotCode                                 Telepen Numeric
+DPD Code                                UK Plessey
+Dutch Post KIX                          Ultracode
+DX Film Edge Barcode                    UPC-A
+EAN (EAN-2, EAN-5, EAN-8 and EAN-13)    UPC-E
+EAN-14                                  UPNQR
+FIM (Facing Identification Mark)        UPU S10
+Flattermarken                           USPS Intelligent Mail (OneCode)
+Grid Matrix                             VIN (Vehicle Identification Number)
+GS1 Composite (EAN/UPC/DataBar/GS-128)
+
+Output can be saved as BMP, EMF, EPS, GIF, PCX, PNG, SVG or TIF.
+
+
+DOCUMENTATION
+-------------
+For documentation see "docs/manual.txt" or "docs/manual.html" or online at
+
+    <https://zint.org.uk/manual/>
+
+
+PROJECT HISTORY
+---------------
+Please see "ChangeLog" in the project root directory.
+
+
+LICENSE
+-------
+Zint, libzint and Zint Barcode Studio are Copyright © 2024 Robin Stuart. All
+historical versions are distributed under the GNU General Public License
+version 3 or later. Versions 2.5 and later are released under a dual license:
+the encoding library is released under the BSD (3 clause) license whereas the
+GUI, Zint Barcode Studio, and the CLI are released under the GNU General Public
+License version 3 or later.
+
+
+CONTACT US
+----------
+The home of Zint is:
+
+    <https://sourceforge.net/p/zint/>
+
+The code is now also mirrored at:
+
+    <https://github.com/zint/zint>
+
+For feature requests or bug reports please either add a ticket on the project's
+SourceForge page
+
+    <https://sourceforge.net/p/zint/tickets/>
+
+or join the mailing list at
+
+    <https://sourceforge.net/projects/zint/lists/zint-barcode>
+
+
+BEFORE POSTING TO THE LIST
+--------------------------
+Please note the following points...
+* Zint is primarily developed for Linux. While we have some experience of
+  using Zint on Windows we may be unable to resolve problems if they are
+  specific to other operating systems. We cannot provide support for using
+  Zint with commercial packages such as MS Office or Crystal Reports.
+* Always ensure you are using the latest version of Zint before posting bug
+  reports - the bug you are reporting may have been fixed already.
+* Please remember to state what operating system you are using and include
+  enough information to allow us to reproduce the error - including input
+  data if appropriate.
+* Please DO NOT post messages asking for us to change the license
+  arrangements. You will be ignored.
+* Please remember that Zint is developed by volunteers. While we attempt to
+  answer all messages within a week, this is highly dependent on external
+  circumstances.

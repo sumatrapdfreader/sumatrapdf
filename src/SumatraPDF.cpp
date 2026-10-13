@@ -14976,7 +14976,7 @@ int fz_redirect_io_to_existing_console();
 // must match premake5.lua
 #define FZ_ENABLE_JS 1
 #define FZ_ENABLE_PDF 1
-#define FZ_ENABLE_BARCODE 0
+#define FZ_ENABLE_BARCODE 1
 #define FZ_VERSION "1.28.5"
 
 using MutoolFunc = int (*)(int argc, char* argv[]);

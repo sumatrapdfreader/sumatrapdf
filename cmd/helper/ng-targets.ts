@@ -75,6 +75,8 @@ export type Target = {
   callcap?: boolean;
   /** compile C++ with exceptions on (orig SumatraPDF default); gpui and mupdf are off */
   exceptions?: boolean;
+  /** compile C++ with RTTI (dynamic_cast); off by default */
+  rtti?: boolean;
   /** third-party libs orig compiles optimized even in debug builds */
   alwaysOptimize?: boolean;
   /** per-source overrides matched by glob; `platforms` limits where they apply */
@@ -368,6 +370,139 @@ const mupdfLinux: PlatformExtra = {
   defines: ["HAVE_LIBCRYPTO=1"],
 };
 
+// OCR (tesseract + leptonica) and barcodes (zxing-cpp + zint) for #5446, built
+// the way mupdf's win32 projects do. Not on wasm: no tessdata there and the
+// app has no use for them yet.
+const ocrPlatforms: Platform[] = ["win", "linux", "mac"];
+const ocrDefines = ["FZ_ENABLE_BARCODE=1", "HAVE_LEPTONICA", "HAVE_TESSERACT", "HAVE_ZXINGCPP"];
+// tesseract picks a SIMD kernel at run time (cpuid); these say which were built
+const tessX86Defines = ["HAVE_AVX", "HAVE_AVX2", "HAVE_SSE4_1", "HAVE_FMA"];
+// each kernel file needs its instruction set enabled by the compiler
+const tessX86Kernels: { glob: string; flags: string[] }[] = [
+  { glob: "ext/tesseract/src/arch/dotproductavx.cpp", flags: ["-mavx"] },
+  { glob: "ext/tesseract/src/arch/intsimdmatrixavx2.cpp", flags: ["-mavx2"] },
+  { glob: "ext/tesseract/src/arch/dotproductfma.cpp", flags: ["-mfma"] },
+  { glob: "ext/tesseract/src/arch/dotproductsse.cpp", flags: ["-msse4.1"] },
+  { glob: "ext/tesseract/src/arch/intsimdmatrixsse.cpp", flags: ["-msse4.1"] },
+];
+const tessX86Kernelsx86: PlatformExtra = { defines: tessX86Defines };
+// an arm64 mac has no x86 kernels; NEON is picked up from __ARM_NEON
+const tessMac: PlatformExtra = hostArm64 ? { exclude: tessX86Kernels.map((k) => k.glob) } : tessX86Kernelsx86;
+
+export const ocrTargets: Target[] = [
+  {
+    // leptonica as mupdf builds it: no image codecs, memory through mupdf's allocator
+    name: "leptonica",
+    kind: "staticlib",
+    platforms: ocrPlatforms,
+    sources: ["ext/leptonica/src/*.c", "ext/mupdf/source/fitz/leptonica-wrap.c"],
+    defines: [
+      "HAVE_LEPTONICA",
+      "LEPTONICA_INTERCEPT_ALLOC=1",
+      "HAVE_LIBPNG=0",
+      "HAVE_LIBTIFF=0",
+      "HAVE_LIBJPEG=0",
+      "HAVE_LIBZ=0",
+      "HAVE_LIBGIF=0",
+      "HAVE_LIBUNGIF=0",
+      "HAVE_LIBWEBP=0",
+      "HAVE_LIBWEBP_ANIM=0",
+      "HAVE_LIBJP2K=0",
+    ],
+    includes: ["ext/leptonica/src", "ext/mupdf/include", "ext/mupdf/scripts/tesseract"],
+    strict: false,
+    alwaysOptimize: true,
+  },
+  {
+    // tesseract: the LSTM engine only (DISABLED_LEGACY_ENGINE), no debug UI
+    name: "tesseract",
+    kind: "staticlib",
+    platforms: ocrPlatforms,
+    sources: ["ext/tesseract/src/*/*.cpp", "ext/mupdf/source/fitz/tessocr.cpp"],
+    defines: [
+      "HAVE_LEPTONICA",
+      "HAVE_TESSERACT",
+      "TESSERACT_IMAGEDATA_AS_PIX",
+      "TESSERACT_DISABLE_DEBUG_FONTS",
+      "GRAPHICS_DISABLED",
+      "DISABLED_LEGACY_ENGINE",
+    ],
+    includes: [
+      "ext/tesseract/include",
+      "ext/tesseract/src/api",
+      "ext/tesseract/src/arch",
+      "ext/tesseract/src/ccmain",
+      "ext/tesseract/src/ccstruct",
+      "ext/tesseract/src/ccutil",
+      "ext/tesseract/src/classify",
+      "ext/tesseract/src/dict",
+      "ext/tesseract/src/lstm",
+      "ext/tesseract/src/textord",
+      "ext/tesseract/src/viewer",
+      "ext/tesseract/src/wordrec",
+      "ext/tesseract/src/cutil",
+      "ext/leptonica/src",
+      "ext/mupdf/include",
+      "ext/mupdf/scripts/tesseract",
+    ],
+    deps: ["leptonica"],
+    strict: false,
+    exceptions: true,
+    rtti: true,
+    alwaysOptimize: true,
+    perPlatform: {
+      // cl.exe does not predefine the instruction-set macros the kernels test
+      win: { defines: [...tessX86Defines, "__AVX__", "__AVX2__", "__FMA__", "__SSE4_1__"] },
+      linux: tessX86Kernelsx86,
+      mac: tessMac,
+    },
+    perSource: [
+      // ccutil.cpp calls GetModuleFileName with a char buffer
+      {
+        glob: "ext/tesseract/src/ccutil/ccutil.cpp",
+        flags: [],
+        msvcFlags: ["/UUNICODE", "/U_UNICODE"],
+        platforms: ["win"],
+      },
+      ...tessX86Kernels.map((k) => ({ ...k, platforms: ["linux", "mac"] as Platform[] })),
+    ],
+  },
+  {
+    // zxing-cpp reads barcodes, zint writes them
+    name: "zxing",
+    kind: "staticlib",
+    platforms: ocrPlatforms,
+    sources: [
+      "ext/zxing-cpp/core/src/*.cpp",
+      "ext/zxing-cpp/core/src/aztec/*.cpp",
+      "ext/zxing-cpp/core/src/datamatrix/*.cpp",
+      "ext/zxing-cpp/core/src/maxicode/*.cpp",
+      "ext/zxing-cpp/core/src/oned/*.cpp",
+      "ext/zxing-cpp/core/src/pdf417/*.cpp",
+      "ext/zxing-cpp/core/src/qrcode/*.cpp",
+      "ext/zxing-cpp/core/src/libzueci/zueci.c",
+      "ext/zint/backend/*.c",
+      "ext/mupdf/source/fitz/zxingbarcode.cpp",
+      // ECI.cpp under a name that does not collide with zint's eci.c
+      "src/mupdf/zxing-eci.cpp",
+    ],
+    exclude: ["ext/zxing-cpp/core/src/ECI.cpp"],
+    defines: [
+      "ZXING_HAS_CHAR8",
+      "ZXING_USE_ZINT",
+      "ZXING_EXPERIMENTAL_API",
+      "ZINT_NO_PNG",
+      "HAVE_ZXINGCPP",
+      "FZ_ENABLE_BARCODE=1",
+    ],
+    includes: ["ext/zxing-cpp/core/src", "ext/mupdf/scripts/zxing-cpp", "ext/zint/backend", "ext/mupdf/include"],
+    strict: false,
+    exceptions: true,
+    rtti: true,
+    alwaysOptimize: true,
+  },
+];
+
 // The x86-64 asm dav1d builds. Everything else under src/x86 is either
 // AVX-512 (orig leaves it out) or %included by these.
 const dav1dAsm = [
@@ -539,6 +674,7 @@ const archiveWinLibs = [
 ];
 
 export const targets: Target[] = [
+  ...ocrTargets,
   {
     name: "test_embedded",
     kind: "console",
@@ -830,10 +966,9 @@ export const targets: Target[] = [
       "ext/mupdf/source/helpers/mu-threads/mu-threads.c",
     ],
     exclude: [
-      "ext/mupdf/source/fitz/leptonica-wrap.c", // no OCR
+      "ext/mupdf/source/fitz/leptonica-wrap.c", // in the leptonica target
       "ext/mupdf/source/fitz/noto.c", // src/mupdf/noto_sumatra.c instead
       "ext/mupdf/source/tools/cmapdump.c",
-      "ext/mupdf/source/tools/mubar.c",
       // both define main(); nothing calls muraster and GNU ld rejects the
       // second definition (cl.exe just kept the first)
       "ext/mupdf/source/tools/muraster.c",
@@ -852,7 +987,6 @@ export const targets: Target[] = [
       "FZ_ENABLE_PDF=1",
       "FZ_ENABLE_SVG=1",
       "FZ_ENABLE_BROTLI=1",
-      "FZ_ENABLE_BARCODE=0",
       "FZ_ENABLE_JS=1",
       "FZ_ENABLE_HYPHEN=0",
       "FZ_ENABLE_MD=1",
@@ -889,6 +1023,9 @@ export const targets: Target[] = [
     ],
     // reverse of the link order we want: depsOf() reverses this list
     deps: [
+      "leptonica",
+      "tesseract",
+      "zxing",
       "jxldec",
       "a-zlib",
       "a-libarchive",
@@ -908,10 +1045,10 @@ export const targets: Target[] = [
     strict: false,
     exceptions: false,
     perPlatform: {
-      win: { exclude: ["ext/mupdf/source/fitz/load-jxr.c"] },
-      linux: mupdfLinux,
-      mac: mupdfPosix,
-      wasm: mupdfPosix,
+      win: { exclude: ["ext/mupdf/source/fitz/load-jxr.c"], defines: ocrDefines },
+      linux: { ...mupdfLinux, defines: [...(mupdfLinux.defines ?? []), ...ocrDefines] },
+      mac: { ...mupdfPosix, defines: ocrDefines },
+      wasm: { ...mupdfPosix, defines: ["FZ_ENABLE_BARCODE=0"] },
     },
   },
   // ── third-party, group B: archives, image codecs, misc ────────────────
