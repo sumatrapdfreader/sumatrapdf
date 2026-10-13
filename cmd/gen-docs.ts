@@ -14,6 +14,7 @@ const mdDir = websiteDocsDir;
 
 const kMainPage = "SumatraPDF-documentation.md";
 const kAllDocsFile = "all-docs.md";
+const kScriptExamplesPage = "Tool-run-javascript-examples.md";
 // hosted on the website, not in this repo
 const kExcludeFromAllDocs = new Set(["SumatraPDF-all-docs-for-llm-ai.md"]);
 
@@ -134,6 +135,38 @@ function writeBundledRenderJs(outDir: string): void {
   writeFileSync(join(outDir, "gen_docs.render.js"), template.replace(marker, bundle));
 }
 
+function copyScriptExamples(outDir: string, pages: string[]): void {
+  if (!pages.includes(kScriptExamplesPage)) {
+    return;
+  }
+  const text = readFileSync(join(mdDir, kScriptExamplesPage), "utf-8");
+  const examples = /^## Examples\r?\n([\s\S]*?)(?=^## |$(?![\s\S]))/m.exec(text);
+  if (!examples) {
+    throw new Error(`${kScriptExamplesPage}: missing Examples section`);
+  }
+  const links = [...examples[1].matchAll(/^- \[[^\]]+\]\(scripts\/([a-zA-Z0-9_-]+\.js)\)\s*$/gm)];
+  if (!links.length) {
+    throw new Error(`${kScriptExamplesPage}: no script examples`);
+  }
+  const names = new Set<string>();
+  const scriptsDir = join(mdDir, "scripts");
+  mkdirSync(join(outDir, "scripts"), { recursive: true });
+  for (const link of links) {
+    const name = link[1];
+    if (names.has(name)) {
+      throw new Error(`${kScriptExamplesPage}: duplicate script ${name}`);
+    }
+    names.add(name);
+    copyFileNormalized(join(outDir, "scripts", name), join(scriptsDir, name));
+  }
+  for (const file of readdirSync(scriptsDir, { withFileTypes: true })) {
+    if (file.isFile() && file.name.endsWith(".js") && !names.has(file.name)) {
+      throw new Error(`${kScriptExamplesPage}: script ${file.name} is not listed`);
+    }
+  }
+  console.log(`staged ${names.size} PDF script examples`);
+}
+
 // Build the manual in a scratch dir and swap it in at the end: a build's
 // prebuild (cmd/pack-embedded-prebuild.cmd) mirrors .work/docs and packs
 // without the manual when the dir is missing, so it must never see a
@@ -150,6 +183,8 @@ function writeManualPakFiles(pages: string[]): void {
   }
   writeFileSync(join(outDir, "manifest.json"), JSON.stringify(manifest, null, 2));
   console.log(`wrote manifest.json (${Object.keys(manifest).length} pages)`);
+
+  copyScriptExamples(outDir, pages);
 
   genAllDocsMd(outDir);
 

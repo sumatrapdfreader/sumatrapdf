@@ -20,6 +20,8 @@
 
   let manifest = null;
   let mainDocText = null;
+  let scriptExamplesCleanup = null;
+  const kScriptExamplesPage = "Tool-run-javascript-examples.md";
 
   function removeNotionId(s) {
     if (s.length <= 32) return s;
@@ -428,10 +430,12 @@
       text = text.replace(/^# .+\n?/, "");
     }
 
-    text = preProcess(text);
-
     const md = global.markdownit({ html: true, typographer: true });
     createMarkdownRenderer(md);
+    if (mdName === kScriptExamplesPage) {
+      text = renderScriptExamples(text, md.utils.escapeHtml);
+    }
+    text = preProcess(text);
     let innerHTML = md.render(text);
 
     if (h1Text && !isMainPage) {
@@ -473,6 +477,163 @@
       if (!r.ok) throw new Error("failed to load " + url);
       return r.text();
     });
+  }
+
+  function renderScriptExamples(text, escape) {
+    return text.replace(/^## Examples\r?\n([\s\S]*?)(?=^## |$(?![\s\S]))/m, function (_, list) {
+      const links = Array.from(list.matchAll(/^- \[([^\]]+)\]\(scripts\/([a-zA-Z0-9_-]+\.js)\)\s*$/gm));
+      if (!links.length) throw new Error("No script examples listed.");
+      const items = links.map(function (link, index) {
+        const title = escape(link[1]);
+        const name = escape(link[2]);
+        const label =
+          index === 0 ? '<span aria-current="true">' + title + "</span>" : '<a href="#' + name + '">' + title + "</a>";
+        return '<span data-script="' + name + '" data-title="' + title + '">' + label + "</span>";
+      });
+      return (
+        '<div class="script-examples" data-selected="">\n' +
+        '<nav class="script-example-list" aria-label="JavaScript examples">' +
+        items.join('<span class="script-example-dot" aria-hidden="true"> &bull; </span>') +
+        "</nav>\n" +
+        '<p class="script-example-hint">Choose an example, or use the left and right arrow keys.</p>\n' +
+        '<div class="script-example-head"><h2 class="script-example-title" id="script-example-title">' +
+        escape(links[0][1]) +
+        '</h2><div class="script-example-arrows">' +
+        '<button type="button" data-step="-1" aria-label="Previous example" title="Previous example (left arrow)">&larr;</button>' +
+        '<button type="button" data-step="1" aria-label="Next example" title="Next example (right arrow)">&rarr;</button>' +
+        "</div></div>\n" +
+        '<div class="script-example-status" role="status"></div>\n' +
+        '<div class="script-example-content"><p>Loading...</p></div>\n</div>\n\n'
+      );
+    });
+  }
+
+  function scriptContentHTML(name, source) {
+    const escape = global.markdownit().utils.escapeHtml;
+    let info = "";
+    const args = [];
+    source.split("\n").forEach(function (line) {
+      line = line.trim();
+      if (line.startsWith("// Info:")) info = line.slice("// Info:".length).trim();
+      if (line.startsWith("// Arg:")) args.push(line.slice("// Arg:".length).trim());
+    });
+    let html = info ? "<p>" + escape(info) + "</p>" : "";
+    const discussion = /^discussion-([0-9]+)-/.exec(name);
+    if (discussion) {
+      html +=
+        '<p>From <a href="https://github.com/sumatrapdfreader/sumatrapdf/discussions/' +
+        discussion[1] +
+        '" target="_blank" rel="noopener noreferrer">discussion #' +
+        discussion[1] +
+        "</a></p>";
+    }
+    html +=
+      '<p><a href="https://www.sumatrapdfreader.org/docs/scripts/' +
+      escape(name) +
+      '" target="_blank" rel="noopener noreferrer">Download script</a></p>';
+    if (args.length) {
+      html +=
+        '<ol class="script-example-args" aria-label="Script arguments">' +
+        args
+          .map(function (arg) {
+            return "<li>" + escape(arg) + "</li>";
+          })
+          .join("") +
+        "</ol>";
+    }
+    return html + genCodeBlockHTML(escape(source), "language-js");
+  }
+
+  function initScriptExamples(root) {
+    if (scriptExamplesCleanup) scriptExamplesCleanup();
+    scriptExamplesCleanup = null;
+    const examples = root && root.querySelector(".script-examples");
+    if (!examples) return Promise.resolve();
+    const items = Array.from(examples.querySelectorAll("[data-script]"));
+    const panel = examples.querySelector(".script-example-content");
+    const title = examples.querySelector(".script-example-title");
+    const status = examples.querySelector(".script-example-status");
+    const cache = new Map();
+    let selected = 0;
+    let requested = 0;
+    let requestID = 0;
+    let disposed = false;
+
+    async function select(index) {
+      requested = index;
+      const currentRequest = ++requestID;
+      const name = items[index].dataset.script;
+      panel.setAttribute("aria-busy", "true");
+      status.textContent = "";
+      try {
+        if (!cache.has(name)) {
+          cache.set(name, scriptContentHTML(name, await fetchText("scripts/" + name)));
+        }
+        if (disposed || currentRequest !== requestID) return;
+        selected = index;
+        items.forEach(function (item, i) {
+          const label = document.createElement(i === index ? "span" : "a");
+          label.textContent = item.dataset.title;
+          if (i === index) label.setAttribute("aria-current", "true");
+          else label.href = "#" + item.dataset.script;
+          item.replaceChildren(label);
+        });
+        title.textContent = items[index].dataset.title;
+        panel.innerHTML = cache.get(name);
+        examples.dataset.selected = name;
+        if (typeof global.rebuildPageToc === "function") global.rebuildPageToc();
+      } catch (err) {
+        if (disposed || currentRequest !== requestID) return;
+        requested = selected;
+        status.textContent = "Could not load that example. Choose it again to retry.";
+      } finally {
+        if (!disposed && currentRequest === requestID) panel.removeAttribute("aria-busy");
+      }
+    }
+
+    function navigate(index) {
+      global.history.pushState(null, "", "#" + items[index].dataset.script);
+      return select(index);
+    }
+    function step(direction) {
+      return navigate((requested + direction + items.length) % items.length);
+    }
+    examples.querySelectorAll("[data-step]").forEach(function (button) {
+      button.addEventListener("click", function () {
+        step(Number(button.dataset.step));
+      });
+    });
+    examples.querySelector("nav").addEventListener("click", function (event) {
+      const link = event.target.closest("a");
+      if (!link || event.ctrlKey || event.metaKey || event.shiftKey || event.altKey) return;
+      const index = items.indexOf(link.closest("[data-script]"));
+      if (index < 0) return;
+      event.preventDefault();
+      navigate(index);
+    });
+    function onKey(event) {
+      if (event.key !== "ArrowLeft" && event.key !== "ArrowRight") return;
+      if (event.ctrlKey || event.metaKey || event.altKey || event.shiftKey) return;
+      if (event.target.closest("input, textarea, select, [contenteditable]")) return;
+      event.preventDefault();
+      step(event.key === "ArrowRight" ? 1 : -1);
+    }
+    function selectHash() {
+      const index = items.findIndex(function (item) {
+        return "#" + item.dataset.script === global.location.hash;
+      });
+      return select(index < 0 ? 0 : index);
+    }
+    document.addEventListener("keydown", onKey);
+    global.addEventListener("popstate", selectHash);
+    global.addEventListener("hashchange", selectHash);
+    scriptExamplesCleanup = function () {
+      disposed = true;
+      document.removeEventListener("keydown", onKey);
+      global.removeEventListener("popstate", selectHash);
+      global.removeEventListener("hashchange", selectHash);
+    };
+    return selectHash();
   }
 
   function ensureManifest() {
@@ -557,8 +718,10 @@
           titleEl.textContent = title;
         }
         if (mdName === "Commands.md") {
+          initScriptExamples(innerSlot);
           return injectCommandsSearch(innerSlot);
         }
+        return initScriptExamples(innerSlot);
       });
   }
 

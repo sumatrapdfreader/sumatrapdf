@@ -168,7 +168,7 @@ void PDFScriptWnd::OnExample() {
 }
 
 void PDFScriptWnd::OnHelp() {
-    SumatraLaunchBrowser(Str(kPDFScriptHelpUrl));
+    LaunchDocumentation(StrL(kPDFScriptHelpDocUri));
 }
 
 void PDFScriptWnd::OnCancel() {

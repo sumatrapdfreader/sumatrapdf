@@ -17,4 +17,4 @@ TempStr ExpandPDFScript(Str script, const StrVec& args);
 void StartPDFScript(Str script, const StrVec& args, const Func1<PDFScriptResult*>& onDone);
 void ShowPDFScriptDialog(MainWindow* win);
 
-constexpr const char* kPDFScriptHelpUrl = "https://www.sumatrapdfreader.org/docs/Run-PDF-script";
+constexpr char kPDFScriptHelpDocUri[] = "/Run-PDF-script";

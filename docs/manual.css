@@ -457,3 +457,64 @@ html[data-theme="dark"] .notion-page a:hover {
   line-height: 1.4;
   letter-spacing: -0.005em;
 }
+
+.script-example-list {
+  line-height: 1.8;
+  color: var(--text-secondary);
+}
+
+.script-example-list a {
+  color: inherit;
+  text-decoration: none;
+}
+
+.script-example-list a:hover {
+  text-decoration: underline;
+}
+
+.script-example-list [aria-current="true"] {
+  color: #000;
+}
+
+html[data-theme="dark"] .script-example-list [aria-current="true"] {
+  color: var(--text-primary);
+}
+
+.script-example-dot,
+.script-example-hint {
+  color: var(--text-secondary);
+}
+
+.script-example-hint {
+  font-size: 0.9em;
+}
+
+.script-example-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+}
+
+.script-example-arrows {
+  display: flex;
+  gap: 0.5rem;
+}
+
+.script-example-arrows button {
+  padding: 0.15rem 0.6rem;
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  background: var(--bg-elevated);
+  color: var(--text-secondary);
+  font-size: 1.2rem;
+  cursor: pointer;
+}
+
+.script-example-arrows button:hover {
+  color: var(--text-primary);
+}
+
+.script-example-content[aria-busy="true"] {
+  opacity: 0.6;
+}

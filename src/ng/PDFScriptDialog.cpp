@@ -175,7 +175,7 @@ void PDFScriptView::OnRun(PDFScriptView*, gp::Ctx*, const gp::ClickEvent*) {
 }
 
 void PDFScriptView::OnHelp(PDFScriptView*, gp::Ctx*, const gp::ClickEvent*) {
-    SumatraLaunchBrowser(Str(kPDFScriptHelpUrl));
+    LaunchDocumentation(StrL(kPDFScriptHelpDocUri));
 }
 
 void PDFScriptView::OnCancel(PDFScriptView*, gp::Ctx*, const gp::ClickEvent*) {
