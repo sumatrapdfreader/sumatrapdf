@@ -5,6 +5,7 @@
 #include "base/File.h"
 #include "base/ScopedWin.h"
 #include "base/Win.h"
+#include "base/CmdLineArgs.h"
 #include "base/Timer.h"
 
 #include "gui/Dpi.h"
@@ -1044,8 +1045,8 @@ void RestartElevatedForAllUsers(Flags* cli) {
         cmdLine = str::JoinTemp(cmdLine, StrL(" -log"));
     }
     Str dir = cli->installDir;
-    cmdLine = str::JoinTemp(cmdLine, StrL(" -install-dir \""), dir);
-    cmdLine = str::JoinTemp(cmdLine, StrL("\""));
+    // a dir ending in \ must not escape the closing quote
+    cmdLine = str::JoinTemp(cmdLine, StrL(" -install-dir "), QuoteCmdLineArgTemp(dir));
     logf("LaunchElevated('%s', '%s')\n", exePath, cmdLine);
     bool ok = LaunchElevated(exePath, cmdLine);
     if (!ok) {
