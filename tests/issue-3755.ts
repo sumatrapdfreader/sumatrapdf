@@ -102,8 +102,10 @@ export async function testit(): Promise<void> {
       throw new Error(`issue-3755: a long touchpad swipe did not turn the page (still ${afterLongSwipe})`);
     }
 
-    // a wheel notch turns exactly one page
+    // a wheel notch turns exactly one page. A modifier stuck down meanwhile
+    // (RDP does that here) would make it a zoom or a horizontal scroll
     await sleep(1200);
+    await ensureModifierKeysUp();
     wheel(-WHEEL_DELTA);
     await client.waitForRenderIdle();
     const afterNotch = await currentPage(client);
