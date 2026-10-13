@@ -17,6 +17,8 @@
 #include "DocController.h"
 #include "DisplayMode.h"
 #include "EngineBase.h"
+#include "base/GuessFileType.h"
+#include "EngineAll.h"
 #include "DisplayModel.h"
 #include "MainWindow.h"
 #include "gui/AppShell.h"
@@ -359,6 +361,10 @@ TempStr RefHoverResultTemp(Str action, int x, int y, int* exitCodeOut) {
         }
         int srcPage = 0;
         IPageElement* el = dm->GetElementAtPos(doc, &srcPage);
+        // TryLock lookup misses while a render holds the page lock; wait instead
+        if (!el && dm->ValidPageNo(srcPage)) {
+            el = EngineMupdfElementAtPosWait(dm->GetEngine(), srcPage, dm->CvtFromScreen(doc, srcPage));
+        }
         RefHoverOnCanvasMouseMove(win->refHover, win, win->ctrl, win->linkHandler, dm, doc.x, doc.y, el, srcPage, 0);
         RefHoverState* s = win->refHover;
         if (!s || (s->showLeftMs < 0 && !s->visible)) {

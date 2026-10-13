@@ -1234,7 +1234,12 @@ TempStr RefHoverResultTemp(Str action, int x, int y, int* exitCodeOut) {
         }
         win->refHover->ctrl = win->ctrl;
         win->refHover->linkHandler = win->linkHandler;
-        IPageElement* el = dm->GetElementAtPos({x, y}, nullptr);
+        // TryLock lookup misses while a render holds the page lock; wait instead
+        int pageNo = 0;
+        IPageElement* el = dm->GetElementAtPos({x, y}, &pageNo);
+        if (!el && dm->ValidPageNo(pageNo)) {
+            el = EngineMupdfElementAtPosWait(dm->GetEngine(), pageNo, dm->CvtFromScreen({x, y}, pageNo));
+        }
         if (!RefHoverScheduleLink(win->refHover, win->hwndCanvas, dm, x, y, el, 0)) {
             if (exitCodeOut) {
                 *exitCodeOut = 1;
