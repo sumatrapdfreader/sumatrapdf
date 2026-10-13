@@ -2237,7 +2237,10 @@ void CloseAnnotationUiForTab(WindowTab* tab) {
         return;
     }
     MainWindow* win = tab->win;
-    if (win && win->CurrentTab() == tab) {
+    AnnotEditToolbar* tb = win ? win->annotEditToolbar : nullptr;
+    // a deleted tab is no longer current but the row can still be bound to it
+    bool isRowTab = tb && tb->tab == tab;
+    if (win && (win->CurrentTab() == tab || isRowTab)) {
         HideAnnotEditToolbar(win);
     }
     // Not just for the current tab: by the time a tab is deleted it has already
