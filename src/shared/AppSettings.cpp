@@ -1660,11 +1660,9 @@ bool SetSettingsValueFromStr(Str path, Str value) {
     if (!FindSettingInStruct(&gSettingsInfo, (u8*)gSettings, {}, path, &type, &p)) {
         return false;
     }
-#if !defined(SUMATRA_NG)
     // snapshot the settings that need an explicit apply (tabs, menu bar, ...)
     // before we overwrite them, so we can act on what actually changed
     SettingsApplyState before = GetSettingsApplyState();
-#endif
     switch (type) {
         case SettingType::Bool:
             *(bool*)p = str::EqI(value, StrL("true")) || str::Eq(value, StrL("1"));
@@ -1694,9 +1692,7 @@ bool SetSettingsValueFromStr(Str path, Str value) {
     // reload so everything derived from settings (theme, fonts, parsed colors,
     // custom commands, accelerators ...) is re-computed and applied
     ForceReloadSettings();
-#if !defined(SUMATRA_NG)
     ApplyChangedSettingsAndRelayout(before);
-#endif
     return true;
 }
 

@@ -109,11 +109,10 @@ struct Flags {
     bool testApp = false;
     bool testPlugin = false;
     bool testPreview = false;
-    bool dumpExif = false;        // -dump-exif
-    bool dumpChm = false;         // -dump-chm
-    bool unitTests = false;       // -unit-tests (debug builds only)
-    bool regenThumbnails = false; // -regen-thumbnails: re-create the thumbnail cache and exit
-    bool forAi = false;           // -for-ai (AI-friendly unit test output)
+    bool dumpExif = false;  // -dump-exif
+    bool dumpChm = false;   // -dump-chm
+    bool unitTests = false; // -unit-tests (debug builds only)
+    bool forAi = false;     // -for-ai (AI-friendly unit test output)
     bool showPrintersDialog = false;
     bool crashOnOpen = false;
     // related to installer

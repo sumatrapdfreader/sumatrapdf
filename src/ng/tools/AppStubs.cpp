@@ -85,6 +85,12 @@ void ReloadSettingsUpdateWindows(bool) {}
 
 void MaybeRedrawHomePage() {}
 
+SettingsApplyState GetSettingsApplyState() {
+    return {};
+}
+
+void ApplyChangedSettingsAndRelayout(const SettingsApplyState&) {}
+
 SeqStrings gScrollbarModeNames = "windows\0smart\0overlay\0hidden\0";
 SeqStrings gToolbarModeNames = "show\0hide\0overlay\0";
 SeqStrings gToolbarPositionNames = "top\0bottom\0";

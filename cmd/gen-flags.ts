@@ -99,7 +99,6 @@ const args = [
     "NoDesktopShortcut", "no-desktop-shortcut",
     "StartPerfLog", "start-perf-log",
     "LogPerfFile", "log-perf-file",
-    "RegenThumbnails", "regen-thumbnails",
     "ConfigureRestrictedUse", "configure-restricted-use",
 ];
 

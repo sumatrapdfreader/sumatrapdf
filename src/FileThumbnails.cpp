@@ -66,9 +66,9 @@ void SaveThumbnail(FileState* fs) {
         return;
     }
     CLSID tmpClsid = GetGdiPlusEncoderClsid(L"image/png");
-    // encode next to the final name and rename: a reader (the app, while a
-    // -regen-thumbnails process writes) never sees a partial png, and a failed
-    // encode leaves no 0-byte png that reads back blank (issue #5932)
+    // encode next to the final name and rename: a reader never sees a partial
+    // png, and a failed encode leaves no 0-byte png that reads back blank
+    // (issue #5932)
     TempStr tmpPath = str::JoinTemp(thumbnailPath, StrL(".tmp"));
     WCHAR* pathW = CWStrTemp(tmpPath);
     Gdiplus::Status st = bmp->Save(pathW, &tmpClsid, nullptr);

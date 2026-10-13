@@ -2658,96 +2658,63 @@ static CreateThumbnailFromFileData* NewThumbnailData(FileState* fs) {
     return d;
 }
 
-// -regen-thumbnails: re-creates the thumbnail of every history entry whose
-// file still exists, writing straight to the cache; the app that started us
-// picks them up as they appear
-void RegenerateThumbnails() {
-    Vec<FileState*> list;
-    CollectThumbnailFiles(list);
-    int nDone = 0;
-    for (FileState* fs : list) {
-        logf("RegenerateThumbnails: '%s'\n", fs->filePath);
-        CreateThumbnailFromFileData* d = NewThumbnailData(fs);
-        Pixmap* bmp = RenderFileThumbnail(d);
-        delete d;
-        if (bmp) {
-            SetThumbnail(fs, bmp);
-            nDone++;
-        }
-        ResetTempArena();
-    }
-    logf("RegenerateThumbnails: %d of %d\n", nDone, len(list));
-}
-
 struct RegenerateThumbnailsData {
     Vec<CreateThumbnailFromFileData*> files;
 };
 
-// RegenerateThumbnails() on a thread, one file at a time
+struct ThumbnailProgress {
+    Str name;
+    int done = 0;
+    int total = 0;
+};
+
+// "Creating thumbnail 3 of 12: file.pdf" on every window showing the home page
+static void ShowThumbnailProgress(ThumbnailProgress* p) {
+    TempStr msg = fmt(Tr("Creating thumbnail %d of %d: %s").s, p->done, p->total, p->name);
+    for (MainWindow* win : gWindows) {
+        if (!win->IsCurrentTabAbout()) {
+            continue;
+        }
+        NotificationCreateArgs args;
+        args.win = win;
+        args.groupId = kNotifThumbnailProgress;
+        args.plainText = true;
+        args.msg = msg;
+        ShowNotification(args);
+    }
+    str::Free(p->name);
+    delete p;
+}
+
+static void HideThumbnailProgress() {
+    for (MainWindow* win : gWindows) {
+        RemoveNotificationsForGroup(win, kNotifThumbnailProgress);
+    }
+}
+
+// renders one file at a time; each finished thumbnail is set and shown on
+// the UI thread before the next file starts
 static void RegenerateThumbnailsThread(RegenerateThumbnailsData* data) {
+    int total = len(data->files);
+    int done = 0;
     for (CreateThumbnailFromFileData* d : data->files) {
+        auto* p = new ThumbnailProgress();
+        p->name = str::Dup(path::GetBaseNameTemp(d->filePath));
+        p->done = ++done;
+        p->total = total;
+        uitask::Post(MkFunc0<ThumbnailProgress>(ShowThumbnailProgress, p), "ThumbnailProgress");
         d->bmp = RenderFileThumbnail(d);
         auto fn = MkFunc0<CreateThumbnailFromFileData>(CreateThumbnailFromFileFinish, d);
         uitask::Post(fn, "SetThumbnailFromFile");
         ResetTempArena();
     }
+    uitask::Post(MkFunc0Void(HideThumbnailProgress), "ThumbnailProgressDone");
     delete data;
     DestroyTempArena();
 }
 
-// where the app can't run itself in the background (wasm, a failed launch)
-static void RegenerateThumbnailsAsync() {
-    Vec<FileState*> list;
-    CollectThumbnailFiles(list);
-    auto* data = new RegenerateThumbnailsData();
-    for (FileState* fs : list) {
-        VecAppend(data->files, NewThumbnailData(fs));
-    }
-    auto fn = MkFunc0<RegenerateThumbnailsData>(RegenerateThumbnailsThread, data);
-    RunAsync(fn, StrL("RegenerateThumbnails"));
-}
-
-// a thumbnail the background process wrote shows up on the next paint
-static void OnThumbnailRegenTick() {
-    Vec<FileState*>* states = FileHistoryStates();
-    if (!states) {
-        return;
-    }
-    bool changed = false;
-    for (FileState* fs : *states) {
-        if (fs->thumbnail || !LoadThumbnail(fs)) {
-            continue;
-        }
-        HomePageThumbnailChanged(fs);
-        changed = true;
-    }
-    if (changed) {
-        MaybeRedrawHomePage();
-    }
-}
-
-struct ThumbnailRegenWatch {
-    ChildProcess* process = nullptr;
-};
-
-// the UI picks up what the -regen-thumbnails process wrote so far every half
-// second and once more when it exits
-static void ThumbnailRegenWatchThread(ThumbnailRegenWatch* w) {
-    constexpr int kTickMs = 500;
-    for (;;) {
-        bool exited = ChildProcessHasExited(w->process, kTickMs);
-        uitask::Post(MkFunc0Void(OnThumbnailRegenTick), "ThumbnailRegenTick");
-        if (exited) {
-            break;
-        }
-    }
-    CloseChildProcess(w->process);
-    delete w;
-    DestroyTempArena();
-}
-
 // the cached thumbnails were made for the other ThumbnailsType: drop them and
-// have a background SumatraPDF re-create those of the files that still exist
+// re-create those of the files that still exist on a background thread
 void OnThumbnailsTypeChanged() {
     logf("OnThumbnailsTypeChanged: '%s'\n", gSettings->thumbnailsType);
     Vec<FileState*>* states = FileHistoryStates();
@@ -2764,16 +2731,14 @@ void OnThumbnailsTypeChanged() {
         return;
     }
 
-    TempStr cmdLine = fmt("\"%s\" -regen-thumbnails -appdata \"%s\"", GetSelfExePathTemp(), GetAppDataDirTemp());
-    ChildProcess* process = StartChildProcess(cmdLine);
-    if (!process) {
-        logf("OnThumbnailsTypeChanged: couldn't start '%s', regenerating in-process\n", cmdLine);
-        RegenerateThumbnailsAsync();
-        return;
+    Vec<FileState*> list;
+    CollectThumbnailFiles(list);
+    auto* data = new RegenerateThumbnailsData();
+    for (FileState* fs : list) {
+        VecAppend(data->files, NewThumbnailData(fs));
     }
-    auto* w = new ThumbnailRegenWatch();
-    w->process = process;
-    RunAsync(MkFunc0<ThumbnailRegenWatch>(ThumbnailRegenWatchThread, w), StrL("ThumbnailRegenWatch"));
+    auto fn = MkFunc0<RegenerateThumbnailsData>(RegenerateThumbnailsThread, data);
+    RunAsync(fn, StrL("RegenerateThumbnails"));
 }
 
 int SidebarExtraDx(MainWindow* win) {
@@ -2802,5 +2767,6 @@ SettingsApplyState GetSettingsApplyState() {
     s.explorerQuickLook = p->explorerQuickLook;
     s.ebookLayout = EbookLayoutSnapshot();
     s.aiChatStyle = AIChatStyleSnapshot();
+    s.thumbnailsType = str::Dup(p->thumbnailsType);
     return s;
 }

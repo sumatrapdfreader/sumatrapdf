@@ -308,6 +308,8 @@ struct SettingsApplyState {
     Str ebookLayout;
     // owned copy of the AI chat look (AIChat section, BgColor); freed the same way
     Str aiChatStyle;
+    // owned copy of ThumbnailsType; freed the same way
+    Str thumbnailsType;
 };
 SettingsApplyState GetSettingsApplyState();
 void ApplyChangedSettingsAndRelayout(const SettingsApplyState& before);

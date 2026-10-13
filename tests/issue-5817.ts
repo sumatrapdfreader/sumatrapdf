@@ -1,7 +1,7 @@
 // ThumbnailsType = full renders the whole first page into a portrait frame;
 // legacy keeps the old landscape crop of the page's top. Changing the setting
-// while the app runs empties the cache and a background SumatraPDF process
-// re-creates the thumbnails of the files that still exist (issue #5817).
+// while the app runs empties the cache and a background thread re-creates
+// the thumbnails of the files that still exist (issue #5817).
 import { existsSync, mkdirSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 import { loadPng, makeOnePagePdf, runStandalone, tmpPath } from "./util.ts";
@@ -30,8 +30,8 @@ function writeSettings(appData: string, thumbnailsType: string): void {
   writeFileSync(join(appData, "SumatraPDF-settings.txt"), lines.join("\n"));
 }
 
-// the app saves its settings (with the file history the background process
-// reads) a moment after opening the files
+// the app saves its settings (which the test then edits) a moment after
+// opening the files
 async function waitForSavedHistory(appData: string, names: string[]): Promise<void> {
   const path = join(appData, "SumatraPDF-settings.txt");
   const deadline = Date.now() + 15_000;
@@ -105,8 +105,8 @@ export async function testit(): Promise<void> {
   const thumbPortrait = thumbnailPath(appData, portrait);
   const thumbLandscape = thumbnailPath(appData, landscape);
 
-  // not -for-testing: the background process reads the file history from the
-  // saved settings, which -for-testing never writes
+  // not -for-testing: the test edits the saved settings, which -for-testing
+  // never writes
   const { proc, client } = await launchControlled(["-appdata", appData, portrait, landscape], { saveSettings: true });
   try {
     await client.waitForRenderIdle();
@@ -121,7 +121,7 @@ export async function testit(): Promise<void> {
     }
 
     // editing the settings file reloads it; the change re-creates the cache
-    // in a background process
+    // on a background thread
     await waitForSavedHistory(appData, ["portrait.pdf", "landscape.pdf"]);
     setThumbnailsType(appData, "legacy");
     await waitForThumb(thumbPortrait, "regenerated legacy portrait", isLegacy, 30_000);

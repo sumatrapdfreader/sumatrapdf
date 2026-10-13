@@ -401,6 +401,12 @@ void ApplyChangedSettingsAndRelayout(const SettingsApplyState& before) {
         }
     }
 
+    bool thumbnailsTypeChanged = !str::EqI(before.thumbnailsType, p->thumbnailsType);
+    str::Free(before.thumbnailsType);
+    if (thumbnailsTypeChanged) {
+        OnThumbnailsTypeChanged();
+    }
+
     for (MainWindow* w : gWindows) {
         RebuildMenuBar(w);
         w->lastViewPortSize = Size{};
@@ -6896,14 +6902,6 @@ int GpuiMain(int argc, char** argv) {
         SetCurrentLang(gFlags->lang);
     }
     UpdateSettings(*gFlags);
-    // started by a running SumatraPDF whose ThumbnailsType changed; no window,
-    // no settings saved
-    if (gFlags->regenThumbnails) {
-        RegenerateThumbnails();
-        CleanUpSettings();
-        uitask::Destroy();
-        return 0;
-    }
     // the console-only dump modes; orig runs them from WinMain the same way
     if (gFlags->dumpExif) {
         gLogToConsole = false;

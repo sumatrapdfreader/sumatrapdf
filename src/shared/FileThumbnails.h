@@ -20,7 +20,6 @@ Size ThumbnailDrawSize(Size thumb, Size frame);
 bool ThumbnailSizeMatchesType(Size sz);
 Size PngSizeFromData(Str data);
 void OnThumbnailsTypeChanged();
-void RegenerateThumbnails();
 
 Pixmap* LoadThumbnail(FileState* fs);
 bool HasThumbnail(FileState* fs);

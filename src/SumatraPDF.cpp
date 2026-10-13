@@ -990,6 +990,7 @@ void CreateThumbnailFromFileFinish(CreateThumbnailFromFileData* d) {
         FileState* fs = FileHistoryFindByPath(d->filePath);
         SetThumbnail(fs, d->bmp);
         d->bmp = nullptr;
+        MaybeRedrawHomePage();
     }
     delete d;
 }
@@ -9120,6 +9121,12 @@ void ApplyChangedSettingsAndRelayout(const SettingsApplyState& before) {
         }
     }
 
+    bool thumbnailsTypeChanged = !str::EqI(before.thumbnailsType, p->thumbnailsType);
+    str::Free(before.thumbnailsType);
+    if (thumbnailsTypeChanged) {
+        OnThumbnailsTypeChanged();
+    }
+
     // UseTabs converts existing windows <-> tabs (closes and reopens windows);
     // post it so it runs after the settings dialog has been torn down
     if (before.useTabs != p->useTabs) {
@@ -15884,14 +15891,6 @@ int APIENTRY WinMain(_In_ HINSTANCE /*hInstance*/, _In_opt_ HINSTANCE /*hPrevIns
 
     if (flags.testRenderPage) {
         TestRenderPage(flags);
-        ShutdownCommon();
-        return 0;
-    }
-
-    // started by a running SumatraPDF whose ThumbnailsType changed; no window,
-    // no settings saved
-    if (flags.regenThumbnails) {
-        RegenerateThumbnails();
         ShutdownCommon();
         return 0;
     }
