@@ -947,6 +947,7 @@ static void FillMouseEvent(VirtMouseEvent& ev, VirtCtrl* target, Point ptWindow,
     ev.isCtrl = IsCtrlPressed() || (wp & MK_CONTROL) != 0;
     ev.isShift = IsShiftPressed() || (wp & MK_SHIFT) != 0;
     ev.isAlt = IsAltPressed();
+    ev.isLeftDown = (wp & MK_LBUTTON) != 0;
 }
 
 // walks up from target until someone consumes the event

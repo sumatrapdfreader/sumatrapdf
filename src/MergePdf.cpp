@@ -841,6 +841,10 @@ void MergeGrid::OnGridMouseMove(VirtMouseEvent* ev) {
         cursor = onBtn ? CursorId::Hand : CursorId::None;
         return;
     }
+    // SetCapture synthesizes a move at the real cursor: not a gesture
+    if (!ev->isLeftDown) {
+        return;
+    }
     // captured: ev->pt is in window coords
     Point origin = OriginInWindow();
     Point pt{ev->ptWindow.x - origin.x, ev->ptWindow.y - origin.y};

@@ -66,6 +66,7 @@ struct VirtMouseEvent {
     bool isCtrl = false;
     bool isShift = false;
     bool isAlt = false;
+    bool isLeftDown = false;
     // true = consume (stop bubbling)
     bool didHandle = false;
 };

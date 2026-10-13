@@ -223,9 +223,11 @@ export async function testit(): Promise<void> {
     await mouse(client, hwnd, WM_LBUTTONUP, 0, to);
     await wantItems(client, "0:4s,0:1,0:2r,0:3", "dragging didn't move page 4 to the front");
 
-    // Ctrl click adds a page to the selection
+    // Ctrl click adds a page to the selection. SetCapture synthesizes a
+    // buttonless move at the real cursor, which must not turn it into a drag
     s = await merge(client);
     await mouse(client, hwnd, WM_LBUTTONDOWN, MK_LBUTTON | MK_CONTROL, center(pageRect(s, 3)));
+    await mouse(client, hwnd, WM_MOUSEMOVE, MK_CONTROL, center(pageRect(s, 0)));
     await mouse(client, hwnd, WM_LBUTTONUP, MK_CONTROL, center(pageRect(s, 3)));
     await wantItems(client, "0:4s,0:1,0:2r,0:3s", "Ctrl click didn't add to the selection");
 
