@@ -225,7 +225,7 @@ void TabsSelect(MainWindow* win, int tabIndex) {
         tabIndex = 0;
     }
     WindowTab* tab = win->GetTab(tabIndex);
-    if (tab == win->CurrentTab()) {
+    if (IsCurrentTab(win, tab)) {
         return;
     }
     SaveCurrentWindowTab(win);
@@ -269,7 +269,7 @@ void RemoveTab(WindowTab* tab) {
     UpdateTabFileDisplayStateForTab(tab);
     RemoveNotificationsForTab(tab);
     VecRemove(*win->tabSelectionHistory, tab);
-    bool closedCurrentTab = (tab == win->CurrentTab());
+    bool closedCurrentTab = IsCurrentTab(win, tab);
     VecRemoveAt(win->tabs, idx);
     if (closedCurrentTab) {
         win->ctrl = nullptr;

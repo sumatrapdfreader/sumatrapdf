@@ -1873,7 +1873,7 @@ static bool NotifShownNow(MainWindow* win, NotificationWnd* n) {
     if (n->win != win) {
         return false;
     }
-    return !n->tab || n->tab == win->CurrentTab();
+    return !n->tab || IsCurrentTab(win, n->tab);
 }
 
 // orig's NotificationWnd::Layout limits the text to the parent's width, so the

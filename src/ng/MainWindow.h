@@ -565,6 +565,7 @@ MainWindow* FindMainWindowByHwnd(HWND);
 WindowTab* FindTabByFilePath(Str path, MainWindow* limitWin = nullptr);
 bool IsMainWindowValid(MainWindow*);
 bool IsMainWindowValidAndNotClosing(MainWindow*);
+bool IsCurrentTab(MainWindow* win, WindowTab* tab);
 bool IsWindowTabValid(WindowTab*);
 extern Vec<MainWindow*> gWindows;
 void CleanRemoteDestNameInPlace(Str& destName);

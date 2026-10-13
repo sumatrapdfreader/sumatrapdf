@@ -1092,7 +1092,7 @@ void ReloadTab(WindowTab* tab) {
     }
     logf("ReloadTab: '%s'\n", tab->filePath);
     tab->reloadOnFocus = true;
-    if (tab == win->CurrentTab()) {
+    if (IsCurrentTab(win, tab)) {
         tab->autoReloadLeftMs = kAutoReloadDelayInMs;
     }
 }
@@ -2288,7 +2288,7 @@ void RerenderTabPage(WindowTab* tab, int pageNo) {
     }
     gRenderCache->Invalidate(dm, pageNo, dm->GetEngine()->PageMediabox(pageNo));
     MainWindow* win = tab->win;
-    if (win->CurrentTab() != tab) {
+    if (!IsCurrentTab(win, tab)) {
         return;
     }
     // the following paint queues the render; keep frames coming until it lands
@@ -2503,7 +2503,7 @@ static void ShowSaveAnnotationError(ShowErrorData* d, Str err) {
 bool SaveAnnotationsToExistingFile(WindowTab* tab) {
     MainWindow* win = nullptr;
     EngineBase* engine = GetLiveTabEngine(tab, &win);
-    if (!engine || win->CurrentTab() != tab) {
+    if (!engine || !IsCurrentTab(win, tab)) {
         return false;
     }
     Str path = engine->FilePath();
@@ -2545,7 +2545,7 @@ static void OnSaveAnnotsPathPicked(SaveAnnotsCtx* ctx, SavePathArgs* args) {
     }
     MainWindow* win = nullptr;
     EngineBase* engine = GetLiveTabEngine(tab, &win);
-    if (!engine || win->CurrentTab() != tab || !str::Eq(engine->FilePath(), srcPath)) {
+    if (!engine || !IsCurrentTab(win, tab) || !str::Eq(engine->FilePath(), srcPath)) {
         onDone.Call(false);
         return;
     }
@@ -2581,7 +2581,7 @@ static void OnSaveAnnotsPathPicked(SaveAnnotsCtx* ctx, SavePathArgs* args) {
 void SaveAnnotationsToMaybeNewPdfFile(WindowTab* tab, const Func1<bool>& onDone) {
     MainWindow* win = nullptr;
     EngineBase* engine = GetLiveTabEngine(tab, &win);
-    if (!engine || win->CurrentTab() != tab) {
+    if (!engine || !IsCurrentTab(win, tab)) {
         onDone.Call(false);
         return;
     }
@@ -3274,7 +3274,7 @@ void CloseTab(WindowTab* tab, bool quitIfLast) {
         return;
     }
     logf("CloseTab: '%s', quitIfLast: %d\n", tab->filePath, (int)quitIfLast);
-    if (tab == win->CurrentTab()) {
+    if (IsCurrentTab(win, tab)) {
         // Cancel while win->ctrl still belongs to the closing tab. The toolbar
         // update in cancellation needs CurrentTab and ctrl to agree.
         CancelAnnotationPlacement(win);
@@ -3287,7 +3287,7 @@ void CloseTab(WindowTab* tab, bool quitIfLast) {
     }
     // the find UI holds the closing tab's document; so does the selection
     // toolbar, which would otherwise stay on screen after the tab is gone
-    if (tab == win->CurrentTab()) {
+    if (IsCurrentTab(win, tab)) {
         HideFindBar(win);
         HideSelectionToolbar(win);
     }
@@ -4089,7 +4089,7 @@ static ClipboardImageRead gClipboardImageRead;
 static void ClipboardImageReady(void*, gp::App*, gp::Window*, const gp::ClipboardItem& item) {
     ClipboardImageRead op = gClipboardImageRead;
     gClipboardImageRead = {};
-    if (!IsMainWindowValidAndNotClosing(op.win) || op.win->CurrentTab() != op.tab) {
+    if (!IsMainWindowValidAndNotClosing(op.win) || !IsCurrentTab(op.win, op.tab)) {
         return;
     }
     Pixmap* image = nullptr;
@@ -4166,7 +4166,7 @@ struct ImagePickCtx {
 static ImagePickCtx gImagePick;
 
 static void OnImagePicked(ImagePickCtx* ctx, Str path) {
-    if (!IsMainWindowValidAndNotClosing(ctx->win) || ctx->win->CurrentTab() != ctx->tab) {
+    if (!IsMainWindowValidAndNotClosing(ctx->win) || !IsCurrentTab(ctx->win, ctx->tab)) {
         return;
     }
     InsertImageAtPath(ctx->win, ctx->pt, path);

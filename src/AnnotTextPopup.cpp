@@ -444,7 +444,7 @@ void RepositionAnnotationTextPopup(MainWindow* win) {
     if (!popup || !popup->host->IsVisible()) {
         return;
     }
-    bool sameTab = popup->tab == win->CurrentTab();
+    bool sameTab = IsCurrentTab(win, popup->tab);
     if (!sameTab || !PositionPopup(popup)) {
         HideAnnotationTextPopup(win);
     }

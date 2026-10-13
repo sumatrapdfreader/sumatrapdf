@@ -791,7 +791,7 @@ NotificationWnd* ShowNotification(const NotificationCreateArgs& argsIn) {
     // already selected another tab). Hide if this tab is not current.
     if (args.tab && wnd->delayTimerId == 0) {
         MainWindow* win = FindMainWindowByHwnd(args.hwndParent);
-        if (win && win->CurrentTab() != args.tab) {
+        if (win && !IsCurrentTab(win, args.tab)) {
             ShowWindow(wnd->hwnd, SW_HIDE);
         } else {
             BringWindowToTop(wnd->hwnd);

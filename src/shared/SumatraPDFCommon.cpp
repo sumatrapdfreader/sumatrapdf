@@ -264,7 +264,7 @@ MainWindow* FindMainWindowBySyncFile(Str path, bool focusTab) {
         }
         // bring a background tab to the foreground
         for (WindowTab* tab : win->Tabs()) {
-            if (tab != win->CurrentTab() && tab->AsFixed() && tab->AsFixed()->pdfSync &&
+            if (!IsCurrentTab(win, tab) && tab->AsFixed() && tab->AsFixed()->pdfSync &&
                 tab->AsFixed()->pdfSync->SourceToDoc(path, 0, 0, &page, rects) != PDFSYNCERR_UNKNOWN_SOURCEFILE) {
                 TabsSelect(win, win->GetTabIdx(tab));
                 return win;
@@ -960,7 +960,7 @@ void ReloadEbookLayoutDocs() {
             if (!LayoutFollowsEbookSettings(engine)) {
                 continue;
             }
-            if (tab == w->CurrentTab()) {
+            if (IsCurrentTab(w, tab)) {
                 ReloadDocument(w, false);
             } else {
                 tab->reloadOnFocus = true;
@@ -1279,7 +1279,7 @@ void SelectTabInWindow(WindowTab* tab) {
         return;
     }
     auto* win = tab->win;
-    if (tab == win->CurrentTab()) {
+    if (IsCurrentTab(win, tab)) {
         return;
     }
     TabsSelect(win, win->GetTabIdx(tab));

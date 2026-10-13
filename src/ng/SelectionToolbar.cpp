@@ -204,7 +204,7 @@ void UpdateSelectionToolbarPosition(MainWindow* win) {
         }
         return;
     }
-    if (win->CurrentTab() != tb->tab) {
+    if (!IsCurrentTab(win, tb->tab)) {
         HideSelectionToolbar(win);
         if (win->showSelection) {
             ShowSelectionToolbar(win, SelToolbarShow::Settled);

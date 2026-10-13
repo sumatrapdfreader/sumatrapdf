@@ -296,7 +296,7 @@ void ReadingBarForgetTab(WindowTab* tab) {
         return;
     }
     MainWindow* win = tab->win;
-    bool wasCurrent = win && win->CurrentTab() == tab;
+    bool wasCurrent = IsCurrentTab(win, tab);
     tab->readingBar = {};
     tab->readingBar.yFrac = kDefaultYFrac;
     if (wasCurrent) {

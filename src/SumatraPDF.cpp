@@ -671,7 +671,7 @@ static void UpdateSidebarDisplayState(WindowTab* tab, FileState* fs) {
     MainWindow* win = tab->win;
     fs->showToc = tab->showToc;
     str::ReplaceWithCopy(&fs->sidebarView, SidebarViewToStr(tab->sidebarView));
-    if (win->tocLoaded && tab == win->CurrentTab()) {
+    if (win->tocLoaded && IsCurrentTab(win, tab)) {
         TocTree* tocTree = tab->ctrl->GetToc();
         UpdateTocExpansionState(tab->tocState, win->tocTreeView, tocTree);
     }
@@ -911,7 +911,7 @@ void ControllerCallbackHandler::TocChanged(DocController* ctrl) {
         return;
     }
     MainWindow* win = tab->win;
-    if (!win || win->CurrentTab() != tab) {
+    if (!IsCurrentTab(win, tab)) {
         tab->currToc = nullptr;
         return;
     }
@@ -3012,7 +3012,7 @@ void ReloadTab(WindowTab* tab) {
         return;
     }
     tab->reloadOnFocus = true;
-    if (tab == win->CurrentTab()) {
+    if (IsCurrentTab(win, tab)) {
         // delay the reload slightly, in case we get another request immediately after this one
         SetTimer(win->hwndCanvas, kAutoReloadTimerID, kAutoReloadDelayInMs, nullptr);
     }
@@ -3189,7 +3189,7 @@ static void ShowLoadErrorInTab(MainWindow* win, LoadArgs* args, Str path) {
     if (!isNewTab) {
         SetTabLoadError(tab, path);
     }
-    if (tab == win->CurrentTab()) {
+    if (IsCurrentTab(win, tab)) {
         // a failed load into a background tab must not clobber win->ctrl,
         // which mirrors the current tab's (possibly loaded) document
         win->ctrl = nullptr;
@@ -3249,8 +3249,8 @@ MainWindow* LoadDocumentFinish(LoadArgs* args) {
     win->DeleteToolTip();
 
     if (targetTab) {
-        ReportIf(targetTab != win->CurrentTab());
-        if (targetTab != win->CurrentTab()) {
+        ReportIf(!IsCurrentTab(win, targetTab));
+        if (!IsCurrentTab(win, targetTab)) {
             DeleteOrphanedController(win, args->ctrl);
             return nullptr;
         }
@@ -3484,7 +3484,7 @@ static void CALLBACK LoadingMessageTimerProc(HWND /*hwnd*/, UINT /*msg*/, UINT_P
                 continue;
             }
             hasLoadingTabs = true;
-            if (tab == win->CurrentTab() && tab->loadStartedAt != 0 && now - tab->loadStartedAt >= 1000) {
+            if (IsCurrentTab(win, tab) && tab->loadStartedAt != 0 && now - tab->loadStartedAt >= 1000) {
                 HwndInvalidate(win->hwndCanvas);
             }
         }
@@ -3559,7 +3559,7 @@ static void DispatchQueuedDocumentLoads() {
         int idx = 0;
         for (int i = 0; i < len(gLoadQueue); i++) {
             LoadArgs* args = gLoadQueue[i]->args;
-            if (IsLoadTargetValid(args) && args->targetTab && args->targetTab == args->win->CurrentTab()) {
+            if (IsLoadTargetValid(args) && IsCurrentTab(args->win, args->targetTab)) {
                 idx = i;
                 break;
             }
@@ -3656,7 +3656,7 @@ static void LoadDocumentAsyncFinish(LoadDocumentAsyncData* d) {
         args->onFinished.Call(false);
         return;
     }
-    if (args->targetTab && args->targetTab != win->CurrentTab()) {
+    if (args->targetTab && !IsCurrentTab(win, args->targetTab)) {
         WindowTab* tab = args->targetTab;
         tab->loadState = WindowTab::LoadState::LoadedPending;
         // a background reload of a previously failed tab succeeded
@@ -3691,7 +3691,7 @@ static void UpdateCopyProgressUI(CopyProgressUITask* task) {
     ReportIf(tab->win != win);
     tab->loadCopyBytesCopied = task->bytesCopied;
     tab->loadCopyBytesTotal = task->bytesTotal;
-    if (tab == win->CurrentTab()) {
+    if (IsCurrentTab(win, tab)) {
         HwndInvalidate(tab->win->hwndCanvas);
     }
 }
@@ -3891,7 +3891,7 @@ void StartLoadDocument(LoadArgs* argsIn) {
     if (argsIn->targetTab) {
         argsIn->targetTab->skipHistory = argsIn->skipHistory;
         argsIn->targetTab->loadState = WindowTab::LoadState::Loading;
-        if (argsIn->targetTab == win->CurrentTab()) {
+        if (IsCurrentTab(win, argsIn->targetTab)) {
             HwndInvalidate(win->hwndCanvas);
         }
     } else if (SettingsUseTabs() && !argsIn->forceReuse) {
@@ -3990,7 +3990,7 @@ void StartLoadDocument(LoadArgs* argsIn) {
             // is not current, defer attach the same way LoadDocumentAsyncFinish
             // does — LoadModelIntoTab will call LoadDocumentFinish later.
             // Without this we ReportIf and drop the controller (crash 8c4d3ae8).
-            if (args->targetTab && args->targetTab != win->CurrentTab()) {
+            if (args->targetTab && !IsCurrentTab(win, args->targetTab)) {
                 WindowTab* tab = args->targetTab;
                 tab->loadState = WindowTab::LoadState::LoadedPending;
                 tab->pendingLoadArgs = args;
@@ -4458,7 +4458,7 @@ void RerenderTabPage(WindowTab* tab, int pageNo) {
     }
     gRenderCache->Invalidate(dm, pageNo, dm->GetEngine()->PageMediabox(pageNo));
     MainWindow* win = tab->win;
-    if (win->CurrentTab() != tab) {
+    if (!IsCurrentTab(win, tab)) {
         return;
     }
     if (win->pageThumbs && win->pageThumbs->active) {
@@ -4797,10 +4797,10 @@ bool SaveAnnotationsToExistingFile(WindowTab* tab) {
     if (!engine) {
         return false;
     }
-    if (win->CurrentTab() != tab) {
+    if (!IsCurrentTab(win, tab)) {
         SelectTabInWindow(tab);
         engine = GetLiveTabEngine(tab, &win);
-        if (!engine || win->CurrentTab() != tab) {
+        if (!engine || !IsCurrentTab(win, tab)) {
             return false;
         }
     }
@@ -4842,10 +4842,10 @@ bool SaveAnnotationsToMaybeNewPdfFile(WindowTab* tab) {
     if (!engine) {
         return false;
     }
-    if (win->CurrentTab() != tab) {
+    if (!IsCurrentTab(win, tab)) {
         SelectTabInWindow(tab);
         engine = GetLiveTabEngine(tab, &win);
-        if (!engine || win->CurrentTab() != tab) {
+        if (!engine || !IsCurrentTab(win, tab)) {
             return false;
         }
     }
@@ -4892,7 +4892,7 @@ bool SaveAnnotationsToMaybeNewPdfFile(WindowTab* tab) {
     // The file dialog pumps messages. The original tab might have been closed,
     // switched away from, or reloaded with a different engine while it was open.
     engine = GetLiveTabEngine(tab, &win);
-    if (!engine || engine != engineBeforeDialog || win->CurrentTab() != tab ||
+    if (!engine || engine != engineBeforeDialog || !IsCurrentTab(win, tab) ||
         !str::Eq(engine->FilePath(), srcFileName)) {
         return false;
     }
@@ -5140,7 +5140,7 @@ void CloseTab(WindowTab* tab, bool quitIfLast) {
     // Tab switches already call HideFindBar via SaveCurrentWindowTab.
     // Same for the floating selection/highlight toolbar: it holds a tab*
     // and would otherwise stay on screen after the tab is gone.
-    if (tab == win->CurrentTab()) {
+    if (IsCurrentTab(win, tab)) {
         HideFindBar(win);
         HideSelectionToolbar(win);
         HideAnnotationHoverOverlay(win);

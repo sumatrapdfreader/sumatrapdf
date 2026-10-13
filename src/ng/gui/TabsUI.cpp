@@ -439,7 +439,7 @@ static gp::El* BuildTab(MainWindow* win, gp::Ctx* cx, int idx, int tabDx) {
     // while the Ctrl+Tab list is open it previews the tab it points at, as
     // orig's TabsCtrl::SetHighlighted does
     WindowTab* preview = TabSwitcherHighlighted(win);
-    bool isSelected = preview ? (tab == preview) : (tab == win->CurrentTab());
+    bool isSelected = preview ? (tab == preview) : IsCurrentTab(win, tab);
     bool isUnderMouse = ui->highlighted == idx;
     Color bgCol = TabBgColor(tab, isSelected, isUnderMouse);
     Color textCol = TabTextColorForBackground(ThemeWindowTextColor(), bgCol);

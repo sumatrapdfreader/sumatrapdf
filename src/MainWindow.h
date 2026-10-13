@@ -811,6 +811,7 @@ MainWindow* FindMainWindowByHwnd(HWND);
 #endif
 bool IsMainWindowValid(MainWindow*);
 bool IsMainWindowValidAndNotClosing(MainWindow*);
+bool IsCurrentTab(MainWindow* win, WindowTab* tab);
 bool IsWindowTabValid(WindowTab*);
 extern Vec<MainWindow*> gWindows;
 extern bool gShowFrameRate;

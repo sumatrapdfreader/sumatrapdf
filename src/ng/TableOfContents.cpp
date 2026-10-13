@@ -61,7 +61,7 @@ void GoToTocLink(GoToTocLinkData* d) {
     }
     MainWindow* win = tab->win;
     // destination snapshot is invalid if the DocController has been replaced
-    if (!ctrl || !IsMainWindowValidAndNotClosing(win) || win->CurrentTab() != tab || tab->ctrl != ctrl) {
+    if (!ctrl || !IsMainWindowValidAndNotClosing(win) || !IsCurrentTab(win, tab) || tab->ctrl != ctrl) {
         return;
     }
 
@@ -588,7 +588,7 @@ void ReloadTocTree(WindowTab* tab) {
     }
     // the tree view only ever shows the current tab; another tab picks up the
     // new tree when it's switched to
-    if (win->CurrentTab() != tab || !win->tocLoaded) {
+    if (!IsCurrentTab(win, tab) || !win->tocLoaded) {
         tab->currToc = nullptr;
         return;
     }

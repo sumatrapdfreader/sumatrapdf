@@ -704,7 +704,7 @@ TempStr MarkdownFollowLinkResultTemp(Str href, bool follow, int* exitCodeOut) {
     for (int i = 0; i < len(gWindows); i++) {
         MainWindow* w = gWindows[i];
         for (WindowTab* tab : w->Tabs()) {
-            int isCurrent = tab == w->CurrentTab() ? 1 : 0;
+            int isCurrent = IsCurrentTab(w, tab) ? 1 : 0;
             int pageNo = tab->ctrl ? tab->ctrl->CurrentPageNo() : 0;
             out.Append(fmt("tab win=%d current=%d pageNo=%d file=%s\n", i, isCurrent, pageNo, tab->filePath));
         }
@@ -1645,7 +1645,7 @@ TempStr HiddenTabGoToPageResultTemp(int* exitCodeOut) {
 
     DisplayModel* dm = nullptr;
     for (WindowTab* tab : win->Tabs()) {
-        if (tab && tab != win->CurrentTab() && tab->AsFixed()) {
+        if (tab && !IsCurrentTab(win, tab) && tab->AsFixed()) {
             dm = tab->AsFixed();
             break;
         }

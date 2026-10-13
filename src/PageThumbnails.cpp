@@ -218,7 +218,7 @@ static void RenderThumbnailsInBackground(ThumbnailRenderWorker* worker) {
 // the tab's document, unless the window has moved on to another tab (which
 // may have closed this one)
 static DisplayModel* CurrentDoc(PageThumbnailsCtrl* c) {
-    if (!c->tab || !c->win || c->win->CurrentTab() != c->tab) {
+    if (!IsCurrentTab(c->win, c->tab)) {
         return nullptr;
     }
     return c->tab->AsFixed();

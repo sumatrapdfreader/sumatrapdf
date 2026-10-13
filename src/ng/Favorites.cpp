@@ -179,7 +179,7 @@ void ToggleFavoritesTab(MainWindow* win) {
     WindowTab* favTab = FindFavoritesTab(win);
     if (favTab) {
         int idx = win->GetTabIdx(favTab);
-        if (idx >= 0 && win->CurrentTab() != favTab) {
+        if (idx >= 0 && !IsCurrentTab(win, favTab)) {
             TabsSelect(win, idx);
         }
         PopulateFavTreeIfNeeded(win);

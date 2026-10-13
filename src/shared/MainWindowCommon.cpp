@@ -199,6 +199,11 @@ bool IsMainWindowValidAndNotClosing(MainWindow* win) {
     return IsMainWindowValid(win) && !win->isBeingClosed;
 }
 
+// false for a null window or tab, so deferred work can test both at once
+bool IsCurrentTab(MainWindow* win, WindowTab* tab) {
+    return win && tab && win->CurrentTab() == tab;
+}
+
 bool IsWindowTabValid(WindowTab* tab) {
     return FindMainWindowByTab(tab) != nullptr;
 }

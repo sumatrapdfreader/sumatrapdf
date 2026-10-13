@@ -349,7 +349,7 @@ void LoadLazyTabIfNeeded(WindowTab* tab) {
         return;
     }
     MainWindow* win = tab->win;
-    if (!IsMainWindowValidAndNotClosing(win) || win->CurrentTab() != tab) {
+    if (!IsMainWindowValidAndNotClosing(win) || !IsCurrentTab(win, tab)) {
         return;
     }
     // a file that has gone away keeps its placeholder tab

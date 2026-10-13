@@ -781,7 +781,7 @@ struct EmbedFontCtx {
 
 static void ApplyOtherFont(MainWindow* win, WindowTab* tab, Annotation* annot, Str family) {
     // the prompt ran a few frames, in which the annotation could have gone
-    if (!IsMainWindowValidAndNotClosing(win) || win->CurrentTab() != tab) {
+    if (!IsMainWindowValidAndNotClosing(win) || !IsCurrentTab(win, tab)) {
         return;
     }
     if (!AnnotationIsLive(annot) || tab->selectedAnnotation != annot) {
@@ -2261,7 +2261,7 @@ void UpdateAnnotationHoverOverlay(MainWindow* win, Point mousePos) {
     }
     AnnotationHoverOverlay* overlay = GetOrCreateAnnotationHoverOverlay(win);
     RectF bounds = GetRect(annot);
-    bool appearing = overlay->annot != annot || overlay->tab != win->CurrentTab() || !overlay->visible;
+    bool appearing = overlay->annot != annot || !IsCurrentTab(win, overlay->tab) || !overlay->visible;
     if (appearing) {
         overlay->hasMouseAnchor = false;
         DisplayModel* dm = win->AsFixed();

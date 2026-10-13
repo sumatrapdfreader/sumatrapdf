@@ -122,7 +122,7 @@ gp::El* AnnotTextPopupBuild(MainWindow* win, gp::Ctx* cx) {
         return nullptr;
     }
     DisplayModel* dm = win->AsFixed();
-    if (!dm || win->CurrentTab() != p->tab || !AnnotationIsLive(p->annot) || !dm->PageVisible(PageNo(p->annot))) {
+    if (!dm || !IsCurrentTab(win, p->tab) || !AnnotationIsLive(p->annot) || !dm->PageVisible(PageNo(p->annot))) {
         HideAnnotationTextPopup(win);
         return nullptr;
     }

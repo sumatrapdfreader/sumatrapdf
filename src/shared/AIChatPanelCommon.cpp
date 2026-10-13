@@ -346,7 +346,7 @@ static void OnAIChatUpdate(AIChatUpdateData* data) {
         return;
     }
     WindowTab* tab = FindAIChatUpdateTab(win, pid, data->sessionId);
-    bool isActiveTab = tab && tab == win->CurrentTab() && win->aiChatProvider == pid;
+    bool isActiveTab = IsCurrentTab(win, tab) && win->aiChatProvider == pid;
     ApplyAIChatUpdate(win, p, data, GetTabState(tab, pid), isActiveTab);
     FreeAIChatUpdateData(data);
     AIChatUpdateApplied(win);

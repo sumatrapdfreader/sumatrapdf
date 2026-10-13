@@ -132,7 +132,7 @@ void RemoveTab(WindowTab* tab) {
     VecRemove(*win->tabSelectionHistory, tab);
     // ask before removing: afterwards CurrentTab() follows the strip's new
     // selection unless currentTabTemp happens to be set
-    bool closedCurrentTab = (tab == win->CurrentTab());
+    bool closedCurrentTab = IsCurrentTab(win, tab);
     WindowTab* tab2 = win->tabsCtrl->RemoveTab<WindowTab*>(idx);
     ReportIf(tab != tab2);
     if (closedCurrentTab) {
@@ -570,7 +570,7 @@ void SaveCurrentWindowTab(MainWindow* win) {
     if (-1 == current) {
         return;
     }
-    if (win->CurrentTab() != win->Tabs()[current]) {
+    if (!IsCurrentTab(win, win->Tabs()[current])) {
         return; // TODO: restore ReportIf() ?
     }
 
