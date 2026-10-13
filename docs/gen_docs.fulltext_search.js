@@ -739,7 +739,7 @@
     const q = widget.querySelector(".askai-input").value.trim();
     if (!q) return;
     const prefix = widget.dataset.scriptExamplesUrl
-      ? "Write SumatraPDF ecma5 javascript script. API reference: https://www.sumatrapdfreader.org/docs/Tool-run-javascript-reference Example scripts: " +
+      ? "Write SumatraPDF ecma5 javascript script. API reference: https://www.sumatrapdfreader.org/docs/Tool-run-javascript-reference.md Example scripts: " +
         widget.dataset.scriptExamplesUrl +
         "\n"
       : undefined;
