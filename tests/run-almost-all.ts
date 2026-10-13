@@ -417,6 +417,7 @@ export const tests: NamedTest[] = [
   // first: it drives the home page, whose thumbnail selection follows the
   // mouse, so it is the one test that cares what the machine was doing before
   ["issue-5978", issue5978],
+  ["issue-6070", issue6070],
   ["pdf-script", pdfScript],
   ["annot-color-dropdown", annotColorDropdown],
   ["read-aloud-lazy-chapters", readAloudLazyChapters],
@@ -725,7 +726,6 @@ export const tests: NamedTest[] = [
   ["command-palette-alt-names", commandPaletteAltNames],
   ["command-palette-thumbnails", commandPaletteThumbnails],
   ["sidebar-thumbnails-close", sidebarThumbnailsClose],
-  ["issue-6070", issue6070],
   ["wheel-while-closing", wheelWhileClosing],
   ["issue-6259", issue6259],
   ["fullscreen-session-restore", fullscreenSessionRestore],

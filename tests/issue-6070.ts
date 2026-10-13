@@ -37,7 +37,7 @@ import {
   WM_LBUTTONUP,
   WM_MOUSEMOVE,
 } from "./winapi.ts";
-import { killAndWait, launchControlled, sendCommand } from "./win-automation.ts";
+import { ensureModifierKeysUp, killAndWait, launchControlled, sendCommand } from "./win-automation.ts";
 
 type Rect = { x: number; y: number; dx: number; dy: number };
 type Merge = {
@@ -128,6 +128,11 @@ async function mouse(client: ControlClient, hwnd: number, msg: number, mk: numbe
       throw new Error(`issue-6070: merge input ${kind}: ${raw}`);
     }
     return;
+  }
+  // the grid also reads the live key state: a Ctrl stuck down mid-run (RDP)
+  // makes a plain press add to the selection. Ctrl presses carry MK_CONTROL
+  if (msg === WM_LBUTTONDOWN) {
+    await ensureModifierKeysUp();
   }
   // SetCapture injects a WM_MOUSEMOVE at the real cursor: keep it where we are
   const screen = clientToScreen(hwnd, pt.x, pt.y);
