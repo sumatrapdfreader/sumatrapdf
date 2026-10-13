@@ -103,19 +103,24 @@ static Str ScriptTitle() {
 
 static void LoadScriptArgs(gp::App* app) {
     gp::Window* host = ScriptHost();
-    for (auto& arg : gScript.args) {
-        gp::InputBlur(arg.input, app, host);
-        delete arg.input;
-        str::Free(arg.hint);
-    }
-    VecClear(gScript.args);
     StrVec values;
     StrVec hints;
     GetPDFScriptArgs(PDFScriptSource(gScript.example), gScript.input, values, hints);
+    while (len(gScript.args) > len(values)) {
+        auto& arg = gScript.args[len(gScript.args) - 1];
+        gp::InputBlur(arg.input, app, host);
+        delete arg.input;
+        str::Free(arg.hint);
+        VecRemoveAt(gScript.args, len(gScript.args) - 1);
+    }
     for (int i = 0; i < len(values); i++) {
-        auto* input = ScriptInput(app, values[i]);
-        gp::InputSetPlaceholder(input, ToGpui(hints[i]));
-        VecAppend(gScript.args, ScriptArg{++gScript.nextArg, input, str::Dup(hints[i])});
+        if (i >= len(gScript.args)) {
+            VecAppend(gScript.args, ScriptArg{++gScript.nextArg, ScriptInput(app, {}), {}});
+        }
+        auto& arg = gScript.args[i];
+        gp::InputSetValue(arg.input, ToGpui(values[i]));
+        gp::InputSetPlaceholder(arg.input, ToGpui(hints[i]));
+        str::ReplaceWithCopy(&arg.hint, hints[i]);
     }
 }
 
@@ -241,9 +246,7 @@ gp::El* PDFScriptDialogBuild(MainWindow* win, gp::Ctx* cx) {
     auto* rows = gp::Div(cx->a)->FlexCol()->Gap(4)->W(gp::kFill);
     for (int i = 0; i < len(gScript.args); i++) {
         auto& arg = gScript.args[i];
-        auto* box = gp::Div(cx->a)->FlexCol()->Gap(2)->W(gp::kFill);
         Str label = len(arg.hint) > 0 ? fmt("%s %d: %s", Tr("Arg"), i + 1, arg.hint) : fmt("%s %d", Tr("Arg"), i + 1);
-        box->Child(gp::TextEl(cx->a, ToGpui(label))->Truncate());
         auto* row = gp::Div(cx->a)->FlexRow()->ItemsCenter()->Gap(6)->W(gp::kFill);
         row->Child(gpc::Input::New(cx, ToGpui(fmt("pdf-arg-%d", arg.id)), arg.input)
                        ->AriaLabel(ToGpui(label))
@@ -259,8 +262,7 @@ gp::El* PDFScriptDialogBuild(MainWindow* win, gp::Ctx* cx) {
                        ->Disabled(gScript.running)
                        ->OnClick(gp::ListenTo(gScriptView, &PDFScriptView::OnDelete, arg.id))
                        ->IntoEl());
-        box->Child(row);
-        rows->Child(box);
+        rows->Child(row);
     }
     body->Child(rows);
     body->Child(

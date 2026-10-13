@@ -98,6 +98,13 @@ async function ngUi(client: ControlClient) {
   await pollUntil(layout, (list) => list.some((n) => n.label === "Run Script"), { error: "script dialog" });
   const editorWidth = (await layout()).find((n) => n.role === 31)!.w;
   return {
+    async argumentIds() {
+      return [] as number[];
+    },
+    async argumentRowGap() {
+      const fields = (await layout()).filter((n) => n.role === 17);
+      return (fields[1]!.y - fields[0]!.y - fields[0]!.h) / fields[0]!.h;
+    },
     async argumentGap() {
       const list = await layout();
       const fields = list.filter((n) => n.role === 17);
@@ -146,6 +153,7 @@ async function ngUi(client: ControlClient) {
       await click((await layout()).find((n) => n.label === "Example Scripts")!);
     },
     async pickExample(index: number, name: string) {
+      name = name.replace(/\.$/, "");
       const list = await pollUntil(
         layout,
         (list) => list.some((n) => n.label === name) && list.find((n) => n.role === 31)?.w === editorWidth,
@@ -191,6 +199,13 @@ async function originalUi(pid: number) {
   const scriptEdit = () => edits().find((h) => getWindowLong(h, -16) & 4 && !(getWindowLong(h, -16) & 0x800))!;
   const outputEdit = () => edits().find((h) => getWindowLong(h, -16) & 0x800)!;
   return {
+    async argumentIds() {
+      return argEdits();
+    },
+    async argumentRowGap() {
+      const fields = argEdits().map(getWindowRect);
+      return (fields[1]!.top - fields[0]!.bottom) / (fields[0]!.bottom - fields[0]!.top);
+    },
     async argumentGap() {
       const fields = argEdits();
       const last = getWindowRect(fields[fields.length - 1]!);
@@ -295,6 +310,8 @@ export async function testit(): Promise<void> {
         },
       );
       if (!(await ui.script()).startsWith("// Info:")) throw new Error("example script starts with empty lines");
+      if ((await ui.argumentRowGap()) > 0.5) throw new Error("argument fields still have label rows");
+      const argumentIds = (await ui.argumentIds()).slice(0, 1);
       await ui.examples();
       await ui.add();
       await pollUntil(
@@ -312,6 +329,9 @@ export async function testit(): Promise<void> {
           error: (args) => `DIR and BASE hints: ${JSON.stringify(args)}`,
         },
       );
+      if (JSON.stringify((await ui.argumentIds()).slice(0, 1)) !== JSON.stringify(argumentIds)) {
+        throw new Error("selecting an example recreated its first argument control");
+      }
       await ui.pickExample(4, "Copy bookmarks from another document.");
       await pollUntil(
         () => ui.args(),

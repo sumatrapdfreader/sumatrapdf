@@ -30,9 +30,6 @@ constexpr int kScriptColumnGap = 6;
 struct ScriptArgRow {
     PDFScriptWnd* owner;
     Edit* edit;
-    VirtText* label;
-    Str hint;
-    ~ScriptArgRow() { str::Free(hint); }
 };
 
 struct PDFScriptWnd : WindowBase {
@@ -103,13 +100,6 @@ static void PickScriptArg(ScriptArgRow* row) {
 }
 
 void PDFScriptWnd::AddArg(Str value, Str hint) {
-    auto* box = new VBox();
-    box->alignCross = CrossAxisAlign::Stretch;
-    box->gap = DpiScale(2);
-    auto* label = new VirtText({}, GetFont());
-    label->ellipsis = true;
-    label->SetTooltip(hint);
-    box->AddChild(label);
     auto* row = new HBox();
     row->alignCross = CrossAxisAlign::CrossCenter;
     row->gap = DpiScale(6);
@@ -122,7 +112,7 @@ void PDFScriptWnd::AddArg(Str value, Str hint) {
     ea.cueText = hint;
     edit->Create(ea);
     row->AddChild(edit, 1);
-    auto* arg = new ScriptArgRow{this, edit, label, str::Dup(hint)};
+    auto* arg = new ScriptArgRow{this, edit};
     VecAppend(rows, arg);
     auto* pick = NewThemedButton(hwnd, StrL("..."), GetFont(), false);
     pick->onClick = MkFunc0(PickScriptArg, arg);
@@ -130,18 +120,12 @@ void PDFScriptWnd::AddArg(Str value, Str hint) {
     auto* remove = NewThemedButton(hwnd, StrL("x"), GetFont(), false);
     remove->onClick = MkFunc0(QueueDeleteScriptArg, arg);
     row->AddChild(remove);
-    box->AddChild(row);
-    argsBox->AddChild(box);
+    argsBox->AddChild(row);
 }
 
 void PDFScriptWnd::LayoutArgs() {
-    for (int i = 0; i < len(rows); i++) {
-        auto* row = rows[i];
-        row->label->SetText(len(row->hint) > 0 ? fmt("%s %d: %s", Tr("Arg"), i + 1, row->hint)
-                                               : fmt("%s %d", Tr("Arg"), i + 1));
-    }
     DoLayout();
-    InvalidateRect(hwnd, nullptr, TRUE);
+    InvalidateRect(hwnd, nullptr, FALSE);
 }
 
 void PDFScriptWnd::OnAdd() {
@@ -186,20 +170,41 @@ void PDFScriptWnd::OnExample() {
     if (running) return;
     bool listFocused = vroot && vroot->focused == examples;
     Str source = PDFScriptSource(examples->GetCurrentSelection());
-    script->SetText(str::LFToCRLFTemp(source));
-    for (auto* row : rows) delete row;
-    VecClear(rows);
-    for (auto& child : argsBox->children) delete child.layout;
-    VecClear(argsBox->children);
     StrVec values;
     StrVec hints;
     GetPDFScriptArgs(source, input, values, hints);
-    for (int i = 0; i < len(values); i++) AddArg(values[i], hints[i]);
+
+    // Reuse edits and paint only after the new script and rows are laid out.
+    bool redraw = IsWindowVisible(hwnd);
+    if (redraw) SuspendRedraw();
+    script->SuspendRedraw();
+    script->SetText(str::LFToCRLFTemp(source));
+    int oldCount = len(rows);
+    while (len(rows) > len(values)) {
+        int last = len(rows) - 1;
+        delete argsBox->children[last].layout;
+        VecRemoveAt(argsBox->children, last);
+        delete rows[last];
+        VecRemoveAt(rows, last);
+    }
+    for (int i = 0; i < len(values); i++) {
+        if (i >= len(rows)) {
+            AddArg(values[i], hints[i]);
+            continue;
+        }
+        rows[i]->edit->SuspendRedraw();
+        rows[i]->edit->SetText(values[i]);
+        EditSetCueText(rows[i]->edit, hints[i]);
+        rows[i]->edit->ResumeRedraw();
+    }
     if (layout) {
         LayoutArgs();
-        UpdateTheme();
-        if (listFocused) SetFocusTo(examples);
+        if (len(rows) > oldCount) UpdateTheme();
     }
+    script->ResumeRedraw();
+    if (redraw) ResumeRedraw();
+    if (listFocused) SetFocusTo(examples);
+    RedrawWindow(hwnd, nullptr, nullptr, RDW_INVALIDATE | RDW_ALLCHILDREN | RDW_FRAME | RDW_NOERASE);
 }
 
 void PDFScriptWnd::OnExamples() {

@@ -47,6 +47,7 @@ static void LoadPDFScripts() {
             if (!str::StartsWith(line, prefix)) continue;
             name = Str(line.s + len(prefix), len(line) - len(prefix));
             str::TrimWSInPlace(name, str::TrimOpt::Both);
+            if (str::EndsWith(name, StrL("."))) name.len--;
             break;
         }
         if (len(name) == 0) name = fmt("Script %d", len(gScriptNames) + 1);
