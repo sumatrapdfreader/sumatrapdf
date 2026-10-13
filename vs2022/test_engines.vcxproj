@@ -1218,6 +1218,15 @@
     <ProjectReference Include="mupdf.vcxproj">
       <Project>{2181F50F-8D95-1DC1-5617-C120C2EA19F2}</Project>
     </ProjectReference>
+    <ProjectReference Include="tesseract.vcxproj">
+      <Project>{D31E8798-3F89-3B0F-88C7-ECB4F4701964}</Project>
+    </ProjectReference>
+    <ProjectReference Include="leptonica.vcxproj">
+      <Project>{A4EEBC10-1059-7187-5997-222DC5404FDC}</Project>
+    </ProjectReference>
+    <ProjectReference Include="zxing.vcxproj">
+      <Project>{5548E210-C15C-0AC2-8ADE-AD21F6B106F3}</Project>
+    </ProjectReference>
     <ProjectReference Include="a-libwebp.vcxproj">
       <Project>{38708512-A4DA-3989-ED18-EB2E59C217DE}</Project>
     </ProjectReference>

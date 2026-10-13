@@ -9,7 +9,8 @@ tesseract       5.5.2      2026-10-14
   mupdf thirdparty submodule (Artifex fork), commit ad0f76d971946512a62c933f490c8111877eddaa
   OCR for the mupdf tools (draw -F ocr.*). Only the LSTM engine and the
   files mupdf's platform/win32/libtesseract.vcxproj compiles; headers of those
-  dirs plus include/tesseract. Needs eng.traineddata from tessdata_fast at run time
+  dirs plus include/tesseract. Needs eng.traineddata from tessdata_fast at run time.
+  One edit: ccutil.cpp calls GetModuleFileNameA (we build with UNICODE)
 
 leptonica       1.87.0     2026-10-14
   https://github.com/DanBloomberg/leptonica

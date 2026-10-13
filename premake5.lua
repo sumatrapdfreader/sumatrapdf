@@ -947,8 +947,6 @@ workspace "SumatraPDF"
     optimized_conf()
     exceptionhandling "On"
     rtti "On"
-    -- ccutil.cpp calls GetModuleFileName with a char buffer
-    characterset "MBCS"
     defines {
       "_CRT_SECURE_NO_WARNINGS", "HAVE_LEPTONICA", "HAVE_TESSERACT", "TESSERACT_IMAGEDATA_AS_PIX",
       "TESSERACT_DISABLE_DEBUG_FONTS", "GRAPHICS_DISABLED", "DISABLED_LEGACY_ENGINE",
@@ -1089,7 +1087,7 @@ workspace "SumatraPDF"
     -- unrar is C++ with exceptions; keep them enabled so the DLL can host it.
     exceptionhandling "On"
     links {
-      "mupdf", "djvudec", "a-libwebp", "dav1d", "heicdec", "jxldec", "a-brotli", "a-unrar", "chmdec", "msdes",
+      "mupdf", "tesseract", "leptonica", "zxing", "djvudec", "a-libwebp", "dav1d", "heicdec", "jxldec", "a-brotli", "a-unrar", "chmdec", "msdes",
       "a-libarchive", "cmark-gfm", "a-gumbo",
       "a-mujs", "a-extract", "a-harfbuzz", "a-freetype", "a-lcms2", "a-openjpeg", "a-jbig2dec", "libjpeg-turbo",
     }
@@ -1156,7 +1154,7 @@ workspace "SumatraPDF"
     test_engines_files()
     links_zlib()
     -- static link (no libsumatrapdf.dll): same image-codec set as libsumatrapdf.dll
-    links { "base", "djvudec", "a-libarchive", "a-unrar", "mupdf" }
+    links { "base", "djvudec", "a-libarchive", "a-unrar", "mupdf", "tesseract", "leptonica", "zxing" }
     links { "a-libwebp", "dav1d", "heicdec", "jxldec", "a-brotli" }
     -- LitDoc.cpp: DES decryption of DRM-free .lit sections, LZX section decompression
     links { "msdes", "chmdec" }
@@ -1423,7 +1421,7 @@ workspace "SumatraPDF"
     -- Static libraries do not propagate dependencies through Ninja.
     links {
       "djvudec", "a-libwebp", "dav1d", "heicdec", "jxldec", "a-brotli",
-      "mupdf", "cmark-gfm", "a-mujs", "a-extract", "a-harfbuzz", "a-freetype", "a-lcms2", "a-openjpeg",
+      "mupdf", "tesseract", "leptonica", "zxing", "cmark-gfm", "a-mujs", "a-extract", "a-harfbuzz", "a-freetype", "a-lcms2", "a-openjpeg",
       "a-jbig2dec", "libjpeg-turbo", "a-libarchive", "a-gumbo", "base", "a-unrar", "chmdec", "a-zopfli", "msdes"
     }
     links {
@@ -1584,7 +1582,7 @@ workspace "SumatraPDF"
     end
     -- mupdf static lib + the libraries it links / depends on
     set_group("mupdf", {
-      "mupdf", "cmark-gfm", "a-libarchive", "a-zlib", "a-brotli", "libjpeg-turbo",
+      "mupdf", "tesseract", "leptonica", "zxing", "cmark-gfm", "a-libarchive", "a-zlib", "a-brotli", "libjpeg-turbo",
       "a-extract", "a-gumbo", "a-jbig2dec", "a-mujs", "a-openjpeg",
       "a-freetype", "a-harfbuzz", "a-lcms2",
     })

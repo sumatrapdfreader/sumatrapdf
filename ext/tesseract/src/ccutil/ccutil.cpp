@@ -62,7 +62,7 @@ void CCUtil::main_setup(const std::string &argv0, const std::string &basename) {
   } else if (datadir.empty() || !std::filesystem::exists(datadir)) {
     /* Look for tessdata in directory of executable. */
     char path[_MAX_PATH];
-    DWORD length = GetModuleFileName(nullptr, path, sizeof(path));
+    DWORD length = GetModuleFileNameA(nullptr, path, sizeof(path)); // SumatraPDF: builds with UNICODE
     if (length > 0 && length < sizeof(path)) {
       char *separator = std::strrchr(path, '\\');
       if (separator != nullptr) {

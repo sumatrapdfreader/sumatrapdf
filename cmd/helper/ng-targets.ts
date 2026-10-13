@@ -456,16 +456,7 @@ export const ocrTargets: Target[] = [
       linux: tessX86Kernelsx86,
       mac: tessMac,
     },
-    perSource: [
-      // ccutil.cpp calls GetModuleFileName with a char buffer
-      {
-        glob: "ext/tesseract/src/ccutil/ccutil.cpp",
-        flags: [],
-        msvcFlags: ["/UUNICODE", "/U_UNICODE"],
-        platforms: ["win"],
-      },
-      ...tessX86Kernels.map((k) => ({ ...k, platforms: ["linux", "mac"] as Platform[] })),
-    ],
+    perSource: tessX86Kernels.map((k) => ({ ...k, platforms: ["linux", "mac"] as Platform[] })),
   },
   {
     // zxing-cpp reads barcodes, zint writes them
