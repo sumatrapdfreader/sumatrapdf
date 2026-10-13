@@ -418,6 +418,7 @@ export const tests: NamedTest[] = [
   // mouse, so it is the one test that cares what the machine was doing before
   ["issue-5978", issue5978],
   ["issue-6252", issue6252],
+  ["issue-6239", issue6239],
   ["issue-3755", issue3755],
   ["issue-6070", issue6070],
   ["pdf-script", pdfScript],
@@ -790,7 +791,6 @@ export const tests: NamedTest[] = [
   ["issue-trim-margins", issueTrimMargins],
   ["trim-empty-margins-restore", trimEmptyMarginsRestore],
   ["issue-6220", issue6220],
-  ["issue-6239", issue6239],
   ["tool-poster", toolPoster],
   ["tool-merge", toolMerge],
   ["merge-struct-parents", mergeStructParents],

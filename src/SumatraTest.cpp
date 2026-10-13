@@ -433,8 +433,28 @@ TempStr RotatedTextMouseDragResultTemp(Str word, int* exitCodeOut) {
     DeleteOldSelectionInfo(win, true);
     LPARAM lp0 = MAKELPARAM(s0.x, s0.y);
     LPARAM lp1 = MAKELPARAM(s1.x, s1.y);
-    SendMessageW(win->hwndCanvas, WM_LBUTTONDOWN, 0, lp0);
-    int actionDown = (int)win->mouseAction;
+    // the press reads page text with TryLock and rubber-bands while a render
+    // holds the page lock, so wait for the lock and retry a press that missed
+    constexpr int kMaxPressTries = 20;
+    constexpr int kLockWaitMs = 2000;
+    int actionDown = (int)MouseAction::None;
+    int tries = 0;
+    for (; tries < kMaxPressTries; tries++) {
+        for (DWORD t0 = GetTickCount(); GetTickCount() - t0 < kLockWaitMs; Sleep(10)) {
+            if (engine->TryGetTextForPage(pageNo)) {
+                break;
+            }
+        }
+        SendMessageW(win->hwndCanvas, WM_LBUTTONDOWN, 0, lp0);
+        actionDown = (int)win->mouseAction;
+        if (actionDown == (int)MouseAction::SelectingText) {
+            break;
+        }
+        SendMessageW(win->hwndCanvas, WM_LBUTTONUP, 0, lp0);
+        DeleteOldSelectionInfo(win, true);
+        Sleep(50);
+    }
+    out.Append(fmt("pressTries=%d\n", tries + 1));
     SendMessageW(win->hwndCanvas, WM_MOUSEMOVE, MK_LBUTTON, lp1);
     SendMessageW(win->hwndCanvas, WM_LBUTTONUP, 0, lp1);
     int actionUp = (int)win->mouseAction;
