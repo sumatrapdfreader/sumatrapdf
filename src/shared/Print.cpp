@@ -1693,7 +1693,7 @@ static ScopedMem<DEVMODE> defaultDevMode;
 static PrintScaleAdv defaultScaleAdv = PrintScaleAdv::Shrink;
 static bool hasDefaults = false;
 
-static void PrintCurrentFileCont(MainWindow* win, bool waitForCompletion, bool selectionByDefault);
+static void PrintCurrentFileCont(MainWindow* win, bool waitForCompletion, bool selectionByDefault, PrintUI ui);
 
 static void PrintWarning(MainWindow* win, Str msg, Str title) {
 #if defined(SUMATRA_NG)
@@ -1708,43 +1708,45 @@ struct PrintAbortPrompt {
     MainWindow* win;
     bool waitForCompletion;
     bool selectionByDefault;
+    PrintUI ui;
 };
 
 static void OnPrintAbortAnswer(PrintAbortPrompt* d, int res) {
     MainWindow* win = d->win;
     bool waitForCompletion = d->waitForCompletion;
     bool selectionByDefault = d->selectionByDefault;
+    PrintUI ui = d->ui;
     delete d;
     if (res != MbRetYes || !IsMainWindowValidAndNotClosing(win)) {
         return;
     }
-    PrintCurrentFileCont(win, waitForCompletion, selectionByDefault);
+    PrintCurrentFileCont(win, waitForCompletion, selectionByDefault, ui);
 }
 #endif
 
-void PrintCurrentFile(MainWindow* win, bool waitForCompletion, bool selectionByDefault) {
+void PrintCurrentFile(MainWindow* win, bool waitForCompletion, bool selectionByDefault, PrintUI ui) {
     if (!HasPermission(Perm::PrinterAccess) || !win->IsDocLoaded()) {
         return;
     }
     if (!win->printThread) {
-        PrintCurrentFileCont(win, waitForCompletion, selectionByDefault);
+        PrintCurrentFileCont(win, waitForCompletion, selectionByDefault, ui);
         return;
     }
 
     Str title = Tr("Printing in progress.");
     Str msg = Tr("Printing is still in progress. Abort and start over?");
 #if defined(SUMATRA_NG)
-    auto* d = new PrintAbortPrompt{win, waitForCompletion, selectionByDefault};
+    auto* d = new PrintAbortPrompt{win, waitForCompletion, selectionByDefault, ui};
     MsgBox(win, msg, title, MbIconWarning | MbYesNo, MkFunc1<PrintAbortPrompt, int>(OnPrintAbortAnswer, d));
 #else
     uint type = MB_ICONEXCLAMATION | MB_YESNO | MbRtlReadingMaybe();
     if (MsgBox(MainWindowHwnd(win), msg, title, type) != IDNO) {
-        PrintCurrentFileCont(win, waitForCompletion, selectionByDefault);
+        PrintCurrentFileCont(win, waitForCompletion, selectionByDefault, ui);
     }
 #endif
 }
 
-static void PrintCurrentFileCont(MainWindow* win, bool waitForCompletion, bool selectionByDefault) {
+static void PrintCurrentFileCont(MainWindow* win, bool waitForCompletion, bool selectionByDefault, PrintUI ui) {
     Printer* printer = nullptr;
 
     if (!hasDefaults) {
@@ -1798,7 +1800,8 @@ static void PrintCurrentFileCont(MainWindow* win, bool waitForCompletion, bool s
 
     // the Windows 11 dialog runs the whole job itself; -print-to and friends
     // need the synchronous classic path
-    if (!waitForCompletion && !selectionByDefault && !PrinterUIWantsClassic()) {
+    bool wantsClassic = ui == PrintUI::Classic || PrinterUIWantsClassic();
+    if (!waitForCompletion && !selectionByDefault && !wantsClassic) {
         bool usedWin11Dialog = TryPrintCurrentFileWin11(win, MainWindowHwnd(win), defaultScaleAdv);
         logf("PrintCurrentFile: Windows 11 dialog=%d\n", (int)usedWin11Dialog);
         if (usedWin11Dialog) {

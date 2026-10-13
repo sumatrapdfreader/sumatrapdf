@@ -7055,7 +7055,9 @@ int GpuiMain(int argc, char** argv) {
         }
         LoadDocument(docWin, fullPath);
         if (gFlags->printDialog) {
-            PrintCurrentFile(docWin, gFlags->exitWhenDone);
+            // one dialog per file, one after another: only the classic one is modal
+            PrintUI ui = len(gFlags->fileNames) > 1 ? PrintUI::Classic : PrintUI::Auto;
+            PrintCurrentFile(docWin, gFlags->exitWhenDone, false, ui);
         }
     }
     gApplyCliViewToEbookLayout = false;

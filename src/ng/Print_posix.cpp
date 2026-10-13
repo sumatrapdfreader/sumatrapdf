@@ -451,7 +451,7 @@ static void OnPrintPathPicked(PrintToPdfCtx* ctx, SavePathArgs* args) {
     }
 }
 
-void PrintCurrentFile(MainWindow* win, bool waitForCompletion, bool selectionByDefault) {
+void PrintCurrentFile(MainWindow* win, bool waitForCompletion, bool selectionByDefault, PrintUI) {
     if (!HasPermission(Perm::PrinterAccess) || !win->IsDocLoaded()) {
         return;
     }

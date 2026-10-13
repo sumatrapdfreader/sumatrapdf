@@ -297,6 +297,7 @@ import { testit as sidebarThumbnailsWheel } from "./sidebar-thumbnails-wheel.ts"
 import { testit as sidebarThumbnailsClose } from "./sidebar-thumbnails-close.ts";
 import { testit as issue6070 } from "./issue-6070.ts";
 import { testit as wheelWhileClosing } from "./wheel-while-closing.ts";
+import { testit as printDialogMultiFile } from "./print-dialog-multi-file.ts";
 import { testit as issue6259 } from "./issue-6259.ts";
 import { testit as fullscreenSessionRestore } from "./fullscreen-session-restore.ts";
 import { testit as stampEditToolbarName } from "./stamp-edit-toolbar-name.ts";
@@ -729,6 +730,7 @@ export const tests: NamedTest[] = [
   ["command-palette-thumbnails", commandPaletteThumbnails],
   ["sidebar-thumbnails-close", sidebarThumbnailsClose],
   ["wheel-while-closing", wheelWhileClosing],
+  ["print-dialog-multi-file", printDialogMultiFile],
   ["issue-6259", issue6259],
   ["fullscreen-session-restore", fullscreenSessionRestore],
   ["stamp-edit-toolbar-name", stampEditToolbarName],

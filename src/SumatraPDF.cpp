@@ -16194,7 +16194,9 @@ ContinueOpenWindow:
             continue;
         }
         if (flags.printDialog) {
-            PrintCurrentFile(win, flags.exitWhenDone);
+            // one dialog per file, one after another: only the classic one is modal
+            PrintUI ui = len(flags.fileNames) > 1 ? PrintUI::Classic : PrintUI::Auto;
+            PrintCurrentFile(win, flags.exitWhenDone, false, ui);
         }
     }
     if (tabToSelect) {
