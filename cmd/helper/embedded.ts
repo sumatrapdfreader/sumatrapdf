@@ -76,7 +76,8 @@ export async function packEmbedded(
   const staging = join(dir, "embedded");
   const archive = join(dir, "embedded.lzsa");
   const inputs = new Map<string, string>();
-  inputs.set("scripts.js", genPDFScripts(inputRoot));
+  const scripts = genPDFScripts(inputRoot);
+  if (scripts) inputs.set("scripts.js", scripts);
   const docs = join(inputRoot, ".work/docs");
   if (opts.manual) {
     for (const src of filesUnder(docs)) inputs.set(relative(docs, src), src);

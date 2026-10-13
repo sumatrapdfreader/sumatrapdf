@@ -1,12 +1,19 @@
-import { existsSync, mkdirSync, readFileSync, readdirSync, writeFileSync } from "node:fs";
-import { join, resolve } from "node:path";
+import { existsSync, mkdirSync, readFileSync, readdirSync, rmSync, writeFileSync } from "node:fs";
+import { join, relative, resolve } from "node:path";
+import { websiteDocsDir } from "./util";
 
 const root = resolve(import.meta.dir, "..");
 const kDefaultScript = "load-a-pdf.js";
 const kScriptSeparator = "// ---";
 
-export function genPDFScripts(inputRoot = root): string {
-  const scriptsDir = join(inputRoot, "docs/scripts");
+export function genPDFScripts(inputRoot = root): string | null {
+  const scriptsDir = join(inputRoot, relative(root, websiteDocsDir), "scripts");
+  const output = join(inputRoot, ".work/scripts.js");
+  if (!existsSync(scriptsDir)) {
+    rmSync(output, { force: true });
+    console.log(`gen-pdf-scripts: skipping, '${scriptsDir}' missing (needs sumatra-website checkout)`);
+    return null;
+  }
   const names = readdirSync(scriptsDir, { withFileTypes: true })
     .filter((file) => file.isFile() && file.name.endsWith(".js"))
     .map((file) => file.name)
@@ -21,12 +28,12 @@ export function genPDFScripts(inputRoot = root): string {
   });
   if (!scripts.length) throw new Error("No PDF scripts found");
   const bundle = scripts.join(`\n${kScriptSeparator}\n`) + "\n";
-  const output = join(inputRoot, ".work/scripts.js");
   mkdirSync(join(inputRoot, ".work"), { recursive: true });
   if (!existsSync(output) || readFileSync(output, "utf8") !== bundle) writeFileSync(output, bundle);
   return output;
 }
 
 if (import.meta.main) {
-  console.log(genPDFScripts());
+  const output = genPDFScripts();
+  if (output) console.log(output);
 }

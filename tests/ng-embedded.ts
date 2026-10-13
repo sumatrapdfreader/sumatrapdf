@@ -1,4 +1,14 @@
-import { existsSync, mkdirSync, mkdtempSync, readFileSync, rmSync, statSync, utimesSync, writeFileSync } from "node:fs";
+import {
+  existsSync,
+  mkdirSync,
+  mkdtempSync,
+  readFileSync,
+  rmSync,
+  rmdirSync,
+  statSync,
+  utimesSync,
+  writeFileSync,
+} from "node:fs";
 import { dirname, join, resolve, sep } from "node:path";
 import { embedLzsa, fontPatterns, packEmbedded } from "../cmd/helper/embedded";
 import { findToolchain, hostPlatform } from "../cmd/helper/ng-toolchain";
@@ -23,7 +33,9 @@ export async function testit(): Promise<void> {
   run([probe, join(dir, "embedded.lzsa"), join(dir, "embedded")]);
 
   const workDir = resolve(ROOT, ".work");
-  const fixture = mkdtempSync(join(workDir, "ng-embedded-test-"));
+  const fixtureDir = mkdtempSync(join(workDir, "ng-embedded-test-"));
+  const fixture = join(fixtureDir, "sumatrapdf");
+  const websiteScripts = "../hack/webapps/sumatra-website/www/docs/scripts";
   const put = (path: string, text: string) => {
     const dst = join(fixture, path);
     mkdirSync(dirname(dst), { recursive: true });
@@ -55,8 +67,21 @@ export async function testit(): Promise<void> {
     let archive = await packEmbedded(tc, packer, output, fixture);
     if (statSync(join(fixture, ".work/translations.txt")).size !== 0) fail("missing translations did not become empty");
     if (names(archive).some((name) => name.endsWith(".md"))) fail("missing manual was packed");
+    if (names(archive).includes("scripts.js")) fail("missing website scripts were packed");
     run([packer, archive]);
     await embedLzsa(tc, archive, output);
+
+    const scriptPath = `${websiteScripts}/load-a-pdf.js`;
+    const source = "// Info: Print a value.\nprint(1);\n";
+    put(scriptPath, source);
+    archive = await packEmbedded(tc, packer, output, fixture);
+    if (!names(archive).includes("scripts.js")) fail("website scripts were not packed");
+    if (readFileSync(join(output, "embedded/scripts.js"), "utf8") !== source) fail("website script source changed");
+    put(scriptPath, source.replace("print(1)", "print(2)"));
+    await packEmbedded(tc, packer, output, fixture);
+    if (!readFileSync(join(output, "embedded/scripts.js"), "utf8").includes("print(2)")) {
+      fail("changed website script was not packed");
+    }
 
     put(".work/docs/nested/index.md", "manual");
     put(".work/translations.txt", ":test\nde:Test\n");
@@ -97,9 +122,16 @@ export async function testit(): Promise<void> {
     if (readFileSync(archive).includes(marker)) fail("stored entry was reused in a compressed archive");
     archive = await packEmbedded(tc, packer, output, fixture, forWeb);
     if (!readFileSync(archive).includes(marker)) fail("compressed entry was reused in a stored archive");
+
+    rmSync(join(fixture, scriptPath));
+    rmdirSync(join(fixture, websiteScripts));
+    archive = await packEmbedded(tc, packer, output, fixture, forWeb);
+    if (names(archive).includes("scripts.js") || existsSync(join(fixture, ".work/scripts.js"))) {
+      fail("stale scripts remained after removing the website checkout");
+    }
   } finally {
-    if (!resolve(fixture).startsWith(workDir + sep)) fail(`invalid fixture path: ${fixture}`);
-    rmSync(fixture, { recursive: true, force: true });
+    if (!resolve(fixtureDir).startsWith(workDir + sep)) fail(`invalid fixture path: ${fixtureDir}`);
+    rmSync(fixtureDir, { recursive: true, force: true });
   }
   console.log("PASS: shared LzSA packing and extraction");
 }

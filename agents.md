@@ -360,6 +360,8 @@ To add a new cmd-line flag:
 
 User docs live in the sumatra-website repo, in `../hack/webapps/sumatra-website/www/docs` (called `www/docs` below); it is the source of truth. `bun cmd/gen-docs.ts` copies the pages reachable from `SumatraPDF-documentation.md` into `.work/docs` for the in-app manual; without a website checkout (CI) it skips and the exe ships without the manual. `cmd/gen-settings.ts` and `cmd/gen-js-reference-md.ts` write their generated pages there. Commit doc changes in the website repo.
 
+PDF example scripts live only in `sumatra-website/www/docs/scripts`. Edit and commit them in the website repo; do not keep copies in `docs/scripts` here. `cmd/gen-pdf-scripts.ts` bundles them into `.work/scripts.js` for embedding, and `cmd/gen-docs.ts` stages the scripts listed in `Tool-run-javascript-examples.md` into `.work/docs/scripts`. Without the website checkout, builds omit both the manual and example scripts.
+
 When writing or restructuring a feature page in `www/docs`, follow `docs/writing-docs.md`.
 
 ## Version history (www/docs/Version-history.md)

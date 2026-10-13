@@ -1,7 +1,8 @@
 # PDF script examples
 
-Standalone legacy examples. The apps bundle `docs/scripts/*.js` into
-`scripts.js` during the build and load that file on first use.
+Standalone legacy examples. App examples live in
+`../hack/webapps/sumatra-website/www/docs/scripts` and are bundled into
+`scripts.js` during the build, then loaded on first use.
 
 Examples are adapted from the SumatraPDF JavaScript examples page and
 MuPDF's `docs/examples/` (AGPL-3.0). Use MuJS syntax: no ES module imports
