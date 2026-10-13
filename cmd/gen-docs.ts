@@ -4,6 +4,7 @@
 // renderer (docs/gen_docs.render.js) needs. The build's prebuild packs that dir into IDR_EMBEDDED_PAK.
 import { readFileSync, writeFileSync, existsSync, readdirSync, mkdirSync, renameSync, rmSync, statSync } from "node:fs";
 import { join, resolve } from "node:path";
+import { createHash } from "node:crypto";
 import { commands as commandsDef } from "./gen-commands";
 import { checkCdnImages } from "./r2";
 import { copyFileNormalized, websiteDocsDir } from "./util.js";
@@ -124,16 +125,28 @@ function writeBundledRenderJs(outDir: string): void {
   const searchHtml = readFileSync(join(docsDir, "gen_docs.search.html"), "utf-8");
   const searchJs = readFileSync(join(docsDir, "gen_docs.search.js"), "utf-8");
   const marker = "/*COMMANDS_SEARCH_BUNDLE*/";
+  const scriptsMarker = '/*PDF_SCRIPTS_URL*/ ""';
   if (!template.includes(marker)) {
     throw new Error(`${join(docsDir, "gen_docs.render.js")} missing ${marker}`);
   }
+  if (!template.includes(scriptsMarker)) {
+    throw new Error(`${join(docsDir, "gen_docs.render.js")} missing ${scriptsMarker}`);
+  }
+  const scriptsHash = createHash("sha1")
+    .update(readFileSync(join(".work", "scripts.js")))
+    .digest("hex")
+    .slice(0, 4);
+  const scriptsURL = `https://www.sumatrapdfreader.org/docs/all-scripts-${scriptsHash}.js`;
   const bundle =
     "const kCommandsSearchHtml = " +
     JSON.stringify(searchHtml) +
     ";\nconst kCommandsSearchJs = " +
     JSON.stringify(searchJs) +
     ";\n";
-  writeFileSync(join(outDir, "gen_docs.render.js"), template.replace(marker, bundle));
+  writeFileSync(
+    join(outDir, "gen_docs.render.js"),
+    template.replace(marker, bundle).replace(scriptsMarker, JSON.stringify(scriptsURL)),
+  );
 }
 
 function copyScriptExamples(outDir: string, pages: string[]): void {

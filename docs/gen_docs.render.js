@@ -21,6 +21,7 @@
   let manifest = null;
   let mainDocText = null;
   let scriptExamplesCleanup = null;
+  const kPDFScriptsURL = /*PDF_SCRIPTS_URL*/ "";
   const kScriptExamplesPage = "Tool-run-javascript-examples.md";
 
   function removeNotionId(s) {
@@ -91,6 +92,9 @@
         }
         if (line.trim() === ":askai") {
           return '\n<div class="askai"></div>\n';
+        }
+        if (line.trim() === ":ask-ai-to-write-script") {
+          return '\n<div class="askai" data-script-examples-url="' + kPDFScriptsURL + '"></div>\n';
         }
         return line;
       })

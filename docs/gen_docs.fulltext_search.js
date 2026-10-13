@@ -10,6 +10,7 @@
   let docsApi = null;
   const PLACEHOLDER_SEARCH = "Search documentation";
   const PLACEHOLDER_ASK = "Ask a question about SumatraPDF e.g. 'How to configure keyboard shortcuts'";
+  const DEFAULT_SCRIPT_REQUEST = "Write me a script that converts all pages to PNG images.";
   const ASK_PREFIX =
     "This is a question about SumatraPDF application (https://www.sumatrapdfreader.org/docs/SumatraPDF-all-docs-for-llm-ai.md). Question: ";
   const AI_URLS = {
@@ -610,10 +611,10 @@
   }
 
   // opens the question in a new tab of the chosen AI service
-  function sendToAi(provider, q) {
+  function sendToAi(provider, q, prefix = ASK_PREFIX) {
     const base = AI_URLS[provider];
     if (!base) return;
-    window.open(base + encodeURIComponent(ASK_PREFIX + q), "_blank", "noopener,noreferrer");
+    window.open(base + encodeURIComponent(prefix + q), "_blank", "noopener,noreferrer");
   }
 
   function openAsk(provider) {
@@ -707,6 +708,15 @@
       el.innerHTML = `
       <textarea class="askai-input" rows="3" placeholder="${PLACEHOLDER_ASK}"></textarea>
       <div class="askai-row">${ASK_BUTTONS_HTML}</div>`;
+      const request = el.querySelector(".askai-input");
+      request.setAttribute(
+        "aria-label",
+        el.dataset.scriptExamplesUrl ? "Describe the PDF script to write" : PLACEHOLDER_ASK,
+      );
+      if (el.dataset.scriptExamplesUrl) request.value = DEFAULT_SCRIPT_REQUEST;
+      el.querySelectorAll(".search-ask-btn").forEach(function (btn) {
+        btn.disabled = !request.value.trim();
+      });
     });
   }
 
@@ -725,9 +735,15 @@
   document.addEventListener("click", function (e) {
     const btn = e.target.closest(".askai .search-ask-btn[data-ai]");
     if (!btn || btn.disabled) return;
-    const q = btn.closest(".askai").querySelector(".askai-input").value.trim();
+    const widget = btn.closest(".askai");
+    const q = widget.querySelector(".askai-input").value.trim();
     if (!q) return;
-    sendToAi(btn.getAttribute("data-ai"), q);
+    const prefix = widget.dataset.scriptExamplesUrl
+      ? "Write SumatraPDF ecma5 javascript script. API reference: https://www.sumatrapdfreader.org/docs/Tool-run-javascript-reference Example scripts: " +
+        widget.dataset.scriptExamplesUrl +
+        "\n"
+      : undefined;
+    sendToAi(btn.getAttribute("data-ai"), q, prefix);
   });
 
   function closeDialog() {
