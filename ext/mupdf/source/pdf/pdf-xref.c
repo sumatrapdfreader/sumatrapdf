@@ -2948,7 +2948,7 @@ pdf_update_local_object(fz_context *ctx, pdf_document *doc, int num, pdf_obj *ne
 void
 pdf_update_object(fz_context *ctx, pdf_document *doc, int num, pdf_obj *newobj)
 {
-	pdf_xref_entry *x;
+	pdf_xref_entry *x, *old;
 
 	if (!doc)
 		return;
@@ -2971,7 +2971,19 @@ pdf_update_object(fz_context *ctx, pdf_document *doc, int num, pdf_obj *newobj)
 		return;
 	}
 
+	old = pdf_get_xref_entry_no_change(ctx, doc, num);
 	x = pdf_get_incremental_xref_entry(ctx, doc, num);
+
+	/* A fresh incremental entry starts empty: carry the stream over
+	 * from the section that held the object, so replacing a stream's
+	 * dictionary keeps its data. */
+	if (old && old != x && old->type && x->type == 0)
+	{
+		x->stm_buf = old->stm_buf;
+		old->stm_buf = NULL;
+		x->stm_ofs = old->stm_ofs;
+		x->gen = old->gen;
+	}
 
 	pdf_drop_obj(ctx, x->obj);
 

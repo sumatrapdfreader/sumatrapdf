@@ -60,6 +60,7 @@ relative to `ext/mupdf`, so `-p1` from inside that directory.
 | `0057-scalable-image-device-size` | SVG / display-list images rasterize at the zoomed size instead of a fixed 96 dpi; fixed-layout EPUB pages were blurry (#6330) |
 | `0058-unwrap-display-list-image` | `fz_unwrap_display_list_image`: the one raster an SVG draws, so Save Image / copy keep its bytes and resolution (#6330) |
 | `0059-svg-text-path` | SVG `<textPath>` places glyphs along the referenced path; such text used to pile up at the origin (#6332) |
+| `0060-pdf-update-object-keeps-stream` | `pdf_update_object` carries a stream over when the entry moves to a new xref section; a stream added in the session lost its data on a `garbage=3` save |
 
 That is the whole list: `ext/mupdf` is byte-for-byte `1.28.5` plus these
 patches, and nothing else.

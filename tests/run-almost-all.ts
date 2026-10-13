@@ -162,6 +162,7 @@ import { testit as issue6280 } from "./issue-6280.ts";
 import { testit as issue6322 } from "./issue-6322.ts";
 import { testit as issue6324 } from "./issue-6324.ts";
 import { testit as pdfScript } from "./pdf-script.ts";
+import { testit as pdfSaveDedupStream } from "./pdf-save-dedup-stream.ts";
 import { testit as issue6323 } from "./issue-6323.ts";
 import { testit as issue6269 } from "./issue-6269.ts";
 import { testit as issue6270 } from "./issue-6270.ts";
@@ -429,6 +430,7 @@ export const tests: NamedTest[] = [
   ["issue-6239", issue6239],
   ["issue-3755", issue3755],
   ["pdf-script", pdfScript],
+  ["pdf-save-dedup-stream", pdfSaveDedupStream],
   ["annot-color-dropdown", annotColorDropdown],
   ["read-aloud-lazy-chapters", readAloudLazyChapters],
   ["free-text-edit-toolbar", freeTextEditToolbar],
