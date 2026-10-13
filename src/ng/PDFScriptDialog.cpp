@@ -21,12 +21,18 @@ struct ScriptArg {
     gp::InputState* input;
 };
 
+constexpr float kScriptListWidth = 360;
+constexpr float kScriptColumnGap = 6;
+constexpr float kScriptListRowHeight = 28;
+
 static struct PDFScriptDlg {
     MainWindow* win = nullptr;
     ToolWindow* tw = nullptr;
     gp::InputState* script = nullptr;
     gp::InputState* output = nullptr;
-    DialogSelect examples;
+    bool showExamples = false;
+    int example = 0;
+    float exampleScrollY = 0;
     Vec<ScriptArg> args;
     bool visible = false;
     bool running = false;
@@ -42,6 +48,9 @@ struct PDFScriptView {
     static void OnDelete(PDFScriptView*, gp::Ctx*, const gp::ClickEvent*, int64_t);
     static void OnPick(PDFScriptView*, gp::Ctx*, const gp::ClickEvent*, int64_t);
     static void OnRun(PDFScriptView*, gp::Ctx*, const gp::ClickEvent*);
+    static void OnExamples(PDFScriptView*, gp::Ctx*, const gp::ClickEvent*);
+    static void OnExample(PDFScriptView*, gp::Ctx*, const gp::ClickEvent*, int64_t);
+    static void OnScroll(PDFScriptView*, gp::Ctx*, const gp::ScrollEvent*);
     static void OnHelp(PDFScriptView*, gp::Ctx*, const gp::ClickEvent*);
     static void OnCancel(PDFScriptView*, gp::Ctx*, const gp::ClickEvent*);
 };
@@ -68,15 +77,15 @@ void ClosePDFScriptDialog() {
     gScript.script = gScript.output = nullptr;
     for (auto& arg : gScript.args) delete arg.input;
     VecClear(gScript.args);
-    gScript.examples.Free();
     ++gScriptSession;
     if (IsMainWindowValid(gScript.win)) AppShellInvalidate(gScript.win);
     gScript.win = nullptr;
 }
 
-static gp::InputState* ScriptInput(gp::App* app, Str text) {
+static gp::InputState* ScriptInput(gp::App* app, Str text, gp::InputKind kind = gp::InputKind::Input) {
     auto* input = new gp::InputState();
     input->focus = gp::FocusHandleNew(app);
+    input->kind = kind;
     gp::InputSetValue(input, ToGpui(text));
     return input;
 }
@@ -96,16 +105,15 @@ void ShowPDFScriptDialog(MainWindow* win) {
     gScript.win = win;
     gScript.visible = true;
     gScript.running = false;
+    gScript.showExamples = false;
+    gScript.example = 0;
+    gScript.exampleScrollY = 0;
     gScript.wantFocus = true;
     gScript.session = ++gScriptSession;
     VecAppend(gScript.args, ScriptArg{++gScript.nextArg, ScriptInput(app, tab->filePath)});
     VecAppend(gScript.args, ScriptArg{++gScript.nextArg, ScriptInput(app, PDFScriptOutputPath(tab->filePath))});
-    gScript.script = ScriptInput(app, PDFScriptSource(0));
-    gScript.output = ScriptInput(app, {});
-    gScript.examples.Init(app);
-    StrVec names;
-    for (int i = 0; i < PDFScriptCount(); i++) names.Append(PDFScriptName(i));
-    gScript.examples.SetItems(names, 0);
+    gScript.script = ScriptInput(app, PDFScriptSource(0), gp::InputKind::Textarea);
+    gScript.output = ScriptInput(app, {}, gp::InputKind::Textarea);
     DlgWindowSpec spec;
     spec.name = "pdfscript";
     spec.title = ScriptTitle;
@@ -178,6 +186,22 @@ void PDFScriptView::OnHelp(PDFScriptView*, gp::Ctx*, const gp::ClickEvent*) {
     LaunchDocumentation(StrL(kPDFScriptHelpDocUri));
 }
 
+void PDFScriptView::OnExamples(PDFScriptView*, gp::Ctx* cx, const gp::ClickEvent*) {
+    gScript.showExamples = !gScript.showExamples;
+    gp::Notify(cx);
+}
+
+void PDFScriptView::OnExample(PDFScriptView*, gp::Ctx* cx, const gp::ClickEvent*, int64_t index) {
+    gScript.example = (int)index;
+    gp::InputSetValue(gScript.script, ToGpui(PDFScriptSource(gScript.example)));
+    gp::Notify(cx);
+}
+
+void PDFScriptView::OnScroll(PDFScriptView*, gp::Ctx* cx, const gp::ScrollEvent* ev) {
+    gScript.exampleScrollY = ev->offsetY;
+    gp::Notify(cx);
+}
+
 void PDFScriptView::OnCancel(PDFScriptView*, gp::Ctx*, const gp::ClickEvent*) {
     ClosePDFScriptDialog();
 }
@@ -185,10 +209,7 @@ void PDFScriptView::OnCancel(PDFScriptView*, gp::Ctx*, const gp::ClickEvent*) {
 gp::El* PDFScriptDialogBuild(MainWindow* win, gp::Ctx* cx) {
     if (!gScript.visible || gScript.win != win || (gScript.tw && !DlgWindowIsHost(cx))) return nullptr;
     if (!gScriptView.IsValid()) gScriptView = gp::EntityNewState<PDFScriptView>(cx->app);
-    if (gScript.examples.PollChanged(cx->app)) {
-        gp::InputSetValue(gScript.script, ToGpui(PDFScriptSource(gScript.examples.sel)));
-    }
-    auto* body = gp::Div(cx->a)->FlexCol()->Gap(6);
+    auto* body = gp::Div(cx->a)->FlexCol()->Gap(6)->W(gp::kFill);
     auto* rows = gp::Div(cx->a)->FlexCol()->Gap(4)->W(gp::kFill);
     for (int i = 0; i < len(gScript.args); i++) {
         auto& arg = gScript.args[i];
@@ -214,31 +235,73 @@ gp::El* PDFScriptDialogBuild(MainWindow* win, gp::Ctx* cx) {
                                                            ->Disabled(gScript.running)
                                                            ->OnClick(gp::ListenTo(gScriptView, &PDFScriptView::OnAdd))
                                                            ->IntoEl()));
-    body->Child(gScript.examples.Build(cx, StrL("pdf-script-example"), 680));
     body->Child(gpc::Textarea::New(cx, GStrL("pdf-script-source"), gScript.script)->H(300)->SoftWrap(false)->IntoEl());
     if (len(FromGpui(gp::InputValue(gScript.output))) > 0) {
         body->Child(gpc::Textarea::New(cx, GStrL("pdf-script-output"), gScript.output)->H(140)->Readonly()->IntoEl());
     }
-    auto* buttons = gp::Div(cx->a)->FlexRow()->JustifyEnd()->Gap(7);
-    buttons->Child(gpc::Button::New(cx, GStrL("pdf-script-cancel"))
-                       ->Label(ToGpui(Tr("Cancel")))
-                       ->OnClick(gp::ListenTo(gScriptView, &PDFScriptView::OnCancel))
+    auto* buttons = gp::Div(cx->a)->FlexRow()->Gap(7)->W(gp::kFill);
+    buttons->Child(gpc::Button::New(cx, GStrL("pdf-script-examples"))
+                       ->Label(ToGpui(Tr("Example Scripts")))
+                       ->OnClick(gp::ListenTo(gScriptView, &PDFScriptView::OnExamples))
                        ->IntoEl());
     buttons->Child(gpc::Button::New(cx, GStrL("pdf-script-help"))
                        ->Label(ToGpui(Tr("Help")))
                        ->OnClick(gp::ListenTo(gScriptView, &PDFScriptView::OnHelp))
+                       ->IntoEl());
+    buttons->Child(gp::Div(cx->a)->Flex1());
+    buttons->Child(gpc::Button::New(cx, GStrL("pdf-script-cancel"))
+                       ->Label(ToGpui(Tr("Cancel")))
+                       ->OnClick(gp::ListenTo(gScriptView, &PDFScriptView::OnCancel))
                        ->IntoEl());
     buttons->Child(gpc::Button::New(cx, GStrL("pdf-script-run"))
                        ->Label(ToGpui(gScript.running ? Tr("Running...") : Tr("Run Script")))
                        ->Disabled(gScript.running)
                        ->OnClick(gp::ListenTo(gScriptView, &PDFScriptView::OnRun))
                        ->IntoEl());
+    body->Child(buttons);
+    auto* columns = gp::Div(cx->a)->W(gp::kFill);
+    columns->Child(body);
+    if (gScript.showExamples) {
+        const gp::Theme& theme = gp::ThemeNow(cx->app);
+        columns->PadR(kScriptListWidth + kScriptColumnGap);
+        auto* list = gp::Div(cx->a)
+                         ->Id(GStrL("pdf-script-list"))
+                         ->Role(gp::AccessibilityRole::List)
+                         ->AriaLabel(ToGpui(Tr("Example Scripts")))
+                         ->Absolute()
+                         ->Right(0)
+                         ->Top(0)
+                         ->Bottom(0)
+                         ->W(kScriptListWidth)
+                         ->FlexCol()
+                         ->Border(1, theme.border)
+                         ->ScrollY(gScript.exampleScrollY)
+                         ->ScrollFromPath()
+                         ->OnScroll(gp::ListenTo(gScriptView, &PDFScriptView::OnScroll));
+        for (int i = 0; i < PDFScriptCount(); i++) {
+            auto* row = gp::Div(cx->a)
+                            ->FlexRow()
+                            ->Role(gp::AccessibilityRole::ListItem)
+                            ->AriaLabel(ToGpui(PDFScriptName(i)))
+                            ->W(gp::kFill)
+                            ->H(kScriptListRowHeight)
+                            ->Shrink0()
+                            ->ItemsCenter()
+                            ->PadX(4)
+                            ->PathClick(GpuiDup(cx->a, fmt("pdf-script-row-%d", i)))
+                            ->OnClick(gp::ListenTo(gScriptView, &PDFScriptView::OnExample, (intptr_t)i));
+            if (i == gScript.example) row->Bg(DlgWinListSelBg(false));
+            row->Child(gp::TextEl(cx->a, ToGpui(PDFScriptName(i)))->Truncate()->Fg(theme.foreground));
+            list->Child(row);
+        }
+        columns->Child(list);
+    }
     auto* dlg = gpc::Dialog::New(cx)
                     ->Open(true)
                     ->Title(ToGpui(ScriptTitle()))
-                    ->Body(body)
-                    ->Footer(buttons)
-                    ->W(720)
+                    ->Body(columns)
+                    ->Footer(gp::Div(cx->a)->H(0))
+                    ->W(720 + (gScript.showExamples ? kScriptListWidth + kScriptColumnGap : 0))
                     ->OnClose(gp::ListenTo(gScriptView, &PDFScriptView::OnCancel));
     if (gScript.wantFocus) {
         gp::InputFocus(gScript.script, cx->app, cx->win);

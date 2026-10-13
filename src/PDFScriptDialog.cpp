@@ -25,6 +25,8 @@
 #include "PDFScript.h"
 
 struct PDFScriptWnd;
+constexpr int kScriptListWidth = 360;
+constexpr int kScriptColumnGap = 6;
 struct ScriptArgRow {
     PDFScriptWnd* owner;
     Edit* edit;
@@ -35,7 +37,7 @@ struct PDFScriptWnd : WindowBase {
     VBox* argsBox = nullptr;
     Edit* script = nullptr;
     Edit* output = nullptr;
-    DropDown* examples = nullptr;
+    VirtListBox* examples = nullptr;
     VirtButton* run = nullptr;
     MainWindow* win = nullptr;
     bool running = false;
@@ -49,6 +51,7 @@ struct PDFScriptWnd : WindowBase {
     void OnAdd();
     void OnRun();
     void OnExample();
+    void OnExamples();
     void OnHelp();
     void OnCancel();
     void OnSize(WindowBase::SizeEvent*);
@@ -164,7 +167,18 @@ void PDFScriptWnd::OnRun() {
 }
 
 void PDFScriptWnd::OnExample() {
-    script->SetText(str::LFToCRLFTemp(PDFScriptSource(CbGetCurrentSelection(examples))));
+    script->SetText(str::LFToCRLFTemp(PDFScriptSource(examples->GetCurrentSelection())));
+}
+
+void PDFScriptWnd::OnExamples() {
+    bool show = examples->GetVisibility() == Visibility::Collapse;
+    examples->SetVisibility(show ? Visibility::Visible : Visibility::Collapse);
+    Rect rect = HwndWindowRect(hwnd);
+    int extra = DpiScale(kScriptListWidth + kScriptColumnGap);
+    SetWindowPos(hwnd, nullptr, 0, 0, rect.dx + (show ? extra : -extra), rect.dy, SWP_NOMOVE | SWP_NOZORDER);
+    HwndEnsureOnScreen(hwnd);
+    DoLayout();
+    InvalidateRect(hwnd, nullptr, TRUE);
 }
 
 void PDFScriptWnd::OnHelp() {
@@ -206,17 +220,16 @@ void PDFScriptWnd::Create(MainWindow* owner, Str path) {
     add->onClick = MkMethod0<PDFScriptWnd, &PDFScriptWnd::OnAdd>(this);
     addRow->AddChild(add);
     body->AddChild(addRow);
-    examples = new DropDown();
-    DropDown::CreateArgs da;
-    da.parent = hwnd;
-    da.font = GetFont();
-    examples->Create(da);
-    StrVec names;
-    for (int i = 0; i < PDFScriptCount(); i++) names.Append(PDFScriptName(i));
-    examples->SetItems(names);
-    CbSetCurrentSelection(examples, 0);
+    examples = new VirtListBox();
+    examples->font = GetFont();
+    examples->dpi = GetDpi();
+    examples->idealSizeDx = DpiScale(kScriptListWidth);
+    auto* model = new ListBoxModelStrings();
+    for (int i = 0; i < PDFScriptCount(); i++) model->strings.Append(PDFScriptName(i));
+    examples->SetModel(model);
+    examples->SetCurrentSelection(0);
+    examples->SetVisibility(Visibility::Collapse);
     examples->onSelectionChanged = MkMethod0<PDFScriptWnd, &PDFScriptWnd::OnExample>(this);
-    body->AddChild(examples);
     auto makeEdit = [&]() {
         auto* edit = new Edit();
         Edit::CreateArgs ea;
@@ -237,19 +250,28 @@ void PDFScriptWnd::Create(MainWindow* owner, Str path) {
     output->SetIsVisible(false);
     body->AddChild(output, 1);
     auto* buttons = new HBox();
-    buttons->alignMain = MainAxisAlign::MainEnd;
+    buttons->alignMain = MainAxisAlign::MainStart;
     buttons->gap = DpiScale(7);
-    auto* cancel = NewThemedButton(hwnd, Tr("Cancel"), GetFont(), false);
-    cancel->onClick = MkMethod0<PDFScriptWnd, &PDFScriptWnd::OnCancel>(this);
-    buttons->AddChild(cancel);
+    auto* showExamples = NewThemedButton(hwnd, Tr("Example Scripts"), GetFont(), false);
+    showExamples->onClick = MkMethod0<PDFScriptWnd, &PDFScriptWnd::OnExamples>(this);
+    buttons->AddChild(showExamples);
     auto* help = NewThemedButton(hwnd, Tr("Help"), GetFont(), false);
     help->onClick = MkMethod0<PDFScriptWnd, &PDFScriptWnd::OnHelp>(this);
     buttons->AddChild(help);
+    buttons->AddChild(new Spacer(0, 0), 1);
+    auto* cancel = NewThemedButton(hwnd, Tr("Cancel"), GetFont(), false);
+    cancel->onClick = MkMethod0<PDFScriptWnd, &PDFScriptWnd::OnCancel>(this);
+    buttons->AddChild(cancel);
     run = NewThemedButton(hwnd, Tr("Run Script"), GetFont(), false);
     run->onClick = MkMethod0<PDFScriptWnd, &PDFScriptWnd::OnRun>(this);
     buttons->AddChild(run);
     body->AddChild(buttons);
-    layout = new Padding(body, DpiScaledInsets(8));
+    auto* columns = new HBox();
+    columns->alignCross = CrossAxisAlign::Stretch;
+    columns->gap = DpiScale(kScriptColumnGap);
+    columns->AddChild(body, 1);
+    columns->AddChild(examples);
+    layout = new Padding(columns, DpiScaledInsets(8));
     onSize = MkMethod1<PDFScriptWnd, WindowBase::SizeEvent*, &PDFScriptWnd::OnSize>(this);
     SetWindowPos(hwnd, nullptr, 0, 0, DpiScale(760), DpiScale(650), SWP_NOMOVE | SWP_NOZORDER);
     DoLayout();

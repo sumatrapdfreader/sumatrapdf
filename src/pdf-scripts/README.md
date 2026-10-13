@@ -1,7 +1,7 @@
 # PDF script examples
 
-Bundled by `cmd/gen-pdf-scripts.ts` into `src/shared/PDFScriptExamples.inc`.
-Run the generator after editing a script. Both apps compile that snapshot.
+Standalone legacy examples. The apps bundle `docs/scripts/*.js` into
+`scripts.js` during the build and load that file on first use.
 
 Examples are adapted from the SumatraPDF JavaScript examples page and
 MuPDF's `docs/examples/` (AGPL-3.0). Use MuJS syntax: no ES module imports

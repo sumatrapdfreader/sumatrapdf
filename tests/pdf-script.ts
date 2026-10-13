@@ -18,6 +18,9 @@ import {
   sendText,
   clientToScreen,
   captureWindowDCRegionPixels,
+  postMessage,
+  WM_KEYDOWN,
+  VK_DOWN,
 } from "./winapi.ts";
 
 const PDF = resolve(import.meta.dir, "issue-1189.pdf");
@@ -55,13 +58,14 @@ async function checkExamples(): Promise<void> {
   }
 }
 
-type Node = { x: number; y: number; h: number; role: number; label: string; value: string };
+type Node = { x: number; y: number; w: number; h: number; role: number; label: string; value: string };
 
 function nodes(raw: string): Node[] {
-  const re = /node rect=(-?\d+),(-?\d+),(-?\d+),(-?\d+) role=(\d+) label='(.*?)' value='(.*?)'\n/g;
+  const re = /node rect=(-?\d+),(-?\d+),(-?\d+),(-?\d+) role=(\d+) label='(.*?)' value='([\s\S]*?)'\n/g;
   return [...raw.matchAll(re)].map((m) => ({
     x: Number(m[1]) + Number(m[3]) / 2,
     y: Number(m[2]) + Number(m[4]) / 2,
+    w: Number(m[3]),
     h: Number(m[4]),
     role: Number(m[5]),
     label: m[6]!,
@@ -76,17 +80,18 @@ async function ngUi(client: ControlClient) {
   const click = async (node: Node) =>
     request("input", "pdfscript", "click", Math.round(node.x), Math.round(node.y), 0, 0);
   await pollUntil(layout, (list) => list.some((n) => n.label === "Run Script"), { error: "script dialog" });
+  const editorWidth = (await layout()).find((n) => n.role === 31)!.w;
   return {
     async argumentGap() {
       const list = await layout();
       const fields = list.filter((n) => n.role === 17);
-      const selector = list.find((n) => n.role === 56)!;
+      const selector = list.find((n) => n.role === 31)!;
       const last = fields[fields.length - 1]!;
       return (selector.y - selector.h / 2 - (last.y + last.h / 2)) / last.h;
     },
     async argumentHeight() {
       const list = await layout();
-      return list.find((n) => n.role === 56)!.y - list.find((n) => n.role === 17)!.y;
+      return list.find((n) => n.role === 31)!.y - list.find((n) => n.role === 17)!.y;
     },
     async checkBorder() {},
     async add() {
@@ -121,6 +126,27 @@ async function ngUi(client: ControlClient) {
     async args() {
       return (await layout()).filter((n) => n.role === 17).map((n) => n.value);
     },
+    async examples() {
+      await click((await layout()).find((n) => n.label === "Example Scripts")!);
+    },
+    async pickExample() {
+      const name = "Add a free-text annotation to the first page.";
+      const list = await pollUntil(
+        layout,
+        (list) => list.some((n) => n.label === name) && list.find((n) => n.role === 31)?.w === editorWidth,
+        {
+          error: (list) =>
+            `script list not shown: ${list
+              .map((n) => n.label)
+              .filter(Boolean)
+              .join("; ")}`,
+        },
+      );
+      await click(list.find((n) => n.label === name)!);
+    },
+    async script() {
+      return (await layout()).find((n) => n.role === 31)?.value ?? "";
+    },
   };
 }
 
@@ -151,14 +177,9 @@ async function originalUi(pid: number) {
   const outputEdit = () => edits().find((h) => getWindowLong(h, -16) & 0x800)!;
   return {
     async argumentGap() {
-      let combo = 0;
-      enumChildWindows(dialog, (h) => {
-        if (getClassName(h) === "ComboBox") combo = h;
-        return true;
-      });
       const fields = argEdits();
       const last = getWindowRect(fields[fields.length - 1]!);
-      return (getWindowRect(combo).top - last.bottom) / (last.bottom - last.top);
+      return (getWindowRect(scriptEdit()).top - last.bottom) / (last.bottom - last.top);
     },
     async checkBorder() {
       const fields = argEdits();
@@ -180,21 +201,11 @@ async function originalUi(pid: number) {
       if (initial !== added) throw new Error(`argument borders differ: initial=${initial}, added=${added}`);
     },
     async argumentHeight() {
-      let combo = 0;
-      enumChildWindows(dialog, (h) => {
-        if (getClassName(h) === "ComboBox") combo = h;
-        return true;
-      });
-      return getWindowRect(combo).top - getWindowRect(argEdits()[0]!).top;
+      return getWindowRect(scriptEdit()).top - getWindowRect(argEdits()[0]!).top;
     },
     async add() {
-      let combo = 0;
-      enumChildWindows(dialog, (h) => {
-        if (getClassName(h) === "ComboBox") combo = h;
-        return true;
-      });
       const origin = clientToScreen(dialog, 0, 0);
-      await clickAt(dialog, getClientRect(dialog).right - 40, getWindowRect(combo).top - origin.y - 20, 0);
+      await clickAt(dialog, getClientRect(dialog).right - 40, getWindowRect(scriptEdit()).top - origin.y - 20, 0);
     },
     async remove() {
       const fields = argEdits();
@@ -220,6 +231,20 @@ async function originalUi(pid: number) {
     async args() {
       return argEdits().map((h) => getControlText(h));
     },
+    async examples() {
+      const origin = clientToScreen(dialog, 0, 0);
+      const editor = getWindowRect(scriptEdit());
+      await clickAt(dialog, editor.left - origin.x + 70, getClientRect(dialog).bottom - 20, 0);
+    },
+    async pickExample() {
+      const origin = clientToScreen(dialog, 0, 0);
+      const editor = getWindowRect(scriptEdit());
+      await clickAt(dialog, editor.right - origin.x + 24, 18, 0);
+      postMessage(dialog, WM_KEYDOWN, VK_DOWN, 0);
+    },
+    async script() {
+      return getControlText(scriptEdit());
+    },
   };
 }
 
@@ -230,6 +255,20 @@ export async function testit(): Promise<void> {
     await client.waitForRenderIdle();
     sendCommand(frame, cmdId("CmdRunPDFScript"));
     const ui = USE_NG ? await ngUi(client) : await originalUi(proc.pid!);
+    if (!(await ui.script()).includes("\n")) throw new Error("initial script lost its line breaks");
+    if (!(await ui.script()).startsWith("// Info: Print the page count of a PDF.")) {
+      throw new Error("reading script metadata changed the source");
+    }
+    await ui.examples();
+    await ui.pickExample();
+    await pollUntil(
+      () => ui.script(),
+      (s) => s.includes("Add a free-text annotation to the first page."),
+      {
+        error: (s) => `script list selection did not load the script: ${JSON.stringify(s)}`,
+      },
+    );
+    await ui.examples();
     const args = await ui.args();
     const initialHeight = await ui.argumentHeight();
     const gap = await ui.argumentGap();

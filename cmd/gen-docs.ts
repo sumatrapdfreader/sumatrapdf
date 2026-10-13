@@ -7,6 +7,7 @@ import { join, resolve } from "node:path";
 import { commands as commandsDef } from "./gen-commands";
 import { checkCdnImages } from "./r2";
 import { copyFileNormalized, websiteDocsDir } from "./util.js";
+import { genPDFScripts } from "./gen-pdf-scripts";
 
 const docsDir = "docs";
 const manualOutDir = join(".work", "docs");
@@ -157,7 +158,7 @@ function copyScriptExamples(outDir: string, pages: string[]): void {
       throw new Error(`${kScriptExamplesPage}: duplicate script ${name}`);
     }
     names.add(name);
-    copyFileNormalized(join(outDir, "scripts", name), join(scriptsDir, name));
+    copyFileNormalized(join(outDir, "scripts", name), join(docsDir, "scripts", name));
   }
   for (const file of readdirSync(scriptsDir, { withFileTypes: true })) {
     if (file.isFile() && file.name.endsWith(".js") && !names.has(file.name)) {
@@ -292,6 +293,7 @@ export type GenDocsOptions = {
 export async function main(opts: GenDocsOptions = {}) {
   const timeStart = performance.now();
   console.log("gen-docs starting");
+  genPDFScripts();
 
   // CI has no (private) sumatra-website checkout; the exe ships without the manual
   if (!existsSync(mdDir)) {

@@ -115,7 +115,6 @@ export const sharedFiles = [
   "src/shared/AdvancedSettingsDialogCommon.h",
   "src/shared/PDFScript.h",
   "src/shared/PDFScriptCommon.cpp",
-  "src/shared/PDFScriptExamples.inc",
   "src/shared/RestrictedUseConfig.cpp",
   "src/shared/RestrictedUseConfig.h",
   "src/shared/AnnotEditToolbarCommon.cpp",

@@ -12,6 +12,7 @@ import {
 } from "node:fs";
 import { dirname, join, relative, resolve, sep } from "node:path";
 import type { Toolchain } from "./ng-toolchain";
+import { genPDFScripts } from "../gen-pdf-scripts";
 
 const root = resolve(import.meta.dir, "../..");
 export const fontPatterns: [string, string[]][] = [
@@ -75,6 +76,7 @@ export async function packEmbedded(
   const staging = join(dir, "embedded");
   const archive = join(dir, "embedded.lzsa");
   const inputs = new Map<string, string>();
+  inputs.set("scripts.js", genPDFScripts(inputRoot));
   const docs = join(inputRoot, ".work/docs");
   if (opts.manual) {
     for (const src of filesUnder(docs)) inputs.set(relative(docs, src), src);

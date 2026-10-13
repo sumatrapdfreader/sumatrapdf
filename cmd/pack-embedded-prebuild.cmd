@@ -73,6 +73,7 @@ if exist "%WORK%\docs\" (
 )
 if not exist "%STAGING%\" mkdir "%STAGING%"
 copy /y "%WORK%\translations.txt" "%STAGING%\translations.txt" >nul || exit /b 1
+copy /y "%WORK%\scripts.js" "%STAGING%\scripts.js" >nul || exit /b 1
 copy /y "%ROOT%\ext\marked.min.js" "%STAGING%\marked.min.js" >nul || exit /b 1
 copy /y "%ROOT%\ext\mermaid.min.js" "%STAGING%\mermaid.min.js" >nul || exit /b 1
 

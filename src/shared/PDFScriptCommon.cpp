@@ -5,6 +5,7 @@
 #include "base/File.h"
 #include "base/CmdLineArgs.h"
 #include "base/UITask.h"
+#include "EmbeddedResources.h"
 #if OS_POSIX && !OS_WASM
 #include <errno.h>
 #include <spawn.h>
@@ -15,23 +16,48 @@ extern char** environ;
 #endif
 #include "PDFScript.h"
 
-struct PDFScriptExample {
-    Str name;
-    Str source;
-};
+static StrVec gScriptNames;
+static StrVec gScriptSources;
 
-#include "PDFScriptExamples.inc"
+static void LoadPDFScripts() {
+    static bool loaded = false;
+    if (loaded) return;
+    loaded = true;
+    int size = 0;
+    u8* data = GetEmbeddedFileData(StrL("scripts.js"), &size);
+    if (!data) return;
+    Split(&gScriptSources, Str((char*)data, size), StrL("// ---"));
+    free(data);
+
+    const Str prefix = StrL("// Info:");
+    for (Str source : gScriptSources) {
+        Str name;
+        Str line;
+        Str rest = source;
+        while (str::NextLine(rest, line, rest)) {
+            line = str::DupTemp(line);
+            str::TrimWSInPlace(line, str::TrimOpt::Both);
+            if (!str::StartsWith(line, prefix)) continue;
+            name = Str(line.s + len(prefix), len(line) - len(prefix));
+            str::TrimWSInPlace(name, str::TrimOpt::Both);
+            break;
+        }
+        if (len(name) == 0) name = fmt("Script %d", len(gScriptNames) + 1);
+        gScriptNames.Append(name);
+    }
+}
 
 int PDFScriptCount() {
-    return dimof(kPDFScripts);
+    LoadPDFScripts();
+    return len(gScriptSources);
 }
 
 Str PDFScriptName(int index) {
-    return index >= 0 && index < PDFScriptCount() ? kPDFScripts[index].name : Str();
+    return index >= 0 && index < PDFScriptCount() ? gScriptNames[index] : Str();
 }
 
 Str PDFScriptSource(int index) {
-    return index >= 0 && index < PDFScriptCount() ? kPDFScripts[index].source : Str();
+    return index >= 0 && index < PDFScriptCount() ? gScriptSources[index] : Str();
 }
 
 PDFScriptResult::~PDFScriptResult() {
