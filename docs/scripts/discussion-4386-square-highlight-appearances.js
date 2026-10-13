@@ -1,4 +1,5 @@
 // Discussion #4386: https://github.com/sumatrapdfreader/sumatrapdf/discussions/4386
+// Discussion #4516: https://github.com/sumatrapdfreader/sumatrapdf/discussions/4516
 // Info: Give highlight annotations square corners.
 // Arg: Input PDF
 // Arg: New output PDF

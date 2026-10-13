@@ -512,20 +512,32 @@
     const escape = global.markdownit().utils.escapeHtml;
     let info = "";
     const args = [];
+    const discussions = [];
     source.split("\n").forEach(function (line) {
       line = line.trim();
+      const discussion = /^\/\/ Discussion #([0-9]+):/.exec(line);
+      if (discussion) discussions.push(discussion[1]);
       if (line.startsWith("// Info:")) info = line.slice("// Info:".length).trim();
       if (line.startsWith("// Arg:")) args.push(line.slice("// Arg:".length).trim());
     });
     let html = info ? "<p>" + escape(info) + "</p>" : "";
     const discussion = /^discussion-([0-9]+)-/.exec(name);
-    if (discussion) {
+    if (!discussions.length && discussion) discussions.push(discussion[1]);
+    if (discussions.length) {
       html +=
-        '<p>From <a href="https://github.com/sumatrapdfreader/sumatrapdf/discussions/' +
-        discussion[1] +
-        '" target="_blank" rel="noopener noreferrer">discussion #' +
-        discussion[1] +
-        "</a></p>";
+        "<p>From " +
+        discussions
+          .map(function (number) {
+            return (
+              '<a href="https://github.com/sumatrapdfreader/sumatrapdf/discussions/' +
+              number +
+              '" target="_blank" rel="noopener noreferrer">discussion #' +
+              number +
+              "</a>"
+            );
+          })
+          .join(", ") +
+        "</p>";
     }
     html +=
       '<p><a href="https://www.sumatrapdfreader.org/docs/scripts/' +
