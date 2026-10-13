@@ -330,7 +330,7 @@ across calls) — keep the caller's stable string instead.
 
 To add a new advanced setting:
 
-- add definition in cmd/gen-settings.ts
+- add definition in cmd/gen-settings.ts (and cmd/ng-gen-settings.ts). A string setting with a fixed set of values gets `.enum([...])`, plus `.emptyMeans("...")` when empty is allowed: the docs list the values, the dialog and the command palette offer them, and loading replaces anything else with the default
 - run "bun cmd/gen-code.ts" (or "bun cmd/gen-settings.ts") to regenerate src/Settings.h and src/Settings.cpp (it also re-emits the settings docs)
 
 ## Adding a new command
