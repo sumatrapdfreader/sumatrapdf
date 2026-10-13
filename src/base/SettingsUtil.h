@@ -53,6 +53,11 @@ struct FieldInfo {
     // app-managed / deprecated setting: serialized like any other, but hidden
     // from the advanced settings dialog
     bool internal = false;
+    // enum (string) setting: the allowed values, nullptr-terminated. Loading
+    // replaces any other value with the default
+    const char** enumValues = nullptr;
+    // what an empty value stands for; nullptr if the enum can't be empty
+    const char* enumEmpty = nullptr;
 };
 
 struct StructInfo {

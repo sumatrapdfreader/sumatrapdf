@@ -349,9 +349,7 @@ struct FileState {
 struct TabState {
     // path of the document
     Str filePath;
-    // layout of pages in this tab. valid values: automatic, single page,
-    // facing, book view, continuous, continuous facing, continuous book
-    // view
+    // layout of pages in this tab
     Str displayMode;
     // number of the last read page, or `bm:<bookmark>` for documents with
     // chapters (see PagePosition.cpp)
@@ -452,9 +450,7 @@ struct Fullscreen {
     bool showMenubar;
     // page layout in presentation (Ctrl+L) and windowed fullscreen
     // (Shift+Ctrl+L / F11). empty keeps the current behavior: presentation
-    // uses single page, windowed fullscreen keeps the existing layout.
-    // valid values: automatic, single page, facing, book view, continuous,
-    // continuous facing, continuous book view
+    // uses single page, windowed fullscreen keeps the existing layout
     Str displayMode;
 };
 
@@ -599,8 +595,7 @@ struct EBookUI {
     // (epub, mobi etc.)
     ParsedColor windowBgCol;
     // default page layout for ebooks; empty uses the global
-    // DefaultDisplayMode. valid values: automatic, single page, facing,
-    // book view, continuous, continuous facing, continuous book view
+    // DefaultDisplayMode
     Str defaultDisplayMode;
 };
 
@@ -651,8 +646,7 @@ struct ComicBookUI {
     // #6305)
     bool autoRotateWidePages;
     // default page layout for comic books; empty uses the global
-    // DefaultDisplayMode. valid values: automatic, single page, facing,
-    // book view, continuous, continuous facing, continuous book view
+    // DefaultDisplayMode
     Str defaultDisplayMode;
     // default zoom for comic books; empty uses fit page. valid values: fit
     // page, fit width, fit height, fit content, fit visible, shrink to fit

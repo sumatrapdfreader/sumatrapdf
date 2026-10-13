@@ -153,6 +153,11 @@ export async function testit(): Promise<void> {
     await typeQuery(client, frame, "=Toolbar =", 3);
     await typeQuery(client, frame, "=Toolbar = over", 1);
 
+    // more enums: ThumbnailsType, a nested PageGrid.Units, an optional display mode
+    await typeQuery(client, frame, "=ThumbnailsType =", 2);
+    await typeQuery(client, frame, "=Units =", 4);
+    await typeQuery(client, frame, "=ComicBookUI.DefaultDisplayMode =", 8); // "" is not a row
+
     // Esc in the value stage goes back to the settings, not out of the palette
     await escape(client, frame, "Esc in the value stage did not return to the settings", backToSettings);
 

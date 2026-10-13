@@ -13,6 +13,24 @@ static Str FieldDefaultStr(const FieldInfo& field) {
     return Str((const char*)field.value);
 }
 
+// an enum setting keeps a listed value (any case) and empty when allowed;
+// anything else falls back to the default
+static Str ValidEnumValue(const FieldInfo& field, Str value) {
+    if (!field.enumValues) {
+        return value;
+    }
+    if (len(value) == 0) {
+        return field.enumEmpty ? value : FieldDefaultStr(field);
+    }
+    for (const char** v = field.enumValues; *v; v++) {
+        if (str::EqI(value, Str(*v))) {
+            return value;
+        }
+    }
+    logf("ValidEnumValue: '%s' is not a valid value, using '%s'\n", value, FieldDefaultStr(field));
+    return FieldDefaultStr(field);
+}
+
 // only escape characters which are significant to SquareTreeParser:
 // newlines and leading/trailing whitespace (and escape characters)
 static bool NeedsEscaping(Str s) {
@@ -343,7 +361,13 @@ static void deserializeField(const FieldInfo& field, u8* base, Str value) {
             Str* strPtr = (Str*)fieldPtr;
             str::Free(*strPtr);
             if (!str::IsNull(value)) {
-                *strPtr = UnescapeStr(value);
+                Str s = UnescapeStr(value);
+                Str valid = ValidEnumValue(field, s);
+                if (valid.s != s.s) {
+                    str::Free(s);
+                    s = str::Dup(valid);
+                }
+                *strPtr = s;
             } else {
                 *strPtr = str::Dup(FieldDefaultStr(field));
             }

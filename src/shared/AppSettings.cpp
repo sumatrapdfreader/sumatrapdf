@@ -1565,73 +1565,35 @@ void ToggleSettingsBool(bool* p) {
     ApplySettingsToOpenWindows();
 }
 
-// Enum settings: string settings restricted to a fixed set of values. Matched
-// by full path or by the last path segment, so a nested setting reuses the same
-// list (e.g. Fullscreen.Toolbar -> Toolbar).
-// clang-format off
-static const char* gEnumDisplayMode[] = {
-    "automatic", "single page", "facing", "book view",
-    "continuous", "continuous facing", "continuous book view", "page aspect", nullptr,
-};
-static const char* gEnumFullscreenDisplayMode[] = {
-    "", "automatic", "single page", "facing", "book view",
-    "continuous", "continuous facing", "continuous book view", nullptr,
-};
-static const char* gEnumToolbar[] = {"show", "hide", "overlay", nullptr};
-static const char* gEnumToolbarPosition[] = {"top", "bottom", nullptr};
-static const char* gEnumScrollbars[] = {"windows", "smart", "overlay", "hidden", nullptr};
-static const char* gEnumEngineeringDrawingEnhance[] = {"off", "auto", "on", nullptr};
-static const char* gEnumDocumentColorsFollowTheme[] = {"off", "smart", "legacy", nullptr};
-static const char* gEnumHomePageViewMode[] = {"thumbnails", "list", nullptr};
-static const char* gEnumFilePicker[] = {"", "os", "sumatrapdf", nullptr};
-static const char* gEnumSidebarWindowSize[] = {"", "keep", "grow", nullptr};
-static const char* gEnumPrinterUI[] = {"", "auto", "modern", "classic", nullptr};
-static const char* gEnumPrintScale[] = {"shrink", "fit", "none", nullptr};
-static const char* gEnumCollate[] = {"default", "collate", "nocollate", nullptr};
-static const char* gEnumFreeTextAlignment[] = {"left", "center", "right", nullptr};
-static const char* gEnumHelpTheme[] = {"app", "light", "dark", nullptr};
-
-struct EnumSettingDef {
-    const char* name; // full path or leaf name (last dotted segment)
-    const char** values;
-};
-
-static const EnumSettingDef gEnumSettings[] = {
-    {"DefaultDisplayMode", gEnumDisplayMode},
-    {"Fullscreen.DisplayMode", gEnumFullscreenDisplayMode},
-    {"Toolbar", gEnumToolbar},
-    {"ToolbarPosition", gEnumToolbarPosition},
-    {"Scrollbars", gEnumScrollbars},
-    {"EngineeringDrawingEnhance", gEnumEngineeringDrawingEnhance},
-    {"DocumentColorsFollowTheme", gEnumDocumentColorsFollowTheme},
-    {"HomePageViewMode", gEnumHomePageViewMode},
-    {"FilePicker", gEnumFilePicker},
-    {"PrinterUI", gEnumPrinterUI},
-    {"SidebarWindowSize", gEnumSidebarWindowSize},
-    {"PrintScale", gEnumPrintScale},
-    {"Collate", gEnumCollate},
-    {"FreeTextAlignment", gEnumFreeTextAlignment},
-    {"HelpTheme", gEnumHelpTheme},
-};
-// clang-format on
-
-// "Fullscreen.Toolbar" -> "Toolbar"
-static Str SettingPathLeaf(Str name) {
-    Str leaf = str::SliceFromCharLast(name, '.');
-    if (len(leaf) < 2) {
-        return name;
-    }
-    return Str(leaf.s + 1, leaf.len - 1);
-}
-
-const char** GetSettingsEnumValues(Str path) {
-    Str leaf = SettingPathLeaf(path);
-    for (const auto& def : gEnumSettings) {
-        if (str::EqI(path, Str(def.name)) || str::EqI(leaf, Str(def.name))) {
-            return def.values;
+// the FieldInfo of a setting by case-insensitive leaf or dotted path
+static const FieldInfo* FindSettingField(const StructInfo* info, Str prefix, Str name) {
+    const char* fieldName = info->fieldNames;
+    for (u16 i = 0; i < info->fieldCount; i++) {
+        const FieldInfo& field = info->fields[i];
+        Str fname(fieldName);
+        fieldName += len(fname) + 1;
+        if (field.type == SettingType::Comment || field.offset == (size_t)-1) {
+            continue;
+        }
+        TempStr path = len(prefix) > 0 ? fmt("%s.%s", prefix, fname) : str::DupTemp(fname);
+        if (field.type == SettingType::Struct) {
+            const FieldInfo* found = FindSettingField((const StructInfo*)field.value, path, name);
+            if (found) {
+                return found;
+            }
+            continue;
+        }
+        if (str::EqI(fname, name) || str::EqI(path, name)) {
+            return &field;
         }
     }
     return nullptr;
+}
+
+// the allowed values of an enum setting, nullptr for any other setting
+const char** GetSettingsEnumValues(Str path) {
+    const FieldInfo* field = FindSettingField(&gSettingsInfo, {}, path);
+    return field ? field->enumValues : nullptr;
 }
 
 // SaveSettings() re-generates these strings from their parsed twins, which would

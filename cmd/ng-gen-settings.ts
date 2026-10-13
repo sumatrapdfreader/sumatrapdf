@@ -37,6 +37,9 @@ class Field {
   DocComment: string;
   Version = "2.3";
   StructName = "";
+  // see enum() / emptyMeans()
+  EnumValues: string[] | null = null;
+  EnumEmpty: string | null = null;
 
   constructor(name: string, typ: Type, def: any, comment: string) {
     this.Name = name;
@@ -62,6 +65,17 @@ class Field {
   }
   doc(s: string): this {
     this.DocComment = s;
+    return this;
+  }
+  // a string setting restricted to these values; the docs list them and
+  // loading replaces anything else with the default
+  enum(values: string[]): this {
+    this.EnumValues = values;
+    return this;
+  }
+  // an enum that may also be empty; `meaning` says what empty stands for
+  emptyMeans(meaning: string): this {
+    this.EnumEmpty = meaning;
     return this;
   }
   structName(structName: string): this {
@@ -147,6 +161,19 @@ function emptyLine(): Field {
   return comment("");
 }
 
+// values of the DisplayMode settings; page aspect is a default-only choice
+const kDisplayModes = [
+  "automatic",
+  "single page",
+  "facing",
+  "book view",
+  "continuous",
+  "continuous facing",
+  "continuous book view",
+];
+const kDefaultDisplayModes = [...kDisplayModes, "page aspect"];
+const kToolbarModes = ["show", "hide", "overlay"];
+
 function rgb(r: number, g: number, b: number): string {
   const hex = (n: number) => n.toString(16).padStart(2, "0");
   return `#${hex(r)}${hex(g)}${hex(b)}`;
@@ -217,14 +244,10 @@ const ebookUI: Field[] = [
     "",
     "if given, sets the canvas background color for ebook documents (epub, mobi etc.)",
   ).ver("3.7"),
-  field(
-    "DefaultDisplayMode",
-    Str,
-    "",
-    "default page layout for ebooks; empty uses the global DefaultDisplayMode. " +
-      "valid values: automatic, single page, facing, book view, continuous, " +
-      "continuous facing, continuous book view",
-  ).ver("3.7"),
+  field("DefaultDisplayMode", Str, "", "default page layout for ebooks; empty uses the global DefaultDisplayMode")
+    .enum(kDefaultDisplayModes)
+    .emptyMeans("the global DefaultDisplayMode")
+    .ver("3.7"),
 ];
 
 // the colors after LinkColor are optional: when empty they're derived from
@@ -374,10 +397,10 @@ const fileTime: Field[] = [
 ];
 
 const printerDefaults: Field[] = [
-  field("PrintScale", Str, "shrink", "default value for scaling (shrink, fit, none)"),
-  field("Collate", Str, "default", "default value for collate in the print dialog (default, collate, nocollate)").ver(
-    "3.7",
-  ),
+  field("PrintScale", Str, "shrink", "default value for scaling (shrink, fit, none)").enum(["shrink", "fit", "none"]),
+  field("Collate", Str, "default", "default value for collate in the print dialog (default, collate, nocollate)")
+    .enum(["default", "collate", "nocollate"])
+    .ver("3.7"),
   field(
     "PrintDpi",
     Float,
@@ -440,10 +463,12 @@ const pageGrid: Field[] = [
   field("OffsetX", Float, 0, "horizontal origin offset from the left of the page, in PDF points").ver("3.7"),
   field("OffsetY", Float, 0, "vertical origin offset from the bottom of the page, in PDF points").ver("3.7"),
   field("Color", Color, rgb(128, 128, 255), "color of the page grid overlay").ver("3.7"),
-  field("Style", Str, "dots", "grid overlay style: dots (marks at intersections), dotted (dotted lines), or solid").ver(
-    "3.7",
-  ),
-  field("Units", Str, "in", "units shown in the Configure Page Grid dialog: pt, in, mm, or cm").ver("3.7"),
+  field("Style", Str, "dots", "grid overlay style: dots (marks at intersections), dotted (dotted lines), or solid")
+    .enum(["dots", "dotted", "solid"])
+    .ver("3.7"),
+  field("Units", Str, "in", "units shown in the Configure Page Grid dialog: pt, in, mm, or cm")
+    .enum(["pt", "in", "mm", "cm"])
+    .ver("3.7"),
 ];
 
 const fixedPageUI: Field[] = [
@@ -531,14 +556,10 @@ const comicBookUI: Field[] = [
       "its long side follows the window's, and Fit Page shows it as large as the other pages. " +
       "With the document rotated 90 degrees the spread shows upright (issue #6305)",
   ).ver("3.7"),
-  field(
-    "DefaultDisplayMode",
-    Str,
-    "",
-    "default page layout for comic books; empty uses the global DefaultDisplayMode. " +
-      "valid values: automatic, single page, facing, book view, continuous, " +
-      "continuous facing, continuous book view",
-  ).ver("3.7"),
+  field("DefaultDisplayMode", Str, "", "default page layout for comic books; empty uses the global DefaultDisplayMode")
+    .enum(kDefaultDisplayModes)
+    .emptyMeans("the global DefaultDisplayMode")
+    .ver("3.7"),
   field(
     "DefaultZoom",
     Str,
@@ -732,7 +753,10 @@ const fullscreen: Field[] = [
     "toolbar mode in fullscreen: show (pinned), hide (no toolbar), overlay " +
       "(toolbar floats over the page, only shown when the mouse is near it). " +
       "if empty, derived from Fullscreen.ShowToolbar",
-  ).ver("3.7"),
+  )
+    .enum(kToolbarModes)
+    .emptyMeans("show or hide, from Fullscreen.ShowToolbar")
+    .ver("3.7"),
   field("ShowMenubar", Bool, false, "if true, show the menu bar in fullscreen mode"),
   field(
     "DisplayMode",
@@ -740,9 +764,11 @@ const fullscreen: Field[] = [
     "",
     "page layout in presentation (Ctrl+L) and windowed fullscreen (Shift+Ctrl+L / F11). " +
       "empty keeps the current behavior: presentation uses single page, windowed fullscreen " +
-      "keeps the existing layout. valid values: automatic, single page, facing, book view, " +
-      "continuous, continuous facing, continuous book view",
-  ).ver("3.7"),
+      "keeps the existing layout",
+  )
+    .enum(kDisplayModes)
+    .emptyMeans("single page in presentation, the current layout in windowed fullscreen")
+    .ver("3.7"),
 ];
 
 const externalViewer: Field[] = [
@@ -892,7 +918,9 @@ const annotations: Field[] = [
     "left",
     "how text is aligned in newly created free text annotations (Text Alignment in the compact " +
       "property row): left, center or right. Right-to-left scripts (Arabic, Hebrew, Persian) want right",
-  ).ver("3.7"),
+  )
+    .enum(["left", "center", "right"])
+    .ver("3.7"),
   field(
     "PresetColors",
     Str,
@@ -971,7 +999,9 @@ const annotations: Field[] = [
     "",
     "icon shown for text (sticky note) annotations: comment, help, insert, key, " +
       "new paragraph, note or paragraph. If not set, note is used",
-  ),
+  )
+    .enum(["comment", "help", "insert", "key", "new paragraph", "note", "paragraph"])
+    .emptyMeans("note"),
   field(
     "DefaultAuthor",
     Str,
@@ -1112,10 +1142,9 @@ const fileState: Field[] = [
     "how pages are laid out for this document. The string is the persisted form of " +
       "DisplayModel::displayMode, so it's parsed after deserialization and written back " +
       "before serialization",
-  ).doc(
-    "layout of pages. valid values: automatic, single page, facing, book view, " +
-      "continuous, continuous facing, continuous book view",
-  ),
+  )
+    .enum(kDisplayModes)
+    .doc("layout of pages"),
   compactStruct("ScrollPos", scrollPos, "how far this document has been scrolled (in x and y direction)").structName(
     "PointF",
   ),
@@ -1141,9 +1170,10 @@ const fileState: Field[] = [
   ),
   compactStruct("WindowPos", windowPos, "default position (can be on any monitor)").structName("Rect"),
   field("ShowToc", Bool, true, "if true, show the table of contents (Bookmarks) sidebar when the document has one"),
-  field("SidebarView", Str, null, "what the sidebar's top panel shows: bookmarks (the default) or thumbnails").ver(
-    "3.7",
-  ),
+  field("SidebarView", Str, null, "what the sidebar's top panel shows: bookmarks (the default) or thumbnails")
+    .enum(["bookmarks", "thumbnails"])
+    .emptyMeans("bookmarks")
+    .ver("3.7"),
   field("SidebarDx", Int, 0, "width of the bookmarks / favorites sidebar in screen pixels, as last resized"),
   field("DisplayR2L", Bool, false, "if true, the document is displayed right-to-left in facing and book view modes"),
   field(
@@ -1222,13 +1252,7 @@ fileState.sort((a, b) => fileStateLayout.indexOf(a.Name) - fileStateLayout.index
 
 const tabState: Field[] = [
   field("FilePath", Str, null, "path of the document"),
-  field(
-    "DisplayMode",
-    Str,
-    "automatic",
-    "layout of pages in this tab. valid values: automatic, single page, facing, " +
-      "book view, continuous, continuous facing, continuous book view",
-  ),
+  field("DisplayMode", Str, "automatic", "layout of pages in this tab").enum(kDisplayModes),
   field(
     "PageNo",
     Str,
@@ -1241,7 +1265,10 @@ const tabState: Field[] = [
     "PointF",
   ),
   field("ShowToc", Bool, true, "if true, the table of contents was shown when the document was closed"),
-  field("SidebarView", Str, null, "what the sidebar's top panel showed: bookmarks or thumbnails").ver("3.7"),
+  field("SidebarView", Str, null, "what the sidebar's top panel showed: bookmarks or thumbnails")
+    .enum(["bookmarks", "thumbnails"])
+    .emptyMeans("bookmarks")
+    .ver("3.7"),
   compactArray("TocState", Int, null, "which table of contents items were expanded (see FileStates -> TocState)"),
 ];
 
@@ -1275,13 +1302,13 @@ const globalPrefs: Field[] = [
     "how pages are laid out by default. The string is the persisted form of " +
       "DefaultDisplayModeEnum, so it's parsed after deserialization and written back " +
       "before serialization",
-  ).doc(
-    "default layout of pages. valid values: automatic, single page, facing, " +
-      "book view, continuous, continuous facing, continuous book view, page aspect. " +
-      "page aspect (3.7+): first open of a PDF, XPS, DjVu, PostScript or DVI file " +
-      "uses page 1 — taller than wide is continuous + fit width, wider than tall " +
-      "is single page + fit page; a remembered FileState still wins",
-  ),
+  )
+    .enum(kDefaultDisplayModes)
+    .doc(
+      "default layout of pages. page aspect (3.7+): first open of a PDF, XPS, DjVu, PostScript or DVI file " +
+        "uses page 1 — taller than wide is continuous + fit width, wider than tall " +
+        "is single page + fit page; a remembered FileState still wins",
+    ),
   field(
     "DefaultZoom",
     Str,
@@ -1339,8 +1366,8 @@ const globalPrefs: Field[] = [
     "thumbnails",
     "how the home page shows the document history: thumbnails (a grid of page previews) or list (one row per file)",
   )
-    .ver("3.7")
-    .doc("valid values: thumbnails, list"),
+    .enum(["thumbnails", "list"])
+    .ver("3.7"),
   field(
     "ThumbnailsType",
     Str,
@@ -1349,8 +1376,8 @@ const globalPrefs: Field[] = [
       "cropped to a 212x150 frame) or full (the whole page, scaled to fit a 150x212 frame). Changing it " +
       "re-creates the thumbnails of the files that still exist in a background process",
   )
-    .ver("3.7")
-    .doc("valid values: legacy, full"),
+    .enum(["legacy", "full"])
+    .ver("3.7"),
   field(
     "FilePicker",
     Str,
@@ -1358,8 +1385,9 @@ const globalPrefs: Field[] = [
     "file open dialog used by Open File: empty or os (standard Windows file picker), " +
       "or sumatrapdf (Navigate Files in Folder). Toggled by Settings / SumatraPDF File Picker",
   )
-    .ver("3.7")
-    .doc("valid values: (empty), os, sumatrapdf"),
+    .enum(["os", "sumatrapdf"])
+    .emptyMeans("os")
+    .ver("3.7"),
   field(
     "PrinterUI",
     Str,
@@ -1370,8 +1398,9 @@ const globalPrefs: Field[] = [
       "driver's own property sheet). modern falls back to the classic dialog when Windows " +
       "can't show the modern one",
   )
-    .ver("3.7")
-    .doc("valid values: (empty), auto, modern, classic"),
+    .enum(["auto", "modern", "classic"])
+    .emptyMeans("auto")
+    .ver("3.7"),
   field(
     "ReloadModifiedDocuments",
     Bool,
@@ -1441,13 +1470,18 @@ const globalPrefs: Field[] = [
     "toolbar mode: show (pinned), hide (no toolbar), overlay (toolbar floats over " +
       "the page, sized to its natural width and centered, only shown when the mouse is near it). " +
       "if empty, derived from ShowToolbar",
-  ).ver("3.7"),
+  )
+    .enum(kToolbarModes)
+    .emptyMeans("show or hide, from ShowToolbar")
+    .ver("3.7"),
   field(
     "ToolbarPosition",
     Str,
     "top",
     "where the toolbar is placed: top or bottom (applies to both show and overlay modes)",
-  ).ver("3.7"),
+  )
+    .enum(["top", "bottom"])
+    .ver("3.7"),
   field(
     "SearchUIFloating",
     Bool,
@@ -1466,7 +1500,10 @@ const globalPrefs: Field[] = [
     Str,
     null,
     "what the sidebar's bottom panel shows: favorites (the default), bookmarks or thumbnails",
-  ).ver("3.7"),
+  )
+    .enum(["favorites", "bookmarks", "thumbnails"])
+    .emptyMeans("favorites")
+    .ver("3.7"),
   field(
     "SortFavoritesByName",
     Bool,
@@ -1497,8 +1534,9 @@ const globalPrefs: Field[] = [
       "(the window keeps its size and position, the document area shrinks), or grow (the window " +
       "grows by the sidebar width where the document can't spare it, and shrinks back on hide)",
   )
-    .ver("3.7")
-    .doc("valid values: (empty), keep, grow"),
+    .enum(["keep", "grow"])
+    .emptyMeans("keep")
+    .ver("3.7"),
   field("ShowLinks", Bool, false, "if true, draw a blue border around links in the document").ver("3.6"),
   field(
     "HighlightFormFields",
@@ -1603,7 +1641,9 @@ const globalPrefs: Field[] = [
     Str,
     "windows",
     "scrollbar mode: windows (standard Windows scrollbar), smart (overlay scrollbar with auto-hide), overlay (always visible overlay scrollbar), hidden (no scrollbars)",
-  ).ver("3.7"),
+  )
+    .enum(["windows", "smart", "overlay", "hidden"])
+    .ver("3.7"),
   field("ScrollbarInSinglePage", Bool, false, "if true, show a scrollbar in single page mode as well").ver("3.6"),
   field(
     "SmoothScroll",
@@ -1715,7 +1755,9 @@ const globalPrefs: Field[] = [
     "app",
     "color theme of the in-app manual (F1): app (follow the app's theme), light or dark. " +
       "The switch in the manual's top-right corner changes it",
-  ).ver("3.7"),
+  )
+    .enum(["app", "light", "dark"])
+    .ver("3.7"),
   // remembered by the light/dark toggle and System theme; not user-facing knobs
   field("LastLightTheme", Str, "", "the light theme the light/dark toggle and the System theme switch to")
     .internal()
@@ -1736,7 +1778,9 @@ const globalPrefs: Field[] = [
       "for UI chrome. Settings / Theme and the CmdSetDocumentColorsFollowTheme command set " +
       "all three values. Shift+I (Invert Colors) is separate: it swaps the page colors for " +
       "the session whatever this is set to",
-  ).ver("3.7"),
+  )
+    .enum(["off", "smart", "legacy"])
+    .ver("3.7"),
   field(
     "TocDy",
     Int,
@@ -1801,7 +1845,9 @@ const globalPrefs: Field[] = [
     Str,
     "off",
     "CAD/engineering PDF line rendering: off, auto (enhance if a CAD drawing is detected) or on",
-  ).ver("3.7"),
+  )
+    .enum(["off", "auto", "on"])
+    .ver("3.7"),
   field(
     "DisableAutoLinks",
     Bool,
@@ -1927,6 +1973,8 @@ const globalPrefs: Field[] = [
     "",
     "remembered engine for Translate Selection: Google, DeepL, Grok Build, Claude Code, OpenAI Codex or Antigravity",
   )
+    .enum(["Google", "DeepL", "Grok Build", "Claude Code", "OpenAI Codex", "Antigravity"])
+    .emptyMeans("the first available engine")
     .internal()
     .ver("3.7"),
   emptyLine(),
@@ -2212,12 +2260,40 @@ function formatComment(comment: string, start: string): string[] {
 }
 
 function formatArrayLines(data: string[][]): string[] {
-  return data.map((ld) => {
-    // 4th element (internal flag) is only emitted when true; otherwise the
-    // FieldInfo::internal default (false) applies
-    const extra = ld.length > 3 ? `, ${ld[3]}` : "";
-    return `\t{ ${ld[0]}, ${ld[1]}, ${ld[2]}${extra} },`;
-  });
+  // trailing FieldInfo members (internal, enumValues, enumEmpty) are only
+  // emitted when a field sets them; otherwise their defaults apply
+  return data.map((ld) => `\t{ ${ld.join(", ")} },`);
+}
+
+// the C array of an enum field's values; empty is a value when emptyMeans() is set
+function enumArrayName(fullName: string, field: Field): string {
+  return `gEnum${fullName}${field.Name}`;
+}
+
+function enumArrayDef(fullName: string, field: Field): string {
+  const values = field.EnumEmpty !== null ? ["", ...field.EnumValues!] : field.EnumValues!;
+  const items = values.map((v) => `"${escapeCStr(v)}"`).join(", ");
+  return `static const char* ${enumArrayName(fullName, field)}[] = { ${items}, nullptr };`;
+}
+
+// the docs list an enum's values after its description
+function enumDoc(field: Field): string {
+  if (!field.EnumValues) {
+    return "";
+  }
+  let s = `valid values: ${field.EnumValues.join(", ")}`;
+  if (field.EnumEmpty !== null) {
+    s += `; empty means ${field.EnumEmpty}`;
+  }
+  return s;
+}
+
+function docWithEnum(field: Field): string {
+  const e = enumDoc(field);
+  if (e === "") {
+    return field.DocComment;
+  }
+  return field.DocComment ? `${field.DocComment}. ${e}` : e;
 }
 
 // escape a string so it can be embedded in a C string literal
@@ -2377,6 +2453,7 @@ function buildMetaData(struc: Field, built: Record<string, number>): string {
   const names: string[] = [];
   const comments: string[] = [];
   const data: string[][] = [];
+  const enumArrays: string[] = [];
   let suffix = "";
   const n = built[struc.StructName] || 0;
   if (n > 0) {
@@ -2411,8 +2488,20 @@ function buildMetaData(struc: Field, built: Record<string, number>): string {
     if (field.Internal || internalRest) {
       dataLine.push("true");
     }
+    if (field.EnumValues) {
+      if (field.Type !== Str) {
+        throw new Error(`${field.Name}: only a string setting can be an enum`);
+      }
+      enumArrays.push(enumArrayDef(fullName, field));
+      if (dataLine.length === 3) {
+        dataLine.push("false");
+      }
+      dataLine.push(enumArrayName(fullName, field));
+      dataLine.push(field.EnumEmpty !== null ? `"${escapeCStr(field.EnumEmpty)}"` : "nullptr");
+    }
     data.push(dataLine);
   }
+  lines.push(...enumArrays);
   lines.push(`static const FieldInfo g${fullName}Fields[] = {`);
   lines.push(...formatArrayLines(data));
   lines.push("};");
@@ -2580,7 +2669,7 @@ function genStructHTML(struc: Field, indent: string): string {
   const fields = struc.Default as Field[];
   for (const field of fields) {
     if (field.NotSaved || isComment(field)) continue;
-    let comment = field.DocComment;
+    let comment = docWithEnum(field);
     if (field.Version !== "2.3") {
       comment += ` (introduced in version ${field.Version})`;
     }
@@ -2660,7 +2749,7 @@ function genStructMarkdown(struc: Field, indent: string): string {
   const fields = struc.Default as Field[];
   for (const field of fields) {
     if (field.NotSaved || isComment(field)) continue;
-    let comment = field.DocComment;
+    let comment = docWithEnum(field);
     if (field.Version !== "2.3") {
       comment += ` (introduced in version ${field.Version})`;
     }
@@ -2768,8 +2857,8 @@ what the different settings mean and what their default values are.</p>
 <p>Highlighted settings can't be changed from the UI. Modifying other settings
 directly in this file is not recommended.</p>
 
-<p>If you add or remove lines with square brackets, <b>make sure to always add/remove
-square brackets in pairs</b>! Else you risk losing all the data following them.</p>
+<p>If you add or remove lines with square brackets, <b>always add or remove the
+brackets in pairs</b>. Otherwise you risk losing all the data that follows them.</p>
 
 </div>
 
@@ -2863,7 +2952,7 @@ of <code>UiLanguage</code> setting in <a href="settings%VER_URL%">settings file<
 
 const tmplMarkdown = `Below is an explanation of what the different settings mean and what their default values are.
 
-If you add or remove lines with square brackets, **make sure to always add/remove square brackets in pairs**! Else you risk losing all the data following them.
+If you add or remove lines with square brackets, always add or remove the brackets in pairs. Otherwise you risk losing all the data that follows them.
 
 \`\`\`
 %INSIDE%
@@ -2879,7 +2968,7 @@ The components are hex values (ranging from 00 to FF) and stand for:
 - \`gg\` : green component
 - \`bb\` : blue component
 
-For example \`#ff0000\` is opaque red. \`#7fff0000\` is half-transparent red. \`#rrggbb\` (6 digits) is the same as \`#FFrrggbb\`. You can use [Sphere](https://colorsphere.app/) to pick a color. This applies to annotation colors too (\`Annotations.HighlightColor\`, underline, squiggly, strike-out).
+For example, \`#ff0000\` is opaque red, and \`#7fff0000\` is half-transparent red. \`#rrggbb\` (6 digits) is the same as \`#FFrrggbb\`. You can use [Sphere](https://colorsphere.app/) to pick a color. The same syntax applies to annotation colors too (\`Annotations.HighlightColor\`, underline, squiggly, strike-out).
 
 `;
 

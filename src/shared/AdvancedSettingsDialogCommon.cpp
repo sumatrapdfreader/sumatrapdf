@@ -227,9 +227,7 @@ void CollectSettings(Vec<SettingItem*>& items) {
             default:
                 item->strVal = str::Dup(*(Str*)fieldPtr);
                 item->defStr = str::Dup(Str((const char*)field.value));
-                if (field.type == SettingType::String) {
-                    item->enumValues = GetSettingsEnumValues(sf.path);
-                }
+                item->enumValues = field.enumValues;
                 break;
         }
         VecAppend(items, item);
