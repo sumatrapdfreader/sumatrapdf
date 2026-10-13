@@ -1,0 +1,232 @@
+svg: text on a path (#6332)
+
+<textPath> was run as a plain <tspan>, so its text was drawn at the
+origin. Flatten the referenced path to line segments and place each
+glyph by its distance along it, rotated to the tangent; startOffset
+sets where the text starts and x on a tspan is a distance too.
+
+diff --git a/source/svg/svg-run.c b/source/svg/svg-run.c
+index 7bfd7fbd4..410e28848 100644
+--- a/source/svg/svg-run.c
++++ b/source/svg/svg-run.c
+@@ -33,6 +33,8 @@
+ 
+ #define MAX_USE_DEPTH 100
+ 
++typedef struct svg_text_path svg_text_path;
++
+ typedef struct svg_state
+ {
+ 	fz_matrix transform;
+@@ -58,8 +60,141 @@ typedef struct svg_state
+ 	int is_bold;
+ 	int is_italic;
+ 	int text_anchor;
++	const svg_text_path *text_path; /* SumatraPDF: inside <textPath> */
+ } svg_state;
+ 
++/* SumatraPDF: text on a path (#6332). The referenced path flattened to line
++ * segments; glyphs are placed by their distance along it. */
++typedef struct
++{
++	float x0, y0, x1, y1, len, start;
++} svg_text_path_seg;
++
++struct svg_text_path
++{
++	svg_text_path_seg *segs;
++	int n, cap;
++	float cur_x, cur_y, sub_x, sub_y, total;
++};
++
++static void
++svg_text_path_add(fz_context *ctx, svg_text_path *tp, float x, float y)
++{
++	float dx = x - tp->cur_x, dy = y - tp->cur_y;
++	float len = sqrtf(dx * dx + dy * dy);
++	if (len > 0)
++	{
++		svg_text_path_seg *seg;
++		if (tp->n == tp->cap)
++		{
++			int cap = tp->cap ? tp->cap * 2 : 64;
++			tp->segs = fz_realloc_array(ctx, tp->segs, cap, svg_text_path_seg);
++			tp->cap = cap;
++		}
++		seg = &tp->segs[tp->n++];
++		seg->x0 = tp->cur_x;
++		seg->y0 = tp->cur_y;
++		seg->x1 = x;
++		seg->y1 = y;
++		seg->len = len;
++		seg->start = tp->total;
++		tp->total += len;
++	}
++	tp->cur_x = x;
++	tp->cur_y = y;
++}
++
++static void
++svg_text_path_moveto(fz_context *ctx, void *arg, float x, float y)
++{
++	svg_text_path *tp = arg;
++	tp->cur_x = tp->sub_x = x;
++	tp->cur_y = tp->sub_y = y;
++}
++
++static void
++svg_text_path_lineto(fz_context *ctx, void *arg, float x, float y)
++{
++	svg_text_path_add(ctx, arg, x, y);
++}
++
++static void
++svg_text_path_curveto(fz_context *ctx, void *arg, float x1, float y1, float x2, float y2, float x3, float y3)
++{
++	svg_text_path *tp = arg;
++	float x0 = tp->cur_x, y0 = tp->cur_y;
++	int i, n = 16;
++	for (i = 1; i <= n; i++)
++	{
++		float t = (float)i / n, u = 1 - t;
++		float x = u * u * u * x0 + 3 * u * u * t * x1 + 3 * u * t * t * x2 + t * t * t * x3;
++		float y = u * u * u * y0 + 3 * u * u * t * y1 + 3 * u * t * t * y2 + t * t * t * y3;
++		svg_text_path_add(ctx, tp, x, y);
++	}
++}
++
++static void
++svg_text_path_closepath(fz_context *ctx, void *arg)
++{
++	svg_text_path *tp = arg;
++	svg_text_path_add(ctx, tp, tp->sub_x, tp->sub_y);
++}
++
++static const fz_path_walker svg_text_path_walker = {
++	svg_text_path_moveto,
++	svg_text_path_lineto,
++	svg_text_path_curveto,
++	svg_text_path_closepath,
++};
++
++/* point and unit tangent at distance d along the path; 0 when d is off it */
++static int
++svg_text_path_at(const svg_text_path *tp, float d, float *x, float *y, float *tx, float *ty)
++{
++	int i;
++	if (tp->n == 0 || d < 0 || d > tp->total)
++		return 0;
++	for (i = 0; i < tp->n; i++)
++	{
++		const svg_text_path_seg *seg = &tp->segs[i];
++		if (d <= seg->start + seg->len || i == tp->n - 1)
++		{
++			float t = (d - seg->start) / seg->len;
++			*x = seg->x0 + (seg->x1 - seg->x0) * t;
++			*y = seg->y0 + (seg->y1 - seg->y0) * t;
++			*tx = (seg->x1 - seg->x0) / seg->len;
++			*ty = (seg->y1 - seg->y0) / seg->len;
++			return 1;
++		}
++	}
++	return 0;
++}
++
++/* Like fz_show_string, but trm.e is the distance along the path and each
++ * glyph is rotated to the tangent at its midpoint. */
++static fz_matrix
++svg_show_string_on_path(fz_context *ctx, fz_text *text, fz_font *user_font, fz_matrix trm, const char *s, const svg_text_path *tp)
++{
++	float fs = trm.a;
++	while (*s)
++	{
++		fz_font *font;
++		int ucs, gid;
++		float adv, w, x, y, tx, ty;
++		s += fz_chartorune(&ucs, s);
++		gid = fz_encode_character_with_fallback(ctx, user_font, ucs, 0, FZ_LANG_UNSET, &font);
++		adv = gid >= 0 ? fz_advance_glyph(ctx, font, gid, 0) : 0;
++		w = adv * fs;
++		if (svg_text_path_at(tp, trm.e + w / 2, &x, &y, &tx, &ty))
++		{
++			fz_matrix gm = { fs * tx, fs * ty, fs * ty, -fs * tx, x - tx * w / 2, y - ty * w / 2 };
++			fz_show_glyph_aux(ctx, text, font, gm, adv, gid, ucs, ucs, 0, 0, FZ_BIDI_LTR, FZ_LANG_UNSET);
++		}
++		trm.e += w;
++	}
++	return trm;
++}
++
+ static void svg_parse_common(fz_context *ctx, svg_document *doc, fz_xml *node, svg_state *state);
+ static void svg_run_element(fz_context *ctx, fz_device *dev, svg_document *doc, fz_xml *root, const svg_state *state);
+ 
+@@ -1746,7 +1881,10 @@ svg_run_text_string(fz_context *ctx, fz_device *dev, fz_matrix trm, const char *
+ 				trm.e -= (adv.e - trm.e);
+ 		}
+ 
+-		trm = fz_show_string(ctx, text, font, trm, s, 0, 0, FZ_BIDI_LTR, FZ_LANG_UNSET);
++		if (state->text_path)
++			trm = svg_show_string_on_path(ctx, text, font, trm, s, state->text_path);
++		else
++			trm = fz_show_string(ctx, text, font, trm, s, 0, 0, FZ_BIDI_LTR, FZ_LANG_UNSET);
+ 
+ 		if (state->fill_is_set)
+ 			fz_fill_text(ctx, dev, text,
+@@ -1813,6 +1951,10 @@ svg_run_text(fz_context *ctx, fz_device *dev, svg_document *doc, fz_xml *root, c
+ 	char *y_att = fz_xml_att(root, "y");
+ 	char *dx_att = fz_xml_att(root, "dx");
+ 	char *dy_att = fz_xml_att(root, "dy");
++	svg_text_path tp = { 0 };
++	fz_path *path = NULL;
++
++	fz_var(path);
+ 
+ 	svg_begin_state(ctx, &local_state, inherit_state);
+ 	fz_try(ctx)
+@@ -1824,6 +1966,26 @@ svg_run_text(fz_context *ctx, fz_device *dev, svg_document *doc, fz_xml *root, c
+ 		trm.e = x;
+ 		trm.f = y;
+ 
++		/* SumatraPDF: text on a path (#6332) */
++		if (fz_xml_is_tag(root, "textPath"))
++		{
++			char *href_att = fz_xml_att_alt(root, "xlink:href", "href");
++			char *offset_att = fz_xml_att(root, "startOffset");
++			fz_xml *linked = (href_att && href_att[0] == '#') ? fz_tree_lookup(ctx, doc->idmap, href_att + 1) : NULL;
++			char *d_att = linked ? fz_xml_att(linked, "d") : NULL;
++			if (d_att)
++			{
++				path = fz_new_path(ctx);
++				svg_parse_path_data(ctx, path, d_att);
++				fz_walk_path(ctx, path, &svg_text_path_walker, &tp);
++				fz_drop_path(ctx, path);
++				path = NULL;
++				local_state.text_path = &tp;
++				trm.e = offset_att ? svg_parse_length(offset_att, tp.total, local_state.fontsize) : 0;
++				trm.f = 0;
++			}
++		}
++
+ 		if (x_att) trm.e = svg_parse_length(x_att, local_state.viewbox_w, local_state.fontsize);
+ 		if (y_att) trm.f = svg_parse_length(y_att, local_state.viewbox_h, local_state.fontsize);
+ 
+@@ -1848,7 +2010,11 @@ svg_run_text(fz_context *ctx, fz_device *dev, svg_document *doc, fz_xml *root, c
+ 		}
+ 	}
+ 	fz_always(ctx)
++	{
++		fz_drop_path(ctx, path);
++		fz_free(ctx, tp.segs);
+ 		svg_end_state(ctx, &local_state);
++	}
+ 	fz_catch(ctx)
+ 		fz_rethrow(ctx);
+ 
+@@ -2001,6 +2167,7 @@ svg_run_document(fz_context *ctx, svg_document *doc, fz_xml *root, fz_device *de
+ 	state.is_bold = 0;
+ 	state.is_italic = 0;
+ 	state.text_anchor = 0;
++	state.text_path = NULL;
+ 
+ 	fz_try(ctx)
+ 	{
