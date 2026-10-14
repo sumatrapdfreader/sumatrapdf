@@ -41,7 +41,6 @@
 #include "RefHover.h"
 #include "gui/DocCanvas.h"
 #include "AnnotEditToolbar.h"
-#include "SelectTextKeyboard.h"
 
 #if OS_WIN
 
@@ -535,9 +534,6 @@ void AppShellApplyNativeCursor(MainWindow* win) {
 }
 
 float CanvasScale(MainWindow* win);
-bool FreeTextInPlaceSetText(MainWindow* win, const WCHAR* text);
-bool CommandPaletteSetText(MainWindow* win, const WCHAR* text);
-bool FreeTextInPlaceCommitOnChar(MainWindow* win, int ch);
 
 // orig's SumatraPDF.h. Posted to the canvas; ng has no canvas child.
 constexpr int kSbHalfPageUp = WM_USER + 102;
@@ -1032,29 +1028,6 @@ static LRESULT CALLBACK ShellSubclass(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp,
         case WM_KEYUP:
             if (MainWindow* win = WinOf(hwnd)) {
                 if (ForwardBrowserMsg(win, msg, wp, lp)) {
-                    return 0;
-                }
-            }
-            break;
-        case WM_SETTEXT:
-            if (MainWindow* win = WinOf(hwnd)) {
-                if (FreeTextInPlaceSetText(win, (const WCHAR*)lp)) {
-                    return TRUE;
-                }
-                if (CommandPaletteSetText(win, (const WCHAR*)lp)) {
-                    return TRUE;
-                }
-            }
-            break;
-        case WM_CHAR:
-            if (MainWindow* win = WinOf(hwnd)) {
-                if (FreeTextInPlaceCommitOnChar(win, (int)wp)) {
-                    return 0;
-                }
-                // a posted WM_CHAR (the keyboard-selection test types 'v')
-                // never becomes a gpui keydown. Handling it there as well
-                // would toggle visual mode twice for a real key.
-                if (SelectTextWithKeyboardOnChar(win, (int)wp)) {
                     return 0;
                 }
             }

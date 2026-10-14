@@ -11,7 +11,7 @@ import { copyFileSync, mkdirSync, rmSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 import { ControlClient, ControlCommand } from "./control";
 import { IS_MAC } from "./host.ts";
-import { ROOT, cmdId, runStandalone, SLOW_BUILD_FACTOR, tmpPath } from "./util";
+import { ROOT, USE_NG, cmdId, runStandalone, SLOW_BUILD_FACTOR, tmpPath } from "./util";
 import {
   enumWindows,
   getClassName,
@@ -193,7 +193,13 @@ export async function testit(): Promise<void> {
     if (!findWnd) {
       throw new Error("issue-6117: the Find window did not open");
     }
-    sendText(getFocusedHwnd(frame), TERM, true);
+    if (USE_NG) {
+      for (const ch of TERM) {
+        await toolReq(client, ["input", "find", "char", ch.charCodeAt(0), 0, 0, 0]);
+      }
+    } else {
+      sendText(getFocusedHwnd(frame), TERM, true);
+    }
     await resultsSel(client); // wait out the count scan
 
     // focus the results list by clicking a row, the way the report describes

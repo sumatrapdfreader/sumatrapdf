@@ -21,6 +21,7 @@ import {
   macDdeExecute,
   macFrameClientRect,
   macFrameVisible,
+  macSendChar,
   macSendMessage,
   macSendText,
   TestLayout,
@@ -722,7 +723,20 @@ export function getScrollPos(hwnd: number, bar: number = SB_VERT): number {
   return getScrollInfo(hwnd, bar).pos;
 }
 
+// ng takes characters through the control channel, whichever window they were
+// aimed at: it has no WM_CHAR hook on its frame. Native menus keep theirs.
+function ngChar(hwnd: number, msg: number, wParam: number | bigint): boolean {
+  if (!USE_NG || IS_MAC || msg !== WM_CHAR || getClassName(hwnd) === "#32768") {
+    return false;
+  }
+  macSendChar(Number(BigInt(wParam) & 0xffffn));
+  return true;
+}
+
 export function postMessage(hwnd: number, msg: number, wParam: number, lParam: number): boolean {
+  if (ngChar(hwnd, msg, wParam)) {
+    return true;
+  }
   if (IS_MAC) {
     macSendMessage(msg, wParam, lParam);
     return true;
@@ -745,6 +759,9 @@ export async function postChar(hwnd: number, ch: string): Promise<boolean> {
 // LRESULT as a bigint -- TreeView messages return HTREEITEM pointers that can
 // exceed 2^53, so they must not be coerced to a JS number.
 export function sendMessage(hwnd: number, msg: number, wParam: number | bigint, lParam: number | bigint): bigint {
+  if (ngChar(hwnd, msg, wParam)) {
+    return 0n;
+  }
   if (IS_MAC) {
     return macSendMessage(msg, wParam, lParam);
   }
@@ -1527,7 +1544,7 @@ export function tbGetButtonIndex(toolbar: number, cmdId: number): number {
 // set a window's text via WM_SETTEXT (works on edit controls cross-process,
 // unlike SendInput typing). Synchronous, so the wide buffer stays alive.
 export function sendText(hwnd: number, text: string): void {
-  if (IS_MAC) {
+  if (IS_MAC || USE_NG) {
     macSendText(text);
     return;
   }
