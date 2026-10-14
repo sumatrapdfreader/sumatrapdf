@@ -332,8 +332,14 @@ void PDFScriptWnd::OnExample() {
     RedrawWindow(hwnd, nullptr, nullptr, RDW_INVALIDATE | RDW_ALLCHILDREN | RDW_FRAME | RDW_NOERASE);
 }
 
-// the picked script's source and arguments again, without the edits
+// the dialog as it opened: the first script, its arguments, no output
 void PDFScriptWnd::OnReset(VirtMouseEvent*) {
+    if (running) return;
+    output->SetText({});
+    ShowOutput(false);
+    if (examples->GetCurrentSelection() != 0) {
+        examples->SetCurrentSelection(0);
+    }
     OnExample();
     script->SetFocus();
 }
@@ -426,8 +432,7 @@ void PDFScriptWnd::Create(MainWindow* owner, Str path) {
     auto* body = new VBox();
     body->alignCross = CrossAxisAlign::Stretch;
 
-    // the arguments, then the quiet "Add argument" under them and "Reset"
-    // at the right, which puts the picked script back the way it came
+    // the arguments, then the quiet "Add argument" under them
     auto* argsBlock = new VBox();
     argsBlock->alignCross = CrossAxisAlign::Stretch;
     argsBox = new VBox();
@@ -441,10 +446,6 @@ void PDFScriptWnd::Create(MainWindow* owner, Str path) {
     // lines up with the fields; the button pads its own text by 8
     addRow->AddChild(new Spacer(DpiScale(kScriptLabelDx + kToolDlgGapDx) - add->textPadding.left, 0));
     addRow->AddChild(add);
-    addRow->AddChild(new Spacer(0, 0), 1);
-    auto* reset = NewDlgButton(hwnd, Tr("Reset"), fontMeta, DlgButtonStyle::Ghost, false);
-    reset->onClick = MkMethod1<PDFScriptWnd, VirtMouseEvent*, &PDFScriptWnd::OnReset>(this);
-    addRow->AddChild(reset);
     argsBlock->AddChild(addRow);
     body->AddChild(new Padding(argsBlock, DpiScaledInsets(kToolDlgFilesPadDy, kToolDlgPadDx)));
     body->AddChild(new VirtLine());
@@ -479,6 +480,9 @@ void PDFScriptWnd::Create(MainWindow* owner, Str path) {
     auto* help = NewDlgButton(hwnd, Tr("Help"), fontText, DlgButtonStyle::Ghost, false);
     help->onClick = MkMethod1<PDFScriptWnd, VirtMouseEvent*, &PDFScriptWnd::OnHelp>(this);
     footer->AddChild(help);
+    auto* reset = NewDlgButton(hwnd, Tr("Reset"), fontText, DlgButtonStyle::Ghost, false);
+    reset->onClick = MkMethod1<PDFScriptWnd, VirtMouseEvent*, &PDFScriptWnd::OnReset>(this);
+    footer->AddChild(reset);
     footer->AddChild(new Spacer(0, 0), 1);
     auto* cancel = NewDlgButton(hwnd, Tr("Cancel"), fontText, DlgButtonStyle::Outline, false);
     cancel->onClick = MkMethod1<PDFScriptWnd, VirtMouseEvent*, &PDFScriptWnd::OnCancel>(this);

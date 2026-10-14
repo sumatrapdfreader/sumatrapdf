@@ -312,9 +312,12 @@ void PDFScriptView::OnExample(PDFScriptView*, gp::Ctx* cx, const gp::ClickEvent*
     gp::Notify(cx);
 }
 
-// the picked script's source and arguments again, without the edits
+// the dialog as it opened: the first script, its arguments, no output
 void PDFScriptView::OnReset(PDFScriptView*, gp::Ctx* cx, const gp::ClickEvent*) {
-    OnExample(nullptr, cx, nullptr, gScript.example);
+    if (gScript.running) return;
+    gp::InputSetValue(gScript.output, GStrL(""));
+    gScript.exampleScrollY = 0;
+    OnExample(nullptr, cx, nullptr, 0);
 }
 
 void PDFScriptView::OnScroll(PDFScriptView*, gp::Ctx* cx, const gp::ScrollEvent* ev) {
@@ -376,8 +379,7 @@ static gp::El* ScriptColumn(gp::Ctx* cx, float editorDy) {
                                      gp::ListenTo(gScriptView, &PDFScriptView::OnDelete, arg.id), gScript.running));
         args->Child(row);
     }
-    // "Add argument" lines up with the fields; "Reset" at the right puts the
-    // picked script back the way it came
+    // "Add argument" lines up with the fields
     args->Child(gp::Div(cx->a)
                     ->FlexRow()
                     ->ItemsCenter()
@@ -386,10 +388,7 @@ static gp::El* ScriptColumn(gp::Ctx* cx, float editorDy) {
                     ->Shrink0()
                     ->PadL(kScriptLabelDx + kToolDlgGapDx - kDlgBtnPadDx)
                     ->Child(ScriptGhostButton(cx, StrL("pdf-add-arg"), Tr("Add argument"),
-                                              gp::ListenTo(gScriptView, &PDFScriptView::OnAdd), gScript.running))
-                    ->Child(gp::Div(cx->a)->Flex1())
-                    ->Child(ScriptGhostButton(cx, StrL("pdf-reset"), Tr("Reset"),
-                                              gp::ListenTo(gScriptView, &PDFScriptView::OnReset), gScript.running)));
+                                              gp::ListenTo(gScriptView, &PDFScriptView::OnAdd), gScript.running)));
     col->Child(args);
     col->Child(DlgHairline(cx));
 
@@ -442,6 +441,8 @@ static gp::El* ScriptColumn(gp::Ctx* cx, float editorDy) {
                                     gp::ListenTo(gScriptView, &PDFScriptView::OnExamples)));
     footer->Child(
         ScriptGhostButton(cx, StrL("pdf-script-help"), Tr("Help"), gp::ListenTo(gScriptView, &PDFScriptView::OnHelp)));
+    footer->Child(ScriptGhostButton(cx, StrL("pdf-reset"), Tr("Reset"),
+                                    gp::ListenTo(gScriptView, &PDFScriptView::OnReset), gScript.running));
     footer->Child(gp::Div(cx->a)->Flex1());
     footer->Child(gpc::Button::New(cx, GStrL("pdf-script-cancel"))
                       ->Label(ToGpui(Tr("Cancel")))
