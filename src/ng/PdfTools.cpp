@@ -3541,12 +3541,8 @@ static gp::El* ToolFilesBlock(gp::Ctx* cx) {
                         ->Shrink0()
                         ->Child(gTool.ddFormat.Build(cx, StrL("pdftool-format"), kToolDlgComboDx)));
     }
-    save->Child(gpc::Button::New(cx, GStrL("pdftool-browse"))
-                    ->Label(ToGpui(Tr("Browse...")))
-                    ->Ghost()
-                    ->WithSize(gp::UiSize::Small)
-                    ->OnClick(gp::ListenTo(gToolView, &PdfToolView::OnBrowse))
-                    ->IntoEl());
+    save->Child(
+        DlgGhostButton(cx, GStrL("pdftool-browse"), Tr("Browse..."), gp::ListenTo(gToolView, &PdfToolView::OnBrowse)));
     return box;
 }
 

@@ -909,7 +909,8 @@ gp::El* DlgGhostButton(gp::Ctx* cx, gp::Str id, Str label, gp::Listener onClick,
                     ->PadX(kDlgBtnPadDx)
                     ->Shrink0()
                     ->Radius(kDlgBtnRadius);
-    Color colText = AccentColor(colBg, kDlgGhostDisabledShift);
+    // as orig's VirtButton: faint, but never lost in a dark background
+    Color colText = EnsureContrast(AccentColor(colBg, kDlgGhostDisabledShift), colBg);
     if (!disabled) {
         colText = ThemeWindowTextDisabledColor();
         b->HoverBg(ToGpui(AccentColor(colBg, kDlgGhostHoverShift)))

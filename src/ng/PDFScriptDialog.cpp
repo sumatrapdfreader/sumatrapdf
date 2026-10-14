@@ -344,13 +344,7 @@ static gp::El* ScriptLabel(gp::Ctx* cx, Str label) {
 }
 
 static gp::El* ScriptGhostButton(gp::Ctx* cx, Str id, Str label, gp::Listener onClick, bool disabled = false) {
-    return gpc::Button::New(cx, GpuiDup(cx->a, id))
-        ->Label(GpuiDup(cx->a, label))
-        ->Ghost()
-        ->WithSize(gp::UiSize::Small)
-        ->Disabled(disabled)
-        ->OnClick(onClick)
-        ->IntoEl();
+    return DlgGhostButton(cx, GpuiDup(cx->a, id), label, onClick, disabled);
 }
 
 static gp::El* ScriptCodeBox(gp::Ctx* cx, gp::El* editor) {
