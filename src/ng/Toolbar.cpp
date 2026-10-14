@@ -1035,12 +1035,9 @@ static gp::El* BuildAnnotColorStrip(MainWindow* win, gp::Ctx* cx) {
 
 // --- the row ----------------------------------------------------------------
 
+// a separator is a gap between button groups, not a line
 static gp::El* ToolbarSeparator(gp::Ctx* cx, int rowDy) {
-    int inset = DpiScale(6);
-    gp::El* box =
-        gp::Div(cx->a)->FlexRow()->W((float)DpiScale(8))->H((float)rowDy)->Shrink0()->ItemsCenter()->JustifyCenter();
-    box->Child(gp::Div(cx->a)->W(1)->H((float)(rowDy - 2 * inset))->Bg(ToGpui(TbEdgeColor())));
-    return box;
+    return gp::Div(cx->a)->W((float)DpiScale(12))->H((float)rowDy)->Shrink0();
 }
 
 static gp::El* ToolbarIcon(gp::Ctx* cx, Str svg, int iconSize, Color col) {

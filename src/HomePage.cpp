@@ -2094,14 +2094,6 @@ static void DrawHomeListRow(Gfx* gfx, ThumbnailLayout& thumb, const StrVec& filt
     }
 }
 
-// one thumbnail: the page image with a rounded outline, the caption (with
-// search-filter highlights) and the file-type icon
-// the reading-progress accent: the app icon's yellow, lighter on a dark page
-static Color HomeAccentColor() {
-    bool light = IsLightColor(ThemeMainWindowBackgroundColor());
-    return light ? MkRgb(0xe9, 0xb4, 0x00) : MkRgb(0xf2, 0xc5, 0x3d);
-}
-
 // a soft shadow under the page: three translucent layers, each a little
 // larger and lower than the last
 static void DrawHomeThumbnailShadow(Gfx* gfx, const Rect& page) {
@@ -2114,28 +2106,8 @@ static void DrawHomeThumbnailShadow(Gfx* gfx, const Rect& page) {
     }
 }
 
-// "Page 24 of 47" while a document is being read, otherwise its page count;
-// a chapter position ("3:12") is shown as stored
-static TempStr HomeThumbnailMetaTemp(FileState* fs, float* progressOut) {
-    *progressOut = 0;
-    bool showProgress = gSettings && gSettings->showHomePageReadingProgress;
-    StoredPagePos pos = ParseStoredPagePos(fs->pageNo);
-    if (showProgress && len(pos.bookmark) > 0) {
-        return FormatFileStateProgressTemp(fs);
-    }
-    if (fs->pageCount <= 0) {
-        return {};
-    }
-    if (showProgress && pos.pageNo > 1 && pos.pageNo <= fs->pageCount) {
-        *progressOut = (float)pos.pageNo / (float)fs->pageCount;
-        return fmt(Tr("Page %d of %d").s, pos.pageNo, fs->pageCount);
-    }
-    if (fs->pageCount == 1) {
-        return str::DupTemp(Tr("1 page"));
-    }
-    return fmt(Tr("%d pages").s, fs->pageCount);
-}
-
+// one thumbnail: the page image with a hairline and a shadow, the caption
+// (with search-filter highlights) and the page count under it
 static void DrawHomeThumbnail(Gfx* gfx, ThumbnailLayout& thumb, const StrVec& filterWords, Vec<u8>& highlighted,
                               PlatformFont* fontText, Color backgroundColor, bool isRtl) {
     FileState* fs = thumb.fs;

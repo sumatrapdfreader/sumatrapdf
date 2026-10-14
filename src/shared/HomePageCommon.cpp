@@ -11,6 +11,8 @@
 #include "AppSettings.h"
 #include "DisplayMode.h"
 #include "DocController.h"
+#include "PagePosition.h"
+#include "Theme.h"
 #include "EngineBase.h"
 #include "EngineAll.h"
 #include "FileHistory.h"
@@ -114,6 +116,34 @@ int CountHomePageFiles() {
         }
     }
     return n;
+}
+
+// "Page 24 of 47" while a document is being read, otherwise its page count;
+// a chapter position ("3:12") is shown as stored
+TempStr HomeThumbnailMetaTemp(FileState* fs, float* progressOut) {
+    *progressOut = 0;
+    bool showProgress = gSettings && gSettings->showHomePageReadingProgress;
+    StoredPagePos pos = ParseStoredPagePos(fs->pageNo);
+    if (showProgress && len(pos.bookmark) > 0) {
+        return FormatFileStateProgressTemp(fs);
+    }
+    if (fs->pageCount <= 0) {
+        return {};
+    }
+    if (showProgress && pos.pageNo > 1 && pos.pageNo <= fs->pageCount) {
+        *progressOut = (float)pos.pageNo / (float)fs->pageCount;
+        return fmt(Tr("Page %d of %d").s, pos.pageNo, fs->pageCount);
+    }
+    if (fs->pageCount == 1) {
+        return str::DupTemp(Tr("1 page"));
+    }
+    return fmt(Tr("%d pages").s, fs->pageCount);
+}
+
+// the reading-progress accent: the app icon's yellow, lighter on a dark page
+Color HomeAccentColor() {
+    bool light = IsLightColor(ThemeMainWindowBackgroundColor());
+    return light ? MkRgb(0xe9, 0xb4, 0x00) : MkRgb(0xf2, 0xc5, 0x3d);
 }
 
 // one tip per line; cmd/trans-dl.ts extracts each line for translation

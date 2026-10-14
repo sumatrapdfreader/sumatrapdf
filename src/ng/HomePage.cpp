@@ -53,11 +53,6 @@
 #include "HomePage.h"
 #include "HomePageCommon.h"
 
-#if OS_WIN
-#include <shellapi.h>
-#include <commctrl.h>
-#endif
-
 #include "SumatraLog.h"
 
 // --- tips and promotions (orig's) -------------------------------------------
@@ -214,8 +209,18 @@ static void AppendBugReportInfo(str::Builder& s) {
 constexpr int kThumbsBorderDx = 1;
 constexpr int kThumbsMarginLeft = 40;
 constexpr int kThumbsMarginRight = 40;
-constexpr int kThumbsSpaceBetweenX = 38;
-constexpr int kThumbsSpaceBetweenY = 58;
+constexpr int kThumbsSpaceBetweenX = 24;
+constexpr int kThumbsSpaceBetweenY = 60;
+// caption below each thumbnail: the file name over the page count
+constexpr int kThumbsCaptionGapY = 10;
+constexpr int kThumbsCaptionLineDy = 18;
+constexpr int kThumbsCaptionMetaDy = 16;
+constexpr int kThumbsCaptionDy = kThumbsCaptionLineDy + kThumbsCaptionMetaDy;
+// the reading-progress line along the bottom edge of a thumbnail
+constexpr int kThumbsProgressDy = 3;
+// the selection ring sits this far outside the page
+constexpr int kThumbsSelectionGap = 4;
+constexpr int kThumbsSelectionDx = 2;
 constexpr int kHomeListThumbDx = 30;
 constexpr int kHomeListThumbDy = 40;
 constexpr int kHomeListRowDy = 46;
@@ -223,7 +228,17 @@ constexpr int kHomeListRowGapDx = 8;
 constexpr int kSearchEditDy = 28;
 // gpui's Small input font. The DPI probe reports this height.
 constexpr int kHomeSearchFontPx = 14;
-constexpr int kSearchThumbnailsGapY = 12;
+constexpr int kSearchThumbnailsGapY = 28;
+constexpr int kHomeHeaderTopY = 24;
+constexpr int kHomeSearchMaxDx = 340;
+constexpr int kHomeTextFontPx = 13;
+constexpr int kHomeMetaFontPx = 12;
+// the home page brand: five stripes in the logo colors and the name
+constexpr int kHomeBrandFontPx = 15;
+constexpr int kHomeBrandStripeDx = 3;
+constexpr int kHomeBrandStripeDy = 16;
+constexpr int kHomeBrandStripeGap = 2;
+constexpr int kHomeBrandGap = 10;
 constexpr int kThumbsMiddleMargin = 32;
 // orig's HomePageIconSize: the icons follow ToolbarSize (dips here)
 static int HomePageIconSize() {
@@ -234,9 +249,9 @@ static int HomePageIconSize() {
     return RoundUp(sz, 4);
 }
 
-// light blue outline marking the keyboard-selected entry (issue #1136).
+// light blue outline marking the keyboard-selected list row (issue #1136).
 // A fixed color: it has to read as "selected" against both the light and the
-// dark page background
+// dark page background. A thumbnail gets a ring in the text color instead
 constexpr Color kHomeSelectionColor = MkRgb(0x4c, 0xa6, 0xff);
 
 // HomePageViewMode setting ("thumbnails" or "list")
@@ -298,11 +313,15 @@ struct HomePageUI {
     Point rdown;
     gpui::Bounds pageBounds{};
     gpui::Bounds searchBounds{};
-    // the "Open..." link as laid out last frame: orig's LayoutHomePage needs
-    // its width, and gpui measures text only while painting
+    // the "Open..." link and the brand as laid out last frame: orig's
+    // LayoutHomePage needs their widths, and gpui measures text only while
+    // painting
     gpui::Bounds openGroupBounds{};
+    gpui::Bounds brandBounds{};
     // the entries as laid out last frame, for the hover tooltip
     Vec<gpui::Bounds> entryBounds;
+    // each thumbnail's selection ring, drawn for the selected one
+    Vec<gpui::Bounds> ringBounds;
     // list-view size column, measured while painting (issue #5870)
     Vec<gpui::Bounds> listSizeBounds;
     // list-view directory column, same paint (issue #5870)
@@ -435,90 +454,6 @@ static gp::ImageLoadState HomeThumbLoad(gp::PaintApp* pa, void* user, gp::Render
     return t->img ? gp::ImageLoadState::Ready : gp::ImageLoadState::Failed;
 }
 
-#if OS_WIN
-static void GetFileStateIcon(FileState* fs) {
-    if (fs->himl) {
-        return;
-    }
-    SHFILEINFOW sfi{};
-    sfi.iIcon = -1;
-    uint flags = SHGFI_SYSICONINDEX | SHGFI_SMALLICON | SHGFI_USEFILEATTRIBUTES;
-    WCHAR* filePathW = CWStrTemp(fs->filePath);
-    fs->himl = (HIMAGELIST)SHGetFileInfoW(filePathW, 0, &sfi, sizeof(sfi), flags);
-    fs->iconIdx = sfi.iIcon;
-}
-
-struct HomeFileIcon {
-    HomeFileIcon* next = nullptr;
-    HIMAGELIST imageList = nullptr;
-    int iconIdx = -1;
-    Pixmap* pixmap = nullptr;
-    // made from the pixmap on the paint thread, the first time it is drawn
-    gp::RenderImage* img = nullptr;
-    bool tried = false;
-};
-
-static HomeFileIcon* gFileIcons = nullptr;
-
-// Shell image lists are Windows drawing objects. Convert each distinct icon to
-// a Pixmap once; the home page draws it as a gpui image.
-static HomeFileIcon* GetFileStateIconPixmap(FileState* fs) {
-    GetFileStateIcon(fs);
-    if (!fs->himl || fs->iconIdx < 0) {
-        return nullptr;
-    }
-    for (HomeFileIcon* icon = gFileIcons; icon; icon = icon->next) {
-        if (icon->imageList == fs->himl && icon->iconIdx == fs->iconIdx) {
-            return icon->pixmap ? icon : nullptr;
-        }
-    }
-
-    HICON hicon = ImageList_GetIcon(fs->himl, fs->iconIdx, ILD_TRANSPARENT);
-    Pixmap* pixmap = nullptr;
-    if (hicon) {
-        pixmap = PixmapFromHICON(hicon);
-        DestroyIcon(hicon);
-    }
-    auto* icon = new HomeFileIcon();
-    icon->imageList = fs->himl;
-    icon->iconIdx = fs->iconIdx;
-    icon->pixmap = pixmap;
-    ListInsertFront(&gFileIcons, icon);
-    return pixmap ? icon : nullptr;
-}
-
-// the icon's pixels are premultiplied BGRA, which is what gpui takes
-static gp::ImageLoadState HomeFileIconLoad(gp::PaintApp* pa, void* user, gp::RenderImage** imgOut) {
-    auto* icon = (HomeFileIcon*)user;
-    Pixmap* px = icon->pixmap;
-    if (!icon->tried) {
-        icon->tried = true;
-        if (px->stride == px->width * 4) {
-            icon->img = gp::RenderImageFromBgra(pa, px->data, px->width, px->height);
-        }
-    }
-    *imgOut = icon->img;
-    return icon->img ? gp::ImageLoadState::Ready : gp::ImageLoadState::Failed;
-}
-#endif
-
-// orig draws the shell's small icon for the file's type in front of its name.
-// ng: the shell is asked on Windows only; elsewhere it is gpui's document glyph
-static gp::El* HomeFileIconEl(MainWindow* win, gp::Ctx* cx, FileState* fs, Color colText) {
-#if OS_WIN
-    HomeFileIcon* icon = GetFileStateIconPixmap(fs);
-    if (icon) {
-        float k = CanvasScale(win);
-        gp::ImageSource src = gp::ImageSource::FromCustom(HomeFileIconLoad, icon);
-        return gp::ImageEl(cx->a, src, GStrL(""))
-            ->W((float)icon->pixmap->width * k)
-            ->H((float)icon->pixmap->height * k)
-            ->Shrink0();
-    }
-#endif
-    return gp::IconEl(cx->a, gp::IconName::FileText, 14)->Fg(ToGpui(colText))->Shrink0();
-}
-
 static TempStr HomeSearchQueryTemp(MainWindow* win) {
     HomePageUI* h = Ui(win);
     if (h->search) {
@@ -572,8 +507,6 @@ struct HomeView {
     static void OnEntryPin(HomeView* self, gp::Ctx* cx, const gp::ClickEvent*, int64_t idx);
     static void OnViewMode(HomeView* self, gp::Ctx* cx, const gp::ClickEvent*, int64_t listView);
     static void OnOpenDoc(HomeView* self, gp::Ctx* cx, const gp::ClickEvent*);
-    static void OnPalette(HomeView* self, gp::Ctx* cx, const gp::ClickEvent*);
-    static void OnHelp(HomeView* self, gp::Ctx* cx, const gp::ClickEvent*);
     static void OnSearch(HomeView* self, gp::Ctx* cx, const gp::InputEvent* ev);
     static void OnSearchKey(HomeView* self, gp::Ctx* cx, const gp::KeyEvent* ev);
     static void OnScroll(HomeView* self, gp::Ctx* cx, const gp::ScrollEvent* ev);
@@ -785,16 +718,6 @@ void HomeView::OnViewMode(HomeView* self, gp::Ctx* cx, const gp::ClickEvent*, in
 
 void HomeView::OnOpenDoc(HomeView* self, gp::Ctx* cx, const gp::ClickEvent*) {
     ExecuteCmd(self->win, CmdOpenFile);
-    HomeNotify(self->win, cx);
-}
-
-void HomeView::OnPalette(HomeView* self, gp::Ctx* cx, const gp::ClickEvent*) {
-    ExecuteCmd(self->win, CmdCommandPalette);
-    HomeNotify(self->win, cx);
-}
-
-void HomeView::OnHelp(HomeView* self, gp::Ctx* cx, const gp::ClickEvent*) {
-    ExecuteCmd(self->win, CmdToggleKeyboardHelp);
     HomeNotify(self->win, cx);
 }
 
@@ -1489,42 +1412,33 @@ static gp::El* AboutPageBuild(MainWindow* win, gp::Ctx* cx) {
 
 // --- the start page ----------------------------------------------------------
 
-// orig's white circle with a glyph: the command palette and the keyboard help
 static gp::El* HomeSvgIcon(gp::Ctx* cx, const char* svg, float size, Color color) {
     return gpc::Icon::Empty(cx)->Data(ToGpui(Str(svg)))->Size(size)->Color(ToGpui(color))->IntoEl();
 }
 
-static gp::El* HomeCircleBtn(gp::Ctx* cx, Str id, Str glyph, const char* svg, Str tooltip, gp::Listener onClick) {
-    gp::El* btn = gp::Div(cx->a)
-                      ->W(30)
-                      ->H(30)
-                      ->Radius(15)
-                      ->Bg(ToGpui(kColWhite))
-                      ->ItemsCenter()
-                      ->JustifyCenter()
-                      ->Cursor(gp::CursorKind::Pointer)
-                      ->AriaLabel(GpuiDup(cx->a, tooltip))
-                      ->PathClick(GpuiDup(cx->a, id))
-                      ->OnClick(onClick);
-    if (svg) {
-        btn->Child(HomeSvgIcon(cx, svg, 16, kColBlack));
-    } else {
-        btn->Child(gp::TextEl(cx->a, GpuiDup(cx->a, glyph))->Font(14)->Bold()->Fg(ToGpui(kColBlack)));
-    }
-    return btn;
+static int HomeBrandStripesDx() {
+    return (5 * kHomeBrandStripeDx) + (4 * kHomeBrandStripeGap);
 }
 
-// e.g. "Command Palette (Ctrl + K)"
-static TempStr AppendCmdAccel(Str base, int cmd) {
-    TempStr accel = AppendAccelKeyToMenuStringTemp({}, cmd);
-    if (len(accel) == 0) {
-        return str::DupTemp(base);
+// the five logo colors as stripes before the name in the window's text color
+// (orig's SumatraLogo::asBrand)
+static gp::El* HomeBrandEl(gp::Ctx* cx, Str name) {
+    static Color cols[] = {kCol1, kCol2, kCol3, kCol4, kCol5};
+    gp::El* row = gp::Div(cx->a)->FlexRow()->ItemsCenter()->Shrink0()->Gap((float)kHomeBrandGap);
+    gp::El* stripes = gp::Div(cx->a)->FlexRow()->Shrink0()->Gap((float)kHomeBrandStripeGap);
+    for (Color c : cols) {
+        stripes->Child(gp::Div(cx->a)->W((float)kHomeBrandStripeDx)->H((float)kHomeBrandStripeDy)->Bg(ToGpui(c)));
     }
-    return str::JoinTemp(base, fmt(" (%s)", Str(accel.s + 1, len(accel) - 1))); // +1 skips the leading \t
+    row->Child(stripes);
+    row->Child(gp::TextEl(cx->a, GpuiDup(cx->a, name))
+                   ->Font((float)kHomeBrandFontPx)
+                   ->Weight(gp::FontWeight::Semibold)
+                   ->Fg(ToGpui(ThemeWindowTextColor())));
+    return row;
 }
 
 static gp::El* HomeViewModeBtn(MainWindow* win, gp::Ctx* cx, bool listView) {
-    const gp::Theme& th = gp::ThemeNow(cx->app);
+    Color colBg = ThemeMainWindowBackgroundColor();
     bool selected = listView == HomePageIsListView();
     Str tip = listView ? Tr("Show as list") : Tr("Show as thumbnails");
     const char* svg = listView ? gIconHomeList : gIconHomeThumbnails;
@@ -1535,21 +1449,23 @@ static gp::El* HomeViewModeBtn(MainWindow* win, gp::Ctx* cx, bool listView) {
                       ->JustifyCenter()
                       ->Cursor(gp::CursorKind::Pointer)
                       ->AriaLabel(ToGpui(tip))
-                      ->HoverBg(th.tokens.muted)
+                      ->Radius(4)
+                      ->HoverBg(ToGpui(AccentColor(colBg, 14)))
                       ->PathClick(listView ? GStrL("home-view-list") : GStrL("home-view-thumbs"))
                       ->OnClick(gp::ListenTo(Ui(win)->view, &HomeView::OnViewMode, listView ? 1 : 0));
     if (listView) {
         btn->BoundsOut(&Ui(win)->listIconBounds);
     }
     if (selected) {
-        btn->Bg(th.tokens.accent)->Border(1, th.border);
+        btn->Bg(ToGpui(AccentColor(colBg, 28)));
     }
     btn->Child(HomeSvgIcon(cx, svg, (float)HomePageIconSize(), ThemeWindowTextColor()));
     return btn;
 }
 
-// one thumbnail: the page image with a rounded outline, the file name under it
-// and the ✕ that forgets the file (shown on hover, as orig does)
+// one thumbnail: the page image with a hairline and a shadow, the reading
+// progress along its bottom edge, the file name and page count under it and
+// the ✕ that forgets the file (shown on hover, as orig does)
 static gp::El* HomeThumbnailEl(MainWindow* win, gp::Ctx* cx, int idx, bool isSelected) {
     FileState* fs = Ui(win)->files[idx];
     Color colText = ThemeWindowTextColor();
@@ -1560,13 +1476,14 @@ static gp::El* HomeThumbnailEl(MainWindow* win, gp::Ctx* cx, int idx, bool isSel
                        ->FlexCol()
                        ->W((float)frame.dx)
                        ->Shrink0()
-                       ->Gap(3)
+                       ->Gap((float)kThumbsCaptionGapY)
                        ->Group()
                        ->Cursor(gp::CursorKind::Pointer)
                        ->PathClick(GpuiDup(cx->a, fmt("home-thumb-%d", idx)))
                        ->OnClick(gp::ListenTo(Ui(win)->view, &HomeView::OnEntryClick, idx))
                        ->OnMouseDown(gp::ListenTo(Ui(win)->view, &HomeView::OnEntryDown, idx))
-                       ->OnHover(gp::ListenTo(Ui(win)->view, &HomeView::OnEntryHover, idx));
+                       ->OnHover(gp::ListenTo(Ui(win)->view, &HomeView::OnEntryHover, idx))
+                       ->BoundsOut(&Ui(win)->entryBounds[idx]);
 
     // a thumbnail smaller than the frame (a whole page, a cover) sits at the
     // bottom of its slot, centered; an empty frame stands in until there is one
@@ -1576,16 +1493,37 @@ static gp::El* HomeThumbnailEl(MainWindow* win, gp::Ctx* cx, int idx, bool isSel
         drawn = ThumbnailDrawSize(t->size, frame);
     }
     gp::El* slot = gp::Div(cx->a)->FlexCol()->W((float)frame.dx)->H((float)frame.dy)->ItemsCenter()->JustifyEnd();
+    // a soft shadow under the page, deeper on a dark page
+    bool light = IsLightColor(ThemeMainWindowBackgroundColor());
+    gp::BoxShadow shadow;
+    shadow.y = 2;
+    shadow.blur = 6;
+    shadow.color = gp::Rgba8(0, 0, 0, light ? 40 : 120);
     gp::El* page = gp::Div(cx->a)
                        ->W((float)drawn.dx)
                        ->H((float)drawn.dy)
-                       ->Radius(10)
-                       ->ClipY()
-                       ->Border((float)kThumbsBorderDx, ToGpui(colText));
+                       ->Shrink0()
+                       ->Bg(ToGpui(ThemeControlBackgroundColor()))
+                       ->Border((float)kThumbsBorderDx, ToGpui(ThemeEdgeColor()))
+                       ->Shadows(&shadow, 1);
     slot->Child(page);
     gp::ImageSource src = gp::ImageSource::FromCustom(HomeThumbLoad, t);
     // no alt text: orig leaves the frame empty until the thumbnail is rendered
-    page->Child(gp::ImageEl(cx->a, src, GStrL(""))->SizeFull()->ObjectFitMode(gp::ObjectFit::Cover));
+    page->Child(gp::Div(cx->a)->SizeFull()->ClipY()->Child(
+        gp::ImageEl(cx->a, src, GStrL(""))->SizeFull()->ObjectFitMode(gp::ObjectFit::Cover)));
+    // the selection ring, just outside the page; always laid out so its rect
+    // is known, drawn for the selected entry
+    int ringGap = kThumbsSelectionGap + kThumbsSelectionDx;
+    gp::Rgba ringCol = isSelected ? ToGpui(colText) : gp::Rgba8(0, 0, 0, 0);
+    page->Child(gp::Div(cx->a)
+                    ->Absolute()
+                    ->Left((float)-ringGap)
+                    ->Top((float)-ringGap)
+                    ->W((float)(drawn.dx + (2 * ringGap)))
+                    ->H((float)(drawn.dy + (2 * ringGap)))
+                    ->Radius(4)
+                    ->Border((float)kThumbsSelectionDx, ringCol)
+                    ->BoundsOut(&Ui(win)->ringBounds[idx]));
     // orig draws the ✕ in the top-right corner of the thumbnail under the mouse
     gp::El* close = gpc::Button::New(cx, GpuiDup(cx->a, fmt("home-forget-%d", idx)))
                         ->Icon(gp::IconName::Close)
@@ -1599,41 +1537,44 @@ static gp::El* HomeThumbnailEl(MainWindow* win, gp::Ctx* cx, int idx, bool isSel
     if (CanAccessDisk()) {
         page->Child(close);
     }
-    if (gSettings->showHomePageReadingProgress) {
-        TempStr progress = FormatFileStateProgressTemp(fs);
-        if (len(progress) > 0) {
-            page->Child(gp::TextEl(cx->a, GpuiDup(cx->a, progress))
-                            ->Font(11)
-                            ->Fg(ToGpui(kColWhite))
-                            ->Bg(ToGpui(kColBlack))
-                            ->PadX(5)
-                            ->PadY(2)
-                            ->Radius(3)
-                            ->Absolute()
-                            ->Right(5)
-                            ->Bottom(5));
-        }
+    float progress = 0;
+    TempStr meta = HomeThumbnailMetaTemp(fs, &progress);
+    if (progress > 0) {
+        page->Child(gp::Div(cx->a)
+                        ->Absolute()
+                        ->Left(0)
+                        ->Bottom(0)
+                        ->W((float)drawn.dx * progress)
+                        ->H((float)kThumbsProgressDy)
+                        ->Bg(ToGpui(HomeAccentColor())));
     }
     cell->Child(slot);
 
-    gp::El* nameRow = gp::Div(cx->a)->FlexRow()->W(gp::kFill)->ItemsCenter()->Gap(4);
-    nameRow->Child(HomeFileIconEl(win, cx, fs, colText));
+    // the caption: the name over the page count
+    gp::El* caption = gp::Div(cx->a)->FlexCol()->W(gp::kFill)->H((float)kThumbsCaptionDy)->Shrink0();
     // orig underlays the letters the search box matched (DrawMaybeHighlightedText)
     StrVec filterWords;
     SplitFilterToWords(HomeSearchQueryTemp(win), filterWords);
-    nameRow->Child(FilterHighlightText(cx, path::GetBaseNameTemp(fs->filePath), filterWords, ToGpui(colText), 14)
-                       ->Flex1()
-                       ->MinW(0)
-                       ->ClipX());
-    cell->Child(nameRow);
-
-    // the selection border lives on this box, so its rect is the outline
-    gp::El* outer =
-        gp::Div(cx->a)->FlexCol()->Shrink0()->Pad(3)->Radius(10)->BoundsOut(&Ui(win)->entryBounds[idx])->Child(cell);
-    if (isSelected) {
-        outer->Border(2, ToGpui(kHomeSelectionColor));
+    caption->Child(gp::Div(cx->a)
+                       ->FlexRow()
+                       ->W(gp::kFill)
+                       ->H((float)kThumbsCaptionLineDy)
+                       ->ItemsCenter()
+                       ->ClipX()
+                       ->Child(FilterHighlightText(cx, path::GetBaseNameTemp(fs->filePath), filterWords,
+                                                   ToGpui(colText), kHomeTextFontPx)
+                                   ->Flex1()
+                                   ->MinW(0)
+                                   ->ClipX()));
+    if (len(meta) > 0) {
+        caption->Child(gp::TextEl(cx->a, GpuiDup(cx->a, meta))
+                           ->Font((float)kHomeMetaFontPx)
+                           ->Fg(ToGpui(ThemeWindowTextDisabledColor()))
+                           ->H((float)kThumbsCaptionMetaDy)
+                           ->Truncate());
     }
-    return outer;
+    cell->Child(caption);
+    return cell;
 }
 
 // one list row: thumbnail, file name, directory, size, ✕ and the pin
@@ -1673,7 +1614,8 @@ static gp::El* HomeListRowEl(MainWindow* win, gp::Ctx* cx, int idx, bool isSelec
     StrVec filterWords;
     SplitFilterToWords(HomeSearchQueryTemp(win), filterWords);
     row->Child(
-        FilterHighlightText(cx, path::GetBaseNameTemp(fs->filePath), filterWords, ToGpui(colText), 14)->Shrink0());
+        FilterHighlightText(cx, path::GetBaseNameTemp(fs->filePath), filterWords, ToGpui(colText), kHomeTextFontPx)
+            ->Shrink0());
     row->Child(gp::TextEl(cx->a, GpuiDup(cx->a, path::GetDirTemp(fs->filePath)))
                    ->Font(12)
                    ->Fg(ToGpui(colDim))
@@ -1735,12 +1677,11 @@ static gp::El* HomeTipBandEl(MainWindow* win, gp::Ctx* cx, float padL, float pad
                        ->PadL(padL)
                        ->PadR(padR)
                        ->PadY(8)
-                       ->Bg(ToGpui(ThemeControlBackgroundColor()))
                        ->PathClick(GStrL("home-tip-band"))
                        ->OnClick(gp::ListenTo(Ui(win)->view, &HomeView::OnTipBand));
     for (int i = 0; i < len(spans); i++) {
         const TipSpan& sp = spans[i];
-        gp::El* el = gp::TextEl(cx->a, GpuiDup(cx->a, sp.text))->Font(16);
+        gp::El* el = gp::TextEl(cx->a, GpuiDup(cx->a, sp.text))->Font((float)kHomeMetaFontPx);
         switch (sp.kind) {
             case TipSpanKind::Text:
                 el->Fg(ToGpui(colText));
@@ -1756,7 +1697,7 @@ static gp::El* HomeTipBandEl(MainWindow* win, gp::Ctx* cx, float padL, float pad
                 break;
             case TipSpanKind::Kbd:
             case TipSpanKind::Code:
-                el->Mono()->Font(14)->Fg(ToGpui(colText))->Bg(th.tokens.muted)->PadX(4)->Radius(3);
+                el->Mono()->Font(11)->Fg(ToGpui(colText))->Bg(th.tokens.muted)->PadX(4)->Radius(3);
                 break;
         }
         band->Child(el);
@@ -1807,6 +1748,9 @@ gp::El* HomePageBuild(MainWindow* win, gp::Ctx* cx) {
     while (len(h->entryBounds) < nFiles) {
         VecAppend(h->entryBounds, gpui::Bounds{});
     }
+    while (len(h->ringBounds) < nFiles) {
+        VecAppend(h->ringBounds, gpui::Bounds{});
+    }
     while (len(h->listSizeBounds) < nFiles) {
         VecAppend(h->listSizeBounds, gpui::Bounds{});
     }
@@ -1855,47 +1799,45 @@ gp::El* HomePageBuild(MainWindow* win, gp::Ctx* cx) {
 
     gp::El* root = gp::Div(cx->a)->FlexCol()->SizeFull()->Bg(ToGpui(colBg));
 
-    // [command palette] SumatraPDF [keyboard shortcuts]
-    // centered over the grid, not over the canvas
-    gp::El* logoRow =
-        gp::Div(cx->a)->FlexRow()->W((float)contentDx)->Shrink0()->ItemsCenter()->JustifyCenter()->Gap(10);
-    logoRow->Child(HomeCircleBtn(cx, StrL("home-palette"), {}, gIconCommandPalette,
-                                 AppendCmdAccel(Tr("Command Palette"), CmdCommandPalette),
-                                 gp::ListenTo(Ui(win)->view, &HomeView::OnPalette)));
-    // orig's chrome-less About dropdown under the logo: shown after the tooltip
-    // delay, it stays up while the cursor is over the logo or the box, so its
-    // links stay clickable
+    // one header row. The brand ends on the first column's right edge, the
+    // Open link and view icons end on the last column's, and the search field
+    // sits on the center line between them
+    // orig's chrome-less About dropdown under the brand: shown after the
+    // tooltip delay, it stays up while the cursor is over the brand or the
+    // box, so its links stay clickable
 #if OS_WIN
     Str logoName = StrL("SumatraPDF NG");
 #else
     Str logoName = StrL(kAppName);
 #endif
-    logoRow->Child(gpc::HoverCard::New(cx, GStrL("home-about-hover"))
-                       ->Trigger(SumatraLogoEl(cx, (float)kSumatraTxtFontSize, {}, logoName))
-                       ->Content(AboutBoxEl(win, cx, false))
-                       ->OpenDelay(kAboutHoverShowDelayMs)
-                       ->CloseDelay(kAboutHoverHideDelayMs)
-                       ->OnOpenChange(gp::ListenTo(Ui(win)->view, &HomeView::OnAboutHover))
-                       ->IntoEl());
-    logoRow->Child(HomeCircleBtn(cx, StrL("home-help"), StrL("?"), nullptr,
-                                 AppendCmdAccel(Tr("Keyboard Shortcuts"), CmdToggleKeyboardHelp),
-                                 gp::ListenTo(Ui(win)->view, &HomeView::OnHelp)));
-    root->Child(gp::Div(cx->a)->FlexRow()->W(gp::kFill)->Shrink0()->PadL(startX)->PadT(8)->Child(logoRow));
+    gp::El* brand = gpc::HoverCard::New(cx, GStrL("home-about-hover"))
+                        ->Trigger(HomeBrandEl(cx, logoName))
+                        ->Content(AboutBoxEl(win, cx, false))
+                        ->OpenDelay(kAboutHoverShowDelayMs)
+                        ->CloseDelay(kAboutHoverHideDelayMs)
+                        ->OnOpenChange(gp::ListenTo(Ui(win)->view, &HomeView::OnAboutHover))
+                        ->IntoEl();
+    brand->BoundsOut(&h->brandBounds);
+    int brandDx = (int)h->brandBounds.w;
+    if (brandDx <= 0) {
+        // first frame: not measured yet
+        brandDx = HomeBrandStripesDx() + kHomeBrandGap + (len(logoName) * 8);
+    }
 
-    // [open] "Open..."      search box      [thumbnails] [list]
+    // [open] "Open..."  [thumbnails] [list]
     Str openTxt = Tr("Open...");
+    int openTextGap = 6;
     gp::El* openGroup = gp::Div(cx->a)
                             ->FlexRow()
                             ->ItemsCenter()
-                            ->Gap(3)
+                            ->Gap((float)openTextGap)
                             ->Shrink0()
                             ->BoundsOut(&h->openGroupBounds)
                             ->Cursor(gp::CursorKind::Pointer)
                             ->PathClick(GStrL("home-open-doc"))
                             ->OnClick(gp::ListenTo(Ui(win)->view, &HomeView::OnOpenDoc));
     openGroup->Child(HomeSvgIcon(cx, gIconFileOpen, (float)HomePageIconSize(), colText));
-    openGroup->Child(
-        gp::TextEl(cx->a, GpuiDup(cx->a, openTxt))->Font(14)->Underline()->Fg(ToGpui(ThemeWindowLinkColor())));
+    openGroup->Child(gp::TextEl(cx->a, GpuiDup(cx->a, openTxt))->Font((float)kHomeTextFontPx)->Fg(ToGpui(colText)));
 
     if (!h->search) {
         h->search = new gp::InputState();
@@ -1908,56 +1850,73 @@ gp::El* HomePageBuild(MainWindow* win, gp::Ctx* cx) {
     gp::InputSetPlaceholder(h->search, ToGpui(cue));
     h->search->onChange = gp::ListenTo(Ui(win)->view, &HomeView::OnSearch);
 
-    // the search box takes what is left between the link and the icons; both
-    // sides are padded to the wider of the two, so the box sits centered
+    // the search box is centered; the brand and the Open group bound its width
     int iconGap = 4;
-    int viewIconsDx = (2 * HomePageIconSize()) + iconGap;
+    int viewBtnDx = HomePageIconSize() + 6;
+    int viewIconsDx = (2 * viewBtnDx) + iconGap;
     int openGroupDx = (int)h->openGroupBounds.w;
     if (openGroupDx <= 0) {
         // first frame: not measured yet
-        openGroupDx = HomePageIconSize() + 3 + (len(openTxt) * 7);
+        openGroupDx = HomePageIconSize() + openTextGap + (len(openTxt) * 7);
     }
     int rowGapX = 16;
-    int flankDx = std::max(viewIconsDx, openGroupDx) + rowGapX;
-    int borderDx = contentDx - (2 * flankDx);
+    int leftDx = std::max(brandDx, frame.dx) + rowGapX;
+    int rightDx = openGroupDx + rowGapX + viewIconsDx + rowGapX;
+    int flankDx = std::max(leftDx, rightDx);
+    int borderDx = std::min(contentDx - (2 * flankDx), kHomeSearchMaxDx);
     borderDx = std::max(borderDx, 200);
-    int borderX = (contentDx - borderDx) / 2;
     int borderDy = AppShellDpiPx(win, kSearchEditDy) + 2; // 1px border on each side
-    int rowDy = std::max(HomePageIconSize(), borderDy);
+    int rowDy = std::max({viewBtnDx, borderDy, kHomeBrandStripeDy});
 
-    // every row item (link, search box, view icons) is centered on the row's
-    // vertical centerline
+    // every row item (brand, link, search box, view icons) is centered on the
+    // row's vertical centerline. Both flanks are as wide, so the middle is
+    // centered over the grid
     gp::El* toolRow = gp::Div(cx->a)->FlexRow()->W((float)contentDx)->H((float)rowDy)->Shrink0()->ItemsCenter();
-    toolRow->Child(
-        gp::Div(cx->a)->FlexRow()->W((float)std::max(0, borderX))->Shrink0()->ItemsCenter()->Child(openGroup));
-    toolRow->Child(gp::Div(cx->a)
-                       ->W((float)borderDx)
-                       ->Shrink0()
-                       ->H((float)borderDy)
-                       ->BoundsOut(&h->searchBounds)
-                       ->Child(gpc::Input::New(cx, GStrL("home-search"), h->search)
-                                   ->WithSize(gp::UiSize::Small)
-                                   ->W(gp::kFill)
-                                   ->IntoEl()
-                                   ->Font((float)AppShellDpiPx(win, kHomeSearchFontPx))
-                                   ->H((float)borderDy)));
+    gp::El* brandBox = gp::Div(cx->a)
+                           ->FlexRow()
+                           ->W((float)std::max(frame.dx, brandDx))
+                           ->Shrink0()
+                           ->ItemsCenter()
+                           ->JustifyEnd()
+                           ->Child(brand);
+    toolRow->Child(gp::Div(cx->a)->FlexRow()->W((float)flankDx)->Shrink0()->ItemsCenter()->Child(brandBox));
+    gp::El* searchBox = gp::Div(cx->a)
+                            ->W((float)borderDx)
+                            ->Shrink0()
+                            ->H((float)borderDy)
+                            ->BoundsOut(&h->searchBounds)
+                            ->Child(gpc::Input::New(cx, GStrL("home-search"), h->search)
+                                        ->WithSize(gp::UiSize::Small)
+                                        ->W(gp::kFill)
+                                        ->IntoEl()
+                                        ->Font((float)AppShellDpiPx(win, kHomeSearchFontPx))
+                                        ->H((float)borderDy));
+    toolRow->Child(gp::Div(cx->a)->FlexRow()->Flex1()->MinW(0)->ItemsCenter()->JustifyCenter()->Child(searchBox));
     gp::El* viewBtns = gp::Div(cx->a)->FlexRow()->ItemsCenter()->Gap((float)iconGap)->Shrink0();
     viewBtns->Child(HomeViewModeBtn(win, cx, false));
     viewBtns->Child(HomeViewModeBtn(win, cx, true));
-    toolRow->Child(gp::Div(cx->a)->FlexRow()->Flex1()->MinW(0)->ItemsCenter()->JustifyEnd()->Child(viewBtns));
+    toolRow->Child(gp::Div(cx->a)
+                       ->FlexRow()
+                       ->W((float)flankDx)
+                       ->Shrink0()
+                       ->ItemsCenter()
+                       ->JustifyEnd()
+                       ->Gap((float)rowGapX)
+                       ->Child(openGroup)
+                       ->Child(viewBtns));
     root->Child(gp::Div(cx->a)
                     ->FlexRow()
                     ->W(gp::kFill)
                     ->Shrink0()
                     ->PadL(startX)
-                    ->PadT(8)
+                    ->PadT((float)kHomeHeaderTopY)
                     ->PadB((float)kSearchThumbnailsGapY)
                     ->Child(toolRow));
 
     // the entries, scrolled as one block
-    // Leave room above the first row so the selection outline's top edge
+    // Leave room above the first row so the selection ring's top edge
     // isn't clipped by the scrolled area (orig's thumbsContentPadTop)
-    float contentPadTop = listView ? 2.f : 5.f;
+    float contentPadTop = listView ? 2.f : (float)(kThumbsSelectionGap + kThumbsSelectionDx + 2);
     gp::El* content =
         gp::Div(cx->a)->FlexCol()->W(startX + (float)contentDx)->PadL(startX)->PadT(contentPadTop)->PadB(12);
     if (listView) {
@@ -1966,7 +1925,9 @@ gp::El* HomePageBuild(MainWindow* win, gp::Ctx* cx) {
             content->Child(HomeListRowEl(win, cx, i, i == h->selIdx));
         }
     } else {
-        content->Gap((float)kThumbsSpaceBetweenY - 24);
+        // the row pitch is the frame plus kThumbsSpaceBetweenY; the caption
+        // takes its share of the space
+        content->Gap((float)(kThumbsSpaceBetweenY - kThumbsCaptionGapY - kThumbsCaptionDy));
         for (int row = 0; row * cols < nFiles; row++) {
             gp::El* rowEl = gp::Div(cx->a)->FlexRow()->W(gp::kFill)->Gap((float)kThumbsSpaceBetweenX);
             for (int col = 0; col < cols; col++) {
@@ -2087,9 +2048,9 @@ TempStr HomeSelectionForWindowTemp(int* exitCodeOut, int winIdx) {
     Rect search = BoundsRect(h->searchBounds);
     Rect outlineFull;
     Rect outline;
-    bool showSel = !HomePageIsListView() && !searchFocus && sel >= 0 && sel < len(h->entryBounds);
+    bool showSel = !HomePageIsListView() && !searchFocus && sel >= 0 && sel < len(h->ringBounds);
     if (showSel) {
-        outlineFull = BoundsRect(h->entryBounds[sel]);
+        outlineFull = BoundsRect(h->ringBounds[sel]);
         outline = outlineFull.Intersect(BoundsRect(h->entriesView));
     }
     Rect lastCaption;

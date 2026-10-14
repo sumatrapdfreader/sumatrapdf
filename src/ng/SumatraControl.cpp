@@ -1324,11 +1324,11 @@ TempStr ImageOrientationResultTemp(Str pdfPath, int pageNo, int* exitCodeOut) {
         return fail(StrL("ERROR no-image-element"));
     }
     Pixmap* px = nullptr;
-#if OS_WIN
-    RenderedBitmap* bmp = engine->GetImageForPageElement(imgEl);
     Str origData = engine->GetImageDataForPageElement(imgEl);
     int dataLen = len(origData);
     str::Free(origData);
+#if OS_WIN
+    RenderedBitmap* bmp = engine->GetImageForPageElement(imgEl);
     SafeEngineRelease(&engine);
     if (!bmp) {
         return fail(StrL("ERROR no-image"));
