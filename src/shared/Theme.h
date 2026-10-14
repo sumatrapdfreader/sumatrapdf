@@ -38,6 +38,7 @@ Color ThemeInactiveTabBackgroundColor();
 Color ThemeWindowLinkColor();
 Color ThemeHotBackgroundColor();
 Color ThemeEdgeColor();
+Color ThemeAccentColor();
 Color ThemeHotEdgeColor();
 Color ThemeDisabledEdgeColor();
 Color ThemeErrorBackgroundColor();

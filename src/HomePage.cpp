@@ -374,7 +374,7 @@ void AboutCtrl::Paint(VirtPaintCtx& ctx) {
     int padSide = DpiScale(kAboutPadSide);
     ctx.gfx->FillRect({r.x + padSide, hairlineY, r.dx - (2 * padSide), 1}, ThemeEdgeColor());
     if (!noteMark.IsEmpty()) {
-        ctx.gfx->FillRect(noteMark, HomeAccentColor());
+        ctx.gfx->FillRect(noteMark, ThemeAccentColor());
     }
 }
 
@@ -2040,7 +2040,7 @@ static void DrawHomeThumbnail(Gfx* gfx, ThumbnailLayout& thumb, const StrVec& fi
     if (progress > 0) {
         int dx = (int)((float)page.dx * progress);
         int x = isRtl ? page.x + page.dx - dx : page.x;
-        gfx->FillRect({x, page.y + page.dy - kThumbsProgressDy, dx, kThumbsProgressDy}, HomeAccentColor());
+        gfx->FillRect({x, page.y + page.dy - kThumbsProgressDy, dx, kThumbsProgressDy}, ThemeAccentColor());
     }
 
     Rect rcName = thumb.rcText;

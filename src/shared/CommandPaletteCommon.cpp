@@ -316,3 +316,299 @@ bool CmdUsesCursorPos(int cmdId) {
     }
     return cmdId == CmdCreateAnnotImageFromClipboard || cmdId == CmdReadAloudFromCursorPosition;
 }
+
+// --- what the apps' palettes had in common -----------------------------------
+
+// The setting at a full dotted path, or an unambiguous leaf ("Units" for
+// "FixedPageUI.PageGrid.Units") so the name can be typed by hand
+ItemDataCP* FindPaletteSetting(PaletteSources& src, Str path, Str& foundPath) {
+    ItemDataCP* found = nullptr;
+    int nLeaf = 0;
+    for (int i = 0; i < len(src.settings); i++) {
+        Str s = src.settings[i];
+        if (str::EqI(s, path)) {
+            found = src.settings.AtData(i);
+            foundPath = s;
+            nLeaf = 1;
+            break;
+        }
+        Str leaf = str::SliceFromCharLast(s, '.');
+        if (len(leaf) > 1 && str::EqI(Str(leaf.s + 1, leaf.len - 1), path)) {
+            nLeaf++;
+            found = src.settings.AtData(i);
+            foundPath = s;
+        }
+    }
+    if (nLeaf != 1) {
+        return nullptr;
+    }
+    return found;
+}
+
+// Rows for the value stage: an enum offers its allowed values, anything else
+// offers the one value being typed. Enter on a row applies it
+void FillSettingValueRows(PaletteSources& src, Str path, Str value, StrVecCP& out) {
+    Str foundPath;
+    ItemDataCP* found = FindPaletteSetting(src, path, foundPath);
+    if (!found || found->settingType == SettingType::Bool) {
+        return;
+    }
+    ItemDataCP data = *found;
+    data.settingPath = foundPath;
+    const char** enumValues = GetSettingsEnumValues(foundPath);
+    if (!enumValues) {
+        // clearing a string is meaningful, an empty number is not
+        bool isStr = found->settingType != SettingType::Int && found->settingType != SettingType::Float;
+        if (len(value) > 0 || isStr) {
+            out.Append(value, data);
+        }
+        return;
+    }
+    for (const char** v = enumValues; *v; v++) {
+        Str s(*v);
+        // the empty choice means "unset"; it can't be a row you pick, so leave
+        // it to the advanced settings dialog
+        if (len(s) == 0 || (len(value) > 0 && !FilterMatches(s, src.filterWords))) {
+            continue;
+        }
+        out.Append(s, data);
+    }
+}
+
+// the rows the query selects, and the words to underlay in them
+void FilterPaletteStrings(PaletteSources& src, Str filter, StrVecCP& out) {
+    out.Reset();
+    if (len(filter) == 0) {
+        filter = StrL("");
+    }
+
+    PaletteMode mode = ParsePaletteMode(filter);
+    if (mode == PaletteMode::Thumbnails) {
+        return;
+    }
+    bool searchTabs = mode == PaletteMode::Tabs || mode == PaletteMode::Everything;
+    bool searchHistory = mode == PaletteMode::FileHistory || mode == PaletteMode::Everything;
+    bool searchCommands = mode == PaletteMode::Commands || mode == PaletteMode::Everything;
+    bool searchToc = mode == PaletteMode::Toc;
+    bool searchFavorites = mode == PaletteMode::Favorites;
+    bool searchAnnotations = mode == PaletteMode::Annotations;
+    bool searchSettings = mode == PaletteMode::Settings;
+
+    src.filterWords.Reset();
+    if (searchSettings) {
+        Str path, value;
+        if (SplitSettingValueQuery(filter, path, value)) {
+            SplitFilterToWords(value, src.filterWords);
+            FillSettingValueRows(src, path, value, out);
+            // the rows are the values themselves: nothing to highlight
+            src.filterWords.Reset();
+            return;
+        }
+    }
+    if (searchAnnotations) {
+        AnnotMatchOpts opts;
+        if (!ParseAnnotSearch(filter, opts)) {
+            opts.Reset();
+            StrVec words;
+            SplitFilterToWords(filter, words);
+            for (Str w : words) {
+                AnnotSearchAddContentWord(opts, w);
+            }
+        }
+        AnnotSearchContentWords(opts, src.filterWords);
+        int n = len(src.annotations);
+        for (int i = 0; i < n; i++) {
+            ItemDataCP* data = src.annotations.AtData(i);
+            if (data && AnnotMatches(data->annot, opts)) {
+                out.AppendFrom(&src.annotations, i);
+            }
+        }
+        return;
+    }
+
+    SplitFilterToWords(filter, src.filterWords);
+
+    if (searchTabs) {
+        FilterStrings(src.tabs, src.filterWords, out);
+    }
+    if (searchHistory) {
+        FilterStrings(src.fileHistory, src.filterWords, out);
+    }
+    if (searchCommands) {
+        FilterStrings(src.commands, src.filterWords, out);
+    }
+    if (searchToc) {
+        FilterStrings(src.toc, src.filterWords, out);
+    }
+    if (searchFavorites) {
+        FilterStrings(src.favorites, src.filterWords, out);
+    }
+    if (searchSettings) {
+        FilterStrings(src.settings, src.filterWords, out);
+    }
+}
+
+// how many rows the query's mode has before filtering, for "26 of 212"
+int PaletteSourceCount(PaletteSources& src, Str filter) {
+    PaletteMode mode = ParsePaletteMode(filter);
+    switch (mode) {
+        case PaletteMode::Tabs:
+            return len(src.tabs);
+        case PaletteMode::FileHistory:
+            return len(src.fileHistory);
+        case PaletteMode::Commands:
+            return len(src.commands);
+        case PaletteMode::Everything:
+            return len(src.tabs) + len(src.fileHistory) + len(src.commands);
+        case PaletteMode::Toc:
+            return len(src.toc);
+        case PaletteMode::Favorites:
+            return len(src.favorites);
+        case PaletteMode::Annotations:
+            return len(src.annotations);
+        case PaletteMode::Settings:
+            return len(src.settings);
+        default:
+            return 0;
+    }
+}
+
+// "212" when nothing is filtered out, "26 of 212" when the query narrows it
+TempStr PaletteCountTemp(int shown, int total) {
+    if (total <= 0) {
+        return {};
+    }
+    if (shown >= total) {
+        return fmt("%d", total);
+    }
+    return fmt(Tr("%d of %d").s, shown, total);
+}
+
+// the switches a palette offers: the modes with rows, in orig's order
+int PaletteSwitches(PaletteSources& src, bool hasPageThumbnails, PaletteSwitch* out) {
+    int n = 0;
+    out[n++] = {Tr("> Commands"), Str(kPalettePrefixCommands)};
+    out[n++] = {Tr("@ Tabs"), Str(kPalettePrefixTabs)};
+    out[n++] = {Tr("# History"), Str(kPalettePrefixFileHistory)};
+    if (len(src.favorites) > 0) {
+        out[n++] = {Tr("$ Favorites"), Str(kPalettePrefixFavorites)};
+    }
+    if (len(src.toc) > 0) {
+        out[n++] = {Tr("% TOC"), Str(kPalettePrefixTOC)};
+    }
+    if (hasPageThumbnails) {
+        out[n++] = {Tr("& Thumbnails"), Str(kPalettePrefixThumbnails)};
+    }
+    if (len(src.annotations) > 0) {
+        out[n++] = {Tr("* Annotations"), Str(kPalettePrefixAnnotations)};
+    }
+    out[n++] = {Tr("= Settings"), Str(kPalettePrefixBoolSettings)};
+    ReportIf(n > kPaletteMaxSwitches);
+    return n;
+}
+
+// the switch of the mode the query is in; an empty query lists commands
+bool PaletteSwitchIsActive(Str filter, Str prefix) {
+    if (len(filter) == 0) {
+        return str::Eq(prefix, Str(kPalettePrefixCommands));
+    }
+    return len(prefix) > 0 && filter.s[0] == prefix.s[0];
+}
+
+static Str RestoreDefaultHelp() {
+#if OS_DARWIN
+    return Tr("Cmd+Backspace restore default");
+#else
+    return Tr("Del restore default");
+#endif
+}
+
+// "Ctrl+Tab navigate" → "Ctrl+Tab" and "navigate"; the key is the first word,
+// or the first two for "Release Ctrl select"
+static PaletteHint SplitHint(Str s, int keyWords = 1) {
+    int keyLen = 0;
+    for (int w = 0; w < keyWords && keyLen < len(s); w++) {
+        keyLen += (w > 0);
+        while (keyLen < len(s) && s.s[keyLen] != ' ') {
+            keyLen++;
+        }
+    }
+    PaletteHint h;
+    h.key = Str(s.s, keyLen);
+    h.desc = keyLen < len(s) ? Str(s.s + keyLen + 1, len(s) - keyLen - 1) : Str();
+    return h;
+}
+
+// the key hints under the list for a mode (PaletteHelpKind)
+int PaletteHelpHints(int kind, PaletteHint* out) {
+    int n = 0;
+    switch (kind) {
+        case kHelpSmartTab:
+            out[n++] = SplitHint(Tr("Ctrl+Tab navigate"));
+            out[n++] = SplitHint(Tr("Release Ctrl select"), 2);
+            out[n++] = SplitHint(Tr("Space for sticky mode"));
+            out[n++] = SplitHint(Tr("Del close tab"));
+            break;
+        case kHelpHistory:
+            out[n++] = SplitHint(Tr("Enter open file"));
+            out[n++] = SplitHint(Tr("Del remove from history"));
+            out[n++] = SplitHint(Tr("Esc close"));
+            break;
+        case kHelpTabs:
+            out[n++] = SplitHint(Tr("Enter switch to tab"));
+            out[n++] = SplitHint(Tr("Del close tab"));
+            out[n++] = SplitHint(Tr("Esc close"));
+            break;
+        case kHelpFavorites:
+            out[n++] = SplitHint(Tr("Enter go to favorite"));
+            out[n++] = SplitHint(Tr("Del remove favorite"));
+            out[n++] = SplitHint(Tr("Esc close"));
+            break;
+        case kHelpAnnotations:
+        case kHelpThumbnails:
+        case kHelpToc:
+            out[n++] = SplitHint(Tr("Enter go to"));
+            out[n++] = SplitHint(Tr("Esc close"));
+            break;
+        case kHelpSettings:
+            out[n++] = SplitHint(Tr("Enter change"));
+            out[n++] = SplitHint(RestoreDefaultHelp());
+            out[n++] = SplitHint(Tr("Esc close"));
+            break;
+        case kHelpSettingValue:
+            out[n++] = SplitHint(Tr("Enter apply"));
+            out[n++] = SplitHint(RestoreDefaultHelp());
+            out[n++] = SplitHint(Tr("Esc go back"));
+            break;
+        case kHelpEverything:
+            out[n++] = SplitHint(Tr("Enter select"));
+            out[n++] = SplitHint(Tr("Esc close"));
+            break;
+        default:
+            out[n++] = SplitHint(Tr("Enter run command"));
+            out[n++] = SplitHint(Tr("Esc close"));
+            break;
+    }
+    return n;
+}
+
+// what a row shows on its right: the shortcut, a setting's value, the page or
+// chapter a toc entry or annotation goes to, a file's directory
+TempStr PaletteRightColumnTemp(ItemDataCP* data) {
+    if (data->cmdId != 0) {
+        return CommandPaletteShortcutTemp(data->cmdId);
+    }
+    if (IsSettingRow(data) && len(data->settingPath) == 0) {
+        return FormatSettingValueTemp(data->settingType, SettingRowPtr(data));
+    }
+    if (data->annot || data->pageNo > 0) {
+        return fmt("p%d", data->pageNo);
+    }
+    if (data->tocItem && data->tocItem->loc.chapter >= 1) {
+        return fmt("ch%d", data->tocItem->loc.chapter);
+    }
+    if (data->filePath) {
+        return path::GetDirTemp(data->filePath);
+    }
+    return {};
+}

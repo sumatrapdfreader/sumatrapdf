@@ -1033,6 +1033,13 @@ Color ThemeEdgeColor() {
     return GetThemeCol(gCurrentTheme->edgeColor, fallback);
 }
 
+// the app icon's yellow, lighter on a dark page: reading progress, the build
+// note, the search matches
+Color ThemeAccentColor() {
+    bool light = IsLightColor(ThemeMainWindowBackgroundColor());
+    return light ? MkRgb(0xe9, 0xb4, 0x00) : MkRgb(0xf2, 0xc5, 0x3d);
+}
+
 Color ThemeHotEdgeColor() {
     if (gUseHighContrast) {
         return SysHighlightBgColor();

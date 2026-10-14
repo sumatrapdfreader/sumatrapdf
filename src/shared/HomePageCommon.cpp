@@ -140,12 +140,6 @@ TempStr HomeThumbnailMetaTemp(FileState* fs, float* progressOut) {
     return fmt(Tr("%d pages").s, fs->pageCount);
 }
 
-// the reading-progress accent: the app icon's yellow, lighter on a dark page
-Color HomeAccentColor() {
-    bool light = IsLightColor(ThemeMainWindowBackgroundColor());
-    return light ? MkRgb(0xe9, 0xb4, 0x00) : MkRgb(0xf2, 0xc5, 0x3d);
-}
-
 // one tip per line; cmd/trans-dl.ts extracts each line for translation
 Str sumatraTips = StrL(R"tips(You can [customize scrollbar](CmdChangeScrollbar).
 You can [customize keyboard shortcuts](Help/Customize-keyboard-shortcuts).

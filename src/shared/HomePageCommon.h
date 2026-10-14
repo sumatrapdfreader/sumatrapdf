@@ -14,5 +14,4 @@ void PickAnotherRandomTip();
 TempStr TrimGitTemp(Str s);
 int CountHomePageFiles();
 TempStr HomeThumbnailMetaTemp(FileState* fs, float* progressOut);
-Color HomeAccentColor();
 extern Str sumatraTips;

@@ -14,7 +14,7 @@ import { ControlClient, ControlCommand } from "./control.ts";
 import { IS_MAC } from "./host.ts";
 import { ROOT, cmdId, runStandalone, tmpPath } from "./util.ts";
 import { captureWindowPixels, captureWindowToPng, sendText, sleep } from "./winapi.ts";
-import { killAndWait, launchControlled, sendCommand, findPalette } from "./win-automation.ts";
+import { killAndWait, launchControlled, sendCommand, findPalette, isFilterMatchTint } from "./win-automation.ts";
 
 const FILE_NAME = "issue6104.pdf";
 const LONG_DIR = IS_MAC
@@ -67,7 +67,7 @@ function countYellowInLeftHalf(palette: number): number {
       const b = shot.data[off]!;
       const g = shot.data[off + 1]!;
       const r = shot.data[off + 2]!;
-      if (r > 240 && g > 240 && b < 30) {
+      if (isFilterMatchTint(r, g, b)) {
         count++;
       }
     }

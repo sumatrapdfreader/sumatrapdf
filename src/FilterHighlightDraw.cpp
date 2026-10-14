@@ -11,6 +11,17 @@
 
 #include "Theme.h"
 #include "FilterHighlightDraw.h"
+// the underlay of a matched range: a tint of the accent on the default
+// theme, a shade of the row on the others
+constexpr u8 kFilterMatchAlpha = 72;
+
+static void FillFilterMatchRect(Gfx* gfx, const Rect& r, Color bg) {
+    if (IsCurrentThemeDefault()) {
+        gfx->FillRects(&r, 1, ThemeAccentColor(), kFilterMatchAlpha);
+        return;
+    }
+    gfx->FillRect(r, AccentColor(bg, 40));
+}
 
 // approximate "is this UTF-8 byte part of a word character?": any byte >= 0x80
 // is part of a multi-byte rune (CJK / Cyrillic / accented Latin -> treat as a
@@ -89,11 +100,18 @@ void DrawMaybeHighlightedText(Gfx* gfx, Rect rc, Str text, const StrVec& filterW
         }
     }
 
-    // measure total string width for RTL positioning
+    // measure the string for RTL positioning and the underlay's height
+    Size sizeTotal = gfx->MeasureText(text, font);
     int strOriginX = rc.x;
     if (isRtl) {
-        Size sizeTotal = gfx->MeasureText(text, font);
         strOriginX = rc.x + rc.dx - sizeTotal.dx;
+    }
+    // the underlay covers the text's line, not the whole row
+    int hlY = rc.y;
+    int hlDy = rc.dy;
+    if ((drawFlags & gfxTextVCenter) && sizeTotal.dy < rc.dy) {
+        hlY = rc.y + ((rc.dy - sizeTotal.dy) / 2);
+        hlDy = sizeTotal.dy;
     }
 
     // compute pixel rectangles for each highlighted range
@@ -101,36 +119,22 @@ void DrawMaybeHighlightedText(Gfx* gfx, Rect rc, Str text, const StrVec& filterW
     for (int i = 0; i < nRanges; i++) {
         Size sizeStart = gfx->MeasureText(Str(text.s, byteRanges[i].start), font);
         Size sizeEnd = gfx->MeasureText(Str(text.s, byteRanges[i].end), font);
-        highlightRects[i] = {strOriginX + sizeStart.dx, rc.y, sizeEnd.dx - sizeStart.dx, rc.dy};
+        highlightRects[i] = {strOriginX + sizeStart.dx, hlY, sizeEnd.dx - sizeStart.dx, hlDy};
     }
 
     // draw highlight background rectangles for matches
-    {
-        Color highlightCol;
-        if (IsCurrentThemeDefault()) {
-            highlightCol = kColYellow; // yellow for default theme
-        } else {
-            highlightCol = AccentColor(colBg, 40);
-        }
-        for (int i = 0; i < nRanges; i++) {
-            // highlightRects are computed from the full (untruncated) string, but
-            // the text is drawn clipped/ellipsized to rc. Clip to rc so a match
-            // in the truncated-away tail doesn't paint a stray box outside the label.
-            Rect clipped = highlightRects[i].Intersect(rc);
-            if (!clipped.IsEmpty()) {
-                gfx->FillRect(clipped, highlightCol);
-            }
+    for (int i = 0; i < nRanges; i++) {
+        // highlightRects are computed from the full (untruncated) string, but
+        // the text is drawn clipped/ellipsized to rc. Clip to rc so a match
+        // in the truncated-away tail doesn't paint a stray box outside the label.
+        Rect clipped = highlightRects[i].Intersect(rc);
+        if (!clipped.IsEmpty()) {
+            FillFilterMatchRect(gfx, clipped, colBg);
         }
     }
 
     // draw the whole string at once over the highlights
     gfx->DrawText(text, rc, drawFlags, font, colText);
-}
-
-// Ink that stays readable on a solid highlight underlay (black on yellow).
-static Color TextColorContrasting(Color bg) {
-    int lum = (GetRValue(bg) * 299 + GetGValue(bg) * 587 + GetBValue(bg) * 114) / 1000;
-    return lum >= 140 ? kColBlack : kColWhite;
 }
 
 // Sample the row background the TreeView already painted (indent/icon strip).
@@ -305,26 +309,19 @@ void DrawTreeItemFilterHighlight(Gfx* gfx, Rect labelRect, Str text, const StrVe
     }
     gfx->FillRect(labelRect, bgCol);
 
-    Color highlightCol;
-    if (IsCurrentThemeDefault()) {
-        highlightCol = kColYellow;
-    } else {
-        highlightCol = AccentColor(bgCol, 40);
-    }
     for (int i = 0; i < nRanges; i++) {
         Size sizeStart = MeasureStyledTextPrefix(gfx, text, byteRanges[i].start, font, boldFont, boldStart, boldEnd);
         Size sizeEnd = MeasureStyledTextPrefix(gfx, text, byteRanges[i].end, font, boldFont, boldStart, boldEnd);
         Rect hr{labelRect.x + sizeStart.dx, textTop, sizeEnd.dx - sizeStart.dx, textBottom - textTop};
         Rect clipped = hr.Intersect(labelRect);
         if (!clipped.IsEmpty()) {
-            gfx->FillRect(clipped, highlightCol);
+            FillFilterMatchRect(gfx, clipped, bgCol);
         }
     }
 
-    // Draw non-match runs in the row text color (white when selected+focused);
-    // match runs use ink that contrasts with the underlay so yellow+white does
-    // not wash out. Prefix extents keep run x positions aligned with underlays.
-    Color matchTxtCol = TextColorContrasting(highlightCol);
+    // the underlay is a tint, so a match keeps the row's text color. Prefix
+    // extents keep run x positions aligned with underlays.
+    Color matchTxtCol = txtCol;
     int pos = 0;
     while (pos < textLen) {
         bool isHl = hl[pos] != 0;

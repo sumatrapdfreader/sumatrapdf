@@ -1037,7 +1037,7 @@ static gp::El* AboutBoxEl(MainWindow* win, gp::Ctx* cx, bool withBorder) {
                 ->Child(gp::Div(cx->a)
                             ->W((float)kAboutNoteMarkDx)
                             ->H((float)kAboutNoteMarkDy)
-                            ->Bg(ToGpui(HomeAccentColor())))
+                            ->Bg(ToGpui(ThemeAccentColor())))
                 ->Child(
                     gp::TextEl(cx->a, GpuiDup(cx->a, noteTxt))->Font((float)kAboutMetaFontPx)->Fg(ToGpui(colMuted))));
     }
@@ -1402,7 +1402,7 @@ static gp::El* HomeThumbnailEl(MainWindow* win, gp::Ctx* cx, int idx, bool isSel
                         ->Bottom(0)
                         ->W((float)drawn.dx * progress)
                         ->H((float)kThumbsProgressDy)
-                        ->Bg(ToGpui(HomeAccentColor())));
+                        ->Bg(ToGpui(ThemeAccentColor())));
     }
     cell->Child(slot);
 

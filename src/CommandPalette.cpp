@@ -78,28 +78,22 @@ struct ListBoxModelCP : ListBoxModel {
     ItemDataCP* Data(int i) { return strings.AtData(i); }
 };
 
-struct CommandPaletteWnd : WindowBase {
+struct CommandPaletteWnd : WindowBase, PaletteSources {
     ~CommandPaletteWnd() override = default;
     MainWindow* win = nullptr;
 
     Edit* editQuery = nullptr;
-    StrVecCP tabs;
-    StrVecCP fileHistory;
-    StrVecCP commands;
-    StrVecCP toc;
-    StrVecCP favorites;
-    StrVecCP annotations;
-    StrVecCP settings;
     VirtListBox* listBox = nullptr;
     PageThumbnailsCtrl* thumbnailCtrl = nullptr;
     HBox* switchRow = nullptr;
     HBox* helpRow = nullptr;
+    // "26 of 212" at the right end of the help row
+    VirtText* countText = nullptr;
     int helpKind = -1;
     // the selected setting's doc comment, shown under the list in "= settings"
     ILayout* settingHelpBox = nullptr;
     VirtFixedLinesText* settingHelp = nullptr;
 
-    StrVec filterWords;
     Vec<u8> highlighted;
 
     int currTabIdx = 0;
@@ -122,11 +116,11 @@ struct CommandPaletteWnd : WindowBase {
     void CollectAnnotations(MainWindow*);
     void CollectSettings();
     void FillSwitchRow();
-    void FilterStringsForQuery(Str, StrVecCP&);
 
     bool Create(MainWindow* win, Str prefix, int smartTabAdvance);
     void QueryChanged();
     void UpdateHelpRow();
+    void UpdateCount();
     void UpdateSettingHelp();
     void UpdateColors();
 
@@ -146,8 +140,6 @@ struct CommandPaletteWnd : WindowBase {
     void ReturnToSettings(Str selPath);
     bool IsEditingSettingValue();
     TempStr EditedSettingPathTemp();
-    ItemDataCP* FindSetting(Str path, Str& foundPath);
-    void FillSettingValueRows(Str path, Str value, StrVecCP& out);
     void SelectSetting(Str path);
     void SetThumbnailMode(ThumbnailMode mode);
     void OnSelectionChange();
@@ -156,6 +148,35 @@ struct CommandPaletteWnd : WindowBase {
 };
 
 extern CommandPaletteWnd* gCommandPaletteWnd;
+
+// the palette: a query line over a hairline, the mode switches, the rows on
+// an inset with a rounded selection, and the key hints under a hairline
+constexpr int kPaletteQueryFontPx = 15;
+constexpr int kPaletteTextFontPx = 13;
+constexpr int kPaletteMetaFontPx = 12;
+constexpr int kPaletteHintFontPx = 11;
+constexpr int kPaletteRowDy = 24;
+constexpr int kPaletteInsetDx = 8;
+constexpr int kPalettePadDx = 16;
+constexpr int kPaletteQueryPadDy = 6;
+constexpr int kPaletteSelectionRadius = 4;
+
+static PlatformFont* PaletteFont(int px) {
+    return GetUserGuiFont(StrL("Segoe UI"), DpiScale(px));
+}
+
+// a hairline across the palette
+static void PaintPaletteRule(VirtCustom*, VirtPaintCtx* ctx) {
+    ctx->gfx->FillRect(ctx->bounds, ThemeEdgeColor());
+}
+
+static VirtCustom* NewPaletteRule() {
+    auto* rule = new VirtCustom();
+    rule->idealSize = {1, 1};
+    rule->onPaint = MkFunc1(PaintPaletteRule, rule);
+    rule->SetFlag(vwfNoHitTest, true);
+    return rule;
+}
 
 Str CommandPaletteSkipWS(Str s);
 bool CommandPaletteUiRtl();
@@ -349,7 +370,7 @@ static void ApplyRemoveItem(RemoveItemOp* op) {
     }
     auto* m = (ListBoxModelCP*)wnd->listBox->model;
     Str filter = CommandPaletteSkipWS(Str(wnd->editQuery->GetTextTemp()));
-    wnd->FilterStringsForQuery(filter, m->strings);
+    FilterPaletteStrings(*wnd, filter, m->strings);
     wnd->listBox->SetModel(m);
 
     int n = m->ItemsCount();
@@ -434,7 +455,7 @@ TempStr CommandPaletteWnd::EditedSettingPathTemp() {
     Str filter = CommandPaletteSkipWS(Str(editQuery->GetTextTemp()));
     str::TrimPrefix(filter, Str(kPalettePrefixBoolSettings));
     Str path, value, foundPath;
-    if (!SplitSettingValueQuery(filter, path, value) || !FindSetting(path, foundPath)) {
+    if (!SplitSettingValueQuery(filter, path, value) || !FindPaletteSetting(*this, path, foundPath)) {
         return {};
     }
     return str::DupTemp(foundPath);
@@ -833,64 +854,15 @@ static void OnDestroy(WindowBase::DestroyEvent* /*ev*/) {
     ScheduleDeleteAndExecCommand();
 }
 
-// The help lines name keys, and a key reads better as a key-cap than as a word
-// in the sentence. The strings are translated, so instead of putting markup in
-// them - which would invalidate every existing translation - the key names are
-// wrapped wherever they ended up in the sentence. Translators leave key names
-// in English, so matching on them works in every language
-static const char* kHelpKeys[] = {
-    "Ctrl+Tab", "Ctrl", "Enter", "Space", "Del", "Esc", "PgUp", "PgDn", "\u2191", "\u2193",
-};
-
-// s[at..] is tok and isn't part of a longer word
-static bool IsTokenAt(Str s, int at, Str tok) {
-    int n = len(tok);
-    if (at + n > len(s)) {
-        return false;
-    }
-    if (!str::EqN(Str(s.s + at, n), tok, n)) {
-        return false;
-    }
-    char before = (at > 0) ? s.s[at - 1] : ' ';
-    char after = (at + n < len(s)) ? s.s[at + n] : ' ';
-    bool okBefore = (before == ' ') || (before == '(');
-    bool okAfter = (after == ' ') || (after == ',') || (after == ')') || (after == '.');
-    return okBefore && okAfter;
-}
-
-static TempStr WithKbdMarkupTemp(Str s) {
-    str::Builder out;
-    int i = 0;
-    while (i < len(s)) {
-        Str match{};
-        for (const char* k : kHelpKeys) {
-            if (IsTokenAt(s, i, Str(k))) {
-                match = Str(k);
-                break;
-            }
-        }
-        if (len(match) == 0) {
-            out.AppendChar(s.s[i]);
-            i++;
-            continue;
-        }
-        out.Append(StrL("(Kbd/"));
-        out.Append(match);
-        out.Append(StrL(")"));
-        i += len(match);
-    }
-    return ToStrTemp(out);
-}
-
 // one of the "# History" / "> Commands" switches in the top row; it
 // carries the prefix it switches to so they can share one click handler
-struct PaletteSwitch : VirtRichText {
+struct PaletteSwitchCtrl : VirtRichText {
     CommandPaletteWnd* wnd = nullptr;
     Str prefix;
 };
 
 static void OnPaletteSwitchClicked(VirtMouseEvent* ev) {
-    auto* t = (PaletteSwitch*)ev->target;
+    auto* t = (PaletteSwitchCtrl*)ev->target;
     t->wnd->SwitchToPrefix(t->prefix);
 }
 
@@ -913,6 +885,13 @@ static void InitHelpText(const HelpStyle& st, VirtRichText* t, Str markup) {
     t->padding = Insets{0, padX, 0, padX};
 }
 
+// "(Kbd/Enter) run command": the key as a key cap before the words
+static TempStr HintMarkupTemp(const PaletteHint& h) {
+    return str::JoinTemp(StrL("(Kbd/"), h.key, StrL(") "), h.desc);
+}
+
+// the mode switches: the one the query is in takes the text color, the others
+// are muted
 void CommandPaletteWnd::FillSwitchRow() {
     if (!switchRow) {
         return;
@@ -922,34 +901,27 @@ void CommandPaletteWnd::FillSwitchRow() {
     }
     VecReset(switchRow->children);
 
-    auto colBg = ThemeWindowControlBackgroundColor();
-    auto colTxt = ThemeWindowTextColor();
-    HelpStyle st{hwnd, GetAppFont(), colTxt, colBg};
-    auto addSwitch = [this, &st](Str s, Str switchTo) {
-        TempStr markup = str::JoinTemp(StrL("(Kbd/"), Str(s.s, 1), StrL(")"), Str(s.s + 1, len(s) - 1));
-        auto* t = new PaletteSwitch();
-        InitHelpText(st, t, markup);
+    Str filter{};
+    if (editQuery) {
+        filter = CommandPaletteSkipWS(Str(editQuery->GetTextTemp()));
+    }
+    Color colBg = ThemeWindowControlBackgroundColor();
+    Color colTxt = ThemeWindowTextColor();
+    Color colMuted = ThemeWindowTextDisabledColor();
+    PaletteSwitch switches[kPaletteMaxSwitches];
+    int n = PaletteSwitches(*this, win && win->AsFixed(), switches);
+    for (int i = 0; i < n; i++) {
+        PaletteSwitch& sw = switches[i];
+        bool active = PaletteSwitchIsActive(filter, sw.prefix);
+        HelpStyle st{hwnd, PaletteFont(kPaletteMetaFontPx), active ? colTxt : colMuted, colBg};
+        PaletteHint h{Str(sw.label.s, 1), Str(sw.label.s + 2, len(sw.label) - 2)};
+        auto* t = new PaletteSwitchCtrl();
+        InitHelpText(st, t, HintMarkupTemp(h));
         t->wnd = this;
-        t->prefix = switchTo;
+        t->prefix = sw.prefix;
         t->onClick = MkFunc1Void(OnPaletteSwitchClicked);
         switchRow->AddChild(t);
-    };
-    addSwitch(Tr("> Commands"), Str(kPalettePrefixCommands));
-    addSwitch(Tr("@ Tabs"), Str(kPalettePrefixTabs));
-    addSwitch(Tr("# History"), Str(kPalettePrefixFileHistory));
-    if (len(favorites) > 0) {
-        addSwitch(Tr("$ Favorites"), Str(kPalettePrefixFavorites));
     }
-    if (len(toc) > 0) {
-        addSwitch(Tr("% TOC"), Str(kPalettePrefixTOC));
-    }
-    if (win && win->AsFixed()) {
-        addSwitch(Tr("& Thumbnails"), Str(kPalettePrefixThumbnails));
-    }
-    if (len(annotations) > 0) {
-        addSwitch(Tr("* Annotations"), Str(kPalettePrefixAnnotations));
-    }
-    addSwitch(Tr("= Settings"), Str(kPalettePrefixBoolSettings));
     if (layout) {
         DoLayout();
     }
@@ -963,8 +935,8 @@ static VirtRichText* NewHelpText(const HelpStyle& st, Str markup) {
 
 // a row of help items: virtual controls sitting in the palette's layout next
 // to the real edit and list
-static HBox* NewHelpRow(HBox* box) {
-    box->alignMain = MainAxisAlign::MainCenter;
+static HBox* NewHelpRow(HBox* box, MainAxisAlign align) {
+    box->alignMain = align;
     box->alignCross = CrossAxisAlign::CrossCenter;
     return box;
 }
@@ -979,6 +951,7 @@ void CommandPaletteWnd::UpdateHelpRow() {
     }
     int kind = PaletteHelpKind(filter, smartTabMode);
     if (helpRow->ChildrenCount() > 0 && kind == helpKind) {
+        UpdateCount();
         return;
     }
     helpKind = kind;
@@ -987,72 +960,59 @@ void CommandPaletteWnd::UpdateHelpRow() {
         delete c.layout;
     }
     VecReset(helpRow->children);
+    countText = nullptr;
 
-    Str strings[4];
-    int nHelp = 0;
-    switch (kind) {
-        case kHelpSmartTab:
-            strings[nHelp++] = Tr("Ctrl+Tab navigate");
-            strings[nHelp++] = Tr("Release Ctrl select");
-            strings[nHelp++] = Tr("Space for sticky mode");
-            strings[nHelp++] = Tr("Del close tab");
-            break;
-        case kHelpHistory:
-            strings[nHelp++] = Tr("Enter open file");
-            strings[nHelp++] = Tr("Del remove from history");
-            strings[nHelp++] = Tr("Esc close");
-            break;
-        case kHelpTabs:
-            strings[nHelp++] = Tr("Enter switch to tab");
-            strings[nHelp++] = Tr("Del close tab");
-            strings[nHelp++] = Tr("Esc close");
-            break;
-        case kHelpFavorites:
-            strings[nHelp++] = Tr("Enter go to favorite");
-            strings[nHelp++] = Tr("Del remove favorite");
-            strings[nHelp++] = Tr("Esc close");
-            break;
-        case kHelpAnnotations:
-        case kHelpThumbnails:
-        case kHelpToc:
-            strings[nHelp++] = Tr("Enter go to");
-            strings[nHelp++] = Tr("Esc close");
-            break;
-        case kHelpSettings:
-            strings[nHelp++] = Tr("Enter change");
-            strings[nHelp++] = Tr("Del restore default");
-            strings[nHelp++] = Tr("Esc close");
-            break;
-        case kHelpSettingValue:
-            strings[nHelp++] = Tr("Enter apply");
-            strings[nHelp++] = Tr("Del restore default");
-            strings[nHelp++] = Tr("Esc go back");
-            break;
-        case kHelpEverything:
-            strings[nHelp++] = Tr("Enter select");
-            strings[nHelp++] = Tr("Esc close");
-            break;
-        default:
-            strings[nHelp++] = Tr("Enter run command");
-            strings[nHelp++] = Tr("Esc close");
-            break;
-    }
-    auto colBg = ThemeWindowControlBackgroundColor();
-    auto colTxt = ThemeWindowTextColor();
-    HelpStyle st{hwnd, GetAppFont(), colTxt, colBg};
+    Color colBg = ThemeWindowControlBackgroundColor();
+    Color colMuted = ThemeWindowTextDisabledColor();
+    HelpStyle st{hwnd, PaletteFont(kPaletteHintFontPx), colMuted, colBg};
+    PaletteHint hints[kPaletteMaxHints];
+    int nHelp = PaletteHelpHints(kind, hints);
     for (int i = 0; i < nHelp; i++) {
-        helpRow->AddChild(NewHelpText(st, WithKbdMarkupTemp(strings[i])));
+        helpRow->AddChild(NewHelpText(st, HintMarkupTemp(hints[i])));
     }
+    // the count at the right end
+    helpRow->AddChild(new Spacer(0, 0), 1);
+    countText = new VirtText({});
+    countText->font = PaletteFont(kPaletteMetaFontPx);
+    countText->SetColor(kColText, colMuted);
+    helpRow->AddChild(countText);
+    UpdateCount();
+
     if (settingHelpBox) {
         bool show = kind == kHelpSettings || kind == kHelpSettingValue;
         settingHelpBox->SetVisibility(show ? Visibility::Visible : Visibility::Collapse);
         // a collapsed box is not laid out, but its virtual child still paints
         settingHelp->SetIsVisible(show);
     }
+    // the mode changed with the kind: the active switch moves
+    FillSwitchRow();
     if (layout) {
         DoLayout();
     }
     UpdateSettingHelp();
+}
+
+// "26 of 212": the rows shown out of the mode's rows
+void CommandPaletteWnd::UpdateCount() {
+    if (!countText || !listBox) {
+        return;
+    }
+    Str filter{};
+    if (editQuery) {
+        filter = CommandPaletteSkipWS(Str(editQuery->GetTextTemp()));
+    }
+    int shown = listBox->model ? listBox->model->ItemsCount() : 0;
+    Str prev = countText->s;
+    TempStr count = PaletteCountTemp(shown, PaletteSourceCount(*this, filter));
+    if (str::Eq(prev, count)) {
+        return;
+    }
+    countText->SetText(count);
+    countText->sz = {};
+    if (layout) {
+        DoLayout();
+    }
+    HwndRepaintNow(hwnd);
 }
 
 // the doc comment of the selected setting, like the advanced settings dialog
@@ -1122,14 +1082,15 @@ bool CommandPaletteWnd::Create(MainWindow* win, Str prefix, int smartTabAdvance)
     vbox->alignMain = MainAxisAlign::MainStart;
     vbox->alignCross = CrossAxisAlign::Stretch;
 
+    // the query line: a bare edit over a hairline
     {
         Edit::CreateArgs args;
         args.parent = hwnd;
         args.isMultiLine = false;
-        args.withBorder = true;
-        args.cueText = StrL("enter search term");
+        args.withBorder = false;
+        args.cueText = StrL("Type a command");
         args.text = prefix;
-        args.font = GetFont();
+        args.font = PaletteFont(kPaletteQueryFontPx);
         args.isRtl = IsUIRtl();
         auto* c = new Edit();
         c->SetColors(colTxt, colBg);
@@ -1138,16 +1099,16 @@ bool CommandPaletteWnd::Create(MainWindow* win, Str prefix, int smartTabAdvance)
         ReportIf(!ok);
         c->onTextChanged = MkMethod0<CommandPaletteWnd, &CommandPaletteWnd::QueryChanged>(this);
         editQuery = c;
-        vbox->AddChild(c);
+        vbox->AddChild(new Padding(c, DpiScaledInsets(kPaletteQueryPadDy, kPalettePadDx)));
+        vbox->AddChild(NewPaletteRule());
     }
 
     if (!smartTabMode) {
-        vbox->AddChild(new Spacer(0, DpiScale(4)));
         auto* box = new HBox();
         box->rtl = CommandPaletteUiRtl();
-        switchRow = NewHelpRow(box);
+        switchRow = NewHelpRow(box, MainAxisAlign::MainCenter);
         FillSwitchRow();
-        vbox->AddChild(switchRow);
+        vbox->AddChild(new Padding(switchRow, DpiScaledInsets(6, kPaletteInsetDx, 4, kPaletteInsetDx)));
     }
 
     {
@@ -1158,16 +1119,17 @@ bool CommandPaletteWnd::Create(MainWindow* win, Str prefix, int smartTabAdvance)
         // focus and doesn't show a focus ring
         c->SetFlag(vwfFocusable, false);
         c->dpi = GetDpi();
-        c->font = font;
+        c->font = PaletteFont(kPaletteTextFontPx);
+        c->itemDy = DpiScale(kPaletteRowDy);
         c->SetColor(kColListText, colTxt);
         c->SetColor(kColListBg, colBg);
-        c->padding = DpiScaledInsets(4, 0);
+        c->padding = DpiScaledInsets(0, kPaletteInsetDx);
         c->onDoubleClick = MkMethod0<CommandPaletteWnd, &CommandPaletteWnd::OnListDoubleClick>(this);
         c->onDrawItem =
             MkMethod1<CommandPaletteWnd, VirtListBox::DrawItemEvent*, &CommandPaletteWnd::DrawListBoxItem>(this);
         c->onSelectionChanged = MkMethod0<CommandPaletteWnd, &CommandPaletteWnd::OnSelectionChange>(this);
         auto* m = new ListBoxModelCP();
-        FilterStringsForQuery(prefix, m->strings);
+        FilterPaletteStrings(*this, prefix, m->strings);
         c->SetModel(m);
         listBox = c;
         overlay->AddChild(c);
@@ -1196,16 +1158,17 @@ bool CommandPaletteWnd::Create(MainWindow* win, Str prefix, int smartTabAdvance)
         vbox->AddChild(box);
     }
 
+    // the footer: the key hints and the count under a hairline
     {
+        vbox->AddChild(NewPaletteRule());
         auto* box = new HBox();
         box->rtl = CommandPaletteUiRtl();
-        helpRow = NewHelpRow(box);
-        vbox->AddChild(helpRow);
+        helpRow = NewHelpRow(box, MainAxisAlign::MainStart);
+        vbox->AddChild(new Padding(helpRow, DpiScaledInsets(5, kPaletteInsetDx)));
         UpdateHelpRow();
     }
 
-    auto* padding = new Padding(vbox, DpiScaledInsets(4, 8));
-    layout = padding;
+    layout = vbox;
 
     auto rc = HwndClientRect(win->hwndFrame);
     int dy = rc.dy - 72;
@@ -1317,7 +1280,7 @@ void CommandPaletteOnAnnotationsChanged() {
         ItemDataCP* data = m->Data(sel);
         keep = data ? data->annot : nullptr;
     }
-    wnd->FilterStringsForQuery(filter, m->strings);
+    FilterPaletteStrings(*wnd, filter, m->strings);
     wnd->listBox->SetModel(m);
     wnd->UpdateHelpRow();
     int n = m->ItemsCount();
@@ -1876,11 +1839,12 @@ void CommandPaletteWnd::DrawListBoxItem(VirtListBox::DrawItemEvent* ev) {
     if (IsSpecialColor(colText)) {
         colText = GetSysColor(COLOR_WINDOWTEXT);
     }
-    if (ev->selected) {
-        colBg = AccentColor(colBg, 30);
-    }
 
     gfx->FillRect(rc, colBg);
+    if (ev->selected) {
+        colBg = AccentColor(colBg, 28);
+        gfx->FillRoundedRect(rc, DpiScale(kPaletteSelectionRadius), colBg);
+    }
 
     // Gfx (Direct2D / GDI+) does not pick up WS_EX_LAYOUTRTL, so we lay the
     // row out right-to-left ourselves. Do not use HwndIsRtl(): the palette
@@ -1893,31 +1857,21 @@ void CommandPaletteWnd::DrawListBoxItem(VirtListBox::DrawItemEvent* ev) {
 
     Str itemText = m->Item(ev->itemIndex);
 
-    TempStr rightStr;
-    PlatformFont* rightFont = lb->font;
-    Color rightCol = AccentColor(colText, 80);
-    if (data->cmdId != 0) {
-        rightStr = CommandPaletteShortcutTemp(data->cmdId);
-    } else if (IsSettingRow(data) && len(data->settingPath) == 0) {
-        rightStr = FormatSettingValueTemp(data->settingType, SettingRowPtr(data));
+    TempStr rightStr = PaletteRightColumnTemp(data);
+    PlatformFont* rightFont = PaletteFont(kPaletteMetaFontPx);
+    Color rightCol = ThemeWindowTextDisabledColor();
+    // a setting's value reads as part of the row; one off its default is bold
+    if (IsSettingRow(data) && len(data->settingPath) == 0) {
         rightCol = colText;
         if (SettingDiffersFromDefault(data)) {
-            PlatformFont* bold = GetBoldPlatformFont(lb->font);
+            PlatformFont* bold = GetBoldPlatformFont(rightFont);
             if (bold) {
                 rightFont = bold;
             }
         }
-    } else if (data->pageNo > 0) {
-        // toc entry: show the destination page number on the right, e.g. "p33"
-        rightStr = fmt("p%d", data->pageNo);
-    } else if (data->tocItem && data->tocItem->loc.chapter >= 1) {
-        // chaptered doc: destination unresolved until clicked, show the chapter
-        rightStr = fmt("ch%d", data->tocItem->loc.chapter);
-    } else if (data->filePath) {
-        rightStr = path::GetDirTemp(data->filePath);
     }
 
-    int padX = DpiScale(4);
+    int padX = DpiScale(kPaletteInsetDx);
     rc.x += padX;
     rc.dx -= 2 * padX;
 
@@ -1996,135 +1950,6 @@ void CommandPaletteWnd::DrawListBoxItem(VirtListBox::DrawItemEvent* ev) {
     }
 }
 
-// The setting at a full dotted path, or an unambiguous leaf ("Units" for
-// "FixedPageUI.PageGrid.Units") so the name can be typed by hand
-ItemDataCP* CommandPaletteWnd::FindSetting(Str path, Str& foundPath) {
-    ItemDataCP* found = nullptr;
-    int nLeaf = 0;
-    for (int i = 0; i < len(settings); i++) {
-        Str s = settings[i];
-        if (str::EqI(s, path)) {
-            found = settings.AtData(i);
-            foundPath = s;
-            nLeaf = 1;
-            break;
-        }
-        Str leaf = str::SliceFromCharLast(s, '.');
-        if (len(leaf) > 1 && str::EqI(Str(leaf.s + 1, leaf.len - 1), path)) {
-            nLeaf++;
-            found = settings.AtData(i);
-            foundPath = s;
-        }
-    }
-    if (nLeaf != 1) {
-        return nullptr;
-    }
-    return found;
-}
-
-// Rows for the value stage: an enum offers its allowed values, anything else
-// offers the one value being typed. Enter on a row applies it (see
-// ExecuteCurrentSelection).
-void CommandPaletteWnd::FillSettingValueRows(Str path, Str value, StrVecCP& out) {
-    Str foundPath;
-    ItemDataCP* found = FindSetting(path, foundPath);
-    if (!found || found->settingType == SettingType::Bool) {
-        return;
-    }
-    ItemDataCP data = *found;
-    data.settingPath = foundPath;
-    const char** enumValues = GetSettingsEnumValues(foundPath);
-    if (!enumValues) {
-        // clearing a string is meaningful, an empty number is not
-        bool isStr = found->settingType != SettingType::Int && found->settingType != SettingType::Float;
-        if (len(value) > 0 || isStr) {
-            out.Append(value, data);
-        }
-        return;
-    }
-    for (const char** v = enumValues; *v; v++) {
-        Str s(*v);
-        // the empty choice means "unset"; it can't be a row you pick, so leave
-        // it to the advanced settings dialog
-        if (len(s) == 0 || (len(value) > 0 && !FilterMatches(s, filterWords))) {
-            continue;
-        }
-        out.Append(s, data);
-    }
-}
-
-void CommandPaletteWnd::FilterStringsForQuery(Str filter, StrVecCP& strings) {
-    strings.Reset();
-    if (len(filter) == 0) {
-        filter = StrL("");
-    }
-
-    PaletteMode mode = ParsePaletteMode(filter);
-    if (mode == PaletteMode::Thumbnails) {
-        return;
-    }
-    bool searchTabs = mode == PaletteMode::Tabs || mode == PaletteMode::Everything;
-    bool searchHistory = mode == PaletteMode::FileHistory || mode == PaletteMode::Everything;
-    bool searchCommands = mode == PaletteMode::Commands || mode == PaletteMode::Everything;
-    bool searchToc = mode == PaletteMode::Toc;
-    bool searchFavorites = mode == PaletteMode::Favorites;
-    bool searchAnnotations = mode == PaletteMode::Annotations;
-    bool searchSettings = mode == PaletteMode::Settings;
-
-    filterWords.Reset();
-    if (searchSettings) {
-        Str path, value;
-        if (SplitSettingValueQuery(filter, path, value)) {
-            SplitFilterToWords(value, filterWords);
-            FillSettingValueRows(path, value, strings);
-            // the rows are the values themselves: nothing to highlight
-            filterWords.Reset();
-            return;
-        }
-    }
-    if (searchAnnotations) {
-        AnnotMatchOpts opts;
-        if (!ParseAnnotSearch(filter, opts)) {
-            opts.Reset();
-            StrVec words;
-            SplitFilterToWords(filter, words);
-            for (Str w : words) {
-                AnnotSearchAddContentWord(opts, w);
-            }
-        }
-        AnnotSearchContentWords(opts, filterWords);
-        int n = len(annotations);
-        for (int i = 0; i < n; i++) {
-            ItemDataCP* data = annotations.AtData(i);
-            if (data && AnnotMatches(data->annot, opts)) {
-                strings.AppendFrom(&annotations, i);
-            }
-        }
-        return;
-    }
-
-    SplitFilterToWords(filter, filterWords);
-
-    if (searchTabs) {
-        FilterStrings(tabs, filterWords, strings);
-    }
-    if (searchHistory) {
-        FilterStrings(fileHistory, filterWords, strings);
-    }
-    if (searchCommands) {
-        FilterStrings(commands, filterWords, strings);
-    }
-    if (searchToc) {
-        FilterStrings(toc, filterWords, strings);
-    }
-    if (searchFavorites) {
-        FilterStrings(favorites, filterWords, strings);
-    }
-    if (searchSettings) {
-        FilterStrings(settings, filterWords, strings);
-    }
-}
-
 void CommandPaletteWnd::QueryChanged() {
     Str filter = CommandPaletteSkipWS(Str(editQuery->GetTextTemp()));
     if (win->AsFixed() && str::StartsWith(filter, Str(kPalettePrefixThumbnails))) {
@@ -2144,9 +1969,10 @@ void CommandPaletteWnd::QueryChanged() {
             }
         }
     }
-    FilterStringsForQuery(filter, m->strings);
+    FilterPaletteStrings(*this, filter, m->strings);
     listBox->SetModel(m);
     UpdateHelpRow();
+    UpdateCount();
     int nItems = m->ItemsCount();
     if (nItems == 0) {
         return;
