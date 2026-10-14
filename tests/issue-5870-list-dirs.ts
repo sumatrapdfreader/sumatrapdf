@@ -10,8 +10,7 @@
 import { copyFileSync, mkdirSync, rmSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 import { ControlClient, ControlCommand } from "./control";
-import { IS_MAC } from "./host";
-import { ROOT, runStandalone, SLOW_BUILD_FACTOR, tmpPath } from "./util";
+import { ROOT, runStandalone, SLOW_BUILD_FACTOR, tmpPath, USE_NG } from "./util";
 import { getWindowRect, postMessage, readWindowDCColumn, sleep, waitForWindowIdle } from "./winapi";
 import { findCanvas, launchControlled, launchSumatra, waitForFrame, killAndWait } from "./win-automation";
 
@@ -86,7 +85,7 @@ async function homeRows(client: ControlClient): Promise<ListRow[] | null> {
   return parseListRows(String(res[1] ?? ""));
 }
 
-async function macListDirs(dir: string, dirPath: string): Promise<void> {
+async function ngListDirs(dir: string, dirPath: string): Promise<void> {
   const { proc, client, frame } = await launchControlled([...WINDOW_POS, "-appdata", dir]);
   try {
     const deadline = Date.now() + 8000 * SLOW_BUILD_FACTOR;
@@ -143,8 +142,9 @@ export async function testit(): Promise<void> {
   );
 
   const dirPath = join(dir, "sub");
-  if (IS_MAC) {
-    await macListDirs(dir, dirPath);
+  // ng's frame is a swapchain: no GDI pixels to read, so ask the app for the rows
+  if (USE_NG) {
+    await ngListDirs(dir, dirPath);
     return;
   }
 

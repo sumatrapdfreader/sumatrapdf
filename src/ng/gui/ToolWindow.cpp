@@ -634,6 +634,14 @@ static LRESULT CALLBACK ToolSubclass(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp, 
                 return 0;
             }
             break;
+        case WM_COMMAND:
+            // a command id sent at the tool window (tests send the palette
+            // Ctrl+A / Ctrl+C that way) runs on its owner, like orig
+            if (HIWORD(wp) == 0 && LOWORD(wp) > 0 && IsMainWindowValid(tw->owner)) {
+                ExecuteCmd(tw->owner, (int)LOWORD(wp));
+                return 0;
+            }
+            break;
         case WM_GETMINMAXINFO: {
             LRESULT res = DefSubclassProc(hwnd, msg, wp, lp);
             Size minClient = tw->desc.minClient;

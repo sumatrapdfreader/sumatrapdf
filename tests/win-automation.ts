@@ -31,7 +31,9 @@ import {
   sendText,
   captureWindowToPng,
   getSystemMetrics,
+  getWindowOwner,
   getWindowRect,
+  isWindowVisible,
   readWindowDCColumn,
   SM_CXVSCROLL,
   WM_LBUTTONDOWN,
@@ -565,8 +567,29 @@ export function findPalette(frame: number): { palette: number; edit: number } {
   if (!edit || getClassName(edit) !== "Edit") {
     return { palette: 0, edit: 0 };
   }
+  if (USE_NG) {
+    return { palette: findNgPalette(frame), edit };
+  }
   const palette = getRootWindow(edit);
   return { palette: palette === frame ? 0 : palette, edit };
+}
+
+// ng's query edit sits in a 0x0 helper window; the palette is the visible GPUI
+// window the frame owns. Posted keys and pixel captures work on it.
+function findNgPalette(frame: number): number {
+  let found = 0;
+  enumWindows((hwnd) => {
+    if (getWindowOwner(hwnd) !== frame || !isWindowVisible(hwnd) || getClassName(hwnd) !== FRAME_CLASS) {
+      return true;
+    }
+    const r = getWindowRect(hwnd);
+    if (r.right - r.left < 100) {
+      return true;
+    }
+    found = hwnd;
+    return false;
+  });
+  return found;
 }
 
 // A posted, unmodified key press that doesn't wait for the app.

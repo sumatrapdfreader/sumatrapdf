@@ -6,8 +6,8 @@ import { join } from "node:path";
 import { ControlClient, ControlCommand } from "./control.ts";
 import { IS_MAC } from "./host.ts";
 import { cmdId, runStandalone, tmpPath } from "./util.ts";
-import { captureWindowPixels, getClassName, getFocusedHwnd, getParentWindow, getRootWindow, sleep } from "./winapi.ts";
-import { killAndWait, launchControlled, sendCommand, sendCommandSync } from "./win-automation.ts";
+import { captureWindowPixels, sleep } from "./winapi.ts";
+import { findPalette, killAndWait, launchControlled, sendCommand, sendCommandSync } from "./win-automation.ts";
 
 const SETTINGS = `UiLanguage = en
 Theme = Light
@@ -66,9 +66,9 @@ async function openPalette(client: ControlClient, frame: number): Promise<number
         return frame;
       }
     } else {
-      const edit = getFocusedHwnd(frame);
-      if (edit && getClassName(edit) === "Edit" && getRootWindow(edit) !== frame) {
-        return getParentWindow(edit);
+      const { palette } = findPalette(frame);
+      if (palette) {
+        return palette;
       }
     }
     await sleep(50);
