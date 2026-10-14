@@ -49,6 +49,7 @@
 #endif
 #include "DocumentProperties.h"
 #include "DocumentPropertiesCommon.h"
+#include "shared/PdfToolsCommon.h"
 
 #include "SumatraLog.h"
 
@@ -584,15 +585,14 @@ static Str PropsLongestLine(Str text, int* nLinesOut) {
 
 // --- a window of its own (Windows) ------------------------------------------
 
-// orig's layout: the edit from the top edge, 8 at the sides and under the
-// button row, whose buttons have 8 above them
-constexpr float kPropsToolPad = 8;
-// orig's Button::GetIdealSize(): the text plus 2 x 12 and 2 x 5
+// orig's layout: the text on the window's background, padded; a hairline,
+// then the footer: the certificate's quiet buttons and the filled Copy
+constexpr float kPropsPadDy = 14;
+// what the buttons add to their label's width
 constexpr float kPropsBtnPadDx = 12;
-constexpr float kPropsBtnDy = 25;
-constexpr float kPropsBtnMinDx = 70;
-constexpr float kPropsBtnFontPx = 12;
-// the edit control's own margins around its text
+// room for the scrollbar beside the longest line
+constexpr float kPropsScrollbarDx = 16;
+// the edit's own margins around its text
 constexpr float kPropsEditMarginDx = 4;
 constexpr float kPropsEditMarginDy = 1;
 // Consolas: the advance of a character over the font's size
@@ -644,11 +644,14 @@ static ToolWindowDesc PropsToolDesc() {
     return desc;
 }
 
-// orig's PropertiesWnd::SizeToContent, with its arithmetic (it adds the
-// classic frame sizes, not what the window really has): the window size in
-// pixels for the text as GDI measures it in orig's font. ng: gpui measures
-// text only while it paints, and the window has to have its size before it is
-// shown
+static float PropsFooterDy() {
+    return 1 + (2 * kToolDlgFootPadDy) + kDlgBtnDy;
+}
+
+// orig's PropertiesWnd::SizeToContent: the window size in pixels for the text
+// as GDI measures it in orig's font, plus the padding and the footer, capped
+// at 80% of the work area. ng: gpui measures text only while it paints, and
+// the window has to have its size before it is shown
 static Size PropsToolWindowSize(MainWindow* win) {
     int dpi = std::max(AppShellWindowDpi(win), 96);
     PlatformFont* propsFont = GetUserGuiFont(StrL("Consolas"), MulDiv(14, dpi, 96));
@@ -665,8 +668,6 @@ static Size PropsToolWindowSize(MainWindow* win) {
         nLines++;
         off += lineLen + (nl >= 0 ? 1 : 0);
     }
-    maxLineDx += 16;
-
     int lineHeight = PlatformFontLineHeight(propsFont);
     int charDx = PlatformFontMeasureText(propsFont, StrL("x")).dx;
     gProps.toolCharDx = (float)charDx * 96.f / (float)dpi;
@@ -674,20 +675,24 @@ static Size PropsToolWindowSize(MainWindow* win) {
     // a bit of slack so the longest lines don't touch the right edge
     maxLineDx += 4 * charDx;
 
-    int pad = MulDiv((int)kPropsToolPad, dpi, 96);
-    // scrollbar + the edit's edges, as orig added them around the text
-    int editPadding = MulDiv(16 + 4, dpi, 96) + 16;
-    Size btnText = PlatformFontMeasureText(GetDefaultGuiFont(), Tr("Copy To Clipboard"));
-    int btnDx = std::max(btnText.dx + MulDiv(2 * (int)kPropsBtnPadDx, dpi, 96), MulDiv((int)kPropsBtnMinDx, dpi, 96));
-    int btnDy = btnText.dy + MulDiv(2 * 5, dpi, 96);
-    int wantedClientDx = std::max(maxLineDx + editPadding, btnDx + (2 * pad));
+    // the footer: its buttons' labels, padded, the dialogs' gap apart
+    PlatformFont* btnFont = GetUserGuiFont(StrL("Segoe UI"), MulDiv((int)kToolDlgTextFontPx, dpi, 96));
+    auto btnDx = [&](Str label) {
+        return PlatformFontMeasureText(btnFont, label).dx + MulDiv(2 * (int)kPropsBtnPadDx, dpi, 96);
+    };
+    int gap = MulDiv((int)kToolDlgGapDx, dpi, 96);
+    int footerDx = btnDx(Tr("Copy To Clipboard"));
+    if (gProps.certs) {
+        footerDx += btnDx(Tr("View Certificate...")) + btnDx(Tr("Update EU Trusted List")) + (2 * gap);
+    }
 
-    int editBorderDy = MulDiv(4, dpi, 96);
-    int btnAreaDy = std::max(MulDiv(40, dpi, 96), btnDy + (2 * pad));
-    int wantedClientDy = ((nLines + kPropsExtraLines) * lineHeight) + editBorderDy + btnAreaDy + pad;
+    auto px = [&](float dips) { return MulDiv((int)dips, dpi, 96); };
+    int textDx = maxLineDx + px(kPropsEditMarginDx + kPropsScrollbarDx);
+    int wantedClientDx = std::max(textDx, footerDx) + (2 * px(kToolDlgPadDx));
+    int textDy = (nLines + 1) * lineHeight;
+    int wantedClientDy = textDy + (2 * px(kPropsPadDy)) + px(PropsFooterDy());
     Size outer = ToolWindowOuterSize(PropsToolDesc(), win, Size(wantedClientDx, wantedClientDy));
 
-    // cap at 80% of the work area
     Rect work = AppShellWorkArea(win);
     if (work.dx > 0) {
         outer.dx = std::min(outer.dx, (work.dx * 80) / 100);
@@ -731,11 +736,34 @@ static void PropsToolSizeToContent() {
     ToolWindowMove(gProps.tw, Rect(cur.x, cur.y, sz.dx, sz.dy));
 }
 
-// orig's themed button, in the window's rem (see PropsToolBuild)
-static gp::El* PropsToolButton(gp::Ctx* cx, gp::Str id, Str label, gp::Listener onClick, float fontPx,
-                               bool disabled = false) {
-    gp::El* btn = gpc::Button::New(cx, id)->Label(ToGpui(label))->Disabled(disabled)->OnClick(onClick)->IntoEl();
-    return btn->H(kPropsBtnDy)->MinW(kPropsBtnMinDx)->PadX(kPropsBtnPadDx)->Font(fontPx)->Shrink0();
+// the certificate's quiet buttons (and its picker), then the filled Copy
+// fontPx: the buttons' text in the window's rem
+static gp::El* PropsFooterEl(gp::Ctx* cx, float fontPx) {
+    gp::El* row = gp::Div(cx->a)
+                      ->FlexRow()
+                      ->ItemsCenter()
+                      ->W(gp::kFill)
+                      ->Shrink0()
+                      ->PadX(kToolDlgPadDx)
+                      ->PadY(kToolDlgFootPadDy)
+                      ->Gap(kToolDlgGapDx);
+#if OS_WIN
+    if (gProps.certs) {
+        gProps.certSelect.PollChanged(cx->app);
+        if (gProps.certs->next) {
+            row->Child(gProps.certSelect.Build(cx, StrL("props-certificate"), 220));
+        }
+        row->Child(DlgGhostButton(cx, GStrL("props-view-certificate"), Tr("View Certificate..."),
+                                  gp::ListenTo(gPropertiesView, &PropertiesView::OnViewCert), false, fontPx));
+        row->Child(DlgGhostButton(cx, GStrL("props-update-eutl"), Tr("Update EU Trusted List"),
+                                  gp::ListenTo(gPropertiesView, &PropertiesView::OnUpdateEutl), gProps.eutlUpdating,
+                                  fontPx));
+    }
+#endif
+    row->Child(gp::Div(cx->a)->Flex1());
+    row->Child(DlgFilledButton(cx, GStrL("props-copy"), Tr("Copy To Clipboard"),
+                               gp::ListenTo(gPropertiesView, &PropertiesView::OnCopy), false, fontPx));
+    return row;
 }
 
 // ng: orig's edit is Consolas 14 px, which GDI lays out 8 wide and 17 high.
@@ -754,20 +782,20 @@ static gp::El* PropsToolBuild(MainWindow*, gp::Ctx* cx) {
     float remScale = 16.f / rem;
     const gp::Theme& th = gp::ThemeNow(cx->app);
     gp::WinSize ws = gp::WindowSize(cx->win);
+    Color colBg = ThemeWindowControlBackgroundColor();
 
     gp::InputState* state = gProps.textEdit;
     state->softWrap = false;
     gp::InputEditorStyle style;
-    style.foreground = th.foreground;
-    style.mutedForeground = th.mutedFg;
+    style.foreground = ToGpui(ThemeWindowTextColor());
+    style.mutedForeground = ToGpui(ThemeWindowTextDisabledColor());
     style.caret = th.caret;
     style.selection = gp::RgbaOpacity(th.selection, 0.4f);
     style.fontSize = (gProps.toolCharDx / kConsolasAdvance) * remScale;
     style.fontFamily = gp::FontFamilyIntern(GStrL("Consolas"));
 
-    float btnRowDy = kPropsToolPad + kPropsBtnDy;
-    float editDy = std::max(ws.dipH - btnRowDy - kPropsToolPad, gProps.toolLineDy);
-    state->viewH = editDy - 2 * (1 + kPropsEditMarginDy);
+    float editDy = std::max(ws.dipH - PropsFooterDy() - (2 * kPropsPadDy), gProps.toolLineDy);
+    state->viewH = editDy - (2 * kPropsEditMarginDy);
     gp::El* edit = gp::InputBase::New(cx, GStrL("properties-text"), true, gp::AccessibilityRole::MultilineTextInput)
                        ->BindInput(state)
                        ->W(gp::kFill)
@@ -779,36 +807,25 @@ static gp::El* PropsToolBuild(MainWindow*, gp::Ctx* cx) {
                        ->ScrollY(state->scrollY)
                        ->ScrollX(state->scrollX)
                        ->ScrollFromPath()
-                       ->Bg(th.inputBg)
-                       ->Border(1, th.inputBorder)
+                       ->Bg(ToGpui(colBg))
                        ->Child(gp::Textarea::New(cx, state, style));
 
-    float btnFont = kPropsBtnFontPx * remScale;
-    gp::El* footer = gp::Div(cx->a)->FlexRow()->JustifyEnd()->ItemsEnd()->Gap(kPropsToolPad)->H(btnRowDy)->Shrink0();
-    footer->Child(PropsToolButton(cx, GStrL("props-copy"), Tr("Copy To Clipboard"),
-                                  gp::ListenTo(gPropertiesView, &PropertiesView::OnCopy), btnFont));
-#if OS_WIN
-    if (gProps.certs) {
-        gProps.certSelect.PollChanged(cx->app);
-        if (gProps.certs->next) {
-            footer->Child(gProps.certSelect.Build(cx, StrL("props-certificate"), 220));
-        }
-        footer->Child(PropsToolButton(cx, GStrL("props-view-certificate"), Tr("View Certificate..."),
-                                      gp::ListenTo(gPropertiesView, &PropertiesView::OnViewCert), btnFont));
-        footer->Child(PropsToolButton(cx, GStrL("props-update-eutl"), Tr("Update EU Trusted List"),
-                                      gp::ListenTo(gPropertiesView, &PropertiesView::OnUpdateEutl), btnFont,
-                                      gProps.eutlUpdating));
-    }
-#endif
+    // the text from the left padding to the right edge, where the scrollbar is
+    gp::El* text = gp::Div(cx->a)
+                       ->W(gp::kFill)
+                       ->Shrink0()
+                       ->PadL(kToolDlgPadDx - kPropsEditMarginDx)
+                       ->PadY(kPropsPadDy)
+                       ->Child(edit);
     return gp::Div(cx->a)
         ->FlexCol()
         ->W(gp::kFill)
         ->Flex1()
         ->MinH(0)
-        ->PadX(kPropsToolPad)
-        ->PadB(kPropsToolPad)
-        ->Child(edit)
-        ->Child(footer);
+        ->Bg(ToGpui(colBg))
+        ->Child(text)
+        ->Child(DlgHairline(cx))
+        ->Child(PropsFooterEl(cx, kDlgBtnFontPx * remScale));
 }
 
 gp::El* PropertiesDialogBuild(MainWindow* win, gp::Ctx* cx) {
@@ -840,7 +857,7 @@ gp::El* PropertiesDialogBuild(MainWindow* win, gp::Ctx* cx) {
     dy = std::max(dy, lineDy * (float)kPropsExtraLines);
 
     gpc::Textarea* area = gpc::Textarea::New(cx, GStrL("properties-text"), gProps.textEdit);
-    gp::El* edit = area->H(dy)->SoftWrap(false)->Readonly()->IntoEl()->Mono();
+    gp::El* edit = area->H(dy)->SoftWrap(false)->Readonly()->Appearance(false)->Bordered(false)->IntoEl()->Mono();
     // the size gpui's inputs draw their text in, whatever the element says
     float fontSize = gp::UiInputFontPx(gp::UiSize::Medium);
     // ng: gpui measures text only while it paints, so the longest line and an
@@ -857,34 +874,30 @@ gp::El* PropertiesDialogBuild(MainWindow* win, gp::Ctx* cx) {
         gp::TextEl(cx->a, GStrL("x"))->Mono()->Font(fontSize)->Fg(transparent)->Shrink0()->BoundsOut(&gProps.oneChar));
     gp::El* body = gp::Div(cx->a)->FlexCol()->W(gp::kFill)->Child(edit)->Child(measure);
 
-    gp::El* footer = gp::Div(cx->a)->FlexRow()->JustifyEnd()->Gap(8);
+    gp::El* footer = gp::Div(cx->a)->FlexRow()->ItemsCenter()->W(gp::kFill)->Gap(kToolDlgGapDx);
 #if OS_WIN
     if (gProps.certs) {
         gProps.certSelect.PollChanged(cx->app);
         if (gProps.certs->next) {
             footer->Child(gProps.certSelect.Build(cx, StrL("props-certificate"), 220));
         }
-        footer->Child(gpc::Button::New(cx, GStrL("props-view-certificate"))
-                          ->Label(ToGpui(Tr("View Certificate...")))
-                          ->OnClick(gp::ListenTo(gPropertiesView, &PropertiesView::OnViewCert))
-                          ->IntoEl());
-        footer->Child(gpc::Button::New(cx, GStrL("props-update-eutl"))
-                          ->Label(ToGpui(Tr("Update EU Trusted List")))
-                          ->Disabled(gProps.eutlUpdating)
-                          ->OnClick(gp::ListenTo(gPropertiesView, &PropertiesView::OnUpdateEutl))
-                          ->IntoEl());
+        footer->Child(DlgGhostButton(cx, GStrL("props-view-certificate"), Tr("View Certificate..."),
+                                     gp::ListenTo(gPropertiesView, &PropertiesView::OnViewCert)));
+        footer->Child(DlgGhostButton(cx, GStrL("props-update-eutl"), Tr("Update EU Trusted List"),
+                                     gp::ListenTo(gPropertiesView, &PropertiesView::OnUpdateEutl),
+                                     gProps.eutlUpdating));
     }
 #endif
-    footer->Child(gpc::Button::New(cx, GStrL("props-copy"))
-                      ->Label(ToGpui(Tr("Copy To Clipboard")))
-                      ->OnClick(gp::ListenTo(gPropertiesView, &PropertiesView::OnCopy))
-                      ->IntoEl());
+    footer->Child(gp::Div(cx->a)->Flex1());
     // ng: a dialog in the frame has no close box
     footer->Child(gpc::Button::New(cx, GStrL("props-close"))
                       ->Label(ToGpui(Tr("Close")))
                       ->Outline()
+                      ->WithSize(gp::UiSize::Small)
                       ->OnClick(gp::ListenTo(gPropertiesView, &PropertiesView::OnClose))
                       ->IntoEl());
+    footer->Child(DlgFilledButton(cx, GStrL("props-copy"), Tr("Copy To Clipboard"),
+                                  gp::ListenTo(gPropertiesView, &PropertiesView::OnCopy)));
 
     return gpc::Dialog::New(cx)
         ->Open(true)

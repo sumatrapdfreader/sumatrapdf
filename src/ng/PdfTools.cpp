@@ -169,19 +169,30 @@ enum class PagesMode {
 // orig's kThumbDx / kThumbDy / kGap and the rest of MergeGrid's constants (dips)
 constexpr int kMergeThumbDx = 140;
 constexpr int kMergeThumbDy = 198;
-constexpr int kMergeGap = 24;
-constexpr int kStripDy = 5;
+constexpr int kMergeGap = 28;
 constexpr int kMergeDialogDx = 1100;
 constexpr int kMergeScrollbarDx = 10;
-constexpr int kMergeCornerBtnDx = 24;
+// the page number (and its file's dot) under a page
+constexpr int kMergeLabelDy = 26;
+constexpr float kMergeDotDx = 7;
+// the selection and hover frame: around a page and its label
+constexpr float kMergeFramePad = 8;
+constexpr float kMergeFrameRadius = 6;
+constexpr int kMergeSelShift = 26;
+constexpr int kMergeHoverShift = 9;
+constexpr int kMergeFocusRingShift = 45;
+constexpr int kMergePageEdgeShift = 22;
+// the remove / restore button in a page's top-right corner
+constexpr int kMergeCornerBtnDx = 22;
 constexpr int kMergeCornerBtnInset = 6;
-constexpr int kMergeDropBarDx = 3;
+constexpr float kMergeCornerGlyphPx = 13;
+constexpr int kMergeDropBarDx = 2;
 constexpr int kMergeAutoScrollMs = 40;
+constexpr u8 kMergeRemovedVeilAlpha = 200;
+constexpr u8 kMergeCornerBtnAlpha = 225;
+constexpr u8 kMergeBandAlpha = 18;
 // ng: orig's SM_CXDRAG
 constexpr float kMergeDragThreshold = 4;
-constexpr Color kDropBarColor = MkRgb(0, 120, 215);
-constexpr Color kRemoveBtnColor = MkRgb(90, 90, 90);
-constexpr Color kRestoreBtnColor = MkRgb(0, 120, 215);
 
 // what the left button went down on in the page grid
 enum class MergePress {
@@ -1144,11 +1155,11 @@ static void MergeMoveSelected(int before);
 // gpui reported for the last frame); "content" coords are local y + scrollY.
 
 static float MergePad() {
-    return (float)(kMergeGap / 2);
+    return (float)(kMergeGap * 3 / 4);
 }
 
 static float MergeItemDy() {
-    return (float)(kMergeThumbDy + kMergeGap);
+    return (float)(kMergeThumbDy + kMergeLabelDy + kMergeGap);
 }
 
 static int MergeRows() {
@@ -2878,11 +2889,6 @@ TempStr PdfToolStateTemp() {
 
 // --- building ---------------------------------------------------------------
 
-static gp::El* LabelEl(gp::Ctx* cx, Str s, bool muted) {
-    const gp::Theme& th = gp::ThemeNow(cx->app);
-    return gp::TextEl(cx->a, GpuiDup(cx->a, s))->Font(13)->Fg(muted ? th.mutedFg : th.foreground);
-}
-
 // orig's MergeGrid::DrawCell / Paint as gpui elements. Only the rows in view
 // are built; everything is positioned absolutely in a box as tall as the grid.
 static void MergeInvalidateLater() {
@@ -2891,12 +2897,7 @@ static void MergeInvalidateLater() {
     }
 }
 
-// ng: 1 in the frame. Merge PDF's own window sets its rem for orig's 12 px
-// buttons (ToolWindowSetUiFontPx), and the grid's font sizes are in that rem
-static float gMergeFontScale = 1;
-
 static gp::El* MergeGridEl(gp::Ctx* cx, float viewDx, float viewDy) {
-    const gp::Theme& th = gp::ThemeNow(cx->app);
     // Last frame's bounds, or the width the caller already knows: gpui fills
     // bounds while painting, and this window may not be built again.
     float dx = gTool.mergeView.w > 1.f ? gTool.mergeView.w : viewDx;
@@ -2922,13 +2923,20 @@ static gp::El* MergeGridEl(gp::Ctx* cx, float viewDx, float viewDy) {
     float contentDy = (float)MergeRows() * MergeItemDy() + 2 * MergePad();
     gp::El* content = gp::Div(cx->a)->W(gp::kFill)->H(contentDy)->Shrink0();
 
-    gp::Rgba colBg = th.tokens.background.color;
-    auto accent = [&](float pct) { return gp::Lerp(colBg, th.foreground, pct / 100.f); };
+    Color colBg = ThemeWindowControlBackgroundColor();
+    Color colTxt = ThemeWindowTextColor();
+    Color colMuted = ThemeWindowTextDisabledColor();
+    auto withAlpha = [](Color c, u8 a) {
+        gp::Rgba res = ToGpui(c);
+        res.a = a;
+        return res;
+    };
     bool multipleSources = len(gTool.mergeSources) > 1;
     int firstRow = std::max(0, (int)(scrollY / MergeItemDy()) - 1);
     int lastRow = (int)((scrollY + viewDy) / MergeItemDy()) + 1;
     int first = firstRow * cols;
     int last = std::min(n - 1, (lastRow + 1) * cols - 1);
+    float labelDy = (float)kMergeLabelDy;
     for (int i = first; i <= last; i++) {
         const MergePageDlg& page = items[i];
         const MergeSourceDlg& source = gTool.mergeSources[page.sourceNo];
@@ -2936,19 +2944,29 @@ static gp::El* MergeGridEl(gp::Ctx* cx, float viewDx, float viewDy) {
         RectF r = MergeCellRect(i);
         r.y += scrollY;
 
-        // the selection, or the page under the mouse: a frame in the gap around it
+        // the selection and hover: a rounded frame around page and number;
+        // the keyboard's page a ring when it isn't selected
         bool hovered = i == gTool.mergeHoverIdx && gTool.mergePress == MergePress::None;
-        if (page.selected || hovered) {
-            float d = (float)(kMergeGap / 3);
-            content->Child(gp::Div(cx->a)
-                               ->Absolute()
-                               ->Left(r.x - d)
-                               ->Top(r.y - d)
-                               ->W(r.dx + 2 * d)
-                               ->H(r.dy + 2 * d)
-                               ->Radius(d)
-                               ->Bg(accent(page.selected ? 60.f : 15.f)));
+        float pad = kMergeFramePad;
+        gp::El* frame = gp::Div(cx->a)
+                            ->Absolute()
+                            ->Left(r.x - pad)
+                            ->Top(r.y - pad)
+                            ->W(r.dx + 2 * pad)
+                            ->H(r.dy + labelDy + pad)
+                            ->Radius(kMergeFrameRadius);
+        Color colFrame = kColorUnset;
+        if (page.selected) {
+            colFrame = AccentColor(colBg, kMergeSelShift);
+        } else if (hovered) {
+            colFrame = AccentColor(colBg, kMergeHoverShift);
         }
+        if (colFrame != kColorUnset) {
+            content->Child(frame->Bg(ToGpui(colFrame)));
+        } else if (i == gTool.mergeFocusIdx) {
+            content->Child(frame->Border(1, ToGpui(AccentColor(colBg, kMergeFocusRingShift))));
+        }
+
         // white pages on a white grid need an edge
         gp::El* cell = gp::Div(cx->a)
                            ->Absolute()
@@ -2959,33 +2977,47 @@ static gp::El* MergeGridEl(gp::Ctx* cx, float viewDx, float viewDy) {
                            ->ItemsCenter()
                            ->JustifyCenter()
                            ->Bg(gp::Rgba{0xff, 0xff, 0xff, 0xff})
-                           ->Border(1, accent(30));
+                           ->Border(1, ToGpui(AccentColor(colBg, kMergePageEdgeShift)));
         if (thumb.bitmap) {
             gp::ImageSource image = gp::ImageSource::FromCustom(MergeThumbLoad, &thumb);
             cell->Child(gp::ImageEl(cx->a, image, GStrL(""))->SizeFull()->ObjectFitMode(gp::ObjectFit::Contain));
         }
-        if (multipleSources) {
-            // which file the page comes from
-            cell->Child(
-                gp::Div(cx->a)->Absolute()->Left(0)->Top(0)->W(r.dx)->H((float)kStripDy)->Bg(ToGpui(source.color)));
-        }
         if (page.removed) {
-            gp::Rgba veil = colBg;
-            veil.a = 190;
-            cell->Child(gp::Div(cx->a)->Absolute()->Left(0)->Top(0)->W(r.dx)->H(r.dy)->Bg(veil));
+            Color veil = colFrame != kColorUnset ? colFrame : colBg;
+            cell->Child(gp::Div(cx->a)->Absolute()->Left(0)->Top(0)->W(r.dx)->H(r.dy)->Bg(
+                withAlpha(veil, kMergeRemovedVeilAlpha)));
         }
-        // the page number, in a pill at the bottom
-        cell->Child(gp::Div(cx->a)->Absolute()->Left(0)->Bottom(4)->W(r.dx)->FlexRow()->JustifyCenter()->Child(
-            gp::Div(cx->a)->PadX(6)->PadY(2)->Radius(10)->Bg(colBg)->Child(
-                gp::TextEl(cx->a, GpuiDup(cx->a, fmt("%d", page.pageNo)))
-                    ->Font(11 * gMergeFontScale)
-                    ->Fg(th.foreground))));
+
+        // the page number under the page; its file's dot when there are more files
+        gp::El* label = gp::Div(cx->a)
+                            ->Absolute()
+                            ->Left(r.x)
+                            ->Top(r.y + r.dy)
+                            ->W(r.dx)
+                            ->H(labelDy)
+                            ->FlexRow()
+                            ->ItemsCenter()
+                            ->JustifyCenter()
+                            ->Gap(kMergeDotDx);
+        if (multipleSources) {
+            u8 alpha = page.removed ? kMergeBandAlpha * 4 : 255;
+            label->Child(gp::Div(cx->a)
+                             ->W(kMergeDotDx)
+                             ->H(kMergeDotDx)
+                             ->Shrink0()
+                             ->Radius(kMergeDotDx / 2)
+                             ->Bg(withAlpha(source.color, alpha)));
+        }
+        Color colLabel = page.selected && !page.removed ? colTxt : colMuted;
+        label->Child(
+            gp::TextEl(cx->a, GpuiDup(cx->a, fmt("%d", page.pageNo)))->Font(kToolDlgMetaFontPx)->Fg(ToGpui(colLabel)));
+        content->Child(label);
+
         // remove on the page under the mouse, restore on every removed page
         if (page.removed || (i == gTool.mergeHoverIdx && !gTool.mergeDragging)) {
-            gp::Rgba colBtn = ToGpui(page.removed ? kRestoreBtnColor : kRemoveBtnColor);
-            colBtn.a = 230;
             float btnDx = (float)kMergeCornerBtnDx;
             float inset = (float)kMergeCornerBtnInset;
+            Str glyph = page.removed ? StrL("\xe2\x86\xba") : StrL("\xc3\x97");
             cell->Child(
                 gp::Div(cx->a)
                     ->Absolute()
@@ -2996,49 +3028,38 @@ static gp::El* MergeGridEl(gp::Ctx* cx, float viewDx, float viewDy) {
                     ->Radius(btnDx / 2)
                     ->ItemsCenter()
                     ->JustifyCenter()
-                    ->Bg(colBtn)
-                    ->Child(gp::TextEl(cx->a, GpuiDup(cx->a, page.removed ? StrL("\xe2\x86\xba") : StrL("\xc3\x97")))
-                                ->Font(15 * gMergeFontScale)
-                                ->Bold()
-                                ->Fg(gp::Rgba{0xff, 0xff, 0xff, 0xff})));
+                    ->Bg(withAlpha(colTxt, kMergeCornerBtnAlpha))
+                    ->Child(gp::TextEl(cx->a, GpuiDup(cx->a, glyph))->Font(kMergeCornerGlyphPx)->Fg(ToGpui(colBg))));
         }
         content->Child(cell);
-        if (i == gTool.mergeFocusIdx) {
-            // orig's DrawFocusRect
-            content->Child(gp::Div(cx->a)
-                               ->Absolute()
-                               ->Left(r.x - 2)
-                               ->Top(r.y - 2)
-                               ->W(r.dx + 4)
-                               ->H(r.dy + 4)
-                               ->Border(1, th.foreground)
-                               ->Dashed());
-        }
     }
 
     // where dragged pages would go, and the rubber band
-    gp::Rgba colBar = ToGpui(kDropBarColor);
     if (gTool.mergeDropBefore >= 0 && n > 0) {
         bool atEnd = gTool.mergeDropBefore >= n;
         RectF r = MergeCellRect(atEnd ? n - 1 : gTool.mergeDropBefore);
         r.y += scrollY;
         float barDx = (float)kMergeDropBarDx;
         float x = atEnd ? r.x + r.dx + (float)(kMergeGap / 2) : r.x - (float)(kMergeGap / 2);
-        content->Child(gp::Div(cx->a)->Absolute()->Left(x - barDx / 2)->Top(r.y)->W(barDx)->H(r.dy)->Bg(colBar));
+        content->Child(gp::Div(cx->a)
+                           ->Absolute()
+                           ->Left(x - barDx / 2)
+                           ->Top(r.y)
+                           ->W(barDx)
+                           ->H(r.dy)
+                           ->Radius(barDx / 2)
+                           ->Bg(ToGpui(colTxt)));
     }
     if (gTool.mergePress == MergePress::Band) {
         float x0 = std::min(gTool.mergeBandFrom.x, gTool.mergeBandTo.x);
         float y0 = std::min(gTool.mergeBandFrom.y, gTool.mergeBandTo.y);
-        gp::Rgba fill = colBar;
-        fill.a = 40;
         content->Child(gp::Div(cx->a)
                            ->Absolute()
                            ->Left(x0)
                            ->Top(y0)
                            ->W(std::abs(gTool.mergeBandTo.x - gTool.mergeBandFrom.x))
                            ->H(std::abs(gTool.mergeBandTo.y - gTool.mergeBandFrom.y))
-                           ->Bg(fill)
-                           ->Border(1, colBar));
+                           ->Bg(withAlpha(colTxt, kMergeBandAlpha)));
     }
 
     return gp::Div(cx->a)
@@ -3046,8 +3067,7 @@ static gp::El* MergeGridEl(gp::Ctx* cx, float viewDx, float viewDy) {
         ->Click(gp::HashClickId(GStrL("merge-pages")))
         ->W(gp::kFill)
         ->H(viewDy)
-        ->Border(1, th.border)
-        ->Bg(colBg)
+        ->Bg(ToGpui(colBg))
         ->ScrollY(scrollY)
         ->ScrollFromPath()
         ->BoundsOut(&gTool.mergeView)
@@ -3058,23 +3078,6 @@ static gp::El* MergeGridEl(gp::Ctx* cx, float viewDx, float viewDy) {
         ->OnMouseUp(gp::ListenTo(gToolView, &PdfToolView::OnMergeGridUp))
         ->OnMouseUpOut(gp::ListenTo(gToolView, &PdfToolView::OnMergeGridUp))
         ->Child(content);
-}
-
-// orig's MergePdfWnd::PaintInfo: each file's color and name after the page
-// count, when there is more than one file
-static gp::El* MergeLegendEl(gp::Ctx* cx) {
-    const gp::Theme& th = gp::ThemeNow(cx->app);
-    gp::El* legend = gp::Div(cx->a)->FlexRow()->Flex1()->MinW(0)->ItemsCenter()->Gap(6)->ClipX();
-    for (int i = 0; len(gTool.mergeSources) > 1 && i < len(gTool.mergeSources); i++) {
-        const MergeSourceDlg& source = gTool.mergeSources[i];
-        legend->Child(gp::Div(cx->a)->W(10)->H(10)->Shrink0()->Bg(ToGpui(source.color)));
-        legend->Child(gp::TextEl(cx->a, GpuiDup(cx->a, path::GetBaseNameTemp(source.path)))
-                          ->Font(12 * gMergeFontScale)
-                          ->Fg(th.foreground)
-                          ->Shrink0());
-        legend->Child(gp::Div(cx->a)->W(6)->Shrink0());
-    }
-    return legend;
 }
 
 // orig's UpdateSizeLabel: what the selection comes to at the DPI in the box
@@ -3094,50 +3097,6 @@ static TempStr SelectionSizeTextTemp(MainWindow* win) {
     return fmt("%d x %d px", w, h);
 }
 
-// Merge PDF in the frame: the legend, Remove / Restore / Save As..., Cancel
-// and Save
-static gp::El* ToolFooter(gp::Ctx* cx, Str hint, Str actionText, bool enabled) {
-    gp::El* row = gp::Div(cx->a)->FlexRow()->W(gp::kFill)->ItemsCenter()->Gap(8);
-    if (len(hint) > 0) {
-        row->Child(LabelEl(cx, hint, true));
-    }
-    row->Child(MergeLegendEl(cx));
-    int nSel = MergeSelectedCount();
-    int nSelRemoved = MergeSelectedRemovedCount();
-    row->Child(gpc::Button::New(cx, GStrL("merge-remove"))
-                   ->Label(ToGpui(Tr("Remove")))
-                   ->WithSize(gp::UiSize::Small)
-                   ->Disabled(nSel <= nSelRemoved)
-                   ->OnClick(gp::ListenTo(gToolView, &PdfToolView::OnMergeSetRemoved, (intptr_t)1))
-                   ->IntoEl());
-    row->Child(gpc::Button::New(cx, GStrL("merge-restore"))
-                   ->Label(ToGpui(Tr("Restore")))
-                   ->WithSize(gp::UiSize::Small)
-                   ->Disabled(nSelRemoved == 0)
-                   ->OnClick(gp::ListenTo(gToolView, &PdfToolView::OnMergeSetRemoved, (intptr_t)0))
-                   ->IntoEl());
-    // orig's Merge PDF: Save As... is the default button, not Save
-    row->Child(gpc::Button::New(cx, GStrL("merge-saveas"))
-                   ->Label(ToGpui(Tr("Save As...")))
-                   ->Primary()
-                   ->WithSize(gp::UiSize::Small)
-                   ->Disabled(!enabled)
-                   ->OnClick(gp::ListenTo(gToolView, &PdfToolView::OnMergeSaveAs))
-                   ->IntoEl());
-    row->Child(gpc::Button::New(cx, GStrL("pdftool-cancel"))
-                   ->Label(ToGpui(Tr("Cancel")))
-                   ->WithSize(gp::UiSize::Small)
-                   ->OnClick(gp::ListenTo(gToolView, &PdfToolView::OnCancel))
-                   ->IntoEl());
-    row->Child(gpc::Button::New(cx, GStrL("pdftool-action"))
-                   ->Label(GpuiDup(cx->a, actionText))
-                   ->WithSize(gp::UiSize::Small)
-                   ->Disabled(!enabled)
-                   ->OnClick(gp::ListenTo(gToolView, &PdfToolView::OnAction))
-                   ->IntoEl());
-    return row;
-}
-
 static gp::El* RadioEl(gp::Ctx* cx, Str id, Str label, PagesMode mode) {
     return gpc::Radio::New(cx, GpuiDup(cx->a, id))
         ->Label(GpuiDup(cx->a, label))
@@ -3153,9 +3112,14 @@ static gp::El* MergeAskRadioEl(gp::Ctx* cx, Str id, Str label, MergeInsertAt at)
         label, gp::ListenTo(gToolView, &PdfToolView::OnMergeAskAt, (intptr_t)at));
 }
 
-// orig's InsertPosWnd
+// orig's InsertPosWnd: the file in the larger font, the choices, a bare
+// underlined page field, Cancel and the filled Add
+constexpr float kMergeAskDx = 340;
+constexpr float kMergeAskPageDx = 48;
+
 static gp::El* MergeAskDialogBuild(gp::Ctx* cx) {
-    const gp::Theme& th = gp::ThemeNow(cx->app);
+    Color colTxt = ThemeWindowTextColor();
+    Color colMuted = ThemeWindowTextDisabledColor();
     int nItems = len(gTool.mergePages);
     Str what = path::GetBaseNameTemp(gTool.mergeAskPaths[0]);
     if (len(gTool.mergeAskPaths) > 1) {
@@ -3163,38 +3127,60 @@ static gp::El* MergeAskDialogBuild(gp::Ctx* cx) {
     }
     gTool.mergeAskEdit->onChange = gp::ListenTo(gToolView, &PdfToolView::OnMergeAskInput);
 
-    gp::El* body = gp::Div(cx->a)->FlexCol()->Gap(8)->W(gp::kFill);
-    body->Child(gp::TextEl(cx->a, GpuiDup(cx->a, fmt(Tr("Insert '%s':").s, what)))->Font(13)->Fg(th.foreground));
-    body->Child(MergeAskRadioEl(cx, StrL("merge-ask-end"), Tr("At the &end"), MergeInsertAt::End));
-    body->Child(MergeAskRadioEl(cx, StrL("merge-ask-start"), Tr("At the &beginning"), MergeInsertAt::Beginning));
-    gp::El* row = gp::Div(cx->a)->FlexRow()->ItemsCenter()->Gap(8);
-    row->Child(MergeAskRadioEl(cx, StrL("merge-ask-after"), Tr("&After page"), MergeInsertAt::AfterPage));
-    row->Child(gp::Div(cx->a)->W(64)->Child(gpc::Input::New(cx, GStrL("merge-ask-page"), gTool.mergeAskEdit)
-                                                ->WithSize(gp::UiSize::Small)
-                                                ->W(gp::kFill)
-                                                ->IntoEl()));
-    row->Child(gp::TextEl(cx->a, GpuiDup(cx->a, fmt(Tr("(of %d)").s, nItems)))->Font(13)->Fg(th.foreground));
-    body->Child(row);
+    gp::El* col = gp::Div(cx->a)->FlexCol()->W(gp::kFill)->Bg(ToGpui(ThemeWindowControlBackgroundColor()));
+    col->Child(gp::Div(cx->a)
+                   ->FlexRow()
+                   ->ItemsCenter()
+                   ->W(gp::kFill)
+                   ->H(kToolDlgLineDy)
+                   ->Shrink0()
+                   ->PadX(kToolDlgPadDx)
+                   ->Child(gp::TextEl(cx->a, GpuiDup(cx->a, fmt(Tr("Insert '%s':").s, what)))
+                               ->Font(kToolDlgQueryFontPx)
+                               ->Fg(ToGpui(colTxt))
+                               ->Truncate()
+                               ->MinW(0)));
+    col->Child(DlgHairline(cx));
 
-    gp::El* footer = gp::Div(cx->a)->FlexRow()->W(gp::kFill)->ItemsCenter()->Gap(8);
+    gp::El* choices = gp::Div(cx->a)->FlexCol()->W(gp::kFill)->Shrink0()->PadX(kToolDlgPadDx)->PadY(kToolDlgFilesPadDy);
+    auto row = [&]() {
+        return gp::Div(cx->a)->FlexRow()->ItemsCenter()->H(kToolDlgRowDy)->Shrink0()->Gap(kToolDlgGapDx);
+    };
+    choices->Child(row()->Child(MergeAskRadioEl(cx, StrL("merge-ask-end"), Tr("At the &end"), MergeInsertAt::End)));
+    choices->Child(
+        row()->Child(MergeAskRadioEl(cx, StrL("merge-ask-start"), Tr("At the &beginning"), MergeInsertAt::Beginning)));
+    gp::El* after = row();
+    after->Child(MergeAskRadioEl(cx, StrL("merge-ask-after"), Tr("&After page"), MergeInsertAt::AfterPage));
+    after->Child(gp::Div(cx->a)
+                     ->W(kMergeAskPageDx)
+                     ->Shrink0()
+                     ->Child(DlgUnderlineInput(cx, GStrL("merge-ask-page"), gTool.mergeAskEdit, kToolDlgTextFontPx,
+                                               ThemeEdgeColor())));
+    after->Child(gp::TextEl(cx->a, GpuiDup(cx->a, fmt(Tr("(of %d)").s, nItems)))
+                     ->Font(kToolDlgMetaFontPx)
+                     ->Fg(ToGpui(colMuted)));
+    choices->Child(after);
+    col->Child(choices);
+    col->Child(DlgHairline(cx));
+
+    // the card's own footer row, so it pads the buttons as it pads the rest
+    gp::El* footer = gp::Div(cx->a)->FlexRow()->ItemsCenter()->W(gp::kFill)->Shrink0()->Gap(kToolDlgGapDx);
     footer->Child(gp::Div(cx->a)->Flex1());
-    footer->Child(gpc::Button::New(cx, GStrL("merge-ask-ok"))
-                      ->Label(ToGpui(Tr("OK")))
-                      ->Primary()
-                      ->WithSize(gp::UiSize::Small)
-                      ->OnClick(gp::ListenTo(gToolView, &PdfToolView::OnMergeAskOk))
-                      ->IntoEl());
     footer->Child(gpc::Button::New(cx, GStrL("merge-ask-cancel"))
                       ->Label(ToGpui(Tr("Cancel")))
+                      ->Outline()
                       ->WithSize(gp::UiSize::Small)
                       ->OnClick(gp::ListenTo(gToolView, &PdfToolView::OnMergeAskCancel))
                       ->IntoEl());
+    footer->Child(
+        DlgFilledButton(cx, GStrL("merge-ask-ok"), Tr("Add"), gp::ListenTo(gToolView, &PdfToolView::OnMergeAskOk)));
+
     gp::El* dlg = gpc::Dialog::New(cx)
                       ->Open(true)
                       ->Title(ToGpui(Tr("Add PDF")))
-                      ->Body(body)
+                      ->Body(col)
                       ->Footer(footer)
-                      ->W(360)
+                      ->W(kMergeAskDx)
                       ->OnClose(gp::ListenTo(gToolView, &PdfToolView::OnMergeAskCancel))
                       ->IntoEl(gp::WindowSize(cx->win));
     if (gTool.mergeAskFocus) {
@@ -3203,16 +3189,6 @@ static gp::El* MergeAskDialogBuild(gp::Ctx* cx) {
         gp::InputSelectAll(gTool.mergeAskEdit, cx->app, cx->win);
     }
     return dlg;
-}
-
-// orig's PaintMergeInfo: how many pages the result has
-static TempStr MergeInfoTemp() {
-    int nRemoved = 0;
-    for (const MergePageDlg& page : gTool.mergePages) {
-        nRemoved += page.removed ? 1 : 0;
-    }
-    return nRemoved > 0 ? fmt(Tr("%d pages, %d removed").s, len(gTool.mergePages) - nRemoved, nRemoved)
-                        : fmt(Tr("%d pages").s, len(gTool.mergePages));
 }
 
 // the page grid with its context menu
@@ -3243,32 +3219,104 @@ static gp::El* MergePagesEl(gp::Ctx* cx, float viewDx, float viewDy) {
 
 // --- Merge PDF in a window of its own (Windows) ------------------------------
 
-// orig's kDialogPadding, and its themed buttons (the text plus 2 x 12 by
-// 2 x 5, at least 70 wide) in the 12 px app font
-constexpr float kMergeWinPad = 10;
-constexpr float kMergeBtnDy = 25;
-constexpr float kMergeBtnMinDx = 70;
-constexpr float kMergeBtnPadDx = 12;
-constexpr float kMergeBtnGap = 6;
-constexpr float kMergeWinFontPx = 12;
+// orig's PaintMergeInfo: how many pages the result has
+static TempStr MergeInfoTemp() {
+    int nRemoved = 0;
+    for (const MergePageDlg& page : gTool.mergePages) {
+        nRemoved += page.removed ? 1 : 0;
+    }
+    return nRemoved > 0 ? fmt(Tr("%d pages, %d removed").s, len(gTool.mergePages) - nRemoved, nRemoved)
+                        : fmt(Tr("%d pages").s, len(gTool.mergePages));
+}
+
 constexpr int kMergeWinMinDx = 480;
 constexpr int kMergeWinMinDy = 320;
+// the frame's card: the grid gets what the frame leaves after its title and
+// the footer
+constexpr float kMergeCardChromeDy = 200;
+constexpr float kMergeCardMinViewDy = 240;
+// between the page count and each file of the legend
+constexpr float kMergeInfoGap = 24;
 
 static Str MergeToolTitle() {
     return fmt("%s - %s", Tr("Merge PDF"), path::GetBaseNameTemp(gTool.srcPath));
 }
 
-static gp::El* MergeWinButton(gp::Ctx* cx, gp::Str id, Str label, gp::Listener onClick, bool enabled, bool isDefault) {
-    gpc::Button* b = gpc::Button::New(cx, id)->Label(ToGpui(label))->Disabled(!enabled)->OnClick(onClick);
-    if (isDefault) {
-        b->Primary();
-    }
-    return b->IntoEl()->H(kMergeBtnDy)->MinW(kMergeBtnMinDx)->PadX(kMergeBtnPadDx)->Shrink0();
+static gp::El* MergeText(gp::Ctx* cx, Str s, Color col) {
+    return gp::TextEl(cx->a, GpuiDup(cx->a, s))->Font(kToolDlgMetaFontPx)->Fg(ToGpui(col))->Shrink0();
 }
 
-// orig's MergePdfWnd::Create layout: the grid, then one row: Add PDF...,
-// Remove, Restore, the page count and the legend, Save, Save As... (the
-// default), Cancel
+// orig's MergePdfWnd::PaintInfo: the page count, then each file's dot and
+// name when there is more than one file
+static gp::El* MergeInfoEl(gp::Ctx* cx) {
+    Color colMuted = ThemeWindowTextDisabledColor();
+    gp::El* info = gp::Div(cx->a)->FlexRow()->Flex1()->MinW(0)->ItemsCenter()->Gap(kMergeInfoGap)->ClipX();
+    info->Child(MergeText(cx, MergeInfoTemp(), colMuted));
+    for (int i = 0; len(gTool.mergeSources) > 1 && i < len(gTool.mergeSources); i++) {
+        const MergeSourceDlg& source = gTool.mergeSources[i];
+        gp::El* file = gp::Div(cx->a)->FlexRow()->ItemsCenter()->Gap(kMergeDotDx)->Shrink0();
+        file->Child(gp::Div(cx->a)->W(kMergeDotDx)->H(kMergeDotDx)->Radius(kMergeDotDx / 2)->Bg(ToGpui(source.color)));
+        file->Child(MergeText(cx, path::GetBaseNameTemp(source.path), colMuted));
+        info->Child(file);
+    }
+    return info;
+}
+
+// orig's footer: the quiet page actions and the status on the left, Cancel,
+// Save and the one filled Save As... on the right
+static gp::El* MergeFooterEl(gp::Ctx* cx) {
+    int nSel = MergeSelectedCount();
+    int nSelRemoved = MergeSelectedRemovedCount();
+    bool canSave = ActionEnabled();
+    gp::El* row = gp::Div(cx->a)
+                      ->FlexRow()
+                      ->ItemsCenter()
+                      ->W(gp::kFill)
+                      ->Shrink0()
+                      ->PadX(kToolDlgPadDx)
+                      ->PadY(kToolDlgFootPadDy)
+                      ->Gap(kToolDlgGapDx);
+    row->Child(
+        DlgGhostButton(cx, GStrL("merge-add"), Tr("Add PDF..."), gp::ListenTo(gToolView, &PdfToolView::OnMergeAdd)));
+    row->Child(DlgGhostButton(cx, GStrL("merge-remove"), Tr("Remove"),
+                              gp::ListenTo(gToolView, &PdfToolView::OnMergeSetRemoved, (intptr_t)1),
+                              nSel <= nSelRemoved));
+    row->Child(DlgGhostButton(cx, GStrL("merge-restore"), Tr("Restore"),
+                              gp::ListenTo(gToolView, &PdfToolView::OnMergeSetRemoved, (intptr_t)0), nSelRemoved == 0));
+    row->Child(gp::Div(cx->a)->W(kToolDlgGapDx)->Shrink0());
+    row->Child(MergeInfoEl(cx));
+    auto outline = [&](gp::Str id, Str label, gp::Listener onClick, bool enabled) {
+        return gpc::Button::New(cx, id)
+            ->Label(ToGpui(label))
+            ->Outline()
+            ->WithSize(gp::UiSize::Small)
+            ->Disabled(!enabled)
+            ->OnClick(onClick)
+            ->IntoEl();
+    };
+    row->Child(outline(GStrL("pdftool-cancel"), Tr("Cancel"), gp::ListenTo(gToolView, &PdfToolView::OnCancel), true));
+    row->Child(outline(GStrL("pdftool-action"), Tr("Save"), gp::ListenTo(gToolView, &PdfToolView::OnAction), canSave));
+    row->Child(DlgFilledButton(cx, GStrL("merge-saveas"), Tr("Save As..."),
+                               gp::ListenTo(gToolView, &PdfToolView::OnMergeSaveAs), !canSave));
+    return row;
+}
+
+// the pages edge to edge, a hairline, the footer
+static gp::El* MergeColumn(gp::Ctx* cx, float viewDx, float viewDy) {
+    StartMergeThumbs();
+    return gp::Div(cx->a)
+        ->FlexCol()
+        ->W(gp::kFill)
+        ->Bg(ToGpui(ThemeWindowControlBackgroundColor()))
+        ->Child(MergePagesEl(cx, viewDx, viewDy))
+        ->Child(DlgHairline(cx))
+        ->Child(MergeFooterEl(cx));
+}
+
+static float MergeFooterDy() {
+    return 1 + 2 * kToolDlgFootPadDy + kDlgBtnDy;
+}
+
 static gp::El* MergeToolBuild(MainWindow* win, gp::Ctx* cx) {
     if (!gTool.visible || !gTool.tw || gTool.win != win || gTool.kind != PdfToolKind::Merge) {
         return nullptr;
@@ -3276,53 +3324,14 @@ static gp::El* MergeToolBuild(MainWindow* win, gp::Ctx* cx) {
     if (!gToolView.IsValid()) {
         gToolView = gp::EntityNewState<PdfToolView>(cx->app);
     }
-    const gp::Theme& th = gp::ThemeNow(cx->app);
     gp::WinSize ws = gp::WindowSize(cx->win);
-    gMergeFontScale = ToolWindowSetUiFontPx(cx, kMergeWinFontPx);
-    StartMergeThumbs();
-    float viewDx = std::max(0.f, ws.dipW - 2 * kMergeWinPad);
-    float viewDy = std::max(100.f, ws.dipH - 3 * kMergeWinPad - kMergeBtnDy);
-
-    int nSel = MergeSelectedCount();
-    int nSelRemoved = MergeSelectedRemovedCount();
-    bool canSave = ActionEnabled();
-    gp::El* bottom =
-        gp::Div(cx->a)->FlexRow()->W(gp::kFill)->H(kMergeBtnDy)->Shrink0()->ItemsCenter()->Gap(kMergeBtnGap);
-    bottom->Child(MergeWinButton(cx, GStrL("merge-add"), Tr("Add PDF..."),
-                                 gp::ListenTo(gToolView, &PdfToolView::OnMergeAdd), true, false));
-    bottom->Child(MergeWinButton(cx, GStrL("merge-remove"), Tr("Remove"),
-                                 gp::ListenTo(gToolView, &PdfToolView::OnMergeSetRemoved, (intptr_t)1),
-                                 nSel > nSelRemoved, false));
-    bottom->Child(MergeWinButton(cx, GStrL("merge-restore"), Tr("Restore"),
-                                 gp::ListenTo(gToolView, &PdfToolView::OnMergeSetRemoved, (intptr_t)0), nSelRemoved > 0,
-                                 false));
-    bottom->Child(gp::TextEl(cx->a, GpuiDup(cx->a, MergeInfoTemp()))
-                      ->Font(kMergeWinFontPx * gMergeFontScale)
-                      ->Fg(th.foreground)
-                      ->Shrink0()
-                      ->PadX(kMergeBtnGap));
-    bottom->Child(MergeLegendEl(cx));
-    bottom->Child(MergeWinButton(cx, GStrL("pdftool-action"), Tr("Save"),
-                                 gp::ListenTo(gToolView, &PdfToolView::OnAction), canSave, false));
-    bottom->Child(MergeWinButton(cx, GStrL("merge-saveas"), Tr("Save As..."),
-                                 gp::ListenTo(gToolView, &PdfToolView::OnMergeSaveAs), canSave, true));
-    bottom->Child(MergeWinButton(cx, GStrL("pdftool-cancel"), Tr("Cancel"),
-                                 gp::ListenTo(gToolView, &PdfToolView::OnCancel), true, false));
-
-    gp::El* col = gp::Div(cx->a)
-                      ->FlexCol()
-                      ->W(gp::kFill)
-                      ->Flex1()
-                      ->MinH(0)
-                      ->Pad(kMergeWinPad)
-                      ->Gap(kMergeWinPad)
-                      ->Child(MergePagesEl(cx, viewDx, viewDy))
-                      ->Child(bottom);
+    float viewDy = std::max(100.f, ws.dipH - MergeFooterDy());
+    gp::El* col = gp::Div(cx->a)->FlexCol()->W(gp::kFill)->Flex1()->MinH(0)->Child(MergeColumn(cx, ws.dipW, viewDy));
     if (len(gTool.mergeAskPaths) == 0) {
         return col;
     }
     // orig's InsertPosWnd is a dialog owned by this window
-    return gp::Div(cx->a)->FlexCol()->W(gp::kFill)->Flex1()->MinH(0)->Child(col)->Child(MergeAskDialogBuild(cx));
+    return col->Child(MergeAskDialogBuild(cx));
 }
 
 // orig's WindowBase::PreTranslateMessage for this window: the grid has the
@@ -3629,7 +3638,6 @@ static gp::El* PdfToolBuildCurrent(MainWindow* win, gp::Ctx* cx) {
     if (gTool.dlgTw && !DlgWindowIsHost(cx)) {
         return nullptr;
     }
-    gMergeFontScale = 1;
     if (!gToolView.IsValid()) {
         gToolView = gp::EntityNewState<PdfToolView>(cx->app);
     }
@@ -3658,23 +3666,10 @@ static gp::El* PdfToolBuildCurrent(MainWindow* win, gp::Ctx* cx) {
     gp::El* footer = nullptr;
     float dialogDx = 600;
     if (gTool.kind == PdfToolKind::Merge) {
-        const gp::Theme& th = gp::ThemeNow(cx->app);
-        body = gp::Div(cx->a)->FlexCol()->Gap(6)->W(gp::kFill);
-        // the source path, ellipsized for long paths
-        body->Child(gp::TextEl(cx->a, GpuiDup(cx->a, gTool.srcPath))->Font(12)->Fg(th.mutedFg)->Truncate());
-        StartMergeThumbs();
-        // orig's window is 85% of the work area tall; the grid gets what the
-        // frame leaves after the dialog's title and button rows
-        float viewDy = std::max(240.f, gp::WindowSize(cx->win).dipH - 260);
-        body->Child(MergePagesEl(cx, 0, viewDy));
-        body->Child(gpc::Button::New(cx, GStrL("merge-add"))
-                        ->Label(ToGpui(Tr("Add PDF...")))
-                        ->WithSize(gp::UiSize::Small)
-                        ->OnClick(gp::ListenTo(gToolView, &PdfToolView::OnMergeAdd))
-                        ->IntoEl());
-        footer = ToolFooter(cx, MergeInfoTemp(), ToolActionText(), ActionEnabled());
-        // orig's kDialogDx, as far as the window allows: room for the page
-        // grid and for the legend next to the buttons
+        float viewDy = std::max(kMergeCardMinViewDy, gp::WindowSize(cx->win).dipH - kMergeCardChromeDy);
+        body = MergeColumn(cx, 0, viewDy);
+        footer = gp::Div(cx->a)->H(0);
+        // orig's kDialogDx, as far as the window allows
         dialogDx = std::max(dialogDx, std::min((float)kMergeDialogDx, gp::WindowSize(cx->win).dipW - 80));
     } else {
         body = PdfToolColumn(win, cx);

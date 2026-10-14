@@ -863,7 +863,7 @@ gp::El* DlgHairline(gp::Ctx* cx) {
 }
 
 // gpui's button variants only tint their color, so it is a plain element
-gp::El* DlgFilledButton(gp::Ctx* cx, gp::Str id, Str label, gp::Listener onClick, bool disabled) {
+gp::El* DlgFilledButton(gp::Ctx* cx, gp::Str id, Str label, gp::Listener onClick, bool disabled, float fontPx) {
     Color colText = ThemeWindowTextColor();
     Color colBg = ThemeWindowControlBackgroundColor();
     gp::El* b = gp::Div(cx->a)
@@ -876,8 +876,7 @@ gp::El* DlgFilledButton(gp::Ctx* cx, gp::Str id, Str label, gp::Listener onClick
                     ->Radius(kDlgBtnRadius);
     if (disabled) {
         b->Bg(ToGpui(AccentColor(colBg, kDlgBtnShift)));
-        b->Child(
-            gp::TextEl(cx->a, GpuiDup(cx->a, label))->Font(kDlgBtnFontPx)->Fg(ToGpui(ThemeWindowTextDisabledColor())));
+        b->Child(gp::TextEl(cx->a, GpuiDup(cx->a, label))->Font(fontPx)->Fg(ToGpui(ThemeWindowTextDisabledColor())));
         return b;
     }
     b->Bg(ToGpui(colText))
@@ -885,7 +884,33 @@ gp::El* DlgFilledButton(gp::Ctx* cx, gp::Str id, Str label, gp::Listener onClick
         ->Cursor(gp::CursorKind::Pointer)
         ->PathClick(id)
         ->OnClick(onClick);
-    b->Child(gp::TextEl(cx->a, GpuiDup(cx->a, label))->Font(kDlgBtnFontPx)->Fg(ToGpui(colBg)));
+    b->Child(gp::TextEl(cx->a, GpuiDup(cx->a, label))->Font(fontPx)->Fg(ToGpui(colBg)));
+    return b;
+}
+
+// orig's quiet buttons: muted words that fill on hover, fainter while disabled
+constexpr int kDlgGhostHoverShift = 14;
+constexpr int kDlgGhostDisabledShift = 25;
+
+gp::El* DlgGhostButton(gp::Ctx* cx, gp::Str id, Str label, gp::Listener onClick, bool disabled, float fontPx) {
+    Color colBg = ThemeWindowControlBackgroundColor();
+    gp::El* b = gp::Div(cx->a)
+                    ->FlexRow()
+                    ->ItemsCenter()
+                    ->JustifyCenter()
+                    ->H(kDlgBtnDy)
+                    ->PadX(kDlgBtnPadDx)
+                    ->Shrink0()
+                    ->Radius(kDlgBtnRadius);
+    Color colText = AccentColor(colBg, kDlgGhostDisabledShift);
+    if (!disabled) {
+        colText = ThemeWindowTextDisabledColor();
+        b->HoverBg(ToGpui(AccentColor(colBg, kDlgGhostHoverShift)))
+            ->Cursor(gp::CursorKind::Pointer)
+            ->PathClick(id)
+            ->OnClick(onClick);
+    }
+    b->Child(gp::TextEl(cx->a, GpuiDup(cx->a, label))->Font(fontPx)->Fg(ToGpui(colText)));
     return b;
 }
 

@@ -260,7 +260,12 @@ constexpr float kDlgBtnPadDx = 12;
 constexpr float kDlgBtnRadius = 4;
 constexpr float kDlgBtnFontPx = 13;
 constexpr int kDlgBtnShift = 28;
-gpui::El* DlgFilledButton(gpui::Ctx* cx, gpui::Str id, Str label, gpui::Listener onClick, bool disabled = false);
+// fontPx: in the window's rem, for a window that changes it
+gpui::El* DlgFilledButton(gpui::Ctx* cx, gpui::Str id, Str label, gpui::Listener onClick, bool disabled = false,
+                          float fontPx = kDlgBtnFontPx);
+// a quiet one: muted words that fill on hover
+gpui::El* DlgGhostButton(gpui::Ctx* cx, gpui::Str id, Str label, gpui::Listener onClick, bool disabled = false,
+                         float fontPx = kDlgBtnFontPx);
 // a bare input over a line in `underline`; the caller sizes the box
 gpui::El* DlgUnderlineInput(gpui::Ctx* cx, gpui::Str id, gpui::InputState* edit, float fontPx, Color underline,
                             bool masked = false, bool disabled = false);
