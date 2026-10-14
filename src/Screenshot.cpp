@@ -33,6 +33,8 @@
 #include "SumatraPDF.h"
 #include "Translations.h"
 #include "GlobalHotkeys.h"
+#include "SumatraDialogs.h"
+#include "shared/PdfToolsCommon.h"
 #include "Screenshot.h"
 #include "AppHelpersCommon.h"
 #include "ScreenshotCommon.h"
@@ -77,6 +79,7 @@ static LRESULT CALLBACK LowLevelKeyboardProc(int nCode, WPARAM wp, LPARAM lp) {
     return CallNextHookEx(gKeyboardHook, nCode, wp, lp);
 }
 
+constexpr int kHotkeyDlgDx = 340;
 struct SetHotkeyWnd : WindowBase {
     ~SetHotkeyWnd() override;
 
@@ -98,7 +101,7 @@ struct SetHotkeyWnd : WindowBase {
     void WndProc(WindowBase::WndProcEvent* ev);
     void OnKeyDown(KeyEvent* ev);
 
-    VirtButton* NewButton(Str text, bool isDefault);
+    VirtButton* NewButton(Str text, DlgButtonStyle style);
     void UpdateUI();
     bool HandleKeyDown(UINT vk);
     void DoSet(VirtMouseEvent* ev = nullptr);
@@ -129,10 +132,10 @@ void SetHotkeyWnd::UpdateUI() {
         ParseTipInto(hotkeyDisplay, markup);
     }
     if (btnSet) {
-        btnSet->SetFlag(vwfEnabled, len(newHotkey) > 0);
+        SetDlgButtonEnabled(btnSet, DlgButtonStyle::Filled, len(newHotkey) > 0);
     }
     if (btnRemove) {
-        btnRemove->SetFlag(vwfEnabled, len(currentHotkey) > 0 || len(newHotkey) > 0);
+        SetDlgButtonEnabled(btnRemove, DlgButtonStyle::Ghost, len(currentHotkey) > 0 || len(newHotkey) > 0);
     }
     // the key-cap changes width with the combination, so lay out again
     DoLayout();
@@ -225,8 +228,8 @@ void SetHotkeyWnd::CleanupHook() {
     gHotkeyDlgHwnd = nullptr;
 }
 
-VirtButton* SetHotkeyWnd::NewButton(Str text, bool isDefault) {
-    return NewThemedButton(hwnd, text, font, isDefault);
+VirtButton* SetHotkeyWnd::NewButton(Str text, DlgButtonStyle style) {
+    return NewDlgButton(hwnd, text, font, style, style == DlgButtonStyle::Filled);
 }
 
 void SetHotkeyWnd::WndProc(WindowBase::WndProcEvent* ev) {
@@ -281,7 +284,15 @@ bool SetHotkeyWnd::Create(HWND owner) {
         currentHotkey = str::Dup(existing);
     }
 
+    //   Press a key combination:
+    //   [Ctrl] + [Shift] + [S]
+    //   ---------------------------------------------- hairline
+    //   Remove                           [Cancel] [Set]
     bool isRtl = IsUIRtl();
+    Color colTxt = ThemeWindowTextColor();
+    Color colBg = ThemeWindowControlBackgroundColor();
+    PlatformFont* fontText = DlgUiFont(kToolDlgTextFontPx);
+    SetFont(fontText);
     {
         CreateCustomArgs args;
         args.owner = owner;
@@ -289,59 +300,45 @@ bool SetHotkeyWnd::Create(HWND owner) {
         args.visible = false;
         args.style = WS_OVERLAPPED | WS_CAPTION | WS_SYSMENU;
         args.exStyle = WS_EX_DLGMODALFRAME;
-        args.font = GetFont();
+        args.font = fontText;
+        args.isRtl = isRtl;
+        args.bgColor = colBg;
         args.icon = LoadIconW(GetModuleHandleW(nullptr), MAKEINTRESOURCEW(GetAppIconID()));
         CreateCustom(args);
     }
     if (!hwnd) {
         return false;
     }
+    SetColors(colTxt, colBg);
 
     auto* vbox = new VBox();
-    vbox->alignMain = MainAxisAlign::MainStart;
     vbox->alignCross = CrossAxisAlign::Stretch;
-
-    prompt = NewVirtText({
-        .s = Tr("Press a key combination:"),
-        .font = font,
-        .isRtl = isRtl,
-    });
+    prompt = NewDlgCaption(Tr("Press a key combination:"), fontText, ThemeWindowTextDisabledColor());
     vbox->AddChild(prompt);
-
     {
+        // the combination, a key-cap a key, on a line of its own
         auto* t = new VirtRichText();
-        t->font = font;
-        t->padding = DpiScaledInsets(6, 0, 0, 0);
+        t->font = fontText;
         hotkeyDisplay = t;
-        vbox->AddChild(t);
+        HBox* row = NewDlgRow();
+        row->minDy = DpiScale(kToolDlgLineDy);
+        row->AddChild(t, 1);
+        vbox->AddChild(new Padding(row, DpiScaledInsets(0, kToolDlgPadDx)));
     }
 
-    {
-        auto* hbox = new HBox();
-        hbox->alignMain = MainAxisAlign::MainEnd;
-        hbox->alignCross = CrossAxisAlign::CrossCenter;
-        hbox->gap = font->averageCharWidth;
-
-        btnCancel = NewButton(Tr("Cancel"), false);
-        btnCancel->onClick = MkMethod1<SetHotkeyWnd, VirtMouseEvent*, &SetHotkeyWnd::OnCancel>(this);
-        hbox->AddChild(btnCancel);
-        btnRemove = NewButton(Tr("Remove"), false);
-        btnRemove->onClick = MkMethod1<SetHotkeyWnd, VirtMouseEvent*, &SetHotkeyWnd::DoRemove>(this);
-        hbox->AddChild(btnRemove);
-        btnSet = NewButton(Tr("Set"), true);
-        btnSet->onClick = MkMethod1<SetHotkeyWnd, VirtMouseEvent*, &SetHotkeyWnd::DoSet>(this);
-        hbox->AddChild(btnSet);
-
-        auto* hboxPad = new Padding(hbox, DpiScaledInsets(8, 0, 0, 0));
-        vbox->AddChild(hboxPad);
-    }
-
-    layout = new Padding(vbox, DpiScaledInsets(8, 12));
+    btnCancel = NewButton(Tr("Cancel"), DlgButtonStyle::Outline);
+    btnCancel->onClick = MkMethod1<SetHotkeyWnd, VirtMouseEvent*, &SetHotkeyWnd::OnCancel>(this);
+    btnRemove = NewButton(Tr("Remove"), DlgButtonStyle::Ghost);
+    btnRemove->onClick = MkMethod1<SetHotkeyWnd, VirtMouseEvent*, &SetHotkeyWnd::DoRemove>(this);
+    btnSet = NewButton(Tr("Set"), DlgButtonStyle::Filled);
+    btnSet->onClick = MkMethod1<SetHotkeyWnd, VirtMouseEvent*, &SetHotkeyWnd::DoSet>(this);
+    vbox->AddChild(NewDlgFooter(btnCancel, btnSet, btnRemove));
+    layout = vbox;
 
     // fill in the key-cap and the button states before measuring: an empty
     // rich text has no height, and the window is sized to its content
     UpdateUI();
-    int minDx = DpiScale(320);
+    int minDx = DpiScale(kHotkeyDlgDx);
     LayoutAndSizeToContent(layout, minDx, 0, hwnd);
     // pick up the virtual controls so we paint them and they get their input
     DoLayout(HwndClientRect(hwnd).Size());

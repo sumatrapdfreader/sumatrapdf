@@ -9,6 +9,7 @@ struct Edit;
 struct Gfx;
 struct Checkbox;
 struct PlatformFont;
+enum class VirtButtonStyle;
 
 void ShowAddFavoriteDialog(MainWindow* win, Str filePath, int pageNo, Str pageLabel, Str name);
 void ShowAdvancedSettingsDialog(MainWindow* win);
@@ -115,11 +116,7 @@ void ShowPDFScriptDialog(MainWindow* win);
 
 // the buttons of the redrawn dialogs: the one action filled with the text
 // color, Cancel outlined, the quiet ones plain words that fill on hover
-enum class DlgButtonStyle {
-    Filled,
-    Outline,
-    Ghost
-};
+using DlgButtonStyle = VirtButtonStyle;
 VirtButton* NewDlgButton(HWND hwndForDpi, Str text, PlatformFont* font, DlgButtonStyle style, bool isDefault);
 // a filled button goes pale while disabled
 void SetDlgButtonEnabled(VirtButton* b, DlgButtonStyle style, bool enabled);

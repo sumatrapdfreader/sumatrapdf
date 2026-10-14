@@ -703,6 +703,16 @@ struct VirtButton : VirtText {
 
 VirtButton* AsVirtButton(ILayout*);
 
+// the redrawn dialogs' buttons, in the gui colors the app pushes: the one
+// action filled with the text color, Cancel outlined, the quiet ones muted
+// words that fill on hover
+enum class VirtButtonStyle {
+    Filled,
+    Outline,
+    Ghost
+};
+void SetVirtButtonStyle(VirtButton* b, VirtButtonStyle style);
+
 struct VirtIconButton : VirtCtrl {
     // not owned; in SumatraPDF it comes from GetCachedPixmapForSvg()
     Pixmap* pixmap = nullptr;

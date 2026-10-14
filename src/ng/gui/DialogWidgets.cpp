@@ -864,6 +864,8 @@ gp::El* DlgHairline(gp::Ctx* cx) {
 
 // gpui's button variants only tint their color, so it is a plain element
 gp::El* DlgFilledButton(gp::Ctx* cx, gp::Str id, Str label, gp::Listener onClick, bool disabled, float fontPx) {
+    // orig's access key: the '&' goes, the letter is underlined
+    gp::Str text = DlgAccelClick(cx, label, onClick, disabled);
     Color colText = ThemeWindowTextColor();
     Color colBg = ThemeWindowControlBackgroundColor();
     gp::El* b = gp::Div(cx->a)
@@ -876,16 +878,16 @@ gp::El* DlgFilledButton(gp::Ctx* cx, gp::Str id, Str label, gp::Listener onClick
                     ->Radius(kDlgBtnRadius);
     if (disabled) {
         b->Bg(ToGpui(AccentColor(colBg, kDlgBtnShift)));
-        b->Child(gp::TextEl(cx->a, GpuiDup(cx->a, label))->Font(fontPx)->Fg(ToGpui(ThemeWindowTextDisabledColor())));
-        return b;
+        b->Child(gp::TextEl(cx->a, text)->Font(fontPx)->Fg(ToGpui(ThemeWindowTextDisabledColor())));
+        return DlgAccelUnderline(cx, b, text);
     }
     b->Bg(ToGpui(colText))
         ->HoverBg(ToGpui(AccentColor(colText, kDlgBtnShift)))
         ->Cursor(gp::CursorKind::Pointer)
         ->PathClick(id)
         ->OnClick(onClick);
-    b->Child(gp::TextEl(cx->a, GpuiDup(cx->a, label))->Font(fontPx)->Fg(ToGpui(colBg)));
-    return b;
+    b->Child(gp::TextEl(cx->a, text)->Font(fontPx)->Fg(ToGpui(colBg)));
+    return DlgAccelUnderline(cx, b, text);
 }
 
 // orig's quiet buttons: muted words that fill on hover, fainter while disabled
@@ -893,6 +895,7 @@ constexpr int kDlgGhostHoverShift = 14;
 constexpr int kDlgGhostDisabledShift = 25;
 
 gp::El* DlgGhostButton(gp::Ctx* cx, gp::Str id, Str label, gp::Listener onClick, bool disabled, float fontPx) {
+    gp::Str text = DlgAccelClick(cx, label, onClick, disabled);
     Color colBg = ThemeWindowControlBackgroundColor();
     gp::El* b = gp::Div(cx->a)
                     ->FlexRow()
@@ -910,8 +913,8 @@ gp::El* DlgGhostButton(gp::Ctx* cx, gp::Str id, Str label, gp::Listener onClick,
             ->PathClick(id)
             ->OnClick(onClick);
     }
-    b->Child(gp::TextEl(cx->a, GpuiDup(cx->a, label))->Font(fontPx)->Fg(ToGpui(colText)));
-    return b;
+    b->Child(gp::TextEl(cx->a, text)->Font(fontPx)->Fg(ToGpui(colText)));
+    return DlgAccelUnderline(cx, b, text);
 }
 
 gp::El* DlgUnderlineInput(gp::Ctx* cx, gp::Str id, gp::InputState* edit, float fontPx, Color underline, bool masked,

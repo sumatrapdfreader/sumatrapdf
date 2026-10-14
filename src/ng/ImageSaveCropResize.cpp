@@ -42,6 +42,7 @@
 #include "gui/AppShell.h"
 #include "gui/DocCanvas.h"
 #include "gui/DialogWidgets.h"
+#include "shared/PdfToolsCommon.h"
 #include "gui/ToolWindow.h"
 #include "SumatraDialogs.h"
 #include "ImageSaveCropResize.h"
@@ -152,9 +153,9 @@ constexpr int kImgMinWindowDx = 640;
 constexpr int kImgDownsizeMinDx = 320;
 constexpr int kImgDownsizeMinDy = 200;
 constexpr float kImgPadding = 16;
-constexpr float kImgControlAreaDy = 100;
+constexpr float kImgControlAreaDy = 104;
 constexpr float kImgRowPadding = 6;
-constexpr float kImgButtonPadding = 8;
+constexpr float kImgButtonPadding = 16;
 constexpr float kImgLabelDy = 15;
 
 static void ImageEditOpenToolWindow(MainWindow* win);
@@ -1596,16 +1597,13 @@ static Str ImageEditToolTitle() {
     return DialogTitle();
 }
 
-constexpr float kImgToolFontPx = 12;
-constexpr float kImgCtrlDy = 23;
-constexpr float kImgBtnPadDx = 9;
-constexpr float kImgCtrlGap = 7;
-constexpr float kImgFormatDx = 69;
+constexpr float kImgCtrlDy = 26;
+constexpr float kImgFormatDx = 76;
 
-// orig's control strip: the source path, then the destination edit with
-// "...", Save and Copy, then the info line with the format and Crop / Resize.
-// It is inset 8 on the left and 24 on the right (orig lays it out in the
-// client width less 16 and pads that by 8 again)
+// orig's control strip, drawn like the redrawn dialogs' footers: a hairline
+// under the image; the source path muted; the destination over a hairline
+// with "...", Copy and the filled Save; the info line muted with the format
+// and the quiet Crop / Resize
 static gp::El* ImageEditToolBuild(MainWindow*, gp::Ctx* cx) {
     ImageEditWnd& w = gImgEdit;
     if (!w.visible || !w.tw) {
@@ -1617,8 +1615,7 @@ static gp::El* ImageEditToolBuild(MainWindow*, gp::Ctx* cx) {
     if (w.ddFormat.PollChanged(cx->app)) {
         OnFormatChanged();
     }
-    const gp::Theme& th = gp::ThemeNow(cx->app);
-    float font = kImgToolFontPx * ToolWindowSetUiFontPx(cx, kImgToolFontPx);
+    Color colMuted = ThemeWindowTextDisabledColor();
     gp::WinSize ws = gp::WindowSize(cx->win);
     float controlDy = ImageEditControlAreaDy();
     w.toolImgAreaDy = std::max(ws.dipH - controlDy, 10.f);
@@ -1644,48 +1641,42 @@ static gp::El* ImageEditToolBuild(MainWindow*, gp::Ctx* cx) {
                         ->W(gp::kFill)
                         ->H(controlDy)
                         ->Shrink0()
-                        ->PadT(kImgRowPadding)
-                        ->PadL(kImgButtonPadding)
-                        ->PadR(3 * kImgButtonPadding);
-    if (!w.fromRenderedBitmap) {
-        strip->Child(gp::Div(cx->a)
-                         ->FlexRow()
-                         ->ItemsCenter()
-                         ->W(gp::kFill)
-                         ->H(kImgLabelDy + kImgRowPadding)
-                         ->PadB(kImgRowPadding)
-                         ->PadL(4)
-                         ->Shrink0()
-                         ->Child(gp::TextEl(cx->a, GpuiDup(cx->a, w.filePath))
-                                     ->Font(font)
-                                     ->Fg(th.foreground)
-                                     ->Flex1()
-                                     ->MinW(0)
-                                     ->Truncate()));
-    }
-    auto button = [&](gp::Str id, Str label, gp::Listener onClick, bool disabled) {
-        gpc::Button* b = gpc::Button::New(cx, id)->Disabled(disabled);
-        return DlgAccelEl(cx, b, label, onClick, disabled)->H(kImgCtrlDy)->PadX(kImgBtnPadDx)->Shrink0();
+                        ->Bg(ToGpui(ThemeWindowControlBackgroundColor()))
+                        ->Child(DlgHairline(cx));
+    gp::El* rows = gp::Div(cx->a)->FlexCol()->W(gp::kFill)->PadX(kImgButtonPadding)->PadT(kToolDlgFootPadDy);
+    auto text = [&](Str s) {
+        return gp::TextEl(cx->a, GpuiDup(cx->a, s))
+            ->Font(kToolDlgTextFontPx)
+            ->Fg(ToGpui(colMuted))
+            ->Flex1()
+            ->MinW(0)
+            ->Truncate();
     };
+    if (!w.fromRenderedBitmap) {
+        rows->Child(gp::Div(cx->a)
+                        ->FlexRow()
+                        ->ItemsCenter()
+                        ->W(gp::kFill)
+                        ->H(kImgLabelDy + kImgRowPadding)
+                        ->PadB(kImgRowPadding)
+                        ->Shrink0()
+                        ->Child(text(w.filePath)));
+    }
     gp::Listener onSave = gp::ListenTo(gImgEditView, &ImageEditView::OnSave);
     // orig's UpdateSaveButtonText
     Str saveLabel = file::Exists(DestPathTemp()) ? HostTr(StrL("&Overwrite")) : HostTr(StrL("&Save"));
-    gp::El* row2 = gp::Div(cx->a)
-                       ->FlexRow()
-                       ->ItemsCenter()
-                       ->W(gp::kFill)
-                       ->H(kImgCtrlDy + kImgRowPadding)
-                       ->PadB(kImgRowPadding)
-                       ->Gap(kImgCtrlGap)
-                       ->Shrink0();
+    auto row = [&]() {
+        return gp::Div(cx->a)->FlexRow()->ItemsCenter()->W(gp::kFill)->H(kImgCtrlDy)->Gap(kToolDlgGapDx)->Shrink0();
+    };
+    gp::El* row2 = row()->PadB(kImgRowPadding)->H(kImgCtrlDy + kImgRowPadding);
     row2->Child(gp::Div(cx->a)->Flex1()->MinW(0)->Child(
-        gpc::Input::New(cx, GStrL("imgedit-dest"), w.destEdit)->WithSize(gp::UiSize::Small)->W(gp::kFill)->IntoEl()));
+        DlgUnderlineInput(cx, GStrL("imgedit-dest"), w.destEdit, kToolDlgTextFontPx, ThemeEdgeColor())));
     row2->Child(
-        button(GStrL("imgedit-browse"), StrL("..."), gp::ListenTo(gImgEditView, &ImageEditView::OnBrowse), false));
-    row2->Child(button(GStrL("imgedit-save"), saveLabel, onSave, false));
-    row2->Child(button(GStrL("imgedit-copy"), HostTr(StrL("C&opy")), gp::ListenTo(gImgEditView, &ImageEditView::OnCopy),
-                       false));
-    strip->Child(row2);
+        DlgGhostButton(cx, GStrL("imgedit-browse"), StrL("..."), gp::ListenTo(gImgEditView, &ImageEditView::OnBrowse)));
+    row2->Child(DlgAccelEl(cx, gpc::Button::New(cx, GStrL("imgedit-copy"))->Outline()->WithSize(gp::UiSize::Small),
+                           HostTr(StrL("C&opy")), gp::ListenTo(gImgEditView, &ImageEditView::OnCopy)));
+    row2->Child(DlgFilledButton(cx, GStrL("imgedit-save"), saveLabel, onSave));
+    rows->Child(row2);
     DlgSetDefault(cx, onSave, true);
 
     // orig's UpdateModeButtons
@@ -1693,15 +1684,15 @@ static gp::El* ImageEditToolBuild(MainWindow*, gp::Ctx* cx) {
     bool resizeMode = w.mode == ImageEditMode::Resize;
     Str cropLabel = cropMode ? HostTr(StrL("&Apply Crop")) : HostTr(StrL("&Crop"));
     Str resizeLabel = resizeMode ? HostTr(StrL("&Apply Resize")) : HostTr(StrL("&Resize"));
-    gp::El* row3 = gp::Div(cx->a)->FlexRow()->ItemsCenter()->W(gp::kFill)->H(kImgCtrlDy)->Gap(kImgCtrlGap)->Shrink0();
-    row3->Child(
-        gp::TextEl(cx->a, GpuiDup(cx->a, InfoTextTemp()))->Font(font)->Fg(th.foreground)->Flex1()->MinW(0)->Truncate());
+    gp::El* row3 = row();
+    row3->Child(text(InfoTextTemp()));
     row3->Child(w.ddFormat.Build(cx, StrL("imgedit-format"), kImgFormatDx));
-    row3->Child(button(GStrL("imgedit-crop"), cropLabel, gp::ListenTo(gImgEditView, &ImageEditView::OnCrop),
-                       cropMode && !IsCropChanged()));
-    row3->Child(button(GStrL("imgedit-resize"), resizeLabel, gp::ListenTo(gImgEditView, &ImageEditView::OnResize),
-                       resizeMode && !IsResizeChanged()));
-    strip->Child(row3);
+    row3->Child(DlgGhostButton(cx, GStrL("imgedit-crop"), cropLabel, gp::ListenTo(gImgEditView, &ImageEditView::OnCrop),
+                               cropMode && !IsCropChanged()));
+    row3->Child(DlgGhostButton(cx, GStrL("imgedit-resize"), resizeLabel,
+                               gp::ListenTo(gImgEditView, &ImageEditView::OnResize), resizeMode && !IsResizeChanged()));
+    rows->Child(row3);
+    strip->Child(rows);
     col->Child(strip);
     return col;
 }

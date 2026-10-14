@@ -84,9 +84,12 @@ constexpr int kDownsizeMinImgDy = 200;
 constexpr int kImagePadding = 16;
 constexpr int kResizeEdgeThreshold = 2;
 constexpr int kDragHandleSize = 6;
-constexpr int kControlAreaDy = 100;
+constexpr int kControlAreaDy = 104;
 constexpr int kRowPadding = 6;
-constexpr int kButtonPadding = 8;
+// the strip's padding, as the redrawn dialogs pad their footers
+constexpr int kButtonPadding = 16;
+constexpr int kStripPadDy = 10;
+constexpr int kStripBtnRadius = 4;
 // WM_TIMER id used to clear the transient "Copied to clipboard" info label
 constexpr UINT_PTR kCopyStatusTimerId = 1;
 constexpr UINT kCopyStatusTimeoutMs = 1500;
@@ -1703,7 +1706,9 @@ void ImageEditWindow::WndProc(WindowBase::WndProcEvent* ev) {
                 PaintResizeImage(ew, gfx, imageArea);
             }
             Rect controlArea{0, imageArea.dy, cRc.dx, cRc.dy - imageArea.dy};
-            gfx->FillRect(controlArea, GetSysColor(COLOR_BTNFACE));
+            gfx->FillRect(controlArea, gColsWin[kColWinBg]);
+            // a hairline between the image and the controls
+            gfx->FillRect({0, imageArea.dy, cRc.dx, 1}, gColsLine[kColLineFg]);
             if (ew->vroot) {
                 ew->vroot->Paint(gfx, controlArea);
             }
@@ -2032,17 +2037,13 @@ void ImageEditWindow::WndProc(WindowBase::WndProcEvent* ev) {
     }
 }
 
-// this window is drawn in the system colors, not the app's theme (its own
-// background is COLOR_BTNFACE), so the buttons override the themed defaults
-static ImageEditButton* NewImageEditButton(ImageEditWindow* ew, Str text, const VirtMouseHandler& onClick) {
+// the strip is drawn like the redrawn dialogs' footers, in the gui colors
+static ImageEditButton* NewImageEditButton(ImageEditWindow* ew, Str text, const VirtMouseHandler& onClick,
+                                           VirtButtonStyle style) {
     auto* b = new ImageEditButton(Str{}, ew->font);
-    Color bg = GetSysColor(COLOR_BTNFACE);
-    b->SetColor(kColBtnText, GetSysColor(COLOR_BTNTEXT));
-    b->SetColor(kColBtnTextDisabled, GetSysColor(COLOR_GRAYTEXT));
-    b->SetColor(kColBtnBg, AccentColor(bg, 14));
-    b->SetColor(kColBtnBgHover, AccentColor(bg, 28));
-    b->SetColor(kColBtnBorder, AccentColor(bg, 40));
-    b->textPadding = DpiScaledInsets(4, 10);
+    SetVirtButtonStyle(b, style);
+    b->cornerRadius = DpiScale(kStripBtnRadius);
+    b->textPadding = DpiScaledInsets(5, 12);
     b->SetLabel(text);
     b->onClick = onClick;
     return b;
@@ -2146,7 +2147,7 @@ void ShowImageEditWindow(HWND parent, ImageEditMode mode, Str filePath, Rendered
         cargs.exStyle = WS_EX_CONTROLPARENT;
         cargs.pos = {CW_USEDEFAULT, CW_USEDEFAULT, winSize.dx, winSize.dy};
         cargs.visible = false;
-        cargs.bgColor = GetSysColor(COLOR_BTNFACE);
+        cargs.bgColor = gColsWin[kColWinBg];
         if (gImageEditHost.appIconId) {
             cargs.icon = LoadIconW(h, MAKEINTRESOURCEW(gImageEditHost.appIconId));
         }
@@ -2187,7 +2188,8 @@ void ShowImageEditWindow(HWND parent, ImageEditMode mode, Str filePath, Rendered
         editArgs.parent = hwnd;
         editArgs.font = ew->font;
         editArgs.text = destPath;
-        editArgs.withBorder = true;
+        editArgs.withBorder = false;
+        edit->SetColors(gColsWin[kColWinText], gColsWin[kColWinBg]);
         edit->Create(editArgs);
         edit->onTextChanged = MkFunc0<ImageEditWindow>(UpdateSaveButtonText, ew);
         if (!gDestEditSubclassId) {
@@ -2196,12 +2198,12 @@ void ShowImageEditWindow(HWND parent, ImageEditMode mode, Str filePath, Rendered
         SetWindowSubclass(edit->hwnd, WndProcDestEditSubclass, gDestEditSubclassId, (DWORD_PTR)ew);
         ew->destEdit = edit;
     }
-    ew->btnBrowse = NewImageEditButton(ew, StrL("..."), MkFunc0(OnBrowse, ew));
+    ew->btnBrowse = NewImageEditButton(ew, StrL("..."), MkFunc0(OnBrowse, ew), VirtButtonStyle::Ghost);
     if (!fromRenderedBitmap) {
         ew->staticPathLabel = NewVirtText({
             .s = filePath ? filePath : Str{},
             .font = ew->font,
-            .textColor = GetSysColor(COLOR_BTNTEXT),
+            .textColor = gColsBtn[kColBtnTextDisabled],
             .pathEllipsis = true,
         });
     }
@@ -2218,15 +2220,16 @@ void ShowImageEditWindow(HWND parent, ImageEditMode mode, Str filePath, Rendered
     ew->staticInfoLabel = NewVirtText({
         .s = infoStr,
         .font = ew->font,
-        .textColor = GetSysColor(COLOR_BTNTEXT),
+        .textColor = gColsBtn[kColBtnTextDisabled],
         .ellipsis = true,
     });
 
     // buttons
-    ew->btnSave = NewImageEditButton(ew, HostTr(StrL("&Save")), MkFunc0(OnSave, ew));
-    ew->btnCrop = NewImageEditButton(ew, HostTr(StrL("&Crop")), MkFunc0(OnCropButton, ew));
-    ew->btnResize = NewImageEditButton(ew, HostTr(StrL("&Resize")), MkFunc0(OnResizeButton, ew));
-    ew->btnCopy = NewImageEditButton(ew, HostTr(StrL("C&opy")), MkFunc0(OnCopyButton, ew));
+    ew->btnSave = NewImageEditButton(ew, HostTr(StrL("&Save")), MkFunc0(OnSave, ew), VirtButtonStyle::Filled);
+    ew->btnCrop = NewImageEditButton(ew, HostTr(StrL("&Crop")), MkFunc0(OnCropButton, ew), VirtButtonStyle::Ghost);
+    ew->btnResize =
+        NewImageEditButton(ew, HostTr(StrL("&Resize")), MkFunc0(OnResizeButton, ew), VirtButtonStyle::Ghost);
+    ew->btnCopy = NewImageEditButton(ew, HostTr(StrL("C&opy")), MkFunc0(OnCopyButton, ew), VirtButtonStyle::Outline);
 
     // format dropdown
     {
@@ -2279,10 +2282,15 @@ void ShowImageEditWindow(HWND parent, ImageEditMode mode, Str filePath, Rendered
             row2->alignMain = MainAxisAlign::MainStart;
             row2->alignCross = CrossAxisAlign::CrossCenter;
             row2->gap = ew->font->averageCharWidth;
-            row2->AddChild(ew->destEdit, 1);
+            // the destination, a bare field over a hairline
+            auto* dest = new VBox();
+            dest->alignCross = CrossAxisAlign::Stretch;
+            dest->AddChild(ew->destEdit);
+            dest->AddChild(new VirtLine());
+            row2->AddChild(dest, 1);
             row2->AddChild(ew->btnBrowse);
-            row2->AddChild(ew->btnSave);
             row2->AddChild(ew->btnCopy);
+            row2->AddChild(ew->btnSave);
             auto* row2Pad = new Padding(row2, {0, 0, ImageEditRowPadding(), 0});
             vbox->AddChild(row2Pad);
         }
@@ -2305,7 +2313,7 @@ void ShowImageEditWindow(HWND parent, ImageEditMode mode, Str filePath, Rendered
             vbox->AddChild(row3);
         }
 
-        ew->controlLayout = new Padding(vbox, DpiScaledInsets(kRowPadding, kButtonPadding));
+        ew->controlLayout = new Padding(vbox, DpiScaledInsets(kStripPadDy, kButtonPadding));
         // WindowBase owns and tab-navigates `layout`; it is the same tree
         ew->layout = ew->controlLayout;
     }

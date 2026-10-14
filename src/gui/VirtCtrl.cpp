@@ -30,6 +30,38 @@ VirtButton* NewThemedButton(HWND hwndForDpi, Str text, PlatformFont* font, bool 
     return b;
 }
 
+constexpr int kStyledBtnHoverShift = 14;
+constexpr int kStyledBtnFaintShift = 25;
+
+// the colors of `style` in the current gui palette
+void SetVirtButtonStyle(VirtButton* b, VirtButtonStyle style) {
+    GuiColorsInitIfNeeded();
+    Color colTxt = gColsWin[kColWinText];
+    Color colBg = gColsWin[kColWinBg];
+    Color fg = colTxt;
+    Color bg = colBg;
+    Color border = kColorTransparent;
+    switch (style) {
+        case VirtButtonStyle::Filled:
+            fg = colBg;
+            bg = colTxt;
+            border = colTxt;
+            break;
+        case VirtButtonStyle::Outline:
+            border = gColsLine[kColLineFg];
+            break;
+        case VirtButtonStyle::Ghost:
+            fg = gColsBtn[kColBtnTextDisabled];
+            // muted already: disabled, it fades further
+            b->SetColor(kColBtnTextDisabled, AccentColor(colBg, kStyledBtnFaintShift));
+            break;
+    }
+    b->SetColor(kColBtnText, fg);
+    b->SetColor(kColBtnBg, bg);
+    b->SetColor(kColBtnBgHover, AccentColor(bg, kStyledBtnHoverShift));
+    b->SetColor(kColBtnBorder, border);
+}
+
 static Kind kindVirtCtrl = "virtCtrl";
 
 VirtCtrl::VirtCtrl() {

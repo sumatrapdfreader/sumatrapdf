@@ -320,7 +320,6 @@ HPROPSHEETPAGE CreatePrintAdvancedPropSheet(Print_Advanced_Data* data) {
 // theme colors (logview links VirtCtrl without Theme) ---
 
 constexpr int kDlgBtnRadius = 4;
-constexpr int kDlgBtnHoverShift = 14;
 
 VirtButton* NewDlgButton(HWND hwndForDpi, Str text, PlatformFont* font, DlgButtonStyle style, bool isDefault) {
     VirtButton* b = NewThemedButton(hwndForDpi, text, font, isDefault);
@@ -331,30 +330,7 @@ VirtButton* NewDlgButton(HWND hwndForDpi, Str text, PlatformFont* font, DlgButto
 
 // the style's colors in the current theme
 void SetDlgButtonColors(VirtButton* b, DlgButtonStyle style) {
-    Color colTxt = ThemeWindowTextColor();
-    Color colBg = ThemeWindowControlBackgroundColor();
-    Color fg = colTxt;
-    Color bg = colBg;
-    Color border = kColorTransparent;
-    switch (style) {
-        case DlgButtonStyle::Filled:
-            fg = colBg;
-            bg = colTxt;
-            border = colTxt;
-            break;
-        case DlgButtonStyle::Outline:
-            border = ThemeEdgeColor();
-            break;
-        case DlgButtonStyle::Ghost:
-            fg = ThemeWindowTextDisabledColor();
-            // muted already: disabled, it fades further
-            b->SetColor(kColBtnTextDisabled, AccentColor(colBg, kToolDlgFaintShift));
-            break;
-    }
-    b->SetColor(kColBtnText, fg);
-    b->SetColor(kColBtnBg, bg);
-    b->SetColor(kColBtnBgHover, AccentColor(bg, kDlgBtnHoverShift));
-    b->SetColor(kColBtnBorder, border);
+    SetVirtButtonStyle(b, style);
 }
 
 constexpr int kDlgBtnDisabledShift = 28;

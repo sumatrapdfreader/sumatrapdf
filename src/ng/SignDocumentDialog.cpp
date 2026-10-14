@@ -36,6 +36,7 @@
 #include "gui/ToolWindow.h"
 #include "Menu.h"
 #include "SumatraDialogs.h"
+#include "shared/PdfToolsCommon.h"
 #include "SignDocumentDialogCommon.h"
 
 #include "SumatraLog.h"
@@ -103,17 +104,9 @@ static gp::Entity<SignDocumentView> gSignView;
 // dialog in the frame, or the window is away while a signature is placed
 static ToolWindow* gSignTw = nullptr;
 
-// orig's window at 96 dpi: a 460 wide client area, 4 / 8 around. A label has
-// 8 above (not the first) and 4 under it; the certificate file and the image
-// rows are a 290 wide edit and a button 7 after it; the checkboxes are 2
-// apart; the buttons have 12 above and 4 below
-constexpr float kSignWinDx = 460;
-constexpr float kSignWinPadX = 8;
-constexpr float kSignWinPadY = 4;
-constexpr float kSignWinLabelGap = 8;
-constexpr float kSignWinFileEditDx = 290;
-constexpr float kSignWinCheckGap = 2;
-constexpr float kSignWinButtonsGap = 12;
+// orig's layout: the certificate, the signature's details, its appearance;
+// hairlines between, the labels in one column
+constexpr float kSignWinDx = 500;
 
 static void ClearSignaturePlacementNotif(MainWindow* win) {
     if (win) {
@@ -722,113 +715,11 @@ void ShowSignDocumentDialog(MainWindow* win, Str fieldName, bool hasField, int c
     AppShellInvalidate(win);
 }
 
-// `text` is what a DlgAccel*() call made of orig's label
-static gp::El* LabelEl(gp::Ctx* cx, gp::Str text) {
-    const gp::Theme& th = gp::ThemeNow(cx->app);
-    return DlgAccelText(cx, text)->Font(12)->Fg(th.mutedFg);
-}
-
-static gp::El* CheckRow(gp::Ctx* cx, Str id, Str label, bool checked, intptr_t which, bool disabled) {
-    return DlgAccelEl(cx, gpc::Checkbox::New(cx, GpuiDup(cx->a, id))->Checked(checked)->Disabled(disabled), label,
-                      gp::ListenTo(gSignView, &SignDocumentView::OnToggle, which), disabled);
-}
-
-static gp::El* SignDocumentWinBuild(gp::Ctx* cx, bool certFile, bool hasImage) {
-    float font = DlgWinFont(cx);
-    gp::El* col = gp::Div(cx->a)->FlexCol()->W(gp::kFill)->PadX(kSignWinPadX)->PadY(kSignWinPadY);
-    auto label = [&](gp::Str text, float padT) {
-        return gp::Div(cx->a)->PadT(padT)->Shrink0()->Child(DlgWinLabel(cx, text, font, kSignWinPadY));
-    };
-    auto select = [&](DialogSelect& dd, Str id) {
-        gp::El* sel = dd.Build(cx, id, gp::kFill)->H(kDlgWinEditDy);
-        if (sel->first) {
-            sel->first->H(kDlgWinEditDy);
-        }
-        return gp::Div(cx->a)->W(gp::kFill)->H(kDlgWinEditDy)->Shrink0()->Child(sel);
-    };
-    auto edit = [&](gp::Str id, gp::InputState* st, bool masked, bool disabled) {
-        return gp::Div(cx->a)
-            ->W(gp::kFill)
-            ->H(kDlgWinEditDy)
-            ->Shrink0()
-            ->Child(gpc::Input::New(cx, id, st)
-                        ->WithSize(gp::UiSize::Small)
-                        ->Masked(masked)
-                        ->Disabled(disabled)
-                        ->W(gp::kFill)
-                        ->IntoEl()
-                        ->H(kDlgWinEditDy));
-    };
-    // an edit of orig's 40 characters with a button after it
-    auto fileRow = [&](gp::Str id, gp::InputState* st, bool disabled, gp::El* button) {
-        gp::El* row =
-            gp::Div(cx->a)->FlexRow()->ItemsCenter()->W(gp::kFill)->H(kDlgWinBtnDy)->Gap(kDlgWinBtnGap)->Shrink0();
-        row->Child(gpc::Input::New(cx, id, st)
-                       ->WithSize(gp::UiSize::Small)
-                       ->Disabled(disabled)
-                       ->W(kSignWinFileEditDx)
-                       ->IntoEl()
-                       ->H(kDlgWinEditDy)
-                       ->Shrink0());
-        row->Child(button);
-        return row;
-    };
-    auto check = [&](Str id, Str text, bool checked, intptr_t which, bool disabled) {
-        return DlgWinCheck(cx, CheckRow(cx, id, text, checked, which, disabled), kSignWinCheckGap);
-    };
-
-    col->Child(label(DlgAccelSelect(cx, Tr("&Certificate:"), &gSign.ddCert), 0));
-    col->Child(select(gSign.ddCert, StrL("sign-cert")));
-    col->Child(fileRow(GStrL("sign-certfile"), gSign.editCert, !certFile,
-                       DlgWinButton(cx, GStrL("sign-browse"), Tr("&Browse..."),
-                                    gp::ListenTo(gSignView, &SignDocumentView::OnBrowse), false, !certFile)));
-
-    col->Child(label(DlgAccelInput(cx, Tr("&Password:"), gSign.editPassword), kSignWinLabelGap));
-    col->Child(edit(GStrL("sign-password"), gSign.editPassword, true, !certFile));
-    col->Child(label(DlgAccelInput(cx, Tr("&Reason (optional):"), gSign.editReason), kSignWinLabelGap));
-    col->Child(edit(GStrL("sign-reason"), gSign.editReason, false, false));
-    col->Child(label(DlgAccelInput(cx, Tr("&Location (optional):"), gSign.editLocation), kSignWinLabelGap));
-    col->Child(edit(GStrL("sign-location"), gSign.editLocation, false, false));
-    col->Child(label(DlgAccelSelect(cx, Tr("&Where to sign:"), &gSign.ddPlacement), kSignWinLabelGap));
-    col->Child(select(gSign.ddPlacement, StrL("sign-placement")));
-    col->Child(label(DlgAccelSelect(cx, Tr("Signature &type:"), &gSign.ddType), kSignWinLabelGap));
-    col->Child(select(gSign.ddType, StrL("sign-type")));
-    col->Child(check(StrL("sign-lock"), Tr("Lock form &fields after signing"), gSign.lockFields, 5, false));
-
-    col->Child(label(DlgAccelNone(cx, Tr("Appearance:")), kSignWinLabelGap));
-    col->Child(check(StrL("sign-labels"), Tr("Show &labels"), gSign.showLabels, 0, false));
-    col->Child(check(StrL("sign-name"), Tr("Show &name"), gSign.showName, 1, false));
-    col->Child(check(StrL("sign-dn"), Tr("Show &DN"), gSign.showDN, 2, false));
-    col->Child(check(StrL("sign-date"), Tr("Show da&te"), gSign.showDate, 3, false));
-    col->Child(
-        check(StrL("sign-graphic"), Tr("Show name as &graphic"), gSign.showGraphicName && !hasImage, 4, hasImage));
-
-    col->Child(label(DlgAccelInput(cx, Tr("&Image (optional):"), gSign.editImage), kSignWinLabelGap));
-    col->Child(fileRow(GStrL("sign-image"), gSign.editImage, false,
-                       DlgWinButton(cx, GStrL("sign-browseimg"), Tr("C&hoose..."),
-                                    gp::ListenTo(gSignView, &SignDocumentView::OnBrowseImage), false)));
-
-    gp::Listener onSign = gp::ListenTo(gSignView, &SignDocumentView::OnSign);
-    DlgSetDefault(cx, onSign, true);
-    gp::El* buttons = gp::Div(cx->a)
-                          ->FlexRow()
-                          ->JustifyEnd()
-                          ->ItemsCenter()
-                          ->W(gp::kFill)
-                          ->H(kDlgWinBtnDy + kSignWinButtonsGap + kSignWinPadY)
-                          ->PadT(kSignWinButtonsGap)
-                          ->PadB(kSignWinPadY)
-                          ->Gap(kDlgWinBtnGap)
-                          ->Shrink0();
-    buttons->Child(DlgWinButton(cx, GStrL("dlg-cancel"), Tr("Cancel"),
-                                gp::ListenTo(gSignView, &SignDocumentView::OnCancel), false));
-    buttons->Child(DlgWinButton(cx, GStrL("dlg-ok"), Tr("Sign"), onSign, true));
-    col->Child(buttons);
-    return DlgWinContent(cx, col);
-}
-
 gp::El* SignDocumentDialogBuild(MainWindow* win, gp::Ctx* cx) {
     if (!gSign.visible || gSign.win != win || gSign.placing) {
+        return nullptr;
+    }
+    if (gSignTw && !DlgWindowIsHost(cx)) {
         return nullptr;
     }
     if (!gSignView.IsValid()) {
@@ -838,78 +729,93 @@ gp::El* SignDocumentDialogBuild(MainWindow* win, gp::Ctx* cx) {
     gSign.ddPlacement.PollChanged(cx->app);
     bool certFile = UsingCertFile();
     bool hasImage = len(TrimmedValueTemp(gSign.editImage)) > 0;
-    if (gSignTw) {
-        return DlgWindowIsHost(cx) ? SignDocumentWinBuild(cx, certFile, hasImage) : nullptr;
+    gp::Listener onSign = gp::ListenTo(gSignView, &SignDocumentView::OnSign);
+    gp::Listener onCancel = gp::ListenTo(gSignView, &SignDocumentView::OnCancel);
+    DlgSetDefault(cx, onSign, true);
+    Color colMuted = ThemeWindowTextDisabledColor();
+    Color colEdge = ThemeEdgeColor();
+
+    Str certLabel = Tr("&Certificate:"), pwdLabel = Tr("&Password:"), reasonLabel = Tr("&Reason (optional):");
+    Str locLabel = Tr("&Location (optional):"), whereLabel = Tr("&Where to sign:"), typeLabel = Tr("Signature &type:");
+    Str imageLabel = Tr("&Image (optional):");
+    float labelDx = 0;
+    for (Str l : {certLabel, pwdLabel, reasonLabel, locLabel, whereLabel, typeLabel, imageLabel}) {
+        labelDx = std::max(labelDx, DlgFieldLabelDx(cx, l));
     }
+    // `label` is what a DlgAccel*() call made of orig's label
+    auto row = [&](gp::Str label, gp::El* ctrl) {
+        gp::El* l = gp::Div(cx->a)->W(labelDx)->Shrink0();
+        if (label.len > 0) {
+            l->Child(DlgAccelText(cx, label)->Font(kToolDlgTextFontPx)->Fg(ToGpui(colMuted)));
+        }
+        return DlgFieldRow(cx)->Child(l)->Child(gp::Div(cx->a)->Flex1()->MinW(0)->Child(ctrl));
+    };
+    auto edit = [&](gp::Str id, gp::InputState* st, bool masked, bool disabled) {
+        return DlgUnderlineInput(cx, id, st, kToolDlgTextFontPx, colEdge, masked, disabled);
+    };
+    auto fileRow = [&](gp::El* field, gp::El* button) {
+        return gp::Div(cx->a)
+            ->FlexRow()
+            ->ItemsCenter()
+            ->W(gp::kFill)
+            ->Gap(kToolDlgGapDx)
+            ->Child(gp::Div(cx->a)->Flex1()->MinW(0)->Child(field))
+            ->Child(button);
+    };
+    auto check = [&](Str id, Str text, bool checked, intptr_t which, bool disabled) {
+        return DlgCheck(cx, id, text, checked, gp::ListenTo(gSignView, &SignDocumentView::OnToggle, which),
+                        DlgCheckKind::Checkbox, disabled);
+    };
 
-    gp::El* body = gp::Div(cx->a)->FlexCol()->Gap(6);
-    body->Child(LabelEl(cx, DlgAccelSelect(cx, Tr("&Certificate:"), &gSign.ddCert)));
-    body->Child(gSign.ddCert.Build(cx, StrL("sign-cert"), gp::kFill));
+    gp::El* col = gp::Div(cx->a)->FlexCol()->W(gp::kFill);
 
-    gp::El* certRow = gp::Div(cx->a)->FlexRow()->W(gp::kFill)->ItemsCenter()->Gap(8);
-    certRow->Child(gp::Div(cx->a)->Flex1()->Child(gpc::Input::New(cx, GStrL("sign-certfile"), gSign.editCert)
-                                                      ->WithSize(gp::UiSize::Small)
-                                                      ->Disabled(!certFile)
-                                                      ->W(gp::kFill)
-                                                      ->IntoEl()));
-    certRow->Child(
-        DlgAccelEl(cx, gpc::Button::New(cx, GStrL("sign-browse"))->WithSize(gp::UiSize::Small)->Disabled(!certFile),
-                   Tr("&Browse..."), gp::ListenTo(gSignView, &SignDocumentView::OnBrowse), !certFile));
-    body->Child(certRow);
+    // the certificate: one of the store's, or a file and its password
+    gp::El* cert = DlgSection(cx);
+    cert->Child(
+        row(DlgAccelSelect(cx, certLabel, &gSign.ddCert), gSign.ddCert.Build(cx, StrL("sign-cert"), gp::kFill)));
+    cert->Child(row({}, fileRow(edit(GStrL("sign-certfile"), gSign.editCert, false, !certFile),
+                                DlgGhostButton(cx, GStrL("sign-browse"), Tr("&Browse..."),
+                                               gp::ListenTo(gSignView, &SignDocumentView::OnBrowse), !certFile))));
+    cert->Child(row(DlgAccelInput(cx, pwdLabel, gSign.editPassword),
+                    edit(GStrL("sign-password"), gSign.editPassword, true, !certFile)));
+    col->Child(cert);
+    col->Child(DlgHairline(cx));
 
-    body->Child(LabelEl(cx, DlgAccelInput(cx, Tr("&Password:"), gSign.editPassword)));
-    body->Child(gpc::Input::New(cx, GStrL("sign-password"), gSign.editPassword)
-                    ->WithSize(gp::UiSize::Small)
-                    ->Masked(true)
-                    ->Disabled(!certFile)
-                    ->W(gp::kFill)
-                    ->IntoEl());
+    // what the signature says and where it goes
+    gp::El* details = DlgSection(cx);
+    details->Child(row(DlgAccelInput(cx, reasonLabel, gSign.editReason),
+                       edit(GStrL("sign-reason"), gSign.editReason, false, false)));
+    details->Child(row(DlgAccelInput(cx, locLabel, gSign.editLocation),
+                       edit(GStrL("sign-location"), gSign.editLocation, false, false)));
+    details->Child(row(DlgAccelSelect(cx, whereLabel, &gSign.ddPlacement),
+                       gSign.ddPlacement.Build(cx, StrL("sign-placement"), gp::kFill)));
+    details->Child(
+        row(DlgAccelSelect(cx, typeLabel, &gSign.ddType), gSign.ddType.Build(cx, StrL("sign-type"), gp::kFill)));
+    details->Child(
+        row({}, check(StrL("sign-lock"), Tr("Lock form &fields after signing"), gSign.lockFields, 5, false)));
+    col->Child(details);
+    col->Child(DlgHairline(cx));
 
-    body->Child(LabelEl(cx, DlgAccelInput(cx, Tr("&Reason (optional):"), gSign.editReason)));
-    body->Child(gpc::Input::New(cx, GStrL("sign-reason"), gSign.editReason)
-                    ->WithSize(gp::UiSize::Small)
-                    ->W(gp::kFill)
-                    ->IntoEl());
-
-    body->Child(LabelEl(cx, DlgAccelInput(cx, Tr("&Location (optional):"), gSign.editLocation)));
-    body->Child(gpc::Input::New(cx, GStrL("sign-location"), gSign.editLocation)
-                    ->WithSize(gp::UiSize::Small)
-                    ->W(gp::kFill)
-                    ->IntoEl());
-
-    body->Child(LabelEl(cx, DlgAccelSelect(cx, Tr("&Where to sign:"), &gSign.ddPlacement)));
-    body->Child(gSign.ddPlacement.Build(cx, StrL("sign-placement"), gp::kFill));
-    body->Child(LabelEl(cx, DlgAccelSelect(cx, Tr("Signature &type:"), &gSign.ddType)));
-    body->Child(gSign.ddType.Build(cx, StrL("sign-type"), gp::kFill));
-    body->Child(CheckRow(cx, StrL("sign-lock"), Tr("Lock form &fields after signing"), gSign.lockFields, 5, false));
-
-    body->Child(LabelEl(cx, DlgAccelNone(cx, Tr("Appearance:"))));
-    body->Child(CheckRow(cx, StrL("sign-labels"), Tr("Show &labels"), gSign.showLabels, 0, false));
-    body->Child(CheckRow(cx, StrL("sign-name"), Tr("Show &name"), gSign.showName, 1, false));
-    body->Child(CheckRow(cx, StrL("sign-dn"), Tr("Show &DN"), gSign.showDN, 2, false));
-    body->Child(CheckRow(cx, StrL("sign-date"), Tr("Show da&te"), gSign.showDate, 3, false));
-    body->Child(CheckRow(cx, StrL("sign-graphic"), Tr("Show name as &graphic"), gSign.showGraphicName && !hasImage, 4,
-                         hasImage));
-
-    body->Child(LabelEl(cx, DlgAccelInput(cx, Tr("&Image (optional):"), gSign.editImage)));
-    gp::El* imgRow = gp::Div(cx->a)->FlexRow()->W(gp::kFill)->ItemsCenter()->Gap(8);
-    imgRow->Child(gp::Div(cx->a)->Flex1()->Child(gpc::Input::New(cx, GStrL("sign-image"), gSign.editImage)
-                                                     ->WithSize(gp::UiSize::Small)
-                                                     ->W(gp::kFill)
-                                                     ->IntoEl()));
-    imgRow->Child(DlgAccelEl(cx, gpc::Button::New(cx, GStrL("sign-browseimg"))->WithSize(gp::UiSize::Small),
-                             Tr("C&hoose..."), gp::ListenTo(gSignView, &SignDocumentView::OnBrowseImage)));
-    body->Child(imgRow);
-
-    gp::El* footer = DialogFooter(cx, nullptr, gSignView, Tr("Sign"), Tr("Cancel"), &SignDocumentView::OnSign,
-                                  &SignDocumentView::OnCancel);
-
-    return gpc::Dialog::New(cx)
-        ->Open(true)
-        ->Title(ToGpui(Tr("Sign Document")))
-        ->Body(body)
-        ->Footer(footer)
-        ->W(520)
-        ->OnClose(gp::ListenTo(gSignView, &SignDocumentView::OnCancel))
-        ->IntoEl(gp::WindowSize(cx->win));
+    // what the signature shows, two checkboxes a row
+    gp::El* look = DlgSection(cx);
+    look->Child(DlgSectionHeader(cx, FromGpui(DlgAccelNone(cx, Tr("Appearance:")))));
+    auto pair = [&](gp::El* left, gp::El* right) {
+        gp::El* r = DlgFieldRow(cx)->Child(gp::Div(cx->a)->Flex1()->MinW(0)->Child(left));
+        r->Child(gp::Div(cx->a)->Flex1()->MinW(0)->Child(right ? right : gp::Div(cx->a)));
+        return r;
+    };
+    look->Child(pair(check(StrL("sign-labels"), Tr("Show &labels"), gSign.showLabels, 0, false),
+                     check(StrL("sign-name"), Tr("Show &name"), gSign.showName, 1, false)));
+    look->Child(pair(check(StrL("sign-dn"), Tr("Show &DN"), gSign.showDN, 2, false),
+                     check(StrL("sign-date"), Tr("Show da&te"), gSign.showDate, 3, false)));
+    look->Child(
+        pair(check(StrL("sign-graphic"), Tr("Show name as &graphic"), gSign.showGraphicName && !hasImage, 4, hasImage),
+             nullptr));
+    look->Child(row(DlgAccelInput(cx, imageLabel, gSign.editImage),
+                    fileRow(edit(GStrL("sign-image"), gSign.editImage, false, false),
+                            DlgGhostButton(cx, GStrL("sign-browseimg"), Tr("C&hoose..."),
+                                           gp::ListenTo(gSignView, &SignDocumentView::OnBrowseImage), false))));
+    col->Child(look);
+    col->Child(DlgFooter(cx, Tr("Sign"), onSign, onCancel));
+    return DlgToolContent(cx, col, Tr("Sign Document"), kSignWinDx, onCancel);
 }

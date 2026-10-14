@@ -219,8 +219,8 @@ enum class DlgField {
 };
 gpui::El* DlgCaption(gpui::Ctx* cx, Str s);
 gpui::El* DlgLine(gpui::Ctx* cx, Str label, float labelDx, Str id, gpui::InputState* edit, DlgField kind);
-gpui::El* DlgFooter(gpui::Ctx* cx, Str okLabel, gpui::Listener onOk, gpui::Listener onCancel,
-                    gpui::El* extra = nullptr);
+gpui::El* DlgFooter(gpui::Ctx* cx, Str okLabel, gpui::Listener onOk, gpui::Listener onCancel, gpui::El* extra = nullptr,
+                    bool okDisabled = false);
 // a list's rows: the text on a rounded selection, in line with the fields
 constexpr float kDlgListRowDy = 24;
 gpui::El* DlgListRow(gpui::Ctx* cx, Str id, Str text, bool selected, gpui::Listener onClick, Str meta = {});

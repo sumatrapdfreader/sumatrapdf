@@ -31,12 +31,31 @@
 #include "Notifications.h"
 #include "DarkMode.h"
 #include "SumatraDialogs.h"
+#include "shared/PdfToolsCommon.h"
 #include "SignDocumentDialogCommon.h"
 
 extern bool SaveAnnotationsToMaybeNewPdfFile(WindowTab*);
 
 // Fills in a signature field with a certificate from a .pfx / .p12 file.
-// Same WindowBase layout pattern as Add Favorite / Change Color.
+//
+//   Certificate:          [Krzysztof Kowalczyk          v]
+//                         C:\certs\me.pfx________  Browse...
+//   Password:             ********_____________________
+//   ---------------------------------------------- hairline
+//   Reason (optional):    _____________________________
+//   Location (optional):  _____________________________
+//   Where to sign:        [New signature on page 1     v]
+//   Signature type:       [Approval signature          v]
+//                         [ ] Lock form fields after signing
+//   ---------------------------------------------- hairline
+//   Appearance
+//   [x] Show labels       [x] Show name
+//   [x] Show DN           [x] Show date
+//   [x] Show name as graphic
+//   Image (optional):     ______________________  Choose...
+//   ---------------------------------------------- hairline
+//                                  [Cancel] [Sign]
+constexpr int kSignDlgDx = 500;
 struct SignDocumentWnd : WindowBase {
     ~SignDocumentWnd() override { str::Free(preselectField); }
 
@@ -279,7 +298,7 @@ void SignDocumentWnd::UpdateCertFileEnabled() {
         editCert->SetIsEnabled(file);
     }
     if (btnBrowse) {
-        btnBrowse->SetIsEnabled(file);
+        SetDlgButtonEnabled(btnBrowse, DlgButtonStyle::Ghost, file);
     }
     if (editPassword) {
         editPassword->SetIsEnabled(file);
@@ -602,195 +621,152 @@ static void OnDestroy(WindowBase::DestroyEvent* /*ev*/) {
 }
 
 // label above a field, matching the spacing the other dialogs use
-static VirtText* AddLabel(VBox* vbox, Str s, PlatformFont* font, bool isRtl, int padTop) {
-    auto* c = NewVirtText({
-        .s = s,
-        .font = font,
-        .isRtl = isRtl,
-        .prefix = true,
-        .padding = DpiScaledInsets(padTop, 0, 4, 0),
-    });
-    vbox->AddChild(c);
-    return c;
-}
-
-static Edit* AddEdit(VBox* vbox, HWND hwnd, PlatformFont* font, bool isRtl, bool isPassword) {
-    Edit::CreateArgs args;
-    args.parent = hwnd;
-    args.font = font;
-    args.withBorder = true;
-    args.isRtl = isRtl;
-    args.isPassword = isPassword;
-    auto* c = new Edit();
-    c->Create(args);
-    vbox->AddChild(c);
-    return c;
-}
-
-static Checkbox* AddCheckbox(VBox* vbox, HWND hwnd, Str text, bool isRtl, int padTop) {
-    Checkbox::CreateArgs args;
-    args.parent = hwnd;
-    args.text = text;
-    args.isRtl = isRtl;
-    auto* c = new Checkbox();
-    c->SetInsetsPt(padTop, 0, 0, 0);
-    c->Create(args);
-    vbox->AddChild(c);
-    return c;
-}
-
 bool SignDocumentWnd::Create(MainWindow* mainWin) {
     win = mainWin;
     hwndOwner = win ? win->hwndFrame : nullptr;
     CollectFields();
-
+    Color colTxt = ThemeWindowTextColor();
+    Color colBg = ThemeWindowControlBackgroundColor();
+    Color colMuted = ThemeWindowTextDisabledColor();
+    PlatformFont* fontText = DlgUiFont(kToolDlgTextFontPx);
+    PlatformFont* fontMeta = DlgUiFont(kToolDlgMetaFontPx);
+    SetFont(fontText);
+    bool isRtl = IsUIRtl();
     {
         CreateCustomArgs args;
         args.owner = hwndOwner;
         args.title = Tr("Sign Document");
         args.visible = false;
         args.style = WS_POPUPWINDOW | WS_CAPTION;
-        args.font = GetFont();
+        args.font = fontText;
+        args.isRtl = isRtl;
+        args.bgColor = colBg;
         args.icon = LoadIconW(GetModuleHandleW(nullptr), MAKEINTRESOURCEW(GetAppIconID()));
         CreateCustom(args);
     }
     if (!hwnd) {
         return false;
     }
-    bool isRtl = IsUIRtl();
-    PlatformFont* f = GetFont();
+    SetColors(colTxt, colBg);
+
+    // every field after a muted label, the labels in one column
+    Vec<VirtText*> labels;
+    auto newSection = [&]() {
+        auto* box = new VBox();
+        box->alignCross = CrossAxisAlign::Stretch;
+        return box;
+    };
+    auto addRow = [&](VBox* box, Str label, ILayout* ctrl) {
+        HBox* row = NewDlgFieldRow();
+        VirtText* t = NewDlgLabel(label, fontText, colMuted, kToolDlgRowDy, true);
+        VecAppend(labels, t);
+        row->AddChild(t);
+        row->AddChild(ctrl, 1);
+        box->AddChild(row);
+        return row;
+    };
+    auto newDropDown = [&]() {
+        DropDown::CreateArgs args;
+        args.parent = hwnd;
+        args.font = fontText;
+        args.isRtl = isRtl;
+        auto* c = new DropDown();
+        c->Create(args);
+        return c;
+    };
+    auto newEdit = [&](bool isPassword) {
+        Edit* e = NewDlgEdit(hwnd, fontText, {}, 0);
+        if (isPassword) {
+            HwndSetWindowStyle(e->hwnd, ES_PASSWORD, true);
+        }
+        return e;
+    };
+    auto newCheck = [&](Str text) { return NewDlgCheckbox(hwnd, text, fontText, false); };
 
     auto* vbox = new VBox();
-    vbox->alignMain = MainAxisAlign::MainStart;
     vbox->alignCross = CrossAxisAlign::Stretch;
 
-    AddLabel(vbox, Tr("&Certificate:"), f, isRtl, 0);
+    // the certificate: one of the store's, or a file and its password
+    VBox* cert = newSection();
+    ddCert = newDropDown();
+    ddCert->onSelectionChanged = MkMethod0<SignDocumentWnd, &SignDocumentWnd::OnCertChanged>(this);
+    addRow(cert, Tr("&Certificate:"), ddCert);
+    FillCertificates();
     {
-        DropDown::CreateArgs args;
-        args.parent = hwnd;
-        args.font = f;
-        args.isRtl = isRtl;
-        auto* c = new DropDown();
-        c->Create(args);
-        ddCert = c;
-        c->onSelectionChanged = MkMethod0<SignDocumentWnd, &SignDocumentWnd::OnCertChanged>(this);
-        vbox->AddChild(c);
-        FillCertificates();
-    }
-    {
-        auto* row = new HBox();
-        row->alignMain = MainAxisAlign::MainStart;
-        row->alignCross = CrossAxisAlign::CrossCenter;
-        row->gap = f->averageCharWidth;
-
-        Edit::CreateArgs args;
-        args.parent = hwnd;
-        args.font = f;
-        args.withBorder = true;
-        args.isRtl = isRtl;
-        args.idealWidthChars = 40;
-        auto* e = new Edit();
-        e->Create(args);
-        editCert = e;
-        row->AddChild(e);
-
-        btnBrowse = NewThemedButton(hwnd, Tr("&Browse..."), f, false);
+        editCert = newEdit(false);
+        btnBrowse = NewDlgButton(hwnd, Tr("&Browse..."), fontText, DlgButtonStyle::Ghost, false);
         btnBrowse->onClick = MkMethod1<SignDocumentWnd, VirtMouseEvent*, &SignDocumentWnd::OnBrowse>(this);
-        row->AddChild(btnBrowse);
-        vbox->AddChild(row);
-        UpdateCertFileEnabled();
+        HBox* file = NewDlgRow();
+        file->AddChild(NewDlgUnderlined(editCert), 1);
+        file->AddChild(btnBrowse);
+        addRow(cert, {}, file);
     }
-
-    AddLabel(vbox, Tr("&Password:"), f, isRtl, 8);
-    editPassword = AddEdit(vbox, hwnd, f, isRtl, true);
+    editPassword = newEdit(true);
+    addRow(cert, Tr("&Password:"), NewDlgUnderlined(editPassword));
     UpdateCertFileEnabled();
+    vbox->AddChild(NewDlgSection(cert));
+    vbox->AddChild(new VirtLine());
 
-    AddLabel(vbox, Tr("&Reason (optional):"), f, isRtl, 8);
-    editReason = AddEdit(vbox, hwnd, f, isRtl, false);
+    // what the signature says and where it goes
+    VBox* details = newSection();
+    editReason = newEdit(false);
+    addRow(details, Tr("&Reason (optional):"), NewDlgUnderlined(editReason));
+    editLocation = newEdit(false);
+    addRow(details, Tr("&Location (optional):"), NewDlgUnderlined(editLocation));
+    ddPlacement = newDropDown();
+    addRow(details, Tr("&Where to sign:"), ddPlacement);
+    FillPlacement();
+    ddType = newDropDown();
+    addRow(details, Tr("Signature &type:"), ddType);
+    FillSignatureType();
+    cbLockFields = newCheck(Tr("Lock form &fields after signing"));
+    addRow(details, {}, cbLockFields);
+    vbox->AddChild(NewDlgSection(details));
+    vbox->AddChild(new VirtLine());
 
-    AddLabel(vbox, Tr("&Location (optional):"), f, isRtl, 8);
-    editLocation = AddEdit(vbox, hwnd, f, isRtl, false);
-
-    AddLabel(vbox, Tr("&Where to sign:"), f, isRtl, 8);
+    // what the signature shows, two checkboxes a row
+    VBox* look = newSection();
+    look->AddChild(NewDlgLabel(Tr("Appearance:"), fontMeta, colMuted, kToolDlgRowDy));
+    auto addPair = [&](Checkbox* left, Checkbox* right) {
+        HBox* row = NewDlgFieldRow();
+        row->AddChild(left, 1);
+        if (right) {
+            row->AddChild(right, 1);
+        } else {
+            row->AddChild(new Spacer(0, 0), 1);
+        }
+        look->AddChild(row);
+    };
+    cbShowLabels = newCheck(Tr("Show &labels"));
+    cbShowName = newCheck(Tr("Show &name"));
+    addPair(cbShowLabels, cbShowName);
+    cbShowDN = newCheck(Tr("Show &DN"));
+    cbShowDate = newCheck(Tr("Show da&te"));
+    addPair(cbShowDN, cbShowDate);
+    cbShowGraphicName = newCheck(Tr("Show name as &graphic"));
+    addPair(cbShowGraphicName, nullptr);
     {
-        DropDown::CreateArgs args;
-        args.parent = hwnd;
-        args.font = f;
-        args.isRtl = isRtl;
-        auto* c = new DropDown();
-        c->Create(args);
-        ddPlacement = c;
-        vbox->AddChild(c);
-        FillPlacement();
-    }
-
-    AddLabel(vbox, Tr("Signature &type:"), f, isRtl, 8);
-    {
-        DropDown::CreateArgs args;
-        args.parent = hwnd;
-        args.font = f;
-        args.isRtl = isRtl;
-        auto* c = new DropDown();
-        c->Create(args);
-        ddType = c;
-        vbox->AddChild(c);
-        FillSignatureType();
-    }
-    cbLockFields = AddCheckbox(vbox, hwnd, Tr("Lock form &fields after signing"), isRtl, 2);
-
-    AddLabel(vbox, Tr("Appearance:"), f, isRtl, 8);
-    cbShowLabels = AddCheckbox(vbox, hwnd, Tr("Show &labels"), isRtl, 2);
-    cbShowName = AddCheckbox(vbox, hwnd, Tr("Show &name"), isRtl, 2);
-    cbShowDN = AddCheckbox(vbox, hwnd, Tr("Show &DN"), isRtl, 2);
-    cbShowDate = AddCheckbox(vbox, hwnd, Tr("Show da&te"), isRtl, 2);
-    cbShowGraphicName = AddCheckbox(vbox, hwnd, Tr("Show name as &graphic"), isRtl, 2);
-    AddLabel(vbox, Tr("&Image (optional):"), f, isRtl, 8);
-    {
-        auto* row = new HBox();
-        row->alignMain = MainAxisAlign::MainStart;
-        row->alignCross = CrossAxisAlign::CrossCenter;
-        row->gap = f->averageCharWidth;
-
-        Edit::CreateArgs args;
-        args.parent = hwnd;
-        args.font = f;
-        args.withBorder = true;
-        args.isRtl = isRtl;
-        args.idealWidthChars = 40;
-        auto* e = new Edit();
-        e->Create(args);
-        editImage = e;
-        e->onTextChanged = MkMethod0<SignDocumentWnd, &SignDocumentWnd::OnImageChanged>(this);
-        row->AddChild(e);
-
-        btnBrowseImage = NewThemedButton(hwnd, Tr("C&hoose..."), f, false);
+        editImage = newEdit(false);
+        editImage->onTextChanged = MkMethod0<SignDocumentWnd, &SignDocumentWnd::OnImageChanged>(this);
+        btnBrowseImage = NewDlgButton(hwnd, Tr("C&hoose..."), fontText, DlgButtonStyle::Ghost, false);
         btnBrowseImage->onClick = MkMethod1<SignDocumentWnd, VirtMouseEvent*, &SignDocumentWnd::OnBrowseImage>(this);
-        row->AddChild(btnBrowseImage);
-        vbox->AddChild(row);
+        HBox* image = NewDlgRow();
+        image->AddChild(NewDlgUnderlined(editImage), 1);
+        image->AddChild(btnBrowseImage);
+        addRow(look, Tr("&Image (optional):"), image);
     }
     FillAppearance();
+    vbox->AddChild(NewDlgSection(look));
+    AlignDlgLabels(labels);
 
-    {
-        auto* hbox = new HBox();
-        hbox->alignMain = MainAxisAlign::MainEnd;
-        hbox->alignCross = CrossAxisAlign::CrossCenter;
-        hbox->gap = f->averageCharWidth;
-        auto pad = Insets{12, 0, 4, 0};
+    btnCancel = NewDlgButton(hwnd, Tr("Cancel"), fontText, DlgButtonStyle::Outline, false);
+    btnCancel->onClick = MkMethod1<SignDocumentWnd, VirtMouseEvent*, &SignDocumentWnd::OnCancel>(this);
+    btnSign = NewDlgButton(hwnd, Tr("Sign"), fontText, DlgButtonStyle::Filled, true);
+    btnSign->onClick = MkMethod1<SignDocumentWnd, VirtMouseEvent*, &SignDocumentWnd::OnSign>(this);
+    vbox->AddChild(NewDlgFooter(btnCancel, btnSign));
+    layout = vbox;
 
-        btnCancel = NewThemedButton(hwnd, Tr("Cancel"), f, false);
-        btnCancel->onClick = MkMethod1<SignDocumentWnd, VirtMouseEvent*, &SignDocumentWnd::OnCancel>(this);
-        hbox->AddChild(new Padding(btnCancel, pad));
-        btnSign = NewThemedButton(hwnd, Tr("Sign"), f, true);
-        btnSign->onClick = MkMethod1<SignDocumentWnd, VirtMouseEvent*, &SignDocumentWnd::OnSign>(this);
-        hbox->AddChild(new Padding(btnSign, pad));
-        vbox->AddChild(hbox);
-    }
-
-    auto* padding = new Padding(vbox, DpiScaledInsets(4, 8));
-    layout = padding;
-
-    int dx = DpiScale(460);
-    LayoutAndSizeToContent(layout, dx, 0, hwnd);
+    LayoutAndSizeToContent(layout, DpiScale(kSignDlgDx), 0, hwnd);
     DoLayout(HwndClientRect(hwnd).Size());
     HwndCenterDialog(hwnd, win ? win->hwndFrame : nullptr);
     UpdateTheme();

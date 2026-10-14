@@ -36,6 +36,7 @@
 #include "VirtKeys.h"
 #include "gui/AppShell.h"
 #include "gui/DialogWidgets.h"
+#include "shared/PdfToolsCommon.h"
 #include "SumatraDialogs.h"
 #include "ImageSaveCropResize.h"
 #if OS_WASM
@@ -57,7 +58,7 @@ static Kind kNotifScreenshot = "notifScreenshot";
 constexpr float kScreenshotDpi = 150;
 constexpr i64 kMaxScreenshotPixels = 80 * 1000 * 1000;
 
-static Pixmap* RenderSelectionPixmap(EngineBase* engine, int rotation, int pageNo, RectF rect, float dpi) {
+static Pixmap* RenderRegionPixmap(EngineBase* engine, int rotation, int pageNo, RectF rect, float dpi) {
     if (!engine || rect.IsEmpty()) {
         return nullptr;
     }
@@ -68,13 +69,13 @@ static Pixmap* RenderSelectionPixmap(EngineBase* engine, int rotation, int pageN
     i64 estW = (i64)(rect.dx * zoom);
     i64 estH = (i64)(rect.dy * zoom);
     if (estW < 1 || estH < 1 || estW * estH > kMaxScreenshotPixels) {
-        logf("RenderSelectionPixmap: %lld x %lld at %.0f DPI is too large\n", estW, estH, dpi);
+        logf("RenderRegionPixmap: %lld x %lld at %.0f DPI is too large\n", estW, estH, dpi);
         return nullptr;
     }
     RenderPageArgs args(pageNo, zoom, rotation, &rect, RenderTarget::Export);
     Pixmap* px = engine->RenderPage(args);
     if (!px) {
-        logf("RenderSelectionPixmap: RenderPage failed page %d\n", pageNo);
+        logf("RenderRegionPixmap: RenderPage failed page %d\n", pageNo);
         return nullptr;
     }
     px->xres = dpi;
@@ -123,7 +124,7 @@ static Pixmap* RenderScreenshotPixmap(MainWindow* win, TempStr* whatOut) {
     } else if (whatOut) {
         *whatOut = fmt("selection on page %d", pageNo);
     }
-    return RenderSelectionPixmap(engine, dm->GetRotation(), pageNo, rect, kScreenshotDpi);
+    return RenderRegionPixmap(engine, dm->GetRotation(), pageNo, rect, kScreenshotDpi);
 }
 
 bool CopySelectionAsImage(MainWindow* win) {
@@ -242,15 +243,7 @@ static gp::Entity<SetHotkeyView> gHotkeyView;
 // dialog in the frame
 static ToolWindow* gHotkeyTw = nullptr;
 
-// orig's window at 96 dpi: at least 320 wide, 8 / 12 around; the prompt, the
-// combination 6 under it in an 18 high row (a key cap, or "None"), the three
-// buttons 8 under that
-constexpr float kHotkeyWinDx = 320;
-constexpr float kHotkeyWinPadX = 12;
-constexpr float kHotkeyWinPadY = 8;
-constexpr float kHotkeyWinCapGap = 6;
-constexpr float kHotkeyWinCapDy = 18;
-constexpr float kHotkeyWinCapPadDx = 7;
+constexpr float kHotkeyDlgDx = 340;
 
 // the dialog in the frame; a window of its own is not the frame's business
 bool IsSetScreenshotHotkeyDialogVisible() {
@@ -301,7 +294,7 @@ void ShowSetScreenshotHotkeyDialog(MainWindow* win) {
     // every key is the combination being captured, PrtSc on its way up
     spec.onKey = SetScreenshotHotkeyOnKey;
     spec.onKeyUp = SetHotkeyOnKeyUp;
-    spec.clientDx = kHotkeyWinDx;
+    spec.clientDx = kHotkeyDlgDx;
     gHotkeyTw = DlgWindowOpen(spec, win);
     AppShellInvalidate(win);
 }
@@ -375,97 +368,44 @@ void SetHotkeyView::OnCancel(SetHotkeyView*, gp::Ctx* cx, const gp::ClickEvent*)
     gp::Notify(cx);
 }
 
-static gp::El* SetHotkeyWinBuild(gp::Ctx* cx, Str display) {
-    const gp::Theme& th = gp::ThemeNow(cx->app);
-    float font = DlgWinFont(cx);
-    gp::El* col = gp::Div(cx->a)->FlexCol()->W(gp::kFill)->PadX(kHotkeyWinPadX)->PadY(kHotkeyWinPadY);
-    col->Child(DlgWinLabel(cx, ToGpui(Tr("Press a key combination:")), font, 0));
-
-    bool hasKey = len(gHotkey.newHotkey) > 0 || len(gHotkey.currentHotkey) > 0;
-    gp::El* shown = gp::TextEl(cx->a, GpuiDup(cx->a, display))->Font(font)->Fg(th.foreground);
-    if (hasKey) {
-        // orig's key cap
-        shown = gp::Div(cx->a)
-                    ->FlexRow()
-                    ->ItemsCenter()
-                    ->H(kHotkeyWinCapDy)
-                    ->PadX(kHotkeyWinCapPadDx)
-                    ->Radius(3)
-                    ->Bg(ToGpui(AccentColor(ThemeWindowControlBackgroundColor(), 16)))
-                    ->Border(1, ToGpui(AccentColor(ThemeWindowControlBackgroundColor(), 40)))
-                    ->Child(shown);
-    }
-    col->Child(gp::Div(cx->a)
-                   ->FlexRow()
-                   ->ItemsCenter()
-                   ->H(kHotkeyWinCapDy + kHotkeyWinCapGap)
-                   ->PadT(kHotkeyWinCapGap)
-                   ->Shrink0()
-                   ->Child(shown));
-
-    gp::El* buttons = gp::Div(cx->a)
-                          ->FlexRow()
-                          ->JustifyEnd()
-                          ->ItemsCenter()
-                          ->W(gp::kFill)
-                          ->H(kDlgWinBtnDy + kHotkeyWinPadY)
-                          ->PadT(kHotkeyWinPadY)
-                          ->Gap(kDlgWinBtnGap)
-                          ->Shrink0();
-    buttons->Child(DlgWinButton(cx, GStrL("dlg-cancel"), Tr("Cancel"),
-                                gp::ListenTo(gHotkeyView, &SetHotkeyView::OnCancel), false));
-    buttons->Child(DlgWinButton(cx, GStrL("hotkey-remove"), Tr("Remove"),
-                                gp::ListenTo(gHotkeyView, &SetHotkeyView::OnRemove), false, !hasKey));
-    buttons->Child(DlgWinButton(cx, GStrL("dlg-ok"), Tr("Set"), gp::ListenTo(gHotkeyView, &SetHotkeyView::OnSet), true,
-                                len(gHotkey.newHotkey) == 0));
-    col->Child(buttons);
-    return DlgWinContent(cx, col);
-}
-
+// orig's layout: the prompt, the combination as a key cap, Remove at the left
+// of the footer
 gp::El* SetScreenshotHotkeyDialogBuild(MainWindow* win, gp::Ctx* cx) {
     if (!gHotkey.visible || gHotkey.win != win) {
+        return nullptr;
+    }
+    if (gHotkeyTw && !DlgWindowIsHost(cx)) {
         return nullptr;
     }
     if (!gHotkeyView.IsValid()) {
         gHotkeyView = gp::EntityNewState<SetHotkeyView>(cx->app);
     }
-    const gp::Theme& th = gp::ThemeNow(cx->app);
     Str display = StrL("None");
     if (len(gHotkey.newHotkey) > 0) {
         display = gHotkey.newHotkey;
     } else if (len(gHotkey.currentHotkey) > 0) {
         display = gHotkey.currentHotkey;
     }
+    bool hasKey = len(gHotkey.newHotkey) > 0 || len(gHotkey.currentHotkey) > 0;
+    gp::Listener onSet = gp::ListenTo(gHotkeyView, &SetHotkeyView::OnSet);
+    gp::Listener onCancel = gp::ListenTo(gHotkeyView, &SetHotkeyView::OnCancel);
 
-    if (gHotkeyTw) {
-        return DlgWindowIsHost(cx) ? SetHotkeyWinBuild(cx, display) : nullptr;
-    }
-
-    gp::El* body = gp::Div(cx->a)->FlexCol()->Gap(10)->ItemsCenter();
-    body->Child(gp::TextEl(cx->a, ToGpui(Tr("Press a key combination:")))->Font(13)->Fg(th.foreground));
-    body->Child(gp::Div(cx->a)
-                    ->PadX(14)
-                    ->PadY(8)
-                    ->Radius(4)
-                    ->Bg(th.tokens.muted)
-                    ->Border(1, th.border)
-                    ->Child(gp::TextEl(cx->a, GpuiDup(cx->a, display))->Font(15)->Fg(th.foreground)));
-
-    gp::El* remove = gpc::Button::New(cx, GStrL("hotkey-remove"))
-                         ->Label(ToGpui(Tr("Remove")))
-                         ->WithSize(gp::UiSize::Small)
-                         ->Disabled(len(gHotkey.currentHotkey) == 0 && len(gHotkey.newHotkey) == 0)
-                         ->OnClick(gp::ListenTo(gHotkeyView, &SetHotkeyView::OnRemove))
-                         ->IntoEl();
-    gp::El* footer =
-        DialogFooter(cx, remove, gHotkeyView, Tr("Set"), Tr("Cancel"), &SetHotkeyView::OnSet, &SetHotkeyView::OnCancel);
-
-    return gpc::Dialog::New(cx)
-        ->Open(true)
-        ->Title(ToGpui(Tr("Set Screenshot Hotkey")))
-        ->Body(body)
-        ->Footer(footer)
-        ->W(420)
-        ->OnClose(gp::ListenTo(gHotkeyView, &SetHotkeyView::OnCancel))
-        ->IntoEl(gp::WindowSize(cx->win));
+    gp::El* col = gp::Div(cx->a)->FlexCol()->W(gp::kFill);
+    col->Child(DlgCaption(cx, Tr("Press a key combination:")));
+    gp::El* shown =
+        hasKey
+            ? DlgKeyCap(cx, display, true)
+            : gp::TextEl(cx->a, GpuiDup(cx->a, display))->Font(kToolDlgTextFontPx)->Fg(ToGpui(ThemeWindowTextColor()));
+    col->Child(gp::Div(cx->a)
+                   ->FlexRow()
+                   ->ItemsCenter()
+                   ->W(gp::kFill)
+                   ->H(kToolDlgLineDy)
+                   ->Shrink0()
+                   ->PadX(kToolDlgPadDx)
+                   ->Child(shown));
+    gp::El* remove = DlgGhostButton(cx, GStrL("hotkey-remove"), Tr("Remove"),
+                                    gp::ListenTo(gHotkeyView, &SetHotkeyView::OnRemove), !hasKey);
+    col->Child(DlgFooter(cx, Tr("Set"), onSet, onCancel, remove, len(gHotkey.newHotkey) == 0));
+    return DlgToolContent(cx, col, Tr("Set Screenshot Hotkey"), kHotkeyDlgDx, onCancel);
 }
