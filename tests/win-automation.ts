@@ -620,6 +620,32 @@ export async function paletteSetText(
   }
 }
 
+// ng's find box is a gpui input with no Edit. Drives it through TestFindUiState:
+// action is "set", "caret", "enter" or "state". Returns the state text.
+export async function ngFind(client: ControlClient, action: string, arg = ""): Promise<string> {
+  const res = await client.request(ControlCommand.TestFindUiState, arg ? [action, arg] : [action]);
+  if (res[0] !== 0) {
+    throw new Error(`ngFind: ${action} failed: ${String(res[1] ?? "")}`);
+  }
+  return String(res[1] ?? "");
+}
+
+// ng: CmdFindFirst is posted, so poll until the find box shows
+export async function waitFindOpen(client: ControlClient, timeoutMs = 4000): Promise<void> {
+  const deadline = Date.now() + timeoutMs;
+  let last = "";
+  for (;;) {
+    last = String((await client.request(ControlCommand.TestFindUiState, ["state"]))[1] ?? "");
+    if (/compact=1/.test(last) || /floating=1/.test(last)) {
+      return;
+    }
+    if (Date.now() > deadline) {
+      throw new Error(`waitFindOpen: find bar did not open (${last})`);
+    }
+    await sleep(40);
+  }
+}
+
 // ng's palette is the visible GPUI window the frame owns. Posted keys and
 // pixel captures work on it.
 function findNgPalette(frame: number): number {

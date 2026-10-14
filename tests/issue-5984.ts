@@ -3,8 +3,7 @@
 import { mkdirSync, rmSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 import { ControlCommand, type ControlClient } from "./control.ts";
-import { IS_MAC } from "./host.ts";
-import { cmdId, runStandalone, SLOW_BUILD_FACTOR, tmpPath } from "./util.ts";
+import { cmdId, runStandalone, SLOW_BUILD_FACTOR, tmpPath, USE_NG } from "./util.ts";
 import { launchControlled, pressEscape, sendCommand, waitForFocusClass, killAndWait } from "./win-automation.ts";
 import { getControlText, sendMessage, WM_CHAR } from "./winapi.ts";
 
@@ -81,17 +80,17 @@ function typeRapidly(edit: number, text: string): void {
 
 const VK_ESCAPE = 0x1b;
 
-async function macFindState(client: ControlClient): Promise<string> {
+async function ngFindState(client: ControlClient): Promise<string> {
   const res = await client.request(ControlCommand.TestToolWindow, ["state", "find"]);
   return String(res[1] ?? "");
 }
 
-// The floating find box is the "find" tool window. There is no Edit HWND.
-async function waitMacFindEdit(client: ControlClient, selectAll: boolean): Promise<void> {
+// ng: the floating find box is the "find" tool window. There is no Edit HWND.
+async function waitNgFindEdit(client: ControlClient, selectAll: boolean): Promise<void> {
   const deadline = Date.now() + 5000 * SLOW_BUILD_FACTOR;
   let raw = "";
   while (Date.now() < deadline) {
-    raw = await macFindState(client);
+    raw = await ngFindState(client);
     const text = /editText='([^']*)'/.exec(raw)?.[1];
     const sel = /sel=(-?\d+),(-?\d+)/.exec(raw);
     const focused = / edit=1/.test(raw);
@@ -104,7 +103,7 @@ async function waitMacFindEdit(client: ControlClient, selectAll: boolean): Promi
   throw new Error(`issue-5984: focus did not move to the find edit (${raw})`);
 }
 
-async function macType(client: ControlClient, text: string): Promise<void> {
+async function ngType(client: ControlClient, text: string): Promise<void> {
   for (const ch of text) {
     const res = await client.request(ControlCommand.TestToolWindow, [
       "input",
@@ -122,12 +121,12 @@ async function macType(client: ControlClient, text: string): Promise<void> {
   }
 }
 
-async function macFindText(client: ControlClient): Promise<string> {
-  const raw = await macFindState(client);
+async function ngFindText(client: ControlClient): Promise<string> {
+  const raw = await ngFindState(client);
   return /editText='([^']*)'/.exec(raw)?.[1] ?? "";
 }
 
-async function macHideFind(client: ControlClient): Promise<void> {
+async function ngHideFind(client: ControlClient): Promise<void> {
   const key = await client.request(ControlCommand.TestToolWindow, ["input", "find", "key", VK_ESCAPE, 0, 0, 0]);
   const keyRaw = String(key[1] ?? "");
   if (keyRaw.startsWith("ERR")) {
@@ -162,9 +161,9 @@ export async function testit(): Promise<void> {
 
     sendCommand(frame, cmdId("CmdFindFirst"));
     let edit = 0;
-    if (IS_MAC) {
-      await waitMacFindEdit(client, false);
-      await macType(client, query);
+    if (USE_NG) {
+      await waitNgFindEdit(client, false);
+      await ngType(client, query);
     } else {
       edit = await waitForFocusClass(frame, "Edit");
       typeRapidly(edit, query);
@@ -174,8 +173,8 @@ export async function testit(): Promise<void> {
       throw new Error(`issue-5984: initial search landed on page ${page}, want ${firstMatchPage}`);
     }
 
-    if (IS_MAC) {
-      await macHideFind(client);
+    if (USE_NG) {
+      await ngHideFind(client);
     } else {
       await pressEscape(edit);
     }
@@ -187,10 +186,10 @@ export async function testit(): Promise<void> {
 
     sendCommand(frame, cmdId("CmdFindFirst"));
     let repeatedText = "";
-    if (IS_MAC) {
-      await waitMacFindEdit(client, true);
-      await macType(client, query);
-      repeatedText = await macFindText(client);
+    if (USE_NG) {
+      await waitNgFindEdit(client, true);
+      await ngType(client, query);
+      repeatedText = await ngFindText(client);
     } else {
       edit = await waitForFocusClass(frame, "Edit");
       typeRapidly(edit, query);

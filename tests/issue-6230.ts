@@ -4,7 +4,15 @@ import { mkdirSync, rmSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 import { ControlCommand, type ControlClient } from "./control.ts";
 import { SLOW_BUILD_FACTOR, USE_NG, cmdId, runStandalone, tmpPath } from "./util.ts";
-import { launchControlled, sendCommand, waitForFocusClass, killAndWait, pressKey } from "./win-automation.ts";
+import {
+  launchControlled,
+  ngFind,
+  sendCommand,
+  waitFindOpen,
+  waitForFocusClass,
+  killAndWait,
+  pressKey,
+} from "./win-automation.ts";
 import { sendMessage, VK_RETURN, WM_CHAR } from "./winapi.ts";
 
 // "x" matches on page 40 and page 80, "xy" only on page 80. Page filler text
@@ -81,29 +89,6 @@ async function expectPage(client: ControlClient, expected: number, what: string)
   const page = await waitForPage(client, expected);
   if (page !== expected) {
     throw new Error(`issue-6230: ${what} landed on page ${page}, want ${expected}`);
-  }
-}
-
-// the find box is drawn in the frame, so there is no Edit to focus
-async function ngFind(client: ControlClient, action: string, arg = ""): Promise<void> {
-  const res = await client.request(ControlCommand.TestFindUiState, arg ? [action, arg] : [action]);
-  if (res[0] !== 0) {
-    throw new Error(`issue-6230: ${action} failed: ${String(res[1] ?? "")}`);
-  }
-}
-
-async function waitFindOpen(client: ControlClient): Promise<void> {
-  const deadline = Date.now() + 4000 * SLOW_BUILD_FACTOR;
-  let last = "";
-  for (;;) {
-    last = String((await client.request(ControlCommand.TestFindUiState, ["state"]))[1] ?? "");
-    if (/compact=1/.test(last) || /floating=1/.test(last)) {
-      return;
-    }
-    if (Date.now() > deadline) {
-      throw new Error(`issue-6230: find bar did not open (${last})`);
-    }
-    await new Promise((r) => setTimeout(r, 40));
   }
 }
 

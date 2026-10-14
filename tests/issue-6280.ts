@@ -7,7 +7,15 @@
 import { writeFileSync } from "node:fs";
 import { ControlCommand, type ControlClient } from "./control.ts";
 import { assemblePdf, cmdId, pollUntil, runStandalone, SLOW_BUILD_FACTOR, tmpPath, USE_NG } from "./util.ts";
-import { launchControlled, pressKey, sendCommand, typeIntoInput, waitForFocusClass } from "./win-automation.ts";
+import {
+  launchControlled,
+  ngFind,
+  pressKey,
+  sendCommand,
+  typeIntoInput,
+  waitFindOpen,
+  waitForFocusClass,
+} from "./win-automation.ts";
 import { getClassName, getParentWindow, VK_ESCAPE, VK_RETURN } from "./winapi.ts";
 
 const kTerm = "tagged";
@@ -54,30 +62,6 @@ async function findState(client: ControlClient): Promise<FindState> {
     page: values.page ?? -1,
     raw,
   };
-}
-
-async function ngFind(client: ControlClient, action: string, arg = ""): Promise<string> {
-  const res = await client.request(ControlCommand.TestFindUiState, arg ? [action, arg] : [action]);
-  if (res[0] !== 0) {
-    throw new Error(`issue-6280: ${action} failed: ${String(res[1] ?? "")}`);
-  }
-  return String(res[1] ?? "");
-}
-
-// the find box is drawn in the frame; CmdFindFirst is posted, so wait until it shows
-async function waitFindOpen(client: ControlClient): Promise<void> {
-  const deadline = Date.now() + 4000 * SLOW_BUILD_FACTOR;
-  let last = "";
-  for (;;) {
-    last = String((await client.request(ControlCommand.TestFindUiState, ["state"]))[1] ?? "");
-    if (/compact=1/.test(last) || /floating=1/.test(last)) {
-      return;
-    }
-    if (Date.now() > deadline) {
-      throw new Error(`issue-6280: find bar did not open (${last})`);
-    }
-    await new Promise((r) => setTimeout(r, 40));
-  }
 }
 
 // waits for the search to settle, then checks where it ended up

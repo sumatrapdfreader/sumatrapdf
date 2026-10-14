@@ -6,9 +6,11 @@ import { ROOT, USE_NG, cmdId, runStandalone, SLOW_BUILD_FACTOR } from "./util";
 import { getClassName, getControlText, getParentWindow, sendMessage } from "./winapi";
 import {
   launchControlled,
+  ngFind,
   pressKey,
   sendCommand,
   typeIntoInput,
+  waitFindOpen,
   waitForFocusClass,
   killAndWait,
 } from "./win-automation";
@@ -20,29 +22,6 @@ const EM_SETSEL = 0x00b1;
 function comboOfEdit(edit: number): number {
   const parent = getParentWindow(edit);
   return parent && getClassName(parent) === "ComboBox" ? parent : edit;
-}
-
-async function ngFind(client: ControlClient, action: string, arg = ""): Promise<string> {
-  const res = await client.request(ControlCommand.TestFindUiState, arg ? [action, arg] : [action]);
-  if (res[0] !== 0) {
-    throw new Error(`issue-893: ${action} failed: ${String(res[1] ?? "")}`);
-  }
-  return String(res[1] ?? "");
-}
-
-async function waitFindOpen(client: ControlClient): Promise<void> {
-  const deadline = Date.now() + 4000 * SLOW_BUILD_FACTOR;
-  let last = "";
-  for (;;) {
-    last = String((await client.request(ControlCommand.TestFindUiState, []))[1] ?? "");
-    if (/visible=1/.test(last)) {
-      return;
-    }
-    if (Date.now() > deadline) {
-      throw new Error(`issue-893: find bar did not open (${last})`);
-    }
-    await new Promise((r) => setTimeout(r, 40));
-  }
 }
 
 export async function testit(): Promise<void> {

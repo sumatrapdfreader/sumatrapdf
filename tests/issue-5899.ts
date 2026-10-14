@@ -12,7 +12,16 @@ import { join } from "node:path";
 import { ControlCommand } from "./control.ts";
 import { ROOT, SLOW_BUILD_FACTOR, USE_NG, cmdId, runStandalone, tmpPath } from "./util";
 import { postMessage, sendText, sleep, WM_CLOSE } from "./winapi";
-import { launchControlled, pressKey, sendCommand, waitForExit, waitForFocusClass, killAndWait } from "./win-automation";
+import {
+  launchControlled,
+  ngFind,
+  pressKey,
+  sendCommand,
+  waitFindOpen,
+  waitForExit,
+  waitForFocusClass,
+  killAndWait,
+} from "./win-automation";
 import type { ControlClient } from "./control.ts";
 
 const VK_RETURN = 0x0d;
@@ -38,28 +47,6 @@ function readFileStates(dir: string): string {
   }
   const end = s.indexOf("\n]", start);
   return s.slice(start + 1, end + 2);
-}
-
-async function ngFind(client: ControlClient, action: string, arg = ""): Promise<void> {
-  const res = await client.request(ControlCommand.TestFindUiState, arg ? [action, arg] : [action]);
-  if (res[0] !== 0) {
-    throw new Error(`issue-5899: ${action} failed: ${String(res[1] ?? "")}`);
-  }
-}
-
-async function waitFindOpen(client: ControlClient): Promise<void> {
-  const deadline = Date.now() + 4000 * SLOW_BUILD_FACTOR;
-  let last = "";
-  for (;;) {
-    last = String((await client.request(ControlCommand.TestFindUiState, ["state"]))[1] ?? "");
-    if (/compact=1/.test(last) || /floating=1/.test(last)) {
-      return;
-    }
-    if (Date.now() > deadline) {
-      throw new Error(`issue-5899: find bar did not open (${last})`);
-    }
-    await sleep(40);
-  }
 }
 
 // the name field is drawn in the dialog, so Enter goes to that window
