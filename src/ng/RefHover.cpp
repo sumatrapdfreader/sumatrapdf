@@ -24,90 +24,6 @@
 #include "gui/AppShell.h"
 #include "RefHover.h"
 
-#if OS_WIN
-// Tests post WM_MOUSEWHEEL at the popup hwnd. The popup is an element, so a
-// message-only window stands in for that hwnd.
-struct RefHoverMsgWin {
-    RefHoverState* s = nullptr;
-    HWND hwnd = nullptr;
-};
-
-static Vec<RefHoverMsgWin> gRefHoverMsgWins;
-
-static constexpr const WCHAR* kRefHoverMsgClass = L"SumatraPDFRefHoverMsg";
-
-static RefHoverState* StateForMsgHwnd(HWND hwnd) {
-    for (int i = 0; i < len(gRefHoverMsgWins); i++) {
-        if (gRefHoverMsgWins[i].hwnd == hwnd) {
-            return gRefHoverMsgWins[i].s;
-        }
-    }
-    return nullptr;
-}
-
-static LRESULT CALLBACK RefHoverMsgProc(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp) {
-    if (msg != WM_MOUSEWHEEL && msg != WM_MOUSEHWHEEL) {
-        return DefWindowProcW(hwnd, msg, wp, lp);
-    }
-    RefHoverState* s = StateForMsgHwnd(hwnd);
-    if (!s || !s->visible || !s->hitEngine) {
-        return 0;
-    }
-    int delta = GET_WHEEL_DELTA_WPARAM(wp);
-    if (msg == WM_MOUSEHWHEEL) {
-        RefHoverWheelScroll(s, s->hitEngine, -delta);
-    } else if (((GET_KEYSTATE_WPARAM(wp) & MK_CONTROL) != 0) || IsCtrlPressed()) {
-        RefHoverWheelZoom(s, s->hitEngine, delta);
-    } else {
-        RefHoverWheelScroll(s, s->hitEngine, delta);
-    }
-    if (s->win) {
-        AppShellInvalidate(s->win);
-    }
-    return 0;
-}
-
-static void EnsureMsgClass() {
-    static bool registered = false;
-    if (registered) {
-        return;
-    }
-    WNDCLASSEXW wc{};
-    wc.cbSize = sizeof(wc);
-    wc.lpfnWndProc = RefHoverMsgProc;
-    wc.hInstance = GetModuleHandleW(nullptr);
-    wc.lpszClassName = kRefHoverMsgClass;
-    registered = RegisterClassExW(&wc) != 0;
-}
-
-static void CreateMsgWin(RefHoverState* s) {
-    EnsureMsgClass();
-    HWND hwnd = CreateWindowExW(0, kRefHoverMsgClass, L"", 0, 0, 0, 0, 0, HWND_MESSAGE, nullptr,
-                                GetModuleHandleW(nullptr), nullptr);
-    if (!hwnd) {
-        return;
-    }
-    RefHoverMsgWin w;
-    w.s = s;
-    w.hwnd = hwnd;
-    VecAppend(gRefHoverMsgWins, w);
-}
-
-static void DestroyMsgWin(RefHoverState* s) {
-    for (int i = 0; i < len(gRefHoverMsgWins); i++) {
-        if (gRefHoverMsgWins[i].s != s) {
-            continue;
-        }
-        HWND hwnd = gRefHoverMsgWins[i].hwnd;
-        VecRemoveAt(gRefHoverMsgWins, i);
-        if (hwnd) {
-            DestroyWindow(hwnd);
-        }
-        return;
-    }
-}
-#endif
-
 float CanvasScale(MainWindow* win);
 
 // Tests pass a frame client point. The document hit-test wants canvas pixels.
@@ -130,9 +46,6 @@ RefHoverState* RefHoverCreate(MainWindow* win) {
     auto* s = new RefHoverState();
     s->win = win;
     RefHoverRegisterLiveState(s);
-#if OS_WIN
-    CreateMsgWin(s);
-#endif
     return s;
 }
 
@@ -140,9 +53,6 @@ void RefHoverDestroy(RefHoverState* s) {
     if (!s) {
         return;
     }
-#if OS_WIN
-    DestroyMsgWin(s);
-#endif
     RefHoverUnregisterLiveState(s);
     RefHoverDropQueuedRender(s);
     RefHoverFreeRenderImage(s);
@@ -324,19 +234,6 @@ bool RefHoverTakePostedWheel(MainWindow* win, bool horizontal, int delta, bool i
     return true;
 }
 
-int RefHoverPopupHwndInt(RefHoverState* s) {
-#if OS_WIN
-    for (int i = 0; i < len(gRefHoverMsgWins); i++) {
-        if (gRefHoverMsgWins[i].s == s) {
-            return (int)(INT_PTR)gRefHoverMsgWins[i].hwnd;
-        }
-    }
-#else
-    (void)s;
-#endif
-    return 0;
-}
-
 // Citation hover popup state. "show" opens the popup for the link at the
 // frame point, because a test cursor cannot hold a hover. tests/issue-6252.ts.
 TempStr RefHoverResultTemp(Str action, int x, int y, int* exitCodeOut) {
@@ -389,6 +286,6 @@ TempStr RefHoverResultTemp(Str action, int x, int y, int* exitCodeOut) {
     }
     int popX = (int)((float)win->canvasRc.x / k + (float)s->popupRc.x + (float)s->popupRc.dx / 2.f);
     int popY = (int)((float)win->canvasRc.y / k + (float)s->popupRc.y + (float)s->popupRc.dy / 2.f);
-    return fmt("OK visible=1 hwnd=%d page=%d y=%d zoom=%d pop=%d,%d", RefHoverPopupHwndInt(s), d.destPage,
-               (int)d.region.y, (int)(d.userZoom * 100), popX, popY);
+    return fmt("OK visible=1 page=%d y=%d zoom=%d pop=%d,%d scale=%.4f", d.destPage, (int)d.region.y,
+               (int)(d.userZoom * 100), popX, popY, (double)k);
 }

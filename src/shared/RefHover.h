@@ -175,7 +175,6 @@ void RefHoverOnHideTimer(RefHoverState* s);
 gpui::El* RefHoverBuild(MainWindow* win, gpui::Ctx* cx);
 bool RefHoverTakePostedWheel(MainWindow* win, bool horizontal, int delta, bool isCtrl, bool isShift, int clientX,
                              int clientY);
-int RefHoverPopupHwndInt(RefHoverState* s);
 #else
 constexpr UINT_PTR kRefHoverTimerID = 9;
 constexpr UINT_PTR kRefHoverHideTimerID = 10;

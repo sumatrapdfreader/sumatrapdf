@@ -9,10 +9,9 @@
 import { mkdirSync, rmSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 import { ControlClient, ControlCommand } from "./control";
-import { IS_MAC } from "./host";
-import { assemblePdf, runStandalone, tmpPath } from "./util";
+import { assemblePdf, runStandalone, tmpPath, USE_NG } from "./util";
 import { clientToScreen, getClientRect, postMessage, sleep } from "./winapi";
-import { findCanvas, killAndWait, launchControlled } from "./win-automation";
+import { findCanvas, killAndWait, launchControlled, ngInput } from "./win-automation";
 
 const WM_MOUSEWHEEL = 0x020a;
 const WM_MOUSEHWHEEL = 0x020e;
@@ -49,6 +48,7 @@ type Popup = {
   y: number;
   zoom: number;
   pop: { x: number; y: number } | null;
+  scale: number;
 };
 
 // scrolling down moves to a later page or further down the same page
@@ -60,20 +60,21 @@ async function popupState(client: ControlClient): Promise<Popup> {
   const res = await client.request(ControlCommand.TestRefHover, []);
   const raw = String(res[1] ?? "");
   if (/visible=0/.test(raw)) {
-    return { visible: false, hwnd: 0, page: 0, y: 0, zoom: 0, pop: null };
+    return { visible: false, hwnd: 0, page: 0, y: 0, zoom: 0, pop: null, scale: 1 };
   }
-  const m = /visible=1 hwnd=(-?\d+) page=(-?\d+) y=(-?\d+) zoom=(\d+)/.exec(raw);
+  const m = /visible=1(?: hwnd=(-?\d+))? page=(-?\d+) y=(-?\d+) zoom=(\d+)/.exec(raw);
   if (!m) {
     throw new Error(`issue-6252: TestRefHover failed: ${raw}`);
   }
   const popM = / pop=(-?\d+),(-?\d+)/.exec(raw);
   return {
     visible: true,
-    hwnd: +m[1]!,
+    hwnd: +(m[1] ?? 0),
     page: +m[2]!,
     y: +m[3]!,
     zoom: +m[4]!,
     pop: popM ? { x: +popM[1]!, y: +popM[2]! } : null,
+    scale: +(/ scale=([\d.]+)/.exec(raw)?.[1] ?? 1),
   };
 }
 
@@ -91,10 +92,26 @@ async function waitFor(client: ControlClient, what: string, pred: (p: Popup) => 
   }
 }
 
-// WM_MOUSE[H]WHEEL: wParam = delta (high word) | key flags, lParam = screen point
-function postWheel(hwnd: number, msg: number, delta: number, keys: number, pt: { x: number; y: number }): void {
+// WM_MOUSE[H]WHEEL: wParam = delta (high word) | key flags, lParam = screen point.
+// ng takes TestInput "wheel" at a frame point (px * scale = dips; a horizontal
+// delta is offset by 1000000, mods: 1 Ctrl, 2 Shift).
+async function wheel(
+  client: ControlClient,
+  hwnd: number,
+  msg: number,
+  delta: number,
+  keys: number,
+  screen: { x: number; y: number },
+  frame: { x: number; y: number; scale: number },
+): Promise<void> {
+  if (USE_NG) {
+    const mods = (keys & MK_CONTROL ? 1 : 0) | (keys & MK_SHIFT ? 2 : 0);
+    const d = msg === WM_MOUSEHWHEEL ? 1000000 + delta : delta;
+    await ngInput(client, ["wheel", Math.round(frame.x * frame.scale), Math.round(frame.y * frame.scale), d, mods]);
+    return;
+  }
   const wp = (delta & 0xffff) * 0x10000 + keys;
-  const lp = (pt.y & 0xffff) * 0x10000 + (pt.x & 0xffff);
+  const lp = (screen.y & 0xffff) * 0x10000 + (screen.x & 0xffff);
   postMessage(hwnd, msg, wp, lp);
 }
 
@@ -123,25 +140,28 @@ export async function testit(): Promise<void> {
       throw new Error(`issue-6252: could not show the popup: ${res[1]}`);
     }
     let p = await waitFor(client, "the popup did not open", (p) => p.visible && p.page === 2);
+    const link = { x, y, scale: p.scale };
 
     // over the link: Shift + wheel down scrolls down
-    postWheel(canvas, WM_MOUSEWHEEL, -WHEEL_DELTA, MK_SHIFT, onLink);
+    await wheel(client, canvas, WM_MOUSEWHEEL, -WHEEL_DELTA, MK_SHIFT, onLink, link);
     p = await waitFor(client, "Shift + wheel on the link did not scroll", (q) => below(q, p));
 
     // a horizontal wheel (Shift + wheel from mouse software) scrolls: right is down
-    postWheel(canvas, WM_MOUSEHWHEEL, WHEEL_DELTA, 0, onLink);
+    await wheel(client, canvas, WM_MOUSEHWHEEL, WHEEL_DELTA, 0, onLink, link);
     p = await waitFor(client, "horizontal wheel on the link did not scroll", (q) => below(q, p));
 
     // Ctrl + wheel up zooms in
-    postWheel(canvas, WM_MOUSEWHEEL, WHEEL_DELTA, MK_CONTROL, onLink);
+    await wheel(client, canvas, WM_MOUSEWHEEL, WHEEL_DELTA, MK_CONTROL, onLink, link);
     p = await waitFor(client, "Ctrl + wheel on the link did not zoom", (q) => q.zoom > p.zoom);
 
-    // over the popup: plain wheel scrolls, Ctrl + wheel zooms.
-    // mac has no popup HWND. pop is the popup's center in frame pixels.
-    const onPopup = IS_MAC && p.pop ? clientToScreen(canvas, p.pop.x, p.pop.y) : onLink;
-    postWheel(p.hwnd, WM_MOUSEWHEEL, -WHEEL_DELTA, 0, onPopup);
+    // over the popup: plain wheel scrolls, Ctrl + wheel zooms. pop is the
+    // popup's center in frame pixels.
+    const pop = p.pop ?? { x, y };
+    const onPopup = USE_NG ? clientToScreen(canvas, pop.x, pop.y) : onLink;
+    const popPt = { x: pop.x, y: pop.y, scale: p.scale };
+    await wheel(client, p.hwnd, WM_MOUSEWHEEL, -WHEEL_DELTA, 0, onPopup, popPt);
     p = await waitFor(client, "wheel on the popup did not scroll", (q) => below(q, p));
-    postWheel(p.hwnd, WM_MOUSEWHEEL, WHEEL_DELTA, MK_CONTROL, onPopup);
+    await wheel(client, p.hwnd, WM_MOUSEWHEEL, WHEEL_DELTA, MK_CONTROL, onPopup, popPt);
     await waitFor(client, "Ctrl + wheel on the popup did not zoom", (q) => q.zoom > p.zoom);
     console.log("issue-6252: OK");
   } finally {
