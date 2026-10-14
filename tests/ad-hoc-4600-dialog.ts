@@ -9,7 +9,8 @@
 
 import { mkdirSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
-import { cmdId, EXE, tmpPath } from "./util.ts";
+import { ControlClient, ControlCommand, uniquePipeName } from "./control.ts";
+import { cmdId, EXE, tmpPath, USE_NG } from "./util.ts";
 import { makeFixtures } from "./ad-hoc-issue-4600.ts";
 import { captureWindowToPng, killAndWait, killProcessesNamed, waitForFrame } from "./win-automation.ts";
 import {
@@ -47,6 +48,12 @@ const ES_READONLY = 0x0800;
 const WS_DISABLED = 0x08000000;
 
 // the multi-line Edit holding the CSS is the only Edit child that is multi-line
+// the FileStates entry for `name`: the "\t[ ... \t]" block, whose EBookUI
+// can come before its FilePath
+function fileStateEntry(saved: string, name: string): string {
+  return saved.split(/\r?\n\t\[\r?\n/).find((s) => s.includes(name)) ?? "";
+}
+
 function cssEdit(dlg: number): number {
   const ES_MULTILINE = 0x0004;
   let found = 0;
@@ -171,9 +178,88 @@ async function openDialog(l: Launched): Promise<number> {
   throw new Error("the eBook Settings dialog did not open");
 }
 
+// OK with "This file" writes a per-document block, with only what differs
+// from the global section
+function checkThisFile(saved: string): void {
+  const entry = fileStateEntry(saved, "none.epub");
+  if (!entry.includes("IgnoreDocumentCSS = true")) {
+    throw new Error("OK didn't write the per-document EBookUI block");
+  }
+  if (entry.includes("FontName = Georgia") || entry.includes("LineSpacing = 1.4")) {
+    throw new Error("the per-document block copied values that match the global ones");
+  }
+  console.log("  This file: wrote IgnoreDocumentCSS = true and nothing that matches the global section ✓");
+}
+
+// OK with "For all ebooks" writes the global section and drops the block
+function checkAllEbooks(saved: string): void {
+  const global = saved.slice(saved.indexOf("EBookUI ["), saved.indexOf("FileStates"));
+  if (!global.includes("IgnoreDocumentCSS = true")) {
+    throw new Error("OK didn't write the global EBookUI section");
+  }
+  const entry = fileStateEntry(saved, "none.epub");
+  if (entry.includes("EBookUI [")) {
+    throw new Error("applying to all ebooks left the per-document block behind");
+  }
+  console.log("  For all ebooks: wrote the global section and dropped the per-document block ✓");
+}
+
+// ng's dialog is a gpui tool window: no child controls to click or read, so
+// drive it through the control channel. Without -for-testing, so OK's
+// settings are saved.
+async function ngApply(epub: string, scope: "This file" | "For all ebooks"): Promise<void> {
+  const pipe = uniquePipeName("issue-4600");
+  const proc = Bun.spawn([EXE, "-appdata", APPDATA, "-dbg-control", pipe, epub], {
+    stdout: "ignore",
+    stderr: "ignore",
+  });
+  const client = await ControlClient.connect(pipe);
+  try {
+    await client.waitForRenderIdle();
+    await client.request(ControlCommand.TestInvokeCommand, ["CmdChangeEbookSettings"]);
+    const req = async (...args: (string | number)[]) =>
+      String((await client.request(ControlCommand.TestToolWindow, args))[1] ?? "");
+    const click = async (label: string) => {
+      let node: RegExpExecArray | null = null;
+      for (let i = 0; i < 40 && !node; i++) {
+        const layout = await req("layout", "ebooksettings");
+        node = new RegExp(`node rect=(-?\\d+),(-?\\d+),(\\d+),(\\d+) role=\\d+ label='${label}`).exec(layout);
+        if (!node) {
+          await sleep(100);
+        }
+      }
+      if (!node) {
+        throw new Error(`no "${label}" in the eBook Settings dialog`);
+      }
+      const x = Number(node[1]) + Math.floor(Number(node[3]) / 2);
+      const y = Number(node[2]) + Math.floor(Number(node[4]) / 2);
+      await req("input", "ebooksettings", "click", x, y, 0, 0);
+      await sleep(200);
+    };
+    if (scope === "For all ebooks") {
+      await click("For all ebooks");
+    }
+    await click("Ignore the document");
+    await click("OK");
+    await sleep(2500);
+  } finally {
+    client.close();
+    await killAndWait(proc);
+  }
+}
+
 export async function testit(): Promise<void> {
   makeFixtures();
   const epub = join(OUT, "none.epub");
+  if (USE_NG) {
+    writeSettings([]);
+    await ngApply(epub, "This file");
+    checkThisFile(readFileSync(join(APPDATA, "SumatraPDF-settings.txt"), "utf8"));
+    await ngApply(epub, "For all ebooks");
+    checkAllEbooks(readFileSync(join(APPDATA, "SumatraPDF-settings.txt"), "utf8"));
+    console.log("  ng: the CSS box, Tab stops, Esc and Reset checks drive Win32 controls; skipped");
+    return;
+  }
   await killProcessesNamed("SumatraPDF.exe");
 
   // --- both states of the CSS box ---------------------------------------
@@ -321,16 +407,7 @@ export async function testit(): Promise<void> {
     } finally {
       await killAndWait(l.proc);
     }
-    const saved = readFileSync(join(APPDATA, "SumatraPDF-settings.txt"), "utf8");
-    const entry = saved.split("FilePath").find((s) => s.includes("none.epub")) ?? "";
-    if (!entry.includes("IgnoreDocumentCSS = true")) {
-      throw new Error("OK didn't write the per-document EBookUI block");
-    }
-    // only what differs from the global section is stored
-    if (entry.includes("FontName = Georgia") || entry.includes("LineSpacing = 1.4")) {
-      throw new Error("the per-document block copied values that match the global ones");
-    }
-    console.log("  This file: wrote IgnoreDocumentCSS = true and nothing that matches the global section ✓");
+    checkThisFile(readFileSync(join(APPDATA, "SumatraPDF-settings.txt"), "utf8"));
   }
 
   // --- OK with "For all ebooks" writes the global section ----------------
@@ -348,16 +425,7 @@ export async function testit(): Promise<void> {
     } finally {
       await killAndWait(l.proc);
     }
-    const saved = readFileSync(join(APPDATA, "SumatraPDF-settings.txt"), "utf8");
-    const global = saved.slice(saved.indexOf("EBookUI ["), saved.indexOf("FileStates"));
-    if (!global.includes("IgnoreDocumentCSS = true")) {
-      throw new Error("OK didn't write the global EBookUI section");
-    }
-    const entry = saved.split("FilePath").find((s) => s.includes("none.epub")) ?? "";
-    if (entry.includes("EBookUI [")) {
-      throw new Error("applying to all ebooks left the per-document block behind");
-    }
-    console.log("  For all ebooks: wrote the global section and dropped the per-document block ✓");
+    checkAllEbooks(readFileSync(join(APPDATA, "SumatraPDF-settings.txt"), "utf8"));
   }
 }
 

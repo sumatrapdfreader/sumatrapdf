@@ -40,6 +40,12 @@ async function render(epub: string, settings: string): Promise<Uint8Array> {
   }
 }
 
+// the FileStates entry for `name`: the "\t[ ... \t]" block, whose EBookUI
+// can come before its FilePath
+function fileStateEntry(saved: string, name: string): string {
+  return saved.split(/\r?\n\t\[\r?\n/).find((s) => s.includes(name)) ?? "";
+}
+
 function diffPct(a: Uint8Array, b: Uint8Array): number {
   const n = Math.min(a.length, b.length) / 4;
   let d = 0;
@@ -123,7 +129,7 @@ export async function testit(): Promise<void> {
   await killAndWait(proc);
 
   const saved = readFileSync(settingsPath, "utf8");
-  const forEpub = saved.split("FilePath").find((b) => b.includes("none.epub"));
+  const forEpub = fileStateEntry(saved, "none.epub");
   if (!forEpub?.includes("Courier New")) {
     throw new Error("the per-file EBookUI block was lost on save");
   }
