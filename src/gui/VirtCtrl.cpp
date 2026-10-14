@@ -2611,7 +2611,8 @@ void VirtText::PaintText(VirtPaintCtx& ctx, Color textColor) {
     if (withUnderline) {
         GetIdealSize(true);
         Rect lineRect = {r.x, r.y + sz.dy + underlineOffsetY, sz.dx, 0};
-        ctx.gfx->DrawLine(lineRect, textColor);
+        Color col = underlineColor == kColorUnset ? textColor : underlineColor;
+        ctx.gfx->DrawLine(lineRect, col);
     }
 }
 

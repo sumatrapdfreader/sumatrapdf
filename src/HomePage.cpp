@@ -94,13 +94,6 @@ struct TipHookInstaller {
 };
 static TipHookInstaller gTipHookInstaller;
 
-#ifndef ABOUT_USE_LESS_COLORS
-constexpr int kAboutLineOuterSize = 2;
-#else
-constexpr int kAboutLineOuterSize = 1;
-#endif
-constexpr int kAboutLineSepSize = 1;
-
 static Str sumatraPromos = StrL(R"promos(Try [Edna](https://edna.arslexis.io): a note taking web app for power users.
 Try [MarkLexis](https://marklexis.arslexis.io): a bookmarking web application.
 Try [Sumatra File Manager](https://sumatrafilemanager.com): file manager with super powers.
@@ -130,20 +123,26 @@ void FreeHomePageTips() {
     HomePageInvalidateLayoutCache();
 }
 
-constexpr Color kAboutBorderCol = kColBlack;
-
-constexpr int kAboutLeftRightSpaceDx = 8;
-constexpr int kAboutMarginDx = 10;
-constexpr int kAboutBoxMarginDy = 6;
-constexpr int kAboutTxtDy = 6;
-constexpr int kAboutRectPadding = 8;
-constexpr int kAboutCopyGap = 6;
-constexpr int kAboutSoftwareGap = 12;
+// the About box: the brand over the version, the link rows, a note, then a
+// hairline over the copy link and the other software
+constexpr int kAboutBoxDx = 380;
+constexpr int kAboutPadTop = 28;
+constexpr int kAboutPadSide = 32;
+constexpr int kAboutPadBottom = 24;
+constexpr int kAboutVersionGap = 2;
+constexpr int kAboutGroupGap = 22;
+constexpr int kAboutRowGap = 7;
+constexpr int kAboutColGap = 20;
+constexpr int kAboutFootGap = 18;
+constexpr int kAboutFootRowGap = 10;
+constexpr int kAboutSoftwareGap = 4;
+constexpr int kAboutNoteMarkDx = 10;
+constexpr int kAboutNoteMarkDy = 3;
+constexpr int kAboutNoteGap = 8;
+constexpr int kAboutTextFontSize = 13;
+constexpr int kAboutMetaFontSize = 12;
 
 constexpr int kInnerPadding = 8;
-
-static const Str kSumatraTxtFont = StrL("Arial Black");
-constexpr int kSumatraTxtFontSize = 24;
 // the home page brand: five stripes in the logo colors and the name
 static const Str kHomeBrandFont = StrL("Segoe UI Semibold");
 constexpr int kHomeBrandFontSize = 15;
@@ -168,10 +167,6 @@ struct AboutRow {
 };
 
 static AboutRow gAboutRows[] = {
-    // a null rightTxt means "the app version", filled in by Sync() because it
-    // isn't known until runtime (32/64-bit, debug)
-    {StrL("version"), {}, {}},
-    {StrL("built on"), StrL(__DATE__ " " __TIME__), {}},
     {StrL("manual"), StrL("SumatraPDF manual"), StrL("https://www.sumatrapdfreader.org/docs/SumatraPDF-documentation")},
     {StrL("version history"), StrL("What's new"), StrL("https://www.sumatrapdfreader.org/docs/Version-history")},
     {StrL("website"), StrL("SumatraPDF website"), Str(kWebsiteURL)},
@@ -182,53 +177,54 @@ static AboutRow gAboutRows[] = {
     {StrL("last change"), StrL("git commit " GIT_COMMIT_ID_STR),
      StrL("https://github.com/sumatrapdfreader/sumatrapdf/commit/" GIT_COMMIT_ID_STR)},
 #endif
-#ifdef PRE_RELEASE_VER
-    {StrL("a note"), StrL("Pre-release version"), {}},
-#endif
-#if IS_DEBUG
-    {StrL("a note"), StrL("Debug version, for testing only!"), {}},
-#endif
     {StrL("more software by me"), StrL("Sumatra File Manager"), StrL("https://sumatrafilemanager.com")},
     {{}, {}, {}}};
 
 constexpr int kAboutSoftwareRow = dimofi(gAboutRows) - 2;
 
-// The About screen's two text columns: a Table (ILayout) whose left column
-// is right-aligned and right column left-aligned. Rows with a url become
-// VirtLink (owning the hit-testing, the hand cursor and the tooltip), the rest
-// plain VirtText. Table is an ILayout child so ElementFromPoint walks the cells.
+// the line under the rows that says this isn't a release build
+static Str AboutNoteText() {
+#if defined(PRE_RELEASE_VER)
+    return StrL("pre-release build");
+#elif IS_DEBUG
+    return StrL("debug build, for testing only");
+#else
+    return {};
+#endif
+}
+
+// The About box, the same in the About window, the home page's dropdown and
+// the About page: the brand over the version line, label / link rows, the
+// build note, then a hairline over the copy link and the other software.
+// Rows with a url are VirtLink (hit-testing, hand cursor, tooltip)
 static Kind kindAboutCtrl = "aboutCtrl";
 
 struct SumatraLogo;
 
 struct AboutCtrl : VirtCtrl {
-    // the two text columns; owned here (not a VirtCtrl child)
-    Table* table = nullptr;
-    // "Show frequently read", bottom right of the About page (not the window)
-    VirtLink* showFreqRead = nullptr;
-    // the colored app name on top of the box; hidden in the home-page dropdown
     SumatraLogo* logo = nullptr;
-    // copies version / OS / machine info for bug reports (dialog and dropdown)
-    VirtButton* copyInfoBtn = nullptr;
+    VirtText* version = nullptr;
+    Vec<VirtText*> labels;
+    Vec<VirtText*> values;
+    VirtText* note = nullptr;
+    // copies version / OS / machine info for bug reports
+    VirtLink* copyLink = nullptr;
     VirtText* softwareHeader = nullptr;
     VirtLink* softwareLink = nullptr;
-    bool hideLogo = false;
+    // "Show frequently read", bottom right of the About page (not the window)
+    VirtLink* showFreqRead = nullptr;
+    // the dropdown has a hairline around it; the window and the page don't
+    bool withBorder = false;
 
     // geometry, computed by UpdateLayout()
-    Rect aboutRect;  // the framed box
-    Size headerSize; // the "SumatraPDF" band on top of it
-    int dividerX = 0;
+    Rect aboutRect;
+    int hairlineY = 0;
+    Rect noteMark;
 
     AboutCtrl();
-    ~AboutCtrl() override;
     void Sync();
     void UpdateLayout(Rect clientRc);
-    VirtText* LeftAt(int i);
-    VirtText* RightAt(int i);
     void Paint(VirtPaintCtx&) override;
-    void PaintChildren(VirtPaintCtx&) override;
-    int LayoutChildCount() override;
-    ILayout* LayoutChildAt(int) override;
 };
 
 static void OpenAboutUrl(VirtMouseEvent* ev) {
@@ -254,6 +250,15 @@ static TempStr GetAppVersionTemp() {
     return s;
 }
 
+// "3.7 64-bit, built Oct 14 2026 01:46"
+static TempStr AboutVersionLineTemp() {
+    Str bits = IsProcess64() ? StrL("64-bit") : StrL("32-bit");
+    Str built = StrL(__DATE__ " " __TIME__);
+    // without the seconds
+    built.len = std::max(0, len(built) - 3);
+    return fmt("%s %s, built %s", StrL(CURR_VERSION_STRA), bits, built);
+}
+
 constexpr Color kCol1 = MkRgb(196, 64, 50);
 constexpr Color kCol2 = MkRgb(227, 107, 35);
 constexpr Color kCol3 = MkRgb(93, 160, 40);
@@ -262,13 +267,10 @@ constexpr Color kCol5 = MkRgb(112, 115, 207);
 
 static Kind kindSumatraLogo = "sumatraLogo";
 
-// the app name centered in its bounds, each letter in a different color (so it
-// can't be a VirtText). The version isn't part of it: it is the first row of
-// the About table. On the home page (asBrand) it is the five logo colors as
-// stripes before the name in the window's text color
+// the brand: the five logo colors as stripes before the app name in the
+// window's text color
 struct SumatraLogo : VirtCtrl {
     PlatformFont* font = nullptr; // not owned
-    bool asBrand = false;
 
     SumatraLogo();
     Size GetIdealSize() override;
@@ -284,45 +286,32 @@ static int HomeBrandStripesDx() {
     return (5 * DpiScale(kHomeBrandStripeDx)) + (4 * DpiScale(kHomeBrandStripeGap));
 }
 
+static PlatformFont* HomeBrandFont() {
+    return GetUserGuiFont(kHomeBrandFont, DpiScale(kHomeBrandFontSize));
+}
+
 Size SumatraLogo::GetIdealSize() {
     Size sz = PlatformFontMeasureText(font, StrL(kAppName));
-    if (asBrand) {
-        sz.dx += HomeBrandStripesDx() + DpiScale(kHomeBrandGap);
-        sz.dy = std::max(sz.dy, DpiScale(kHomeBrandStripeDy));
-        return sz;
-    }
-    sz.dy += DpiScale(kAboutBoxMarginDy * 2);
-    sz.dx += 2 * DpiScale(kInnerPadding);
+    sz.dx += HomeBrandStripesDx() + DpiScale(kHomeBrandGap);
+    sz.dy = std::max(sz.dy, DpiScale(kHomeBrandStripeDy));
     return sz;
 }
 
 void SumatraLogo::Paint(VirtPaintCtx& ctx) {
-    static Color cols[] = {kCol1, kCol2, kCol3, kCol4, kCol5, kCol5, kCol4, kCol3, kCol2, kCol1};
+    static Color cols[] = {kCol1, kCol2, kCol3, kCol4, kCol5};
     Size txtSize = PlatformFontMeasureText(font, StrL(kAppName));
     Rect r = ctx.bounds;
-    if (asBrand) {
-        int stripeDx = DpiScale(kHomeBrandStripeDx);
-        int stripeDy = DpiScale(kHomeBrandStripeDy);
-        int x = r.x;
-        int y = r.y + ((r.dy - stripeDy) / 2);
-        for (int i = 0; i < 5; i++) {
-            ctx.gfx->FillRect({x, y, stripeDx, stripeDy}, cols[i]);
-            x += stripeDx + DpiScale(kHomeBrandStripeGap);
-        }
-        x = r.x + HomeBrandStripesDx() + DpiScale(kHomeBrandGap);
-        Rect rcName(x, r.y + ((r.dy - txtSize.dy) / 2), txtSize.dx, txtSize.dy);
-        ctx.gfx->DrawText(StrL(kAppName), rcName, 0, font, ThemeWindowTextColor());
-        return;
+    int stripeDx = DpiScale(kHomeBrandStripeDx);
+    int stripeDy = DpiScale(kHomeBrandStripeDy);
+    int x = r.x;
+    int y = r.y + ((r.dy - stripeDy) / 2);
+    for (int i = 0; i < 5; i++) {
+        ctx.gfx->FillRect({x, y, stripeDx, stripeDy}, cols[i]);
+        x += stripeDx + DpiScale(kHomeBrandStripeGap);
     }
-    Point pt{r.x + ((r.dx - txtSize.dx) / 2), r.y + ((r.dy - txtSize.dy) / 2)};
-    char buf[2] = {};
-    for (int i = 0; i < len(kAppName); i++) {
-        buf[0] = kAppName[i];
-        Str letter{buf, 1};
-        Size sz = PlatformFontMeasureText(font, letter);
-        ctx.gfx->DrawText(letter, {pt.x, pt.y, sz.dx, sz.dy}, 0, font, cols[i % dimofi(cols)]);
-        pt.x += sz.dx;
-    }
+    x = r.x + HomeBrandStripesDx() + DpiScale(kHomeBrandGap);
+    Rect rcName(x, r.y + ((r.dy - txtSize.dy) / 2), txtSize.dx, txtSize.dy);
+    ctx.gfx->DrawText(StrL(kAppName), rcName, 0, font, ThemeWindowTextColor());
 }
 
 // the About screen's virtual controls for one HWND. Positions come from
@@ -343,249 +332,198 @@ static AboutCtrl* EnsureAboutCtrl(VirtRoot** rootPtr, HWND hwnd, Rect clientRc) 
     return about;
 }
 
-static int AboutRowCount() {
-    int n = 0;
-    for (AboutRow* el = gAboutRows; el->leftTxt; el++) {
-        n++;
-    }
-    return n;
-}
+static PlatformFont* HomePageFont(int size);
+static void OnCopyProgramInfo(VirtMouseEvent*);
 
 AboutCtrl::AboutCtrl() {
     kind = kindAboutCtrl;
     flags |= vwfNoHitTest;
-    table = new Table();
     logo = new SumatraLogo();
     AddChild(logo);
+    version = new VirtText({});
+    AddChild(version);
+    note = new VirtText({});
+    AddChild(note);
+    copyLink = new VirtLink(Tr("Copy program and machine info"));
+    copyLink->withUnderline = true;
+    copyLink->underlineOffsetY = -3;
+    copyLink->onClick = MkFunc1Void(OnCopyProgramInfo);
+    AddChild(copyLink);
+    AboutRow& software = gAboutRows[kAboutSoftwareRow];
+    softwareHeader = new VirtText(software.leftTxt);
+    AddChild(softwareHeader);
+    softwareLink = new VirtLink(software.rightTxt);
+    softwareLink->SetTarget(software.url);
+    softwareLink->SetTooltip(software.url);
+    softwareLink->withUnderline = true;
+    softwareLink->underlineOffsetY = -3;
+    softwareLink->onClick = MkFunc1Void(OpenAboutUrl);
+    AddChild(softwareLink);
 }
 
-AboutCtrl::~AboutCtrl() {
-    delete table;
-    table = nullptr;
-}
-
-VirtText* AboutCtrl::LeftAt(int i) {
-    return (VirtText*)table->GetCell(i, 0);
-}
-
-VirtText* AboutCtrl::RightAt(int i) {
-    return (VirtText*)table->GetCell(i, 1);
-}
-
-// framed box: title band, body, then children, then the column divider
+// the hairline over the footer, the note's mark and the dropdown's frame
 void AboutCtrl::Paint(VirtPaintCtx& ctx) {
-    Rect rect = aboutRect;
-    if (rect.IsEmpty()) {
+    Rect r = aboutRect;
+    if (r.IsEmpty()) {
         return;
     }
-    Color lineCol = ThemeWindowTextColor();
-    Color bgCol = ThemeMainWindowBackgroundColor();
-    ctx.gfx->FillRect(rect, bgCol);
-
-#ifndef ABOUT_USE_LESS_COLORS
-    if (headerSize.dy > 0) {
-        Rect titleRect(rect.TL(), headerSize);
-        ctx.gfx->DrawRect({rect.x, rect.y + kAboutLineOuterSize, rect.dx, titleRect.dy}, lineCol, kAboutLineOuterSize);
-        ctx.gfx->DrawRect({rect.x, rect.y + titleRect.dy, rect.dx, rect.dy - titleRect.dy}, lineCol,
-                          kAboutLineOuterSize);
-    } else {
-        ctx.gfx->DrawRect(rect, lineCol, kAboutLineOuterSize);
+    ctx.gfx->FillRect(r, ThemeMainWindowBackgroundColor());
+    if (withBorder) {
+        ctx.gfx->DrawRect(r, ThemeEdgeColor());
     }
-#endif
-}
-
-// paint logo (VirtCtrl children) and the table's VirtText / VirtLink cells
-void AboutCtrl::PaintChildren(VirtPaintCtx& ctx) {
-    VirtCtrl::PaintChildren(ctx);
-    if (table) {
-        for (int i = 0; i < table->LayoutChildCount(); i++) {
-            VirtCtrl* v = table->LayoutChildAt(i)->AsVirtCtrl();
-            if (!v) {
-                continue;
-            }
-            v->SetRoot(root);
-            // cells were given absolute window coords by Table::SetBounds
-            v->PaintTree(ctx.gfx, {0, 0}, ctx.clip);
-        }
-    }
-
-    if (table && !table->lastBounds.IsEmpty()) {
-        Color lineCol = ThemeWindowTextColor();
-        Rect t = table->lastBounds;
-        ctx.gfx->DrawLine({dividerX, t.y, 0, t.dy}, lineCol, kAboutLineSepSize);
+    int padSide = DpiScale(kAboutPadSide);
+    ctx.gfx->FillRect({r.x + padSide, hairlineY, r.dx - (2 * padSide), 1}, ThemeEdgeColor());
+    if (!noteMark.IsEmpty()) {
+        ctx.gfx->FillRect(noteMark, HomeAccentColor());
     }
 }
 
-// table is not a VirtCtrl child; expose it so ElementFromPoint walks the cells
-int AboutCtrl::LayoutChildCount() {
-    return VirtCtrl::LayoutChildCount() + (table ? 1 : 0);
-}
-
-ILayout* AboutCtrl::LayoutChildAt(int i) {
-    int n = VirtCtrl::LayoutChildCount();
-    if (i < n) {
-        return VirtCtrl::LayoutChildAt(i);
-    }
-    return table;
-}
-
-// build the table once, then keep text, fonts and colors in step with the theme
+// build the rows once, then keep text, fonts and colors in step with the theme
 // and the DPI. Sizing happens in UpdateLayout(), which measures what we set here
 void AboutCtrl::Sync() {
-    int n = AboutRowCount();
-    bool showSoftware = GetHwnd() == gHwndAbout;
-    if (showSoftware) {
-        n = kAboutSoftwareRow;
-    }
+    int n = kAboutSoftwareRow;
     bool canAccessDisk = CanAccessDisk();
-    if (table->rows != n) {
-        table->SetSize(n, 2);
+    if (len(labels) == 0) {
         for (int i = 0; i < n; i++) {
             AboutRow* el = &gAboutRows[i];
-            TableCell& left = table->SetCell(i, 0, new VirtText(el->leftTxt));
-            // the left column is flush against the divider line
-            left.alignH = CrossAxisAlign::CrossEnd;
-            left.alignV = CrossAxisAlign::CrossCenter;
-
-            VirtText* rightTxt;
-            if (el->url) {
-                auto* link = new VirtLink(el->rightTxt);
-                link->SetTarget(el->url);
-                link->SetTooltip(el->url);
-                link->withUnderline = true;
-                // the underline sat 3px above the bottom of the text box
-                link->underlineOffsetY = -3;
-                link->onClick = MkFunc1Void(OpenAboutUrl);
-                rightTxt = link;
-            } else {
-                rightTxt = new VirtText(el->rightTxt);
-            }
-            TableCell& right = table->SetCell(i, 1, rightTxt);
-            right.alignV = CrossAxisAlign::CrossCenter;
+            auto* label = new VirtText(el->leftTxt);
+            label->align = VirtTextAlign::Right;
+            AddChild(label);
+            VecAppend(labels, label);
+            auto* link = new VirtLink(TrimGitTemp(el->rightTxt));
+            link->SetTarget(el->url);
+            link->SetTooltip(el->url);
+            link->underlineOffsetY = -3;
+            link->onClick = MkFunc1Void(OpenAboutUrl);
+            AddChild(link);
+            VecAppend(values, link);
         }
     }
 
-    logo->font = GetUserGuiFont(kSumatraTxtFont, DpiScale(kSumatraTxtFontSize));
-
-    PlatformFont* fontLeftTxt = GetUserGuiFont(Str(kLeftTextFont), DpiScale(kLeftTextFontSize));
-    PlatformFont* fontRightTxt = GetUserGuiFont(Str(kRightTextFont), DpiScale(kRightTextFontSize));
+    logo->font = HomeBrandFont();
+    PlatformFont* fontText = HomePageFont(kAboutTextFontSize);
+    PlatformFont* fontMeta = HomePageFont(kAboutMetaFontSize);
     Color colText = ThemeWindowTextColor();
-    Color colLink = ThemeWindowLinkColor();
+    Color colMuted = ThemeWindowTextDisabledColor();
 
-    if (showSoftware) {
-        AboutRow& software = gAboutRows[kAboutSoftwareRow];
-        if (!softwareHeader) {
-            softwareHeader = new VirtText(software.leftTxt);
-            AddChild(softwareHeader);
-            softwareLink = new VirtLink(software.rightTxt);
-            softwareLink->SetTarget(software.url);
-            softwareLink->SetTooltip(software.url);
-            softwareLink->underlineOffsetY = -3;
-            softwareLink->onClick = MkFunc1Void(OpenAboutUrl);
-            AddChild(softwareLink);
-        }
-        softwareHeader->font = fontLeftTxt;
-        softwareHeader->SetColor(kColText, colText);
-        softwareLink->font = fontRightTxt;
-        softwareLink->SetColor(kColText, canAccessDisk ? colLink : colText);
-        softwareLink->withUnderline = canAccessDisk;
-        softwareLink->SetFlag(vwfNoHitTest, !canAccessDisk);
-    }
+    version->SetText(AboutVersionLineTemp());
+    version->font = fontMeta;
+    version->SetColor(kColText, colMuted);
 
+    // a link only when the url can be opened: without disk access it is text
+    auto syncLink = [&](VirtText* link) {
+        link->font = fontText;
+        link->SetColor(kColText, colText);
+        link->underlineColor = colMuted;
+        link->withUnderline = canAccessDisk;
+        link->SetFlag(vwfNoHitTest, !canAccessDisk);
+    };
     for (int i = 0; i < n; i++) {
-        AboutRow* el = &gAboutRows[i];
-        VirtText* left = LeftAt(i);
-        left->font = fontLeftTxt;
-
-        VirtText* right = RightAt(i);
-        right->font = fontRightTxt;
-        bool isLink = canAccessDisk && el->url;
-        // the right column is a link when the row has a url we can open
-        right->SetColor(kColText, isLink ? colLink : colText);
-        // without disk access the url can't be opened, so it isn't a link
-        right->withUnderline = isLink;
-        right->SetFlag(vwfNoHitTest, !isLink);
-        right->SetText(el->rightTxt ? TrimGitTemp(el->rightTxt) : Str(GetAppVersionTemp()));
+        labels[i]->font = fontText;
+        labels[i]->SetColor(kColText, colMuted);
+        syncLink(values[i]);
     }
+
+    Str noteTxt = AboutNoteText();
+    note->SetText(noteTxt);
+    note->font = fontMeta;
+    note->SetColor(kColText, colMuted);
+    note->SetVisibility(len(noteTxt) > 0 ? Visibility::Visible : Visibility::Collapse);
+
+    copyLink->font = fontText;
+    copyLink->SetColor(kColText, colText);
+    copyLink->underlineColor = colMuted;
+    softwareHeader->font = fontMeta;
+    softwareHeader->SetColor(kColText, colMuted);
+    syncLink(softwareLink);
 }
 
-// the About box is the title band above the two-column table. This sizes it from
-// the table, centers it in clientRc and positions the table inside it
+// the box is kAboutBoxDx wide (more when a row needs it) and as tall as its
+// content; it is centered in clientRc
 void AboutCtrl::UpdateLayout(Rect clientRc) {
-    bool showLogo = logo && logo->GetVisibility() != Visibility::Collapse;
-    bool showCopy = copyInfoBtn && copyInfoBtn->GetVisibility() != Visibility::Collapse;
-    headerSize = showLogo ? logo->GetIdealSize() : Size{};
+    int padTop = DpiScale(kAboutPadTop);
+    int padSide = DpiScale(kAboutPadSide);
+    int padBottom = DpiScale(kAboutPadBottom);
+    int groupGap = DpiScale(kAboutGroupGap);
+    int rowGap = DpiScale(kAboutRowGap);
+    int colGap = DpiScale(kAboutColGap);
 
-    int leftRightSpaceDx = DpiScale(kAboutLeftRightSpaceDx);
-    int marginDx = DpiScale(kAboutMarginDx);
-    int aboutTxtDy = DpiScale(kAboutTxtDy);
-
-    table->colGap = 2 * leftRightSpaceDx;
-    table->rowGap = aboutTxtDy;
-    Size tableSize = table->Layout(ExpandInf());
-
-    Size btnSz{};
-    int gap = DpiScale(kAboutCopyGap);
-    int padBottom = DpiScale(kAboutRectPadding);
-    int copyBlockDy = 0;
-    if (showCopy) {
-        btnSz = copyInfoBtn->GetIdealSize();
-        copyBlockDy = gap + btnSz.dy + padBottom;
+    Size logoSz = logo->GetIdealSize();
+    version->sz = {};
+    Size verSz = version->GetIdealSize(true);
+    int n = len(labels);
+    int labelDx = 0;
+    int valueDx = 0;
+    int rowsDy = 0;
+    for (int i = 0; i < n; i++) {
+        labels[i]->sz = {};
+        values[i]->sz = {};
+        Size l = labels[i]->GetIdealSize(true);
+        Size v = values[i]->GetIdealSize(true);
+        labelDx = std::max(labelDx, l.dx);
+        valueDx = std::max(valueDx, v.dx);
+        rowsDy += std::max(l.dy, v.dy) + (i > 0 ? rowGap : 0);
     }
-
-    bool showSoftware = softwareHeader != nullptr;
-    Size softwareHeaderSz{};
-    Size softwareLinkSz{};
-    int softwareBlockDy = 0;
-    if (showSoftware) {
-        copyBlockDy = gap + btnSz.dy;
-        softwareHeaderSz = softwareHeader->GetIdealSize(false);
-        softwareLinkSz = softwareLink->GetIdealSize(false);
-        softwareBlockDy =
-            DpiScale(kAboutSoftwareGap) + softwareHeaderSz.dy + aboutTxtDy + softwareLinkSz.dy + padBottom;
-    }
+    bool showNote = note->GetVisibility() != Visibility::Collapse;
+    note->sz = {};
+    Size noteSz = showNote ? note->GetIdealSize(true) : Size{};
+    copyLink->sz = {};
+    softwareHeader->sz = {};
+    softwareLink->sz = {};
+    Size copySz = copyLink->GetIdealSize(true);
+    Size hdrSz = softwareHeader->GetIdealSize(true);
+    Size linkSz = softwareLink->GetIdealSize(true);
 
     Rect r;
-    // the divider line is drawn inside the gap between the two columns
-    r.dx = std::max(tableSize.dx + kAboutLineSepSize, headerSize.dx) + (2 * kAboutLineOuterSize) + (2 * marginDx);
-    if (showCopy) {
-        r.dx = std::max(r.dx, btnSz.dx + (2 * marginDx) + (2 * kAboutLineOuterSize));
+    r.dx = std::max(DpiScale(kAboutBoxDx), labelDx + colGap + valueDx + (2 * padSide));
+    r.dy = padTop + logoSz.dy + DpiScale(kAboutVersionGap) + verSz.dy + groupGap + rowsDy;
+    if (showNote) {
+        r.dy += groupGap + noteSz.dy;
     }
-    // one extra row gap so the last row isn't flush against the frame
-    int tableBottomDy = showSoftware ? 0 : aboutTxtDy + (2 * kAboutLineOuterSize);
-    r.dy = headerSize.dy + tableSize.dy + tableBottomDy + 4 + copyBlockDy + softwareBlockDy;
+    r.dy += groupGap + 1 + DpiScale(kAboutFootGap) + copySz.dy + DpiScale(kAboutFootRowGap) + hdrSz.dy +
+            DpiScale(kAboutSoftwareGap) + linkSz.dy + padBottom;
     r.x = clientRc.x + ((clientRc.dx - r.dx) / 2);
-    if (hideLogo) {
-        r.y = clientRc.y;
-    } else if (showCopy) {
-        r.y = clientRc.y + DpiScale(kAboutRectPadding);
-    } else {
-        r.y = clientRc.y + ((clientRc.dy - r.dy) / 2);
-    }
+    r.y = clientRc.y + ((clientRc.dy - r.dy) / 2);
     aboutRect = r;
 
-    if (showLogo) {
-        logo->SetBounds({r.x + ((r.dx - headerSize.dx) / 2), r.y, headerSize.dx, headerSize.dy});
+    int x = r.x + padSide;
+    int innerDx = r.dx - (2 * padSide);
+    int y = r.y + padTop;
+    logo->SetBounds({x, y, logoSz.dx, logoSz.dy});
+    y += logoSz.dy + DpiScale(kAboutVersionGap);
+    version->SetBounds({x, y, verSz.dx, verSz.dy});
+    y += verSz.dy + groupGap;
+
+    int valueX = x + labelDx + colGap;
+    for (int i = 0; i < n; i++) {
+        Size l = labels[i]->GetIdealSize(true);
+        Size v = values[i]->GetIdealSize(true);
+        int rowDy = std::max(l.dy, v.dy);
+        labels[i]->SetBounds({x, y + ((rowDy - l.dy) / 2), labelDx, l.dy});
+        values[i]->SetBounds({valueX, y + ((rowDy - v.dy) / 2), v.dx, v.dy});
+        y += rowDy + rowGap;
+    }
+    y -= rowGap;
+
+    noteMark = {};
+    if (showNote) {
+        y += groupGap;
+        int markDx = DpiScale(kAboutNoteMarkDx);
+        int lineDx = markDx + DpiScale(kAboutNoteGap) + noteSz.dx;
+        int lineX = x + ((innerDx - lineDx) / 2);
+        noteMark = {lineX, y + ((noteSz.dy - DpiScale(kAboutNoteMarkDy)) / 2), markDx, DpiScale(kAboutNoteMarkDy)};
+        note->SetBounds({lineX + markDx + DpiScale(kAboutNoteGap), y, noteSz.dx, noteSz.dy});
+        y += noteSz.dy;
     }
 
-    int x = r.x + kAboutLineOuterSize + marginDx;
-    int y = r.y + (showLogo ? headerSize.dy : kAboutLineOuterSize) + 4;
-    table->SetBounds({x, y, tableSize.dx, tableSize.dy});
-    dividerX = table->CellRect(0, 1).x - leftRightSpaceDx;
-
-    if (showCopy) {
-        int btnX = r.x + ((r.dx - btnSz.dx) / 2);
-        int btnY = showSoftware ? y + tableSize.dy + gap : r.y + r.dy - padBottom - btnSz.dy;
-        copyInfoBtn->SetBounds({btnX, btnY, btnSz.dx, btnSz.dy});
-        if (showSoftware) {
-            int softwareY = btnY + btnSz.dy + DpiScale(kAboutSoftwareGap);
-            softwareHeader->SetBounds(
-                {r.x + (r.dx - softwareHeaderSz.dx) / 2, softwareY, softwareHeaderSz.dx, softwareHeaderSz.dy});
-            softwareY += softwareHeaderSz.dy + aboutTxtDy;
-            softwareLink->SetBounds(
-                {r.x + (r.dx - softwareLinkSz.dx) / 2, softwareY, softwareLinkSz.dx, softwareLinkSz.dy});
-        }
-    }
+    y += groupGap;
+    hairlineY = y;
+    y += 1 + DpiScale(kAboutFootGap);
+    copyLink->SetBounds({x + ((innerDx - copySz.dx) / 2), y, copySz.dx, copySz.dy});
+    y += copySz.dy + DpiScale(kAboutFootRowGap);
+    softwareHeader->SetBounds({x + ((innerDx - hdrSz.dx) / 2), y, hdrSz.dx, hdrSz.dy});
+    y += hdrSz.dy + DpiScale(kAboutSoftwareGap);
+    softwareLink->SetBounds({x + ((innerDx - linkSz.dx) / 2), y, linkSz.dx, linkSz.dy});
 }
 
 // Version, OS, WebView2, memory and similar facts for a bug report.
@@ -675,45 +613,14 @@ static void OnCopyProgramInfo(VirtMouseEvent*) {
 static AboutCtrl* UpdateAboutLayout(VirtRoot** rootPtr, HWND hwnd, Rect clientRc, bool hover = false) {
     DpiSetFromHwnd(hwnd);
     AboutCtrl* about = EnsureAboutCtrl(rootPtr, hwnd, clientRc);
-    about->hideLogo = hover;
-    if (about->logo) {
-        about->logo->SetVisibility(hover ? Visibility::Collapse : Visibility::Visible);
-    }
+    about->withBorder = hover;
     about->Sync();
-    bool showCopy = hover || (hwnd == gHwndAbout);
-    if (showCopy) {
-        if (!about->copyInfoBtn) {
-            about->copyInfoBtn =
-                NewThemedButton(hwnd, Tr("Copy program and machine info to clipboard"), GetAppFont(), false);
-            about->copyInfoBtn->onClick = MkFunc1Void(OnCopyProgramInfo);
-            about->AddChild(about->copyInfoBtn);
-        }
-        about->copyInfoBtn->font = GetAppFont();
-        about->copyInfoBtn->SetVisibility(Visibility::Visible);
-    } else if (about->copyInfoBtn) {
-        about->copyInfoBtn->SetVisibility(Visibility::Collapse);
-    }
     about->UpdateLayout(clientRc);
     return about;
 }
 
-/* Draws the about screen. The text columns are painted by the AboutCtrl tree;
-   this draws the frame around them. It transcribes the design I did in graphics
-   software - hopeless to understand without seeing the design. */
 static void DrawAbout(Gfx* gfx, VirtRoot* root, Rect clientRc) {
-    auto* about = (AboutCtrl*)root->owned;
-    Color bgCol = ThemeMainWindowBackgroundColor();
-    gfx->FillRect(clientRc, bgCol);
-
-#ifdef ABOUT_USE_LESS_COLORS
-    Color lineCol = ThemeWindowTextColor();
-    Rect titleRect(about->aboutRect.TL(), about->headerSize);
-    Rect titleBgBand(0, about->aboutRect.y, clientRc.dx, titleRect.dy);
-    gfx->FillRect(titleBgBand, bgCol);
-    gfx->DrawLine(Rect(0, about->aboutRect.y, clientRc.dx, 0), lineCol);
-    gfx->DrawLine(Rect(0, about->aboutRect.y + titleRect.dy, clientRc.dx, 0), lineCol);
-#endif
-
+    gfx->FillRect(clientRc, ThemeMainWindowBackgroundColor());
     root->Paint(gfx, clientRc);
 }
 
@@ -869,11 +776,10 @@ void ShowAboutWindow(MainWindow* win) {
 
     HwndSetRtl(gHwndAbout, IsUIRtl());
 
-    // get the dimensions required for the about box's content
+    // the client area is the box
     AboutCtrl* about = UpdateAboutLayout(&gAboutRoot, gHwndAbout, HwndClientRect(gHwndAbout));
-    int rectPadding = DpiScale(kAboutRectPadding);
-    dx = about->aboutRect.dx + (2 * rectPadding);
-    dy = about->aboutRect.dy + (2 * rectPadding);
+    dx = about->aboutRect.dx;
+    dy = about->aboutRect.dy;
 
     // resize the new window to just match these dimensions
     Rect wRc = HwndWindowRect(gHwndAbout);
@@ -911,7 +817,9 @@ void DrawAboutPage(MainWindow* win, Gfx* gfx) {
     if (about->showFreqRead) {
         VirtLink* link = about->showFreqRead;
         link->visibility = showLink ? Visibility::Visible : Visibility::Collapse;
-        link->font = GetUserGuiFont(StrL("MS Shell Dlg"), DpiScale(16));
+        link->font = HomePageFont(kAboutTextFontSize);
+        link->SetColor(kColText, ThemeWindowTextColor());
+        link->underlineColor = ThemeWindowTextDisabledColor();
         link->sz = {0, 0}; // re-measure: the font may have changed with the DPI
         Size txtSize = link->GetIdealSize(true);
         Rect r = {0, 0, txtSize.dx, txtSize.dy};
@@ -1705,7 +1613,7 @@ static void LayoutHomePage(HomePageLayout& l) {
     int searchThumbsGap = DpiScale(kSearchThumbnailsGapY);
     int borderDy = searchEditDy + 2; // 1px border on each side
 
-    chrome->logo->font = GetUserGuiFont(kHomeBrandFont, DpiScale(kHomeBrandFontSize));
+    chrome->logo->font = HomeBrandFont();
     Size logoRowSize = chrome->logoRow->GetIdealSize();
 
     int hdrY = DpiScale(kHomeHeaderTopY);
@@ -2835,7 +2743,6 @@ static HomeChromeCtrl* EnsureHomeChrome(MainWindow* win) {
     // the About dropdown.
     chrome->logoRow = new HomeLogoRow();
     chrome->logo = new SumatraLogo();
-    chrome->logo->asBrand = true;
     chrome->logo->SetFlag(vwfNoHitTest, false);
     chrome->logo->onMouseEnter = MkFunc0(OnHomeLogoEnter, win);
     chrome->logo->onMouseLeave = MkFunc0(OnHomeLogoLeave, win);
@@ -2993,7 +2900,7 @@ static void HomePageSyncChrome(HomePageLayout& l) {
 
     // font also set here so the cached-layout path (ApplyHomeLayoutCache)
     // repaints the brand without a full relayout
-    chrome->logo->font = GetUserGuiFont(kHomeBrandFont, DpiScale(kHomeBrandFontSize));
+    chrome->logo->font = HomeBrandFont();
     chrome->logoRow->SetBounds(l.rcLogo);
     if (chrome->aboutHover && chrome->aboutHover->IsVisible()) {
         Size sz = chrome->aboutHover->ScreenRect().Size();

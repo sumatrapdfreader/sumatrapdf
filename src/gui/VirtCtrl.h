@@ -627,6 +627,8 @@ struct VirtText : VirtCtrl {
     bool prefix = false;
     // nudges the underline off the text baseline box
     int underlineOffsetY = 0;
+    // kColorUnset: the text color
+    Color underlineColor = kColorUnset;
     VirtTextAlign align = VirtTextAlign::Left;
 
     Size sz = {0, 0};

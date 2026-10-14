@@ -12,11 +12,6 @@ struct MainWindow;
 struct Gfx;
 enum class ScrollMsg;
 
-constexpr const char* kLeftTextFont = "Arial";
-constexpr int kLeftTextFontSize = 14;
-constexpr const char* kRightTextFont = "Arial Black";
-constexpr int kRightTextFontSize = 14;
-
 // the About box (CmdHelpAbout); orig opens a window of its own
 void ShowAboutWindow(MainWindow*);
 void CloseAboutWindow();
