@@ -2,9 +2,10 @@
 
 import { mkdirSync, rmSync } from "node:fs";
 import { IS_MAC } from "./host.ts";
-import { cmdId, runStandalone, tmpPath } from "./util.ts";
+import { ControlClient, ControlCommand } from "./control.ts";
+import { cmdId, runStandalone, tmpPath, USE_NG } from "./util.ts";
 import { findTopWindow, postMessage, sleep, VK_ESCAPE, VK_RETURN, waitForTopWindow, WM_KEYDOWN } from "./winapi.ts";
-import { killAndWait, launchControlled, sendCommand } from "./win-automation.ts";
+import { killAndWait, launchControlled, ngToolWindow, sendCommand } from "./win-automation.ts";
 
 const SCREENSHOT_OVERLAY_CLASS = "SumatraScreenshotOverlay";
 const IMAGE_EDIT_CLASS = "SUMATRA_PDF_IMAGE_EDIT";
@@ -18,6 +19,19 @@ async function waitForGone(pid: number, className: string, timeoutMs = 3000): Pr
     await sleep(40);
   }
   throw new Error(`issue-5988: ${className} stayed open after Esc`);
+}
+
+// ng: the editor is the "imageedit" tool window
+async function waitNgEditor(client: ControlClient, up: boolean): Promise<void> {
+  const deadline = Date.now() + 3000;
+  while (Date.now() < deadline) {
+    const tw = await ngToolWindow(client, "imageedit");
+    if (!!tw?.visible === up) {
+      return;
+    }
+    await sleep(40);
+  }
+  throw new Error(`issue-5988: image editor ${up ? "did not open" : "stayed open after Esc"}`);
 }
 
 export async function testit(): Promise<void> {
@@ -38,13 +52,19 @@ export async function testit(): Promise<void> {
     }
 
     postMessage(overlay, WM_KEYDOWN, VK_RETURN, 0);
-    const editor = await waitForTopWindow(proc.pid!, IMAGE_EDIT_CLASS);
-    if (!editor) {
-      throw new Error("issue-5988: image editor did not open");
-    }
+    if (USE_NG) {
+      await waitNgEditor(client, true);
+      await client.request(ControlCommand.TestToolWindow, ["input", "imageedit", "key", VK_ESCAPE, 0, 0, 0]);
+      await waitNgEditor(client, false);
+    } else {
+      const editor = await waitForTopWindow(proc.pid!, IMAGE_EDIT_CLASS);
+      if (!editor) {
+        throw new Error("issue-5988: image editor did not open");
+      }
 
-    postMessage(editor, WM_KEYDOWN, VK_ESCAPE, 0);
-    await waitForGone(proc.pid!, IMAGE_EDIT_CLASS);
+      postMessage(editor, WM_KEYDOWN, VK_ESCAPE, 0);
+      await waitForGone(proc.pid!, IMAGE_EDIT_CLASS);
+    }
     console.log("issue-5988: screenshot image editor closed with Esc");
   } finally {
     client.close();
