@@ -152,23 +152,28 @@ export async function testit(): Promise<void> {
   writeFileSync(dvi, makeBlankDvi());
   const logPath = join(dir, "sumatra.log");
 
+  // each launch starts its log afresh, so keep every run's
+  let log = "";
+  const open = async () => {
+    await openDvi(dvi, logPath);
+    log += readLog(logPath);
+  };
   try {
-    await openDvi(dvi, logPath);
-    await openDvi(dvi, logPath);
+    await open();
+    await open();
 
     const st = statSync(dvi);
     const next = new Date(st.mtimeMs + 5000);
     utimesSync(dvi, next, next);
-    await openDvi(dvi, logPath);
+    await open();
 
-    const log = readLog(logPath);
     const converts = log.split("\n").filter((l) => l.includes("dvi convert ")).length;
     const hits = log.split("\n").filter((l) => l.includes("dvi cache hit ")).length;
     if (converts !== 2 || hits !== 1) {
       throw new Error(`dvi-open: converts=${converts} hits=${hits}, want 2 and 1`);
     }
   } finally {
-    const log = readLog(logPath);
+    log += readLog(logPath);
     for (const path of [...quotedPaths(log, "pdf"), ...quotedPaths(log, "meta")]) {
       if (existsSync(path)) {
         unlinkSync(path);

@@ -109,6 +109,7 @@ extern "C" {
 #include "SelectionToolbar.h"
 #include "RefHover.h"
 #include "PerfLog.h"
+#include "AnnotTextPopup.h"
 #include "ReadAloud.h"
 #include "ReadingAutoScroll.h"
 #include "ReadingBar.h"
@@ -2721,6 +2722,7 @@ static void ExecuteControlRequest(ControlRequest* req) {
                            ShowFitContentArea() ? 1 : 0, gSettings->showLinks ? 1 : 0));
             out.Append(fmt("drawn shapes=%d\n", CanvasOverlayShapesDrawn()));
             out.Append(fmt("commandPalette=%d\n", IsCommandPaletteVisible() ? 1 : 0));
+            out.Append(fmt("annotTextPopup=%d\n", IsAnnotationTextPopupShown(win) ? 1 : 0));
             AppendTestResult(req, 0, ToStrTemp(out));
             break;
         }

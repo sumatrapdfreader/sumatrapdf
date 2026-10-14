@@ -7,7 +7,7 @@
 import { writeFileSync } from "node:fs";
 import { IS_MAC } from "./host.ts";
 import { ControlCommand } from "./control.ts";
-import { cmdId, SLOW_BUILD_FACTOR, tmpPath } from "./util";
+import { cmdId, SLOW_BUILD_FACTOR, tmpPath, USE_NG } from "./util";
 import { launchControlled, killAndWait } from "./win-automation";
 import {
   enumWindows,
@@ -145,6 +145,17 @@ async function testTranslateEscCloses(): Promise<void> {
     const tw = await waitForSecondary(proc.pid!, frame, "translate", 4000);
     if (!tw) {
       throw new Error("translate: dialog did not appear (selection empty?)");
+    }
+    // ng's window shows before its first frame, and takes no keys until then
+    if (USE_NG) {
+      const drawnBy = Date.now() + 4000;
+      while (Date.now() < drawnBy) {
+        const layout = String((await client.request(ControlCommand.TestToolWindow, ["layout", "translate"]))[1] ?? "");
+        if (layout.includes("label='Close'")) {
+          break;
+        }
+        await sleep(50);
+      }
     }
 
     pressEscape(tw);

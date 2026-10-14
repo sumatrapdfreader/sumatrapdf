@@ -6,12 +6,25 @@
 
 import { mkdirSync, rmSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
-import { withControlledSumatra } from "./control.ts";
-import { EXE, SLOW_BUILD_FACTOR, cmdId, runStandalone, tmpPath } from "./util.ts";
+import { type ControlClient, ControlCommand, withControlledSumatra } from "./control.ts";
+import { EXE, SLOW_BUILD_FACTOR, USE_NG, cmdId, runStandalone, tmpPath } from "./util.ts";
 import { FRAME_CLASS, clickAt, findCanvas, sendCommandSync } from "./win-automation.ts";
-import { getWindowRect, isWindowVisible, sleep, waitForTopWindow } from "./winapi.ts";
+import { findTopWindow, getWindowRect, isWindowVisible, sleep, waitForTopWindow } from "./winapi.ts";
 
 const POPUP_CLASS = "SumatraAnnotTextPopup";
+// ng draws the card in the canvas; its overlay probe (ng's wire number) says
+// whether it is up
+const kNgTestOverlayState = 102 as ControlCommand;
+
+// orig's card is a window of its own
+async function cardShown(client: ControlClient, pid: number): Promise<boolean> {
+  if (!USE_NG) {
+    const popup = findTopWindow(pid, POPUP_CLASS);
+    return popup !== 0 && isWindowVisible(popup);
+  }
+  const raw = String((await client.request(kNgTestOverlayState, []))[1] ?? "");
+  return /annotTextPopup=1/.test(raw);
+}
 
 // one page covered by a Square annotation with a comment
 function makePdf(): string {
@@ -58,9 +71,12 @@ export async function testit(): Promise<void> {
       const canvas = findCanvas(frame);
       const r = getWindowRect(canvas);
       await clickAt(canvas, Math.floor((r.right - r.left) / 2), Math.floor((r.bottom - r.top) / 2));
-      const popup = await waitForTopWindow(proc.pid!, POPUP_CLASS, 4000 * SLOW_BUILD_FACTOR);
-      if (!popup || !isWindowVisible(popup)) {
-        throw new Error("comment card did not show");
+      const shownBy = Date.now() + 4000 * SLOW_BUILD_FACTOR;
+      while (!(await cardShown(client, proc.pid!))) {
+        if (Date.now() > shownBy) {
+          throw new Error("comment card did not show");
+        }
+        await sleep(50);
       }
 
       // reload, then repaint: the card must not outlive the old engine
@@ -71,7 +87,7 @@ export async function testit(): Promise<void> {
         await client.waitForRenderIdle();
         await sleep(20);
       }
-      if (isWindowVisible(popup)) {
+      if (await cardShown(client, proc.pid!)) {
         throw new Error("comment card still shown after reload");
       }
     },

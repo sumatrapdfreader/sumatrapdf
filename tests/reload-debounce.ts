@@ -9,7 +9,7 @@
 import { copyFileSync, mkdirSync, openSync, readFileSync, rmSync, writeFileSync, writeSync, closeSync } from "node:fs";
 import { join } from "node:path";
 import { IS_MAC } from "./host.ts";
-import { EXE, ROOT, runStandalone, tmpPath } from "./util";
+import { EXE, ROOT, runStandalone, tmpPath, USE_NG } from "./util";
 import { windowPosArgs } from "./win-automation";
 import { sleep, killAndWait } from "./winapi";
 
@@ -39,7 +39,7 @@ export async function testit(): Promise<void> {
 
   const logPath = join(dir, "reload.log");
   const proc = Bun.spawn(
-    [EXE, "-for-testing", ...windowPosArgs(), "-appdata", dir, ...(IS_MAC ? ["-log-to-file", logPath] : []), doc],
+    [EXE, "-for-testing", ...windowPosArgs(), "-appdata", dir, ...(USE_NG ? ["-log-to-file", logPath] : []), doc],
     {
       stdout: "pipe",
       // ASan writes its report to stderr. "ignore" closes that pipe and the
@@ -60,8 +60,9 @@ export async function testit(): Promise<void> {
       }
     })();
   }
+  // ng logs to the file only; orig's debug build to stdout as well
   const appLog = (): string => {
-    if (!IS_MAC) {
+    if (!USE_NG) {
       return out;
     }
     try {

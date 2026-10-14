@@ -9,8 +9,7 @@
 import { mkdirSync, rmSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 import { ControlClient, ControlCommand } from "./control";
-import { IS_MAC } from "./host";
-import { assemblePdf, cmdId, runStandalone, SLOW_BUILD_FACTOR, tmpPath } from "./util";
+import { assemblePdf, cmdId, runStandalone, SLOW_BUILD_FACTOR, tmpPath, USE_NG } from "./util";
 import {
   captureWindowToPng,
   enumChildWindows,
@@ -221,7 +220,7 @@ async function focusFilterEdit(client: ControlClient): Promise<void> {
   throw new Error(`annot-filter-toolbar: filter input not in layout\n${last}`);
 }
 
-async function macAnnotFilter(client: ControlClient, frame: number): Promise<void> {
+async function ngAnnotFilter(client: ControlClient, frame: number): Promise<void> {
   sendCommandSync(frame, cmdId("CmdToggleEditPDF"));
   const closed = await toolbarDump(client);
   if (/annotFilter floatVisible=1/.test(closed)) {
@@ -292,8 +291,8 @@ export async function testit(): Promise<void> {
   try {
     await client.waitForRenderIdle();
     await client.setNotificationsEnabled(false);
-    if (IS_MAC) {
-      await macAnnotFilter(client, frame);
+    if (USE_NG) {
+      await ngAnnotFilter(client, frame);
       return;
     }
     const pid = getWindowPid(frame);

@@ -10,7 +10,7 @@
 import { copyFileSync, existsSync, mkdirSync, rmSync, statSync } from "node:fs";
 import { join } from "node:path";
 import { IS_WIN } from "./host.ts";
-import { EXE, runStandalone, tmpPath } from "./util.ts";
+import { EXE, USE_NG, runStandalone, tmpPath } from "./util.ts";
 
 const PAYLOAD = ["libsumatrapdf.dll", "PdfFilter.dll", "PdfPreview.dll", "sumatrapdf-tool.exe"];
 
@@ -41,8 +41,8 @@ function mustExist(dir: string, names: string[]): void {
 }
 
 export async function testit(): Promise<void> {
-  if (!IS_WIN) {
-    console.log("SKIP issue-6003: -x extracts the Windows installer payload");
+  if (!IS_WIN || USE_NG) {
+    console.log("SKIP issue-6003: -x extracts the Windows installer payload, which only orig has");
     return;
   }
   if (!existsSync(EXE)) {

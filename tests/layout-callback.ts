@@ -4,8 +4,7 @@
 
 import { mkdirSync, rmSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
-import { IS_MAC } from "./host.ts";
-import { cmdId, ROOT, runStandalone, tmpPath } from "./util.ts";
+import { cmdId, ROOT, runStandalone, tmpPath, USE_NG } from "./util.ts";
 import { launchControlled, killAndWait, sendCommandSync, waitForTitle } from "./win-automation.ts";
 import { captureWindowDCRegionPixels, sendCopyDataW, setProcessDpiAware, sleep } from "./winapi.ts";
 import type { LayoutInfo, LayoutItem } from "./control.ts";
@@ -142,7 +141,7 @@ export async function testit(): Promise<void> {
     ) {
       throw new Error(`layout-callback: initial HWND geometry is invalid:\n${normal.raw}`);
     }
-    if (IS_MAC) {
+    if (USE_NG) {
       console.log("SKIP layout-callback: ng has no Win32 ILayout tree");
     } else if (
       normal.nodes.length < 10 ||
@@ -178,8 +177,8 @@ export async function testit(): Promise<void> {
       throw new Error(`layout-callback: fullscreen canvas does not cover the frame:\n${fullscreen.raw}`);
     }
 
-    if (IS_MAC) {
-      console.log("SKIP layout-callback: no window DC to sample stale fullscreen pixels");
+    if (USE_NG) {
+      console.log("SKIP layout-callback: ng's frame has no window DC to sample stale fullscreen pixels");
     } else {
       const immediatePixels = sampleFullscreenTop(frame);
       const settledPixels = await sampleStableFullscreenTop(frame);
@@ -249,8 +248,8 @@ export async function testit(): Promise<void> {
     await killAndWait(proc);
   }
 
-  if (IS_MAC) {
-    console.log("SKIP layout-callback: WebView2 window-DC samples are Windows-only");
+  if (USE_NG) {
+    console.log("SKIP layout-callback: ng's frame has no window DC for the WebView2 samples");
     return;
   }
 
