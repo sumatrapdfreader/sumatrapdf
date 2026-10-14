@@ -60,13 +60,12 @@ constexpr int kAdvFootPadDy = 5;
 constexpr int kAdvRadius = 4;
 constexpr int kAdvSelShift = 28;
 constexpr int kAdvFaintShift = 25;
-constexpr int kAdvHoverShift = 14;
 constexpr int kAdvHeaderShiftDy = 4;
 constexpr int kAdvSwatchDx = 12;
 constexpr int kAdvDotDx = 6;
 
 static PlatformFont* UiFont(int px) {
-    return GetUserGuiFont(StrL("Segoe UI"), DpiScale(px));
+    return DlgUiFont(px);
 }
 
 struct ListBoxModelSettings : ListBoxModel {
@@ -1077,19 +1076,6 @@ static void PositionDialog(HWND hwnd, HWND hwndRelative) {
     SetWindowPos(hwnd, nullptr, r2.x, r2.y, 0, 0, SWP_NOZORDER | SWP_NOSIZE);
 }
 
-// the buttons are virtual controls styled here: Save is filled with the text
-// color, Cancel outlined, the rest plain words that fill on hover
-static VirtButton* NewAdvButton(HWND hwnd, Str text, PlatformFont* font, Color colTxt, Color colBg, Color colBorder,
-                                bool isDefault) {
-    VirtButton* b = NewThemedButton(hwnd, text, font, isDefault);
-    b->cornerRadius = DpiScale(kAdvRadius);
-    b->SetColor(kColBtnText, colTxt);
-    b->SetColor(kColBtnBg, colBg);
-    b->SetColor(kColBtnBgHover, AccentColor(colBg, kAdvHoverShift));
-    b->SetColor(kColBtnBorder, colBorder);
-    return b;
-}
-
 static void PaintUnsavedDot(VirtCustom*, VirtPaintCtx* ctx) {
     ctx->gfx->FillEllipse(ctx->bounds, ThemeAccentColor());
 }
@@ -1224,12 +1210,11 @@ bool AdvancedSettingsWnd::Create(MainWindow* mainWin) {
         UpdateHints();
 
         PlatformFont* btnFont = UiFont(kAdvTextFontPx);
-        btnOpenSettingsFile =
-            NewAdvButton(hwnd, Tr("Open Settings File"), btnFont, colMuted, colBg, kColorTransparent, false);
+        btnOpenSettingsFile = NewDlgButton(hwnd, Tr("Open Settings File"), btnFont, DlgButtonStyle::Ghost, false);
         btnOpenSettingsFile->onClick =
             MkMethod1<AdvancedSettingsWnd, VirtMouseEvent*, &AdvancedSettingsWnd::OnOpenSettingsFile>(this);
         row->AddChild(btnOpenSettingsFile);
-        btnHelp = NewAdvButton(hwnd, Tr("Help"), btnFont, colMuted, colBg, kColorTransparent, false);
+        btnHelp = NewDlgButton(hwnd, Tr("Help"), btnFont, DlgButtonStyle::Ghost, false);
         btnHelp->onClick = MkMethod1<AdvancedSettingsWnd, VirtMouseEvent*, &AdvancedSettingsWnd::OnHelp>(this);
         row->AddChild(btnHelp);
         row->AddChild(new Spacer(0, 0), 1);
@@ -1252,10 +1237,10 @@ bool AdvancedSettingsWnd::Create(MainWindow* mainWin) {
         unsavedRow = unsaved;
         row->AddChild(new Padding(unsaved, DpiScaledInsets(0, kAdvGapDx)));
 
-        btnCancel = NewAdvButton(hwnd, Tr("Cancel"), btnFont, colTxt, colBg, ThemeEdgeColor(), false);
+        btnCancel = NewDlgButton(hwnd, Tr("Cancel"), btnFont, DlgButtonStyle::Outline, false);
         btnCancel->onClick = MkMethod1<AdvancedSettingsWnd, VirtMouseEvent*, &AdvancedSettingsWnd::OnCancel>(this);
         row->AddChild(btnCancel);
-        btnSave = NewAdvButton(hwnd, Tr("Save"), btnFont, colBg, colTxt, colTxt, true);
+        btnSave = NewDlgButton(hwnd, Tr("Save"), btnFont, DlgButtonStyle::Filled, true);
         btnSave->onClick = MkMethod1<AdvancedSettingsWnd, VirtMouseEvent*, &AdvancedSettingsWnd::OnSave>(this);
         row->AddChild(new Padding(btnSave, DpiScaledInsets(0, kAdvGapDx, 0, 0)));
         // the hints pad themselves by 8, so the row starts 8 in and the

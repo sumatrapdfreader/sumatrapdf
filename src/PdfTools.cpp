@@ -12,6 +12,7 @@
 #include "gui/win/WinGui.h"
 #include "gui/PlatformFont.h"
 #include "gui/Gfx.h"
+#include "gui/GuiColors.h"
 #include "gui/VirtCtrl.h"
 
 #include "Settings.h"
@@ -79,43 +80,82 @@ static void BrowseForDest(HWND owner, Edit* edit, WStr filter, WStr defExt) {
     }
 }
 
-// Every dialog here has the same shape: the source path, a destination edit
-// with a browse button, sometimes one more labelled field, and an action +
-// Cancel row. PdfToolDialog builds that as one layout tree: the labels and
-// buttons are virtual controls, the text fields are native edits, and they sit
-// in the same VBox/HBox side by side. Each dialog only adds its rows and
+// PNG / JPEG / BMP, same core formats as the Save Image dialog
+struct ConvertImageFormat {
+    Str label;
+    Str ext; // including the dot, e.g. ".png"
+    WStr mime;
+    WStr defExt; // OPENFILENAME lpstrDefExt, no dot
+};
+
+static const ConvertImageFormat kConvertImageFormats[] = {
+    {StrL("PNG"), StrL(".png"), L"image/png", L"png"},
+    {StrL("JPEG"), StrL(".jpg"), L"image/jpeg", L"jpg"},
+    {StrL("BMP"), StrL(".bmp"), L"image/bmp", L"bmp"},
+};
+
+static int ConvertImageFormatCount() {
+    return dimofi(kConvertImageFormats);
+}
+
+// Every dialog here has the same shape, drawn like the palette: the lines
+// the user types in (a page range, a password), then the files - the source
+// and a destination over a hairline, with Browse - then the footer with a
+// hint, Cancel and the one filled action button, hairlines between the
+// three. The labels and buttons are virtual controls, the text fields
+// native edits, all in one layout tree. Each dialog adds its lines and
 // implements DoIt().
 struct PdfToolDialog : WindowBase {
     Str srcPath; // owned
     MainWindow* win = nullptr;
-    // what the "..." button's save dialog offers
+    // what the Browse button's save dialog offers
     WStr browseFilter;
     WStr browseDefExt;
 
     VBox* mainBox = nullptr;
-    VirtText* pathLabel = nullptr;
     Edit* destEdit = nullptr;
+    // PNG / JPEG / BMP next to the destination of the image tools
+    DropDown* dropFormat = nullptr;
+    bool syncingFormat = false;
     VirtButton* browseBtn = nullptr;
     VirtButton* actionBtn = nullptr;
     VirtButton* cancelBtn = nullptr;
-    // the row AddRow() built last, so a dialog can put more in it
-    HBox* lastRow = nullptr;
-    int rowGap = 0;
-    int gap = 0;
+    // the line AddLine() built last, so a dialog can put more in it
+    HBox* lastLine = nullptr;
+    // the text at a line's right end: the pages a range picks, an image's size
+    VirtText* metaText = nullptr;
+    int nLines = 0;
+    Color colTxt = kColorUnset;
+    Color colBg = kColorUnset;
+    Color colMuted = kColorUnset;
+    PlatformFont* fontText = nullptr;
+    PlatformFont* fontQuery = nullptr;
+    PlatformFont* fontMeta = nullptr;
+    // the window's height once laid out; the frame can only be dragged wider
+    int windowDy = 0;
 
     ~PdfToolDialog() override;
 
     bool CreateToolDialog(MainWindow*, WindowTab*, Str title);
-    HBox* AddRow();
-    void AddPathRow();
-    void AddDestRow(Str destPath, WStr filter, WStr defExt);
-    Edit* AddLabeledEdit(Str label, Str text, bool isPassword = false);
-    void AddButtonsRow(Str actionText, Str hint = {});
+    HBox* NewRow();
+    VirtText* NewLabel(Str s, PlatformFont* font, Color col, int dy = 0, int dx = 0);
+    Edit* NewEdit(Str text, PlatformFont* font, bool isPassword = false);
+    HBox* AddLine(Str label);
+    Edit* AddLineEdit(Str text, bool isPassword = false);
+    VirtText* AddLineMeta();
+    void SetMeta(Str s, bool ok);
+    void AddFilesBlock(Str destPath, WStr filter, WStr defExt, bool withFormat = false);
+    void AddFooter(Str actionText, Str hint = {});
     void FinishDialog(Edit* focusOn);
-    VirtButton* NewButton(Str text, bool isDefault);
+    void SetActionEnabled(bool enabled);
 
+    int SelectedFormatIdx() const;
+    void SetDestExtFromFormat();
+    void SyncFormatFromPath(Str path);
+    void OnFormatChanged();
     void OnBrowse(VirtMouseEvent* ev = nullptr);
     void OnCancel(VirtMouseEvent* ev = nullptr);
+    void OnGetMinMaxInfo(WindowBase::GetMinMaxInfoEvent* ev);
     // what the action button does; the only thing the dialogs really differ in
     virtual void DoIt(VirtMouseEvent* ev = nullptr) {}
 };
@@ -142,135 +182,237 @@ void PdfToolDialog::OnCancel(VirtMouseEvent*) {
     Close();
 }
 
-void PdfToolDialog::OnBrowse(VirtMouseEvent*) {
-    BrowseForDest(hwnd, destEdit, browseFilter, browseDefExt);
+// no narrower than the layout's minimum, never taller than the layout
+void PdfToolDialog::OnGetMinMaxInfo(WindowBase::GetMinMaxInfoEvent* ev) {
+    if (!ev->mmi || windowDy == 0) {
+        return;
+    }
+    int chromeDx = HwndWindowRect(hwnd).dx - HwndClientRect(hwnd).dx;
+    ev->mmi->ptMinTrackSize.x = DpiScale(kToolDlgMinDx) + chromeDx;
+    ev->mmi->ptMinTrackSize.y = windowDy;
+    ev->mmi->ptMaxTrackSize.y = windowDy;
 }
 
-VirtButton* PdfToolDialog::NewButton(Str text, bool isDefault) {
-    return NewThemedButton(hwnd, text, font, isDefault);
+void PdfToolDialog::OnBrowse(VirtMouseEvent*) {
+    BrowseForDest(hwnd, destEdit, browseFilter, browseDefExt);
 }
 
 bool PdfToolDialog::CreateToolDialog(MainWindow* w, WindowTab* tab, Str title) {
     win = w;
     srcPath = str::Dup(tab->filePath);
-    PlatformFont* dialogFont = GetDefaultGuiFont();
+    colTxt = ThemeWindowTextColor();
+    colBg = ThemeWindowControlBackgroundColor();
+    colMuted = ThemeWindowTextDisabledColor();
     closeOnEsc = true;
     onClose = MkFunc1Void(PdfToolDialogOnClose);
 
     CreateCustomArgs cargs;
     cargs.title = title;
-    cargs.font = dialogFont;
-    cargs.style = WS_OVERLAPPED | WS_CAPTION | WS_SYSMENU;
+    cargs.font = GetDefaultGuiFont();
+    cargs.style = WS_OVERLAPPED | WS_CAPTION | WS_SYSMENU | WS_THICKFRAME;
     cargs.visible = false;
     cargs.icon = GetAppIcon();
-    cargs.bgColor = DarkModeDialogBgColor();
+    cargs.bgColor = colBg;
+    onGetMinMaxInfo = MkMethod1<PdfToolDialog, WindowBase::GetMinMaxInfoEvent*, &PdfToolDialog::OnGetMinMaxInfo>(this);
     CreateCustom(cargs);
     if (!hwnd) {
         return false;
     }
     // make the dialog an owned (rather than child) window of the main frame
     SetWindowLongPtrW(hwnd, GWLP_HWNDPARENT, (LONG_PTR)w->hwndFrame);
+    SetColors(colTxt, colBg);
 
-    rowGap = DpiScale(6);
-    gap = DpiScale(8);
+    fontText = DlgUiFont(kToolDlgTextFontPx);
+    fontQuery = DlgUiFont(kToolDlgQueryFontPx);
+    fontMeta = DlgUiFont(kToolDlgMetaFontPx);
     mainBox = new VBox();
     mainBox->alignCross = CrossAxisAlign::Stretch;
-    layout = new Padding(mainBox, DpiScaledInsets(10));
+    layout = mainBox;
     return true;
 }
 
-// a row of the dialog, with the gap that separates it from the row above
-HBox* PdfToolDialog::AddRow() {
+// a row with its content centered and the dialog's gap between the controls
+HBox* PdfToolDialog::NewRow() {
     auto* row = new HBox();
     row->alignCross = CrossAxisAlign::CrossCenter;
-    if (mainBox->ChildrenCount() > 0) {
-        mainBox->AddChild(new Padding(row, Insets{rowGap, 0, 0, 0}));
-    } else {
-        mainBox->AddChild(row);
-    }
-    lastRow = row;
+    row->rtl = IsUIRtl();
+    row->gap = DpiScale(kToolDlgGapDx);
     return row;
 }
 
-// the source path, ellipsized in the middle for long paths
-void PdfToolDialog::AddPathRow() {
-    pathLabel = NewVirtText({.s = srcPath, .font = font, .isRtl = IsUIRtl(), .ellipsis = true});
-    mainBox->AddChild(pathLabel);
+// `dy`: the label pads itself to that height, and so sets its row's;
+// `dx`: the label column's width
+VirtText* PdfToolDialog::NewLabel(Str s, PlatformFont* font, Color col, int dy, int dx) {
+    VirtText* t = NewVirtText({.s = s, .font = font, .textColor = col, .isRtl = IsUIRtl()});
+    if (dy > 0) {
+        int lineDy = PlatformFontLineHeight(font);
+        t->padding.top = std::max(0, (DpiScale(dy) - lineDy) / 2);
+        t->padding.bottom = std::max(0, DpiScale(dy) - lineDy - t->padding.top);
+    }
+    if (dx > 0) {
+        int textDx = PlatformFontMeasureText(font, s).dx;
+        t->padding.right = std::max(0, DpiScale(dx) - textDx);
+    }
+    return t;
 }
 
-void PdfToolDialog::AddDestRow(Str destPath, WStr filter, WStr defExt) {
-    browseFilter = filter;
-    browseDefExt = defExt;
-    HBox* row = AddRow();
-    row->gap = font->averageCharWidth;
-
+// a bare edit, in the dialog's colors
+Edit* PdfToolDialog::NewEdit(Str text, PlatformFont* font, bool isPassword) {
     Edit::CreateArgs args;
     args.parent = hwnd;
-    args.withBorder = true;
+    args.withBorder = false;
     args.font = font;
-    args.text = destPath;
+    args.text = text;
     args.isRtl = IsUIRtl();
-    destEdit = new Edit();
-    destEdit->Create(args);
-    row->AddChild(destEdit, 1);
-
-    browseBtn = NewButton(StrL("..."), false);
-    browseBtn->onClick = MkMethod1<PdfToolDialog, VirtMouseEvent*, &PdfToolDialog::OnBrowse>(this);
-    row->AddChild(browseBtn);
-
-    // align the source path label's text with the destination edit's text,
-    // which is inset by the edit's border + internal left margin
-    if (pathLabel) {
-        pathLabel->padding.left = destEdit->GetLeftTextMargin();
-    }
-}
-
-Edit* PdfToolDialog::AddLabeledEdit(Str label, Str text, bool isPassword) {
-    HBox* row = AddRow();
-
-    row->AddChild(NewVirtText({.s = label, .font = font, .isRtl = IsUIRtl()}));
-    row->AddChild(new Spacer(gap, 0));
-
-    Edit::CreateArgs eargs;
-    eargs.parent = hwnd;
-    eargs.withBorder = true;
-    eargs.font = font;
-    eargs.text = text;
-    eargs.isRtl = IsUIRtl();
     auto* e = new Edit();
-    e->Create(eargs);
+    e->SetColors(colTxt, colBg);
+    e->Create(args);
     if (isPassword) {
         HwndSetWindowStyle(e->hwnd, ES_PASSWORD, true);
     }
-    row->AddChild(e, 1);
     return e;
 }
 
-void PdfToolDialog::AddButtonsRow(Str actionText, Str hint) {
-    HBox* row = AddRow();
-    row->gap = font->averageCharWidth;
-    if (hint) {
-        row->AddChild(NewVirtText({.s = hint, .font = font, .isRtl = IsUIRtl()}));
+// a line of the top section: its label, then what the caller adds
+HBox* PdfToolDialog::AddLine(Str label) {
+    HBox* row = NewRow();
+    row->AddChild(NewLabel(label, fontText, colMuted, kToolDlgLineDy, kToolDlgLabelDx));
+    mainBox->AddChild(new Padding(row, DpiScaledInsets(0, kToolDlgPadDx)));
+    lastLine = row;
+    nLines++;
+    return row;
+}
+
+// the line's field, in the larger font: what the dialog is about
+Edit* PdfToolDialog::AddLineEdit(Str text, bool isPassword) {
+    Edit* e = NewEdit(text, fontQuery, isPassword);
+    lastLine->AddChild(e, 1);
+    return e;
+}
+
+VirtText* PdfToolDialog::AddLineMeta() {
+    metaText = NewLabel({}, fontMeta, colMuted);
+    lastLine->AddChild(metaText);
+    return metaText;
+}
+
+// the meta text fades when what it describes is not usable
+void PdfToolDialog::SetMeta(Str s, bool ok) {
+    if (!metaText) {
+        return;
     }
-    // a flexible spacer pushes the buttons to the right
+    metaText->SetText(s);
+    metaText->SetColor(kColText, ok ? colMuted : AccentColor(colMuted, kToolDlgFaintShift));
+    if (layout) {
+        DoLayout(); // the text's width changed
+    }
+    HwndInvalidate(hwnd);
+}
+
+// the source path: the folder muted, the file name in the text color, the
+// folder cut in the middle when the row is too narrow for both
+static void PaintSrcPath(PdfToolDialog* dlg, VirtPaintCtx* ctx) {
+    PlatformFont* font = dlg->fontText;
+    Str name = path::GetBaseNameTemp(dlg->srcPath);
+    Str dir = Str(dlg->srcPath.s, len(dlg->srcPath) - len(name));
+    Rect r = ctx->bounds;
+    int nameDx = ctx->gfx->MeasureText(name, font).dx;
+    int dirDx = std::min(ctx->gfx->MeasureText(dir, font).dx, r.dx - nameDx);
+    u32 flags = gfxTextVCenter;
+    if (dirDx > 0) {
+        ctx->gfx->DrawText(dir, {r.x, r.y, dirDx, r.dy}, flags | gfxTextPathEllipsis, font, dlg->colMuted);
+    }
+    dirDx = std::max(dirDx, 0);
+    ctx->gfx->DrawText(name, {r.x + dirDx, r.y, r.dx - dirDx, r.dy}, flags | gfxTextEllipsis, font, dlg->colTxt);
+}
+
+// PNG / JPEG / BMP, as the Save Image dialog has them
+static DropDown* NewFormatDropDown(HWND parent, PlatformFont* font) {
+    auto* dd = new DropDown();
+    DropDown::CreateArgs args;
+    args.parent = parent;
+    args.font = font;
+    args.isRtl = IsUIRtl();
+    dd->Create(args);
+    StrVec items;
+    for (int i = 0; i < ConvertImageFormatCount(); i++) {
+        items.Append(kConvertImageFormats[i].label);
+    }
+    dd->SetItems(items);
+    CbSetCurrentSelection(dd, 0);
+    dd->SetColors(ThemeWindowTextColor(), ThemeWindowControlBackgroundColor());
+    return dd;
+}
+
+// "From" the source, "Save as" the destination over a hairline, with the
+// format drop-down of the image tools and Browse after it
+void PdfToolDialog::AddFilesBlock(Str destPath, WStr filter, WStr defExt, bool withFormat) {
+    browseFilter = filter;
+    browseDefExt = defExt;
+    if (nLines > 0) {
+        mainBox->AddChild(new VirtLine());
+    }
+    auto* box = new VBox();
+    box->alignCross = CrossAxisAlign::Stretch;
+
+    HBox* from = NewRow();
+    from->AddChild(NewLabel(Tr("From"), fontText, colMuted, kToolDlgRowDy, kToolDlgLabelDx));
+    auto* path = new VirtCustom();
+    path->idealSize = {PlatformFontMeasureText(fontText, srcPath).dx, PlatformFontLineHeight(fontText)};
+    path->onPaint = MkFunc1(PaintSrcPath, this);
+    path->SetFlag(vwfNoHitTest, true);
+    box->AddChild(from);
+
+    HBox* save = NewRow();
+    save->AddChild(NewLabel(Tr("Save as"), fontText, colMuted, kToolDlgRowDy, kToolDlgLabelDx));
+    destEdit = NewEdit(destPath, fontText);
+    // the source path lines up with the destination's text
+    from->AddChild(new Padding(path, Insets{0, 0, 0, destEdit->GetLeftTextMargin()}), 1);
+    auto* underlined = new VBox();
+    underlined->alignCross = CrossAxisAlign::Stretch;
+    underlined->AddChild(destEdit);
+    underlined->AddChild(new VirtLine());
+    save->AddChild(underlined, 1);
+    if (withFormat) {
+        dropFormat = NewFormatDropDown(hwnd, fontText);
+        dropFormat->onSelectionChanged = MkMethod0<PdfToolDialog, &PdfToolDialog::OnFormatChanged>(this);
+        save->AddChild(dropFormat);
+    }
+    browseBtn = NewDlgButton(hwnd, Tr("Browse..."), fontMeta, DlgButtonStyle::Ghost, false);
+    browseBtn->onClick = MkMethod1<PdfToolDialog, VirtMouseEvent*, &PdfToolDialog::OnBrowse>(this);
+    save->AddChild(browseBtn);
+    box->AddChild(save);
+    lastLine = save;
+
+    mainBox->AddChild(new Padding(box, DpiScaledInsets(kToolDlgFilesPadDy, kToolDlgPadDx)));
+}
+
+// the hint on the left, Cancel and the action button (the default) on the right
+void PdfToolDialog::AddFooter(Str actionText, Str hint) {
+    mainBox->AddChild(new VirtLine());
+    HBox* row = NewRow();
+    if (hint) {
+        row->AddChild(NewLabel(hint, fontMeta, colMuted));
+    }
     row->AddChild(new Spacer(0, 0), 1);
 
-    actionBtn = NewButton(actionText, true);
-    actionBtn->onClick = MkMethod1<PdfToolDialog, VirtMouseEvent*, &PdfToolDialog::DoIt>(this);
-    row->AddChild(actionBtn);
-
-    cancelBtn = NewButton(Tr("Cancel"), false);
+    cancelBtn = NewDlgButton(hwnd, Tr("Cancel"), fontText, DlgButtonStyle::Outline, false);
     cancelBtn->onClick = MkMethod1<PdfToolDialog, VirtMouseEvent*, &PdfToolDialog::OnCancel>(this);
     row->AddChild(cancelBtn);
+
+    actionBtn = NewDlgButton(hwnd, actionText, fontText, DlgButtonStyle::Filled, true);
+    actionBtn->onClick = MkMethod1<PdfToolDialog, VirtMouseEvent*, &PdfToolDialog::DoIt>(this);
+    row->AddChild(actionBtn);
+    mainBox->AddChild(new Padding(row, DpiScaledInsets(kToolDlgFootPadDy, kToolDlgPadDx)));
 }
 
 void PdfToolDialog::FinishDialog(Edit* focusOn) {
     // size to a width that fits the source path (clamped), let the layout
     // compute the height
-    int minClientW = DpiScale(480);
-    int clientW = CalcDlgWidth(font, srcPath, minClientW, DpiScale(10));
+    int clientW = CalcDlgWidth(fontText, srcPath, DpiScale(kToolDlgMinDx), DpiScale(kToolDlgPadDx));
     Size size = layout->Layout(ExpandHeight(clientW));
     ResizeHwndToClientArea(hwnd, size.dx, size.dy, false);
+    windowDy = HwndWindowRect(hwnd).dy;
     // positions everything and picks up the virtual controls to paint
     DoLayout(size);
 
@@ -278,6 +420,85 @@ void PdfToolDialog::FinishDialog(Edit* focusOn) {
     UpdateTheme();
     SetIsVisible(true);
     EditSetFocus(focusOn);
+}
+
+void PdfToolDialog::SetActionEnabled(bool enabled) {
+    if (actionBtn) {
+        SetDlgButtonEnabled(actionBtn, DlgButtonStyle::Filled, enabled);
+    }
+}
+
+int PdfToolDialog::SelectedFormatIdx() const {
+    if (!dropFormat) {
+        return 0;
+    }
+    int idx = CbGetCurrentSelection(dropFormat);
+    if (idx < 0 || idx >= ConvertImageFormatCount()) {
+        return 0;
+    }
+    return idx;
+}
+
+void PdfToolDialog::SetDestExtFromFormat() {
+    if (!destEdit) {
+        return;
+    }
+    TempStr dest = destEdit->GetTextTemp();
+    if (len(dest) == 0) {
+        return;
+    }
+    Str ext = kConvertImageFormats[SelectedFormatIdx()].ext;
+    TempStr noExt = path::GetPathNoExtTemp(dest);
+    TempStr newDest = str::JoinTemp(noExt, ext);
+    if (str::EqI(dest, newDest)) {
+        return;
+    }
+    destEdit->SetText(newDest);
+}
+
+void PdfToolDialog::SyncFormatFromPath(Str path) {
+    if (!dropFormat) {
+        return;
+    }
+    int idx = ConvertImageFormatIdxFromPath(path);
+    if (idx == CbGetCurrentSelection(dropFormat)) {
+        return;
+    }
+    syncingFormat = true;
+    CbSetCurrentSelection(dropFormat, idx);
+    syncingFormat = false;
+}
+
+void PdfToolDialog::OnFormatChanged() {
+    if (syncingFormat) {
+        return;
+    }
+    SetDestExtFromFormat();
+}
+
+// a dialog with a page range: the line counts the pages the range picks and
+// the action waits for a usable one
+struct PdfPagesDialog : PdfToolDialog {
+    Edit* pagesEdit = nullptr;
+    int pageCount = 0;
+    bool isExtract = true;
+
+    void AddPagesLine(Str pages);
+    void UpdatePages();
+};
+
+void PdfPagesDialog::AddPagesLine(Str pages) {
+    AddLine(Tr("Pages"));
+    pagesEdit = AddLineEdit(pages);
+    AddLineMeta();
+}
+
+void PdfPagesDialog::UpdatePages() {
+    TempStr pages = pagesEdit->GetTextTemp();
+    Vec<int> parsed;
+    bool ok = PageRangeOk(pages, pageCount, isExtract, parsed);
+    SetMeta(PageRangeCountTemp(pages, pageCount, isExtract), ok);
+    SetActionEnabled(ok);
 }
 
 struct PdfBakeDialog : PdfToolDialog {
@@ -336,9 +557,8 @@ bool PdfBakeDialog::Create(MainWindow* w, WindowTab* tab) {
     if (!CreateToolDialog(w, tab, Tr("Bake PDF"))) {
         return false;
     }
-    AddPathRow();
-    AddDestRow(MakeUniqueFilePathTemp(srcPath), L"PDF Files\0*.pdf\0All Files\0*.*\0", L"pdf");
-    AddButtonsRow(Tr("Bake PDF"));
+    AddFilesBlock(MakeUniqueFilePathTemp(srcPath), L"PDF Files\0*.pdf\0All Files\0*.*\0", L"pdf");
+    AddFooter(Tr("Bake PDF"));
     FinishDialog(destEdit);
     return true;
 }
@@ -364,8 +584,7 @@ void ShowPdfBakeDialog(MainWindow* win) {
 
 // --- Extract PDF Text dialog ---
 
-struct PdfExtractTextDialog : PdfToolDialog {
-    Edit* pagesEdit = nullptr;
+struct PdfExtractTextDialog : PdfPagesDialog {
     bool Create(MainWindow* win, WindowTab* tab);
     void DoIt(VirtMouseEvent* ev = nullptr) override;
 };
@@ -412,14 +631,15 @@ bool PdfExtractTextDialog::Create(MainWindow* w, WindowTab* tab) {
     if (!CreateToolDialog(w, tab, Tr("Extract Text From PDF"))) {
         return false;
     }
-    AddPathRow();
+    pageCount = w->ctrl ? w->ctrl->PageCount() : 1;
+    AddPagesLine(fmt("1-%d", pageCount));
     TempStr noExt = path::GetPathNoExtTemp(srcPath);
     TempStr txtPath = str::JoinTemp(noExt, StrL(".txt"));
-    AddDestRow(MakeUniqueFilePathTemp(txtPath), L"Text Files\0*.txt\0All Files\0*.*\0", L"txt");
-    int pageCount = w->ctrl ? w->ctrl->PageCount() : 1;
-    pagesEdit = AddLabeledEdit(Tr("Pages:"), fmt("1-%d", pageCount));
-    AddButtonsRow(Tr("Extract Text"));
-    FinishDialog(destEdit);
+    AddFilesBlock(MakeUniqueFilePathTemp(txtPath), L"Text Files\0*.txt\0All Files\0*.*\0", L"txt");
+    AddFooter(Tr("Extract Text"), PageRangeHint());
+    FinishDialog(pagesEdit);
+    pagesEdit->onTextChanged = MkMethod0<PdfPagesDialog, &PdfPagesDialog::UpdatePages>(this);
+    UpdatePages();
     return true;
 }
 
@@ -478,9 +698,8 @@ bool PdfCompressDialog::Create(MainWindow* w, WindowTab* tab) {
     if (!CreateToolDialog(w, tab, Tr("Compress PDF"))) {
         return false;
     }
-    AddPathRow();
-    AddDestRow(MakeUniqueFilePathTemp(srcPath), L"PDF Files\0*.pdf\0All Files\0*.*\0", L"pdf");
-    AddButtonsRow(Tr("Compress PDF"));
+    AddFilesBlock(MakeUniqueFilePathTemp(srcPath), L"PDF Files\0*.pdf\0All Files\0*.*\0", L"pdf");
+    AddFooter(Tr("Compress PDF"));
     FinishDialog(destEdit);
     return true;
 }
@@ -542,9 +761,8 @@ bool PdfDecompressDialog::Create(MainWindow* w, WindowTab* tab) {
     if (!CreateToolDialog(w, tab, Tr("Decompress PDF"))) {
         return false;
     }
-    AddPathRow();
-    AddDestRow(MakeUniqueFilePathTemp(srcPath), L"PDF Files\0*.pdf\0All Files\0*.*\0", L"pdf");
-    AddButtonsRow(Tr("Decompress PDF"));
+    AddFilesBlock(MakeUniqueFilePathTemp(srcPath), L"PDF Files\0*.pdf\0All Files\0*.*\0", L"pdf");
+    AddFooter(Tr("Decompress PDF"));
     FinishDialog(destEdit);
     return true;
 }
@@ -570,34 +788,11 @@ void ShowPdfDecompressDialog(MainWindow* win) {
 
 // --- Delete Pages From PDF dialog ---
 
-// The dialog's content is a VirtCtrl tree: the labels and buttons are virtual
-// controls, while the two text fields stay real HWND edits, hosted in the tree
-// so they take part in the same layout.
-struct PdfDeletePageDialog : PdfToolDialog {
-    bool isExtract = false;
-    int pageCount = 0;
-    Edit* pagesEdit = nullptr;
-
+struct PdfDeletePageDialog : PdfPagesDialog {
     bool Create(MainWindow* win, WindowTab* tab, bool isExtract);
     void DoIt(VirtMouseEvent* ev = nullptr) override;
-    void UpdateButton();
     void PreTranslate(WindowBase::PreTranslateEvent* ev);
 };
-
-void PdfDeletePageDialog::UpdateButton() {
-    TempStr pages = pagesEdit->GetTextTemp();
-    Vec<int> parsedPages;
-    bool valid = ParseDeletePages(pages, pageCount, parsedPages);
-    // for delete mode, can't delete all pages
-    if (valid && !isExtract && len(parsedPages) >= pageCount) {
-        valid = false;
-    }
-    if (valid == actionBtn->HasFlag(vwfEnabled)) {
-        return;
-    }
-    actionBtn->SetFlag(vwfEnabled, valid);
-    actionBtn->Invalidate();
-}
 
 void PdfDeletePageDialog::DoIt(VirtMouseEvent*) {
     TempStr destPath = destEdit->GetTextTemp();
@@ -608,10 +803,7 @@ void PdfDeletePageDialog::DoIt(VirtMouseEvent*) {
     TempStr pages = pagesEdit->GetTextTemp();
 
     Vec<int> parsedPages;
-    if (!ParseDeletePages(pages, pageCount, parsedPages)) {
-        return;
-    }
-    if (!isExtract && len(parsedPages) >= pageCount) {
+    if (!PageRangeOk(pages, pageCount, isExtract, parsedPages)) {
         return;
     }
 
@@ -696,9 +888,6 @@ void PdfDeletePageDialog::PreTranslate(WindowBase::PreTranslateEvent* ev) {
     ev->didHandle = true;
 }
 
-// the buttons are virtual controls, so they are styled here rather than by the
-// system: a filled box with a border, brighter on hover
-
 bool PdfDeletePageDialog::Create(MainWindow* w, WindowTab* tab, bool isExtractArg) {
     isExtract = isExtractArg;
     Str title = isExtract ? Tr("Extract Pages From PDF") : Tr("Delete Pages From PDF");
@@ -706,26 +895,20 @@ bool PdfDeletePageDialog::Create(MainWindow* w, WindowTab* tab, bool isExtractAr
         return false;
     }
     pageCount = w->ctrl ? w->ctrl->PageCount() : 0;
-    AddPathRow();
-    AddDestRow(MakeUniqueFilePathTemp(srcPath), L"PDF Files\0*.pdf\0All Files\0*.*\0", L"pdf");
-
     int currentPage = w->ctrl ? w->ctrl->CurrentPageNo() : 1;
-    Str pagesLabel = isExtract ? Tr("Pages To Extract:") : Tr("Pages To Delete:");
-    pagesEdit = AddLabeledEdit(pagesLabel, fmt("%d", currentPage));
-    // "of N" after the edit
-    lastRow->AddChild(new Spacer(gap, 0));
-    lastRow->AddChild(NewVirtText({.s = fmt("of %d", pageCount), .font = font, .isRtl = IsUIRtl()}));
+    AddPagesLine(fmt("%d", currentPage));
+    AddFilesBlock(MakeUniqueFilePathTemp(srcPath), L"PDF Files\0*.pdf\0All Files\0*.*\0", L"pdf");
 
     Str actionText = isExtract ? Tr("Extract Pages") : Tr("Delete Pages");
-    AddButtonsRow(actionText, StrL("Syntax: 2,5-7,13-"));
+    AddFooter(actionText, PageRangeHint());
     onPreTranslate =
         MkMethod1<PdfDeletePageDialog, WindowBase::PreTranslateEvent*, &PdfDeletePageDialog::PreTranslate>(this);
     FinishDialog(pagesEdit);
 
     // attach the change handler only now that actionBtn exists, then set the
     // initial validation state (Edit::Create fires onTextChanged on initial text)
-    pagesEdit->onTextChanged = MkMethod0<PdfDeletePageDialog, &PdfDeletePageDialog::UpdateButton>(this);
-    UpdateButton();
+    pagesEdit->onTextChanged = MkMethod0<PdfPagesDialog, &PdfPagesDialog::UpdatePages>(this);
+    UpdatePages();
     return true;
 }
 
@@ -766,12 +949,7 @@ struct PdfEncryptDialog : PdfToolDialog {
 // there is nothing to encrypt with until a password is typed
 void PdfEncryptDialog::UpdateButton() {
     TempStr pwd = passwordEdit->GetTextTemp();
-    bool valid = len(pwd) > 0;
-    if (valid == actionBtn->HasFlag(vwfEnabled)) {
-        return;
-    }
-    actionBtn->SetFlag(vwfEnabled, valid);
-    actionBtn->Invalidate();
+    SetActionEnabled(len(pwd) > 0);
 }
 
 void PdfEncryptDialog::DoIt(VirtMouseEvent*) {
@@ -812,10 +990,10 @@ bool PdfEncryptDialog::Create(MainWindow* w, WindowTab* tab) {
     if (!CreateToolDialog(w, tab, Tr("Encrypt PDF"))) {
         return false;
     }
-    AddPathRow();
-    AddDestRow(MakeUniqueFilePathTemp(srcPath), L"PDF Files\0*.pdf\0All Files\0*.*\0", L"pdf");
-    passwordEdit = AddLabeledEdit(Tr("Password:"), {}, true);
-    AddButtonsRow(Tr("Encrypt PDF"));
+    AddLine(Tr("Password"));
+    passwordEdit = AddLineEdit({}, true);
+    AddFilesBlock(MakeUniqueFilePathTemp(srcPath), L"PDF Files\0*.pdf\0All Files\0*.*\0", L"pdf");
+    AddFooter(Tr("Encrypt PDF"));
     FinishDialog(passwordEdit);
     passwordEdit->onTextChanged = MkMethod0<PdfEncryptDialog, &PdfEncryptDialog::UpdateButton>(this);
     UpdateButton();
@@ -896,9 +1074,8 @@ bool PdfDecryptDialog::Create(MainWindow* w, WindowTab* tab, Str pwd) {
         return false;
     }
     password = str::Dup(pwd);
-    AddPathRow();
-    AddDestRow(MakeUniqueFilePathTemp(srcPath), L"PDF Files\0*.pdf\0All Files\0*.*\0", L"pdf");
-    AddButtonsRow(Tr("Decrypt PDF"));
+    AddFilesBlock(MakeUniqueFilePathTemp(srcPath), L"PDF Files\0*.pdf\0All Files\0*.*\0", L"pdf");
+    AddFooter(Tr("Decrypt PDF"));
     FinishDialog(destEdit);
     return true;
 }
@@ -973,9 +1150,8 @@ bool ConvertToPdfDialog::Create(MainWindow* w, WindowTab* tab) {
     if (!CreateToolDialog(w, tab, Tr("Convert to PDF"))) {
         return false;
     }
-    AddPathRow();
-    AddDestRow(DefaultPdfDestPathTemp(srcPath), L"PDF Files\0*.pdf\0All Files\0*.*\0", L"pdf");
-    AddButtonsRow(Tr("Convert to PDF"));
+    AddFilesBlock(DefaultPdfDestPathTemp(srcPath), L"PDF Files\0*.pdf\0All Files\0*.*\0", L"pdf");
+    AddFooter(Tr("Convert to PDF"));
     FinishDialog(destEdit);
     return true;
 }
@@ -1045,24 +1221,6 @@ static int DpiFromComboSel(DropDown* dd) {
     return kImageDpiChoices[idx];
 }
 
-// PNG / JPEG / BMP, same core formats as the Save Image dialog
-struct ConvertImageFormat {
-    Str label;
-    Str ext; // including the dot, e.g. ".png"
-    WStr mime;
-    WStr defExt; // OPENFILENAME lpstrDefExt, no dot
-};
-
-static const ConvertImageFormat kConvertImageFormats[] = {
-    {StrL("PNG"), StrL(".png"), L"image/png", L"png"},
-    {StrL("JPEG"), StrL(".jpg"), L"image/jpeg", L"jpg"},
-    {StrL("BMP"), StrL(".bmp"), L"image/bmp", L"bmp"},
-};
-
-static int ConvertImageFormatCount() {
-    return dimofi(kConvertImageFormats);
-}
-
 static bool GetImageEncoderForPath(Str path, CLSID* encOut) {
     if (!IsSupportedConvertImageExt(path)) {
         return false;
@@ -1119,22 +1277,16 @@ struct ConvertPdfToImagesDialog : PdfToolDialog {
     Checkbox* radioAll = nullptr;
     Checkbox* radioCustom = nullptr;
     Edit* pagesEdit = nullptr;
-    DropDown* dropFormat = nullptr;
     DropDown* dropDpi = nullptr;
     int dpi = kConvertPdfToImagesDpi; // 0 if what's typed is not a DPI
-    bool syncingFormat = false;
 
     bool Create(MainWindow* win, WindowTab* tab);
     void DoIt(VirtMouseEvent* ev = nullptr) override;
     void OnBrowseTemplate(VirtMouseEvent* ev = nullptr);
     void UpdateButton();
     void OnPagesModeChanged();
-    void OnFormatChanged();
     void OnDpiPicked();
     void OnDpiTyped();
-    void SetDestExtFromFormat();
-    void SyncFormatFromPath(Str path);
-    int SelectedFormatIdx() const;
 };
 
 static Checkbox* NewPagesRadio(HWND parent, PlatformFont* font, Str text, bool groupStart, bool checked) {
@@ -1148,56 +1300,8 @@ static Checkbox* NewPagesRadio(HWND parent, PlatformFont* font, Str text, bool g
     args.initialState = checked ? Checkbox::State::Checked : Checkbox::State::Unchecked;
     auto* c = new Checkbox();
     c->Create(args);
-    c->SetColors(ThemeWindowTextColor(), DarkModeDialogBgColor());
+    c->SetColors(ThemeWindowTextColor(), ThemeWindowControlBackgroundColor());
     return c;
-}
-
-int ConvertPdfToImagesDialog::SelectedFormatIdx() const {
-    if (!dropFormat) {
-        return 0;
-    }
-    int idx = CbGetCurrentSelection(dropFormat);
-    if (idx < 0 || idx >= ConvertImageFormatCount()) {
-        return 0;
-    }
-    return idx;
-}
-
-void ConvertPdfToImagesDialog::SetDestExtFromFormat() {
-    if (!destEdit) {
-        return;
-    }
-    TempStr dest = destEdit->GetTextTemp();
-    if (len(dest) == 0) {
-        return;
-    }
-    Str ext = kConvertImageFormats[SelectedFormatIdx()].ext;
-    TempStr noExt = path::GetPathNoExtTemp(dest);
-    TempStr newDest = str::JoinTemp(noExt, ext);
-    if (str::EqI(dest, newDest)) {
-        return;
-    }
-    destEdit->SetText(newDest);
-}
-
-void ConvertPdfToImagesDialog::SyncFormatFromPath(Str path) {
-    if (!dropFormat) {
-        return;
-    }
-    int idx = ConvertImageFormatIdxFromPath(path);
-    if (idx == CbGetCurrentSelection(dropFormat)) {
-        return;
-    }
-    syncingFormat = true;
-    CbSetCurrentSelection(dropFormat, idx);
-    syncingFormat = false;
-}
-
-void ConvertPdfToImagesDialog::OnFormatChanged() {
-    if (syncingFormat) {
-        return;
-    }
-    SetDestExtFromFormat();
 }
 
 void ConvertPdfToImagesDialog::OnDpiPicked() {
@@ -1218,6 +1322,8 @@ void ConvertPdfToImagesDialog::OnPagesModeChanged() {
     UpdateButton();
 }
 
+// the line's count follows the mode: the one page, all of them, or what the
+// custom range picks
 void ConvertPdfToImagesDialog::UpdateButton() {
     if (!actionBtn) {
         return;
@@ -1229,13 +1335,12 @@ void ConvertPdfToImagesDialog::UpdateButton() {
         TempStr pages = pagesEdit ? pagesEdit->GetTextTemp() : TempStr{};
         Vec<int> parsed;
         pagesOk = ParseDeletePages(pages, pageCount, parsed);
+        SetMeta(PageRangeCountTemp(pages, pageCount, true), pagesOk);
+    } else {
+        int n = radioAll && radioAll->IsChecked() ? pageCount : 1;
+        SetMeta(PageCountTextTemp(n, pageCount), true);
     }
-    bool valid = destOk && pagesOk && dpi > 0;
-    if (valid == actionBtn->HasFlag(vwfEnabled)) {
-        return;
-    }
-    actionBtn->SetFlag(vwfEnabled, valid);
-    actionBtn->Invalidate();
+    SetActionEnabled(destOk && pagesOk && dpi > 0);
 }
 
 void ConvertPdfToImagesDialog::OnBrowseTemplate(VirtMouseEvent*) {
@@ -1342,91 +1447,36 @@ bool ConvertPdfToImagesDialog::Create(MainWindow* w, WindowTab* tab) {
         return false;
     }
     pageCount = w->ctrl ? w->ctrl->PageCount() : 1;
-    AddPathRow();
 
-    TempStr noExt = path::GetPathNoExtTemp(srcPath);
-    TempStr pngPath = str::JoinTemp(noExt, StrL("-<N>.png"));
-
-    HBox* destRow = AddRow();
-    destRow->gap = font->averageCharWidth;
-
-    Edit::CreateArgs dargs;
-    dargs.parent = hwnd;
-    dargs.withBorder = true;
-    dargs.font = font;
-    dargs.text = pngPath;
-    dargs.isRtl = IsUIRtl();
-    destEdit = new Edit();
-    destEdit->Create(dargs);
-    destRow->AddChild(destEdit, 1);
-
-    {
-        auto* dd = new DropDown();
-        DropDown::CreateArgs ddargs;
-        ddargs.parent = hwnd;
-        ddargs.font = font;
-        ddargs.isRtl = IsUIRtl();
-        dd->Create(ddargs);
-        StrVec items;
-        for (int i = 0; i < ConvertImageFormatCount(); i++) {
-            items.Append(kConvertImageFormats[i].label);
-        }
-        dd->SetItems(items);
-        CbSetCurrentSelection(dd, 0);
-        dd->SetColors(ThemeWindowTextColor(), ThemeWindowControlBackgroundColor());
-        dd->onSelectionChanged = MkMethod0<ConvertPdfToImagesDialog, &ConvertPdfToImagesDialog::OnFormatChanged>(this);
-        dropFormat = dd;
-        destRow->AddChild(dropFormat);
-    }
-
-    browseBtn = NewButton(StrL("..."), false);
-    browseBtn->onClick =
-        MkMethod1<ConvertPdfToImagesDialog, VirtMouseEvent*, &ConvertPdfToImagesDialog::OnBrowseTemplate>(this);
-    destRow->AddChild(browseBtn);
-
-    if (pathLabel) {
-        pathLabel->padding.left = destEdit->GetLeftTextMargin();
-    }
-
-    HBox* row = AddRow();
-    row->gap = font->averageCharWidth;
-    row->AddChild(NewVirtText({.s = Tr("Pages:"), .font = font, .isRtl = IsUIRtl()}));
-
-    radioCurrent = NewPagesRadio(hwnd, font, Tr("Current"), true, false);
+    HBox* row = AddLine(Tr("Pages"));
+    radioCurrent = NewPagesRadio(hwnd, fontText, Tr("Current"), true, false);
     radioCurrent->onStateChanged =
         MkMethod0<ConvertPdfToImagesDialog, &ConvertPdfToImagesDialog::OnPagesModeChanged>(this);
     row->AddChild(radioCurrent);
-
-    radioAll = NewPagesRadio(hwnd, font, Tr("All"), false, true);
+    radioAll = NewPagesRadio(hwnd, fontText, Tr("All"), false, true);
     radioAll->onStateChanged = MkMethod0<ConvertPdfToImagesDialog, &ConvertPdfToImagesDialog::OnPagesModeChanged>(this);
     row->AddChild(radioAll);
-
-    radioCustom = NewPagesRadio(hwnd, font, Tr("Custom"), false, false);
+    radioCustom = NewPagesRadio(hwnd, fontText, Tr("Custom"), false, false);
     radioCustom->onStateChanged =
         MkMethod0<ConvertPdfToImagesDialog, &ConvertPdfToImagesDialog::OnPagesModeChanged>(this);
     row->AddChild(radioCustom);
-
-    Edit::CreateArgs eargs;
-    eargs.parent = hwnd;
-    eargs.withBorder = true;
-    eargs.font = font;
-    eargs.text = fmt("1-%d", pageCount);
-    eargs.isRtl = IsUIRtl();
-    pagesEdit = new Edit();
-    pagesEdit->Create(eargs);
+    pagesEdit = AddLineEdit(fmt("1-%d", pageCount));
     pagesEdit->SetIsEnabled(false);
-    row->AddChild(pagesEdit, 1);
+    AddLineMeta();
 
-    HBox* dpiRow = AddRow();
-    dpiRow->gap = font->averageCharWidth;
-    dpiRow->AddChild(NewVirtText({.s = Tr("Resolution (DPI):"), .font = font, .isRtl = IsUIRtl()}));
-
-    dropDpi = NewDpiCombo(hwnd, font, dpi);
+    AddLine(Tr("Resolution (DPI)"));
+    dropDpi = NewDpiCombo(hwnd, fontText, dpi);
     dropDpi->onSelectionChanged = MkMethod0<ConvertPdfToImagesDialog, &ConvertPdfToImagesDialog::OnDpiPicked>(this);
     dropDpi->onTextChanged = MkMethod0<ConvertPdfToImagesDialog, &ConvertPdfToImagesDialog::OnDpiTyped>(this);
-    dpiRow->AddChild(dropDpi);
+    lastLine->AddChild(dropDpi);
 
-    AddButtonsRow(Tr("Convert"), Tr("Use <N> for the page number"));
+    TempStr noExt = path::GetPathNoExtTemp(srcPath);
+    TempStr pngPath = str::JoinTemp(noExt, StrL("-<N>.png"));
+    AddFilesBlock(pngPath, {}, {}, true);
+    browseBtn->onClick =
+        MkMethod1<ConvertPdfToImagesDialog, VirtMouseEvent*, &ConvertPdfToImagesDialog::OnBrowseTemplate>(this);
+
+    AddFooter(Tr("Convert"), Tr("Use <N> for the page number"));
     FinishDialog(destEdit);
 
     destEdit->onTextChanged = MkMethod0<ConvertPdfToImagesDialog, &ConvertPdfToImagesDialog::UpdateButton>(this);
@@ -1478,67 +1528,20 @@ void FinishSaveSelImg(SaveSelImgWork* d) {
 struct SaveSelectionAsImageDialog : PdfToolDialog {
     int pageNo = 0;
     RectF selRect;
-    DropDown* dropFormat = nullptr;
     DropDown* dropDpi = nullptr;
-    VirtText* sizeLabel = nullptr;
     int dpi = kSaveSelectionDefaultDpi; // 0 if what's typed is not a DPI
-    bool syncingFormat = false;
 
     bool Create(MainWindow* win, WindowTab* tab);
     void DoIt(VirtMouseEvent* ev = nullptr) override;
     void OnBrowseDest(VirtMouseEvent* ev = nullptr);
-    void OnFormatChanged();
     void OnDpiPicked();
     void OnDpiTyped();
-    void SetDestExtFromFormat();
-    void SyncFormatFromPath(Str path);
     void UpdateSizeLabel();
-    int SelectedFormatIdx() const;
 };
 
-int SaveSelectionAsImageDialog::SelectedFormatIdx() const {
-    if (!dropFormat) {
-        return 0;
-    }
-    int idx = CbGetCurrentSelection(dropFormat);
-    if (idx < 0 || idx >= ConvertImageFormatCount()) {
-        return 0;
-    }
-    return idx;
-}
-
-void SaveSelectionAsImageDialog::SetDestExtFromFormat() {
-    if (!destEdit) {
-        return;
-    }
-    TempStr dest = destEdit->GetTextTemp();
-    if (len(dest) == 0) {
-        return;
-    }
-    Str ext = kConvertImageFormats[SelectedFormatIdx()].ext;
-    TempStr noExt = path::GetPathNoExtTemp(dest);
-    TempStr newDest = str::JoinTemp(noExt, ext);
-    if (str::EqI(dest, newDest)) {
-        return;
-    }
-    destEdit->SetText(newDest);
-}
-
-void SaveSelectionAsImageDialog::SyncFormatFromPath(Str path) {
-    if (!dropFormat) {
-        return;
-    }
-    int idx = ConvertImageFormatIdxFromPath(path);
-    if (idx == CbGetCurrentSelection(dropFormat)) {
-        return;
-    }
-    syncingFormat = true;
-    CbSetCurrentSelection(dropFormat, idx);
-    syncingFormat = false;
-}
-
+// the line's right end: the image's size at this DPI
 void SaveSelectionAsImageDialog::UpdateSizeLabel() {
-    if (!sizeLabel || !win) {
+    if (!win) {
         return;
     }
     DisplayModel* dm = win->AsFixed();
@@ -1551,30 +1554,16 @@ void SaveSelectionAsImageDialog::UpdateSizeLabel() {
     int h = 0;
     EstimateSelectionPx(selRect, zoom, w, h);
     if (dpi < 1) {
-        sizeLabel->SetText(StrL(""));
-        if (actionBtn) {
-            actionBtn->SetIsEnabled(false);
-        }
+        SetMeta(StrL(""), false);
+        SetActionEnabled(false);
     } else if (!SaveSelectionSizeOk(w, h)) {
-        sizeLabel->SetText(Tr("Too large for this DPI"));
-        if (actionBtn) {
-            actionBtn->SetIsEnabled(false);
-        }
+        SetMeta(Tr("Too large for this DPI"), false);
+        SetActionEnabled(false);
     } else {
-        sizeLabel->SetText(fmt("%d x %d px", w, h));
-        if (actionBtn) {
-            TempStr dest = destEdit ? destEdit->GetTextTemp() : Str{};
-            actionBtn->SetIsEnabled(len(dest) > 0);
-        }
+        SetMeta(fmt("%d x %d px", w, h), true);
+        TempStr dest = destEdit ? destEdit->GetTextTemp() : Str{};
+        SetActionEnabled(len(dest) > 0);
     }
-    sizeLabel->RequestLayout();
-}
-
-void SaveSelectionAsImageDialog::OnFormatChanged() {
-    if (syncingFormat) {
-        return;
-    }
-    SetDestExtFromFormat();
 }
 
 void SaveSelectionAsImageDialog::OnDpiPicked() {
@@ -1677,66 +1666,21 @@ bool SaveSelectionAsImageDialog::Create(MainWindow* w, WindowTab* tab) {
     if (!CreateToolDialog(w, tab, Tr("Save Selection As Image"))) {
         return false;
     }
-    AddPathRow();
+
+    AddLine(Tr("Resolution (DPI)"));
+    dropDpi = NewDpiCombo(hwnd, fontText, dpi);
+    dropDpi->onSelectionChanged = MkMethod0<SaveSelectionAsImageDialog, &SaveSelectionAsImageDialog::OnDpiPicked>(this);
+    dropDpi->onTextChanged = MkMethod0<SaveSelectionAsImageDialog, &SaveSelectionAsImageDialog::OnDpiTyped>(this);
+    lastLine->AddChild(dropDpi);
+    AddLineMeta();
 
     TempStr noExt = path::GetPathNoExtTemp(srcPath);
     TempStr pngPath = MakeUniqueFilePathTemp(str::JoinTemp(noExt, StrL("-sel.png")));
-
-    HBox* destRow = AddRow();
-    destRow->gap = font->averageCharWidth;
-
-    Edit::CreateArgs dargs;
-    dargs.parent = hwnd;
-    dargs.withBorder = true;
-    dargs.font = font;
-    dargs.text = pngPath;
-    dargs.isRtl = IsUIRtl();
-    destEdit = new Edit();
-    destEdit->Create(dargs);
-    destRow->AddChild(destEdit, 1);
-
-    {
-        auto* dd = new DropDown();
-        DropDown::CreateArgs ddargs;
-        ddargs.parent = hwnd;
-        ddargs.font = font;
-        ddargs.isRtl = IsUIRtl();
-        dd->Create(ddargs);
-        StrVec items;
-        for (int i = 0; i < ConvertImageFormatCount(); i++) {
-            items.Append(kConvertImageFormats[i].label);
-        }
-        dd->SetItems(items);
-        CbSetCurrentSelection(dd, 0);
-        dd->SetColors(ThemeWindowTextColor(), ThemeWindowControlBackgroundColor());
-        dd->onSelectionChanged =
-            MkMethod0<SaveSelectionAsImageDialog, &SaveSelectionAsImageDialog::OnFormatChanged>(this);
-        dropFormat = dd;
-        destRow->AddChild(dropFormat);
-    }
-
-    browseBtn = NewButton(StrL("..."), false);
+    AddFilesBlock(pngPath, {}, {}, true);
     browseBtn->onClick =
         MkMethod1<SaveSelectionAsImageDialog, VirtMouseEvent*, &SaveSelectionAsImageDialog::OnBrowseDest>(this);
-    destRow->AddChild(browseBtn);
 
-    if (pathLabel) {
-        pathLabel->padding.left = destEdit->GetLeftTextMargin();
-    }
-
-    HBox* dpiRow = AddRow();
-    dpiRow->gap = font->averageCharWidth;
-    dpiRow->AddChild(NewVirtText({.s = Tr("Resolution (DPI):"), .font = font, .isRtl = IsUIRtl()}));
-
-    dropDpi = NewDpiCombo(hwnd, font, dpi);
-    dropDpi->onSelectionChanged = MkMethod0<SaveSelectionAsImageDialog, &SaveSelectionAsImageDialog::OnDpiPicked>(this);
-    dropDpi->onTextChanged = MkMethod0<SaveSelectionAsImageDialog, &SaveSelectionAsImageDialog::OnDpiTyped>(this);
-    dpiRow->AddChild(dropDpi);
-
-    sizeLabel = NewVirtText({.s = StrL(""), .font = font, .isRtl = IsUIRtl()});
-    dpiRow->AddChild(sizeLabel, 1);
-
-    AddButtonsRow(Tr("Save"));
+    AddFooter(Tr("Save"));
     FinishDialog(destEdit);
 
     destEdit->onTextChanged = MkMethod0<SaveSelectionAsImageDialog, &SaveSelectionAsImageDialog::UpdateSizeLabel>(this);

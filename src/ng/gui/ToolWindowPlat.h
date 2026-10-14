@@ -28,6 +28,8 @@ void ToolWinNativeInjectKey(gpui::Window* gw, int keyCode);
 void ToolWinNativeActivate(gpui::Window* gw);
 bool ToolWinNativeIsActive(gpui::Window* gw);
 void ToolWinNativeSetMinClient(gpui::Window* gw, int dx, int dy);
+// a 0 side is unbounded
+void ToolWinNativeSetMaxClient(gpui::Window* gw, int dx, int dy);
 // the owner takes no clicks or keys while `on`
 void ToolWinNativeSetModal(gpui::Window* gw, gpui::Window* owner, bool on);
 bool ToolWinNativeMouseDown();

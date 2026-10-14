@@ -305,6 +305,14 @@ void ToolWinNativeSetMinClient(gp::Window* gw, int dx, int dy) {
     [w setContentMinSize:NSMakeSize(dx, dy)];
 }
 
+void ToolWinNativeSetMaxClient(gp::Window* gw, int dx, int dy) {
+    NSWindow* w = NsWin(gw);
+    if (!w) {
+        return;
+    }
+    [w setContentMaxSize:NSMakeSize(dx > 0 ? dx : CGFLOAT_MAX, dy > 0 ? dy : CGFLOAT_MAX)];
+}
+
 // clicks and keys aimed at the owner go to the dialog instead
 static id gModalMonitor = nil;
 

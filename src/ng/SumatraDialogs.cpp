@@ -410,6 +410,9 @@ static ToolWindowDesc DlgWindowDesc(const DlgWindowSpec& spec) {
     ToolWindowDesc desc = ToolWindowModalDesc(spec.name, spec.title);
     desc.modal = spec.modal ? ToolWinModal::Yes : ToolWinModal::No;
     desc.owner = (spec.modal || spec.owned) ? ToolWinOwner::Owned : ToolWinOwner::TopLevel;
+    if (spec.resizable) {
+        desc.resize = ToolWinResize::Resizable;
+    }
     desc.build = DlgWindowBuild;
     desc.onKey = DlgWindowOnKey;
     desc.onCaptureKey = DlgWindowOnCaptureKey;
@@ -470,10 +473,15 @@ static void DlgWindowFit(DlgWindowEntry* e) {
     Size client((int)(e->width + 0.5f), (int)(std::max(e->content.h, e->comboBottom) + 0.5f));
     if (e->placed) {
         ToolWindowSetClientSize(e->tw, client);
-        return;
+    } else {
+        e->placed = true;
+        ToolWindowMove(e->tw, ToolWindowCenteredRect(DlgWindowDesc(e->spec), e->win, client));
     }
-    e->placed = true;
-    ToolWindowMove(e->tw, ToolWindowCenteredRect(DlgWindowDesc(e->spec), e->win, client));
+    if (e->spec.resizable) {
+        // the frame drags only sideways: the height is the content's
+        ToolWindowSetMinClient(e->tw, Size((int)e->spec.minClientDx, client.dy));
+        ToolWindowSetMaxClient(e->tw, Size(0, client.dy));
+    }
 }
 
 static gp::El* DlgWindowFitTo(DlgWindowEntry* e, gp::Ctx* cx, gp::El* col, float width);
@@ -510,7 +518,8 @@ gp::El* DlgIntoEl(gp::Ctx* cx, gpc::Dialog* dlg) {
 // asks for the window to be `width` wide and as tall as `col` came out
 static gp::El* DlgWindowFitTo(DlgWindowEntry* e, gp::Ctx* cx, gp::El* col, float width) {
     gp::WinSize ws = gp::WindowSize(cx->win);
-    e->width = width;
+    // once placed, a resizable window is as wide as the user left it
+    e->width = (e->spec.resizable && e->placed) ? ws.dipW : width;
     constexpr float kComboListMargin = 4;
     float comboBottom = DialogComboListBottom(cx->win);
     e->comboBottom = comboBottom > 0 ? comboBottom + kComboListMargin : 0;

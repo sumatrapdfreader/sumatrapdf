@@ -30,6 +30,58 @@ VirtButton* NewThemedButton(HWND hwndForDpi, Str text, PlatformFont* font, bool 
     return b;
 }
 
+constexpr int kDlgBtnRadius = 4;
+constexpr int kDlgBtnHoverShift = 14;
+
+VirtButton* NewDlgButton(HWND hwndForDpi, Str text, PlatformFont* font, DlgButtonStyle style, bool isDefault) {
+    VirtButton* b = NewThemedButton(hwndForDpi, text, font, isDefault);
+    Color colTxt = ThemeWindowTextColor();
+    Color colBg = ThemeWindowControlBackgroundColor();
+    Color fg = colTxt;
+    Color bg = colBg;
+    Color border = kColorTransparent;
+    switch (style) {
+        case DlgButtonStyle::Filled:
+            fg = colBg;
+            bg = colTxt;
+            border = colTxt;
+            break;
+        case DlgButtonStyle::Outline:
+            border = ThemeEdgeColor();
+            break;
+        case DlgButtonStyle::Ghost:
+            fg = ThemeWindowTextDisabledColor();
+            break;
+    }
+    b->cornerRadius = DpiScale(kDlgBtnRadius);
+    b->SetColor(kColBtnText, fg);
+    b->SetColor(kColBtnBg, bg);
+    b->SetColor(kColBtnBgHover, AccentColor(bg, kDlgBtnHoverShift));
+    b->SetColor(kColBtnBorder, border);
+    return b;
+}
+
+constexpr int kDlgBtnDisabledShift = 28;
+
+void SetDlgButtonEnabled(VirtButton* b, DlgButtonStyle style, bool enabled) {
+    if (enabled == b->HasFlag(vwfEnabled)) {
+        return;
+    }
+    b->SetFlag(vwfEnabled, enabled);
+    if (style == DlgButtonStyle::Filled) {
+        Color colTxt = ThemeWindowTextColor();
+        Color colBg = ThemeWindowControlBackgroundColor();
+        b->SetColor(kColBtnBg, enabled ? colTxt : AccentColor(colBg, kDlgBtnDisabledShift));
+        b->SetColor(kColBtnBorder, enabled ? colTxt : kColorTransparent);
+        b->SetColor(kColBtnTextDisabled, ThemeWindowTextDisabledColor());
+    }
+    b->Invalidate();
+}
+
+PlatformFont* DlgUiFont(int px) {
+    return GetUserGuiFont(StrL("Segoe UI"), DpiScale(px));
+}
+
 static Kind kindVirtCtrl = "virtCtrl";
 
 VirtCtrl::VirtCtrl() {

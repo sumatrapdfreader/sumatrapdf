@@ -644,12 +644,25 @@ static LRESULT CALLBACK ToolSubclass(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp, 
             break;
         case WM_GETMINMAXINFO: {
             LRESULT res = DefSubclassProc(hwnd, msg, wp, lp);
+            if (!IsMainWindowValid(tw->owner)) {
+                return res;
+            }
+            auto* mmi = (MINMAXINFO*)lp;
             Size minClient = tw->desc.minClient;
-            if (!minClient.IsEmpty() && IsMainWindowValid(tw->owner)) {
+            if (!minClient.IsEmpty()) {
                 Size sz = ToolWindowOuterSize(tw->desc, tw->owner, minClient);
-                auto* mmi = (MINMAXINFO*)lp;
                 mmi->ptMinTrackSize.x = sz.dx;
                 mmi->ptMinTrackSize.y = sz.dy;
+            }
+            Size maxClient = tw->desc.maxClient;
+            if (maxClient.dx > 0 || maxClient.dy > 0) {
+                Size sz = ToolWindowOuterSize(tw->desc, tw->owner, maxClient);
+                if (maxClient.dx > 0) {
+                    mmi->ptMaxTrackSize.x = sz.dx;
+                }
+                if (maxClient.dy > 0) {
+                    mmi->ptMaxTrackSize.y = sz.dy;
+                }
             }
             return res;
         }
@@ -961,6 +974,9 @@ static void ApplyNative(ToolWindow* tw) {
     if (!tw->desc.minClient.IsEmpty()) {
         ToolWinNativeSetMinClient(tw->gw, tw->desc.minClient.dx, tw->desc.minClient.dy);
     }
+    if (tw->desc.maxClient.dx > 0 || tw->desc.maxClient.dy > 0) {
+        ToolWinNativeSetMaxClient(tw->gw, tw->desc.maxClient.dx, tw->desc.maxClient.dy);
+    }
     if (tw->desc.modal == ToolWinModal::Yes && !tw->hidden && owner) {
         ToolWinNativeSetModal(tw->gw, owner, true);
     }
@@ -1173,9 +1189,27 @@ float ToolWindowSetUiFontPx(gp::Ctx* cx, float px) {
 }
 
 void ToolWindowSetMinClient(ToolWindow* tw, Size minClientDip) {
-    if (IsLive(tw)) {
-        tw->desc.minClient = minClientDip;
+    if (!IsLive(tw)) {
+        return;
     }
+    tw->desc.minClient = minClientDip;
+#if !OS_WIN && !OS_WASM
+    if (tw->gw && !minClientDip.IsEmpty()) {
+        ToolWinNativeSetMinClient(tw->gw, minClientDip.dx, minClientDip.dy);
+    }
+#endif
+}
+
+void ToolWindowSetMaxClient(ToolWindow* tw, Size maxClientDip) {
+    if (!IsLive(tw)) {
+        return;
+    }
+    tw->desc.maxClient = maxClientDip;
+#if !OS_WIN && !OS_WASM
+    if (tw->gw) {
+        ToolWinNativeSetMaxClient(tw->gw, maxClientDip.dx, maxClientDip.dy);
+    }
+#endif
 }
 
 void ToolWindowSetClientSize(ToolWindow* tw, Size clientDip) {

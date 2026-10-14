@@ -861,3 +861,41 @@ gp::El* DlgKeyCap(gp::Ctx* cx, Str key, bool active) {
 gp::El* DlgHairline(gp::Ctx* cx) {
     return gp::Div(cx->a)->W(gp::kFill)->H(1)->Shrink0()->Bg(ToGpui(ThemeEdgeColor()));
 }
+
+// gpui's button variants only tint their color, so it is a plain element
+gp::El* DlgFilledButton(gp::Ctx* cx, gp::Str id, Str label, gp::Listener onClick, bool disabled) {
+    Color colText = ThemeWindowTextColor();
+    Color colBg = ThemeWindowControlBackgroundColor();
+    gp::El* b = gp::Div(cx->a)
+                    ->FlexRow()
+                    ->ItemsCenter()
+                    ->JustifyCenter()
+                    ->H(kDlgBtnDy)
+                    ->PadX(kDlgBtnPadDx)
+                    ->Shrink0()
+                    ->Radius(kDlgBtnRadius);
+    if (disabled) {
+        b->Bg(ToGpui(AccentColor(colBg, kDlgBtnShift)));
+        b->Child(
+            gp::TextEl(cx->a, GpuiDup(cx->a, label))->Font(kDlgBtnFontPx)->Fg(ToGpui(ThemeWindowTextDisabledColor())));
+        return b;
+    }
+    b->Bg(ToGpui(colText))
+        ->HoverBg(ToGpui(AccentColor(colText, kDlgBtnShift)))
+        ->Cursor(gp::CursorKind::Pointer)
+        ->PathClick(id)
+        ->OnClick(onClick);
+    b->Child(gp::TextEl(cx->a, GpuiDup(cx->a, label))->Font(kDlgBtnFontPx)->Fg(ToGpui(colBg)));
+    return b;
+}
+
+gp::El* DlgUnderlineInput(gp::Ctx* cx, gp::Str id, gp::InputState* edit, float fontPx, Color underline, bool masked,
+                          bool disabled) {
+    gpc::Input* in = gpc::Input::New(cx, id, edit)
+                         ->Appearance(false)
+                         ->WithSize(gp::UiSize::Small)
+                         ->Masked(masked)
+                         ->Disabled(disabled)
+                         ->W(gp::kFill);
+    return gp::Div(cx->a)->BorderB(1, ToGpui(underline))->Child(in->IntoEl()->Font(fontPx));
+}

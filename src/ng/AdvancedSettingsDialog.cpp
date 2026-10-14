@@ -70,8 +70,6 @@ constexpr int kAdvFaintShift = 25;
 constexpr float kAdvHeaderPadB = 4;
 constexpr float kAdvSwatchDx = 12;
 constexpr float kAdvDotDx = 6;
-constexpr float kAdvBtnDy = 26;
-constexpr float kAdvBtnPadDx = 12;
 constexpr float kAdvValueDx = 240;
 constexpr float kAdvListDy = 360; // the list in a frame dialog
 constexpr int kAdvOverscanRows = 2;
@@ -757,17 +755,8 @@ static gp::El* AdvSettingRow(gp::Ctx* cx, int i, float valDx, Color colBg, Color
         return row;
     }
     if (editing) {
-        // a bare input over an underline
-        row->Child(gp::Div(cx->a)
-                       ->W(valDx)
-                       ->Shrink0()
-                       ->BorderB(1, ToGpui(colText))
-                       ->Child(gpc::Input::New(cx, GStrL("adv-value"), gAdv.editValue)
-                                   ->Appearance(false)
-                                   ->WithSize(gp::UiSize::Small)
-                                   ->W(gp::kFill)
-                                   ->IntoEl()
-                                   ->Font(kAdvTextFontPx)));
+        row->Child(
+            DlgUnderlineInput(cx, GStrL("adv-value"), gAdv.editValue, kAdvTextFontPx, colText)->W(valDx)->Shrink0());
         return row;
     }
     gp::El* val = gp::Div(cx->a)->FlexRow()->ItemsCenter()->JustifyEnd()->Gap(kAdvGapDx)->W(valDx)->Shrink0();
@@ -949,23 +938,8 @@ static gp::El* AdvFooter(gp::Ctx* cx) {
                    ->WithSize(gp::UiSize::Small)
                    ->OnClick(gp::ListenTo(gAdvView, &AdvancedSettingsView::OnCancel))
                    ->IntoEl());
-    // Save is the one filled thing: the text color, as orig draws it. gpui's
-    // button variants only tint their color, so it is a plain element
-    Color colBg = ThemeWindowControlBackgroundColor();
-    row->Child(gp::Div(cx->a)
-                   ->FlexRow()
-                   ->ItemsCenter()
-                   ->JustifyCenter()
-                   ->H(kAdvBtnDy)
-                   ->PadX(kAdvBtnPadDx)
-                   ->Shrink0()
-                   ->Radius(kAdvRadius)
-                   ->Bg(ToGpui(colText))
-                   ->HoverBg(ToGpui(AccentColor(colText, kAdvSelShift)))
-                   ->Cursor(gp::CursorKind::Pointer)
-                   ->PathClick(GStrL("adv-save"))
-                   ->OnClick(gp::ListenTo(gAdvView, &AdvancedSettingsView::OnSave))
-                   ->Child(gp::TextEl(cx->a, ToGpui(Tr("Save")))->Font(kAdvTextFontPx)->Fg(ToGpui(colBg))));
+    row->Child(
+        DlgFilledButton(cx, GStrL("adv-save"), Tr("Save"), gp::ListenTo(gAdvView, &AdvancedSettingsView::OnSave)));
     return row;
 }
 

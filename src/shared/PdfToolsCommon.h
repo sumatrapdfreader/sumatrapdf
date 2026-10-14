@@ -4,6 +4,27 @@
 // --- shared by PdfToolsCommon.cpp and each app's PdfTools.cpp ---
 
 bool ParseDeletePages(Str s, int pageCount, Vec<int>& pagesToDelete);
+bool PageRangeOk(Str s, int pageCount, bool isExtract, Vec<int>& pages);
+TempStr PageRangeCountTemp(Str s, int pageCount, bool isExtract);
+TempStr PageCountTextTemp(int nPages, int pageCount);
+Str PageRangeHint();
+
+// the tool dialogs' layout, in dips: the lines the user types in, then the
+// files, then the footer, hairlines between them, as the palette draws
+constexpr int kToolDlgMinDx = 520;
+constexpr int kToolDlgPadDx = 16;
+constexpr int kToolDlgLabelDx = 64;
+constexpr int kToolDlgGapDx = 10;
+constexpr int kToolDlgLineDy = 44;
+constexpr int kToolDlgRowDy = 30;
+constexpr int kToolDlgFilesPadDy = 8;
+constexpr int kToolDlgFootPadDy = 10;
+constexpr int kToolDlgComboDx = 84;
+constexpr int kToolDlgQueryFontPx = 15;
+constexpr int kToolDlgTextFontPx = 13;
+constexpr int kToolDlgMetaFontPx = 12;
+// the meta text, lighter still, while what it describes is not usable
+constexpr int kToolDlgFaintShift = 25;
 TempStr BuildKeepPagesRangeTemp(int pageCount, const Vec<int>& pagesToDelete);
 TempStr FormatPageRangeTemp(const Vec<int>& pages);
 bool KeepOnlyPagesWithAnnotations(EngineBase* engine, Vec<int>& pages);

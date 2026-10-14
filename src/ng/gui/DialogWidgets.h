@@ -158,6 +158,10 @@ struct DlgWindowSpec {
     // the client width (dips) when the dialog's build function gives the
     // window orig's layout (DlgWinContent); 0: the Dialog's own width
     float clientDx = 0;
+    // the window can be dragged wider, down to minClientDx; its height stays
+    // the content's
+    bool resizable = false;
+    float minClientDx = 0;
 };
 // null where the dialog stays in the frame
 ToolWindow* DlgWindowOpen(const DlgWindowSpec& spec, MainWindow* win);
@@ -237,6 +241,16 @@ gpui::El* DlgAccelEl(gpui::Ctx* cx, T* ctrl, Str label, gpui::Listener onClick, 
 gpui::El* DlgKeyCap(gpui::Ctx* cx, Str key, bool active = false);
 // a hairline across the dialog
 gpui::El* DlgHairline(gpui::Ctx* cx);
+// the one filled button of a dialog: the text color, as orig draws it
+constexpr float kDlgBtnDy = 26;
+constexpr float kDlgBtnPadDx = 12;
+constexpr float kDlgBtnRadius = 4;
+constexpr float kDlgBtnFontPx = 13;
+constexpr int kDlgBtnShift = 28;
+gpui::El* DlgFilledButton(gpui::Ctx* cx, gpui::Str id, Str label, gpui::Listener onClick, bool disabled = false);
+// a bare input over a line in `underline`; the caller sizes the box
+gpui::El* DlgUnderlineInput(gpui::Ctx* cx, gpui::Str id, gpui::InputState* edit, float fontPx, Color underline,
+                            bool masked = false, bool disabled = false);
 
 // gpui's Dialog draws OK / Cancel itself unless the caller gives it a footer,
 // and then it draws nothing else. orig's dialogs with an extra button (Help,

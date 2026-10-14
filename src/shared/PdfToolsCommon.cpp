@@ -36,6 +36,31 @@ extern "C" int pdfclean_main(int argc, char** argv);
 extern "C" int muconvert_main(int argc, char** argv);
 extern "C" void fz_set_optind(int val);
 
+// a usable page range: Delete Pages cannot take every page
+bool PageRangeOk(Str s, int pageCount, bool isExtract, Vec<int>& pages) {
+    if (!ParseDeletePages(s, pageCount, pages)) {
+        return false;
+    }
+    return isExtract || len(pages) < pageCount;
+}
+
+// "4 of 7 pages" for the pages a range picks; "of 7 pages" while it is not usable
+TempStr PageRangeCountTemp(Str s, int pageCount, bool isExtract) {
+    Vec<int> pages;
+    if (!PageRangeOk(s, pageCount, isExtract, pages)) {
+        return fmt(Tr("of %d pages").s, pageCount);
+    }
+    return PageCountTextTemp(len(pages), pageCount);
+}
+
+TempStr PageCountTextTemp(int nPages, int pageCount) {
+    return fmt(Tr("%d of %d pages").s, nPages, pageCount);
+}
+
+Str PageRangeHint() {
+    return StrL("Ranges: 2, 5-7, 13-");
+}
+
 // Parse delete page ranges like "1,3-8,13-N" where N means last page.
 // Returns a sorted list of unique 1-based page numbers to delete.
 // Returns false if the syntax is invalid or any page is out of range.

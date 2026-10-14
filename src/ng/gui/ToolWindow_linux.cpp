@@ -262,6 +262,24 @@ void ToolWinNativeSetMinClient(gp::Window* gw, int dx, int dy) {
     XFlush(dpy);
 }
 
+// a window keeps the size hints it has, so a 0 side stays as it was
+void ToolWinNativeSetMaxClient(gp::Window* gw, int dx, int dy) {
+    Display* dpy = Dpy();
+    XWin xw = XOf(gw);
+    if (!dpy || !xw) {
+        return;
+    }
+    XSizeHints hints{};
+    long supplied = 0;
+    XGetWMNormalHints(dpy, xw, &hints, &supplied);
+    constexpr int kUnbounded = 1 << 20;
+    hints.flags |= PMaxSize;
+    hints.max_width = dx > 0 ? dx : kUnbounded;
+    hints.max_height = dy > 0 ? dy : kUnbounded;
+    XSetWMNormalHints(dpy, xw, &hints);
+    XFlush(dpy);
+}
+
 static XWin gGrabbed = 0;
 
 void ToolWinNativeSetModal(gp::Window* gw, gp::Window*, bool on) {

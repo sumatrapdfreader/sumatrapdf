@@ -1844,13 +1844,10 @@ static bool ActionEnabled() {
     if (len(DestPathTemp()) == 0) {
         return false;
     }
-    if (IsPageRangeTool()) {
+    if (IsPageRangeTool() || gTool.kind == PdfToolKind::ExtractText) {
         Vec<int> parsed;
-        if (!ParseDeletePages(InputTextTemp(gTool.pagesEdit), gTool.pageCount, parsed)) {
-            return false;
-        }
-        // for delete mode, can't delete all pages
-        return gTool.kind == PdfToolKind::ExtractPages || len(parsed) < gTool.pageCount;
+        bool isExtract = gTool.kind != PdfToolKind::DeletePages;
+        return PageRangeOk(InputTextTemp(gTool.pagesEdit), gTool.pageCount, isExtract, parsed);
     }
     if (gTool.kind == PdfToolKind::Encrypt) {
         // there is nothing to encrypt with until a password is typed
@@ -2439,11 +2436,11 @@ static bool ToolDlgWindowOnKey(MainWindow* win, int vk, bool ctrl, bool shift, b
     return true;
 }
 
-// orig's CalcDlgWidth: wide enough for the source path, at least 480 and at
-// most 80% of the screen (a longer path is cut with an ellipsis)
+// orig's CalcDlgWidth: wide enough for the source path, at least kToolDlgMinDx
+// and at most 80% of the screen (a longer path is cut with an ellipsis)
 static float ToolWinClientDx(MainWindow* win, Str srcPath) {
-    constexpr float kMinDx = 480;
-    constexpr float kPathExtraDx = 2 * 10 + 32;
+    constexpr float kMinDx = kToolDlgMinDx;
+    constexpr float kPathExtraDx = 2 * kToolDlgPadDx + 32;
     int dpi = std::max(AppShellWindowDpi(win), 96);
     float pathDx = (float)PlatformFontMeasureText(GetDefaultGuiFont(), srcPath).dx * 96.f / (float)dpi;
     float dx = std::max(pathDx + kPathExtraDx, kMinDx);
@@ -2556,6 +2553,8 @@ static bool StartToolDialog(MainWindow* win, PdfToolKind kind, Str destPath, Str
     spec.onKey = ToolDlgWindowOnKey;
     gTool.winDx = ToolWinClientDx(win, gTool.srcPath);
     spec.clientDx = gTool.winDx;
+    spec.resizable = true;
+    spec.minClientDx = kToolDlgMinDx;
     gTool.dlgTw = DlgWindowOpen(spec, win);
     VecAppend(gWinTools, gCurTool);
     if (!gTool.dlgTw) {
@@ -2601,6 +2600,7 @@ void ShowPdfExtractTextDialog(MainWindow* win) {
     }
     int pageCount = win->ctrl ? win->ctrl->PageCount() : 1;
     gTool.pagesEdit = NewInput(win, fmt("1-%d", pageCount));
+    gTool.focusPages = true;
     AppShellInvalidate(win);
 }
 
@@ -2874,8 +2874,6 @@ static gp::El* LabelEl(gp::Ctx* cx, Str s, bool muted) {
     return gp::TextEl(cx->a, GpuiDup(cx->a, s))->Font(13)->Fg(muted ? th.mutedFg : th.foreground);
 }
 
-// orig's AddButtonsRow: the optional hint on the left, then the action button
-// (the dialog's default) and Cancel on the right
 // orig's MergeGrid::DrawCell / Paint as gpui elements. Only the rows in view
 // are built; everything is positioned absolutely in a box as tall as the grid.
 static void MergeInvalidateLater() {
@@ -3087,52 +3085,47 @@ static TempStr SelectionSizeTextTemp(MainWindow* win) {
     return fmt("%d x %d px", w, h);
 }
 
+// Merge PDF in the frame: the legend, Remove / Restore / Save As..., Cancel
+// and Save
 static gp::El* ToolFooter(gp::Ctx* cx, Str hint, Str actionText, bool enabled) {
     gp::El* row = gp::Div(cx->a)->FlexRow()->W(gp::kFill)->ItemsCenter()->Gap(8);
     if (len(hint) > 0) {
         row->Child(LabelEl(cx, hint, true));
     }
-    if (gTool.kind == PdfToolKind::Merge) {
-        row->Child(MergeLegendEl(cx));
-        int nSel = MergeSelectedCount();
-        int nSelRemoved = MergeSelectedRemovedCount();
-        row->Child(gpc::Button::New(cx, GStrL("merge-remove"))
-                       ->Label(ToGpui(Tr("Remove")))
-                       ->WithSize(gp::UiSize::Small)
-                       ->Disabled(nSel <= nSelRemoved)
-                       ->OnClick(gp::ListenTo(gToolView, &PdfToolView::OnMergeSetRemoved, (intptr_t)1))
-                       ->IntoEl());
-        row->Child(gpc::Button::New(cx, GStrL("merge-restore"))
-                       ->Label(ToGpui(Tr("Restore")))
-                       ->WithSize(gp::UiSize::Small)
-                       ->Disabled(nSelRemoved == 0)
-                       ->OnClick(gp::ListenTo(gToolView, &PdfToolView::OnMergeSetRemoved, (intptr_t)0))
-                       ->IntoEl());
-        row->Child(gpc::Button::New(cx, GStrL("merge-saveas"))
-                       ->Label(ToGpui(Tr("Save As...")))
-                       ->Primary()
-                       ->WithSize(gp::UiSize::Small)
-                       ->Disabled(!enabled)
-                       ->OnClick(gp::ListenTo(gToolView, &PdfToolView::OnMergeSaveAs))
-                       ->IntoEl());
-    } else {
-        row->Child(gp::Div(cx->a)->Flex1());
-    }
+    row->Child(MergeLegendEl(cx));
+    int nSel = MergeSelectedCount();
+    int nSelRemoved = MergeSelectedRemovedCount();
+    row->Child(gpc::Button::New(cx, GStrL("merge-remove"))
+                   ->Label(ToGpui(Tr("Remove")))
+                   ->WithSize(gp::UiSize::Small)
+                   ->Disabled(nSel <= nSelRemoved)
+                   ->OnClick(gp::ListenTo(gToolView, &PdfToolView::OnMergeSetRemoved, (intptr_t)1))
+                   ->IntoEl());
+    row->Child(gpc::Button::New(cx, GStrL("merge-restore"))
+                   ->Label(ToGpui(Tr("Restore")))
+                   ->WithSize(gp::UiSize::Small)
+                   ->Disabled(nSelRemoved == 0)
+                   ->OnClick(gp::ListenTo(gToolView, &PdfToolView::OnMergeSetRemoved, (intptr_t)0))
+                   ->IntoEl());
+    // orig's Merge PDF: Save As... is the default button, not Save
+    row->Child(gpc::Button::New(cx, GStrL("merge-saveas"))
+                   ->Label(ToGpui(Tr("Save As...")))
+                   ->Primary()
+                   ->WithSize(gp::UiSize::Small)
+                   ->Disabled(!enabled)
+                   ->OnClick(gp::ListenTo(gToolView, &PdfToolView::OnMergeSaveAs))
+                   ->IntoEl());
     row->Child(gpc::Button::New(cx, GStrL("pdftool-cancel"))
                    ->Label(ToGpui(Tr("Cancel")))
                    ->WithSize(gp::UiSize::Small)
                    ->OnClick(gp::ListenTo(gToolView, &PdfToolView::OnCancel))
                    ->IntoEl());
-    gpc::Button* action = gpc::Button::New(cx, GStrL("pdftool-action"))
-                              ->Label(GpuiDup(cx->a, actionText))
-                              ->WithSize(gp::UiSize::Small)
-                              ->Disabled(!enabled)
-                              ->OnClick(gp::ListenTo(gToolView, &PdfToolView::OnAction));
-    // orig's Merge PDF: Save As... is the default button, not Save
-    if (gTool.kind != PdfToolKind::Merge) {
-        action->Primary();
-    }
-    row->Child(action->IntoEl());
+    row->Child(gpc::Button::New(cx, GStrL("pdftool-action"))
+                   ->Label(GpuiDup(cx->a, actionText))
+                   ->WithSize(gp::UiSize::Small)
+                   ->Disabled(!enabled)
+                   ->OnClick(gp::ListenTo(gToolView, &PdfToolView::OnAction))
+                   ->IntoEl());
     return row;
 }
 
@@ -3399,66 +3392,210 @@ static void MergeOpenToolWindow(MainWindow* win) {
     gTool.tw = ToolWindowOpen(MergeToolDesc(), win, MergeToolRect(win));
 }
 
-// --- orig's layout, for a tool in a window of its own -----------------------
+// --- the dialog, drawn like the palette -------------------------------------
 
-// sizes at 96 dpi, as PdfToolDialog has them: 10 around, the rows 6 apart, a
-// label 8 before its field, an average character between the controls of a
-// row
-constexpr float kToolWinPad = 10;
-constexpr float kToolWinRowGap = 6;
-constexpr float kToolWinGap = 8;
-constexpr float kToolWinCtrlGap = kDlgWinBtnGap;
-constexpr float kToolWinComboDx = 69;
-// what BCM_GETIDEALSIZE adds to a radio button's or a checkbox's label
-constexpr float kToolWinCheckExtraDx = 34;
-// the left text margin of an edit, which the source path lines up with
-constexpr float kToolWinPathPadL = 4;
+// what a bare gpui input insets its text by; the source path lines up with it
+constexpr float kToolDlgInputPadDx = 8;
+// The tool's lines (a page range, a password, the DPI), the files - the
+// source and the destination over a hairline, with Browse - and the footer
+// with a hint, Cancel and the one filled action button; hairlines between
+// the three. The same column goes in a window of its own and in the frame.
 
-// one row of the dialog, `dy` high, with the gap that separates it from the
-// row above
-static gp::El* ToolWinRow(gp::Ctx* cx, float dy, float gap = 0) {
+static gp::El* ToolText(gp::Ctx* cx, Str s, float font, Color col) {
+    return gp::TextEl(cx->a, GpuiDup(cx->a, s))->Font(font)->Fg(ToGpui(col));
+}
+
+static gp::El* ToolLabel(gp::Ctx* cx, Str label) {
+    return gp::Div(cx->a)
+        ->MinW(kToolDlgLabelDx)
+        ->Shrink0()
+        ->Child(ToolText(cx, label, kToolDlgTextFontPx, ThemeWindowTextDisabledColor()));
+}
+
+// a line of the top section: its label, then what the caller adds
+static gp::El* ToolLine(gp::Ctx* cx, Str label) {
     return gp::Div(cx->a)
         ->FlexRow()
         ->ItemsCenter()
         ->W(gp::kFill)
-        ->H(dy + kToolWinRowGap)
-        ->PadT(kToolWinRowGap)
-        ->Gap(gap)
-        ->Shrink0();
-}
-
-// a label, as wide as GDI measures it (what orig's layout goes by)
-static gp::El* ToolWinText(gp::Ctx* cx, Str s, float font) {
-    const gp::Theme& th = gp::ThemeNow(cx->app);
-    return gp::Div(cx->a)
-        ->W(DlgWinTextDx(cx, s))
+        ->H(kToolDlgLineDy)
         ->Shrink0()
-        ->Child(gp::TextEl(cx->a, GpuiDup(cx->a, s))->Font(font)->Fg(th.foreground));
+        ->PadX(kToolDlgPadDx)
+        ->Gap(kToolDlgGapDx)
+        ->Child(ToolLabel(cx, label));
 }
 
-static gp::El* ToolWinEdit(gp::Ctx* cx, gp::Str id, gp::InputState* edit, bool masked = false, bool disabled = false) {
-    gpc::Input* in = gpc::Input::New(cx, id, edit)->WithSize(gp::UiSize::Small)->Disabled(disabled)->W(gp::kFill);
-    if (masked) {
-        in->Masked(true);
+// a bare field in the larger font: what the dialog is about
+static gp::El* ToolLineInput(gp::Ctx* cx, gp::Str id, gp::InputState* edit, bool masked = false,
+                             bool disabled = false) {
+    gpc::Input* in = gpc::Input::New(cx, id, edit)
+                         ->Appearance(false)
+                         ->WithSize(gp::UiSize::Small)
+                         ->Masked(masked)
+                         ->Disabled(disabled)
+                         ->W(gp::kFill);
+    return gp::Div(cx->a)->Flex1()->MinW(0)->Child(in->IntoEl()->Font(kToolDlgQueryFontPx));
+}
+
+// the text at a line's right end, lighter while what it describes is not usable
+static gp::El* ToolMeta(gp::Ctx* cx, Str s, bool ok) {
+    Color col = ThemeWindowTextDisabledColor();
+    if (!ok) {
+        col = AccentColor(col, kToolDlgFaintShift);
     }
-    return gp::Div(cx->a)->Flex1()->MinW(0)->H(kDlgWinEditDy)->Child(in->IntoEl()->H(kDlgWinEditDy));
+    return gp::Div(cx->a)->Shrink0()->Child(ToolText(cx, s, kToolDlgMetaFontPx, col));
 }
 
-static gp::El* ToolWinRadio(gp::Ctx* cx, Str id, Str label, PagesMode mode) {
+static gp::El* ToolDpiCombo(gp::Ctx* cx) {
     return gp::Div(cx->a)
-        ->FlexRow()
-        ->ItemsCenter()
-        ->W(DlgWinTextDx(cx, label) + kToolWinCheckExtraDx)
-        ->H(kDlgWinCheckDy)
+        ->W(kToolDlgComboDx)
         ->Shrink0()
-        ->Child(RadioEl(cx, id, label, mode));
+        ->Child(gTool.ddDpi.BuildCombo(cx, StrL("pdftool-dpi"), gTool.dpiEdit, kToolDlgComboDx));
 }
 
-static gp::El* ToolWinDpiCombo(gp::Ctx* cx) {
-    return gp::Div(cx->a)
-        ->W(kToolWinComboDx)
-        ->Shrink0()
-        ->Child(gTool.ddDpi.BuildCombo(cx, StrL("pdftool-dpi"), gTool.dpiEdit, kToolWinComboDx, false, kDlgWinEditDy));
+static gp::El* ToolPagesLine(gp::Ctx* cx, bool isExtract) {
+    gp::El* line = ToolLine(cx, Tr("Pages"));
+    line->Child(ToolLineInput(cx, GStrL("pdftool-pages"), gTool.pagesEdit));
+    TempStr pages = InputTextTemp(gTool.pagesEdit);
+    Vec<int> parsed;
+    bool ok = PageRangeOk(pages, gTool.pageCount, isExtract, parsed);
+    line->Child(ToolMeta(cx, PageRangeCountTemp(pages, gTool.pageCount, isExtract), ok));
+    return line;
+}
+
+// Convert PDF to Images: the mode, the custom range, and the count the mode
+// comes to
+static gp::El* ToolPagesModeLine(gp::Ctx* cx) {
+    gp::El* line = ToolLine(cx, Tr("Pages"));
+    line->Child(RadioEl(cx, StrL("pdftool-cur"), Tr("Current"), PagesMode::Current));
+    line->Child(RadioEl(cx, StrL("pdftool-all"), Tr("All"), PagesMode::All));
+    line->Child(RadioEl(cx, StrL("pdftool-custom"), Tr("Custom"), PagesMode::Custom));
+    bool custom = gTool.pagesMode == PagesMode::Custom;
+    line->Child(ToolLineInput(cx, GStrL("pdftool-pages"), gTool.pagesEdit, false, !custom));
+    if (custom) {
+        TempStr pages = InputTextTemp(gTool.pagesEdit);
+        Vec<int> parsed;
+        bool ok = ParseDeletePages(pages, gTool.pageCount, parsed);
+        line->Child(ToolMeta(cx, PageRangeCountTemp(pages, gTool.pageCount, true), ok));
+    } else {
+        int n = gTool.pagesMode == PagesMode::All ? gTool.pageCount : 1;
+        line->Child(ToolMeta(cx, PageCountTextTemp(n, gTool.pageCount), true));
+    }
+    return line;
+}
+
+// "From" the source - the folder muted, the file name in the text color -
+// and "Save as" the destination over a hairline, with the format drop-down
+// of the image tools and Browse after it
+static gp::El* ToolFilesBlock(gp::Ctx* cx) {
+    Color colText = ThemeWindowTextColor();
+    Color colMuted = ThemeWindowTextDisabledColor();
+    gp::El* box = gp::Div(cx->a)->FlexCol()->W(gp::kFill)->Shrink0()->PadX(kToolDlgPadDx)->PadY(kToolDlgFilesPadDy);
+    auto row = [&](Str label) {
+        gp::El* r = gp::Div(cx->a)
+                        ->FlexRow()
+                        ->ItemsCenter()
+                        ->W(gp::kFill)
+                        ->H(kToolDlgRowDy)
+                        ->Shrink0()
+                        ->Gap(kToolDlgGapDx)
+                        ->Child(ToolLabel(cx, label));
+        box->Child(r);
+        return r;
+    };
+
+    gp::El* from = row(Tr("From"));
+    Str name = path::GetBaseNameTemp(gTool.srcPath);
+    Str dir = Str(gTool.srcPath.s, len(gTool.srcPath) - len(name));
+    gp::El* path = gp::Div(cx->a)->FlexRow()->ItemsCenter()->Flex1()->MinW(0)->PadL(kToolDlgInputPadDx);
+    path->Child(ToolText(cx, dir, kToolDlgTextFontPx, colMuted)->Truncate()->MinW(0));
+    path->Child(ToolText(cx, name, kToolDlgTextFontPx, colText)->Shrink0());
+    from->Child(path);
+
+    gp::El* save = row(Tr("Save as"));
+    save->Child(DlgUnderlineInput(cx, GStrL("pdftool-dest"), gTool.destEdit, kToolDlgTextFontPx, ThemeEdgeColor())
+                    ->Flex1()
+                    ->MinW(0));
+    if (HasFormatDropDown()) {
+        save->Child(gp::Div(cx->a)
+                        ->W(kToolDlgComboDx)
+                        ->Shrink0()
+                        ->Child(gTool.ddFormat.Build(cx, StrL("pdftool-format"), kToolDlgComboDx)));
+    }
+    save->Child(gpc::Button::New(cx, GStrL("pdftool-browse"))
+                    ->Label(ToGpui(Tr("Browse...")))
+                    ->Ghost()
+                    ->WithSize(gp::UiSize::Small)
+                    ->OnClick(gp::ListenTo(gToolView, &PdfToolView::OnBrowse))
+                    ->IntoEl());
+    return box;
+}
+
+// the hint on the left, Cancel and the filled action button on the right
+static gp::El* ToolDlgFooter(gp::Ctx* cx, Str hint) {
+    gp::El* row = gp::Div(cx->a)
+                      ->FlexRow()
+                      ->ItemsCenter()
+                      ->W(gp::kFill)
+                      ->Shrink0()
+                      ->PadX(kToolDlgPadDx)
+                      ->PadY(kToolDlgFootPadDy)
+                      ->Gap(kToolDlgGapDx);
+    if (len(hint) > 0) {
+        row->Child(ToolText(cx, hint, kToolDlgMetaFontPx, ThemeWindowTextDisabledColor()));
+    }
+    row->Child(gp::Div(cx->a)->Flex1());
+    row->Child(gpc::Button::New(cx, GStrL("pdftool-cancel"))
+                   ->Label(ToGpui(Tr("Cancel")))
+                   ->Outline()
+                   ->WithSize(gp::UiSize::Small)
+                   ->OnClick(gp::ListenTo(gToolView, &PdfToolView::OnCancel))
+                   ->IntoEl());
+    row->Child(DlgFilledButton(cx, GStrL("pdftool-action"), ToolActionText(),
+                               gp::ListenTo(gToolView, &PdfToolView::OnAction), !ActionEnabled()));
+    return row;
+}
+
+static gp::El* PdfToolColumn(MainWindow* win, gp::Ctx* cx) {
+    gp::El* col = gp::Div(cx->a)->FlexCol()->W(gp::kFill)->Shrink0();
+    Str hint;
+    int nLines = 0;
+    switch (gTool.kind) {
+        case PdfToolKind::ExtractText:
+        case PdfToolKind::DeletePages:
+        case PdfToolKind::ExtractPages:
+            col->Child(ToolPagesLine(cx, gTool.kind != PdfToolKind::DeletePages));
+            nLines++;
+            hint = PageRangeHint();
+            break;
+        case PdfToolKind::Encrypt:
+            col->Child(
+                ToolLine(cx, Tr("Password"))->Child(ToolLineInput(cx, GStrL("pdftool-pwd"), gTool.passwordEdit, true)));
+            nLines++;
+            break;
+        case PdfToolKind::ConvertToImages:
+            col->Child(ToolPagesModeLine(cx));
+            col->Child(ToolLine(cx, Tr("Resolution (DPI)"))->Child(ToolDpiCombo(cx)));
+            nLines += 2;
+            hint = Tr("Use <N> for the page number");
+            break;
+        case PdfToolKind::SaveSelectionAsImage:
+            col->Child(ToolLine(cx, Tr("Resolution (DPI)"))
+                           ->Child(ToolDpiCombo(cx))
+                           ->Child(gp::Div(cx->a)->Flex1())
+                           ->Child(ToolMeta(cx, SelectionSizeTextTemp(win), ActionEnabled())));
+            nLines++;
+            break;
+        default:
+            break;
+    }
+    if (nLines > 0) {
+        col->Child(DlgHairline(cx));
+    }
+    col->Child(ToolFilesBlock(cx));
+    col->Child(DlgHairline(cx));
+    col->Child(ToolDlgFooter(cx, hint));
+    return col;
 }
 
 // orig's FinishDialog(focusOn)
@@ -3474,90 +3611,6 @@ static void PdfToolFocusFirst(gp::Ctx* cx) {
     gp::InputFocus(focusOn, cx->app, cx->win);
     gp::InputSelectAll(focusOn, cx->app, cx->win);
     logf("PdfTool: %s\n", PdfToolStateTemp());
-}
-
-static gp::El* PdfToolWinBuild(MainWindow* win, gp::Ctx* cx) {
-    const gp::Theme& th = gp::ThemeNow(cx->app);
-    float font = DlgWinFont(cx);
-    gp::El* col = gp::Div(cx->a)->FlexCol()->W(gp::kFill)->Pad(kToolWinPad);
-
-    // the source path, cut with an ellipsis when the window cannot be as wide
-    col->Child(
-        gp::Div(cx->a)
-            ->FlexRow()
-            ->ItemsCenter()
-            ->W(gp::kFill)
-            ->H(kDlgWinLineDy)
-            ->PadL(kToolWinPathPadL)
-            ->Shrink0()
-            ->Child(gp::TextEl(cx->a, GpuiDup(cx->a, gTool.srcPath))->Font(font)->Fg(th.foreground)->Truncate()));
-
-    gp::El* destRow = ToolWinRow(cx, kDlgWinBtnDy, kToolWinCtrlGap);
-    destRow->Child(ToolWinEdit(cx, GStrL("pdftool-dest"), gTool.destEdit));
-    if (HasFormatDropDown()) {
-        gp::El* sel = gTool.ddFormat.Build(cx, StrL("pdftool-format"), kToolWinComboDx)->H(kDlgWinEditDy);
-        if (sel->first) {
-            sel->first->H(kDlgWinEditDy);
-        }
-        destRow->Child(gp::Div(cx->a)->W(kToolWinComboDx)->Shrink0()->Child(sel));
-    }
-    destRow->Child(
-        DlgWinButton(cx, GStrL("pdftool-browse"), StrL("..."), gp::ListenTo(gToolView, &PdfToolView::OnBrowse), false));
-    col->Child(destRow);
-
-    Str hint;
-    auto labeledEdit = [&](Str label, gp::Str id, gp::InputState* edit, bool masked) {
-        gp::El* row = ToolWinRow(cx, kDlgWinEditDy);
-        row->Child(gp::Div(cx->a)->PadR(kToolWinGap)->Shrink0()->Child(ToolWinText(cx, label, font)));
-        row->Child(ToolWinEdit(cx, id, edit, masked));
-        col->Child(row);
-        return row;
-    };
-    if (gTool.kind == PdfToolKind::ExtractText) {
-        labeledEdit(Tr("Pages:"), GStrL("pdftool-pages"), gTool.pagesEdit, false);
-    } else if (IsPageRangeTool()) {
-        bool isExtract = gTool.kind == PdfToolKind::ExtractPages;
-        gp::El* row = labeledEdit(isExtract ? Tr("Pages To Extract:") : Tr("Pages To Delete:"), GStrL("pdftool-pages"),
-                                  gTool.pagesEdit, false);
-        row->Child(
-            gp::Div(cx->a)->PadL(kToolWinGap)->Shrink0()->Child(ToolWinText(cx, fmt("of %d", gTool.pageCount), font)));
-        hint = StrL("Syntax: 2,5-7,13-");
-    } else if (gTool.kind == PdfToolKind::Encrypt) {
-        labeledEdit(Tr("Password:"), GStrL("pdftool-pwd"), gTool.passwordEdit, true);
-    } else if (gTool.kind == PdfToolKind::ConvertToImages) {
-        gp::El* row = ToolWinRow(cx, kDlgWinEditDy, kToolWinCtrlGap);
-        row->Child(ToolWinText(cx, Tr("Pages:"), font));
-        row->Child(ToolWinRadio(cx, StrL("pdftool-cur"), Tr("Current"), PagesMode::Current));
-        row->Child(ToolWinRadio(cx, StrL("pdftool-all"), Tr("All"), PagesMode::All));
-        row->Child(ToolWinRadio(cx, StrL("pdftool-custom"), Tr("Custom"), PagesMode::Custom));
-        row->Child(
-            ToolWinEdit(cx, GStrL("pdftool-pages"), gTool.pagesEdit, false, gTool.pagesMode != PagesMode::Custom));
-        col->Child(row);
-        gp::El* dpiRow = ToolWinRow(cx, kDlgWinEditDy, kToolWinCtrlGap);
-        dpiRow->Child(ToolWinText(cx, Tr("Resolution (DPI):"), font));
-        dpiRow->Child(ToolWinDpiCombo(cx));
-        col->Child(dpiRow);
-        hint = Tr("Use <N> for the page number");
-    } else if (gTool.kind == PdfToolKind::SaveSelectionAsImage) {
-        gp::El* dpiRow = ToolWinRow(cx, kDlgWinEditDy, kToolWinCtrlGap);
-        dpiRow->Child(ToolWinText(cx, Tr("Resolution (DPI):"), font));
-        dpiRow->Child(ToolWinDpiCombo(cx));
-        dpiRow->Child(ToolWinText(cx, SelectionSizeTextTemp(win), font));
-        col->Child(dpiRow);
-    }
-
-    // the hint at the left, then the action button (the default) and Cancel
-    gp::El* buttons = ToolWinRow(cx, kDlgWinBtnDy, kToolWinCtrlGap);
-    if (len(hint) > 0) {
-        buttons->Child(ToolWinText(cx, hint, font));
-    }
-    buttons->Child(gp::Div(cx->a)->Flex1());
-    buttons->Child(DlgWinButton(cx, GStrL("pdftool-action"), ToolActionText(),
-                                gp::ListenTo(gToolView, &PdfToolView::OnAction), true, !ActionEnabled()));
-    buttons->Child(DlgWinButton(cx, GStrL("pdftool-cancel"), Tr("Cancel"),
-                                gp::ListenTo(gToolView, &PdfToolView::OnCancel), false));
-    col->Child(buttons);
-    return DlgWinContent(cx, col);
 }
 
 static gp::El* PdfToolBuildCurrent(MainWindow* win, gp::Ctx* cx) {
@@ -3581,42 +3634,25 @@ static gp::El* PdfToolBuildCurrent(MainWindow* win, gp::Ctx* cx) {
         gTool.dpiEdit->onChange = gp::ListenTo(gToolView, &PdfToolView::OnInput);
         gTool.ddDpi.TakeComboPicked();
     }
-    const gp::Theme& th = gp::ThemeNow(cx->app);
-    gTool.destEdit->onChange = gp::ListenTo(gToolView, &PdfToolView::OnInput);
-    if (DlgWindowIsHost(cx)) {
-        for (gp::InputState* e : {gTool.pagesEdit, gTool.passwordEdit}) {
-            if (e) {
-                e->onChange = gp::ListenTo(gToolView, &PdfToolView::OnInput);
-            }
+    for (gp::InputState* e : {gTool.destEdit, gTool.pagesEdit, gTool.passwordEdit}) {
+        if (e) {
+            e->onChange = gp::ListenTo(gToolView, &PdfToolView::OnInput);
         }
-        gp::El* content = PdfToolWinBuild(win, cx);
+    }
+    if (DlgWindowIsHost(cx)) {
+        gp::El* content = DlgWinContent(cx, PdfToolColumn(win, cx));
         PdfToolFocusFirst(cx);
         return content;
     }
 
-    gp::El* body = gp::Div(cx->a)->FlexCol()->Gap(6)->W(gp::kFill);
-    // the source path, ellipsized for long paths
-    body->Child(gp::TextEl(cx->a, GpuiDup(cx->a, gTool.srcPath))->Font(12)->Fg(th.mutedFg)->Truncate());
-
-    gp::El* destRow = gp::Div(cx->a)->FlexRow()->W(gp::kFill)->ItemsCenter()->Gap(8);
-    destRow->Child(gp::Div(cx->a)->Flex1()->MinW(0)->Child(gpc::Input::New(cx, GStrL("pdftool-dest"), gTool.destEdit)
-                                                               ->WithSize(gp::UiSize::Small)
-                                                               ->W(gp::kFill)
-                                                               ->IntoEl()));
-    if (HasFormatDropDown()) {
-        destRow->Child(gTool.ddFormat.Build(cx, StrL("pdftool-format"), 84));
-    }
-    destRow->Child(gpc::Button::New(cx, GStrL("pdftool-browse"))
-                       ->Label(GStrL("..."))
-                       ->WithSize(gp::UiSize::Small)
-                       ->OnClick(gp::ListenTo(gToolView, &PdfToolView::OnBrowse))
-                       ->IntoEl());
-    if (gTool.kind != PdfToolKind::Merge) {
-        body->Child(destRow);
-    }
-
-    Str hint;
+    gp::El* body;
+    gp::El* footer = nullptr;
+    float dialogDx = 600;
     if (gTool.kind == PdfToolKind::Merge) {
+        const gp::Theme& th = gp::ThemeNow(cx->app);
+        body = gp::Div(cx->a)->FlexCol()->Gap(6)->W(gp::kFill);
+        // the source path, ellipsized for long paths
+        body->Child(gp::TextEl(cx->a, GpuiDup(cx->a, gTool.srcPath))->Font(12)->Fg(th.mutedFg)->Truncate());
         StartMergeThumbs();
         // orig's window is 85% of the work area tall; the grid gets what the
         // frame leaves after the dialog's title and button rows
@@ -3627,78 +3663,23 @@ static gp::El* PdfToolBuildCurrent(MainWindow* win, gp::Ctx* cx) {
                         ->WithSize(gp::UiSize::Small)
                         ->OnClick(gp::ListenTo(gToolView, &PdfToolView::OnMergeAdd))
                         ->IntoEl());
-        hint = MergeInfoTemp();
-    } else if (gTool.kind == PdfToolKind::ExtractText) {
-        gTool.pagesEdit->onChange = gp::ListenTo(gToolView, &PdfToolView::OnInput);
-        gp::El* row = gp::Div(cx->a)->FlexRow()->W(gp::kFill)->ItemsCenter()->Gap(8);
-        row->Child(LabelEl(cx, Tr("Pages:"), false));
-        row->Child(gp::Div(cx->a)->Flex1()->Child(gpc::Input::New(cx, GStrL("pdftool-pages"), gTool.pagesEdit)
-                                                      ->WithSize(gp::UiSize::Small)
-                                                      ->W(gp::kFill)
-                                                      ->IntoEl()));
-        body->Child(row);
-    } else if (IsPageRangeTool()) {
-        bool isExtract = gTool.kind == PdfToolKind::ExtractPages;
-        gTool.pagesEdit->onChange = gp::ListenTo(gToolView, &PdfToolView::OnInput);
-        gp::El* row = gp::Div(cx->a)->FlexRow()->W(gp::kFill)->ItemsCenter()->Gap(8);
-        row->Child(LabelEl(cx, isExtract ? Tr("Pages To Extract:") : Tr("Pages To Delete:"), false));
-        row->Child(gp::Div(cx->a)->Flex1()->Child(gpc::Input::New(cx, GStrL("pdftool-pages"), gTool.pagesEdit)
-                                                      ->WithSize(gp::UiSize::Small)
-                                                      ->W(gp::kFill)
-                                                      ->IntoEl()));
-        row->Child(LabelEl(cx, fmt("of %d", gTool.pageCount), true));
-        body->Child(row);
-        hint = StrL("Syntax: 2,5-7,13-");
-    } else if (gTool.kind == PdfToolKind::Encrypt) {
-        gTool.passwordEdit->onChange = gp::ListenTo(gToolView, &PdfToolView::OnInput);
-        gp::El* row = gp::Div(cx->a)->FlexRow()->W(gp::kFill)->ItemsCenter()->Gap(8);
-        row->Child(LabelEl(cx, Tr("Password:"), false));
-        row->Child(gp::Div(cx->a)->Flex1()->Child(gpc::Input::New(cx, GStrL("pdftool-pwd"), gTool.passwordEdit)
-                                                      ->WithSize(gp::UiSize::Small)
-                                                      ->Masked(true)
-                                                      ->W(gp::kFill)
-                                                      ->IntoEl()));
-        body->Child(row);
-    } else if (gTool.kind == PdfToolKind::ConvertToImages) {
-        gTool.pagesEdit->onChange = gp::ListenTo(gToolView, &PdfToolView::OnInput);
-        gp::El* row = gp::Div(cx->a)->FlexRow()->W(gp::kFill)->ItemsCenter()->Gap(8);
-        row->Child(LabelEl(cx, Tr("Pages:"), false));
-        row->Child(RadioEl(cx, StrL("pdftool-cur"), Tr("Current"), PagesMode::Current));
-        row->Child(RadioEl(cx, StrL("pdftool-all"), Tr("All"), PagesMode::All));
-        row->Child(RadioEl(cx, StrL("pdftool-custom"), Tr("Custom"), PagesMode::Custom));
-        row->Child(gp::Div(cx->a)->Flex1()->Child(gpc::Input::New(cx, GStrL("pdftool-pages"), gTool.pagesEdit)
-                                                      ->WithSize(gp::UiSize::Small)
-                                                      ->Disabled(gTool.pagesMode != PagesMode::Custom)
-                                                      ->W(gp::kFill)
-                                                      ->IntoEl()));
-        body->Child(row);
-        gp::El* dpiRow = gp::Div(cx->a)->FlexRow()->W(gp::kFill)->ItemsCenter()->Gap(8);
-        dpiRow->Child(LabelEl(cx, Tr("Resolution (DPI):"), false));
-        dpiRow->Child(gTool.ddDpi.BuildCombo(cx, StrL("pdftool-dpi"), gTool.dpiEdit, 90));
-        body->Child(dpiRow);
-        hint = Tr("Use <N> for the page number");
-    } else if (gTool.kind == PdfToolKind::SaveSelectionAsImage) {
-        gp::El* row = gp::Div(cx->a)->FlexRow()->W(gp::kFill)->ItemsCenter()->Gap(8);
-        row->Child(LabelEl(cx, Tr("Resolution (DPI):"), false));
-        row->Child(gTool.ddDpi.BuildCombo(cx, StrL("pdftool-dpi"), gTool.dpiEdit, 90));
-        row->Child(LabelEl(cx, SelectionSizeTextTemp(win), true));
-        body->Child(row);
-    }
-
-    gp::El* footer = ToolFooter(cx, hint, ToolActionText(), ActionEnabled());
-    float dialogDx = 600;
-    if (gTool.kind == PdfToolKind::Merge) {
+        footer = ToolFooter(cx, MergeInfoTemp(), ToolActionText(), ActionEnabled());
         // orig's kDialogDx, as far as the window allows: room for the page
         // grid and for the legend next to the buttons
         dialogDx = std::max(dialogDx, std::min((float)kMergeDialogDx, gp::WindowSize(cx->win).dipW - 80));
+    } else {
+        body = PdfToolColumn(win, cx);
     }
-    gp::El* dlg = DlgIntoEl(cx, gpc::Dialog::New(cx)
-                                    ->Open(true)
-                                    ->Title(GpuiDup(cx->a, ToolTitle()))
-                                    ->Body(body)
-                                    ->Footer(footer)
-                                    ->W(dialogDx)
-                                    ->OnClose(gp::ListenTo(gToolView, &PdfToolView::OnCancel)));
+    gpc::Dialog* d = gpc::Dialog::New(cx)
+                         ->Open(true)
+                         ->Title(GpuiDup(cx->a, ToolTitle()))
+                         ->Body(body)
+                         ->W(dialogDx)
+                         ->OnClose(gp::ListenTo(gToolView, &PdfToolView::OnCancel));
+    if (footer) {
+        d->Footer(footer);
+    }
+    gp::El* dlg = DlgIntoEl(cx, d);
 
     PdfToolFocusFirst(cx);
     return dlg;
