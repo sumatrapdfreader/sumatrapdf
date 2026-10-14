@@ -98,10 +98,19 @@ export async function testit(): Promise<void> {
 
     // a real click on the path label starts editing (the label must take the
     // mouse: plain virtual text doesn't); it starts with the current path
-    const rectStr = await raw(client, "path-label-rect");
-    const rm = /^OK (-?\d+) (-?\d+) (\d+) (\d+)$/.exec(rectStr);
-    if (!rm) {
-      throw new Error(`navigate files: could not parse label rect: ${rectStr}`);
+    // the label's rect is known once the window has laid it out
+    let rectStr = "";
+    let rm: RegExpExecArray | null = null;
+    for (const deadline = Date.now() + 5000; Date.now() < deadline;) {
+      rectStr = await raw(client, "path-label-rect");
+      rm = /^OK (-?\d+) (-?\d+) (\d+) (\d+)$/.exec(rectStr);
+      if (rm && Number(rm[3]) > 0 && Number(rm[4]) > 0) {
+        break;
+      }
+      await sleep(40);
+    }
+    if (!rm || Number(rm[3]) === 0) {
+      throw new Error(`navigate files: could not get the label rect: ${rectStr}`);
     }
     const x = Math.round(Number(rm[1]) + Number(rm[3]) / 2);
     const y = Math.round(Number(rm[2]) + Number(rm[4]) / 2);
