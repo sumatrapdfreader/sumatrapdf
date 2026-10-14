@@ -1310,44 +1310,6 @@ static void SyncLocationEdits(MainWindow* win) {
     SetEditText(tb->pageEdit, ctrl->GetPageLabeTemp(ctrl->CurrentPageNo()));
 }
 
-// ng: orig dumps the toolbar for its -dbg-control tests
-// (ToolbarButtonsResultTemp); the log is where this port's tests read it. Only
-// when it changed: this runs on every frame.
-static Str gLoggedButtons;
-
-static void LogToolbarButtons(MainWindow* win, const Vec<bool>& hidden, AppCommandCtx* ctx) {
-    str::Builder b;
-    int n = TotalButtonsCount();
-    for (int i = 0; i < n; i++) {
-        const ToolbarButtonInfo& bi = GetToolbarButtonInfoByIdx(i);
-        if (hidden[i]) {
-            continue;
-        }
-        b.AppendNonEmpty(len(b) == 0 ? StrL("") : StrL(" "));
-        if (bi.cmdId == 0) {
-            b.Append(StrL("|"));
-            continue;
-        }
-        if (bi.cmdId == PageInfoId) {
-            b.Append(StrL("PageInfo"));
-            continue;
-        }
-        Str name = GetCommandName(bi.cmdId);
-        b.Append(len(name) > 0 ? name : StrL("Custom"));
-        if (!IsCmdEnabled(win, bi.cmdId, ctx)) {
-            b.Append(StrL("(off)"));
-        } else if (IsCmdChecked(win, bi.cmdId)) {
-            b.Append(StrL("(checked)"));
-        }
-    }
-    Str s = b.TakeStr();
-    if (!str::Eq(s, gLoggedButtons)) {
-        str::ReplaceWithCopy(&gLoggedButtons, s);
-        logf("ToolbarButtons: %s\n", s);
-    }
-    str::Free(s);
-}
-
 gp::El* ToolbarBuild(MainWindow* win, gp::Ctx* cx) {
     Toolbar* tb = Tb(win);
     ToolbarUI* ui = Ui(win);
@@ -1458,7 +1420,6 @@ gp::El* ToolbarBuild(MainWindow* win, gp::Ctx* cx) {
     if (!floating) {
         row->Child(gp::Div(cx->a)->Flex1()->H(gp::kFill)->Click(gp::ClickWinCaption));
     }
-    LogToolbarButtons(win, hidden, ctx);
 
     if (tb->wantPageFocus) {
         tb->wantPageFocus = false;
