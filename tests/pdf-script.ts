@@ -110,18 +110,23 @@ async function ngUi(client: ControlClient) {
       const fields = list.filter((n) => n.role === 17);
       const selector = list.find((n) => n.role === 31)!;
       const last = fields[fields.length - 1]!;
-      return (selector.y - selector.h / 2 - (last.y + last.h / 2)) / last.h;
+      // Add argument sits under the last row; the gap is what follows it
+      const add = list.find((n) => n.label === "Add argument");
+      const bottom = add ? add.y + add.h / 2 : last.y + last.h / 2;
+      return (selector.y - selector.h / 2 - bottom) / last.h;
     },
     async argumentHeight() {
       const list = await layout();
-      return list.find((n) => n.role === 31)!.y - list.find((n) => n.role === 17)!.y;
+      // the editor's top: it shrinks once there is output, which moves its center up
+      const editor = list.find((n) => n.role === 31)!;
+      return editor.y - editor.h / 2 - list.find((n) => n.role === 17)!.y;
     },
     async checkBorder() {},
     async add() {
       await click((await layout()).find((n) => n.label === "Add argument")!);
     },
     async remove() {
-      const buttons = (await layout()).filter((n) => n.label === "x");
+      const buttons = (await layout()).filter((n) => n.label === "Remove");
       await click(buttons[buttons.length - 1]!);
     },
     async setArg(text: string) {

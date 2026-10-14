@@ -879,7 +879,10 @@ gp::El* DlgFilledButton(gp::Ctx* cx, gp::Str id, Str label, gp::Listener onClick
                     ->H(kDlgBtnDy)
                     ->PadX(kDlgBtnPadDx)
                     ->Shrink0()
-                    ->Radius(kDlgBtnRadius);
+                    ->Radius(kDlgBtnRadius)
+                    ->Role(gp::AccessibilityRole::Button)
+                    ->AriaLabel(text)
+                    ->AriaDisabled(disabled);
     if (disabled) {
         b->Bg(ToGpui(AccentColor(colBg, kDlgBtnShift)));
         b->Child(gp::TextEl(cx->a, text)->Font(fontPx)->Fg(ToGpui(ThemeWindowTextDisabledColor())));
@@ -908,7 +911,10 @@ gp::El* DlgGhostButton(gp::Ctx* cx, gp::Str id, Str label, gp::Listener onClick,
                     ->H(kDlgBtnDy)
                     ->PadX(kDlgBtnPadDx)
                     ->Shrink0()
-                    ->Radius(kDlgBtnRadius);
+                    ->Radius(kDlgBtnRadius)
+                    ->Role(gp::AccessibilityRole::Button)
+                    ->AriaLabel(text)
+                    ->AriaDisabled(disabled);
     // as orig's VirtButton: faint, but never lost in a dark background
     Color colText = EnsureContrast(AccentColor(colBg, kDlgGhostDisabledShift), colBg);
     if (!disabled) {
