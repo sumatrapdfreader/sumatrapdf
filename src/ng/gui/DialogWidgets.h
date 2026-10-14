@@ -162,6 +162,8 @@ struct DlgWindowSpec {
     // the content's
     bool resizable = false;
     float minClientDx = 0;
+    // the user dragged it to `clientDx` wide
+    void (*onResized)(float clientDx) = nullptr;
 };
 // null where the dialog stays in the frame
 ToolWindow* DlgWindowOpen(const DlgWindowSpec& spec, MainWindow* win);

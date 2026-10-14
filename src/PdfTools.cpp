@@ -54,6 +54,10 @@ static int CalcDlgWidth(PlatformFont* font, Str path, int minW, int padding) {
     return dlgW;
 }
 
+// the client width the user last dragged a tool dialog to, kept while the
+// process runs so the next one opens that wide, as Advanced Settings does
+static int gToolDlgLastClientDx = 0;
+
 // the Sumatra app icon, shown in each tool dialog's title bar / taskbar
 static HICON GetAppIcon() {
     return LoadIconW(GetModuleHandleW(nullptr), MAKEINTRESOURCEW(GetAppIconID()));
@@ -156,6 +160,7 @@ struct PdfToolDialog : WindowBase {
     void OnBrowse(VirtMouseEvent* ev = nullptr);
     void OnCancel(VirtMouseEvent* ev = nullptr);
     void OnGetMinMaxInfo(WindowBase::GetMinMaxInfoEvent* ev);
+    void OnSize(WindowBase::SizeEvent* ev);
     // what the action button does; the only thing the dialogs really differ in
     virtual void DoIt(VirtMouseEvent* ev = nullptr) {}
 };
@@ -193,6 +198,12 @@ void PdfToolDialog::OnGetMinMaxInfo(WindowBase::GetMinMaxInfoEvent* ev) {
     ev->mmi->ptMaxTrackSize.y = windowDy;
 }
 
+void PdfToolDialog::OnSize(WindowBase::SizeEvent* ev) {
+    if (windowDy > 0 && ev->size.dx > 0) {
+        gToolDlgLastClientDx = ev->size.dx;
+    }
+}
+
 void PdfToolDialog::OnBrowse(VirtMouseEvent*) {
     BrowseForDest(hwnd, destEdit, browseFilter, browseDefExt);
 }
@@ -214,6 +225,7 @@ bool PdfToolDialog::CreateToolDialog(MainWindow* w, WindowTab* tab, Str title) {
     cargs.icon = GetAppIcon();
     cargs.bgColor = colBg;
     onGetMinMaxInfo = MkMethod1<PdfToolDialog, WindowBase::GetMinMaxInfoEvent*, &PdfToolDialog::OnGetMinMaxInfo>(this);
+    onSize = MkMethod1<PdfToolDialog, WindowBase::SizeEvent*, &PdfToolDialog::OnSize>(this);
     CreateCustom(cargs);
     if (!hwnd) {
         return false;
@@ -410,6 +422,9 @@ void PdfToolDialog::FinishDialog(Edit* focusOn) {
     // size to a width that fits the source path (clamped), let the layout
     // compute the height
     int clientW = CalcDlgWidth(fontText, srcPath, DpiScale(kToolDlgMinDx), DpiScale(kToolDlgPadDx));
+    if (gToolDlgLastClientDx > 0) {
+        clientW = std::max(gToolDlgLastClientDx, DpiScale(kToolDlgMinDx));
+    }
     Size size = layout->Layout(ExpandHeight(clientW));
     ResizeHwndToClientArea(hwnd, size.dx, size.dy, false);
     windowDy = HwndWindowRect(hwnd).dy;

@@ -2436,6 +2436,14 @@ static bool ToolDlgWindowOnKey(MainWindow* win, int vk, bool ctrl, bool shift, b
     return true;
 }
 
+// the width (dips) the user last dragged a tool dialog to; the next one
+// opens that wide, as Advanced Settings does
+static float gToolLastDx = 0;
+
+static void ToolDlgOnResized(float clientDx) {
+    gToolLastDx = clientDx;
+}
+
 // orig's CalcDlgWidth: wide enough for the source path, at least kToolDlgMinDx
 // and at most 80% of the screen (a longer path is cut with an ellipsis)
 static float ToolWinClientDx(MainWindow* win, Str srcPath) {
@@ -2551,10 +2559,11 @@ static bool StartToolDialog(MainWindow* win, PdfToolKind kind, Str destPath, Str
     spec.close = ToolDlgWindowClose;
     spec.onEnter = ToolDlgWindowOnEnter;
     spec.onKey = ToolDlgWindowOnKey;
-    gTool.winDx = ToolWinClientDx(win, gTool.srcPath);
+    gTool.winDx = gToolLastDx > 0 ? std::max(gToolLastDx, (float)kToolDlgMinDx) : ToolWinClientDx(win, gTool.srcPath);
     spec.clientDx = gTool.winDx;
     spec.resizable = true;
     spec.minClientDx = kToolDlgMinDx;
+    spec.onResized = ToolDlgOnResized;
     gTool.dlgTw = DlgWindowOpen(spec, win);
     VecAppend(gWinTools, gCurTool);
     if (!gTool.dlgTw) {

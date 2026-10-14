@@ -519,7 +519,13 @@ gp::El* DlgIntoEl(gp::Ctx* cx, gpc::Dialog* dlg) {
 static gp::El* DlgWindowFitTo(DlgWindowEntry* e, gp::Ctx* cx, gp::El* col, float width) {
     gp::WinSize ws = gp::WindowSize(cx->win);
     // once placed, a resizable window is as wide as the user left it
-    e->width = (e->spec.resizable && e->placed) ? ws.dipW : width;
+    if (e->spec.resizable && e->placed) {
+        if (e->spec.onResized && std::abs(ws.dipW - e->width) >= 1) {
+            e->spec.onResized(ws.dipW);
+        }
+        width = ws.dipW;
+    }
+    e->width = width;
     constexpr float kComboListMargin = 4;
     float comboBottom = DialogComboListBottom(cx->win);
     e->comboBottom = comboBottom > 0 ? comboBottom + kComboListMargin : 0;
