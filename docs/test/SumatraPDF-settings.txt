@@ -172,6 +172,13 @@ AntiGravity [
 	BgColor = #ffffff
 ]
 
+AIChat [
+	FontSize = 0
+	LineSpacing = 0
+	MessagePadding = -1
+	Bubbles = true
+]
+
 AIChatSidebarDx = 0
 
 
