@@ -237,6 +237,8 @@ MainWindow::~MainWindow() {
 void ClearMouseState(MainWindow* win) {
     CancelAnnotationResizeRerender(win);
     HideAnnotationHoverOverlay(win);
+    // the comment card holds an Annotation* of the engine about to go
+    HideAnnotationTextPopup(win);
     win->dragStartPending = false;
     win->textDragPending = false;
     win->imageDragPending = false;
