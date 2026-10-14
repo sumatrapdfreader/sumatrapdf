@@ -763,8 +763,9 @@ static void PlacePixelMirror(PixelMirror* m) {
                  SWP_NOACTIVATE | SWP_NOZORDER | SWP_SHOWWINDOW);
 }
 
-// PrintWindow of the frame, then into the popup. The popup is hidden for the
-// capture so it is not what the frame's thumbnail shows.
+// PrintWindow of the frame, then into the popup. PrintWindow draws the frame
+// alone, so the popup stays up: hiding it exposed the frame, whose repaint
+// came back here and starved WM_TIMER (the shell tick).
 static void UpdatePixelMirror(HWND frame) {
     if (!gForTesting || gPixelMirrorBusy) {
         return;
@@ -782,9 +783,6 @@ static void UpdatePixelMirror(HWND frame) {
     }
 
     gPixelMirrorBusy = true;
-    PlacePixelMirror(m);
-    SetWindowPos(m->hwnd, nullptr, 0, 0, 0, 0,
-                 SWP_NOMOVE | SWP_NOSIZE | SWP_NOZORDER | SWP_NOACTIVATE | SWP_HIDEWINDOW);
 
     BITMAPINFO bi{};
     bi.bmiHeader.biSize = sizeof(bi.bmiHeader);
