@@ -362,6 +362,7 @@ void MaybeMigrateTab(WindowTab* tab, MainWindow* newWin) {
     WindowTab* newTab = newWin->CurrentTab();
     if (newTab && len(displayName) > 0) {
         newTab->SetDisplayName(displayName);
+        UpdateWindowTitle(newWin);
     }
     if (state) {
         SetTabState(newTab, state);

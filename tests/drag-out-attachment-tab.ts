@@ -6,7 +6,7 @@
 import { mkdirSync, rmSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 import { type ControlClient, ControlCommand } from "./control.ts";
-import { assemblePdf, pollUntil, runStandalone, SLOW_BUILD_FACTOR, tmpPath, USE_NG } from "./util.ts";
+import { assemblePdf, pollUntil, runStandalone, SLOW_BUILD_FACTOR, TESTS_TMP_DIR, tmpPath, USE_NG } from "./util.ts";
 import {
   clientToScreen,
   enumWindows,
@@ -117,6 +117,12 @@ export async function testit(): Promise<void> {
   const pdf = join(dir, "outer.pdf");
   writeFileSync(pdf, makePdfWithImageAttachment(), "latin1");
 
+  if (USE_NG) {
+    // ng saves the attachment under a unique name; make it differ from the tab's
+    const attachments = join(TESTS_TMP_DIR, "data", "attachments");
+    mkdirSync(attachments, { recursive: true });
+    writeFileSync(join(attachments, ATTACHMENT), "");
+  }
   const { proc, client, frame } = await launchControlled(["-view", "single page", "-zoom", "fit page", pdf]);
   try {
     await client.waitForRenderIdle();
