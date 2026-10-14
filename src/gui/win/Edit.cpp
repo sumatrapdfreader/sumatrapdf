@@ -232,9 +232,13 @@ HWND Edit::Create(const CreateArgs& args) {
     centerTextVert = args.centerTextVert && !args.isMultiLine;
     selectAllOnFocus = args.selectAllOnFocus;
     if (args.isMultiLine) {
-        cargs.style |= ES_MULTILINE | WS_VSCROLL | ES_WANTRETURN;
+        cargs.style |= ES_MULTILINE | ES_WANTRETURN;
+        cargs.style |= args.noScrollBars ? ES_AUTOVSCROLL : WS_VSCROLL;
         if (args.noWrap) {
-            cargs.style |= ES_AUTOHSCROLL | WS_HSCROLL;
+            cargs.style |= ES_AUTOHSCROLL;
+            if (!args.noScrollBars) {
+                cargs.style |= WS_HSCROLL;
+            }
         }
     } else {
         cargs.style |= ES_AUTOHSCROLL;

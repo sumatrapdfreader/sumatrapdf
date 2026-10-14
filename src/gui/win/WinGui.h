@@ -708,6 +708,8 @@ struct Edit : ControlBase {
         bool isMultiLine = false;
         // multi-line: ES_AUTOHSCROLL so long lines scroll instead of wrapping
         bool noWrap = false;
+        // multi-line: scrolls with the caret and the wheel, but shows no bars
+        bool noScrollBars = false;
         bool withBorder = false;
         // 1px NC underline under the client area (no WS_EX_CLIENTEDGE)
         bool withBottomBorder = false;
