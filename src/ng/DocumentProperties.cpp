@@ -682,9 +682,11 @@ static Size PropsToolWindowSize(MainWindow* win) {
     };
     int gap = MulDiv((int)kToolDlgGapDx, dpi, 96);
     int footerDx = btnDx(Tr("Copy To Clipboard"));
+#if OS_WIN
     if (gProps.certs) {
         footerDx += btnDx(Tr("View Certificate...")) + btnDx(Tr("Update EU Trusted List")) + (2 * gap);
     }
+#endif
 
     auto px = [&](float dips) { return MulDiv((int)dips, dpi, 96); };
     int textDx = maxLineDx + px(kPropsEditMarginDx + kPropsScrollbarDx);

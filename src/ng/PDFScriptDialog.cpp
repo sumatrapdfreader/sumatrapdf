@@ -2,6 +2,7 @@
    License: GPLv3 */
 
 #include "gui/GpuiBridge.h"
+#include "VirtKeys.h"
 #include "base/UITask.h"
 #include "gui/UIModels.h"
 #include "Settings.h"

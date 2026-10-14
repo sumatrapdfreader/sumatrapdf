@@ -33,6 +33,10 @@ static XWin RootWin(Display* dpy) {
     return DefaultRootWindow(dpy);
 }
 
+// the last frame a window manager reported, so ToolWinNativeChrome adds what
+// ToolWinNativeSetFrame takes off (e.g. WSLg's frame is ~76 x 97, not a guess)
+static Size gSeenChrome;
+
 // left, right, top, bottom. Zero until the window manager has set them.
 static void FrameExtents(Display* dpy, XWin xw, int* left, int* right, int* top, int* bottom) {
     *left = *right = *top = *bottom = 0;
@@ -54,6 +58,9 @@ static void FrameExtents(Display* dpy, XWin xw, int* left, int* right, int* top,
         *right = (int)v[1];
         *top = (int)v[2];
         *bottom = (int)v[3];
+        if (*top > 0 || *left > 0) {
+            gSeenChrome = Size(*left + *right, *top + *bottom);
+        }
     }
     if (data) {
         XFree(data);
@@ -163,6 +170,9 @@ constexpr int kBorderGuess = 1;
 Size ToolWinNativeChrome(bool titled, bool, bool) {
     if (!titled) {
         return {};
+    }
+    if (gSeenChrome.dy > 0 || gSeenChrome.dx > 0) {
+        return gSeenChrome;
     }
     return Size(2 * kBorderGuess, kTitleGuess + kBorderGuess);
 }
