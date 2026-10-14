@@ -680,7 +680,17 @@ bool AppShellOnWmContextMenu(MainWindow* win, int screenX, int screenY) {
     if (!gw || !hwnd) {
         return false;
     }
+    float k = CanvasScale(win);
+    RECT rc{};
+    GetClientRect(hwnd, &rc);
     if (screenX == -1 && screenY == -1) {
+        // orig opens it at the cursor; gpui's position is stale until the mouse moves here
+        POINT cur{};
+        if (GetCursorPos(&cur) && ScreenToClient(hwnd, &cur) && PtInRect(&rc, cur)) {
+            gp::PlatformInput mv =
+                gp::InputMouseMove((float)cur.x * k, (float)cur.y * k, false, gp::MouseButton::Left, gp::Modifiers{});
+            gp::WindowDispatchInput(gw, &mv);
+        }
         gp::WindowKeyDown(gw, VK_APPS, false, false, false, false, false, gp::KeyDownFlags{});
         gp::WindowKeyUp(gw, VK_APPS, false, false, false, false);
         gw->eatChar = false;
@@ -690,12 +700,9 @@ bool AppShellOnWmContextMenu(MainWindow* win, int screenX, int screenY) {
 
     POINT pt{screenX, screenY};
     ScreenToClient(hwnd, &pt);
-    RECT rc{};
-    GetClientRect(hwnd, &rc);
     if (!PtInRect(&rc, pt)) {
         return false;
     }
-    float k = CanvasScale(win);
     float x = (float)pt.x * k;
     float y = (float)pt.y * k;
     gp::MouseButton btn = gp::MouseButton::Right;
