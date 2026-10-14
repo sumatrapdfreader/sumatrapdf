@@ -1014,7 +1014,9 @@ static LRESULT CALLBACK ShellSubclass(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp,
                 GetClientRect(hwnd, &rc);
                 bool inside = pt.x >= 0 && pt.y >= 0 && pt.x < rc.right && pt.y < rc.bottom;
                 if (!inside && msg == WM_MOUSEWHEEL && win->AsFixed()) {
-                    DocCanvasPostedWheel(win, delta, isCtrl, isShift);
+                    // orig's canvas reads Alt the same way
+                    bool isAlt = ((GET_KEYSTATE_WPARAM(wp) & MK_ALT) != 0) || IsAltPressed();
+                    DocCanvasPostedWheel(win, delta, isCtrl, isShift, isAlt);
                     return 0;
                 }
             }

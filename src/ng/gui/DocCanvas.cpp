@@ -1735,12 +1735,12 @@ static void CanvasOnMouseWheel(MainWindow* win, int delta, bool isCtrl, bool isS
 
 // A wheel sent straight at the frame (a test, or a point outside the client)
 // never hit-tests an element. Orig delivers that message to the canvas window.
-void DocCanvasPostedWheel(MainWindow* win, int delta, bool isCtrl, bool isShift) {
+void DocCanvasPostedWheel(MainWindow* win, int delta, bool isCtrl, bool isShift, bool isAlt) {
     if (!IsMainWindowValid(win) || !win->AsFixed()) {
         return;
     }
     gInMouseWheelScroll = true;
-    CanvasOnMouseWheel(win, delta, isCtrl, isShift, false, Point{1, 1});
+    CanvasOnMouseWheel(win, delta, isCtrl, isShift, isAlt, Point{1, 1});
     gInMouseWheelScroll = false;
     AppShellInvalidate(win);
 }
@@ -3023,7 +3023,7 @@ static void OnMouseLeftButtonUp(MainWindow* win, int x, int y) {
 
     // Mouse-down hit testing gives up when text extraction holds the page
     // lock. The move before this click started that extraction.
-    if (!link && !gSettings->disableLinks) {
+    if (!link && !gSettings->disableLinks && dm->ValidPageNo(pageNo)) {
         IPageElement* again = EngineMupdfElementAtPosWait(dm->GetEngine(), pageNo, ptPage);
         if (again && again->Is(kindPageElementDest)) {
             link = again;
