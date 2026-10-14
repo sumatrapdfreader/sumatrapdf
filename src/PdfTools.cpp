@@ -577,7 +577,6 @@ struct PdfDeletePageDialog : PdfToolDialog {
     bool isExtract = false;
     int pageCount = 0;
     Edit* pagesEdit = nullptr;
-    Checkbox* onlyWithAnnotations = nullptr;
 
     bool Create(MainWindow* win, WindowTab* tab, bool isExtract);
     void DoIt(VirtMouseEvent* ev = nullptr) override;
@@ -618,17 +617,6 @@ void PdfDeletePageDialog::DoIt(VirtMouseEvent*) {
 
     WindowTab* sourceTab = isExtract ? FindTabByFile(srcPath, win) : nullptr;
     EngineBase* sourceEngine = sourceTab ? sourceTab->GetEngine() : nullptr;
-    if (isExtract && onlyWithAnnotations && onlyWithAnnotations->IsChecked()) {
-        if (!sourceEngine || !KeepOnlyPagesWithAnnotations(sourceEngine, parsedPages)) {
-            MessageBoxWarning(hwnd, StrL("Failed to read annotations from PDF file."), Tr("Extract Pages From PDF"));
-            return;
-        }
-        if (len(parsedPages) == 0) {
-            MessageBoxWarning(hwnd, StrL("No pages with annotations in the selected range."),
-                              Tr("Extract Pages From PDF"));
-            return;
-        }
-    }
 
     TempStr pageRange;
     if (isExtract) {
@@ -727,18 +715,6 @@ bool PdfDeletePageDialog::Create(MainWindow* w, WindowTab* tab, bool isExtractAr
     // "of N" after the edit
     lastRow->AddChild(new Spacer(gap, 0));
     lastRow->AddChild(NewVirtText({.s = fmt("of %d", pageCount), .font = font, .isRtl = IsUIRtl()}));
-
-    if (isExtract) {
-        Checkbox::CreateArgs args;
-        args.parent = hwnd;
-        args.text = Tr("Only with annotations");
-        args.font = font;
-        args.isRtl = IsUIRtl();
-        onlyWithAnnotations = new Checkbox();
-        onlyWithAnnotations->Create(args);
-        onlyWithAnnotations->SetColors(ThemeWindowTextColor(), DarkModeDialogBgColor());
-        AddRow()->AddChild(onlyWithAnnotations);
-    }
 
     Str actionText = isExtract ? Tr("Extract Pages") : Tr("Delete Pages");
     AddButtonsRow(actionText, StrL("Syntax: 2,5-7,13-"));

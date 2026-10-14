@@ -243,7 +243,6 @@ struct PdfToolDlg {
     Str password;  // owned; the password Decrypt re-opens the document with
     Str browseExt; // owned; the default extension of the "..." save dialog
     int pageCount = 0;
-    bool onlyWithAnnotations = false;
     PagesMode pagesMode = PagesMode::All;
     // Save Selection As Image
     int pageNo = 0;
@@ -370,7 +369,6 @@ struct PdfToolView {
     static void OnAction(PdfToolView* self, gp::Ctx* cx, const gp::ClickEvent*);
     static void OnCancel(PdfToolView* self, gp::Ctx* cx, const gp::ClickEvent*);
     static void OnBrowse(PdfToolView* self, gp::Ctx* cx, const gp::ClickEvent*);
-    static void OnAnnotsOnly(PdfToolView* self, gp::Ctx* cx, const gp::ClickEvent*);
     static void OnPagesMode(PdfToolView* self, gp::Ctx* cx, const gp::ClickEvent*, int64_t mode);
     static void OnMergeAdd(PdfToolView* self, gp::Ctx* cx, const gp::ClickEvent*);
     static void OnMergeScroll(PdfToolView* self, gp::Ctx* cx, const gp::ScrollEvent* ev);
@@ -790,17 +788,6 @@ static void PdfDeletePageDoIt() {
 
     WindowTab* sourceTab = isExtract ? FindTabByFilePath(gTool.srcPath) : nullptr;
     EngineBase* sourceEngine = sourceTab ? sourceTab->GetEngine() : nullptr;
-    if (isExtract && gTool.onlyWithAnnotations) {
-        if (!sourceEngine || !KeepOnlyPagesWithAnnotations(sourceEngine, parsedPages)) {
-            MessageBoxWarning(win, StrL("Failed to read annotations from PDF file."), Tr("Extract Pages From PDF"));
-            return;
-        }
-        if (len(parsedPages) == 0) {
-            MessageBoxWarning(win, StrL("No pages with annotations in the selected range."),
-                              Tr("Extract Pages From PDF"));
-            return;
-        }
-    }
 
     TempStr pageRange;
     if (isExtract) {
@@ -1991,13 +1978,6 @@ void PdfToolView::OnInput(PdfToolView*, gp::Ctx* cx, const gp::InputEvent* ev) {
     PdfToolDoIt();
 }
 
-void PdfToolView::OnAnnotsOnly(PdfToolView*, gp::Ctx* cx, const gp::ClickEvent*) {
-    ToolScope scope(ToolForCx(cx));
-    gTool.onlyWithAnnotations = !gTool.onlyWithAnnotations;
-    gp::Notify(cx);
-    AppShellInvalidate(gTool.win);
-}
-
 void PdfToolView::OnPagesMode(PdfToolView*, gp::Ctx* cx, const gp::ClickEvent*, int64_t mode) {
     ToolScope scope(ToolForCx(cx));
     gTool.pagesMode = (PagesMode)mode;
@@ -2554,7 +2534,6 @@ static bool StartToolDialog(MainWindow* win, PdfToolKind kind, Str destPath, Str
     gTool.srcPath = str::Dup(tab->filePath);
     gTool.browseExt = str::Dup(defExt);
     gTool.pageCount = win->ctrl ? win->ctrl->PageCount() : 0;
-    gTool.onlyWithAnnotations = false;
     gTool.pagesMode = PagesMode::All;
     gTool.destEdit = NewInput(win, destPath);
     gTool.pagesEdit = nullptr;
@@ -2877,9 +2856,6 @@ TempStr PdfToolStateTemp() {
     s.Append(fmt("'%s' src '%s' dest '%s'", ToolTitle(), gTool.srcPath, DestPathTemp()));
     if (gTool.pagesEdit) {
         s.Append(fmt(" pages '%s' of %d", InputTextTemp(gTool.pagesEdit), gTool.pageCount));
-    }
-    if (gTool.kind == PdfToolKind::ExtractPages) {
-        s.Append(fmt(" annotsOnly %d", (int)gTool.onlyWithAnnotations));
     }
     if (gTool.kind == PdfToolKind::ConvertToImages) {
         s.Append(fmt(" mode %d format %s dpi %d", (int)gTool.pagesMode, gTool.ddFormat.SelText(), SelectedDpi()));
@@ -3545,17 +3521,6 @@ static gp::El* PdfToolWinBuild(MainWindow* win, gp::Ctx* cx) {
                                   gTool.pagesEdit, false);
         row->Child(
             gp::Div(cx->a)->PadL(kToolWinGap)->Shrink0()->Child(ToolWinText(cx, fmt("of %d", gTool.pageCount), font)));
-        if (isExtract) {
-            constexpr float kCheckLabelGap = 2;
-            gp::El* checkRow = ToolWinRow(cx, kDlgWinCheckDy);
-            checkRow->Child(gpc::Checkbox::New(cx, GStrL("pdftool-annots"))
-                                ->Label(ToGpui(Tr("Only with annotations")))
-                                ->Checked(gTool.onlyWithAnnotations)
-                                ->OnClick(gp::ListenTo(gToolView, &PdfToolView::OnAnnotsOnly))
-                                ->IntoEl()
-                                ->Gap(kCheckLabelGap));
-            col->Child(checkRow);
-        }
         hint = StrL("Syntax: 2,5-7,13-");
     } else if (gTool.kind == PdfToolKind::Encrypt) {
         labeledEdit(Tr("Password:"), GStrL("pdftool-pwd"), gTool.passwordEdit, true);
@@ -3683,13 +3648,6 @@ static gp::El* PdfToolBuildCurrent(MainWindow* win, gp::Ctx* cx) {
                                                       ->IntoEl()));
         row->Child(LabelEl(cx, fmt("of %d", gTool.pageCount), true));
         body->Child(row);
-        if (isExtract) {
-            body->Child(gpc::Checkbox::New(cx, GStrL("pdftool-annots"))
-                            ->Label(ToGpui(Tr("Only with annotations")))
-                            ->Checked(gTool.onlyWithAnnotations)
-                            ->OnClick(gp::ListenTo(gToolView, &PdfToolView::OnAnnotsOnly))
-                            ->IntoEl());
-        }
         hint = StrL("Syntax: 2,5-7,13-");
     } else if (gTool.kind == PdfToolKind::Encrypt) {
         gTool.passwordEdit->onChange = gp::ListenTo(gToolView, &PdfToolView::OnInput);
