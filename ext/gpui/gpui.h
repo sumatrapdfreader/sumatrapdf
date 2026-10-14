@@ -5947,6 +5947,8 @@ struct PaintCtx {
 
     bool headless = false;
 
+    bool transparent = false;
+
     scene::State* sceneState = nullptr;
 
     float opacity = 1;
@@ -7660,6 +7662,8 @@ struct WinOpts {
     bool borderless = false;
 
     bool clientTitleBar = false;
+
+    bool transparent = false;
     bool anim = false;
     int timerMs = 500;
 };
@@ -8573,6 +8577,12 @@ void AppMinimize(Window* win);
 void AppToggleMaximize(Window* win);
 
 void WindowSetFullScreen(Window* win, bool fullScreen);
+
+void AppWindowSetOpacity(Window* win, int percent);
+
+void AppWindowSetClickThrough(Window* win, bool on);
+
+bool WindowIsTransparent(const Window* win);
 
 void WindowSetCursorVisible(Window* win, bool visible);
 
@@ -33304,6 +33314,10 @@ Str PaintSystemUIFontMappedFamily();
 
 bool PaintTargetBegin(PaintCtx* ctx, void* native, int pxW, int pxH);
 
+bool PaintWindowCanBeTransparent();
+
+bool PlatWindowCanBeTransparent();
+
 bool PaintTargetBeginOffscreen(PaintCtx* ctx, int pxW, int pxH);
 
 bool PaintTargetEndOffscreen(PaintCtx* ctx, uint8_t* outBgra);
@@ -36952,9 +36966,15 @@ struct HttpRsp {
     Str contentType;
 
     Str redirectUrl;
+
+    Str headers;
 };
 
 void HttpRspFree(HttpRsp* r);
+
+Str HttpRspHeader(const HttpRsp& r, Str name);
+
+Str HttpHeadersFromRaw(Str raw);
 
 struct HttpHeader {
     Str name;
@@ -36983,6 +37003,11 @@ struct HttpReq {
 };
 
 bool HttpSend(const HttpReq& req, HttpRsp* out);
+
+void HttpSetProxy(Str proxy, Str direct = {});
+
+Str HttpProxyDup();
+Str HttpProxyDirectDup();
 
 bool HttpGet(Str url, HttpRsp* out);
 bool HttpGetNoRedirect(Str url, HttpRsp* out);

@@ -18463,8 +18463,16 @@ void Replay(PaintCtx* ctx, const Bounds* damage) {
             case kPClear:
                 if (partial) {
 
-                    CanvasFillRect(ctx, damage->x, damage->y, damage->w,
-                                   damage->h, p.color);
+                    if (ctx->transparent) {
+
+                        CanvasPushClip(ctx, damage->x, damage->y, damage->w,
+                                       damage->h);
+                        CanvasClear(ctx, p.color);
+                        CanvasPopClip(ctx);
+                    } else {
+                        CanvasFillRect(ctx, damage->x, damage->y, damage->w,
+                                       damage->h, p.color);
+                    }
                 } else {
                     CanvasClear(ctx, p.color);
                 }
@@ -21214,7 +21222,8 @@ static void DrawFrame(Window* win, void* native, int pxW, int pxH, float dipW,
     win->paint.app = win->app;
     win->paint.window = win;
     const RuntimeStyle& th = RuntimeStyleNow(win->app);
-    CanvasClear(&win->paint, th.background);
+    CanvasClear(&win->paint,
+                win->paint.transparent ? RgbaTransparent() : th.background);
     gFrameLayoutSecs = 0;
     gFramePaintSecs = 0;
     if (root) {
@@ -21307,6 +21316,10 @@ static void DrawFrame(Window* win, void* native, int pxW, int pxH, float dipW,
     InteractionBenchRecord(win, timing);
     win->frameSeq++;
     FrameBenchTick(win, timing.drawSecs);
+}
+
+bool WindowIsTransparent(const Window* win) {
+    return win && win->paint.transparent;
 }
 
 void WindowDrawFrame(Window* win, void* native, int pxW, int pxH, float dipW,
@@ -24010,6 +24023,7 @@ Window* WindowAlloc(App* app, WinOpts opts) {
     Window* win = new Window();
     win->app = app;
     win->opts = opts;
+    win->paint.transparent = opts.transparent && PlatWindowCanBeTransparent();
     win->anim = opts.anim;
 
     win->paint.pa = app->paint;
@@ -111443,7 +111457,58 @@ void HttpRspFree(HttpRsp* r) {
     }
     StrFree(r->redirectUrl);
     r->redirectUrl = {};
+    StrFree(r->headers);
+    r->headers = {};
     r->status = 0;
+}
+
+Str HttpRspHeader(const HttpRsp& r, Str name) {
+    Str all = r.headers;
+    for (int at = 0; at < len(all);) {
+        int end = at;
+        while (end < len(all) && all.s[end] != '\n') {
+            end++;
+        }
+        int colon = at;
+        while (colon < end && all.s[colon] != ':') {
+            colon++;
+        }
+        if (colon < end && base::StrEqI(Str(all.s + at, colon - at), name)) {
+            return StrTrimAscii(Str(all.s + colon + 1, end - colon - 1));
+        }
+        at = end + 1;
+    }
+    return {};
+}
+
+Str HttpHeadersFromRaw(Str raw) {
+    StrBuilder out;
+    for (int at = 0; at < len(raw);) {
+        int end = at;
+        while (end < len(raw) && raw.s[end] != '\n') {
+            end++;
+        }
+        Str line = StrTrimAscii(Str(raw.s + at, end - at));
+        at = end + 1;
+
+        if (base::StrStartsWithI(line, "HTTP/")) {
+            out.Reset();
+            continue;
+        }
+        int colon = 0;
+        while (colon < len(line) && line.s[colon] != ':') {
+            colon++;
+        }
+        if (colon <= 0 || colon >= len(line)) {
+            continue;
+        }
+        out.Append(StrTrimAscii(Str(line.s, colon)));
+        out.Append(StrL(": "));
+        out.Append(
+            StrTrimAscii(Str(line.s + colon + 1, len(line) - colon - 1)));
+        out.AppendChar('\n');
+    }
+    return out.TakeStr();
 }
 
 bool HttpUrlIsRemote(Str url) {
@@ -111558,6 +111623,33 @@ constexpr int kFetchSlots = 24;
 constexpr int kMaxConcurrent = 4;
 
 static FetchSlot gFetch[kFetchSlots];
+static Mutex gProxyLock;
+static Str gProxy;
+static Str gProxyDirect;
+
+void HttpSetProxy(Str proxy, Str direct) {
+    gProxyLock.Lock();
+    StrFree(gProxy);
+    gProxy = StrDup(StrTrim(proxy));
+    StrFree(gProxyDirect);
+    gProxyDirect = StrDup(StrTrim(direct));
+    gProxyLock.Unlock();
+}
+
+Str HttpProxyDirectDup() {
+    gProxyLock.Lock();
+    Str copy = StrDup(gProxyDirect);
+    gProxyLock.Unlock();
+    return copy;
+}
+
+Str HttpProxyDup() {
+    gProxyLock.Lock();
+    Str copy = StrDup(gProxy);
+    gProxyLock.Unlock();
+    return copy;
+}
+
 static Mutex gFetchLock;
 static int gFetchPending = 0;
 static int gFetchNext = 0;
@@ -213021,6 +213113,7 @@ Str SyntheticMouseEventJsTemp(const SyntheticMouseEvent* ev) {
 #include <d2d1_2.h>
 #include <d2d1.h>
 #include <d3d11.h>
+#include <dcomp.h>
 #include <dwmapi.h>
 #include <dwrite.h>
 #include <dxgi1_2.h>
@@ -222383,6 +222476,11 @@ struct PaintTarget {
     int pxH = 0;
     ID2D1RenderTarget* rt = nullptr;
     ID2D1SolidColorBrush* brush = nullptr;
+
+    bool transparent = false;
+    IDCompositionDevice* dcomp = nullptr;
+    IDCompositionTarget* dcompTarget = nullptr;
+    IDCompositionVisual* dcompVisual = nullptr;
 };
 
 static void MakeFontFamily(PaintApp* pa, const wchar_t* family, float px,
@@ -222539,6 +222637,10 @@ Str PaintSystemUIFontMappedFamily() {
     return cached;
 }
 
+bool PaintWindowCanBeTransparent() {
+    return WIN_BACKEND_DIRECT2D && !PaintGpuOn();
+}
+
 void PaintTargetFree(PaintCtx* ctx) {
 
     if (SceneOn()) {
@@ -222551,6 +222653,9 @@ void PaintTargetFree(PaintCtx* ctx) {
     if (!ctx || !ctx->rt) {
         return;
     }
+    gpui_paint_win_Rel(&ctx->rt->dcompVisual);
+    gpui_paint_win_Rel(&ctx->rt->dcompTarget);
+    gpui_paint_win_Rel(&ctx->rt->dcomp);
     gpui_paint_win_Rel(&ctx->rt->brush);
     gpui_paint_win_Rel(&ctx->rt->dcRt);
     if (ctx->rt->dc) {
@@ -222631,7 +222736,9 @@ static bool BindBackBuffer(PaintTarget* t) {
     }
     D2D1_BITMAP_PROPERTIES1 props = D2D1::BitmapProperties1(
         D2D1_BITMAP_OPTIONS_TARGET | D2D1_BITMAP_OPTIONS_CANNOT_DRAW,
-        D2D1::PixelFormat(DXGI_FORMAT_B8G8R8A8_UNORM, D2D1_ALPHA_MODE_IGNORE),
+        D2D1::PixelFormat(DXGI_FORMAT_B8G8R8A8_UNORM,
+                          t->transparent ? D2D1_ALPHA_MODE_PREMULTIPLIED
+                                         : D2D1_ALPHA_MODE_IGNORE),
         96.f, 96.f);
     hr = t->dc->CreateBitmapFromDxgiSurface(surface, &props, &t->backBuffer);
     surface->Release();
@@ -222661,13 +222768,15 @@ bool PaintTargetBegin(PaintCtx* ctx, void* native, int pxW, int pxH) {
         return false;
     }
 
-    if (ctx->rt && ctx->rt->hwnd != hwnd) {
+    if (ctx->rt &&
+        (ctx->rt->hwnd != hwnd || ctx->rt->transparent != ctx->transparent)) {
         PaintTargetFree(ctx);
     }
     if (!ctx->rt) {
         auto* t = new PaintTarget();
         t->generation = PaintResourceGenerationNew();
         t->hwnd = hwnd;
+        t->transparent = ctx->transparent;
         DXGI_SWAP_CHAIN_DESC1 desc = {};
         desc.Width = (UINT)pxW;
         desc.Height = (UINT)pxH;
@@ -222680,10 +222789,39 @@ bool PaintTargetBegin(PaintCtx* ctx, void* native, int pxW, int pxH) {
         desc.AlphaMode = DXGI_ALPHA_MODE_IGNORE;
 
         desc.Scaling = DXGI_SCALING_NONE;
-        HRESULT hr = ctx->pa->dxgiFactory->CreateSwapChainForHwnd(
-            ctx->pa->d3d, hwnd, &desc, nullptr, nullptr, &t->swap);
+        HRESULT hr = S_OK;
+        if (t->transparent) {
+
+            desc.AlphaMode = DXGI_ALPHA_MODE_PREMULTIPLIED;
+            desc.Scaling = DXGI_SCALING_STRETCH;
+            hr = ctx->pa->dxgiFactory->CreateSwapChainForComposition(
+                ctx->pa->d3d, &desc, nullptr, &t->swap);
+            if (SUCCEEDED(hr)) {
+                hr = DCompositionCreateDevice(ctx->pa->dxgi,
+                                              __uuidof(IDCompositionDevice),
+                                              (void**)&t->dcomp);
+            }
+            if (SUCCEEDED(hr)) {
+                hr = t->dcomp->CreateTargetForHwnd(hwnd, TRUE, &t->dcompTarget);
+            }
+            if (SUCCEEDED(hr)) {
+                hr = t->dcomp->CreateVisual(&t->dcompVisual);
+            }
+            if (SUCCEEDED(hr)) {
+                t->dcompVisual->SetContent(t->swap);
+                t->dcompTarget->SetRoot(t->dcompVisual);
+                hr = t->dcomp->Commit();
+            }
+        } else {
+            hr = ctx->pa->dxgiFactory->CreateSwapChainForHwnd(
+                ctx->pa->d3d, hwnd, &desc, nullptr, nullptr, &t->swap);
+        }
         if (FAILED(hr)) {
-            logf("CreateSwapChainForHwnd failed %08x", (unsigned)hr);
+            logf("creating the swap chain failed %08x", (unsigned)hr);
+            gpui_paint_win_Rel(&t->dcompVisual);
+            gpui_paint_win_Rel(&t->dcompTarget);
+            gpui_paint_win_Rel(&t->dcomp);
+            gpui_paint_win_Rel(&t->swap);
             delete t;
             return false;
         }
@@ -222698,6 +222836,10 @@ bool PaintTargetBegin(PaintCtx* ctx, void* native, int pxW, int pxH) {
             return false;
         }
         t->dc->SetDpi(96.f, 96.f);
+        if (t->transparent) {
+
+            t->dc->SetTextAntialiasMode(D2D1_TEXT_ANTIALIAS_MODE_GRAYSCALE);
+        }
         if (!BindBackBuffer(t)) {
             gpui_paint_win_Rel(&t->dc);
             gpui_paint_win_Rel(&t->swap);
@@ -229934,6 +230076,32 @@ void WindowSetFullScreen(Window* win, bool fullScreen) {
     }
 }
 
+void AppWindowSetOpacity(Window* win, int percent) {
+    if (!win || !win->plat) {
+        return;
+    }
+    Atom atom = XInternAtom(gDpy, "_NET_WM_WINDOW_OPACITY", False);
+    if (percent >= 100) {
+        XDeleteProperty(gDpy, win->plat->xwin, atom);
+    } else {
+
+        unsigned long value = (unsigned long)(0xFFFFFFFFu / 100.0 *
+                                              (percent < 20 ? 20 : percent));
+        XChangeProperty(gDpy, win->plat->xwin, atom, XA_CARDINAL, 32,
+                        PropModeReplace, (unsigned char*)&value, 1);
+    }
+    XFlush(gDpy);
+}
+
+bool PlatWindowCanBeTransparent() {
+    return false;
+}
+
+void AppWindowSetClickThrough(Window* win, bool on) {
+    (void)win;
+    (void)on;
+}
+
 void AppDrag(Window* win) {
     if (!win || !win->plat) {
         return;
@@ -231674,6 +231842,25 @@ void WindowSetFullScreen(Window* win, bool fullScreen) {
     }
 }
 
+void AppWindowSetOpacity(Window* win, int percent) {
+    if (!win || !win->plat) {
+        return;
+    }
+    int clamped = percent < 20 ? 20 : percent > 100 ? 100 : percent;
+    [win->plat->window setAlphaValue:clamped / 100.0];
+}
+
+bool PlatWindowCanBeTransparent() {
+    return false;
+}
+
+void AppWindowSetClickThrough(Window* win, bool on) {
+    if (!win || !win->plat) {
+        return;
+    }
+    [win->plat->window setIgnoresMouseEvents:on ? YES : NO];
+}
+
 void AppDrag(Window* win) {
     if (!win || !win->plat) {
         return;
@@ -233354,6 +233541,20 @@ void WindowSetFullScreen(Window* win, bool fullScreen) {
     win->plat->dirty = true;
 }
 
+void AppWindowSetOpacity(Window* win, int percent) {
+    (void)win;
+    (void)percent;
+}
+
+void AppWindowSetClickThrough(Window* win, bool on) {
+    (void)win;
+    (void)on;
+}
+
+bool PlatWindowCanBeTransparent() {
+    return false;
+}
+
 void AppDrag(Window* win) {
     (void)win;
 }
@@ -233676,6 +233877,9 @@ struct PlatWindow {
     LONG_PTR windowedStyle = 0;
     WINDOWPLACEMENT windowedPlacement = {sizeof(WINDOWPLACEMENT)};
     bool fullScreen = false;
+
+    int opacity = 100;
+    bool clickThrough = false;
 };
 
 static HWND Hwnd(Window* win) {
@@ -234516,6 +234720,55 @@ void WindowSetFullScreen(Window* win, bool fullScreen) {
                          SWP_NOACTIVATE);
     }
     pw->fullScreen = fullScreen;
+}
+
+static void ApplyLayered(HWND hwnd, const PlatWindow* pw) {
+    LONG_PTR ex = GetWindowLongPtrW(hwnd, GWL_EXSTYLE);
+    bool layered = (ex & WS_EX_LAYERED) != 0;
+    if (!layered && pw->opacity >= 100 && !pw->clickThrough) {
+        return;
+    }
+    LONG_PTR want = (ex | WS_EX_LAYERED) & ~(LONG_PTR)WS_EX_TRANSPARENT;
+    if (pw->clickThrough) {
+        want |= WS_EX_TRANSPARENT;
+    }
+    if (want != ex) {
+        SetWindowLongPtrW(hwnd, GWL_EXSTYLE, want);
+    }
+    SetLayeredWindowAttributes(hwnd, 0, (BYTE)(pw->opacity * 255 / 100),
+                               LWA_ALPHA);
+    if (!layered) {
+
+        SetWindowPos(hwnd, nullptr, 0, 0, 0, 0,
+                     SWP_FRAMECHANGED | SWP_NOMOVE | SWP_NOSIZE | SWP_NOZORDER |
+                         SWP_NOACTIVATE);
+        RedrawWindow(hwnd, nullptr, nullptr,
+                     RDW_INVALIDATE | RDW_UPDATENOW | RDW_ALLCHILDREN);
+    }
+}
+
+void AppWindowSetOpacity(Window* win, int percent) {
+    HWND hwnd = Hwnd(win);
+    PlatWindow* pw = win ? win->plat : nullptr;
+    if (!hwnd || !pw) {
+        return;
+    }
+    pw->opacity = percent < 20 ? 20 : percent > 100 ? 100 : percent;
+    ApplyLayered(hwnd, pw);
+}
+
+bool PlatWindowCanBeTransparent() {
+    return PaintWindowCanBeTransparent();
+}
+
+void AppWindowSetClickThrough(Window* win, bool on) {
+    HWND hwnd = Hwnd(win);
+    PlatWindow* pw = win ? win->plat : nullptr;
+    if (!hwnd || !pw) {
+        return;
+    }
+    pw->clickThrough = on;
+    ApplyLayered(hwnd, pw);
 }
 
 void AppDrag(Window* win) {
@@ -237285,7 +237538,15 @@ struct CurlTransfer {
     HttpRsp* out = nullptr;
     CURL* curl = nullptr;
     int64_t sent = 0;
+
+    StrBuilder rawHeaders;
 };
+
+static size_t OnHeader(char* data, size_t size, size_t n, void* userp) {
+    CurlTransfer* t = (CurlTransfer*)userp;
+    size_t got = size * n;
+    return t->rawHeaders.Append(Str(data, (int)got)) ? got : 0;
+}
 
 static size_t OnBody(char* data, size_t size, size_t n, void* userp) {
     CurlTransfer* t = (CurlTransfer*)userp;
@@ -237351,6 +237612,40 @@ bool HttpSend(const HttpReq& req, HttpRsp* out) {
     u[len(url)] = 0;
 
     curl_easy_setopt(c, CURLOPT_URL, u);
+
+    Str proxy = HttpProxyDup();
+    if (StrEqI(proxy, StrL("direct"))) {
+        curl_easy_setopt(c, CURLOPT_PROXY, "");
+    } else if (len(proxy) > 0 && !StrEqI(proxy, StrL("system"))) {
+        char* p = (char*)Alloc(nullptr, len(proxy) + 1);
+        if (p) {
+            memcpy(p, proxy.s, (size_t)len(proxy));
+            p[len(proxy)] = 0;
+
+            curl_easy_setopt(c, CURLOPT_PROXY, p);
+            Free(nullptr, p);
+        }
+
+        Str direct = HttpProxyDirectDup();
+        StrBuilder list;
+        list.Append(StrL("localhost,127.0.0.1,::1"));
+        int start = 0;
+        for (int i = 0; i <= len(direct); i++) {
+            char ch = i < len(direct) ? direct.s[i] : ',';
+            if (ch != ',' && ch != ';' && ch != ' ') {
+                continue;
+            }
+            if (i > start) {
+                list.AppendChar(',');
+                list.Append(Str(direct.s + start, i - start));
+            }
+            start = i + 1;
+        }
+        list.AppendChar(0);
+        curl_easy_setopt(c, CURLOPT_NOPROXY, list.els);
+        StrFree(direct);
+    }
+    StrFree(proxy);
     curl_easy_setopt(c, CURLOPT_FOLLOWLOCATION, noRedirect ? 0L : 1L);
     curl_easy_setopt(c, CURLOPT_MAXREDIRS, 5L);
     CurlTransfer transfer;
@@ -237371,6 +237666,8 @@ bool HttpSend(const HttpReq& req, HttpRsp* out) {
     curl_easy_setopt(c, CURLOPT_NOSIGNAL, 1L);
     curl_easy_setopt(c, CURLOPT_WRITEFUNCTION, OnBody);
     curl_easy_setopt(c, CURLOPT_WRITEDATA, &transfer);
+    curl_easy_setopt(c, CURLOPT_HEADERFUNCTION, OnHeader);
+    curl_easy_setopt(c, CURLOPT_HEADERDATA, &transfer);
 
 #if LIBCURL_VERSION_NUM >= 0x075500
     curl_easy_setopt(c, CURLOPT_PROTOCOLS_STR, "http,https");
@@ -237390,6 +237687,10 @@ bool HttpSend(const HttpReq& req, HttpRsp* out) {
         memcpy(verb, req.method.s, (size_t)len(req.method));
         verb[len(req.method)] = 0;
         curl_easy_setopt(c, CURLOPT_CUSTOMREQUEST, verb);
+
+        if (base::StrEqI(req.method, "HEAD")) {
+            curl_easy_setopt(c, CURLOPT_NOBODY, 1L);
+        }
     }
     struct curl_slist* headers = nullptr;
     bool headersReady = true;
@@ -237450,6 +237751,8 @@ bool HttpSend(const HttpReq& req, HttpRsp* out) {
             TrimMediaType(&s);
             out->contentType = s;
         }
+        out->headers = HttpHeadersFromRaw(
+            Str(transfer.rawHeaders.els, len(transfer.rawHeaders)));
     }
     curl_easy_cleanup(c);
     if (headers) {
@@ -237643,6 +237946,28 @@ static Str StrFromNS(NSString* s) {
     return StrDup(Str(u));
 }
 
+static Str HeadersFromResponse(NSHTTPURLResponse* rsp) {
+    StrBuilder out;
+    NSDictionary* fields = [rsp allHeaderFields];
+    for (id key in fields) {
+        id value = [fields objectForKey:key];
+        if (![key isKindOfClass:[NSString class]] ||
+            ![value isKindOfClass:[NSString class]]) {
+            continue;
+        }
+        const char* name = [(NSString*)key UTF8String];
+        const char* text = [(NSString*)value UTF8String];
+        if (!name || !text) {
+            continue;
+        }
+        out.Append(Str(name));
+        out.Append(StrL(": "));
+        out.Append(Str(text));
+        out.AppendChar('\n');
+    }
+    return out.TakeStr();
+}
+
 static NSString* NSFromStr(Str s) {
     if (len(s) <= 0) {
         return @"";
@@ -237758,6 +238083,7 @@ static bool HttpSendStreamed(const HttpReq& request, HttpRsp* out) {
         Str ct = StrFromNS([rsp valueForHTTPHeaderField:@"Content-Type"]);
         TrimMediaType(&ct);
         out->contentType = ct;
+        out->headers = HeadersFromResponse(rsp);
         return true;
     }
 }
@@ -237847,6 +238173,7 @@ bool HttpSend(const HttpReq& request, HttpRsp* out) {
         Str ct = StrFromNS([rsp valueForHTTPHeaderField:@"Content-Type"]);
         TrimMediaType(&ct);
         out->contentType = ct;
+        out->headers = HeadersFromResponse(rsp);
 
         NSUInteger n = body ? [body length] : 0;
         if (n > (NSUInteger)kHttpMaxBody) {
@@ -237931,11 +238258,12 @@ EM_JS(int, GpJsHttpBegin,
             return { ptr: ptr, len: bytes.length };
         };
         G.finish = function(tokenValue, ok, status, bytes, contentType,
-                            redirectUrl) {
+                            redirectUrl, headerLines) {
             let body = 0;
             let bodyLen = 0;
             const type = G.encoded(contentType);
             const redirect = G.encoded(redirectUrl);
+            const headers = G.encoded(headerLines);
             if (bytes && bytes.length > 0) {
                 bodyLen = bytes.length;
                 body = _malloc(bodyLen);
@@ -237948,7 +238276,10 @@ EM_JS(int, GpJsHttpBegin,
             }
             _gpui_wasm_http_done(tokenValue, ok ? 1 : 0, status, body,
                                  bodyLen, type.ptr, type.len, redirect.ptr,
-                                 redirect.len);
+                                 redirect.len, headers.ptr, headers.len);
+            if (headers.ptr) {
+                _free(headers.ptr);
+            }
             if (type.ptr) {
                 _free(type.ptr);
             }
@@ -238062,10 +238393,15 @@ EM_JS(void, GpJsHttpStart,
                     redirectUrl = new URL(location, response.url).href;
                 }
             }
+            let headerLines = "";
+            response.headers.forEach(function(value, name) {
+                headerLines += name + ": " + value + String.fromCharCode(10);
+            });
             G.finish(token, true, response.status, bytes,
-                     response.headers.get("content-type") || "", redirectUrl);
+                     response.headers.get("content-type") || "", redirectUrl,
+                     headerLines);
         } catch (error) {
-            G.finish(token, false, 0, null, "", "");
+            G.finish(token, false, 0, null, "", "", "");
         } finally {
             clearTimeout(timeout);
         }
@@ -238075,7 +238411,7 @@ EM_JS(void, GpJsHttpStart,
 extern "C" EMSCRIPTEN_KEEPALIVE void gpui_wasm_http_done(
     int token, int ok, int status, uint8_t* body, int bodyLen,
     const char* contentType, int contentTypeLen, const char* redirectUrl,
-    int redirectUrlLen) {
+    int redirectUrlLen, const char* headers, int headersLen) {
     WasmHttpTransfer* transfer = (WasmHttpTransfer*)(intptr_t)token;
     if (!transfer) {
         Free(nullptr, body);
@@ -238098,6 +238434,9 @@ extern "C" EMSCRIPTEN_KEEPALIVE void gpui_wasm_http_done(
     if (redirectUrl && redirectUrlLen > 0) {
         transfer->response
             .redirectUrl = StrDup(Str(redirectUrl, redirectUrlLen));
+    }
+    if (headers && headersLen > 0) {
+        transfer->response.headers = StrDup(Str(headers, headersLen));
     }
     HttpAsyncResult result = {ok != 0, &transfer->response};
     transfer->done.Call(result);
@@ -238240,6 +238579,26 @@ static void ReadRedirect(HINTERNET req, const wchar_t* base, HttpRsp* out) {
     Free(nullptr, location);
 }
 
+static void ReadHeaders(HINTERNET req, HttpRsp* out) {
+    DWORD size = 0;
+    WinHttpQueryHeaders(req, WINHTTP_QUERY_RAW_HEADERS_CRLF,
+                        WINHTTP_HEADER_NAME_BY_INDEX, nullptr, &size,
+                        WINHTTP_NO_HEADER_INDEX);
+    if (GetLastError() != ERROR_INSUFFICIENT_BUFFER || size < sizeof(wchar_t))
+        return;
+    wchar_t* block = (wchar_t*)Alloc(nullptr, (int)size + (int)sizeof(wchar_t));
+    if (!block) return;
+    if (WinHttpQueryHeaders(req, WINHTTP_QUERY_RAW_HEADERS_CRLF,
+                            WINHTTP_HEADER_NAME_BY_INDEX, block, &size,
+                            WINHTTP_NO_HEADER_INDEX)) {
+        block[size / sizeof(wchar_t)] = 0;
+        Str raw = FromWide(block);
+        out->headers = HttpHeadersFromRaw(raw);
+        StrFree(raw);
+    }
+    Free(nullptr, block);
+}
+
 constexpr int kStreamBuf = 64 * 1024;
 
 static bool WriteBody(HINTERNET req, const HttpReq& request) {
@@ -238271,8 +238630,16 @@ static bool StreamBody(HINTERNET req, const HttpReq& request) {
     }
     bool ok = true;
     for (;;) {
+
+        DWORD avail = 0;
+        ok = WinHttpQueryDataAvailable(req, &avail);
+        if (!ok || avail == 0) {
+            break;
+        }
         DWORD got = 0;
-        ok = WinHttpReadData(req, buf, kStreamBuf, &got);
+        ok = WinHttpReadData(
+            req, buf, avail < (DWORD)kStreamBuf ? avail : (DWORD)kStreamBuf,
+            &got);
         if (!ok || got == 0) {
             break;
         }
@@ -238297,6 +238664,7 @@ static bool ReadResponse(HINTERNET req, const wchar_t* base,
         return false;
     }
     out->status = (int)status;
+    ReadHeaders(req, out);
     if (noRedirect && status >= 300 && status < 400) {
         ReadRedirect(req, base, out);
     }
@@ -238380,9 +238748,72 @@ bool HttpSend(const HttpReq& req, HttpRsp* out) {
     {
         WinHttpHandle session;
 
-        session
-            .h = WinHttpOpen(L"gpui/1.0", WINHTTP_ACCESS_TYPE_DEFAULT_PROXY,
-                             WINHTTP_NO_PROXY_NAME, WINHTTP_NO_PROXY_BYPASS, 0);
+        Str proxy = HttpProxyDup();
+        DWORD access = WINHTTP_ACCESS_TYPE_DEFAULT_PROXY;
+        wchar_t* named = nullptr;
+        if (StrEqI(proxy, StrL("system"))) {
+            access = WINHTTP_ACCESS_TYPE_AUTOMATIC_PROXY;
+        } else if (StrEqI(proxy, StrL("direct"))) {
+            access = WINHTTP_ACCESS_TYPE_NO_PROXY;
+        } else if (len(proxy) > 0) {
+
+            Str proxyHost = proxy;
+            int scheme = StrFind(proxyHost, StrL("://"));
+            if (scheme >= 0) {
+                proxyHost =
+                    Str(proxyHost.s + scheme + 3, len(proxyHost) - scheme - 3);
+            }
+            while (len(proxyHost) > 0 &&
+                   proxyHost.s[len(proxyHost) - 1] == '/') {
+                proxyHost = Str(proxyHost.s, len(proxyHost) - 1);
+            }
+            int n = MultiByteToWideChar(CP_UTF8, 0, proxyHost.s, len(proxyHost),
+                                        nullptr, 0);
+            named = (wchar_t*)Alloc(nullptr, (n + 1) * (int)sizeof(wchar_t));
+            if (named) {
+                MultiByteToWideChar(CP_UTF8, 0, proxyHost.s, len(proxyHost),
+                                    named, n);
+                named[n] = 0;
+                access = WINHTTP_ACCESS_TYPE_NAMED_PROXY;
+            }
+        }
+
+        wchar_t* bypass = nullptr;
+        if (named) {
+            Str direct = HttpProxyDirectDup();
+            StrBuilder list;
+            list.Append(StrL("<local>;localhost;127.0.0.1"));
+            int start = 0;
+            for (int i = 0; i <= len(direct); i++) {
+                char c = i < len(direct) ? direct.s[i] : ';';
+                if (c != ',' && c != ';' && c != ' ') {
+                    continue;
+                }
+                if (i > start) {
+                    list.AppendChar(';');
+                    list.Append(Str(direct.s + start, i - start));
+                }
+                start = i + 1;
+            }
+            int n = MultiByteToWideChar(CP_UTF8, 0, list.els, len(list),
+                                        nullptr, 0);
+            bypass = (wchar_t*)Alloc(nullptr, (n + 1) * (int)sizeof(wchar_t));
+            if (bypass) {
+                MultiByteToWideChar(CP_UTF8, 0, list.els, len(list), bypass, n);
+                bypass[n] = 0;
+            }
+            StrFree(direct);
+        }
+        session.h = WinHttpOpen(L"gpui/1.0", access,
+                                named ? named : WINHTTP_NO_PROXY_NAME,
+                                bypass ? bypass : WINHTTP_NO_PROXY_BYPASS, 0);
+        if (named) {
+            Free(nullptr, named);
+        }
+        if (bypass) {
+            Free(nullptr, bypass);
+        }
+        StrFree(proxy);
         if (session.h) {
             WinHttpSetTimeouts(session.h, kHttpTimeoutMs, kHttpTimeoutMs,
                                kHttpTimeoutMs, kHttpTimeoutMs);

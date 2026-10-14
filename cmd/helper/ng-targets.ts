@@ -124,6 +124,7 @@ const gpuiWinLibs = [
   "dxgi.lib",
   "dwrite.lib",
   "dwmapi.lib",
+  "dcomp.lib",
   "psapi.lib",
   "ole32.lib",
   "uiautomationcore.lib",
