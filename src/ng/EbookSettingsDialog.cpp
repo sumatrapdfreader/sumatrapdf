@@ -30,6 +30,7 @@
 #include "gui/AppShell.h"
 #include "gui/DialogWidgets.h"
 #include "SumatraDialogs.h"
+#include "shared/PdfToolsCommon.h"
 #include "EbookSettingsDialogCommon.h"
 
 #include "SumatraLog.h"
@@ -58,24 +59,12 @@ struct EbookSettingsDlg {
 
 static EbookSettingsDlg gEbook;
 
-// orig's window at 96 dpi: a 460 wide client area, 4 / 8 around. The font
-// drop-down after its label; 8 under it the three 54 wide edits, each 8 after
-// its label and the labels 16 after the edit before; the two checkboxes 10
-// and 8 under what is above; the 106 high CSS box 4 under them; the two radio
-// buttons 10 under it, 12 apart; Reset at the left and Cancel / OK at the
-// right with 4 above and below
-constexpr float kEbookWinDx = 460;
-constexpr float kEbookWinPadX = 8;
-constexpr float kEbookWinPadY = 4;
-constexpr float kEbookWinLabelGap = 8;
-constexpr float kEbookWinFieldGap = 16;
-constexpr float kEbookWinEditDx = 54;
-constexpr float kEbookWinRowGap = 8;
-constexpr float kEbookWinCheckGap = 10;
-constexpr float kEbookWinCssDy = 106;
-// 12 between the radio buttons, and the system's ideal width for one is 19
-// more than its box and label
-constexpr float kEbookWinRadioGap = 12 + 19;
+// orig's layout: the font and its numbers, the styling with the CSS, this
+// file or every ebook, the footer; hairlines between
+constexpr float kEbookDlgDx = 480;
+constexpr float kEbookNumDx = 54;
+constexpr float kEbookCssDy = 106;
+constexpr float kEbookCssFontPx = 13;
 
 struct EbookSettingsView {
     static void OnOk(EbookSettingsView* self, gp::Ctx* cx, const gp::ClickEvent*);
@@ -345,7 +334,7 @@ void ShowEbookSettingsDialog(MainWindow* win) {
     spec.closeOnEsc = gSettings->escToExit;
     spec.onOwnerClosed = EbookSettingsDlgOnOwnerClosed;
     gEbook.ownerClosed = false;
-    spec.clientDx = kEbookWinDx;
+    spec.clientDx = kEbookDlgDx;
     gEbook.wantFocus = true;
     gEbookSettingsTw = DlgWindowOpen(spec, win);
     AppShellInvalidate(win);
@@ -418,104 +407,6 @@ void EbookSettingsView::OnValueChanged(EbookSettingsView*, gp::Ctx* cx, const gp
     gp::Notify(cx);
 }
 
-static gp::El* EbookSettingsWinBuild(gp::Ctx* cx) {
-    const gp::Theme& th = gp::ThemeNow(cx->app);
-    float font = DlgWinFont(cx);
-    gp::El* col = gp::Div(cx->a)->FlexCol()->W(gp::kFill)->PadX(kEbookWinPadX)->PadY(kEbookWinPadY);
-    auto label = [&](Str s, float padL) {
-        return gp::Div(cx->a)
-            ->W(padL + DlgWinTextDx(cx, s) + kEbookWinLabelGap)
-            ->PadL(padL)
-            ->Shrink0()
-            ->Child(gp::TextEl(cx->a, ToGpui(s))->Font(font)->Fg(th.foreground));
-    };
-    auto edit = [&](gp::Str id, gp::InputState* state, bool disabled) {
-        return gpc::Input::New(cx, id, state)
-            ->WithSize(gp::UiSize::Small)
-            ->Disabled(disabled)
-            ->W(kEbookWinEditDx)
-            ->IntoEl()
-            ->H(kDlgWinEditDy)
-            ->Shrink0();
-    };
-
-    gp::El* fontRow = gp::Div(cx->a)->FlexRow()->ItemsCenter()->W(gp::kFill)->H(kDlgWinEditDy)->Shrink0();
-    fontRow->Child(label(Tr("Font:"), 0));
-    fontRow->Child(gp::Div(cx->a)->Flex1()->MinW(0)->Child(
-        gEbook.ddFont.BuildCombo(cx, StrL("ebook-font"), gEbook.editFont, gp::kFill, gEbook.customCss, kDlgWinEditDy)));
-    col->Child(fontRow);
-
-    gp::El* numRow = gp::Div(cx->a)
-                         ->FlexRow()
-                         ->ItemsCenter()
-                         ->W(gp::kFill)
-                         ->H(kDlgWinEditDy + kEbookWinRowGap)
-                         ->PadT(kEbookWinRowGap)
-                         ->Shrink0();
-    numRow->Child(label(Tr("Size:"), 0));
-    numRow->Child(edit(GStrL("ebook-size"), gEbook.editSize, false));
-    numRow->Child(label(Tr("Margin:"), kEbookWinFieldGap));
-    numRow->Child(edit(GStrL("ebook-margin"), gEbook.editMargin, gEbook.customCss));
-    numRow->Child(label(Tr("Line spacing:"), kEbookWinFieldGap));
-    numRow->Child(edit(GStrL("ebook-spacing"), gEbook.editSpacing, gEbook.customCss));
-    col->Child(numRow);
-
-    col->Child(DlgWinCheck(cx,
-                           DlgAccelEl(cx, gpc::Checkbox::New(cx, GStrL("ebook-ignorecss"))->Checked(gEbook.ignoreCss),
-                                      Tr("&Ignore the document's own styling"),
-                                      gp::ListenTo(gEbookView, &EbookSettingsView::OnToggle, (intptr_t)0)),
-                           kEbookWinCheckGap));
-    col->Child(
-        DlgWinCheck(cx,
-                    DlgAccelEl(cx, gpc::Checkbox::New(cx, GStrL("ebook-customcss"))->Checked(gEbook.customCss),
-                               Tr("&Custom CSS"), gp::ListenTo(gEbookView, &EbookSettingsView::OnToggle, (intptr_t)1)),
-                    kEbookWinRowGap));
-    // read-only until "Custom CSS" is on, as orig's
-    col->Child(gp::Div(cx->a)
-                   ->W(gp::kFill)
-                   ->PadT(kEbookWinPadY)
-                   ->Shrink0()
-                   ->Child(gpc::Textarea::New(cx, GStrL("ebook-css"), gEbook.editCss)
-                               ->H(kEbookWinCssDy)
-                               ->Readonly(!gEbook.customCss)
-                               ->IntoEl()));
-
-    gp::El* radios = gp::Div(cx->a)
-                         ->FlexRow()
-                         ->ItemsCenter()
-                         ->W(gp::kFill)
-                         ->H(kDlgWinCheckDy + kEbookWinCheckGap)
-                         ->PadT(kEbookWinCheckGap)
-                         ->Gap(kEbookWinRadioGap)
-                         ->Shrink0();
-    constexpr float kRadioLabelGap = 2;
-    radios->Child(DlgAccelEl(cx,
-                             gpc::Checkbox::New(cx, GStrL("ebook-thisfile"))
-                                 ->Role(gp::AccessibilityRole::RadioButton)
-                                 ->Checked(gEbook.thisFile),
-                             Tr("&This file"), gp::ListenTo(gEbookView, &EbookSettingsView::OnToggle, (intptr_t)2))
-                      ->Gap(kRadioLabelGap));
-    radios->Child(DlgAccelEl(cx,
-                             gpc::Checkbox::New(cx, GStrL("ebook-allebooks"))
-                                 ->Role(gp::AccessibilityRole::RadioButton)
-                                 ->Checked(!gEbook.thisFile),
-                             Tr("For all &ebooks"), gp::ListenTo(gEbookView, &EbookSettingsView::OnToggle, (intptr_t)3))
-                      ->Gap(kRadioLabelGap));
-    col->Child(radios);
-
-    gp::Listener onOk = gp::ListenTo(gEbookView, &EbookSettingsView::OnOk);
-    DlgSetDefault(cx, onOk, true);
-    gp::El* buttons = DlgWinButtonRow(cx, kEbookWinPadY);
-    buttons->Child(DlgWinButton(cx, GStrL("ebook-reset"), Tr("Reset to defaults"),
-                                gp::ListenTo(gEbookView, &EbookSettingsView::OnReset), false));
-    buttons->Child(gp::Div(cx->a)->Flex1());
-    buttons->Child(DlgWinButton(cx, GStrL("dlg-cancel"), Tr("Cancel"),
-                                gp::ListenTo(gEbookView, &EbookSettingsView::OnCancel), false));
-    buttons->Child(DlgWinButton(cx, GStrL("dlg-ok"), Tr("OK"), onOk, true));
-    col->Child(buttons);
-    return DlgWinContent(cx, col);
-}
-
 gp::El* EbookSettingsDialogBuild(MainWindow* win, gp::Ctx* cx) {
     if (!gEbook.visible || gEbook.win != win) {
         return nullptr;
@@ -529,88 +420,87 @@ gp::El* EbookSettingsDialogBuild(MainWindow* win, gp::Ctx* cx) {
     if (gEbook.ddFont.TakeComboPicked()) {
         UpdateCssPreview();
     }
-    const gp::Theme& th = gp::ThemeNow(cx->app);
     gp::Listener onChange = gp::ListenTo(gEbookView, &EbookSettingsView::OnValueChanged);
     gEbook.editMargin->onChange = onChange;
     gEbook.editSpacing->onChange = onChange;
     gEbook.editFont->onChange = onChange;
+    gp::Listener onOk = gp::ListenTo(gEbookView, &EbookSettingsView::OnOk);
+    gp::Listener onCancel = gp::ListenTo(gEbookView, &EbookSettingsView::OnCancel);
+    DlgSetDefault(cx, onOk, true);
+    Color colEdge = ThemeEdgeColor();
 
-    if (DlgWindowIsHost(cx)) {
-        gp::El* content = EbookSettingsWinBuild(cx);
-        if (gEbook.wantFocus) {
-            gp::InputFocus(gEbook.editFont, cx->app, cx->win);
-            gp::InputSelectAll(gEbook.editFont, cx->app, cx->win);
-            gEbook.wantFocus = cx->win->input != gEbook.editFont;
-        }
-        return content;
-    }
+    gp::El* col = gp::Div(cx->a)->FlexCol()->W(gp::kFill);
 
-    gp::El* body = gp::Div(cx->a)->FlexCol()->Gap(8);
+    // the font, then its size, the margin and the line spacing
+    float labelDx = std::max(DlgFieldLabelDx(cx, Tr("Font:")), DlgFieldLabelDx(cx, Tr("Size:")));
+    auto number = [&](gp::Str id, gp::InputState* state, bool disabled) {
+        return gp::Div(cx->a)
+            ->W(kEbookNumDx)
+            ->Shrink0()
+            ->Child(DlgUnderlineInput(cx, id, state, kToolDlgTextFontPx, colEdge, false, disabled));
+    };
+    gp::El* fields = DlgSection(cx);
+    gp::El* fontRow = DlgFieldRow(cx);
+    fontRow->Child(DlgFieldLabel(cx, Tr("Font:"), labelDx));
+    fontRow->Child(gp::Div(cx->a)->Flex1()->MinW(0)->Child(gEbook.ddFont.BuildCombo(
+        cx, StrL("ebook-font"), gEbook.editFont, gp::kFill, gEbook.customCss, kDlgWinEditDy, kToolDlgTextFontPx)));
+    fields->Child(fontRow);
+    gp::El* numRow = DlgFieldRow(cx);
+    numRow->Child(DlgFieldLabel(cx, Tr("Size:"), labelDx));
+    numRow->Child(number(GStrL("ebook-size"), gEbook.editSize, false));
+    numRow->Child(DlgFieldLabel(cx, Tr("Margin:"), 0));
+    numRow->Child(number(GStrL("ebook-margin"), gEbook.editMargin, gEbook.customCss));
+    numRow->Child(DlgFieldLabel(cx, Tr("Line spacing:"), 0));
+    numRow->Child(number(GStrL("ebook-spacing"), gEbook.editSpacing, gEbook.customCss));
+    fields->Child(numRow);
+    col->Child(fields);
+    col->Child(DlgHairline(cx));
 
-    gp::El* fontRow = gp::Div(cx->a)->FlexRow()->W(gp::kFill)->ItemsCenter()->Gap(6);
-    fontRow->Child(gp::TextEl(cx->a, ToGpui(Tr("Font:")))->Font(13)->Fg(th.foreground)->Shrink0());
-    fontRow->Child(gp::Div(cx->a)->Flex1()->MinW(0)->Child(
-        gEbook.ddFont.BuildCombo(cx, StrL("ebook-font"), gEbook.editFont, gp::kFill, gEbook.customCss)));
-    body->Child(fontRow);
+    // the styling: the document's, the generated CSS or the user's; the CSS
+    // is read-only until "Custom CSS" is on, as orig's
+    gp::El* styling = DlgSection(cx);
+    styling->Child(DlgFieldRow(cx)->Child(
+        DlgCheck(cx, StrL("ebook-ignorecss"), Tr("&Ignore the document's own styling"), gEbook.ignoreCss,
+                 gp::ListenTo(gEbookView, &EbookSettingsView::OnToggle, (intptr_t)0))));
+    styling->Child(
+        DlgFieldRow(cx)->Child(DlgCheck(cx, StrL("ebook-customcss"), Tr("&Custom CSS"), gEbook.customCss,
+                                        gp::ListenTo(gEbookView, &EbookSettingsView::OnToggle, (intptr_t)1))));
+    styling->Child(gp::Div(cx->a)
+                       ->W(gp::kFill)
+                       ->Shrink0()
+                       ->PadT(kToolDlgFilesPadDy)
+                       ->Child(gpc::Textarea::New(cx, GStrL("ebook-css"), gEbook.editCss)
+                                   ->H(kEbookCssDy)
+                                   ->Readonly(!gEbook.customCss)
+                                   ->Appearance(false)
+                                   ->Bordered(false)
+                                   ->FocusRing(false)
+                                   ->IntoEl()
+                                   ->Mono()
+                                   ->Font(kEbookCssFontPx)));
+    col->Child(styling);
+    col->Child(DlgHairline(cx));
 
-    gp::El* numRow = gp::Div(cx->a)->FlexRow()->W(gp::kFill)->ItemsCenter()->Gap(6);
-    numRow->Child(gp::TextEl(cx->a, ToGpui(Tr("Size:")))->Font(13)->Fg(th.foreground)->Shrink0());
-    numRow->Child(
-        gpc::Input::New(cx, GStrL("ebook-size"), gEbook.editSize)->WithSize(gp::UiSize::Small)->W(70)->IntoEl());
-    numRow->Child(gp::TextEl(cx->a, ToGpui(Tr("Margin:")))->Font(13)->Fg(th.foreground)->Shrink0());
-    numRow->Child(gpc::Input::New(cx, GStrL("ebook-margin"), gEbook.editMargin)
-                      ->WithSize(gp::UiSize::Small)
-                      ->Disabled(gEbook.customCss)
-                      ->W(90)
-                      ->IntoEl());
-    numRow->Child(gp::TextEl(cx->a, ToGpui(Tr("Line spacing:")))->Font(13)->Fg(th.foreground)->Shrink0());
-    numRow->Child(gpc::Input::New(cx, GStrL("ebook-spacing"), gEbook.editSpacing)
-                      ->WithSize(gp::UiSize::Small)
-                      ->Disabled(gEbook.customCss)
-                      ->W(70)
-                      ->IntoEl());
-    body->Child(numRow);
+    // this file or every ebook
+    gp::El* target = DlgSection(cx);
+    target->Child(
+        DlgFieldRow(cx)
+            ->Child(DlgCheck(cx, StrL("ebook-thisfile"), Tr("&This file"), gEbook.thisFile,
+                             gp::ListenTo(gEbookView, &EbookSettingsView::OnToggle, (intptr_t)2), DlgCheckKind::Radio))
+            ->Child(DlgCheck(cx, StrL("ebook-allebooks"), Tr("For all &ebooks"), !gEbook.thisFile,
+                             gp::ListenTo(gEbookView, &EbookSettingsView::OnToggle, (intptr_t)3),
+                             DlgCheckKind::Radio)));
+    col->Child(target);
 
-    body->Child(DlgAccelEl(cx, gpc::Checkbox::New(cx, GStrL("ebook-ignorecss"))->Checked(gEbook.ignoreCss),
-                           Tr("&Ignore the document's own styling"),
-                           gp::ListenTo(gEbookView, &EbookSettingsView::OnToggle, (intptr_t)0)));
-    body->Child(DlgAccelEl(cx, gpc::Checkbox::New(cx, GStrL("ebook-customcss"))->Checked(gEbook.customCss),
-                           Tr("&Custom CSS"), gp::ListenTo(gEbookView, &EbookSettingsView::OnToggle, (intptr_t)1)));
-    body->Child(gpc::Textarea::New(cx, GStrL("ebook-css"), gEbook.editCss)->Rows(6)->IntoEl());
+    gp::El* reset = DlgGhostButton(cx, GStrL("ebook-reset"), Tr("Reset to defaults"),
+                                   gp::ListenTo(gEbookView, &EbookSettingsView::OnReset));
+    col->Child(DlgFooter(cx, Tr("OK"), onOk, onCancel, reset));
+    gp::El* content = DlgToolContent(cx, col, Tr("eBook Settings"), kEbookDlgDx, onCancel);
 
-    gp::El* radios = gp::Div(cx->a)->FlexRow()->W(gp::kFill)->ItemsCenter()->Gap(16);
-    radios->Child(DlgAccelEl(cx,
-                             gpc::Checkbox::New(cx, GStrL("ebook-thisfile"))
-                                 ->Role(gp::AccessibilityRole::RadioButton)
-                                 ->Checked(gEbook.thisFile),
-                             Tr("&This file"), gp::ListenTo(gEbookView, &EbookSettingsView::OnToggle, (intptr_t)2)));
-    radios->Child(DlgAccelEl(cx,
-                             gpc::Checkbox::New(cx, GStrL("ebook-allebooks"))
-                                 ->Role(gp::AccessibilityRole::RadioButton)
-                                 ->Checked(!gEbook.thisFile),
-                             Tr("For all &ebooks"),
-                             gp::ListenTo(gEbookView, &EbookSettingsView::OnToggle, (intptr_t)3)));
-    body->Child(radios);
-
-    gp::El* reset = gpc::Button::New(cx, GStrL("ebook-reset"))
-                        ->Label(ToGpui(Tr("Reset to defaults")))
-                        ->WithSize(gp::UiSize::Small)
-                        ->OnClick(gp::ListenTo(gEbookView, &EbookSettingsView::OnReset))
-                        ->IntoEl();
-    gp::El* footer = DialogFooter(cx, reset, gEbookView, Tr("OK"), Tr("Cancel"), &EbookSettingsView::OnOk,
-                                  &EbookSettingsView::OnCancel);
-
-    gp::El* dlg = DlgIntoEl(cx, gpc::Dialog::New(cx)
-                                    ->Open(true)
-                                    ->Title(ToGpui(Tr("eBook Settings")))
-                                    ->Body(body)
-                                    ->Footer(footer)
-                                    ->W(560)
-                                    ->OnClose(gp::ListenTo(gEbookView, &EbookSettingsView::OnCancel)));
     if (gEbook.wantFocus) {
-        gEbook.wantFocus = false;
         gp::InputFocus(gEbook.editFont, cx->app, cx->win);
         gp::InputSelectAll(gEbook.editFont, cx->app, cx->win);
+        gEbook.wantFocus = cx->win->input != gEbook.editFont;
     }
-    return dlg;
+    return content;
 }

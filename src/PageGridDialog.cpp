@@ -24,11 +24,32 @@
 #include "Translations.h"
 #include "DarkMode.h"
 #include "SumatraDialogs.h"
+#include "shared/PdfToolsCommon.h"
 #include "PageGridDialogCommon.h"
 
 // CmdConfigurePageGrid: spacing / origin / color / line style, like
 // PDF-XChange's Measurement > Grid and Guides. Appearance is saved in
 // FixedPageUI.PageGrid; the Show Grid checkbox is the session toggle.
+//
+//   Units:          [inches          v]
+//   ---------------------------------------------- hairline
+//   Distance between grid lines
+//   Horizontal:     1____
+//   Vertical:       1____
+//   Subdivisions:   4____
+//   Grid line origin offset
+//   From left:      0____
+//   From bottom:    0____
+//   ---------------------------------------------- hairline
+//   Grid style:     [Dots            v]
+//   Color:          [#] #8080ff____
+//                   [x] Show Grid
+//   ---------------------------------------------- hairline
+//   Reset to defaults                [Cancel] [OK]
+constexpr int kGridDlgDx = 360;
+constexpr int kGridNumChars = 8;
+constexpr int kGridSwatchDx = 22;
+constexpr int kGridSwatchRadius = 4;
 
 struct PageGridWnd : WindowBase {
     ~PageGridWnd() override;
@@ -359,211 +380,133 @@ static void PaintPageGridSwatch(VirtCustom* sw, VirtPaintCtx* ctx) {
         return;
     }
     Rect rc = ctx->content;
-    ctx->gfx->FillRect(rc, wnd->currentColor);
-    ctx->gfx->DrawRect(rc, ThemeWindowTextColor());
-}
-
-static VirtText* PageGridLabel(Str s, PlatformFont* font, bool isRtl) {
-    return NewVirtText({
-        .s = s,
-        .font = font,
-        .isRtl = isRtl,
-        .padding = DpiScaledInsets(0, 8, 0, 0),
-    });
-}
-
-static void AddPageGridRow(Table* t, int row, VirtText* label, ILayout* ctrl, bool stretchCtrl = true) {
-    auto& lc = t->SetCell(row, 0, label);
-    lc.alignH = CrossAxisAlign::Stretch;
-    lc.alignV = CrossAxisAlign::CrossCenter;
-    auto& rc = t->SetCell(row, 1, ctrl);
-    rc.alignH = stretchCtrl ? CrossAxisAlign::Stretch : CrossAxisAlign::CrossStart;
-    rc.alignV = CrossAxisAlign::CrossCenter;
+    ctx->gfx->FillRoundedRect(rc, DpiScale(kGridSwatchRadius), wnd->currentColor, ThemeEdgeColor());
 }
 
 bool PageGridWnd::Create(MainWindow* mainWin) {
     win = mainWin;
-
+    Color colTxt = ThemeWindowTextColor();
+    Color colBg = ThemeWindowControlBackgroundColor();
+    Color colMuted = ThemeWindowTextDisabledColor();
+    PlatformFont* fontText = DlgUiFont(kToolDlgTextFontPx);
+    PlatformFont* fontMeta = DlgUiFont(kToolDlgMetaFontPx);
+    SetFont(fontText);
+    bool isRtl = IsUIRtl();
     {
         CreateCustomArgs args;
         args.owner = win ? win->hwndFrame : nullptr;
         args.title = Tr("Page Grid");
         args.visible = false;
         args.style = WS_POPUPWINDOW | WS_CAPTION;
-        args.font = GetFont();
+        args.font = fontText;
+        args.isRtl = isRtl;
+        args.bgColor = colBg;
         args.icon = LoadIconW(GetModuleHandleW(nullptr), MAKEINTRESOURCEW(GetAppIconID()));
         CreateCustom(args);
     }
     if (!hwnd) {
         return false;
     }
-    bool isRtl = IsUIRtl();
+    SetColors(colTxt, colBg);
 
-    auto makeEdit = [&]() -> Edit* {
-        Edit::CreateArgs args;
-        args.parent = hwnd;
-        args.font = GetFont();
-        args.withBorder = true;
-        args.isRtl = isRtl;
-        args.idealWidthChars = 8;
-        auto* e = new Edit();
-        e->Create(args);
+    // every row is a muted label in one column, then its control
+    Vec<VirtText*> labels;
+    auto addRow = [&](VBox* box, Str label, ILayout* ctrl, int flex) {
+        HBox* row = NewDlgFieldRow();
+        VirtText* t = NewDlgLabel(label, fontText, colMuted, kToolDlgRowDy);
+        VecAppend(labels, t);
+        row->AddChild(t);
+        row->AddChild(ctrl, flex);
+        box->AddChild(row);
+    };
+    auto addHeader = [&](VBox* box, Str s) { box->AddChild(NewDlgLabel(s, fontMeta, colMuted, kToolDlgRowDy)); };
+    auto makeEdit = [&]() {
+        Edit* e = NewDlgEdit(hwnd, fontText, {}, kGridNumChars);
         e->onTextChanged = MkMethod0<PageGridWnd, &PageGridWnd::ApplyLive>(this);
         return e;
     };
-    auto makeDropDown = [&]() -> DropDown* {
+    auto makeDropDown = [&](Str (*name)(int), int n) {
         DropDown::CreateArgs args;
         args.parent = hwnd;
-        args.font = GetFont();
+        args.font = fontText;
         args.isRtl = isRtl;
         auto* d = new DropDown();
         d->Create(args);
+        StrVec items;
+        for (int i = 0; i < n; i++) {
+            items.Append(name(i));
+        }
+        d->SetItems(items);
         return d;
+    };
+    auto newSection = [&]() {
+        auto* box = new VBox();
+        box->alignCross = CrossAxisAlign::Stretch;
+        return box;
     };
 
     auto* vbox = new VBox();
-    vbox->alignMain = MainAxisAlign::MainStart;
     vbox->alignCross = CrossAxisAlign::Stretch;
 
+    VBox* units = newSection();
+    ddUnits = makeDropDown(PageGridUnitName, 4);
+    ddUnits->onSelectionChanged = MkMethod0<PageGridWnd, &PageGridWnd::OnUnitsChanged>(this);
+    addRow(units, Tr("Units:"), ddUnits, 1);
+    vbox->AddChild(NewDlgSection(units));
+    vbox->AddChild(new VirtLine());
+
+    VBox* spacing = newSection();
+    addHeader(spacing, Tr("Distance between grid lines"));
+    editWidth = makeEdit();
+    addRow(spacing, Tr("Horizontal:"), NewDlgUnderlined(editWidth), 0);
+    editHeight = makeEdit();
+    addRow(spacing, Tr("Vertical:"), NewDlgUnderlined(editHeight), 0);
+    editSub = makeEdit();
+    addRow(spacing, Tr("Subdivisions:"), NewDlgUnderlined(editSub), 0);
+    addHeader(spacing, Tr("Grid line origin offset"));
+    editOffX = makeEdit();
+    addRow(spacing, Tr("From left:"), NewDlgUnderlined(editOffX), 0);
+    editOffY = makeEdit();
+    addRow(spacing, Tr("From bottom:"), NewDlgUnderlined(editOffY), 0);
+    vbox->AddChild(NewDlgSection(spacing));
+    vbox->AddChild(new VirtLine());
+
+    VBox* look = newSection();
+    ddStyle = makeDropDown(PageGridStyleName, 3);
+    ddStyle->onSelectionChanged = MkMethod0<PageGridWnd, &PageGridWnd::ApplyLive>(this);
+    addRow(look, Tr("Grid style:"), ddStyle, 1);
     {
-        auto* t = new Table();
-        t->SetSize(1, 2);
-        t->colGap = DpiScale(8);
-        t->rowGap = DpiScale(6);
-        ddUnits = makeDropDown();
-        {
-            StrVec items;
-            for (int i = 0; i < 4; i++) {
-                items.Append(PageGridUnitName(i));
-            }
-            ddUnits->SetItems(items);
-            ddUnits->onSelectionChanged = MkMethod0<PageGridWnd, &PageGridWnd::OnUnitsChanged>(this);
-        }
-        AddPageGridRow(t, 0, PageGridLabel(Tr("Units:"), font, isRtl), ddUnits);
-        vbox->AddChild(t);
+        HBox* colorRow = NewDlgRow();
+        auto* c = new VirtCustom();
+        c->idealSize = {DpiScale(kGridSwatchDx), DpiScale(kGridSwatchDx)};
+        c->userData = (uintptr_t)this;
+        c->SetFlag(vwfFocusable, true);
+        c->cursor = CursorId::Hand;
+        c->onPaint = MkFunc1(PaintPageGridSwatch, c);
+        c->onClick = MkMethod1<PageGridWnd, VirtMouseEvent*, &PageGridWnd::OnSwatchClick>(this);
+        swatch = c;
+        colorRow->AddChild(c);
+        editColor = NewDlgEdit(hwnd, fontText, {}, kGridNumChars);
+        editColor->onTextChanged = MkMethod0<PageGridWnd, &PageGridWnd::OnColorEditChanged>(this);
+        colorRow->AddChild(NewDlgUnderlined(editColor));
+        addRow(look, Tr("Color:"), colorRow, 0);
     }
+    cbShow = NewDlgCheckbox(hwnd, Tr("&Show Grid"), fontText, false);
+    cbShow->onStateChanged = MkMethod0<PageGridWnd, &PageGridWnd::ApplyLive>(this);
+    addRow(look, {}, cbShow, 0);
+    vbox->AddChild(NewDlgSection(look));
+    AlignDlgLabels(labels);
 
-    vbox->AddChild(NewVirtText({
-        .s = Tr("Distance between grid lines"),
-        .font = font,
-        .isRtl = isRtl,
-        .padding = DpiScaledInsets(8, 0, 4, 0),
-    }));
+    btnReset = NewDlgButton(hwnd, Tr("Reset to defaults"), fontText, DlgButtonStyle::Ghost, false);
+    btnReset->onClick = MkMethod1<PageGridWnd, VirtMouseEvent*, &PageGridWnd::OnReset>(this);
+    btnCancel = NewDlgButton(hwnd, Tr("Cancel"), fontText, DlgButtonStyle::Outline, false);
+    btnCancel->onClick = MkMethod1<PageGridWnd, VirtMouseEvent*, &PageGridWnd::OnCancel>(this);
+    btnOk = NewDlgButton(hwnd, Tr("OK"), fontText, DlgButtonStyle::Filled, true);
+    btnOk->onClick = MkMethod1<PageGridWnd, VirtMouseEvent*, &PageGridWnd::OnOk>(this);
+    vbox->AddChild(NewDlgFooter(btnCancel, btnOk, btnReset));
+    layout = vbox;
 
-    {
-        auto* t = new Table();
-        t->SetSize(3, 2);
-        t->colGap = DpiScale(8);
-        t->rowGap = DpiScale(6);
-        editWidth = makeEdit();
-        AddPageGridRow(t, 0, PageGridLabel(Tr("Horizontal:"), font, isRtl), editWidth, false);
-        editHeight = makeEdit();
-        AddPageGridRow(t, 1, PageGridLabel(Tr("Vertical:"), font, isRtl), editHeight, false);
-        editSub = makeEdit();
-        AddPageGridRow(t, 2, PageGridLabel(Tr("Subdivisions:"), font, isRtl), editSub, false);
-        vbox->AddChild(t);
-    }
-
-    {
-        auto* t = new Table();
-        t->SetSize(2, 2);
-        t->colGap = DpiScale(8);
-        t->rowGap = DpiScale(6);
-        t->padding = DpiScaledInsets(8, 0, 0, 0);
-        vbox->AddChild(NewVirtText({
-            .s = Tr("Grid line origin offset"),
-            .font = font,
-            .isRtl = isRtl,
-            .padding = DpiScaledInsets(8, 0, 4, 0),
-        }));
-        editOffX = makeEdit();
-        AddPageGridRow(t, 0, PageGridLabel(Tr("From left:"), font, isRtl), editOffX, false);
-        editOffY = makeEdit();
-        AddPageGridRow(t, 1, PageGridLabel(Tr("From bottom:"), font, isRtl), editOffY, false);
-        vbox->AddChild(t);
-    }
-
-    {
-        auto* t = new Table();
-        t->SetSize(3, 2);
-        t->colGap = DpiScale(8);
-        t->rowGap = DpiScale(6);
-        t->padding = DpiScaledInsets(8, 0, 0, 0);
-
-        ddStyle = makeDropDown();
-        {
-            StrVec items;
-            for (int i = 0; i < 3; i++) {
-                items.Append(PageGridStyleName(i));
-            }
-            ddStyle->SetItems(items);
-            ddStyle->onSelectionChanged = MkMethod0<PageGridWnd, &PageGridWnd::ApplyLive>(this);
-        }
-        AddPageGridRow(t, 0, PageGridLabel(Tr("Grid style:"), font, isRtl), ddStyle);
-
-        {
-            auto* row = new HBox();
-            row->alignMain = MainAxisAlign::MainStart;
-            row->alignCross = CrossAxisAlign::CrossCenter;
-            row->gap = DpiScale(8);
-            auto* c = new VirtCustom();
-            c->idealSize = {DpiScale(22), DpiScale(22)};
-            c->userData = (uintptr_t)this;
-            c->SetFlag(vwfFocusable, true);
-            c->cursor = CursorId::Hand;
-            c->onPaint = MkFunc1(PaintPageGridSwatch, c);
-            c->onClick = MkMethod1<PageGridWnd, VirtMouseEvent*, &PageGridWnd::OnSwatchClick>(this);
-            swatch = c;
-            row->AddChild(c);
-            editColor = makeEdit();
-            editColor->onTextChanged = MkMethod0<PageGridWnd, &PageGridWnd::OnColorEditChanged>(this);
-            row->AddChild(editColor, 1);
-            AddPageGridRow(t, 1, PageGridLabel(Tr("Color:"), font, isRtl), row);
-        }
-
-        {
-            Checkbox::CreateArgs args;
-            args.parent = hwnd;
-            args.text = Tr("&Show Grid");
-            args.isRtl = isRtl;
-            cbShow = new Checkbox();
-            cbShow->Create(args);
-            cbShow->onStateChanged = MkMethod0<PageGridWnd, &PageGridWnd::ApplyLive>(this);
-            AddPageGridRow(t, 2, PageGridLabel({}, font, isRtl), cbShow);
-        }
-        vbox->AddChild(t);
-    }
-
-    {
-        auto* hbox = new HBox();
-        hbox->alignMain = MainAxisAlign::SpaceBetween;
-        hbox->alignCross = CrossAxisAlign::CrossCenter;
-        hbox->gap = font->averageCharWidth;
-        auto pad = Insets{8, 0, 4, 0};
-
-        btnReset = NewThemedButton(hwnd, Tr("Reset to defaults"), font, false);
-        btnReset->onClick = MkMethod1<PageGridWnd, VirtMouseEvent*, &PageGridWnd::OnReset>(this);
-        hbox->AddChild(new Padding(btnReset, pad));
-
-        auto* right = new HBox();
-        right->alignMain = MainAxisAlign::MainEnd;
-        right->alignCross = CrossAxisAlign::CrossCenter;
-        right->gap = font->averageCharWidth;
-        btnCancel = NewThemedButton(hwnd, Tr("Cancel"), font, false);
-        btnCancel->onClick = MkMethod1<PageGridWnd, VirtMouseEvent*, &PageGridWnd::OnCancel>(this);
-        right->AddChild(new Padding(btnCancel, pad));
-        btnOk = NewThemedButton(hwnd, Tr("OK"), font, true);
-        btnOk->onClick = MkMethod1<PageGridWnd, VirtMouseEvent*, &PageGridWnd::OnOk>(this);
-        right->AddChild(new Padding(btnOk, pad));
-        hbox->AddChild(right);
-        vbox->AddChild(hbox);
-    }
-
-    auto* padding = new Padding(vbox, DpiScaledInsets(4, 8));
-    layout = padding;
-
-    int dx = DpiScale(360);
-    LayoutAndSizeToContent(layout, dx, 0, hwnd);
+    LayoutAndSizeToContent(layout, DpiScale(kGridDlgDx), 0, hwnd);
     DoLayout(HwndClientRect(hwnd).Size());
     HwndCenterDialog(hwnd, win ? win->hwndFrame : nullptr);
     UpdateTheme();

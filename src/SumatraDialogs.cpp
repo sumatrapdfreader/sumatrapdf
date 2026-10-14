@@ -347,6 +347,8 @@ void SetDlgButtonColors(VirtButton* b, DlgButtonStyle style) {
             break;
         case DlgButtonStyle::Ghost:
             fg = ThemeWindowTextDisabledColor();
+            // muted already: disabled, it fades further
+            b->SetColor(kColBtnTextDisabled, AccentColor(colBg, kToolDlgFaintShift));
             break;
     }
     b->SetColor(kColBtnText, fg);
@@ -436,21 +438,34 @@ constexpr int kDlgListInsetDx = 8;
 constexpr int kDlgListRadius = 4;
 constexpr int kDlgListSelShift = 28;
 
-// a row of a dialog's list: its text, on a rounded selection
-static void DrawDlgListRow(VirtListBox::DrawItemEvent* ev) {
-    VirtListBox* lb = ev->listBox;
-    Gfx* gfx = ev->gfx;
-    Rect rc = ev->itemRect;
+// a row of a dialog's list: its text, on a rounded selection, and `meta`
+// muted at the other end
+void DrawDlgListItem(VirtListBox* lb, Gfx* gfx, Rect rc, bool selected, Str text, Str meta) {
     Color colBg = lb->GetColor(kColListBg);
     gfx->FillRect(rc, colBg);
-    if (ev->selected) {
+    if (selected) {
         gfx->FillRoundedRect(rc, DpiScaleByDpi(lb->dpi, kDlgListRadius), AccentColor(colBg, kDlgListSelShift));
     }
     int inset = DpiScaleByDpi(lb->dpi, kDlgListInsetDx);
     Rect rcText{rc.x + inset, rc.y, rc.dx - (2 * inset), rc.dy};
+    bool isRtl = IsUIRtl();
+    if (len(meta) > 0) {
+        u32 fmtMeta = gfxTextVCenter | (isRtl ? (gfxTextLeft | gfxTextRtl) : gfxTextRight);
+        gfx->DrawText(meta, rcText, fmtMeta, lb->font, ThemeWindowTextDisabledColor());
+        int metaDx = gfx->MeasureText(meta, lb->font).dx + DpiScaleByDpi(lb->dpi, kToolDlgGapDx);
+        rcText.dx -= metaDx;
+        if (isRtl) {
+            rcText.x += metaDx;
+        }
+    }
     u32 fmt = gfxTextEllipsis | gfxTextVCenter;
-    fmt |= IsUIRtl() ? (gfxTextRight | gfxTextRtl) : gfxTextLeft;
-    gfx->DrawText(lb->model->Item(ev->itemIndex), rcText, fmt, lb->font, lb->GetColor(kColListText));
+    fmt |= isRtl ? (gfxTextRight | gfxTextRtl) : gfxTextLeft;
+    gfx->DrawText(text, rcText, fmt, lb->font, lb->GetColor(kColListText));
+}
+
+static void DrawDlgListRow(VirtListBox::DrawItemEvent* ev) {
+    VirtListBox* lb = ev->listBox;
+    DrawDlgListItem(lb, ev->gfx, ev->itemRect, ev->selected, lb->model->Item(ev->itemIndex), {});
 }
 
 // a list on the dialog's background, its rows drawn by DrawDlgListRow
@@ -473,4 +488,67 @@ void SetDlgListColors(VirtListBox* lb) {
 // the list under a hairline, its rows' text in line with the fields
 ILayout* NewDlgListBox(VirtListBox* lb) {
     return new Padding(lb, DpiScaledInsets(kToolDlgFilesPadDy, kToolDlgPadDx - kDlgListInsetDx));
+}
+
+// a bare field in the dialog's colors; the caller underlines it
+Edit* NewDlgEdit(HWND parent, PlatformFont* font, Str text, int idealChars) {
+    Edit::CreateArgs args;
+    args.parent = parent;
+    args.font = font;
+    args.withBorder = false;
+    args.isRtl = IsUIRtl();
+    args.text = text;
+    args.idealWidthChars = idealChars;
+    auto* e = new Edit();
+    e->SetColors(ThemeWindowTextColor(), ThemeWindowControlBackgroundColor());
+    e->Create(args);
+    return e;
+}
+
+static Checkbox* NewDlgCheckboxOrRadio(HWND parent, Str text, PlatformFont* font, bool checked, bool isRadio,
+                                       bool groupStart) {
+    Checkbox::CreateArgs args;
+    args.parent = parent;
+    args.text = text;
+    args.font = font;
+    args.isRtl = IsUIRtl();
+    args.isRadio = isRadio;
+    args.isGroupStart = groupStart;
+    args.initialState = checked ? Checkbox::State::Checked : Checkbox::State::Unchecked;
+    auto* c = new Checkbox();
+    c->Create(args);
+    c->SetColors(ThemeWindowTextColor(), ThemeWindowControlBackgroundColor());
+    return c;
+}
+
+Checkbox* NewDlgCheckbox(HWND parent, Str text, PlatformFont* font, bool checked) {
+    return NewDlgCheckboxOrRadio(parent, text, font, checked, false, false);
+}
+
+// groupStart: the first radio of its group
+Checkbox* NewDlgRadio(HWND parent, Str text, PlatformFont* font, bool checked, bool groupStart) {
+    return NewDlgCheckboxOrRadio(parent, text, font, checked, true, groupStart);
+}
+
+// a row of the dialog's controls, as tall as a row of a list
+HBox* NewDlgFieldRow() {
+    HBox* row = NewDlgRow();
+    row->minDy = DpiScale(kToolDlgRowDy);
+    return row;
+}
+
+// the controls between two hairlines, padded as the tool dialogs pad them
+ILayout* NewDlgSection(ILayout* content) {
+    return new Padding(content, DpiScaledInsets(kToolDlgFilesPadDy, kToolDlgPadDx));
+}
+
+// the labels as wide as the widest, so the fields after them line up
+void AlignDlgLabels(const Vec<VirtText*>& labels) {
+    int dx = 0;
+    for (VirtText* t : labels) {
+        dx = std::max(dx, t->GetIdealSize().dx);
+    }
+    for (VirtText* t : labels) {
+        t->padding.right += dx - t->GetIdealSize().dx;
+    }
 }

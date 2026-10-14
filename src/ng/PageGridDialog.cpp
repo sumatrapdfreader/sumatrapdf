@@ -32,6 +32,7 @@
 #include "gui/DocCanvas.h"
 #include "gui/DialogWidgets.h"
 #include "SumatraDialogs.h"
+#include "shared/PdfToolsCommon.h"
 #include "PageGridDialogCommon.h"
 
 #include "SumatraLog.h"
@@ -246,19 +247,12 @@ struct PageGridDlg {
 
 static PageGridDlg gPageGrid;
 
-// orig's window at 96 dpi: a 360 wide client area, 4 / 8 around. Four tables
-// of label + control rows: each table's labels share a column, the controls
-// start 16 after it, the rows are 23 high and 6 apart, the edits 66 wide. A
-// heading has 8 above and 4 under it; a table after the first 8 above it; the
-// buttons 8 above and 4 below
-constexpr float kGridWinDx = 360;
-constexpr float kGridWinPadX = 8;
-constexpr float kGridWinPadY = 4;
-constexpr float kGridWinColGap = 16;
-constexpr float kGridWinRowGap = 6;
-constexpr float kGridWinGap = 8;
-constexpr float kGridWinEditDx = 66;
-constexpr float kGridWinSwatch = 22;
+// orig's layout: the units, the spacing and the offset under muted headings,
+// the look, the footer; hairlines between, the labels in one column
+constexpr float kGridDlgDx = 360;
+constexpr float kGridEditDx = 66;
+constexpr float kGridSwatch = 22;
+constexpr float kGridSwatchRadius = 4;
 
 struct PageGridView {
     static void OnOk(PageGridView* self, gp::Ctx* cx, const gp::ClickEvent*);
@@ -519,7 +513,7 @@ void ShowPageGridDialog(MainWindow* win) {
     spec.close = ClosePageGridDialog;
     // orig's is owned by the main window, which stays enabled
     spec.owned = true;
-    spec.clientDx = kGridWinDx;
+    spec.clientDx = kGridDlgDx;
     gPageGrid.wantFocus = true;
     gPageGridTw = DlgWindowOpen(spec, win);
     AppShellInvalidate(win);
@@ -612,114 +606,6 @@ void PageGridView::OnPickColor(PageGridView*, gp::Ctx* cx, const gp::ClickEvent*
     gp::Notify(cx);
 }
 
-static gp::El* GridRow(gp::Ctx* cx, Str label, gp::El* ctrl) {
-    const gp::Theme& th = gp::ThemeNow(cx->app);
-    gp::El* row = gp::Div(cx->a)->FlexRow()->W(gp::kFill)->ItemsCenter()->Gap(8);
-    row->Child(gp::TextEl(cx->a, GpuiDup(cx->a, label))->Font(13)->Fg(th.foreground)->W(120)->Shrink0());
-    row->Child(gp::Div(cx->a)->Flex1()->MinW(0)->Child(ctrl));
-    return row;
-}
-
-static gp::El* PageGridWinBuild(gp::Ctx* cx) {
-    const gp::Theme& th = gp::ThemeNow(cx->app);
-    float font = DlgWinFont(cx);
-    gp::El* col = gp::Div(cx->a)->FlexCol()->W(gp::kFill)->PadX(kGridWinPadX)->PadY(kGridWinPadY);
-
-    // one row of a table whose label column is `labelDx` wide
-    auto row = [&](Str label, float labelDx, gp::El* ctrl, float padT, float dy = kDlgWinEditDy) {
-        gp::El* r = gp::Div(cx->a)->FlexRow()->ItemsCenter()->W(gp::kFill)->H(dy + padT)->PadT(padT)->Shrink0();
-        r->Child(gp::Div(cx->a)
-                     ->W(labelDx + kGridWinColGap)
-                     ->Shrink0()
-                     ->Child(gp::TextEl(cx->a, GpuiDup(cx->a, label))->Font(font)->Fg(th.foreground)));
-        r->Child(ctrl);
-        return r;
-    };
-    auto edit = [&](gp::Str id, gp::InputState* st) {
-        return gpc::Input::New(cx, id, st)
-            ->WithSize(gp::UiSize::Small)
-            ->W(kGridWinEditDx)
-            ->IntoEl()
-            ->H(kDlgWinEditDy)
-            ->Shrink0();
-    };
-    auto select = [&](DialogSelect& dd, Str id) {
-        gp::El* sel = dd.Build(cx, id, gp::kFill)->H(kDlgWinEditDy);
-        if (sel->first) {
-            sel->first->H(kDlgWinEditDy);
-        }
-        return gp::Div(cx->a)->Flex1()->MinW(0)->Child(sel);
-    };
-    auto heading = [&](Str s) {
-        return gp::Div(cx->a)->PadT(kGridWinGap)->Shrink0()->Child(DlgWinLabel(cx, ToGpui(s), font, kGridWinPadY));
-    };
-    auto widest = [&](std::initializer_list<Str> labels) {
-        float dx = 0;
-        for (Str s : labels) {
-            dx = std::max(dx, DlgWinTextDx(cx, s));
-        }
-        return dx;
-    };
-
-    Str units = Tr("Units:");
-    col->Child(row(units, DlgWinTextDx(cx, units), select(gPageGrid.ddUnits, StrL("grid-units")), 0));
-
-    col->Child(heading(Tr("Distance between grid lines")));
-    Str horz = Tr("Horizontal:"), vert = Tr("Vertical:"), sub = Tr("Subdivisions:");
-    float dx = widest({horz, vert, sub});
-    col->Child(row(horz, dx, edit(GStrL("grid-w"), gPageGrid.editWidth), 0));
-    col->Child(row(vert, dx, edit(GStrL("grid-h"), gPageGrid.editHeight), kGridWinRowGap));
-    col->Child(row(sub, dx, edit(GStrL("grid-sub"), gPageGrid.editSub), kGridWinRowGap));
-
-    col->Child(heading(Tr("Grid line origin offset")));
-    Str fromLeft = Tr("From left:"), fromBottom = Tr("From bottom:");
-    dx = widest({fromLeft, fromBottom});
-    col->Child(row(fromLeft, dx, edit(GStrL("grid-ox"), gPageGrid.editOffX), kGridWinGap));
-    col->Child(row(fromBottom, dx, edit(GStrL("grid-oy"), gPageGrid.editOffY), kGridWinRowGap));
-
-    Str style = Tr("Grid style:"), color = Tr("Color:");
-    dx = widest({style, color});
-    col->Child(row(style, dx, select(gPageGrid.ddStyle, StrL("grid-style")), kGridWinGap));
-    gp::El* colorRow = gp::Div(cx->a)->FlexRow()->ItemsCenter()->Gap(kGridWinGap);
-    colorRow->Child(gp::Div(cx->a)
-                        ->W(kGridWinSwatch)
-                        ->H(kGridWinSwatch)
-                        ->Shrink0()
-                        ->Border(1, th.foreground)
-                        ->Bg(ToGpui(gPageGrid.currentColor))
-                        ->Cursor(gp::CursorKind::Pointer)
-                        ->PathClick(GStrL("grid-swatch"))
-                        ->OnClick(gp::ListenTo(gPageGridView, &PageGridView::OnPickColor)));
-    colorRow->Child(edit(GStrL("grid-color"), gPageGrid.editColor));
-    col->Child(row(color, dx, colorRow, kGridWinRowGap));
-    constexpr float kCheckLabelGap = 2;
-    col->Child(row({}, dx,
-                   DlgAccelEl(cx, gpc::Checkbox::New(cx, GStrL("grid-show"))->Checked(gPageGrid.showGrid),
-                              Tr("&Show Grid"), gp::ListenTo(gPageGridView, &PageGridView::OnShowGrid))
-                       ->Gap(kCheckLabelGap),
-                   kGridWinRowGap, kDlgWinCheckDy));
-
-    gp::Listener onOk = gp::ListenTo(gPageGridView, &PageGridView::OnOk);
-    DlgSetDefault(cx, onOk, true);
-    gp::El* buttons = gp::Div(cx->a)
-                          ->FlexRow()
-                          ->ItemsCenter()
-                          ->W(gp::kFill)
-                          ->H(kDlgWinBtnDy + kGridWinGap + kGridWinPadY)
-                          ->PadT(kGridWinGap)
-                          ->PadB(kGridWinPadY)
-                          ->Gap(kDlgWinBtnGap)
-                          ->Shrink0();
-    buttons->Child(DlgWinButton(cx, GStrL("grid-reset"), Tr("Reset to defaults"),
-                                gp::ListenTo(gPageGridView, &PageGridView::OnReset), false));
-    buttons->Child(gp::Div(cx->a)->Flex1());
-    buttons->Child(DlgWinButton(cx, GStrL("dlg-cancel"), Tr("Cancel"),
-                                gp::ListenTo(gPageGridView, &PageGridView::OnCancel), false));
-    buttons->Child(DlgWinButton(cx, GStrL("dlg-ok"), Tr("OK"), onOk, true));
-    col->Child(buttons);
-    return DlgWinContent(cx, col);
-}
-
 gp::El* PageGridDialogBuild(MainWindow* win, gp::Ctx* cx) {
     if (!gPageGrid.visible || gPageGrid.win != win) {
         return nullptr;
@@ -736,7 +622,6 @@ gp::El* PageGridDialogBuild(MainWindow* win, gp::Ctx* cx) {
     if (gPageGrid.ddStyle.PollChanged(cx->app)) {
         ApplyLive();
     }
-    const gp::Theme& th = gp::ThemeNow(cx->app);
     gp::Listener onChanged = gp::ListenTo(gPageGridView, &PageGridView::OnChanged);
     gPageGrid.editWidth->onChange = onChanged;
     gPageGrid.editHeight->onChange = onChanged;
@@ -744,70 +629,75 @@ gp::El* PageGridDialogBuild(MainWindow* win, gp::Ctx* cx) {
     gPageGrid.editOffX->onChange = onChanged;
     gPageGrid.editOffY->onChange = onChanged;
     gPageGrid.editColor->onChange = gp::ListenTo(gPageGridView, &PageGridView::OnColorChanged);
+    gp::Listener onOk = gp::ListenTo(gPageGridView, &PageGridView::OnOk);
+    gp::Listener onCancel = gp::ListenTo(gPageGridView, &PageGridView::OnCancel);
+    DlgSetDefault(cx, onOk, true);
+    Color colEdge = ThemeEdgeColor();
 
-    if (DlgWindowIsHost(cx)) {
-        gp::El* content = PageGridWinBuild(cx);
-        if (gPageGrid.wantFocus) {
-            gp::InputFocus(gPageGrid.editWidth, cx->app, cx->win);
-            gp::InputSelectAll(gPageGrid.editWidth, cx->app, cx->win);
-            gPageGrid.wantFocus = cx->win->input != gPageGrid.editWidth;
-        }
-        return content;
+    Str units = Tr("Units:"), horz = Tr("Horizontal:"), vert = Tr("Vertical:"), sub = Tr("Subdivisions:");
+    Str fromLeft = Tr("From left:"), fromBottom = Tr("From bottom:"), style = Tr("Grid style:"), color = Tr("Color:");
+    float labelDx = 0;
+    for (Str l : {units, horz, vert, sub, fromLeft, fromBottom, style, color}) {
+        labelDx = std::max(labelDx, DlgFieldLabelDx(cx, l));
     }
-
-    auto numInput = [&](Str id, gp::InputState* st) {
-        return gpc::Input::New(cx, GpuiDup(cx->a, id), st)->WithSize(gp::UiSize::Small)->W(100)->IntoEl();
+    auto row = [&](Str label, gp::El* ctrl) {
+        return DlgFieldRow(cx)->Child(DlgFieldLabel(cx, label, labelDx))->Child(ctrl);
+    };
+    auto edit = [&](gp::Str id, gp::InputState* st) {
+        return gp::Div(cx->a)
+            ->W(kGridEditDx)
+            ->Shrink0()
+            ->Child(DlgUnderlineInput(cx, id, st, kToolDlgTextFontPx, colEdge));
+    };
+    auto select = [&](DialogSelect& dd, Str id) {
+        return gp::Div(cx->a)->Flex1()->MinW(0)->Child(dd.Build(cx, id, gp::kFill));
     };
 
-    gp::El* body = gp::Div(cx->a)->FlexCol()->Gap(6);
-    body->Child(GridRow(cx, Tr("Units:"), gPageGrid.ddUnits.Build(cx, StrL("grid-units"), gp::kFill)));
-    body->Child(gp::TextEl(cx->a, ToGpui(Tr("Distance between grid lines")))->Font(13)->Bold()->Fg(th.foreground));
-    body->Child(GridRow(cx, Tr("Horizontal:"), numInput(StrL("grid-w"), gPageGrid.editWidth)));
-    body->Child(GridRow(cx, Tr("Vertical:"), numInput(StrL("grid-h"), gPageGrid.editHeight)));
-    body->Child(GridRow(cx, Tr("Subdivisions:"), numInput(StrL("grid-sub"), gPageGrid.editSub)));
-    body->Child(gp::TextEl(cx->a, ToGpui(Tr("Grid line origin offset")))->Font(13)->Bold()->Fg(th.foreground));
-    body->Child(GridRow(cx, Tr("From left:"), numInput(StrL("grid-ox"), gPageGrid.editOffX)));
-    body->Child(GridRow(cx, Tr("From bottom:"), numInput(StrL("grid-oy"), gPageGrid.editOffY)));
-    body->Child(GridRow(cx, Tr("Grid style:"), gPageGrid.ddStyle.Build(cx, StrL("grid-style"), gp::kFill)));
+    gp::El* col = gp::Div(cx->a)->FlexCol()->W(gp::kFill);
+    gp::El* unitsBox = DlgSection(cx);
+    unitsBox->Child(row(units, select(gPageGrid.ddUnits, StrL("grid-units"))));
+    col->Child(unitsBox);
+    col->Child(DlgHairline(cx));
 
-    gp::El* colorRow = gp::Div(cx->a)->FlexRow()->W(gp::kFill)->ItemsCenter()->Gap(8);
-    colorRow->Child(gp::Div(cx->a)
-                        ->W(22)
-                        ->H(22)
-                        ->Shrink0()
-                        ->Border(1, th.border)
-                        ->Bg(ToGpui(gPageGrid.currentColor))
-                        ->Cursor(gp::CursorKind::Pointer)
-                        ->PathClick(GStrL("grid-swatch"))
-                        ->OnClick(gp::ListenTo(gPageGridView, &PageGridView::OnPickColor)));
-    colorRow->Child(
-        gp::Div(cx->a)->Flex1()->MinW(0)->Child(gpc::Input::New(cx, GStrL("grid-color"), gPageGrid.editColor)
-                                                    ->WithSize(gp::UiSize::Small)
-                                                    ->W(gp::kFill)
-                                                    ->IntoEl()));
-    body->Child(GridRow(cx, Tr("Color:"), colorRow));
-    body->Child(DlgAccelEl(cx, gpc::Checkbox::New(cx, GStrL("grid-show"))->Checked(gPageGrid.showGrid),
-                           Tr("&Show Grid"), gp::ListenTo(gPageGridView, &PageGridView::OnShowGrid)));
+    gp::El* spacing = DlgSection(cx);
+    spacing->Child(DlgSectionHeader(cx, Tr("Distance between grid lines")));
+    spacing->Child(row(horz, edit(GStrL("grid-w"), gPageGrid.editWidth)));
+    spacing->Child(row(vert, edit(GStrL("grid-h"), gPageGrid.editHeight)));
+    spacing->Child(row(sub, edit(GStrL("grid-sub"), gPageGrid.editSub)));
+    spacing->Child(DlgSectionHeader(cx, Tr("Grid line origin offset")));
+    spacing->Child(row(fromLeft, edit(GStrL("grid-ox"), gPageGrid.editOffX)));
+    spacing->Child(row(fromBottom, edit(GStrL("grid-oy"), gPageGrid.editOffY)));
+    col->Child(spacing);
+    col->Child(DlgHairline(cx));
 
-    gp::El* reset = gpc::Button::New(cx, GStrL("grid-reset"))
-                        ->Label(ToGpui(Tr("Reset to defaults")))
-                        ->WithSize(gp::UiSize::Small)
-                        ->OnClick(gp::ListenTo(gPageGridView, &PageGridView::OnReset))
-                        ->IntoEl();
-    gp::El* footer =
-        DialogFooter(cx, reset, gPageGridView, Tr("OK"), Tr("Cancel"), &PageGridView::OnOk, &PageGridView::OnCancel);
+    gp::El* look = DlgSection(cx);
+    look->Child(row(style, select(gPageGrid.ddStyle, StrL("grid-style"))));
+    gp::El* swatch = gp::Div(cx->a)
+                         ->W(kGridSwatch)
+                         ->H(kGridSwatch)
+                         ->Shrink0()
+                         ->Radius(kGridSwatchRadius)
+                         ->Border(1, ToGpui(colEdge))
+                         ->Bg(ToGpui(gPageGrid.currentColor))
+                         ->Cursor(gp::CursorKind::Pointer)
+                         ->PathClick(GStrL("grid-swatch"))
+                         ->OnClick(gp::ListenTo(gPageGridView, &PageGridView::OnPickColor));
+    gp::El* colorBox = gp::Div(cx->a)->FlexRow()->ItemsCenter()->Gap(kToolDlgGapDx)->Shrink0();
+    colorBox->Child(swatch)->Child(edit(GStrL("grid-color"), gPageGrid.editColor));
+    look->Child(row(color, colorBox));
+    look->Child(row({}, DlgCheck(cx, StrL("grid-show"), Tr("&Show Grid"), gPageGrid.showGrid,
+                                 gp::ListenTo(gPageGridView, &PageGridView::OnShowGrid))));
+    col->Child(look);
 
-    gp::El* dlg = DlgIntoEl(cx, gpc::Dialog::New(cx)
-                                    ->Open(true)
-                                    ->Title(ToGpui(Tr("Page Grid")))
-                                    ->Body(body)
-                                    ->Footer(footer)
-                                    ->W(420)
-                                    ->OnClose(gp::ListenTo(gPageGridView, &PageGridView::OnCancel)));
+    gp::El* reset = DlgGhostButton(cx, GStrL("grid-reset"), Tr("Reset to defaults"),
+                                   gp::ListenTo(gPageGridView, &PageGridView::OnReset));
+    col->Child(DlgFooter(cx, Tr("OK"), onOk, onCancel, reset));
+    gp::El* content = DlgToolContent(cx, col, Tr("Page Grid"), kGridDlgDx, onCancel);
+
     if (gPageGrid.wantFocus) {
-        gPageGrid.wantFocus = false;
         gp::InputFocus(gPageGrid.editWidth, cx->app, cx->win);
         gp::InputSelectAll(gPageGrid.editWidth, cx->app, cx->win);
+        gPageGrid.wantFocus = cx->win->input != gPageGrid.editWidth;
     }
-    return dlg;
+    return content;
 }

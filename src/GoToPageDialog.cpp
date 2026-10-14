@@ -227,13 +227,7 @@ bool GoToPageWnd::Create(MainWindow* mainWin) {
     editPage = AddLine(vbox, label, pageLabel, onlyNumeric, &labelOf, pageCount);
 
     // the fields start in one column
-    int labelDx = 0;
-    for (VirtText* t : labels) {
-        labelDx = std::max(labelDx, t->GetIdealSize().dx);
-    }
-    for (VirtText* t : labels) {
-        t->padding.right += labelDx - t->GetIdealSize().dx;
-    }
+    AlignDlgLabels(labels);
 
     btnCancel = NewDlgButton(hwnd, Tr("Cancel"), fontText, DlgButtonStyle::Outline, false);
     btnCancel->onClick = MkMethod1<GoToPageWnd, VirtMouseEvent*, &GoToPageWnd::OnCancel>(this);

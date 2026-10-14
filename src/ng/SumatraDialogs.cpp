@@ -1100,6 +1100,49 @@ bool DialogsOnEscape(MainWindow* win) {
 
 constexpr float kDlgCaptionPadDy = 14;
 
+gp::El* DlgFieldRow(gp::Ctx* cx) {
+    return gp::Div(cx->a)->FlexRow()->ItemsCenter()->W(gp::kFill)->H(kToolDlgRowDy)->Shrink0()->Gap(kToolDlgGapDx);
+}
+
+gp::El* DlgFieldLabel(gp::Ctx* cx, Str s, float dx) {
+    gp::El* t =
+        gp::TextEl(cx->a, GpuiDup(cx->a, s))->Font(kToolDlgTextFontPx)->Fg(ToGpui(ThemeWindowTextDisabledColor()));
+    gp::El* box = gp::Div(cx->a)->Shrink0()->Child(t);
+    if (dx > 0) {
+        box->W(dx);
+    }
+    return box;
+}
+
+// the app font is the labels' family, a size smaller
+float DlgFieldLabelDx(gp::Ctx* cx, Str s) {
+    return DlgWinTextDx(cx, s) * kToolDlgTextFontPx / kDlgWinFontPx;
+}
+
+gp::El* DlgSectionHeader(gp::Ctx* cx, Str s) {
+    return gp::Div(cx->a)
+        ->FlexRow()
+        ->ItemsCenter()
+        ->H(kToolDlgRowDy)
+        ->Shrink0()
+        ->Child(
+            gp::TextEl(cx->a, GpuiDup(cx->a, s))->Font(kToolDlgMetaFontPx)->Fg(ToGpui(ThemeWindowTextDisabledColor())));
+}
+
+gp::El* DlgSection(gp::Ctx* cx) {
+    return gp::Div(cx->a)->FlexCol()->W(gp::kFill)->Shrink0()->PadX(kToolDlgPadDx)->PadY(kToolDlgFilesPadDy);
+}
+
+gp::El* DlgCheck(gp::Ctx* cx, Str id, Str label, bool checked, gp::Listener onClick, DlgCheckKind kind) {
+    gp::Str gid = GpuiDup(cx->a, id);
+    if (kind == DlgCheckKind::Radio) {
+        gpc::Radio* r = gpc::Radio::New(cx, gid)->Checked(checked)->WithSize(gp::UiSize::Small);
+        return DlgAccelEl(cx, r, label, onClick)->Font(kToolDlgTextFontPx);
+    }
+    gpc::Checkbox* c = gpc::Checkbox::New(cx, gid)->Checked(checked);
+    return DlgAccelEl(cx, c, label, onClick)->Font(kToolDlgTextFontPx);
+}
+
 // muted text over the line it describes, cut with ... when too long
 gp::El* DlgCaption(gp::Ctx* cx, Str s) {
     gp::El* t = gp::TextEl(cx->a, GpuiDup(cx->a, s))
@@ -1175,7 +1218,7 @@ constexpr float kDlgListInsetDx = 8;
 constexpr float kDlgListRadius = 4;
 constexpr int kDlgListSelShift = 28;
 
-gp::El* DlgListRow(gp::Ctx* cx, Str id, Str text, bool selected, gp::Listener onClick) {
+gp::El* DlgListRow(gp::Ctx* cx, Str id, Str text, bool selected, gp::Listener onClick, Str meta) {
     gp::El* row = gp::Div(cx->a)
                       ->FlexRow()
                       ->W(gp::kFill)
@@ -1193,7 +1236,14 @@ gp::El* DlgListRow(gp::Ctx* cx, Str id, Str text, bool selected, gp::Listener on
                    ->Font(kToolDlgTextFontPx)
                    ->Fg(ToGpui(ThemeWindowTextColor()))
                    ->Truncate()
+                   ->Flex1()
                    ->MinW(0));
+    if (len(meta) > 0) {
+        row->Child(gp::TextEl(cx->a, GpuiDup(cx->a, meta))
+                       ->Font(kToolDlgTextFontPx)
+                       ->Fg(ToGpui(ThemeWindowTextDisabledColor()))
+                       ->Shrink0());
+    }
     return row;
 }
 

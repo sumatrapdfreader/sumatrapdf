@@ -847,9 +847,9 @@ Size HBox::Layout(const Constraints bc) {
     }
 
     if (alignCross == CrossAxisAlign::Stretch) {
-        return bc.Constrain(Size{width, cbc.min.dy});
+        return bc.Constrain(Size{width, std::max(cbc.min.dy, minDy)});
     }
-    return bc.Constrain(Size{width, height});
+    return bc.Constrain(Size{width, std::max(height, minDy)});
 }
 
 int HBox::MinIntrinsicHeight(int width) {
@@ -864,7 +864,7 @@ int HBox::MinIntrinsicHeight(int width) {
     } else {
         width = Inf;
     }
-    int size = 0;
+    int size = minDy;
     for (auto& v : children) {
         if (!IsCollapsed(v.layout)) {
             size = std::max(size, v.layout->MinIntrinsicHeight(width));

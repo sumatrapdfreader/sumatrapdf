@@ -24,10 +24,19 @@
 #include "SumatraConfig.h"
 #include "Theme.h"
 #include "DarkMode.h"
+#include "SumatraDialogs.h"
+#include "shared/PdfToolsCommon.h"
 #include "TabGroupsManage.h"
 #include "AppHelpersCommon.h"
 
-constexpr int kPadding = 8;
+//   group #3                       the name, in the larger font (Save only)
+//   ---------------------------------------------- hairline
+//   group #1                        4 tabs
+//   group #2                        2 tabs     the saved groups
+//   ---------------------------------------------- hairline
+//   Delete                         [Cancel] [Save]
+constexpr int kTabGroupsDlgDx = 400;
+constexpr int kTabGroupsDlgDy = 350;
 
 struct TabGroupsListBoxModel : ListBoxModel {
     Vec<TabGroup*> groups;
@@ -166,7 +175,7 @@ void TabGroupsWnd::UpdateDeleteButton() {
         return;
     }
     int sel = listBox ? listBox->GetCurrentSelection() : -1;
-    btnDelete->SetIsEnabled(sel >= 0);
+    SetDlgButtonEnabled(btnDelete, DlgButtonStyle::Ghost, sel >= 0);
 }
 
 void TabGroupsWnd::DeleteTabGroup(VirtMouseEvent*) {
@@ -190,38 +199,8 @@ static void DrawTabGroupItem(TabGroupsWnd* w, VirtListBox::DrawItemEvent* ev) {
     if (ev->itemIndex < 0 || ev->itemIndex >= w->model->ItemsCount()) {
         return;
     }
-
-    VirtListBox* lb = ev->listBox;
-    Gfx* gfx = ev->gfx;
-    Rect rc = ev->itemRect;
-
-    Color colBg = lb->GetColor(kColListBg);
-    Color colText = lb->GetColor(kColListText);
-    if (IsSpecialColor(colBg)) {
-        colBg = GetSysColor(COLOR_WINDOW);
-    }
-    if (IsSpecialColor(colText)) {
-        colText = GetSysColor(COLOR_WINDOWTEXT);
-    }
-    if (ev->selected) {
-        colBg = AccentColor(colBg, 30);
-    }
-
-    gfx->FillRect(rc, colBg);
-
-    int padX = DpiScale(4);
-    rc.x += padX;
-    rc.dx -= 2 * padX;
-
-    // draw group name on the left
-    Str name = w->model->Item(ev->itemIndex);
-    gfx->DrawText(name, rc, gfxTextVCenter | gfxTextLeft, lb->font, colText);
-
-    // draw tab count on the right
-    int nTabs = w->model->TabCount(ev->itemIndex);
-    char buf[32];
-    snprintf(buf, sizeof(buf), "%d tabs", nTabs);
-    gfx->DrawText(Str(buf), rc, gfxTextVCenter | gfxTextRight, lb->font, AccentColor(colText, 80));
+    TempStr nTabs = fmt("%d tabs", w->model->TabCount(ev->itemIndex));
+    DrawDlgListItem(ev->listBox, ev->gfx, ev->itemRect, ev->selected, w->model->Item(ev->itemIndex), nTabs);
 }
 
 static void OnListDoubleClick(TabGroupsWnd* w) {
@@ -280,79 +259,61 @@ bool TabGroupsWnd::Create(MainWindow* winIn, TabGroupDialogMode modeIn) {
     bool isRtl = IsUIRtl();
 
     Str titleStr = (mode == TabGroupDialogMode::Save) ? Str(Tr("Save Tab Group")) : Str(Tr("Restore Tab Group"));
+    Color colTxt = ThemeWindowTextColor();
+    Color colBg = ThemeWindowControlBackgroundColor();
+    PlatformFont* fontText = DlgUiFont(kToolDlgTextFontPx);
+    SetFont(fontText);
     {
         CreateCustomArgs args;
         args.title = titleStr;
         args.visible = false;
         args.style = WS_OVERLAPPEDWINDOW;
-        args.font = GetFont();
+        args.font = fontText;
         args.isRtl = isRtl;
+        args.bgColor = colBg;
         args.icon = LoadIconW(GetModuleHandleW(nullptr), MAKEINTRESOURCEW(GetAppIconID()));
         CreateCustom(args);
     }
     if (!hwnd) {
         return false;
     }
+    SetColors(colTxt, colBg);
 
     auto* vbox = new VBox();
-    vbox->alignMain = MainAxisAlign::MainStart;
     vbox->alignCross = CrossAxisAlign::Stretch;
 
     if (mode == TabGroupDialogMode::Save) {
-        Edit::CreateArgs args;
-        args.parent = hwnd;
-        args.font = GetFont();
-        args.withBorder = true;
-        args.isRtl = isRtl;
         int groupNum = 1;
         if (gSettings->tabGroups) {
             groupNum = len(*gSettings->tabGroups) + 1;
         }
-        TempStr defaultName = fmt("group #%d", groupNum);
-        args.text = defaultName;
-        editName = new Edit();
-        editName->Create(args);
-        auto* editPad = new Padding(editName, DpiScaledInsets(0, 0, kPadding, 0));
-        vbox->AddChild(editPad);
+        editName = NewDlgEdit(hwnd, DlgUiFont(kToolDlgQueryFontPx), fmt("group #%d", groupNum), 0);
+        HBox* row = NewDlgRow();
+        row->minDy = DpiScale(kToolDlgLineDy);
+        row->AddChild(editName, 1);
+        vbox->AddChild(new Padding(row, DpiScaledInsets(0, kToolDlgPadDx)));
+        vbox->AddChild(new VirtLine());
     }
 
-    {
-        listBox = new VirtListBox();
-        listBox->dpi = GetDpi();
-        listBox->font = font;
-        listBox->onDrawItem = MkFunc1(DrawTabGroupItem, this);
-        listBox->onSelectionChanged = MkMethod0<TabGroupsWnd, &TabGroupsWnd::UpdateDeleteButton>(this);
-        listBox->onDoubleClick = MkFunc0(OnListDoubleClick, this);
-        model = new TabGroupsListBoxModel();
-        PopulateListBox(this);
-        vbox->AddChild(listBox, 1);
-    }
+    listBox = NewDlgList(GetDpi(), fontText);
+    listBox->onDrawItem = MkFunc1(DrawTabGroupItem, this);
+    listBox->onSelectionChanged = MkMethod0<TabGroupsWnd, &TabGroupsWnd::UpdateDeleteButton>(this);
+    listBox->onDoubleClick = MkFunc0(OnListDoubleClick, this);
+    model = new TabGroupsListBoxModel();
+    PopulateListBox(this);
+    vbox->AddChild(NewDlgListBox(listBox), 1);
 
-    {
-        auto* btnRow = new HBox();
-        btnRow->alignMain = MainAxisAlign::MainEnd;
-        btnRow->alignCross = CrossAxisAlign::CrossCenter;
-        btnRow->gap = font->averageCharWidth;
+    btnDelete = NewDlgButton(hwnd, Tr("Delete"), fontText, DlgButtonStyle::Ghost, false);
+    btnDelete->onClick = MkMethod1<TabGroupsWnd, VirtMouseEvent*, &TabGroupsWnd::DeleteTabGroup>(this);
+    btnCancel = NewDlgButton(hwnd, Tr("Cancel"), fontText, DlgButtonStyle::Outline, false);
+    btnCancel->onClick = MkMethod1<TabGroupsWnd, VirtMouseEvent*, &TabGroupsWnd::OnCancel>(this);
+    Str okText = (mode == TabGroupDialogMode::Save) ? Str(Tr("Save")) : Str(Tr("Restore"));
+    btnOk = NewDlgButton(hwnd, okText, fontText, DlgButtonStyle::Filled, true);
+    btnOk->onClick = MkMethod1<TabGroupsWnd, VirtMouseEvent*, &TabGroupsWnd::OnOk>(this);
+    vbox->AddChild(NewDlgFooter(btnCancel, btnOk, btnDelete));
+    layout = vbox;
 
-        btnCancel = NewThemedButton(hwnd, Tr("Cancel"), font, false);
-        btnCancel->onClick = MkMethod1<TabGroupsWnd, VirtMouseEvent*, &TabGroupsWnd::OnCancel>(this);
-        btnRow->AddChild(btnCancel);
-        btnDelete = NewThemedButton(hwnd, Tr("Delete"), font, false);
-        btnDelete->onClick = MkMethod1<TabGroupsWnd, VirtMouseEvent*, &TabGroupsWnd::DeleteTabGroup>(this);
-        btnDelete->SetIsEnabled(false);
-        btnRow->AddChild(btnDelete);
-        Str okText = (mode == TabGroupDialogMode::Save) ? Str(Tr("Save")) : Str(Tr("Restore"));
-        btnOk = NewThemedButton(hwnd, okText, font, true);
-        btnOk->onClick = MkMethod1<TabGroupsWnd, VirtMouseEvent*, &TabGroupsWnd::OnOk>(this);
-        btnRow->AddChild(btnOk);
-        vbox->AddChild(new Padding(btnRow, DpiScaledInsets(kPadding, 0, 0, 0)));
-    }
-
-    layout = new Padding(vbox, DpiScaledInsets(kPadding, kPadding));
-
-    int winW = DpiScale(400);
-    int winH = DpiScale(350);
-    SetWindowPos(hwnd, nullptr, 0, 0, winW, winH, SWP_NOMOVE | SWP_NOZORDER);
+    SetWindowPos(hwnd, nullptr, 0, 0, DpiScale(kTabGroupsDlgDx), DpiScale(kTabGroupsDlgDy), SWP_NOMOVE | SWP_NOZORDER);
     DoLayout();
     HwndCenterDialog(hwnd, hwndParent);
     HwndEnsureOnScreen(hwnd);

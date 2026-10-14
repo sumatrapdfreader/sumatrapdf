@@ -223,8 +223,24 @@ gpui::El* DlgFooter(gpui::Ctx* cx, Str okLabel, gpui::Listener onOk, gpui::Liste
                     gpui::El* extra = nullptr);
 // a list's rows: the text on a rounded selection, in line with the fields
 constexpr float kDlgListRowDy = 24;
-gpui::El* DlgListRow(gpui::Ctx* cx, Str id, Str text, bool selected, gpui::Listener onClick);
+gpui::El* DlgListRow(gpui::Ctx* cx, Str id, Str text, bool selected, gpui::Listener onClick, Str meta = {});
 gpui::El* DlgListBox(gpui::Ctx* cx, gpui::El* list);
+// a row of controls as tall as a list's row; a muted label for it, `dx` wide
+// (0: its own width); what a label of `s` takes in that font
+gpui::El* DlgFieldRow(gpui::Ctx* cx);
+gpui::El* DlgFieldLabel(gpui::Ctx* cx, Str s, float dx);
+float DlgFieldLabelDx(gpui::Ctx* cx, Str s);
+// a muted heading inside a section
+gpui::El* DlgSectionHeader(gpui::Ctx* cx, Str s);
+// controls between two hairlines, padded as the tool dialogs pad them
+gpui::El* DlgSection(gpui::Ctx* cx);
+// a checkbox or a radio button, with orig's access key
+enum class DlgCheckKind {
+    Checkbox,
+    Radio
+};
+gpui::El* DlgCheck(gpui::Ctx* cx, Str id, Str label, bool checked, gpui::Listener onClick,
+                   DlgCheckKind kind = DlgCheckKind::Checkbox);
 gpui::El* DlgToolContent(gpui::Ctx* cx, gpui::El* col, Str title, float dx, gpui::Listener onCancel);
 
 // the dialog window that has the input of `win`'s program: a modal one, or

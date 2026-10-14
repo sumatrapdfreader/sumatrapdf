@@ -33,12 +33,13 @@
 #include "gui/DialogWidgets.h"
 #include "gui/ToolWindow.h"
 #include "SumatraDialogs.h"
+#include "shared/PdfToolsCommon.h"
 #include "ChangeColorDialogCommon.h"
 
 #include "SumatraLog.h"
 
 // the client width of orig's window
-constexpr float kColorWinDx = 400;
+constexpr float kColorWinDx = 420;
 
 struct ChangeColorDlg {
     MainWindow* win = nullptr;
@@ -627,63 +628,12 @@ static gp::El* ColorAreaEl(gp::Ctx* cx, float areaDx = (float)kColorAreaDx) {
         ->W(areaDx)
         ->H((float)kColorAreaDy)
         ->Shrink0()
-        ->Border(1, ToGpui(ThemeWindowTextColor()))
+        ->Border(1, ToGpui(ThemeEdgeColor()))
         ->Cursor(gp::CursorKind::Crosshair)
         ->PathClick(GStrL("color-area"))
         ->OnMouseDown(gp::ListenTo(gColorView, &ChangeColorView::OnAreaDown))
         ->OnMouseMove(gp::ListenTo(gColorView, &ChangeColorView::OnAreaMove))
         ->Child(gp::ImageEl(cx->a, src, GStrL(""))->W(areaDx - 2)->H((float)kColorAreaDy - 2));
-}
-
-// a swatch: the color, or orig's checkerboard when it means "unset", or an
-// empty slot with a cross through it
-static gp::El* SwatchEl(gp::Ctx* cx, Str id, int swatchId, Color col, bool checkered, bool empty, bool selected,
-                        float w, float h) {
-    const gp::Theme& th = gp::ThemeNow(cx->app);
-    gp::El* box = gp::Div(cx->a)
-                      ->W(w)
-                      ->H(h)
-                      ->Shrink0()
-                      ->Cursor(gp::CursorKind::Pointer)
-                      ->PathClick(GpuiDup(cx->a, id))
-                      ->OnClick(gp::ListenTo(gColorView, &ChangeColorView::OnSwatch, (intptr_t)swatchId));
-    box->Border(selected ? 2.f : 1.f, selected ? th.ring : th.border);
-    if (empty) {
-        box->Bg(th.muted);
-        return box;
-    }
-    if (checkered) {
-        // orig's PaintCheckerboard: 8 px cells, the last ones cut at the edge
-        constexpr int kCheckerSize = 8;
-        int innerDx = (int)w - 2;
-        int innerDy = (int)h - 2;
-        box->Bg(ToGpui(kColWhite));
-        for (int cy = 0; cy < innerDy; cy += kCheckerSize) {
-            for (int cxx = 0; cxx < innerDx; cxx += kCheckerSize) {
-                bool isDark = ((cxx / kCheckerSize) + (cy / kCheckerSize)) % 2 != 0;
-                if (!isDark) {
-                    continue;
-                }
-                int cellW = std::min(kCheckerSize, innerDx - cxx);
-                int cellH = std::min(kCheckerSize, innerDy - cy);
-                box->Child(gp::Div(cx->a)
-                               ->Absolute()
-                               ->Left((float)cxx)
-                               ->Top((float)cy)
-                               ->W((float)cellW)
-                               ->H((float)cellH)
-                               ->Bg(ToGpui(kColCheckerDark)));
-            }
-        }
-        return box;
-    }
-    gp::Rgba c = ToGpui(col);
-    if (gColor.withOpacity) {
-        c.a = GetAlpha(col) == 0 ? 255 : GetAlpha(col);
-    } else {
-        c.a = 255;
-    }
-    return box->Bg(c);
 }
 
 static Str AllFilesLabel() {
@@ -701,20 +651,14 @@ static Str AllFilesLabel() {
 
 // --- orig's layout, for the dialog in a window of its own -------------------
 
-// sizes at 96 dpi, as ChangeColorWnd::Create has them
-constexpr float kColorWinPadX = 8;
-constexpr float kColorWinPadY = 4;
-constexpr float kColorWinGap = 8;
-constexpr float kColorWinEditDx = 108;
+// orig's layout: the area, the opacity and the color as text, the swatches;
+// this file or all of them; the footer; hairlines between
 constexpr float kColorWinPreviewDx = 42;
 constexpr float kColorWinPreviewDy = 20;
 constexpr float kColorWinSwatchDx = 36;
 constexpr float kColorWinSwatchDy = 22;
-constexpr float kColorWinSwatchGap = 4;
-constexpr float kColorWinSliderDx = 200;
-constexpr float kColorWinSliderDy = 18;
-constexpr float kColorWinRadioPadT = 10;
-constexpr float kColorWinRadioGap = 12;
+constexpr float kColorWinSwatchGap = 6;
+constexpr float kColorWinRgbDx = 100;
 
 struct WinSwatchPaint {
     Color col = 0;
@@ -789,141 +733,6 @@ static gp::El* WinSwatchEl(gp::Ctx* cx, Str id, int slot, int swatchId, Color co
     return box;
 }
 
-static gp::El* ChangeColorWinBuild(gp::Ctx* cx) {
-    const gp::Theme& th = gp::ThemeNow(cx->app);
-    float font = DlgWinFont(cx);
-    gp::El* col = gp::Div(cx->a)->FlexCol()->W(gp::kFill)->PadX(kColorWinPadX)->PadY(kColorWinPadY);
-    col->Child(ColorAreaEl(cx, kColorWinDx - 2 * kColorWinPadX));
-
-    if (gColor.withOpacity) {
-        constexpr float kOpacityPadT = 4;
-        gp::El* row = gp::Div(cx->a)
-                          ->FlexRow()
-                          ->ItemsCenter()
-                          ->W(gp::kFill)
-                          ->H(kColorWinSliderDy + kOpacityPadT)
-                          ->PadT(kOpacityPadT)
-                          ->Gap(kColorWinSwatchGap)
-                          ->Shrink0();
-        row->Child(gp::TextEl(cx->a, ToGpui(Tr("Opacity:")))->Font(font)->Fg(th.foreground)->Shrink0());
-        row->Child(gp::Div(cx->a)
-                       ->FlexRow()
-                       ->ItemsCenter()
-                       ->W(kColorWinSliderDx)
-                       ->H(kColorWinSliderDy)
-                       ->Shrink0()
-                       ->Child(gpc::Slider::New(cx, GStrL("color-opacity"), &gColor.opacitySlider)
-                                   ->OnChange(gColor.opacitySlider.onChange)
-                                   ->W(kColorWinSliderDx)
-                                   ->IntoEl()));
-        row->Child(gp::TextEl(cx->a, GpuiDup(cx->a, fmt("%d", (int)gColor.opacity)))->Font(font)->Fg(th.foreground));
-        col->Child(row);
-    }
-
-    // the edit has 8 above it; the label is centered on the row, the preview
-    // (8 above it as well) a pixel lower than the edit
-    gp::El* rgbRow = gp::Div(cx->a)->FlexRow()->ItemsStart()->W(gp::kFill)->H(kDlgWinEditDy + kColorWinGap)->Shrink0();
-    Str rgbLabel = Tr("RGB:");
-    rgbRow->Child(gp::Div(cx->a)
-                      ->W(DlgWinTextDx(cx, rgbLabel) + kColorWinGap)
-                      ->PadT(kColorWinGap)
-                      ->Shrink0()
-                      ->Child(DlgWinLabel(cx, ToGpui(rgbLabel), font, 0)));
-    rgbRow->Child(gp::Div(cx->a)
-                      ->W(kColorWinEditDx)
-                      ->PadT(kColorWinGap)
-                      ->Shrink0()
-                      ->Child(DlgWinEdit(cx, GStrL("color-rgb"), gColor.editRgb)));
-    rgbRow->Child(
-        gp::Div(cx->a)
-            ->PadT(kColorWinGap + 1)
-            ->PadL(kColorWinGap)
-            ->Shrink0()
-            ->Child(WinSwatchEl(cx, StrL("color-preview"), 0, kIdPreview, gColor.currentColor, gColor.isCheckered,
-                                false, gColor.previewSelected, kColorWinPreviewDx, kColorWinPreviewDy)));
-    col->Child(rgbRow);
-
-    // only the defined colors plus a single empty slot are shown (orig's
-    // UpdateSwatchVis)
-    int nVisible = gColor.nCustom < kMaxCustomColors ? gColor.nCustom + 1 : kMaxCustomColors;
-    auto custom = [&](int i) {
-        bool empty = i >= gColor.nCustom;
-        return WinSwatchEl(cx, fmt("color-custom-%d", i), 1 + kNumPresets + i, kIdCustom0 + i, gColor.customColors[i],
-                           false, empty, i == gColor.selectedCustomIdx, kColorWinSwatchDx, kColorWinSwatchDy);
-    };
-    gp::El* row1 = gp::Div(cx->a)
-                       ->FlexRow()
-                       ->ItemsCenter()
-                       ->H(kColorWinSwatchDy + kColorWinGap)
-                       ->PadT(kColorWinGap)
-                       ->Gap(kColorWinSwatchGap)
-                       ->Shrink0();
-    for (int i = 0; i < kNumPresets; i++) {
-        Color c = kBgPresetColors[i];
-        row1->Child(WinSwatchEl(cx, fmt("color-preset-%d", i), 1 + i, kIdPreset0 + i, c, c == kColorUnset, false, false,
-                                kColorWinSwatchDx, kColorWinSwatchDy));
-    }
-    for (int i = 0; i < kCustomInRow1 && i < nVisible; i++) {
-        row1->Child(custom(i));
-    }
-    col->Child(row1);
-    if (nVisible > kCustomInRow1) {
-        gp::El* row2 = gp::Div(cx->a)
-                           ->FlexRow()
-                           ->ItemsCenter()
-                           ->H(kColorWinSwatchDy + kColorWinSwatchGap)
-                           ->PadT(kColorWinSwatchGap)
-                           ->Gap(kColorWinSwatchGap)
-                           ->Shrink0();
-        for (int i = kCustomInRow1; i < nVisible; i++) {
-            row2->Child(custom(i));
-        }
-        col->Child(row2);
-    }
-
-    if (!gColor.colorsArgs) {
-        constexpr float kCheckLabelGap = 2;
-        // what BCM_GETIDEALSIZE adds to a radio button's label
-        constexpr float kRadioExtraDx = 34;
-        gp::El* radios = gp::Div(cx->a)
-                             ->FlexRow()
-                             ->ItemsCenter()
-                             ->W(gp::kFill)
-                             ->H(kDlgWinCheckDy + kColorWinRadioPadT)
-                             ->PadT(kColorWinRadioPadT)
-                             ->Gap(kColorWinRadioGap)
-                             ->Shrink0();
-        radios->Child(DlgAccelEl(cx,
-                                 gpc::Checkbox::New(cx, GStrL("color-thisfile"))
-                                     ->Role(gp::AccessibilityRole::RadioButton)
-                                     ->Checked(!gColor.allFiles),
-                                 Tr("&This file"), gp::ListenTo(gColorView, &ChangeColorView::OnTarget, (intptr_t)0))
-                          ->Gap(kCheckLabelGap)
-                          ->W(DlgWinTextDx(cx, Tr("&This file")) + kRadioExtraDx)
-                          ->Shrink0());
-        radios->Child(DlgAccelEl(cx,
-                                 gpc::Checkbox::New(cx, GStrL("color-allfiles"))
-                                     ->Role(gp::AccessibilityRole::RadioButton)
-                                     ->Checked(gColor.allFiles),
-                                 AllFilesLabel(), gp::ListenTo(gColorView, &ChangeColorView::OnTarget, (intptr_t)1))
-                          ->Gap(kCheckLabelGap));
-        col->Child(radios);
-    }
-
-    // 4 above the row and 4 around the buttons in it
-    gp::Listener onOk = gp::ListenTo(gColorView, &ChangeColorView::OnOk);
-    DlgSetDefault(cx, onOk, true);
-    gp::El* buttons = DlgWinButtonRow(cx, kColorWinPadY);
-    bool canRemove = gColor.selectedCustomIdx >= 0 && gColor.selectedCustomIdx < gColor.nCustom;
-    buttons->Child(DlgWinButton(cx, GStrL("color-remove"), Tr("Remove"),
-                                gp::ListenTo(gColorView, &ChangeColorView::OnRemove), false, !canRemove));
-    buttons->Child(DlgWinButton(cx, GStrL("dlg-cancel"), Tr("Cancel"),
-                                gp::ListenTo(gColorView, &ChangeColorView::OnCancel), false));
-    buttons->Child(DlgWinButton(cx, GStrL("dlg-ok"), gColor.colorsArgs ? Tr("Select") : Tr("OK"), onOk, true));
-    col->Child(gp::Div(cx->a)->PadT(kColorWinPadY)->Shrink0()->Child(buttons));
-    return DlgWinContent(cx, col);
-}
-
 gp::El* ChangeColorDialogBuild(MainWindow* win, gp::Ctx* cx) {
     if (!gColor.visible || gColor.win != win) {
         return nullptr;
@@ -934,107 +743,103 @@ gp::El* ChangeColorDialogBuild(MainWindow* win, gp::Ctx* cx) {
     if (!gColorView.IsValid()) {
         gColorView = gp::EntityNewState<ChangeColorView>(cx->app);
     }
-    const gp::Theme& th = gp::ThemeNow(cx->app);
     gColor.editRgb->onChange = gp::ListenTo(gColorView, &ChangeColorView::OnEditChanged);
     // ng: Slider::IntoEl() replaces the state's listener with the component's
     gColor.opacitySlider.onChange = gp::ListenTo(gColorView, &ChangeColorView::OnOpacity);
+    gp::Listener onOk = gp::ListenTo(gColorView, &ChangeColorView::OnOk);
+    gp::Listener onCancel = gp::ListenTo(gColorView, &ChangeColorView::OnCancel);
+    DlgSetDefault(cx, onOk, true);
+    Color colMuted = ThemeWindowTextDisabledColor();
 
-    if (DlgWindowIsHost(cx)) {
-        gp::El* content = ChangeColorWinBuild(cx);
-        if (gColor.wantFocus) {
-            gp::InputFocus(gColor.editRgb, cx->app, cx->win);
-            gp::InputSelectAll(gColor.editRgb, cx->app, cx->win);
-            gColor.wantFocus = cx->win->input != gColor.editRgb;
-        }
-        return content;
-    }
+    gp::El* col = gp::Div(cx->a)->FlexCol()->W(gp::kFill);
+    gp::El* picker = DlgSection(cx);
+    picker->Child(
+        gp::Div(cx->a)->PadY(kToolDlgFilesPadDy)->Shrink0()->Child(ColorAreaEl(cx, kColorWinDx - 2 * kToolDlgPadDx)));
 
-    gp::El* body = gp::Div(cx->a)->FlexCol()->Gap(8);
-    body->Child(ColorAreaEl(cx));
-
+    // the opacity, then the color as text with its preview; labels in a column
+    float labelDx = DlgFieldLabelDx(cx, Tr("RGB:"));
     if (gColor.withOpacity) {
-        gp::El* row = gp::Div(cx->a)->FlexRow()->W(gp::kFill)->ItemsCenter()->Gap(8);
-        row->Child(gp::TextEl(cx->a, ToGpui(Tr("Opacity:")))->Font(13)->Fg(th.foreground)->Shrink0());
-        row->Child(gpc::Slider::New(cx, GStrL("color-opacity"), &gColor.opacitySlider)
-                       ->OnChange(gColor.opacitySlider.onChange)
-                       ->W(200)
-                       ->IntoEl());
-        row->Child(gp::TextEl(cx->a, GpuiDup(cx->a, fmt("%d", (int)gColor.opacity)))->Font(13)->Fg(th.foreground));
-        body->Child(row);
+        labelDx = std::max(labelDx, DlgFieldLabelDx(cx, Tr("Opacity:")));
+        gp::El* row = DlgFieldRow(cx);
+        row->Child(DlgFieldLabel(cx, Tr("Opacity:"), labelDx));
+        row->Child(
+            gp::Div(cx->a)->Flex1()->MinW(0)->Child(gpc::Slider::New(cx, GStrL("color-opacity"), &gColor.opacitySlider)
+                                                        ->OnChange(gColor.opacitySlider.onChange)
+                                                        ->W(gp::kFill)
+                                                        ->IntoEl()));
+        row->Child(gp::TextEl(cx->a, GpuiDup(cx->a, fmt("%d", (int)gColor.opacity)))
+                       ->Font(kToolDlgTextFontPx)
+                       ->Fg(ToGpui(colMuted))
+                       ->Shrink0());
+        picker->Child(row);
     }
-
-    gp::El* rgbRow = gp::Div(cx->a)->FlexRow()->W(gp::kFill)->ItemsCenter()->Gap(8);
-    rgbRow->Child(gp::TextEl(cx->a, ToGpui(Tr("RGB:")))->Font(13)->Fg(th.foreground)->Shrink0());
-    rgbRow->Child(gp::Div(cx->a)->Flex1()->MinW(0)->Child(
-        gpc::Input::New(cx, GStrL("color-rgb"), gColor.editRgb)->WithSize(gp::UiSize::Small)->W(gp::kFill)->IntoEl()));
-    rgbRow->Child(SwatchEl(cx, StrL("color-preview"), kIdPreview, gColor.currentColor, gColor.isCheckered, false,
-                           gColor.previewSelected, 42, 22));
-    body->Child(rgbRow);
+    gp::El* rgbRow = DlgFieldRow(cx);
+    rgbRow->Child(DlgFieldLabel(cx, Tr("RGB:"), labelDx));
+    rgbRow->Child(
+        gp::Div(cx->a)
+            ->W(kColorWinRgbDx)
+            ->Shrink0()
+            ->Child(DlgUnderlineInput(cx, GStrL("color-rgb"), gColor.editRgb, kToolDlgTextFontPx, ThemeEdgeColor())));
+    rgbRow->Child(WinSwatchEl(cx, StrL("color-preview"), 0, kIdPreview, gColor.currentColor, gColor.isCheckered, false,
+                              gColor.previewSelected, kColorWinPreviewDx, kColorWinPreviewDy));
+    picker->Child(rgbRow);
 
     // only the defined colors plus a single empty slot are shown (orig's
     // UpdateSwatchVis)
     int nVisible = gColor.nCustom < kMaxCustomColors ? gColor.nCustom + 1 : kMaxCustomColors;
-    gp::El* row1 = gp::Div(cx->a)->FlexRow()->ItemsCenter()->Gap(4);
+    auto custom = [&](int i) {
+        bool empty = i >= gColor.nCustom;
+        return WinSwatchEl(cx, fmt("color-custom-%d", i), 1 + kNumPresets + i, kIdCustom0 + i, gColor.customColors[i],
+                           false, empty, i == gColor.selectedCustomIdx, kColorWinSwatchDx, kColorWinSwatchDy);
+    };
+    auto swatchRow = [&](float padT) {
+        return gp::Div(cx->a)->FlexRow()->ItemsCenter()->PadT(padT)->Gap(kColorWinSwatchGap)->Shrink0();
+    };
+    gp::El* row1 = swatchRow(kToolDlgFilesPadDy);
     for (int i = 0; i < kNumPresets; i++) {
-        Color col = kBgPresetColors[i];
-        row1->Child(
-            SwatchEl(cx, fmt("color-preset-%d", i), kIdPreset0 + i, col, col == kColorUnset, false, false, 36, 22));
+        Color c = kBgPresetColors[i];
+        row1->Child(WinSwatchEl(cx, fmt("color-preset-%d", i), 1 + i, kIdPreset0 + i, c, c == kColorUnset, false, false,
+                                kColorWinSwatchDx, kColorWinSwatchDy));
     }
     for (int i = 0; i < kCustomInRow1 && i < nVisible; i++) {
-        bool empty = i >= gColor.nCustom;
-        row1->Child(SwatchEl(cx, fmt("color-custom-%d", i), kIdCustom0 + i, gColor.customColors[i], false, empty,
-                             i == gColor.selectedCustomIdx, 36, 22));
+        row1->Child(custom(i));
     }
-    body->Child(row1);
+    picker->Child(row1);
     if (nVisible > kCustomInRow1) {
-        gp::El* row2 = gp::Div(cx->a)->FlexRow()->ItemsCenter()->Gap(4);
+        gp::El* row2 = swatchRow(kColorWinSwatchGap);
         for (int i = kCustomInRow1; i < nVisible; i++) {
-            bool empty = i >= gColor.nCustom;
-            row2->Child(SwatchEl(cx, fmt("color-custom-%d", i), kIdCustom0 + i, gColor.customColors[i], false, empty,
-                                 i == gColor.selectedCustomIdx, 36, 22));
+            row2->Child(custom(i));
         }
-        body->Child(row2);
+        picker->Child(row2);
     }
+    col->Child(picker);
 
+    // this file or every file of its kind (the background only)
     if (!gColor.colorsArgs) {
-        Str allLabel = AllFilesLabel();
-        gp::El* radios = gp::Div(cx->a)->FlexRow()->ItemsCenter()->Gap(16);
-        radios->Child(DlgAccelEl(cx,
-                                 gpc::Checkbox::New(cx, GStrL("color-thisfile"))
-                                     ->Role(gp::AccessibilityRole::RadioButton)
-                                     ->Checked(!gColor.allFiles),
-                                 Tr("&This file"), gp::ListenTo(gColorView, &ChangeColorView::OnTarget, (intptr_t)0)));
-        radios->Child(DlgAccelEl(cx,
-                                 gpc::Checkbox::New(cx, GStrL("color-allfiles"))
-                                     ->Role(gp::AccessibilityRole::RadioButton)
-                                     ->Checked(gColor.allFiles),
-                                 allLabel, gp::ListenTo(gColorView, &ChangeColorView::OnTarget, (intptr_t)1)));
-        body->Child(radios);
+        col->Child(DlgHairline(cx));
+        gp::El* target = DlgSection(cx);
+        target->Child(DlgFieldRow(cx)
+                          ->Child(DlgCheck(cx, StrL("color-thisfile"), Tr("&This file"), !gColor.allFiles,
+                                           gp::ListenTo(gColorView, &ChangeColorView::OnTarget, (intptr_t)0),
+                                           DlgCheckKind::Radio))
+                          ->Child(DlgCheck(cx, StrL("color-allfiles"), AllFilesLabel(), gColor.allFiles,
+                                           gp::ListenTo(gColorView, &ChangeColorView::OnTarget, (intptr_t)1),
+                                           DlgCheckKind::Radio)));
+        col->Child(target);
     }
 
-    gp::El* remove = gpc::Button::New(cx, GStrL("color-remove"))
-                         ->Label(ToGpui(Tr("Remove")))
-                         ->WithSize(gp::UiSize::Small)
-                         ->Disabled(gColor.selectedCustomIdx < 0 || gColor.selectedCustomIdx >= gColor.nCustom)
-                         ->OnClick(gp::ListenTo(gColorView, &ChangeColorView::OnRemove))
-                         ->IntoEl();
-    Str okText = gColor.colorsArgs ? Tr("Select") : Tr("OK");
-    gp::El* footer =
-        DialogFooter(cx, remove, gColorView, okText, Tr("Cancel"), &ChangeColorView::OnOk, &ChangeColorView::OnCancel);
+    bool canRemove = gColor.selectedCustomIdx >= 0 && gColor.selectedCustomIdx < gColor.nCustom;
+    gp::El* remove = DlgGhostButton(cx, GStrL("color-remove"), Tr("Remove"),
+                                    gp::ListenTo(gColorView, &ChangeColorView::OnRemove), !canRemove);
+    col->Child(DlgFooter(cx, gColor.colorsArgs ? Tr("Select") : Tr("OK"), onOk, onCancel, remove));
+    gp::El* content = DlgToolContent(cx, col, ChangeColorDlgTitle(), kColorWinDx, onCancel);
 
-    gp::El* dlg = DlgIntoEl(cx, gpc::Dialog::New(cx)
-                                    ->Open(true)
-                                    ->Title(GpuiDup(cx->a, ChangeColorDlgTitle()))
-                                    ->Body(body)
-                                    ->Footer(footer)
-                                    ->W(440)
-                                    ->OnClose(gp::ListenTo(gColorView, &ChangeColorView::OnCancel)));
     if (gColor.wantFocus) {
-        gColor.wantFocus = false;
         gp::InputFocus(gColor.editRgb, cx->app, cx->win);
         gp::InputSelectAll(gColor.editRgb, cx->app, cx->win);
+        gColor.wantFocus = cx->win->input != gColor.editRgb;
     }
-    return dlg;
+    return content;
 }
 
 // --- the tab color, orig's ShowSetTabColorDialog ----------------------------

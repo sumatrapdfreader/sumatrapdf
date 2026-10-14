@@ -29,11 +29,25 @@
 #include "Translations.h"
 #include "DarkMode.h"
 #include "SumatraDialogs.h"
+#include "shared/PdfToolsCommon.h"
 #include "ChangeColorDialogCommon.h"
 
-// HSV picker, hex edit, swatches and Cancel/OK. Same WindowBase layout as
-// Settings. Used for Change Background Color and, when colorsArgs is set, as
-// the generic color picker (ShowChangeColorsDialog).
+// HSV picker, hex edit, swatches and Cancel/OK. Used for Change Background
+// Color and, when colorsArgs is set, as the generic color picker
+// (ShowChangeColorsDialog).
+//
+//   [ hue / value area                            ]
+//   Opacity:  ------o------  255     (with an opacity only)
+//   RGB:      #f2f2f2____  [preview]
+//   [] [] [] [] ...                  presets, then custom colors
+//   ---------------------------------------------- hairline
+//   (o) This file   ( ) For all PDF files   (the background only)
+//   ---------------------------------------------- hairline
+//   Remove                           [Cancel] [OK]
+constexpr int kColorDlgDx = 420;
+constexpr int kColorAreaDy = 150;
+constexpr int kColorRgbChars = 10;
+constexpr int kColorSwatchGap = 6;
 struct ChangeColorWnd : WindowBase {
     ~ChangeColorWnd() override;
 
@@ -74,6 +88,9 @@ struct ChangeColorWnd : WindowBase {
     VirtText* opacityValue = nullptr;
     Checkbox* radioThisFile = nullptr;
     Checkbox* radioAllFiles = nullptr;
+    // the radios' section and the hairline over it, hidden with them
+    ILayout* radiosBox = nullptr;
+    VirtLine* radiosLine = nullptr;
     VirtButton* btnRemove = nullptr;
     VirtButton* btnCancel = nullptr;
     VirtButton* btnOk = nullptr;
@@ -226,7 +243,7 @@ void ChangeColorWnd::UpdateRemoveBtn() {
     if (!btnRemove) {
         return;
     }
-    btnRemove->SetIsEnabled(selectedCustomIdx >= 0 && selectedCustomIdx < nCustom);
+    SetDlgButtonEnabled(btnRemove, DlgButtonStyle::Ghost, selectedCustomIdx >= 0 && selectedCustomIdx < nCustom);
 }
 
 // Visibility on the row only takes it out of the layout, so the controls in it
@@ -484,7 +501,7 @@ static void PaintColorArea(ChangeColorWnd* wnd, VirtPaintCtx* ctx) {
     if (wnd->hsvPx) {
         ctx->gfx->DrawPixmap(wnd->hsvPx, inner);
     }
-    ctx->gfx->DrawRect(r, ThemeWindowTextColor());
+    ctx->gfx->DrawRect(r, ThemeEdgeColor());
 }
 
 static void PaintSwatch(VirtCustom* sw, VirtPaintCtx* ctx) {
@@ -726,8 +743,7 @@ void ChangeColorWnd::Relayout() {
     if (!hwnd || !layout) {
         return;
     }
-    int dx = DpiScale(400);
-    LayoutAndSizeToContent(layout, dx, 0, hwnd);
+    LayoutAndSizeToContent(layout, DpiScale(kColorDlgDx), 0, hwnd);
     DoLayout(HwndClientRect(hwnd).Size());
 }
 
@@ -739,6 +755,10 @@ void ChangeColorWnd::RelayoutRadios() {
     }
     if (radioAllFiles) {
         radioAllFiles->SetVisibility(vis);
+    }
+    if (radiosBox) {
+        radiosBox->SetVisibility(vis);
+        radiosLine->SetVisibility(vis);
     }
     if (show && radioAllFiles) {
         Str label = Tr("For all &PDF files");
@@ -834,7 +854,12 @@ static HBox* SwatchRow(VirtCustom** items, int n, int gap) {
 
 bool ChangeColorWnd::Create(MainWindow* mainWin) {
     win = mainWin;
-
+    Color colTxt = ThemeWindowTextColor();
+    Color colBg = ThemeWindowControlBackgroundColor();
+    Color colMuted = ThemeWindowTextDisabledColor();
+    PlatformFont* fontText = DlgUiFont(kToolDlgTextFontPx);
+    SetFont(fontText);
+    bool isRtl = IsUIRtl();
     {
         CreateCustomArgs args;
         // owned by the main window, so it can't end up behind it
@@ -842,98 +867,71 @@ bool ChangeColorWnd::Create(MainWindow* mainWin) {
         args.title = colorsArgs ? colorsArgs->title : Tr("Change Background Color");
         args.visible = false;
         args.style = WS_POPUPWINDOW | WS_CAPTION;
-        args.font = GetFont();
+        args.font = fontText;
+        args.isRtl = isRtl;
+        args.bgColor = colBg;
         args.icon = LoadIconW(GetModuleHandleW(nullptr), MAKEINTRESOURCEW(GetAppIconID()));
         CreateCustom(args);
     }
     if (!hwnd) {
         return false;
     }
-    bool isRtl = IsUIRtl();
+    SetColors(colTxt, colBg);
     LoadColors();
 
     auto* vbox = new VBox();
-    vbox->alignMain = MainAxisAlign::MainStart;
     vbox->alignCross = CrossAxisAlign::Stretch;
+    auto* picker = new VBox();
+    picker->alignCross = CrossAxisAlign::Stretch;
 
     {
         auto* c = new VirtCustom();
-        c->idealSize = {DpiScale(380), DpiScale(150)};
+        c->idealSize = {0, DpiScale(kColorAreaDy)};
         c->SetFlag(vwfCapturesMouse, true);
         c->cursor = CursorId::Cross;
         c->onPaint = MkFunc1(PaintColorArea, this);
         c->onMouseDown = MkMethod1<ChangeColorWnd, VirtMouseEvent*, &ChangeColorWnd::OnAreaMouse>(this);
         c->onMouseMove = MkFunc1(OnAreaMouseMove, this);
         colorArea = c;
-        vbox->AddChild(c);
+        picker->AddChild(new Padding(c, DpiScaledInsets(kToolDlgFilesPadDy, 0)));
     }
 
+    // the opacity, then the color as text with its preview; labels in a column
+    Vec<VirtText*> labels;
     {
-        auto* row = new HBox();
-        row->alignMain = MainAxisAlign::MainStart;
-        row->alignCross = CrossAxisAlign::CrossCenter;
-        row->gap = DpiScale(4);
-
-        opacityLabel = NewVirtText({
-            .s = Tr("Opacity:"),
-            .font = font,
-            .isRtl = isRtl,
-        });
+        HBox* row = NewDlgFieldRow();
+        opacityLabel = NewDlgLabel(Tr("Opacity:"), fontText, colMuted, kToolDlgRowDy);
+        VecAppend(labels, opacityLabel);
         row->AddChild(opacityLabel);
-
         auto* sl = new VirtSlider();
         sl->minVal = 0;
         sl->maxVal = 255;
         sl->value = opacity;
-        sl->idealDx = DpiScale(200);
         sl->onValueChanged = MkMethod0<ChangeColorWnd, &ChangeColorWnd::OnOpacityChanged>(this);
         opacitySlider = sl;
-        row->AddChild(sl);
-
-        opacityValue = NewVirtText({
-            .s = StrL("255"),
-            .font = font,
-            .isRtl = isRtl,
-        });
+        row->AddChild(sl, 1);
+        opacityValue = NewVirtText({.s = StrL("255"), .font = fontText, .textColor = colMuted, .isRtl = isRtl});
         row->AddChild(opacityValue);
-        opacityRow = new Padding(row, DpiScaledInsets(4, 0, 0, 0));
-        vbox->AddChild(opacityRow);
+        opacityRow = row;
+        picker->AddChild(row);
     }
-
     {
-        auto* row = new HBox();
-        row->alignMain = MainAxisAlign::MainStart;
-        row->alignCross = CrossAxisAlign::CrossCenter;
-        auto* lab = NewVirtText({
-            .s = Tr("RGB:"),
-            .font = font,
-            .isRtl = isRtl,
-            .padding = DpiScaledInsets(0, 8, 0, 0),
-        });
-        labelRgb = lab;
-        row->AddChild(lab);
-
-        Edit::CreateArgs args;
-        args.parent = hwnd;
-        args.font = GetFont();
-        args.withBorder = true;
-        args.isRtl = isRtl;
-        args.idealWidthChars = 14;
-        auto* e = new Edit();
-        e->SetInsetsPt(8, 0, 0, 0);
-        e->Create(args);
-        e->onTextChanged = MkMethod0<ChangeColorWnd, &ChangeColorWnd::OnEditChanged>(this);
-        editRgb = e;
-        row->AddChild(e);
-
+        HBox* row = NewDlgFieldRow();
+        labelRgb = NewDlgLabel(Tr("RGB:"), fontText, colMuted, kToolDlgRowDy);
+        VecAppend(labels, labelRgb);
+        row->AddChild(labelRgb);
+        editRgb = NewDlgEdit(hwnd, fontText, {}, kColorRgbChars);
+        editRgb->onTextChanged = MkMethod0<ChangeColorWnd, &ChangeColorWnd::OnEditChanged>(this);
+        row->AddChild(NewDlgUnderlined(editRgb));
         Size previewSz{DpiScale(42), DpiScale(20)};
         swatchPreview = MakeSwatch(this, kIdPreview, previewSz, false);
-        row->AddChild(new Padding(swatchPreview, DpiScaledInsets(8, 0, 0, 8)));
-        vbox->AddChild(row);
+        row->AddChild(swatchPreview);
+        picker->AddChild(row);
     }
+    AlignDlgLabels(labels);
 
     Size swSz{DpiScale(36), DpiScale(22)};
-    int gap = DpiScale(4);
+    int gap = DpiScale(kColorSwatchGap);
     const int kInRow1 = kNumPresets + kCustomInRow1;
     VirtCustom* row1[kInRow1]{};
     for (int i = 0; i < kNumPresets; i++) {
@@ -944,8 +942,7 @@ bool ChangeColorWnd::Create(MainWindow* mainWin) {
         swatchCustom[i] = MakeSwatch(this, kIdCustom0 + i, swSz, true);
         row1[kNumPresets + i] = swatchCustom[i];
     }
-    auto* swatches1 = SwatchRow(row1, kInRow1, gap);
-    vbox->AddChild(new Padding(swatches1, DpiScaledInsets(8, 0, 0, 0)));
+    picker->AddChild(new Padding(SwatchRow(row1, kInRow1, gap), DpiScaledInsets(kToolDlgFilesPadDy, 0, 0, 0)));
 
     const int kInRow2 = kMaxCustomColors - kCustomInRow1;
     VirtCustom* row2[kInRow2]{};
@@ -953,61 +950,31 @@ bool ChangeColorWnd::Create(MainWindow* mainWin) {
         swatchCustom[kCustomInRow1 + i] = MakeSwatch(this, kIdCustom0 + kCustomInRow1 + i, swSz, true);
         row2[i] = swatchCustom[kCustomInRow1 + i];
     }
-    auto* swatches2 = SwatchRow(row2, kInRow2, gap);
-    swatchRow2 = new Padding(swatches2, DpiScaledInsets(4, 0, 0, 0));
-    vbox->AddChild(swatchRow2);
+    swatchRow2 = new Padding(SwatchRow(row2, kInRow2, gap), DpiScaledInsets(gap, 0, 0, 0));
+    picker->AddChild(swatchRow2);
+    vbox->AddChild(NewDlgSection(picker));
 
+    // this file or every file of its kind
     {
-        auto* row = new HBox();
-        row->alignMain = MainAxisAlign::MainStart;
-        row->alignCross = CrossAxisAlign::CrossCenter;
-
-        Checkbox::CreateArgs args;
-        args.parent = hwnd;
-        args.text = Tr("&This file");
-        args.isRtl = isRtl;
-        args.isRadio = true;
-        args.isGroupStart = true;
-        args.initialState = Checkbox::State::Checked;
-        auto* r1 = new Checkbox();
-        r1->SetInsetsPt(10, 0, 0, 0);
-        r1->Create(args);
-        radioThisFile = r1;
-        row->AddChild(r1);
-
-        args.text = Tr("For all &PDF files");
-        args.isGroupStart = false;
-        args.initialState = Checkbox::State::Unchecked;
-        auto* r2 = new Checkbox();
-        r2->SetInsetsPt(10, 0, 0, 12);
-        r2->Create(args);
-        radioAllFiles = r2;
-        row->AddChild(r2);
-        vbox->AddChild(row);
+        radioThisFile = NewDlgRadio(hwnd, Tr("&This file"), fontText, true, true);
+        radioAllFiles = NewDlgRadio(hwnd, Tr("For all &PDF files"), fontText, false, false);
+        HBox* row = NewDlgFieldRow();
+        row->AddChild(radioThisFile);
+        row->AddChild(radioAllFiles);
+        radiosLine = new VirtLine();
+        vbox->AddChild(radiosLine);
+        radiosBox = NewDlgSection(row);
+        vbox->AddChild(radiosBox);
     }
 
-    {
-        auto* hbox = new HBox();
-        hbox->alignMain = MainAxisAlign::MainEnd;
-        hbox->alignCross = CrossAxisAlign::CrossCenter;
-        hbox->gap = font->averageCharWidth;
-        auto pad = Insets{4, 0, 4, 0};
-
-        btnRemove = NewThemedButton(hwnd, Tr("Remove"), font, false);
-        btnRemove->onClick = MkMethod1<ChangeColorWnd, VirtMouseEvent*, &ChangeColorWnd::OnRemove>(this);
-        hbox->AddChild(new Padding(btnRemove, pad));
-        btnCancel = NewThemedButton(hwnd, Tr("Cancel"), font, false);
-        btnCancel->onClick = MkMethod1<ChangeColorWnd, VirtMouseEvent*, &ChangeColorWnd::OnCancel>(this);
-        hbox->AddChild(new Padding(btnCancel, pad));
-        btnOk = NewThemedButton(hwnd, colorsArgs ? Tr("Select") : Tr("OK"), font, true);
-        btnOk->onClick = MkMethod1<ChangeColorWnd, VirtMouseEvent*, &ChangeColorWnd::OnOk>(this);
-        hbox->AddChild(new Padding(btnOk, pad));
-        // same space above the buttons as below them
-        vbox->AddChild(new Padding(hbox, DpiScaledInsets(4, 0, 0, 0)));
-    }
-
-    auto* padding = new Padding(vbox, DpiScaledInsets(4, 8));
-    layout = padding;
+    btnRemove = NewDlgButton(hwnd, Tr("Remove"), fontText, DlgButtonStyle::Ghost, false);
+    btnRemove->onClick = MkMethod1<ChangeColorWnd, VirtMouseEvent*, &ChangeColorWnd::OnRemove>(this);
+    btnCancel = NewDlgButton(hwnd, Tr("Cancel"), fontText, DlgButtonStyle::Outline, false);
+    btnCancel->onClick = MkMethod1<ChangeColorWnd, VirtMouseEvent*, &ChangeColorWnd::OnCancel>(this);
+    btnOk = NewDlgButton(hwnd, colorsArgs ? Tr("Select") : Tr("OK"), fontText, DlgButtonStyle::Filled, true);
+    btnOk->onClick = MkMethod1<ChangeColorWnd, VirtMouseEvent*, &ChangeColorWnd::OnOk>(this);
+    vbox->AddChild(NewDlgFooter(btnCancel, btnOk, btnRemove));
+    layout = vbox;
 
     RelayoutRadios();
     UpdateSwatchVis();
@@ -1015,8 +982,7 @@ bool ChangeColorWnd::Create(MainWindow* mainWin) {
     SyncOpacityFromColor();
     UpdateEditFromColor();
 
-    int dx = DpiScale(400);
-    LayoutAndSizeToContent(layout, dx, 0, hwnd);
+    LayoutAndSizeToContent(layout, DpiScale(kColorDlgDx), 0, hwnd);
     DoLayout(HwndClientRect(hwnd).Size());
     HwndCenterDialog(hwnd, win ? win->hwndFrame : nullptr);
     UpdateTheme();

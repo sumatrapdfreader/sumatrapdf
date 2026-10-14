@@ -27,12 +27,31 @@
 #include "Translations.h"
 #include "DarkMode.h"
 #include "SumatraDialogs.h"
+#include "shared/PdfToolsCommon.h"
 #include "EbookSettingsDialogCommon.h"
 
 // Font, size and line spacing for reflowable documents (EPUB, MOBI, FB2, ...),
 // either globally or for the current document only (issue #4600). The CSS the
 // engine generates from those values is shown read-only; "Custom CSS" hands
 // the user the pen instead, and then what they type *is* the user CSS.
+//
+//   Font:   [(default)                      v]
+//   Size:   12__   Margin: 1em__   Line spacing: 1.5__
+//   ---------------------------------------------- hairline
+//   [ ] Ignore the document's own styling
+//   [ ] Custom CSS
+//   body { ... }                          the CSS, monospaced
+//   ---------------------------------------------- hairline
+//   (o) This file   ( ) For all ebooks
+//   ---------------------------------------------- hairline
+//   Reset to defaults                [Cancel] [OK]
+constexpr int kEbookDlgDx = 480;
+constexpr int kEbookNumChars = 5;
+constexpr int kEbookCssLines = 6;
+constexpr int kEbookCssFontPx = 13;
+// the generated rules are one long line; without a cap the dialog would grow
+// as wide as the text
+constexpr int kEbookCssMaxDx = 440;
 
 struct EbookSettingsWnd : WindowBase {
     ~EbookSettingsWnd() override;
@@ -386,40 +405,43 @@ static void OnDestroy(WindowBase::DestroyEvent*) {
 
 bool EbookSettingsWnd::Create(MainWindow* mainWin) {
     win = mainWin;
+    Color colTxt = ThemeWindowTextColor();
+    Color colBg = ThemeWindowControlBackgroundColor();
+    Color colMuted = ThemeWindowTextDisabledColor();
+    PlatformFont* fontText = DlgUiFont(kToolDlgTextFontPx);
+    SetFont(fontText);
+    bool isRtl = IsUIRtl();
     {
         CreateCustomArgs args;
         args.title = Tr("eBook Settings");
         args.visible = false;
         args.style = WS_POPUPWINDOW | WS_CAPTION;
-        args.font = GetFont();
+        args.font = fontText;
+        args.isRtl = isRtl;
+        args.bgColor = colBg;
         args.icon = LoadIconW(GetModuleHandleW(nullptr), MAKEINTRESOURCEW(GetAppIconID()));
         CreateCustom(args);
     }
     if (!hwnd) {
         return false;
     }
-    bool isRtl = IsUIRtl();
+    SetColors(colTxt, colBg);
 
     auto* vbox = new VBox();
-    vbox->alignMain = MainAxisAlign::MainStart;
     vbox->alignCross = CrossAxisAlign::Stretch;
 
+    // the font, then its size, the margin and the line spacing
+    auto label = [&](Str s) { return NewDlgLabel(s, fontText, colMuted, kToolDlgRowDy); };
+    auto numberField = [&]() { return NewDlgEdit(hwnd, fontText, {}, kEbookNumChars); };
+    auto* fields = new VBox();
+    fields->alignCross = CrossAxisAlign::Stretch;
     {
-        auto* row = new HBox();
-        row->alignMain = MainAxisAlign::MainStart;
-        row->alignCross = CrossAxisAlign::CrossCenter;
-
-        labelFont = NewVirtText({
-            .s = Tr("Font:"),
-            .font = font,
-            .isRtl = isRtl,
-            .padding = DpiScaledInsets(0, 8, 0, 0),
-        });
+        HBox* row = NewDlgFieldRow();
+        labelFont = label(Tr("Font:"));
         row->AddChild(labelFont);
-
         DropDown::CreateArgs args;
         args.parent = hwnd;
-        args.font = GetFont();
+        args.font = fontText;
         args.isRtl = isRtl;
         args.isEditable = true;
         ddFont = new DropDown();
@@ -427,168 +449,93 @@ bool EbookSettingsWnd::Create(MainWindow* mainWin) {
         ddFont->onTextChanged = MkMethod0<EbookSettingsWnd, &EbookSettingsWnd::OnControlChanged>(this);
         ddFont->onSelectionChanged = MkMethod0<EbookSettingsWnd, &EbookSettingsWnd::OnControlChanged>(this);
         row->AddChild(ddFont, 1);
-        vbox->AddChild(row);
+        fields->AddChild(row);
     }
-
     {
-        auto* row = new HBox();
-        row->alignMain = MainAxisAlign::MainStart;
-        row->alignCross = CrossAxisAlign::CrossCenter;
-
-        labelSize = NewVirtText({
-            .s = Tr("Size:"),
-            .font = font,
-            .isRtl = isRtl,
-            .padding = DpiScaledInsets(8, 8, 0, 0),
-        });
+        HBox* row = NewDlgFieldRow();
+        labelSize = label(Tr("Size:"));
         row->AddChild(labelSize);
-
-        Edit::CreateArgs args;
-        args.parent = hwnd;
-        args.font = GetFont();
-        args.withBorder = true;
-        args.isRtl = isRtl;
-        args.idealWidthChars = 6;
-        editSize = new Edit();
-        editSize->SetInsetsPt(8, 0, 0, 0);
-        editSize->Create(args);
-        row->AddChild(editSize);
-
-        labelMargin = NewVirtText({
-            .s = Tr("Margin:"),
-            .font = font,
-            .isRtl = isRtl,
-            .padding = DpiScaledInsets(8, 8, 0, 16),
-        });
+        editSize = numberField();
+        row->AddChild(NewDlgUnderlined(editSize));
+        row->AddChild(new Spacer(DpiScale(kToolDlgGapDx), 0));
+        labelMargin = label(Tr("Margin:"));
         row->AddChild(labelMargin);
-
-        editMargin = new Edit();
-        editMargin->SetInsetsPt(8, 0, 0, 0);
-        editMargin->Create(args);
+        editMargin = numberField();
         editMargin->onTextChanged = MkMethod0<EbookSettingsWnd, &EbookSettingsWnd::OnControlChanged>(this);
-        row->AddChild(editMargin);
-
-        labelSpacing = NewVirtText({
-            .s = Tr("Line spacing:"),
-            .font = font,
-            .isRtl = isRtl,
-            .padding = DpiScaledInsets(8, 8, 0, 16),
-        });
+        row->AddChild(NewDlgUnderlined(editMargin));
+        row->AddChild(new Spacer(DpiScale(kToolDlgGapDx), 0));
+        labelSpacing = label(Tr("Line spacing:"));
         row->AddChild(labelSpacing);
-
-        args.idealWidthChars = 6;
-        editSpacing = new Edit();
-        editSpacing->SetInsetsPt(8, 0, 0, 0);
-        editSpacing->Create(args);
+        editSpacing = numberField();
         editSpacing->onTextChanged = MkMethod0<EbookSettingsWnd, &EbookSettingsWnd::OnControlChanged>(this);
-        row->AddChild(editSpacing);
-        vbox->AddChild(row);
+        row->AddChild(NewDlgUnderlined(editSpacing));
+        fields->AddChild(row);
     }
+    Vec<VirtText*> labels;
+    VecAppend(labels, labelFont);
+    VecAppend(labels, labelSize);
+    AlignDlgLabels(labels);
+    vbox->AddChild(NewDlgSection(fields));
+    vbox->AddChild(new VirtLine());
 
+    // the styling: the document's, the generated CSS or the user's
+    auto* styling = new VBox();
+    styling->alignCross = CrossAxisAlign::Stretch;
     {
-        Checkbox::CreateArgs args;
-        args.parent = hwnd;
-        args.text = Tr("&Ignore the document's own styling");
-        args.isRtl = isRtl;
-        cbIgnoreCss = new Checkbox();
-        cbIgnoreCss->SetInsetsPt(10, 0, 0, 0);
-        cbIgnoreCss->Create(args);
-        vbox->AddChild(cbIgnoreCss);
-    }
+        cbIgnoreCss = NewDlgCheckbox(hwnd, Tr("&Ignore the document's own styling"), fontText, false);
+        HBox* row = NewDlgFieldRow();
+        row->AddChild(cbIgnoreCss);
+        styling->AddChild(row);
 
-    {
-        Checkbox::CreateArgs args;
-        args.parent = hwnd;
-        args.text = Tr("&Custom CSS");
-        args.isRtl = isRtl;
-        cbCustomCss = new Checkbox();
-        cbCustomCss->SetInsetsPt(8, 0, 0, 0);
-        cbCustomCss->Create(args);
+        cbCustomCss = NewDlgCheckbox(hwnd, Tr("&Custom CSS"), fontText, false);
         cbCustomCss->onStateChanged = MkMethod0<EbookSettingsWnd, &EbookSettingsWnd::OnCustomCssToggled>(this);
-        vbox->AddChild(cbCustomCss);
-    }
+        row = NewDlgFieldRow();
+        row->AddChild(cbCustomCss);
+        styling->AddChild(row);
 
-    {
         Edit::CreateArgs args;
         args.parent = hwnd;
-        args.font = GetFont();
+        args.font = GetUserGuiFont(StrL("Consolas"), DpiScale(kEbookCssFontPx));
         args.isMultiLine = true;
-        args.withBorder = true;
+        args.withBorder = false;
         args.isRtl = isRtl;
-        args.idealSizeLines = 6;
-        args.textPadding = 4;
+        args.idealSizeLines = kEbookCssLines;
         editCss = new Edit();
-        editCss->SetInsetsPt(4, 0, 0, 0);
+        editCss->SetColors(colTxt, colBg);
         editCss->Create(args);
-        // the generated rules are one long line; without this the dialog would
-        // grow as wide as the text
-        editCss->maxDx = DpiScale(440);
+        editCss->maxDx = DpiScale(kEbookCssMaxDx);
         SendMessageW(editCss->hwnd, EM_SETREADONLY, TRUE, 0);
         SendMessageW(editCss->hwnd, EM_SETLIMITTEXT, 0, 0);
-        vbox->AddChild(editCss, 1);
+        styling->AddChild(new Padding(editCss, DpiScaledInsets(kToolDlgFilesPadDy, 0, 0, 0)), 1);
     }
+    vbox->AddChild(NewDlgSection(styling), 1);
+    vbox->AddChild(new VirtLine());
 
+    // this file or every ebook
     {
-        auto* row = new HBox();
-        row->alignMain = MainAxisAlign::MainStart;
-        row->alignCross = CrossAxisAlign::CrossCenter;
-
-        Checkbox::CreateArgs args;
-        args.parent = hwnd;
-        args.text = Tr("&This file");
-        args.isRtl = isRtl;
-        args.isRadio = true;
-        args.isGroupStart = true;
-        args.initialState = Checkbox::State::Checked;
-        radioThisFile = new Checkbox();
-        radioThisFile->SetInsetsPt(10, 0, 0, 0);
-        radioThisFile->Create(args);
+        radioThisFile = NewDlgRadio(hwnd, Tr("&This file"), fontText, true, true);
         radioThisFile->onStateChanged = MkMethod0<EbookSettingsWnd, &EbookSettingsWnd::OnTargetChanged>(this);
-        row->AddChild(radioThisFile);
-
-        args.text = Tr("For all &ebooks");
-        args.isGroupStart = false;
-        args.initialState = Checkbox::State::Unchecked;
-        radioAllEbooks = new Checkbox();
-        radioAllEbooks->SetInsetsPt(10, 0, 0, 12);
-        radioAllEbooks->Create(args);
+        radioAllEbooks = NewDlgRadio(hwnd, Tr("For all &ebooks"), fontText, false, false);
         radioAllEbooks->onStateChanged = MkMethod0<EbookSettingsWnd, &EbookSettingsWnd::OnTargetChanged>(this);
+        HBox* row = NewDlgFieldRow();
+        row->AddChild(radioThisFile);
         row->AddChild(radioAllEbooks);
-        vbox->AddChild(row);
+        vbox->AddChild(NewDlgSection(row));
     }
 
-    {
-        auto* hbox = new HBox();
-        hbox->alignMain = MainAxisAlign::SpaceBetween;
-        hbox->alignCross = CrossAxisAlign::CrossCenter;
-        hbox->gap = font->averageCharWidth;
-        auto pad = Insets{4, 0, 4, 0};
-
-        btnReset = NewThemedButton(hwnd, Tr("Reset to defaults"), font, false);
-        btnReset->onClick = MkMethod1<EbookSettingsWnd, VirtMouseEvent*, &EbookSettingsWnd::OnReset>(this);
-        hbox->AddChild(new Padding(btnReset, pad));
-
-        auto* right = new HBox();
-        right->alignMain = MainAxisAlign::MainEnd;
-        right->alignCross = CrossAxisAlign::CrossCenter;
-        right->gap = font->averageCharWidth;
-        btnCancel = NewThemedButton(hwnd, Tr("Cancel"), font, false);
-        btnCancel->onClick = MkMethod1<EbookSettingsWnd, VirtMouseEvent*, &EbookSettingsWnd::OnCancel>(this);
-        right->AddChild(new Padding(btnCancel, pad));
-        btnOk = NewThemedButton(hwnd, Tr("OK"), font, true);
-        btnOk->onClick = MkMethod1<EbookSettingsWnd, VirtMouseEvent*, &EbookSettingsWnd::OnOk>(this);
-        right->AddChild(new Padding(btnOk, pad));
-        hbox->AddChild(right);
-        vbox->AddChild(hbox);
-    }
-
-    layout = new Padding(vbox, DpiScaledInsets(4, 8));
+    btnReset = NewDlgButton(hwnd, Tr("Reset to defaults"), fontText, DlgButtonStyle::Ghost, false);
+    btnReset->onClick = MkMethod1<EbookSettingsWnd, VirtMouseEvent*, &EbookSettingsWnd::OnReset>(this);
+    btnCancel = NewDlgButton(hwnd, Tr("Cancel"), fontText, DlgButtonStyle::Outline, false);
+    btnCancel->onClick = MkMethod1<EbookSettingsWnd, VirtMouseEvent*, &EbookSettingsWnd::OnCancel>(this);
+    btnOk = NewDlgButton(hwnd, Tr("OK"), fontText, DlgButtonStyle::Filled, true);
+    btnOk->onClick = MkMethod1<EbookSettingsWnd, VirtMouseEvent*, &EbookSettingsWnd::OnOk>(this);
+    vbox->AddChild(NewDlgFooter(btnCancel, btnOk, btnReset));
+    layout = vbox;
 
     FillFontList();
     LoadFromTarget();
 
-    int dx = DpiScale(460);
-    LayoutAndSizeToContent(layout, dx, 0, hwnd);
+    LayoutAndSizeToContent(layout, DpiScale(kEbookDlgDx), 0, hwnd);
     DoLayout(HwndClientRect(hwnd).Size());
     HwndCenterDialog(hwnd, win ? win->hwndFrame : nullptr);
     UpdateTheme();

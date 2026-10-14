@@ -196,6 +196,8 @@ struct HBox : ILayout {
     MainAxisAlign alignMain = MainAxisAlign::MainStart;
     CrossAxisAlign alignCross = CrossAxisAlign::CrossStart;
     int gap = 0;
+    // at least this tall, the children centered in it per alignCross
+    int minDy = 0;
     // when true, children are placed right-to-left (MainStart packs to the right)
     bool rtl = false;
     int totalWidth = 0;
