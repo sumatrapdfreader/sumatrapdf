@@ -125,6 +125,10 @@ void OpenPopupMenuAt(gp::Ctx* cx, gp::Entity<gp::PopupMenuState> menu, float x, 
     }
     st->x = x;
     st->y = y;
+    // gpui runs a picked item's action from the focus the menu opened with.
+    // The element that opened it took no focus, so the trigger - where the
+    // action's handler is - gets it first
+    gp::FocusHandleFocus(cx->win, st->triggerFocus);
     gp::PopupMenuOpen(st, cx);
     gFitPopup = menu;
     gFitPopupFrames = 0;

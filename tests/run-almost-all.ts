@@ -267,6 +267,7 @@ import { testit as issue1930 } from "./issue-1930.ts";
 import { testit as annotFilterSyntax } from "./annot-filter-syntax.ts";
 import { testit as annotCutPaste } from "./annot-cut-paste.ts";
 import { testit as ctxMenuReload } from "./ctx-menu-reload.ts";
+import { testit as ctxMenuPick } from "./ctx-menu-pick.ts";
 import { testit as homeTwoWindows } from "./home-two-windows.ts";
 import { testit as annotUndoRedo } from "./annot-undo-redo.ts";
 import { testit as annotUndoOneStep } from "./annot-undo-one-step.ts";
@@ -475,6 +476,7 @@ export const tests: NamedTest[] = [
   ["issue-6167", issue6167],
   ["issue-6168", issue6168],
   ["ctx-menu-reload", ctxMenuReload],
+  ["ctx-menu-pick", ctxMenuPick],
   ["home-two-windows", homeTwoWindows],
   ["issue-5870", issue5870],
   ["issue-6199", issue6199],
