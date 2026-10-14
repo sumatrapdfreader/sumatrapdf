@@ -992,13 +992,8 @@ static gp::El* AdvContentEl(gp::Ctx* cx) {
     gp::El* list = AdvList(cx, kAdvListDy, dx)->H(kAdvListDy)->Shrink0();
     gp::El* body = AdvColumn(cx, list);
     DlgSetDefault(cx, gp::ListenTo(gAdvView, &AdvancedSettingsView::OnSave), true);
-    gp::El* dlg = gpc::Dialog::New(cx)
-                      ->Open(true)
-                      ->Title(ToGpui(Tr("Advanced Settings")))
-                      ->Body(body)
-                      ->W(dx)
-                      ->OnClose(gp::ListenTo(gAdvView, &AdvancedSettingsView::OnCancel))
-                      ->IntoEl(ws);
+    gp::Listener onClose = gp::ListenTo(gAdvView, &AdvancedSettingsView::OnCancel);
+    gp::El* dlg = DlgFrameCard(cx, body, Tr("Advanced Settings"), dx, onClose);
     AdvEndBuild(cx);
     return dlg;
 }

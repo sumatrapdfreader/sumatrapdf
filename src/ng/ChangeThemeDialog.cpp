@@ -459,12 +459,6 @@ gp::El* ChangeThemeDialogBuild(MainWindow* win, gp::Ctx* cx) {
         gChangeThemeView = gp::EntityNewState<ChangeThemeView>(cx->app);
     }
     DlgSetDefault(cx, gp::ListenTo(gChangeThemeView, &ChangeThemeView::OnOk));
-    return gpc::Dialog::New(cx)
-        ->Open(true)
-        ->Title(ToGpui(ChangeThemeToolTitle()))
-        ->Body(ChangeThemeColumn(cx))
-        ->Footer(gp::Div(cx->a)->H(0))
-        ->W(kThemeDlgDx)
-        ->OnClose(gp::ListenTo(gChangeThemeView, &ChangeThemeView::OnCancel))
-        ->IntoEl(gp::WindowSize(cx->win));
+    return DlgFrameCard(cx, ChangeThemeColumn(cx), ChangeThemeToolTitle(), kThemeDlgDx,
+                        gp::ListenTo(gChangeThemeView, &ChangeThemeView::OnCancel));
 }

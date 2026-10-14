@@ -548,12 +548,6 @@ gp::El* TabGroupsDialogBuild(MainWindow* win, gp::Ctx* cx) {
     }
     bool isSave = gTg->mode == TabGroupDialogMode::Save;
     DlgSetDefault(cx, gp::ListenTo(gTabGroupsView, &TabGroupsView::OnOk));
-    return gpc::Dialog::New(cx)
-        ->Open(true)
-        ->Title(ToGpui(isSave ? Tr("Save Tab Group") : Tr("Restore Tab Group")))
-        ->Body(TabGroupsColumn(cx, kTgCardListDy))
-        ->Footer(gp::Div(cx->a)->H(0))
-        ->W(kTgWinDx)
-        ->OnClose(gp::ListenTo(gTabGroupsView, &TabGroupsView::OnCancel))
-        ->IntoEl(gp::WindowSize(cx->win));
+    return DlgFrameCard(cx, TabGroupsColumn(cx, kTgCardListDy), isSave ? Tr("Save Tab Group") : Tr("Restore Tab Group"),
+                        kTgWinDx, gp::ListenTo(gTabGroupsView, &TabGroupsView::OnCancel));
 }

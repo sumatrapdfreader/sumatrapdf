@@ -521,14 +521,8 @@ gp::El* PDFScriptDialogBuild(MainWindow* win, gp::Ctx* cx) {
         result = gp::Div(cx->a)->FlexCol()->SizeFull()->Child(ScriptColumns(cx, editorDy));
     } else {
         float dx = kScriptDlgDx + (gScript.showExamples ? kScriptListDx + 2 * kScriptListInsetDx + 1 : 0);
-        auto* dlg = gpc::Dialog::New(cx)
-                        ->Open(true)
-                        ->Title(ToGpui(ScriptTitle()))
-                        ->Body(ScriptColumns(cx, kScriptFrameEditorDy))
-                        ->Footer(gp::Div(cx->a)->H(0))
-                        ->W(dx)
-                        ->OnClose(gp::ListenTo(gScriptView, &PDFScriptView::OnCancel));
-        result = DlgIntoEl(cx, dlg);
+        result = DlgFrameCard(cx, ScriptColumns(cx, kScriptFrameEditorDy), ScriptTitle(), dx,
+                              gp::ListenTo(gScriptView, &PDFScriptView::OnCancel));
     }
     if (gScript.wantFocus) {
         gp::InputFocus(gScript.script, cx->app, cx->win);

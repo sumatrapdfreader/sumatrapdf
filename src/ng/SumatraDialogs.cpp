@@ -1263,11 +1263,33 @@ gp::El* DlgToolContent(gp::Ctx* cx, gp::El* col, Str title, float dx, gp::Listen
     if (DlgWindowIsHost(cx)) {
         return DlgWinContent(cx, col);
     }
-    return DlgIntoEl(cx, gpc::Dialog::New(cx)
-                             ->Open(true)
-                             ->Title(ToGpui(title))
-                             ->Body(col)
-                             ->Footer(gp::Div(cx->a)->H(0))
-                             ->W(dx)
-                             ->OnClose(onCancel));
+    return DlgFrameCard(cx, col, title, dx, onCancel);
+}
+
+// a dialog drawn over the frame (no window of its own, e.g. Wasm): `col` under
+// the title as the whole card. gpui's own header and button row would pad it
+// and add a default OK button
+gp::El* DlgFrameCard(gp::Ctx* cx, gp::El* col, Str title, float dx, gp::Listener onClose) {
+    constexpr float kTitleFontPx = 15;
+    constexpr float kTitlePadT = 14;
+    gp::El* titleEl = gp::TextEl(cx->a, GpuiDup(cx->a, title))
+                          ->Font(kTitleFontPx)
+                          ->Semibold()
+                          ->Fg(ToGpui(ThemeWindowTextColor()))
+                          ->Truncate()
+                          ->MinW(0);
+    gp::El* card = gp::Div(cx->a)
+                       ->FlexCol()
+                       ->W(gp::kFill)
+                       ->MinH(0)
+                       ->Bg(ToGpui(ThemeWindowControlBackgroundColor()))
+                       ->Child(gp::Div(cx->a)
+                                   ->FlexRow()
+                                   ->W(gp::kFill)
+                                   ->Shrink0()
+                                   ->PadT(kTitlePadT)
+                                   ->PadX(kToolDlgPadDx)
+                                   ->Child(titleEl))
+                       ->Child(col);
+    return gpc::Dialog::New(cx)->Open(true)->Surface(card)->W(dx)->OnClose(onClose)->IntoEl(gp::WindowSize(cx->win));
 }
