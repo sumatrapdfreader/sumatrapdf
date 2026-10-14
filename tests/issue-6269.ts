@@ -6,7 +6,7 @@
 
 import { dlopen, FFIType } from "bun:ffi";
 import { IS_WIN } from "./host.ts";
-import { runStandalone } from "./util.ts";
+import { runStandalone, USE_NG } from "./util.ts";
 import {
   captureWindowPixels,
   clientToScreen,
@@ -217,7 +217,7 @@ async function clickCopy(hover: number, from: { x: number; y: number }): Promise
 export async function testit(): Promise<void> {
   // ng draws About as a gpui hover card. There is no WS_EX_NOACTIVATE popup
   // whose SetFocus closes it on mouse-down.
-  if (!IS_WIN) {
+  if (!IS_WIN || USE_NG) {
     console.log("SKIP issue-6269: About hover is a Win32 no-activate popup");
     return;
   }

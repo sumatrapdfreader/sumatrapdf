@@ -6,7 +6,7 @@ import { mkdirSync, readFileSync, rmSync } from "node:fs";
 import { join } from "node:path";
 import { ControlClient, ControlCommand } from "./control";
 import { IS_MAC } from "./host.ts";
-import { ROOT, cmdId, runStandalone, tmpPath } from "./util";
+import { ROOT, USE_NG, cmdId, runStandalone, tmpPath } from "./util";
 import {
   captureWindowToPng,
   clientToScreen,
@@ -262,7 +262,7 @@ export async function testit(): Promise<void> {
     // letterboxed, so that point is not the rect the model actually created.
     let resizeX = freeText.x + 212;
     let resizeY = freeText.y + 109;
-    if (IS_MAC) {
+    if (USE_NG) {
       const placed = await selectedAnnotState(client);
       resizeX = placed.rect.x + placed.rect.dx;
       resizeY = placed.rect.y + placed.rect.dy;
@@ -277,7 +277,8 @@ export async function testit(): Promise<void> {
     sendMessage(canvas, WM_MOUSEMOVE, MK_LBUTTON, packCoords(resizedX, resizedY));
     sendMessage(canvas, WM_LBUTTONUP, 0, packCoords(resizedX, resizedY));
     await client.waitForRenderIdle();
-    if (IS_MAC) {
+    // ng redraws hover on a move, so compare the annotation, not the pixels
+    if (USE_NG) {
       const afterUp = await selectedAnnotState(client);
       sendMessage(canvas, WM_MOUSEMOVE, 0, packCoords(resizedX + 60, resizedY + 60));
       await client.waitForRenderIdle();
