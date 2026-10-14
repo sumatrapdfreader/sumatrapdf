@@ -5,7 +5,6 @@
 #include "base/UITask.h"
 #include "base/SettingsUtil.h"
 #include "gui/UIModels.h"
-#define INCLUDE_SETTINGSSTRUCTS_METADATA
 #include "Settings.h"
 #include "AppSettings.h"
 #include "AppTools.h"

@@ -20,7 +20,6 @@
 #include "gui/UIModels.h"
 
 #if defined(SUMATRA_NG)
-#define INCLUDE_SETTINGSSTRUCTS_METADATA
 #endif
 #include "Settings.h"
 #include "Commands.h"

@@ -9,7 +9,6 @@
 #include "base/File.h"
 #include "base/SettingsUtil.h"
 
-#define INCLUDE_SETTINGSSTRUCTS_METADATA
 #include "Settings.h"
 #include "AppSettings.h"
 
