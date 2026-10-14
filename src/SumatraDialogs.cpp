@@ -3,6 +3,14 @@
 
 #include "base/Base.h"
 #include "base/Win.h"
+#include "gui/Dpi.h"
+#include "gui/UIModels.h"
+#include "gui/Layout.h"
+#include "gui/win/WinGui.h"
+#include "gui/PlatformFont.h"
+#include "gui/Gfx.h"
+#include "gui/GuiColors.h"
+#include "gui/VirtCtrl.h"
 
 #include "Settings.h"
 #include "AppSettings.h"
@@ -303,4 +311,59 @@ HPROPSHEETPAGE CreatePrintAdvancedPropSheet(Print_Advanced_Data* data) {
     }
 
     return CreatePropertySheetPage(&psp);
+}
+
+// --- the buttons of the redrawn dialogs; here, not in VirtCtrl.cpp, for the
+// theme colors (logview links VirtCtrl without Theme) ---
+
+constexpr int kDlgBtnRadius = 4;
+constexpr int kDlgBtnHoverShift = 14;
+
+VirtButton* NewDlgButton(HWND hwndForDpi, Str text, PlatformFont* font, DlgButtonStyle style, bool isDefault) {
+    VirtButton* b = NewThemedButton(hwndForDpi, text, font, isDefault);
+    Color colTxt = ThemeWindowTextColor();
+    Color colBg = ThemeWindowControlBackgroundColor();
+    Color fg = colTxt;
+    Color bg = colBg;
+    Color border = kColorTransparent;
+    switch (style) {
+        case DlgButtonStyle::Filled:
+            fg = colBg;
+            bg = colTxt;
+            border = colTxt;
+            break;
+        case DlgButtonStyle::Outline:
+            border = ThemeEdgeColor();
+            break;
+        case DlgButtonStyle::Ghost:
+            fg = ThemeWindowTextDisabledColor();
+            break;
+    }
+    b->cornerRadius = DpiScale(kDlgBtnRadius);
+    b->SetColor(kColBtnText, fg);
+    b->SetColor(kColBtnBg, bg);
+    b->SetColor(kColBtnBgHover, AccentColor(bg, kDlgBtnHoverShift));
+    b->SetColor(kColBtnBorder, border);
+    return b;
+}
+
+constexpr int kDlgBtnDisabledShift = 28;
+
+void SetDlgButtonEnabled(VirtButton* b, DlgButtonStyle style, bool enabled) {
+    if (enabled == b->HasFlag(vwfEnabled)) {
+        return;
+    }
+    b->SetFlag(vwfEnabled, enabled);
+    if (style == DlgButtonStyle::Filled) {
+        Color colTxt = ThemeWindowTextColor();
+        Color colBg = ThemeWindowControlBackgroundColor();
+        b->SetColor(kColBtnBg, enabled ? colTxt : AccentColor(colBg, kDlgBtnDisabledShift));
+        b->SetColor(kColBtnBorder, enabled ? colTxt : kColorTransparent);
+        b->SetColor(kColBtnTextDisabled, ThemeWindowTextDisabledColor());
+    }
+    b->Invalidate();
+}
+
+PlatformFont* DlgUiFont(int px) {
+    return GetUserGuiFont(StrL("Segoe UI"), DpiScale(px));
 }

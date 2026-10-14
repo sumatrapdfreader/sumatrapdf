@@ -3,6 +3,8 @@
 
 struct MainWindow;
 struct WindowTab;
+struct VirtButton;
+struct PlatformFont;
 
 void ShowAddFavoriteDialog(MainWindow* win, Str filePath, int pageNo, Str pageLabel, Str name);
 void ShowAdvancedSettingsDialog(MainWindow* win);
@@ -106,3 +108,16 @@ struct Print_Advanced_Data {
 
 HPROPSHEETPAGE CreatePrintAdvancedPropSheet(Print_Advanced_Data* data);
 void ShowPDFScriptDialog(MainWindow* win);
+
+// the buttons of the redrawn dialogs: the one action filled with the text
+// color, Cancel outlined, the quiet ones plain words that fill on hover
+enum class DlgButtonStyle {
+    Filled,
+    Outline,
+    Ghost
+};
+VirtButton* NewDlgButton(HWND hwndForDpi, Str text, PlatformFont* font, DlgButtonStyle style, bool isDefault);
+// a filled button goes pale while disabled
+void SetDlgButtonEnabled(VirtButton* b, DlgButtonStyle style, bool enabled);
+// the dialogs' UI font at `px`
+PlatformFont* DlgUiFont(int px);

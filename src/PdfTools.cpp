@@ -16,6 +16,7 @@
 #include "gui/VirtCtrl.h"
 
 #include "Settings.h"
+#include "SumatraDialogs.h"
 #include "DocController.h"
 #include "EngineBase.h"
 #include "base/GuessFileType.h"
