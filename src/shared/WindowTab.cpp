@@ -5,6 +5,9 @@
 #include "base/File.h"
 #include "base/FileWatcher.h"
 #include "base/GuessFileType.h"
+#if OS_WIN
+#include "base/Win.h"
+#endif
 
 #include "gui/UIModels.h"
 
@@ -305,7 +308,7 @@ bool SaveDataToFile(HWND hwndParent, Str fileName, Str data) {
     ofn.nFilterIndex = 1;
     ofn.Flags = OFN_OVERWRITEPROMPT | OFN_PATHMUSTEXIST | OFN_HIDEREADONLY;
 
-    if (!GetSaveFileNameW(&ofn)) {
+    if (!(TakeTestSaveFileName(&ofn) || GetSaveFileNameW(&ofn))) {
         return false;
     }
     return file::WriteFile(ToUtf8Temp(dstFileName), data);

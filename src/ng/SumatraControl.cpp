@@ -817,6 +817,10 @@ enum class ControlCmd : u16 {
     TestChapterLayoutHold = 133,
     // ng: open a file the way a drop or a Finder open does
     TestOpenFiles = 132,
+    // the path the next Save As takes, without its dialog
+    TestSaveFileName = 134,
+    // places the signature being placed at a canvas point (pixels), as a click does
+    TestPlaceSignature = 135,
 };
 
 bool ParseArg(PacketReader& r, ControlArg** argOut) {
@@ -2096,6 +2100,33 @@ static void ExecuteControlRequest(ControlRequest* req) {
             break;
         }
 
+        case ControlCmd::TestSaveFileName: {
+#if OS_WIN
+            SetTestSaveFileName(StringArg(req, 0));
+            AppendTestResult(req, 0, StrL("OK"));
+#else
+            AppendError(req, StrL("TestSaveFileName: Windows only"));
+#endif
+            break;
+        }
+
+        case ControlCmd::TestPlaceSignature: {
+            i32 x = 0;
+            i32 y = 0;
+            if (!IntArg(req, 0, x) || !IntArg(req, 1, y)) {
+                AppendError(req, StrL("TestPlaceSignature expects int x, int y"));
+                break;
+            }
+            MainWindow* win = len(gWindows) > 0 ? gWindows[0] : nullptr;
+            if (!win || !IsPlacingSignature(win)) {
+                AppendTestResult(req, 2, StrL("NOTREADY not-placing"));
+                break;
+            }
+            FinishSignaturePlacement(win, x, y, true);
+            AppendTestResult(req, 0, StrL("OK"));
+            break;
+        }
+
         case ControlCmd::TestRenameFile: {
             Str dstPath = StringArg(req, 0);
             if (len(dstPath) == 0) {
@@ -3010,6 +3041,11 @@ static void ExecuteControlRequest(ControlRequest* req) {
         case ControlCmd::TestToolWindow: {
             if (str::Eq(StringArg(req, 0), StrL("sign-placement"))) {
                 AppendTestResult(req, 0, SignDocumentPlacementTemp());
+                break;
+            }
+            if (str::Eq(StringArg(req, 0), StrL("sign-cert-file"))) {
+                Str res = SignDocumentUseCertFileTemp();
+                AppendTestResult(req, len(res) > 0 ? 0 : 2, len(res) > 0 ? res : StrL("NOTREADY no-dialog"));
                 break;
             }
             if (str::Eq(StringArg(req, 0), StrL("sign-checks"))) {

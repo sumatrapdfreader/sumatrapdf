@@ -1477,6 +1477,27 @@ bool IsAltPressed() {
     return IsKeyPressed(VK_MENU);
 }
 
+// a path the next Save As takes instead of showing the dialog: tests set it
+// through the control channel, so no script has to drive the system dialog
+static WStr gTestSaveFileName;
+
+void SetTestSaveFileName(Str path) {
+    wstr::Free(gTestSaveFileName);
+    gTestSaveFileName = len(path) > 0 ? ToWStr(path) : WStr{};
+}
+
+// call before GetSaveFileNameW: true when a test's path was put in ofn
+bool TakeTestSaveFileName(OPENFILENAMEW* ofn) {
+    if (len(gTestSaveFileName) == 0 || !ofn || !ofn->lpstrFile || ofn->nMaxFile == 0) {
+        return false;
+    }
+    int n = std::min(len(gTestSaveFileName), (int)ofn->nMaxFile - 1);
+    memcpy(ofn->lpstrFile, gTestSaveFileName.s, n * sizeof(WCHAR));
+    ofn->lpstrFile[n] = 0;
+    SetTestSaveFileName({});
+    return true;
+}
+
 bool IsCtrlPressed() {
     return IsKeyPressed(VK_CONTROL);
 }

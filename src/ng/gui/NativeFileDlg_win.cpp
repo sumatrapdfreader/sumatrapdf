@@ -111,7 +111,7 @@ static void SaveFileDlgNow(SavePathArgs* args) {
 
     gDlgOwner = hwnd;
     gDlgIsSave = true;
-    bool ok = GetSaveFileNameW(&ofn);
+    bool ok = (TakeTestSaveFileName(&ofn) || GetSaveFileNameW(&ofn));
     gDlgOwner = nullptr;
     wstr::Free(filterW);
     wstr::Free(titleW);

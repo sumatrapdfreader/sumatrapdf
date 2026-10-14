@@ -644,6 +644,10 @@ enum class ControlCmd : u16 {
     TestQuitProcess = 130,
     TestRenameFile = 131,
     TestChapterLayoutHold = 133,
+    // the path the next Save As takes, without its dialog
+    TestSaveFileName = 134,
+    // places the signature being placed at a canvas point (pixels), as a click does
+    TestPlaceSignature = 135,
 };
 
 bool ParseArg(PacketReader& r, ControlArg** argOut) {
@@ -1592,6 +1596,29 @@ static void ExecuteControlRequest(ControlRequest* req) {
             int exitCode = 0;
             Str res = SaveFileAsResultTemp(dstPath, &exitCode);
             AppendTestResult(req, exitCode, res);
+            break;
+        }
+
+        case ControlCmd::TestSaveFileName: {
+            SetTestSaveFileName(StringArg(req, 0));
+            AppendTestResult(req, 0, StrL("OK"));
+            break;
+        }
+
+        case ControlCmd::TestPlaceSignature: {
+            i32 x = 0;
+            i32 y = 0;
+            if (!IntArg(req, 0, x) || !IntArg(req, 1, y)) {
+                AppendError(req, StrL("TestPlaceSignature expects int x, int y"));
+                break;
+            }
+            MainWindow* win = len(gWindows) > 0 ? gWindows[0] : nullptr;
+            if (!win || !IsPlacingSignature(win)) {
+                AppendTestResult(req, 2, StrL("NOTREADY not-placing"));
+                break;
+            }
+            FinishSignaturePlacement(win, x, y, true);
+            AppendTestResult(req, 0, StrL("OK"));
             break;
         }
 

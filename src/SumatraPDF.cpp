@@ -4884,7 +4884,7 @@ bool SaveAnnotationsToMaybeNewPdfFile(WindowTab* tab) {
     ofn.lpstrDefExt = L".pdf";
     ofn.Flags = OFN_OVERWRITEPROMPT | OFN_PATHMUSTEXIST | OFN_HIDEREADONLY;
 
-    bool ok = GetSaveFileNameW(&ofn);
+    bool ok = (TakeTestSaveFileName(&ofn) || GetSaveFileNameW(&ofn));
     if (!ok) {
         return false;
     }
@@ -5494,7 +5494,7 @@ static void SaveCurrentFileAs(MainWindow* win) {
     // picks a reasonable default (in particular, we don't want this
     // in plugin mode, which is likely the main reason for saving as...)
 
-    bool ok = GetSaveFileNameW(&ofn);
+    bool ok = (TakeTestSaveFileName(&ofn) || GetSaveFileNameW(&ofn));
     if (!ok) {
         // GetSaveFileNameW() returns FALSE both on user cancellation (extended
         // error == 0) and on an actual failure such as a path that is too long
@@ -5784,7 +5784,7 @@ static void RenameCurrentFile(MainWindow* win) {
     ofn.lpstrDefExt = defExtW.s + 1;
     ofn.Flags = OFN_OVERWRITEPROMPT | OFN_PATHMUSTEXIST | OFN_HIDEREADONLY;
 
-    ok = GetSaveFileNameW(&ofn);
+    ok = (TakeTestSaveFileName(&ofn) || GetSaveFileNameW(&ofn));
     if (!ok) {
         return;
     }
@@ -5899,7 +5899,7 @@ static void CreateLnkShortcut(MainWindow* win) {
     ofn.lpstrDefExt = L"lnk";
     ofn.Flags = OFN_OVERWRITEPROMPT | OFN_PATHMUSTEXIST | OFN_HIDEREADONLY;
 
-    if (!GetSaveFileNameW(&ofn)) {
+    if (!(TakeTestSaveFileName(&ofn) || GetSaveFileNameW(&ofn))) {
         return;
     }
 

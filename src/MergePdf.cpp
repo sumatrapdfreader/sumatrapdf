@@ -1706,7 +1706,7 @@ void MergePdfWnd::OnSaveAs(VirtMouseEvent*) {
     ofn.lpstrFilter = L"PDF documents\0*.pdf\0";
     ofn.lpstrDefExt = L"pdf";
     ofn.Flags = OFN_OVERWRITEPROMPT | OFN_PATHMUSTEXIST | OFN_HIDEREADONLY;
-    if (!GetSaveFileNameW(&ofn) || tornDown) {
+    if (!(TakeTestSaveFileName(&ofn) || GetSaveFileNameW(&ofn)) || tornDown) {
         return;
     }
     TempStr path = ToUtf8Temp(dstFileName);

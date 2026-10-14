@@ -80,7 +80,7 @@ static void BrowseForDest(HWND owner, Edit* edit, WStr filter, WStr defExt) {
     ofn.Flags = OFN_OVERWRITEPROMPT | OFN_PATHMUSTEXIST | OFN_HIDEREADONLY;
     ofn.lpstrDefExt = defExt.s;
 
-    if (GetSaveFileNameW(&ofn)) {
+    if ((TakeTestSaveFileName(&ofn) || GetSaveFileNameW(&ofn))) {
         edit->SetText(ToUtf8Temp(dstFileName));
     }
 }
@@ -1380,7 +1380,7 @@ void ConvertPdfToImagesDialog::OnBrowseTemplate(VirtMouseEvent*) {
     ofn.Flags = OFN_OVERWRITEPROMPT | OFN_PATHMUSTEXIST | OFN_HIDEREADONLY;
     ofn.lpstrDefExt = kConvertImageFormats[fmtIdx].defExt.s;
 
-    if (!GetSaveFileNameW(&ofn)) {
+    if (!(TakeTestSaveFileName(&ofn) || GetSaveFileNameW(&ofn))) {
         return;
     }
     TempStr picked = ToUtf8Temp(dstFileName);
@@ -1608,7 +1608,7 @@ void SaveSelectionAsImageDialog::OnBrowseDest(VirtMouseEvent*) {
     ofn.Flags = OFN_OVERWRITEPROMPT | OFN_PATHMUSTEXIST | OFN_HIDEREADONLY;
     ofn.lpstrDefExt = kConvertImageFormats[fmtIdx].defExt.s;
 
-    if (!GetSaveFileNameW(&ofn)) {
+    if (!(TakeTestSaveFileName(&ofn) || GetSaveFileNameW(&ofn))) {
         return;
     }
     TempStr picked = ToUtf8Temp(dstFileName);

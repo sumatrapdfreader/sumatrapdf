@@ -132,6 +132,17 @@ TempStr SignDocumentPlacementTemp() {
     return str::DupTemp(gSign.ddPlacement.SelText());
 }
 
+// Picks "Certificate file..." over a Windows store certificate, so a test
+// signs with its own file. Empty while the dialog is down.
+TempStr SignDocumentUseCertFileTemp() {
+    if (!gSign.visible || !gSign.win || len(gSign.ddCert.items) == 0) {
+        return {};
+    }
+    gSign.ddCert.SetSel(AppShellGetApp(), len(gSign.ddCert.items) - 1);
+    AppShellInvalidate(gSign.win);
+    return str::DupTemp(StrL("OK"));
+}
+
 // Appearance checkboxes as "Show labels=1" lines. Empty while the dialog is down.
 TempStr SignDocumentChecksTemp() {
     if (!gSign.visible || gSign.placing) {

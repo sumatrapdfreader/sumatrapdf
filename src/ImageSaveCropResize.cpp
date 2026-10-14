@@ -1117,7 +1117,7 @@ static void OnBrowse(ImageEditWindow* ew) {
         L"All Files\0*.*\0";
     ofn.Flags = OFN_OVERWRITEPROMPT | OFN_PATHMUSTEXIST | OFN_HIDEREADONLY;
 
-    if (GetSaveFileNameW(&ofn) && ew->destEdit) {
+    if ((TakeTestSaveFileName(&ofn) || GetSaveFileNameW(&ofn)) && ew->destEdit) {
         ew->destEdit->SetText(ToUtf8Temp(dstFileName));
     }
 }

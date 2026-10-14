@@ -12,7 +12,7 @@ import { ControlClient, ControlCommand } from "./control.ts";
 import { IS_MAC } from "./host.ts";
 import { pdfSigFieldObjects, verifyPdfSignature, writeTestPfx, type TestCert } from "./pki.ts";
 import { ROOT, USE_NG, cmdId, runStandalone, tmpPath, writePdfWithEmptySigField } from "./util.ts";
-import { clickAt, findCanvas, killAndWait, launchControlled, pressEnter, sendCommand } from "./win-automation.ts";
+import { findCanvas, killAndWait, launchControlled, pressEnter, sendCommand } from "./win-automation.ts";
 import {
   captureWindowToPng,
   enumChildWindows,
@@ -23,12 +23,15 @@ import {
   getWindowPid,
   getWindowText,
   postMessage,
+  sendMessage,
   sendText,
   sleep,
   WM_CLOSE,
 } from "./winapi.ts";
 
 const kPassword = "sumatra-test-pw";
+const CB_GETCOUNT = 0x0146;
+const CB_SETCURSEL = 0x014e;
 const kCertName = "SumatraPDF SignTest";
 const kDlgTitle = "Sign Document";
 const kSaveTimeoutMs = 20000;
@@ -44,7 +47,10 @@ type SignUi = {
   close(): Promise<void>;
   // a new signature is placed by clicking the page (issue #5967)
   clickPage(): Promise<void>;
-  // accepts "Save As" with the name it suggests
+  // where the next "Save As" writes: Windows takes it without showing the
+  // dialog (TestSaveFileName); mac's gpui dialog suggests the same name
+  saveTo(path: string): Promise<void>;
+  // accepts "Save As" (mac's gpui dialog; nothing to do on Windows)
   acceptSave(): Promise<void>;
 };
 
@@ -90,7 +96,7 @@ function childrenOfClass(parent: number, className: string): number[] {
   return res;
 }
 
-function winSignUi(pid: number, frame: number): SignUi {
+function winSignUi(pid: number, frame: number, client: ControlClient): SignUi {
   const findDlg = () => findTopWindow(pid, "SumatraWgDefaultWinClass", kDlgTitle);
   return {
     async sign(pfx, password) {
@@ -102,8 +108,14 @@ function winSignUi(pid: number, frame: number): SignUi {
         throw new Error(`Sign dialog: expected 4 edit fields, got ${edits.length}`);
       }
       const combos = childrenOfClass(dlg, "ComboBox");
+      // the first combo lists the Windows store's certificates, then
+      // "Certificate file..."; with a store certificate it defaults to that one
+      if (combos.length > 0) {
+        const n = Number(sendMessage(combos[0]!, CB_GETCOUNT, 0, 0));
+        sendMessage(combos[0]!, CB_SETCURSEL, n - 1, 0);
+      }
       const placement =
-        combos.map(getControlText).find((t) => /signature|CEO|page/i.test(t)) ??
+        combos.map((h) => getControlText(h)).find((t) => /signature|CEO|page/i.test(t)) ??
         (combos.length ? getControlText(combos[combos.length - 1]!) : "");
       sendText(edits[0]!, pfx);
       sendText(edits[1]!, password);
@@ -114,7 +126,14 @@ function winSignUi(pid: number, frame: number): SignUi {
       return placement;
     },
     async dismissError() {
-      const msgBox = findTopWindow(pid, "#32770");
+      // signing reads the certificate first, which can take a moment
+      let msgBox = 0;
+      for (const deadline = Date.now() + 5000; !msgBox && Date.now() < deadline;) {
+        msgBox = findTopWindow(pid, "#32770");
+        if (!msgBox) {
+          await sleep(100);
+        }
+      }
       if (!msgBox) {
         return false;
       }
@@ -135,14 +154,19 @@ function winSignUi(pid: number, frame: number): SignUi {
       if (!canvas) {
         throw new Error("could not find the canvas to place the signature");
       }
+      // the click at the canvas center, without the real mouse
       const cr = getClientRect(canvas);
-      await clickAt(canvas, Math.floor(cr.right / 2), Math.floor(cr.bottom / 2), 400);
+      const x = Math.floor(cr.right / 2);
+      const y = Math.floor(cr.bottom / 2);
+      await waitFor("signature placement", async () => {
+        const res = await client.request(ControlCommand.TestPlaceSignature, [x, y]);
+        return res[0] === 0;
+      });
     },
-    async acceptSave() {
-      const save = await waitFor("Save As dialog", () => findTopWindow(pid, "#32770", "Save As"));
-      const edits = childrenOfClass(save, "Edit");
-      await pressEnter(edits.length ? edits[0]! : save);
+    saveTo: async (path) => {
+      await client.request(ControlCommand.TestSaveFileName, [path]);
     },
+    async acceptSave() {},
   };
 }
 
@@ -190,6 +214,9 @@ function macSignUi(client: ControlClient, frame: number): SignUi {
         const ns = await dlgNodes();
         return button(ns, "Sign") ? ns : null;
       });
+      // a Windows store certificate is the default; sign with the test's file
+      await toolWin("sign-cert-file");
+      await sleep(100);
       const placement = (await toolWin("sign-placement")).trim();
       await typeInto(
         nodes.find((n) => n.role === kRoleEdit)!,
@@ -231,6 +258,7 @@ function macSignUi(client: ControlClient, frame: number): SignUi {
       const y = Math.round(scale * (Number(page[2]) + Number(page[4]) / 2));
       await client.request(ControlCommand.TestInput, ["click", x, y, 0, 0]);
     },
+    async saveTo() {},
     async acceptSave() {
       const save = await waitFor("Save As dialog", async () => button(await frameNodes(), "Save"));
       await clickFrame(save);
@@ -245,11 +273,11 @@ async function withSignUi(pdf: string, fn: (ui: SignUi) => Promise<void>): Promi
   try {
     await client.waitForRenderIdle();
     // ng on Windows: gpui dialog over the control channel, native Save As
-    const ui = USE_NG ? macSignUi(client, frame) : winSignUi(proc.pid!, frame);
+    const ui = USE_NG ? macSignUi(client, frame) : winSignUi(proc.pid!, frame, client);
     if (USE_NG && !IS_MAC) {
-      const win = winSignUi(proc.pid!, frame);
+      const win = winSignUi(proc.pid!, frame, client);
+      ui.saveTo = win.saveTo;
       ui.acceptSave = win.acceptSave;
-      ui.dismissError = win.dismissError;
     }
     await fn(ui);
   } finally {
@@ -308,6 +336,7 @@ async function signExistingField(pfx: string, cert: TestCert): Promise<void> {
     }
     await ui.close();
 
+    await ui.saveTo(fieldOut);
     const placement = await ui.sign(pfx, kPassword);
     if (!placement.includes("CEO")) {
       throw new Error(`expected the document's empty 'CEO' field to be offered, got '${placement}'`);
@@ -330,6 +359,7 @@ async function signPlainPdf(pfx: string, cert: TestCert): Promise<void> {
   rmSync(plainOut, { force: true });
 
   await withSignUi(plainIn, async (ui) => {
+    await ui.saveTo(plainOut);
     const placement = await ui.sign(pfx, kPassword);
     if (!placement.includes("New signature")) {
       throw new Error(`expected a "new signature" placement, got '${placement}'`);
