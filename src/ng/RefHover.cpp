@@ -200,40 +200,6 @@ void RefHoverTick(MainWindow* win, int elapsedMs) {
     RefHoverOnTimer(s, dm->GetEngine(), dm->GetZoomReal(destPage));
 }
 
-bool RefHoverTakePostedWheel(MainWindow* win, bool horizontal, int delta, bool isCtrl, bool isShift, int clientX,
-                             int clientY) {
-    RefHoverState* s = win ? win->refHover : nullptr;
-    if (!s || !s->visible) {
-        return false;
-    }
-    // a plain vertical wheel still scrolls the document
-    if (!horizontal && !isCtrl && !isShift) {
-        return false;
-    }
-    Point doc;
-    if (!FrameClientToDoc(win, clientX, clientY, &doc)) {
-        return false;
-    }
-    DisplayModel* dm = win->AsFixed();
-    int srcPage = s->displayed.srcPage;
-    if (!dm || !dm->ValidPageNo(srcPage) || !s->hitEngine) {
-        return false;
-    }
-    PointF pagePt = dm->CvtFromScreen(doc, srcPage);
-    if (!s->displayed.srcRect.Contains(pagePt)) {
-        return false;
-    }
-    if (horizontal) {
-        RefHoverWheelScroll(s, s->hitEngine, -delta);
-    } else if (isCtrl) {
-        RefHoverWheelZoom(s, s->hitEngine, delta);
-    } else {
-        RefHoverWheelScroll(s, s->hitEngine, delta);
-    }
-    AppShellInvalidate(win);
-    return true;
-}
-
 // Citation hover popup state. "show" opens the popup for the link at the
 // frame point, because a test cursor cannot hold a hover. tests/issue-6252.ts.
 TempStr RefHoverResultTemp(Str action, int x, int y, int* exitCodeOut) {

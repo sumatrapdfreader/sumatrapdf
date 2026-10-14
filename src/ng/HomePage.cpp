@@ -808,28 +808,6 @@ static float HomeClampScrollY(HomePageUI* h, float y) {
     return std::max(0.f, std::min(y, maxY));
 }
 
-// a third of a row per notch. WM_MOUSEWHEEL on the frame uses the same step:
-// the test harness posts the wheel with the cursor parked off the window.
-void HomePageOnMouseWheel(MainWindow* win, int delta) {
-    if (!win || !win->IsCurrentTabAbout() || delta == 0) {
-        return;
-    }
-    HomePageUI* h = Ui(win);
-    int thumbsRowDy = HomePageIsListView() ? kHomeListRowDy : ThumbnailFrameSize().dy + kThumbsSpaceBetweenY;
-    int scrollBy = thumbsRowDy / 3;
-    if (delta > 0) {
-        scrollBy = -scrollBy;
-    }
-    float newScrollY = HomeClampScrollY(h, h->scrollY + (float)scrollBy);
-    if (newScrollY == h->scrollY) {
-        return;
-    }
-    h->scrollToEnd = false;
-    h->scrollY = newScrollY;
-    OverlayScrollbarsNotifyScroll(win);
-    AppShellInvalidate(win);
-}
-
 // orig's HomePageOnMouseWheel: a third of a row per notch
 void HomeView::OnWheel(HomeView* self, gp::Ctx* cx, const gp::ScrollWheelEvent* ev) {
     if (ev->deltaY == 0) {
@@ -1653,7 +1631,12 @@ gp::El* HomePageBuild(MainWindow* win, gp::Ctx* cx) {
     float startX = (float)thumbsStartX;
     float endX = std::max(0.f, frameDx - startX - (float)contentDx);
 
-    gp::El* root = gp::Div(cx->a)->FlexCol()->SizeFull()->Bg(ToGpui(colBg));
+    // orig scrolls the entries from a wheel anywhere on the page
+    gp::El* root = gp::Div(cx->a)
+                       ->FlexCol()
+                       ->SizeFull()
+                       ->Bg(ToGpui(colBg))
+                       ->OnScrollWheel(gp::ListenTo(Ui(win)->view, &HomeView::OnWheel));
 
     // one header row. The brand ends on the first column's right edge, the
     // Open link and view icons end on the last column's, and the search field

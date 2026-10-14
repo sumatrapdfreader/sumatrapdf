@@ -609,47 +609,6 @@ static void PresentScroll(MainWindow* win, HWND hwnd) {
     }
 }
 
-// A posted click carries MK_* in wParam. gpui asks GetKeyState, which
-// SendMessage does not update, so Ctrl+click never entered Edit PDF.
-struct PostedKeyBits {
-    BYTE before[256]{};
-    bool changed = false;
-};
-
-static PostedKeyBits ApplyPostedMouseMods(WPARAM wp) {
-    PostedKeyBits bits;
-    bool wantCtrl = (GET_KEYSTATE_WPARAM(wp) & MK_CONTROL) != 0 && !IsCtrlPressed();
-    bool wantShift = (GET_KEYSTATE_WPARAM(wp) & MK_SHIFT) != 0 && !IsShiftPressed();
-    if (!wantCtrl && !wantShift) {
-        return bits;
-    }
-    if (!GetKeyboardState(bits.before)) {
-        return bits;
-    }
-    BYTE state[256];
-    memcpy(state, bits.before, sizeof(state));
-    if (wantCtrl) {
-        state[VK_CONTROL] |= 0x80;
-        state[VK_LCONTROL] |= 0x80;
-    }
-    if (wantShift) {
-        state[VK_SHIFT] |= 0x80;
-        state[VK_LSHIFT] |= 0x80;
-    }
-    if (SetKeyboardState(state)) {
-        bits.changed = true;
-    }
-    return bits;
-}
-
-static void RestorePostedMouseMods(PostedKeyBits& bits) {
-    if (!bits.changed) {
-        return;
-    }
-    SetKeyboardState(bits.before);
-    bits.changed = false;
-}
-
 // GetPixel cannot read the frame: it is a flip swapchain created with
 // WS_EX_NOREDIRECTIONBITMAP. Tests sample SUMATRA_PDF_CANVAS. This owned
 // popup is a real GDI window, so the sample sees the page.
@@ -895,13 +854,6 @@ static LRESULT CALLBACK PixelMirrorProc(HWND hwnd, UINT msg, WPARAM wp, LPARAM l
     return DefWindowProcW(hwnd, msg, wp, lp);
 }
 
-static LRESULT DefSubclassWithPostedMods(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp) {
-    PostedKeyBits bits = ApplyPostedMouseMods(wp);
-    LRESULT res = DefSubclassProc(hwnd, msg, wp, lp);
-    RestorePostedMouseMods(bits);
-    return res;
-}
-
 static LRESULT CALLBACK ShellSubclass(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp, UINT_PTR, DWORD_PTR) {
     switch (msg) {
         case WM_NCCALCSIZE:
@@ -947,7 +899,7 @@ static LRESULT CALLBACK ShellSubclass(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp,
         case WM_MOUSEMOVE: {
             // gpui sets the cursor itself from inside the mouse move when the
             // kind under the pointer changed
-            LRESULT res = DefSubclassWithPostedMods(hwnd, msg, wp, lp);
+            LRESULT res = DefSubclassProc(hwnd, msg, wp, lp);
             if (HCURSOR cur = NativeCursorWanted(hwnd)) {
                 SetCursor(cur);
             }
@@ -972,40 +924,22 @@ static LRESULT CALLBACK ShellSubclass(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp,
             break;
         case WM_MOUSEWHEEL:
         case WM_MOUSEHWHEEL:
-            // the home page scrolls from a wheel posted at the frame, including
-            // when the cursor is not over the thumbnails
             if (MainWindow* win = WinOf(hwnd)) {
                 // CloseWindow is tearing the document down. Drop the wheel.
                 if (win->isBeingClosed) {
                     return 0;
                 }
-                if (msg == WM_MOUSEWHEEL && win->IsCurrentTabAbout()) {
-                    HomePageOnMouseWheel(win, GET_WHEEL_DELTA_WPARAM(wp));
-                    return 0;
-                }
-                // posted wheels carry MK_* in the message. gpui reads GetKeyState,
-                // which a test's PostMessage does not set.
-                POINT pt{GET_X_LPARAM(lp), GET_Y_LPARAM(lp)};
-                ScreenToClient(hwnd, &pt);
-                int delta = GET_WHEEL_DELTA_WPARAM(wp);
-                bool isCtrl = ((GET_KEYSTATE_WPARAM(wp) & MK_CONTROL) != 0) || IsCtrlPressed();
-                bool isShift = ((GET_KEYSTATE_WPARAM(wp) & MK_SHIFT) != 0) || IsShiftPressed();
-                if (RefHoverTakePostedWheel(win, msg == WM_MOUSEHWHEEL, delta, isCtrl, isShift, pt.x, pt.y)) {
-                    return 0;
-                }
                 if (ForwardBrowserMsg(win, msg, wp, lp)) {
                     return 0;
                 }
-                // lParam is screen coords. A message aimed at the window rather
-                // than a point (tests post 0) is outside the client; orig's
-                // canvas window still scrolls.
+                // over the caption or a border: orig's frame passes it to the canvas
+                POINT pt{GET_X_LPARAM(lp), GET_Y_LPARAM(lp)};
+                ScreenToClient(hwnd, &pt);
                 RECT rc{};
                 GetClientRect(hwnd, &rc);
-                bool inside = pt.x >= 0 && pt.y >= 0 && pt.x < rc.right && pt.y < rc.bottom;
-                if (!inside && msg == WM_MOUSEWHEEL && win->AsFixed()) {
-                    // orig's canvas reads Alt the same way
-                    bool isAlt = ((GET_KEYSTATE_WPARAM(wp) & MK_ALT) != 0) || IsAltPressed();
-                    DocCanvasPostedWheel(win, delta, isCtrl, isShift, isAlt);
+                if (!PtInRect(&rc, pt) && msg == WM_MOUSEWHEEL && win->AsFixed()) {
+                    DocCanvasFrameWheel(win, GET_WHEEL_DELTA_WPARAM(wp), IsCtrlPressed(), IsShiftPressed(),
+                                        IsAltPressed());
                     return 0;
                 }
             }
@@ -1174,19 +1108,6 @@ static LRESULT CALLBACK ShellSubclass(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp,
                 return 0;
             }
             break;
-        case WM_LBUTTONDOWN:
-        case WM_LBUTTONUP:
-        case WM_LBUTTONDBLCLK:
-        case WM_RBUTTONDOWN:
-        case WM_RBUTTONUP:
-        case WM_RBUTTONDBLCLK:
-        case WM_MBUTTONDOWN:
-        case WM_MBUTTONUP:
-        case WM_MBUTTONDBLCLK:
-        case WM_XBUTTONDOWN:
-        case WM_XBUTTONUP:
-        case WM_XBUTTONDBLCLK:
-            return DefSubclassWithPostedMods(hwnd, msg, wp, lp);
         default:
             break;
     }

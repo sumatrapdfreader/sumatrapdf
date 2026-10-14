@@ -1695,9 +1695,9 @@ static void CanvasOnMouseWheel(MainWindow* win, int delta, bool isCtrl, bool isS
     Ui(win)->wheelDidTurnPage = true;
 }
 
-// A wheel sent straight at the frame (a test, or a point outside the client)
-// never hit-tests an element. Orig delivers that message to the canvas window.
-void DocCanvasPostedWheel(MainWindow* win, int delta, bool isCtrl, bool isShift, bool isAlt) {
+// A wheel over the frame's caption or border never hit-tests an element.
+// Orig delivers that message to the canvas window.
+void DocCanvasFrameWheel(MainWindow* win, int delta, bool isCtrl, bool isShift, bool isAlt) {
     if (!IsMainWindowValid(win) || !win->AsFixed()) {
         return;
     }
