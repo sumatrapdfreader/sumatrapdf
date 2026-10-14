@@ -585,8 +585,19 @@ static void RunOnDeactivated(ToolWindow* tw) {
     RunOnActivate(tw, false);
 }
 
+// gpui drops a move's MK_LBUTTON, and its own "pressed" stays set from the
+// press: SetCapture's synthesized move has no button, and is not a drag
+static bool gMoveHasLeftButton = true;
+
+bool ToolWindowMoveHasLeftButton() {
+    return gMoveHasLeftButton;
+}
+
 // gpui reads modifiers with GetKeyState. A posted click carries them in MK_*.
 static LRESULT MouseWithPostedMods(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp) {
+    if (msg == WM_MOUSEMOVE) {
+        gMoveHasLeftButton = (GET_KEYSTATE_WPARAM(wp) & MK_LBUTTON) != 0;
+    }
     BYTE before[256]{};
     GetKeyboardState(before);
     BYTE keys[256];
@@ -1181,6 +1192,13 @@ static void SyncTitle(ToolWindow* tw) {
 
 // gpui's size for the text of an input or a button
 constexpr float kGpuiUiFontPx = 14;
+
+#if !OS_WIN
+// gpui's moves say whether a button is down, see MouseMoveEvent::pressed
+bool ToolWindowMoveHasLeftButton() {
+    return true;
+}
+#endif
 
 float ToolWindowSetUiFontPx(gp::Ctx* cx, float px) {
     float scale = kGpuiUiFontPx / px;

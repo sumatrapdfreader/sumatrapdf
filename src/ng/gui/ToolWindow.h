@@ -183,6 +183,8 @@ Point ToolWindowOffsetInOwner(ToolWindow* tw);
 // out at `px` (orig's app font) and returns the factor the window's other
 // font sizes have to be multiplied by. For the content of a tool window
 float ToolWindowSetUiFontPx(gpui::Ctx* cx, float px);
+// whether the left button was down in the last mouse move a tool window got
+bool ToolWindowMoveHasLeftButton();
 
 // the shell's side: AppShellInvalidate() repaints the tool windows of `win`
 // too, and they are closed before it is
