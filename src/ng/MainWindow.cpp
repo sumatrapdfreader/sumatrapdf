@@ -283,15 +283,16 @@ void LinkHandler::LaunchFile(Str pathOrig, IPageDestination* remoteLink) {
         return;
     }
 
+    // remoteLink's page and rect are in the source document: only its name means
+    // something in the target
     Str destName = remoteLink->GetName();
-    if (destName) {
-        CleanRemoteDestNameInPlace(destName);
-        IPageDestination* dest = targetWin->ctrl->GetNamedDest(destName);
-        if (dest) {
-            ((LinkHandler*)targetWin->linkHandler)->ScrollTo(dest);
-        }
-    } else {
-        ((LinkHandler*)targetWin->linkHandler)->ScrollTo(remoteLink);
+    if (len(destName) == 0) {
+        return;
+    }
+    CleanRemoteDestNameInPlace(destName);
+    IPageDestination* dest = targetWin->ctrl->GetNamedDest(destName);
+    if (dest) {
+        ((LinkHandler*)targetWin->linkHandler)->ScrollTo(dest);
     }
 }
 

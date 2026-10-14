@@ -408,6 +408,7 @@ import { testit as mergeStructParents } from "./merge-struct-parents.ts";
 import { testit as reuseInstanceFullscreen } from "./reuse-instance-fullscreen.ts";
 import { testit as attachmentOpenExternal } from "./attachment-open-external.ts";
 import { testit as cbrNetworkUnrar } from "./cbr-network-unrar.ts";
+import { testit as fileLinkNoDest } from "./file-link-no-dest.ts";
 
 async function annotationClipboardTests(): Promise<void> {
   beginSharedControlledSession();
@@ -812,6 +813,7 @@ export const tests: NamedTest[] = [
   ["reuse-instance-fullscreen", reuseInstanceFullscreen],
   ["attachment-open-external", attachmentOpenExternal],
   ["cbr-network-unrar", cbrNetworkUnrar],
+  ["file-link-no-dest", fileLinkNoDest],
 ];
 
 export async function testit(opts?: SuiteOptions): Promise<void> {
