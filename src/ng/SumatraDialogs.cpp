@@ -1133,14 +1133,14 @@ gp::El* DlgSection(gp::Ctx* cx) {
     return gp::Div(cx->a)->FlexCol()->W(gp::kFill)->Shrink0()->PadX(kToolDlgPadDx)->PadY(kToolDlgFilesPadDy);
 }
 
-gp::El* DlgCheck(gp::Ctx* cx, Str id, Str label, bool checked, gp::Listener onClick, DlgCheckKind kind) {
+gp::El* DlgCheck(gp::Ctx* cx, Str id, Str label, bool checked, gp::Listener onClick, DlgCheckKind kind, bool disabled) {
     gp::Str gid = GpuiDup(cx->a, id);
     if (kind == DlgCheckKind::Radio) {
-        gpc::Radio* r = gpc::Radio::New(cx, gid)->Checked(checked)->WithSize(gp::UiSize::Small);
-        return DlgAccelEl(cx, r, label, onClick)->Font(kToolDlgTextFontPx);
+        gpc::Radio* r = gpc::Radio::New(cx, gid)->Checked(checked)->Disabled(disabled)->WithSize(gp::UiSize::Small);
+        return DlgAccelEl(cx, r, label, onClick, disabled)->Font(kToolDlgTextFontPx);
     }
-    gpc::Checkbox* c = gpc::Checkbox::New(cx, gid)->Checked(checked);
-    return DlgAccelEl(cx, c, label, onClick)->Font(kToolDlgTextFontPx);
+    gpc::Checkbox* c = gpc::Checkbox::New(cx, gid)->Checked(checked)->Disabled(disabled);
+    return DlgAccelEl(cx, c, label, onClick, disabled)->Font(kToolDlgTextFontPx);
 }
 
 // muted text over the line it describes, cut with ... when too long

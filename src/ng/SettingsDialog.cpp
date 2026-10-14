@@ -27,6 +27,7 @@
 #include "gui/AppShell.h"
 #include "gui/DialogWidgets.h"
 #include "SumatraDialogs.h"
+#include "shared/PdfToolsCommon.h"
 
 #include "SumatraLog.h"
 
@@ -51,17 +52,11 @@ struct SettingsDlg {
 
 static SettingsDlg gSettingsDlg;
 
-// orig's window at 96 dpi: a 480 wide client area, 4 / 8 around. "View" with
-// 4 under it; the two labelled drop-downs, their labels sharing a column, 8
-// between the columns and 4 between the rows; the checkboxes 8 or 4 under
-// what is above them; "Advanced" with 12 above and 4 under it; the buttons
-// with 4 above and below
-constexpr float kOptWinDx = 480;
-constexpr float kOptWinPadX = 8;
-constexpr float kOptWinPadY = 4;
-constexpr float kOptWinColGap = 8;
-constexpr float kOptWinCheckGap = 8;
-constexpr float kOptWinSectionGap = 12;
+// orig's layout: View, Advanced and inverse search as sections under muted
+// headings, hairlines between, the footer
+constexpr float kOptDlgDx = 480;
+// the frame's card scrolls past this
+constexpr float kOptCardMaxDy = 520;
 
 struct SettingsView {
     static void OnOk(SettingsView* self, gp::Ctx* cx, const gp::ClickEvent*);
@@ -225,7 +220,7 @@ void ShowSettingsDialog(MainWindow* win) {
     spec.build = SettingsDialogBuild;
     spec.close = CloseSettingsDialog;
     spec.onOwnerClosed = SettingsDlgOnOwnerClosed;
-    spec.clientDx = kOptWinDx;
+    spec.clientDx = kOptDlgDx;
     gSettingsTw = DlgWindowOpen(spec, win);
     AppShellInvalidate(win);
 }
@@ -299,102 +294,10 @@ void SettingsView::OnToggle(SettingsView*, gp::Ctx* cx, const gp::ClickEvent*, i
     AppShellInvalidate(gSettingsDlg.win);
 }
 
-static gp::El* SectionLabel(gp::Ctx* cx, Str s) {
-    const gp::Theme& th = gp::ThemeNow(cx->app);
-    return gp::TextEl(cx->a, GpuiDup(cx->a, s))->Font(13)->Bold()->Fg(th.foreground);
-}
-
-static gp::El* LabeledRow(gp::Ctx* cx, gp::Str label, gp::El* ctrl) {
-    const gp::Theme& th = gp::ThemeNow(cx->app);
-    gp::El* row = gp::Div(cx->a)->FlexRow()->W(gp::kFill)->ItemsCenter()->Gap(8);
-    row->Child(DlgAccelText(cx, label)->Font(13)->Fg(th.foreground)->W(140)->Shrink0());
-    row->Child(gp::Div(cx->a)->Flex1()->MinW(0)->Child(ctrl));
-    return row;
-}
-
-static gp::El* CheckRow(gp::Ctx* cx, Str id, Str label, bool checked, bool disabled, intptr_t which) {
-    gp::El* box = DlgAccelEl(cx, gpc::Checkbox::New(cx, GpuiDup(cx->a, id))->Checked(checked)->Disabled(disabled),
-                             label, gp::ListenTo(gSettingsView, &SettingsView::OnToggle, which), disabled);
-    // ng: gpui's Checkbox reports its indicator's 2 px top margin as content
-    // past its own box, which made the body scroll by 2 px; a clipping
-    // wrapper keeps that out of the body's content height
-    return gp::Div(cx->a)->W(gp::kFill)->ClipY()->Child(box);
-}
-
 void SettingsView::OnScroll(SettingsView*, gp::Ctx* cx, const gp::ScrollEvent* ev) {
     gSettingsDlg.scrollY = ev->offsetY;
     gp::Notify(cx);
     AppShellInvalidate(gSettingsDlg.win);
-}
-
-static gp::El* SettingsWinCheck(gp::Ctx* cx, Str id, Str label, bool checked, bool disabled, intptr_t which,
-                                float padT) {
-    gp::El* box = DlgAccelEl(cx, gpc::Checkbox::New(cx, GpuiDup(cx->a, id))->Checked(checked)->Disabled(disabled),
-                             label, gp::ListenTo(gSettingsView, &SettingsView::OnToggle, which), disabled);
-    return DlgWinCheck(cx, box, padT);
-}
-
-static gp::El* SettingsWinBuild(gp::Ctx* cx) {
-    const gp::Theme& th = gp::ThemeNow(cx->app);
-    float font = DlgWinFont(cx);
-    gp::El* col = gp::Div(cx->a)->FlexCol()->W(gp::kFill)->PadX(kOptWinPadX)->PadY(kOptWinPadY);
-    col->Child(DlgWinLabel(cx, ToGpui(Tr("View")), font, kOptWinPadY));
-
-    Str layoutLabel = Tr("Default &Layout:");
-    Str zoomLabel = Tr("Default &Zoom:");
-    float labelDx = std::max(DlgWinTextDx(cx, layoutLabel), DlgWinTextDx(cx, zoomLabel));
-    auto row = [&](gp::Str label, gp::El* ctrl, float padB) {
-        gp::El* r =
-            gp::Div(cx->a)->FlexRow()->ItemsCenter()->W(gp::kFill)->H(kDlgWinEditDy + padB)->PadB(padB)->Shrink0();
-        r->Child(gp::Div(cx->a)
-                     ->W(labelDx + kOptWinColGap)
-                     ->Shrink0()
-                     ->Child(DlgAccelText(cx, label)->Font(font)->Fg(th.foreground)));
-        r->Child(gp::Div(cx->a)->Flex1()->MinW(0)->Child(ctrl));
-        return r;
-    };
-    // gpui's Select has no height of its own to set: its box is the first child
-    gp::El* layoutSel = gSettingsDlg.ddLayout.Build(cx, StrL("opt-layout"), gp::kFill)->H(kDlgWinEditDy);
-    if (layoutSel->first) {
-        layoutSel->first->H(kDlgWinEditDy);
-    }
-    col->Child(row(DlgAccelSelect(cx, layoutLabel, &gSettingsDlg.ddLayout), layoutSel, kOptWinPadY));
-    col->Child(row(DlgAccelInput(cx, zoomLabel, gSettingsDlg.editZoom),
-                   gSettingsDlg.ddZoom.BuildCombo(cx, StrL("opt-zoom-edit"), gSettingsDlg.editZoom, gp::kFill, false,
-                                                  kDlgWinEditDy),
-                   0));
-
-    col->Child(SettingsWinCheck(cx, StrL("opt-showtoc"), Tr("Show the &bookmarks sidebar when available"),
-                                gSettingsDlg.showToc, false, 0, kOptWinCheckGap));
-    col->Child(SettingsWinCheck(cx, StrL("opt-remember"), Tr("&Remember these settings for each document"),
-                                gSettingsDlg.rememberState, !gSettingsDlg.rememberOpened, 1, kOptWinPadY));
-
-    auto section = [&](Str s) {
-        return gp::Div(cx->a)->PadT(kOptWinSectionGap)->Shrink0()->Child(DlgWinLabel(cx, ToGpui(s), font, kOptWinPadY));
-    };
-    col->Child(section(Tr("Advanced")));
-    col->Child(SettingsWinCheck(cx, StrL("opt-tabs"), Tr("Use &tabs"), gSettingsDlg.useTabs, false, 2, 0));
-    col->Child(SettingsWinCheck(cx, StrL("opt-updates"), Tr("Automatically check for &updates"),
-                                gSettingsDlg.checkUpdates, !HasPermission(Perm::InternetAccess), 3, kOptWinPadY));
-    col->Child(SettingsWinCheck(cx, StrL("opt-opened"), Tr("Remember &opened files"), gSettingsDlg.rememberOpened,
-                                false, 4, kOptWinPadY));
-
-    if (gSettingsDlg.showInverseSearch) {
-        col->Child(section(Tr("Set inverse search command line")));
-        Str prompt = Tr("Enter the command line to invoke when you double-click on the PDF document:");
-        col->Child(DlgWinLabel(cx, ToGpui(prompt), font, kOptWinPadY));
-        col->Child(gSettingsDlg.ddInverse.BuildCombo(cx, StrL("opt-inverse-edit"), gSettingsDlg.editInverse, gp::kFill,
-                                                     false, kDlgWinEditDy));
-    }
-
-    gp::Listener onOk = gp::ListenTo(gSettingsView, &SettingsView::OnOk);
-    DlgSetDefault(cx, onOk, true);
-    gp::El* buttons = DlgWinButtonRow(cx, kOptWinPadY);
-    buttons->Child(DlgWinButton(cx, GStrL("dlg-cancel"), Tr("Cancel"),
-                                gp::ListenTo(gSettingsView, &SettingsView::OnCancel), false));
-    buttons->Child(DlgWinButton(cx, GStrL("dlg-ok"), Tr("OK"), onOk, true));
-    col->Child(buttons);
-    return DlgWinContent(cx, col);
 }
 
 gp::El* SettingsDialogBuild(MainWindow* win, gp::Ctx* cx) {
@@ -408,56 +311,77 @@ gp::El* SettingsDialogBuild(MainWindow* win, gp::Ctx* cx) {
         gSettingsView = gp::EntityNewState<SettingsView>(cx->app);
     }
     gSettingsDlg.ddLayout.PollChanged(cx->app);
-    if (DlgWindowIsHost(cx)) {
-        return SettingsWinBuild(cx);
-    }
+    gp::Listener onOk = gp::ListenTo(gSettingsView, &SettingsView::OnOk);
+    gp::Listener onCancel = gp::ListenTo(gSettingsView, &SettingsView::OnCancel);
+    DlgSetDefault(cx, onOk, true);
+    Color colMuted = ThemeWindowTextDisabledColor();
 
-    gp::El* body = gp::Div(cx->a)
-                       ->Id(GStrL("opt-body"))
-                       ->FlexCol()
-                       ->Gap(8)
-                       ->MaxH(520)
-                       ->ScrollY(gSettingsDlg.scrollY)
-                       ->ScrollFromPath()
-                       ->OnScroll(gp::ListenTo(gSettingsView, &SettingsView::OnScroll));
-    body->Child(SectionLabel(cx, Tr("View")));
-    body->Child(LabeledRow(cx, DlgAccelSelect(cx, Tr("Default &Layout:"), &gSettingsDlg.ddLayout),
-                           gSettingsDlg.ddLayout.Build(cx, StrL("opt-layout"), gp::kFill)));
+    auto check = [&](Str id, Str label, bool checked, bool disabled, intptr_t which) {
+        return DlgFieldRow(cx)->Child(DlgCheck(cx, id, label, checked,
+                                               gp::ListenTo(gSettingsView, &SettingsView::OnToggle, which),
+                                               DlgCheckKind::Checkbox, disabled));
+    };
+    Str layoutLabel = Tr("Default &Layout:");
+    Str zoomLabel = Tr("Default &Zoom:");
+    float labelDx = std::max(DlgFieldLabelDx(cx, layoutLabel), DlgFieldLabelDx(cx, zoomLabel));
+    auto row = [&](gp::Str label, gp::El* ctrl) {
+        gp::El* l = gp::Div(cx->a)->W(labelDx)->Shrink0()->Child(
+            DlgAccelText(cx, label)->Font(kToolDlgTextFontPx)->Fg(ToGpui(colMuted)));
+        return DlgFieldRow(cx)->Child(l)->Child(gp::Div(cx->a)->Flex1()->MinW(0)->Child(ctrl));
+    };
 
+    gp::El* col = gp::Div(cx->a)->FlexCol()->W(gp::kFill);
+    gp::El* view = DlgSection(cx);
+    view->Child(DlgSectionHeader(cx, Tr("View")));
+    view->Child(row(DlgAccelSelect(cx, layoutLabel, &gSettingsDlg.ddLayout),
+                    gSettingsDlg.ddLayout.Build(cx, StrL("opt-layout"), gp::kFill)));
     // orig's editable combo box of zoom levels
-    gp::El* zoomRow = gSettingsDlg.ddZoom.BuildCombo(cx, StrL("opt-zoom-edit"), gSettingsDlg.editZoom, gp::kFill);
-    body->Child(LabeledRow(cx, DlgAccelInput(cx, Tr("Default &Zoom:"), gSettingsDlg.editZoom), zoomRow));
+    view->Child(row(DlgAccelInput(cx, zoomLabel, gSettingsDlg.editZoom),
+                    gSettingsDlg.ddZoom.BuildCombo(cx, StrL("opt-zoom-edit"), gSettingsDlg.editZoom, gp::kFill, false,
+                                                   kDlgWinEditDy, kToolDlgTextFontPx)));
+    view->Child(
+        check(StrL("opt-showtoc"), Tr("Show the &bookmarks sidebar when available"), gSettingsDlg.showToc, false, 0));
+    view->Child(check(StrL("opt-remember"), Tr("&Remember these settings for each document"),
+                      gSettingsDlg.rememberState, !gSettingsDlg.rememberOpened, 1));
+    col->Child(view);
+    col->Child(DlgHairline(cx));
 
-    body->Child(CheckRow(cx, StrL("opt-showtoc"), Tr("Show the &bookmarks sidebar when available"),
-                         gSettingsDlg.showToc, false, 0));
-    body->Child(CheckRow(cx, StrL("opt-remember"), Tr("&Remember these settings for each document"),
-                         gSettingsDlg.rememberState, !gSettingsDlg.rememberOpened, 1));
-
-    body->Child(SectionLabel(cx, Tr("Advanced")));
-    body->Child(CheckRow(cx, StrL("opt-tabs"), Tr("Use &tabs"), gSettingsDlg.useTabs, false, 2));
-    body->Child(CheckRow(cx, StrL("opt-updates"), Tr("Automatically check for &updates"), gSettingsDlg.checkUpdates,
-                         !HasPermission(Perm::InternetAccess), 3));
-    body->Child(CheckRow(cx, StrL("opt-opened"), Tr("Remember &opened files"), gSettingsDlg.rememberOpened, false, 4));
+    gp::El* advanced = DlgSection(cx);
+    advanced->Child(DlgSectionHeader(cx, Tr("Advanced")));
+    advanced->Child(check(StrL("opt-tabs"), Tr("Use &tabs"), gSettingsDlg.useTabs, false, 2));
+    advanced->Child(check(StrL("opt-updates"), Tr("Automatically check for &updates"), gSettingsDlg.checkUpdates,
+                          !HasPermission(Perm::InternetAccess), 3));
+    advanced->Child(check(StrL("opt-opened"), Tr("Remember &opened files"), gSettingsDlg.rememberOpened, false, 4));
+    col->Child(advanced);
 
     if (gSettingsDlg.showInverseSearch) {
-        body->Child(SectionLabel(cx, Tr("Set inverse search command line")));
-        const gp::Theme& th = gp::ThemeNow(cx->app);
+        col->Child(DlgHairline(cx));
+        gp::El* inverse = DlgSection(cx);
+        inverse->Child(DlgSectionHeader(cx, Tr("Set inverse search command line")));
         Str prompt = Tr("Enter the command line to invoke when you double-click on the PDF document:");
-        body->Child(gp::TextEl(cx->a, ToGpui(prompt))->Font(13)->Fg(th.mutedFg));
-        body->Child(
-            gSettingsDlg.ddInverse.BuildCombo(cx, StrL("opt-inverse-edit"), gSettingsDlg.editInverse, gp::kFill));
+        inverse->Child(DlgFieldRow(cx)->Child(DlgFieldLabel(cx, prompt, 0)));
+        inverse->Child(
+            gp::Div(cx->a)
+                ->W(gp::kFill)
+                ->PadB(kToolDlgFilesPadDy)
+                ->Shrink0()
+                ->Child(gSettingsDlg.ddInverse.BuildCombo(cx, StrL("opt-inverse-edit"), gSettingsDlg.editInverse,
+                                                          gp::kFill, false, kDlgWinEditDy, kToolDlgTextFontPx)));
+        col->Child(inverse);
     }
+    col->Child(DlgFooter(cx, Tr("OK"), onOk, onCancel));
 
-    DlgSetDefault(cx, gp::ListenTo(gSettingsView, &SettingsView::OnOk), true);
-    return DlgIntoEl(cx, gpc::Dialog::New(cx)
-                             ->Open(true)
-                             ->Title(ToGpui(Tr("Settings")))
-                             ->Body(body)
-                             ->W(560)
-                             ->OkText(ToGpui(Tr("OK")))
-                             ->CancelText(ToGpui(Tr("Cancel")))
-                             ->ShowCancel(true)
-                             ->OnOk(gp::ListenTo(gSettingsView, &SettingsView::OnOk))
-                             ->OnCancel(gp::ListenTo(gSettingsView, &SettingsView::OnCancel))
-                             ->OnClose(gp::ListenTo(gSettingsView, &SettingsView::OnCancel)));
+    if (!DlgWindowIsHost(cx)) {
+        // the frame may be shorter than the dialog
+        col = gp::Div(cx->a)
+                  ->Id(GStrL("opt-body"))
+                  ->FlexCol()
+                  ->W(gp::kFill)
+                  ->MaxH(kOptCardMaxDy)
+                  ->ScrollY(gSettingsDlg.scrollY)
+                  ->ScrollFromPath()
+                  ->OnScroll(gp::ListenTo(gSettingsView, &SettingsView::OnScroll))
+                  ->Child(col);
+    }
+    return DlgToolContent(cx, col, Tr("Settings"), kOptDlgDx, onCancel);
 }

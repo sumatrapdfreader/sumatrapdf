@@ -25,9 +25,25 @@
 #include "Translations.h"
 #include "DarkMode.h"
 #include "SumatraDialogs.h"
+#include "shared/PdfToolsCommon.h"
 
-// Section headers, labels and OK/Cancel are VirtCtrl; layout/zoom/command
-// combos and the checkboxes are HWNDs. Same WindowBase layout as Inverse Search.
+//   View
+//   Default Layout:  [Automatic        v]
+//   Default Zoom:    [Fit Page         v]
+//   [ ] Show the bookmarks sidebar when available
+//   [ ] Remember these settings for each document
+//   ---------------------------------------------- hairline
+//   Advanced
+//   [ ] Use tabs
+//   [ ] Automatically check for updates
+//   [ ] Remember opened files
+//   ---------------------------------------------- hairline
+//   Set inverse search command line      (with TeX enhancements)
+//   Enter the command line to invoke ...
+//   [code -g "%f:%l"                     v]
+//   ---------------------------------------------- hairline
+//                                    [Cancel] [OK]
+constexpr int kSettingsDlgDx = 480;
 struct SettingsWnd : WindowBase {
     ~SettingsWnd() override = default;
 
@@ -249,177 +265,125 @@ static DropDown* MakeDropDown(HWND parent, PlatformFont* font, bool isRtl, bool 
     return c;
 }
 
-static Checkbox* MakeCheckbox(HWND parent, Str text, bool isRtl, bool checked, int topPt) {
-    Checkbox::CreateArgs args;
-    args.parent = parent;
-    args.text = text;
-    args.isRtl = isRtl;
-    if (checked) {
-        args.initialState = Checkbox::State::Checked;
-    }
-    auto* c = new Checkbox();
-    c->SetInsetsPt(topPt, 0, 0, 0);
-    c->Create(args);
-    return c;
-}
-
 bool SettingsWnd::Create(MainWindow* mainWin) {
     win = mainWin;
     showInverseSearch = gSettings && gSettings->enableTeXEnhancements && CanAccessDisk();
-
+    Color colTxt = ThemeWindowTextColor();
+    Color colBg = ThemeWindowControlBackgroundColor();
+    Color colMuted = ThemeWindowTextDisabledColor();
+    PlatformFont* fontText = DlgUiFont(kToolDlgTextFontPx);
+    PlatformFont* fontMeta = DlgUiFont(kToolDlgMetaFontPx);
+    SetFont(fontText);
+    bool isRtl = IsUIRtl();
     {
         CreateCustomArgs args;
         args.title = Tr("Settings");
         args.visible = false;
         args.style = WS_POPUPWINDOW | WS_CAPTION;
-        args.font = GetFont();
+        args.font = fontText;
+        args.isRtl = isRtl;
+        args.bgColor = colBg;
         args.icon = LoadIconW(GetModuleHandleW(nullptr), MAKEINTRESOURCEW(GetAppIconID()));
         CreateCustom(args);
     }
     if (!hwnd) {
         return false;
     }
-    bool isRtl = IsUIRtl();
+    SetColors(colTxt, colBg);
 
     auto* vbox = new VBox();
-    vbox->alignMain = MainAxisAlign::MainStart;
     vbox->alignCross = CrossAxisAlign::Stretch;
+    auto newSection = [&]() {
+        auto* box = new VBox();
+        box->alignCross = CrossAxisAlign::Stretch;
+        return box;
+    };
+    auto header = [&](Str text) { return NewDlgLabel(text, fontMeta, colMuted, kToolDlgRowDy); };
+    auto addCheck = [&](VBox* box, Checkbox* c) {
+        HBox* row = NewDlgFieldRow();
+        row->AddChild(c);
+        box->AddChild(row);
+    };
+    bool sett = gSettings != nullptr;
 
     //[ ACCESSKEY_GROUP Settings Dialog
+    VBox* view = newSection();
+    labelView = header(Tr("View"));
+    view->AddChild(labelView);
     {
-        auto* c = NewVirtText({
-            .s = Tr("View"),
-            .font = font,
-            .isRtl = isRtl,
-            .padding = DpiScaledInsets(0, 0, 4, 0),
-        });
-        labelView = c;
-        vbox->AddChild(c);
-    }
+        HBox* row = NewDlgFieldRow();
+        labelLayout = NewDlgLabel(Tr("Default &Layout:"), fontText, colMuted, kToolDlgRowDy, true);
+        row->AddChild(labelLayout);
+        dropLayout = MakeDropDown(hwnd, fontText, isRtl, false);
+        row->AddChild(dropLayout, 1);
+        view->AddChild(row);
 
-    {
-        // Default Layout / Default Zoom in a 2x2 table so the labels share a
-        // column and the two drop-downs line up at the same left edge
-        auto* labLayout = NewVirtText({
-            .s = Tr("Default &Layout:"),
-            .font = font,
-            .isRtl = isRtl,
-            .prefix = true,
-        });
-        labelLayout = labLayout;
-        dropLayout = MakeDropDown(hwnd, GetFont(), isRtl, false);
+        row = NewDlgFieldRow();
+        labelZoom = NewDlgLabel(Tr("Default &Zoom:"), fontText, colMuted, kToolDlgRowDy, true);
+        row->AddChild(labelZoom);
+        dropZoom = MakeDropDown(hwnd, fontText, isRtl, true);
+        row->AddChild(dropZoom, 1);
+        view->AddChild(row);
 
-        auto* labZoom = NewVirtText({
-            .s = Tr("Default &Zoom:"),
-            .font = font,
-            .isRtl = isRtl,
-            .prefix = true,
-        });
-        labelZoom = labZoom;
-        dropZoom = MakeDropDown(hwnd, GetFont(), isRtl, true);
-
-        auto* table = new Table();
-        table->SetSize(2, 2);
-        table->colGap = DpiScale(8);
-        table->rowGap = DpiScale(4);
-        auto& lc = table->SetCell(0, 0, labLayout);
-        lc.alignV = CrossAxisAlign::CrossCenter;
-        auto& ld = table->SetCell(0, 1, dropLayout);
-        ld.alignH = CrossAxisAlign::Stretch;
-        ld.alignV = CrossAxisAlign::CrossCenter;
-        auto& zc = table->SetCell(1, 0, labZoom);
-        zc.alignV = CrossAxisAlign::CrossCenter;
-        auto& zd = table->SetCell(1, 1, dropZoom);
-        zd.alignH = CrossAxisAlign::Stretch;
-        zd.alignV = CrossAxisAlign::CrossCenter;
-        vbox->AddChild(table);
+        Vec<VirtText*> labels;
+        VecAppend(labels, labelLayout);
+        VecAppend(labels, labelZoom);
+        AlignDlgLabels(labels);
         FillLayout();
         FillZoom();
     }
-
     chkShowToc =
-        MakeCheckbox(hwnd, Tr("Show the &bookmarks sidebar when available"), isRtl, gSettings && gSettings->showToc, 8);
-    vbox->AddChild(chkShowToc);
-
-    chkRememberState = MakeCheckbox(hwnd, Tr("&Remember these settings for each document"), isRtl,
-                                    gSettings && gSettings->rememberStatePerDocument, 4);
-    if (gSettings && !gSettings->rememberOpenedFiles) {
+        NewDlgCheckbox(hwnd, Tr("Show the &bookmarks sidebar when available"), fontText, sett && gSettings->showToc);
+    addCheck(view, chkShowToc);
+    chkRememberState = NewDlgCheckbox(hwnd, Tr("&Remember these settings for each document"), fontText,
+                                      sett && gSettings->rememberStatePerDocument);
+    if (sett && !gSettings->rememberOpenedFiles) {
         chkRememberState->SetIsEnabled(false);
     }
-    vbox->AddChild(chkRememberState);
+    addCheck(view, chkRememberState);
+    vbox->AddChild(NewDlgSection(view));
+    vbox->AddChild(new VirtLine());
 
-    {
-        auto* c = NewVirtText({
-            .s = Tr("Advanced"),
-            .font = font,
-            .isRtl = isRtl,
-            .padding = DpiScaledInsets(12, 0, 4, 0),
-        });
-        labelAdvanced = c;
-        vbox->AddChild(c);
-    }
-
-    chkUseTabs = MakeCheckbox(hwnd, Tr("Use &tabs"), isRtl, gSettings && gSettings->useTabs, 0);
-    vbox->AddChild(chkUseTabs);
-
+    VBox* advanced = newSection();
+    labelAdvanced = header(Tr("Advanced"));
+    advanced->AddChild(labelAdvanced);
+    chkUseTabs = NewDlgCheckbox(hwnd, Tr("Use &tabs"), fontText, sett && gSettings->useTabs);
+    addCheck(advanced, chkUseTabs);
     chkCheckUpdates =
-        MakeCheckbox(hwnd, Tr("Automatically check for &updates"), isRtl, gSettings && gSettings->checkForUpdates, 4);
+        NewDlgCheckbox(hwnd, Tr("Automatically check for &updates"), fontText, sett && gSettings->checkForUpdates);
     if (!HasPermission(Perm::InternetAccess)) {
         chkCheckUpdates->SetIsEnabled(false);
     }
-    vbox->AddChild(chkCheckUpdates);
-
+    addCheck(advanced, chkCheckUpdates);
     chkRememberOpened =
-        MakeCheckbox(hwnd, Tr("Remember &opened files"), isRtl, gSettings && gSettings->rememberOpenedFiles, 4);
+        NewDlgCheckbox(hwnd, Tr("Remember &opened files"), fontText, sett && gSettings->rememberOpenedFiles);
     chkRememberOpened->onStateChanged = MkMethod0<SettingsWnd, &SettingsWnd::OnRememberOpenedChanged>(this);
-    vbox->AddChild(chkRememberOpened);
+    addCheck(advanced, chkRememberOpened);
+    vbox->AddChild(NewDlgSection(advanced));
 
     if (showInverseSearch) {
-        auto* hdr = NewVirtText({
-            .s = Tr("Set inverse search command line"),
-            .font = font,
-            .isRtl = isRtl,
-            .padding = DpiScaledInsets(12, 0, 4, 0),
-        });
-        labelInverse = hdr;
-        vbox->AddChild(hdr);
-
-        auto* lab = NewVirtText({
-            .s = Tr("Enter the command line to invoke when you double-click on the PDF document:"),
-            .font = font,
-            .isRtl = isRtl,
-            .padding = DpiScaledInsets(0, 0, 4, 0),
-        });
-        labelCmdLine = lab;
-        vbox->AddChild(lab);
-
-        dropInverse = MakeDropDown(hwnd, GetFont(), isRtl, true);
-        vbox->AddChild(dropInverse);
+        vbox->AddChild(new VirtLine());
+        VBox* inverse = newSection();
+        labelInverse = header(Tr("Set inverse search command line"));
+        inverse->AddChild(labelInverse);
+        labelCmdLine = NewDlgLabel(Tr("Enter the command line to invoke when you double-click on the PDF document:"),
+                                   fontText, colMuted, kToolDlgRowDy);
+        inverse->AddChild(labelCmdLine);
+        dropInverse = MakeDropDown(hwnd, fontText, isRtl, true);
+        inverse->AddChild(new Padding(dropInverse, DpiScaledInsets(0, 0, kToolDlgFilesPadDy, 0)));
+        vbox->AddChild(NewDlgSection(inverse));
         FillInverse();
     }
     //] ACCESSKEY_GROUP Settings Dialog
 
-    {
-        auto* hbox = new HBox();
-        hbox->alignMain = MainAxisAlign::MainEnd;
-        hbox->alignCross = CrossAxisAlign::CrossCenter;
-        hbox->gap = font->averageCharWidth;
-        auto pad = Insets{4, 0, 4, 0};
+    btnCancel = NewDlgButton(hwnd, Tr("Cancel"), fontText, DlgButtonStyle::Outline, false);
+    btnCancel->onClick = MkMethod1<SettingsWnd, VirtMouseEvent*, &SettingsWnd::OnCancel>(this);
+    btnOk = NewDlgButton(hwnd, Tr("OK"), fontText, DlgButtonStyle::Filled, true);
+    btnOk->onClick = MkMethod1<SettingsWnd, VirtMouseEvent*, &SettingsWnd::OnOk>(this);
+    vbox->AddChild(NewDlgFooter(btnCancel, btnOk));
+    layout = vbox;
 
-        btnCancel = NewThemedButton(hwnd, Tr("Cancel"), font, false);
-        btnCancel->onClick = MkMethod1<SettingsWnd, VirtMouseEvent*, &SettingsWnd::OnCancel>(this);
-        hbox->AddChild(new Padding(btnCancel, pad));
-        btnOk = NewThemedButton(hwnd, Tr("OK"), font, true);
-        btnOk->onClick = MkMethod1<SettingsWnd, VirtMouseEvent*, &SettingsWnd::OnOk>(this);
-        hbox->AddChild(new Padding(btnOk, pad));
-        vbox->AddChild(hbox);
-    }
-
-    auto* padding = new Padding(vbox, DpiScaledInsets(4, 8));
-    layout = padding;
-
-    int dx = DpiScale(480);
-    LayoutAndSizeToContent(layout, dx, 0, hwnd);
+    LayoutAndSizeToContent(layout, DpiScale(kSettingsDlgDx), 0, hwnd);
     DoLayout(HwndClientRect(hwnd).Size());
     HwndCenterDialog(hwnd, win ? win->hwndFrame : nullptr);
     UpdateTheme();

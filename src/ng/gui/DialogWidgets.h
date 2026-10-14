@@ -240,7 +240,7 @@ enum class DlgCheckKind {
     Radio
 };
 gpui::El* DlgCheck(gpui::Ctx* cx, Str id, Str label, bool checked, gpui::Listener onClick,
-                   DlgCheckKind kind = DlgCheckKind::Checkbox);
+                   DlgCheckKind kind = DlgCheckKind::Checkbox, bool disabled = false);
 gpui::El* DlgToolContent(gpui::Ctx* cx, gpui::El* col, Str title, float dx, gpui::Listener onCancel);
 
 // the dialog window that has the input of `win`'s program: a modal one, or
