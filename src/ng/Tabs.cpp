@@ -314,8 +314,9 @@ void MaybeMigrateTab(WindowTab* tab, MainWindow* newWin) {
     if (EngineHasUnsavedAnnotations(tab->GetEngine())) {
         return;
     }
-    TempStr path = str::DupTemp(tab->filePath);
-    TempStr displayName = str::DupTemp(tab->displayName);
+    // not temp: creating the window reuses the temp arena
+    Str path = str::Dup(tab->filePath);
+    Str displayName = str::Dup(tab->displayName);
     TabState* state = NewTabStateFromTab(tab);
     RemoveTab(tab);
     delete tab;
@@ -350,6 +351,8 @@ void MaybeMigrateTab(WindowTab* tab, MainWindow* newWin) {
     }
     if (!newWin) {
         DeleteTabState(state);
+        str::Free(path);
+        str::Free(displayName);
         return;
     }
     logf("MaybeMigrateTab: '%s' -> window 0x%p\n", path, newWin);
@@ -364,6 +367,8 @@ void MaybeMigrateTab(WindowTab* tab, MainWindow* newWin) {
         SetTabState(newTab, state);
         DeleteTabState(state);
     }
+    str::Free(path);
+    str::Free(displayName);
     CloseWindowIfNoDocuments(oldWin);
 }
 

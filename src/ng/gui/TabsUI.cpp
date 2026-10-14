@@ -459,6 +459,8 @@ static gp::El* BuildTab(MainWindow* win, gp::Ctx* cx, int idx, int tabDx) {
                      ->PadL(8)
                      ->PadR(isSelected ? 2.f : 8.f)
                      ->Bg(ToGpui(bgCol))
+                     ->Role(gp::AccessibilityRole::Tab)
+                     ->AriaLabel(GpuiDup(cx->a, tab->GetTabTitle()))
                      ->PathClick(GpuiDup(cx->a, fmt("sumatra-tab-%d", idx)))
                      ->BoundsOut(&ui->tabBounds[idx])
                      ->OnMouseDown(gp::ListenTo(Ui(win)->view, &TabsView::OnTabDown, (intptr_t)idx))

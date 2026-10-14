@@ -5,12 +5,15 @@
 
 import { mkdirSync, rmSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
-import { ControlCommand } from "./control.ts";
-import { assemblePdf, pollUntil, runStandalone, SLOW_BUILD_FACTOR, tmpPath } from "./util.ts";
+import { type ControlClient, ControlCommand } from "./control.ts";
+import { assemblePdf, pollUntil, runStandalone, SLOW_BUILD_FACTOR, tmpPath, USE_NG } from "./util.ts";
 import {
   clientToScreen,
+  enumWindows,
   getClientRect,
+  getWindowPid,
   getWindowText,
+  isWindowVisible,
   MK_LBUTTON,
   packCoords,
   postMessage,
@@ -24,6 +27,8 @@ import { clickAt, findChildByClass, killAndWait, launchControlled } from "./win-
 
 const TABS_CLASS = "SumatraTabsCtrlClass";
 const ATTACHMENT = "image002.png";
+// how far below the tab bar the tab is dropped
+const DROP_DY = 300;
 
 // 1x1 red PNG
 const PNG_BASE64 = "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8z8DwHwAFBQIAX8jx0gAAAABJRU5ErkJggg==";
@@ -54,6 +59,55 @@ async function findAttachmentTabX(frame: number, tabs: number, y: number): Promi
     }
   }
   throw new Error("drag-out-attachment-tab: could not find the attachment's tab");
+}
+
+async function findTabBar(frame: number): Promise<{ tabs: number; x: number; y: number }> {
+  const tabs = findChildByClass(frame, TABS_CLASS);
+  if (!tabs) {
+    throw new Error("drag-out-attachment-tab: no tab bar");
+  }
+  const y = Math.floor(getClientRect(tabs).bottom / 2);
+  const x = await findAttachmentTabX(frame, tabs, y);
+  return { tabs, x, y };
+}
+
+// press on the tab, pull it down past the drag threshold, drop below the bar
+function dragOutOrig(frame: number, { tabs, x, y }: { tabs: number; x: number; y: number }): void {
+  const dropY = y + DROP_DY;
+  const at = clientToScreen(tabs, x, y);
+  setCursorPos(at.x, at.y);
+  postMessage(tabs, WM_LBUTTONDOWN, MK_LBUTTON, packCoords(x, y));
+  postMessage(tabs, WM_MOUSEMOVE, MK_LBUTTON, packCoords(x, y + 40));
+  postMessage(tabs, WM_MOUSEMOVE, MK_LBUTTON, packCoords(x, dropY));
+  postMessage(tabs, WM_LBUTTONUP, 0, packCoords(x, dropY));
+}
+
+function processWindowTitles(pid: number): string[] {
+  const titles: string[] = [];
+  enumWindows((h) => {
+    if (getWindowPid(h) === pid && isWindowVisible(h)) {
+      titles.push(getWindowText(h));
+    }
+    return true;
+  });
+  return titles;
+}
+
+// ng draws its tabs: the attachment's is the frame layout node labelled with it
+async function dragOutNg(client: ControlClient): Promise<void> {
+  const layout = String((await client.request(ControlCommand.TestToolWindow, ["layout", "frame"]))[1] ?? "");
+  const re = new RegExp(`node rect=(-?\\d+),(-?\\d+),(\\d+),(\\d+) role=\\d+ label='[^']*${ATTACHMENT}`);
+  const m = re.exec(layout);
+  if (!m) {
+    throw new Error(`drag-out-attachment-tab: no tab labelled ${ATTACHMENT}:\n${layout.slice(0, 2000)}`);
+  }
+  const x = Number(m[1]) + Math.floor(Number(m[3]) / 3);
+  const y = Number(m[2]) + Math.floor(Number(m[4]) / 2);
+  const input = async (...args: (string | number)[]) => client.request(ControlCommand.TestInput, args);
+  await input("down", x, y, 0, 0);
+  await input("move", x, y + 40, 1, 0);
+  await input("move", x, y + DROP_DY, 1, 0);
+  await input("up", x, y + DROP_DY, 0, 0);
 }
 
 export async function testit(): Promise<void> {
@@ -89,21 +143,11 @@ export async function testit(): Promise<void> {
     );
     await client.waitForRenderIdle();
 
-    const tabs = findChildByClass(frame, TABS_CLASS);
-    if (!tabs) {
-      throw new Error("drag-out-attachment-tab: no tab bar");
+    if (USE_NG) {
+      await dragOutNg(client);
+    } else {
+      dragOutOrig(frame, await findTabBar(frame));
     }
-    const y = Math.floor(getClientRect(tabs).bottom / 2);
-    const x = await findAttachmentTabX(frame, tabs, y);
-
-    // press on the tab, pull it down past the drag threshold, drop below the bar
-    const dropY = y + 300;
-    const at = clientToScreen(tabs, x, y);
-    setCursorPos(at.x, at.y);
-    postMessage(tabs, WM_LBUTTONDOWN, MK_LBUTTON, packCoords(x, y));
-    postMessage(tabs, WM_MOUSEMOVE, MK_LBUTTON, packCoords(x, y + 40));
-    postMessage(tabs, WM_MOUSEMOVE, MK_LBUTTON, packCoords(x, dropY));
-    postMessage(tabs, WM_LBUTTONUP, 0, packCoords(x, dropY));
     await sleep(300 * SLOW_BUILD_FACTOR);
 
     // a debug report under -for-testing ends the process
@@ -111,9 +155,11 @@ export async function testit(): Promise<void> {
       throw new Error(`drag-out-attachment-tab: the app exited with ${proc.exitCode} after the drag`);
     }
     await client.waitForRenderIdle();
-    const title = getWindowText(frame);
-    if (!title.includes(ATTACHMENT)) {
-      throw new Error(`drag-out-attachment-tab: the attachment tab is gone, title='${title}'`);
+    // ng saves an attachment to a file before opening it, so its tab has a
+    // path and moves to a window of its own
+    const titles = USE_NG ? processWindowTitles(proc.pid!) : [getWindowText(frame)];
+    if (!titles.some((t) => t.includes(ATTACHMENT))) {
+      throw new Error(`drag-out-attachment-tab: the attachment tab is gone, titles=${JSON.stringify(titles)}`);
     }
   } finally {
     client.close();
