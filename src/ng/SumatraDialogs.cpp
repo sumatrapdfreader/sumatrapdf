@@ -41,6 +41,7 @@
 #include "gui/DialogWidgets.h"
 #include "gui/NativeMsgBox.h"
 #include "SumatraDialogs.h"
+#include "shared/PdfToolsCommon.h"
 
 #include "SumatraLog.h"
 
@@ -1093,4 +1094,90 @@ bool DialogsOnEscape(MainWindow* win) {
         return true;
     }
     return false;
+}
+
+//--- the redrawn dialogs' pieces, laid out as orig's NewDlg*() do
+
+constexpr float kDlgCaptionPadDy = 14;
+
+// muted text over the line it describes, cut with ... when too long
+gp::El* DlgCaption(gp::Ctx* cx, Str s) {
+    gp::El* t = gp::TextEl(cx->a, GpuiDup(cx->a, s))
+                    ->Font(kToolDlgTextFontPx)
+                    ->Fg(ToGpui(ThemeWindowTextDisabledColor()))
+                    ->Truncate()
+                    ->MinW(0);
+    return gp::Div(cx->a)->FlexRow()->W(gp::kFill)->Shrink0()->PadT(kDlgCaptionPadDy)->PadX(kToolDlgPadDx)->Child(t);
+}
+
+// a line: `label` muted in a column `labelDx` wide (0: its own width), then
+// `edit` in the larger font. The caller adds what goes after the field
+gp::El* DlgLine(gp::Ctx* cx, Str label, float labelDx, Str id, gp::InputState* edit, DlgField kind) {
+    gp::El* row = gp::Div(cx->a)
+                      ->FlexRow()
+                      ->ItemsCenter()
+                      ->W(gp::kFill)
+                      ->H(kToolDlgLineDy)
+                      ->Shrink0()
+                      ->PadX(kToolDlgPadDx)
+                      ->Gap(kToolDlgGapDx);
+    if (len(label) > 0) {
+        Color colMuted = ThemeWindowTextDisabledColor();
+        gp::El* t = DlgAccelText(cx, DlgAccelInput(cx, label, edit))->Font(kToolDlgTextFontPx)->Fg(ToGpui(colMuted));
+        gp::El* box = gp::Div(cx->a)->Shrink0()->Child(t);
+        if (labelDx > 0) {
+            box->W(labelDx);
+        }
+        row->Child(box);
+    }
+    gp::El* field;
+    if (kind == DlgField::Plain) {
+        field = gpc::Input::New(cx, GpuiDup(cx->a, id), edit)
+                    ->Appearance(false)
+                    ->WithSize(gp::UiSize::Small)
+                    ->W(gp::kFill)
+                    ->IntoEl()
+                    ->Font(kToolDlgQueryFontPx);
+    } else {
+        bool masked = kind == DlgField::Password;
+        field = DlgUnderlineInput(cx, GpuiDup(cx->a, id), edit, kToolDlgQueryFontPx, ThemeEdgeColor(), masked);
+    }
+    row->Child(gp::Div(cx->a)->Flex1()->MinW(0)->Child(field));
+    return row;
+}
+
+// a hairline, then Cancel and the one filled action at the right
+gp::El* DlgFooter(gp::Ctx* cx, Str okLabel, gp::Listener onOk, gp::Listener onCancel) {
+    gp::El* row = gp::Div(cx->a)
+                      ->FlexRow()
+                      ->ItemsCenter()
+                      ->W(gp::kFill)
+                      ->Shrink0()
+                      ->PadX(kToolDlgPadDx)
+                      ->PadY(kToolDlgFootPadDy)
+                      ->Gap(kToolDlgGapDx);
+    row->Child(gp::Div(cx->a)->Flex1());
+    row->Child(gpc::Button::New(cx, GStrL("dlg-cancel"))
+                   ->Label(ToGpui(Tr("Cancel")))
+                   ->Outline()
+                   ->WithSize(gp::UiSize::Small)
+                   ->OnClick(onCancel)
+                   ->IntoEl());
+    row->Child(DlgFilledButton(cx, GStrL("dlg-ok"), okLabel, onOk));
+    return gp::Div(cx->a)->FlexCol()->W(gp::kFill)->Shrink0()->Child(DlgHairline(cx))->Child(row);
+}
+
+// `col` in its own window (DlgWindowOpen), else in a card over the frame
+gp::El* DlgToolContent(gp::Ctx* cx, gp::El* col, Str title, float dx, gp::Listener onCancel) {
+    col->Bg(ToGpui(ThemeWindowControlBackgroundColor()));
+    if (DlgWindowIsHost(cx)) {
+        return DlgWinContent(cx, col);
+    }
+    return DlgIntoEl(cx, gpc::Dialog::New(cx)
+                             ->Open(true)
+                             ->Title(ToGpui(title))
+                             ->Body(col)
+                             ->Footer(gp::Div(cx->a)->H(0))
+                             ->W(dx)
+                             ->OnClose(onCancel));
 }

@@ -23,10 +23,17 @@
 #include "Translations.h"
 #include "DarkMode.h"
 #include "SumatraDialogs.h"
+#include "shared/PdfToolsCommon.h"
 
-// Labels and buttons are VirtCtrl; the password field and checkboxes are HWNDs.
-// Same WindowBase layout as Change Theme. The dialog itself stays modal: engine
-// load calls PasswordUI::GetPassword and has to wait for the typed password.
+//   Enter password for foo.pdf
+//   Password:  ********
+//   ---------------------------------------------- hairline
+//   [ ] Show password
+//   [ ] Remember the password for this document
+//   ---------------------------------------------- hairline
+//                                    [Cancel] [OK]
+// Modal: engine load calls PasswordUI::GetPassword and waits for the password.
+constexpr int kPasswordDlgDx = 400;
 struct GetPasswordWnd : WindowBase {
     ~GetPasswordWnd() override;
 
@@ -34,8 +41,6 @@ struct GetPasswordWnd : WindowBase {
     Str fileName;
     bool* remember = nullptr;
     bool* showPassword = nullptr;
-    VirtText* labelFile = nullptr;
-    VirtText* labelPwd = nullptr;
     Edit* editPwd = nullptr;
     Checkbox* chkShow = nullptr;
     Checkbox* chkRemember = nullptr;
@@ -97,117 +102,89 @@ void GetPasswordWnd::OnOk(VirtMouseEvent*) {
 }
 
 bool GetPasswordWnd::Create() {
+    Color colTxt = ThemeWindowTextColor();
+    Color colBg = ThemeWindowControlBackgroundColor();
+    Color colMuted = ThemeWindowTextDisabledColor();
+    PlatformFont* fontText = DlgUiFont(kToolDlgTextFontPx);
+    PlatformFont* fontQuery = DlgUiFont(kToolDlgQueryFontPx);
+    SetFont(fontText);
+    bool isRtl = IsUIRtl();
     {
         CreateCustomArgs args;
         args.parent = hwndParent;
         args.title = Tr("Enter password");
         args.visible = false;
         args.style = WS_POPUPWINDOW | WS_CAPTION;
-        args.font = GetFont();
+        args.font = fontText;
+        args.isRtl = isRtl;
+        args.bgColor = colBg;
         args.icon = LoadIconW(GetModuleHandleW(nullptr), MAKEINTRESOURCEW(GetAppIconID()));
         CreateCustom(args);
     }
     if (!hwnd) {
         return false;
     }
-    bool isRtl = IsUIRtl();
+    SetColors(colTxt, colBg);
 
     auto* vbox = new VBox();
-    vbox->alignMain = MainAxisAlign::MainStart;
     vbox->alignCross = CrossAxisAlign::Stretch;
+    vbox->AddChild(NewDlgCaption(fmt(Tr("Enter password for %s").s, fileName), fontText, colMuted));
 
+    // the password, in the larger font
     {
-        auto* c = NewVirtText({
-            .s = fmt(Tr("Enter password for %s").s, fileName),
-            .font = font,
-            .isRtl = isRtl,
-            .padding = DpiScaledInsets(0, 0, 4, 0),
-        });
-        labelFile = c;
-        vbox->AddChild(c);
-    }
-
-    {
-        auto* hbox = new HBox();
-        hbox->alignMain = MainAxisAlign::MainStart;
-        hbox->alignCross = CrossAxisAlign::CrossCenter;
-
-        auto* lab = NewVirtText({
-            .s = Tr("&Password:"),
-            .font = font,
-            .isRtl = isRtl,
-            .prefix = true,
-        });
-        labelPwd = lab;
-        hbox->AddChild(lab);
-
+        HBox* row = NewDlgRow();
+        row->AddChild(NewDlgLabel(Tr("&Password:"), fontText, colMuted, kToolDlgLineDy, true));
         Edit::CreateArgs args;
         args.parent = hwnd;
-        args.font = GetFont();
-        args.withBorder = true;
+        args.font = fontQuery;
+        args.withBorder = false;
         args.isPassword = true;
         args.selectAllOnFocus = true;
         args.isRtl = isRtl;
-        auto* e = new Edit();
-        e->SetInsetsPt(0, 8, 0, 0);
-        e->Create(args);
-        editPwd = e;
-        hbox->AddChild(e, 1);
-        vbox->AddChild(hbox);
+        editPwd = new Edit();
+        editPwd->SetColors(colTxt, colBg);
+        editPwd->Create(args);
+        row->AddChild(NewDlgUnderlined(editPwd), 1);
+        vbox->AddChild(new Padding(row, DpiScaledInsets(0, kToolDlgPadDx)));
     }
+    vbox->AddChild(new VirtLine());
 
-    {
+    // the options, a row each
+    auto* options = new VBox();
+    options->alignCross = CrossAxisAlign::Stretch;
+    auto addCheck = [&](Str text, bool checked) {
         Checkbox::CreateArgs args;
         args.parent = hwnd;
-        args.text = Tr("&Show password");
+        args.text = text;
+        args.font = fontText;
         args.isRtl = isRtl;
-        if (showPassword && *showPassword) {
-            args.initialState = Checkbox::State::Checked;
-        }
+        args.initialState = checked ? Checkbox::State::Checked : Checkbox::State::Unchecked;
         auto* c = new Checkbox();
-        c->SetInsetsPt(8, 0, 0, 0);
         c->Create(args);
-        c->onStateChanged = MkMethod0<GetPasswordWnd, &GetPasswordWnd::OnShowPasswordChanged>(this);
-        chkShow = c;
-        vbox->AddChild(c);
-        if (showPassword && *showPassword) {
-            EditSetPasswordVisible(editPwd, true);
-        }
-    }
-
+        c->SetColors(colTxt, colBg);
+        HBox* row = NewDlgRow();
+        row->AddChild(new Spacer(0, DpiScale(kToolDlgRowDy)));
+        row->AddChild(c);
+        options->AddChild(row);
+        return c;
+    };
+    bool show = showPassword && *showPassword;
+    chkShow = addCheck(Tr("&Show password"), show);
+    chkShow->onStateChanged = MkMethod0<GetPasswordWnd, &GetPasswordWnd::OnShowPasswordChanged>(this);
+    EditSetPasswordVisible(editPwd, show);
     if (remember) {
-        Checkbox::CreateArgs args;
-        args.parent = hwnd;
-        args.text = Tr("&Remember the password for this document");
-        args.isRtl = isRtl;
-        auto* c = new Checkbox();
-        c->SetInsetsPt(4, 0, 0, 0);
-        c->Create(args);
-        chkRemember = c;
-        vbox->AddChild(c);
+        chkRemember = addCheck(Tr("&Remember the password for this document"), false);
     }
+    vbox->AddChild(new Padding(options, DpiScaledInsets(kToolDlgFilesPadDy, kToolDlgPadDx)));
 
-    {
-        auto* hbox = new HBox();
-        hbox->alignMain = MainAxisAlign::MainEnd;
-        hbox->alignCross = CrossAxisAlign::CrossCenter;
-        hbox->gap = font->averageCharWidth;
-        auto pad = Insets{4, 0, 4, 0};
+    btnCancel = NewDlgButton(hwnd, Tr("Cancel"), fontText, DlgButtonStyle::Outline, false);
+    btnCancel->onClick = MkMethod1<GetPasswordWnd, VirtMouseEvent*, &GetPasswordWnd::OnCancel>(this);
+    btnOk = NewDlgButton(hwnd, Tr("OK"), fontText, DlgButtonStyle::Filled, true);
+    btnOk->onClick = MkMethod1<GetPasswordWnd, VirtMouseEvent*, &GetPasswordWnd::OnOk>(this);
+    vbox->AddChild(NewDlgFooter(btnCancel, btnOk));
+    layout = vbox;
 
-        btnCancel = NewThemedButton(hwnd, Tr("Cancel"), font, false);
-        btnCancel->onClick = MkMethod1<GetPasswordWnd, VirtMouseEvent*, &GetPasswordWnd::OnCancel>(this);
-        hbox->AddChild(new Padding(btnCancel, pad));
-        btnOk = NewThemedButton(hwnd, Tr("OK"), font, true);
-        btnOk->onClick = MkMethod1<GetPasswordWnd, VirtMouseEvent*, &GetPasswordWnd::OnOk>(this);
-        hbox->AddChild(new Padding(btnOk, pad));
-        vbox->AddChild(hbox);
-    }
-
-    auto* padding = new Padding(vbox, DpiScaledInsets(4, 8));
-    layout = padding;
-
-    int dx = DpiScale(360);
-    LayoutAndSizeToContent(layout, dx, 0, hwnd);
+    LayoutAndSizeToContent(layout, DpiScale(kPasswordDlgDx), 0, hwnd);
     DoLayout(HwndClientRect(hwnd).Size());
     HwndCenterDialog(hwnd, hwndParent);
     UpdateTheme();

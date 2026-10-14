@@ -20,7 +20,10 @@
 #include "Translations.h"
 #include "Theme.h"
 #include "DarkMode.h"
+#include "base/Pixmap.h"
+#include "EngineBase.h"
 #include "SumatraDialogs.h"
+#include "shared/PdfToolsCommon.h"
 
 // http://msdn.microsoft.com/en-us/library/ms645398(v=VS.85).aspx
 #pragma pack(push, 1)
@@ -366,4 +369,54 @@ void SetDlgButtonEnabled(VirtButton* b, DlgButtonStyle style, bool enabled) {
 
 PlatformFont* DlgUiFont(int px) {
     return GetUserGuiFont(StrL("Segoe UI"), DpiScale(px));
+}
+
+// a label centered in a line `dy` dips high
+VirtText* NewDlgLabel(Str s, PlatformFont* font, Color col, int dy, bool prefix) {
+    VirtText* t = NewVirtText({.s = s, .font = font, .textColor = col, .isRtl = IsUIRtl(), .prefix = prefix});
+    int lineDy = PlatformFontLineHeight(font);
+    t->padding.top = std::max(0, (DpiScale(dy) - lineDy) / 2);
+    t->padding.bottom = std::max(0, DpiScale(dy) - lineDy - t->padding.top);
+    return t;
+}
+
+constexpr int kDlgCaptionPadDy = 14;
+
+// muted text over the line it describes, cut with ... when too long
+VirtText* NewDlgCaption(Str s, PlatformFont* font, Color col) {
+    VirtText* t = NewVirtText({.s = s, .font = font, .textColor = col, .isRtl = IsUIRtl(), .ellipsis = true});
+    int padDx = DpiScale(kToolDlgPadDx);
+    t->padding = Insets{DpiScale(kDlgCaptionPadDy), padDx, 0, padDx};
+    return t;
+}
+
+// a bare field over a hairline, so an empty one still reads as a field
+ILayout* NewDlgUnderlined(ILayout* field) {
+    auto* box = new VBox();
+    box->alignCross = CrossAxisAlign::Stretch;
+    box->AddChild(field);
+    box->AddChild(new VirtLine());
+    return box;
+}
+
+// controls side by side, centered, the dialogs' gap apart
+HBox* NewDlgRow() {
+    auto* row = new HBox();
+    row->alignCross = CrossAxisAlign::CrossCenter;
+    row->rtl = IsUIRtl();
+    row->gap = DpiScale(kToolDlgGapDx);
+    return row;
+}
+
+// a hairline, then Cancel and the one filled action at the right
+ILayout* NewDlgFooter(VirtButton* cancel, VirtButton* ok) {
+    HBox* row = NewDlgRow();
+    row->AddChild(new Spacer(0, 0), 1);
+    row->AddChild(cancel);
+    row->AddChild(ok);
+    auto* box = new VBox();
+    box->alignCross = CrossAxisAlign::Stretch;
+    box->AddChild(new VirtLine());
+    box->AddChild(new Padding(row, DpiScaledInsets(kToolDlgFootPadDy, kToolDlgPadDx)));
+    return box;
 }

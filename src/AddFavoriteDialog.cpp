@@ -22,10 +22,17 @@
 #include "Translations.h"
 #include "DarkMode.h"
 #include "SumatraDialogs.h"
+#include "shared/PdfToolsCommon.h"
 #include "AppHelpersCommon.h"
 
-// Label and buttons are VirtCtrl; the name field is a real HWND Edit.
-// Same WindowBase layout pattern as Change Theme / Change Language.
+//   Name for page 5 (optional):
+//   Chapter 2
+//   ______________________________________________ underline
+//   ---------------------------------------------- hairline
+//                          [Cancel] [Add Favorite]
+constexpr int kAddFavoriteDlgDx = 400;
+constexpr int kFavFieldPadTop = 10;
+constexpr int kFavFieldPadBottom = 16;
 struct AddFavoriteWnd : WindowBase {
     ~AddFavoriteWnd() override;
 
@@ -99,71 +106,56 @@ static void OnDestroy(WindowBase::DestroyEvent* /*ev*/) {
 bool AddFavoriteWnd::Create(MainWindow* win, Str path, int page, Str labelIn, Str name) {
     SetTarget(win, path, page, labelIn, name);
 
+    Color colTxt = ThemeWindowTextColor();
+    Color colBg = ThemeWindowControlBackgroundColor();
+    Color colMuted = ThemeWindowTextDisabledColor();
+    PlatformFont* fontText = DlgUiFont(kToolDlgTextFontPx);
+    SetFont(fontText);
+    bool isRtl = IsUIRtl();
     {
         CreateCustomArgs args;
         args.owner = win ? win->hwndFrame : nullptr;
         args.title = Tr("Add Favorite");
         args.visible = false;
         args.style = WS_POPUPWINDOW | WS_CAPTION;
-        args.font = GetFont();
+        args.font = fontText;
+        args.isRtl = isRtl;
+        args.bgColor = colBg;
         args.icon = LoadIconW(GetModuleHandleW(nullptr), MAKEINTRESOURCEW(GetAppIconID()));
         CreateCustom(args);
     }
     if (!hwnd) {
         return false;
     }
-    bool isRtl = IsUIRtl();
+    SetColors(colTxt, colBg);
 
     auto* vbox = new VBox();
-    vbox->alignMain = MainAxisAlign::MainStart;
     vbox->alignCross = CrossAxisAlign::Stretch;
+    label = NewDlgCaption(FavoritePromptTemp(pageLabel), fontText, colMuted);
+    vbox->AddChild(label);
 
-    {
-        auto* c = NewVirtText({
-            .s = FavoritePromptTemp(pageLabel),
-            .font = font,
-            .isRtl = isRtl,
-            .padding = DpiScaledInsets(0, 0, 4, 0),
-        });
-        label = c;
-        vbox->AddChild(c);
-    }
+    // the name, in the larger font
+    Edit::CreateArgs args;
+    args.parent = hwnd;
+    args.font = DlgUiFont(kToolDlgQueryFontPx);
+    args.withBorder = false;
+    args.selectAllOnFocus = true;
+    args.isRtl = isRtl;
+    args.text = name;
+    editName = new Edit();
+    editName->SetColors(colTxt, colBg);
+    editName->Create(args);
+    vbox->AddChild(new Padding(NewDlgUnderlined(editName),
+                               DpiScaledInsets(kFavFieldPadTop, kToolDlgPadDx, kFavFieldPadBottom, kToolDlgPadDx)));
 
-    {
-        Edit::CreateArgs args;
-        args.parent = hwnd;
-        args.font = GetFont();
-        args.withBorder = true;
-        args.selectAllOnFocus = true;
-        args.isRtl = isRtl;
-        args.text = name;
-        auto* c = new Edit();
-        c->Create(args);
-        editName = c;
-        vbox->AddChild(c);
-    }
+    btnCancel = NewDlgButton(hwnd, Tr("Cancel"), fontText, DlgButtonStyle::Outline, false);
+    btnCancel->onClick = MkMethod1<AddFavoriteWnd, VirtMouseEvent*, &AddFavoriteWnd::OnCancel>(this);
+    btnOk = NewDlgButton(hwnd, Tr("Add Favorite"), fontText, DlgButtonStyle::Filled, true);
+    btnOk->onClick = MkMethod1<AddFavoriteWnd, VirtMouseEvent*, &AddFavoriteWnd::OnOk>(this);
+    vbox->AddChild(NewDlgFooter(btnCancel, btnOk));
+    layout = vbox;
 
-    {
-        auto* hbox = new HBox();
-        hbox->alignMain = MainAxisAlign::MainEnd;
-        hbox->alignCross = CrossAxisAlign::CrossCenter;
-        hbox->gap = font->averageCharWidth;
-        auto pad = Insets{.top = 4, .right = 0, .bottom = 4, .left = 0};
-
-        btnCancel = NewThemedButton(hwnd, Tr("Cancel"), font, false);
-        btnCancel->onClick = MkMethod1<AddFavoriteWnd, VirtMouseEvent*, &AddFavoriteWnd::OnCancel>(this);
-        hbox->AddChild(new Padding(btnCancel, pad));
-        btnOk = NewThemedButton(hwnd, Tr("OK"), font, true);
-        btnOk->onClick = MkMethod1<AddFavoriteWnd, VirtMouseEvent*, &AddFavoriteWnd::OnOk>(this);
-        hbox->AddChild(new Padding(btnOk, pad));
-        vbox->AddChild(hbox);
-    }
-
-    auto* padding = new Padding(vbox, DpiScaledInsets(4, 8));
-    layout = padding;
-
-    int dx = DpiScale(360);
-    LayoutAndSizeToContent(layout, dx, 0, hwnd);
+    LayoutAndSizeToContent(layout, DpiScale(kAddFavoriteDlgDx), 0, hwnd);
     DoLayout(HwndClientRect(hwnd).Size());
     HwndCenterDialog(hwnd, win ? win->hwndFrame : nullptr);
     UpdateTheme();

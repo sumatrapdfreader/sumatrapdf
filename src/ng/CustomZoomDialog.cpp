@@ -2,11 +2,9 @@
    License: GPLv3 */
 
 // ng: orig's CustomZoomDialog.cpp is a WS_POPUPWINDOW with an Edit and a
-// VirtListBox. Here it is a gpui Dialog with the same rows: the
-// "&Magnification:" label, the editable field, the list of zoom levels under
-// it and Cancel / Zoom. Picking a row writes it into the field, typing into
-// the field moves the list, and Up / Down step the list - orig's editable
-// combo box behaviour.
+// VirtListBox. Here it is the same column of gpui elements: the
+// "&Magnification:" line, the list of zoom levels under it and Cancel / Zoom. Picking a row writes it into the field,
+// typing into the field moves the list, and Up / Down step the list - orig's editable combo box behaviour.
 
 #include "gui/GpuiBridge.h"
 
@@ -24,16 +22,19 @@
 #include "gui/AppShell.h"
 #include "gui/DialogWidgets.h"
 #include "SumatraDialogs.h"
+#include "shared/PdfToolsCommon.h"
 
 #include "SumatraLog.h"
 
-static constexpr float kZoomRowDy = 22;
+static constexpr float kZoomRowDy = 24;
 static constexpr float kZoomListMinDy = 120;
-static constexpr float kZoomListMaxDy = 300;
-// orig's window, at 96 dpi
-static constexpr float kZoomWinDx = 240;
-static constexpr float kZoomWinPadX = 8;
-static constexpr float kZoomWinPadY = 4;
+// every level of the default set, as orig shows them
+static constexpr float kZoomListMaxDy = 20 * kZoomRowDy;
+static constexpr float kZoomDlgDx = 280;
+// the rows' text lines up with the field's
+static constexpr float kZoomListInsetDx = 8;
+static constexpr float kZoomListRadius = 4;
+static constexpr int kZoomListSelShift = 28;
 
 struct CustomZoomDlg {
     MainWindow* win = nullptr;
@@ -101,17 +102,11 @@ static void SetEditFromSelection() {
     gp::InputSetValue(gCustomZoom.editZoom, ToGpui(ZoomLevelStrExact(gCustomZoom.zoomLevels[idx])));
 }
 
-// the tool window's rows are the shared dialog row; the in-frame card uses its own
-static float ZoomListRowDy() {
-    return gCustomZoomTw ? kDlgWinRowDy : kZoomRowDy;
-}
-
 // what orig's ListBox does when its selection changes
 static void ScrollSelIntoView() {
     int n = len(gCustomZoom.zoomLevels);
-    float rowDy = ZoomListRowDy();
-    float viewDy = DialogListViewDy(n, rowDy, kZoomListMinDy, kZoomListMaxDy);
-    gCustomZoom.scrollY = DialogScrollToRow(gCustomZoom.scrollY, gCustomZoom.sel, n, rowDy, viewDy);
+    float viewDy = DialogListViewDy(n, kZoomRowDy, kZoomListMinDy, kZoomListMaxDy, 0);
+    gCustomZoom.scrollY = DialogScrollToRow(gCustomZoom.scrollY, gCustomZoom.sel, n, kZoomRowDy, viewDy);
 }
 
 // orig's SelectLevelFromEdit: typing a level's name puts the list on it
@@ -277,7 +272,7 @@ void ShowCustomZoomDialog(MainWindow* win) {
     spec.build = CustomZoomDialogBuild;
     spec.close = CloseCustomZoomDialog;
     spec.onArrow = CustomZoomOnArrow;
-    spec.clientDx = kZoomWinDx;
+    spec.clientDx = kZoomDlgDx;
     gCustomZoomTw = DlgWindowOpen(spec, win);
     AppShellInvalidate(win);
 }
@@ -288,77 +283,7 @@ void CustomZoomView::OnScroll(CustomZoomView*, gp::Ctx* cx, const gp::ScrollEven
     AppShellInvalidate(gCustomZoom.win);
 }
 
-// orig's window: a 240 wide client area, 4 / 8 around; the label with 4 under
-// it, the edit, 4, every level as a row (nothing to scroll), then the buttons
-// with 4 above and below
-static gp::El* CustomZoomWinBuild(gp::Ctx* cx) {
-    const gp::Theme& th = gp::ThemeNow(cx->app);
-    float font = DlgWinFont(cx);
-    gp::El* col = gp::Div(cx->a)->FlexCol()->W(gp::kFill)->PadX(kZoomWinPadX)->PadY(kZoomWinPadY);
-    col->Child(gp::Div(cx->a)
-                   ->FlexRow()
-                   ->ItemsCenter()
-                   ->H(kDlgWinLineDy + kZoomWinPadY)
-                   ->PadB(kZoomWinPadY)
-                   ->Shrink0()
-                   ->Child(DlgAccelText(cx, DlgAccelInput(cx, Tr("&Magnification:"), gCustomZoom.editZoom))
-                               ->Font(font)
-                               ->Fg(th.foreground)));
-    col->Child(gp::Div(cx->a)
-                   ->FlexRow()
-                   ->ItemsCenter()
-                   ->W(gp::kFill)
-                   ->H(kDlgWinEditDy)
-                   ->Shrink0()
-                   ->Child(gpc::Input::New(cx, GStrL("customzoom-edit"), gCustomZoom.editZoom)
-                               ->WithSize(gp::UiSize::Small)
-                               ->W(gp::kFill)
-                               ->IntoEl()
-                               ->H(kDlgWinEditDy)));
-
-    // more levels than the screen has room for: the list scrolls instead of
-    // growing the dialog past the monitor (orig's tall-list check)
-    int n = len(gCustomZoom.zoomLevels);
-    float viewDy = DialogListViewDy(n, kDlgWinRowDy, kZoomListMinDy, kZoomListMaxDy);
-    gp::El* list = gp::Div(cx->a)
-                       ->Id(GStrL("customzoom-list"))
-                       ->FlexCol()
-                       ->W(gp::kFill)
-                       ->H(viewDy)
-                       ->PadT(kZoomWinPadY)
-                       ->Shrink0()
-                       ->ScrollY(gCustomZoom.scrollY)
-                       ->ScrollFromPath()
-                       ->OnScroll(gp::ListenTo(gCustomZoomView, &CustomZoomView::OnScroll));
-    for (int i = 0; i < n; i++) {
-        gp::El* row = gp::Div(cx->a)
-                          ->FlexRow()
-                          ->W(gp::kFill)
-                          ->H(kDlgWinRowDy)
-                          ->Shrink0()
-                          ->ItemsCenter()
-                          ->PadX(4)
-                          ->PathClick(GpuiDup(cx->a, fmt("customzoom-row-%d", i)))
-                          ->OnClick(gp::ListenTo(gCustomZoomView, &CustomZoomView::OnRowClick, (intptr_t)i));
-        if (i == gCustomZoom.sel) {
-            row->Bg(DlgWinListSelBg(false));
-        }
-        Str s = ZoomLevelStrExact(gCustomZoom.zoomLevels[i]);
-        row->Child(gp::TextEl(cx->a, GpuiDup(cx->a, s))->Font(font)->Fg(th.foreground));
-        list->Child(row);
-    }
-    col->Child(list);
-
-    gp::Listener onOk = gp::ListenTo(gCustomZoomView, &CustomZoomView::OnOk);
-    DlgSetDefault(cx, onOk);
-    gp::El* buttons = DlgWinButtonRow(cx, kZoomWinPadY);
-    buttons->Child(DlgWinButton(cx, GStrL("dlg-cancel"), Tr("Cancel"),
-                                gp::ListenTo(gCustomZoomView, &CustomZoomView::OnCancel), false));
-    buttons->Child(DlgWinButton(cx, GStrL("dlg-ok"), Tr("Zoom"), onOk, true));
-    col->Child(buttons);
-    return DlgWinContent(cx, col);
-}
-
+// orig's layout: the zoom, the levels on a rounded selection, Cancel / Zoom
 gp::El* CustomZoomDialogBuild(MainWindow* win, gp::Ctx* cx) {
     if (!gCustomZoom.visible || gCustomZoom.win != win) {
         return nullptr;
@@ -369,72 +294,61 @@ gp::El* CustomZoomDialogBuild(MainWindow* win, gp::Ctx* cx) {
     if (!gCustomZoomView.IsValid()) {
         gCustomZoomView = gp::EntityNewState<CustomZoomView>(cx->app);
     }
-    const gp::Theme& th = gp::ThemeNow(cx->app);
     gCustomZoom.editZoom->onChange = gp::ListenTo(gCustomZoomView, &CustomZoomView::OnInput);
-    if (DlgWindowIsHost(cx)) {
-        gp::El* content = CustomZoomWinBuild(cx);
-        if (gCustomZoom.wantFocus) {
-            gp::InputFocus(gCustomZoom.editZoom, cx->app, cx->win);
-            gp::InputSelectAll(gCustomZoom.editZoom, cx->app, cx->win);
-            gCustomZoom.wantFocus = cx->win->input != gCustomZoom.editZoom;
-        }
-        return content;
-    }
+    gp::Listener onOk = gp::ListenTo(gCustomZoomView, &CustomZoomView::OnOk);
+    gp::Listener onCancel = gp::ListenTo(gCustomZoomView, &CustomZoomView::OnCancel);
+    DlgSetDefault(cx, onOk);
+    Color colTxt = ThemeWindowTextColor();
+    Color colBg = ThemeWindowControlBackgroundColor();
 
-    gp::El* body = gp::Div(cx->a)->FlexCol()->Gap(6);
-    body->Child(
-        DlgAccelText(cx, DlgAccelInput(cx, Tr("&Magnification:"), gCustomZoom.editZoom))->Font(13)->Fg(th.foreground));
-    body->Child(gpc::Input::New(cx, GStrL("customzoom-edit"), gCustomZoom.editZoom)
-                    ->WithSize(gp::UiSize::Small)
-                    ->W(gp::kFill)
-                    ->IntoEl());
+    gp::El* col = gp::Div(cx->a)->FlexCol()->W(gp::kFill);
+    col->Child(DlgLine(cx, Tr("&Magnification:"), 0, StrL("customzoom-edit"), gCustomZoom.editZoom, DlgField::Plain));
+    col->Child(DlgHairline(cx));
 
+    // more levels than the screen has room for: the list scrolls instead of
+    // growing the dialog past the monitor (orig's tall-list check)
+    int n = len(gCustomZoom.zoomLevels);
+    float viewDy = DialogListViewDy(n, kZoomRowDy, kZoomListMinDy, kZoomListMaxDy, 0);
     gp::El* list = gp::Div(cx->a)
                        ->Id(GStrL("customzoom-list"))
                        ->FlexCol()
                        ->W(gp::kFill)
-                       ->MinH(kZoomListMinDy)
-                       ->MaxH(kZoomListMaxDy)
+                       ->H(viewDy)
+                       ->Shrink0()
                        ->ScrollY(gCustomZoom.scrollY)
                        ->ScrollFromPath()
-                       ->OnScroll(gp::ListenTo(gCustomZoomView, &CustomZoomView::OnScroll))
-                       ->Border(1, th.border);
-    for (int i = 0; i < len(gCustomZoom.zoomLevels); i++) {
+                       ->OnScroll(gp::ListenTo(gCustomZoomView, &CustomZoomView::OnScroll));
+    for (int i = 0; i < n; i++) {
         gp::El* row = gp::Div(cx->a)
                           ->FlexRow()
                           ->W(gp::kFill)
                           ->H(kZoomRowDy)
                           ->Shrink0()
                           ->ItemsCenter()
-                          ->PadX(6)
+                          ->PadX(kZoomListInsetDx)
+                          ->Radius(kZoomListRadius)
                           ->PathClick(GpuiDup(cx->a, fmt("customzoom-row-%d", i)))
                           ->OnClick(gp::ListenTo(gCustomZoomView, &CustomZoomView::OnRowClick, (intptr_t)i));
         if (i == gCustomZoom.sel) {
-            row->Bg(th.selection);
+            row->Bg(ToGpui(AccentColor(colBg, kZoomListSelShift)));
         }
         Str s = ZoomLevelStrExact(gCustomZoom.zoomLevels[i]);
-        row->Child(gp::TextEl(cx->a, GpuiDup(cx->a, s))->Font(13)->Fg(th.foreground));
+        row->Child(gp::TextEl(cx->a, GpuiDup(cx->a, s))->Font(kToolDlgTextFontPx)->Fg(ToGpui(colTxt)));
         list->Child(row);
     }
-    body->Child(list);
-
-    DlgSetDefault(cx, gp::ListenTo(gCustomZoomView, &CustomZoomView::OnOk));
-    gp::El* dlg = DlgIntoEl(cx, gpc::Dialog::New(cx)
-                                    ->Open(true)
-                                    ->Title(ToGpui(Tr("Zoom")))
-                                    ->Body(body)
-                                    ->W(300)
-                                    ->OkText(ToGpui(Tr("Zoom")))
-                                    ->CancelText(ToGpui(Tr("Cancel")))
-                                    ->ShowCancel(true)
-                                    ->OnOk(gp::ListenTo(gCustomZoomView, &CustomZoomView::OnOk))
-                                    ->OnCancel(gp::ListenTo(gCustomZoomView, &CustomZoomView::OnCancel))
-                                    ->OnClose(gp::ListenTo(gCustomZoomView, &CustomZoomView::OnCancel)));
+    col->Child(gp::Div(cx->a)
+                   ->W(gp::kFill)
+                   ->Shrink0()
+                   ->PadX(kToolDlgPadDx - kZoomListInsetDx)
+                   ->PadY(kToolDlgFilesPadDy)
+                   ->Child(list));
+    col->Child(DlgFooter(cx, Tr("Zoom"), onOk, onCancel));
+    gp::El* content = DlgToolContent(cx, col, CustomZoomTitle(), kZoomDlgDx, onCancel);
 
     if (gCustomZoom.wantFocus) {
         gp::InputFocus(gCustomZoom.editZoom, cx->app, cx->win);
         gp::InputSelectAll(gCustomZoom.editZoom, cx->app, cx->win);
         gCustomZoom.wantFocus = cx->win->input != gCustomZoom.editZoom;
     }
-    return dlg;
+    return content;
 }

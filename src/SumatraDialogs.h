@@ -121,3 +121,8 @@ VirtButton* NewDlgButton(HWND hwndForDpi, Str text, PlatformFont* font, DlgButto
 void SetDlgButtonEnabled(VirtButton* b, DlgButtonStyle style, bool enabled);
 // the dialogs' UI font at `px`
 PlatformFont* DlgUiFont(int px);
+VirtText* NewDlgLabel(Str s, PlatformFont* font, Color col, int dy, bool prefix = false);
+VirtText* NewDlgCaption(Str s, PlatformFont* font, Color col);
+ILayout* NewDlgUnderlined(ILayout* field);
+HBox* NewDlgRow();
+ILayout* NewDlgFooter(VirtButton* cancel, VirtButton* ok);

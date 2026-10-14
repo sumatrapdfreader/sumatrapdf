@@ -23,10 +23,15 @@
 #include "Translations.h"
 #include "DarkMode.h"
 #include "SumatraDialogs.h"
+#include "shared/PdfToolsCommon.h"
 #include "PagePosition.h"
 
-// Labels and buttons are VirtCtrl; the page field is a real HWND Edit.
-// Same WindowBase layout pattern as Change Theme / Add Favorite.
+//   Go to page:   12                   (of 300)
+//   ---------------------------------------------- hairline
+//                          [Cancel] [Go to page]
+// A chaptered document gets a Chapter line over the Page line.
+constexpr int kGoToDlgDx = 340;
+constexpr int kGoToEditChars = 6;
 struct GoToPageWnd : WindowBase {
     ~GoToPageWnd() override = default;
 
@@ -34,17 +39,23 @@ struct GoToPageWnd : WindowBase {
     int pageCount = 0;
     bool onlyNumeric = true;
     bool hasChapters = false;
-    VirtText* label = nullptr;
     Edit* editPage = nullptr;
     VirtText* labelOf = nullptr;
     // chapter row; only built when hasChapters was true at Create() time
-    VirtText* chapterLabel = nullptr;
     Edit* editChapter = nullptr;
     VirtText* chapterLabelOf = nullptr;
     VirtButton* btnCancel = nullptr;
     VirtButton* btnGo = nullptr;
+    PlatformFont* fontText = nullptr;
+    PlatformFont* fontQuery = nullptr;
+    PlatformFont* fontMeta = nullptr;
+    Color colTxt = kColorUnset;
+    Color colBg = kColorUnset;
+    Color colMuted = kColorUnset;
+    Vec<VirtText*> labels;
 
     bool Create(MainWindow* win);
+    Edit* AddLine(VBox* vbox, Str label, Str text, bool numbersOnly, VirtText** ofOut, int ofCount);
     void SetTarget(MainWindow* win);
 
     void OnCancel(VirtMouseEvent* ev = nullptr);
@@ -133,6 +144,34 @@ static void OnDestroy(WindowBase::DestroyEvent* /*ev*/) {
     }
 }
 
+// a line: the label muted, the field in the larger font, "(of N)" at the end
+Edit* GoToPageWnd::AddLine(VBox* vbox, Str label, Str text, bool numbersOnly, VirtText** ofOut, int ofCount) {
+    HBox* row = NewDlgRow();
+    VirtText* t = NewDlgLabel(label, fontText, colMuted, kToolDlgLineDy, true);
+    VecAppend(labels, t);
+    row->AddChild(t);
+
+    Edit::CreateArgs args;
+    args.parent = hwnd;
+    args.font = fontQuery;
+    args.withBorder = false;
+    args.numbersOnly = numbersOnly;
+    args.selectAllOnFocus = true;
+    args.isRtl = IsUIRtl();
+    args.text = text;
+    args.idealWidthChars = kGoToEditChars;
+    auto* e = new Edit();
+    e->SetColors(colTxt, colBg);
+    e->Create(args);
+    row->AddChild(e, 1);
+
+    *ofOut =
+        NewVirtText({.s = fmt(Tr("(of %d)").s, ofCount), .font = fontMeta, .textColor = colMuted, .isRtl = IsUIRtl()});
+    row->AddChild(*ofOut);
+    vbox->AddChild(new Padding(row, DpiScaledInsets(0, kToolDlgPadDx)));
+    return e;
+}
+
 bool GoToPageWnd::Create(MainWindow* mainWin) {
     win = mainWin;
     Str pageLabel;
@@ -154,126 +193,56 @@ bool GoToPageWnd::Create(MainWindow* mainWin) {
         }
     }
 
+    colTxt = ThemeWindowTextColor();
+    colBg = ThemeWindowControlBackgroundColor();
+    colMuted = ThemeWindowTextDisabledColor();
+    fontText = DlgUiFont(kToolDlgTextFontPx);
+    fontQuery = DlgUiFont(kToolDlgQueryFontPx);
+    fontMeta = DlgUiFont(kToolDlgMetaFontPx);
+    SetFont(fontText);
     {
         CreateCustomArgs args;
         args.owner = win ? win->hwndFrame : nullptr;
         args.title = Tr("Go to page");
         args.visible = false;
         args.style = WS_POPUPWINDOW | WS_CAPTION;
-        args.font = GetFont();
+        args.font = fontText;
+        args.isRtl = IsUIRtl();
+        args.bgColor = colBg;
         args.icon = LoadIconW(GetModuleHandleW(nullptr), MAKEINTRESOURCEW(GetAppIconID()));
         CreateCustom(args);
     }
     if (!hwnd) {
         return false;
     }
-    bool isRtl = IsUIRtl();
+    SetColors(colTxt, colBg);
 
     auto* vbox = new VBox();
-    vbox->alignMain = MainAxisAlign::MainStart;
     vbox->alignCross = CrossAxisAlign::Stretch;
-
     if (hasChapters) {
-        auto* hbox = new HBox();
-        hbox->alignMain = MainAxisAlign::MainStart;
-        hbox->alignCross = CrossAxisAlign::CrossCenter;
+        editChapter = AddLine(vbox, Tr("&Chapter:"), fmt("%d", chapterCur), true, &chapterLabelOf, chapterCount);
+        vbox->AddChild(new VirtLine());
+    }
+    Str label = hasChapters ? Tr("&Page:") : Tr("&Go to page:");
+    editPage = AddLine(vbox, label, pageLabel, onlyNumeric, &labelOf, pageCount);
 
-        auto* lab = NewVirtText({
-            .s = Tr("&Chapter:"),
-            .font = font,
-            .isRtl = isRtl,
-            .prefix = true,
-        });
-        chapterLabel = lab;
-        hbox->AddChild(lab);
-
-        Edit::CreateArgs args;
-        args.parent = hwnd;
-        args.font = GetFont();
-        args.withBorder = true;
-        args.alignRight = true;
-        args.numbersOnly = true;
-        args.selectAllOnFocus = true;
-        args.isRtl = isRtl;
-        args.text = fmt("%d", chapterCur);
-        args.idealWidthChars = 6;
-        auto* ce = new Edit();
-        ce->SetInsetsPt(0, 8, 0, 8);
-        ce->Create(args);
-        editChapter = ce;
-        hbox->AddChild(ce);
-
-        auto* of = NewVirtText({
-            .s = fmt(Tr("(of %d)").s, chapterCount),
-            .font = font,
-            .isRtl = isRtl,
-        });
-        chapterLabelOf = of;
-        hbox->AddChild(of);
-        vbox->AddChild(hbox);
+    // the fields start in one column
+    int labelDx = 0;
+    for (VirtText* t : labels) {
+        labelDx = std::max(labelDx, t->GetIdealSize().dx);
+    }
+    for (VirtText* t : labels) {
+        t->padding.right += labelDx - t->GetIdealSize().dx;
     }
 
-    {
-        auto* hbox = new HBox();
-        hbox->alignMain = MainAxisAlign::MainStart;
-        hbox->alignCross = CrossAxisAlign::CrossCenter;
+    btnCancel = NewDlgButton(hwnd, Tr("Cancel"), fontText, DlgButtonStyle::Outline, false);
+    btnCancel->onClick = MkMethod1<GoToPageWnd, VirtMouseEvent*, &GoToPageWnd::OnCancel>(this);
+    btnGo = NewDlgButton(hwnd, Tr("Go to page"), fontText, DlgButtonStyle::Filled, true);
+    btnGo->onClick = MkMethod1<GoToPageWnd, VirtMouseEvent*, &GoToPageWnd::OnOk>(this);
+    vbox->AddChild(NewDlgFooter(btnCancel, btnGo));
+    layout = vbox;
 
-        auto* lab = NewVirtText({
-            .s = hasChapters ? Tr("&Page:") : Tr("&Go to page:"),
-            .font = font,
-            .isRtl = isRtl,
-            .prefix = true,
-        });
-        label = lab;
-        hbox->AddChild(lab);
-
-        Edit::CreateArgs args;
-        args.parent = hwnd;
-        args.font = GetFont();
-        args.withBorder = true;
-        args.alignRight = true;
-        args.numbersOnly = onlyNumeric;
-        args.selectAllOnFocus = true;
-        args.isRtl = isRtl;
-        args.text = pageLabel;
-        args.idealWidthChars = 6;
-        auto* e = new Edit();
-        e->SetInsetsPt(0, 8, 0, 8);
-        e->Create(args);
-        editPage = e;
-        hbox->AddChild(e);
-
-        auto* of = NewVirtText({
-            .s = fmt(Tr("(of %d)").s, pageCount),
-            .font = font,
-            .isRtl = isRtl,
-        });
-        labelOf = of;
-        hbox->AddChild(of);
-        vbox->AddChild(hbox);
-    }
-
-    {
-        auto* hbox = new HBox();
-        hbox->alignMain = MainAxisAlign::MainEnd;
-        hbox->alignCross = CrossAxisAlign::CrossCenter;
-        hbox->gap = font->averageCharWidth;
-        auto pad = Insets{4, 0, 4, 0};
-
-        btnCancel = NewThemedButton(hwnd, Tr("Cancel"), font, false);
-        btnCancel->onClick = MkMethod1<GoToPageWnd, VirtMouseEvent*, &GoToPageWnd::OnCancel>(this);
-        hbox->AddChild(new Padding(btnCancel, pad));
-        btnGo = NewThemedButton(hwnd, Tr("Go to page"), font, true);
-        btnGo->onClick = MkMethod1<GoToPageWnd, VirtMouseEvent*, &GoToPageWnd::OnOk>(this);
-        hbox->AddChild(new Padding(btnGo, pad));
-        vbox->AddChild(hbox);
-    }
-
-    auto* padding = new Padding(vbox, DpiScaledInsets(4, 8));
-    layout = padding;
-
-    int dx = DpiScale(300);
-    LayoutAndSizeToContent(layout, dx, 0, hwnd);
+    LayoutAndSizeToContent(layout, DpiScale(kGoToDlgDx), 0, hwnd);
     DoLayout(HwndClientRect(hwnd).Size());
     HwndCenterDialog(hwnd, win ? win->hwndFrame : nullptr);
     UpdateTheme();

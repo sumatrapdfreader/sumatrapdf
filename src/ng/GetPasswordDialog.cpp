@@ -5,9 +5,9 @@
 // message loop, because PasswordUI::GetPassword is called from the engine load
 // and has to wait for the typed password. A gpui frame cannot block, so the
 // dialog is asynchronous: it hands the password to `onDone` and the caller
-// (LoadDocument) re-runs the load with it. Same rows as orig: the file name,
-// the password field, "Show password", "Remember the password for this
-// document" and Cancel / OK.
+// (LoadDocument) re-runs the load with it. Same column as orig: the file name,
+// the password, "Show password", "Remember the password for this document"
+// and Cancel / OK.
 
 #include "gui/GpuiBridge.h"
 
@@ -25,6 +25,7 @@
 #include "gui/AppShell.h"
 #include "gui/DialogWidgets.h"
 #include "SumatraDialogs.h"
+#include "shared/PdfToolsCommon.h"
 
 #include "SumatraLog.h"
 
@@ -43,8 +44,7 @@ struct GetPasswordDlg {
 
 static GetPasswordDlg gGetPassword;
 
-// the client width of orig's window (see GetPasswordWinBuild)
-constexpr float kPwdWinDx = 360;
+constexpr float kPwdDlgDx = 400;
 // orig keeps the "show password" choice for the process, not per document
 static bool gShowPassword = false;
 
@@ -135,7 +135,7 @@ void ShowGetPasswordDialog(MainWindow* win, Str fileName, bool canRemember, Func
     spec.title = GetPasswordDlgTitle;
     spec.build = GetPasswordDialogBuild;
     spec.close = CloseGetPasswordDialog;
-    spec.clientDx = kPwdWinDx;
+    spec.clientDx = kPwdDlgDx;
     gGetPasswordTw = DlgWindowOpen(spec, win);
     AppShellInvalidate(win);
 }
@@ -170,71 +170,9 @@ void GetPasswordView::OnRemember(GetPasswordView*, gp::Ctx* cx, const gp::ClickE
     AppShellInvalidate(gGetPassword.win);
 }
 
-// orig's window at 96 dpi: a 360 wide client area, 4 / 8 around; the prompt
-// with 4 under it; the label and the edit, which ends 8 before the edge; the
-// two 21 high checkboxes 8 and 4 under what is above them; the buttons with 4
-// above and below
-constexpr float kPwdWinPadX = 8;
-constexpr float kPwdWinPadY = 4;
-constexpr float kPwdWinEditInset = 8;
-constexpr float kPwdWinCheckDy = 21;
-constexpr float kPwdWinShowGap = 8;
-// between a checkbox and its label
-constexpr float kPwdWinCheckGap = 2;
+constexpr float kPwdOptionsGap = 4;
 
-static gp::El* GetPasswordWinBuild(gp::Ctx* cx, Str prompt) {
-    const gp::Theme& th = gp::ThemeNow(cx->app);
-    float font = DlgWinFont(cx);
-    gp::El* col = gp::Div(cx->a)->FlexCol()->W(gp::kFill)->PadX(kPwdWinPadX)->PadY(kPwdWinPadY);
-    col->Child(DlgWinLabel(cx, GpuiDup(cx->a, prompt), font, kPwdWinPadY));
-
-    gp::El* row =
-        gp::Div(cx->a)->FlexRow()->ItemsCenter()->W(gp::kFill)->H(kDlgWinEditDy)->PadR(kPwdWinEditInset)->Shrink0();
-    row->Child(gp::Div(cx->a)
-                   ->W(DlgWinTextDx(cx, Tr("&Password:")))
-                   ->Shrink0()
-                   ->Child(DlgAccelText(cx, DlgAccelInput(cx, Tr("&Password:"), gGetPassword.editPwd))
-                               ->Font(font)
-                               ->Fg(th.foreground)));
-    row->Child(gp::Div(cx->a)->Flex1()->MinW(0)->Child(gpc::Input::New(cx, GStrL("password-edit"), gGetPassword.editPwd)
-                                                           ->WithSize(gp::UiSize::Small)
-                                                           ->Masked(!gShowPassword)
-                                                           ->W(gp::kFill)
-                                                           ->IntoEl()
-                                                           ->H(kDlgWinEditDy)));
-    col->Child(row);
-
-    auto check = [&](gp::El* box, float padT) {
-        return gp::Div(cx->a)
-            ->FlexRow()
-            ->ItemsCenter()
-            ->W(gp::kFill)
-            ->H(kPwdWinCheckDy + padT)
-            ->PadT(padT)
-            ->Shrink0()
-            ->Child(box->Gap(kPwdWinCheckGap));
-    };
-    col->Child(check(DlgAccelEl(cx, gpc::Checkbox::New(cx, GStrL("password-show"))->Checked(gShowPassword),
-                                Tr("&Show password"), gp::ListenTo(gGetPasswordView, &GetPasswordView::OnShowPassword)),
-                     kPwdWinShowGap));
-    if (gGetPassword.canRemember) {
-        col->Child(
-            check(DlgAccelEl(cx, gpc::Checkbox::New(cx, GStrL("password-remember"))->Checked(gGetPassword.remember),
-                             Tr("&Remember the password for this document"),
-                             gp::ListenTo(gGetPasswordView, &GetPasswordView::OnRemember)),
-                  kPwdWinPadY));
-    }
-
-    gp::Listener onOk = gp::ListenTo(gGetPasswordView, &GetPasswordView::OnOk);
-    DlgSetDefault(cx, onOk);
-    gp::El* buttons = DlgWinButtonRow(cx, kPwdWinPadY);
-    buttons->Child(DlgWinButton(cx, GStrL("dlg-cancel"), Tr("Cancel"),
-                                gp::ListenTo(gGetPasswordView, &GetPasswordView::OnCancel), false));
-    buttons->Child(DlgWinButton(cx, GStrL("dlg-ok"), Tr("OK"), onOk, true));
-    col->Child(buttons);
-    return DlgWinContent(cx, col);
-}
-
+// orig's layout: the prompt, the password, the options, Cancel / OK
 gp::El* GetPasswordDialogBuild(MainWindow* win, gp::Ctx* cx) {
     if (!gGetPassword.visible || gGetPassword.win != win) {
         return nullptr;
@@ -246,59 +184,50 @@ gp::El* GetPasswordDialogBuild(MainWindow* win, gp::Ctx* cx) {
         gGetPasswordView = gp::EntityNewState<GetPasswordView>(cx->app);
     }
     gGetPassword.notDrawn = false;
-    const gp::Theme& th = gp::ThemeNow(cx->app);
     gGetPassword.editPwd->onChange = gp::ListenTo(gGetPasswordView, &GetPasswordView::OnInput);
+    gp::Listener onOk = gp::ListenTo(gGetPasswordView, &GetPasswordView::OnOk);
+    gp::Listener onCancel = gp::ListenTo(gGetPasswordView, &GetPasswordView::OnCancel);
+    DlgSetDefault(cx, onOk);
 
-    TempStr prompt = fmt(Tr("Enter password for %s").s, gGetPassword.fileName);
-    if (DlgWindowIsHost(cx)) {
-        gp::El* content = GetPasswordWinBuild(cx, prompt);
-        if (gGetPassword.wantFocus) {
-            gp::InputFocus(gGetPassword.editPwd, cx->app, cx->win);
-            gp::InputSelectAll(gGetPassword.editPwd, cx->app, cx->win);
-            gGetPassword.wantFocus = cx->win->input != gGetPassword.editPwd;
-        }
-        return content;
-    }
-    gp::El* body = gp::Div(cx->a)->FlexCol()->Gap(8);
-    body->Child(gp::TextEl(cx->a, GpuiDup(cx->a, prompt))->Font(13)->Fg(th.foreground));
+    gp::El* col = gp::Div(cx->a)->FlexCol()->W(gp::kFill);
+    col->Child(DlgCaption(cx, fmt(Tr("Enter password for %s").s, gGetPassword.fileName)));
+    DlgField kind = gShowPassword ? DlgField::Underlined : DlgField::Password;
+    col->Child(DlgLine(cx, Tr("&Password:"), 0, StrL("password-edit"), gGetPassword.editPwd, kind));
+    col->Child(DlgHairline(cx));
 
-    gp::El* row = gp::Div(cx->a)->FlexRow()->ItemsCenter()->Gap(8);
-    row->Child(DlgAccelText(cx, DlgAccelInput(cx, Tr("&Password:"), gGetPassword.editPwd))
-                   ->Font(13)
-                   ->Fg(th.foreground)
-                   ->Shrink0());
-    row->Child(gpc::Input::New(cx, GStrL("password-edit"), gGetPassword.editPwd)
-                   ->WithSize(gp::UiSize::Small)
-                   ->Masked(!gShowPassword)
-                   ->W(gp::kFill)
-                   ->IntoEl());
-    body->Child(row);
-
-    body->Child(DlgAccelEl(cx, gpc::Checkbox::New(cx, GStrL("password-show"))->Checked(gShowPassword),
-                           Tr("&Show password"), gp::ListenTo(gGetPasswordView, &GetPasswordView::OnShowPassword)));
+    // the options, a row each
+    gp::El* options = gp::Div(cx->a)
+                          ->FlexCol()
+                          ->W(gp::kFill)
+                          ->Shrink0()
+                          ->PadX(kToolDlgPadDx)
+                          ->PadY(kToolDlgFilesPadDy)
+                          ->Gap(kPwdOptionsGap);
+    auto option = [&](gp::El* box) {
+        return gp::Div(cx->a)
+            ->FlexRow()
+            ->ItemsCenter()
+            ->H(kToolDlgRowDy)
+            ->Shrink0()
+            ->Child(box->Font(kToolDlgTextFontPx));
+    };
+    options->Child(
+        option(DlgAccelEl(cx, gpc::Checkbox::New(cx, GStrL("password-show"))->Checked(gShowPassword),
+                          Tr("&Show password"), gp::ListenTo(gGetPasswordView, &GetPasswordView::OnShowPassword))));
     if (gGetPassword.canRemember) {
-        body->Child(DlgAccelEl(cx, gpc::Checkbox::New(cx, GStrL("password-remember"))->Checked(gGetPassword.remember),
-                               Tr("&Remember the password for this document"),
-                               gp::ListenTo(gGetPasswordView, &GetPasswordView::OnRemember)));
+        options->Child(
+            option(DlgAccelEl(cx, gpc::Checkbox::New(cx, GStrL("password-remember"))->Checked(gGetPassword.remember),
+                              Tr("&Remember the password for this document"),
+                              gp::ListenTo(gGetPasswordView, &GetPasswordView::OnRemember))));
     }
-
-    DlgSetDefault(cx, gp::ListenTo(gGetPasswordView, &GetPasswordView::OnOk));
-    gp::El* dlg = DlgIntoEl(cx, gpc::Dialog::New(cx)
-                                    ->Open(true)
-                                    ->Title(ToGpui(Tr("Enter password")))
-                                    ->Body(body)
-                                    ->W(400)
-                                    ->OkText(ToGpui(Tr("OK")))
-                                    ->CancelText(ToGpui(Tr("Cancel")))
-                                    ->ShowCancel(true)
-                                    ->OnOk(gp::ListenTo(gGetPasswordView, &GetPasswordView::OnOk))
-                                    ->OnCancel(gp::ListenTo(gGetPasswordView, &GetPasswordView::OnCancel))
-                                    ->OnClose(gp::ListenTo(gGetPasswordView, &GetPasswordView::OnCancel)));
+    col->Child(options);
+    col->Child(DlgFooter(cx, Tr("OK"), onOk, onCancel));
+    gp::El* content = DlgToolContent(cx, col, GetPasswordDlgTitle(), kPwdDlgDx, onCancel);
 
     if (gGetPassword.wantFocus) {
         gp::InputFocus(gGetPassword.editPwd, cx->app, cx->win);
         gp::InputSelectAll(gGetPassword.editPwd, cx->app, cx->win);
         gGetPassword.wantFocus = cx->win->input != gGetPassword.editPwd;
     }
-    return dlg;
+    return content;
 }

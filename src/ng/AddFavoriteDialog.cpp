@@ -1,9 +1,9 @@
 /* Copyright 2022 the SumatraPDF project authors (see AUTHORS file).
    License: GPLv3 */
 
-// ng: orig's AddFavoriteDialog.cpp is a WS_POPUPWINDOW with a VirtText prompt,
-// an Edit for the name and Cancel / OK buttons. Here it is a gpui Dialog with
-// the same prompt text and the same fields.
+// ng: orig's AddFavoriteDialog.cpp is a WS_POPUPWINDOW with a prompt, the name
+// and Cancel / Add Favorite. Here it is the same column of gpui elements, in a
+// window of its own where the platform has one, else in a card over the frame.
 
 #include "gui/GpuiBridge.h"
 
@@ -38,11 +38,7 @@ struct AddFavoriteDlg {
 
 static AddFavoriteDlg gAddFav;
 
-// orig's window at 96 dpi: a 360 wide client area, 4 / 8 around; the prompt
-// with 4 under it, the edit, the buttons with 4 above and below
-constexpr float kAddFavWinDx = 360;
-constexpr float kAddFavWinPadX = 8;
-constexpr float kAddFavWinPadY = 4;
+constexpr float kAddFavDlgDx = 400;
 
 struct AddFavoriteView {
     static void OnOk(AddFavoriteView* self, gp::Ctx* cx, const gp::ClickEvent*);
@@ -143,28 +139,13 @@ void ShowAddFavoriteDialog(MainWindow* win, Str filePath, int pageNo, Str pageLa
     spec.modal = true;
     spec.build = AddFavoriteDialogBuild;
     spec.close = CloseAddFavoriteDialog;
-    spec.clientDx = kAddFavWinDx;
+    spec.clientDx = kAddFavDlgDx;
     gAddFavoriteTw = DlgWindowOpen(spec, win);
     gAddFav.wantFocus = true;
     AppShellInvalidate(win);
 }
 
-static gp::El* AddFavoriteWinBuild(gp::Ctx* cx) {
-    float font = DlgWinFont(cx);
-    gp::El* col = gp::Div(cx->a)->FlexCol()->W(gp::kFill)->PadX(kAddFavWinPadX)->PadY(kAddFavWinPadY);
-    col->Child(DlgWinLabel(cx, GpuiDup(cx->a, FavoritePromptTemp(gAddFav.pageLabel)), font, kAddFavWinPadY));
-    col->Child(DlgWinEdit(cx, GStrL("addfav-name"), gAddFav.editName));
-
-    gp::Listener onOk = gp::ListenTo(gAddFavView, &AddFavoriteView::OnOk);
-    DlgSetDefault(cx, onOk);
-    gp::El* buttons = DlgWinButtonRow(cx, kAddFavWinPadY);
-    buttons->Child(DlgWinButton(cx, GStrL("dlg-cancel"), Tr("Cancel"),
-                                gp::ListenTo(gAddFavView, &AddFavoriteView::OnCancel), false));
-    buttons->Child(DlgWinButton(cx, GStrL("dlg-ok"), Tr("OK"), onOk, true));
-    col->Child(buttons);
-    return DlgWinContent(cx, col);
-}
-
+// orig's layout: the prompt, the name over a hairline, Cancel / Add Favorite
 gp::El* AddFavoriteDialogBuild(MainWindow* win, gp::Ctx* cx) {
     if (!gAddFav.visible || gAddFav.win != win) {
         return nullptr;
@@ -175,43 +156,21 @@ gp::El* AddFavoriteDialogBuild(MainWindow* win, gp::Ctx* cx) {
     if (!gAddFavView.IsValid()) {
         gAddFavView = gp::EntityNewState<AddFavoriteView>(cx->app);
     }
-    const gp::Theme& th = gp::ThemeNow(cx->app);
     gAddFav.editName->onChange = gp::ListenTo(gAddFavView, &AddFavoriteView::OnInput);
 
-    if (DlgWindowIsHost(cx)) {
-        gp::El* content = AddFavoriteWinBuild(cx);
-        if (gAddFav.wantFocus) {
-            gp::InputFocus(gAddFav.editName, cx->app, cx->win);
-            gp::InputSelectAll(gAddFav.editName, cx->app, cx->win);
-            gAddFav.wantFocus = cx->win->input != gAddFav.editName;
-        }
-        return content;
-    }
-
-    gp::El* body = gp::Div(cx->a)->FlexCol()->Gap(8);
-    body->Child(gp::TextEl(cx->a, GpuiDup(cx->a, FavoritePromptTemp(gAddFav.pageLabel)))->Font(13)->Fg(th.foreground));
-    body->Child(gpc::Input::New(cx, GStrL("addfav-name"), gAddFav.editName)
-                    ->WithSize(gp::UiSize::Small)
-                    ->W(gp::kFill)
-                    ->IntoEl());
-
-    DlgSetDefault(cx, gp::ListenTo(gAddFavView, &AddFavoriteView::OnOk));
-    gp::El* dlg = DlgIntoEl(cx, gpc::Dialog::New(cx)
-                                    ->Open(true)
-                                    ->Title(ToGpui(Tr("Add Favorite")))
-                                    ->Body(body)
-                                    ->W(360)
-                                    ->OkText(ToGpui(Tr("OK")))
-                                    ->CancelText(ToGpui(Tr("Cancel")))
-                                    ->ShowCancel(true)
-                                    ->OnOk(gp::ListenTo(gAddFavView, &AddFavoriteView::OnOk))
-                                    ->OnCancel(gp::ListenTo(gAddFavView, &AddFavoriteView::OnCancel))
-                                    ->OnClose(gp::ListenTo(gAddFavView, &AddFavoriteView::OnCancel)));
+    gp::Listener onOk = gp::ListenTo(gAddFavView, &AddFavoriteView::OnOk);
+    gp::Listener onCancel = gp::ListenTo(gAddFavView, &AddFavoriteView::OnCancel);
+    DlgSetDefault(cx, onOk);
+    gp::El* col = gp::Div(cx->a)->FlexCol()->W(gp::kFill);
+    col->Child(DlgCaption(cx, FavoritePromptTemp(gAddFav.pageLabel)));
+    col->Child(DlgLine(cx, {}, 0, StrL("addfav-name"), gAddFav.editName, DlgField::Underlined));
+    col->Child(DlgFooter(cx, Tr("Add Favorite"), onOk, onCancel));
+    gp::El* content = DlgToolContent(cx, col, Tr("Add Favorite"), kAddFavDlgDx, onCancel);
 
     if (gAddFav.wantFocus) {
-        gAddFav.wantFocus = false;
         gp::InputFocus(gAddFav.editName, cx->app, cx->win);
         gp::InputSelectAll(gAddFav.editName, cx->app, cx->win);
+        gAddFav.wantFocus = cx->win->input != gAddFav.editName;
     }
-    return dlg;
+    return content;
 }

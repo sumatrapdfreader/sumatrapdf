@@ -90,10 +90,11 @@ function findDialog(pid: number, frame: number): number {
     if (hwnd === frame || getWindowPid(hwnd) !== pid || !isWindowVisible(hwnd)) {
       return true;
     }
+    // ng: the dialog is a gpui tool window, not the default class, and ng has
+    // an empty, zero-sized window of the default class
     const cls = getClassName(hwnd);
-    // ng: the dialog is a gpui tool window titled Zoom, not the default class
-    const ngZoom = cls === "GpuiSystemMonitor" && getWindowText(hwnd) === "Zoom";
-    if (cls === DIALOG_CLASS || ngZoom) {
+    const isZoom = getWindowText(hwnd) === "Zoom";
+    if (isZoom && (cls === DIALOG_CLASS || cls === "GpuiSystemMonitor")) {
       res = hwnd;
       return false;
     }

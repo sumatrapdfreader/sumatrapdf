@@ -10,6 +10,7 @@
 #include "gui/win/WinGui.h"
 #include "gui/PlatformFont.h"
 #include "gui/Gfx.h"
+#include "gui/GuiColors.h"
 #include "gui/VirtCtrl.h"
 
 #include "Settings.h"
@@ -22,6 +23,7 @@
 #include "Translations.h"
 #include "DarkMode.h"
 #include "SumatraDialogs.h"
+#include "shared/PdfToolsCommon.h"
 
 // The zoom to use is whatever is in the edit field: a level's name ("Fit Page")
 // or a number. The list under it is the levels to choose from, and picking one
@@ -35,12 +37,14 @@ struct CustomZoomWnd : WindowBase {
     bool forChm = false;
     float startZoom = 0;
     Vec<float> zoomLevels;
-    VirtText* label = nullptr;
     Edit* editZoom = nullptr;
     VirtListBox* listBox = nullptr;
     ListBoxModelStrings* model = nullptr; // owned by listBox
     VirtButton* btnCancel = nullptr;
     VirtButton* btnZoom = nullptr;
+    PlatformFont* fontText = nullptr;
+    Color colTxt = kColorUnset;
+    Color colBg = kColorUnset;
 
     bool Create(MainWindow* win);
     void SetTarget(MainWindow* win);
@@ -52,6 +56,7 @@ struct CustomZoomWnd : WindowBase {
     bool MoveSelection(int vkey);
     void OnListSelectionChanged();
     void OnListDoubleClick();
+    void DrawLevel(VirtListBox::DrawItemEvent* ev);
     void OnKeyDown(KeyEvent* ev);
     void OnCancel(VirtMouseEvent* ev = nullptr);
     void OnOk(VirtMouseEvent* ev = nullptr);
@@ -66,6 +71,13 @@ static void ClearCustomZoomWnd() {
 // the fewest rows the list is allowed to shrink to when the screen is too
 // short for all of them
 constexpr int kZoomListMinLines = 6;
+constexpr int kZoomDlgDx = 280;
+constexpr int kZoomListRowDy = 24;
+// the rows' text lines up with the field's
+constexpr int kZoomListInsetDx = 8;
+constexpr int kZoomListPadDx = kToolDlgPadDx - kZoomListInsetDx;
+constexpr int kZoomListRadius = 4;
+constexpr int kZoomListSelShift = 28;
 
 void CustomZoomWnd::FillZoom() {
     if (!listBox || !model) {
@@ -141,6 +153,21 @@ void CustomZoomWnd::SelectLevelFromEdit() {
 
 void CustomZoomWnd::OnListSelectionChanged() {
     SetEditFromSelection();
+}
+
+// a level: its name, on a rounded selection
+void CustomZoomWnd::DrawLevel(VirtListBox::DrawItemEvent* ev) {
+    Gfx* gfx = ev->gfx;
+    Rect rc = ev->itemRect;
+    gfx->FillRect(rc, colBg);
+    if (ev->selected) {
+        gfx->FillRoundedRect(rc, DpiScale(kZoomListRadius), AccentColor(colBg, kZoomListSelShift));
+    }
+    int inset = DpiScale(kZoomListInsetDx);
+    Rect rcText{rc.x + inset, rc.y, rc.dx - (2 * inset), rc.dy};
+    u32 fmt = gfxTextEllipsis | gfxTextVCenter;
+    fmt |= IsUIRtl() ? (gfxTextRight | gfxTextRtl) : gfxTextLeft;
+    gfx->DrawText(ZoomLevelStrExact(zoomLevels[ev->itemIndex]), rcText, fmt, fontText, colTxt);
 }
 
 void CustomZoomWnd::OnListDoubleClick() {
@@ -230,83 +257,77 @@ bool CustomZoomWnd::Create(MainWindow* mainWin) {
         startZoom = win->ctrl->GetZoomVirtual();
     }
 
+    colTxt = ThemeWindowTextColor();
+    colBg = ThemeWindowControlBackgroundColor();
+    Color colMuted = ThemeWindowTextDisabledColor();
+    fontText = DlgUiFont(kToolDlgTextFontPx);
+    SetFont(fontText);
+    bool isRtl = IsUIRtl();
     {
         CreateCustomArgs args;
         args.owner = win ? win->hwndFrame : nullptr;
         args.title = Tr("Zoom");
         args.visible = false;
         args.style = WS_POPUPWINDOW | WS_CAPTION;
-        args.font = GetFont();
+        args.font = fontText;
+        args.isRtl = isRtl;
+        args.bgColor = colBg;
         args.icon = LoadIconW(GetModuleHandleW(nullptr), MAKEINTRESOURCEW(GetAppIconID()));
         CreateCustom(args);
     }
     if (!hwnd) {
         return false;
     }
-    bool isRtl = IsUIRtl();
+    SetColors(colTxt, colBg);
 
     auto* vbox = new VBox();
-    vbox->alignMain = MainAxisAlign::MainStart;
     vbox->alignCross = CrossAxisAlign::Stretch;
 
+    // the zoom, in the larger font
     {
-        auto* c = NewVirtText({
-            .s = Tr("&Magnification:"),
-            .font = font,
-            .isRtl = isRtl,
-            .prefix = true,
-            .padding = DpiScaledInsets(0, 0, 4, 0),
-        });
-        label = c;
-        vbox->AddChild(c);
-    }
-
-    {
+        HBox* row = NewDlgRow();
+        row->AddChild(NewDlgLabel(Tr("&Magnification:"), fontText, colMuted, kToolDlgLineDy, true));
         Edit::CreateArgs args;
         args.parent = hwnd;
-        args.font = GetFont();
-        args.withBorder = true;
+        args.font = DlgUiFont(kToolDlgQueryFontPx);
+        args.withBorder = false;
         args.selectAllOnFocus = true;
         args.isRtl = isRtl;
-        auto* c = new Edit();
-        c->Create(args);
-        c->onTextChanged = MkMethod0<CustomZoomWnd, &CustomZoomWnd::SelectLevelFromEdit>(this);
-        editZoom = c;
-        vbox->AddChild(c);
+        editZoom = new Edit();
+        editZoom->SetColors(colTxt, colBg);
+        editZoom->Create(args);
+        editZoom->onTextChanged = MkMethod0<CustomZoomWnd, &CustomZoomWnd::SelectLevelFromEdit>(this);
+        row->AddChild(editZoom, 1);
+        vbox->AddChild(new Padding(row, DpiScaledInsets(0, kToolDlgPadDx)));
     }
+    vbox->AddChild(new VirtLine());
 
+    // the levels, the one in the field on a rounded selection
     {
         auto* c = new VirtListBox();
         c->dpi = GetDpi();
-        c->font = font;
+        c->font = fontText;
+        c->itemDy = DpiScale(kZoomListRowDy);
+        c->showFocusRing = false;
+        c->SetColor(kColListText, colTxt);
+        c->SetColor(kColListBg, colBg);
+        c->onDrawItem = MkMethod1<CustomZoomWnd, VirtListBox::DrawItemEvent*, &CustomZoomWnd::DrawLevel>(this);
         listBox = c;
         model = new ListBoxModelStrings();
         c->onSelectionChanged = MkMethod0<CustomZoomWnd, &CustomZoomWnd::OnListSelectionChanged>(this);
         c->onDoubleClick = MkMethod0<CustomZoomWnd, &CustomZoomWnd::OnListDoubleClick>(this);
-        vbox->AddChild(new Padding(c, DpiScaledInsets(4, 0, 0, 0)));
+        vbox->AddChild(new Padding(c, DpiScaledInsets(kToolDlgFilesPadDy, kZoomListPadDx)));
         FillZoom();
     }
 
-    {
-        auto* hbox = new HBox();
-        hbox->alignMain = MainAxisAlign::MainEnd;
-        hbox->alignCross = CrossAxisAlign::CrossCenter;
-        hbox->gap = font->averageCharWidth;
-        auto pad = Insets{4, 0, 4, 0};
+    btnCancel = NewDlgButton(hwnd, Tr("Cancel"), fontText, DlgButtonStyle::Outline, false);
+    btnCancel->onClick = MkMethod1<CustomZoomWnd, VirtMouseEvent*, &CustomZoomWnd::OnCancel>(this);
+    btnZoom = NewDlgButton(hwnd, Tr("Zoom"), fontText, DlgButtonStyle::Filled, true);
+    btnZoom->onClick = MkMethod1<CustomZoomWnd, VirtMouseEvent*, &CustomZoomWnd::OnOk>(this);
+    vbox->AddChild(NewDlgFooter(btnCancel, btnZoom));
+    layout = vbox;
 
-        btnCancel = NewThemedButton(hwnd, Tr("Cancel"), font, false);
-        btnCancel->onClick = MkMethod1<CustomZoomWnd, VirtMouseEvent*, &CustomZoomWnd::OnCancel>(this);
-        hbox->AddChild(new Padding(btnCancel, pad));
-        btnZoom = NewThemedButton(hwnd, Tr("Zoom"), font, true);
-        btnZoom->onClick = MkMethod1<CustomZoomWnd, VirtMouseEvent*, &CustomZoomWnd::OnOk>(this);
-        hbox->AddChild(new Padding(btnZoom, pad));
-        vbox->AddChild(hbox);
-    }
-
-    auto* padding = new Padding(vbox, DpiScaledInsets(4, 8));
-    layout = padding;
-
-    int dx = DpiScale(240);
+    int dx = DpiScale(kZoomDlgDx);
     LayoutAndSizeToContent(layout, dx, 0, hwnd);
     {
         // the list asked for all of its rows: give some back if that made the

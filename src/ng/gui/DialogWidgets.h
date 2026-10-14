@@ -211,6 +211,17 @@ gpui::El* DlgWinButtonRow(gpui::Ctx* cx, float padY);
 // dialog; the window gets spec.clientDx and the column's height
 gpui::El* DlgWinContent(gpui::Ctx* cx, gpui::El* col);
 
+// the redrawn dialogs' pieces, in the tool dialogs' layout (PdfToolsCommon.h)
+enum class DlgField {
+    Plain,
+    Underlined,
+    Password
+};
+gpui::El* DlgCaption(gpui::Ctx* cx, Str s);
+gpui::El* DlgLine(gpui::Ctx* cx, Str label, float labelDx, Str id, gpui::InputState* edit, DlgField kind);
+gpui::El* DlgFooter(gpui::Ctx* cx, Str okLabel, gpui::Listener onOk, gpui::Listener onCancel);
+gpui::El* DlgToolContent(gpui::Ctx* cx, gpui::El* col, Str title, float dx, gpui::Listener onCancel);
+
 // the dialog window that has the input of `win`'s program: a modal one, or
 // the active one. -dbg-control's TestInput and TestUiState follow it
 gpui::Window* DlgWindowInputTarget(MainWindow* win);
