@@ -122,10 +122,6 @@ struct CommandPaletteWnd : PaletteSources {
     // orig's popup window, where the platform can have one; null: an overlay
     // in the frame
     ToolWindow* tw = nullptr;
-#if OS_WIN
-    // tests look for a focused Edit whose root is not the frame
-    HWND queryEdit = nullptr;
-#endif
 
     // what the list shows: the filtered rows
     StrVecCP items;
@@ -474,13 +470,6 @@ void CloseCommandPalette() {
     }
     gCommandPaletteWnd = nullptr;
     MainWindow* win = wnd->win;
-#if OS_WIN
-    if (wnd->queryEdit) {
-        HWND edit = wnd->queryEdit;
-        wnd->queryEdit = nullptr;
-        DestroyWindow(edit);
-    }
-#endif
     if (wnd->tw) {
         ToolWindowClose(wnd->tw);
         wnd->tw = nullptr;
@@ -898,10 +887,6 @@ static bool RemoveSelectedItem() {
     return true;
 }
 
-#if OS_WIN
-static void PaletteAttachQueryEdit(CommandPaletteWnd* wnd);
-#endif
-
 // orig's list-box dump. exit 2 when the palette is not open.
 TempStr CommandPaletteStateTemp(int* exitCodeOut) {
     str::Builder out;
@@ -916,21 +901,11 @@ TempStr CommandPaletteStateTemp(int* exitCodeOut) {
         out.Append(StrL("NOTREADY no-palette\n"));
         return finish(2);
     }
-#if OS_WIN
-    // the query Edit appears with the tool window, after this state is first visible
-    if (!wnd->queryEdit) {
-        PaletteAttachQueryEdit(wnd);
-    }
-    if (!wnd->queryEdit) {
+    // in a window of its own: ready once that window is made
+    if (!wnd->editQuery || (wnd->tw && !ToolWindowGpui(wnd->tw))) {
         out.Append(StrL("NOTREADY no-palette\n"));
         return finish(2);
     }
-#else
-    if (!wnd->editQuery) {
-        out.Append(StrL("NOTREADY no-palette\n"));
-        return finish(2);
-    }
-#endif
     int sel = wnd->sel;
     int n = len(wnd->items);
     int selectedCmdId = 0;
@@ -2046,68 +2021,6 @@ static Size PaletteWindowSize(MainWindow* win, CommandPaletteWnd* wnd) {
     return Size(dx, dy);
 }
 
-#if OS_WIN
-constexpr UINT_PTR kPaletteQuerySubclassId = 7;
-
-static bool IsKeyboardMsg(UINT msg) {
-    switch (msg) {
-        case WM_KEYDOWN:
-        case WM_KEYUP:
-        case WM_SYSKEYDOWN:
-        case WM_SYSKEYUP:
-        case WM_CHAR:
-        case WM_SYSCHAR:
-        case WM_DEADCHAR:
-        case WM_UNICHAR:
-            return true;
-    }
-    return false;
-}
-
-// The query Edit holds focus so tests find the palette, and takes their
-// WM_SETTEXT. The text they filter is the gpui input: keys, typed or posted,
-// go to the palette's gpui window.
-static LRESULT CALLBACK PaletteQueryProc(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp, UINT_PTR, DWORD_PTR dw) {
-    auto* win = (MainWindow*)dw;
-    if (msg == WM_SETTEXT && lp) {
-        CommandPaletteSetText(win, (const WCHAR*)lp);
-    }
-    CommandPaletteWnd* wnd = gCommandPaletteWnd;
-    HWND gpuiHwnd = wnd && wnd->tw ? ToolWindowHwnd(wnd->tw) : nullptr;
-    if (IsKeyboardMsg(msg) && gpuiHwnd) {
-        return SendMessageW(gpuiHwnd, msg, wp, lp);
-    }
-    if (msg == WM_NCDESTROY) {
-        RemoveWindowSubclass(hwnd, PaletteQueryProc, kPaletteQuerySubclassId);
-    }
-    return DefSubclassProc(hwnd, msg, wp, lp);
-}
-
-static void PaletteAttachQueryEdit(CommandPaletteWnd* wnd) {
-    if (!wnd || wnd->queryEdit) {
-        return;
-    }
-    HWND parent = wnd->tw ? ToolWindowOrigHwnd(wnd->tw) : nullptr;
-    if (!parent) {
-        return;
-    }
-    HWND edit = CreateWindowExW(0, L"EDIT", L"", WS_CHILD | WS_VISIBLE | ES_AUTOHSCROLL, 0, 0, 1, 1, parent, nullptr,
-                                GetModuleHandleW(nullptr), nullptr);
-    if (!edit) {
-        return;
-    }
-    SetWindowSubclass(edit, PaletteQueryProc, kPaletteQuerySubclassId, (DWORD_PTR)wnd->win);
-    wnd->queryEdit = edit;
-}
-
-static void PaletteFocusQueryEdit(CommandPaletteWnd* wnd) {
-    if (!wnd || !wnd->queryEdit || GetFocus() == wnd->queryEdit) {
-        return;
-    }
-    SetFocus(wnd->queryEdit);
-}
-#endif
-
 static gp::El* PaletteToolBuild(MainWindow* win, gp::Ctx* cx) {
     CommandPaletteWnd* wnd = gCommandPaletteWnd;
     if (!wnd || !wnd->visible || wnd->win != win || !wnd->tw || ToolWindowGpui(wnd->tw) != cx->win) {
@@ -2116,23 +2029,13 @@ static gp::El* PaletteToolBuild(MainWindow* win, gp::Ctx* cx) {
     // orig's WA_INACTIVE: the palette goes when another window is activated.
     // The query Edit lives on the orig-class window, so focus there is still us.
     bool active = gp::WindowIsActive(cx);
-#if OS_WIN
-    if (!active && wnd->queryEdit && GetFocus() == wnd->queryEdit) {
-        active = true;
-    }
-#endif
     if (wnd->wasActive && !active) {
         CloseCommandPalette();
         return nullptr;
     }
     wnd->wasActive = active;
     gp::WinSize ws = gp::WindowSize(cx->win);
-    gp::El* card = PaletteCard(wnd, cx, RectF(0, 0, ws.dipW, ws.dipH));
-#if OS_WIN
-    PaletteAttachQueryEdit(wnd);
-    PaletteFocusQueryEdit(wnd);
-#endif
-    return card;
+    return PaletteCard(wnd, cx, RectF(0, 0, ws.dipW, ws.dipH));
 }
 
 static bool PaletteToolOnKey(MainWindow* win, gp::Ctx*, const gp::KeyEvent* ev) {

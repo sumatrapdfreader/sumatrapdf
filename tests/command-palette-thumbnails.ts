@@ -15,7 +15,14 @@ import {
   VK_RETURN,
   WM_KEYDOWN,
 } from "./winapi.ts";
-import { killAndWait, launchControlled, sendCommand, findPalette } from "./win-automation.ts";
+import {
+  killAndWait,
+  launchControlled,
+  sendCommand,
+  findPalette,
+  waitForPalette,
+  paletteSetText,
+} from "./win-automation.ts";
 
 const THUMBNAIL_CLASS = "SumatraPDF_ThumbnailNavigation";
 const SETTINGS = `UiLanguage = en
@@ -92,7 +99,7 @@ export async function testit(): Promise<void> {
           break;
         }
       } else {
-        handles = findPalette(frame);
+        handles = await waitForPalette(client, frame, 50);
         if (handles.palette && handles.edit) {
           break;
         }
@@ -117,7 +124,11 @@ export async function testit(): Promise<void> {
       throw new Error("command-palette-thumbnails: right arrow did not select page 2");
     }
 
-    sendText(handles.edit, ">");
+    if (IS_MAC) {
+      sendText(handles.edit, ">");
+    } else {
+      await paletteSetText(client, handles, ">");
+    }
     if ((await waitForThumbnail(client, false))?.active !== false) {
       throw new Error("command-palette-thumbnails: thumbnail grid remained in command view");
     }
@@ -136,7 +147,11 @@ export async function testit(): Promise<void> {
       }
     }
 
-    sendText(IS_MAC ? frame : findPalette(frame).edit, "&");
+    if (IS_MAC) {
+      sendText(frame, "&");
+    } else {
+      await paletteSetText(client, findPalette(frame), "&");
+    }
     const returned = await waitForThumbnail(client, true);
     if (!returned?.active || returned.page !== 2) {
       throw new Error(`command-palette-thumbnails: thumbnail grid did not return: ${JSON.stringify(returned)}`);

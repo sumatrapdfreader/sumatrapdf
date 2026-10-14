@@ -5,8 +5,15 @@ import { join } from "node:path";
 import { ControlClient, ControlCommand } from "./control.ts";
 import { IS_MAC } from "./host.ts";
 import { ROOT, cmdId, runStandalone, tmpPath } from "./util.ts";
-import { captureWindowPixels, captureWindowToPng, sendText, sleep } from "./winapi.ts";
-import { killAndWait, launchControlled, sendCommand, findPalette, isFilterMatchTint } from "./win-automation.ts";
+import { captureWindowPixels, captureWindowToPng, sleep } from "./winapi.ts";
+import {
+  killAndWait,
+  launchControlled,
+  sendCommand,
+  waitForPalette,
+  paletteSetText,
+  isFilterMatchTint,
+} from "./win-automation.ts";
 
 const SETTINGS = `UiLanguage = en
 Theme = Light
@@ -75,7 +82,7 @@ export async function testit(): Promise<void> {
           break;
         }
       } else {
-        handles = findPalette(frame);
+        handles = await waitForPalette(client, frame, 50);
         if (handles.palette && handles.edit) {
           break;
         }
@@ -87,7 +94,7 @@ export async function testit(): Promise<void> {
     }
 
     const query = ">F2";
-    sendText(handles.edit, query);
+    await paletteSetText(client, handles, query);
     const filterDeadline = Date.now() + 3_000;
     let state: PaletteState | null = null;
     while (Date.now() < filterDeadline) {

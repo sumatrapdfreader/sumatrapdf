@@ -7,7 +7,7 @@ import { ControlClient, ControlCommand } from "./control.ts";
 import { IS_MAC } from "./host.ts";
 import { cmdId, runStandalone, tmpPath } from "./util.ts";
 import { captureWindowPixels, sleep } from "./winapi.ts";
-import { findPalette, killAndWait, launchControlled, sendCommand, sendCommandSync } from "./win-automation.ts";
+import { waitForPalette, killAndWait, launchControlled, sendCommand, sendCommandSync } from "./win-automation.ts";
 
 const SETTINGS = `UiLanguage = en
 Theme = Light
@@ -66,7 +66,7 @@ async function openPalette(client: ControlClient, frame: number): Promise<number
         return frame;
       }
     } else {
-      const { palette } = findPalette(frame);
+      const { palette } = await waitForPalette(client, frame, 50);
       if (palette) {
         return palette;
       }

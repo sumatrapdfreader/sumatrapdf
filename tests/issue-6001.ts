@@ -8,20 +8,18 @@ import { IS_MAC } from "./host.ts";
 import { ROOT, cmdId, runStandalone, tmpPath } from "./util.ts";
 import {
   enumWindows,
-  findChildWindow,
   getClassName,
   getWindowOwner,
   getWindowPid,
   isWindowEnabled,
   isWindowVisible,
   postMessage,
-  sendText,
   sleep,
   VK_RETURN,
   WM_CLOSE,
   WM_KEYDOWN,
 } from "./winapi.ts";
-import { killAndWait, launchControlled, sendCommand } from "./win-automation.ts";
+import { killAndWait, launchControlled, paletteSetText, sendCommand, waitForPalette } from "./win-automation.ts";
 
 const DEFAULT_WINDOW_CLASS = "SumatraWgDefaultWinClass";
 
@@ -121,18 +119,13 @@ async function openScreenshotFromPalette(
   frame: number,
   client: Awaited<ReturnType<typeof launchControlled>>["client"],
 ): Promise<void> {
-  const beforePalette = topWindows(pid);
   sendCommand(frame, cmdId("CmdCommandPalette"));
-  const palette = await waitForNewVisibleWindow(pid, beforePalette);
-  if (!palette) {
+  const handles = await waitForPalette(client, frame);
+  if (!handles.edit) {
     throw new Error("issue-6001: command palette did not open");
   }
-  const edit = findChildWindow(palette, "Edit");
-  if (!edit) {
-    throw new Error("issue-6001: command palette has no query edit");
-  }
 
-  sendText(edit, "Set Screenshot Hotkey");
+  await paletteSetText(client, handles, "Set Screenshot Hotkey");
   const expected = cmdId("CmdSetScreenshotHotkey");
   const deadline = Date.now() + 3000;
   for (;;) {
@@ -147,8 +140,8 @@ async function openScreenshotFromPalette(
   }
 
   const beforeDialog = topWindows(pid);
-  postMessage(edit, WM_KEYDOWN, VK_RETURN, 0);
-  const dialog = await waitForNewVisibleWindow(pid, beforeDialog, palette);
+  postMessage(handles.edit, WM_KEYDOWN, VK_RETURN, 0);
+  const dialog = await waitForNewVisibleWindow(pid, beforeDialog, handles.palette);
   await checkModal(pid, frame, dialog, "CmdSetScreenshotHotkey from the command palette");
 }
 

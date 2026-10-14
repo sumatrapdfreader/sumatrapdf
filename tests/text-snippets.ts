@@ -9,8 +9,8 @@ import { join } from "node:path";
 import { ControlClient, ControlCommand } from "./control.ts";
 import { IS_MAC } from "./host.ts";
 import { assemblePdf, cmdId, runStandalone, tmpPath } from "./util.ts";
-import { getClassName, getFocusedHwnd, getRootWindow, postMessage, sendText, sleep, WM_KEYDOWN } from "./winapi.ts";
-import { killAndWait, launchControlled, sendCommand } from "./win-automation.ts";
+import { postMessage, sendText, sleep, WM_KEYDOWN } from "./winapi.ts";
+import { killAndWait, launchControlled, paletteSetText, sendCommand, waitForPalette } from "./win-automation.ts";
 
 const VK_RETURN = 0x0d;
 const VK_ESCAPE = 0x1b;
@@ -66,20 +66,13 @@ async function runFromPalette(client: ControlClient, frame: number, query: strin
     await sleep(300);
     return n;
   }
-  let edit = 0;
-  for (let i = 0; i < 100 && !edit; i++) {
-    const h = getFocusedHwnd(frame);
-    if (h && getClassName(h) === "Edit" && getRootWindow(h) !== frame) {
-      edit = h;
-    }
-    await sleep(50);
-  }
-  if (!edit) {
+  const handles = await waitForPalette(client, frame);
+  if (!handles.edit) {
     throw new Error("text-snippets: palette did not open");
   }
-  sendText(edit, query);
+  await paletteSetText(client, handles, query);
   const n = await paletteItems(client, query.length);
-  postMessage(edit, WM_KEYDOWN, n === 1 ? VK_RETURN : VK_ESCAPE, 0);
+  postMessage(handles.edit, WM_KEYDOWN, n === 1 ? VK_RETURN : VK_ESCAPE, 0);
   await sleep(300);
   return n;
 }

@@ -8,8 +8,8 @@ import { join } from "node:path";
 import { ControlClient, ControlCommand } from "./control.ts";
 import { IS_MAC } from "./host.ts";
 import { assemblePdf, cmdId, runStandalone, tmpPath } from "./util.ts";
-import { postMessage, sendText, sleep, VK_RETURN, WM_KEYDOWN } from "./winapi.ts";
-import { killAndWait, launchControlled, sendCommand, findPalette } from "./win-automation.ts";
+import { postMessage, sleep, VK_RETURN, WM_KEYDOWN } from "./winapi.ts";
+import { killAndWait, launchControlled, sendCommand, waitForPalette, paletteSetText } from "./win-automation.ts";
 
 const SETTINGS = `UiLanguage = en
 Theme = Light
@@ -85,7 +85,7 @@ export async function testit(): Promise<void> {
           break;
         }
       } else {
-        handles = findPalette(frame);
+        handles = await waitForPalette(client, frame, 50);
         if (handles.palette && handles.edit) {
           break;
         }
@@ -110,7 +110,7 @@ export async function testit(): Promise<void> {
     }
 
     const query = "* palette-annot-beta";
-    sendText(handles.edit, query);
+    await paletteSetText(client, handles, query);
     const filterDeadline = Date.now() + 3_000;
     let filtered: PaletteState | null = null;
     while (Date.now() < filterDeadline) {

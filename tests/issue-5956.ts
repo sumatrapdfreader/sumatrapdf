@@ -15,9 +15,6 @@ import { ROOT, cmdId, runStandalone, tmpPath } from "./util.ts";
 import {
   captureWindowPixels,
   captureWindowToPng,
-  getClassName,
-  getFocusedHwnd,
-  getRootWindow,
   postMessage,
   sendMessage,
   sleep,
@@ -25,7 +22,7 @@ import {
   WM_CLOSE,
   WM_KEYDOWN,
 } from "./winapi.ts";
-import { findCanvas, killAndWait, launchControlled, sendCommandSync } from "./win-automation.ts";
+import { findCanvas, findPalette, killAndWait, launchControlled, sendCommandSync } from "./win-automation.ts";
 
 type Shot = { w: number; h: number; data: Uint8Array };
 
@@ -60,21 +57,12 @@ async function waitRtl(client: ControlClient): Promise<number> {
   }
 }
 
-function findPalette(frame: number): number {
-  const edit = getFocusedHwnd(frame);
-  if (!edit || getClassName(edit) !== "Edit") {
-    return 0;
-  }
-  const palette = getRootWindow(edit);
-  return palette === frame ? 0 : palette;
-}
-
 async function closePalette(client: ControlClient, frame: number): Promise<void> {
   if (IS_MAC) {
     // the palette is not a separate HWND; Escape closes it
     sendMessage(frame, WM_KEYDOWN, VK_ESCAPE, 0);
   } else {
-    const palette = findPalette(frame);
+    const { palette } = findPalette(frame);
     if (palette) {
       postMessage(palette, WM_CLOSE, 0, 0);
     }

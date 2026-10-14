@@ -4,8 +4,8 @@
 import { ControlClient, ControlCommand } from "./control.ts";
 import { IS_MAC } from "./host.ts";
 import { cmdId, runStandalone } from "./util.ts";
-import { killAndWait, launchControlled, sendCommand } from "./win-automation.ts";
-import { getFocusedHwnd, sendText, sleep } from "./winapi.ts";
+import { killAndWait, launchControlled, paletteSetText, sendCommand, waitForPalette } from "./win-automation.ts";
+import { sleep } from "./winapi.ts";
 
 type Palette = { open: boolean; queryLen: number; settingHelp: boolean };
 
@@ -42,12 +42,9 @@ export async function testit(): Promise<void> {
     sendCommand(frame, cmdId("CmdCommandPalette"));
     await waitFor(client, "the palette never opened", (p) => p.open);
     // mac types into the palette through TestInput. The query edit has no HWND.
-    let edit = 0;
-    if (!IS_MAC) {
-      edit = getFocusedHwnd(frame);
-      if (!edit) {
-        throw new Error("issue-6246: no query edit");
-      }
+    const handles = IS_MAC ? { palette: 0, edit: 0 } : await waitForPalette(client, frame);
+    if (!IS_MAC && !handles.edit) {
+      throw new Error("issue-6246: no query edit");
     }
 
     // [query, setting help expected]: in and out of "=" through other modes
@@ -60,7 +57,7 @@ export async function testit(): Promise<void> {
       ["#", false],
     ];
     for (const [query, want] of steps) {
-      sendText(edit, query);
+      await paletteSetText(client, handles, query);
       await waitFor(
         client,
         `after '${query}' the setting help ${want ? "is hidden" : "still shows"}`,

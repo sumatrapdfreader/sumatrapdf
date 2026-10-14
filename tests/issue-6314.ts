@@ -13,8 +13,8 @@ import { copyFileSync, existsSync, mkdirSync, rmSync, writeFileSync } from "node
 import { basename, dirname, join, resolve } from "node:path";
 import { ControlCommand, withControlledSumatra, type ControlClient } from "./control.ts";
 import { cmdId, EXE, runStandalone, tmpPath } from "./util.ts";
-import { sendCommand, waitForFrame } from "./win-automation.ts";
-import { getFocusedHwnd, sendText, sleep } from "./winapi.ts";
+import { paletteSetText, sendCommand, waitForFrame, waitForPalette } from "./win-automation.ts";
+import { sleep } from "./winapi.ts";
 
 const PDF = resolve("ext/a-zlib/zlib.3.pdf");
 const AI_QUERY = ">chat";
@@ -55,7 +55,7 @@ async function paletteItems(client: ControlClient, frame: number, query: string)
     const out = String(res[1] ?? "").trim();
     if (res[0] === 0) {
       if (!typed) {
-        sendText(getFocusedHwnd(frame), query);
+        await paletteSetText(client, await waitForPalette(client, frame), query);
         typed = true;
       }
       const m = /items=(\d+).*queryLen=(\d+)/.exec(out);

@@ -6,8 +6,8 @@ import { join } from "node:path";
 import { ControlClient, ControlCommand } from "./control.ts";
 import { IS_MAC } from "./host.ts";
 import { ROOT, SLOW_BUILD_FACTOR, cmdId, runStandalone, tmpPath } from "./util.ts";
-import { enumWindows, findChildWindow, getWindowPid, isWindowVisible, sendText, sleep } from "./winapi.ts";
-import { killAndWait, launchControlled, sendCommand } from "./win-automation.ts";
+import { sleep } from "./winapi.ts";
+import { findPalette, killAndWait, launchControlled, paletteSetText, sendCommand } from "./win-automation.ts";
 
 const SETTINGS = `UiLanguage = en
 CheckForUpdates = false
@@ -34,19 +34,7 @@ async function paletteState(client: ControlClient): Promise<PaletteState | null>
   return { items: +m[1]!, queryLen: +m[2]!, selectedCmdId: +m[3]! };
 }
 
-function findPaletteEdit(pid: number, frame: number): number {
-  let edit = 0;
-  enumWindows((hwnd) => {
-    if (hwnd === frame || getWindowPid(hwnd) !== pid || !isWindowVisible(hwnd)) {
-      return true;
-    }
-    edit = findChildWindow(hwnd, "Edit");
-    return edit === 0;
-  });
-  return edit;
-}
-
-async function waitForPalette(client: ControlClient): Promise<void> {
+async function waitForItems(client: ControlClient): Promise<void> {
   const deadline = Date.now() + 8_000 * SLOW_BUILD_FACTOR;
   for (;;) {
     const state = await paletteState(client);
@@ -60,7 +48,7 @@ async function waitForPalette(client: ControlClient): Promise<void> {
   }
 }
 
-async function querySelectedCommand(client: ControlClient, pid: number, frame: number, query: string): Promise<number> {
+async function querySelectedCommand(client: ControlClient, frame: number, query: string): Promise<number> {
   const text = `>${query}`;
   const deadline = Date.now() + 3_000 * SLOW_BUILD_FACTOR;
   let lastState: PaletteState | null = null;
@@ -69,14 +57,14 @@ async function querySelectedCommand(client: ControlClient, pid: number, frame: n
     let state = await paletteState(client);
     if (!state) {
       sendCommand(frame, cmdId("CmdCommandPalette"));
-      await waitForPalette(client);
+      await waitForItems(client);
       sent = false;
       state = await paletteState(client);
     }
     // mac has no palette edit HWND; TestInput sets the query.
-    const edit = IS_MAC ? 1 : findPaletteEdit(pid, frame);
-    if (state && edit && !sent) {
-      sendText(edit, text);
+    const handles = IS_MAC ? { palette: 1, edit: 1 } : findPalette(frame);
+    if (state && handles.edit && !sent) {
+      await paletteSetText(client, handles, text);
       sent = true;
       state = await paletteState(client);
     }
@@ -103,14 +91,14 @@ async function checkDocument(file: string, shouldShow: boolean, appData: string)
   try {
     await client.waitForRenderIdle();
     sendCommand(frame, cmdId("CmdCommandPalette"));
-    await waitForPalette(client);
-    if (!IS_MAC && !findPaletteEdit(proc.pid!, frame)) {
+    await waitForItems(client);
+    if (!IS_MAC && !findPalette(frame).edit) {
       throw new Error("image-only-palette-items: no command palette edit");
     }
 
     for (const [query, commandName] of imageCommands) {
       const expected = cmdId(commandName);
-      const selected = await querySelectedCommand(client, proc.pid!, frame, query);
+      const selected = await querySelectedCommand(client, frame, query);
       if ((selected === expected) !== shouldShow) {
         throw new Error(
           `image-only-palette-items: ${commandName} selected=${selected}, expected ${shouldShow ? expected : "hidden"}`,

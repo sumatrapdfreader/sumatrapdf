@@ -8,8 +8,8 @@ import { mkdirSync, rmSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 import { ControlCommand, type ControlClient } from "./control.ts";
 import { cmdId, runStandalone, tmpPath } from "./util.ts";
-import { killAndWait, launchControlled, sendCommand } from "./win-automation.ts";
-import { WM_KEYDOWN, VK_DELETE, VK_ESCAPE, VK_RETURN, getFocusedHwnd, postMessage, sendText, sleep } from "./winapi.ts";
+import { killAndWait, launchControlled, paletteSetText, sendCommand, waitForPalette } from "./win-automation.ts";
+import { WM_KEYDOWN, VK_DELETE, VK_ESCAPE, VK_RETURN, postMessage, sleep } from "./winapi.ts";
 
 const SETTINGS = `UiLanguage = en
 Theme = Light
@@ -47,21 +47,21 @@ async function waitFor(client: ControlClient, what: string, pred: (p: Palette) =
   return last;
 }
 
-async function openPalette(client: ControlClient, frame: number): Promise<number> {
+async function openPalette(client: ControlClient, frame: number): Promise<{ palette: number; edit: number }> {
   if (!(await paletteState(client)).open) {
     sendCommand(frame, cmdId("CmdCommandPalette"));
     await waitFor(client, "the palette never opened", (p) => p.open);
   }
-  const edit = getFocusedHwnd(frame);
-  if (!edit) {
+  const handles = await waitForPalette(client, frame);
+  if (!handles.edit) {
     throw new Error("settings-restore-default: no query edit");
   }
-  return edit;
+  return handles;
 }
 
 async function typeQuery(client: ControlClient, frame: number, query: string, wantItems: number): Promise<Palette> {
-  const edit = await openPalette(client, frame);
-  sendText(edit, query);
+  const handles = await openPalette(client, frame);
+  await paletteSetText(client, handles, query);
   return waitFor(
     client,
     `'${query}' did not produce ${wantItems} row(s)`,
@@ -70,7 +70,7 @@ async function typeQuery(client: ControlClient, frame: number, query: string, wa
 }
 
 async function pressKey(client: ControlClient, frame: number, vk: number, what: string, pred: (p: Palette) => boolean) {
-  const edit = await openPalette(client, frame);
+  const { edit } = await openPalette(client, frame);
   postMessage(edit, WM_KEYDOWN, vk, 0);
   return waitFor(client, what, pred);
 }

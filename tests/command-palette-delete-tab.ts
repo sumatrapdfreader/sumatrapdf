@@ -12,7 +12,6 @@ import {
   getWindowPid,
   isWindowVisible,
   postMessage,
-  sendText,
   sleep,
   VK_DELETE,
   VK_DOWN,
@@ -24,7 +23,8 @@ import {
   launchControlled,
   sendCommand,
   sendCommandSync,
-  findPalette,
+  waitForPalette,
+  paletteSetText,
 } from "./win-automation.ts";
 
 const SETTINGS = `UiLanguage = en
@@ -114,7 +114,7 @@ export async function testit(): Promise<void> {
           break;
         }
       } else {
-        handles = findPalette(frame);
+        handles = await waitForPalette(client, frame, 50);
         if (handles.palette && handles.edit) {
           break;
         }
@@ -125,7 +125,7 @@ export async function testit(): Promise<void> {
       throw new Error("command-palette-delete-tab: palette did not open");
     }
 
-    sendText(handles.edit, "@");
+    await paletteSetText(client, handles, "@");
     await waitFor(client, "@ did not list 4 tabs", (p) => p.open && p.items === 4);
 
     // Home, doc, Home, doc — Delete the first window's document

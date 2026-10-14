@@ -10,7 +10,7 @@
 import { ControlCommand, withControlledSumatra, type ControlClient } from "./control.ts";
 import { IS_MAC } from "./host.ts";
 import { cmdId, EXE, runStandalone } from "./util.ts";
-import { findCanvas, sendCommand, waitForFrame } from "./win-automation.ts";
+import { findCanvas, findPalette, sendCommand, waitForFrame } from "./win-automation.ts";
 import { WM_CHAR, WM_KEYDOWN, VK_ESCAPE, getFocusedHwnd, postMessage, sleep } from "./winapi.ts";
 
 const PDF = "ext/a-zlib/zlib.3.pdf";
@@ -57,7 +57,7 @@ async function waitFor(client: ControlClient, what: string, pred: (p: Palette) =
 async function closePalette(client: ControlClient, frame: number): Promise<void> {
   // the thumbnail grid takes one Esc for the grid and one for the palette
   for (let i = 0; i < 3 && (await paletteState(client)).open; i++) {
-    postMessage(getFocusedHwnd(frame), WM_KEYDOWN, VK_ESCAPE, 0);
+    postMessage(findPalette(frame).edit || getFocusedHwnd(frame), WM_KEYDOWN, VK_ESCAPE, 0);
     await sleep(150);
   }
   await waitFor(client, "Esc did not close the palette", (p) => !p.open);

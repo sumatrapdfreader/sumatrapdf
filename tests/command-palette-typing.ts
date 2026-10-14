@@ -6,7 +6,7 @@ import { join } from "node:path";
 import { ControlClient, ControlCommand } from "./control.ts";
 import { ROOT, cmdId, runStandalone, tmpPath } from "./util.ts";
 import { postMessage, sleep, WM_KEYDOWN, WM_KEYUP } from "./winapi.ts";
-import { killAndWait, launchControlled, sendCommand, findPalette } from "./win-automation.ts";
+import { killAndWait, launchControlled, sendCommand, waitForPalette } from "./win-automation.ts";
 
 const VK_BACK = 0x08;
 // repeat count 1; key up also sets the previous-state and transition bits, or
@@ -56,12 +56,7 @@ export async function testit(): Promise<void> {
     await client.waitForRenderIdle();
     sendCommand(frame, cmdId("CmdCommandPalette"));
 
-    let edit = 0;
-    const openDeadline = Date.now() + 8_000;
-    while (Date.now() < openDeadline && !edit) {
-      edit = findPalette(frame).edit;
-      await sleep(50);
-    }
+    const { edit } = await waitForPalette(client, frame);
     if (!edit) {
       throw new Error("command-palette-typing: palette did not open");
     }

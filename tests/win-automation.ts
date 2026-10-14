@@ -561,8 +561,13 @@ export function findSubMenu(items: MenuItem[], label: string): MenuItem | null {
   return null;
 }
 
-// The Command Palette window and its edit, found through the focused control.
+// The Command Palette window and where its keys go. orig: the focused Edit.
+// ng: its gpui window takes the keys itself; set the query with paletteSetText.
 export function findPalette(frame: number): { palette: number; edit: number } {
+  if (USE_NG && !IS_MAC) {
+    const palette = findNgPalette(frame);
+    return { palette, edit: palette };
+  }
   const edit = getFocusedHwnd(frame);
   if (!edit || getClassName(edit) !== "Edit") {
     return { palette: 0, edit: 0 };
@@ -574,8 +579,49 @@ export function findPalette(frame: number): { palette: number; edit: number } {
   return { palette: palette === frame ? 0 : palette, edit };
 }
 
-// ng's query edit sits in a 0x0 helper window; the palette is the visible GPUI
-// window the frame owns. Posted keys and pixel captures work on it.
+// The palette once it takes input, polled for up to timeoutMs. ng asks the
+// control channel, which answers once its window is made.
+export async function waitForPalette(
+  client: ControlClient,
+  frame: number,
+  timeoutMs = 8000,
+): Promise<{ palette: number; edit: number }> {
+  const deadline = Date.now() + timeoutMs;
+  for (;;) {
+    const handles = findPalette(frame);
+    let ready = handles.palette !== 0 && handles.edit !== 0;
+    if (ready && USE_NG && !IS_MAC) {
+      ready = (await client.request(ControlCommand.TestCommandPalette, []))[0] === 0;
+    }
+    if (ready) {
+      return handles;
+    }
+    if (Date.now() > deadline) {
+      return { palette: 0, edit: 0 };
+    }
+    await sleep(50);
+  }
+}
+
+// Replaces the palette's query. orig: WM_SETTEXT on its Edit; ng (and mac)
+// through the control channel.
+export async function paletteSetText(
+  client: ControlClient,
+  handles: { palette: number; edit: number },
+  text: string,
+): Promise<void> {
+  if (!USE_NG) {
+    sendText(handles.edit, text);
+    return;
+  }
+  const res = await client.request(ControlCommand.TestInput, ["text", text]);
+  if (res[0] !== 0) {
+    throw new Error(`paletteSetText: ${String(res[1] ?? "")}`);
+  }
+}
+
+// ng's palette is the visible GPUI window the frame owns. Posted keys and
+// pixel captures work on it.
 function findNgPalette(frame: number): number {
   let found = 0;
   enumWindows((hwnd) => {

@@ -6,14 +6,15 @@ import { join } from "node:path";
 import { ControlClient, ControlCommand } from "./control";
 import { IS_MAC } from "./host";
 import { ROOT, cmdId, runStandalone, SLOW_BUILD_FACTOR } from "./util";
-import { postMessage, sendText, sleep, WM_CLOSE, WM_KEYDOWN } from "./winapi";
+import { postMessage, sleep, WM_CLOSE, WM_KEYDOWN } from "./winapi";
 import {
   killAndWait,
   launchControlled,
   sendCommand,
   sendCommandSync,
   waitForExit,
-  findPalette,
+  paletteSetText,
+  waitForPalette,
 } from "./win-automation";
 
 const VK_END = 0x23;
@@ -101,7 +102,7 @@ export async function testit(): Promise<void> {
     let palette = frame;
     let edit = frame;
     if (!IS_MAC) {
-      const found = findPalette(frame);
+      const found = await waitForPalette(client, frame);
       palette = found.palette;
       edit = found.edit;
       if (!palette || !edit) {
@@ -122,7 +123,7 @@ export async function testit(): Promise<void> {
     await waitForSel(client, 0, "Home");
 
     const query = "palette-copy-5972";
-    sendText(edit, query);
+    await paletteSetText(client, { palette, edit }, query);
     sendCommandSync(palette, cmdId("CmdSelectAll"));
     const deadline = Date.now() + 3_000 * kWait;
     for (;;) {

@@ -6,8 +6,15 @@ import { join } from "node:path";
 import { ControlClient, ControlCommand } from "./control.ts";
 import { IS_MAC } from "./host.ts";
 import { ROOT, cmdId, runStandalone, tmpPath } from "./util.ts";
-import { getClassName, getFocusedHwnd, getRootWindow, sendText, sleep, VK_ESCAPE } from "./winapi.ts";
-import { killAndWait, launchControlled, pressKey, sendCommand } from "./win-automation.ts";
+import { sleep, VK_ESCAPE } from "./winapi.ts";
+import {
+  killAndWait,
+  launchControlled,
+  paletteSetText,
+  pressKey,
+  sendCommand,
+  waitForPalette,
+} from "./win-automation.ts";
 
 const SETTINGS = `UiLanguage = en
 Theme = Light
@@ -35,18 +42,18 @@ async function paletteState(client: ControlClient): Promise<PaletteState | null>
   return { items: +m[1]!, queryLen: +m[2]!, selectedCmdId: +m[3]! };
 }
 
-async function openPalette(client: ControlClient, frame: number): Promise<number> {
+async function openPalette(client: ControlClient, frame: number): Promise<{ palette: number; edit: number }> {
   sendCommand(frame, cmdId("CmdCommandPalette"));
   const deadline = Date.now() + 8_000;
   while (Date.now() < deadline) {
     if (IS_MAC) {
       if (await paletteState(client)) {
-        return frame;
+        return { palette: frame, edit: frame };
       }
     } else {
-      const edit = getFocusedHwnd(frame);
-      if (edit && getClassName(edit) === "Edit" && getRootWindow(edit) !== frame) {
-        return edit;
+      const handles = await waitForPalette(client, frame, 50);
+      if (handles.edit) {
+        return handles;
       }
     }
     await sleep(50);
@@ -56,8 +63,8 @@ async function openPalette(client: ControlClient, frame: number): Promise<number
 
 // types query into a freshly opened palette and returns the selected command
 async function queryPalette(client: ControlClient, frame: number, query: string): Promise<PaletteState> {
-  const edit = await openPalette(client, frame);
-  sendText(edit, query);
+  const handles = await openPalette(client, frame);
+  await paletteSetText(client, handles, query);
   const deadline = Date.now() + 3_000;
   let state: PaletteState | null = null;
   while (Date.now() < deadline) {
@@ -70,7 +77,7 @@ async function queryPalette(client: ControlClient, frame: number, query: string)
   if (!state) {
     throw new Error(`command-palette-alt-names: no palette state for '${query}'`);
   }
-  await pressKey(edit, VK_ESCAPE, 0);
+  await pressKey(handles.edit, VK_ESCAPE, 0);
   const closeDeadline = Date.now() + 3_000;
   while (await paletteState(client)) {
     if (Date.now() > closeDeadline) {

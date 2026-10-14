@@ -8,8 +8,8 @@ import { mkdirSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 import { ControlClient, ControlCommand } from "./control.ts";
 import { cmdId, runStandalone, tmpPath } from "./util.ts";
-import { killAndWait, launchControlled, sendCommand } from "./win-automation.ts";
-import { WM_KEYDOWN, VK_ESCAPE, getFocusedHwnd, postMessage, sendText, sleep } from "./winapi.ts";
+import { killAndWait, launchControlled, paletteSetText, sendCommand, waitForPalette } from "./win-automation.ts";
+import { WM_KEYDOWN, VK_ESCAPE, postMessage, sleep } from "./winapi.ts";
 
 const kTag = "command-palette-external-reload";
 const kBoolName = "DisableJavaScript";
@@ -81,12 +81,13 @@ export async function testit(): Promise<void> {
     await waitForLoads(logPath, 1);
     sendCommand(frame, cmdId("CmdCommandPalette"));
     await waitFor(client, "the palette never opened", (p) => p.open);
-    const edit = getFocusedHwnd(frame);
+    const handles = await waitForPalette(client, frame);
+    const edit = handles.edit;
     if (!edit) {
       throw new Error(`${kTag}: no query edit`);
     }
     const query = `=${kBoolName}`;
-    sendText(edit, query);
+    await paletteSetText(client, handles, query);
     const row = await waitFor(
       client,
       `'${query}' did not produce one row`,
