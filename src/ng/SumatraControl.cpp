@@ -2938,7 +2938,9 @@ static void ExecuteControlRequest(ControlRequest* req) {
                 bool ok = false;
                 if (win) {
                     WStr w = ToWStrTemp(StringArg(req, 1));
-                    ok = FreeTextInPlaceSetText(win, w.s) || CommandPaletteSetText(win, w.s);
+                    // an open palette has the keyboard, over a free-text editor left behind it
+                    ok = (IsCommandPaletteVisible() && CommandPaletteSetText(win, w.s)) ||
+                         FreeTextInPlaceSetText(win, w.s);
                 }
                 AppendTestResult(req, ok ? 0 : 1, ok ? StrL("OK") : StrL("ERR text"));
                 break;
