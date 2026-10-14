@@ -1539,7 +1539,7 @@
     <ClCompile Include="..\ext\zxing-cpp\core\src\qrcode\QRReader.cpp" />
     <ClCompile Include="..\ext\zxing-cpp\core\src\qrcode\QRVersion.cpp" />
     <ClCompile Include="..\ext\zxing-cpp\core\src\qrcode\QRWriter.cpp" />
-    <ClCompile Include="..\src\mupdf\zxing-eci.cpp" />
+    <ClCompile Include="..\src\shared\mupdf\zxing-eci.cpp" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

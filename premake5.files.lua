@@ -1319,7 +1319,7 @@ end
 
 function zxing_files()
   files { "ext/zxing-cpp/core/src/*.h", "ext/zxing-cpp/core/src/*/*.h", "ext/zint/backend/*.h" }
-  files { "ext/mupdf/source/fitz/zxingbarcode.cpp", "src/mupdf/zxing-eci.cpp" }
+  files { "ext/mupdf/source/fitz/zxingbarcode.cpp", "src/shared/mupdf/zxing-eci.cpp" }
   files_in_dir("ext/zxing-cpp/core/src", {
     "Barcode.cpp",
     "BarcodeFormat.cpp",

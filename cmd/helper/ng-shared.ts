@@ -443,6 +443,7 @@ export const sharedFiles = [
   "src/shared/mupdf/noto_sumatra.h",
   "src/shared/mupdf/pkcs7-windows.c",
   "src/shared/mupdf/pkcs7-windows.h",
+  "src/shared/mupdf/zxing-eci.cpp",
   "src/shared/tests/AnnotSearch_ut.cpp",
   "src/shared/tests/CachedObjects_ut.cpp",
   "src/shared/tests/ChapterTable_ut.cpp",

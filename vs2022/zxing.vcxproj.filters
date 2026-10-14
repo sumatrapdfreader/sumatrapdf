@@ -55,8 +55,11 @@
     <Filter Include="src">
       <UniqueIdentifier>{2DAB880B-99B4-887C-2230-9F7C8E38947C}</UniqueIdentifier>
     </Filter>
-    <Filter Include="src\mupdf">
-      <UniqueIdentifier>{788FB2B5-E4F9-662C-2D38-18D299E14481}</UniqueIdentifier>
+    <Filter Include="src\shared">
+      <UniqueIdentifier>{D3351079-BFED-51C6-28F5-2A2214CCECB6}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="src\shared\mupdf">
+      <UniqueIdentifier>{9EFE7CBB-8AF7-9B0D-B329-81929F817B19}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
   <ItemGroup>
@@ -1241,8 +1244,8 @@
     <ClCompile Include="..\ext\zxing-cpp\core\src\qrcode\QRWriter.cpp">
       <Filter>ext\zxing-cpp\core\src\qrcode</Filter>
     </ClCompile>
-    <ClCompile Include="..\src\mupdf\zxing-eci.cpp">
-      <Filter>src\mupdf</Filter>
+    <ClCompile Include="..\src\shared\mupdf\zxing-eci.cpp">
+      <Filter>src\shared\mupdf</Filter>
     </ClCompile>
   </ItemGroup>
 </Project>
