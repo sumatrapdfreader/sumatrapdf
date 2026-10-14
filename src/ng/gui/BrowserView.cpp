@@ -722,11 +722,14 @@ static void CreateWebView(BrowserView* bv, gp::Ctx* cx) {
         attrs.url = ToGpui(ToWebViewUrlTemp(bv->pendingUrl));
     }
 
+    // creating runs a nested message loop, which can ask for another page
+    Str startUrl = str::Dup(bv->pendingUrl);
     gWebViewCreateDepth++;
     bv->view = gp::WebViewNew(cx, &attrs);
     gWebViewCreateDepth--;
     gp::WebView* wv = bv->view.Get(cx->app);
     if (!wv || !gp::WebViewRaw(wv)) {
+        str::Free(startUrl);
         bv->view = {};
         // give up and show the missing-runtime message
         if (bv->createTries >= 3) {
@@ -750,7 +753,11 @@ static void CreateWebView(BrowserView* bv, gp::Ctx* cx) {
         r.size = wry::LogicalSize(rc.dx, rc.dy);
         wry::WebViewSetBounds(gp::WebViewRaw(wv), r);
     }
-    str::FreePtr(&bv->pendingUrl);
+    // a navigation asked for while it was being made is loaded on the next build
+    if (str::Eq(bv->pendingUrl, startUrl)) {
+        str::FreePtr(&bv->pendingUrl);
+    }
+    str::Free(startUrl);
     if (bv->zoomPercent != 100) {
         wry::WebViewZoom(gp::WebViewRaw(wv), (double)bv->zoomPercent / 100.0);
     }
