@@ -573,19 +573,19 @@ static bool ForwardTestWheelToBrowser(MainWindow* win, int delta, int mods) {
 // dips; c = button: 0 left, 1 right, 2 middle; d = mods: 1 Ctrl, 2 Shift,
 // 4 Alt, 8 Command), move (c = pressed
 // button + 1, or 0) and wheel (c = delta in 120ths of a notch, 1000000 + delta
-// for a horizontal one)
-TempStr AppShellTestInput(MainWindow* win, Str kind, int a, int b, int c, int d) {
+// for a horizontal one). k is dips per unit of a mouse x, y.
+TempStr AppShellTestInput(MainWindow* win, Str kind, int a, int b, int c, int d, float k) {
     // a modal dialog in a window of its own has the input, as on screen: the
     // main window is disabled, so what a test sends "to the window" is the
     // dialog's (mouse coordinates are the dialog's client area then)
     if (ToolWindow* modal = ToolWindowModalOf(win)) {
-        TempStr res = AppShellTestInputGpui(ToolWindowGpui(modal), kind, a, b, c, d);
+        TempStr res = AppShellTestInputGpui(ToolWindowGpui(modal), kind, a, b, c, d, k);
         ToolWindowInvalidate(modal);
         return res;
     }
     // and so has one of orig's modeless dialogs while it is the active window
     if (gp::Window* dlgWin = DlgWindowInputTarget(win)) {
-        TempStr res = AppShellTestInputGpui(dlgWin, kind, a, b, c, d);
+        TempStr res = AppShellTestInputGpui(dlgWin, kind, a, b, c, d, k);
         gp::AppInvalidate(dlgWin);
         return res;
     }
@@ -595,7 +595,7 @@ TempStr AppShellTestInput(MainWindow* win, Str kind, int a, int b, int c, int d)
         return StrL("OK eaten=1");
     }
     if (gp::Window* paletteWin = CommandPaletteInputWindow(win)) {
-        TempStr res = AppShellTestInputGpui(paletteWin, kind, a, b, c, d);
+        TempStr res = AppShellTestInputGpui(paletteWin, kind, a, b, c, d, k);
         gp::AppInvalidate(paletteWin);
         return res;
     }
@@ -607,15 +607,15 @@ TempStr AppShellTestInput(MainWindow* win, Str kind, int a, int b, int c, int d)
     if (str::Eq(kind, StrL("char")) && SelectTextWithKeyboardOnChar(win, a)) {
         return StrL("OK");
     }
-    return AppShellTestInputGpui(win ? win->gpuiWin : nullptr, kind, a, b, c, d);
+    return AppShellTestInputGpui(win ? win->gpuiWin : nullptr, kind, a, b, c, d, k);
 }
 
-TempStr AppShellTestInputGpui(gp::Window* gw, Str kind, int a, int b, int c, int d) {
+TempStr AppShellTestInputGpui(gp::Window* gw, Str kind, int a, int b, int c, int d, float k) {
     if (!gw) {
         return StrL("ERR no-window");
     }
-    float x = (float)a;
-    float y = (float)b;
+    float x = (float)a * k;
+    float y = (float)b * k;
     if (str::Eq(kind, StrL("key"))) {
         gp::KeyDownFlags flags;
         flags.held = (b & 8) != 0;
@@ -671,6 +671,30 @@ TempStr AppShellTestInputGpui(gp::Window* gw, Str kind, int a, int b, int c, int
 }
 
 #if OS_WIN
+// Windows tests aim input at a frame or a tool window, at its client pixels
+TempStr AppShellTestInputHwnd(HWND hwnd, Str kind, int a, int b, int c, int d) {
+    MainWindow* win = AppShellWindowFromHwnd(hwnd);
+    ToolWindow* tw = win ? nullptr : ToolWindowFromHwnd(hwnd);
+    gp::Window* gw = win ? win->gpuiWin : ToolWindowGpui(tw);
+    // as PostMessage to a window that closed (Esc's key up after the key down)
+    if (!gw) {
+        return StrL("OK gone");
+    }
+    gp::WinSize ws = gp::WindowSize(gw);
+    float k = (ws.dipW > 0 && ws.pxW > 0) ? ws.dipW / (float)ws.pxW : 1.f;
+    if (win) {
+        // the frame's arrow keys scroll a CHM or markdown page, as WM_KEYDOWN does
+        bool isKey = str::Eq(kind, StrL("key"));
+        if ((isKey || str::Eq(kind, StrL("keyup"))) && ForwardBrowserMsg(win, isKey ? WM_KEYDOWN : WM_KEYUP, a, 0)) {
+            return StrL("OK");
+        }
+        return AppShellTestInput(win, kind, a, b, c, d, k);
+    }
+    TempStr res = AppShellTestInputGpui(gw, kind, a, b, c, d, k);
+    ToolWindowInvalidate(tw);
+    return res;
+}
+
 // orig's WM_CONTEXTMENU: from the keyboard (-1, -1) the Apps key's menu, from a
 // screen point the menu a right click there opens. Both are gpui's menus.
 // False for a point outside the client area (a border): DefWindowProc's.

@@ -37,9 +37,12 @@ void AppShellInvalidate(MainWindow* win);
 TempStr AppShellFrameStatsTemp(MainWindow* win, bool reset);
 // -dbg-control's TestInput / TestUiState: input a posted window message cannot
 // carry (modifiers, hover, a held button) and what the shell made of it
-TempStr AppShellTestInput(MainWindow* win, Str kind, int a, int b, int c, int d);
+TempStr AppShellTestInput(MainWindow* win, Str kind, int a, int b, int c, int d, float k = 1);
 // the same into any gpui window (a tool window's)
-TempStr AppShellTestInputGpui(gpui::Window* gw, Str kind, int a, int b, int c, int d);
+TempStr AppShellTestInputGpui(gpui::Window* gw, Str kind, int a, int b, int c, int d, float k = 1);
+#if OS_WIN
+TempStr AppShellTestInputHwnd(HWND hwnd, Str kind, int a, int b, int c, int d);
+#endif
 TempStr AppShellUiStateTemp(MainWindow* win);
 // orig's gSupressNextAltMenuTrigger: the Alt that is down was used for
 // something (Alt + wheel), so its release must not enter the menu bar

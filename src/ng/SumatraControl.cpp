@@ -2948,6 +2948,21 @@ static void ExecuteControlRequest(ControlRequest* req) {
             IntArg(req, 2, b);
             IntArg(req, 3, c);
             IntArg(req, 4, d);
+#if OS_WIN
+            // a Windows test names the window it aimed the message at
+            // and may repeat it: a burst of wheel notches faster than a request each
+            i32 hwnd = 0;
+            if (IntArg(req, 5, hwnd) && hwnd != 0) {
+                i32 repeat = 1;
+                IntArg(req, 6, repeat);
+                TempStr res;
+                for (int i = 0; i < std::max(repeat, 1); i++) {
+                    res = AppShellTestInputHwnd((HWND)(intptr_t)hwnd, kind, a, b, c, d);
+                }
+                AppendTestResult(req, 0, res);
+                break;
+            }
+#endif
             // WM_CHAR LF commits the in-place editor before gpui sees it.
             if (str::Eq(kind, StrL("char")) && a == '\n' && FreeTextInPlaceCommitOnChar(win, a)) {
                 AppendTestResult(req, 0, StrL("OK"));

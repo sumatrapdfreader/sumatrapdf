@@ -25,6 +25,7 @@ import {
   findVisibleChildWindow,
   waitForTopWindow,
   packCoords,
+  ngInputTarget,
   sleep,
   sendMessage,
   postMessage,
@@ -365,9 +366,15 @@ export async function clickAt(hwnd: number, x: number, y: number, settleMs = 350
   await ensureModifierKeysUp();
   const screen = clientToScreen(hwnd, x, y);
   setCursorPos(screen.x, screen.y);
-  const lp = packCoords(x, y);
-  sendMessage(hwnd, WM_LBUTTONDOWN, MK_LBUTTON | extraMk, lp);
-  sendMessage(hwnd, WM_LBUTTONUP, extraMk, lp);
+  // ng: one click, as on macOS, so no real move lands between down and up
+  const target = ngInputTarget(hwnd);
+  if (target) {
+    macClick(x, y, extraMk, target);
+  } else {
+    const lp = packCoords(x, y);
+    sendMessage(hwnd, WM_LBUTTONDOWN, MK_LBUTTON | extraMk, lp);
+    sendMessage(hwnd, WM_LBUTTONUP, extraMk, lp);
+  }
 
   // someone moving the real mouse (e.g. over RDP) mid-click turns it into a drag.
   // macOS has no GetCursorPos; the click coordinates went out as TestInput.

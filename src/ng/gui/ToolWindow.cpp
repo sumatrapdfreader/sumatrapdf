@@ -217,6 +217,15 @@ bool ToolWindowOwnsHwnd(HWND hwnd) {
     return false;
 }
 
+ToolWindow* ToolWindowFromHwnd(HWND hwnd) {
+    for (ToolWindow* tw : gToolWindows) {
+        if (tw->hwnd == hwnd) {
+            return tw;
+        }
+    }
+    return nullptr;
+}
+
 HWND ToolWindowHwnd(ToolWindow* tw) {
     return IsLive(tw) ? tw->hwnd : nullptr;
 }

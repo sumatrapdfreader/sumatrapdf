@@ -194,6 +194,7 @@ void ToolWindowsCloseFor(MainWindow* win);
 // NativeWindow.cpp claims gpui windows by class name; these are not frames
 bool ToolWindowOwnsHwnd(HWND hwnd);
 HWND ToolWindowHwnd(ToolWindow* tw);
+ToolWindow* ToolWindowFromHwnd(HWND hwnd);
 // the main window of the tool window with this handle
 MainWindow* ToolWindowOwnerFromHwnd(HWND hwnd);
 #endif

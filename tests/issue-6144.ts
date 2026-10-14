@@ -7,8 +7,16 @@ import { mkdirSync, rmSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 import { ControlClient, ControlCommand } from "./control.ts";
 import { runStandalone, tmpPath, crc32, makePng } from "./util.ts";
-import { findCanvas, launchControlled, killAndWait, ensureModifierKeysUp } from "./win-automation.ts";
-import { clientToScreen, getClientRect, packCoords, sendMessage, setCursorPos, sleep } from "./winapi.ts";
+import { findCanvas, launchControlled, killAndWait, ensureModifierKeysUp, ngInput } from "./win-automation.ts";
+import {
+  clientToScreen,
+  getClientRect,
+  ngInputTarget,
+  packCoords,
+  sendMessage,
+  setCursorPos,
+  sleep,
+} from "./winapi.ts";
 
 const WM_MOUSEWHEEL = 0x020a;
 const WHEEL_DELTA = 120;
@@ -112,8 +120,14 @@ export async function testit(): Promise<void> {
     const lp = packCoords(mid.x, mid.y);
     const wp = (-WHEEL_DELTA << 16) >>> 0;
     await ensureModifierKeysUp();
-    for (let i = 0; i < 10; i++) {
-      sendMessage(canvas, WM_MOUSEWHEEL, wp, lp);
+    // ng: one request, as a request per notch is slower than the burst
+    const target = ngInputTarget(canvas);
+    if (target) {
+      await ngInput(client, ["wheel", cr.right >> 1, cr.bottom >> 1, -WHEEL_DELTA, 0, target.hwnd, 10]);
+    } else {
+      for (let i = 0; i < 10; i++) {
+        sendMessage(canvas, WM_MOUSEWHEEL, wp, lp);
+      }
     }
     await client.waitForRenderIdle();
     const page = await currentPage(client);

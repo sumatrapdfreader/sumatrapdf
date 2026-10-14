@@ -25,6 +25,7 @@ import {
   macSendMessage,
   macSendText,
   TestLayout,
+  type InputTarget,
 } from "./mac-control.ts";
 import { USE_NG } from "./util.ts";
 
@@ -73,6 +74,7 @@ const user32 = loadDll("user32.dll", {
   GetClientRect: { args: [FFIType.ptr, FFIType.ptr], returns: FFIType.bool },
   GetScrollInfo: { args: [FFIType.ptr, FFIType.i32, FFIType.ptr], returns: FFIType.bool },
   SetCursorPos: { args: [FFIType.i32, FFIType.i32], returns: FFIType.bool },
+  MapVirtualKeyW: { args: [FFIType.u32, FFIType.u32], returns: FFIType.u32 },
   GetAsyncKeyState: { args: [FFIType.i32], returns: FFIType.i16 },
   keybd_event: { args: [FFIType.u8, FFIType.u8, FFIType.u32, FFIType.u64], returns: FFIType.void },
   ClientToScreen: { args: [FFIType.ptr, FFIType.ptr], returns: FFIType.bool },
@@ -723,6 +725,85 @@ export function getScrollPos(hwnd: number, bar: number = SB_VERT): number {
   return getScrollInfo(hwnd, bar).pos;
 }
 
+const WM_RBUTTONDBLCLK = 0x0206;
+const WM_MBUTTONUP = 0x0208;
+const WM_MBUTTONDBLCLK = 0x0209;
+const WM_MOUSEWHEEL = 0x020a;
+const WM_MOUSEHWHEEL = 0x020e;
+const NG_INPUT_MSGS = new Set([
+  WM_MOUSEMOVE,
+  WM_LBUTTONDOWN,
+  WM_LBUTTONUP,
+  WM_LBUTTONDBLCLK,
+  WM_RBUTTONDOWN,
+  WM_RBUTTONUP,
+  WM_RBUTTONDBLCLK,
+  WM_MBUTTONDOWN,
+  WM_MBUTTONUP,
+  WM_MBUTTONDBLCLK,
+  WM_MOUSEWHEEL,
+  WM_MOUSEHWHEEL,
+  WM_KEYDOWN,
+  WM_KEYUP,
+]);
+const NG_GPUI_CLASS = "GpuiSystemMonitor";
+const NG_MIRROR_CLASS = "SUMATRA_PDF_CANVAS";
+
+// ng on Windows: a frame, its pixel mirror and a tool window are gpui windows,
+// so mouse and key input aimed at them goes through the control channel, as on
+// macOS. Native windows (message boxes, file dialogs) get the message.
+export function ngInputTarget(hwnd: number): InputTarget | undefined {
+  if (!USE_NG || IS_MAC) {
+    return undefined;
+  }
+  const cls = getClassName(hwnd);
+  // the mirror covers the frame's client area, so its pixels are the frame's
+  const target = cls === NG_MIRROR_CLASS ? getWindowOwner(hwnd) : cls === NG_GPUI_CLASS ? hwnd : 0;
+  if (!target) {
+    return undefined;
+  }
+  const screenToClient = (x: number, y: number) => {
+    const o = clientToScreen(target, 0, 0);
+    return { x: x - o.x, y: y - o.y };
+  };
+  return { hwnd: target, screenToClient };
+}
+
+const MAPVK_VK_TO_CHAR = 2;
+
+// the character TranslateMessage makes of an unshifted key, 0 for none
+function keyChar(vk: number): number {
+  const ch = user32.symbols.MapVirtualKeyW(vk, MAPVK_VK_TO_CHAR) & 0xffff;
+  // letters come back upper case
+  return ch >= 0x41 && ch <= 0x5a ? ch + 0x20 : ch;
+}
+
+function ngInput(
+  hwnd: number,
+  msg: number,
+  wParam: number | bigint,
+  lParam: number | bigint,
+  posted: boolean,
+): boolean {
+  if (!NG_INPUT_MSGS.has(msg)) {
+    return false;
+  }
+  const target = ngInputTarget(hwnd);
+  if (!target) {
+    return false;
+  }
+  const eaten = macSendMessage(msg, wParam, lParam, target);
+  // the message loop's TranslateMessage: a posted key types its character
+  // unless the key was handled
+  if (posted && msg === WM_KEYDOWN && eaten === 0n) {
+    const ch = keyChar(Number(BigInt(wParam) & 0xffffn));
+    if (ch) {
+      macSendMessage(WM_CHAR, ch, 0, target);
+    }
+  }
+  return true;
+}
+
 // ng takes characters through the control channel, whichever window they were
 // aimed at: it has no WM_CHAR hook on its frame.
 function ngChar(msg: number, wParam: number | bigint): boolean {
@@ -734,7 +815,7 @@ function ngChar(msg: number, wParam: number | bigint): boolean {
 }
 
 export function postMessage(hwnd: number, msg: number, wParam: number, lParam: number): boolean {
-  if (ngChar(msg, wParam)) {
+  if (ngChar(msg, wParam) || ngInput(hwnd, msg, wParam, lParam, true)) {
     return true;
   }
   if (IS_MAC) {
@@ -759,7 +840,7 @@ export async function postChar(hwnd: number, ch: string): Promise<boolean> {
 // LRESULT as a bigint -- TreeView messages return HTREEITEM pointers that can
 // exceed 2^53, so they must not be coerced to a JS number.
 export function sendMessage(hwnd: number, msg: number, wParam: number | bigint, lParam: number | bigint): bigint {
-  if (ngChar(msg, wParam)) {
+  if (ngChar(msg, wParam) || ngInput(hwnd, msg, wParam, lParam, false)) {
     return 0n;
   }
   if (IS_MAC) {
