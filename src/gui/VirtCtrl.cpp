@@ -2033,7 +2033,7 @@ void VirtListBox::Paint(VirtPaintCtx& ctx) {
 
     // dashed outline while the list has the keys (annotations list, find
     // results, command palette, …)
-    if (isFocused) {
+    if (isFocused && showFocusRing) {
         Rect ring = ctx.bounds;
         ring.SubTB(1, 1);
         ring.SubLR(1, 1);

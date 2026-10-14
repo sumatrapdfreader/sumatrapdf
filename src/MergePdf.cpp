@@ -33,6 +33,8 @@
 #include "Theme.h"
 #include "DarkMode.h"
 #include "PageThumbnails.h"
+#include "SumatraDialogs.h"
+#include "shared/PdfToolsCommon.h"
 #include "MergePdf.h"
 
 // Merge PDF (issue #6070): the pages of the document and of PDFs added to it
@@ -41,29 +43,38 @@
 // document or as a new PDF.
 //
 //   +----------------------------------------------------------+
-//   |  [1]   [2]   [x3]   [1]   [2] ...     thumbnails (MergeGrid)
-//   +----------------------------------------------------------+
-//   [Add PDF...] [Remove] [Restore] 7 pages, 1 removed  ■ a.pdf  ■ b.pdf  [Save] [Save As...] [Cancel]
+//   |  [  ]   [  ]   [ x]   [  ]   [  ] ...  thumbnails (MergeGrid)
+//   |   1      2     • 1     • 2    ...     page numbers, file dots
+//   +----------------------------------------------------------+  hairline
+//   Add PDF...  Remove  Restore  7 pages, 1 removed  • a.pdf  • b.pdf   [Cancel] [Save] [Save As...]
 
 constexpr int kThumbDx = 140;
 constexpr int kThumbDy = 198;
-constexpr int kGap = 24;
-constexpr int kDialogPadding = 10;
+constexpr int kGap = 28;
 constexpr int kDialogDx = 1100;
 constexpr int kScrollbarDx = 10;
-// a page's source color: a strip along its top
-constexpr int kStripDy = 5;
+// the page number (and its file's dot) under a page
+constexpr int kLabelDy = 26;
+constexpr int kDotDx = 7;
+// the selection and hover frame: around a page and its label
+constexpr int kFramePad = 8;
+constexpr int kFrameRadius = 6;
+constexpr int kSelShift = 26;
+constexpr int kSelUnfocusedShift = 16;
+constexpr int kHoverShift = 9;
+constexpr int kFocusRingShift = 45;
+constexpr int kPageEdgeShift = 22;
 // the remove / restore button in a page's top-right corner
-constexpr int kCornerBtnDx = 24;
+constexpr int kCornerBtnDx = 22;
 constexpr int kCornerBtnInset = 6;
-constexpr int kDropBarDx = 3;
+constexpr int kDropBarDx = 2;
 constexpr int kRenderScreens = 1;
 constexpr int kKeepScreens = 2;
 constexpr UINT_PTR kAutoScrollTimerId = 1;
 constexpr UINT kAutoScrollMs = 40;
-constexpr Color kDropBarColor = MkRgb(0, 120, 215);
-constexpr Color kRemoveBtnColor = MkRgb(90, 90, 90);
-constexpr Color kRestoreBtnColor = MkRgb(0, 120, 215);
+constexpr u8 kRemovedVeilAlpha = 200;
+constexpr u8 kCornerBtnAlpha = 225;
+constexpr u8 kBandAlpha = 18;
 
 static Pixmap* const kRenderFailed = (Pixmap*)(intptr_t)-1;
 
@@ -213,6 +224,11 @@ struct MergePdfWnd : WindowBase {
     VirtButton* btnCancel = nullptr;
     // the page count, then the files' colors
     VirtCustom* info = nullptr;
+    Color colTxt = kColorUnset;
+    Color colBg = kColorUnset;
+    Color colMuted = kColorUnset;
+    PlatformFont* fontText = nullptr;
+    PlatformFont* fontMeta = nullptr;
     bool tornDown = false;
 
     ~MergePdfWnd() override;
@@ -327,9 +343,10 @@ MergeGrid::MergeGrid(MergePdfWnd* wnd, MergeSources* sources, PlatformFont* font
     thumbDx = DpiScaleByDpi(dpi, kThumbDx);
     thumbDy = DpiScaleByDpi(dpi, kThumbDy);
     gap = DpiScaleByDpi(dpi, kGap);
-    itemDy = thumbDy + gap;
-    int pad = gap / 2;
+    itemDy = thumbDy + DpiScaleByDpi(dpi, kLabelDy) + gap;
+    int pad = gap * 3 / 4;
     padding = {pad, pad, pad, pad};
+    showFocusRing = false;
     SetColor(kColListText, ThemeWindowTextColor());
     SetColor(kColListBg, ThemeWindowControlBackgroundColor());
 
@@ -493,32 +510,40 @@ static void DrawRestoreGlyph(Gfx* gfx, Rect r, Color col, float thickness) {
     gfx->DrawLineAA(tip, {tip.x - head, tip.y + head}, col, thickness);
 }
 
+// A page on its own: the thumbnail with a hairline edge, under it the page
+// number after its file's dot. The selection and hover are a rounded frame
+// around both, the keyboard's page a ring when it isn't selected
 void MergeGrid::DrawCell(Gfx* gfx, int idx) {
     MergeItem& item = items[idx];
     Point origin = OriginInWindow();
     Rect r = CellRect(idx);
     r.Offset(origin.x, origin.y);
     Color colBg = GetColor(kColListBg);
+    Color colTxt = ThemeWindowTextColor();
+    Color colMuted = ThemeWindowTextDisabledColor();
+    bool isFocused = HasFlag(vwfFocused);
+    int labelDy = DpiScaleByDpi(dpi, kLabelDy);
 
-    // the selection, or the page under the mouse: a frame in the gap around it
+    int framePad = DpiScaleByDpi(dpi, kFramePad);
+    Rect fr{r.x - framePad, r.y - framePad, r.dx + (framePad * 2), r.dy + labelDy + framePad};
+    int radius = DpiScaleByDpi(dpi, kFrameRadius);
     Color colFrame = kColorUnset;
     if (item.selected) {
-        colFrame = AccentColor(colBg, HasFlag(vwfFocused) ? 60 : 40);
+        colFrame = AccentColor(colBg, isFocused ? kSelShift : kSelUnfocusedShift);
     } else if (idx == hoverIdx && press == MergePress::None) {
-        colFrame = AccentColor(colBg, 15);
+        colFrame = AccentColor(colBg, kHoverShift);
     }
     if (colFrame != kColorUnset) {
-        Rect fr = r;
-        int d = gap / 3;
-        fr.Inflate(d, d);
-        gfx->FillRoundedRect(fr, d, colFrame);
+        gfx->FillRoundedRect(fr, radius, colFrame);
+    } else if (idx == focusIdx && isFocused) {
+        gfx->FillRoundedRect(fr, radius, colBg, AccentColor(colBg, kFocusRingShift));
     }
-    gfx->FillRect(r, kColWhite);
+
     // white pages on a white grid need an edge
     Rect edge = r;
     edge.Inflate(1, 1);
-    gfx->DrawRect(edge, AccentColor(colBg, 30));
-
+    gfx->FillRect(edge, AccentColor(colBg, kPageEdgeShift));
+    gfx->FillRect(r, kColWhite);
     Pixmap* thumb = item.src->thumbs[item.pageNo - 1];
     if (thumb && thumb != kRenderFailed) {
         int drawDx = std::min(thumb->width, thumbDx);
@@ -526,29 +551,27 @@ void MergeGrid::DrawCell(Gfx* gfx, int idx) {
         Rect target{r.x + ((thumbDx - drawDx) / 2), r.y + ((thumbDy - drawDy) / 2), drawDx, drawDy};
         gfx->DrawPixmap(thumb, target);
     }
-    if (len(sources->all) > 1) {
-        gfx->FillRect({r.x, r.y, r.dx, DpiScaleByDpi(dpi, kStripDy)}, item.src->color);
-    }
     if (item.removed) {
-        gfx->FillRects(&r, 1, colBg, 190);
-    }
-    if (idx == focusIdx && HasFlag(vwfFocused)) {
-        Rect fr = r;
-        fr.Inflate(2, 2);
-        gfx->DrawFocusRect(fr);
+        gfx->FillRects(&edge, 1, colFrame != kColorUnset ? colFrame : colBg, kRemovedVeilAlpha);
     }
 
-    // the page number, in a pill at the bottom
+    // the page number; its file's dot when there are more files
     TempStr label = fmt("%d", item.pageNo);
     Size ts = gfx->MeasureText(label, font);
-    int padX = DpiScaleByDpi(dpi, 6);
-    int padY = DpiScaleByDpi(dpi, 2);
-    int inset = DpiScaleByDpi(dpi, 4);
-    int boxDx = std::min(ts.dx + (padX * 2), r.dx - (inset * 2));
-    int boxDy = ts.dy + (padY * 2);
-    Rect box{r.x + ((r.dx - boxDx) / 2), r.y + r.dy - boxDy - inset, boxDx, boxDy};
-    gfx->FillRoundedRect(box, boxDy / 2, ThemeWindowBackgroundColor());
-    gfx->DrawText(label, box, gfxTextCenter | gfxTextVCenter, font, ThemeWindowTextColor());
+    bool withDot = len(sources->all) > 1;
+    int dotDx = DpiScaleByDpi(dpi, kDotDx);
+    int dotGap = dotDx;
+    int labelDx = ts.dx + (withDot ? dotDx + dotGap : 0);
+    int x = r.x + ((r.dx - labelDx) / 2);
+    Rect rl{x, r.y + r.dy, labelDx, labelDy};
+    if (withDot) {
+        Rect dot{x, rl.y + ((labelDy - dotDx) / 2), dotDx, dotDx};
+        gfx->FillEllipse(dot, item.src->color, item.removed ? kBandAlpha * 4 : 255);
+        rl.x += dotDx + dotGap;
+        rl.dx = ts.dx;
+    }
+    Color colLabel = item.selected && !item.removed ? colTxt : colMuted;
+    gfx->DrawText(label, rl, gfxTextVCenter, font, colLabel);
 
     // remove on the page under the mouse, restore on every removed page
     if (!item.removed && (idx != hoverIdx || dragging)) {
@@ -556,22 +579,23 @@ void MergeGrid::DrawCell(Gfx* gfx, int idx) {
     }
     Rect btn = CornerBtnRect(idx);
     btn.Offset(origin.x, origin.y);
-    gfx->FillEllipse(btn, item.removed ? kRestoreBtnColor : kRemoveBtnColor, 230);
-    float thickness = (float)DpiScaleByDpi(dpi, 2);
+    gfx->FillEllipse(btn, colTxt, kCornerBtnAlpha);
+    float thickness = 1.5f * dpi / 96.f;
     if (item.removed) {
-        DrawRestoreGlyph(gfx, btn, kColWhite, thickness);
+        DrawRestoreGlyph(gfx, btn, colBg, thickness);
         return;
     }
-    int d = btn.dx * 3 / 10;
+    int d = btn.dx * 2 / 9;
     Point c{btn.x + (btn.dx / 2), btn.y + (btn.dy / 2)};
-    gfx->DrawLineAA({c.x - d, c.y - d}, {c.x + d, c.y + d}, kColWhite, thickness);
-    gfx->DrawLineAA({c.x - d, c.y + d}, {c.x + d, c.y - d}, kColWhite, thickness);
+    gfx->DrawLineAA({c.x - d, c.y - d}, {c.x + d, c.y + d}, colBg, thickness);
+    gfx->DrawLineAA({c.x - d, c.y + d}, {c.x + d, c.y - d}, colBg, thickness);
 }
 
 // the thumbnails, then where dragged pages or files would go and the rubber band
 void MergeGrid::Paint(VirtPaintCtx& ctx) {
     VirtListBox::Paint(ctx);
     Point origin = OriginInWindow();
+    Color colTxt = ThemeWindowTextColor();
     ctx.gfx->PushClip(ctx.clip.Intersect(ctx.bounds));
     int n = len(items);
     if (dropBefore >= 0 && n > 0) {
@@ -580,14 +604,14 @@ void MergeGrid::Paint(VirtPaintCtx& ctx) {
         r.Offset(origin.x, origin.y);
         int barDx = DpiScaleByDpi(dpi, kDropBarDx);
         int x = atEnd ? r.x + thumbDx + (gap / 2) : r.x - (gap / 2);
-        ctx.gfx->FillRect({x - (barDx / 2), r.y, barDx, thumbDy}, kDropBarColor);
+        ctx.gfx->FillRoundedRect({x - (barDx / 2), r.y, barDx, thumbDy}, barDx / 2, colTxt);
     }
     if (press == MergePress::Band) {
         int x0 = std::min(bandFrom.x, bandTo.x);
         int y0 = std::min(bandFrom.y, bandTo.y) - scrollY;
         Rect band{origin.x + x0, origin.y + y0, std::abs(bandTo.x - bandFrom.x), std::abs(bandTo.y - bandFrom.y)};
-        ctx.gfx->FillRects(&band, 1, kDropBarColor, 40);
-        ctx.gfx->DrawRect(band, kDropBarColor);
+        ctx.gfx->FillRects(&band, 1, colTxt, kBandAlpha);
+        ctx.gfx->DrawRect(band, AccentColor(GetColor(kColListBg), kFocusRingShift));
     }
     ctx.gfx->PopClip();
 }
@@ -1281,7 +1305,7 @@ bool MergePdfWnd::AddPdf(Str path, int at) {
     return true;
 }
 
-// The page count, then which file a page comes from: its color and its name.
+// The page count, then which file a page comes from: its dot and its name.
 // One control that takes the free space: a longer text needs no layout, which
 // would end a drag
 void MergePdfWnd::PaintInfo(VirtPaintCtx* ctx) {
@@ -1295,21 +1319,20 @@ void MergePdfWnd::PaintInfo(VirtPaintCtx* ctx) {
         s = fmt(Tr("%d pages, %d removed").s, nPages - nRemoved, nRemoved);
     }
     Rect r = ctx->content;
-    Color col = GetColor(kColWinText);
-    int gap = font->averageCharWidth;
+    int gap = fontMeta->averageCharWidth;
     ctx->gfx->PushClip(ctx->clip.Intersect(r));
-    Size ts = ctx->gfx->MeasureText(s, font);
-    ctx->gfx->DrawText(s, {r.x, r.y, ts.dx, r.dy}, gfxTextVCenter, font, col);
-    int x = r.x + ts.dx + (gap * 4);
-    int swatch = ts.dy * 2 / 3;
+    Size ts = ctx->gfx->MeasureText(s, fontMeta);
+    ctx->gfx->DrawText(s, {r.x, r.y, ts.dx, r.dy}, gfxTextVCenter, fontMeta, colMuted);
+    int x = r.x + ts.dx + (gap * 5);
+    int dot = DpiScale(kDotDx);
     for (int i = 0; len(sources->all) > 1 && i < len(sources->all); i++) {
         MergeSource* src = sources->all[i];
         TempStr name = path::GetBaseNameTemp(src->path);
-        ts = ctx->gfx->MeasureText(name, font);
-        ctx->gfx->FillRect({x, r.y + ((r.dy - swatch) / 2), swatch, swatch}, src->color);
-        x += swatch + gap;
-        ctx->gfx->DrawText(name, {x, r.y, ts.dx, r.dy}, gfxTextVCenter, font, col);
-        x += ts.dx + (gap * 3);
+        ts = ctx->gfx->MeasureText(name, fontMeta);
+        ctx->gfx->FillEllipse({x, r.y + ((r.dy - dot) / 2), dot, dot}, src->color);
+        x += dot + gap;
+        ctx->gfx->DrawText(name, {x, r.y, ts.dx, r.dy}, gfxTextVCenter, fontMeta, colMuted);
+        x += ts.dx + (gap * 4);
     }
     ctx->gfx->PopClip();
 }
@@ -1327,21 +1350,26 @@ void MergePdfWnd::UpdateUI() {
     }
     int nSel = grid->SelectedCount();
     int nSelRemoved = grid->SelectedRemovedCount();
-    btnRemove->SetIsEnabled(nSel > nSelRemoved);
-    btnRestore->SetIsEnabled(nSelRemoved > 0);
+    SetDlgButtonEnabled(btnRemove, DlgButtonStyle::Ghost, nSel > nSelRemoved);
+    SetDlgButtonEnabled(btnRestore, DlgButtonStyle::Ghost, nSelRemoved > 0);
     bool canSave = nPages > nRemoved;
-    btnSave->SetIsEnabled(canSave);
-    btnSaveAs->SetIsEnabled(canSave);
+    SetDlgButtonEnabled(btnSave, DlgButtonStyle::Outline, canSave);
+    SetDlgButtonEnabled(btnSaveAs, DlgButtonStyle::Filled, canSave);
     info->Invalidate();
 }
 
 //--- where Add PDF... puts the pages
 
 //   Insert 'b.pdf':
+//   ------------------------------- hairline
 //   ( ) At the end
 //   ( ) At the beginning
-//   (o) After page [ 3 ] (of 12)
-//                     [OK] [Cancel]
+//   (o) After page  3__  of 12
+//   ------------------------------- hairline
+//                     [Cancel] [Add]
+
+constexpr int kInsertDlgDx = 340;
+constexpr int kInsertPageChars = 4;
 struct InsertPosWnd : WindowBase {
     // where the answer goes: the caller's, which outlives the modal loop
     int* atOut = nullptr;
@@ -1350,8 +1378,11 @@ struct InsertPosWnd : WindowBase {
     Checkbox* rbStart = nullptr;
     Checkbox* rbAfter = nullptr;
     Edit* editPage = nullptr;
+    Color colTxt = kColorUnset;
+    Color colBg = kColorUnset;
+    Color colMuted = kColorUnset;
 
-    bool Create(HWND owner, PlatformFont*, Str what, int nItems, int afterPage);
+    bool Create(HWND owner, Str what, int nItems, int afterPage);
     Checkbox* NewRadio(Str text, bool checked, bool groupStart);
     void OnPageEdited();
     void OnOk(VirtMouseEvent* ev = nullptr);
@@ -1373,7 +1404,7 @@ Checkbox* InsertPosWnd::NewRadio(Str text, bool checked, bool groupStart) {
     args.initialState = checked ? Checkbox::State::Checked : Checkbox::State::Unchecked;
     auto* rb = new Checkbox();
     rb->Create(args);
-    rb->SetColors(ThemeWindowTextColor(), DarkModeDialogBgColor());
+    rb->SetColors(colTxt, colBg);
     return rb;
 }
 
@@ -1403,74 +1434,112 @@ void InsertPosWnd::OnCancel(VirtMouseEvent*) {
 }
 
 // afterPage: 1-based, 0 when nothing is selected (then "At the end" is picked)
-bool InsertPosWnd::Create(HWND owner, PlatformFont* f, Str what, int n, int afterPage) {
+bool InsertPosWnd::Create(HWND owner, Str what, int n, int afterPage) {
     nItems = n;
     closeOnEsc = true;
     onClose = MkFunc1Void(OnInsertPosClose);
-    SetFont(f);
+    colTxt = ThemeWindowTextColor();
+    colBg = ThemeWindowControlBackgroundColor();
+    colMuted = ThemeWindowTextDisabledColor();
+    PlatformFont* fontQuery = DlgUiFont(kToolDlgQueryFontPx);
+    PlatformFont* fontText = DlgUiFont(kToolDlgTextFontPx);
+    PlatformFont* fontMeta = DlgUiFont(kToolDlgMetaFontPx);
+    SetFont(fontText);
+    bool isRtl = IsUIRtl();
 
     CreateCustomArgs cargs;
     cargs.owner = owner;
     cargs.title = Tr("Add PDF");
-    cargs.font = font;
+    cargs.font = fontText;
     cargs.style = WS_POPUPWINDOW | WS_CAPTION;
     cargs.visible = false;
-    cargs.isRtl = IsUIRtl();
-    cargs.bgColor = DarkModeDialogBgColor();
+    cargs.isRtl = isRtl;
+    cargs.bgColor = colBg;
     CreateCustom(cargs);
     if (!hwnd) {
         return false;
     }
+    SetColors(colTxt, colBg);
 
-    int gap = DpiScaleByDpi(GetDpi(), 6);
     auto* vbox = new VBox();
     vbox->alignCross = CrossAxisAlign::Stretch;
-    vbox->AddChild(NewVirtText({.s = fmt(Tr("Insert '%s':").s, what), .font = font, .isRtl = IsUIRtl()}));
-    vbox->AddChild(new Spacer(0, gap));
+
+    // what is added, in the larger font
+    VirtText* header = NewVirtText({.s = fmt(Tr("Insert '%s':").s, what),
+                                    .font = fontQuery,
+                                    .textColor = colTxt,
+                                    .isRtl = isRtl,
+                                    .ellipsis = true});
+    int headerPad = std::max(0, (DpiScale(kToolDlgLineDy) - PlatformFontLineHeight(fontQuery)) / 2);
+    vbox->AddChild(new Padding(header, Insets{headerPad, DpiScale(kToolDlgPadDx), headerPad, DpiScale(kToolDlgPadDx)}));
+    vbox->AddChild(new VirtLine());
+
+    // the choices, a row each
+    auto* choices = new VBox();
+    choices->alignCross = CrossAxisAlign::Stretch;
+    int rowDy = DpiScale(kToolDlgRowDy);
+    auto addRow = [&](ILayout* l) {
+        auto* row = new HBox();
+        row->alignCross = CrossAxisAlign::CrossCenter;
+        row->rtl = isRtl;
+        row->gap = DpiScale(kToolDlgGapDx);
+        row->AddChild(new Spacer(0, rowDy));
+        row->AddChild(l);
+        choices->AddChild(row);
+        return row;
+    };
     bool hasPage = afterPage > 0;
     rbEnd = NewRadio(Tr("At the &end"), !hasPage, true);
-    vbox->AddChild(rbEnd);
-    vbox->AddChild(new Spacer(0, gap));
+    addRow(rbEnd);
     rbStart = NewRadio(Tr("At the &beginning"), false, false);
-    vbox->AddChild(rbStart);
-    vbox->AddChild(new Spacer(0, gap));
-
-    auto* row = new HBox();
-    row->alignCross = CrossAxisAlign::CrossCenter;
-    row->gap = font->averageCharWidth;
+    addRow(rbStart);
     rbAfter = NewRadio(Tr("&After page"), hasPage, false);
-    row->AddChild(rbAfter);
+    HBox* rowAfter = addRow(rbAfter);
+
+    // the page: a bare field over a hairline, then the count, muted
     Edit::CreateArgs eargs;
     eargs.parent = hwnd;
-    eargs.font = font;
-    eargs.withBorder = true;
+    eargs.font = fontText;
+    eargs.withBorder = false;
     eargs.numbersOnly = true;
     eargs.selectAllOnFocus = true;
-    eargs.isRtl = IsUIRtl();
+    eargs.isRtl = isRtl;
     eargs.text = fmt("%d", hasPage ? afterPage : nItems);
-    eargs.idealWidthChars = 6;
+    eargs.idealWidthChars = kInsertPageChars;
     editPage = new Edit();
+    editPage->SetColors(colTxt, colBg);
     editPage->Create(eargs);
     // set after Create(), which reports the initial text as a change
     editPage->onTextChanged = MkMethod0<InsertPosWnd, &InsertPosWnd::OnPageEdited>(this);
-    row->AddChild(editPage);
-    row->AddChild(NewVirtText({.s = fmt(Tr("(of %d)").s, nItems), .font = font, .isRtl = IsUIRtl()}));
-    vbox->AddChild(row);
-    vbox->AddChild(new Spacer(0, gap * 2));
+    auto* underlined = new VBox();
+    underlined->alignCross = CrossAxisAlign::Stretch;
+    underlined->AddChild(editPage);
+    underlined->AddChild(new VirtLine());
+    // the radio pads its own text on the right
+    rowAfter->gap = 0;
+    rowAfter->AddChild(underlined);
+    rowAfter->AddChild(new Spacer(DpiScale(kToolDlgGapDx), 0));
+    rowAfter->AddChild(
+        NewVirtText({.s = fmt(Tr("(of %d)").s, nItems), .font = fontMeta, .textColor = colMuted, .isRtl = isRtl}));
+    vbox->AddChild(new Padding(choices, DpiScaledInsets(kToolDlgFilesPadDy, kToolDlgPadDx)));
+    vbox->AddChild(new VirtLine());
 
-    auto* buttons = new HBox();
-    buttons->alignMain = MainAxisAlign::MainEnd;
-    buttons->gap = font->averageCharWidth;
-    auto* btnOk = NewThemedButton(hwnd, Tr("OK"), font, true);
-    btnOk->onClick = MkMethod1<InsertPosWnd, VirtMouseEvent*, &InsertPosWnd::OnOk>(this);
-    buttons->AddChild(btnOk);
-    auto* btnCancel = NewThemedButton(hwnd, Tr("Cancel"), font, false);
+    // Cancel and the one filled Add, on the right
+    auto* footer = new HBox();
+    footer->alignCross = CrossAxisAlign::CrossCenter;
+    footer->rtl = isRtl;
+    footer->gap = DpiScale(kToolDlgGapDx);
+    footer->AddChild(new Spacer(0, 0), 1);
+    auto* btnCancel = NewDlgButton(hwnd, Tr("Cancel"), fontText, DlgButtonStyle::Outline, false);
     btnCancel->onClick = MkMethod1<InsertPosWnd, VirtMouseEvent*, &InsertPosWnd::OnCancel>(this);
-    buttons->AddChild(btnCancel);
-    vbox->AddChild(buttons);
-    layout = new Padding(vbox, DpiScaledInsets(10, 10));
+    footer->AddChild(btnCancel);
+    auto* btnOk = NewDlgButton(hwnd, Tr("Add"), fontText, DlgButtonStyle::Filled, true);
+    btnOk->onClick = MkMethod1<InsertPosWnd, VirtMouseEvent*, &InsertPosWnd::OnOk>(this);
+    footer->AddChild(btnOk);
+    vbox->AddChild(new Padding(footer, DpiScaledInsets(kToolDlgFootPadDy, kToolDlgPadDx)));
+    layout = vbox;
 
-    LayoutAndSizeToContent(layout, DpiScale(260), 0, hwnd);
+    LayoutAndSizeToContent(layout, DpiScale(kInsertDlgDx), 0, hwnd);
     DoLayout(HwndClientRect(hwnd).Size());
     HwndCenterDialog(hwnd, owner);
     UpdateTheme();
@@ -1497,7 +1566,7 @@ static int AskInsertPosition(MergePdfWnd* w, const StrVec& paths) {
     int at = -1;
     auto* dlg = new InsertPosWnd();
     dlg->atOut = &at;
-    if (!dlg->Create(w->hwnd, w->font, what, n, afterPage)) {
+    if (!dlg->Create(w->hwnd, what, n, afterPage)) {
         delete dlg;
         return -1;
     }
@@ -1680,58 +1749,72 @@ bool MergePdfWnd::Create(MainWindow* w, WindowTab* tab) {
     onKeyDown = MkMethod1<MergePdfWnd, KeyEvent*, &MergePdfWnd::OnKey>(this);
     onTimer = MkMethod1<MergePdfWnd, WindowBase::TimerEvent*, &MergePdfWnd::OnTimer>(this);
 
+    colTxt = ThemeWindowTextColor();
+    colBg = ThemeWindowControlBackgroundColor();
+    colMuted = ThemeWindowTextDisabledColor();
+    fontText = DlgUiFont(kToolDlgTextFontPx);
+    fontMeta = DlgUiFont(kToolDlgMetaFontPx);
+    SetFont(fontText);
+
     CreateCustomArgs cargs;
     cargs.title = fmt("%s - %s", Tr("Merge PDF"), path::GetBaseNameTemp(docPath));
-    cargs.font = GetDefaultGuiFont();
+    cargs.font = fontText;
     cargs.style = WS_OVERLAPPEDWINDOW;
     cargs.visible = false;
     cargs.isRtl = IsUIRtl();
     cargs.icon = LoadIconW(GetModuleHandleW(nullptr), MAKEINTRESOURCEW(GetAppIconID()));
-    cargs.bgColor = DarkModeDialogBgColor();
+    cargs.bgColor = colBg;
     CreateCustom(cargs);
     if (!hwnd) {
         return false;
     }
     SetWindowLongPtrW(hwnd, GWLP_HWNDPARENT, (LONG_PTR)w->hwndFrame);
+    SetColors(colTxt, colBg);
 
-    int btnGap = font->averageCharWidth;
-
-    grid = new MergeGrid(this, sources, GetAppFont(), GetDpi());
+    grid = new MergeGrid(this, sources, fontMeta, GetDpi());
     sources->grid = grid;
 
-    auto* bottom = new HBox();
-    bottom->alignCross = CrossAxisAlign::CrossCenter;
-    bottom->gap = btnGap;
-    btnAdd = NewThemedButton(hwnd, Tr("Add PDF..."), font, false);
+    // the footer: the quiet page actions and the status on the left, Cancel,
+    // Save and the one filled Save As... on the right
+    auto* footer = new HBox();
+    footer->alignCross = CrossAxisAlign::CrossCenter;
+    footer->rtl = IsUIRtl();
+    footer->gap = DpiScale(kToolDlgGapDx);
+    btnAdd = NewDlgButton(hwnd, Tr("Add PDF..."), fontText, DlgButtonStyle::Ghost, false);
     btnAdd->onClick = MkMethod1<MergePdfWnd, VirtMouseEvent*, &MergePdfWnd::OnAdd>(this);
-    bottom->AddChild(btnAdd);
-    btnRemove = NewThemedButton(hwnd, Tr("Remove"), font, false);
+    footer->AddChild(btnAdd);
+    btnRemove = NewDlgButton(hwnd, Tr("Remove"), fontText, DlgButtonStyle::Ghost, false);
     btnRemove->onClick = MkMethod1<MergePdfWnd, VirtMouseEvent*, &MergePdfWnd::OnRemove>(this);
-    bottom->AddChild(btnRemove);
-    btnRestore = NewThemedButton(hwnd, Tr("Restore"), font, false);
+    footer->AddChild(btnRemove);
+    btnRestore = NewDlgButton(hwnd, Tr("Restore"), fontText, DlgButtonStyle::Ghost, false);
     btnRestore->onClick = MkMethod1<MergePdfWnd, VirtMouseEvent*, &MergePdfWnd::OnRestore>(this);
-    bottom->AddChild(btnRestore);
+    footer->AddChild(btnRestore);
+    // the quiet buttons are muted already: disabled, they fade further
+    for (VirtButton* b : {btnAdd, btnRemove, btnRestore}) {
+        b->SetColor(kColBtnTextDisabled, AccentColor(colBg, kToolDlgFaintShift));
+    }
     info = new VirtCustom();
-    info->idealSize = {0, PlatformFontMeasureText(font, StrL("M")).dy};
+    info->idealSize = {0, PlatformFontMeasureText(fontMeta, StrL("M")).dy};
     info->onPaint = MkFunc1(PaintMergeInfo, this);
-    bottom->AddChild(info, 1);
-    btnSave = NewThemedButton(hwnd, Tr("Save"), font, false);
-    btnSave->onClick = MkMethod1<MergePdfWnd, VirtMouseEvent*, &MergePdfWnd::OnSave>(this);
-    bottom->AddChild(btnSave);
-    btnSaveAs = NewThemedButton(hwnd, Tr("Save As..."), font, true);
-    btnSaveAs->onClick = MkMethod1<MergePdfWnd, VirtMouseEvent*, &MergePdfWnd::OnSaveAs>(this);
-    bottom->AddChild(btnSaveAs);
-    btnCancel = NewThemedButton(hwnd, Tr("Cancel"), font, false);
+    footer->AddChild(new Spacer(DpiScale(kToolDlgGapDx), 0));
+    footer->AddChild(info, 1);
+    btnCancel = NewDlgButton(hwnd, Tr("Cancel"), fontText, DlgButtonStyle::Outline, false);
     btnCancel->onClick = MkMethod1<MergePdfWnd, VirtMouseEvent*, &MergePdfWnd::OnCancel>(this);
-    bottom->AddChild(btnCancel);
+    footer->AddChild(btnCancel);
+    btnSave = NewDlgButton(hwnd, Tr("Save"), fontText, DlgButtonStyle::Outline, false);
+    btnSave->onClick = MkMethod1<MergePdfWnd, VirtMouseEvent*, &MergePdfWnd::OnSave>(this);
+    footer->AddChild(btnSave);
+    btnSaveAs = NewDlgButton(hwnd, Tr("Save As..."), fontText, DlgButtonStyle::Filled, true);
+    btnSaveAs->onClick = MkMethod1<MergePdfWnd, VirtMouseEvent*, &MergePdfWnd::OnSaveAs>(this);
+    footer->AddChild(btnSaveAs);
 
-    int gap = DpiScaleByDpi(GetDpi(), kDialogPadding);
+    // the pages take the window, edge to edge; a hairline over the footer
     auto* vbox = new VBox();
     vbox->alignCross = CrossAxisAlign::Stretch;
     vbox->AddChild(grid, 1);
-    vbox->AddChild(new Spacer(0, gap));
-    vbox->AddChild(bottom);
-    layout = new Padding(vbox, Insets{gap, gap, gap, gap});
+    vbox->AddChild(new VirtLine());
+    vbox->AddChild(new Padding(footer, DpiScaledInsets(kToolDlgFootPadDy, kToolDlgPadDx)));
+    layout = vbox;
 
     grid->InsertPages(sources->all[0], 0);
     grid->SelectOnly(ClampI(tab->ctrl->CurrentPageNo() - 1, 0, std::max(len(grid->items) - 1, 0)));
