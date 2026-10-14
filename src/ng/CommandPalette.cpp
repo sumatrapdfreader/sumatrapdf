@@ -2049,22 +2049,33 @@ static Size PaletteWindowSize(MainWindow* win, CommandPaletteWnd* wnd) {
 #if OS_WIN
 constexpr UINT_PTR kPaletteQuerySubclassId = 7;
 
-// WM_SETTEXT and the keys tests post at the query Edit. The box they see is
-// this control; the text they filter is the gpui input.
+static bool IsKeyboardMsg(UINT msg) {
+    switch (msg) {
+        case WM_KEYDOWN:
+        case WM_KEYUP:
+        case WM_SYSKEYDOWN:
+        case WM_SYSKEYUP:
+        case WM_CHAR:
+        case WM_SYSCHAR:
+        case WM_DEADCHAR:
+        case WM_UNICHAR:
+            return true;
+    }
+    return false;
+}
+
+// The query Edit holds focus so tests find the palette, and takes their
+// WM_SETTEXT. The text they filter is the gpui input: keys, typed or posted,
+// go to the palette's gpui window.
 static LRESULT CALLBACK PaletteQueryProc(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp, UINT_PTR, DWORD_PTR dw) {
     auto* win = (MainWindow*)dw;
     if (msg == WM_SETTEXT && lp) {
         CommandPaletteSetText(win, (const WCHAR*)lp);
     }
-    if (msg == WM_KEYDOWN || msg == WM_SYSKEYDOWN) {
-        bool ctrl = (GetKeyState(VK_CONTROL) & 0x8000) != 0;
-        bool shift = (GetKeyState(VK_SHIFT) & 0x8000) != 0;
-        if (CommandPaletteOnKeyDown(win, (int)wp, ctrl, shift)) {
-            return 0;
-        }
-    }
-    if (msg == WM_KEYUP) {
-        CommandPaletteOnKeyUp(win, (int)wp);
+    CommandPaletteWnd* wnd = gCommandPaletteWnd;
+    HWND gpuiHwnd = wnd && wnd->tw ? ToolWindowHwnd(wnd->tw) : nullptr;
+    if (IsKeyboardMsg(msg) && gpuiHwnd) {
+        return SendMessageW(gpuiHwnd, msg, wp, lp);
     }
     if (msg == WM_NCDESTROY) {
         RemoveWindowSubclass(hwnd, PaletteQueryProc, kPaletteQuerySubclassId);

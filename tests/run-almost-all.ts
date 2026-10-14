@@ -296,6 +296,7 @@ import { testit as issue5956 } from "./issue-5956.ts";
 import { testit as issue6113 } from "./issue-6113.ts";
 import { testit as imageOnlyPaletteItems } from "./image-only-palette-items.ts";
 import { testit as commandPaletteShortcutFilter } from "./command-palette-shortcut-filter.ts";
+import { testit as commandPaletteTyping } from "./command-palette-typing.ts";
 import { testit as commandPaletteAltNames } from "./command-palette-alt-names.ts";
 import { testit as commandPaletteThumbnails } from "./command-palette-thumbnails.ts";
 import { testit as sidebarThumbnails } from "./sidebar-thumbnails.ts";
@@ -741,6 +742,7 @@ export const tests: NamedTest[] = [
   ["home-theme-icons", homeThemeIcons],
   ["issue-5971", issue5971],
   ["command-palette-shortcut-filter", commandPaletteShortcutFilter],
+  ["command-palette-typing", commandPaletteTyping],
   ["command-palette-alt-names", commandPaletteAltNames],
   ["command-palette-thumbnails", commandPaletteThumbnails],
   ["sidebar-thumbnails-close", sidebarThumbnailsClose],
