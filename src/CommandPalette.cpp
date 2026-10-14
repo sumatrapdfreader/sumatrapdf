@@ -866,30 +866,6 @@ static void OnPaletteSwitchClicked(VirtMouseEvent* ev) {
     t->wnd->SwitchToPrefix(t->prefix);
 }
 
-// what the two help rows have in common
-struct HelpStyle {
-    HWND hwnd = nullptr;
-    PlatformFont* font = nullptr;
-    Color colTxt = kColorUnset;
-    Color colBg = kColorUnset;
-};
-
-static void InitHelpText(const HelpStyle& st, VirtRichText* t, Str markup) {
-    ParseTipInto(t, markup);
-    t->font = st.font;
-    // the help rows are not links, so they take the plain text color
-    t->SetColor(kColRichText, st.colTxt);
-    t->SetColor(kColRichLink, st.colTxt);
-    t->SetColor(kColRichBg, st.colBg);
-    int padX = DpiScale(8);
-    t->padding = Insets{0, padX, 0, padX};
-}
-
-// "(Kbd/Enter) run command": the key as a key cap before the words
-static TempStr HintMarkupTemp(const PaletteHint& h) {
-    return str::JoinTemp(StrL("(Kbd/"), h.key, StrL(") "), h.desc);
-}
-
 // the mode switches: the one the query is in takes the text color, the others
 // are muted
 void CommandPaletteWnd::FillSwitchRow() {
@@ -913,10 +889,9 @@ void CommandPaletteWnd::FillSwitchRow() {
     for (int i = 0; i < n; i++) {
         PaletteSwitch& sw = switches[i];
         bool active = PaletteSwitchIsActive(filter, sw.prefix);
-        HelpStyle st{hwnd, PaletteFont(kPaletteMetaFontPx), active ? colTxt : colMuted, colBg};
-        PaletteHint h{Str(sw.label.s, 1), Str(sw.label.s + 2, len(sw.label) - 2)};
         auto* t = new PaletteSwitchCtrl();
-        InitHelpText(st, t, HintMarkupTemp(h));
+        InitKeyHint(t, PaletteFont(kPaletteMetaFontPx), Str(sw.label.s, 1), Str(sw.label.s + 2, len(sw.label) - 2),
+                    active ? colTxt : colMuted, colBg);
         t->wnd = this;
         t->prefix = sw.prefix;
         t->onClick = MkFunc1Void(OnPaletteSwitchClicked);
@@ -925,12 +900,6 @@ void CommandPaletteWnd::FillSwitchRow() {
     if (layout) {
         DoLayout();
     }
-}
-
-static VirtRichText* NewHelpText(const HelpStyle& st, Str markup) {
-    auto* t = new VirtRichText();
-    InitHelpText(st, t, markup);
-    return t;
 }
 
 // a row of help items: virtual controls sitting in the palette's layout next
@@ -964,11 +933,10 @@ void CommandPaletteWnd::UpdateHelpRow() {
 
     Color colBg = ThemeWindowControlBackgroundColor();
     Color colMuted = ThemeWindowTextDisabledColor();
-    HelpStyle st{hwnd, PaletteFont(kPaletteHintFontPx), colMuted, colBg};
     PaletteHint hints[kPaletteMaxHints];
     int nHelp = PaletteHelpHints(kind, hints);
     for (int i = 0; i < nHelp; i++) {
-        helpRow->AddChild(NewHelpText(st, HintMarkupTemp(hints[i])));
+        helpRow->AddChild(NewKeyHint(PaletteFont(kPaletteHintFontPx), hints[i].key, hints[i].desc, colMuted, colBg));
     }
     // the count at the right end
     helpRow->AddChild(new Spacer(0, 0), 1);

@@ -2734,8 +2734,14 @@ Color VirtButton::TextColor(Color bg) const {
 void VirtButton::Paint(VirtPaintCtx& ctx) {
     bool isEnabled = HasFlag(vwfEnabled);
     Color bg = GetColor((isEnabled && HasFlag(vwfHovered)) ? kColBtnBgHover : kColBtnBg);
-    ctx.gfx->FillRect(ctx.bounds, bg);
     Color borderCol = GetColor(kColBtnBorder);
+    if (cornerRadius > 0) {
+        Color border = ColorSkipsPaint(borderCol) ? kColorTransparent : borderCol;
+        ctx.gfx->FillRoundedRect(ctx.bounds, cornerRadius, bg, border);
+        borderCol = kColorUnset;
+    } else {
+        ctx.gfx->FillRect(ctx.bounds, bg);
+    }
     if (!ColorSkipsPaint(borderCol)) {
         Rect b = ctx.bounds;
         ctx.gfx->FillRect({b.x, b.y, b.dx, 1}, borderCol);
@@ -3834,6 +3840,23 @@ static TempStr CommandShortcutTemp(Str cmdName) {
     return gCommandsContext->GetCommandShortcutTemp(cmdName);
 }
 
+void InitKeyHint(VirtRichText* t, PlatformFont* font, Str key, Str desc, Color colTxt, Color colBg) {
+    ParseTipInto(t, str::JoinTemp(StrL("(Kbd/"), key, StrL(") "), desc));
+    t->font = font;
+    // a hint is not a link, so it takes the plain text color
+    t->SetColor(kColRichText, colTxt);
+    t->SetColor(kColRichLink, colTxt);
+    t->SetColor(kColRichBg, colBg);
+    int padX = DpiScale(8);
+    t->padding = Insets{0, padX, 0, padX};
+}
+
+VirtRichText* NewKeyHint(PlatformFont* font, Str key, Str desc, Color colTxt, Color colBg) {
+    auto* t = new VirtRichText();
+    InitKeyHint(t, font, key, desc, colTxt, colBg);
+    return t;
+}
+
 void ParseTipInto(VirtRichText* tipIn, Str s) {
     VirtRichText& tip = *tipIn;
     if (len(s) == 0) {
@@ -4149,9 +4172,11 @@ TipLink* VirtRichText::LinkAt(Point ptLocal) {
 }
 
 // a click on a link runs it; anything else bubbles up to whoever hosts us
+// LayoutText's line pitch: a word's height with a pixel above and below it,
+// and 2 between the lines
 int VirtFixedLinesText::FixedDy() {
-    int lineDy = PlatformFontMeasureText(font, StrL("Ag")).dy;
-    return (lineDy * nLines) + padding.top + padding.bottom;
+    int lineDy = PlatformFontMeasureText(font, StrL("Ag")).dy + (2 * DpiScale(1));
+    return (lineDy * nLines) + (2 * (nLines - 1)) + padding.top + padding.bottom;
 }
 
 // the height is ours in all three, or the box would follow the text: it is

@@ -12,6 +12,7 @@ struct SettingItem {
     Str comment; // doc comment describing the setting, owned
     SettingType type = SettingType::Bool;
     int fieldOffset = 0;
+    int sectionIdx = -1;               // the struct the setting is in ("FixedPageUI"), -1 at the top level
     const char** enumValues = nullptr; // non-null for enum (string) settings
 
     // pending value; strVal (owned) is used for String, Color and Compact
@@ -37,6 +38,39 @@ struct SettingItem {
     }
 };
 
+// the settings of one struct ("FixedPageUI.*"), listed under a header row
+struct SettingSection {
+    Str name;    // the struct's dotted path, owned
+    Str comment; // its doc comment, owned
+
+    ~SettingSection() {
+        str::Free(name);
+        str::Free(comment);
+    }
+};
+
+// a row of the filtered list: a setting, or the header of the section the
+// rows under it belong to
+struct SettingRow {
+    int itemIdx = -1;      // index into the items; -1 for a header
+    int sectionIdx = -1;   // header: the section
+    bool leafName = false; // a setting under its header is shown by its leaf name
+};
+
+// what the footer's key hints are for
+enum {
+    kAdvEditNone,
+    kAdvEditValue,
+    kAdvEditEnum,
+};
+
+// one "Enter change" hint in the footer, like the palette's
+struct AdvHint {
+    Str key;
+    Str desc;
+};
+constexpr int kAdvMaxHints = 2;
+
 void ApplyCompactInts(const StructInfo* info, u8* base, Str s);
 bool SettingDiffersFromDefault(SettingItem* item);
 TempStr FormatSettingValueTemp(SettingItem* item);
@@ -45,8 +79,16 @@ void PreviewSettingChange(SettingItem* item);
 void EndPreviewSettingChange();
 void SetItemChanged(SettingItem* item);
 void RestoreSettingDefault(SettingItem* item);
-void CollectSettings(Vec<SettingItem*>& items);
-void CollectFilteredSettings(Vec<SettingItem*>& items, const StrVec& words, Vec<int>& filtered);
+void CollectSettings(Vec<SettingItem*>& items, Vec<SettingSection*>& sections);
+void CollectFilteredSettings(Vec<SettingItem*>& items, const StrVec& words, Vec<SettingRow>& rows);
+int CountSettingRows(const Vec<SettingRow>& rows);
+int FindSettingRow(const Vec<SettingRow>& rows, int itemIdx);
+int NextSettingRow(const Vec<SettingRow>& rows, int row, int dir);
+Str SettingLeafName(Str path);
+Str SettingRowName(Vec<SettingItem*>& items, const SettingRow& row);
+TempStr AdvSettingsCountTemp(int shown, int total);
+TempStr AdvSettingsDefaultTemp(SettingItem* item);
+int AdvSettingsHints(int editState, AdvHint* out);
 
 constexpr const char* kSettingsDocsUrl = "https://www.sumatrapdfreader.org/settings/settings3-7.html";
 

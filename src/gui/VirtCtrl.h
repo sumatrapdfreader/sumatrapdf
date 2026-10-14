@@ -677,6 +677,7 @@ struct VirtLink : VirtText {
 struct VirtButton : VirtText {
     // colors: kColBtn*, defaulting to gColsBtnDefault when isDefault
     Insets textPadding{.top = 4, .right = 8, .bottom = 4, .left = 8};
+    int cornerRadius = 0;
 
     VirtButton(Str s, PlatformFont* font = nullptr);
     ~VirtButton() override;
@@ -963,6 +964,9 @@ struct VirtFixedLinesText : VirtRichText {
 };
 
 VirtRichText* ParseTip(Str s);
+// "Enter run": the key as a key cap before the words, padded 8 on each side
+void InitKeyHint(VirtRichText* t, PlatformFont* font, Str key, Str desc, Color colTxt, Color colBg);
+VirtRichText* NewKeyHint(PlatformFont* font, Str key, Str desc, Color colTxt, Color colBg);
 // same, but into a VirtRichText the caller made (e.g. a subclass of it)
 void ParseTipInto(VirtRichText*, Str s);
 int TipWordCount(VirtRichText*);

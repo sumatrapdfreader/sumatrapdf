@@ -232,6 +232,12 @@ gpui::El* DlgAccelEl(gpui::Ctx* cx, T* ctrl, Str label, gpui::Listener onClick, 
     return DlgAccelUnderline(cx, ctrl->Label(text)->OnClick(onClick)->IntoEl(), text);
 }
 
+// a key in a small outline, muted; in the text color when `active`. The
+// palette and the settings dialog draw their key hints with it
+gpui::El* DlgKeyCap(gpui::Ctx* cx, Str key, bool active = false);
+// a hairline across the dialog
+gpui::El* DlgHairline(gpui::Ctx* cx);
+
 // gpui's Dialog draws OK / Cancel itself unless the caller gives it a footer,
 // and then it draws nothing else. orig's dialogs with an extra button (Help,
 // Reset to defaults, Remove, Open Settings File) need the whole row, so this

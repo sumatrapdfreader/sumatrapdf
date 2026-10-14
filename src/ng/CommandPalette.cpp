@@ -54,6 +54,7 @@
 #include "TableOfContents.h"
 #include "gui/AppShell.h"
 #include "gui/ToolWindow.h"
+#include "gui/DialogWidgets.h"
 #include "gui/DocCanvas.h"
 #include "gui/Sidebar.h"
 #include "SumatraDialogs.h"
@@ -1694,30 +1695,6 @@ void PaletteView::OnThumbScroll(PaletteView*, gp::Ctx* cx, const gp::ScrollEvent
     gp::Notify(cx);
 }
 
-// a key drawn as a key cap: light fill, darker rounded border
-// a key in a small outline, muted; in the text color when `active`
-static gp::El* KeyCap(gp::Ctx* cx, Str key, bool active = false) {
-    constexpr float kKeyCapPadX = 5;
-    constexpr float kKeyCapPadY = 2;
-    constexpr float kKeyCapRadius = 3;
-    Color col = active ? ThemeWindowTextColor() : ThemeWindowTextDisabledColor();
-    return gp::Div(cx->a)
-        ->FlexRow()
-        ->Shrink0()
-        ->ItemsCenter()
-        ->JustifyCenter()
-        ->PadX(kKeyCapPadX)
-        ->PadY(kKeyCapPadY)
-        ->Radius(kKeyCapRadius)
-        ->Border(1, ToGpui(active ? col : ThemeEdgeColor()))
-        ->Child(gp::TextEl(cx->a, GpuiDup(cx->a, key))->Mono()->Font(kPaletteHintFontPx)->Fg(ToGpui(col)));
-}
-
-// a hairline across the palette
-static gp::El* PaletteRule(gp::Ctx* cx) {
-    return gp::Div(cx->a)->W(gp::kFill)->H(1)->Shrink0()->Bg(ToGpui(ThemeEdgeColor()));
-}
-
 static gp::El* BuildList(CommandPaletteWnd* wnd, gp::Ctx* cx, float listDy) {
     Color colBg = ThemeWindowControlBackgroundColor();
     Color colText = ThemeWindowTextColor();
@@ -1952,7 +1929,7 @@ static gp::El* BuildSwitchRow(CommandPaletteWnd* wnd, gp::Ctx* cx) {
                          ->PathClick(GpuiDup(cx->a, fmt("palette-switch-%d", prefixIdx)))
                          ->OnClick(gp::ListenTo(gPaletteView, &PaletteView::OnSwitchClick, (intptr_t)prefixIdx));
         // the leading character is the prefix: draw it as a key cap, as orig does
-        el->Child(KeyCap(cx, Str(sw.label.s, 1), active));
+        el->Child(DlgKeyCap(cx, Str(sw.label.s, 1), active));
         el->Child(gp::TextEl(cx->a, GpuiDup(cx->a, Str(sw.label.s + 2, len(sw.label) - 2)))
                       ->Font(kPaletteMetaFontPx)
                       ->Fg(ToGpui(active ? colText : colMuted)));
@@ -1979,7 +1956,7 @@ static gp::El* BuildHelpRow(CommandPaletteWnd* wnd, gp::Ctx* cx) {
                       ->Gap(18);
     for (int i = 0; i < nHelp; i++) {
         gp::El* hint = gp::Div(cx->a)->FlexRow()->ItemsCenter()->Gap(6);
-        hint->Child(KeyCap(cx, hints[i].key));
+        hint->Child(DlgKeyCap(cx, hints[i].key));
         hint->Child(gp::TextEl(cx->a, GpuiDup(cx->a, hints[i].desc))->Font(kPaletteMetaFontPx)->Fg(ToGpui(colMuted)));
         row->Child(hint);
     }
@@ -2254,7 +2231,7 @@ static gp::El* PaletteCard(CommandPaletteWnd* wnd, gp::Ctx* cx, RectF bounds) {
                                 ->W(gp::kFill)
                                 ->IntoEl()
                                 ->Font(kPaletteQueryFontPx)));
-    card->Child(PaletteRule(cx));
+    card->Child(DlgHairline(cx));
     if (!wnd->smartTabMode) {
         card->Child(BuildSwitchRow(wnd, cx));
     }

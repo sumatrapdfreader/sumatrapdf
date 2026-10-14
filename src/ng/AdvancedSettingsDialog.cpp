@@ -9,9 +9,10 @@
 // is re-computed); Cancel abandons the changes.
 //
 // ng: orig's is a resizable WS_POPUPWINDOW with a VirtListBox it custom-draws
-// and in-place HWND editors placed over the value column. Here it is a gpui
-// Dialog whose list is an element per row, and the in-place editor is an Input
-// (or a Select for an enum) rendered inside the row it belongs to.
+// and in-place HWND editors placed over the value column. Here it is a window
+// of its own where the platform has one, else a gpui Dialog in the frame; the
+// list is an element per row, and the in-place editor is an Input (or a
+// Select for an enum) rendered inside the row it belongs to.
 
 #include "gui/GpuiBridge.h"
 #include "VirtKeys.h"
@@ -48,22 +49,42 @@
 
 #include "SumatraLog.h"
 
+// the dialog is drawn like the command palette: a bare filter line, 24 px
+// rows on an 8 px inset with a rounded selection, 16 px side padding
+constexpr float kAdvQueryFontPx = 15;
+constexpr float kAdvTextFontPx = 13;
+constexpr float kAdvMetaFontPx = 12;
 constexpr float kAdvRowDy = 24;
-constexpr float kAdvListDy = 360;
-constexpr float kAdvListBorderDx = 1;
+constexpr float kAdvQueryDy = 40;
+constexpr float kAdvInsetDx = 8;
+constexpr float kAdvPadDx = 16;
+constexpr float kAdvGapDx = 8;
+constexpr float kAdvHintGapDx = 18;
+constexpr float kAdvListPadDy = 4;
+constexpr float kAdvHelpDy = 104;
+constexpr float kAdvHelpPadDy = 8;
+constexpr float kAdvFootDy = 44;
+constexpr float kAdvRadius = 4;
+constexpr int kAdvSelShift = 28;
+constexpr int kAdvFaintShift = 25;
+constexpr float kAdvHeaderPadB = 4;
+constexpr float kAdvSwatchDx = 12;
+constexpr float kAdvDotDx = 6;
+constexpr float kAdvBtnDy = 26;
+constexpr float kAdvBtnPadDx = 12;
+constexpr float kAdvValueDx = 240;
+constexpr float kAdvListDy = 360; // the list in a frame dialog
 constexpr int kAdvOverscanRows = 2;
 
 struct AdvancedSettingsDlg {
     MainWindow* win = nullptr;
     bool visible = false;
     Vec<SettingItem*> items;
-    Vec<int> filtered; // indexes into items
+    Vec<SettingSection*> sections;
+    Vec<SettingRow> rows;
     StrVec filterWords;
-    int sel = -1; // index into filtered
+    int sel = -1; // index into rows
     float scrollY = 0;
-    // the comment box's offset, and the row it belongs to
-    float commentScrollY = 0;
-    int commentSel = -1;
     int editIdx = -1; // index into items of the setting being edited
     bool editIsEnum = false;
     gpui::InputState* editFilter = nullptr;
@@ -85,32 +106,14 @@ static AdvancedSettingsDlg gAdv;
 static Size gAdvLastClient;
 constexpr int kAdvSettingsMinClientDy = 320;
 // what is in the window besides the list, until a frame has measured it
-constexpr float kAdvWinChromeGuessDy = 230;
+constexpr float kAdvWinChromeGuessDy = kAdvQueryDy + kAdvHelpDy + kAdvFootDy + 2 * kAdvListPadDy + 3;
 
 static void AdvOpenToolWindow(MainWindow* win);
 
-// orig's sizes for the window, at 96 dpi: 19 high rows in the 12 px app font,
-// 4 / 8 around, a 23 high filter, 4 above and below the rows, a comment box
-// of 6 lines, 25 high buttons 7 apart
-constexpr float kAdvWinRowDy = 19;
-constexpr float kAdvWinFontPx = 12;
-constexpr float kAdvWinPadX = 8;
-constexpr float kAdvWinPadY = 4;
-constexpr float kAdvWinFilterDy = 23;
-constexpr float kAdvWinListPadY = 4;
-constexpr float kAdvWinLineDy = 15;
-constexpr int kAdvWinCommentLines = 6;
-constexpr float kAdvWinBtnDy = 25;
-constexpr float kAdvWinBtnPadDx = 12;
-constexpr float kAdvWinBtnGap = 7;
-// AdvSettingsItemColumns
-constexpr float kAdvWinColPad = 4;
-constexpr float kAdvWinColGap = 10;
-constexpr float kAdvWinMinValDx = 100;
-constexpr float kAdvWinMinNameDx = 72;
-constexpr float kAdvWinScrollbarDx = 10;
-
-static float AdvRowDy();
+// orig's AdvSettingsItemColumns: the value column is about 45% of the row
+constexpr float kAdvColGap = 10;
+constexpr float kAdvMinValDx = 100;
+constexpr float kAdvMinNameDx = 72;
 
 // the gpui window the dialog is drawn in
 static gp::Window* AdvHostWindow() {
@@ -129,7 +132,6 @@ struct AdvancedSettingsView {
     static void OnRowClick(AdvancedSettingsView* self, gp::Ctx* cx, const gp::ClickEvent* ev, int64_t idx);
     static void OnEditInput(AdvancedSettingsView* self, gp::Ctx* cx, const gp::InputEvent* ev);
     static void OnScroll(AdvancedSettingsView* self, gp::Ctx* cx, const gp::ScrollEvent* ev);
-    static void OnCommentScroll(AdvancedSettingsView* self, gp::Ctx* cx, const gp::ScrollEvent* ev);
 };
 
 static gp::Entity<AdvancedSettingsView> gAdvView;
@@ -142,6 +144,14 @@ static int CountChangedSettings() {
         }
     }
     return n;
+}
+
+// the setting of a row; null for a header or no row
+static SettingItem* RowItem(int row) {
+    if (row < 0 || row >= len(gAdv.rows) || gAdv.rows[row].itemIdx < 0) {
+        return nullptr;
+    }
+    return gAdv.items[gAdv.rows[row].itemIdx];
 }
 
 // the dialog in the frame; a window of its own is not the frame's business
@@ -191,11 +201,11 @@ static bool AdvEditingValue() {
     return gAdv.editIdx >= 0 && !gAdv.editIsEnum;
 }
 
-// first filtered row orig's "edit" action would open
+// first row orig's "edit" action would open
 static int FirstEditableRow() {
-    int n = len(gAdv.filtered);
+    int n = len(gAdv.rows);
     for (int i = 0; i < n; i++) {
-        SettingItem* item = gAdv.items[gAdv.filtered[i]];
+        SettingItem* item = RowItem(i);
         if (item && !item->enumValues && item->type != SettingType::Bool) {
             return i;
         }
@@ -273,17 +283,11 @@ TempStr AdvSettingsRowsResultTemp(Str action, int arg, int* exitCodeOut) {
     if (str::Eq(action, StrL("restore"))) {
         int nBool = 0;
         int row = -1;
-        int n = len(gAdv.filtered);
         for (int i = 0; i < len(gAdv.items) && row < 0; i++) {
             if (gAdv.items[i]->type != SettingType::Bool || nBool++ != arg) {
                 continue;
             }
-            for (int r = 0; r < n; r++) {
-                if (gAdv.filtered[r] == i) {
-                    row = r;
-                    break;
-                }
-            }
+            row = FindSettingRow(gAdv.rows, i);
         }
         if (row < 0) {
             out.Append(StrL("ERROR no-bool\n"));
@@ -291,8 +295,7 @@ TempStr AdvSettingsRowsResultTemp(Str action, int arg, int* exitCodeOut) {
         }
         gAdv.sel = row;
         bool restored = AdvRestoreDefault();
-        out.Append(fmt("restored=%s changed=%d\n", restored ? gAdv.items[gAdv.filtered[row]]->name : StrL(""),
-                       CountChangedSettings()));
+        out.Append(fmt("restored=%s changed=%d\n", restored ? RowItem(row)->name : StrL(""), CountChangedSettings()));
         return finish(0);
     }
     if (str::Eq(action, StrL("save"))) {
@@ -363,7 +366,9 @@ void CloseAdvancedSettingsDialog() {
     gAdv.editValue = nullptr;
     DeleteVecMembers(gAdv.items);
     VecReset(gAdv.items);
-    VecReset(gAdv.filtered);
+    DeleteVecMembers(gAdv.sections);
+    VecReset(gAdv.sections);
+    VecReset(gAdv.rows);
     gAdv.filterWords.Reset();
     gAdv.sel = -1;
     AppShellInvalidate(win);
@@ -386,12 +391,12 @@ void ShowAdvancedSettingsDialog(MainWindow* win) {
     gp::App* app = win->gpuiWin ? win->gpuiWin->app : nullptr;
     gAdv.editFilter = new gp::InputState();
     gAdv.editFilter->focus = gp::FocusHandleNew(app);
-    gp::InputSetPlaceholder(gAdv.editFilter, ToGpui(Tr("enter search term to filter settings")));
+    gp::InputSetPlaceholder(gAdv.editFilter, ToGpui(Tr("Filter settings")));
     gAdv.editValue = new gp::InputState();
     gAdv.editValue->focus = gp::FocusHandleNew(app);
-    CollectSettings(gAdv.items);
-    CollectFilteredSettings(gAdv.items, gAdv.filterWords, gAdv.filtered);
-    gAdv.sel = len(gAdv.filtered) > 0 ? 0 : -1;
+    CollectSettings(gAdv.items, gAdv.sections);
+    CollectFilteredSettings(gAdv.items, gAdv.filterWords, gAdv.rows);
+    gAdv.sel = NextSettingRow(gAdv.rows, -1, 1);
     gAdv.scrollY = 0;
     gAdv.visible = true;
     gAdv.wantFocus = true;
@@ -459,11 +464,11 @@ static void ApplyChangesAndSave() {
 
 // orig's ActivateItem: toggle a bool, or begin editing a value
 static void ActivateItem(int lbIdx) {
-    if (lbIdx < 0 || lbIdx >= len(gAdv.filtered)) {
+    SettingItem* item = RowItem(lbIdx);
+    if (!item) {
         return;
     }
-    int idx = gAdv.filtered[lbIdx];
-    SettingItem* item = gAdv.items[idx];
+    int idx = gAdv.rows[lbIdx].itemIdx;
     if (item->type == SettingType::Bool) {
         item->boolVal = !item->boolVal;
         SetItemChanged(item);
@@ -490,13 +495,9 @@ static void ActivateItem(int lbIdx) {
     gAdv.wantEditFocus = true;
 }
 
-static float AdvRowDy() {
-    return gAdv.tw ? kAdvWinRowDy : kAdvRowDy;
-}
-
 static float AdvListViewDy() {
     if (!gAdv.tw) {
-        return kAdvListDy - 2 * kAdvListBorderDx;
+        return kAdvListDy;
     }
     // the list takes what the window has left
     float dy = gAdv.listBounds.h;
@@ -504,20 +505,19 @@ static float AdvListViewDy() {
     if (dy <= 0 && host) {
         dy = gp::WindowSize(host).dipH - kAdvWinChromeGuessDy;
     }
-    return std::max(dy, kAdvWinRowDy);
+    return std::max(dy, kAdvRowDy);
 }
 
 // orig's VirtListBox::EnsureVisible, on whole rows
 static void AdvEnsureVisible() {
-    float rowDy = AdvRowDy();
-    float viewDy = (float)(int)(AdvListViewDy() / rowDy) * rowDy;
-    float maxY = std::max(0.f, (float)len(gAdv.filtered) * rowDy - viewDy);
+    float viewDy = (float)(int)(AdvListViewDy() / kAdvRowDy) * kAdvRowDy;
+    float maxY = std::max(0.f, (float)len(gAdv.rows) * kAdvRowDy - viewDy);
     if (gAdv.sel >= 0) {
-        float top = (float)gAdv.sel * rowDy;
+        float top = (float)gAdv.sel * kAdvRowDy;
         if (top < gAdv.scrollY) {
             gAdv.scrollY = top;
-        } else if (top + rowDy > gAdv.scrollY + viewDy) {
-            gAdv.scrollY = top + rowDy - viewDy;
+        } else if (top + kAdvRowDy > gAdv.scrollY + viewDy) {
+            gAdv.scrollY = top + kAdvRowDy - viewDy;
         }
     }
     gAdv.scrollY = std::max(0.f, std::min(gAdv.scrollY, maxY));
@@ -526,7 +526,6 @@ static void AdvEnsureVisible() {
 static bool AdvMoveSelection(int dir);
 static bool AdvOnEnter();
 
-// orig's HandleUpDownKey: Up / Down move the list selection (wrapping)
 // orig's HandleEscapeKey: Esc cancels an in-place edit; it only closes the
 // dialog when nothing is unsaved
 void AdvancedSettingsOnEscape() {
@@ -538,13 +537,7 @@ void AdvancedSettingsOnEscape() {
         AppShellInvalidate(gAdv.win);
         return;
     }
-    int nChanged = 0;
-    for (SettingItem* item : gAdv.items) {
-        if (item->changed) {
-            nChanged++;
-        }
-    }
-    if (nChanged == 0) {
+    if (CountChangedSettings() == 0) {
         CloseAdvancedSettingsDialog();
     }
 }
@@ -554,16 +547,22 @@ bool AdvancedSettingsMoveSelection(int dir) {
     return !gAdv.tw && AdvMoveSelection(dir);
 }
 
+// orig's HandleUpDownKey: Up / Down move the list selection (wrapping),
+// stepping over the section headers
 static bool AdvMoveSelection(int dir) {
     if (!gAdv.visible) {
         return false;
     }
-    int n = len(gAdv.filtered);
-    if (n == 0) {
+    int n = len(gAdv.rows);
+    if (n == 0 || CountSettingRows(gAdv.rows) == 0) {
         return false;
     }
     CommitEditValue();
-    gAdv.sel = (gAdv.sel + dir + n) % n;
+    int sel = gAdv.sel;
+    do {
+        sel = (sel + dir + n) % n;
+    } while (!RowItem(sel));
+    gAdv.sel = sel;
     AdvEnsureVisible();
     AppShellInvalidate(gAdv.win);
     return true;
@@ -604,7 +603,7 @@ void AdvancedSettingsView::OnOpenFile(AdvancedSettingsView*, gp::Ctx* cx, const 
 }
 
 void AdvancedSettingsView::OnHelp(AdvancedSettingsView*, gp::Ctx* cx, const gp::ClickEvent*) {
-    SumatraLaunchBrowser(StrL("https://www.sumatrapdfreader.org/settings/settings3-7.html"));
+    SumatraLaunchBrowser(Str(kSettingsDocsUrl));
     gp::Notify(cx);
 }
 
@@ -630,8 +629,8 @@ void AdvancedSettingsView::OnFilter(AdvancedSettingsView*, gp::Ctx* cx, const gp
     TempStr filter = str::DupTemp(FromGpui(gp::InputValue(gAdv.editFilter)));
     gAdv.filterWords.Reset();
     SplitFilterToWords(filter, gAdv.filterWords);
-    CollectFilteredSettings(gAdv.items, gAdv.filterWords, gAdv.filtered);
-    gAdv.sel = len(gAdv.filtered) > 0 ? 0 : -1;
+    CollectFilteredSettings(gAdv.items, gAdv.filterWords, gAdv.rows);
+    gAdv.sel = NextSettingRow(gAdv.rows, -1, 1);
     if (gAdv.tw) {
         // orig's SetModel() resets the selection
         gAdv.sel = -1;
@@ -646,14 +645,12 @@ void AdvancedSettingsView::OnScroll(AdvancedSettingsView*, gp::Ctx* cx, const gp
     AppShellInvalidate(gAdv.win);
 }
 
-void AdvancedSettingsView::OnCommentScroll(AdvancedSettingsView*, gp::Ctx* cx, const gp::ScrollEvent* ev) {
-    gAdv.commentScrollY = ev->offsetY;
-    gp::Notify(cx);
-    AppShellInvalidate(gAdv.win);
-}
-
 void AdvancedSettingsView::OnRowClick(AdvancedSettingsView*, gp::Ctx* cx, const gp::ClickEvent* ev, int64_t idx) {
-    // a single click only selects; activation is on double-click or Enter
+    // a single click only selects; activation is on double-click or Enter.
+    // A header row takes no click
+    if (!RowItem((int)idx)) {
+        return;
+    }
     if (gAdv.sel != (int)idx) {
         CommitEditValue();
     }
@@ -681,6 +678,355 @@ gp::El* AdvancedSettingsDialogBuild(MainWindow* win, gp::Ctx* cx) {
         return nullptr;
     }
     return AdvContentEl(cx);
+}
+
+// --- the dialog's elements -------------------------------------------------
+
+// orig's AdvSettingsItemColumns: the value column is about 45% of the row
+static float AdvValueDx(float rowDx) {
+    float totalW = rowDx - 2 * kAdvInsetDx;
+    float valW = std::max(totalW * 45 / 100, kAdvMinValDx);
+    valW = std::min(valW, totalW * 3 / 5);
+    float nameW = totalW - valW - kAdvColGap;
+    if (nameW < kAdvMinNameDx) {
+        nameW = (totalW / 2) - (kAdvColGap / 2);
+        valW = totalW - nameW - kAdvColGap;
+    }
+    return std::max(valW, 1.f);
+}
+
+// the state the footer's hints are for
+static int AdvEditState() {
+    if (gAdv.editIdx < 0) {
+        return kAdvEditNone;
+    }
+    return gAdv.editIsEnum ? kAdvEditEnum : kAdvEditValue;
+}
+
+// a header row: the section's name with its comment fainter after it, set
+// low in the row so it reads as the title of the rows under it
+static gp::El* AdvSectionRow(gp::Ctx* cx, SettingSection* sec, Color colMuted) {
+    gp::El* row = gp::Div(cx->a)
+                      ->FlexRow()
+                      ->W(gp::kFill)
+                      ->H(kAdvRowDy)
+                      ->Shrink0()
+                      ->ItemsEnd()
+                      ->PadX(kAdvInsetDx)
+                      ->PadB(kAdvHeaderPadB)
+                      ->Gap(kAdvGapDx)
+                      ->ClipX();
+    row->Child(gp::TextEl(cx->a, GpuiDup(cx->a, sec->name))->Font(kAdvMetaFontPx)->Fg(ToGpui(colMuted))->Shrink0());
+    if (len(sec->comment) > 0) {
+        row->Child(gp::TextEl(cx->a, GpuiDup(cx->a, sec->comment))
+                       ->Font(kAdvMetaFontPx)
+                       ->Fg(ToGpui(AccentColor(colMuted, kAdvFaintShift)))
+                       ->Truncate()
+                       ->MinW(0));
+    }
+    return row;
+}
+
+// a setting's row: the name, and the value on the right. The value is muted
+// when it is the default, the text color when not; a color setting gets a
+// swatch and an unsaved edit a yellow dot before it, or the in-place editor
+// takes its place
+static gp::El* AdvSettingRow(gp::Ctx* cx, int i, float valDx, Color colBg, Color colText, Color colMuted) {
+    const SettingRow& r = gAdv.rows[i];
+    SettingItem* item = gAdv.items[r.itemIdx];
+    bool editing = gAdv.editIdx == r.itemIdx;
+    gp::El* row = gp::Div(cx->a)
+                      ->FlexRow()
+                      ->W(gp::kFill)
+                      ->H(kAdvRowDy)
+                      ->Shrink0()
+                      ->ItemsCenter()
+                      ->PadX(kAdvInsetDx)
+                      ->Gap(kAdvColGap)
+                      ->Radius(kAdvRadius)
+                      ->PathClick(GpuiDup(cx->a, fmt("adv-row-%d", i)))
+                      ->OnClick(gp::ListenTo(gAdvView, &AdvancedSettingsView::OnRowClick, (intptr_t)i));
+    if (i == gAdv.sel) {
+        row->Bg(ToGpui(AccentColor(colBg, kAdvSelShift)));
+    }
+    Str name = SettingRowName(gAdv.items, r);
+    row->Child(
+        FilterHighlightText(cx, name, gAdv.filterWords, ToGpui(colText), kAdvTextFontPx)->Flex1()->MinW(0)->ClipX());
+    if (editing && gAdv.editIsEnum) {
+        row->Child(gAdv.ddValue.Build(cx, StrL("adv-enum"), valDx));
+        return row;
+    }
+    if (editing) {
+        // a bare input over an underline
+        row->Child(gp::Div(cx->a)
+                       ->W(valDx)
+                       ->Shrink0()
+                       ->BorderB(1, ToGpui(colText))
+                       ->Child(gpc::Input::New(cx, GStrL("adv-value"), gAdv.editValue)
+                                   ->Appearance(false)
+                                   ->WithSize(gp::UiSize::Small)
+                                   ->W(gp::kFill)
+                                   ->IntoEl()
+                                   ->Font(kAdvTextFontPx)));
+        return row;
+    }
+    gp::El* val = gp::Div(cx->a)->FlexRow()->ItemsCenter()->JustifyEnd()->Gap(kAdvGapDx)->W(valDx)->Shrink0();
+    if (item->changed) {
+        val->Child(gp::Div(cx->a)
+                       ->W(kAdvDotDx)
+                       ->H(kAdvDotDx)
+                       ->Shrink0()
+                       ->Radius(kAdvDotDx / 2)
+                       ->Bg(ToGpui(ThemeAccentColor())));
+    }
+    Color swatch;
+    if (item->type == SettingType::Color && ParseColor(&swatch, item->strVal)) {
+        val->Child(gp::Div(cx->a)
+                       ->W(kAdvSwatchDx)
+                       ->H(kAdvSwatchDx)
+                       ->Shrink0()
+                       ->Bg(ToGpui(swatch))
+                       ->Border(1, ToGpui(ThemeEdgeColor())));
+    }
+    Color valCol = SettingDiffersFromDefault(item) ? colText : colMuted;
+    val->Child(gp::TextEl(cx->a, GpuiDup(cx->a, FormatSettingValueTemp(item)))
+                   ->Font(kAdvTextFontPx)
+                   ->Fg(ToGpui(valCol))
+                   ->Truncate()
+                   ->MinW(0));
+    row->Child(val);
+    return row;
+}
+
+// the list: only the rows in view are built, between two spacers that stand
+// in for the rest
+static gp::El* AdvList(gp::Ctx* cx, float viewDy, float rowDx) {
+    Color colBg = ThemeWindowControlBackgroundColor();
+    Color colText = ThemeWindowTextColor();
+    Color colMuted = ThemeWindowTextDisabledColor();
+    int n = len(gAdv.rows);
+    gAdv.scrollY = std::max(0.f, std::min(gAdv.scrollY, std::max(0.f, (float)n * kAdvRowDy - viewDy)));
+    int first = std::max((int)(gAdv.scrollY / kAdvRowDy) - kAdvOverscanRows, 0);
+    int last = std::min(first + (int)(viewDy / kAdvRowDy) + 1 + 2 * kAdvOverscanRows, n);
+    float valDx = AdvValueDx(rowDx - 2 * kAdvInsetDx);
+    gp::El* rows = gp::Div(cx->a)->FlexCol()->W(gp::kFill)->PadX(kAdvInsetDx);
+    if (first > 0) {
+        rows->Child(gp::Div(cx->a)->W(gp::kFill)->H((float)first * kAdvRowDy)->Shrink0());
+    }
+    for (int i = first; i < last; i++) {
+        const SettingRow& r = gAdv.rows[i];
+        if (r.itemIdx < 0) {
+            rows->Child(AdvSectionRow(cx, gAdv.sections[r.sectionIdx], colMuted));
+        } else {
+            rows->Child(AdvSettingRow(cx, i, valDx, colBg, colText, colMuted));
+        }
+    }
+    if (last < n) {
+        rows->Child(gp::Div(cx->a)->W(gp::kFill)->H((float)(n - last) * kAdvRowDy)->Shrink0());
+    }
+    return gp::Div(cx->a)
+        ->Id(GStrL("adv-list"))
+        ->FlexCol()
+        ->W(gp::kFill)
+        ->ScrollY(gAdv.scrollY)
+        ->ScrollFromPath()
+        ->OnScroll(gp::ListenTo(gAdvView, &AdvancedSettingsView::OnScroll))
+        ->Child(rows);
+}
+
+// the filter line: a bare input with the count at its right end
+static gp::El* AdvQueryLine(gp::Ctx* cx) {
+    Color colMuted = ThemeWindowTextDisabledColor();
+    TempStr count = AdvSettingsCountTemp(CountSettingRows(gAdv.rows), len(gAdv.items));
+    return gp::Div(cx->a)
+        ->FlexRow()
+        ->W(gp::kFill)
+        ->H(kAdvQueryDy)
+        ->Shrink0()
+        ->ItemsCenter()
+        ->Gap(kAdvGapDx)
+        ->PadL(kAdvPadDx - kAdvInsetDx)
+        ->PadR(kAdvPadDx)
+        ->Child(gpc::Input::New(cx, GStrL("adv-filter"), gAdv.editFilter)
+                    ->Appearance(false)
+                    ->W(gp::kFill)
+                    ->IntoEl()
+                    ->Font(kAdvQueryFontPx))
+        ->Child(gp::TextEl(cx->a, GpuiDup(cx->a, count))->Font(kAdvMetaFontPx)->Fg(ToGpui(colMuted))->Shrink0());
+}
+
+// the help strip: the selected setting's name and default over its doc comment
+static gp::El* AdvHelpStrip(gp::Ctx* cx) {
+    Color colText = ThemeWindowTextColor();
+    Color colMuted = ThemeWindowTextDisabledColor();
+    SettingItem* item = RowItem(gAdv.sel);
+    gp::El* head = gp::Div(cx->a)->FlexRow()->W(gp::kFill)->ItemsCenter()->Gap(kAdvPadDx)->Shrink0();
+    head->Child(gp::TextEl(cx->a, GpuiDup(cx->a, item ? item->name : Str{}))
+                    ->Font(kAdvTextFontPx)
+                    ->Bold()
+                    ->Fg(ToGpui(colText))
+                    ->Truncate()
+                    ->Flex1()
+                    ->MinW(0));
+    head->Child(gp::TextEl(cx->a, GpuiDup(cx->a, item ? Str(AdvSettingsDefaultTemp(item)) : Str{}))
+                    ->Font(kAdvMetaFontPx)
+                    ->Fg(ToGpui(colMuted))
+                    ->Shrink0());
+    return gp::Div(cx->a)
+        ->FlexCol()
+        ->W(gp::kFill)
+        ->H(kAdvHelpDy)
+        ->Shrink0()
+        ->PadX(kAdvPadDx)
+        ->PadY(kAdvHelpPadDy)
+        ->Gap(3)
+        ->ClipY()
+        ->Child(head)
+        ->Child(gp::TextEl(cx->a, GpuiDup(cx->a, item ? item->comment : Str{}))
+                    ->Font(kAdvTextFontPx)
+                    ->Fg(ToGpui(colMuted))
+                    ->Wrap()
+                    ->W(gp::kFill));
+}
+
+// the footer: the key hints and the quiet actions on the left, the unsaved
+// count, Cancel and Save on the right
+static gp::El* AdvFooter(gp::Ctx* cx) {
+    Color colText = ThemeWindowTextColor();
+    Color colMuted = ThemeWindowTextDisabledColor();
+    gp::El* row = gp::Div(cx->a)
+                      ->FlexRow()
+                      ->W(gp::kFill)
+                      ->H(kAdvFootDy)
+                      ->Shrink0()
+                      ->ItemsCenter()
+                      ->PadX(kAdvPadDx)
+                      ->Gap(kAdvGapDx);
+    AdvHint hints[kAdvMaxHints];
+    int nHints = AdvSettingsHints(AdvEditState(), hints);
+    gp::El* hintRow = gp::Div(cx->a)->FlexRow()->ItemsCenter()->Gap(kAdvHintGapDx)->Shrink0();
+    for (int i = 0; i < nHints; i++) {
+        gp::El* hint = gp::Div(cx->a)->FlexRow()->ItemsCenter()->Gap(6);
+        hint->Child(DlgKeyCap(cx, hints[i].key));
+        hint->Child(gp::TextEl(cx->a, GpuiDup(cx->a, hints[i].desc))->Font(kAdvMetaFontPx)->Fg(ToGpui(colMuted)));
+        hintRow->Child(hint);
+    }
+    row->Child(hintRow);
+    row->Child(gpc::Button::New(cx, GStrL("adv-openfile"))
+                   ->Label(ToGpui(Tr("Open Settings File")))
+                   ->Ghost()
+                   ->WithSize(gp::UiSize::Small)
+                   ->OnClick(gp::ListenTo(gAdvView, &AdvancedSettingsView::OnOpenFile))
+                   ->IntoEl());
+    row->Child(gpc::Button::New(cx, GStrL("adv-help"))
+                   ->Label(ToGpui(Tr("Help")))
+                   ->Ghost()
+                   ->WithSize(gp::UiSize::Small)
+                   ->OnClick(gp::ListenTo(gAdvView, &AdvancedSettingsView::OnHelp))
+                   ->IntoEl());
+    row->Child(gp::Div(cx->a)->Flex1());
+    int nChanged = CountChangedSettings();
+    if (nChanged > 0) {
+        row->Child(gp::Div(cx->a)
+                       ->FlexRow()
+                       ->ItemsCenter()
+                       ->Gap(kAdvGapDx)
+                       ->PadX(kAdvGapDx)
+                       ->Shrink0()
+                       ->Child(gp::Div(cx->a)
+                                   ->W(kAdvDotDx)
+                                   ->H(kAdvDotDx)
+                                   ->Shrink0()
+                                   ->Radius(kAdvDotDx / 2)
+                                   ->Bg(ToGpui(ThemeAccentColor())))
+                       ->Child(gp::TextEl(cx->a, GpuiDup(cx->a, fmt(Tr("Unsaved changes: %d").s, nChanged)))
+                                   ->Font(kAdvMetaFontPx)
+                                   ->Fg(ToGpui(colText))));
+    }
+    row->Child(gpc::Button::New(cx, GStrL("adv-cancel"))
+                   ->Label(ToGpui(Tr("Cancel")))
+                   ->Outline()
+                   ->WithSize(gp::UiSize::Small)
+                   ->OnClick(gp::ListenTo(gAdvView, &AdvancedSettingsView::OnCancel))
+                   ->IntoEl());
+    // Save is the one filled thing: the text color, as orig draws it. gpui's
+    // button variants only tint their color, so it is a plain element
+    Color colBg = ThemeWindowControlBackgroundColor();
+    row->Child(gp::Div(cx->a)
+                   ->FlexRow()
+                   ->ItemsCenter()
+                   ->JustifyCenter()
+                   ->H(kAdvBtnDy)
+                   ->PadX(kAdvBtnPadDx)
+                   ->Shrink0()
+                   ->Radius(kAdvRadius)
+                   ->Bg(ToGpui(colText))
+                   ->HoverBg(ToGpui(AccentColor(colText, kAdvSelShift)))
+                   ->Cursor(gp::CursorKind::Pointer)
+                   ->PathClick(GStrL("adv-save"))
+                   ->OnClick(gp::ListenTo(gAdvView, &AdvancedSettingsView::OnSave))
+                   ->Child(gp::TextEl(cx->a, ToGpui(Tr("Save")))->Font(kAdvTextFontPx)->Fg(ToGpui(colBg))));
+    return row;
+}
+
+// what both hosts share: the per-frame state, the focus, the enum's pick
+static void AdvBeginBuild(gp::Ctx* cx) {
+    if (!gAdvView.IsValid()) {
+        gAdvView = gp::EntityNewState<AdvancedSettingsView>(cx->app);
+    }
+    if (gAdv.editIsEnum && gAdv.editIdx >= 0 && gAdv.ddValue.PollChanged(cx->app)) {
+        SettingItem* item = gAdv.items[gAdv.editIdx];
+        str::ReplaceWithCopy(&item->strVal, gAdv.ddValue.SelText());
+        SetItemChanged(item);
+        // browsing the list previews each value in turn, as orig does
+        PreviewSettingChange(item);
+    }
+    gAdv.editFilter->onChange = gp::ListenTo(gAdvView, &AdvancedSettingsView::OnFilter);
+    gAdv.editValue->onChange = gp::ListenTo(gAdvView, &AdvancedSettingsView::OnEditInput);
+}
+
+static void AdvEndBuild(gp::Ctx* cx) {
+    if (gAdv.wantEditFocus && gAdv.editIdx >= 0 && !gAdv.editIsEnum) {
+        gp::InputFocus(gAdv.editValue, cx->app, cx->win);
+        gp::InputSelectAll(gAdv.editValue, cx->app, cx->win);
+        gAdv.wantEditFocus = cx->win->input != gAdv.editValue;
+    } else if (gAdv.wantFocus) {
+        gp::InputFocus(gAdv.editFilter, cx->app, cx->win);
+        gAdv.wantFocus = cx->win->input != gAdv.editFilter;
+    }
+}
+
+// the dialog's column: the filter line, the list, the help strip and the
+// footer, hairlines between them. `list` is sized by the host
+static gp::El* AdvColumn(gp::Ctx* cx, gp::El* list) {
+    gp::El* col = gp::Div(cx->a)->FlexCol()->W(gp::kFill)->Flex1()->MinH(0);
+    col->Child(AdvQueryLine(cx));
+    col->Child(DlgHairline(cx));
+    col->Child(list);
+    col->Child(DlgHairline(cx));
+    col->Child(AdvHelpStrip(cx));
+    col->Child(DlgHairline(cx));
+    col->Child(AdvFooter(cx));
+    return col;
+}
+
+// the dialog in the frame
+static gp::El* AdvContentEl(gp::Ctx* cx) {
+    AdvBeginBuild(cx);
+    gp::WinSize ws = gp::WindowSize(cx->win);
+    float dx = std::min(820.f, ws.dipW - 32);
+    gp::El* list = AdvList(cx, kAdvListDy, dx)->H(kAdvListDy)->Shrink0();
+    gp::El* body = AdvColumn(cx, list);
+    DlgSetDefault(cx, gp::ListenTo(gAdvView, &AdvancedSettingsView::OnSave), true);
+    gp::El* dlg = gpc::Dialog::New(cx)
+                      ->Open(true)
+                      ->Title(ToGpui(Tr("Advanced Settings")))
+                      ->Body(body)
+                      ->W(dx)
+                      ->OnClose(gp::ListenTo(gAdvView, &AdvancedSettingsView::OnCancel))
+                      ->IntoEl(ws);
+    AdvEndBuild(cx);
+    return dlg;
 }
 
 struct RestrictedUseDlg {
@@ -943,209 +1289,24 @@ static Str AdvToolTitle() {
     return Tr("Advanced Settings");
 }
 
-// orig's AdvSettingsItemColumns: the value column is about 45% of the row
-static float AdvWinValueDx(float rowDx) {
-    float totalW = rowDx - 2 * kAdvWinColPad;
-    float valW = std::max(totalW * 45 / 100, kAdvWinMinValDx);
-    valW = std::min(valW, totalW * 3 / 5);
-    float nameW = totalW - valW - kAdvWinColGap;
-    if (nameW < kAdvWinMinNameDx) {
-        nameW = (totalW / 2) - (kAdvWinColGap / 2);
-        valW = totalW - nameW - kAdvWinColGap;
-    }
-    return std::max(valW, 1.f);
-}
-
-// the window's content, in orig's layout
+// the window's content: the column, with the list taking what is left
 static gp::El* AdvToolBuild(MainWindow*, gp::Ctx* cx) {
     if (!gAdv.visible || !gAdv.tw) {
         return nullptr;
     }
-    if (!gAdvView.IsValid()) {
-        gAdvView = gp::EntityNewState<AdvancedSettingsView>(cx->app);
-    }
-    if (gAdv.editIsEnum && gAdv.editIdx >= 0 && gAdv.ddValue.PollChanged(cx->app)) {
-        SettingItem* item = gAdv.items[gAdv.editIdx];
-        str::ReplaceWithCopy(&item->strVal, gAdv.ddValue.SelText());
-        SetItemChanged(item);
-        PreviewSettingChange(item);
-    }
-    const gp::Theme& th = gp::ThemeNow(cx->app);
-    gAdv.editFilter->onChange = gp::ListenTo(gAdvView, &AdvancedSettingsView::OnFilter);
-    gAdv.editValue->onChange = gp::ListenTo(gAdvView, &AdvancedSettingsView::OnEditInput);
-    float font = kAdvWinFontPx * ToolWindowSetUiFontPx(cx, kAdvWinFontPx);
+    AdvBeginBuild(cx);
     gp::WinSize ws = gp::WindowSize(cx->win);
-
-    gp::El* col = gp::Div(cx->a)->FlexCol()->W(gp::kFill)->Flex1()->MinH(0)->PadX(kAdvWinPadX)->PadY(kAdvWinPadY);
-    col->Child(gp::Div(cx->a)
-                   ->FlexRow()
-                   ->ItemsCenter()
-                   ->W(gp::kFill)
-                   ->H(kAdvWinFilterDy)
-                   ->Shrink0()
-                   ->Child(gpc::Input::New(cx, GStrL("adv-filter"), gAdv.editFilter)
-                               ->WithSize(gp::UiSize::Small)
-                               ->W(gp::kFill)
-                               ->IntoEl()));
-
-    int n = len(gAdv.filtered);
     float viewDy = AdvListViewDy();
-    gAdv.scrollY = std::max(0.f, std::min(gAdv.scrollY, std::max(0.f, (float)n * kAdvWinRowDy - viewDy)));
-    int first = std::max((int)(gAdv.scrollY / kAdvWinRowDy) - kAdvOverscanRows, 0);
-    int last = std::min(first + (int)(viewDy / kAdvWinRowDy) + 1 + 2 * kAdvOverscanRows, n);
-    float rowDx = gAdv.listBounds.w > 0 ? gAdv.listBounds.w : ws.dipW - 2 * kAdvWinPadX;
-    // orig's list keeps its scrollbar's width free; gpui draws one over the rows
-    float scrollbarDx = (float)n * kAdvWinRowDy > viewDy ? kAdvWinScrollbarDx : 0;
-    rowDx -= scrollbarDx;
-    float valDx = AdvWinValueDx(rowDx);
-    gp::Rgba selBg = ToGpui(AccentColor(ThemeWindowControlBackgroundColor(), 30));
-    gp::El* rows = gp::Div(cx->a)->FlexCol()->W(gp::kFill);
-    if (first > 0) {
-        rows->Child(gp::Div(cx->a)->W(gp::kFill)->H((float)first * kAdvWinRowDy)->Shrink0());
-    }
-    for (int i = first; i < last; i++) {
-        SettingItem* item = gAdv.items[gAdv.filtered[i]];
-        bool editing = gAdv.editIdx == gAdv.filtered[i];
-        gp::El* row = gp::Div(cx->a)
-                          ->FlexRow()
-                          ->W(gp::kFill)
-                          ->H(kAdvWinRowDy)
-                          ->Shrink0()
-                          ->ItemsCenter()
-                          ->PadL(kAdvWinColPad)
-                          ->PadR(kAdvWinColPad + scrollbarDx)
-                          ->Gap(kAdvWinColGap)
-                          ->PathClick(GpuiDup(cx->a, fmt("adv-row-%d", i)))
-                          ->OnClick(gp::ListenTo(gAdvView, &AdvancedSettingsView::OnRowClick, (intptr_t)i));
-        if (i == gAdv.sel) {
-            row->Bg(selBg);
-        }
-        // bold name => changed this session; bold value => differs from default
-        int boldLen = item->changed ? len(item->name) : 0;
-        gp::El* name =
-            FilterHighlightText(cx, item->name, gAdv.filterWords, th.foreground, font, 0, boldLen)->Flex1()->MinW(0);
-        row->Child(name->ClipX());
-        if (editing && gAdv.editIsEnum) {
-            row->Child(gAdv.ddValue.Build(cx, StrL("adv-enum"), valDx));
-        } else if (editing) {
-            row->Child(gpc::Input::New(cx, GStrL("adv-value"), gAdv.editValue)
-                           ->WithSize(gp::UiSize::Small)
-                           ->W(valDx)
-                           ->IntoEl());
-        } else {
-            gp::El* val =
-                gp::TextEl(cx->a, GpuiDup(cx->a, FormatSettingValueTemp(item)))->Font(font)->Fg(th.foreground);
-            if (SettingDiffersFromDefault(item)) {
-                val->Bold();
-            }
-            row->Child(gp::Div(cx->a)->FlexRow()->JustifyEnd()->W(valDx)->Shrink0()->ClipX()->Child(val->Truncate()));
-        }
-        rows->Child(row);
-    }
-    if (last < n) {
-        rows->Child(gp::Div(cx->a)->W(gp::kFill)->H((float)(n - last) * kAdvWinRowDy)->Shrink0());
-    }
+    float rowDx = gAdv.listBounds.w > 0 ? gAdv.listBounds.w : ws.dipW;
     float prevDy = gAdv.listBounds.h;
-    gp::El* list = gp::Div(cx->a)
-                       ->Id(GStrL("adv-list"))
-                       ->FlexCol()
-                       ->W(gp::kFill)
-                       ->Flex1()
-                       ->MinH(kAdvWinRowDy)
-                       ->BoundsOut(&gAdv.listBounds)
-                       ->ScrollY(gAdv.scrollY)
-                       ->ScrollFromPath()
-                       ->OnScroll(gp::ListenTo(gAdvView, &AdvancedSettingsView::OnScroll))
-                       ->Child(rows);
+    gp::El* list = AdvList(cx, viewDy, rowDx)->Flex1()->MinH(kAdvRowDy)->BoundsOut(&gAdv.listBounds);
     if (prevDy <= 0) {
         // the list's height is read back from the first frame
         uitask::Post(MkFunc0(AppShellInvalidate, gAdv.win), "AdvSettingsListDy");
     }
-    col->Child(gp::Div(cx->a)->FlexCol()->W(gp::kFill)->Flex1()->MinH(0)->PadY(kAdvWinListPadY)->Child(list));
-
-    int nChanged = CountChangedSettings();
-    if (nChanged > 0) {
-        col->Child(gp::Div(cx->a)
-                       ->FlexRow()
-                       ->W(gp::kFill)
-                       ->H(kAdvWinLineDy + 8)
-                       ->Shrink0()
-                       ->ItemsCenter()
-                       ->JustifyCenter()
-                       ->Bg(ToGpui(kColYellow))
-                       ->Child(gp::TextEl(cx->a, GpuiDup(cx->a, fmt(Tr("Unsaved changes: %d").s, nChanged)))
-                                   ->Font(font)
-                                   ->Bold()
-                                   ->Fg(ToGpui(kColRed))));
-    }
-
-    // the selected setting's doc comment
-    SettingItem* selItem = nullptr;
-    if (gAdv.sel >= 0 && gAdv.sel < len(gAdv.filtered)) {
-        selItem = gAdv.items[gAdv.filtered[gAdv.sel]];
-    }
-    int commentSel = selItem ? gAdv.filtered[gAdv.sel] : -1;
-    if (commentSel != gAdv.commentSel) {
-        gAdv.commentSel = commentSel;
-        gAdv.commentScrollY = 0;
-    }
-    float commentDy = (float)kAdvWinCommentLines * kAdvWinLineDy + 8;
-    col->Child(gp::Div(cx->a)->W(gp::kFill)->Shrink0()->PadX(2)->PadY(4)->Child(
-        gp::Div(cx->a)
-            ->Id(GStrL("adv-comment"))
-            ->W(gp::kFill)
-            ->H(commentDy)
-            ->Pad(4)
-            ->Border(1, ToGpui(ThemeEdgeColor()))
-            ->ScrollY(gAdv.commentScrollY)
-            ->ScrollFromPath()
-            ->OnScroll(gp::ListenTo(gAdvView, &AdvancedSettingsView::OnCommentScroll))
-            ->Child(gp::TextEl(cx->a, GpuiDup(cx->a, selItem ? selItem->comment : Str{}))
-                        ->Font(font)
-                        ->Fg(th.foreground)
-                        ->Wrap()
-                        ->W(gp::kFill))));
-    col->Child(
-        gp::Div(cx->a)
-            ->FlexRow()
-            ->W(gp::kFill)
-            ->H(kAdvWinLineDy + 2)
-            ->Shrink0()
-            ->ItemsCenter()
-            ->JustifyCenter()
-            ->Gap(16)
-            ->Child(gp::TextEl(cx->a, ToGpui(Tr("Bold: differs from default")))->Font(font)->Fg(th.foreground))
-            ->Child(gp::TextEl(cx->a, GpuiDup(cx->a, fmt(Tr("%s: restore default").s, StrL(kRestoreDefaultKeyName))))
-                        ->Font(font)
-                        ->Fg(th.foreground)));
-
-    // left: Save, Cancel, Open Settings File; right: Help
-    auto button = [&](gp::Str id, Str label, gp::Listener onClick, bool isDefault) {
-        gpc::Button* b = gpc::Button::New(cx, id)->Label(ToGpui(label))->OnClick(onClick);
-        if (isDefault) {
-            b->Primary();
-        }
-        return b->IntoEl()->H(kAdvWinBtnDy)->PadX(kAdvWinBtnPadDx)->Shrink0();
-    };
-    gp::El* buttons =
-        gp::Div(cx->a)->FlexRow()->ItemsCenter()->W(gp::kFill)->H(kAdvWinBtnDy + 8)->Gap(kAdvWinBtnGap)->Shrink0();
-    buttons->Child(button(GStrL("adv-save"), Tr("Save"), gp::ListenTo(gAdvView, &AdvancedSettingsView::OnSave), true));
-    buttons->Child(
-        button(GStrL("adv-cancel"), Tr("Cancel"), gp::ListenTo(gAdvView, &AdvancedSettingsView::OnCancel), false));
-    buttons->Child(button(GStrL("adv-openfile"), Tr("Open Settings File"),
-                          gp::ListenTo(gAdvView, &AdvancedSettingsView::OnOpenFile), false));
-    buttons->Child(gp::Div(cx->a)->Flex1());
-    buttons->Child(button(GStrL("adv-help"), Tr("Help"), gp::ListenTo(gAdvView, &AdvancedSettingsView::OnHelp), false));
-    col->Child(buttons);
-
-    if (gAdv.wantEditFocus && gAdv.editIdx >= 0 && !gAdv.editIsEnum) {
-        gp::InputFocus(gAdv.editValue, cx->app, cx->win);
-        gp::InputSelectAll(gAdv.editValue, cx->app, cx->win);
-        gAdv.wantEditFocus = cx->win->input != gAdv.editValue;
-    } else if (gAdv.wantFocus) {
-        gp::InputFocus(gAdv.editFilter, cx->app, cx->win);
-        gAdv.wantFocus = cx->win->input != gAdv.editFilter;
-    }
+    gp::El* col =
+        AdvColumn(cx, gp::Div(cx->a)->FlexCol()->W(gp::kFill)->Flex1()->MinH(0)->PadY(kAdvListPadDy)->Child(list));
+    AdvEndBuild(cx);
     return col;
 }
 
@@ -1162,14 +1323,14 @@ static bool AdvIsRestoreDefaultKey(const gp::KeyEvent* ev) {
 }
 
 static bool AdvRestoreDefault() {
-    if (gAdv.sel < 0 || gAdv.sel >= len(gAdv.filtered)) {
+    SettingItem* item = RowItem(gAdv.sel);
+    if (!item) {
         return false;
     }
     // typing a value: Delete edits that text
     if (gAdv.editIdx >= 0 && !gAdv.editIsEnum) {
         return false;
     }
-    SettingItem* item = gAdv.items[gAdv.filtered[gAdv.sel]];
     CancelEditValue();
     RestoreSettingDefault(item);
     AppShellInvalidate(gAdv.win);
@@ -1275,177 +1436,4 @@ static void AdvOpenToolWindow(MainWindow* win) {
     Rect frame = AppShellWindowScreenRect(win);
     Rect r{frame.x + (frame.dx / 2) - (size.dx / 2), frame.y + (frame.dy / 2) - (size.dy / 2), size.dx, size.dy};
     gAdv.tw = ToolWindowOpen(desc, win, AppShellShiftToWorkArea(r, win, true));
-}
-
-static gp::El* AdvContentEl(gp::Ctx* cx) {
-    if (!gAdvView.IsValid()) {
-        gAdvView = gp::EntityNewState<AdvancedSettingsView>(cx->app);
-    }
-    if (gAdv.editIsEnum && gAdv.editIdx >= 0 && gAdv.ddValue.PollChanged(cx->app)) {
-        SettingItem* item = gAdv.items[gAdv.editIdx];
-        str::ReplaceWithCopy(&item->strVal, gAdv.ddValue.SelText());
-        SetItemChanged(item);
-        // browsing the list previews each value in turn, as orig does
-        PreviewSettingChange(item);
-    }
-    const gp::Theme& th = gp::ThemeNow(cx->app);
-    gAdv.editFilter->onChange = gp::ListenTo(gAdvView, &AdvancedSettingsView::OnFilter);
-    gAdv.editValue->onChange = gp::ListenTo(gAdvView, &AdvancedSettingsView::OnEditInput);
-
-    gp::El* body = gp::Div(cx->a)->FlexCol()->Gap(6);
-    body->Child(gp::Div(cx->a)->W(gp::kFill)->Shrink0()->Child(gpc::Input::New(cx, GStrL("adv-filter"), gAdv.editFilter)
-                                                                   ->WithSize(gp::UiSize::Small)
-                                                                   ->W(gp::kFill)
-                                                                   ->IntoEl()));
-
-    // ng: only the rows in view are built, between two spacers that stand in
-    // for the rest
-    int n = len(gAdv.filtered);
-    float viewDy = AdvListViewDy();
-    gAdv.scrollY = std::max(0.f, std::min(gAdv.scrollY, std::max(0.f, (float)n * kAdvRowDy - viewDy)));
-    int first = std::max((int)(gAdv.scrollY / kAdvRowDy) - kAdvOverscanRows, 0);
-    int last = std::min(first + (int)(viewDy / kAdvRowDy) + 1 + 2 * kAdvOverscanRows, n);
-    gp::El* rows = gp::Div(cx->a)->FlexCol()->W(gp::kFill);
-    if (first > 0) {
-        rows->Child(gp::Div(cx->a)->W(gp::kFill)->H((float)first * kAdvRowDy)->Shrink0());
-    }
-    for (int i = first; i < last; i++) {
-        SettingItem* item = gAdv.items[gAdv.filtered[i]];
-        bool editing = gAdv.editIdx == gAdv.filtered[i];
-        gp::El* row = gp::Div(cx->a)
-                          ->FlexRow()
-                          ->W(gp::kFill)
-                          ->H(kAdvRowDy)
-                          ->Shrink0()
-                          ->ItemsCenter()
-                          ->PadX(6)
-                          ->Gap(10)
-                          ->PathClick(GpuiDup(cx->a, fmt("adv-row-%d", i)))
-                          ->OnClick(gp::ListenTo(gAdvView, &AdvancedSettingsView::OnRowClick, (intptr_t)i));
-        if (i == gAdv.sel) {
-            row->Bg(th.selection);
-        }
-        // bold name => changed this session; bold value => differs from default
-        int boldLen = item->changed ? len(item->name) : 0;
-        gp::El* name =
-            FilterHighlightText(cx, item->name, gAdv.filterWords, th.foreground, 13, 0, boldLen)->Flex1()->MinW(0);
-        row->Child(name->ClipX());
-        if (editing && gAdv.editIsEnum) {
-            row->Child(gAdv.ddValue.Build(cx, StrL("adv-enum"), 240));
-        } else if (editing) {
-            row->Child(
-                gpc::Input::New(cx, GStrL("adv-value"), gAdv.editValue)->WithSize(gp::UiSize::Small)->W(240)->IntoEl());
-        } else {
-            gp::El* val = gp::TextEl(cx->a, GpuiDup(cx->a, FormatSettingValueTemp(item)))
-                              ->Font(13)
-                              ->Fg(th.mutedFg)
-                              ->W(240)
-                              ->Shrink0()
-                              ->Truncate();
-            if (SettingDiffersFromDefault(item)) {
-                val->Bold()->Fg(th.foreground);
-            }
-            row->Child(val);
-        }
-        rows->Child(row);
-    }
-    if (last < n) {
-        rows->Child(gp::Div(cx->a)->W(gp::kFill)->H((float)(n - last) * kAdvRowDy)->Shrink0());
-    }
-    gp::El* list = gp::Div(cx->a)
-                       ->Id(GStrL("adv-list"))
-                       ->FlexCol()
-                       ->W(gp::kFill)
-                       ->Border(kAdvListBorderDx, th.border)
-                       ->ScrollY(gAdv.scrollY)
-                       ->ScrollFromPath()
-                       ->OnScroll(gp::ListenTo(gAdvView, &AdvancedSettingsView::OnScroll))
-                       ->Child(rows);
-    list->H(kAdvListDy);
-    body->Child(list);
-
-    int nChanged = CountChangedSettings();
-    if (nChanged > 0) {
-        body->Child(gp::Div(cx->a)
-                        ->W(gp::kFill)
-                        ->ItemsCenter()
-                        ->JustifyCenter()
-                        ->PadY(2)
-                        ->Bg(th.yellowLight)
-                        ->Child(gp::TextEl(cx->a, GpuiDup(cx->a, fmt(Tr("Unsaved changes: %d").s, nChanged)))
-                                    ->Font(13)
-                                    ->Bold()
-                                    ->Fg(th.red)));
-    }
-
-    // the selected setting's doc comment
-    SettingItem* selItem = nullptr;
-    if (gAdv.sel >= 0 && gAdv.sel < len(gAdv.filtered)) {
-        selItem = gAdv.items[gAdv.filtered[gAdv.sel]];
-    }
-    // another setting's comment starts at its top
-    int commentSel = selItem ? gAdv.filtered[gAdv.sel] : -1;
-    if (commentSel != gAdv.commentSel) {
-        gAdv.commentSel = commentSel;
-        gAdv.commentScrollY = 0;
-    }
-    body->Child(gp::Div(cx->a)
-                    ->Id(GStrL("adv-comment"))
-                    ->W(gp::kFill)
-                    ->H(84)
-                    ->Shrink0()
-                    ->Pad(6)
-                    ->Border(1, th.border)
-                    ->ScrollY(gAdv.commentScrollY)
-                    ->ScrollFromPath()
-                    ->OnScroll(gp::ListenTo(gAdvView, &AdvancedSettingsView::OnCommentScroll))
-                    ->Child(gp::TextEl(cx->a, GpuiDup(cx->a, selItem ? selItem->comment : Str{}))
-                                ->Font(12)
-                                ->Fg(th.mutedFg)
-                                ->Wrap()
-                                ->W(gp::kFill)));
-    body->Child(
-        gp::Div(cx->a)
-            ->FlexRow()
-            ->W(gp::kFill)
-            ->ItemsCenter()
-            ->JustifyCenter()
-            ->Gap(16)
-            ->Child(gp::TextEl(cx->a, ToGpui(Tr("Bold: differs from default")))->Font(12)->Fg(th.mutedFg))
-            ->Child(gp::TextEl(cx->a, GpuiDup(cx->a, fmt(Tr("%s: restore default").s, StrL(kRestoreDefaultKeyName))))
-                        ->Font(12)
-                        ->Fg(th.mutedFg)));
-
-    gp::El* extra = gp::Div(cx->a)->FlexRow()->ItemsCenter()->Gap(8);
-    extra->Child(gpc::Button::New(cx, GStrL("adv-openfile"))
-                     ->Label(ToGpui(Tr("Open Settings File")))
-                     ->WithSize(gp::UiSize::Small)
-                     ->OnClick(gp::ListenTo(gAdvView, &AdvancedSettingsView::OnOpenFile))
-                     ->IntoEl());
-    extra->Child(gpc::Button::New(cx, GStrL("adv-help"))
-                     ->Label(ToGpui(Tr("Help")))
-                     ->WithSize(gp::UiSize::Small)
-                     ->OnClick(gp::ListenTo(gAdvView, &AdvancedSettingsView::OnHelp))
-                     ->IntoEl());
-    gp::El* footer = DialogFooter(cx, extra, gAdvView, Tr("Save"), Tr("Cancel"), &AdvancedSettingsView::OnSave,
-                                  &AdvancedSettingsView::OnCancel);
-
-    gp::El* dlg = gpc::Dialog::New(cx)
-                      ->Open(true)
-                      ->Title(ToGpui(Tr("Advanced Settings")))
-                      ->Body(body)
-                      ->Footer(footer)
-                      ->W(820)
-                      ->OnClose(gp::ListenTo(gAdvView, &AdvancedSettingsView::OnCancel))
-                      ->IntoEl(gp::WindowSize(cx->win));
-
-    if (gAdv.wantEditFocus && gAdv.editIdx >= 0 && !gAdv.editIsEnum) {
-        gp::InputFocus(gAdv.editValue, cx->app, cx->win);
-        gp::InputSelectAll(gAdv.editValue, cx->app, cx->win);
-        gAdv.wantEditFocus = cx->win->input != gAdv.editValue;
-    } else if (gAdv.wantFocus) {
-        gp::InputFocus(gAdv.editFilter, cx->app, cx->win);
-        gAdv.wantFocus = cx->win->input != gAdv.editFilter;
-    }
-    return dlg;
 }

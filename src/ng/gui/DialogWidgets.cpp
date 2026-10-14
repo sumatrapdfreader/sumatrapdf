@@ -4,6 +4,7 @@
 #include "gui/GpuiBridge.h"
 
 #include "Menu.h"
+#include "Theme.h"
 #include "gui/DialogWidgets.h"
 
 #include "SumatraLog.h"
@@ -836,4 +837,27 @@ bool DlgAccelOnKey(gp::Ctx* cx, int vk, bool alt, bool ctrl, bool editFocused) {
         return true;
     }
     return false;
+}
+
+constexpr float kKeyCapFontPx = 11;
+constexpr float kKeyCapPadX = 5;
+constexpr float kKeyCapPadY = 2;
+constexpr float kKeyCapRadius = 3;
+
+gp::El* DlgKeyCap(gp::Ctx* cx, Str key, bool active) {
+    Color col = active ? ThemeWindowTextColor() : ThemeWindowTextDisabledColor();
+    return gp::Div(cx->a)
+        ->FlexRow()
+        ->Shrink0()
+        ->ItemsCenter()
+        ->JustifyCenter()
+        ->PadX(kKeyCapPadX)
+        ->PadY(kKeyCapPadY)
+        ->Radius(kKeyCapRadius)
+        ->Border(1, ToGpui(active ? col : ThemeEdgeColor()))
+        ->Child(gp::TextEl(cx->a, GpuiDup(cx->a, key))->Mono()->Font(kKeyCapFontPx)->Fg(ToGpui(col)));
+}
+
+gp::El* DlgHairline(gp::Ctx* cx) {
+    return gp::Div(cx->a)->W(gp::kFill)->H(1)->Shrink0()->Bg(ToGpui(ThemeEdgeColor()));
 }
