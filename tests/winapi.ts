@@ -590,22 +590,6 @@ export function enumChildWindows(parent: number, visit: (hwnd: number) => boolea
   }
 }
 
-// an owned top-level window (not a child) of a given class. 0 if none.
-export function findOwnedWindow(owner: number, className: string): number {
-  if (!owner) {
-    return 0;
-  }
-  let found = 0;
-  enumWindows((hwnd) => {
-    if (getWindowOwner(hwnd) === owner && getClassName(hwnd) === className) {
-      found = hwnd;
-      return false;
-    }
-    return true;
-  });
-  return found;
-}
-
 // find a top-level window of a given process and window class (0 if none)
 export function findTopWindow(pid: number, className: string): number {
   let found = 0;
@@ -747,21 +731,19 @@ const NG_INPUT_MSGS = new Set([
   WM_KEYUP,
 ]);
 const NG_GPUI_CLASS = "GpuiSystemMonitor";
-const NG_MIRROR_CLASS = "SUMATRA_PDF_CANVAS";
 
-// ng on Windows: a frame, its pixel mirror and a tool window are gpui windows,
-// so mouse and key input aimed at them goes through the control channel, as on
-// macOS. Native windows (message boxes, file dialogs) get the message.
+function isNgGpuiWindow(hwnd: number): boolean {
+  return USE_NG && !IS_MAC && getClassName(hwnd) === NG_GPUI_CLASS;
+}
+
+// ng on Windows: a frame and a tool window are gpui windows, so mouse and key
+// input aimed at them goes through the control channel, as on macOS. Native
+// windows (message boxes, file dialogs) get the message.
 export function ngInputTarget(hwnd: number): InputTarget | undefined {
-  if (!USE_NG || IS_MAC) {
+  if (!isNgGpuiWindow(hwnd)) {
     return undefined;
   }
-  const cls = getClassName(hwnd);
-  // the mirror covers the frame's client area, so its pixels are the frame's
-  const target = cls === NG_MIRROR_CLASS ? getWindowOwner(hwnd) : cls === NG_GPUI_CLASS ? hwnd : 0;
-  if (!target) {
-    return undefined;
-  }
+  const target = hwnd;
   const screenToClient = (x: number, y: number) => {
     const o = clientToScreen(target, 0, 0);
     return { x: x - o.x, y: y - o.y };
@@ -1471,6 +1453,32 @@ export function setTaskbarAutoHide(on: boolean): void {
 // was failing on these alone while the UI looked correct).
 export const CLR_INVALID = 0xffffffff;
 
+// A DC with what a window shows. ng's gpui windows are flip swapchains without
+// a redirection bitmap, so their window DC is empty: PrintWindow them instead
+// (current when called from another process, unlike from inside the app).
+function openWindowDC(hwnd: number) {
+  if (!isNgGpuiWindow(hwnd)) {
+    const dc = user32.symbols.GetWindowDC(hwnd);
+    const r = getWindowRect(hwnd);
+    return { dc, w: r.right - r.left, h: r.bottom - r.top, close: () => user32.symbols.ReleaseDC(hwnd, dc) };
+  }
+  const r = getWindowRect(hwnd);
+  const w = r.right - r.left;
+  const h = r.bottom - r.top;
+  const screenDC = user32.symbols.GetWindowDC(0);
+  const dc = gdi32.symbols.CreateCompatibleDC(screenDC);
+  const bmp = gdi32.symbols.CreateCompatibleBitmap(screenDC, w, h);
+  user32.symbols.ReleaseDC(0, screenDC);
+  const oldObj = gdi32.symbols.SelectObject(dc, bmp);
+  user32.symbols.PrintWindow(hwnd, dc, PW_RENDERFULLCONTENT);
+  const close = () => {
+    gdi32.symbols.SelectObject(dc, oldObj);
+    gdi32.symbols.DeleteObject(bmp);
+    gdi32.symbols.DeleteDC(dc);
+  };
+  return { dc, w, h, close };
+}
+
 // Read a vertical run of pixels straight out of a window's DC, as 0x00bbggrr
 // COLORREFs. Coordinates are window-relative, so 0,0 is the top-left of the
 // NON-client area -- which is what makes this usable for checking that native
@@ -1478,7 +1486,8 @@ export const CLR_INVALID = 0xffffffff;
 // Retries briefly on CLR_INVALID: concurrent DWM/paint can make GetPixel fail
 // for a frame without meaning the chrome is wrong.
 export function readWindowDCColumn(hwnd: number, x: number, y: number, count: number): number[] {
-  const dc = user32.symbols.GetWindowDC(hwnd);
+  const src = openWindowDC(hwnd);
+  const dc = src.dc;
   const out: number[] = [];
   for (let i = 0; i < count; i++) {
     let c = gdi32.symbols.GetPixel(dc, x, y + i) >>> 0;
@@ -1487,7 +1496,7 @@ export function readWindowDCColumn(hwnd: number, x: number, y: number, count: nu
     }
     out.push(c);
   }
-  user32.symbols.ReleaseDC(hwnd, dc);
+  src.close();
   return out;
 }
 
@@ -1496,7 +1505,8 @@ export function readWindowDCColumn(hwnd: number, x: number, y: number, count: nu
 // actually painted: scan the rows around the middle and count non-background
 // pixels.
 export function readWindowDCRow(hwnd: number, x: number, y: number, count: number): number[] {
-  const dc = user32.symbols.GetWindowDC(hwnd);
+  const src = openWindowDC(hwnd);
+  const dc = src.dc;
   const out: number[] = [];
   for (let i = 0; i < count; i++) {
     let c = gdi32.symbols.GetPixel(dc, x + i, y) >>> 0;
@@ -1505,7 +1515,7 @@ export function readWindowDCRow(hwnd: number, x: number, y: number, count: numbe
     }
     out.push(c);
   }
-  user32.symbols.ReleaseDC(hwnd, dc);
+  src.close();
   return out;
 }
 
@@ -1572,7 +1582,8 @@ export function captureWindowDCRegionPixels(
   if (w <= 0 || h <= 0) {
     return null;
   }
-  const winDC = user32.symbols.GetWindowDC(hwnd);
+  const src = openWindowDC(hwnd);
+  const winDC = src.dc;
   const memDC = gdi32.symbols.CreateCompatibleDC(winDC);
   const bmi = new ArrayBuffer(40);
   const dv = new DataView(bmi);
@@ -1585,7 +1596,7 @@ export function captureWindowDCRegionPixels(
   const bmp = gdi32.symbols.CreateDIBSection(memDC, ptr(bmi), 0, ptr(bitsPtr), 0n, 0);
   if (!bmp || !bitsPtr[0]) {
     gdi32.symbols.DeleteDC(memDC);
-    user32.symbols.ReleaseDC(hwnd, winDC);
+    src.close();
     return null;
   }
   const oldObj = gdi32.symbols.SelectObject(memDC, bmp);
@@ -1596,7 +1607,7 @@ export function captureWindowDCRegionPixels(
   const data = copied ? new Uint8Array(toArrayBuffer(bits, 0, w * h * 4)).slice() : null;
   gdi32.symbols.DeleteObject(bmp);
   gdi32.symbols.DeleteDC(memDC);
-  user32.symbols.ReleaseDC(hwnd, winDC);
+  src.close();
   return data;
 }
 
@@ -1688,13 +1699,13 @@ export function captureWindowToPng(hwnd: number, outPath: string): boolean {
 // DWM this works for background windows too, but NOT for minimized ones.
 export function captureWindowDCToPng(hwnd: number, outPath: string): boolean {
   ensureGdiplus();
-  const r = getWindowRect(hwnd);
-  const w = r.right - r.left;
-  const h = r.bottom - r.top;
+  const src = openWindowDC(hwnd);
+  const { w, h } = src;
   if (w <= 0 || h <= 0) {
+    src.close();
     return false;
   }
-  const winDC = user32.symbols.GetWindowDC(hwnd);
+  const winDC = src.dc;
   const memDC = gdi32.symbols.CreateCompatibleDC(winDC);
   const bmp = gdi32.symbols.CreateCompatibleBitmap(winDC, w, h);
   const oldObj = gdi32.symbols.SelectObject(memDC, bmp);
@@ -1708,7 +1719,7 @@ export function captureWindowDCToPng(hwnd: number, outPath: string): boolean {
 
   gdi32.symbols.DeleteObject(bmp);
   gdi32.symbols.DeleteDC(memDC);
-  user32.symbols.ReleaseDC(hwnd, winDC);
+  src.close();
   return status === 0;
 }
 
@@ -1728,7 +1739,8 @@ export function captureWindowDCRegionToPng(
   if (w <= 0 || h <= 0) {
     return false;
   }
-  const winDC = user32.symbols.GetWindowDC(hwnd);
+  const src = openWindowDC(hwnd);
+  const winDC = src.dc;
   const memDC = gdi32.symbols.CreateCompatibleDC(winDC);
   const bmp = gdi32.symbols.CreateCompatibleBitmap(winDC, w * zoom, h * zoom);
   const oldObj = gdi32.symbols.SelectObject(memDC, bmp);
@@ -1743,7 +1755,7 @@ export function captureWindowDCRegionToPng(
 
   gdi32.symbols.DeleteObject(bmp);
   gdi32.symbols.DeleteDC(memDC);
-  user32.symbols.ReleaseDC(hwnd, winDC);
+  src.close();
   return status === 0;
 }
 

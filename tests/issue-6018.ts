@@ -13,7 +13,7 @@ import { cmdId, runStandalone, tmpPath, crc32 } from "./util.ts";
 import { ControlCommand } from "./control.ts";
 import { IS_MAC } from "./host.ts";
 import { findCanvas, killAndWait, launchControlled, sendCommandSync } from "./win-automation.ts";
-import { readWindowDCColumn, setProcessDpiAware, sleep } from "./winapi.ts";
+import { clientToScreen, getWindowRect, readWindowDCColumn, setProcessDpiAware, sleep } from "./winapi.ts";
 
 // Lossless 400x51 solid-color WebP (VP8L). WebP used EngineImages' GDI+ scale
 // path then (#6245 moved it to mupdf's), which is what left a 1-2px dark seam
@@ -176,7 +176,10 @@ export async function testit(): Promise<void> {
       const p1 = z.pages.find((p) => p.n === 1)!;
       const x = p1.sx + Math.floor(p1.sdx / 2);
       const y = p1.sy + p1.sdy - 2;
-      const col = readWindowDCColumn(canvas, x, y, 5);
+      // window DC coordinates; ng's canvas is the frame, with resize borders
+      const o = clientToScreen(canvas, 0, 0);
+      const wr = getWindowRect(canvas);
+      const col = readWindowDCColumn(canvas, x + o.x - wr.left, y + o.y - wr.top, 5);
       const hex = col.map((c) => c.toString(16)).join(",");
       const isBlack = (c: number) => c === 0;
       if (col.slice(1, 4).some(isBlack)) {
