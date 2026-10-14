@@ -25,29 +25,15 @@ import {
   sendCommandSync,
   waitForPalette,
   paletteSetText,
+  paletteState,
+  type PaletteState,
 } from "./win-automation.ts";
-
 const SETTINGS = `UiLanguage = en
 Theme = Light
 CheckForUpdates = false
 RestoreSession = false
 RememberOpenedFiles = false
 `;
-
-type Palette = { open: boolean; items: number };
-
-async function paletteState(client: ControlClient): Promise<Palette> {
-  const res = await client.request(ControlCommand.TestCommandPalette, []);
-  const out = String(res[1] ?? "").trim();
-  if (res[0] === 2) {
-    return { open: false, items: 0 };
-  }
-  const m = /items=(\d+)/.exec(out);
-  if (res[0] !== 0 || !m) {
-    throw new Error(`command-palette-delete-tab: TestCommandPalette failed: ${out}`);
-  }
-  return { open: true, items: +m[1]! };
-}
 
 async function frameCount(client: ControlClient, pid: number): Promise<number> {
   if (IS_MAC) {
@@ -68,9 +54,9 @@ function getFrames(pid: number): number[] {
   return res;
 }
 
-async function waitFor(client: ControlClient, what: string, pred: (p: Palette) => boolean): Promise<Palette> {
+async function waitFor(client: ControlClient, what: string, pred: (p: PaletteState) => boolean): Promise<PaletteState> {
   const deadline = Date.now() + 8000;
-  let last: Palette = { open: false, items: 0 };
+  let last: PaletteState = { open: false, items: 0 };
   for (;;) {
     last = await paletteState(client);
     if (pred(last)) {

@@ -21,6 +21,7 @@ import {
   waitForExit,
   waitForFocusClass,
   killAndWait,
+  ngKey,
 } from "./win-automation";
 import type { ControlClient } from "./control.ts";
 
@@ -56,7 +57,7 @@ async function confirmAddFavorite(client: ControlClient): Promise<void> {
   for (;;) {
     last = String((await client.request(ControlCommand.TestUiState))[1] ?? "");
     if (/dialog=1/.test(last)) {
-      await client.request(ControlCommand.TestInput, ["key", VK_RETURN, 0]);
+      await ngKey(client, VK_RETURN);
       await sleep(50);
       const after = String((await client.request(ControlCommand.TestUiState))[1] ?? "");
       if (!/dialog=1/.test(after)) {

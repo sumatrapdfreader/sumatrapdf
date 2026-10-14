@@ -8,7 +8,14 @@ import { join } from "node:path";
 import { ControlClient, ControlCommand } from "./control";
 import { cmdId, runStandalone, tmpPath, USE_NG } from "./util";
 import { clientToScreen, getClientRect, postMessage, sleep, VK_ESCAPE, WM_CHAR, WM_KEYDOWN } from "./winapi";
-import { findCanvas, killAndWait, launchControlled, openContextMenu, waitForContextMenu } from "./win-automation";
+import {
+  findCanvas,
+  killAndWait,
+  launchControlled,
+  ngKey,
+  openContextMenu,
+  waitForContextMenu,
+} from "./win-automation";
 
 // auto-reload waits for two 500ms ticks that see an unchanged file
 const kReloadWaitMs = 8000;
@@ -57,7 +64,7 @@ async function openImageMenu(client: ControlClient, frame: number): Promise<numb
 
 async function dismissMenu(client: ControlClient, popup: number): Promise<void> {
   if (USE_NG) {
-    await client.request(ControlCommand.TestInput, ["key", VK_ESCAPE, 0, 0, 0]);
+    await ngKey(client, VK_ESCAPE);
     return;
   }
   postMessage(popup, WM_KEYDOWN, VK_ESCAPE, 0);
@@ -65,7 +72,7 @@ async function dismissMenu(client: ControlClient, popup: number): Promise<void> 
 
 async function menuChar(client: ControlClient, popup: number, ch: string): Promise<void> {
   if (USE_NG) {
-    await client.request(ControlCommand.TestInput, ["key", ch.toUpperCase().charCodeAt(0), 0, 0, 0]);
+    await ngKey(client, ch.toUpperCase().charCodeAt(0));
     return;
   }
   postMessage(popup, WM_CHAR, ch.charCodeAt(0), 0);

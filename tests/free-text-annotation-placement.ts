@@ -9,20 +9,12 @@ import { ControlClient, ControlCommand } from "./control.ts";
 import { cmdId, runStandalone, SLOW_BUILD_FACTOR, tmpPath, USE_NG, makeBlankPdf } from "./util.ts";
 import {
   clientToScreen,
-  getClassName,
   getClientRect,
-  getFocusedHwnd,
-  getRootWindow,
   packCoords,
-  postMessage,
   sendMessage,
-  sendText,
   setCursorPos,
   sleep,
-  VK_DOWN,
-  VK_RETURN,
   WM_COMMAND,
-  WM_KEYDOWN,
   WM_MOUSEMOVE,
 } from "./winapi.ts";
 import {
@@ -32,10 +24,8 @@ import {
   killAndWait,
   launchControlled,
   pressEscape,
-  sendCommand,
   sendCommandSync,
-  ngKey,
-  ngType,
+  paletteRun,
 } from "./win-automation.ts";
 
 type Rect = { x: number; y: number; dx: number; dy: number };
@@ -112,110 +102,6 @@ function toolbarRect(dump: string): Rect {
   const x = +m[1]!;
   const y = +m[2]!;
   return { x, y, dx: +m[3]! - x, dy: +m[4]! - y };
-}
-
-async function executeFromCommandPaletteNg(client: ControlClient, frame: number): Promise<void> {
-  sendCommand(frame, cmdId("CmdCommandPalette"));
-  const openDeadline = Date.now() + 8_000 * SLOW_BUILD_FACTOR;
-  let raw = "";
-  for (;;) {
-    const res = await client.request(ControlCommand.TestCommandPalette, []);
-    raw = String(res[1] ?? "");
-    if (res[0] === 0 && raw.startsWith("OK") && raw.includes("editFocus=1")) {
-      break;
-    }
-    if (Date.now() > openDeadline) {
-      throw new Error(`free-text-annotation-placement: command palette did not open\n${raw}`);
-    }
-    await sleep(50);
-  }
-
-  const query = ">Create Free Text Annotation";
-  await ngType(client, query);
-  const filterDeadline = Date.now() + 3_000 * SLOW_BUILD_FACTOR;
-  let itemCount = 0;
-  for (;;) {
-    const res = await client.request(ControlCommand.TestCommandPalette, []);
-    raw = String(res[1] ?? "");
-    const m = /items=(\d+) querySel=-?\d+,-?\d+ queryLen=(\d+) cmd=(-?\d+)/.exec(raw);
-    if (res[0] === 0 && m && +m[2]! === query.length) {
-      itemCount = +m[1]!;
-      break;
-    }
-    if (Date.now() > filterDeadline) {
-      throw new Error(`free-text-annotation-placement: palette did not filter\n${raw}`);
-    }
-    await sleep(40);
-  }
-
-  const want = cmdId("CmdCreateAnnotFreeText");
-  for (let i = 0; i < itemCount; i++) {
-    const res = await client.request(ControlCommand.TestCommandPalette, []);
-    raw = String(res[1] ?? "");
-    const m = /cmd=(-?\d+)/.exec(raw);
-    if (res[0] === 0 && m && +m[1]! === want) {
-      await ngKey(client, VK_RETURN);
-      return;
-    }
-    await ngKey(client, VK_DOWN);
-  }
-  throw new Error("free-text-annotation-placement: command was not in the filtered palette");
-}
-
-async function executeFromCommandPalette(client: ControlClient, frame: number): Promise<void> {
-  if (USE_NG) {
-    await executeFromCommandPaletteNg(client, frame);
-    return;
-  }
-  sendCommand(frame, cmdId("CmdCommandPalette"));
-  const openDeadline = Date.now() + 8_000;
-  let palette = 0;
-  let edit = 0;
-  while (Date.now() < openDeadline) {
-    edit = getFocusedHwnd(frame);
-    if (edit && getClassName(edit) === "Edit") {
-      palette = getRootWindow(edit);
-      if (palette && palette !== frame) {
-        break;
-      }
-    }
-    await sleep(50);
-  }
-  if (!palette || !edit) {
-    throw new Error("free-text-annotation-placement: command palette did not open");
-  }
-
-  const query = ">Create Free Text Annotation";
-  sendText(edit, query);
-  const filterDeadline = Date.now() + 3_000;
-  let itemCount = 0;
-  for (;;) {
-    const res = await client.request(ControlCommand.TestCommandPalette, []);
-    const raw = String(res[1] ?? "");
-    const m = /items=(\d+) querySel=-?\d+,-?\d+ queryLen=(\d+) cmd=(-?\d+)/.exec(raw);
-    if (res[0] === 0 && m && +m[2]! === query.length) {
-      itemCount = +m[1]!;
-      break;
-    }
-    if (Date.now() > filterDeadline) {
-      throw new Error(`free-text-annotation-placement: palette did not filter\n${raw}`);
-    }
-    await sleep(40);
-  }
-
-  const want = cmdId("CmdCreateAnnotFreeText");
-  for (let i = 0; i < itemCount; i++) {
-    const res = await client.request(ControlCommand.TestCommandPalette, []);
-    const raw = String(res[1] ?? "");
-    const m = /cmd=(-?\d+)/.exec(raw);
-    if (res[0] === 0 && m && +m[1]! === want) {
-      postMessage(edit, WM_KEYDOWN, VK_RETURN, 0);
-      return;
-    }
-    postMessage(edit, WM_KEYDOWN, VK_DOWN, 0);
-    await sleep(80);
-  }
-  throw new Error("free-text-annotation-placement: command was not in the filtered palette");
 }
 
 export async function testit(): Promise<void> {
@@ -334,7 +220,7 @@ export async function testit(): Promise<void> {
       throw new Error(`free-text-annotation-placement: context point did not place immediately\n${state.raw}`);
     }
 
-    await executeFromCommandPalette(client, frame);
+    await paletteRun(client, frame, ">Create Free Text Annotation", "CmdCreateAnnotFreeText");
     state = await waitForPlacement(client, true);
     if (!state.notification || state.annotations !== 2 || state.command !== wantCmd) {
       throw new Error(`free-text-annotation-placement: palette did not start placement\n${state.raw}`);

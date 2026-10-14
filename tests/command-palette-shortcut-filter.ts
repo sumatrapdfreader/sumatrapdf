@@ -2,7 +2,6 @@
 // and matching shortcut text gets the same highlight as command descriptions.
 import { mkdirSync, rmSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
-import { ControlClient, ControlCommand } from "./control.ts";
 import { IS_MAC } from "./host.ts";
 import { ROOT, cmdId, runStandalone, tmpPath } from "./util.ts";
 import { captureWindowPixels, captureWindowToPng, sleep } from "./winapi.ts";
@@ -13,6 +12,8 @@ import {
   waitForPalette,
   paletteSetText,
   isFilterMatchTint,
+  paletteState,
+  type PaletteState,
 } from "./win-automation.ts";
 
 const SETTINGS = `UiLanguage = en
@@ -21,25 +22,6 @@ CheckForUpdates = false
 RestoreSession = false
 RememberOpenedFiles = false
 `;
-
-type PaletteState = { items: number; queryLen: number; selectedCmdId: number };
-
-async function paletteState(client: ControlClient): Promise<PaletteState | null> {
-  const res = await client.request(ControlCommand.TestCommandPalette, []);
-  const exitCode = res[0] as number;
-  const out = String(res[1] ?? "");
-  if (exitCode === 2) {
-    return null;
-  }
-  if (exitCode !== 0) {
-    throw new Error(`command-palette-shortcut-filter: TestCommandPalette failed: ${out}`);
-  }
-  const m = /OK sel=-?\d+ items=(\d+) querySel=-?\d+,-?\d+ queryLen=(\d+) cmd=(-?\d+)/.exec(out);
-  if (!m) {
-    throw new Error(`command-palette-shortcut-filter: could not parse: ${out}`);
-  }
-  return { items: +m[1]!, queryLen: +m[2]!, selectedCmdId: +m[3]! };
-}
 
 function countYellowInRightHalf(palette: number): number {
   const shot = captureWindowPixels(palette);
@@ -77,7 +59,7 @@ export async function testit(): Promise<void> {
     let handles = { palette: 0, edit: 0 };
     while (Date.now() < openDeadline) {
       if (IS_MAC) {
-        if (await paletteState(client)) {
+        if ((await paletteState(client)).open) {
           handles = { palette: 1, edit: 1 };
           break;
         }
@@ -99,13 +81,13 @@ export async function testit(): Promise<void> {
     let state: PaletteState | null = null;
     while (Date.now() < filterDeadline) {
       state = await paletteState(client);
-      if (state && state.queryLen === query.length) {
+      if (state?.open && state.queryLen === query.length) {
         break;
       }
       await sleep(40);
     }
     const expected = cmdId("CmdRenameFile");
-    if (!state || state.items !== 1 || state.selectedCmdId !== expected) {
+    if (!state?.open || state.items !== 1 || state.cmd !== expected) {
       throw new Error(`command-palette-shortcut-filter: shortcut query failed: ${JSON.stringify(state)}`);
     }
 

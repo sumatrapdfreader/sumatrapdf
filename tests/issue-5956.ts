@@ -9,7 +9,7 @@
 // Run: bun tests/issue-5956.ts [--no-build]
 
 import { join } from "node:path";
-import { ControlClient, ControlCommand } from "./control.ts";
+import { ControlClient } from "./control.ts";
 import { IS_MAC } from "./host.ts";
 import { ROOT, cmdId, runStandalone, tmpPath } from "./util.ts";
 import {
@@ -22,33 +22,23 @@ import {
   WM_CLOSE,
   WM_KEYDOWN,
 } from "./winapi.ts";
-import { findCanvas, findPalette, killAndWait, launchControlled, sendCommandSync } from "./win-automation.ts";
+import {
+  findCanvas,
+  findPalette,
+  killAndWait,
+  launchControlled,
+  sendCommandSync,
+  paletteState,
+} from "./win-automation.ts";
 
 type Shot = { w: number; h: number; data: Uint8Array };
-
-async function paletteRtl(client: ControlClient): Promise<number | null> {
-  const res = await client.request(ControlCommand.TestCommandPalette, []);
-  const exitCode = res[0] as number;
-  const out = String(res[1] ?? "");
-  if (exitCode === 2) {
-    return null;
-  }
-  if (exitCode !== 0) {
-    throw new Error(`issue-5956: TestCommandPalette failed: ${out.trim()}`);
-  }
-  const m = /rtl=(\d+)/.exec(out);
-  if (!m) {
-    throw new Error(`issue-5956: no rtl= in: ${out.trim()}`);
-  }
-  return Number(m[1]);
-}
 
 async function waitRtl(client: ControlClient): Promise<number> {
   const deadline = Date.now() + 8_000;
   for (;;) {
-    const rtl = await paletteRtl(client);
-    if (rtl !== null) {
-      return rtl;
+    const st = await paletteState(client);
+    if (st.open) {
+      return st.rtl;
     }
     if (Date.now() > deadline) {
       throw new Error("issue-5956: command palette did not open");
@@ -69,7 +59,7 @@ async function closePalette(client: ControlClient, frame: number): Promise<void>
   }
   const deadline = Date.now() + 3_000;
   while (Date.now() < deadline) {
-    if ((await paletteRtl(client)) === null) {
+    if (!(await paletteState(client)).open) {
       return;
     }
     await sleep(50);

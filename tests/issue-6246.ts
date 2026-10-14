@@ -1,28 +1,21 @@
 // #6246: the command palette's setting description shows only in "=" mode.
 // Leaving "=" collapsed its layout box but the text kept painting.
 
-import { ControlClient, ControlCommand } from "./control.ts";
+import { ControlClient } from "./control.ts";
 import { IS_MAC } from "./host.ts";
 import { cmdId, runStandalone } from "./util.ts";
-import { killAndWait, launchControlled, paletteSetText, sendCommand, waitForPalette } from "./win-automation.ts";
+import {
+  killAndWait,
+  launchControlled,
+  paletteSetText,
+  sendCommand,
+  waitForPalette,
+  paletteState,
+  type PaletteState,
+} from "./win-automation.ts";
 import { sleep } from "./winapi.ts";
 
-type Palette = { open: boolean; queryLen: number; settingHelp: boolean };
-
-async function paletteState(client: ControlClient): Promise<Palette> {
-  const res = await client.request(ControlCommand.TestCommandPalette, []);
-  const out = String(res[1] ?? "").trim();
-  if (res[0] === 2) {
-    return { open: false, queryLen: 0, settingHelp: false };
-  }
-  const m = /queryLen=(\d+) .* settingHelp=(\d)/.exec(out);
-  if (res[0] !== 0 || !m) {
-    throw new Error(`issue-6246: TestCommandPalette failed: ${out}`);
-  }
-  return { open: true, queryLen: +m[1]!, settingHelp: m[2] === "1" };
-}
-
-async function waitFor(client: ControlClient, what: string, pred: (p: Palette) => boolean): Promise<Palette> {
+async function waitFor(client: ControlClient, what: string, pred: (p: PaletteState) => boolean): Promise<PaletteState> {
   const deadline = Date.now() + 8000;
   for (;;) {
     const p = await paletteState(client);
@@ -61,7 +54,7 @@ export async function testit(): Promise<void> {
       await waitFor(
         client,
         `after '${query}' the setting help ${want ? "is hidden" : "still shows"}`,
-        (p) => p.open && p.queryLen === query.length && p.settingHelp === want,
+        (p) => p.open && p.queryLen === query.length && (p.settingHelp === 1) === want,
       );
     }
     console.log("issue-6246: OK");

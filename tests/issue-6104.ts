@@ -10,7 +10,6 @@
 
 import { mkdirSync, rmSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
-import { ControlClient, ControlCommand } from "./control.ts";
 import { IS_MAC } from "./host.ts";
 import { ROOT, cmdId, runStandalone, tmpPath } from "./util.ts";
 import { captureWindowPixels, captureWindowToPng, sleep } from "./winapi.ts";
@@ -21,8 +20,9 @@ import {
   waitForPalette,
   paletteSetText,
   isFilterMatchTint,
+  paletteState,
+  type PaletteState,
 } from "./win-automation.ts";
-
 const FILE_NAME = "issue6104.pdf";
 const LONG_DIR = IS_MAC
   ? `/${Array(30).fill("zzzzzzzzzzzzzzzzzzzz").join("/")}`
@@ -41,25 +41,6 @@ FileStates [
 	]
 ]
 `;
-
-type PaletteState = { items: number; queryLen: number };
-
-async function paletteState(client: ControlClient): Promise<PaletteState | null> {
-  const res = await client.request(ControlCommand.TestCommandPalette, []);
-  const exitCode = res[0] as number;
-  const out = String(res[1] ?? "");
-  if (exitCode === 2) {
-    return null;
-  }
-  if (exitCode !== 0) {
-    throw new Error(`issue-6104: TestCommandPalette failed: ${out}`);
-  }
-  const m = /OK sel=-?\d+ items=(\d+) querySel=-?\d+,-?\d+ queryLen=(\d+)/.exec(out);
-  if (!m) {
-    throw new Error(`issue-6104: could not parse: ${out}`);
-  }
-  return { items: +m[1]!, queryLen: +m[2]! };
-}
 
 function countYellowInLeftHalf(palette: number): number {
   const shot = captureWindowPixels(palette);
@@ -98,7 +79,7 @@ export async function testit(): Promise<void> {
     let handles = { palette: 0, edit: 0 };
     while (Date.now() < openDeadline) {
       if (IS_MAC) {
-        if (await paletteState(client)) {
+        if ((await paletteState(client)).open) {
           handles = { palette: frame, edit: frame };
           break;
         }
@@ -120,12 +101,12 @@ export async function testit(): Promise<void> {
     let state: PaletteState | null = null;
     while (Date.now() < filterDeadline) {
       state = await paletteState(client);
-      if (state && state.queryLen === query.length && state.items === 1) {
+      if (state?.open && state.queryLen === query.length && state.items === 1) {
         break;
       }
       await sleep(40);
     }
-    if (!state || state.items !== 1) {
+    if (!state?.open || state.items !== 1) {
       throw new Error(`issue-6104: file history query failed: ${JSON.stringify(state)}`);
     }
 

@@ -11,36 +11,27 @@ import { mkdirSync, rmSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 import { ControlClient, ControlCommand } from "./control.ts";
 import { cmdId, runStandalone, tmpPath } from "./util.ts";
-import { killAndWait, launchControlled, paletteSetText, sendCommand, waitForPalette } from "./win-automation.ts";
+import {
+  killAndWait,
+  launchControlled,
+  paletteSetText,
+  sendCommand,
+  waitForPalette,
+  paletteState,
+  type PaletteState,
+} from "./win-automation.ts";
 import { WM_KEYDOWN, VK_ESCAPE, VK_RETURN, postMessage, sleep } from "./winapi.ts";
-
 const SETTINGS = `UiLanguage = en
 Theme = Light
 CheckForUpdates = false
 RestoreSession = false
 `;
 
-type Palette = { open: boolean; items: number; queryLen: number; sel: number; selText: string };
-
-async function paletteState(client: ControlClient): Promise<Palette> {
-  const res = await client.request(ControlCommand.TestCommandPalette, []);
-  const out = String(res[1] ?? "").trim();
-  if (res[0] === 2) {
-    return { open: false, items: 0, queryLen: 0, sel: -1, selText: "" };
-  }
-  const m = /sel=(-?\d+) items=(\d+) querySel=-?\d+,-?\d+ queryLen=(\d+)/.exec(out);
-  if (res[0] !== 0 || !m) {
-    throw new Error(`command-palette-settings: TestCommandPalette failed: ${out}`);
-  }
-  const selText = /selText=(.*)$/.exec(out)?.[1] ?? "";
-  return { open: true, items: +m[2]!, queryLen: +m[3]!, sel: +m[1]!, selText };
-}
-
 // the palette re-filters its list asynchronously, so every step waits for the
 // state it expects instead of sleeping a fixed amount
-async function waitFor(client: ControlClient, what: string, pred: (p: Palette) => boolean): Promise<Palette> {
+async function waitFor(client: ControlClient, what: string, pred: (p: PaletteState) => boolean): Promise<PaletteState> {
   const deadline = Date.now() + 8000;
-  let last: Palette;
+  let last: PaletteState;
   for (;;) {
     last = await paletteState(client);
     if (pred(last)) {
@@ -66,7 +57,12 @@ async function openPalette(client: ControlClient, frame: number): Promise<{ pale
 }
 
 // sets the query and waits until the list holds exactly wantItems rows
-async function typeQuery(client: ControlClient, frame: number, query: string, wantItems: number): Promise<Palette> {
+async function typeQuery(
+  client: ControlClient,
+  frame: number,
+  query: string,
+  wantItems: number,
+): Promise<PaletteState> {
   const handles = await openPalette(client, frame);
   await paletteSetText(client, handles, query);
   return waitFor(
@@ -76,23 +72,29 @@ async function typeQuery(client: ControlClient, frame: number, query: string, wa
   );
 }
 
-async function pressKey(client: ControlClient, frame: number, vk: number, what: string, pred: (p: Palette) => boolean) {
+async function pressKey(
+  client: ControlClient,
+  frame: number,
+  vk: number,
+  what: string,
+  pred: (p: PaletteState) => boolean,
+) {
   const { edit } = await openPalette(client, frame);
   postMessage(edit, WM_KEYDOWN, vk, 0);
   return waitFor(client, what, pred);
 }
 
-async function enter(client: ControlClient, frame: number, what: string, pred: (p: Palette) => boolean) {
+async function enter(client: ControlClient, frame: number, what: string, pred: (p: PaletteState) => boolean) {
   return pressKey(client, frame, VK_RETURN, what, pred);
 }
 
-async function escape(client: ControlClient, frame: number, what: string, pred: (p: Palette) => boolean) {
+async function escape(client: ControlClient, frame: number, what: string, pred: (p: PaletteState) => boolean) {
   return pressKey(client, frame, VK_ESCAPE, what, pred);
 }
 
 // the palette is back in the setting-picking stage: query is "=" and the list
 // holds every setting again
-const backToSettings = (p: Palette) => p.open && p.queryLen === 1 && p.items > 1;
+const backToSettings = (p: PaletteState) => p.open && p.queryLen === 1 && p.items > 1;
 
 // "name=value" for every setting that differs from its default
 async function nonDefaultSettings(client: ControlClient, frame: number): Promise<Map<string, string>> {

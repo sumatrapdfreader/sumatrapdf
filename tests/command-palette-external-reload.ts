@@ -6,11 +6,18 @@
 
 import { mkdirSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
-import { ControlClient, ControlCommand } from "./control.ts";
+import { ControlClient } from "./control.ts";
 import { cmdId, runStandalone, tmpPath } from "./util.ts";
-import { killAndWait, launchControlled, paletteSetText, sendCommand, waitForPalette } from "./win-automation.ts";
+import {
+  killAndWait,
+  launchControlled,
+  paletteSetText,
+  sendCommand,
+  waitForPalette,
+  paletteState,
+  type PaletteState,
+} from "./win-automation.ts";
 import { WM_KEYDOWN, VK_ESCAPE, postMessage, sleep } from "./winapi.ts";
-
 const kTag = "command-palette-external-reload";
 const kBoolName = "DisableJavaScript";
 const kReloadWaitMs = 10000;
@@ -19,23 +26,7 @@ function settingsText(boolValue: string): string {
   return `UiLanguage = en\nCheckForUpdates = false\nRestoreSession = false\n${kBoolName} = ${boolValue}\n`;
 }
 
-type Palette = { open: boolean; items: number; queryLen: number; sel: number; selValue: string; raw: string };
-
-async function paletteState(client: ControlClient): Promise<Palette> {
-  const res = await client.request(ControlCommand.TestCommandPalette, []);
-  const out = String(res[1] ?? "").trim();
-  if (res[0] === 2) {
-    return { open: false, items: 0, queryLen: 0, sel: -1, selValue: "", raw: out };
-  }
-  const m = /sel=(-?\d+) items=(\d+) querySel=-?\d+,-?\d+ queryLen=(\d+)/.exec(out);
-  if (res[0] !== 0 || !m) {
-    throw new Error(`${kTag}: TestCommandPalette failed: ${out}`);
-  }
-  const selValue = /selValue=(.*?) selText=/.exec(out)?.[1] ?? "";
-  return { open: true, items: +m[2]!, queryLen: +m[3]!, sel: +m[1]!, selValue, raw: out };
-}
-
-async function waitFor(client: ControlClient, what: string, pred: (p: Palette) => boolean): Promise<Palette> {
+async function waitFor(client: ControlClient, what: string, pred: (p: PaletteState) => boolean): Promise<PaletteState> {
   const deadline = Date.now() + 8000;
   for (;;) {
     const p = await paletteState(client);

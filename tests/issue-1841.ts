@@ -11,7 +11,7 @@ import { writeFileSync } from "node:fs";
 import { ControlClient, ControlCommand } from "./control.ts";
 import { makeBookmarkedPdf } from "./toc-tree-sent-click.ts";
 import { pollUntil, runStandalone, tmpPath, USE_NG } from "./util.ts";
-import { killAndWait, launchControlled } from "./win-automation.ts";
+import { killAndWait, launchControlled, ngKey } from "./win-automation.ts";
 import { findVisibleChildWindow, postMessage, WM_KEYDOWN } from "./winapi.ts";
 
 const VK_PRIOR = 0x21;
@@ -19,7 +19,7 @@ const VK_NEXT = 0x22;
 
 async function pageAfterKey(client: ControlClient, tree: number, vk: number, want: number): Promise<number> {
   if (USE_NG) {
-    await client.request(ControlCommand.TestInput, ["key", vk, 0]);
+    await ngKey(client, vk);
   } else {
     postMessage(tree, WM_KEYDOWN, vk, 0);
   }

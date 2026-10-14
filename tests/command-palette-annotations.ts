@@ -9,22 +9,21 @@ import { ControlClient, ControlCommand } from "./control.ts";
 import { IS_MAC } from "./host.ts";
 import { assemblePdf, cmdId, runStandalone, tmpPath } from "./util.ts";
 import { postMessage, sleep, VK_RETURN, WM_KEYDOWN } from "./winapi.ts";
-import { killAndWait, launchControlled, sendCommand, waitForPalette, paletteSetText } from "./win-automation.ts";
-
+import {
+  killAndWait,
+  launchControlled,
+  sendCommand,
+  waitForPalette,
+  paletteSetText,
+  paletteState,
+  type PaletteState,
+} from "./win-automation.ts";
 const SETTINGS = `UiLanguage = en
 Theme = Light
 CheckForUpdates = false
 RestoreSession = false
 RememberOpenedFiles = false
 `;
-
-type PaletteState = {
-  items: number;
-  queryLen: number;
-  annots: number;
-  annotPage: number;
-  annotsDone: number;
-};
 
 function makePdf(): string {
   const objs = [
@@ -36,26 +35,6 @@ function makePdf(): string {
       "/QuadPoints [72 530 220 530 72 500 220 500] /C [1 1 0] /Contents (palette-annot-beta) >>",
   ];
   return assemblePdf(objs);
-}
-
-async function paletteState(client: ControlClient): Promise<PaletteState | null> {
-  const res = await client.request(ControlCommand.TestCommandPalette, []);
-  const exitCode = res[0] as number;
-  const out = String(res[1] ?? "");
-  if (exitCode === 2) {
-    return null;
-  }
-  if (exitCode !== 0) {
-    throw new Error(`command-palette-annotations: TestCommandPalette failed: ${out.trim()}`);
-  }
-  const m =
-    /OK sel=-?\d+ items=(\d+) querySel=-?\d+,-?\d+ queryLen=(\d+) cmd=-?\d+ rtl=\d+ thumb=\d+ page=\d+ rendered=\d+ annots=(\d+) annotPage=(\d+) annotsDone=(\d+)/.exec(
-      out,
-    );
-  if (!m) {
-    throw new Error(`command-palette-annotations: could not parse: ${out.trim()}`);
-  }
-  return { items: +m[1]!, queryLen: +m[2]!, annots: +m[3]!, annotPage: +m[4]!, annotsDone: +m[5]! };
 }
 
 async function annotContents(client: ControlClient): Promise<string> {
@@ -80,7 +59,7 @@ export async function testit(): Promise<void> {
     let handles = { palette: 0, edit: 0 };
     while (Date.now() < openDeadline) {
       if (IS_MAC) {
-        if (await paletteState(client)) {
+        if ((await paletteState(client)).open) {
           handles = { palette: frame, edit: frame };
           break;
         }
@@ -100,12 +79,12 @@ export async function testit(): Promise<void> {
     let collected: PaletteState | null = null;
     while (Date.now() < annotDeadline) {
       collected = await paletteState(client);
-      if (collected && collected.annots >= 2) {
+      if (collected?.open && collected.annots >= 2) {
         break;
       }
       await sleep(40);
     }
-    if (!collected || collected.annots < 2) {
+    if (!collected?.open || collected.annots < 2) {
       throw new Error(`command-palette-annotations: annotations not collected: ${JSON.stringify(collected)}`);
     }
 
@@ -115,24 +94,24 @@ export async function testit(): Promise<void> {
     let filtered: PaletteState | null = null;
     while (Date.now() < filterDeadline) {
       filtered = await paletteState(client);
-      if (filtered && filtered.queryLen === query.length && filtered.items === 1) {
+      if (filtered?.open && filtered.queryLen === query.length && filtered.items === 1) {
         break;
       }
       await sleep(40);
     }
-    if (!filtered || filtered.items !== 1) {
+    if (!filtered?.open || filtered.items !== 1) {
       throw new Error(`command-palette-annotations: filter failed: ${JSON.stringify(filtered)}`);
     }
 
     postMessage(handles.palette, WM_KEYDOWN, VK_RETURN, 0);
     const closeDeadline = Date.now() + 3_000;
     while (Date.now() < closeDeadline) {
-      if ((await paletteState(client)) === null) {
+      if (!(await paletteState(client)).open) {
         break;
       }
       await sleep(40);
     }
-    if ((await paletteState(client)) !== null) {
+    if ((await paletteState(client)).open) {
       throw new Error("command-palette-annotations: palette did not close");
     }
 

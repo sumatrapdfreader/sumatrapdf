@@ -9,7 +9,7 @@
 // control has focus) rather than pixels, so it doesn't depend on the drawing.
 import { copyFileSync, mkdirSync, rmSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
-import { ControlCommand, type ControlClient, waitForHome } from "./control.ts";
+import { type ControlClient, waitForHome } from "./control.ts";
 import { ROOT, USE_NG, cmdId, runStandalone, tmpPath } from "./util";
 import { sendMessage, setCursorPos } from "./winapi";
 import {
@@ -19,6 +19,8 @@ import {
   sendCommand,
   waitForTitle,
   killAndWait,
+  ngKey,
+  ngType,
 } from "./win-automation";
 const WM_KEYDOWN = 0x0100;
 const WM_CHAR = 0x0102;
@@ -53,7 +55,7 @@ function makeAppDir(name: string): string {
 async function key(client: ControlClient, target: number, vk: number): Promise<void> {
   // ng draws the search box in the frame, so a posted WM_KEYDOWN has no Edit
   if (USE_NG) {
-    await client.request(ControlCommand.TestInput, ["key", vk, 0, 0, 0]);
+    await ngKey(client, vk);
     return;
   }
   sendMessage(target, WM_KEYDOWN, vk, 0);
@@ -61,7 +63,7 @@ async function key(client: ControlClient, target: number, vk: number): Promise<v
 
 async function typeChar(client: ControlClient, target: number, ch: string): Promise<void> {
   if (USE_NG) {
-    await client.request(ControlCommand.TestInput, ["char", ch.charCodeAt(0), 0, 0, 0]);
+    await ngType(client, ch);
     return;
   }
   sendMessage(target, WM_CHAR, ch.charCodeAt(0), 0);

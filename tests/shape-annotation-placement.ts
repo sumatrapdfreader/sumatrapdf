@@ -10,22 +10,14 @@ import { cmdId, runStandalone, SLOW_BUILD_FACTOR, tmpPath, USE_NG, makeBlankPdf 
 import {
   captureWindowPixels,
   clientToScreen,
-  getClassName,
   getClientRect,
-  getFocusedHwnd,
-  getRootWindow,
   MK_LBUTTON,
   MK_SHIFT,
   packCoords,
-  postMessage,
   sendMessage,
-  sendText,
   setCursorPos,
   sleep,
-  VK_DOWN,
-  VK_RETURN,
   WM_COMMAND,
-  WM_KEYDOWN,
   WM_LBUTTONDOWN,
   WM_LBUTTONUP,
   WM_MOUSEMOVE,
@@ -39,9 +31,8 @@ import {
   pressEscape,
   sendCommand,
   sendCommandSync,
-  ngKey,
-  ngType,
   countPreviewBlue,
+  paletteRun,
 } from "./win-automation.ts";
 
 type Point = { x: number; y: number };
@@ -118,108 +109,6 @@ function toolbarButtonRect(dump: string, command: string): { x: number; y: numbe
   const x = +m[1]!;
   const y = +m[2]!;
   return { x, y, dx: +m[3]! - x, dy: +m[4]! - y };
-}
-
-async function executeFromCommandPaletteNg(client: ControlClient, frame: number, command: string): Promise<void> {
-  sendCommand(frame, cmdId("CmdCommandPalette"));
-  const openDeadline = Date.now() + 8_000 * SLOW_BUILD_FACTOR;
-  let raw = "";
-  for (;;) {
-    const res = await client.request(ControlCommand.TestCommandPalette, []);
-    raw = String(res[1] ?? "");
-    if (res[0] === 0 && raw.startsWith("OK") && raw.includes("editFocus=1")) {
-      break;
-    }
-    if (Date.now() > openDeadline) {
-      throw new Error(`shape-annotation-placement: command palette did not open\n${raw}`);
-    }
-    await sleep(50);
-  }
-
-  const query = `>${command === "CmdCreateAnnotCircle" ? "Create Circle Annotation" : "Create Square Annotation"}`;
-  await ngType(client, query);
-  const filterDeadline = Date.now() + 3_000 * SLOW_BUILD_FACTOR;
-  let itemCount = 0;
-  for (;;) {
-    const res = await client.request(ControlCommand.TestCommandPalette, []);
-    raw = String(res[1] ?? "");
-    const m = /items=(\d+) querySel=-?\d+,-?\d+ queryLen=(\d+) cmd=(-?\d+)/.exec(raw);
-    if (res[0] === 0 && m && +m[2]! === query.length) {
-      itemCount = +m[1]!;
-      break;
-    }
-    if (Date.now() > filterDeadline) {
-      throw new Error(`shape-annotation-placement: palette query did not settle\n${raw}`);
-    }
-    await sleep(40);
-  }
-
-  for (let i = 0; i < itemCount; i++) {
-    const res = await client.request(ControlCommand.TestCommandPalette, []);
-    raw = String(res[1] ?? "");
-    const m = /cmd=(-?\d+)/.exec(raw);
-    if (res[0] === 0 && m && +m[1]! === cmdId(command)) {
-      await ngKey(client, VK_RETURN);
-      return;
-    }
-    await ngKey(client, VK_DOWN);
-  }
-  throw new Error(`shape-annotation-placement: ${command} was not in the filtered palette`);
-}
-
-async function executeFromCommandPalette(client: ControlClient, frame: number, command: string): Promise<void> {
-  if (USE_NG) {
-    await executeFromCommandPaletteNg(client, frame, command);
-    return;
-  }
-  sendCommand(frame, cmdId("CmdCommandPalette"));
-  const openDeadline = Date.now() + 8_000;
-  let palette = 0;
-  let edit = 0;
-  while (Date.now() < openDeadline) {
-    edit = getFocusedHwnd(frame);
-    if (edit && getClassName(edit) === "Edit") {
-      palette = getRootWindow(edit);
-      if (palette && palette !== frame) {
-        break;
-      }
-    }
-    await sleep(50);
-  }
-  if (!palette || !edit) {
-    throw new Error("shape-annotation-placement: command palette did not open");
-  }
-
-  const query = `>${command === "CmdCreateAnnotCircle" ? "Create Circle Annotation" : "Create Square Annotation"}`;
-  sendText(edit, query);
-  const filterDeadline = Date.now() + 3_000;
-  let itemCount = 0;
-  for (;;) {
-    const res = await client.request(ControlCommand.TestCommandPalette, []);
-    const raw = String(res[1] ?? "");
-    const m = /items=(\d+) querySel=-?\d+,-?\d+ queryLen=(\d+) cmd=(-?\d+)/.exec(raw);
-    if (res[0] === 0 && m && +m[2]! === query.length) {
-      itemCount = +m[1]!;
-      break;
-    }
-    if (Date.now() > filterDeadline) {
-      throw new Error(`shape-annotation-placement: palette query did not settle\n${raw}`);
-    }
-    await sleep(40);
-  }
-
-  for (let i = 0; i < itemCount; i++) {
-    const res = await client.request(ControlCommand.TestCommandPalette, []);
-    const raw = String(res[1] ?? "");
-    const m = /cmd=(-?\d+)/.exec(raw);
-    if (res[0] === 0 && m && +m[1]! === cmdId(command)) {
-      postMessage(edit, WM_KEYDOWN, VK_RETURN, 0);
-      return;
-    }
-    postMessage(edit, WM_KEYDOWN, VK_DOWN, 0);
-    await sleep(80);
-  }
-  throw new Error(`shape-annotation-placement: ${command} was not in the filtered palette`);
 }
 
 function moveMouse(canvas: number, point: Point, keys = 0): void {
@@ -404,7 +293,7 @@ export async function testit(): Promise<void> {
     }
 
     await client.setNotificationsEnabled(true);
-    await executeFromCommandPalette(client, frame, "CmdCreateAnnotCircle");
+    await paletteRun(client, frame, ">Create Circle Annotation", "CmdCreateAnnotCircle");
     state = await waitForPlacement(client, true);
     if (
       !state.notification ||

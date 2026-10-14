@@ -10,26 +10,19 @@ import { cmdId, runStandalone, tmpPath, USE_NG, makeBlankPdf, SLOW_BUILD_FACTOR 
 import {
   captureWindowPixels,
   clientToScreen,
-  getClassName,
   getClientRect,
-  getFocusedHwnd,
-  getRootWindow,
   MK_CONTROL,
   MK_LBUTTON,
   MK_RBUTTON,
   MK_SHIFT,
   packCoords,
-  postMessage,
   sendMessage,
-  sendText,
   setCursorPos,
   sleep,
-  VK_DOWN,
   VK_ESCAPE,
   VK_RETURN,
   VK_SPACE,
   WM_COMMAND,
-  WM_KEYDOWN,
   WM_LBUTTONDBLCLK,
   WM_LBUTTONDOWN,
   WM_LBUTTONUP,
@@ -45,9 +38,9 @@ import {
   launchControlled,
   pressKey,
   sendCommand,
-  ngKey,
-  ngType,
   countPreviewBlue,
+  paletteRun,
+  ngInput,
 } from "./win-automation.ts";
 
 type Point = { x: number; y: number };
@@ -131,107 +124,6 @@ function toolbarButtonRect(dump: string): { x: number; y: number; dx: number; dy
 }
 
 // ng's palette is a gpui field, not an Edit. Type through the control pipe.
-async function executeFromCommandPaletteNg(client: ControlClient, frame: number): Promise<void> {
-  sendCommand(frame, cmdId("CmdCommandPalette"));
-  const openDeadline = Date.now() + 8_000;
-  let raw = "";
-  for (;;) {
-    const res = await client.request(ControlCommand.TestCommandPalette, []);
-    raw = String(res[1] ?? "");
-    if (res[0] === 0 && raw.startsWith("OK") && raw.includes("editFocus=1")) {
-      break;
-    }
-    if (Date.now() > openDeadline) {
-      throw new Error(`polyline-annotation-placement: command palette did not open\n${raw}`);
-    }
-    await sleep(50);
-  }
-
-  const query = ">Create Polyline Annotation";
-  await ngType(client, query);
-  const filterDeadline = Date.now() + 3_000;
-  let itemCount = 0;
-  for (;;) {
-    const res = await client.request(ControlCommand.TestCommandPalette, []);
-    raw = String(res[1] ?? "");
-    const m = /items=(\d+) querySel=-?\d+,-?\d+ queryLen=(\d+) cmd=(-?\d+)/.exec(raw);
-    if (res[0] === 0 && m && +m[2]! === query.length) {
-      itemCount = +m[1]!;
-      break;
-    }
-    if (Date.now() > filterDeadline) {
-      throw new Error(`polyline-annotation-placement: palette query did not settle\n${raw}`);
-    }
-    await sleep(40);
-  }
-
-  for (let i = 0; i < itemCount; i++) {
-    const res = await client.request(ControlCommand.TestCommandPalette, []);
-    raw = String(res[1] ?? "");
-    const m = /cmd=(-?\d+)/.exec(raw);
-    if (res[0] === 0 && m && +m[1]! === cmdId("CmdCreateAnnotPolyLine")) {
-      await ngKey(client, VK_RETURN);
-      return;
-    }
-    await ngKey(client, VK_DOWN);
-  }
-  throw new Error("polyline-annotation-placement: Polyline command was not in the filtered palette");
-}
-
-async function executeFromCommandPalette(client: ControlClient, frame: number): Promise<void> {
-  if (USE_NG) {
-    await executeFromCommandPaletteNg(client, frame);
-    return;
-  }
-  sendCommand(frame, cmdId("CmdCommandPalette"));
-  const openDeadline = Date.now() + 8_000;
-  let palette = 0;
-  let edit = 0;
-  while (Date.now() < openDeadline) {
-    edit = getFocusedHwnd(frame);
-    if (edit && getClassName(edit) === "Edit") {
-      palette = getRootWindow(edit);
-      if (palette && palette !== frame) {
-        break;
-      }
-    }
-    await sleep(50);
-  }
-  if (!palette || !edit) {
-    throw new Error("polyline-annotation-placement: command palette did not open");
-  }
-
-  const query = ">Create Polyline Annotation";
-  sendText(edit, query);
-  const filterDeadline = Date.now() + 3_000;
-  let itemCount = 0;
-  for (;;) {
-    const res = await client.request(ControlCommand.TestCommandPalette, []);
-    const raw = String(res[1] ?? "");
-    const m = /items=(\d+) querySel=-?\d+,-?\d+ queryLen=(\d+) cmd=(-?\d+)/.exec(raw);
-    if (res[0] === 0 && m && +m[2]! === query.length) {
-      itemCount = +m[1]!;
-      break;
-    }
-    if (Date.now() > filterDeadline) {
-      throw new Error(`polyline-annotation-placement: palette query did not settle\n${raw}`);
-    }
-    await sleep(40);
-  }
-
-  for (let i = 0; i < itemCount; i++) {
-    const res = await client.request(ControlCommand.TestCommandPalette, []);
-    const raw = String(res[1] ?? "");
-    const m = /cmd=(-?\d+)/.exec(raw);
-    if (res[0] === 0 && m && +m[1]! === cmdId("CmdCreateAnnotPolyLine")) {
-      await pressKey(edit, VK_RETURN, 0);
-      return;
-    }
-    postMessage(edit, WM_KEYDOWN, VK_DOWN, 0);
-  }
-  throw new Error("polyline-annotation-placement: Polyline command was not in the filtered palette");
-}
-
 function ngMods(key: number): number {
   let mods = 0;
   if (key & MK_SHIFT) {
@@ -244,12 +136,8 @@ function ngMods(key: number): number {
   return mods;
 }
 
-async function ngMouse(client: ControlClient, kind: string, point: Point, button: number, key: number): Promise<void> {
-  const res = await client.request(ControlCommand.TestInput, [kind, point.x, point.y, button, ngMods(key)]);
-  const raw = String(res[1] ?? "");
-  if (res[0] !== 0 || !raw.startsWith("OK")) {
-    throw new Error(`polyline-annotation-placement: ${kind} failed: ${raw}`);
-  }
+function ngMouse(client: ControlClient, kind: string, point: Point, button: number, key: number): Promise<void> {
+  return ngInput(client, [kind, point.x, point.y, button, ngMods(key)]);
 }
 
 async function moveMouse(client: ControlClient, canvas: number, point: Point, key = 0): Promise<void> {
@@ -452,7 +340,7 @@ export async function testit(): Promise<void> {
     }
 
     await client.setNotificationsEnabled(true);
-    await executeFromCommandPalette(client, frame);
+    await paletteRun(client, frame, ">Create Polyline Annotation", "CmdCreateAnnotPolyLine");
     await waitForPlacement(client, true);
     await clickPoints(canvas, [p1, p2, p3]);
     const dblLp = packCoords(p3.x, p3.y);
@@ -506,7 +394,7 @@ export async function testit(): Promise<void> {
 
     // Ctrl+click commits the vertex and closes the path back to the first
     // point, so the annotation repeats it (issue #6119)
-    await executeFromCommandPalette(client, frame);
+    await paletteRun(client, frame, ">Create Polyline Annotation", "CmdCreateAnnotPolyLine");
     await waitForPlacement(client, true);
     // enough vertices that closing the path grows the point vec: appending an
     // element of the vec to itself used to read the freed buffer
@@ -527,7 +415,7 @@ export async function testit(): Promise<void> {
 
     // two vertices are a single segment: closing would double back on it, so
     // Ctrl+click keeps collecting instead
-    await executeFromCommandPalette(client, frame);
+    await paletteRun(client, frame, ">Create Polyline Annotation", "CmdCreateAnnotPolyLine");
     await waitForPlacement(client, true);
     await clickAt(canvas, p1.x, p1.y, 0);
     await clickCanvas(client, canvas, p2, MK_CONTROL);

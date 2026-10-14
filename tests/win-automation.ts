@@ -14,7 +14,7 @@
 
 import { IS_MAC } from "./host.ts";
 import { macClick } from "./mac-control.ts";
-import { cmdId, drainProcStderr, EXE, setFailureContext, USE_NG } from "./util.ts";
+import { cmdId, drainProcStderr, EXE, SLOW_BUILD_FACTOR, setFailureContext, USE_NG } from "./util.ts";
 import {
   testWindowPos,
   waitForWindowIdle,
@@ -45,6 +45,7 @@ import {
   WM_COMMAND,
   MK_LBUTTON,
   VK_RETURN,
+  VK_DOWN,
   VK_TAB,
   VK_ESCAPE,
   ensureModifierKeysUp,
@@ -620,6 +621,133 @@ export async function paletteSetText(
   }
 }
 
+export type PaletteState = {
+  open: boolean;
+  sel: number;
+  items: number;
+  querySel: [number, number];
+  queryLen: number;
+  cmd: number;
+  rtl: number;
+  thumb: number;
+  page: number;
+  rendered: number;
+  annots: number;
+  annotPage: number;
+  annotsDone: number;
+  settingHelp: number;
+  selValue: string;
+  selText: string;
+  raw: string;
+};
+
+const closedPalette: PaletteState = {
+  open: false,
+  sel: -1,
+  items: 0,
+  querySel: [0, 0],
+  queryLen: 0,
+  cmd: 0,
+  rtl: 0,
+  thumb: 0,
+  page: 0,
+  rendered: 0,
+  annots: 0,
+  annotPage: 0,
+  annotsDone: 0,
+  settingHelp: 0,
+  selValue: "",
+  selText: "",
+  raw: "",
+};
+
+// Parsed TestCommandPalette state; open is false (other fields zero) when closed.
+export async function paletteState(client: ControlClient): Promise<PaletteState> {
+  const res = await client.request(ControlCommand.TestCommandPalette, []);
+  const out = String(res[1] ?? "").trim();
+  if (res[0] === 2) {
+    return { ...closedPalette, raw: out };
+  }
+  const qs = /querySel=(-?\d+),(-?\d+)/.exec(out);
+  if (res[0] !== 0 || !qs) {
+    throw new Error(`paletteState: TestCommandPalette failed: ${out}`);
+  }
+  const num = (name: string): number => Number(new RegExp(`\\b${name}=(-?\\d+)`).exec(out)?.[1] ?? 0);
+  return {
+    open: true,
+    sel: num("sel"),
+    items: num("items"),
+    querySel: [+qs[1]!, +qs[2]!],
+    queryLen: num("queryLen"),
+    cmd: num("cmd"),
+    rtl: num("rtl"),
+    thumb: num("thumb"),
+    page: num("page"),
+    rendered: num("rendered"),
+    annots: num("annots"),
+    annotPage: num("annotPage"),
+    annotsDone: num("annotsDone"),
+    settingHelp: num("settingHelp"),
+    selValue: /selValue=(.*?) selText=/.exec(out)?.[1] ?? "",
+    selText: /selText=(.*)$/.exec(out)?.[1] ?? "",
+    raw: out,
+  };
+}
+
+// Opens the palette, types query and runs the item whose command is cmdName.
+export async function paletteRun(client: ControlClient, frame: number, query: string, cmdName: string): Promise<void> {
+  const tag = `paletteRun(${cmdName})`;
+  sendCommand(frame, cmdId("CmdCommandPalette"));
+  const handles = await waitForPalette(client, frame, 8_000 * SLOW_BUILD_FACTOR);
+  const focusDeadline = Date.now() + 8_000 * SLOW_BUILD_FACTOR;
+  while (USE_NG && Date.now() < focusDeadline) {
+    const raw = (await paletteState(client)).raw;
+    if (!raw.includes("editFocus=") || raw.includes("editFocus=1")) {
+      break;
+    }
+    await sleep(40);
+  }
+  // not paletteSetText: ng's "text" input goes to a lingering free-text editor first
+  if (USE_NG) {
+    await ngType(client, query);
+  } else {
+    await paletteSetText(client, handles, query);
+  }
+
+  const deadline = Date.now() + 3_000 * SLOW_BUILD_FACTOR;
+  let st: PaletteState;
+  for (;;) {
+    st = await paletteState(client);
+    if (st.open && st.queryLen === query.length) {
+      break;
+    }
+    if (Date.now() > deadline) {
+      throw new Error(`${tag}: palette did not filter\n${st.raw}`);
+    }
+    await sleep(40);
+  }
+
+  const want = cmdId(cmdName);
+  for (let i = 0; i < st.items; i++) {
+    st = await paletteState(client);
+    if (st.open && st.cmd === want) {
+      await paletteKey(client, handles, VK_RETURN);
+      return;
+    }
+    await paletteKey(client, handles, VK_DOWN);
+  }
+  throw new Error(`${tag}: command was not in the filtered palette`);
+}
+
+async function paletteKey(client: ControlClient, handles: { edit: number }, vk: number): Promise<void> {
+  if (USE_NG) {
+    await ngKey(client, vk);
+    return;
+  }
+  postMessage(handles.edit, WM_KEYDOWN, vk, 0);
+  await sleep(80);
+}
+
 // ng's find box is a gpui input with no Edit. Drives it through TestFindUiState:
 // action is "set", "caret", "enter" or "state". Returns the state text.
 export async function ngFind(client: ControlClient, action: string, arg = ""): Promise<string> {
@@ -670,7 +798,7 @@ export function pressVKey(hwnd: number, vk: number): void {
   postMessage(hwnd, WM_KEYUP, vk, 0);
 }
 
-async function ngInput(client: ControlClient, args: (string | number)[]): Promise<void> {
+export async function ngInput(client: ControlClient, args: (string | number)[]): Promise<void> {
   const res = await client.request(ControlCommand.TestInput, args);
   const raw = String(res[1] ?? "");
   if (res[0] !== 0 || !raw.startsWith("OK")) {

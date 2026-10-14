@@ -10,22 +10,14 @@ import { cmdId, runStandalone, SLOW_BUILD_FACTOR, tmpPath, USE_NG, makeBlankPdf 
 import {
   captureWindowPixels,
   clientToScreen,
-  getClassName,
   getClientRect,
-  getFocusedHwnd,
-  getRootWindow,
   packCoords,
-  postMessage,
   sendMessage,
-  sendText,
   setCursorPos,
   sleep,
   MK_SHIFT,
-  VK_DOWN,
   VK_ESCAPE,
-  VK_RETURN,
   WM_COMMAND,
-  WM_KEYDOWN,
   WM_MOUSEMOVE,
 } from "./winapi.ts";
 import {
@@ -35,10 +27,8 @@ import {
   killAndWait,
   launchControlled,
   pressKey,
-  sendCommand,
-  ngKey,
-  ngType,
   countPreviewBlue,
+  paletteRun,
 } from "./win-automation.ts";
 
 type Point = { x: number; y: number };
@@ -107,107 +97,6 @@ function toolbarButtonRect(dump: string, command: string): { x: number; y: numbe
   const x = +m[1]!;
   const y = +m[2]!;
   return { x, y, dx: +m[3]! - x, dy: +m[4]! - y };
-}
-
-async function executeFromCommandPaletteNg(client: ControlClient, frame: number): Promise<void> {
-  sendCommand(frame, cmdId("CmdCommandPalette"));
-  const openDeadline = Date.now() + 8_000 * SLOW_BUILD_FACTOR;
-  let raw = "";
-  for (;;) {
-    const res = await client.request(ControlCommand.TestCommandPalette, []);
-    raw = String(res[1] ?? "");
-    if (res[0] === 0 && raw.startsWith("OK") && raw.includes("editFocus=1")) {
-      break;
-    }
-    if (Date.now() > openDeadline) {
-      throw new Error(`line-annotation-placement: command palette did not open\n${raw}`);
-    }
-    await sleep(50);
-  }
-
-  const query = ">Create Line Annotation";
-  await ngType(client, query);
-  const filterDeadline = Date.now() + 3_000 * SLOW_BUILD_FACTOR;
-  let itemCount = 0;
-  for (;;) {
-    const res = await client.request(ControlCommand.TestCommandPalette, []);
-    raw = String(res[1] ?? "");
-    const m = /items=(\d+) querySel=-?\d+,-?\d+ queryLen=(\d+) cmd=(-?\d+)/.exec(raw);
-    if (res[0] === 0 && m && +m[2]! === query.length) {
-      itemCount = +m[1]!;
-      break;
-    }
-    if (Date.now() > filterDeadline) {
-      throw new Error(`line-annotation-placement: palette query did not settle\n${raw}`);
-    }
-    await sleep(40);
-  }
-
-  for (let i = 0; i < itemCount; i++) {
-    const res = await client.request(ControlCommand.TestCommandPalette, []);
-    raw = String(res[1] ?? "");
-    const m = /cmd=(-?\d+)/.exec(raw);
-    if (res[0] === 0 && m && +m[1]! === cmdId("CmdCreateAnnotLine")) {
-      await ngKey(client, VK_RETURN);
-      return;
-    }
-    await ngKey(client, VK_DOWN);
-  }
-  throw new Error("line-annotation-placement: Line annotation command was not in the filtered palette");
-}
-
-async function executeFromCommandPalette(client: ControlClient, frame: number): Promise<void> {
-  if (USE_NG) {
-    await executeFromCommandPaletteNg(client, frame);
-    return;
-  }
-  sendCommand(frame, cmdId("CmdCommandPalette"));
-  const openDeadline = Date.now() + 8_000;
-  let palette = 0;
-  let edit = 0;
-  while (Date.now() < openDeadline) {
-    edit = getFocusedHwnd(frame);
-    if (edit && getClassName(edit) === "Edit") {
-      palette = getRootWindow(edit);
-      if (palette && palette !== frame) {
-        break;
-      }
-    }
-    await sleep(50);
-  }
-  if (!palette || !edit) {
-    throw new Error("line-annotation-placement: command palette did not open");
-  }
-
-  const query = ">Create Line Annotation";
-  sendText(edit, query);
-  const filterDeadline = Date.now() + 3_000;
-  let itemCount = 0;
-  for (;;) {
-    const res = await client.request(ControlCommand.TestCommandPalette, []);
-    const raw = String(res[1] ?? "");
-    const m = /items=(\d+) querySel=-?\d+,-?\d+ queryLen=(\d+) cmd=(-?\d+)/.exec(raw);
-    if (res[0] === 0 && m && +m[2]! === query.length) {
-      itemCount = +m[1]!;
-      break;
-    }
-    if (Date.now() > filterDeadline) {
-      throw new Error(`line-annotation-placement: palette query did not settle\n${raw}`);
-    }
-    await sleep(40);
-  }
-
-  for (let i = 0; i < itemCount; i++) {
-    const res = await client.request(ControlCommand.TestCommandPalette, []);
-    const raw = String(res[1] ?? "");
-    const m = /cmd=(-?\d+)/.exec(raw);
-    if (res[0] === 0 && m && +m[1]! === cmdId("CmdCreateAnnotLine")) {
-      await pressKey(edit, VK_RETURN, 0);
-      return;
-    }
-    postMessage(edit, WM_KEYDOWN, VK_DOWN, 0);
-  }
-  throw new Error("line-annotation-placement: Line annotation command was not in the filtered palette");
 }
 
 function moveMouse(canvas: number, point: Point, key = 0): void {
@@ -370,7 +259,7 @@ export async function testit(): Promise<void> {
     }
 
     await client.setNotificationsEnabled(true);
-    await executeFromCommandPalette(client, frame);
+    await paletteRun(client, frame, ">Create Line Annotation", "CmdCreateAnnotLine");
     state = await waitForPlacement(client, true);
     if (!state.notification || state.started || state.annotations !== 0) {
       throw new Error(`line-annotation-placement: palette did not start placement mode\n${state.raw}`);
@@ -383,7 +272,7 @@ export async function testit(): Promise<void> {
       throw new Error(`line-annotation-placement: second page click did not create exactly one line\n${state.raw}`);
     }
 
-    await executeFromCommandPalette(client, frame);
+    await paletteRun(client, frame, ">Create Line Annotation", "CmdCreateAnnotLine");
     await waitForPlacement(client, true);
     await clickAt(canvas, start.x, start.y, 0);
     await pressKey(frame, VK_ESCAPE, 0);

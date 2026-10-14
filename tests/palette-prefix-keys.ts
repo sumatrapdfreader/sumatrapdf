@@ -10,9 +10,15 @@
 import { ControlCommand, withControlledSumatra, type ControlClient } from "./control.ts";
 import { IS_MAC } from "./host.ts";
 import { cmdId, EXE, runStandalone } from "./util.ts";
-import { findCanvas, findPalette, sendCommand, waitForFrame } from "./win-automation.ts";
+import {
+  findCanvas,
+  findPalette,
+  sendCommand,
+  waitForFrame,
+  paletteState,
+  type PaletteState,
+} from "./win-automation.ts";
 import { WM_CHAR, WM_KEYDOWN, VK_ESCAPE, getFocusedHwnd, postMessage, sleep } from "./winapi.ts";
-
 const PDF = "ext/a-zlib/zlib.3.pdf";
 
 // prefix key => the query length the palette shows (the default mode shows
@@ -26,22 +32,7 @@ const KEYS: { key: string; queryLen: number; thumb: boolean }[] = [
   { key: "&", queryLen: 1, thumb: true },
 ];
 
-type Palette = { open: boolean; queryLen: number; thumb: boolean };
-
-async function paletteState(client: ControlClient): Promise<Palette> {
-  const res = await client.request(ControlCommand.TestCommandPalette, []);
-  if (res[0] === 2) {
-    return { open: false, queryLen: 0, thumb: false };
-  }
-  const out = String(res[1] ?? "").trim();
-  const m = /queryLen=(\d+).*thumb=(\d)/.exec(out);
-  if (res[0] !== 0 || !m) {
-    throw new Error(`palette-prefix-keys: TestCommandPalette failed: ${out}`);
-  }
-  return { open: true, queryLen: +m[1]!, thumb: m[2] === "1" };
-}
-
-async function waitFor(client: ControlClient, what: string, pred: (p: Palette) => boolean): Promise<Palette> {
+async function waitFor(client: ControlClient, what: string, pred: (p: PaletteState) => boolean): Promise<PaletteState> {
   const deadline = Date.now() + 8000;
   let last = await paletteState(client);
   while (!pred(last)) {
@@ -75,7 +66,7 @@ export async function testit(): Promise<void> {
         await waitFor(
           client,
           `'${k.key}' did not open the palette with queryLen ${k.queryLen}, thumb ${k.thumb}`,
-          (p) => p.open && p.queryLen === k.queryLen && p.thumb === k.thumb,
+          (p) => p.open && p.queryLen === k.queryLen && (p.thumb === 1) === k.thumb,
         );
         await closePalette(client, frame);
       }

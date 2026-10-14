@@ -3,7 +3,7 @@
 // own "Navigate Files in Folder..." does.
 import { mkdirSync, rmSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
-import { ControlClient, ControlCommand } from "./control.ts";
+import { ControlClient } from "./control.ts";
 import { IS_MAC } from "./host.ts";
 import { ROOT, cmdId, runStandalone, tmpPath } from "./util.ts";
 import { sleep, VK_ESCAPE } from "./winapi.ts";
@@ -14,6 +14,8 @@ import {
   pressKey,
   sendCommand,
   waitForPalette,
+  paletteState,
+  type PaletteState,
 } from "./win-automation.ts";
 
 const SETTINGS = `UiLanguage = en
@@ -23,31 +25,12 @@ RestoreSession = false
 RememberOpenedFiles = false
 `;
 
-type PaletteState = { items: number; queryLen: number; selectedCmdId: number };
-
-async function paletteState(client: ControlClient): Promise<PaletteState | null> {
-  const res = await client.request(ControlCommand.TestCommandPalette, []);
-  const exitCode = res[0] as number;
-  const out = String(res[1] ?? "");
-  if (exitCode === 2) {
-    return null;
-  }
-  if (exitCode !== 0) {
-    throw new Error(`command-palette-alt-names: TestCommandPalette failed: ${out}`);
-  }
-  const m = /OK sel=-?\d+ items=(\d+) querySel=-?\d+,-?\d+ queryLen=(\d+) cmd=(-?\d+)/.exec(out);
-  if (!m) {
-    throw new Error(`command-palette-alt-names: could not parse: ${out}`);
-  }
-  return { items: +m[1]!, queryLen: +m[2]!, selectedCmdId: +m[3]! };
-}
-
 async function openPalette(client: ControlClient, frame: number): Promise<{ palette: number; edit: number }> {
   sendCommand(frame, cmdId("CmdCommandPalette"));
   const deadline = Date.now() + 8_000;
   while (Date.now() < deadline) {
     if (IS_MAC) {
-      if (await paletteState(client)) {
+      if ((await paletteState(client)).open) {
         return { palette: frame, edit: frame };
       }
     } else {
@@ -69,17 +52,17 @@ async function queryPalette(client: ControlClient, frame: number, query: string)
   let state: PaletteState | null = null;
   while (Date.now() < deadline) {
     state = await paletteState(client);
-    if (state && state.queryLen === query.length) {
+    if (state?.open && state.queryLen === query.length) {
       break;
     }
     await sleep(40);
   }
-  if (!state) {
+  if (!state?.open) {
     throw new Error(`command-palette-alt-names: no palette state for '${query}'`);
   }
   await pressKey(handles.edit, VK_ESCAPE, 0);
   const closeDeadline = Date.now() + 3_000;
-  while (await paletteState(client)) {
+  while ((await paletteState(client)).open) {
     if (Date.now() > closeDeadline) {
       throw new Error(`command-palette-alt-names: palette did not close after '${query}'`);
     }
@@ -106,8 +89,8 @@ export async function testit(): Promise<void> {
       const expected = cmdId(cmd);
       for (const text of texts) {
         const state = await queryPalette(client, frame, ">" + text);
-        if (state.selectedCmdId !== expected) {
-          throw new Error(`command-palette-alt-names: '${text}' selected ${state.selectedCmdId}, want ${expected}`);
+        if (state.cmd !== expected) {
+          throw new Error(`command-palette-alt-names: '${text}' selected ${state.cmd}, want ${expected}`);
         }
       }
     }

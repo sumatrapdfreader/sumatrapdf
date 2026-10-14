@@ -3,7 +3,7 @@
 // query. Ctrl+C was eaten as CmdCopySelection and did not copy the query.
 // Home/End/PageUp/PageDown never moved the list.
 import { join } from "node:path";
-import { ControlClient, ControlCommand } from "./control";
+import { ControlClient } from "./control";
 import { IS_MAC } from "./host";
 import { ROOT, cmdId, runStandalone, SLOW_BUILD_FACTOR } from "./util";
 import { postMessage, sleep, WM_CLOSE, WM_KEYDOWN } from "./winapi";
@@ -15,6 +15,8 @@ import {
   waitForExit,
   paletteSetText,
   waitForPalette,
+  paletteState,
+  type PaletteState,
 } from "./win-automation";
 
 const VK_END = 0x23;
@@ -56,32 +58,13 @@ function setClipboard(value: string): void {
   }
 }
 
-type PaletteState = { sel: number; items: number; querySel: [number, number]; queryLen: number };
-
-async function paletteState(client: ControlClient): Promise<PaletteState | null> {
-  const res = await client.request(ControlCommand.TestCommandPalette, []);
-  const exitCode = res[0] as number;
-  const out = String(res[1] ?? "");
-  if (exitCode === 2) {
-    return null;
-  }
-  if (exitCode !== 0) {
-    throw new Error(`issue-5972: TestCommandPalette failed: ${out}`);
-  }
-  const m = /OK sel=(-?\d+) items=(\d+) querySel=(-?\d+),(-?\d+) queryLen=(\d+)/.exec(out);
-  if (!m) {
-    throw new Error(`issue-5972: could not parse: ${out}`);
-  }
-  return { sel: +m[1]!, items: +m[2]!, querySel: [+m[3]!, +m[4]!], queryLen: +m[5]! };
-}
-
 const kWait = IS_MAC ? SLOW_BUILD_FACTOR : 1;
 
 async function waitPalette(client: ControlClient): Promise<PaletteState> {
   const deadline = Date.now() + 8_000 * kWait;
   for (;;) {
     const st = await paletteState(client);
-    if (st && st.items > 1) {
+    if (st.open && st.items > 1) {
       return st;
     }
     if (Date.now() > deadline) {
@@ -127,7 +110,7 @@ export async function testit(): Promise<void> {
     sendCommandSync(palette, cmdId("CmdSelectAll"));
     const deadline = Date.now() + 3_000 * kWait;
     for (;;) {
-      st = (await paletteState(client))!;
+      st = await paletteState(client);
       if (st.queryLen === query.length && st.querySel[0] === 0 && st.querySel[1] === query.length) {
         break;
       }
@@ -168,7 +151,7 @@ async function waitForSelChange(client: ControlClient, from: number, what: strin
   const deadline = Date.now() + 5_000 * kWait;
   for (;;) {
     const st = await paletteState(client);
-    if (st && st.sel !== from) {
+    if (st.open && st.sel !== from) {
       return st;
     }
     if (Date.now() > deadline) {
@@ -182,7 +165,7 @@ async function waitForSel(client: ControlClient, want: number, what: string): Pr
   const deadline = Date.now() + 5_000 * kWait;
   for (;;) {
     const st = await paletteState(client);
-    if (st && st.sel === want) {
+    if (st.open && st.sel === want) {
       return st;
     }
     if (Date.now() > deadline) {
