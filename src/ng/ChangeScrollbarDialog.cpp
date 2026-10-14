@@ -21,6 +21,7 @@
 #include "gui/AppShell.h"
 #include "gui/DialogWidgets.h"
 #include "SumatraDialogs.h"
+#include "shared/PdfToolsCommon.h"
 #include "AppHelpersCommon.h"
 
 #include "SumatraLog.h"
@@ -35,9 +36,7 @@ static ChangeScrollbarDlg gChangeScrollbar;
 
 // orig's window at 96 dpi: a 260 wide client area, 4 / 8 around; the four
 // rows of the list, which has the focus, and the buttons with 4 above and below
-constexpr float kSbWinDx = 260;
-constexpr float kSbWinPadX = 8;
-constexpr float kSbWinPadY = 4;
+constexpr float kSbDlgDx = 280;
 
 struct ChangeScrollbarView {
     static void OnOk(ChangeScrollbarView* self, gp::Ctx* cx, const gp::ClickEvent*);
@@ -89,7 +88,7 @@ void ShowChangeScrollbarDialog(MainWindow* win) {
     spec.build = ChangeScrollbarDialogBuild;
     spec.close = CloseChangeScrollbarDialog;
     spec.onArrow = ChangeScrollbarDlgOnArrow;
-    spec.clientDx = kSbWinDx;
+    spec.clientDx = kSbDlgDx;
     gChangeScrollbarTw = DlgWindowOpen(spec, win);
     AppShellInvalidate(win);
 }
@@ -138,48 +137,7 @@ void ChangeScrollbarView::OnRowClick(ChangeScrollbarView*, gp::Ctx* cx, const gp
     gp::Notify(cx);
 }
 
-static gp::El* ChangeScrollbarWinBuild(gp::Ctx* cx) {
-    const gp::Theme& th = gp::ThemeNow(cx->app);
-    float font = DlgWinFont(cx);
-    gp::El* col = gp::Div(cx->a)->FlexCol()->W(gp::kFill)->PadX(kSbWinPadX)->PadY(kSbWinPadY);
-    gp::El* list = gp::Div(cx->a)->FlexCol()->W(gp::kFill)->Shrink0();
-    for (int i = 0; i <= kScrollbarHidden; i++) {
-        gp::El* row = gp::Div(cx->a)
-                          ->FlexRow()
-                          ->W(gp::kFill)
-                          ->H(kDlgWinRowDy)
-                          ->Shrink0()
-                          ->ItemsCenter()
-                          ->PadX(4)
-                          ->PathClick(GpuiDup(cx->a, fmt("scrollbar-row-%d", i)))
-                          ->OnClick(gp::ListenTo(gChangeScrollbarView, &ChangeScrollbarView::OnRowClick, (intptr_t)i));
-        if (i == gChangeScrollbar.sel) {
-            row->Bg(DlgWinListSelBg(true));
-        }
-        row->Child(gp::TextEl(cx->a, GpuiDup(cx->a, ScrollbarModeDisplayName(i)))->Font(font)->Fg(th.foreground));
-        list->Child(row);
-    }
-    // orig's list has the focus: its dotted focus rectangle
-    list->Child(gp::Div(cx->a)
-                    ->Absolute()
-                    ->Left(0)
-                    ->Top(0)
-                    ->W(gp::kFill)
-                    ->H((kScrollbarHidden + 1) * kDlgWinRowDy)
-                    ->Border(1, th.foreground)
-                    ->Dashed());
-    col->Child(list);
-
-    gp::Listener onOk = gp::ListenTo(gChangeScrollbarView, &ChangeScrollbarView::OnOk);
-    DlgSetDefault(cx, onOk);
-    gp::El* buttons = DlgWinButtonRow(cx, kSbWinPadY);
-    buttons->Child(DlgWinButton(cx, GStrL("dlg-cancel"), Tr("Cancel"),
-                                gp::ListenTo(gChangeScrollbarView, &ChangeScrollbarView::OnCancel), false));
-    buttons->Child(DlgWinButton(cx, GStrL("dlg-ok"), Tr("OK"), onOk, true));
-    col->Child(buttons);
-    return DlgWinContent(cx, col);
-}
-
+// orig's layout: the modes, Cancel / OK
 gp::El* ChangeScrollbarDialogBuild(MainWindow* win, gp::Ctx* cx) {
     if (!gChangeScrollbar.visible || gChangeScrollbar.win != win) {
         return nullptr;
@@ -190,37 +148,17 @@ gp::El* ChangeScrollbarDialogBuild(MainWindow* win, gp::Ctx* cx) {
     if (!gChangeScrollbarView.IsValid()) {
         gChangeScrollbarView = gp::EntityNewState<ChangeScrollbarView>(cx->app);
     }
-    const gp::Theme& th = gp::ThemeNow(cx->app);
-    if (DlgWindowIsHost(cx)) {
-        return ChangeScrollbarWinBuild(cx);
-    }
-    gp::El* list = gp::Div(cx->a)->FlexCol()->W(gp::kFill)->Border(1, th.border);
-    for (int i = 0; i <= kScrollbarHidden; i++) {
-        gp::El* row = gp::Div(cx->a)
-                          ->FlexRow()
-                          ->W(gp::kFill)
-                          ->H(24)
-                          ->ItemsCenter()
-                          ->PadX(6)
-                          ->PathClick(GpuiDup(cx->a, fmt("scrollbar-row-%d", i)))
-                          ->OnClick(gp::ListenTo(gChangeScrollbarView, &ChangeScrollbarView::OnRowClick, (intptr_t)i));
-        if (i == gChangeScrollbar.sel) {
-            row->Bg(th.selection);
-        }
-        row->Child(gp::TextEl(cx->a, GpuiDup(cx->a, ScrollbarModeDisplayName(i)))->Font(13)->Fg(th.foreground));
-        list->Child(row);
-    }
+    gp::Listener onOk = gp::ListenTo(gChangeScrollbarView, &ChangeScrollbarView::OnOk);
+    gp::Listener onCancel = gp::ListenTo(gChangeScrollbarView, &ChangeScrollbarView::OnCancel);
+    DlgSetDefault(cx, onOk);
 
-    DlgSetDefault(cx, gp::ListenTo(gChangeScrollbarView, &ChangeScrollbarView::OnOk));
-    return DlgIntoEl(cx, gpc::Dialog::New(cx)
-                             ->Open(true)
-                             ->Title(ToGpui(Tr("Change Scrollbar")))
-                             ->Body(list)
-                             ->W(320)
-                             ->OkText(ToGpui(Tr("OK")))
-                             ->CancelText(ToGpui(Tr("Cancel")))
-                             ->ShowCancel(true)
-                             ->OnOk(gp::ListenTo(gChangeScrollbarView, &ChangeScrollbarView::OnOk))
-                             ->OnCancel(gp::ListenTo(gChangeScrollbarView, &ChangeScrollbarView::OnCancel))
-                             ->OnClose(gp::ListenTo(gChangeScrollbarView, &ChangeScrollbarView::OnCancel)));
+    gp::El* list = gp::Div(cx->a)->FlexCol()->W(gp::kFill)->Shrink0();
+    for (int i = 0; i <= kScrollbarHidden; i++) {
+        list->Child(DlgListRow(cx, fmt("scrollbar-row-%d", i), ScrollbarModeDisplayName(i), i == gChangeScrollbar.sel,
+                               gp::ListenTo(gChangeScrollbarView, &ChangeScrollbarView::OnRowClick, (intptr_t)i)));
+    }
+    gp::El* col = gp::Div(cx->a)->FlexCol()->W(gp::kFill);
+    col->Child(DlgListBox(cx, list));
+    col->Child(DlgFooter(cx, Tr("OK"), onOk, onCancel));
+    return DlgToolContent(cx, col, ChangeScrollbarDlgTitle(), kSbDlgDx, onCancel);
 }

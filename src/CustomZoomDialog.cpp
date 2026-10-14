@@ -56,7 +56,6 @@ struct CustomZoomWnd : WindowBase {
     bool MoveSelection(int vkey);
     void OnListSelectionChanged();
     void OnListDoubleClick();
-    void DrawLevel(VirtListBox::DrawItemEvent* ev);
     void OnKeyDown(KeyEvent* ev);
     void OnCancel(VirtMouseEvent* ev = nullptr);
     void OnOk(VirtMouseEvent* ev = nullptr);
@@ -72,12 +71,6 @@ static void ClearCustomZoomWnd() {
 // short for all of them
 constexpr int kZoomListMinLines = 6;
 constexpr int kZoomDlgDx = 280;
-constexpr int kZoomListRowDy = 24;
-// the rows' text lines up with the field's
-constexpr int kZoomListInsetDx = 8;
-constexpr int kZoomListPadDx = kToolDlgPadDx - kZoomListInsetDx;
-constexpr int kZoomListRadius = 4;
-constexpr int kZoomListSelShift = 28;
 
 void CustomZoomWnd::FillZoom() {
     if (!listBox || !model) {
@@ -153,21 +146,6 @@ void CustomZoomWnd::SelectLevelFromEdit() {
 
 void CustomZoomWnd::OnListSelectionChanged() {
     SetEditFromSelection();
-}
-
-// a level: its name, on a rounded selection
-void CustomZoomWnd::DrawLevel(VirtListBox::DrawItemEvent* ev) {
-    Gfx* gfx = ev->gfx;
-    Rect rc = ev->itemRect;
-    gfx->FillRect(rc, colBg);
-    if (ev->selected) {
-        gfx->FillRoundedRect(rc, DpiScale(kZoomListRadius), AccentColor(colBg, kZoomListSelShift));
-    }
-    int inset = DpiScale(kZoomListInsetDx);
-    Rect rcText{rc.x + inset, rc.y, rc.dx - (2 * inset), rc.dy};
-    u32 fmt = gfxTextEllipsis | gfxTextVCenter;
-    fmt |= IsUIRtl() ? (gfxTextRight | gfxTextRtl) : gfxTextLeft;
-    gfx->DrawText(ZoomLevelStrExact(zoomLevels[ev->itemIndex]), rcText, fmt, fontText, colTxt);
 }
 
 void CustomZoomWnd::OnListDoubleClick() {
@@ -304,19 +282,12 @@ bool CustomZoomWnd::Create(MainWindow* mainWin) {
 
     // the levels, the one in the field on a rounded selection
     {
-        auto* c = new VirtListBox();
-        c->dpi = GetDpi();
-        c->font = fontText;
-        c->itemDy = DpiScale(kZoomListRowDy);
-        c->showFocusRing = false;
-        c->SetColor(kColListText, colTxt);
-        c->SetColor(kColListBg, colBg);
-        c->onDrawItem = MkMethod1<CustomZoomWnd, VirtListBox::DrawItemEvent*, &CustomZoomWnd::DrawLevel>(this);
+        auto* c = NewDlgList(GetDpi(), fontText);
         listBox = c;
         model = new ListBoxModelStrings();
         c->onSelectionChanged = MkMethod0<CustomZoomWnd, &CustomZoomWnd::OnListSelectionChanged>(this);
         c->onDoubleClick = MkMethod0<CustomZoomWnd, &CustomZoomWnd::OnListDoubleClick>(this);
-        vbox->AddChild(new Padding(c, DpiScaledInsets(kToolDlgFilesPadDy, kZoomListPadDx)));
+        vbox->AddChild(NewDlgListBox(c));
         FillZoom();
     }
 

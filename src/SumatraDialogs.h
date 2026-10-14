@@ -4,6 +4,7 @@
 struct MainWindow;
 struct WindowTab;
 struct VirtButton;
+struct VirtListBox;
 struct PlatformFont;
 
 void ShowAddFavoriteDialog(MainWindow* win, Str filePath, int pageNo, Str pageLabel, Str name);
@@ -125,4 +126,8 @@ VirtText* NewDlgLabel(Str s, PlatformFont* font, Color col, int dy, bool prefix 
 VirtText* NewDlgCaption(Str s, PlatformFont* font, Color col);
 ILayout* NewDlgUnderlined(ILayout* field);
 HBox* NewDlgRow();
-ILayout* NewDlgFooter(VirtButton* cancel, VirtButton* ok);
+ILayout* NewDlgFooter(VirtButton* cancel, VirtButton* ok, VirtButton* extra = nullptr);
+void SetDlgButtonColors(VirtButton* b, DlgButtonStyle style);
+VirtListBox* NewDlgList(int dpi, PlatformFont* font);
+void SetDlgListColors(VirtListBox* lb);
+ILayout* NewDlgListBox(VirtListBox* lb);

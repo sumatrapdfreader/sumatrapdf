@@ -21,9 +21,16 @@
 #include "Translations.h"
 #include "DarkMode.h"
 #include "SumatraDialogs.h"
+#include "shared/PdfToolsCommon.h"
 
-// Search edit is a real HWND; the language list and buttons are VirtCtrl.
-// Same layout / WindowBase pattern as Change Theme.
+//   Search
+//   ---------------------------------------------- hairline
+//   English
+//   Deutsch                       languages, the current one selected
+//   ---------------------------------------------- hairline
+//                                    [Cancel] [OK]
+constexpr int kLangDlgDx = 320;
+constexpr int kLangListLines = 16;
 struct ChangeLanguageWnd : WindowBase {
     ~ChangeLanguageWnd() override = default;
 
@@ -128,71 +135,66 @@ static void OnDestroy(WindowBase::DestroyEvent* /*ev*/) {
 
 bool ChangeLanguageWnd::Create(MainWindow* mainWin) {
     win = mainWin;
-
+    Color colTxt = ThemeWindowTextColor();
+    Color colBg = ThemeWindowControlBackgroundColor();
+    PlatformFont* fontText = DlgUiFont(kToolDlgTextFontPx);
+    SetFont(fontText);
+    bool isRtl = IsUIRtl();
     {
         CreateCustomArgs args;
         args.owner = win ? win->hwndFrame : nullptr;
         args.title = Tr("Change Language");
         args.visible = false;
         args.style = WS_POPUPWINDOW | WS_CAPTION;
-        args.font = GetFont();
+        args.font = fontText;
+        args.isRtl = isRtl;
+        args.bgColor = colBg;
         args.icon = LoadIconW(GetModuleHandleW(nullptr), MAKEINTRESOURCEW(GetAppIconID()));
         CreateCustom(args);
     }
     if (!hwnd) {
         return false;
     }
+    SetColors(colTxt, colBg);
 
     auto* vbox = new VBox();
-    vbox->alignMain = MainAxisAlign::MainStart;
     vbox->alignCross = CrossAxisAlign::Stretch;
 
+    // the search, in the larger font, as the palette has it
     {
         Edit::CreateArgs args;
         args.parent = hwnd;
-        args.font = GetFont();
-        args.withBorder = true;
-        args.isRtl = IsUIRtl();
-        auto* c = new Edit();
-        c->Create(args);
-        c->onTextChanged = MkMethod0<ChangeLanguageWnd, &ChangeLanguageWnd::FilterList>(this);
-        editSearch = c;
-        vbox->AddChild(c);
+        args.font = DlgUiFont(kToolDlgQueryFontPx);
+        args.withBorder = false;
+        args.isRtl = isRtl;
+        editSearch = new Edit();
+        editSearch->SetColors(colTxt, colBg);
+        editSearch->Create(args);
+        // the hint stays while the empty field has the focus, as it always does here
+        Edit_SetCueBannerTextFocused(editSearch->hwnd, CWStrTemp(Tr("Search")), TRUE);
+        editSearch->onTextChanged = MkMethod0<ChangeLanguageWnd, &ChangeLanguageWnd::FilterList>(this);
+        HBox* row = NewDlgRow();
+        row->AddChild(new Spacer(0, DpiScale(kToolDlgLineDy)));
+        row->AddChild(editSearch, 1);
+        vbox->AddChild(new Padding(row, DpiScaledInsets(0, kToolDlgPadDx)));
     }
+    vbox->AddChild(new VirtLine());
 
-    {
-        auto* c = new VirtListBox();
-        c->dpi = GetDpi();
-        c->font = font;
-        c->idealSizeLines = 16;
-        listBox = c;
-        model = new ListBoxModelStrings();
-        c->onDoubleClick = MkMethod0<ChangeLanguageWnd, &ChangeLanguageWnd::OnListDoubleClick>(this);
-        vbox->AddChild(c);
-        FilterList();
-    }
+    listBox = NewDlgList(GetDpi(), fontText);
+    listBox->idealSizeLines = kLangListLines;
+    model = new ListBoxModelStrings();
+    listBox->onDoubleClick = MkMethod0<ChangeLanguageWnd, &ChangeLanguageWnd::OnListDoubleClick>(this);
+    vbox->AddChild(NewDlgListBox(listBox));
+    FilterList();
 
-    {
-        auto* hbox = new HBox();
-        hbox->alignMain = MainAxisAlign::MainEnd;
-        hbox->alignCross = CrossAxisAlign::CrossCenter;
-        hbox->gap = font->averageCharWidth;
-        auto pad = Insets{4, 0, 4, 0};
+    btnCancel = NewDlgButton(hwnd, Tr("Cancel"), fontText, DlgButtonStyle::Outline, false);
+    btnCancel->onClick = MkMethod1<ChangeLanguageWnd, VirtMouseEvent*, &ChangeLanguageWnd::OnCancel>(this);
+    btnOk = NewDlgButton(hwnd, Tr("OK"), fontText, DlgButtonStyle::Filled, true);
+    btnOk->onClick = MkMethod1<ChangeLanguageWnd, VirtMouseEvent*, &ChangeLanguageWnd::OnOk>(this);
+    vbox->AddChild(NewDlgFooter(btnCancel, btnOk));
+    layout = vbox;
 
-        btnCancel = NewThemedButton(hwnd, Tr("Cancel"), font, false);
-        btnCancel->onClick = MkMethod1<ChangeLanguageWnd, VirtMouseEvent*, &ChangeLanguageWnd::OnCancel>(this);
-        hbox->AddChild(new Padding(btnCancel, pad));
-        btnOk = NewThemedButton(hwnd, Tr("OK"), font, true);
-        btnOk->onClick = MkMethod1<ChangeLanguageWnd, VirtMouseEvent*, &ChangeLanguageWnd::OnOk>(this);
-        hbox->AddChild(new Padding(btnOk, pad));
-        vbox->AddChild(hbox);
-    }
-
-    auto* padding = new Padding(vbox, DpiScaledInsets(4, 8));
-    layout = padding;
-
-    int dx = DpiScale(280);
-    LayoutAndSizeToContent(layout, dx, 0, hwnd);
+    LayoutAndSizeToContent(layout, DpiScale(kLangDlgDx), 0, hwnd);
     DoLayout(HwndClientRect(hwnd).Size());
     HwndCenterDialog(hwnd, win ? win->hwndFrame : nullptr);
     UpdateTheme();

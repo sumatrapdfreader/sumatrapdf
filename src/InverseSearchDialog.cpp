@@ -22,9 +22,15 @@
 #include "Translations.h"
 #include "DarkMode.h"
 #include "SumatraDialogs.h"
+#include "shared/PdfToolsCommon.h"
 
-// Label, Help and OK/Cancel are VirtCtrl; the command line is an editable DropDown.
-// Same WindowBase layout as Change Theme / Custom Zoom.
+//   Enter the command line to invoke when you double-click on the PDF document:
+//   [code -g "%f:%l"                          v]
+//   ---------------------------------------------- hairline
+//   Help                             [Cancel] [OK]
+constexpr int kInverseSearchDlgDx = 520;
+constexpr int kInverseSearchPadTop = 10;
+constexpr int kInverseSearchPadBottom = 16;
 struct InverseSearchWnd : WindowBase {
     ~InverseSearchWnd() override = default;
 
@@ -101,88 +107,61 @@ static void OnDestroy(WindowBase::DestroyEvent* /*ev*/) {
 
 bool InverseSearchWnd::Create(MainWindow* mainWin) {
     win = mainWin;
-
+    Color colTxt = ThemeWindowTextColor();
+    Color colBg = ThemeWindowControlBackgroundColor();
+    PlatformFont* fontText = DlgUiFont(kToolDlgTextFontPx);
+    SetFont(fontText);
+    bool isRtl = IsUIRtl();
     {
         CreateCustomArgs args;
         args.owner = win ? win->hwndFrame : nullptr;
         args.title = Tr("Set inverse search command line");
         args.visible = false;
         args.style = WS_POPUPWINDOW | WS_CAPTION;
-        args.font = GetFont();
+        args.font = fontText;
+        args.isRtl = isRtl;
+        args.bgColor = colBg;
         args.icon = LoadIconW(GetModuleHandleW(nullptr), MAKEINTRESOURCEW(GetAppIconID()));
         CreateCustom(args);
     }
     if (!hwnd) {
         return false;
     }
-    bool isRtl = IsUIRtl();
+    SetColors(colTxt, colBg);
 
     auto* vbox = new VBox();
-    vbox->alignMain = MainAxisAlign::MainStart;
     vbox->alignCross = CrossAxisAlign::Stretch;
+    label = NewDlgCaption(Tr("Enter the command line to invoke when you double-click on the PDF document:"), fontText,
+                          ThemeWindowTextDisabledColor());
+    vbox->AddChild(label);
 
-    {
-        auto* c = NewVirtText({
-            .s = Tr("Enter the command line to invoke when you double-click on the PDF document:"),
-            .font = font,
-            .isRtl = isRtl,
-            .padding = DpiScaledInsets(0, 0, 4, 0),
-        });
-        label = c;
-        vbox->AddChild(c);
-    }
+    DropDown::CreateArgs args;
+    args.parent = hwnd;
+    args.font = fontText;
+    args.isRtl = isRtl;
+    args.isEditable = true;
+    dropDown = new DropDown();
+    dropDown->Create(args);
+    Insets pad = DpiScaledInsets(kInverseSearchPadTop, kToolDlgPadDx, kInverseSearchPadBottom, kToolDlgPadDx);
+    vbox->AddChild(new Padding(dropDown, pad));
+    FillCommands();
 
-    {
-        DropDown::CreateArgs args;
-        args.parent = hwnd;
-        args.font = GetFont();
-        args.isRtl = isRtl;
-        args.isEditable = true;
-        auto* c = new DropDown();
-        c->Create(args);
-        dropDown = c;
-        vbox->AddChild(c);
-        FillCommands();
-    }
+    btnHelp = NewDlgButton(hwnd, Tr("Help"), fontText, DlgButtonStyle::Ghost, false);
+    btnHelp->onClick = MkMethod1<InverseSearchWnd, VirtMouseEvent*, &InverseSearchWnd::OnHelp>(this);
+    btnCancel = NewDlgButton(hwnd, Tr("Cancel"), fontText, DlgButtonStyle::Outline, false);
+    btnCancel->onClick = MkMethod1<InverseSearchWnd, VirtMouseEvent*, &InverseSearchWnd::OnCancel>(this);
+    btnOk = NewDlgButton(hwnd, Tr("OK"), fontText, DlgButtonStyle::Filled, true);
+    btnOk->onClick = MkMethod1<InverseSearchWnd, VirtMouseEvent*, &InverseSearchWnd::OnOk>(this);
+    vbox->AddChild(NewDlgFooter(btnCancel, btnOk, btnHelp));
+    layout = vbox;
 
-    {
-        auto* row = new HBox();
-        row->alignMain = MainAxisAlign::SpaceBetween;
-        row->alignCross = CrossAxisAlign::CrossCenter;
-        row->gap = font->averageCharWidth;
-        auto pad = Insets{4, 0, 4, 0};
-
-        btnHelp = NewThemedButton(hwnd, Tr("Help"), font, false);
-        btnHelp->onClick = MkMethod1<InverseSearchWnd, VirtMouseEvent*, &InverseSearchWnd::OnHelp>(this);
-        row->AddChild(new Padding(btnHelp, pad));
-
-        auto* right = new HBox();
-        right->alignMain = MainAxisAlign::MainEnd;
-        right->alignCross = CrossAxisAlign::CrossCenter;
-        right->gap = font->averageCharWidth;
-        btnCancel = NewThemedButton(hwnd, Tr("Cancel"), font, false);
-        btnCancel->onClick = MkMethod1<InverseSearchWnd, VirtMouseEvent*, &InverseSearchWnd::OnCancel>(this);
-        right->AddChild(new Padding(btnCancel, pad));
-        btnOk = NewThemedButton(hwnd, Tr("OK"), font, true);
-        btnOk->onClick = MkMethod1<InverseSearchWnd, VirtMouseEvent*, &InverseSearchWnd::OnOk>(this);
-        right->AddChild(new Padding(btnOk, pad));
-        row->AddChild(right);
-        vbox->AddChild(row);
-    }
-
-    auto* padding = new Padding(vbox, DpiScaledInsets(4, 8));
-    layout = padding;
-
-    int dx = DpiScale(520);
-    LayoutAndSizeToContent(layout, dx, 0, hwnd);
+    LayoutAndSizeToContent(layout, DpiScale(kInverseSearchDlgDx), 0, hwnd);
     DoLayout(HwndClientRect(hwnd).Size());
     HwndCenterDialog(hwnd, win ? win->hwndFrame : nullptr);
     UpdateTheme();
 
     SetIsVisible(true);
-    if (dropDown) {
-        HwndSetFocus(dropDown->hwnd);
-    }
+    HwndSetFocus(dropDown->hwnd);
     return true;
 }
 

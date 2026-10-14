@@ -31,15 +31,15 @@
 #include "gui/DialogWidgets.h"
 #include "gui/ToolWindow.h"
 #include "SumatraDialogs.h"
+#include "shared/PdfToolsCommon.h"
 #include "AppHelpersCommon.h"
 #include "ChangeThemeDialogCommon.h"
 
 #include "SumatraLog.h"
 
 static constexpr int kThemePreviewDebounceMs = 300;
-static constexpr float kThemeRowDy = 22;
 static constexpr float kThemeListMinDy = 180;
-static constexpr float kThemeListMaxDy = 320;
+static constexpr float kThemeListMaxDy = 16 * kDlgListRowDy;
 static SeqStrings gDocumentColorsFollowThemeNames = "off\0smart\0legacy\0";
 
 struct ChangeThemeDlg {
@@ -96,34 +96,19 @@ bool IsChangeThemeDialogVisible() {
     return gChangeTheme.visible && !gChangeTheme.tw;
 }
 
-// orig's sizes for the window: 280 wide, 4 / 8 around, a 16 row list of 19
-// high rows in the 12 px app font, the label 8 under it, the drop-down 4
-// under that, 25 high buttons with 4 above and below
-constexpr int kThemeWinDx = 280;
-constexpr float kThemeWinPadX = 8;
-constexpr float kThemeWinPadY = 4;
-constexpr float kThemeWinRowDy = 19;
-constexpr int kThemeWinListRows = 16;
-constexpr float kThemeWinFontPx = 12;
-constexpr float kThemeWinLabelDy = 15;
-constexpr float kThemeWinLabelGap = 8;
-constexpr float kThemeWinDropDownDy = 23;
-constexpr float kThemeWinBtnDy = 25;
-constexpr float kThemeWinBtnMinDx = 70;
-constexpr float kThemeWinBtnPadDx = 12;
-constexpr float kThemeWinGap = 4;
-
-static float ThemeRowDy() {
-    return gChangeTheme.tw ? kThemeWinRowDy : kThemeRowDy;
-}
+// orig's layout: the themes (16 rows at most), the drop-down's line, the
+// footer, hairlines between
+constexpr int kThemeDlgDx = 320;
+constexpr int kThemeListRows = 16;
+constexpr float kThemeComboDx = 90;
 
 // the height of the list's view
 static float ThemeListViewDy() {
     int n = ThemeGetCount() + 1;
     if (gChangeTheme.tw) {
-        return (float)std::min(n, kThemeWinListRows) * kThemeWinRowDy;
+        return (float)std::min(n, kThemeListRows) * kDlgListRowDy;
     }
-    return DialogListViewDy(n, kThemeRowDy, kThemeListMinDy, kThemeListMaxDy);
+    return DialogListViewDy(n, kDlgListRowDy, kThemeListMinDy, kThemeListMaxDy, 0);
 }
 
 // closes the window or the dialog without touching the settings
@@ -215,7 +200,7 @@ void ChangeThemeOk() {
 static void ScrollSelIntoView() {
     int n = ThemeGetCount() + 1;
     gChangeTheme.scrollY =
-        DialogScrollToRow(gChangeTheme.scrollY, gChangeTheme.sel, n, ThemeRowDy(), ThemeListViewDy());
+        DialogScrollToRow(gChangeTheme.scrollY, gChangeTheme.sel, n, kDlgListRowDy, ThemeListViewDy());
 }
 
 static void ThemeSelect(int sel) {
@@ -273,23 +258,13 @@ static Str ChangeThemeToolTitle() {
     return gChangeTheme.documentColorsFollowThemeOnly ? Tr("Make Document Colors Follow Theme") : Tr("Change Theme");
 }
 
-static gp::El* ChangeThemeToolBuild(MainWindow*, gp::Ctx* cx) {
-    if (!gChangeTheme.visible || !gChangeTheme.tw) {
-        return nullptr;
-    }
-    if (!gChangeThemeView.IsValid()) {
-        gChangeThemeView = gp::EntityNewState<ChangeThemeView>(cx->app);
-    }
+static gp::El* ChangeThemeColumn(gp::Ctx* cx) {
     // orig's OnDocumentColorsFollowThemeChanged
     if (gChangeTheme.ddFollow.PollChanged(cx->app)) {
         SetDocumentColorsFollowTheme(FollowThemeFromIndex(gChangeTheme.ddFollow.sel));
         PreviewDocumentColors();
     }
-    const gp::Theme& th = gp::ThemeNow(cx->app);
-    float fontScale = ToolWindowSetUiFontPx(cx, kThemeWinFontPx);
-    float font = kThemeWinFontPx * fontScale;
-    gp::El* col = gp::Div(cx->a)->FlexCol()->W(gp::kFill)->Flex1()->MinH(0)->PadX(kThemeWinPadX)->PadY(kThemeWinPadY);
-
+    gp::El* col = gp::Div(cx->a)->FlexCol()->W(gp::kFill);
     if (!gChangeTheme.documentColorsFollowThemeOnly) {
         gp::El* list = gp::Div(cx->a)
                            ->Id(GStrL("theme-list"))
@@ -302,64 +277,47 @@ static gp::El* ChangeThemeToolBuild(MainWindow*, gp::Ctx* cx) {
                            ->OnScroll(gp::ListenTo(gChangeThemeView, &ChangeThemeView::OnScroll));
         int nThemes = ThemeGetCount();
         for (int i = 0; i <= nThemes; i++) {
+            // orig: a mode, not another color theme, so its name is distinct
+            // from the persisted Theme = System value
             Str name = (i == kFollowWindowsThemeListIndex) ? Tr("Follow Windows") : ThemeGetNameAt(i - 1);
-            gp::El* row = gp::Div(cx->a)
-                              ->FlexRow()
-                              ->W(gp::kFill)
-                              ->H(kThemeWinRowDy)
-                              ->Shrink0()
-                              ->ItemsCenter()
-                              ->PadX(4)
-                              ->PathClick(GpuiDup(cx->a, fmt("theme-row-%d", i)))
-                              ->OnClick(gp::ListenTo(gChangeThemeView, &ChangeThemeView::OnRowClick, (intptr_t)i));
-            if (i == gChangeTheme.sel) {
-                row->Bg(ToGpui(AccentColor(ThemeWindowControlBackgroundColor(), 30)));
-            }
-            row->Child(gp::TextEl(cx->a, GpuiDup(cx->a, name))->Font(font)->Fg(th.foreground));
-            list->Child(row);
+            list->Child(DlgListRow(cx, fmt("theme-row-%d", i), name, i == gChangeTheme.sel,
+                                   gp::ListenTo(gChangeThemeView, &ChangeThemeView::OnRowClick, (intptr_t)i)));
         }
-        col->Child(list);
-        col->Child(
-            gp::Div(cx->a)
-                ->FlexRow()
-                ->ItemsCenter()
-                ->H(kThemeWinLabelGap + kThemeWinLabelDy)
-                ->PadT(kThemeWinLabelGap)
-                ->Shrink0()
-                ->Child(gp::TextEl(cx->a, ToGpui(Tr("Document colors follow theme")))->Font(font)->Fg(th.foreground)));
+        col->Child(DlgListBox(cx, list));
+        col->Child(DlgHairline(cx));
     }
-    col->Child(
-        gp::Div(cx->a)
-            ->FlexRow()
-            ->ItemsCenter()
-            ->W(gp::kFill)
-            ->H(kThemeWinGap + kThemeWinDropDownDy)
-            ->PadT(kThemeWinGap)
-            ->Shrink0()
-            ->Child(gChangeTheme.ddFollow.Build(cx, StrL("theme-follow"), (float)kThemeWinDx - 2 * kThemeWinPadX)));
 
-    auto button = [&](gp::Str id, Str label, gp::Listener onClick, bool isDefault) {
-        gpc::Button* b = gpc::Button::New(cx, id)->Label(ToGpui(label))->OnClick(onClick);
-        if (isDefault) {
-            b->Primary();
-        }
-        return b->IntoEl()->H(kThemeWinBtnDy)->MinW(kThemeWinBtnMinDx)->PadX(kThemeWinBtnPadDx)->Shrink0();
-    };
-    gp::El* buttons = gp::Div(cx->a)
-                          ->FlexRow()
-                          ->JustifyEnd()
-                          ->ItemsCenter()
-                          ->W(gp::kFill)
-                          ->H(kThemeWinBtnDy + 2 * kThemeWinGap)
-                          ->Gap(6)
-                          ->Shrink0();
-    buttons->Child(
-        button(GStrL("theme-cancel"), Tr("Cancel"), gp::ListenTo(gChangeThemeView, &ChangeThemeView::OnCancel), false));
-    // Enter runs this one, so it is drawn as the default button
-    buttons->Child(
-        button(GStrL("theme-change"), Tr("Change"), gp::ListenTo(gChangeThemeView, &ChangeThemeView::OnOk), true));
-    col->Child(buttons);
-    return col;
+    // whether the document's colors follow: the label muted, the drop-down
+    Color colMuted = ThemeWindowTextDisabledColor();
+    col->Child(gp::Div(cx->a)
+                   ->FlexRow()
+                   ->ItemsCenter()
+                   ->W(gp::kFill)
+                   ->H(kToolDlgLineDy)
+                   ->Shrink0()
+                   ->PadX(kToolDlgPadDx)
+                   ->Gap(kToolDlgGapDx)
+                   ->Child(gp::TextEl(cx->a, ToGpui(Tr("Document colors follow theme")))
+                               ->Font(kToolDlgTextFontPx)
+                               ->Fg(ToGpui(colMuted))
+                               ->Truncate()
+                               ->MinW(0))
+                   ->Child(gp::Div(cx->a)->Flex1())
+                   ->Child(gChangeTheme.ddFollow.Build(cx, StrL("theme-follow"), kThemeComboDx)));
+    // Enter runs Change, so it is drawn as the default button
+    col->Child(DlgFooter(cx, Tr("Change"), gp::ListenTo(gChangeThemeView, &ChangeThemeView::OnOk),
+                         gp::ListenTo(gChangeThemeView, &ChangeThemeView::OnCancel)));
+    return col->Bg(ToGpui(ThemeWindowControlBackgroundColor()));
+}
+
+static gp::El* ChangeThemeToolBuild(MainWindow*, gp::Ctx* cx) {
+    if (!gChangeTheme.visible || !gChangeTheme.tw) {
+        return nullptr;
+    }
+    if (!gChangeThemeView.IsValid()) {
+        gChangeThemeView = gp::EntityNewState<ChangeThemeView>(cx->app);
+    }
+    return gp::Div(cx->a)->FlexCol()->W(gp::kFill)->Flex1()->MinH(0)->Child(ChangeThemeColumn(cx));
 }
 
 // orig's closeOnEsc (which cancels), Enter for the default button, and the
@@ -380,7 +338,7 @@ static bool ChangeThemeToolOnKey(MainWindow*, gp::Ctx*, const gp::KeyEvent* ev) 
         return false;
     }
     int n = ThemeGetCount() + 1;
-    int page = std::max(std::min(n, kThemeWinListRows) - 1, 1);
+    int page = std::max(std::min(n, kThemeListRows) - 1, 1);
     int sel = std::max(gChangeTheme.sel, 0);
     switch (ev->vk) {
         case VK_UP:
@@ -432,14 +390,13 @@ static void ChangeThemeOpenToolWindow(MainWindow* win) {
     desc.onKey = ChangeThemeToolOnKey;
     desc.onClosed = ChangeThemeToolOnClosed;
     desc.onOwnerClosed = ChangeThemeToolOnOwnerClosed;
-    // the row height and the list's view depend on tw being set
+    // the drop-down's line and the footer, the list over them
     int n = ThemeGetCount() + 1;
-    float listDy = (float)std::min(n, kThemeWinListRows) * kThemeWinRowDy;
-    float clientDy = 2 * kThemeWinPadY + kThemeWinGap + kThemeWinDropDownDy + 2 * kThemeWinGap + kThemeWinBtnDy;
+    float clientDy = kToolDlgLineDy + 1 + 2 * kToolDlgFootPadDy + kDlgBtnDy;
     if (!gChangeTheme.documentColorsFollowThemeOnly) {
-        clientDy += listDy + kThemeWinLabelGap + kThemeWinLabelDy;
+        clientDy += (float)std::min(n, kThemeListRows) * kDlgListRowDy + 2 * kToolDlgFilesPadDy + 1;
     }
-    Size size = ToolWindowOuterSize(desc, win, Size(kThemeWinDx, (int)(clientDy + 0.5f)));
+    Size size = ToolWindowOuterSize(desc, win, Size(kThemeDlgDx, (int)(clientDy + 0.5f)));
 
     Rect rRelative = AppShellWindowScreenRect(win);
     Rect work = AppShellWorkArea(win);
@@ -501,63 +458,13 @@ gp::El* ChangeThemeDialogBuild(MainWindow* win, gp::Ctx* cx) {
     if (!gChangeThemeView.IsValid()) {
         gChangeThemeView = gp::EntityNewState<ChangeThemeView>(cx->app);
     }
-    // orig's OnDocumentColorsFollowThemeChanged
-    if (gChangeTheme.ddFollow.PollChanged(cx->app)) {
-        SetDocumentColorsFollowTheme(FollowThemeFromIndex(gChangeTheme.ddFollow.sel));
-        PreviewDocumentColors();
-    }
-    const gp::Theme& th = gp::ThemeNow(cx->app);
-    gp::El* body = gp::Div(cx->a)->FlexCol()->Gap(8);
-
-    if (!gChangeTheme.documentColorsFollowThemeOnly) {
-        gp::El* list = gp::Div(cx->a)
-                           ->Id(GStrL("theme-list"))
-                           ->FlexCol()
-                           ->W(gp::kFill)
-                           ->MinH(kThemeListMinDy)
-                           ->MaxH(kThemeListMaxDy)
-                           ->ScrollY(gChangeTheme.scrollY)
-                           ->ScrollFromPath()
-                           ->OnScroll(gp::ListenTo(gChangeThemeView, &ChangeThemeView::OnScroll))
-                           ->Border(1, th.border);
-        int nThemes = ThemeGetCount();
-        for (int i = 0; i <= nThemes; i++) {
-            // orig: a mode, not another color theme, so its name is distinct
-            // from the persisted Theme = System value
-            Str name = (i == kFollowWindowsThemeListIndex) ? Tr("Follow Windows") : ThemeGetNameAt(i - 1);
-            gp::El* row = gp::Div(cx->a)
-                              ->FlexRow()
-                              ->W(gp::kFill)
-                              ->H(kThemeRowDy)
-                              ->Shrink0()
-                              ->ItemsCenter()
-                              ->PadX(6)
-                              ->PathClick(GpuiDup(cx->a, fmt("theme-row-%d", i)))
-                              ->OnClick(gp::ListenTo(gChangeThemeView, &ChangeThemeView::OnRowClick, (intptr_t)i));
-            if (i == gChangeTheme.sel) {
-                row->Bg(th.selection);
-            }
-            row->Child(gp::TextEl(cx->a, GpuiDup(cx->a, name))->Font(13)->Fg(th.foreground));
-            list->Child(row);
-        }
-        body->Child(list);
-        body->Child(gp::TextEl(cx->a, ToGpui(Tr("Document colors follow theme")))->Font(13)->Fg(th.foreground));
-    }
-    body->Child(gChangeTheme.ddFollow.Build(cx, StrL("theme-follow"), gp::kFill));
-
-    Str title =
-        gChangeTheme.documentColorsFollowThemeOnly ? Tr("Make Document Colors Follow Theme") : Tr("Change Theme");
     DlgSetDefault(cx, gp::ListenTo(gChangeThemeView, &ChangeThemeView::OnOk));
     return gpc::Dialog::New(cx)
         ->Open(true)
-        ->Title(ToGpui(title))
-        ->Body(body)
-        ->W(360)
-        ->OkText(ToGpui(Tr("Change")))
-        ->CancelText(ToGpui(Tr("Cancel")))
-        ->ShowCancel(true)
-        ->OnOk(gp::ListenTo(gChangeThemeView, &ChangeThemeView::OnOk))
-        ->OnCancel(gp::ListenTo(gChangeThemeView, &ChangeThemeView::OnCancel))
+        ->Title(ToGpui(ChangeThemeToolTitle()))
+        ->Body(ChangeThemeColumn(cx))
+        ->Footer(gp::Div(cx->a)->H(0))
+        ->W(kThemeDlgDx)
         ->OnClose(gp::ListenTo(gChangeThemeView, &ChangeThemeView::OnCancel))
         ->IntoEl(gp::WindowSize(cx->win));
 }

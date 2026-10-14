@@ -21,9 +21,14 @@
 #include "Translations.h"
 #include "DarkMode.h"
 #include "SumatraDialogs.h"
+#include "shared/PdfToolsCommon.h"
 #include "AppHelpersCommon.h"
 
-// Mode list and buttons are VirtCtrl. Same WindowBase layout as Change Theme.
+//   Automatic
+//   Always visible                the modes, the current one selected
+//   ---------------------------------------------- hairline
+//                                    [Cancel] [OK]
+constexpr int kScrollbarDlgDx = 280;
 struct ChangeScrollbarWnd : WindowBase {
     ~ChangeScrollbarWnd() override = default;
 
@@ -79,65 +84,52 @@ static void OnDestroy(WindowBase::DestroyEvent* /*ev*/) {
 
 bool ChangeScrollbarWnd::Create(MainWindow* mainWin) {
     win = mainWin;
-
+    Color colTxt = ThemeWindowTextColor();
+    Color colBg = ThemeWindowControlBackgroundColor();
+    PlatformFont* fontText = DlgUiFont(kToolDlgTextFontPx);
+    SetFont(fontText);
     {
         CreateCustomArgs args;
         args.owner = win ? win->hwndFrame : nullptr;
         args.title = Tr("Change Scrollbar");
         args.visible = false;
         args.style = WS_POPUPWINDOW | WS_CAPTION;
-        args.font = GetFont();
+        args.font = fontText;
+        args.isRtl = IsUIRtl();
+        args.bgColor = colBg;
         args.icon = LoadIconW(GetModuleHandleW(nullptr), MAKEINTRESOURCEW(GetAppIconID()));
         CreateCustom(args);
     }
     if (!hwnd) {
         return false;
     }
+    SetColors(colTxt, colBg);
 
     auto* vbox = new VBox();
-    vbox->alignMain = MainAxisAlign::MainStart;
     vbox->alignCross = CrossAxisAlign::Stretch;
 
-    {
-        auto* c = new VirtListBox();
-        c->dpi = GetDpi();
-        c->font = font;
-        c->idealSizeLines = 4;
-        listBox = c;
-        model = new ListBoxModelStrings();
-        for (int i = 0; i <= kScrollbarHidden; i++) {
-            model->strings.Append(ScrollbarModeDisplayName(i));
-        }
-        c->SetModel(model);
-        int curr = ScrollbarModeFromPrefs();
-        if (curr >= 0 && curr <= kScrollbarHidden) {
-            c->SetCurrentSelection(curr);
-        }
-        c->onDoubleClick = MkMethod0<ChangeScrollbarWnd, &ChangeScrollbarWnd::OnListDoubleClick>(this);
-        vbox->AddChild(c);
+    listBox = NewDlgList(GetDpi(), fontText);
+    model = new ListBoxModelStrings();
+    for (int i = 0; i <= kScrollbarHidden; i++) {
+        model->strings.Append(ScrollbarModeDisplayName(i));
     }
-
-    {
-        auto* hbox = new HBox();
-        hbox->alignMain = MainAxisAlign::MainEnd;
-        hbox->alignCross = CrossAxisAlign::CrossCenter;
-        hbox->gap = font->averageCharWidth;
-        auto pad = Insets{4, 0, 4, 0};
-
-        btnCancel = NewThemedButton(hwnd, Tr("Cancel"), font, false);
-        btnCancel->onClick = MkMethod1<ChangeScrollbarWnd, VirtMouseEvent*, &ChangeScrollbarWnd::OnCancel>(this);
-        hbox->AddChild(new Padding(btnCancel, pad));
-        btnOk = NewThemedButton(hwnd, Tr("OK"), font, true);
-        btnOk->onClick = MkMethod1<ChangeScrollbarWnd, VirtMouseEvent*, &ChangeScrollbarWnd::OnOk>(this);
-        hbox->AddChild(new Padding(btnOk, pad));
-        vbox->AddChild(hbox);
+    listBox->idealSizeLines = len(model->strings);
+    listBox->SetModel(model);
+    int curr = ScrollbarModeFromPrefs();
+    if (curr >= 0 && curr <= kScrollbarHidden) {
+        listBox->SetCurrentSelection(curr);
     }
+    listBox->onDoubleClick = MkMethod0<ChangeScrollbarWnd, &ChangeScrollbarWnd::OnListDoubleClick>(this);
+    vbox->AddChild(NewDlgListBox(listBox));
 
-    auto* padding = new Padding(vbox, DpiScaledInsets(4, 8));
-    layout = padding;
+    btnCancel = NewDlgButton(hwnd, Tr("Cancel"), fontText, DlgButtonStyle::Outline, false);
+    btnCancel->onClick = MkMethod1<ChangeScrollbarWnd, VirtMouseEvent*, &ChangeScrollbarWnd::OnCancel>(this);
+    btnOk = NewDlgButton(hwnd, Tr("OK"), fontText, DlgButtonStyle::Filled, true);
+    btnOk->onClick = MkMethod1<ChangeScrollbarWnd, VirtMouseEvent*, &ChangeScrollbarWnd::OnOk>(this);
+    vbox->AddChild(NewDlgFooter(btnCancel, btnOk));
+    layout = vbox;
 
-    int dx = DpiScale(260);
-    LayoutAndSizeToContent(layout, dx, 0, hwnd);
+    LayoutAndSizeToContent(layout, DpiScale(kScrollbarDlgDx), 0, hwnd);
     DoLayout(HwndClientRect(hwnd).Size());
     HwndCenterDialog(hwnd, win ? win->hwndFrame : nullptr);
     UpdateTheme();

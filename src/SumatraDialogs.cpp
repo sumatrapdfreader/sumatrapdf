@@ -324,6 +324,13 @@ constexpr int kDlgBtnHoverShift = 14;
 
 VirtButton* NewDlgButton(HWND hwndForDpi, Str text, PlatformFont* font, DlgButtonStyle style, bool isDefault) {
     VirtButton* b = NewThemedButton(hwndForDpi, text, font, isDefault);
+    b->cornerRadius = DpiScale(kDlgBtnRadius);
+    SetDlgButtonColors(b, style);
+    return b;
+}
+
+// the style's colors in the current theme
+void SetDlgButtonColors(VirtButton* b, DlgButtonStyle style) {
     Color colTxt = ThemeWindowTextColor();
     Color colBg = ThemeWindowControlBackgroundColor();
     Color fg = colTxt;
@@ -342,12 +349,10 @@ VirtButton* NewDlgButton(HWND hwndForDpi, Str text, PlatformFont* font, DlgButto
             fg = ThemeWindowTextDisabledColor();
             break;
     }
-    b->cornerRadius = DpiScale(kDlgBtnRadius);
     b->SetColor(kColBtnText, fg);
     b->SetColor(kColBtnBg, bg);
     b->SetColor(kColBtnBgHover, AccentColor(bg, kDlgBtnHoverShift));
     b->SetColor(kColBtnBorder, border);
-    return b;
 }
 
 constexpr int kDlgBtnDisabledShift = 28;
@@ -408,9 +413,13 @@ HBox* NewDlgRow() {
     return row;
 }
 
-// a hairline, then Cancel and the one filled action at the right
-ILayout* NewDlgFooter(VirtButton* cancel, VirtButton* ok) {
+// a hairline, then `extra` (a quiet button) at the left, Cancel and the one
+// filled action at the right
+ILayout* NewDlgFooter(VirtButton* cancel, VirtButton* ok, VirtButton* extra) {
     HBox* row = NewDlgRow();
+    if (extra) {
+        row->AddChild(extra);
+    }
     row->AddChild(new Spacer(0, 0), 1);
     row->AddChild(cancel);
     row->AddChild(ok);
@@ -419,4 +428,49 @@ ILayout* NewDlgFooter(VirtButton* cancel, VirtButton* ok) {
     box->AddChild(new VirtLine());
     box->AddChild(new Padding(row, DpiScaledInsets(kToolDlgFootPadDy, kToolDlgPadDx)));
     return box;
+}
+
+constexpr int kDlgListRowDy = 24;
+// the rows' text lines up with the dialog's fields
+constexpr int kDlgListInsetDx = 8;
+constexpr int kDlgListRadius = 4;
+constexpr int kDlgListSelShift = 28;
+
+// a row of a dialog's list: its text, on a rounded selection
+static void DrawDlgListRow(VirtListBox::DrawItemEvent* ev) {
+    VirtListBox* lb = ev->listBox;
+    Gfx* gfx = ev->gfx;
+    Rect rc = ev->itemRect;
+    Color colBg = lb->GetColor(kColListBg);
+    gfx->FillRect(rc, colBg);
+    if (ev->selected) {
+        gfx->FillRoundedRect(rc, DpiScaleByDpi(lb->dpi, kDlgListRadius), AccentColor(colBg, kDlgListSelShift));
+    }
+    int inset = DpiScaleByDpi(lb->dpi, kDlgListInsetDx);
+    Rect rcText{rc.x + inset, rc.y, rc.dx - (2 * inset), rc.dy};
+    u32 fmt = gfxTextEllipsis | gfxTextVCenter;
+    fmt |= IsUIRtl() ? (gfxTextRight | gfxTextRtl) : gfxTextLeft;
+    gfx->DrawText(lb->model->Item(ev->itemIndex), rcText, fmt, lb->font, lb->GetColor(kColListText));
+}
+
+// a list on the dialog's background, its rows drawn by DrawDlgListRow
+VirtListBox* NewDlgList(int dpi, PlatformFont* font) {
+    auto* lb = new VirtListBox();
+    lb->dpi = dpi;
+    lb->font = font;
+    lb->itemDy = DpiScaleByDpi(dpi, kDlgListRowDy);
+    lb->showFocusRing = false;
+    SetDlgListColors(lb);
+    lb->onDrawItem = MkFunc1Void<VirtListBox::DrawItemEvent*>(DrawDlgListRow);
+    return lb;
+}
+
+void SetDlgListColors(VirtListBox* lb) {
+    lb->SetColor(kColListText, ThemeWindowTextColor());
+    lb->SetColor(kColListBg, ThemeWindowControlBackgroundColor());
+}
+
+// the list under a hairline, its rows' text in line with the fields
+ILayout* NewDlgListBox(VirtListBox* lb) {
+    return new Padding(lb, DpiScaledInsets(kToolDlgFilesPadDy, kToolDlgPadDx - kDlgListInsetDx));
 }

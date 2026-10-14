@@ -10,6 +10,7 @@
 #include "gui/win/WinGui.h"
 #include "gui/PlatformFont.h"
 #include "gui/Gfx.h"
+#include "gui/GuiColors.h"
 #include "gui/VirtCtrl.h"
 
 #include "Settings.h"
@@ -22,12 +23,18 @@
 #include "DarkMode.h"
 #include "PdfDarkMode.h"
 #include "SumatraDialogs.h"
+#include "shared/PdfToolsCommon.h"
 #include "AppHelpersCommon.h"
 #include "ChangeThemeDialogCommon.h"
 
-// The theme list, the label and the buttons are virtual controls (VirtCtrl);
-// only the drop-down is a real HWND. They all sit in the same layout tree,
-// which the window paints and dispatches input to
+//   Follow Windows
+//   Light                         themes, previewed live
+//   ---------------------------------------------- hairline
+//   Document colors follow theme        [off  v]
+//   ---------------------------------------------- hairline
+//                                [Cancel] [Change]
+// Only the drop-down is a real HWND.
+constexpr int kThemeDlgDx = 320;
 struct ChangeThemeWnd : WindowBase {
     ~ChangeThemeWnd() override;
 
@@ -43,6 +50,7 @@ struct ChangeThemeWnd : WindowBase {
     DocumentColorsFollowTheme startDocumentColorsFollowTheme = DocumentColorsFollowTheme::Off;
 
     bool Create(MainWindow* win);
+    void Recolor();
 
     void KeepFocus();
     void OnSelectionChanged();
@@ -169,8 +177,21 @@ void ChangeThemeWnd::ApplyPreview() {
         SetThemeByIndex(idx - 1);
     }
     UpdateTheme();
+    Recolor();
     PreviewDocumentColors();
     KeepFocus();
+}
+
+// UpdateTheme() recolors the native controls; the drawn ones follow here
+void ChangeThemeWnd::Recolor() {
+    SetColors(ThemeWindowTextColor(), ThemeWindowControlBackgroundColor());
+    if (listBox) {
+        SetDlgListColors(listBox);
+    }
+    labelDocumentColorsFollowTheme->SetColor(kColText, ThemeWindowTextDisabledColor());
+    SetDlgButtonColors(btnCancel, DlgButtonStyle::Outline);
+    SetDlgButtonColors(btnChange, DlgButtonStyle::Filled);
+    HwndInvalidate(hwnd);
 }
 
 void ChangeThemeWnd::SchedulePreview() {
@@ -235,12 +256,17 @@ bool ChangeThemeWnd::Create(MainWindow* mainWin) {
     startThemePref = str::Dup(gSettings->theme);
     startDocumentColorsFollowTheme = GetDocumentColorsFollowTheme();
 
+    PlatformFont* fontText = DlgUiFont(kToolDlgTextFontPx);
+    SetFont(fontText);
+    bool isRtl = IsUIRtl();
     {
         CreateCustomArgs args;
         args.title = documentColorsFollowThemeOnly ? Tr("Make Document Colors Follow Theme") : Tr("Change Theme");
         args.visible = false;
         args.style = WS_POPUPWINDOW | WS_CAPTION;
-        args.font = GetFont();
+        args.font = fontText;
+        args.isRtl = isRtl;
+        args.bgColor = ThemeWindowControlBackgroundColor();
         args.icon = LoadIconW(GetModuleHandleW(nullptr), MAKEINTRESOURCEW(GetAppIconID()));
         CreateCustom(args);
     }
@@ -249,18 +275,12 @@ bool ChangeThemeWnd::Create(MainWindow* mainWin) {
     }
     onTimer = MkMethod1<ChangeThemeWnd, WindowBase::TimerEvent*, &ChangeThemeWnd::OnTimer>(this);
 
-    bool isRtl = IsUIRtl();
-
     auto* vbox = new VBox();
-    vbox->alignMain = MainAxisAlign::MainStart;
     vbox->alignCross = CrossAxisAlign::Stretch;
 
     if (!documentColorsFollowThemeOnly) {
         int nThemes = ThemeGetCount();
-        auto* c = new VirtListBox();
-        c->dpi = GetDpi();
-        c->font = font;
-        listBox = c;
+        listBox = NewDlgList(GetDpi(), fontText);
         model = new ListBoxModelStrings();
         // This is a mode, not another color theme, so keep its user-facing
         // name distinct from the persisted Theme = System value.
@@ -268,70 +288,58 @@ bool ChangeThemeWnd::Create(MainWindow* mainWin) {
         for (int i = 0; i < nThemes; i++) {
             model->strings.Append(ThemeGetNameAt(i));
         }
-        c->onSelectionChanged = MkMethod0<ChangeThemeWnd, &ChangeThemeWnd::OnSelectionChanged>(this);
-        c->SetModel(model);
+        listBox->onSelectionChanged = MkMethod0<ChangeThemeWnd, &ChangeThemeWnd::OnSelectionChanged>(this);
+        listBox->SetModel(model);
         int currIdx = kFollowWindowsThemeListIndex;
         if (!str::EqI(gSettings->theme, StrL("System"))) {
             currIdx = ThemeGetCurrentIndex() + 1;
         }
         if (currIdx >= 0 && currIdx < len(model->strings)) {
-            c->SetCurrentSelection(currIdx);
+            listBox->SetCurrentSelection(currIdx);
         }
-        vbox->AddChild(c);
-
-        auto* label = NewVirtText({
-            .s = Tr("Document colors follow theme"),
-            .font = font,
-            .isRtl = isRtl,
-            .padding = DpiScaledInsets(8, 0, 0, 0),
-        });
-        labelDocumentColorsFollowTheme = label;
-        vbox->AddChild(label);
+        vbox->AddChild(NewDlgListBox(listBox));
+        vbox->AddChild(new VirtLine());
     }
 
+    // whether the document's colors follow: the label muted, the drop-down
     {
+        HBox* row = NewDlgRow();
+        labelDocumentColorsFollowTheme =
+            NewDlgLabel(Tr("Document colors follow theme"), fontText, ThemeWindowTextDisabledColor(), kToolDlgLineDy);
+        row->AddChild(labelDocumentColorsFollowTheme);
+        row->AddChild(new Spacer(0, 0), 1);
+
         DropDown::CreateArgs args;
         args.parent = hwnd;
-        args.font = GetFont();
+        args.font = fontText;
         args.isRtl = isRtl;
         auto* c = new DropDown();
-        c->SetInsetsPt(4, 0, 0, 0);
         c->Create(args);
         c->SetItemsSeqStrings(gDocumentColorsFollowThemeNames);
         c->onSelectionChanged = MkMethod0<ChangeThemeWnd, &ChangeThemeWnd::OnDocumentColorsFollowThemeChanged>(this);
         c->onCloseUp = MkMethod0<ChangeThemeWnd, &ChangeThemeWnd::KeepFocus>(this);
         dropDownDocumentColorsFollowTheme = c;
         CbSetCurrentSelection(c, DocumentColorsFollowThemeToDropDownIndex(startDocumentColorsFollowTheme));
-        vbox->AddChild(c);
+        row->AddChild(c);
+        vbox->AddChild(new Padding(row, DpiScaledInsets(0, kToolDlgPadDx)));
     }
 
-    {
-        auto* hbox = new HBox();
-        hbox->alignMain = MainAxisAlign::MainEnd;
-        hbox->alignCross = CrossAxisAlign::CrossCenter;
-        hbox->gap = font->averageCharWidth;
-        auto pad = Insets{4, 0, 4, 0};
+    btnCancel = NewDlgButton(hwnd, Tr("Cancel"), fontText, DlgButtonStyle::Outline, false);
+    btnCancel->onClick = MkMethod1<ChangeThemeWnd, VirtMouseEvent*, &ChangeThemeWnd::OnCancel>(this);
+    // Enter runs this one (WindowBase::ActivateOnEnter), so draw it as the
+    // default button to say so
+    btnChange = NewDlgButton(hwnd, Tr("Change"), fontText, DlgButtonStyle::Filled, true);
+    btnChange->onClick = MkMethod1<ChangeThemeWnd, VirtMouseEvent*, &ChangeThemeWnd::OnChange>(this);
+    vbox->AddChild(NewDlgFooter(btnCancel, btnChange));
+    layout = vbox;
 
-        btnCancel = NewThemedButton(hwnd, Tr("Cancel"), font, false);
-        btnCancel->onClick = MkMethod1<ChangeThemeWnd, VirtMouseEvent*, &ChangeThemeWnd::OnCancel>(this);
-        hbox->AddChild(new Padding(btnCancel, pad));
-        // Enter runs this one (WindowBase::ActivateOnEnter), so draw it
-        // as the default button to say so
-        btnChange = NewThemedButton(hwnd, Tr("Change"), font, true);
-        btnChange->onClick = MkMethod1<ChangeThemeWnd, VirtMouseEvent*, &ChangeThemeWnd::OnChange>(this);
-        hbox->AddChild(new Padding(btnChange, pad));
-        vbox->AddChild(hbox);
-    }
-
-    auto* padding = new Padding(vbox, DpiScaledInsets(4, 8));
-    layout = padding;
-
-    int dx = DpiScale(280);
+    int dx = DpiScale(kThemeDlgDx);
     LayoutAndSizeToContent(layout, dx, 0, hwnd);
     // pick up the virtual controls so we paint them and they get their input
     DoLayout(HwndClientRect(hwnd).Size());
     PositionDialog(hwnd, win->hwndFrame);
     UpdateTheme();
+    Recolor();
 
     SetIsVisible(true);
     if (documentColorsFollowThemeOnly) {

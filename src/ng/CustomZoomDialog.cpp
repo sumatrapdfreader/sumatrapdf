@@ -26,15 +26,11 @@
 
 #include "SumatraLog.h"
 
-static constexpr float kZoomRowDy = 24;
+static constexpr float kZoomRowDy = kDlgListRowDy;
 static constexpr float kZoomListMinDy = 120;
 // every level of the default set, as orig shows them
 static constexpr float kZoomListMaxDy = 20 * kZoomRowDy;
 static constexpr float kZoomDlgDx = 280;
-// the rows' text lines up with the field's
-static constexpr float kZoomListInsetDx = 8;
-static constexpr float kZoomListRadius = 4;
-static constexpr int kZoomListSelShift = 28;
 
 struct CustomZoomDlg {
     MainWindow* win = nullptr;
@@ -298,9 +294,6 @@ gp::El* CustomZoomDialogBuild(MainWindow* win, gp::Ctx* cx) {
     gp::Listener onOk = gp::ListenTo(gCustomZoomView, &CustomZoomView::OnOk);
     gp::Listener onCancel = gp::ListenTo(gCustomZoomView, &CustomZoomView::OnCancel);
     DlgSetDefault(cx, onOk);
-    Color colTxt = ThemeWindowTextColor();
-    Color colBg = ThemeWindowControlBackgroundColor();
-
     gp::El* col = gp::Div(cx->a)->FlexCol()->W(gp::kFill);
     col->Child(DlgLine(cx, Tr("&Magnification:"), 0, StrL("customzoom-edit"), gCustomZoom.editZoom, DlgField::Plain));
     col->Child(DlgHairline(cx));
@@ -319,29 +312,11 @@ gp::El* CustomZoomDialogBuild(MainWindow* win, gp::Ctx* cx) {
                        ->ScrollFromPath()
                        ->OnScroll(gp::ListenTo(gCustomZoomView, &CustomZoomView::OnScroll));
     for (int i = 0; i < n; i++) {
-        gp::El* row = gp::Div(cx->a)
-                          ->FlexRow()
-                          ->W(gp::kFill)
-                          ->H(kZoomRowDy)
-                          ->Shrink0()
-                          ->ItemsCenter()
-                          ->PadX(kZoomListInsetDx)
-                          ->Radius(kZoomListRadius)
-                          ->PathClick(GpuiDup(cx->a, fmt("customzoom-row-%d", i)))
-                          ->OnClick(gp::ListenTo(gCustomZoomView, &CustomZoomView::OnRowClick, (intptr_t)i));
-        if (i == gCustomZoom.sel) {
-            row->Bg(ToGpui(AccentColor(colBg, kZoomListSelShift)));
-        }
-        Str s = ZoomLevelStrExact(gCustomZoom.zoomLevels[i]);
-        row->Child(gp::TextEl(cx->a, GpuiDup(cx->a, s))->Font(kToolDlgTextFontPx)->Fg(ToGpui(colTxt)));
-        list->Child(row);
+        list->Child(DlgListRow(cx, fmt("customzoom-row-%d", i), ZoomLevelStrExact(gCustomZoom.zoomLevels[i]),
+                               i == gCustomZoom.sel,
+                               gp::ListenTo(gCustomZoomView, &CustomZoomView::OnRowClick, (intptr_t)i)));
     }
-    col->Child(gp::Div(cx->a)
-                   ->W(gp::kFill)
-                   ->Shrink0()
-                   ->PadX(kToolDlgPadDx - kZoomListInsetDx)
-                   ->PadY(kToolDlgFilesPadDy)
-                   ->Child(list));
+    col->Child(DlgListBox(cx, list));
     col->Child(DlgFooter(cx, Tr("Zoom"), onOk, onCancel));
     gp::El* content = DlgToolContent(cx, col, CustomZoomTitle(), kZoomDlgDx, onCancel);
 

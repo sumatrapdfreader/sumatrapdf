@@ -23,6 +23,7 @@
 #include "gui/AppShell.h"
 #include "gui/DialogWidgets.h"
 #include "SumatraDialogs.h"
+#include "shared/PdfToolsCommon.h"
 
 #include "SumatraLog.h"
 
@@ -39,9 +40,9 @@ static InverseSearchDlg gInverseSearch;
 // orig's window at 96 dpi: a 520 wide client area, 4 / 8 around; the prompt
 // with 4 under it, the editable drop-down, then Help at the left and Cancel /
 // OK at the right with 4 above and below
-constexpr float kInvWinDx = 520;
-constexpr float kInvWinPadX = 8;
-constexpr float kInvWinPadY = 4;
+constexpr float kInvDlgDx = 520;
+constexpr float kInvComboPadTop = 10;
+constexpr float kInvComboPadBottom = 16;
 
 struct InverseSearchView {
     static void OnOk(InverseSearchView* self, gp::Ctx* cx, const gp::ClickEvent*);
@@ -117,7 +118,7 @@ void ShowInverseSearchDialog(MainWindow* win) {
     spec.modal = true;
     spec.build = InverseSearchDialogBuild;
     spec.close = CloseInverseSearchDialog;
-    spec.clientDx = kInvWinDx;
+    spec.clientDx = kInvDlgDx;
     gInverseSearchTw = DlgWindowOpen(spec, win);
     gInverseSearch.wantFocus = true;
     AppShellInvalidate(win);
@@ -159,26 +160,7 @@ void InverseSearchView::OnInput(InverseSearchView*, gp::Ctx* cx, const gp::Input
     gp::Notify(cx);
 }
 
-static gp::El* InverseSearchWinBuild(gp::Ctx* cx, Str prompt) {
-    float font = DlgWinFont(cx);
-    gp::El* col = gp::Div(cx->a)->FlexCol()->W(gp::kFill)->PadX(kInvWinPadX)->PadY(kInvWinPadY);
-    col->Child(DlgWinLabel(cx, ToGpui(prompt), font, kInvWinPadY));
-    col->Child(gInverseSearch.ddCommands.BuildCombo(cx, StrL("inverse-cmd"), gInverseSearch.editCmd, gp::kFill, false,
-                                                    kDlgWinEditDy));
-
-    gp::Listener onOk = gp::ListenTo(gInverseSearchView, &InverseSearchView::OnOk);
-    DlgSetDefault(cx, onOk, true);
-    gp::El* buttons = DlgWinButtonRow(cx, kInvWinPadY);
-    buttons->Child(DlgWinButton(cx, GStrL("inverse-help"), Tr("Help"),
-                                gp::ListenTo(gInverseSearchView, &InverseSearchView::OnHelp), false));
-    buttons->Child(gp::Div(cx->a)->Flex1());
-    buttons->Child(DlgWinButton(cx, GStrL("dlg-cancel"), Tr("Cancel"),
-                                gp::ListenTo(gInverseSearchView, &InverseSearchView::OnCancel), false));
-    buttons->Child(DlgWinButton(cx, GStrL("dlg-ok"), Tr("OK"), onOk, true));
-    col->Child(buttons);
-    return DlgWinContent(cx, col);
-}
-
+// orig's layout: the prompt, the command line, Help, Cancel / OK
 gp::El* InverseSearchDialogBuild(MainWindow* win, gp::Ctx* cx) {
     if (!gInverseSearch.visible || gInverseSearch.win != win) {
         return nullptr;
@@ -189,48 +171,30 @@ gp::El* InverseSearchDialogBuild(MainWindow* win, gp::Ctx* cx) {
     if (!gInverseSearchView.IsValid()) {
         gInverseSearchView = gp::EntityNewState<InverseSearchView>(cx->app);
     }
-    const gp::Theme& th = gp::ThemeNow(cx->app);
     gInverseSearch.editCmd->onChange = gp::ListenTo(gInverseSearchView, &InverseSearchView::OnInput);
+    gp::Listener onOk = gp::ListenTo(gInverseSearchView, &InverseSearchView::OnOk);
+    gp::Listener onCancel = gp::ListenTo(gInverseSearchView, &InverseSearchView::OnCancel);
+    DlgSetDefault(cx, onOk, true);
 
-    Str prompt = Tr("Enter the command line to invoke when you double-click on the PDF document:");
-    if (DlgWindowIsHost(cx)) {
-        gp::El* content = InverseSearchWinBuild(cx, prompt);
-        if (gInverseSearch.wantFocus) {
-            gp::InputFocus(gInverseSearch.editCmd, cx->app, cx->win);
-            gp::InputSelectAll(gInverseSearch.editCmd, cx->app, cx->win);
-            gInverseSearch.wantFocus = cx->win->input != gInverseSearch.editCmd;
-        }
-        return content;
-    }
-    gp::El* body = gp::Div(cx->a)->FlexCol()->Gap(8);
-    body->Child(gp::TextEl(cx->a, ToGpui(prompt))->Font(13)->Fg(th.foreground));
-    body->Child(gInverseSearch.ddCommands.BuildCombo(cx, StrL("inverse-cmd"), gInverseSearch.editCmd, gp::kFill));
-
-    gp::El* help = gpc::Button::New(cx, GStrL("inverse-help"))
-                       ->Label(ToGpui(Tr("Help")))
-                       ->WithSize(gp::UiSize::Small)
-                       ->OnClick(gp::ListenTo(gInverseSearchView, &InverseSearchView::OnHelp))
-                       ->IntoEl();
-    gp::El* footer = DialogFooter(cx, help, gInverseSearchView, Tr("OK"), Tr("Cancel"), &InverseSearchView::OnOk,
-                                  &InverseSearchView::OnCancel);
-
-    gp::El* dlg = DlgIntoEl(cx, gpc::Dialog::New(cx)
-                                    ->Open(true)
-                                    ->Title(ToGpui(Tr("Set inverse search command line")))
-                                    ->Body(body)
-                                    ->Footer(footer)
-                                    ->W(560)
-                                    ->OkText(ToGpui(Tr("OK")))
-                                    ->CancelText(ToGpui(Tr("Cancel")))
-                                    ->ShowCancel(true)
-                                    ->OnOk(gp::ListenTo(gInverseSearchView, &InverseSearchView::OnOk))
-                                    ->OnCancel(gp::ListenTo(gInverseSearchView, &InverseSearchView::OnCancel))
-                                    ->OnClose(gp::ListenTo(gInverseSearchView, &InverseSearchView::OnCancel)));
+    gp::El* col = gp::Div(cx->a)->FlexCol()->W(gp::kFill);
+    col->Child(DlgCaption(cx, Tr("Enter the command line to invoke when you double-click on the PDF document:")));
+    col->Child(gp::Div(cx->a)
+                   ->W(gp::kFill)
+                   ->Shrink0()
+                   ->PadX(kToolDlgPadDx)
+                   ->PadT(kInvComboPadTop)
+                   ->PadB(kInvComboPadBottom)
+                   ->Child(gInverseSearch.ddCommands.BuildCombo(cx, StrL("inverse-cmd"), gInverseSearch.editCmd,
+                                                                gp::kFill, false, kDlgWinEditDy, kToolDlgTextFontPx)));
+    gp::El* help = DlgGhostButton(cx, GStrL("inverse-help"), Tr("Help"),
+                                  gp::ListenTo(gInverseSearchView, &InverseSearchView::OnHelp));
+    col->Child(DlgFooter(cx, Tr("OK"), onOk, onCancel, help));
+    gp::El* content = DlgToolContent(cx, col, InverseSearchDlgTitle(), kInvDlgDx, onCancel);
 
     if (gInverseSearch.wantFocus) {
         gp::InputFocus(gInverseSearch.editCmd, cx->app, cx->win);
         gp::InputSelectAll(gInverseSearch.editCmd, cx->app, cx->win);
         gInverseSearch.wantFocus = cx->win->input != gInverseSearch.editCmd;
     }
-    return dlg;
+    return content;
 }

@@ -1146,8 +1146,9 @@ gp::El* DlgLine(gp::Ctx* cx, Str label, float labelDx, Str id, gp::InputState* e
     return row;
 }
 
-// a hairline, then Cancel and the one filled action at the right
-gp::El* DlgFooter(gp::Ctx* cx, Str okLabel, gp::Listener onOk, gp::Listener onCancel) {
+// a hairline, then `extra` (a quiet button) at the left, Cancel and the one
+// filled action at the right
+gp::El* DlgFooter(gp::Ctx* cx, Str okLabel, gp::Listener onOk, gp::Listener onCancel, gp::El* extra) {
     gp::El* row = gp::Div(cx->a)
                       ->FlexRow()
                       ->ItemsCenter()
@@ -1156,6 +1157,9 @@ gp::El* DlgFooter(gp::Ctx* cx, Str okLabel, gp::Listener onOk, gp::Listener onCa
                       ->PadX(kToolDlgPadDx)
                       ->PadY(kToolDlgFootPadDy)
                       ->Gap(kToolDlgGapDx);
+    if (extra) {
+        row->Child(extra);
+    }
     row->Child(gp::Div(cx->a)->Flex1());
     row->Child(gpc::Button::New(cx, GStrL("dlg-cancel"))
                    ->Label(ToGpui(Tr("Cancel")))
@@ -1165,6 +1169,42 @@ gp::El* DlgFooter(gp::Ctx* cx, Str okLabel, gp::Listener onOk, gp::Listener onCa
                    ->IntoEl());
     row->Child(DlgFilledButton(cx, GStrL("dlg-ok"), okLabel, onOk));
     return gp::Div(cx->a)->FlexCol()->W(gp::kFill)->Shrink0()->Child(DlgHairline(cx))->Child(row);
+}
+
+constexpr float kDlgListInsetDx = 8;
+constexpr float kDlgListRadius = 4;
+constexpr int kDlgListSelShift = 28;
+
+gp::El* DlgListRow(gp::Ctx* cx, Str id, Str text, bool selected, gp::Listener onClick) {
+    gp::El* row = gp::Div(cx->a)
+                      ->FlexRow()
+                      ->W(gp::kFill)
+                      ->H(kDlgListRowDy)
+                      ->Shrink0()
+                      ->ItemsCenter()
+                      ->PadX(kDlgListInsetDx)
+                      ->Radius(kDlgListRadius)
+                      ->PathClick(GpuiDup(cx->a, id))
+                      ->OnClick(onClick);
+    if (selected) {
+        row->Bg(ToGpui(AccentColor(ThemeWindowControlBackgroundColor(), kDlgListSelShift)));
+    }
+    row->Child(gp::TextEl(cx->a, GpuiDup(cx->a, text))
+                   ->Font(kToolDlgTextFontPx)
+                   ->Fg(ToGpui(ThemeWindowTextColor()))
+                   ->Truncate()
+                   ->MinW(0));
+    return row;
+}
+
+// the list padded as orig's NewDlgListBox
+gp::El* DlgListBox(gp::Ctx* cx, gp::El* list) {
+    return gp::Div(cx->a)
+        ->W(gp::kFill)
+        ->Shrink0()
+        ->PadX(kToolDlgPadDx - kDlgListInsetDx)
+        ->PadY(kToolDlgFilesPadDy)
+        ->Child(list);
 }
 
 // `col` in its own window (DlgWindowOpen), else in a card over the frame

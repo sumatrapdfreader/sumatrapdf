@@ -2,8 +2,8 @@
    License: GPLv3 */
 
 // ng: orig's ChangeLanguageDialog.cpp is a WS_POPUPWINDOW with a search Edit
-// and a VirtListBox. Here it is a gpui Dialog with the same rows: the search
-// box, the filtered language list with the current language selected, and
+// and a VirtListBox. Here it is the same column of gpui elements: the search,
+// the filtered language list with the current language selected, and
 // Cancel / OK.
 
 #include "gui/GpuiBridge.h"
@@ -22,18 +22,12 @@
 #include "gui/AppShell.h"
 #include "gui/DialogWidgets.h"
 #include "SumatraDialogs.h"
+#include "shared/PdfToolsCommon.h"
 
 #include "SumatraLog.h"
 
-static constexpr float kLangRowDy = 22;
-static constexpr float kLangListMinDy = 200;
-static constexpr float kLangListMaxDy = 360;
-// orig's window at 96 dpi: a 280 wide client area, 4 / 8 around; the search
-// box, 16 rows of the list, the buttons with 4 above and below
-static constexpr float kLangWinDx = 280;
-static constexpr float kLangWinPadX = 8;
-static constexpr float kLangWinPadY = 4;
-static constexpr int kLangWinListLines = 16;
+static constexpr float kLangDlgDx = 320;
+static constexpr int kLangListLines = 16;
 
 struct ChangeLanguageDlg {
     MainWindow* win = nullptr;
@@ -85,13 +79,8 @@ void CloseChangeLanguageDialog() {
 // what orig's ListBox does when its selection changes
 static void ScrollSelIntoView() {
     int n = len(gChangeLanguage.langIdxByListIdx);
-    float rowDy = kLangRowDy;
-    float viewDy = DialogListViewDy(n, kLangRowDy, kLangListMinDy, kLangListMaxDy);
-    if (gChangeLanguageTw) {
-        rowDy = kDlgWinRowDy;
-        viewDy = kLangWinListLines * kDlgWinRowDy;
-    }
-    gChangeLanguage.scrollY = DialogScrollToRow(gChangeLanguage.scrollY, gChangeLanguage.sel, n, rowDy, viewDy);
+    float viewDy = kLangListLines * kDlgListRowDy;
+    gChangeLanguage.scrollY = DialogScrollToRow(gChangeLanguage.scrollY, gChangeLanguage.sel, n, kDlgListRowDy, viewDy);
 }
 
 // orig's ChangeLanguageWnd::FilterList: rebuild from the search box, keeping
@@ -136,6 +125,7 @@ void ShowChangeLanguageDialog(MainWindow* win) {
     gChangeLanguage.win = win;
     auto* s = new gp::InputState();
     s->focus = gp::FocusHandleNew(win->gpuiWin ? win->gpuiWin->app : nullptr);
+    gp::InputSetPlaceholder(s, ToGpui(Tr("Search")));
     gChangeLanguage.editSearch = s;
     FilterList();
     gChangeLanguage.visible = true;
@@ -146,7 +136,7 @@ void ShowChangeLanguageDialog(MainWindow* win) {
     spec.build = ChangeLanguageDialogBuild;
     spec.close = CloseChangeLanguageDialog;
     spec.onArrow = ChangeLanguageDlgOnArrow;
-    spec.clientDx = kLangWinDx;
+    spec.clientDx = kLangDlgDx;
     gChangeLanguageTw = DlgWindowOpen(spec, win);
     // the window's rows are not the frame dialog's
     ScrollSelIntoView();
@@ -227,50 +217,7 @@ void ChangeLanguageView::OnScroll(ChangeLanguageView*, gp::Ctx* cx, const gp::Sc
     AppShellInvalidate(gChangeLanguage.win);
 }
 
-static gp::El* ChangeLanguageWinBuild(gp::Ctx* cx) {
-    const gp::Theme& th = gp::ThemeNow(cx->app);
-    float font = DlgWinFont(cx);
-    gp::El* col = gp::Div(cx->a)->FlexCol()->W(gp::kFill)->PadX(kLangWinPadX)->PadY(kLangWinPadY);
-    col->Child(DlgWinEdit(cx, GStrL("language-search"), gChangeLanguage.editSearch));
-
-    gp::El* list = gp::Div(cx->a)
-                       ->Id(GStrL("language-list"))
-                       ->FlexCol()
-                       ->W(gp::kFill)
-                       ->H(kLangWinListLines * kDlgWinRowDy)
-                       ->Shrink0()
-                       ->ScrollY(gChangeLanguage.scrollY)
-                       ->ScrollFromPath()
-                       ->OnScroll(gp::ListenTo(gChangeLanguageView, &ChangeLanguageView::OnScroll));
-    for (int i = 0; i < len(gChangeLanguage.langIdxByListIdx); i++) {
-        TempStr name = trans::GetLangNameByIdxTemp(gChangeLanguage.langIdxByListIdx[i]);
-        gp::El* row = gp::Div(cx->a)
-                          ->FlexRow()
-                          ->W(gp::kFill)
-                          ->H(kDlgWinRowDy)
-                          ->Shrink0()
-                          ->ItemsCenter()
-                          ->PadX(4)
-                          ->PathClick(GpuiDup(cx->a, fmt("language-row-%d", i)))
-                          ->OnClick(gp::ListenTo(gChangeLanguageView, &ChangeLanguageView::OnRowClick, (intptr_t)i));
-        if (i == gChangeLanguage.sel) {
-            row->Bg(DlgWinListSelBg(false));
-        }
-        row->Child(gp::TextEl(cx->a, GpuiDup(cx->a, name))->Font(font)->Fg(th.foreground));
-        list->Child(row);
-    }
-    col->Child(list);
-
-    gp::Listener onOk = gp::ListenTo(gChangeLanguageView, &ChangeLanguageView::OnOk);
-    DlgSetDefault(cx, onOk);
-    gp::El* buttons = DlgWinButtonRow(cx, kLangWinPadY);
-    buttons->Child(DlgWinButton(cx, GStrL("dlg-cancel"), Tr("Cancel"),
-                                gp::ListenTo(gChangeLanguageView, &ChangeLanguageView::OnCancel), false));
-    buttons->Child(DlgWinButton(cx, GStrL("dlg-ok"), Tr("OK"), onOk, true));
-    col->Child(buttons);
-    return DlgWinContent(cx, col);
-}
-
+// orig's layout: the search, the languages, Cancel / OK
 gp::El* ChangeLanguageDialogBuild(MainWindow* win, gp::Ctx* cx) {
     if (!gChangeLanguage.visible || gChangeLanguage.win != win) {
         return nullptr;
@@ -281,69 +228,35 @@ gp::El* ChangeLanguageDialogBuild(MainWindow* win, gp::Ctx* cx) {
     if (!gChangeLanguageView.IsValid()) {
         gChangeLanguageView = gp::EntityNewState<ChangeLanguageView>(cx->app);
     }
-    const gp::Theme& th = gp::ThemeNow(cx->app);
     gChangeLanguage.editSearch->onChange = gp::ListenTo(gChangeLanguageView, &ChangeLanguageView::OnInput);
+    gp::Listener onOk = gp::ListenTo(gChangeLanguageView, &ChangeLanguageView::OnOk);
+    gp::Listener onCancel = gp::ListenTo(gChangeLanguageView, &ChangeLanguageView::OnCancel);
+    DlgSetDefault(cx, onOk);
 
-    if (DlgWindowIsHost(cx)) {
-        gp::El* content = ChangeLanguageWinBuild(cx);
-        if (gChangeLanguage.wantFocus) {
-            gp::InputFocus(gChangeLanguage.editSearch, cx->app, cx->win);
-            gChangeLanguage.wantFocus = cx->win->input != gChangeLanguage.editSearch;
-        }
-        return content;
-    }
-
-    gp::El* body = gp::Div(cx->a)->FlexCol()->Gap(8);
-    body->Child(gpc::Input::New(cx, GStrL("language-search"), gChangeLanguage.editSearch)
-                    ->WithSize(gp::UiSize::Small)
-                    ->W(gp::kFill)
-                    ->IntoEl());
-
+    gp::El* col = gp::Div(cx->a)->FlexCol()->W(gp::kFill);
+    col->Child(DlgLine(cx, {}, 0, StrL("language-search"), gChangeLanguage.editSearch, DlgField::Plain));
+    col->Child(DlgHairline(cx));
     gp::El* list = gp::Div(cx->a)
                        ->Id(GStrL("language-list"))
                        ->FlexCol()
                        ->W(gp::kFill)
-                       ->MinH(kLangListMinDy)
-                       ->MaxH(kLangListMaxDy)
+                       ->H(kLangListLines * kDlgListRowDy)
+                       ->Shrink0()
                        ->ScrollY(gChangeLanguage.scrollY)
                        ->ScrollFromPath()
-                       ->OnScroll(gp::ListenTo(gChangeLanguageView, &ChangeLanguageView::OnScroll))
-                       ->Border(1, th.border);
+                       ->OnScroll(gp::ListenTo(gChangeLanguageView, &ChangeLanguageView::OnScroll));
     for (int i = 0; i < len(gChangeLanguage.langIdxByListIdx); i++) {
         TempStr name = trans::GetLangNameByIdxTemp(gChangeLanguage.langIdxByListIdx[i]);
-        gp::El* row = gp::Div(cx->a)
-                          ->FlexRow()
-                          ->W(gp::kFill)
-                          ->H(kLangRowDy)
-                          ->Shrink0()
-                          ->ItemsCenter()
-                          ->PadX(6)
-                          ->PathClick(GpuiDup(cx->a, fmt("language-row-%d", i)))
-                          ->OnClick(gp::ListenTo(gChangeLanguageView, &ChangeLanguageView::OnRowClick, (intptr_t)i));
-        if (i == gChangeLanguage.sel) {
-            row->Bg(th.selection);
-        }
-        row->Child(gp::TextEl(cx->a, GpuiDup(cx->a, name))->Font(13)->Fg(th.foreground));
-        list->Child(row);
+        list->Child(DlgListRow(cx, fmt("language-row-%d", i), name, i == gChangeLanguage.sel,
+                               gp::ListenTo(gChangeLanguageView, &ChangeLanguageView::OnRowClick, (intptr_t)i)));
     }
-    body->Child(list);
-
-    DlgSetDefault(cx, gp::ListenTo(gChangeLanguageView, &ChangeLanguageView::OnOk));
-    gp::El* dlg = DlgIntoEl(cx, gpc::Dialog::New(cx)
-                                    ->Open(true)
-                                    ->Title(ToGpui(Tr("Change Language")))
-                                    ->Body(body)
-                                    ->W(360)
-                                    ->OkText(ToGpui(Tr("OK")))
-                                    ->CancelText(ToGpui(Tr("Cancel")))
-                                    ->ShowCancel(true)
-                                    ->OnOk(gp::ListenTo(gChangeLanguageView, &ChangeLanguageView::OnOk))
-                                    ->OnCancel(gp::ListenTo(gChangeLanguageView, &ChangeLanguageView::OnCancel))
-                                    ->OnClose(gp::ListenTo(gChangeLanguageView, &ChangeLanguageView::OnCancel)));
+    col->Child(DlgListBox(cx, list));
+    col->Child(DlgFooter(cx, Tr("OK"), onOk, onCancel));
+    gp::El* content = DlgToolContent(cx, col, ChangeLanguageDlgTitle(), kLangDlgDx, onCancel);
 
     if (gChangeLanguage.wantFocus) {
         gp::InputFocus(gChangeLanguage.editSearch, cx->app, cx->win);
         gChangeLanguage.wantFocus = cx->win->input != gChangeLanguage.editSearch;
     }
-    return dlg;
+    return content;
 }
