@@ -9,7 +9,7 @@
 
 import { mkdirSync, rmSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
-import { ROOT, cmdId, runStandalone, tmpPath } from "./util.ts";
+import { ROOT, USE_NG, cmdId, runStandalone, tmpPath } from "./util.ts";
 import {
   captureWindowDCRegionPixels,
   captureWindowToPng,
@@ -134,6 +134,18 @@ function findComboList(pid: number): number {
   return list;
 }
 
+function findDialog(pid: number, title: string): number {
+  let found = 0;
+  enumWindows((hwnd) => {
+    if (getWindowPid(hwnd) === pid && isWindowVisible(hwnd) && getWindowText(hwnd) === title) {
+      found = hwnd;
+      return false;
+    }
+    return true;
+  });
+  return found;
+}
+
 function findDialogCombo(pid: number, title: string): { dlg: number; combo: number } {
   let found = { dlg: 0, combo: 0 };
   enumWindows((hwnd) => {
@@ -154,6 +166,10 @@ function findDialogCombo(pid: number, title: string): { dlg: number; combo: numb
 }
 
 export async function testit(): Promise<void> {
+  if (USE_NG) {
+    console.log("SKIP issue-6000: ng draws its combos, lists and tooltips with gpui, not themed Win32 controls");
+    return;
+  }
   const dir = tmpPath("issue-6000");
   rmSync(dir, { recursive: true, force: true });
   mkdirSync(dir, { recursive: true });
@@ -250,29 +266,36 @@ RememberOpenedFiles = false
       }
     }
 
-    // Custom Zoom runs a modal loop; PostMessage so we don't block on it.
+    // Custom Zoom runs a modal loop; PostMessage so we don't block on it. Its
+    // presets are a list now, not a combo: the dialog must not be white
     sendCommand(frame, cmdId("CmdZoomCustom"));
-    let zoom = { dlg: 0, combo: 0 };
+    let zoomDlg = 0;
     const zoomDeadline = Date.now() + 5_000;
-    while (Date.now() < zoomDeadline) {
-      zoom = findDialogCombo(proc.pid!, "Zoom factor");
-      if (zoom.combo) {
-        break;
+    while (Date.now() < zoomDeadline && !zoomDlg) {
+      zoomDlg = findDialog(proc.pid!, "Zoom");
+      await sleep(50);
+    }
+    if (!zoomDlg) {
+      throw new Error("issue-6000: Custom Zoom dialog not found");
+    }
+    await sleep(150);
+    captureWindowToPng(zoomDlg, tmpPath("issue-6000-zoom.png"));
+    const zoom = grab(zoomDlg);
+    let zoomLight = 0;
+    let zoomN = 0;
+    for (let y = 2; y < zoom.h - 2; y += 3) {
+      for (let x = 2; x < zoom.w - 2; x += 3) {
+        zoomN++;
+        if (tooLight(zoom.data, x, y, zoom.w)) {
+          zoomLight++;
+        }
       }
-      await sleep(50);
     }
-    if (!zoom.combo) {
-      throw new Error("issue-6000: Custom Zoom ComboBox not found");
+    if (zoomN === 0 || zoomLight / zoomN > 0.2) {
+      throw new Error(`issue-6000: Custom Zoom dialog is white in Dark theme (${zoomLight}/${zoomN} light samples)`);
     }
-    const list = await openComboList(proc.pid!, zoom.combo);
-    if (!list) {
-      throw new Error("issue-6000: ComboLBox drop-down not found");
-    }
-    assertDarkDropDown(list, "Custom Zoom", "issue-6000-list.png");
-    if (zoom.dlg) {
-      postMessage(zoom.dlg, WM_CLOSE, 0, 0);
-      await sleep(50);
-    }
+    postMessage(zoomDlg, WM_CLOSE, 0, 0);
+    await sleep(50);
 
     sendCommand(frame, cmdId("CmdOptions"));
     let opts = { dlg: 0, combo: 0 };
