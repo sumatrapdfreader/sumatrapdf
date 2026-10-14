@@ -25,6 +25,7 @@ import {
   macSendText,
   TestLayout,
 } from "./mac-control.ts";
+import { USE_NG } from "./util.ts";
 
 // Windows tests talk to user32. On macOS the same helpers either use
 // CoreGraphics or throw, so importing this file does not require the DLLs.
@@ -692,7 +693,7 @@ export function getScrollInfo(
   hwnd: number,
   bar: number = SB_VERT,
 ): { min: number; max: number; page: number; pos: number; trackPos: number } {
-  if (IS_MAC) {
+  if (IS_MAC || USE_NG) {
     const text = String(macControlRequest(TestLayout, [])[1] ?? "");
     const key = bar === SB_HORZ ? "scrollH" : "scrollV";
     const m = new RegExp(`${key} pos=(-?\\d+) min=(-?\\d+) max=(-?\\d+) page=(-?\\d+)`).exec(text);

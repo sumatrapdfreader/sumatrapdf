@@ -5,6 +5,7 @@
 import { readFileSync } from "node:fs";
 import { join } from "node:path";
 import { dlopen, FFIType, ptr, toArrayBuffer } from "bun:ffi";
+import { IS_WIN } from "./host.ts";
 
 export const TestLayout = 70;
 const TestInvokeCommand = 87;
@@ -90,7 +91,11 @@ function errno(): number {
 
 function closeFd(): void {
   if (gFd >= 0) {
-    lib().symbols.close(gFd);
+    if (IS_WIN) {
+      kernel32().symbols.CloseHandle(gFd);
+    } else {
+      lib().symbols.close(gFd);
+    }
     gFd = -1;
   }
 }
@@ -215,6 +220,44 @@ function decodeArg(r: PacketReader): ControlArg | undefined {
   throw new Error(`unknown control argument type ${type}`);
 }
 
+// Windows: a second, synchronous connection to the named pipe (the server
+// serves one thread per client)
+const GENERIC_READ_WRITE = 0xc0000000;
+const OPEN_EXISTING = 3;
+
+let k32: ReturnType<typeof dlopen> | null = null;
+
+function kernel32(): ReturnType<typeof dlopen> {
+  if (!k32) {
+    k32 = dlopen("kernel32.dll", {
+      CreateFileW: {
+        args: [FFIType.ptr, FFIType.u32, FFIType.u32, FFIType.ptr, FFIType.u32, FFIType.u32, FFIType.ptr],
+        returns: FFIType.i64_fast,
+      },
+      WriteFile: {
+        args: [FFIType.i64_fast, FFIType.ptr, FFIType.u32, FFIType.ptr, FFIType.ptr],
+        returns: FFIType.i32,
+      },
+      ReadFile: {
+        args: [FFIType.i64_fast, FFIType.ptr, FFIType.u32, FFIType.ptr, FFIType.ptr],
+        returns: FFIType.i32,
+      },
+      CloseHandle: { args: [FFIType.i64_fast], returns: FFIType.i32 },
+      GetLastError: { args: [], returns: FFIType.u32 },
+    });
+  }
+  return k32;
+}
+
+function connectPipe(path: string): number {
+  const name = Buffer.from(path + String.fromCharCode(0), "utf16le");
+  const h = Number(kernel32().symbols.CreateFileW(ptr(name), GENERIC_READ_WRITE, 0, null, OPEN_EXISTING, 0, null));
+  if (h === -1) {
+    throw new Error(`control CreateFileW ${path} failed, err=${kernel32().symbols.GetLastError()}`);
+  }
+  return h;
+}
+
 function connectUnix(path: string): number {
   const fd = lib().symbols.socket(AF_UNIX, SOCK_STREAM, 0);
   if (fd < 0) {
@@ -252,7 +295,7 @@ function ensureFd(): number {
   let last = "";
   while (Date.now() < deadline) {
     try {
-      gFd = connectUnix(gPath);
+      gFd = IS_WIN ? connectPipe(gPath) : connectUnix(gPath);
       return gFd;
     } catch (e) {
       last = String((e as Error).message ?? e);
@@ -265,6 +308,15 @@ function ensureFd(): number {
 function writeAll(fd: number, buf: Buffer): void {
   let off = 0;
   while (off < buf.length) {
+    if (IS_WIN) {
+      const part = buf.subarray(off);
+      const done = new Uint32Array(1);
+      if (!kernel32().symbols.WriteFile(fd, ptr(part), part.length, ptr(done), null) || done[0] === 0) {
+        throw new Error(`control WriteFile failed, err=${kernel32().symbols.GetLastError()}`);
+      }
+      off += done[0]!;
+      continue;
+    }
     const n = Number(lib().symbols.send(fd, ptr(buf.subarray(off)), BigInt(buf.length - off), 0));
     if (n <= 0) {
       throw new Error(`control send failed, errno=${errno()}`);
@@ -277,6 +329,15 @@ function readExact(fd: number, len: number): Buffer {
   const out = Buffer.alloc(len);
   let got = 0;
   while (got < len) {
+    if (IS_WIN) {
+      const part = out.subarray(got);
+      const done = new Uint32Array(1);
+      if (!kernel32().symbols.ReadFile(fd, ptr(part), part.length, ptr(done), null) || done[0] === 0) {
+        throw new Error("control pipe closed while reading");
+      }
+      got += done[0]!;
+      continue;
+    }
     const n = Number(lib().symbols.recv(fd, ptr(out.subarray(got)), BigInt(len - got), 0));
     if (n === 0) {
       throw new Error("control pipe closed while reading");

@@ -434,31 +434,55 @@ static WStr FullPipeNameOwned(Str pipeName) {
     return ToWStr(fullName);
 }
 
+static WStr gControlPipeName;
+static volatile LONG gControlStop = 0;
+
+struct ControlConnArg {
+    HANDLE pipe;
+};
+
+// One thread per client: the async client stays connected while tests also
+// make short synchronous requests (scroll position) on a second connection.
+static void ControlConnThread(ControlConnArg* arg) {
+    HANDLE pipe = arg->pipe;
+    delete arg;
+    bool stop = ProcessControlConnection(pipe);
+    // DisconnectNamedPipe discards data the client hasn't read yet; wait
+    // until it has, or the Quit reply is lost and the client sees EPIPE
+    FlushFileBuffers(pipe);
+    DisconnectNamedPipe(pipe);
+    CloseHandle(pipe);
+    if (!stop) {
+        return;
+    }
+    // wake the listener blocked in ConnectNamedPipe so it can exit
+    InterlockedExchange(&gControlStop, 1);
+    HANDLE h = CreateFileW(gControlPipeName.s, GENERIC_READ | GENERIC_WRITE, 0, nullptr, OPEN_EXISTING, 0, nullptr);
+    if (h != INVALID_HANDLE_VALUE) {
+        CloseHandle(h);
+    }
+}
+
 void SumatraControlThread(ControlThreadArg* arg) {
-    WStr pipeNameW = FullPipeNameOwned(arg->pipeName);
+    gControlPipeName = FullPipeNameOwned(arg->pipeName);
     str::FreePtr(&arg->pipeName);
     delete arg;
 
-    for (;;) {
-        HANDLE pipe = CreateNamedPipeW(pipeNameW.s, PIPE_ACCESS_DUPLEX, PIPE_TYPE_BYTE | PIPE_READMODE_BYTE | PIPE_WAIT,
-                                       1, 64 * 1024, 64 * 1024, 0, nullptr);
+    constexpr DWORD kMaxConns = 8;
+    while (!gControlStop) {
+        HANDLE pipe =
+            CreateNamedPipeW(gControlPipeName.s, PIPE_ACCESS_DUPLEX, PIPE_TYPE_BYTE | PIPE_READMODE_BYTE | PIPE_WAIT,
+                             kMaxConns, 64 * 1024, 64 * 1024, 0, nullptr);
         if (pipe == INVALID_HANDLE_VALUE) {
             logf("CreateNamedPipeW failed for control pipe, err=%u\n", (unsigned)GetLastError());
             return;
         }
         BOOL connected = ConnectNamedPipe(pipe, nullptr) ? TRUE : (GetLastError() == ERROR_PIPE_CONNECTED);
-        bool stop = false;
-        if (connected) {
-            stop = ProcessControlConnection(pipe);
+        if (!connected || gControlStop) {
+            CloseHandle(pipe);
+            continue;
         }
-        // DisconnectNamedPipe discards data the client hasn't read yet; wait
-        // until it has, or the Quit reply is lost and the client sees EPIPE
-        FlushFileBuffers(pipe);
-        DisconnectNamedPipe(pipe);
-        CloseHandle(pipe);
-        if (stop) {
-            return;
-        }
+        RunAsync(MkFunc0(ControlConnThread, new ControlConnArg{pipe}), StrL("SumatraControlConn"));
     }
 }
 
