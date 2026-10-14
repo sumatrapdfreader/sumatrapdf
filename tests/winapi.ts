@@ -724,9 +724,9 @@ export function getScrollPos(hwnd: number, bar: number = SB_VERT): number {
 }
 
 // ng takes characters through the control channel, whichever window they were
-// aimed at: it has no WM_CHAR hook on its frame. Native menus keep theirs.
-function ngChar(hwnd: number, msg: number, wParam: number | bigint): boolean {
-  if (!USE_NG || IS_MAC || msg !== WM_CHAR || getClassName(hwnd) === "#32768") {
+// aimed at: it has no WM_CHAR hook on its frame.
+function ngChar(msg: number, wParam: number | bigint): boolean {
+  if (!USE_NG || IS_MAC || msg !== WM_CHAR) {
     return false;
   }
   macSendChar(Number(BigInt(wParam) & 0xffffn));
@@ -734,7 +734,7 @@ function ngChar(hwnd: number, msg: number, wParam: number | bigint): boolean {
 }
 
 export function postMessage(hwnd: number, msg: number, wParam: number, lParam: number): boolean {
-  if (ngChar(hwnd, msg, wParam)) {
+  if (ngChar(msg, wParam)) {
     return true;
   }
   if (IS_MAC) {
@@ -759,7 +759,7 @@ export async function postChar(hwnd: number, ch: string): Promise<boolean> {
 // LRESULT as a bigint -- TreeView messages return HTREEITEM pointers that can
 // exceed 2^53, so they must not be coerced to a JS number.
 export function sendMessage(hwnd: number, msg: number, wParam: number | bigint, lParam: number | bigint): bigint {
-  if (ngChar(hwnd, msg, wParam)) {
+  if (ngChar(msg, wParam)) {
     return 0n;
   }
   if (IS_MAC) {

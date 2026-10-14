@@ -1170,8 +1170,7 @@ static LRESULT CALLBACK ShellSubclass(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp,
             RevokeCanvasDropTarget(hwnd);
             break;
         case WM_CONTEXTMENU:
-            if (MainWindow* win = WinOf(hwnd)) {
-                DocCanvasOnWmContextMenu(win, GET_X_LPARAM(lp), GET_Y_LPARAM(lp));
+            if (AppShellOnWmContextMenu(WinOf(hwnd), GET_X_LPARAM(lp), GET_Y_LPARAM(lp))) {
                 return 0;
             }
             break;

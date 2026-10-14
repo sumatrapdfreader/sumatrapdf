@@ -2910,7 +2910,9 @@ static void ExecuteControlRequest(ControlRequest* req) {
             }
             IntArg(req, 0, x);
             IntArg(req, 1, y);
-            AppendTestResult(req, 0, ContextMenuAtPointResultTemp(win, x, y));
+            // a frame point, as TestMarkupAnnots' screen= reports it
+            Point pt = FramePointToCanvas(win, Point{x, y});
+            AppendTestResult(req, 0, ContextMenuAtPointResultTemp(win, pt.x, pt.y));
             break;
         }
 

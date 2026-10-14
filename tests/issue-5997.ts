@@ -5,7 +5,7 @@ import { mkdirSync, rmSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 import { ControlCommand, type ControlClient } from "./control";
 import { IS_MAC } from "./host";
-import { cmdId, runStandalone, SLOW_BUILD_FACTOR, tmpPath } from "./util";
+import { cmdId, runStandalone, SLOW_BUILD_FACTOR, tmpPath, USE_NG } from "./util";
 import { clientToScreen, getClientRect, postMessage, sleep, VK_ESCAPE, WM_CHAR, WM_KEYDOWN } from "./winapi";
 import { findCanvas, killAndWait, launchControlled, openContextMenu, waitForContextMenu } from "./win-automation";
 
@@ -127,7 +127,7 @@ export async function testit(): Promise<void> {
   ]);
   try {
     await client.waitForRenderIdle();
-    if (IS_MAC) {
+    if (USE_NG) {
       const at = await freeTextCenter(client);
       await copyCommentAt(client, at.x, at.y);
       const deadline = Date.now() + 5000 * SLOW_BUILD_FACTOR;

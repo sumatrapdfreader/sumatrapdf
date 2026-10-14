@@ -164,6 +164,7 @@ void AppShellPreventSleep(bool on);
 // the native handle of a window, or null; orig's MainWindow::hwndFrame
 HWND AppShellNativeHwnd(MainWindow* win);
 MainWindow* AppShellWindowFromHwnd(HWND hwnd);
+bool AppShellOnWmContextMenu(MainWindow* win, int screenX, int screenY);
 // the top-level windows of another SumatraPDF process: `procId`, or with 0 any
 // process running this exe (orig: FindWindowW(kFrameClassName))
 void AppShellFindOtherInstanceWindows(DWORD procId, Vec<HWND>& out);

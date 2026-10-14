@@ -670,6 +670,47 @@ TempStr AppShellTestInputGpui(gp::Window* gw, Str kind, int a, int b, int c, int
     return StrL("OK");
 }
 
+#if OS_WIN
+// orig's WM_CONTEXTMENU: from the keyboard (-1, -1) the Apps key's menu, from a
+// screen point the menu a right click there opens. Both are gpui's menus.
+// False for a point outside the client area (a border): DefWindowProc's.
+bool AppShellOnWmContextMenu(MainWindow* win, int screenX, int screenY) {
+    gp::Window* gw = win ? win->gpuiWin : nullptr;
+    HWND hwnd = AppShellNativeHwnd(win);
+    if (!gw || !hwnd) {
+        return false;
+    }
+    if (screenX == -1 && screenY == -1) {
+        gp::WindowKeyDown(gw, VK_APPS, false, false, false, false, false, gp::KeyDownFlags{});
+        gp::WindowKeyUp(gw, VK_APPS, false, false, false, false);
+        gw->eatChar = false;
+        gp::AppInvalidate(gw);
+        return true;
+    }
+
+    POINT pt{screenX, screenY};
+    ScreenToClient(hwnd, &pt);
+    RECT rc{};
+    GetClientRect(hwnd, &rc);
+    if (!PtInRect(&rc, pt)) {
+        return false;
+    }
+    float k = CanvasScale(win);
+    float x = (float)pt.x * k;
+    float y = (float)pt.y * k;
+    gp::MouseButton btn = gp::MouseButton::Right;
+    gp::PlatformInput mv = gp::InputMouseMove(x, y, false, btn, gp::Modifiers{});
+    gp::WindowDispatchInput(gw, &mv);
+    int clicks = gp::WindowClickCount(gw, x, y, btn);
+    gp::PlatformInput down = gp::InputMouseDown(btn, x, y, gp::Modifiers{}, clicks, false);
+    gp::WindowDispatchInput(gw, &down);
+    gp::PlatformInput up = gp::InputMouseUp(btn, x, y, gp::Modifiers{}, gp::WindowCurrentClickCount(gw));
+    gp::WindowDispatchInput(gw, &up);
+    gp::AppInvalidate(gw);
+    return true;
+}
+#endif
+
 bool AppShellNativeCursorActive(MainWindow* win) {
     gp::Window* gw = IsMainWindowValid(win) ? win->gpuiWin : nullptr;
     if (!gw || win->nativeCursor == NativeCursor::None) {
