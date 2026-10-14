@@ -32,6 +32,8 @@ import {
   captureWindowToPng,
   getSystemMetrics,
   getWindowOwner,
+  getWindowPid,
+  WM_CLOSE,
   getWindowRect,
   isWindowVisible,
   readWindowDCColumn,
@@ -772,6 +774,79 @@ export async function waitFindOpen(client: ControlClient, timeoutMs = 4000): Pro
     }
     await sleep(40);
   }
+}
+
+export type ToolWinInfo = { hwnd: number; owner: number; title: string; visible: boolean; mainEnabled: boolean };
+
+// ng: one tool window from the TestToolWindow list, or null when it is not up
+export async function ngToolWindow(client: ControlClient, name: string): Promise<ToolWinInfo | null> {
+  const raw = String((await client.request(ControlCommand.TestToolWindow, ["list"]))[1] ?? "");
+  for (const line of raw.split("\n")) {
+    if (!line.startsWith(`${name} made=1 `)) {
+      continue;
+    }
+    const num = (key: string) => Number(new RegExp(`${key}=(-?\\d+)`).exec(line)?.[1] ?? 0);
+    return {
+      hwnd: num("hwnd"),
+      owner: num("owner"),
+      title: /title='(.*)'/.exec(line)?.[1] ?? "",
+      visible: num("visible") === 1,
+      mainEnabled: num("mainEnabled") === 1,
+    };
+  }
+  return null;
+}
+
+export type ToolWinOpts = { title?: string; before?: Set<number>; exclude?: number; timeoutMs?: number };
+
+// Waits for a dialog / tool window. ng: the named tool window of the control
+// channel. Orig: a new visible default-class window, optionally with a title.
+// Returns its hwnd, or 0 on timeout.
+export async function waitToolWindow(
+  client: ControlClient,
+  pid: number,
+  name: string,
+  opts: ToolWinOpts = {},
+): Promise<number> {
+  const deadline = Date.now() + (opts.timeoutMs ?? 5000) * SLOW_BUILD_FACTOR;
+  for (;;) {
+    let found = 0;
+    if (USE_NG) {
+      const tw = await ngToolWindow(client, name);
+      found = tw && tw.visible && (!opts.title || tw.title === opts.title) ? tw.hwnd : 0;
+    } else {
+      enumWindows((hwnd) => {
+        if (
+          hwnd === opts.exclude ||
+          opts.before?.has(hwnd) ||
+          getWindowPid(hwnd) !== pid ||
+          getClassName(hwnd) !== "SumatraWgDefaultWinClass" ||
+          !isWindowVisible(hwnd) ||
+          (opts.title && getWindowText(hwnd) !== opts.title)
+        ) {
+          return true;
+        }
+        found = hwnd;
+        return false;
+      });
+    }
+    if (found) {
+      return found;
+    }
+    if (Date.now() > deadline) {
+      return 0;
+    }
+    await sleep(40);
+  }
+}
+
+// ng: the tool window is closed over the control channel. Orig: WM_CLOSE.
+export async function closeToolWindow(client: ControlClient, name: string, hwnd: number): Promise<void> {
+  if (USE_NG) {
+    await client.request(ControlCommand.TestToolWindow, ["close", name]);
+    return;
+  }
+  postMessage(hwnd, WM_CLOSE, 0, 0);
 }
 
 // ng's palette is the visible GPUI window the frame owns. Posted keys and

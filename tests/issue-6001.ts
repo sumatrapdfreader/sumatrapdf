@@ -8,20 +8,23 @@ import { IS_MAC } from "./host.ts";
 import { ROOT, cmdId, runStandalone, tmpPath } from "./util.ts";
 import {
   enumWindows,
-  getClassName,
   getWindowOwner,
   getWindowPid,
   isWindowEnabled,
-  isWindowVisible,
   postMessage,
   sleep,
   VK_RETURN,
-  WM_CLOSE,
   WM_KEYDOWN,
 } from "./winapi.ts";
-import { killAndWait, launchControlled, paletteSetText, sendCommand, waitForPalette } from "./win-automation.ts";
-
-const DEFAULT_WINDOW_CLASS = "SumatraWgDefaultWinClass";
+import {
+  closeToolWindow,
+  killAndWait,
+  launchControlled,
+  paletteSetText,
+  sendCommand,
+  waitForPalette,
+  waitToolWindow,
+} from "./win-automation.ts";
 
 function topWindows(pid: number): Set<number> {
   const result = new Set<number>();
@@ -34,34 +37,16 @@ function topWindows(pid: number): Set<number> {
   return result;
 }
 
-function findNewVisibleWindow(pid: number, before: Set<number>, exclude = 0): number {
-  let result = 0;
-  enumWindows((hwnd) => {
-    if (
-      hwnd !== exclude &&
-      !before.has(hwnd) &&
-      getWindowPid(hwnd) === pid &&
-      getClassName(hwnd) === DEFAULT_WINDOW_CLASS &&
-      isWindowVisible(hwnd)
-    ) {
-      result = hwnd;
-      return false;
-    }
-    return true;
-  });
-  return result;
-}
+type Client = Awaited<ReturnType<typeof launchControlled>>["client"];
 
-async function waitForNewVisibleWindow(pid: number, before: Set<number>, exclude = 0): Promise<number> {
-  const deadline = Date.now() + 3000;
-  while (Date.now() < deadline) {
-    const hwnd = findNewVisibleWindow(pid, before, exclude);
-    if (hwnd) {
-      return hwnd;
-    }
-    await sleep(40);
-  }
-  return 0;
+async function waitForNewVisibleWindow(
+  client: Client,
+  pid: number,
+  name: string,
+  before: Set<number>,
+  exclude = 0,
+): Promise<number> {
+  return waitToolWindow(client, pid, name, { before, exclude, timeoutMs: 3000 });
 }
 
 async function waitForClosed(pid: number, hwnd: number): Promise<void> {
@@ -90,7 +75,14 @@ async function waitForEnabled(frame: number, want: boolean): Promise<boolean> {
   }
 }
 
-async function checkModal(pid: number, frame: number, hwnd: number, command: string): Promise<void> {
+async function checkModal(
+  client: Client,
+  pid: number,
+  frame: number,
+  hwnd: number,
+  name: string,
+  command: string,
+): Promise<void> {
   if (!hwnd) {
     throw new Error(`issue-6001: ${command} did not create a visible top-level dialog`);
   }
@@ -100,25 +92,21 @@ async function checkModal(pid: number, frame: number, hwnd: number, command: str
   if (!(await waitForEnabled(frame, false))) {
     throw new Error(`issue-6001: ${command} did not disable its owner`);
   }
-  postMessage(hwnd, WM_CLOSE, 0, 0);
+  await closeToolWindow(client, name, hwnd);
   await waitForClosed(pid, hwnd);
   if (!(await waitForEnabled(frame, true))) {
     throw new Error(`issue-6001: ${command} did not re-enable its owner`);
   }
 }
 
-async function openDirect(pid: number, frame: number, command: string): Promise<void> {
+async function openDirect(client: Client, pid: number, frame: number, command: string, name: string): Promise<void> {
   const before = topWindows(pid);
   sendCommand(frame, cmdId(command));
-  const dialog = await waitForNewVisibleWindow(pid, before);
-  await checkModal(pid, frame, dialog, command);
+  const dialog = await waitForNewVisibleWindow(client, pid, name, before);
+  await checkModal(client, pid, frame, dialog, name, command);
 }
 
-async function openScreenshotFromPalette(
-  pid: number,
-  frame: number,
-  client: Awaited<ReturnType<typeof launchControlled>>["client"],
-): Promise<void> {
+async function openScreenshotFromPalette(pid: number, frame: number, client: Client): Promise<void> {
   sendCommand(frame, cmdId("CmdCommandPalette"));
   const handles = await waitForPalette(client, frame);
   if (!handles.edit) {
@@ -141,8 +129,8 @@ async function openScreenshotFromPalette(
 
   const beforeDialog = topWindows(pid);
   postMessage(handles.edit, WM_KEYDOWN, VK_RETURN, 0);
-  const dialog = await waitForNewVisibleWindow(pid, beforeDialog, handles.palette);
-  await checkModal(pid, frame, dialog, "CmdSetScreenshotHotkey from the command palette");
+  const dialog = await waitForNewVisibleWindow(client, pid, "screenshothotkey", beforeDialog, handles.palette);
+  await checkModal(client, pid, frame, dialog, "screenshothotkey", "CmdSetScreenshotHotkey from the command palette");
 }
 
 export async function testit(): Promise<void> {
@@ -157,20 +145,21 @@ export async function testit(): Promise<void> {
   const { proc, client, frame } = await launchControlled(["-appdata", appData, pdf]);
   try {
     await client.waitForRenderIdle();
-    for (const command of [
-      "CmdFavoriteAdd",
-      "CmdChangeLanguage",
-      "CmdChangeScrollbar",
-      "CmdZoomCustom",
-      "CmdSetInverseSearch",
-    ]) {
-      await openDirect(proc.pid!, frame, command);
+    // command, and the name of its ng tool window
+    for (const [command, name] of [
+      ["CmdFavoriteAdd", "addfavorite"],
+      ["CmdChangeLanguage", "changelanguage"],
+      ["CmdChangeScrollbar", "changescrollbar"],
+      ["CmdZoomCustom", "customzoom"],
+      ["CmdSetInverseSearch", "inversesearch"],
+    ] as const) {
+      await openDirect(client, proc.pid!, frame, command, name);
     }
     // Go to page uses the toolbar's page box in normal mode. Presentation mode
     // exercises its RunModalWindow fallback.
     sendCommand(frame, cmdId("CmdTogglePresentationMode"));
     await sleep(200);
-    await openDirect(proc.pid!, frame, "CmdGoToPage");
+    await openDirect(client, proc.pid!, frame, "CmdGoToPage", "gotopage");
     sendCommand(frame, cmdId("CmdTogglePresentationMode"));
     await openScreenshotFromPalette(proc.pid!, frame, client);
     console.log("issue-6001: modal dialogs are owned, usable top-level windows");

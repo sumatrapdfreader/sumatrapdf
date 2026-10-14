@@ -11,7 +11,7 @@ import { join } from "node:path";
 import { ControlClient, ControlCommand } from "./control.ts";
 import { IS_MAC } from "./host.ts";
 import { pdfSigFieldObjects, verifyPdfSignature, writeTestPfx, type TestCert } from "./pki.ts";
-import { ROOT, cmdId, runStandalone, tmpPath, writePdfWithEmptySigField } from "./util.ts";
+import { ROOT, USE_NG, cmdId, runStandalone, tmpPath, writePdfWithEmptySigField } from "./util.ts";
 import { clickAt, findCanvas, killAndWait, launchControlled, pressEnter, sendCommand } from "./win-automation.ts";
 import {
   captureWindowToPng,
@@ -244,7 +244,14 @@ async function withSignUi(pdf: string, fn: (ui: SignUi) => Promise<void>): Promi
   const { proc, client, frame } = await launchControlled([pdf]);
   try {
     await client.waitForRenderIdle();
-    await fn(IS_MAC ? macSignUi(client, frame) : winSignUi(proc.pid!, frame));
+    // ng on Windows: gpui dialog over the control channel, native Save As
+    const ui = USE_NG ? macSignUi(client, frame) : winSignUi(proc.pid!, frame);
+    if (USE_NG && !IS_MAC) {
+      const win = winSignUi(proc.pid!, frame);
+      ui.acceptSave = win.acceptSave;
+      ui.dismissError = win.dismissError;
+    }
+    await fn(ui);
   } finally {
     client.close();
     postMessage(frame, WM_CLOSE, 0, 0);

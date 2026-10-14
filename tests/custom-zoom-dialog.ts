@@ -12,15 +12,11 @@ import { IS_MAC } from "./host.ts";
 import { EXE, ROOT, USE_NG, cmdId, runStandalone, SLOW_BUILD_FACTOR, writeAppdata } from "./util.ts";
 import {
   ensureModifierKeysUp,
-  enumWindows,
   findChildWindow,
-  getClassName,
-  getWindowPid,
   getWindowRect,
   getControlText,
   getWindowText,
   getWorkArea,
-  isWindowVisible,
   postMessage,
   sleep,
   VK_DOWN,
@@ -29,9 +25,7 @@ import {
   WM_KEYDOWN,
   WM_KEYUP,
 } from "./winapi.ts";
-import { sendCommand, waitForFrame } from "./win-automation.ts";
-
-const DIALOG_CLASS = "SumatraWgDefaultWinClass";
+import { sendCommand, waitForFrame, waitToolWindow } from "./win-automation.ts";
 
 // The mac dialog is a tool window. 1 is only a stand-in so the key posts,
 // which the control channel delivers to the modal dialog.
@@ -84,37 +78,20 @@ const ZOOM_LEVELS = [
   "8.33%",
 ];
 
-function findDialog(pid: number, frame: number): number {
-  let res = 0;
-  enumWindows((hwnd) => {
-    if (hwnd === frame || getWindowPid(hwnd) !== pid || !isWindowVisible(hwnd)) {
-      return true;
-    }
-    // ng: the dialog is a gpui tool window, not the default class, and ng has
-    // an empty, zero-sized window of the default class
-    const cls = getClassName(hwnd);
-    const isZoom = getWindowText(hwnd) === "Zoom";
-    if (isZoom && (cls === DIALOG_CLASS || cls === "GpuiSystemMonitor")) {
-      res = hwnd;
-      return false;
-    }
-    return true;
-  });
-  return res;
+// 0 when the dialog is not up. orig: default-class window titled Zoom; ng: the customzoom tool window.
+async function findDialog(client: ControlClient, pid: number): Promise<number> {
+  if (IS_MAC) {
+    return (await macZoom()) ? 1 : 0;
+  }
+  return waitToolWindow(client, pid, "customzoom", { title: "Zoom", timeoutMs: 0 });
 }
 
-async function waitForDialog(pid: number, frame: number): Promise<number> {
+async function waitForDialog(client: ControlClient, pid: number): Promise<number> {
   const deadline = Date.now() + 5000 * SLOW_BUILD_FACTOR;
   for (;;) {
-    if (IS_MAC) {
-      if (await macZoom()) {
-        return 1;
-      }
-    } else {
-      const hwnd = findDialog(pid, frame);
-      if (hwnd) {
-        return hwnd;
-      }
+    const hwnd = await findDialog(client, pid);
+    if (hwnd) {
+      return hwnd;
     }
     if (Date.now() > deadline) {
       throw new Error("custom-zoom-dialog: the dialog did not open");
@@ -123,11 +100,10 @@ async function waitForDialog(pid: number, frame: number): Promise<number> {
   }
 }
 
-async function waitForDialogGone(pid: number, frame: number): Promise<void> {
+async function waitForDialogGone(client: ControlClient, pid: number): Promise<void> {
   const deadline = Date.now() + 5000 * SLOW_BUILD_FACTOR;
   for (;;) {
-    const open = IS_MAC ? (await macZoom()) !== null : findDialog(pid, frame) !== 0;
-    if (!open) {
+    if (!(await findDialog(client, pid))) {
       return;
     }
     if (Date.now() > deadline) {
@@ -228,7 +204,7 @@ async function checkTallList(): Promise<void> {
       await client.setNotificationsEnabled(false);
 
       sendCommand(frame, cmdId("CmdZoomCustom"));
-      const dlg = await waitForDialog(pid, frame);
+      const dlg = await waitForDialog(client, pid);
       const dr = IS_MAC ? (await macZoom())!.rect : getWindowRect(dlg);
       const wa = getWorkArea();
       if (dr.bottom - dr.top > wa.bottom - wa.top) {
@@ -265,7 +241,7 @@ export async function testit(): Promise<void> {
       await client.setNotificationsEnabled(false);
 
       sendCommand(frame, cmdId("CmdZoomCustom"));
-      const dlg = await waitForDialog(pid, frame);
+      const dlg = await waitForDialog(client, pid);
 
       const title = IS_MAC ? (await macZoom())!.title : getWindowText(dlg);
       if (title !== "Zoom") {
@@ -299,7 +275,7 @@ export async function testit(): Promise<void> {
 
       // Enter zooms to what the field says
       await pressKey(edit, VK_RETURN);
-      await waitForDialogGone(pid, frame);
+      await waitForDialogGone(client, pid);
       const zoom = await zoomLabel(client);
       if (zoom !== "125") {
         throw new Error(`custom-zoom-dialog: the dialog zoomed to ${zoom}, want 125`);
@@ -308,7 +284,7 @@ export async function testit(): Promise<void> {
       // walking to both ends says what the whole list holds: every level, in
       // order, with no separator row and nothing beyond the ends
       sendCommand(frame, cmdId("CmdZoomCustom"));
-      const dlg2 = await waitForDialog(pid, frame);
+      const dlg2 = await waitForDialog(client, pid);
       const edit2 = USE_NG ? dlg2 : findChildWindow(dlg2, "Edit");
       await editText(client, edit2, "125%", "reopening did not show the zoom it is at");
       const down = await walk(client, edit2, VK_DOWN);
@@ -325,7 +301,7 @@ export async function testit(): Promise<void> {
       // than a number: the field takes the name and so does the zoom
       await editText(client, edit2, "Fit Page", "the walk did not end on the first level");
       await pressKey(edit2, VK_RETURN);
-      await waitForDialogGone(pid, frame);
+      await waitForDialogGone(client, pid);
       const zoom2 = await zoomLabel(client);
       if (zoom2 !== "fit page") {
         throw new Error(`custom-zoom-dialog: the dialog zoomed to ${zoom2}, want fit page`);

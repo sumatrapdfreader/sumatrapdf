@@ -12,14 +12,12 @@ import { existsSync, rmSync, writeFileSync } from "node:fs";
 import { ControlCommand } from "./control.ts";
 import { IS_MAC } from "./host.ts";
 import { cmdId, runStandalone, tmpPath, USE_NG, removeTestCert, runPowerShell } from "./util.ts";
-import { killAndWait, launchControlled, sendCommand } from "./win-automation.ts";
+import { closeToolWindow, killAndWait, launchControlled, sendCommand, waitToolWindow } from "./win-automation.ts";
 import {
   enumChildWindows,
-  enumWindows,
   getClassName,
   getControlText,
   getWindowPid,
-  getWindowText,
   postMessage,
   sendMessage,
   sleep,
@@ -90,35 +88,6 @@ function writeTinyPng(path: string): void {
   writeFileSync(path, Buffer.from(b64, "base64"));
 }
 
-function findTopWindow(pid: number, className: string, title?: string): number {
-  let found = 0;
-  enumWindows((h) => {
-    if (getWindowPid(h) !== pid || getClassName(h) !== className) {
-      return true;
-    }
-    if (title !== undefined && getWindowText(h) !== title) {
-      return true;
-    }
-    found = h;
-    return false;
-  });
-  return found;
-}
-
-async function waitFor<T>(what: string, fn: () => T, timeoutMs = 8000): Promise<T> {
-  const deadline = Date.now() + timeoutMs;
-  for (;;) {
-    const v = fn();
-    if (v) {
-      return v;
-    }
-    if (Date.now() > deadline) {
-      throw new Error(`timed out waiting for ${what}`);
-    }
-    await sleep(100);
-  }
-}
-
 function stripAmp(s: string): string {
   return s.replace(/&/g, "");
 }
@@ -153,11 +122,10 @@ export async function testit(): Promise<void> {
     let dlg = 0;
     if (!IS_MAC) {
       const pid = getWindowPid(frame);
-      dlg = await waitFor("Sign Document dialog", () =>
-        USE_NG
-          ? findTopWindow(pid, "GpuiSystemMonitor", "Sign Document")
-          : findTopWindow(pid, "SumatraWgDefaultWinClass", "Sign Document"),
-      );
+      dlg = await waitToolWindow(client, pid, "signdocument", { title: "Sign Document", timeoutMs: 8000 });
+      if (!dlg) {
+        throw new Error("timed out waiting for Sign Document dialog");
+      }
     }
 
     const want = [
@@ -213,11 +181,7 @@ export async function testit(): Promise<void> {
       }
     }
     console.log("  Sign Document offers appearance checkboxes, all on by default ✓");
-    if (IS_MAC) {
-      await client.request(ControlCommand.TestToolWindow, ["close", "signdocument"]);
-    } else {
-      postMessage(dlg, WM_CLOSE, 0, 0);
-    }
+    await closeToolWindow(client, "signdocument", dlg);
     await sleep(200);
 
     if (IS_MAC) {
