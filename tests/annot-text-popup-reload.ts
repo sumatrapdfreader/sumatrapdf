@@ -7,14 +7,43 @@
 import { mkdirSync, rmSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 import { type ControlClient, ControlCommand, withControlledSumatra } from "./control.ts";
-import { EXE, SLOW_BUILD_FACTOR, USE_NG, cmdId, runStandalone, tmpPath } from "./util.ts";
+import { EXE, SLOW_BUILD_FACTOR, USE_NG, cmdId, pollUntil, runStandalone, tmpPath } from "./util.ts";
 import { FRAME_CLASS, clickAt, findCanvas, sendCommandSync } from "./win-automation.ts";
-import { findTopWindow, getWindowRect, isWindowVisible, sleep, waitForTopWindow } from "./winapi.ts";
+import { findTopWindow, getClientRect, isWindowVisible, sleep, waitForTopWindow } from "./winapi.ts";
 
 const POPUP_CLASS = "SumatraAnnotTextPopup";
 // ng draws the card in the canvas; its overlay probe (ng's wire number) says
 // whether it is up
 const kNgTestOverlayState = 102 as ControlCommand;
+
+type Rect = { x: number; y: number; dx: number; dy: number };
+
+async function markup(client: ControlClient): Promise<string> {
+  return String((await client.request(ControlCommand.TestMarkupAnnots, []))[1] ?? "");
+}
+
+// canvas coords of the square, once annotation load has published it
+function squareScreen(raw: string): Rect | null {
+  const m = /type=Square[^\n]*screen=(-?\d+),(-?\d+),(-?\d+),(-?\d+)/.exec(raw);
+  if (!m) {
+    return null;
+  }
+  const r = { x: +m[1]!, y: +m[2]!, dx: +m[3]!, dy: +m[4]! };
+  if (r.dx <= 0 || r.dy <= 0) {
+    return null;
+  }
+  return r;
+}
+
+// a point on the square that is also inside the canvas
+function hitPoint(canvas: number, sq: Rect): { x: number; y: number } {
+  const cr = getClientRect(canvas);
+  const x0 = Math.max(sq.x, 0);
+  const y0 = Math.max(sq.y, 0);
+  const x1 = Math.min(sq.x + sq.dx, cr.right);
+  const y1 = Math.min(sq.y + sq.dy, cr.bottom);
+  return { x: Math.floor((x0 + x1) / 2), y: Math.floor((y0 + y1) / 2) };
+}
 
 // orig's card is a window of its own
 async function cardShown(client: ControlClient, pid: number): Promise<boolean> {
@@ -64,18 +93,34 @@ export async function testit(): Promise<void> {
       if (!frame) {
         throw new Error("no frame window");
       }
-      sendCommandSync(frame, cmdId("CmdZoomFitPage"));
       await client.waitForRenderIdle();
 
-      // a click on the annotation shows its comment card
+      // Click the square, not the canvas center. Fit-page and annotation load
+      // can both land after the first paint, and a moving cursor turns one
+      // click into a drag, so retry until the card is up.
       const canvas = findCanvas(frame);
-      const r = getWindowRect(canvas);
-      await clickAt(canvas, Math.floor((r.right - r.left) / 2), Math.floor((r.bottom - r.top) / 2));
+      let raw = "";
+      const found = await pollUntil(
+        async () => {
+          raw = await markup(client);
+          return squareScreen(raw);
+        },
+        (r): r is Rect => r !== null,
+        {
+          timeoutMs: 8000 * SLOW_BUILD_FACTOR,
+          error: () => `annotation not on screen\n${raw}`,
+        },
+      );
+      let sq = found!;
       const shownBy = Date.now() + 4000 * SLOW_BUILD_FACTOR;
       while (!(await cardShown(client, proc.pid!))) {
         if (Date.now() > shownBy) {
-          throw new Error("comment card did not show");
+          throw new Error(`comment card did not show\n${raw}`);
         }
+        raw = await markup(client);
+        sq = squareScreen(raw) ?? sq;
+        const pt = hitPoint(canvas, sq);
+        await clickAt(canvas, pt.x, pt.y, 0);
         await sleep(50);
       }
 
@@ -91,7 +136,7 @@ export async function testit(): Promise<void> {
         throw new Error("comment card still shown after reload");
       }
     },
-    [pdf],
+    ["-zoom", "fit page", pdf],
   );
   rmSync(dir, { recursive: true, force: true });
   console.log("annot-text-popup-reload: OK");

@@ -434,6 +434,7 @@ export const tests: NamedTest[] = [
   // first: it drives the home page, whose thumbnail selection follows the
   // mouse, so it is the one test that cares what the machine was doing before
   ["issue-5978", issue5978],
+  ["annot-text-popup-reload", annotTextPopupReload],
   ["read-aloud-lazy-chapters", readAloudLazyChapters],
   ["jbig2-resize-overflow", jbig2ResizeOverflow],
   ["selection-toolbar-move", selectionToolbarMove],
@@ -828,7 +829,6 @@ export const tests: NamedTest[] = [
   ["attachment-open-external", attachmentOpenExternal],
   ["cbr-network-unrar", cbrNetworkUnrar],
   ["file-link-no-dest", fileLinkNoDest],
-  ["annot-text-popup-reload", annotTextPopupReload],
   ["control-pipe-busy", controlPipeBusy],
 ];
 
