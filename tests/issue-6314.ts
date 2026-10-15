@@ -13,7 +13,7 @@ import { copyFileSync, existsSync, mkdirSync, rmSync, writeFileSync } from "node
 import { basename, dirname, join, resolve } from "node:path";
 import { ControlCommand, withControlledSumatra, type ControlClient } from "./control.ts";
 import { cmdId, EXE, runStandalone, tmpPath } from "./util.ts";
-import { paletteSetText, sendCommand, waitForFrame, waitForPalette } from "./win-automation.ts";
+import { paletteSetText, sendCommand, waitForFrame, waitForPalette, paletteState } from "./win-automation.ts";
 import { sleep } from "./winapi.ts";
 
 const PDF = resolve("ext/a-zlib/zlib.3.pdf");
@@ -51,20 +51,18 @@ async function paletteItems(client: ControlClient, frame: number, query: string)
   const deadline = Date.now() + 8000;
   let typed = false;
   for (;;) {
-    const res = await client.request(ControlCommand.TestCommandPalette, []);
-    const out = String(res[1] ?? "").trim();
-    if (res[0] === 0) {
+    const state = await paletteState(client);
+    if (state.open) {
       if (!typed) {
         await paletteSetText(client, await waitForPalette(client, frame), query);
         typed = true;
       }
-      const m = /items=(\d+).*queryLen=(\d+)/.exec(out);
-      if (m && +m[2]! === query.length) {
-        return +m[1]!;
+      if (state.queryLen === query.length) {
+        return state.items;
       }
     }
     if (Date.now() > deadline) {
-      throw new Error(`issue-6314: palette never showed '${query}': ${out}`);
+      throw new Error(`issue-6314: palette never showed '${query}': ${state.raw}`);
     }
     await sleep(50);
   }

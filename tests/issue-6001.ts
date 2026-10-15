@@ -3,7 +3,6 @@
 
 import { mkdirSync, rmSync } from "node:fs";
 import { join } from "node:path";
-import { ControlCommand } from "./control.ts";
 import { IS_MAC } from "./host.ts";
 import { ROOT, cmdId, runStandalone, tmpPath } from "./util.ts";
 import {
@@ -24,6 +23,7 @@ import {
   sendCommand,
   waitForPalette,
   waitToolWindow,
+  paletteState,
 } from "./win-automation.ts";
 
 function topWindows(pid: number): Set<number> {
@@ -117,12 +117,12 @@ async function openScreenshotFromPalette(pid: number, frame: number, client: Cli
   const expected = cmdId("CmdSetScreenshotHotkey");
   const deadline = Date.now() + 3000;
   for (;;) {
-    const response = await client.request(ControlCommand.TestCommandPalette, []);
-    if (String(response[1] ?? "").includes(`cmd=${expected}`)) {
+    const state = await paletteState(client);
+    if (state.cmd === expected) {
       break;
     }
     if (Date.now() >= deadline) {
-      throw new Error(`issue-6001: command palette did not select CmdSetScreenshotHotkey: ${response}`);
+      throw new Error(`issue-6001: command palette did not select CmdSetScreenshotHotkey: ${state.raw}`);
     }
     await sleep(40);
   }

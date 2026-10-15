@@ -3,11 +3,18 @@
 // text ("Enter run command", "Esc close").
 import { mkdirSync, rmSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
-import { ControlClient, ControlCommand } from "./control.ts";
+import { ControlClient } from "./control.ts";
 import { IS_MAC } from "./host.ts";
 import { cmdId, runStandalone, tmpPath } from "./util.ts";
 import { captureWindowPixels, sleep } from "./winapi.ts";
-import { waitForPalette, killAndWait, launchControlled, sendCommand, sendCommandSync } from "./win-automation.ts";
+import {
+  waitForPalette,
+  killAndWait,
+  launchControlled,
+  sendCommand,
+  sendCommandSync,
+  paletteState,
+} from "./win-automation.ts";
 
 const SETTINGS = `UiLanguage = en
 Theme = Light
@@ -53,8 +60,7 @@ function paletteLook(hwnd: number): Look | null {
 }
 
 async function paletteOpen(client: ControlClient): Promise<boolean> {
-  const res = await client.request(ControlCommand.TestCommandPalette, []);
-  return (res[0] as number) === 0;
+  return (await paletteState(client)).open;
 }
 
 async function openPalette(client: ControlClient, frame: number): Promise<number> {

@@ -22,6 +22,7 @@ import {
   findPalette,
   waitForPalette,
   paletteSetText,
+  paletteState,
 } from "./win-automation.ts";
 
 const THUMBNAIL_CLASS = "SumatraPDF_ThumbnailNavigation";
@@ -35,13 +36,8 @@ RememberOpenedFiles = false
 type ThumbnailState = { active: boolean; page: number; rendered: number };
 
 async function thumbnailState(client: ControlClient): Promise<ThumbnailState | null> {
-  const res = await client.request(ControlCommand.TestCommandPalette, []);
-  if ((res[0] as number) !== 0) {
-    return null;
-  }
-  const out = String(res[1] ?? "");
-  const m = /thumb=(\d+) page=(\d+) rendered=(\d+)/.exec(out);
-  return m ? { active: m[1] === "1", page: +m[2]!, rendered: +m[3]! } : null;
+  const s = await paletteState(client);
+  return s.open ? { active: s.thumb === 1, page: s.page, rendered: s.rendered } : null;
 }
 
 async function waitForThumbnail(client: ControlClient, expected: boolean): Promise<ThumbnailState | null> {
@@ -68,8 +64,7 @@ async function waitForPage(client: ControlClient, page: number): Promise<boolean
 }
 
 async function paletteOpen(client: ControlClient): Promise<boolean> {
-  const res = await client.request(ControlCommand.TestCommandPalette, []);
-  return (res[0] as number) === 0;
+  return (await paletteState(client)).open;
 }
 
 async function currentPage(client: ControlClient): Promise<number> {

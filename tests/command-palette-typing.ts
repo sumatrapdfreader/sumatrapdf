@@ -3,10 +3,10 @@
 // which other palette tests use, skips that path).
 import { mkdirSync, rmSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
-import { ControlClient, ControlCommand } from "./control.ts";
+import { ControlClient } from "./control.ts";
 import { ROOT, cmdId, runStandalone, tmpPath } from "./util.ts";
 import { postMessage, sleep, WM_KEYDOWN, WM_KEYUP } from "./winapi.ts";
-import { killAndWait, launchControlled, sendCommand, waitForPalette } from "./win-automation.ts";
+import { killAndWait, launchControlled, sendCommand, waitForPalette, paletteState } from "./win-automation.ts";
 
 const VK_BACK = 0x08;
 // repeat count 1; key up also sets the previous-state and transition bits, or
@@ -26,9 +26,8 @@ RememberOpenedFiles = false
 `;
 
 async function queryLen(client: ControlClient): Promise<number> {
-  const res = await client.request(ControlCommand.TestCommandPalette, []);
-  const m = /queryLen=(\d+)/.exec(String(res[1] ?? ""));
-  return m ? +m[1]! : -1;
+  const s = await paletteState(client);
+  return s.open ? s.queryLen : -1;
 }
 
 async function waitQueryLen(client: ControlClient, want: number): Promise<number> {
