@@ -494,8 +494,13 @@ function dips(px: number, py: number, g: Geom): { x: number; y: number } {
 }
 
 // Windows: the gpui window a message was aimed at. TestInput takes its client
-// pixels as they are and scales them itself.
-export type InputTarget = { hwnd: number; screenToClient: (x: number, y: number) => { x: number; y: number } };
+// pixels as they are and scales them itself. clientCenter: a tool window's,
+// where a wheel aimed at the window (lParam 0) goes.
+export type InputTarget = {
+  hwnd: number;
+  screenToClient: (x: number, y: number) => { x: number; y: number };
+  clientCenter?: () => { x: number; y: number };
+};
 
 function modsOf(w: number, target?: InputTarget): number {
   let m = 0;
@@ -646,7 +651,9 @@ export function macSendMessage(
     let px = client.x;
     let py = client.y;
     // A posted wheel of lParam 0 is "the document", not the corner pixel.
-    if (lp === 0n && g.cdx > 0 && g.cdy > 0) {
+    if (lp === 0n && target?.clientCenter) {
+      ({ x: px, y: py } = target.clientCenter());
+    } else if (lp === 0n && g.cdx > 0 && g.cdy > 0) {
       px = Math.round(g.ox + g.cdx / g.scale / 2);
       py = Math.round(g.oy + g.cdy / g.scale / 2);
     }

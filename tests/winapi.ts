@@ -748,7 +748,15 @@ export function ngInputTarget(hwnd: number): InputTarget | undefined {
     const o = clientToScreen(target, 0, 0);
     return { x: x - o.x, y: y - o.y };
   };
-  return { hwnd: target, screenToClient };
+  // a tool window is owned by its frame; the frame's document is not in it
+  if (!getWindowOwner(target)) {
+    return { hwnd: target, screenToClient };
+  }
+  const clientCenter = () => {
+    const rc = getClientRect(target);
+    return { x: Math.round((rc.left + rc.right) / 2), y: Math.round((rc.top + rc.bottom) / 2) };
+  };
+  return { hwnd: target, screenToClient, clientCenter };
 }
 
 const MAPVK_VK_TO_CHAR = 2;
