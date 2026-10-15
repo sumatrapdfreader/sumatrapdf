@@ -1194,6 +1194,10 @@ void DisplayModel::BuildPagesInfo() {
         logf("DisplayModel::BuildPagesInfo took %.2f ms\n", dur);
     };
 
+    // an EPUB restyle shrinks the page count; Relayout() runs before
+    // SetScrollState() and must not ask for a page past the end
+    startPage = ClampI(startPage, 1, std::max(newCount, 1));
+
     int columns = ColumnsFromDisplayMode(displayMode);
     int newStartPage = startPage;
     if (IsBookView(displayMode) && newStartPage == 1 && columns > 1) {
