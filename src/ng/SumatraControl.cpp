@@ -2986,6 +2986,11 @@ static void ExecuteControlRequest(ControlRequest* req) {
             // and may repeat it: a burst of wheel notches faster than a request each
             i32 hwnd = 0;
             if (IntArg(req, 5, hwnd) && hwnd != 0) {
+                MainWindow* frameWin = AppShellWindowFromHwnd((HWND)(intptr_t)hwnd);
+                if (frameWin && str::Eq(kind, StrL("char")) && a == '\n' && FreeTextInPlaceCommitOnChar(frameWin, a)) {
+                    AppendTestResult(req, 0, StrL("OK"));
+                    break;
+                }
                 i32 repeat = 1;
                 IntArg(req, 6, repeat);
                 TempStr res;
