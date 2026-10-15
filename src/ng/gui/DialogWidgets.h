@@ -176,37 +176,11 @@ bool DlgWindowIsHost(gpui::Ctx* cx);
 ToolWindow* DlgWindowCurrent();
 gpui::El* DlgIntoEl(gpui::Ctx* cx, gpui::component::Dialog* dlg);
 
-// orig's dialog layout for the content of such a window. Sizes at 96 dpi, as
-// orig's layout code has them: the 12 px app font with its 15 px line, a 23
-// high edit, 19 high list rows, 25 high buttons (5 / 12 around the label) an
-// average character apart
+// orig's dialog sizes at 96 dpi: the 12 px app font and a 23 high edit
 constexpr float kDlgWinFontPx = 12;
-constexpr float kDlgWinLineDy = 15;
 constexpr float kDlgWinEditDy = 23;
-constexpr float kDlgWinRowDy = 19;
-constexpr float kDlgWinBtnDy = 25;
-constexpr float kDlgWinBtnPadDx = 12;
-constexpr float kDlgWinBtnGap = 7;
-// sets the window's fonts to orig's and returns the size for Font()
-float DlgWinFont(gpui::Ctx* cx);
 // the width of `label` (its '&' dropped) in the app font, in dips
 float DlgWinTextDx(gpui::Ctx* cx, Str label);
-// orig's VirtButton: as wide as its label plus the padding
-gpui::El* DlgWinButton(gpui::Ctx* cx, gpui::Str id, Str label, gpui::Listener onClick, bool isDefault,
-                       bool disabled = false);
-// the selected row of orig's VirtListBox; darker while the list has the focus
-gpui::Rgba DlgWinListSelBg(bool listFocused);
-// orig's VirtText: one line of `text` (what a DlgAccel*() call returned, or
-// plain text) with `padB` under it
-gpui::El* DlgWinLabel(gpui::Ctx* cx, gpui::Str text, float font, float padB);
-// orig's Edit with a border: 23 high, as wide as its parent
-gpui::El* DlgWinEdit(gpui::Ctx* cx, gpui::Str id, gpui::InputState* edit);
-// orig's Checkbox: `box` (a gpui Checkbox element) in a 21 high row with
-// `padT` above it, the label 2 after the box
-constexpr float kDlgWinCheckDy = 21;
-gpui::El* DlgWinCheck(gpui::Ctx* cx, gpui::El* box, float padT);
-// the row of buttons at the bottom: at the right, `padY` above and below
-gpui::El* DlgWinButtonRow(gpui::Ctx* cx, float padY);
 // in place of DlgIntoEl(): `col` is the whole content, laid out by the
 // dialog; the window gets spec.clientDx and the column's height
 gpui::El* DlgWinContent(gpui::Ctx* cx, gpui::El* col);

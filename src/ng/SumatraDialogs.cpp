@@ -543,81 +543,12 @@ static gp::El* DlgWindowFitTo(DlgWindowEntry* e, gp::Ctx* cx, gp::El* col, float
     return gp::Div(cx->a)->FlexCol()->SizeFull()->Child(col);
 }
 
-float DlgWinFont(gp::Ctx* cx) {
-    return kDlgWinFontPx * ToolWindowSetUiFontPx(cx, kDlgWinFontPx);
-}
-
 float DlgWinTextDx(gp::Ctx* cx, Str label) {
     DlgWindowEntry* e = DlgWindowEntryOf(cx->win);
     int dpi = std::max(e ? AppShellWindowDpi(e->win) : 96, 96);
     TempStr noAmp = str::ReplaceTemp(label, StrL("&"), StrL(""));
     int dx = PlatformFontMeasureText(GetDefaultGuiFont(), noAmp).dx;
     return (float)dx * 96.f / (float)dpi;
-}
-
-gp::El* DlgWinButton(gp::Ctx* cx, gp::Str id, Str label, gp::Listener onClick, bool isDefault, bool disabled) {
-    gpc::Button* b = gpc::Button::New(cx, id)->Disabled(disabled);
-    if (isDefault) {
-        b->Primary();
-    }
-    float dx = DlgWinTextDx(cx, label) + 2 * kDlgWinBtnPadDx;
-    gp::El* el = DlgAccelEl(cx, b, label, onClick, disabled)->H(kDlgWinBtnDy)->W(dx)->PadX(0)->Shrink0();
-    if (isDefault) {
-        // orig's gColsBtnDefault
-        el->Border(1, ToGpui(ThemeHotEdgeColor()));
-    }
-    return el;
-}
-
-// orig's kColListSel / kColListSelFocused
-gp::Rgba DlgWinListSelBg(bool listFocused) {
-    constexpr int kListSelPct = 25;
-    constexpr int kListSelFocusedPct = 45;
-    return ToGpui(AccentColor(ThemeWindowControlBackgroundColor(), listFocused ? kListSelFocusedPct : kListSelPct));
-}
-
-gp::El* DlgWinLabel(gp::Ctx* cx, gp::Str text, float font, float padB) {
-    const gp::Theme& th = gp::ThemeNow(cx->app);
-    return gp::Div(cx->a)
-        ->FlexRow()
-        ->ItemsCenter()
-        ->H(kDlgWinLineDy + padB)
-        ->PadB(padB)
-        ->Shrink0()
-        ->Child(DlgAccelText(cx, text)->Font(font)->Fg(th.foreground));
-}
-
-gp::El* DlgWinEdit(gp::Ctx* cx, gp::Str id, gp::InputState* edit) {
-    return gp::Div(cx->a)
-        ->FlexRow()
-        ->ItemsCenter()
-        ->W(gp::kFill)
-        ->H(kDlgWinEditDy)
-        ->Shrink0()
-        ->Child(gpc::Input::New(cx, id, edit)->WithSize(gp::UiSize::Small)->W(gp::kFill)->IntoEl()->H(kDlgWinEditDy));
-}
-
-gp::El* DlgWinCheck(gp::Ctx* cx, gp::El* box, float padT) {
-    constexpr float kCheckLabelGap = 2;
-    return gp::Div(cx->a)
-        ->FlexRow()
-        ->ItemsCenter()
-        ->W(gp::kFill)
-        ->H(kDlgWinCheckDy + padT)
-        ->PadT(padT)
-        ->Shrink0()
-        ->Child(box->Gap(kCheckLabelGap));
-}
-
-gp::El* DlgWinButtonRow(gp::Ctx* cx, float padY) {
-    return gp::Div(cx->a)
-        ->FlexRow()
-        ->JustifyEnd()
-        ->ItemsCenter()
-        ->W(gp::kFill)
-        ->H(kDlgWinBtnDy + 2 * padY)
-        ->Gap(kDlgWinBtnGap)
-        ->Shrink0();
 }
 
 gp::El* DlgWinContent(gp::Ctx* cx, gp::El* col) {
