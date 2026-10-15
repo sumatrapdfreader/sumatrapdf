@@ -2427,8 +2427,8 @@ void ShellView::OnKeyDown(ShellView* self, gp::Ctx* cx, const gp::KeyEvent* ev) 
         }
         return;
     }
-    // a context menu does not take the focus; a dialog's open drop-down
-    // would have its dialog closed under it
+    // a menu whose focus has not landed yet, or a dialog's open drop-down:
+    // Escape closes it, and nothing under it runs
     if (IsTrackedPopupOpen(cx)) {
         if (ev->vk == VK_ESCAPE) {
             DismissTrackedPopup(cx);

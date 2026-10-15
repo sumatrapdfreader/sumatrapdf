@@ -50,10 +50,11 @@ struct DialogSelect {
     float comboScrollY = 0;
 };
 
-// ng: a gpui context menu does not take the focus, so the shell cannot tell
-// from the key event that one is open. Every context / drop-down menu goes
-// through TrackPopup() when built (a DialogSelect tracks itself); while one is
-// open the shell leaves the keys to it (win32's modal menu loop) and Esc
+// ng: OpenPopupMenuAt focuses the trigger before PopupMenuOpen, so a picked
+// item runs from the element that opened the menu. The menu's trap then takes
+// the keyboard, which is where arrows, Enter and Escape dispatch. Every
+// context / drop-down menu goes through TrackPopup() when built (a DialogSelect
+// tracks itself); while one is open the shell leaves those keys to it and Esc
 // closes only the popup.
 gpui::component::PopupMenu* TrackPopup(gpui::Ctx* cx, gpui::component::PopupMenu* menu);
 bool IsTrackedPopupOpen(gpui::Ctx* cx);
