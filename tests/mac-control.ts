@@ -242,6 +242,10 @@ function kernel32(): ReturnType<typeof dlopen> {
         args: [FFIType.i64_fast, FFIType.ptr, FFIType.u32, FFIType.ptr, FFIType.ptr],
         returns: FFIType.i32,
       },
+      PeekNamedPipe: {
+        args: [FFIType.i64_fast, FFIType.ptr, FFIType.u32, FFIType.ptr, FFIType.ptr, FFIType.ptr],
+        returns: FFIType.i32,
+      },
       CloseHandle: { args: [FFIType.i64_fast], returns: FFIType.i32 },
       GetLastError: { args: [], returns: FFIType.u32 },
     });
@@ -325,11 +329,42 @@ function writeAll(fd: number, buf: Buffer): void {
   }
 }
 
+// A synchronous ReadFile has no timeout: input that opens a modal native
+// window (MessageBox, Save As) never gets its reply and would hang the test.
+const kPipeReplyTimeoutMs = 60_000;
+
+// waits until the pipe has data to read
+function waitPipeData(fd: number, deadline: number): void {
+  const avail = new Uint32Array(1);
+  const start = Date.now();
+  for (;;) {
+    if (!kernel32().symbols.PeekNamedPipe(fd, null, 0, null, ptr(avail), null)) {
+      throw new Error("control pipe closed while reading");
+    }
+    if (avail[0]! > 0) {
+      return;
+    }
+    if (Date.now() >= deadline) {
+      // the late reply would answer the next request
+      closeFd();
+      throw new Error(
+        `no control reply in ${kPipeReplyTimeoutMs / 1000}s: the app is likely in a modal native window (MessageBox, file dialog)`,
+      );
+    }
+    // replies usually take a few ms: spin briefly before sleeping
+    if (Date.now() - start > 20) {
+      Bun.sleepSync(1);
+    }
+  }
+}
+
 function readExact(fd: number, len: number): Buffer {
   const out = Buffer.alloc(len);
   let got = 0;
+  const deadline = Date.now() + kPipeReplyTimeoutMs;
   while (got < len) {
     if (IS_WIN) {
+      waitPipeData(fd, deadline);
       const part = out.subarray(got);
       const done = new Uint32Array(1);
       if (!kernel32().symbols.ReadFile(fd, ptr(part), part.length, ptr(done), null) || done[0] === 0) {
