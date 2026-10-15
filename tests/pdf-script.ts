@@ -334,7 +334,7 @@ export async function testit(): Promise<void> {
       await ui.pickExample(2, "Render every page as a PNG at 96 DPI.");
       await pollUntil(
         () => ui.args(),
-        (args) => args.length === 2 && args[1] === dirname(input) + "/" + basename(stem) + "-[page].png",
+        (args) => args.length === 2 && args[1] === join(dirname(input), basename(stem) + "-[page].png"),
         {
           error: (args) => `DIR and BASE hints: ${JSON.stringify(args)}`,
         },

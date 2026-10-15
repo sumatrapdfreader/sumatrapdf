@@ -82,10 +82,30 @@ TempStr PDFScriptOutputPath(Str input) {
     }
 }
 
+// A trailing "(...)" is a note in the script, not a dialog label.
+static TempStr StripTrailingComment(Str s) {
+    TempStr out = str::DupTemp(s);
+    if (!str::EndsWith(out, StrL(")"))) {
+        return out;
+    }
+    int i = str::LastIndexOfChar(out, '(');
+    if (i < 0) {
+        return out;
+    }
+    out.len = i;
+    str::TrimWSInPlace(out, str::TrimOpt::Right);
+    return out;
+}
+
 static TempStr ExpandScriptArg(Str value, Str input, Str output) {
-    TempStr expanded = str::ReplaceTemp(value, StrL("<INPUT>"), input);
+    // "<DIR>/rest" is a path: the slash is the separator, so Windows gets "\"
+    TempStr dir = path::GetDirTemp(input);
+    TempStr dirSep = path::JoinTemp(dir, StrL(""));
+    TempStr expanded = str::ReplaceTemp(value, StrL("<DIR>/"), dirSep);
+    expanded = str::ReplaceTemp(expanded, StrL("<DIR>\\"), dirSep);
+    expanded = str::ReplaceTemp(expanded, StrL("<DIR>"), dir);
+    expanded = str::ReplaceTemp(expanded, StrL("<INPUT>"), input);
     expanded = str::ReplaceTemp(expanded, StrL("<OUTPUT>"), output);
-    expanded = str::ReplaceTemp(expanded, StrL("<DIR>"), path::GetDirTemp(input));
     return str::ReplaceTemp(expanded, StrL("<BASE>"), path::GetBaseNameTemp(path::GetPathNoExtTemp(input)));
 }
 
@@ -107,7 +127,7 @@ void GetPDFScriptArgs(Str script, Str input, StrVec& values, StrVec& hints) {
         str::TrimWSInPlace(value, str::TrimOpt::Both);
         str::TrimWSInPlace(hint, str::TrimOpt::Both);
         values.Append(ExpandScriptArg(value, input, output));
-        hints.Append(hint);
+        hints.Append(StripTrailingComment(hint));
     }
 }
 

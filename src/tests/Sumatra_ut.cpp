@@ -240,6 +240,23 @@ static void ExpandPDFScriptTest() {
     utassert(str::Eq(ExpandPDFScript(StrL("\"<INPUT>\" \"<OUTPUT>\""), both), StrL("\"in.pdf\" \"out.pdf\"")));
 }
 
+static void PDFScriptArgHintTest() {
+    Str script = StrL(
+        "// Arg: <DIR>/<BASE>-[page].png : Output filename template (folder must exist)\n"
+        "// Arg: <DIR>/<BASE>-[page].png : Image filename template (.png or .jpg; folder must exist)\n"
+        "// Arg: Page %page / %lastpage : Footer text (empty = none)\n"
+        "// Arg: x : Keep (this) word\n");
+    StrVec values;
+    StrVec hints;
+    GetPDFScriptArgs(script, StrL("C:\\docs\\a.pdf"), values, hints);
+    utassert(len(hints) == 4);
+    utassert(str::Eq(hints[0], StrL("Output filename template")));
+    utassert(str::Eq(hints[1], StrL("Image filename template")));
+    utassert(str::Eq(hints[2], StrL("Footer text")));
+    utassert(str::Eq(hints[3], StrL("Keep (this) word")));
+    utassert(str::EndsWith(values[0], StrL("a-[page].png")));
+}
+
 static void SumatraPDF_UnitTests() {
     RestrictedUseConfigTest();
     ControlFrameActionTest();
@@ -256,6 +273,7 @@ static void SumatraPDF_UnitTests() {
     versioncheck_test();
     hexstrTest();
     ExpandPDFScriptTest();
+    PDFScriptArgHintTest();
 }
 
 static void ParseTipExpectWordsLinks(Str input, int expWords, int expLinks) {
