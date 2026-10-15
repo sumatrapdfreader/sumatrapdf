@@ -612,6 +612,7 @@ const enginesSources = [
 const appSources = [
   "src/ng/Accelerators.cpp",
   "src/ng/AIChatProcess.cpp",
+  "src/ng/AppDecisions.cpp",
   "src/ng/AppSettings.cpp",
   "src/ng/AppTools.cpp",
   "src/ng/AppTools_posix.cpp",

@@ -1154,6 +1154,9 @@
     <ClCompile Include="..\src\shared\AppHelpersCommon.cpp">
       <Filter>src\shared</Filter>
     </ClCompile>
+    <ClCompile Include="..\src\shared\AppDecisions.cpp">
+      <Filter>src\shared</Filter>
+    </ClCompile>
     <ClCompile Include="..\src\shared\AppSettings.cpp">
       <Filter>src\shared</Filter>
     </ClCompile>

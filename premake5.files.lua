@@ -297,6 +297,7 @@ function sumatrapdf_files()
     "SettingsDialog.*",
     "AppSettings.*",
     "PagePosition.*",
+    "AppDecisions.cpp",
     "AppTools.*",
     "Canvas.*",
     "CanvasCommon.*",

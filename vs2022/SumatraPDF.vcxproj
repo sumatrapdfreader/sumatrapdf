@@ -2139,6 +2139,7 @@
     <ClCompile Include="..\src\shared\AnnotSearch.cpp" />
     <ClCompile Include="..\src\shared\Annotation.cpp" />
     <ClCompile Include="..\src\shared\AppHelpersCommon.cpp" />
+    <ClCompile Include="..\src\shared\AppDecisions.cpp" />
     <ClCompile Include="..\src\shared\AppSettings.cpp" />
     <ClCompile Include="..\src\shared\AppTools.cpp" />
     <ClCompile Include="..\src\shared\AvifReader.cpp" />

@@ -618,54 +618,6 @@ TempStr LinkDestHighlightResultTemp(int* exitCodeOut) {
                          win->fwdSearchMark.page, n, gSettings && gSettings->highlightLinkDestination ? 1 : 0));
 }
 
-// [Open("path")] or [Open("path",new,focus,refresh[,inTab])].
-OpenDdeArgs ParseOpenDdeCmd(Str cmd) {
-    OpenDdeArgs a;
-    a.next = str::Parse(cmd, "[Open(\"%s\")]", &a.filePath);
-    if (str::IsNull(a.next)) {
-        a.next = str::Parse(cmd, "[Open(\"%s\",%u,%u,%u,%u)]", &a.filePath, &a.newWindow, &a.setFocus, &a.forceRefresh,
-                            &a.inCurrentTab);
-    }
-    if (str::IsNull(a.next)) {
-        a.next = str::Parse(cmd, "[Open(\"%s\",%u,%u,%u)]", &a.filePath, &a.newWindow, &a.setFocus, &a.forceRefresh);
-    }
-    a.parsed = !str::IsNull(a.next);
-    return a;
-}
-
-// newWindow replaces the current tab only when it is 0.
-int ApplyOpenNewWindow(int newWindow, int inCurrentTab) {
-    if (newWindow != 0 && inCurrentTab != 0) {
-        logf("HandleOpenCmd: setting inCurrentTab to 0 because newWindow != 0\n");
-        return 0;
-    }
-    return inCurrentTab;
-}
-
-// Short terms (1-2 chars) match a lot, so wait longer (issue #4626).
-int FindDebounceDelayMs(int nChars) {
-    constexpr int kFindDebounceDelayMs = 500;
-    constexpr int kFindDebounceShortDelayMs = 1000;
-    return nChars <= 2 ? kFindDebounceShortDelayMs : kFindDebounceDelayMs;
-}
-
-// Text shown for a failed forward search. Codes that never notified stay empty.
-TempStr ForwardSearchFailTextTemp(int ret, Str fileName, int line, int page) {
-    if (ret == PDFSYNCERR_INVALID_PAGE_NUMBER) {
-        return fmt(Tr("Page %u does not exist").s, page);
-    }
-    if (ret == PDFSYNCERR_UNKNOWN_SOURCEFILE) {
-        return fmt(Tr("Unknown source file (%s)").s, fileName);
-    }
-    if (ret == PDFSYNCERR_NORECORD_IN_SOURCEFILE) {
-        return fmt(Tr("Source file %s has no synchronization point").s, fileName);
-    }
-    if (ret == PDFSYNCERR_NORECORD_FOR_THATLINE || ret == PDFSYNCERR_NOSYNCPOINT_FOR_LINERECORD) {
-        return fmt(Tr("No result found around line %u in file %s").s, line, fileName);
-    }
-    return {};
-}
-
 // Parse a DDE quoted string starting at off (content after the opening ").
 // Stops at an unescaped "; treats "" as a literal quote. Sets *endOff past
 // the closing quote. Returns false on missing closing quote.
