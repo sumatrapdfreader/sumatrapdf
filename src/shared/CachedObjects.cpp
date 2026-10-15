@@ -3,6 +3,7 @@
 
 #include "base/Base.h"
 #include "base/File.h"
+#include "base/UITask.h"
 
 #include "gui/UIModels.h"
 #include "EngineBase.h"
@@ -24,15 +25,17 @@ static thread_local uintptr_t gSkipFreeId = 0;
 
 static void EnsureCachedObjectHooks();
 
+// Tabs belong to the UI thread. Render / load threads allocate cached objects
+// too; walking the tab list from there raced CloseTab and read a freed tab.
 static WindowTab* CurrTab() {
-    if (gCurrentTabForCache) {
+    if (gCurrentTabForCache && uitask::IsMainUIThread()) {
         return gCurrentTabForCache();
     }
     return nullptr;
 }
 
 static WindowTab* TabForEngine(EngineBase* engine) {
-    if (!engine || !gFindTabByEngine) {
+    if (!engine || !gFindTabByEngine || !uitask::IsMainUIThread()) {
         return nullptr;
     }
     return gFindTabByEngine(engine);
@@ -128,8 +131,9 @@ static u64 FreeMatching(u64 wantBytes, bool aggressive, uintptr_t skipId) {
     WindowTab* currTab = CurrTab();
     u64 freed = 0;
 
-    // Pass 0: other tabs. Pass 1: current tab. Aggressive: both, everything CanFree.
-    int nPasses = aggressive ? 1 : 2;
+    // Pass 0: other tabs. Pass 1: current tab. Aggressive or off the UI thread
+    // (current tab unknown): one pass over everything CanFree.
+    int nPasses = (aggressive || !currTab) ? 1 : 2;
     for (int pass = 0; pass < nPasses && freed < wantBytes; pass++) {
         Vec<CachedObject> snap;
         {
@@ -138,8 +142,9 @@ static u64 FreeMatching(u64 wantBytes, bool aggressive, uintptr_t skipId) {
         }
         for (int i = 0; i < len(snap) && freed < wantBytes; i++) {
             CachedObject o = snap[i];
-            bool otherTab = o.tab != currTab;
-            if (!aggressive) {
+            WindowTab* tab = o.tab ? o.tab : TabForEngine(o.engine);
+            bool otherTab = tab != currTab;
+            if (nPasses == 2) {
                 if (pass == 0 && !otherTab) {
                     continue;
                 }

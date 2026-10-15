@@ -34,6 +34,29 @@ static CachedObject MkObj(uintptr_t id, u64 size, EngineBase* engine) {
     return o;
 }
 
+static AtomicInt gFindTabCalls;
+
+static WindowTab* CountingFindTab(EngineBase*) {
+    AtomicIntInc(&gFindTabCalls);
+    return nullptr;
+}
+
+static void AllocOnWorker() {
+    CachedObject o = MkObj(8, 100, (EngineBase*)(uintptr_t)0x300);
+    DidAllocateCachedObject(&o);
+}
+
+// tabs belong to the UI thread: a render thread walking them races CloseTab
+static void TabLookupOffUIThreadTest() {
+    auto saved = gFindTabByEngine;
+    gFindTabByEngine = CountingFindTab;
+    AtomicIntSet(&gFindTabCalls, 0);
+    ThreadHandle thread = StartThread(MkFunc0Void(AllocOnWorker), StrL("cache-alloc-test"));
+    utassert(JoinThread(&thread, 5000));
+    utassert(AtomicIntGet(&gFindTabCalls) == 0);
+    gFindTabByEngine = saved;
+}
+
 static void ResetCacheTest() {
     while (len(gCachedObjects) > 0) {
         UnregisterCachedObject(gCachedObjects[0].id);
@@ -124,5 +147,9 @@ void CachedObjects_UnitTests() {
     utassert(str::IndexOf(t, StrL("image")) < str::IndexOf(t, StrL("render")));
 
     ResetCacheTest();
+    if (kHasThreads) {
+        TabLookupOffUIThreadTest();
+        ResetCacheTest();
+    }
     gSaveMemory = saved;
 }
