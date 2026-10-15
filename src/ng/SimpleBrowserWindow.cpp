@@ -197,6 +197,9 @@ void SimpleBrowserWindowShow(const SimpleBrowserCreateArgs& args) {
     // what a plain browser window wants
     Str host = len(args.resourceUriPrefix) > 0 ? args.resourceUriPrefix : StrL("https://sumatrapdf.browser/");
     gBrowser.view = BrowserViewCreate(args.win, nullptr, &gBrowser.cb, host);
+    // orig's args.backgroundColor: the manual window matches the theme, not
+    // the WebView's dark canvas
+    BrowserViewSetBackground(gBrowser.view, ThemeWindowBackgroundColor());
     if (!gBrowser.view) {
         gp::OpenUrl(ToGpui(args.url));
         return;

@@ -96,6 +96,7 @@ void BrowserViewCreatePending(MainWindow* win, gpui::Ctx* cx);
 // leaves it alone and that window's own tick makes it, with that window's Ctx
 void BrowserViewSetOwnHost(BrowserView*);
 void BrowserViewCreatePendingIn(BrowserView*, gpui::Ctx* cx);
+void BrowserViewSetBackground(BrowserView*, Color);
 
 // is there an embedded browser at all (WebView2 runtime installed)
 bool BrowserViewAvailable();

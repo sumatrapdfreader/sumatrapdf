@@ -835,3 +835,4 @@ gpui::El* BrowserViewBuild(BrowserView*, gpui::Ctx*) {
 void BrowserViewCreatePending(MainWindow*, gpui::Ctx*) {}
 void BrowserViewSetOwnHost(BrowserView*) {}
 void BrowserViewCreatePendingIn(BrowserView*, gpui::Ctx*) {}
+void BrowserViewSetBackground(BrowserView*, Color) {}

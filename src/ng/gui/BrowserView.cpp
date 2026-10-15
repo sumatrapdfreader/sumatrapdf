@@ -111,6 +111,8 @@ struct BrowserView {
     // drawn in a tool window, which makes it from its own tick
     bool ownHost = false;
     bool visible = false;
+    // composition color; unset keeps the white host chm and markdown use
+    Color background = kColorUnset;
     int zoomPercent = 100;
     // last scroll position the page reported, in CSS pixels; (-1, -1) means
     // "not known yet"
@@ -283,10 +285,42 @@ static wry::NewWindowResponse OnNewWindow(void* ctx, gp::Str url, const wry::New
     return wry::NewWindowResponse::Deny;
 }
 
+static wry::Rgba WryColor(Color c) {
+    return wry::Rgba{GetRed(c), GetGreen(c), GetBlue(c), 0xff};
+}
+
+static void ApplyBackground(BrowserView* bv) {
+    if (!bv || ColorSkipsPaint(bv->background)) {
+        return;
+    }
+    wry::WebView* raw = Raw(bv);
+    if (!raw) {
+        return;
+    }
+    wry::WebViewSetBackgroundColor(raw, WryColor(bv->background));
+}
+
+// orig's webView->defaultBackgroundColor: the host shows through until the
+// page paints, and again while the window is resized
+void BrowserViewSetBackground(BrowserView* bv, Color c) {
+    if (!bv) {
+        return;
+    }
+    bv->background = c;
+    ApplyBackground(bv);
+}
+
 static void OnPageLoad(void* ctx, wry::PageLoadEvent ev, gp::Str url) {
     auto* bv = (BrowserView*)ctx;
     if (!bv || !bv->cb || ev != wry::PageLoadEvent::Finished) {
         return;
+    }
+    ApplyBackground(bv);
+    if (!ColorSkipsPaint(bv->background)) {
+        wry::WebView* raw = Raw(bv);
+        if (raw) {
+            wry::WebViewSetVisible(raw, true);
+        }
     }
     TempStr u = UrlForEventTemp(bv, FromGpui(url));
     if (len(u) == 0) {
@@ -705,7 +739,10 @@ static void CreateWebView(BrowserView* bv, gp::Ctx* cx) {
     attrs.newWindowReqHandler = OnNewWindow;
     attrs.ipcHandler = OnIpcMessage;
     attrs.hasBackgroundColor = true;
-    attrs.backgroundColor = wry::Rgba{0xff, 0xff, 0xff, 0xff};
+    attrs.backgroundColor = WryColor(ColorSkipsPaint(bv->background) ? kColWhite : bv->background);
+    // an empty document is the dark canvas; keep it hidden until the page is
+    // up so the theme-colored window is what shows
+    attrs.visible = ColorSkipsPaint(bv->background);
     // keep the keyboard with the application until the user clicks the page
     attrs.focused = false;
     // gpui zeroes the bounds and positions the view from its element's bounds
@@ -796,8 +833,15 @@ gp::El* BrowserViewBuild(BrowserView* bv, gp::Ctx* cx) {
     }
     if (!bv->created) {
         bv->wantCreate = true;
-        const gp::Theme& th = gp::ThemeNow(cx->app);
-        return gp::Div(cx->a)->SizeFull()->Bg(th.tokens.muted);
+        // orig's host brush shows until the web view exists. An unset color
+        // keeps the muted fill chm and markdown use.
+        gp::El* fill = gp::Div(cx->a)->SizeFull();
+        if (ColorSkipsPaint(bv->background)) {
+            fill->Bg(gp::ThemeNow(cx->app).tokens.muted);
+        } else {
+            fill->Bg(ToGpui(bv->background));
+        }
+        return fill;
     }
     if (!bv->view.IsValid()) {
         const gp::Theme& th = gp::ThemeNow(cx->app);

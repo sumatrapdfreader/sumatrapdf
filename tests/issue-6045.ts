@@ -7,7 +7,7 @@
 
 import { mkdirSync, rmSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
-import { cmdId, runStandalone, tmpPath, USE_NG } from "./util.ts";
+import { cmdId, runStandalone, tmpPath } from "./util.ts";
 import {
   captureWindowPixels,
   captureWindowDCRegionPixels,
@@ -46,7 +46,9 @@ function findHelpWindow(pid: number): number {
 function findWebViewHost(help: number): number {
   let found = 0;
   enumChildWindows(help, (hwnd) => {
-    if (getClassName(hwnd) === "SumatraWgDefaultWinClass") {
+    const cls = getClassName(hwnd);
+    // orig's WebView2 host, or ng's wry container in the manual tool window
+    if (cls === "SumatraWgDefaultWinClass" || cls === "WRY_WEBVIEW") {
       found = hwnd;
       return false;
     }
@@ -190,10 +192,6 @@ async function waitForLightThemeText(help: number, webView: number): Promise<voi
 }
 
 export async function testit(): Promise<void> {
-  if (USE_NG) {
-    console.log("SKIP issue-6045: ng's Manual window has no SumatraWgDefaultWinClass WebView2 host");
-    return;
-  }
   setProcessDpiAware();
   const appdata = tmpPath("issue-6045-appdata");
   rmSync(appdata, { recursive: true, force: true });
