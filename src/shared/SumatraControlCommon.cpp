@@ -483,7 +483,13 @@ void SumatraControlThread(ControlThreadArg* arg) {
             CreateNamedPipeW(gControlPipeName.s, PIPE_ACCESS_DUPLEX, PIPE_TYPE_BYTE | PIPE_READMODE_BYTE | PIPE_WAIT,
                              kMaxConns, 64 * 1024, 64 * 1024, 0, nullptr);
         if (pipe == INVALID_HANDLE_VALUE) {
-            logf("CreateNamedPipeW failed for control pipe, err=%u\n", (unsigned)GetLastError());
+            DWORD err = GetLastError();
+            // all kMaxConns instances connected: wait for one to disconnect
+            if (err == ERROR_PIPE_BUSY) {
+                SleepInMs(50);
+                continue;
+            }
+            logf("CreateNamedPipeW failed for control pipe, err=%u\n", (unsigned)err);
             break;
         }
         BOOL connected = ConnectNamedPipe(pipe, nullptr) ? TRUE : (GetLastError() == ERROR_PIPE_CONNECTED);

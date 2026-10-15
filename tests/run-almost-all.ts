@@ -412,6 +412,7 @@ import { testit as attachmentOpenExternal } from "./attachment-open-external.ts"
 import { testit as cbrNetworkUnrar } from "./cbr-network-unrar.ts";
 import { testit as fileLinkNoDest } from "./file-link-no-dest.ts";
 import { testit as annotTextPopupReload } from "./annot-text-popup-reload.ts";
+import { testit as controlPipeBusy } from "./control-pipe-busy.ts";
 
 async function annotationClipboardTests(): Promise<void> {
   beginSharedControlledSession();
@@ -820,6 +821,7 @@ export const tests: NamedTest[] = [
   ["cbr-network-unrar", cbrNetworkUnrar],
   ["file-link-no-dest", fileLinkNoDest],
   ["annot-text-popup-reload", annotTextPopupReload],
+  ["control-pipe-busy", controlPipeBusy],
 ];
 
 export async function testit(opts?: SuiteOptions): Promise<void> {
