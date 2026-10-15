@@ -26,6 +26,7 @@
 #include "Commands.h"
 #include "SvgIcons.h"
 #include "AppUnitTests.h"
+#include "PDFScript.h"
 
 // must be last to over-write assert()
 #include "base/tests/UtAssert.h"
@@ -215,6 +216,27 @@ static void ParseCommandLineTest() {
     }
 }
 
+static void ExpandPDFScriptTest() {
+    StrVec none;
+    utassert(str::Eq(ExpandPDFScript(StrL("print(1);\n"), none), StrL("print(1);\n")));
+
+    StrVec inputOnly;
+    inputOnly.Append(StrL("C:\\docs\\a \"b\".pdf"));
+    utassert(str::Eq(ExpandPDFScript(StrL("print(1);\n"), inputOnly), StrL("print(1);\n")));
+    utassert(str::Eq(ExpandPDFScript(StrL("\"<INPUT>\" \"<OUTPUT>\""), inputOnly),
+                     StrL("\"C:\\\\docs\\\\a \\\"b\\\".pdf\" \"\"")));
+
+    StrVec emptyOut;
+    emptyOut.Append(StrL("in.pdf"));
+    emptyOut.Append(Str());
+    utassert(str::Eq(ExpandPDFScript(StrL("print(\"ok\");\n"), emptyOut), StrL("print(\"ok\");\n")));
+
+    StrVec both;
+    both.Append(StrL("in.pdf"));
+    both.Append(StrL("out.pdf"));
+    utassert(str::Eq(ExpandPDFScript(StrL("\"<INPUT>\" \"<OUTPUT>\""), both), StrL("\"in.pdf\" \"out.pdf\"")));
+}
+
 static void SumatraPDF_UnitTests() {
     RestrictedUseConfigTest();
     CachedObjects_UnitTests();
@@ -227,6 +249,7 @@ static void SumatraPDF_UnitTests() {
     ParseFileArgsTest();
     versioncheck_test();
     hexstrTest();
+    ExpandPDFScriptTest();
 }
 
 static void ParseTipExpectWordsLinks(Str input, int expWords, int expLinks) {

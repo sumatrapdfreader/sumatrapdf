@@ -302,6 +302,13 @@ export async function testit(): Promise<void> {
       const firstArgs = await ui.args();
       if (firstArgs.length !== 1 || firstArgs[0] !== input)
         throw new Error("initial example needs only its input argument");
+      // the usual dialog run: one input path and no output argument
+      await ui.run();
+      await pollUntil(
+        () => ui.output(),
+        (s) => s.trim() === "1",
+        { timeoutMs: 10000, error: (s) => `one-argument script: ${JSON.stringify(s)}` },
+      );
       await ui.examples();
       await ui.pickExample(1, "Add a free-text annotation to the first page.");
       await pollUntil(

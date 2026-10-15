@@ -112,7 +112,12 @@ void GetPDFScriptArgs(Str script, Str input, StrVec& values, StrVec& hints) {
 }
 
 // Keep path quoting in JavaScript: "<INPUT>" also works for Windows backslashes and quotes.
+// Empty must be a real string: ReplaceTemp drops the script when the replacement is null.
 static TempStr ScriptPathTemp(Str path) {
+    if (len(path) == 0) {
+        return str::DupTemp(StrL(""));
+    }
+
     str::Builder out;
     for (int i = 0; i < len(path); i++) {
         char c = path.s[i];
