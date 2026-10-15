@@ -26,6 +26,12 @@ description: Regenerate the amalgamated jbig2dec copy in ext/a-jbig2dec from ups
    It writes `jbig2.h`, `jbig2dec.c`, `COPYING`, `LICENSE` and `version.txt` into `ext/a-jbig2dec/`.
    Add `-keep` to reuse the existing checkout while iterating on the amalgamation rules.
 
+   `ext/a-jbig2dec/patches/*.patch` is applied to the checkout before amalgamation,
+   after `git checkout --force`, so a regeneration keeps those changes. The resize
+   overflow guard is `0001-resize-check-requested-height.patch`. If a patch does
+   not apply, upstream moved: update the patch, or delete it once upstream has
+   the same fix. Do not edit `jbig2dec.c` by hand.
+
 2. Check `ext/a-jbig2dec/version.txt` — it records the project homepage, source repo URL, requested
    revision, resolved commit SHA-1 and GitHub commit URL. Confirm it is the revision you meant.
 

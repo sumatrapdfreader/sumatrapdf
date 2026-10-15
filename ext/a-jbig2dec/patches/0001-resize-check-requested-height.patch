@@ -1,0 +1,25 @@
+jbig2dec: check the requested height in jbig2_image_resize
+
+The overflow guard tested image->height, the size already allocated.
+A striped page grows the buffer to y + region height. On a 32-bit
+size_t that product wraps, the realloc succeeds, and image->height
+is then set to the unwrapped value. A later region is composed at
+that row, past the end of the buffer.
+
+Test the requested height, as jbig2_image_new already does. Drop this
+patch when upstream jbig2_image.c contains the same check
+(https://bugs.ghostscript.com/show_bug.cgi?id=709213).
+
+---
+diff --git a/jbig2_image.c b/jbig2_image.c
+--- a/jbig2_image.c
++++ b/jbig2_image.c
+@@ -110,7 +110,7 @@ jbig2_image_resize(Jbig2Ctx *ctx, Jbig2Image *image, uint32_t width, uint32_t he
+         uint8_t *data;
+ 
+         /* check for integer multiplication overflow */
+-        if (image->height > (INT32_MAX / image->stride)) {
++        if (height > (INT32_MAX / image->stride)) {
+             jbig2_error(ctx, JBIG2_SEVERITY_FATAL, JBIG2_UNKNOWN_SEGMENT_NUMBER, "integer multiplication overflow during resize (stride=%u, height=%u)", image->stride, height);
+             return NULL;
+         }

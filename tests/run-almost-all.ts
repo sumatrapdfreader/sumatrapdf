@@ -20,6 +20,7 @@ import { runNamedTests, runSuiteMain, startSuiteProgress, type NamedTest, type S
 import { setTestWindowLayout } from "./winapi.ts";
 import { beginSharedControlledSession, endSharedControlledSession } from "./win-automation.ts";
 import { testit as lintCommandIds } from "./lint-command-ids.ts";
+import { testit as jbig2ResizeOverflow } from "./jbig2-resize-overflow.ts";
 import { testit as jpegXlPdf } from "./jpeg-xl-pdf.ts";
 import { testit as buildCli } from "./build-cli.ts";
 import { testit as ngEmbedded } from "./ng-embedded.ts";
@@ -433,6 +434,7 @@ export const tests: NamedTest[] = [
   // first: it drives the home page, whose thumbnail selection follows the
   // mouse, so it is the one test that cares what the machine was doing before
   ["issue-5978", issue5978],
+  ["jbig2-resize-overflow", jbig2ResizeOverflow],
   ["selection-toolbar-move", selectionToolbarMove],
   ["issue-6232-path-edit", issue6232PathEdit],
   ["issue-6070", issue6070],
