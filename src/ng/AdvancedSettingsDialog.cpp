@@ -103,7 +103,7 @@ static AdvancedSettingsDlg gAdv;
 static Size gAdvLastClient;
 constexpr int kAdvSettingsMinClientDy = 320;
 // what is in the window besides the list, until a frame has measured it
-constexpr float kAdvWinChromeGuessDy = kAdvQueryDy + kAdvHelpDy + kAdvFootDy + 2 * kAdvListPadDy + 3;
+constexpr float kAdvWinChromeGuessDy = kAdvQueryDy + kAdvHelpDy + kAdvFootDy + 2 * kAdvListPadDy + 2;
 
 static void AdvOpenToolWindow(MainWindow* win);
 
@@ -969,8 +969,8 @@ static void AdvEndBuild(gp::Ctx* cx) {
     }
 }
 
-// the dialog's column: the filter line, the list, the help strip and the
-// footer, hairlines between them. `list` is sized by the host
+// the dialog's column: the filter line, the list and the help strip, hairlines
+// between them, then the footer. `list` is sized by the host
 static gp::El* AdvColumn(gp::Ctx* cx, gp::El* list) {
     gp::El* col = gp::Div(cx->a)->FlexCol()->W(gp::kFill)->Flex1()->MinH(0);
     col->Child(AdvQueryLine(cx));
@@ -978,7 +978,6 @@ static gp::El* AdvColumn(gp::Ctx* cx, gp::El* list) {
     col->Child(list);
     col->Child(DlgHairline(cx));
     col->Child(AdvHelpStrip(cx));
-    col->Child(DlgHairline(cx));
     col->Child(AdvFooter(cx));
     return col;
 }

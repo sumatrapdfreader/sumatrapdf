@@ -41,7 +41,6 @@
 //   Set inverse search command line      (with TeX enhancements)
 //   Enter the command line to invoke ...
 //   [code -g "%f:%l"                     v]
-//   ---------------------------------------------- hairline
 //                                    [Cancel] [OK]
 constexpr int kSettingsDlgDx = 480;
 struct SettingsWnd : WindowBase {

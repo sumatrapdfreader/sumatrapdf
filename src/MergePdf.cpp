@@ -45,7 +45,7 @@
 //   +----------------------------------------------------------+
 //   |  [  ]   [  ]   [ x]   [  ]   [  ] ...  thumbnails (MergeGrid)
 //   |   1      2     • 1     • 2    ...     page numbers, file dots
-//   +----------------------------------------------------------+  hairline
+//   +----------------------------------------------------------+
 //   Add PDF...  Remove  Restore  7 pages, 1 removed  • a.pdf  • b.pdf   [Cancel] [Save] [Save As...]
 
 constexpr int kThumbDx = 140;
@@ -1365,7 +1365,6 @@ void MergePdfWnd::UpdateUI() {
 //   ( ) At the end
 //   ( ) At the beginning
 //   (o) After page  3__  of 12
-//   ------------------------------- hairline
 //                     [Cancel] [Add]
 
 constexpr int kInsertDlgDx = 340;
@@ -1522,7 +1521,6 @@ bool InsertPosWnd::Create(HWND owner, Str what, int n, int afterPage) {
     rowAfter->AddChild(
         NewVirtText({.s = fmt(Tr("(of %d)").s, nItems), .font = fontMeta, .textColor = colMuted, .isRtl = isRtl}));
     vbox->AddChild(new Padding(choices, DpiScaledInsets(kToolDlgFilesPadDy, kToolDlgPadDx)));
-    vbox->AddChild(new VirtLine());
 
     // Cancel and the one filled Add, on the right
     auto* footer = new HBox();
@@ -1808,11 +1806,10 @@ bool MergePdfWnd::Create(MainWindow* w, WindowTab* tab) {
     btnSaveAs->onClick = MkMethod1<MergePdfWnd, VirtMouseEvent*, &MergePdfWnd::OnSaveAs>(this);
     footer->AddChild(btnSaveAs);
 
-    // the pages take the window, edge to edge; a hairline over the footer
+    // the pages take the window, edge to edge, then the footer
     auto* vbox = new VBox();
     vbox->alignCross = CrossAxisAlign::Stretch;
     vbox->AddChild(grid, 1);
-    vbox->AddChild(new VirtLine());
     vbox->AddChild(new Padding(footer, DpiScaledInsets(kToolDlgFootPadDy, kToolDlgPadDx)));
     layout = vbox;
 

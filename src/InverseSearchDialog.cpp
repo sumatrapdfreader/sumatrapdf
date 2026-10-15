@@ -26,7 +26,6 @@
 
 //   Enter the command line to invoke when you double-click on the PDF document:
 //   [code -g "%f:%l"                          v]
-//   ---------------------------------------------- hairline
 //   Help                             [Cancel] [OK]
 constexpr int kInverseSearchDlgDx = 520;
 constexpr int kInverseSearchPadTop = 10;

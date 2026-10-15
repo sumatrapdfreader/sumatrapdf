@@ -96,8 +96,8 @@ bool IsChangeThemeDialogVisible() {
     return gChangeTheme.visible && !gChangeTheme.tw;
 }
 
-// orig's layout: the themes (16 rows at most), the drop-down's line, the
-// footer, hairlines between
+// orig's layout: the themes (16 rows at most), a hairline, the drop-down's
+// line, the footer
 constexpr int kThemeDlgDx = 320;
 constexpr int kThemeListRows = 16;
 constexpr float kThemeComboDx = 90;
@@ -392,7 +392,7 @@ static void ChangeThemeOpenToolWindow(MainWindow* win) {
     desc.onOwnerClosed = ChangeThemeToolOnOwnerClosed;
     // the drop-down's line and the footer, the list over them
     int n = ThemeGetCount() + 1;
-    float clientDy = kToolDlgLineDy + 1 + 2 * kToolDlgFootPadDy + kDlgBtnDy;
+    float clientDy = kToolDlgLineDy + 2 * kToolDlgFootPadDy + kDlgBtnDy;
     if (!gChangeTheme.documentColorsFollowThemeOnly) {
         clientDy += (float)std::min(n, kThemeListRows) * kDlgListRowDy + 2 * kToolDlgFilesPadDy + 1;
     }

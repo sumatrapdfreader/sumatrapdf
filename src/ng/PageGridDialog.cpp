@@ -248,7 +248,7 @@ struct PageGridDlg {
 static PageGridDlg gPageGrid;
 
 // orig's layout: the units, the spacing and the offset under muted headings,
-// the look, the footer; hairlines between, the labels in one column
+// the look, hairlines between those, then the footer; the labels in one column
 constexpr float kGridDlgDx = 360;
 constexpr float kGridEditDx = 66;
 constexpr float kGridSwatch = 22;

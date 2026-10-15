@@ -53,7 +53,6 @@ extern bool SaveAnnotationsToMaybeNewPdfFile(WindowTab*);
 //   [x] Show DN           [x] Show date
 //   [x] Show name as graphic
 //   Image (optional):     ______________________  Choose...
-//   ---------------------------------------------- hairline
 //                                  [Cancel] [Sign]
 constexpr int kSignDlgDx = 500;
 struct SignDocumentWnd : WindowBase {

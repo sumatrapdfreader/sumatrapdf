@@ -28,7 +28,6 @@
 //   Name for page 5 (optional):
 //   Chapter 2
 //   ______________________________________________ underline
-//   ---------------------------------------------- hairline
 //                          [Cancel] [Add Favorite]
 constexpr int kAddFavoriteDlgDx = 400;
 constexpr int kFavFieldPadTop = 10;

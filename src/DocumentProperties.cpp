@@ -40,8 +40,8 @@
 #include "DocumentPropertiesCommon.h"
 
 // The properties as selectable monospaced text on the dialog's background,
-// a hairline, then the footer: the certificate actions as quiet buttons on
-// the left, the one filled Copy To Clipboard on the right
+// then the footer: the certificate actions as quiet buttons on the left, the
+// one filled Copy To Clipboard on the right
 constexpr int kPropsPadDy = 14;
 
 struct PropertiesWnd : WindowBase {
@@ -404,7 +404,7 @@ void PropertiesWnd::SizeToContent() {
     int textDx = maxLineDx + editProps->GetLeftTextMargin() + sbDx;
     int wantedDx = std::max(textDx, footerDx) + (2 * padDx);
     int textDy = (nLines + 1) * PlatformFontLineHeight(propsFont);
-    int wantedDy = textDy + (2 * padDy) + 1 + footerDy;
+    int wantedDy = textDy + (2 * padDy) + footerDy;
 
     Rect wr = HwndWindowRect(hwnd);
     Rect cr = HwndClientRect(hwnd);
@@ -523,7 +523,6 @@ bool PropertiesWnd::Create(HWND parent) {
         Insets pad = DpiScaledInsets(kPropsPadDy, 0, kPropsPadDy, kToolDlgPadDx);
         vbox->AddChild(new Padding(editProps, pad), 1);
     }
-    vbox->AddChild(new VirtLine());
 
     {
         footer = new HBox();

@@ -44,7 +44,6 @@
 //   Grid style:     [Dots            v]
 //   Color:          [#] #8080ff____
 //                   [x] Show Grid
-//   ---------------------------------------------- hairline
 //   Reset to defaults                [Cancel] [OK]
 constexpr int kGridDlgDx = 360;
 constexpr int kGridNumChars = 8;

@@ -3162,7 +3162,6 @@ static gp::El* MergeAskDialogBuild(gp::Ctx* cx) {
                      ->Fg(ToGpui(colMuted)));
     choices->Child(after);
     col->Child(choices);
-    col->Child(DlgHairline(cx));
 
     // the card's own footer row, so it pads the buttons as it pads the rest
     gp::El* footer = gp::Div(cx->a)->FlexRow()->ItemsCenter()->W(gp::kFill)->Shrink0()->Gap(kToolDlgGapDx);
@@ -3302,7 +3301,7 @@ static gp::El* MergeFooterEl(gp::Ctx* cx) {
     return row;
 }
 
-// the pages edge to edge, a hairline, the footer
+// the pages edge to edge, then the footer
 static gp::El* MergeColumn(gp::Ctx* cx, float viewDx, float viewDy) {
     StartMergeThumbs();
     return gp::Div(cx->a)
@@ -3310,12 +3309,11 @@ static gp::El* MergeColumn(gp::Ctx* cx, float viewDx, float viewDy) {
         ->W(gp::kFill)
         ->Bg(ToGpui(ThemeWindowControlBackgroundColor()))
         ->Child(MergePagesEl(cx, viewDx, viewDy))
-        ->Child(DlgHairline(cx))
         ->Child(MergeFooterEl(cx));
 }
 
 static float MergeFooterDy() {
-    return 1 + 2 * kToolDlgFootPadDy + kDlgBtnDy;
+    return 2 * kToolDlgFootPadDy + kDlgBtnDy;
 }
 
 static gp::El* MergeToolBuild(MainWindow* win, gp::Ctx* cx) {
@@ -3415,10 +3413,10 @@ static void MergeOpenToolWindow(MainWindow* win) {
 
 // what a bare gpui input insets its text by; the source path lines up with it
 constexpr float kToolDlgInputPadDx = 8;
-// The tool's lines (a page range, a password, the DPI), the files - the
-// source and the destination over a hairline, with Browse - and the footer
-// with a hint, Cancel and the one filled action button; hairlines between
-// the three. The same column goes in a window of its own and in the frame.
+// The tool's lines (a page range, a password, the DPI), a hairline, the files
+// - the source and the destination over a hairline, with Browse - and the
+// footer with a hint, Cancel and the one filled action button. The same
+// column goes in a window of its own and in the frame.
 
 static gp::El* ToolText(gp::Ctx* cx, Str s, float font, Color col) {
     return gp::TextEl(cx->a, GpuiDup(cx->a, s))->Font(font)->Fg(ToGpui(col));
@@ -3608,7 +3606,6 @@ static gp::El* PdfToolColumn(MainWindow* win, gp::Ctx* cx) {
         col->Child(DlgHairline(cx));
     }
     col->Child(ToolFilesBlock(cx));
-    col->Child(DlgHairline(cx));
     col->Child(ToolDlgFooter(cx, hint));
     return col;
 }

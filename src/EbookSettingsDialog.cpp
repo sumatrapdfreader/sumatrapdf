@@ -43,7 +43,6 @@
 //   body { ... }                          the CSS, monospaced
 //   ---------------------------------------------- hairline
 //   (o) This file   ( ) For all ebooks
-//   ---------------------------------------------- hairline
 //   Reset to defaults                [Cancel] [OK]
 constexpr int kEbookDlgDx = 480;
 constexpr int kEbookNumChars = 5;

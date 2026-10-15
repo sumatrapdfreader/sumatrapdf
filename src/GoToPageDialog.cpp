@@ -27,7 +27,6 @@
 #include "PagePosition.h"
 
 //   Go to page:   12                   (of 300)
-//   ---------------------------------------------- hairline
 //                          [Cancel] [Go to page]
 // A chaptered document gets a Chapter line over the Page line.
 constexpr int kGoToDlgDx = 340;

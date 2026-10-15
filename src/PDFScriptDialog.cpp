@@ -466,7 +466,6 @@ void PDFScriptWnd::Create(MainWindow* owner, Str path) {
     outputBox = new Padding(output, DpiScaledInsets(kToolDlgFilesPadDy, kToolDlgPadDx));
     outputBox->SetVisibility(Visibility::Collapse);
     body->AddChild(outputBox);
-    body->AddChild(new VirtLine());
 
     // the footer: the key hint and the quiet buttons on the left, Cancel and
     // Run on the right

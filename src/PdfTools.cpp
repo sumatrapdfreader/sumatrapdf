@@ -104,12 +104,11 @@ static int ConvertImageFormatCount() {
 }
 
 // Every dialog here has the same shape, drawn like the palette: the lines
-// the user types in (a page range, a password), then the files - the source
-// and a destination over a hairline, with Browse - then the footer with a
-// hint, Cancel and the one filled action button, hairlines between the
-// three. The labels and buttons are virtual controls, the text fields
-// native edits, all in one layout tree. Each dialog adds its lines and
-// implements DoIt().
+// the user types in (a page range, a password), a hairline, then the files -
+// the source and a destination over a hairline, with Browse - then the footer
+// with a hint, Cancel and the one filled action button. The labels and
+// buttons are virtual controls, the text fields native edits, all in one
+// layout tree. Each dialog adds its lines and implements DoIt().
 struct PdfToolDialog : WindowBase {
     Str srcPath; // owned
     MainWindow* win = nullptr;
@@ -402,7 +401,6 @@ void PdfToolDialog::AddFilesBlock(Str destPath, WStr filter, WStr defExt, bool w
 
 // the hint on the left, Cancel and the action button (the default) on the right
 void PdfToolDialog::AddFooter(Str actionText, Str hint) {
-    mainBox->AddChild(new VirtLine());
     HBox* row = NewRow();
     if (hint) {
         row->AddChild(NewLabel(hint, fontMeta, colMuted));

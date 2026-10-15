@@ -41,7 +41,6 @@
 //   ---------------------------------------------- hairline
 //   Translate with   [Google               v]
 //   From:  [auto     v]   To:  [English     v]
-//   ---------------------------------------------- hairline
 //                             [Close] [Translate]
 constexpr int kTranslateTextPadDy = 4;
 struct SelectionTranslateWnd : WindowBase {

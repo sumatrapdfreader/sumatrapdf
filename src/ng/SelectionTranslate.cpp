@@ -499,8 +499,8 @@ void ShowSelectionTranslateDialog(WindowTab* tab, TranslateEngine engineIn) {
 // --- a window of its own (Windows) ------------------------------------------
 
 // orig's layout: the source text, the translation once there is one, the
-// engine and languages, the footer; hairlines between. The source edit is 7
-// lines (113), the translation 6 (98)
+// engine and languages, then the footer. The source edit is 7 lines (113),
+// the translation 6 (98)
 constexpr float kTrSrcDy = 113;
 constexpr float kTrResultDy = 98;
 // the bare text fields have this much more above and below them
@@ -515,7 +515,7 @@ constexpr int kTrEditMaxChars = 120;
 constexpr int kTrResultRowsDy = (int)(1 + 2 * kToolDlgFilesPadDy + kToolDlgRowDy + kTrResultDy);
 // the source's section, a hairline, the two rows of controls, the footer
 constexpr int kTrBaseDy = (int)(2 * (kToolDlgFilesPadDy + kTrTextPadDy) + kTrSrcDy + 1 + 2 * kToolDlgFilesPadDy +
-                                2 * kToolDlgRowDy + 1 + 2 * kToolDlgFootPadDy + kDlgBtnDy);
+                                2 * kToolDlgRowDy + 2 * kToolDlgFootPadDy + kDlgBtnDy);
 
 static Str TranslateToolTitle() {
     return Tr("Translate");
@@ -636,7 +636,6 @@ static gp::El* TranslateToolBuild(MainWindow*, gp::Ctx* cx) {
                    ->IntoEl());
     row->Child(DlgFilledButton(cx, GStrL("translate-go"), okText,
                                gp::ListenTo(gTranslateView, &TranslateView::OnTranslate), !enable));
-    col->Child(DlgHairline(cx));
     col->Child(row);
     return col;
 }

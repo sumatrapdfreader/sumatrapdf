@@ -26,7 +26,6 @@
 
 //   Automatic
 //   Always visible                the modes, the current one selected
-//   ---------------------------------------------- hairline
 //                                    [Cancel] [OK]
 constexpr int kScrollbarDlgDx = 280;
 struct ChangeScrollbarWnd : WindowBase {

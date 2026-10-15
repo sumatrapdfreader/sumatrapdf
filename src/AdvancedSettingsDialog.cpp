@@ -1195,7 +1195,6 @@ bool AdvancedSettingsWnd::Create(MainWindow* mainWin) {
     // the footer: the key hints and the quiet actions on the left, the unsaved
     // count, Cancel and Save on the right
     {
-        vbox->AddChild(new VirtLine());
         auto* row = new HBox();
         row->alignMain = MainAxisAlign::MainStart;
         row->alignCross = CrossAxisAlign::CrossCenter;

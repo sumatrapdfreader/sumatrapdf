@@ -42,7 +42,6 @@
 //   [] [] [] [] ...                  presets, then custom colors
 //   ---------------------------------------------- hairline
 //   (o) This file   ( ) For all PDF files   (the background only)
-//   ---------------------------------------------- hairline
 //   Remove                           [Cancel] [OK]
 constexpr int kColorDlgDx = 420;
 constexpr int kColorAreaDy = 150;

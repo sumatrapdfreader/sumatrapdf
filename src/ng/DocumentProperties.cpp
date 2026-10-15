@@ -585,8 +585,8 @@ static Str PropsLongestLine(Str text, int* nLinesOut) {
 
 // --- a window of its own (Windows) ------------------------------------------
 
-// orig's layout: the text on the window's background, padded; a hairline,
-// then the footer: the certificate's quiet buttons and the filled Copy
+// orig's layout: the text on the window's background, padded, then the
+// footer: the certificate's quiet buttons and the filled Copy
 constexpr float kPropsPadDy = 14;
 // what the buttons add to their label's width
 constexpr float kPropsBtnPadDx = 12;
@@ -645,7 +645,7 @@ static ToolWindowDesc PropsToolDesc() {
 }
 
 static float PropsFooterDy() {
-    return 1 + (2 * kToolDlgFootPadDy) + kDlgBtnDy;
+    return (2 * kToolDlgFootPadDy) + kDlgBtnDy;
 }
 
 // orig's PropertiesWnd::SizeToContent: the window size in pixels for the text
@@ -826,7 +826,6 @@ static gp::El* PropsToolBuild(MainWindow*, gp::Ctx* cx) {
         ->MinH(0)
         ->Bg(ToGpui(colBg))
         ->Child(text)
-        ->Child(DlgHairline(cx))
         ->Child(PropsFooterEl(cx, kDlgBtnFontPx * remScale));
 }
 

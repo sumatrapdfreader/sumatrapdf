@@ -27,7 +27,6 @@
 //   ---------------------------------------------- hairline
 //   English
 //   Deutsch                       languages, the current one selected
-//   ---------------------------------------------- hairline
 //                                    [Cancel] [OK]
 constexpr int kLangDlgDx = 320;
 constexpr int kLangListLines = 16;

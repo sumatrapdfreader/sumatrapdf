@@ -150,7 +150,7 @@ struct CommandPaletteWnd : WindowBase, PaletteSources {
 extern CommandPaletteWnd* gCommandPaletteWnd;
 
 // the palette: a query line over a hairline, the mode switches, the rows on
-// an inset with a rounded selection, and the key hints under a hairline
+// an inset with a rounded selection, and the key hints
 constexpr int kPaletteQueryFontPx = 15;
 constexpr int kPaletteTextFontPx = 13;
 constexpr int kPaletteMetaFontPx = 12;
@@ -1126,9 +1126,8 @@ bool CommandPaletteWnd::Create(MainWindow* win, Str prefix, int smartTabAdvance)
         vbox->AddChild(box);
     }
 
-    // the footer: the key hints and the count under a hairline
+    // the footer: the key hints and the count
     {
-        vbox->AddChild(NewPaletteRule());
         auto* box = new HBox();
         box->rtl = CommandPaletteUiRtl();
         helpRow = NewHelpRow(box, MainAxisAlign::MainStart);

@@ -63,7 +63,7 @@
 #include "SumatraLog.h"
 
 // the palette: a query line over a hairline, the mode switches, the rows on
-// an inset with a rounded selection, and the key hints under a hairline
+// an inset with a rounded selection, and the key hints
 constexpr float kPaletteRowDy = 24;
 constexpr float kPaletteQueryDy = 40;
 constexpr float kPaletteSwitchRowDy = 30;
@@ -1924,7 +1924,6 @@ static gp::El* BuildHelpRow(CommandPaletteWnd* wnd, gp::Ctx* cx) {
                       ->W(gp::kFill)
                       ->H(kPaletteFootDy)
                       ->Shrink0()
-                      ->BorderT(1, ToGpui(ThemeEdgeColor()))
                       ->PadX(kPalettePadDx)
                       ->ItemsCenter()
                       ->Gap(18);

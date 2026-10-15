@@ -1120,8 +1120,8 @@ gp::El* DlgLine(gp::Ctx* cx, Str label, float labelDx, Str id, gp::InputState* e
     return row;
 }
 
-// a hairline, then `extra` (a quiet button) at the left, Cancel and the one
-// filled action at the right
+// `extra` (a quiet button) at the left, Cancel and the one filled action at
+// the right
 gp::El* DlgFooter(gp::Ctx* cx, Str okLabel, gp::Listener onOk, gp::Listener onCancel, gp::El* extra, bool okDisabled) {
     gp::El* row = gp::Div(cx->a)
                       ->FlexRow()
@@ -1142,7 +1142,7 @@ gp::El* DlgFooter(gp::Ctx* cx, Str okLabel, gp::Listener onOk, gp::Listener onCa
                    ->OnClick(onCancel)
                    ->IntoEl());
     row->Child(DlgFilledButton(cx, GStrL("dlg-ok"), okLabel, onOk, okDisabled));
-    return gp::Div(cx->a)->FlexCol()->W(gp::kFill)->Shrink0()->Child(DlgHairline(cx))->Child(row);
+    return row;
 }
 
 constexpr float kDlgListInsetDx = 8;

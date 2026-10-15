@@ -427,7 +427,7 @@ static gp::El* TabGroupsToolBuild(MainWindow*, gp::Ctx* cx) {
         gTabGroupsView = gp::EntityNewState<TabGroupsView>(cx->app);
     }
     // the list takes what the name, the list's padding and the footer leave
-    float fixedDy = 2 * kToolDlgFilesPadDy + 1 + 2 * kToolDlgFootPadDy + kDlgBtnDy;
+    float fixedDy = 2 * kToolDlgFilesPadDy + 2 * kToolDlgFootPadDy + kDlgBtnDy;
     if (gTg->mode == TabGroupDialogMode::Save) {
         fixedDy += kToolDlgLineDy + 1;
     }

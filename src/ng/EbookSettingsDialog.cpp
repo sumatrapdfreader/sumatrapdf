@@ -60,7 +60,7 @@ struct EbookSettingsDlg {
 static EbookSettingsDlg gEbook;
 
 // orig's layout: the font and its numbers, the styling with the CSS, this
-// file or every ebook, the footer; hairlines between
+// file or every ebook, hairlines between those, then the footer
 constexpr float kEbookDlgDx = 480;
 constexpr float kEbookNumDx = 54;
 constexpr float kEbookCssDy = 106;

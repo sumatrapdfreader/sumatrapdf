@@ -1707,8 +1707,6 @@ void ImageEditWindow::WndProc(WindowBase::WndProcEvent* ev) {
             }
             Rect controlArea{0, imageArea.dy, cRc.dx, cRc.dy - imageArea.dy};
             gfx->FillRect(controlArea, gColsWin[kColWinBg]);
-            // a hairline between the image and the controls
-            gfx->FillRect({0, imageArea.dy, cRc.dx, 1}, gColsLine[kColLineFg]);
             if (ew->vroot) {
                 ew->vroot->Paint(gfx, controlArea);
             }

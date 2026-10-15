@@ -33,7 +33,6 @@
 //   ---------------------------------------------- hairline
 //   group #1                        4 tabs
 //   group #2                        2 tabs     the saved groups
-//   ---------------------------------------------- hairline
 //   Delete                         [Cancel] [Save]
 constexpr int kTabGroupsDlgDx = 400;
 constexpr int kTabGroupsDlgDy = 350;

@@ -391,8 +391,8 @@ HBox* NewDlgRow() {
     return row;
 }
 
-// a hairline, then `extra` (a quiet button) at the left, Cancel and the one
-// filled action at the right
+// `extra` (a quiet button) at the left, Cancel and the one filled action at
+// the right
 ILayout* NewDlgFooter(VirtButton* cancel, VirtButton* ok, VirtButton* extra) {
     HBox* row = NewDlgRow();
     if (extra) {
@@ -403,7 +403,6 @@ ILayout* NewDlgFooter(VirtButton* cancel, VirtButton* ok, VirtButton* extra) {
     row->AddChild(ok);
     auto* box = new VBox();
     box->alignCross = CrossAxisAlign::Stretch;
-    box->AddChild(new VirtLine());
     box->AddChild(new Padding(row, DpiScaledInsets(kToolDlgFootPadDy, kToolDlgPadDx)));
     return box;
 }

@@ -1547,10 +1547,9 @@ static Str ImageEditToolTitle() {
 constexpr float kImgCtrlDy = 26;
 constexpr float kImgFormatDx = 76;
 
-// orig's control strip, drawn like the redrawn dialogs' footers: a hairline
-// under the image; the source path muted; the destination over a hairline
-// with "...", Copy and the filled Save; the info line muted with the format
-// and the quiet Crop / Resize
+// orig's control strip, drawn like the redrawn dialogs' footers: the source
+// path muted; the destination over a hairline with "...", Copy and the filled
+// Save; the info line muted with the format and the quiet Crop / Resize
 static gp::El* ImageEditToolBuild(MainWindow*, gp::Ctx* cx) {
     ImageEditWnd& w = gImgEdit;
     if (!w.visible || !w.tw) {
@@ -1583,13 +1582,8 @@ static gp::El* ImageEditToolBuild(MainWindow*, gp::Ctx* cx) {
     imgArea->customUser = nullptr;
     col->Child(imgArea);
 
-    gp::El* strip = gp::Div(cx->a)
-                        ->FlexCol()
-                        ->W(gp::kFill)
-                        ->H(controlDy)
-                        ->Shrink0()
-                        ->Bg(ToGpui(ThemeWindowControlBackgroundColor()))
-                        ->Child(DlgHairline(cx));
+    gp::El* strip = gp::Div(cx->a)->FlexCol()->W(gp::kFill)->H(controlDy)->Shrink0()->Bg(
+        ToGpui(ThemeWindowControlBackgroundColor()));
     gp::El* rows = gp::Div(cx->a)->FlexCol()->W(gp::kFill)->PadX(kImgButtonPadding)->PadT(kToolDlgFootPadDy);
     auto text = [&](Str s) {
         return gp::TextEl(cx->a, GpuiDup(cx->a, s))

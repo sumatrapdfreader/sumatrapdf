@@ -30,7 +30,6 @@
 //   ---------------------------------------------- hairline
 //   [ ] Show password
 //   [ ] Remember the password for this document
-//   ---------------------------------------------- hairline
 //                                    [Cancel] [OK]
 // Modal: engine load calls PasswordUI::GetPassword and waits for the password.
 constexpr int kPasswordDlgDx = 400;

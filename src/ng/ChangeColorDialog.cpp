@@ -652,7 +652,7 @@ static Str AllFilesLabel() {
 // --- orig's layout, for the dialog in a window of its own -------------------
 
 // orig's layout: the area, the opacity and the color as text, the swatches;
-// this file or all of them; the footer; hairlines between
+// this file or all of them; hairlines between those, then the footer
 constexpr float kColorWinPreviewDx = 42;
 constexpr float kColorWinPreviewDy = 20;
 constexpr float kColorWinSwatchDx = 36;

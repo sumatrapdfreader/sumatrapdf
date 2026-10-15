@@ -433,7 +433,6 @@ static gp::El* ScriptColumn(gp::Ctx* cx, float editorDy) {
                           ->Fg(ToGpui(colMuted));
         col->Child(ScriptCodeBox(cx, out));
     }
-    col->Child(DlgHairline(cx));
 
     gp::El* footer = gp::Div(cx->a)
                          ->FlexRow()
@@ -524,7 +523,7 @@ static float ScriptFixedDy() {
     if (len(FromGpui(gp::InputValue(gScript.output))) > 0) {
         dy += 1 + 2 * kToolDlgFilesPadDy + kScriptOutputLines * kScriptOutputLineDy;
     }
-    dy += 1 + 2 * kToolDlgFootPadDy + kDlgBtnDy;
+    dy += 2 * kToolDlgFootPadDy + kDlgBtnDy;
     return dy;
 }
 

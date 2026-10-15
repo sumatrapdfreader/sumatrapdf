@@ -31,7 +31,6 @@
 //   Light                         themes, previewed live
 //   ---------------------------------------------- hairline
 //   Document colors follow theme        [off  v]
-//   ---------------------------------------------- hairline
 //                                [Cancel] [Change]
 // Only the drop-down is a real HWND.
 constexpr int kThemeDlgDx = 320;
