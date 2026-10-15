@@ -696,7 +696,3 @@ export function macSendText(text: string): void {
     throw new Error(`set text failed: ${raw}`);
   }
 }
-
-export function macSendChar(code: number): void {
-  input("char", code, 0, 0, 0);
-}

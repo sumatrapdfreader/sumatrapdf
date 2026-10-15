@@ -21,7 +21,6 @@ import {
   macDdeExecute,
   macFrameClientRect,
   macFrameVisible,
-  macSendChar,
   macSendMessage,
   macSendText,
   TestLayout,
@@ -729,6 +728,7 @@ const NG_INPUT_MSGS = new Set([
   WM_MOUSEHWHEEL,
   WM_KEYDOWN,
   WM_KEYUP,
+  WM_CHAR,
 ]);
 const NG_GPUI_CLASS = "GpuiSystemMonitor";
 
@@ -786,18 +786,8 @@ function ngInput(
   return true;
 }
 
-// ng takes characters through the control channel, whichever window they were
-// aimed at: it has no WM_CHAR hook on its frame.
-function ngChar(msg: number, wParam: number | bigint): boolean {
-  if (!USE_NG || IS_MAC || msg !== WM_CHAR) {
-    return false;
-  }
-  macSendChar(Number(BigInt(wParam) & 0xffffn));
-  return true;
-}
-
 export function postMessage(hwnd: number, msg: number, wParam: number, lParam: number): boolean {
-  if (ngChar(msg, wParam) || ngInput(hwnd, msg, wParam, lParam, true)) {
+  if (ngInput(hwnd, msg, wParam, lParam, true)) {
     return true;
   }
   if (IS_MAC) {
@@ -822,7 +812,7 @@ export async function postChar(hwnd: number, ch: string): Promise<boolean> {
 // LRESULT as a bigint -- TreeView messages return HTREEITEM pointers that can
 // exceed 2^53, so they must not be coerced to a JS number.
 export function sendMessage(hwnd: number, msg: number, wParam: number | bigint, lParam: number | bigint): bigint {
-  if (ngChar(msg, wParam) || ngInput(hwnd, msg, wParam, lParam, false)) {
+  if (ngInput(hwnd, msg, wParam, lParam, false)) {
     return 0n;
   }
   if (IS_MAC) {
@@ -1636,7 +1626,9 @@ export function tbGetButtonIndex(toolbar: number, cmdId: number): number {
 // set a window's text via WM_SETTEXT (works on edit controls cross-process,
 // unlike SendInput typing). Synchronous, so the wide buffer stays alive.
 export function sendText(hwnd: number, text: string): void {
-  if (IS_MAC || USE_NG) {
+  // ng's gpui windows take it through the control channel; native ones (file
+  // dialogs, message boxes) get the message
+  if (IS_MAC || ngInputTarget(hwnd)) {
     macSendText(text);
     return;
   }
