@@ -16917,14 +16917,56 @@ static JSValue JS_MakeError2(JSContext *ctx, JSErrorEnum error_num,
     return obj;
 }
 
+/* The shell's messages say what went wrong and then what to do instead.
+   QuickJS's printf constructors keep only 256 bytes, which cut the second
+   half off. Grow on the heap, capped at 1 MiB, and keep the stack buffer
+   when malloc fails. (malloc), not js_malloc: this runs while an error is
+   being built and must not re-enter the GC allocator. The call is
+   parenthesized because this file #defines malloc and free away.
+   cmd/update-quickjs.ts regenerates this file and drops this change.
+   Reapply src/quickjs/js_make_error.patch, and update the patch if the
+   upstream function moved. */
 static JSValue JS_PRINTF_FORMAT_ATTR(4, 0)
 JS_MakeError(JSContext *ctx, JSErrorEnum error_num, bool add_backtrace,
              JS_PRINTF_FORMAT const char *fmt, va_list ap)
 {
-    char buf[256];
+    char stack_buf[256];
+    va_list measure;
+    int needed;
 
-    vsnprintf(buf, sizeof(buf), fmt, ap);
-    return JS_MakeError2(ctx, error_num, add_backtrace, buf);
+    va_copy(measure, ap);
+    needed = vsnprintf(stack_buf, sizeof(stack_buf), fmt, measure);
+    va_end(measure);
+    if (needed < 0)
+        return JS_MakeError2(ctx, error_num, add_backtrace,
+                             "invalid error message");
+    if (needed < (int)sizeof(stack_buf))
+        return JS_MakeError2(ctx, error_num, add_backtrace, stack_buf);
+
+    {
+        size_t cap = (size_t)needed;
+        char *heap;
+        va_list again;
+        int wrote;
+        JSValue obj;
+
+        if (cap > (size_t)1024 * 1024)
+            cap = (size_t)1024 * 1024;
+        heap = (char *)(malloc)(cap + 1);
+        if (!heap)
+            return JS_MakeError2(ctx, error_num, add_backtrace, stack_buf);
+        va_copy(again, ap);
+        wrote = vsnprintf(heap, cap + 1, fmt, again);
+        va_end(again);
+        if (wrote < 0) {
+            (free)(heap);
+            return JS_MakeError2(ctx, error_num, add_backtrace,
+                                 "invalid error message");
+        }
+        obj = JS_MakeError2(ctx, error_num, add_backtrace, heap);
+        (free)(heap);
+        return obj;
+    }
 }
 
 static JSValue JS_PRINTF_FORMAT_ATTR(4, 0)

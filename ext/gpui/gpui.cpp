@@ -5367,6 +5367,14 @@ void* EntityGet(App* app, EntityId id) {
     return s.ptr;
 }
 
+bool EntityHasDrop(App* app, EntityId id, DropFn drop) {
+    if (!app || !drop || !id.IsValid() || id.index >= app->entities.len) {
+        return false;
+    }
+    EntitySlot& s = app->entities[id.index];
+    return s.gen == id.gen && s.ptr && s.drop == drop;
+}
+
 void EntityDrop(App* app, EntityId id) {
     if (!app || !id.IsValid() || id.index >= app->entities.len) {
         return;
@@ -10307,6 +10315,8 @@ static void LayoutCacheReset(LayoutCache* lc) {
 static void WriteBackEl(LayoutCache* lc, PaintCtx* ctx, El* e, float originX,
                         float originY);
 
+static void PublishCaretGeometry(PaintCtx* ctx, El* e);
+
 static void ShiftElTree(El* e, float dx, float dy) {
     if (!e || (dx == 0 && dy == 0)) {
         return;
@@ -10506,6 +10516,8 @@ static void WriteBackEl(LayoutCache* lc, PaintCtx* ctx, El* e, float originX,
     if (e->prePaint) {
         e->prePaint(ctx, e, e->customUser);
     }
+
+    PublishCaretGeometry(ctx, e);
 }
 
 static float PositionMax(float a, float b) {
@@ -12594,55 +12606,102 @@ static bool IsOverlay(El* e) {
     return e->style.fixed || e->style.deferred;
 }
 
-static void PaintCaretAt(PaintCtx* ctx, El* e, float font, int off,
-                         bool lineEndAffinity, bool primary) {
-    float x = e->x;
-    float y = e->y;
-    float h = e->h;
-    if (e->text.s && len(e->text) > 0) {
-        float maxW = e->laidMaxW > 0 ? e->laidMaxW : e->w;
+struct CaretPlace {
+    float x = 0;
+    float y = 0;
+    float h = 0;
+};
 
-        TextLayout* tl = TextMeasLayout(ctx, e->text, font, maxW, e->style.wrap,
-                                        ElTextWeight(e), e->style.lineHeight,
-                                        nullptr, nullptr, ElTextAlign(e));
-        if (tl) {
-            Bounds r[32] = {};
-            if (off > len(e->text)) {
-                off = len(e->text);
-            }
-            int n = 0;
-            if (off > 0 && (lineEndAffinity || off == len(e->text))) {
+static CaretPlace MeasureCaretPlace(PaintCtx* ctx, El* e, float font, int off,
+                                    bool lineEndAffinity) {
+    CaretPlace place;
+    place.x = e->x;
+    place.y = e->y;
+    place.h = e->h;
+    if (!e->text.s || len(e->text) <= 0) {
+        return place;
+    }
+    float maxW = e->laidMaxW > 0 ? e->laidMaxW : e->w;
 
-                n = TextLayoutRangeRects(tl, e->text, 0, off, r, 32);
-                if (n > 0) {
-                    x = e->x + r[n - 1].x + r[n - 1].w;
-                    y = e->y + r[n - 1].y;
-                    h = r[n - 1].h;
-                }
-            } else {
+    TextLayout* tl =
+        TextMeasLayout(ctx, e->text, font, maxW, e->style.wrap, ElTextWeight(e),
+                       e->style.lineHeight, nullptr, nullptr, ElTextAlign(e));
+    if (!tl) {
+        return place;
+    }
+    Bounds r[32] = {};
+    if (off > len(e->text)) {
+        off = len(e->text);
+    }
+    int n = 0;
+    if (off > 0 && (lineEndAffinity || off == len(e->text))) {
 
-                n = TextLayoutRangeRects(tl, e->text, off, len(e->text), r, 32);
-                if (n > 0) {
-                    x = e->x + r[0].x;
-                    y = e->y + r[0].y;
-                    h = r[0].h;
-                }
-            }
-            TextLayoutRelease(tl);
+        n = TextLayoutRangeRects(tl, e->text, 0, off, r, 32);
+        if (n > 0) {
+            place.x = e->x + r[n - 1].x + r[n - 1].w;
+            place.y = e->y + r[n - 1].y;
+            place.h = r[n - 1].h;
+        }
+    } else {
+
+        n = TextLayoutRangeRects(tl, e->text, off, len(e->text), r, 32);
+        if (n > 0) {
+            place.x = e->x + r[0].x;
+            place.y = e->y + r[0].y;
+            place.h = r[0].h;
         }
     }
+    TextLayoutRelease(tl);
+    return place;
+}
 
-    if (primary && e->input) {
-        e->input->caretX = x - e->x;
+static void ApplyPrimaryCaret(El* e, CaretPlace place) {
+    if (e->input) {
+        e->input->caretX = place.x - e->x;
     }
-    if (primary && e->caretOutX) {
-        *e->caretOutX = x;
+    if (e->caretOutX) {
+        *e->caretOutX = place.x;
     }
-    if (primary && e->caretOutY) {
-        *e->caretOutY = y + h;
+    if (e->caretOutY) {
+        *e->caretOutY = place.y + place.h;
+    }
+}
+
+static void PublishCaretGeometry(PaintCtx* ctx, El* e) {
+    if (!ctx || !e || e->caretOff < 0) {
+        return;
+    }
+    if (!e->caretOutX && !e->caretOutY && !e->input) {
+        return;
+    }
+    float font = e->laidFont > 0
+                     ? e->laidFont
+                     : (e->style.fontSize > 0 ? e->style.fontSize : 14.f);
+    ApplyPrimaryCaret(e, MeasureCaretPlace(ctx, e, font, e->caretOff,
+                                           e->caretLineEndAffinity));
+}
+
+static void PaintCaretAt(PaintCtx* ctx, El* e, float font, int off,
+                         bool lineEndAffinity, bool primary) {
+    CaretPlace place = MeasureCaretPlace(ctx, e, font, off, lineEndAffinity);
+    if (primary) {
+        ApplyPrimaryCaret(e, place);
     }
     if (e->caretColor.a != 0) {
-        CanvasFillRect(ctx, x, y, e->caretW, h, e->caretColor);
+
+        float x = place.x;
+        float w = e->caretW;
+        float scale = ctx && ctx->dpi > 0 ? ctx->dpi / 96.f : 1.f;
+        if (!(scale > 0.f)) {
+            scale = 1.f;
+        }
+        x = (float)lroundf(x * scale) / scale;
+        float px = (float)lroundf(w * scale);
+        if (px < 1.f) {
+            px = 1.f;
+        }
+        w = px / scale;
+        CanvasFillRect(ctx, x, place.y, w, place.h, e->caretColor);
     }
 }
 
@@ -21932,11 +21991,16 @@ static void SliderPress(Window* win, const HitRect* hit, Point at) {
 
 static void InputRightPress(Window* win, const MouseDownEvent& in) {
     InputState* s = InputAtPosition(&win->paint, in.x, in.y);
-    if (!s || s->disabled || !s->enableContextMenu) {
+    if (!s || s->disabled) {
         return;
     }
 
     InputFocus(s, win->app, win);
+    BlinkPause(win->app, win, &s->blink);
+    if (!s->enableContextMenu) {
+        return;
+    }
+
     int offset = InputIndexForPosition(s, &win->paint, in.x, in.y);
     if (!s->selectedRange.Contains(offset)) {
         InputMoveTo(s, win->app, win, offset);
@@ -21968,6 +22032,9 @@ static void InputPress(Window* win, const MouseDownEvent& in) {
         return;
     }
 
+    InputFocus(s, win->app, win);
+    BlinkPause(win->app, win, &s->blink);
+
     InputClearInlineCompletion(s);
 
     if (in.button == MouseButton::Left && in.clickCount == 1 &&
@@ -21975,9 +22042,6 @@ static void InputPress(Window* win, const MouseDownEvent& in) {
         return;
     }
     InputDismissTouchSelection(s, win->app, win);
-    if (!s->focused) {
-        InputFocus(s, win->app, win);
-    }
     bool lineEndAffinity = false;
     int columnsPastLineEnd = 0;
     int offset = InputIndexForPosition(s, &win->paint, in.x, in.y,
@@ -22377,6 +22441,11 @@ static void DispatchMouseMove(Window* win, const MouseMoveEvent& in) {
     win->mouseX = x;
     win->mouseY = y;
 
+    if (win->tooltipPressedTrigger.w >= 0 && !win->tooltipPressedTrigger
+                                                  .Contains({x, y})) {
+        win->tooltipPressedTrigger.w = -1;
+    }
+
     if (win->lastInputKeyboard) {
         win->lastInputKeyboard = false;
         AppInvalidate(win);
@@ -22428,8 +22497,16 @@ static void DispatchMouseMove(Window* win, const MouseMoveEvent& in) {
         win->hoverId = id;
 
         if (tip.s) {
-            TooltipRequestShow(win, tip, tipAt, tipPlacement, tipRoot,
-                               tipDelay);
+
+            bool held = win->tooltipPressedTrigger.w >= 0 &&
+                        win->tooltipPressedTrigger.x == tipAt.x &&
+                        win->tooltipPressedTrigger.y == tipAt.y &&
+                        win->tooltipPressedTrigger.w == tipAt.w &&
+                        win->tooltipPressedTrigger.h == tipAt.h;
+            if (!held) {
+                TooltipRequestShow(win, tip, tipAt, tipPlacement, tipRoot,
+                                   tipDelay);
+            }
         } else {
             TooltipRequestHide(win);
         }
@@ -22720,6 +22797,17 @@ static void DispatchMouseDown(Window* win, const MouseDownEvent& in) {
 
     if (in.IsFocusing()) {
         TooltipHide(win);
+        win->tooltipPressedTrigger.w = -1;
+        Vec<int> tipChain;
+        HitChain(win, x, y, &tipChain);
+        for (int k = 0; k < len(tipChain); k++) {
+            const HitRect& hr = win->paint.hits[tipChain[k]];
+            if (hr.tooltip.s) {
+                win->tooltipPressedTrigger = hr.bounds;
+                break;
+            }
+        }
+        VecReset(tipChain);
     }
     if (win->onMouseDown.IsValid()) {
         ListenerCall(win->app, win, win->onMouseDown, &in);
@@ -23070,18 +23158,20 @@ static void DispatchScrollWheel(Window* win, const ScrollWheelEvent& in) {
     }
 
     InputState* field = InputAtPosition(&win->paint, in.x, in.y);
-    if (field && InputIsMultiLine(field)) {
-        bool canY = field->contentH > field->viewH;
-
-        bool canX = field->contentW > field->viewW;
+    if (field) {
         float dx = in.deltaX;
         float dy = in.deltaY;
-        if (canX && !canY && dx == 0) {
-            dx = dy;
-            dy = 0;
-        }
+        if (InputIsMultiLine(field)) {
+            bool canY = field->contentH > field->viewH;
 
-        if (InputOnScrollWheel(field, win->app, win, dx, dy, in.phase)) {
+            bool canX = field->contentW > field->viewW;
+            if (canX && !canY && dx == 0) {
+                dx = dy;
+                dy = 0;
+            }
+        }
+        if (InputOnScrollWheel(field, win->app, win, dx, dy, in.phase,
+                               in.precise)) {
             AppInvalidate(win);
             return;
         }
@@ -23851,11 +23941,15 @@ void BlinkStart(App* app, Window* win, EntityId* handle) {
                                &EntityDropT<BlinkCursor>);
     }
     BlinkCursor* b = BlinkGet(app, *handle);
-    if (!b || b->timer) {
+    if (!b) {
         return;
     }
-    b->paused = false;
 
+    if (b->timer) {
+        WindowCancelTimer(win, b->timer);
+        b->timer = 0;
+    }
+    b->paused = false;
     b->visible = true;
     b->timer = WindowSetInterval(win, kBlinkIntervalMs,
                                  BlinkListener(*handle, &BlinkCursor::OnFlip));
@@ -24896,7 +24990,7 @@ float MotionAppear(Ctx* cx, uint32_t key, float durationMs, EaseFn ease);
 
 namespace gpui {
 
-float CubicBezier(float x1, float y1, float x2, float y2, float t) {
+float UnclampedCubicBezier(float x1, float y1, float x2, float y2, float t) {
     t = ClampF(t, 0.f, 1.f);
 
     float cx = 3.f * x1;
@@ -24940,6 +25034,11 @@ float CubicBezier(float x1, float y1, float x2, float y2, float t) {
         }
     }
     return ((ay * s + by) * s + cy) * s;
+}
+
+float CubicBezier(float x1, float y1, float x2, float y2, float t) {
+
+    return ClampF01(UnclampedCubicBezier(x1, y1, x2, y2, t));
 }
 
 float EaseLinear(float t) {
@@ -26656,6 +26755,11 @@ void TableEnsureCols(TableState* s, int n) {
     while (s->colBounds.len < n) {
         VecAppend(s->colBounds, Bounds{});
     }
+    while (s->colFit.len < n) {
+        TableColEdge edge = {};
+        edge.resizable = 1;
+        VecAppend(s->colFit, edge);
+    }
 }
 
 float TableColWidth(const TableState* s, int col, float declared) {
@@ -26713,18 +26817,97 @@ void TableSetColConstraints(TableState* s, int col, float minWidth,
     s->colMaxWidths[col] = maxWidth;
 }
 
-void TableResizeCol(TableState* s, Ctx* cx, int col, float width) {
+bool TableResizeCol(TableState* s, Ctx* cx, int col, float width) {
     if (!s->colResizable || col < 0 || col >= s->colCount) {
-        return;
+        return false;
     }
     TableEnsureCols(s, col + 1);
     width = TableClampColWidth(s, col, width);
 
     if (s->colWidth[col] == width) {
-        return;
+        return false;
     }
     s->colWidth[col] = width;
     Notify(cx);
+    return true;
+}
+
+void TableSetColEdge(TableState* s, int col, bool resizable, bool hasPaddings,
+                     float padL, float padR) {
+    if (!s || col < 0) {
+        return;
+    }
+    TableEnsureCols(s, col + 1);
+    TableColEdge& edge = s->colFit[col];
+    edge.resizable = resizable ? 1 : 0;
+    edge.hasPaddings = hasPaddings ? 1 : 0;
+    edge.padL = padL;
+    edge.padR = padR;
+}
+
+bool TableColWidthNow(const TableState* s, int col, float* out) {
+    if (!s || !out || col < 0 || col >= s->colCount || col >= s->colWidth.len) {
+        return false;
+    }
+    *out = s->colWidth[col];
+    return true;
+}
+
+static bool TableColCanResize(const TableState* s, int col) {
+    if (!s->colResizable || col < 0 || col >= s->colCount ||
+        col >= s->colFit.len) {
+        return false;
+    }
+    return s->colFit[col].resizable != 0;
+}
+
+static float TableDeviceScale(const Ctx* cx) {
+    if (cx && cx->win && cx->win->paint.dpi > 0) {
+        return cx->win->paint.dpi / 96.f;
+    }
+    return 1.f;
+}
+
+static float TableDevicePixels(float length, float scale) {
+    return ceilf(length * scale);
+}
+
+bool TableFitCol(TableState* s, Ctx* cx, int col) {
+    if (!TableColCanResize(s, col) || !s->delegateFitColumn) {
+        return false;
+    }
+    float content = 0;
+    if (!s->delegateFitColumn(cx, s->delegateData, col, &content)) {
+        return false;
+    }
+    float padL = s->cellPadding.left;
+    float padR = s->cellPadding.right;
+    if (col < s->colFit.len && s->colFit[col].hasPaddings) {
+        padL = s->colFit[col].padL;
+        padR = s->colFit[col].padR;
+    }
+
+    float scale = TableDeviceScale(cx);
+    float contentPx = TableDevicePixels(content, scale);
+
+    if (contentPx / scale < content) {
+        contentPx += 1.f;
+    }
+    float widthPx = contentPx + TableDevicePixels(padL, scale) +
+                    TableDevicePixels(padR, scale);
+    if (TableResizeCol(s, cx, col, widthPx / scale)) {
+        TableEvent ev = {TableEventKind::ColumnWidthsChanged,
+                         -1,
+                         -1,
+                         ColumnSort::Default,
+                         s->colWidth.els,
+                         s->colCount};
+        if (s->onEvent.IsValid()) {
+            ListenerCall(cx->app, cx->win, s->onEvent, &ev);
+        }
+        EntityEmit(cx->app, cx->win, s->self, &ev);
+    }
+    return true;
 }
 
 void TablePerformSort(TableState* s, Ctx* cx, int col) {
@@ -26994,6 +27177,8 @@ void TablePerform(TableState* s, Ctx* cx, TableAction act) {
 
             if (cellMode) {
                 TableSetSelectedCell(s, cx, s->selectedCellRow, 0);
+            } else if (s->mode == TableSelectionMode::Row && s->rowSelectable) {
+                TableSetSelectedRow(s, cx, 0);
             } else {
                 TableSetSelectedCol(s, cx, 0);
             }
@@ -27002,6 +27187,8 @@ void TablePerform(TableState* s, Ctx* cx, TableAction act) {
             if (cellMode) {
                 TableSetSelectedCell(s, cx, s->selectedCellRow,
                                      s->colCount - 1);
+            } else if (s->mode == TableSelectionMode::Row && s->rowSelectable) {
+                TableSetSelectedRow(s, cx, last);
             } else {
                 TableSetSelectedCol(s, cx, s->colCount - 1);
             }
@@ -27033,6 +27220,8 @@ void TablePerform(TableState* s, Ctx* cx, TableAction act) {
 
 void TableState::OnRowClick(TableState* self, Ctx* cx, const ClickEvent* ev,
                             int64_t row) {
+
+    WindowStopPropagation(cx);
     TableSetSelectedRow(self, cx, (int)row);
     if (ev->clickCount == 2) {
         TableEmit(self, cx, TableEventKind::DoubleClickedRow, (int)row, -1,
@@ -27331,12 +27520,29 @@ void TableState::OnResizeDrag(TableState* self, Ctx* cx,
     if (col < 0 || col >= self->colCount) {
         return;
     }
+
+    if (self->fittedCol == col) {
+        return;
+    }
     TableEnsureCols(self, col + 1);
     self->resizingCol = col;
 
     float boundary = ev->drag.data ? ev->el.x : ev->el.Right();
     float left = boundary - self->colWidth[col];
     TableResizeCol(self, cx, col, ev->event.x - kTableResizeHandleW - left);
+}
+
+void TableState::OnResizeMouseDown(TableState* self, Ctx* cx,
+                                   const MouseDownEvent* ev, int64_t col) {
+    if (!ev || ev->button != MouseButton::Left) {
+        return;
+    }
+    int ix = (int)col;
+    if (ev->clickCount == 1) {
+        self->fittedCol = -1;
+    } else if (ev->clickCount == 2 && TableFitCol(self, cx, ix)) {
+        self->fittedCol = ix;
+    }
 }
 
 void TableState::OnResizeEnd(TableState* self, Ctx* cx, const MouseUpEvent*) {
@@ -27412,6 +27618,22 @@ void TableState::OnColDragEnd(TableState* self, Ctx* cx, const MouseUpEvent*) {
     self->draggingCol = -1;
     self->dropGap = -1;
     Notify(cx);
+}
+
+void TableState::OnBounceWheel(TableState* self, Ctx* cx,
+                               const ScrollWheelEvent* ev) {
+    if (!self || !ev) return;
+    if (!self->overscroll) {
+        self->overscroll = new ScrollOverscroll();
+        self->overscroll->SetMotion(ScrollBounceMotion::Default());
+    }
+    Listener onScroll = {};
+    if (self->self.IsValid()) {
+        onScroll = ListenTo(self->self, &TableState::OnScroll);
+    }
+    ScrollBounceOwnedWheel(self->overscroll, &self->bounceLock,
+                           PositiveScrollHandle(&self->bounce), self->bounceOn,
+                           ev, cx, onScroll);
 }
 
 void TableState::OnScroll(TableState* self, Ctx* cx, const ScrollEvent* ev) {
@@ -35951,6 +36173,47 @@ static void WrapMapCatchUp(InputState* s, PaintCtx* ctx) {
     VecClear(m->dirtyLines);
 }
 
+static bool InputWrapLaidOut(const InputState* s) {
+    return s->contentBox.w > 0 || s->wrap.measuredWidth > 0 ||
+           s->lastBounds.w > 0;
+}
+
+InputDisplayMapRef InputDisplayMap(const InputState* s) {
+    InputDisplayMapRef map;
+    map.state = s;
+    return map;
+}
+
+int InputWrapRowCount(InputDisplayMapRef map) {
+    const InputState* s = map.state;
+    if (!s) {
+        return 0;
+    }
+    if (s->wrap.valid) {
+        return s->wrap.totalRows;
+    }
+    if (InputWrapLaidOut(s)) {
+        return RopeLinesLen(InputValue(s));
+    }
+    return 0;
+}
+
+void InputPrewrap(InputState* s, PaintCtx* ctx, float fontSize,
+                  uint16_t fontWord, float width) {
+    if (!s || InputWrapLaidOut(s)) {
+        return;
+    }
+
+    float wrapWidth = 0;
+    if (s->softWrap) {
+        wrapWidth = width - kEditorRightMargin;
+        if (wrapWidth < 1) {
+            wrapWidth = 1;
+        }
+    }
+    InputUpdateWrapMap(s, ctx, wrapWidth, fontSize, fontWord);
+}
+
 void InputUpdateWrapMap(InputState* s, PaintCtx* ctx, float width,
                         float fontSize, uint16_t fontWord) {
     if (!s) {
@@ -37046,6 +37309,17 @@ El* Textarea::New(Ctx* cx, InputState* state, const InputEditorStyle& projected,
         float height = state->contentH > 0
                            ? state->contentH
                            : (float)InputLinesLen(state) * lineH;
+
+        float vh = state->viewH;
+        float vhCap = 600.f;
+        if (cx->win && cx->win->paint.viewH > 0) {
+            vhCap = cx->win->paint.viewH;
+        }
+        if (vh <= 0 || vh > vhCap) {
+            vh = vhCap;
+        }
+        state->scrollY =
+            InputClampVerticalScrollOffset(state->scrollY, height, vh);
         return col->Child(Div(a)->H(height));
     }
 
@@ -37132,6 +37406,13 @@ El* Textarea::New(Ctx* cx, InputState* state, const InputEditorStyle& projected,
     if (vh <= 0 || vh > vhCap) {
         vh = vhCap;
     }
+
+    float emptyBottom =
+        InputEmptyBottomHeight(state->mode.kind == LayoutModeKind::CodeEditor,
+                               state->scrollBeyondLastLine, vh, lineH);
+    state->scrollY = InputClampVerticalScrollOffset(
+        state->scrollY, state->contentH + emptyBottom, vh);
+    state->contentH += emptyBottom;
     int firstRow = 0;
     int endRow = rows;
     float padTop = 0;
@@ -37199,10 +37480,6 @@ El* Textarea::New(Ctx* cx, InputState* state, const InputEditorStyle& projected,
         }
     }
 
-    float emptyBottom =
-        InputEmptyBottomHeight(state->mode.kind == LayoutModeKind::CodeEditor,
-                               state->scrollBeyondLastLine, vh, lineH);
-    state->contentH += emptyBottom;
     padBottom += emptyBottom;
     if (padTop > 0) {
         col->Child(Div(a)->W(kFill)->Shrink0()->H(padTop));
@@ -37657,14 +37934,14 @@ El* Textarea::New(Ctx* cx, InputState* state, const InputEditorStyle& projected,
                     el->Caret(0, style.caret);
                 }
             } else if (!tokenLine && caret && caretHere) {
-                el->Caret(cursor - start, style.caret, 2,
+                el->Caret(cursor - start, style.caret, base::PlatCaretWidth(),
                           state->cursorLineEndAffinity);
 
                 el->CaretOut(&state->caretWinX, &state->caretWinY);
             } else if (!tokenLine && !caretFolded && caretHere) {
 
-                el->Caret(cursor - start, Rgba{0, 0, 0, 0}, 2,
-                          state->cursorLineEndAffinity);
+                el->Caret(cursor - start, Rgba{0, 0, 0, 0},
+                          base::PlatCaretWidth(), state->cursorLineEndAffinity);
                 el->CaretOut(&state->caretWinX, &state->caretWinY);
             }
             if (!tokenLine && state->extraCursors.len > 0) {
@@ -37920,6 +38197,8 @@ InputState::~InputState() {
     if (highlighter.drop) {
         highlighter.drop(highlighter.data);
     }
+    delete overscroll;
+    overscroll = nullptr;
 }
 
 static void TextReserve(InputState* s, int want) {
@@ -38106,6 +38385,10 @@ void TextareaSetAutoGrow(InputState* s, int minRows, int maxRows) {
     s->mode.rows = minRows;
     s->mode.minRows = minRows;
     s->mode.maxRows = maxRows > minRows ? maxRows : minRows;
+
+    if (InputIsMultiLine(s)) {
+        LayoutModeSetRows(&s->mode, RopeLinesLen(InputValue(s)));
+    }
 }
 
 void TextareaSetRows(InputState* s, int rows) {
@@ -38730,6 +39013,21 @@ int InputDisplayedLineNumber(int number) {
     return number > kMaxDisplayedLineNumber ? kMaxDisplayedLineNumber : number;
 }
 
+float InputClampVerticalScrollOffset(float scroll, float scrollHeight,
+                                     float viewportH) {
+    float most = scrollHeight - viewportH;
+    if (most < 0) {
+        most = 0;
+    }
+    if (scroll < 0) {
+        return 0;
+    }
+    if (scroll > most) {
+        return most;
+    }
+    return scroll;
+}
+
 float InputEmptyBottomHeight(bool isCodeEditor, int overrideRows,
                              float viewportH, float lineH) {
     if (!isCodeEditor) {
@@ -38876,24 +39174,102 @@ bool InputUpdateScrollOffset(InputState* s, App* app, Window* win,
     return true;
 }
 
+static ScrollOverscroll* InputOverscrollGet(InputState* s) {
+    if (!s->overscroll) {
+        s->overscroll = new ScrollOverscroll();
+        s->overscroll->SetMotion(ScrollBounceMotion::Default());
+    }
+    return s->overscroll;
+}
+
+struct InputScrollUser {
+    InputState* state = nullptr;
+    App* app = nullptr;
+    Window* win = nullptr;
+    float dx = 0;
+};
+
+static float InputScrollRust(void* user, float dy) {
+    InputScrollUser* u = (InputScrollUser*)user;
+    float before = u->state->scrollY;
+    Point want = {u->state->scrollX - u->dx, u->state->scrollY - dy};
+    InputUpdateScrollOffset(u->state, u->app, u->win, &want);
+    return before - u->state->scrollY;
+}
+
+static bool InputOverflowsVertically(const InputState* s) {
+    return InputIsMultiLine(s) && s->contentH > s->viewH;
+}
+
 bool InputOnScrollWheel(InputState* s, App* app, Window* win, float dx,
-                        float dy, TouchPhase phase) {
+                        float dy, TouchPhase phase, bool precise) {
     if (!s) {
         return false;
     }
     float oldX = s->scrollX;
     float oldY = s->scrollY;
-    Point want = {oldX - dx, oldY - dy};
-    InputUpdateScrollOffset(s, app, win, &want);
+    bool overflowsV = InputOverflowsVertically(s);
+    bool reduced = MotionReduced();
+    if (!precise || !s->scrollBounce || reduced || !overflowsV) {
+        ScrollOverscroll* over = s->overscroll;
+        if (over && over->Offset() != 0) {
+            over->Reset();
+            Notify(app, win);
+        }
+    }
+    bool bounces = s->scrollBounce && precise && !reduced &&
+                   fabsf(dy) >= fabsf(dx) && overflowsV;
+    if (bounces) {
+        ScrollOverscroll* over = InputOverscrollGet(s);
+        InputScrollUser user = {s, app, win, dx};
+        float extent = s->viewH > 1.f ? s->viewH : 1.f;
+        if (over->Packet(dy, phase, extent, TimeNow(), InputScrollRust,
+                         &user)) {
+            Notify(app, win);
+        }
+    } else {
+        if ((phase == TouchPhase::Ended || phase == TouchPhase::Cancelled) &&
+            s->overscroll && s->overscroll->Offset() != 0) {
+            InputScrollUser user = {s, app, win, 0};
+            float extent = s->viewH > 1.f ? s->viewH : 1.f;
+            s->overscroll
+                ->Packet(0, phase, extent, TimeNow(), InputScrollRust, &user);
+            Notify(app, win);
+        }
+        Point want = {oldX - dx, oldY - dy};
+        InputUpdateScrollOffset(s, app, win, &want);
+    }
     bool moved = s->scrollX != oldX || s->scrollY != oldY;
-
     if (s->hoverDiagnostic >= 0) {
         s->hoverDiagnostic = -1;
         Notify(app, win);
     }
-
     InputEditMenuOnScroll(s, app, win, phase);
-    return moved;
+
+    bool vertical = fabsf(dy) >= fabsf(dx);
+    bool takes = vertical ? overflowsV : s->contentW > s->viewW;
+    return moved || takes;
+}
+
+float InputBouncePaint(InputState* s, Window* win) {
+    if (!s || !s->overscroll) return 0;
+    if (!s->scrollBounce || MotionReduced() || !InputOverflowsVertically(s)) {
+        s->overscroll->Reset();
+        return 0;
+    }
+    if (s->overscroll->Step(TimeNow()) && win) AppRequestAnim(win, true);
+    if (!InputOverflowsVertically(s)) {
+        s->overscroll->Reset();
+        return 0;
+    }
+    return s->overscroll->Offset();
+}
+
+void InputSetScrollBounce(InputState* s, bool on) {
+    if (!s || s->scrollBounce == on) return;
+    s->scrollBounce = on;
+    if (s->overscroll) s->overscroll->Reset();
+    if (s->focusWin) AppInvalidate(s->focusWin);
 }
 
 void InputScrollToOffset(InputState* s, int offset, InputMoveDir dir) {
@@ -40095,6 +40471,20 @@ void InputSetSmartIndent(InputState* s, bool enabled, App* app, Window* win) {
         return;
     }
     s->smartIndent = enabled;
+    Notify(app, win);
+}
+
+void InputSetLineNumber(InputState* s, bool lineNumber, App* app, Window* win) {
+
+    if (!s) {
+        return;
+    }
+    if (s->mode.kind == LayoutModeKind::CodeEditor) {
+        if (s->mode.lineNumber == lineNumber) {
+            return;
+        }
+        s->mode.lineNumber = lineNumber;
+    }
     Notify(app, win);
 }
 
@@ -43716,7 +44106,7 @@ static bool IsAsciiDigit(uint32_t c) {
 static bool IsAsciiAlpha(uint32_t c) {
     return (c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z');
 }
-static bool IsAsciiAlnum(uint32_t c) {
+static bool base_input_IsAsciiAlnum(uint32_t c) {
     return IsAsciiDigit(c) || IsAsciiAlpha(c);
 }
 static bool IsSign(uint32_t c) {
@@ -43730,7 +44120,7 @@ static bool TokenIsMatch(MaskToken tok, uint32_t sep, uint32_t ch) {
         case MaskToken::Letter:
             return IsAsciiAlpha(ch);
         case MaskToken::LetterOrDigit:
-            return IsAsciiAlnum(ch);
+            return base_input_IsAsciiAlnum(ch);
         case MaskToken::Any:
             return true;
         case MaskToken::Sep:
@@ -46365,7 +46755,7 @@ float Easing::Sample(float progress) const {
         case EasingKind::EaseInOut:
             return gpui::CubicBezier(0.42f, 0.f, 0.58f, 1.f, progress);
         case EasingKind::CubicBezier:
-            return gpui::CubicBezier(x1, y1, x2, y2, progress);
+            return gpui::UnclampedCubicBezier(x1, y1, x2, y2, progress);
         case EasingKind::Steps: {
             float steps = (float)count;
             float jumps = steps;
@@ -49438,6 +49828,8 @@ bool TrackHover(Ctx* cx, const TooltipState* live, const Point* cursor,
     float progress = motion::transition(
         cx, motion::TransitionId(StrL("__plot-hover"), StrL("progress")),
         hovered ? 1.f : 0.f, hovered ? motion.Enter() : motion.Exit());
+
+    progress = ClampF01(progress);
     if (live && cursor) {
         memory->state = *live;
         int n = live->dotCount;
@@ -49854,14 +50246,28 @@ void PopupMenuDismissAll(PopupMenuState* s, Ctx* cx) {
 
 void PopupMenuConfirm(PopupMenuState* s, Ctx* cx, int ix) {
 
-    if (ix >= 0 && ix < len(s->rows) && s->rows[ix].handler.IsValid()) {
-        Listener handler = s->rows[ix].handler;
+    PopupMenuRow row = {};
+    bool have = ix >= 0 && ix < len(s->rows);
+    if (have) {
+        row = s->rows[ix];
+    }
+
+    if (have && row.handler.IsValid()) {
         ClickEvent ev = {};
-        ListenerCall(cx->app, cx->win, handler, &ev);
+        ListenerCall(cx->app, cx->win, row.handler, &ev);
     }
     if (s->onConfirm.IsValid()) {
         ClickEvent ev = {};
         ListenerCall(cx->app, cx->win, ListenerFill(s->onConfirm, ix), &ev);
+    }
+
+    if (have && row.action && !row.handler.IsValid()) {
+        if (row.actionFocus.IsValid()) {
+            WindowDispatchActionAtFocus(cx->win, row.actionFocus, row.action,
+                                        row.actionArg);
+        } else {
+            WindowDispatchAction(cx->win, row.action, row.actionArg);
+        }
     }
 
     PopupMenuDismissAll(s, cx);
@@ -50030,10 +50436,24 @@ void PopupMenuState::OnContextDown(PopupMenuState* self, Ctx* cx,
     PopupMenuOpen(self, cx);
 }
 
+static void RefocusLeavingSubmenu(PopupMenuState* self, Ctx* cx, int ix) {
+    if (!self || !cx || !cx->win || self->selected == ix) {
+        return;
+    }
+    if (!FocusHandleContainsFocused(cx->win, self->submenuFocus)) {
+        return;
+    }
+    if (!self->focus.IsValid()) {
+        self->focus = FocusHandleNew(cx);
+    }
+    FocusHandleFocus(cx->win, self->focus);
+}
+
 void PopupMenuState::OnItemHover(PopupMenuState* self, Ctx* cx,
                                  const HoverEvent* ev, int64_t ix) {
 
     if (ev->hovered) {
+        RefocusLeavingSubmenu(self, cx, (int)ix);
         self->selected = (int)ix;
         self->openSubmenu = -1;
     } else if (self->selected == (int)ix && self->openSubmenu != (int)ix &&
@@ -50054,6 +50474,7 @@ void PopupMenuState::OnSubmenuHover(PopupMenuState* self, Ctx* cx,
                                     const HoverEvent* ev, int64_t ix) {
 
     if (ev->hovered) {
+        RefocusLeavingSubmenu(self, cx, (int)ix);
         self->selected = (int)ix;
         self->openSubmenu = (int)ix;
         Notify(cx);
@@ -50113,10 +50534,12 @@ Popup* Popup::New(Ctx* cx, Str id, El* trigger, PopupAnchor anchor) {
     p->anchor = anchor;
     PopupAnchorState* state =
         ElementState<PopupAnchorState>(cx, id, StrL("PopupAnchorState"));
+
     p->contentReady = state && state->captured;
-    if (state && !state->captured) {
+    p->askFrame = state && !state->captured;
+    p->win = cx->win;
+    if (p->askFrame) {
         state->captured = true;
-        WindowRequestAnimationFrame(cx->win);
     }
 
     p->root = Div(a)->Id(id);
@@ -50161,6 +50584,10 @@ static void PopupPlaced(void* user, AnchoredPosition placed, Bounds trigger) {
 }
 
 Popup* Popup::Content(El* content) {
+
+    if (content && askFrame && win) {
+        WindowRequestAnimationFrame(win);
+    }
     if (!content || !contentReady) {
         return this;
     }
@@ -52257,7 +52684,8 @@ static float PanelMax(const float* maxs, int ix) {
 }
 
 bool ResizablePanelResize(float* sizes, const float* mins, const float* maxs,
-                          int n, int ix, float size, float containerSize) {
+                          int n, int ix, float size, float containerSize,
+                          const bool* fixed) {
 
     if (n <= 1 || ix < 0 || ix >= n - 1) {
         return false;
@@ -52279,6 +52707,10 @@ bool ResizablePanelResize(float* sizes, const float* mins, const float* maxs,
         int i = ix;
         while (changed > 0 && i < n - 1) {
             i++;
+
+            if (fixed && fixed[i] && i != mainIx + 1) {
+                continue;
+            }
             float spare = sizes[i] - PanelMin(mins, i);
             if (spare < 0) {
                 spare = 0;
@@ -52294,6 +52726,9 @@ bool ResizablePanelResize(float* sizes, const float* mins, const float* maxs,
         int i = ix;
         while (changed > 0 && i > 0) {
             i--;
+            if (fixed && fixed[i]) {
+                continue;
+            }
             float spare = sizes[i] - PanelMin(mins, i);
             if (spare < 0) {
                 spare = 0;
@@ -52317,19 +52752,33 @@ bool ResizablePanelResize(float* sizes, const float* mins, const float* maxs,
     return true;
 }
 
-void ResizableAdjustToContainer(float* sizes, int n, float containerSize) {
+void ResizableAdjustToContainer(float* sizes, int n, float containerSize,
+                                const bool* fixed) {
     if (containerSize <= 0) {
         return;
     }
+
+    float fixedSize = 0;
     float total = 0;
     for (int i = 0; i < n; i++) {
-        total += sizes[i];
+        if (fixed && fixed[i]) {
+            fixedSize += sizes[i];
+        } else {
+            total += sizes[i];
+        }
     }
-    if (total <= 0) {
+    if (!(total > 0.f)) {
+        return;
+    }
+    float available = containerSize - fixedSize;
+    if (available <= 0.f) {
         return;
     }
     for (int i = 0; i < n; i++) {
-        sizes[i] = containerSize * (sizes[i] / total);
+        if (fixed && fixed[i]) {
+            continue;
+        }
+        sizes[i] = available * (sizes[i] / total);
     }
 }
 
@@ -52362,6 +52811,7 @@ void ResizableState::OnHandleDrag(ResizableState* self, Ctx* cx,
     float* sizes = (float*)Alloc(cx->a, (int)sizeof(float) * cap);
     float* mins = (float*)Alloc(cx->a, (int)sizeof(float) * cap);
     float* maxs = (float*)Alloc(cx->a, (int)sizeof(float) * cap);
+    bool* fixed = (bool*)Alloc(cx->a, (int)sizeof(bool) * cap);
     int* back = (int*)Alloc(cx->a, (int)sizeof(int) * cap);
     int n = 0;
     int at = -1;
@@ -52372,6 +52822,7 @@ void ResizableState::OnHandleDrag(ResizableState* self, Ctx* cx,
         sizes[n] = self->sizes[i];
         mins[n] = self->mins[i];
         maxs[n] = self->maxs[i];
+        fixed[n] = i < self->fixed.len && self->fixed[i];
         back[n] = i;
         if (i == ix) {
             at = n;
@@ -52391,7 +52842,8 @@ void ResizableState::OnHandleDrag(ResizableState* self, Ctx* cx,
         horiz ? ev->event.x - self->bounds.x : ev->event.y - self->bounds.y;
     float want = pt - before;
     float container = horiz ? self->bounds.w : self->bounds.h;
-    if (!ResizablePanelResize(sizes, mins, maxs, n, at, want, container)) {
+    if (!ResizablePanelResize(sizes, mins, maxs, n, at, want, container,
+                              fixed)) {
         return;
     }
     for (int i = 0; i < n; i++) {
@@ -52425,9 +52877,10 @@ bool ResizableState::ResizePanel(Ctx* cx, int ix, float size) {
         handle = ix - 1;
         requested = sizes[handle] + sizes[ix] - size;
     }
+    const bool* fixedFlags = fixed.len == sizes.len ? fixed.els : nullptr;
     bool changed =
         ResizablePanelResize(sizes.els, mins.els, maxs.els, sizes.len, handle,
-                             requested, ContainerSize());
+                             requested, ContainerSize(), fixedFlags);
 
     if (onResized.IsValid()) {
         ResizablePanelEvent ev = {sizes.els, sizes.len};
@@ -52451,6 +52904,7 @@ bool ResizableState::InsertPanel(Ctx* cx, float size, int ix) {
     VecInsertAt(maxs, ix, 1e9f);
     VecInsertAt(grows, ix, false);
     VecInsertAt(shown, ix, true);
+    if (fixed.len == n) VecInsertAt(fixed, ix, false);
     VecInsertAt(laid, ix, Bounds{});
     Notify(cx);
     return true;
@@ -52458,17 +52912,22 @@ bool ResizableState::InsertPanel(Ctx* cx, float size, int ix) {
 
 bool ResizableState::RemovePanel(Ctx* cx, int ix) {
     if (ix < 0 || ix >= sizes.len) return false;
+    int nBefore = sizes.len;
+    bool hadFixed = fixed.len == nBefore;
     ResizableVecRemove(&sizes, ix);
     ResizableVecRemove(&mins, ix);
     ResizableVecRemove(&maxs, ix);
     if (ix < grows.len) ResizableVecRemove(&grows, ix);
     if (ix < shown.len) ResizableVecRemove(&shown, ix);
+    if (hadFixed) ResizableVecRemove(&fixed, ix);
     if (ix < laid.len) ResizableVecRemove(&laid, ix);
     if (dragging == ix)
         dragging = -1;
     else if (dragging > ix)
         dragging--;
-    ResizableAdjustToContainer(sizes.els, sizes.len, ContainerSize());
+    const bool* fixedFlags = hadFixed ? fixed.els : nullptr;
+    ResizableAdjustToContainer(sizes.els, sizes.len, ContainerSize(),
+                               fixedFlags);
     Notify(cx);
     return true;
 }
@@ -52479,8 +52938,11 @@ bool ResizableState::ResetPanel(Ctx* cx, int ix) {
     maxs[ix] = 1e9f;
     if (ix < grows.len) grows[ix] = false;
     if (ix < shown.len) shown[ix] = true;
+    if (fixed.len == sizes.len) fixed[ix] = false;
     if (ix < laid.len) laid[ix] = {};
-    ResizableAdjustToContainer(sizes.els, sizes.len, ContainerSize());
+    const bool* fixedFlags = fixed.len == sizes.len ? fixed.els : nullptr;
+    ResizableAdjustToContainer(sizes.els, sizes.len, ContainerSize(),
+                               fixedFlags);
     Notify(cx);
     return true;
 }
@@ -52491,6 +52953,7 @@ void ResizableState::Clear() {
     VecClear(maxs);
     VecClear(grows);
     VecClear(shown);
+    VecClear(fixed);
     VecClear(laid);
     dragging = -1;
     lastContainer = 0;
@@ -52812,6 +53275,7 @@ ResizablePanelGroup* ResizablePanelGroup::Panel(El* content, float size,
     maxs.Append(a, max);
     grows.Append(a, false);
     shown.Append(a, true);
+    fixed.Append(a, false);
     sources.Append(a, nullptr);
     return this;
 }
@@ -52840,6 +53304,8 @@ ResizablePanelGroup* ResizablePanelGroup::Child(ResizablePanel* panel) {
     Panel(panel->content, panel->size, panel->min, panel->max);
     grows[grows.len - 1] = panel->grow;
     shown[shown.len - 1] = panel->visible;
+
+    fixed[fixed.len - 1] = panel->fixed && panel->size > 0.f;
     sources[sources.len - 1] = panel;
     return this;
 }
@@ -52852,6 +53318,7 @@ ResizablePanelGroup* ResizablePanelGroup::Children(ResizablePanel** values,
     maxs.len = 0;
     grows.len = 0;
     shown.len = 0;
+    fixed.len = 0;
     sources.len = 0;
     for (int i = 0; values && i < count; i++) Child(values[i]);
     return this;
@@ -52877,8 +53344,10 @@ static void MeasureResizableGroup(PaintCtx* paint, El* root, void* data) {
             panel = panel->next;
         }
     } else {
+        const bool* fixed =
+            state->fixed.len == state->sizes.len ? state->fixed.els : nullptr;
         ResizableAdjustToContainer(state->sizes.els, state->sizes.len,
-                                   container);
+                                   container, fixed);
     }
     state->lastContainer = container;
     WindowPost(paint->window, ListenTo(entity, &ResizableState::OnSettled));
@@ -52925,9 +53394,12 @@ El* ResizablePanelGroup::IntoEl() {
     }
     VecClear(s->grows);
     VecClear(s->shown);
+    VecClear(s->fixed);
     for (int i = 0; i < panels.len; i++) {
         VecAppend(s->grows, grows[i]);
         VecAppend(s->shown, shown[i]);
+
+        VecAppend(s->fixed, i < fixed.len && fixed[i]);
     }
     while (s->laid.len < panels.len) {
         VecAppend(s->laid, Bounds{});
@@ -52978,6 +53450,10 @@ El* ResizablePanelGroup::IntoEl() {
             box->W(s->sizes[i])->H(kFill);
         } else {
             box->H(s->sizes[i])->W(kFill);
+        }
+        if (i < s->fixed.len && s->fixed[i]) {
+
+            box->Grow(0)->Shrink(0);
         }
         const ResizablePanel* source = i < sources.len ? sources[i] : nullptr;
 
@@ -53083,6 +53559,11 @@ ResizablePanel* ResizablePanel::SizeRange(float minValue, float maxValue) {
 
 ResizablePanel* ResizablePanel::FlexNone() {
     grow = false;
+    return this;
+}
+
+ResizablePanel* ResizablePanel::Fixed() {
+    fixed = true;
     return this;
 }
 
@@ -54042,19 +54523,82 @@ SankeyError SankeyLayout(const Sankey* s, int nodeCount,
 
 namespace gpui {
 
+const double kOverscrollGestureGap = 0.25;
+
+const float kOverscrollCarry = 0.31f;
+
+const double kOverscrollStill = 0.05;
+
+const float kOverscrollFrame = 1.f / 60.f;
+
+const double kOverscrollSpeedSpan = 0.05;
+
+static const float kBounceTau = 6.2831853071795864769f;
+
+static float BounceOmega(const ScrollBounceMotion& motion) {
+    if (motion.responseMs <= 0) return 0;
+    return kBounceTau / (motion.responseMs / 1000.f);
+}
+
+static float LimitThrow(float position, float speed, float omega, float max) {
+    auto peak = [&](float v) {
+        if (v <= omega * position) return position;
+        return v / omega * expf(omega * position / v - 1.f);
+    };
+    if (peak(speed) <= max) return speed;
+    float low = 0;
+    float high = speed;
+    for (int i = 0; i < 24; i++) {
+        float mid = (low + high) * .5f;
+        if (peak(mid) <= max) {
+            low = mid;
+        } else {
+            high = mid;
+        }
+    }
+    return low;
+}
+
+ScrollBounceMotion ScrollBounceMotion::Default() {
+    ScrollBounceMotion out;
+    if (base::PlatScrollBounceTouch()) {
+
+        out.tracking = 0.55f;
+        out.responseMs = 524.f;
+        out.maxStretch = 0;
+        out.hasMaxStretch = false;
+    }
+    return out;
+}
+
 float ScrollBouncePhysics::Offset() const {
     if (!dragging) return position;
-    float d = extent > 1 ? extent : 1;
+    float d = extent > 1.f ? extent : 1.f;
     float tracked = motion.tracking;
-    return position * tracked / (1.f + tracked * fabsf(position) / d);
+    float stretch = position * tracked / (1.f + tracked * fabsf(position) / d);
+    if (!motion.hasMaxStretch) return stretch;
+    float max = motion.maxStretch;
+    if (!(max > 0)) return stretch;
+    return max * tanhf(stretch / max);
 }
 
 void ScrollBouncePhysics::Begin(float viewportExtent) {
     float offset = Offset();
-    if (offset == 0) extent = viewportExtent > 1 ? viewportExtent : 1;
-    float denominator =
-        motion.tracking * std::max(0.01f, 1.f - fabsf(offset) / extent);
-    position = offset / denominator;
+
+    if (offset == 0 || extent <= 0) {
+        extent = viewportExtent > 1.f ? viewportExtent : 1.f;
+    }
+    float stretch = offset;
+    if (motion.hasMaxStretch && motion.maxStretch > 0) {
+        float max = motion.maxStretch;
+        float t = offset / max;
+        if (t > 0.999f) t = 0.999f;
+        if (t < -0.999f) t = -0.999f;
+        stretch = max * atanhf(t);
+    }
+    float denom =
+        motion.tracking * std::max(0.01f, 1.f - fabsf(stretch) / extent);
+    position = stretch / denom;
     velocity = 0;
     dragging = true;
     suppressMomentum = false;
@@ -54077,15 +54621,43 @@ void ScrollBouncePhysics::Release() {
     if (position != 0) suppressMomentum = true;
 }
 
+void ScrollBouncePhysics::LetGo(float vel) {
+    position = Offset();
+    dragging = false;
+    float omega = BounceOmega(motion);
+    if (omega <= 0) {
+        position = 0;
+        velocity = 0;
+        return;
+    }
+
+    float outward = position * vel >= 0 ? vel : 0;
+    if (motion.hasMaxStretch && motion.maxStretch > 0) {
+        float sign = outward < 0 ? -1.f : 1.f;
+        outward = sign * LimitThrow(fabsf(position), fabsf(outward), omega,
+                                    motion.maxStretch);
+    }
+    velocity = outward - omega * position;
+}
+
+void ScrollBouncePhysics::Reset() {
+    ScrollBounceMotion keep = motion;
+    position = 0;
+    velocity = 0;
+    dragging = false;
+    suppressMomentum = false;
+    extent = 0;
+    motion = keep;
+}
+
 bool ScrollBouncePhysics::Step(float seconds) {
-    if (dragging || position == 0) return false;
-    if (motion.responseMs <= 0) {
+    if (dragging || (position == 0 && velocity == 0)) return false;
+    float omega = BounceOmega(motion);
+    if (omega <= 0) {
         position = 0;
         velocity = 0;
         return false;
     }
-    const float tau = 6.2831853071795864769f;
-    float omega = tau / (motion.responseMs / 1000.f);
     float decay = expf(-omega * std::max(0.f, seconds));
     float c = velocity + omega * position;
     position = (position + c * seconds) * decay;
@@ -54098,6 +54670,233 @@ bool ScrollBouncePhysics::Step(float seconds) {
     return true;
 }
 
+void ScrollOverscroll::SetMotion(ScrollBounceMotion value) {
+    physics.motion = value;
+}
+
+ScrollOverscroll::~ScrollOverscroll() {
+    VecReset(moveDy);
+    VecReset(moveAt);
+}
+
+static void OverscrollStartGesture(ScrollOverscroll* self) {
+    self->spent = false;
+    self->velocity = 0;
+    VecClear(self->moveDy);
+    VecClear(self->moveAt);
+}
+
+static void OverscrollSample(ScrollOverscroll* self, float dy, double now) {
+    if (dy == 0) return;
+    int n = len(self->moveDy);
+    if (n > 0 && self->moveDy[n - 1] * dy < 0) {
+        VecClear(self->moveDy);
+        VecClear(self->moveAt);
+    }
+    VecAppend(self->moveDy, dy);
+    VecAppend(self->moveAt, now);
+    int start = 0;
+    for (int i = len(self->moveAt) - 1; i >= 0; i--) {
+        if (now - self->moveAt[i] > kOverscrollSpeedSpan) {
+            start = i;
+            break;
+        }
+    }
+    while (start > 0 && len(self->moveAt) > 0) {
+        VecRemoveAt(self->moveAt, 0);
+        VecRemoveAt(self->moveDy, 0);
+        start--;
+    }
+    if (len(self->moveAt) <= 0) return;
+    float seconds = (float)(now - self->moveAt[0]);
+    float sum = 0;
+    if (seconds > 0 && len(self->moveDy) > 1) {
+        for (int i = 1; i < len(self->moveDy); i++) sum += self->moveDy[i];
+        self->velocity = sum / seconds;
+    } else {
+        for (int i = 0; i < len(self->moveDy); i++) sum += self->moveDy[i];
+        self->velocity = sum / kOverscrollFrame;
+    }
+    self->movedAt = now;
+    self->hasMoved = true;
+}
+
+bool ScrollOverscroll::Packet(float dy, TouchPhase phase, float extent,
+                              double now, float (*scroll)(void*, float),
+                              void* user) {
+    float before = Offset();
+    bool thrown = false;
+    bool inGesture = false;
+    if (hasLastPacket && now - lastPacketAt < kOverscrollGestureGap) {
+        inGesture = true;
+    }
+    lastPacketAt = now;
+    hasLastPacket = true;
+    if (!inGesture && !physics.IsDragging()) {
+        OverscrollStartGesture(this);
+        hasMoved = false;
+    }
+    OverscrollSample(this, dy, now);
+    if (phase == TouchPhase::Started) {
+        physics.Begin(extent);
+        spent = false;
+        resting = dy == 0;
+    } else if (dy != 0) {
+        resting = false;
+    } else if (resting && physics.IsDragging()) {
+
+        resting = false;
+        physics.LetGo(0);
+        spent = Offset() != 0;
+        if (spent) {
+            sampledAt = now;
+            hasSampled = true;
+        }
+        return physics.IsMoving();
+    }
+    if (physics.IsDragging()) {
+        float rest = Offset() != 0 ? physics.Pull(dy) : dy;
+        if (rest != 0 && scroll) {
+            float unused = rest - scroll(user, rest);
+            if (unused != 0) physics.Pull(unused);
+        }
+        if (phase == TouchPhase::Ended || phase == TouchPhase::Cancelled) {
+            bool moving = hasMoved && now - movedAt < kOverscrollStill;
+            physics.LetGo((moving ? velocity : 0) * kOverscrollCarry);
+            thrown = true;
+            spent = Offset() != 0;
+        }
+    } else if (spent) {
+
+        if (scroll) scroll(user, dy);
+    } else if (scroll) {
+        float unused = dy - scroll(user, dy);
+        if (unused != 0) {
+            physics.LetGo(velocity * kOverscrollCarry);
+            thrown = true;
+            spent = true;
+        }
+    }
+    bool changed = (thrown && physics.IsMoving()) || Offset() != before;
+    if (thrown || (changed && !hasSampled)) {
+        sampledAt = now;
+        hasSampled = true;
+    }
+    return changed;
+}
+
+bool ScrollOverscroll::Step(double now) {
+    float elapsed = 0;
+    if (hasSampled) elapsed = (float)(now - sampledAt);
+    sampledAt = now;
+    hasSampled = true;
+    bool moving = physics.Step(elapsed);
+    if (!moving) hasSampled = false;
+    return moving;
+}
+
+void ScrollOverscroll::Reset() {
+    ScrollBounceMotion keep = physics.motion;
+    physics.Reset();
+    physics.motion = keep;
+    sampledAt = 0;
+    lastPacketAt = 0;
+    movedAt = 0;
+    velocity = 0;
+    VecClear(moveDy);
+    VecClear(moveAt);
+    hasSampled = false;
+    hasLastPacket = false;
+    hasMoved = false;
+    resting = false;
+    spent = false;
+}
+
+static Bounds PositiveViewport(void* user) {
+    PositiveScroll* s = (PositiveScroll*)user;
+    float h = s && s->viewport ? *s->viewport : 0;
+    return Bounds{0, 0, 0, h};
+}
+
+static Point PositiveOffset(void* user) {
+    PositiveScroll* s = (PositiveScroll*)user;
+    float y = s && s->offset ? *s->offset : 0;
+    return Point{0, -y};
+}
+
+static void PositiveSetOffset(void* user, Point value) {
+    PositiveScroll* s = (PositiveScroll*)user;
+    if (!s || !s->offset) return;
+    float max = 0;
+    if (s->content && s->viewport) {
+        max = *s->content - *s->viewport;
+        if (max < 0) max = 0;
+    }
+    float y = -value.y;
+    if (y < 0) y = 0;
+    if (y > max) y = max;
+    *s->offset = y;
+}
+
+static Size PositiveContent(void* user) {
+    PositiveScroll* s = (PositiveScroll*)user;
+    float h = s && s->content ? *s->content : 0;
+    return Size{0, h};
+}
+
+ScrollbarHandle PositiveScrollHandle(PositiveScroll* slot) {
+    ScrollbarHandle out;
+    if (!slot) return out;
+    out.user = slot;
+    out.viewportBounds = PositiveViewport;
+    out.offset = PositiveOffset;
+    out.setOffset = PositiveSetOffset;
+    out.contentSize = PositiveContent;
+    return out;
+}
+
+static Bounds VirtualViewport(void* user) {
+    auto* h = (VirtualListScrollHandle*)user;
+    return Bounds{0, 0, 0, h ? h->viewport : 0};
+}
+
+static Point VirtualOffset(void* user) {
+    auto* h = (VirtualListScrollHandle*)user;
+    return Point{0, h ? -h->offset : 0};
+}
+
+static void VirtualSetOffset(void* user, Point value) {
+    auto* h = (VirtualListScrollHandle*)user;
+    if (!h) return;
+    float max = h->contentSize - h->viewport;
+    if (max < 0) max = 0;
+    float y = -value.y;
+    if (y < 0) y = 0;
+    if (y > max) y = max;
+    h->offset = y;
+    h->pending = false;
+}
+
+static Size VirtualContent(void* user) {
+    auto* h = (VirtualListScrollHandle*)user;
+    return Size{0, h ? h->contentSize : 0};
+}
+
+ScrollbarHandle VirtualListScrollbar(VirtualListScrollHandle* handle) {
+    ScrollbarHandle out;
+    if (!handle) return out;
+    out.user = handle;
+    out.viewportBounds = VirtualViewport;
+    out.offset = VirtualOffset;
+    out.setOffset = VirtualSetOffset;
+    out.contentSize = VirtualContent;
+    return out;
+}
+
+bool ScrollBounce::EnabledByDefault() {
+    return base::PlatScrollBounce();
+}
+
 ScrollBounce* ScrollBounce::New(Ctx* cx, Str id, El* child) {
     ScrollBounce* out = ArenaNew<ScrollBounce>(cx->a);
     out->cx = cx;
@@ -54107,8 +54906,21 @@ ScrollBounce* ScrollBounce::New(Ctx* cx, Str id, El* child) {
     return out;
 }
 
+ScrollBounce* ScrollBounce::New(Ctx* cx, Str id, ScrollbarHandle handle,
+                                El* child) {
+    ScrollBounce* out = New(cx, id, child);
+    out->handle = handle;
+    out->scrollWheel = true;
+    return out;
+}
+
 ScrollBounce* ScrollBounce::Enabled(bool value) {
     enabled = value;
+    return this;
+}
+
+ScrollBounce* ScrollBounce::ScrollWheel(bool value) {
+    scrollWheel = value;
     return this;
 }
 
@@ -54119,6 +54931,11 @@ ScrollBounce* ScrollBounce::Motion(ScrollBounceMotion value) {
 
 ScrollBounce* ScrollBounce::OnScroll(Listener listener) {
     onScroll = listener;
+    return this;
+}
+
+ScrollBounce* ScrollBounce::Measure(PositiveScroll* slot) {
+    laidOut = slot;
     return this;
 }
 
@@ -54157,118 +54974,288 @@ bool ScrollBounceCatch::Observe(TouchPhase phase, float deltaY) {
     return shortCatch && phase == TouchPhase::Ended;
 }
 
+static float HandleMax(const ScrollbarHandle& handle) {
+    if (!handle.IsValid()) return 0;
+    float max = handle.ContentSize().h - handle.ViewportBounds().h;
+    return max > 0 ? max : 0;
+}
+
+struct OwnedScroll {
+    ScrollbarHandle handle;
+    float max = 0;
+};
+
+static float OwnedScrollBy(void* user, float dy) {
+    OwnedScroll* a = (OwnedScroll*)user;
+    Point before = a->handle.Offset();
+    float y = before.y + dy;
+    if (y < -a->max) y = -a->max;
+    if (y > 0) y = 0;
+    Point next = before;
+    next.y = y;
+    a->handle.SetOffset(next);
+    return next.y - before.y;
+}
+
 struct ScrollBounceState {
     ScrollBouncePhysics physics;
+    ScrollOverscroll overscroll;
     ScrollBounceCatch shortDrag;
     ScrollBounceSuppression suppression;
     OngoingScroll wheelLock;
     double sampledAt = 0;
+    float paintOffset = 0;
     Listener onScroll = {};
+    ScrollbarHandle handle = {};
+    PositiveScroll* laidOut = nullptr;
+    Window* win = nullptr;
+    bool scrollWheel = true;
+    bool enabled = false;
+
+    int scrollId = 0;
 
     static void OnWheel(ScrollBounceState* self, Ctx* cx,
-                        const ScrollWheelEvent* ev) {
-        if (!self || !ev || !cx || !cx->win) {
-            return;
+                        const ScrollWheelEvent* ev);
+    static void OnOwnedWheel(ScrollBounceState* self, Ctx* cx,
+                             const ScrollWheelEvent* ev);
+};
+
+static void ApplyContentShift(El* scrollBox, float offset) {
+    if (!scrollBox || offset == 0) return;
+
+    for (El* c = scrollBox->first; c; c = c->next) {
+        c->PaintOffset(c->paintDx, c->paintDy + offset);
+    }
+}
+
+static void BounceAfterChild(PaintCtx*, El* wrap, void* user) {
+    ScrollBounceState* s = (ScrollBounceState*)user;
+    if (!s) return;
+    El* box = wrap ? wrap->first : nullptr;
+    if (box && box->scrollId) s->scrollId = box->scrollId;
+    if (s->laidOut && box) {
+        if (s->laidOut->viewport && box->h > 0) {
+            *s->laidOut->viewport = box->h;
         }
-        Point delta = {ev->deltaX, ev->deltaY};
-        if (ev->precise) {
-            self->wheelLock.Filter(&delta, ev->phase);
+        if (s->laidOut->measureContent && s->laidOut->content) {
+            *s->laidOut->content = box->contentH;
         }
-        if (delta.x != 0 && delta.y != 0) {
-            if (fabsf(delta.x) > fabsf(delta.y)) {
-                return;
-            }
-            delta.x = 0;
+    }
+    if (!s->scrollWheel) {
+        ApplyContentShift(box, s->paintOffset);
+        return;
+    }
+    if (HandleMax(s->handle) <= 0) {
+        bool displaced = s->overscroll.Offset() != 0;
+        s->overscroll.Reset();
+        s->paintOffset = 0;
+        if (displaced && s->win) AppRequestAnim(s->win, true);
+    }
+    ApplyContentShift(box, s->paintOffset);
+}
+
+bool ScrollBounceOwnedWheel(ScrollOverscroll* over, OngoingScroll* lock,
+                            ScrollbarHandle handle, bool enabled,
+                            const ScrollWheelEvent* ev, Ctx* cx,
+                            Listener onScroll) {
+    if (!over || !ev || !cx) return false;
+    float max = HandleMax(handle);
+    if (max <= 0) {
+        over->Reset();
+        return false;
+    }
+    Point delta = {ev->deltaX, ev->deltaY};
+    if (lock) lock->Filter(&delta, ev->phase);
+    if (fabsf(delta.x) > fabsf(delta.y)) {
+        over->Reset();
+        return false;
+    }
+    float before = handle.Offset().y;
+    bool changed = false;
+    if (!enabled || MotionReduced() || !ev->precise) {
+        bool displaced = over->Offset() != 0;
+        over->Reset();
+        Point next = handle.Offset();
+        float y = before + delta.y;
+        if (y < -max) y = -max;
+        if (y > 0) y = 0;
+        next.y = y;
+        handle.SetOffset(next);
+        changed = displaced;
+    } else {
+        float extent = handle.ViewportBounds().h;
+        if (extent < 1.f) extent = 1.f;
+        OwnedScroll apply;
+        apply.handle = handle;
+        apply.max = max;
+        changed = over->Packet(delta.y, ev->phase, extent, TimeNow(),
+                               OwnedScrollBy, &apply);
+    }
+    bool scrolled = handle.Offset().y != before;
+    const_cast<ScrollWheelEvent*>(ev)->propagate = false;
+    if ((changed || scrolled) && cx->win) AppInvalidate(cx->win);
+    if (scrolled && onScroll.IsValid()) {
+        ScrollEvent se;
+        se.offsetY = -handle.Offset().y;
+        se.offsetX = handle.Offset().x;
+        ListenerCall(cx->app, cx->win, onScroll, &se);
+    }
+    return true;
+}
+
+float ScrollBounceOwnedOffset(ScrollOverscroll* over, Window* win, bool enabled,
+                              float maxExtent) {
+    if (!over) return 0;
+    if (!enabled || MotionReduced() || maxExtent <= 0) {
+        bool was = over->Offset() != 0;
+        over->Reset();
+        if (was && win) AppRequestAnim(win, true);
+        return 0;
+    }
+    if (over->Step(TimeNow()) && win) AppRequestAnim(win, true);
+    return over->Offset();
+}
+
+static bool DeeperVerticalScroll(Window* win, int selfId, float x, float y) {
+    if (!win || selfId == 0) return false;
+    const ScrollRect* self = nullptr;
+    for (int i = 0; i < win->paint.scrolls.len; i++) {
+        if (win->paint.scrolls[i].id == selfId) {
+            self = &win->paint.scrolls[i];
+            break;
         }
+    }
+    if (!self) return false;
+    for (int i = win->paint.scrolls.len - 1; i >= 0; i--) {
+        const ScrollRect& s = win->paint.scrolls[i];
+        if (s.id == selfId || !s.bounds.Contains({x, y})) continue;
+        bool inside =
+            s.bounds.x + 0.5f >= self->bounds.x &&
+            s.bounds.y + 0.5f >= self->bounds.y &&
+            s.bounds.x + s.bounds.w <= self->bounds.x + self->bounds.w + 0.5f &&
+            s.bounds.y + s.bounds.h <= self->bounds.y + self->bounds.h + 0.5f;
+        if (!inside) continue;
+        if (s.contentH > s.bounds.h + 1.f || (s.maskAxes & 2)) return true;
+    }
+    return false;
+}
+
+void ScrollBounceState::OnOwnedWheel(ScrollBounceState* self, Ctx* cx,
+                                     const ScrollWheelEvent* ev) {
+    if (!self || !ev) return;
+    if (DeeperVerticalScroll(cx ? cx->win : nullptr, self->scrollId, ev->x,
+                             ev->y)) {
+        return;
+    }
+
+    ScrollBounceOwnedWheel(&self->overscroll, &self->wheelLock, self->handle,
+                           self->enabled, ev, cx, self->onScroll);
+}
+
+void ScrollBounceState::OnWheel(ScrollBounceState* self, Ctx* cx,
+                                const ScrollWheelEvent* ev) {
+    if (!self || !ev || !cx || !cx->win) {
+        return;
+    }
+    Point delta = {ev->deltaX, ev->deltaY};
+    if (ev->precise) {
+        self->wheelLock.Filter(&delta, ev->phase);
+    }
+    if (delta.x != 0 && delta.y != 0) {
         if (fabsf(delta.x) > fabsf(delta.y)) {
             return;
         }
-        bool ended = ev->phase == TouchPhase::Ended ||
-                     ev->phase == TouchPhase::Cancelled;
-        Window* win = cx->win;
-        ScrollRect* box = nullptr;
-        for (int i = win->paint.scrolls.len - 1; i >= 0; i--) {
-            ScrollRect& s = win->paint.scrolls[i];
-            if (s.onScroll.IsValid() && s.bounds.Contains({ev->x, ev->y}) &&
-                s.contentH > s.bounds.h + 1.f) {
-                box = &s;
-                break;
-            }
+        delta.x = 0;
+    }
+    if (fabsf(delta.x) > fabsf(delta.y)) {
+        return;
+    }
+    bool ended =
+        ev->phase == TouchPhase::Ended || ev->phase == TouchPhase::Cancelled;
+    Window* win = cx->win;
+    ScrollRect* box = nullptr;
+    for (int i = win->paint.scrolls.len - 1; i >= 0; i--) {
+        ScrollRect& s = win->paint.scrolls[i];
+        if (s.onScroll.IsValid() && s.bounds.Contains({ev->x, ev->y}) &&
+            s.contentH > s.bounds.h + 1.f) {
+            box = &s;
+            break;
         }
-        float viewH = box ? box->bounds.h : 1.f;
-        if (ev->phase == TouchPhase::Started) {
+    }
+    float viewH = box ? box->bounds.h : 1.f;
+    if (ev->phase == TouchPhase::Started) {
+        self->physics.Begin(viewH);
+    }
+
+    bool suppressShortDragMomentum = self->shortDrag
+                                         .Observe(ev->phase, delta.y);
+    if (self->suppression.Lifts(TimeNow(), delta.y)) {
+        self->physics.suppressMomentum = false;
+    }
+    if (self->physics.suppressMomentum) {
+        const_cast<ScrollWheelEvent*>(ev)->propagate = false;
+        return;
+    }
+    bool changed = false;
+    bool scrolled = false;
+    if (self->physics.Offset() != 0) {
+
+        bool fromRest = !self->physics.dragging;
+        if (fromRest) {
             self->physics.Begin(viewH);
         }
-
-        bool suppressShortDragMomentum = self->shortDrag
-                                             .Observe(ev->phase, delta.y);
-        if (self->suppression.Lifts(TimeNow(), delta.y)) {
-            self->physics.suppressMomentum = false;
+        float remainder = self->physics.Pull(delta.y);
+        if (remainder != 0 &&
+            WindowScrollApply(win, ev->x, ev->y, 0, remainder)) {
+            scrolled = true;
         }
-        if (self->physics.suppressMomentum) {
-            const_cast<ScrollWheelEvent*>(ev)->propagate = false;
-            return;
+        if (ended || fromRest) {
+            self->suppression.Release(&self->physics, fromRest);
         }
-        bool changed = false;
-        bool scrolled = false;
-        if (self->physics.Offset() != 0) {
-
-            bool fromRest = !self->physics.dragging;
-            if (fromRest) {
+        changed = true;
+        const_cast<ScrollWheelEvent*>(ev)->propagate = false;
+    } else if (box && ev->precise) {
+        float maxOff = box->contentH - box->bounds.h;
+        if (maxOff < 0) {
+            maxOff = 0;
+        }
+        bool atTop = box->scrollY <= 0 && delta.y > 0;
+        bool atBot = box->scrollY >= maxOff && delta.y < 0;
+        if (atTop || atBot) {
+            bool dragging = self->physics.dragging;
+            if (!dragging) {
                 self->physics.Begin(viewH);
             }
-            float remainder = self->physics.Pull(delta.y);
-            if (remainder != 0 &&
-                WindowScrollApply(win, ev->x, ev->y, 0, remainder)) {
-                scrolled = true;
-            }
-            if (ended || fromRest) {
-                self->suppression.Release(&self->physics, fromRest);
+            self->physics.Pull(delta.y);
+            if (!dragging || ended) {
+                self->suppression.Release(&self->physics, !dragging);
             }
             changed = true;
             const_cast<ScrollWheelEvent*>(ev)->propagate = false;
-        } else if (box && ev->precise) {
-            float maxOff = box->contentH - box->bounds.h;
-            if (maxOff < 0) {
-                maxOff = 0;
-            }
-            bool atTop = box->scrollY <= 0 && delta.y > 0;
-            bool atBot = box->scrollY >= maxOff && delta.y < 0;
-            if (atTop || atBot) {
-                bool dragging = self->physics.dragging;
-                if (!dragging) {
-                    self->physics.Begin(viewH);
-                }
-                self->physics.Pull(delta.y);
-                if (!dragging || ended) {
-                    self->suppression.Release(&self->physics, !dragging);
-                }
-                changed = true;
-                const_cast<ScrollWheelEvent*>(ev)->propagate = false;
-            }
-        }
-        if (ended && !changed) {
-            self->physics.Release();
-        }
-        if (suppressShortDragMomentum) {
-            self->physics.suppressMomentum = true;
-            self->suppression.direction = 0;
-        }
-        self->sampledAt = TimeNow();
-        if (changed && cx->win) {
-            AppInvalidate(cx->win);
-        }
-        if (scrolled && self->onScroll.IsValid()) {
-            ListenerCall(cx->app, cx->win, self->onScroll, ev);
         }
     }
-};
+    if (ended && !changed) {
+        self->physics.Release();
+    }
+    if (suppressShortDragMomentum) {
+        self->physics.suppressMomentum = true;
+        self->suppression.direction = 0;
+    }
+    self->sampledAt = TimeNow();
+    if (changed && cx->win) {
+        AppInvalidate(cx->win);
+    }
+    if (scrolled && self->onScroll.IsValid()) {
+        ListenerCall(cx->app, cx->win, self->onScroll, ev);
+    }
+}
 
 El* ScrollBounce::IntoEl() {
     if (!child) {
         return Div(cx->a)->PathClick(id);
     }
-    if (!enabled || MotionReduced()) {
+
+    if (!scrollWheel && (!enabled || MotionReduced())) {
         return Div(cx->a)->PathClick(id)->Child(child);
     }
     Entity<ScrollBounceState> st =
@@ -54277,18 +55264,43 @@ El* ScrollBounce::IntoEl() {
     float offset = 0;
     if (s) {
         s->physics.motion = motion;
+        s->overscroll.SetMotion(motion);
         s->onScroll = onScroll;
-        double now = TimeNow();
-        float dt = s->sampledAt > 0 ? (float)(now - s->sampledAt) : 0;
-        s->sampledAt = now;
-        if (s->physics.Step(dt) && cx->win) {
-            AppRequestAnim(cx->win, true);
+        s->handle = handle;
+        s->laidOut = laidOut;
+        s->win = cx->win;
+        s->scrollWheel = scrollWheel;
+        s->enabled = enabled;
+        if (!enabled || MotionReduced()) {
+            s->overscroll.Reset();
+            s->physics.Reset();
+            s->physics.motion = motion;
+            s->overscroll.SetMotion(motion);
         }
-        offset = s->physics.Offset();
+        double now = TimeNow();
+        if (scrollWheel) {
+            if (HandleMax(handle) <= 0) s->overscroll.Reset();
+            if (s->overscroll.Step(now) && cx->win) {
+                AppRequestAnim(cx->win, true);
+            }
+            offset = enabled && !MotionReduced() ? s->overscroll.Offset() : 0;
+        } else {
+            float dt = s->sampledAt > 0 ? (float)(now - s->sampledAt) : 0;
+            s->sampledAt = now;
+            if (s->physics.Step(dt) && cx->win) {
+                AppRequestAnim(cx->win, true);
+            }
+            offset = s->physics.Offset();
+        }
+        s->paintOffset = offset;
     }
-    El* wrap = Div(cx->a)->PathClick(id)->ClipY()->PaintOffset(0, offset);
+    El* wrap = Div(cx->a)->PathClick(id)->ClipY();
     if (s) {
-        wrap->OnScrollWheel(ListenTo(st, &ScrollBounceState::OnWheel));
+        wrap->prePaint = BounceAfterChild;
+        wrap->customUser = s;
+        wrap->OnScrollWheel(ListenTo(st, scrollWheel
+                                             ? &ScrollBounceState::OnOwnedWheel
+                                             : &ScrollBounceState::OnWheel));
     }
     return wrap->Child(child);
 }
@@ -55375,13 +56387,17 @@ bool SliderHandleRelease(SliderState* s) {
     return true;
 }
 
-El* Slider::New(Ctx* cx, SliderState* state, Axis axis, int clickId) {
+El* Slider::New(Ctx* cx, SliderState* state, Axis axis, int clickId,
+                Str accessibilityLabel) {
     Arena* a = cx->a;
     El* e = UiRoot(a, StrL("example-slider"), clickId)
                 ->Role(AccessibilityRole::Slider)
                 ->AriaOrientation(axis == Axis::Vertical
                                       ? AccessibilityOrientation::Vertical
                                       : AccessibilityOrientation::Horizontal);
+    if (accessibilityLabel) {
+        e->AriaLabel(accessibilityLabel);
+    }
     if (state) {
         e->slider = state;
         e->AriaNumericValue(state->value.End())
@@ -56173,6 +57189,9 @@ struct Project {
     MdNode* cur = nullptr;
     MdNode* para = nullptr;
     uint8_t marks = 0;
+
+    Rgba highlight = {};
+    bool hasHighlight = false;
     Str href = {};
     bool raw = false;
     bool tableHead = false;
@@ -56216,6 +57235,8 @@ static void AddRun(Project* p, Str text) {
     run->text = text;
     run->marks = p->marks;
     run->href = p->href;
+    run->highlight = p->highlight;
+    run->hasHighlight = p->hasHighlight;
     if (target->runLast)
         target->runLast->next = run;
     else
@@ -56262,6 +57283,8 @@ static void base_text_format_AddImage(Project* p, const html5ever::Node* node) {
     run->imgH = ElementLength(p->a, node, "height");
     run->marks = p->marks;
     run->href = p->href;
+    run->highlight = p->highlight;
+    run->hasHighlight = p->hasHighlight;
     if (target->runLast)
         target->runLast->next = run;
     else
@@ -56379,16 +57402,27 @@ static void ProjectElement(Project* p, const html5ever::Node* source) {
     }
     uint8_t oldMarks = p->marks;
     Str oldHref = p->href;
+    Rgba oldHighlight = p->highlight;
+    bool oldHasHighlight = p->hasHighlight;
     uint8_t mark = InlineMark(name);
     if (StrEqI(name, "a")) {
         p->marks = (uint8_t)(p->marks | MdLink);
         p->href = html5ever::AttrValue(p->a, source, StrL("href"));
     } else {
         p->marks = (uint8_t)(p->marks | mark);
+        if (mark & MdHighlight) {
+
+            p->highlight = MarkColorFromValues(
+                html5ever::AttrValue(p->a, source, StrL("color")),
+                html5ever::AttrValue(p->a, source, StrL("style")));
+            p->hasHighlight = true;
+        }
     }
     ProjectChildren(p, source);
     p->marks = oldMarks;
     p->href = oldHref;
+    p->highlight = oldHighlight;
+    p->hasHighlight = oldHasHighlight;
 }
 
 static void ProjectNode(Project* p, const html5ever::Node* source) {
@@ -56426,6 +57460,98 @@ MdNode* HtmlParse(Arena* a, Str source) {
     project.cur = doc;
     ProjectNode(&project, dom);
     return doc;
+}
+
+static int MarkHexDigit(char c) {
+    if (c >= '0' && c <= '9') return c - '0';
+    if (c >= 'a' && c <= 'f') return c - 'a' + 10;
+    if (c >= 'A' && c <= 'F') return c - 'A' + 10;
+    return -1;
+}
+
+static bool ParseMarkHex(Str value, Rgba* out) {
+    value = StrTrim(value);
+    if (len(value) < 2 || value.s[0] != '#') return false;
+    const char* hex = value.s + 1;
+    int n = len(value) - 1;
+    if (n != 3 && n != 4 && n != 6 && n != 8) return false;
+    int v[8];
+    for (int i = 0; i < n; i++) {
+        v[i] = MarkHexDigit(hex[i]);
+        if (v[i] < 0) return false;
+    }
+    uint8_t r = 0;
+    uint8_t g = 0;
+    uint8_t b = 0;
+    uint8_t a = 255;
+    if (n == 3 || n == 4) {
+        r = (uint8_t)((v[0] << 4) | v[0]);
+        g = (uint8_t)((v[1] << 4) | v[1]);
+        b = (uint8_t)((v[2] << 4) | v[2]);
+        if (n == 4) a = (uint8_t)((v[3] << 4) | v[3]);
+    } else {
+        r = (uint8_t)((v[0] << 4) | v[1]);
+        g = (uint8_t)((v[2] << 4) | v[3]);
+        b = (uint8_t)((v[4] << 4) | v[5]);
+        if (n == 8) a = (uint8_t)((v[6] << 4) | v[7]);
+    }
+    *out = Rgba{r, g, b, a};
+    return true;
+}
+
+static bool ParseMarkColor(Str value, Rgba* out) {
+    if (!out || !value.s || len(value) <= 0) return false;
+    value = StrTrim(value);
+    if (len(value) <= 0) return false;
+    if (value.s[0] == '#') return ParseMarkHex(value, out);
+    if (StrEqI(value, "black")) {
+        *out = Rgba{0, 0, 0, 255};
+        return true;
+    }
+    if (StrEqI(value, "white")) {
+        *out = Rgba{255, 255, 255, 255};
+        return true;
+    }
+    if (StrEqI(value, "blue")) {
+        *out = Rgba{0x3b, 0x82, 0xf6, 255};
+        return true;
+    }
+    if (StrEqI(value, "yellow")) {
+        *out = Rgba{0xfa, 0xcc, 0x15, 255};
+        return true;
+    }
+    return false;
+}
+
+static Str StyleDecl(Str css, const char* name) {
+    if (!css.s || !name || len(css) <= 0) return {};
+    int nameLen = (int)strlen(name);
+    Str found = {};
+    int i = 0;
+    while (i < len(css)) {
+        int semi = i;
+        while (semi < len(css) && css.s[semi] != ';') semi++;
+        Str decl = StrTrim(Str(css.s + i, semi - i));
+        int colon = 0;
+        while (colon < len(decl) && decl.s[colon] != ':') colon++;
+        if (colon < len(decl)) {
+            Str key = StrTrim(Str(decl.s, colon));
+            if (len(key) == nameLen && StrEqI(key, Str(name, nameLen))) {
+                found = StrTrim(Str(decl.s + colon + 1, len(decl) - colon - 1));
+            }
+        }
+        i = semi < len(css) ? semi + 1 : semi;
+    }
+    return found;
+}
+
+Rgba MarkColorFromValues(Str color, Str style) {
+    Rgba parsed;
+    if (ParseMarkColor(color, &parsed)) return parsed;
+    if (ParseMarkColor(StyleDecl(style, "background-color"), &parsed)) {
+        return parsed;
+    }
+    return DefaultMarkColor();
 }
 
 }
@@ -58902,6 +60028,9 @@ struct MdBuild {
     MdNode* cur = nullptr;
 
     uint8_t marks = 0;
+
+    Rgba highlight = {};
+    bool hasHighlight = false;
     Str href = {};
     ArenaVec<MdDef> defs{};
 };
@@ -59344,8 +60473,11 @@ static void base_text_AddText(MdBuild* b, Str s,
     int added = segments ? segments->len : 0;
     MdNode* n = b->cur;
     MdRun* r = n->runLast;
+
+    bool sameWash = r && r->hasHighlight == b->hasHighlight &&
+                    (!r->hasHighlight || RgbaEq(r->highlight, b->highlight));
     if (r && !r->imgSrc.s && !r->hasCustom && r->marks == b->marks &&
-        r->href.s == b->href.s && r->text.s + len(r->text) == s.s) {
+        sameWash && r->href.s == b->href.s && r->text.s + len(r->text) == s.s) {
         if (added > 0) {
             int total = r->segmentCount + added;
             SourceSegment* merged = TextArenaArray<SourceSegment>(b->a, total);
@@ -59369,6 +60501,8 @@ static void base_text_AddText(MdBuild* b, Str s,
     r = ArenaNew<MdRun>(b->a);
     r->text = s;
     r->marks = b->marks;
+    r->highlight = b->highlight;
+    r->hasHighlight = b->hasHighlight;
     r->href = b->href;
     if (added > 0) {
         SourceSegment* copy = TextArenaArray<SourceSegment>(b->a, added);
@@ -59402,6 +60536,8 @@ static void base_text_AddImage(MdBuild* b, Str src, Str alt, float w, float h,
     r->imgW = w;
     r->imgH = h;
     r->marks = b->marks;
+    r->highlight = b->highlight;
+    r->hasHighlight = b->hasHighlight;
     r->href = b->href;
     if (n->runLast) {
         n->runLast->next = r;
@@ -59437,6 +60573,8 @@ static void AddCustomInline(MdBuild* b, const MarkdownNode& custom,
     r->text = r->custom.text;
     r->hasCustom = true;
     r->marks = b->marks;
+    r->highlight = b->highlight;
+    r->hasHighlight = b->hasHighlight;
     r->href = b->href;
     if (n->runLast) {
         n->runLast->next = r;
@@ -59466,7 +60604,8 @@ Str MdDecodeEntity(Arena* a, Str e) {
     return value.s ? value : e;
 }
 
-static bool MdInlineHtmlTag(Str v, bool* closing, char* name, int cap) {
+static bool MdInlineHtmlTag(Str v, bool* closing, char* name, int cap,
+                            Str* attrs) {
     int s = 0;
     int e = len(v);
     auto space = [](char c) {
@@ -59478,6 +60617,7 @@ static bool MdInlineHtmlTag(Str v, bool* closing, char* name, int cap) {
     while (e > s && space(v.s[e - 1])) {
         e--;
     }
+    if (attrs) *attrs = {};
     if (e - s < 2 || v.s[s] != '<' || v.s[e - 1] != '>') {
         return false;
     }
@@ -59502,6 +60642,13 @@ static bool MdInlineHtmlTag(Str v, bool* closing, char* name, int cap) {
         s++;
     }
     name[n] = 0;
+    if (attrs && n > 0) {
+        int as = s;
+        int ae = e;
+        while (as < ae && space(v.s[as])) as++;
+        while (ae > as && space(v.s[ae - 1])) ae--;
+        *attrs = Str((char*)v.s + as, ae - as);
+    }
     return n > 0;
 }
 
@@ -59511,7 +60658,54 @@ static uint8_t MdInlineHtmlMark(const char* name) {
     if (!strcmp(name, "u")) return MdUnderline;
     if (!strcmp(name, "s") || !strcmp(name, "del") || !strcmp(name, "strike"))
         return MdDel;
+    if (!strcmp(name, "mark")) return MdHighlight;
     return 0;
+}
+
+static bool MdInlineHtmlAttr(Str attrs, const char* name, Str* value) {
+    if (value) *value = {};
+    if (!name || !value) return false;
+    if (!attrs.s || len(attrs) <= 0) return true;
+    int i = 0;
+    int n = len(attrs);
+    int nameLen = (int)strlen(name);
+    auto space = [](char c) {
+        return c == ' ' || c == '\t' || c == '\n' || c == '\r';
+    };
+    while (i < n) {
+        while (i < n && space(attrs.s[i])) i++;
+        if (i >= n) break;
+        int keyStart = i;
+        while (i < n && !space(attrs.s[i]) && attrs.s[i] != '=' &&
+               attrs.s[i] != '/' && attrs.s[i] != '>') {
+            i++;
+        }
+        if (i == keyStart) break;
+        Str key(attrs.s + keyStart, i - keyStart);
+        while (i < n && space(attrs.s[i])) i++;
+        Str val = {};
+        if (i < n && attrs.s[i] == '=') {
+            i++;
+            while (i < n && space(attrs.s[i])) i++;
+            if (i < n && (attrs.s[i] == '"' || attrs.s[i] == '\'')) {
+                char q = attrs.s[i++];
+                int vs = i;
+                while (i < n && attrs.s[i] != q) i++;
+                if (i >= n) return false;
+                val = Str(attrs.s + vs, i - vs);
+                i++;
+            } else {
+                int vs = i;
+                while (i < n && !space(attrs.s[i])) i++;
+                val = Str(attrs.s + vs, i - vs);
+            }
+        }
+        if (len(key) == nameLen && StrEqI(key, Str(name, nameLen))) {
+            *value = val;
+            return true;
+        }
+    }
+    return true;
 }
 
 static void MdInlineHtml(MdBuild* b, Str tag) {
@@ -59523,7 +60717,7 @@ static void MdInlineHtml(MdBuild* b, Str tag) {
 
     bool closing = false;
     char name[16];
-    if (MdInlineHtmlTag(tag, &closing, name, (int)sizeof name) &&
+    if (MdInlineHtmlTag(tag, &closing, name, (int)sizeof name, nullptr) &&
         MdInlineHtmlMark(name)) {
         return;
     }
@@ -59563,10 +60757,10 @@ struct MdInlineItem {
 };
 
 static bool MdItemTag(MdBuild* b, const MdInlineItem& item, bool* closing,
-                      char* name, int cap) {
+                      char* name, int cap, Str* attrs = nullptr) {
     return item.node->kind == md::NodeKind::Html &&
            MdInlineHtmlTag(V(b, item.node, md::NodeStrKind::Value), closing,
-                           name, cap);
+                           name, cap, attrs);
 }
 
 static int MdMatchingCloseTag(MdBuild* b, const MdInlineItem* items, int count,
@@ -59598,17 +60792,32 @@ static void MdInlineItems(MdBuild* b, const MdInlineItem* items, int count) {
         b->posShift = items[i].shift;
         bool closing = false;
         char name[16];
+        Str attrs = {};
         if (b->cur->kind != MdKind::Html &&
-            MdItemTag(b, items[i], &closing, name, (int)sizeof name) &&
+            MdItemTag(b, items[i], &closing, name, (int)sizeof name, &attrs) &&
             !closing) {
             uint8_t mark = MdInlineHtmlMark(name);
             int close =
                 mark ? MdMatchingCloseTag(b, items, count, i, name) : -1;
             if (close >= 0) {
                 uint8_t saved = b->marks;
+                Rgba savedHighlight = b->highlight;
+                bool savedHasHighlight = b->hasHighlight;
                 b->marks = (uint8_t)(b->marks | mark);
+                if (mark & MdHighlight) {
+                    Str colorAttr;
+                    Str styleAttr;
+                    bool colorOk = MdInlineHtmlAttr(attrs, "color", &colorAttr);
+                    bool styleOk = MdInlineHtmlAttr(attrs, "style", &styleAttr);
+                    b->highlight =
+                        MarkColorFromValues(colorOk ? colorAttr : Str{},
+                                            styleOk ? styleAttr : Str{});
+                    b->hasHighlight = true;
+                }
                 MdInlineItems(b, items + i + 1, close - i - 1);
                 b->marks = saved;
+                b->highlight = savedHighlight;
+                b->hasHighlight = savedHasHighlight;
                 i = close;
                 continue;
             }
@@ -60633,13 +61842,14 @@ El* TextView::ImageRun(MdRun* r, float font, Rgba color, bool inFlow) {
 }
 
 El* TextView::Word(Str w, float font, Rgba color, uint8_t marks, int weight,
-                   Str href) {
+                   Str href, Rgba highlight, bool hasHighlight) {
     Rgba c = color;
+    Rgba markBg = hasHighlight ? highlight : kMarkBg;
     if (marks & MdLink) {
 
         c = textViewStyle.link;
     }
-    if (marks & MdHighlight) {
+    if ((marks & MdHighlight) && RgbaEq(markBg, kMarkBg)) {
         c = kMarkFg;
     }
     El* t = TextEl(a, w)->Font(font);
@@ -60668,7 +61878,7 @@ El* TextView::Word(Str w, float font, Rgba color, uint8_t marks, int weight,
         t->Strikethrough();
     }
     if (marks & MdHighlight) {
-        t->Bg(kMarkBg);
+        t->Bg(markBg);
     } else if (marks & MdCode) {
 
         float radius = base_theme::Theme::Global(cx->app).tokens.radius.sm;
@@ -60766,6 +61976,8 @@ El* TextView::Inline(MdNode* n, float font, Rgba color, int weight,
     int wordLen = 0;
     uint8_t marks = 0;
     Str href = {};
+    Rgba highlight = {};
+    bool hasHighlight = false;
 
     MdRun* wordRun = nullptr;
     int wordStart = 0;
@@ -60781,7 +61993,7 @@ El* TextView::Inline(MdNode* n, float font, Rgba color, int weight,
             return;
         }
         El* w = Word(StrDup(a, Str(word, wordLen)), font, color, marks, weight,
-                     href);
+                     href, highlight, hasHighlight);
         if (wordRun) {
             SrcMap(w, wordRun->segments, wordRun->segmentCount, wordStart);
             RangeWashes(w, n, runOffset + wordStart,
@@ -60802,6 +62014,8 @@ El* TextView::Inline(MdNode* n, float font, Rgba color, int weight,
         flush();
         marks = r->marks;
         href = r->href;
+        highlight = r->highlight;
+        hasHighlight = r->hasHighlight;
         runOffset = nextRunOffset;
         nextRunOffset += len(r->text);
         if (r->hasCustom) {
@@ -60843,7 +62057,8 @@ El* TextView::Inline(MdNode* n, float font, Rgba color, int weight,
                 }
                 row->Child(rendered.element);
             } else if (r->custom.text) {
-                El* w = Word(r->custom.text, font, color, marks, weight, href);
+                El* w = Word(r->custom.text, font, color, marks, weight, href,
+                             highlight, hasHighlight);
 
                 SourceSegment* whole = nullptr;
                 if (r->custom.hasSpan) {
@@ -63697,17 +64912,34 @@ El* TextView::IntoEl() {
                                  : Listener{});
     }
 
+    El* scrollBox = nullptr;
     if (scrollable && cx->win && managed) {
         uint32_t key = TextViewScrollKey(state);
-        element = Div(a)
-                      ->FlexCol()
-                      ->W(kFill)
-                      ->H(kFill)
-                      ->ClipY()
-                      ->ScrollY(managed->scrollY)
-                      ->ScrollId((int)key)
-                      ->OnScroll(ListenTo(state, &TextViewState::OnScroll))
-                      ->Child(element);
+        Listener onScroll = ListenTo(state, &TextViewState::OnScroll);
+        scrollBox = Div(a)
+                        ->FlexCol()
+                        ->W(kFill)
+                        ->H(kFill)
+                        ->ClipY()
+                        ->ScrollY(managed->scrollY)
+                        ->ScrollId((int)key)
+                        ->OnScroll(onScroll)
+                        ->Child(element);
+        element = scrollBox;
+        Entity<ScrollBounceMetrics> met =
+            ScrollBounceMetricsEntity(cx, StrL("text-view-bounce"), true);
+        ScrollBounceMetrics* m = met.Get(cx);
+        if (m) {
+            m->offset = managed->scrollY;
+            element =
+                ScrollBounce::New(cx, StrL("text-view-bounce"),
+                                  PositiveScrollHandle(&m->slot), scrollBox)
+                    ->Measure(&m->slot)
+                    ->OnScroll(onScroll)
+                    ->IntoEl();
+
+            element->FlexCol()->W(kFill)->H(kFill)->MinH(0);
+        }
     }
     if (outerStyleFields) {
         element->Refine(outerStyle, outerStyleFields);
@@ -63723,15 +64955,17 @@ El* TextView::IntoEl() {
             ->OnAction(input::Copy(), onAction)
             ->OnAction(input::SelectAll(), onAction);
     }
-    element = RevealReportView(element, managed);
-    element->lifecycle = ArenaNew<ElLifecycle>(a);
-    element->lifecycle->afterPaint = &TextView::RevealPainted;
-    element->lifecycle->user = this;
+
+    El* revealed = scrollBox ? scrollBox : element;
+    revealed = RevealReportView(revealed, managed);
+    revealed->lifecycle = ArenaNew<ElLifecycle>(a);
+    revealed->lifecycle->afterPaint = &TextView::RevealPainted;
+    revealed->lifecycle->user = this;
     if (inheritedBuilder) {
         inheritedBuilder->state = state;
         inheritedBuilder->textViewStyle = textViewStyle;
-        element->lifecycle->prepareStyle = &TextView::PrepareInheritedColor;
-        element->lifecycle->user = inheritedBuilder;
+        revealed->lifecycle->prepareStyle = &TextView::PrepareInheritedColor;
+        revealed->lifecycle->user = inheritedBuilder;
     }
     return element;
 }
@@ -66359,15 +67593,18 @@ VirtualRange VirtualListVisibleRows(int count, float rowSize, float offset,
         return r;
     }
 
-    int first = (int)(offset / rowSize);
-    if (first < 0 || first >= count) {
-        first = 0;
+    double row = (double)rowSize;
+    double top = (double)offset / row;
+    int first = 0;
+    if (top > 0 && top < (double)count) {
+        first = (int)top;
     }
     r.first = first;
 
-    int last = (int)((offset + viewport) / rowSize);
-    if (last < 0) {
-        last = 0;
+    double bottom = ((double)offset + (double)viewport) / row;
+    int last = 0;
+    if (bottom > 0) {
+        last = bottom >= (double)count ? count : (int)bottom;
     }
     int end = last >= count ? count : last + 2;
     r.end = end < count ? end : count;
@@ -66375,6 +67612,13 @@ VirtualRange VirtualListVisibleRows(int count, float rowSize, float offset,
         r.end = r.first;
     }
     return r;
+}
+
+float VirtualListUniformAlong(int ix, float stride, float offset) {
+    if (ix < 0 || stride == 0) {
+        return 0;
+    }
+    return (float)((double)ix * (double)stride - (double)offset);
 }
 
 float VirtualListItemOrigin(const float* sizes, int count, int ix) {
@@ -66584,7 +67828,8 @@ static void VirtualListAfterPaint(PaintCtx* ctx, El* e, void* user) {
         WindowRequestAutoscroll(ctx->window, want);
         return;
     }
-    float delta = want.y < top || want.h > height ? want.y - top
+    float delta = want.y < top || want.h > height
+                      ? want.y - top
                       : std::max(want.y + want.h - (top + height), 0.f);
     float next = std::min(std::max(e->scrollY + delta, 0.f),
                           std::max(e->contentH - e->h, 0.f));
@@ -66602,17 +67847,17 @@ static El* VirtualListTakeRow(const VirtualListOpts& o, El** rangeRows,
 }
 
 static void VirtualListPlace(PaintCtx* ctx, El* e, El* made, Axis axis,
-                             float pad, float innerW, float innerH,
-                             float origin, float offset, float extent) {
+                             float pad, float innerW, float innerH, float along,
+                             float extent) {
     float x = e->x + pad;
     float y = e->y + pad;
     float w = innerW;
     float h = innerH;
     if (axis == Axis::Horizontal) {
-        x += origin - offset;
+        x += along;
         w = extent;
     } else {
-        y += origin - offset;
+        y += along;
         h = extent;
     }
 
@@ -66666,18 +67911,23 @@ static void VirtualListBindRows(PaintCtx* ctx, El* e, VirtualListPaint* paint,
                 }
                 if (ix < layout->sizes.len) layout->sizes[ix] = extent;
             }
-            VirtualListPlace(ctx, e, made, axis, pad, innerW, innerH, origin,
-                             offset, extent);
+            VirtualListPlace(ctx, e, made, axis, pad, innerW, innerH,
+                             origin - offset, extent);
             along += extent;
             origin += extent;
             ix++;
         }
         return;
     }
-    VirtualRange vis = VirtualListVisibleRangeFromLayout(
-        layout->origins.len ? layout->origins.els : nullptr,
-        layout->sizes.len ? layout->sizes.els : nullptr, o.count, offset,
-        viewport);
+
+    bool uniform = !o.sizes && o.rowH > 0;
+    float stride = o.rowH + o.gap;
+    VirtualRange vis =
+        uniform ? VirtualListVisibleRows(o.count, stride, offset, viewport)
+                : VirtualListVisibleRangeFromLayout(
+                      layout->origins.len ? layout->origins.els : nullptr,
+                      layout->sizes.len ? layout->sizes.els : nullptr, o.count,
+                      offset, viewport);
     int visibleCount = vis.end - vis.first;
     El** rangeRows = nullptr;
     if (o.range && visibleCount > 0 && cx.a) {
@@ -66696,10 +67946,16 @@ static void VirtualListBindRows(PaintCtx* ctx, El* e, VirtualListPaint* paint,
             made = Div(cx.a);
         }
         float extent = ix < layout->sizes.len ? layout->sizes[ix] : o.rowH;
-        float origin =
-            ix < layout->origins.len ? layout->origins[ix] : (float)ix * o.rowH;
-        VirtualListPlace(ctx, e, made, axis, pad, innerW, innerH, origin,
-                         offset, extent);
+        float along;
+        if (uniform) {
+            along = VirtualListUniformAlong(ix, stride, offset);
+        } else {
+            float origin = ix < layout->origins.len ? layout->origins[ix]
+                                                    : (float)ix * o.rowH;
+            along = origin - offset;
+        }
+        VirtualListPlace(ctx, e, made, axis, pad, innerW, innerH, along,
+                         extent);
     }
 }
 
@@ -67433,7 +68689,7 @@ static float CardRadius(UiSize size, const Theme& th) {
     return size == UiSize::XSmall ? th.radius : th.radiusLg;
 }
 
-static El* ShadowSm(Arena* a, El* e) {
+static El* ui_attachment_ShadowSm(Arena* a, El* e) {
     BoxShadow* shadows = (BoxShadow*)Alloc(a, (int)sizeof(BoxShadow) * 2);
     if (!shadows) {
         return e;
@@ -67522,7 +68778,7 @@ static El* RetryButton(Ctx* cx, Str id, Listener onRetry) {
                      ->OnClick(onRetry)
                      ->IntoEl();
     button->Pad(0)->Radius(kRadiusFull)->Bg(th.tokens.background);
-    return ShadowSm(a, button);
+    return ui_attachment_ShadowSm(a, button);
 }
 
 El* AttachmentMedia::IntoEl() {
@@ -68089,7 +69345,7 @@ static El* RemoveButton(Ctx* cx, Str id, Listener onRemove) {
         ->Radius(kRadiusFull)
         ->Bg(th.tokens.background)
         ->Border(1, th.border);
-    return ShadowSm(a, button);
+    return ui_attachment_ShadowSm(a, button);
 }
 
 El* Attachment::IntoEl() {
@@ -76281,6 +77537,10 @@ Command* Command::Bordered(bool v) {
     bordered = v;
     return this;
 }
+Command* Command::ScrollBounce(bool v) {
+    scrollBounce = v ? 1 : 0;
+    return this;
+}
 Command* Command::W(float v) {
     w = v;
     return this;
@@ -76553,7 +77813,11 @@ El* Command::IntoEl() {
                        ->Pad(inset)
                        ->Row(CommandRowEl, rowCx)
                        ->IntoEl();
-        listBox->Child(list);
+        gpui::ScrollBounce* bounce =
+            gpui::ScrollBounce::New(cx, StrL("command-scroll-bounce"),
+                                    VirtualListScrollbar(&s->scroll), list);
+        if (scrollBounce >= 0) bounce->Enabled(scrollBounce == 1);
+        listBox->Child(bounce->IntoEl());
     }
     box->Child(listBox);
     if (footer) {
@@ -76846,7 +78110,8 @@ static float DialogEase(float t) {
 static Easing gDialogEnterEase = Easing::EaseOut();
 
 static float DialogEnterEase(float t) {
-    return gDialogEnterEase.Sample(t);
+
+    return ClampF01(gDialogEnterEase.Sample(t));
 }
 
 float DialogFadeSlideOffset(float top, float topLimit, float travel,
@@ -80420,15 +81685,25 @@ static int ScrollTop(const DiffState* self) {
     return self->scrollItem;
 }
 
+static bool ScrolledToEnd(const DiffState* self) {
+    const VirtualListScrollHandle& h = self->listScroll;
+    if (h.itemsCount <= 0 || h.viewport <= 0 || h.contentSize <= 0) {
+        return false;
+    }
+    return h.offset + h.viewport >= h.contentSize - 0.5f;
+}
+
 static void MoveChange(DiffState* self, bool forward, Ctx* cx) {
     int top = ScrollTop(self);
     int n = len(self->changeRows);
     if (n == 0) return;
     int target = -1;
     if (forward) {
+
         int i = 0;
         while (i < n && self->changeRows[i] <= top) i++;
-        target = i < n ? self->changeRows[i] : self->changeRows[0];
+        bool atEnd = ScrolledToEnd(self);
+        target = i < n && !atEnd ? self->changeRows[i] : self->changeRows[0];
     } else {
         int i = 0;
         while (i < n && self->changeRows[i] < top) i++;
@@ -81069,10 +82344,13 @@ El* Diff::IntoEl() {
     root->OnAction(Act("diff::ExtendUp"), ListenTo(state, &OnDiffAction));
     root->OnAction(Act("diff::ExtendDown"), ListenTo(state, &OnDiffAction));
     root->OnAction(input::Copy(), ListenTo(state, &OnDiffAction));
-    root->Child(VirtualList::New(cx, len(st->rows))
-                    ->RowH(24)
-                    ->Handle(&st->listScroll)
-                    ->Row(&ui_diff_RenderRow, this)
+    El* rows = VirtualList::New(cx, len(st->rows))
+                   ->RowH(24)
+                   ->Handle(&st->listScroll)
+                   ->Row(&ui_diff_RenderRow, this)
+                   ->IntoEl();
+    root->Child(ScrollBounce::New(cx, StrL("diff-bounce"),
+                                  VirtualListScrollbar(&st->listScroll), rows)
                     ->IntoEl());
     return root;
 }
@@ -82549,25 +83827,166 @@ bool CompletionMenu::HandleAction(InputAction action) {
     return editor && InputCompletionAction(editor, cx->app, cx->win, action);
 }
 
+static float CaretPopupX(const InputState* s) {
+    if (!s) return 0;
+    return s->caretWinX > 0 ? s->caretWinX - 4.f : s->inputBounds.x;
+}
+
+static float CaretPopupY(const InputState* s) {
+    if (!s) return 0;
+    float lineH = s->lastLineH > 0 ? s->lastLineH : 20.f;
+    return s->caretWinY > 0 ? s->caretWinY + 4.f
+                            : s->inputBounds.y + lineH + 4.f;
+}
+
+static float PopupWindowW(Ctx* cx, PaintCtx* ctx) {
+    if (ctx && ctx->viewW > 0) return ctx->viewW;
+    if (cx && cx->win) return WindowSize(cx->win).dipW;
+    return 0;
+}
+
+struct MenuWidth {
+    float maxW = 0;
+    bool vertical = false;
+};
+
+static MenuWidth CompletionWidth(float x, float configuredMax, float windowW) {
+    MenuWidth w;
+    w.maxW = configuredMax;
+    if (windowW > 0 && windowW - x < w.maxW) w.maxW = windowW - x;
+    if (w.maxW < 120.f) w.maxW = 120.f;
+    const float gap = 4.f;
+    w.vertical =
+        windowW > 0 && x + configuredMax + gap + configuredMax + gap > windowW;
+    return w;
+}
+
+static float CodeActionWidth(float x, float windowW) {
+    float maxW = windowW > x ? windowW - x : 120.f;
+    if (maxW > 320.f) maxW = 320.f;
+    if (maxW < 120.f) maxW = 120.f;
+    return maxW;
+}
+
+struct CaretMenuAnchor {
+    CompletionMenu* completion = nullptr;
+    CodeActionMenu* codeAction = nullptr;
+    App* app = nullptr;
+    Window* win = nullptr;
+    uint32_t path = 0;
+    float maxW = 0;
+    bool vertical = false;
+};
+
+static void AnchorFromCtx(CaretMenuAnchor* anchor, Ctx* cx) {
+    if (!anchor || !cx) return;
+    anchor->app = cx->app;
+    anchor->win = cx->win;
+    anchor->path = cx->path;
+}
+
+static void ShiftMenu(El* e, float dx, float dy) {
+    if (!e || (dx == 0.f && dy == 0.f)) return;
+    e->x += dx;
+    e->y += dy;
+    for (El* c = e->first; c; c = c->next) {
+        ShiftMenu(c, dx, dy);
+    }
+}
+
+static El* CompletionMenuContent(CompletionMenu* self, Ctx* cx, float maxW,
+                                 bool vertical);
+static El* CodeActionMenuContent(CodeActionMenu* self, Ctx* cx, float maxW);
+
+static void PlaceCaretMenu(PaintCtx* ctx, El* e, void* user) {
+    auto* anchor = (CaretMenuAnchor*)user;
+    if (!anchor || !e) return;
+    InputState* state = anchor->completion   ? anchor->completion->editor
+                        : anchor->codeAction ? anchor->codeAction->state
+                                             : nullptr;
+    if (!state) return;
+    float x = CaretPopupX(state);
+    float y = CaretPopupY(state);
+
+    Ctx frame = {};
+    frame.app = anchor->app ? anchor->app : (ctx ? ctx->app : nullptr);
+    frame.win = anchor->win ? anchor->win : (ctx ? ctx->window : nullptr);
+    frame.a = e->arena;
+    frame.path = anchor->path;
+    Ctx* cx = &frame;
+    float windowW = PopupWindowW(cx, ctx);
+    bool rebuild = false;
+    float maxW = anchor->maxW;
+    bool vertical = anchor->vertical;
+    if (anchor->completion) {
+        MenuWidth now = CompletionWidth(x, state->completionMenuMaxW, windowW);
+        rebuild = now.maxW != anchor->maxW || now.vertical != anchor->vertical;
+        maxW = now.maxW;
+        vertical = now.vertical;
+    } else {
+        float now = CodeActionWidth(x, windowW);
+        rebuild = now != anchor->maxW;
+        maxW = now;
+    }
+    if (!rebuild) {
+        ShiftMenu(e, x - e->x, y - e->y);
+        return;
+    }
+
+    e->first = nullptr;
+    e->last = nullptr;
+    El* content =
+        anchor->completion
+            ? CompletionMenuContent(anchor->completion, cx, maxW, vertical)
+            : CodeActionMenuContent(anchor->codeAction, cx, maxW);
+    if (!content) return;
+    LayoutEl(ctx, content, x, y, 0, 0, e->laidFont, e->style.color);
+    e->Child(content);
+    e->x = x;
+    e->y = y;
+    e->w = content->w;
+    e->h = content->h;
+    IdsCollectChildren(e);
+}
+
 El* CompletionMenu::IntoEl() {
     if (!editor || !editor->completion.open ||
         editor->completion.items.len <= 0) {
         return nullptr;
     }
+    float x = CaretPopupX(editor);
+    float y = CaretPopupY(editor);
+    float windowW = PopupWindowW(cx, nullptr);
+    MenuWidth width = CompletionWidth(x, editor->completionMenuMaxW, windowW);
+    Entity<InputMenuViewState> view =
+        InputMenuView(cx, editor, "completion-menu");
+    El* content = CompletionMenuContent(this, cx, width.maxW, width.vertical);
+    auto* anchor = ArenaNew<CaretMenuAnchor>(a);
+    anchor->completion = this;
+    anchor->maxW = width.maxW;
+    anchor->vertical = width.vertical;
+    AnchorFromCtx(anchor, cx);
+    El* root = Div(a)
+                   ->Fixed()
+                   ->Left(x)
+                   ->Top(y)
+                   ->PathClick(StrL("completion-menu"))
+                   ->OnMouseDownOut(
+                       ListenTo(view, &InputMenuViewState::CompletionOutside))
+                   ->Child(content);
+    root->customUser = anchor;
+    root->prePaint = &PlaceCaretMenu;
+    return root;
+}
+
+static El* CompletionMenuContent(CompletionMenu* self, Ctx* cx, float maxW,
+                                 bool vertical) {
+    if (!self || !self->editor || !cx) return nullptr;
+    Arena* a = self->a;
+    InputState* editor = self->editor;
     const Theme& theme = ThemeNow(cx->app);
-    float x =
-        editor->caretWinX > 0 ? editor->caretWinX - 4.f : editor->inputBounds.x;
-    float lineH = editor->lastLineH > 0 ? editor->lastLineH : 20.f;
-    float y = editor->caretWinY > 0 ? editor->caretWinY + 4.f
-                                    : editor->inputBounds.y + lineH + 4.f;
     float configuredMax = editor->completionMenuMaxW;
-    float windowW = cx->win ? WindowSize(cx->win).dipW : 0.f;
-    float maxW = configuredMax;
-    if (windowW > 0 && windowW - x < maxW) maxW = windowW - x;
-    if (maxW < 120.f) maxW = 120.f;
     const float gap = 4.f;
-    bool vertical =
-        windowW > 0 && x + configuredMax + gap + configuredMax + gap > windowW;
     Entity<InputMenuViewState> view =
         InputMenuView(cx, editor, "completion-menu");
 
@@ -82644,12 +84063,7 @@ El* CompletionMenu::IntoEl() {
                                     ->Selectable()
                                     ->IntoEl()));
     }
-    return Div(a)
-        ->Fixed()
-        ->Left(x)
-        ->Top(y)
-        ->OnMouseDownOut(ListenTo(view, &InputMenuViewState::CompletionOutside))
-        ->Child(menu);
+    return menu;
 }
 
 CodeActionMenu* CodeActionMenu::New(Ctx* cx, InputState* state) {
@@ -82680,16 +84094,36 @@ bool CodeActionMenu::HandleAction(InputAction action) {
 El* CodeActionMenu::IntoEl() {
     if (!state || !state->codeActions.open || state->codeActions.items.len <= 0)
         return nullptr;
+    float x = CaretPopupX(state);
+    float y = CaretPopupY(state);
+    float windowW = PopupWindowW(cx, nullptr);
+    if (windowW <= 0) windowW = 320.f;
+    float maxW = CodeActionWidth(x, windowW);
+    Entity<InputMenuViewState> view =
+        InputMenuView(cx, state, "code-action-menu");
+    El* content = CodeActionMenuContent(this, cx, maxW);
+    auto* anchor = ArenaNew<CaretMenuAnchor>(a);
+    anchor->codeAction = this;
+    anchor->maxW = maxW;
+    AnchorFromCtx(anchor, cx);
+    El* root = Div(a)
+                   ->Fixed()
+                   ->Left(x)
+                   ->Top(y)
+                   ->PathClick(StrL("code-action-menu"))
+                   ->OnMouseDownOut(
+                       ListenTo(view, &InputMenuViewState::CodeActionOutside))
+                   ->Child(content);
+    root->customUser = anchor;
+    root->prePaint = &PlaceCaretMenu;
+    return root;
+}
+
+static El* CodeActionMenuContent(CodeActionMenu* self, Ctx* cx, float maxW) {
+    if (!self || !self->state || !cx) return nullptr;
+    Arena* a = self->a;
+    InputState* state = self->state;
     const Theme& theme = ThemeNow(cx->app);
-    float x =
-        state->caretWinX > 0 ? state->caretWinX - 4.f : state->inputBounds.x;
-    float lineH = state->lastLineH > 0 ? state->lastLineH : 20.f;
-    float y = state->caretWinY > 0 ? state->caretWinY + 4.f
-                                   : state->inputBounds.y + lineH + 4.f;
-    float windowW = cx->win ? WindowSize(cx->win).dipW : 320.f;
-    float maxW = windowW > x ? windowW - x : 120.f;
-    if (maxW > 320.f) maxW = 320.f;
-    if (maxW < 120.f) maxW = 120.f;
     El* list = PopoverSurface(
         cx,
 
@@ -82718,12 +84152,7 @@ El* CodeActionMenu::IntoEl() {
                        ->LineHeight(1.f));
         list->Child(row);
     }
-    return Div(a)
-        ->Fixed()
-        ->Left(x)
-        ->Top(y)
-        ->OnMouseDownOut(ListenTo(view, &InputMenuViewState::CodeActionOutside))
-        ->Child(list);
+    return list;
 }
 
 DiagnosticPopover* DiagnosticPopover::New(Ctx* cx, InputState* state,
@@ -83419,6 +84848,9 @@ El* Highlighter::IntoEl() {
 
     style.activeLineBleedL = editorPad.left;
     El* editor = gpui::Editor::New(cx, state, style);
+
+    float stretch = InputBouncePaint(state, cx->win);
+    if (stretch != 0) editor->PaintOffset(0, stretch);
     bool padded = editorPad.left != 0 || editorPad.right != 0 ||
                   editorPad.top != 0 || editorPad.bottom != 0;
     El* scroller = editor;
@@ -84391,11 +85823,19 @@ Editor* Editor::Folding(bool value) {
     return this;
 }
 
+Editor* Editor::WithSize(UiSize value) {
+    size = value;
+    return this;
+}
+
 Editor* Editor::Refine(const gpui::Style& value, uint32_t fields) {
     StyleApplyFields(&style, value, fields);
     styleFields |= fields;
     return this;
 }
+
+static void InputSizeMetrics(const Ctx* cx, UiSize size, float* h, float* padX,
+                             float* padY, float* font);
 
 El* Editor::IntoEl() {
     if (!state) return Div(a);
@@ -84418,7 +85858,10 @@ El* Editor::IntoEl() {
     if (fontSize > 0) highlighter->Font(fontSize);
     highlighter->FontFamily(fontFamily);
 
-    highlighter->editorPad = Edges::New(6, 10, 8, 8);
+    float unusedH = 0, padX = 0, padY = 0, unusedFont = 0;
+    InputSizeMetrics(cx, size, &unusedH, &padX, &padY, &unusedFont);
+    float left = padX < 6.f ? padX : 6.f;
+    highlighter->editorPad = Edges::New(left, padX, padY, padY);
     El* element = highlighter->IntoEl();
 
     const Theme& theme = ThemeNow(cx->app);
@@ -85009,10 +86452,14 @@ El* Textarea::IntoEl() {
                   ->PadY(padY)
                   ->ClipY()
 
-                  ->ScrollY(state ? state->scrollY : 0)
-
                   ->ScrollFromPath()
-                  ->Child(gpui::Textarea::New(cx, state, editor));
+
+                  ->ScrollY(state ? state->scrollY : 0);
+    El* text = gpui::Textarea::New(cx, state, editor);
+
+    float stretch = InputBouncePaint(state, cx->win);
+    if (stretch != 0) text->PaintOffset(0, stretch);
+    box->Child(text);
     if (interactive) InputTrackFrameFocus(cx, box, state);
     if (accessibilityId.s) {
         box->AccessibilityId(accessibilityId);
@@ -86059,6 +87506,12 @@ struct InputGroupHost {
     }
 };
 
+static Easing gInputGroupEase = Easing::EaseOut();
+
+static float InputGroupEase(float t) {
+    return ClampF01(gInputGroupEase.Sample(t));
+}
+
 El* InputGroup::IntoEl() {
     const Theme& th = ThemeNow(cx->app);
     InputState* state = nullptr;
@@ -86095,8 +87548,8 @@ El* InputGroup::IntoEl() {
     InputGroupAppearance appearance =
         InputGroupAppearance::New(th, focused, groupDisabled, invalid);
 
-    Motion fast = MotionNew(th.motion.durationFastMs)
-                      .Ease(th.motion.easingMove);
+    gInputGroupEase = th.motion.easingMove;
+    Motion fast = MotionNew(th.motion.durationFastMs).Ease(InputGroupEase);
     Rgba border = MotionValue(cx, MotionId(id, StrL("border-color")),
                               appearance.border, fast);
     Rgba background = MotionValue(cx, MotionId(id, StrL("background-color")),
@@ -87620,6 +89073,11 @@ List* List::ScrollbarVisible(bool value) {
     return this;
 }
 
+List* List::ScrollBounce(bool value) {
+    scrollBounce = value ? 1 : 0;
+    return this;
+}
+
 List* List::Padding(float value) {
     padding = value < 0 ? 0 : value;
     return this;
@@ -87944,15 +89402,27 @@ El* List::IntoEl() {
     };
     opts.user = rows;
     opts.onScroll = ListenTo(state, &ListState::OnScroll);
+    s->contentH =
+        sizes ? VirtualListContentSize(sizes, total) : (float)total * s->rowH;
+    s->bounce.offset = &s->scrollY;
+    s->bounce.viewport = &s->viewportH;
+    s->bounce.content = &s->contentH;
 
-    El* body = gpui::VirtualList::New(cx, StrL("body"), opts)
-                   ->ScrollFromPath()
-                   ->OnScroll(opts.onScroll);
+    El* rowList = gpui::VirtualList::New(cx, StrL("body"), opts)
+                      ->ScrollFromPath()
+                      ->OnScroll(opts.onScroll);
+    if (!scrollbarVisible) {
+        rowList->HideScrollbar();
+    }
+
+    gpui::ScrollBounce* bounce =
+        gpui::ScrollBounce::New(cx, StrL("list-scroll-bounce"),
+                                PositiveScrollHandle(&s->bounce), rowList);
+    if (scrollBounce >= 0) bounce->Enabled(scrollBounce == 1);
+    bounce->OnScroll(opts.onScroll);
+    El* body = bounce->IntoEl();
     if (fill) {
         body->Flex1()->MinH(0);
-    }
-    if (!scrollbarVisible) {
-        body->HideScrollbar();
     }
     inner->Child(body);
 
@@ -89020,6 +90490,27 @@ PopupMenu* PopupMenu::ExternalLinkIcon(bool v) {
     return this;
 }
 
+static FocusHandle MenuActionFocus(PopupMenuState* s, Ctx* cx,
+                                   const char* actionContext) {
+    FocusHandle target = {};
+    if (!actionContext || !s || !cx) {
+        return target;
+    }
+    target = s->previousFocus;
+    Entity<PopupMenuState> parent = s->parent;
+    while (parent.IsValid()) {
+        PopupMenuState* up = parent.Get(cx);
+        if (!up) {
+            break;
+        }
+        if (up->previousFocus.IsValid()) {
+            target = up->previousFocus;
+        }
+        parent = up->parent;
+    }
+    return target;
+}
+
 static void OnPopupLinkClick(PopupMenuState* state, Ctx* cx, const ClickEvent*,
                              int64_t hrefPtr) {
     const Str* href = (const Str*)hrefPtr;
@@ -89035,6 +90526,10 @@ El* PopupMenu::IntoEl() {
     PopupMenuState* s = state.Get(cx);
     int selected = s ? s->selected : -1;
     int openSubmenu = s ? s->openSubmenu : -1;
+
+    if (s) {
+        s->submenuFocus = {};
+    }
 
     bool leftGutter = false;
     for (const MenuItem& it : items) {
@@ -89112,6 +90607,7 @@ El* PopupMenu::IntoEl() {
         ->OnAction(action::SelectLeft(), onAction)
         ->OnAction(action::SelectRight(), onAction);
 
+    FocusHandle actionFocus = MenuActionFocus(s, cx, actionContext);
     PopupMenuBeginRows(s);
     for (const MenuItem& it : items) {
         PopupMenuRow row;
@@ -89121,6 +90617,13 @@ El* PopupMenu::IntoEl() {
         row.link = it.isLink;
         row.href = it.href;
         row.handler = it.onClick;
+
+        if (it.action && !it.onClick.IsValid() && !it.submenu &&
+            !(it.isLink && it.href.s)) {
+            row.action = it.action;
+            row.actionArg = it.actionArg;
+            row.actionFocus = actionFocus;
+        }
         PopupMenuAddRow(s, row);
     }
 
@@ -89260,29 +90763,6 @@ El* PopupMenu::IntoEl() {
             } else {
                 BindClick(row, StrDup(a, fmt("%d", i)), ListenerArg(click, i));
 
-                if (it.action && !it.onClick.IsValid()) {
-
-                    FocusHandle target = {};
-                    if (actionContext && s) {
-                        target = s->previousFocus;
-                        Entity<PopupMenuState> parent = s->parent;
-                        while (parent.IsValid()) {
-                            PopupMenuState* up = parent.Get(cx);
-                            if (!up) {
-                                break;
-                            }
-                            if (up->previousFocus.IsValid()) {
-                                target = up->previousFocus;
-                            }
-                            parent = up->parent;
-                        }
-                    }
-                    if (target.IsValid()) {
-                        row->OnClickActionAt(it.action, target, it.actionArg);
-                    } else {
-                        row->OnClickAction(it.action, it.actionArg);
-                    }
-                }
                 row->OnHover(ListenerArg(hover, i));
             }
         }
@@ -89299,6 +90779,9 @@ El* PopupMenu::IntoEl() {
                 subState->side = s->side;
             }
             El* sub = it.submenu->IntoEl();
+            if (s && subState && subState->focus.IsValid()) {
+                s->submenuFocus = subState->focus;
+            }
             sub->Absolute()->Top(-Rems(cx, 0.25f));
             if (s && SideIsLeft(s->side)) {
                 sub->Right(menuW - 8);
@@ -89443,14 +90926,16 @@ static void ContextMenuOpenAt(ContextMenuState* self, Ctx* cx, float x, float y,
     menu->x = self->position.x;
     menu->y = self->position.y;
     PopupMenuOpen(menu, cx);
+    if (!menu->focus.IsValid()) {
+        menu->focus = FocusHandleNew(cx);
+    }
 
     InputState* field = cx->win ? cx->win->input : nullptr;
     if (field && field->focused && field->inputBounds.Contains({x, y})) {
-        if (!menu->focus.IsValid()) {
-            menu->focus = FocusHandleNew(cx);
-        }
         field->SetSelectionFocus(menu->focus);
     }
+
+    FocusHandleFocus(cx->win, menu->focus);
 }
 
 void ContextMenuState::OnMouseDown(ContextMenuState* self, Ctx* cx,
@@ -89694,6 +91179,8 @@ void MessageScrollerState::Init(MessageScrollerState* self, int itemCount) {
     self->handle = VirtualListScrollHandle{};
     self->handle.itemsCount = itemCount;
     self->followTail = true;
+
+    VirtualListScrollToBottomDeferred(&self->handle);
 }
 
 int MessageScrollerState::ItemCount() const {
@@ -89702,6 +91189,29 @@ int MessageScrollerState::ItemCount() const {
 
 bool MessageScrollerState::IsFollowingTail() const {
     return followTail;
+}
+
+ListOffset MessageScrollerState::LogicalScrollTop() const {
+    ListOffset top;
+
+    if (handle.pending) {
+        if (followTail) {
+            top.itemIx = heights.len;
+            return top;
+        }
+        int ix = handle.pendingIx + handle.pendingOffset;
+        if (ix < 0) {
+            ix = 0;
+        }
+        if (ix > heights.len) {
+            ix = heights.len;
+        }
+        top.itemIx = ix;
+        return top;
+    }
+    VirtualListLogicalFromPixel(heights.els, heights.len, 0, handle.offset,
+                                &top.itemIx, &top.offsetInItem);
+    return top;
 }
 
 bool MessageScrollerState::IsScrolledUp() const {
@@ -89806,8 +91316,18 @@ bool MessageScrollerState::ScrollToItem(Ctx* cx, int index) {
     if (index < 0 || index >= heights.len) {
         return false;
     }
+
     followTail = false;
-    VirtualListScrollToItemDeferred(&handle, index, ScrollStrategy::Top);
+    handle.pending = false;
+    float origin = VirtualListItemOrigin(heights.els, heights.len, index);
+    float most = handle.contentSize - handle.viewport;
+    if (handle.contentSize > 0 && handle.viewport > 0 && origin > most) {
+        origin = most > 0.f ? most : 0.f;
+    }
+    if (origin < 0) {
+        origin = 0;
+    }
+    handle.offset = origin;
     if (cx) {
         Notify(cx);
     }
@@ -89827,6 +91347,8 @@ void MessageScrollerState::OnScroll(MessageScrollerState* self, Ctx* cx,
     if (!self || !ev) {
         return;
     }
+
+    self->handle.pending = false;
     self->handle.offset = ev->offsetY;
 
     float maxOffset = self->handle.contentSize - self->handle.viewport;
@@ -89997,10 +91519,18 @@ El* MessageScroller::IntoEl() {
                    ->Row(&MessageScrollerRow, rc)
                    ->IntoEl();
 
-    list->ScrollMask(Axis::Vertical);
     if (!scrollbar) {
         list->HideScrollbarY();
     }
+    StrBuilder bounceName;
+    bounceName.Append(id);
+    bounceName.Append(StrL("-bounce"));
+    list = ScrollBounce::New(cx, StrDup(a, Str(bounceName.els, bounceName.len)),
+                             VirtualListScrollbar(&st->handle), list)
+               ->OnScroll(ListenTo(state, &MessageScrollerState::OnScroll))
+               ->IntoEl();
+
+    list->W(kFill)->H(kFill)->MinH(0)->MinW(0);
     if (listStyleSet) {
         list->Refine(listStyle, listStyleSet & ~(uint32_t)StyleFieldPad);
     }
@@ -93250,6 +94780,8 @@ El* ProgressCircle::IntoEl() {
     } else {
         value = MotionValue(cx, MotionId(StrL("progress-circle"), id), value,
                             ProgressMotion(ThemeNow(cx->app)));
+
+        value = ClampF(value, 0.f, 100.f);
         startValue = 0;
     }
     El* e = Div(a)
@@ -94611,6 +96143,8 @@ El* RenderResizeHandle(void*, const ResizeHandleContext* handle, Ctx* cx) {
         cx, MotionName(cx, StrL("resizable-handle-indicator-opacity")),
         target.opacity, policy);
 
+    opacity = ClampF01(opacity);
+
     El* line = Div(a)->FlexNone()->FlexRow()->Bg(th.border);
     if (horizontal) {
         line->W(1)->H(kFill)->ItemsCenter();
@@ -94843,16 +96377,36 @@ Scrollable* Scrollable::H(float v) {
     hSet = true;
     return this;
 }
+Scrollable* Scrollable::ScrollBounce(bool v) {
+    scrollBounce = v ? 1 : 0;
+    return this;
+}
 
 El* Scrollable::IntoEl() {
 
-    El* box = Scrollbar::Apply(cx, element, id.s ? id : StrL("scrollable"),
-                               scrollY, scrollX, onScroll, axis,
-                               modeSet ? mode : ScrollbarModeNow(cx->app));
+    Str scrollId = id.s ? id : StrL("scrollable");
+    El* box =
+        Scrollbar::Apply(cx, element, scrollId, scrollY, scrollX, onScroll,
+                         axis, modeSet ? mode : ScrollbarModeNow(cx->app));
     if (hSet) {
         box->H(h);
     }
-    return box;
+
+    if (axis == ScrollAxis::Horizontal) {
+        return box;
+    }
+    Entity<ScrollBounceMetrics> met =
+        ScrollBounceMetricsEntity(cx, scrollId, true);
+    ScrollBounceMetrics* m = met.Get(cx);
+    if (!m) return box;
+    m->offset = scrollY;
+    gpui::ScrollBounce* bounce =
+        gpui::ScrollBounce::New(cx, StrL("scrollable-bounce"),
+                                PositiveScrollHandle(&m->slot), box)
+            ->Measure(&m->slot);
+    if (scrollBounce >= 0) bounce->Enabled(scrollBounce == 1);
+    if (onScroll.IsValid()) bounce->OnScroll(onScroll);
+    return bounce->IntoEl();
 }
 
 El* ScrollableElement::Scrollbar(Ctx* cx, El* element, Str id, float scrollY,
@@ -95639,6 +97193,10 @@ SearchableList* SearchableList::InSelect(bool v) {
     inSelect = v;
     return this;
 }
+SearchableList* SearchableList::ScrollBounce(bool v) {
+    scrollBounce = v ? 1 : 0;
+    return this;
+}
 SearchableList* SearchableList::CheckIcon(IconName n) {
     checkIcon = n;
     return this;
@@ -95741,7 +97299,7 @@ El* SearchableList::IntoEl() {
         return box;
     }
 
-    El* rows = Div(a)->FlexCol()->W(kFill)->MaxH(maxH)->ClipY();
+    El* rows = Div(a)->FlexCol()->W(kFill)->Shrink0();
     Listener click = ListenTo(state, &SearchableListState::OnRowClick, 0);
     int lastSection = -1;
     for (int m = 0; m < s->matches.len; m++) {
@@ -95837,7 +97395,28 @@ El* SearchableList::IntoEl() {
         }
         rows->Child(row);
     }
-    box->Child(rows);
+    Entity<ScrollBounceMetrics> met =
+        ScrollBounceMetricsEntity(cx, StrL("searchable-list-bounce"), true);
+    ScrollBounceMetrics* m = met.Get(cx);
+    El* pane = Div(a)
+                   ->FlexCol()
+                   ->W(kFill)
+                   ->MaxH(maxH)
+                   ->ClipY()
+                   ->ScrollY(m ? m->offset : 0)
+                   ->ScrollFromPath()
+                   ->OnScroll(ListenTo(met, &ScrollBounceMetrics::OnScroll))
+                   ->Child(rows);
+    if (m) {
+        gpui::ScrollBounce* bounce =
+            gpui::ScrollBounce::New(cx, StrL("searchable-list-bounce"),
+                                    PositiveScrollHandle(&m->slot), pane)
+                ->Measure(&m->slot)
+                ->OnScroll(ListenTo(met, &ScrollBounceMetrics::OnScroll));
+        if (scrollBounce >= 0) bounce->Enabled(scrollBounce == 1);
+        pane = bounce->IntoEl();
+    }
+    box->Child(pane);
     if (footer) {
 
         box->Child(Div(a)
@@ -96307,6 +97886,10 @@ Select* Select::Searchable(InputState* q, Listener onFocus) {
     onQueryFocus = onFocus;
     return this;
 }
+Select* Select::ScrollBounce(bool v) {
+    scrollBounce = v ? 1 : 0;
+    return this;
+}
 Select* Select::Multiple(bool v) {
     SearchableListState* s = state.Get(cx);
     if (s) {
@@ -96569,6 +98152,7 @@ El* Select::IntoEl() {
         }
 
         list->MaxH(menuMaxH > 0 ? menuMaxH : Rems(cx, 20.f));
+        if (scrollBounce >= 0) list->ScrollBounce(scrollBounce == 1);
         if (footer) {
             list->Footer(footer);
         }
@@ -97720,6 +99304,19 @@ static void SettingsBuildPage(Ctx* cx, Settings* s, El* pane, int selected,
     }
     body->customPaint = &SettingsPageScrollPaint;
     body->customUser = scroll;
+    Entity<ScrollBounceMetrics> met =
+        ScrollBounceMetricsEntity(cx, StrL("settings-page-bounce"), true);
+    ScrollBounceMetrics* m = met.Get(cx);
+    if (m) {
+        m->offset = st ? st->scrollY : 0;
+        body = ScrollBounce::New(cx, StrL("settings-page-bounce"),
+                                 PositiveScrollHandle(&m->slot), body)
+                   ->Measure(&m->slot)
+                   ->OnScroll(ListenTo(state, &SettingsState::OnPageScroll))
+                   ->IntoEl();
+
+        body->FlexCol()->W(kFill)->Flex1()->MinH(0);
+    }
     pane->Child(head);
     pane->Child(body);
 }
@@ -98598,6 +100195,8 @@ El* SidebarMenuItem::IntoEl(Str id) {
                                   : IconName::ChevronRight)
                     ->Ghost()
                     ->WithSize(UiSize::XSmall)
+
+                    ->AccessibilityLabel(fmt("Toggle %s submenu", label))
                     ->OnClick(ListenTo(st, &SidebarMenuState::OnCaretClick))
                     ->IntoEl()
 
@@ -99068,13 +100667,24 @@ El* Sidebar::IntoEl() {
     Entity<SidebarScrollState> scrollState = KeyedEntity<SidebarScrollState>(
         cx, KeyedName(cx, StrL("sidebar-content-scroll")));
     SidebarScrollState* scroll = scrollState.Get(cx);
-    El* viewport =
-        gpui::Scrollbar::Vertical(
-            cx, StrL("sidebar-content-scroll"), scroll ? scroll->y : 0,
-            ListenTo(scrollState, &SidebarScrollState::OnScroll))
-            ->W(kFill)
-            ->H(kFill)
-            ->Child(inner);
+    Listener onScroll = ListenTo(scrollState, &SidebarScrollState::OnScroll);
+    El* viewport = gpui::Scrollbar::Vertical(cx, StrL("sidebar-content-scroll"),
+                                             scroll ? scroll->y : 0, onScroll)
+                       ->W(kFill)
+                       ->H(kFill)
+                       ->Child(inner);
+    Entity<ScrollBounceMetrics> met =
+        ScrollBounceMetricsEntity(cx, StrL("sidebar-content-scroll"), true);
+    ScrollBounceMetrics* m = met.Get(cx);
+    if (m) {
+        m->offset = scroll ? scroll->y : 0;
+        viewport = ScrollBounce::New(cx, StrL("sidebar-bounce"),
+                                     PositiveScrollHandle(&m->slot), viewport)
+                       ->Measure(&m->slot)
+                       ->OnScroll(onScroll)
+                       ->IntoEl();
+        viewport->W(kFill)->H(kFill);
+    }
     body->Child(viewport);
     root->Child(body);
     if (footer) {
@@ -99211,6 +100821,10 @@ Slider* Slider::Bg(Rgba c) {
     hasBar = true;
     return this;
 }
+Slider* Slider::AccessibilityLabel(Str s) {
+    accessibilityLabel = s;
+    return this;
+}
 
 El* Slider::IntoEl() {
     const Theme& th = ThemeNow(cx->app);
@@ -99313,7 +100927,7 @@ El* Slider::IntoEl() {
                                         ->BindSlider(bind, axis),
                                     thumbId, thumbBorder));
         }
-        El* root = gpui::Slider::New(cx, state, axis)
+        El* root = gpui::Slider::New(cx, state, axis, 0, accessibilityLabel)
                        ->Id(id.s ? id : StrL("slider"))
                        ->AriaDisabled(disabled)
                        ->AriaOrientation(AccessibilityOrientation::Vertical)
@@ -99375,7 +100989,7 @@ El* Slider::IntoEl() {
         thumb->Click(thumbId)->BindSlider(bind, axis);
         track->Child(ThumbRing(thumb, thumbId, thumbBorder));
     }
-    El* root = gpui::Slider::New(cx, state, axis)
+    El* root = gpui::Slider::New(cx, state, axis, 0, accessibilityLabel)
                    ->Id(id.s ? id : StrL("slider"))
                    ->AriaDisabled(disabled)
                    ->AriaOrientation(AccessibilityOrientation::Horizontal)
@@ -103511,6 +105125,14 @@ DataTable* DataTable::Bordered(bool v) {
     bordered = v;
     return this;
 }
+DataTable* DataTable::FixedColsBorder(bool v) {
+    fixedColsBorder = v;
+    return this;
+}
+DataTable* DataTable::ScrollBounce(bool v) {
+    scrollBounce = v ? 1 : 0;
+    return this;
+}
 DataTable* DataTable::ScrollbarVisible(bool vertical, bool horizontal) {
     scrollbarV = vertical;
     scrollbarH = horizontal;
@@ -103523,6 +105145,10 @@ DataTable* DataTable::WithSize(UiSize sz) {
 }
 DataTable* DataTable::RowHeight(float px) {
     rowHeight = px;
+    return this;
+}
+DataTable* DataTable::HeaderRowHeight(float px) {
+    headerRowHeight = px;
     return this;
 }
 DataTable* DataTable::H(float px) {
@@ -103547,6 +105173,10 @@ DataTable* DataTable::OnVisibleCols(void (*fn)(Ctx*, void*, int, int)) {
 }
 DataTable* DataTable::CellText(Str (*fn)(Ctx*, void*, int, int)) {
     cellText = fn;
+    return this;
+}
+DataTable* DataTable::FitColumn(bool (*fn)(Ctx*, void*, int, float*)) {
+    fitColumn = fn;
     return this;
 }
 
@@ -103649,6 +105279,9 @@ static El* ResizeHandleBand(Ctx* cx, Str id, int col, bool leading,
     e->OnDrag(kTableResizeDrag, col, leading ? (void*)e : nullptr);
     e->OnDragMove(ListenTo(state, &TableState::OnResizeDrag));
 
+    e->OnMouseDown(
+        ListenTo(state, &TableState::OnResizeMouseDown, (int64_t)col));
+
     e->OnMouseUpOut(ListenTo(state, &TableState::OnResizeEnd));
     e->OnMouseUp(ListenTo(state, &TableState::OnResizeEnd));
     return e;
@@ -103679,6 +105312,17 @@ static El* LeadingResizeHandle(Ctx* cx, Str id, int prevCol,
         ->Left(0)
         ->H(kFill)
         ->W(kTableResizeHandlePadding);
+}
+
+static El* RenderFixedColsBorder(Ctx* cx, float height) {
+    El* e = Div(cx->a)->Absolute()->Top(0)->Right(0)->W(0)->Shrink0()->BorderR(
+        1, ThemeNow(cx->app).border);
+    if (height > 0) {
+        e->H(height);
+    } else {
+        e->Bottom(0);
+    }
+    return e;
 }
 
 static int FixedColCount(const DataTable* t, const TableState* s) {
@@ -103874,27 +105518,33 @@ El* DataTable::BuildEl() {
         s->rowCount = nRows;
         s->colCount = nColumns;
         s->rowH = rowHeight;
+        s->cellPadding = UiTableCellPadding(size);
         if (hasDelegate) {
             s->delegateData = data;
             s->delegateSort = delegate.performSort;
             s->delegateMoveColumn = delegate.moveColumn;
             s->delegateLoadMore = delegate.loadMore;
+            s->delegateFitColumn = delegate.fitColumn;
             s->loading = delegate.loading && delegate.loading(cx, data);
             s->hasMore = delegate.hasMore && delegate.hasMore(cx, data);
             s->loadMoreThreshold = delegate.loadMoreThreshold
                                        ? delegate.loadMoreThreshold(data)
                                        : 20;
         } else {
-            s->delegateData = nullptr;
+            s->delegateData = data;
             s->delegateSort = nullptr;
             s->delegateMoveColumn = nullptr;
             s->delegateLoadMore = nullptr;
+            s->delegateFitColumn = fitColumn;
         }
         TableSeedColOrder(s, nColumns);
         for (int c = 0; c < nColumns; c++) {
             TableSeedColWidth(s, c, columns[c].width);
             TableSetColConstraints(s, c, columns[c].minWidth,
                                    columns[c].maxWidth);
+            TableSetColEdge(s, c, columns[c].resizable, columns[c].hasPaddings,
+                            columns[c].paddings.left,
+                            columns[c].paddings.right);
             if (s->sortCol < 0 && columns[c].hasSort &&
                 columns[c].sort != ColumnSort::Default) {
                 s->sortCol = c;
@@ -103918,7 +105568,9 @@ El* DataTable::BuildEl() {
     if (fill) {
         box->H(kFill);
     }
-    float headsH = (float)(groupHeaders.len + 1) * rowHeight;
+
+    float headerH = headerRowHeight > 0 ? headerRowHeight : rowHeight;
+    float headsH = (float)(groupHeaders.len + 1) * headerH;
     float first = h > 0 ? h : (cx->win ? WindowSize(cx->win).dipH : 0.f);
     LaidOutHeight* laid = UseLaidOutHeight(cx, id, first);
     if (laid) {
@@ -103964,10 +105616,10 @@ El* DataTable::BuildEl() {
     for (int g = 0; g < groupHeaders.len; g++) {
 
         El* gf =
-            Div(a)->FlexRow()->Shrink0()->H(rowHeight)->BorderB(1, th.border);
+            Div(a)->FlexRow()->Shrink0()->H(headerH)->BorderB(1, th.border);
 
         El* gsWrap = follow(
-            Div(a)->FlexRow()->W(kFill)->H(rowHeight)->BorderB(1, th.border));
+            Div(a)->FlexRow()->W(kFill)->H(headerH)->BorderB(1, th.border));
         El* gs = Div(a)->FlexRow()->Shrink0();
         gsWrap->Child(gs);
         int col = 0;
@@ -104006,14 +105658,14 @@ El* DataTable::BuildEl() {
     El* headFixed = gpui::TableHeader::New(cx, StrL("head-fixed"))
                         ->FlexRow()
                         ->Shrink0()
-                        ->H(rowHeight)
+                        ->H(headerH)
                         ->Bg(th.tokens.tableHead)
                         ->Fg(th.tableHeadFg)
                         ->BorderB(1, th.border);
     El* headWrap = follow(Div(a)
                               ->FlexRow()
                               ->W(kFill)
-                              ->H(rowHeight)
+                              ->H(headerH)
                               ->Bg(th.tokens.tableHead)
                               ->Fg(th.tableHeadFg)
                               ->BorderB(1, th.border));
@@ -104122,6 +105774,11 @@ El* DataTable::BuildEl() {
     fixedPane->Child(headFixed);
     scrollPane->Child(headWrap);
 
+    bool drawFixedBorder = nFixed > 0 && fixedColsBorder;
+    if (drawFixedBorder) {
+        fixedPane->Child(RenderFixedColsBorder(cx, headsH));
+    }
+
     if (nRows == 0) {
         if (s && TableVisibleRowsChanged(s, 0, 0, 0) && visibleRowsChanged) {
             visibleRowsChanged(cx, data, 0, 0);
@@ -104155,6 +105812,14 @@ El* DataTable::BuildEl() {
     VirtualRange range = {0, nRows};
     if (s && viewH > 0) {
         s->viewportH = viewH;
+
+        float bodyForPage = viewH;
+        if ((!laid || laid->measured < 0) && headsH > 0 &&
+            bodyForPage > headsH) {
+            bodyForPage -= headsH;
+        }
+        int page = rowHeight > 0 ? (int)floorf(bodyForPage / rowHeight) : 1;
+        s->pageRows = page < 1 ? 1 : page;
         range = VirtualListVisibleRows(nRows, s->rowH, s->scrollY, viewH);
 
         float bodyH = viewH;
@@ -104166,7 +105831,6 @@ El* DataTable::BuildEl() {
         bodyFixed->H(bodyH)->ClipY()->ScrollY(s->scrollY)->ScrollFromPath();
         bodyFixed->OnScroll(ListenTo(state, &TableState::OnScroll));
         bodyFixed->noScrollbar = true;
-        ScrollableMask::Apply(bodyFixed, Axis::Vertical);
         bodyScroll->H(bodyH)
             ->ClipY()
             ->ScrollY(s->scrollY)
@@ -104175,7 +105839,15 @@ El* DataTable::BuildEl() {
             ->OnScroll(ListenTo(state, &TableState::OnScrollXY));
 
         ScrollableMask::Apply(bodyScroll, Axis::Horizontal);
-        ScrollableMask::Apply(bodyScroll, Axis::Vertical);
+        s->contentH = (float)nRows * s->rowH;
+        s->bounce.offset = &s->scrollY;
+        s->bounce.viewport = &s->viewportH;
+        s->bounce.content = &s->contentH;
+        s->bounceOn = scrollBounce < 0 ? gpui::ScrollBounce::EnabledByDefault()
+                                       : scrollBounce == 1;
+        Listener bounceWheel = ListenTo(state, &TableState::OnBounceWheel);
+        bodyFixed->OnScrollWheel(bounceWheel);
+        bodyScroll->OnScrollWheel(bounceWheel);
         bodyScroll->noScrollbarY = !scrollbarV;
         bodyScroll->noScrollbarX = !scrollbarH;
         if (range.first > 0) {
@@ -104299,6 +105971,10 @@ El* DataTable::BuildEl() {
             (d < nFixed ? rowFixed : rowScroll)->Child(td);
         }
         rowScroll->Child(LastEmptyColEl(cx, lastEmptyCol, data));
+
+        if (drawFixedBorder) {
+            rowFixed->Child(RenderFixedColsBorder(cx, 0));
+        }
         if (s && s->rowSelectable && !s->cellSelectable) {
             BindPathClick(rowScroll,
                           ElementIdNamed(a, StrL("row"), (uint64_t)r),
@@ -104345,8 +106021,35 @@ El* DataTable::BuildEl() {
             fillFixed->Bg(th.tokens.tableEven);
             fillScroll->Bg(th.tokens.tableEven);
         }
+
+        if (drawFixedBorder) {
+            fillFixed->Child(RenderFixedColsBorder(cx, 0));
+        }
         bodyFixed->Child(fillFixed);
         bodyScroll->Child(fillScroll);
+    }
+
+    if (s && viewH > 0) {
+        El* fixedRows = Div(a)->FlexCol()->W(kFill);
+        El* scrollRows = Div(a)->FlexCol()->W(kFill);
+        fixedRows->first = bodyFixed->first;
+        fixedRows->last = bodyFixed->last;
+        bodyFixed->first = nullptr;
+        bodyFixed->last = nullptr;
+        bodyFixed->Child(fixedRows);
+        scrollRows->first = bodyScroll->first;
+        scrollRows->last = bodyScroll->last;
+        bodyScroll->first = nullptr;
+        bodyScroll->last = nullptr;
+        bodyScroll->Child(scrollRows);
+        float maxExtent = s->contentH - s->viewportH;
+        if (maxExtent < 0) maxExtent = 0;
+        float stretch = ScrollBounceOwnedOffset(s->overscroll, cx->win,
+                                                s->bounceOn, maxExtent);
+        if (stretch != 0) {
+            fixedRows->PaintOffset(0, stretch);
+            scrollRows->PaintOffset(0, stretch);
+        }
     }
     fixedPane->Child(bodyFixed);
     scrollPane->Child(bodyScroll);
@@ -109921,24 +111624,30 @@ namespace gpui {
 
 namespace component {
 
-static El* ControlIcon(Ctx* cx, IconName icon, int clickId) {
+static El* ControlIcon(Ctx* cx, IconName icon, int clickId, Listener onClose) {
     Arena* a = cx->a;
     const Theme& th = ThemeNow(cx->app);
     bool isClose = clickId == ClickWinClose;
 
-    return Div(a)
-        ->W(kTitleBarHeight)
-        ->H(kFill)
-        ->Shrink0()
-        ->ItemsCenter()
-        ->JustifyCenter()
-        ->Click(clickId)
-        ->HoverBg(isClose ? th.danger : th.secondaryHover)
-        ->HoverFg(isClose ? th.dangerFg : th.secondaryFg)
-        ->Child(IconEl(a, icon, UiIconPx(cx, UiSize::Small)));
+    El* cell = Div(a)
+                   ->W(kTitleBarHeight)
+                   ->H(kFill)
+                   ->Shrink0()
+                   ->ItemsCenter()
+                   ->JustifyCenter()
+                   ->HoverBg(isClose ? th.danger : th.secondaryHover)
+                   ->HoverFg(isClose ? th.dangerFg : th.secondaryFg);
+
+    bool customClose =
+        isClose && onClose.fn && base::PlatTitleBarCloseIsElement();
+    if (customClose)
+        cell->OnClick(onClose);
+    else
+        cell->Click(clickId);
+    return cell->Child(IconEl(a, icon, UiIconPx(cx, UiSize::Small)));
 }
 
-static El* WindowControls(Ctx* cx) {
+static El* WindowControls(Ctx* cx, Listener onClose) {
     Arena* a = cx->a;
     Window* win = cx->win;
 
@@ -109951,11 +111660,11 @@ static El* WindowControls(Ctx* cx) {
         ->H(kFill)
         ->ItemsCenter()
         ->Shrink0()
-        ->Child(ControlIcon(cx, IconName::WindowMinimize, ClickWinMin))
+        ->Child(ControlIcon(cx, IconName::WindowMinimize, ClickWinMin, {}))
         ->Child(ControlIcon(
             cx, maximized ? IconName::WindowRestore : IconName::WindowMaximize,
-            ClickWinMax))
-        ->Child(ControlIcon(cx, IconName::WindowClose, ClickWinClose));
+            ClickWinMax, {}))
+        ->Child(ControlIcon(cx, IconName::WindowClose, ClickWinClose, onClose));
 }
 
 TitleBar* TitleBar::New(Ctx* cx) {
@@ -109992,9 +111701,14 @@ TitleBar* TitleBar::Child(El* e) {
     return this;
 }
 
+TitleBar* TitleBar::OnCloseWindow(Listener listener) {
+    onCloseWindow = listener;
+    return this;
+}
+
 El* TitleBar::IntoEl() {
     if (base::PlatShowsWindowControls()) {
-        bar->Child(WindowControls(cx));
+        bar->Child(WindowControls(cx, onCloseWindow));
     }
     return bar;
 }
@@ -110349,6 +112063,10 @@ Tree* Tree::H(float v) {
     h = v;
     return this;
 }
+Tree* Tree::ScrollBounce(bool v) {
+    scrollBounce = v ? 1 : 0;
+    return this;
+}
 Tree* Tree::Icons(bool v) {
     icons = v;
     return this;
@@ -110417,10 +112135,22 @@ static El* TreeRow(void* user, Ctx* cx, int ix, const TreeEntry& entry,
 }
 
 El* Tree::IntoEl() {
-    if (!state.Get(cx)) {
+    TreeState* s = state.Get(cx);
+    if (!s) {
         return Div(a)->W(kFill)->H(h > 0 ? h : kFill);
     }
-    return TreeList::New(cx, id, state, h, &TreeRow, this);
+    El* list = TreeList::New(cx, id, state, h, &TreeRow, this);
+    s->contentH = (float)len(s->entries) * s->rowH;
+    s->bounce.offset = &s->scrollY;
+    s->bounce.viewport = &s->viewportH;
+    s->bounce.content = &s->contentH;
+    gpui::ScrollBounce* bounce =
+        gpui::ScrollBounce::New(cx, StrL("tree-scroll-bounce"),
+                                PositiveScrollHandle(&s->bounce), list)
+            ->Measure(&s->bounce)
+            ->OnScroll(ListenTo(state, &TreeState::OnScroll));
+    if (scrollBounce >= 0) bounce->Enabled(scrollBounce == 1);
+    return bounce->IntoEl();
 }
 
 }
@@ -111446,6 +113176,27 @@ void ExecShutdown() {
 
 namespace gpui {
 
+static thread_local char gLastError[512];
+
+bool HttpSendPlatform(const HttpReq& req, HttpRsp* out);
+
+bool HttpSend(const HttpReq& req, HttpRsp* out) {
+    bool ok = HttpSendPlatform(req, out);
+    Str why = !ok && out ? out->error : Str{};
+    int n = len(why) < (int)sizeof(gLastError) - 1
+                ? len(why)
+                : (int)sizeof(gLastError) - 1;
+    if (n > 0) {
+        memcpy(gLastError, why.s, (size_t)n);
+    }
+    gLastError[n] = 0;
+    return ok;
+}
+
+Str HttpLastError() {
+    return Str(gLastError);
+}
+
 void HttpRspFree(HttpRsp* r) {
     if (!r) {
         return;
@@ -111459,6 +113210,8 @@ void HttpRspFree(HttpRsp* r) {
     r->redirectUrl = {};
     StrFree(r->headers);
     r->headers = {};
+    StrFree(r->error);
+    r->error = {};
     r->status = 0;
 }
 
@@ -111509,6 +113262,10 @@ Str HttpHeadersFromRaw(Str raw) {
         out.AppendChar('\n');
     }
     return out.TakeStr();
+}
+
+int HttpWaitMs(const HttpReq& req) {
+    return req.waitMs < 0 ? 0 : req.waitMs > 0 ? req.waitMs : kHttpTimeoutMs;
 }
 
 bool HttpUrlIsRemote(Str url) {
@@ -118799,6 +120556,7 @@ bool RegisterDisplay(shell::ComponentRegistry* registry,
            RegisterDisplayGroupBox(registry, error) &&
            RegisterDisplayRating(registry, error) &&
            RegisterDisplayStatusBar(registry, error) &&
+           RegisterDisplayTitleBar(registry, error) &&
            RegisterDisplayToolbar(registry, error);
 }
 
@@ -119072,6 +120830,83 @@ namespace gpui::component_shell {
 bool RegisterDisplayStatusBar(shell::ComponentRegistry* registry,
                               shell::RegistryError* error) {
     return registry->Register(&display::status_bar::kStatusBar, error);
+}
+
+}
+
+#line 1 "src/component_shell/display/title_bar.cpp"
+
+namespace gpui::component_shell::display::title_bar {
+
+struct TitleBarPayload {};
+
+struct TitleBarOp {
+    shell::ComponentArgument close = {};
+};
+
+static bool component_shell_display_title_bar_Construct(PayloadBuild* build, const ComponentArgument*, int) {
+    return build->Mark<TitleBarPayload>();
+}
+
+static bool RecordClose(PayloadBuild* build, const ComponentArgument* args,
+                        int) {
+    TitleBarOp* op = build->New<TitleBarOp>();
+    op->close = args[0];
+    return true;
+}
+
+static void RunClose(const shell::ComponentEventBinding* binding,
+                     ScriptView* view, Ctx* cx, const void*) {
+    binding->callback.InvokeAndReport(
+        view->runtime, "TitleBar.on_close_window callback failed", nullptr, 0,
+        cx->win, cx->app);
+}
+
+static El* component_shell_display_title_bar_Materialize(MaterializeRequest* request) {
+    if (!shell::PayloadIs<TitleBarPayload>(request->payload)) {
+        request->Fail(StrL("TitleBar received an incompatible payload"));
+        return nullptr;
+    }
+    component::TitleBar* bar = component::TitleBar::New(request->cx);
+    EachMethod<TitleBarOp>(request, [&](const TitleBarOp& op) {
+        bar->OnCloseWindow(shell::ComponentListener(
+            request->cx, &RunClose, request->ResolveCallback(op.close)));
+    });
+    El** children = nullptr;
+    int count = 0;
+    if (!request->TakeChildren(&children, &count)) return nullptr;
+    for (int i = 0; i < count; i++) bar->Child(children[i]);
+    return request->ApplyStyle(bar->IntoEl());
+}
+
+static constexpr ArgumentDescriptor kCloseArgs[] = {
+    {"callback", SchemaCallback("(cx: Context) => void")}};
+
+static constexpr ConstructorDescriptor component_shell_display_title_bar_kConstructors[] = {
+    {"TitleBar", {}, &component_shell_display_title_bar_Construct}};
+static constexpr MethodDescriptor component_shell_display_title_bar_kMethods[] = {
+    {"on_close_window", kCloseArgs,
+     "Runs the callback instead of closing the window when the title bar's "
+     "own close button is clicked. Only Linux draws that button; elsewhere "
+     "the system owns closing.",
+     &RecordClose},
+};
+static constexpr ComponentDescriptor kTitleBar = {
+    "TitleBar", component_shell_display_title_bar_kConstructors, component_shell_display_title_bar_kMethods,
+    "The window title bar, rendered as the first child of the application's "
+    "root view. It draws the window controls, drags and zooms the window, "
+    "and lays its children out between the leading edge and the controls; "
+    "stop mouse-down propagation on interactive children so pressing them "
+    "does not start a window move.",
+    &component_shell_display_title_bar_Materialize};
+
+}
+
+namespace gpui::component_shell {
+
+bool RegisterDisplayTitleBar(shell::ComponentRegistry* registry,
+                             shell::RegistryError* error) {
+    return registry->Register(&display::title_bar::kTitleBar, error);
 }
 
 }
@@ -120412,12 +122247,15 @@ static void component_shell_input_tokens_RunChange(const shell::ComponentEventBi
 struct InputChangeFanout {
 
     uint64_t frame = 0;
+
+    InputState* state = nullptr;
     static constexpr int kCap = 16;
     Listener relays[kCap];
     int count = 0;
 
     static void OnChange(InputChangeFanout* self, Ctx* cx,
                          const InputEvent* event) {
+        if (self) shell::TextStateNotify(self->state, event, cx);
 
         Listener relays[kCap];
         int count = self ? self->count : 0;
@@ -120458,6 +122296,7 @@ void SubscribeChange(Ctx* cx, InputState* state, uint64_t handle, Str key,
         }
         fanout->frame = frame;
         fanout->count = 0;
+        fanout->state = state;
         state->onChange = ListenTo(owner, &InputChangeFanout::OnChange);
     }
     bool known = false;
@@ -120881,7 +122720,8 @@ static constexpr shell::StateDescriptor component_shell_layout_textarea_kState =
     component_shell_layout_textarea_kStateArgs,
     "Retained multi-line editing state with an optional initial value.",
     &NewTextareaState,
-    shell::kTextareaTokenStateMethods};
+    shell::kTextareaTokenStateMethods,
+    true};
 
 static constexpr ArgumentDescriptor component_shell_layout_textarea_kConstructorArgs[] = {
     {"state", SchemaEntity("TextareaState")}};
@@ -120995,8 +122835,11 @@ void MountWindowRoot(App* app, Window* window,
 Window* OpenWindowWithRoot(App* app,
                            const shell::ComponentWindowOptions& options,
                            shell::ComponentWindowBuild build, void* data) {
-    Window* window = WindowOpen(app, options.title, options.dipW, options.dipH,
-                                options.opts);
+
+    shell::ComponentWindowOptions chrome = options;
+    chrome.opts.clientTitleBar = true;
+    Window* window =
+        WindowOpen(app, chrome.title, chrome.dipW, chrome.dipH, chrome.opts);
     if (!window) return nullptr;
     MountWindowRoot(app, window, build, data);
     return window;
@@ -124336,7 +126179,7 @@ static constexpr shell::StateDescriptor kStates[] = {
     {"InputState", "InputState", component_shell_retained_forms_mod_kInputStateArgs,
      "Retained editable text state shared by Input and NumberInput, with "
      "optional placeholder and initial value.",
-     &NewInputState, shell::kInputTokenStateMethods},
+     &NewInputState, shell::kInputTokenStateMethods, true},
     {"CalendarState",
      "CalendarState",
      {},
@@ -152547,6 +154390,2319 @@ bool AppAssets::List(Str path, Vec<Str>* out, Str* error) {
 
 }
 
+#line 1 "src/shell/bundle_scripts.cpp"
+
+namespace gpui::shell {
+
+extern const char kBundleRuntimeSh[] =
+    R"BUNDLESCRIPT(# Finds gpui-shell, or installs the release this bundle was made with.
+# Included by the launchers and the installer; the includer defines
+# `runtime_notice <message>` and `runtime_fail <message>` (which must not return).
+
+runtime_version=@RUNTIME_VERSION@
+runtime_repository=longbridge/gpui-kit
+
+# Whether version $1 is at least $2. Numeric X.Y.Z; a pre-release suffix on an
+# otherwise equal version is lower, as semver orders it.
+runtime_at_least() {
+  awk -v have="$1" -v want="$2" 'BEGIN {
+    split(have, h, "-"); split(want, w, "-")
+    n = split(h[1], a, "."); m = split(w[1], b, ".")
+    if (n != 3 || m != 3) exit 1
+    for (i = 1; i <= 3; i++) {
+      if (a[i] !~ /^[0-9]+$/) exit 1
+      if (a[i] + 0 > b[i] + 0) exit 0
+      if (a[i] + 0 < b[i] + 0) exit 1
+    }
+    # Equal numbers: a release beats any pre-release of itself.
+    exit (h[2] != "" && w[2] == "") ? 1 : 0
+  }'
+}
+
+# Whether $1 is a gpui-shell this bundle can run on.
+runtime_suits() {
+  [ -x "$1" ] || return 1
+  candidate_version=$("$1" --version 2>/dev/null | awk '$1 == "gpui-shell" { print $2; exit }') || return 1
+  [ -n "$candidate_version" ] && runtime_at_least "$candidate_version" "$runtime_version"
+}
+
+# Sets `runtime` to a suitable gpui-shell, downloading one into ~/.local/bin
+# when none is installed. ~/.local/bin is where the official installer puts it.
+ensure_runtime() {
+  for candidate in ~/.local/bin/gpui-shell "$(command -v gpui-shell 2>/dev/null || true)" \
+    /opt/homebrew/bin/gpui-shell /usr/local/bin/gpui-shell ~/.cargo/bin/gpui-shell; do
+    if [ -n "$candidate" ] && runtime_suits "$candidate"; then
+      runtime=$candidate
+      return 0
+    fi
+  done
+  runtime_install
+}
+
+runtime_install() {
+  case "$(uname -s)" in
+    Darwin) runtime_os=apple-darwin ;;
+    Linux) runtime_os=unknown-linux-gnu ;;
+    *) runtime_fail "gpui-shell has no release for $(uname -s)." ;;
+  esac
+  case "$(uname -m)" in
+    arm64 | aarch64) runtime_arch=aarch64 ;;
+    x86_64 | amd64) runtime_arch=x86_64 ;;
+    *) runtime_fail "gpui-shell has no release for $(uname -m)." ;;
+  esac
+  runtime_target="$runtime_arch-$runtime_os"
+  if [ "$runtime_target" = aarch64-unknown-linux-gnu ]; then
+    runtime_fail "gpui-shell has no release for Linux on ARM yet; build it with \`cargo build -p gpui-shell --release\` and put it in ~/.local/bin."
+  fi
+  for utility in curl tar mktemp; do
+    command -v "$utility" >/dev/null 2>&1 || runtime_fail "Installing gpui-shell needs $utility."
+  done
+
+  runtime_asset="gpui-shell-$runtime_target.tar.gz"
+  runtime_url="https://github.com/$runtime_repository/releases/download/v$runtime_version/$runtime_asset"
+  runtime_bin=~/.local/bin
+  mkdir -p "$runtime_bin" || runtime_fail "Cannot create $runtime_bin."
+  runtime_work=$(mktemp -d) || runtime_fail 'Cannot create a temporary directory.'
+  runtime_notice "Downloading gpui-shell $runtime_version…"
+  if ! runtime_fetch; then
+    rm -rf "$runtime_work"
+    runtime_fail "Could not install gpui-shell $runtime_version from $runtime_url."
+  fi
+  rm -rf "$runtime_work"
+  runtime="$runtime_bin/gpui-shell"
+  runtime_notice "Installed gpui-shell $runtime_version in $runtime_bin."
+}
+
+# Downloads, verifies and installs into $runtime_bin. Fails without touching
+# an installed copy: the new binary replaces it only after it checks out.
+# Every step is checked explicitly: `set -e` does not apply inside a function
+# whose status is tested.
+runtime_fetch() (
+  cd "$runtime_work" || exit 1
+  curl --fail --silent --show-error --location --retry 3 "$runtime_url" -o "$runtime_asset" || exit 1
+  curl --fail --silent --show-error --location --retry 3 "$runtime_url.sha256" -o "$runtime_asset.sha256" || exit 1
+  if command -v shasum >/dev/null 2>&1; then
+    shasum -a 256 -c "$runtime_asset.sha256" >/dev/null || exit 1
+  elif command -v sha256sum >/dev/null 2>&1; then
+    sha256sum -c "$runtime_asset.sha256" >/dev/null || exit 1
+  else
+    echo 'Missing a SHA-256 verifier (shasum or sha256sum).' >&2
+    exit 1
+  fi
+  tar -xzf "$runtime_asset" || exit 1
+  staged="$runtime_bin/.gpui-shell.$$"
+  if ! cp "gpui-shell-$runtime_target/gpui-shell" "$staged" || ! chmod 755 "$staged" ||
+    ! runtime_suits "$staged"; then
+    rm -f "$staged"
+    echo "The downloaded gpui-shell is not version $runtime_version or later." >&2
+    exit 1
+  fi
+  mv -f "$staged" "$runtime_bin/gpui-shell" || { rm -f "$staged"; exit 1; }
+)
+)BUNDLESCRIPT";
+
+extern const char kBundleLinuxLauncherSh[] =
+    R"BUNDLESCRIPT(#!/bin/sh
+# Starts @NAME@ with an installed gpui-shell. Written by `gpui-shell bundle`.
+set -eu
+
+[ "$#" -eq 0 ] || { echo 'This launcher takes no arguments.' >&2; exit 2; }
+
+# A desktop launch has no terminal, so tell the user through a notification.
+runtime_notice() {
+  if [ -t 2 ]; then
+    echo "$1" >&2
+  elif command -v notify-send >/dev/null 2>&1; then
+    notify-send -- @NAME@ "$1" 2>/dev/null || true
+  fi
+}
+
+runtime_fail() {
+  if [ -t 2 ]; then
+    echo "$1" >&2
+  elif command -v notify-send >/dev/null 2>&1; then
+    notify-send --urgency=critical -- @NAME@ "$1" 2>/dev/null || true
+  fi
+  exit 1
+}
+
+@RUNTIME_FUNCTIONS@
+
+# Resolved through the ~/.local/bin link to the installed directory.
+dir=$(dirname "$(readlink -f "$0")")
+ensure_runtime
+exec "$runtime" run --dir "$dir/app" --packaged
+)BUNDLESCRIPT";
+
+extern const char kBundleLinuxInstallSh[] =
+    R"BUNDLESCRIPT(#!/bin/sh
+# Installs @NAME@ for the current user. Written by `gpui-shell bundle`.
+#
+#   sh install.sh                   install from @ARCHIVE@ beside this script,
+#                                   or download it; also updates an installed copy
+#   sh install.sh <archive or URL>  install from that archive
+#   sh install.sh --uninstall       remove it; its saved data and gpui-shell stay
+#   curl -fsSL <url>/install.sh | sh
+#
+# No sudo: everything goes under ~/.local. The application runs on the
+# gpui-shell in ~/.local/bin, which is installed when no suitable one exists.
+# Whatever the source, the archive must match the checksum written here.
+set -eu
+
+id=@ID@
+name=@NAME@
+command_name=@COMMAND@
+icon_size=@ICON_SIZE@
+archive_name=@ARCHIVE@
+archive_sha256=@ARCHIVE_SHA256@
+download_url=@DOWNLOAD_URL@
+stem=@STEM@
+
+# Tilde resolves the current account; no environment overrides.
+data_home=~/.local/share
+bin_dir=~/.local/bin
+install_dir="$data_home/$id"
+bin_link="$bin_dir/$command_name"
+desktop_dir="$data_home/applications"
+desktop_file="$desktop_dir/$id.desktop"
+icon_dir="$data_home/icons/hicolor/${icon_size}x${icon_size}/apps"
+
+runtime_notice() { echo "$1"; }
+runtime_fail() { echo "$1" >&2; exit 1; }
+
+@RUNTIME_FUNCTIONS@
+
+refresh_launcher() {
+  if command -v update-desktop-database >/dev/null 2>&1; then
+    update-desktop-database "$desktop_dir" 2>/dev/null || true
+  fi
+  if [ -n "$icon_size" ] && command -v gtk-update-icon-cache >/dev/null 2>&1; then
+    gtk-update-icon-cache -q -t "$data_home/icons/hicolor" 2>/dev/null || true
+  fi
+}
+
+# Only a link this script made is removed or replaced.
+owns_link() {
+  [ -L "$bin_link" ] && [ "$(readlink "$bin_link")" = "$install_dir/$command_name" ]
+}
+
+usage() {
+  echo "Usage: sh install.sh [<archive or URL>]"
+  echo "       sh install.sh --uninstall"
+  echo "Without an argument it installs $archive_name from beside this script,"
+  if [ -n "$download_url" ]; then
+    echo "or downloads it from $download_url."
+  else
+    echo 'so keep the two together, or name the archive.'
+  fi
+}
+
+source_arg=''
+case "${1:-}" in
+  '') ;;
+  --uninstall)
+    [ "$#" -eq 1 ] || { echo 'Unexpected arguments' >&2; exit 2; }
+    if [ -L "$install_dir" ]; then
+      echo "Refusing to remove the linked application: $install_dir" >&2
+      exit 1
+    fi
+    if owns_link; then rm -f "$bin_link"; fi
+    rm -f "$desktop_file"
+    [ -z "$icon_size" ] || rm -f "$icon_dir/$id.png"
+    rm -rf "$install_dir"
+    refresh_launcher
+    echo "$name is uninstalled. Its saved data and gpui-shell are kept."
+    exit 0 ;;
+  --help | -h) usage; exit 0 ;;
+  -*) echo "Unknown option: $1" >&2; exit 2 ;;
+  *) source_arg=$1 ;;
+esac
+[ "$#" -le 1 ] || { echo 'Unexpected arguments' >&2; exit 2; }
+
+for utility in install mktemp readlink tar; do
+  command -v "$utility" >/dev/null 2>&1 || { echo "Missing dependency: $utility" >&2; exit 1; }
+done
+if [ -L "$install_dir" ]; then
+  echo "Refusing to replace the linked application: $install_dir" >&2
+  exit 1
+fi
+if { [ -e "$bin_link" ] || [ -L "$bin_link" ]; } && ! owns_link; then
+  echo "Refusing to replace $bin_link, which this application did not install." >&2
+  exit 1
+fi
+
+# Where the archive comes from: the argument, the file beside this script, or
+# the release. Piped into `sh`, $0 is the shell, so there is no "beside".
+source=''
+case "$source_arg" in
+  http://* | https://*) source=$source_arg ;;
+  '')
+    case "$0" in
+      *.sh)
+        if [ -f "$0" ] && [ -f "$(dirname "$0")/$archive_name" ]; then
+          source="$(cd "$(dirname "$0")" && pwd -P)/$archive_name"
+        fi ;;
+    esac
+    if [ -z "$source" ] && [ -n "$download_url" ]; then
+      source="${download_url%/}/$archive_name"
+    fi
+    if [ -z "$source" ]; then
+      echo "Cannot find $archive_name." >&2
+      usage >&2
+      exit 1
+    fi ;;
+  *)
+    [ -f "$source_arg" ] || { echo "No such archive: $source_arg" >&2; exit 1; }
+    source=$source_arg ;;
+esac
+
+# Now rather than at the first launch, where a download has no terminal.
+# Before any file changes, so a failed download leaves an installation as it was.
+ensure_runtime
+echo "Using $("$runtime" --version) at $runtime"
+
+mkdir -p "$data_home" "$bin_dir" "$desktop_dir"
+stage=$(mktemp -d "$data_home/.$id.XXXXXX")
+trap 'rm -rf "$stage"' EXIT
+trap 'exit 130' INT
+trap 'exit 143' TERM
+
+case "$source" in
+  http://* | https://*)
+    command -v curl >/dev/null 2>&1 || { echo 'Missing dependency: curl' >&2; exit 1; }
+    echo "Downloading $source"
+    curl --fail --silent --show-error --location --retry 3 "$source" -o "$stage/$archive_name" ;;
+  *) cp "$source" "$stage/$archive_name" ;;
+esac
+
+if command -v sha256sum >/dev/null 2>&1; then
+  actual=$(sha256sum "$stage/$archive_name" | awk '{ print $1 }')
+elif command -v shasum >/dev/null 2>&1; then
+  actual=$(shasum -a 256 "$stage/$archive_name" | awk '{ print $1 }')
+else
+  echo 'Missing a SHA-256 verifier (sha256sum or shasum).' >&2
+  exit 1
+fi
+if [ "$actual" != "$archive_sha256" ]; then
+  echo "$source does not match the $archive_name this script was written for." >&2
+  exit 1
+fi
+
+mkdir "$stage/unpacked"
+tar -xzf "$stage/$archive_name" -C "$stage/unpacked"
+here="$stage/unpacked/$stem"
+if [ ! -f "$here/$command_name" ] || [ ! -f "$here/app/gpui-shell.json" ]; then
+  echo "$archive_name does not hold $stem/$command_name and its app." >&2
+  exit 1
+fi
+
+# Copy first, then swap: a failed copy leaves the installed version untouched.
+mkdir "$stage/new"
+install -m 755 "$here/$command_name" "$stage/new/$command_name"
+cp -R "$here/app" "$stage/new/app"
+if [ -e "$install_dir" ]; then mv "$install_dir" "$stage/previous"; fi
+if ! mv "$stage/new" "$install_dir"; then
+  [ ! -e "$stage/previous" ] || mv "$stage/previous" "$install_dir"
+  exit 1
+fi
+
+ln -sfn "$install_dir/$command_name" "$bin_link"
+
+icon=application-x-executable
+if [ -n "$icon_size" ] && [ -f "$here/$command_name.png" ]; then
+  mkdir -p "$icon_dir"
+  install -m 644 "$here/$command_name.png" "$icon_dir/$id.png"
+  icon=$id
+fi
+
+# Desktop Exec quoting has its own grammar; escape the account path literally.
+desktop_exec=$(printf '%s' "$install_dir/$command_name" | sed 's/\\/\\\\/g; s/"/\\"/g; s/`/\\`/g; s/\$/\\$/g; s/%/%%/g')
+cat > "$stage/$id.desktop" <<DESKTOP
+[Desktop Entry]
+Type=Application
+Name=$name
+Exec="$desktop_exec"
+Icon=$icon
+Terminal=false
+Categories=Utility;
+StartupWMClass=$id
+StartupNotify=true
+DESKTOP
+install -m 644 "$stage/$id.desktop" "$desktop_file"
+refresh_launcher
+
+echo "$name is installed in $install_dir."
+echo 'Open it from your application launcher, or run:'
+echo "  $bin_link"
+case ":${PATH:-}:" in
+  *":$bin_dir:"*) ;;
+  *) echo "Add $bin_dir to PATH to run it as \`$command_name\`." ;;
+esac
+)BUNDLESCRIPT";
+
+extern const char kBundleMacosLauncherSh[] =
+    R"BUNDLESCRIPT(#!/bin/sh
+# Starts @NAME@ with an installed gpui-shell. Written by `gpui-shell bundle`.
+#
+# Finder starts this with PATH=/usr/bin:/bin:/usr/sbin:/sbin, which holds
+# everything used here: curl, shasum, tar and osascript.
+set -eu
+
+# Messages reach osascript as arguments, never as script text.
+runtime_notice() {
+  osascript - "$1" @NAME@ >/dev/null 2>&1 <<'APPLESCRIPT' || true
+on run argv
+  display notification (item 1 of argv) with title (item 2 of argv)
+end run
+APPLESCRIPT
+}
+
+runtime_fail() {
+  osascript - "$1" @NAME@ >/dev/null 2>&1 <<'APPLESCRIPT' || true
+on run argv
+  display alert ((item 2 of argv) & " cannot start") message (item 1 of argv) as critical
+end run
+APPLESCRIPT
+  echo "$1" >&2
+  exit 1
+}
+
+@RUNTIME_FUNCTIONS@
+
+# Contents/MacOS/<name> beside Contents/Resources/app.
+dir=$(cd "$(dirname "$0")" && pwd -P)
+ensure_runtime
+exec "$runtime" run --dir "$dir/../Resources/app" --packaged
+)BUNDLESCRIPT";
+
+}
+
+#line 1 "src/shell/bundle.cpp"
+
+namespace gpui::shell {
+
+extern const char kBundleRuntimeSh[];
+extern const char kBundleLinuxLauncherSh[];
+extern const char kBundleLinuxInstallSh[];
+extern const char kBundleMacosLauncherSh[];
+
+static const char* kWindowsTarget = "x86_64-pc-windows-msvc";
+static const int kBundleReadLimit = 64 * 1024 * 1024;
+
+static bool RawDeflate(Str input, Str* out, Str* error);
+
+static bool BundleFail(Str* error, Str message) {
+    if (error) {
+        StrFree(*error);
+        *error = message ? StrDup(message) : Str{};
+    }
+    return false;
+}
+
+static Str JoinDisk(Str left, Str right) {
+    if (!left || len(left) == 0) return StrDup(right);
+    if (!right || len(right) == 0) return StrDup(left);
+    char last = left.s[len(left) - 1];
+    if (last == '/' || last == '\\') return StrDup(fmt("%s%s", left, right));
+    return StrDup(fmt("%s/%s", left, right));
+}
+
+static Str ParentPath(Str path) {
+    int end = len(path);
+    while (end > 0 && (path.s[end - 1] == '/' || path.s[end - 1] == '\\'))
+        end--;
+    int slash = end;
+    while (slash > 0 && path.s[slash - 1] != '/' && path.s[slash - 1] != '\\')
+        slash--;
+    if (slash <= 0) return StrDup(StrL("."));
+    while (slash > 1 && (path.s[slash - 1] == '/' || path.s[slash - 1] == '\\'))
+        slash--;
+    return StrDup(Str(path.s, slash));
+}
+
+static bool ReadFileBytes(Str path, Str* out, Str* error) {
+    if (out) *out = {};
+    if (!path || len(path) <= 0 || len(path) >= kMaxPath)
+        return BundleFail(error,
+                          StrL("cannot read: the path is empty or too long"));
+    TempStr name = StrDupTemp(path);
+    FILE* file = fopen(name.s, "rb");
+    if (!file) return BundleFail(error, fmt("cannot read %s", path));
+    if (fseek(file, 0, SEEK_END) != 0) {
+        fclose(file);
+        return BundleFail(error, fmt("cannot read %s", path));
+    }
+    long size = ftell(file);
+    if (size < 0 || size > kBundleReadLimit || fseek(file, 0, SEEK_SET) != 0) {
+        fclose(file);
+        return BundleFail(error, fmt("cannot read %s", path));
+    }
+    char* buffer = (char*)Alloc(nullptr, (size_t)size + 1);
+    if (!buffer) {
+        fclose(file);
+        return BundleFail(error, StrL("allocating a file failed"));
+    }
+    size_t got = size ? fread(buffer, 1, (size_t)size, file) : 0;
+    fclose(file);
+    if (got != (size_t)size) {
+        free(buffer);
+        return BundleFail(error, fmt("cannot read %s", path));
+    }
+    buffer[size] = 0;
+    if (out) *out = Str(buffer, (int)size);
+    return true;
+}
+
+static bool WriteFileBytes(Str path, Str bytes, Str* error) {
+    if (!path || len(path) <= 0 || len(path) >= kMaxPath)
+        return BundleFail(error,
+                          StrL("cannot write: the path is empty or too long"));
+    TempStr name = StrDupTemp(path);
+    FILE* file = fopen(name.s, "wb");
+    if (!file) return BundleFail(error, fmt("cannot write %s", path));
+    bool ok = len(bytes) == 0 || fwrite(bytes.s, 1, (size_t)len(bytes), file) ==
+                                     (size_t)len(bytes);
+    if (fclose(file) != 0) ok = false;
+    if (!ok) return BundleFail(error, fmt("cannot write %s", path));
+    return true;
+}
+
+static bool ReplaceFile(Str destination, Str bytes, Str* error) {
+    Str partial = StrDup(fmt("%s.partial", destination));
+    bool ok = WriteFileBytes(partial, bytes, error);
+    if (ok) {
+        remove(destination.s);
+        TempStr from = StrDupTemp(partial);
+        TempStr to = StrDupTemp(destination);
+        if (rename(from.s, to.s) != 0) {
+            remove(partial.s);
+            ok = BundleFail(error, fmt("cannot write %s", destination));
+        }
+    } else {
+        remove(partial.s);
+    }
+    StrFree(partial);
+    return ok;
+}
+
+bool BundlePlatformParse(Str value, BundlePlatform* out) {
+    if (StrEq(value, StrL("macos"))) {
+        if (out) *out = BundlePlatform::MacOS;
+        return true;
+    }
+    if (StrEq(value, StrL("linux"))) {
+        if (out) *out = BundlePlatform::Linux;
+        return true;
+    }
+    if (StrEq(value, StrL("windows"))) {
+        if (out) *out = BundlePlatform::Windows;
+        return true;
+    }
+    return false;
+}
+
+BundlePlatform BundleHostPlatform() {
+    Str name = Str(PlatShellPlatformName());
+    if (StrEq(name, StrL("macos"))) return BundlePlatform::MacOS;
+    if (StrEq(name, StrL("windows"))) return BundlePlatform::Windows;
+    return BundlePlatform::Linux;
+}
+
+static const char* PlatformName(BundlePlatform platform) {
+    if (platform == BundlePlatform::MacOS) return "macos";
+    if (platform == BundlePlatform::Windows) return "windows";
+    return "linux";
+}
+
+static bool shell_bundle_IsAsciiAlnum(unsigned char c) {
+    return (c >= '0' && c <= '9') || (c >= 'A' && c <= 'Z') ||
+           (c >= 'a' && c <= 'z');
+}
+
+static char ToAsciiLower(char c) {
+    if (c >= 'A' && c <= 'Z') return (char)(c - 'A' + 'a');
+    return c;
+}
+
+static Str Slug(Str value) {
+    StrBuilder out;
+    bool word = false;
+    for (int i = 0; i < len(value); i++) {
+        unsigned char c = (unsigned char)value.s[i];
+        if (c >= 0x80) {
+            word = false;
+            continue;
+        }
+        if (shell_bundle_IsAsciiAlnum(c)) {
+            if (word == false && len(out) > 0) out.AppendChar('-');
+            out.AppendChar(ToAsciiLower((char)c));
+            word = true;
+        } else {
+            word = false;
+        }
+    }
+    return out.TakeStr();
+}
+
+static Str LastIdPart(Str id) {
+    int start = 0;
+    for (int i = 0; i < len(id); i++)
+        if (id.s[i] == '.') start = i + 1;
+    return Str(id.s + start, len(id) - start);
+}
+
+static Str CommandName(const PluginManifest& manifest) {
+    Str fromName = Slug(manifest.name);
+    if (len(fromName) > 0) return fromName;
+    StrFree(fromName);
+    Str fromId = Slug(LastIdPart(manifest.id));
+    if (len(fromId) > 0) return fromId;
+    StrFree(fromId);
+    return StrDup(StrL("app"));
+}
+
+bool BundleFileName(Str name, Str* out) {
+    if (out) *out = {};
+    StrBuilder cleaned;
+    for (int i = 0; i < len(name);) {
+        unsigned char c = (unsigned char)name.s[i];
+        if (c < 0x80) {
+            bool banned = c < 0x20 || c == 0x7f || c == '/' || c == '\\' ||
+                          c == ':' || c == '*' || c == '?' || c == '"' ||
+                          c == '<' || c == '>' || c == '|';
+            cleaned.AppendChar(banned ? '-' : (char)c);
+            i++;
+        } else {
+            int n = 1;
+            if ((c & 0xe0) == 0xc0)
+                n = 2;
+            else if ((c & 0xf0) == 0xe0)
+                n = 3;
+            else if ((c & 0xf8) == 0xf0)
+                n = 4;
+            if (i + n > len(name)) n = 1;
+            cleaned.Append(Str(name.s + i, n));
+            i += n;
+        }
+    }
+    Str text = cleaned.TakeStr();
+    int begin = 0;
+    int end = len(text);
+    while (begin < end && (text.s[begin] == ' ' || text.s[begin] == '\t' ||
+                           text.s[begin] == '\n' || text.s[begin] == '\r'))
+        begin++;
+    while (end > begin && (text.s[end - 1] == ' ' || text.s[end - 1] == '\t' ||
+                           text.s[end - 1] == '\n' || text.s[end - 1] == '\r' ||
+                           text.s[end - 1] == '.'))
+        end--;
+    while (end > begin && (text.s[end - 1] == ' ' || text.s[end - 1] == '\t'))
+        end--;
+    bool keep = end > begin;
+    if (keep && out) *out = StrDup(Str(text.s + begin, end - begin));
+    StrFree(text);
+    return keep;
+}
+
+bool BundleNamesFrom(const PluginManifest& manifest, BundlePlatform platform,
+                     BundleNames* out) {
+    if (!out) return false;
+    *out = {};
+    out->command = CommandName(manifest);
+    if (!BundleFileName(manifest.name, &out->display)) {
+        StrFree(out->display);
+        out->display = StrDup(out->command);
+    }
+    out->appBundle = StrDup(fmt("%s.app", out->display));
+    out->archiveStem = StrDup(fmt("%s-%s-%s", out->command, manifest.version,
+                                  Str(PlatformName(platform))));
+    return true;
+}
+
+static Str XmlEscape(Str value) {
+    StrBuilder out;
+    for (int i = 0; i < len(value); i++) {
+        char c = value.s[i];
+        if (c == '&')
+            out.Append(StrL("&amp;"));
+        else if (c == '<')
+            out.Append(StrL("&lt;"));
+        else if (c == '>')
+            out.Append(StrL("&gt;"));
+        else if (c == '"')
+            out.Append(StrL("&quot;"));
+        else
+            out.AppendChar(c);
+    }
+    return out.TakeStr();
+}
+
+static Str BundleVersion(Str version) {
+    int parts[3] = {};
+    int count = 0;
+    int i = 0;
+    while (count < 3 && i < len(version)) {
+        if (version.s[i] < '0' || version.s[i] > '9') return StrDup(version);
+        int value = 0;
+        while (i < len(version) && version.s[i] >= '0' && version.s[i] <= '9') {
+            value = value * 10 + (version.s[i] - '0');
+            i++;
+        }
+        parts[count++] = value;
+        if (count == 3) break;
+        if (i >= len(version) || version.s[i] != '.') return StrDup(version);
+        i++;
+    }
+    if (count != 3) return StrDup(version);
+    return StrDup(fmt("%d.%d.%d", parts[0], parts[1], parts[2]));
+}
+
+struct PlistEntry {
+    const char* key;
+    Str value;
+};
+
+Str BundleInfoPlist(const PluginManifest& manifest, const BundleNames& names,
+                    bool hasIcon) {
+    Str build = BundleVersion(manifest.version);
+    PlistEntry entries[12];
+    int n = 0;
+    entries[n++] = {"CFBundleDevelopmentRegion", StrDup(StrL("en"))};
+    entries[n++] = {"CFBundleDisplayName", StrDup(manifest.name)};
+    entries[n++] = {"CFBundleExecutable", StrDup(names.display)};
+    entries[n++] = {"CFBundleIdentifier", StrDup(manifest.id)};
+    entries[n++] = {"CFBundleInfoDictionaryVersion", StrDup(StrL("6.0"))};
+    entries[n++] = {"CFBundleName", StrDup(manifest.name)};
+    entries[n++] = {"CFBundlePackageType", StrDup(StrL("APPL"))};
+    entries[n++] = {"CFBundleShortVersionString", StrDup(manifest.version)};
+    entries[n++] = {"CFBundleVersion", build};
+    entries[n++] = {"LSMinimumSystemVersion", StrDup(StrL("11.0"))};
+    if (hasIcon) entries[n++] = {"CFBundleIconFile", StrDup(names.display)};
+    for (int i = 1; i < n; i++) {
+        PlistEntry item = entries[i];
+        int j = i;
+        while (j > 0 && strcmp(entries[j - 1].key, item.key) > 0) {
+            entries[j] = entries[j - 1];
+            j--;
+        }
+        entries[j] = item;
+    }
+    StrBuilder plist;
+    plist
+        .Append(StrL("<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n"
+                     "<!DOCTYPE plist PUBLIC \"-//Apple//DTD PLIST 1.0//EN\" "
+                     "\"http://www.apple.com/DTDs/PropertyList-1.0.dtd\">\n"
+                     "<plist version=\"1.0\">\n<dict>\n"));
+    for (int i = 0; i < n; i++) {
+        Str escaped = XmlEscape(entries[i].value);
+        plist.Append(fmt("  <key>%s</key>\n  <string>%s</string>\n",
+                         Str(entries[i].key), escaped));
+        StrFree(escaped);
+        StrFree(entries[i].value);
+    }
+    plist
+        .Append(StrL("  <key>NSHighResolutionCapable</key>\n  "
+                     "<true/>\n</dict>\n</plist>\n"));
+    return plist.TakeStr();
+}
+
+static Str ShellQuote(Str value) {
+    StrBuilder out;
+    out.AppendChar('\'');
+    for (int i = 0; i < len(value); i++) {
+        if (value.s[i] == '\'')
+            out.Append(StrL("'\\''"));
+        else
+            out.AppendChar(value.s[i]);
+    }
+    out.AppendChar('\'');
+    return out.TakeStr();
+}
+
+static bool PlaceholderName(Str text, int at, int* nameLen) {
+    int i = at;
+    while (i < len(text)) {
+        unsigned char c = (unsigned char)text.s[i];
+        if (!((c >= 'A' && c <= 'Z') || (c >= '0' && c <= '9') || c == '_'))
+            break;
+        i++;
+    }
+    *nameLen = i - at;
+    return i < len(text) && text.s[i] == '@';
+}
+
+static Str ScriptValue(const BundleScriptValues& values, Str name) {
+    if (StrEq(name, StrL("ID"))) return values.id;
+    if (StrEq(name, StrL("NAME"))) return values.name;
+    if (StrEq(name, StrL("COMMAND"))) return values.command;
+    if (StrEq(name, StrL("APP_VERSION"))) return values.appVersion;
+    if (StrEq(name, StrL("RUNTIME_VERSION"))) return values.runtimeVersion;
+    if (StrEq(name, StrL("ICON_SIZE"))) return values.iconSize;
+    if (StrEq(name, StrL("ARCHIVE"))) return values.archive;
+    if (StrEq(name, StrL("ARCHIVE_SHA256"))) return values.archiveSha256;
+    if (StrEq(name, StrL("DOWNLOAD_URL"))) return values.downloadUrl;
+    if (StrEq(name, StrL("STEM"))) return values.stem;
+    return {};
+}
+
+Str BundleShellScript(Str templ, const BundleScriptValues& values) {
+    StrBuilder out;
+    int i = 0;
+    while (i < len(templ)) {
+        if (templ.s[i] != '@') {
+            out.AppendChar(templ.s[i]);
+            i++;
+            continue;
+        }
+        int nameLen = 0;
+        if (!PlaceholderName(templ, i + 1, &nameLen)) {
+            out.AppendChar('@');
+            i++;
+            continue;
+        }
+        Str name = Str(templ.s + i + 1, nameLen);
+        if (StrEq(name, StrL("RUNTIME_FUNCTIONS"))) {
+            Str nested = BundleShellScript(Str(kBundleRuntimeSh), values);
+            out.Append(nested);
+            StrFree(nested);
+            i += nameLen + 2;
+            continue;
+        }
+        Str raw = ScriptValue(values, name);
+        if (!raw.s && len(raw) == 0 && !StrEq(name, StrL("ICON_SIZE")) &&
+            !StrEq(name, StrL("ARCHIVE")) &&
+            !StrEq(name, StrL("DOWNLOAD_URL")) &&
+            !StrEq(name, StrL("ARCHIVE_SHA256"))) {
+
+            bool known = false;
+            const char* keys[] = {"ID",
+                                  "NAME",
+                                  "COMMAND",
+                                  "APP_VERSION",
+                                  "RUNTIME_VERSION",
+                                  "ICON_SIZE",
+                                  "ARCHIVE",
+                                  "ARCHIVE_SHA256",
+                                  "DOWNLOAD_URL",
+                                  "STEM"};
+            for (const char* key : keys)
+                if (StrEq(name, Str(key))) known = true;
+            if (!known) {
+                out.AppendChar('@');
+                i++;
+                continue;
+            }
+        }
+        Str quoted = ShellQuote(raw.s ? raw : Str{});
+        out.Append(quoted);
+        StrFree(quoted);
+        i += nameLen + 2;
+    }
+    return out.TakeStr();
+}
+
+static uint32_t Crc32Bytes(const uint8_t* data, int n) {
+    static uint32_t table[256];
+    static int ready = 0;
+    if (!ready) {
+        for (uint32_t i = 0; i < 256; i++) {
+            uint32_t c = i;
+            for (int k = 0; k < 8; k++)
+                c = (c & 1u) ? (0xedb88320u ^ (c >> 1)) : (c >> 1);
+            table[i] = c;
+        }
+        ready = 1;
+    }
+    uint32_t crc = 0xffffffffu;
+    for (int i = 0; i < n; i++)
+        crc = table[(crc ^ data[i]) & 0xffu] ^ (crc >> 8);
+    return crc ^ 0xffffffffu;
+}
+
+static void AppendBe32(StrBuilder* out, uint32_t value) {
+    out->AppendChar((char)(value >> 24));
+    out->AppendChar((char)(value >> 16));
+    out->AppendChar((char)(value >> 8));
+    out->AppendChar((char)value);
+}
+
+static void AppendPngChunk(StrBuilder* file, const char* type,
+                           const uint8_t* data, int n) {
+    AppendBe32(file, (uint32_t)n);
+    file->Append(Str(type, 4));
+    if (n) file->Append(Str((const char*)data, n));
+    StrBuilder crcIn;
+    crcIn.Append(Str(type, 4));
+    if (n) crcIn.Append(Str((const char*)data, n));
+    Str crcBytes = crcIn.TakeStr();
+    uint32_t crc = Crc32Bytes((const uint8_t*)crcBytes.s, len(crcBytes));
+    StrFree(crcBytes);
+    AppendBe32(file, crc);
+}
+
+static bool PngEncode(const uint8_t* rgba, int size, Str* out, Str* error) {
+    int stride = size * 4;
+    int rawLen = size * (1 + stride);
+    char* raw = (char*)Alloc(nullptr, (size_t)rawLen + 1);
+    if (!raw) return BundleFail(error, StrL("allocating an icon failed"));
+    for (int y = 0; y < size; y++) {
+        raw[y * (1 + stride)] = 0;
+        memcpy(raw + y * (1 + stride) + 1, rgba + y * stride, (size_t)stride);
+    }
+    raw[rawLen] = 0;
+    Str compressed;
+
+    bool ok = RawDeflate(Str(raw, rawLen), &compressed, error);
+    free(raw);
+    if (!ok) return false;
+    uint8_t ihdr[13];
+    ihdr[0] = (uint8_t)(size >> 24);
+    ihdr[1] = (uint8_t)(size >> 16);
+    ihdr[2] = (uint8_t)(size >> 8);
+    ihdr[3] = (uint8_t)size;
+    memcpy(ihdr + 4, ihdr, 4);
+    ihdr[8] = 8;
+    ihdr[9] = 6;
+    ihdr[10] = 0;
+    ihdr[11] = 0;
+    ihdr[12] = 0;
+    StrBuilder file;
+    const uint8_t sig[8] = {137, 80, 78, 71, 13, 10, 26, 10};
+    file.Append(Str((const char*)sig, 8));
+    AppendPngChunk(&file, "IHDR", ihdr, 13);
+    AppendPngChunk(&file, "IDAT", (const uint8_t*)compressed.s,
+                   len(compressed));
+    AppendPngChunk(&file, "IEND", nullptr, 0);
+    StrFree(compressed);
+    if (out) *out = file.TakeStr();
+    return true;
+}
+
+static void BoxScale(const uint8_t* src, int srcN, uint8_t* dst, int dstN) {
+    if (srcN == dstN) {
+        memcpy(dst, src, (size_t)srcN * srcN * 4);
+        return;
+    }
+    for (int y = 0; y < dstN; y++) {
+        int y0 = y * srcN / dstN;
+        int y1 = (y + 1) * srcN / dstN;
+        if (y1 <= y0) y1 = y0 + 1;
+        for (int x = 0; x < dstN; x++) {
+            int x0 = x * srcN / dstN;
+            int x1 = (x + 1) * srcN / dstN;
+            if (x1 <= x0) x1 = x0 + 1;
+            uint32_t sum[4] = {};
+            int count = 0;
+            for (int yy = y0; yy < y1; yy++) {
+                for (int xx = x0; xx < x1; xx++) {
+                    const uint8_t* p = src + ((yy * srcN + xx) * 4);
+                    for (int c = 0; c < 4; c++) sum[c] += p[c];
+                    count++;
+                }
+            }
+            uint8_t* d = dst + ((y * dstN + x) * 4);
+            for (int c = 0; c < 4; c++)
+                d[c] = (uint8_t)(sum[c] / (uint32_t)count);
+        }
+    }
+}
+
+bool BundleWriteIcns(const uint8_t* rgba, int width, Str* out, Str* error) {
+    if (out) *out = {};
+    if (!rgba || width < 16)
+        return BundleFail(error, StrL("the icon must be a square PNG, ideally "
+                                      "1024×1024"));
+    struct Kind {
+        int size;
+        char type[4];
+    };
+    const Kind kinds[] = {
+        {16, {'i', 'c', 'p', '4'}},   {32, {'i', 'c', 'p', '5'}},
+        {64, {'i', 'c', 'p', '6'}},   {128, {'i', 'c', '0', '7'}},
+        {256, {'i', 'c', '0', '8'}},  {512, {'i', 'c', '0', '9'}},
+        {1024, {'i', 'c', '1', '0'}},
+    };
+    StrBuilder body;
+    uint8_t* scaled = (uint8_t*)Alloc(nullptr, (size_t)width * width * 4);
+    if (!scaled) return BundleFail(error, StrL("allocating an icon failed"));
+    for (const Kind& kind : kinds) {
+        if (kind.size > width) continue;
+        BoxScale(rgba, width, scaled, kind.size);
+        Str png;
+        if (!PngEncode(scaled, kind.size, &png, error)) {
+            free(scaled);
+            return false;
+        }
+        body.Append(Str(kind.type, 4));
+        AppendBe32(&body, (uint32_t)len(png) + 8);
+        body.Append(png);
+        StrFree(png);
+    }
+    free(scaled);
+    StrBuilder file;
+    file.Append(StrL("icns"));
+    Str bodyBytes = body.TakeStr();
+    AppendBe32(&file, (uint32_t)len(bodyBytes) + 8);
+    file.Append(bodyBytes);
+    StrFree(bodyBytes);
+    if (out) *out = file.TakeStr();
+    return true;
+}
+
+static uint32_t Be32(const uint8_t* p) {
+    return ((uint32_t)p[0] << 24) | ((uint32_t)p[1] << 16) |
+           ((uint32_t)p[2] << 8) | p[3];
+}
+
+static uint8_t Paeth(uint8_t a, uint8_t b, uint8_t c) {
+    int p = (int)a + (int)b - (int)c;
+    int pa = abs(p - (int)a);
+    int pb = abs(p - (int)b);
+    int pc = abs(p - (int)c);
+    if (pa <= pb && pa <= pc) return a;
+    if (pb <= pc) return b;
+    return c;
+}
+
+static bool PngDecode(Str bytes, Str* rgba, int* width, int* height,
+                      Str* error) {
+    if (rgba) *rgba = {};
+    const uint8_t sig[8] = {137, 80, 78, 71, 13, 10, 26, 10};
+    if (len(bytes) < 8 || memcmp(bytes.s, sig, 8) != 0)
+        return BundleFail(error, StrL("the icon is not a PNG image"));
+    int w = 0, h = 0, depth = 0, color = 0, interlace = 0;
+    bool have = false;
+    StrBuilder idat;
+    int at = 8;
+    while (at + 12 <= len(bytes)) {
+        uint32_t length = Be32((const uint8_t*)bytes.s + at);
+        if (at + 12 + (int)length > len(bytes))
+            return BundleFail(error, StrL("the icon is not a PNG image"));
+        const char* type = bytes.s + at + 4;
+        const uint8_t* data = (const uint8_t*)bytes.s + at + 8;
+        if (memcmp(type, "IHDR", 4) == 0) {
+            if (length < 13)
+                return BundleFail(error, StrL("the icon is not a PNG image"));
+            w = (int)Be32(data);
+            h = (int)Be32(data + 4);
+            depth = data[8];
+            color = data[9];
+            interlace = data[12];
+            have = true;
+        } else if (memcmp(type, "IDAT", 4) == 0) {
+            idat.Append(Str((const char*)data, (int)length));
+        } else if (memcmp(type, "IEND", 4) == 0) {
+            break;
+        }
+        at += 12 + (int)length;
+    }
+    if (!have || w <= 0 || h <= 0 || depth != 8 || interlace != 0 ||
+        (color != 0 && color != 2 && color != 4 && color != 6))
+        return BundleFail(error, StrL("the icon is not an 8-bit RGB PNG"));
+    int channels = color == 0 ? 1 : color == 2 ? 3 : color == 4 ? 2 : 4;
+    int stride = w * channels;
+    int rawLen = h * (1 + stride);
+    Str compressed = idat.TakeStr();
+    Str inflated;
+    if (!ZlibInflate(compressed, false, &inflated, error) ||
+        len(inflated) < rawLen) {
+        StrFree(compressed);
+        StrFree(inflated);
+        if (error && !*error)
+            BundleFail(error, StrL("the icon is not a PNG image"));
+        return false;
+    }
+    StrFree(compressed);
+    uint8_t* raw = (uint8_t*)inflated.s;
+    for (int y = 0; y < h; y++) {
+        uint8_t* row = raw + y * (1 + stride);
+        uint8_t filter = row[0];
+        uint8_t* prev = y ? raw + (y - 1) * (1 + stride) + 1 : nullptr;
+        uint8_t* pix = row + 1;
+        for (int x = 0; x < stride; x++) {
+            uint8_t left = x >= channels ? pix[x - channels] : 0;
+            uint8_t up = prev ? prev[x] : 0;
+            uint8_t ul = prev && x >= channels ? prev[x - channels] : 0;
+            if (filter == 1)
+                pix[x] = (uint8_t)(pix[x] + left);
+            else if (filter == 2)
+                pix[x] = (uint8_t)(pix[x] + up);
+            else if (filter == 3)
+                pix[x] = (uint8_t)(pix[x] + ((int)left + (int)up) / 2);
+            else if (filter == 4)
+                pix[x] = (uint8_t)(pix[x] + Paeth(left, up, ul));
+            else if (filter != 0) {
+                StrFree(inflated);
+                return BundleFail(error, StrL("the icon is not a PNG image"));
+            }
+        }
+    }
+    char* pixels = (char*)Alloc(nullptr, (size_t)w * h * 4 + 1);
+    if (!pixels) {
+        StrFree(inflated);
+        return BundleFail(error, StrL("allocating an icon failed"));
+    }
+    for (int y = 0; y < h; y++) {
+        const uint8_t* pix = raw + y * (1 + stride) + 1;
+        for (int x = 0; x < w; x++) {
+            uint8_t* d = (uint8_t*)pixels + ((y * w + x) * 4);
+            const uint8_t* s = pix + x * channels;
+            if (channels == 4) {
+                memcpy(d, s, 4);
+            } else if (channels == 3) {
+                d[0] = s[0];
+                d[1] = s[1];
+                d[2] = s[2];
+                d[3] = 255;
+            } else if (channels == 2) {
+                d[0] = d[1] = d[2] = s[0];
+                d[3] = s[1];
+            } else {
+                d[0] = d[1] = d[2] = s[0];
+                d[3] = 255;
+            }
+        }
+    }
+    pixels[w * h * 4] = 0;
+    StrFree(inflated);
+    if (rgba)
+        *rgba = Str(pixels, w * h * 4);
+    else
+        free(pixels);
+    if (width) *width = w;
+    if (height) *height = h;
+    return true;
+}
+
+struct BundleItem {
+    Str path;
+    Str bytes;
+    bool directory = false;
+    bool executable = false;
+};
+
+struct BundleTree {
+    Vec<BundleItem> items;
+
+    void Free() {
+        for (int i = 0; i < len(items); i++) {
+            StrFree(items.els[i].path);
+            StrFree(items.els[i].bytes);
+        }
+        VecReset(items);
+    }
+
+    bool Has(Str path) const {
+        for (int i = 0; i < len(items); i++)
+            if (StrEq(items.els[i].path, path)) return true;
+        return false;
+    }
+
+    bool Directory(Str path) {
+        if (len(path) == 0 || Has(path)) return true;
+        int slash = -1;
+        for (int i = 0; i < len(path); i++)
+            if (path.s[i] == '/') slash = i;
+        if (slash > 0 && !Directory(Str(path.s, slash))) return false;
+        BundleItem item;
+        item.path = StrDup(path);
+        item.directory = true;
+        item.executable = true;
+        return VecAppend(items, item);
+    }
+
+    bool Add(Str path, Str bytes, bool executable, bool directory) {
+        int slash = -1;
+        for (int i = 0; i < len(path); i++)
+            if (path.s[i] == '/') slash = i;
+        if (slash > 0 && !Directory(Str(path.s, slash))) return false;
+        BundleItem item;
+        item.path = StrDup(path);
+        item.bytes = bytes;
+        item.directory = directory;
+        item.executable = executable;
+        return VecAppend(items, item);
+    }
+};
+
+static bool AddDirectory(BundleTree* tree, Str directory, Str prefix,
+                         Str exclude, bool isRoot, Vec<Str>* visited,
+                         Str* error);
+
+static bool shell_bundle_Canonical(Str path, Str* out, Str* error) {
+    if (out) *out = {};
+    char buffer[kMaxPath];
+    buffer[0] = 0;
+    TempStr raw = StrDupTemp(path);
+    if (!raw || !PlatCanonicalPath(raw.s, buffer, kMaxPath))
+        return BundleFail(error, fmt("cannot read %s", path));
+    if (out) *out = StrDup(Str(buffer));
+    return true;
+}
+
+static int CmpEntry(const void* a, const void* b) {
+    return strcmp(((const DirEntry*)a)->name, ((const DirEntry*)b)->name);
+}
+
+static bool LeftOut(Str name, bool isRoot) {
+    if (len(name) == 0 || name.s[0] == '.') return true;
+    if (StrEq(name, StrL("node_modules"))) return true;
+    if (StrEq(name, StrL("gpui-kit.d.ts"))) return true;
+    if (isRoot &&
+        (StrEq(name, StrL("jsconfig.json")) || StrEq(name, StrL("AGENTS.md"))))
+        return true;
+    return false;
+}
+
+static bool AddDirectory(BundleTree* tree, Str directory, Str prefix,
+                         Str exclude, bool isRoot, Vec<Str>* visited,
+                         Str* error) {
+    Str canonical;
+    if (!shell_bundle_Canonical(directory, &canonical, error)) return false;
+    for (int i = 0; i < len(*visited); i++) {
+        if (StrEq(visited->els[i], canonical)) {
+            StrFree(canonical);
+            return true;
+        }
+    }
+    VecAppend(*visited, canonical);
+    Vec<DirEntry> listed;
+    if (!VecResize(listed, 4096)) {
+        VecReset(listed);
+        return BundleFail(error, fmt("cannot read %s", directory));
+    }
+    int n = PlatListDir(directory.s, listed.els, 4096);
+    if (n < 0) n = 0;
+    if (n >= 4096) {
+        VecReset(listed);
+        return BundleFail(error, fmt("cannot read %s", directory));
+    }
+    qsort(listed.els, (size_t)n, sizeof(DirEntry), CmpEntry);
+    for (int i = 0; i < n; i++) {
+        Str name = Str(listed.els[i].name);
+        Str path = JoinDisk(directory, name);
+        if (LeftOut(name, isRoot)) {
+            StrFree(path);
+            continue;
+        }
+        Str canon;
+        bool excluded = false;
+        if (shell_bundle_Canonical(path, &canon, nullptr) && exclude &&
+            StrEq(canon, exclude))
+            excluded = true;
+        StrFree(canon);
+        if (excluded) {
+            StrFree(path);
+            continue;
+        }
+        bool dir = listed.els[i].isDir;
+        bool file = listed.els[i].isFile;
+        if (listed.els[i].isSymlink) {
+            dir = PlatDirExists(path.s);
+            file = PlatFileExists(path.s);
+        }
+        Str inner = StrDup(fmt("%s/%s", prefix, name));
+        if (dir) {
+            if (!tree->Directory(inner) ||
+                !AddDirectory(tree, path, inner, exclude, false, visited,
+                              error)) {
+                StrFree(inner);
+                StrFree(path);
+                VecReset(listed);
+                return false;
+            }
+        } else if (file) {
+            Str bytes;
+            if (!ReadFileBytes(path, &bytes, error) ||
+                !tree->Add(inner, bytes, PlatFileIsExecutable(path.s), false)) {
+                StrFree(bytes);
+                StrFree(inner);
+                StrFree(path);
+                VecReset(listed);
+                return false;
+            }
+        }
+        StrFree(inner);
+        StrFree(path);
+    }
+    VecReset(listed);
+    return true;
+}
+
+static bool AddApplication(BundleTree* tree, Str root, Str prefix, Str exclude,
+                           Str* error) {
+    if (!tree->Directory(prefix))
+        return BundleFail(error, StrL("the bundle is empty"));
+    Vec<Str> visited;
+    bool ok = AddDirectory(tree, root, prefix, exclude, true, &visited, error);
+    for (int i = 0; i < len(visited); i++) StrFree(visited.els[i]);
+    VecReset(visited);
+    return ok;
+}
+
+bool BundleApplicationPaths(Str root, Str prefix, Str exclude, Str* paths,
+                            Str* error) {
+    if (paths) *paths = {};
+    BundleTree tree;
+    if (!AddApplication(&tree, root, prefix, exclude, error)) {
+        tree.Free();
+        return false;
+    }
+    StrBuilder out;
+    for (int i = 0; i < len(tree.items); i++) {
+        if (i) out.AppendChar('\n');
+        out.Append(tree.items.els[i].path);
+    }
+    tree.Free();
+    if (paths) *paths = out.TakeStr();
+    return true;
+}
+
+static void PutOctal(char* field, int width, uint64_t value) {
+    memset(field, '0', (size_t)width);
+    field[width - 1] = 0;
+    for (int i = width - 2; i >= 0; i--) {
+        field[i] = (char)('0' + (value & 7u));
+        value >>= 3;
+    }
+}
+
+static bool WriteTar(const BundleTree& tree, Str* out, Str* error) {
+    StrBuilder archive;
+    uint64_t mtime = (uint64_t)time(nullptr);
+    for (int i = 0; i < len(tree.items); i++) {
+        const BundleItem& item = tree.items.els[i];
+        StrBuilder name;
+        name.Append(item.path);
+        if (item.directory) name.AppendChar('/');
+        Str shown = name.TakeStr();
+        if (len(shown) > 100) {
+            StrFree(shown);
+            return BundleFail(error,
+                              StrL("a bundled path is too long for a tar "
+                                   "archive"));
+        }
+        char header[512];
+        memset(header, 0, sizeof(header));
+        memcpy(header, shown.s, (size_t)len(shown));
+        StrFree(shown);
+        uint32_t mode = item.executable ? 0755u : 0644u;
+        PutOctal(header + 100, 8, mode);
+        PutOctal(header + 108, 8, 0);
+        PutOctal(header + 116, 8, 0);
+        PutOctal(header + 124, 12,
+                 item.directory ? 0 : (uint64_t)len(item.bytes));
+        PutOctal(header + 136, 12, mtime);
+        memset(header + 148, ' ', 8);
+        header[156] = item.directory ? '5' : '0';
+        memcpy(header + 257, "ustar", 5);
+        header[263] = '0';
+        header[264] = '0';
+        unsigned sum = 0;
+        for (int b = 0; b < 512; b++) sum += (unsigned char)header[b];
+        snprintf(header + 148, 8, "%06o", sum);
+        header[154] = 0;
+        header[155] = ' ';
+        archive.Append(Str(header, 512));
+        if (!item.directory && len(item.bytes) > 0) archive.Append(item.bytes);
+        int padded = item.directory ? 0 : (len(item.bytes) + 511) & ~511;
+        int extra = padded - (item.directory ? 0 : len(item.bytes));
+        for (int z = 0; z < extra; z++) archive.AppendChar(0);
+    }
+    for (int z = 0; z < 1024; z++) archive.AppendChar(0);
+    Str raw = archive.TakeStr();
+    bool ok = ZlibDeflate(raw, true, out, error);
+    StrFree(raw);
+    return ok;
+}
+
+static void AppendLe16(StrBuilder* out, uint16_t value) {
+    out->AppendChar((char)value);
+    out->AppendChar((char)(value >> 8));
+}
+
+static void AppendLe32(StrBuilder* out, uint32_t value) {
+    out->AppendChar((char)value);
+    out->AppendChar((char)(value >> 8));
+    out->AppendChar((char)(value >> 16));
+    out->AppendChar((char)(value >> 24));
+}
+
+static bool RawDeflate(Str input, Str* out, Str* error) {
+    Str wrapped;
+    if (!ZlibDeflate(input, false, &wrapped, error)) return false;
+    if (len(wrapped) < 6) {
+        StrFree(wrapped);
+        return BundleFail(error, StrL("deflate produced an empty stream"));
+    }
+    int n = len(wrapped) - 6;
+    char* raw = (char*)Alloc(nullptr, (size_t)n + 1);
+    if (!raw) {
+        StrFree(wrapped);
+        return BundleFail(error, StrL("allocating a zip entry failed"));
+    }
+    memcpy(raw, wrapped.s + 2, (size_t)n);
+    raw[n] = 0;
+    StrFree(wrapped);
+    *out = Str(raw, n);
+    return true;
+}
+
+static void DosStamp(uint16_t* dosTime, uint16_t* dosDate) {
+    time_t now = time(nullptr);
+
+    struct tm* stamp = gmtime(&now);
+    if (!stamp || stamp->tm_year + 1900 < 1980) {
+        *dosTime = 0;
+        *dosDate = (uint16_t)((1 << 5) | 1);
+        return;
+    }
+    *dosTime = (uint16_t)((stamp->tm_hour << 11) | (stamp->tm_min << 5) |
+                          (stamp->tm_sec / 2));
+    *dosDate = (uint16_t)(((stamp->tm_year + 1900 - 1980) << 9) |
+                          ((stamp->tm_mon + 1) << 5) | stamp->tm_mday);
+}
+
+static bool WriteZip(const BundleTree& tree, Str* out, Str* error) {
+    StrBuilder file;
+    StrBuilder central;
+    uint16_t dosTime = 0, dosDate = 0;
+    DosStamp(&dosTime, &dosDate);
+    uint32_t offset = 0;
+    for (int i = 0; i < len(tree.items); i++) {
+        const BundleItem& item = tree.items.els[i];
+        StrBuilder nameBuf;
+        nameBuf.Append(item.path);
+        if (item.directory) nameBuf.AppendChar('/');
+        Str name = nameBuf.TakeStr();
+        if (len(name) > 65535) {
+            StrFree(name);
+            return BundleFail(
+                error, StrL("the bundle is too large for a zip archive"));
+        }
+        Str stored;
+        uint16_t method = 0;
+        if (!item.directory) {
+            method = 8;
+            if (!RawDeflate(item.bytes.s ? item.bytes : Str{}, &stored,
+                            error)) {
+                StrFree(name);
+                return false;
+            }
+        }
+        uint32_t crc =
+            item.directory
+                ? 0
+                : Crc32Bytes((const uint8_t*)(item.bytes.s ? item.bytes.s : ""),
+                             len(item.bytes));
+        uint16_t flags = 0x0800;
+        StrBuilder local;
+        AppendLe32(&local, 0x04034b50u);
+        AppendLe16(&local, 20);
+        AppendLe16(&local, flags);
+        AppendLe16(&local, method);
+        AppendLe16(&local, dosTime);
+        AppendLe16(&local, dosDate);
+        AppendLe32(&local, crc);
+        AppendLe32(&local, (uint32_t)len(stored));
+        AppendLe32(&local, item.directory ? 0 : (uint32_t)len(item.bytes));
+        AppendLe16(&local, (uint16_t)len(name));
+        AppendLe16(&local, 0);
+        local.Append(name);
+        Str localBytes = local.TakeStr();
+        file.Append(localBytes);
+        if (len(stored)) file.Append(stored);
+        uint32_t fileType = item.directory ? 040000u : 0100000u;
+        uint32_t mode = item.executable ? 0755u : 0644u;
+        uint32_t attributes =
+            ((fileType | mode) << 16) | (item.directory ? 0x10u : 0);
+        AppendLe32(&central, 0x02014b50u);
+        AppendLe16(&central, (uint16_t)((3u << 8) | 20));
+        AppendLe16(&central, 20);
+        AppendLe16(&central, flags);
+        AppendLe16(&central, method);
+        AppendLe16(&central, dosTime);
+        AppendLe16(&central, dosDate);
+        AppendLe32(&central, crc);
+        AppendLe32(&central, (uint32_t)len(stored));
+        AppendLe32(&central, item.directory ? 0 : (uint32_t)len(item.bytes));
+        AppendLe16(&central, (uint16_t)len(name));
+        for (int z = 0; z < 8; z++) central.AppendChar(0);
+        AppendLe32(&central, attributes);
+        AppendLe32(&central, offset);
+        central.Append(name);
+        offset += (uint32_t)len(localBytes) + (uint32_t)len(stored);
+        StrFree(localBytes);
+        StrFree(stored);
+        StrFree(name);
+    }
+    Str centralBytes = central.TakeStr();
+    file.Append(centralBytes);
+    AppendLe32(&file, 0x06054b50u);
+    AppendLe16(&file, 0);
+    AppendLe16(&file, 0);
+    AppendLe16(&file, (uint16_t)len(tree.items));
+    AppendLe16(&file, (uint16_t)len(tree.items));
+    AppendLe32(&file, (uint32_t)len(centralBytes));
+    AppendLe32(&file, offset);
+    AppendLe16(&file, 0);
+    StrFree(centralBytes);
+    if (out) *out = file.TakeStr();
+    return true;
+}
+
+static bool U16At(Str archive, int at, int* out, Str* error) {
+    if (at < 0 || at + 2 > len(archive))
+        return BundleFail(error, StrL("the zip archive is truncated"));
+    *out =
+        (unsigned char)archive.s[at] | ((unsigned char)archive.s[at + 1] << 8);
+    return true;
+}
+
+static bool U32At(Str archive, int at, uint32_t* out, Str* error) {
+    if (at < 0 || at + 4 > len(archive))
+        return BundleFail(error, StrL("the zip archive is truncated"));
+    *out = (unsigned char)archive.s[at] |
+           ((unsigned char)archive.s[at + 1] << 8) |
+           ((unsigned char)archive.s[at + 2] << 16) |
+           ((unsigned char)archive.s[at + 3] << 24);
+    return true;
+}
+
+bool BundleZipEntry(Str archive, Str name, Str* out, Str* error) {
+    if (out) *out = {};
+    int end = -1;
+    int last = len(archive) - 22;
+    int stop = last - 65557;
+    if (stop < 0) stop = 0;
+    for (int at = last; at >= stop; at--) {
+        if ((unsigned char)archive.s[at] == 0x50 &&
+            (unsigned char)archive.s[at + 1] == 0x4b &&
+            (unsigned char)archive.s[at + 2] == 0x05 &&
+            (unsigned char)archive.s[at + 3] == 0x06) {
+            end = at;
+            break;
+        }
+    }
+    if (end < 0) return BundleFail(error, StrL("not a zip archive"));
+    int count = 0;
+    uint32_t at = 0;
+    if (!U16At(archive, end + 10, &count, error) ||
+        !U32At(archive, end + 16, &at, error))
+        return false;
+    for (int i = 0; i < count; i++) {
+        uint32_t sig = 0;
+        if (!U32At(archive, (int)at, &sig, error)) return false;
+        if (sig != 0x02014b50u)
+            return BundleFail(error,
+                              StrL("the zip archive's directory is damaged"));
+        int method = 0, compressed = 0, size = 0, nameLen = 0, extra = 0,
+            comment = 0;
+        uint32_t compressed32 = 0, size32 = 0, local = 0;
+        if (!U16At(archive, (int)at + 10, &method, error) ||
+            !U32At(archive, (int)at + 20, &compressed32, error) ||
+            !U32At(archive, (int)at + 24, &size32, error) ||
+            !U16At(archive, (int)at + 28, &nameLen, error) ||
+            !U16At(archive, (int)at + 30, &extra, error) ||
+            !U16At(archive, (int)at + 32, &comment, error) ||
+            !U32At(archive, (int)at + 42, &local, error))
+            return false;
+        compressed = (int)compressed32;
+        size = (int)size32;
+        if ((int)at + 46 + nameLen > len(archive))
+            return BundleFail(error, StrL("the zip archive is truncated"));
+        Str entry = Str(archive.s + at + 46, nameLen);
+        if (StrEq(entry, name)) {
+            uint32_t localSig = 0;
+            if (!U32At(archive, (int)local, &localSig, error)) return false;
+            if (localSig != 0x04034b50u)
+                return BundleFail(error,
+                                  fmt("the zip archive's entry for %s is "
+                                      "damaged",
+                                      name));
+            int localName = 0, localExtra = 0;
+            if (!U16At(archive, (int)local + 26, &localName, error) ||
+                !U16At(archive, (int)local + 28, &localExtra, error))
+                return false;
+            int data = (int)local + 30 + localName + localExtra;
+            if (data + compressed > len(archive))
+                return BundleFail(error, StrL("the zip archive is truncated"));
+            Str stored = Str(archive.s + data, compressed);
+            Str contents;
+            if (method == 0) {
+                contents = StrDup(stored);
+            } else if (method == 8) {
+                if (!ZlibInflateRaw(stored, &contents, error)) return false;
+            } else {
+                return BundleFail(error,
+                                  fmt("%s is compressed with method %d, which "
+                                      "is not supported",
+                                      name, method));
+            }
+            if (len(contents) != size) {
+                StrFree(contents);
+                return BundleFail(
+                    error, fmt("%s in the zip archive is damaged", name));
+            }
+            if (out)
+                *out = contents;
+            else
+                StrFree(contents);
+            return true;
+        }
+        at += (uint32_t)(46 + nameLen + extra + comment);
+    }
+    return BundleFail(error, fmt("the zip archive holds no %s", name));
+}
+
+static int PeHeader(Str bytes) {
+    if (len(bytes) < 0x40 || bytes.s[0] != 'M' || bytes.s[1] != 'Z') return -1;
+    uint32_t at = (unsigned char)bytes.s[0x3c] |
+                  ((unsigned char)bytes.s[0x3d] << 8) |
+                  ((unsigned char)bytes.s[0x3e] << 16) |
+                  ((unsigned char)bytes.s[0x3f] << 24);
+    if ((int)at < 0 || (int)at + 4 > len(bytes)) return -1;
+    if (memcmp(bytes.s + at, "PE\0\0", 4) != 0) return -1;
+    return (int)at;
+}
+
+bool BundleMarkAsGuiProgram(Str bytes, Str* error) {
+    int pe = PeHeader(bytes);
+    if (pe < 0) return BundleFail(error, StrL("not a PE executable"));
+    int optional = pe + 24;
+    if (optional + 70 > len(bytes))
+        return BundleFail(error, StrL("the PE optional header is truncated"));
+    uint16_t magic = (unsigned char)bytes.s[optional] |
+                     ((unsigned char)bytes.s[optional + 1] << 8);
+    if (magic != 0x10b && magic != 0x20b)
+        return BundleFail(error,
+                          StrL("the PE executable has no optional header"));
+    bytes.s[optional + 68] = 2;
+    bytes.s[optional + 69] = 0;
+    return true;
+}
+
+static Str Sha256Hex(Str bytes) {
+    uint8_t digest[32];
+    Sha256(bytes, digest);
+    StrBuilder out;
+    for (int i = 0; i < 32; i++) out.Append(fmt("%02x", (int)digest[i]));
+    return out.TakeStr();
+}
+
+bool BundleWindowsRuntimeFrom(Str cache, Str version, BundleDownloadFn download,
+                              void* data, Str* executable, Str* error) {
+    if (executable) *executable = {};
+    if (cache && PlatFileExists(cache.s)) {
+        Str bytes;
+        if (!ReadFileBytes(cache, &bytes, error)) return false;
+        if (PeHeader(bytes) < 0) {
+            StrFree(bytes);
+            return BundleFail(error,
+                              fmt("%s is not a Windows executable", cache));
+        }
+        if (executable)
+            *executable = bytes;
+        else
+            StrFree(bytes);
+        return true;
+    }
+    Str url = StrDup(
+        fmt("https://github.com/longbridge/gpui-kit/releases/download/v%s/"
+            "gpui-shell-%s.zip",
+            version, Str(kWindowsTarget)));
+    Str archive;
+    bool got = download && download(url, data, &archive, error);
+    if (!got) {
+        StrFree(url);
+
+        if (error && *error) return false;
+        return BundleFail(error,
+                          StrL("cannot download gpui-shell for Windows"));
+    }
+    Str entryName =
+        StrDup(fmt("gpui-shell-%s/gpui-shell.exe", Str(kWindowsTarget)));
+    Str bytes;
+    bool ok = BundleZipEntry(archive, entryName, &bytes, error);
+    StrFree(archive);
+    StrFree(entryName);
+    if (!ok) {
+        StrFree(url);
+        return false;
+    }
+    if (PeHeader(bytes) < 0) {
+        StrFree(bytes);
+        StrFree(url);
+        return BundleFail(error, fmt("%s holds no Windows executable", url));
+    }
+    StrFree(url);
+    if (cache) {
+        Str parent = ParentPath(cache);
+        Str ignored;
+        DependencyMakeDirectories(parent, &ignored);
+        StrFree(ignored);
+        StrFree(parent);
+        if (!ReplaceFile(cache, bytes, error)) {
+            StrFree(bytes);
+            return false;
+        }
+    }
+    if (executable)
+        *executable = bytes;
+    else
+        StrFree(bytes);
+    return true;
+}
+
+static bool WriteDirectory(const BundleTree& tree, Str destination,
+                           Str* error) {
+    for (int i = 0; i < len(tree.items); i++) {
+        const BundleItem& item = tree.items.els[i];
+        Str path = JoinDisk(destination, item.path);
+        if (item.directory) {
+            Str ignored;
+            if (!DependencyMakeDirectories(path, &ignored)) {
+                Str message =
+                    ignored ? ignored : StrDup(fmt("cannot write %s", path));
+                StrFree(path);
+                return BundleFail(error, message);
+            }
+            StrFree(ignored);
+        } else if (!WriteFileBytes(path, item.bytes, error)) {
+            StrFree(path);
+            return false;
+        }
+        if (item.executable && !PlatMakeExecutable(path.s)) {
+            StrFree(path);
+            return BundleFail(error,
+                              fmt("cannot make %s executable", item.path));
+        }
+        StrFree(path);
+    }
+    return true;
+}
+
+static int IconSizeFor(int width) {
+    const int sizes[] = {512, 256, 128, 64, 48, 32, 16};
+    for (int size : sizes)
+        if (size <= width) return size;
+    return width;
+}
+
+static Str TrimTrailingSlash(Str value) {
+    int n = len(value);
+    while (n > 0 && value.s[n - 1] == '/') n--;
+    return Str(value.s, n);
+}
+
+static bool DownloadRelease(Str url, void*, Str* bytes, Str* err) {
+    HttpRsp response;
+    if (!HttpGet(url, &response) || response.status < 200 ||
+        response.status >= 300) {
+        HttpRspFree(&response);
+        return BundleFail(err, fmt("cannot download %s", url));
+    }
+    char* copy = (char*)Alloc(nullptr, (size_t)len(response.body) + 1);
+    if (!copy) {
+        HttpRspFree(&response);
+        return BundleFail(err, StrL("allocating a download failed"));
+    }
+    if (len(response.body))
+        memcpy(copy, response.body.els, (size_t)len(response.body));
+    copy[len(response.body)] = 0;
+    int n = len(response.body);
+    HttpRspFree(&response);
+    Str body = Str(copy, n);
+    Str sumUrl = StrDup(fmt("%s.sha256", url));
+    HttpRsp sum;
+    bool summed =
+        HttpGet(sumUrl, &sum) && sum.status >= 200 && sum.status < 300;
+    StrFree(sumUrl);
+    if (!summed) {
+        HttpRspFree(&sum);
+        StrFree(body);
+        return BundleFail(err, fmt("%s.sha256 is empty", url));
+    }
+    int hex = 0;
+    while (hex < len(sum.body) && sum.body.els[hex] != ' ' &&
+           sum.body.els[hex] != '\t' && sum.body.els[hex] != '\n' &&
+           sum.body.els[hex] != '\r')
+        hex++;
+    Str expect = Str((const char*)sum.body.els, hex);
+    Str actual = Sha256Hex(body);
+    bool match = len(expect) == len(actual);
+    if (match) {
+        for (int i = 0; i < len(expect); i++) {
+            char a = expect.s[i];
+            char b = actual.s[i];
+            if (a >= 'A' && a <= 'Z') a = (char)(a - 'A' + 'a');
+            if (b >= 'A' && b <= 'Z') b = (char)(b - 'A' + 'a');
+            if (a != b) match = false;
+        }
+    }
+    StrFree(actual);
+    HttpRspFree(&sum);
+    if (!match) {
+        StrFree(body);
+        return BundleFail(err, fmt("%s does not match its checksum", url));
+    }
+    if (bytes)
+        *bytes = body;
+    else
+        StrFree(body);
+    return true;
+}
+
+bool ShellBundle(Str directory, const Invocation& invocation, Str* report,
+                 Str* error) {
+    if (report) *report = {};
+    if (error) {
+        StrFree(*error);
+        *error = {};
+    }
+    Str manifestOwned = JoinDisk(directory, Str(kShellManifestFile));
+    if (!PlatFileExists(manifestOwned.s)) {
+        StrFree(manifestOwned);
+        return BundleFail(
+            error,
+            fmt("%s has no %s. A bundle needs one: its `id` keeps the user's "
+                "data when the application is moved or updated, and its `name` "
+                "and `version` name the bundle.",
+                directory, Str(kShellManifestFile)));
+    }
+    StrFree(manifestOwned);
+    PluginManifest manifest;
+    if (!PluginManifestRead(directory, &manifest, nullptr))
+        return BundleFail(
+            error, fmt("invalid %s/%s", directory, Str(kShellManifestFile)));
+    BundlePlatform platform =
+        invocation.platformSet ? invocation.platform : BundleHostPlatform();
+    if (invocation.downloadUrl && platform != BundlePlatform::Linux)
+        return BundleFail(error,
+                          StrL("`--download-url` is for the Linux bundle, "
+                               "whose install.sh downloads the archive"));
+    Str rgba;
+    int iconW = 0, iconH = 0;
+    if (invocation.icon) {
+        Str png;
+        if (!ReadFileBytes(invocation.icon, &png, error)) return false;
+        Str decodeError;
+        if (!PngDecode(png, &rgba, &iconW, &iconH, &decodeError)) {
+            StrFree(png);
+            if (decodeError && StrContains(decodeError, StrL("8-bit"))) {
+                bool failed = BundleFail(error, decodeError);
+                StrFree(decodeError);
+                return failed;
+            }
+            StrFree(decodeError);
+            return BundleFail(error,
+                              fmt("%s is not a PNG image", invocation.icon));
+        }
+        StrFree(png);
+        if (iconW != iconH || iconW < 16) {
+            StrFree(rgba);
+            return BundleFail(error,
+                              fmt("%s is %d×%d; the icon must be a square "
+                                  "PNG, ideally 1024×1024",
+                                  invocation.icon, iconW, iconH));
+        }
+    }
+    Str out = invocation.out ? StrDup(invocation.out) : Str{};
+    if (!out) {
+        char cwd[kMaxPath];
+        cwd[0] = 0;
+        PlatGetCwd(cwd, kMaxPath);
+        out = JoinDisk(Str(cwd), StrL("dist"));
+    }
+    Str ignored;
+    if (!DependencyMakeDirectories(out, &ignored)) {
+        StrFree(rgba);
+        StrFree(out);
+        return BundleFail(error,
+                          ignored ? ignored : StrL("cannot create the output"));
+    }
+    StrFree(ignored);
+    Str exclude;
+    if (!shell_bundle_Canonical(out, &exclude, error)) {
+        StrFree(rgba);
+        StrFree(out);
+        return false;
+    }
+    BundleNames names;
+    BundleNamesFrom(manifest, platform, &names);
+    Str runtime = StrDup(fmt(
+        "It uses gpui-shell %s or later when one is installed, and downloads "
+        "v%s otherwise.",
+        Str(kShellVersion), Str(kShellVersion)));
+    BundleScriptValues values;
+    values.id = manifest.id;
+    values.name = manifest.name;
+    values.command = names.command;
+    values.appVersion = manifest.version;
+    values.runtimeVersion = Str(kShellVersion);
+    values.stem = names.archiveStem;
+    values.downloadUrl = invocation.downloadUrl
+                             ? TrimTrailingSlash(invocation.downloadUrl)
+                             : Str{};
+    BundleTree tree;
+    Str built;
+    if (platform == BundlePlatform::MacOS) {
+        Str contents = StrDup(fmt("%s/Contents", names.appBundle));
+        Str plist = BundleInfoPlist(manifest, names, rgba.s != nullptr);
+        Str plistPath = StrDup(fmt("%s/Info.plist", contents));
+        Str pkgPath = StrDup(fmt("%s/PkgInfo", contents));
+        Str exePath = StrDup(fmt("%s/MacOS/%s", contents, names.display));
+        Str launcher = BundleShellScript(Str(kBundleMacosLauncherSh), values);
+        tree.Add(plistPath, plist, false, false);
+        tree.Add(pkgPath, StrDup(StrL("APPL????")), false, false);
+        tree.Add(exePath, launcher, true, false);
+        StrFree(plistPath);
+        StrFree(pkgPath);
+        StrFree(exePath);
+        if (rgba.s) {
+            Str icns;
+            if (!BundleWriteIcns((const uint8_t*)rgba.s, iconW, &icns, error)) {
+                tree.Free();
+                StrFree(contents);
+                names.Free();
+                StrFree(runtime);
+                StrFree(rgba);
+                StrFree(exclude);
+                StrFree(out);
+                return false;
+            }
+            Str iconPath =
+                StrDup(fmt("%s/Resources/%s.icns", contents, names.display));
+            tree.Add(iconPath, icns, false, false);
+            StrFree(iconPath);
+        }
+        Str appPrefix = StrDup(fmt("%s/Resources/app", contents));
+        bool added =
+            AddApplication(&tree, directory, appPrefix, exclude, error);
+        StrFree(appPrefix);
+        StrFree(contents);
+        if (!added) {
+            tree.Free();
+            names.Free();
+            StrFree(runtime);
+            StrFree(rgba);
+            StrFree(exclude);
+            StrFree(out);
+            return false;
+        }
+        Str staging = JoinDisk(out, StrL(".bundle-partial"));
+        DependencyRemoveTree(staging);
+        if (!WriteDirectory(tree, staging, error)) {
+            DependencyRemoveTree(staging);
+            StrFree(staging);
+            tree.Free();
+            names.Free();
+            StrFree(runtime);
+            StrFree(rgba);
+            StrFree(exclude);
+            StrFree(out);
+            return false;
+        }
+        Str destination = JoinDisk(out, names.appBundle);
+        Str marker = JoinDisk(destination, StrL("Contents/Info.plist"));
+        if (PlatFileExists(destination.s) || PlatDirExists(destination.s)) {
+            if (!PlatFileExists(marker.s)) {
+                StrFree(marker);
+                DependencyRemoveTree(staging);
+                StrFree(staging);
+                tree.Free();
+                names.Free();
+                StrFree(runtime);
+                StrFree(rgba);
+                StrFree(exclude);
+                Str message =
+                    StrDup(fmt("%s exists and is not an application "
+                               "bundle; move it away first",
+                               destination));
+                StrFree(destination);
+                StrFree(out);
+                return BundleFail(error, message);
+            }
+            DependencyRemoveTree(destination);
+        }
+        StrFree(marker);
+        Str top = JoinDisk(staging, names.appBundle);
+        bool renamed = DependencyRenameDirectory(top, destination);
+        StrFree(top);
+        DependencyRemoveTree(staging);
+        StrFree(staging);
+        if (!renamed) {
+            tree.Free();
+            names.Free();
+            StrFree(runtime);
+            StrFree(rgba);
+            StrFree(exclude);
+            StrFree(out);
+            return BundleFail(error, fmt("cannot write %s", destination));
+        }
+        built = StrDup(fmt(
+            "bundled %s\n%s The first launch downloads it when needed.\n"
+            "The bundle is not signed. Sign and notarize it before giving it "
+            "to anyone; see "
+            "https://gpui-kit.com/shell/packaging#signing-on-macos",
+            destination, runtime));
+        StrFree(destination);
+    } else if (platform == BundlePlatform::Linux) {
+        if (rgba.s) {
+            int size = IconSizeFor(iconW);
+            uint8_t* scaled = (uint8_t*)Alloc(nullptr, (size_t)size * size * 4);
+            if (!scaled) {
+                tree.Free();
+                names.Free();
+                StrFree(runtime);
+                StrFree(rgba);
+                StrFree(exclude);
+                StrFree(out);
+                return BundleFail(error, StrL("allocating an icon failed"));
+            }
+            BoxScale((const uint8_t*)rgba.s, iconW, scaled, size);
+            Str png;
+            bool encoded = PngEncode(scaled, size, &png, error);
+            free(scaled);
+            if (!encoded) {
+                tree.Free();
+                names.Free();
+                StrFree(runtime);
+                StrFree(rgba);
+                StrFree(exclude);
+                StrFree(out);
+                return false;
+            }
+            Str iconPath =
+                StrDup(fmt("%s/%s.png", names.archiveStem, names.command));
+            tree.Add(iconPath, png, false, false);
+            StrFree(iconPath);
+            values.iconSize = StrDup(fmt("%d", size));
+        }
+        Str launcher = BundleShellScript(Str(kBundleLinuxLauncherSh), values);
+        Str launcherPath =
+            StrDup(fmt("%s/%s", names.archiveStem, names.command));
+        tree.Add(launcherPath, launcher, true, false);
+        StrFree(launcherPath);
+        Str appPrefix = StrDup(fmt("%s/app", names.archiveStem));
+        bool added =
+            AddApplication(&tree, directory, appPrefix, exclude, error);
+        StrFree(appPrefix);
+        if (!added) {
+            tree.Free();
+            names.Free();
+            StrFree(runtime);
+            StrFree(rgba);
+            StrFree(values.iconSize);
+            StrFree(exclude);
+            StrFree(out);
+            return false;
+        }
+        Str tar;
+        if (!WriteTar(tree, &tar, error)) {
+            tree.Free();
+            names.Free();
+            StrFree(runtime);
+            StrFree(rgba);
+            StrFree(values.iconSize);
+            StrFree(exclude);
+            StrFree(out);
+            return false;
+        }
+        Str archive = JoinDisk(out, fmt("%s.tar.gz", names.archiveStem));
+        bool wrote = ReplaceFile(archive, tar, error);
+        StrFree(tar);
+        if (!wrote) {
+            StrFree(archive);
+            tree.Free();
+            names.Free();
+            StrFree(runtime);
+            StrFree(rgba);
+            StrFree(values.iconSize);
+            StrFree(exclude);
+            StrFree(out);
+            return false;
+        }
+        Str archiveBytes;
+        if (!ReadFileBytes(archive, &archiveBytes, error)) {
+            StrFree(archive);
+            tree.Free();
+            names.Free();
+            StrFree(runtime);
+            StrFree(rgba);
+            StrFree(values.iconSize);
+            StrFree(exclude);
+            StrFree(out);
+            return false;
+        }
+        values.archive = StrDup(fmt("%s.tar.gz", names.archiveStem));
+        values.archiveSha256 = Sha256Hex(archiveBytes);
+        StrFree(archiveBytes);
+        Str installerText =
+            BundleShellScript(Str(kBundleLinuxInstallSh), values);
+        Str installer = JoinDisk(out, StrL("install.sh"));
+        bool installOk = ReplaceFile(installer, installerText, error) &&
+                         PlatMakeExecutable(installer.s);
+        StrFree(installerText);
+        if (!installOk) {
+            StrFree(installer);
+            StrFree(archive);
+            StrFree(values.archive);
+            StrFree(values.archiveSha256);
+            tree.Free();
+            names.Free();
+            StrFree(runtime);
+            StrFree(rgba);
+            StrFree(values.iconSize);
+            StrFree(exclude);
+            StrFree(out);
+            return false;
+        }
+        Str remote;
+        if (invocation.downloadUrl) {
+            Str trimmed = TrimTrailingSlash(invocation.downloadUrl);
+            remote = StrDup(fmt(
+                "\nPublish both at %s; `curl -fsSL %s/install.sh | sh` then "
+                "installs it.",
+                trimmed, trimmed));
+        }
+        built = StrDup(
+            fmt("bundled %s\nbundled %s\n"
+                "Unpack the archive and run the launcher in it, or run `sh "
+                "install.sh` beside the archive to install it for the current "
+                "user; `sh install.sh --uninstall` removes it.%s\n%s",
+                archive, installer, remote ? remote : Str{}, runtime));
+        StrFree(remote);
+        StrFree(installer);
+        StrFree(archive);
+        StrFree(values.archive);
+        StrFree(values.archiveSha256);
+        StrFree(values.iconSize);
+    } else {
+        char exePath[kMaxPath];
+        exePath[0] = 0;
+        Str executable;
+        if (StrEq(Str(PlatShellPlatformName()), StrL("windows"))) {
+            if (!PlatGetExePath(exePath, kMaxPath) ||
+                !ReadFileBytes(Str(exePath), &executable, error)) {
+                tree.Free();
+                names.Free();
+                StrFree(runtime);
+                StrFree(rgba);
+                StrFree(exclude);
+                StrFree(out);
+                if (error && *error) return false;
+                return BundleFail(error,
+                                  StrL("cannot locate the running executable"));
+            }
+        } else {
+            Str apps = ShellApplicationsDirectory();
+            Str home = ParentPath(apps);
+            StrFree(apps);
+            Str cache =
+                StrDup(fmt("%s/cache/runtime/v%s/%s/gpui-shell.exe", home,
+                           Str(kShellVersion), Str(kWindowsTarget)));
+            StrFree(home);
+            bool got = BundleWindowsRuntimeFrom(cache, Str(kShellVersion),
+                                                DownloadRelease, nullptr,
+                                                &executable, error);
+            StrFree(cache);
+            if (!got) {
+                tree.Free();
+                names.Free();
+                StrFree(runtime);
+                StrFree(rgba);
+                StrFree(exclude);
+                StrFree(out);
+                return false;
+            }
+        }
+        if (!BundleMarkAsGuiProgram(executable, error)) {
+            StrFree(executable);
+            tree.Free();
+            names.Free();
+            StrFree(runtime);
+            StrFree(rgba);
+            StrFree(exclude);
+            StrFree(out);
+            return false;
+        }
+        Str top = StrDup(fmt("%s-x86_64", names.archiveStem));
+        Str exeName = StrDup(fmt("%s/%s.exe", top, names.display));
+        tree.Add(exeName, executable, true, false);
+        StrFree(exeName);
+        Str appPrefix = StrDup(fmt("%s/app", top));
+        bool added =
+            AddApplication(&tree, directory, appPrefix, exclude, error);
+        StrFree(appPrefix);
+        if (!added) {
+            StrFree(top);
+            tree.Free();
+            names.Free();
+            StrFree(runtime);
+            StrFree(rgba);
+            StrFree(exclude);
+            StrFree(out);
+            return false;
+        }
+        Str zip;
+        if (!WriteZip(tree, &zip, error)) {
+            StrFree(top);
+            tree.Free();
+            names.Free();
+            StrFree(runtime);
+            StrFree(rgba);
+            StrFree(exclude);
+            StrFree(out);
+            return false;
+        }
+        Str archive = JoinDisk(out, fmt("%s.zip", top));
+        bool wrote = ReplaceFile(archive, zip, error);
+        StrFree(zip);
+        if (!wrote) {
+            StrFree(archive);
+            StrFree(top);
+            tree.Free();
+            names.Free();
+            StrFree(runtime);
+            StrFree(rgba);
+            StrFree(exclude);
+            StrFree(out);
+            return false;
+        }
+        built = StrDup(
+            fmt("bundled %s\nUnzip it anywhere and open %s.exe; it needs no "
+                "installation. It carries gpui-shell %s.",
+                archive, names.display, Str(kShellVersion)));
+        if (rgba.s) {
+            Str extra =
+                StrDup(fmt("%s\nThe icon is not embedded: the executable keeps "
+                           "gpui-shell's.",
+                           built));
+            StrFree(built);
+            built = extra;
+        }
+        StrFree(archive);
+        StrFree(top);
+    }
+    tree.Free();
+    names.Free();
+    StrFree(runtime);
+    StrFree(rgba);
+    StrFree(exclude);
+    StrFree(out);
+    if (report)
+        *report = built;
+    else
+        StrFree(built);
+    return true;
+}
+
+bool BundleWriteSampleArchives(Str directory, Str* error) {
+    BundleTree tree;
+    tree.Add(StrL("top/run"), StrDup(StrL("#!/bin/sh\n")), true, false);
+    StrBuilder body;
+    for (int i = 0; i < 100; i++) body.Append(StrL("export {}"));
+    tree.Add(StrL("top/app/main.js"), body.TakeStr(), false, false);
+    Str tar;
+    if (!WriteTar(tree, &tar, error)) {
+        tree.Free();
+        return false;
+    }
+    Str tarPath = JoinDisk(directory, StrL("bundle.tar.gz"));
+    bool ok = ReplaceFile(tarPath, tar, error);
+    StrFree(tar);
+    StrFree(tarPath);
+    if (!ok) {
+        tree.Free();
+        return false;
+    }
+    Str zip;
+    if (!WriteZip(tree, &zip, error)) {
+        tree.Free();
+        return false;
+    }
+    Str zipPath = JoinDisk(directory, StrL("bundle.zip"));
+    ok = ReplaceFile(zipPath, zip, error);
+    StrFree(zip);
+    StrFree(zipPath);
+    tree.Free();
+    return ok;
+}
+
+static uint32_t ParseOctal(const char* field, int width) {
+    uint32_t value = 0;
+    for (int i = 0; i < width; i++) {
+        char c = field[i];
+        if (c == 0 || c == ' ') break;
+        if (c < '0' || c > '7') break;
+        value = (value << 3) | (uint32_t)(c - '0');
+    }
+    return value;
+}
+
+bool BundleTarMode(Str tarGz, Str path, uint32_t* mode, Str* error) {
+    Str gz;
+    if (!ReadFileBytes(tarGz, &gz, error)) return false;
+    Str tar;
+    if (!ZlibInflate(gz, true, &tar, error)) {
+        StrFree(gz);
+        return false;
+    }
+    StrFree(gz);
+    int at = 0;
+    bool found = false;
+    while (at + 512 <= len(tar)) {
+        if (tar.s[at] == 0) break;
+        int nameLen = 0;
+        while (nameLen < 100 && tar.s[at + nameLen]) nameLen++;
+        Str name = Str(tar.s + at, nameLen);
+        uint32_t entryMode = ParseOctal(tar.s + at + 100, 8);
+        uint64_t size = ParseOctal(tar.s + at + 124, 12);
+        if (StrEq(name, path)) {
+            if (mode) *mode = entryMode;
+            found = true;
+            break;
+        }
+        int blocks = (int)((size + 511) / 512);
+        at += 512 + blocks * 512;
+    }
+    StrFree(tar);
+    if (!found) return BundleFail(error, fmt("tar holds no %s", path));
+    return true;
+}
+
+bool BundleZipEntryCount(Str zipPath, int* count, Str* error) {
+    Str zip;
+    if (!ReadFileBytes(zipPath, &zip, error)) return false;
+    if (len(zip) < 22 || memcmp(zip.s + len(zip) - 22, "PK\x05\x06", 4) != 0) {
+        StrFree(zip);
+        return BundleFail(error, StrL("not a zip archive"));
+    }
+    int n = (unsigned char)zip.s[len(zip) - 22 + 10] |
+            ((unsigned char)zip.s[len(zip) - 22 + 11] << 8);
+    StrFree(zip);
+    if (count) *count = n;
+    return true;
+}
+
+bool BundleReleaseZip(Str executable, Str* zip, Str* error) {
+    if (zip) *zip = {};
+    BundleTree tree;
+    Str readmeName =
+        StrDup(fmt("gpui-shell-%s/README.md", Str(kWindowsTarget)));
+    Str exeName =
+        StrDup(fmt("gpui-shell-%s/gpui-shell.exe", Str(kWindowsTarget)));
+    tree.Add(readmeName, StrDup(StrL("readme")), false, false);
+    tree.Add(exeName, StrDup(executable), true, false);
+    StrFree(readmeName);
+    StrFree(exeName);
+    bool ok = WriteZip(tree, zip, error);
+    tree.Free();
+    return ok;
+}
+
+}
+
 #line 1 "src/shell/capability.cpp"
 
 namespace gpui {
@@ -152844,6 +157000,7 @@ void Capabilities::Clear() {
     FreeStrings(&readRoots);
     FreeStrings(&writeRoots);
     FreeStrings(&networkHosts);
+    FreeStrings(&envVariables);
     for (int i = 0; i < httpRequests.len; i++) delete httpRequests[i];
     VecReset(httpRequests);
     execute = ExecuteGrant::Denied();
@@ -152861,6 +157018,7 @@ void Capabilities::CopyFrom(const Capabilities& other) {
     clipboardRead = other.clipboardRead;
     clipboardWrite = other.clipboardWrite;
     exit = other.exit;
+    CopyStrings(&envVariables, other.envVariables);
 }
 
 Capabilities& Capabilities::AddReadRoot(Str root) {
@@ -152898,6 +157056,120 @@ Capabilities& Capabilities::ClipboardWrite(bool allowed) {
 Capabilities& Capabilities::Exit(bool allowed) {
     exit = allowed;
     return *this;
+}
+Capabilities& Capabilities::AddEnvVariable(Str name) {
+    if (name) VecAppend(envVariables, StrDup(name));
+    return *this;
+}
+
+static bool SameRoot(const Vec<Str>& roots, Str root) {
+    for (int i = 0; i < roots.len; i++) {
+        if (StrEq(roots[i], root)) return true;
+    }
+    return false;
+}
+
+Capabilities& Capabilities::AddReadRootOnce(Str root) {
+    if (!SameRoot(readRoots, root)) AddReadRoot(root);
+    return *this;
+}
+Capabilities& Capabilities::AddWriteRootOnce(Str root) {
+    if (!SameRoot(writeRoots, root)) AddWriteRoot(root);
+    return *this;
+}
+
+static const char* const kDefaultEnvNames[] = {
+    "HOME",
+    "USER",
+    "LOGNAME",
+    "USERNAME",
+    "USERPROFILE",
+    "HOMEDRIVE",
+    "HOMEPATH",
+    "HOSTNAME",
+    "COMPUTERNAME",
+    "PROCESSOR_ARCHITECTURE",
+    "LANG",
+    "LANGUAGE",
+    "LC_ALL",
+    "LC_ADDRESS",
+    "LC_COLLATE",
+    "LC_CTYPE",
+    "LC_IDENTIFICATION",
+    "LC_MEASUREMENT",
+    "LC_MESSAGES",
+    "LC_MONETARY",
+    "LC_NAME",
+    "LC_NUMERIC",
+    "LC_PAPER",
+    "LC_TELEPHONE",
+    "LC_TIME",
+    "TZ",
+    "PATH",
+    "PATHEXT",
+    "SHELL",
+    "EDITOR",
+    "VISUAL",
+    "PAGER",
+    "BROWSER",
+    "TERM",
+    "DISPLAY",
+    "WAYLAND_DISPLAY",
+    "XDG_CURRENT_DESKTOP",
+    "XDG_SESSION_TYPE",
+    "DESKTOP_SESSION",
+    "HTTP_PROXY",
+    "HTTPS_PROXY",
+    "ALL_PROXY",
+    "NO_PROXY",
+    "TMPDIR",
+    "TEMP",
+    "TMP",
+    "XDG_CONFIG_HOME",
+    "XDG_DATA_HOME",
+    "XDG_CACHE_HOME",
+    "XDG_STATE_HOME",
+    "XDG_RUNTIME_DIR",
+    "XDG_CONFIG_DIRS",
+    "XDG_DATA_DIRS",
+    "APPDATA",
+    "LOCALAPPDATA",
+    "PROGRAMDATA",
+    "PROGRAMFILES",
+    "PROGRAMFILES(X86)",
+    "SYSTEMROOT",
+    "WINDIR",
+};
+
+int ShellDefaultEnvNameCount() {
+    return (int)(sizeof(kDefaultEnvNames) / sizeof(kDefaultEnvNames[0]));
+}
+const char* ShellDefaultEnvName(int index) {
+    if (index < 0 || index >= ShellDefaultEnvNameCount()) return nullptr;
+    return kDefaultEnvNames[index];
+}
+
+static bool EqIgnoreAsciiCase(Str a, Str b) {
+    if (len(a) != len(b)) return false;
+    for (int i = 0; i < len(a); i++) {
+        unsigned char ca = (unsigned char)a.s[i];
+        unsigned char cb = (unsigned char)b.s[i];
+        if (ca >= 'A' && ca <= 'Z') ca = (unsigned char)(ca - 'A' + 'a');
+        if (cb >= 'A' && cb <= 'Z') cb = (unsigned char)(cb - 'A' + 'a');
+        if (ca != cb) return false;
+    }
+    return true;
+}
+
+bool Capabilities::MayShowEnvVariable(Str name) const {
+    if (!name) return false;
+    for (int i = 0; i < ShellDefaultEnvNameCount(); i++) {
+        if (EqIgnoreAsciiCase(name, Str(ShellDefaultEnvName(i)))) return true;
+    }
+    for (int i = 0; i < envVariables.len; i++) {
+        if (EqIgnoreAsciiCase(name, envVariables[i])) return true;
+    }
+    return false;
 }
 bool Capabilities::HasReadAccess() const {
     return readRoots.len != 0;
@@ -153054,6 +157326,62 @@ bool Capabilities::ResolvePath(Str path, CapabilityAccess access,
         error->subject = StrDup(path);
     }
     return false;
+}
+
+static void AppendJoined(StrBuilder* out, const Vec<Str>& values,
+                         const char* separator) {
+    for (int i = 0; i < values.len; i++) {
+        if (i) out->Append(Str(separator));
+        out->Append(values[i]);
+    }
+}
+
+void Capabilities::AppendSummary(StrBuilder* out) const {
+    if (!out) return;
+    if (readRoots.len > 0) {
+        out->Append(StrL("fs read: "));
+        AppendJoined(out, readRoots, ", ");
+        out->Append(StrL("\n"));
+    }
+    if (writeRoots.len > 0) {
+        out->Append(StrL("fs write: "));
+        AppendJoined(out, writeRoots, ", ");
+        out->Append(StrL("\n"));
+    }
+    if (networkHosts.len > 0) {
+        out->Append(StrL("network: "));
+        AppendJoined(out, networkHosts, ", ");
+        out->Append(StrL("\n"));
+    }
+    for (int i = 0; i < httpRequests.len; i++) {
+        const HttpRequestGrant* request = httpRequests[i];
+        if (!request) continue;
+        out->Append(StrL("http: "));
+        AppendJoined(out, request->methods, "|");
+        out->Append(fmt(" %s://%s", request->scheme, request->host));
+        if (request->hasPort) out->Append(fmt(":%u", (unsigned)request->port));
+        out->Append(StrL("\n"));
+    }
+    if (execute.kind == ExecuteGrantKind::Allowed) {
+        out->Append(StrL("process: "));
+        AppendJoined(out, execute.commands, ", ");
+        out->Append(StrL("\n"));
+    } else if (execute.kind == ExecuteGrantKind::Unrestricted) {
+        out->Append(StrL("process: any command\n"));
+    }
+    if (storage) out->Append(StrL("storage\n"));
+    if (clipboardRead && clipboardWrite) {
+        out->Append(StrL("clipboard: read, write\n"));
+    } else if (clipboardRead) {
+        out->Append(StrL("clipboard: read\n"));
+    } else if (clipboardWrite) {
+        out->Append(StrL("clipboard: write\n"));
+    }
+    if (envVariables.len > 0) {
+        out->Append(StrL("env: "));
+        AppendJoined(out, envVariables, ", ");
+        out->Append(StrL("\n"));
+    }
 }
 
 }
@@ -153653,9 +157981,18 @@ Str FrozenComponentRegistry::JavaScriptModuleSource(Str stateProof) const {
                                       Str(method.name)));
             source.Append(StrL("](__stateProof, handle, args),"));
         }
+        if (state->inputEvents) {
+            source.Append(
+                StrL("on:(event,handler)=>globalThis.__component_input_on("
+                     "__stateProof,handle,event,handler),"));
+        }
         source
             .Append(StrL("}); __stateHandles.set(value, handle); return "
-                         "value; }\nexport { "));
+                         "value; }\n"));
+        source.Append(Str(state->exportName));
+        source.Append(StrL(".new = "));
+        source.Append(Str(state->exportName));
+        source.Append(StrL(";\nexport { "));
         source.Append(Str(state->exportName));
         source.Append(StrL(" };\n"));
     }
@@ -153669,7 +158006,11 @@ Str FrozenComponentRegistry::JavaScriptModuleSource(Str stateProof) const {
                              "globalThis.__gpui.__element(globalThis.__gpui_"
                              "components["));
             shell_component_registry_AppendQuoted(&source, Str(constructor.exportName));
-            source.Append(StrL("](args.map(__unwrapState))); }\nexport { "));
+            source.Append(StrL("](args.map(__unwrapState))); }\n"));
+            source.Append(Str(constructor.exportName));
+            source.Append(StrL(".new = "));
+            source.Append(Str(constructor.exportName));
+            source.Append(StrL(";\nexport { "));
             source.Append(Str(constructor.exportName));
             source.Append(StrL(" };\n"));
         }
@@ -153770,6 +158111,13 @@ void AppendComponentDeclarations(StrBuilder* out,
     out
         ->Append(StrL("  import { ClickEvent, Context, Element, NativeElement "
                       "} from \"gpui-kit\";\n"));
+    bool inputEvents = false;
+    for (int i = 0; components && i < components->StateCount(); i++) {
+        if (components->State(i)->inputEvents) inputEvents = true;
+    }
+    if (inputEvents) {
+        out->Append(StrL("  import { InputEvent } from \"gpui-base\";\n"));
+    }
     out->Append(inlineTokenTypes);
     for (int i = 0; components && i < components->StateCount(); i++) {
         const StateDescriptor* state = components->State(i);
@@ -153782,15 +158130,28 @@ void AppendComponentDeclarations(StrBuilder* out,
             out->Append(S(method.name));
             out->Append(S(method.signature));
         }
+        if (state->inputEvents) {
+            out->Append(StrL(
+                ";\n    /** `change`, `submit` (Enter), `focus` or `blur`, "
+                "as on `gpui-base`'s `InputState`. */\n"
+                "    on(event: \"change\" | \"submit\" | \"focus\" | "
+                "\"blur\", handler: (event: InputEvent, cx: Context) => "
+                "void): boolean"));
+        }
         out->Append(StrL(" }\n"));
         AppendJsdoc(out, state->documentation, nullptr, "  ");
-        out->Append(StrL("  export function "));
+
+        out->Append(StrL("  export const "));
         out->Append(S(state->exportName));
-        out->AppendChar('(');
+        out->Append(StrL(": { ("));
         AppendArguments(out, state->arguments);
         out->Append(StrL("): "));
         out->Append(S(state->kind));
-        out->Append(StrL(";\n"));
+        out->Append(StrL("; new: ("));
+        AppendArguments(out, state->arguments);
+        out->Append(StrL(") => "));
+        out->Append(S(state->kind));
+        out->Append(StrL(" };\n"));
     }
     for (int i = 0; components && i < components->DescriptorCount(); i++) {
         const ComponentDescriptor* d = components->Descriptor((uint32_t)i);
@@ -153855,9 +158216,14 @@ void AppendComponentDeclarations(StrBuilder* out,
                         "  ");
             out->Append(StrL("  export const "));
             out->Append(S(constructor.exportName));
+
             out->Append(StrL(": { new("));
             AppendArguments(out, constructor.arguments);
             out->Append(StrL("): "));
+            out->Append(S(d->name));
+            out->Append(StrL("Element; new: ("));
+            AppendArguments(out, constructor.arguments);
+            out->Append(StrL(") => "));
             out->Append(S(d->name));
             out->Append(StrL("Element };\n"));
         }
@@ -154411,7 +158777,7 @@ static bool WithinPath(Str root, Str path) {
     return len(path) == len(root) || shell_dependencies_IsSeparator(path.s[len(root)]);
 }
 
-static Str Canonical(Str path) {
+static Str shell_dependencies_Canonical(Str path) {
     if (!path || len(path) >= kMaxPath) return {};
     TempStr input = StrDupTemp(path);
     TempStr output = AllocStrTemp(kMaxPath - 1);
@@ -154427,7 +158793,7 @@ static Str shell_dependencies_TrimAscii(Str value) {
     return Str(value.s + start, end - start);
 }
 
-static bool WriteWhole(Str path, Str contents) {
+static bool shell_dependencies_WriteWhole(Str path, Str contents) {
     if (!path || len(path) >= kMaxPath) return false;
     TempStr name = StrDupTemp(path);
     FILE* file = fopen(name.s, "wb");
@@ -154478,6 +158844,25 @@ bool GitDependencyUserCacheRoot(Str home, Str userProfile, Str* out,
     }
     if (out) *out = GitDependencyCacheRoot(selected);
     return true;
+}
+
+bool GitDependencyCacheFromEnvironment(Str shellHome, Str home, Str userProfile,
+                                       Str* out, Str* error) {
+    if (out) *out = {};
+    if (shellHome && len(shellHome) > 0) {
+        if (!shell_dependencies_AbsolutePath(shellHome)) {
+            DepError(error,
+                     fmt("cannot locate the Git dependency cache: "
+                         "GPUI_SHELL_HOME must be an absolute path, got `%s`",
+                         shellHome));
+            return false;
+        }
+        Str cache = JoinPath(shellHome, StrL("cache"));
+        if (out) *out = JoinPath(cache, StrL("dependencies"));
+        StrFree(cache);
+        return true;
+    }
+    return GitDependencyUserCacheRoot(home, userProfile, out, error);
 }
 
 static void AppendLengthLe(Vec<uint8_t>* out, int value) {
@@ -154596,7 +158981,7 @@ static Str DependencyEntryName(Str name, const GitDependency& dependency,
         StrFree(manifestPath);
         return StrDup(Str(kGitDependencyDefaultEntry));
     }
-    Str canonical = Canonical(manifestPath);
+    Str canonical = shell_dependencies_Canonical(manifestPath);
     if (!canonical || !WithinPath(root, canonical) ||
         !PlatFileExists(canonical.s)) {
         DepError(error, fmt("Git dependency `%s` package.json is not a file "
@@ -154714,11 +159099,12 @@ GitDependencyStore::GitDependencyStore(Str value) {
         root = StrDup(value);
         return;
     }
+    const char* shellHome = getenv("GPUI_SHELL_HOME");
     const char* home = getenv("HOME");
     const char* userProfile = getenv("USERPROFILE");
-    GitDependencyUserCacheRoot(Str(home ? home : ""),
-                               Str(userProfile ? userProfile : ""), &root,
-                               &initError);
+    GitDependencyCacheFromEnvironment(
+        Str(shellHome ? shellHome : ""), Str(home ? home : ""),
+        Str(userProfile ? userProfile : ""), &root, &initError);
 }
 
 GitDependencyStore::~GitDependencyStore() {
@@ -154863,7 +159249,7 @@ bool GitDependencyStore::Materialize(Str name, const GitDependency& dependency,
         }
     }
     if (ok) {
-        checkoutCanonical = Canonical(checkout);
+        checkoutCanonical = shell_dependencies_Canonical(checkout);
         if (!checkoutCanonical) {
             DepError(error,
                      fmt("resolving dependency checkout %s failed", checkout));
@@ -154877,7 +159263,7 @@ bool GitDependencyStore::Materialize(Str name, const GitDependency& dependency,
     }
     if (ok) {
         entryPath = JoinPath(checkoutCanonical, entryName);
-        entryCanonical = Canonical(entryPath);
+        entryCanonical = shell_dependencies_Canonical(entryPath);
         if (!entryCanonical) {
             DepError(error, fmt("Git dependency `%s` has no entry `%s`", name,
                                 entryName));
@@ -154985,9 +159371,9 @@ static bool WriteEditorLinkStub(Str link, Str name,
     index.Append(StrL(";\n"));
     Str manifestText = manifest.TakeStr();
     Str indexText = index.TakeStr();
-    bool ok = WriteWhole(markerPath, fmt("%s\n", dependency.root)) &&
-              WriteWhole(manifestPath, manifestText) &&
-              WriteWhole(indexPath, indexText);
+    bool ok = shell_dependencies_WriteWhole(markerPath, fmt("%s\n", dependency.root)) &&
+              shell_dependencies_WriteWhole(manifestPath, manifestText) &&
+              shell_dependencies_WriteWhole(indexPath, indexText);
     if (!ok) DepError(error, fmt("writing %s failed", link));
     StrFree(manifestText);
     StrFree(indexText);
@@ -155667,6 +160053,576 @@ void ShellErrorSet(ShellError* error, Str message) {
 
 }
 
+#line 1 "src/shell/failure.cpp"
+
+namespace gpui {
+
+void SpokenDuration(double seconds, char* out, int cap) {
+    if (!out || cap <= 0) return;
+    if (seconds < 1.0) {
+        int ms = (int)(seconds * 1000.0 + 0.5);
+        snprintf(out, (size_t)cap, "%d ms", ms);
+    } else {
+        snprintf(out, (size_t)cap, "%d s", (int)seconds);
+    }
+}
+
+static Str Dup(Arena* arena, Str text) {
+    return arena ? StrDup(arena, text) : Str{};
+}
+
+Str ExplainInterruption(Arena* arena, Str message, ScriptInterruption* slot) {
+    if (!slot || !slot->set || !StrEq(message, StrL("interrupted"))) return {};
+    ScriptInterruption taken = *slot;
+    slot->set = false;
+    char limit[32];
+    SpokenDuration(taken.budget, limit, (int)sizeof(limit));
+    const char* text = nullptr;
+    if (!taken.scoped) {
+        text =
+            "Loading the script ran for %s without finishing and was "
+            "stopped.\n"
+            "Check for a loop that never ends; defer slow work at module "
+            "load to init() or a task.";
+    } else if (taken.phase == ScopePhase::Render) {
+        text =
+            "render() ran for %s without returning and was stopped.\n"
+            "Check for a loop that never ends; move slow work such as "
+            "scanning or parsing into a task and render its result.";
+    } else if (taken.phase == ScopePhase::Layout) {
+        text =
+            "A list item ran for %s without returning and was stopped.\n"
+            "Check for a loop that never ends; prepare item data ahead of "
+            "time so rendering one item stays cheap.";
+    } else if (taken.phase == ScopePhase::Event) {
+        text =
+            "An event handler ran for %s without returning and was "
+            "stopped.\n"
+            "Check for a loop that never ends; move slow work into a task "
+            "and await between chunks of it.";
+    } else {
+        text =
+            "A task ran for %s without awaiting and was stopped.\n"
+            "Check for a loop that never ends; await between chunks of "
+            "work so the window stays responsive.";
+    }
+    return Dup(arena, fmt(text, Str(limit)));
+}
+
+static bool LineBlank(Str line) {
+    for (int i = 0; i < len(line); i++) {
+        char c = line.s[i];
+        if (c != ' ' && c != '\t' && c != '\r') return false;
+    }
+    return true;
+}
+
+Str TidyStack(Arena* arena, Str stack) {
+    if (!arena || !stack) return {};
+    struct Frame {
+        Str line;
+        int count = 1;
+    };
+    Vec<Frame> frames;
+    int at = 0;
+    while (at <= len(stack)) {
+        int end = at;
+        while (end < len(stack) && stack.s[end] != '\n') end++;
+        Str raw(stack.s + at, end - at);
+        at = end < len(stack) ? end + 1 : end + 1;
+        if (LineBlank(raw) || StrContains(raw, StrL("(eval_script:"))) {
+            if (end >= len(stack)) break;
+            continue;
+        }
+        StrBuilder line(arena);
+        int i = 0;
+        while (i < len(raw)) {
+            if (i + 3 <= len(raw) && raw.s[i] == '?' && raw.s[i + 1] == 'v' &&
+                raw.s[i + 2] == '=') {
+                int digits = 0;
+                while (i + 3 + digits < len(raw) &&
+                       raw.s[i + 3 + digits] >= '0' &&
+                       raw.s[i + 3 + digits] <= '9') {
+                    digits++;
+                }
+                if (digits == 0) line.Append(StrL("?v="));
+                i += 3 + digits;
+                continue;
+            }
+            line.AppendChar(raw.s[i]);
+            i++;
+        }
+        Str cleaned = line.TakeStr();
+        if (len(frames) > 0 && StrEq(frames[len(frames) - 1].line, cleaned)) {
+            frames[len(frames) - 1].count++;
+        } else {
+            Frame frame;
+            frame.line = cleaned;
+            frame.count = 1;
+            VecAppend(frames, frame);
+        }
+        if (end >= len(stack)) break;
+    }
+    StrBuilder out(arena);
+    for (int f = 0; f < len(frames); f++) {
+        if (f) out.AppendChar('\n');
+        out.Append(frames[f].line);
+        if (frames[f].count > 1) {
+            char times[16];
+            snprintf(times, sizeof(times), " \xC3\x97%d", frames[f].count);
+            out.Append(Str(times));
+        }
+    }
+    return out.TakeStr();
+}
+
+static const char kMemoryAdvice[] =
+    "Keep less data in script \xE2\x80\x94 derive values instead of storing "
+    "them on every item \xE2\x80\x94 or move a large data set into a host "
+    "module.";
+
+static Str SpokenSize(Arena* arena, int64_t bytes) {
+    if (bytes >= ((int64_t)1 << 30) && (bytes % ((int64_t)1 << 30)) == 0) {
+        return Dup(arena, fmt("%d GiB", (int)(bytes >> 30)));
+    }
+    return Dup(arena, fmt("%d MiB", (int)(bytes >> 20)));
+}
+
+Str ExplainOutOfMemory(Arena* arena, void* js, Str message, bool thrownNull) {
+    if (!arena || !js) return {};
+    JSContext* ctx = (JSContext*)js;
+    JSRuntime* rt = JS_GetRuntime(ctx);
+    if (!rt) return {};
+    JSMemoryUsage usage;
+    memset(&usage, 0, sizeof(usage));
+    JS_ComputeMemoryUsage(rt, &usage);
+    bool limited =
+        usage.malloc_limit > 0 && usage.malloc_limit < (INT64_MAX / 2);
+    bool nearlyFull = limited && (double)usage.malloc_size >=
+                                     0.9 * (double)usage.malloc_limit;
+    bool oom = StrEq(message, StrL("out of memory"));
+    if (!oom && !(thrownNull && nearlyFull)) return {};
+    if (oom && !limited) {
+        return Dup(arena, fmt("The script ran out of memory: the system could "
+                              "not allocate more.\n%s",
+                              Str(kMemoryAdvice)));
+    }
+    Str size = SpokenSize(arena, usage.malloc_limit);
+    return Dup(arena, fmt("The script ran out of memory: its JavaScript heap "
+                          "reached the %s limit this host set.\n%s",
+                          size, Str(kMemoryAdvice)));
+}
+
+static bool shell_failure_IsSpace(char c) {
+    return c == ' ' || c == '\t' || c == '\n' || c == '\r' || c == '\v' ||
+           c == '\f';
+}
+
+static Str Trim(Arena* arena, Str text) {
+    int lo = 0;
+    int hi = len(text);
+    while (lo < hi && shell_failure_IsSpace(text.s[lo])) lo++;
+    while (hi > lo && shell_failure_IsSpace(text.s[hi - 1])) hi--;
+    return Dup(arena, Str(text.s + lo, hi - lo));
+}
+
+static int CharCount(Str text) {
+    int n = 0;
+    for (int i = 0; i < len(text);) {
+        unsigned char c = (unsigned char)text.s[i];
+        int w = 1;
+        if ((c & 0xE0) == 0xC0)
+            w = 2;
+        else if ((c & 0xF0) == 0xE0)
+            w = 3;
+        else if ((c & 0xF8) == 0xF0)
+            w = 4;
+        i += w;
+        if (i > len(text)) break;
+        n++;
+    }
+    return n;
+}
+
+static void ReplacePrefix(StrBuilder& out, Str text, Str prefix) {
+    if (!prefix || len(prefix) == 0) {
+        out.Append(text);
+        return;
+    }
+    int at = 0;
+    while (at < len(text)) {
+        if (at + len(prefix) <= len(text) &&
+            memcmp(text.s + at, prefix.s, (size_t)len(prefix)) == 0) {
+            at += len(prefix);
+            continue;
+        }
+        out.AppendChar(text.s[at]);
+        at++;
+    }
+}
+
+static Str RelativeErrorPaths(Arena* arena, Str message) {
+    char cwd[kMaxPath];
+    PlatGetCwd(cwd, kMaxPath);
+    int cwdLen = (int)strlen(cwd);
+    if (cwdLen <= 0 || cwdLen + 2 >= kMaxPath) return Dup(arena, message);
+    char slash[kMaxPath];
+    char back[kMaxPath];
+    memcpy(slash, cwd, (size_t)cwdLen);
+    slash[cwdLen] = '/';
+    slash[cwdLen + 1] = 0;
+    memcpy(back, cwd, (size_t)cwdLen);
+    back[cwdLen] = '\\';
+    back[cwdLen + 1] = 0;
+    StrBuilder once(arena);
+    ReplacePrefix(once, message, Str(slash));
+    StrBuilder twice(arena);
+    ReplacePrefix(twice, once.TakeStr(), Str(back));
+    return twice.TakeStr();
+}
+
+FailureText FailureTextParse(Arena* arena, Str message) {
+    FailureText text;
+    Str trimmed = Trim(arena, message);
+    Str relative = RelativeErrorPaths(arena, trimmed);
+    int split = 0;
+    while (split < len(relative) && relative.s[split] != '\n') split++;
+    Str summary(relative.s, split);
+    int hi = len(summary);
+    while (hi > 0 && shell_failure_IsSpace(summary.s[hi - 1]) && summary.s[hi - 1] != '\n')
+        hi--;
+    text.summary = Dup(arena, Str(summary.s, hi));
+    if (split < len(relative)) {
+        int lo = split + 1;
+        int end = len(relative);
+        while (lo < end && relative.s[lo] == '\n') lo++;
+        while (end > lo && relative.s[end - 1] == '\n') end--;
+        Str detail(relative.s + lo, end - lo);
+        bool blank = true;
+        for (int i = 0; i < len(detail); i++) {
+            if (!shell_failure_IsSpace(detail.s[i])) {
+                blank = false;
+                break;
+            }
+        }
+        if (!blank) text.detail = Dup(arena, detail);
+    }
+
+    text.expandable = (bool)text.detail || CharCount(text.summary) > 96;
+    return text;
+}
+
+const char* ViewFailureLabel(ViewFailure failure) {
+    return failure == ViewFailure::Reload ? "Reload failed" : "Render failed";
+}
+const char* ViewFailureHeading(ViewFailure failure) {
+    return failure == ViewFailure::Reload
+               ? "This application could not be reloaded"
+               : "This view could not be re-rendered";
+}
+const char* ViewFailureKeptNote(ViewFailure failure) {
+    return failure == ViewFailure::Reload
+               ? "Still running the code from before this change. Save a "
+                 "fix to reload."
+               : "Showing the last version that rendered. Save a fix to "
+                 "re-render.";
+}
+const char* ViewFailureOverlayHeading(ViewFailure failure) {
+    return failure == ViewFailure::Reload
+               ? "This application could not be reloaded"
+               : "This view could not be rendered";
+}
+const char* ViewFailureRecovery(ViewFailure failure) {
+    return failure == ViewFailure::Reload
+               ? "Fix the script and save; it reloads on the next change."
+               : "Fix the script and save; the view re-renders on the next "
+                 "change.";
+}
+
+struct FailureColors {
+    Rgba background = {};
+    Rgba surface = {};
+    Rgba foreground = {};
+    Rgba muted = {};
+    Rgba border = {};
+    Rgba accent = {};
+    Rgba hover = {};
+};
+
+static Rgba TokenOr(const char* name, Rgba fallback) {
+    Hsla color;
+    if (shell::ThemeTokenColor(Str(name), &color)) return HslaToRgba(color);
+    return fallback;
+}
+
+static FailureColors FailureColorsResolve() {
+    ColorTokens defaults = ColorTokens::Light();
+    FailureColors colors;
+    colors.background = TokenOr("background", defaults.background);
+    colors.surface = TokenOr("surface", defaults.surface);
+    colors.foreground = TokenOr("foreground", defaults.foreground);
+    colors.muted = TokenOr("muted_foreground", defaults.mutedForeground);
+    colors.border = TokenOr("border", defaults.border);
+    colors.accent = TokenOr("destructive", defaults.destructive);
+    colors.hover = TokenOr("muted", defaults.muted);
+    return colors;
+}
+
+static El* shell_failure_ShadowSm(Arena* a, El* element) {
+    BoxShadow* shadows = (BoxShadow*)Alloc(a, (int)sizeof(BoxShadow) * 2);
+    if (!shadows) return element;
+    shadows[0] = {0, 1, 3, 0, Rgba8(0, 0, 0, 26), false};
+    shadows[1] = {0, 1, 2, -1, Rgba8(0, 0, 0, 26), false};
+    return element->Shadows(shadows, 2);
+}
+
+static El* StatusDot(Ctx* cx, Rgba accent) {
+    float side = Rems(cx, 0.375f);
+    return Div(cx->a)
+        ->Shrink0()
+        ->W(side)
+        ->H(side)
+        ->Radius(kRadiusFull)
+        ->Bg(accent);
+}
+
+static FailureChrome* ChromeFor(Ctx* cx, Str name, Str payload) {
+    FailureChrome* chrome = FrameKeyedState<FailureChrome>(
+        cx, KeyedKey(KeyedName(cx, name), HashClickId(StrL("FailureChrome"))));
+    if (!chrome) return nullptr;
+    if (!StrEq(chrome->payload, payload)) {
+        StrFree(chrome->payload);
+        chrome->payload = StrDup(payload);
+    }
+    return chrome;
+}
+
+void ScriptView::OnFailureToggle(ScriptView*, Ctx* cx, const ClickEvent*,
+                                 int64_t slot) {
+    auto* chrome = (FailureChrome*)(intptr_t)slot;
+    if (!chrome || !cx) return;
+    chrome->expanded = !chrome->expanded;
+    Notify(cx);
+}
+
+void ScriptView::OnFailureCopy(ScriptView*, Ctx* cx, const ClickEvent*,
+                               int64_t slot) {
+    auto* chrome = (FailureChrome*)(intptr_t)slot;
+    if (!chrome || !cx) return;
+    if (chrome->payload) ClipboardSetText(cx->win, chrome->payload);
+    chrome->copied = true;
+    Notify(cx);
+}
+
+static El* DetailWell(Ctx* cx, Str key, Str detail,
+                      const FailureColors& colors) {
+    float padX = Rems(cx, 0.75f);
+    float padY = Rems(cx, 0.5f);
+    return Div(cx->a)
+        ->Click(HashClickId(key))
+        ->MaxH(Rems(cx, 16.f))
+        ->ScrollY(0)
+        ->PadX(padX)
+        ->PadY(padY)
+        ->Bg(colors.background)
+        ->Border(1, colors.border)
+        ->FontFamily(Str(PlatMonoFontName()))
+        ->Font(Rems(cx, 0.6875f))
+        ->LineHeight(1.6f)
+        ->Fg(colors.muted)
+        ->Child(TextEl(cx->a, detail)->Wrap()->Selectable());
+}
+
+static El* DetailsButton(Ctx* cx, Str id, FailureChrome* chrome,
+                         const FailureColors& colors) {
+    bool expanded = chrome && chrome->expanded;
+    El* button = Button::New(
+        cx, id, false,
+        Listen(cx, &ScriptView::OnFailureToggle, (int64_t)(intptr_t)chrome));
+    button->H(Rems(cx, 1.625f))
+        ->Shrink0()
+        ->Gap(Rems(cx, 0.25f))
+        ->PadL(Rems(cx, 0.5f))
+        ->PadR(Rems(cx, 0.375f))
+        ->Fg(colors.foreground)
+        ->HoverBg(colors.hover)
+        ->AriaLabel(expanded ? StrL("Hide details") : StrL("Show details"))
+        ->AriaExpanded(expanded)
+        ->Child(TextEl(cx->a, StrL("Details"))->Font(Rems(cx, 0.75f)))
+        ->Child(IconEl(cx->a,
+                       expanded ? IconName::ChevronUp : IconName::ChevronDown,
+                       Rems(cx, 0.75f))
+                    ->Fg(colors.muted));
+    return button;
+}
+
+static El* CopyButton(Ctx* cx, FailureChrome* chrome,
+                      const FailureColors& colors) {
+    bool copied = chrome && chrome->copied;
+    El* button = Button::New(
+        cx, StrL("shell-failure-copy"), false,
+        Listen(cx, &ScriptView::OnFailureCopy, (int64_t)(intptr_t)chrome));
+    button->W(Rems(cx, 1.625f))
+        ->H(Rems(cx, 1.625f))
+        ->Shrink0()
+        ->HoverBg(colors.hover)
+        ->AriaLabel(StrL("Copy error"))
+        ->Child(IconEl(cx->a, copied ? IconName::Check : IconName::Copy,
+                       Rems(cx, 0.875f))
+                    ->Fg(copied ? colors.muted : colors.foreground));
+    return button;
+}
+
+static El* SummaryLine(Ctx* cx, Str summary, bool expanded, Rgba muted) {
+    El* line = Div(cx->a)->Flex1()->MinW(0)->Fg(muted);
+    if (!expanded) line->Truncate();
+    El* text = TextEl(cx->a, summary)->Font(Rems(cx, 0.75f))->LineHeight(1.5f);
+    if (expanded) text->Wrap();
+    return line->Child(text);
+}
+
+El* ShellErrorBanner(Ctx* cx, ViewFailure failure, Str message) {
+    if (!cx) return nullptr;
+    Arena* a = cx->a;
+    FailureColors colors = FailureColorsResolve();
+    FailureText text = FailureTextParse(a, message);
+    Str payload =
+        Dup(a, fmt("%s\n\n%s", Str(ViewFailureHeading(failure)), message));
+    FailureChrome* chrome = ChromeFor(cx, StrL("shell-banner"), payload);
+    bool expanded = chrome && chrome->expanded;
+    El* row = Div(a)
+                  ->Flex()
+                  ->ItemsCenter()
+                  ->Gap(Rems(cx, 0.75f))
+                  ->PadL(Rems(cx, 1.f))
+                  ->PadR(Rems(cx, 0.5f))
+                  ->PadY(Rems(cx, 0.375f))
+                  ->Font(Rems(cx, 0.75f))
+                  ->LineHeight(1.5f);
+    row->Child(Div(a)
+                   ->Flex()
+                   ->Shrink0()
+                   ->ItemsCenter()
+                   ->Gap(Rems(cx, 0.5f))
+                   ->Fg(colors.foreground)
+                   ->Child(StatusDot(cx, colors.accent))
+                   ->Child(TextEl(a, Str(ViewFailureLabel(failure)))));
+    row->Child(SummaryLine(cx, text.summary, expanded, colors.muted));
+    El* actions =
+        Div(a)->Flex()->Shrink0()->ItemsCenter()->Gap(Rems(cx, 0.25f));
+    if (text.expandable)
+        actions->Child(
+            DetailsButton(cx, StrL("shell-banner-details"), chrome, colors));
+    actions->Child(CopyButton(cx, chrome, colors));
+    row->Child(actions);
+
+    El* banner = Div(a)
+                     ->Absolute()
+                     ->Top(0)
+                     ->Left(0)
+                     ->Right(0)
+                     ->FlexCol()
+                     ->Bg(colors.surface)
+                     ->BorderB(1, colors.border);
+    shell_failure_ShadowSm(a, banner);
+    banner->Child(row);
+    if (expanded) {
+        El* extra = Div(a)
+                        ->FlexCol()
+                        ->Gap(Rems(cx, 0.5f))
+                        ->PadX(Rems(cx, 1.f))
+                        ->PadT(Rems(cx, 0.25f))
+                        ->PadB(Rems(cx, 0.75f));
+        if (text.detail)
+            extra->Child(DetailWell(cx, StrL("shell-banner-detail"),
+                                    text.detail, colors));
+        extra->Child(TextEl(a, Str(ViewFailureKeptNote(failure)))
+                         ->Font(Rems(cx, 0.75f))
+                         ->LineHeight(1.5f)
+                         ->Fg(colors.muted)
+                         ->Wrap());
+        banner->Child(extra);
+    }
+    return banner;
+}
+
+El* ShellErrorOverlay(Ctx* cx, ViewFailure failure, Str message) {
+    if (!cx) return nullptr;
+    Arena* a = cx->a;
+    FailureColors colors = FailureColorsResolve();
+    FailureText text = FailureTextParse(a, message);
+    Str payload = Dup(
+        a, fmt("%s\n\n%s", Str(ViewFailureOverlayHeading(failure)), message));
+    FailureChrome* chrome = ChromeFor(cx, StrL("shell-failure"), payload);
+    bool expanded = chrome && chrome->expanded;
+
+    El* body = Div(a)
+                   ->FlexCol()
+                   ->Gap(Rems(cx, 0.375f))
+                   ->PadX(Rems(cx, 1.25f))
+                   ->PadT(Rems(cx, 1.f))
+                   ->PadB(Rems(cx, 0.75f));
+    body->Child(
+        Div(a)
+            ->Flex()
+            ->ItemsCenter()
+            ->Gap(Rems(cx, 0.5f))
+            ->Font(Rems(cx, 0.875f))
+            ->LineHeight(1.4f)
+            ->Fg(colors.foreground)
+            ->Child(StatusDot(cx, colors.accent))
+            ->Child(TextEl(a, Str(ViewFailureOverlayHeading(failure)))));
+    body->Child(SummaryLine(cx, text.summary, expanded, colors.muted));
+    if (expanded && text.detail) {
+        body->Child(Div(a)
+                        ->PadT(Rems(cx, 0.25f))
+                        ->Child(DetailWell(cx, StrL("shell-failure-detail"),
+                                           text.detail, colors)));
+    }
+
+    El* actions =
+        Div(a)->Flex()->Shrink0()->ItemsCenter()->Gap(Rems(cx, 0.25f));
+    if (text.expandable)
+        actions->Child(
+            DetailsButton(cx, StrL("shell-failure-details"), chrome, colors));
+    actions->Child(CopyButton(cx, chrome, colors));
+    El* footer = Div(a)
+                     ->Flex()
+                     ->ItemsCenter()
+                     ->Gap(Rems(cx, 1.f))
+                     ->PadL(Rems(cx, 1.25f))
+                     ->PadR(Rems(cx, 0.75f))
+                     ->PadY(Rems(cx, 0.5f))
+                     ->BorderT(1, colors.border);
+    footer
+        ->Child(Div(a)->Flex1()->MinW(0)->Child(
+            TextEl(a, Str(ViewFailureRecovery(failure)))
+                ->Font(Rems(cx, 0.75f))
+                ->LineHeight(1.5f)
+                ->Fg(colors.muted)
+                ->Wrap()))
+        ->Child(actions);
+
+    El* panel = Div(a)
+                    ->FlexCol()
+                    ->W(kFill)
+                    ->MaxW(Rems(cx, 42.f))
+                    ->Bg(colors.surface)
+                    ->Border(1, colors.border)
+                    ->Child(body)
+                    ->Child(footer);
+    return Div(a)
+        ->SizeFull()
+        ->Flex()
+        ->ItemsCenter()
+        ->JustifyCenter()
+        ->Bg(colors.background)
+        ->Pad(Rems(cx, 2.f))
+        ->Child(panel);
+}
+
+}
+
 #line 1 "src/shell/fetch.cpp"
 
 namespace gpui::shell {
@@ -155689,6 +160645,26 @@ static void FetchError(Str* error, Str message) {
     if (!error) return;
     StrFree(*error);
     *error = StrDup(message);
+}
+
+static bool HeaderIsUserAgent(Str name) {
+    return StrEqI(name, "user-agent");
+}
+
+static bool AppendDefaultUserAgent(Vec<HttpHeader>* wire,
+                                   const Vec<FetchHeader>& headers, Str agent) {
+    for (int i = 0; i < len(headers); i++) {
+        if (HeaderIsUserAgent(headers[i].name)) return true;
+    }
+    HttpHeader header;
+    header.name = StrL("User-Agent");
+    header.value = agent;
+    return VecAppend(*wire, header);
+}
+
+static void FormatUserAgent(char* out, int cap) {
+    if (!out || cap <= 0) return;
+    snprintf(out, (size_t)cap, "gpui-shell/%s", kShellVersion);
 }
 
 static bool ParsePort(Str text, uint16_t* value) {
@@ -156039,6 +161015,8 @@ bool FetchSend(const FetchRequest& request, const Capabilities& capabilities,
         return false;
     }
 
+    char userAgent[64];
+    FormatUserAgent(userAgent, (int)sizeof(userAgent));
     Vec<HttpHeader> wire;
     for (int redirects = 0;; redirects++) {
         VecReset(wire);
@@ -156047,6 +161025,13 @@ bool FetchSend(const FetchRequest& request, const Capabilities& capabilities,
             h.name = walk.headers[i].name;
             h.value = walk.headers[i].value;
             VecAppend(wire, h);
+        }
+        if (!AppendDefaultUserAgent(&wire, walk.headers, Str(userAgent))) {
+            FetchError(&out->error,
+                       StrL("allocating the fetch headers failed"));
+            VecReset(wire);
+            walk.Free();
+            return false;
         }
         HttpReq req;
         req.url = walk.url;
@@ -156143,6 +161128,7 @@ struct FetchAsyncState {
     Func1<FetchAsyncResult> done;
     int redirects = 0;
     double deadline = 0;
+    char userAgent[64] = {};
 
     HttpRsp testResponse;
     bool testOk = false;
@@ -156309,6 +161295,7 @@ static void FetchAsyncTestDone(FetchAsyncState* state) {
 }
 
 static bool FetchAsyncStart(FetchAsyncState* state) {
+    FormatUserAgent(state->userAgent, (int)sizeof(state->userAgent));
     VecReset(state->wire);
     for (int i = 0; i < len(state->walk.headers); i++) {
         HttpHeader header;
@@ -156319,6 +161306,12 @@ static bool FetchAsyncStart(FetchAsyncState* state) {
                        StrL("allocating the fetch headers failed"));
             return false;
         }
+    }
+    if (!AppendDefaultUserAgent(&state->wire, state->walk.headers,
+                                Str(state->userAgent))) {
+        FetchError(&state->result.error,
+                   StrL("allocating the fetch headers failed"));
+        return false;
     }
     HttpReq request;
     request.url = state->walk.url;
@@ -156370,6 +161363,904 @@ void FsResult::Free() {
     for (int i = 0; i < entries.len; i++) StrFree(entries[i].name);
     VecReset(entries);
     exists = false;
+    hasStats = false;
+    isFile = false;
+    isDirectory = false;
+    isSymbolicLink = false;
+    size = 0;
+    mode = 0;
+    mtimeMs = 0;
+    atimeMs = 0;
+    birthtimeMs = 0;
+}
+
+}
+
+#line 1 "src/shell/host_agents.cpp"
+
+namespace gpui::shell {
+
+extern const char kShellAgentsTemplate[] =
+    R"HOSTAGENTS(# Developing a {name} application
+
+These instructions were generated by `{name} {version}` for coding agents and
+people writing an application for it. They describe the runtime that generated
+them; regenerate them with `{name} agents --dir <directory>` after upgrading.
+
+## What the runtime is
+
+`{name}` runs JavaScript applications natively on GPUI. There is **no DOM, no
+HTML, no CSS, no browser and no Node.js**. A script describes its interface
+with builder calls; Rust turns that description into real GPUI elements and
+renders it on the GPU. Do not reach for web APIs, React, JSX, npm packages that
+touch the DOM, or `document`/`window.addEventListener` — none of them exist.
+
+The language is modern JavaScript (ES2022 modules) on QuickJS. Write `.js`
+files with JSDoc types; there is no build step and no bundler.
+
+## Application layout
+
+```text
+my-app/
+├── gpui-shell.json   # identity, entry, dependencies and capabilities
+├── main.js           # entry module: default-exports a View subclass
+├── jsconfig.json     # editor type checking (written on first run)
+├── gpui-kit.d.ts     # generated declarations — never edit, never commit
+└── icons/            # assets, resolved against the application root
+```
+
+`{name}` runs one application per process. An installed application is a
+directory under `{home}`: `{name} run clock` runs `{home}/clock`. Any
+other directory runs with `{name} run -d <directory>`. To ship the application as a
+macOS `.app` or a Linux package, place this directory as `app` beside the
+`{name}` executable (or `Contents/Resources/app` in a macOS bundle) and start
+the executable with no arguments.
+
+### `gpui-shell.json`
+
+```json
+{
+  "id": "com.example.clock",
+  "name": "Clock",
+  "version": "1.0.0",
+  "shell-version": "{version}",
+  "entry": "main.js",
+  "capabilities": {
+    "storage": true
+  }
+}
+```
+
+`id`, `name` and `entry` are required. `id` is the application's identity and
+keys its data directory, so keep it stable. `shell-version` is the oldest
+runtime the application supports. `window` is the size the window opens at,
+in logical pixels — `"window": { "width": 360, "height": 520 }` — and the host's
+default when absent. Unknown fields are rejected.
+
+## The smallest application
+
+```js
+import { View, div } from "gpui-kit";
+import { v_flex, Button } from "gpui-base";
+
+export default class Counter extends View {
+  init(_props, _cx) {
+    this.count = 0;
+  }
+
+  render(cx) {
+    return v_flex()
+      .size_full()
+      .items_center()
+      .justify_center()
+      .gap(12)
+      .bg(cx.theme().colors.background)
+      .child(div().text_color(cx.theme().colors.foreground).child(`Count: ${this.count}`))
+      .child(
+        Button.new("increment")
+          .px(14)
+          .h(32)
+          .rounded(6)
+          .bg(cx.theme().colors.primary)
+          .text_color(cx.theme().colors.primary_foreground)
+          .on_click((_event, cx) => {
+            this.count += 1;
+            cx.notify();
+          })
+          .child("Increment"),
+      );
+  }
+}
+```
+
+## Built-in modules
+
+{modules}
+
+Import only these names, plus relative modules (`./ui.js`) and the bare
+dependency names declared in `gpui-shell.json`. The exact API — every element,
+style method, argument type and component — is in `gpui-kit.d.ts`, generated by
+`{name} types <directory>`. **Read it before writing code** and treat it as the
+source of truth over this guide.
+
+## Rules that are easy to get wrong
+
+- **Host methods are snake_case** (`items_center`, `on_click`, `text_sm`,
+  `Button.new("id")`), exactly as in Rust. Your own code is camelCase.
+- **Construct with `Type.new(...)`**, never `new Type(...)`.
+- **Assign state in `init`, not as class fields.** `View`'s constructor calls
+  `init` from inside `super()`; a class field declaration runs afterwards and
+  overwrites it with `undefined`.
+- **`render(cx)` returns one element** (or a string, or a retained view). It
+  runs only when the view is invalidated, not every frame.
+- **Call `cx.notify()` after changing state** in an event handler or task.
+  Calling it inside `render` throws.
+- **Elements are single-use.** Build them inside `render`; never store one on
+  `this` or reuse it in two places.
+- **Ids must be stable and unique among siblings** for interactive controls:
+  `Button.new("save")`, `Checkbox.new(`todo-${item.id}`)`.
+- **Controls are controlled.** `Checkbox`/`Switch` take `.checked(value)` and
+  report `.on_change((checked, cx) => …)`; store the new value and notify.
+- **Base controls draw nothing by themselves.** `Button.new("x")` has no
+  padding, colour or radius; every visual decision is written in the script.
+- **Use theme tokens for colour**: `cx.theme().colors.surface`,
+  `cx.theme().spacing.md`. Read them at the use site; do not destructure the
+  theme. `#rrggbb` literals bypass the theme and break dark mode.
+- A number length is pixels; a string length is `"auto"`, `"50%"`, `"12px"`
+  or `"1rem"`, as far as the Rust signature allows.
+- `svg(path)` and `image(path)` resolve against the **application root**, not
+  the importing file. Keep assets in a directory named after the application.
+- Use `.when(condition, (el) => el.…)` to keep a builder chain in one piece.
+
+## State, events and asynchrony
+
+- `cx.spawn(async (cx) => { … })` runs async work whose `cx` survives `await`;
+  `cx.sleep(ms)`, `cx.timer.after` and `cx.timer.every` schedule on the UI
+  thread. There is no background thread for script.
+- `localStorage` / `sessionStorage` persist per application (needs
+  `"storage": true`).
+- `fetch` (HTTP), `WebSocket` from `"websocket"`, `fs/promises`, clipboard and
+  `process.run` exist but are **denied unless the manifest grants them**. Ask
+  for the narrowest grant that works:
+
+```json
+"capabilities": {
+  "fs": { "read": ["${pluginDir}"], "write": ["${dataDir}"] },
+  "network": {
+    "http": [{ "host": "api.example.com", "methods": ["GET"], "path_prefixes": ["/v1/"] }]
+  },
+  "storage": true,
+  "clipboard": { "write": true }
+}
+```
+
+- `process.run(command, args, { cwd, timeoutMs })` waits for a command to
+  finish (30 s unless `timeoutMs` says otherwise). For one that runs longer,
+  reads stdin, or should be read as it works — an AI command line in JSON-lines
+  mode — use `process.spawn`. Same grant (`capabilities.fs.execute`), same empty
+  environment; handlers run on the UI thread with a `cx`, `exit` fires once
+  after the last output, and the child is killed when the view goes away, the
+  application reloads or the window closes:
+
+```js
+import process from "process";
+
+const child = process.spawn("claude", ["-p", prompt, "--output-format", "stream-json"], {
+  cwd: projectDir, // inside capabilities.fs.read
+  lines: true,
+});
+child
+  .on("stdout", (line, cx) => {
+    if (!line.trim()) return;
+    this.events.push(JSON.parse(line));
+    cx.notify();
+  })
+  .on("exit", ({ code, signal, error }, cx) => {
+    this.running = false;
+    this.failure = error ?? (code === 0 ? null : `exited with ${code ?? signal}`);
+    cx.notify();
+  });
+// child.kill() to stop it; { stdin: "pipe" } and child.write(text) / child.end() to talk to it.
+```
+
+- `console.log` / `console.error` go to the terminal running `{name}`.
+- Heavy or rarely used code belongs in modules loaded with dynamic
+  `import()` from the handler that needs it; keep the entry module light.
+
+## Workflow
+
+```bash
+{name} types -d my-app          # write gpui-kit.d.ts — do this first
+{name} check -d my-app          # load, render and materialize once; exit 1 on error
+{name} dev -d my-app             # run it, reloading on save
+{name} list                      # what is installed under {home}
+{name} run my-app               # run the installed copy
+```
+
+After every change, run `{name} check -d <directory>` and fix what it
+reports before declaring the work done. `check` does not exercise layout,
+paint, later interactions or asynchronous states, so also run the application
+with `{name} dev` when behaviour matters.
+
+To install an application, copy or link its directory into `{home}`; the
+directory name is the name `{name}` runs it by. An installed application keeps
+its data under its manifest `id`, so a reinstall does not lose it.
+)HOSTAGENTS";
+
+}
+
+#line 1 "src/shell/host_apps.cpp"
+
+namespace gpui::shell {
+
+extern const char kShellAgentsTemplate[];
+
+static bool shell_host_apps_AbsolutePath(Str path) {
+    if (!path || len(path) == 0) return false;
+    if (path.s[0] == '/' || path.s[0] == '\\') return true;
+    return len(path) >= 3 && path.s[1] == ':' &&
+           (path.s[2] == '/' || path.s[2] == '\\');
+}
+
+static Str JoinOwned(Str left, Str right) {
+    if (!left || len(left) == 0) return StrDup(right);
+    if (!right || len(right) == 0) return StrDup(left);
+    char last = left.s[len(left) - 1];
+    bool separator = last != '/' && last != '\\';
+    if (!separator) return StrDup(fmt("%s%s", left, right));
+    return StrDup(fmt("%s%c%s", left, base::PlatPathSep(), right));
+}
+
+static void shell_host_apps_SetOwned(Str* error, Str message) {
+    if (!error) return;
+    StrFree(*error);
+    *error = StrDup(message);
+}
+
+static bool shell_host_apps_WriteWhole(Str path, Str contents, Str* error) {
+    if (!path || len(path) >= kMaxPath) {
+        shell_host_apps_SetOwned(error, StrL("cannot write: the path is empty or too long"));
+        return false;
+    }
+    TempStr name = StrDupTemp(path);
+    FILE* file = fopen(name.s, "wb");
+    if (!file) {
+        shell_host_apps_SetOwned(error, fmt("cannot write %s", path));
+        return false;
+    }
+    bool ok = len(contents) == 0 || fwrite(contents.s, 1, (size_t)len(contents),
+                                           file) == (size_t)len(contents);
+    if (fclose(file) != 0) ok = false;
+    if (!ok) shell_host_apps_SetOwned(error, fmt("cannot write %s", path));
+    return ok;
+}
+
+static Str ReadWhole(Str path) {
+    if (!path || len(path) >= kMaxPath) return {};
+    TempStr name = StrDupTemp(path);
+    FILE* file = fopen(name.s, "rb");
+    if (!file) return {};
+    if (fseek(file, 0, SEEK_END) != 0) {
+        fclose(file);
+        return {};
+    }
+    long size = ftell(file);
+    if (size < 0 || size > 1024 * 1024 || fseek(file, 0, SEEK_SET) != 0) {
+        fclose(file);
+        return {};
+    }
+    StrBuilder out;
+    if (size > 0) {
+        char* buffer = new char[(size_t)size];
+        size_t got = fread(buffer, 1, (size_t)size, file);
+        out.Append(Str(buffer, (int)got));
+        delete[] buffer;
+    }
+    fclose(file);
+    return out.TakeStr();
+}
+
+Str ShellHomeFrom(Str shellHome, Str home, Str userProfile) {
+    if (shellHome && len(shellHome) > 0) {
+        if (shell_host_apps_AbsolutePath(shellHome)) return StrDup(shellHome);
+        char cwd[kMaxPath];
+        cwd[0] = 0;
+        PlatGetCwd(cwd, kMaxPath);
+        return JoinOwned(Str(cwd), shellHome);
+    }
+    Str base = home && len(home) > 0 ? home : userProfile;
+    Str ownedBase = {};
+    if (!base || len(base) == 0) {
+        const char* temp = getenv("TEMP");
+        if (!temp || !temp[0]) temp = getenv("TMP");
+        if (!temp || !temp[0]) temp = "/tmp";
+        ownedBase = StrDup(Str(temp));
+        base = ownedBase;
+    }
+    Str homeDir = JoinOwned(base, StrL(".gpui-shell"));
+    StrFree(ownedBase);
+    return homeDir;
+}
+
+Str ShellHome() {
+    const char* shellHome = getenv("GPUI_SHELL_HOME");
+    const char* home = getenv("HOME");
+    const char* userProfile = getenv("USERPROFILE");
+    return ShellHomeFrom(Str(shellHome ? shellHome : ""), Str(home ? home : ""),
+                         Str(userProfile ? userProfile : ""));
+}
+
+Str ShellApplicationsDirectory() {
+    Str home = ShellHome();
+    Str apps = JoinOwned(home, StrL("apps"));
+    StrFree(home);
+    return apps;
+}
+
+static bool IsApplication(Str directory) {
+    Str manifest = JoinOwned(directory, Str(kShellManifestFile));
+    Str entry = JoinOwned(directory, StrL("main.js"));
+    bool found = (manifest && PlatFileExists(manifest.s)) ||
+                 (entry && PlatFileExists(entry.s));
+    StrFree(manifest);
+    StrFree(entry);
+    return found;
+}
+
+bool ShellBundledApplication(Str* directory) {
+    if (directory) *directory = {};
+    char executable[kMaxPath];
+    executable[0] = 0;
+    PlatGetExeDir(executable, kMaxPath);
+    if (!executable[0]) return false;
+    Str root(executable);
+    Str resources = JoinOwned(root, StrL(".."));
+    Str resourcesApp = JoinOwned(resources, StrL("Resources"));
+    Str bundled = JoinOwned(resourcesApp, StrL("app"));
+    Str beside = JoinOwned(root, StrL("app"));
+    StrFree(resources);
+    StrFree(resourcesApp);
+    bool found = false;
+    if (IsApplication(bundled)) {
+        if (directory)
+            *directory = bundled;
+        else
+            StrFree(bundled);
+        found = true;
+        StrFree(beside);
+    } else if (IsApplication(beside)) {
+        if (directory)
+            *directory = beside;
+        else
+            StrFree(beside);
+        found = true;
+        StrFree(bundled);
+    } else {
+        StrFree(bundled);
+        StrFree(beside);
+    }
+    return found;
+}
+
+bool ShellResolveApplication(const Invocation& invocation, Str* directory,
+                             Str* error) {
+    if (directory) *directory = {};
+    if (invocation.application == ApplicationKind::Installed) {
+        Str apps = ShellApplicationsDirectory();
+        Str candidate = JoinOwned(apps, invocation.directory);
+        if (IsApplication(candidate)) {
+            if (directory)
+                *directory = candidate;
+            else
+                StrFree(candidate);
+            StrFree(apps);
+            return true;
+        }
+        shell_host_apps_SetOwned(error,
+                 fmt("no application `%s` is installed: %s has no main.js or "
+                     "gpui-shell.json. `gpui-shell list` shows what is "
+                     "installed; to run a directory, use `gpui-shell run -d "
+                     "%s`.",
+                     invocation.directory, candidate, invocation.directory));
+        StrFree(candidate);
+        StrFree(apps);
+        return false;
+    }
+    if (invocation.application == ApplicationKind::Path) {
+        if (directory) *directory = StrDup(invocation.directory);
+        return directory == nullptr || directory->s != nullptr;
+    }
+    if (invocation.application == ApplicationKind::Current) {
+        char cwd[kMaxPath];
+        cwd[0] = 0;
+        PlatGetCwd(cwd, kMaxPath);
+        if (!cwd[0]) {
+            shell_host_apps_SetOwned(error, StrL("cannot read the current directory"));
+            return false;
+        }
+        if (directory) *directory = StrDup(Str(cwd));
+        return true;
+    }
+    if (invocation.application == ApplicationKind::Bundled) {
+        if (ShellBundledApplication(directory)) return true;
+        Str apps = ShellApplicationsDirectory();
+        shell_host_apps_SetOwned(error,
+                 fmt("nothing to run: no application is packaged beside this "
+                     "executable. Run one with `gpui-shell run <name>` or "
+                     "`gpui-shell run -d <directory>`; `gpui-shell list` "
+                     "shows what is installed in %s.",
+                     apps));
+        StrFree(apps);
+        return false;
+    }
+    shell_host_apps_SetOwned(error, StrL("no application was named"));
+    return false;
+}
+
+static void PrintStr(FILE* file, Str value) {
+    if (value) fwrite(value.s, 1, (size_t)len(value), file);
+}
+
+int ShellListApplications() {
+    Str directory = ShellApplicationsDirectory();
+    DirEntry* entries = new DirEntry[512];
+    int count = directory ? PlatListDir(directory.s, entries, 512) : 0;
+    Vec<Str> names;
+    for (int i = 0; i < count; i++) {
+        if (!entries[i].isDir) continue;
+        Str path = JoinOwned(directory, Str(entries[i].name));
+        if (IsApplication(path))
+            VecAppend(names, path);
+        else
+            StrFree(path);
+    }
+    delete[] entries;
+    for (int i = 1; i < names.len; i++) {
+        Str item = names[i];
+        int at = i;
+        while (at > 0 && StrCmp(names[at - 1], item) > 0) {
+            names[at] = names[at - 1];
+            at--;
+        }
+        names[at] = item;
+    }
+    if (names.len == 0) {
+        fprintf(stderr,
+                "no application is installed in %s. Each application is a "
+                "directory there holding main.js and, usually, "
+                "gpui-shell.json.\n",
+                directory ? directory.s : "");
+        StrFree(directory);
+        return 1;
+    }
+    for (int i = 0; i < names.len; i++) {
+        Str root = names[i];
+        int start = len(root);
+        while (start > 0 && root.s[start - 1] != '/' &&
+               root.s[start - 1] != '\\')
+            start--;
+        Str name = Str(root.s + start, len(root) - start);
+        Str manifestPath = JoinOwned(root, Str(kShellManifestFile));
+        bool hasManifest = manifestPath && PlatFileExists(manifestPath.s);
+        StrFree(manifestPath);
+        if (!hasManifest) {
+            PrintStr(stdout, name);
+            printf("\n    no %s: local defaults (storage only)\n",
+                   kShellManifestFile);
+            continue;
+        }
+        PluginManifest manifest;
+        ShellError error = {};
+        if (!PluginManifestRead(root, &manifest, &error)) {
+            PrintStr(stdout, name);
+            printf("\n    invalid: ");
+            PrintStr(stdout, error.message);
+            fputc('\n', stdout);
+            ShellErrorClear(&error);
+            continue;
+        }
+        PrintStr(stdout, name);
+        printf("  ");
+        PrintStr(stdout, manifest.name);
+        fputc(' ', stdout);
+        PrintStr(stdout, manifest.version);
+        printf(" (");
+        PrintStr(stdout, manifest.id);
+        printf(")\n");
+        Arena* scratch = ArenaNew();
+        Str data = ShellAppDataDirectory(manifest.id, scratch, nullptr);
+        Capabilities capabilities = manifest.Grant(root, data ? data : Str{});
+        StrBuilder summary;
+        capabilities.AppendSummary(&summary);
+        Str lines = summary.TakeStr();
+        if (!lines || len(lines) == 0) {
+            printf("    no capabilities\n");
+        } else {
+            int at = 0;
+            while (at < len(lines)) {
+                int end = at;
+                while (end < len(lines) && lines.s[end] != '\n') end++;
+                printf("    ");
+                fwrite(lines.s + at, 1, (size_t)(end - at), stdout);
+                fputc('\n', stdout);
+                at = end < len(lines) ? end + 1 : end;
+            }
+        }
+        StrFree(lines);
+        ArenaDelete(scratch);
+        ShellErrorClear(&error);
+    }
+    for (int i = 0; i < names.len; i++) StrFree(names[i]);
+    VecReset(names);
+    StrFree(directory);
+    return 0;
+}
+
+static void AppendSlug(StrBuilder* out, Str folder) {
+    bool dash = false;
+    bool any = false;
+    for (int i = 0; i < len(folder); i++) {
+        unsigned char c = (unsigned char)folder.s[i];
+        if (c >= 'A' && c <= 'Z') c = (unsigned char)(c - 'A' + 'a');
+        if ((c >= 'a' && c <= 'z') || (c >= '0' && c <= '9')) {
+            out->AppendChar((char)c);
+            dash = false;
+            any = true;
+        } else if (any && !dash) {
+            out->AppendChar('-');
+            dash = true;
+        }
+    }
+}
+
+static Str ApplicationId(Str folder) {
+    StrBuilder slug;
+    AppendSlug(&slug, folder);
+    Str text = slug.TakeStr();
+    int end = len(text);
+    while (end > 0 && text.s[end - 1] == '-') end--;
+    StrBuilder id;
+    id.Append(StrL("local."));
+    if (end == 0)
+        id.Append(StrL("app"));
+    else
+        id.Append(Str(text.s, end));
+    StrFree(text);
+    return id.TakeStr();
+}
+
+static bool SeparatorWord(char c) {
+    return c == '-' || c == '_' || c == ' ' || c == '.';
+}
+
+static Str DisplayName(Str folder) {
+    StrBuilder out;
+    bool word = false;
+    bool any = false;
+    for (int i = 0; i < len(folder); i++) {
+        char c = folder.s[i];
+        if (SeparatorWord(c)) {
+            word = false;
+            continue;
+        }
+        if (!word && any) out.AppendChar(' ');
+        if (!word && c >= 'a' && c <= 'z') c = (char)(c - 'a' + 'A');
+        out.AppendChar(c);
+        word = true;
+        any = true;
+    }
+    if (!any) return StrDup(StrL("App"));
+    return out.TakeStr();
+}
+
+static void shell_host_apps_AppendJsonString(StrBuilder* out, Str text) {
+    out->AppendChar('"');
+    for (int i = 0; i < len(text); i++) {
+        char c = text.s[i];
+        if (c == '"' || c == '\\') out->AppendChar('\\');
+        out->AppendChar(c);
+    }
+    out->AppendChar('"');
+}
+
+static Str FolderName(Str directory) {
+    int start = len(directory);
+    while (start > 0 && directory.s[start - 1] != '/' &&
+           directory.s[start - 1] != '\\')
+        start--;
+    return Str(directory.s + start, len(directory) - start);
+}
+
+static Str ManifestText(Str folder) {
+    Str id = ApplicationId(folder);
+    Str name = DisplayName(folder);
+    StrBuilder out;
+    out.Append(StrL("{\n  \"id\": "));
+    shell_host_apps_AppendJsonString(&out, id);
+    out.Append(StrL(",\n  \"name\": "));
+    shell_host_apps_AppendJsonString(&out, name);
+    out.Append(StrL(",\n  \"version\": \"0.1.0\",\n  \"shell-version\": \""));
+    out.Append(Str(kShellVersion));
+    out
+        .Append(StrL("\",\n  \"entry\": \"main.js\",\n  \"capabilities\": {\n"
+                     "    \"storage\": true\n  }\n}\n"));
+    StrFree(id);
+    StrFree(name);
+    return out.TakeStr();
+}
+
+static Str EntryText(Str name, bool styled) {
+    StrBuilder title;
+    shell_host_apps_AppendJsonString(&title, name);
+    Str quoted = title.TakeStr();
+    StrBuilder out;
+    if (styled) {
+        out.Append(
+            StrL("import { View, div } from \"gpui-kit\";\n"
+                 "import { v_flex } from \"gpui-base\";\n"
+                 "import { Button, TitleBar } from \"gpui-component\";\n"
+                 "\n"
+                 "export default class App extends View {\n"
+                 "  init() {\n"
+                 "    this.count = 0;\n"
+                 "  }\n"
+                 "\n"
+                 "  render(cx) {\n"
+                 "    return v_flex()\n"
+                 "      .size_full()\n"
+                 "      .bg(cx.theme().colors.background)\n"
+                 "      .child(\n"
+                 "        new TitleBar().child(\n"
+                 "          "
+                 "div().text_size(13).font_medium().text_color(cx.theme()."
+                 "colors.foreground).child("));
+        out.Append(quoted);
+        out.Append(StrL(
+            "),\n"
+            "        ),\n"
+            "      )\n"
+            "      .child(\n"
+            "        v_flex()\n"
+            "          .flex_1()\n"
+            "          .items_center()\n"
+            "          .justify_center()\n"
+            "          .gap(12)\n"
+            "          "
+            ".child(div().text_color(cx.theme().colors.foreground).child(`"
+            "Clicked ${this.count} times`))\n"
+            "          .child(\n"
+            "            new Button(\"increment\").primary().label(\"Click "
+            "me\").on_click((_event, cx) => {\n"
+            "              this.count += 1;\n"
+            "              cx.notify();\n"
+            "            }),\n"
+            "          ),\n"
+            "      );\n"
+            "  }\n"
+            "}\n"));
+    } else {
+        out
+            .Append(StrL("import { View, div } from \"gpui-kit\";\n"
+                         "import { v_flex, Button } from \"gpui-base\";\n"
+                         "\n"
+                         "// "));
+        out.Append(quoted);
+        out.Append(
+            StrL("\n"
+                 "export default class App extends View {\n"
+                 "  init() {\n"
+                 "    this.count = 0;\n"
+                 "  }\n"
+                 "\n"
+                 "  render(cx) {\n"
+                 "    return v_flex()\n"
+                 "      .size_full()\n"
+                 "      .items_center()\n"
+                 "      .justify_center()\n"
+                 "      .gap(12)\n"
+                 "      .bg(cx.theme().colors.background)\n"
+                 "      "
+                 ".child(div().text_color(cx.theme().colors.foreground).child(`"
+                 "Clicked ${this.count} times`))\n"
+                 "      .child(\n"
+                 "        Button.new(\"increment\")\n"
+                 "          .h(28)\n"
+                 "          .px(12)\n"
+                 "          .items_center()\n"
+                 "          .justify_center()\n"
+                 "          .rounded(6)\n"
+                 "          .bg(cx.theme().colors.primary)\n"
+                 "          .text_color(cx.theme().colors.primary_foreground)\n"
+                 "          .on_click((_event, cx) => {\n"
+                 "            this.count += 1;\n"
+                 "            cx.notify();\n"
+                 "          })\n"
+                 "          .child(\"Click me\"),\n"
+                 "      );\n"
+                 "  }\n"
+                 "}\n"));
+    }
+    StrFree(quoted);
+    return out.TakeStr();
+}
+
+static bool DirectoryOccupied(Str directory) {
+    if (!directory || !PlatDirExists(directory.s)) return false;
+    DirEntry* entries = new DirEntry[64];
+    int count = PlatListDir(directory.s, entries, 64);
+    delete[] entries;
+    return count > 0;
+}
+
+bool ShellCreateApplication(Str directory,
+                            const FrozenComponentRegistry* components,
+                            Str* created, Str* error) {
+    if (created) *created = {};
+    if (DirectoryOccupied(directory)) {
+        shell_host_apps_SetOwned(error, fmt("`%s` already exists and is not empty; `new` only "
+                            "creates an application",
+                            directory));
+        return false;
+    }
+    if (!DependencyMakeDirectories(directory, error)) {
+        if (error && !*error)
+            shell_host_apps_SetOwned(error, fmt("cannot create `%s`", directory));
+        return false;
+    }
+    char canonical[kMaxPath];
+    canonical[0] = 0;
+    TempStr raw = StrDupTemp(directory);
+    if (!raw || !PlatCanonicalPath(raw.s, canonical, kMaxPath)) {
+        shell_host_apps_SetOwned(error, fmt("cannot read `%s`", directory));
+        return false;
+    }
+    Str root = StrDup(Str(canonical));
+    Str folder = FolderName(root);
+    bool styled = components && components->ModuleSpecifier();
+    Str manifest = ManifestText(folder);
+    Str shown = DisplayName(folder);
+    Str entry = EntryText(shown, styled);
+    StrFree(shown);
+    Str manifestPath = JoinOwned(root, Str(kShellManifestFile));
+    Str entryPath = JoinOwned(root, StrL("main.js"));
+    Str ignorePath = JoinOwned(root, StrL(".gitignore"));
+    bool ok = shell_host_apps_WriteWhole(manifestPath, manifest, error) &&
+              shell_host_apps_WriteWhole(entryPath, entry, error) &&
+              shell_host_apps_WriteWhole(ignorePath,
+                         StrL("gpui-kit.d.ts\nnode_modules/\ndist/\n"), error);
+    StrFree(manifest);
+    StrFree(entry);
+    StrFree(manifestPath);
+    StrFree(entryPath);
+    StrFree(ignorePath);
+    if (!ok) {
+        StrFree(root);
+        return false;
+    }
+    ShellError declared = {};
+    if (!ShellWriteTypeDeclarations(root, nullptr, nullptr, &declared,
+                                    components)) {
+        shell_host_apps_SetOwned(error, fmt("cannot write type declarations: %s",
+                            declared.message ? declared.message
+                                             : StrL("unknown error")));
+        ShellErrorClear(&declared);
+        StrFree(root);
+        return false;
+    }
+    ShellErrorClear(&declared);
+    Str written = {};
+    if (!ShellWriteAgents(root, components, &written, error)) {
+        StrFree(written);
+        StrFree(root);
+        return false;
+    }
+    StrFree(written);
+    if (created)
+        *created = root;
+    else
+        StrFree(root);
+    return true;
+}
+
+static void AppendReplaced(StrBuilder* out, Str text, Str name, Str version,
+                           Str home, Str modules) {
+    for (int i = 0; i < len(text);) {
+        if (text.s[i] == '{') {
+            struct Token {
+                const char* key;
+                Str value;
+            };
+            Token tokens[] = {{"{name}", name},
+                              {"{version}", version},
+                              {"{home}", home},
+                              {"{modules}", modules}};
+            bool replaced = false;
+            for (const Token& token : tokens) {
+                int n = (int)strlen(token.key);
+                if (i + n <= len(text) &&
+                    memcmp(text.s + i, token.key, (size_t)n) == 0) {
+                    out->Append(token.value);
+                    i += n;
+                    replaced = true;
+                    break;
+                }
+            }
+            if (replaced) continue;
+        }
+        out->AppendChar(text.s[i]);
+        i++;
+    }
+}
+
+static Str AgentsMarker() {
+    return StrDup(
+        fmt("<!-- Generated by `gpui-shell agents`. Edits are "
+            "replaced on the next run; delete this line to keep "
+            "them. -->"));
+}
+
+Str ShellAgentsText(const FrozenComponentRegistry* components) {
+    StrBuilder modules;
+    gpui::ShellAppendAgentsModules(&modules, components);
+    Str moduleText = modules.TakeStr();
+    StrBuilder body;
+    AppendReplaced(&body, Str(kShellAgentsTemplate), StrL("gpui-shell"),
+                   Str(kShellVersion), StrL("~/.gpui-shell/apps"),
+                   moduleText ? moduleText : Str{});
+    Str marker = AgentsMarker();
+    StrBuilder out;
+    out.Append(marker);
+    out.Append(StrL("\n\n"));
+    Str bodyText = body.TakeStr();
+    out.Append(bodyText);
+    StrFree(bodyText);
+    StrFree(marker);
+    StrFree(moduleText);
+    return out.TakeStr();
+}
+
+bool ShellWriteAgents(Str directory, const FrozenComponentRegistry* components,
+                      Str* written, Str* error) {
+    if (written) *written = {};
+    if (!directory || !PlatDirExists(directory.s)) {
+        shell_host_apps_SetOwned(error, fmt("`%s` is not a directory", directory));
+        return false;
+    }
+    Str path = JoinOwned(directory, StrL("AGENTS.md"));
+    Str text = ShellAgentsText(components);
+    Str existing = ReadWhole(path);
+    if (existing && StrEq(existing, text)) {
+        StrFree(existing);
+        StrFree(text);
+        StrFree(path);
+        return true;
+    }
+    Str marker = AgentsMarker();
+    if (existing && !StrStartsWith(existing, marker)) {
+        shell_host_apps_SetOwned(error,
+                 fmt("%s exists and was not generated by gpui-shell; it is "
+                     "left alone. Run `gpui-shell agents` to print the "
+                     "instructions instead.",
+                     path));
+        StrFree(marker);
+        StrFree(existing);
+        StrFree(text);
+        StrFree(path);
+        return false;
+    }
+    StrFree(marker);
+    StrFree(existing);
+    bool ok = shell_host_apps_WriteWhole(path, text, error);
+    StrFree(text);
+    if (!ok) {
+        StrFree(path);
+        return false;
+    }
+    if (written)
+        *written = path;
+    else
+        StrFree(path);
+    return true;
 }
 
 }
@@ -157095,6 +162986,158 @@ bool HostDispatchBegin(Str module, Str function, HostAsyncRequest* request) {
 
 namespace gpui::shell {
 
+static bool IsApplicationName(Str argument) {
+    if (!argument || StrEq(argument, StrL(".")) || StrEq(argument, StrL("..")))
+        return false;
+    if (argument.s[0] == '~') return false;
+    for (int i = 0; i < len(argument); i++) {
+        if (argument.s[i] == '/' || argument.s[i] == '\\') return false;
+    }
+    return true;
+}
+
+static bool TakeApplication(Invocation* out, Str argument, Str* error) {
+    if (out->application != ApplicationKind::None) {
+        *error =
+            StrDup(fmt("unexpected argument `%s`; gpui-shell runs one "
+                       "application",
+                       argument));
+        return false;
+    }
+    if (IsApplicationName(argument)) {
+        out->application = ApplicationKind::Installed;
+    } else {
+        out->application = ApplicationKind::Path;
+    }
+    out->directory = argument;
+    return true;
+}
+
+static const char* kHelpBody =
+    "\n\nUsage: gpui-shell dev [<name> | --dir <directory>] [--dev]\n"
+    "       gpui-shell run [<name> | --dir <directory>] [--watch] [--dev] "
+    "[--packaged]\n"
+    "       gpui-shell new <directory>\n"
+    "       gpui-shell list\n"
+    "       gpui-shell check [<name> | --dir <directory>] [--print-spec]\n"
+    "       gpui-shell types [<name> | --dir <directory>]\n"
+    "       gpui-shell agents [<name> | --dir <directory>]\n"
+    "       gpui-shell bundle [<name> | --dir <directory>] [--platform "
+    "<platform>]\n"
+    "              [--icon <png>] [--out <directory>] [--download-url "
+    "<url>]\n"
+    "\n"
+    "Arguments:\n"
+    "  <name>       An installed application: the directory of that name in\n"
+    "               %s. An argument containing a path\n"
+    "               separator is a path instead, as if given with --dir.\n"
+    "\n"
+    "`run`, `dev`, `check`, `types` and `bundle` with no application use the\n"
+    "current directory. With no arguments at all, gpui-shell runs the "
+    "application\n"
+    "packaged beside its executable (`app` beside the executable, or "
+    "`../Resources/app`\n"
+    "inside a macOS bundle), and prints this help when there is none.\n"
+    "\n"
+    "Commands:\n"
+    "  dev          Run an application while you edit it: reload it when its\n"
+    "               sources change, and log at debug level.\n"
+    "  run          Run one application in a window.\n"
+    "  new          Create a blank application in a new directory, relative "
+    "to\n"
+    "               where the command runs: manifest, entry module, editor "
+    "types\n"
+    "               and AGENTS.md.\n"
+    "  list         Print the installed applications — id, name, version and\n"
+    "               requested capabilities — without running any.\n"
+    "  agents       Print the development instructions a coding agent needs "
+    "to write\n"
+    "               an application for this runtime, or write them into the\n"
+    "               application's AGENTS.md (only ever replacing one it "
+    "generated).\n"
+    "  types        Write gpui-kit.d.ts next to the application, so an editor "
+    "— or a\n"
+    "               model writing the code — sees the whole API and catches "
+    "a\n"
+    "               mistyped style method before it runs.\n"
+    "  check        Load the application, build its description, and "
+    "materialize its\n"
+    "               eager native elements in a hidden window. Exit 0 on "
+    "success or\n"
+    "               1 on load, render, or registered-component "
+    "materialization errors.\n"
+    "               Does not check layout, paint, deferred slots, nested "
+    "view renders,\n"
+    "               or later interaction and asynchronous states.\n"
+    "  bundle       Package the application as a desktop application. Needs\n"
+    "               gpui-shell.json. macOS: an unsigned .app. Linux: a "
+    ".tar.gz, and an\n"
+    "               install.sh beside it that installs it. Both hold no "
+    "runtime:\n"
+    "               they use an installed gpui-shell %s or later, or\n"
+    "               download that release. Windows: a portable .zip whose "
+    ".exe is\n"
+    "               gpui-shell %s itself.\n"
+    "\n"
+    "Options:\n"
+    "  -d, --dir <directory>\n"
+    "               The application root, or the main.js inside it.\n"
+    "  --packaged   With run, run the directory as a packaged application, "
+    "the way a\n"
+    "               bundle's launcher does: its data stays under the "
+    "manifest's id\n"
+    "               wherever it is, and no editor files are written into "
+    "it.\n"
+    "  --watch      With run, reload the application when its sources "
+    "change.\n"
+    "               `dev` always does.\n"
+    "  --dev        With run or dev, development mode: relax the sandbox, "
+    "opening\n"
+    "               eval and the built-in prototypes. Capabilities are "
+    "unchanged.\n"
+    "  --print-spec With check, also print the element description that was "
+    "built.\n"
+    "  --platform <platform>\n"
+    "               With bundle, the platform: macos, linux or windows. "
+    "Defaults to\n"
+    "               the one this runs on.\n"
+    "  --icon <png> With bundle, a square PNG icon, ideally 1024×1024.\n"
+    "  --out <directory>\n"
+    "               With bundle, where the bundle is written. Defaults to "
+    "./dist.\n"
+    "  --download-url <url>\n"
+    "               With bundle for Linux, where the archive will be "
+    "published, so\n"
+    "               install.sh run on its own downloads it from there.\n"
+    "  --help       Print this message and exit.\n"
+    "  --version    Print the version and exit.\n";
+
+void ShellFormatHelp(StrBuilder* out) {
+    if (!out) return;
+    out->Append(fmt("gpui-shell %s", Str(kShellVersion)));
+    Str apps = ShellApplicationsDirectory();
+    Str version = Str(kShellVersion);
+    out->Append(fmt(kHelpBody, apps ? apps : Str{}, version, version));
+    StrFree(apps);
+}
+
+static bool FlagValue(const char* const* arguments, int count, int* index,
+                      const char* flag, const char* expects, Str* value,
+                      Str* error) {
+    if (*index + 1 >= count || !arguments[*index + 1] ||
+        arguments[*index + 1][0] == '-') {
+        *error = StrDup(fmt("`%s` expects %s", Str(flag), Str(expects)));
+        return false;
+    }
+    (*index)++;
+    *value = Str(arguments[*index]);
+    return true;
+}
+
+static void NoteBundleFlag(const char** first, const char* flag) {
+    if (!*first) *first = flag;
+}
+
 bool ShellParseInvocation(const char* const* arguments, int count,
                           Invocation* out, Str* error) {
     *out = {};
@@ -157116,40 +163159,166 @@ bool ShellParseInvocation(const char* const* arguments, int count,
         }
     }
     bool command = false;
+    bool dev = false;
+    const char* bundleFlag = nullptr;
     for (int i = 0; i < count; i++) {
         Str argument = Str(arguments[i]);
-        if (!command && !out->directory && StrEq(argument, StrL("check"))) {
+        bool bareCommand =
+            !command && out->application == ApplicationKind::None;
+        if (bareCommand && StrEq(argument, StrL("new"))) {
+            out->kind = InvocationKind::New;
+            command = true;
+        } else if (bareCommand && StrEq(argument, StrL("run"))) {
+            out->kind = InvocationKind::Run;
+            command = true;
+        } else if (bareCommand && StrEq(argument, StrL("dev"))) {
+            out->kind = InvocationKind::Run;
+            dev = true;
+            command = true;
+        } else if (bareCommand && StrEq(argument, StrL("check"))) {
             out->kind = InvocationKind::Check;
             command = true;
-        } else if (!command && !out->directory &&
-                   StrEq(argument, StrL("types"))) {
+        } else if (bareCommand && StrEq(argument, StrL("types"))) {
             out->kind = InvocationKind::Types;
             command = true;
+        } else if (bareCommand && StrEq(argument, StrL("list"))) {
+            out->kind = InvocationKind::List;
+            command = true;
+        } else if (bareCommand && StrEq(argument, StrL("agents"))) {
+            out->kind = InvocationKind::Agents;
+            command = true;
+        } else if (bareCommand && StrEq(argument, StrL("bundle"))) {
+            out->kind = InvocationKind::Bundle;
+            command = true;
+        } else if (StrEq(argument, StrL("--platform"))) {
+            Str value;
+            if (!FlagValue(arguments, count, &i, "--platform",
+                           "macos, linux or windows", &value, error))
+                return false;
+            if (!BundlePlatformParse(value, &out->platform)) {
+                *error =
+                    StrDup(fmt("unknown platform `%s`; `--platform` is "
+                               "macos, linux or windows",
+                               value));
+                return false;
+            }
+            out->platformSet = true;
+            NoteBundleFlag(&bundleFlag, "--platform");
+        } else if (StrEq(argument, StrL("--icon"))) {
+            if (!FlagValue(arguments, count, &i, "--icon", "a PNG image",
+                           &out->icon, error))
+                return false;
+            NoteBundleFlag(&bundleFlag, "--icon");
+        } else if (StrEq(argument, StrL("--download-url"))) {
+            Str value;
+            if (!FlagValue(arguments, count, &i, "--download-url", "a URL",
+                           &value, error))
+                return false;
+            if (!StrStartsWith(value, StrL("https://")) &&
+                !StrStartsWith(value, StrL("http://"))) {
+                *error =
+                    StrDup(fmt("`--download-url` expects an http(s) URL, "
+                               "not `%s`",
+                               value));
+                return false;
+            }
+            out->downloadUrl = value;
+            NoteBundleFlag(&bundleFlag, "--download-url");
+        } else if (StrEq(argument, StrL("--out"))) {
+            if (!FlagValue(arguments, count, &i, "--out", "a directory",
+                           &out->out, error))
+                return false;
+            NoteBundleFlag(&bundleFlag, "--out");
+        } else if (StrEq(argument, StrL("--dir")) ||
+                   StrEq(argument, StrL("-d"))) {
+            if (i + 1 >= count || !arguments[i + 1] ||
+                arguments[i + 1][0] == '-') {
+                *error =
+                    StrDup(StrL("`--dir` expects an application directory"));
+                return false;
+            }
+            i++;
+            if (!TakeApplication(out, Str(arguments[i]), error)) return false;
+
+            out->application = ApplicationKind::Path;
         } else if (StrEq(argument, StrL("--watch"))) {
             out->watch = true;
+        } else if (StrEq(argument, StrL("--packaged"))) {
+            out->packaged = true;
         } else if (StrEq(argument, StrL("--dev"))) {
             out->development = true;
-            out->watch = true;
         } else if (StrEq(argument, StrL("--print-spec"))) {
             out->printSpec = true;
         } else if (len(argument) > 0 && argument.s[0] == '-') {
             *error = StrDup(fmt("unknown flag `%s`", argument));
             return false;
-        } else if (!out->directory) {
-            out->directory = argument;
-        } else {
-            *error =
-                StrDup(fmt("unexpected argument `%s`; gpui-shell runs one "
-                           "application directory",
-                           argument));
+        } else if (!TakeApplication(out, argument, error)) {
             return false;
         }
     }
-    if (!out->directory) {
-        *error = StrDup(StrL("expected an application directory"));
+    if (bundleFlag && out->kind != InvocationKind::Bundle) {
+        *error = StrDup(fmt("`%s` is only for `bundle`", Str(bundleFlag)));
         return false;
     }
-    return true;
+
+    bool watchOk = !command || dev || out->kind == InvocationKind::Run;
+    if ((out->watch || out->development) && !watchOk) {
+        *error = StrDup(fmt("`%s` is only for `run` and `dev`",
+                            out->watch ? StrL("--watch") : StrL("--dev")));
+        return false;
+    }
+    if (out->packaged &&
+        !(command && !dev && out->kind == InvocationKind::Run)) {
+        *error = StrDup(StrL("`--packaged` is only for `run`"));
+        return false;
+    }
+    if (out->kind == InvocationKind::Bundle) {
+        if (out->application == ApplicationKind::None)
+            out->application = ApplicationKind::Current;
+        return true;
+    }
+    if (out->kind == InvocationKind::List) {
+        if (out->application != ApplicationKind::None) {
+            *error = StrDup(StrL("`list` takes no application"));
+            return false;
+        }
+        return true;
+    }
+    if (out->kind == InvocationKind::Agents) return true;
+    if (out->kind == InvocationKind::New) {
+        if (out->application == ApplicationKind::None) {
+            *error = StrDup(StrL("`new` expects the directory to create"));
+            return false;
+        }
+
+        out->application = ApplicationKind::Path;
+        return true;
+    }
+
+    if (command && (out->kind == InvocationKind::Types ||
+                    out->kind == InvocationKind::Check ||
+                    out->kind == InvocationKind::Run)) {
+        if (dev) {
+            out->watch = true;
+            out->verbose = true;
+            out->packaged = false;
+        }
+        if (out->application == ApplicationKind::None)
+            out->application = ApplicationKind::Current;
+        return true;
+    }
+
+    if (out->application == ApplicationKind::None) {
+        out->kind = InvocationKind::Bare;
+        out->application = ApplicationKind::Bundled;
+        return true;
+    }
+    TempStr shown = out->application == ApplicationKind::Installed
+                        ? StrDupTemp(out->directory)
+                        : fmt("-d %s", out->directory);
+    *error = StrDup(
+        fmt("an application runs with `gpui-shell run %s`", Str(shown.s)));
+    return false;
 }
 
 Window* ShellOpenWindow(App* app, const FrozenComponentRegistry* components,
@@ -157177,6 +163346,16 @@ namespace gpui::shell {
 TextStateEntity::~TextStateEntity() {
 
     if (app && input.blink.IsValid()) EntityDrop(app, input.blink);
+
+    if (runtime) runtime->RetireTextState(this);
+}
+
+void TextStateNotify(InputState* state, const InputEvent* event, Ctx* cx) {
+    if (!state || !event || !cx) return;
+    TextStateEntity* entity =
+        (TextStateEntity*)((char*)state - offsetof(TextStateEntity, input));
+    if (!entity->runtime) return;
+    entity->runtime->DispatchComponentInput(entity, event, cx->win, cx->app);
 }
 
 void TextStateInit(TextStateEntity* state, App* app, bool textarea,
@@ -157715,6 +163894,8 @@ struct MaterialBehavior {
     bool hasAriaSelected = false;
     bool ariaActiveDescendant = false;
     Str tooltip;
+
+    int windowControl = 0;
     float value = 0;
     int rowCount = -1;
     int columnCount = -1;
@@ -158019,6 +164200,23 @@ static void ResolveBehavior(const shell::SpecNode* node,
             out->ariaActiveDescendant = true;
         } else if (StrEq(op.name, StrL("tooltip"))) {
             out->tooltip = AsString(op, 0);
+        } else if (StrEq(op.name, StrL("window_control_area"))) {
+            Str area = AsString(op, 0);
+            if (StrEq(area, StrL("drag")))
+                out->windowControl = ClickWinCaption;
+            else if (StrEq(area, StrL("close")))
+                out->windowControl = ClickWinClose;
+            else if (StrEq(area, StrL("max")))
+                out->windowControl = ClickWinMax;
+            else if (StrEq(area, StrL("min")))
+                out->windowControl = ClickWinMin;
+            else {
+                logf(
+                    "`window_control_area` takes \"drag\", \"close\", "
+                    "\"max\" or \"min\", not `%s`; the area is dropped\n",
+                    area.s ? area : Str{});
+                out->windowControl = 0;
+            }
         } else if (StrEq(op.name, StrL("track_scroll"))) {
             const shell::Bridged* handle = Arg(op, 0);
             if (handle && handle->kind == shell::BridgedKind::Number &&
@@ -160055,6 +166253,8 @@ static El* MaterializeNode(Ctx* cx, ShellRuntime* runtime,
         element->Tip(behavior.tooltip);
         element->rootTooltip = true;
     }
+
+    if (behavior.windowControl) element->Click(behavior.windowControl);
     element->TabIndex(behavior.tabIndex)->TabStop(behavior.tabStop);
     if (behavior.scrollX || behavior.scrollY ||
         node->component.kind == shell::ComponentKind::Scrollbar) {
@@ -160481,10 +166681,35 @@ static bool ParseStringArray(Arena* arena, const JsonValue* value,
     return true;
 }
 
+static const char* const kHomeSpellings[] = {
+    "${HOME}", "$HOME", "${USERPROFILE}", "$USERPROFILE", "%USERPROFILE%", "~",
+};
+
+static bool HomeSpelling(Str path, Str* rest) {
+    for (const char* spelling : kHomeSpellings) {
+        int n = (int)strlen(spelling);
+        if (len(path) < n || !StrEq(Str(path.s, n), Str(spelling))) continue;
+        Str tail(path.s + n, len(path) - n);
+        if (len(tail) != 0 && tail.s[0] != '/' && tail.s[0] != '\\') continue;
+        if (rest) *rest = tail;
+        return true;
+    }
+    return false;
+}
+
 static bool ValidatePlaceholders(const Vec<Str>& paths, Str field,
                                  ShellError* error) {
     for (int p = 0; p < len(paths); p++) {
         Str value = paths[p];
+        Str rest;
+        if (HomeSpelling(value, &rest)) {
+            shell_plugin_SetError(error,
+                     fmt("\"%s\" in %s is not expanded: the manifest does not "
+                         "read environment variables or `~`; write "
+                         "\"${homeDir}%s\"",
+                         value, field, rest));
+            return false;
+        }
         for (int i = 0; i + 2 < len(value); i++) {
             if (value.s[i] != '$' || value.s[i + 1] != '{') continue;
             int end = i + 2;
@@ -160495,9 +166720,12 @@ static bool ValidatePlaceholders(const Vec<Str>& paths, Str field,
             }
             Str placeholder(value.s + i, end - i + 1);
             if (!StrEq(placeholder, StrL("${pluginDir}")) &&
-                !StrEq(placeholder, StrL("${dataDir}"))) {
-                shell_plugin_SetError(error, fmt("unknown placeholder `%s` in %s",
-                                    placeholder, field));
+                !StrEq(placeholder, StrL("${dataDir}")) &&
+                !StrEq(placeholder, StrL("${homeDir}"))) {
+                shell_plugin_SetError(error,
+                         fmt("unknown placeholder `%s` in %s: the manifest "
+                             "may use ${pluginDir}, ${dataDir} and ${homeDir}",
+                             placeholder, field));
                 return false;
             }
             i = end;
@@ -160957,8 +167185,8 @@ static bool ParseCapabilities(const JsonValue* value, PluginManifest* out,
     }
     const JsonValue* process = JsonGet(value, "process");
     if (process && process->kind != JsonKind::Null) {
-        static const char* processFields[] = {"exit"};
-        if (!HasOnly(process, processFields, 1, StrL("capabilities.process"),
+        static const char* processFields[] = {"exit", "env"};
+        if (!HasOnly(process, processFields, 2, StrL("capabilities.process"),
                      error))
             return false;
         const JsonValue* exit = JsonGet(process, "exit");
@@ -160968,6 +167196,18 @@ static bool ParseCapabilities(const JsonValue* value, PluginManifest* out,
             return false;
         }
         out->exit = exit && exit->b;
+        if (!ParseStringArray(out->arena, JsonGet(process, "env"), &out->env,
+                              StrL("capabilities.process.env"), error))
+            return false;
+        for (int i = 0; i < out->env.len; i++) {
+            Str name = out->env[i];
+            if (!name || StrFind(name, StrL("=")) >= 0) {
+                shell_plugin_SetError(error, fmt("process.env entry `%s` must be an "
+                                    "environment variable name",
+                                    name));
+                return false;
+            }
+        }
     }
     return true;
 }
@@ -160980,6 +167220,7 @@ PluginManifest::~PluginManifest() {
     VecReset(writeRoots);
     VecReset(execute);
     VecReset(networkHosts);
+    VecReset(env);
     for (int i = 0; i < http.len; i++) {
         VecReset(http[i]->methods);
         VecReset(http[i]->paths);
@@ -160987,6 +167228,56 @@ PluginManifest::~PluginManifest() {
     }
     VecReset(http);
     ArenaDelete(arena);
+}
+
+static bool WindowFail(ShellError* error, Str detail) {
+    shell_plugin_SetError(error, fmt("invalid `window`: %s. Expected an object such as "
+                        "{\"width\": 360, \"height\": 520}, in logical pixels",
+                        detail));
+    return false;
+}
+
+static bool PositivePixels(double value, const char* name, ShellError* error) {
+    if (value == value && value > 0 && value < 1e10) return true;
+    return WindowFail(error, fmt("`%s` must be a positive number of logical "
+                                 "pixels, found %g",
+                                 Str(name), value));
+}
+
+static bool ParseWindow(const JsonValue* value, PluginManifest* out,
+                        ShellError* error) {
+    if (!value || value->kind == JsonKind::Null) return true;
+    if (value->kind != JsonKind::Object) {
+        return WindowFail(error, StrL("expected an object"));
+    }
+    bool sawWidth = false;
+    bool sawHeight = false;
+    for (const JsonValue* child = value->first; child; child = child->next) {
+        bool width = StrEq(child->key, StrL("width"));
+        bool height = StrEq(child->key, StrL("height"));
+        if (!width && !height) {
+            return WindowFail(error, fmt("unknown field `%s`", child->key));
+        }
+        if (child->kind != JsonKind::Number) {
+            return WindowFail(error,
+                              fmt("`%s` must be a positive number of logical "
+                                  "pixels, found a non-number",
+                                  child->key));
+        }
+        if (!PositivePixels(child->num, width ? "width" : "height", error))
+            return false;
+        if (width) {
+            out->windowW = (float)child->num;
+            sawWidth = true;
+        } else {
+            out->windowH = (float)child->num;
+            sawHeight = true;
+        }
+    }
+    if (!sawWidth) return WindowFail(error, StrL("missing field `width`"));
+    if (!sawHeight) return WindowFail(error, StrL("missing field `height`"));
+    out->hasWindow = true;
+    return true;
 }
 
 bool PluginManifestParse(Str source, PluginManifest* out, ShellError* error) {
@@ -161001,9 +167292,9 @@ bool PluginManifestParse(Str source, PluginManifest* out, ShellError* error) {
         return false;
     }
     static const char* fields[] = {
-        "id",    "name",         "version",     "shell-version",
-        "entry", "dependencies", "capabilities"};
-    if (!HasOnly(root, fields, 7, StrL("the manifest"), error)) return false;
+        "id",    "name",         "version",      "shell-version",
+        "entry", "dependencies", "capabilities", "window"};
+    if (!HasOnly(root, fields, 8, StrL("the manifest"), error)) return false;
     Str id, name, entry;
     if (!RequiredString(root, "id", &id, error) ||
         !RequiredString(root, "name", &name, error) ||
@@ -161068,7 +167359,9 @@ bool PluginManifestParse(Str source, PluginManifest* out, ShellError* error) {
     out->entry = StrDup(out->arena, entry);
     if (!ParseDependencies(JsonGet(root, "dependencies"), out, error))
         return false;
-    return ParseCapabilities(JsonGet(root, "capabilities"), out, error);
+    if (!ParseCapabilities(JsonGet(root, "capabilities"), out, error))
+        return false;
+    return ParseWindow(JsonGet(root, "window"), out, error);
 }
 
 bool PluginManifestRead(Str directory, PluginManifest* out, ShellError* error) {
@@ -161102,7 +167395,11 @@ void PluginManifestSchema(StrBuilder* out) {
         "\"string\"},"
         "\"entry\":{\"type\":\"string\"},\"dependencies\":{\"type\":\"object\"}"
         ","
-        "\"capabilities\":{\"type\":\"object\"}}}"));
+        "\"capabilities\":{\"type\":\"object\"},"
+        "\"window\":{\"type\":\"object\",\"additionalProperties\":false,"
+        "\"required\":[\"width\",\"height\"],\"properties\":{"
+        "\"width\":{\"type\":\"number\"},\"height\":{\"type\":\"number\"}}}}"
+        "}"));
 }
 
 static bool shell_plugin_AbsolutePath(Str path) {
@@ -161111,23 +167408,32 @@ static bool shell_plugin_AbsolutePath(Str path) {
            (path.s[2] == '/' || path.s[2] == '\\');
 }
 
-static Str ExpandPath(Str raw, Str plugin, Str data) {
-    StrBuilder out;
+static bool ExpandPath(Str raw, Str plugin, Str data, Str home, Str* out) {
+    if (out) *out = {};
+    if (StrFind(raw, StrL("${homeDir}")) >= 0 && !home) return false;
+    StrBuilder built;
     for (int i = 0; i < len(raw);) {
         if (i + 12 <= len(raw) &&
             StrEq(Str(raw.s + i, 12), StrL("${pluginDir}"))) {
-            out.Append(plugin);
+            built.Append(plugin);
             i += 12;
         } else if (i + 10 <= len(raw) &&
                    StrEq(Str(raw.s + i, 10), StrL("${dataDir}"))) {
-            out.Append(data);
+            built.Append(data);
+            i += 10;
+        } else if (i + 10 <= len(raw) &&
+                   StrEq(Str(raw.s + i, 10), StrL("${homeDir}"))) {
+            built.Append(home);
             i += 10;
         } else {
-            out.AppendChar(raw.s[i++]);
+            built.AppendChar(raw.s[i++]);
         }
     }
-    Str expanded = out.TakeStr();
-    if (shell_plugin_AbsolutePath(expanded)) return expanded;
+    Str expanded = built.TakeStr();
+    if (shell_plugin_AbsolutePath(expanded)) {
+        if (out) *out = expanded;
+        return true;
+    }
     StrBuilder joined;
     joined.Append(plugin);
     if (plugin && plugin.s[len(plugin) - 1] != '/' &&
@@ -161135,22 +167441,32 @@ static Str ExpandPath(Str raw, Str plugin, Str data) {
         joined.AppendChar(base::PlatPathSep());
     joined.Append(expanded);
     StrFree(expanded);
-    return joined.TakeStr();
+    if (out) *out = joined.TakeStr();
+    return true;
 }
 
 Capabilities PluginManifest::Grant(Str pluginDirectory,
                                    Str dataDirectory) const {
     Capabilities result;
+    Str home = ShellHomeDirectory();
     for (int i = 0; i < readRoots.len; i++) {
-        Str path = ExpandPath(readRoots[i], pluginDirectory, dataDirectory);
+        Str path;
+        if (!ExpandPath(readRoots[i], pluginDirectory, dataDirectory, home,
+                        &path))
+            continue;
         result.AddReadRoot(path);
         StrFree(path);
     }
     for (int i = 0; i < writeRoots.len; i++) {
-        Str path = ExpandPath(writeRoots[i], pluginDirectory, dataDirectory);
+        Str path;
+        if (!ExpandPath(writeRoots[i], pluginDirectory, dataDirectory, home,
+                        &path))
+            continue;
         result.AddWriteRoot(path);
         StrFree(path);
     }
+    StrFree(home);
+    for (int i = 0; i < env.len; i++) result.AddEnvVariable(env[i]);
     if (executeUnrestricted) {
         result.SetExecute(ExecuteGrant::Unrestricted());
     } else if (execute.len > 0) {
@@ -161182,6 +167498,16 @@ static int ComparePaths(const void* left, const void* right) {
     const Str* a = (const Str*)left;
     const Str* b = (const Str*)right;
     return StrCmp(*a, *b);
+}
+
+Str ShellHomeDirectory() {
+    const char* home = getenv("HOME");
+    if ((!home || !*home) && base::PlatIsWindows())
+        home = getenv("USERPROFILE");
+    if (!home || !*home) return {};
+    Str path(home);
+    if (!shell_plugin_AbsolutePath(path)) return {};
+    return StrDup(path);
 }
 
 Str ShellDataHome() {
@@ -161422,6 +167748,7 @@ bool PluginManager::Load(ShellRuntime* runtime, Str id,
     }
     Capabilities capabilities = selected->manifest->Grant(selected->root, data);
     Policy* policy = PolicyNew(capabilities);
+    PolicySetDataDir(policy, data);
 
     PolicySetApplication(policy, id);
     Str store = Join(scratch, data, StrL("store.json"));
@@ -161570,9 +167897,13 @@ struct Policy {
     Capabilities capabilities;
 
     Str application = StrDup(Str(kDefaultApplication));
+    Str dataDir = {};
     PolicyShared* shared = nullptr;
 
-    ~Policy() { StrFree(application); }
+    ~Policy() {
+        StrFree(application);
+        StrFree(dataDir);
+    }
 };
 
 static PolicyShared* SharedRetain(PolicyShared* shared) {
@@ -161619,6 +167950,16 @@ void PolicySetApplication(Policy* policy, Str name) {
         trimmed && len(trimmed) > 0 ? trimmed : Str(kDefaultApplication));
 }
 
+void PolicySetDataDir(Policy* policy, Str path) {
+    if (!policy) return;
+    StrFree(policy->dataDir);
+    policy->dataDir = path ? StrDup(path) : Str{};
+}
+
+Str PolicyDataDir(const Policy* policy) {
+    return policy ? policy->dataDir : Str{};
+}
+
 const Capabilities& PolicyCapabilities(const Policy* policy) {
     static const Capabilities denied;
     return policy ? policy->capabilities : denied;
@@ -161646,6 +167987,7 @@ void PolicyUpdateDefaultCapabilities(const Capabilities& capabilities) {
     Policy* replacement = new Policy();
     replacement->capabilities = capabilities;
     PolicySetApplication(replacement, current->application);
+    PolicySetDataDir(replacement, current->dataDir);
     replacement->shared = SharedRetain(current->shared);
     gDefaultPolicy = replacement;
     PolicyRelease(current);
@@ -161656,6 +167998,7 @@ void PolicyUpdateDefaultApplication(Str name) {
     Policy* replacement = new Policy();
     replacement->capabilities = current->capabilities;
     PolicySetApplication(replacement, name);
+    PolicySetDataDir(replacement, current->dataDir);
     replacement->shared = SharedRetain(current->shared);
     gDefaultPolicy = replacement;
     PolicyRelease(current);
@@ -161729,6 +168072,378 @@ void ProcessOutput::Free() {
     StrFree(out);
     StrFree(err);
     *this = {};
+}
+
+void ProcessStreamEvent::Free() {
+    StrFree(text);
+    StrFree(signal);
+    text = {};
+    signal = {};
+    hasCode = false;
+    hasError = false;
+    code = 0;
+    kind = Kind::Out;
+}
+
+void Utf8CarryInit(Utf8Carry* carry) {
+    if (carry) carry->pendingLen = 0;
+}
+
+static int Utf8Width(uint8_t lead) {
+    if ((lead & 0x80) == 0) return 1;
+    if ((lead & 0xE0) == 0xC0) return 2;
+    if ((lead & 0xF0) == 0xE0) return 3;
+    if ((lead & 0xF8) == 0xF0) return 4;
+    return 0;
+}
+
+static bool Utf8SequenceOk(const uint8_t* bytes, int width) {
+    if (width <= 1) return width == 1;
+    for (int i = 1; i < width; i++) {
+        if ((bytes[i] & 0xC0) != 0x80) return false;
+    }
+    uint32_t cp = 0;
+    if (width == 2) {
+        cp = ((uint32_t)(bytes[0] & 0x1F) << 6) | (bytes[1] & 0x3F);
+        if (cp < 0x80) return false;
+    } else if (width == 3) {
+        cp = ((uint32_t)(bytes[0] & 0x0F) << 12) |
+             ((uint32_t)(bytes[1] & 0x3F) << 6) | (bytes[2] & 0x3F);
+        if (cp < 0x800 || (cp >= 0xD800 && cp <= 0xDFFF)) return false;
+    } else {
+        cp = ((uint32_t)(bytes[0] & 0x07) << 18) |
+             ((uint32_t)(bytes[1] & 0x3F) << 12) |
+             ((uint32_t)(bytes[2] & 0x3F) << 6) | (bytes[3] & 0x3F);
+        if (cp < 0x10000 || cp > 0x10FFFF) return false;
+    }
+    return true;
+}
+
+static Str DecodeBytes(Utf8Carry* carry, const uint8_t* bytes, int count,
+                       bool finish) {
+    int incoming = count > 0 ? count : 0;
+    int total = carry->pendingLen + incoming;
+    if (total <= 0) {
+        carry->pendingLen = 0;
+        return {};
+    }
+    uint8_t* buf = AllocArray<uint8_t>(total);
+    if (!buf) return {};
+    for (int i = 0; i < carry->pendingLen; i++) buf[i] = carry->pending[i];
+    if (incoming > 0) memcpy(buf + carry->pendingLen, bytes, (size_t)incoming);
+    StrBuilder out;
+    int i = 0;
+    while (i < total) {
+        int width = Utf8Width(buf[i]);
+        if (width == 0) {
+            out.Append(StrL("\xEF\xBF\xBD"));
+            i++;
+            continue;
+        }
+        if (i + width > total) {
+            if (finish) {
+                out.Append(StrL("\xEF\xBF\xBD"));
+                i = total;
+            }
+            break;
+        }
+        if (!Utf8SequenceOk(buf + i, width)) {
+            out.Append(StrL("\xEF\xBF\xBD"));
+            i++;
+            continue;
+        }
+        out.Append(Str((const char*)buf + i, width));
+        i += width;
+    }
+    carry->pendingLen = 0;
+    if (!finish && i < total) {
+        int tail = total - i;
+        if (tail > 4) tail = 4;
+        for (int n = 0; n < tail; n++) carry->pending[n] = buf[i + n];
+        carry->pendingLen = tail;
+    }
+    Free(nullptr, buf);
+    return out.TakeStr();
+}
+
+Str Utf8CarryDecode(Utf8Carry* carry, const uint8_t* bytes, int count) {
+    if (!carry) return {};
+    return DecodeBytes(carry, bytes, count, false);
+}
+
+Str Utf8CarryFinish(Utf8Carry* carry) {
+    if (!carry) return {};
+    return DecodeBytes(carry, nullptr, 0, true);
+}
+
+void LineCarryInit(LineCarry* carry) {
+    (void)carry;
+}
+
+void LineCarryFree(LineCarry* carry) {
+    if (carry) VecReset(carry->partial);
+}
+
+bool LineCarryPush(LineCarry* carry, Str text, Vec<Str>* lines, Str* error) {
+    if (!carry) return false;
+    int at = 0;
+    while (at < len(text)) {
+        int newline = at;
+        while (newline < len(text) && text.s[newline] != '\n') newline++;
+        if (newline >= len(text)) break;
+        carry->partial.Append(Str(text.s + at, newline - at));
+        if (carry->partial.len > 0 &&
+            carry->partial.els[carry->partial.len - 1] == '\r') {
+            carry->partial.len--;
+        }
+        Str line = carry->partial.TakeStr();
+        if (lines) {
+            if (!VecAppend(*lines, line)) StrFree(line);
+        } else {
+            StrFree(line);
+        }
+        at = newline + 1;
+    }
+    if (at < len(text)) carry->partial.Append(Str(text.s + at, len(text) - at));
+    if (carry->partial.len > kProcessMaxLineBytes) {
+        if (error) {
+            StrFree(*error);
+            *error =
+                StrDup(fmt("a line of output exceeded %d MiB without a "
+                           "newline",
+                           kProcessMaxLineBytes >> 20));
+        }
+        return false;
+    }
+    return true;
+}
+
+Str LineCarryFinish(LineCarry* carry) {
+    if (!carry || carry->partial.len <= 0) return {};
+    return carry->partial.TakeStr();
+}
+
+void ProcessEventBoxInit(ProcessEventBox* box, bool stdinPipe) {
+    if (!box) return;
+    box->stdinPiped = stdinPipe;
+}
+
+void ProcessEventBoxFree(ProcessEventBox* box) {
+    if (!box) return;
+    for (int i = 0; i < len(box->pending); i++) box->pending[i].Free();
+    VecReset(box->pending);
+    StrFree(box->reason);
+    box->reason = {};
+    VecReset(box->stdinBytes);
+}
+
+void ProcessEventPush(ProcessEventBox* box, ProcessStreamEvent event) {
+    if (!box) {
+        event.Free();
+        return;
+    }
+    box->mutex.Lock();
+    if (!VecAppend(box->pending, event)) event.Free();
+    box->mutex.Unlock();
+}
+
+void ProcessEventTake(ProcessEventBox* box, Vec<ProcessStreamEvent>* out) {
+    if (!box || !out) return;
+    box->mutex.Lock();
+    for (int i = 0; i < len(box->pending); i++)
+        VecAppend(*out, box->pending[i]);
+    box->pending.len = 0;
+    box->mutex.Unlock();
+}
+
+void ProcessEventSetReason(ProcessEventBox* box, Str reason) {
+    if (!box) {
+        StrFree(reason);
+        return;
+    }
+    box->mutex.Lock();
+    if (box->reason) {
+        StrFree(reason);
+    } else {
+        box->reason = reason;
+    }
+    box->mutex.Unlock();
+}
+
+Str ProcessEventTakeReason(ProcessEventBox* box) {
+    if (!box) return {};
+    box->mutex.Lock();
+    Str reason = box->reason;
+    box->reason = {};
+    box->mutex.Unlock();
+    return reason;
+}
+
+bool ProcessEventKilled(ProcessEventBox* box) {
+    if (!box) return false;
+    box->mutex.Lock();
+    bool killed = box->killed;
+    box->mutex.Unlock();
+    return killed;
+}
+
+void ProcessEventMarkKilled(ProcessEventBox* box) {
+    if (!box) return;
+    box->mutex.Lock();
+    box->killed = true;
+    box->mutex.Unlock();
+}
+
+bool ProcessEventReaped(ProcessEventBox* box) {
+    if (!box) return false;
+    box->mutex.Lock();
+    bool reaped = box->reaped;
+    box->mutex.Unlock();
+    return reaped;
+}
+
+void ProcessEventMarkReaped(ProcessEventBox* box) {
+    if (!box) return;
+    box->mutex.Lock();
+    box->reaped = true;
+    box->mutex.Unlock();
+}
+
+bool ProcessStdinEnqueue(ProcessEventBox* box, Str text, Str* error) {
+    if (!box) return false;
+    box->stdinMutex.Lock();
+    if (!box->stdinPiped) {
+        box->stdinMutex.Unlock();
+        if (error)
+            *error = StrDup(StrL(
+                "ChildProcess.write(text) needs a child spawned with { stdin: "
+                "\"pipe\" }"));
+        return false;
+    }
+    if (box->stdinEnded) {
+        box->stdinMutex.Unlock();
+        if (error) *error = StrDup(StrL("stdin has already been closed"));
+        return false;
+    }
+    if (box->stdinFailed || box->stdinStop) {
+        box->stdinMutex.Unlock();
+        if (error)
+            *error = StrDup(
+                StrL("stdin is closed: the process is no longer reading it"));
+        return false;
+    }
+    for (int i = 0; i < len(text); i++) VecAppend(box->stdinBytes, text.s[i]);
+    box->stdinCv.WakeOne();
+    box->stdinMutex.Unlock();
+    return true;
+}
+
+void ProcessStdinEnd(ProcessEventBox* box) {
+    if (!box) return;
+    box->stdinMutex.Lock();
+    box->stdinEnded = true;
+    box->stdinCv.WakeOne();
+    box->stdinMutex.Unlock();
+}
+
+void ProcessStdinStop(ProcessEventBox* box) {
+    if (!box) return;
+    box->stdinMutex.Lock();
+    box->stdinStop = true;
+    box->stdinCv.WakeOne();
+    box->stdinMutex.Unlock();
+}
+
+void ProcessStdinFail(ProcessEventBox* box) {
+    if (!box) return;
+    box->stdinMutex.Lock();
+    box->stdinFailed = true;
+    box->stdinCv.WakeOne();
+    box->stdinMutex.Unlock();
+}
+
+bool ProcessStdinTake(ProcessEventBox* box, Vec<char>* out, bool* ended) {
+    if (ended) *ended = false;
+    if (!box || !out) return false;
+    box->stdinMutex.Lock();
+    while (box->stdinBytes.len == 0 && !box->stdinEnded && !box->stdinStop &&
+           !box->stdinFailed) {
+        box->stdinCv.Wait(&box->stdinMutex, 200);
+    }
+    bool stop = box->stdinStop || box->stdinFailed;
+    bool done = box->stdinEnded;
+    if (box->stdinBytes.len > 0 && !stop) {
+        for (int i = 0; i < box->stdinBytes.len; i++)
+            VecAppend(*out, box->stdinBytes[i]);
+        box->stdinBytes.len = 0;
+        if (ended) *ended = done;
+        box->stdinMutex.Unlock();
+        return true;
+    }
+    box->stdinMutex.Unlock();
+    if (ended) *ended = done;
+    return false;
+}
+
+void ProcessDecodeInit(ProcessDecodeState* state, bool lines) {
+    if (!state) return;
+    Utf8CarryInit(&state->utf8);
+    LineCarryInit(&state->lines);
+    state->lineMode = lines;
+}
+
+void ProcessDecodeFree(ProcessDecodeState* state) {
+    if (state) LineCarryFree(&state->lines);
+}
+
+static void PushText(ProcessEventBox* box, ProcessStreamEvent::Kind kind,
+                     Str text) {
+    if (!text) return;
+    ProcessStreamEvent event;
+    event.kind = kind;
+    event.text = text;
+    ProcessEventPush(box, event);
+}
+
+bool ProcessDecodeFeed(ProcessDecodeState* state, ProcessEventBox* box,
+                       ProcessStreamEvent::Kind kind, const uint8_t* bytes,
+                       int count, Str* error) {
+    if (!state || !box) return false;
+    Str text = Utf8CarryDecode(&state->utf8, bytes, count);
+    if (!state->lineMode) {
+        PushText(box, kind, text);
+        return true;
+    }
+    Vec<Str> lines;
+    bool ok = LineCarryPush(&state->lines, text, &lines, error);
+    StrFree(text);
+    for (int i = 0; i < len(lines); i++) {
+        if (ok)
+            PushText(box, kind, lines[i]);
+        else
+            StrFree(lines[i]);
+    }
+    VecReset(lines);
+    return ok;
+}
+
+void ProcessDecodeFinish(ProcessDecodeState* state, ProcessEventBox* box,
+                         ProcessStreamEvent::Kind kind) {
+    if (!state || !box) return;
+    Str rest = Utf8CarryFinish(&state->utf8);
+    if (!state->lineMode) {
+        PushText(box, kind, rest);
+        return;
+    }
+    Vec<Str> lines;
+    Str ignored;
+    LineCarryPush(&state->lines, rest, &lines, &ignored);
+    StrFree(rest);
+    StrFree(ignored);
+    for (int i = 0; i < len(lines); i++) PushText(box, kind, lines[i]);
+    VecReset(lines);
+    Str tail = LineCarryFinish(&state->lines);
+    PushText(box, kind, tail);
 }
 
 }
@@ -162787,8 +169502,10 @@ El* ShellRoot::Render(ShellRoot* self, Ctx* cx) {
         }
     }
 
-    if (self->tooltipOverlay.IsValid() && cx->win &&
-        cx->win->root == cx->self) {
+    Root* outer = cx->win ? Root::Read(cx->win) : nullptr;
+    bool ownsWindow = cx->win && (cx->win->root == cx->self ||
+                                  (outer && outer->View() == cx->self));
+    if (self->tooltipOverlay.IsValid() && ownsWindow) {
         cx->win->rootTooltip = self->tooltipOverlay;
         if (El* tooltip =
                 EntityRender(cx->app, cx->win, cx->a, self->tooltipOverlay))
@@ -162797,12 +169514,23 @@ El* ShellRoot::Render(ShellRoot* self, Ctx* cx) {
     return root;
 }
 
-ShellRoot* ShellRootOf(Window* window, App* app) {
-    ShellRootWindowState* state = RootWindowState(window);
-    if (!state || !state->root.IsValid()) return nullptr;
+static bool IsShellRootEntity(App* app, EntityId id) {
+    return EntityHasDrop(app, id, &EntityDropT<ShellRoot>);
+}
 
-    if (state->root != window->root) return nullptr;
-    return Entity<ShellRoot>{state->root}.Get(app);
+ShellRoot* ShellRootOf(Window* window, App* app) {
+    if (!window || !app) return nullptr;
+
+    if (IsShellRootEntity(app, window->root)) {
+        return Entity<ShellRoot>{window->root}.Get(app);
+    }
+    if (Root* outer = Root::Read(window)) {
+        EntityId view = outer->View();
+        if (IsShellRootEntity(app, view)) {
+            return Entity<ShellRoot>{view}.Get(app);
+        }
+    }
+    return nullptr;
 }
 
 bool ShellRootShowFpsMonitor(Ctx* cx, const FpsHudRequest& request) {
@@ -162900,6 +169628,7 @@ enum class ShellTaskKind : uint8_t {
     Fetch,
     StorageFlush,
     HostAsync,
+    ProcessStream,
 };
 
 struct ProcessJob;
@@ -162922,6 +169651,9 @@ struct ShellTask {
     ProcessJob* processJob = nullptr;
     FsJob* fsJob = nullptr;
     StorageFlushState* storageFlush = nullptr;
+
+    shell::ProcessStream* processStream = nullptr;
+    int streamId = 0;
 };
 
 struct ShellTaskDriver {
@@ -162955,6 +169687,8 @@ struct CallbackArena {
     int buildingStart = 0;
     bool building = false;
     bool tokenRender = false;
+
+    bool layoutHandlers = false;
     uint64_t tokenGeneration = 0;
     uint32_t tokenFrame = 0;
 
@@ -163117,6 +169851,8 @@ struct CallbackArena {
         }
         return count;
     }
+
+    bool HasStaged() const { return building && len(entries) > buildingStart; }
 };
 
 struct ScriptPanelClass;
@@ -163166,6 +169902,8 @@ struct ShellRuntimeImpl {
     Vec<ScriptPanelClass*> panelClasses;
     Vec<ChromeCacheEntry*> chromeCache;
     Vec<ShellTask*> tasks;
+
+    Vec<shell::ProcessStream*> streams;
     Entity<ShellTaskDriver> taskDriver = {};
     App* taskApp = nullptr;
     uint32_t nextTask = 1;
@@ -163177,6 +169915,7 @@ struct ShellRuntimeImpl {
     uint64_t interruptIdentity = UINT64_MAX;
     double interruptStarted = 0;
     bool interruptWasScoped = false;
+    bool interruptWarned = false;
     uint32_t tokenFrame = 0;
 
     const shell::FrozenComponentRegistry* components = nullptr;
@@ -163194,6 +169933,8 @@ struct ShellRuntimeImpl {
     Vec<ComponentAppEffectGeneration*> appEffects;
     Vec<DeferredAppEffect> deferredAppEffects;
     uint64_t nextAppEffectToken = 1;
+
+    bool editorFiles = true;
 };
 
 struct ComponentAppEffectGeneration {
@@ -163312,6 +170053,9 @@ struct ProcessJob {
     shell::ProcessCancellation cancellation;
     Str command;
     Vec<Str> args;
+    Str cwd;
+
+    double timeoutSeconds = 0;
     shell::ProcessOutput output;
     Str error;
 
@@ -163319,6 +170063,7 @@ struct ProcessJob {
         for (int i = 0; i < len(args); i++) StrFree(args[i]);
         VecReset(args);
         StrFree(command);
+        StrFree(cwd);
         output.Free();
         StrFree(error);
     }
@@ -163328,6 +170073,8 @@ struct FsJob {
     ShellJobHeader head;
     shell::FsOperation operation = shell::FsOperation::Read;
     CapabilityPath path;
+
+    CapabilityPath dest;
     Str input;
     shell::FsResult result;
     Str error;
@@ -163337,6 +170084,7 @@ struct FsJob {
 
     void Free() {
         path.Free();
+        dest.Free();
         StrFree(input);
         result.Free();
         StrFree(error);
@@ -163449,6 +170197,15 @@ static void DestroyTask(ShellRuntimeImpl* impl, ShellTask* task,
         WindowCancelTimer(task->window, task->timer);
     }
     if (task->processJob) task->processJob->cancellation.Cancel();
+    if (task->processStream) {
+        shell::ProcessStreamKill(task->processStream);
+        shell::ProcessStreamFree(task->processStream);
+        task->processStream = nullptr;
+        if (impl && task->streamId > 0 && task->streamId <= impl->streams.len) {
+            impl->streams[task->streamId - 1] = nullptr;
+        }
+        task->streamId = 0;
+    }
     if (task->storageFlush) {
         StorageFlushState* state = task->storageFlush;
         state->storage->CancelWaiter(state->waiter);
@@ -163515,8 +170272,12 @@ static Str ExceptionText(Arena* arena, JSContext* ctx);
 static void DriveStorage(Policy* policy);
 
 static void ProcessJobWork(ProcessJob* job) {
+    shell::ProcessOptions options;
+    options.workingDirectory = job->cwd;
+    options.timeoutSeconds = job->timeoutSeconds;
     shell::ProcessRunBounded(job->command, job->args.els, job->args.len,
-                             &job->cancellation, &job->output, &job->error);
+                             &job->cancellation, &job->output, &job->error,
+                             &options);
 }
 
 static void DetachTaskJob(ShellTask* task) {
@@ -163661,6 +170422,11 @@ static Task ShellProcessTask(TaskGuard guard, ProcessJob* job) {
 }
 
 static void FsJobWork(FsJob* job) {
+    if (job->operation == shell::FsOperation::Rename) {
+        shell::FsRename(job->path.root, job->path.relative, job->dest.root,
+                        job->dest.relative, &job->error);
+        return;
+    }
     shell::FsRun(job->operation, job->path.root, job->path.relative, job->input,
                  job->recursive, &job->result, &job->error);
 }
@@ -163683,6 +170449,33 @@ static JSValue FsJobValue(JSContext* context, FsJob* job) {
     }
     if (job->operation == shell::FsOperation::Exists) {
         return JS_NewBool(context, job->result.exists);
+    }
+    if (job->operation == shell::FsOperation::ReadLink) {
+        return JS_NewStringLen(context,
+                               job->result.bytes.s ? job->result.bytes.s : "",
+                               (size_t)job->result.bytes.len);
+    }
+    if (job->operation == shell::FsOperation::Stat ||
+        job->operation == shell::FsOperation::Lstat) {
+        JSValue global = JS_GetGlobalObject(context);
+        JSValue make = JS_GetPropertyStr(context, global, "__shell_fs_stats");
+        JSValue args[8] = {
+            JS_NewBool(context, job->result.isFile),
+            JS_NewBool(context, job->result.isDirectory),
+            JS_NewBool(context, job->result.isSymbolicLink),
+            JS_NewFloat64(context, (double)job->result.size),
+            JS_NewInt32(context, (int32_t)job->result.mode),
+            JS_NewFloat64(context, job->result.mtimeMs),
+            JS_NewFloat64(context, job->result.atimeMs),
+            JS_NewFloat64(context, job->result.birthtimeMs),
+        };
+        JSValue value = JS_IsException(make)
+                            ? JS_EXCEPTION
+                            : JS_Call(context, make, JS_UNDEFINED, 8, args);
+        for (int i = 0; i < 8; i++) JS_FreeValue(context, args[i]);
+        JS_FreeValue(context, make);
+        JS_FreeValue(context, global);
+        return value;
     }
     if (job->operation != shell::FsOperation::ReadDirectory) {
         return JS_UNDEFINED;
@@ -163736,17 +170529,21 @@ static Task ShellFsTask(TaskGuard guard, FsJob* job) {
 static JSValue FetchJobValue(JSContext* context, ShellFetchJob* job) {
     JSValue global = JS_GetGlobalObject(context);
     JSValue make = JS_GetPropertyStr(context, global, "__shell_fetch_response");
-    JSValue args[3] = {
+    JSValue args[4] = {
         JS_NewInt32(context, job->result.status),
         JS_NewStringLen(context, job->result.url.s ? job->result.url.s : "",
                         (size_t)len(job->result.url)),
         JS_NewStringLen(context, job->result.body.s ? job->result.body.s : "",
                         (size_t)len(job->result.body)),
+        JS_NewUint8ArrayCopy(
+            context,
+            (const uint8_t*)(job->result.body.s ? job->result.body.s : ""),
+            (size_t)len(job->result.body)),
     };
     JSValue value = JS_IsException(make)
                         ? JS_EXCEPTION
-                        : JS_Call(context, make, JS_UNDEFINED, 3, args);
-    for (int i = 0; i < 3; i++) JS_FreeValue(context, args[i]);
+                        : JS_Call(context, make, JS_UNDEFINED, 4, args);
+    for (int i = 0; i < 4; i++) JS_FreeValue(context, args[i]);
     JS_FreeValue(context, make);
     JS_FreeValue(context, global);
     return value;
@@ -163906,6 +170703,8 @@ static void BeginExecution(ShellRuntimeImpl* impl) {
     if (impl->detachedExecution == 0) impl->detachedExecution++;
 }
 
+static ScriptInterruption gInterruption;
+
 static int Interrupt(JSRuntime*, void* opaque) {
     ShellRuntimeImpl* impl = (ShellRuntimeImpl*)opaque;
     uint64_t generation = shell::ScopeCurrentGeneration();
@@ -163916,48 +170715,144 @@ static int Interrupt(JSRuntime*, void* opaque) {
         impl->interruptIdentity = identity;
         impl->interruptWasScoped = scoped;
         impl->interruptStarted = TimeNow();
+        impl->interruptWarned = false;
+
+        gInterruption.set = false;
     }
-    double budget = 5.0;
-    if (scoped) {
-        ScopePhase phase = shell::ScopeCurrentPhase();
-        budget = phase == ScopePhase::Render || phase == ScopePhase::Layout
-                     ? 0.050
-                     : 0.500;
+    ScopePhase phase = scoped ? shell::ScopeCurrentPhase() : ScopePhase::Render;
+
+    double budget = 10.0;
+    double warnAfter = 1.0;
+    if (scoped &&
+        (phase == ScopePhase::Render || phase == ScopePhase::Layout)) {
+        budget = 2.0;
+        warnAfter = 0.100;
+    } else if (scoped) {
+        budget = 5.0;
     }
-    return TimeNow() - impl->interruptStarted > budget;
+    double elapsed = TimeNow() - impl->interruptStarted;
+    if (!impl->interruptWarned && elapsed > warnAfter) {
+        impl->interruptWarned = true;
+        char over[32];
+        char stop[32];
+        SpokenDuration(warnAfter, over, (int)sizeof(over));
+        SpokenDuration(budget, stop, (int)sizeof(stop));
+        const char* which = scoped ? ScopePhaseName(phase) : "module";
+        logf(
+            "a script %s call has run for over %s; it will be stopped at "
+            "%s\n",
+            Str(which), Str(over), Str(stop));
+    }
+    bool expired = elapsed > budget;
+    if (expired) {
+        gInterruption.set = true;
+        gInterruption.scoped = scoped;
+        gInterruption.phase = phase;
+        gInterruption.budget = budget;
+    }
+    return expired;
+}
+
+static Str JsText(Arena* arena, JSContext* ctx, JSValue value) {
+    size_t n = 0;
+    const char* text = JS_ToCStringLen(ctx, &n, value);
+    Str out;
+    if (text) {
+        out = StrDup(arena, Str(text, (int)n));
+        JS_FreeCString(ctx, text);
+    }
+    return out;
+}
+
+static Str JsProp(Arena* arena, JSContext* ctx, JSValue object,
+                  const char* name) {
+    JSValue value = JS_GetPropertyStr(ctx, object, name);
+    Str out;
+    if (!JS_IsException(value) && !JS_IsUndefined(value) && !JS_IsNull(value))
+        out = JsText(arena, ctx, value);
+    JS_FreeValue(ctx, value);
+    return out;
+}
+
+static bool StackBlank(Str text) {
+    for (int i = 0; i < len(text); i++) {
+        char c = text.s[i];
+        if (c != ' ' && c != '\t' && c != '\n' && c != '\r') return false;
+    }
+    return true;
 }
 
 static Str ExceptionText(Arena* arena, JSContext* ctx) {
     JSValue exception = JS_GetException(ctx);
     StrBuilder out(arena);
-    size_t messageLen = 0;
-    const char* message = JS_ToCStringLen(ctx, &messageLen, exception);
-    Str messageText;
-    if (message) {
-        messageText = StrDup(arena, Str(message, (int)messageLen));
-        out.Append(messageText);
-        JS_FreeCString(ctx, message);
-    } else {
-        out.Append(StrL("JavaScript exception"));
-    }
     if (JS_IsError(exception)) {
-        JSValue stack = JS_GetPropertyStr(ctx, exception, "stack");
-        if (!JS_IsException(stack) && !JS_IsUndefined(stack)) {
-            size_t stackLen = 0;
-            const char* text = JS_ToCStringLen(ctx, &stackLen, stack);
-            if (text && stackLen > 0) {
-                Str stackText(text, (int)stackLen);
-                if (!messageText || !StrStartsWith(stackText, messageText)) {
-                    out.AppendChar('\n');
-                    out.Append(stackText);
-                } else if ((int)stackLen > (int)messageLen) {
-                    out.Append(Str(text + messageLen,
-                                   (int)stackLen - (int)messageLen));
-                }
-                JS_FreeCString(ctx, text);
+        Str raw = JsProp(arena, ctx, exception, "message");
+        if (!raw) raw = JsText(arena, ctx, exception);
+        Str explained = ExplainInterruption(arena, raw, &gInterruption);
+        if (!explained) explained = ExplainOutOfMemory(arena, ctx, raw, false);
+        if (explained) {
+            out.Append(explained);
+        } else {
+            Str name = JsProp(arena, ctx, exception, "name");
+            if (name && !raw) {
+                out.Append(name);
+            } else if (name && !StrEq(name, StrL("Error"))) {
+                out.Append(name);
+                out.Append(StrL(": "));
+                if (raw) out.Append(raw);
+            } else if (!raw) {
+                out.Append(StrL("Error"));
+            } else {
+                out.Append(raw);
             }
         }
-        JS_FreeValue(ctx, stack);
+        Str stack = JsProp(arena, ctx, exception, "stack");
+        if (stack && !StackBlank(stack)) {
+            Str frames = stack;
+            if (raw && StrStartsWith(stack, raw)) {
+                frames = Str(stack.s + len(raw), len(stack) - len(raw));
+            }
+            Str tidy = TidyStack(arena, frames);
+            if (tidy && !StackBlank(tidy)) {
+                out.AppendChar('\n');
+                out.Append(tidy);
+            }
+        }
+    } else if (JS_IsString(exception)) {
+        Str text = JsText(arena, ctx, exception);
+        out.Append(text ? text : StrL("JavaScript exception"));
+    } else if (JS_IsNull(exception) || JS_IsUndefined(exception)) {
+        Str explained = JS_IsNull(exception)
+                            ? ExplainOutOfMemory(arena, ctx, {}, true)
+                            : Str{};
+        if (explained) {
+            out.Append(explained);
+        } else {
+            out.Append(StrL("A script threw "));
+            out.Append(JS_IsNull(exception) ? StrL("null") : StrL("undefined"));
+            out.Append(StrL(
+                " instead of an Error.\n"
+                "Throw an Error with a message so the failure says what went "
+                "wrong and where."));
+        }
+    } else {
+        JSValue json =
+            JS_JSONStringify(ctx, exception, JS_UNDEFINED, JS_UNDEFINED);
+        Str text;
+        if (!JS_IsException(json) && !JS_IsUndefined(json) && !JS_IsNull(json))
+            text = JsText(arena, ctx, json);
+        JS_FreeValue(ctx, json);
+        if (!text) {
+            text =
+                StrDup(arena, JS_IsFunction(ctx, exception) ? StrL("function")
+                                                            : StrL("object"));
+        }
+        out.Append(StrL("A script threw "));
+        out.Append(text);
+        out.Append(
+            StrL(" instead of an Error.\n"
+                 "Throw an Error with a message so the failure says what went "
+                 "wrong and where."));
     }
     JS_FreeValue(ctx, exception);
     return out.TakeStr();
@@ -164045,16 +170940,17 @@ static const char* const kConsoleExports[] = {"default"};
 static const char* const kCryptoExports[] = {
     "default",         "createHash", "randomBytes", "randomUUID",
     "getRandomValues", "crypto",     "webcrypto"};
-static const char* const kFsExports[] = {"default", "readFile", "writeFile",
-                                         "readdir", "exists",   "unlink",
-                                         "rmdir",   "mkdir"};
-static const char* const kOsExports[] = {"default", "platform", "arch", "EOL"};
+static const char* const kFsExports[] = {
+    "default", "readFile", "writeFile", "readdir", "exists", "unlink",
+    "rmdir",   "mkdir",    "stat",      "lstat",   "rename", "readlink"};
+static const char* const kOsExports[] = {"default", "platform", "arch", "EOL",
+                                         "homedir"};
 static const char* const kPathExports[] = {
     "default", "sep",        "delimiter", "basename",  "dirname",
     "extname", "isAbsolute", "join",      "normalize", "relative",
     "resolve", "parse",      "format"};
-static const char* const kProcessExports[] = {"default", "run",      "nextTick",
-                                              "exit",    "platform", "arch"};
+static const char* const kProcessExports[] = {
+    "default", "run", "nextTick", "exit", "platform", "arch", "env", "dataDir"};
 static const char* const kUrlExports[] = {"default", "URL", "URLSearchParams",
                                           "fileURLToPath", "pathToFileURL"};
 static const char* const kZlibExports[] = {
@@ -164314,6 +171210,17 @@ static char* ModuleNormalize(JSContext* ctx, const char* base, const char* name,
                 PlatFileExists(candidate.s);
     }
     if (!found) {
+
+        if (StrEq(moduleName, shell::kDefaultComponentModule)) {
+            JS_ThrowReferenceError(
+                ctx,
+                "cannot resolve module `%s`: this runtime has no component "
+                "catalog. `gpui-shell` provides it with its default "
+                "`components` feature; a build without that feature, or an "
+                "embedding host that registers no catalog, does not.",
+                name);
+            return nullptr;
+        }
         JS_ThrowReferenceError(ctx, "cannot resolve module `%s` from `%s`",
                                name, base);
         return nullptr;
@@ -164432,6 +171339,64 @@ static JSModuleDef* LoadHostModule(JSContext* ctx, Str name) {
     return definition;
 }
 
+static bool PathIsAbsolute(Str path) {
+    if (!path.s || len(path) == 0) return false;
+    if (path.s[0] == '/' || path.s[0] == '\\') return true;
+    if (len(path) >= 3 && path.s[1] == ':' &&
+        ((path.s[0] >= 'A' && path.s[0] <= 'Z') ||
+         (path.s[0] >= 'a' && path.s[0] <= 'z')) &&
+        (path.s[2] == '/' || path.s[2] == '\\'))
+        return true;
+    return false;
+}
+
+static bool UrlUnreserved(unsigned char byte) {
+    return (byte >= 'A' && byte <= 'Z') || (byte >= 'a' && byte <= 'z') ||
+           (byte >= '0' && byte <= '9') || byte == '-' || byte == '.' ||
+           byte == '_' || byte == '~' || byte == '/' || byte == ':';
+}
+
+static Str FileUrlFromPath(Str path) {
+    StrBuilder out;
+    out.Append(StrL("file://"));
+    const char* text = path.s;
+    int n = len(path);
+    if (base::PlatIsWindows() && n >= 4 && text[0] == '\\' && text[1] == '\\' &&
+        text[2] == '?' && text[3] == '\\') {
+        text += 4;
+        n -= 4;
+    }
+    bool slash = n > 0 && (text[0] == '/' || text[0] == '\\');
+    if (!slash) out.AppendChar('/');
+    for (int i = 0; i < n; i++) {
+        unsigned char byte = (unsigned char)text[i];
+        if (base::PlatIsWindows() && byte == '\\') byte = '/';
+        if (UrlUnreserved(byte)) {
+            out.AppendChar((char)byte);
+        } else {
+            char hex[4];
+            snprintf(hex, sizeof(hex), "%%%02X", byte);
+            out.Append(Str(hex));
+        }
+    }
+    return out.TakeStr();
+}
+
+static void SetFileImportMeta(JSContext* ctx, JSModuleDef* module, Str tagged) {
+    if (!ctx || !module) return;
+    TempStr path = UntagTemp(tagged);
+    if (!PathIsAbsolute(path)) return;
+    Str url = FileUrlFromPath(path);
+    if (!url.s) return;
+    JSValue meta = JS_GetImportMeta(ctx, module);
+    if (!JS_IsException(meta)) {
+        JS_SetPropertyStr(ctx, meta, "url",
+                          JS_NewStringLen(ctx, url.s, (size_t)len(url)));
+        JS_FreeValue(ctx, meta);
+    }
+    StrFree(url);
+}
+
 static JSModuleDef* ModuleLoad(JSContext* ctx, const char* name, void* opaque) {
     Str moduleName = Str(name);
     ShellRuntimeImpl* impl = (ShellRuntimeImpl*)opaque;
@@ -164478,6 +171443,7 @@ static JSModuleDef* ModuleLoad(JSContext* ctx, const char* name, void* opaque) {
                             JS_EVAL_TYPE_MODULE | JS_EVAL_FLAG_COMPILE_ONLY);
     if (JS_IsException(value)) return nullptr;
     JSModuleDef* module = (JSModuleDef*)JS_VALUE_GET_PTR(value);
+    SetFileImportMeta(ctx, module, moduleName);
     JS_FreeValue(ctx, value);
     return module;
 }
@@ -164826,6 +171792,8 @@ static bool IsCallbackMethod(Str name) {
         "on_item_secondary_click\0on_change\0"
         "on_open_change\0on_confirm\0on_dismiss\0on_step\0on_resize\0"
         "on_key_down\0on_key_up\0on_mouse_down_out\0on_scroll_wheel\0"
+
+        "on_pinch\0"
         "on_link_click\0token\0on_token_click\0on_token_hover\0"
 
         "tab_bar\0empty_group\0drop_indicator\0dock\0";
@@ -164880,7 +171848,7 @@ static bool IsBehavior(Str name) {
         "key_context\0aria_level\0keep_mounted\0"
         "readonly\0invalid\0focus_ring\0aria_label\0masked\0placeholder\0"
         "content_type\0align\0label\0icon\0variant\0loading\0outline\0"
-        "accessibility_id\0rows\0auto_grow\0";
+        "accessibility_id\0rows\0auto_grow\0window_control_area\0";
     for (const char* at = names; *at; at += strlen(at) + 1) {
         if (StrEq(name, at)) return true;
     }
@@ -165378,11 +172346,30 @@ static bool ValidateComponentValue(ComponentArgumentScope* scope,
         case shell::SchemaKind::Entity: {
 
             double handle = 0;
-            if (!JS_IsObject(value) || JS_IsFunction(ctx, value) ||
-                !JsObjectNumber(ctx, value, "__componentStateHandle",
-                                &handle) ||
-                handle < 0)
-                return ThrowExpects(scope, name, schema);
+            bool object = JS_IsObject(value) && !JS_IsFunction(ctx, value);
+            bool componentHandle =
+                object &&
+                JsObjectNumber(ctx, value, "__componentStateHandle", &handle) &&
+                handle >= 0;
+            if (!componentHandle && object && scope->impl->components &&
+                scope->impl->components->StateOfKind(Str(schema.text))) {
+                double baseHandle = 0;
+                if (JsObjectNumber(ctx, value, "__handle", &baseHandle)) {
+                    const char* module = scope->impl->components
+                                             ->ModuleSpecifier();
+                    if (!module) module = "";
+                    JS_ThrowTypeError(
+                        ctx,
+                        "%s(%s) expects the %s from \"%s\", created with "
+                        "%s.new(...) imported from \"%s\"; this one is "
+                        "gpui-base's",
+                        scope->api ? scope->api : "component", name,
+                        schema.text ? schema.text : "", module,
+                        schema.text ? schema.text : "", module);
+                    return false;
+                }
+            }
+            if (!componentHandle) return ThrowExpects(scope, name, schema);
             JSValue proofValue =
                 JS_GetPropertyStr(ctx, value, "__componentStateProof");
             Str proof;
@@ -166118,7 +173105,7 @@ static JSValue NativeApply(JSContext* ctx, JSValueConst, int argc,
     if (actionCallback || buttonCallback) {
 
         if (shell::ScopeCurrentPhase() == ScopePhase::Layout &&
-            !impl->callbacks.tokenRender) {
+            !impl->callbacks.tokenRender && !impl->callbacks.layoutHandlers) {
             JSValue thrown = JS_ThrowTypeError(
                 ctx,
                 "`%.*s` cannot be registered from a virtual list's item "
@@ -166203,17 +173190,17 @@ static JSValue NativeApply(JSContext* ctx, JSValueConst, int argc,
     shell::SlotSiteKind slotSite = shell::SlotSiteKind::Handler;
     if (IsCallbackMethod(name)) {
         if (shell::ScopeCurrentPhase() == ScopePhase::Layout &&
-            !impl->callbacks.tokenRender) {
+            !impl->callbacks.tokenRender && !impl->callbacks.layoutHandlers) {
             ArenaDelete(arena);
             return JS_ThrowTypeError(
                 ctx,
-                "callbacks cannot be registered from a virtual list's item "
-                "renderer: the rows are rebuilt every frame, so a handler "
-                "registered there would pile up for as long as the view "
-                "stood. Use `on_item_click((key, cx) => ...)` or "
-                "`on_item_secondary_click((key, event, cx) => ...)` on the "
-                "list itself, and read the row out of your own data with the "
-                "stable key it gives you");
+                "`%.*s` cannot be registered here: this renderer runs during "
+                "layout with no handler lifetime of its own, so a handler "
+                "registered from it would pile up for as long as the view "
+                "stood. Register it from render(), or on a virtual list use "
+                "`on_item_click((key, cx) => ...)` and read the row out of "
+                "your own data with the key it gives you",
+                len(name), name.s);
         }
         JSValue handler =
             argCount > 0 ? JS_GetPropertyUint32(ctx, argv[2], 0) : JS_UNDEFINED;
@@ -166702,8 +173689,10 @@ static bool OverlayHost(JSContext* ctx, const char* api,
     if (!ShellRootOf(host.GetWindow(), host.GetApp())) {
         JS_ThrowTypeError(
             ctx,
-            "%s needs a ShellRoot as the window's first view; this window "
-            "was opened with another view",
+            "%s found no ShellRoot in this window. A view's init() runs "
+            "before its window has one, so open overlays from an event "
+            "handler or a task; otherwise the host opened the window with "
+            "another root view",
             api);
         return false;
     }
@@ -168954,6 +175943,254 @@ static JSValue NativeOpenUrl(JSContext* ctx, JSValueConst, int argc,
     return JS_UNDEFINED;
 }
 
+static Str GrantDenial(Arena* arena, const CapabilityError& error) {
+    Str message = CapabilityErrorMessage(arena, error);
+    if (error.kind != CapabilityErrorKind::OutsideRoots) return message;
+    const char* access =
+        error.access == CapabilityAccess::Read ? "read" : "write";
+    return StrDup(arena, fmt("%s; add its directory to capabilities.fs.%s in "
+                             "the manifest",
+                             message, Str(access)));
+}
+
+static Str JoinGrantedPath(Arena* arena, const CapabilityPath& path) {
+    if (!path.relative.s || len(path.relative) == 0 ||
+        StrEq(path.relative, StrL("."))) {
+        return arena ? StrDup(arena, path.root) : StrDup(path.root);
+    }
+    char sep = '/';
+    for (int i = 0; path.root.s && i < len(path.root); i++) {
+        if (path.root.s[i] == '\\') {
+            sep = '\\';
+            break;
+        }
+    }
+    TempStr joined = fmt("%s%c%s", path.root, sep, path.relative);
+    return arena ? StrDup(arena, joined) : StrDup(joined);
+}
+
+static void ClearHeapStr(Str* value) {
+    if (!value) return;
+    StrFree(*value);
+    *value = {};
+}
+
+static bool ParseProcessOptions(JSContext* ctx, JSValueConst value,
+                                const char* api, bool spawn, Arena* arena,
+                                Str* cwd, double* timeoutSeconds,
+                                bool* stdinPipe, bool* lines) {
+    if (cwd) *cwd = {};
+    if (timeoutSeconds) *timeoutSeconds = 0;
+    if (stdinPipe) *stdinPipe = false;
+    if (lines) *lines = false;
+    if (JS_IsUndefined(value) || JS_IsNull(value) || JS_IsArray(value) ||
+        !JS_IsObject(value)) {
+        return true;
+    }
+
+    JSValue cwdValue = JS_GetPropertyStr(ctx, value, "cwd");
+    if (JS_IsException(cwdValue)) return false;
+    if (!JS_IsUndefined(cwdValue) && !JS_IsNull(cwdValue)) {
+        if (!JS_IsString(cwdValue)) {
+            JS_FreeValue(ctx, cwdValue);
+            JS_ThrowTypeError(ctx, "%s: options.cwd must be a string", api);
+            return false;
+        }
+        Str text;
+        if (!JsString(ctx, cwdValue, arena, &text)) {
+            JS_FreeValue(ctx, cwdValue);
+            return false;
+        }
+        JS_FreeValue(ctx, cwdValue);
+        bool release = false;
+        Policy* policy = CurrentPolicy(&release);
+        CapabilityPath granted;
+        CapabilityError denied = {};
+        bool resolved = PolicyCapabilities(policy).ResolvePath(
+            text, CapabilityAccess::Read, &granted, &denied);
+        if (release) PolicyRelease(policy);
+        if (!resolved) {
+            Str message = GrantDenial(arena, denied);
+            JS_ThrowTypeError(ctx, "%s: %.*s", api, len(message), message.s);
+            CapabilityErrorFree(&denied);
+            granted.Free();
+            return false;
+        }
+        CapabilityErrorFree(&denied);
+        shell::FsResult stat;
+        Str fsError;
+        bool directory =
+            shell::FsRun(shell::FsOperation::Stat, granted.root,
+                         granted.relative, {}, false, &stat, &fsError) &&
+            stat.isDirectory;
+        stat.Free();
+        StrFree(fsError);
+        if (!directory) {
+            JS_ThrowTypeError(ctx, "%s: options.cwd `%.*s` is not a directory",
+                              api, len(text), text.s);
+            granted.Free();
+            return false;
+        }
+        if (cwd) *cwd = JoinGrantedPath(nullptr, granted);
+        granted.Free();
+        if (cwd && !cwd->s) {
+            JS_ThrowOutOfMemory(ctx);
+            return false;
+        }
+    } else {
+        JS_FreeValue(ctx, cwdValue);
+    }
+
+    JSValue timeout = JS_GetPropertyStr(ctx, value, "timeoutMs");
+    if (JS_IsException(timeout)) {
+        ClearHeapStr(cwd);
+        return false;
+    }
+    if (!JS_IsUndefined(timeout) && !JS_IsNull(timeout)) {
+        double ms = 0;
+        bool number = JS_IsNumber(timeout) &&
+                      JS_ToFloat64(ctx, &ms, timeout) >= 0 && ms > 0 &&
+                      ms <= 4294967295.0;
+        JS_FreeValue(ctx, timeout);
+        if (!number) {
+            if (!JS_HasException(ctx)) {
+                JS_ThrowTypeError(ctx,
+                                  "%s: options.timeoutMs must be a positive "
+                                  "number of milliseconds",
+                                  api);
+            }
+            ClearHeapStr(cwd);
+            return false;
+        }
+        if (timeoutSeconds) *timeoutSeconds = ms / 1000.0;
+    } else {
+        JS_FreeValue(ctx, timeout);
+    }
+
+    if (!spawn) return true;
+
+    JSValue stdinValue = JS_GetPropertyStr(ctx, value, "stdin");
+    if (JS_IsException(stdinValue)) {
+        ClearHeapStr(cwd);
+        return false;
+    }
+    if (!JS_IsUndefined(stdinValue)) {
+        Str mode;
+        bool text =
+            JS_IsString(stdinValue) && JsString(ctx, stdinValue, arena, &mode);
+        JS_FreeValue(ctx, stdinValue);
+        if (!text ||
+            (!StrEq(mode, StrL("pipe")) && !StrEq(mode, StrL("null")))) {
+            if (!JS_HasException(ctx)) {
+                JS_ThrowTypeError(
+                    ctx, "%s: options.stdin must be \"pipe\" or \"null\"", api);
+            }
+            ClearHeapStr(cwd);
+            return false;
+        }
+        if (stdinPipe) *stdinPipe = StrEq(mode, StrL("pipe"));
+    } else {
+        JS_FreeValue(ctx, stdinValue);
+    }
+
+    JSValue linesValue = JS_GetPropertyStr(ctx, value, "lines");
+    if (JS_IsException(linesValue)) {
+        ClearHeapStr(cwd);
+        return false;
+    }
+    if (!JS_IsUndefined(linesValue)) {
+        if (!JS_IsBool(linesValue)) {
+            JS_FreeValue(ctx, linesValue);
+            JS_ThrowTypeError(ctx, "%s: options.lines must be a boolean", api);
+            ClearHeapStr(cwd);
+            return false;
+        }
+        if (lines) *lines = JS_ToBool(ctx, linesValue) != 0;
+        JS_FreeValue(ctx, linesValue);
+    } else {
+        JS_FreeValue(ctx, linesValue);
+    }
+    return true;
+}
+
+static JSValue NativeOpenPath(JSContext* ctx, JSValueConst, int argc,
+                              JSValueConst* argv) {
+    if (argc < 2 || !JS_IsString(argv[1])) {
+        return JS_ThrowTypeError(ctx, "cx.open_path(path) expects a path");
+    }
+    uint64_t generation = 0;
+    bool explicitGeneration = !JS_IsUndefined(argv[0]);
+    if (explicitGeneration && JS_ToIndex(ctx, &generation, argv[0]) < 0) {
+        return JS_EXCEPTION;
+    }
+    Arena* arena = ArenaNew();
+    Str path;
+    if (!JsString(ctx, argv[1], arena, &path)) {
+        ArenaDelete(arena);
+        return JS_EXCEPTION;
+    }
+    bool release = false;
+    Policy* policy = CurrentPolicy(&release);
+    CapabilityPath granted;
+    CapabilityError denied = {};
+    bool resolved = PolicyCapabilities(policy).ResolvePath(
+        path, CapabilityAccess::Read, &granted, &denied);
+    if (release) PolicyRelease(policy);
+    if (!resolved) {
+        Str message = GrantDenial(arena, denied);
+        JSValue result =
+            JS_ThrowTypeError(ctx, "%.*s", len(message), message.s);
+        CapabilityErrorFree(&denied);
+        granted.Free();
+        ArenaDelete(arena);
+        return result;
+    }
+    CapabilityErrorFree(&denied);
+    shell::FsResult stat;
+    Str fsError;
+
+    bool exists = shell::FsRun(shell::FsOperation::Stat, granted.root,
+                               granted.relative, {}, false, &stat, &fsError) &&
+                  stat.hasStats;
+    stat.Free();
+    if (!exists) {
+        Str detail = fsError.s && len(fsError) > 0
+                         ? fsError
+                         : StrL("the path does not exist");
+        JSValue result = JS_ThrowTypeError(
+            ctx, "cx.open_path(path) cannot open `%.*s`: %.*s", len(path),
+            path.s, len(detail), detail.s);
+        StrFree(fsError);
+        granted.Free();
+        ArenaDelete(arena);
+        return result;
+    }
+    StrFree(fsError);
+    ShellError error = {};
+    shell::ScopeHostContext host =
+        explicitGeneration ? shell::ScopeHostForGeneration(generation, &error)
+                           : shell::ScopeCurrentHost();
+    if (!host.IsSet()) {
+        Str message = error.IsSet()
+                          ? error.message
+                          : StrL(
+                                "cx.open_path(path) needs a live host call; "
+                                "call it from render, an event handler or a "
+                                "task");
+        JSValue result =
+            JS_ThrowTypeError(ctx, "%.*s", len(message), message.s);
+        ShellErrorClear(&error);
+        granted.Free();
+        ArenaDelete(arena);
+        return result;
+    }
+    OpenPath(JoinGrantedPath(arena, granted));
+    ShellErrorClear(&error);
+    granted.Free();
+    ArenaDelete(arena);
+    return JS_UNDEFINED;
+}
+
 static JSValue NativeNotify(JSContext* ctx, JSValueConst, int argc,
                             JSValueConst* argv) {
     uint64_t generation = 0;
@@ -170098,20 +177335,582 @@ static JSValue NativeFetch(JSContext* ctx, JSValueConst, int argc,
     return promise;
 }
 
+static void AppendFffd(StrBuilder* out) {
+    out->Append(StrL("\xEF\xBF\xBD"));
+}
+
+static bool DecodeUtf8(StrBuilder* out, const uint8_t* bytes, int count,
+                       bool fatal) {
+    int i = 0;
+    while (i < count) {
+        uint8_t lead = bytes[i];
+        if (lead <= 0x7F) {
+            out->AppendChar((char)lead);
+            i++;
+            continue;
+        }
+        int need = 0;
+        unsigned lo = 0x80;
+        unsigned hi = 0xBF;
+        if (lead >= 0xC2 && lead <= 0xDF)
+            need = 2;
+        else if (lead == 0xE0) {
+            need = 3;
+            lo = 0xA0;
+        } else if ((lead >= 0xE1 && lead <= 0xEC) || lead == 0xEE ||
+                   lead == 0xEF)
+            need = 3;
+        else if (lead == 0xED) {
+            need = 3;
+            hi = 0x9F;
+        } else if (lead == 0xF0) {
+            need = 4;
+            lo = 0x90;
+        } else if (lead >= 0xF1 && lead <= 0xF3)
+            need = 4;
+        else if (lead == 0xF4) {
+            need = 4;
+            hi = 0x8F;
+        } else {
+            if (fatal) return false;
+            AppendFffd(out);
+            i++;
+            continue;
+        }
+        if (i + need > count) {
+            if (fatal) return false;
+            AppendFffd(out);
+            return true;
+        }
+        bool bad = false;
+        for (int k = 1; k < need; k++) {
+            unsigned byte = bytes[i + k];
+            unsigned min = k == 1 ? lo : 0x80;
+            unsigned max = k == 1 ? hi : 0xBF;
+            if (byte < min || byte > max) {
+                bad = true;
+                break;
+            }
+        }
+        if (bad) {
+            if (fatal) return false;
+            AppendFffd(out);
+            i++;
+            continue;
+        }
+        out->Append(Str((const char*)bytes + i, need));
+        i += need;
+    }
+    return true;
+}
+
+static int IncompleteTail(const uint8_t* bytes, int count) {
+    int len = count;
+    for (int back = 1; back <= len && back <= 3; back++) {
+        uint8_t byte = bytes[len - back];
+        if ((byte & 0xC0) == 0x80) continue;
+        int expected = 0;
+        if (byte >= 0xC2 && byte <= 0xDF)
+            expected = 2;
+        else if (byte >= 0xE0 && byte <= 0xEF)
+            expected = 3;
+        else if (byte >= 0xF0 && byte <= 0xF4)
+            expected = 4;
+        else
+            return 0;
+        if (back >= expected) return 0;
+        if (len - back + 1 < len) {
+            uint8_t next = bytes[len - back + 1];
+            bool valid = true;
+            if (byte == 0xE0)
+                valid = next >= 0xA0 && next <= 0xBF;
+            else if (byte == 0xED)
+                valid = next >= 0x80 && next <= 0x9F;
+            else if (byte == 0xF0)
+                valid = next >= 0x90 && next <= 0xBF;
+            else if (byte == 0xF4)
+                valid = next >= 0x80 && next <= 0x8F;
+            if (!valid) return 0;
+        }
+        return back;
+    }
+    return 0;
+}
+
+static bool BufferSource(JSContext* ctx, JSValueConst value,
+                         const uint8_t** out, int* count) {
+    *out = nullptr;
+    *count = 0;
+    if (JS_IsUndefined(value) || JS_IsNull(value)) return true;
+    if (JS_IsArrayBuffer(value)) {
+        size_t n = 0;
+        uint8_t* data = JS_GetArrayBuffer(ctx, &n, value);
+        if (!data || n == 0) return true;
+        if (n > (size_t)INT_MAX) {
+            JS_ThrowRangeError(ctx, "TextDecoder.decode input is too large");
+            return false;
+        }
+        *out = data;
+        *count = (int)n;
+        return true;
+    }
+    JSValue buffer = JS_GetPropertyStr(ctx, value, "buffer");
+    if (!JS_IsArrayBuffer(buffer)) {
+        JS_FreeValue(ctx, buffer);
+        JS_ThrowTypeError(ctx,
+                          "TextDecoder.decode(input) expects an ArrayBuffer, "
+                          "a typed array or a DataView");
+        return false;
+    }
+    double offset = 0;
+    double length = 0;
+    JSValue off = JS_GetPropertyStr(ctx, value, "byteOffset");
+    JSValue len = JS_GetPropertyStr(ctx, value, "byteLength");
+    bool numbers = JS_IsNumber(off) && JS_IsNumber(len) &&
+                   JS_ToFloat64(ctx, &offset, off) >= 0 &&
+                   JS_ToFloat64(ctx, &length, len) >= 0 && offset >= 0 &&
+                   length >= 0;
+    JS_FreeValue(ctx, off);
+    JS_FreeValue(ctx, len);
+    size_t n = 0;
+    uint8_t* data = JS_GetArrayBuffer(ctx, &n, buffer);
+    JS_FreeValue(ctx, buffer);
+    if (!numbers || offset + length > (double)n || length > (double)INT_MAX) {
+        if (!JS_HasException(ctx)) {
+            JS_ThrowTypeError(ctx,
+                              "TextDecoder.decode(input) expects an "
+                              "ArrayBuffer, a typed array or a DataView");
+        }
+        return false;
+    }
+    if (!data || length == 0) return true;
+    *out = data + (size_t)offset;
+    *count = (int)length;
+    return true;
+}
+
+static bool NextUsv(const uint16_t* units, int count, int at, uint32_t* cp,
+                    int* used) {
+    if (at >= count) return false;
+    uint16_t unit = units[at];
+    if (unit >= 0xD800 && unit <= 0xDBFF) {
+        if (at + 1 < count && units[at + 1] >= 0xDC00 &&
+            units[at + 1] <= 0xDFFF) {
+            *cp = 0x10000u + ((((uint32_t)unit - 0xD800u) << 10) |
+                              ((uint32_t)units[at + 1] - 0xDC00u));
+            *used = 2;
+            return true;
+        }
+        *cp = 0xFFFDu;
+        *used = 1;
+        return true;
+    }
+    if (unit >= 0xDC00 && unit <= 0xDFFF) {
+        *cp = 0xFFFDu;
+        *used = 1;
+        return true;
+    }
+    *cp = unit;
+    *used = 1;
+    return true;
+}
+
+static int Utf8Size(uint32_t cp) {
+    if (cp < 0x80) return 1;
+    if (cp < 0x800) return 2;
+    if (cp < 0x10000) return 3;
+    return 4;
+}
+
+static void WriteUtf8(uint8_t* out, uint32_t cp) {
+    if (cp < 0x80) {
+        out[0] = (uint8_t)cp;
+    } else if (cp < 0x800) {
+        out[0] = (uint8_t)(0xC0 | (cp >> 6));
+        out[1] = (uint8_t)(0x80 | (cp & 0x3F));
+    } else if (cp < 0x10000) {
+        out[0] = (uint8_t)(0xE0 | (cp >> 12));
+        out[1] = (uint8_t)(0x80 | ((cp >> 6) & 0x3F));
+        out[2] = (uint8_t)(0x80 | (cp & 0x3F));
+    } else {
+        out[0] = (uint8_t)(0xF0 | (cp >> 18));
+        out[1] = (uint8_t)(0x80 | ((cp >> 12) & 0x3F));
+        out[2] = (uint8_t)(0x80 | ((cp >> 6) & 0x3F));
+        out[3] = (uint8_t)(0x80 | (cp & 0x3F));
+    }
+}
+
+static JSValue NativeTextEncode(JSContext* ctx, JSValueConst, int argc,
+                                JSValueConst* argv) {
+    if (argc < 1 || JS_IsUndefined(argv[0]) || JS_IsNull(argv[0])) {
+        uint8_t empty = 0;
+        return JS_NewUint8ArrayCopy(ctx, &empty, 0);
+    }
+    size_t units = 0;
+    const uint16_t* text = JS_ToCStringLenUTF16(ctx, &units, argv[0]);
+    if (!text) return JS_EXCEPTION;
+    if (units > (size_t)INT_MAX) {
+        JS_FreeCStringUTF16(ctx, text);
+        return JS_ThrowRangeError(ctx, "TextEncoder.encode input is too large");
+    }
+    int count = (int)units;
+    int bytes = 0;
+    for (int at = 0; at < count;) {
+        uint32_t cp = 0;
+        int used = 1;
+        NextUsv(text, count, at, &cp, &used);
+        bytes += Utf8Size(cp);
+        at += used;
+    }
+    uint8_t* encoded = (uint8_t*)malloc((size_t)bytes + 1);
+    if (!encoded) {
+        JS_FreeCStringUTF16(ctx, text);
+        return JS_ThrowOutOfMemory(ctx);
+    }
+    int written = 0;
+    for (int at = 0; at < count;) {
+        uint32_t cp = 0;
+        int used = 1;
+        NextUsv(text, count, at, &cp, &used);
+        WriteUtf8(encoded + written, cp);
+        written += Utf8Size(cp);
+        at += used;
+    }
+    JS_FreeCStringUTF16(ctx, text);
+    JSValue value = JS_NewUint8ArrayCopy(
+        ctx, bytes ? encoded : (const uint8_t*)"", (size_t)bytes);
+    free(encoded);
+    return value;
+}
+
+static JSValue NativeTextEncodeInto(JSContext* ctx, JSValueConst, int argc,
+                                    JSValueConst* argv) {
+    if (argc < 2) {
+        return JS_ThrowTypeError(
+            ctx,
+            "TextEncoder.encodeInto(source, destination) expects a "
+            "Uint8Array destination");
+    }
+    size_t capacity = 0;
+    uint8_t* destination = JS_GetUint8Array(ctx, &capacity, argv[1]);
+    if (!destination && capacity != 0) {
+        return JS_ThrowTypeError(
+            ctx,
+            "TextEncoder.encodeInto(source, destination) expects a "
+            "Uint8Array destination");
+    }
+    size_t units = 0;
+    const uint16_t* text = nullptr;
+    if (argc >= 1 && !JS_IsUndefined(argv[0]) && !JS_IsNull(argv[0])) {
+        text = JS_ToCStringLenUTF16(ctx, &units, argv[0]);
+        if (!text) return JS_EXCEPTION;
+    }
+    int read = 0;
+    int written = 0;
+    int count = (int)units;
+    for (int at = 0; at < count;) {
+        uint32_t cp = 0;
+        int used = 1;
+        NextUsv(text, count, at, &cp, &used);
+        int size = Utf8Size(cp);
+        if ((size_t)written + (size_t)size > capacity) break;
+        if (destination) WriteUtf8(destination + written, cp);
+        written += size;
+        read += used;
+        at += used;
+    }
+    if (text) JS_FreeCStringUTF16(ctx, text);
+    JSValue result = JS_NewObject(ctx);
+    JS_SetPropertyStr(ctx, result, "read", JS_NewInt32(ctx, read));
+    JS_SetPropertyStr(ctx, result, "written", JS_NewInt32(ctx, written));
+    return result;
+}
+
+static JSValue NativeTextDecode(JSContext* ctx, JSValueConst, int argc,
+                                JSValueConst* argv) {
+    if (argc < 1 || !JS_IsObject(argv[0])) {
+        return JS_ThrowTypeError(ctx, "TextDecoder.decode needs its decoder");
+    }
+    JSValue decoder = argv[0];
+    bool fatal = false;
+    bool ignoreBom = false;
+    bool started = false;
+    {
+        JSValue value = JS_GetPropertyStr(ctx, decoder, "fatal");
+        fatal = JS_ToBool(ctx, value) == 1;
+        JS_FreeValue(ctx, value);
+        value = JS_GetPropertyStr(ctx, decoder, "ignoreBOM");
+        ignoreBom = JS_ToBool(ctx, value) == 1;
+        JS_FreeValue(ctx, value);
+        value = JS_GetPropertyStr(ctx, decoder, "_started");
+        started = JS_ToBool(ctx, value) == 1;
+        JS_FreeValue(ctx, value);
+    }
+    bool stream = false;
+    if (argc >= 3 && JS_IsObject(argv[2]) && !JS_IsNull(argv[2])) {
+        JSValue value = JS_GetPropertyStr(ctx, argv[2], "stream");
+        stream = JS_ToBool(ctx, value) == 1;
+        JS_FreeValue(ctx, value);
+    }
+    const uint8_t* pending = nullptr;
+    int pendingCount = 0;
+    JSValue pendingValue = JS_GetPropertyStr(ctx, decoder, "_pending");
+    if (!BufferSource(ctx, pendingValue, &pending, &pendingCount)) {
+        JS_FreeValue(ctx, pendingValue);
+        return JS_EXCEPTION;
+    }
+    const uint8_t* input = nullptr;
+    int inputCount = 0;
+    if (argc >= 2 && !BufferSource(ctx, argv[1], &input, &inputCount)) {
+        JS_FreeValue(ctx, pendingValue);
+        return JS_EXCEPTION;
+    }
+    int total = pendingCount + inputCount;
+    uint8_t* bytes = (uint8_t*)malloc((size_t)total + 1);
+    if (!bytes) {
+        JS_FreeValue(ctx, pendingValue);
+        return JS_ThrowOutOfMemory(ctx);
+    }
+    if (pendingCount) memcpy(bytes, pending, (size_t)pendingCount);
+    if (inputCount) memcpy(bytes + pendingCount, input, (size_t)inputCount);
+    JS_FreeValue(ctx, pendingValue);
+    const uint8_t bom[3] = {0xEF, 0xBB, 0xBF};
+    int start = 0;
+    if (!started) {
+        bool prefix = total < 3;
+        for (int i = 0; prefix && i < total; i++) prefix = bytes[i] == bom[i];
+        if (!ignoreBom && stream && prefix) {
+            JS_SetPropertyStr(
+                ctx, decoder, "_pending",
+                JS_NewUint8ArrayCopy(ctx, total ? bytes : bom, (size_t)total));
+            JS_SetPropertyStr(ctx, decoder, "_started", JS_FALSE);
+            free(bytes);
+            return JS_NewString(ctx, "");
+        }
+        if (!ignoreBom && total >= 3 && bytes[0] == bom[0] &&
+            bytes[1] == bom[1] && bytes[2] == bom[2]) {
+            start = 3;
+        }
+        started = total > 0;
+    }
+    int end = total;
+    if (stream) {
+        end -= IncompleteTail(bytes + start, end - start);
+    } else {
+        started = false;
+    }
+    if (end < start) end = start;
+    StrBuilder text;
+    bool valid = DecodeUtf8(&text, bytes + start, end - start, fatal);
+    if (!valid) {
+        uint8_t empty = 0;
+        JS_SetPropertyStr(ctx, decoder, "_pending",
+                          JS_NewUint8ArrayCopy(ctx, &empty, 0));
+        JS_SetPropertyStr(ctx, decoder, "_started", JS_FALSE);
+        free(bytes);
+        StrFree(text.TakeStr());
+        return JS_ThrowTypeError(
+            ctx, "TextDecoder.decode received invalid UTF-8 data");
+    }
+    int held = total - end;
+    JS_SetPropertyStr(
+        ctx, decoder, "_pending",
+        JS_NewUint8ArrayCopy(ctx, held ? bytes + end : bom, (size_t)held));
+    JS_SetPropertyStr(ctx, decoder, "_started", JS_NewBool(ctx, started));
+    free(bytes);
+    Str decoded = text.TakeStr();
+    JSValue result =
+        JS_NewStringLen(ctx, decoded.s ? decoded.s : "", (size_t)len(decoded));
+    StrFree(decoded);
+    return result;
+}
+
+struct EnvVisit {
+    JSContext* ctx;
+    JSValue object;
+    const Capabilities* capabilities;
+};
+
+static void VisitGrantedEnv(Str name, Str value, void* user) {
+    EnvVisit* visit = (EnvVisit*)user;
+    if (!visit || !name.s || len(name) <= 0 || len(name) >= 512 || !value.s)
+        return;
+    if (!visit->capabilities->MayShowEnvVariable(name)) return;
+    char key[512];
+    memcpy(key, name.s, (size_t)len(name));
+    key[len(name)] = 0;
+    JS_SetPropertyStr(visit->ctx, visit->object, key,
+                      JS_NewStringLen(visit->ctx, value.s, (size_t)len(value)));
+}
+
+static JSValue NativeProcessEnv(JSContext* ctx, JSValueConst, int,
+                                JSValueConst*) {
+    bool release = false;
+    Policy* policy = CurrentPolicy(&release);
+    JSValue object = JS_NewObject(ctx);
+    if (!JS_IsException(object)) {
+        EnvVisit visit;
+        visit.ctx = ctx;
+        visit.object = object;
+        visit.capabilities = &PolicyCapabilities(policy);
+        base::PlatVisitEnv(VisitGrantedEnv, &visit);
+    }
+    if (release) PolicyRelease(policy);
+    return object;
+}
+
+static JSValue NativeProcessDataDir(JSContext* ctx, JSValueConst, int,
+                                    JSValueConst*) {
+    bool release = false;
+    Policy* policy = CurrentPolicy(&release);
+    Str dir = PolicyDataDir(policy);
+    JSValue value =
+        dir ? JS_NewStringLen(ctx, dir.s, (size_t)len(dir)) : JS_UNDEFINED;
+    if (release) PolicyRelease(policy);
+    return value;
+}
+
+static JSValue NativeOsHomedir(JSContext* ctx, JSValueConst, int,
+                               JSValueConst*) {
+    Str home = shell::ShellHomeDirectory();
+    if (!home) {
+        return JS_ThrowPlainError(ctx,
+                                  "os.homedir(): neither HOME nor USERPROFILE "
+                                  "names an absolute directory");
+    }
+    JSValue value = JS_NewStringLen(ctx, home.s, (size_t)len(home));
+    StrFree(home);
+    return value;
+}
+
+static bool ComponentInputEvent(Str name, InputEventKind* kind) {
+    if (StrEq(name, StrL("change"))) {
+        *kind = InputEventKind::Change;
+        return true;
+    }
+    if (StrEq(name, StrL("submit"))) {
+        *kind = InputEventKind::PressEnter;
+        return true;
+    }
+    if (StrEq(name, StrL("focus"))) {
+        *kind = InputEventKind::Focus;
+        return true;
+    }
+    if (StrEq(name, StrL("blur"))) {
+        *kind = InputEventKind::Blur;
+        return true;
+    }
+    return false;
+}
+
+static JSValue NativeComponentInputOn(JSContext* ctx, JSValueConst, int argc,
+                                      JSValueConst* argv) {
+    ShellRuntimeImpl* impl = (ShellRuntimeImpl*)JS_GetContextOpaque(ctx);
+    if (!impl || argc < 4) {
+        return JS_ThrowTypeError(ctx,
+                                 "on(...) needs a live host call; subscribe "
+                                 "from init() or an event handler");
+    }
+    Arena* arena = ArenaNew();
+    Str proof;
+    double handleNumber = 0;
+    if (!JS_IsString(argv[0]) || !JsString(ctx, argv[0], arena, &proof) ||
+        !StrEq(proof, impl->componentStateProof) ||
+        JS_ToFloat64(ctx, &handleNumber, argv[1]) < 0 || handleNumber < 0) {
+        ArenaDelete(arena);
+        return JS_ThrowTypeError(ctx, "state belongs to another runtime");
+    }
+    if (shell::ScopeHasCurrent() &&
+        (shell::ScopeCurrentPhase() == ScopePhase::Render ||
+         shell::ScopeCurrentPhase() == ScopePhase::Layout)) {
+        ArenaDelete(arena);
+        return JS_ThrowTypeError(
+            ctx,
+            "on(...) cannot run during render; subscribe from init() or an "
+            "event handler");
+    }
+    Str eventName;
+    if (!JsString(ctx, argv[2], arena, &eventName)) {
+        ArenaDelete(arena);
+        return JS_EXCEPTION;
+    }
+    InputEventKind kind = InputEventKind::Change;
+    if (!ComponentInputEvent(eventName, &kind)) {
+        JSValue thrown = JS_ThrowTypeError(
+            ctx,
+            "unknown input event `%.*s`; expected one of: change, submit, "
+            "focus, blur",
+            len(eventName), eventName.s);
+        ArenaDelete(arena);
+        return thrown;
+    }
+    if (!JS_IsFunction(ctx, argv[3])) {
+        ArenaDelete(arena);
+        return JS_ThrowTypeError(ctx,
+                                 "state.on(event, handler) expects a function");
+    }
+    uint64_t handle = (uint64_t)handleNumber;
+    const char* stored = impl->componentStates.Kind(handle);
+    if (!stored || (strcmp(stored, "InputState") != 0 &&
+                    strcmp(stored, "TextareaState") != 0)) {
+        ArenaDelete(arena);
+        return JS_ThrowTypeError(ctx,
+                                 "retained state handle has been released");
+    }
+    Str error;
+    void* value = impl->componentStates.Get(handle, stored, &error, arena);
+    if (!value) {
+        JSValue thrown =
+            JS_ThrowTypeError(ctx, "%.*s", len(error), error.s ? error.s : "");
+        ArenaDelete(arena);
+        return thrown;
+    }
+    shell::ScopeHostContext host = shell::ScopeCurrentHost();
+    if (!host.IsSet()) {
+        ArenaDelete(arena);
+        return JS_ThrowTypeError(ctx,
+                                 "on(...) needs a live host call; subscribe "
+                                 "from init() or an event handler");
+    }
+    shell::CallbackId callback = impl->callbacks.PushPersistent(
+        ctx, argv[3], shell::ScopeCurrentView(), shell::ScopeCurrentPolicy(),
+        (AppModule*)shell::ScopeCurrentApplication());
+    ArenaDelete(arena);
+    if (callback == UINT64_MAX) {
+        return JS_ThrowInternalError(ctx, "callback id space is exhausted");
+    }
+    shell::TextStateEntity* entity = (shell::TextStateEntity*)value;
+    shell::TextStateSubscription sub;
+    sub.kind = kind;
+    sub.id = callback;
+    if (!VecAppend(entity->subs, sub)) {
+        impl->callbacks.RetireId(ctx, callback);
+        return JS_ThrowOutOfMemory(ctx);
+    }
+    entity->runtime = impl->owner;
+    return JS_TRUE;
+}
+
 static JSValue NativeFs(JSContext* ctx, JSValueConst, int argc,
                         JSValueConst* argv, int magic) {
-    if (magic < 0 || magic > 6)
+    if (magic < 0 || magic > (int)shell::FsOperation::Rename)
         return JS_ThrowInternalError(ctx, "invalid filesystem operation");
     shell::FsOperation operation = (shell::FsOperation)magic;
+    bool readAccess = operation == shell::FsOperation::Read ||
+                      operation == shell::FsOperation::ReadDirectory ||
+                      operation == shell::FsOperation::Exists ||
+                      operation == shell::FsOperation::Stat ||
+                      operation == shell::FsOperation::Lstat ||
+                      operation == shell::FsOperation::ReadLink;
     CapabilityAccess access =
-        operation == shell::FsOperation::Read ||
-                operation == shell::FsOperation::ReadDirectory ||
-                operation == shell::FsOperation::Exists
-            ? CapabilityAccess::Read
-            : CapabilityAccess::Write;
+        readAccess ? CapabilityAccess::Read : CapabilityAccess::Write;
     Arena* arena = ArenaNew();
     Str requested;
     bool ok = argc >= 1 && JsString(ctx, argv[0], arena, &requested);
+    Str requestedDest;
+    if (ok && operation == shell::FsOperation::Rename) {
+        ok = argc >= 2 && JsString(ctx, argv[1], arena, &requestedDest);
+    }
     if (!ok) {
         ArenaDelete(arena);
         return JS_EXCEPTION;
@@ -170119,15 +177918,22 @@ static JSValue NativeFs(JSContext* ctx, JSValueConst, int argc,
     bool release = false;
     Policy* policy = CurrentPolicy(&release);
     CapabilityPath path;
+    CapabilityPath dest;
     CapabilityError capabilityError;
     ok = PolicyCapabilities(policy)
              .ResolvePath(requested, access, &path, &capabilityError);
+    if (ok && operation == shell::FsOperation::Rename) {
+        ok = PolicyCapabilities(policy).ResolvePath(
+            requestedDest, CapabilityAccess::Write, &dest, &capabilityError);
+    }
     if (release) PolicyRelease(policy);
     if (!ok) {
         Str message = CapabilityErrorMessage(arena, capabilityError);
         JSValue result =
             JS_ThrowTypeError(ctx, "%.*s", len(message), message.s);
         CapabilityErrorFree(&capabilityError);
+        path.Free();
+        dest.Free();
         ArenaDelete(arena);
         return result;
     }
@@ -170135,6 +177941,7 @@ static JSValue NativeFs(JSContext* ctx, JSValueConst, int argc,
     FsJob* job = new FsJob();
     job->operation = operation;
     job->path = path;
+    job->dest = dest;
     if (operation == shell::FsOperation::Read) {
         ok = FsReadTextOption(ctx, argc > 1 ? argv[1] : JS_UNDEFINED, arena,
                               &job->text);
@@ -170251,11 +178058,6 @@ static JSValue NativeProcessRun(JSContext* ctx, JSValueConst, int argc,
         ArenaDelete(arena);
         return JS_EXCEPTION;
     }
-    shell::ScopeHostContext host = shell::ScopeCurrentHost();
-    if (!host.IsSet()) {
-        ArenaDelete(arena);
-        return JS_ThrowTypeError(ctx, "process.run() needs a live host task");
-    }
 
     ProcessJob* job = new ProcessJob();
     job->command = StrDup(command);
@@ -170300,11 +178102,28 @@ static JSValue NativeProcessRun(JSContext* ctx, JSValueConst, int argc,
         }
         totalBytes += len(argument);
     }
+    Str cwd = {};
+    double timeoutSeconds = 0;
+    if (ok && argc > 2) {
+        ok = ParseProcessOptions(
+            ctx, argv[2], "process.run(command, args, options)", false, arena,
+            &cwd, &timeoutSeconds, nullptr, nullptr);
+    }
     ArenaDelete(arena);
     if (!ok) {
+        StrFree(cwd);
         job->Free();
         delete job;
         return JS_EXCEPTION;
+    }
+    job->cwd = cwd;
+    job->timeoutSeconds = timeoutSeconds;
+
+    shell::ScopeHostContext host = shell::ScopeCurrentHost();
+    if (!host.IsSet()) {
+        job->Free();
+        delete job;
+        return JS_ThrowTypeError(ctx, "process.run() needs a live host task");
     }
 
     JSValue resolving[2] = {JS_UNDEFINED, JS_UNDEFINED};
@@ -170343,6 +178162,237 @@ static JSValue NativeProcessRun(JSContext* ctx, JSValueConst, int argc,
             ctx, "process.run could not start background work");
     }
     return promise;
+}
+
+static void FreeArgCopies(Vec<Str>* args) {
+    if (!args) return;
+    for (int i = 0; i < len(*args); i++) StrFree((*args)[i]);
+    VecReset(*args);
+}
+
+static shell::ProcessStream* StreamById(ShellRuntimeImpl* impl, int id) {
+    if (!impl || id <= 0 || id > impl->streams.len) return nullptr;
+    return impl->streams[id - 1];
+}
+
+static void ReleaseStreamSlot(ShellRuntimeImpl* impl, int streamId,
+                              shell::ProcessStream* stream) {
+    if (stream) {
+        shell::ProcessStreamKill(stream);
+        shell::ProcessStreamFree(stream);
+    }
+    if (impl && streamId > 0 && streamId <= impl->streams.len) {
+        impl->streams[streamId - 1] = nullptr;
+    }
+}
+
+static JSValue NativeChildWrite(JSContext* ctx, JSValueConst, int argc,
+                                JSValueConst* argv, int magic) {
+    ShellRuntimeImpl* impl = (ShellRuntimeImpl*)JS_GetContextOpaque(ctx);
+    shell::ProcessStream* stream = StreamById(impl, magic);
+    if (!stream) {
+        return JS_ThrowPlainError(ctx, "the process is gone");
+    }
+    Arena* arena = ArenaNew();
+    Str text;
+    if (argc < 1 || !JsString(ctx, argv[0], arena, &text)) {
+        ArenaDelete(arena);
+        if (!JS_HasException(ctx)) {
+            JS_ThrowTypeError(ctx, "ChildProcess.write(text) expects a string");
+        }
+        return JS_EXCEPTION;
+    }
+    Str error;
+    bool wrote = shell::ProcessStreamWrite(stream, text, &error);
+    ArenaDelete(arena);
+    if (wrote) {
+        StrFree(error);
+        return JS_UNDEFINED;
+    }
+    if (!error.s) {
+        return JS_ThrowPlainError(ctx, "the process is gone");
+    }
+    JSValue thrown;
+    if (StrContains(error, StrL("needs a child spawned"))) {
+        thrown = JS_ThrowTypeError(ctx, "%.*s", len(error), error.s);
+    } else {
+        thrown = JS_ThrowPlainError(ctx, "ChildProcess.write(text): %.*s",
+                                    len(error), error.s);
+    }
+    StrFree(error);
+    return thrown;
+}
+
+static JSValue NativeChildEnd(JSContext* ctx, JSValueConst, int, JSValueConst*,
+                              int magic) {
+    ShellRuntimeImpl* impl = (ShellRuntimeImpl*)JS_GetContextOpaque(ctx);
+    shell::ProcessStreamEnd(StreamById(impl, magic));
+    return JS_UNDEFINED;
+}
+
+static JSValue NativeChildKill(JSContext* ctx, JSValueConst, int, JSValueConst*,
+                               int magic) {
+    ShellRuntimeImpl* impl = (ShellRuntimeImpl*)JS_GetContextOpaque(ctx);
+    shell::ProcessStreamKill(StreamById(impl, magic));
+    return JS_UNDEFINED;
+}
+
+static JSValue NativeProcessSpawn(JSContext* ctx, JSValueConst, int argc,
+                                  JSValueConst* argv) {
+    const char* api = "process.spawn(command, args, options)";
+    Arena* arena = ArenaNew();
+    Str command;
+    bool converted = argc >= 1 && JsString(ctx, argv[0], arena, &command);
+    bool release = false;
+    Policy* policy = CurrentPolicy(&release);
+    bool allowed = converted && PolicyCapabilities(policy).MayRun(command);
+    if (release) PolicyRelease(policy);
+    if (converted && !allowed) {
+        JSValue result = JS_ThrowTypeError(
+            ctx,
+            "running `%.*s` is not granted; add it to capabilities.fs.execute",
+            len(command), command.s);
+        ArenaDelete(arena);
+        return result;
+    }
+    if (!converted) {
+        ArenaDelete(arena);
+        return JS_EXCEPTION;
+    }
+    if (argc < 4 || !JS_IsFunction(ctx, argv[3])) {
+        ArenaDelete(arena);
+        return JS_ThrowTypeError(ctx, "%s expects a dispatch function", api);
+    }
+
+    Vec<Str> args;
+    bool ok = true;
+    int64_t argCount = 0;
+    if (argc > 1 && !JS_IsUndefined(argv[1]) && !JS_IsNull(argv[1])) {
+        if (!JS_IsArray(argv[1]) || JS_GetLength(ctx, argv[1], &argCount) < 0) {
+            JS_ThrowTypeError(ctx, "%s expects args to be an array of strings",
+                              api);
+            ok = false;
+        } else if (argCount < 0 || argCount > 4096) {
+            JS_ThrowRangeError(ctx, "%s accepts at most 4096 arguments", api);
+            ok = false;
+        }
+    }
+    int totalBytes = 0;
+    for (int64_t i = 0; ok && i < argCount; i++) {
+        JSValue value = JS_GetPropertyUint32(ctx, argv[1], (uint32_t)i);
+        Str argument;
+        bool stringOk =
+            !JS_IsException(value) && JsString(ctx, value, arena, &argument);
+        JS_FreeValue(ctx, value);
+        if (!stringOk) {
+            ok = false;
+            break;
+        }
+        if (len(argument) > 1024 * 1024 - totalBytes) {
+            JS_ThrowRangeError(ctx, "%s arguments exceed the 1 MiB limit", api);
+            ok = false;
+            break;
+        }
+        Str copy = StrDup(argument);
+        if (!copy.s || !VecAppend(args, copy)) {
+            StrFree(copy);
+            JS_ThrowOutOfMemory(ctx);
+            ok = false;
+            break;
+        }
+        totalBytes += len(argument);
+    }
+    Str cwd = {};
+    double timeoutSeconds = 0;
+    bool stdinPipe = false;
+    bool lines = false;
+    if (ok && argc > 2) {
+        ok = ParseProcessOptions(ctx, argv[2], api, true, arena, &cwd,
+                                 &timeoutSeconds, &stdinPipe, &lines);
+    }
+    if (!ok) {
+        StrFree(cwd);
+        FreeArgCopies(&args);
+        ArenaDelete(arena);
+        return JS_EXCEPTION;
+    }
+
+    shell::ScopeHostContext host = shell::ScopeCurrentHost();
+    if (!host.IsSet()) {
+        StrFree(cwd);
+        FreeArgCopies(&args);
+        ArenaDelete(arena);
+        return JS_ThrowTypeError(ctx, "process.spawn() needs a live host task");
+    }
+
+    shell::ProcessSpawnOptions options;
+    options.cwd = cwd;
+    options.stdinPipe = stdinPipe;
+    options.lines = lines;
+    options.timeoutSeconds = timeoutSeconds;
+    shell::ProcessStream* stream = nullptr;
+    Str startError;
+    bool started = shell::ProcessStreamStart(command, args.els, len(args),
+                                             &options, &stream, &startError);
+    StrFree(cwd);
+    FreeArgCopies(&args);
+    ArenaDelete(arena);
+    if (!started || !stream) {
+        shell::ProcessStreamFree(stream);
+        const char* message =
+            startError.s ? startError.s : "process.spawn could not start";
+        int messageLen = startError.s ? len(startError) : (int)strlen(message);
+        JSValue thrown = JS_ThrowPlainError(ctx, "%.*s", messageLen, message);
+        StrFree(startError);
+        return thrown;
+    }
+    StrFree(startError);
+
+    ShellRuntimeImpl* impl = (ShellRuntimeImpl*)JS_GetContextOpaque(ctx);
+    if (!VecAppend(impl->streams, stream)) {
+        shell::ProcessStreamKill(stream);
+        shell::ProcessStreamFree(stream);
+        return JS_ThrowOutOfMemory(ctx);
+    }
+    int streamId = impl->streams.len;
+    Entity<ShellTaskDriver> driver = TaskDriver(impl, host.GetApp());
+    uint32_t taskId = driver.IsValid()
+                          ? NewTask(impl, ShellTaskKind::ProcessStream, argv[3],
+                                    host.GetApp(), host.GetWindow())
+                          : 0;
+    if (!taskId) {
+        ReleaseStreamSlot(impl, streamId, stream);
+        return driver.IsValid()
+                   ? JS_ThrowRangeError(
+                         ctx,
+                         "the runtime reached its outstanding host task limit")
+                   : JS_ThrowInternalError(
+                         ctx, "creating the shell task driver failed");
+    }
+    ShellTask* task = FindTask(impl, taskId);
+    task->processStream = stream;
+    task->streamId = streamId;
+    task->timer = WindowSetInterval(
+        host.GetWindow(), 10,
+        ListenTo(driver, &ShellTaskDriver::OnTimer, (int64_t)taskId));
+    if (!task->timer) {
+        ForgetTask(impl, taskId, false);
+        return JS_ThrowInternalError(ctx, "arming process.spawn failed");
+    }
+
+    JSValue child = JS_NewObject(ctx);
+    JS_SetPropertyStr(ctx, child, "pid",
+                      JS_NewUint32(ctx, shell::ProcessStreamPid(stream)));
+    JS_SetPropertyStr(ctx, child, "write",
+                      JS_NewCFunctionMagic(ctx, NativeChildWrite, "write", 1,
+                                           JS_CFUNC_generic_magic, streamId));
+    JS_SetPropertyStr(ctx, child, "end",
+                      JS_NewCFunctionMagic(ctx, NativeChildEnd, "end", 0,
+                                           JS_CFUNC_generic_magic, streamId));
+    JS_SetPropertyStr(ctx, child, "kill",
+                      JS_NewCFunctionMagic(ctx, NativeChildKill, "kill", 0,
+                                           JS_CFUNC_generic_magic, streamId));
+    return child;
 }
 
 static JSValue NativeProcessExit(JSContext* ctx, JSValueConst, int argc,
@@ -170731,8 +178781,8 @@ globalThis.__gpui = (() => {
   });
   const storage = (session) => {
     const object = {
-      key: (index) => Number.isInteger(index) && index >= 0 ? __storage_key(index, session) : null,
-      getItem: (key) => __storage_get(String(key), session),
+      key: (index) => Number.isInteger(index) && index >= 0 ? (__storage_key(index, session) ?? null) : null,
+      getItem: (key) => __storage_get(String(key), session) ?? null,
       setItem: (key, value) => __storage_set(String(key), String(value), session),
       removeItem: (key) => __storage_remove(String(key), session),
       clear: () => __storage_clear(session),
@@ -170803,6 +178853,7 @@ globalThis.__gpui = (() => {
   globalThis.__context = (generation) => Object.freeze({
     theme: () => currentTheme(generation),
     open_url: (url) => __open_url(generation, String(url)),
+    open_path: (path) => __open_path(generation, String(path)),
     notify: () => __cx_notify(generation),
     focus_handle: () => focusHandle(__focus_handle_new()),
     new: (Class, props) => {
@@ -170833,6 +178884,7 @@ globalThis.__gpui = (() => {
   ambientContext = Object.freeze({
     theme: () => currentTheme(undefined),
     open_url: (url) => __open_url(undefined, String(url)),
+    open_path: (path) => __open_path(undefined, String(path)),
     notify: () => __cx_notify_current(),
     focus_handle: () => focusHandle(__focus_handle_new()),
     new: (Class, props) => {
@@ -170907,6 +178959,7 @@ globalThis.__gpui = (() => {
     activate_window: () => __window_activate(),
     minimize_window: () => __window_minimize(),
     zoom_window: () => __window_zoom(),
+    start_window_move: () => __window_start_move(),
     toggle_fullscreen: () => __window_toggle_fullscreen(),
   });
   globalThis.localStorage = localStorage;
@@ -170924,6 +178977,21 @@ globalThis.__gpui = (() => {
     name,
     isDirectory: () => directory,
   });
+  // Node's Stats, cut to the fields every platform can fill. A time the
+  // filesystem does not record is 0, and `new Date(0)` is the epoch.
+  globalThis.__shell_fs_stats = (isFile, isDirectory, isSymbolicLink, size, mode, mtimeMs, atimeMs, birthtimeMs) => Object.freeze({
+    isFile: () => isFile,
+    isDirectory: () => isDirectory,
+    isSymbolicLink: () => isSymbolicLink,
+    size,
+    mode,
+    mtimeMs,
+    atimeMs,
+    birthtimeMs,
+    mtime: new Date(mtimeMs),
+    atime: new Date(atimeMs),
+    birthtime: new Date(birthtimeMs),
+  });
   globalThis.__shell_fs = Object.freeze({
     readFile: (path, encoding) => __fs_read(path, encoding),
     writeFile: (path, contents) => __fs_write(path, contents),
@@ -170932,6 +179000,10 @@ globalThis.__gpui = (() => {
     unlink: (path) => __fs_unlink(path),
     rmdir: (path) => __fs_rmdir(path),
     mkdir: (path, options) => __fs_mkdir(path, options),
+    stat: (path) => __fs_stat(path),
+    lstat: (path) => __fs_lstat(path),
+    rename: (from, to) => __fs_rename(from, to),
+    readlink: (path) => __fs_readlink(path),
   });
 
   const utf8Encode = (text) => {
@@ -171173,12 +179245,15 @@ globalThis.__gpui = (() => {
   globalThis.URLSearchParams = URLSearchParams;
   globalThis.__shell_url = Object.freeze(urlApi);
 
-  globalThis.__shell_fetch_response = (status, url, body) => Object.freeze({
+  globalThis.__shell_fetch_response = (status, url, body, bytes) => Object.freeze({
     status,
     ok: status >= 200 && status < 300,
     url,
     text: () => Promise.resolve(body),
     json: () => Promise.resolve().then(() => JSON.parse(body)),
+    arrayBuffer: () => Promise.resolve(
+      bytes.buffer.slice(bytes.byteOffset, bytes.byteOffset + bytes.byteLength)),
+    bytes: () => Promise.resolve(bytes.slice()),
   });
   globalThis.fetch = (url, options) => {
     let method = "GET";
@@ -171232,14 +179307,81 @@ globalThis.__gpui = (() => {
     platform: () => __shell_platform,
     arch: () => __shell_arch,
     EOL: __shell_is_windows ? "\r\n" : "\n",
+    homedir: () => __os_homedir(),
   });
   globalThis.process = Object.freeze({
     run: (...args) => __process_run(...args),
+    spawn: (() => {
+      const spawnNative = globalThis.__process_spawn;
+      delete globalThis.__process_spawn;
+      return function spawn(command, args, options) {
+        const handlers = { stdout: [], stderr: [], exit: [] };
+        const dispatch = (event, payload, cx) => {
+          for (const handler of handlers[event].slice()) handler(payload, cx);
+        };
+        const child = spawnNative(
+          String(command),
+          Array.from(args ?? [], String),
+          options ?? {},
+          dispatch,
+        );
+        child.on = function on(event, handler) {
+          if (!Object.hasOwn(handlers, event)) {
+            throw new TypeError(
+              "ChildProcess.on(event, handler): event must be \"stdout\", \"stderr\" or \"exit\", not " + JSON.stringify(event),
+            );
+          }
+          if (typeof handler !== "function") {
+            throw new TypeError("ChildProcess.on(event, handler) expects a function");
+          }
+          handlers[event].push(handler);
+          return child;
+        };
+        return Object.freeze(child);
+      };
+    })(),
     nextTick: (callback, ...args) => Promise.resolve().then(() => callback(...args)),
     exit: (code = 0) => __process_exit(Number(code)),
     platform: __shell_platform,
     arch: __shell_arch,
+    get env() { return __process_env(); },
+    get dataDir() { return __process_data_dir(); },
   });
+
+  // WHATWG Encoding, UTF-8 only. The bytes live in the C++ natives;
+  // the label check and the decoder's own flags stay here so a
+  // getter reads the value the constructor stored.
+  class TextEncoder {
+    get encoding() { return "utf-8"; }
+    encode(input) { return __text_encode(input); }
+    encodeInto(source, destination) { return __text_encode_into(source, destination); }
+  }
+  class TextDecoder {
+    constructor(label, options) {
+      if (label !== undefined && label !== null) {
+        const text = String(label);
+        const name = text.trim().toLowerCase();
+        if (name !== "utf-8" && name !== "utf8" && name !== "unicode-1-1-utf-8") {
+          throw new RangeError(
+            "TextDecoder encoding `" + text + "` is not supported; only utf-8 is available");
+        }
+      }
+      let fatal = false;
+      let ignoreBOM = false;
+      if (options !== undefined && options !== null && typeof options === "object") {
+        if (options.fatal != null) fatal = Boolean(options.fatal);
+        if (options.ignoreBOM != null) ignoreBOM = Boolean(options.ignoreBOM);
+      }
+      Object.defineProperty(this, "fatal", { get() { return fatal; } });
+      Object.defineProperty(this, "ignoreBOM", { get() { return ignoreBOM; } });
+      this._pending = new Uint8Array(0);
+      this._started = false;
+    }
+    get encoding() { return "utf-8"; }
+    decode(input, options) { return __text_decode(this, input, options); }
+  }
+  globalThis.TextEncoder = TextEncoder;
+  globalThis.TextDecoder = TextDecoder;
 )JS"
                                R"JS(
   const component = (kind, text, handle, index) =>
@@ -171958,17 +180100,20 @@ static JSValue NativeWindowCommand(JSContext* ctx, JSValueConst, int,
                                    JSValueConst*, int magic) {
     Window* window = nullptr;
     App* app = nullptr;
-    static const char* const names[] = {"window.activate_window()",
-                                        "window.minimize_window()",
-                                        "window.zoom_window()"};
+    static const char* const names[] = {
+        "window.activate_window()", "window.minimize_window()",
+        "window.zoom_window()", "window.start_window_move()"};
+    if (magic < 0 || magic > 3) return JS_EXCEPTION;
     if (!WindowHost(ctx, names[magic], true, &window, &app))
         return JS_EXCEPTION;
     if (magic == 0) {
         AppActivate(window);
     } else if (magic == 1) {
         AppMinimize(window);
-    } else {
+    } else if (magic == 2) {
         AppToggleMaximize(window);
+    } else {
+        AppDrag(window);
     }
     return JS_UNDEFINED;
 }
@@ -173149,6 +181294,8 @@ static bool InstallRuntime(ShellRuntimeImpl* impl, ShellError* error) {
                            NativeWindowCommand, 0, 1);
     SetGlobalMagicFunction(impl->context, global, "__window_zoom",
                            NativeWindowCommand, 0, 2);
+    SetGlobalMagicFunction(impl->context, global, "__window_start_move",
+                           NativeWindowCommand, 0, 3);
     SetGlobalFunction(impl->context, global, "__stop_propagation",
                       NativeStopPropagation, 0);
     SetGlobalFunction(impl->context, global, "__propagate", NativePropagate, 0);
@@ -173242,6 +181389,7 @@ static bool InstallRuntime(ShellRuntimeImpl* impl, ShellError* error) {
                       NativeThemeRevision, 1);
     SetGlobalFunction(impl->context, global, "__set_theme", NativeSetTheme, 1);
     SetGlobalFunction(impl->context, global, "__open_url", NativeOpenUrl, 2);
+    SetGlobalFunction(impl->context, global, "__open_path", NativeOpenPath, 2);
     SetGlobalFunction(impl->context, global, "__host_call", NativeHostCall, 3);
     SetGlobalFunction(impl->context, global, "__host_async_call",
                       NativeHostAsyncCall, 3);
@@ -173350,8 +181498,32 @@ static bool InstallRuntime(ShellRuntimeImpl* impl, ShellError* error) {
                            (int)shell::FsOperation::RemoveDirectory);
     SetGlobalMagicFunction(impl->context, global, "__fs_mkdir", NativeFs, 2,
                            (int)shell::FsOperation::MakeDirectory);
+    SetGlobalMagicFunction(impl->context, global, "__fs_stat", NativeFs, 1,
+                           (int)shell::FsOperation::Stat);
+    SetGlobalMagicFunction(impl->context, global, "__fs_lstat", NativeFs, 1,
+                           (int)shell::FsOperation::Lstat);
+    SetGlobalMagicFunction(impl->context, global, "__fs_readlink", NativeFs, 1,
+                           (int)shell::FsOperation::ReadLink);
+    SetGlobalMagicFunction(impl->context, global, "__fs_rename", NativeFs, 2,
+                           (int)shell::FsOperation::Rename);
+    SetGlobalFunction(impl->context, global, "__text_encode", NativeTextEncode,
+                      1);
+    SetGlobalFunction(impl->context, global, "__text_encode_into",
+                      NativeTextEncodeInto, 2);
+    SetGlobalFunction(impl->context, global, "__text_decode", NativeTextDecode,
+                      3);
+    SetGlobalFunction(impl->context, global, "__process_env", NativeProcessEnv,
+                      0);
+    SetGlobalFunction(impl->context, global, "__process_data_dir",
+                      NativeProcessDataDir, 0);
+    SetGlobalFunction(impl->context, global, "__os_homedir", NativeOsHomedir,
+                      0);
+    SetGlobalFunction(impl->context, global, "__component_input_on",
+                      NativeComponentInputOn, 4);
     SetGlobalFunction(impl->context, global, "__process_run", NativeProcessRun,
-                      2);
+                      3);
+    SetGlobalFunction(impl->context, global, "__process_spawn",
+                      NativeProcessSpawn, 4);
     SetGlobalFunction(impl->context, global, "__process_exit",
                       NativeProcessExit, 1);
     SetGlobalFunction(impl->context, global, "__input_state_new",
@@ -173601,7 +181773,6 @@ ShellRuntime* ShellRuntime::New(
         runtime->Release();
         return nullptr;
     }
-    JS_SetMemoryLimit(runtime->impl->jsRuntime, (size_t)256 * 1024 * 1024);
     JS_SetMaxStackSize(runtime->impl->jsRuntime, (size_t)1024 * 1024);
     JS_SetInterruptHandler(runtime->impl->jsRuntime, Interrupt, runtime->impl);
     JS_SetModuleLoaderFunc(runtime->impl->jsRuntime, ModuleNormalize,
@@ -173625,6 +181796,10 @@ ShellRuntime* ShellRuntime::Retain() {
     return this;
 }
 
+void ShellRuntime::SetEditorFiles(bool enabled) {
+    if (impl) impl->editorFiles = enabled;
+}
+
 void ShellRuntime::Release() {
     if (--refs == 0) delete this;
 }
@@ -173644,6 +181819,7 @@ static ViewType* LoadModule(ShellRuntime* runtime, Str name, Str source,
         return nullptr;
     }
     JSModuleDef* definition = (JSModuleDef*)JS_VALUE_GET_PTR(module);
+    SetFileImportMeta(impl->context, definition, name);
     JSValue evaluated =
         JS_EvalFunction(impl->context, JS_DupValue(impl->context, module));
     if (JS_IsException(evaluated)) {
@@ -173766,9 +181942,11 @@ ViewType* ShellRuntime::ReloadApp(Str directory, Str entry, Policy* policy,
             return nullptr;
         }
         StrFree(dependencyError);
-        Str linkError = {};
-        store.LinkForEditor(Str(dir), dependencies, nullptr, &linkError);
-        StrFree(linkError);
+        if (impl->editorFiles) {
+            Str linkError = {};
+            store.LinkForEditor(Str(dir), dependencies, nullptr, &linkError);
+            StrFree(linkError);
+        }
     }
     StrFree(manifestPath);
 
@@ -174018,6 +182196,13 @@ int ShellRuntime::LiveCallbacks() const {
     return impl->callbacks.Live();
 }
 
+int64_t ShellRuntime::MallocLimit() const {
+    if (!impl || !impl->jsRuntime) return 0;
+    JSMemoryUsage usage = {};
+    JS_ComputeMemoryUsage(impl->jsRuntime, &usage);
+    return usage.malloc_limit;
+}
+
 int ShellRuntime::LiveEntities() const {
     return impl->retained.Len();
 }
@@ -174145,12 +182330,97 @@ void ShellRuntime::ReleaseApplicationState(ViewObject* object) {
     }
 }
 
+static void DriveProcessStream(ShellRuntime* runtime, ShellRuntimeImpl* impl,
+                               ShellTask* task, Ctx* cx) {
+    if (!runtime || !impl || !task || !task->processStream) return;
+    Vec<shell::ProcessStreamEvent> events;
+    shell::ProcessStreamPoll(task->processStream, &events);
+    if (len(events) == 0) {
+        VecReset(events);
+        return;
+    }
+    uint32_t id = task->id;
+    EntityId owner = task->owner;
+    Policy* policy = PolicyRetain(task->policy);
+    AppModule* application = task->application;
+    JSValue callback = JS_DupValue(impl->context, task->callback);
+    shell::CallScopeGuard scope =
+        shell::ScopeEnter(cx->win, cx->app, ScopePhase::Task, owner, policy,
+                          runtime, application);
+    PolicyRelease(policy);
+    JSContext* ctx = impl->context;
+    JSValue global = JS_GetGlobalObject(ctx);
+    JSValue ambient = JS_GetPropertyStr(ctx, global, "__ambient_context");
+    bool sawExit = false;
+    for (int i = 0; i < len(events); i++) {
+        shell::ProcessStreamEvent& event = events[i];
+        const char* name = "stdout";
+        JSValue payload = JS_UNDEFINED;
+        if (event.kind == shell::ProcessStreamEvent::Kind::Err) {
+            name = "stderr";
+        } else if (event.kind == shell::ProcessStreamEvent::Kind::Exit) {
+            name = "exit";
+            sawExit = true;
+            payload = JS_NewObject(ctx);
+            JS_SetPropertyStr(
+                ctx, payload, "code",
+                event.hasCode ? JS_NewInt32(ctx, event.code) : JS_NULL);
+            if (event.signal.s && len(event.signal) > 0) {
+                JS_SetPropertyStr(ctx, payload, "signal",
+                                  JS_NewStringLen(ctx, event.signal.s,
+                                                  (size_t)len(event.signal)));
+            } else {
+                JS_SetPropertyStr(ctx, payload, "signal", JS_NULL);
+            }
+            if (event.hasError) {
+                JS_SetPropertyStr(
+                    ctx, payload, "error",
+                    JS_NewStringLen(ctx, event.text.s ? event.text.s : "",
+                                    (size_t)len(event.text)));
+            }
+        }
+        if (event.kind != shell::ProcessStreamEvent::Kind::Exit) {
+            payload = JS_NewStringLen(ctx, event.text.s ? event.text.s : "",
+                                      (size_t)len(event.text));
+        }
+        JSValue args[3] = {JS_NewString(ctx, name), payload,
+                           JS_DupValue(ctx, ambient)};
+        JSValue result = JS_Call(ctx, callback, JS_UNDEFINED, 3, args);
+        JS_FreeValue(ctx, args[0]);
+        JS_FreeValue(ctx, args[1]);
+        JS_FreeValue(ctx, args[2]);
+        if (JS_IsException(result)) {
+            Arena* arena = ArenaNew();
+            log(ExceptionText(arena, ctx));
+            ArenaDelete(arena);
+        } else {
+            JS_FreeValue(ctx, result);
+        }
+        event.Free();
+    }
+    VecReset(events);
+    JS_FreeValue(ctx, ambient);
+    JS_FreeValue(ctx, global);
+    JS_FreeValue(ctx, callback);
+    if (sawExit) ForgetTask(impl, id, true);
+    ShellError error = {};
+    runtime->DrainJobs(kMaxJobBatch, &error);
+    if (error.IsSet()) {
+        log(error.message);
+        ShellErrorClear(&error);
+    }
+}
+
 void ShellRuntime::ResumeTask(uint32_t id, Ctx* cx) {
     if (!cx || !cx->app || !cx->win) return;
     ShellTask* task = FindTask(impl, id);
     if (!task || task->kind == ShellTaskKind::Spawn) return;
     if (task->owner.IsValid() && !EntityGet(cx->app, task->owner)) {
         ForgetTask(impl, id, false);
+        return;
+    }
+    if (task->kind == ShellTaskKind::ProcessStream) {
+        DriveProcessStream(this, impl, task, cx);
         return;
     }
 
@@ -174606,6 +182876,34 @@ void ShellRuntime::DispatchInputEvent(shell::EntityHandle handle,
     VecReset(callbacks);
 }
 
+void ShellRuntime::RetireTextState(shell::TextStateEntity* state) {
+    if (!state) return;
+    if (impl && impl->context) {
+        for (int i = 0; i < len(state->subs); i++) {
+            impl->callbacks.RetireId(impl->context, state->subs[i].id);
+        }
+    }
+    VecReset(state->subs);
+    state->runtime = nullptr;
+}
+
+void ShellRuntime::DispatchComponentInput(shell::TextStateEntity* state,
+                                          const InputEvent* event,
+                                          Window* window, App* app) {
+    if (!state || !event || !impl || !impl->context) return;
+    for (int i = 0; i < len(state->subs); i++) {
+        if (state->subs[i].kind != event->kind) continue;
+        JSValue payload = JS_NewObject(impl->context);
+        if (event->kind == InputEventKind::PressEnter) {
+            JS_SetPropertyStr(impl->context, payload, "secondary",
+                              JS_NewBool(impl->context, event->secondary));
+            JS_SetPropertyStr(impl->context, payload, "shift",
+                              JS_NewBool(impl->context, event->shift));
+        }
+        Dispatch(this, state->subs[i].id, payload, window, app);
+    }
+}
+
 void ShellRuntime::DispatchSliderEvent(shell::EntityHandle handle,
                                        const SliderEvent& event, Window* window,
                                        App* app) {
@@ -174654,6 +182952,9 @@ void ShellRuntime::RenderVirtualItems(shell::CallbackId renderId,
     if (!render || !key || !cx->win || !cx->app) return;
     if (render->view.IsValid() && !EntityGet(cx->app, render->view)) return;
 
+    EntityId outerSelf = cx->self;
+    cx->self = render->view;
+
     double started = TimeNow();
     shell::SpecArena* outer = impl->scratch;
 
@@ -174661,6 +182962,13 @@ void ShellRuntime::RenderVirtualItems(shell::CallbackId renderId,
     impl->scratch = batch;
     Vec<shell::SpecId> roots;
     Vec<Str> itemKeys;
+
+    bool opened = !impl->callbacks.building;
+    uint64_t generation = 0;
+    if (opened) {
+        generation = impl->callbacks.Begin(impl->context);
+        impl->callbacks.layoutHandlers = true;
+    }
     bool succeeded = true;
     {
         shell::CallScopeGuard scope = shell::ScopeEnter(
@@ -174736,12 +183044,20 @@ void ShellRuntime::RenderVirtualItems(shell::CallbackId renderId,
         VecReset(seen);
         ArenaDelete(keys);
     }
+    if (opened) impl->callbacks.layoutHandlers = false;
     impl->scratch = outer;
+    bool staged = false;
     if (!succeeded) {
+        if (opened) impl->callbacks.Abort(impl->context);
         Arena* arena = ArenaNew();
         log(ExceptionText(arena, impl->context));
         ArenaDelete(arena);
     } else {
+        staged = opened && impl->callbacks.HasStaged();
+        if (staged)
+            impl->callbacks.Commit();
+        else if (opened)
+            impl->callbacks.Abort(impl->context);
         ShellError error = {};
         for (int i = 0; i < len(roots); i++) {
             out[i] = ShellMaterializeSpec(cx, this, batch, roots[i], &error);
@@ -174777,6 +183093,18 @@ void ShellRuntime::RenderVirtualItems(shell::CallbackId renderId,
                 out[i] = row;
             }
         }
+        if (staged) {
+
+            RenderSnapshot* snapshot = new RenderSnapshot(
+                generation, 0, new shell::SpecArena(), SnapshotLease(this));
+            Entity<ScriptView> owner;
+            owner.id = render->view;
+            if (ScriptView* view = owner.Get(cx)) {
+                VecAppend(view->frameSnapshots, snapshot);
+            } else {
+                snapshot->Release();
+            }
+        }
     }
     VecReset(itemKeys);
     VecReset(roots);
@@ -174784,6 +183112,7 @@ void ShellRuntime::RenderVirtualItems(shell::CallbackId renderId,
     double elapsed = TimeNow() - started;
     shell::MetricsAdd(&impl->metrics, shell::MetricsTimerKind::FrameScript,
                       elapsed <= 0 ? 0 : (uint64_t)(elapsed * 1e9));
+    cx->self = outerSelf;
 }
 
 static const int kMaxChromeCacheEntries = 4096;
@@ -175754,6 +184083,60 @@ void ViewObjectRelease(ViewObject* object) {
                  object->value);
     object->runtime->Release();
     delete object;
+}
+
+static void AppendAgentsSection(StrBuilder* out, bool* first, const char* spec,
+                                const char* description,
+                                const char* const* names, int count) {
+    if (!out || !spec) return;
+    if (first && *first) {
+        *first = false;
+    } else if (first) {
+        out->AppendChar('\n');
+    }
+    out->Append(fmt("- `\"%s\"` — %s: ", Str(spec), Str(description)));
+    for (int i = 0; i < count; i++) {
+        if (i) out->Append(StrL(", "));
+        out->Append(fmt("`%s`", Str(names[i])));
+    }
+}
+
+void ShellAppendAgentsModules(
+    StrBuilder* out, const shell::FrozenComponentRegistry* components) {
+    if (!out) return;
+    bool first = true;
+    const char* const* names = nullptr;
+    int count = 0;
+    ModuleExports(StrL("gpui-kit"), &names, &count);
+    AppendAgentsSection(out, &first, "gpui-kit",
+                        "GPUI's own elements and the runtime (`\"gpui\"` is "
+                        "an alias)",
+                        names, count);
+    ModuleExports(StrL("gpui-base"), &names, &count);
+    AppendAgentsSection(out, &first, "gpui-base",
+                        "unstyled controls, layout helpers and the theme",
+                        names, count);
+    ModuleExports(StrL("gpui-fps"), &names, &count);
+    AppendAgentsSection(out, &first, "gpui-fps", "the native performance HUD",
+                        names, count);
+    if (!components || !components->ModuleSpecifier()) return;
+    Vec<const char*> catalog;
+    for (int i = 0; i < components->DescriptorCount(); i++) {
+        const shell::ComponentDescriptor* descriptor =
+            components->Descriptor((uint32_t)i);
+        if (descriptor && descriptor->name)
+            VecAppend(catalog, descriptor->name);
+    }
+    for (int i = 0; i < components->StateCount(); i++) {
+        const shell::StateDescriptor* state = components->State(i);
+        if (state && state->exportName) VecAppend(catalog, state->exportName);
+    }
+    AppendAgentsSection(
+        out, &first, components->ModuleSpecifier(),
+        "this host's styled components; prefer them to hand-styled base "
+        "controls",
+        catalog.els, catalog.len);
+    VecReset(catalog);
 }
 
 }
@@ -177247,6 +185630,46 @@ bool ZlibInflate(Str input, bool gzip, Str* output, Str* error) {
         result[len(decoded)] = 0;
         *output = Str(result, len(decoded));
     }
+    return true;
+}
+
+bool ZlibInflateRaw(Str input, Str* output, Str* error) {
+    if (output) {
+        StrFree(*output);
+        *output = {};
+    }
+    if (error) {
+        StrFree(*error);
+        *error = {};
+    }
+    if (!input.s || len(input) < 0 || len(input) > kStandardDataLimit) {
+        StandardError(
+            error,
+            StrL("compressed input is invalid or exceeds the 64 MiB limit"));
+        return false;
+    }
+    Vec<uint8_t> decoded;
+    int consumed = 0;
+    bool ok =
+        InflateRaw((const uint8_t*)input.s, len(input), &decoded, &consumed) &&
+        consumed == len(input);
+    if (!ok) {
+        StandardError(error, StrL("invalid or oversized DEFLATE stream"));
+        VecReset(decoded);
+        return false;
+    }
+    if (output) {
+        char* result = (char*)Alloc(nullptr, len(decoded) + 1);
+        if (!result) {
+            StandardError(error, StrL("allocating decompressed data failed"));
+            VecReset(decoded);
+            return false;
+        }
+        if (len(decoded)) memcpy(result, decoded.els, (size_t)len(decoded));
+        result[len(decoded)] = 0;
+        *output = Str(result, len(decoded));
+    }
+    VecReset(decoded);
     return true;
 }
 
@@ -179106,6 +187529,55 @@ static int EditDistance(const uint32_t* left, int nLeft, Str right) {
     return previous[nRight];
 }
 
+static TempStr MissingArgumentTemp(Str name) {
+    char prefixBuf[96];
+    int prefixLen = snprintf(prefixBuf, sizeof(prefixBuf), "%.*s_", len(name),
+                             name.s ? name.s : "");
+    char siblings[4][64];
+    int found = 0;
+    if (prefixLen > 0 && prefixLen < (int)sizeof(prefixBuf)) {
+        Str prefix(prefixBuf, prefixLen);
+        EachKnownName([&](Str candidate) {
+            if (found >= 4 || len(candidate) <= 0 || len(candidate) >= 64) {
+                return;
+            }
+            if (!StrStartsWith(candidate, prefix)) return;
+            if (FindFamily(candidate) != nullptr || IsOtherParam(candidate)) {
+                return;
+            }
+            memcpy(siblings[found], candidate.s, (size_t)len(candidate));
+            siblings[found][len(candidate)] = 0;
+            found++;
+        });
+    }
+    if (found == 0) {
+        return fmt("`%s` expects 1 argument, got none", name);
+    }
+    if (found == 1) {
+        return fmt(
+            "`%s` expects 1 argument, got none; the forms without an "
+            "argument are `%s()`",
+            name, Str(siblings[0]));
+    }
+    if (found == 2) {
+        return fmt(
+            "`%s` expects 1 argument, got none; the forms without an "
+            "argument are `%s()`, `%s()`",
+            name, Str(siblings[0]), Str(siblings[1]));
+    }
+    if (found == 3) {
+        return fmt(
+            "`%s` expects 1 argument, got none; the forms without an "
+            "argument are `%s()`, `%s()`, `%s()`",
+            name, Str(siblings[0]), Str(siblings[1]), Str(siblings[2]));
+    }
+    return fmt(
+        "`%s` expects 1 argument, got none; the forms without an "
+        "argument are `%s()`, `%s()`, `%s()`, `%s()`",
+        name, Str(siblings[0]), Str(siblings[1]), Str(siblings[2]),
+        Str(siblings[3]));
+}
+
 }
 
 namespace gpui::shell {
@@ -179197,6 +187669,13 @@ bool ApplyParamStyle(El* element, const SpecOp& op, ShellError* error,
     RemScope scope(remSize);
     const style::Family* family = style::FindFamily(op.name);
     if (!family && !style::IsOtherParam(op.name)) {
+        return false;
+    }
+
+    bool missing =
+        op.argCount <= 0 || !op.args || op.args[0].kind == BridgedKind::Nil;
+    if (missing) {
+        ShellErrorSet(error, style::MissingArgumentTemp(op.name));
         return false;
     }
     Bridged value;
@@ -179442,7 +187921,7 @@ namespace gpui::shell {
 
 static const char kShellTypes0[] = R"GPUI_DTS(// Auto-generated — add `gpui-kit.d.ts` to your .gitignore.
 //
-// The built-in modules, as TypeScript declarations, for gpui-shell 0.7.1.
+// The built-in modules, as TypeScript declarations, for gpui-shell 0.7.3.
 // Do not edit: gpui-shell rewrites this on every run, in every directory that
 // imports one of them, from the runtime that is about to execute the script. A
 // committed copy could only ever be the stale one.
@@ -179783,6 +188262,18 @@ declare module "gpui-kit" {
      * registered for its scheme.
      */
     open_url(url: string): void;
+    /**
+     * Opens a file or directory with whatever the system opens it with —
+     * the user's default application for its type, or the file manager for
+     * a directory. `App::open_with_system`.
+     *
+     * The path must be inside a directory granted in `capabilities.fs.read`
+     * and must exist; anything else throws. Use this rather than running
+     * `xdg-open` or `open` through `process.run`, which starts commands
+     * without the desktop session's environment, so the opener cannot find
+     * the default application.
+     */
+    open_path(path: string): void;
 
     /** `App::read_from_clipboard`. `undefined` when it holds no text. */
     read_from_clipboard(): string | undefined;
@@ -179968,6 +188459,20 @@ static const char kShellTypes1[] = R"GPUI_DTS(   * The mirror of GPUI's `AsyncAp
     modifiers: Modifiers;
   }
 
+  /** What an `on_pinch` handler receives. */
+  export interface PinchEvent {
+    /**
+     * The zoom change for this step: positive zooms in, negative zooms out,
+     * `0.1` is a 10% increase.
+     */
+    delta: number;
+    phase: "started" | "moved" | "ended" | "cancelled";
+    position: Point;
+    local_position?: Point;
+    bounds?: import("gpui-shell").ElementBounds;
+    modifiers: Modifiers;
+  }
+
   /**
    * The base class of every view: subclass it and default-export the subclass.
    *
@@ -180096,7 +188601,8 @@ static const char kShellTypes1[] = R"GPUI_DTS(   * The mirror of GPUI's `AsyncAp
      * that is on screen while the surface is closed, and that opens it.
      *
      * Consumed exactly as `content` is. A surface with no trigger draws
-     * nothing at all. A `Popup` takes its trigger in `Popup.new(id, trigger)`
+)GPUI_DTS";
+static const char kShellTypes2[] = R"GPUI_DTS(     * nothing at all. A `Popup` takes its trigger in `Popup.new(id, trigger)`
      * instead, because its trigger's bounds are what the content is anchored
      * to.
      */
@@ -180106,8 +188612,7 @@ static const char kShellTypes1[] = R"GPUI_DTS(   * The mirror of GPUI's `AsyncAp
      *
      * Left empty, the frame draws the bare editor for the state it was built
      * from, which is what a number input almost always wants. Fill it to put
-)GPUI_DTS";
-static const char kShellTypes2[] = R"GPUI_DTS(     * something else there — but not `Input.new(state)`: that is the *framed*
+     * something else there — but not `Input.new(state)`: that is the *framed*
      * editor, and a frame inside this frame draws two borders. Adornments
      * beside the editor are ordinary `child(...)` calls on the number input.
      */
@@ -180219,6 +188724,12 @@ static const char kShellTypes2[] = R"GPUI_DTS(     * something else there — bu
      */
     on_scroll_wheel<Self extends Element>(this: Self, handler: (event: ScrollWheelEvent, cx: Context) => void): Self;
     /**
+     * GPUI `InteractiveElement::on_pinch`: a trackpad or touch pinch over this
+     * element, delivered once per step of the gesture. Multiply a zoom level
+     * by `1 + event.delta` to follow it.
+     */
+    on_pinch<Self extends Element>(this: Self, handler: (event: PinchEvent, cx: Context) => void): Self;
+    /**
      * `handler(event, cx)` when the named action is dispatched to this element
      * or to something inside it.
      *
@@ -180263,20 +188774,12 @@ static const char kShellTypes2[] = R"GPUI_DTS(     * something else there — bu
      * key names the item that was pressed; the index would name whatever slid
      * into its place.
      *
-     * One handler for the list rather than one per row, and that is a limit
-     * rather than a shorthand: a handler registered inside the item renderer
-     * throws. Handlers belong to the render pass that registered them and are
-     * released with it; a row is rebuilt on every frame the list is scrolled,
-     * so a per-row handler would accumulate for as long as the view stood —
-     * twenty visible rows over a thousand frames is twenty thousand functions
-     * nothing can reach and nothing releases.
-     *
-     * The key is normally enough: the script already holds the data the row was
-     * built from. A row with several independently clickable parts needs a
-     * handler lifetime scoped to one batch of items, which this runtime does
-     * not have yet; when it does, this restriction lifts and `on_click` inside
-     * an item renderer starts working, with no change to anything written
-     * against `on_item_click`.
+     * A row may also register handlers of its own — `row.on_click(...)` inside
+     * the item renderer works, and a row with several clickable parts needs it.
+     * Those handlers belong to the batch of rows that registered them and are
+     * released when the next frame replaces it. `on_item_click` remains the
+     * cheaper choice for a whole-row click: one handler for the list, and the
+     * key it reports names the item even after a filter or a sort.
      */
     on_item_click<Self extends Element>(this: Self, handler: (key: string, cx: Context) => void): Self;
     /**
@@ -180288,8 +188791,7 @@ static const char kShellTypes2[] = R"GPUI_DTS(     * something else there — bu
      *
      * A press rather than a click, because that is when a context menu opens:
      * the row is still under the pointer, so the menu can name what it is for
-     * before it is drawn over it. And one handler for the list rather than one
-     * per row, for the reason `on_item_click` gives.
+     * before it is drawn over it.
      *
      * It is delivered on the row, so a handler for the same button on an
      * element around the list still fires after it, in the ordinary bubble
@@ -180313,7 +188815,8 @@ static const char kShellTypes2[] = R"GPUI_DTS(     * something else there — bu
      * `handler(action, cx)` on a `NumberInput`, where `action` is
      * `"increment"` or `"decrement"`.
      *
-     * **Replaces the built-in stepping.** Without a handler the control steps
+)GPUI_DTS";
+static const char kShellTypes3[] = R"GPUI_DTS(     * **Replaces the built-in stepping.** Without a handler the control steps
      * itself: it adds or subtracts the state's `set_step(...)`, clamps to
      * `set_min(...)` and `set_max(...)`, and re-applies the numeric mask. All
      * of that lives in the closure this replaces, so once a handler is set none
@@ -180326,8 +188829,7 @@ static const char kShellTypes2[] = R"GPUI_DTS(     * something else there — bu
     /**
      * `handler(open, cx)`, when something other than the script changed a
      * `Popover`'s open state: a press on the trigger, a press outside it, or
-)GPUI_DTS";
-static const char kShellTypes3[] = R"GPUI_DTS(     * Escape. Storage the value and call `cx.notify()`, the way `on_change`
+     * Escape. Storage the value and call `cx.notify()`, the way `on_change`
      * stores a checkbox's.
      *
      * A `HoverCard` accepts this too, and today never calls it: the base layer
@@ -180437,6 +188939,19 @@ static const char kShellTypes3[] = R"GPUI_DTS(     * Escape. Storage the value a
      */
     aria_active_descendant<Self extends Element>(this: Self): Self;
     /**
+     * GPUI `InteractiveElement::window_control_area`: this element is the
+     * window's drag area, or its close, maximize or minimize button.
+     *
+     * The host draws no title bar of its own, so a script's title bar is the
+     * window's. `"drag"` makes it behave like one on every platform, as
+     * gpui-component's `TitleBar` does: pressing and dragging across it moves
+     * the window, and a double-click zooms it (or does what the user set
+     * double-clicking a title bar to do, on macOS).
+     *
+     * Plain elements only.
+     */
+    window_control_area<Self extends Element>(this: Self, area: "drag" | "close" | "max" | "min"): Self;
+    /**
      * Tracks a `FocusHandle` the script owns, so `handle.is_focused()` answers
      * for this element and `handle.focus()` moves the keyboard onto it.
      *
@@ -180527,7 +189042,8 @@ static const char kShellTypes3[] = R"GPUI_DTS(     * Escape. Storage the value a
     mode<Self extends Element>(this: Self, value: import("gpui-base").ScrollbarMode): Self;
     /**
      * The content size a `Scrollbar` measures its thumb against, in pixels,
-     * for when the script knows it and the scroll area does not — a list that
+)GPUI_DTS";
+static const char kShellTypes4[] = R"GPUI_DTS(     * for when the script knows it and the scroll area does not — a list that
      * paints a window of rows rather than all of them.
      */
     scroll_size<Self extends Element>(this: Self, width: number, height: number): Self;
@@ -180556,8 +189072,7 @@ static const char kShellTypes3[] = R"GPUI_DTS(     * Escape. Storage the value a
      * wired: it is for persisting a layout or showing a width, not for making
      * the group resize.
      */
-)GPUI_DTS";
-static const char kShellTypes4[] = R"GPUI_DTS(    on_resize<Self extends Element>(this: Self, handler: (sizes: number[], cx: Context) => void): Self;
+    on_resize<Self extends Element>(this: Self, handler: (sizes: number[], cx: Context) => void): Self;
     /**
      * The orientation a `RadioGroup` or `ToggleGroup` announces.
      *
@@ -180739,7 +189254,8 @@ static const char kShellTypes4[] = R"GPUI_DTS(    on_resize<Self extends Element
     /** Sets the border colour. Draws nothing without a width. */
     border_color<Self extends Element>(this: Self, value: Color): Self;
     /** Sets the border width on the left. */
-    border_l<Self extends Element>(this: Self, value: AbsoluteLength): Self;
+)GPUI_DTS";
+static const char kShellTypes5[] = R"GPUI_DTS(    border_l<Self extends Element>(this: Self, value: AbsoluteLength): Self;
     /** Sets the border width on the right. */
     border_r<Self extends Element>(this: Self, value: AbsoluteLength): Self;
     /** Sets the border width on the top. */
@@ -180761,8 +189277,7 @@ static const char kShellTypes4[] = R"GPUI_DTS(    on_resize<Self extends Element
     /** Sets the font weight to a number between 100 and 900. */
     font_weight<Self extends Element>(this: Self, value: number): Self;
     /** Sets the gap between children on both axes. */
-)GPUI_DTS";
-static const char kShellTypes5[] = R"GPUI_DTS(    gap<Self extends Element>(this: Self, value: DefiniteLength): Self;
+    gap<Self extends Element>(this: Self, value: DefiniteLength): Self;
     /** Sets the gap between children along the main axis. */
     gap_x<Self extends Element>(this: Self, value: DefiniteLength): Self;
     /** Sets the gap between children along the cross axis. */
@@ -180773,7 +189288,7 @@ static const char kShellTypes5[] = R"GPUI_DTS(    gap<Self extends Element>(this
     inset<Self extends Element>(this: Self, value: Length): Self;
     /** Sets the left offset of a positioned element. */
     left<Self extends Element>(this: Self, value: Length): Self;
-    /** Sets the line height. A bare number is a multiplier (`1.45`), not pixels; a string is a length. */
+    /** Sets the line height. A bare number is a multiplier of the font size, as in CSS (`1.45`); a string is a length (`"18px"`). */
     line_height<Self extends Element>(this: Self, value: DefiniteLength): Self;
     /** Sets the margin on all four sides. */
     m<Self extends Element>(this: Self, value: Length): Self;
@@ -181010,7 +189525,8 @@ static const char kShellTypes5[] = R"GPUI_DTS(    gap<Self extends Element>(this
      */
     border_b_16<Self extends Element>(this: Self): Self;
     /**
-     * Sets the border width of the bottom side of the element. [Docs](https://tailwindcss.com/docs/border-width#individual-sides)
+)GPUI_DTS";
+static const char kShellTypes6[] = R"GPUI_DTS(     * Sets the border width of the bottom side of the element. [Docs](https://tailwindcss.com/docs/border-width#individual-sides)
      *
      * 2px
      */
@@ -181049,8 +189565,7 @@ static const char kShellTypes5[] = R"GPUI_DTS(    gap<Self extends Element>(this
      * Sets the border width of the bottom side of the element. [Docs](https://tailwindcss.com/docs/border-width#individual-sides)
      *
      * 5px
-)GPUI_DTS";
-static const char kShellTypes6[] = R"GPUI_DTS(     */
+     */
     border_b_5<Self extends Element>(this: Self): Self;
     /**
      * Sets the border width of the bottom side of the element. [Docs](https://tailwindcss.com/docs/border-width#individual-sides)
@@ -181335,7 +189850,8 @@ static const char kShellTypes6[] = R"GPUI_DTS(     */
      *
      * 24px
      */
-    border_t_24<Self extends Element>(this: Self): Self;
+)GPUI_DTS";
+static const char kShellTypes7[] = R"GPUI_DTS(    border_t_24<Self extends Element>(this: Self): Self;
     /**
      * Sets the border width of the top side of the element. [Docs](https://tailwindcss.com/docs/border-width#individual-sides)
      *
@@ -181377,8 +189893,7 @@ static const char kShellTypes6[] = R"GPUI_DTS(     */
      *
      * 8px
      */
-)GPUI_DTS";
-static const char kShellTypes7[] = R"GPUI_DTS(    border_t_8<Self extends Element>(this: Self): Self;
+    border_t_8<Self extends Element>(this: Self): Self;
     /**
      * Sets the border width of the top side of the element. [Docs](https://tailwindcss.com/docs/border-width#individual-sides)
      *
@@ -181648,7 +190163,8 @@ static const char kShellTypes7[] = R"GPUI_DTS(    border_t_8<Self extends Elemen
      *
      * 8% (1/12)
      */
-    bottom_1_12<Self extends Element>(this: Self): Self;
+)GPUI_DTS";
+static const char kShellTypes8[] = R"GPUI_DTS(    bottom_1_12<Self extends Element>(this: Self): Self;
     /**
      * Sets the bottom value of a positioned element. [Docs](https://tailwindcss.com/docs/top-right-bottom-left)
      *
@@ -181692,8 +190208,7 @@ static const char kShellTypes7[] = R"GPUI_DTS(    border_t_8<Self extends Elemen
      */
     bottom_2<Self extends Element>(this: Self): Self;
     /**
-)GPUI_DTS";
-static const char kShellTypes8[] = R"GPUI_DTS(     * Sets the bottom value of a positioned element. [Docs](https://tailwindcss.com/docs/top-right-bottom-left)
+     * Sets the bottom value of a positioned element. [Docs](https://tailwindcss.com/docs/top-right-bottom-left)
      *
      * 80px (5rem)
      */
@@ -181987,7 +190502,8 @@ static const char kShellTypes8[] = R"GPUI_DTS(     * Sets the bottom value of a 
      */
     bottom_neg_2_4<Self extends Element>(this: Self): Self;
     /**
-     * Sets the bottom value of a positioned element. [Docs](https://tailwindcss.com/docs/top-right-bottom-left)
+)GPUI_DTS";
+static const char kShellTypes9[] = R"GPUI_DTS(     * Sets the bottom value of a positioned element. [Docs](https://tailwindcss.com/docs/top-right-bottom-left)
      *
      * 40% (2/5)
      */
@@ -182029,8 +190545,7 @@ static const char kShellTypes8[] = R"GPUI_DTS(     * Sets the bottom value of a 
      */
     bottom_neg_3p5<Self extends Element>(this: Self): Self;
     /**
-)GPUI_DTS";
-static const char kShellTypes9[] = R"GPUI_DTS(     * Sets the bottom value of a positioned element. [Docs](https://tailwindcss.com/docs/top-right-bottom-left)
+     * Sets the bottom value of a positioned element. [Docs](https://tailwindcss.com/docs/top-right-bottom-left)
      *
      * 16px (1rem)
      */
@@ -182318,7 +190833,8 @@ static const char kShellTypes9[] = R"GPUI_DTS(     * Sets the bottom value of a 
      */
     cursor_s_resize<Self extends Element>(this: Self): Self;
     /**
-     * Sets cursor style when hovering over an element to `text`.
+)GPUI_DTS";
+static const char kShellTypes10[] = R"GPUI_DTS(     * Sets cursor style when hovering over an element to `text`.
      *
      * [Docs](https://tailwindcss.com/docs/cursor)
      */
@@ -182356,8 +190872,7 @@ static const char kShellTypes9[] = R"GPUI_DTS(     * Sets the bottom value of a 
      * [Docs](https://tailwindcss.com/docs/flex#flex-1)
      */
     flex_1<Self extends Element>(this: Self): Self;
-)GPUI_DTS";
-static const char kShellTypes10[] = R"GPUI_DTS(    /**
+    /**
      * Sets the element to allow a flex item to grow and shrink, taking into account its initial size.
      *
      * [Docs](https://tailwindcss.com/docs/flex#auto)
@@ -182656,7 +191171,8 @@ static const char kShellTypes10[] = R"GPUI_DTS(    /**
      *
      * 20px (1.25rem)
      */
-    gap_5<Self extends Element>(this: Self): Self;
+)GPUI_DTS";
+static const char kShellTypes11[] = R"GPUI_DTS(    gap_5<Self extends Element>(this: Self): Self;
     /**
      * Sets the gap between rows and columns in flex layouts. [Docs](https://tailwindcss.com/docs/gap)
      *
@@ -182702,8 +191218,7 @@ static const char kShellTypes10[] = R"GPUI_DTS(    /**
     /**
      * Sets the gap between rows and columns in flex layouts. [Docs](https://tailwindcss.com/docs/gap)
      *
-)GPUI_DTS";
-static const char kShellTypes11[] = R"GPUI_DTS(     * 320px (20rem)
+     * 320px (20rem)
      */
     gap_80<Self extends Element>(this: Self): Self;
     /**
@@ -183013,7 +191528,8 @@ static const char kShellTypes11[] = R"GPUI_DTS(     * 320px (20rem)
      */
     gap_x_0p5<Self extends Element>(this: Self): Self;
     /**
-     * Sets the gap between columns in flex layouts. [Docs](https://tailwindcss.com/docs/gap#changing-row-and-column-gaps-independently)
+)GPUI_DTS";
+static const char kShellTypes12[] = R"GPUI_DTS(     * Sets the gap between columns in flex layouts. [Docs](https://tailwindcss.com/docs/gap#changing-row-and-column-gaps-independently)
      *
      * 4px (0.25rem)
      */
@@ -183053,8 +191569,7 @@ static const char kShellTypes11[] = R"GPUI_DTS(     * 320px (20rem)
      *
      * 64px (4rem)
      */
-)GPUI_DTS";
-static const char kShellTypes12[] = R"GPUI_DTS(    gap_x_16<Self extends Element>(this: Self): Self;
+    gap_x_16<Self extends Element>(this: Self): Self;
     /**
      * Sets the gap between columns in flex layouts. [Docs](https://tailwindcss.com/docs/gap#changing-row-and-column-gaps-independently)
      *
@@ -183320,7 +191835,8 @@ static const char kShellTypes12[] = R"GPUI_DTS(    gap_x_16<Self extends Element
      */
     gap_x_neg_16<Self extends Element>(this: Self): Self;
     /**
-     * Sets the gap between columns in flex layouts. [Docs](https://tailwindcss.com/docs/gap#changing-row-and-column-gaps-independently)
+)GPUI_DTS";
+static const char kShellTypes13[] = R"GPUI_DTS(     * Sets the gap between columns in flex layouts. [Docs](https://tailwindcss.com/docs/gap#changing-row-and-column-gaps-independently)
      *
      * 8% (1/12)
      */
@@ -183360,8 +191876,7 @@ static const char kShellTypes12[] = R"GPUI_DTS(    gap_x_16<Self extends Element
      *
      * 6px (0.375rem)
      */
-)GPUI_DTS";
-static const char kShellTypes13[] = R"GPUI_DTS(    gap_x_neg_1p5<Self extends Element>(this: Self): Self;
+    gap_x_neg_1p5<Self extends Element>(this: Self): Self;
     /**
      * Sets the gap between columns in flex layouts. [Docs](https://tailwindcss.com/docs/gap#changing-row-and-column-gaps-independently)
      *
@@ -183627,7 +192142,8 @@ static const char kShellTypes13[] = R"GPUI_DTS(    gap_x_neg_1p5<Self extends El
      */
     gap_y_1_5<Self extends Element>(this: Self): Self;
     /**
-     * Sets the gap between rows in flex layouts. [Docs](https://tailwindcss.com/docs/gap#changing-row-and-column-gaps-independently)
+)GPUI_DTS";
+static const char kShellTypes14[] = R"GPUI_DTS(     * Sets the gap between rows in flex layouts. [Docs](https://tailwindcss.com/docs/gap#changing-row-and-column-gaps-independently)
      *
      * 16% (1/6)
      */
@@ -183667,8 +192183,7 @@ static const char kShellTypes13[] = R"GPUI_DTS(    gap_x_neg_1p5<Self extends El
      *
      * 50% (2/4)
      */
-)GPUI_DTS";
-static const char kShellTypes14[] = R"GPUI_DTS(    gap_y_2_4<Self extends Element>(this: Self): Self;
+    gap_y_2_4<Self extends Element>(this: Self): Self;
     /**
      * Sets the gap between rows in flex layouts. [Docs](https://tailwindcss.com/docs/gap#changing-row-and-column-gaps-independently)
      *
@@ -183937,7 +192452,8 @@ static const char kShellTypes14[] = R"GPUI_DTS(    gap_y_2_4<Self extends Elemen
      * Sets the gap between rows in flex layouts. [Docs](https://tailwindcss.com/docs/gap#changing-row-and-column-gaps-independently)
      *
      * 40% (2/5)
-     */
+)GPUI_DTS";
+static const char kShellTypes15[] = R"GPUI_DTS(     */
     gap_y_neg_2_5<Self extends Element>(this: Self): Self;
     /**
      * Sets the gap between rows in flex layouts. [Docs](https://tailwindcss.com/docs/gap#changing-row-and-column-gaps-independently)
@@ -183976,8 +192492,7 @@ static const char kShellTypes14[] = R"GPUI_DTS(    gap_y_2_4<Self extends Elemen
      */
     gap_y_neg_3p5<Self extends Element>(this: Self): Self;
     /**
-)GPUI_DTS";
-static const char kShellTypes15[] = R"GPUI_DTS(     * Sets the gap between rows in flex layouts. [Docs](https://tailwindcss.com/docs/gap#changing-row-and-column-gaps-independently)
+     * Sets the gap between rows in flex layouts. [Docs](https://tailwindcss.com/docs/gap#changing-row-and-column-gaps-independently)
      *
      * 16px (1rem)
      */
@@ -184299,7 +192814,8 @@ static const char kShellTypes15[] = R"GPUI_DTS(     * Sets the gap between rows 
      *
      * 80% (5/6)
      */
-    h_5_6<Self extends Element>(this: Self): Self;
+)GPUI_DTS";
+static const char kShellTypes16[] = R"GPUI_DTS(    h_5_6<Self extends Element>(this: Self): Self;
     /**
      * Sets the height of the element. [Docs](https://tailwindcss.com/docs/height)
      *
@@ -184349,8 +192865,7 @@ static const char kShellTypes15[] = R"GPUI_DTS(     * Sets the gap between rows 
      */
     h_96<Self extends Element>(this: Self): Self;
     /**
-)GPUI_DTS";
-static const char kShellTypes16[] = R"GPUI_DTS(     * Sets the height of the element. [Docs](https://tailwindcss.com/docs/height)
+     * Sets the height of the element. [Docs](https://tailwindcss.com/docs/height)
      *
      * Auto
      */
@@ -184692,7 +193207,8 @@ static const char kShellTypes16[] = R"GPUI_DTS(     * Sets the height of the ele
      */
     inset_0p5<Self extends Element>(this: Self): Self;
     /**
-     * Sets the top, right, bottom, and left values of a positioned element. [Docs](https://tailwindcss.com/docs/top-right-bottom-left)
+)GPUI_DTS";
+static const char kShellTypes17[] = R"GPUI_DTS(     * Sets the top, right, bottom, and left values of a positioned element. [Docs](https://tailwindcss.com/docs/top-right-bottom-left)
      *
      * 4px (0.25rem)
      */
@@ -184728,8 +193244,7 @@ static const char kShellTypes16[] = R"GPUI_DTS(     * Sets the height of the ele
      */
     inset_128<Self extends Element>(this: Self): Self;
     /**
-)GPUI_DTS";
-static const char kShellTypes17[] = R"GPUI_DTS(     * Sets the top, right, bottom, and left values of a positioned element. [Docs](https://tailwindcss.com/docs/top-right-bottom-left)
+     * Sets the top, right, bottom, and left values of a positioned element. [Docs](https://tailwindcss.com/docs/top-right-bottom-left)
      *
      * 64px (4rem)
      */
@@ -184999,7 +193514,8 @@ static const char kShellTypes17[] = R"GPUI_DTS(     * Sets the top, right, botto
      */
     inset_neg_128<Self extends Element>(this: Self): Self;
     /**
-     * Sets the top, right, bottom, and left values of a positioned element. [Docs](https://tailwindcss.com/docs/top-right-bottom-left)
+)GPUI_DTS";
+static const char kShellTypes18[] = R"GPUI_DTS(     * Sets the top, right, bottom, and left values of a positioned element. [Docs](https://tailwindcss.com/docs/top-right-bottom-left)
      *
      * 64px (4rem)
      */
@@ -185035,8 +193551,7 @@ static const char kShellTypes17[] = R"GPUI_DTS(     * Sets the top, right, botto
      */
     inset_neg_1_5<Self extends Element>(this: Self): Self;
     /**
-)GPUI_DTS";
-static const char kShellTypes18[] = R"GPUI_DTS(     * Sets the top, right, bottom, and left values of a positioned element. [Docs](https://tailwindcss.com/docs/top-right-bottom-left)
+     * Sets the top, right, bottom, and left values of a positioned element. [Docs](https://tailwindcss.com/docs/top-right-bottom-left)
      *
      * 16% (1/6)
      */
@@ -185306,7 +193821,8 @@ static const char kShellTypes18[] = R"GPUI_DTS(     * Sets the top, right, botto
      *
      * each item when using justify-around.
      *
-     * [Docs](https://tailwindcss.com/docs/justify-content#space-evenly)
+)GPUI_DTS";
+static const char kShellTypes19[] = R"GPUI_DTS(     * [Docs](https://tailwindcss.com/docs/justify-content#space-evenly)
      */
     justify_evenly<Self extends Element>(this: Self): Self;
     /**
@@ -185346,8 +193862,7 @@ static const char kShellTypes18[] = R"GPUI_DTS(     * Sets the top, right, botto
      */
     left_11<Self extends Element>(this: Self): Self;
     /**
-)GPUI_DTS";
-static const char kShellTypes19[] = R"GPUI_DTS(     * Sets the left value of a positioned element. [Docs](https://tailwindcss.com/docs/top-right-bottom-left)
+     * Sets the left value of a positioned element. [Docs](https://tailwindcss.com/docs/top-right-bottom-left)
      *
      * 448px (28rem)
      */
@@ -185653,7 +194168,8 @@ static const char kShellTypes19[] = R"GPUI_DTS(     * Sets the left value of a p
      */
     left_neg_1_2<Self extends Element>(this: Self): Self;
     /**
-     * Sets the left value of a positioned element. [Docs](https://tailwindcss.com/docs/top-right-bottom-left)
+)GPUI_DTS";
+static const char kShellTypes20[] = R"GPUI_DTS(     * Sets the left value of a positioned element. [Docs](https://tailwindcss.com/docs/top-right-bottom-left)
      *
      * 33% (1/3)
      */
@@ -185693,8 +194209,7 @@ static const char kShellTypes19[] = R"GPUI_DTS(     * Sets the left value of a p
      *
      * 80px (5rem)
      */
-)GPUI_DTS";
-static const char kShellTypes20[] = R"GPUI_DTS(    left_neg_20<Self extends Element>(this: Self): Self;
+    left_neg_20<Self extends Element>(this: Self): Self;
     /**
      * Sets the left value of a positioned element. [Docs](https://tailwindcss.com/docs/top-right-bottom-left)
      *
@@ -186020,7 +194535,8 @@ static const char kShellTypes20[] = R"GPUI_DTS(    left_neg_20<Self extends Elem
      */
     m_32<Self extends Element>(this: Self): Self;
     /**
-     * Sets the margin of the element. [Docs](https://tailwindcss.com/docs/margin)
+)GPUI_DTS";
+static const char kShellTypes21[] = R"GPUI_DTS(     * Sets the margin of the element. [Docs](https://tailwindcss.com/docs/margin)
      *
      * 75% (3/4)
      */
@@ -186068,8 +194584,7 @@ static const char kShellTypes20[] = R"GPUI_DTS(    left_neg_20<Self extends Elem
      */
     m_5<Self extends Element>(this: Self): Self;
     /**
-)GPUI_DTS";
-static const char kShellTypes21[] = R"GPUI_DTS(     * Sets the margin of the element. [Docs](https://tailwindcss.com/docs/margin)
+     * Sets the margin of the element. [Docs](https://tailwindcss.com/docs/margin)
      *
      * 224px (14rem)
      */
@@ -186423,7 +194938,8 @@ static const char kShellTypes21[] = R"GPUI_DTS(     * Sets the margin of the ele
      */
     max_h_0<Self extends Element>(this: Self): Self;
     /**
-     * Sets the maximum height of the element. [Docs](https://tailwindcss.com/docs/max-height)
+)GPUI_DTS";
+static const char kShellTypes22[] = R"GPUI_DTS(     * Sets the maximum height of the element. [Docs](https://tailwindcss.com/docs/max-height)
      *
      * 2px (0.125rem)
      */
@@ -186468,8 +194984,7 @@ static const char kShellTypes21[] = R"GPUI_DTS(     * Sets the margin of the ele
      * Sets the maximum height of the element. [Docs](https://tailwindcss.com/docs/max-height)
      *
      * 64px (4rem)
-)GPUI_DTS";
-static const char kShellTypes22[] = R"GPUI_DTS(     */
+     */
     max_h_16<Self extends Element>(this: Self): Self;
     /**
      * Sets the maximum height of the element. [Docs](https://tailwindcss.com/docs/max-height)
@@ -186796,7 +195311,8 @@ static const char kShellTypes22[] = R"GPUI_DTS(     */
      */
     max_h_neg_20<Self extends Element>(this: Self): Self;
     /**
-     * Sets the maximum height of the element. [Docs](https://tailwindcss.com/docs/max-height)
+)GPUI_DTS";
+static const char kShellTypes23[] = R"GPUI_DTS(     * Sets the maximum height of the element. [Docs](https://tailwindcss.com/docs/max-height)
      *
      * 96px (6rem)
      */
@@ -186842,8 +195358,7 @@ static const char kShellTypes22[] = R"GPUI_DTS(     */
      *
      * 75% (3/4)
      */
-)GPUI_DTS";
-static const char kShellTypes23[] = R"GPUI_DTS(    max_h_neg_3_4<Self extends Element>(this: Self): Self;
+    max_h_neg_3_4<Self extends Element>(this: Self): Self;
     /**
      * Sets the maximum height of the element. [Docs](https://tailwindcss.com/docs/max-height)
      *
@@ -187215,7 +195730,8 @@ static const char kShellTypes23[] = R"GPUI_DTS(    max_h_neg_3_4<Self extends El
      *
      * 36px (2.25rem)
      */
-    max_size_9<Self extends Element>(this: Self): Self;
+)GPUI_DTS";
+static const char kShellTypes24[] = R"GPUI_DTS(    max_size_9<Self extends Element>(this: Self): Self;
     /**
      * Sets the maximum width and height of the element.
      *
@@ -187271,8 +195787,7 @@ static const char kShellTypes23[] = R"GPUI_DTS(    max_h_neg_3_4<Self extends El
      */
     max_size_neg_112<Self extends Element>(this: Self): Self;
     /**
-)GPUI_DTS";
-static const char kShellTypes24[] = R"GPUI_DTS(     * Sets the maximum width and height of the element.
+     * Sets the maximum width and height of the element.
      *
      * 48px (3rem)
      */
@@ -187642,7 +196157,8 @@ static const char kShellTypes24[] = R"GPUI_DTS(     * Sets the maximum width and
      *
      * 40% (2/5)
      */
-    max_w_2_5<Self extends Element>(this: Self): Self;
+)GPUI_DTS";
+static const char kShellTypes25[] = R"GPUI_DTS(    max_w_2_5<Self extends Element>(this: Self): Self;
     /**
      * Sets the maximum width of the element. [Docs](https://tailwindcss.com/docs/max-width)
      *
@@ -187688,8 +196204,7 @@ static const char kShellTypes24[] = R"GPUI_DTS(     * Sets the maximum width and
     /**
      * Sets the maximum width of the element. [Docs](https://tailwindcss.com/docs/max-width)
      *
-)GPUI_DTS";
-static const char kShellTypes25[] = R"GPUI_DTS(     * 160px (10rem)
+     * 160px (10rem)
      */
     max_w_40<Self extends Element>(this: Self): Self;
     /**
@@ -188017,7 +196532,8 @@ static const char kShellTypes25[] = R"GPUI_DTS(     * 160px (10rem)
      */
     max_w_neg_72<Self extends Element>(this: Self): Self;
     /**
-     * Sets the maximum width of the element. [Docs](https://tailwindcss.com/docs/max-width)
+)GPUI_DTS";
+static const char kShellTypes26[] = R"GPUI_DTS(     * Sets the maximum width of the element. [Docs](https://tailwindcss.com/docs/max-width)
      *
      * 32px (2rem)
      */
@@ -188063,8 +196579,7 @@ static const char kShellTypes25[] = R"GPUI_DTS(     * 160px (10rem)
      *
      * 0px
      */
-)GPUI_DTS";
-static const char kShellTypes26[] = R"GPUI_DTS(    mb_0<Self extends Element>(this: Self): Self;
+    mb_0<Self extends Element>(this: Self): Self;
     /**
      * Sets the bottom margin of the element. [Docs](https://tailwindcss.com/docs/margin#add-margin-to-a-single-side)
      *
@@ -188360,7 +196875,8 @@ static const char kShellTypes26[] = R"GPUI_DTS(    mb_0<Self extends Element>(th
      */
     mb_neg_11<Self extends Element>(this: Self): Self;
     /**
-     * Sets the bottom margin of the element. [Docs](https://tailwindcss.com/docs/margin#add-margin-to-a-single-side)
+)GPUI_DTS";
+static const char kShellTypes27[] = R"GPUI_DTS(     * Sets the bottom margin of the element. [Docs](https://tailwindcss.com/docs/margin#add-margin-to-a-single-side)
      *
      * 448px (28rem)
      */
@@ -188402,8 +196918,7 @@ static const char kShellTypes26[] = R"GPUI_DTS(    mb_0<Self extends Element>(th
      */
     mb_neg_1_3<Self extends Element>(this: Self): Self;
     /**
-)GPUI_DTS";
-static const char kShellTypes27[] = R"GPUI_DTS(     * Sets the bottom margin of the element. [Docs](https://tailwindcss.com/docs/margin#add-margin-to-a-single-side)
+     * Sets the bottom margin of the element. [Docs](https://tailwindcss.com/docs/margin#add-margin-to-a-single-side)
      *
      * 25% (1/4)
      */
@@ -188705,7 +197220,8 @@ static const char kShellTypes27[] = R"GPUI_DTS(     * Sets the bottom margin of 
     /**
      * Sets the minimum height of the element. [Docs](https://tailwindcss.com/docs/min-height)
      *
-     * 8px (0.5rem)
+)GPUI_DTS";
+static const char kShellTypes28[] = R"GPUI_DTS(     * 8px (0.5rem)
      */
     min_h_2<Self extends Element>(this: Self): Self;
     /**
@@ -188752,8 +197268,7 @@ static const char kShellTypes27[] = R"GPUI_DTS(     * Sets the bottom margin of 
     min_h_3<Self extends Element>(this: Self): Self;
     /**
      * Sets the minimum height of the element. [Docs](https://tailwindcss.com/docs/min-height)
-)GPUI_DTS";
-static const char kShellTypes28[] = R"GPUI_DTS(     *
+     *
      * 128px (8rem)
      */
     min_h_32<Self extends Element>(this: Self): Self;
@@ -189077,7 +197592,8 @@ static const char kShellTypes28[] = R"GPUI_DTS(     *
     min_h_neg_5<Self extends Element>(this: Self): Self;
     /**
      * Sets the minimum height of the element. [Docs](https://tailwindcss.com/docs/min-height)
-     *
+)GPUI_DTS";
+static const char kShellTypes29[] = R"GPUI_DTS(     *
      * 224px (14rem)
      */
     min_h_neg_56<Self extends Element>(this: Self): Self;
@@ -189124,8 +197640,7 @@ static const char kShellTypes28[] = R"GPUI_DTS(     *
      */
     min_h_neg_80<Self extends Element>(this: Self): Self;
     /**
-)GPUI_DTS";
-static const char kShellTypes29[] = R"GPUI_DTS(     * Sets the minimum height of the element. [Docs](https://tailwindcss.com/docs/min-height)
+     * Sets the minimum height of the element. [Docs](https://tailwindcss.com/docs/min-height)
      *
      * 36px (2.25rem)
      */
@@ -189519,7 +198034,8 @@ static const char kShellTypes29[] = R"GPUI_DTS(     * Sets the minimum height of
      *
      * 6px (0.375rem)
      */
-    min_size_neg_1p5<Self extends Element>(this: Self): Self;
+)GPUI_DTS";
+static const char kShellTypes30[] = R"GPUI_DTS(    min_size_neg_1p5<Self extends Element>(this: Self): Self;
     /**
      * Sets the minimum width and height of the element.
      *
@@ -189574,8 +198090,7 @@ static const char kShellTypes29[] = R"GPUI_DTS(     * Sets the minimum height of
      * 128px (8rem)
      */
     min_size_neg_32<Self extends Element>(this: Self): Self;
-)GPUI_DTS";
-static const char kShellTypes30[] = R"GPUI_DTS(    /**
+    /**
      * Sets the minimum width and height of the element.
      *
      * 75% (3/4)
@@ -189926,7 +198441,8 @@ static const char kShellTypes30[] = R"GPUI_DTS(    /**
     /**
      * Sets the minimum width of the element. [Docs](https://tailwindcss.com/docs/min-width)
      *
-     * 28px (1.75rem)
+)GPUI_DTS";
+static const char kShellTypes31[] = R"GPUI_DTS(     * 28px (1.75rem)
      */
     min_w_7<Self extends Element>(this: Self): Self;
     /**
@@ -189975,8 +198491,7 @@ static const char kShellTypes30[] = R"GPUI_DTS(    /**
      * Sets the minimum width of the element. [Docs](https://tailwindcss.com/docs/min-width)
      *
      * 0px
-)GPUI_DTS";
-static const char kShellTypes31[] = R"GPUI_DTS(     */
+     */
     min_w_neg_0<Self extends Element>(this: Self): Self;
     /**
      * Sets the minimum width of the element. [Docs](https://tailwindcss.com/docs/min-width)
@@ -190297,7 +198812,8 @@ static const char kShellTypes31[] = R"GPUI_DTS(     */
      */
     ml_128<Self extends Element>(this: Self): Self;
     /**
-     * Sets the left margin of the element. [Docs](https://tailwindcss.com/docs/margin#add-margin-to-a-single-side)
+)GPUI_DTS";
+static const char kShellTypes32[] = R"GPUI_DTS(     * Sets the left margin of the element. [Docs](https://tailwindcss.com/docs/margin#add-margin-to-a-single-side)
      *
      * 64px (4rem)
      */
@@ -190339,8 +198855,7 @@ static const char kShellTypes31[] = R"GPUI_DTS(     */
      */
     ml_1_6<Self extends Element>(this: Self): Self;
     /**
-)GPUI_DTS";
-static const char kShellTypes32[] = R"GPUI_DTS(     * Sets the left margin of the element. [Docs](https://tailwindcss.com/docs/margin#add-margin-to-a-single-side)
+     * Sets the left margin of the element. [Docs](https://tailwindcss.com/docs/margin#add-margin-to-a-single-side)
      *
      * 6px (0.375rem)
      */
@@ -190638,7 +199153,8 @@ static const char kShellTypes32[] = R"GPUI_DTS(     * Sets the left margin of th
      *
      * 66% (2/3)
      */
-    ml_neg_2_3<Self extends Element>(this: Self): Self;
+)GPUI_DTS";
+static const char kShellTypes33[] = R"GPUI_DTS(    ml_neg_2_3<Self extends Element>(this: Self): Self;
     /**
      * Sets the left margin of the element. [Docs](https://tailwindcss.com/docs/margin#add-margin-to-a-single-side)
      *
@@ -190680,8 +199196,7 @@ static const char kShellTypes32[] = R"GPUI_DTS(     * Sets the left margin of th
      *
      * 60% (3/5)
      */
-)GPUI_DTS";
-static const char kShellTypes33[] = R"GPUI_DTS(    ml_neg_3_5<Self extends Element>(this: Self): Self;
+    ml_neg_3_5<Self extends Element>(this: Self): Self;
     /**
      * Sets the left margin of the element. [Docs](https://tailwindcss.com/docs/margin#add-margin-to-a-single-side)
      *
@@ -190977,7 +199492,8 @@ static const char kShellTypes33[] = R"GPUI_DTS(    ml_neg_3_5<Self extends Eleme
      */
     mr_40<Self extends Element>(this: Self): Self;
     /**
-     * Sets the right margin of the element. [Docs](https://tailwindcss.com/docs/margin#add-margin-to-a-single-side)
+)GPUI_DTS";
+static const char kShellTypes34[] = R"GPUI_DTS(     * Sets the right margin of the element. [Docs](https://tailwindcss.com/docs/margin#add-margin-to-a-single-side)
      *
      * 192px (12rem)
      */
@@ -191019,8 +199535,7 @@ static const char kShellTypes33[] = R"GPUI_DTS(    ml_neg_3_5<Self extends Eleme
      */
     mr_64<Self extends Element>(this: Self): Self;
     /**
-)GPUI_DTS";
-static const char kShellTypes34[] = R"GPUI_DTS(     * Sets the right margin of the element. [Docs](https://tailwindcss.com/docs/margin#add-margin-to-a-single-side)
+     * Sets the right margin of the element. [Docs](https://tailwindcss.com/docs/margin#add-margin-to-a-single-side)
      *
      * 28px (1.75rem)
      */
@@ -191314,7 +199829,8 @@ static const char kShellTypes34[] = R"GPUI_DTS(     * Sets the right margin of t
      */
     mr_neg_80<Self extends Element>(this: Self): Self;
     /**
-     * Sets the right margin of the element. [Docs](https://tailwindcss.com/docs/margin#add-margin-to-a-single-side)
+)GPUI_DTS";
+static const char kShellTypes35[] = R"GPUI_DTS(     * Sets the right margin of the element. [Docs](https://tailwindcss.com/docs/margin#add-margin-to-a-single-side)
      *
      * 36px (2.25rem)
      */
@@ -191356,8 +199872,7 @@ static const char kShellTypes34[] = R"GPUI_DTS(     * Sets the right margin of t
      */
     mt_0p5<Self extends Element>(this: Self): Self;
     /**
-)GPUI_DTS";
-static const char kShellTypes35[] = R"GPUI_DTS(     * Sets the top margin of the element. [Docs](https://tailwindcss.com/docs/margin#add-margin-to-a-single-side)
+     * Sets the top margin of the element. [Docs](https://tailwindcss.com/docs/margin#add-margin-to-a-single-side)
      *
      * 4px (0.25rem)
      */
@@ -191657,7 +200172,8 @@ static const char kShellTypes35[] = R"GPUI_DTS(     * Sets the top margin of the
      */
     mt_neg_12<Self extends Element>(this: Self): Self;
     /**
-     * Sets the top margin of the element. [Docs](https://tailwindcss.com/docs/margin#add-margin-to-a-single-side)
+)GPUI_DTS";
+static const char kShellTypes36[] = R"GPUI_DTS(     * Sets the top margin of the element. [Docs](https://tailwindcss.com/docs/margin#add-margin-to-a-single-side)
      *
      * 512px (32rem)
      */
@@ -191699,8 +200215,7 @@ static const char kShellTypes35[] = R"GPUI_DTS(     * Sets the top margin of the
      */
     mt_neg_1_5<Self extends Element>(this: Self): Self;
     /**
-)GPUI_DTS";
-static const char kShellTypes36[] = R"GPUI_DTS(     * Sets the top margin of the element. [Docs](https://tailwindcss.com/docs/margin#add-margin-to-a-single-side)
+     * Sets the top margin of the element. [Docs](https://tailwindcss.com/docs/margin#add-margin-to-a-single-side)
      *
      * 16% (1/6)
      */
@@ -191998,7 +200513,8 @@ static const char kShellTypes36[] = R"GPUI_DTS(     * Sets the top margin of the
      *
      * 80px (5rem)
      */
-    mx_20<Self extends Element>(this: Self): Self;
+)GPUI_DTS";
+static const char kShellTypes37[] = R"GPUI_DTS(    mx_20<Self extends Element>(this: Self): Self;
     /**
      * Sets the horizontal margin of the element. [Docs](https://tailwindcss.com/docs/margin#add-horizontal-margin)
      *
@@ -192040,8 +200556,7 @@ static const char kShellTypes36[] = R"GPUI_DTS(     * Sets the top margin of the
      *
      * 128px (8rem)
      */
-)GPUI_DTS";
-static const char kShellTypes37[] = R"GPUI_DTS(    mx_32<Self extends Element>(this: Self): Self;
+    mx_32<Self extends Element>(this: Self): Self;
     /**
      * Sets the horizontal margin of the element. [Docs](https://tailwindcss.com/docs/margin#add-horizontal-margin)
      *
@@ -192337,7 +200852,8 @@ static const char kShellTypes37[] = R"GPUI_DTS(    mx_32<Self extends Element>(t
      */
     mx_neg_4<Self extends Element>(this: Self): Self;
     /**
-     * Sets the horizontal margin of the element. [Docs](https://tailwindcss.com/docs/margin#add-horizontal-margin)
+)GPUI_DTS";
+static const char kShellTypes38[] = R"GPUI_DTS(     * Sets the horizontal margin of the element. [Docs](https://tailwindcss.com/docs/margin#add-horizontal-margin)
      *
      * 160px (10rem)
      */
@@ -192379,8 +200895,7 @@ static const char kShellTypes37[] = R"GPUI_DTS(    mx_32<Self extends Element>(t
      */
     mx_neg_6<Self extends Element>(this: Self): Self;
     /**
-)GPUI_DTS";
-static const char kShellTypes38[] = R"GPUI_DTS(     * Sets the horizontal margin of the element. [Docs](https://tailwindcss.com/docs/margin#add-horizontal-margin)
+     * Sets the horizontal margin of the element. [Docs](https://tailwindcss.com/docs/margin#add-horizontal-margin)
      *
      * 256px (16rem)
      */
@@ -192684,7 +201199,8 @@ static const char kShellTypes38[] = R"GPUI_DTS(     * Sets the horizontal margin
      *
      * 320px (20rem)
      */
-    my_80<Self extends Element>(this: Self): Self;
+)GPUI_DTS";
+static const char kShellTypes39[] = R"GPUI_DTS(    my_80<Self extends Element>(this: Self): Self;
     /**
      * Sets the vertical margin of the element. [Docs](https://tailwindcss.com/docs/margin#add-vertical-margin)
      *
@@ -192728,8 +201244,7 @@ static const char kShellTypes38[] = R"GPUI_DTS(     * Sets the horizontal margin
      */
     my_neg_1<Self extends Element>(this: Self): Self;
     /**
-)GPUI_DTS";
-static const char kShellTypes39[] = R"GPUI_DTS(     * Sets the vertical margin of the element. [Docs](https://tailwindcss.com/docs/margin#add-vertical-margin)
+     * Sets the vertical margin of the element. [Docs](https://tailwindcss.com/docs/margin#add-vertical-margin)
      *
      * 40px (2.5rem)
      */
@@ -193027,7 +201542,8 @@ static const char kShellTypes39[] = R"GPUI_DTS(     * Sets the vertical margin o
      *
      * 4px (0.25rem)
      */
-    p_1<Self extends Element>(this: Self): Self;
+)GPUI_DTS";
+static const char kShellTypes40[] = R"GPUI_DTS(    p_1<Self extends Element>(this: Self): Self;
     /**
      * Sets the padding of the element. [Docs](https://tailwindcss.com/docs/padding)
      *
@@ -193077,8 +201593,7 @@ static const char kShellTypes39[] = R"GPUI_DTS(     * Sets the vertical margin o
      */
     p_1_2<Self extends Element>(this: Self): Self;
     /**
-)GPUI_DTS";
-static const char kShellTypes40[] = R"GPUI_DTS(     * Sets the padding of the element. [Docs](https://tailwindcss.com/docs/padding)
+     * Sets the padding of the element. [Docs](https://tailwindcss.com/docs/padding)
      *
      * 33% (1/3)
      */
@@ -193430,7 +201945,8 @@ static const char kShellTypes40[] = R"GPUI_DTS(     * Sets the padding of the el
      *
      * 75% (3/4)
      */
-    p_neg_3_4<Self extends Element>(this: Self): Self;
+)GPUI_DTS";
+static const char kShellTypes41[] = R"GPUI_DTS(    p_neg_3_4<Self extends Element>(this: Self): Self;
     /**
      * Sets the padding of the element. [Docs](https://tailwindcss.com/docs/padding)
      *
@@ -193478,8 +201994,7 @@ static const char kShellTypes40[] = R"GPUI_DTS(     * Sets the padding of the el
      *
      * 224px (14rem)
      */
-)GPUI_DTS";
-static const char kShellTypes41[] = R"GPUI_DTS(    p_neg_56<Self extends Element>(this: Self): Self;
+    p_neg_56<Self extends Element>(this: Self): Self;
     /**
      * Sets the padding of the element. [Docs](https://tailwindcss.com/docs/padding)
      *
@@ -193785,7 +202300,8 @@ static const char kShellTypes41[] = R"GPUI_DTS(    p_neg_56<Self extends Element
      *
      * 288px (18rem)
      */
-    pb_72<Self extends Element>(this: Self): Self;
+)GPUI_DTS";
+static const char kShellTypes42[] = R"GPUI_DTS(    pb_72<Self extends Element>(this: Self): Self;
     /**
      * Sets the bottom padding of the element. [Docs](https://tailwindcss.com/docs/padding#add-padding-to-a-single-side)
      *
@@ -193825,8 +202341,7 @@ static const char kShellTypes41[] = R"GPUI_DTS(    p_neg_56<Self extends Element
     /**
      * Sets the bottom padding of the element. [Docs](https://tailwindcss.com/docs/padding#add-padding-to-a-single-side)
      *
-)GPUI_DTS";
-static const char kShellTypes42[] = R"GPUI_DTS(     * 2px (0.125rem)
+     * 2px (0.125rem)
      */
     pb_neg_0p5<Self extends Element>(this: Self): Self;
     /**
@@ -194116,7 +202631,8 @@ static const char kShellTypes42[] = R"GPUI_DTS(     * 2px (0.125rem)
      *
      * 40px (2.5rem)
      */
-    pl_10<Self extends Element>(this: Self): Self;
+)GPUI_DTS";
+static const char kShellTypes43[] = R"GPUI_DTS(    pl_10<Self extends Element>(this: Self): Self;
     /**
      * Sets the left padding of the element. [Docs](https://tailwindcss.com/docs/padding#add-padding-to-a-single-side)
      *
@@ -194158,8 +202674,7 @@ static const char kShellTypes42[] = R"GPUI_DTS(     * 2px (0.125rem)
      *
      * 50% (1/2)
      */
-)GPUI_DTS";
-static const char kShellTypes43[] = R"GPUI_DTS(    pl_1_2<Self extends Element>(this: Self): Self;
+    pl_1_2<Self extends Element>(this: Self): Self;
     /**
      * Sets the left padding of the element. [Docs](https://tailwindcss.com/docs/padding#add-padding-to-a-single-side)
      *
@@ -194453,7 +202968,8 @@ static const char kShellTypes43[] = R"GPUI_DTS(    pl_1_2<Self extends Element>(
      *
      * 6px (0.375rem)
      */
-    pl_neg_1p5<Self extends Element>(this: Self): Self;
+)GPUI_DTS";
+static const char kShellTypes44[] = R"GPUI_DTS(    pl_neg_1p5<Self extends Element>(this: Self): Self;
     /**
      * Sets the left padding of the element. [Docs](https://tailwindcss.com/docs/padding#add-padding-to-a-single-side)
      *
@@ -194495,8 +203011,7 @@ static const char kShellTypes43[] = R"GPUI_DTS(    pl_1_2<Self extends Element>(
      *
      * 10px (0.625rem)
      */
-)GPUI_DTS";
-static const char kShellTypes44[] = R"GPUI_DTS(    pl_neg_2p5<Self extends Element>(this: Self): Self;
+    pl_neg_2p5<Self extends Element>(this: Self): Self;
     /**
      * Sets the left padding of the element. [Docs](https://tailwindcss.com/docs/padding#add-padding-to-a-single-side)
      *
@@ -194787,7 +203302,8 @@ static const char kShellTypes44[] = R"GPUI_DTS(    pl_neg_2p5<Self extends Eleme
     pr_32<Self extends Element>(this: Self): Self;
     /**
      * Sets the right padding of the element. [Docs](https://tailwindcss.com/docs/padding#add-padding-to-a-single-side)
-     *
+)GPUI_DTS";
+static const char kShellTypes45[] = R"GPUI_DTS(     *
      * 75% (3/4)
      */
     pr_3_4<Self extends Element>(this: Self): Self;
@@ -194830,8 +203346,7 @@ static const char kShellTypes44[] = R"GPUI_DTS(    pl_neg_2p5<Self extends Eleme
     /**
      * Sets the right padding of the element. [Docs](https://tailwindcss.com/docs/padding#add-padding-to-a-single-side)
      *
-)GPUI_DTS";
-static const char kShellTypes45[] = R"GPUI_DTS(     * 20px (1.25rem)
+     * 20px (1.25rem)
      */
     pr_5<Self extends Element>(this: Self): Self;
     /**
@@ -195123,7 +203638,8 @@ static const char kShellTypes45[] = R"GPUI_DTS(     * 20px (1.25rem)
      */
     pr_neg_64<Self extends Element>(this: Self): Self;
     /**
-     * Sets the right padding of the element. [Docs](https://tailwindcss.com/docs/padding#add-padding-to-a-single-side)
+)GPUI_DTS";
+static const char kShellTypes46[] = R"GPUI_DTS(     * Sets the right padding of the element. [Docs](https://tailwindcss.com/docs/padding#add-padding-to-a-single-side)
      *
      * 28px (1.75rem)
      */
@@ -195163,8 +203679,7 @@ static const char kShellTypes45[] = R"GPUI_DTS(     * 20px (1.25rem)
      *
      * 100%
      */
-)GPUI_DTS";
-static const char kShellTypes46[] = R"GPUI_DTS(    pr_neg_full<Self extends Element>(this: Self): Self;
+    pr_neg_full<Self extends Element>(this: Self): Self;
     /**
      * Sets the right padding of the element. [Docs](https://tailwindcss.com/docs/padding#add-padding-to-a-single-side)
      *
@@ -195460,7 +203975,8 @@ static const char kShellTypes46[] = R"GPUI_DTS(    pr_neg_full<Self extends Elem
      */
     pt_neg_1<Self extends Element>(this: Self): Self;
     /**
-     * Sets the top padding of the element. [Docs](https://tailwindcss.com/docs/padding#add-padding-to-a-single-side)
+)GPUI_DTS";
+static const char kShellTypes47[] = R"GPUI_DTS(     * Sets the top padding of the element. [Docs](https://tailwindcss.com/docs/padding#add-padding-to-a-single-side)
      *
      * 40px (2.5rem)
      */
@@ -195502,8 +204018,7 @@ static const char kShellTypes46[] = R"GPUI_DTS(    pr_neg_full<Self extends Elem
      */
     pt_neg_1_12<Self extends Element>(this: Self): Self;
     /**
-)GPUI_DTS";
-static const char kShellTypes47[] = R"GPUI_DTS(     * Sets the top padding of the element. [Docs](https://tailwindcss.com/docs/padding#add-padding-to-a-single-side)
+     * Sets the top padding of the element. [Docs](https://tailwindcss.com/docs/padding#add-padding-to-a-single-side)
      *
      * 50% (1/2)
      */
@@ -195795,7 +204310,8 @@ static const char kShellTypes47[] = R"GPUI_DTS(     * Sets the top padding of th
      *
      * 25% (1/4)
      */
-    px_1_4<Self extends Element>(this: Self): Self;
+)GPUI_DTS";
+static const char kShellTypes48[] = R"GPUI_DTS(    px_1_4<Self extends Element>(this: Self): Self;
     /**
      * Sets the horizontal padding of the element. [Docs](https://tailwindcss.com/docs/padding#add-horizontal-padding)
      *
@@ -195839,8 +204355,7 @@ static const char kShellTypes47[] = R"GPUI_DTS(     * Sets the top padding of th
      */
     px_2_3<Self extends Element>(this: Self): Self;
     /**
-)GPUI_DTS";
-static const char kShellTypes48[] = R"GPUI_DTS(     * Sets the horizontal padding of the element. [Docs](https://tailwindcss.com/docs/padding#add-horizontal-padding)
+     * Sets the horizontal padding of the element. [Docs](https://tailwindcss.com/docs/padding#add-horizontal-padding)
      *
      * 50% (2/4)
      */
@@ -196131,7 +204646,8 @@ static const char kShellTypes48[] = R"GPUI_DTS(     * Sets the horizontal paddin
      * Sets the horizontal padding of the element. [Docs](https://tailwindcss.com/docs/padding#add-horizontal-padding)
      *
      * 128px (8rem)
-     */
+)GPUI_DTS";
+static const char kShellTypes49[] = R"GPUI_DTS(     */
     px_neg_32<Self extends Element>(this: Self): Self;
     /**
      * Sets the horizontal padding of the element. [Docs](https://tailwindcss.com/docs/padding#add-horizontal-padding)
@@ -196174,8 +204690,7 @@ static const char kShellTypes48[] = R"GPUI_DTS(     * Sets the horizontal paddin
      *
      * 80% (4/5)
      */
-)GPUI_DTS";
-static const char kShellTypes49[] = R"GPUI_DTS(    px_neg_4_5<Self extends Element>(this: Self): Self;
+    px_neg_4_5<Self extends Element>(this: Self): Self;
     /**
      * Sets the horizontal padding of the element. [Docs](https://tailwindcss.com/docs/padding#add-horizontal-padding)
      *
@@ -196471,7 +204986,8 @@ static const char kShellTypes49[] = R"GPUI_DTS(    px_neg_4_5<Self extends Eleme
      */
     py_5_6<Self extends Element>(this: Self): Self;
     /**
-     * Sets the vertical padding of the element. [Docs](https://tailwindcss.com/docs/padding#add-vertical-padding)
+)GPUI_DTS";
+static const char kShellTypes50[] = R"GPUI_DTS(     * Sets the vertical padding of the element. [Docs](https://tailwindcss.com/docs/padding#add-vertical-padding)
      *
      * 24px (1.5rem)
      */
@@ -196517,8 +205033,7 @@ static const char kShellTypes49[] = R"GPUI_DTS(    px_neg_4_5<Self extends Eleme
      *
      * 384px (24rem)
      */
-)GPUI_DTS";
-static const char kShellTypes50[] = R"GPUI_DTS(    py_96<Self extends Element>(this: Self): Self;
+    py_96<Self extends Element>(this: Self): Self;
     /**
      * Sets the vertical padding of the element. [Docs](https://tailwindcss.com/docs/padding#add-vertical-padding)
      *
@@ -196812,7 +205327,8 @@ static const char kShellTypes50[] = R"GPUI_DTS(    py_96<Self extends Element>(t
      *
      * 0px
      */
-    right_0<Self extends Element>(this: Self): Self;
+)GPUI_DTS";
+static const char kShellTypes51[] = R"GPUI_DTS(    right_0<Self extends Element>(this: Self): Self;
     /**
      * Sets the right value of a positioned element. [Docs](https://tailwindcss.com/docs/top-right-bottom-left)
      *
@@ -196858,8 +205374,7 @@ static const char kShellTypes50[] = R"GPUI_DTS(    py_96<Self extends Element>(t
     /**
      * Sets the right value of a positioned element. [Docs](https://tailwindcss.com/docs/top-right-bottom-left)
      *
-)GPUI_DTS";
-static const char kShellTypes51[] = R"GPUI_DTS(     * 64px (4rem)
+     * 64px (4rem)
      */
     right_16<Self extends Element>(this: Self): Self;
     /**
@@ -197156,7 +205671,8 @@ static const char kShellTypes51[] = R"GPUI_DTS(     * 64px (4rem)
      * 25% (1/4)
      */
     right_neg_1_4<Self extends Element>(this: Self): Self;
-    /**
+)GPUI_DTS";
+static const char kShellTypes52[] = R"GPUI_DTS(    /**
      * Sets the right value of a positioned element. [Docs](https://tailwindcss.com/docs/top-right-bottom-left)
      *
      * 20% (1/5)
@@ -197203,8 +205719,7 @@ static const char kShellTypes51[] = R"GPUI_DTS(     * 64px (4rem)
      *
      * 50% (2/4)
      */
-)GPUI_DTS";
-static const char kShellTypes52[] = R"GPUI_DTS(    right_neg_2_4<Self extends Element>(this: Self): Self;
+    right_neg_2_4<Self extends Element>(this: Self): Self;
     /**
      * Sets the right value of a positioned element. [Docs](https://tailwindcss.com/docs/top-right-bottom-left)
      *
@@ -197476,7 +205991,8 @@ static const char kShellTypes52[] = R"GPUI_DTS(    right_neg_2_4<Self extends El
      */
     rounded_bl_xs<Self extends Element>(this: Self): Self;
     /**
-     * Sets the border radius of the bottom right corner of the element. [Docs](https://tailwindcss.com/docs/border-radius#rounding-corners-separately)
+)GPUI_DTS";
+static const char kShellTypes53[] = R"GPUI_DTS(     * Sets the border radius of the bottom right corner of the element. [Docs](https://tailwindcss.com/docs/border-radius#rounding-corners-separately)
      *
      * 16px (1rem)
      */
@@ -197518,8 +206034,7 @@ static const char kShellTypes52[] = R"GPUI_DTS(    right_neg_2_4<Self extends El
      */
     rounded_br_sm<Self extends Element>(this: Self): Self;
     /**
-)GPUI_DTS";
-static const char kShellTypes53[] = R"GPUI_DTS(     * Sets the border radius of the bottom right corner of the element. [Docs](https://tailwindcss.com/docs/border-radius#rounding-corners-separately)
+     * Sets the border radius of the bottom right corner of the element. [Docs](https://tailwindcss.com/docs/border-radius#rounding-corners-separately)
      *
      * 12px (0.75rem)
      */
@@ -197776,7 +206291,8 @@ static const char kShellTypes53[] = R"GPUI_DTS(     * Sets the border radius of 
      * 2px (0.125rem)
      */
     rounded_tl_xs<Self extends Element>(this: Self): Self;
-    /**
+)GPUI_DTS";
+static const char kShellTypes54[] = R"GPUI_DTS(    /**
      * Sets the border radius of the top right corner of the element. [Docs](https://tailwindcss.com/docs/border-radius#rounding-corners-separately)
      *
      * 16px (1rem)
@@ -197819,8 +206335,7 @@ static const char kShellTypes53[] = R"GPUI_DTS(     * Sets the border radius of 
      */
     rounded_tr_sm<Self extends Element>(this: Self): Self;
     /**
-)GPUI_DTS";
-static const char kShellTypes54[] = R"GPUI_DTS(     * Sets the border radius of the top right corner of the element. [Docs](https://tailwindcss.com/docs/border-radius#rounding-corners-separately)
+     * Sets the border radius of the top right corner of the element. [Docs](https://tailwindcss.com/docs/border-radius#rounding-corners-separately)
      *
      * 12px (0.75rem)
      */
@@ -198188,7 +206703,8 @@ static const char kShellTypes54[] = R"GPUI_DTS(     * Sets the border radius of 
     /**
      * Sets the width and height of the element.
      *
-     * 36px (2.25rem)
+)GPUI_DTS";
+static const char kShellTypes55[] = R"GPUI_DTS(     * 36px (2.25rem)
      */
     size_9<Self extends Element>(this: Self): Self;
     /**
@@ -198260,8 +206776,7 @@ static const char kShellTypes54[] = R"GPUI_DTS(     * Sets the border radius of 
     /**
      * Sets the width and height of the element.
      *
-)GPUI_DTS";
-static const char kShellTypes55[] = R"GPUI_DTS(     * 64px (4rem)
+     * 64px (4rem)
      */
     size_neg_16<Self extends Element>(this: Self): Self;
     /**
@@ -198617,7 +207132,8 @@ static const char kShellTypes55[] = R"GPUI_DTS(     * 64px (4rem)
      */
     top_0p5<Self extends Element>(this: Self): Self;
     /**
-     * Sets the top value of a positioned element. [Docs](https://tailwindcss.com/docs/top-right-bottom-left)
+)GPUI_DTS";
+static const char kShellTypes56[] = R"GPUI_DTS(     * Sets the top value of a positioned element. [Docs](https://tailwindcss.com/docs/top-right-bottom-left)
      *
      * 4px (0.25rem)
      */
@@ -198670,8 +207186,7 @@ static const char kShellTypes55[] = R"GPUI_DTS(     * 64px (4rem)
      * 50% (1/2)
      */
     top_1_2<Self extends Element>(this: Self): Self;
-)GPUI_DTS";
-static const char kShellTypes56[] = R"GPUI_DTS(    /**
+    /**
      * Sets the top value of a positioned element. [Docs](https://tailwindcss.com/docs/top-right-bottom-left)
      *
      * 33% (1/3)
@@ -198966,7 +207481,8 @@ static const char kShellTypes56[] = R"GPUI_DTS(    /**
      */
     top_neg_1_6<Self extends Element>(this: Self): Self;
     /**
-     * Sets the top value of a positioned element. [Docs](https://tailwindcss.com/docs/top-right-bottom-left)
+)GPUI_DTS";
+static const char kShellTypes57[] = R"GPUI_DTS(     * Sets the top value of a positioned element. [Docs](https://tailwindcss.com/docs/top-right-bottom-left)
      *
      * 6px (0.375rem)
      */
@@ -199020,8 +207536,7 @@ static const char kShellTypes56[] = R"GPUI_DTS(    /**
      */
     top_neg_3<Self extends Element>(this: Self): Self;
     /**
-)GPUI_DTS";
-static const char kShellTypes57[] = R"GPUI_DTS(     * Sets the top value of a positioned element. [Docs](https://tailwindcss.com/docs/top-right-bottom-left)
+     * Sets the top value of a positioned element. [Docs](https://tailwindcss.com/docs/top-right-bottom-left)
      *
      * 128px (8rem)
      */
@@ -199335,7 +207850,8 @@ static const char kShellTypes57[] = R"GPUI_DTS(     * Sets the top value of a po
      */
     w_3_4<Self extends Element>(this: Self): Self;
     /**
-     * Sets the width of the element. [Docs](https://tailwindcss.com/docs/width)
+)GPUI_DTS";
+static const char kShellTypes58[] = R"GPUI_DTS(     * Sets the width of the element. [Docs](https://tailwindcss.com/docs/width)
      *
      * 60% (3/5)
      */
@@ -199401,8 +207917,7 @@ static const char kShellTypes57[] = R"GPUI_DTS(     * Sets the top value of a po
      */
     w_64<Self extends Element>(this: Self): Self;
     /**
-)GPUI_DTS";
-static const char kShellTypes58[] = R"GPUI_DTS(     * Sets the width of the element. [Docs](https://tailwindcss.com/docs/width)
+     * Sets the width of the element. [Docs](https://tailwindcss.com/docs/width)
      *
      * 28px (1.75rem)
      */
@@ -199743,7 +208258,8 @@ static const char kShellTypes58[] = R"GPUI_DTS(     * Sets the width of the elem
   export function div(): NativeElement;
 
   /**
-   * A vector image from the application's own directory.
+)GPUI_DTS";
+static const char kShellTypes59[] = R"GPUI_DTS(   * A vector image from the application's own directory.
    *
    * The path resolves against the application root — the directory passed to
    * gpui-shell — not against the file that asked for it, the way a web
@@ -199790,8 +208306,7 @@ static const char kShellTypes58[] = R"GPUI_DTS(     * Sets the width of the elem
    *   .child(Scrollbar.vertical("panels").absolute().inset_0());
    * ```
    *
-)GPUI_DTS";
-static const char kShellTypes59[] = R"GPUI_DTS(   * The measuring is what it costs: the host is entered once per visible item
+   * The measuring is what it costs: the host is entered once per visible item
    * per frame, where `v_virtual_list` and `uniform_list` are entered once per
    * frame however many rows are on screen. Reach for this when heights are
    * genuinely unequal and unknown — a column of panels, a feed of mixed
@@ -200000,7 +208515,8 @@ static const char kShellTypes59[] = R"GPUI_DTS(   * The measuring is what it cos
      * lot -- so calling it where `cx.notify()` would do turns one view's update
      * into all of them, and calling it per incoming message turns a data feed
      * into a frame-rate problem. An application that pushed a quote through it
-     * for each tick of a live market watchlist measured seven frames a second.
+)GPUI_DTS";
+static const char kShellTypes60[] = R"GPUI_DTS(     * for each tick of a live market watchlist measured seven frames a second.
      *
      * Reach for it only when there is genuinely no view to notify:
      *
@@ -200024,6 +208540,15 @@ static const char kShellTypes59[] = R"GPUI_DTS(   * The measuring is what it cos
     minimize_window(): void;
     /** `Window::zoom_window`: the platform's zoom, not a scale factor. */
     zoom_window(): void;
+    /**
+     * `Window::start_window_move`: hand the pointer to the platform, which
+     * moves the window until the button is released.
+     *
+     * The host opens its window with a title bar the application draws, so
+     * dragging that bar is the application's to do. Call it from the bar's
+     * `on_mouse_down`; anywhere but inside a press it does nothing.
+     */
+    start_window_move(): void;
     /** `Window::toggle_fullscreen`. */
     toggle_fullscreen(): void;
   }
@@ -200042,8 +208567,7 @@ static const char kShellTypes59[] = R"GPUI_DTS(   * The measuring is what it cos
    * **Values are strings.** `setItem` converts whatever it is handed, exactly
    * as the browser does, so an object is stored as `"[object Object]"` unless
    * you `JSON.stringify` it — and reading it back is `JSON.parse`. That is not
-)GPUI_DTS";
-static const char kShellTypes60[] = R"GPUI_DTS(   * an omission; it is the API this mirrors.
+   * an omission; it is the API this mirrors.
    *
    * Storage is per application. The host places the file, because an
    * application that could name its own storage location could name another
@@ -200296,7 +208820,8 @@ declare module "gpui-base" {
    */
   export const Accordion: ComponentType;
   /**
-   * One item. `open(...)` in, and the trigger's `on_change(...)` out.
+)GPUI_DTS";
+static const char kShellTypes61[] = R"GPUI_DTS(   * One item. `open(...)` in, and the trigger's `on_change(...)` out.
    *
    * `disabled(true)` stops the trigger under it responding, whatever the
    * trigger itself says.
@@ -200352,8 +208877,7 @@ declare module "gpui-base" {
    * ```
    *
    * Dates are `"YYYY-MM-DD"` — sortable as text, and readable by `new Date(s)`
-)GPUI_DTS";
-static const char kShellTypes61[] = R"GPUI_DTS(   * when you need a weekday name or a localized month label.
+   * when you need a weekday name or a localized month label.
    */
   export const CalendarState: { new(): CalendarStateHandle };
   /** A selected date: one day, a `[start, end]` range, or nothing. */
@@ -200562,7 +209086,8 @@ static const char kShellTypes61[] = R"GPUI_DTS(   * when you need a weekday name
    * It measures its trigger, pins the chosen corner of the content to it,
    * paints that content in a layer above the rest of the window and keeps it
    * clear of the window edges. It owns nothing else — no press handling, no
-   * dismissal, no open state. That is the point: a `Select` already owns those,
+)GPUI_DTS";
+static const char kShellTypes62[] = R"GPUI_DTS(   * dismissal, no open state. That is the point: a `Select` already owns those,
    * and a `Popover` underneath it would be a second control fighting the first
    * for the same Escape key.
    *
@@ -200612,8 +209137,7 @@ static const char kShellTypes61[] = R"GPUI_DTS(   * when you need a weekday name
    *
    * ```js
    * Select.new("country")
-)GPUI_DTS";
-static const char kShellTypes62[] = R"GPUI_DTS(   *   .accessibility_label("Country")
+   *   .accessibility_label("Country")
    *   .open(this.open)
    *   .track_focus(this.trigger_focus)
    *   .content_focus_handle(this.list_focus)
@@ -200709,8 +209233,9 @@ static const char kShellTypes62[] = R"GPUI_DTS(   *   .accessibility_label("Coun
    * Two consequences follow from that, and both are enforced rather than
    * documented away:
    *
-   * * **No handlers inside the renderer.** `on_click` and the rest throw if
-   *   called there. Use `on_item_click` on the list — see its note for why.
+   * * **Handlers inside the renderer last one frame.** `on_click` and the rest
+   *   work on a row, and are released when the next frame redraws it. For a
+   *   whole-row click, `on_item_click` on the list is cheaper — see its note.
    * * **No state inside the renderer.** `InputState.new()`, `cx.focus_handle()`
    *   and the rest throw there as they do in `render()`, and `cx.notify()` is
    *   refused: asking for a re-render from inside layout is a loop.
@@ -200825,7 +209350,8 @@ static const char kShellTypes62[] = R"GPUI_DTS(   *   .accessibility_label("Coun
      */
     set_step(step: number | null): void;
     /** The lowest value stepping and blurring clamp to. `null` removes it. */
-    set_min(min: number | null): void;
+)GPUI_DTS";
+static const char kShellTypes63[] = R"GPUI_DTS(    set_min(min: number | null): void;
     /** The highest value stepping and blurring clamp to. `null` removes it. */
     set_max(max: number | null): void;
     /** Draws the text as a password. */
@@ -200881,8 +209407,7 @@ static const char kShellTypes62[] = R"GPUI_DTS(   *   .accessibility_label("Coun
     /** Plain text, or a content snapshot to restore its tokens as well. */
     set_value(next: string | InputContent): void;
     /** `change`, `submit`, `focus` or `blur`. */
-)GPUI_DTS";
-static const char kShellTypes63[] = R"GPUI_DTS(    on(event: "change" | "submit" | "focus" | "blur", handler: (event: InputEvent, cx: Context) => void): boolean;
+    on(event: "change" | "submit" | "focus" | "blur", handler: (event: InputEvent, cx: Context) => void): boolean;
     /** Shows this many rows. */
     set_rows(rows: number): void;
     /** Grows with the content, between the two row counts. */
@@ -201116,7 +209641,8 @@ static const char kShellTypes63[] = R"GPUI_DTS(    on(event: "change" | "submit"
     readonly tabs: readonly DockTab[];
   }
 
-  /** One dock, as the `dock` handler is given it. */
+)GPUI_DTS";
+static const char kShellTypes64[] = R"GPUI_DTS(  /** One dock, as the `dock` handler is given it. */
   export interface DockRegion {
     readonly placement: DockPlacement;
     /** Its extent along its own axis: width for left and right, height for bottom. */
@@ -201173,8 +209699,7 @@ static const char kShellTypes63[] = R"GPUI_DTS(    on(event: "change" | "submit"
    * `add_panel` is handed a view from `cx.new(Class)`, which is itself still
    * being constructed; `load` rebuilds panels, which constructs more. So
    * `panels()` and `dump()` read the layout as it was before this turn's edits,
-)GPUI_DTS";
-static const char kShellTypes64[] = R"GPUI_DTS(   * and `on("layout_changed", …)` is where to read it after them.
+   * and `on("layout_changed", …)` is where to read it after them.
    *
    * ```js
    * init(_props, cx) {
@@ -201390,7 +209915,8 @@ declare module "gpui-component" {
 }
 
 declare module "gpui-shell" {
-  /** The string forms accepted by gpui-shell's length bridge. */
+)GPUI_DTS";
+static const char kShellTypes65[] = R"GPUI_DTS(  /** The string forms accepted by gpui-shell's length bridge. */
   export type LengthString = `${number}px` | `${number}rem` | `${number}%`;
 
   /** The gpui-shell call scope reported by `cx.phase()`; unrelated to gpui::DispatchPhase. */
@@ -201466,8 +209992,7 @@ declare module "gpui-fps" {
 
   /** Where the root-owned HUD sits and how it behaves. Every key is optional. */
   export interface FpsMonitorOptions {
-)GPUI_DTS";
-static const char kShellTypes65[] = R"GPUI_DTS(    /** Corner or edge of the window. Default `top_right`. */
+    /** Corner or edge of the window. Default `top_right`. */
     anchor?: Anchor;
     /** Frame budget in milliseconds, for the FRAME grading and the chart's scale. */
     frame_budget?: number;
@@ -201542,24 +210067,121 @@ declare module "console" {
 }
 declare module "process" {
   export interface CommandOutput { code: number; stdout: string; stderr: string; }
-  export function run(command: string, args?: string[]): Promise<CommandOutput>;
+  export interface RunOptions {
+    /** Must be inside a directory granted in `capabilities.fs.read`. */
+    cwd?: string;
+    /** Defaults to 30 seconds. */
+    timeoutMs?: number;
+  }
+  /**
+   * Runs a command to completion and resolves with what it did. Bounded: 30
+   * seconds unless `timeoutMs` says otherwise, 8 MiB of each stream. For a
+   * command that runs longer, talks over stdin, or should be read as it
+   * works, use `spawn`.
+   */
+  export function run(command: string, args?: string[], options?: RunOptions): Promise<CommandOutput>;
+  export interface SpawnOptions {
+    /** Must be inside a directory granted in `capabilities.fs.read`, or this throws. */
+    cwd?: string;
+    /** `"pipe"` to `write()` to the child; defaults to `"null"`. */
+    stdin?: "pipe" | "null";
+    /** No limit by default. When given, the whole process group is killed at the deadline. */
+    timeoutMs?: number;
+    /**
+     * Deliver stdout and stderr a line at a time, without the line ending —
+     * joined across reads, with a last unterminated line delivered at the end.
+     * A single line over 8 MiB kills the process and is reported on `exit`.
+     */
+    lines?: boolean;
+  }
+  export interface ExitResult {
+    code: number | null;
+    signal: string | null;
+    /** Set when the runtime stopped the process: a timeout, or a line too long. */
+    error?: string;
+  }
+  /**
+   * A running child. Handlers run on the UI thread with an async `cx`, like a
+   * `cx.spawn` task's. `exit` fires once, after the last `stdout`/`stderr`.
+   * Releasing the view that spawned it, reloading the application or closing
+   * the window kills it and everything it started.
+   */
+  export interface ChildProcess {
+    readonly pid: number;
+    on(event: "stdout" | "stderr", handler: (text: string, cx: import("gpui-kit").AsyncContext) => void): ChildProcess;
+    on(event: "exit", handler: (result: ExitResult, cx: import("gpui-kit").AsyncContext) => void): ChildProcess;
+    /** Needs `stdin: "pipe"`; throws otherwise, or after `end()`. */
+    write(text: string): void;
+    /** Closes stdin. */
+    end(): void;
+    /** Kills the whole process group (a Job Object on Windows). `exit` still fires once. */
+    kill(): void;
+  }
+  /**
+   * Starts a command and streams what it does: output as it arrives, no
+   * deadline unless asked for, stdin on request. The same grant as `run`
+   * (`capabilities.fs.execute`), the same host-PATH resolution and the same
+   * empty environment. UTF-8 output is decoded whole even when a character
+   * spans two reads; there is no limit on total output.
+   */
+  export function spawn(command: string, args?: string[], options?: SpawnOptions): ChildProcess;
   export function exit(code?: number): void;
   export function nextTick(callback: (...args: unknown[]) => void, ...args: unknown[]): void;
   export const platform: string;
   export const arch: string;
-  const process: { run: typeof run; exit: typeof exit; nextTick: typeof nextTick; platform: string; arch: string };
+  const process: {
+    run: typeof run;
+    spawn: typeof spawn;
+    exit: typeof exit;
+    nextTick: typeof nextTick;
+    platform: string;
+    arch: string;
+    /**
+     * Common variables (`HOME`, `USER`, `HOSTNAME`, `LANG`, `TZ`, `PATH`,
+     * `EDITOR`, `DISPLAY`, `HTTP_PROXY`, the XDG directories…), plus those
+     * `capabilities.process.env` names, when set; names match regardless of
+     * case. Every other variable is absent. A fresh copy on each read; assigning to
+     * it changes nothing.
+     */
+    readonly env: Record<string, string | undefined>;
+    /**
+     * This application's data directory, the one `${dataDir}` names in the
+     * manifest and `localStorage` lives in. `undefined` when the host placed
+     * none. A path, not a grant: reading it still needs `capabilities.fs`.
+     */
+    readonly dataDir: string | undefined;
+  };
   export default process;
 }
 declare module "os" {
   export function platform(): string;
   export function arch(): string;
   export const EOL: string;
-  const os: { platform: typeof platform; arch: typeof arch; EOL: string };
+  /**
+   * The user's home directory. Needs no capability; reading files there needs
+   * a `${homeDir}` root in `capabilities.fs`.
+   */
+  export function homedir(): string;
+  const os: { platform: typeof platform; arch: typeof arch; EOL: string; homedir: typeof homedir };
   export default os;
 }
 declare module "fs/promises" {
   export interface Dirent { name: string; isDirectory(): boolean; }
   export interface MakeDirectoryOptions { recursive?: boolean; }
+  /** Node's `Stats`, cut to what every platform can fill. An unrecorded time reads as the epoch. */
+  export interface Stats {
+    isFile(): boolean;
+    isDirectory(): boolean;
+    isSymbolicLink(): boolean;
+    size: number;
+    mode: number;
+    mtimeMs: number;
+    atimeMs: number;
+    birthtimeMs: number;
+    mtime: Date;
+    atime: Date;
+    birthtime: Date;
+  }
   export function readFile(path: string): Promise<Uint8Array>;
   export function readFile(path: string, encoding: "utf8" | { encoding: "utf8" }): Promise<string>;
   export function writeFile(path: string, contents: string | Uint8Array): Promise<void>;
@@ -201569,6 +210191,14 @@ declare module "fs/promises" {
   export function unlink(path: string): Promise<void>;
   export function rmdir(path: string): Promise<void>;
   export function mkdir(path: string, options?: MakeDirectoryOptions): Promise<void>;
+  /** Follows a symlink; needs read access. */
+  export function stat(path: string): Promise<Stats>;
+  /** Describes a symlink itself; needs read access. */
+  export function lstat(path: string): Promise<Stats>;
+  /** Moves a file or directory, replacing a file at `to`; needs write access to both paths. */
+  export function rename(from: string, to: string): Promise<void>;
+  /** The target a symlink stores, as written; needs read access. */
+  export function readlink(path: string): Promise<string>;
 }
 declare module "net" {
   export interface Socket {
@@ -201606,6 +210236,8 @@ interface ShellFetchResponse {
   readonly url: string;
   text(): Promise<string>;
   json(): Promise<unknown>;
+  arrayBuffer(): Promise<ArrayBuffer>;
+  bytes(): Promise<Uint8Array>;
 }
 interface ShellFetchOptions {
   /**
@@ -201614,19 +210246,44 @@ interface ShellFetchOptions {
    * this field.
    */
   method?: string;
-  /** Client-managed framing headers such as Host and Content-Length are refused. */
+  /**
+   * Client-managed framing headers such as Host and Content-Length are refused.
+   * `User-Agent` defaults to `gpui-shell/<version>`; a value set here replaces it.
+   */
   headers?: Record<string, string>;
   body?: string | Uint8Array;
 }
 declare function fetch(url: string, options?: ShellFetchOptions): Promise<ShellFetchResponse>;
+/** UTF-8 encoding, as in the WHATWG Encoding standard. */
+declare class TextEncoder {
+  constructor();
+  readonly encoding: "utf-8";
+  encode(input?: string): Uint8Array;
+  encodeInto(source: string, destination: Uint8Array): { read: number; written: number };
+}
+interface TextDecoderOptions { fatal?: boolean; ignoreBOM?: boolean; }
+interface TextDecodeOptions { stream?: boolean; }
+/** UTF-8 decoding, as in the WHATWG Encoding standard. Any other label throws a RangeError. */
+declare class TextDecoder {
+  constructor(label?: "utf-8" | "utf8" | "unicode-1-1-utf-8", options?: TextDecoderOptions);
+  readonly encoding: "utf-8";
+  readonly fatal: boolean;
+  readonly ignoreBOM: boolean;
+  decode(input?: ArrayBuffer | ArrayBufferView, options?: TextDecodeOptions): string;
+}
 declare const process: typeof import("process").default;
+interface ImportMeta {
+  /** The `file:` URL of this module. */
+  readonly url: string;
+}
 
 /**
  * The window the script is drawing into. A global: nothing to import, and
  * unlike `cx`, nothing hands it to you.
  *
  * Ambient: every call reads the host call that is running now, and throws
- * outside one. There is no handle to hold, so there is nothing to hold past the
+)GPUI_DTS";
+static const char kShellTypes66[] = R"GPUI_DTS( * outside one. There is no handle to hold, so there is nothing to hold past the
  * call that would have made it stale.
  *
  * An overlay belongs to the window rather than to the view that opened it —
@@ -201714,6 +210371,7 @@ void AppendBuiltinTypeDeclarations(StrBuilder* out) {
     out->Append(Str(kShellTypes63, (int)sizeof(kShellTypes63) - 1));
     out->Append(Str(kShellTypes64, (int)sizeof(kShellTypes64) - 1));
     out->Append(Str(kShellTypes65, (int)sizeof(kShellTypes65) - 1));
+    out->Append(Str(kShellTypes66, (int)sizeof(kShellTypes66) - 1));
 }
 
 }
@@ -202285,6 +210943,7 @@ ScriptView::~ScriptView() {
     ViewTypeRelease(type);
     PolicyRelease(policy);
     ShellErrorClear(&error);
+    ShellErrorClear(&reloadError);
     if (runtime) runtime->Release();
 }
 
@@ -202331,23 +210990,49 @@ El* ScriptView::Render(ScriptView* self, Ctx* cx) {
             if (self->snapshot) self->snapshot->Release();
             self->snapshot = next;
             self->dirty = false;
+            self->renderBroken = false;
             ShellErrorClear(&self->error);
+        } else {
+            self->renderBroken = true;
         }
     }
-    if (self->snapshot) {
+    bool reloadFailed = self->reloadError.IsSet();
+    bool renderFailed =
+        self->renderBroken || (!self->snapshot && self->error.IsSet());
+    ViewFailure failure =
+        reloadFailed ? ViewFailure::Reload : ViewFailure::Render;
+    Str message = reloadFailed ? self->reloadError.message
+                  : self->error.IsSet()
+                      ? self->error.message
+                      : StrL("The shell view did not publish a snapshot");
+    if (self->snapshot && !reloadFailed && !renderFailed) {
         return ShellMaterialize(cx, self->runtime, self->snapshot,
                                 &self->error);
     }
-    Str message = self->error.IsSet()
-                      ? self->error.message
-                      : StrL("The shell view did not publish a snapshot");
-    return Div(cx->a)
-        ->FlexCol()
-        ->SizeFull()
-        ->Pad(16)
-        ->Gap(8)
-        ->Child(TextEl(cx->a, StrL("JavaScript application error"))->Bold())
-        ->Child(TextEl(cx->a, message)->Wrap());
+
+    ShellError scratch = {};
+    ShellError* into = reloadFailed || renderFailed ? &scratch : &self->error;
+    if (self->snapshot) {
+        El* kept = ShellMaterialize(cx, self->runtime, self->snapshot, into);
+        ShellErrorClear(&scratch);
+
+        return Div(cx->a)->SizeFull()->Child(kept)->Child(
+            ShellErrorBanner(cx, failure, message));
+    }
+    ShellErrorClear(&scratch);
+    return ShellErrorOverlay(cx, failure, message);
+}
+
+void ScriptView::SetReloadError(ScriptView* self, Ctx* cx, Str message) {
+    if (!self) return;
+    bool clear = !message;
+    bool same = clear ? !self->reloadError.IsSet()
+                      : self->reloadError.IsSet() &&
+                            StrEq(self->reloadError.message, message);
+    if (same) return;
+    ShellErrorClear(&self->reloadError);
+    if (!clear) ShellErrorSet(&self->reloadError, message);
+    if (cx) Notify(cx);
 }
 
 void ScriptView::Refresh(ScriptView* self, Ctx* cx) {
@@ -202383,7 +211068,9 @@ bool ScriptView::Reload(ScriptView* self, Ctx* cx, Str directory, Str entry,
     self->type = nextType;
     self->snapshot = nullptr;
     self->dirty = true;
+    self->renderBroken = false;
     ShellErrorClear(&self->error);
+    ShellErrorClear(&self->reloadError);
     if (oldObject) self->runtime->ReleaseApplicationState(oldObject);
     if (oldSnapshot) oldSnapshot->Release();
     ViewObjectRelease(oldObject);
@@ -202917,6 +211604,20 @@ static void SourceScanDone(SourceScanJob* job) {
             WindowCancelTimer(watcher->window, watcher->timer);
             watcher->timer = 0;
         }
+        if (watcher->error.IsSet()) {
+
+            logf("source watch stopped: %s\n", watcher->error.message);
+            Ctx cx = {job->app, job->window, job->window->frameArena,
+                      watcher->view};
+            ToastRequest toast;
+            toast.title = StrL("Stopped watching for changes");
+            toast.description = watcher->error.message;
+            toast.level = ToastLevel::Error;
+            toast.hasTimeout = false;
+            toast.hasId = true;
+            toast.id = StrL("shell-watch");
+            ShellRootPushToast(&cx, toast);
+        }
         delete job;
         return;
     }
@@ -202939,12 +211640,13 @@ static void SourceScanDone(SourceScanJob* job) {
     ShellError reload = {};
     if (!ScriptView::Reload(view, &cx, watcher->directory, watcher->entry,
                             &reload)) {
-        ShellErrorClear(&watcher->error);
-        watcher->error = reload;
-        reload = {};
-        if (watcher->error.IsSet()) log(watcher->error.message);
+
+        if (reload.IsSet()) logf("reload failed: %s\n", reload.message);
+        ScriptView::SetReloadError(view, &cx, reload.message);
+        ShellErrorClear(&reload);
         return;
     }
+    ScriptView::SetReloadError(view, &cx, {});
     ShellErrorClear(&watcher->error);
 }
 
@@ -212698,6 +221400,7 @@ void WebViewShow(WebView* self) {
     }
     wry::WebViewSetVisible(raw, true);
     self->visible = true;
+    self->nativeShown = true;
 }
 
 void WebViewHide(WebView* self) {
@@ -212708,6 +221411,7 @@ void WebViewHide(WebView* self) {
     wry::WebViewFocusParent(raw);
     wry::WebViewSetVisible(raw, false);
     self->visible = false;
+    self->nativeShown = false;
 }
 
 bool WebViewVisible(const WebView* self) {
@@ -212817,12 +221521,32 @@ WebViewHandle WebViewGetHandle(const WebView* self) {
     return self ? self->owned : WebViewHandle();
 }
 
+static Bounds ClipIntersect(Bounds a, Bounds b) {
+    float x = a.x > b.x ? a.x : b.x;
+    float y = a.y > b.y ? a.y : b.y;
+    float right = (a.x + a.w) < (b.x + b.w) ? (a.x + a.w) : (b.x + b.w);
+    float bottom = (a.y + a.h) < (b.y + b.h) ? (a.y + a.h) : (b.y + b.h);
+    return {x, y, right > x ? right - x : 0.f, bottom > y ? bottom - y : 0.f};
+}
+
+static bool BoundsSame(Bounds a, Bounds b) {
+    return a.x == b.x && a.y == b.y && a.w == b.w && a.h == b.h;
+}
+
+static void HideNative(WebView* self, wry::WebView* raw) {
+    if (!self->nativeShown) {
+        return;
+    }
+    wry::WebViewSetVisible(raw, false);
+    self->nativeShown = false;
+}
+
 static void PaintWebView(PaintCtx* ctx, El* e, void* user) {
     WebView* self = (WebView*)user;
-    Bounds b = e->Bounds();
-    self->bounds = b;
+    Bounds document = e->Bounds();
+    self->bounds = document;
     wry::WebView* raw = self->owned.Raw();
-    if (!raw || !self->visible) {
+    if (!raw) {
         return;
     }
 
@@ -212833,19 +221557,39 @@ static void PaintWebView(PaintCtx* ctx, El* e, void* user) {
             self->hasPageScale = true;
         }
     }
-    bool same = self->hasApplied && self->applied.x == b.x &&
-                self->applied.y == b.y && self->applied.w == b.w &&
-                self->applied.h == b.h;
-    if (same) {
+    if (!self->visible) {
+        HideNative(self, raw);
         return;
     }
-    self->applied = b;
-    self->hasApplied = true;
+    Bounds visible = ctx && ctx->hasHitMask
+                         ? ClipIntersect(document, ctx->hitMask)
+                         : document;
+    bool empty = visible.w <= 0.f || visible.h <= 0.f;
+    bool partial = !empty && !BoundsSame(visible, document);
+    if (empty || (partial && PlatWebViewPartialClipHides())) {
+        if (partial && !self->clipWarned) {
+            self->clipWarned = true;
+            logf(
+                "webview: a partial clip needs a native composition "
+                "surface, so the view is hidden\n");
+        }
+        HideNative(self, raw);
+        return;
+    }
+    bool same = self->hasApplied && BoundsSame(self->applied, document);
+    if (!same) {
+        self->applied = document;
+        self->hasApplied = true;
 
-    wry::Rect r;
-    r.position = wry::LogicalPosition(b.x, b.y);
-    r.size = wry::LogicalSize(b.w, b.h);
-    wry::WebViewSetBounds(raw, r);
+        wry::Rect r;
+        r.position = wry::LogicalPosition(document.x, document.y);
+        r.size = wry::LogicalSize(document.w, document.h);
+        wry::WebViewSetBounds(raw, r);
+    }
+    if (!self->nativeShown) {
+        wry::WebViewSetVisible(raw, true);
+        self->nativeShown = true;
+    }
 }
 
 El* WebViewEl(Entity<WebView> view, Ctx* cx) {
@@ -213139,6 +221883,7 @@ Str SyntheticMouseEventJsTemp(const SyntheticMouseEvent* ev) {
 #include <windows.h>
 #include <windows.media.speechrecognition.h>
 #include <winhttp.h>
+#include <winioctl.h>
 #include <winternl.h>
 #endif
 
@@ -213212,6 +221957,7 @@ Str SyntheticMouseEventJsTemp(const SyntheticMouseEvent* ev) {
 #if GPUI_OS_LINUX || GPUI_OS_MAC || GPUI_OS_IOS || GPUI_OS_ANDROID
 #include <dirent.h>
 #include <fcntl.h>
+#include <pthread.h>
 #include <signal.h>
 #include <sys/mman.h>
 #include <sys/select.h>
@@ -229228,6 +237974,27 @@ void OpenUrl(Str url) {
     }
 }
 
+void OpenPath(Str path) {
+    if (!path.s || len(path) <= 0) {
+        return;
+    }
+
+    Str value = StrDup(path);
+    pid_t pid = fork();
+    if (pid == 0) {
+        if (fork() == 0) {
+            execlp("xdg-open", "xdg-open", value.s, (char*)nullptr);
+            _exit(127);
+        }
+        _exit(0);
+    }
+    if (pid > 0) {
+        int st = 0;
+        waitpid(pid, &st, 0);
+    }
+    StrFree(value);
+}
+
 TempStr PromptForPathTemp(Window* win, const PathPrompt& opts) {
     (void)win;
     TempStr title =
@@ -229249,6 +238016,13 @@ TempStr PromptForPathTemp(Window* win, const PathPrompt& opts) {
                    title ? title.s : (char*)nullptr, (char*)nullptr);
             execlp("kdialog", "kdialog", "--getexistingdirectory", ".",
                    (char*)nullptr);
+        } else if (opts.multiple) {
+
+            execlp("zenity", "zenity", "--file-selection", "--multiple",
+                   "--separator=\n", title ? "--title" : (char*)nullptr,
+                   title ? title.s : (char*)nullptr, (char*)nullptr);
+            execlp("kdialog", "kdialog", "--getopenfilename", ".", "--multiple",
+                   "--separate-output", (char*)nullptr);
         } else {
             execlp("zenity", "zenity", "--file-selection",
                    title ? "--title" : (char*)nullptr,
@@ -229263,7 +238037,8 @@ TempStr PromptForPathTemp(Window* win, const PathPrompt& opts) {
         close(fds[0]);
         return {};
     }
-    TempStr result = AllocStrTemp(kMaxPath - 1);
+    TempStr result =
+        AllocStrTemp(opts.multiple ? kMaxPath * 64 - 1 : kMaxPath - 1);
     if (!result.s) {
         close(fds[0]);
         int st = 0;
@@ -232396,12 +241171,25 @@ void OpenUrl(Str url) {
     }
 }
 
+void OpenPath(Str path) {
+    if (!path.s || len(path) <= 0) {
+        return;
+    }
+    NSString* s = [[NSString alloc] initWithBytes:path.s
+                                           length:(NSUInteger)len(path)
+                                         encoding:NSUTF8StringEncoding];
+    NSURL* u = s ? [NSURL fileURLWithPath:s] : nil;
+    if (u) {
+        [[NSWorkspace sharedWorkspace] openURL:u];
+    }
+}
+
 TempStr PromptForPathTemp(Window* win, const PathPrompt& opts) {
     (void)win;
     NSOpenPanel* panel = [NSOpenPanel openPanel];
     [panel setCanChooseFiles:opts.files ? YES : NO];
     [panel setCanChooseDirectories:opts.directories ? YES : NO];
-    [panel setAllowsMultipleSelection:NO];
+    [panel setAllowsMultipleSelection:opts.multiple ? YES : NO];
     if (len(opts.title) > 0) {
         NSString* t =
             [[NSString alloc] initWithBytes:opts.title.s
@@ -232414,12 +241202,25 @@ TempStr PromptForPathTemp(Window* win, const PathPrompt& opts) {
     if ([panel runModal] != NSModalResponseOK) {
         return {};
     }
-    NSURL* url = [[panel URLs] firstObject];
-    const char* path = url ? [[url path] UTF8String] : nullptr;
-    if (!path) {
+
+    StrBuilder paths;
+    for (NSURL* url in [panel URLs]) {
+        const char* path = url ? [[url path] UTF8String] : nullptr;
+        if (!path) {
+            continue;
+        }
+        if (len(paths) > 0) {
+            paths.AppendChar('\n');
+        }
+        paths.Append(Str(path));
+        if (!opts.multiple) {
+            break;
+        }
+    }
+    if (len(paths) == 0) {
         return {};
     }
-    return StrDupTemp(Str(path));
+    return StrDupTemp(Str(paths.els, len(paths)));
 }
 
 void ClipboardSetText(Window* win, Str text) {
@@ -233661,6 +242462,8 @@ void OpenUrl(Str url) {
         GpJsOpenUrl(url.s, len(url));
     }
 }
+
+void OpenPath(Str) {}
 
 TempStr PromptForPathTemp(Window* win, const PathPrompt& opts) {
     (void)win;
@@ -235147,6 +243950,14 @@ void OpenUrl(Str url) {
                   SW_SHOWNORMAL);
 }
 
+void OpenPath(Str path) {
+    if (!path.s || len(path) <= 0) {
+        return;
+    }
+    ShellExecuteW(nullptr, L"open", ToCWstrTemp(path), nullptr, nullptr,
+                  SW_SHOWNORMAL);
+}
+
 TempStr PromptForPathTemp(Window* win, const PathPrompt& opts) {
     IFileOpenDialog* dlg = nullptr;
     HRESULT hr = CoCreateInstance(CLSID_FileOpenDialog, nullptr,
@@ -235162,6 +243973,9 @@ TempStr PromptForPathTemp(Window* win, const PathPrompt& opts) {
     } else {
         flags &= ~(DWORD)FOS_PICKFOLDERS;
     }
+    if (opts.multiple) {
+        flags |= FOS_ALLOWMULTISELECT;
+    }
     dlg->SetOptions(flags | FOS_FORCEFILESYSTEM | FOS_PATHMUSTEXIST);
     if (len(opts.title) > 0) {
         dlg->SetTitle(ToCWstrTemp(opts.title));
@@ -235170,27 +243984,51 @@ TempStr PromptForPathTemp(Window* win, const PathPrompt& opts) {
     hr = dlg->Show(owner);
     TempStr result;
     if (SUCCEEDED(hr)) {
+        IShellItemArray* items = nullptr;
         IShellItem* item = nullptr;
-        if (SUCCEEDED(dlg->GetResult(&item)) && item) {
+        DWORD count = 0;
+        if (opts.multiple && SUCCEEDED(dlg->GetResults(&items)) && items) {
+            items->GetCount(&count);
+        } else if (SUCCEEDED(dlg->GetResult(&item)) && item) {
+            count = 1;
+        }
+        StrBuilder paths;
+        for (DWORD i = 0; i < count; i++) {
+            IShellItem* one = item;
+            if (items && FAILED(items->GetItemAt(i, &one))) {
+                continue;
+            }
             PWSTR wide = nullptr;
-            if (SUCCEEDED(item->GetDisplayName(SIGDN_FILESYSPATH, &wide)) &&
+            if (one &&
+                SUCCEEDED(one->GetDisplayName(SIGDN_FILESYSPATH, &wide)) &&
                 wide) {
                 int n = WideCharToMultiByte(CP_UTF8, 0, wide, -1, nullptr, 0,
                                             nullptr, nullptr);
                 if (n > 1) {
-                    result = AllocStrTemp(n - 1);
-                    if (result.s) {
-                        int wrote =
-                            WideCharToMultiByte(CP_UTF8, 0, wide, -1, result.s,
-                                                n, nullptr, nullptr);
-                        if (wrote != n) {
-                            result = {};
+                    TempStr path = AllocStrTemp(n - 1);
+                    if (path.s &&
+                        WideCharToMultiByte(CP_UTF8, 0, wide, -1, path.s, n,
+                                            nullptr, nullptr) == n) {
+                        if (len(paths) > 0) {
+                            paths.AppendChar('\n');
                         }
+                        paths.Append(path);
                     }
                 }
                 CoTaskMemFree(wide);
             }
+            if (items && one) {
+                one->Release();
+            }
+        }
+        if (item) {
             item->Release();
+        }
+        if (items) {
+            items->Release();
+        }
+        if (len(paths) > 0) {
+            result = StrDupTemp(Str(paths.els, len(paths)));
         }
     }
     dlg->Release();
@@ -237592,7 +246430,7 @@ static size_t OnReadBody(char* buf, size_t size, size_t n, void* userp) {
     return (size_t)got;
 }
 
-bool HttpSend(const HttpReq& req, HttpRsp* out) {
+bool HttpSendPlatform(const HttpReq& req, HttpRsp* out) {
     Str url = req.url;
     bool noRedirect = req.noRedirect;
     if (!out || !HttpUrlIsRemote(url)) {
@@ -237653,13 +246491,16 @@ bool HttpSend(const HttpReq& req, HttpRsp* out) {
     transfer.out = out;
     transfer.curl = c;
     bool streamed = req.readBody || req.onBody;
+    curl_easy_setopt(c, CURLOPT_CONNECTTIMEOUT_MS, (long)kHttpTimeoutMs);
     if (streamed) {
 
-        curl_easy_setopt(c, CURLOPT_CONNECTTIMEOUT_MS, (long)kHttpTimeoutMs);
-        curl_easy_setopt(c, CURLOPT_LOW_SPEED_LIMIT, 1L);
-        curl_easy_setopt(c, CURLOPT_LOW_SPEED_TIME, 60L);
+        if (req.waitMs >= 0) {
+            curl_easy_setopt(c, CURLOPT_LOW_SPEED_LIMIT, 1L);
+            curl_easy_setopt(c, CURLOPT_LOW_SPEED_TIME, 60L);
+        }
     } else {
-        curl_easy_setopt(c, CURLOPT_TIMEOUT_MS, (long)kHttpTimeoutMs);
+
+        curl_easy_setopt(c, CURLOPT_TIMEOUT_MS, (long)HttpWaitMs(req));
     }
     curl_easy_setopt(c, CURLOPT_USERAGENT, "gpui/1.0");
 
@@ -237732,6 +246573,9 @@ bool HttpSend(const HttpReq& req, HttpRsp* out) {
 
     CURLcode err = headersReady ? curl_easy_perform(c) : CURLE_OUT_OF_MEMORY;
     bool ok = err == CURLE_OK;
+    if (!ok) {
+        out->error = StrDup(Str(curl_easy_strerror(err)));
+    }
     if (ok) {
         long status = 0;
         curl_easy_getinfo(c, CURLINFO_RESPONSE_CODE, &status);
@@ -237781,10 +246625,12 @@ bool HttpGetNoRedirect(Str url, HttpRsp* out) {
 
 #else
 
-bool HttpSend(const HttpReq& req, HttpRsp* out) {
+bool HttpSendPlatform(const HttpReq& req, HttpRsp* out) {
 
     (void)req;
-    (void)out;
+    if (out) {
+        out->error = StrDup(StrL("built without libcurl"));
+    }
     return false;
 }
 
@@ -237977,6 +246823,11 @@ static NSString* NSFromStr(Str s) {
                                   encoding:NSUTF8StringEncoding];
 }
 
+static NSTimeInterval IdleSeconds(const HttpReq& request) {
+    int ms = HttpWaitMs(request);
+    return ms > 0 ? (NSTimeInterval)ms / 1000.0 : 7 * 24 * 3600.0;
+}
+
 static bool HttpSendStreamed(const HttpReq& request, HttpRsp* out) {
     @autoreleasepool {
         NSURL* u = [NSURL URLWithString:NSFromStr(request.url)];
@@ -237987,7 +246838,7 @@ static bool HttpSendStreamed(const HttpReq& request, HttpRsp* out) {
         NSMutableURLRequest* req = [NSMutableURLRequest
              requestWithURL:u
                 cachePolicy:NSURLRequestUseProtocolCachePolicy
-            timeoutInterval:(NSTimeInterval)kHttpTimeoutMs / 1000.0];
+            timeoutInterval:IdleSeconds(request)];
         [req setHTTPMethod:len(request.method) > 0 ? NSFromStr(request.method)
                                                    : @"GET"];
         [req setValue:@"gpui/1.0" forHTTPHeaderField:@"User-Agent"];
@@ -238088,7 +246939,7 @@ static bool HttpSendStreamed(const HttpReq& request, HttpRsp* out) {
     }
 }
 
-bool HttpSend(const HttpReq& request, HttpRsp* out) {
+bool HttpSendPlatform(const HttpReq& request, HttpRsp* out) {
     Str url = request.url;
     bool noRedirect = request.noRedirect;
     if (!out || !HttpUrlIsRemote(url)) {
@@ -238108,7 +246959,7 @@ bool HttpSend(const HttpReq& request, HttpRsp* out) {
         NSMutableURLRequest* req = [NSMutableURLRequest
              requestWithURL:u
                 cachePolicy:NSURLRequestUseProtocolCachePolicy
-            timeoutInterval:(NSTimeInterval)kHttpTimeoutMs / 1000.0];
+            timeoutInterval:IdleSeconds(request)];
         NSString* verb =
             len(request.method) > 0 ? NSFromStr(request.method) : @"GET";
         [req setHTTPMethod:verb];
@@ -238128,6 +246979,7 @@ bool HttpSend(const HttpReq& request, HttpRsp* out) {
 
         __block NSData* body = nil;
         __block NSHTTPURLResponse* rsp = nil;
+        __block NSString* failure = nil;
         dispatch_semaphore_t done = dispatch_semaphore_create(0);
         GpuiNoRedirectDelegate* delegate =
             noRedirect ? [[GpuiNoRedirectDelegate alloc] init] : nil;
@@ -238145,14 +246997,19 @@ bool HttpSend(const HttpReq& request, HttpRsp* out) {
                 if (!e && [r isKindOfClass:[NSHTTPURLResponse class]]) {
                     body = d;
                     rsp = (NSHTTPURLResponse*)r;
+                } else if (e) {
+                    failure = [e localizedDescription];
                 }
                 dispatch_semaphore_signal(done);
               }];
         [task resume];
 
         dispatch_time_t deadline =
-            dispatch_time(DISPATCH_TIME_NOW,
-                          (int64_t)(kHttpTimeoutMs + 5000) * NSEC_PER_MSEC);
+            HttpWaitMs(request) == 0
+                ? DISPATCH_TIME_FOREVER
+                : dispatch_time(
+                      DISPATCH_TIME_NOW,
+                      (int64_t)(HttpWaitMs(request) + 5000) * NSEC_PER_MSEC);
         if (dispatch_semaphore_wait(done, deadline) != 0) {
             [task cancel];
             if (noRedirect) [session invalidateAndCancel];
@@ -238160,6 +247017,10 @@ bool HttpSend(const HttpReq& request, HttpRsp* out) {
         }
         if (noRedirect) [session finishTasksAndInvalidate];
         if (!rsp) {
+            const char* why = failure ? [failure UTF8String] : nullptr;
+            if (why) {
+                out->error = StrDup(Str(why));
+            }
             return false;
         }
         out->status = (int)[rsp statusCode];
@@ -238473,7 +247334,7 @@ bool HttpWasmSendAsync(const HttpReq& req, Func1<HttpAsyncResult> done) {
     return true;
 }
 
-bool HttpSend(const HttpReq& req, HttpRsp* out) {
+bool HttpSendPlatform(const HttpReq& req, HttpRsp* out) {
     (void)req;
     (void)out;
     return false;
@@ -238707,7 +247568,38 @@ static bool ReadResponse(HINTERNET req, const wchar_t* base,
     }
 }
 
-bool HttpSend(const HttpReq& req, HttpRsp* out) {
+static Str WinHttpErrorDup(DWORD code) {
+    wchar_t* text = nullptr;
+    HMODULE winhttp = GetModuleHandleW(L"winhttp.dll");
+    DWORD n = FormatMessageW(FORMAT_MESSAGE_ALLOCATE_BUFFER |
+                                 FORMAT_MESSAGE_FROM_SYSTEM |
+                                 FORMAT_MESSAGE_IGNORE_INSERTS |
+                                 (winhttp ? FORMAT_MESSAGE_FROM_HMODULE : 0),
+                             winhttp, code, 0, (wchar_t*)&text, 0, nullptr);
+    while (n > 0 && (text[n - 1] == L'\r' || text[n - 1] == L'\n' ||
+                     text[n - 1] == L' ' || text[n - 1] == L'.')) {
+        n--;
+    }
+    StrBuilder b;
+    if (n > 0) {
+        int bytes = WideCharToMultiByte(CP_UTF8, 0, text, (int)n, nullptr, 0,
+                                        nullptr, nullptr);
+        TempStr utf8 = bytes > 0 ? AllocStrTemp(bytes) : TempStr{};
+        if (utf8.s) {
+            WideCharToMultiByte(CP_UTF8, 0, text, (int)n, utf8.s, bytes,
+                                nullptr, nullptr);
+            b.Append(utf8);
+            b.Append(StrL(" "));
+        }
+    }
+    if (text) {
+        LocalFree(text);
+    }
+    b.Append(fmt("(error %d)", (int)code));
+    return b.TakeStr();
+}
+
+bool HttpSendPlatform(const HttpReq& req, HttpRsp* out) {
     Str url = req.url;
     bool noRedirect = req.noRedirect;
     if (!out || !HttpUrlIsRemote(url)) {
@@ -238745,6 +247637,7 @@ bool HttpSend(const HttpReq& req, HttpRsp* out) {
     }
 
     bool ok = false;
+    DWORD failure = 0;
     {
         WinHttpHandle session;
 
@@ -238814,11 +247707,18 @@ bool HttpSend(const HttpReq& req, HttpRsp* out) {
             Free(nullptr, bypass);
         }
         StrFree(proxy);
+        if (!session.h) {
+            failure = GetLastError();
+        }
         if (session.h) {
+
             WinHttpSetTimeouts(session.h, kHttpTimeoutMs, kHttpTimeoutMs,
-                               kHttpTimeoutMs, kHttpTimeoutMs);
+                               HttpWaitMs(req), HttpWaitMs(req));
             WinHttpHandle conn;
             conn.h = WinHttpConnect(session.h, host, uc.nPort, 0);
+            if (!conn.h) {
+                failure = GetLastError();
+            }
             if (conn.h) {
                 DWORD flags = uc.nScheme == INTERNET_SCHEME_HTTPS
                                   ? WINHTTP_FLAG_SECURE
@@ -238875,6 +247775,8 @@ bool HttpSend(const HttpReq& req, HttpRsp* out) {
                     (!streamed || WriteBody(request.h, req)) &&
                     WinHttpReceiveResponse(request.h, nullptr)) {
                     ok = ReadResponse(request.h, wurl, req, out);
+                } else {
+                    failure = GetLastError();
                 }
                 Free(nullptr, headers);
                 Free(nullptr, verb);
@@ -238885,6 +247787,9 @@ bool HttpSend(const HttpReq& req, HttpRsp* out) {
     Free(nullptr, wurl);
     if (!ok) {
         VecReset(out->body);
+        if (out->status == 0 && failure != 0 && len(out->error) == 0) {
+            out->error = WinHttpErrorDup(failure);
+        }
     }
     return ok;
 }
@@ -241396,6 +250301,15 @@ bool SysSelfPrivateMemory(uint64_t* bytes) {
 
 namespace base {
 
+bool PlatGetExePath(char* out, int cap) {
+    if (!out || cap <= 0) return false;
+    out[0] = 0;
+    ssize_t n = readlink("/proc/self/exe", out, (size_t)cap - 1);
+    if (n <= 0) return false;
+    out[n] = 0;
+    return true;
+}
+
 uint64_t PlatStatModifiedNs(const struct stat* st) {
     return (uint64_t)st->st_mtim.tv_sec * 1000000000ull + (uint64_t)st->st_mtim
                                                               .tv_nsec;
@@ -241404,14 +250318,23 @@ uint64_t PlatStatModifiedNs(const struct stat* st) {
 bool PlatSecondaryIsCommand() {
     return false;
 }
+bool PlatTitleBarCloseIsElement() {
+    return false;
+}
 bool PlatShowsWindowControls() {
     return true;
 }
 float PlatCaretWidth() {
-    return 2.f;
+    return 1.f;
 }
 bool PlatScrollBounce() {
     return true;
+}
+bool PlatScrollBounceTouch() {
+    return true;
+}
+bool PlatWebViewPartialClipHides() {
+    return false;
 }
 const char* PlatMonoFontName() {
     return "DejaVu Sans Mono";
@@ -241444,6 +250367,11 @@ float PlatWindowShadowSize() {
 
 namespace base {
 
+bool PlatGetExePath(char* out, int cap) {
+    if (out && cap > 0) out[0] = 0;
+    return false;
+}
+
 uint64_t PlatStatModifiedNs(const struct stat* st) {
     return (uint64_t)st->st_mtimespec.tv_sec * 1000000000ull +
            (uint64_t)st->st_mtimespec.tv_nsec;
@@ -241452,14 +250380,23 @@ uint64_t PlatStatModifiedNs(const struct stat* st) {
 bool PlatSecondaryIsCommand() {
     return false;
 }
+bool PlatTitleBarCloseIsElement() {
+    return false;
+}
 bool PlatShowsWindowControls() {
     return true;
 }
 float PlatCaretWidth() {
-    return 2.f;
+    return 1.f;
 }
 bool PlatScrollBounce() {
     return true;
+}
+bool PlatScrollBounceTouch() {
+    return true;
+}
+bool PlatWebViewPartialClipHides() {
+    return false;
 }
 const char* PlatMonoFontName() {
     return "DejaVu Sans Mono";
@@ -241494,16 +250431,17 @@ namespace base {
 
 void PlatDirNameInPlace(char* path);
 
-void PlatGetExeDir(char* out, int cap) {
-    if (!out || cap <= 0) {
-        return;
-    }
+bool PlatGetExePath(char* out, int cap) {
+    if (!out || cap <= 0) return false;
     out[0] = 0;
     ssize_t n = readlink("/proc/self/exe", out, (size_t)cap - 1);
-    if (n <= 0) {
-        return;
-    }
+    if (n <= 0) return false;
     out[n] = 0;
+    return true;
+}
+
+void PlatGetExeDir(char* out, int cap) {
+    if (!PlatGetExePath(out, cap)) return;
     PlatDirNameInPlace(out);
 }
 
@@ -241547,11 +250485,20 @@ bool PlatSecondaryIsCommand() {
 bool PlatShowsWindowControls() {
     return true;
 }
+bool PlatTitleBarCloseIsElement() {
+    return true;
+}
 float PlatCaretWidth() {
-    return 2.f;
+    return 1.f;
 }
 bool PlatScrollBounce() {
     return false;
+}
+bool PlatScrollBounceTouch() {
+    return false;
+}
+bool PlatWebViewPartialClipHides() {
+    return true;
 }
 const char* PlatMonoFontName() {
     return "DejaVu Sans Mono";
@@ -241586,17 +250533,17 @@ namespace base {
 
 void PlatDirNameInPlace(char* path);
 
-void PlatGetExeDir(char* out, int cap) {
-    if (!out || cap <= 0) {
-        return;
-    }
+bool PlatGetExePath(char* out, int cap) {
+    if (!out || cap <= 0) return false;
     out[0] = 0;
     uint32_t n = (uint32_t)cap;
-    if (_NSGetExecutablePath(out, &n) != 0) {
-        out[0] = 0;
-        return;
-    }
+    if (_NSGetExecutablePath(out, &n) != 0) return false;
     out[cap - 1] = 0;
+    return out[0] != 0;
+}
+
+void PlatGetExeDir(char* out, int cap) {
+    if (!PlatGetExePath(out, cap)) return;
     PlatDirNameInPlace(out);
 }
 
@@ -241638,14 +250585,23 @@ uint64_t PlatStatModifiedNs(const struct stat* st) {
 bool PlatSecondaryIsCommand() {
     return true;
 }
+bool PlatTitleBarCloseIsElement() {
+    return false;
+}
 bool PlatShowsWindowControls() {
     return false;
 }
 float PlatCaretWidth() {
-    return 1.5f;
+    return 1.f;
 }
 bool PlatScrollBounce() {
+    return true;
+}
+bool PlatScrollBounceTouch() {
     return false;
+}
+bool PlatWebViewPartialClipHides() {
+    return true;
 }
 const char* PlatMonoFontName() {
     return "Menlo";
@@ -241781,6 +250737,31 @@ bool PlatDirExists(const char* path) {
     }
     struct stat st = {};
     return stat(path, &st) == 0 && S_ISDIR(st.st_mode);
+}
+
+bool PlatFileIsExecutable(const char* path) {
+    if (!path || !path[0]) return false;
+    struct stat st;
+    if (stat(path, &st) != 0) return false;
+    return (st.st_mode & 0111) != 0;
+}
+
+bool PlatMakeExecutable(const char* path) {
+    if (!path || !path[0]) return false;
+    return chmod(path, 0755) == 0;
+}
+
+extern "C" char** environ;
+
+bool PlatVisitEnv(void (*visit)(Str name, Str value, void* user), void* user) {
+    if (!visit) return false;
+    if (!environ) return true;
+    for (char** at = environ; *at; at++) {
+        char* eq = strchr(*at, '=');
+        if (!eq || eq == *at) continue;
+        visit(Str(*at, (int)(eq - *at)), Str(eq + 1), user);
+    }
+    return true;
 }
 
 bool PlatFileExists(const char* path) {
@@ -242005,6 +250986,11 @@ uint64_t PlatArenaReserveSize() {
     return 4ull * 1024ull * 1024ull;
 }
 
+bool PlatGetExePath(char* out, int cap) {
+    if (out && cap > 0) out[0] = 0;
+    return false;
+}
+
 void PlatGetExeDir(char* out, int cap) {
     if (!out || cap <= 0) {
         return;
@@ -242032,13 +251018,22 @@ uint64_t PlatStatModifiedNs(const struct stat* st) {
 bool PlatSecondaryIsCommand() {
     return false;
 }
+bool PlatTitleBarCloseIsElement() {
+    return false;
+}
 bool PlatShowsWindowControls() {
     return true;
 }
 float PlatCaretWidth() {
-    return 2.f;
+    return 1.f;
 }
 bool PlatScrollBounce() {
+    return false;
+}
+bool PlatScrollBounceTouch() {
+    return false;
+}
+bool PlatWebViewPartialClipHides() {
     return false;
 }
 const char* PlatMonoFontName() {
@@ -242238,19 +251233,75 @@ bool PlatCanonicalPath(const char* path, char* out, int cap) {
     return true;
 }
 
-void PlatGetExeDir(char* out, int cap) {
-    if (!out || cap <= 0) {
-        return;
-    }
+bool PlatGetExePath(char* out, int cap) {
+    if (!out || cap <= 0) return false;
     out[0] = 0;
-    GetModuleFileNameA(nullptr, out, (DWORD)cap);
+    DWORD n = GetModuleFileNameA(nullptr, out, (DWORD)cap);
+    if (n == 0 || n >= (DWORD)cap) {
+        out[0] = 0;
+        return false;
+    }
+
+    for (DWORD i = 0; i < n; i++) {
+        if (out[i] == '\\') out[i] = '/';
+    }
+    return true;
+}
+
+void PlatGetExeDir(char* out, int cap) {
+    if (!PlatGetExePath(out, cap)) return;
     int n = (int)strlen(out);
-    while (n > 0 && out[n - 1] != '\\' && out[n - 1] != '/') {
-        out[--n] = 0;
+    while (n > 0 && out[n - 1] != '/') out[--n] = 0;
+    while (n > 0 && out[n - 1] == '/') out[--n] = 0;
+}
+
+bool PlatFileIsExecutable(const char* path) {
+    (void)path;
+    return false;
+}
+
+bool PlatMakeExecutable(const char* path) {
+    (void)path;
+    return true;
+}
+
+static char* WideToUtf8Alloc(const WCHAR* text, int wlen) {
+    if (!text) return nullptr;
+    if (wlen < 0) wlen = (int)wcslen(text);
+    int bytes = wlen == 0
+                    ? 0
+                    : WideCharToMultiByte(CP_UTF8, WC_ERR_INVALID_CHARS, text,
+                                          wlen, nullptr, 0, nullptr, nullptr);
+    if (wlen != 0 && bytes <= 0) return nullptr;
+    char* out = (char*)malloc((size_t)bytes + 1);
+    if (!out) return nullptr;
+    if (bytes > 0) {
+        WideCharToMultiByte(CP_UTF8, WC_ERR_INVALID_CHARS, text, wlen, out,
+                            bytes, nullptr, nullptr);
     }
-    while (n > 0 && (out[n - 1] == '\\' || out[n - 1] == '/')) {
-        out[--n] = 0;
+    out[bytes] = 0;
+    return out;
+}
+
+bool PlatVisitEnv(void (*visit)(Str name, Str value, void* user), void* user) {
+    if (!visit) return false;
+    LPWCH block = GetEnvironmentStringsW();
+    if (!block) return false;
+    for (WCHAR* at = block; *at;) {
+        int n = (int)wcslen(at);
+        WCHAR* eq = wcschr(at, L'=');
+
+        if (eq && eq != at && at[0] != L'=') {
+            char* name = WideToUtf8Alloc(at, (int)(eq - at));
+            char* value = WideToUtf8Alloc(eq + 1, -1);
+            if (name && value && name[0]) visit(Str(name), Str(value), user);
+            free(name);
+            free(value);
+        }
+        at += n + 1;
     }
+    FreeEnvironmentStringsW(block);
+    return true;
 }
 
 int PlatListDir(const char* dir, DirEntry* out, int max) {
@@ -242362,13 +251413,22 @@ bool PlatIsWindows() {
 bool PlatSecondaryIsCommand() {
     return false;
 }
+bool PlatTitleBarCloseIsElement() {
+    return false;
+}
 bool PlatShowsWindowControls() {
     return true;
 }
 float PlatCaretWidth() {
-    return 2.f;
+    return 1.f;
 }
 bool PlatScrollBounce() {
+    return false;
+}
+bool PlatScrollBounceTouch() {
+    return false;
+}
+bool PlatWebViewPartialClipHides() {
     return false;
 }
 const char* PlatMonoFontName() {
@@ -242779,6 +251839,10 @@ uint32_t DependencyProcessId() {
 #if GPUI_OS_LINUX || GPUI_OS_MAC || GPUI_OS_IOS || GPUI_OS_ANDROID
 #line 1 "src/shell/filesystem_posix.cpp"
 
+namespace base {
+uint64_t PlatStatModifiedNs(const struct stat* st);
+}
+
 namespace gpui::shell {
 
 static void FsError(Str* error, Str message) {
@@ -243090,6 +252154,103 @@ static bool MakeDirectoryRecursive(int root, Str rootName, Str relative,
     return ok;
 }
 
+static void FillPosixStats(const struct stat& info, FsResult* result) {
+    result->hasStats = true;
+    result->isSymbolicLink = S_ISLNK(info.st_mode) != 0;
+    result->isDirectory = S_ISDIR(info.st_mode) != 0;
+    result->isFile = S_ISREG(info.st_mode) != 0;
+    result->size = (uint64_t)info.st_size;
+    result->mode = (uint32_t)info.st_mode;
+
+    uint64_t ns = ::base::PlatStatModifiedNs(&info);
+    result->mtimeMs = (double)(ns / 1000000ull);
+    result->atimeMs = 0;
+    result->birthtimeMs = 0;
+}
+
+static bool StatAt(int root, Str rootName, Str relative, bool followRefusal,
+                   FsResult* result, Str* error) {
+    int parent = -1;
+    TempStr leaf;
+    if (!OpenParent(root, relative, &parent, &leaf, rootName, error))
+        return false;
+    struct stat info = {};
+    bool ok = fstatat(parent, leaf.s, &info, AT_SYMLINK_NOFOLLOW) == 0;
+    if (!ok) {
+        SyscallError(error, "stat", rootName, relative);
+    } else if (followRefusal && S_ISLNK(info.st_mode)) {
+        FsError(error, fmt("cannot stat `%s/%s`: symbolic links are not "
+                           "followed",
+                           rootName, relative));
+        ok = false;
+    } else {
+        FillPosixStats(info, result);
+    }
+    close(parent);
+    return ok;
+}
+
+static bool ReadLinkAt(int root, Str rootName, Str relative, FsResult* result,
+                       Str* error) {
+    int parent = -1;
+    TempStr leaf;
+    if (!OpenParent(root, relative, &parent, &leaf, rootName, error))
+        return false;
+    char bytes[16384];
+    ssize_t n = readlinkat(parent, leaf.s, bytes, sizeof(bytes));
+    close(parent);
+    if (n < 0) {
+        SyscallError(error, "read link", rootName, relative);
+        return false;
+    }
+    if (n >= (ssize_t)sizeof(bytes)) {
+        FsError(error, fmt("cannot read link `%s/%s`: target is too long",
+                           rootName, relative));
+        return false;
+    }
+    result->bytes = StrDup(Str(bytes, (int)n));
+    if (!result->bytes.s && n != 0) {
+        FsError(error, StrL("allocating a symlink target failed"));
+        return false;
+    }
+    return true;
+}
+
+bool FsRename(Str fromRoot, Str fromRelative, Str toRoot, Str toRelative,
+              Str* error) {
+    if (error) {
+        StrFree(*error);
+        *error = {};
+    }
+    int source = OpenRoot(fromRoot, true, error);
+    if (source < 0) return false;
+    int destination = OpenRoot(toRoot, true, error);
+    if (destination < 0) {
+        close(source);
+        return false;
+    }
+    int sourceParent = -1;
+    int destinationParent = -1;
+    TempStr sourceLeaf;
+    TempStr destinationLeaf;
+    bool ok = OpenParent(source, fromRelative, &sourceParent, &sourceLeaf,
+                         fromRoot, error);
+    if (ok) {
+        ok = OpenParent(destination, toRelative, &destinationParent,
+                        &destinationLeaf, toRoot, error);
+    }
+    if (ok && renameat(sourceParent, sourceLeaf.s, destinationParent,
+                       destinationLeaf.s) != 0) {
+        SyscallError(error, "rename", fromRoot, fromRelative);
+        ok = false;
+    }
+    if (sourceParent >= 0) close(sourceParent);
+    if (destinationParent >= 0) close(destinationParent);
+    close(source);
+    close(destination);
+    return ok;
+}
+
 bool FsRun(FsOperation operation, Str rootName, Str relative, Str input,
            bool recursive, FsResult* result, Str* error) {
     if (result) result->Free();
@@ -243112,6 +252273,12 @@ bool FsRun(FsOperation operation, Str rootName, Str relative, Str input,
         ok = WriteFile(root, rootName, relative, input, error);
     } else if (operation == FsOperation::ReadDirectory) {
         ok = ReadDirectory(root, rootName, relative, result, error);
+    } else if (operation == FsOperation::Stat) {
+        ok = StatAt(root, rootName, relative, true, result, error);
+    } else if (operation == FsOperation::Lstat) {
+        ok = StatAt(root, rootName, relative, false, result, error);
+    } else if (operation == FsOperation::ReadLink) {
+        ok = ReadLinkAt(root, rootName, relative, result, error);
     } else if (operation == FsOperation::Exists) {
         int parent = -1;
         TempStr leaf;
@@ -243161,13 +252328,21 @@ bool FsRun(FsOperation operation, Str rootName, Str relative, Str input,
 
 namespace gpui::shell {
 
-bool FsRun(FsOperation, Str root, Str relative, Str, bool, FsResult*,
-           Str* error) {
+static bool Unavailable(Str root, Str relative, Str* error) {
     if (error)
         *error = StrDup(
             fmt("filesystem mutation `%s/%s` is unavailable in a browser", root,
                 relative));
     return false;
+}
+
+bool FsRun(FsOperation, Str root, Str relative, Str, bool, FsResult*,
+           Str* error) {
+    return Unavailable(root, relative, error);
+}
+
+bool FsRename(Str fromRoot, Str fromRelative, Str, Str, Str* error) {
+    return Unavailable(fromRoot, fromRelative, error);
 }
 
 }
@@ -243181,6 +252356,9 @@ namespace gpui::shell {
 
 #ifndef FILE_OPEN_REPARSE_POINT
 #define FILE_OPEN_REPARSE_POINT 0x00200000
+#endif
+#ifndef IO_REPARSE_TAG_SYMLINK
+#define IO_REPARSE_TAG_SYMLINK 0xA000000CL
 #endif
 
 using NtCreateFileProc = NTSTATUS(NTAPI*)(PHANDLE, ACCESS_MASK,
@@ -243655,6 +252833,187 @@ static bool DeleteHandle(HANDLE handle, Str root, Str relative, Str* error) {
     return false;
 }
 
+static double NtTimeToUnixMs(LONGLONG ticks) {
+    const LONGLONG epoch = 116444736000000000LL;
+    if (ticks <= epoch) return 0;
+    return (double)((uint64_t)(ticks - epoch) / 10000ull);
+}
+
+static bool FillWinStats(HANDLE handle, FsResult* result) {
+    FILE_BASIC_INFO basic = {};
+    FILE_STANDARD_INFO standard = {};
+    if (!GetFileInformationByHandleEx(handle, FileBasicInfo, &basic,
+                                      sizeof(basic)) ||
+        !GetFileInformationByHandleEx(handle, FileStandardInfo, &standard,
+                                      sizeof(standard))) {
+        return false;
+    }
+    bool symlink = false;
+    FILE_ATTRIBUTE_TAG_INFO tag = {};
+    if ((basic.FileAttributes & FILE_ATTRIBUTE_REPARSE_POINT) != 0 &&
+        GetFileInformationByHandleEx(handle, FileAttributeTagInfo, &tag,
+                                     sizeof(tag))) {
+        symlink = tag.ReparseTag == IO_REPARSE_TAG_SYMLINK;
+    }
+    result->hasStats = true;
+    result->isSymbolicLink = symlink;
+    result->isDirectory = standard.Directory != FALSE && !symlink;
+    result->isFile = standard.Directory == FALSE && !symlink;
+    result->size = (uint64_t)standard.EndOfFile.QuadPart;
+    result->mode =
+        (basic.FileAttributes & FILE_ATTRIBUTE_READONLY) != 0 ? 0444u : 0666u;
+    result->mtimeMs = NtTimeToUnixMs(basic.LastWriteTime.QuadPart);
+    result->atimeMs = NtTimeToUnixMs(basic.LastAccessTime.QuadPart);
+    result->birthtimeMs = NtTimeToUnixMs(basic.CreationTime.QuadPart);
+    return true;
+}
+
+static bool ReadLinkHandle(HANDLE handle, Str root, Str relative,
+                           FsResult* result, Str* error) {
+    uint8_t bytes[16 * 1024];
+    DWORD got = 0;
+    if (!DeviceIoControl(handle, FSCTL_GET_REPARSE_POINT, nullptr, 0, bytes,
+                         sizeof(bytes), &got, nullptr) ||
+        got < 20) {
+        FsError(error, fmt("cannot read link `%s/%s`: Windows error %u", root,
+                           relative, GetLastError()));
+        return false;
+    }
+    ULONG tag = *(ULONG*)bytes;
+    if (tag != IO_REPARSE_TAG_SYMLINK) {
+        FsError(error, fmt("cannot read link `%s/%s`: not a symbolic link",
+                           root, relative));
+        return false;
+    }
+    USHORT printOffset = *(USHORT*)(bytes + 12);
+    USHORT printLength = *(USHORT*)(bytes + 14);
+    if ((DWORD)20 + printOffset + printLength > got) {
+        FsError(error, fmt("cannot read link `%s/%s`: reparse data is short",
+                           root, relative));
+        return false;
+    }
+    const WCHAR* print = (const WCHAR*)(bytes + 20 + printOffset);
+    int chars = (int)(printLength / sizeof(WCHAR));
+    int utf8 = chars == 0
+                   ? 0
+                   : WideCharToMultiByte(CP_UTF8, WC_ERR_INVALID_CHARS, print,
+                                         chars, nullptr, 0, nullptr, nullptr);
+    if (chars != 0 && utf8 <= 0) {
+        FsError(error, fmt("cannot read link `%s/%s`: target is not UTF-8",
+                           root, relative));
+        return false;
+    }
+    char* text = (char*)malloc((size_t)utf8 + 1);
+    if (!text) {
+        FsError(error, StrL("allocating a symlink target failed"));
+        return false;
+    }
+    if (utf8 > 0) {
+        WideCharToMultiByte(CP_UTF8, WC_ERR_INVALID_CHARS, print, chars, text,
+                            utf8, nullptr, nullptr);
+    }
+    text[utf8] = 0;
+    result->bytes = StrDup(Str(text, utf8));
+    free(text);
+    if (!result->bytes.s && utf8 != 0) {
+        FsError(error, StrL("allocating a symlink target failed"));
+        return false;
+    }
+    return true;
+}
+
+bool FsRename(Str fromRoot, Str fromRelative, Str toRoot, Str toRelative,
+              Str* error) {
+    if (error) {
+        StrFree(*error);
+        *error = {};
+    }
+    HANDLE sourceRoot = OpenRoot(fromRoot, true, error);
+    if (!sourceRoot) return false;
+    HANDLE destinationRoot = OpenRoot(toRoot, true, error);
+    if (!destinationRoot) {
+        CloseHandle(sourceRoot);
+        return false;
+    }
+    HANDLE sourceParent = nullptr;
+    HANDLE destinationParent = nullptr;
+    WCHAR sourceLeaf[256];
+    WCHAR destinationLeaf[256];
+    bool ok = OpenParent(sourceRoot, fromRoot, fromRelative, &sourceParent,
+                         sourceLeaf, error);
+    if (ok) {
+        ok = OpenParent(destinationRoot, toRoot, toRelative, &destinationParent,
+                        destinationLeaf, error);
+    }
+    HANDLE file = nullptr;
+    if (ok) {
+        NTSTATUS status = 0;
+
+        file = OpenAt(sourceParent, sourceLeaf,
+                      DELETE | FILE_READ_ATTRIBUTES | SYNCHRONIZE, FILE_OPEN,
+                      FILE_NON_DIRECTORY_FILE, &status);
+        if (!file) {
+            NtError(error, "rename", fromRoot, fromRelative, status);
+            ok = false;
+        }
+    }
+    if (ok) {
+
+        WCHAR* parentPath = (WCHAR*)malloc(32768 * sizeof(WCHAR));
+        DWORD parentChars = 0;
+        if (!parentPath) {
+            FsError(error, StrL("allocating a rename failed"));
+            ok = false;
+        } else {
+            parentChars = GetFinalPathNameByHandleW(
+                destinationParent, parentPath, 32768, FILE_NAME_NORMALIZED);
+            if (parentChars == 0 || parentChars >= 32768) {
+                FsError(error, fmt("cannot rename `%s/%s`: Windows error %u",
+                                   fromRoot, fromRelative, GetLastError()));
+                ok = false;
+            }
+        }
+        int leafChars = ok ? (int)wcslen(destinationLeaf) : 0;
+        bool slash =
+            ok && parentChars > 0 && parentPath[parentChars - 1] != L'\\';
+        int nameChars = ok ? (int)parentChars + (slash ? 1 : 0) + leafChars : 0;
+        int nameBytes = nameChars * (int)sizeof(WCHAR);
+        int bytes = ok ? (int)FIELD_OFFSET(FILE_RENAME_INFO, FileName) +
+                             nameBytes + (int)sizeof(WCHAR)
+                       : 0;
+        FILE_RENAME_INFO* info =
+            ok ? (FILE_RENAME_INFO*)malloc((size_t)bytes) : nullptr;
+        if (ok && !info) {
+            FsError(error, StrL("allocating a rename failed"));
+            ok = false;
+        } else if (ok) {
+            memset(info, 0, (size_t)bytes);
+            info->ReplaceIfExists = TRUE;
+            info->RootDirectory = nullptr;
+            info->FileNameLength = (DWORD)nameBytes;
+            memcpy(info->FileName, parentPath, parentChars * sizeof(WCHAR));
+            int at = (int)parentChars;
+            if (slash) info->FileName[at++] = L'\\';
+            memcpy(info->FileName + at, destinationLeaf,
+                   (size_t)leafChars * sizeof(WCHAR));
+            if (!SetFileInformationByHandle(file, FileRenameInfo, info,
+                                            (DWORD)bytes)) {
+                FsError(error, fmt("cannot rename `%s/%s`: Windows error %u",
+                                   fromRoot, fromRelative, GetLastError()));
+                ok = false;
+            }
+            free(info);
+        }
+        free(parentPath);
+    }
+    if (file) CloseHandle(file);
+    if (sourceParent) CloseHandle(sourceParent);
+    if (destinationParent) CloseHandle(destinationParent);
+    CloseHandle(sourceRoot);
+    CloseHandle(destinationRoot);
+    return ok;
+}
+
 bool FsRun(FsOperation operation, Str rootName, Str relative, Str input,
            bool recursive, FsResult* result, Str* error) {
     if (result) result->Free();
@@ -243685,16 +253044,65 @@ bool FsRun(FsOperation operation, Str rootName, Str relative, Str input,
         ok = OpenParent(root, rootName, relative, &parent, leaf, error);
         if (ok) {
             NTSTATUS status = 0;
-            if (operation == FsOperation::Exists) {
-                HANDLE target =
-                    OpenAt(parent, leaf, FILE_READ_ATTRIBUTES | SYNCHRONIZE,
-                           FILE_OPEN, 0, &status);
-                result->exists = target != nullptr;
-                if (target)
-                    CloseHandle(target);
-                else if (!NtMissing(status)) {
-                    NtError(error, "inspect", rootName, relative, status);
+            if (operation == FsOperation::Stat ||
+                operation == FsOperation::Lstat ||
+                operation == FsOperation::ReadLink) {
+
+                HANDLE target = nullptr;
+                if (wcscmp(leaf, L".") == 0) {
+                    if (!DuplicateHandle(GetCurrentProcess(), parent,
+                                         GetCurrentProcess(), &target, 0, FALSE,
+                                         DUPLICATE_SAME_ACCESS)) {
+                        FsError(error,
+                                fmt("cannot stat `%s/%s`: Windows error %u",
+                                    rootName, relative, GetLastError()));
+                        ok = false;
+                    }
+                } else {
+                    target =
+                        OpenAt(parent, leaf, FILE_READ_ATTRIBUTES | SYNCHRONIZE,
+                               FILE_OPEN, 0, &status);
+                    if (!target) {
+                        NtError(error,
+                                operation == FsOperation::ReadLink ? "read link"
+                                                                   : "stat",
+                                rootName, relative, status);
+                        ok = false;
+                    }
+                }
+                if (target && operation == FsOperation::ReadLink) {
+                    ok = ReadLinkHandle(target, rootName, relative, result,
+                                        error);
+                } else if (target && operation == FsOperation::Stat &&
+                           IsReparse(target)) {
+
+                    FsError(error, fmt("cannot stat `%s/%s`: symbolic links "
+                                       "are not followed",
+                                       rootName, relative));
                     ok = false;
+                } else if (target) {
+                    ok = FillWinStats(target, result);
+                    if (!ok) {
+                        FsError(error,
+                                fmt("cannot stat `%s/%s`: Windows error %u",
+                                    rootName, relative, GetLastError()));
+                    }
+                }
+                if (target) CloseHandle(target);
+            } else if (operation == FsOperation::Exists) {
+                if (wcscmp(leaf, L".") == 0) {
+                    result->exists = true;
+                } else {
+                    HANDLE target =
+                        OpenAt(parent, leaf, FILE_READ_ATTRIBUTES | SYNCHRONIZE,
+                               FILE_OPEN, 0, &status);
+                    result->exists = target != nullptr;
+                    if (target)
+                        CloseHandle(target);
+                    else if (!NtMissing(status)) {
+                        NtError(error, "inspect", rootName, relative, status);
+                        ok = false;
+                    }
                 }
             } else if (operation == FsOperation::MakeDirectory) {
                 HANDLE target =
@@ -243734,17 +253142,22 @@ bool FsRun(FsOperation operation, Str rootName, Str relative, Str input,
 #if GPUI_OS_LINUX || GPUI_OS_MAC || GPUI_OS_IOS || GPUI_OS_ANDROID
 #line 1 "src/shell/process_posix.cpp"
 
-extern char** environ;
+extern "C" char** environ;
 
 namespace gpui::shell {
 
 constexpr int kProcessStreamLimit = 8 * 1024 * 1024;
-constexpr double kProcessTimeout = 30.0;
 
 static void ProcessError(Str* error, Str message) {
     if (!error) return;
     StrFree(*error);
     *error = StrDup(message);
+}
+
+static double WallSeconds() {
+    struct timespec now;
+    if (clock_gettime(CLOCK_MONOTONIC, &now) != 0) return 0;
+    return (double)now.tv_sec + (double)now.tv_nsec / 1000000000.0;
 }
 
 static bool HasSlash(Str command) {
@@ -243836,10 +253249,10 @@ bool ProcessRunBounded(Str command, const Str* args, int count,
     int extra = options ? options->environmentCount : 0;
     int inherited = 0;
     if (options && options->inheritEnvironment) {
-        while (environ[inherited]) inherited++;
+        while (::environ[inherited]) inherited++;
     }
     char** envp = AllocArray<char*>(inherited + extra + 1);
-    for (int i = 0; i < inherited; i++) envp[i] = environ[i];
+    for (int i = 0; i < inherited; i++) envp[i] = ::environ[i];
     for (int i = 0; i < extra; i++)
         envp[inherited + i] = options->environment[i].s;
     envp[inherited + extra] = nullptr;
@@ -243877,7 +253290,11 @@ bool ProcessRunBounded(Str command, const Str* args, int count,
     StrBuilder stdoutText, stderrText;
     bool stdoutClosed = false, stderrClosed = false, done = false, ok = true;
     int status = 0;
-    double started = TimeNow();
+    double started = WallSeconds();
+    double timeoutSeconds = (options && options->timeoutSeconds > 0)
+                                ? options->timeoutSeconds
+                                : 30.0;
+    int timeoutMs = (int)(timeoutSeconds * 1000.0 + 0.5);
     while (!done || !stdoutClosed || !stderrClosed) {
         if (!stdoutClosed)
             ok = DrainFd(outPipe[0], &stdoutText, &stdoutClosed, error,
@@ -243886,12 +253303,12 @@ bool ProcessRunBounded(Str command, const Str* args, int count,
             ok = DrainFd(errPipe[0], &stderrText, &stderrClosed, error,
                          "stderr");
         bool cancelled = cancellation && cancellation->IsCancelled();
-        if (!ok || cancelled || TimeNow() - started >= kProcessTimeout) {
+        if (!ok || cancelled || WallSeconds() - started >= timeoutSeconds) {
             if (ok && cancelled) {
                 ProcessError(error, fmt("`%s` was cancelled", command));
             } else if (ok) {
-                ProcessError(error,
-                             fmt("`%s` timed out after 30000 ms", command));
+                ProcessError(error, fmt("`%s` timed out after %d ms", command,
+                                        timeoutMs));
             }
             kill(-pid, SIGKILL);
             waitpid(pid, &status, 0);
@@ -243928,6 +253345,386 @@ bool ProcessRunBounded(Str command, const Str* args, int count,
     return true;
 }
 
+static char* kEmptyEnv[] = {nullptr};
+
+struct ProcessStream {
+    ProcessEventBox box;
+    Str command;
+    Str cwd;
+    Vec<Str> owned;
+    char** argv = nullptr;
+    double timeoutSeconds = 0;
+    uint32_t pid = 0;
+    pid_t child = -1;
+    int outFd = -1;
+    int errFd = -1;
+    int inFd = -1;
+    pthread_t readerOut = {};
+    pthread_t readerErr = {};
+    pthread_t waiter = {};
+    pthread_t stdinThread = {};
+    bool haveReaderOut = false;
+    bool haveReaderErr = false;
+    bool haveWaiter = false;
+    bool haveStdin = false;
+    ProcessDecodeState outDecode;
+    ProcessDecodeState errDecode;
+};
+
+struct PosixReader {
+    ProcessStream* stream = nullptr;
+    int* fd = nullptr;
+    ProcessDecodeState* decode = nullptr;
+    ProcessStreamEvent::Kind kind = ProcessStreamEvent::Kind::Out;
+};
+
+static int TimeoutMilliseconds(double seconds) {
+    return (int)(seconds * 1000.0 + 0.5);
+}
+
+static Str SignalName(int signal) {
+    switch (signal) {
+        case SIGKILL:
+            return StrDup(StrL("SIGKILL"));
+        case SIGTERM:
+            return StrDup(StrL("SIGTERM"));
+        case SIGINT:
+            return StrDup(StrL("SIGINT"));
+        case SIGHUP:
+            return StrDup(StrL("SIGHUP"));
+        case SIGQUIT:
+            return StrDup(StrL("SIGQUIT"));
+        case SIGABRT:
+            return StrDup(StrL("SIGABRT"));
+        case SIGSEGV:
+            return StrDup(StrL("SIGSEGV"));
+        case SIGPIPE:
+            return StrDup(StrL("SIGPIPE"));
+        default:
+            return StrDup(fmt("signal %d", signal));
+    }
+}
+
+static void CloseFd(int* fd) {
+    if (fd && *fd >= 0) close(*fd);
+    if (fd) *fd = -1;
+}
+
+static void* PosixReaderMain(void* param) {
+    PosixReader* launch = (PosixReader*)param;
+    ProcessStream* stream = launch->stream;
+    int fd = launch->fd ? *launch->fd : -1;
+    uint8_t chunk[64 * 1024];
+    bool failed = false;
+    for (;;) {
+        ssize_t count = fd >= 0 ? read(fd, chunk, sizeof(chunk)) : 0;
+        if (count == 0) break;
+        if (count < 0) {
+            if (errno == EINTR) continue;
+            break;
+        }
+        Str error;
+        if (!ProcessDecodeFeed(launch->decode, &stream->box, launch->kind,
+                               chunk, (int)count, &error)) {
+            ProcessEventSetReason(&stream->box, error);
+            if (stream->child > 0 && !ProcessEventReaped(&stream->box))
+                kill(-stream->child, SIGKILL);
+            failed = true;
+            break;
+        }
+    }
+    if (!failed)
+        ProcessDecodeFinish(launch->decode, &stream->box, launch->kind);
+    ProcessDecodeFree(launch->decode);
+    if (fd >= 0) close(fd);
+    if (launch->fd) *launch->fd = -1;
+    delete launch;
+    return nullptr;
+}
+
+static void* PosixStdinMain(void* param) {
+    ProcessStream* stream = (ProcessStream*)param;
+    for (;;) {
+        Vec<char> bytes;
+        bool ended = false;
+        if (!ProcessStdinTake(&stream->box, &bytes, &ended)) break;
+        int offset = 0;
+        bool ok = true;
+        while (offset < bytes.len) {
+            ssize_t wrote = write(stream->inFd, bytes.els + offset,
+                                  (size_t)(bytes.len - offset));
+            if (wrote < 0) {
+                if (errno == EINTR) continue;
+                ok = false;
+                break;
+            }
+            if (wrote == 0) {
+                ok = false;
+                break;
+            }
+            offset += (int)wrote;
+        }
+        VecReset(bytes);
+        if (!ok) {
+            ProcessStdinFail(&stream->box);
+            break;
+        }
+        if (ended) break;
+    }
+    CloseFd(&stream->inFd);
+    return nullptr;
+}
+
+static void* PosixWaiterMain(void* param) {
+    ProcessStream* stream = (ProcessStream*)param;
+    double started = WallSeconds();
+    int status = 0;
+    bool waitFailed = false;
+    for (;;) {
+        pid_t got = waitpid(stream->child, &status, WNOHANG);
+        if (got == stream->child) break;
+        if (got < 0 && errno != EINTR) {
+            ProcessEventSetReason(
+                &stream->box,
+                StrDup(fmt("waiting for `%s` failed", stream->command)));
+            waitFailed = true;
+            break;
+        }
+        if (stream->timeoutSeconds > 0 &&
+            WallSeconds() - started >= stream->timeoutSeconds) {
+            ProcessEventSetReason(
+                &stream->box,
+                StrDup(fmt("`%s` timed out after %d ms", stream->command,
+                           TimeoutMilliseconds(stream->timeoutSeconds))));
+            if (stream->child > 0) kill(-stream->child, SIGKILL);
+        }
+        PlatSleepMs(20);
+    }
+    if (stream->child > 0) kill(-stream->child, SIGKILL);
+    ProcessEventMarkReaped(&stream->box);
+    if (stream->haveReaderOut) {
+        pthread_join(stream->readerOut, nullptr);
+        stream->haveReaderOut = false;
+    }
+    if (stream->haveReaderErr) {
+        pthread_join(stream->readerErr, nullptr);
+        stream->haveReaderErr = false;
+    }
+    ProcessStreamEvent event;
+    event.kind = ProcessStreamEvent::Kind::Exit;
+    if (!waitFailed) {
+        if (WIFSIGNALED(status)) {
+            event.signal = SignalName(WTERMSIG(status));
+        } else {
+            event.hasCode = true;
+            event.code = WIFEXITED(status) ? WEXITSTATUS(status) : -1;
+        }
+    }
+    Str reason = ProcessEventTakeReason(&stream->box);
+    if (reason) {
+        event.hasError = true;
+        event.text = reason;
+    }
+    ProcessEventPush(&stream->box, event);
+    return nullptr;
+}
+
+static bool StartPosixReader(ProcessStream* stream, pthread_t* thread, int* fd,
+                             ProcessDecodeState* decode,
+                             ProcessStreamEvent::Kind kind) {
+    PosixReader* launch = new PosixReader();
+    launch->stream = stream;
+    launch->fd = fd;
+    launch->decode = decode;
+    launch->kind = kind;
+    if (pthread_create(thread, nullptr, PosixReaderMain, launch) != 0) {
+        delete launch;
+        return false;
+    }
+    return true;
+}
+
+static void ReleaseStream(ProcessStream* stream) {
+    if (!stream) return;
+    if (stream->child > 0 && !ProcessEventReaped(&stream->box)) {
+        ProcessEventMarkKilled(&stream->box);
+        kill(-stream->child, SIGKILL);
+    }
+    ProcessStdinStop(&stream->box);
+    if (stream->haveWaiter) {
+        pthread_join(stream->waiter, nullptr);
+        stream->haveWaiter = false;
+    }
+    if (stream->haveReaderOut) {
+        pthread_join(stream->readerOut, nullptr);
+        stream->haveReaderOut = false;
+    }
+    if (stream->haveReaderErr) {
+        pthread_join(stream->readerErr, nullptr);
+        stream->haveReaderErr = false;
+    }
+    if (stream->haveStdin) {
+        pthread_join(stream->stdinThread, nullptr);
+        stream->haveStdin = false;
+    }
+    if (stream->child > 0 && !ProcessEventReaped(&stream->box)) {
+        int status = 0;
+        while (waitpid(stream->child, &status, 0) < 0 && errno == EINTR) {
+        }
+    }
+    CloseFd(&stream->outFd);
+    CloseFd(&stream->errFd);
+    CloseFd(&stream->inFd);
+    ProcessDecodeFree(&stream->outDecode);
+    ProcessDecodeFree(&stream->errDecode);
+    ProcessEventBoxFree(&stream->box);
+    for (int i = 0; i < len(stream->owned); i++) StrFree(stream->owned[i]);
+    VecReset(stream->owned);
+    Free(nullptr, stream->argv);
+    StrFree(stream->command);
+    StrFree(stream->cwd);
+    delete stream;
+}
+
+bool ProcessStreamStart(Str command, const Str* args, int count,
+                        const ProcessSpawnOptions* options, ProcessStream** out,
+                        Str* error) {
+    if (out) *out = nullptr;
+    if (error) {
+        StrFree(*error);
+        *error = {};
+    }
+    Str executable = ResolveExecutable(command, error);
+    if (!executable) return false;
+    ProcessStream* stream = new ProcessStream();
+    bool stdinPipe = options && options->stdinPipe;
+    ProcessEventBoxInit(&stream->box, stdinPipe);
+    stream->command = StrDup(command);
+    stream->timeoutSeconds = options ? options->timeoutSeconds : 0;
+    if (options && options->cwd) stream->cwd = StrDup(options->cwd);
+    bool lines = options && options->lines;
+    ProcessDecodeInit(&stream->outDecode, lines);
+    ProcessDecodeInit(&stream->errDecode, lines);
+    VecAppend(stream->owned, executable);
+    for (int i = 0; i < count; i++) VecAppend(stream->owned, StrDup(args[i]));
+    stream->argv = AllocArray<char*>(len(stream->owned) + 1);
+    for (int i = 0; i < len(stream->owned); i++)
+        stream->argv[i] = stream->owned[i].s;
+
+    int outPipe[2] = {-1, -1};
+    int errPipe[2] = {-1, -1};
+    int inPipe[2] = {-1, -1};
+    if (pipe(outPipe) != 0 || pipe(errPipe) != 0 ||
+        (stdinPipe && pipe(inPipe) != 0)) {
+        CloseFd(&outPipe[0]);
+        CloseFd(&outPipe[1]);
+        CloseFd(&errPipe[0]);
+        CloseFd(&errPipe[1]);
+        CloseFd(&inPipe[0]);
+        CloseFd(&inPipe[1]);
+        ProcessError(error, StrL("creating child-process pipes failed"));
+        ReleaseStream(stream);
+        return false;
+    }
+    pid_t pid = fork();
+    if (pid == 0) {
+        setpgid(0, 0);
+        if (stream->cwd.s && chdir(stream->cwd.s) != 0) _exit(127);
+        dup2(outPipe[1], STDOUT_FILENO);
+        dup2(errPipe[1], STDERR_FILENO);
+        if (stdinPipe) {
+            dup2(inPipe[0], STDIN_FILENO);
+        } else {
+            int nullFd = open("/dev/null", O_RDONLY);
+            if (nullFd >= 0) dup2(nullFd, STDIN_FILENO);
+        }
+        close(outPipe[0]);
+        close(outPipe[1]);
+        close(errPipe[0]);
+        close(errPipe[1]);
+        if (inPipe[0] >= 0) close(inPipe[0]);
+        if (inPipe[1] >= 0) close(inPipe[1]);
+        execve(stream->argv[0], stream->argv, kEmptyEnv);
+        _exit(127);
+    }
+    close(outPipe[1]);
+    close(errPipe[1]);
+    if (inPipe[0] >= 0) close(inPipe[0]);
+    if (pid < 0) {
+        close(outPipe[0]);
+        close(errPipe[0]);
+        if (inPipe[1] >= 0) close(inPipe[1]);
+        ProcessError(error, fmt("running `%s` failed", command));
+        ReleaseStream(stream);
+        return false;
+    }
+    setpgid(pid, pid);
+    stream->child = pid;
+    stream->pid = (uint32_t)pid;
+    stream->outFd = outPipe[0];
+    stream->errFd = errPipe[0];
+    if (stdinPipe) stream->inFd = inPipe[1];
+
+    bool threadsOk =
+        StartPosixReader(stream, &stream->readerOut, &stream->outFd,
+                         &stream->outDecode, ProcessStreamEvent::Kind::Out);
+    if (threadsOk) stream->haveReaderOut = true;
+    if (threadsOk) {
+        threadsOk =
+            StartPosixReader(stream, &stream->readerErr, &stream->errFd,
+                             &stream->errDecode, ProcessStreamEvent::Kind::Err);
+        if (threadsOk) stream->haveReaderErr = true;
+    }
+    if (threadsOk && stdinPipe) {
+        threadsOk = pthread_create(&stream->stdinThread, nullptr,
+                                   PosixStdinMain, stream) == 0;
+        if (threadsOk) stream->haveStdin = true;
+    }
+    if (threadsOk) {
+        threadsOk = pthread_create(&stream->waiter, nullptr, PosixWaiterMain,
+                                   stream) == 0;
+        if (threadsOk) stream->haveWaiter = true;
+    }
+    if (!threadsOk) {
+        ProcessError(error, fmt("running `%s` failed: a stream thread could "
+                                "not be started",
+                                command));
+        ReleaseStream(stream);
+        return false;
+    }
+    if (out) *out = stream;
+    return true;
+}
+
+uint32_t ProcessStreamPid(const ProcessStream* stream) {
+    return stream ? stream->pid : 0;
+}
+
+void ProcessStreamPoll(ProcessStream* stream, Vec<ProcessStreamEvent>* out) {
+    if (stream) ProcessEventTake(&stream->box, out);
+}
+
+bool ProcessStreamWrite(ProcessStream* stream, Str text, Str* error) {
+    if (!stream) return false;
+    return ProcessStdinEnqueue(&stream->box, text, error);
+}
+
+void ProcessStreamEnd(ProcessStream* stream) {
+    if (stream) ProcessStdinEnd(&stream->box);
+}
+
+void ProcessStreamKill(ProcessStream* stream) {
+    if (!stream || stream->child <= 0 || ProcessEventReaped(&stream->box))
+        return;
+    ProcessEventMarkKilled(&stream->box);
+    kill(-stream->child, SIGKILL);
+    ProcessStdinStop(&stream->box);
+}
+
+void ProcessStreamFree(ProcessStream* stream) {
+    ReleaseStream(stream);
+}
+
 }
 
 #endif
@@ -243945,6 +253742,34 @@ bool ProcessRunBounded(Str command, const Str*, int, ProcessCancellation*,
     return false;
 }
 
+bool ProcessStreamStart(Str command, const Str*, int,
+                        const ProcessSpawnOptions*, ProcessStream** out,
+                        Str* error) {
+    if (out) *out = nullptr;
+    if (error)
+        *error =
+            StrDup(fmt("running `%s` is unavailable in a browser", command));
+    return false;
+}
+
+uint32_t ProcessStreamPid(const ProcessStream*) {
+    return 0;
+}
+
+void ProcessStreamPoll(ProcessStream*, Vec<ProcessStreamEvent>*) {}
+
+bool ProcessStreamWrite(ProcessStream*, Str, Str* error) {
+    if (error)
+        *error = StrDup(StrL("running a process is unavailable in a browser"));
+    return false;
+}
+
+void ProcessStreamEnd(ProcessStream*) {}
+
+void ProcessStreamKill(ProcessStream*) {}
+
+void ProcessStreamFree(ProcessStream*) {}
+
 }
 
 #endif
@@ -243955,12 +253780,24 @@ bool ProcessRunBounded(Str command, const Str*, int, ProcessCancellation*,
 namespace gpui::shell {
 
 constexpr int kProcessStreamLimit = 8 * 1024 * 1024;
-constexpr double kProcessTimeout = 30.0;
 
 static void ProcessError(Str* error, Str message) {
     if (!error) return;
     StrFree(*error);
     *error = StrDup(message);
+}
+
+static double WallSeconds() {
+    static LARGE_INTEGER freq = {};
+    static LARGE_INTEGER start = {};
+    if (freq.QuadPart == 0) {
+        QueryPerformanceFrequency(&freq);
+        QueryPerformanceCounter(&start);
+    }
+    LARGE_INTEGER now = {};
+    QueryPerformanceCounter(&now);
+    if (freq.QuadPart == 0) return 0;
+    return (double)(now.QuadPart - start.QuadPart) / (double)freq.QuadPart;
 }
 
 static WCHAR* shell_process_win_WideDup(Str value) {
@@ -244373,7 +254210,11 @@ bool ProcessRunBounded(Str command, const Str* args, int count,
         StrBuilder stdoutText, stderrText;
         bool stdoutClosed = false, stderrClosed = false, done = false;
         DWORD exitCode = (DWORD)-1;
-        double started = TimeNow();
+        double started = WallSeconds();
+        double timeoutSeconds = (options && options->timeoutSeconds > 0)
+                                    ? options->timeoutSeconds
+                                    : 30.0;
+        int timeoutMs = (int)(timeoutSeconds * 1000.0 + 0.5);
         while (!done || !stdoutClosed || !stderrClosed) {
             if (!stdoutClosed)
                 ok = DrainPipe(&outRead, &stdoutText, &stdoutClosed, error,
@@ -244382,12 +254223,12 @@ bool ProcessRunBounded(Str command, const Str* args, int count,
                 ok = DrainPipe(&errRead, &stderrText, &stderrClosed, error,
                                "stderr");
             bool cancelled = cancellation && cancellation->IsCancelled();
-            if (!ok || cancelled || TimeNow() - started >= kProcessTimeout) {
+            if (!ok || cancelled || WallSeconds() - started >= timeoutSeconds) {
                 if (ok && cancelled)
                     ProcessError(error, fmt("`%s` was cancelled", command));
                 else if (ok)
-                    ProcessError(error,
-                                 fmt("`%s` timed out after 30000 ms", command));
+                    ProcessError(error, fmt("`%s` timed out after %d ms",
+                                            command, timeoutMs));
                 ok = false;
                 TerminateJobObject(job, 1);
                 WaitForSingleObject(process.hProcess, 5000);
@@ -244427,6 +254268,410 @@ cleanup:
     Free(nullptr, environment);
     Free(nullptr, directory);
     return ok;
+}
+
+struct ProcessStream {
+    ProcessEventBox box;
+    Str command;
+    Str cwd;
+    double timeoutSeconds = 0;
+    uint32_t pid = 0;
+    HANDLE process = nullptr;
+    HANDLE job = nullptr;
+    HANDLE outRead = nullptr;
+    HANDLE errRead = nullptr;
+    HANDLE inWrite = nullptr;
+    HANDLE readerOut = nullptr;
+    HANDLE readerErr = nullptr;
+    HANDLE waiter = nullptr;
+    HANDLE stdinThread = nullptr;
+    ProcessDecodeState outDecode;
+    ProcessDecodeState errDecode;
+};
+
+struct ReaderLaunch {
+    ProcessStream* stream = nullptr;
+    HANDLE* pipeSlot = nullptr;
+    ProcessDecodeState* decode = nullptr;
+    ProcessStreamEvent::Kind kind = ProcessStreamEvent::Kind::Out;
+};
+
+static int TimeoutMilliseconds(double seconds) {
+    return (int)(seconds * 1000.0 + 0.5);
+}
+
+static void JoinThread(HANDLE* thread) {
+    if (!thread || !*thread) return;
+    WaitForSingleObject(*thread, INFINITE);
+    CloseHandle(*thread);
+    *thread = nullptr;
+}
+
+static DWORD WINAPI StreamReaderMain(LPVOID param) {
+    ReaderLaunch* launch = (ReaderLaunch*)param;
+    ProcessStream* stream = launch->stream;
+    HANDLE pipe = launch->pipeSlot ? *launch->pipeSlot : nullptr;
+    uint8_t chunk[64 * 1024];
+    bool failed = false;
+    for (;;) {
+        if (!pipe) break;
+
+        DWORD available = 0;
+        DWORD count = 0;
+        if (!PeekNamedPipe(pipe, nullptr, 0, nullptr, &available, nullptr)) {
+
+            if (!ReadFile(pipe, chunk, sizeof(chunk), &count, nullptr) ||
+                count == 0) {
+                break;
+            }
+        } else if (available == 0) {
+            if (ProcessEventReaped(&stream->box)) break;
+            Sleep(5);
+            continue;
+        } else {
+            DWORD want =
+                available > sizeof(chunk) ? (DWORD)sizeof(chunk) : available;
+            if (!ReadFile(pipe, chunk, want, &count, nullptr) || count == 0) {
+                break;
+            }
+        }
+        Str error;
+        if (!ProcessDecodeFeed(launch->decode, &stream->box, launch->kind,
+                               chunk, (int)count, &error)) {
+            ProcessEventSetReason(&stream->box, error);
+            if (stream->job && !ProcessEventReaped(&stream->box))
+                TerminateJobObject(stream->job, 1);
+            failed = true;
+            break;
+        }
+    }
+    if (!failed)
+        ProcessDecodeFinish(launch->decode, &stream->box, launch->kind);
+    ProcessDecodeFree(launch->decode);
+    if (launch->pipeSlot) Close(launch->pipeSlot);
+    delete launch;
+    return 0;
+}
+
+static DWORD WINAPI StreamStdinMain(LPVOID param) {
+    ProcessStream* stream = (ProcessStream*)param;
+    for (;;) {
+        Vec<char> bytes;
+        bool ended = false;
+        if (!ProcessStdinTake(&stream->box, &bytes, &ended)) break;
+        int offset = 0;
+        bool ok = true;
+        while (offset < bytes.len) {
+            DWORD wrote = 0;
+            if (!WriteFile(stream->inWrite, bytes.els + offset,
+                           (DWORD)(bytes.len - offset), &wrote, nullptr) ||
+                wrote == 0) {
+                ok = false;
+                break;
+            }
+            offset += (int)wrote;
+        }
+        VecReset(bytes);
+        if (!ok) {
+            ProcessStdinFail(&stream->box);
+            break;
+        }
+        if (ended) break;
+    }
+    Close(&stream->inWrite);
+    return 0;
+}
+
+static DWORD WINAPI StreamWaiterMain(LPVOID param) {
+    ProcessStream* stream = (ProcessStream*)param;
+    double started = WallSeconds();
+    bool waitFailed = false;
+    for (;;) {
+        DWORD waited = WaitForSingleObject(stream->process, 20);
+        if (waited == WAIT_OBJECT_0) break;
+        if (waited != WAIT_TIMEOUT) {
+            ProcessEventSetReason(
+                &stream->box,
+                StrDup(fmt("waiting for `%s` failed with Windows error %u",
+                           stream->command, GetLastError())));
+            waitFailed = true;
+            break;
+        }
+        if (stream->timeoutSeconds > 0 &&
+            WallSeconds() - started >= stream->timeoutSeconds) {
+            ProcessEventSetReason(
+                &stream->box,
+                StrDup(fmt("`%s` timed out after %d ms", stream->command,
+                           TimeoutMilliseconds(stream->timeoutSeconds))));
+            if (stream->job) TerminateJobObject(stream->job, 1);
+            break;
+        }
+    }
+    if (stream->job) TerminateJobObject(stream->job, 1);
+
+    ProcessEventMarkReaped(&stream->box);
+    JoinThread(&stream->readerOut);
+    JoinThread(&stream->readerErr);
+    ProcessStreamEvent event;
+    event.kind = ProcessStreamEvent::Kind::Exit;
+    if (!waitFailed) {
+        DWORD code = 0;
+        if (GetExitCodeProcess(stream->process, &code)) {
+            event.hasCode = true;
+            event.code = (int)code;
+        }
+    }
+    Str reason = ProcessEventTakeReason(&stream->box);
+    if (reason) {
+        event.hasError = true;
+        event.text = reason;
+    }
+    ProcessEventPush(&stream->box, event);
+    return 0;
+}
+
+static HANDLE StartReader(ProcessStream* stream, HANDLE* pipe,
+                          ProcessDecodeState* decode,
+                          ProcessStreamEvent::Kind kind) {
+    ReaderLaunch* launch = new ReaderLaunch();
+    launch->stream = stream;
+    launch->pipeSlot = pipe;
+    launch->decode = decode;
+    launch->kind = kind;
+    HANDLE thread =
+        CreateThread(nullptr, 0, StreamReaderMain, launch, 0, nullptr);
+    if (!thread) delete launch;
+    return thread;
+}
+
+static void ReleaseStream(ProcessStream* stream) {
+    if (!stream) return;
+    if (!ProcessEventReaped(&stream->box)) {
+        ProcessEventMarkKilled(&stream->box);
+        if (stream->job) TerminateJobObject(stream->job, 1);
+    }
+    ProcessStdinStop(&stream->box);
+    JoinThread(&stream->waiter);
+    JoinThread(&stream->readerOut);
+    JoinThread(&stream->readerErr);
+    JoinThread(&stream->stdinThread);
+    Close(&stream->outRead);
+    Close(&stream->errRead);
+    Close(&stream->inWrite);
+    Close(&stream->process);
+    Close(&stream->job);
+    ProcessDecodeFree(&stream->outDecode);
+    ProcessDecodeFree(&stream->errDecode);
+    ProcessEventBoxFree(&stream->box);
+    StrFree(stream->command);
+    StrFree(stream->cwd);
+    delete stream;
+}
+
+bool ProcessStreamStart(Str command, const Str* args, int count,
+                        const ProcessSpawnOptions* options, ProcessStream** out,
+                        Str* error) {
+    if (out) *out = nullptr;
+    if (error) {
+        StrFree(*error);
+        *error = {};
+    }
+    WCHAR* executable = ResolveExecutable(command, error);
+    if (!executable) return false;
+    Vec<WCHAR> commandLine;
+    bool built = AppendArgument(&commandLine, command);
+    for (int i = 0; built && i < count; i++)
+        built = AppendArgument(&commandLine, args[i]);
+    if (built) built = VecAppend(commandLine, (WCHAR)0);
+    if (!built) {
+        Free(nullptr, executable);
+        ProcessError(error,
+                     StrL("building the child-process command line failed"));
+        return false;
+    }
+
+    ProcessStream* stream = new ProcessStream();
+    ProcessEventBoxInit(&stream->box, options && options->stdinPipe);
+    stream->command = StrDup(command);
+    stream->timeoutSeconds = options ? options->timeoutSeconds : 0;
+    if (options && options->cwd) stream->cwd = StrDup(options->cwd);
+    bool lines = options && options->lines;
+    ProcessDecodeInit(&stream->outDecode, lines);
+    ProcessDecodeInit(&stream->errDecode, lines);
+
+    SECURITY_ATTRIBUTES security = {};
+    security.nLength = sizeof(security);
+    security.bInheritHandle = TRUE;
+    HANDLE outWrite = nullptr;
+    HANDLE errWrite = nullptr;
+    HANDLE inRead = nullptr;
+    HANDLE nullInput = nullptr;
+    JOBOBJECT_EXTENDED_LIMIT_INFORMATION limits = {};
+    STARTUPINFOW startup = {};
+    PROCESS_INFORMATION process = {};
+    WCHAR emptyEnvironment[2] = {};
+    WCHAR* directory = nullptr;
+    bool ok = true;
+    bool wantStdin = false;
+    bool threadsOk = false;
+    if (!CreatePipe(&stream->outRead, &outWrite, &security, 0) ||
+        !CreatePipe(&stream->errRead, &errWrite, &security, 0) ||
+        !SetHandleInformation(stream->outRead, HANDLE_FLAG_INHERIT, 0) ||
+        !SetHandleInformation(stream->errRead, HANDLE_FLAG_INHERIT, 0)) {
+        ProcessError(error, fmt("creating child-process pipes failed with "
+                                "Windows error %u",
+                                GetLastError()));
+        ok = false;
+        goto done;
+    }
+    if (options && options->stdinPipe) {
+        if (!CreatePipe(&inRead, &stream->inWrite, &security, 0) ||
+            !SetHandleInformation(stream->inWrite, HANDLE_FLAG_INHERIT, 0)) {
+            ProcessError(error, fmt("creating the child stdin pipe failed with "
+                                    "Windows error %u",
+                                    GetLastError()));
+            ok = false;
+            goto done;
+        }
+    } else {
+        nullInput = CreateFileW(L"NUL", GENERIC_READ,
+                                FILE_SHARE_READ | FILE_SHARE_WRITE, &security,
+                                OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, nullptr);
+        if (nullInput == INVALID_HANDLE_VALUE) {
+            nullInput = nullptr;
+            ProcessError(error, fmt("opening the child-process null input "
+                                    "failed with Windows error %u",
+                                    GetLastError()));
+            ok = false;
+            goto done;
+        }
+    }
+    stream->job = CreateJobObjectW(nullptr, nullptr);
+    if (!stream->job) {
+        ProcessError(error, fmt("creating the child-process Job Object failed "
+                                "with Windows error %u",
+                                GetLastError()));
+        ok = false;
+        goto done;
+    }
+    limits.BasicLimitInformation
+        .LimitFlags = JOB_OBJECT_LIMIT_KILL_ON_JOB_CLOSE;
+    if (!SetInformationJobObject(stream->job, JobObjectExtendedLimitInformation,
+                                 &limits, sizeof(limits))) {
+        ProcessError(error, fmt("configuring the child-process Job Object "
+                                "failed with Windows error %u",
+                                GetLastError()));
+        ok = false;
+        goto done;
+    }
+    if (stream->cwd) {
+        directory = shell_process_win_WideDup(stream->cwd);
+        if (!directory) {
+            ProcessError(error, StrL("the child-process working directory is "
+                                     "not valid UTF-8"));
+            ok = false;
+            goto done;
+        }
+    }
+    startup.cb = sizeof(startup);
+    startup.dwFlags = STARTF_USESTDHANDLES;
+    startup.hStdInput = (options && options->stdinPipe) ? inRead : nullInput;
+    startup.hStdOutput = outWrite;
+    startup.hStdError = errWrite;
+    if (!CreateProcessW(
+            executable, commandLine.els, nullptr, nullptr, TRUE,
+            CREATE_NO_WINDOW | CREATE_SUSPENDED | CREATE_UNICODE_ENVIRONMENT,
+            emptyEnvironment, directory, &startup, &process)) {
+        ProcessError(error, fmt("running `%s` failed with Windows error %u",
+                                command, GetLastError()));
+        ok = false;
+        goto done;
+    }
+    stream->process = process.hProcess;
+    stream->pid = process.dwProcessId;
+    if (!AssignProcessToJobObject(stream->job, stream->process) ||
+        ResumeThread(process.hThread) == (DWORD)-1) {
+        ProcessError(error,
+                     fmt("isolating `%s` process tree failed with Windows "
+                         "error %u",
+                         command, GetLastError()));
+        ok = false;
+        goto done;
+    }
+    CloseHandle(process.hThread);
+    process.hThread = nullptr;
+    Close(&outWrite);
+    Close(&errWrite);
+    Close(&inRead);
+    Close(&nullInput);
+
+    wantStdin = options && options->stdinPipe;
+    stream
+        ->readerOut = StartReader(stream, &stream->outRead, &stream->outDecode,
+                                  ProcessStreamEvent::Kind::Out);
+    stream
+        ->readerErr = StartReader(stream, &stream->errRead, &stream->errDecode,
+                                  ProcessStreamEvent::Kind::Err);
+    if (wantStdin) {
+        stream->stdinThread =
+            CreateThread(nullptr, 0, StreamStdinMain, stream, 0, nullptr);
+    }
+    threadsOk = stream->readerOut && stream->readerErr &&
+                (!wantStdin || stream->stdinThread);
+    if (threadsOk) {
+        stream->waiter =
+            CreateThread(nullptr, 0, StreamWaiterMain, stream, 0, nullptr);
+        threadsOk = stream->waiter != nullptr;
+    }
+    if (!threadsOk) {
+        ProcessError(error, fmt("running `%s` failed: a stream thread could "
+                                "not be started",
+                                command));
+        ok = false;
+    }
+
+done:
+    Close(&outWrite);
+    Close(&errWrite);
+    Close(&inRead);
+    Close(&nullInput);
+    if (process.hThread) CloseHandle(process.hThread);
+    Free(nullptr, executable);
+    Free(nullptr, directory);
+    if (!ok) {
+        ReleaseStream(stream);
+        return false;
+    }
+    if (out) *out = stream;
+    return true;
+}
+
+uint32_t ProcessStreamPid(const ProcessStream* stream) {
+    return stream ? stream->pid : 0;
+}
+
+void ProcessStreamPoll(ProcessStream* stream, Vec<ProcessStreamEvent>* out) {
+    if (stream) ProcessEventTake(&stream->box, out);
+}
+
+bool ProcessStreamWrite(ProcessStream* stream, Str text, Str* error) {
+    if (!stream) return false;
+    return ProcessStdinEnqueue(&stream->box, text, error);
+}
+
+void ProcessStreamEnd(ProcessStream* stream) {
+    if (stream) ProcessStdinEnd(&stream->box);
+}
+
+void ProcessStreamKill(ProcessStream* stream) {
+    if (!stream || ProcessEventReaped(&stream->box)) return;
+    ProcessEventMarkKilled(&stream->box);
+    if (stream->job) TerminateJobObject(stream->job, 1);
+    ProcessStdinStop(&stream->box);
+}
+
+void ProcessStreamFree(ProcessStream* stream) {
+    ReleaseStream(stream);
 }
 
 }
@@ -248348,7 +258593,9 @@ struct ICoreWebView2PrintCompletedHandler;
 struct ICoreWebView2PrintSettings;
 struct ICoreWebView2PrintToPdfCompletedHandler;
 struct ICoreWebView2PrintToPdfStreamCompletedHandler;
-struct ICoreWebView2ProcessFailedEventHandler;
+struct ICoreWebView2ProcessFailedEventArgs;
+struct DECLSPEC_UUID("79e0aea4-990b-42d9-aa1d-0fcc2e5bc7f1")
+    ICoreWebView2ProcessFailedEventHandler;
 struct ICoreWebView2ProcessInfoCollection;
 struct ICoreWebView2ProcessInfosChangedEventHandler;
 struct ICoreWebView2BrowserExtension;
@@ -249502,6 +259749,15 @@ struct ICoreWebView2NavigationCompletedEventHandler : IUnknown {
 struct ICoreWebView2ContentLoadingEventHandler : IUnknown {
     virtual HRESULT STDMETHODCALLTYPE Invoke(
         ICoreWebView2* sender, ICoreWebView2ContentLoadingEventArgs* args) = 0;
+};
+
+struct ICoreWebView2ProcessFailedEventArgs : IUnknown {
+    virtual HRESULT STDMETHODCALLTYPE get_ProcessFailedKind(int* kind) = 0;
+};
+
+struct ICoreWebView2ProcessFailedEventHandler : IUnknown {
+    virtual HRESULT STDMETHODCALLTYPE Invoke(
+        ICoreWebView2* sender, ICoreWebView2ProcessFailedEventArgs* args) = 0;
 };
 
 struct ICoreWebView2DocumentTitleChangedEventHandler : IUnknown {
@@ -251166,6 +261422,7 @@ struct WebView {
     void (*documentTitleChangedHandler)(void* ctx, Str title) = nullptr;
     void (*onPageLoadHandler)(void* ctx, PageLoadEvent event,
                               Str url) = nullptr;
+    void (*processFailedHandler)(void* ctx, int kind) = nullptr;
     DownloadStartedHandler downloadStartedHandler = nullptr;
     DownloadCompletedHandler downloadCompletedHandler = nullptr;
     DownloadCallbackState* downloadCallbacks = nullptr;
@@ -252295,6 +262552,20 @@ static HRESULT OnDocumentTitleChanged(void* ctx, ICoreWebView2* sender,
     return S_OK;
 }
 
+static HRESULT OnProcessFailed(void* ctx, ICoreWebView2*,
+                               ICoreWebView2ProcessFailedEventArgs* args) {
+    WebView* wv = LiveWebView(ctx);
+    if (!wv || !wv->processFailedHandler) {
+        return S_OK;
+    }
+    int kind = 0;
+    if (!args || FAILED(args->get_ProcessFailedKind(&kind))) {
+        kind = 0;
+    }
+    wv->processFailedHandler(wv->ctx, kind);
+    return S_OK;
+}
+
 static HRESULT OnContentLoading(void* ctx, ICoreWebView2* sender,
                                 ICoreWebView2ContentLoadingEventArgs*) {
     WebView* wv = LiveWebView(ctx);
@@ -252516,6 +262787,17 @@ static bool AttachHandlers(WebView* wv, EventRegistrationToken* token) {
             Handler2<ICoreWebView2DocumentTitleChangedEventHandler,
                      ICoreWebView2*, IUnknown*>>(wv, OnDocumentTitleChanged);
         HRESULT hr = wv->webview->add_DocumentTitleChanged(h, token);
+        h->Release();
+        if (FAILED(hr)) {
+            return false;
+        }
+    }
+    if (wv->processFailedHandler) {
+        auto* h = MkWebViewHandler<
+            Handler2<ICoreWebView2ProcessFailedEventHandler, ICoreWebView2*,
+                     ICoreWebView2ProcessFailedEventArgs*>>(wv,
+                                                            OnProcessFailed);
+        HRESULT hr = wv->webview->add_ProcessFailed(h, token);
         h->Release();
         if (FAILED(hr)) {
             return false;
@@ -252812,6 +263094,7 @@ WebView* WebViewNew(void* parentWindow, const WebViewAttributes* attrs,
     wv->navigationHandler = attrs->navigationHandler;
     wv->documentTitleChangedHandler = attrs->documentTitleChangedHandler;
     wv->onPageLoadHandler = attrs->onPageLoadHandler;
+    wv->processFailedHandler = attrs->processFailedHandler;
     wv->downloadStartedHandler = attrs->downloadStartedHandler;
     wv->downloadCompletedHandler = attrs->downloadCompletedHandler;
     if (attrs->downloadCompletedHandler) {
