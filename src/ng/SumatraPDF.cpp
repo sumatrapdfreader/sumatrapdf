@@ -33,6 +33,7 @@
 #include "EngineBase.h"
 #include "EngineAll.h"
 #include "DisplayModel.h"
+#include "PdfSync.h"
 #include "RenderCache.h"
 #include "ChmModel.h"
 #include "MarkdownModel.h"
@@ -90,7 +91,6 @@
 #include "ProgressUpdateUI.h"
 #include "TextSearch.h"
 #include "AppTools.h"
-#include "PdfSync.h"
 #include "SearchAndDDE.h"
 #include "FindBar.h"
 #include "Toolbar.h"
@@ -1749,6 +1749,11 @@ static MainWindow* LoadDocumentFinish(MainWindow* win, Str fullPath, DocControll
         // will show previews/thumbnails for this file without security warnings
         file::DeleteZoneIdentifier(fullPath);
     }
+    // orig builds this as the file opens, so -forward-search can jump at once
+    if (CanAccessDisk() && dm && tab->GetEngineType() == kindEngineMupdf) {
+        Synchronizer::Create(fullPath, dm->GetEngine(), &dm->pdfSync);
+    }
+
     logf("LoadDocument: %.2f ms, %d pages for '%s'\n", (float)TimeSinceInMs(timeStart), ctrl->PageCount(), fullPath);
 
     win->currPageNo = ctrl->CurrentPageNo();
