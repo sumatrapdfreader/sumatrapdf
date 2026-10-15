@@ -996,6 +996,7 @@ function tesseract_files()
     "dotproduct.cpp",
     "dotproductavx.cpp",
     "dotproductfma.cpp",
+    "dotproductneon.cpp",
     "dotproductsse.cpp",
     "intsimdmatrix.cpp",
     "intsimdmatrixavx2.cpp",

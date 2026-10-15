@@ -8,7 +8,9 @@ tesseract       5.5.2      2026-10-14
   https://github.com/tesseract-ocr/tesseract
   mupdf thirdparty submodule (Artifex fork), commit ad0f76d971946512a62c933f490c8111877eddaa
   OCR for the mupdf tools (draw -F ocr.*). Only the LSTM engine and the
-  files mupdf's platform/win32/libtesseract.vcxproj compiles; headers of those
+  files mupdf's platform/win32/libtesseract.vcxproj compiles, plus
+  src/arch/dotproductneon.cpp (the vcxproj omits it; arm64 simddetect.cpp
+  calls DotProductNEON because __aarch64__ implies NEON). Headers of those
   dirs plus include/tesseract. Needs eng.traineddata from tessdata_fast at run time.
   One edit: ccutil.cpp calls GetModuleFileNameA (we build with UNICODE)
 
