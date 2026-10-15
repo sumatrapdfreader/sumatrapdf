@@ -2122,7 +2122,7 @@ void PdfToolView::OnMergeGridDrag(PdfToolView*, gp::Ctx* cx, const gp::DragMoveE
     float x = ev->x - gTool.mergeView.x;
     float y = ev->y - gTool.mergeView.y;
     // orig: SetCapture synthesizes a move at the real cursor: not a gesture
-    if (gTool.mergePress == MergePress::None || !ev->pressed) {
+    if (gTool.mergePress == MergePress::None || !ev->Dragging()) {
         return;
     }
     gTool.mergeLast = {x, y};
