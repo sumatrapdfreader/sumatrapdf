@@ -113,12 +113,6 @@ void FindFirst(MainWindow* win) {
     HighlightRestoredFindTerm(win);
 }
 
-// debounce delays (ms) for find-as-you-type. Short terms (1-2 chars) match a
-// lot of text and the search is expensive, so wait longer before starting them
-// (issue #4626). Enter bypasses the wait (see FindFlushPendingSearch).
-constexpr int kFindDebounceDelayMs = 500;
-constexpr int kFindDebounceShortDelayMs = 1000;
-
 TempStr FindPagesEditTextTemp(MainWindow* win) {
     return win->findPagesEdit ? str::DupTemp(FromGpui(gp::InputValue(win->findPagesEdit))) : TempStr{};
 }
@@ -143,7 +137,7 @@ void OnFindBarTextChanged(MainWindow* win) {
         return;
     }
     int nChars = FindEditTextLen(win);
-    int delay = (nChars <= 2) ? kFindDebounceShortDelayMs : kFindDebounceDelayMs;
+    int delay = FindDebounceDelayMs(nChars);
     // re-arming replaces the previous countdown, so each keystroke restarts it
     win->findDebounceLeftMs = delay;
     win->findDebouncePending = true;
@@ -376,27 +370,12 @@ void ShowForwardSearchResult(MainWindow* win, Str fileName, int line, int /* col
         return;
     }
 
-    TempStr buf;
-    NotificationCreateArgs args{};
-    args.win = win;
-    // several of these embed a file name read from the .synctex / .pdfsync file
-    args.plainText = true;
-    if (ret == PDFSYNCERR_SYNCFILE_NOTFOUND) {
-        args.msg = Tr("No synchronization file found");
-    } else if (ret == PDFSYNCERR_SYNCFILE_CANNOT_BE_OPENED) {
-        args.msg = Tr("Synchronization file cannot be opened");
-    } else if (ret == PDFSYNCERR_INVALID_PAGE_NUMBER) {
-        buf = fmt(Tr("Page %u does not exist").s, page);
-    } else if (ret == PDFSYNCERR_NO_SYNC_AT_LOCATION) {
-        args.msg = Tr("No synchronization info at this position");
-    } else if (ret == PDFSYNCERR_UNKNOWN_SOURCEFILE) {
-        buf = fmt(Tr("Unknown source file (%s)").s, fileName);
-    } else if (ret == PDFSYNCERR_NORECORD_IN_SOURCEFILE) {
-        buf = fmt(Tr("Source file %s has no synchronization point").s, fileName);
-    } else if (ret == PDFSYNCERR_NORECORD_FOR_THATLINE || ret == PDFSYNCERR_NOSYNCPOINT_FOR_LINERECORD) {
-        buf = fmt(Tr("No result found around line %u in file %s").s, line, fileName);
-    }
+    TempStr buf = ForwardSearchFailTextTemp(ret, fileName, line, page);
     if (buf) {
+        NotificationCreateArgs args{};
+        args.win = win;
+        // the text embeds a file name read from the .synctex / .pdfsync file
+        args.plainText = true;
         args.msg = buf;
         ShowNotification(args);
     }
@@ -507,22 +486,16 @@ valid formats:
     [Open("c:\file.pdf",1,1,0,1)]
 */
 Str HandleOpenCmd(Str cmd, bool* ack) {
-    TempStr filePath;
-    int newWindow = 0;
-    int setFocus = 0;
-    int forceRefresh = 0;
-    int inCurrentTab = 0;
-    Str next = str::Parse(cmd, "[Open(\"%s\")]", &filePath);
-    if (str::IsNull(next)) {
-        next = str::Parse(cmd, "[Open(\"%s\",%u,%u,%u,%u)]", &filePath, &newWindow, &setFocus, &forceRefresh,
-                          &inCurrentTab);
-    }
-    if (str::IsNull(next)) {
-        next = str::Parse(cmd, "[Open(\"%s\",%u,%u,%u)]", &filePath, &newWindow, &setFocus, &forceRefresh);
-    }
-    if (str::IsNull(next)) {
+    OpenDdeArgs open = ParseOpenDdeCmd(cmd);
+    if (!open.parsed) {
         return {};
     }
+    TempStr filePath = open.filePath;
+    int newWindow = open.newWindow;
+    int setFocus = open.setFocus;
+    int forceRefresh = open.forceRefresh;
+    int inCurrentTab = open.inCurrentTab;
+    Str next = open.next;
     logf("HandleOpenCmd: '%s', newWindow: %d, setFocus: %d, forceRefresh: %d, inCurrentTab: %d\n", filePath, newWindow,
          setFocus, forceRefresh, inCurrentTab);
     // on startup this runs while the command line is still being opened, so
@@ -535,10 +508,7 @@ Str HandleOpenCmd(Str cmd, bool* ack) {
         return next;
     }
 
-    if (newWindow != 0 && inCurrentTab != 0) {
-        inCurrentTab = 0;
-        logf("HandleOpenCmd: setting inCurrentTab to 0 because newWindow != 0\n");
-    }
+    inCurrentTab = ApplyOpenNewWindow(newWindow, inCurrentTab);
 
     bool focusTab = (newWindow == 0);
 

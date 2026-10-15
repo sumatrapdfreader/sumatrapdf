@@ -18,6 +18,21 @@
 #include "RestrictedUseConfig.h"
 #include "MainWindow.h"
 #include "SumatraControlCommon.h"
+#include "PdfSync.h"
+
+struct OpenDdeArgs {
+    bool parsed = false;
+    TempStr filePath;
+    int newWindow = 0;
+    int setFocus = 0;
+    int forceRefresh = 0;
+    int inCurrentTab = 0;
+    Str next;
+};
+OpenDdeArgs ParseOpenDdeCmd(Str cmd);
+int ApplyOpenNewWindow(int newWindow, int inCurrentTab);
+int FindDebounceDelayMs(int nChars);
+TempStr ForwardSearchFailTextTemp(int ret, Str fileName, int line, int page);
 
 // must be last to over-write assert()
 #include "base/tests/UtAssert.h"
@@ -69,6 +84,39 @@ void BenchRangeTest() {
     utassert(!IsBenchPagesInfo(StrL("4-2")));
     utassert(!IsBenchPagesInfo(StrL("1-3,loadonly")));
     utassert(!IsBenchPagesInfo({}));
+}
+
+void OpenDdeCmdTest() {
+    OpenDdeArgs plain = ParseOpenDdeCmd(StrL("[Open(\"docs/file.pdf\")]"));
+    utassert(plain.parsed);
+    utassert(str::Eq(plain.filePath, StrL("docs/file.pdf")));
+    utassert(plain.newWindow == 0 && plain.setFocus == 0 && plain.forceRefresh == 0 && plain.inCurrentTab == 0);
+
+    OpenDdeArgs three = ParseOpenDdeCmd(StrL("[Open(\"docs/file.pdf\",1,0,1)]"));
+    utassert(three.parsed);
+    utassert(str::Eq(three.filePath, StrL("docs/file.pdf")));
+    utassert(three.newWindow == 1 && three.setFocus == 0 && three.forceRefresh == 1 && three.inCurrentTab == 0);
+
+    OpenDdeArgs four = ParseOpenDdeCmd(StrL("[Open(\"docs/file.pdf\",1,1,0,1)]"));
+    utassert(four.parsed);
+    utassert(four.newWindow == 1 && four.setFocus == 1 && four.forceRefresh == 0 && four.inCurrentTab == 1);
+    utassert(ApplyOpenNewWindow(four.newWindow, four.inCurrentTab) == 0);
+    utassert(ApplyOpenNewWindow(0, 1) == 1);
+
+    utassert(!ParseOpenDdeCmd(StrL("[Search(\"x\",\"y\")]")).parsed);
+
+    utassert(FindDebounceDelayMs(0) == 1000);
+    utassert(FindDebounceDelayMs(2) == 1000);
+    utassert(FindDebounceDelayMs(3) == 500);
+
+    TempStr page = ForwardSearchFailTextTemp(PDFSYNCERR_INVALID_PAGE_NUMBER, StrL("a.tex"), 12, 7);
+    utassert(str::Eq(page, StrL("Page 7 does not exist")));
+    TempStr around = ForwardSearchFailTextTemp(PDFSYNCERR_NORECORD_FOR_THATLINE, StrL("a.tex"), 12, 7);
+    utassert(str::Eq(around, StrL("No result found around line 12 in file a.tex")));
+    TempStr point = ForwardSearchFailTextTemp(PDFSYNCERR_NOSYNCPOINT_FOR_LINERECORD, StrL("a.tex"), 12, 7);
+    utassert(str::Eq(point, around));
+    utassert(len(ForwardSearchFailTextTemp(PDFSYNCERR_SYNCFILE_NOTFOUND, StrL("a.tex"), 12, 7)) == 0);
+    utassert(len(ForwardSearchFailTextTemp(PDFSYNCERR_SUCCESS, StrL("a.tex"), 12, 7)) == 0);
 }
 
 void ControlFrameActionTest() {
