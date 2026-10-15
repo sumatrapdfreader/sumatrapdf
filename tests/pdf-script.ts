@@ -194,6 +194,14 @@ async function originalUi(pid: number, client: ControlClient) {
     });
     return list;
   };
+  // TestPdfScript does what the drawn buttons do. Its reply has the Add
+  // argument button's screen rect.
+  const scriptCmd = async (action: string, idx = -1) => {
+    const res = await client.request(ControlCommand.TestPdfScript, [action, idx]);
+    const raw = String(res[1] ?? "");
+    if (res[0] !== 0) throw new Error(`TestPdfScript ${action}: ${raw}`);
+    return raw;
+  };
   const argEdits = () => edits().filter((h) => !(getWindowLong(h, -16) & 4));
   const scriptEdit = () => edits().find((h) => getWindowLong(h, -16) & 4 && !(getWindowLong(h, -16) & 0x800))!;
   const outputEdit = () => edits().find((h) => getWindowLong(h, -16) & 0x800)!;
@@ -208,9 +216,11 @@ async function originalUi(pid: number, client: ControlClient) {
     async argumentGap() {
       const fields = argEdits();
       const last = getWindowRect(fields[fields.length - 1]!);
-      // Add argument sits in a row of its own under the last field
-      const addRow = fields.length > 1 ? getWindowRect(fields[1]!).top - getWindowRect(fields[0]!).top : 0;
-      return (getWindowRect(scriptEdit()).top - last.bottom - addRow) / (last.bottom - last.top);
+      // Add argument sits under the last row; the gap is what follows it
+      const add = /add=(-?\d+),(-?\d+),(\d+),(\d+)/.exec(await scriptCmd("state"));
+      if (!add) throw new Error("no Add argument rect");
+      const addBottom = Number(add[2]) + Number(add[4]);
+      return (getWindowRect(scriptEdit()).top - addBottom) / (last.bottom - last.top);
     },
     async checkBorder() {
       const fields = argEdits();
@@ -235,10 +245,10 @@ async function originalUi(pid: number, client: ControlClient) {
       return getWindowRect(scriptEdit()).top - getWindowRect(argEdits()[0]!).top;
     },
     async add() {
-      await client.request(ControlCommand.TestPdfScript, ["add", -1]);
+      await scriptCmd("add");
     },
     async remove() {
-      await client.request(ControlCommand.TestPdfScript, ["remove", -1]);
+      await scriptCmd("remove");
     },
     async setArg(text: string) {
       const fields = argEdits();
@@ -248,7 +258,7 @@ async function originalUi(pid: number, client: ControlClient) {
       sendText(scriptEdit(), text);
     },
     async run() {
-      await client.request(ControlCommand.TestPdfScript, ["run", -1]);
+      await scriptCmd("run");
     },
     async output() {
       const h = outputEdit();
@@ -260,10 +270,10 @@ async function originalUi(pid: number, client: ControlClient) {
     // the list's buttons and rows are drawn, not windows: the control channel
     // does what clicking them does
     async examples() {
-      await client.request(ControlCommand.TestPdfScript, ["examples", -1]);
+      await scriptCmd("examples");
     },
     async pickExample(index: number) {
-      await client.request(ControlCommand.TestPdfScript, ["pick", index]);
+      await scriptCmd("pick", index);
     },
     async script() {
       return getControlText(scriptEdit());

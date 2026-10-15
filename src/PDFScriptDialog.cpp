@@ -68,6 +68,7 @@ struct PDFScriptWnd : WindowBase {
     ILayout* examplesBox = nullptr;
     VirtLine* examplesLine = nullptr;
     VirtButton* run = nullptr;
+    VirtButton* add = nullptr;
     MainWindow* win = nullptr;
     Str input;
     bool running = false;
@@ -441,7 +442,7 @@ void PDFScriptWnd::Create(MainWindow* owner, Str path) {
     auto* addRow = new HBox();
     addRow->alignCross = CrossAxisAlign::CrossCenter;
     addRow->rtl = isRtl;
-    auto* add = NewDlgButton(hwnd, Tr("Add argument"), fontMeta, DlgButtonStyle::Ghost, false);
+    add = NewDlgButton(hwnd, Tr("Add argument"), fontMeta, DlgButtonStyle::Ghost, false);
     add->onClick = MkMethod1<PDFScriptWnd, VirtMouseEvent*, &PDFScriptWnd::OnAdd>(this);
     // lines up with the fields; the button pads its own text by 8
     addRow->AddChild(new Spacer(DpiScale(kScriptLabelDx + kToolDlgGapDx) - add->textPadding.left, 0));
@@ -533,7 +534,8 @@ void PDFScriptWnd::Create(MainWindow* owner, Str path) {
 
 // -dbg-control, what the drawn buttons do: "examples" shows / hides the list,
 // "pick" selects example `idx`, "add" / "remove" add an argument row or remove
-// the last one, "run" runs the script
+// the last one, "run" runs the script, "state" only reports. The reply has the
+// Add argument button's screen rect.
 TempStr PDFScriptTestTemp(Str action, int idx, int* exitCodeOut) {
     *exitCodeOut = 2;
     PDFScriptWnd* w = gScriptWnd;
@@ -557,10 +559,16 @@ TempStr PDFScriptTestTemp(Str action, int idx, int* exitCodeOut) {
         QueueDeleteScriptArg(w->rows[len(w->rows) - 1]);
     } else if (str::Eq(action, StrL("run"))) {
         w->OnRun();
+    } else if (!str::Eq(action, StrL("state"))) {
+        return fmt("ERR unknown-action %s", action);
     }
     *exitCodeOut = 0;
     bool shown = w->examplesBox->GetVisibility() != Visibility::Collapse;
-    return fmt("OK shown=%d sel=%d", shown ? 1 : 0, w->examples->GetCurrentSelection());
+    Rect r = w->add->BoundsInWindow();
+    POINT pt{r.x, r.y};
+    ClientToScreen(w->hwnd, &pt);
+    return fmt("OK shown=%d sel=%d add=%d,%d,%d,%d", shown ? 1 : 0, w->examples->GetCurrentSelection(), (int)pt.x,
+               (int)pt.y, r.dx, r.dy);
 }
 
 static void ClearScriptWnd() {
