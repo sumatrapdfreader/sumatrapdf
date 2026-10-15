@@ -1528,7 +1528,10 @@ static void LayoutContentsEditor(AnnotEditToolbar* tb) {
     int wantDx = std::max(tb->lastAnnotBounds.dx, DpiScale(320));
     wantDx = std::min(wantDx, std::max(canvas.dx - DpiScale(24), DpiScale(200)));
 
+    // idealDx only raises a short measurement. Cap it too, or a long note
+    // is measured as one line and becomes the card's width.
     tb->contentsEdit->idealDx = wantDx;
+    tb->contentsEdit->maxDx = wantDx;
     auto* slot = new ContentsEditSlot();
     slot->edit = tb->contentsEdit;
     slot->idealSize = {wantDx, tb->contentsEdit->GetIdealSize().dy};
