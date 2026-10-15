@@ -51,10 +51,14 @@ export async function testit(): Promise<void> {
       const deep = await client.chapterInfo();
       pagesBefore = deep.pageCount;
 
+      // the recount that follows a restyle publishes the full total again.
+      // hold it so the read below is the collapsed count Relayout just used
+      await client.setChapterLayoutHold(true);
       sendCommandSync(frame, cmdId("CmdToggleLightDarkTheme"));
-      await client.waitForRenderIdle(30000);
       const after = await client.chapterInfo();
       pagesAfter = after.pageCount;
+      await client.setChapterLayoutHold(false);
+      await client.waitForRenderIdle(30000);
     },
     ["-appdata", appdata, "-log-to-file", log, "-window-pos", "1000x900@40x40", epub],
   );

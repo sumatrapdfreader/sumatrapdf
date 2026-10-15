@@ -435,6 +435,7 @@ export const tests: NamedTest[] = [
   // first: it drives the home page, whose thumbnail selection follows the
   // mouse, so it is the one test that cares what the machine was doing before
   ["issue-5978", issue5978],
+  ["epub-restyle-fit-content", epubRestyleFitContent],
   ["annot-text-popup-reload", annotTextPopupReload],
   ["read-aloud-lazy-chapters", readAloudLazyChapters],
   ["jbig2-resize-overflow", jbig2ResizeOverflow],
@@ -706,7 +707,6 @@ export const tests: NamedTest[] = [
   ["epub-theme-restyle", epubThemeRestyle],
   ["show-chapters-in-ebooks", showChaptersInEbooks],
   ["epub-relayout-stale-page", epubRelayoutStalePage],
-  ["epub-restyle-fit-content", epubRestyleFitContent],
   ["epub-quit-during-layout", epubQuitDuringLayout],
   ["issue-5943", issue5943],
   ["issue-6118", issue6118],
