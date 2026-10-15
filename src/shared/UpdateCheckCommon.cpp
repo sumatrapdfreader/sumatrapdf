@@ -36,6 +36,86 @@ bool IsTrustedUpdateDlUrl(Str dlURL) {
     return str::StartsWith(dlURL, kExpectedDlHost);
 }
 
+// Automatic checks wait out the first start, then a day. Pre-release builds
+// check on every startup. forcePreReleaseOnly is orig's FORCE_AUTO_UPDATE.
+UpdateCheckChoice DecideUpdateCheck(const UpdateCheckFacts& f) {
+    if (f.inProgress) {
+        logf("CheckForUpdate: skipping because gUpdateCheckInProgress\n");
+        return UpdateCheckChoice::Skip;
+    }
+    if (f.forcePreReleaseOnly) {
+        if (f.userInitiated) {
+            logf("CheckForUpdate: checking, user initiated (FORCE_AUTO_UPDATE)\n");
+            return UpdateCheckChoice::Check;
+        }
+        logf("CheckForUpdate: skipping auto check, FORCE_AUTO_UPDATE downloads pre-release\n");
+        return UpdateCheckChoice::Skip;
+    }
+    if (!f.hasInternet) {
+        logf("CheckForUpdate: skipping because no internet access\n");
+        return UpdateCheckChoice::Skip;
+    }
+    if (f.userInitiated) {
+        logf("CheckForUpdate: checking, user initiated\n");
+        return UpdateCheckChoice::Check;
+    }
+    if (!f.canSavePrefs) {
+        logf("CheckForUpdate: skipping auto check because no prefs access\n");
+        return UpdateCheckChoice::Skip;
+    }
+    if (!f.checkForUpdates) {
+        logf("CheckForUpdate: skipping auto check because CheckForUpdates is false\n");
+        return UpdateCheckChoice::Skip;
+    }
+    if (f.firstStart) {
+        logf("CheckForUpdate: skipping auto check, first start (TimeOfLastUpdateCheck not set)\n");
+        return UpdateCheckChoice::Skip;
+    }
+    if (f.isPreRelease) {
+        logf("CheckForUpdate: checking, pre-release build checks on every startup\n");
+        return UpdateCheckChoice::Check;
+    }
+
+    constexpr int kSecondsInDay = 60 * 60 * 24;
+    constexpr int kSecondsInWeek = 7 * 60 * 60 * 24;
+    int secsBetweenChecks = f.isPreRelease ? kSecondsInWeek : kSecondsInDay;
+    bool checkUpdate = f.secsSinceLast > secsBetweenChecks;
+    logf("CheckForUpdate: %s auto check, %d secs since the last one, %d secs between checks\n",
+         checkUpdate ? StrL("doing") : StrL("skipping"), f.secsSinceLast, secsBetweenChecks);
+    return checkUpdate ? UpdateCheckChoice::Check : UpdateCheckChoice::Skip;
+}
+
+bool ShouldOfferProgramUpdate(Str latestVer, Str myVer, bool isStoreBuild) {
+    if (isStoreBuild) {
+        return false;
+    }
+    return CompareProgramVersion(latestVer, myVer) > 0;
+}
+
+UpdateInfoFetch ClassifyUpdateInfoFetch(Str url, int error, int httpStatus, int bodyLen, const Str* allowed,
+                                        int nAllowed) {
+    if (error != 0) {
+        return UpdateInfoFetch::TransportError;
+    }
+    if (httpStatus != 200) {
+        return UpdateInfoFetch::BadStatus;
+    }
+    bool listed = false;
+    for (int i = 0; i < nAllowed; i++) {
+        if (str::StartsWith(url, allowed[i])) {
+            listed = true;
+            break;
+        }
+    }
+    if (!listed) {
+        return UpdateInfoFetch::UnlistedUrl;
+    }
+    if (bodyLen <= 0) {
+        return UpdateInfoFetch::EmptyBody;
+    }
+    return UpdateInfoFetch::Ok;
+}
+
 void BuildUpdateURL(str::Builder& url, Str baseURL, UpdateCheck updateCheckType) {
     url.Reset(baseURL);
     AppendClientInfoQuery(url);

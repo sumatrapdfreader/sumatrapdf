@@ -19,6 +19,8 @@
 #include "MainWindow.h"
 #include "SumatraControlCommon.h"
 #include "PdfSync.h"
+#include "UpdateCheck.h"
+#include "UpdateCheckCommon.h"
 
 struct OpenDdeArgs {
     bool parsed = false;
@@ -117,6 +119,77 @@ void OpenDdeCmdTest() {
     utassert(str::Eq(point, around));
     utassert(len(ForwardSearchFailTextTemp(PDFSYNCERR_SYNCFILE_NOTFOUND, StrL("a.tex"), 12, 7)) == 0);
     utassert(len(ForwardSearchFailTextTemp(PDFSYNCERR_SUCCESS, StrL("a.tex"), 12, 7)) == 0);
+}
+
+void UpdateCheckDecisionTest() {
+    UpdateCheckFacts busy;
+    busy.inProgress = true;
+    busy.userInitiated = true;
+    busy.hasInternet = true;
+    utassert(DecideUpdateCheck(busy) == UpdateCheckChoice::Skip);
+
+    UpdateCheckFacts offline;
+    offline.userInitiated = true;
+    utassert(DecideUpdateCheck(offline) == UpdateCheckChoice::Skip);
+
+    UpdateCheckFacts asked;
+    asked.userInitiated = true;
+    asked.hasInternet = true;
+    utassert(DecideUpdateCheck(asked) == UpdateCheckChoice::Check);
+
+    UpdateCheckFacts noPrefs;
+    noPrefs.hasInternet = true;
+    noPrefs.checkForUpdates = true;
+    utassert(DecideUpdateCheck(noPrefs) == UpdateCheckChoice::Skip);
+
+    UpdateCheckFacts optedOut;
+    optedOut.hasInternet = true;
+    optedOut.canSavePrefs = true;
+    utassert(DecideUpdateCheck(optedOut) == UpdateCheckChoice::Skip);
+
+    UpdateCheckFacts first;
+    first.hasInternet = true;
+    first.canSavePrefs = true;
+    first.checkForUpdates = true;
+    first.firstStart = true;
+    utassert(DecideUpdateCheck(first) == UpdateCheckChoice::Skip);
+
+    UpdateCheckFacts pre;
+    pre.hasInternet = true;
+    pre.canSavePrefs = true;
+    pre.checkForUpdates = true;
+    pre.isPreRelease = true;
+    utassert(DecideUpdateCheck(pre) == UpdateCheckChoice::Check);
+
+    constexpr int kSecondsInDay = 60 * 60 * 24;
+    UpdateCheckFacts daily;
+    daily.hasInternet = true;
+    daily.canSavePrefs = true;
+    daily.checkForUpdates = true;
+    daily.secsSinceLast = kSecondsInDay;
+    utassert(DecideUpdateCheck(daily) == UpdateCheckChoice::Skip);
+    daily.secsSinceLast = kSecondsInDay + 1;
+    utassert(DecideUpdateCheck(daily) == UpdateCheckChoice::Check);
+
+    UpdateCheckFacts forced = daily;
+    forced.forcePreReleaseOnly = true;
+    utassert(DecideUpdateCheck(forced) == UpdateCheckChoice::Skip);
+    forced.userInitiated = true;
+    utassert(DecideUpdateCheck(forced) == UpdateCheckChoice::Check);
+
+    utassert(!ShouldOfferProgramUpdate(StrL("3.8"), StrL("3.7"), true));
+    utassert(ShouldOfferProgramUpdate(StrL("3.8"), StrL("3.7"), false));
+    utassert(!ShouldOfferProgramUpdate(StrL("3.7"), StrL("3.7"), false));
+    utassert(!ShouldOfferProgramUpdate(StrL("3.6"), StrL("3.7"), false));
+
+    Str allowed[] = {StrL("https://www.sumatrapdfreader.org/")};
+    Str url = StrL("https://www.sumatrapdfreader.org/update-check-rel.txt");
+    utassert(ClassifyUpdateInfoFetch(url, 0, 200, 4, allowed, 1) == UpdateInfoFetch::Ok);
+    Str evil = StrL("https://evil.example/update-check-rel.txt");
+    utassert(ClassifyUpdateInfoFetch(evil, 0, 200, 4, allowed, 1) == UpdateInfoFetch::UnlistedUrl);
+    utassert(ClassifyUpdateInfoFetch(url, 5, 200, 4, allowed, 1) == UpdateInfoFetch::TransportError);
+    utassert(ClassifyUpdateInfoFetch(url, 0, 404, 4, allowed, 1) == UpdateInfoFetch::BadStatus);
+    utassert(ClassifyUpdateInfoFetch(url, 0, 200, 0, allowed, 1) == UpdateInfoFetch::EmptyBody);
 }
 
 void ControlFrameActionTest() {

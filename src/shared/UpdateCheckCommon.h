@@ -9,6 +9,37 @@ static const Str kExpectedDlHost = StrL("https://www.sumatrapdfreader.org/");
 bool IsTrustedUpdateDlUrl(Str dlURL);
 void BuildUpdateURL(str::Builder& url, Str baseURL, UpdateCheck updateCheckType);
 
+enum class UpdateCheckChoice : u8 {
+    Skip = 0,
+    Check = 1
+};
+
+struct UpdateCheckFacts {
+    bool inProgress = false;
+    bool forcePreReleaseOnly = false;
+    bool userInitiated = false;
+    bool hasInternet = false;
+    bool canSavePrefs = false;
+    bool checkForUpdates = false;
+    bool firstStart = false;
+    bool isPreRelease = false;
+    int secsSinceLast = 0;
+};
+
+UpdateCheckChoice DecideUpdateCheck(const UpdateCheckFacts& f);
+bool ShouldOfferProgramUpdate(Str latestVer, Str myVer, bool isStoreBuild);
+
+enum class UpdateInfoFetch : u8 {
+    Ok = 0,
+    TransportError,
+    BadStatus,
+    UnlistedUrl,
+    EmptyBody,
+};
+
+UpdateInfoFetch ClassifyUpdateInfoFetch(Str url, int error, int httpStatus, int bodyLen, const Str* allowed,
+                                        int nAllowed);
+
 #if !OS_WIN
 // implemented by ng: base/Win.h has them on Windows
 bool IsProcess64();

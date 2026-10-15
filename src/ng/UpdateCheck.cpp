@@ -120,62 +120,19 @@ DownloadPage: https://www.sumatrapdfreader.org/dlng/mac/14276/SumatraPDF-mac-arm
 */
 
 static bool ShouldCheckForUpdate(UpdateCheck updateCheckType) {
-    if (gUpdateCheckInProgress) {
-        logf("CheckForUpdate: skipping because gUpdateCheckInProgress\n");
-        return false;
-    }
-
-    if (!HasPermission(Perm::InternetAccess)) {
-        logf("CheckForUpdate: skipping because no internet access\n");
-        return false;
-    }
-
-    if (updateCheckType == UpdateCheck::UserInitiated) {
-        logf("CheckForUpdate: checking, user initiated\n");
-        return true;
-    }
-
-    // don't check if the timestamp or version to skip can't be updated
-    // (mainly in plugin mode, stress testing and restricted settings)
-    if (!HasPermission(Perm::SavePreferences)) {
-        logf("CheckForUpdate: skipping auto check because no prefs access\n");
-        return false;
-    }
-
-    // only applies to automatic update check
-    if (!gSettings->checkForUpdates) {
-        logf("CheckForUpdate: skipping auto check because CheckForUpdates is false\n");
-        return false;
-    }
-
-    // don't check for updates at the first start, so that privacy
-    // sensitive users can disable the update check in time
+    UpdateCheckFacts f;
+    f.inProgress = gUpdateCheckInProgress;
+    f.userInitiated = updateCheckType == UpdateCheck::UserInitiated;
+    f.hasInternet = HasPermission(Perm::InternetAccess);
+    f.canSavePrefs = HasPermission(Perm::SavePreferences);
+    f.checkForUpdates = gSettings->checkForUpdates;
     FILETIME never{};
-    if (FileTimeEq(gSettings->timeOfLastUpdateCheck, never)) {
-        logf("CheckForUpdate: skipping auto check, first start (TimeOfLastUpdateCheck not set)\n");
-        return false;
-    }
-
-    // pre-release builds check on every startup (testers want the newest build);
-    // skip the daily/weekly throttle below
-    if (gIsPreReleaseBuild) {
-        logf("CheckForUpdate: checking, pre-release build checks on every startup\n");
-        return true;
-    }
-
-    // only check if at least a day passed since last check
+    f.firstStart = FileTimeEq(gSettings->timeOfLastUpdateCheck, never);
+    f.isPreRelease = gIsPreReleaseBuild;
     FILETIME currentTimeFt;
     CurrentFileTime(&currentTimeFt);
-    int secsSinceLastUpdate = FileTimeDiffInSecs(currentTimeFt, gSettings->timeOfLastUpdateCheck);
-
-    constexpr int kSecondsInDay = 60 * 60 * 24;
-    constexpr int kSecondsInWeek = 7 * 60 * 60 * 24;
-
-    int secsBetweenChecks = gIsPreReleaseBuild ? kSecondsInWeek : kSecondsInDay;
-    bool checkUpdate = secsSinceLastUpdate > secsBetweenChecks;
-    logf("CheckForUpdate: %s auto check, %d secs since the last one, %d secs between checks\n",
-         checkUpdate ? StrL("doing") : StrL("skipping"), secsSinceLastUpdate, secsBetweenChecks);
-    return checkUpdate;
+    f.secsSinceLast = FileTimeDiffInSecs(currentTimeFt, gSettings->timeOfLastUpdateCheck);
+    return DecideUpdateCheck(f) == UpdateCheckChoice::Check;
 }
 
 static void OpenWebPage(Str url) {
@@ -449,12 +406,8 @@ void DownloadAndInstallPendingUpdate(MainWindow* win) {
 }
 
 static bool ShouldDownloadUpdate(UpdateInfo* updateInfo) {
-    if (gIsStoreBuild) {
-        // I assume store will take care of updates
-        return false;
-    }
-    Str latestVer = updateInfo->latestVer;
-    return CompareProgramVersion(latestVer, currentVersion) > 0;
+    // a store build lets the store install updates
+    return ShouldOfferProgramUpdate(updateInfo->latestVer, currentVersion, gIsStoreBuild);
 }
 
 static void OnVisitWebsiteAnswer(int res) {
@@ -485,29 +438,22 @@ static void NotifyUpdateCheckFailed(MainWindow* win, DWORD err) {
 
 static DWORD MaybeStartUpdateDownload(MainWindow* win, HttpRsp* rsp, UpdateCheck updateCheckType) {
     Str url = rsp->url;
-
-    if (rsp->error != 0) {
+    str::Builder* data = &rsp->data;
+    UpdateInfoFetch kind = ClassifyUpdateInfoFetch(url, (int)rsp->error, (int)rsp->httpStatusCode, len(*data),
+                                                   updateInfoURLs, dimof(updateInfoURLs));
+    if (kind == UpdateInfoFetch::TransportError) {
         logf("MaybeStartUpdateDownload: http get of '%s' failed with %d\n", url, (int)rsp->error);
         return rsp->error;
     }
-    if (rsp->httpStatusCode != 200) {
+    if (kind == UpdateInfoFetch::BadStatus) {
         logf("MaybeStartUpdateDownload: http get of '%s' failed with code %d\n", url, (int)rsp->httpStatusCode);
         return (DWORD)rsp->httpStatusCode;
     }
-
-    bool isValidURL = false;
-    for (auto updateInfoURL : updateInfoURLs) {
-        if (str::StartsWith(url, updateInfoURL)) {
-            isValidURL = true;
-            break;
-        }
-    }
-    if (!isValidURL) {
+    if (kind == UpdateInfoFetch::UnlistedUrl) {
         logf("MaybeStartUpdateDownload: '%s' is not a valid url\n", url);
         return 1;
     }
-    str::Builder* data = &rsp->data;
-    if (0 == len(*data)) {
+    if (kind == UpdateInfoFetch::EmptyBody) {
         logf("MaybeStartUpdateDownload: empty response from url '%s'\n", url);
         return 2;
     }
