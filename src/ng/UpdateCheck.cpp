@@ -150,56 +150,15 @@ void StartInstallerAutoUpgrade(Str installerPath) {
         logf("StartInstallerAutoUpgrade: refusing an update with an untrusted signature\n");
         return;
     }
-    str::Builder cmd;
-    // ng: orig asks the installer (IsOurExeInstalled()); the installer is step
-    // 17, so "not portable" stands in for "installed"
-    if (!IsRunningInPortableMode()) {
-        // no need for sleep because it shows the installer dialog anyway
-        if (gIsPreReleaseBuild) {
-            cmd.Append(StrL(" -fast-install"));
-        } else {
-            cmd.Append(StrL(" -install"));
-        }
-    } else {
-        // we're asking to over-write over ourselves, so also wait 2 secs to allow
-        // our process to exit
-        cmd.Append(fmt(R"( -sleep-ms 2000 -exit-when-done -update-self-to "%s")", GetSelfExePathTemp()));
-    }
-    logf("StartInstallerAutoUpgrade: installer cmd: '%s'\n", ToStr(cmd));
-    CreateProcessHelper(installerPath, ToStr(cmd));
+    // orig asks the installer (IsOurExeInstalled()). Here "not portable" means installed.
+    TempStr cmd = InstallerUpgradeArgsTemp(!IsRunningInPortableMode(), gIsPreReleaseBuild, GetSelfExePathTemp());
+    logf("StartInstallerAutoUpgrade: installer cmd: '%s'\n", cmd);
+    CreateProcessHelper(installerPath, cmd);
 }
 
 static void ExitAfterStartingUpdater() {
     // Exit immediately so the updater can overwrite our exe
     ::ExitProcess(0);
-}
-
-// the assumption is that this is a portable version downloaded to temp directory
-// we should copy ourselves over the existing file, launch ourselves and
-// tell our new copy to delete ourselves
-void UpdateSelfTo(Str dstPath, int sleepMs) {
-    ReportIf(len(dstPath) == 0);
-    if (!file::Exists(dstPath)) {
-        logf("UpdateSelfTo: failed because destination doesn't exist\n");
-        return;
-    }
-
-    logf("UpdateSelfTo: '%s', sleep for %d ms\n", dstPath, sleepMs);
-    // sleeping for a bit to make sure that the program that launched us
-    // had time to exit so that we can overwrite it
-    SleepInMs(sleepMs);
-
-    // OverwriteAtomicRetry(dst, src): copy this process (new build) onto dstPath
-    TempStr srcPath = GetSelfExePathTemp();
-    bool ok = file::OverwriteAtomicRetry(dstPath, srcPath, 20, 250);
-    if (!ok) {
-        logf("UpdateSelfTo: failed to overwrite '%s' with '%s'\n", dstPath, srcPath);
-        return;
-    }
-    logf("UpdateSelfTo: copied self to '%s'\n", dstPath);
-
-    TempStr args = fmt(R"(-sleep-ms 500 -delete-file "%s")", srcPath);
-    CreateProcessHelper(dstPath, args);
 }
 
 #else
@@ -208,8 +167,6 @@ void UpdateSelfTo(Str dstPath, int sleepMs) {
 void StartInstallerAutoUpgrade(Str) {}
 
 static void ExitAfterStartingUpdater() {}
-
-void UpdateSelfTo(Str, int) {}
 
 #endif
 

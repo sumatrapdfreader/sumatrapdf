@@ -40,6 +40,8 @@ enum class UpdateInfoFetch : u8 {
 UpdateInfoFetch ClassifyUpdateInfoFetch(Str url, int error, int httpStatus, int bodyLen, const Str* allowed,
                                         int nAllowed);
 
+TempStr InstallerUpgradeArgsTemp(bool installed, bool preRelease, Str selfPath);
+
 #if !OS_WIN
 // implemented by ng: base/Win.h has them on Windows
 bool IsProcess64();

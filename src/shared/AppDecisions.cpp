@@ -166,3 +166,11 @@ UpdateInfoFetch ClassifyUpdateInfoFetch(Str url, int error, int httpStatus, int 
     }
     return UpdateInfoFetch::Ok;
 }
+
+// Installed builds show setup. A portable build waits, then overwrites this exe.
+TempStr InstallerUpgradeArgsTemp(bool installed, bool preRelease, Str selfPath) {
+    if (installed) {
+        return preRelease ? StrL(" -fast-install") : StrL(" -install");
+    }
+    return fmt(R"( -sleep-ms 2000 -exit-when-done -update-self-to "%s")", selfPath);
+}

@@ -32,6 +32,34 @@ bool HasPendingPreReleaseUpdate() {
     return gPendingUpdate != nullptr;
 }
 
+#if OS_WIN
+// Portable update: copy this process onto dstPath, relaunch it, and delete us.
+void UpdateSelfTo(Str dstPath, int sleepMs) {
+    ReportIf(len(dstPath) == 0);
+    if (!file::Exists(dstPath)) {
+        logf("UpdateSelfTo: failed because destination doesn't exist\n");
+        return;
+    }
+
+    logf("UpdateSelfTo: '%s', sleep for %d ms\n", dstPath, sleepMs);
+    // the launcher must exit before we overwrite it
+    SleepInMs(sleepMs);
+
+    TempStr srcPath = GetSelfExePathTemp();
+    bool ok = file::OverwriteAtomicRetry(dstPath, srcPath, 20, 250);
+    if (!ok) {
+        logf("UpdateSelfTo: failed to overwrite '%s' with '%s'\n", dstPath, srcPath);
+        return;
+    }
+    logf("UpdateSelfTo: copied self to '%s'\n", dstPath);
+
+    TempStr args = fmt(R"(-sleep-ms 500 -delete-file "%s")", srcPath);
+    CreateProcessHelper(dstPath, args);
+}
+#else
+void UpdateSelfTo(Str, int) {}
+#endif
+
 bool IsTrustedUpdateDlUrl(Str dlURL) {
     return str::StartsWith(dlURL, kExpectedDlHost);
 }

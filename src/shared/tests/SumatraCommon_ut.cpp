@@ -190,6 +190,12 @@ void UpdateCheckDecisionTest() {
     utassert(ClassifyUpdateInfoFetch(url, 5, 200, 4, allowed, 1) == UpdateInfoFetch::TransportError);
     utassert(ClassifyUpdateInfoFetch(url, 0, 404, 4, allowed, 1) == UpdateInfoFetch::BadStatus);
     utassert(ClassifyUpdateInfoFetch(url, 0, 200, 0, allowed, 1) == UpdateInfoFetch::EmptyBody);
+
+    utassert(str::Eq(InstallerUpgradeArgsTemp(true, true, StrL("C:/SumatraPDF.exe")), StrL(" -fast-install")));
+    utassert(str::Eq(InstallerUpgradeArgsTemp(true, false, StrL("C:/SumatraPDF.exe")), StrL(" -install")));
+    TempStr portable = InstallerUpgradeArgsTemp(false, true, StrL("C:/SumatraPDF.exe"));
+    utassert(str::Eq(portable, StrL(" -sleep-ms 2000 -exit-when-done -update-self-to \"C:/SumatraPDF.exe\"")));
+    utassert(str::Eq(portable, InstallerUpgradeArgsTemp(false, false, StrL("C:/SumatraPDF.exe"))));
 }
 
 void ControlFrameActionTest() {
