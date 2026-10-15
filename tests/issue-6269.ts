@@ -86,18 +86,16 @@ function setClipboard(value: string): void {
   }
 }
 
-// colored "SumatraPDF" letters in the top band, away from the pale background
+// the five brand stripes at the left of the header. Other saturated pixels
+// in that band (a focus ring, an icon) must not pull the point off the title.
 function findLogo(canvas: number): { x: number; y: number } | null {
   const pix = captureWindowPixels(canvas, "client");
   if (!pix) {
     return null;
   }
   let minX = pix.w;
-  let minY = pix.h;
-  let maxX = 0;
-  let maxY = 0;
-  let n = 0;
-  const yMax = Math.min(pix.h, 55);
+  const yMax = Math.min(pix.h, 80);
+  const hits: { x: number; y: number }[] = [];
   for (let y = 0; y < yMax; y++) {
     for (let x = 0; x < pix.w; x++) {
       const i = (y * pix.w + x) * 4;
@@ -108,19 +106,29 @@ function findLogo(canvas: number): { x: number; y: number } | null {
       if (spread < 40 || r + g + b > 680) {
         continue;
       }
-      n++;
+      hits.push({ x, y });
       if (x < minX) {
         minX = x;
       }
-      if (y < minY) {
-        minY = y;
-      }
-      if (x > maxX) {
-        maxX = x;
-      }
-      if (y > maxY) {
-        maxY = y;
-      }
+    }
+  }
+  let n = 0;
+  let maxX = 0;
+  let minY = pix.h;
+  let maxY = 0;
+  for (const p of hits) {
+    if (p.x > minX + 40) {
+      continue;
+    }
+    n++;
+    if (p.x > maxX) {
+      maxX = p.x;
+    }
+    if (p.y < minY) {
+      minY = p.y;
+    }
+    if (p.y > maxY) {
+      maxY = p.y;
     }
   }
   if (n < 20) {
@@ -190,12 +198,95 @@ async function walkTo(hover: number, from: { x: number; y: number }, to: { x: nu
   }
 }
 
+function darkSpan(
+  pix: { w: number; h: number; data: Uint8Array },
+  y: number,
+): { n: number; minX: number; maxX: number } {
+  let n = 0;
+  let minX = pix.w;
+  let maxX = 0;
+  for (let x = 0; x < pix.w; x++) {
+    const i = (y * pix.w + x) * 4;
+    const sum = pix.data[i]! + pix.data[i + 1]! + pix.data[i + 2]!;
+    if (sum > 400) {
+      continue;
+    }
+    n++;
+    if (x < minX) {
+      minX = x;
+    }
+    if (x > maxX) {
+      maxX = x;
+    }
+  }
+  return { n, minX, maxX };
+}
+
+function isBlankCapture(pix: { w: number; h: number; data: Uint8Array }): boolean {
+  const y = Math.floor(pix.h / 2);
+  for (let x = 0; x < pix.w; x += 16) {
+    const i = (y * pix.w + x) * 4;
+    if (pix.data[i]! + pix.data[i + 1]! + pix.data[i + 2]! > 0) {
+      return false;
+    }
+  }
+  return true;
+}
+
+// "Copy program and machine info" is the first text row in the footer, under
+// the rule. A fixed offset from the bottom lands on the software link.
+// PW_CLIENTONLY PrintWindow sometimes returns an all-black bitmap for this
+// no-activate popup; the full-window capture still has the glyphs.
+async function findCopyPoint(hover: number): Promise<{ x: number; y: number }> {
+  const win = getWindowRect(hover);
+  const origin = clientToScreen(hover, 0, 0);
+  const offX = origin.x - win.left;
+  const offY = origin.y - win.top;
+  for (let attempt = 0; attempt < 8; attempt++) {
+    const pix = captureWindowPixels(hover, "window");
+    if (!pix || isBlankCapture(pix)) {
+      await sleep(40);
+      continue;
+    }
+    let bandY0 = -1;
+    let bandY1 = -1;
+    let minX = pix.w;
+    let maxX = 0;
+    for (let y = Math.floor(pix.h * 0.65); y < pix.h; y++) {
+      const span = darkSpan(pix, y);
+      const text = span.n >= 30 && span.maxX - span.minX >= 80 && span.minX > 16;
+      if (!text) {
+        if (bandY0 >= 0) {
+          break;
+        }
+        continue;
+      }
+      if (bandY0 < 0) {
+        bandY0 = y;
+      }
+      bandY1 = y;
+      if (span.minX < minX) {
+        minX = span.minX;
+      }
+      if (span.maxX > maxX) {
+        maxX = span.maxX;
+      }
+    }
+    if (bandY0 >= 0) {
+      return {
+        x: Math.round((minX + maxX) / 2) - offX,
+        y: Math.round((bandY0 + bandY1) / 2) - offY,
+      };
+    }
+    break;
+  }
+  throw new Error("issue-6269: could not find the Copy link");
+}
+
 // mouse-down, a gap, then mouse-up. The popup used to close inside the down,
 // so the up never reached the button.
 async function clickCopy(hover: number, from: { x: number; y: number }): Promise<void> {
-  const rc = getWindowRect(hover);
-  const x = Math.round((rc.right - rc.left) / 2);
-  const y = rc.bottom - rc.top - 28;
+  const { x, y } = await findCopyPoint(hover);
   await walkTo(hover, from, screenAt(hover, x, y));
   const lp = packCoords(x, y);
   sendMessage(hover, WM_LBUTTONDOWN, MK_LBUTTON, lp);
