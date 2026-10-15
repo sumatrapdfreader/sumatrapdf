@@ -436,6 +436,7 @@ static WStr FullPipeNameOwned(Str pipeName) {
 
 static WStr gControlPipeName;
 static volatile LONG gControlStop = 0;
+static HANDLE gControlListenerExited = nullptr;
 
 struct ControlConnArg {
     HANDLE pipe;
@@ -455,11 +456,18 @@ static void ControlConnThread(ControlConnArg* arg) {
     if (!stop) {
         return;
     }
-    // wake the listener blocked in ConnectNamedPipe so it can exit
+    // wake the listener blocked in ConnectNamedPipe so it can exit. It may be
+    // between instances (no pipe to open yet) or all instances busy: retry
     InterlockedExchange(&gControlStop, 1);
-    HANDLE h = CreateFileW(gControlPipeName.s, GENERIC_READ | GENERIC_WRITE, 0, nullptr, OPEN_EXISTING, 0, nullptr);
-    if (h != INVALID_HANDLE_VALUE) {
-        CloseHandle(h);
+    for (int i = 0; i < 300; i++) {
+        if (WaitForSingleObject(gControlListenerExited, 0) == WAIT_OBJECT_0) {
+            return;
+        }
+        HANDLE h = CreateFileW(gControlPipeName.s, GENERIC_READ | GENERIC_WRITE, 0, nullptr, OPEN_EXISTING, 0, nullptr);
+        if (h != INVALID_HANDLE_VALUE) {
+            CloseHandle(h);
+        }
+        WaitForSingleObject(gControlListenerExited, 10);
     }
 }
 
@@ -467,6 +475,7 @@ void SumatraControlThread(ControlThreadArg* arg) {
     gControlPipeName = FullPipeNameOwned(arg->pipeName);
     str::FreePtr(&arg->pipeName);
     delete arg;
+    gControlListenerExited = CreateEventW(nullptr, TRUE, FALSE, nullptr);
 
     constexpr DWORD kMaxConns = 8;
     while (!gControlStop) {
@@ -475,7 +484,7 @@ void SumatraControlThread(ControlThreadArg* arg) {
                              kMaxConns, 64 * 1024, 64 * 1024, 0, nullptr);
         if (pipe == INVALID_HANDLE_VALUE) {
             logf("CreateNamedPipeW failed for control pipe, err=%u\n", (unsigned)GetLastError());
-            return;
+            break;
         }
         BOOL connected = ConnectNamedPipe(pipe, nullptr) ? TRUE : (GetLastError() == ERROR_PIPE_CONNECTED);
         if (!connected || gControlStop) {
@@ -484,6 +493,7 @@ void SumatraControlThread(ControlThreadArg* arg) {
         }
         RunAsync(MkFunc0(ControlConnThread, new ControlConnArg{pipe}), StrL("SumatraControlConn"));
     }
+    SetEvent(gControlListenerExited);
 }
 
 #endif // OS_WIN
