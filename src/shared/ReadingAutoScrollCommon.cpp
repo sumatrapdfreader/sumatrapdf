@@ -118,6 +118,18 @@ bool AtScrollLimit(DisplayModel* dm, int dir) {
     if (!dm) {
         return true;
     }
+    if (dm->ScrollFollowsRotation()) {
+        if (!dm->AtContentEdge(dir)) {
+            return false;
+        }
+        if (IsContinuous(dm->GetDisplayMode())) {
+            return true;
+        }
+        if (dir > 0) {
+            return dm->CurrentPageNo() >= dm->PageCount();
+        }
+        return dm->CurrentPageNo() <= 1;
+    }
     if (dir > 0) {
         int maxY = std::max(0, dm->canvasSize.dy - dm->viewPort.dy);
         if (dm->viewPort.y < maxY) {
@@ -398,7 +410,7 @@ void ReadingAutoScrollTick(MainWindow* win, int elapsedMs) {
     if (dy == 0) {
         return;
     }
-    dm->ScrollYBy(dy, true);
+    dm->ScrollContentBy(dy, true);
     ScheduleRepaint(win, 0);
     if (AtScrollLimit(dm, dir)) {
         tab->autoScroll.atEnd = true;

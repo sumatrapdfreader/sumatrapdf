@@ -1245,6 +1245,10 @@ struct Settings {
     // if true, continuous view has extra scroll room after the last page
     // so you can scroll the end of the document to the top of the window
     bool paddingAfterLastPage;
+    // if true, continuous view stacks the next page where the bottom of a
+    // rotated page points: left after Rotate Right, right after Rotate
+    // Left, up after a half turn. Off, the next page stays below
+    bool continuousScrollFollowsRotation;
     // if true, going to a destination (clicking a bookmark or a link
     // inside the document) keeps the current zoom instead of applying the
     // zoom the destination asks for; it still goes to the page and the

@@ -173,6 +173,15 @@ static bool SettingsRestoreSession() {
     return gSettings->restoreSession && !gMyWindowWasEmbedded && !gForTesting;
 }
 
+// Page Up/Down decide "did it move" from the content axis when the stack follows rotation.
+static int PageScrollPos(MainWindow* win) {
+    DisplayModel* dm = win ? win->AsFixed() : nullptr;
+    if (dm && dm->ScrollFollowsRotation()) {
+        return dm->ContentScrollPos();
+    }
+    return GetScrollPos(win->hwndCanvas, SB_VERT);
+}
+
 bool SettingsRememberOpenedFiles() {
     return gSettings->rememberOpenedFiles && !gMyWindowWasEmbedded;
 }
@@ -10596,9 +10605,9 @@ static LRESULT FrameOnCommand(MainWindow* win, HWND hwnd, UINT msg, WPARAM wp, L
             if (!win->IsDocLoaded()) {
                 return 0;
             }
-            int currentPos = GetScrollPos(win->hwndCanvas, SB_VERT);
+            int currentPos = PageScrollPos(win);
             SendMessageW(win->hwndCanvas, WM_VSCROLL, kSbHalfPageUp, 0);
-            if (GetScrollPos(win->hwndCanvas, SB_VERT) == currentPos) {
+            if (PageScrollPos(win) == currentPos) {
                 win->ctrl->GoToPrevPage(true);
                 OnDocumentVerticalScrollIntent(win, false);
             }
@@ -10614,11 +10623,11 @@ static LRESULT FrameOnCommand(MainWindow* win, HWND hwnd, UINT msg, WPARAM wp, L
             if (!win->IsDocLoaded()) {
                 return 0;
             }
-            int currentPos = GetScrollPos(win->hwndCanvas, SB_VERT);
+            int currentPos = PageScrollPos(win);
             if (win->ctrl->GetZoomVirtual() != kZoomFitContent) {
                 SendMessageW(win->hwndCanvas, WM_VSCROLL, SB_PAGEUP, 0);
             }
-            if (GetScrollPos(win->hwndCanvas, SB_VERT) == currentPos) {
+            if (PageScrollPos(win) == currentPos) {
                 win->ctrl->GoToPrevPage(true);
                 OnDocumentVerticalScrollIntent(win, false);
             }
@@ -10679,9 +10688,9 @@ static LRESULT FrameOnCommand(MainWindow* win, HWND hwnd, UINT msg, WPARAM wp, L
             if (!win->IsDocLoaded()) {
                 return 0;
             }
-            int currentPos = GetScrollPos(win->hwndCanvas, SB_VERT);
+            int currentPos = PageScrollPos(win);
             SendMessageW(win->hwndCanvas, WM_VSCROLL, kSbHalfPageDown, 0);
-            if (GetScrollPos(win->hwndCanvas, SB_VERT) == currentPos) {
+            if (PageScrollPos(win) == currentPos) {
                 win->ctrl->GoToNextPage();
                 OnDocumentVerticalScrollIntent(win, true);
             }
@@ -10696,11 +10705,11 @@ static LRESULT FrameOnCommand(MainWindow* win, HWND hwnd, UINT msg, WPARAM wp, L
             if (!win->IsDocLoaded()) {
                 return 0;
             }
-            int currentPos = GetScrollPos(win->hwndCanvas, SB_VERT);
+            int currentPos = PageScrollPos(win);
             if (win->ctrl->GetZoomVirtual() != kZoomFitContent) {
                 SendMessageW(win->hwndCanvas, WM_VSCROLL, SB_PAGEDOWN, 0);
             }
-            if (GetScrollPos(win->hwndCanvas, SB_VERT) == currentPos) {
+            if (PageScrollPos(win) == currentPos) {
                 win->ctrl->GoToNextPage();
                 OnDocumentVerticalScrollIntent(win, true);
             }

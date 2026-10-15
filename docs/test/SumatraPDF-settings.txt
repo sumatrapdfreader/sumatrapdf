@@ -55,6 +55,7 @@ SmoothScroll = true
 ScrollLineAmount = 16
 SaveMemory = 50
 PaddingAfterLastPage = false
+ContinuousScrollFollowsRotation = false
 IgnoreDestinationZoom = false
 HighlightLinkDestination = false
 CitationHoverDelay = -1

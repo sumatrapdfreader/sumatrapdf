@@ -212,6 +212,13 @@ struct DisplayModel : DocController {
     void ScrollXBy(int dx);
     void ScrollYTo(int yOff);
     void ScrollYBy(int dy, bool changePage);
+    bool ScrollFollowsRotation() const;
+    bool ContentScrollHorizontal() const;
+    int ContentScrollSign() const;
+    int ContentScrollPos() const;
+    bool AtContentEdge(int forward) const;
+    void ScrollContentBy(int forward, bool changePage);
+    void ScrollContentToEdge(bool toEnd);
 
     int yOffset();
 

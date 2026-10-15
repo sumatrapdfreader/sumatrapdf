@@ -324,6 +324,170 @@ static void RelayoutRows(DocumentLayout& layout, bool isFitContent) {
     FinishRelayout(layout, canvasDx, canvasDy, isFitContent);
 }
 
+// Half a turn puts page 1 at the bottom. Padding and free-pan slack flip with it.
+static void FlipLayoutY(DocumentLayout& layout) {
+    int canvasDy = layout.canvasSize.dy;
+    for (DocumentLayoutPage& page : layout.pages) {
+        if (!page.isShown || page.pos.dy <= 0) {
+            continue;
+        }
+        page.pos.y = canvasDy - (page.pos.y + page.pos.dy);
+    }
+    layout.RecalcVisibleParts();
+}
+
+// Rotate Right (90): next page to the left. Rotate Left (270): next page to the right.
+// Advance by the page's screen width. A vertical stack of those short boxes would overlap.
+static void RelayoutRowsAlongX(DocumentLayout& layout, bool flip) {
+    const DocumentLayoutParams& params = layout.params;
+    const int pageCount = layout.pages.len;
+    bool single = IsSingle(params.displayMode);
+    Vec<FacingRow> rows;
+    if (!single) {
+        Vec<u8> noSpreads;
+        CollectFacingRows(rows, pageCount, IsBookView(params.displayMode),
+                          params.landscapeAsSpread ? params.spreadFlags : noSpreads);
+    }
+
+    for (int pageNo = 1; pageNo <= pageCount; pageNo++) {
+        DocumentLayoutPage& page = layout.pages[pageNo - 1];
+        page.pos = {};
+        page.isShown = true;
+    }
+
+    CalcZoomReal(layout, params.zoomVirtual);
+
+    int columnMaxCross[2] = {0, 0};
+    int maxFullRowCross = 0;
+    int nRows = single ? pageCount : len(rows);
+    for (int ri = 0; ri < nRows; ri++) {
+        FacingRow row = single ? FacingRow{ri + 1, ri + 1, false} : rows[ri];
+        if (!layout.GetPage(row.firstPage)->isShown) {
+            continue;
+        }
+        bool cover = row.firstPage == row.lastPage && IsBookView(params.displayMode) && row.firstPage == 1;
+        for (int pageNo = row.firstPage; pageNo <= row.lastPage; pageNo++) {
+            DocumentLayoutPage* page = layout.GetPage(pageNo);
+            Size px = PagePixelSize(PageSizeAfterRotation(page), page->zoomReal);
+            page->pos.dx = px.dx;
+            page->pos.dy = px.dy;
+            if (single || row.isSpread) {
+                maxFullRowCross = std::max(maxFullRowCross, page->pos.dy);
+            } else {
+                int col = pageNo - row.firstPage + (cover ? 1 : 0);
+                ReportIf(col >= 2);
+                columnMaxCross[col] = std::max(columnMaxCross[col], page->pos.dy);
+            }
+        }
+    }
+
+    if (pageCount == 1) {
+        if (IsBookView(params.displayMode)) {
+            columnMaxCross[0] = columnMaxCross[1];
+        } else {
+            columnMaxCross[1] = columnMaxCross[0];
+        }
+    }
+
+    int crossSpacing = params.pageSpacing.dx;
+    int mainSpacing = params.pageSpacing.dy;
+    int twoColDy = columnMaxCross[0] + crossSpacing + columnMaxCross[1];
+    int pagesDy = single ? maxFullRowCross : twoColDy;
+    if (params.landscapeAsSpread) {
+        pagesDy = std::max(pagesDy, maxFullRowCross);
+    }
+    int canvasDy = params.windowMargin.top + pagesDy + params.windowMargin.bottom;
+
+    // Cross axis is centered in the window, same as today's horizontal centering.
+    int offY = 0;
+    if (canvasDy < layout.viewPort.dy) {
+        layout.viewPort.y = 0;
+        offY = (layout.viewPort.dy - canvasDy) / 2;
+        canvasDy = layout.viewPort.dy;
+    }
+
+    int currMain = params.windowMargin.left;
+    for (int ri = 0; ri < nRows; ri++) {
+        FacingRow row = single ? FacingRow{ri + 1, ri + 1, false} : rows[ri];
+        if (!layout.GetPage(row.firstPage)->isShown) {
+            continue;
+        }
+        bool cover = row.firstPage == row.lastPage && IsBookView(params.displayMode) && row.firstPage == 1;
+        int rowMaxMain = 0;
+        int pageOffY = offY + params.windowMargin.top;
+        for (int pageNo = row.firstPage; pageNo <= row.lastPage; pageNo++) {
+            DocumentLayoutPage* page = layout.GetPage(pageNo);
+            page->pos.x = currMain;
+            rowMaxMain = std::max(rowMaxMain, page->pos.dx);
+            if (single || row.isSpread) {
+                page->pos.y = pageOffY + ((pagesDy - page->pos.dy) / 2);
+            } else if (!cover && pageNo == row.firstPage) {
+                page->pos.y = pageOffY + columnMaxCross[0] - page->pos.dy;
+            } else {
+                page->pos.y = pageOffY + (columnMaxCross[0] + crossSpacing);
+            }
+            if (!single && params.displayR2L) {
+                page->pos.y = canvasDy - page->pos.y - page->pos.dy;
+            }
+        }
+        currMain += rowMaxMain + mainSpacing;
+    }
+
+    int canvasDx = currMain + params.windowMargin.right - mainSpacing;
+
+    // Shorter than the window: center, and keep every page inside the canvas so the flip stays positive.
+    if (canvasDx < layout.viewPort.dx) {
+        int offX = (layout.viewPort.dx - canvasDx) / 2;
+        canvasDx = layout.viewPort.dx;
+        for (DocumentLayoutPage& page : layout.pages) {
+            if (page.isShown) {
+                page.pos.x += offX;
+            }
+        }
+    }
+
+    if (params.paddingAfterLastPage && layout.viewPort.dx > 0) {
+        int lastStart = -1;
+        for (int pageNo = pageCount; pageNo >= 1; pageNo--) {
+            DocumentLayoutPage* page = layout.GetPage(pageNo);
+            if (page->isShown) {
+                lastStart = page->pos.x;
+                break;
+            }
+        }
+        if (lastStart >= 0) {
+            canvasDx = std::max(canvasDx, lastStart + layout.viewPort.dx);
+        }
+    }
+
+    if (params.freePan) {
+        Size slack = FreePanSlack(layout.viewPort.Size());
+        for (DocumentLayoutPage& page : layout.pages) {
+            if (page.isShown) {
+                page.pos.Offset(slack.dx, slack.dy);
+            }
+        }
+        canvasDx = std::max(canvasDx, layout.viewPort.dx) + (2 * slack.dx);
+        canvasDy = std::max(canvasDy, layout.viewPort.dy) + (2 * slack.dy);
+    }
+
+    // Place ran toward +x. Rotate Right reads the other way, so mirror the canvas.
+    if (flip) {
+        for (DocumentLayoutPage& page : layout.pages) {
+            if (!page.isShown || page.pos.dx <= 0) {
+                continue;
+            }
+            page.pos.x = canvasDx - (page.pos.x + page.pos.dx);
+        }
+    }
+
+    layout.canvasSize = Size(std::max(canvasDx, layout.viewPort.dx), std::max(canvasDy, layout.viewPort.dy));
+    Rect& viewPort = layout.viewPort;
+    viewPort.x = std::min(viewPort.x, layout.canvasSize.dx - viewPort.dx);
+    viewPort.y = std::min(viewPort.y, layout.canvasSize.dy - viewPort.dy);
+    layout.RecalcVisibleParts();
+}
+
 void DocumentLayout::Relayout(const DocumentLayoutParams& newParams) {
     if (len(pages) == 0) {
         Reset(0);
@@ -348,7 +512,16 @@ void DocumentLayout::Relayout(const DocumentLayoutParams& newParams) {
 
     viewPort = Rect(params.viewPortOffset, params.viewPortSize);
 
-    RelayoutRows(*this, isFitContent);
+    int rot = params.rotation;
+    bool follow = params.scrollFollowsRotation && IsContinuous(params.displayMode);
+    if (follow && (rot == 90 || rot == 270)) {
+        RelayoutRowsAlongX(*this, rot == 90);
+    } else {
+        RelayoutRows(*this, isFitContent);
+        if (follow && rot == 180) {
+            FlipLayoutY(*this);
+        }
+    }
 }
 
 void DocumentLayout::RecalcVisibleParts() {

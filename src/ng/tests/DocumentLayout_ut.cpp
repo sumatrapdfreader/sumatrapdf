@@ -51,4 +51,55 @@ void DocumentLayout_UnitTests() {
     utassert(freePanLayout.canvasSize.dy >= params.viewPortSize.dy * 2);
 
     engine->Release();
+
+    // 200x400 pages. Rotation 90/270 swaps that to 400x200, so a vertical stack would overlap.
+    auto layoutPages = [](DocumentLayout& layout, int rot, bool follow, DisplayMode mode) {
+        DocumentLayoutParams params;
+        params.displayMode = mode;
+        params.viewPortSize = {800, 600};
+        params.zoomVirtual = 100;
+        params.dpiFactor = 1;
+        params.rotation = rot;
+        params.scrollFollowsRotation = follow;
+        layout.Reset(2);
+        for (int pageNo = 1; pageNo <= 2; pageNo++) {
+            DocumentLayoutPage* page = layout.GetPage(pageNo);
+            page->mediaBox = RectF(0, 0, 200, 400);
+            page->rotation = rot;
+        }
+        layout.Relayout(params);
+    };
+
+    DocumentLayout right;
+    layoutPages(right, 90, true, DisplayMode::Continuous);
+    utassert(right.GetPage(1)->pos.dx == 400);
+    utassert(right.GetPage(1)->pos.dy == 200);
+    utassert(right.GetPage(2)->pos.x + right.GetPage(2)->pos.dx <= right.GetPage(1)->pos.x);
+    utassert(right.GetPage(1)->pos.y == right.GetPage(2)->pos.y);
+
+    DocumentLayout left;
+    layoutPages(left, 270, true, DisplayMode::Continuous);
+    utassert(left.GetPage(1)->pos.x + left.GetPage(1)->pos.dx <= left.GetPage(2)->pos.x);
+    utassert(left.GetPage(1)->pos.y == left.GetPage(2)->pos.y);
+
+    DocumentLayout half;
+    layoutPages(half, 180, true, DisplayMode::Continuous);
+    utassert(half.GetPage(1)->pos.dx == 200);
+    utassert(half.GetPage(1)->pos.dy == 400);
+    utassert(half.GetPage(2)->pos.y == 0);
+    utassert(half.GetPage(1)->pos.y == 400);
+
+    DocumentLayout down;
+    layoutPages(down, 90, false, DisplayMode::Continuous);
+    utassert(down.GetPage(2)->pos.y >= down.GetPage(1)->pos.y + down.GetPage(1)->pos.dy);
+    utassert(down.GetPage(1)->pos.dx == 400);
+
+    DocumentLayout upright;
+    layoutPages(upright, 0, true, DisplayMode::Continuous);
+    utassert(upright.GetPage(2)->pos.y >= upright.GetPage(1)->pos.y + upright.GetPage(1)->pos.dy);
+
+    DocumentLayout facing;
+    layoutPages(facing, 90, true, DisplayMode::ContinuousFacing);
+    utassert(facing.GetPage(1)->pos.x == facing.GetPage(2)->pos.x);
+    utassert(facing.GetPage(2)->pos.y > facing.GetPage(1)->pos.y);
 }

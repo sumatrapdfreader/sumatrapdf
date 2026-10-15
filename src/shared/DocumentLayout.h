@@ -33,6 +33,8 @@ struct DocumentLayoutParams {
     bool usePageZooms = false;
     // extra scroll room after last page in continuous view (issue #411)
     bool paddingAfterLastPage = false;
+    // continuous rows advance along the rotated down direction (issue #6337)
+    bool scrollFollowsRotation = false;
     // comic/image facing and book view: a page wider than it is tall occupies
     // the whole two-page row (issues #1324, #872)
     bool landscapeAsSpread = false;

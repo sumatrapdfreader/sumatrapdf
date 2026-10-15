@@ -320,6 +320,7 @@ import { testit as palettePrefixKeys } from "./palette-prefix-keys.ts";
 import { testit as issue6287 } from "./issue-6287.ts";
 import { testit as issue6340 } from "./issue-6340.ts";
 import { testit as issue6341 } from "./issue-6341.ts";
+import { testit as issue6337 } from "./issue-6337.ts";
 import { testit as findFloatSwitchResults } from "./find-float-switch-results.ts";
 import { testit as signCertify } from "./sign-certify.ts";
 import { testit as commandPaletteTheme } from "./command-palette-theme.ts";
@@ -766,6 +767,7 @@ export const tests: NamedTest[] = [
   ["issue-6287", issue6287],
   ["issue-6340", issue6340],
   ["issue-6341", issue6341],
+  ["issue-6337", issue6337],
   ["find-float-switch-results", findFloatSwitchResults],
   ["command-palette-theme", commandPaletteTheme],
   ["command-palette-delete-tab", commandPaletteDeleteTab],

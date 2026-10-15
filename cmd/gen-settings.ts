@@ -1703,6 +1703,12 @@ const globalPrefs: Field[] = [
     "if true, continuous view has extra scroll room after the last page so you can scroll the end of the document to the top of the window",
   ).ver("3.7"),
   field(
+    "ContinuousScrollFollowsRotation",
+    Bool,
+    false,
+    "if true, continuous view stacks the next page where the bottom of a rotated page points: left after Rotate Right, right after Rotate Left, up after a half turn. Off, the next page stays below",
+  ).ver("3.7"),
+  field(
     "IgnoreDestinationZoom",
     Bool,
     false,
@@ -2259,6 +2265,7 @@ const globalPrefsLayout = [
   "ScrollbarInSinglePage",
   "SmoothScroll",
   "PaddingAfterLastPage",
+  "ContinuousScrollFollowsRotation",
   "IgnoreDestinationZoom",
   "HighlightLinkDestination",
   "FastScrollOverScrollbar",

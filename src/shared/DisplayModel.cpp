@@ -1756,6 +1756,53 @@ float DisplayModel::ComputeZoomReal(int pageNo) const {
     return std::min(zoomCurr, zoomNext);
 }
 
+// scrollY is how far the content-start edge has moved into the window.
+// Rotate Right (90) and a half turn read toward decreasing canvas coordinates.
+static void PlaceContentScroll(DisplayModel* dm, PageInfo* pi, int scrollY) {
+    int rot = NormalizeRotation(dm->GetRotation());
+    if (rot == 90) {
+        dm->viewPort.x = pi->pos.x + pi->pos.dx + dm->windowMargin.left - dm->viewPort.dx - scrollY;
+        return;
+    }
+    if (rot == 270) {
+        dm->viewPort.x = pi->pos.x - dm->windowMargin.left + scrollY;
+        return;
+    }
+    if (rot == 180) {
+        dm->viewPort.y = pi->pos.y + pi->pos.dy + dm->windowMargin.top - dm->viewPort.dy - scrollY;
+    }
+}
+
+static int ContentScrollOffset(DisplayModel* dm, PageInfo* pi) {
+    int rot = NormalizeRotation(dm->GetRotation());
+    if (rot == 90) {
+        return pi->pos.x + pi->pos.dx + dm->windowMargin.left - dm->viewPort.dx - dm->viewPort.x;
+    }
+    if (rot == 270) {
+        return dm->viewPort.x - (pi->pos.x - dm->windowMargin.left);
+    }
+    if (rot == 180) {
+        return pi->pos.y + pi->pos.dy + dm->windowMargin.top - dm->viewPort.dy - dm->viewPort.y;
+    }
+    return dm->viewPort.y - pi->pos.y + dm->windowMargin.top;
+}
+
+// The other axis stays put unless the page is completely off it.
+static void SnapCrossAxis(DisplayModel* dm, PageInfo* pi) {
+    int rot = NormalizeRotation(dm->GetRotation());
+    if (rot == 90 || rot == 270) {
+        if (dm->viewPort.y + dm->viewPort.dy <= pi->pos.y || dm->viewPort.y >= pi->pos.y + pi->pos.dy) {
+            dm->viewPort.y = std::max(0, pi->pos.y - dm->windowMargin.top);
+        }
+        return;
+    }
+    if (rot == 180) {
+        if (dm->viewPort.x + dm->viewPort.dx <= pi->pos.x || dm->viewPort.x >= pi->pos.x + pi->pos.dx) {
+            dm->viewPort.x = std::max(0, pi->pos.x - dm->windowMargin.left);
+        }
+    }
+}
+
 // Viewport larger than windowMargin, so a fit zoom can be computed.
 bool DisplayModel::ViewportReadyForRelayout() const {
     int dx = totalViewPortSize.dx;
@@ -1814,6 +1861,10 @@ void DisplayModel::Relayout(float newZoomVirtual, int newRotation) {
     // before CalcZoomReal(), which already asks for page sizes
     UpdateEstimatedMediaBox();
 
+    // zoomReal is still unset on the first successful layout. CalcZoomReal
+    // overwrites it inside the loop, so this has to be captured first.
+    bool openingLayout = zoomReal < 0.01f;
+
     DocumentLayout layout;
     for (;;) {
         float currZoomReal = zoomReal;
@@ -1862,6 +1913,7 @@ void DisplayModel::Relayout(float newZoomVirtual, int newRotation) {
         params.windowMargin = ToDocumentLayoutMargin(windowMargin);
         params.pageSpacing = pageSpacing;
         params.paddingAfterLastPage = gSettings->paddingAfterLastPage;
+        params.scrollFollowsRotation = gSettings->continuousScrollFollowsRotation;
         params.freePan = freePan && !inPresentation;
         params.landscapeAsSpread = ShouldTreatLandscapeAsSpread();
         if (params.landscapeAsSpread) {
@@ -1897,6 +1949,19 @@ void DisplayModel::Relayout(float newZoomVirtual, int newRotation) {
         viewPort.y = slack.dy;
         RecalcVisibleParts();
     }
+
+    // Page 1 of a rotated stack does not start at the canvas origin.
+    if (openingLayout && ScrollFollowsRotation()) {
+        int pageNo = ValidPageNo(startPage) ? startPage : 1;
+        PageInfo* pi = GetPageInfo(pageNo);
+        if (pi && pi->pos.dx > 0 && pi->pos.dy > 0) {
+            PlaceContentScroll(this, pi, 0);
+            SnapCrossAxis(this, pi);
+            viewPort.x = limitValue(viewPort.x, slack.dx, canvasSize.dx - viewPort.dx - slack.dx);
+            viewPort.y = limitValue(viewPort.y, slack.dy, canvasSize.dy - viewPort.dy - slack.dy);
+            RecalcVisibleParts();
+        }
+    }
 }
 
 // Re-do the layout after page sizes changed, keeping the user looking at the
@@ -1913,16 +1978,24 @@ void DisplayModel::RelayoutKeepingView() {
     if (!ValidPageNo(anchorPageNo)) {
         anchorPageNo = CurrentPageNo();
     }
-    int dyInPage = 0;
+    bool horiz = ContentScrollHorizontal();
+    int anchor = 0;
     if (ValidPageNo(anchorPageNo)) {
-        dyInPage = viewPort.y - GetPageInfo(anchorPageNo)->pos.y;
+        PageInfo* pi = GetPageInfo(anchorPageNo);
+        anchor = horiz ? viewPort.x - pi->pos.x : viewPort.y - pi->pos.y;
     }
 
     Relayout(zoomVirtual, rotation);
 
     if (ValidPageNo(anchorPageNo)) {
-        int newY = GetPageInfo(anchorPageNo)->pos.y + dyInPage;
-        viewPort.y = limitValue(newY, 0, std::max(0, canvasSize.dy - viewPort.dy));
+        PageInfo* pi = GetPageInfo(anchorPageNo);
+        if (horiz) {
+            int newX = pi->pos.x + anchor;
+            viewPort.x = limitValue(newX, 0, std::max(0, canvasSize.dx - viewPort.dx));
+        } else {
+            int newY = pi->pos.y + anchor;
+            viewPort.y = limitValue(newY, 0, std::max(0, canvasSize.dy - viewPort.dy));
+        }
     }
     viewPort.x = limitValue(viewPort.x, 0, std::max(0, canvasSize.dx - viewPort.dx));
     RecalcVisibleParts();
@@ -2485,6 +2558,10 @@ void DisplayModel::GoToPage(int pageNo, int scrollY, bool addNavPt, int scrollX)
     }
     PageInfo* pageInfo = GetPageInfo(pageNo);
 
+    // scrollY is a content-down offset when the stack follows rotation.
+    // A caller-supplied scrollX stays an absolute canvas position.
+    bool contentLanding = ScrollFollowsRotation() && !IsFitContentZoom(zoomVirtual) && scrollX == -1;
+    int rot = NormalizeRotation(rotation);
     // intentionally ignore scrollX and scrollY when fitting to content
     if (IsFitContentZoom(zoomVirtual)) {
         // scroll down to where the actual content starts
@@ -2497,6 +2574,9 @@ void DisplayModel::GoToPage(int pageNo, int scrollY, bool addNavPt, int scrollX)
             scrollY = std::min(scrollY, second.y);
         }
         viewPort.x = scrollX + pageInfo->pos.x - windowMargin.left;
+    } else if (contentLanding && (rot == 90 || rot == 270)) {
+        PlaceContentScroll(this, pageInfo, scrollY);
+        SnapCrossAxis(this, pageInfo);
     } else if (-1 != scrollX) {
         viewPort.x = scrollX;
     } else if (1 == pageNo && IsBookView(GetDisplayMode())) {
@@ -2505,6 +2585,8 @@ void DisplayModel::GoToPage(int pageNo, int scrollY, bool addNavPt, int scrollX)
     } else if (viewPort.x >= pageInfo->pos.x + pageInfo->pos.dx) {
         // make sure that at least part of the page is visible
         viewPort.x = pageInfo->pos.x;
+    } else if (contentLanding && rot == 180) {
+        SnapCrossAxis(this, pageInfo);
     }
     // NOTE: a caller-supplied scrollX is an absolute canvas position that
     // already accounts for which column of the row the page is in, so it must
@@ -2516,7 +2598,11 @@ void DisplayModel::GoToPage(int pageNo, int scrollY, bool addNavPt, int scrollX)
 
     // Same calculation for every mode: non-continuous pages sit at the window
     // margin, or at free pan's slack above it.
-    viewPort.y = pageInfo->pos.y - windowMargin.top + scrollY;
+    if (contentLanding && rot == 180) {
+        PlaceContentScroll(this, pageInfo, scrollY);
+    } else if (!contentLanding) {
+        viewPort.y = pageInfo->pos.y - windowMargin.top + scrollY;
+    }
 
     // Navigation lands the page as without free pan. Exact view restores may
     // use the slack past the page edges.
@@ -2632,6 +2718,11 @@ static void GetRememberedViewOffset(DisplayModel* dm, int pageNo, int* scrollXOu
         *scrollYOut = 0;
         return;
     }
+    if (dm->ScrollFollowsRotation()) {
+        *scrollXOut = -1;
+        *scrollYOut = ContentScrollOffset(dm, pi);
+        return;
+    }
     *scrollXOut = dm->viewPort.x;
     if (IsContinuous(dm->GetDisplayMode())) {
         *scrollYOut = dm->viewPort.y - pi->pos.y + dm->windowMargin.top;
@@ -2702,7 +2793,7 @@ bool DisplayModel::GoToNextPage(bool keepViewOffset) {
 
 // true when the view is at the bottom and GoToNextPage would fail
 bool DisplayModel::IsAtDocumentEnd() const {
-    if (CanScrollDown()) {
+    if (!AtContentEdge(1)) {
         return false;
     }
     if (engine && engine->HasChapters()) {
@@ -2743,7 +2834,11 @@ bool DisplayModel::GoToPrevPage(int scrollY) {
         int sy = scrollY;
         if (-1 == sy) {
             PageInfo* pi = GetPageInfo(pageNo);
-            sy = pi ? pi->pageOnScreen.dy : 0;
+            if (ScrollFollowsRotation() && pi) {
+                sy = ContentScrollHorizontal() ? pi->pos.dx : pi->pos.dy;
+            } else {
+                sy = pi ? pi->pageOnScreen.dy : 0;
+            }
         }
         GoToPage(pageNo, sy);
         return true;
@@ -2762,6 +2857,10 @@ bool DisplayModel::GoToPrevPage(int scrollY) {
     }
     if (IsFitContentZoom(zoomVirtual) && -pageInfo->pageOnScreen.y <= top.y) {
         scrollY = 0; // continue, even though the current page isn't fully visible
+    } else if (ScrollFollowsRotation() && IsContinuous(GetDisplayMode()) &&
+               ContentScrollOffset(this, pageInfo) > scrollY) {
+        GoToPage(currPageNo, scrollY == -1 ? 0 : scrollY);
+        return true;
     } else if (std::max(-pageInfo->pageOnScreen.y, 0) > scrollY && IsContinuous(GetDisplayMode())) {
         /* the current page isn't fully visible, so show it first */
         GoToPage(currPageNo, scrollY);
@@ -2776,7 +2875,12 @@ bool DisplayModel::GoToPrevPage(int scrollY) {
 
     // scroll to the bottom of the page
     if (-1 == scrollY) {
-        scrollY = GetPageInfo(firstPageInNewRow)->pageOnScreen.dy;
+        PageInfo* prev = GetPageInfo(firstPageInNewRow);
+        if (ScrollFollowsRotation() && prev) {
+            scrollY = ContentScrollHorizontal() ? prev->pos.dx : prev->pos.dy;
+        } else {
+            scrollY = prev->pageOnScreen.dy;
+        }
     } else if (gSettings->rememberViewOffsetOnPageTurn && scrollY == 0) {
         int scrollX = -1;
         GetRememberedViewOffset(this, currPageNo, &scrollX, &scrollY);
@@ -2812,7 +2916,11 @@ bool DisplayModel::GoToLastPage() {
 bool DisplayModel::GoToFirstPage() {
     SyncWithEngineLayout();
     if (IsContinuous(GetDisplayMode())) {
-        if (0 == viewPort.y) {
+        if (ScrollFollowsRotation()) {
+            if (AtContentEdge(-1)) {
+                return false;
+            }
+        } else if (0 == viewPort.y) {
             return false;
         }
     } else {
@@ -3005,6 +3113,82 @@ void DisplayModel::ScrollYBy(int dy, bool changePage) {
     FinishYScroll(this, currPageNo);
 }
 
+// Continuous rows run along the rotated down direction (issue #6337).
+bool DisplayModel::ScrollFollowsRotation() const {
+    if (!gSettings || !gSettings->continuousScrollFollowsRotation) {
+        return false;
+    }
+    if (!IsContinuous(GetDisplayMode())) {
+        return false;
+    }
+    int rot = NormalizeRotation(rotation);
+    return rot == 90 || rot == 180 || rot == 270;
+}
+
+bool DisplayModel::ContentScrollHorizontal() const {
+    if (!ScrollFollowsRotation()) {
+        return false;
+    }
+    int rot = NormalizeRotation(rotation);
+    return rot == 90 || rot == 270;
+}
+
+int DisplayModel::ContentScrollSign() const {
+    int rot = NormalizeRotation(rotation);
+    if (ScrollFollowsRotation() && (rot == 90 || rot == 180)) {
+        return -1;
+    }
+    return 1;
+}
+
+int DisplayModel::ContentScrollPos() const {
+    return ContentScrollHorizontal() ? viewPort.x : viewPort.y;
+}
+
+bool DisplayModel::AtContentEdge(int forward) const {
+    if (forward == 0) {
+        return true;
+    }
+    if (!ScrollFollowsRotation()) {
+        return forward > 0 ? !CanScrollDown() : !CanScrollUp();
+    }
+    int toward = forward * ContentScrollSign();
+    if (ContentScrollHorizontal()) {
+        return toward > 0 ? !CanScrollRight() : !CanScrollLeft();
+    }
+    return toward > 0 ? !CanScrollDown() : !CanScrollUp();
+}
+
+void DisplayModel::ScrollContentBy(int forward, bool changePage) {
+    if (forward == 0) {
+        return;
+    }
+    if (!ScrollFollowsRotation()) {
+        ScrollYBy(forward, changePage);
+        return;
+    }
+    int delta = forward * ContentScrollSign();
+    if (ContentScrollHorizontal()) {
+        ScrollXBy(delta);
+        return;
+    }
+    ScrollYBy(delta, changePage);
+}
+
+void DisplayModel::ScrollContentToEdge(bool toEnd) {
+    bool horiz = ContentScrollHorizontal();
+    int span = horiz ? viewPort.dx : viewPort.dy;
+    int canvas = horiz ? canvasSize.dx : canvasSize.dy;
+    int maxPos = std::max(0, canvas - span);
+    bool forwardIncreases = ContentScrollSign() > 0;
+    int pos = (forwardIncreases == toEnd) ? maxPos : 0;
+    if (horiz) {
+        ScrollXTo(pos);
+        return;
+    }
+    ScrollYTo(pos);
+}
+
 int DisplayModel::yOffset() {
     return viewPort.y;
 }
@@ -3019,8 +3203,13 @@ float DisplayModel::MaxZoomForDocument() const {
     // room to spare for margins, page spacing and the arithmetic done on positions
     constexpr float kMaxCanvasSize = (float)(1 << 29);
 
-    float totalDy = 0;
-    float maxDx = 0;
+    bool alongX = false;
+    if (gSettings && gSettings->continuousScrollFollowsRotation && IsContinuous(GetDisplayMode())) {
+        int rot = NormalizeRotation(rotation);
+        alongX = rot == 90 || rot == 270;
+    }
+    float totalMain = 0;
+    float maxCross = 0;
     int nPages = PageCount();
     for (int pageNo = 1; pageNo <= nPages; pageNo++) {
         RectF box = PageMediaBoxForLayout(pageNo);
@@ -3030,12 +3219,17 @@ float DisplayModel::MaxZoomForDocument() const {
         if (pageRotation == 90 || pageRotation == 270) {
             std::swap(dx, dy);
         }
-        totalDy += dy;
-        maxDx = std::max(maxDx, dx);
+        if (alongX) {
+            totalMain += dx;
+            maxCross = std::max(maxCross, dy);
+        } else {
+            totalMain += dy;
+            maxCross = std::max(maxCross, dx);
+        }
     }
     // facing modes put two pages side by side
-    maxDx *= 2;
-    float largest = std::max(totalDy, maxDx);
+    maxCross *= 2;
+    float largest = std::max(totalMain, maxCross);
     if (largest <= 0) {
         return kZoomMax;
     }
@@ -3463,6 +3657,30 @@ void DisplayModel::SetScrollState(const ScrollState& state, RestorePan pan) {
         logf("  newPt:  %d,%d\n", newPt.x, newPt.y);
     }
 
+    // GoToPage landed on the content-start edge. The stored point is a screen
+    // offset from there, on whichever axis was actually scrolled.
+    if (ScrollFollowsRotation()) {
+        if (!showMarginX) {
+            viewPort.x += newPt.x;
+        }
+        if (!showMarginY) {
+            viewPort.y += newPt.y;
+        }
+        Size slack = restoringExactPan ? Size() : PanSlack();
+        viewPort.x = limitValue(viewPort.x, slack.dx, canvasSize.dx - viewPort.dx - slack.dx);
+        viewPort.y = limitValue(viewPort.y, slack.dy, canvasSize.dy - viewPort.dy - slack.dy);
+        RecalcVisibleParts();
+        EnsureMediaBoxesForVisiblePages();
+        EnsureTrimEmptyMarginsForVisiblePages();
+        RenderVisibleParts();
+        cb->UpdateScrollbars(this, canvasSize);
+        cb->PageNoChanged(this, st.page);
+        RepaintDisplay();
+        stableNavPoint.suppress = false;
+        RememberExactScroll(state, pan, st.page);
+        return;
+    }
+
     // Also show the margins, if this has been requested
     if (showMarginX) {
         newPt.x = -1;
@@ -3658,11 +3876,29 @@ void DisplayModel::ScrollTo(int pageNo, RectF rect, float zoom) {
         scroll.y = std::min(scroll.y, destPage->pos.dy - viewPort.dy + windowMargin.top);
     }
     scroll.y = std::max(scroll.y, 0);
-    if (isVirtualZoom) {
-        // already on pageNo; scroll.y is page-relative, ScrollYTo() takes a document offset
-        if (scroll.y > 0) {
-            GoToPage(pageNo, scroll.y, false, -1);
+    // scroll.y is a screen-down offset. When the stack follows rotation that
+    // is not the content axis, so it stays a screen Y after the content landing.
+    auto scrollScreenY = [&]() {
+        if (scroll.y <= 0) {
+            return;
         }
+        if (!ScrollFollowsRotation()) {
+            GoToPage(pageNo, scroll.y, false, -1);
+            return;
+        }
+        PageInfo* pi = GetPageInfo(pageNo);
+        if (!pi) {
+            return;
+        }
+        int y = pi->pos.y - windowMargin.top + scroll.y;
+        y = limitValue(y, 0, std::max(0, canvasSize.dy - viewPort.dy));
+        ScrollYTo(y);
+    };
+    if (isVirtualZoom) {
+        scrollScreenY();
+    } else if (ScrollFollowsRotation()) {
+        GoToPage(pageNo, 0, true, -1);
+        scrollScreenY();
     } else {
         GoToPage(pageNo, scroll.y, true, -1);
     }

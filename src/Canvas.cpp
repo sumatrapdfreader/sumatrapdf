@@ -401,6 +401,43 @@ static void OnVScroll(MainWindow* win, WPARAM wp) {
         return;
     }
 
+    // Page Up/Down follow the rotated stack. Arrow keys stay on this scrollbar.
+    DisplayModel* dm = win->AsFixed();
+    if (dm && dm->ScrollFollowsRotation() && msg != SB_LINEUP && msg != SB_LINEDOWN && msg != SB_THUMBTRACK) {
+        bool handled = true;
+        int span = dm->ContentScrollHorizontal() ? dm->GetViewPort().dx : dm->GetViewPort().dy;
+        switch (msg) {
+            case SB_TOP:
+                dm->ScrollContentToEdge(false);
+                break;
+            case SB_BOTTOM:
+                dm->ScrollContentToEdge(true);
+                break;
+            case SB_PAGEUP:
+                dm->ScrollContentBy(-span, false);
+                break;
+            case SB_PAGEDOWN:
+                dm->ScrollContentBy(span, false);
+                break;
+            case kSbHalfPageUp:
+                dm->ScrollContentBy(-span / 2, false);
+                break;
+            case kSbHalfPageDown:
+                dm->ScrollContentBy(span / 2, false);
+                break;
+            default:
+                handled = false;
+                break;
+        }
+        if (handled) {
+            ReadAloudOnUserViewChanged(win);
+            if (scrollDown || scrollUp) {
+                OnDocumentVerticalScrollIntent(win, scrollDown);
+            }
+            return;
+        }
+    }
+
     // Original logic for other display modes
 
     // SmoothScroll eases wheel input and arrow-key / scrollbar line steps
@@ -3638,13 +3675,25 @@ static LRESULT CanvasOnMouseWheel(MainWindow* win, UINT msg, WPARAM wp, LPARAM l
         if (scrollBy == 0) {
             return 0;
         }
-        if (hScroll) {
+        if (dm->ScrollFollowsRotation()) {
+            if (hScroll && dm->ContentScrollHorizontal()) {
+                dm->ScrollYBy(scrollBy, false);
+            } else if (hScroll) {
+                dm->ScrollXBy(scrollBy);
+            } else {
+                dm->ScrollContentBy(scrollBy, gSettings->scrollEdgeTurnsPage);
+            }
+        } else if (hScroll) {
             dm->ScrollXBy(scrollBy);
         } else {
             dm->ScrollYBy(scrollBy, gSettings->scrollEdgeTurnsPage);
         }
         if (ScrollbarsUseOverlay()) {
-            OverlayScrollbarNotifyScroll(hScroll ? win->overlayScrollH : win->overlayScrollV);
+            bool notifyH = hScroll;
+            if (dm->ScrollFollowsRotation() && dm->ContentScrollHorizontal()) {
+                notifyH = !hScroll;
+            }
+            OverlayScrollbarNotifyScroll(notifyH ? win->overlayScrollH : win->overlayScrollV);
         }
         ReadAloudOnUserViewChanged(win);
         return 0;
@@ -3671,6 +3720,36 @@ static LRESULT CanvasOnMouseWheel(MainWindow* win, UINT msg, WPARAM wp, LPARAM l
     }
 
     win->wheelAccumDelta += delta;
+    // Unshifted wheel follows the rotated stack. Shift+wheel stays the other axis.
+    if (dm && dm->ScrollFollowsRotation() && (!hScroll || dm->ContentScrollHorizontal())) {
+        int line = DpiScale(ScrollLineAmount(gSettings->scrollLineAmount));
+        bool crossY = hScroll && dm->ContentScrollHorizontal();
+        if (win->wheelAccumDelta < 0) {
+            while (win->wheelAccumDelta <= -gDeltaPerLine) {
+                if (crossY) {
+                    dm->ScrollYBy(line, false);
+                } else {
+                    dm->ScrollContentBy(line, false);
+                }
+                win->wheelAccumDelta += gDeltaPerLine;
+            }
+        } else {
+            while (win->wheelAccumDelta >= gDeltaPerLine) {
+                if (crossY) {
+                    dm->ScrollYBy(-line, false);
+                } else {
+                    dm->ScrollContentBy(-line, false);
+                }
+                win->wheelAccumDelta -= gDeltaPerLine;
+            }
+        }
+        if (ScrollbarsUseOverlay()) {
+            bool contentH = dm->ContentScrollHorizontal() && !crossY;
+            OverlayScrollbarNotifyScroll(contentH ? win->overlayScrollH : win->overlayScrollV);
+        }
+        ReadAloudOnUserViewChanged(win);
+        return 0;
+    }
     int prevScrollPos = WheelScrollPosOrTarget(win);
 
     UINT scrollMsg = hScroll ? WM_HSCROLL : WM_VSCROLL;
