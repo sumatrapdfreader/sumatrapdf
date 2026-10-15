@@ -1367,6 +1367,7 @@
     <ClCompile Include="..\ext\tesseract\src\arch\dotproduct.cpp" />
     <ClCompile Include="..\ext\tesseract\src\arch\dotproductavx.cpp" />
     <ClCompile Include="..\ext\tesseract\src\arch\dotproductfma.cpp" />
+    <ClCompile Include="..\ext\tesseract\src\arch\dotproductneon.cpp" />
     <ClCompile Include="..\ext\tesseract\src\arch\dotproductsse.cpp" />
     <ClCompile Include="..\ext\tesseract\src\arch\intsimdmatrix.cpp" />
     <ClCompile Include="..\ext\tesseract\src\arch\intsimdmatrixavx2.cpp" />

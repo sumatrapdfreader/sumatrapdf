@@ -725,6 +725,9 @@
     <ClCompile Include="..\ext\tesseract\src\arch\dotproductfma.cpp">
       <Filter>tesseract\src\arch</Filter>
     </ClCompile>
+    <ClCompile Include="..\ext\tesseract\src\arch\dotproductneon.cpp">
+      <Filter>tesseract\src\arch</Filter>
+    </ClCompile>
     <ClCompile Include="..\ext\tesseract\src\arch\dotproductsse.cpp">
       <Filter>tesseract\src\arch</Filter>
     </ClCompile>
