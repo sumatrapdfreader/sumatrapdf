@@ -650,6 +650,8 @@ enum class ControlCmd : u16 {
     TestPlaceSignature = 135,
     // Run PDF Script's drawn buttons: examples, pick <idx>, add, remove, run
     TestPdfScript = 136,
+    // visible virtual controls (kind, name, text, client rect), or the one under a point
+    TestVirtTree = 137,
 };
 
 static_assert((u16)ControlCmd::Quit == (u16)ControlFrameCmd::Quit);
@@ -1635,6 +1637,27 @@ static void ExecuteControlRequest(ControlRequest* req) {
             int exitCode = 0;
             Str res = PDFScriptTestTemp(StringArg(req, 0), idx, &exitCode);
             AppendTestResult(req, exitCode, res);
+            break;
+        }
+
+        case ControlCmd::TestVirtTree: {
+            Str action = StringArg(req, 0);
+            str::Builder out;
+            if (str::Eq(action, StrL("hit"))) {
+                Str cls = StringArg(req, 1);
+                i32 x = 0;
+                i32 y = 0;
+                if (len(cls) == 0 || !IntArg(req, 2, x) || !IntArg(req, 3, y)) {
+                    AppendError(req, StrL("TestVirtTree hit expects string class, int x, int y"));
+                    break;
+                }
+                if (!AppendVirtHit(out, cls, x, y)) {
+                    out.Append(StrL("NONE\n"));
+                }
+            } else {
+                AppendVirtTreeDump(out, action);
+            }
+            AppendTestResult(req, 0, ToStrTemp(out));
             break;
         }
 

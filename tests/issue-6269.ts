@@ -5,17 +5,16 @@
 // Run: bun tests/issue-6269.ts [--no-build]
 
 import { dlopen, FFIType } from "bun:ffi";
+import type { ControlClient, LayoutRect } from "./control.ts";
 import { IS_WIN } from "./host.ts";
 import { runStandalone, USE_NG } from "./util.ts";
 import {
-  captureWindowPixels,
   clientToScreen,
   ensureModifierKeysUp,
   enumWindows,
   getClassName,
   getForegroundWindow,
   getWindowPid,
-  getWindowRect,
   isWindowVisible,
   MK_LBUTTON,
   packCoords,
@@ -86,55 +85,27 @@ function setClipboard(value: string): void {
   }
 }
 
-// the five brand stripes at the left of the header. Other saturated pixels
-// in that band (a focus ring, an icon) must not pull the point off the title.
-function findLogo(canvas: number): { x: number; y: number } | null {
-  const pix = captureWindowPixels(canvas, "client");
-  if (!pix) {
-    return null;
+const kCanvasClass = "SUMATRA_PDF_CANVAS";
+const kAboutHoverClass = "SUMATRA_ABOUT_HOVER";
+
+function centerOf(r: LayoutRect): { x: number; y: number } {
+  return { x: r.x + Math.floor(r.dx / 2), y: r.y + Math.floor(r.dy / 2) };
+}
+
+// Client rect of a named virtual control. The hover and the click still use the real cursor.
+async function waitNamed(client: ControlClient, className: string, name: string): Promise<LayoutRect> {
+  const deadline = Date.now() + 3000;
+  for (;;) {
+    const rows = await client.virtTree(className);
+    const hit = rows.find((r) => r.name === name && r.rect.dx > 0 && r.rect.dy > 0);
+    if (hit) {
+      return hit.rect;
+    }
+    if (Date.now() > deadline) {
+      throw new Error(`issue-6269: no ${name} in ${className}`);
+    }
+    await sleep(40);
   }
-  let minX = pix.w;
-  const yMax = Math.min(pix.h, 80);
-  const hits: { x: number; y: number }[] = [];
-  for (let y = 0; y < yMax; y++) {
-    for (let x = 0; x < pix.w; x++) {
-      const i = (y * pix.w + x) * 4;
-      const b = pix.data[i]!;
-      const g = pix.data[i + 1]!;
-      const r = pix.data[i + 2]!;
-      const spread = Math.max(r, g, b) - Math.min(r, g, b);
-      if (spread < 40 || r + g + b > 680) {
-        continue;
-      }
-      hits.push({ x, y });
-      if (x < minX) {
-        minX = x;
-      }
-    }
-  }
-  let n = 0;
-  let maxX = 0;
-  let minY = pix.h;
-  let maxY = 0;
-  for (const p of hits) {
-    if (p.x > minX + 40) {
-      continue;
-    }
-    n++;
-    if (p.x > maxX) {
-      maxX = p.x;
-    }
-    if (p.y < minY) {
-      minY = p.y;
-    }
-    if (p.y > maxY) {
-      maxY = p.y;
-    }
-  }
-  if (n < 20) {
-    return null;
-  }
-  return { x: Math.round((minX + maxX) / 2), y: Math.round((minY + maxY) / 2) };
 }
 
 function findHover(pid: number): number {
@@ -198,95 +169,10 @@ async function walkTo(hover: number, from: { x: number; y: number }, to: { x: nu
   }
 }
 
-function darkSpan(
-  pix: { w: number; h: number; data: Uint8Array },
-  y: number,
-): { n: number; minX: number; maxX: number } {
-  let n = 0;
-  let minX = pix.w;
-  let maxX = 0;
-  for (let x = 0; x < pix.w; x++) {
-    const i = (y * pix.w + x) * 4;
-    const sum = pix.data[i]! + pix.data[i + 1]! + pix.data[i + 2]!;
-    if (sum > 400) {
-      continue;
-    }
-    n++;
-    if (x < minX) {
-      minX = x;
-    }
-    if (x > maxX) {
-      maxX = x;
-    }
-  }
-  return { n, minX, maxX };
-}
-
-function isBlankCapture(pix: { w: number; h: number; data: Uint8Array }): boolean {
-  const y = Math.floor(pix.h / 2);
-  for (let x = 0; x < pix.w; x += 16) {
-    const i = (y * pix.w + x) * 4;
-    if (pix.data[i]! + pix.data[i + 1]! + pix.data[i + 2]! > 0) {
-      return false;
-    }
-  }
-  return true;
-}
-
-// "Copy program and machine info" is the first text row in the footer, under
-// the rule. A fixed offset from the bottom lands on the software link.
-// PW_CLIENTONLY PrintWindow sometimes returns an all-black bitmap for this
-// no-activate popup; the full-window capture still has the glyphs.
-async function findCopyPoint(hover: number): Promise<{ x: number; y: number }> {
-  const win = getWindowRect(hover);
-  const origin = clientToScreen(hover, 0, 0);
-  const offX = origin.x - win.left;
-  const offY = origin.y - win.top;
-  for (let attempt = 0; attempt < 8; attempt++) {
-    const pix = captureWindowPixels(hover, "window");
-    if (!pix || isBlankCapture(pix)) {
-      await sleep(40);
-      continue;
-    }
-    let bandY0 = -1;
-    let bandY1 = -1;
-    let minX = pix.w;
-    let maxX = 0;
-    for (let y = Math.floor(pix.h * 0.65); y < pix.h; y++) {
-      const span = darkSpan(pix, y);
-      const text = span.n >= 30 && span.maxX - span.minX >= 80 && span.minX > 16;
-      if (!text) {
-        if (bandY0 >= 0) {
-          break;
-        }
-        continue;
-      }
-      if (bandY0 < 0) {
-        bandY0 = y;
-      }
-      bandY1 = y;
-      if (span.minX < minX) {
-        minX = span.minX;
-      }
-      if (span.maxX > maxX) {
-        maxX = span.maxX;
-      }
-    }
-    if (bandY0 >= 0) {
-      return {
-        x: Math.round((minX + maxX) / 2) - offX,
-        y: Math.round((bandY0 + bandY1) / 2) - offY,
-      };
-    }
-    break;
-  }
-  throw new Error("issue-6269: could not find the Copy link");
-}
-
 // mouse-down, a gap, then mouse-up. The popup used to close inside the down,
 // so the up never reached the button.
-async function clickCopy(hover: number, from: { x: number; y: number }): Promise<void> {
-  const { x, y } = await findCopyPoint(hover);
+async function clickCopy(client: ControlClient, hover: number, from: { x: number; y: number }): Promise<void> {
+  const { x, y } = centerOf(await waitNamed(client, kAboutHoverClass, "aboutCopy"));
   await walkTo(hover, from, screenAt(hover, x, y));
   const lp = packCoords(x, y);
   sendMessage(hover, WM_LBUTTONDOWN, MK_LBUTTON, lp);
@@ -313,25 +199,15 @@ export async function testit(): Promise<void> {
     return;
   }
   setClipboard("issue-6269-sentinel");
-  const { proc, frame } = await launchControlled([]);
+  const { proc, client, frame } = await launchControlled([]);
   try {
     const canvas = findCanvas(frame);
-    let logo: { x: number; y: number } | null = null;
-    const logoDeadline = Date.now() + 3000;
-    while (Date.now() < logoDeadline && !logo) {
-      logo = findLogo(canvas);
-      if (!logo) {
-        await sleep(50);
-      }
-    }
-    if (!logo) {
-      throw new Error("issue-6269: could not find the SumatraPDF title on the home page");
-    }
+    const logo = centerOf(await waitNamed(client, kCanvasClass, "homeLogo"));
     const logoScreen = clientToScreen(canvas, logo.x, logo.y);
 
     forceForeground(frame);
     const hover = await showByHover(canvas, logo, proc.pid!);
-    await clickCopy(hover, logoScreen);
+    await clickCopy(client, hover, logoScreen);
 
     // clicking the title puts the frame in front. Copy used to fail on every
     // later try, not only on the first hover.
@@ -342,7 +218,7 @@ export async function testit(): Promise<void> {
     sendMessage(canvas, WM_LBUTTONUP, 0, lp);
     forceForeground(frame);
     const again = isWindowVisible(hover) ? hover : await showByHover(canvas, logo, proc.pid!);
-    await clickCopy(again, logoScreen);
+    await clickCopy(client, again, logoScreen);
   } finally {
     await ensureModifierKeysUp();
     await killAndWait(proc);

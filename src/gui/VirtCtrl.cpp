@@ -630,11 +630,18 @@ void VirtCtrl::SetRoot(VirtRoot* r) {
 
 //--- VirtRoot
 
+static Vec<VirtRoot*> gLiveVirtRoots;
+
 VirtRoot::VirtRoot(HWND hwnd) {
     this->hwnd = hwnd;
+    VecAppend(gLiveVirtRoots, this);
 }
 
 VirtRoot::~VirtRoot() {
+    int idx = VecFind(gLiveVirtRoots, this);
+    if (idx >= 0) {
+        VecRemoveAt(gLiveVirtRoots, idx);
+    }
     // `tops` belong to the layout tree and can outlive us; make sure they don't
     // report their destruction to a root that is gone
     ForgetTops();
@@ -733,6 +740,95 @@ void VirtRoot::Paint(Gfx* gfx, Rect clip) {
     for (VirtCtrl* w : tops) {
         w->PaintTree(gfx, bounds.TL(), c);
     }
+}
+
+// virt class=<wnd> hwnd=<n> kind=<k> name=<n|-> rect=x,y,dx,dy text=<t>
+static Str VirtClassTemp(HWND hwnd) {
+    WCHAR buf[128];
+    if (!hwnd || GetClassNameW(hwnd, buf, dimof(buf)) <= 0) {
+        return {};
+    }
+    return ToUtf8Temp(WStr(buf));
+}
+
+static void AppendSanitized(str::Builder& out, Str s) {
+    for (int i = 0; i < len(s); i++) {
+        char c = s.s[i];
+        if (c == '\n' || c == '\r') {
+            c = ' ';
+        }
+        out.AppendChar(c);
+    }
+}
+
+static void AppendVirtLine(str::Builder& out, Str cls, HWND hwnd, VirtCtrl* w) {
+    Rect r = w->BoundsInWindow();
+    if (r.dx <= 0 || r.dy <= 0) {
+        return;
+    }
+    Kind k = w->GetKind();
+    Str kindName = k ? Str(k) : StrL("none");
+    Str name = w->name ? w->name : StrL("-");
+    VirtText* text = AsVirtText(w);
+    out.Append(fmt("virt class=%s hwnd=%d kind=%s name=%s rect=%d,%d,%d,%d text=", cls, (i64)(uintptr_t)hwnd, kindName,
+                   name, r.x, r.y, r.dx, r.dy));
+    if (text) {
+        AppendSanitized(out, text->s);
+    }
+    out.AppendChar('\n');
+}
+
+static void AppendVirtCtrl(str::Builder& out, Str cls, HWND hwnd, VirtCtrl* w, int depth) {
+    if (!w || depth > 32 || !w->IsVisible()) {
+        return;
+    }
+    AppendVirtLine(out, cls, hwnd, w);
+    if (w->HasFlag(vwfPaintsOwnChildren)) {
+        return;
+    }
+    for (VirtCtrl* c : w->children) {
+        AppendVirtCtrl(out, cls, hwnd, c, depth + 1);
+    }
+}
+
+static bool VirtRootMatches(VirtRoot* root, Str classFilter, Str& clsOut) {
+    if (!root || !root->hwnd || !IsWindow(root->hwnd) || !IsWindowVisible(root->hwnd)) {
+        return false;
+    }
+    clsOut = VirtClassTemp(root->hwnd);
+    if (len(clsOut) == 0) {
+        return false;
+    }
+    return len(classFilter) == 0 || str::Eq(clsOut, classFilter);
+}
+
+void AppendVirtTreeDump(str::Builder& out, Str classFilter) {
+    for (VirtRoot* root : gLiveVirtRoots) {
+        Str cls;
+        if (!VirtRootMatches(root, classFilter, cls)) {
+            continue;
+        }
+        for (VirtCtrl* w : root->tops) {
+            AppendVirtCtrl(out, cls, root->hwnd, w, 0);
+        }
+    }
+}
+
+bool AppendVirtHit(str::Builder& out, Str className, int x, int y) {
+    for (VirtRoot* root : gLiveVirtRoots) {
+        Str cls;
+        if (!VirtRootMatches(root, className, cls)) {
+            continue;
+        }
+        ILayout* el = ElementFromPoint(root, Point{x, y}, nullptr, 0);
+        VirtCtrl* w = el ? el->AsVirtCtrl() : nullptr;
+        if (!w) {
+            continue;
+        }
+        AppendVirtLine(out, cls, root->hwnd, w);
+        return true;
+    }
+    return false;
 }
 
 ILayout* ElementFromPoint(VirtRoot* root, Point ptWindow, Point* ptLocalOut, u32 flags) {

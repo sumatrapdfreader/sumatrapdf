@@ -137,6 +137,8 @@ export enum ControlCommand {
   TestPlaceSignature = 135,
   // orig: Run PDF Script's drawn buttons: examples, pick <idx>, add, remove, run
   TestPdfScript = 136,
+  // orig: visible virtual controls, or the control under a client point
+  TestVirtTree = 137,
 }
 
 export type ControlArg = number | string | Uint8Array | ControlArg[];
@@ -173,6 +175,39 @@ export type ChapterInfo = {
 };
 
 export type LayoutRect = { x: number; y: number; dx: number; dy: number };
+
+export type VirtCtrlInfo = {
+  className: string;
+  hwnd: number;
+  kind: string;
+  // "-" when the control has no name
+  name: string;
+  rect: LayoutRect;
+  text: string;
+};
+
+const virtLineRe =
+  /^virt class=(\S+) hwnd=(-?\d+) kind=(\S+) name=(\S+) rect=(-?\d+),(-?\d+),(-?\d+),(-?\d+) text=(.*)$/;
+
+function parseVirtLine(line: string): VirtCtrlInfo {
+  const m = virtLineRe.exec(line);
+  if (!m) {
+    throw new Error(`TestVirtTree: could not parse '${line}'`);
+  }
+  return {
+    className: m[1],
+    hwnd: parseInt(m[2], 10),
+    kind: m[3],
+    name: m[4],
+    rect: {
+      x: parseInt(m[5], 10),
+      y: parseInt(m[6], 10),
+      dx: parseInt(m[7], 10),
+      dy: parseInt(m[8], 10),
+    },
+    text: m[9],
+  };
+}
 
 export type LayoutItem = {
   visible: boolean;
@@ -646,6 +681,38 @@ export class ControlClient {
       nodes,
       raw,
     };
+  }
+
+  // Visible virtual controls. className limits the dump to one window class.
+  // "hit" is the control under a client point of that class, or null.
+  async virtTree(className = ""): Promise<VirtCtrlInfo[]> {
+    const res = await this.request(ControlCommand.TestVirtTree, className ? [className] : []);
+    const code = typeof res[0] === "number" ? res[0] : -1;
+    const raw = String(res[1] ?? "");
+    if (code !== 0) {
+      throw new Error(`TestVirtTree failed: ${raw.trim() || code}`);
+    }
+    const rows: VirtCtrlInfo[] = [];
+    for (const line of raw.split("\n")) {
+      if (!line || line === "NONE") {
+        continue;
+      }
+      rows.push(parseVirtLine(line));
+    }
+    return rows;
+  }
+
+  async virtHit(className: string, x: number, y: number): Promise<VirtCtrlInfo | null> {
+    const res = await this.request(ControlCommand.TestVirtTree, ["hit", className, x, y]);
+    const code = typeof res[0] === "number" ? res[0] : -1;
+    const raw = String(res[1] ?? "").trim();
+    if (code !== 0) {
+      throw new Error(`TestVirtTree hit failed: ${raw || code}`);
+    }
+    if (!raw || raw === "NONE") {
+      return null;
+    }
+    return parseVirtLine(raw);
   }
 
   // Notifications are drawn over the document and linger for ~2s, so a test

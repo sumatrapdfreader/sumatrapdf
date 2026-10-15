@@ -345,6 +345,7 @@ AboutCtrl::AboutCtrl() {
     note = new VirtText({});
     AddChild(note);
     copyLink = new VirtLink(Tr("Copy program and machine info"));
+    copyLink->name = StrL("aboutCopy");
     copyLink->withUnderline = true;
     copyLink->underlineOffsetY = -3;
     copyLink->onClick = MkFunc1Void(OnCopyProgramInfo);
@@ -2743,6 +2744,7 @@ static HomeChromeCtrl* EnsureHomeChrome(MainWindow* win) {
     // the About dropdown.
     chrome->logoRow = new HomeLogoRow();
     chrome->logo = new SumatraLogo();
+    chrome->logo->name = StrL("homeLogo");
     chrome->logo->SetFlag(vwfNoHitTest, false);
     chrome->logo->onMouseEnter = MkFunc0(OnHomeLogoEnter, win);
     chrome->logo->onMouseLeave = MkFunc0(OnHomeLogoLeave, win);
