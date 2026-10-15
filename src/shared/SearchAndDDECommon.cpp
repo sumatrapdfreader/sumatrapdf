@@ -2171,9 +2171,7 @@ static bool LaunchInverseSearchCmd(Str cmdLine) {
             rest = Str(rest.s + spaceIdx + 1, rest.len - spaceIdx - 1);
         }
     }
-    while (rest.len > 0 && rest.s[0] == ' ') {
-        rest = Str(rest.s + 1, rest.len - 1);
-    }
+    str::TrimChar(rest, ' ');
     return LaunchFileShell(exe, rest);
 #endif
 }

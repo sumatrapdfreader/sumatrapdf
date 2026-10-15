@@ -469,9 +469,7 @@ static TempStr FullUrlTemp(BrowserView* bv, Str url) {
         return str::DupTemp(url);
     }
     Str rel = url;
-    while (len(rel) > 0 && rel.s[0] == '/') {
-        rel = Str(rel.s + 1, rel.len - 1);
-    }
+    str::TrimAny(rel, "/");
     return str::JoinTemp(bv->virtualHost, rel);
 }
 

@@ -1395,20 +1395,12 @@ static float gZoomLevelsChm[] = {
 
 // "#ff0000 #00ff00 ..." => list of colors. maxColors of 0 means no limit
 void ParseColorList(Str s, Vec<Color>& out, int maxColors) {
-    int i = 0;
-    while (i < s.len && (maxColors == 0 || len(out) < maxColors)) {
-        while (i < s.len && s.s[i] == ' ') {
-            i++;
-        }
-        if (i >= s.len) {
+    while (Str token = str::NextWord(s)) {
+        if (maxColors != 0 && len(out) >= maxColors) {
             break;
         }
-        int start = i;
-        while (i < s.len && s.s[i] != ' ') {
-            i++;
-        }
         ParsedColor parsed;
-        ParseColor(parsed, Str(s.s + start, i - start));
+        ParseColor(parsed, token);
         if (parsed.parsedOk) {
             VecAppend(out, parsed.col);
         }

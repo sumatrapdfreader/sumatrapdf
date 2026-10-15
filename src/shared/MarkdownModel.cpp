@@ -102,10 +102,7 @@ static TempStr RelPathFromBaseTemp(Str filePath, Str baseDir) {
         return path::GetBaseNameTemp(filePath);
     }
     Str rel = normFile;
-    while (len(rel) > 0 && (rel.s[0] == '\\' || rel.s[0] == '/')) {
-        rel.s++;
-        rel.len--;
-    }
+    str::TrimAny(rel, "/\\");
     if (len(rel) == 0) {
         return path::GetBaseNameTemp(filePath);
     }

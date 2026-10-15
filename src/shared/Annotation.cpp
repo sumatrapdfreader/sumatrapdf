@@ -1146,19 +1146,7 @@ static bool IsCssItalic(Str v) {
 // "bold 12pt Georgia" or, the way Acrobat writes it, "Helvetica,sans-serif 12.0pt"
 static void ParseCssFontShorthand(Str v, Str& family, int& style) {
     str::Builder names;
-    int i = 0;
-    while (i < len(v)) {
-        while (i < len(v) && str::IsWs(v.s[i])) {
-            i++;
-        }
-        int start = i;
-        while (i < len(v) && !str::IsWs(v.s[i])) {
-            i++;
-        }
-        Str token(v.s + start, i - start);
-        if (len(token) == 0) {
-            break;
-        }
+    while (Str token = str::NextWord(v)) {
         if (IsCssBold(token)) {
             style |= kFreeTextBold;
             continue;

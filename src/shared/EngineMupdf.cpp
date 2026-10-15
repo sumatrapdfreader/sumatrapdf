@@ -429,13 +429,6 @@ static int ResolveLinkChapterOnly(fz_context* ctx, fz_document* doc, Str uri) {
 // MuPDF html/md link URIs for relative hrefs are built with an empty base file,
 // so e.g. [other](other.md) becomes "/other.md". Treat those like the HTML
 // ebook engine: launch a local file Sumatra can open.
-static void SkipLeadingPathSeparators(Str& path) {
-    while (len(path) > 0 && (path.s[0] == '/' || path.s[0] == '\\')) {
-        path.s++;
-        path.len--;
-    }
-}
-
 static bool IsMupdfLocalFileLink(Str uri, TempStr* pathOut, Str* fragmentOut) {
     if (len(uri) == 0 || uri.s[0] == '#') {
         return false;
@@ -452,7 +445,7 @@ static bool IsMupdfLocalFileLink(Str uri, TempStr* pathOut, Str* fragmentOut) {
         fragment = Str(fragment.s + 1);
     }
     // MuPDF uses unix paths; strip a leading slash from relative URIs.
-    SkipLeadingPathSeparators(pathStr);
+    str::TrimAny(pathStr, "/\\");
     if (len(pathStr) == 0) {
         return false;
     }

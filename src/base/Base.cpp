@@ -2357,12 +2357,11 @@ bool ContainsCharAny(Str s, Str chars) {
 }
 
 Str SliceFromCharLast(Str str, char c) {
-    for (int i = str.len - 1; i >= 0; i--) {
-        if (str.s[i] == c) {
-            return Str(str.s + i, str.len - i);
-        }
+    int i = LastIndexOfChar(str, c);
+    if (i < 0) {
+        return {};
     }
-    return {};
+    return Str(str.s + i, str.len - i);
 }
 
 int IndexOf(Str buf, Str toFind) {
