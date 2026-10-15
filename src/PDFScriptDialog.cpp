@@ -531,6 +531,38 @@ void PDFScriptWnd::Create(MainWindow* owner, Str path) {
     script->SetFocus();
 }
 
+// -dbg-control, what the drawn buttons do: "examples" shows / hides the list,
+// "pick" selects example `idx`, "add" / "remove" add an argument row or remove
+// the last one, "run" runs the script
+TempStr PDFScriptTestTemp(Str action, int idx, int* exitCodeOut) {
+    *exitCodeOut = 2;
+    PDFScriptWnd* w = gScriptWnd;
+    if (!w || !w->examples) {
+        return str::DupTemp(StrL("NOTREADY no-dialog"));
+    }
+    if (str::Eq(action, StrL("examples"))) {
+        w->OnExamples();
+    } else if (str::Eq(action, StrL("pick"))) {
+        if (idx < 0 || idx >= PDFScriptCount()) {
+            return fmt("ERR no-example %d", idx);
+        }
+        w->examples->SetCurrentSelection(idx);
+        w->OnExample();
+    } else if (str::Eq(action, StrL("add"))) {
+        w->OnAdd();
+    } else if (str::Eq(action, StrL("remove"))) {
+        if (len(w->rows) == 0) {
+            return str::DupTemp(StrL("ERR no-argument"));
+        }
+        QueueDeleteScriptArg(w->rows[len(w->rows) - 1]);
+    } else if (str::Eq(action, StrL("run"))) {
+        w->OnRun();
+    }
+    *exitCodeOut = 0;
+    bool shown = w->examplesBox->GetVisibility() != Visibility::Collapse;
+    return fmt("OK shown=%d sel=%d", shown ? 1 : 0, w->examples->GetCurrentSelection());
+}
+
 static void ClearScriptWnd() {
     gScriptWnd = nullptr;
     ++gScriptRunId;

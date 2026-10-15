@@ -4,12 +4,11 @@ import { ControlCommand, type ControlClient } from "./control.ts";
 import { websiteDocsDir } from "../cmd/util.ts";
 import { IS_MAC } from "./host.ts";
 import { cmdId, EXE, pollUntil, runStandalone, tmpPath, USE_NG } from "./util.ts";
-import { clickAt, killAndWait, launchControlled, sendCommand } from "./win-automation.ts";
+import { killAndWait, launchControlled, sendCommand } from "./win-automation.ts";
 import {
   enumChildWindows,
   enumWindows,
   getClassName,
-  getClientRect,
   getControlText,
   getWindowPid,
   getWindowLong,
@@ -17,12 +16,7 @@ import {
   getWindowText,
   isWindowVisible,
   sendText,
-  clientToScreen,
   captureWindowDCRegionPixels,
-  postMessage,
-  WM_KEYDOWN,
-  VK_DOWN,
-  VK_HOME,
 } from "./winapi.ts";
 
 const PDF = resolve(import.meta.dir, "issue-1189.pdf");
@@ -178,7 +172,7 @@ async function ngUi(client: ControlClient) {
   };
 }
 
-async function originalUi(pid: number) {
+async function originalUi(pid: number, client: ControlClient) {
   let dialog = 0;
   await pollUntil(
     () => {
@@ -214,7 +208,9 @@ async function originalUi(pid: number) {
     async argumentGap() {
       const fields = argEdits();
       const last = getWindowRect(fields[fields.length - 1]!);
-      return (getWindowRect(scriptEdit()).top - last.bottom) / (last.bottom - last.top);
+      // Add argument sits in a row of its own under the last field
+      const addRow = fields.length > 1 ? getWindowRect(fields[1]!).top - getWindowRect(fields[0]!).top : 0;
+      return (getWindowRect(scriptEdit()).top - last.bottom - addRow) / (last.bottom - last.top);
     },
     async checkBorder() {
       const fields = argEdits();
@@ -239,14 +235,10 @@ async function originalUi(pid: number) {
       return getWindowRect(scriptEdit()).top - getWindowRect(argEdits()[0]!).top;
     },
     async add() {
-      const origin = clientToScreen(dialog, 0, 0);
-      await clickAt(dialog, getClientRect(dialog).right - 40, getWindowRect(scriptEdit()).top - origin.y - 20, 0);
+      await client.request(ControlCommand.TestPdfScript, ["add", -1]);
     },
     async remove() {
-      const fields = argEdits();
-      const rc = getWindowRect(fields[fields.length - 1]!);
-      const origin = clientToScreen(dialog, 0, 0);
-      await clickAt(dialog, getClientRect(dialog).right - 26, (rc.top + rc.bottom) / 2 - origin.y, 0);
+      await client.request(ControlCommand.TestPdfScript, ["remove", -1]);
     },
     async setArg(text: string) {
       const fields = argEdits();
@@ -256,8 +248,7 @@ async function originalUi(pid: number) {
       sendText(scriptEdit(), text);
     },
     async run() {
-      const rc = getClientRect(dialog);
-      await clickAt(dialog, rc.right - 50, rc.bottom - 20, 0);
+      await client.request(ControlCommand.TestPdfScript, ["run", -1]);
     },
     async output() {
       const h = outputEdit();
@@ -266,17 +257,13 @@ async function originalUi(pid: number) {
     async args() {
       return argEdits().map((h) => getControlText(h));
     },
+    // the list's buttons and rows are drawn, not windows: the control channel
+    // does what clicking them does
     async examples() {
-      const origin = clientToScreen(dialog, 0, 0);
-      const editor = getWindowRect(scriptEdit());
-      await clickAt(dialog, editor.left - origin.x + 70, getClientRect(dialog).bottom - 20, 0);
+      await client.request(ControlCommand.TestPdfScript, ["examples", -1]);
     },
-    async pickExample(index: number, name: string) {
-      const origin = clientToScreen(dialog, 0, 0);
-      const editor = getWindowRect(scriptEdit());
-      await clickAt(dialog, editor.right - origin.x + 24, 18, 0);
-      postMessage(dialog, WM_KEYDOWN, VK_HOME, 0);
-      for (let i = 0; i < index; i++) postMessage(dialog, WM_KEYDOWN, VK_DOWN, 0);
+    async pickExample(index: number) {
+      await client.request(ControlCommand.TestPdfScript, ["pick", index]);
     },
     async script() {
       return getControlText(scriptEdit());
@@ -296,7 +283,7 @@ export async function testit(): Promise<void> {
   try {
     await client.waitForRenderIdle();
     sendCommand(frame, cmdId("CmdRunPDFScript"));
-    const ui = USE_NG ? await ngUi(client) : await originalUi(proc.pid!);
+    const ui = USE_NG ? await ngUi(client) : await originalUi(proc.pid!, client);
     if (existsSync(join(websiteDocsDir, "scripts"))) {
       if (!(await ui.script()).includes("\n")) throw new Error("initial script lost its line breaks");
       if (!(await ui.script()).startsWith("// Info: Print the page count of a PDF.")) {
@@ -315,7 +302,8 @@ export async function testit(): Promise<void> {
         },
       );
       if (!(await ui.script()).startsWith("// Info:")) throw new Error("example script starts with empty lines");
-      if ((await ui.argumentRowGap()) > 0.5) throw new Error("argument fields still have label rows");
+      // a label row over each field would put a field's height between them
+      if ((await ui.argumentRowGap()) > 1) throw new Error("argument fields still have label rows");
       const argumentIds = (await ui.argumentIds()).slice(0, 1);
       await ui.examples();
       await ui.add();

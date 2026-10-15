@@ -648,6 +648,8 @@ enum class ControlCmd : u16 {
     TestSaveFileName = 134,
     // places the signature being placed at a canvas point (pixels), as a click does
     TestPlaceSignature = 135,
+    // Run PDF Script's drawn buttons: examples, pick <idx>, add, remove, run
+    TestPdfScript = 136,
 };
 
 bool ParseArg(PacketReader& r, ControlArg** argOut) {
@@ -1619,6 +1621,15 @@ static void ExecuteControlRequest(ControlRequest* req) {
             }
             FinishSignaturePlacement(win, x, y, true);
             AppendTestResult(req, 0, StrL("OK"));
+            break;
+        }
+
+        case ControlCmd::TestPdfScript: {
+            i32 idx = -1;
+            IntArg(req, 1, idx);
+            int exitCode = 0;
+            Str res = PDFScriptTestTemp(StringArg(req, 0), idx, &exitCode);
+            AppendTestResult(req, exitCode, res);
             break;
         }
 

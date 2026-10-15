@@ -135,6 +135,8 @@ export enum ControlCommand {
   TestSaveFileName = 134,
   // places the signature being placed at a canvas point (pixels), as a click does
   TestPlaceSignature = 135,
+  // orig: Run PDF Script's drawn buttons: examples, pick <idx>, add, remove, run
+  TestPdfScript = 136,
 }
 
 export type ControlArg = number | string | Uint8Array | ControlArg[];

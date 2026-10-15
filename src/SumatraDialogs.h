@@ -113,6 +113,7 @@ struct Print_Advanced_Data {
 
 HPROPSHEETPAGE CreatePrintAdvancedPropSheet(Print_Advanced_Data* data);
 void ShowPDFScriptDialog(MainWindow* win);
+TempStr PDFScriptTestTemp(Str action, int idx, int* exitCodeOut);
 
 // the buttons of the redrawn dialogs: the one action filled with the text
 // color, Cancel outlined, the quiet ones plain words that fill on hover
