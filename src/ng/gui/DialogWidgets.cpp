@@ -867,6 +867,9 @@ gp::El* DlgHairline(gp::Ctx* cx) {
     return gp::Div(cx->a)->W(gp::kFill)->H(1)->Shrink0()->Bg(ToGpui(ThemeEdgeColor()));
 }
 
+// a black fill moved by kDlgBtnShift is still black; hover has to read as a lighter gray
+constexpr int kFilledDarkHoverShift = 48;
+
 // gpui's button variants only tint their color, so it is a plain element
 gp::El* DlgFilledButton(gp::Ctx* cx, gp::Str id, Str label, gp::Listener onClick, bool disabled, float fontPx) {
     // orig's access key: the '&' goes, the letter is underlined
@@ -889,8 +892,9 @@ gp::El* DlgFilledButton(gp::Ctx* cx, gp::Str id, Str label, gp::Listener onClick
         b->Child(gp::TextEl(cx->a, text)->Font(fontPx)->Fg(ToGpui(ThemeWindowTextDisabledColor())));
         return DlgAccelUnderline(cx, b, text);
     }
+    int hoverShift = IsLightColor(colText) ? kDlgBtnShift : kFilledDarkHoverShift;
     b->Bg(ToGpui(colText))
-        ->HoverBg(ToGpui(AccentColor(colText, kDlgBtnShift)))
+        ->HoverBg(ToGpui(AccentColor(colText, hoverShift)))
         ->Cursor(gp::CursorKind::Pointer)
         ->PathClick(id)
         ->OnClick(onClick);

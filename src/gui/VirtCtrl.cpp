@@ -32,6 +32,8 @@ VirtButton* NewThemedButton(HWND hwndForDpi, Str text, PlatformFont* font, bool 
 
 constexpr int kStyledBtnHoverShift = 14;
 constexpr int kStyledBtnFaintShift = 25;
+// a black fill moved by 14 is still black; hover has to read as a lighter gray
+constexpr int kFilledDarkHoverShift = 48;
 
 // the colors of `style` in the current gui palette
 void SetVirtButtonStyle(VirtButton* b, VirtButtonStyle style) {
@@ -58,7 +60,11 @@ void SetVirtButtonStyle(VirtButton* b, VirtButtonStyle style) {
     }
     b->SetColor(kColBtnText, fg);
     b->SetColor(kColBtnBg, bg);
-    b->SetColor(kColBtnBgHover, AccentColor(bg, kStyledBtnHoverShift));
+    int hoverShift = kStyledBtnHoverShift;
+    if (style == VirtButtonStyle::Filled && !IsLightColor(bg)) {
+        hoverShift = kFilledDarkHoverShift;
+    }
+    b->SetColor(kColBtnBgHover, AccentColor(bg, hoverShift));
     b->SetColor(kColBtnBorder, border);
 }
 
