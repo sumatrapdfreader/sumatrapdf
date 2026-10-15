@@ -4211,6 +4211,12 @@ int VirtFixedLinesText::FixedDy() {
     return (lineDy * nLines) + (2 * (nLines - 1)) + padding.top + padding.bottom;
 }
 
+// wraps to the width it is given. The unwrapped line is not a minimum, or a
+// long note becomes the window's minimum width instead of wrapping inside it.
+int VirtFixedLinesText::MinIntrinsicWidth(int) {
+    return 0;
+}
+
 // the height is ours in all three, or the box would follow the text: it is
 // laid out (and sized) while empty, and every text is a different length
 Size VirtFixedLinesText::GetIdealSize() {

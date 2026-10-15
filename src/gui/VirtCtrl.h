@@ -968,6 +968,7 @@ struct VirtFixedLinesText : VirtRichText {
     Color borderCol = kColorUnset;
 
     int FixedDy();
+    int MinIntrinsicWidth(int height) override;
     int MinIntrinsicHeight(int width) override;
     Size Layout(Constraints bc) override;
     Size GetIdealSize() override;
