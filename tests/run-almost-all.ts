@@ -434,6 +434,7 @@ export const tests: NamedTest[] = [
   // first: it drives the home page, whose thumbnail selection follows the
   // mouse, so it is the one test that cares what the machine was doing before
   ["issue-5978", issue5978],
+  ["read-aloud-lazy-chapters", readAloudLazyChapters],
   ["jbig2-resize-overflow", jbig2ResizeOverflow],
   ["selection-toolbar-move", selectionToolbarMove],
   ["issue-6232-path-edit", issue6232PathEdit],
@@ -446,7 +447,6 @@ export const tests: NamedTest[] = [
   ["pdf-save-dedup-stream", pdfSaveDedupStream],
   ["issue-5446", issue5446],
   ["annot-color-dropdown", annotColorDropdown],
-  ["read-aloud-lazy-chapters", readAloudLazyChapters],
   ["free-text-edit-toolbar", freeTextEditToolbar],
   ["free-text-edit-zoom", freeTextEditZoom],
   ["pdf-edit-toolbar-interaction", pdfEditToolbarInteraction],

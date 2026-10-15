@@ -8,7 +8,7 @@
 
 import { mkdirSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
-import { ControlClient, ControlCommand, withControlledSumatra } from "./control.ts";
+import { type ChapterInfo, ControlClient, ControlCommand, withControlledSumatra } from "./control.ts";
 import { makeEpub } from "./epub-relayout-stale-page.ts";
 import { cmdId, EXE, runStandalone, SLOW_BUILD_FACTOR, tmpPath, writeAppdata } from "./util.ts";
 import { sleep } from "./winapi.ts";
@@ -42,6 +42,20 @@ async function mapState(client: ControlClient): Promise<MapState> {
   };
 }
 
+// Open-next closes the current doc before the next file finishes loading, so
+// TestChapterInfo answers NOTREADY in that gap. Keep polling until the deadline.
+async function chapterInfoReady(client: ControlClient, deadline: number): Promise<ChapterInfo | null> {
+  try {
+    return await client.chapterInfo();
+  } catch (e) {
+    const msg = e instanceof Error ? e.message : String(e);
+    if (msg.includes("NOTREADY") && Date.now() <= deadline) {
+      return null;
+    }
+    throw e;
+  }
+}
+
 export async function testit(): Promise<void> {
   const dir = tmpPath("read-aloud-lazy-chapters-data");
   mkdirSync(dir, { recursive: true });
@@ -71,13 +85,13 @@ export async function testit(): Promise<void> {
       await client.setChapterLayoutHold(true);
       sendCommandSync(frame, cmdId("CmdOpenNextFileInFolder"));
       const deadline = Date.now() + 30_000 * SLOW_BUILD_FACTOR;
-      let info = await client.chapterInfo();
-      while (info.chapterCount < 2) {
+      let info: ChapterInfo | null = null;
+      while (!info || info.chapterCount < 2) {
         if (Date.now() > deadline) {
           throw new Error(`read-aloud-lazy-chapters: the chaptered book did not open: ${JSON.stringify(info)}`);
         }
         await sleep(100);
-        info = await client.chapterInfo();
+        info = await chapterInfoReady(client, deadline);
       }
       sendCommandSync(frame, cmdId("CmdReadAloudFromTopPage"));
       if (info.laidOut >= info.chapterCount) {
@@ -89,12 +103,14 @@ export async function testit(): Promise<void> {
 
       // compare once every chapter is laid out, so the span is in final page numbers
       for (;;) {
-        const ci = await client.chapterInfo();
-        if (ci.laidOut >= ci.chapterCount) {
+        const ci = await chapterInfoReady(client, deadline);
+        if (ci && ci.laidOut >= ci.chapterCount) {
           break;
         }
         if (Date.now() > deadline) {
-          throw new Error(`read-aloud-lazy-chapters: only ${ci.laidOut} of ${ci.chapterCount} chapters laid out`);
+          throw new Error(
+            `read-aloud-lazy-chapters: only ${ci?.laidOut ?? "NOTREADY"} of ${ci?.chapterCount ?? "?"} chapters laid out`,
+          );
         }
         await sleep(100);
       }
