@@ -41,6 +41,7 @@ import {
   getWindowRect,
   postMessage,
   readWindowDCColumn,
+  withWindowDC,
   setProcessDpiAware,
   setTaskbarAutoHide,
   sleep,
@@ -69,9 +70,11 @@ function sampleChrome(hwnd: number): number[] {
   const r = getWindowRect(hwnd);
   const w = r.right - r.left;
   const px: number[] = [];
-  for (let x = 4; x < w - 4; x += X_STEP) {
-    px.push(...readWindowDCColumn(hwnd, x, 0, STRIP_DY));
-  }
+  withWindowDC(hwnd, () => {
+    for (let x = 4; x < w - 4; x += X_STEP) {
+      px.push(...readWindowDCColumn(hwnd, x, 0, STRIP_DY));
+    }
+  });
   return px;
 }
 

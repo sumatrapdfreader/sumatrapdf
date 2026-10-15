@@ -37,6 +37,7 @@ import {
   getWindowRect,
   isWindowVisible,
   readWindowDCColumn,
+  withWindowDC,
   SM_CXVSCROLL,
   WM_LBUTTONDOWN,
   WM_LBUTTONUP,
@@ -488,9 +489,11 @@ export function topChromePixels(hwnd: number, dy: number): number[] {
   const r = getWindowRect(hwnd);
   const w = r.right - r.left;
   const px: number[] = [];
-  for (let x = 2; x < w - 2; x += 6) {
-    px.push(...readWindowDCColumn(hwnd, x, 0, dy));
-  }
+  withWindowDC(hwnd, () => {
+    for (let x = 2; x < w - 2; x += 6) {
+      px.push(...readWindowDCColumn(hwnd, x, 0, dy));
+    }
+  });
   return px;
 }
 

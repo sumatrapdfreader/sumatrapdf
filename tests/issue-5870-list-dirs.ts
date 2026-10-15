@@ -11,7 +11,7 @@ import { copyFileSync, mkdirSync, rmSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 import { ControlClient, ControlCommand } from "./control";
 import { ROOT, runStandalone, SLOW_BUILD_FACTOR, tmpPath, USE_NG } from "./util";
-import { getWindowRect, postMessage, readWindowDCColumn, sleep, waitForWindowIdle } from "./winapi";
+import { getWindowRect, postMessage, readWindowDCColumn, sleep, waitForWindowIdle, withWindowDC } from "./winapi";
 import { findCanvas, launchControlled, launchSumatra, waitForFrame, killAndWait } from "./win-automation";
 
 const WM_VSCROLL = 0x0115;
@@ -34,9 +34,11 @@ function dirColumnTextPixels(hwnd: number, yFrac: number, h: number): number {
   const dx = r.right - r.left;
   const dy = r.bottom - r.top;
   const px: number[] = [];
-  for (let x = Math.floor(dx * 0.45); x < Math.floor(dx * 0.72); x += 2) {
-    px.push(...readWindowDCColumn(hwnd, x, Math.floor(dy * yFrac), h));
-  }
+  withWindowDC(hwnd, () => {
+    for (let x = Math.floor(dx * 0.45); x < Math.floor(dx * 0.72); x += 2) {
+      px.push(...readWindowDCColumn(hwnd, x, Math.floor(dy * yFrac), h));
+    }
+  });
   const counts = new Map<number, number>();
   for (const p of px) {
     counts.set(p, (counts.get(p) ?? 0) + 1);

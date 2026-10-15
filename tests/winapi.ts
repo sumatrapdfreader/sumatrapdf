@@ -1451,10 +1451,37 @@ export function setTaskbarAutoHide(on: boolean): void {
 // was failing on these alone while the UI looked correct).
 export const CLR_INVALID = 0xffffffff;
 
+type WindowDC = ReturnType<typeof openWindowDCNow>;
+
+let gHeldDC: { hwnd: number; src: WindowDC } | null = null;
+
+// Runs fn with one DC of hwnd held: every read of hwnd inside it shares one
+// capture instead of a PrintWindow of an ng window per readWindowDCColumn call.
+export function withWindowDC<T>(hwnd: number, fn: () => T): T {
+  if (gHeldDC) {
+    return fn();
+  }
+  const src = openWindowDCNow(hwnd);
+  gHeldDC = { hwnd, src };
+  try {
+    return fn();
+  } finally {
+    gHeldDC = null;
+    src.close();
+  }
+}
+
+function openWindowDC(hwnd: number): WindowDC {
+  if (gHeldDC && gHeldDC.hwnd === hwnd) {
+    return { ...gHeldDC.src, close: () => {} };
+  }
+  return openWindowDCNow(hwnd);
+}
+
 // A DC with what a window shows. ng's gpui windows are flip swapchains without
 // a redirection bitmap, so their window DC is empty: PrintWindow them instead
 // (current when called from another process, unlike from inside the app).
-function openWindowDC(hwnd: number) {
+function openWindowDCNow(hwnd: number) {
   if (!isNgGpuiWindow(hwnd)) {
     const dc = user32.symbols.GetWindowDC(hwnd);
     const r = getWindowRect(hwnd);
