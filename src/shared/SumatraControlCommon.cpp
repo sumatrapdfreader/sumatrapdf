@@ -529,6 +529,53 @@ ControlRequest* ReadControlRequest(ControlConn h) {
     return req;
 }
 
+// Wait-idle commands run on the control thread. Everything else, including
+// CrashMe, goes to the UI thread. Quit is reported; the app decides whether
+// a failed write still stops the listener.
+ControlFrameAction ControlFrameActionFor(u16 cmd) {
+    if (cmd == (u16)ControlFrameCmd::WaitRenderIdle) {
+        return ControlFrameAction::WaitRenderIdle;
+    }
+    if (cmd == (u16)ControlFrameCmd::WaitSessionRestored) {
+        return ControlFrameAction::WaitSessionRestored;
+    }
+    return ControlFrameAction::RunOnUi;
+}
+
+bool ControlCmdEndsListener(u16 cmd) {
+    return cmd == (u16)ControlFrameCmd::Quit;
+}
+
+ControlServeResult ServeControlRequest(ControlConn h, ControlExecFn execOnUi) {
+    ControlServeResult res;
+    ControlRequest* req = ReadControlRequest(h);
+    if (!req) {
+        return res;
+    }
+    res.hadRequest = true;
+    res.isQuit = ControlCmdEndsListener(req->cmd);
+    if (req->cmd == (u16)ControlFrameCmd::CrashMe) {
+        log(StrL("ControlCmd::CrashMe\n"));
+        CrashMe();
+    }
+    switch (ControlFrameActionFor(req->cmd)) {
+        case ControlFrameAction::WaitRenderIdle:
+            RunWaitRenderIdle(req);
+            break;
+        case ControlFrameAction::WaitSessionRestored:
+            RunWaitSessionRestored(req);
+            break;
+        case ControlFrameAction::RunOnUi:
+            if (execOnUi) {
+                execOnUi(req);
+            }
+            break;
+    }
+    res.wrote = WriteControlResponse(h, req);
+    DeleteControlRequest(req);
+    return res;
+}
+
 bool WriteControlResponse(ControlConn h, ControlRequest* req) {
     str::Builder payload;
     AppendU16(payload, req->reqId);

@@ -139,6 +139,31 @@ bool ReadExact(int fd, void* data, u32 n);
 bool WriteExact(int fd, Str data);
 #endif
 
+// wire ids shared by both apps' ControlCmd. 101/102 differ, so they stay per app.
+enum class ControlFrameCmd : u16 {
+    Quit = 2,
+    WaitRenderIdle = 54,
+    CrashMe = 93,
+    WaitSessionRestored = 103,
+};
+
+enum class ControlFrameAction : u8 {
+    RunOnUi = 0,
+    WaitRenderIdle = 1,
+    WaitSessionRestored = 2,
+};
+
+struct ControlServeResult {
+    bool hadRequest = false;
+    bool wrote = false;
+    bool isQuit = false;
+};
+
+ControlFrameAction ControlFrameActionFor(u16 cmd);
+bool ControlCmdEndsListener(u16 cmd);
+using ControlExecFn = void (*)(ControlRequest*);
+ControlServeResult ServeControlRequest(ControlConn h, ControlExecFn execOnUi);
+
 struct LayoutProbeState {
     MainWindow* win = nullptr;
     int count = 0;

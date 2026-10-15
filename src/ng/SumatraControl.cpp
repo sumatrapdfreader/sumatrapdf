@@ -823,6 +823,11 @@ enum class ControlCmd : u16 {
     TestPlaceSignature = 135,
 };
 
+static_assert((u16)ControlCmd::Quit == (u16)ControlFrameCmd::Quit);
+static_assert((u16)ControlCmd::WaitRenderIdle == (u16)ControlFrameCmd::WaitRenderIdle);
+static_assert((u16)ControlCmd::CrashMe == (u16)ControlFrameCmd::CrashMe);
+static_assert((u16)ControlCmd::WaitSessionRestored == (u16)ControlFrameCmd::WaitSessionRestored);
+
 bool ParseArg(PacketReader& r, ControlArg** argOut) {
     u16 typeRaw = 0;
     if (!r.ReadU16(typeRaw)) {
@@ -3547,35 +3552,21 @@ bool WriteExact(int fd, Str data) {
 }
 #endif
 
+static void RunControlOnUi(ControlRequest* req) {
+    uitask::Post(MkFunc0<ControlRequest>(ExecuteControlRequest, req), "SumatraControl");
+    req->done.Wait();
+}
+
 // One request. false closes the connection. *stop ends the listener thread
 // (Quit), which otherwise blocks in ConnectNamedPipe through ASan shutdown.
+// A failed write does not stop the listener, including a failed Quit.
 static bool HandleControlRequest(ControlConn h, bool* stop) {
     *stop = false;
-    ControlRequest* req = ReadControlRequest(h);
-    if (!req) {
+    ControlServeResult step = ServeControlRequest(h, RunControlOnUi);
+    if (!step.hadRequest || !step.wrote) {
         return false;
     }
-    bool isQuit = (ControlCmd)req->cmd == ControlCmd::Quit;
-    if ((ControlCmd)req->cmd == ControlCmd::CrashMe) {
-        log(StrL("ControlCmd::CrashMe\n"));
-        CrashMe();
-    }
-    // WaitRenderIdle polls on this thread so the UI thread stays free to
-    // paint (and thereby request the tiles we are waiting for)
-    if ((ControlCmd)req->cmd == ControlCmd::WaitRenderIdle) {
-        RunWaitRenderIdle(req);
-    } else if ((ControlCmd)req->cmd == ControlCmd::WaitSessionRestored) {
-        RunWaitSessionRestored(req);
-    } else {
-        uitask::Post(MkFunc0<ControlRequest>(ExecuteControlRequest, req), "SumatraControl");
-        req->done.Wait();
-    }
-    bool ok = WriteControlResponse(h, req);
-    DeleteControlRequest(req);
-    if (!ok) {
-        return false;
-    }
-    if (isQuit) {
+    if (step.isQuit) {
         *stop = true;
         return false;
     }

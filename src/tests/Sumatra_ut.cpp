@@ -40,6 +40,7 @@ void parseCommandsTest();
 void DocPropertiesTest();
 void ParseFileArgsTest();
 void RestrictedUseConfigTest();
+void ControlFrameActionTest();
 
 // in src/base/tests/
 void ArchiveTest();
@@ -239,6 +240,7 @@ static void ExpandPDFScriptTest() {
 
 static void SumatraPDF_UnitTests() {
     RestrictedUseConfigTest();
+    ControlFrameActionTest();
     CachedObjects_UnitTests();
     CommandPaletteModel_UnitTests();
     DocPropertiesTest();

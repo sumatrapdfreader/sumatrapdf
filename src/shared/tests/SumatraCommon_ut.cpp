@@ -16,6 +16,8 @@
 #include "Flags.h"
 #include "Commands.h"
 #include "RestrictedUseConfig.h"
+#include "MainWindow.h"
+#include "SumatraControlCommon.h"
 
 // must be last to over-write assert()
 #include "base/tests/UtAssert.h"
@@ -67,6 +69,18 @@ void BenchRangeTest() {
     utassert(!IsBenchPagesInfo(StrL("4-2")));
     utassert(!IsBenchPagesInfo(StrL("1-3,loadonly")));
     utassert(!IsBenchPagesInfo({}));
+}
+
+void ControlFrameActionTest() {
+    utassert(ControlFrameActionFor((u16)ControlFrameCmd::WaitRenderIdle) == ControlFrameAction::WaitRenderIdle);
+    utassert(ControlFrameActionFor((u16)ControlFrameCmd::WaitSessionRestored) ==
+             ControlFrameAction::WaitSessionRestored);
+    utassert(ControlFrameActionFor((u16)ControlFrameCmd::Quit) == ControlFrameAction::RunOnUi);
+    utassert(ControlFrameActionFor((u16)ControlFrameCmd::CrashMe) == ControlFrameAction::RunOnUi);
+    utassert(ControlFrameActionFor(1) == ControlFrameAction::RunOnUi);
+    utassert(ControlCmdEndsListener((u16)ControlFrameCmd::Quit));
+    utassert(!ControlCmdEndsListener((u16)ControlFrameCmd::CrashMe));
+    utassert(!ControlCmdEndsListener(11));
 }
 
 void versioncheck_test() {
