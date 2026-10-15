@@ -92,8 +92,11 @@ export async function testit(): Promise<void> {
     }
 
     pressVKey(frame, VK_END);
-    const raw0 = await waitForToolbarVisible(client);
-    const tb0 = parsePlaced(raw0);
+    await waitForToolbarVisible(client);
+    // ng lays the card out from a guessed size first and from its measured one
+    // on the next frame: take the baseline once that is drawn
+    await client.waitForRenderIdle();
+    const tb0 = parsePlaced(await toolbarDump(client));
     const frame0 = getWindowRect(frame);
 
     // several SetWindowPos calls, each generating WM_MOVE: this is the "while

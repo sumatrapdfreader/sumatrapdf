@@ -123,6 +123,10 @@ static void ShowSelectionToolbarNow(MainWindow* win) {
     if (len(tb->buttons) == 0) {
         return;
     }
+    if (!tb->visible) {
+        // the buttons may differ from last time: measure them again
+        tb->measured = {};
+    }
     tb->visible = true;
     str::Builder labels;
     for (const SelectionToolbarButton& b : tb->buttons) {
@@ -357,6 +361,12 @@ gp::El* SelectionToolbarBuild(MainWindow* win, gp::Ctx* cx) {
     y = std::min(y, canvasH - h);
     y = std::max(y, 0.f);
     card->Absolute()->Left(x)->Top(y);
+    if (tb->measured.w <= 0) {
+        // placed from a guessed size: show it from the next frame, placed from
+        // its measured one, so it does not jump
+        card->Opacity(0);
+        AppShellInvalidate(win);
+    }
     return card;
 }
 
