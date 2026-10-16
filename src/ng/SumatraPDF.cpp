@@ -4600,13 +4600,9 @@ bool FrameOnChar(MainWindow* win, u32 key, bool isShift) {
         key = key - 'A' + 'a';
     }
     switch (key) {
-        // per https://en.wikipedia.org/wiki/Keyboard_layout
-        // almost all keyboard layouts allow to press either
-        // '+' or '=' unshifted (and one of them is also often
-        // close to '-'); the other two alternatives are for
-        // the major exception: the two Swiss layouts
+        // '+' unshifted, or the two Swiss-layout alternatives.
+        // '=' opens the settings palette instead.
         case '+':
-        case '=':
         case 0xE0:
         case 0xE4:
             ExecuteCmd(win, CmdZoomIn);

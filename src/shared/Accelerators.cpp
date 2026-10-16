@@ -99,6 +99,7 @@ static Accel gBuiltInAccelerators[] = {
     {{0, '$'}, CmdNavigateFavorites},
     {{0, '%'}, CmdNavigateTableOfContents},
     {{0, '&'}, CmdNavigateThumbnail},
+    {{0, '='}, CmdQuickEditSettings},
     {{kShift | kCtrl | kVirt, 'S'}, CmdSaveAnnotations},
     {{kCtrl | kVirt, 'P'}, CmdPrint},
     {{kCtrl | kVirt, 'Q'}, CmdExit},

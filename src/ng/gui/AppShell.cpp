@@ -2789,7 +2789,7 @@ void ShellView::OnKeyDown(ShellView* self, gp::Ctx* cx, const gp::KeyEvent* ev) 
         gp::Notify(cx);
         return;
     }
-    // orig's FrameOnChar: + = - / b. gpui hands the typed character on in a
+    // orig's FrameOnChar: + - / b. gpui hands the typed character on in a
     // key event of its own, without a virtual key
     if (ev->vk == 0 && ev->ch != 0) {
         // orig's TranslateAccelerator on WM_CHAR: '.', the palette prefixes

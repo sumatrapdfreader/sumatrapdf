@@ -171,7 +171,7 @@ Press (Kbd/%) to navigate via table of contents.
 Press (Kbd/&) to navigate via thumbnails.
 Press (Kbd/(Key/CmdToggleAutomaticallyScroll)) to [scroll automatically](Help/Scrolling-and-zooming#scroll-automatically).
 You can keep your place with the [reading bar](Help/Scrolling-and-zooming#keep-your-place-with-a-reading-bar).
-You can [change a setting](CmdQuickEditSettings) without opening Advanced Settings.
+Press (Kbd/=) to [change a setting](CmdQuickEditSettings) without opening Advanced Settings.
 You can [browse files in the current folder](CmdNavigateFilesInFolder). [Learn more](Help/Scrolling-and-zooming#browse-files-in-the-folder)
 You can overlay a [page grid](Help/Scrolling-and-zooming#overlay-a-page-grid) for measurement and calligraphy.
 You can [zoom to fit the page content](Help/Scrolling-and-zooming#fit-the-page-content).
