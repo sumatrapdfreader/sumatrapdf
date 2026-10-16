@@ -101,8 +101,8 @@ RenderCache* gRenderCache;
 
 int ScrollbarModeFromPrefs() {
     int idx = SeqStrIndexIS(gScrollbarModeNames, gSettings->scrollbars);
-    if (idx < 0) {
-        idx = kScrollbarWindows;
+    if (idx < 0 || idx == kScrollbarWindows) {
+        idx = kScrollbarSmart;
     }
     return idx;
 }

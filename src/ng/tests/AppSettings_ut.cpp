@@ -24,19 +24,22 @@ void AppSettingsTest() {
     utassert(len(golden) > 0);
     AutoCall freeGolden((void (*)(Str))str::Free, golden);
 
-    // the defaults serialize to exactly the golden file
+    // ng has no Windows scrollbars, so that orig default becomes smart
+    TempStr expect = str::ReplaceTemp(golden, StrL("Scrollbars = windows"), StrL("Scrollbars = smart"));
+
+    // the defaults serialize to the golden file, with that one substitution
     Settings* def = NewSettings({});
     utassert(def != nullptr);
     Str serialized = SerializeSettings(def, {});
-    utassert(str::Eq(serialized, golden));
+    utassert(str::Eq(serialized, expect));
     str::Free(serialized);
     DeleteSettings(def);
 
-    // and a load + save of it changes nothing
+    // and a load + save of it changes nothing, apart from that scrollbar value
     Settings* loaded = NewSettings(golden);
     utassert(loaded != nullptr);
     Str out = SerializeSettings(loaded, golden);
-    utassert(str::Eq(out, golden));
+    utassert(str::Eq(out, expect));
     str::Free(out);
     DeleteSettings(loaded);
 }

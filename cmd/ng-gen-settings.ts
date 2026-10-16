@@ -1645,10 +1645,10 @@ const globalPrefs: Field[] = [
   field(
     "Scrollbars",
     Str,
-    "windows",
-    "scrollbar mode: windows (standard Windows scrollbar), smart (overlay scrollbar with auto-hide), overlay (always visible overlay scrollbar), hidden (no scrollbars)",
+    "smart",
+    "scrollbar mode: smart (overlay scrollbar with auto-hide), overlay (always visible overlay scrollbar), hidden (no scrollbars)",
   )
-    .enum(["windows", "smart", "overlay", "hidden"])
+    .enum(["smart", "overlay", "hidden"])
     .ver("3.7"),
   field("ScrollbarInSinglePage", Bool, false, "if true, show a scrollbar in single page mode as well").ver("3.6"),
   field(

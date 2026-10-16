@@ -97,7 +97,7 @@ void ShowChangeScrollbarDialog(MainWindow* win) {
 void ChangeScrollbarOk() {
     int idx = gChangeScrollbar.sel;
     CloseChangeScrollbarDialog();
-    if (idx < 0) {
+    if (idx < kScrollbarSmart || idx > kScrollbarHidden) {
         return;
     }
     Str val = SeqStrByIndex(gScrollbarModeNames, idx);
@@ -111,10 +111,15 @@ bool ChangeScrollbarMoveSelection(int dir) {
     if (!gChangeScrollbar.visible) {
         return false;
     }
-    int n = kScrollbarHidden + 1;
+    // windows is not offered; the choices are smart, overlay, hidden
+    int n = kScrollbarHidden - kScrollbarSmart + 1;
     int sel = gChangeScrollbar.sel;
-    sel = (sel < 0) ? (dir < 0 ? n - 1 : 0) : ((sel + dir + n) % n);
-    gChangeScrollbar.sel = sel;
+    int pos = sel - kScrollbarSmart;
+    if (pos < 0 || pos >= n) {
+        pos = 0;
+    }
+    int step = dir < 0 ? n - 1 : 1;
+    gChangeScrollbar.sel = kScrollbarSmart + (pos + step) % n;
     AppShellInvalidate(gChangeScrollbar.win);
     return true;
 }
@@ -153,7 +158,7 @@ gp::El* ChangeScrollbarDialogBuild(MainWindow* win, gp::Ctx* cx) {
     DlgSetDefault(cx, onOk);
 
     gp::El* list = gp::Div(cx->a)->FlexCol()->W(gp::kFill)->Shrink0();
-    for (int i = 0; i <= kScrollbarHidden; i++) {
+    for (int i = kScrollbarSmart; i <= kScrollbarHidden; i++) {
         list->Child(DlgListRow(cx, fmt("scrollbar-row-%d", i), ScrollbarModeDisplayName(i), i == gChangeScrollbar.sel,
                                gp::ListenTo(gChangeScrollbarView, &ChangeScrollbarView::OnRowClick, (intptr_t)i)));
     }

@@ -596,8 +596,9 @@ void ForgetFileFromFrequentlyRead(MainWindow* win, Str filePath) {
 
 int ScrollbarModeFromPrefs() {
     int idx = SeqStrIndexIS(gScrollbarModeNames, gSettings->scrollbars);
-    if (idx < 0) {
-        idx = kScrollbarWindows;
+    // ng has no native Windows scrollbar; a saved "windows" value is smart
+    if (idx < 0 || idx == kScrollbarWindows) {
+        idx = kScrollbarSmart;
     }
     return idx;
 }

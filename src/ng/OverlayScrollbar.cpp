@@ -745,9 +745,8 @@ static OverlayScrollbar::Mode ModeFromPrefs() {
         case kScrollbarOverlay:
             return OverlayScrollbar::Mode::Thick;
         case kScrollbarSmart:
-            return OverlayScrollbar::Mode::Smart;
         default:
-            return OverlayScrollbar::Mode::Windows;
+            return OverlayScrollbar::Mode::Smart;
     }
 }
 

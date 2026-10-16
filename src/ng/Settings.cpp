@@ -937,7 +937,7 @@ static const char* gEnumSettingsToolbar[] = {"", "show", "hide", "overlay", null
 static const char* gEnumSettingsToolbarPosition[] = {"top", "bottom", nullptr};
 static const char* gEnumSettingsSidebarBottomView[] = {"", "favorites", "bookmarks", "thumbnails", nullptr};
 static const char* gEnumSettingsSidebarWindowSize[] = {"", "keep", "grow", nullptr};
-static const char* gEnumSettingsScrollbars[] = {"windows", "smart", "overlay", "hidden", nullptr};
+static const char* gEnumSettingsScrollbars[] = {"smart", "overlay", "hidden", nullptr};
 static const char* gEnumSettingsHelpTheme[] = {"app", "light", "dark", nullptr};
 static const char* gEnumSettingsDocumentColorsFollowTheme[] = {"off", "smart", "legacy", nullptr};
 static const char* gEnumSettingsEngineeringDrawingEnhance[] = {"off", "auto", "on", nullptr};
@@ -1008,7 +1008,7 @@ static const FieldInfo gSettingsFields[] = {
     {offsetof(Settings, autoGenerateTOC), SettingType::Bool, false},
     {offsetof(Settings, showStartPage), SettingType::Bool, true},
     {offsetof(Settings, sidebarDx), SettingType::Int, 0, true},
-    {offsetof(Settings, scrollbars), SettingType::String, (intptr_t)"windows", false, gEnumSettingsScrollbars, nullptr},
+    {offsetof(Settings, scrollbars), SettingType::String, (intptr_t)"smart", false, gEnumSettingsScrollbars, nullptr},
     {offsetof(Settings, scrollbarInSinglePage), SettingType::Bool, false},
     {offsetof(Settings, smoothScroll), SettingType::Bool, true},
     {offsetof(Settings, scrollLineAmount), SettingType::Int, 16},
@@ -1215,38 +1215,38 @@ const StructInfo gSettingsInfo = {
     "(labels) right-aligned on bookmark / table-of-contents entries\0if true, a PDF without an outline gets a table of "
     "contents built from numbered headings in its text (Generate Table Of Contents command does it on demand)\0if "
     "true, show a list of frequently read documents when no document is loaded\0width of the favorites / bookmarks "
-    "sidebar in screen pixels, as last resized (0 means the default)\0scrollbar mode: windows (standard Windows "
-    "scrollbar), smart (overlay scrollbar with auto-hide), overlay (always visible overlay scrollbar), hidden (no "
-    "scrollbars)\0if true, show a scrollbar in single page mode as well\0if true, smooth mouse-wheel and arrow-key "
-    "scrolling (exponential chase of the target; continuous input stays fluid)\0distance, in screen pixels at 96 DPI, "
-    "scrolled by an arrow-key press or one mouse-wheel line; values below 1 use 16\0how hard to free unused page and "
-    "image caches to save RAM (0 to 100). 0 keeps them until an allocation fails; 100 drops them as soon as a page is "
-    "off-screen\0if true, continuous view has extra scroll room after the last page so you can scroll the end of the "
-    "document to the top of the window\0if true, continuous view stacks the next page where the bottom of a rotated "
-    "page points: left after Rotate Right, right after Rotate Left, up after a half turn. Off, the next page stays "
-    "below\0if true, going to a destination (clicking a bookmark or a link inside the document) keeps the current zoom "
-    "instead of applying the zoom the destination asks for; it still goes to the page and the position. Same as Adobe "
-    "Reader's 'forbid the change of the current zoom factor during execution of Go to Destination actions'\0if true, "
-    "following an internal link or bookmark flashes a highlight at the destination so you can see where you landed (a "
-    "bibliography entry, figure, or named destination). The color and fade match ForwardSearch. Off when the "
-    "destination is only a page with no position\0how long an internal-document link has to be hovered, in "
-    "milliseconds, before a popup rendering the destination region (citation entry, figure, footnote) appears. -1 (the "
-    "default) disables the popup; set a positive value like 300 to enable it\0voice id for Read Aloud text-to-speech; "
-    "empty or unset means system default. Voice ids match those used internally by the Read Aloud Voice menu (WinRT "
-    "voice id or SAPI token id)\0playback speed multiplier for Read Aloud text-to-speech (0.5 .. 3.0), 1 is normal "
-    "speed; can also be changed from the Read Aloud playback bar\0pixels per second for Automatically Scroll (View "
-    "menu / Ctrl+Shift+H). 8 to 320; also changed from the auto-scroll bar and the arrow keys while scrolling\0reading "
-    "bar (View menu): a horizontal band on the page to keep your place. Highlight fills the band; Invert dims "
-    "everything else\0if true, mouse wheel scrolling is faster when mouse is over a scrollbar\0if true, prevents the "
-    "screen from turning off when in fullscreen or presentation mode\0maximum width of a single tab, in pixels at 100% "
-    "display scaling (at least 60)\0valid themes: Light, Dark, Light Warm, Dark from 3.5, Charcoal, Solarized Light, "
-    "Solarized Dark, Dracula, Nebula, Greeny, Choco, Purpy, One Dark, Monokai, Nord, GitHub Dark, Catppuccin Mocha, "
-    "Tokyo Night, Gruvbox, Night Owl, Ayu, Palenight, System\0color theme of the in-app manual (F1): app (follow the "
-    "app's theme), light or dark. The switch in the manual's top-right corner changes it\0the light theme the "
-    "light/dark toggle and the System theme switch to\0the dark theme the light/dark toggle and the System theme "
-    "switch to\0how MuPDF-rendered documents (PDF, XPS, DjVu, EPUB, MOBI, FB2, CBZ, images, etc.) use UI / FixedPageUI "
-    "colors for the page. Values: off (document's own colors; default); smart (recolor text and page background, keep "
-    "photos/images as-is — best for dark reading); legacy (also recolor images; pre-3.7 invert-style). Does not change "
+    "sidebar in screen pixels, as last resized (0 means the default)\0scrollbar mode: smart (overlay scrollbar with "
+    "auto-hide), overlay (always visible overlay scrollbar), hidden (no scrollbars)\0if true, show a scrollbar in "
+    "single page mode as well\0if true, smooth mouse-wheel and arrow-key scrolling (exponential chase of the target; "
+    "continuous input stays fluid)\0distance, in screen pixels at 96 DPI, scrolled by an arrow-key press or one "
+    "mouse-wheel line; values below 1 use 16\0how hard to free unused page and image caches to save RAM (0 to 100). 0 "
+    "keeps them until an allocation fails; 100 drops them as soon as a page is off-screen\0if true, continuous view "
+    "has extra scroll room after the last page so you can scroll the end of the document to the top of the window\0if "
+    "true, continuous view stacks the next page where the bottom of a rotated page points: left after Rotate Right, "
+    "right after Rotate Left, up after a half turn. Off, the next page stays below\0if true, going to a destination "
+    "(clicking a bookmark or a link inside the document) keeps the current zoom instead of applying the zoom the "
+    "destination asks for; it still goes to the page and the position. Same as Adobe Reader's 'forbid the change of "
+    "the current zoom factor during execution of Go to Destination actions'\0if true, following an internal link or "
+    "bookmark flashes a highlight at the destination so you can see where you landed (a bibliography entry, figure, or "
+    "named destination). The color and fade match ForwardSearch. Off when the destination is only a page with no "
+    "position\0how long an internal-document link has to be hovered, in milliseconds, before a popup rendering the "
+    "destination region (citation entry, figure, footnote) appears. -1 (the default) disables the popup; set a "
+    "positive value like 300 to enable it\0voice id for Read Aloud text-to-speech; empty or unset means system "
+    "default. Voice ids match those used internally by the Read Aloud Voice menu (WinRT voice id or SAPI token "
+    "id)\0playback speed multiplier for Read Aloud text-to-speech (0.5 .. 3.0), 1 is normal speed; can also be changed "
+    "from the Read Aloud playback bar\0pixels per second for Automatically Scroll (View menu / Ctrl+Shift+H). 8 to "
+    "320; also changed from the auto-scroll bar and the arrow keys while scrolling\0reading bar (View menu): a "
+    "horizontal band on the page to keep your place. Highlight fills the band; Invert dims everything else\0if true, "
+    "mouse wheel scrolling is faster when mouse is over a scrollbar\0if true, prevents the screen from turning off "
+    "when in fullscreen or presentation mode\0maximum width of a single tab, in pixels at 100% display scaling (at "
+    "least 60)\0valid themes: Light, Dark, Light Warm, Dark from 3.5, Charcoal, Solarized Light, Solarized Dark, "
+    "Dracula, Nebula, Greeny, Choco, Purpy, One Dark, Monokai, Nord, GitHub Dark, Catppuccin Mocha, Tokyo Night, "
+    "Gruvbox, Night Owl, Ayu, Palenight, System\0color theme of the in-app manual (F1): app (follow the app's theme), "
+    "light or dark. The switch in the manual's top-right corner changes it\0the light theme the light/dark toggle and "
+    "the System theme switch to\0the dark theme the light/dark toggle and the System theme switch to\0how "
+    "MuPDF-rendered documents (PDF, XPS, DjVu, EPUB, MOBI, FB2, CBZ, images, etc.) use UI / FixedPageUI colors for the "
+    "page. Values: off (document's own colors; default); smart (recolor text and page background, keep photos/images "
+    "as-is — best for dark reading); legacy (also recolor images; pre-3.7 invert-style). Does not change "
     "menus/toolbars — use Theme for UI chrome. Settings / Theme and the CmdSetDocumentColorsFollowTheme command set "
     "all three values. Shift+I (Invert Colors) is separate: it swaps the page colors for the session whatever this is "
     "set to\0if both the favorites and the bookmarks part of the sidebar are visible, this is the height of the "

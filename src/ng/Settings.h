@@ -918,9 +918,8 @@ struct Settings {
     // where the toolbar is placed: top or bottom (applies to both show and
     // overlay modes)
     Str toolbarPosition;
-    // scrollbar mode: windows (standard Windows scrollbar), smart (overlay
-    // scrollbar with auto-hide), overlay (always visible overlay
-    // scrollbar), hidden (no scrollbars)
+    // scrollbar mode: smart (overlay scrollbar with auto-hide), overlay
+    // (always visible overlay scrollbar), hidden (no scrollbars)
     Str scrollbars;
     // voice id for Read Aloud text-to-speech; empty or unset means system
     // default. Voice ids match those used internally by the Read Aloud
