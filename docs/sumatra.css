@@ -240,6 +240,110 @@ pre > code {
   border: 0;
 }
 
+/* ```svg in the docs markdown: a diagram drawn inline. Its shapes use these classes,
+   so the colors follow the light / dark theme */
+.doc-svg {
+  margin: 1rem 0;
+  --sv-canvas: #e2e2e2;
+  --sv-frame: #8c8c8c;
+  --sv-bar: #cfcfcf;
+  --sv-page: #ffffff;
+  --sv-page-stroke: #7d7d7d;
+  --sv-lines: #c4c4c4;
+  --sv-num: #5c5c5c;
+  --sv-off: #a5a5a5;
+  --sv-accent: #2b6cd4;
+  --sv-label: var(--text-primary, #232323);
+}
+
+html[data-theme="dark"] .doc-svg {
+  --sv-canvas: #2c2c2c;
+  --sv-frame: #707070;
+  --sv-bar: #3c3c3c;
+  --sv-page: #e6e6e6;
+  --sv-page-stroke: #a0a0a0;
+  --sv-lines: #b4b4b4;
+  --sv-num: #4a4a4a;
+  --sv-off: #626262;
+  --sv-accent: #73a7ff;
+}
+
+.doc-svg svg {
+  display: block;
+  max-width: 100%;
+  height: auto;
+}
+
+.doc-svg .sv-win {
+  fill: var(--sv-canvas);
+  stroke: var(--sv-frame);
+  stroke-width: 1.5;
+}
+
+.doc-svg .sv-bar {
+  fill: var(--sv-bar);
+}
+
+.doc-svg .sv-pg {
+  fill: var(--sv-page);
+  stroke: var(--sv-page-stroke);
+  stroke-width: 1;
+}
+
+.doc-svg .sv-off {
+  fill: none;
+  stroke: var(--sv-off);
+  stroke-width: 1;
+  stroke-dasharray: 4 3;
+}
+
+.doc-svg .sv-nb {
+  fill: var(--sv-page);
+}
+
+.doc-svg .sv-ln {
+  stroke: var(--sv-lines);
+  stroke-width: 2;
+  stroke-linecap: round;
+}
+
+.doc-svg .sv-n,
+.doc-svg .sv-noff {
+  font: 600 14px system-ui, -apple-system, "Segoe UI", sans-serif;
+  text-anchor: middle;
+  dominant-baseline: central;
+}
+
+.doc-svg .sv-n {
+  fill: var(--sv-num);
+}
+
+.doc-svg .sv-noff {
+  fill: var(--sv-off);
+}
+
+.doc-svg .sv-lb {
+  fill: var(--sv-label);
+  font: 13px system-ui, -apple-system, "Segoe UI", sans-serif;
+  text-anchor: middle;
+}
+
+.doc-svg .sv-ac {
+  fill: none;
+  stroke: var(--sv-accent);
+  stroke-width: 1.5;
+}
+
+.doc-svg .sv-acf {
+  fill: var(--sv-accent);
+}
+
+.doc-svg .sv-act {
+  fill: var(--sv-accent);
+  font: 12px system-ui, -apple-system, "Segoe UI", sans-serif;
+  text-anchor: middle;
+}
+
 .doc-columns {
   columns: 2;
   margin-top: 1rem;

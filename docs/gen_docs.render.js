@@ -360,6 +360,9 @@
       const t = tokens[idx];
       const lang = t.info.trim().split(/\s+/)[0];
       if (lang === "commands") return genCsvTableHTML(parseCsv(t.content));
+      // a diagram drawn inline; colors come from the doc-svg classes in sumatra.css
+      // (see renderSVGCodeBlock() in the website's server/gen_manual.go, which also checks it)
+      if (lang === "svg") return '<div class="doc-svg">' + t.content.trim() + "</div>\n";
       return renderFenceCodeBlock(t.content, md.utils.escapeHtml(t.content));
     };
 

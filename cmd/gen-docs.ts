@@ -112,7 +112,8 @@ function genAllDocsMd(outDir: string): void {
     if (!existsSync(path)) {
       throw new Error(`all-docs: '${fileName}' not found`);
     }
-    const content = readFileSync(path, "utf-8");
+    // ```svg diagrams are markup, noise for the full-text search
+    const content = readFileSync(path, "utf-8").replace(/^```svg[ \t]*\r?\n[\s\S]*?^```[ \t]*\r?$\n?/gm, "");
     parts.push(`::${fileName}\n${content}`);
   }
   const outPath = join(outDir, kAllDocsFile);

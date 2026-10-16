@@ -38,6 +38,12 @@ A video goes on its own line, e.g. right after the title:
 in-app manual (`gen_docs.render.js`) render it as an embedded YouTube player. How to record
 and upload one: "Doc videos" in the website's `agents.md`.
 
+## Diagrams
+
+A fenced code block with the language `svg` is a diagram, drawn inline by the website and the
+in-app manual (`gen_docs.render.js`). Use the `sv-*` classes from `sumatra.css` for colors, so it
+works in the dark theme too. Rules: "Doc diagrams (SVG)" in the website's `agents.md`.
+
 ## Index
 
 `SumatraPDF-documentation.md` groups pages by task (getting started, reading, ...).
