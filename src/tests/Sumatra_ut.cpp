@@ -9,6 +9,7 @@
 #include "base/DbgHelpDyn.h"
 #include "base/File.h"
 #include "base/Pixmap.h"
+#include "base/SettingsUtil.h"
 
 #include "gui/UIModels.h"
 #include "gui/Layout.h"
@@ -24,6 +25,10 @@
 #include "AppSettings.h"
 #include "Flags.h"
 #include "Commands.h"
+#include "Annotation.h"
+#include "CommandAvailability.h"
+#include "CommandPalette.h"
+#include "CommandPaletteCommon.h"
 #include "SvgIcons.h"
 #include "AppUnitTests.h"
 #include "PDFScript.h"
@@ -107,6 +112,41 @@ bool AnnotSearch_UnitTests();
 void ReadAloudHighlight_UnitTests();
 bool RenderCache_UnitTestCookieUnlocked();
 bool RenderCache_UnitTestFullOfOneVisiblePage();
+
+// a color setting's row gets a swatch of its value, or of the value being typed
+static void PaletteRowColorTest() {
+    Settings* prevSettings = gSettings;
+    if (!gSettings) {
+        gSettings = NewSettings({});
+    }
+
+    StrVecCP rows;
+    CollectSettingRows(rows);
+    // an unset (empty) color has no swatch
+    int nSwatches = 0;
+    Color col;
+    for (int i = 0; i < len(rows); i++) {
+        ItemDataCP* d = rows.AtData(i);
+        if (!PaletteRowColor(d, rows[i], &col)) {
+            continue;
+        }
+        utassert(d->settingType == SettingType::Color);
+        nSwatches++;
+    }
+    utassert(nSwatches > 0);
+
+    ItemDataCP typed;
+    typed.settingType = SettingType::Color;
+    typed.settingPath = StrL("FixedPageUI.TextColor");
+    utassert(PaletteRowColor(&typed, StrL("#ff0000"), &col));
+    utassert(col == kColRed);
+    utassert(!PaletteRowColor(&typed, StrL("not a color"), &col));
+
+    if (!prevSettings) {
+        DeleteSettings(gSettings);
+        gSettings = nullptr;
+    }
+}
 
 static void ParseCommandLineTest() {
     {
@@ -265,6 +305,7 @@ static void SumatraPDF_UnitTests() {
     UpdateCheckDecisionTest();
     CachedObjects_UnitTests();
     CommandPaletteModel_UnitTests();
+    PaletteRowColorTest();
     DocPropertiesTest();
     parseCommandsTest();
     colorTest();

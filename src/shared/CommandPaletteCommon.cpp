@@ -204,6 +204,16 @@ bool SettingDiffersFromDefault(const ItemDataCP* d) {
     return !str::Eq(val, FormatSettingDefaultTemp(d->settingType, d->settingDefault));
 }
 
+// The color a "= settings" row shows a swatch of: a color setting's value, or
+// the value typed for one in the value stage
+bool PaletteRowColor(const ItemDataCP* d, Str rowText, Color* colOut) {
+    if (!IsSettingRow(d) || d->settingType != SettingType::Color) {
+        return false;
+    }
+    Str val = len(d->settingPath) > 0 ? rowText : FormatSettingValueTemp(d->settingType, SettingRowPtr(d));
+    return ParseColor(colOut, val);
+}
+
 // Delete on a "= settings" row puts the setting's default back. rowText is the
 // row's text: the setting's path in the picking stage, a candidate value once
 // settingPath names the setting. Returns the path, empty if nothing changed.

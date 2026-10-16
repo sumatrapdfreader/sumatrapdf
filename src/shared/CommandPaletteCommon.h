@@ -56,6 +56,7 @@ void CollectTocRec(StrVecCP& toc, TocItem* ti, int indent, int currPageNo, int& 
 void AppendFavoritesForFile(StrVecCP& favorites, FileState* fs, bool isCurrent);
 TempStr FormatSettingValueTemp(SettingType type, const u8* p);
 bool SettingDiffersFromDefault(const ItemDataCP* d);
+bool PaletteRowColor(const ItemDataCP* d, Str rowText, Color* colOut);
 void CollectSettingRows(StrVecCP& out);
 TempStr RestorePaletteSettingDefault(const ItemDataCP* d, Str rowText);
 TempStr CommandPaletteShortcutTemp(i32 cmdId);

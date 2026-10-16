@@ -75,6 +75,8 @@ constexpr float kPaletteTextFontPx = 13;
 constexpr float kPaletteMetaFontPx = 12;
 constexpr float kPaletteHintFontPx = 11;
 constexpr float kPaletteSelectionRadius = 4;
+constexpr float kPaletteSwatchDx = 12;
+constexpr float kPaletteSwatchGap = 8;
 constexpr float kPaletteTopMargin = 42;
 constexpr int kPaletteMinDx = 640;
 constexpr int kPaletteMaxDx = 1024;
@@ -1728,6 +1730,17 @@ static gp::El* BuildList(CommandPaletteWnd* wnd, gp::Ctx* cx, float listDy) {
             }
         }
         row->Child(left);
+        // a color setting shows its color before the value, as in advanced settings
+        Color swatch;
+        if (PaletteRowColor(data, itemText, &swatch)) {
+            row->Child(gp::Div(cx->a)->W(kPaletteSwatchGap)->Shrink0());
+            row->Child(gp::Div(cx->a)
+                           ->W(kPaletteSwatchDx)
+                           ->H(kPaletteSwatchDx)
+                           ->Shrink0()
+                           ->Bg(ToGpui(swatch))
+                           ->Border(1, ToGpui(ThemeEdgeColor())));
+        }
         TempStr right = PaletteRightColumnTemp(data);
         if (len(right) > 0) {
             // a setting's value reads as part of the row; one off its default is bold
