@@ -589,7 +589,11 @@ bool SelectTextWithKeyboardOnChar(MainWindow* win, int key) {
         return true;
     }
     if (key == 'y' || key == 'Y') {
-        CopySelectionToClipboard(win);
+        // with only a caret there is nothing to copy
+        WindowTab* tab = win->CurrentTab();
+        if (tab && tab->selectionOnPage) {
+            CopySelectionToClipboard(win);
+        }
         StopSelectTextWithKeyboard(win);
         return true;
     }
