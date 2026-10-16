@@ -145,7 +145,6 @@ Str sumatraTips = StrL(R"tips(You can [customize scrollbar](CmdChangeScrollbar).
 You can [customize keyboard shortcuts](Help/Customize-keyboard-shortcuts).
 You can [customize toolbar](Help/Customize-toolbar).
 Press (Kbd/(Key/CmdCommandPalette)) to open [command palette](CmdCommandPalette).
-To open file from history open [command palette](CmdCommandPalette) with (Kbd/(Key/CmdCommandPalette)) and type (Kbd/#).
 You can [extract text from PDF file](Help/Tool-x-extract-text-from-pdf).
 You can [toggle menu bar](CmdToggleMenuBar) with (Kbd/(Key/CmdToggleMenuBar)).
 You can [toggle toolbar](CmdToggleToolbar) with (Kbd/(Key/CmdToggleToolbar)).
@@ -170,4 +169,12 @@ Press (Kbd/#) to navigate file history.
 Press (Kbd/$) to navigate via favorites.
 Press (Kbd/%) to navigate via table of contents.
 Press (Kbd/&) to navigate via thumbnails.
+Press (Kbd/(Key/CmdToggleAutomaticallyScroll)) to [scroll automatically](Help/Scrolling-and-zooming#scroll-automatically).
+You can keep your place with the [reading bar](Help/Scrolling-and-zooming#keep-your-place-with-a-reading-bar).
+You can [change a setting](CmdQuickEditSettings) without opening Advanced Settings.
+You can [browse files in the current folder](CmdNavigateFilesInFolder). [Learn more](Help/Scrolling-and-zooming#browse-files-in-the-folder)
+You can overlay a [page grid](Help/Scrolling-and-zooming#overlay-a-page-grid) for measurement and calligraphy.
+You can [zoom to fit the page content](Help/Scrolling-and-zooming#fit-the-page-content).
+You can [paste an image from the clipboard](Help/Add-an-image-to-a-PDF#insert-an-image-from-the-clipboard).
+You can [translate selected text](Help/Customize-search-translation-services#search-or-translate-the-selection).
 )tips");
