@@ -235,8 +235,16 @@ export async function testit(): Promise<void> {
     }
 
     moveMouse(canvas, end);
-    state = await placementState(client);
-    if (!snapped || !state.raw.includes(`end=${end.x},${end.y}`)) {
+    // Queued cursor moves can overwrite the synthetic Shift-release move too.
+    const pointerDeadline = Date.now() + 2_000 * SLOW_BUILD_FACTOR;
+    const pointerEnd = `end=${end.x},${end.y}`;
+    for (;;) {
+      sendMessage(canvas, WM_MOUSEMOVE, 0, packCoords(end.x, end.y));
+      state = await placementState(client);
+      if (state.raw.includes(pointerEnd) || Date.now() > pointerDeadline) break;
+      await sleep(40);
+    }
+    if (!state.raw.includes(pointerEnd)) {
       throw new Error(`line-annotation-placement: releasing Shift did not restore the pointer endpoint\n${state.raw}`);
     }
     if (IS_MAC) {
