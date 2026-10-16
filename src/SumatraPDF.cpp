@@ -16284,6 +16284,7 @@ ContinueOpenWindow:
     if (showStartPage && FileHistoryGet(0)) {
         RemoveNonExistentFilesAsync();
     }
+    RegenerateMissingThumbnails();
     // call this once it's clear whether Perm::SavePreferences has been granted
     RegisterSettingsForFileChanges();
 

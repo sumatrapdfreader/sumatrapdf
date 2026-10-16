@@ -7105,6 +7105,7 @@ int GpuiMain(int argc, char** argv) {
     }
     // call this once it's clear whether Perm::SavePreferences has been granted
     RegisterSettingsForFileChanges();
+    RegenerateMissingThumbnails();
     // -forward-search <source file> <line>: jump to the matching place in the
     // PDF and flash the mark there (orig does this in LoadOnStartup)
     if (gFlags->forwardSearchOrigin && gFlags->forwardSearchLine && win->AsFixed() && win->AsFixed()->pdfSync) {
