@@ -63,13 +63,7 @@ static const i32 gNoDocWhitelist[] = {
     CmdToggleMenuBar,
     CmdToggleToolbar,
     CmdToggleInverseSearch,
-    CmdToggleLinks,
-    CmdToggleHighlightFormFields,
     CmdToggleDisableLinks,
-    CmdToggleImages,
-    CmdToggleTransparencyGrid,
-    CmdTogglePageGrid,
-    CmdConfigurePageGrid,
     CmdToggleHoverPreview,
     CmdToggleWindowsPreviewer,
     CmdToggleWindowsSearchFilter,
@@ -102,6 +96,26 @@ uintptr_t disableIfNoSelection[] = {
     CmdTranslateSelection,
     CmdTranslateSelectionWithDeepL,
     CmdTranslateSelectionWithGoogle,
+    CmdTranslateSelectionWithGrokBuild,
+    CmdTranslateSelectionWithClaudeCode,
+    CmdTranslateSelectionWithOpenAICodex,
+    CmdTranslateSelectionWithAntiGravity,
+    CmdSearchSelectionWithWikipedia,
+    CmdSearchSelectionWithGoogleScholar,
+    CmdSearchSelectionWithBing,
+    CmdSearchSelectionWithGoogle,
+    0,
+};
+
+// Needs extracted text. A comic, an image folder or a single image never has
+// any, so these stay out of the menu instead of sitting disabled.
+static const i32 removeIfNoExtractedText[] = {
+    CmdSelectCurrentPage,
+    CmdFindNextSel,
+    CmdFindPrevSel,
+    CmdTranslateSelection,
+    CmdTranslateSelectionWithGoogle,
+    CmdTranslateSelectionWithDeepL,
     CmdTranslateSelectionWithGrokBuild,
     CmdTranslateSelectionWithClaudeCode,
     CmdTranslateSelectionWithOpenAICodex,
@@ -271,6 +285,7 @@ static const i32 removeIfChm[] = {
     CmdZoomFitHeight,
     CmdZoomFitContent,
     CmdZoomFitVisible,
+    CmdZoomFitByOrientation,
     CmdDebugShowFitContentArea,
     CmdZoomShrinkToFit,
     CmdZoom6400,
@@ -338,6 +353,12 @@ static bool CmdIdInList(int cmdId, const T* ids) {
         }
     }
     return false;
+}
+
+// Graph paper and the transparency checkerboard are drawn on a paginated
+// page. Comics, image folders and single images skip both.
+static bool UsesPageOverlay(const AppCommandCtx& ctx) {
+    return ctx.isFixedPage && !ctx.isImageCollection;
 }
 
 static CommandVisibility MapForSurface(CommandVisibility v, CommandSurface surface) {
@@ -488,6 +509,33 @@ CommandVisibility GetCommandVisibility(int cmdId, const AppCommandCtx& ctx, Comm
 
     if (!ctx.isDocLoaded) {
         return CommandVisibility::Hide;
+    }
+
+    if (cmdId == CmdTogglePageGrid || cmdId == CmdConfigurePageGrid || cmdId == CmdToggleTransparencyGrid ||
+        cmdId == CmdToggleLinks) {
+        if (!UsesPageOverlay(ctx)) {
+            return CommandVisibility::Hide;
+        }
+    }
+    // outlines image elements on the page canvas
+    if (cmdId == CmdToggleImages && !ctx.isFixedPage) {
+        return CommandVisibility::Hide;
+    }
+    // empty widget tint; only a PDF has form fields
+    if (cmdId == CmdToggleHighlightFormFields && !ctx.isPdf) {
+        return CommandVisibility::Hide;
+    }
+    if (ctx.isImageCollection && (CmdIdInList(cmdId, removeIfNoExtractedText) || cmdId == CmdSelectionHandler ||
+                                  origCmdId == CmdSelectionHandler)) {
+        return CommandVisibility::Hide;
+    }
+    // selects the page's text; CHM / markdown use their own select-all
+    if (!ctx.isFixedPage && cmdId == CmdSelectCurrentPage) {
+        return CommandVisibility::Hide;
+    }
+    // search has nothing to scan; the item stays, greyed, as in the Go To menu
+    if (cmdId == CmdFindFirst && ctx.isImageCollection) {
+        return MapForSurface(CommandVisibility::Disable, surface);
     }
 
     if ((cmdId == CmdNavigateThumbnail || cmdId == CmdToggleThumbnails) && !ctx.isFixedPage) {

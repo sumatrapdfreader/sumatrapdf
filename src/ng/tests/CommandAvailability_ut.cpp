@@ -40,6 +40,9 @@ void CommandAvailability_UnitTests() {
     utassert(MenuVis(CmdGoToHomePage, noDoc) == CommandVisibility::Show);
     utassert(PaletteVis(CmdGoToHomePage, noDoc) == CommandVisibility::Hide);
     utassert(MenuVis(CmdPrint, noDoc) == CommandVisibility::Hide);
+    utassert(MenuVis(CmdTogglePageGrid, noDoc) == CommandVisibility::Hide);
+    utassert(MenuVis(CmdToggleTransparencyGrid, noDoc) == CommandVisibility::Hide);
+    utassert(!CmdWorksWithoutDocument(CmdTogglePageGrid));
 
     bool remove = false, disable = false;
     GetCommandIdState(&noDoc, CmdPrint, &remove, &disable);
@@ -82,6 +85,9 @@ void CommandAvailability_UnitTests() {
     doc.isChm = true;
     utassert(MenuVis(CmdRotateLeft, doc) == CommandVisibility::Hide);
     utassert(MenuVis(CmdZoomFitPage, doc) == CommandVisibility::Hide);
+    utassert(MenuVis(CmdZoomFitByOrientation, doc) == CommandVisibility::Hide);
+    utassert(MenuVis(CmdZoom100, doc) == CommandVisibility::Show);
+    utassert(MenuVis(CmdSelectCurrentPage, doc) == CommandVisibility::Hide);
     doc.isChm = false;
 
     // free pan only applies to the fixed-page display model
@@ -100,7 +106,23 @@ void CommandAvailability_UnitTests() {
     utassert(PaletteVis(CmdReadAloudFromCursorPosition, doc) == CommandVisibility::Show);
     doc.isImageCollection = true;
     utassert(PaletteVis(CmdReadAloudFromCursorPosition, doc) == CommandVisibility::Hide);
+    utassert(MenuVis(CmdTogglePageGrid, doc) == CommandVisibility::Hide);
+    utassert(MenuVis(CmdConfigurePageGrid, doc) == CommandVisibility::Hide);
+    utassert(MenuVis(CmdToggleTransparencyGrid, doc) == CommandVisibility::Hide);
+    utassert(MenuVis(CmdToggleLinks, doc) == CommandVisibility::Hide);
+    utassert(MenuVis(CmdFindFirst, doc) == CommandVisibility::Disable);
+    utassert(PaletteVis(CmdFindFirst, doc) == CommandVisibility::Hide);
+    utassert(MenuVis(CmdSelectCurrentPage, doc) == CommandVisibility::Hide);
+    utassert(MenuVis(CmdTranslateSelectionWithGoogle, doc) == CommandVisibility::Hide);
+    utassert(MenuVis(CmdCopySelection, doc) == CommandVisibility::Disable);
     doc.isImageCollection = false;
+    doc.isPdf = false;
+    utassert(MenuVis(CmdTogglePageGrid, doc) == CommandVisibility::Show);
+    utassert(MenuVis(CmdToggleTransparencyGrid, doc) == CommandVisibility::Show);
+    utassert(MenuVis(CmdFindFirst, doc) == CommandVisibility::Show);
+    utassert(MenuVis(CmdToggleHighlightFormFields, doc) == CommandVisibility::Hide);
+    doc.isPdf = true;
+    utassert(MenuVis(CmdToggleHighlightFormFields, doc) == CommandVisibility::Show);
 
     // annotations need an engine that supports them
     utassert(MenuVis(CmdSaveAnnotations, doc) == CommandVisibility::Hide);
