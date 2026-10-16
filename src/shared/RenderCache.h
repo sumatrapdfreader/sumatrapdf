@@ -13,7 +13,7 @@ constexpr int kMaxPageRequests = 8;
 // GDI resources/memory when caching many larger bitmaps
 // TODO: this should be based on amount of memory taken by rendered pages
 // i.e. one big page can use as much memory as lots of small pages
-constexpr int kMaxBitmapsCached = 128;
+constexpr int kMaxBitmapsCached = 256;
 
 // predictive rendering renders up to this many pages ahead, one at a time
 // (chained), so they don't flood the render queue

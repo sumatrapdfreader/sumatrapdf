@@ -115,7 +115,7 @@ bool RenderCache_UnitTestFullOfOneVisiblePage() {
     {
         RenderCache cache;
         cache.maxRenderThreads = 0;
-        cache.maxTileSize = {400, 400};
+        cache.maxTileSize = {200, 200};
         PageRenderRequest visible;
         visible.dm = dm;
         visible.pageNo = 1;
@@ -130,7 +130,7 @@ bool RenderCache_UnitTestFullOfOneVisiblePage() {
         int rowFromTop = std::max(0, -page.y) * nTiles / page.dy;
         visible.tile = TilePosition(res, (u16)(nTiles - 1 - rowFromTop), (u16)col);
 
-        if (res >= 4) {
+        if (res >= 5) {
             for (int r = 0; r < nTiles && cache.cacheCount < kMaxBitmapsCached; r++) {
                 for (int c = 0; c < nTiles && cache.cacheCount < kMaxBitmapsCached; c++) {
                     PageRenderRequest req = visible;
