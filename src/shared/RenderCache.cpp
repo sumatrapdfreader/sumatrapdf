@@ -43,6 +43,7 @@ bool ShowTransparencyGrid();
 
 struct RenderThreadData;
 static void RenderCacheThread(RenderThreadData* data);
+static bool IsTileVisible(DisplayModel* dm, int pageNo, TilePosition tile, float fuzz);
 
 static bool gShowTileLayout = false;
 int gMaxRenderThreads = 8;
@@ -325,6 +326,17 @@ static bool FreeIfFull(RenderCache* rc, const PageRenderRequest& req) {
     for (int i = 0; i < n; i++) {
         auto* entry = rc->cache[i];
         if (entry->dm == dm && !dm->PageVisibleNearby(entry->pageNo)) {
+            bool didDrop = rc->DropCacheEntryIfNotUsed(entry);
+            if (didDrop) {
+                return true;
+            }
+        }
+    }
+
+    // ... or an off-screen tile of a visible page (a deeply zoomed page has more tiles than the cache)
+    for (int i = 0; i < n; i++) {
+        auto* entry = rc->cache[i];
+        if (entry->dm == dm && entry->tile.res > 0 && !IsTileVisible(dm, entry->pageNo, entry->tile, 0)) {
             bool didDrop = rc->DropCacheEntryIfNotUsed(entry);
             if (didDrop) {
                 return true;

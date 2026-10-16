@@ -106,6 +106,7 @@ bool ShortcutParse_UnitTestShiftedPunct();
 bool AnnotSearch_UnitTests();
 void ReadAloudHighlight_UnitTests();
 bool RenderCache_UnitTestCookieUnlocked();
+bool RenderCache_UnitTestFullOfOneVisiblePage();
 
 static void ParseCommandLineTest() {
     {
@@ -505,6 +506,7 @@ int RunAppUnitTests(bool forAi) {
     utassert(ShortcutParse_UnitTestShiftedPunct());
     utassert(AnnotSearch_UnitTests());
     utassert(RenderCache_UnitTestCookieUnlocked());
+    utassert(RenderCache_UnitTestFullOfOneVisiblePage());
     ReadAloudHighlight_UnitTests();
 #endif
     return utassert_print_results();

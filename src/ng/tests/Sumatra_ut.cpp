@@ -54,6 +54,7 @@ void CachedObjects_UnitTests();
 void CommandPaletteModel_UnitTests();
 void ImageReader_UnitTests();
 bool RenderCache_UnitTestCookieUnlocked();
+bool RenderCache_UnitTestFullOfOneVisiblePage();
 
 #if OS_POSIX && !OS_WASM
 static void AIChatProcessTest() {
@@ -325,6 +326,7 @@ void SumatraPDF_UnitTests() {
     CommandPaletteModel_UnitTests();
     ImageReader_UnitTests();
     utassert(RenderCache_UnitTestCookieUnlocked());
+    utassert(RenderCache_UnitTestFullOfOneVisiblePage());
 #if OS_POSIX && !OS_WASM
     AIChatProcessTest();
 #endif
