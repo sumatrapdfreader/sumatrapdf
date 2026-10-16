@@ -102,6 +102,7 @@ FixedPageUI [
 		Subdivisions = 4
 		OffsetX = 0
 		OffsetY = 0
+		Slant = 90
 		Color = #8080ff
 		Style = dots
 		Units = in
