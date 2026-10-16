@@ -65,7 +65,7 @@ export async function testit(): Promise<void> {
       if (!/show=1/.test(reset)) {
         throw new Error(`issue-4398: reset-grid turned off Show Grid: ${reset}`);
       }
-      if (!/width=72/.test(reset) || !/subdiv=4/.test(reset) || !/ox=0/.test(reset)) {
+      if (!/width=72/.test(reset) || !/subdiv=4/.test(reset) || !/ox=0/.test(reset) || !/slant=90/.test(reset)) {
         throw new Error(`issue-4398: reset-grid did not restore defaults: ${reset}`);
       }
     },

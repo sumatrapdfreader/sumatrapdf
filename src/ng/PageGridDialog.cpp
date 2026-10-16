@@ -55,54 +55,78 @@ void SetShowPageGrid(bool on) {
 
 // --- the overlay (orig's Canvas.cpp) ----------------------------------------
 
-enum class PageGridStyleKind {
-    Dots,
-    Dotted,
-    Solid
-};
+static void PageGridDash(gp::PaintCtx* ctx, Point a, Point b, Color col) {
+    int dx = b.x - a.x;
+    int dy = b.y - a.y;
+    float len = sqrtf((float)(dx * dx + dy * dy));
+    if (len < 1.f) {
+        return;
+    }
+    for (float t = 0; t < len; t += 4.f) {
+        float t2 = t + 2.f;
+        if (t2 > len) {
+            t2 = len;
+        }
+        Point p0{a.x + (int)(dx * (t / len)), a.y + (int)(dy * (t / len))};
+        Point p1{a.x + (int)(dx * (t2 / len)), a.y + (int)(dy * (t2 / len))};
+        CanvasDrawLine(ctx, p0, p1, col, 1);
+    }
+}
 
-struct PageGridDraw {
-    float widthPt = kPageGridDefaultSizePt;
-    float heightPt = kPageGridDefaultSizePt;
-    int subdiv = kPageGridDefaultSubdivisions;
-    float offsetXPt = 0;
-    float offsetYPt = 0;
-    Color color = kPageGridDefaultColor;
-    PageGridStyleKind style = PageGridStyleKind::Dots;
-};
-
-static PageGridDraw GetPageGridDraw() {
-    PageGridDraw d;
-    PageGrid* pg = PageGridPrefs();
-    if (!pg) {
-        return d;
+static void PaintPageGridSlanted(DisplayModel* dm, gp::PaintCtx* ctx, const PageGridDraw& g) {
+    EngineBase* engine = dm->GetEngine();
+    if (!engine || engine->isImageCollection) {
+        return;
     }
-    if (pg->width > 0) {
-        d.widthPt = pg->width;
+    Rect viewPort(Point(), dm->GetViewPort().Size());
+    Vec<Rect> dots;
+    for (int pageNo = 1; pageNo <= dm->PageCount(); pageNo++) {
+        PageInfo* pi = dm->GetPageInfo(pageNo);
+        if (!pi || !pi->isShown || 0.0 == pi->visibleRatio) {
+            continue;
+        }
+        Rect bounds = pi->pageOnScreen.Intersect(viewPort);
+        if (bounds.IsEmpty()) {
+            continue;
+        }
+        RectF box = engine->PageMediabox(pageNo);
+        if (box.IsEmpty()) {
+            continue;
+        }
+        RectF vis = dm->CvtFromScreen(bounds, pageNo).Intersect(box);
+        if (vis.IsEmpty()) {
+            continue;
+        }
+        bool drawMinor = false;
+        if (!PageGridSlantVisible(dm, pageNo, g, box, drawMinor)) {
+            continue;
+        }
+        Vec<PageGridSeg> segs;
+        PageGridSlantedSegs(g, box, vis, drawMinor, segs);
+        bool dashed = g.style == PageGridStyleKind::Dotted;
+        for (PageGridSeg& s : segs) {
+            if (s.dot) {
+                Point p = dm->CvtToScreen(pageNo, PointF(s.x0, s.y0));
+                int d = s.major ? 3 : 1;
+                Rect r{p.x - (d / 2), p.y - (d / 2), d, d};
+                if (!r.Intersect(bounds).IsEmpty()) {
+                    VecAppend(dots, r);
+                }
+                continue;
+            }
+            Point a = dm->CvtToScreen(pageNo, PointF(s.x0, s.y0));
+            Point b = dm->CvtToScreen(pageNo, PointF(s.x1, s.y1));
+            if (dashed && !s.major) {
+                PageGridDash(ctx, a, b, g.color);
+                continue;
+            }
+            float w = (s.major && !dashed) ? 2.f : 1.f;
+            CanvasDrawLine(ctx, a, b, g.color, w);
+        }
     }
-    if (pg->height > 0) {
-        d.heightPt = pg->height;
+    if (len(dots) > 0) {
+        CanvasFillRects(ctx, dots.els, len(dots), g.color, 255, 0);
     }
-    if (pg->subdivisions > 0) {
-        d.subdiv = pg->subdivisions;
-    }
-    d.offsetXPt = pg->offsetX;
-    d.offsetYPt = pg->offsetY;
-    ParseColor(pg->color);
-    if (pg->color.parsedOk && !IsSpecialColor(pg->color.col)) {
-        d.color = pg->color.col;
-    }
-    if (str::EqI(pg->style, StrL("dotted"))) {
-        d.style = PageGridStyleKind::Dotted;
-    } else if (str::EqI(pg->style, StrL("solid"))) {
-        d.style = PageGridStyleKind::Solid;
-    }
-    d.widthPt = limitValue(d.widthPt, 1.f, 720.f);
-    d.heightPt = limitValue(d.heightPt, 1.f, 720.f);
-    d.subdiv = limitValue(d.subdiv, 1, 32);
-    d.offsetXPt = limitValue(d.offsetXPt, -720.f, 720.f);
-    d.offsetYPt = limitValue(d.offsetYPt, -720.f, 720.f);
-    return d;
 }
 
 // ng: orig strokes with a GDI pen; here every line is a filled rect in document
@@ -201,10 +225,15 @@ bool PageGridCovers(MainWindow* win) {
 }
 
 void PaintPageGrid(DisplayModel* dm, gpui::PaintCtx* ctx) {
+    PageGridDraw g = GetPageGridDraw();
+    if (!PageGridIsUpright(g.slantDeg)) {
+        PaintPageGridSlanted(dm, ctx, g);
+        return;
+    }
     Vec<Rect> rects;
     CollectPageGridMarks(dm, rects);
     if (len(rects) > 0) {
-        CanvasFillRects(ctx, rects.els, len(rects), GetPageGridDraw().color, 255, 0);
+        CanvasFillRects(ctx, rects.els, len(rects), g.color, 255, 0);
     }
 }
 
@@ -238,6 +267,7 @@ struct PageGridDlg {
     gpui::InputState* editWidth = nullptr;
     gpui::InputState* editHeight = nullptr;
     gpui::InputState* editSub = nullptr;
+    gpui::InputState* editSlant = nullptr;
     gpui::InputState* editOffX = nullptr;
     gpui::InputState* editOffY = nullptr;
     gpui::InputState* editColor = nullptr;
@@ -308,6 +338,7 @@ static void WriteSnapToPrefs() {
     pg->subdivisions = snap.subdivisions;
     pg->offsetX = snap.offsetX;
     pg->offsetY = snap.offsetY;
+    pg->slant = snap.slant;
     SetColorText(pg->color, snap.color);
     str::ReplaceWithCopy(&pg->style, snap.style);
     str::ReplaceWithCopy(&pg->units, snap.units);
@@ -327,6 +358,8 @@ static void FillEditsFromPt() {
                       ToGpui(PageGridNumTemp(PageGridFromPt(pg->height > 0 ? pg->height : kPageGridDefaultSizePt, u))));
     int n = pg->subdivisions > 0 ? pg->subdivisions : kPageGridDefaultSubdivisions;
     gp::InputSetValue(gPageGrid.editSub, ToGpui(fmt("%d", n)));
+    float slant = pg->slant == 0 ? kPageGridDefaultSlant : pg->slant;
+    gp::InputSetValue(gPageGrid.editSlant, ToGpui(PageGridNumTemp(slant)));
     gp::InputSetValue(gPageGrid.editOffX, ToGpui(PageGridNumTemp(PageGridFromPt(pg->offsetX, u))));
     gp::InputSetValue(gPageGrid.editOffY, ToGpui(PageGridNumTemp(PageGridFromPt(pg->offsetY, u))));
     gPageGrid.updating = false;
@@ -374,6 +407,10 @@ static void ApplyLive() {
         pg->subdivisions = sub;
         pg->offsetX = ox;
         pg->offsetY = oy;
+    }
+    float slant = pg->slant;
+    if (ParseEditFloat(gPageGrid.editSlant, &slant)) {
+        pg->slant = PageGridClampSlant(slant);
     }
     int styleIdx = gPageGrid.ddStyle.sel;
     if (styleIdx < 0) {
@@ -444,9 +481,20 @@ bool IsPageGridDialogVisible() {
     return gPageGrid.visible && !gPageGridTw;
 }
 
+bool IsPageGridDialogOpen() {
+    return gPageGrid.visible;
+}
+
+void PageGridDialogSyncFromPrefs() {
+    if (!gPageGrid.visible || !gPageGrid.editSlant) {
+        return;
+    }
+    FillEditsFromPt();
+}
+
 static void FreePageGridInputs() {
     MainWindow* win = gPageGrid.win;
-    gp::InputState* edits[] = {gPageGrid.editWidth, gPageGrid.editHeight, gPageGrid.editSub,
+    gp::InputState* edits[] = {gPageGrid.editWidth, gPageGrid.editHeight, gPageGrid.editSub,  gPageGrid.editSlant,
                                gPageGrid.editOffX,  gPageGrid.editOffY,   gPageGrid.editColor};
     for (gp::InputState* e : edits) {
         if (e && win && win->gpuiWin) {
@@ -457,6 +505,7 @@ static void FreePageGridInputs() {
     gPageGrid.editWidth = nullptr;
     gPageGrid.editHeight = nullptr;
     gPageGrid.editSub = nullptr;
+    gPageGrid.editSlant = nullptr;
     gPageGrid.editOffX = nullptr;
     gPageGrid.editOffY = nullptr;
     gPageGrid.editColor = nullptr;
@@ -495,7 +544,7 @@ void ShowPageGridDialog(MainWindow* win) {
     }
     gPageGrid.win = win;
     gp::App* app = win->gpuiWin ? win->gpuiWin->app : nullptr;
-    gp::InputState** edits[] = {&gPageGrid.editWidth, &gPageGrid.editHeight, &gPageGrid.editSub,
+    gp::InputState** edits[] = {&gPageGrid.editWidth, &gPageGrid.editHeight, &gPageGrid.editSub,  &gPageGrid.editSlant,
                                 &gPageGrid.editOffX,  &gPageGrid.editOffY,   &gPageGrid.editColor};
     for (gp::InputState** e : edits) {
         *e = new gp::InputState();
@@ -626,6 +675,7 @@ gp::El* PageGridDialogBuild(MainWindow* win, gp::Ctx* cx) {
     gPageGrid.editWidth->onChange = onChanged;
     gPageGrid.editHeight->onChange = onChanged;
     gPageGrid.editSub->onChange = onChanged;
+    gPageGrid.editSlant->onChange = onChanged;
     gPageGrid.editOffX->onChange = onChanged;
     gPageGrid.editOffY->onChange = onChanged;
     gPageGrid.editColor->onChange = gp::ListenTo(gPageGridView, &PageGridView::OnColorChanged);
@@ -635,9 +685,10 @@ gp::El* PageGridDialogBuild(MainWindow* win, gp::Ctx* cx) {
     Color colEdge = ThemeEdgeColor();
 
     Str units = Tr("Units:"), horz = Tr("Horizontal:"), vert = Tr("Vertical:"), sub = Tr("Subdivisions:");
-    Str fromLeft = Tr("From left:"), fromBottom = Tr("From bottom:"), style = Tr("Grid style:"), color = Tr("Color:");
+    Str slant = Tr("Slant:"), fromLeft = Tr("From left:"), fromBottom = Tr("From bottom:");
+    Str style = Tr("Grid style:"), color = Tr("Color:");
     float labelDx = 0;
-    for (Str l : {units, horz, vert, sub, fromLeft, fromBottom, style, color}) {
+    for (Str l : {units, horz, vert, sub, slant, fromLeft, fromBottom, style, color}) {
         labelDx = std::max(labelDx, DlgFieldLabelDx(cx, l));
     }
     auto row = [&](Str label, gp::El* ctrl) {
@@ -664,6 +715,9 @@ gp::El* PageGridDialogBuild(MainWindow* win, gp::Ctx* cx) {
     spacing->Child(row(horz, edit(GStrL("grid-w"), gPageGrid.editWidth)));
     spacing->Child(row(vert, edit(GStrL("grid-h"), gPageGrid.editHeight)));
     spacing->Child(row(sub, edit(GStrL("grid-sub"), gPageGrid.editSub)));
+    spacing->Child(row(slant, edit(GStrL("grid-slant"), gPageGrid.editSlant)));
+    spacing->Child(DlgSectionHeader(cx, Tr("Drag a line on the page to resize it")));
+    spacing->Child(DlgSectionHeader(cx, Tr("Alt+drag when this dialog is closed")));
     spacing->Child(DlgSectionHeader(cx, Tr("Grid line origin offset")));
     spacing->Child(row(fromLeft, edit(GStrL("grid-ox"), gPageGrid.editOffX)));
     spacing->Child(row(fromBottom, edit(GStrL("grid-oy"), gPageGrid.editOffY)));

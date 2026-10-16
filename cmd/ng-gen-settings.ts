@@ -462,6 +462,12 @@ const pageGrid: Field[] = [
   field("Subdivisions", Int, 4, "minor lines per major cell").ver("3.7"),
   field("OffsetX", Float, 0, "horizontal origin offset from the left of the page, in PDF points").ver("3.7"),
   field("OffsetY", Float, 0, "vertical origin offset from the bottom of the page, in PDF points").ver("3.7"),
+  field(
+    "Slant",
+    Float,
+    90,
+    "angle of the vertical grid lines from the horizontal, in degrees. 90 is upright; 52 to 60 is a typical calligraphy slant",
+  ).ver("3.7"),
   field("Color", Color, rgb(128, 128, 255), "color of the page grid overlay").ver("3.7"),
   field("Style", Str, "dots", "grid overlay style: dots (marks at intersections), dotted (dotted lines), or solid")
     .enum(["dots", "dotted", "solid"])
@@ -513,7 +519,7 @@ const fixedPageUI: Field[] = [
   struct(
     "PageGrid",
     pageGrid,
-    "measurement grid overlay (View > Page Grid). Spacing and style are saved; showing the grid is session-only",
+    "measurement grid overlay (View > Page Grid). Spacing, slant and style are saved; showing the grid is session-only. Drag a grid line while Configure Page Grid is open, or Alt+drag, to resize a cell",
   ).ver("3.7"),
 ];
 

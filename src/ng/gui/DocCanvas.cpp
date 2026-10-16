@@ -45,6 +45,7 @@
 #include "Toolbar.h"
 #include "SelectTextKeyboard.h"
 #include "SumatraDialogs.h"
+#include "PageGridDialogCommon.h"
 #include "gui/GpuiTheme.h"
 #include "OverlayScrollbar.h"
 #include "ReadingBar.h"
@@ -390,11 +391,13 @@ void CanvasDrawText(gp::PaintCtx* ctx, Str s, Point at, Color col, float fontSiz
 // the modifiers of the last mouse or key event; orig asks GetKeyState()
 static bool gCtrlPressed = false;
 static bool gShiftPressed = false;
+static bool gAltPressed = false;
 static bool gPlatformPressed = false;
 
 static void SetCanvasModifiers(const gp::Modifiers& m) {
     gCtrlPressed = m.control;
     gShiftPressed = m.shift;
+    gAltPressed = m.alt;
     gPlatformPressed = m.platform;
 }
 
@@ -2040,6 +2043,16 @@ static void OnSetCursor(MainWindow* win, Point pt) {
     if (win->mouseAction != MouseAction::None) {
         DeleteLinkTooltip(win);
     }
+    if (DisplayModel* dm = win->AsFixed()) {
+        bool allow = PageGridDragActive() || IsPageGridDialogOpen() || gAltPressed;
+        PageGridAxis axis = PageGridCursorAxis(dm, pt.x, pt.y, allow);
+        if (axis != PageGridAxis::None) {
+            int cur = axis == PageGridAxis::Height ? (int)gp::CursorKind::RowResize : (int)gp::CursorKind::ColResize;
+            CanvasSetCursor(win, cur);
+            DeleteLinkTooltip(win);
+            return;
+        }
+    }
     if (ReadingBarOnSetCursor(win, pt.x, pt.y)) {
         DeleteLinkTooltip(win);
         return;
@@ -2595,6 +2608,11 @@ static void OnMouseLeftButtonDown(MainWindow* win, int x, int y) {
     if (AnnotationPlacementOnLeftDown(win, Point{x, y}, CanvasShiftPressed(), CanvasCtrlPressed())) {
         return;
     }
+    // Configure Page Grid is open, or Alt is held: a press on a grid line
+    // resizes that cell instead of selecting text.
+    if ((IsPageGridDialogOpen() || gAltPressed) && PageGridDragStart(win->AsFixed(), x, y)) {
+        return;
+    }
     if (IsRightDragging(win)) {
         return;
     }
@@ -2946,6 +2964,11 @@ static void OnMouseLeftButtonUp(MainWindow* win, int x, int y) {
     if (AnnotationPlacementOnLeftUp(win, Point{x, y}, CanvasShiftPressed())) {
         return;
     }
+    if (PageGridDragActive()) {
+        PageGridDragMove(dm, x, y);
+        PageGridDragEnd();
+        return;
+    }
     // ng: orig's press that only deselected leaves no mouse action behind; the
     // flag stays up for the double-click it may be the first half of
     if (win->pressOnlyDeselected) {
@@ -3199,6 +3222,11 @@ void DocCanvasClick(MainWindow* win, int x, int y) {
 
 // orig's CancelDrag: Escape abandons whatever the mouse was doing
 void CanvasCancelDrag(MainWindow* win) {
+    if (PageGridDragActive()) {
+        PageGridDragCancel();
+        CanvasSetCursor(win, kCurArrow);
+        return;
+    }
     Point pt = win->dragPrevPos;
     if (StopAnnotationResize(win, true)) {
         win->mouseAction = MouseAction::None;
@@ -3234,6 +3262,13 @@ static void OnMouseMove(MainWindow* win, int x, int y) {
     }
     DisplayModel* dm = win->AsFixed();
     if (!dm) {
+        return;
+    }
+    if (PageGridDragActive()) {
+        PageGridDragMove(dm, x, y);
+        PageGridAxis axis = PageGridCursorAxis(dm, x, y, true);
+        int cur = axis == PageGridAxis::Height ? (int)gp::CursorKind::RowResize : (int)gp::CursorKind::ColResize;
+        CanvasSetCursor(win, cur);
         return;
     }
     // orig's presentation branch: the cursor comes back when the mouse moves

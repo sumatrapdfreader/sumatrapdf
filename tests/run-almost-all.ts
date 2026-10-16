@@ -33,6 +33,7 @@ import { testit as cmykImageSave } from "./cmyk-image-save.ts";
 import { testit as issue6214 } from "./issue-6214.ts";
 import { testit as issue1809 } from "./issue-1809.ts";
 import { testit as issue4398 } from "./issue-4398.ts";
+import { testit as issue6346 } from "./issue-6346.ts";
 import { testit as issue6039 } from "./issue-6039.ts";
 import { testit as issue5846 } from "./issue-5846.ts";
 import { testit as issue5941 } from "./issue-5941.ts";
@@ -556,6 +557,7 @@ export const tests: NamedTest[] = [
   ["issue-5944", issue5944],
   ["issue-6039", issue6039],
   ["issue-4398", issue4398],
+  ["issue-6346", issue6346],
   ["issue-5964", issue5964],
   ["issue-6013", issue6013],
   ["issue-5989", issue5989],

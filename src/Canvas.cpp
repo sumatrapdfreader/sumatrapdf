@@ -782,6 +782,14 @@ static void StopMouseDrag(MainWindow* win, int x, int y, bool aborted) {
 static bool StopAnnotationResize(MainWindow* win, bool aborted);
 
 void CancelDrag(MainWindow* win) {
+    if (PageGridDragActive()) {
+        PageGridDragCancel();
+        if (GetCapture() == win->hwndCanvas) {
+            ReleaseCapture();
+        }
+        SetCanvasCursor(win, IDC_ARROW);
+        return;
+    }
     if (StopAnnotationResize(win, true)) {
         win->mouseAction = MouseAction::None;
         win->linkOnLastButtonDown = nullptr;
@@ -1016,6 +1024,12 @@ static void OnMouseMove(MainWindow* win, int x, int y, WPARAM key) {
     DisplayModel* dm = win->AsFixed();
     // ReportIf(!dm); // can happen if reload fails, we delete DisplayModel
     if (!dm) return;
+
+    if (PageGridDragActive()) {
+        PageGridDragMove(dm, x, y);
+        SetCursorCached(PageGridCursorAxis(dm, x, y, true) == PageGridAxis::Height ? IDC_SIZENS : IDC_SIZEWE);
+        return;
+    }
 
     if (AnnotationPlacementOnMouseMove(win, Point{x, y}, key)) {
         return;
@@ -1431,6 +1445,13 @@ static void OnMouseLeftButtonDown(MainWindow* win, int x, int y, WPARAM key) {
         return;
     }
 
+    // Configure Page Grid is open, or Alt is held: a press on a grid line
+    // resizes that cell instead of selecting text.
+    if ((IsPageGridDialogOpen() || IsAltPressed()) && PageGridDragStart(dm, x, y)) {
+        SetCapture(win->hwndCanvas);
+        return;
+    }
+
     // Edit PDF with an annotation selected: a press anywhere but on that
     // annotation or its resize handles only deselects it
     Annotation* locked = AnnotationLockingMouse(win);
@@ -1670,6 +1691,15 @@ static void OnMouseLeftButtonUp(MainWindow* win, int x, int y, WPARAM key) {
 
     DisplayModel* dm = win->AsFixed();
     ReportIf(!dm);
+
+    if (PageGridDragActive()) {
+        PageGridDragMove(dm, x, y);
+        PageGridDragEnd();
+        if (GetCapture() == win->hwndCanvas) {
+            ReleaseCapture();
+        }
+        return;
+    }
 
     if (AnnotationPlacementOnLeftUp(win, Point{x, y}, key)) {
         return;
@@ -2317,56 +2347,6 @@ constexpr int kPageGridMinMajorPx = 4;
 constexpr int kPageGridMaxDots = 8000;
 constexpr int kPageGridMaxLines = 800;
 
-enum class PageGridStyleKind {
-    Dots,
-    Dotted,
-    Solid
-};
-
-struct PageGridDraw {
-    float widthPt = 72.f;
-    float heightPt = 72.f;
-    int subdiv = 4;
-    float offsetXPt = 0;
-    float offsetYPt = 0;
-    Color color = kPageGridDefaultColor;
-    PageGridStyleKind style = PageGridStyleKind::Dots;
-};
-
-static PageGridDraw GetPageGridDraw() {
-    PageGridDraw d;
-    if (!gSettings) {
-        return d;
-    }
-    PageGrid& pg = gSettings->fixedPageUI.pageGrid;
-    if (pg.width > 0) {
-        d.widthPt = pg.width;
-    }
-    if (pg.height > 0) {
-        d.heightPt = pg.height;
-    }
-    if (pg.subdivisions > 0) {
-        d.subdiv = pg.subdivisions;
-    }
-    d.offsetXPt = pg.offsetX;
-    d.offsetYPt = pg.offsetY;
-    ParseColor(pg.color);
-    if (pg.color.parsedOk && !IsSpecialColor(pg.color.col)) {
-        d.color = pg.color.col;
-    }
-    if (str::EqI(pg.style, StrL("dotted"))) {
-        d.style = PageGridStyleKind::Dotted;
-    } else if (str::EqI(pg.style, StrL("solid"))) {
-        d.style = PageGridStyleKind::Solid;
-    }
-    d.widthPt = limitValue(d.widthPt, 1.f, 720.f);
-    d.heightPt = limitValue(d.heightPt, 1.f, 720.f);
-    d.subdiv = limitValue(d.subdiv, 1, 32);
-    d.offsetXPt = limitValue(d.offsetXPt, -720.f, 720.f);
-    d.offsetYPt = limitValue(d.offsetYPt, -720.f, 720.f);
-    return d;
-}
-
 static int PageGridScreenDist(Point a, Point b) {
     int dx = a.x - b.x;
     int dy = a.y - b.y;
@@ -2384,6 +2364,32 @@ static void PageGridStroke(HDC hdc, DisplayModel* dm, int pageNo, PointF a, Poin
     Point sb = dm->CvtToScreen(pageNo, b);
     MoveToEx(hdc, sa.x, sa.y, nullptr);
     LineTo(hdc, sb.x, sb.y);
+}
+
+static void PaintPageGridSlanted(DisplayModel* dm, HDC hdc, int pageNo, const Rect& bounds, const RectF& vis,
+                                 const RectF& box, const PageGridDraw& g, HBRUSH br, HPEN penMinor, HPEN penMajor) {
+    bool drawMinor = false;
+    if (!PageGridSlantVisible(dm, pageNo, g, box, drawMinor)) {
+        return;
+    }
+    Vec<PageGridSeg> segs;
+    PageGridSlantedSegs(g, box, vis, drawMinor, segs);
+    int saved = SaveDC(hdc);
+    IntersectClipRect(hdc, bounds.x, bounds.y, bounds.x + bounds.dx, bounds.y + bounds.dy);
+    SetBkMode(hdc, TRANSPARENT);
+    for (PageGridSeg& s : segs) {
+        if (s.dot) {
+            Point pt = dm->CvtToScreen(pageNo, PointF(s.x0, s.y0));
+            int sz = s.major ? 3 : 1;
+            int o = sz / 2;
+            RECT rc = {pt.x - o, pt.y - o, pt.x - o + sz, pt.y - o + sz};
+            FillRect(hdc, &rc, br);
+            continue;
+        }
+        SelectObject(hdc, s.major ? penMajor : penMinor);
+        PageGridStroke(hdc, dm, pageNo, PointF(s.x0, s.y0), PointF(s.x1, s.y1));
+    }
+    RestoreDC(hdc, saved);
 }
 
 // Graph-paper overlay in page space, clipped to the visible page.
@@ -2429,6 +2435,10 @@ static void PaintPageGrid(DisplayModel* dm, HDC hdc) {
 
         float ox = box.x + g.offsetXPt;
         float oy = box.y + g.offsetYPt;
+        if (!PageGridIsUpright(g.slantDeg)) {
+            PaintPageGridSlanted(dm, hdc, pageNo, bounds, vis, box, g, br, penMinor, penMajor);
+            continue;
+        }
         Point p0 = dm->CvtToScreen(pageNo, PointF(ox, oy));
         Point px = dm->CvtToScreen(pageNo, PointF(ox + minorX, oy));
         Point py = dm->CvtToScreen(pageNo, PointF(ox, oy + minorY));
@@ -3225,6 +3235,16 @@ static LRESULT OnSetCursor(MainWindow* win, HWND hwnd) {
     if (ReadingBarOnSetCursor(win)) {
         win->DeleteToolTip();
         return TRUE;
+    }
+    if (DisplayModel* dm = win->AsFixed()) {
+        Point pt = HwndGetCursorPos(hwnd);
+        bool allow = PageGridDragActive() || IsPageGridDialogOpen() || IsAltPressed();
+        PageGridAxis axis = PageGridCursorAxis(dm, pt.x, pt.y, allow);
+        if (axis != PageGridAxis::None) {
+            SetCursorCached(axis == PageGridAxis::Height ? IDC_SIZENS : IDC_SIZEWE);
+            win->DeleteToolTip();
+            return TRUE;
+        }
     }
     if (win->mouseAction != MouseAction::None) {
         win->DeleteToolTip();

@@ -37,6 +37,8 @@
 //   Horizontal:     1____
 //   Vertical:       1____
 //   Subdivisions:   4____
+//   Slant:          90____   degrees from horizontal; 90 is upright
+//   Drag a line on the page to resize it
 //   Grid line origin offset
 //   From left:      0____
 //   From bottom:    0____
@@ -63,6 +65,7 @@ struct PageGridWnd : WindowBase {
     Edit* editWidth = nullptr;
     Edit* editHeight = nullptr;
     Edit* editSub = nullptr;
+    Edit* editSlant = nullptr;
     Edit* editOffX = nullptr;
     Edit* editOffY = nullptr;
     DropDown* ddStyle = nullptr;
@@ -137,6 +140,7 @@ void PageGridWnd::WriteSnapToPrefs() {
     pg->subdivisions = snap.subdivisions;
     pg->offsetX = snap.offsetX;
     pg->offsetY = snap.offsetY;
+    pg->slant = snap.slant;
     SetColorText(pg->color, snap.color);
     str::ReplaceWithCopy(&pg->style, snap.style);
     str::ReplaceWithCopy(&pg->units, snap.units);
@@ -160,6 +164,10 @@ void PageGridWnd::FillEditsFromPt() {
     if (editSub) {
         int n = pg->subdivisions > 0 ? pg->subdivisions : kPageGridDefaultSubdivisions;
         editSub->SetText(fmt("%d", n));
+    }
+    if (editSlant) {
+        float slant = pg->slant == 0 ? kPageGridDefaultSlant : pg->slant;
+        editSlant->SetText(PageGridNumTemp(slant));
     }
     if (editOffX) {
         editOffX->SetText(PageGridNumTemp(PageGridFromPt(pg->offsetX, unitIdx)));
@@ -209,6 +217,10 @@ void PageGridWnd::ApplyLive() {
         pg->subdivisions = sub;
         pg->offsetX = ox;
         pg->offsetY = oy;
+    }
+    float slant = pg->slant;
+    if (ParseEditFloat(editSlant, &slant)) {
+        pg->slant = PageGridClampSlant(slant);
     }
     int styleIdx = ddStyle ? CbGetCurrentSelection(ddStyle) : kPageGridDefaultStyleIdx;
     if (styleIdx < 0) {
@@ -462,6 +474,10 @@ bool PageGridWnd::Create(MainWindow* mainWin) {
     addRow(spacing, Tr("Vertical:"), NewDlgUnderlined(editHeight), 0);
     editSub = makeEdit();
     addRow(spacing, Tr("Subdivisions:"), NewDlgUnderlined(editSub), 0);
+    editSlant = makeEdit();
+    addRow(spacing, Tr("Slant:"), NewDlgUnderlined(editSlant), 0);
+    addHeader(spacing, Tr("Drag a line on the page to resize it"));
+    addHeader(spacing, Tr("Alt+drag when this dialog is closed"));
     addHeader(spacing, Tr("Grid line origin offset"));
     editOffX = makeEdit();
     addRow(spacing, Tr("From left:"), NewDlgUnderlined(editOffX), 0);
@@ -516,6 +532,16 @@ bool PageGridWnd::Create(MainWindow* mainWin) {
     EditSelectAll(editWidth);
     EditSetFocus(editWidth);
     return true;
+}
+
+bool IsPageGridDialogOpen() {
+    return gPageGridWnd != nullptr;
+}
+
+void PageGridDialogSyncFromPrefs() {
+    if (gPageGridWnd) {
+        gPageGridWnd->FillEditsFromPt();
+    }
 }
 
 void ShowPageGridDialog(MainWindow* win) {

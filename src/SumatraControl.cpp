@@ -56,6 +56,7 @@
 #include "Notifications.h"
 #include "AIChatCommon.h"
 #include "SumatraDialogs.h"
+#include "PageGridDialogCommon.h"
 #include "AnnotEditToolbar.h"
 #include "AnnotFilterToolbar.h"
 #include "Annotation.h"
@@ -1800,6 +1801,38 @@ static void ExecuteControlRequest(ControlRequest* req) {
                 SetShowPageGrid(on != 0);
             } else if (str::EqI(action, StrL("reset-grid"))) {
                 ResetPageGridToDefaults();
+            } else if (str::EqI(action, StrL("set-slant"))) {
+                i32 deg = (int)kPageGridDefaultSlant;
+                IntArg(req, 1, deg);
+                if (PageGrid* pg = PageGridPrefs()) {
+                    pg->slant = PageGridClampSlant((float)deg);
+                }
+                RedrawPageGridWindows();
+            } else if (str::EqI(action, StrL("probe-grid"))) {
+                MainWindow* win = len(gWindows) > 0 ? gWindows[0] : nullptr;
+                AppendTestResult(req, 0, PageGridProbeTemp(win ? win->AsFixed() : nullptr));
+                break;
+            } else if (str::EqI(action, StrL("drag-grid"))) {
+                Str phase = StringArg(req, 1);
+                i32 x = 0;
+                i32 y = 0;
+                bool hasPt = IntArg(req, 2, x) && IntArg(req, 3, y);
+                MainWindow* win = len(gWindows) > 0 ? gWindows[0] : nullptr;
+                DisplayModel* dm = win ? win->AsFixed() : nullptr;
+                if (str::EqI(phase, StrL("down"))) {
+                    AppendTestResult(req, 0, fmt("hit=%d", PageGridDragStart(dm, x, y) ? 1 : 0));
+                    break;
+                }
+                if (str::EqI(phase, StrL("move"))) {
+                    PageGridDragMove(dm, x, y);
+                } else if (str::EqI(phase, StrL("up"))) {
+                    if (hasPt) {
+                        PageGridDragMove(dm, x, y);
+                    }
+                    PageGridDragEnd();
+                } else if (str::EqI(phase, StrL("cancel"))) {
+                    PageGridDragCancel();
+                }
             }
             AppendTestResult(req, 0, PageGridStateTemp());
             break;
