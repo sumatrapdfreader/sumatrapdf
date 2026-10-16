@@ -125,6 +125,17 @@ async function moveMouse(client: ControlClient, canvas: number, point: Point): P
   sendMessage(canvas, WM_MOUSEMOVE, 0, packCoords(point.x, point.y));
 }
 
+// Toolbar and notification cursor queries can overwrite the canvas cursor.
+async function waitForCursor(client: ControlClient, canvas: number, point: Point): Promise<PlacementState | null> {
+  const deadline = Date.now() + 2_000 * SLOW_BUILD_FACTOR;
+  for (;;) {
+    await moveMouse(client, canvas, point);
+    const state = await placementState(client);
+    if (state?.cursor || Date.now() > deadline) return state;
+    await sleep(40);
+  }
+}
+
 async function drawStroke(client: ControlClient, canvas: number, points: Point[]): Promise<void> {
   if (USE_NG) {
     const first = points[0]!;
@@ -218,8 +229,7 @@ export async function testit(): Promise<void> {
 
     await clickInkToolbar();
     let state = await waitForPlacement(client, true, "toolbar");
-    await moveMouse(client, canvas, center);
-    state = await placementState(client);
+    state = await waitForCursor(client, canvas, center);
     if (
       !state ||
       !state.notification ||
@@ -248,8 +258,7 @@ export async function testit(): Promise<void> {
 
     await paletteRun(client, frame, ">Create Ink Annotation", "CmdCreateAnnotInk");
     state = await waitForPlacement(client, true, "palette");
-    await moveMouse(client, canvas, center);
-    state = await placementState(client);
+    state = await waitForCursor(client, canvas, center);
     if (!state || !state.notification || !state.cursor || state.annotations !== 0) {
       throw new Error(`ink-annotation-placement: palette did not start placement mode\n${state?.raw ?? "NOTREADY"}`);
     }

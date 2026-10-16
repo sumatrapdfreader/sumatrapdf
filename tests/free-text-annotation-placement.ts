@@ -172,9 +172,15 @@ export async function testit(): Promise<void> {
     }
 
     const screenPoint = clientToScreen(canvas, pagePoint.x, pagePoint.y);
-    setCursorPos(screenPoint.x, screenPoint.y);
-    sendMessage(canvas, WM_MOUSEMOVE, 0, packCoords(pagePoint.x, pagePoint.y));
-    state = await placementState(client);
+    // Toolbar and notification cursor queries can overwrite the canvas cursor.
+    const cursorDeadline = Date.now() + 2_000 * SLOW_BUILD_FACTOR;
+    for (;;) {
+      setCursorPos(screenPoint.x, screenPoint.y);
+      sendMessage(canvas, WM_MOUSEMOVE, 0, packCoords(pagePoint.x, pagePoint.y));
+      state = await placementState(client);
+      if ((state.cursor && state.preview) || Date.now() > cursorDeadline) break;
+      await sleep(40);
+    }
     if (!state.cursor || !state.preview) {
       throw new Error(`free-text-annotation-placement: preview/cursor was not active\n${state.raw}`);
     }
