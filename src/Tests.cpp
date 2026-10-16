@@ -71,6 +71,28 @@ static void extractPageText(EngineBase* engine, int pageNo) {
         printf("%02x ", (u8)c);
     }
     printf("'\n");
+    // codepoint:height, same order as the text. tests/issue-6348.ts
+    printf("boxh on page %d:", pageNo);
+    const u8* p = (const u8*)pageText.text.s;
+    const u8* end = p + pageText.text.len;
+    for (int i = 0; i < pageText.nCodepoints && p < end; i++) {
+        int n = utf8RuneLen(p);
+        if (n < 1 || p + n > end) {
+            break;
+        }
+        int cp = p[0];
+        if (n == 2) {
+            cp = ((p[0] & 0x1f) << 6) | (p[1] & 0x3f);
+        } else if (n == 3) {
+            cp = ((p[0] & 0x0f) << 12) | ((p[1] & 0x3f) << 6) | (p[2] & 0x3f);
+        } else if (n == 4) {
+            cp = ((p[0] & 0x07) << 18) | ((p[1] & 0x3f) << 12) | ((p[2] & 0x3f) << 6) | (p[3] & 0x3f);
+        }
+        int dy = pageText.coords ? pageText.coords[i].dy : 0;
+        printf(" %d:%d", cp, dy);
+        p += n;
+    }
+    printf("\n");
     FreePageText(&pageText);
 }
 

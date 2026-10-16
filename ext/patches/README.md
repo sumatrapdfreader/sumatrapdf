@@ -61,6 +61,7 @@ relative to `ext/mupdf`, so `-p1` from inside that directory.
 | `0058-unwrap-display-list-image` | `fz_unwrap_display_list_image`: the one raster an SVG draws, so Save Image / copy keep its bytes and resolution (#6330) |
 | `0059-svg-text-path` | SVG `<textPath>` places glyphs along the referenced path; such text used to pile up at the origin (#6332) |
 | `0060-pdf-update-object-keeps-stream` | `pdf_update_object` carries a stream over when the entry moves to a new xref section; a stream added in the session lost its data on a `garbage=3` save |
+| `0061-stext-tall-font-glyph-ink` | a font box taller than 3em (Cambria Math bbox used as ascent/descent) takes glyph ink for the vertical selection edges (#6348) |
 
 That is the whole list: `ext/mupdf` is byte-for-byte `1.28.5` plus these
 patches, and nothing else.

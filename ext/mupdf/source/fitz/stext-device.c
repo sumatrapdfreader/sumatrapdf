@@ -444,6 +444,18 @@ add_line_to_block(fz_context *ctx, fz_stext_page *page, fz_stext_block *block, c
 #define NON_ACCURATE_GLYPH_ADDED_SPACE (-2)
 #define NON_ACCURATE_GLYPH (-1)
 
+/* FontDescriptor ascent/descent is sometimes the font-wide glyph bbox
+ * (Cambria Math: 3.12 / -2.46). Past 3em that box is not a text metric:
+ * use the glyph ink for the vertical edges, or 0.8/-0.2 when the ink is
+ * empty or still that tall. Advances stay on the origin. */
+#define STEXT_TALL_FONT_EM 3.0f
+
+static int
+font_span_tall(fz_context *ctx, fz_font *font)
+{
+	return fz_font_ascender(ctx, font) - fz_font_descender(ctx, font) > STEXT_TALL_FONT_EM;
+}
+
 static fz_stext_char *
 add_char_to_line(fz_context *ctx, fz_stext_page *page, fz_stext_line *line, fz_matrix trm, fz_font *font, float size, int c, int glyph, fz_point *p, fz_point *q, int bidi, int color, int synthetic, int flags, int dev_flags)
 {
@@ -479,19 +491,39 @@ add_char_to_line(fz_context *ctx, fz_stext_page *page, fz_stext_line *line, fz_m
 			/* Added space, in accurate mode. */
 			a.y = d.y = 0;
 		}
-		else if (glyph == NON_ACCURATE_GLYPH)
-		{
-			/* Non accurate mode. */
-			a.y = fz_font_ascender(ctx, font);
-			d.y = fz_font_descender(ctx, font);
-		}
-		else
+		else if (dev_flags & FZ_STEXT_ACCURATE_BBOXES)
 		{
 			/* Any glyph in accurate mode */
 			bounds = fz_bound_glyph(ctx, font, glyph, fz_identity);
 			bounded = 1;
 			a.y = bounds.y1;
 			d.y = bounds.y0;
+		}
+		else if (font_span_tall(ctx, font))
+		{
+			float gh = 0;
+			if (glyph >= 0)
+			{
+				bounds = fz_bound_glyph(ctx, font, glyph, fz_identity);
+				bounded = 1;
+				gh = bounds.y1 - bounds.y0;
+			}
+			if (gh > 0.01f && gh <= STEXT_TALL_FONT_EM)
+			{
+				a.y = bounds.y1;
+				d.y = bounds.y0;
+			}
+			else
+			{
+				a.y = 0.8f;
+				d.y = -0.2f;
+			}
+		}
+		else
+		{
+			/* Non accurate mode. */
+			a.y = fz_font_ascender(ctx, font);
+			d.y = fz_font_descender(ctx, font);
 		}
 		if (dev_flags & FZ_STEXT_ACCURATE_SIDE_BEARINGS)
 		{
@@ -859,7 +891,7 @@ fz_add_stext_char_imp(fz_context *ctx, fz_stext_device *dev, fz_font *font, int 
 	/* Don't advance pen or break lines for either no-glyph or marking non-spacing characters in a cluster */
 	if (cur_line && (glyph == -1 || ucdn_get_general_category(c) == UCDN_GENERAL_CATEGORY_MN))
 	{
-		add_char_to_line(ctx, page, cur_line, trm, font, size, c, (dev->flags & FZ_STEXT_ACCURATE_BBOXES) ? glyph : NON_ACCURATE_GLYPH, &dev->pen, &dev->pen, bidi, dev->color, 0, flags, dev->flags);
+		add_char_to_line(ctx, page, cur_line, trm, font, size, c, glyph, &dev->pen, &dev->pen, bidi, dev->color, 0, flags, dev->flags);
 		dev->lastbidi = bidi;
 		dev->lastchar = c;
 		dev->lastline = cur_line;
@@ -1039,7 +1071,7 @@ fz_add_stext_char_imp(fz_context *ctx, fz_stext_device *dev, fz_font *font, int 
 	if (c != ' ' && add_space && !(dev->flags & FZ_STEXT_INHIBIT_SPACES))
 		add_char_to_line(ctx, page, cur_line, trm, font, size, ' ', (dev->flags & FZ_STEXT_ACCURATE_BBOXES) ? NON_ACCURATE_GLYPH_ADDED_SPACE : NON_ACCURATE_GLYPH, &dev->pen, &p, bidi, dev->color, add_space, flags, dev->flags);
 
-	add_char_to_line(ctx, page, cur_line, trm, font, size, c, (dev->flags & FZ_STEXT_ACCURATE_BBOXES) ? glyph : NON_ACCURATE_GLYPH, &p, &q, bidi, dev->color, 0, flags, dev->flags);
+	add_char_to_line(ctx, page, cur_line, trm, font, size, c, glyph, &p, &q, bidi, dev->color, 0, flags, dev->flags);
 
 	dev->lastchar = c;
 	dev->lastbidi = bidi;
