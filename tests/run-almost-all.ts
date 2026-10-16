@@ -438,6 +438,7 @@ export const tests: NamedTest[] = [
   // first: it drives the home page, whose thumbnail selection follows the
   // mouse, so it is the one test that cares what the machine was doing before
   ["issue-5978", issue5978],
+  ["shape-annotation-placement", shapeAnnotationPlacement],
   ["epub-restyle-fit-content", epubRestyleFitContent],
   ["annot-text-popup-reload", annotTextPopupReload],
   ["read-aloud-lazy-chapters", readAloudLazyChapters],
@@ -459,7 +460,6 @@ export const tests: NamedTest[] = [
   ["polyline-annotation-placement", polylineAnnotationPlacement],
   ["line-annotation-placement", lineAnnotationPlacement],
   ["sidebar-thumbnails", sidebarThumbnails],
-  ["shape-annotation-placement", shapeAnnotationPlacement],
   ["issue-6144", issue6144],
   ["sidebar-thumbnails-wheel", sidebarThumbnailsWheel],
   ["issue-6305", issue6305],

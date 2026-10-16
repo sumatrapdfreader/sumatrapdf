@@ -215,8 +215,14 @@ export async function testit(): Promise<void> {
 
     await clickSquareToolbar();
     let state = await waitForPlacement(client, true);
-    moveMouse(canvas, center);
-    state = await placementState(client);
+    // Toolbar and notification cursor queries can overwrite the canvas cursor.
+    const cursorDeadline = Date.now() + 2_000 * SLOW_BUILD_FACTOR;
+    for (;;) {
+      moveMouse(canvas, center);
+      state = await placementState(client);
+      if (state.cursor || Date.now() > cursorDeadline) break;
+      await sleep(40);
+    }
     if (
       !state.notification ||
       !state.cursor ||
