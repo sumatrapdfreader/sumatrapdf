@@ -454,18 +454,30 @@ export async function testit(): Promise<void> {
       throw new Error(`polyline-annotation-placement: Shift did not snap preview to horizontal\n${state.raw}`);
     }
     await moveMouse(client, canvas, nearlyFlat);
-    state = await placementState(client);
-    if (USE_NG && shiftAnchor) {
-      const back = placementEnd(state.raw);
-      const wantX = shiftAnchor.x + (nearlyFlat.x - p1.x);
-      const wantY = shiftAnchor.y + (nearlyFlat.y - p1.y);
-      if (!back || back.x !== wantX || back.y !== wantY) {
-        throw new Error(
-          `polyline-annotation-placement: releasing Shift did not restore the pointer (end=${back?.x},${back?.y} want=${wantX},${wantY})\n${state.raw}`,
-        );
+    const want =
+      USE_NG && shiftAnchor
+        ? { x: shiftAnchor.x + (nearlyFlat.x - p1.x), y: shiftAnchor.y + (nearlyFlat.y - p1.y) }
+        : nearlyFlat;
+    // Queued cursor moves can overwrite the synthetic Shift-release move too.
+    const pointerDeadline = Date.now() + 2_000 * SLOW_BUILD_FACTOR;
+    let restored = false;
+    for (;;) {
+      if (USE_NG) {
+        await moveMouse(client, canvas, nearlyFlat);
+      } else {
+        sendMessage(canvas, WM_MOUSEMOVE, 0, packCoords(nearlyFlat.x, nearlyFlat.y));
       }
-    } else if (!state.raw.includes(`end=${nearlyFlat.x},${nearlyFlat.y}`)) {
-      throw new Error(`polyline-annotation-placement: releasing Shift did not restore the pointer\n${state.raw}`);
+      state = await placementState(client);
+      const back = placementEnd(state.raw);
+      restored = !!back && back.x === want.x && back.y === want.y;
+      if (restored || Date.now() > pointerDeadline) break;
+      await sleep(40);
+    }
+    if (!restored) {
+      const back = placementEnd(state.raw);
+      throw new Error(
+        `polyline-annotation-placement: releasing Shift did not restore the pointer (end=${back?.x},${back?.y} want=${want.x},${want.y})\n${state.raw}`,
+      );
     }
     await clickCanvas(client, canvas, nearlyFlat, MK_SHIFT);
     await pressKey(frame, VK_RETURN, 0);
