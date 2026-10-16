@@ -165,4 +165,9 @@ You can [chat with AI about a document](Help/AI-Chat-with-document).
 You can [customize theme colors](Help/Customize-theme-colors).
 You can [save a page region as an image](Help/Save-page-region-as-image).
 You can [print selected pages](Help/Print-selected-pages).
+Press (Kbd/@) to quickly switch between tabs.
+Press (Kbd/#) to navigate file history.
+Press (Kbd/$) to navigate via favorites.
+Press (Kbd/%) to navigate via table of contents.
+Press (Kbd/&) to navigate via thumbnails.
 )tips");
