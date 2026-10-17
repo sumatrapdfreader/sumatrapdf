@@ -76,7 +76,7 @@ static const StructInfo gPageGridInfo = {
     "distance between major vertical grid lines, in PDF points (1/72 inch)\0distance between major horizontal grid "
     "lines, in PDF points\0minor lines per major cell\0horizontal origin offset from the left of the page, in PDF "
     "points\0vertical origin offset from the bottom of the page, in PDF points\0angle of the vertical grid lines from "
-    "the horizontal, in degrees. 90 is upright; 52 to 60 is a typical calligraphy slant\0color of the page grid "
+    "the rightward horizontal, in degrees. 90 is upright; 52 to 60 leans right for calligraphy\0color of the page grid "
     "overlay\0grid overlay style: dots (marks at intersections), dotted (dotted lines), or solid\0units shown in the "
     "Configure Page Grid dialog: pt, in, mm, or cm",
     false};
@@ -108,7 +108,8 @@ static const StructInfo gFixedPageUIInfo = {
     "are spread evenly, at most 3 colors). The shifting background is meant to give a subconscious sense of reading "
     "progress. Suggested values: #2828aa #28aa28 #aa2828\0if given, sets the canvas background color for PDF "
     "files\0measurement grid overlay (View > Page Grid). Spacing, slant and style are saved; showing the grid is "
-    "session-only. Drag a grid line while Configure Page Grid is open, or Alt+drag, to resize a cell",
+    "session-only. Drag a grid line while Configure Page Grid is open, or Alt+drag, to resize cells with equal width "
+    "and height",
     false};
 
 static const char* gEnumEBookUIDefaultDisplayMode[] = {

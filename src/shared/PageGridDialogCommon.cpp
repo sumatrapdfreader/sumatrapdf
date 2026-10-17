@@ -178,7 +178,7 @@ static float PageGridCot(float deg) {
     if (s > -0.02f && s < 0.02f) {
         return 0;
     }
-    return cosf(deg * kPageGridDegToRad) / s;
+    return -cosf(deg * kPageGridDegToRad) / s;
 }
 
 PageGridDraw GetPageGridDraw() {
@@ -394,7 +394,7 @@ bool PageGridSlantVisible(DisplayModel* dm, int pageNo, const PageGridDraw& g, c
     float rad = g.slantDeg * kPageGridDegToRad;
     float s = sinf(rad);
     float pitch = minorX * fabsf(s);
-    int hs = PageGridScreenDist(dm, pageNo, o, PointF(ox - s * pitch, oy + cosf(rad) * pitch));
+    int hs = PageGridScreenDist(dm, pageNo, o, PointF(ox - s * pitch, oy - cosf(rad) * pitch));
     int cell = std::min(hx, std::min(hy, hs));
     if (cell * g.subdiv < kPageGridMinMajorPx) {
         return false;
@@ -467,7 +467,7 @@ static bool PageGridHitTest(DisplayModel* dm, int x, int y, PageGridHit& hit) {
     PointF origin(ox, oy);
     int minorAcross = PageGridScreenDist(dm, pageNo, origin, PointF(ox + minorX, oy));
     float pitch = minorX * sAbs;
-    int minorSlant = PageGridScreenDist(dm, pageNo, origin, PointF(ox - sinf(rad) * pitch, oy + cosf(rad) * pitch));
+    int minorSlant = PageGridScreenDist(dm, pageNo, origin, PointF(ox - sinf(rad) * pitch, oy - cosf(rad) * pitch));
     int minorW = std::min(minorAcross, minorSlant);
     int minorH = PageGridScreenDist(dm, pageNo, origin, PointF(ox, oy + minorY));
 
@@ -577,6 +577,7 @@ static void PageGridApplyDrag(DisplayModel* dm, int x, int y) {
             // Past the origin the grabbed line cannot follow; keep the minimum.
             float major = h.minor ? step * (float)h.subdiv : step;
             pg->width = limitValue(major, 1.f, 720.f);
+            pg->height = pg->width;
         }
         return;
     }
@@ -587,6 +588,7 @@ static void PageGridApplyDrag(DisplayModel* dm, int x, int y) {
     float step = (p.y - h.oy) / (float)h.index;
     float major = h.minor ? step * (float)h.subdiv : step;
     pg->height = limitValue(major, 1.f, 720.f);
+    pg->width = pg->height;
 }
 
 void PageGridDragMove(DisplayModel* dm, int x, int y) {

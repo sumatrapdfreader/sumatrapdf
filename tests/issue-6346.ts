@@ -1,7 +1,7 @@
 // Discussion https://github.com/sumatrapdfreader/sumatrapdf/discussions/6346
 //
-// Page grid slant is degrees from the horizontal (90 upright). Dragging a
-// grid line changes that cell size; dragging the origin line moves the grid.
+// Page grid slant is measured from the right (90 upright). Dragging either
+// spacing keeps cells square; cancelling restores both dimensions.
 //
 // Run: bun tests/issue-6346.ts [--no-build]
 
@@ -54,6 +54,14 @@ export async function testit(): Promise<void> {
       if (dxSlant < 8) {
         throw new Error(`issue-6346: 55° grid did not lean (${dxSlant}px): ${slanted}`);
       }
+      if (num(slanted, "x0") <= num(slanted, "x1")) {
+        throw new Error(`issue-6346: 55° grid did not lean right: ${slanted}`);
+      }
+      await client.request(ControlCommand.TestCanvasFlags, ["set-slant", 125]);
+      const left = String((await client.request(ControlCommand.TestCanvasFlags, ["probe-grid"]))[1] ?? "");
+      if (num(left, "x0") >= num(left, "x1")) {
+        throw new Error(`issue-6346: 125° grid did not lean left: ${left}`);
+      }
 
       const clamped = String((await client.request(ControlCommand.TestCanvasFlags, ["set-slant", 5]))[1] ?? "");
       if (!/slant=15/.test(clamped)) {
@@ -77,9 +85,13 @@ export async function testit(): Promise<void> {
       if (!(width > 72)) {
         throw new Error(`issue-6346: dragging a vertical line did not widen the cell: ${widened}`);
       }
+      if (num(widened, "height") !== width) {
+        throw new Error(`issue-6346: width drag did not keep cells square: ${widened}`);
+      }
 
-      const hx = num(probe, "hx");
-      const hy = num(probe, "hy");
+      const resized = String((await client.request(ControlCommand.TestCanvasFlags, ["probe-grid"]))[1] ?? "");
+      const hx = num(resized, "hx");
+      const hy = num(resized, "hy");
       const hDown = String(
         (await client.request(ControlCommand.TestCanvasFlags, ["drag-grid", "down", hx, hy]))[1] ?? "",
       );
@@ -89,16 +101,36 @@ export async function testit(): Promise<void> {
       const moved = String(
         (await client.request(ControlCommand.TestCanvasFlags, ["drag-grid", "move", hx, hy + 80]))[1] ?? "",
       );
-      if (num(moved, "height") === 72) {
+      if (num(moved, "height") === width) {
         throw new Error(`issue-6346: dragging a horizontal line did not change the cell height: ${moved}`);
+      }
+      if (num(moved, "width") !== num(moved, "height")) {
+        throw new Error(`issue-6346: height drag did not keep cells square: ${moved}`);
       }
       await client.request(ControlCommand.TestCanvasFlags, ["drag-grid", "cancel"]);
       const back = String((await client.request(ControlCommand.TestCanvasFlags, []))[1] ?? "");
-      if (num(back, "height") !== 72) {
+      if (num(back, "height") !== width) {
         throw new Error(`issue-6346: cancel did not restore the cell height: ${back}`);
       }
       if (num(back, "width") !== width) {
         throw new Error(`issue-6346: cancel changed the width: ${back}`);
+      }
+
+      await client.request(ControlCommand.TestCanvasFlags, ["set-slant", 55]);
+      const leanProbe = String((await client.request(ControlCommand.TestCanvasFlags, ["probe-grid"]))[1] ?? "");
+      const leanX = num(leanProbe, "sx");
+      const leanY = num(leanProbe, "sy");
+      const leanDown = String(
+        (await client.request(ControlCommand.TestCanvasFlags, ["drag-grid", "down", leanX, leanY]))[1] ?? "",
+      );
+      if (!/hit=1/.test(leanDown)) {
+        throw new Error(`issue-6346: slanted line was not draggable: ${leanDown} probe ${leanProbe}`);
+      }
+      const leanSize = String(
+        (await client.request(ControlCommand.TestCanvasFlags, ["drag-grid", "up", leanX + 40, leanY]))[1] ?? "",
+      );
+      if (num(leanSize, "width") <= width || num(leanSize, "width") !== num(leanSize, "height")) {
+        throw new Error(`issue-6346: slanted drag did not enlarge square cells: ${leanSize}`);
       }
     },
     ["-appdata", appdata, PDF],

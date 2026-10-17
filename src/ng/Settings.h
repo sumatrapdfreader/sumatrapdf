@@ -660,7 +660,8 @@ struct ComicBookUI {
 
 // measurement grid overlay (View > Page Grid). Spacing, slant and style
 // are saved; showing the grid is session-only. Drag a grid line while
-// Configure Page Grid is open, or Alt+drag, to resize a cell
+// Configure Page Grid is open, or Alt+drag, to resize cells with equal
+// width and height
 struct PageGrid {
     // distance between major vertical grid lines, in PDF points (1/72
     // inch)
@@ -673,8 +674,8 @@ struct PageGrid {
     float offsetX;
     // vertical origin offset from the bottom of the page, in PDF points
     float offsetY;
-    // angle of the vertical grid lines from the horizontal, in degrees. 90
-    // is upright; 52 to 60 is a typical calligraphy slant
+    // angle of the vertical grid lines from the rightward horizontal, in
+    // degrees. 90 is upright; 52 to 60 leans right for calligraphy
     float slant;
     // color of the page grid overlay
     ParsedColor color;
@@ -715,7 +716,8 @@ struct FixedPageUI {
     ParsedColor windowBgCol;
     // measurement grid overlay (View > Page Grid). Spacing, slant and
     // style are saved; showing the grid is session-only. Drag a grid line
-    // while Configure Page Grid is open, or Alt+drag, to resize a cell
+    // while Configure Page Grid is open, or Alt+drag, to resize cells with
+    // equal width and height
     PageGrid pageGrid;
 };
 

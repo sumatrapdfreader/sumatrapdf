@@ -466,7 +466,7 @@ const pageGrid: Field[] = [
     "Slant",
     Float,
     90,
-    "angle of the vertical grid lines from the horizontal, in degrees. 90 is upright; 52 to 60 is a typical calligraphy slant",
+    "angle of the vertical grid lines from the rightward horizontal, in degrees. 90 is upright; 52 to 60 leans right for calligraphy",
   ).ver("3.7"),
   field("Color", Color, rgb(128, 128, 255), "color of the page grid overlay").ver("3.7"),
   field("Style", Str, "dots", "grid overlay style: dots (marks at intersections), dotted (dotted lines), or solid")
@@ -519,7 +519,7 @@ const fixedPageUI: Field[] = [
   struct(
     "PageGrid",
     pageGrid,
-    "measurement grid overlay (View > Page Grid). Spacing, slant and style are saved; showing the grid is session-only. Drag a grid line while Configure Page Grid is open, or Alt+drag, to resize a cell",
+    "measurement grid overlay (View > Page Grid). Spacing, slant and style are saved; showing the grid is session-only. Drag a grid line while Configure Page Grid is open, or Alt+drag, to resize cells with equal width and height",
   ).ver("3.7"),
 ];
 
