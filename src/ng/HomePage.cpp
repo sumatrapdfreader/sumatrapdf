@@ -60,6 +60,7 @@
 static Str sumatraPromos = StrL(R"promos(Try [Edna](https://edna.arslexis.io): a note taking web app for power users.
 Try [MarkLexis](https://marklexis.arslexis.io): a bookmarking web application.
 Try [Sumatra File Manager](https://sumatrafilemanager.com): file manager with super powers.
+Try [Sumatra File Manager Online](https://online.sumatrafilemanager.com): file manager for S3, Dropbox and more.
 )promos");
 
 static Str promoFromServer;
@@ -120,9 +121,12 @@ static AboutRow gAboutRows[] = {
     {StrL("licenses"), StrL("Various Open Source"),
      StrL("https://github.com/sumatrapdfreader/sumatrapdf/blob/master/AUTHORS")},
     {StrL("more software by me"), StrL("Sumatra File Manager"), StrL("https://sumatrafilemanager.com")},
+    {{}, StrL("Sumatra File Manager Online"), StrL("https://online.sumatrafilemanager.com")},
     {{}, {}, {}}};
 
-constexpr int kAboutSoftwareRow = dimofi(gAboutRows) - 2;
+// the rows from kAboutSoftwareRow on are the other software, in the footer
+constexpr int kAboutSoftwareEnd = dimofi(gAboutRows) - 1;
+constexpr int kAboutSoftwareRow = kAboutSoftwareEnd - 2;
 
 // the About box (orig's): the brand over the version, the link rows, a note,
 // then a hairline over the copy link and the other software. Every row has a
@@ -1036,17 +1040,16 @@ static gp::El* AboutBoxEl(MainWindow* win, gp::Ctx* cx, bool withBorder) {
                     ->Cursor(gp::CursorKind::Pointer)
                     ->PathClick(GStrL("about-copy-info"))
                     ->OnClick(gp::ListenTo(Ui(win)->view, &HomeView::OnCopyInfo)));
-    AboutRow& software = gAboutRows[kAboutSoftwareRow];
-    foot->Child(
-        gp::Div(cx->a)
-            ->FlexCol()
-            ->ItemsCenter()
-            ->Gap((float)kAboutSoftwareGap)
-            ->Child(gp::TextEl(cx->a, GpuiDup(cx->a, software.leftTxt))
+    gp::El* software = gp::Div(cx->a)->FlexCol()->ItemsCenter()->Gap((float)kAboutSoftwareGap);
+    software->Child(gp::TextEl(cx->a, GpuiDup(cx->a, gAboutRows[kAboutSoftwareRow].leftTxt))
                         ->Font((float)kAboutMetaFontPx)
                         ->Fg(ToGpui(colMuted))
-                        ->H((float)kAboutMetaDy))
-            ->Child(AboutLinkEl(win, cx, software.rightTxt, software.url, StrL("about-software"), kAboutSoftwareRow)));
+                        ->H((float)kAboutMetaDy));
+    for (int i = kAboutSoftwareRow; i < kAboutSoftwareEnd; i++) {
+        AboutRow* el = &gAboutRows[i];
+        software->Child(AboutLinkEl(win, cx, el->rightTxt, el->url, fmt("about-software-%d", i), i));
+    }
+    foot->Child(software);
     box->Child(foot);
     return box;
 }
@@ -1059,8 +1062,9 @@ static int AboutBoxDy() {
     if (len(AboutNoteText()) > 0) {
         dy += kAboutGroupGap + kAboutMetaDy;
     }
-    dy += kAboutGroupGap + 1 + kAboutFootGap + kAboutRowDy + kAboutFootRowGap + kAboutMetaDy + kAboutSoftwareGap +
-          kAboutRowDy + kAboutPadBottom;
+    int nSoftware = kAboutSoftwareEnd - kAboutSoftwareRow;
+    dy += kAboutGroupGap + 1 + kAboutFootGap + kAboutRowDy + kAboutFootRowGap + kAboutMetaDy +
+          (nSoftware * (kAboutSoftwareGap + kAboutRowDy)) + kAboutPadBottom;
     return dy;
 }
 
