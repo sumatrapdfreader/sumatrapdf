@@ -458,50 +458,62 @@ html[data-theme="dark"] .notion-page a:hover {
   letter-spacing: -0.005em;
 }
 
-.script-example-list {
+.script-example-list,
+.feature-list {
   line-height: 1.8;
   color: var(--text-secondary);
 }
 
-.script-example-list a {
+.script-example-list a,
+.feature-list a {
   color: inherit;
   text-decoration: none;
 }
 
-.script-example-list a:hover {
+.script-example-list a:hover,
+.feature-list a:hover {
   text-decoration: underline;
 }
 
-.script-example-list [aria-current="true"] {
+.script-example-list [aria-current="true"],
+.feature-list [aria-current="true"] {
   color: #000;
 }
 
-html[data-theme="dark"] .script-example-list [aria-current="true"] {
+html[data-theme="dark"] .script-example-list [aria-current="true"],
+html[data-theme="dark"] .feature-list [aria-current="true"] {
   color: var(--text-primary);
 }
 
 .script-example-dot,
-.script-example-hint {
+.script-example-hint,
+.feature-dot,
+.feature-hint,
+.feature-links {
   color: var(--text-secondary);
 }
 
-.script-example-hint {
+.script-example-hint,
+.feature-hint {
   font-size: 0.9em;
 }
 
-.script-example-head {
+.script-example-head,
+.feature-head {
   display: flex;
   align-items: center;
   justify-content: space-between;
   gap: 1rem;
 }
 
-.script-example-arrows {
+.script-example-arrows,
+.feature-arrows {
   display: flex;
   gap: 0.5rem;
 }
 
-.script-example-arrows button {
+.script-example-arrows button,
+.feature-arrows button {
   padding: 0.15rem 0.6rem;
   border: 1px solid var(--border);
   border-radius: 4px;
@@ -511,7 +523,8 @@ html[data-theme="dark"] .script-example-list [aria-current="true"] {
   cursor: pointer;
 }
 
-.script-example-arrows button:hover {
+.script-example-arrows button:hover,
+.feature-arrows button:hover {
   color: var(--text-primary);
 }
 

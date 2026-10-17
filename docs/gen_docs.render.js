@@ -23,6 +23,8 @@
   let scriptExamplesCleanup = null;
   const kPDFScriptsURL = /*PDF_SCRIPTS_URL*/ "";
   const kScriptExamplesPage = "Tool-run-javascript-examples.md";
+  let featuresCleanup = null;
+  const kFeaturesPage = "Features.md";
 
   function removeNotionId(s) {
     if (s.length <= 32) return s;
@@ -66,10 +68,18 @@
     /^:video[ \t]+https:\/\/(?:youtu\.be\/|(?:www\.)?youtube\.com\/watch\?v=)([A-Za-z0-9_-]{11})\S*[ \t]+https:\/\/files\.sumatrapdfreader\.org\/\S+[ \t]*$/;
 
   function videoHTML(youTubeId) {
+    return '\n<div class="doc-video">' + youTubeIframeHTML(youTubeId, "Video", "") + "</div>\n";
+  }
+
+  function youTubeIframeHTML(youTubeId, title, cls) {
     return (
-      '\n<div class="doc-video"><iframe src="https://www.youtube-nocookie.com/embed/' +
+      "<iframe" +
+      (cls ? ' class="' + cls + '"' : "") +
+      ' src="https://www.youtube-nocookie.com/embed/' +
       youTubeId +
-      '" title="Video" loading="lazy" allow="accelerometer; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" referrerpolicy="strict-origin-when-cross-origin" allowfullscreen></iframe></div>\n'
+      '" title="' +
+      title +
+      '" loading="lazy" allow="accelerometer; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" referrerpolicy="strict-origin-when-cross-origin" allowfullscreen></iframe>'
     );
   }
 
@@ -442,6 +452,9 @@
     if (mdName === kScriptExamplesPage) {
       text = renderScriptExamples(text, md.utils.escapeHtml);
     }
+    if (mdName === kFeaturesPage) {
+      text = renderFeatures(text, md.utils.escapeHtml);
+    }
     text = preProcess(text);
     let innerHTML = md.render(text);
 
@@ -663,6 +676,155 @@
     return selectHash();
   }
 
+  // Features.md: "- [title](Doc.md) <youtube link> <r2 link>" lines, shown as a "&bull;" separated
+  // list of feature names above one video; clicking a name switches the video (initFeatures).
+  // Same as renderFeatures() in the website's server/features.go
+  function renderFeatures(text, escape) {
+    return text.replace(/^## Features\r?\n([\s\S]*?)(?=^## |$(?![\s\S]))/m, function (_, list) {
+      const features = [];
+      list.split("\n").forEach(function (line) {
+        line = line.trim();
+        if (!line) return;
+        const m = /^- \[([^\]]+)\]\(([a-zA-Z0-9_-]+\.md)\)[ \t]+(\S+)[ \t]+(\S+)$/.exec(line);
+        const yt = m && /^https:\/\/(?:youtu\.be\/|(?:www\.)?youtube\.com\/watch\?v=)([A-Za-z0-9_-]{11})/.exec(m[3]);
+        if (!m || !yt || !/^https:\/\/files\.sumatrapdfreader\.org\/\S+\.mp4$/.test(m[4])) {
+          throw new Error(kFeaturesPage + ": bad line " + line);
+        }
+        features.push({
+          slug: m[1].toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, ""),
+          title: escape(m[1]),
+          doc: escape(getHTMLFileName(m[2])),
+          youtube: yt[1],
+          r2: escape(m[4]),
+        });
+      });
+      if (!features.length) throw new Error(kFeaturesPage + ": no features");
+      const items = features.map(function (f, index) {
+        const label =
+          index === 0 ? '<span aria-current="true">' + f.title + "</span>" : '<a href="#' + f.slug + '">' + f.title + "</a>";
+        return (
+          '<span data-feature="' +
+          f.slug +
+          '" data-title="' +
+          f.title +
+          '" data-doc="' +
+          f.doc +
+          '" data-youtube="' +
+          f.youtube +
+          '" data-r2="' +
+          f.r2 +
+          '">' +
+          label +
+          "</span>"
+        );
+      });
+      const first = features[0];
+      return (
+        '<div class="feature-videos" data-selected="' +
+        first.slug +
+        '">\n' +
+        '<nav class="feature-list" aria-label="Features">' +
+        items.join('<span class="feature-dot" aria-hidden="true"> &bull; </span>') +
+        "</nav>\n" +
+        '<p class="feature-hint">Choose a feature, or use the left and right arrow keys.</p>\n' +
+        '<div class="feature-head"><h2 class="feature-title">' +
+        first.title +
+        '</h2><div class="feature-arrows">' +
+        '<button type="button" data-step="-1" aria-label="Previous feature" title="Previous feature (left arrow)">&larr;</button>' +
+        '<button type="button" data-step="1" aria-label="Next feature" title="Next feature (right arrow)">&rarr;</button>' +
+        "</div></div>\n" +
+        '<div class="doc-video">' +
+        youTubeIframeHTML(first.youtube, first.title, "feature-player") +
+        "</div>\n" +
+        '<p class="feature-links"><a class="feature-doc" href="' +
+        first.doc +
+        '">Read more about ' +
+        first.title +
+        "</a> &bull; " +
+        '<a class="feature-r2" href="' +
+        first.r2 +
+        '" target="_blank" rel="noopener noreferrer">Watch without YouTube</a></p>\n</div>\n\n'
+      );
+    });
+  }
+
+  function initFeatures(root) {
+    if (featuresCleanup) featuresCleanup();
+    featuresCleanup = null;
+    const features = root && root.querySelector(".feature-videos");
+    if (!features) return;
+    const items = Array.from(features.querySelectorAll("[data-feature]"));
+    const title = features.querySelector(".feature-title");
+    const player = features.querySelector(".feature-player");
+    const docLink = features.querySelector(".feature-doc");
+    const r2Link = features.querySelector(".feature-r2");
+    let selected = -1;
+
+    function select(index) {
+      if (index === selected) return;
+      selected = index;
+      const item = items[index].dataset;
+      items.forEach(function (el, i) {
+        const label = document.createElement(i === index ? "span" : "a");
+        label.textContent = el.dataset.title;
+        if (i === index) label.setAttribute("aria-current", "true");
+        else label.href = "#" + el.dataset.feature;
+        el.replaceChildren(label);
+      });
+      title.textContent = item.title;
+      const src = "https://www.youtube-nocookie.com/embed/" + item.youtube;
+      if (player.getAttribute("src") !== src) player.setAttribute("src", src);
+      player.title = item.title;
+      docLink.href = item.doc;
+      docLink.textContent = "Read more about " + item.title;
+      r2Link.href = item.r2;
+      features.dataset.selected = item.feature;
+    }
+
+    function navigate(index) {
+      global.history.pushState(null, "", "#" + items[index].dataset.feature);
+      select(index);
+    }
+    function step(direction) {
+      navigate((selected + direction + items.length) % items.length);
+    }
+    features.querySelectorAll("[data-step]").forEach(function (button) {
+      button.addEventListener("click", function () {
+        step(Number(button.dataset.step));
+      });
+    });
+    features.querySelector("nav").addEventListener("click", function (event) {
+      const link = event.target.closest("a");
+      if (!link || event.ctrlKey || event.metaKey || event.shiftKey || event.altKey) return;
+      const index = items.indexOf(link.closest("[data-feature]"));
+      if (index < 0) return;
+      event.preventDefault();
+      navigate(index);
+    });
+    function onKey(event) {
+      if (event.key !== "ArrowLeft" && event.key !== "ArrowRight") return;
+      if (event.ctrlKey || event.metaKey || event.altKey || event.shiftKey) return;
+      if (event.target.closest("input, textarea, select, [contenteditable]")) return;
+      event.preventDefault();
+      step(event.key === "ArrowRight" ? 1 : -1);
+    }
+    function selectHash() {
+      const index = items.findIndex(function (item) {
+        return "#" + item.dataset.feature === global.location.hash;
+      });
+      select(index < 0 ? 0 : index);
+    }
+    document.addEventListener("keydown", onKey);
+    global.addEventListener("popstate", selectHash);
+    global.addEventListener("hashchange", selectHash);
+    featuresCleanup = function () {
+      document.removeEventListener("keydown", onKey);
+      global.removeEventListener("popstate", selectHash);
+      global.removeEventListener("hashchange", selectHash);
+    };
+    selectHash();
+  }
+
   function ensureManifest() {
     if (manifest) return Promise.resolve(manifest);
     return fetchText("manifest.json").then(function (text) {
@@ -744,6 +906,7 @@
           const title = currentHtml.replace(".html", "").replace(/-/g, " ");
           titleEl.textContent = title;
         }
+        initFeatures(innerSlot);
         if (mdName === "Commands.md") {
           initScriptExamples(innerSlot);
           return injectCommandsSearch(innerSlot);
