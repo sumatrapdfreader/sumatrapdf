@@ -2042,7 +2042,11 @@ static void DrawHomeThumbnail(Gfx* gfx, ThumbnailLayout& thumb, const StrVec& fi
     // disk load only first time; stays on fs->thumbnail afterwards
     Pixmap* thumbImg = LoadThumbnail(fs);
     if (thumbImg) {
-        thumb.szThumb = Size(thumbImg->width, thumbImg->height);
+        Size size(thumbImg->width, thumbImg->height);
+        if (size != thumb.szThumb) {
+            HomePageThumbnailChanged(fs);
+            thumb.szThumb = size;
+        }
         gfx->PushClip(page);
         // note: we used to invert bitmaps in dark theme but that doesn't
         // make sense for thumbnails
@@ -3493,5 +3497,25 @@ void HomePageOnMouseWheel(MainWindow* win, int delta) {
     }
 }
 
-// ng drops its cached thumbnail texture here; orig loads thumbnails when it paints
-void HomePageThumbnailChanged(FileState*) {}
+// Dimensions can arrive after layout; rebuild affected windows on the next paint.
+void HomePageThumbnailChanged(FileState* fs) {
+    for (MainWindow* win : gWindows) {
+        if (!win->homeLayout) {
+            continue;
+        }
+        auto& c = *win->homeLayout;
+        if (!c.valid) {
+            continue;
+        }
+        for (ThumbnailLayout& t : c.thumbs) {
+            if (t.fs != fs) {
+                continue;
+            }
+            c.valid = false;
+            if (win->IsCurrentTabAbout()) {
+                HwndInvalidate(win->hwndCanvas);
+            }
+            break;
+        }
+    }
+}
