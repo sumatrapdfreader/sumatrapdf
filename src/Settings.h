@@ -830,6 +830,9 @@ struct MarkdownUI {
     // if true, use MuPDF (cmark-gfm) to render markdown; if false, use
     // WebView2 browser view when available
     bool useFixedPageUI;
+    // if true, preserve source line breaks in the Markdown browser view;
+    // false uses standard Markdown paragraph wrapping
+    bool preserveLineBreaks;
 };
 
 // customization options for HTML UI. If UseFixedPageUI is true, MuPDF

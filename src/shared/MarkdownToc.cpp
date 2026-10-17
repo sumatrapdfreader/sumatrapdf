@@ -7,6 +7,8 @@
 
 #include "base/HtmlTags.h"
 
+#include "Settings.h"
+#include "AppSettings.h"
 #include "Theme.h"
 #include "GumboHtmlParser.h"
 
@@ -533,7 +535,7 @@ static void AddHeadingAnchors(cmark_node* doc) {
     }
 }
 
-static char* MarkdownToHtmlBody(Str markdown) {
+static char* MarkdownToHtmlBody(Str markdown, int options = CMARK_OPT_DEFAULT) {
     if (len(markdown) == 0) {
         return nullptr;
     }
@@ -551,7 +553,7 @@ static char* MarkdownToHtmlBody(Str markdown) {
 
     // Render before cmark_parser_free(); the extensions list is owned by the parser.
     cmark_llist* extensions = cmark_parser_get_syntax_extensions(parser);
-    char* body = cmark_render_html(doc, CMARK_OPT_DEFAULT, extensions);
+    char* body = cmark_render_html(doc, options, extensions);
     cmark_parser_free(parser);
     cmark_node_free(doc);
     return body;
@@ -559,7 +561,11 @@ static char* MarkdownToHtmlBody(Str markdown) {
 
 // Convert markdown source to a full HTML page (body only is rendered with cmark-gfm).
 Str MarkdownToHtmlPage(Str markdown) {
-    char* body = MarkdownToHtmlBody(markdown);
+    int options = CMARK_OPT_DEFAULT;
+    if (gSettings && gSettings->markdownUI.preserveLineBreaks) {
+        options |= CMARK_OPT_HARDBREAKS;
+    }
+    char* body = MarkdownToHtmlBody(markdown, options);
     if (!body) {
         return {};
     }
@@ -723,4 +729,32 @@ bool MarkdownToc_UnitTestMermaid() {
     ok = ok && (nPlain == 0) && str::Contains(plain, StrL("language-js")) &&
          !str::Contains(plain, StrL("pre class=\"mermaid\""));
     return ok;
+}
+
+bool MarkdownToc_TestLineBreaks() {
+    Str markdown = StrL(
+        "soft\nline\n\nhard  \nline\n\nslash\\\nline\n\n"
+        "`inline\ncode`\n\n```text\ncode\nline\n```\n");
+    Str tail = StrL(
+        "<p>hard<br />\nline</p>\n<p>slash<br />\nline</p>\n"
+        "<p><code>inline code</code></p>\n"
+        "<pre><code class=\"language-text\">code\nline\n</code></pre>\n");
+    struct {
+        int options;
+        Str firstParagraph;
+    } cases[] = {{CMARK_OPT_DEFAULT, StrL("<p>soft\nline</p>\n")},
+                 {CMARK_OPT_HARDBREAKS, StrL("<p>soft<br />\nline</p>\n")}};
+    for (auto& c : cases) {
+        char* body = MarkdownToHtmlBody(markdown, c.options);
+        if (!body) {
+            return false;
+        }
+        Str expected = str::JoinTemp(c.firstParagraph, tail);
+        bool ok = str::Eq(Str(body), expected);
+        cmark_get_default_mem_allocator()->free(body);
+        if (!ok) {
+            return false;
+        }
+    }
+    return true;
 }

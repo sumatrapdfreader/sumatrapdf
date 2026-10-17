@@ -253,13 +253,15 @@ static const StructInfo gChmUIInfo = {
 
 static const FieldInfo gMarkdownUIFields[] = {
     {offsetof(MarkdownUI, useFixedPageUI), SettingType::Bool, false},
+    {offsetof(MarkdownUI, preserveLineBreaks), SettingType::Bool, false},
 };
 static const StructInfo gMarkdownUIInfo = {
     sizeof(MarkdownUI),
-    1,
+    2,
     gMarkdownUIFields,
-    "UseFixedPageUI",
-    "if true, use MuPDF (cmark-gfm) to render markdown; if false, use WebView2 browser view when available",
+    "UseFixedPageUI\0PreserveLineBreaks",
+    "if true, use MuPDF (cmark-gfm) to render markdown; if false, use WebView2 browser view when available\0if true, "
+    "preserve source line breaks in the Markdown browser view; false uses standard Markdown paragraph wrapping",
     false};
 
 static const FieldInfo gHtmlUIFields[] = {

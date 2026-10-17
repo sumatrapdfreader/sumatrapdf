@@ -9082,7 +9082,8 @@ void ApplyChangedSettingsAndRelayout(const SettingsApplyState& before) {
             }
         }
     }
-    if (before.markdownUseFixedPageUI != p->markdownUI.useFixedPageUI) {
+    if (before.markdownUseFixedPageUI != p->markdownUI.useFixedPageUI ||
+        before.markdownPreserveLineBreaks != p->markdownUI.preserveLineBreaks) {
         for (MainWindow* w : gWindows) {
             if (IsMarkdownTab(w->CurrentTab())) {
                 ReloadDocument(w, false);

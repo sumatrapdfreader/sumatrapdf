@@ -634,6 +634,12 @@ const markdownUI: Field[] = [
     false,
     "if true, use MuPDF (cmark-gfm) to render markdown; if false, use WebView2 browser view when available",
   ),
+  field(
+    "PreserveLineBreaks",
+    Bool,
+    false,
+    "if true, preserve source line breaks in the Markdown browser view; false uses standard Markdown paragraph wrapping",
+  ).ver("3.7"),
 ];
 
 const htmlUI: Field[] = [

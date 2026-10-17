@@ -2793,6 +2793,7 @@ SettingsApplyState GetSettingsApplyState() {
     s.disableAntiAlias = p->disableAntiAlias;
     s.chmUseFixedPageUI = p->chmUI.useFixedPageUI;
     s.markdownUseFixedPageUI = p->markdownUI.useFixedPageUI;
+    s.markdownPreserveLineBreaks = p->markdownUI.preserveLineBreaks;
     s.explorerQuickLook = p->explorerQuickLook;
     s.ebookLayout = EbookLayoutSnapshot();
     s.aiChatStyle = AIChatStyleSnapshot();
