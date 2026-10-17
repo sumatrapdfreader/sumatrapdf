@@ -983,6 +983,8 @@ static float EbookLayoutAspectForLoad(MainWindow* win, Str path);
 // True while the command-line file loop is loading, so -view / -zoom size
 // that ebook and not a session restored just before it.
 static bool gApplyCliViewToEbookLayout = false;
+// another instance owns the saved session, so we don't restore it (#6350)
+static bool gOtherInstanceRunning = false;
 
 static DocController* CreateControllerForFile(MainWindow* win, Str path, PasswordUI* pwdUI) {
     auto timeStart = TimeGet();
@@ -6535,6 +6537,7 @@ Retry:
 static bool ForwardToExistingInstance(Flags& flags, HANDLE* hMutex) {
     bool openInNewWindow = false;
     HWND existingInstanceHwnd = FindExistingSumatraProcessHwnd(hMutex, &openInNewWindow);
+    gOtherInstanceRunning = existingInstanceHwnd != nullptr;
 
     HWND existingHwnd = nullptr;
     if (flags.printDialog || flags.configureRestrictedUse || gForTesting) {
@@ -7041,7 +7044,8 @@ int GpuiMain(int argc, char** argv) {
     gIsStartup = true;
 #endif
     bool restoredSession = false;
-    if (!gFlags->configureRestrictedUse && (len(gFlags->fileNames) == 0 || SettingsUseTabs())) {
+    bool canRestore = !gFlags->configureRestrictedUse && !gOtherInstanceRunning;
+    if (canRestore && (len(gFlags->fileNames) == 0 || SettingsUseTabs())) {
         restoredSession = RestoreSession(win);
         // the session may have opened more windows; the command line goes into
         // the first one, as orig does

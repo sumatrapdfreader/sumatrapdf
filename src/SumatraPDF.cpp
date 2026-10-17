@@ -16063,11 +16063,10 @@ ContinueOpenWindow:
 
     restoreSession = SettingsRestoreSession() && (len(*gInitialSessionData) > 0) && !NeedsWindowEmbeddingHacks() &&
                      !flags.quickLook && !flags.configureRestrictedUse;
-    if (!SettingsUseTabs() && (existingInstanceHwnd != nullptr)) {
-        // do not restore a session if tabs are disabled and SumatraPDF is already running
-        // TODO: maybe disable restoring if tabs are disabled?
+    if (existingInstanceHwnd != nullptr) {
+        // the session belongs to the running instance; restoring it would duplicate its documents (#6350)
         restoreSession = false;
-        logf("not restoring a session because the same exe is already running and tabs are disabled\n");
+        logf("not restoring a session because the same exe is already running\n");
     }
 
     showStartPage =
