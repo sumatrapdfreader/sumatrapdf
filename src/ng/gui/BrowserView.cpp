@@ -13,6 +13,9 @@
 
 #include "base/GuessFileType.h"
 #include "base/Win.h"
+#if OS_WIN
+#include "../../../ext/webview2/WebView2.h"
+#endif
 
 #include "gui/UIModels.h"
 
@@ -111,6 +114,7 @@ struct BrowserView {
     // drawn in a tool window, which makes it from its own tick
     bool ownHost = false;
     bool visible = false;
+    int clipTop = 0;
     // composition color; unset keeps the white host chm and markdown use
     Color background = kColorUnset;
     int zoomPercent = 100;
@@ -825,7 +829,33 @@ void BrowserViewCreatePendingIn(BrowserView* bv, gp::Ctx* cx) {
     AppShellInvalidate(bv->win);
 }
 
-gp::El* BrowserViewBuild(BrowserView* bv, gp::Ctx* cx) {
+static void ClipBrowserTop(BrowserView* bv, int top) {
+#if OS_WIN
+    if (top == bv->clipTop) {
+        return;
+    }
+    auto* controller = (ICoreWebView2Controller*)wry::WebViewControllerRaw(Raw(bv));
+    HWND hwnd = nullptr;
+    if (!controller || FAILED(controller->get_ParentWindow(&hwnd)) || !hwnd) {
+        return;
+    }
+    // Clip the native surface without changing the page's viewport or scroll position.
+    HRGN region = nullptr;
+    if (top > 0) {
+        Rect frame = HwndClientRect(AppShellNativeHwnd(bv->win));
+        region = CreateRectRgn(0, AppShellDpiPx(bv->win, top), frame.dx, frame.dy);
+    }
+    if (!SetWindowRgn(hwnd, region, TRUE)) {
+        if (region) {
+            DeleteObject(region);
+        }
+        return;
+    }
+    bv->clipTop = top;
+#endif
+}
+
+gp::El* BrowserViewBuild(BrowserView* bv, gp::Ctx* cx, int clipTop) {
     if (!bv) {
         return nullptr;
     }
@@ -858,5 +888,6 @@ gp::El* BrowserViewBuild(BrowserView* bv, gp::Ctx* cx) {
             str::FreePtr(&bv->pendingUrl);
         }
     }
+    ClipBrowserTop(bv, clipTop);
     return gp::WebViewEl(bv->view, cx);
 }

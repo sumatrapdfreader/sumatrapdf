@@ -72,7 +72,7 @@ bool TabIsDirty(WindowTab* tab) {
 // Hide a lone Home tab. Favorites is a closable tab, so it must remain visible
 // even when it is the only tab left.
 bool TabsAreVisible(MainWindow* win) {
-    if (win->isQuickLook) {
+    if (win->isQuickLook || (win->tabsInTitlebar && !gSettings->showCaption && !win->captionOverlayShown)) {
         return false;
     }
     // orig's showTabsBar: fullscreen and presentation hide the strip

@@ -296,6 +296,10 @@ MenuDef menuDefView[] = {
         CmdToggleToolbar,
     },
     {
+        TrN("Show Caption"),
+        CmdToggleCaption,
+    },
+    {
         TrN("&Highlight Form Fields"),
         CmdToggleHighlightFormFields,
     },

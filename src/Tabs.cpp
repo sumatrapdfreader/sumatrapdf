@@ -94,7 +94,7 @@ void UpdateTabWidth(MainWindow* win) {
     // even when it is the only tab left.
     bool onlyHomeTab = nTabs == 1 && win->GetTab(0)->IsAboutTab();
     bool showSingleTab = SettingsUseTabs() || win->tabsInTitlebar;
-    bool showTabs = !onlyHomeTab && ((nTabs > 1) || (showSingleTab && (nTabs > 0)));
+    bool showTabs = !onlyHomeTab && !win->isQuickLook && ((nTabs > 1) || (showSingleTab && (nTabs > 0)));
     // TabWidth is stored in logical (96-DPI) units, same as other layout
     // settings; convert to physical pixels so HiDPI monitors honor the value
     // (issue #3850). Height already uses DpiScale via GetTabbarHeight.

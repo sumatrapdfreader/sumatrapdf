@@ -2774,7 +2774,7 @@ static MainWindow* CreateMainWindow() {
     // is deferred to ShowMainWindow so the shell sees a normal frame during
     // the first ShowWindow and creates the taskbar button.
     {
-        bool inTitleBar = SettingsUseTabs();
+        bool inTitleBar = SettingsUseTabs() || !gSettings->showCaption;
         win->tabsInTitlebar = inTitleBar;
         win->tabsCtrl->inTitleBar = inTitleBar;
         if (inTitleBar) {
@@ -6620,6 +6620,13 @@ static void SyncCaptionLayout(MainWindow* win) {
     }
 }
 
+enum class CaptionUpdate {
+    Layout,
+    Mouse
+};
+
+static void UpdateCaptionOverlay(MainWindow* win, CaptionUpdate update);
+
 static bool RelayoutFrame(MainWindow* win, bool updateToolbars, int sidebarDx) {
     DpiSetFromHwnd(win->hwndFrame);
     Rect rc = HwndClientRect(win->hwndFrame);
@@ -6760,7 +6767,7 @@ static bool RelayoutFrame(MainWindow* win, bool updateToolbars, int sidebarDx) {
     bool bottomVisible = !favAsTab && win->uiState.sidebarBottomVisible;
     bool sidebarVisible = topVisible || bottomVisible;
     bool aiChatVisible = !favAsTab && win->uiState.aiChatVisible && win->hwndAiChatBox;
-    bool showCaption = !win->presentation && !win->isFullScreen && win->tabsInTitlebar;
+    bool showCaption = !win->presentation && !win->isFullScreen && win->tabsInTitlebar && gSettings->showCaption;
     bool showingMenuBar = IsShowingMenuBarRebar(win);
     bool showTabsBar = !win->presentation && !win->isFullScreen && !win->tabsInTitlebar && win->tabsVisible;
     bool showMenuRebar = showingMenuBar && (!win->tabsInTitlebar || win->isFullScreen);
@@ -6942,6 +6949,7 @@ static bool RelayoutFrame(MainWindow* win, bool updateToolbars, int sidebarDx) {
     }
 
     dh.End();
+    UpdateCaptionOverlay(win, CaptionUpdate::Layout);
 
     if (isSplitterDrag) {
         if (discardCanvasBits) {
@@ -8395,7 +8403,7 @@ static void FrameOnChar(MainWindow* win, WPARAM key, LPARAM info = 0) {
 
 static bool FrameOnSysChar(MainWindow* win, WPARAM key) {
     // use Alt+1 to Alt+8 for selecting the first 8 tabs and Alt+9 for the last tab
-    if (win->tabsVisible && ('1' <= key && key <= '9')) {
+    if (SettingsUseTabs() && win->TabCount() > 0 && ('1' <= key && key <= '9')) {
         TabsSelect(win, key < '9' ? (int)(key - '1') : win->TabCount() - 1);
         return true;
     }
@@ -10358,6 +10366,10 @@ static LRESULT FrameOnCommand(MainWindow* win, HWND hwnd, UINT msg, WPARAM wp, L
             ToggleFreePan(win);
             break;
 
+        case CmdToggleCaption:
+            ToggleCaption(cmd);
+            break;
+
         case CmdToggleToolbar:
             if (GetCommandArg(cmd, kCmdArgState)) {
                 // explicit state: on -> show (pinned), off -> hide
@@ -11873,6 +11885,9 @@ void OpenSystemMenu(MainWindow* win) {
 }
 
 static int CaptionButtonAt(MainWindow* win, Point pt) {
+    if (!gSettings->showCaption && !win->captionOverlayShown) {
+        return -1;
+    }
     UnmirrorRtl(win->hwndFrame, pt);
     for (int i = CB_BTN_FIRST; i < CB_BTN_COUNT; i++) {
         if (win->captionBtn[i].visible && win->captionBtn[i].rect.Contains(pt)) {
@@ -11883,6 +11898,9 @@ static int CaptionButtonAt(MainWindow* win, Point pt) {
 }
 
 static void RepaintButton(HWND hwnd, int btnIdx, MainWindow* win) {
+    if (win->captionOverlayShown) {
+        HwndInvalidate(win->hwndCaptionOverlay);
+    }
     if (false) {
         HwndInvalidateRect(hwnd, win->captionBtn[btnIdx].rect, false);
         UpdateWindow(hwnd);
@@ -11969,6 +11987,9 @@ static void HandleCaptionClick(MainWindow* win, int btnIdx) {
 
 void RelayoutCaption(MainWindow* win) {
     if (!win->captionLayout || !win->tabsInTitlebar) {
+        return;
+    }
+    if (!gSettings->showCaption && !win->captionOverlayShown) {
         return;
     }
     DpiSetFromHwnd(win->hwndFrame);
@@ -12769,6 +12790,117 @@ static LRESULT CustomCaptionFrameProc(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp,
 
     *callDef = true;
     return 0;
+}
+
+static LRESULT CALLBACK CaptionOverlayProc(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp) {
+    MainWindow* win = (MainWindow*)GetWindowLongPtrW(hwnd, GWLP_USERDATA);
+    if (!win) {
+        return DefWindowProcW(hwnd, msg, wp, lp);
+    }
+    if (msg == WM_TIMER) {
+        UpdateCaptionOverlay(win, CaptionUpdate::Mouse);
+        return 0;
+    }
+    if (msg == WM_MOUSEACTIVATE) {
+        return MA_NOACTIVATE;
+    }
+    if (msg == WM_PAINT) {
+        PAINTSTRUCT ps;
+        HDC hdc = BeginPaint(hwnd, &ps);
+        HBRUSH bg = CreateSolidBrush(ThemeControlBackgroundColor());
+        HdcFillRect(hdc, HwndClientRect(hwnd), bg);
+        DeleteObject(bg);
+        for (int i = CB_BTN_FIRST; i < CB_BTN_COUNT; i++) {
+            DrawCaptionButton(win, hdc, &win->captionBtn[i]);
+        }
+        EndPaint(hwnd, &ps);
+        return 0;
+    }
+    if (msg == WM_LBUTTONDOWN || msg == WM_LBUTTONDBLCLK) {
+        Point pt{GET_X_LPARAM(lp), GET_Y_LPARAM(lp)};
+        if (CaptionButtonAt(win, pt) < 0) {
+            return SendMessageW(win->hwndFrame, msg == WM_LBUTTONDBLCLK ? WM_NCLBUTTONDBLCLK : WM_NCLBUTTONDOWN,
+                                HTCAPTION, 0);
+        }
+    }
+    if (msg == WM_RBUTTONUP) {
+        Point screen = HwndClientToScreen(hwnd, Point(GET_X_LPARAM(lp), GET_Y_LPARAM(lp)));
+        return SendMessageW(win->hwndFrame, WM_NCRBUTTONUP, HTCAPTION, MAKELPARAM(screen.x, screen.y));
+    }
+    if (msg == WM_MOUSEMOVE || msg == WM_LBUTTONDOWN || msg == WM_LBUTTONUP || msg == WM_LBUTTONDBLCLK) {
+        return SendMessageW(win->hwndFrame, msg, wp, lp);
+    }
+    return DefWindowProcW(hwnd, msg, wp, lp);
+}
+
+static void UpdateCaptionOverlay(MainWindow* win, CaptionUpdate update) {
+    constexpr int kCaptionRevealDy = 8;
+    constexpr int kCaptionPollMs = 50;
+    constexpr int kCaptionTimer = 1;
+    bool overlay = !gSettings->showCaption && win->tabsInTitlebar && !win->isFullScreen && !win->presentation;
+    if (overlay && !win->hwndCaptionOverlay) {
+        WNDCLASSW cls{};
+        cls.lpfnWndProc = CaptionOverlayProc;
+        cls.hInstance = GetModuleHandleW(nullptr);
+        cls.lpszClassName = L"SumatraCaptionOverlay";
+        cls.hCursor = LoadCursorW(nullptr, IDC_ARROW);
+        cls.style = CS_DBLCLKS;
+        RegisterClassW(&cls);
+        win->hwndCaptionOverlay = CreateWindowExW(WS_EX_NOACTIVATE, cls.lpszClassName, L"", WS_CHILD | WS_CLIPSIBLINGS,
+                                                  0, 0, 0, 0, win->hwndFrame, nullptr, cls.hInstance, nullptr);
+        SetWindowLongPtrW(win->hwndCaptionOverlay, GWLP_USERDATA, (LONG_PTR)win);
+    }
+    if (!win->hwndCaptionOverlay) {
+        return;
+    }
+    if (overlay && update == CaptionUpdate::Layout) {
+        SetTimer(win->hwndCaptionOverlay, kCaptionTimer, kCaptionPollMs, nullptr);
+    } else if (!overlay) {
+        KillTimer(win->hwndCaptionOverlay, kCaptionTimer);
+    }
+    POINT cursor;
+    GetCursorPos(&cursor);
+    Point pt = HwndScreenToClient(win->hwndFrame, Point(cursor.x, cursor.y));
+    Rect rc = HwndClientRect(win->hwndFrame);
+    int revealDy = DpiScale(kCaptionRevealDy);
+    int hoverDy = win->captionOverlayShown ? win->captionRect.y + win->captionRect.dy : revealDy;
+    GUITHREADINFO gui{sizeof(gui)};
+    GetGUIThreadInfo(GetCurrentThreadId(), &gui);
+    bool menuUp = gui.hwndActive == win->hwndFrame && (gui.flags & GUI_INMENUMODE) != 0;
+    bool overFrame = GetAncestor(WindowFromPoint(cursor), GA_ROOT) == win->hwndFrame;
+    bool shown = overlay && ((overFrame && pt.x >= 0 && pt.x < rc.dx && pt.y >= 0 && pt.y < hoverDy) || menuUp ||
+                             GetCapture() == win->hwndFrame);
+    if (update == CaptionUpdate::Mouse && shown == win->captionOverlayShown) {
+        return;
+    }
+    win->captionOverlayShown = shown;
+    if (shown) {
+        // Lay out the caption independently so revealing it never resizes the document.
+        SetVis(win->captionLayout, true);
+        win->captionRect = {0, 0, rc.dx, 1};
+        RelayoutCaption(win);
+        SetVis(win->captionLayout, false);
+        SetWindowPos(win->hwndCaptionOverlay, HWND_TOP, 0, 0, rc.dx, win->captionRect.dy,
+                     SWP_NOACTIVATE | SWP_SHOWWINDOW);
+        if (win->tabsCtrl && win->tabsVisible) {
+            SetWindowPos(win->tabsCtrl->hwnd, HWND_TOP, 0, 0, 0, 0,
+                         SWP_NOMOVE | SWP_NOSIZE | SWP_NOACTIVATE | SWP_SHOWWINDOW);
+        }
+        if (IsShowingMenuBarRebar(win)) {
+            SetWindowPos(win->hwndMenuReBar, HWND_TOP, 0, 0, 0, 0,
+                         SWP_NOMOVE | SWP_NOSIZE | SWP_NOACTIVATE | SWP_SHOWWINDOW);
+        }
+        HwndInvalidate(win->hwndCaptionOverlay);
+        return;
+    }
+    ShowWindow(win->hwndCaptionOverlay, SW_HIDE);
+    if (!gSettings->showCaption) {
+        win->captionRect = {};
+        if (win->tabsCtrl) {
+            ShowWindow(win->tabsCtrl->hwnd, SW_HIDE);
+        }
+        ShowWindow(win->hwndMenuReBar, SW_HIDE);
+    }
 }
 
 // --- End caption code ---

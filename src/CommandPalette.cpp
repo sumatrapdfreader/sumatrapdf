@@ -1363,6 +1363,10 @@ static TempStr UpdateCommandNameTemp(MainWindow* win, int cmdId, Str s) {
             bool visible = SettingsUseTabs() ? gSettings->showMenubarWithTabs : gSettings->showMenubar;
             newIsOn = !visible;
         } break;
+        case CmdToggleCaption: {
+            isToggle = true;
+            newIsOn = !gSettings->showCaption;
+        } break;
         case CmdToggleBookmarks:
         case CmdToggleTableOfContents: {
             isToggle = true;

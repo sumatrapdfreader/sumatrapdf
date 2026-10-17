@@ -457,13 +457,26 @@ void ApplySettingsToOpenWindows() {
         // selection handlers, shortcuts) with fresh command ids. Menus still
         // hold the old ids unless rebuilt - without this, e.g. "Set theme ..."
         // does nothing until restart (issue #5822).
+        bool customCaption = SettingsUseTabs() || !gSettings->showCaption;
+        if (!win->isQuickLook && !gPluginMode && !gMyWindowWasEmbedded && customCaption != win->tabsInTitlebar) {
+            SetMenu(win->hwndFrame, nullptr);
+            if (!customCaption) {
+                DestroyMenuBarRebar(win);
+            }
+            SetTabsInTitlebar(win, customCaption);
+            UpdateTabWidth(win);
+            bool menuVisible = SettingsUseTabs() ? gSettings->showMenubarWithTabs : gSettings->showMenubar;
+            if (customCaption && menuVisible) {
+                CreateMenuBarRebar(win);
+            }
+        }
         RebuildMenuBarForWindow(win);
         ReCreateToolbar(win);
         ToolbarUpdateStateForWindow(win, true);
         UpdateFindbox(win);
         // force the relayout: toolbar size/font are not part of the layout
         // state snapshot (see issue #5136), and repaint the toolbar after it
-        ScheduleUiUpdate(win, kUiForceRelayout | kUiToolbarDirty);
+        ScheduleUiUpdate(win, kUiForceRelayout | kUiToolbarDirty | kUiTabsDirty);
         for (WindowTab* tab : win->Tabs()) {
             UpdateTabPageText(tab);
         }

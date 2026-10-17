@@ -2665,7 +2665,8 @@ static void ExecuteControlRequest(ControlRequest* req) {
             }
             Rect frame = win->frameRc;
             Rect canvas = win->canvasRc;
-            int menuDy = (win->isMenuBarVisible && !AppShellNativeMenu()) ? kMenuBarDy : 0;
+            bool captionHidden = win->tabsInTitlebar && !gSettings->showCaption && !win->captionOverlayShown;
+            int menuDy = (win->isMenuBarVisible && !AppShellNativeMenu() && !captionHidden) ? kMenuBarDy : 0;
             int tabsDy = TabsAreVisible(win) ? kTabBarDy : 0;
             int toolbarDy = ToolbarDy(win);
             int sidebarDx = (win->uiState.tocVisible || win->uiState.favVisible) ? win->sidebarDx : 0;

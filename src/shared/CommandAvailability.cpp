@@ -62,6 +62,7 @@ static const i32 gNoDocWhitelist[] = {
     CmdToggleFullscreen,
     CmdToggleMenuBar,
     CmdToggleToolbar,
+    CmdToggleCaption,
     CmdToggleInverseSearch,
     CmdToggleDisableLinks,
     CmdToggleHoverPreview,
@@ -373,6 +374,11 @@ bool CmdWorksWithoutDocument(int cmdId) {
 }
 
 CommandVisibility GetCommandVisibility(int cmdId, const AppCommandCtx& ctx, CommandSurface surface) {
+#if !OS_WIN
+    if (cmdId == CmdToggleCaption) {
+        return CommandVisibility::Hide;
+    }
+#endif
 #if OS_WASM
     if (cmdId == CmdRunPDFScript) return CommandVisibility::Hide;
 #endif

@@ -372,6 +372,8 @@ struct MainWindow { // NOLINT(clang-analyzer-optin.performance.Padding)
     Point captionPressPt;
     bool isMenuOpen = false;
     Rect captionRect;
+    HWND hwndCaptionOverlay = nullptr;
+    bool captionOverlayShown = false;
 
     Tooltip* infotip = nullptr;
 

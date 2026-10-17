@@ -240,6 +240,7 @@ struct MainWindow {
     // orig's tabsInTitlebar: the tab strip and the caption buttons are drawn
     // in a caption of the port's own (Windows; set when UseTabs is on)
     bool tabsInTitlebar = false;
+    bool captionOverlayShown = false;
     // the width the tab strip has in that caption; 0 = the frame's
     int tabsAvailDx = 0;
     // size of the whole window and whether it is maximized, as the shell saw

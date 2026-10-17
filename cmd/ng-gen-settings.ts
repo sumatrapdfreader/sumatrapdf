@@ -1880,6 +1880,12 @@ const globalPrefs: Field[] = [
   ),
   field("UseTabs", Bool, true, "if true, documents are opened in tabs instead of new windows").ver("3.0"),
   field(
+    "ShowCaption",
+    Bool,
+    true,
+    "show the caption; when hidden, hover at the top to reveal it. Toggle with Shift+F8",
+  ).ver("3.7"),
+  field(
     "SelectionToolbar",
     Bool,
     true,
@@ -2244,6 +2250,7 @@ const globalPrefsLayout = [
   "DisableAutoLinks",
   "UseSysColors",
   "UseTabs",
+  "ShowCaption",
   "SelectionToolbar",
   "TabsMru",
   "CtrlTabSimple",

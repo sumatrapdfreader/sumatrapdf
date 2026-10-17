@@ -2800,3 +2800,10 @@ SettingsApplyState GetSettingsApplyState() {
     s.thumbnailsType = str::Dup(p->thumbnailsType);
     return s;
 }
+
+void ToggleCaption(CustomCommand* cmd) {
+    bool show = GetCommandBoolArg(cmd, kCmdArgState, !gSettings->showCaption);
+    if (show != gSettings->showCaption) {
+        ToggleSettingsBool(&gSettings->showCaption);
+    }
+}

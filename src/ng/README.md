@@ -33,6 +33,12 @@ engine as `SumatraPDF run` in a child process. Arguments, bundled examples
 and output capture match the original. WebAssembly has no child processes,
 so the command is unavailable there.
 
+## Caption overlay
+
+On Windows, `CmdToggleCaption` (`Shift + F8`) hides the caption and reveals
+it over the document while the pointer is near the top edge. Other platforms
+keep their native caption: GPUI's client caption currently supports Windows.
+
 ## Keyboard shortcuts
 
 `src/shared/Accelerators.cpp` holds the Windows defaults and a per-platform

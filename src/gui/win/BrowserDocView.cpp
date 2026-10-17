@@ -828,7 +828,7 @@ LRESULT BrowserViewPassUIMsg(BrowserView* bv, UINT msg, WPARAM wp, LPARAM lp) {
     return bv ? bv->view->SendMsg(msg, wp, lp) : 0;
 }
 
-gpui::El* BrowserViewBuild(BrowserView*, gpui::Ctx*) {
+gpui::El* BrowserViewBuild(BrowserView*, gpui::Ctx*, int) {
     return nullptr;
 }
 

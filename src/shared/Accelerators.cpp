@@ -134,6 +134,7 @@ static Accel gBuiltInAccelerators[] = {
     {{kVirt, VK_F6}, CmdMoveFrameFocus},
     {{kVirt, VK_F7}, CmdSelectTextViaKeyboard},
     {{kVirt, VK_F8}, CmdToggleToolbar},
+    {{kShift | kVirt, VK_F8}, CmdToggleCaption},
     {{kVirt, VK_F9}, CmdToggleMenuBar},
     {{kCtrl | kVirt, 'L'}, CmdTogglePresentationMode},
     {{kVirt, VK_F5}, CmdTogglePresentationMode},

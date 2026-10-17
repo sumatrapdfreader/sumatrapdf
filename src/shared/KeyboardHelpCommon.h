@@ -46,7 +46,7 @@ static const int kSecAnnot[] = {
 };
 
 static const int kSecIface[] = {
-    CmdCommandPalette, CmdToggleBookmarks, CmdToggleToolbar, CmdToggleMenuBar,
+    CmdCommandPalette, CmdToggleBookmarks, CmdToggleToolbar, CmdToggleCaption, CmdToggleMenuBar,
     CmdToggleCursorPosition, CmdTogglePageInfo,
     CmdFavoriteAdd, CmdFavoriteToggle, CmdHelpOpenManual,0,
 };
@@ -90,6 +90,7 @@ static const struct {
     {CmdMoveTabRight, "Ctrl + Shift + Page Down"}, {CmdReopenLastClosedFile, "Ctrl + Shift + T"},
     {CmdCreateAnnotHighlight, "A"}, {CmdCreateAnnotUnderline, "U"}, {CmdSaveAnnotations, "Ctrl + Shift + S"},
     {CmdDeleteAnnotation, "Ctrl + Delete"}, {CmdToggleBookmarks, "F12"}, {CmdToggleToolbar, "F8"},
+    {CmdToggleCaption, "Shift + F8"},
     {CmdToggleMenuBar, "F9"}, {CmdToggleCursorPosition, "M"}, {CmdTogglePageInfo, "I"}, {CmdCommandPalette, "Ctrl + K"},
     {CmdFavoriteAdd, "Ctrl + B"}, {CmdHelpOpenManual, "F1"}, {CmdToggleKeyboardHelp, "?"},
 };

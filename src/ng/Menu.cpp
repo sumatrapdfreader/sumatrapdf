@@ -160,6 +160,10 @@ static MenuDef menuDefContext[] = {
         CmdToggleToolbar,
     },
     {
+        TrN("Show Caption"),
+        CmdToggleCaption,
+    },
+    {
         StrL(kMenuSeparator),
         kMenuSeparatorID,
     },
@@ -678,6 +682,10 @@ static void SetMenuChecks(MenuModel* menu, MainWindow* win) {
         }
         if (it.cmdId == CmdTogglePageGrid) {
             it.checked = ShowPageGrid();
+            continue;
+        }
+        if (it.cmdId == CmdToggleCaption) {
+            it.checked = gSettings->showCaption;
             continue;
         }
         if (it.cmdId == CmdToggleBookmarks || it.cmdId == CmdToggleTableOfContents) {

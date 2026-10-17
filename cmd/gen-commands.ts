@@ -346,6 +346,7 @@ const commandsRaw = [
     "CmdQuickEditSettings", "Quick Edit Settings",
     "CmdConfigureRestrictedUse", "Configure Restricted Use...",
     "CmdRunPDFScript", "Run PDF Script...",
+    "CmdToggleCaption", "Toggle Caption",
 ];
 
 // removed slots are dropped: nothing outside the generators should see them

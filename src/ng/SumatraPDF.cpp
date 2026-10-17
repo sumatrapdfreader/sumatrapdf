@@ -5285,6 +5285,10 @@ void ExecuteCmd(MainWindow* win, int cmdId) {
             ReadingBarToggleInvert(win);
             break;
 
+        case CmdToggleCaption:
+            ToggleCaption(cmd);
+            break;
+
         case CmdToggleToolbar:
             if (GetCommandArg(cmd, kCmdArgState)) {
                 // explicit state: on -> show (pinned), off -> hide

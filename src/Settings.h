@@ -1292,6 +1292,9 @@ struct Settings {
     bool useSysColors;
     // if true, documents are opened in tabs instead of new windows
     bool useTabs;
+    // show the caption; when hidden, hover at the top to reveal it. Toggle
+    // with Shift+F8
+    bool showCaption;
     // if true, a small floating toolbar with selection actions (copy, read
     // aloud, highlight etc.) pops up after selecting text. Set to false to
     // disable it

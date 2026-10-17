@@ -283,7 +283,7 @@ static int CaptionDy(MainWindow* win, bool twoRow, bool tabsVisible) {
 }
 
 bool AppShellCaptionRects(MainWindow* win, Rect* menuOut, Rect* tabsOut, int* dyOut) {
-    if (!ShowCaption(win)) {
+    if (!ShowCaption(win) || (!gSettings->showCaption && !win->captionOverlayShown)) {
         return false;
     }
     bool twoRow = win->isMenuBarVisible && !gp::AppHasMenuBar();
@@ -1832,7 +1832,11 @@ static gp::El* BuildCanvas(ShellView* self, gp::Ctx* cx, bool overlayUp) {
     }
     if (browser && !overlayUp) {
         gp::El* box = gp::Div(cx->a)->Flex1()->W(gp::kFill)->Bg(ThemeGpuiCanvasBg());
-        box->Child(BrowserViewBuild(browser, cx));
+        int clipTop = 0;
+        if (win->captionOverlayShown && ShowCaption(win) && !gSettings->showCaption) {
+            clipTop = std::max(0, CaptionDy(win, win->isMenuBarVisible, TabsAreVisible(win)) - win->canvasRc.y);
+        }
+        box->Child(BrowserViewBuild(browser, cx, clipTop));
         return box;
     }
     gp::El* canvas = gp::Div(cx->a)->FlexCol()->Flex1()->W(gp::kFill)->ItemsCenter()->JustifyCenter()->Gap(6)->Bg(
@@ -2917,6 +2921,30 @@ void ShellView::OnTick(ShellView* self, gp::Ctx* cx, const gp::TickEvent* ev) {
     PdfToolDialogTick(win, ms);
     // what moved inside the frame (a sidebar, a toolbar row) moves the canvas
     ToolWindowsFollow(win);
+    if (ShowCaption(win)) {
+        auto* menuState = (gpc::AppMenuBarState*)gp::EntityGet(cx->app, self->menuBarState.id);
+        auto* popup = (gp::PopupMenuState*)gp::EntityGet(cx->app, self->menuPopupState.id);
+        constexpr int kCaptionRevealDy = 8;
+        int hoverDy =
+            win->captionOverlayShown ? CaptionDy(win, win->isMenuBarVisible, TabsAreVisible(win)) : kCaptionRevealDy;
+        bool menuOpen = (menuState && menuState->selected >= 0) || (popup && popup->open);
+        float mouseX = cx->win->mouseX;
+        float mouseY = cx->win->mouseY;
+#if OS_WIN
+        POINT cursor{};
+        GetCursorPos(&cursor);
+        ScreenToClient(AppShellNativeHwnd(win), &cursor);
+        float scale = CanvasScale(win);
+        mouseX = cursor.x * scale;
+        mouseY = cursor.y * scale;
+#endif
+        bool shown = !gSettings->showCaption &&
+                     ((mouseX >= 0 && mouseX < win->frameRc.dx && mouseY >= 0 && mouseY < hoverDy) || menuOpen);
+        if (shown != win->captionOverlayShown) {
+            win->captionOverlayShown = shown;
+            gp::Notify(cx);
+        }
+    }
     ToolbarTick(win, ms);
     AutoReloadTick(win, ms);
     DocCanvasAutoScrollTick(win, ms);
@@ -2947,7 +2975,7 @@ void ShellView::OnTick(ShellView* self, gp::Ctx* cx, const gp::TickEvent* ev) {
 static Rect CanvasRcForFrame(MainWindow* win, int frameDx, int frameDy, bool menuBarShown, bool tabsVisible) {
     int chromeDy;
     if (ShowCaption(win)) {
-        chromeDy = CaptionDy(win, menuBarShown, tabsVisible);
+        chromeDy = gSettings->showCaption ? CaptionDy(win, menuBarShown, tabsVisible) : 0;
     } else {
         chromeDy = (menuBarShown ? kMenuBarDy : 0) + (tabsVisible ? kTabBarDy : 0);
     }
@@ -3068,7 +3096,8 @@ gp::El* ShellView::Render(ShellView* self, gp::Ctx* cx) {
     }
     bool menuBarShown = (win->isMenuBarVisible || self->menuBarTemp) && !nativeMenu;
     // orig: tabsInTitlebar follows UseTabs
-    SetTabsInTitlebar(win, CanHaveTabsInTitlebar() && SettingsUseTabs() && !win->isQuickLook);
+    SetTabsInTitlebar(win,
+                      CanHaveTabsInTitlebar() && (SettingsUseTabs() || !gSettings->showCaption) && !win->isQuickLook);
     bool showCaption = ShowCaption(win);
     if (!showCaption) {
         win->tabsAvailDx = 0;
@@ -3108,9 +3137,9 @@ gp::El* ShellView::Render(ShellView* self, gp::Ctx* cx) {
     if (border > 0) {
         root->Pad((float)border)->Bg(ToGpui(ThemeControlBackgroundColor()));
     }
-    if (showCaption) {
+    if (showCaption && gSettings->showCaption) {
         BuildCaption(self, cx, root, menuBarShown);
-    } else {
+    } else if (!showCaption) {
         if (menuBarShown) {
             root->Child(gp::Div(cx->a)
                             ->W(gp::kFill)
@@ -3161,6 +3190,11 @@ gp::El* ShellView::Render(ShellView* self, gp::Ctx* cx) {
     }
     if (gp::El* strip = ToolbarOverlayBuild(win, cx)) {
         root->Child(strip);
+    }
+    if (showCaption && !gSettings->showCaption && win->captionOverlayShown) {
+        gp::El* caption = gp::Div(cx->a)->Absolute()->Top(0)->Left(0)->W(gp::kFill)->FlexCol()->Bg(th.tokens.titleBar);
+        BuildCaption(self, cx, caption, menuBarShown);
+        root->Child(caption);
     }
     // orig floats the find bar over the frame, pinned to its right edge
     if (gp::El* findBar = FindBarBuild(win, cx)) {
@@ -3219,7 +3253,7 @@ MainWindow* AppShellCreateWindow(gp::App* app, int dipW, int dipH) {
 
     // orig sets tabsInTitlebar from UseTabs when it creates the frame
     gp::WinOpts opts;
-    opts.clientTitleBar = CanHaveTabsInTitlebar() && SettingsUseTabs();
+    opts.clientTitleBar = CanHaveTabsInTitlebar() && (SettingsUseTabs() || !gSettings->showCaption);
     gp::Window* gw = gp::WindowOpenView(app, GStrL("SumatraPDF"), dipW, dipH, ui->view.id, opts);
     auto* win = new MainWindow(gw);
     // The first paint replaces this. Ebook layout runs before that paint and

@@ -337,6 +337,7 @@ import { testit as issue5968 } from "./issue-5968.ts";
 import { testit as issue5978 } from "./issue-5978.ts";
 import { testit as issue6352 } from "./issue-6352.ts";
 import { testit as issue6354 } from "./issue-6354.ts";
+import { testit as issue6355 } from "./issue-6355.ts";
 import { testit as issue2423 } from "./issue-2423.ts";
 import { testit as issue6167 } from "./issue-6167.ts";
 import { testit as issue6168 } from "./issue-6168.ts";
@@ -442,6 +443,7 @@ export const tests: NamedTest[] = [
   ["issue-5978", issue5978],
   ["issue-6352", issue6352],
   ["issue-6354", issue6354],
+  ["issue-6355", issue6355],
   ["line-annotation-placement", lineAnnotationPlacement],
   ["polyline-annotation-placement", polylineAnnotationPlacement],
   ["shape-annotation-placement", shapeAnnotationPlacement],
