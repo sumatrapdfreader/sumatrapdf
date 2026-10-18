@@ -187,9 +187,26 @@ static fz_css_condition *fz_new_css_condition(fz_context *ctx, fz_pool *pool, in
 	return cond;
 }
 
+/* SumatraPDF: properties added without regenerating css-properties.h with gperf */
+static struct css_property_info css_extra_properties[] = {
+	{ "transform", PRO_TRANSFORM },
+	{ "transform-origin", PRO_TRANSFORM_ORIGIN },
+};
+
+static struct css_property_info *css_extra_property_lookup(const char *name)
+{
+	size_t i;
+	for (i = 0; i < nelem(css_extra_properties); ++i)
+		if (!strcmp(css_extra_properties[i].name, name))
+			return &css_extra_properties[i];
+	return NULL;
+}
+
 static fz_css_property *fz_new_css_property(fz_context *ctx, fz_pool *pool, const char *name, fz_css_value *value, int spec)
 {
 	struct css_property_info *info = css_property_lookup(name, strlen(name));
+	if (!info)
+		info = css_extra_property_lookup(name);
 	if (info)
 	{
 		fz_css_property *prop = fz_pool_alloc(ctx, pool, sizeof *prop);
@@ -1179,6 +1196,9 @@ const char *fz_css_property_name(int key)
 	for (i = 0; i < nelem(css_property_list); ++i)
 		if (*css_property_list[i].name && css_property_list[i].key == key)
 			name = css_property_list[i].name;
+	for (i = 0; i < nelem(css_extra_properties); ++i)
+		if (css_extra_properties[i].key == key)
+			name = css_extra_properties[i].name;
 	return name;
 }
 

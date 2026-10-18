@@ -603,6 +603,9 @@ typedef struct
 /* "are we in a restarting context, and stopping already?" */
 #define STOPPING_FOR_RESTART(restart) ((restart) && (restart)->end != NULL)
 
+/* SumatraPDF: page height for content laid out without page breaks */
+#define UNPAGINATED_H 1e7f
+
 #define TRBLCPY(DST,SRC) \
 do { DST[T] = SRC[T] ; DST[R] = SRC[R]; DST[B] = SRC[B]; DST[L] = SRC[L]; } while (0)
 
@@ -839,6 +842,76 @@ static void break_word_for_overflow_wrap(fz_context *ctx, fz_html_flow *node, la
 	box: The BOX_FLOW to layout.
 	top: The enclosing box.
 */
+/* SumatraPDF: the innermost inline box with position: absolute that holds a flow node */
+static fz_html_box *absolute_inline(fz_html_box *box)
+{
+	for (; box && box->type == BOX_INLINE; box = box->up)
+		if (box->style->position == POS_ABSOLUTE)
+			return box;
+	return NULL;
+}
+
+/* SumatraPDF: move the text of an absolutely positioned inline box (InDesign
+ * places every word with <span style="position:absolute;top:..;left:..">) to
+ * its left/top in the containing block. The text is laid out in the line
+ * first, so it still takes up room there (#1293). */
+static void position_absolute_inlines(fz_context *ctx, layout_data *ld, fz_html_box *box)
+{
+	fz_html_flow *node;
+	fz_html_box *abs = NULL;
+	float dx = 0, dy_text = 0, dy_image = 0, top = 0;
+	int has_top = 0, text_done = 0, image_done = 0;
+
+	for (node = box->u.flow.head; node; node = node->next)
+	{
+		const fz_css_style *style;
+		float em;
+		fz_html_box *a = absolute_inline(node->box);
+		if (!a)
+		{
+			abs = NULL;
+			continue;
+		}
+
+		style = a->style;
+		em = a->s.layout.em;
+		if (a != abs)
+		{
+			float cb_w = ld->ancestor[R] - ld->ancestor[L];
+			float cb_h = ld->ancestor[B] - ld->ancestor[T];
+
+			abs = a;
+			dx = 0;
+			if (fz_css_number_defined(style->inset[L]))
+				dx = ld->ancestor[L] + fz_from_css_number(style->inset[L], em, cb_w, 0) - node->x;
+			has_top = fz_css_number_defined(style->inset[T]);
+			if (has_top)
+				top = ld->ancestor[T] + fz_from_css_number(style->inset[T], em, cb_h, 0);
+			text_done = image_done = 0;
+			dy_text = dy_image = 0;
+		}
+
+		/* image y is its top, text y the baseline: top + half-leading + ascent */
+		if (has_top && node->type == FLOW_IMAGE && !image_done)
+		{
+			dy_image = top - node->y;
+			image_done = 1;
+		}
+		else if (has_top && node->type != FLOW_IMAGE && !text_done)
+		{
+			float asc = fz_font_ascender(ctx, style->font);
+			float desc = fz_font_descender(ctx, style->font);
+			float line_h = fz_from_css_number_scale(style->line_height, em);
+			float half_leading = (line_h - (asc - desc) * em) / 2;
+			dy_text = top + half_leading + asc * em - node->y;
+			text_done = 1;
+		}
+
+		node->x += dx;
+		node->y += node->type == FLOW_IMAGE ? dy_image : dy_text;
+	}
+}
+
 static void layout_flow(fz_context *ctx, layout_data *ld, fz_html_box *box, fz_html_box *top)
 {
 	fz_html_flow *node, *line, *candidate, *desperate;
@@ -1103,6 +1176,8 @@ static void layout_flow(fz_context *ctx, layout_data *ld, fz_html_box *box, fz_h
 		int line_align = (align == TA_JUSTIFY) ? justify_align : align;
 		flush_line(ctx, box, ld, line_w, line_align, indent, line, NULL, restart);
 	}
+
+	position_absolute_inlines(ctx, ld, box);
 
 	ld->used[T] = box->s.layout.y;
 	ld->used[R] = box->s.layout.x + box->s.layout.w;
@@ -1468,6 +1543,10 @@ pre_position(fz_context *ctx, position_data *pd, layout_data *ld, fz_html_box *b
 		break;
 	}
 	}
+
+	/* SumatraPDF: absolute descendants are placed against where this box
+	 * ended up, not its static position (#1293) */
+	TRBLCPY(ld->ancestor, ld->bounds);
 
 	box->s.layout.x = ld->bounds[L];
 	box->s.layout.w = 0;
@@ -2793,6 +2872,7 @@ static int layout_block(fz_context *ctx, layout_data *ld, fz_html_box *box)
 	float em = box->s.layout.em;
 	int eop = 0;
 	position_data position;
+	float saved_page[4];
 
 	assert(fz_html_box_has_boxes(box));
 
@@ -2847,6 +2927,14 @@ static int layout_block(fz_context *ctx, layout_data *ld, fz_html_box *box)
 
 	/* At this point, fill is already setup. */
 
+	/* SumatraPDF: a transformed box is drawn as one piece, so its content
+	 * is laid out without page breaks (#1293) */
+	if (style->has_transform)
+	{
+		TRBLCPY(saved_page, ld->page);
+		ld->page[B] = ld->page[T] + UNPAGINATED_H;
+	}
+
 	for (child = box->down; child; child = child->next)
 	{
 		if (SHOULD_STOP_FOR_RESTART(restart))
@@ -2898,6 +2986,9 @@ static int layout_block(fz_context *ctx, layout_data *ld, fz_html_box *box)
 
 		ld->bounds[T] = ld->used[B];
 	}
+
+	if (style->has_transform)
+		TRBLCPY(ld->page, saved_page);
 
 	if (post_position(ctx, &position, ld, box, 0))
 	{
@@ -4500,6 +4591,41 @@ do_borders(fz_context *ctx, fz_device *dev, fz_matrix ctm, float page_top, fz_ht
 		draw_border(ctx, dev, ctm, box, L, x0, y0, x1, y1);
 }
 
+/* SumatraPDF: CSS transform (#1293). The box draws at (x, y - page_top) in
+ * page space. For transform M about the transform-origin, pick the window
+ * [top, bot] of untransformed y that lands on the page, and a ctm that takes
+ * (x, y - top) to M(x, y) - (0, page_top), so the boxes inside draw as usual. */
+static void transform_page_window(fz_html_box *box, float x0, float y0, float x1, float y1,
+	float *page_top, float *page_bot, fz_matrix *ctm)
+{
+	const fz_css_style *style = box->style;
+	float em = box->s.layout.em;
+	float ox = x0 + fz_from_css_number(style->transform_origin[0], em, x1 - x0, 0);
+	float oy = y0 + fz_from_css_number(style->transform_origin[1], em, y1 - y0, 0);
+	fz_matrix t = fz_make_matrix(style->transform[0], style->transform[1], style->transform[2],
+		style->transform[3], style->transform[4], style->transform[5]);
+	fz_matrix m = fz_concat(fz_concat(fz_translate(-ox, -oy), t), fz_translate(ox, oy));
+	float top, bot;
+
+	if (m.b == 0 && m.c == 0 && m.d > 0)
+	{
+		top = (*page_top - m.f) / m.d;
+		bot = (*page_bot - m.f) / m.d;
+	}
+	else
+	{
+		/* rotated, skewed or flipped: draw everything */
+		top = -UNPAGINATED_H;
+		bot = UNPAGINATED_H;
+	}
+
+	m.e += m.c * top;
+	m.f += m.d * top - *page_top;
+	*ctm = fz_concat(m, *ctm);
+	*page_top = top;
+	*page_bot = bot;
+}
+
 static int draw_block_box(fz_context *ctx, fz_html_box *box, float page_top, float page_bot, fz_device *dev, fz_matrix ctm, hb_buffer_t *hb_buf, fz_html_restarter *restart)
 {
 	fz_html_box *child;
@@ -4516,6 +4642,9 @@ static int draw_block_box(fz_context *ctx, fz_html_box *box, float page_top, flo
 	y0 = box->s.layout.y - padding[T];
 	x1 = box->s.layout.x + box->s.layout.w + padding[R];
 	y1 = box->s.layout.b + padding[B];
+
+	if (box->style->has_transform)
+		transform_page_window(box, x0, y0, x1, y1, &page_top, &page_bot, &ctm);
 
 	if (y0 > page_bot || y1 < page_top)
 		return 0;
