@@ -82337,8 +82337,12 @@ El* Diff::IntoEl() {
     DiffState* st = state.Get(cx);
     if (!st) return Div(a);
     st->listScroll.itemsCount = len(st->rows);
-    El* root =
-        Div(a)->SizeFull()->KeyContext(StrL("Diff"))->TrackFocus(st->focus);
+
+    El* root = Div(a)
+                   ->FlexCol()
+                   ->SizeFull()
+                   ->KeyContext(StrL("Diff"))
+                   ->TrackFocus(st->focus);
     root->OnAction(Act("diff::ScrollUp"), ListenTo(state, &OnDiffAction));
     root->OnAction(Act("diff::ScrollDown"), ListenTo(state, &OnDiffAction));
     root->OnAction(Act("diff::ExtendUp"), ListenTo(state, &OnDiffAction));
@@ -82351,7 +82355,10 @@ El* Diff::IntoEl() {
                    ->IntoEl();
     root->Child(ScrollBounce::New(cx, StrL("diff-bounce"),
                                   VirtualListScrollbar(&st->listScroll), rows)
-                    ->IntoEl());
+                    ->IntoEl()
+                    ->Flex1()
+                    ->MinH(0)
+                    ->H(kFill));
     return root;
 }
 
@@ -242677,6 +242684,12 @@ struct PlatWindow {
     HCURSOR cursor = nullptr;
 
     bool firstMouse = false;
+
+    bool touchDown = false;
+    bool touchScroll = false;
+    float touchStartX = 0;
+    float touchStartY = 0;
+    float touchLastY = 0;
     LONG_PTR windowedStyle = 0;
     WINDOWPLACEMENT windowedPlacement = {sizeof(WINDOWPLACEMENT)};
     bool fullScreen = false;
@@ -242963,6 +242976,80 @@ static bool HoverHoldForTests() {
         hold = (env && env[0] && env[0] != '0') ? 1 : 0;
     }
     return hold != 0;
+}
+
+static const float kTouchSlopDips = 10.f;
+
+static bool IsTouchPointer(WPARAM wParam) {
+    POINTER_INPUT_TYPE type = PT_POINTER;
+    return GetPointerType(GET_POINTERID_WPARAM(wParam), &type) &&
+           type == PT_TOUCH;
+}
+
+static bool IsMouseFromTouch() {
+    return ((ULONG_PTR)GetMessageExtraInfo() & 0xFFFFFF80) == 0xFF515780;
+}
+
+static void TouchEmitScroll(Window* win, TouchPhase phase, float dy) {
+    PlatWindow* p = win->plat;
+    PlatformInput in = InputScrollWheel(p->touchStartX, p->touchStartY, 0.f, dy,
+                                        true, {}, phase);
+    WindowDispatchInput(win, &in);
+}
+
+static void TouchPointer(Window* win, UINT msg, LPARAM lParam) {
+    PlatWindow* p = win->plat;
+    POINT pt = {GET_X_LPARAM(lParam), GET_Y_LPARAM(lParam)};
+    ScreenToClient(p->hwnd, &pt);
+    win->paint.dpi = HostDpi(p->hwnd);
+    float x = PxToDip(&win->paint, pt.x);
+    float y = PxToDip(&win->paint, pt.y);
+    if (msg == WM_POINTERDOWN) {
+        p->touchDown = true;
+        p->touchScroll = false;
+        p->touchStartX = x;
+        p->touchStartY = y;
+        p->touchLastY = y;
+        return;
+    }
+    if (!p->touchDown) {
+        return;
+    }
+    if (msg == WM_POINTERUP) {
+        if (p->touchScroll) {
+            TouchEmitScroll(win, TouchPhase::Ended, 0.f);
+        }
+        p->touchDown = false;
+        return;
+    }
+    if (!p->touchScroll) {
+        float dx = x - p->touchStartX;
+        float dy = y - p->touchStartY;
+        if (dx * dx + dy * dy < kTouchSlopDips * kTouchSlopDips) {
+            return;
+        }
+
+        if (fabsf(dx) >= fabsf(dy) || win->scrollDragId != 0) {
+            p->touchDown = false;
+            return;
+        }
+        p->touchScroll = true;
+
+        if (win->mouseDown) {
+            PlatformInput in =
+                InputMouseUp(win->pressedButton, -1e6f, -1e6f, ModsNow(),
+                             WindowCurrentClickCount(win));
+            WindowDispatchInput(win, &in);
+        }
+        TouchEmitScroll(win, TouchPhase::Started, y - p->touchStartY);
+    } else {
+        TouchEmitScroll(win, TouchPhase::Moved, y - p->touchLastY);
+    }
+    p->touchLastY = y;
+}
+
+static bool IsTouchScrollMouse(Window* win) {
+    return win->plat->touchScroll && IsMouseFromTouch();
 }
 
 static void MouseExited(Window* win) {
@@ -243334,7 +243421,17 @@ static LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam,
             }
             return 0;
         }
+        case WM_POINTERDOWN:
+        case WM_POINTERUPDATE:
+        case WM_POINTERUP:
+            if (IsTouchPointer(wParam)) {
+                TouchPointer(win, msg, lParam);
+            }
+            break;
         case WM_MOUSEMOVE: {
+            if (IsTouchScrollMouse(win)) {
+                return 0;
+            }
             win->paint.dpi = HostDpi(hwnd);
             float x = PxToDip(&win->paint, GET_X_LPARAM(lParam));
             float y = PxToDip(&win->paint, GET_Y_LPARAM(lParam));
@@ -243373,10 +243470,14 @@ static LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam,
             break;
         case WM_LBUTTONDOWN:
         case WM_LBUTTONDBLCLK:
-            MouseDown(win, MouseButton::Left, lParam);
+            if (!IsTouchScrollMouse(win)) {
+                MouseDown(win, MouseButton::Left, lParam);
+            }
             return 0;
         case WM_LBUTTONUP:
-            MouseUp(win, MouseButton::Left, lParam);
+            if (!IsTouchScrollMouse(win)) {
+                MouseUp(win, MouseButton::Left, lParam);
+            }
             return 0;
         case WM_NCLBUTTONDOWN:
             if (wParam == HTMINBUTTON) {
