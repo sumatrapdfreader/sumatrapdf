@@ -493,6 +493,13 @@ bool EngineHasRedactMarks(EngineBase* engine) {
     return EngineMupdfHasRedactMarks(engine);
 }
 
+bool EngineHasRedactMarksNoWait(EngineBase* engine) {
+    if (!IsEngineMupdf(engine)) {
+        return false;
+    }
+    return EngineMupdfHasRedactMarksNoWait(engine);
+}
+
 bool EngineHasUserRedactMarks(EngineBase* engine) {
     if (!IsEngineMupdf(engine)) {
         return false;

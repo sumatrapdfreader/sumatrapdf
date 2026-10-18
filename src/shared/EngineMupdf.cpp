@@ -9589,15 +9589,34 @@ bool EngineMupdfHasUserRedactMarks(EngineBase* engine) {
     return e && e->createdRedactMark && EngineMupdfHasRedactMarks(engine);
 }
 
-bool EngineMupdfHasRedactMarks(EngineBase* engine) {
-    Vec<Annotation*> annots;
-    EngineMupdfGetLoadedAnnotations(engine, annots);
+static bool HasRedactAnnot(const Vec<Annotation*>& annots) {
     for (Annotation* a : annots) {
         if (a && a->type == AnnotationType::Redact) {
             return true;
         }
     }
     return false;
+}
+
+bool EngineMupdfHasRedactMarks(EngineBase* engine) {
+    Vec<Annotation*> annots;
+    EngineMupdfGetLoadedAnnotations(engine, annots);
+    return HasRedactAnnot(annots);
+}
+
+// For menu and toolbar state, which is rebuilt on every page change: a render
+// holds pagesLock for as long as the page takes, and waiting for it froze
+// navigation (#6362). While it is held, answers what it last saw.
+bool EngineMupdfHasRedactMarksNoWait(EngineBase* engine) {
+    EngineMupdf* e = AsEngineMupdf(engine);
+    if (!e) {
+        return false;
+    }
+    Vec<Annotation*> annots;
+    if (EngineMupdfTryGetLoadedAnnotations(engine, annots)) {
+        e->hasRedactMarksSeen = HasRedactAnnot(annots);
+    }
+    return e->hasRedactMarksSeen;
 }
 
 static void DropPageImages(fz_context* ctx, FzPageInfo* pi) {

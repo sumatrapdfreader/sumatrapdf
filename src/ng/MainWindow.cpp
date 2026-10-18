@@ -544,7 +544,7 @@ AppCommandCtx NewAppCommandCtx(MainWindow* win, Point cursorPos) {
         ctx.hasTextSelection = ctx.hasSelection && dm->textSelection->result.len > 0;
         ctx.supportsAnnots = EngineSupportsAnnotations(engine);
         ctx.hasUnsavedAnnotations = EngineHasUnsavedAnnotations(engine);
-        ctx.hasRedactMarks = EngineHasRedactMarks(engine);
+        ctx.hasRedactMarks = EngineHasRedactMarksNoWait(engine);
         ctx.hasUserRedactMarks = EngineHasUserRedactMarks(engine);
         ctx.canUndo = EngineMupdfCanUndo(engine);
         ctx.canRedo = EngineMupdfCanRedo(engine);
