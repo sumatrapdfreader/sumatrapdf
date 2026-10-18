@@ -83,6 +83,7 @@ EngineeringDrawingEnhance = off
 DisableAutoLinks = false
 UseSysColors = false
 UseTabs = true
+ShowCaption = true
 SelectionToolbar = true
 TabsMru = false
 CtrlTabSimple = false
@@ -140,6 +141,7 @@ ChmUI [
 
 MarkdownUI [
 	UseFixedPageUI = false
+	PreserveLineBreaks = false
 ]
 
 HtmlUI [
