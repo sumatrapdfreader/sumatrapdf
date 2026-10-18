@@ -1388,6 +1388,15 @@ TempStr NavFilesInFolderStateTemp(Str action, int idx, int* exitCodeOut) {
             *exitCodeOut = 0;
         }
         return fmt("OK %d %d %d %d", r.x, r.y, r.dx, r.dy);
+    } else if (str::Eq(action, StrL("list-screen-rect"))) {
+        // where a test must touch to pan the list (screen coords)
+        Rect r = wnd->listBox->VisibleRectInWindow();
+        POINT pt{r.x, r.y};
+        ClientToScreen(wnd->hwnd, &pt);
+        if (exitCodeOut) {
+            *exitCodeOut = 0;
+        }
+        return fmt("OK %d %d %d %d", (int)pt.x, (int)pt.y, r.dx, r.dy);
     } else if (str::Eq(action, StrL("edit-path")) || str::TrimPrefix(action, StrL("path-"))) {
         // path editing: edit-path, path-text:<text>, path-commit, path-cancel,
         // path-state (report only)
@@ -1427,6 +1436,6 @@ TempStr NavFilesInFolderStateTemp(Str action, int idx, int* exitCodeOut) {
     }
     int canBack = wnd->navBtns[NavBtnBack]->IsEnabled();
     int canFwd = wnd->navBtns[NavBtnForward]->IsEnabled();
-    return fmt("OK scan=%d sel=%d items=%d back=%d fwd=%d dir=\"%s\" name=\"%s\"", (int)wnd->scanInFlight, sel,
-               m->ItemsCount(), canBack, canFwd, wnd->currDir, name);
+    return fmt("OK scan=%d sel=%d items=%d back=%d fwd=%d dir=\"%s\" name=\"%s\" scrollY=%d", (int)wnd->scanInFlight,
+               sel, m->ItemsCount(), canBack, canFwd, wnd->currDir, name, wnd->listBox->scrollY);
 }

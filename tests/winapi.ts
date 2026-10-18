@@ -91,6 +91,8 @@ const user32 = loadDll("user32.dll", {
   GetSystemMetrics: { args: [FFIType.i32], returns: FFIType.i32 },
   SystemParametersInfoW: { args: [FFIType.u32, FFIType.u32, FFIType.ptr, FFIType.u32], returns: FFIType.bool },
   SetProcessDpiAwarenessContext: { args: [FFIType.i64], returns: FFIType.bool },
+  InitializeTouchInjection: { args: [FFIType.u32, FFIType.u32], returns: FFIType.bool },
+  InjectTouchInput: { args: [FFIType.u32, FFIType.ptr], returns: FFIType.bool },
   GetCursorPos: { args: [FFIType.ptr], returns: FFIType.bool },
   GetGUIThreadInfo: { args: [FFIType.u32, FFIType.ptr], returns: FFIType.bool },
   GetCursorInfo: { args: [FFIType.ptr], returns: FFIType.bool },
@@ -1379,6 +1381,36 @@ export function setProcessDpiAware(): boolean {
   }
   // DPI_AWARENESS_CONTEXT_PER_MONITOR_AWARE_V2 == (HANDLE)-4
   return user32.symbols.SetProcessDpiAwarenessContext(-4n as unknown as number);
+}
+
+// Touch injection: unlike SendInput mouse/keyboard, it reaches the app on this
+// machine. Coordinates are screen pixels (physical once setProcessDpiAware()).
+export const POINTER_FLAG_DOWN = 0x10000;
+export const POINTER_FLAG_UPDATE = 0x20000;
+export const POINTER_FLAG_UP = 0x40000;
+const POINTER_FLAG_INRANGE = 0x2;
+const POINTER_FLAG_INCONTACT = 0x4;
+const PT_TOUCH = 2;
+const TOUCH_FEEDBACK_NONE = 3;
+// sizeof(POINTER_TOUCH_INFO) on x64; ptPixelLocation is at 32
+const kPointerTouchInfoSize = 144;
+let touchInjectionReady = false;
+
+export function injectTouch(x: number, y: number, flag: number): boolean {
+  if (!IS_WIN) {
+    return false;
+  }
+  if (!touchInjectionReady) {
+    touchInjectionReady = user32.symbols.InitializeTouchInjection(1, TOUCH_FEEDBACK_NONE);
+  }
+  const buf = new Uint8Array(kPointerTouchInfoSize);
+  const v = new DataView(buf.buffer);
+  v.setUint32(0, PT_TOUCH, true);
+  const contact = flag === POINTER_FLAG_UP ? 0 : POINTER_FLAG_INRANGE | POINTER_FLAG_INCONTACT;
+  v.setUint32(12, flag | contact, true);
+  v.setInt32(32, x, true);
+  v.setInt32(36, y, true);
+  return user32.symbols.InjectTouchInput(1, ptr(buf));
 }
 
 // The real cursor position, in screen (physical, when this process is DPI

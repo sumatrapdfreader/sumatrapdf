@@ -63,6 +63,8 @@ struct VirtMouseEvent {
     Point ptWindow;
     int button = 0; // 0 left, 1 right, 2 middle
     int wheelDelta = 0;
+    // touch pan: how far the finger moved down since the last event, in pixels
+    int panDy = 0;
     bool isCtrl = false;
     bool isShift = false;
     bool isAlt = false;
@@ -177,6 +179,7 @@ struct VirtCtrl : ILayout {
     bool OnMouseUp(VirtMouseEvent&);
     bool OnMouseMove(VirtMouseEvent&);
     bool OnMouseWheel(VirtMouseEvent&);
+    bool OnPan(VirtMouseEvent&);
     bool OnDoubleClick(VirtMouseEvent&);
     bool OnContextMenu(VirtMouseEvent&);
     void OnMouseEnter();
@@ -227,6 +230,7 @@ struct VirtCtrl : ILayout {
     VirtMouseHandler onMouseUp;
     VirtMouseHandler onMouseMove;
     VirtMouseHandler onMouseWheel;
+    VirtMouseHandler onPan;
     VirtMouseHandler onDoubleClick;
     VirtMouseHandler onContextMenu;
     Func0 onMouseEnter;
@@ -309,6 +313,10 @@ struct VirtRoot {
     // legacy single-tree hosts lay out lazily from Paint(); see SetChild()
     bool layoutInPaint = false;
     bool trackingMouseLeave = false;
+    // a touch pan in progress: where it started (window coords) and the last y
+    bool panActive = false;
+    Point panStart;
+    int panLastY = 0;
 
     explicit VirtRoot(HWND);
     ~VirtRoot();
@@ -364,6 +372,7 @@ struct VirtScroll : VirtCtrl {
     void SetBounds(Rect) override;
     Point ScrollOffset() override;
     void OnMouseWheel(VirtMouseEvent*);
+    void OnPan(VirtMouseEvent*);
 
     void SetContentDy(int);
     int MaxScrollY() const;
@@ -469,6 +478,7 @@ struct VirtListBox : VirtCtrl {
     void OnMouseUp(VirtMouseEvent*);
     void OnMouseMove(VirtMouseEvent*);
     void OnMouseWheel(VirtMouseEvent*);
+    void OnPan(VirtMouseEvent*);
     void OnDoubleClick(VirtMouseEvent*);
     void OnKeyDown(VirtKeyEvent*);
     void OnCaptureLost();

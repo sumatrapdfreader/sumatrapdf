@@ -17,6 +17,10 @@ import { macClick } from "./mac-control.ts";
 import { cmdId, drainProcStderr, EXE, SLOW_BUILD_FACTOR, setFailureContext, USE_NG } from "./util.ts";
 import {
   testWindowPos,
+  injectTouch,
+  POINTER_FLAG_DOWN,
+  POINTER_FLAG_UP,
+  POINTER_FLAG_UPDATE,
   waitForWindowIdle,
   enumWindows,
   getClassName,
@@ -478,6 +482,19 @@ export async function waitForContextMenu(timeoutMs = 1500): Promise<number> {
 // Send a WM_COMMAND (menu/command id) to a window (usually the frame).
 export function sendCommand(hwnd: number, cmdId: number): void {
   postMessage(hwnd, WM_COMMAND, cmdId, 0);
+}
+
+// A one-finger vertical swipe from (x, y0) to (x, y1), in screen pixels: a
+// touch pan, which Windows delivers as WM_GESTURE GID_PAN.
+export async function touchSwipe(x: number, y0: number, y1: number, steps = 20): Promise<boolean> {
+  if (!injectTouch(x, y0, POINTER_FLAG_DOWN)) {
+    return false;
+  }
+  for (let i = 1; i <= steps; i++) {
+    await sleep(16);
+    injectTouch(x, Math.round(y0 + ((y1 - y0) * i) / steps), POINTER_FLAG_UPDATE);
+  }
+  return injectTouch(x, y1, POINTER_FLAG_UP);
 }
 
 // A dense pixel sample of the top `dy` rows of a window, straight from its
