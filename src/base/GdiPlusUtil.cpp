@@ -376,7 +376,14 @@ bool CopyPixmapToClipboard(Pixmap* p, bool appendOnly) {
     };
 
     bool hasAlpha = PixmapHasTransparency(p);
-    HBITMAP hbmp = PixmapToHbitmapOnWhite(p); // a no-op copy when there's no alpha
+    HBITMAP dibSection = PixmapToHbitmapOnWhite(p); // a no-op copy when there's no alpha
+    if (!dibSection) {
+        return false;
+    }
+    // A DIB section's pixels live in our process, so other apps can't get
+    // CF_DIB out of it and paste nothing (#6360). The clipboard gets a DDB.
+    HBITMAP hbmp = (HBITMAP)CopyImage(dibSection, IMAGE_BITMAP, 0, 0, 0);
+    DeleteObject(dibSection);
     if (!hbmp) {
         return false;
     }
