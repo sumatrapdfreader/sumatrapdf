@@ -1,4 +1,4 @@
-import { copyFileSync, existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
+import { copyFileSync, existsSync, mkdirSync, readdirSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { join, dirname, extname, resolve } from "node:path";
 
 // user docs live in the sumatra-website repo, checked out next to this one
@@ -101,9 +101,58 @@ function findToolMulti(vsRoot: string, relPaths: string[]): string {
   return "";
 }
 
+const outDir = resolve(import.meta.dir, "..", "out");
+// the MSVC toolset the msbuild outputs under out/ were last compiled with
+const vcToolsStampPath = join(outDir, ".vctools-version");
+
+// msbuild directories under out/ hold precompiled headers in obj/<project> and obj-s/<project>
+function deleteMsbuildPchFiles(): void {
+  if (!existsSync(outDir)) return;
+  for (const cfg of readdirSync(outDir, { withFileTypes: true })) {
+    if (!cfg.isDirectory()) continue;
+    for (const objName of ["obj", "obj-s"]) {
+      const objDir = join(outDir, cfg.name, objName);
+      if (!existsSync(objDir)) continue;
+      for (const proj of readdirSync(objDir, { withFileTypes: true })) {
+        if (!proj.isDirectory()) continue;
+        const projDir = join(objDir, proj.name);
+        for (const f of readdirSync(projDir)) {
+          if (f.endsWith(".pch")) rmSync(join(projDir, f), { force: true });
+        }
+      }
+    }
+  }
+}
+
+// msbuild compiles with $(VCToolsVersion), which a developer prompt sets from
+// the environment. A stale prompt (e.g. VSCMD 17.14 pinning MSVC 14.44 while
+// 14.51 is the default) made builds from different shells use different
+// compilers on the same out/ dirs, and each one's .pch failed the other's
+// build with C1853. Always build with the installed default toolset, and drop
+// the .pch files when that toolset changes.
+function useDefaultVcToolset(vsRoot: string): void {
+  const defaultPath = join(vsRoot, "VC", "Auxiliary", "Build", "Microsoft.VCToolsVersion.default.txt");
+  if (!existsSync(defaultPath)) return;
+  const toolset = readFileSync(defaultPath, "utf8").trim();
+  const envToolset = process.env.VCToolsVersion;
+  if (envToolset && envToolset !== toolset) {
+    console.log(`ignoring VCToolsVersion=${envToolset} from the environment, building with MSVC ${toolset}`);
+    delete process.env.VCToolsVersion;
+    delete process.env.VCToolsInstallDir;
+    delete process.env.VCToolsRedistDir;
+  }
+  const last = existsSync(vcToolsStampPath) ? readFileSync(vcToolsStampPath, "utf8").trim() : "";
+  if (last === toolset) return;
+  console.log(`MSVC toolset changed (${last || "unknown"} -> ${toolset}), deleting stale .pch files`);
+  deleteMsbuildPchFiles();
+  mkdirSync(outDir, { recursive: true });
+  writeFileSync(vcToolsStampPath, `${toolset}\n`);
+}
+
 export function detectVisualStudioVer(ver: string): VisualStudioInfo | undefined {
   const vsRoot = findVsRootVer(ver);
   if (vsRoot == "") return;
+  useDefaultVcToolset(vsRoot);
 
   const msbuildPath = findTool(vsRoot, msBuildRelPath);
   if (!msbuildPath) {
