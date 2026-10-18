@@ -3,9 +3,17 @@ import { mkdirSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 import { IS_MAC } from "./host.ts";
 import { ControlClient, ControlCommand, type LayoutInfo } from "./control.ts";
-import { makeBlankPdf, runStandalone, SLOW_BUILD_FACTOR, tmpPath } from "./util.ts";
+import { makeBlankPdf, runStandalone, SLOW_BUILD_FACTOR, tmpPath, USE_NG } from "./util.ts";
 import { killAndWait, launchControlled, waitForExit } from "./win-automation.ts";
-import { clientToScreen, getClassName, setCursorPos, sleep, windowFromPoint } from "./winapi.ts";
+import {
+  clientToScreen,
+  findChildWindow,
+  getClassName,
+  isWindowVisible,
+  setCursorPos,
+  sleep,
+  windowFromPoint,
+} from "./winapi.ts";
 
 async function invoke(client: ControlClient, command: string): Promise<void> {
   const res = await client.request(ControlCommand.TestInvokeCommand, [command]);
@@ -181,6 +189,37 @@ export async function testit(): Promise<void> {
   } finally {
     browser.client.close();
     await killAndWait(browser.proc);
+  }
+  await toggleCaptionTwice(dir, docs);
+}
+
+// Hiding the caption and showing it again must bring back the tab strip: the
+// overlay hid the tabs window and the relayout only moved it. ng's tabs are
+// not a window of their own.
+async function toggleCaptionTwice(dir: string, docs: string[]): Promise<void> {
+  if (USE_NG) return;
+  writeFileSync(
+    join(dir, "SumatraPDF-settings.txt"),
+    "UseTabs = true\nShowCaption = true\nRestoreSession = false\nNoHomeTab = true\n",
+  );
+  setCursorPos(0, 0);
+  const app = await launchControlled(["-appdata", dir, ...docs]);
+  try {
+    await app.client.waitForRenderIdle();
+    const tabs = findChildWindow(app.frame, "SumatraTabsCtrlClass");
+    if (!tabs || !isWindowVisible(tabs)) throw new Error("issue-6355: no visible tabs at start");
+    await invoke(app.client, "CmdToggleCaption");
+    await barLayout(app.client, false);
+    await invoke(app.client, "CmdToggleCaption");
+    await barLayout(app.client, true);
+    const deadline = Date.now() + 2_000 * SLOW_BUILD_FACTOR;
+    while (!isWindowVisible(tabs)) {
+      if (Date.now() > deadline) throw new Error("issue-6355: tabs stayed hidden after showing the caption again");
+      await sleep(40);
+    }
+  } finally {
+    app.client.close();
+    await killAndWait(app.proc);
   }
 }
 

@@ -12907,6 +12907,14 @@ static void UpdateCaptionOverlay(MainWindow* win, CaptionUpdate update) {
             ShowWindow(win->tabsCtrl->hwnd, SW_HIDE);
         }
         ShowWindow(win->hwndMenuReBar, SW_HIDE);
+        return;
+    }
+    // the caption is back: the relayout only moves what the overlay hid
+    if (win->tabsCtrl && win->tabsVisible) {
+        ShowWindow(win->tabsCtrl->hwnd, SW_SHOWNA);
+    }
+    if (IsShowingMenuBarRebar(win)) {
+        ShowWindow(win->hwndMenuReBar, SW_SHOWNA);
     }
 }
 
