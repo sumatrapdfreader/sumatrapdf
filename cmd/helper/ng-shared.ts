@@ -128,6 +128,8 @@ export const sharedFiles = [
   "src/shared/AnnotTextPopupCommon.h",
   "src/shared/AppHelpersCommon.cpp",
   "src/shared/AppHelpersCommon.h",
+  "src/shared/BrightnessContrastDialogCommon.cpp",
+  "src/shared/BrightnessContrastDialogCommon.h",
   "src/shared/BrowserViewCommon.cpp",
   "src/shared/BrowserViewCommon.h",
   "src/shared/CanvasCommon.cpp",

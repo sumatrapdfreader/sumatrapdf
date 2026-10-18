@@ -5923,6 +5923,11 @@ void ExecuteCmd(MainWindow* win, int cmdId) {
             ShowChangeBackgroundColorDialog(win);
             break;
 
+        case CmdAdjustBrightness:
+        case CmdAdjustContrast:
+            ShowBrightnessContrastDialog(win);
+            break;
+
         case CmdSetTabColor:
             ShowSetTabColorDialog(win, tab);
             break;

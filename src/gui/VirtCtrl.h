@@ -828,6 +828,7 @@ struct VirtSlider : VirtCtrl {
     int ValueFromLocalX(int xLocal);
     Size GetIdealSize() override;
     void Paint(VirtPaintCtx&) override;
+    void OnKeyDown(VirtKeyEvent*);
     void OnMouseDown(VirtMouseEvent*);
     void OnMouseMove(VirtMouseEvent*);
     void OnMouseUp(VirtMouseEvent*);

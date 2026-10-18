@@ -3264,9 +3264,9 @@ VirtSlider::VirtSlider() {
     kind = kindVirtCtrlSlider;
     colorDefaults = gColsSlider;
     nColors = kColSliderCount;
-    flags |= vwfCapturesMouse;
-    flags &= ~vwfFocusable;
+    flags |= vwfCapturesMouse | vwfFocusable;
     cursor = CursorId::Hand;
+    onKeyDown = MkMethod1<VirtSlider, VirtKeyEvent*, &VirtSlider::OnKeyDown>(this);
     onMouseDown = MkMethod1<VirtSlider, VirtMouseEvent*, &VirtSlider::OnMouseDown>(this);
     onMouseMove = MkMethod1<VirtSlider, VirtMouseEvent*, &VirtSlider::OnMouseMove>(this);
     onMouseUp = MkMethod1<VirtSlider, VirtMouseEvent*, &VirtSlider::OnMouseUp>(this);
@@ -3381,6 +3381,11 @@ void VirtSlider::Paint(VirtPaintCtx& ctx) {
     bool hot = HasFlag(vwfHovered) || HasFlag(vwfPressed);
     Color thumb = GetColor(hot ? kColSliderThumbHover : kColSliderThumb);
     int d = r * 2;
+    if (HasFlag(vwfFocused)) {
+        // focus: a halo around the thumb
+        int h = std::max(r / 2, 3);
+        ctx.gfx->FillEllipse({cx - r - h, cy - r - h, d + 2 * h, d + 2 * h}, fillCol, 80);
+    }
     ctx.gfx->FillEllipse({cx - r, cy - r, d, d}, thumb);
 }
 
@@ -3421,6 +3426,50 @@ void VirtSlider::OnMouseWheel(VirtMouseEvent* ev) {
         onValueCommitted.Call();
     }
     ev->didHandle = true;
+}
+
+// arrows step by 1 (Ctrl: by a tenth of the range), PgUp / PgDn by a tenth,
+// Home / End go to the ends; left / right are mirrored in RTL
+void VirtSlider::OnKeyDown(VirtKeyEvent* ev) {
+    int bigStep = std::max((maxVal - minVal) / 10, 1);
+    int step = ev->isCtrl ? bigStep : 1;
+    HWND hwnd = GetHwnd();
+    if (hwnd && HwndIsRtl(hwnd) && (ev->vkey == VK_LEFT || ev->vkey == VK_RIGHT)) {
+        step = -step;
+    }
+    int v = value;
+    switch (ev->vkey) {
+        case VK_LEFT:
+        case VK_DOWN:
+            v -= step;
+            break;
+        case VK_RIGHT:
+        case VK_UP:
+            v += step;
+            break;
+        case VK_PRIOR:
+            v += bigStep;
+            break;
+        case VK_NEXT:
+            v -= bigStep;
+            break;
+        case VK_HOME:
+            v = minVal;
+            break;
+        case VK_END:
+            v = maxVal;
+            break;
+        default:
+            return;
+    }
+    ev->didHandle = true;
+    if (adjusting) {
+        return;
+    }
+    SetValue(v, true);
+    if (onValueCommitted.IsValid()) {
+        onValueCommitted.Call();
+    }
 }
 
 void VirtSlider::OnMouseEnter() {

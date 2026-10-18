@@ -288,6 +288,9 @@
     <ClInclude Include="..\src\shared\AvifReader.h">
       <Filter>src\shared</Filter>
     </ClInclude>
+    <ClInclude Include="..\src\shared\BrightnessContrastDialogCommon.h">
+      <Filter>src\shared</Filter>
+    </ClInclude>
     <ClInclude Include="..\src\shared\BrowserViewCommon.h">
       <Filter>src\shared</Filter>
     </ClInclude>
@@ -1173,6 +1176,9 @@
       <Filter>src\shared</Filter>
     </ClCompile>
     <ClCompile Include="..\src\shared\AvifReader.cpp">
+      <Filter>src\shared</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\shared\BrightnessContrastDialogCommon.cpp">
       <Filter>src\shared</Filter>
     </ClCompile>
     <ClCompile Include="..\src\shared\BrowserViewCommon.cpp">

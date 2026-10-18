@@ -280,6 +280,7 @@ function sumatrapdf_files()
     "AdvancedSettingsDialogCommon.*",
     "RestrictedUseConfig.*",
     "BrightnessContrastDialog.*",
+    "BrightnessContrastDialogCommon.*",
     "ChangeColorDialog.*",
     "ChangeColorDialogCommon.*",
     "ChangeLanguageDialog.*",

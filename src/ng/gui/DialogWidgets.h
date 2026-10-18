@@ -103,6 +103,8 @@ gpui::Str DlgAccelClick(gpui::Ctx* cx, Str label, gpui::Listener onClick, bool d
 gpui::Str DlgAccelInput(gpui::Ctx* cx, Str label, gpui::InputState* input);
 // the label of a drop-down: the key focuses it
 gpui::Str DlgAccelSelect(gpui::Ctx* cx, Str label, DialogSelect* select);
+// the label of a control with a gpui focus id (a slider): the key focuses it
+gpui::Str DlgAccelFocus(gpui::Ctx* cx, Str label, int focusId);
 // the label alone: stripped and underlined, the key does nothing
 gpui::Str DlgAccelNone(gpui::Ctx* cx, Str label);
 // underlines the access key of `text` (what a DlgAccel*() call returned) in

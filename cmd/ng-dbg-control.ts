@@ -68,6 +68,7 @@ export const controlCommands: Record<string, number> = {
   TestContextMenuAt: 127,
   TestSavePathDialog: 128,
   TestOpenFiles: 132,
+  TestPageAdjust: 138,
 };
 
 const argTypeEnd = 0;

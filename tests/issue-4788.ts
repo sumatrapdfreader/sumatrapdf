@@ -23,7 +23,11 @@ import {
   sendCopyDataW,
   sendMessage,
   sleep,
+  VK_END,
+  VK_RIGHT,
+  WM_CHAR,
   WM_COMMAND,
+  WM_KEYDOWN,
 } from "./winapi.ts";
 
 const PAGE_DX = 612;
@@ -151,6 +155,27 @@ export async function testit(): Promise<void> {
     if (reopened.top > plain.top - 20 || reopened.bottom < plain.bottom + 20) {
       throw new Error(`issue-4788: reopened file not rendered adjusted: ${JSON.stringify(reopened)}`);
     }
+
+    // keyboard: &Brightness / &Contrast mnemonics focus the sliders, arrows / End change them
+    postMessage(frame, WM_COMMAND, cmdId("CmdAdjustBrightness"), 0);
+    const kbdDlg = await waitForDialog(proc.pid!);
+    if (!kbdDlg) {
+      throw new Error(`issue-4788: CmdAdjustBrightness did not open the "${DIALOG_TITLE}" dialog`);
+    }
+    postMessage(kbdDlg, WM_CHAR, "b".charCodeAt(0), 0);
+    for (let i = 0; i < 3; i++) {
+      postMessage(kbdDlg, WM_KEYDOWN, VK_RIGHT, 0);
+    }
+    postMessage(kbdDlg, WM_CHAR, "c".charCodeAt(0), 0);
+    postMessage(kbdDlg, WM_KEYDOWN, VK_END, 0);
+    await sleep(300);
+    const kbd = await readAdjust(client);
+    console.log(`issue-4788: keyboard ${kbd}`);
+    if (!kbd.includes("brightness=3 contrast=100")) {
+      throw new Error(`issue-4788: keyboard did not change the sliders: ${kbd}`);
+    }
+    postMessage(kbdDlg, WM_CLOSE, 0, 0);
+    await sleep(300);
 
     // both commands open the one dialog
     for (const name of ["CmdAdjustBrightness", "CmdAdjustContrast"]) {

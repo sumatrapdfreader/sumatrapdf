@@ -600,6 +600,9 @@ gp::El* DialogsBuild(MainWindow* win, gp::Ctx* cx) {
     if (gp::El* e = ChangeColorDialogBuild(win, cx)) {
         return e;
     }
+    if (gp::El* e = BrightnessContrastDialogBuild(win, cx)) {
+        return e;
+    }
     if (gp::El* e = PDFScriptDialogBuild(win, cx)) {
         return e;
     }
@@ -683,10 +686,10 @@ DialogAccels DialogsAccelTable(MainWindow* win) {
                IsSelectionTranslateDialogVisible() || IsAboutWindowVisible() || IsAddFavoriteDialogVisible() ||
                IsGoToPageDialogVisible() || IsTabGroupsDialogVisible() || IsGetPasswordDialogVisible() ||
                IsCustomZoomDialogVisible() || IsChangeScrollbarDialogVisible() || IsChangeLanguageDialogVisible() ||
-               IsChangeThemeDialogVisible() || IsChangeColorDialogVisible() || IsPDFScriptDialogVisible() ||
-               IsInverseSearchDialogVisible() || IsSignDocumentDialogVisible() || IsPdfToolDialogVisible() ||
-               IsImageEditWindowVisible() || IsSetScreenshotHotkeyDialogVisible() || IsEbookSettingsDialogVisible() ||
-               IsSettingsDialogVisible() || IsAdvancedSettingsDialogVisible() ||
+               IsChangeThemeDialogVisible() || IsChangeColorDialogVisible() || IsBrightnessContrastDialogVisible() ||
+               IsPDFScriptDialogVisible() || IsInverseSearchDialogVisible() || IsSignDocumentDialogVisible() ||
+               IsPdfToolDialogVisible() || IsImageEditWindowVisible() || IsSetScreenshotHotkeyDialogVisible() ||
+               IsEbookSettingsDialogVisible() || IsSettingsDialogVisible() || IsAdvancedSettingsDialogVisible() ||
                IsConfigureRestrictedUseDialogVisible() || IsPageGridDialogVisible() || IsKeyboardHelpVisible() ||
                IsUnsavedAnnotationsDialogVisible() || IsSavePathDialogVisible();
     (void)win;
@@ -968,6 +971,10 @@ bool DialogsOnEscape(MainWindow* win) {
     }
     if (IsChangeColorDialogVisible()) {
         CloseChangeColorDialog();
+        return true;
+    }
+    if (IsBrightnessContrastDialogVisible()) {
+        CloseBrightnessContrastDialog();
         return true;
     }
     if (IsPDFScriptDialogVisible()) {

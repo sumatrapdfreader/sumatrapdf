@@ -616,7 +616,8 @@ enum class DlgAccelKind {
     None,
     Click,
     Input,
-    Select
+    Select,
+    Focus
 };
 
 struct DlgAccel {
@@ -630,6 +631,7 @@ struct DlgAccel {
     gp::Listener onClick = {};
     gp::InputState* input = nullptr;
     DialogSelect* select = nullptr;
+    int focusId = 0;
 };
 
 // the access keys of the dialogs each window built in its last frame
@@ -743,6 +745,13 @@ gp::Str DlgAccelSelect(gp::Ctx* cx, Str label, DialogSelect* select) {
     return DlgAccelAdd(cx, label, acc);
 }
 
+gp::Str DlgAccelFocus(gp::Ctx* cx, Str label, int focusId) {
+    DlgAccel acc;
+    acc.kind = DlgAccelKind::Focus;
+    acc.focusId = focusId;
+    return DlgAccelAdd(cx, label, acc);
+}
+
 gp::Str DlgAccelNone(gp::Ctx* cx, Str label) {
     DlgAccel acc;
     return DlgAccelAdd(cx, label, acc);
@@ -834,6 +843,9 @@ bool DlgAccelOnKey(gp::Ctx* cx, int vk, bool alt, bool ctrl, bool editFocused) {
                         gp::FocusHandleFocus(cx->win, s->state.triggerFocus);
                     }
                 }
+                break;
+            case DlgAccelKind::Focus:
+                gp::WindowSetFocusId(cx->win, acc.focusId);
                 break;
             case DlgAccelKind::None:
                 break;

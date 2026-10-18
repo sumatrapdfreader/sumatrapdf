@@ -118,6 +118,7 @@ extern "C" {
 #include "gui/NativeCursors.h"
 #include "SumatraControl.h"
 #include "SumatraControlCommon.h"
+#include "BrightnessContrastDialogCommon.h"
 
 #include "SumatraLog.h"
 
@@ -822,6 +823,9 @@ enum class ControlCmd : u16 {
     TestSaveFileName = 134,
     // places the signature being placed at a canvas point (pixels), as a click does
     TestPlaceSignature = 135,
+    // [brightness, contrast] applied to the current file as the Brightness /
+    // Contrast dialog's OK does; returns the current values
+    TestPageAdjust = 138,
 };
 
 static_assert((u16)ControlCmd::Quit == (u16)ControlFrameCmd::Quit);
@@ -2103,6 +2107,20 @@ static void ExecuteControlRequest(ControlRequest* req) {
             }
             SetChapterLayoutHold(hold != 0);
             AppendTestResult(req, 0, StrL("OK"));
+            break;
+        }
+
+        case ControlCmd::TestPageAdjust: {
+            MainWindow* win = FirstWindow();
+            i32 brightness = 0;
+            i32 contrast = 0;
+            bool set = IntArg(req, 0, brightness) && IntArg(req, 1, contrast);
+            TempStr res = PageAdjustTestTemp(win ? win->CurrentTab() : nullptr, set, brightness, contrast);
+            if (len(res) == 0) {
+                AppendError(req, StrL("TestPageAdjust needs an open fixed-page document"));
+                break;
+            }
+            AppendTestResult(req, 0, res);
             break;
         }
 

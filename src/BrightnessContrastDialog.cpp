@@ -27,6 +27,7 @@
 #include "Translations.h"
 #include "SumatraDialogs.h"
 #include "shared/PdfToolsCommon.h"
+#include "BrightnessContrastDialogCommon.h"
 #include "BrightnessContrastDialog.h"
 
 // Brightness and contrast of the rendered pages of one file (#4788). The
@@ -37,31 +38,6 @@
 //   Contrast:    ------o------   0
 //   Reset                 [Cancel] [OK]
 constexpr int kBcDlgDx = 380;
-constexpr int kBcMin = -100;
-constexpr int kBcMax = 100;
-
-// Applies brightness / contrast to tab's rendered pages; Remember also stores
-// them for the file, so they come back when it is opened again.
-void SetTabPageAdjust(WindowTab* tab, int brightness, int contrast, PageAdjustSave save) {
-    DisplayModel* dm = tab ? tab->AsFixed() : nullptr;
-    if (!dm) {
-        return;
-    }
-    if (dm->brightness != brightness || dm->contrast != contrast) {
-        dm->SetPageAdjust(brightness, contrast);
-        gRenderCache->InvalidateAll(dm);
-        dm->RepaintDisplay();
-    }
-    if (save != PageAdjustSave::Remember) {
-        return;
-    }
-    FileState* fs = FileHistoryFindByPath(tab->filePath);
-    if (fs) {
-        fs->brightness = dm->brightness;
-        fs->contrast = dm->contrast;
-    }
-    ScheduleSaveSettings();
-}
 
 struct BrightnessContrastWnd : WindowBase {
     MainWindow* win = nullptr;
@@ -109,10 +85,9 @@ WindowTab* BrightnessContrastWnd::TargetTab() {
 void BrightnessContrastWnd::UpdateValues() {
     valueBrightness->SetText(fmt("%d", sliderBrightness->value));
     valueContrast->SetText(fmt("%d", sliderContrast->value));
-    if (hwnd && layout) {
-        DoLayout(HwndClientRect(hwnd).Size());
-        HwndInvalidate(hwnd);
-    }
+    // no relayout: the labels are sized for "-100" and relayout drops keyboard focus
+    valueBrightness->Invalidate();
+    valueContrast->Invalidate();
 }
 
 void BrightnessContrastWnd::OnSliderChanged() {
@@ -150,8 +125,8 @@ static void OnDestroy(WindowBase::DestroyEvent*) {
 
 static VirtSlider* NewAdjustSlider(BrightnessContrastWnd* wnd, int value) {
     auto* sl = new VirtSlider();
-    sl->minVal = kBcMin;
-    sl->maxVal = kBcMax;
+    sl->minVal = kPageAdjustMin;
+    sl->maxVal = kPageAdjustMax;
     sl->value = value;
     sl->onValueChanged = MkMethod0<BrightnessContrastWnd, &BrightnessContrastWnd::OnSliderChanged>(wnd);
     return sl;

@@ -185,6 +185,11 @@ void CloseChangeColorDialog();
 bool IsChangeColorDialogVisible();
 gpui::El* ChangeColorDialogBuild(MainWindow* win, gpui::Ctx* cx);
 
+void ShowBrightnessContrastDialog(MainWindow* win);
+void CloseBrightnessContrastDialog();
+bool IsBrightnessContrastDialogVisible();
+gpui::El* BrightnessContrastDialogBuild(MainWindow* win, gpui::Ctx* cx);
+
 void ShowInverseSearchDialog(MainWindow* win);
 void CloseInverseSearchDialog();
 bool IsInverseSearchDialogVisible();

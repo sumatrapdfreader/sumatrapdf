@@ -1559,6 +1559,8 @@ export const targets: Target[] = [
       "src/ng/ChangeScrollbarDialog.cpp",
       "src/ng/ChangeLanguageDialog.cpp",
       "src/ng/ChangeThemeDialog.cpp",
+      "src/ng/BrightnessContrastDialog.cpp",
+      "src/ng/BrightnessContrastDialogCommon.cpp",
       "src/ng/ChangeColorDialog.cpp",
       "src/ng/ChangeColorDialogCommon.cpp",
       "src/ng/InverseSearchDialog.cpp",
