@@ -100,6 +100,66 @@ static Pixmap* GrayscalePagePixmap(Pixmap* bmp) {
     return bmp;
 }
 
+// Brightness and contrast, -100..100 each, of the page bitmap (#4788).
+// Contrast scales around mid gray (up to 4x, down to flat gray), then
+// brightness shifts by up to half the range.
+static Pixmap* AdjustPagePixmap(Pixmap* bmp, int brightness, int contrast) {
+    if (!bmp || (brightness == 0 && contrast == 0)) {
+        return bmp;
+    }
+    if (bmp->format == PixmapFormat::Native) {
+#if OS_WIN
+        Pixmap* converted = PixmapCopyAs32bppDIB(bmp);
+        if (!converted) {
+            return bmp;
+        }
+        FreePixmap(bmp);
+        bmp = converted;
+#else
+        return bmp;
+#endif
+    }
+    if (!bmp->data) {
+        return bmp;
+    }
+    if (bmp->format != PixmapFormat::BGRA8 && bmp->format != PixmapFormat::BGR8 && bmp->format != PixmapFormat::RGBA8) {
+        return bmp;
+    }
+
+    float c = (float)contrast / 100.f;
+    float factor = c >= 0 ? 1.f + 3.f * c : 1.f + c;
+    float offset = (float)brightness * 127.5f / 100.f;
+    u8 lut[256];
+    for (int v = 0; v < 256; v++) {
+        float r = ((float)v - 127.5f) * factor + 127.5f + offset;
+        lut[v] = (u8)limitValue((int)(r + 0.5f), 0, 255);
+    }
+
+    // premultiplied pixels with partial alpha are adjusted unpremultiplied
+    int bpp = PixmapBytesPerPixel(bmp->format);
+    bool premul = bmp->premultiplied && bmp->hasAlpha && bpp == 4;
+    for (int y = 0; y < bmp->height; y++) {
+        u8* p = bmp->data + ((size_t)y * bmp->stride);
+        for (int x = 0; x < bmp->width; x++, p += bpp) {
+            u32 a = premul ? p[3] : 255;
+            if (a == 255) {
+                p[0] = lut[p[0]];
+                p[1] = lut[p[1]];
+                p[2] = lut[p[2]];
+                continue;
+            }
+            if (a == 0) {
+                continue;
+            }
+            for (int i = 0; i < 3; i++) {
+                u32 v = std::min(255u, (p[i] * 255 + a / 2) / a);
+                p[i] = (u8)((lut[v] * a + 127) / 255);
+            }
+        }
+    }
+    return bmp;
+}
+
 // RenderCache's verbose per-operation logging (FreePage / Paint / DropCacheEntry
 // / ...) is noisy, so it's disabled by default. Set gLogRenderCache = true to
 // re-enable it when debugging the cache.
@@ -660,6 +720,22 @@ void RenderCache::Invalidate(DisplayModel* dm, int pageNo, RectF rect) {
     }
 }
 
+// Re-render all of dm's pages, e.g. after a brightness change. Unlike
+// FreeForDisplayModel, the stale bitmaps stay on screen until replaced.
+void RenderCache::InvalidateAll(DisplayModel* dm) {
+    ScopedRecursiveMutex scopeReq(&requestAccess);
+    AbortRendering(dm);
+
+    ScopedRecursiveMutex scopeCache(&cacheAccess);
+    for (int i = 0; i < cacheCount; i++) {
+        auto* e = cache[i];
+        if (e->dm == dm) {
+            e->zoom = kInvalidZoom;
+            e->outOfDate = true;
+        }
+    }
+}
+
 // determine the count of tiles required for a page at a given zoom level
 u16 RenderCache::GetTileRes(DisplayModel* dm, int pageNo) const {
     auto* engine = dm->GetEngine();
@@ -1025,6 +1101,8 @@ bool RenderCache::GetNextRequest(PageRenderRequest* req, int threadIdx) {
     *req = requests[idx];
     req->darkModeEpoch = darkModeEpoch;
     req->grayscale = AtomicBoolGet(&grayscalePageColors);
+    req->brightness = req->dm->brightness;
+    req->contrast = req->dm->contrast;
     curReqs[threadIdx] = req;
     ReportIf(req->abort);
 
@@ -1337,6 +1415,10 @@ static bool RenderCacheRunOne(RenderCache* cache, int threadIdx, PageRenderReque
             bmp = GrayscalePagePixmap(bmp);
             req.bmp = bmp;
         }
+        if (req.brightness != 0 || req.contrast != 0) {
+            bmp = AdjustPagePixmap(bmp, req.brightness, req.contrast);
+            req.bmp = bmp;
+        }
         const DarkModeProfile* profile = args.darkProfile;
         bool recolor;
         if (profile) {
@@ -1578,6 +1660,7 @@ int RenderCache::Paint(
         if (AtomicBoolGet(&grayscalePageColors)) {
             bmp = GrayscalePagePixmap(bmp);
         }
+        bmp = AdjustPagePixmap(bmp, dm->brightness, dm->contrast);
 
         bool success = bmp && BlitPixmap(bmp, hdc, bounds);
         FreePixmap(bmp);

@@ -305,6 +305,12 @@ struct FileState {
     int pageCount;
     // how far pages have been rotated as a multiple of 90 degrees
     int rotation;
+    // brightness of rendered pages, -100 to 100; 0 leaves them unchanged.
+    // Set with CmdAdjustBrightness
+    int brightness;
+    // contrast of rendered pages, -100 to 100; 0 leaves them unchanged.
+    // Set with CmdAdjustContrast
+    int contrast;
     // state of the window. 1 is normal, 2 is maximized, 3 is fullscreen, 4
     // is minimized
     int windowState;
@@ -1329,7 +1335,7 @@ struct FieldInfo;
 struct StructInfo;
 extern const StructInfo gFavoriteInfo;
 extern const StructInfo gFileEBookUIInfo;
-extern const FieldInfo gFileStateFields[26];
+extern const FieldInfo gFileStateFields[28];
 extern StructInfo gFileStateInfo;
 extern const StructInfo gTabStateInfo;
 extern const StructInfo gSessionDataInfo;

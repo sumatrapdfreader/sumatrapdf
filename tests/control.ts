@@ -139,6 +139,9 @@ export enum ControlCommand {
   TestPdfScript = 136,
   // orig: visible virtual controls, or the control under a client point
   TestVirtTree = 137,
+  // orig: [brightness, contrast] applies them to the current file as the
+  // Brightness / Contrast dialog's OK does; returns the current values
+  TestPageAdjust = 138,
 }
 
 export type ControlArg = number | string | Uint8Array | ControlArg[];

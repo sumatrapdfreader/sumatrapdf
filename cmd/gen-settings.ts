@@ -1213,6 +1213,18 @@ const fileState: Field[] = [
     false,
     "if true, the view can be panned past the page edges, so any part of a page can be brought to the center of the window",
   ).ver("3.7"),
+  field(
+    "Brightness",
+    Int,
+    0,
+    "brightness of rendered pages, -100 to 100; 0 leaves them unchanged. Set with CmdAdjustBrightness",
+  ).ver("3.7"),
+  field(
+    "Contrast",
+    Int,
+    0,
+    "contrast of rendered pages, -100 to 100; 0 leaves them unchanged. Set with CmdAdjustContrast",
+  ).ver("3.7"),
   field("BgCol", Color, "", "if given, overrides the background color for this document").ver("3.7"),
   field("TabCol", Color, "", "if given, overrides the tab color for this document").ver("3.7"),
   compactArray(
@@ -1255,6 +1267,8 @@ const fileStateLayout = [
   "PageNo",
   "PageCount",
   "Rotation",
+  "Brightness",
+  "Contrast",
   "WindowState",
   "SidebarDx",
   "Index",

@@ -360,6 +360,12 @@ bool DisplayModel::GetTrimEmptyMargins() const {
     return trimEmptyMargins;
 }
 
+// Only stores the values: the caller re-renders (RenderCache::InvalidateAll).
+void DisplayModel::SetPageAdjust(int newBrightness, int newContrast) {
+    brightness = limitValue(newBrightness, -100, 100);
+    contrast = limitValue(newContrast, -100, 100);
+}
+
 // Free pan lets the view go past the page edges by half a window, so a
 // corner of a drawing can be looked at in the middle of the screen.
 void DisplayModel::SetFreePan(bool enable) {
@@ -652,6 +658,8 @@ void DisplayModel::GetDisplayState(FileState* fs) {
     fs->uniformPageWidth = uniformPageWidth;
     fs->trimEmptyMargins = trimEmptyMargins;
     fs->freePan = freePan;
+    fs->brightness = brightness;
+    fs->contrast = contrast;
 
     str::Free(fs->decryptionKey);
     fs->decryptionKey = engine->decryptionKey ? str::Dup(engine->decryptionKey) : Str();

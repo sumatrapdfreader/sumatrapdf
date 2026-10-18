@@ -1410,6 +1410,7 @@
     <ClInclude Include="..\ext\darkmodelib\src\StdAfx.h" />
     <ClInclude Include="..\ext\darkmodelib\src\UAHMenuBar.h" />
     <ClInclude Include="..\ext\darkmodelib\src\Version.h" />
+    <ClInclude Include="..\src\BrightnessContrastDialog.h" />
     <ClInclude Include="..\src\Canvas.h" />
     <ClInclude Include="..\src\DarkMode.h" />
     <ClInclude Include="..\src\FindWindow.h" />
@@ -1651,6 +1652,7 @@
     <ClCompile Include="..\src\BasePch.cpp">
       <PrecompiledHeader>Create</PrecompiledHeader>
     </ClCompile>
+    <ClCompile Include="..\src\BrightnessContrastDialog.cpp" />
     <ClCompile Include="..\src\Canvas.cpp" />
     <ClCompile Include="..\src\CanvasAboutUI.cpp" />
     <ClCompile Include="..\src\ChangeColorDialog.cpp" />

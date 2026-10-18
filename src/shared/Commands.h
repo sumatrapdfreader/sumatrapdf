@@ -340,8 +340,10 @@ enum {
     CmdConfigureRestrictedUse = 534,
     CmdRunPDFScript = 535,
     CmdToggleCaption = 536,
+    CmdAdjustBrightness = 537,
+    CmdAdjustContrast = 538,
 
-    CmdLast = 536,
+    CmdLast = 538,
     CmdFirstCustom = CmdLast + 100,
 
     // aliases, at the end to not mess ordering

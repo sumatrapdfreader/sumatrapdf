@@ -346,6 +346,8 @@ const CommandInfo gCommands[] = {
     {CmdConfigureRestrictedUse, "CmdConfigureRestrictedUse\0", StrL("Configure Restricted Use...")},
     {CmdRunPDFScript, "CmdRunPDFScript\0", StrL("Run PDF Script...")},
     {CmdToggleCaption, "CmdToggleCaption\0", StrL("Toggle Caption")},
+    {CmdAdjustBrightness, "CmdAdjustBrightness\0", StrL("Adjust Brightness...")},
+    {CmdAdjustContrast, "CmdAdjustContrast\0", StrL("Adjust Contrast...")},
 };
 const int gCommandsCount = dimofi(gCommands);
 

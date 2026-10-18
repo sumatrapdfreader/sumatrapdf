@@ -117,6 +117,7 @@
 #include "GoogleLens.h"
 #include "CommandPalette.h"
 #include "SumatraDialogs.h"
+#include "BrightnessContrastDialog.h"
 #include "NavFilesInFolder.h"
 #include "Installer.h"
 #include "RegistryPreview.h"
@@ -1955,6 +1956,7 @@ static void ReplaceDocumentInCurrentTab(LoadArgs* args, DocController* ctrl, Fil
                 dm->SetUniformPageWidth(fs->uniformPageWidth);
                 dm->SetTrimEmptyMargins(fs->trimEmptyMargins);
                 dm->SetFreePan(fs->freePan);
+                dm->SetPageAdjust(fs->brightness, fs->contrast);
             }
             // migrate in place only. SaveSettings() here would rebuild
             // gInitialSessionData and free the TabState a lazily restored
@@ -10407,6 +10409,11 @@ static LRESULT FrameOnCommand(MainWindow* win, HWND hwnd, UINT msg, WPARAM wp, L
 
         case CmdChangeBackgroundColor:
             ShowChangeBackgroundColorDialog(win);
+            break;
+
+        case CmdAdjustBrightness:
+        case CmdAdjustContrast:
+            ShowBrightnessContrastDialog(win);
             break;
 
         case CmdChangeEbookSettings:

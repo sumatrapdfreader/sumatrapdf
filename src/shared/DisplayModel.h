@@ -261,6 +261,7 @@ struct DisplayModel : DocController {
     bool GetTrimEmptyMargins() const;
     void SetFreePan(bool enable);
     bool GetFreePan() const;
+    void SetPageAdjust(int brightness, int contrast);
     Size PanSlack() const;
     bool EnsureTrimEmptyMarginsForVisiblePages();
     bool GoToPageHorizontal(bool toRight);
@@ -387,6 +388,9 @@ struct DisplayModel : DocController {
     bool uniformPageWidth = false;
     bool trimEmptyMargins = false;
     bool inTrimMarginsUpdate = false;
+    // -100..100, applied to rendered pages (see AdjustPagePixmap)
+    int brightness = 0;
+    int contrast = 0;
     bool freePan = false;
     // set while SetScrollState() restores a view exactly: GoToPage() may then
     // land in free pan's slack past the page edges

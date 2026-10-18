@@ -795,6 +795,8 @@ const FieldInfo gFileStateFields[] = {
     {offsetof(FileState, pageNo), SettingType::String, (intptr_t)"1"},
     {offsetof(FileState, pageCount), SettingType::Int, 0},
     {offsetof(FileState, rotation), SettingType::Int, 0},
+    {offsetof(FileState, brightness), SettingType::Int, 0},
+    {offsetof(FileState, contrast), SettingType::Int, 0},
     {offsetof(FileState, windowState), SettingType::Int, 0},
     {offsetof(FileState, sidebarDx), SettingType::Int, 0},
     {offsetof(FileState, scrollPos), SettingType::Compact, (intptr_t)&gPointF_1_Info},
@@ -810,11 +812,11 @@ const FieldInfo gFileStateFields[] = {
 };
 StructInfo gFileStateInfo = {
     sizeof(FileState),
-    26,
+    28,
     gFileStateFields,
     "Favorites\0EBookUI\0TocState\0FilePath\0DecryptionKey\0SidebarView\0DisplayMode\0Zoom\0BgCol\0TabCol\0OpenCount\0P"
-    "ageNo\0PageCount\0Rotation\0WindowState\0SidebarDx\0ScrollPos\0WindowPos\0IsPinned\0IsMissing\0UseDefaultState\0Sh"
-    "owToc\0DisplayR2L\0UniformPageWidth\0TrimEmptyMargins\0FreePan",
+    "ageNo\0PageCount\0Rotation\0Brightness\0Contrast\0WindowState\0SidebarDx\0ScrollPos\0WindowPos\0IsPinned\0IsMissin"
+    "g\0UseDefaultState\0ShowToc\0DisplayR2L\0UniformPageWidth\0TrimEmptyMargins\0FreePan",
     "pages of this document bookmarked in the Favorites menu\0reflowable (ebook) settings for just this document. The "
     "block is absent until you add it; a field left empty or 0 uses the global EBookUI value. The global section's "
     "WindowBgCol and DefaultDisplayMode are already per-document as BgCol and DisplayMode below\0data required to "
@@ -825,16 +827,18 @@ StructInfo gFileStateInfo = {
     "given, overrides the tab color for this document\0number of times this document has been opened recently\0number "
     "of the last read page, or `bm:<bookmark>` for documents with chapters (folds in ReparseIdx; see "
     "PagePosition.cpp)\0number of pages in the document when it was last open; 0 if unknown. Used to show reading "
-    "progress on the home page\0how far pages have been rotated as a multiple of 90 degrees\0state of the window. 1 is "
-    "normal, 2 is maximized, 3 is fullscreen, 4 is minimized\0width of the bookmarks / favorites sidebar in screen "
-    "pixels, as last resized\0how far this document has been scrolled (in x and y direction)\0default position (can be "
-    "on any monitor)\0if true, the document is \"pinned\" to the Frequently Read list, so that recently opened "
-    "documents don't displace it\0if true, the file is considered missing and won't be shown in any list\0if true, "
-    "this document opens with the global defaults instead of the values below\0if true, show the table of contents "
-    "(Bookmarks) sidebar when the document has one\0if true, the document is displayed right-to-left in facing and "
-    "book view modes\0if true, percentage zoom scales every page to the width page 1 has at that zoom level\0if true, "
-    "empty margins around page content are trimmed from display\0if true, the view can be panned past the page edges, "
-    "so any part of a page can be brought to the center of the window",
+    "progress on the home page\0how far pages have been rotated as a multiple of 90 degrees\0brightness of rendered "
+    "pages, -100 to 100; 0 leaves them unchanged. Set with CmdAdjustBrightness\0contrast of rendered pages, -100 to "
+    "100; 0 leaves them unchanged. Set with CmdAdjustContrast\0state of the window. 1 is normal, 2 is maximized, 3 is "
+    "fullscreen, 4 is minimized\0width of the bookmarks / favorites sidebar in screen pixels, as last resized\0how far "
+    "this document has been scrolled (in x and y direction)\0default position (can be on any monitor)\0if true, the "
+    "document is \"pinned\" to the Frequently Read list, so that recently opened documents don't displace it\0if true, "
+    "the file is considered missing and won't be shown in any list\0if true, this document opens with the global "
+    "defaults instead of the values below\0if true, show the table of contents (Bookmarks) sidebar when the document "
+    "has one\0if true, the document is displayed right-to-left in facing and book view modes\0if true, percentage zoom "
+    "scales every page to the width page 1 has at that zoom level\0if true, empty margins around page content are "
+    "trimmed from display\0if true, the view can be panned past the page edges, so any part of a page can be brought "
+    "to the center of the window",
     false};
 
 static const FieldInfo gPointF_2_Fields[] = {

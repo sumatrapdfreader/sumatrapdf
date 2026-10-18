@@ -71,6 +71,7 @@
 #include "ReadingBar.h"
 #include "NavFilesInFolder.h"
 #include "PerfLog.h"
+#include "BrightnessContrastDialog.h"
 #include "SumatraControl.h"
 #include "SumatraControlCommon.h"
 
@@ -653,6 +654,9 @@ enum class ControlCmd : u16 {
     TestPdfScript = 136,
     // visible virtual controls (kind, name, text, client rect), or the one under a point
     TestVirtTree = 137,
+    // [brightness, contrast] applied to the current file as the Brightness /
+    // Contrast dialog's OK does; returns the current values
+    TestPageAdjust = 138,
 };
 
 static_assert((u16)ControlCmd::Quit == (u16)ControlFrameCmd::Quit);
@@ -1638,6 +1642,28 @@ static void ExecuteControlRequest(ControlRequest* req) {
             int exitCode = 0;
             Str res = PDFScriptTestTemp(StringArg(req, 0), idx, &exitCode);
             AppendTestResult(req, exitCode, res);
+            break;
+        }
+
+        case ControlCmd::TestPageAdjust: {
+            MainWindow* win = len(gWindows) > 0 ? gWindows[0] : nullptr;
+            WindowTab* tab = win ? win->CurrentTab() : nullptr;
+            DisplayModel* dm = tab ? tab->AsFixed() : nullptr;
+            if (!dm) {
+                AppendError(req, StrL("TestPageAdjust needs an open fixed-page document"));
+                break;
+            }
+            i32 brightness = 0;
+            i32 contrast = 0;
+            if (IntArg(req, 0, brightness) && IntArg(req, 1, contrast)) {
+                SetTabPageAdjust(tab, brightness, contrast, PageAdjustSave::Remember);
+            }
+            FileState* fs = FileHistoryFindByPath(tab->filePath);
+            int fsBrightness = fs ? fs->brightness : 0;
+            int fsContrast = fs ? fs->contrast : 0;
+            AppendTestResult(
+                req, 0,
+                fmt("brightness=%d contrast=%d fs=%d,%d\n", dm->brightness, dm->contrast, fsBrightness, fsContrast));
             break;
         }
 

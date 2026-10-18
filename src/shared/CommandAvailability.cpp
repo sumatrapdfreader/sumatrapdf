@@ -699,6 +699,17 @@ CommandVisibility GetCommandVisibility(int cmdId, const AppCommandCtx& ctx, Comm
         return CommandVisibility::Hide;
     }
 
+    if (cmdId == CmdAdjustBrightness || cmdId == CmdAdjustContrast) {
+#if defined(SUMATRA_NG)
+        // the Brightness / Contrast dialog is orig only for now
+        return CommandVisibility::Hide;
+#else
+        if (!ctx.isFixedPage) {
+            return CommandVisibility::Hide;
+        }
+#endif
+    }
+
     if (cmdId == CmdConvertToPDF) {
         // comic books, image folders, single images (issue #4118)
         if (!ctx.isDocLoaded || !ctx.isImageCollection) {
