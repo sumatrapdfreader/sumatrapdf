@@ -51,10 +51,12 @@ typedef struct svg_state
 	int fill_is_set;
 	float fill_color[3];
 	float fill_opacity;
+	float fill_alpha; /* SumatraPDF: of an rgba() fill (#6339) */
 
 	int stroke_is_set;
 	float stroke_color[3];
 	float stroke_opacity;
+	float stroke_alpha; /* SumatraPDF: of an rgba() stroke (#6339) */
 
 	const char *font_family;
 	int is_bold;
@@ -232,14 +234,14 @@ static void svg_end_state(fz_context *ctx, svg_state *child)
 
 static void svg_fill(fz_context *ctx, fz_device *dev, svg_document *doc, fz_path *path, svg_state *state)
 {
-	float opacity = state->opacity * state->fill_opacity;
+	float opacity = state->opacity * state->fill_opacity * state->fill_alpha;
 	if (path)
 		fz_fill_path(ctx, dev, path, state->fill_rule, state->transform, fz_device_rgb(ctx), state->fill_color, opacity, fz_default_color_params);
 }
 
 static void svg_stroke(fz_context *ctx, fz_device *dev, svg_document *doc, fz_path *path, svg_state *state)
 {
-	float opacity = state->opacity * state->stroke_opacity;
+	float opacity = state->opacity * state->stroke_opacity * state->stroke_alpha;
 	if (path)
 		fz_stroke_path(ctx, dev, path, state->stroke, state->transform, fz_device_rgb(ctx), state->stroke_color, opacity, fz_default_color_params);
 }
@@ -1304,6 +1306,7 @@ svg_parse_common_imp(fz_context *ctx, svg_document *doc, fz_xml *node, svg_state
 		{
 			state->fill_is_set = 1;
 			svg_parse_color(ctx, doc, fill_att, state->fill_color);
+			state->fill_alpha = svg_parse_color_alpha(fill_att);
 		}
 	}
 
@@ -1328,6 +1331,7 @@ svg_parse_common_imp(fz_context *ctx, svg_document *doc, fz_xml *node, svg_state
 		{
 			state->stroke_is_set = 1;
 			svg_parse_color(ctx, doc, stroke_att, state->stroke_color);
+			state->stroke_alpha = svg_parse_color_alpha(stroke_att);
 		}
 	}
 
@@ -1814,13 +1818,56 @@ svg_run_image(fz_context *ctx, fz_device *dev, svg_document *doc, fz_xml *root, 
 		fz_rethrow(ctx);
 }
 
+/* SumatraPDF: an @font-face font named in the font-family list, preferring
+ * the face whose weight and style match (#6339). */
 static fz_font *
-svg_load_font(fz_context *ctx, const svg_state *state)
+svg_find_font_face(fz_context *ctx, svg_document *doc, const svg_state *state)
+{
+	const char *p = state->font_family;
+	char name[100];
+	svg_font_face *face, *found;
+	int n;
+
+	while (*p)
+	{
+		while (*p == ',' || *p == '"' || *p == '\'' || svg_is_whitespace(*p))
+			++p;
+		n = 0;
+		while (*p && *p != ',' && *p != '"' && *p != '\'')
+		{
+			if (n < (int)sizeof name - 1)
+				name[n++] = *p;
+			++p;
+		}
+		while (n > 0 && svg_is_whitespace(name[n - 1]))
+			--n;
+		name[n] = 0;
+
+		found = NULL;
+		for (face = doc->fonts; face; face = face->next)
+		{
+			if (fz_strcasecmp(face->family, name))
+				continue;
+			if (!found || (face->is_bold == state->is_bold && face->is_italic == state->is_italic))
+				found = face;
+		}
+		if (found)
+			return fz_keep_font(ctx, found->font);
+	}
+	return NULL;
+}
+
+static fz_font *
+svg_load_font(fz_context *ctx, svg_document *doc, const svg_state *state)
 {
 	int bold = state->is_bold;
 	int italic = state->is_italic;
 	int mono = 0;
 	int serif = 1;
+	fz_font *font = svg_find_font_face(ctx, doc, state);
+
+	if (font)
+		return font;
 
 	/* scan font-family property for common fallback names */
 
@@ -1859,7 +1906,7 @@ svg_load_font(fz_context *ctx, const svg_state *state)
 }
 
 static fz_matrix
-svg_run_text_string(fz_context *ctx, fz_device *dev, fz_matrix trm, const char *s, const svg_state *state)
+svg_run_text_string(fz_context *ctx, fz_device *dev, svg_document *doc, fz_matrix trm, const char *s, const svg_state *state)
 {
 	fz_font *font = NULL;
 	fz_text *text = NULL;
@@ -1869,7 +1916,7 @@ svg_run_text_string(fz_context *ctx, fz_device *dev, fz_matrix trm, const char *
 
 	fz_try(ctx)
 	{
-		font = svg_load_font(ctx, state);
+		font = svg_load_font(ctx, doc, state);
 		text = fz_new_text(ctx);
 
 		if (state->text_anchor > 0)
@@ -1890,14 +1937,14 @@ svg_run_text_string(fz_context *ctx, fz_device *dev, fz_matrix trm, const char *
 			fz_fill_text(ctx, dev, text,
 				state->transform,
 				fz_device_rgb(ctx), state->fill_color,
-				state->opacity,
+				state->opacity * state->fill_opacity * state->fill_alpha,
 				fz_default_color_params);
 		if (state->stroke_is_set)
 			fz_stroke_text(ctx, dev, text,
 				state->stroke,
 				state->transform,
 				fz_device_rgb(ctx), state->stroke_color,
-				state->opacity,
+				state->opacity * state->stroke_opacity * state->stroke_alpha,
 				fz_default_color_params);
 		if (!state->fill_is_set && !state->stroke_is_set)
 			fz_ignore_text(ctx, dev, text, state->transform);
@@ -2000,7 +2047,7 @@ svg_run_text(fz_context *ctx, fz_device *dev, svg_document *doc, fz_xml *root, c
 			if (text)
 			{
 				svg_collapse_whitespace(text, cif, cil);
-				trm = svg_run_text_string(ctx, dev, trm, text, &local_state);
+				trm = svg_run_text_string(ctx, dev, doc, trm, text, &local_state);
 			}
 			else if (fz_xml_is_tag(node, "tspan"))
 				trm = svg_run_text(ctx, dev, doc, node, &local_state, trm.e, trm.f, cif, cil);
@@ -2156,12 +2203,14 @@ svg_run_document(fz_context *ctx, svg_document *doc, fz_xml *root, fz_device *de
 	state.fill_color[1] = 0;
 	state.fill_color[2] = 0;
 	state.fill_opacity = 1;
+	state.fill_alpha = 1;
 
 	state.stroke_is_set = 0;
 	state.stroke_color[0] = 0;
 	state.stroke_color[1] = 0;
 	state.stroke_color[2] = 0;
 	state.stroke_opacity = 1;
+	state.stroke_alpha = 1;
 
 	state.font_family = "serif";
 	state.is_bold = 0;

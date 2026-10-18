@@ -1,0 +1,436 @@
+svg: rgba() colors and @font-face fonts (#6339)
+
+Text filled with rgba() drew black and fonts embedded as WOFF/TTF data
+URIs in @font-face rules were ignored, so text drew in Times. Parse
+rgba() and its alpha; load @font-face data URI fonts from <style> and
+use them for a matching font-family. Text also honors fill-opacity.
+
+diff --git a/source/svg/svg-color.c b/source/svg/svg-color.c
+index 8f8158ddb..d64b59dc3 100644
+--- a/source/svg/svg-color.c
++++ b/source/svg/svg-color.c
+@@ -242,13 +242,14 @@ svg_parse_color(fz_context *ctx, svg_document *doc, const char *str, float *rgb)
+ 	}
+ 
+ 	/* rgb(X,Y,Z) -- whitespace allowed around numbers */
++	/* SumatraPDF: also rgba(X,Y,Z,A); svg_parse_color_alpha() reads A (#6339) */
+ 
+-	else if (strstr(str, "rgb("))
++	else if (strstr(str, "rgb(") || strstr(str, "rgba("))
+ 	{
+ 		int numberlen = 0;
+ 		char numberbuf[50];
+ 
+-		str = str + 4;
++		str = strchr(str, '(') + 1;
+ 
+ 		for (i = 0; i < 3; i++)
+ 		{
+@@ -312,6 +313,34 @@ svg_parse_color(fz_context *ctx, svg_document *doc, const char *str, float *rgb)
+ 	}
+ }
+ 
++/* SumatraPDF: the alpha of an rgba() color, 1 for any other color (#6339) */
++float
++svg_parse_color_alpha(const char *str)
++{
++	const char *p = strstr(str, "rgba(");
++	char *end;
++	float a;
++	int i;
++
++	if (!p)
++		return 1;
++	for (i = 0; i < 3 && p; i++)
++	{
++		p = strchr(p, ',');
++		if (p)
++			++p;
++	}
++	if (!p)
++		return 1;
++
++	a = fz_strtof(p, &end);
++	if (end == p)
++		return 1;
++	if (*end == '%')
++		a /= 100;
++	return fz_clamp(a, 0, 1);
++}
++
+ static int
+ svg_parse_color_from_style_string(fz_context *ctx, svg_document *doc, const char *p, float color[3])
+ {
+diff --git a/source/svg/svg-doc.c b/source/svg/svg-doc.c
+index b7b136f20..259bd7f7d 100644
+--- a/source/svg/svg-doc.c
++++ b/source/svg/svg-doc.c
+@@ -190,9 +190,102 @@ svg_add_rule(fz_context *ctx, svg_document *doc, const char *sel, const char *se
+ 	}
+ }
+ 
++/* SumatraPDF: the value of "name: value;" in a declaration block, unquoted. */
++static int
++svg_css_value(const char *decl, const char *end, const char *name, char *buf, int size)
++{
++	size_t n = strlen(name);
++	const char *p = decl;
++	const char *v;
++
++	while (p < end)
++	{
++		p = svg_skip_css_space(p, end);
++		v = (size_t)(end - p) > n && !fz_strncasecmp(p, name, n) ? svg_skip_css_space(p + n, end) : end;
++		if (v < end && *v == ':')
++		{
++			p = v = svg_skip_css_space(v + 1, end);
++			while (p < end && *p != ';')
++				++p;
++			while (p > v && svg_is_whitespace(p[-1]))
++				--p;
++			if (p - v >= 2 && (*v == '"' || *v == '\'') && p[-1] == *v)
++				++v, --p;
++			fz_strlcpy(buf, v, fz_mini(size, (int)(p - v) + 1));
++			return 1;
++		}
++		while (p < end && *p != ';')
++			++p;
++		if (p < end)
++			++p;
++	}
++	return 0;
++}
++
++/* SumatraPDF: load "@font-face { font-family: f; src: url(data:...;base64,...) }" (#6339).
++ * The data URI holds ';', so src is found by its url( and not split on ';'. */
++static void
++svg_add_font_face(fz_context *ctx, svg_document *doc, const char *decl, const char *end)
++{
++	char family[100], weight[20], style[20];
++	const char *data, *data_end;
++	fz_buffer *buf = NULL;
++	fz_font *font = NULL;
++	svg_font_face *face = NULL;
++
++	if (!svg_css_value(decl, end, "font-family", family, sizeof family))
++		return;
++
++	data = decl;
++	while (data + 7 < end && strncmp(data, "base64,", 7))
++		++data;
++	if (data + 7 >= end)
++		return;
++	data += 7;
++	data_end = data;
++	while (data_end < end && *data_end != ')' && *data_end != '"' && *data_end != '\'')
++		++data_end;
++
++	fz_var(buf);
++	fz_try(ctx)
++	{
++		buf = fz_new_buffer_from_base64(ctx, data, data_end - data);
++		font = fz_new_font_from_buffer(ctx, family, buf, 0, 0);
++	}
++	fz_always(ctx)
++		fz_drop_buffer(ctx, buf);
++	fz_catch(ctx)
++	{
++		fz_rethrow_if(ctx, FZ_ERROR_SYSTEM);
++		fz_report_error(ctx);
++		fz_warn(ctx, "svg: ignoring @font-face '%s'", family);
++		return;
++	}
++
++	fz_var(face);
++	fz_try(ctx)
++	{
++		face = fz_malloc_struct(ctx, svg_font_face);
++		face->family = fz_strdup(ctx, family);
++	}
++	fz_catch(ctx)
++	{
++		fz_free(ctx, face);
++		fz_drop_font(ctx, font);
++		fz_rethrow(ctx);
++	}
++	face->font = font;
++	if (svg_css_value(decl, end, "font-weight", weight, sizeof weight))
++		face->is_bold = !strcmp(weight, "bold") || atoi(weight) > 400;
++	if (svg_css_value(decl, end, "font-style", style, sizeof style))
++		face->is_italic = !strcmp(style, "italic") || !strcmp(style, "oblique");
++	face->next = doc->fonts;
++	doc->fonts = face;
++}
++
+ /* A deliberately small CSS subset: only ".name { ... }" rules are collected, so
+  * that class="name" can be resolved like an inline style attribute. Everything
+- * else (at-rules, element and id selectors, combinators) is skipped. */
++ * else (other at-rules, element and id selectors, combinators) is skipped. */
+ static void
+ svg_parse_style_sheet(fz_context *ctx, svg_document *doc, const char *p)
+ {
+@@ -209,6 +302,19 @@ svg_parse_style_sheet(fz_context *ctx, svg_document *doc, const char *p)
+ 		if (*p == '@')
+ 		{
+ 			int depth = 0;
++			if (!strncmp(p, "@font-face", 10))
++			{
++				const char *open = p;
++				while (open < end && *open != '{' && *open != ';')
++					++open;
++				if (open < end && *open == '{')
++				{
++					const char *close = open;
++					while (close < end && *close != '}')
++						++close;
++					svg_add_font_face(ctx, doc, open + 1, close);
++				}
++			}
+ 			while (p < end)
+ 			{
+ 				if (*p == '{')
+@@ -268,6 +374,7 @@ void
+ svg_drop_class_map(fz_context *ctx, svg_document *doc)
+ {
+ 	svg_class *cls = doc->classes;
++	svg_font_face *face = doc->fonts;
+ 	while (cls)
+ 	{
+ 		svg_class *next = cls->next;
+@@ -277,6 +384,15 @@ svg_drop_class_map(fz_context *ctx, svg_document *doc)
+ 		cls = next;
+ 	}
+ 	doc->classes = NULL;
++	while (face)
++	{
++		svg_font_face *next = face->next;
++		fz_drop_font(ctx, face->font);
++		fz_free(ctx, face->family);
++		fz_free(ctx, face);
++		face = next;
++	}
++	doc->fonts = NULL;
+ }
+ 
+ static int
+@@ -300,6 +416,7 @@ svg_open_document_with_xml(fz_context *ctx, fz_xml_doc *xmldoc, fz_xml *xml, con
+ 
+ 	doc->idmap = NULL;
+ 	doc->classes = NULL;
++	doc->fonts = NULL;
+ 	if (base_uri)
+ 		fz_strlcpy(doc->base_uri, base_uri, sizeof doc->base_uri);
+ 	doc->xml = NULL;
+@@ -341,6 +458,7 @@ svg_open_document_with_buffer(fz_context *ctx, fz_buffer *buf, const char *base_
+ 
+ 	doc->idmap = NULL;
+ 	doc->classes = NULL;
++	doc->fonts = NULL;
+ 	if (base_uri)
+ 		fz_strlcpy(doc->base_uri, base_uri, sizeof doc->base_uri);
+ 	doc->zip = zip;
+diff --git a/source/svg/svg-imp.h b/source/svg/svg-imp.h
+index 2e84e48de..555294593 100644
+--- a/source/svg/svg-imp.h
++++ b/source/svg/svg-imp.h
+@@ -41,6 +41,17 @@ struct svg_class_s
+ 	char *decl;
+ };
+ 
++/* SumatraPDF: an @font-face font from a <style> sheet (#6339) */
++typedef struct svg_font_face_s svg_font_face;
++struct svg_font_face_s
++{
++	svg_font_face *next;
++	char *family;
++	int is_bold;
++	int is_italic;
++	fz_font *font;
++};
++
+ struct svg_document_s
+ {
+ 	fz_document super;
+@@ -48,6 +59,7 @@ struct svg_document_s
+ 	fz_xml *root;
+ 	fz_tree *idmap;
+ 	svg_class *classes;
++	svg_font_face *fonts;
+ 	float width;
+ 	float height;
+ 	svg_cycle_list *cycle; /* for detecting mutual recursive <use> invocations */
+@@ -72,6 +84,7 @@ float svg_parse_angle(const char *str);
+ void svg_parse_color_from_style(fz_context *ctx, svg_document *doc, const char *str,
+ 	int *fill_is_set, float fill[3], int *stroke_is_set, float stroke[3]);
+ void svg_parse_color(fz_context *ctx, svg_document *doc, const char *str, float *rgb);
++float svg_parse_color_alpha(const char *str);
+ fz_matrix svg_parse_transform(fz_context *ctx, svg_document *doc, const char *str, fz_matrix transform);
+ 
+ int svg_is_whitespace_or_comma(int c);
+diff --git a/source/svg/svg-run.c b/source/svg/svg-run.c
+index 410e28848..2e25ff73d 100644
+--- a/source/svg/svg-run.c
++++ b/source/svg/svg-run.c
+@@ -51,10 +51,12 @@ typedef struct svg_state
+ 	int fill_is_set;
+ 	float fill_color[3];
+ 	float fill_opacity;
++	float fill_alpha; /* SumatraPDF: of an rgba() fill (#6339) */
+ 
+ 	int stroke_is_set;
+ 	float stroke_color[3];
+ 	float stroke_opacity;
++	float stroke_alpha; /* SumatraPDF: of an rgba() stroke (#6339) */
+ 
+ 	const char *font_family;
+ 	int is_bold;
+@@ -232,14 +234,14 @@ static void svg_end_state(fz_context *ctx, svg_state *child)
+ 
+ static void svg_fill(fz_context *ctx, fz_device *dev, svg_document *doc, fz_path *path, svg_state *state)
+ {
+-	float opacity = state->opacity * state->fill_opacity;
++	float opacity = state->opacity * state->fill_opacity * state->fill_alpha;
+ 	if (path)
+ 		fz_fill_path(ctx, dev, path, state->fill_rule, state->transform, fz_device_rgb(ctx), state->fill_color, opacity, fz_default_color_params);
+ }
+ 
+ static void svg_stroke(fz_context *ctx, fz_device *dev, svg_document *doc, fz_path *path, svg_state *state)
+ {
+-	float opacity = state->opacity * state->stroke_opacity;
++	float opacity = state->opacity * state->stroke_opacity * state->stroke_alpha;
+ 	if (path)
+ 		fz_stroke_path(ctx, dev, path, state->stroke, state->transform, fz_device_rgb(ctx), state->stroke_color, opacity, fz_default_color_params);
+ }
+@@ -1304,6 +1306,7 @@ svg_parse_common_imp(fz_context *ctx, svg_document *doc, fz_xml *node, svg_state
+ 		{
+ 			state->fill_is_set = 1;
+ 			svg_parse_color(ctx, doc, fill_att, state->fill_color);
++			state->fill_alpha = svg_parse_color_alpha(fill_att);
+ 		}
+ 	}
+ 
+@@ -1328,6 +1331,7 @@ svg_parse_common_imp(fz_context *ctx, svg_document *doc, fz_xml *node, svg_state
+ 		{
+ 			state->stroke_is_set = 1;
+ 			svg_parse_color(ctx, doc, stroke_att, state->stroke_color);
++			state->stroke_alpha = svg_parse_color_alpha(stroke_att);
+ 		}
+ 	}
+ 
+@@ -1814,13 +1818,56 @@ svg_run_image(fz_context *ctx, fz_device *dev, svg_document *doc, fz_xml *root,
+ 		fz_rethrow(ctx);
+ }
+ 
++/* SumatraPDF: an @font-face font named in the font-family list, preferring
++ * the face whose weight and style match (#6339). */
+ static fz_font *
+-svg_load_font(fz_context *ctx, const svg_state *state)
++svg_find_font_face(fz_context *ctx, svg_document *doc, const svg_state *state)
++{
++	const char *p = state->font_family;
++	char name[100];
++	svg_font_face *face, *found;
++	int n;
++
++	while (*p)
++	{
++		while (*p == ',' || *p == '"' || *p == '\'' || svg_is_whitespace(*p))
++			++p;
++		n = 0;
++		while (*p && *p != ',' && *p != '"' && *p != '\'')
++		{
++			if (n < (int)sizeof name - 1)
++				name[n++] = *p;
++			++p;
++		}
++		while (n > 0 && svg_is_whitespace(name[n - 1]))
++			--n;
++		name[n] = 0;
++
++		found = NULL;
++		for (face = doc->fonts; face; face = face->next)
++		{
++			if (fz_strcasecmp(face->family, name))
++				continue;
++			if (!found || (face->is_bold == state->is_bold && face->is_italic == state->is_italic))
++				found = face;
++		}
++		if (found)
++			return fz_keep_font(ctx, found->font);
++	}
++	return NULL;
++}
++
++static fz_font *
++svg_load_font(fz_context *ctx, svg_document *doc, const svg_state *state)
+ {
+ 	int bold = state->is_bold;
+ 	int italic = state->is_italic;
+ 	int mono = 0;
+ 	int serif = 1;
++	fz_font *font = svg_find_font_face(ctx, doc, state);
++
++	if (font)
++		return font;
+ 
+ 	/* scan font-family property for common fallback names */
+ 
+@@ -1859,7 +1906,7 @@ svg_load_font(fz_context *ctx, const svg_state *state)
+ }
+ 
+ static fz_matrix
+-svg_run_text_string(fz_context *ctx, fz_device *dev, fz_matrix trm, const char *s, const svg_state *state)
++svg_run_text_string(fz_context *ctx, fz_device *dev, svg_document *doc, fz_matrix trm, const char *s, const svg_state *state)
+ {
+ 	fz_font *font = NULL;
+ 	fz_text *text = NULL;
+@@ -1869,7 +1916,7 @@ svg_run_text_string(fz_context *ctx, fz_device *dev, fz_matrix trm, const char *
+ 
+ 	fz_try(ctx)
+ 	{
+-		font = svg_load_font(ctx, state);
++		font = svg_load_font(ctx, doc, state);
+ 		text = fz_new_text(ctx);
+ 
+ 		if (state->text_anchor > 0)
+@@ -1890,14 +1937,14 @@ svg_run_text_string(fz_context *ctx, fz_device *dev, fz_matrix trm, const char *
+ 			fz_fill_text(ctx, dev, text,
+ 				state->transform,
+ 				fz_device_rgb(ctx), state->fill_color,
+-				state->opacity,
++				state->opacity * state->fill_opacity * state->fill_alpha,
+ 				fz_default_color_params);
+ 		if (state->stroke_is_set)
+ 			fz_stroke_text(ctx, dev, text,
+ 				state->stroke,
+ 				state->transform,
+ 				fz_device_rgb(ctx), state->stroke_color,
+-				state->opacity,
++				state->opacity * state->stroke_opacity * state->stroke_alpha,
+ 				fz_default_color_params);
+ 		if (!state->fill_is_set && !state->stroke_is_set)
+ 			fz_ignore_text(ctx, dev, text, state->transform);
+@@ -2000,7 +2047,7 @@ svg_run_text(fz_context *ctx, fz_device *dev, svg_document *doc, fz_xml *root, c
+ 			if (text)
+ 			{
+ 				svg_collapse_whitespace(text, cif, cil);
+-				trm = svg_run_text_string(ctx, dev, trm, text, &local_state);
++				trm = svg_run_text_string(ctx, dev, doc, trm, text, &local_state);
+ 			}
+ 			else if (fz_xml_is_tag(node, "tspan"))
+ 				trm = svg_run_text(ctx, dev, doc, node, &local_state, trm.e, trm.f, cif, cil);
+@@ -2156,12 +2203,14 @@ svg_run_document(fz_context *ctx, svg_document *doc, fz_xml *root, fz_device *de
+ 	state.fill_color[1] = 0;
+ 	state.fill_color[2] = 0;
+ 	state.fill_opacity = 1;
++	state.fill_alpha = 1;
+ 
+ 	state.stroke_is_set = 0;
+ 	state.stroke_color[0] = 0;
+ 	state.stroke_color[1] = 0;
+ 	state.stroke_color[2] = 0;
+ 	state.stroke_opacity = 1;
++	state.stroke_alpha = 1;
+ 
+ 	state.font_family = "serif";
+ 	state.is_bold = 0;

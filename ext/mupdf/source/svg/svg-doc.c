@@ -190,9 +190,102 @@ svg_add_rule(fz_context *ctx, svg_document *doc, const char *sel, const char *se
 	}
 }
 
+/* SumatraPDF: the value of "name: value;" in a declaration block, unquoted. */
+static int
+svg_css_value(const char *decl, const char *end, const char *name, char *buf, int size)
+{
+	size_t n = strlen(name);
+	const char *p = decl;
+	const char *v;
+
+	while (p < end)
+	{
+		p = svg_skip_css_space(p, end);
+		v = (size_t)(end - p) > n && !fz_strncasecmp(p, name, n) ? svg_skip_css_space(p + n, end) : end;
+		if (v < end && *v == ':')
+		{
+			p = v = svg_skip_css_space(v + 1, end);
+			while (p < end && *p != ';')
+				++p;
+			while (p > v && svg_is_whitespace(p[-1]))
+				--p;
+			if (p - v >= 2 && (*v == '"' || *v == '\'') && p[-1] == *v)
+				++v, --p;
+			fz_strlcpy(buf, v, fz_mini(size, (int)(p - v) + 1));
+			return 1;
+		}
+		while (p < end && *p != ';')
+			++p;
+		if (p < end)
+			++p;
+	}
+	return 0;
+}
+
+/* SumatraPDF: load "@font-face { font-family: f; src: url(data:...;base64,...) }" (#6339).
+ * The data URI holds ';', so src is found by its url( and not split on ';'. */
+static void
+svg_add_font_face(fz_context *ctx, svg_document *doc, const char *decl, const char *end)
+{
+	char family[100], weight[20], style[20];
+	const char *data, *data_end;
+	fz_buffer *buf = NULL;
+	fz_font *font = NULL;
+	svg_font_face *face = NULL;
+
+	if (!svg_css_value(decl, end, "font-family", family, sizeof family))
+		return;
+
+	data = decl;
+	while (data + 7 < end && strncmp(data, "base64,", 7))
+		++data;
+	if (data + 7 >= end)
+		return;
+	data += 7;
+	data_end = data;
+	while (data_end < end && *data_end != ')' && *data_end != '"' && *data_end != '\'')
+		++data_end;
+
+	fz_var(buf);
+	fz_try(ctx)
+	{
+		buf = fz_new_buffer_from_base64(ctx, data, data_end - data);
+		font = fz_new_font_from_buffer(ctx, family, buf, 0, 0);
+	}
+	fz_always(ctx)
+		fz_drop_buffer(ctx, buf);
+	fz_catch(ctx)
+	{
+		fz_rethrow_if(ctx, FZ_ERROR_SYSTEM);
+		fz_report_error(ctx);
+		fz_warn(ctx, "svg: ignoring @font-face '%s'", family);
+		return;
+	}
+
+	fz_var(face);
+	fz_try(ctx)
+	{
+		face = fz_malloc_struct(ctx, svg_font_face);
+		face->family = fz_strdup(ctx, family);
+	}
+	fz_catch(ctx)
+	{
+		fz_free(ctx, face);
+		fz_drop_font(ctx, font);
+		fz_rethrow(ctx);
+	}
+	face->font = font;
+	if (svg_css_value(decl, end, "font-weight", weight, sizeof weight))
+		face->is_bold = !strcmp(weight, "bold") || atoi(weight) > 400;
+	if (svg_css_value(decl, end, "font-style", style, sizeof style))
+		face->is_italic = !strcmp(style, "italic") || !strcmp(style, "oblique");
+	face->next = doc->fonts;
+	doc->fonts = face;
+}
+
 /* A deliberately small CSS subset: only ".name { ... }" rules are collected, so
  * that class="name" can be resolved like an inline style attribute. Everything
- * else (at-rules, element and id selectors, combinators) is skipped. */
+ * else (other at-rules, element and id selectors, combinators) is skipped. */
 static void
 svg_parse_style_sheet(fz_context *ctx, svg_document *doc, const char *p)
 {
@@ -209,6 +302,19 @@ svg_parse_style_sheet(fz_context *ctx, svg_document *doc, const char *p)
 		if (*p == '@')
 		{
 			int depth = 0;
+			if (!strncmp(p, "@font-face", 10))
+			{
+				const char *open = p;
+				while (open < end && *open != '{' && *open != ';')
+					++open;
+				if (open < end && *open == '{')
+				{
+					const char *close = open;
+					while (close < end && *close != '}')
+						++close;
+					svg_add_font_face(ctx, doc, open + 1, close);
+				}
+			}
 			while (p < end)
 			{
 				if (*p == '{')
@@ -268,6 +374,7 @@ void
 svg_drop_class_map(fz_context *ctx, svg_document *doc)
 {
 	svg_class *cls = doc->classes;
+	svg_font_face *face = doc->fonts;
 	while (cls)
 	{
 		svg_class *next = cls->next;
@@ -277,6 +384,15 @@ svg_drop_class_map(fz_context *ctx, svg_document *doc)
 		cls = next;
 	}
 	doc->classes = NULL;
+	while (face)
+	{
+		svg_font_face *next = face->next;
+		fz_drop_font(ctx, face->font);
+		fz_free(ctx, face->family);
+		fz_free(ctx, face);
+		face = next;
+	}
+	doc->fonts = NULL;
 }
 
 static int
@@ -300,6 +416,7 @@ svg_open_document_with_xml(fz_context *ctx, fz_xml_doc *xmldoc, fz_xml *xml, con
 
 	doc->idmap = NULL;
 	doc->classes = NULL;
+	doc->fonts = NULL;
 	if (base_uri)
 		fz_strlcpy(doc->base_uri, base_uri, sizeof doc->base_uri);
 	doc->xml = NULL;
@@ -341,6 +458,7 @@ svg_open_document_with_buffer(fz_context *ctx, fz_buffer *buf, const char *base_
 
 	doc->idmap = NULL;
 	doc->classes = NULL;
+	doc->fonts = NULL;
 	if (base_uri)
 		fz_strlcpy(doc->base_uri, base_uri, sizeof doc->base_uri);
 	doc->zip = zip;

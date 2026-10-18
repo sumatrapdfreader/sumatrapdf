@@ -242,13 +242,14 @@ svg_parse_color(fz_context *ctx, svg_document *doc, const char *str, float *rgb)
 	}
 
 	/* rgb(X,Y,Z) -- whitespace allowed around numbers */
+	/* SumatraPDF: also rgba(X,Y,Z,A); svg_parse_color_alpha() reads A (#6339) */
 
-	else if (strstr(str, "rgb("))
+	else if (strstr(str, "rgb(") || strstr(str, "rgba("))
 	{
 		int numberlen = 0;
 		char numberbuf[50];
 
-		str = str + 4;
+		str = strchr(str, '(') + 1;
 
 		for (i = 0; i < 3; i++)
 		{
@@ -310,6 +311,34 @@ svg_parse_color(fz_context *ctx, svg_document *doc, const char *str, float *rgb)
 			}
 		}
 	}
+}
+
+/* SumatraPDF: the alpha of an rgba() color, 1 for any other color (#6339) */
+float
+svg_parse_color_alpha(const char *str)
+{
+	const char *p = strstr(str, "rgba(");
+	char *end;
+	float a;
+	int i;
+
+	if (!p)
+		return 1;
+	for (i = 0; i < 3 && p; i++)
+	{
+		p = strchr(p, ',');
+		if (p)
+			++p;
+	}
+	if (!p)
+		return 1;
+
+	a = fz_strtof(p, &end);
+	if (end == p)
+		return 1;
+	if (*end == '%')
+		a /= 100;
+	return fz_clamp(a, 0, 1);
 }
 
 static int
