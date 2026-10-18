@@ -166,6 +166,8 @@ struct CadPageStats {
     int grayStrokes = 0;
     int thinStrokes = 0;
     float maxImageCoverage = 0.f;
+    // how much of the page-size image is near-white paper, 0..1
+    float bigImageWhite = 1.f;
     float pageArea = 0.f;
 };
 
@@ -234,14 +236,65 @@ static void cad_analysis_stroke_text(fz_context* ctx, fz_device* dev, const fz_t
     cad_analysis_fill_text(ctx, dev, text, ctm, colorspace, color, alpha, color_params);
 }
 
-static void cad_analysis_fill_image(fz_context* /*ctx*/, fz_device* dev, fz_image* /*image*/, fz_matrix ctm,
-                                    float /*alpha*/, fz_color_params /*color_params*/) {
+// Image coverage of a page that makes it a raster CAD candidate.
+constexpr float kRasterCadCoverage = 0.80f;
+
+// Fraction of the image's pixels that are near-white, from a small decode.
+// Raster CAD is line work on white paper; a scan or photo is not (#6361).
+static float CadImageWhiteFraction(fz_context* ctx, fz_image* image) {
+    constexpr int kSampleDx = 128;
+    constexpr int kWhite = 230;
+    fz_pixmap* pix = nullptr;
+    fz_var(pix);
+    float res = 1.f;
+    fz_try(ctx) {
+        int w = kSampleDx;
+        int h = kSampleDx;
+        pix = fz_get_pixmap_from_image(ctx, image, nullptr, nullptr, &w, &h);
+        // gray and RGB are read as they are, anything else as RGB
+        bool isGray = pix->colorspace && fz_colorspace_n(ctx, pix->colorspace) == 1;
+        if (pix->colorspace && !isGray && !fz_colorspace_is_rgb(ctx, pix->colorspace)) {
+            fz_pixmap* rgb =
+                fz_convert_pixmap(ctx, pix, fz_device_rgb(ctx), nullptr, nullptr, fz_default_color_params, 1);
+            fz_drop_pixmap(ctx, pix);
+            pix = rgb;
+        }
+        int nColors = pix->n - pix->alpha;
+        int white = 0;
+        for (int y = 0; y < pix->h; y++) {
+            const u8* p = pix->samples + ((size_t)y * pix->stride);
+            for (int x = 0; x < pix->w; x++, p += pix->n) {
+                bool isWhite = true;
+                for (int c = 0; c < nColors; c++) {
+                    isWhite = isWhite && p[c] >= kWhite;
+                }
+                white += isWhite ? 1 : 0;
+            }
+        }
+        int total = pix->w * pix->h;
+        res = total > 0 ? (float)white / (float)total : 1.f;
+    }
+    fz_always(ctx) {
+        fz_drop_pixmap(ctx, pix);
+    }
+    fz_catch(ctx) {
+        fz_report_error(ctx);
+    }
+    return res;
+}
+
+static void cad_analysis_fill_image(fz_context* ctx, fz_device* dev, fz_image* image, fz_matrix ctm, float /*alpha*/,
+                                    fz_color_params /*color_params*/) {
     cad_analysis_device* d = (cad_analysis_device*)dev;
     fz_rect bbox = fz_transform_rect(fz_unit_rect, ctm);
-    if (d->stats->pageArea > 0.f) {
-        float coverage = CadRectArea(bbox) / d->stats->pageArea;
-        d->stats->maxImageCoverage = std::max(coverage, d->stats->maxImageCoverage);
+    if (d->stats->pageArea <= 0.f) {
+        return;
     }
+    float coverage = CadRectArea(bbox) / d->stats->pageArea;
+    if (coverage >= kRasterCadCoverage && coverage > d->stats->maxImageCoverage) {
+        d->stats->bigImageWhite = CadImageWhiteFraction(ctx, image);
+    }
+    d->stats->maxImageCoverage = std::max(coverage, d->stats->maxImageCoverage);
 }
 
 static fz_device* NewCadAnalysisDevice(fz_context* ctx, CadPageStats* stats) {
@@ -376,8 +429,10 @@ static int ScoreHeuristic(fz_context* ctx, pdf_document* doc, int pageCount, flo
         }
     }
 
-    // Screenshot / raster CAD: one large image per page, almost no vector content.
-    bool rasterCad = stats.maxImageCoverage >= 0.80f && stats.strokes + stats.fills < 50 && stats.textOps < 200;
+    // Screenshot / raster CAD: one large image per page, almost no vector content,
+    // mostly white paper (the enhancement grays everything that isn't white).
+    bool rasterCad = stats.maxImageCoverage >= kRasterCadCoverage && stats.strokes + stats.fills < 50 &&
+                     stats.textOps < 200 && stats.bigImageWhite >= 0.50f;
     if (rasterCad) {
         if (pageCount > 30) {
             // Full-bleed cover art in multi-page books mimics raster CAD; do not
