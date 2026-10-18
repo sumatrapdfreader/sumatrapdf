@@ -177,6 +177,9 @@ static fz_html *epub_get_laid_out_html(fz_context *ctx, epub_document *doc, epub
 
 static int count_laid_out_pages(fz_html *html)
 {
+	/* SumatraPDF: a fixed-layout chapter is one page; overflow is clipped (#1293) */
+	if (html->meta_w > 0 && html->meta_h > 0)
+		return 1;
 	if (html->tree.root->s.layout.b > 0)
 		return ceilf(html->tree.root->s.layout.b / html->page_h);
 	return 1;

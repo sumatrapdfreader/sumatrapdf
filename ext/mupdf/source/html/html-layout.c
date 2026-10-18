@@ -3235,19 +3235,28 @@ fz_restartable_layout_html(fz_context *ctx, fz_html_tree *tree, float start_x, f
 void
 fz_layout_html(fz_context *ctx, fz_html *html, float w, float h, float em)
 {
+	/* SumatraPDF: a viewport with both sizes is a fixed-layout page: exactly
+	 * that size, without the @page margin (#1293) */
+	int fixed = html->meta_w > 0 && html->meta_h > 0;
+
 	/* Override requested page size if the meta viewport defines a width or height */
 	w = fz_max(w, html->meta_w);
 	h = fz_max(h, html->meta_h);
+	if (fixed)
+	{
+		w = html->meta_w;
+		h = html->meta_h;
+	}
 
 	/* If we're already laid out to the specifications we need,
 	 * nothing to do. */
 	if (html->layout_w == w && html->layout_h == h && html->layout_em == em)
 		return;
 
-	html->page_margin[T] = fz_from_css_number(html->tree.root->style->margin[T], em, em, 0);
-	html->page_margin[B] = fz_from_css_number(html->tree.root->style->margin[B], em, em, 0);
-	html->page_margin[L] = fz_from_css_number(html->tree.root->style->margin[L], em, em, 0);
-	html->page_margin[R] = fz_from_css_number(html->tree.root->style->margin[R], em, em, 0);
+	html->page_margin[T] = fixed ? 0 : fz_from_css_number(html->tree.root->style->margin[T], em, em, 0);
+	html->page_margin[B] = fixed ? 0 : fz_from_css_number(html->tree.root->style->margin[B], em, em, 0);
+	html->page_margin[L] = fixed ? 0 : fz_from_css_number(html->tree.root->style->margin[L], em, em, 0);
+	html->page_margin[R] = fixed ? 0 : fz_from_css_number(html->tree.root->style->margin[R], em, em, 0);
 
 	html->page_w = w - html->page_margin[L] - html->page_margin[R];
 	if (html->page_w <= 72)

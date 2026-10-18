@@ -1,0 +1,59 @@
+epub: fixed-layout chapter is one viewport-sized page (#1293)
+
+A chapter whose <meta name="viewport"> gives width and height is a
+fixed-layout page. mupdf still applied the default @page margin, so
+content filling the viewport spilled onto blank extra pages and was
+offset from the page edges. Lay such a chapter out at exactly the
+viewport size with no page margin, and count it as one page.
+
+diff --git a/source/html/epub-doc.c b/source/html/epub-doc.c
+index eb2ad111b..91bab53d8 100644
+--- a/source/html/epub-doc.c
++++ b/source/html/epub-doc.c
+@@ -177,6 +177,9 @@ static fz_html *epub_get_laid_out_html(fz_context *ctx, epub_document *doc, epub
+ 
+ static int count_laid_out_pages(fz_html *html)
+ {
++	/* SumatraPDF: a fixed-layout chapter is one page; overflow is clipped (#1293) */
++	if (html->meta_w > 0 && html->meta_h > 0)
++		return 1;
+ 	if (html->tree.root->s.layout.b > 0)
+ 		return ceilf(html->tree.root->s.layout.b / html->page_h);
+ 	return 1;
+diff --git a/source/html/html-layout.c b/source/html/html-layout.c
+index a5293596a..03126b9c4 100644
+--- a/source/html/html-layout.c
++++ b/source/html/html-layout.c
+@@ -3235,19 +3235,28 @@ fz_restartable_layout_html(fz_context *ctx, fz_html_tree *tree, float start_x, f
+ void
+ fz_layout_html(fz_context *ctx, fz_html *html, float w, float h, float em)
+ {
++	/* SumatraPDF: a viewport with both sizes is a fixed-layout page: exactly
++	 * that size, without the @page margin (#1293) */
++	int fixed = html->meta_w > 0 && html->meta_h > 0;
++
+ 	/* Override requested page size if the meta viewport defines a width or height */
+ 	w = fz_max(w, html->meta_w);
+ 	h = fz_max(h, html->meta_h);
++	if (fixed)
++	{
++		w = html->meta_w;
++		h = html->meta_h;
++	}
+ 
+ 	/* If we're already laid out to the specifications we need,
+ 	 * nothing to do. */
+ 	if (html->layout_w == w && html->layout_h == h && html->layout_em == em)
+ 		return;
+ 
+-	html->page_margin[T] = fz_from_css_number(html->tree.root->style->margin[T], em, em, 0);
+-	html->page_margin[B] = fz_from_css_number(html->tree.root->style->margin[B], em, em, 0);
+-	html->page_margin[L] = fz_from_css_number(html->tree.root->style->margin[L], em, em, 0);
+-	html->page_margin[R] = fz_from_css_number(html->tree.root->style->margin[R], em, em, 0);
++	html->page_margin[T] = fixed ? 0 : fz_from_css_number(html->tree.root->style->margin[T], em, em, 0);
++	html->page_margin[B] = fixed ? 0 : fz_from_css_number(html->tree.root->style->margin[B], em, em, 0);
++	html->page_margin[L] = fixed ? 0 : fz_from_css_number(html->tree.root->style->margin[L], em, em, 0);
++	html->page_margin[R] = fixed ? 0 : fz_from_css_number(html->tree.root->style->margin[R], em, em, 0);
+ 
+ 	html->page_w = w - html->page_margin[L] - html->page_margin[R];
+ 	if (html->page_w <= 72)
