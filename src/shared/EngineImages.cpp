@@ -2302,6 +2302,7 @@ class EngineCbx : public EngineImages {
     bool tocFromComicInfo = false;
 
   protected:
+    fz_image* LoadFzImageForPage(fz_context* ctx, int pageNo) override;
     Pixmap* LoadPixmapForPage(int pageNo, bool& deleteAfterUse) override;
     RectF LoadMediabox(int pageNo) override;
     Str GetImageData(int pageNo) override;
@@ -2550,7 +2551,8 @@ bool EngineCbx::FinishLoading() {
 
         // an archive member name, not a path on disk: nothing to probe
         FileType kind = GuessFileTypeFromName(fileName, true);
-        if (IsEngineImageSupportedFileType(kind) &&
+        bool isPage = IsEngineImageSupportedFileType(kind) || FileType::Svg == kind;
+        if (isPage &&
             // OS X occasionally leaves metadata with image extensions
             !str::StartsWith(path::GetBaseNameTemp(fileName), StrL("."))) {
             VecAppend(pageFiles, fileInfo);
@@ -2754,6 +2756,34 @@ void EngineCbx::GetProperties(Props& propsOut) {
     AddProp(propsOut, DocProp::Files, str::DupTemp(filesStrView));
 }
 
+// SVG pages become display-list images, so they stay sharp at any zoom (#6364)
+fz_image* EngineCbx::LoadFzImageForPage(fz_context* ctx, int pageNo) {
+    FileType kind = GuessFileTypeFromName(files[pageNo - 1]->name, true);
+    if (FileType::Svg != kind) {
+        return EngineImages::LoadFzImageForPage(ctx, pageNo);
+    }
+    Str data = GetImageData(pageNo);
+    if (len(data) == 0) {
+        return nullptr;
+    }
+    fz_image* img = nullptr;
+    fz_buffer* buf = nullptr;
+    fz_var(buf);
+    fz_var(img);
+    fz_try(ctx) {
+        buf = fz_new_buffer_from_copied_data(ctx, (u8*)data.s, (size_t)data.len);
+        img = fz_new_image_from_svg(ctx, buf, nullptr, nullptr);
+    }
+    fz_always(ctx) {
+        fz_drop_buffer(ctx, buf);
+    }
+    fz_catch(ctx) {
+        fz_report_error(ctx);
+        img = nullptr;
+    }
+    return img;
+}
+
 Pixmap* EngineCbx::LoadPixmapForPage(int pageNo, bool& deleteAfterUse) {
     auto timeStart = TimeGet();
     defer{};
@@ -2803,6 +2833,11 @@ RectF EngineCbx::LoadMediabox(int pageNo) {
             // mupdf decoded the image; use its dimensions
             w = page->img->w;
             h = page->img->h;
+            if (page->img->scalable && page->img->xres > 0 && page->img->yres > 0) {
+                // SVG: mupdf sizes it at 96 dpi; use SVG units, like a standalone .svg
+                w = (int)roundf(w * 72.f / page->img->xres);
+                h = (int)roundf(h * 72.f / page->img->yres);
+            }
             uint8_t orientation = page->img->orientation;
             if (orientation != 0 && (orientation & 1) == 0) {
                 std::swap(w, h);
