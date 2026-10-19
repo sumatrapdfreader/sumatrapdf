@@ -50,6 +50,33 @@ Annotation* VisibleAnnotAt(AnnotFilterToolbarBase* f, int idx) {
     return f->visibleAnnots[idx];
 }
 
+// right-click on a row: the same copy / edit / delete as on the page (#6365).
+// Edit needs the annotation toolbar, which only Edit PDF mode shows.
+void AnnotListMenuItems(MainWindow* win, Annotation* annot, int nSel, Vec<AnnotListMenuItem>& out) {
+    VecReset(out);
+    if (!win || !annot) {
+        return;
+    }
+    AnnotListMenuItem copy;
+    copy.id = AnnotListMenu::CopyComment;
+    copy.title = Tr("Copy Comment");
+    copy.disabled = str::IsEmptyOrWhiteSpace(Contents(annot));
+    VecAppend(out, copy);
+
+    AnnotationType type = Type(annot);
+    if (nSel == 1 && type != AnnotationType::Widget && win->pdfAnnotationsToolbarEnabled) {
+        AnnotListMenuItem edit;
+        edit.id = AnnotListMenu::Edit;
+        edit.title = type == AnnotationType::FreeText ? Tr("Edit text") : Tr("Edit Note");
+        VecAppend(out, edit);
+    }
+
+    AnnotListMenuItem del;
+    del.id = AnnotListMenu::Delete;
+    del.title = nSel > 1 ? fmt(Tr("Delete %d annotations").s, nSel) : Tr("Delete Annotation");
+    VecAppend(out, del);
+}
+
 void ToggleFloatingAnnotList(MainWindow* win) {
     if (!win) {
         return;

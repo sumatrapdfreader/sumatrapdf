@@ -58,6 +58,7 @@ void HideAnnotFilterWindow(MainWindow*);
 static bool FilterHomeEndMovesList(AnnotFilterToolbar*, int vkey, bool isCtrl);
 static void KillSelectionTimer(AnnotFilterToolbar*);
 static void UpdateFloatButtons(AnnotFilterToolbar*);
+static void OnListContextMenu(AnnotFilterToolbar*, VirtMouseEvent*);
 
 struct AnnotFilterWindow : WindowBase {
     MainWindow* win = nullptr;
@@ -338,6 +339,7 @@ static void WireListBox(AnnotFilterToolbar* f, VirtListBox* lb, int dpi) {
     lb->onSelectionChanged = MkFunc0(OnListSelectionChanged, f);
     lb->onDoubleClick = MkFunc0(OnListDoubleClick, f);
     lb->onDrawItem = MkFunc1(OnListDrawItem, f);
+    lb->onContextMenu = MkFunc1(OnListContextMenu, f);
     lb->SetFlag(vwfFocusable, false);
     ApplyListColorsTo(lb);
 }
@@ -596,6 +598,54 @@ static void DeleteFloatSelected(AnnotFilterWindow* w) {
 
 static void OnFloatDelete(AnnotFilterWindow* w, VirtMouseEvent*) {
     DeleteFloatSelected(w);
+}
+
+// right-click on a row: copy / edit / delete (#6365)
+static void OnListContextMenu(AnnotFilterToolbar* f, VirtMouseEvent* ev) {
+    AnnotFilterWindow* w = f ? f->floatWnd : nullptr;
+    VirtListBox* lb = ActiveList(f);
+    WindowTab* tab = FilterTab(f);
+    if (!w || !lb || !tab) {
+        return;
+    }
+    int idx = lb->ItemFromPoint(ev->pt);
+    Annotation* annot = VisibleAnnotAt(f, idx);
+    if (!annot) {
+        return;
+    }
+    ev->didHandle = true;
+
+    // like Explorer: right-click outside the selection selects that row
+    if (!lb->IsSelected(idx)) {
+        lb->SetCurrentSelection(idx);
+        ApplySelectionNow(f);
+    }
+    int nSel = std::max(lb->SelectedCount(), 1);
+
+    Vec<AnnotListMenuItem> items;
+    AnnotListMenuItems(f->win, annot, nSel, items);
+    HMENU menu = CreatePopupMenu();
+    for (const AnnotListMenuItem& it : items) {
+        UINT flags = MF_STRING | (it.disabled ? MF_GRAYED : 0);
+        AppendMenuW(menu, flags, (UINT)it.id, ToWStrTemp(it.title).s);
+    }
+
+    Point pt = HwndClientToScreen(w->hwnd, ev->ptWindow);
+    int cmd = TrackPopupMenu(menu, TPM_RETURNCMD | TPM_NONOTIFY | TPM_RIGHTBUTTON, pt.x, pt.y, 0, w->hwnd, nullptr);
+    DestroyMenu(menu);
+
+    switch ((AnnotListMenu)cmd) {
+        case AnnotListMenu::CopyComment:
+            CopyTextToClipboard(Contents(annot));
+            break;
+        case AnnotListMenu::Edit:
+            SetSelectedAnnotation(tab, annot);
+            uitask::Post(MkFunc0(StartSelectedAnnotContentsEdit, f->win), "StartAnnotContentsEdit");
+            break;
+        case AnnotListMenu::Delete:
+            DeleteFloatSelected(w);
+            break;
+    }
 }
 
 static void OnFloatDiscard(AnnotFilterWindow* w, VirtMouseEvent*) {

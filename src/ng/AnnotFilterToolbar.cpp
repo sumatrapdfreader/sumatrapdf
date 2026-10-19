@@ -42,7 +42,9 @@
 #include "MainWindow.h"
 #include "WindowTab.h"
 #include "Toolbar.h"
+#include "Menu.h"
 #include "gui/AppShell.h"
+#include "gui/DialogWidgets.h"
 #include "gui/ToolWindow.h"
 #include "AnnotEditToolbar.h"
 #include "AnnotFilterToolbar.h"
@@ -103,8 +105,15 @@ struct AnnotFilterToolbar : AnnotFilterToolbarBase {
     gp::Bounds cardBounds{};
     gp::Bounds saveNewBounds{};
     int selectPendingMs = -1;
+    // the row context menu, and the row it is for
+    MenuModel* menu = nullptr;
+    int menuIdx = -1;
+    gp::Entity<gp::PopupMenuState> menuPopup;
 
-    ~AnnotFilterToolbar() { str::Free(filterText); }
+    ~AnnotFilterToolbar() {
+        str::Free(filterText);
+        DeleteMenuModel(menu);
+    }
 };
 
 static void OnListSelectionChanged(AnnotFilterToolbar*);
@@ -867,6 +876,8 @@ struct AnnotFilterView {
     static void OnCmd(AnnotFilterView* self, gp::Ctx* cx, const gp::ClickEvent*, int64_t cmdId);
     static void OnClose(AnnotFilterView* self, gp::Ctx* cx, const gp::ClickEvent*);
     static void OnListDown(AnnotFilterView* self, gp::Ctx* cx, const gp::MouseDownEvent*);
+    static void OnListUp(AnnotFilterView* self, gp::Ctx* cx, const gp::MouseUpEvent* ev);
+    static void OnMenuAction(AnnotFilterView* self, gp::Ctx* cx, const gp::ActionEvent* ev);
 };
 
 static gp::Entity<AnnotFilterView> gAnnotFilterView;
@@ -908,7 +919,12 @@ void AnnotFilterView::OnScroll(AnnotFilterView* self, gp::Ctx* cx, const gp::Scr
 
 // a press on the list of a window of its own (the frame's card hears of it
 // through AnnotFilterOnMouseDown)
-void AnnotFilterView::OnListDown(AnnotFilterView* self, gp::Ctx* cx, const gp::MouseDownEvent*) {
+void AnnotFilterView::OnListDown(AnnotFilterView* self, gp::Ctx* cx, const gp::MouseDownEvent* ev) {
+    // ng: the ContextMenu would open from the press; orig's opens on release
+    if (IsContextClick(ev->button, ev->modifiers)) {
+        gp::WindowStopPropagation(cx);
+        return;
+    }
     AnnotFilterToolbar* f = self->win ? self->win->annotFilterToolbar : nullptr;
     if (!f || !f->tw) {
         return;
@@ -917,9 +933,90 @@ void AnnotFilterView::OnListDown(AnnotFilterView* self, gp::Ctx* cx, const gp::M
     AnnotFilterNotify(self, cx);
 }
 
+static uint32_t ActAnnotListMenu() {
+    static uint32_t act = gp::ActionOf(GStrL("sumatra::AnnotListMenu"));
+    return act;
+}
+
+// orig's OnListContextMenu: right-click on a row; copy / edit / delete (#6365)
+void AnnotFilterView::OnListUp(AnnotFilterView* self, gp::Ctx* cx, const gp::MouseUpEvent* ev) {
+    AnnotFilterToolbar* f = self->win ? self->win->annotFilterToolbar : nullptr;
+    if (!f || !IsContextClick(ev->button, ev->modifiers)) {
+        return;
+    }
+    float y = ev->y - f->listBounds.y - kListBorderDx + f->scrollY;
+    int idx = y < 0 ? -1 : (int)(y / RowDy());
+    Annotation* annot = VisibleAnnotAt(f, idx);
+    if (!annot) {
+        return;
+    }
+    // like Explorer: right-click outside the selection selects that row
+    if (!IsSelected(f, idx)) {
+        SetCurrentSelection(f, idx);
+        OnListSelectionChanged(f);
+        ApplySelectionNow(f);
+    }
+    int nSel = std::max(SelectedCount(f), 1);
+
+    Vec<AnnotListMenuItem> items;
+    AnnotListMenuItems(f->win, annot, nSel, items);
+    DeleteMenuModel(f->menu);
+    f->menu = new MenuModel();
+    for (const AnnotListMenuItem& it : items) {
+        MenuItemModel mi;
+        mi.title = str::Dup(it.title);
+        mi.titleOwned = true;
+        mi.cmdId = (int)it.id;
+        mi.disabled = it.disabled;
+        VecAppend(f->menu->items, mi);
+    }
+    f->menuIdx = idx;
+    OpenPopupMenuAt(cx, f->menuPopup, ev->x - f->listBounds.x, ev->y - f->listBounds.y);
+    AnnotFilterNotify(self, cx);
+}
+
+struct AnnotListMenuCmd {
+    MainWindow* win;
+    int cmdId;
+};
+
+static void RunAnnotListMenuCmd(AnnotListMenuCmd* c) {
+    MainWindow* win = c->win;
+    int cmdId = c->cmdId;
+    delete c;
+    logf("RunAnnotListMenuCmd: %d\n", cmdId);
+    AnnotFilterToolbar* f = IsMainWindowValidAndNotClosing(win) ? win->annotFilterToolbar : nullptr;
+    WindowTab* tab = FilterTab(f);
+    Annotation* annot = f ? VisibleAnnotAt(f, f->menuIdx) : nullptr;
+    if (!tab || !annot) {
+        return;
+    }
+    switch ((AnnotListMenu)cmdId) {
+        case AnnotListMenu::CopyComment:
+            CopyTextToClipboard(win, Contents(annot));
+            break;
+        case AnnotListMenu::Edit:
+            SetSelectedAnnotation(tab, annot);
+            uitask::Post(MkFunc0(StartSelectedAnnotContentsEdit, win), "StartAnnotContentsEdit");
+            break;
+        case AnnotListMenu::Delete:
+            DeleteListSelection(f);
+            break;
+    }
+    AppShellInvalidate(win);
+}
+
+// a command from a gpui popup runs while the popup still owns the mouse and
+// the keyboard, so it goes through the ui task queue
+void AnnotFilterView::OnMenuAction(AnnotFilterView* self, gp::Ctx* cx, const gp::ActionEvent* ev) {
+    auto* c = new AnnotListMenuCmd{self->win, (int)ev->arg};
+    uitask::Post(MkFunc0(RunAnnotListMenuCmd, c), "AnnotListMenuCmd");
+    AnnotFilterNotify(self, cx);
+}
+
 void AnnotFilterView::OnCaptureKey(AnnotFilterView* self, gp::Ctx* cx, const gp::KeyEvent* ev) {
     AnnotFilterToolbar* f = self->win ? self->win->annotFilterToolbar : nullptr;
-    if (!f || !FilterHasHostFocus(f)) {
+    if (!f || !FilterHasHostFocus(f) || IsTrackedPopupOpen(cx)) {
         return;
     }
     if (!AnnotFilterKey(f, ev->vk, ev->ctrl, ev->shift, ev->alt, AnnotListFocus::Filter)) {
@@ -1052,7 +1149,8 @@ static gp::El* AnnotFilterToolBuild(MainWindow* win, gp::Ctx* cx) {
 // of the filter were taken before the edit saw them (OnCaptureKey)
 static bool AnnotFilterToolOnKey(MainWindow* win, gp::Ctx* cx, const gp::KeyEvent* ev) {
     AnnotFilterToolbar* f = win ? win->annotFilterToolbar : nullptr;
-    if (!f || !f->visible) {
+    // an open row menu has the arrows, Enter and Esc
+    if (!f || !f->visible || IsTrackedPopupOpen(cx)) {
         return false;
     }
     if (ev->vk == VK_ESCAPE) {
@@ -1292,13 +1390,28 @@ static gp::El* AnnotFilterContentEl(MainWindow* win, gp::Ctx* cx, bool ownWindow
                        ->ScrollFromPath()
                        ->OnScroll(gp::ListenTo(gAnnotFilterView, &AnnotFilterView::OnScroll))
                        ->BoundsOut(&f->listBounds)
+                       ->OnMouseDown(gp::ListenTo(gAnnotFilterView, &AnnotFilterView::OnListDown))
+                       ->OnMouseUp(gp::ListenTo(gAnnotFilterView, &AnnotFilterView::OnListUp))
                        ->Child(rows);
+
+    // ng: the ContextMenu wraps a box around the list, so the list's own
+    // right-press listener can keep the press from it
+    gpc::PopupMenu* popup = TrackPopup(cx, gpc::PopupMenu::New(cx, GStrL("annot-list-menu"))->MinW(200));
+    if (f->menu) {
+        for (const MenuItemModel& it : f->menu->items) {
+            popup->MenuWithAction(GpuiDup(cx->a, it.title), ActAnnotListMenu(), (intptr_t)it.cmdId);
+            popup->Disabled(it.disabled);
+        }
+    }
+    f->menuPopup = popup->state;
+    gp::El* listBox = gp::Div(cx->a)->FlexCol()->W(gp::kFill)->Shrink0()->Child(list);
+    gp::El* listEl = gpc::ContextMenu::New(cx, GStrL("annot-list-ctx"))->Child(listBox)->Menu(popup)->IntoEl();
+    listEl->OnAction(ActAnnotListMenu(), gp::ListenTo(gAnnotFilterView, &AnnotFilterView::OnMenuAction));
     if (ownWindow) {
-        list->OnMouseDown(gp::ListenTo(gAnnotFilterView, &AnnotFilterView::OnListDown));
         // what the whole rows leave of the window is under the list
-        card->Child(gp::Div(cx->a)->FlexCol()->W(gp::kFill)->Flex1()->MinH(0)->Child(list));
+        card->Child(gp::Div(cx->a)->FlexCol()->W(gp::kFill)->Flex1()->MinH(0)->Child(listEl));
     } else {
-        card->Child(list);
+        card->Child(listEl);
     }
     if (showNote) {
         card->Child(BuildNotePreview(f, cx, colText, fontScale));
@@ -1439,6 +1552,17 @@ TempStr AnnotFilterToolbarStateTemp(MainWindow* win) {
     // a second fmt: one call's instruction list tops out at 32
     out.Append(fmt("saveNewRect=%d,%d,%d,%d saveNewText=%s saveNewBg=%s\n", saveNewRc.x, saveNewRc.y, saveNewRc.dx,
                    saveNewRc.dy, SerializeColorTemp(saveNewTxt), SerializeColorTemp(btnBg)));
+    // in dips of the window the list is in, and the last row menu's labels
+    Rect listRc = FromGpui(f->listBounds);
+    str::Builder menu;
+    for (int i = 0; f->menu && i < len(f->menu->items); i++) {
+        if (i > 0) {
+            menu.AppendChar('|');
+        }
+        menu.Append(f->menu->items[i].title);
+    }
+    out.Append(fmt("listRect=%d,%d,%d,%d rowDy=%d menu=%s\n", listRc.x, listRc.y, listRc.dx, listRc.dy, (int)RowDy(),
+                   ToStrTemp(menu)));
     for (int i = 0; i < nVisible; i++) {
         out.Append(fmt("annot=%d sel=%d page=%d %s\n", i, IsSelected(f, i) ? 1 : 0, f->visibleAnnots[i]->pageNo,
                        AnnotationListRowTextTemp(f->visibleAnnots[i])));
