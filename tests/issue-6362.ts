@@ -5,6 +5,10 @@
 // of ~600K paths, compressed to little). After Right to page 2 the render
 // cache loads page 3 ahead; Right pressed meanwhile must land at once.
 //
+// Scrolling a continuous view into slow pages must not block the UI thread
+// either: the toolbar update asked for undo state, which waited for the lock
+// the render thread holds while drawing.
+//
 // Run: bun tests/issue-6362.ts [--no-build]
 
 import { writeFileSync } from "node:fs";
@@ -12,7 +16,11 @@ import { deflateSync } from "node:zlib";
 import { ControlCommand, type ControlClient } from "./control.ts";
 import { assemblePdf, runStandalone, tmpPath } from "./util.ts";
 import { findCanvas, killAndWait, launchControlled } from "./win-automation.ts";
-import { postMessage, sleep, VK_RIGHT, WM_KEYDOWN } from "./winapi.ts";
+import { postMessage, sendMessage, sleep, VK_RIGHT, WM_KEYDOWN } from "./winapi.ts";
+
+const WM_NULL = 0;
+const WM_VSCROLL = 0x115;
+const SB_PAGEDOWN = 3;
 
 // paths on a slow page
 const SLOW_PATHS = 600_000;
@@ -58,9 +66,39 @@ async function pressRight(client: ControlClient, canvas: number, page: number, t
   return -1;
 }
 
+// scroll a page down while the next page renders; how long the UI thread was busy
+async function scrollLatencyMs(canvas: number): Promise<number> {
+  postMessage(canvas, WM_VSCROLL, SB_PAGEDOWN, 0);
+  // let the render thread start drawing the page scrolled into view
+  await sleep(150);
+  const t0 = Date.now();
+  sendMessage(canvas, WM_NULL, 0, 0);
+  return Date.now() - t0;
+}
+
+async function testScroll(pdf: string): Promise<void> {
+  const { proc, client, frame } = await launchControlled(["-view", "continuous", "-zoom", "fit page", pdf]);
+  try {
+    await client.waitForRenderIdle(60000);
+    const canvas = findCanvas(frame);
+    let maxMs = 0;
+    for (let i = 0; i < SLOW_PAGES - 1; i++) {
+      maxMs = Math.max(maxMs, await scrollLatencyMs(canvas));
+    }
+    console.log(`issue-6362: scrolling into slow pages blocked the UI for up to ${maxMs} ms`);
+    if (maxMs > MAX_NAV_MS) {
+      throw new Error(`issue-6362: scrolling waited for the render (${maxMs} ms)`);
+    }
+  } finally {
+    client.close();
+    await killAndWait(proc);
+  }
+}
+
 export async function testit(): Promise<void> {
   const pdf = tmpPath("issue-6362.pdf");
   writeFileSync(pdf, makePdf(), "latin1");
+  await testScroll(pdf);
 
   const { proc, client, frame } = await launchControlled(["-view", "single page", "-zoom", "fit page", pdf]);
   try {

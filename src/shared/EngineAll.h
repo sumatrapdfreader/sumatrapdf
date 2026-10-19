@@ -120,6 +120,8 @@ void EngineMupdfBeginOperation(EngineBase*, const char* name);
 void EngineMupdfEndOperation(EngineBase*);
 bool EngineMupdfCanUndo(EngineBase*);
 bool EngineMupdfCanRedo(EngineBase*);
+bool EngineMupdfCanUndoNoWait(EngineBase*);
+bool EngineMupdfCanRedoNoWait(EngineBase*);
 bool EngineMupdfUndo(EngineBase*, Vec<Annotation*>& removedOut);
 bool EngineMupdfRedo(EngineBase*, Vec<Annotation*>& removedOut);
 void EngineMupdfRefreshModifiedState(EngineBase*);

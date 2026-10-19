@@ -221,6 +221,9 @@ class EngineMupdf : public EngineBase {
     bool createdRedactMark = false;
     // what EngineMupdfHasRedactMarksNoWait last saw, for when a render holds pagesLock
     bool hasRedactMarksSeen = false;
+    // what UndoPosNoWait last saw, for when a render holds docLock
+    int undoPosSeen = -1;
+    int undoStepsSeen = 0;
 
     // how many journal operations we have open (see EngineMupdfBeginOperation).
     // MuPDF can't undo / redo while one is, e.g. during a resize drag

@@ -805,8 +805,8 @@ AppCommandCtx NewAppCommandCtx(MainWindow* win, Point cursorPos) {
         ctx.hasUnsavedAnnotations = EngineHasUnsavedAnnotations(engine);
         ctx.hasRedactMarks = EngineHasRedactMarksNoWait(engine);
         ctx.hasUserRedactMarks = EngineHasUserRedactMarks(engine);
-        ctx.canUndo = EngineMupdfCanUndo(engine);
-        ctx.canRedo = EngineMupdfCanRedo(engine);
+        ctx.canUndo = EngineMupdfCanUndoNoWait(engine);
+        ctx.canRedo = EngineMupdfCanRedoNoWait(engine);
         ctx.isCursorOnPage = dm->GetPageNoByPoint(cursorPos) > 0;
         ctx.annotationUnderCursor = dm->GetAnnotationAtPos(cursorPos, nullptr);
         IPageElement* pageEl = dm->GetElementAtPos(cursorPos, nullptr);

@@ -9844,6 +9844,34 @@ bool EngineMupdfCanRedo(EngineBase* engine) {
     return pos >= 0 && pos < steps;
 }
 
+// For menu and toolbar state, rebuilt on every page change: a render holds
+// docLock for as long as the page takes to draw (#6362). While it is held,
+// answers what it last saw.
+static int UndoPosNoWait(EngineMupdf* e, int* stepsOut) {
+    if (!e) {
+        *stepsOut = 0;
+        return -1;
+    }
+    if (e->docLock.TryLock()) {
+        e->undoPosSeen = EngineMupdfUndoPos(e, &e->undoStepsSeen);
+        e->docLock.Unlock();
+    }
+    *stepsOut = e->undoStepsSeen;
+    return e->undoPosSeen;
+}
+
+bool EngineMupdfCanUndoNoWait(EngineBase* engine) {
+    int steps = 0;
+    int pos = UndoPosNoWait(AsEngineMupdf(engine), &steps);
+    return pos > 0;
+}
+
+bool EngineMupdfCanRedoNoWait(EngineBase* engine) {
+    int steps = 0;
+    int pos = UndoPosNoWait(AsEngineMupdf(engine), &steps);
+    return pos >= 0 && pos < steps;
+}
+
 static Annotation* FindWrapperForPdfAnnot(const Vec<Annotation*>& annots, pdf_annot* a) {
     for (Annotation* w : annots) {
         if (w && w->pdfannot == a) {
