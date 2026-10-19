@@ -156,3 +156,58 @@ bool RenderCache_UnitTestFullOfOneVisiblePage() {
     }
     return ok;
 }
+
+// Tiles left from an earlier zoom must not crowd out tiles for the current
+// zoom. Otherwise every finished render is dropped, the repaint re-requests it
+// and rendering never stops (#6366).
+bool RenderCache_UnitTestFullOfOldZoom() {
+    Settings* prevSettings = gSettings;
+    if (!gSettings) {
+        gSettings = NewSettings({});
+    }
+    EngineBase* engine = CreateEngineMupdfFromData(Str(kOnePagePdf), StrL("one-page.pdf"), nullptr);
+    if (!engine) {
+        return false;
+    }
+
+    NoopDocCb cb;
+    auto* dm = new DisplayModel(engine, &cb);
+    dm->SetInitialViewSettings(DisplayMode::Continuous, 1, {400, 300}, 96);
+    // the whole page is visible, so every tile of the old zoom is on screen
+    dm->Relayout(25, 0);
+
+    bool ok = false;
+    {
+        RenderCache cache;
+        cache.maxRenderThreads = 0;
+        PageRenderRequest visible;
+        visible.dm = dm;
+        visible.pageNo = 1;
+        visible.zoom = dm->GetRenderZoom(1);
+        visible.darkModeEpoch = cache.darkModeEpoch;
+        visible.tile = TilePosition(cache.GetTileRes(dm, 1), 0, 0);
+
+        constexpr u16 kOldRes = 5;
+        int nTiles = 1 << kOldRes;
+        for (int r = 0; r < nTiles && cache.cacheCount < kMaxBitmapsCached; r++) {
+            for (int c = 0; c < nTiles && cache.cacheCount < kMaxBitmapsCached; c++) {
+                PageRenderRequest req = visible;
+                req.zoom = visible.zoom * 8;
+                req.tile = TilePosition(kOldRes, (u16)r, (u16)c);
+                cache.Add(req, AllocPixmap(4, 4));
+            }
+        }
+        bool full = cache.cacheCount == kMaxBitmapsCached;
+        cache.Add(visible, AllocPixmap(4, 4));
+        ok = full && cache.Exists(dm, 1, visible.rotation, visible.zoom, &visible.tile);
+        cache.AbortRendering(dm);
+        cache.FreeForDisplayModel(dm);
+    }
+
+    delete dm;
+    if (!prevSettings) {
+        DeleteSettings(gSettings);
+        gSettings = nullptr;
+    }
+    return ok;
+}

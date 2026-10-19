@@ -393,6 +393,19 @@ static bool FreeIfFull(RenderCache* rc, const PageRenderRequest& req) {
         }
     }
 
+    // ... or a tile rendered at an earlier zoom or rotation (#6366)
+    for (int i = 0; i < n; i++) {
+        auto* entry = rc->cache[i];
+        if (entry->dm != dm) {
+            continue;
+        }
+        bool isStale = entry->zoom != dm->GetRenderZoom(entry->pageNo) ||
+                       entry->rotation != NormalizeRotation(dm->PageRotation(entry->pageNo));
+        if (isStale && rc->DropCacheEntryIfNotUsed(entry)) {
+            return true;
+        }
+    }
+
     // ... or an off-screen tile of a visible page (a deeply zoomed page has more tiles than the cache)
     for (int i = 0; i < n; i++) {
         auto* entry = rc->cache[i];

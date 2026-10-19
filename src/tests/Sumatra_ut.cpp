@@ -113,6 +113,7 @@ bool AnnotSearch_UnitTests();
 void ReadAloudHighlight_UnitTests();
 bool RenderCache_UnitTestCookieUnlocked();
 bool RenderCache_UnitTestFullOfOneVisiblePage();
+bool RenderCache_UnitTestFullOfOldZoom();
 
 // a color setting's row gets a swatch of its value, or of the value being typed
 static void PaletteRowColorTest() {
@@ -550,6 +551,7 @@ int RunAppUnitTests(bool forAi) {
     utassert(AnnotSearch_UnitTests());
     utassert(RenderCache_UnitTestCookieUnlocked());
     utassert(RenderCache_UnitTestFullOfOneVisiblePage());
+    utassert(RenderCache_UnitTestFullOfOldZoom());
     ReadAloudHighlight_UnitTests();
 #endif
     return utassert_print_results();
