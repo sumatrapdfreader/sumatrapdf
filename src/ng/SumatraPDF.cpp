@@ -6038,7 +6038,7 @@ void ExecuteCmd(MainWindow* win, int cmdId) {
         case CmdExec: {
             Str filter = GetCommandStringArg(cmd, kCmdArgFilter, {});
             Str cmdLine = GetCommandStringArg(cmd, kCmdArgExe, {});
-            if (len(cmdLine) > 0) {
+            if (len(cmdLine) > 0 && CanAccessDisk()) {
                 RunWithExe(tab, cmdLine, filter);
             }
             break;

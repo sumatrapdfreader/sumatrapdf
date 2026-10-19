@@ -9956,7 +9956,7 @@ static LRESULT FrameOnCommand(MainWindow* win, HWND hwnd, UINT msg, WPARAM wp, L
         case CmdExec: {
             auto filter = GetCommandStringArg(cmd, kCmdArgFilter, {});
             auto cmdLine = GetCommandStringArg(cmd, kCmdArgExe, {});
-            if (len(cmdLine) == 0) {
+            if (len(cmdLine) == 0 || !CanAccessDisk()) {
                 return 0;
             }
             RunWithExe(tab, cmdLine, filter);

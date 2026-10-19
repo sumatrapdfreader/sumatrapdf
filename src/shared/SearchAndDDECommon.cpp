@@ -2355,6 +2355,11 @@ Str HandleGetFileStateCmd(Str cmd, bool* ack, str::Builder& res) {
     return next;
 }
 
+// commands that launch an external program
+static bool IsRunProgramCmd(int cmdId) {
+    return cmdId == CmdExec || cmdId == CmdSelectionHandler || cmdId == CmdViewWithExternalViewer;
+}
+
 Str HandleCmdCommand(HWND hwnd, Str cmd, bool* ack) {
     TempStr cmdContent;
     Str next = str::Parse(cmd, "[%s]", &cmdContent);
@@ -2376,6 +2381,11 @@ Str HandleCmdCommand(HWND hwnd, Str cmd, bool* ack) {
     int cmdId = GetCommandIdByName(name);
     if (cmdId < 0) {
         return {};
+    }
+    // any process in the session can send DDE; don't let it run programs (GHSA-5wm7-225j-9qcj)
+    if (IsRunProgramCmd(cmdId)) {
+        logf("HandleCmdCommand: refusing '%s' from DDE\n", name);
+        return next;
     }
     MainWindow* win = WindowFromHwnd(hwnd);
     if (!win) {

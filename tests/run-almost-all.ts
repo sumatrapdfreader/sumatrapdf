@@ -146,6 +146,7 @@ import { testit as textSnippets } from "./text-snippets.ts";
 import { testit as signWithImage } from "./sign-with-image.ts";
 import { testit as alwaysShowSidebar } from "./always-show-sidebar.ts";
 import { testit as ghsaP2ph2rvmQ37m } from "./security-ghsa-p2ph-2rvm-q37m.ts";
+import { testit as ghsa5wm7225j9qcj } from "./security-ghsa-5wm7-225j-9qcj.ts";
 import { testit as issue4753 } from "./issue-4753.ts";
 import { testit as issue4055 } from "./issue-4055.ts";
 import { testit as issue2165 } from "./issue-2165.ts";
@@ -687,6 +688,7 @@ export const tests: NamedTest[] = [
   ["issue-3472", issue3472],
   ["pdf-only-menu-items", pdfOnlyMenuItems],
   ["security-ghsa-p2ph-2rvm-q37m", ghsaP2ph2rvmQ37m],
+  ["security-ghsa-5wm7-225j-9qcj", ghsa5wm7225j9qcj],
   ["issue-5780", issue5780],
   ["issue-5845", issue5845],
   ["issue-5963", issue5963],
