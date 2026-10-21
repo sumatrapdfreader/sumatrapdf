@@ -400,7 +400,10 @@ static void TimedJoinTest() {
     utassert(thread != nullptr);
     utassert(!JoinThread(&thread, 1));
     utassert(thread == nullptr);
-    SleepInMs(100);
+    // the detached worker still finishes; poll, a loaded CI runner can take long
+    for (int i = 0; i < 500 && !AtomicBoolGet(&gTimedJoinFinished); i++) {
+        SleepInMs(10);
+    }
     utassert(AtomicBoolGet(&gTimedJoinFinished));
 
     AtomicBoolSet(&gTimedJoinFinished, false);
