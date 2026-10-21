@@ -16232,6 +16232,7 @@ ContinueOpenWindow:
         // each window goes back to the virtual desktop it was on (#6271)
         ISumatraVirtualDesktopManager* vdm = CreateVirtualDesktopManager();
         MainWindow* winOnCurrentDesktop = nullptr;
+        int sessionGen = gInitialSessionDataGen;
         for (SessionData* data : *gInitialSessionData) {
             // create window hidden to avoid flashing the about page
             win = CreateAndShowMainWindow(data, false);
@@ -16299,9 +16300,22 @@ ContinueOpenWindow:
                 // trigger loading of the document
                 ReloadDocument(win, false);
             }
-            ShowMainWindow(win, data->windowState);
-            MoveWindowToVirtualDesktop(vdm, win->hwndFrame, data->virtualDesktopId);
-            if (IsWindowOnCurrentDesktop(vdm, win->hwndFrame)) {
+            int windowState = data->windowState;
+            TempStr desktopId = str::DupTemp(data->virtualDesktopId);
+            HWND hwndFrame = win->hwndFrame;
+            ShowMainWindow(win, windowState);
+            // COM calls to the shell dispatch incoming sent messages: a DDE
+            // [CmdExit] can close win and re-save (free) the session data
+            MoveWindowToVirtualDesktop(vdm, hwndFrame, desktopId);
+            bool onCurrentDesktop = IsWindowOnCurrentDesktop(vdm, hwndFrame);
+            if (!IsMainWindowValid(win) || sessionGen != gInitialSessionDataGen) {
+                logf("WinMain: window closed or session re-saved while restoring, stopping\n");
+                if (!IsMainWindowValid(win)) {
+                    win = nullptr;
+                }
+                break;
+            }
+            if (onCurrentDesktop) {
                 winOnCurrentDesktop = win;
             }
             // Docs were loaded while the frame was hidden (normal windowPos size).
@@ -16309,8 +16323,7 @@ ContinueOpenWindow:
             // final canvas so scroll isn't stuck on the pre-show viewport
             // (related to #5753 / #5823). ShowMainWindow already RelayoutFrame'd
             // a normal window to its restored size.
-            if (win->IsDocLoaded() &&
-                (data->windowState == WIN_STATE_MAXIMIZED || data->windowState == WIN_STATE_FULLSCREEN)) {
+            if (win->IsDocLoaded() && (windowState == WIN_STATE_MAXIMIZED || windowState == WIN_STATE_FULLSCREEN)) {
                 win->canvasRc = {};
                 win->UpdateCanvasSize();
             }
@@ -16320,7 +16333,7 @@ ContinueOpenWindow:
         }
         // the last window shown took the foreground; if it went to another
         // desktop, a window that stayed gets it and the cmd-line files instead
-        if (winOnCurrentDesktop && winOnCurrentDesktop != win) {
+        if (winOnCurrentDesktop && winOnCurrentDesktop != win && IsMainWindowValid(winOnCurrentDesktop)) {
             win = winOnCurrentDesktop;
             SetForegroundWindow(win->hwndFrame);
         }
@@ -16331,7 +16344,8 @@ ContinueOpenWindow:
             auto* tab = FindTabByFile(path);
             if (tab) {
                 tabToSelect = tab;
-                if (flags.forwardSearchOrigin && flags.forwardSearchLine && win->AsFixed() && win->AsFixed()->pdfSync) {
+                if (flags.forwardSearchOrigin && flags.forwardSearchLine && win && win->AsFixed() &&
+                    win->AsFixed()->pdfSync) {
                     int page;
                     Vec<Rect> rects;
                     TempStr srcPath = path::NormalizeTemp(flags.forwardSearchOrigin);

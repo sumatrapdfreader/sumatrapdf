@@ -209,6 +209,7 @@ import { testit as formJsThrow } from "./form-js-throw.ts";
 import { testit as closeTabDuringPlacement } from "./close-tab-during-placement.ts";
 import { testit as toggleZoomFailedTab } from "./toggle-zoom-failed-tab.ts";
 import { testit as restoreChmMissingTab } from "./restore-chm-missing-tab.ts";
+import { testit as restoreSessionCloseReentry } from "./restore-session-close-reentry.ts";
 import { testit as issue5943 } from "./issue-5943.ts";
 import { testit as issue6117 } from "./issue-6117.ts";
 import { testit as issue6118 } from "./issue-6118.ts";
@@ -556,6 +557,7 @@ export const tests: NamedTest[] = [
   ["close-tab-during-placement", closeTabDuringPlacement],
   ["toggle-zoom-failed-tab", toggleZoomFailedTab],
   ["restore-chm-missing-tab", restoreChmMissingTab],
+  ["restore-session-close-reentry", restoreSessionCloseReentry],
   ["issue-4705", issue4705],
   ["toc-tree-sent-click", tocTreeSentClick],
   ["issue-5956", issue5956],

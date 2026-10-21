@@ -535,6 +535,8 @@ static SessionData* CloneSessionData(const SessionData* src) {
 // not-yet-loaded (lazy) tabs, kept mirroring the live session by
 // SyncInitialSessionData() so it never carries closed-window entries.
 Vec<SessionData*>* gInitialSessionData = nullptr;
+// bumped when gInitialSessionData is rebuilt, freeing its SessionData
+int gInitialSessionDataGen = 0;
 
 #if defined(SUMATRA_NG)
 // ng: orig's SaveSettings() calls UpdateTabFileDisplayStateForTab() for every
@@ -609,6 +611,7 @@ static void SyncInitialSessionData() {
         return;
     }
     FreeSessionDataVec(gInitialSessionData);
+    gInitialSessionDataGen++;
     for (SessionData* sd : *gSettings->sessionData) {
         VecAppend(*gInitialSessionData, CloneSessionData(sd));
     }

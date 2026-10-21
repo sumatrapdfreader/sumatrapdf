@@ -12,6 +12,7 @@ enum {
 extern bool gDontSaveSettings;
 
 extern Vec<SessionData*>* gInitialSessionData;
+extern int gInitialSessionDataGen;
 extern void (*gRememberSessionStateFn)();
 
 struct PlatformFont;
