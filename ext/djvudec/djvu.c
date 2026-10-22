@@ -3057,6 +3057,7 @@ const int16_t djvu_iw44_zigzag[1024] = {
   231, 247, 743, 759, 239, 255, 751, 767, 487, 503, 999, 1015, 495, 511, 1007, 1023,
 };
 
+#include <limits.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -3124,16 +3125,30 @@ struct iw_pixmap {
     int w, h;
 };
 
+static int iw_padded_area(int bw, int bh)
+{
+    long long n;
+    if (bw < 0 || bh < 0)
+        return -1;
+    n = (long long)bw * bh;
+    return n > INT_MAX ? -1 : (int)n;
+}
+
 static iw_map *map_new(djvu_ctx *ctx, int w, int h)
 {
-    iw_map *m = (iw_map *)djvu_alloc(ctx, sizeof(iw_map));
+    iw_map *m;
     size_t blocks_bytes;
+    int area;
+    if (w < 0 || h < 0) return NULL;
+    m = (iw_map *)djvu_alloc(ctx, sizeof(iw_map));
     if (!m) return NULL;
     memset(m, 0, sizeof(*m));
     m->w = w; m->h = h;
     m->bw = (w + 0x20 - 1) & ~0x1f;
     m->bh = (h + 0x20 - 1) & ~0x1f;
-    m->nb = (m->bw * m->bh) / 1024;
+    area = iw_padded_area(m->bw, m->bh);
+    if (area < 0) { djvu_free(ctx, m); return NULL; }
+    m->nb = area / 1024;
     blocks_bytes = sizeof(iw_block) * (size_t)m->nb;
     m->blocks = (iw_block *)djvu_alloc(ctx, blocks_bytes);
     if (!m->blocks) { djvu_free(ctx, m); return NULL; }
