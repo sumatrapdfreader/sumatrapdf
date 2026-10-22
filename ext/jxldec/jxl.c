@@ -1111,6 +1111,7 @@ int jxl_render_splines(jxl_ctx *ctx, jxl_fimage *img, const jxl_splines *sp,
 int jxl_render_noise(jxl_ctx *ctx, jxl_fimage *img, const jxl_noise_params *np,
                      const jxl_frame_header *fh, uint32_t visible_frames,
                      uint32_t invisible_frames, float corr_x, float corr_b);
+int jxl_output_buffer_size(int w, int h, int bpp, int *stride, size_t *total);
 
 int jxl_upsample_plane(jxl_ctx *ctx, jxl_fplane *p, uint32_t shift,
                        const jxl_image_metadata *meta, uint32_t out_w,
@@ -16219,16 +16220,34 @@ static int decode_frame_planes(jxl_doc *doc, int frame_no, jxl_fimage *img) {
     return walk_frames(doc, frame_no, img, NULL, NULL);
 }
 
+int jxl_output_buffer_size(int w, int h, int bpp, int *stride, size_t *total) {
+    uint64_t stride64, total64;
+    if (w <= 0 || h <= 0 || bpp <= 0) return -1;
+    stride64 = (uint64_t)w * (uint64_t)bpp;
+    if (stride64 > (uint64_t)INT32_MAX) return -1;
+    total64 = stride64 * (uint64_t)h;
+    if (total64 > (uint64_t)SIZE_MAX) return -1;
+    *stride = (int)stride64;
+    *total = (size_t)total64;
+    return 0;
+}
+
 jxl_image *jxl_frame_render(jxl_doc *doc, int frame_no, jxl_format fmt) {
     jxl_ctx *ctx;
     jxl_render_info info;
     jxl_fimage img;
     jxl_image *out = NULL;
     size_t total;
+    int stride;
 
     if (!doc) return NULL;
     ctx = doc->ctx;
     if (jxl_frame_render_info(doc, frame_no, fmt, &info) != 0) return NULL;
+
+    if (jxl_output_buffer_size(info.width, info.height,
+                               jxl_format_bpp(info.format), &stride, &total) != 0)
+        return NULL;
+
     memset(&img, 0, sizeof(img));
     if (decode_frame_planes(doc, frame_no, &img) != 0) return NULL;
 
@@ -16237,12 +16256,7 @@ jxl_image *jxl_frame_render(jxl_doc *doc, int frame_no, jxl_format fmt) {
     out->width = info.width;
     out->height = info.height;
     out->format = info.format;
-    out->stride = info.width * jxl_format_bpp(info.format);
-    if (!jxl_size_mul((size_t)out->stride, (size_t)out->height, &total)) {
-        jxl_free(ctx, out);
-        out = NULL;
-        goto done;
-    }
+    out->stride = stride;
 
     out->data = (uint8_t *)jxl_malloc(ctx, total ? total : 1);
 #ifdef JXL_POISON_UNINIT
