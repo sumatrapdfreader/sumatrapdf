@@ -90,6 +90,7 @@ struct PaletteSwitch {
 };
 constexpr int kPaletteMaxSwitches = 8;
 int PaletteSwitches(PaletteSources& src, bool hasPageThumbnails, PaletteSwitch* out);
+Str PaletteSwitchLabel(Str label, Str prefix);
 bool PaletteSwitchIsActive(Str filter, Str prefix);
 
 // one "Enter run command" hint in the row under the list

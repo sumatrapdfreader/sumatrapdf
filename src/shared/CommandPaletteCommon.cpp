@@ -517,6 +517,14 @@ int PaletteSwitches(PaletteSources& src, bool hasPageThumbnails, PaletteSwitch* 
     return n;
 }
 
+// Translations can omit the prefix; never slice into the first UTF-8 character.
+Str PaletteSwitchLabel(Str label, Str prefix) {
+    if (str::TrimPrefix(label, prefix)) {
+        str::TrimWs(label);
+    }
+    return label;
+}
+
 // the switch of the mode the query is in; an empty query lists commands
 bool PaletteSwitchIsActive(Str filter, Str prefix) {
     if (len(filter) == 0) {
