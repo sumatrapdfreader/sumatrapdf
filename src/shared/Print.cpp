@@ -857,7 +857,10 @@ static bool PrintPageInBands(EngineBase& engine, HDC hdc, int pageNo, float zoom
             }
             args.cookie_out = &abortCookie->cookie;
         }
-        Pixmap* bmp = engine.RenderPage(args);
+        // 24bpp, not 32bpp: for a v4 (XPS-based) driver, Windows spools a 32bpp
+        // bitmap as an RGBA image although print renders are opaque, and the
+        // driver renders that more slowly than RGB. Palette DIBs come back as is.
+        Pixmap* bmp = PixmapToBgr(engine.RenderPage(args));
         if (abortCookie) {
             abortCookie->Clear();
         }
