@@ -11739,8 +11739,13 @@ static LRESULT FrameOnCommand(MainWindow* win, HWND hwnd, UINT msg, WPARAM wp, L
             }
             if (len(path) == 0) {
                 path = PickImageFilePathTemp(win->hwndFrame);
+                // the dialog's message loop can reload or close the document
+                if (!IsMainWindowValidAndNotClosing(win) || win->CurrentTab() != tab) {
+                    return 0;
+                }
+                dm = win->AsFixed();
             }
-            if (len(path) == 0) {
+            if (len(path) == 0 || !dm) {
                 return 0;
             }
             Str data = file::ReadFile(path);

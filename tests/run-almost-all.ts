@@ -429,6 +429,7 @@ import { testit as issue6312 } from "./issue-6312.ts";
 import { testit as toolPoster } from "./tool-poster.ts";
 import { testit as toolMerge } from "./tool-merge.ts";
 import { testit as toolGrep } from "./tool-grep.ts";
+import { testit as insertImageReload } from "./insert-image-reload.ts";
 import { testit as mergeStructParents } from "./merge-struct-parents.ts";
 import { testit as reuseInstanceFullscreen } from "./reuse-instance-fullscreen.ts";
 import { testit as attachmentOpenExternal } from "./attachment-open-external.ts";
@@ -862,6 +863,7 @@ export const tests: NamedTest[] = [
   ["tool-poster", toolPoster],
   ["tool-merge", toolMerge],
   ["tool-grep", toolGrep],
+  ["insert-image-reload", insertImageReload],
   ["merge-struct-parents", mergeStructParents],
   ["reuse-instance-fullscreen", reuseInstanceFullscreen],
   ["attachment-open-external", attachmentOpenExternal],
