@@ -835,6 +835,10 @@ static TempWStr NormalizeTemp(WStr path) {
     if (cch > 0) {
         WCHAR* longBuf = AllocArrayTemp<WCHAR>((int)cch);
         DWORD nLong = GetLongPathNameW(fullPath.s, longBuf, cch);
+        // 0 or a bigger size if the file was deleted or renamed since the size query
+        if (nLong == 0 || nLong >= cch) {
+            return LongPathTemp(fullPath);
+        }
         normPath = WStr(longBuf, (int)nLong);
         if (cch <= MAX_PATH) {
             return normPath;
@@ -845,7 +849,9 @@ static TempWStr NormalizeTemp(WStr path) {
     if (cch && cch <= MAX_PATH) {
         WCHAR* shortBuf = AllocArrayTemp<WCHAR>((int)cch);
         DWORD nShort = GetShortPathNameW(fullPath.s, shortBuf, cch);
-        return WStr(shortBuf, (int)nShort);
+        if (nShort > 0 && nShort < cch) {
+            return WStr(shortBuf, (int)nShort);
+        }
     }
     return LongPathTemp(normPath);
 }
