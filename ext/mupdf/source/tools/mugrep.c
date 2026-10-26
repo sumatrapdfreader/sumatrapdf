@@ -338,6 +338,13 @@ mugrep_run(char *filename, fz_document *doc, char *pattern, fz_search_options op
 
 static void silence(void *user, const char *message) {}
 
+static int mugrep_bad_options(void)
+{
+	fz_report_error(ctx);
+	fz_drop_context(ctx);
+	return EXIT_FAILURE;
+}
+
 int mugrep_main(int argc, char **argv)
 {
 	fz_document *doc = NULL;
@@ -376,10 +383,16 @@ int mugrep_main(int argc, char **argv)
 		switch (c)
 		{
 		case 'O':
-			fz_parse_stext_options(ctx, &stext_options, fz_optarg);
+			fz_try(ctx)
+				fz_parse_stext_options(ctx, &stext_options, fz_optarg);
+			fz_catch(ctx)
+				return mugrep_bad_options();
 			break;
 		case 'S':
-			fz_parse_search_options(ctx, &options, fz_optarg);
+			fz_try(ctx)
+				fz_parse_search_options(ctx, &options, fz_optarg);
+			fz_catch(ctx)
+				return mugrep_bad_options();
 			break;
 		case 'F':
 			is_fixed_string = 1;

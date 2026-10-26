@@ -65,6 +65,7 @@ relative to `ext/mupdf`, so `-p1` from inside that directory.
 | `0062-svg-rgba-font-face` | SVG `rgba()` colors and `@font-face` data URI fonts (WOFF/TTF) in `<style>`; such text drew black in Times (#6339) |
 | `0063-epub-fixed-layout-page` | an EPUB chapter whose viewport gives width and height is one page of exactly that size, without the `@page` margin; such books had blank pages between chapters (#1293) |
 | `0064-html-css-transform` | CSS `transform` / `transform-origin` on blocks and `position:absolute` on inline boxes; InDesign fixed-layout text (`scale(0.05)` around per-word positioned spans) ran off the page (#1293) |
+| `0065-grep-catch-bad-options` | `grep -S` / `-O` report an unknown option instead of aborting with no `fz_try` |
 
 That is the whole list: `ext/mupdf` is byte-for-byte `1.28.5` plus these
 patches, and nothing else.
