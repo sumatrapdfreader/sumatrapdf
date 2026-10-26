@@ -3468,7 +3468,7 @@ static bool gLoadQueueDispatchPosted = false;
 static UINT_PTR gLoadingMessageTimer = 0;
 
 bool AreLoadThreadsActive() {
-    return gLoadThreadsActive > 0;
+    return gLoadThreadsActive > 0 || AreThumbnailThreadsActive();
 }
 
 bool HasPendingDocumentLoads() {

@@ -2616,9 +2616,36 @@ static Pixmap* RenderFileThumbnail(CreateThumbnailFromFileData* d) {
     return bmp;
 }
 
+// thumbnail threads read gSettings and file history, so a settings reload
+// waits for them like for load threads; only touched on the UI thread
+static int gThumbnailThreadsActive = 0;
+
+bool AreThumbnailThreadsActive() {
+    return gThumbnailThreadsActive > 0;
+}
+
+static void ThumbnailThreadStarted() {
+    gThumbnailThreadsActive++;
+}
+
+static void ThumbnailThreadFinished() {
+    gThumbnailThreadsActive--;
+    ReportIf(gThumbnailThreadsActive < 0);
+#if !defined(SUMATRA_NG)
+    if (gThumbnailThreadsActive == 0) {
+        uitask::Post(MkFunc0Void(ReloadDeferredSettings), "ReloadDeferredSettings");
+    }
+#endif
+}
+
+static void CreateThumbnailFromFileDone(CreateThumbnailFromFileData* d) {
+    CreateThumbnailFromFileFinish(d);
+    ThumbnailThreadFinished();
+}
+
 static void CreateThumbnailFromFileThread(CreateThumbnailFromFileData* d) {
     d->bmp = RenderFileThumbnail(d);
-    auto fn = MkFunc0<CreateThumbnailFromFileData>(CreateThumbnailFromFileFinish, d);
+    auto fn = MkFunc0<CreateThumbnailFromFileData>(CreateThumbnailFromFileDone, d);
     uitask::Post(fn, "SetThumbnailFromFile");
     DestroyTempArena();
 }
@@ -2631,6 +2658,7 @@ void CreateThumbnailFromFileAsync(FileState* ds, EngineBase* engine) {
     d->engine = engine;
     d->fileEBookUI = CopyFileEBookUI(ds->eBookUI);
     auto fn = MkFunc0<CreateThumbnailFromFileData>(CreateThumbnailFromFileThread, d);
+    ThumbnailThreadStarted();
     RunAsync(fn, StrL("CreateThumbnailFromFile"));
 }
 
@@ -2692,6 +2720,11 @@ static void HideThumbnailProgress() {
     }
 }
 
+static void RegenerateThumbnailsDone() {
+    HideThumbnailProgress();
+    ThumbnailThreadFinished();
+}
+
 // renders one file at a time; each finished thumbnail is set and shown on
 // the UI thread before the next file starts
 static void RegenerateThumbnailsThread(RegenerateThumbnailsData* data) {
@@ -2708,7 +2741,7 @@ static void RegenerateThumbnailsThread(RegenerateThumbnailsData* data) {
         uitask::Post(fn, "SetThumbnailFromFile");
         ResetTempArena();
     }
-    uitask::Post(MkFunc0Void(HideThumbnailProgress), "ThumbnailProgressDone");
+    uitask::Post(MkFunc0Void(RegenerateThumbnailsDone), "ThumbnailProgressDone");
     delete data;
     DestroyTempArena();
 }
@@ -2738,6 +2771,7 @@ void OnThumbnailsTypeChanged() {
         VecAppend(data->files, NewThumbnailData(fs));
     }
     auto fn = MkFunc0<RegenerateThumbnailsData>(RegenerateThumbnailsThread, data);
+    ThumbnailThreadStarted();
     RunAsync(fn, StrL("RegenerateThumbnails"));
 }
 
@@ -2767,6 +2801,7 @@ void RegenerateMissingThumbnails() {
     }
     logf("RegenerateMissingThumbnails: %d\n", len(data->files));
     auto fn = MkFunc0<RegenerateThumbnailsData>(RegenerateThumbnailsThread, data);
+    ThumbnailThreadStarted();
     RunAsync(fn, StrL("RegenerateThumbnails"));
 }
 
