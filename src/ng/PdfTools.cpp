@@ -327,6 +327,10 @@ struct PdfToolDlg {
     MergeInsertAt mergeAskAt = MergeInsertAt::End;
     gp::InputState* mergeAskEdit = nullptr;
     bool mergeAskFocus = false;
+    // the pages last copied or cut; pasted while the system clipboard still
+    // has the text copying them put there (orig: its sequence number)
+    Vec<MergePageDlg> mergeClip;
+    Str mergeClipText; // owned
 };
 
 // Merge PDF (orig has one such window), and the single-purpose tool that is
@@ -621,6 +625,8 @@ static void FreeToolState(gp::Window* toolWin) {
     }
     VecReset(gTool.mergeSources);
     VecReset(gTool.mergePages);
+    VecReset(gTool.mergeClip);
+    str::FreePtr(&gTool.mergeClipText);
     str::Free(gTool.srcPath);
     gTool.srcPath = {};
     str::Free(gTool.password);
@@ -1453,6 +1459,110 @@ static void MergeInsertPages(int sourceNo, int at) {
     gTool.mergeAnchorIdx = at;
 }
 
+// orig's MergeGrid::CopySelected: the selected pages to our clipboard, their
+// names to the system one
+static void MergeCopySelected() {
+    VecReset(gTool.mergeClip);
+    str::Builder text;
+    for (const MergePageDlg& it : gTool.mergePages) {
+        if (!it.selected) {
+            continue;
+        }
+        VecAppend(gTool.mergeClip, it);
+        Str path = gTool.mergeSources[it.sourceNo].path;
+        text.Append(fmt(Tr("%s, page %d").s, path::GetBaseNameTemp(path), it.pageNo));
+        text.AppendChar('\n');
+    }
+    if (len(gTool.mergeClip) == 0 || !gTool.win) {
+        return;
+    }
+    str::FreePtr(&gTool.mergeClipText);
+    gTool.mergeClipText = str::Dup(ToStrTemp(text));
+    gp::ClipboardSetText(gTool.win->gpuiWin, ToGpui(gTool.mergeClipText));
+}
+
+// copies the selected pages and takes them out; nothing is selected after
+static void MergeCutSelected() {
+    MergeCopySelected();
+    if (len(gTool.mergeClip) == 0) {
+        return;
+    }
+    Vec<MergePageDlg>& items = gTool.mergePages;
+    Vec<MergePageDlg> rest;
+    int first = -1;
+    for (int i = 0; i < len(items); i++) {
+        if (!items[i].selected) {
+            VecAppend(rest, items[i]);
+        } else if (first < 0) {
+            first = i;
+        }
+    }
+    VecReset(items);
+    for (const MergePageDlg& it : rest) {
+        VecAppend(items, it);
+    }
+    gTool.mergeFocusIdx = limitValue(first, 0, std::max(0, len(items) - 1));
+    gTool.mergeAnchorIdx = gTool.mergeFocusIdx;
+}
+
+// copies of the pages last copied or cut, selected, in front of item `at`
+static void MergePastePages(int at) {
+    Vec<MergePageDlg>& items = gTool.mergePages;
+    for (MergePageDlg& it : items) {
+        it.selected = false;
+    }
+    at = limitValue(at, 0, len(items));
+    for (int i = 0; i < len(gTool.mergeClip); i++) {
+        MergePageDlg it = gTool.mergeClip[i];
+        it.selected = true;
+        VecInsertAt(items, at + i, it);
+    }
+    gTool.mergeFocusIdx = at;
+    gTool.mergeAnchorIdx = at;
+    MergeEnsureVisible(at / std::max(1, gTool.mergeCols));
+    StartMergeThumbs();
+}
+
+// the platform's line ends may differ from what we put there
+static bool IsMergeClipText(Str text) {
+    if (len(gTool.mergeClip) == 0 || len(text) == 0) {
+        return false;
+    }
+    return str::Eq(str::ReplaceTemp(text, StrL("\r\n"), StrL("\n")), gTool.mergeClipText);
+}
+
+// PDF files copied in a file manager; ng: also a text of such paths, one a
+// line, where gpui has no file list (Linux, macOS)
+static void MergePdfPathsFromClipboard(const gp::ClipboardItem& item, StrVec& out) {
+    Str all = FromGpui(item.HasExternalPaths() ? item.externalPaths : item.text);
+    StrVec lines;
+    Split(&lines, str::ReplaceTemp(all, StrL("\r"), StrL("")), StrL("\n"), true);
+    for (Str line : lines) {
+        if (str::EndsWithI(line, StrL(".pdf")) && file::Exists(line)) {
+            out.Append(line);
+        }
+    }
+}
+
+static void AddMergeSourcesAt(const StrVec& paths, int at);
+
+// orig's MergePdfWnd::Paste: the pages last copied or cut, else PDF files
+// copied in a file manager; after the last selected page
+static void MergePaste() {
+    if (!gTool.win) {
+        return;
+    }
+    int at = MergeInsertPosition();
+    gp::ClipboardItem item = gp::ClipboardGetItem(gp::GetTempArena(), gTool.win->gpuiWin);
+    if (IsMergeClipText(FromGpui(item.text))) {
+        MergePastePages(at);
+        return;
+    }
+    StrVec paths;
+    MergePdfPathsFromClipboard(item, paths);
+    AddMergeSourcesAt(paths, at);
+}
+
 // arrows move through the pages; with Shift they extend the selection
 static void MergeMoveFocus(int idx, bool shift) {
     Vec<MergePageDlg>& items = gTool.mergePages;
@@ -1749,6 +1859,8 @@ static void MergeAddPrompt() {
     uitask::Post(MkFunc0(MergeAddPromptNow, gTool.win), "MergeAddPdf");
 }
 
+static TempStr MergeInfoTemp();
+
 TempStr MergePdfResultTemp(Str action, Str arg, int n, int* exitCodeOut) {
     auto finish = [exitCodeOut](int code, TempStr res) -> TempStr {
         if (exitCodeOut) {
@@ -1805,6 +1917,15 @@ TempStr MergePdfResultTemp(Str action, Str arg, int n, int* exitCodeOut) {
     } else if (str::Eq(action, StrL("rotate"))) {
         selectItems();
         MergeRotate(n);
+    } else if (str::Eq(action, StrL("copy"))) {
+        selectItems();
+        MergeCopySelected();
+    } else if (str::Eq(action, StrL("cut"))) {
+        selectItems();
+        MergeCutSelected();
+    } else if (str::Eq(action, StrL("paste"))) {
+        selectItems();
+        MergePaste();
     } else if (str::Eq(action, StrL("save")) || str::Eq(action, StrL("saveas"))) {
         TempStr path = str::DupTemp(str::Eq(action, StrL("save")) ? gTool.srcPath : arg);
         bool ok = MergeSaveTo(path);
@@ -1878,6 +1999,7 @@ TempStr MergePdfResultTemp(Str action, Str arg, int n, int* exitCodeOut) {
         ask = InputTextTemp(gTool.mergeAskEdit);
     }
     out.Append(fmt(" asking=%d ask=%s", (int)(len(gTool.mergeAskPaths) > 0), ask));
+    out.Append(fmt(" info=\"%s\"", MergeInfoTemp()));
     return finish(0, fmt("OK %s", ToStrTemp(out)));
 }
 
@@ -2227,6 +2349,9 @@ enum {
     kMenuRotateLeft,
     kMenuRotateRight,
     kMenuSelectAll,
+    kMenuCut,
+    kMenuCopy,
+    kMenuPaste,
 };
 
 static uint32_t ActMergeMenu() {
@@ -2242,6 +2367,12 @@ void PdfToolView::OnMergeMenu(PdfToolView*, gp::Ctx* cx, const gp::ActionEvent* 
         MergeRotate(cmd == kMenuRotateRight ? 90 : -90);
     } else if (cmd == kMenuSelectAll) {
         MergeSelectAll();
+    } else if (cmd == kMenuCut) {
+        MergeCutSelected();
+    } else if (cmd == kMenuCopy) {
+        MergeCopySelected();
+    } else if (cmd == kMenuPaste) {
+        MergePaste();
     }
     gp::Notify(cx);
     AppShellInvalidate(gTool.win);
@@ -2345,6 +2476,12 @@ static bool MergeOnKeyDown(MainWindow* win, int vk, bool ctrl, bool shift) {
         }
         return false;
     }
+    // pasting works without pages too
+    if (ctrl && vk == 'V') {
+        MergePaste();
+        AppShellInvalidate(win);
+        return true;
+    }
     int n = len(gTool.mergePages);
     if (n == 0) {
         return false;
@@ -2392,6 +2529,18 @@ static bool MergeOnKeyDown(MainWindow* win, int vk, bool ctrl, bool shift) {
                 return false;
             }
             MergeSelectAll();
+            break;
+        case 'C':
+            if (!ctrl) {
+                return false;
+            }
+            MergeCopySelected();
+            break;
+        case 'X':
+            if (!ctrl) {
+                return false;
+            }
+            MergeCutSelected();
             break;
         default:
             return false;
@@ -3263,6 +3412,19 @@ static gp::El* MergePagesEl(gp::Ctx* cx, float viewDx, float viewDy) {
     menu->Disabled(nSel == 0);
     menu->Kbd(GStrL("]"));
     menu->Separator();
+    menu->MenuWithAction(GpuiDup(cx->a, ParseMenuAccelTextTemp(Tr("Cu&t")).display), ActMergeMenu(),
+                         (intptr_t)kMenuCut);
+    menu->Disabled(nSel == 0);
+    menu->Kbd(GStrL("Ctrl+X"));
+    menu->MenuWithAction(GpuiDup(cx->a, ParseMenuAccelTextTemp(Tr("&Copy")).display), ActMergeMenu(),
+                         (intptr_t)kMenuCopy);
+    menu->Disabled(nSel == 0);
+    menu->Kbd(GStrL("Ctrl+C"));
+    // ng: always enabled; reading the clipboard every frame is a round trip on X11
+    menu->MenuWithAction(GpuiDup(cx->a, ParseMenuAccelTextTemp(Tr("&Paste")).display), ActMergeMenu(),
+                         (intptr_t)kMenuPaste);
+    menu->Kbd(GStrL("Ctrl+V"));
+    menu->Separator();
     menu->MenuWithAction(GpuiDup(cx->a, ParseMenuAccelTextTemp(Tr("Select &All")).display), ActMergeMenu(),
                          (intptr_t)kMenuSelectAll);
     menu->Kbd(GStrL("Ctrl+A"));
@@ -3284,8 +3446,13 @@ static TempStr MergeInfoTemp() {
     for (const MergePageDlg& page : gTool.mergePages) {
         nRemoved += page.removed ? 1 : 0;
     }
-    return nRemoved > 0 ? fmt(Tr("%d pages, %d removed").s, len(gTool.mergePages) - nRemoved, nRemoved)
-                        : fmt(Tr("%d pages").s, len(gTool.mergePages));
+    TempStr s = nRemoved > 0 ? fmt(Tr("%d pages, %d removed").s, len(gTool.mergePages) - nRemoved, nRemoved)
+                             : fmt(Tr("%d pages").s, len(gTool.mergePages));
+    int nSel = MergeSelectedCount();
+    if (nSel > 0) {
+        s = fmt("%s, %s", s, fmt(Tr("%d selected").s, nSel));
+    }
+    return s;
 }
 
 constexpr int kMergeWinMinDx = 480;

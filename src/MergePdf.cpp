@@ -166,6 +166,10 @@ struct MergeGrid : VirtListBox {
     // where the mouse was last, local coords; auto scroll goes on from it
     Point lastPt;
     bool autoScrolling = false;
+    // the pages last copied or cut; pasted while the system clipboard is still
+    // what copying them put there (clipSeq)
+    Vec<MergeItem> clip;
+    DWORD clipSeq = 0;
 
     MergeGrid(MergePdfWnd*, MergeSources*, PlatformFont*, int dpi);
     ~MergeGrid() override;
@@ -197,6 +201,10 @@ struct MergeGrid : VirtListBox {
     void SetRemoved(bool removed);
     void Rotate(int degrees);
     void InsertPages(MergeSource*, int at);
+    void CopySelected();
+    void CutSelected();
+    bool HasClipPages();
+    void PastePages(int at);
     int SelectedCount();
     int SelectedRemovedCount();
     int InsertPosition();
@@ -244,6 +252,7 @@ struct MergePdfWnd : WindowBase {
     void UpdateUI();
     bool SaveTo(Str destPath);
     void AfterSave(Str path);
+    void Paste();
 
     void OnAdd(VirtMouseEvent* ev = nullptr);
     void OnRemove(VirtMouseEvent* ev = nullptr);
@@ -254,6 +263,7 @@ struct MergePdfWnd : WindowBase {
     void OnKey(KeyEvent* ev);
     void OnTimer(WindowBase::TimerEvent* ev);
     void PaintInfo(VirtPaintCtx* ctx);
+    TempStr InfoTemp();
 };
 
 static MergePdfWnd* gMergeWnd = nullptr;
@@ -749,6 +759,69 @@ void MergeGrid::InsertPages(MergeSource* src, int at) {
     EnsureVisible(at / cols);
 }
 
+// the selected pages to our clipboard; the system one gets their names, so
+// whatever is copied after them is pasted instead
+void MergeGrid::CopySelected() {
+    VecReset(clip);
+    str::Builder text;
+    for (MergeItem& it : items) {
+        if (!it.selected) {
+            continue;
+        }
+        VecAppend(clip, it);
+        text.Append(fmt(Tr("%s, page %d").s, path::GetBaseNameTemp(it.src->path), it.pageNo));
+        text.Append(StrL("\r\n"));
+    }
+    if (len(clip) == 0) {
+        return;
+    }
+    CopyTextToClipboard(ToStrTemp(text));
+    clipSeq = GetClipboardSequenceNumber();
+}
+
+// copies the selected pages and takes them out; nothing is selected after
+void MergeGrid::CutSelected() {
+    CopySelected();
+    if (len(clip) == 0) {
+        return;
+    }
+    Vec<MergeItem> rest;
+    int first = -1;
+    for (int i = 0; i < len(items); i++) {
+        if (!items[i].selected) {
+            VecAppend(rest, items[i]);
+        } else if (first < 0) {
+            first = i;
+        }
+    }
+    VecReset(items);
+    VecAppendVec(items, rest);
+    focusIdx = first;
+    anchorIdx = first;
+    ItemsChanged();
+}
+
+bool MergeGrid::HasClipPages() {
+    return len(clip) > 0 && GetClipboardSequenceNumber() == clipSeq;
+}
+
+// copies of the pages last copied or cut, selected, in front of item `at`
+void MergeGrid::PastePages(int at) {
+    for (MergeItem& it : items) {
+        it.selected = false;
+    }
+    at = ClampI(at, 0, len(items));
+    for (int i = 0; i < len(clip); i++) {
+        MergeItem it = clip[i];
+        it.selected = true;
+        VecInsertAt(items, at + i, it);
+    }
+    focusIdx = at;
+    anchorIdx = at;
+    ItemsChanged();
+    EnsureVisible(at / cols);
+}
+
 void MergeGrid::SetHover(int idx) {
     if (idx == hoverIdx) {
         return;
@@ -1019,6 +1092,14 @@ void MergeGrid::MoveFocus(int idx, bool shift) {
 
 // arrows move through the pages, Delete removes (or restores) the selected ones
 void MergeGrid::OnGridKeyDown(VirtKeyEvent* ev) {
+    // pasting works without pages too
+    if (ev->isCtrl && ev->vkey == 'V') {
+        ev->didHandle = true;
+        if (wnd) {
+            wnd->Paste();
+        }
+        return;
+    }
     int n = len(items);
     if (n == 0) {
         return;
@@ -1069,6 +1150,14 @@ void MergeGrid::OnGridKeyDown(VirtKeyEvent* ev) {
         SelectAll();
         return;
     }
+    if (ev->isCtrl && ev->vkey == 'C') {
+        CopySelected();
+        return;
+    }
+    if (ev->isCtrl && ev->vkey == 'X') {
+        CutSelected();
+        return;
+    }
     ev->didHandle = false;
 }
 
@@ -1078,6 +1167,9 @@ enum {
     kMenuRotateLeft,
     kMenuRotateRight,
     kMenuSelectAll,
+    kMenuCut,
+    kMenuCopy,
+    kMenuPaste,
 };
 
 void MergeGrid::ShowContextMenu() {
@@ -1091,6 +1183,12 @@ void MergeGrid::ShowContextMenu() {
     AppendMenuW(menu, rotateFlags, kMenuRotateLeft, CWStrTemp(fmt("%s\t[", Tr("Rotate &Left"))));
     AppendMenuW(menu, rotateFlags, kMenuRotateRight, CWStrTemp(fmt("%s\t]", Tr("Rotate &Right"))));
     AppendMenuW(menu, MF_SEPARATOR, 0, nullptr);
+    AppendMenuW(menu, rotateFlags, kMenuCut, CWStrTemp(fmt("%s\tCtrl+X", Tr("Cu&t"))));
+    AppendMenuW(menu, rotateFlags, kMenuCopy, CWStrTemp(fmt("%s\tCtrl+C", Tr("&Copy"))));
+    bool canPaste = HasClipPages() || IsClipboardFormatAvailable(CF_HDROP);
+    UINT pasteFlags = MF_STRING | (canPaste ? 0 : MF_GRAYED);
+    AppendMenuW(menu, pasteFlags, kMenuPaste, CWStrTemp(fmt("%s\tCtrl+V", Tr("&Paste"))));
+    AppendMenuW(menu, MF_SEPARATOR, 0, nullptr);
     AppendMenuW(menu, MF_STRING, kMenuSelectAll, CWStrTemp(Tr("Select &All\tCtrl+A")));
     POINT pt{};
     GetCursorPos(&pt);
@@ -1102,6 +1200,12 @@ void MergeGrid::ShowContextMenu() {
         Rotate(cmd == kMenuRotateRight ? 90 : -90);
     } else if (cmd == kMenuSelectAll) {
         SelectAll();
+    } else if (cmd == kMenuCut) {
+        CutSelected();
+    } else if (cmd == kMenuCopy) {
+        CopySelected();
+    } else if (cmd == kMenuPaste && wnd) {
+        wnd->Paste();
     }
 }
 
@@ -1175,13 +1279,7 @@ void MergeGrid::StartRendering() {
 
 //--- dropping PDF files on the grid
 
-static void PdfPathsFromDataObject(IDataObject* dataObj, StrVec& out) {
-    FORMATETC fmt = {CF_HDROP, nullptr, DVASPECT_CONTENT, -1, TYMED_HGLOBAL};
-    STGMEDIUM medium{};
-    if (FAILED(dataObj->GetData(&fmt, &medium)) || !medium.hGlobal) {
-        return;
-    }
-    HDROP hDrop = (HDROP)medium.hGlobal;
+static void PdfPathsFromHDrop(HDROP hDrop, StrVec& out) {
     int nFiles = DragQueryFileW(hDrop, DRAGQUERY_NUMFILES, nullptr, 0);
     WCHAR pathW[MAX_PATH]{};
     for (int i = 0; i < nFiles; i++) {
@@ -1191,7 +1289,28 @@ static void PdfPathsFromDataObject(IDataObject* dataObj, StrVec& out) {
             out.Append(path);
         }
     }
+}
+
+static void PdfPathsFromDataObject(IDataObject* dataObj, StrVec& out) {
+    FORMATETC fmt = {CF_HDROP, nullptr, DVASPECT_CONTENT, -1, TYMED_HGLOBAL};
+    STGMEDIUM medium{};
+    if (FAILED(dataObj->GetData(&fmt, &medium)) || !medium.hGlobal) {
+        return;
+    }
+    PdfPathsFromHDrop((HDROP)medium.hGlobal, out);
     ReleaseStgMedium(&medium);
+}
+
+// PDF files copied in a file manager
+static void PdfPathsFromClipboard(HWND hwnd, StrVec& out) {
+    if (!IsClipboardFormatAvailable(CF_HDROP) || !OpenClipboard(hwnd)) {
+        return;
+    }
+    HANDLE h = GetClipboardData(CF_HDROP);
+    if (h) {
+        PdfPathsFromHDrop((HDROP)h, out);
+    }
+    CloseClipboard();
 }
 
 struct AddDroppedPdfs {
@@ -1357,15 +1476,7 @@ bool MergePdfWnd::AddPdf(Str path, int at) {
 // One control that takes the free space: a longer text needs no layout, which
 // would end a drag
 void MergePdfWnd::PaintInfo(VirtPaintCtx* ctx) {
-    int nPages = len(grid->items);
-    int nRemoved = 0;
-    for (MergeItem& it : grid->items) {
-        nRemoved += it.removed ? 1 : 0;
-    }
-    TempStr s = fmt(Tr("%d pages").s, nPages - nRemoved);
-    if (nRemoved > 0) {
-        s = fmt(Tr("%d pages, %d removed").s, nPages - nRemoved, nRemoved);
-    }
+    TempStr s = InfoTemp();
     Rect r = ctx->content;
     int gap = fontMeta->averageCharWidth;
     ctx->gfx->PushClip(ctx->clip.Intersect(r));
@@ -1383,6 +1494,24 @@ void MergePdfWnd::PaintInfo(VirtPaintCtx* ctx) {
         x += ts.dx + (gap * 4);
     }
     ctx->gfx->PopClip();
+}
+
+// "7 pages, 1 removed, 2 selected"
+TempStr MergePdfWnd::InfoTemp() {
+    int nPages = len(grid->items);
+    int nRemoved = 0;
+    for (MergeItem& it : grid->items) {
+        nRemoved += it.removed ? 1 : 0;
+    }
+    TempStr s = fmt(Tr("%d pages").s, nPages - nRemoved);
+    if (nRemoved > 0) {
+        s = fmt(Tr("%d pages, %d removed").s, nPages - nRemoved, nRemoved);
+    }
+    int nSel = grid->SelectedCount();
+    if (nSel > 0) {
+        s = fmt("%s, %s", s, fmt(Tr("%d selected").s, nSel));
+    }
+    return s;
 }
 
 static void PaintMergeInfo(MergePdfWnd* w, VirtPaintCtx* ctx) {
@@ -1655,6 +1784,23 @@ void MergePdfWnd::OnAdd(VirtMouseEvent*) {
         at += len(grid->items) - n;
     }
     SetFocusTo(grid);
+}
+
+// Ctrl+V: the pages last copied or cut, else PDF files copied in a file
+// manager; after the last selected page
+void MergePdfWnd::Paste() {
+    int at = grid->InsertPosition();
+    if (grid->HasClipPages()) {
+        grid->PastePages(at);
+        return;
+    }
+    StrVec paths;
+    PdfPathsFromClipboard(hwnd, paths);
+    for (Str path : paths) {
+        int n = len(grid->items);
+        AddPdf(path, at);
+        at += len(grid->items) - n;
+    }
 }
 
 void MergePdfWnd::OnRemove(VirtMouseEvent*) {
@@ -1941,9 +2087,11 @@ static void ReleaseCtrlKey() {
 // PDF path, n: in front of that item, -1: where Add PDF... puts it), "askpos"
 // (arg: a PDF path; asks where to add it, like Add PDF...), "move"
 // (arg: 0-based items like "0,2", n: in front of that item), "remove" /
-// "restore" (arg: items), "rotate" (arg: items, n: degrees), "save" / "saveas"
-// (arg: the path), "ctrla" (presses Ctrl+A), "close" or "" (report only). Reports the items as
-// src:page[@rotation] (r: removed, s: selected) and,
+// "restore" (arg: items), "rotate" (arg: items, n: degrees), "copy" / "cut"
+// (arg: items), "paste" (arg: items, the paste goes after the last), "save" /
+// "saveas" (arg: the path), "ctrla" (presses Ctrl+A), "close" or "" (report
+// only). Reports the items as src:page[@rotation] (r: removed, s: selected),
+// the status text (info="...") and,
 // for clicking, the dialog's hwnd and each visible thumbnail and its corner
 // button in client coords. Used by tests/issue-6070.ts.
 TempStr MergePdfResultTemp(Str action, Str arg, int n, int* exitCodeOut) {
@@ -1993,6 +2141,15 @@ TempStr MergePdfResultTemp(Str action, Str arg, int n, int* exitCodeOut) {
     } else if (str::Eq(action, StrL("rotate"))) {
         selectItems();
         grid->Rotate(n);
+    } else if (str::Eq(action, StrL("copy"))) {
+        selectItems();
+        grid->CopySelected();
+    } else if (str::Eq(action, StrL("cut"))) {
+        selectItems();
+        grid->CutSelected();
+    } else if (str::Eq(action, StrL("paste"))) {
+        selectItems();
+        w->Paste();
     } else if (str::Eq(action, StrL("save")) || str::Eq(action, StrL("saveas"))) {
         Str path = str::Eq(action, StrL("save")) ? Str(w->docPath) : arg;
         bool ok = w->SaveTo(path);
@@ -2040,5 +2197,6 @@ TempStr MergePdfResultTemp(Str action, Str arg, int n, int* exitCodeOut) {
         out.Append(fmt("%d:%d,%d,%d,%d:%d,%d,%d,%d;", i, r.x + origin.x, r.y + origin.y, r.dx, r.dy, b.x + origin.x,
                        b.y + origin.y, b.dx, b.dy));
     }
+    out.Append(fmt(" info=\"%s\"", w->InfoTemp()));
     return finish(0, fmt("OK %s", ToStrTemp(out)));
 }

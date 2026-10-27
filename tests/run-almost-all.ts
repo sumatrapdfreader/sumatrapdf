@@ -329,6 +329,7 @@ import { testit as sidebarThumbnailsClose } from "./sidebar-thumbnails-close.ts"
 import { testit as issue6070 } from "./issue-6070.ts";
 import { testit as issue6371 } from "./issue-6371.ts";
 import { testit as issue6372 } from "./issue-6372.ts";
+import { testit as issue5890 } from "./issue-5890.ts";
 import { testit as wheelWhileClosing } from "./wheel-while-closing.ts";
 import { testit as printDialogMultiFile } from "./print-dialog-multi-file.ts";
 import { testit as issue6259 } from "./issue-6259.ts";
@@ -483,6 +484,7 @@ export const tests: NamedTest[] = [
   ["issue-6070", issue6070],
   ["issue-6371", issue6371],
   ["issue-6372", issue6372],
+  ["issue-5890", issue5890],
   ["annotation clipboard tests", annotationClipboardTests],
   ["issue-6252", issue6252],
   ["issue-6239", issue6239],

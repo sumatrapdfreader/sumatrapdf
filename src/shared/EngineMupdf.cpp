@@ -10020,6 +10020,11 @@ bool EngineMupdfMergePdfs(const Vec<PdfMergeSource>& srcs, const Vec<PdfMergePag
     // index in the base document of each page of the result
     Vec<int> order;
     VecAppendBlanks(order, nPages);
+    // a base page that is in the result again: grafted like another source's,
+    // so each is a page object of its own (rotated on its own)
+    Vec<u8> grafted;
+    VecAppendBlanks(grafted, nPages);
+    bool hasRepeated = false;
     pdf_document* doc = nullptr;
     pdf_document* src = nullptr;
     pdf_graft_map* map = nullptr;
@@ -10031,23 +10036,32 @@ bool EngineMupdfMergePdfs(const Vec<PdfMergeSource>& srcs, const Vec<PdfMergePag
     fz_try(ctx) {
         doc = OpenPdfForMerge(ctx, srcs[0]);
         int nBase = pdf_count_pages(ctx, doc);
+        Vec<u8> used;
+        VecAppendBlanks(used, nBase);
         for (int i = 0; i < nPages; i++) {
             if (pages[i].src == 0) {
                 if (pages[i].pageNo < 1 || pages[i].pageNo > nBase) {
                     fz_throw(ctx, FZ_ERROR_ARGUMENT, "no page %d", pages[i].pageNo);
                 }
                 order[i] = pages[i].pageNo - 1;
+                if (used[order[i]]) {
+                    grafted[i] = 1;
+                    hasRepeated = true;
+                }
+                used[order[i]] = 1;
+            } else {
+                grafted[i] = 1;
             }
         }
-        // the pages of the other sources go to the end, then into place below
-        for (int s = 1; s < len(srcs); s++) {
+        // the grafted pages go to the end, then into place below
+        for (int s = hasRepeated ? 0 : 1; s < len(srcs); s++) {
             src = OpenPdfForMerge(ctx, srcs[s]);
             // in memory only: the file isn't changed
             pdf_bake_document(ctx, src, 1, 1);
             int nSrc = pdf_count_pages(ctx, src);
             map = pdf_new_graft_map(ctx, doc);
             for (int i = 0; i < nPages; i++) {
-                if (pages[i].src != s) {
+                if (pages[i].src != s || !grafted[i]) {
                     continue;
                 }
                 if (pages[i].pageNo < 1 || pages[i].pageNo > nSrc) {
