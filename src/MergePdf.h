@@ -4,4 +4,5 @@
 struct MainWindow;
 
 void ShowMergePdfDialog(MainWindow* win);
+bool IsHwndInMergePdfWindow(HWND hwnd);
 TempStr MergePdfResultTemp(Str action, Str arg, int n, int* exitCodeOut = nullptr);

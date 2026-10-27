@@ -13940,6 +13940,10 @@ static HACCEL FindAcceleratorsForHwnd(HWND hwnd, HWND* hwndAccel, bool* forwardS
         return editAccTable;
     }
 
+    if (IsHwndInMergePdfWindow(hwnd)) {
+        return nullptr;
+    }
+
     HWND hwndCP = CommandPaletteHwndForAccelerator(hwnd);
     if (hwndCP) {
         *hwndAccel = hwndCP;

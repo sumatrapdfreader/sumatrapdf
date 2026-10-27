@@ -1886,6 +1886,13 @@ bool MergePdfWnd::Create(MainWindow* w, WindowTab* tab) {
     return true;
 }
 
+// the dialog handles its own keys: the owner frame's accelerators would take
+// them (Ctrl+A selected the document's text, issue #6372)
+bool IsHwndInMergePdfWindow(HWND hwnd) {
+    HWND wnd = gMergeWnd ? gMergeWnd->hwnd : nullptr;
+    return wnd && hwnd && (hwnd == wnd || IsChild(wnd, hwnd));
+}
+
 void ShowMergePdfDialog(MainWindow* win) {
     WindowTab* tab = win ? win->CurrentTab() : nullptr;
     if (!tab || !tab->IsDocLoaded() || len(tab->filePath) == 0 || !EngineMupdfIsPdf(tab->GetEngine())) {
@@ -1923,12 +1930,19 @@ static void AskAndAddPdfNow(AskAndAddPdf* d) {
     delete d;
 }
 
+static void ReleaseCtrlKey() {
+    BYTE keys[256];
+    GetKeyboardState(keys);
+    keys[VK_CONTROL] &= ~0x80;
+    SetKeyboardState(keys);
+}
+
 // Drives the Merge PDF dialog and reports it. action: "open", "add" (arg: a
 // PDF path, n: in front of that item, -1: where Add PDF... puts it), "askpos"
 // (arg: a PDF path; asks where to add it, like Add PDF...), "move"
 // (arg: 0-based items like "0,2", n: in front of that item), "remove" /
 // "restore" (arg: items), "rotate" (arg: items, n: degrees), "save" / "saveas"
-// (arg: the path), "close" or "" (report only). Reports the items as
+// (arg: the path), "ctrla" (presses Ctrl+A), "close" or "" (report only). Reports the items as
 // src:page[@rotation] (r: removed, s: selected) and,
 // for clicking, the dialog's hwnd and each visible thumbnail and its corner
 // button in client coords. Used by tests/issue-6070.ts.
@@ -1990,6 +2004,16 @@ TempStr MergePdfResultTemp(Str action, Str arg, int n, int* exitCodeOut) {
     } else if (str::Eq(action, StrL("close"))) {
         w->Close();
         return finish(0, str::DupTemp(StrL("OK closed")));
+    } else if (str::Eq(action, StrL("ctrla"))) {
+        // Ctrl+A through the message loop (and its accelerators), Ctrl held
+        // until the key has been processed
+        BYTE keys[256];
+        GetKeyboardState(keys);
+        keys[VK_CONTROL] |= 0x80;
+        SetKeyboardState(keys);
+        PostMessageW(w->hwnd, WM_KEYDOWN, 'A', 1);
+        PostMessageW(w->hwnd, WM_KEYUP, 'A', 0xC0000001);
+        uitask::Post(MkFunc0Void(ReleaseCtrlKey));
     }
     out.Append(fmt("hwnd=%d focused=%d items=", (int)(intptr_t)w->hwnd, (int)grid->HasFlag(vwfFocused)));
     for (int i = 0; i < len(grid->items); i++) {

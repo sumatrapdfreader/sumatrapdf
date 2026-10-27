@@ -2474,7 +2474,7 @@ void ShellView::OnKeyDown(ShellView* self, gp::Ctx* cx, const gp::KeyEvent* ev) 
         return;
     }
     // the Merge PDF dialog's page grid: arrows, Delete, Ctrl + A
-    if (!editFocused && PdfToolDialogOnKeyDown(win, (int)ev->vk, ev->ctrl, ev->shift)) {
+    if (!editFocused && PdfToolDialogOnKeyDown(win, (int)ev->vk, ev->ctrl || ev->platform, ev->shift)) {
         mut->propagate = false;
         gp::Notify(cx);
         return;
