@@ -1950,7 +1950,11 @@ static void OnMouseLeftButtonDblClk(MainWindow* win, int x, int y, WPARAM key) {
         return;
     }
     if (gPressOnlyDeselected) {
+        // the first click deselected another annotation; free text still edits (#6387)
         gPressOnlyDeselected = false;
+        if (!IsPlacingHighlighterAnnotation(win)) {
+            StartFreeTextInPlaceEditAt(win, Point{x, y});
+        }
         return;
     }
     // while an annotation is selected, double-clicking it (to edit free text in

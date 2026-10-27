@@ -2860,6 +2860,10 @@ static bool OnMouseLeftButtonDblClk(MainWindow* win, int x, int y) {
     }
     if (win->pressOnlyDeselected) {
         win->pressOnlyDeselected = false;
+        // the first click deselected another annotation; free text still edits (#6387)
+        if (!IsPlacingHighlighterAnnotation(win) && StartFreeTextInPlaceEditAt(win, Point{x, y})) {
+            return true;
+        }
         // gpui counts the next click here as a double-click. Orig still gets a
         // WM_LBUTTONDOWN, which selects or deselects on its own.
         return false;
