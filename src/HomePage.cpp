@@ -2104,6 +2104,14 @@ static TempStr RectCsvTemp(const Rect& r) {
     return fmt("%d,%d,%d,%d", r.x, r.y, r.dx, r.dy);
 }
 
+static bool HomeVScrollShown(MainWindow* win) {
+    auto& c = HomeLayout(win);
+    if (ScrollbarsUseOverlay()) {
+        return win->overlayScrollV && c.valid && c.totalContentDy > c.thumbsVisibleDy;
+    }
+    return (GetWindowLongW(win->hwndCanvas, GWL_STYLE) & WS_VSCROLL) != 0;
+}
+
 // The home page's keyboard state: which entry the arrows have selected, how
 // many entries are currently shown (the search box filters them) and whether
 // the search box has the focus. A test driving the home page with keys waits on
@@ -2152,11 +2160,11 @@ TempStr HomeSelectionResultTemp(int* exitCodeOut) {
     // the tip shown (promo or tip, index) and its band, for picking another one
     Rect tipRect = c.hasTip ? c.rcTip : Rect{};
     return finish(0, fmt("OK sel=%d entries=%d searchFocus=%d searchBox=%d search=%s outline=%s outlineFull=%s path=%s "
-                         "listView=%d listIcon=%s thumbsArea=%s lastCaption=%s tip=%d,%d tipRect=%s",
+                         "listView=%d listIcon=%s thumbsArea=%s lastCaption=%s tip=%d,%d tipRect=%s vbar=%d",
                          sel, len(c.thumbs), searchFocus, searchBox, RectCsvTemp(search), RectCsvTemp(outline),
                          RectCsvTemp(outlineFull), path, HomePageIsListView() ? 1 : 0, RectCsvTemp(c.rcIconListView),
                          RectCsvTemp(c.rcThumbsArea), RectCsvTemp(lastCaption), gSelectedIsPromo ? 1 : 0,
-                         gSelectedTipIdx, RectCsvTemp(tipRect)));
+                         gSelectedTipIdx, RectCsvTemp(tipRect), HomeVScrollShown(win) ? 1 : 0));
 }
 
 // What the home page list drew for each row: the path, the size text as drawn,
@@ -3021,6 +3029,28 @@ static void UpdateHomeOverlayScrollbar(MainWindow* win) {
     OverlayScrollbarShow(win->overlayScrollV, show);
 }
 
+// the canvas' own scrollbar in windows mode (issue #6367). Can't flip-flop:
+// showing it only narrows the page (more rows), hiding it only widens it
+static void UpdateHomeWinScrollbar(MainWindow* win) {
+    if (ScrollbarsAreHidden() || ScrollbarsUseOverlay()) {
+        return;
+    }
+    auto& c = HomeLayout(win);
+    bool show = c.valid && c.totalContentDy > c.thumbsVisibleDy;
+    if (show) {
+        SCROLLINFO si{};
+        si.cbSize = sizeof(si);
+        si.fMask = SIF_ALL;
+        si.nMin = 0;
+        si.nMax = c.totalContentDy - 1;
+        si.nPage = c.thumbsVisibleDy;
+        si.nPos = win->homePageScrollY;
+        SetScrollInfo(win->hwndCanvas, SB_VERT, &si, TRUE);
+    }
+    // may resize the canvas, which re-lays out the page
+    ShowScrollBar(win->hwndCanvas, SB_VERT, show);
+}
+
 void HomePageCreate(MainWindow* win) {
     if (!win || !win->hwndCanvas) {
         return;
@@ -3070,6 +3100,7 @@ void HomePageRelayout(MainWindow* win) {
     }
     UpdateHomeSearchCueBanner(win);
     UpdateHomeOverlayScrollbar(win);
+    UpdateHomeWinScrollbar(win);
 }
 
 void DrawHomePage(MainWindow* win, Gfx* gfx) {
@@ -3460,8 +3491,16 @@ void HomePageOnVScroll(MainWindow* win, WPARAM wp) {
         case SB_THUMBPOSITION: {
             int pos = (int)(short)HIWORD(wp);
             // overlay scrollbar sends full position in HIWORD for THUMBTRACK
-            if (win->overlayScrollV) {
+            if (win->overlayScrollV && ScrollbarsUseOverlay()) {
                 pos = win->overlayScrollV->nTrackPos;
+            } else {
+                // HIWORD is only 16 bits
+                SCROLLINFO si{};
+                si.cbSize = sizeof(si);
+                si.fMask = SIF_TRACKPOS;
+                if (GetScrollInfo(win->hwndCanvas, SB_VERT, &si)) {
+                    pos = si.nTrackPos;
+                }
             }
             newScrollY = pos;
             break;

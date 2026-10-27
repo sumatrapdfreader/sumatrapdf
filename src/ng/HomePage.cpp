@@ -337,6 +337,8 @@ struct HomePageUI {
     // the entries' height is only known once they were painted: the first
     // frame asks for a second one so the scrollbar can be there
     bool askedForMeasure = false;
+    // the vertical scrollbar was built last frame
+    bool vbarShown = false;
     // false from invalidate until the next HomePageBuild refills files
     bool filesLaidOut = false;
     Vec<FileState*> files;
@@ -1829,6 +1831,7 @@ gp::El* HomePageBuild(MainWindow* win, gp::Ctx* cx) {
         OverlayScrollbarsSyncMode(win);
         show = IsOverlayScrollbarVisible(win->overlayScrollV);
     }
+    h->vbarShown = show;
     if (show) {
         OverlayScrollbar* sb = win->overlayScrollV;
         OverlayScrollbarSetInfo(sb, 0, totalContentDy - 1, thumbsVisibleDy, (int)h->scrollY);
@@ -1901,12 +1904,13 @@ TempStr HomeSelectionForWindowTemp(int* exitCodeOut, int winIdx) {
         lastCaption = BoundsRect(h->entryBounds[len(h->entryBounds) - 1]);
     }
     Rect tipRect = BoundsRect(h->tipBounds);
-    return finish(0, fmt("OK sel=%d entries=%d searchFocus=%d searchBox=%d search=%s outline=%s outlineFull=%s path=%s "
-                         "listView=%d listIcon=%s thumbsArea=%s lastCaption=%s tip=%d,%d tipRect=%s",
-                         sel, h->entryCount, searchFocus ? 1 : 0, searchBox, RectCsvTemp(search), RectCsvTemp(outline),
-                         RectCsvTemp(outlineFull), path, HomePageIsListView() ? 1 : 0,
-                         RectCsvTemp(BoundsRect(h->listIconBounds)), RectCsvTemp(BoundsRect(h->entriesView)),
-                         RectCsvTemp(lastCaption), gSelectedIsPromo ? 1 : 0, gSelectedTipIdx, RectCsvTemp(tipRect)));
+    return finish(
+        0, fmt("OK sel=%d entries=%d searchFocus=%d searchBox=%d search=%s outline=%s outlineFull=%s path=%s "
+               "listView=%d listIcon=%s thumbsArea=%s lastCaption=%s tip=%d,%d tipRect=%s vbar=%d",
+               sel, h->entryCount, searchFocus ? 1 : 0, searchBox, RectCsvTemp(search), RectCsvTemp(outline),
+               RectCsvTemp(outlineFull), path, HomePageIsListView() ? 1 : 0, RectCsvTemp(BoundsRect(h->listIconBounds)),
+               RectCsvTemp(BoundsRect(h->entriesView)), RectCsvTemp(lastCaption), gSelectedIsPromo ? 1 : 0,
+               gSelectedTipIdx, RectCsvTemp(tipRect), h->vbarShown ? 1 : 0));
 }
 
 TempStr HomeSelectionResultTemp(int* exitCodeOut) {

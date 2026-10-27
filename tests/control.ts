@@ -163,6 +163,8 @@ export type HomeSelection = {
   // "<isPromo>,<index>" of the tip shown, and its band
   tip: string;
   tipRect: number[];
+  // a vertical scrollbar is shown for the entries
+  vbar: boolean;
   raw: string;
 };
 
@@ -613,11 +615,12 @@ export class ControlClient {
         lastCaption: [0, 0, 0, 0],
         tip: "",
         tipRect: [0, 0, 0, 0],
+        vbar: false,
         raw,
       };
     }
     const m =
-      /OK sel=(-?\d+) entries=(\d+) searchFocus=(\d) searchBox=(\d) search=(-?\d+),(-?\d+),(-?\d+),(-?\d+) outline=(-?\d+),(-?\d+),(-?\d+),(-?\d+) outlineFull=(-?\d+),(-?\d+),(-?\d+),(-?\d+) path=(.*) listView=(\d) listIcon=(-?\d+),(-?\d+),(-?\d+),(-?\d+) thumbsArea=(-?\d+),(-?\d+),(-?\d+),(-?\d+) lastCaption=(-?\d+),(-?\d+),(-?\d+),(-?\d+) tip=(\d,-?\d+) tipRect=(-?\d+),(-?\d+),(-?\d+),(-?\d+)$/.exec(
+      /OK sel=(-?\d+) entries=(\d+) searchFocus=(\d) searchBox=(\d) search=(-?\d+),(-?\d+),(-?\d+),(-?\d+) outline=(-?\d+),(-?\d+),(-?\d+),(-?\d+) outlineFull=(-?\d+),(-?\d+),(-?\d+),(-?\d+) path=(.*) listView=(\d) listIcon=(-?\d+),(-?\d+),(-?\d+),(-?\d+) thumbsArea=(-?\d+),(-?\d+),(-?\d+),(-?\d+) lastCaption=(-?\d+),(-?\d+),(-?\d+),(-?\d+) tip=(\d,-?\d+) tipRect=(-?\d+),(-?\d+),(-?\d+),(-?\d+) vbar=(\d)$/.exec(
         raw,
       );
     if (!m) {
@@ -639,6 +642,7 @@ export class ControlClient {
       lastCaption: [parseInt(m[27], 10), parseInt(m[28], 10), parseInt(m[29], 10), parseInt(m[30], 10)],
       tip: m[31],
       tipRect: [parseInt(m[32], 10), parseInt(m[33], 10), parseInt(m[34], 10), parseInt(m[35], 10)],
+      vbar: m[36] === "1",
       raw,
     };
   }
