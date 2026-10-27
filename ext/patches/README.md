@@ -67,6 +67,7 @@ relative to `ext/mupdf`, so `-p1` from inside that directory.
 | `0064-html-css-transform` | CSS `transform` / `transform-origin` on blocks and `position:absolute` on inline boxes; InDesign fixed-layout text (`scale(0.05)` around per-word positioned spans) ran off the page (#1293) |
 | `0065-grep-catch-bad-options` | `grep -S` / `-O` report an unknown option instead of aborting with no `fz_try` |
 | `0066-murun-name-tree-null` | `run` scripts: embedded-file and name-tree helpers work on PDFs without `/Names` and on trees with `/Kids` |
+| `0067-murun-get-array-index` | `run` scripts: multi-key `PDFObject.get()` indexes an array with its own key, not the first one |
 
 That is the whole list: `ext/mupdf` is byte-for-byte `1.28.5` plus these
 patches, and nothing else.

@@ -1,0 +1,18 @@
+murun: multi-key PDFObject.get() indexes arrays with the current key
+
+ffi_PDFObject_get_imp read argument 1 instead of i on reaching an
+array, so get("Root", "Pages", "Kids", 1) returned Kids[0].
+---
+diff --git a/source/tools/murun.c b/source/tools/murun.c
+index ec57783dd..14e9fc3bc 100644
+--- a/source/tools/murun.c
++++ b/source/tools/murun.c
+@@ -9132,7 +9132,7 @@ static pdf_obj *ffi_PDFObject_get_imp(js_State *J, int inheritable)
+ 
+ 	for (i = 1; i < n && obj; ++i) {
+ 		if (pdf_is_array(ctx, obj)) {
+-			int key = js_tointeger(J, 1);
++			int key = js_tointeger(J, i);
+ 			fz_try(ctx)
+ 				obj = val = pdf_array_get(ctx, obj, key);
+ 			fz_catch(ctx)

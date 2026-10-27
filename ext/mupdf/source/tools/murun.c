@@ -9132,7 +9132,7 @@ static pdf_obj *ffi_PDFObject_get_imp(js_State *J, int inheritable)
 
 	for (i = 1; i < n && obj; ++i) {
 		if (pdf_is_array(ctx, obj)) {
-			int key = js_tointeger(J, 1);
+			int key = js_tointeger(J, i);
 			fz_try(ctx)
 				obj = val = pdf_array_get(ctx, obj, key);
 			fz_catch(ctx)
