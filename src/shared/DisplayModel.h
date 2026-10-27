@@ -410,6 +410,7 @@ struct DisplayModel : DocController {
     bool pauseRendering = false;
 
     bool pendingRelayout = false;
+    bool inSetViewPortSize = false;
     bool hasPendingScroll = false;
     ScrollState pendingScroll;
 

@@ -2467,6 +2467,16 @@ void DisplayModel::RenderVisibleParts() {
 }
 
 void DisplayModel::SetViewPortSize(Size newViewPortSize) {
+    // restoring scroll below toggles scrollbars, which re-enters via WM_SIZE with
+    // the same size; that call would remember the mid-restore position (#6405)
+    if (inSetViewPortSize && newViewPortSize == totalViewPortSize) {
+        return;
+    }
+    bool wasInSetViewPortSize = inSetViewPortSize;
+    inSetViewPortSize = true;
+    defer {
+        inSetViewPortSize = wasInSetViewPortSize;
+    };
     ScrollState ss;
 
     bool hadLayout = zoomReal >= 0.01f;
