@@ -188,7 +188,8 @@ void BrowserDocController::SetZoomVirtual(float zoom, Point*) {
     if (zoom > 0) {
         zoom = limitValue(zoom, kZoomMin, kZoomMax);
     }
-    if (!IsValidZoom(zoom)) {
+    // fit modes (kZoomFitPage etc.) are negative and mean nothing to a browser
+    if (zoom <= 0 || !IsValidZoom(zoom)) {
         zoom = 100.0f;
     }
     BrowserViewSetZoomPercent(docView, (int)zoom);

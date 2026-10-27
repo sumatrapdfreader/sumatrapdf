@@ -434,6 +434,7 @@ import { testit as toolbarTabSwitchPos } from "./toolbar-tab-switch-pos.ts";
 import { testit as facingFitTinyViewport } from "./facing-fit-tiny-viewport.ts";
 import { testit as mdMissingFile } from "./ad-hoc-md-missing-file.ts";
 import { testit as issue6148 } from "./issue-6148.ts";
+import { testit as issue6393 } from "./issue-6393.ts";
 import { testit as issue6184 } from "./issue-6184.ts";
 import { testit as issue6220 } from "./issue-6220.ts";
 import { testit as sessionRestoreTabState } from "./session-restore-tab-state.ts";
@@ -559,6 +560,7 @@ export const tests: NamedTest[] = [
   ["ad-hoc-md-missing-file", mdMissingFile],
   ["issue-6142", issue6142],
   ["issue-6148", issue6148],
+  ["issue-6393", issue6393],
   ["issue-6143", issue6143],
   ["issue-5993", issue5993],
   ["issue-2629", issue2629],
