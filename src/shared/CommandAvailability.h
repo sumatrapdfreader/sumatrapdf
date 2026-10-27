@@ -69,7 +69,6 @@ struct AppCommandCtx {
     bool canCloseTabsToRight = false;
     bool canCloseTabsToLeft = false;
 
-    bool canSendEmail = false;
     // the document's own permission (orig's MenuUpdatePrintItem)
     bool allowsPrinting = true;
     bool allowToggleMenuBar = true;

@@ -505,7 +505,6 @@ AppCommandCtx NewAppCommandCtx(MainWindow* win, Point cursorPos) {
         ctx.isReflowable = engine && engine->isReflowable;
         ctx.engineKind = ctx.tab->GetEngineType();
         ctx.engineHasErrors = engine && engine->HasErrors();
-        ctx.canSendEmail = CanSendAsEmailAttachment(ctx.tab);
 #ifndef DISABLE_DOCUMENT_RESTRICTIONS
         ctx.allowsPrinting = !win->AsFixed() || (engine && engine->AllowsPrinting());
 #endif

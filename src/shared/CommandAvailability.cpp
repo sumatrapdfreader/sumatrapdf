@@ -604,7 +604,8 @@ CommandVisibility GetCommandVisibility(int cmdId, const AppCommandCtx& ctx, Comm
         return CommandVisibility::Hide;
     }
 
-    if (!ctx.canSendEmail && cmdId == CmdSendByEmail) {
+    // checked here, not in the ctx: it stats the file, slow on network drives (#6369)
+    if (cmdId == CmdSendByEmail && !(ctx.tab && CanSendAsEmailAttachment(ctx.tab))) {
         return CommandVisibility::Hide;
     }
 
