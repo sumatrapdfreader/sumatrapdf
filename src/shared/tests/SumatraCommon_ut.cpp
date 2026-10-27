@@ -21,6 +21,7 @@
 #include "PdfSync.h"
 #include "UpdateCheck.h"
 #include "UpdateCheckCommon.h"
+#include "FileThumbnails.h"
 
 struct OpenDdeArgs {
     bool parsed = false;
@@ -391,4 +392,46 @@ void ParseFileArgsTest() {
     utassert(!ParseFileArgs(StrL("\\\\?\\C:\\foo.pdf")));
     // a garbled drive letter: no file before the '?'
     utassert(!ParseFileArgs(StrL("?:\\foo.pdf")));
+}
+
+// 8-byte signature, IHDR length and type, then big-endian width and height
+static Str PngHeaderTemp(u32 dx, u32 dy) {
+    u8 d[24] = {0x89, 'P', 'N', 'G', '\r', '\n', 0x1a, '\n', 0, 0, 0, 13, 'I', 'H', 'D', 'R'};
+    for (int i = 0; i < 4; i++) {
+        d[16 + i] = (u8)(dx >> (24 - i * 8));
+        d[20 + i] = (u8)(dy >> (24 - i * 8));
+    }
+    return str::DupTemp(Str((const char*)d, (int)sizeof(d)));
+}
+
+void PngSizeTest() {
+    utassert(PngSizeFromData(PngHeaderTemp(150, 212)) == Size(150, 212));
+    utassert(PngSizeFromData(PngHeaderTemp(0x7fffffff, 1)) == Size(0x7fffffff, 1));
+
+    Str png = PngHeaderTemp(150, 212);
+    utassert(PngSizeFromData(Str(png.s, 23)).IsEmpty());
+    Str notPng = str::DupTemp(png);
+    notPng.s[1] = 'X';
+    utassert(PngSizeFromData(notPng).IsEmpty());
+    utassert(PngSizeFromData(PngHeaderTemp(0, 212)).IsEmpty());
+    utassert(PngSizeFromData(PngHeaderTemp(150, 0)).IsEmpty());
+    utassert(PngSizeFromData(PngHeaderTemp(0x80000000, 212)).IsEmpty());
+    utassert(PngSizeFromData(PngHeaderTemp(150, 0xffffffff)).IsEmpty());
+
+    // an unreadable cache file must not pass for a thumbnail of either type
+    Settings* prevSettings = gSettings;
+    if (!gSettings) {
+        gSettings = NewSettings({});
+    }
+    Str prevType = gSettings->thumbnailsType;
+    for (Str type : {StrL("full"), StrL("legacy")}) {
+        gSettings->thumbnailsType = type;
+        utassert(!ThumbnailSizeMatchesType(Size()));
+        utassert(!ThumbnailSizeMatchesType(Size(-1, 100)));
+    }
+    gSettings->thumbnailsType = prevType;
+    if (!prevSettings) {
+        DeleteSettings(gSettings);
+        gSettings = nullptr;
+    }
 }

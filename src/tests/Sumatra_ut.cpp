@@ -41,6 +41,7 @@ void BenchRangeTest();
 void versioncheck_test();
 void hexstrTest();
 void colorTest();
+void PngSizeTest();
 void parseCommandsTest();
 void DocPropertiesTest();
 void ParseFileArgsTest();
@@ -311,6 +312,7 @@ static void SumatraPDF_UnitTests() {
     DocPropertiesTest();
     parseCommandsTest();
     colorTest();
+    PngSizeTest();
     BenchRangeTest();
     ParseCommandLineTest();
     ParseFileArgsTest();
