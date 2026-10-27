@@ -1061,7 +1061,7 @@ static Str HandleTealDocTag(str::Builder& builder, StrVec& tocEntries, Str text)
     if (len(text) < 9) {
     Fallback:
         builder.Append(StrL("&lt;"));
-        return text;
+        return Str(text.s + 1, len(text) - 1);
     }
     if (!str::StartsWithI(text, StrL("<BOOKMARK")) && !str::StartsWithI(text, StrL("<HEADER")) &&
         !str::StartsWithI(text, StrL("<HRULE")) && !str::StartsWithI(text, StrL("<LABEL")) &&

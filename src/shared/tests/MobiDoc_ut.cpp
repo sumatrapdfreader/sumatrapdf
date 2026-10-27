@@ -2,6 +2,8 @@
    License: GPLv3 */
 
 #include "base/Base.h"
+#include "base/File.h"
+#include "base/Archive.h"
 
 #include "gui/UIModels.h"
 
@@ -10,6 +12,7 @@
 #include "EbookBase.h"
 #include "PalmDbReader.h"
 #include "MobiDoc.h"
+#include "EbookDoc.h"
 
 #include "base/tests/UtAssert.h"
 
@@ -85,6 +88,36 @@ static Str MkMobi(u32 imageFirstRec, u32 hdrLen = kMobiHdrLen, u32 exthFlags = 0
     w.Bytes("hi\r\n", kRec1Len);
     ReportIf(w.off != kFileLen);
     return Str((char*)d, kFileLen);
+}
+
+// a PalmDoc: PDB header, record 0 (PalmDoc header only) and one text record
+static Str MkPalmDoc(Str text) {
+    int rec1Off = kPdbHeaderLen + (kNumRecs * kRecHeaderLen) + kPalmDocLen;
+    int fileLen = rec1Off + len(text);
+    u8* d = AllocArray<u8>(fileLen);
+    BeWriter w{d};
+
+    w.Zeros(60);           // name .. sortInfoID
+    w.Bytes("TEXtREAd", 8) // typeCreator
+        ;
+    w.Zeros(8);
+    w.U16(kNumRecs);
+
+    w.U32(kRec0Off);
+    w.Zeros(4);
+    w.U32((u32)rec1Off);
+    w.Zeros(4);
+
+    w.U16(1); // compressionType: none
+    w.Zeros(2);
+    w.U32((u32)len(text));
+    w.U16(1);
+    w.U16((u16)len(text));
+    w.Zeros(4);
+
+    w.Bytes(text.s, len(text));
+    ReportIf(w.off != fileLen);
+    return Str((char*)d, fileLen);
 }
 
 #if IS_DEBUG
@@ -172,5 +205,17 @@ void MobiDoc_UnitTests() {
     {
         MobiDoc* doc = MobiDoc::CreateFromData(MkMobi(0, 0x80000000, 0x40));
         utassert(doc == nullptr);
+    }
+
+    // a '<' that doesn't start a TealDoc tag used to loop forever appending "&lt;"
+    {
+        Str data = MkPalmDoc(StrL("a<b"));
+        AutoFree<char> cleanup(data.s);
+        TempStr path = GetTempFilePathTemp(StrL("palmdoc"));
+        utassert(file::WriteFile(path, data));
+        AutoDelete<PalmDoc> doc(PalmDoc::CreateFromFile(path));
+        file::Delete(path);
+        utassert(doc.o != nullptr);
+        utassert(str::Eq(ToStr(doc->htmlData), StrL("a&lt;b")));
     }
 }
