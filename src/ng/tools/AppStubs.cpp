@@ -207,6 +207,10 @@ bool CanViewWithKnownExternalViewer(WindowTab*, int) {
     return false;
 }
 
+bool CanSendAsEmailAttachment(WindowTab*) {
+    return false;
+}
+
 bool PathMatchFilter(Str, Str) {
     return false;
 }
