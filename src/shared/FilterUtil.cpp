@@ -71,3 +71,12 @@ void SplitFilterToWords(Str filter, StrVec& words) {
         AppendIfNotExists(&words, word);
     }
 }
+
+// "& Thumbnails" -> "Thumbnails". Most translations drop the prefix
+// ("Duimnaels", "缩略图"), so strip it only when present.
+Str PaletteSwitchLabel(Str label, Str prefix) {
+    if (str::TrimPrefix(label, prefix)) {
+        str::TrimWs(label);
+    }
+    return label;
+}

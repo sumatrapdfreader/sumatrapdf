@@ -8,3 +8,4 @@ int FoldCaseForSearch(int c);
 void SplitFilterToWords(Str filter, StrVec& words);
 bool FilterMatches(Str str, const StrVec& words);
 int FilterIndexOf(Str s, Str word, int* matchLenOut);
+Str PaletteSwitchLabel(Str label, Str prefix);

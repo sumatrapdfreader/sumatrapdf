@@ -38,6 +38,7 @@
 #include "FileHistory.h"
 #include "Menu.h"
 #include "Translations.h"
+#include "FilterUtil.h"
 #include "PagePosition.h"
 #include "Installer.h"
 #include "RegistryPreview.h"

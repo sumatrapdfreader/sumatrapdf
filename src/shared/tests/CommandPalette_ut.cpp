@@ -9,8 +9,6 @@
 // must be last due to assert() over-write
 #include "base/tests/UtAssert.h"
 
-Str PaletteSwitchLabel(Str label, Str prefix);
-
 static void PaletteSwitchLabel_UnitTests() {
     struct {
         const char* label;
