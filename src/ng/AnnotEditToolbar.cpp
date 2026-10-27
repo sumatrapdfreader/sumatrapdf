@@ -1461,13 +1461,11 @@ void AnnotEditView::OnPopupSlider(AnnotEditView* self, gp::Ctx* cx, const gp::Sl
     } else {
         tb->sliderValue = v;
     }
-    // orig rewrites the annotation when the slider is let go
-    if (ev->kind == gp::SliderEventKind::Release) {
-        if (thickness) {
-            ChipThicknessPicked(tb, v);
-        } else {
-            SliderValuePicked(tb, v);
-        }
+    // the annotation follows the drag; the handlers skip unchanged values
+    if (thickness) {
+        ChipThicknessPicked(tb, v);
+    } else {
+        SliderValuePicked(tb, v);
     }
     gp::Notify(cx);
 }

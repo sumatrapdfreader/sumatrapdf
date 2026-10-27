@@ -2107,7 +2107,7 @@ struct InkThicknessSlider : VirtSlider {
     // the width as a number, under the slider; a sibling like the preview
     VirtText* valueText = nullptr;
     Str text; // owned; what the -dbg-control dump shows for the slider
-    // where the width goes when let go. Without one it's the setting the ink
+    // where the width goes as it changes. Without one it's the setting the ink
     // button makes its strokes with
     Func1<int> onThickness;
     // committed by letting go of a drag, so the mouse capture is about to be
@@ -2125,19 +2125,18 @@ struct InkThicknessSlider : VirtSlider {
             valueText->SetText(fmt("%d", value));
             valueText->Invalidate();
         }
-        if (!onThickness.IsValid() && gSettings) {
+        // the annotation follows the drag; its handler skips unchanged values
+        if (onThickness.IsValid()) {
+            onThickness.Call(value);
+        } else if (gSettings) {
             gSettings->annotations.inkBorderWidth = value;
         }
     }
-    // rewriting an annotation is too slow to do on every step of a drag, so
-    // the width lands when the slider is let go
     void OnCommitted() {
         // a mouse-up commits while still adjusting, a wheel step doesn't
         releasingMouse = IsAdjusting();
         OnChanged();
-        if (onThickness.IsValid()) {
-            onThickness.Call(value);
-        } else {
+        if (!onThickness.IsValid()) {
             ScheduleSaveSettings();
         }
     }
@@ -2401,7 +2400,7 @@ void ShowAnnotColorPopup(MainWindow* win, Rect anchor, Color current, bool withN
 }
 
 // A number picked with a slider: a label, the slider, and the value under it.
-// onValue gets the value when the slider is let go.
+// onValue gets the value on every step of a drag.
 void ShowAnnotSliderPopup(MainWindow* win, Rect anchor, Str label, int value, int minVal, int maxVal,
                           const Func1<int>& onValue) {
     ToolbarVirt* tb = win ? win->toolbarVirt : nullptr;
