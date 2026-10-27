@@ -294,6 +294,9 @@ struct PdfToolDlg {
     // the grid's bounds in the window, as of the last frame, and what the
     // layout of that frame was computed for
     gp::Bounds mergeView{};
+    // the files' legend and its entries, as of the last frame
+    gp::Bounds mergeLegendView{};
+    Vec<gp::Bounds> mergeLegendItems;
     float mergeLayoutDx = 0;
     float mergeLayoutDy = 0;
     // width the columns were laid out for; bounds are filled in only while painting
@@ -1861,6 +1864,20 @@ static void MergeAddPrompt() {
 
 static TempStr MergeInfoTemp();
 
+// the legend's entries that fit in it, as of the last frame; reported to tests
+static int MergeLegendShownCount() {
+    if (len(gTool.mergeSources) < 2) {
+        return 0;
+    }
+    const gp::Bounds& box = gTool.mergeLegendView;
+    int n = 0;
+    for (const gp::Bounds& b : gTool.mergeLegendItems) {
+        bool fits = b.w > 0 && b.x >= box.x && b.Right() <= box.Right() + 0.5f && b.Bottom() <= box.Bottom() + 0.5f;
+        n += fits ? 1 : 0;
+    }
+    return n;
+}
+
 TempStr MergePdfResultTemp(Str action, Str arg, int n, int* exitCodeOut) {
     auto finish = [exitCodeOut](int code, TempStr res) -> TempStr {
         if (exitCodeOut) {
@@ -2000,6 +2017,8 @@ TempStr MergePdfResultTemp(Str action, Str arg, int n, int* exitCodeOut) {
     }
     out.Append(fmt(" asking=%d ask=%s", (int)(len(gTool.mergeAskPaths) > 0), ask));
     out.Append(fmt(" info=\"%s\"", MergeInfoTemp()));
+    out.Append(
+        fmt(" legend=%d/%d", MergeLegendShownCount(), len(gTool.mergeSources) > 1 ? len(gTool.mergeSources) : 0));
     return finish(0, fmt("OK %s", ToStrTemp(out)));
 }
 
@@ -3461,7 +3480,7 @@ constexpr int kMergeWinMinDy = 320;
 // the footer
 constexpr float kMergeCardChromeDy = 200;
 constexpr float kMergeCardMinViewDy = 240;
-// between the page count and each file of the legend
+// between the files of the legend
 constexpr float kMergeInfoGap = 24;
 
 static Str MergeToolTitle() {
@@ -3472,20 +3491,82 @@ static gp::El* MergeText(gp::Ctx* cx, Str s, Color col) {
     return gp::TextEl(cx->a, GpuiDup(cx->a, s))->Font(kToolDlgMetaFontPx)->Fg(ToGpui(col))->Shrink0();
 }
 
-// orig's MergePdfWnd::PaintInfo: the page count, then each file's dot and
-// name when there is more than one file
+// orig's MergePdfWnd::PaintInfo: the page count
 static gp::El* MergeInfoEl(gp::Ctx* cx) {
     Color colMuted = ThemeWindowTextDisabledColor();
-    gp::El* info = gp::Div(cx->a)->FlexRow()->Flex1()->MinW(0)->ItemsCenter()->Gap(kMergeInfoGap)->ClipX();
+    gp::El* info = gp::Div(cx->a)->FlexRow()->Flex1()->MinW(0)->ItemsCenter()->ClipX();
     info->Child(MergeText(cx, MergeInfoTemp(), colMuted));
-    for (int i = 0; len(gTool.mergeSources) > 1 && i < len(gTool.mergeSources); i++) {
+    return info;
+}
+
+// orig's MergePdfWnd::LegendRects: each file's dot and name, in rows that wrap
+// at dx, so every file is named (issue #6397). Relative to the legend
+static void MergeLegendRects(gp::Ctx* cx, float dx, Vec<RectF>& out) {
+    VecReset(out);
+    if (len(gTool.mergeSources) < 2) {
+        return;
+    }
+    gp::PaintCtx* paint = cx->win ? &cx->win->paint : nullptr;
+    float lineDy = ceilf(gp::MeasureText(paint, GStrL("M"), kToolDlgMetaFontPx, 0).h);
+    float x = 0;
+    float y = kToolDlgFootPadDy;
+    for (const MergeSourceDlg& source : gTool.mergeSources) {
+        Str name = path::GetBaseNameTemp(source.path);
+        float nameDx = ceilf(gp::MeasureText(paint, ToGpui(name), kToolDlgMetaFontPx, 0).w);
+        RectF r{0, 0, (2 * kMergeDotDx) + nameDx, lineDy};
+        if (x > 0 && x + r.dx > dx) {
+            x = 0;
+            y += lineDy + (lineDy / 2);
+        }
+        r.x = x;
+        r.y = y;
+        x += r.dx + kMergeInfoGap;
+        VecAppend(out, r);
+    }
+}
+
+// the legend's width: the column's, inside its padding. The card's column is
+// as wide as the grid was the last frame
+static float MergeLegendDx(float viewDx) {
+    float colDx = viewDx > 0 ? viewDx : gTool.mergeView.w;
+    if (colDx <= 1.f) {
+        colDx = (float)kMergeDialogDx;
+    }
+    return std::max(0.f, colDx - (2 * kToolDlgPadDx));
+}
+
+static float MergeLegendDy(gp::Ctx* cx, float dx) {
+    Vec<RectF> rects;
+    MergeLegendRects(cx, dx, rects);
+    return len(rects) > 0 ? VecLast(rects).Bottom() : 0;
+}
+
+// orig's MergeLegend: above the footer, as tall as its rows of files
+static gp::El* MergeLegendEl(gp::Ctx* cx, float dx) {
+    Color colMuted = ThemeWindowTextDisabledColor();
+    Vec<RectF> rects;
+    MergeLegendRects(cx, dx, rects);
+    VecResize(gTool.mergeLegendItems, len(rects));
+    float dy = len(rects) > 0 ? VecLast(rects).Bottom() : 0;
+    gp::El* box = gp::Div(cx->a)->W(gp::kFill)->H(dy)->BoundsOut(&gTool.mergeLegendView);
+    for (int i = 0; i < len(rects); i++) {
         const MergeSourceDlg& source = gTool.mergeSources[i];
-        gp::El* file = gp::Div(cx->a)->FlexRow()->ItemsCenter()->Gap(kMergeDotDx)->Shrink0();
+        RectF r = rects[i];
+        gp::El* file = gp::Div(cx->a)
+                           ->Absolute()
+                           ->Left(r.x)
+                           ->Top(r.y)
+                           ->W(r.dx)
+                           ->H(r.dy)
+                           ->FlexRow()
+                           ->ItemsCenter()
+                           ->Gap(kMergeDotDx)
+                           ->BoundsOut(&gTool.mergeLegendItems[i]);
         file->Child(gp::Div(cx->a)->W(kMergeDotDx)->H(kMergeDotDx)->Radius(kMergeDotDx / 2)->Bg(ToGpui(source.color)));
         file->Child(MergeText(cx, path::GetBaseNameTemp(source.path), colMuted));
-        info->Child(file);
+        box->Child(file);
     }
-    return info;
+    return gp::Div(cx->a)->W(gp::kFill)->Shrink0()->PadX(kToolDlgPadDx)->Child(box);
 }
 
 // orig's footer: the quiet page actions and the status on the left, Cancel,
@@ -3527,7 +3608,7 @@ static gp::El* MergeFooterEl(gp::Ctx* cx) {
     return row;
 }
 
-// the pages edge to edge, then the footer
+// the pages edge to edge, then the legend and the footer
 static gp::El* MergeColumn(gp::Ctx* cx, float viewDx, float viewDy) {
     StartMergeThumbs();
     return gp::Div(cx->a)
@@ -3535,6 +3616,7 @@ static gp::El* MergeColumn(gp::Ctx* cx, float viewDx, float viewDy) {
         ->W(gp::kFill)
         ->Bg(ToGpui(ThemeWindowControlBackgroundColor()))
         ->Child(MergePagesEl(cx, viewDx, viewDy))
+        ->Child(MergeLegendEl(cx, MergeLegendDx(viewDx)))
         ->Child(MergeFooterEl(cx));
 }
 
@@ -3550,7 +3632,7 @@ static gp::El* MergeToolBuild(MainWindow* win, gp::Ctx* cx) {
         gToolView = gp::EntityNewState<PdfToolView>(cx->app);
     }
     gp::WinSize ws = gp::WindowSize(cx->win);
-    float viewDy = std::max(100.f, ws.dipH - MergeFooterDy());
+    float viewDy = std::max(100.f, ws.dipH - MergeFooterDy() - MergeLegendDy(cx, MergeLegendDx(ws.dipW)));
     gp::El* col = gp::Div(cx->a)->FlexCol()->W(gp::kFill)->Flex1()->MinH(0)->Child(MergeColumn(cx, ws.dipW, viewDy));
     if (len(gTool.mergeAskPaths) == 0) {
         return col;
@@ -3887,7 +3969,8 @@ static gp::El* PdfToolBuildCurrent(MainWindow* win, gp::Ctx* cx) {
     gp::El* footer = nullptr;
     float dialogDx = 600;
     if (gTool.kind == PdfToolKind::Merge) {
-        float viewDy = std::max(kMergeCardMinViewDy, gp::WindowSize(cx->win).dipH - kMergeCardChromeDy);
+        float chromeDy = kMergeCardChromeDy + MergeLegendDy(cx, MergeLegendDx(0));
+        float viewDy = std::max(kMergeCardMinViewDy, gp::WindowSize(cx->win).dipH - chromeDy);
         body = MergeColumn(cx, 0, viewDy);
         footer = gp::Div(cx->a)->H(0);
         // orig's kDialogDx, as far as the window allows

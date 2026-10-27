@@ -46,7 +46,9 @@
 //   |  [  ]   [  ]   [ x]   [  ]   [  ] ...  thumbnails (MergeGrid)
 //   |   1      2     • 1     • 2    ...     page numbers, file dots
 //   +----------------------------------------------------------+
-//   Add PDF...  Remove  Restore  7 pages, 1 removed  • a.pdf  • b.pdf   [Cancel] [Save] [Save As...]
+//   • a.pdf  • b.pdf  • c.pdf ...                    files' colors (MergeLegend),
+//   • d.pdf ...                                      in rows that wrap
+//   Add PDF...  Remove  Restore  7 pages, 1 removed      [Cancel] [Save] [Save As...]
 
 constexpr int kThumbDx = 140;
 constexpr int kThumbDy = 198;
@@ -223,6 +225,15 @@ struct MergeGrid : VirtListBox {
     void MoveFocus(int idx, bool shift);
 };
 
+// above the footer, as tall as its rows of files
+struct MergeLegend : VirtCtrl {
+    MergePdfWnd* wnd = nullptr;
+
+    Size Layout(Constraints bc) override;
+    int MinIntrinsicHeight(int width) override;
+    void Paint(VirtPaintCtx&) override;
+};
+
 struct MergePdfWnd : WindowBase {
     MainWindow* win = nullptr;
     // the document the dialog was opened for; what Save writes
@@ -235,8 +246,10 @@ struct MergePdfWnd : WindowBase {
     VirtButton* btnSave = nullptr;
     VirtButton* btnSaveAs = nullptr;
     VirtButton* btnCancel = nullptr;
-    // the page count, then the files' colors
+    // the page count
     VirtCustom* info = nullptr;
+    // the files' colors
+    MergeLegend* legend = nullptr;
     Color colTxt = kColorUnset;
     Color colBg = kColorUnset;
     Color colMuted = kColorUnset;
@@ -264,6 +277,9 @@ struct MergePdfWnd : WindowBase {
     void OnTimer(WindowBase::TimerEvent* ev);
     void PaintInfo(VirtPaintCtx* ctx);
     TempStr InfoTemp();
+    void LegendRects(int dx, Vec<Rect>& out);
+    int LegendShownCount();
+    void PaintLegend(VirtPaintCtx* ctx);
 };
 
 static MergePdfWnd* gMergeWnd = nullptr;
@@ -1469,30 +1485,18 @@ bool MergePdfWnd::AddPdf(Str path, int at) {
     }
     MergeSource* src = AddSource(path, engine);
     grid->InsertPages(src, at);
+    // the legend may need another row
+    DoLayout();
     return true;
 }
 
-// The page count, then which file a page comes from: its dot and its name.
-// One control that takes the free space: a longer text needs no layout, which
-// would end a drag
+// The page count. One control that takes the free space: a longer text needs
+// no layout, which would end a drag
 void MergePdfWnd::PaintInfo(VirtPaintCtx* ctx) {
     TempStr s = InfoTemp();
     Rect r = ctx->content;
-    int gap = fontMeta->averageCharWidth;
     ctx->gfx->PushClip(ctx->clip.Intersect(r));
-    Size ts = ctx->gfx->MeasureText(s, fontMeta);
-    ctx->gfx->DrawText(s, {r.x, r.y, ts.dx, r.dy}, gfxTextVCenter, fontMeta, colMuted);
-    int x = r.x + ts.dx + (gap * 5);
-    int dot = DpiScale(kDotDx);
-    for (int i = 0; len(sources->all) > 1 && i < len(sources->all); i++) {
-        MergeSource* src = sources->all[i];
-        TempStr name = path::GetBaseNameTemp(src->path);
-        ts = ctx->gfx->MeasureText(name, fontMeta);
-        ctx->gfx->FillEllipse({x, r.y + ((r.dy - dot) / 2), dot, dot}, src->color);
-        x += dot + gap;
-        ctx->gfx->DrawText(name, {x, r.y, ts.dx, r.dy}, gfxTextVCenter, fontMeta, colMuted);
-        x += ts.dx + (gap * 4);
-    }
+    ctx->gfx->DrawText(s, r, gfxTextVCenter, fontMeta, colMuted);
     ctx->gfx->PopClip();
 }
 
@@ -1512,6 +1516,79 @@ TempStr MergePdfWnd::InfoTemp() {
         s = fmt("%s, %s", s, fmt(Tr("%d selected").s, nSel));
     }
     return s;
+}
+
+// Which file a page comes from: each file's dot and name, in rows that wrap at
+// dx, so every file is named (issue #6397). Relative to the legend
+void MergePdfWnd::LegendRects(int dx, Vec<Rect>& out) {
+    VecReset(out);
+    if (len(sources->all) < 2) {
+        return;
+    }
+    int gap = fontMeta->averageCharWidth;
+    int lineDy = PlatformFontMeasureText(fontMeta, StrL("M")).dy;
+    int x = 0;
+    int y = DpiScale(kToolDlgFootPadDy);
+    for (MergeSource* src : sources->all) {
+        int nameDx = PlatformFontMeasureText(fontMeta, path::GetBaseNameTemp(src->path)).dx;
+        Rect r{0, 0, DpiScale(kDotDx) + gap + nameDx, lineDy};
+        if (x > 0 && x + r.dx > dx) {
+            x = 0;
+            y += lineDy + (lineDy / 2);
+        }
+        r.x = x;
+        r.y = y;
+        x += r.dx + (gap * 4);
+        if (IsUIRtl()) {
+            r.x = dx - r.x - r.dx;
+        }
+        VecAppend(out, r);
+    }
+}
+
+// the entries that fit in the legend; reported to tests
+int MergePdfWnd::LegendShownCount() {
+    Vec<Rect> rects;
+    LegendRects(legend->bounds.dx, rects);
+    int n = 0;
+    for (Rect& r : rects) {
+        n += (r.x >= 0 && r.x + r.dx <= legend->bounds.dx && r.y + r.dy <= legend->bounds.dy) ? 1 : 0;
+    }
+    return n;
+}
+
+void MergePdfWnd::PaintLegend(VirtPaintCtx* ctx) {
+    Vec<Rect> rects;
+    LegendRects(ctx->content.dx, rects);
+    int dot = DpiScale(kDotDx);
+    int gap = fontMeta->averageCharWidth;
+    bool rtl = IsUIRtl();
+    ctx->gfx->PushClip(ctx->clip.Intersect(ctx->content));
+    for (int i = 0; i < len(rects); i++) {
+        MergeSource* src = sources->all[i];
+        Rect r = rects[i];
+        r.Offset(ctx->content.x, ctx->content.y);
+        int dotX = rtl ? r.x + r.dx - dot : r.x;
+        int nameX = rtl ? r.x : r.x + dot + gap;
+        ctx->gfx->FillEllipse({dotX, r.y + ((r.dy - dot) / 2), dot, dot}, src->color);
+        ctx->gfx->DrawText(path::GetBaseNameTemp(src->path), {nameX, r.y, r.dx - dot - gap, r.dy}, gfxTextVCenter,
+                           fontMeta, colMuted);
+    }
+    ctx->gfx->PopClip();
+}
+
+Size MergeLegend::Layout(Constraints bc) {
+    return bc.Constrain({bc.max.dx, MinIntrinsicHeight(bc.max.dx)});
+}
+
+int MergeLegend::MinIntrinsicHeight(int width) {
+    Vec<Rect> rects;
+    wnd->LegendRects(width, rects);
+    return len(rects) > 0 ? VecLast(rects).Bottom() : 0;
+}
+
+void MergeLegend::Paint(VirtPaintCtx& ctx) {
+    wnd->PaintLegend(&ctx);
 }
 
 static void PaintMergeInfo(MergePdfWnd* w, VirtPaintCtx* ctx) {
@@ -2000,10 +2077,14 @@ bool MergePdfWnd::Create(MainWindow* w, WindowTab* tab) {
     btnSaveAs->onClick = MkMethod1<MergePdfWnd, VirtMouseEvent*, &MergePdfWnd::OnSaveAs>(this);
     footer->AddChild(btnSaveAs);
 
-    // the pages take the window, edge to edge, then the footer
+    legend = new MergeLegend();
+    legend->wnd = this;
+
+    // the pages take the window, edge to edge, then the legend and the footer
     auto* vbox = new VBox();
     vbox->alignCross = CrossAxisAlign::Stretch;
     vbox->AddChild(grid, 1);
+    vbox->AddChild(new Padding(legend, DpiScaledInsets(0, kToolDlgPadDx)));
     vbox->AddChild(new Padding(footer, DpiScaledInsets(kToolDlgFootPadDy, kToolDlgPadDx)));
     layout = vbox;
 
@@ -2198,5 +2279,7 @@ TempStr MergePdfResultTemp(Str action, Str arg, int n, int* exitCodeOut) {
                        b.y + origin.y, b.dx, b.dy));
     }
     out.Append(fmt(" info=\"%s\"", w->InfoTemp()));
+    int nFiles = len(w->sources->all) > 1 ? len(w->sources->all) : 0;
+    out.Append(fmt(" legend=%d/%d", w->LegendShownCount(), nFiles));
     return finish(0, fmt("OK %s", ToStrTemp(out)));
 }
