@@ -336,6 +336,25 @@ function fixTranslation(s: string): string {
   return s;
 }
 
+// command palette switches ("& Thumbnails"): the character and space are the
+// mode prefix and must start every translation. Translators took "&" for an
+// access key and dropped it ("Duimnaels", "サムネイル(&T)").
+const kPalettePrefixRe = /^([>@#$%&*=]) \S/;
+
+function fixPalettePrefix(english: string, line: string): string {
+  const m = kPalettePrefixRe.exec(english);
+  const colonIdx = line.indexOf(":");
+  if (!m || colonIdx < 0) return line;
+  const prefix = m[1] + " ";
+  let t = line.slice(colonIdx + 1);
+  if (t.startsWith(prefix)) return line;
+  // "&Vignette" => "Vignette", "サムネイル(&T)" => "サムネイル"
+  if (t.startsWith(m[1])) t = t.slice(1);
+  t = t.replace(/\s*\(&.\)$/, "").trim();
+  if (t.length === 0) return line;
+  return `${line.slice(0, colonIdx)}:${prefix}${t}`;
+}
+
 function fixTranslations(d: string): { fixed: string; badTranslations: BadTranslation[] } {
   const badTranslations: BadTranslation[] = [];
   const lines = d.split("\n");
@@ -348,7 +367,7 @@ function fixTranslations(d: string): { fixed: string; badTranslations: BadTransl
       result.push(line);
       continue;
     }
-    const fixed = fixTranslation(line);
+    const fixed = fixPalettePrefix(currString, fixTranslation(line));
     if (line !== fixed) {
       badTranslations.push({ currString, orig: line, fixed });
     }
@@ -983,6 +1002,7 @@ You may use quotes, newlines, and HTML freely inside translations — only the <
 Keep placeholders like %s, %d, %1 unchanged.
 Some strings have markup: in [text](target) translate only the text and keep (target) as is; keep (Kbd/...) and (Key/...) unchanged.
 Keep access-key ampersands if present (e.g. "&File" → localized with & before the hotkey letter).
+A string that starts with one of > @ # $ % & * = and a space (e.g. "& Thumbnails") is a command palette mode: keep that character and space at the start and translate the rest ("& Miniaturen").
 No markdown fences. No explanation before or after.
 
 Input:
