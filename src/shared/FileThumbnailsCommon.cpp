@@ -109,6 +109,9 @@ Size ThumbnailDrawSize(Size thumb, Size frame) {
 
 // a legacy thumbnail is as wide as its frame, a full one fits inside its frame
 bool ThumbnailSizeMatchesType(Size sz) {
+    if (sz.dx <= 0 || sz.dy <= 0) {
+        return false;
+    }
     if (ThumbnailsAreFullPage()) {
         return sz.dx <= kThumbnailFullDx && sz.dy <= kThumbnailFullDy;
     }
@@ -123,9 +126,17 @@ Size PngSizeFromData(Str data) {
     if (len(data) < kIhdrEnd || memcmp(data.s, kSignature, sizeof(kSignature)) != 0) {
         return {};
     }
-    auto be32 = [](const u8* p) { return (int)((p[0] << 24) | (p[1] << 16) | (p[2] << 8) | p[3]); };
+    auto be32 = [](const u8* p) -> u32 {
+        return ((u32)p[0] << 24) | ((u32)p[1] << 16) | ((u32)p[2] << 8) | (u32)p[3];
+    };
     const u8* s = (const u8*)data.s;
-    return Size(be32(s + 16), be32(s + 20));
+    u32 width = be32(s + 16);
+    u32 height = be32(s + 20);
+    // PNG dimensions must be positive and fit within a signed int.
+    if (width == 0 || height == 0 || width > 0x7fffffffU || height > 0x7fffffffU) {
+        return {};
+    }
+    return Size((int)width, (int)height);
 }
 
 Pixmap* LoadThumbnail(FileState* fs) {
