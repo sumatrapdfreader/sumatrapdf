@@ -857,7 +857,8 @@ static bool PrintPageInBands(EngineBase& engine, HDC hdc, int pageNo, float zoom
             }
             args.cookie_out = &abortCookie->cookie;
         }
-        Pixmap* bmp = engine.RenderPage(args);
+        // 24bpp: v4 (XPS) drivers render a 32bpp band as a slower RGBA PNG
+        Pixmap* bmp = PixmapToBgr(engine.RenderPage(args));
         if (abortCookie) {
             abortCookie->Clear();
         }

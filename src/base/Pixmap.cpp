@@ -548,8 +548,9 @@ static bool IsPaletteDib(HBITMAP hbmp) {
 }
 
 // Takes p. Returns an opaque 24bpp BGR8 copy, transparency composited over white:
-// 3/4 the memory of 32bpp, for cached thumbnails. BGR8, and palette DIBs (smaller
-// still), are returned as is; so is p when the copy can't be allocated.
+// 3/4 the memory of 32bpp, for cached thumbnails and print bands. BGR8, and
+// palette DIBs (smaller still), are returned as is; so is p when the copy can't
+// be allocated.
 #endif
 
 Pixmap* PixmapToBgr(Pixmap* p) {
