@@ -3382,14 +3382,37 @@ int VirtSlider::ThumbRadius() const {
     return std::max(DpiScaleByDpi(dpi, 7), 5);
 }
 
+// focus halo drawn around the thumb, beyond its radius
+int VirtSlider::HaloWidth() const {
+    return std::max(ThumbRadius() / 2, 3);
+}
+
 Rect VirtSlider::TrackRectLocal() const {
     int r = ThumbRadius();
     int thick = std::max(r / 3, 3);
     Rect c = {0, 0, bounds.dx, bounds.dy};
     int y = c.y + ((c.dy - thick) / 2);
-    int x = c.x + r;
-    int dx = std::max(c.dx - (2 * r), 1);
+    // inset so the focus halo fits at either end
+    int pad = r + HaloWidth();
+    int x = c.x + pad;
+    int dx = std::max(c.dx - (2 * pad), 1);
     return {x, y, dx, thick};
+}
+
+Point VirtSlider::ThumbCenterLocal() const {
+    Rect track = TrackRectLocal();
+    int n = maxVal - minVal;
+    float t = (n <= 0) ? 0 : (float)(value - minVal) / (float)n;
+    HWND hwnd = GetHwnd();
+    int off = (int)lroundf(t * (float)track.dx);
+    int cx = (hwnd && HwndIsRtl(hwnd)) ? track.x + track.dx - off : track.x + off;
+    return {cx, track.y + (track.dy / 2)};
+}
+
+Rect VirtSlider::ThumbHaloRectLocal() const {
+    Point c = ThumbCenterLocal();
+    int r = ThumbRadius() + HaloWidth();
+    return {c.x - r, c.y - r, 2 * r, 2 * r};
 }
 
 int VirtSlider::ValueFromLocalX(int xLocal) {
@@ -3439,7 +3462,7 @@ void VirtSlider::SetValue(int v, bool notify) {
 Size VirtSlider::GetIdealSize() {
     HWND hwnd = GetHwnd();
     int dpi = hwnd ? DpiGetForHwnd(hwnd) : 96;
-    int r = ThumbRadius();
+    int r = ThumbRadius() + HaloWidth();
     int dx = idealDx > 0 ? idealDx : DpiScaleByDpi(dpi, 88);
     return {dx, (2 * r) + DpiScaleByDpi(dpi, 4)};
 }
@@ -3449,17 +3472,11 @@ void VirtSlider::Paint(VirtPaintCtx& ctx) {
     track.x += ctx.bounds.x;
     track.y += ctx.bounds.y;
     int r = ThumbRadius();
-    int n = maxVal - minVal;
-    float t = (n <= 0) ? 0 : (float)(value - minVal) / (float)n;
     HWND hwnd = GetHwnd();
     bool rtl = hwnd && HwndIsRtl(hwnd);
-    int cx;
-    if (rtl) {
-        cx = track.x + track.dx - (int)lroundf(t * (float)track.dx);
-    } else {
-        cx = track.x + (int)lroundf(t * (float)track.dx);
-    }
-    int cy = track.y + (track.dy / 2);
+    Point c = ThumbCenterLocal();
+    int cx = c.x + ctx.bounds.x;
+    int cy = c.y + ctx.bounds.y;
 
     Color trackCol = GetColor(kColSliderTrack);
     Color fillCol = GetColor(kColSliderFill);
@@ -3481,8 +3498,10 @@ void VirtSlider::Paint(VirtPaintCtx& ctx) {
     int d = r * 2;
     if (HasFlag(vwfFocused)) {
         // focus: a halo around the thumb
-        int h = std::max(r / 2, 3);
-        ctx.gfx->FillEllipse({cx - r - h, cy - r - h, d + 2 * h, d + 2 * h}, fillCol, 80);
+        Rect halo = ThumbHaloRectLocal();
+        halo.x += ctx.bounds.x;
+        halo.y += ctx.bounds.y;
+        ctx.gfx->FillEllipse(halo, fillCol, 80);
     }
     ctx.gfx->FillEllipse({cx - r, cy - r, d, d}, thumb);
 }

@@ -836,6 +836,7 @@ struct VirtSlider : VirtCtrl {
     void SetValue(int v, bool notify);
     bool IsAdjusting() const;
     int ValueFromLocalX(int xLocal);
+    Rect ThumbHaloRectLocal() const;
     Size GetIdealSize() override;
     void Paint(VirtPaintCtx&) override;
     void OnKeyDown(VirtKeyEvent*);
@@ -851,7 +852,9 @@ struct VirtSlider : VirtCtrl {
     bool adjusting = false;
     int committed = 0;
     int ThumbRadius() const;
+    int HaloWidth() const;
     Rect TrackRectLocal() const;
+    Point ThumbCenterLocal() const;
     void ApplyFromEvent(const VirtMouseEvent&, bool commit);
 };
 

@@ -263,7 +263,25 @@ static void TipLinkUnderlines_Test() {
     delete tip;
 }
 
+// #6386: the focus halo must not be clipped at either end of the track
+static void Slider_HaloFitsTest() {
+    auto* s = new VirtSlider();
+    s->minVal = 0;
+    s->maxVal = 12;
+    Size sz = s->GetIdealSize();
+    s->bounds = {0, 0, sz.dx, sz.dy};
+    Rect local = {0, 0, sz.dx, sz.dy};
+    int vals[] = {s->minVal, 5, s->maxVal};
+    for (int v : vals) {
+        s->value = v;
+        Rect halo = s->ThumbHaloRectLocal();
+        utassert(local.Intersect(halo) == halo);
+    }
+    delete s;
+}
+
 void VirtCtrl_UnitTests() {
+    Slider_HaloFitsTest();
     TipLinkUnderlines_Test();
     Table_TestGrid();
     Table_TestAlign();
