@@ -1635,6 +1635,10 @@ bool OpenDocumentFromMemory(MainWindow* win, Str data, Str nameHint) {
 
 static void SetFrameTitleForTab(WindowTab* tab, bool needRefresh) {
     Str titlePath = tab->displayName ? Str(tab->displayName) : tab->filePath;
+    // the Home tab has no file; name it like its tab (issue #6367)
+    if (tab->IsAboutTab()) {
+        titlePath = StrL("Home");
+    }
     TempStr embeddedFileName = ParseEmbeddedPdfName(titlePath).fileName;
     if (embeddedFileName) {
         titlePath = embeddedFileName;
@@ -1697,6 +1701,9 @@ static void UpdateUiForCurrentTab(MainWindow* win) {
 
     UpdateFindbox(win);
 
+    if (win->CurrentTab()->IsAboutTab()) {
+        SetFrameTitleForTab(win->CurrentTab(), false);
+    }
     HwndSetText(win->hwndFrame, win->CurrentTab()->frameTitle);
 
     bool onlyNumbers = !win->ctrl || !win->ctrl->HasPageLabels();
