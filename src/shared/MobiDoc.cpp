@@ -782,7 +782,11 @@ static void EmitRecindexPages(str::Builder& doc, const Vec<int>& recs) {
     doc.Reset();
     doc.Append(StrL("<html><body>"));
     for (int i = 0; i < len(recs); i++) {
-        doc.Append(fmt("<img recindex=\"%d\"/><mbp:pagebreak/>", recs[i]));
+        // a break after the last image would add an empty last page
+        if (i > 0) {
+            doc.Append(StrL("<mbp:pagebreak/>"));
+        }
+        doc.Append(fmt("<img recindex=\"%d\"/>", recs[i]));
     }
     doc.Append(StrL("</body></html>"));
 }
@@ -803,11 +807,18 @@ void MobiDoc::MaybeSynthesizeImagePages() {
         return;
     }
 
+    int coverNo = -1;
+    if (coverImageRec >= imageFirstRec) {
+        coverNo = coverImageRec - imageFirstRec;
+    }
+
     Vec<int> embedIdx;
     CollectKindleEmbedRecIndexes(html, embedIdx);
     bool fixedLayout =
         html && (str::ContainsI(html, StrL("name=\"viewport\"")) || str::ContainsI(html, StrL("name='viewport'")));
     if (len(embedIdx) >= 2 && fixedLayout) {
+        // MobiFormatter already emits the cover on its own page
+        VecRemove(embedIdx, coverNo + 1);
         logf("MobiDoc: synthesizing %d pages from kindle:embed (htmlLen=%d)\n", len(embedIdx), len(html));
         EmitRecindexPages(doc, embedIdx);
         imagePageSize = ImageSizeFromHeader(GetImage(embedIdx[0]));
@@ -824,10 +835,6 @@ void MobiDoc::MaybeSynthesizeImagePages() {
     // Drop HD-media thumbnails (often ~10KB next to 200KB page JPEGs).
     int minKeep = maxImgLen / 8;
     logf("MobiDoc: synthesizing %d image pages (htmlLen=%d, minKeep=%d)\n", nImg, len(html), minKeep);
-    int coverNo = -1;
-    if (coverImageRec >= imageFirstRec) {
-        coverNo = coverImageRec - imageFirstRec;
-    }
     Vec<int> recs;
     for (int i = 0; i < len(images); i++) {
         int imgLen = len(images[i]);
