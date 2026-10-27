@@ -894,6 +894,22 @@ static bool PrintPageInBands(EngineBase& engine, HDC hdc, int pageNo, float zoom
     return anyOk;
 }
 
+// Ranges come from the print dialog or -print-settings and can name pages past
+// the end, e.g. when the document was reloaded with fewer pages
+static Vec<PRINTPAGERANGE> ClampPageRanges(const Vec<PRINTPAGERANGE>& ranges, int nPages) {
+    Vec<PRINTPAGERANGE> res;
+    DWORD last = (DWORD)nPages;
+    for (PRINTPAGERANGE r : ranges) {
+        if (nPages < 1 || (r.nFromPage > last && r.nToPage > last)) {
+            continue;
+        }
+        r.nFromPage = limitValue(r.nFromPage, (DWORD)1, last);
+        r.nToPage = limitValue(r.nToPage, (DWORD)1, last);
+        VecAppend(res, r);
+    }
+    return res;
+}
+
 static bool PrintToDevice(const PrintData& pd) {
     ReportIf(!pd.engine);
     if (!pd.engine) {
@@ -940,13 +956,18 @@ static bool PrintToDevice(const PrintData& pd) {
         di.lpszOutput = CWStrTemp(pd.printer->output);
     }
 
+    Vec<PRINTPAGERANGE> ranges = ClampPageRanges(pd.ranges, engine.PageCount());
     int current = 1, total = 0;
     if (len(pd.sel) == 0) {
-        for (int i = 0; i < len(pd.ranges); i++) {
-            if (pd.ranges[i].nToPage < pd.ranges[i].nFromPage) {
-                total += (int)pd.ranges[i].nFromPage - (int)pd.ranges[i].nToPage + 1;
+        if (len(ranges) == 0) {
+            logf("PrintToDevice: no pages in range, %d pages\n", engine.PageCount());
+            return false;
+        }
+        for (int i = 0; i < len(ranges); i++) {
+            if (ranges[i].nToPage < ranges[i].nFromPage) {
+                total += (int)ranges[i].nFromPage - (int)ranges[i].nToPage + 1;
             } else {
-                total += (int)pd.ranges[i].nToPage - (int)pd.ranges[i].nFromPage + 1;
+                total += (int)ranges[i].nToPage - (int)ranges[i].nFromPage + 1;
             }
         }
     } else {
@@ -1132,9 +1153,9 @@ static bool PrintToDevice(const PrintData& pd) {
     }
 
     // print all the pages the user requested
-    for (int i = 0; i < len(pd.ranges); i++) {
-        int dir = pd.ranges[i].nFromPage > pd.ranges[i].nToPage ? -1 : 1;
-        for (DWORD pageNo = pd.ranges[i].nFromPage; pageNo != pd.ranges[i].nToPage + dir; pageNo += dir) {
+    for (int i = 0; i < len(ranges); i++) {
+        int dir = ranges[i].nFromPage > ranges[i].nToPage ? -1 : 1;
+        for (DWORD pageNo = ranges[i].nFromPage; pageNo != ranges[i].nToPage + dir; pageNo += dir) {
             if ((PrintRangeAdv::Even == pd.advData.range && pageNo % 2 != 0) ||
                 (PrintRangeAdv::Odd == pd.advData.range && pageNo % 2 == 0)) {
                 continue;
@@ -1784,6 +1805,7 @@ static void PrintCurrentFileCont(MainWindow* win, bool waitForCompletion, bool s
         return;
     }
     int rotation;
+    WindowTab* tab = win->CurrentTab();
     // the print dialog needs the real total up front; no progress UI here
     EnsureFullLayout(dm);
     int nPages = dm->PageCount();
@@ -1903,6 +1925,13 @@ static void PrintCurrentFileCont(MainWindow* win, bool waitForCompletion, bool s
     if (action != PD_RESULT_PRINT) {
         // it's cancel or apply so silently ignore as it's not an error
         logf("PrintCurrentFile: PrintDlgEx ended without print, action=%u\n", action);
+        goto Exit;
+    }
+
+    // the dialog's page ranges are for this tab's document; another file opened
+    // while it was up (e.g. from Outlook) becomes the current tab
+    if (win->CurrentTab() != tab) {
+        logf("PrintCurrentFile: tab changed during PrintDlgEx\n");
         goto Exit;
     }
 
