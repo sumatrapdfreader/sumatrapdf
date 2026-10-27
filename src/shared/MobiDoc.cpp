@@ -768,6 +768,16 @@ static void CollectKindleEmbedRecIndexes(Str html, Vec<int>& out) {
     }
 }
 
+static Size ImageSizeFromHeader(Str img) {
+    Size res;
+    FileTypeInfo fti = GuessFileInfoFromData(img);
+    if (fti.hasImageSize) {
+        res = Size(fti.imageDx, fti.imageDy);
+    }
+    FreeFileTypeInfo(&fti);
+    return res;
+}
+
 static void EmitRecindexPages(str::Builder& doc, const Vec<int>& recs) {
     doc.Reset();
     doc.Append(StrL("<html><body>"));
@@ -800,6 +810,7 @@ void MobiDoc::MaybeSynthesizeImagePages() {
     if (len(embedIdx) >= 2 && fixedLayout) {
         logf("MobiDoc: synthesizing %d pages from kindle:embed (htmlLen=%d)\n", len(embedIdx), len(html));
         EmitRecindexPages(doc, embedIdx);
+        imagePageSize = ImageSizeFromHeader(GetImage(embedIdx[0]));
         return;
     }
     if (len(embedIdx) >= 2) {
@@ -833,6 +844,7 @@ void MobiDoc::MaybeSynthesizeImagePages() {
         return;
     }
     EmitRecindexPages(doc, recs);
+    imagePageSize = ImageSizeFromHeader(GetImage(recs[0]));
 }
 
 // don't free the result

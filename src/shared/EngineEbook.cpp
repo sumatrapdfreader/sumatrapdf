@@ -1276,6 +1276,13 @@ bool EngineMobi::FinishLoading() {
         return false;
     }
 
+    // a page per image: size pages like the images, without a border (#6399)
+    Size imgSize = doc->imagePageSize;
+    if (!imgSize.IsEmpty()) {
+        pageRect = RectF(0, 0, (float)imgSize.dx, (float)imgSize.dy);
+        pageBorder = 0;
+    }
+
     Str html = doc->GetHtmlData();
     FindMobiChapterStarts(html, chapterStart);
 

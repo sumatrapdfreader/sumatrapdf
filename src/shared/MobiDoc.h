@@ -24,6 +24,8 @@ struct MobiDoc {
     int coverImageRec = 0; // 0 if no cover image
 
     Vec<Str> images;
+    // size of the first page image when the book is synthesized image pages
+    Size imagePageSize;
 
     HuffDicDecompressor* huffDic = nullptr;
 

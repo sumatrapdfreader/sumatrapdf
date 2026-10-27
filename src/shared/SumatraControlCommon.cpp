@@ -99,6 +99,10 @@ TempStr PageBoxesResultTemp(int pageNo, int* exitCodeOut) {
         line.Append(fmt(" %s=%.2f,%.2f,%.2f,%.2f", Str(PdfPageBoxName(box.kind)), box.rect.x, box.rect.y, box.rect.dx,
                         box.rect.dy));
     }
+    RectF media = engine->PageMediabox(pageNo);
+    RectF content = engine->PageContentBox(pageNo);
+    line.Append(fmt(" engineMedia=%.2f,%.2f,%.2f,%.2f", media.x, media.y, media.dx, media.dy));
+    line.Append(fmt(" engineContent=%.2f,%.2f,%.2f,%.2f", content.x, content.y, content.dx, content.dy));
     return finish(ToStrTemp(line), 0);
 }
 
