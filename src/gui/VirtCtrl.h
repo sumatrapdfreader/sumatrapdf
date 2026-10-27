@@ -960,6 +960,7 @@ struct VirtRichText : VirtCtrl {
     void AddPlainText(Str);
     void AddPlainLink(Str text, Str cmd);
     void LayoutText(int areaWidth);
+    void WrapToBounds();
     bool HasRichContent();
     TempStr PlainTextTemp();
     TipLink* LinkAt(Point ptLocal);

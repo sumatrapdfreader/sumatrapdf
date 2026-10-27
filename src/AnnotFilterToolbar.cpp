@@ -1236,7 +1236,8 @@ TempStr AnnotFilterToolbarStateTemp(MainWindow* win) {
     if (f && f->floatWnd && f->floatWnd->notePreview) {
         VirtFixedLinesText* np = f->floatWnd->notePreview;
         bool shown = np->GetVisibility() == Visibility::Visible;
-        out.Append(fmt("note=%d noteText=%s\n", shown ? 1 : 0, np->PlainTextTemp()));
+        out.Append(fmt("note=%d noteWrapDx=%d noteDx=%d noteText=%s\n", shown ? 1 : 0, np->layoutDx,
+                       np->ContentRectInWindow().dx, np->PlainTextTemp()));
     }
     int deleteOn = 0;
     int discardOn = 0;

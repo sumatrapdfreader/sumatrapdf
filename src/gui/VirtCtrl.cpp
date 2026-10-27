@@ -4407,6 +4407,15 @@ void VirtRichText::SetBounds(Rect r) {
     LayoutText(content.dx);
 }
 
+// size queries (e.g. WM_GETMINMAXINFO's) re-wrap the words to the width they
+// ask about; wrap them back to our bounds before drawing or hit-testing
+void VirtRichText::WrapToBounds() {
+    int dx = lastBounds.dx - padding.left - padding.right;
+    if (dx > 0) {
+        LayoutText(dx);
+    }
+}
+
 // one underline per line the link's words wrapped onto, in word coordinates
 void TipLinkUnderlines(TipLink* link, Vec<Rect>& out) {
     TipWord* last = link->lastWord;
@@ -4432,6 +4441,7 @@ void TipLinkUnderlines(TipLink* link, Vec<Rect>& out) {
 // draws the words (link words in kColRichLink, underlined; others in kColRichText;
 // isKbd words as key-caps like the keyboard help sheet)
 void VirtRichText::Paint(VirtPaintCtx& ctx) {
+    WrapToBounds();
     Gfx* gfx = ctx.gfx;
     PlatformFont* boldFont = nullptr;
     Color textCol = GetColor(kColRichText);
@@ -4480,6 +4490,7 @@ void VirtRichText::Paint(VirtPaintCtx& ctx) {
 
 // the link under a point in our own coordinates, or null
 TipLink* VirtRichText::LinkAt(Point ptLocal) {
+    WrapToBounds();
     int x = ptLocal.x - padding.left;
     int y = ptLocal.y - padding.top;
     for (TipWord* w = words.next; w; w = w->next) {
