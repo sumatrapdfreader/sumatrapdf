@@ -122,6 +122,7 @@ const user32 = loadDll("user32.dll", {
   GetClipboardData: { args: [FFIType.u32], returns: FFIType.u64 },
   EnumClipboardFormats: { args: [FFIType.u32], returns: FFIType.u32 },
   EmptyClipboard: { args: [], returns: FFIType.bool },
+  SetClipboardData: { args: [FFIType.u32, FFIType.u64], returns: FFIType.u64 },
 });
 
 // GDI + GDI+ for capturing a window to a PNG (see captureWindowToPng). Capturing
@@ -229,6 +230,8 @@ const kernel32 = loadDll("kernel32.dll", {
   GlobalLock: { args: [FFIType.u64], returns: FFIType.ptr },
   GlobalUnlock: { args: [FFIType.u64], returns: FFIType.bool },
   GlobalSize: { args: [FFIType.u64], returns: FFIType.u64 },
+  GlobalAlloc: { args: [FFIType.u32, FFIType.u64], returns: FFIType.u64 },
+  GlobalFree: { args: [FFIType.u64], returns: FFIType.u64 },
 });
 
 // Authenticode helpers (mirror src/base/Crypto.cpp GetExecutableSignerTemp / IsPEFileSigned).
@@ -1266,6 +1269,37 @@ export function getClipboardDibInfo(): { width: number; height: number; bitCount
     } finally {
       kernel32.symbols.GlobalUnlock(h);
     }
+  } finally {
+    user32.symbols.CloseClipboard();
+  }
+}
+
+// Puts `text` on the clipboard as CF_UNICODETEXT, verbatim (no line ending conversion).
+export function setClipboardText(text: string): boolean {
+  const CF_UNICODETEXT = 13;
+  const GMEM_MOVEABLE = 0x2;
+  if (!user32.symbols.OpenClipboard(null)) {
+    return false;
+  }
+  try {
+    user32.symbols.EmptyClipboard();
+    const src = wideZ(text);
+    const h = kernel32.symbols.GlobalAlloc(GMEM_MOVEABLE, src.byteLength);
+    if (!h) {
+      return false;
+    }
+    const mem = kernel32.symbols.GlobalLock(h);
+    if (!mem) {
+      kernel32.symbols.GlobalFree(h);
+      return false;
+    }
+    new Uint8Array(toArrayBuffer(mem, 0, src.byteLength)).set(new Uint8Array(src.buffer));
+    kernel32.symbols.GlobalUnlock(h);
+    if (!user32.symbols.SetClipboardData(CF_UNICODETEXT, h)) {
+      kernel32.symbols.GlobalFree(h);
+      return false;
+    }
+    return true;
   } finally {
     user32.symbols.CloseClipboard();
   }

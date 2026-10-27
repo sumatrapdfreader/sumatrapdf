@@ -1,4 +1,4 @@
-// Run PDF Script: LF-only text (GitHub's copy button) must show as separate lines.
+// Run PDF Script: pasted LF-only text (GitHub's copy button) must show as separate lines.
 import { resolve } from "node:path";
 import { cmdId, pollUntil, runStandalone, USE_NG } from "./util.ts";
 import { killAndWait, launchControlled, sendCommand } from "./win-automation.ts";
@@ -12,10 +12,12 @@ import {
   isWindowVisible,
   sendMessage,
   sendText,
+  setClipboardText,
 } from "./winapi.ts";
 
 const PDF = resolve(import.meta.dir, "issue-1189.pdf");
 const EM_GETLINECOUNT = 0x00ba;
+const WM_PASTE = 0x0302;
 const GWL_STYLE = -16;
 const ES_MULTILINE = 0x4;
 const ES_READONLY = 0x800;
@@ -49,7 +51,10 @@ export async function testit(): Promise<void> {
       { error: "script edit" },
     );
 
-    sendText(scriptEdit, "let a = 1;\nlet b = 2;\nprint(a + b);");
+    if (!setClipboardText("let a = 1;\nlet b = 2;\nprint(a + b);")) throw new Error("setClipboardText failed");
+    // the box starts with an example script
+    sendText(scriptEdit, "");
+    sendMessage(scriptEdit, WM_PASTE, 0, 0);
     const lines = Number(sendMessage(scriptEdit, EM_GETLINECOUNT, 0, 0));
     if (lines !== 3) throw new Error(`LF-only script shows as ${lines} line(s), expected 3`);
     console.log("issue-6373: LF-only script shows 3 lines");

@@ -249,12 +249,6 @@ HWND Edit::Create(const CreateArgs& args) {
     if (!hwnd) {
         return nullptr;
     }
-    if (args.isMultiLine) {
-        // break lines on bare LF / CR too, e.g. text pasted from a browser (Win10 1809+, no-op before)
-        constexpr UINT kEmSetExtendedStyle = 0x1500 + 10; // EM_SETEXTENDEDSTYLE
-        constexpr LPARAM kEsExAllowEolAll = 0x3;          // ES_EX_ALLOWEOL_ALL
-        SendMessageW(hwnd, kEmSetExtendedStyle, kEsExAllowEolAll, kEsExAllowEolAll);
-    }
     if (args.noTheme || createdWithFrame) {
         // strip the Win11 CFD/fluent style so it cannot draw a blue accent
         SetWindowTheme(hwnd, L"", L"");
@@ -322,6 +316,39 @@ HBRUSH Edit::CtlColorBrush(HDC hdc) {
         br = (HBRUSH)DefWindowProcW(parent, msg, (WPARAM)hdc, (LPARAM)hwnd);
     }
     return br;
+}
+
+static WStr GetClipboardTextTemp(HWND hwnd) {
+    if (!OpenClipboard(hwnd)) {
+        return {};
+    }
+    WStr res;
+    HANDLE h = GetClipboardData(CF_UNICODETEXT);
+    WCHAR* s = h ? (WCHAR*)GlobalLock(h) : nullptr;
+    if (s) {
+        res = str::DupTemp(WStr(s));
+        GlobalUnlock(h);
+    }
+    CloseClipboard();
+    return res;
+}
+
+// A multi-line edit only breaks lines on CRLF. Browsers (e.g. GitHub's copy
+// button) put LF-only text on the clipboard, which would paste as one line.
+// Returns false to let the edit paste as usual.
+static bool PasteWithCRLF(HWND hwnd) {
+    DWORD style = GetWindowStyle(hwnd);
+    if (!(style & ES_MULTILINE) || (style & ES_READONLY)) {
+        return false;
+    }
+    TempStr text = ToUtf8Temp(GetClipboardTextTemp(hwnd));
+    TempStr crlf = str::LFToCRLFTemp(text);
+    if (len(crlf) == len(text)) {
+        // no bare LF
+        return false;
+    }
+    SendMessageW(hwnd, EM_REPLACESEL, TRUE, (LPARAM)ToWStrTemp(crlf).s);
+    return true;
 }
 
 void Edit::WndProc(ControlBase::WndProcEvent* ev) {
@@ -398,6 +425,15 @@ void Edit::WndProc(ControlBase::WndProcEvent* ev) {
         case WM_SETFOCUS: {
             if (selectAllOnFocus && !delaySelectAll) {
                 PostDelayedEditSelectAll(hwnd);
+            }
+            break;
+        }
+
+        case WM_PASTE: {
+            if (PasteWithCRLF(hwnd)) {
+                ev->result = 0;
+                ev->didHandle = true;
+                return;
             }
             break;
         }
