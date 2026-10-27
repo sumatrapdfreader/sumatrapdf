@@ -8,7 +8,7 @@
 import { mkdirSync, rmSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 import { ControlClient, ControlCommand } from "./control.ts";
-import { USE_NG, cmdId, makePdf, runStandalone, tmpPath } from "./util.ts";
+import { cmdId, makePdf, runStandalone, tmpPath } from "./util.ts";
 import { sleep } from "./winapi.ts";
 import { killAndWait, launchControlled, sendCommand } from "./win-automation.ts";
 
@@ -52,22 +52,15 @@ export async function testit(): Promise<void> {
     await want("bookmarks/-");
     sendCommand(frame, cmdId("CmdFavoriteToggle"));
     await want("bookmarks/favorites");
-    if (USE_NG) {
-      sendCommand(frame, cmdId("CmdToggleThumbnails"));
-      await want("thumbnails/favorites");
-      sendCommand(frame, cmdId("CmdToggleBookmarks"));
-      await want("bookmarks/favorites");
-    } else {
-      // the thumbnails open in the middle panel and move to the top one
-      sendCommand(frame, cmdId("CmdToggleThumbnails"));
-      await want("bookmarks/thumbnails/favorites");
-      sendCommand(frame, cmdId("CmdToggleBookmarks"));
-      await want("thumbnails/favorites");
-      sendCommand(frame, cmdId("CmdToggleThumbnails"));
-      await want("-/favorites");
-      sendCommand(frame, cmdId("CmdToggleBookmarks"));
-      await want("bookmarks/favorites");
-    }
+    // the thumbnails open in the middle panel and move to the top one
+    sendCommand(frame, cmdId("CmdToggleThumbnails"));
+    await want("bookmarks/thumbnails/favorites");
+    sendCommand(frame, cmdId("CmdToggleBookmarks"));
+    await want("thumbnails/favorites");
+    sendCommand(frame, cmdId("CmdToggleThumbnails"));
+    await want("-/favorites");
+    sendCommand(frame, cmdId("CmdToggleBookmarks"));
+    await want("bookmarks/favorites");
 
     await client.quit();
     quit = true;

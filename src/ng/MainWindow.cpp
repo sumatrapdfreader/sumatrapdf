@@ -308,6 +308,7 @@ MainWindow::MainWindow(gpui::Window* w) {
     gpuiWin = w;
     sidebarBottomContent =
         SidebarContentFromStr(gSettings ? gSettings->sidebarBottomView : Str{}, SidebarContent::Favorites);
+    sidebarMiddleContent = SidebarContent::Thumbnails;
     sidebarDx = gSettings ? gSettings->sidebarDx : 0;
     if (sidebarDx < kSidebarMinDx) {
         sidebarDx = kSidebarMinDx;

@@ -2555,7 +2555,9 @@ void ShellView::OnKeyDown(ShellView* self, gp::Ctx* cx, const gp::KeyEvent* ev) 
     // box cycles between them. Elsewhere (a dialog, the find bar) Tab is gpui's
     if (ev->vk == VK_TAB && !ev->ctrl && !ev->alt && !self->overlayUp) {
         bool inTabOrder = AppShellIsFrameFocused(win) || IsToolbarPageBoxFocused(win) ||
-                          SidebarPanelHasFocus(win, true) || SidebarPanelHasFocus(win, false);
+                          SidebarPanelHasFocus(win, SidebarSlot::Top) ||
+                          SidebarPanelHasFocus(win, SidebarSlot::Middle) ||
+                          SidebarPanelHasFocus(win, SidebarSlot::Bottom);
         if (inTabOrder) {
             AdvanceFocus(win, ev->shift);
             mut->propagate = false;

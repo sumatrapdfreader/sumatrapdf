@@ -51,7 +51,6 @@ type Sidebar = {
   current: number;
   rendered: number;
   top: Panel;
-  // ng has no middle panel
   middle?: Panel;
   bottom: Panel;
   rects: Map<number, Rect>;
@@ -236,8 +235,8 @@ export async function testit(): Promise<void> {
     };
 
     // a command opens its view in the first free panel: the top one, the
-    // bottom one, then the middle one (ng: the top one switches to it). The
-    // document has bookmarks, so they show on opening
+    // bottom one, then the middle one. The document has bookmarks, so they
+    // show on opening
     await want("the bookmarks didn't show on opening", "bookmarks/-");
     sendCommand(frame, cmdId("CmdToggleThumbnails"));
     await want("Thumbnails didn't show in the bottom panel", "bookmarks/thumbnails");
@@ -250,27 +249,23 @@ export async function testit(): Promise<void> {
     sendCommand(frame, cmdId("CmdToggleBookmarks"));
     await want("Bookmarks didn't show in the top panel", "bookmarks/thumbnails");
     sendCommand(frame, cmdId("CmdFavoriteToggle"));
-    if (USE_NG) {
-      await want("Favorites didn't replace Bookmarks on top", "favorites/thumbnails");
-    } else {
-      await want("Favorites didn't show in the middle panel", "bookmarks/favorites/thumbnails");
-      s = await sidebar(client);
-      if (s.middle!.selected !== "001") {
-        throw new Error(`sidebar-thumbnails: want Favorites selected in the middle panel: ${s.raw}`);
-      }
-      // the middle panel's icons swap views like the others
-      await clickIcon(async () => (await sidebar(client)).middle!, "thumbnails");
-      await want("clicking Thumbnails in the middle panel didn't swap", "bookmarks/thumbnails/favorites");
-      await clickIcon(async () => (await sidebar(client)).middle!, "favorites");
-      await want("clicking Favorites in the middle panel didn't swap back", "bookmarks/favorites/thumbnails");
-      // closing the top panel moves the middle one's view up
-      sendCommand(frame, cmdId("CmdToggleBookmarks"));
-      await want("hiding Bookmarks didn't move Favorites to the top", "favorites/thumbnails");
-      sendCommand(frame, cmdId("CmdToggleBookmarks"));
-      await want("Bookmarks didn't show in the middle panel", "favorites/bookmarks/thumbnails");
-      sendCommand(frame, cmdId("CmdToggleBookmarks"));
-      await want("Bookmarks didn't hide the middle panel", "favorites/thumbnails");
+    await want("Favorites didn't show in the middle panel", "bookmarks/favorites/thumbnails");
+    s = await sidebar(client);
+    if (s.middle!.selected !== "001") {
+      throw new Error(`sidebar-thumbnails: want Favorites selected in the middle panel: ${s.raw}`);
     }
+    // the middle panel's icons swap views like the others
+    await clickIcon(async () => (await sidebar(client)).middle!, "thumbnails");
+    await want("clicking Thumbnails in the middle panel didn't swap", "bookmarks/thumbnails/favorites");
+    await clickIcon(async () => (await sidebar(client)).middle!, "favorites");
+    await want("clicking Favorites in the middle panel didn't swap back", "bookmarks/favorites/thumbnails");
+    // closing the top panel moves the middle one's view up
+    sendCommand(frame, cmdId("CmdToggleBookmarks"));
+    await want("hiding Bookmarks didn't move Favorites to the top", "favorites/thumbnails");
+    sendCommand(frame, cmdId("CmdToggleBookmarks"));
+    await want("Bookmarks didn't show in the middle panel", "favorites/bookmarks/thumbnails");
+    sendCommand(frame, cmdId("CmdToggleBookmarks"));
+    await want("Bookmarks didn't hide the middle panel", "favorites/thumbnails");
 
     // clicking an icon switches the panel's view; the other panel's view swaps
     await clickIcon(async () => (await sidebar(client)).top, "bookmarks");

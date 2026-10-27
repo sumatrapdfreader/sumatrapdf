@@ -97,7 +97,9 @@ struct SidebarUI {
     gp::Entity<SidebarView> view;
     gpui::InputState* tocFilter = nullptr;
     gpui::InputState* favFilter = nullptr;
+    // per panel: top, middle, bottom
     gp::FocusHandle tocFocus;
+    gp::FocusHandle midFocus;
     gp::FocusHandle favFocus;
     float tocScrollY = 0;
     float favScrollY = 0;
@@ -112,7 +114,7 @@ struct SidebarUI {
     int thumbSelectedPage = 0;
     bool thumbSelectionPinned = false;
     // view icons, Bookmarks / Thumbnails / Favorites, for each panel
-    gpui::Bounds viewIconBounds[2][3]{};
+    gpui::Bounds viewIconBounds[3][3]{};
     // pixel sizes at the current frame DPI (96 DPI keeps the constants above)
     int viewIconPx = kSidebarIconPx;
     int filterFontPx = kSidebarFilterFontPx;
@@ -170,6 +172,7 @@ struct SidebarView {
     static void OnFavAction(SidebarView* self, gp::Ctx* cx, const gp::ActionEvent* ev);
     static void OnFavSplitter(SidebarView* self, gp::Ctx* cx, const gp::DragMoveEvent* ev);
     static void OnFavSplitterDone(SidebarView* self, gp::Ctx* cx, const gp::MouseUpEvent*);
+    static void OnMiddleSplitter(SidebarView* self, gp::Ctx* cx, const gp::DragMoveEvent* ev);
     static void OnThumbClick(SidebarView* self, gp::Ctx* cx, const gp::ClickEvent*, int64_t pageNo);
     static void OnThumbScroll(SidebarView* self, gp::Ctx* cx, const gp::ScrollEvent* ev);
     static void OnThumbClose(SidebarView* self, gp::Ctx* cx, const gp::ClickEvent*);
@@ -198,6 +201,7 @@ static void EnsureView(MainWindow* win, gp::Ctx* cx) {
     if (!ui->view.IsValid()) {
         ui->view = gp::EntityNewState<SidebarView>(cx->app);
         ui->tocFocus = gp::FocusHandleNew(cx);
+        ui->midFocus = gp::FocusHandleNew(cx);
         ui->favFocus = gp::FocusHandleNew(cx);
     }
     auto* view = (SidebarView*)gp::EntityGet(cx->app, ui->view.id);
@@ -379,28 +383,58 @@ void SidebarFocusFavorites(MainWindow* win) {
     AppShellInvalidate(win);
 }
 
-bool SidebarPanelVisible(MainWindow* win, bool top) {
+static gp::FocusHandle SlotFocus(SidebarUI* ui, SidebarSlot slot) {
+    switch (slot) {
+        case SidebarSlot::Top:
+            return ui->tocFocus;
+        case SidebarSlot::Middle:
+            return ui->midFocus;
+        default:
+            return ui->favFocus;
+    }
+}
+
+bool SidebarPanelVisible(MainWindow* win, SidebarSlot slot) {
     if (!win || !win->sidebar) {
         return false;
     }
-    return top ? (win->uiState.tocVisible && win->CurrentTab() != nullptr) : win->uiState.favVisible;
+    switch (slot) {
+        case SidebarSlot::Top:
+            return win->uiState.tocVisible && win->CurrentTab() != nullptr;
+        case SidebarSlot::Middle:
+            return win->uiState.middleVisible;
+        default:
+            return win->uiState.favVisible;
+    }
 }
 
-bool SidebarPanelHasFocus(MainWindow* win, bool top) {
+bool SidebarPanelHasFocus(MainWindow* win, SidebarSlot slot) {
     if (!win || !win->gpuiWin || !win->sidebar) {
         return false;
     }
-    gp::FocusHandle focus = top ? win->sidebar->tocFocus : win->sidebar->favFocus;
+    gp::FocusHandle focus = SlotFocus(win->sidebar, slot);
     return focus.IsValid() && gp::FocusHandleIsFocused(win->gpuiWin, focus);
+}
+
+// the panel with the keyboard, if any
+static bool FocusedSlot(MainWindow* win, SidebarSlot* slotOut) {
+    SidebarSlot slots[] = {SidebarSlot::Top, SidebarSlot::Middle, SidebarSlot::Bottom};
+    for (SidebarSlot slot : slots) {
+        if (SidebarPanelHasFocus(win, slot)) {
+            *slotOut = slot;
+            return true;
+        }
+    }
+    return false;
 }
 
 // orig's FocusSidebarPanel: the keyboard goes to the panel's tree (or to the
 // panel itself for thumbnails), not to its search field
-void SidebarFocusPanel(MainWindow* win, bool top) {
-    if (!SidebarPanelVisible(win, top) || !win->gpuiWin) {
+void SidebarFocusPanel(MainWindow* win, SidebarSlot slot) {
+    if (!SidebarPanelVisible(win, slot) || !win->gpuiWin) {
         return;
     }
-    gp::FocusHandle focus = top ? win->sidebar->tocFocus : win->sidebar->favFocus;
+    gp::FocusHandle focus = SlotFocus(win->sidebar, slot);
     if (!focus.IsValid()) {
         return;
     }
@@ -418,7 +452,8 @@ void SidebarFocusTop(MainWindow* win) {
         return;
     }
     // ng: the handles belong to the panels, not to what they show
-    SidebarFocusPanel(win, SidebarPanelVisible(win, true));
+    bool top = SidebarPanelVisible(win, SidebarSlot::Top);
+    SidebarFocusPanel(win, top ? SidebarSlot::Top : SidebarSlot::Bottom);
 }
 
 SidebarContent SidebarContentFromStr(Str s, SidebarContent fallback) {
@@ -454,85 +489,141 @@ static bool ContentAvailable(MainWindow* win, SidebarContent content) {
     return win && win->IsDocLoaded() && win->ctrl && win->ctrl->HasToc();
 }
 
+// what the panel shows; the top one's is the document's
+static SidebarContent SlotContent(MainWindow* win, SidebarSlot slot) {
+    WindowTab* tab = win->CurrentTab();
+    switch (slot) {
+        case SidebarSlot::Top:
+            return tab ? tab->sidebarContent : SidebarContent::Bookmarks;
+        case SidebarSlot::Middle:
+            return win->sidebarMiddleContent;
+        default:
+            return win->sidebarBottomContent;
+    }
+}
+
+// the visible panel that shows content, if any
+static bool ShownSlot(MainWindow* win, SidebarContent content, SidebarSlot* slotOut) {
+    SidebarSlot slots[] = {SidebarSlot::Top, SidebarSlot::Middle, SidebarSlot::Bottom};
+    for (SidebarSlot slot : slots) {
+        if (SidebarPanelVisible(win, slot) && SlotContent(win, slot) == content) {
+            *slotOut = slot;
+            return true;
+        }
+    }
+    return false;
+}
+
 bool SidebarContentVisible(MainWindow* win, SidebarContent content) {
     if (!win) {
         return false;
     }
-    WindowTab* tab = win->CurrentTab();
-    bool top = tab && win->uiState.tocVisible && tab->sidebarContent == content;
-    bool bottom = win->uiState.favVisible && win->sidebarBottomContent == content;
-    return top || bottom;
+    SidebarSlot slot;
+    return ShownSlot(win, content, &slot);
 }
 
 static void SaveBottomContent(MainWindow* win) {
     str::ReplaceWithCopy(&gSettings->sidebarBottomView, SidebarContentToStr(win->sidebarBottomContent));
 }
 
+// the bottom panel gives way to the document's top one; the middle one shows
+// the content left over
 void SidebarResolveContents(MainWindow* win) {
-    WindowTab* tab = win ? win->CurrentTab() : nullptr;
-    if (!tab || tab->sidebarContent != win->sidebarBottomContent) {
+    if (!win) {
         return;
     }
+    WindowTab* tab = win->CurrentTab();
+    SidebarContent top = SlotContent(win, SidebarSlot::Top);
     SidebarContent order[] = {SidebarContent::Favorites, SidebarContent::Bookmarks, SidebarContent::Thumbnails};
+    if (tab && top == win->sidebarBottomContent) {
+        for (SidebarContent content : order) {
+            if (content != top) {
+                win->sidebarBottomContent = content;
+                SaveBottomContent(win);
+                break;
+            }
+        }
+    }
     for (SidebarContent content : order) {
-        if (content != tab->sidebarContent) {
-            win->sidebarBottomContent = content;
-            SaveBottomContent(win);
-            return;
+        if (content != top && content != win->sidebarBottomContent) {
+            win->sidebarMiddleContent = content;
         }
     }
 }
 
-static void SetPanelContent(MainWindow* win, bool top, SidebarContent content) {
+// the panel shows content from now on; if another one did, it takes the
+// panel's old content (swap). Without a tab the bottom panel stands in
+static void SetPanelContent(MainWindow* win, SidebarSlot slot, SidebarContent content) {
     WindowTab* tab = win->CurrentTab();
-    SidebarContent old = top && tab ? tab->sidebarContent : win->sidebarBottomContent;
-    SidebarContent other = top ? win->sidebarBottomContent : (tab ? tab->sidebarContent : SidebarContent::Bookmarks);
-    if (content == other) {
-        if (top) {
-            win->sidebarBottomContent = old;
-        } else if (tab) {
-            tab->sidebarContent = old;
+    if (slot == SidebarSlot::Top && !tab) {
+        slot = SidebarSlot::Bottom;
+    }
+    SidebarContent* contents[] = {tab ? &tab->sidebarContent : nullptr, &win->sidebarMiddleContent,
+                                  &win->sidebarBottomContent};
+    SidebarContent* mine = contents[(int)slot];
+    for (SidebarContent* other : contents) {
+        if (other && other != mine && *other == content) {
+            *other = *mine;
         }
     }
-    if (top && tab) {
-        tab->sidebarContent = content;
-    } else {
-        win->sidebarBottomContent = content;
-    }
+    *mine = content;
     SaveBottomContent(win);
 }
 
+// orig's HideSidebarPanel: the middle panel shows only with the other two, so
+// when one of them goes, it takes the middle one's content instead
+static void HidePanel(MainWindow* win, SidebarSlot slot) {
+    const auto& ui = win->uiState;
+    if (slot == SidebarSlot::Middle || ui.middleVisible) {
+        bool focused = SidebarPanelHasFocus(win, slot) || SidebarPanelHasFocus(win, SidebarSlot::Middle);
+        if (slot != SidebarSlot::Middle) {
+            SetPanelContent(win, slot, win->sidebarMiddleContent);
+        }
+        gSettings->showSidebarMiddle = false;
+        SetSidebarVisibility(win, ui.tocVisible, ui.favVisible, SidebarResizeFrame::Adjust);
+        if (focused && slot != SidebarSlot::Middle) {
+            SidebarFocusPanel(win, slot);
+        }
+        return;
+    }
+    bool top = slot != SidebarSlot::Top && ui.tocVisible;
+    bool bottom = slot != SidebarSlot::Bottom && ui.favVisible;
+    SetSidebarVisibility(win, top, bottom, SidebarResizeFrame::Adjust);
+}
+
+// orig's ShowSidebarView: the first free panel, top, bottom, then middle; with
+// all shown, the top one switches to content
 static void ToggleContent(MainWindow* win, SidebarContent content) {
     if (!ContentAvailable(win, content)) {
         return;
     }
-    WindowTab* tab = win->CurrentTab();
-    bool topShows = tab && win->uiState.tocVisible && tab->sidebarContent == content;
-    bool bottomShows = win->uiState.favVisible && win->sidebarBottomContent == content;
-    if (topShows) {
-        SetSidebarVisibility(win, false, win->uiState.favVisible, SidebarResizeFrame::Adjust);
+    SidebarSlot shown;
+    if (ShownSlot(win, content, &shown)) {
+        HidePanel(win, shown);
         ScheduleSaveSettings();
         return;
     }
-    if (bottomShows) {
-        SetSidebarVisibility(win, win->uiState.tocVisible, false, SidebarResizeFrame::Adjust);
-        ScheduleSaveSettings();
-        return;
+    const auto& ui = win->uiState;
+    SidebarSlot slot = SidebarSlot::Top;
+    if (!win->CurrentTab()) {
+        slot = SidebarSlot::Bottom;
+    } else if (ui.tocVisible && !ui.favVisible) {
+        slot = SidebarSlot::Bottom;
+    } else if (ui.tocVisible && !ui.middleVisible) {
+        slot = SidebarSlot::Middle;
     }
-    bool useTop = tab && !win->uiState.tocVisible;
-    if (win->uiState.tocVisible && !win->uiState.favVisible) {
-        useTop = false;
-    } else if (win->uiState.tocVisible && win->uiState.favVisible) {
-        useTop = tab != nullptr;
+    SetPanelContent(win, slot, content);
+    if (slot == SidebarSlot::Middle) {
+        gSettings->showSidebarMiddle = true;
     }
-    SetPanelContent(win, useTop, content);
-    SetSidebarVisibility(win, useTop || win->uiState.tocVisible, !useTop || win->uiState.favVisible,
-                         SidebarResizeFrame::Adjust);
+    bool top = slot == SidebarSlot::Top || ui.tocVisible;
+    bool bottom = slot == SidebarSlot::Bottom || ui.favVisible;
+    SetSidebarVisibility(win, top, bottom, SidebarResizeFrame::Adjust);
     if (content == SidebarContent::Favorites) {
         SidebarFocusFavorites(win);
     } else if (content == SidebarContent::Thumbnails) {
         // showing the pane puts the keyboard there, same as the favorites tree
-        SidebarFocusPanel(win, useTop);
+        SidebarFocusPanel(win, slot);
     }
     ScheduleSaveSettings();
 }
@@ -550,6 +641,7 @@ void SidebarToggleFavorites(MainWindow* win) {
 }
 
 static float ScrollToRow(float scrollY, float viewH, int idx, int nRows);
+static int TopPaneDy(MainWindow* win);
 
 // orig's TocTreeKeyDown / FavTreeKeyDown: Esc clears the search and focuses
 // the filter, Up on the first row goes back to the search box
@@ -695,12 +787,11 @@ bool SidebarOnKeyDown(MainWindow* win, int vkey, bool ctrl, bool shift, bool alt
     if (!tab || !ui || ctrl || alt) {
         return false;
     }
-    bool topFocused = ui->tocFocus.IsValid() && gp::FocusHandleIsFocused(win->gpuiWin, ui->tocFocus);
-    bool bottomFocused = ui->favFocus.IsValid() && gp::FocusHandleIsFocused(win->gpuiWin, ui->favFocus);
-    if (!topFocused && !bottomFocused) {
+    SidebarSlot focused;
+    if (!FocusedSlot(win, &focused)) {
         return false;
     }
-    SidebarContent content = topFocused ? tab->sidebarContent : win->sidebarBottomContent;
+    SidebarContent content = SlotContent(win, focused);
     if (content == SidebarContent::Bookmarks) {
         int n = len(ui->tocRows);
         if (n == 0) {
@@ -896,11 +987,11 @@ bool SidebarOnChar(MainWindow* win, u32 ch) {
     if (!tab || !ui || ch < 0x20 || ch == 0x7f) {
         return false;
     }
-    bool topFocused = SidebarPanelHasFocus(win, true);
-    if (!topFocused && !SidebarPanelHasFocus(win, false)) {
+    SidebarSlot focused;
+    if (!FocusedSlot(win, &focused)) {
         return false;
     }
-    SidebarContent content = topFocused ? tab->sidebarContent : win->sidebarBottomContent;
+    SidebarContent content = SlotContent(win, focused);
     bool isToc = content == SidebarContent::Bookmarks;
     if (!isToc && content != SidebarContent::Favorites) {
         return false;
@@ -1035,8 +1126,8 @@ static TempStr TocProbeRows(MainWindow* win, TocItem* root) {
 TempStr SidebarTestToc(MainWindow* win, Str op, int arg) {
     // the bookmarks tree has no window of its own; tests focus it from here
     if (str::Eq(op, StrL("focus"))) {
-        SidebarFocusPanel(win, true);
-        return SidebarPanelHasFocus(win, true) ? StrL("ok") : StrL("ERR no-focus");
+        SidebarFocusPanel(win, SidebarSlot::Top);
+        return SidebarPanelHasFocus(win, SidebarSlot::Top) ? StrL("ok") : StrL("ERR no-focus");
     }
     TocTree* tree = win ? CurrentTocTree(win) : nullptr;
     TocItem* root = tree && tree->root ? tree->root->child : nullptr;
@@ -1103,8 +1194,8 @@ TempStr SidebarStateTemp(MainWindow* win) {
         "tocRows=%d tocSel='%s' tocFilter='%s' favRows=%d favSel='%s' panelFocus=%d%d top=%s bottom=%s "
         "favView=%d,%d,%d,%d",
         len(ui->tocRows), ui->tocSel ? ui->tocSel->title : Str{}, ui->tocFilter ? SidebarTocFilterTextTemp(win) : Str{},
-        len(ui->favRows), ui->favSel ? ui->favSel->text : Str{}, SidebarPanelHasFocus(win, true) ? 1 : 0,
-        SidebarPanelHasFocus(win, false) ? 1 : 0,
+        len(ui->favRows), ui->favSel ? ui->favSel->text : Str{}, SidebarPanelHasFocus(win, SidebarSlot::Top) ? 1 : 0,
+        SidebarPanelHasFocus(win, SidebarSlot::Bottom) ? 1 : 0,
         SidebarContentToStr(tab ? tab->sidebarContent : SidebarContent::Bookmarks),
         SidebarContentToStr(win->sidebarBottomContent), (int)fv.x, (int)fv.y, (int)fv.w, (int)fv.h);
 }
@@ -1128,7 +1219,8 @@ void SidebarView::OnFilterKey(SidebarView* self, gp::Ctx* cx, const gp::KeyEvent
     AppShellInvalidate(win);
     WindowTab* tab = win->CurrentTab();
     SidebarContent content = isToc ? SidebarContent::Bookmarks : SidebarContent::Favorites;
-    bool top = tab && win->uiState.tocVisible && tab->sidebarContent == content;
+    SidebarSlot slot = SidebarSlot::Bottom;
+    ShownSlot(win, content, &slot);
     bool inFavTab = isFav && tab && tab->IsFavoritesTab();
     gp::InputState* filter = isToc ? ui->tocFilter : ui->favFilter;
     if (ev->vk == VK_ESCAPE) {
@@ -1144,7 +1236,7 @@ void SidebarView::OnFilterKey(SidebarView* self, gp::Ctx* cx, const gp::KeyEvent
         }
         // empty: stay in the edit (Favorites tab) or move the focus to the tree
         if (!inFavTab) {
-            SidebarFocusPanel(win, top);
+            SidebarFocusPanel(win, slot);
         }
         return;
     }
@@ -1169,7 +1261,7 @@ void SidebarView::OnFilterKey(SidebarView* self, gp::Ctx* cx, const gp::KeyEvent
         gp::FocusHandleFocus(cx->win, ui->favFocus);
         return;
     }
-    SidebarFocusPanel(win, top);
+    SidebarFocusPanel(win, slot);
 }
 
 // --- flattening -------------------------------------------------------------
@@ -1305,11 +1397,11 @@ bool SidebarContextMenuFromKey(MainWindow* win, gp::Ctx* cx) {
     if (!tab || !ui) {
         return false;
     }
-    bool topFocused = SidebarPanelHasFocus(win, true);
-    if (!topFocused && !SidebarPanelHasFocus(win, false)) {
+    SidebarSlot focused;
+    if (!FocusedSlot(win, &focused)) {
         return false;
     }
-    SidebarContent content = topFocused ? tab->sidebarContent : win->sidebarBottomContent;
+    SidebarContent content = SlotContent(win, focused);
     // no mouse position when launched via keyboard shortcut
     // use position of selected item to show menu
     if (content == SidebarContent::Bookmarks) {
@@ -1508,6 +1600,24 @@ void SidebarView::OnFavSplitter(SidebarView* self, gp::Ctx* cx, const gp::DragMo
     gp::Notify(cx);
 }
 
+// the splitter between the middle and bottom panes sets the middle one's height
+void SidebarView::OnMiddleSplitter(SidebarView* self, gp::Ctx* cx, const gp::DragMoveEvent* ev) {
+    MainWindow* win = self->win;
+    if (!IsMainWindowValidAndNotClosing(win)) {
+        return;
+    }
+    int contentDy = win->canvasRc.dy;
+    int tocDy = TopPaneDy(win);
+    int restDy = contentDy - tocDy - kSplitterDy;
+    int middleDy = (int)ev->event.y - win->canvasRc.y - tocDy - kSplitterDy;
+    middleDy = limitValue(middleDy, kTocMinDy, std::max(kTocMinDy, restDy - kTocMinDy));
+    if (middleDy == gSettings->sidebarMiddleDy) {
+        return;
+    }
+    gSettings->sidebarMiddleDy = middleDy;
+    gp::Notify(cx);
+}
+
 void SidebarView::OnFavSplitterDone(SidebarView*, gp::Ctx* cx, const gp::MouseUpEvent*) {
     logf("OnFavSplitterDone: tocDy %d\n", gSettings->tocDy);
     ScheduleSaveSettings();
@@ -1538,12 +1648,12 @@ void SidebarView::OnThumbClose(SidebarView* self, gp::Ctx* cx, const gp::ClickEv
 }
 
 void SidebarView::OnPanelView(SidebarView* self, gp::Ctx* cx, const gp::ClickEvent*, int64_t arg) {
-    bool top = (arg & 4) == 0;
+    SidebarSlot slot = (SidebarSlot)(arg >> 2);
     SidebarContent content = (SidebarContent)(arg & 3);
     if (!ContentAvailable(self->win, content)) {
         return;
     }
-    SetPanelContent(self->win, top, content);
+    SetPanelContent(self->win, slot, content);
     if (content == SidebarContent::Bookmarks) {
         LoadTocTree(self->win);
     } else if (content == SidebarContent::Favorites) {
@@ -1569,7 +1679,7 @@ static gpc::PopupMenu* PopupFromModel(gp::Ctx* cx, MenuModel* model, Str id, uin
     return menu;
 }
 
-static gp::El* PaneHeader(MainWindow* win, gp::Ctx* cx, bool selectors, bool top, Str title, Str closeId,
+static gp::El* PaneHeader(MainWindow* win, gp::Ctx* cx, bool selectors, SidebarSlot slot, Str title, Str closeId,
                           gp::Listener onClose) {
     const gp::Theme& th = gp::ThemeNow(cx->app);
     SidebarApplyDpi(win);
@@ -1583,14 +1693,14 @@ static gp::El* PaneHeader(MainWindow* win, gp::Ctx* cx, bool selectors, bool top
                       ->PadX(6)
                       ->Gap(4);
     if (selectors) {
-        SidebarContent selected =
-            top && win->CurrentTab() ? win->CurrentTab()->sidebarContent : win->sidebarBottomContent;
+        SidebarContent selected = SlotContent(win, slot);
+        int slotIdx = (int)slot;
         SidebarContent contents[] = {SidebarContent::Bookmarks, SidebarContent::Thumbnails, SidebarContent::Favorites};
         gp::IconName icons[] = {gp::IconName::BookOpen, gp::IconName::GalleryVerticalEnd, gp::IconName::Star};
         Str tips[] = {Tr("Bookmarks"), Tr("Thumbnails"), Tr("Favorites")};
         for (int i = 0; i < dimofi(contents); i++) {
-            int64_t arg = (top ? 0 : 4) | (int)contents[i];
-            auto* button = gpc::Button::New(cx, GpuiDup(cx->a, fmt("sidebar-view-%d-%d", top ? 0 : 1, i)))
+            int64_t arg = (slotIdx << 2) | (int)contents[i];
+            auto* button = gpc::Button::New(cx, GpuiDup(cx->a, fmt("sidebar-view-%d-%d", slotIdx, i)))
                                ->Icon(icons[i])
                                ->Ghost()
                                ->Compact()
@@ -1600,7 +1710,7 @@ static gp::El* PaneHeader(MainWindow* win, gp::Ctx* cx, bool selectors, bool top
                                ->Disabled(!ContentAvailable(win, contents[i]))
                                ->Tooltip(ToGpui(tips[i]))
                                ->OnClick(gp::ListenTo(Ui(win)->view, &SidebarView::OnPanelView, arg));
-            row->Child(button->IntoEl()->BoundsOut(&Ui(win)->viewIconBounds[top ? 0 : 1][i]));
+            row->Child(button->IntoEl()->BoundsOut(&Ui(win)->viewIconBounds[slotIdx][i]));
         }
         row->Child(gp::Div(cx->a)->Flex1());
     } else {
@@ -1857,12 +1967,12 @@ static gp::ImageLoadState SidebarThumbLoad(gp::PaintApp* pa, void* user, gp::Ren
     return thumb->img ? gp::ImageLoadState::Ready : gp::ImageLoadState::Loading;
 }
 
-static gp::El* BuildThumbPane(MainWindow* win, gp::Ctx* cx, bool top) {
+static gp::El* BuildThumbPane(MainWindow* win, gp::Ctx* cx, SidebarSlot slot) {
     SidebarUI* ui = Ui(win);
     DisplayModel* dm = win->AsFixed();
     const gp::Theme& th = gp::ThemeNow(cx->app);
     gp::El* pane = gp::Div(cx->a)->FlexCol()->SizeFull()->Bg(th.tokens.sidebar);
-    pane->Child(PaneHeader(win, cx, true, top, Tr("Thumbnails"), StrL("thumb-close"),
+    pane->Child(PaneHeader(win, cx, true, slot, Tr("Thumbnails"), StrL("thumb-close"),
                            gp::ListenTo(ui->view, &SidebarView::OnThumbClose)));
     if (!dm) {
         return pane;
@@ -1940,7 +2050,7 @@ static gp::El* BuildThumbPane(MainWindow* win, gp::Ctx* cx, bool top) {
     }
     gp::El* scroll = gp::Div(cx->a)
                          ->Id(GStrL("page-thumbnails"))
-                         ->TrackFocus(top ? ui->tocFocus : ui->favFocus)
+                         ->TrackFocus(SlotFocus(ui, slot))
                          ->FocusOnPress()
                          ->TabStop(false)
                          ->FocusRing()
@@ -1987,10 +2097,8 @@ TempStr SidebarThumbnailsResultTemp(int* exitCodeOut) {
     if (s <= 0.f) {
         s = 1.f;
     }
-    WindowTab* tab = win->CurrentTab();
-    bool thumbsTop = tab && win->uiState.tocVisible && tab->sidebarContent == SidebarContent::Thumbnails;
-    bool thumbsBottom = win->uiState.favVisible && win->sidebarBottomContent == SidebarContent::Thumbnails;
-    bool ring = (thumbsTop && SidebarPanelHasFocus(win, true)) || (thumbsBottom && SidebarPanelHasFocus(win, false));
+    SidebarSlot thumbsSlot;
+    bool ring = ShownSlot(win, SidebarContent::Thumbnails, &thumbsSlot) && SidebarPanelHasFocus(win, thumbsSlot);
     int hwnd = 0;
 #if OS_WIN
     hwnd = (int)(intptr_t)AppShellNativeHwnd(win);
@@ -1999,10 +2107,14 @@ TempStr SidebarThumbnailsResultTemp(int* exitCodeOut) {
     sb.Append(fmt("hwnd=%d thumbnails=%d count=%d current=%d rendered=%d ring=%d", hwnd, showing ? 1 : 0, pageCount,
                   current, rendered, ring ? 1 : 0));
     SidebarContent icons[] = {SidebarContent::Bookmarks, SidebarContent::Thumbnails, SidebarContent::Favorites};
-    bool panelVis[] = {win->uiState.tocVisible, win->uiState.favVisible};
-    SidebarContent panelContent[] = {tab ? tab->sidebarContent : SidebarContent::Bookmarks, win->sidebarBottomContent};
-    Str panelName[] = {StrL("top"), StrL("bottom")};
-    for (int p = 0; p < 2; p++) {
+    bool panelVis[] = {win->uiState.tocVisible, win->uiState.middleVisible, win->uiState.favVisible};
+    SidebarSlot slots[] = {SidebarSlot::Top, SidebarSlot::Middle, SidebarSlot::Bottom};
+    Str panelName[] = {StrL("top"), StrL("middle"), StrL("bottom")};
+    SidebarContent panelContent[3];
+    for (int p = 0; p < 3; p++) {
+        panelContent[p] = SlotContent(win, slots[p]);
+    }
+    for (int p = 0; p < 3; p++) {
         sb.Append(fmt(" %s=%d,%d,%s,", panelName[p], hwnd, panelVis[p] ? 1 : 0, SidebarContentToStr(panelContent[p])));
         for (int i = 0; i < 3; i++) {
             sb.Append(fmt("%d", ContentAvailable(win, icons[i]) ? 1 : 0));
@@ -2037,7 +2149,7 @@ TempStr SidebarThumbnailsResultTemp(int* exitCodeOut) {
     return ToStrTemp(sb);
 }
 
-static gp::El* BuildTocPane(MainWindow* win, gp::Ctx* cx, bool top) {
+static gp::El* BuildTocPane(MainWindow* win, gp::Ctx* cx, SidebarSlot slot) {
     SidebarUI* ui = Ui(win);
     const gp::Theme& th = gp::ThemeNow(cx->app);
 
@@ -2066,7 +2178,7 @@ static gp::El* BuildTocPane(MainWindow* win, gp::Ctx* cx, bool top) {
     // ng: the pane is inset on the right so nothing it draws sits under the
     // splitter's grab strip (orig's SplitterCtrl is a window of its own)
     gp::El* pane = gp::Div(cx->a)->FlexCol()->SizeFull()->Bg(th.tokens.sidebar);
-    pane->Child(PaneHeader(win, cx, true, top, Tr("Bookmarks"), StrL("toc-close"),
+    pane->Child(PaneHeader(win, cx, true, slot, Tr("Bookmarks"), StrL("toc-close"),
                            gp::ListenTo(Ui(win)->view, &SidebarView::OnTocClose)));
 
     gp::InputState* filter = EnsureInput(win, &ui->tocFilter, Tr("Search Bookmarks"));
@@ -2092,7 +2204,7 @@ static gp::El* BuildTocPane(MainWindow* win, gp::Ctx* cx, bool top) {
     gp::Listener hover = gp::ListenTo(Ui(win)->view, &SidebarView::OnTocRowHover, 0);
     StrVec filterWords;
     SplitFilterToWords(SidebarTocFilterTextTemp(win), filterWords);
-    gp::FocusHandle treeFocus = top ? ui->tocFocus : ui->favFocus;
+    gp::FocusHandle treeFocus = SlotFocus(ui, slot);
     bool hasFocus = treeFocus.IsValid() && gp::FocusHandleIsFocused(cx->win, treeFocus);
     for (int i = first; i < end; i++) {
         TocItem* item = ui->tocRows[i].item;
@@ -2167,7 +2279,7 @@ static gp::El* BuildTocPane(MainWindow* win, gp::Ctx* cx, bool top) {
 
     gp::El* scroll = gp::Div(cx->a)
                          ->Id(GStrL("toc-tree"))
-                         ->TrackFocus(top ? ui->tocFocus : ui->favFocus)
+                         ->TrackFocus(SlotFocus(ui, slot))
                          ->FocusOnPress()
                          ->TabStop(false)
                          ->FocusRing()
@@ -2200,7 +2312,7 @@ static gp::El* BuildTocPane(MainWindow* win, gp::Ctx* cx, bool top) {
     return pane;
 }
 
-static gp::El* BuildFavPane(MainWindow* win, gp::Ctx* cx, bool top, bool selectors = true) {
+static gp::El* BuildFavPane(MainWindow* win, gp::Ctx* cx, SidebarSlot slot, bool selectors = true) {
     SidebarUI* ui = Ui(win);
     const gp::Theme& th = gp::ThemeNow(cx->app);
 
@@ -2215,7 +2327,7 @@ static gp::El* BuildFavPane(MainWindow* win, gp::Ctx* cx, bool top, bool selecto
     // ng: the pane is inset on the right so nothing it draws sits under the
     // splitter's grab strip (orig's SplitterCtrl is a window of its own)
     gp::El* pane = gp::Div(cx->a)->FlexCol()->SizeFull()->Bg(th.tokens.sidebar);
-    pane->Child(PaneHeader(win, cx, selectors, top, Tr("Favorites"), StrL("fav-close"),
+    pane->Child(PaneHeader(win, cx, selectors, slot, Tr("Favorites"), StrL("fav-close"),
                            gp::ListenTo(Ui(win)->view, &SidebarView::OnFavClose)));
 
     gp::InputState* filter = EnsureInput(win, &ui->favFilter, Tr("Search Favorites"));
@@ -2236,7 +2348,7 @@ static gp::El* BuildFavPane(MainWindow* win, gp::Ctx* cx, bool top, bool selecto
     gp::Listener hover = gp::ListenTo(Ui(win)->view, &SidebarView::OnFavRowHover, 0);
     StrVec filterWords;
     SplitFilterToWords(SidebarFavFilterTextTemp(win), filterWords);
-    gp::FocusHandle treeFocus = top ? ui->tocFocus : ui->favFocus;
+    gp::FocusHandle treeFocus = SlotFocus(ui, slot);
     bool hasFocus = treeFocus.IsValid() && gp::FocusHandleIsFocused(cx->win, treeFocus);
     for (int i = first; i < end; i++) {
         FavTreeItem* item = ui->favRows[i].item;
@@ -2288,7 +2400,7 @@ static gp::El* BuildFavPane(MainWindow* win, gp::Ctx* cx, bool top, bool selecto
 
     gp::El* scroll = gp::Div(cx->a)
                          ->Id(GStrL("fav-tree"))
-                         ->TrackFocus(top ? ui->tocFocus : ui->favFocus)
+                         ->TrackFocus(SlotFocus(ui, slot))
                          ->FocusOnPress()
                          ->TabStop(false)
                          ->FocusRing()
@@ -2324,6 +2436,21 @@ static gp::El* BuildFavPane(MainWindow* win, gp::Ctx* cx, bool top, bool selecto
     return pane;
 }
 
+// the top pane's height with the bottom one showing (TocDy), and the middle
+// one's (SidebarMiddleDy); the bottom pane takes the rest
+static int TopPaneDy(MainWindow* win) {
+    int contentDy = win->canvasRc.dy;
+    int nPanes = win->uiState.middleVisible ? 3 : 2;
+    int tocDy = gSettings->tocDy > 0 ? gSettings->tocDy : contentDy / nPanes;
+    return limitValue(tocDy, kTocMinDy, std::max(kTocMinDy, contentDy - (nPanes - 1) * kTocMinDy));
+}
+
+static int MiddlePaneDy(MainWindow* win, int tocDy) {
+    int restDy = win->canvasRc.dy - tocDy - kSplitterDy;
+    int middleDy = gSettings->sidebarMiddleDy > 0 ? gSettings->sidebarMiddleDy : restDy / 2;
+    return limitValue(middleDy, kTocMinDy, std::max(kTocMinDy, restDy - kTocMinDy));
+}
+
 gp::El* SidebarBuild(MainWindow* win, gp::Ctx* cx) {
     bool tocVisible = win->uiState.tocVisible;
     bool favVisible = win->uiState.favVisible;
@@ -2332,35 +2459,38 @@ gp::El* SidebarBuild(MainWindow* win, gp::Ctx* cx) {
     }
     EnsureView(win, cx);
     SidebarResolveContents(win);
-    WindowTab* tab = win->CurrentTab();
-    SidebarContent topContent = tab ? tab->sidebarContent : SidebarContent::Bookmarks;
-    SidebarContent bottomContent = win->sidebarBottomContent;
-    auto build = [&](SidebarContent content, bool top) -> gp::El* {
+    auto build = [&](SidebarSlot slot) -> gp::El* {
+        SidebarContent content = SlotContent(win, slot);
         if (content == SidebarContent::Thumbnails) {
-            return BuildThumbPane(win, cx, top);
+            return BuildThumbPane(win, cx, slot);
         }
         if (content == SidebarContent::Favorites) {
-            return BuildFavPane(win, cx, top);
+            return BuildFavPane(win, cx, slot);
         }
-        return BuildTocPane(win, cx, top);
+        return BuildTocPane(win, cx, slot);
     };
 
     if (tocVisible && !favVisible) {
-        return build(topContent, true);
+        return build(SidebarSlot::Top);
     }
     if (!tocVisible && favVisible) {
-        return build(bottomContent, false);
+        return build(SidebarSlot::Bottom);
     }
     // both panes: orig's favSplitter between them. TocDy is the height of the
     // bookmarks pane.
     const gp::Theme& th = gp::ThemeNow(cx->app);
-    int contentDy = win->canvasRc.dy;
-    int tocDy = gSettings->tocDy > 0 ? gSettings->tocDy : contentDy / 2;
-    tocDy = limitValue(tocDy, kTocMinDy, std::max(kTocMinDy, contentDy - kTocMinDy));
+    int tocDy = TopPaneDy(win);
+    bool middle = win->uiState.middleVisible;
+    int middleDy = middle ? MiddlePaneDy(win, tocDy) : 0;
     gp::El* col = gp::Div(cx->a)->FlexCol()->SizeFull();
-    col->Child(gp::Div(cx->a)->FlexCol()->W(gp::kFill)->H((float)tocDy)->Shrink0()->Child(build(topContent, true)));
+    col->Child(gp::Div(cx->a)->FlexCol()->W(gp::kFill)->H((float)tocDy)->Shrink0()->Child(build(SidebarSlot::Top)));
     col->Child(gp::Div(cx->a)->H((float)kSplitterDy)->W(gp::kFill)->Shrink0()->Bg(th.border));
-    col->Child(gp::Div(cx->a)->FlexCol()->Flex1()->MinH(0)->W(gp::kFill)->Child(build(bottomContent, false)));
+    if (middle) {
+        gp::El* pane = build(SidebarSlot::Middle);
+        col->Child(gp::Div(cx->a)->FlexCol()->W(gp::kFill)->H((float)middleDy)->Shrink0()->Child(pane));
+        col->Child(gp::Div(cx->a)->H((float)kSplitterDy)->W(gp::kFill)->Shrink0()->Bg(th.border));
+    }
+    col->Child(gp::Div(cx->a)->FlexCol()->Flex1()->MinH(0)->W(gp::kFill)->Child(build(SidebarSlot::Bottom)));
     // ng: the grab strip goes last and absolute, so it is the topmost hit rect
     // over the splitter's row (a later sibling's rect would win otherwise)
     col->Child(gp::Div(cx->a)
@@ -2375,6 +2505,20 @@ gp::El* SidebarBuild(MainWindow* win, gp::Ctx* cx) {
                    ->OnDragMove(gp::ListenTo(Ui(win)->view, &SidebarView::OnFavSplitter))
                    ->OnMouseUp(gp::ListenTo(Ui(win)->view, &SidebarView::OnFavSplitterDone))
                    ->OnMouseUpOut(gp::ListenTo(Ui(win)->view, &SidebarView::OnFavSplitterDone)));
+    if (middle) {
+        col->Child(gp::Div(cx->a)
+                       ->Absolute()
+                       ->Left(0)
+                       ->Top((float)(tocDy + kSplitterDy + middleDy))
+                       ->H((float)kSplitterDy)
+                       ->W(gp::kFill)
+                       ->Cursor(gp::CursorKind::RowResize)
+                       ->PathClick(GStrL("middle-splitter"))
+                       ->OnDrag(GStrL("sumatra-middle-splitter"))
+                       ->OnDragMove(gp::ListenTo(Ui(win)->view, &SidebarView::OnMiddleSplitter))
+                       ->OnMouseUp(gp::ListenTo(Ui(win)->view, &SidebarView::OnFavSplitterDone))
+                       ->OnMouseUpOut(gp::ListenTo(Ui(win)->view, &SidebarView::OnFavSplitterDone)));
+    }
     return col;
 }
 
@@ -2382,5 +2526,5 @@ gp::El* SidebarBuild(MainWindow* win, gp::Ctx* cx) {
 // the canvas instead of the sidebar. orig reparents the same child window.
 gp::El* SidebarBuildFavTab(MainWindow* win, gp::Ctx* cx) {
     EnsureView(win, cx);
-    return BuildFavPane(win, cx, false, false);
+    return BuildFavPane(win, cx, SidebarSlot::Bottom, false);
 }

@@ -2714,6 +2714,7 @@ static void ExecuteControlRequest(ControlRequest* req) {
             AppendLayoutRect(out, SidebarContentToStr(win->sidebarBottomContent), win->uiState.favVisible, sideRc);
             // orig names the panes sidebarTop / sidebarBottom, whatever they show
             AppendLayoutRect(out, StrL("sidebarTop"), win->uiState.tocVisible, sideRc);
+            AppendLayoutRect(out, StrL("sidebarMiddle"), win->uiState.middleVisible, sideRc);
             AppendLayoutRect(out, StrL("sidebarBottom"), win->uiState.favVisible, sideRc);
             // dips per document pixel; click tests scale canvas points by this
             out.Append(fmt("canvasScale=%.3f\n", (double)CanvasScale(win)));

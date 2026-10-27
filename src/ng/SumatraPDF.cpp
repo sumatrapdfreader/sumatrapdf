@@ -3820,6 +3820,7 @@ void SetSidebarVisibility(MainWindow* win, bool tocVisible, bool showFavorites, 
     WindowTab* tab = win->CurrentTab();
     SidebarResolveContents(win);
     SidebarContent topContent = tab ? tab->sidebarContent : SidebarContent::Bookmarks;
+    SidebarContent middleContent = win->sidebarMiddleContent;
     SidebarContent bottomContent = win->sidebarBottomContent;
     EngineBase* engine = win->CurrentTab() ? win->CurrentTab()->GetEngine() : nullptr;
     bool headingPending = EngineMupdfHeadingTocPending(engine);
@@ -3830,25 +3831,35 @@ void SetSidebarVisibility(MainWindow* win, bool tocVisible, bool showFavorites, 
     bool bottomAvailable =
         (bottomContent == SidebarContent::Favorites && CanAccessDisk()) ||
         (bottomContent == SidebarContent::Thumbnails ? win->AsFixed() != nullptr : win->ctrl && win->ctrl->HasToc());
+    bool middleAvailable =
+        (middleContent == SidebarContent::Favorites && CanAccessDisk()) ||
+        (middleContent == SidebarContent::Thumbnails ? win->AsFixed() != nullptr : win->ctrl && win->ctrl->HasToc());
     tocVisible = tocVisible && topAvailable;
     showFavorites = showFavorites && bottomAvailable;
+    // the middle panel shows only with the other two
+    bool middleVisible = gSettings->showSidebarMiddle && tocVisible && showFavorites && middleAvailable;
 
     if (PM_BLACK_SCREEN == win->presentation || PM_WHITE_SCREEN == win->presentation) {
         tocVisible = false;
+        middleVisible = false;
         showFavorites = false;
     }
 
     bool bookmarks = (tocVisible && topContent == SidebarContent::Bookmarks) ||
+                     (middleVisible && middleContent == SidebarContent::Bookmarks) ||
                      (showFavorites && bottomContent == SidebarContent::Bookmarks);
     if (bookmarks) {
         LoadTocTree(win);
         if (!win->tocLoaded) {
             tocVisible = tocVisible && topContent != SidebarContent::Bookmarks;
+            middleVisible = middleVisible && middleContent != SidebarContent::Bookmarks;
             showFavorites = showFavorites && bottomContent != SidebarContent::Bookmarks;
         }
     }
+    middleVisible = middleVisible && tocVisible && showFavorites;
 
     bool favorites = (tocVisible && topContent == SidebarContent::Favorites) ||
+                     (middleVisible && middleContent == SidebarContent::Favorites) ||
                      (showFavorites && bottomContent == SidebarContent::Favorites);
     if (favorites) {
         PopulateFavTreeIfNeeded(win);
@@ -3872,6 +3883,7 @@ void SetSidebarVisibility(MainWindow* win, bool tocVisible, bool showFavorites, 
 
     bool wasSidebar = win->uiState.tocVisible || win->uiState.favVisible;
     win->uiState.tocVisible = tocVisible;
+    win->uiState.middleVisible = middleVisible;
     win->uiState.favVisible = showFavorites;
     bool nowSidebar = tocVisible || showFavorites;
     if (resizeFrame == SidebarResizeFrame::Adjust && wasSidebar != nowSidebar) {
@@ -4503,9 +4515,10 @@ void AdvanceFocus(MainWindow* win, bool isShift) {
         Chapter,
         Page,
         SidebarTop,
+        SidebarMiddle,
         SidebarBottom
     };
-    constexpr int kMaxWindows = 6;
+    constexpr int kMaxWindows = 7;
     Stop tabOrder[kMaxWindows] = {Stop::Frame};
     int nWindows = 1;
     if (hasToolbar && ShowChapterUi(win->ctrl) && ToolbarHasChapterBox(win)) {
@@ -4516,11 +4529,14 @@ void AdvanceFocus(MainWindow* win, bool isShift) {
     }
     // note: the find edit is no longer in the toolbar tab order; it lives in the
     // floating findBar and is reached via Ctrl+F / the search toolbar icon
-    // the sidebar panels, top then bottom
-    if (SidebarPanelVisible(win, true)) {
+    // the sidebar panels, top to bottom
+    if (SidebarPanelVisible(win, SidebarSlot::Top)) {
         tabOrder[nWindows++] = Stop::SidebarTop;
     }
-    if (SidebarPanelVisible(win, false)) {
+    if (SidebarPanelVisible(win, SidebarSlot::Middle)) {
+        tabOrder[nWindows++] = Stop::SidebarMiddle;
+    }
+    if (SidebarPanelVisible(win, SidebarSlot::Bottom)) {
         tabOrder[nWindows++] = Stop::SidebarBottom;
     }
     ReportIf(nWindows > kMaxWindows);
@@ -4534,9 +4550,11 @@ void AdvanceFocus(MainWindow* win, bool isShift) {
             case Stop::Page:
                 return IsToolbarLocationBoxFocused(win, false);
             case Stop::SidebarTop:
-                return SidebarPanelHasFocus(win, true);
+                return SidebarPanelHasFocus(win, SidebarSlot::Top);
+            case Stop::SidebarMiddle:
+                return SidebarPanelHasFocus(win, SidebarSlot::Middle);
             case Stop::SidebarBottom:
-                return SidebarPanelHasFocus(win, false);
+                return SidebarPanelHasFocus(win, SidebarSlot::Bottom);
         }
         return false;
     };
@@ -4566,10 +4584,13 @@ void AdvanceFocus(MainWindow* win, bool isShift) {
             ToolbarFocusLocationBox(win, false);
             break;
         case Stop::SidebarTop:
-            SidebarFocusPanel(win, true);
+            SidebarFocusPanel(win, SidebarSlot::Top);
+            break;
+        case Stop::SidebarMiddle:
+            SidebarFocusPanel(win, SidebarSlot::Middle);
             break;
         case Stop::SidebarBottom:
-            SidebarFocusPanel(win, false);
+            SidebarFocusPanel(win, SidebarSlot::Bottom);
             break;
     }
 }

@@ -1468,7 +1468,7 @@ static TempStr UpdateCommandNameTemp(MainWindow* win, int cmdId, Str s) {
         } break;
         case CmdFavoriteToggle: {
             isToggle = true;
-            newIsOn = !gSettings->showFavorites;
+            newIsOn = !IsSidebarViewShown(win, SidebarView::Favorites);
         } break;
         case CmdTogglePageInfo: {
             isToggle = true;

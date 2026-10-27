@@ -59,8 +59,9 @@ bool SidebarContextMenuFromKey(MainWindow*, gpui::Ctx* cx);
 // for -dbg-control's TestUiState
 TempStr SidebarStateTemp(MainWindow*);
 TempStr SidebarTestToc(MainWindow*, Str op, int arg);
-// orig's sidebarTop / sidebarBottom panels: where the keyboard goes in one
-// (its tree, or the panel for thumbnails) and whether it is there
-bool SidebarPanelVisible(MainWindow*, bool top);
-bool SidebarPanelHasFocus(MainWindow*, bool top);
-void SidebarFocusPanel(MainWindow*, bool top);
+// orig's sidebarTop / sidebarMiddle / sidebarBottom panels: where the keyboard
+// goes in one (its tree, or the panel for thumbnails) and whether it is there
+enum class SidebarSlot;
+bool SidebarPanelVisible(MainWindow*, SidebarSlot);
+bool SidebarPanelHasFocus(MainWindow*, SidebarSlot);
+void SidebarFocusPanel(MainWindow*, SidebarSlot);
