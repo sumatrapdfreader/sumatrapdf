@@ -663,10 +663,14 @@ Str HandleSearchCmd(HWND hwnd, Str cmd, bool* ack) {
     if (!ParseDdeQuoted(cmd, endFile + 2, &term, &endTerm)) {
         return {};
     }
-    if (endTerm >= cmd.len || cmd.s[endTerm] != ']') {
+    // expect ")]" after the closing quote of the term
+    while (endTerm < cmd.len && cmd.s[endTerm] == ' ') {
+        endTerm++;
+    }
+    if (endTerm + 1 >= cmd.len || cmd.s[endTerm] != ')' || cmd.s[endTerm + 1] != ']') {
         return {};
     }
-    Str next = Str(cmd.s + endTerm + 1, cmd.len - endTerm - 1);
+    Str next = Str(cmd.s + endTerm + 2, cmd.len - endTerm - 2);
     if (len(term) == 0) {
         return next;
     }

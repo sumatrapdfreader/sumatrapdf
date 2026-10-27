@@ -2462,8 +2462,9 @@ void OpenUsingDDE(HWND targetHwnd, Str path, Flags& i, bool isFirstWin) {
         cmd.Append(fmt("[ForwardSearch(\"%s\", \"%s\", %d, 0, 0, 1)]", fullPath, srcPath, i.forwardSearchLine));
     }
     if (i.search) {
-        // TODO: quote if i.search has '"' in it
-        cmd.Append(fmt("[Search(\"%s\",\"%s\")]", fullPath, i.search));
+        // HandleSearchCmd unescapes "" to "
+        TempStr term = str::ReplaceTemp(i.search, StrL("\""), StrL("\"\""));
+        cmd.Append(fmt("[Search(\"%s\",\"%s\")]", fullPath, term));
     }
     if ((i.enterPresentation || i.enterFullScreen) && isFirstWin) {
         Str name = i.enterPresentation ? StrL("Presentation") : StrL("FullScreen");
