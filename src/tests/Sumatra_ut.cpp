@@ -9,6 +9,7 @@
 #include "base/DbgHelpDyn.h"
 #include "base/File.h"
 #include "base/Pixmap.h"
+#include "base/GuessFileType.h"
 #include "base/SettingsUtil.h"
 
 #include "gui/UIModels.h"
@@ -22,6 +23,7 @@
 #include "DocController.h"
 #include "DocProperties.h"
 #include "EngineBase.h"
+#include "EngineAll.h"
 #include "AppSettings.h"
 #include "Flags.h"
 #include "Commands.h"
@@ -373,6 +375,56 @@ static void SvgTextIcon_UnitTests() {
     }
 }
 
+// a black triangle on white; its diagonal edge is anti-aliased on screen
+static const char* kTrianglePdf =
+    "%PDF-1.4\n"
+    "1 0 obj <</Type/Catalog/Pages 2 0 R>> endobj\n"
+    "2 0 obj <</Type/Pages/Kids[3 0 R]/Count 1>> endobj\n"
+    "3 0 obj <</Type/Page/Parent 2 0 R/MediaBox[0 0 100 100]/Contents 4 0 R>> endobj\n"
+    "4 0 obj <</Length 32>> stream\n"
+    "0 g 10 10 m 90 10 l 50 87.3 l f\n"
+    "endstream endobj\n"
+    "trailer <</Root 1 0 R>>\n"
+    "%%EOF\n";
+
+static int CountGrayPixels(Pixmap* px) {
+    int bpp = PixmapBytesPerPixel(px->format);
+    int n = 0;
+    for (int y = 0; y < px->height; y++) {
+        u8* d = px->data + ((size_t)px->stride * (size_t)y);
+        for (int x = 0; x < px->width; x++, d += bpp) {
+            if (d[0] != 0 && d[0] != 255) {
+                n++;
+            }
+        }
+    }
+    return n;
+}
+
+static int RenderGrayPixels(EngineBase* engine, RenderTarget target) {
+    RenderPageArgs args(1, 2.f, 0, nullptr, target);
+    Pixmap* rendered = engine->RenderPage(args);
+    // a few-color page renders to a palette DIB, readable only through GDI
+    Pixmap* px = rendered ? PixmapCopyAs32bppDIB(rendered) : nullptr;
+    FreePixmap(rendered);
+    utassert(px && px->data);
+    int n = px ? CountGrayPixels(px) : -1;
+    FreePixmap(px);
+    return n;
+}
+
+// #6384: printers halftone anti-aliased edge grays into toothy edges
+static void PrintNoAntiAlias_UnitTest() {
+    EngineBase* engine = CreateEngineMupdfFromData(Str(kTrianglePdf), StrL("triangle.pdf"), nullptr);
+    utassert(engine);
+    if (!engine) {
+        return;
+    }
+    utassert(RenderGrayPixels(engine, RenderTarget::View) > 0);
+    utassert(RenderGrayPixels(engine, RenderTarget::Print) == 0);
+    SafeEngineRelease(&engine);
+}
+
 static void ParseTip_UnitTests() {
     // issue #5752: brackets in filenames must not hang
     ParseTipExpectPlainContains(StrL("Loading Apocalypse Bringer Mynoghra_01 [CIW].pdf ..."), StrL("[CIW]"));
@@ -522,6 +574,7 @@ int RunAppUnitTests(bool forAi) {
 
     ParseTip_UnitTests();
     SvgTextIcon_UnitTests();
+    PrintNoAntiAlias_UnitTest();
 #if IS_DEBUG
     TextSelection_UnitTests();
     EngineDjvuDec_UnitTests();

@@ -1570,6 +1570,8 @@ TempStr PageRenderViewPrintResultTemp(Str path, int* exitCodeOut) {
         return fail(StrL("ERROR page-load-failed\n"));
     }
 
+    // print renders without AA; match it so only the OCGs differ
+    engine->disableAntiAlias = true;
     RenderPageArgs viewArgs(1, 1.f, 0, nullptr, RenderTarget::View);
     RenderPageArgs printArgs(1, 1.f, 0, nullptr, RenderTarget::Print);
     Pixmap* viewRaw = engine->RenderPage(viewArgs);

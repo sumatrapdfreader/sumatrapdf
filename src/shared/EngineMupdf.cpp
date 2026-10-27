@@ -7034,7 +7034,9 @@ Pixmap* EngineMupdf::RenderPage(RenderPageArgs& args) {
     }
 
     // AA level is per-thread-context state since Ctx() clones; no lock needed.
-    if (disableAntiAlias) {
+    // Print renders at printer DPI where AA edge grays only get halftoned into
+    // jagged edges (#6384).
+    if (disableAntiAlias || args.target == RenderTarget::Print) {
         fz_set_aa_level(ctx, 0);
     } else {
         // 8 seems to be the default
