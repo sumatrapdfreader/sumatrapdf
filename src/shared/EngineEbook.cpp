@@ -293,10 +293,32 @@ RectF EngineEbook::PageMediabox(int) {
     return pageRect;
 }
 
+// Union of what the page draws, so Trim Empty Margins crops to it (#6399).
 RectF EngineEbook::PageContentBox(int pageNo, RenderTarget) {
+    ScopedRecursiveMutex scope(&pagesAccess);
     RectF mbox = PageMediabox(pageNo);
-    mbox.Inflate(-pageBorder, -pageBorder);
-    return mbox;
+    RectF border = mbox;
+    border.Inflate(-pageBorder, -pageBorder);
+    Vec<DrawInstr>* instrs = GetHtmlPage(pageNo);
+    if (!instrs) {
+        return border;
+    }
+
+    RectF res;
+    for (DrawInstr& i : *instrs) {
+        bool visible = i.type == DrawInstrType::String || i.type == DrawInstrType::RtlString ||
+                       i.type == DrawInstrType::Line || i.type == DrawInstrType::Image;
+        if (!visible) {
+            continue;
+        }
+        RectF bbox = i.bbox;
+        bbox.Offset(pageBorder, pageBorder);
+        res = res.Union(bbox);
+    }
+    if (res.IsEmpty()) {
+        return border;
+    }
+    return res.Intersect(mbox);
 }
 
 Str EngineEbook::GetFileData() {
