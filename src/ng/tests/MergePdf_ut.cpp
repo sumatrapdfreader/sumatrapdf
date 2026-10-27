@@ -26,16 +26,20 @@ void MergePdf_UnitTests() {
     VecAppend(sources, PdfMergeSource{basePath, {}});
     VecAppend(sources, PdfMergeSource{addPath, {}});
     Vec<PdfMergePage> pages;
-    VecAppend(pages, PdfMergePage{1, 1});
+    VecAppend(pages, PdfMergePage{1, 1, 90});
     VecAppend(pages, PdfMergePage{0, 1});
     VecAppend(pages, PdfMergePage{1, 1});
     int expectedPages = len(pages);
+    RectF addBox = add->PageMediabox(1);
     utassert(EngineMupdfMergePdfs(sources, pages, destPath));
     SafeEngineRelease(&base);
     SafeEngineRelease(&add);
     utassert(file::Exists(destPath));
     EngineBase* merged = CreateEngineMupdfFromFile(destPath, FileType::PDF, 96);
     utassert(merged && merged->PageCount() == expectedPages);
+    // turned by 90: as wide as it was tall
+    utassert(lroundf(merged->PageMediabox(1).dx) == lroundf(addBox.dy));
+    utassert(lroundf(merged->PageMediabox(3).dx) == lroundf(addBox.dx));
     SafeEngineRelease(&merged);
     file::Delete(destPath);
 }

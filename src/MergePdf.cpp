@@ -77,6 +77,8 @@ constexpr u8 kCornerBtnAlpha = 225;
 constexpr u8 kBandAlpha = 18;
 
 static Pixmap* const kRenderFailed = (Pixmap*)(intptr_t)-1;
+// 0, 90, 180, 270: each has its own thumbnail
+constexpr int kRotations = 4;
 
 // the files' colors on their pages, in the order they were added
 static const Color kSourceColors[] = {
@@ -96,7 +98,7 @@ struct MergeSource {
     EngineBase* engine = nullptr;
     int pageCount = 0;
     Color color = 0;
-    // by pageNo - 1; UI thread only
+    // by ThumbIdx(); UI thread only
     Vec<Pixmap*> thumbs;
 };
 
@@ -113,6 +115,8 @@ struct MergeSources {
 struct MergeItem {
     MergeSource* src = nullptr;
     int pageNo = 0;
+    // degrees clockwise: 0, 90, 180 or 270
+    int rotation = 0;
     bool removed = false;
     bool selected = false;
 };
@@ -191,6 +195,7 @@ struct MergeGrid : VirtListBox {
     void SetDropBefore(int);
     void MoveSelected(int before);
     void SetRemoved(bool removed);
+    void Rotate(int degrees);
     void InsertPages(MergeSource*, int at);
     int SelectedCount();
     int SelectedRemovedCount();
@@ -259,6 +264,7 @@ struct MergeThumbTask {
     MergeSources* sources = nullptr;
     MergeSource* src = nullptr;
     int pageNo = 0;
+    int rotation = 0;
     Pixmap* bitmap = nullptr;
 };
 
@@ -266,9 +272,18 @@ struct MergeRenderBatch {
     MergeSources* sources = nullptr;
     Vec<MergeSource*> srcs;
     Vec<int> pageNos;
+    Vec<int> rotations;
     int thumbDx = 0;
     int thumbDy = 0;
 };
+
+static int ThumbIdx(int pageNo, int rotation) {
+    return ((pageNo - 1) * kRotations) + (rotation / 90);
+}
+
+static int ThumbIdx(const MergeItem& it) {
+    return ThumbIdx(it.pageNo, it.rotation);
+}
 
 static void FreeThumb(Pixmap* thumb) {
     if (thumb != kRenderFailed) {
@@ -295,7 +310,7 @@ static void DeleteMergeSources(MergeSources* sources) {
 static void FinishThumb(MergeThumbTask* task) {
     MergeSources* sources = task->sources;
     MergeSource* src = task->src;
-    int idx = task->pageNo - 1;
+    int idx = ThumbIdx(task->pageNo, task->rotation);
     if (sources->grid && idx >= 0 && idx < len(src->thumbs) && !src->thumbs[idx]) {
         src->thumbs[idx] = task->bitmap ? task->bitmap : kRenderFailed;
         task->bitmap = nullptr;
@@ -325,8 +340,9 @@ static void RenderBatchAsync(MergeRenderBatch* batch) {
         task->sources = sources;
         task->src = batch->srcs[i];
         task->pageNo = batch->pageNos[i];
-        task->bitmap =
-            RenderPageThumbnail(task->src->engine, task->pageNo, kInvalidLocation, 0, batch->thumbDx, batch->thumbDy);
+        task->rotation = batch->rotations[i];
+        task->bitmap = RenderPageThumbnail(task->src->engine, task->pageNo, kInvalidLocation, task->rotation,
+                                           batch->thumbDx, batch->thumbDy);
         uitask::Post(MkFunc0<MergeThumbTask>(FinishThumb, task));
     }
     uitask::Post(MkFunc0<MergeSources>(FinishRenderBatch, sources));
@@ -539,17 +555,22 @@ void MergeGrid::DrawCell(Gfx* gfx, int idx) {
         gfx->FillRoundedRect(fr, radius, colBg, AccentColor(colBg, kFocusRingShift));
     }
 
-    // white pages on a white grid need an edge
-    Rect edge = r;
-    edge.Inflate(1, 1);
-    gfx->FillRect(edge, AccentColor(colBg, kPageEdgeShift));
-    gfx->FillRect(r, kColWhite);
-    Pixmap* thumb = item.src->thumbs[item.pageNo - 1];
-    if (thumb && thumb != kRenderFailed) {
+    // the page is the thumbnail's size once rendered: rotated, it's landscape
+    Pixmap* thumb = item.src->thumbs[ThumbIdx(item)];
+    bool hasThumb = thumb && thumb != kRenderFailed;
+    Rect page = r;
+    if (hasThumb) {
         int drawDx = std::min(thumb->width, thumbDx);
         int drawDy = std::min(thumb->height, thumbDy);
-        Rect target{r.x + ((thumbDx - drawDx) / 2), r.y + ((thumbDy - drawDy) / 2), drawDx, drawDy};
-        gfx->DrawPixmap(thumb, target);
+        page = {r.x + ((thumbDx - drawDx) / 2), r.y + ((thumbDy - drawDy) / 2), drawDx, drawDy};
+    }
+    // white pages on a white grid need an edge
+    Rect edge = page;
+    edge.Inflate(1, 1);
+    gfx->FillRect(edge, AccentColor(colBg, kPageEdgeShift));
+    gfx->FillRect(page, kColWhite);
+    if (hasThumb) {
+        gfx->DrawPixmap(thumb, page);
     }
     if (item.removed) {
         gfx->FillRects(&edge, 1, colFrame != kColorUnset ? colFrame : colBg, kRemovedVeilAlpha);
@@ -696,6 +717,17 @@ void MergeGrid::SetRemoved(bool removed) {
         }
     }
     Changed();
+}
+
+// degrees: 90 turns the selected pages clockwise, -90 counterclockwise
+void MergeGrid::Rotate(int degrees) {
+    for (MergeItem& it : items) {
+        if (it.selected) {
+            it.rotation = (((it.rotation + degrees) % 360) + 360) % 360;
+        }
+    }
+    Changed();
+    StartRendering();
 }
 
 // every page of src, selected, in front of item `at`
@@ -1025,6 +1057,13 @@ void MergeGrid::OnGridKeyDown(VirtKeyEvent* ev) {
         case VK_APPS:
             ShowContextMenu();
             return;
+        // [ and ], as in the document window
+        case VK_OEM_4:
+            Rotate(-90);
+            return;
+        case VK_OEM_6:
+            Rotate(90);
+            return;
     }
     if (ev->isCtrl && ev->vkey == 'A') {
         SelectAll();
@@ -1036,6 +1075,8 @@ void MergeGrid::OnGridKeyDown(VirtKeyEvent* ev) {
 enum {
     kMenuRemove = 1,
     kMenuRestore,
+    kMenuRotateLeft,
+    kMenuRotateRight,
     kMenuSelectAll,
 };
 
@@ -1046,6 +1087,10 @@ void MergeGrid::ShowContextMenu() {
     AppendMenuW(menu, MF_STRING | (nSel > nRemoved ? 0 : MF_GRAYED), kMenuRemove, CWStrTemp(Tr("&Remove")));
     AppendMenuW(menu, MF_STRING | (nRemoved > 0 ? 0 : MF_GRAYED), kMenuRestore, CWStrTemp(Tr("R&estore")));
     AppendMenuW(menu, MF_SEPARATOR, 0, nullptr);
+    UINT rotateFlags = MF_STRING | (nSel > 0 ? 0 : MF_GRAYED);
+    AppendMenuW(menu, rotateFlags, kMenuRotateLeft, CWStrTemp(fmt("%s\t[", Tr("Rotate &Left"))));
+    AppendMenuW(menu, rotateFlags, kMenuRotateRight, CWStrTemp(fmt("%s\t]", Tr("Rotate &Right"))));
+    AppendMenuW(menu, MF_SEPARATOR, 0, nullptr);
     AppendMenuW(menu, MF_STRING, kMenuSelectAll, CWStrTemp(Tr("Select &All\tCtrl+A")));
     POINT pt{};
     GetCursorPos(&pt);
@@ -1053,6 +1098,8 @@ void MergeGrid::ShowContextMenu() {
     DestroyMenu(menu);
     if (cmd == kMenuRemove || cmd == kMenuRestore) {
         SetRemoved(cmd == kMenuRemove);
+    } else if (cmd == kMenuRotateLeft || cmd == kMenuRotateRight) {
+        Rotate(cmd == kMenuRotateRight ? 90 : -90);
     } else if (cmd == kMenuSelectAll) {
         SelectAll();
     }
@@ -1073,16 +1120,16 @@ void MergeGrid::StartRendering() {
     int keepFirst = std::max(0, firstIdx - (kKeepScreens * perScreen));
     int keepLast = std::min(n - 1, lastIdx + (kKeepScreens * perScreen));
 
-    // keep[src][pageNo - 1]
+    // keep[src][ThumbIdx()]
     Vec<Vec<u8>*> keep;
     for (MergeSource* src : sources->all) {
         auto* k = new Vec<u8>();
-        VecAppendBlanks(*k, src->pageCount);
+        VecAppendBlanks(*k, len(src->thumbs));
         VecAppend(keep, k);
     }
     for (int i = keepFirst; i <= keepLast; i++) {
         int s = VecFind(sources->all, items[i].src);
-        (*keep[s])[items[i].pageNo - 1] = 1;
+        (*keep[s])[ThumbIdx(items[i])] = 1;
     }
     for (int s = 0; s < len(sources->all); s++) {
         MergeSource* src = sources->all[s];
@@ -1098,11 +1145,12 @@ void MergeGrid::StartRendering() {
     auto* batch = new MergeRenderBatch;
     auto queue = [&](int idx) {
         MergeItem& it = items[idx];
-        if (it.src->thumbs[it.pageNo - 1]) {
+        if (it.src->thumbs[ThumbIdx(it)]) {
             return;
         }
         VecAppend(batch->srcs, it.src);
         VecAppend(batch->pageNos, it.pageNo);
+        VecAppend(batch->rotations, it.rotation);
     };
     for (int i = firstVisible; i <= lastVisible; i++) {
         queue(i);
@@ -1285,7 +1333,7 @@ MergeSource* MergePdfWnd::AddSource(Str path, EngineBase* engine) {
     src->engine = engine;
     src->pageCount = engine->PageCount();
     src->color = kSourceColors[len(sources->all) % dimof(kSourceColors)];
-    VecAppendBlanks(src->thumbs, src->pageCount);
+    VecAppendBlanks(src->thumbs, src->pageCount * kRotations);
     VecAppend(sources->all, src);
     return src;
 }
@@ -1623,7 +1671,7 @@ bool MergePdfWnd::SaveTo(Str destPath) {
     Vec<PdfMergePage> pages;
     for (MergeItem& it : grid->items) {
         if (!it.removed) {
-            VecAppend(pages, PdfMergePage{VecFind(sources->all, it.src), it.pageNo});
+            VecAppend(pages, PdfMergePage{VecFind(sources->all, it.src), it.pageNo, it.rotation});
         }
     }
     if (len(pages) == 0) {
@@ -1879,8 +1927,9 @@ static void AskAndAddPdfNow(AskAndAddPdf* d) {
 // PDF path, n: in front of that item, -1: where Add PDF... puts it), "askpos"
 // (arg: a PDF path; asks where to add it, like Add PDF...), "move"
 // (arg: 0-based items like "0,2", n: in front of that item), "remove" /
-// "restore" (arg: items), "save" / "saveas" (arg: the path), "close" or ""
-// (report only). Reports the items as src:page (r: removed, s: selected) and,
+// "restore" (arg: items), "rotate" (arg: items, n: degrees), "save" / "saveas"
+// (arg: the path), "close" or "" (report only). Reports the items as
+// src:page[@rotation] (r: removed, s: selected) and,
 // for clicking, the dialog's hwnd and each visible thumbnail and its corner
 // button in client coords. Used by tests/issue-6070.ts.
 TempStr MergePdfResultTemp(Str action, Str arg, int n, int* exitCodeOut) {
@@ -1927,6 +1976,9 @@ TempStr MergePdfResultTemp(Str action, Str arg, int n, int* exitCodeOut) {
     } else if (str::Eq(action, StrL("remove")) || str::Eq(action, StrL("restore"))) {
         selectItems();
         grid->SetRemoved(str::Eq(action, StrL("remove")));
+    } else if (str::Eq(action, StrL("rotate"))) {
+        selectItems();
+        grid->Rotate(n);
     } else if (str::Eq(action, StrL("save")) || str::Eq(action, StrL("saveas"))) {
         Str path = str::Eq(action, StrL("save")) ? Str(w->docPath) : arg;
         bool ok = w->SaveTo(path);
@@ -1943,6 +1995,9 @@ TempStr MergePdfResultTemp(Str action, Str arg, int n, int* exitCodeOut) {
     for (int i = 0; i < len(grid->items); i++) {
         MergeItem& it = grid->items[i];
         out.Append(fmt(i == 0 ? "%d:%d" : ",%d:%d", VecFind(w->sources->all, it.src), it.pageNo));
+        if (it.rotation != 0) {
+            out.Append(fmt("@%d", it.rotation));
+        }
         if (it.removed) {
             out.AppendChar('r');
         }

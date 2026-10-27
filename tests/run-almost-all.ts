@@ -320,6 +320,7 @@ import { testit as sidebarThumbnails } from "./sidebar-thumbnails.ts";
 import { testit as sidebarThumbnailsWheel } from "./sidebar-thumbnails-wheel.ts";
 import { testit as sidebarThumbnailsClose } from "./sidebar-thumbnails-close.ts";
 import { testit as issue6070 } from "./issue-6070.ts";
+import { testit as issue6371 } from "./issue-6371.ts";
 import { testit as wheelWhileClosing } from "./wheel-while-closing.ts";
 import { testit as printDialogMultiFile } from "./print-dialog-multi-file.ts";
 import { testit as issue6259 } from "./issue-6259.ts";
@@ -471,6 +472,7 @@ export const tests: NamedTest[] = [
   ["selection-toolbar-move", selectionToolbarMove],
   ["issue-6232-path-edit", issue6232PathEdit],
   ["issue-6070", issue6070],
+  ["issue-6371", issue6371],
   ["annotation clipboard tests", annotationClipboardTests],
   ["issue-6252", issue6252],
   ["issue-6239", issue6239],

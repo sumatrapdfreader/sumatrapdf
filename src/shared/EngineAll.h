@@ -134,6 +134,8 @@ struct PdfMergeSource {
 struct PdfMergePage {
     int src = 0;
     int pageNo = 0;
+    // degrees clockwise, on top of the page's own /Rotate
+    int rotation = 0;
 };
 bool EngineMupdfMergePdfs(const Vec<PdfMergeSource>& srcs, const Vec<PdfMergePage>& pages, Str destPath);
 

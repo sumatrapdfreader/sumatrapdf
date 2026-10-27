@@ -209,6 +209,9 @@ static const Color kSourceColors[] = {
     MkRgb(0xe3, 0x77, 0xc2), MkRgb(0xbc, 0xbd, 0x22), MkRgb(0x17, 0xbe, 0xcf),
 };
 
+// 0, 90, 180, 270: each has its own thumbnail
+constexpr int kMergeRotations = 4;
+
 struct MergeThumb {
     Pixmap* bitmap = nullptr;
     gp::RenderImage* image = nullptr;
@@ -235,6 +238,8 @@ struct MergeSourceDlg {
 struct MergePageDlg {
     int sourceNo = 0;
     int pageNo = 0;
+    // degrees clockwise: 0, 90, 180 or 270
+    int rotation = 0;
     bool removed = false;
     bool selected = false;
 };
@@ -1034,6 +1039,7 @@ static void SaveSelectionAsImageDoIt() {
 struct MergeThumbWorkItem {
     int sourceNo = 0;
     int pageNo = 0;
+    int rotation = 0;
     int thumbIdx = 0;
 };
 
@@ -1049,13 +1055,19 @@ struct MergeThumbResult {
     Pixmap* bitmap = nullptr;
 };
 
-static Pixmap* RenderMergeThumb(EngineBase* engine, int pageNo) {
+static int MergeThumbIdx(const MergePageDlg& page) {
+    const MergeSourceDlg& source = gTool.mergeSources[page.sourceNo];
+    return source.thumbStart + ((page.pageNo - 1) * kMergeRotations) + (page.rotation / 90);
+}
+
+static Pixmap* RenderMergeThumb(EngineBase* engine, int pageNo, int rotation) {
     RectF pageRect = engine->PageMediabox(pageNo);
     if (pageRect.IsEmpty()) {
         return nullptr;
     }
+    pageRect = engine->Transform(pageRect, pageNo, 1.0f, rotation);
     float zoom = std::min((float)kMergeThumbDx / pageRect.dx, (float)kMergeThumbDy / pageRect.dy);
-    RenderPageArgs args(pageNo, zoom, 0, nullptr, RenderTarget::View);
+    RenderPageArgs args(pageNo, zoom, rotation, nullptr, RenderTarget::View);
     // kept as opaque 24bpp, like the other thumbnails
     return PixmapToBgr(engine->RenderPage(args));
 }
@@ -1073,6 +1085,8 @@ static void FinishMergeThumb(MergeThumbResult* result) {
     delete result;
 }
 
+static void StartMergeThumbs();
+
 static void FinishMergeThumbWorker(MergeThumbCache* cache) {
     cache->workerRunning = false;
     if (cache->deleteWhenWorkerFinishes) {
@@ -1080,6 +1094,8 @@ static void FinishMergeThumbWorker(MergeThumbCache* cache) {
         return;
     }
     AppShellInvalidate(cache->win);
+    // pages rotated meanwhile
+    StartMergeThumbs();
 }
 
 static void RenderMergeThumbs(MergeThumbWorker* worker) {
@@ -1096,7 +1112,7 @@ static void RenderMergeThumbs(MergeThumbWorker* worker) {
         result->cache = worker->cache;
         result->thumbIdx = item.thumbIdx;
         EngineBase* engine = engines[item.sourceNo];
-        result->bitmap = engine ? RenderMergeThumb(engine, item.pageNo) : nullptr;
+        result->bitmap = engine ? RenderMergeThumb(engine, item.pageNo, item.rotation) : nullptr;
         uitask::Post(MkFunc0<MergeThumbResult>(FinishMergeThumb, result));
     }
     for (EngineBase* engine : engines) {
@@ -1117,14 +1133,12 @@ static void StartMergeThumbs() {
         source.engine->AddRef();
         VecAppend(worker->engines, source.engine);
     }
-    for (int sourceNo = 0; sourceNo < len(gTool.mergeSources); sourceNo++) {
-        const MergeSourceDlg& source = gTool.mergeSources[sourceNo];
-        for (int pageNo = 1; pageNo <= source.pageCount; pageNo++) {
-            int idx = source.thumbStart + pageNo - 1;
-            const MergeThumb& thumb = cache->thumbs[idx];
-            if (!thumb.bitmap && !thumb.failed) {
-                VecAppend(worker->items, MergeThumbWorkItem{sourceNo, pageNo, idx});
-            }
+    // only the rotations the pages have; each page is in the grid once
+    for (const MergePageDlg& page : gTool.mergePages) {
+        int idx = MergeThumbIdx(page);
+        const MergeThumb& thumb = cache->thumbs[idx];
+        if (!thumb.bitmap && !thumb.failed) {
+            VecAppend(worker->items, MergeThumbWorkItem{page.sourceNo, page.pageNo, page.rotation, idx});
         }
     }
     if (len(worker->items) == 0) {
@@ -1410,6 +1424,16 @@ static void MergeSetRemoved(bool removed) {
     }
 }
 
+// degrees: 90 turns the selected pages clockwise, -90 counterclockwise
+static void MergeRotate(int degrees) {
+    for (MergePageDlg& it : gTool.mergePages) {
+        if (it.selected) {
+            it.rotation = (((it.rotation + degrees) % 360) + 360) % 360;
+        }
+    }
+    StartMergeThumbs();
+}
+
 // every page of the source, selected, in front of item `at`
 static void MergeInsertPages(int sourceNo, int at) {
     Vec<MergePageDlg>& items = gTool.mergePages;
@@ -1468,7 +1492,7 @@ static bool AddMergeSource(Str filePath, int at) {
     source.thumbStart = len(gTool.mergeThumbs->thumbs);
     source.color = kSourceColors[len(gTool.mergeSources) % dimofi(kSourceColors)];
     source.engine = engine;
-    for (int i = 0; i < source.pageCount; i++) {
+    for (int i = 0; i < source.pageCount * kMergeRotations; i++) {
         VecAppend(gTool.mergeThumbs->thumbs, MergeThumb{});
     }
     VecAppend(gTool.mergeSources, source);
@@ -1604,7 +1628,7 @@ static bool MergeSaveTo(Str destPath) {
     Vec<PdfMergePage> pages;
     for (const MergePageDlg& page : gTool.mergePages) {
         if (!page.removed) {
-            VecAppend(pages, PdfMergePage{page.sourceNo, page.pageNo});
+            VecAppend(pages, PdfMergePage{page.sourceNo, page.pageNo, page.rotation});
         }
     }
     if (len(destPath) == 0 || len(pages) == 0) {
@@ -1691,9 +1715,10 @@ static void OnMergeSaveAsPicked(SavePathArgs* args) {
 // (arg: a PDF path; asks where to add it, like Add PDF...), "addprompt" (ng:
 // the Add PDF... button), "answer" (ng: n: 1 OK, 0 Cancel of that
 // question), "asktext" (the After page field), "move" (arg: 0-based
-// items like "0,2", n: in front of that item), "remove" / "restore" (arg: items), "select"
-// (ng: arg: items), "save" / "saveas" (arg: the path), "close" or "" (report
-// only). Reports the items as src:page (r: removed, s: selected).
+// items like "0,2", n: in front of that item), "remove" / "restore" (arg: items),
+// "rotate" (arg: items, n: degrees), "select" (ng: arg: items), "save" /
+// "saveas" (arg: the path), "close" or "" (report only). Reports the items as
+// src:page[@rotation] (r: removed, s: selected).
 // ng: for the platforms whose picker answers later (AppShellPickFileAsync)
 static void OnMergePicked(MainWindow* win, Str path) {
     if (!gTool.visible || gTool.win != win || !IsMainWindowValidAndNotClosing(win)) {
@@ -1777,6 +1802,9 @@ TempStr MergePdfResultTemp(Str action, Str arg, int n, int* exitCodeOut) {
     } else if (str::Eq(action, StrL("remove")) || str::Eq(action, StrL("restore"))) {
         selectItems();
         MergeSetRemoved(str::Eq(action, StrL("remove")));
+    } else if (str::Eq(action, StrL("rotate"))) {
+        selectItems();
+        MergeRotate(n);
     } else if (str::Eq(action, StrL("save")) || str::Eq(action, StrL("saveas"))) {
         TempStr path = str::DupTemp(str::Eq(action, StrL("save")) ? gTool.srcPath : arg);
         bool ok = MergeSaveTo(path);
@@ -1820,6 +1848,9 @@ TempStr MergePdfResultTemp(Str action, Str arg, int n, int* exitCodeOut) {
     for (int i = 0; i < len(items); i++) {
         const MergePageDlg& it = items[i];
         out.Append(fmt(i == 0 ? "%d:%d" : ",%d:%d", it.sourceNo, it.pageNo));
+        if (it.rotation != 0) {
+            out.Append(fmt("@%d", it.rotation));
+        }
         if (it.removed) {
             out.AppendChar('r');
         }
@@ -2193,6 +2224,8 @@ void PdfToolView::OnMergeSetRemoved(PdfToolView*, gp::Ctx* cx, const gp::ClickEv
 enum {
     kMenuRemove = 1,
     kMenuRestore,
+    kMenuRotateLeft,
+    kMenuRotateRight,
     kMenuSelectAll,
 };
 
@@ -2205,6 +2238,8 @@ void PdfToolView::OnMergeMenu(PdfToolView*, gp::Ctx* cx, const gp::ActionEvent* 
     int cmd = (int)ev->arg;
     if (cmd == kMenuRemove || cmd == kMenuRestore) {
         MergeSetRemoved(cmd == kMenuRemove);
+    } else if (cmd == kMenuRotateLeft || cmd == kMenuRotateRight) {
+        MergeRotate(cmd == kMenuRotateRight ? 90 : -90);
     } else if (cmd == kMenuSelectAll) {
         MergeSelectAll();
     }
@@ -2344,6 +2379,13 @@ static bool MergeOnKeyDown(MainWindow* win, int vk, bool ctrl, bool shift) {
         case VK_DELETE:
             // all removed already: restore them
             MergeSetRemoved(MergeSelectedRemovedCount() < MergeSelectedCount());
+            break;
+        // [ and ], as in the document window
+        case VK_OEM_4:
+            MergeRotate(-90);
+            break;
+        case VK_OEM_6:
+            MergeRotate(90);
             break;
         case 'A':
             if (!ctrl) {
@@ -2712,7 +2754,7 @@ void ShowMergePdfDialog(MainWindow* win) {
     source.pageCount = engine->PageCount();
     source.engine = engine;
     engine->AddRef();
-    for (int i = 0; i < source.pageCount; i++) {
+    for (int i = 0; i < source.pageCount * kMergeRotations; i++) {
         VecAppend(gTool.mergeThumbs->thumbs, MergeThumb{});
     }
     VecAppend(gTool.mergeSources, source);
@@ -2941,9 +2983,17 @@ static gp::El* MergeGridEl(gp::Ctx* cx, float viewDx, float viewDy) {
     for (int i = first; i <= last; i++) {
         const MergePageDlg& page = items[i];
         const MergeSourceDlg& source = gTool.mergeSources[page.sourceNo];
-        MergeThumb& thumb = gTool.mergeThumbs->thumbs[source.thumbStart + page.pageNo - 1];
+        MergeThumb& thumb = gTool.mergeThumbs->thumbs[MergeThumbIdx(page)];
         RectF r = MergeCellRect(i);
         r.y += scrollY;
+        // the page is the thumbnail's size once rendered: rotated, it's landscape
+        RectF pr = r;
+        if (thumb.bitmap) {
+            pr.dx = std::min((float)thumb.bitmap->width, r.dx);
+            pr.dy = std::min((float)thumb.bitmap->height, r.dy);
+            pr.x = r.x + ((r.dx - pr.dx) / 2);
+            pr.y = r.y + ((r.dy - pr.dy) / 2);
+        }
 
         // the selection and hover: a rounded frame around page and number;
         // the keyboard's page a ring when it isn't selected
@@ -2971,10 +3021,10 @@ static gp::El* MergeGridEl(gp::Ctx* cx, float viewDx, float viewDy) {
         // white pages on a white grid need an edge
         gp::El* cell = gp::Div(cx->a)
                            ->Absolute()
-                           ->Left(r.x)
-                           ->Top(r.y)
-                           ->W(r.dx)
-                           ->H(r.dy)
+                           ->Left(pr.x)
+                           ->Top(pr.y)
+                           ->W(pr.dx)
+                           ->H(pr.dy)
                            ->ItemsCenter()
                            ->JustifyCenter()
                            ->Bg(gp::Rgba{0xff, 0xff, 0xff, 0xff})
@@ -2985,7 +3035,7 @@ static gp::El* MergeGridEl(gp::Ctx* cx, float viewDx, float viewDy) {
         }
         if (page.removed) {
             Color veil = colFrame != kColorUnset ? colFrame : colBg;
-            cell->Child(gp::Div(cx->a)->Absolute()->Left(0)->Top(0)->W(r.dx)->H(r.dy)->Bg(
+            cell->Child(gp::Div(cx->a)->Absolute()->Left(0)->Top(0)->W(pr.dx)->H(pr.dy)->Bg(
                 withAlpha(veil, kMergeRemovedVeilAlpha)));
         }
 
@@ -3203,6 +3253,15 @@ static gp::El* MergePagesEl(gp::Ctx* cx, float viewDx, float viewDy) {
     menu->MenuWithAction(GpuiDup(cx->a, ParseMenuAccelTextTemp(Tr("R&estore")).display), ActMergeMenu(),
                          (intptr_t)kMenuRestore);
     menu->Disabled(nSelRemoved == 0);
+    menu->Separator();
+    menu->MenuWithAction(GpuiDup(cx->a, ParseMenuAccelTextTemp(Tr("Rotate &Left")).display), ActMergeMenu(),
+                         (intptr_t)kMenuRotateLeft);
+    menu->Disabled(nSel == 0);
+    menu->Kbd(GStrL("["));
+    menu->MenuWithAction(GpuiDup(cx->a, ParseMenuAccelTextTemp(Tr("Rotate &Right")).display), ActMergeMenu(),
+                         (intptr_t)kMenuRotateRight);
+    menu->Disabled(nSel == 0);
+    menu->Kbd(GStrL("]"));
     menu->Separator();
     menu->MenuWithAction(GpuiDup(cx->a, ParseMenuAccelTextTemp(Tr("Select &All")).display), ActMergeMenu(),
                          (intptr_t)kMenuSelectAll);

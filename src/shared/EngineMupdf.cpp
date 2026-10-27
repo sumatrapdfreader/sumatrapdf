@@ -9994,6 +9994,14 @@ static pdf_document* OpenPdfForMerge(fz_context* ctx, const PdfMergeSource& src)
     return doc;
 }
 
+// adds degrees to page pageIdx's /Rotate, which may be inherited from its parent
+static void RotatePdfPage(fz_context* ctx, pdf_document* doc, int pageIdx, int degrees) {
+    pdf_obj* page = pdf_lookup_page_obj(ctx, doc, pageIdx);
+    int rotate = pdf_to_int(ctx, pdf_dict_get_inheritable(ctx, page, PDF_NAME(Rotate)));
+    rotate = (((rotate + degrees) % 360) + 360) % 360;
+    pdf_dict_put_int(ctx, page, PDF_NAME(Rotate), rotate);
+}
+
 // Write the pages, in order, to destPath, which must not be one of the sources.
 // srcs[0] is the base: its pages keep annotations, links and bookmarks. Pages of
 // the others are grafted, with annotations and form fields flattened (grafting
@@ -10053,6 +10061,11 @@ bool EngineMupdfMergePdfs(const Vec<PdfMergeSource>& srcs, const Vec<PdfMergePag
         }
         // drops the pages not in order and fixes bookmarks and links to them
         pdf_rearrange_pages(ctx, doc, nPages, order.els, PDF_CLEAN_STRUCTURE_KEEP);
+        for (int i = 0; i < nPages; i++) {
+            if (pages[i].rotation % 360 != 0) {
+                RotatePdfPage(ctx, doc, i, pages[i].rotation);
+            }
+        }
 
         pdf_write_options opts = gPdfDefaultWriteOptions;
         opts.do_compress = 1;
