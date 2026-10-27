@@ -636,10 +636,11 @@ static void extend_system_font_list(fz_context* ctx, const WCHAR* path) {
     hList = FindFirstFile(szPath, &FileData);
     if (hList == INVALID_HANDLE_VALUE) {
         // Don't complain about missing directories
-        if (GetLastError() == ERROR_FILE_NOT_FOUND) {
+        DWORD err = GetLastError();
+        if (err == ERROR_FILE_NOT_FOUND || err == ERROR_PATH_NOT_FOUND) {
             return;
         }
-        fz_throw(ctx, FZ_ERROR_GENERIC, "extend_system_font_list: unknown error %d", GetLastError());
+        fz_throw(ctx, FZ_ERROR_GENERIC, "extend_system_font_list: unknown error %d", err);
     }
     do {
         if (!(FileData.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY)) {
@@ -679,6 +680,15 @@ static void create_system_font_list(fz_context* ctx) {
     cch = GetWindowsDirectory(szFontDir, nelem(szFontDir) - 12);
     if (0 < cch && cch < nelem(szFontDir) - 12) {
         wcscat_s(szFontDir, MAX_PATH, L"\\Fonts\\*.?t?");
+        extend_system_font_list(ctx, szFontDir);
+    }
+
+    // fonts installed for the current user only (the default since Windows 10 1809)
+    const WCHAR* userFontsPattern = L"\\Microsoft\\Windows\\Fonts\\*.?t?";
+    size_t patternLen = wcslen(userFontsPattern);
+    cch = GetEnvironmentVariable(L"LOCALAPPDATA", szFontDir, nelem(szFontDir));
+    if (0 < cch && cch + patternLen < nelem(szFontDir)) {
+        wcscat_s(szFontDir, MAX_PATH, userFontsPattern);
         extend_system_font_list(ctx, szFontDir);
     }
 

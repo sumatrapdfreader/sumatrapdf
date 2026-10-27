@@ -4335,6 +4335,7 @@ bool EngineMupdf::LoadFromStream(fz_stream* stm, Str nameHint, PasswordUI* pwdUI
     if (requestedFontName && isReflowable) {
         if (!EbookFontIsAvailable(ctx, requestedFontName)) {
             ebookFontUnavailable = str::Dup(arena, requestedFontName);
+            logf("EngineMupdf: ebook font '%s' not found\n", requestedFontName);
         }
     }
 
