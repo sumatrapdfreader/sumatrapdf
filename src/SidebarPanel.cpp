@@ -96,9 +96,13 @@ bool IsSidebarViewAvailable(MainWindow* win, SidebarView v) {
 // the visible sidebar panel that shows v, if any
 SidebarPanel* SidebarPanelShowing(MainWindow* win, SidebarView v) {
     SidebarPanel* top = win->sidebarTop;
+    SidebarPanel* middle = win->sidebarMiddle;
     SidebarPanel* bottom = win->sidebarBottom;
     if (top && win->uiState.sidebarTopVisible && top->view == v) {
         return top;
+    }
+    if (middle && win->uiState.sidebarMiddleVisible && middle->view == v) {
+        return middle;
     }
     if (bottom && win->uiState.sidebarBottomVisible && bottom->view == v) {
         return bottom;
@@ -110,11 +114,6 @@ bool IsSidebarViewShown(MainWindow* win, SidebarView v) {
     return SidebarPanelShowing(win, v) != nullptr;
 }
 
-static SidebarPanel* OtherPanel(SidebarPanel* p) {
-    MainWindow* win = p->win;
-    return p == win->sidebarTop ? win->sidebarBottom : win->sidebarTop;
-}
-
 static void SaveSidebarViews(MainWindow* win) {
     if (WindowTab* tab = win->CurrentTab()) {
         tab->sidebarView = win->sidebarTop->view;
@@ -122,37 +121,46 @@ static void SaveSidebarViews(MainWindow* win) {
     str::ReplaceWithCopy(&gSettings->sidebarBottomView, SidebarViewToStr(win->sidebarBottom->view));
 }
 
-// p shows v from now on; if the other panel did, it takes p's view (swap)
+// p shows v from now on; if another panel did, it takes p's view (swap)
 static void SetPanelView(SidebarPanel* p, SidebarView v) {
-    SidebarPanel* other = OtherPanel(p);
-    if (other->view == v) {
-        other->view = p->view;
+    MainWindow* win = p->win;
+    SidebarPanel* panels[] = {win->sidebarTop, win->sidebarMiddle, win->sidebarBottom};
+    for (SidebarPanel* other : panels) {
+        if (other != p && other->view == v) {
+            other->view = p->view;
+        }
     }
     p->view = v;
-    SaveSidebarViews(p->win);
+    SaveSidebarViews(win);
 }
 
 // The top panel's view is the document's, the bottom's is app-wide, so they can
-// collide on a tab switch: the bottom one gives way
+// collide on a tab switch: the bottom one gives way. The middle one shows the
+// view left over
 void ResolveSidebarViews(MainWindow* win) {
     SidebarPanel* top = win->sidebarTop;
+    SidebarPanel* middle = win->sidebarMiddle;
     SidebarPanel* bottom = win->sidebarBottom;
-    if (!top || !bottom) {
+    if (!top || !middle || !bottom) {
         return;
     }
     WindowTab* tab = win->CurrentTab();
     top->view = tab ? tab->sidebarView : SidebarView::Bookmarks;
-    if (bottom->view != top->view) {
-        return;
-    }
     const SidebarView order[] = {SidebarView::Favorites, SidebarView::Bookmarks, SidebarView::Thumbnails};
+    if (bottom->view == top->view) {
+        for (SidebarView v : order) {
+            if (v != top->view) {
+                bottom->view = v;
+                break;
+            }
+        }
+        SaveSidebarViews(win);
+    }
     for (SidebarView v : order) {
-        if (v != top->view) {
-            bottom->view = v;
-            break;
+        if (v != top->view && v != bottom->view) {
+            middle->view = v;
         }
     }
-    SaveSidebarViews(win);
 }
 
 static bool RequestedTopVisible(MainWindow* win) {
@@ -168,9 +176,9 @@ void ApplySidebarPanels(MainWindow* win) {
     SetSidebarVisibility(win, RequestedTopVisible(win), gSettings->showFavorites);
 }
 
-// First free panel: the top one if it's hidden, else the bottom one if it is,
-// else the top one switches to v. Without a tab the top panel has nowhere to
-// keep its view (e.g. Favorites on the home page), so the bottom one shows v
+// First free panel: the top one, the bottom one, then the middle one; with
+// all shown, the top one switches to v. Without a tab the top panel has nowhere
+// to keep its view (e.g. Favorites on the home page), so the bottom one shows v
 void ShowSidebarView(MainWindow* win, SidebarView v) {
     if (!IsSidebarViewAvailable(win, v)) {
         return;
@@ -179,26 +187,51 @@ void ShowSidebarView(MainWindow* win, SidebarView v) {
         FocusSidebarPanel(shown);
         return;
     }
+    const MainWindow::UIState& ui = win->uiState;
     SidebarPanel* p = win->sidebarTop;
-    bool topTaken = win->uiState.sidebarTopVisible && !win->uiState.sidebarBottomVisible;
-    if (topTaken || !win->CurrentTab()) {
+    if (!win->CurrentTab()) {
         p = win->sidebarBottom;
+    } else if (ui.sidebarTopVisible && !ui.sidebarBottomVisible) {
+        p = win->sidebarBottom;
+    } else if (ui.sidebarTopVisible && !ui.sidebarMiddleVisible) {
+        p = win->sidebarMiddle;
     }
     SetPanelView(p, v);
+    if (p == win->sidebarMiddle) {
+        gSettings->showSidebarMiddle = true;
+    }
     bool top = p == win->sidebarTop || RequestedTopVisible(win);
     bool bottom = p == win->sidebarBottom || gSettings->showFavorites;
     SetSidebarVisibility(win, top, bottom, SidebarResizeFrame::Adjust);
     FocusSidebarPanel(p);
 }
 
-void HideSidebarView(MainWindow* win, SidebarView v) {
-    SidebarPanel* p = SidebarPanelShowing(win, v);
-    if (!p) {
+// The middle panel shows only with the other two: when one of them goes, it
+// takes the middle one's view instead
+static void HideSidebarPanel(SidebarPanel* p) {
+    MainWindow* win = p->win;
+    SidebarPanel* middle = win->sidebarMiddle;
+    if (p == middle || win->uiState.sidebarMiddleVisible) {
+        bool focused = SidebarPanelHasFocus(p) || SidebarPanelHasFocus(middle);
+        if (p != middle) {
+            SetPanelView(p, middle->view);
+        }
+        gSettings->showSidebarMiddle = false;
+        SetSidebarVisibility(win, RequestedTopVisible(win), gSettings->showFavorites, SidebarResizeFrame::Adjust);
+        if (focused && p != middle) {
+            FocusSidebarPanel(p);
+        }
         return;
     }
     bool top = p != win->sidebarTop && RequestedTopVisible(win);
     bool bottom = p != win->sidebarBottom && gSettings->showFavorites;
     SetSidebarVisibility(win, top, bottom, SidebarResizeFrame::Adjust);
+}
+
+void HideSidebarView(MainWindow* win, SidebarView v) {
+    if (SidebarPanel* p = SidebarPanelShowing(win, v)) {
+        HideSidebarPanel(p);
+    }
 }
 
 static void OnViewClick(SidebarPanel* p, SidebarView v) {
@@ -232,9 +265,7 @@ static void OnCloseClick(SidebarPanel* p, VirtMouseEvent*) {
         }
         return;
     }
-    bool top = p != win->sidebarTop && RequestedTopVisible(win);
-    bool bottom = p != win->sidebarBottom && gSettings->showFavorites;
-    SetSidebarVisibility(win, top, bottom, SidebarResizeFrame::Adjust);
+    HideSidebarPanel(p);
 }
 
 // where the keyboard goes in the panel: its tree, or the panel for thumbnails
@@ -264,6 +295,7 @@ void FocusSidebarPanel(SidebarPanel* p) {
     MainWindow* win = p->win;
     bool shown = p->kind == SidebarPanelKind::FavoritesTab;
     shown |= p == win->sidebarTop && win->uiState.sidebarTopVisible;
+    shown |= p == win->sidebarMiddle && win->uiState.sidebarMiddleVisible;
     shown |= p == win->sidebarBottom && win->uiState.sidebarBottomVisible;
     if (!shown) {
         return;
@@ -316,7 +348,7 @@ static bool PanelHostsThumbnails(SidebarPanel* p) {
 }
 
 static bool IsSidebarPanelHwnd(MainWindow* win, HWND hwnd) {
-    SidebarPanel* panels[] = {win->sidebarTop, win->sidebarBottom, win->favoritesTabPanel};
+    SidebarPanel* panels[] = {win->sidebarTop, win->sidebarMiddle, win->sidebarBottom, win->favoritesTabPanel};
     for (SidebarPanel* p : panels) {
         if (p && p->hwnd == hwnd) {
             return true;
@@ -480,13 +512,14 @@ static void PlaceViewControls(MainWindow* win, SidebarView v, SidebarPanel* host
     }
 }
 
-// Puts each view in the panel that shows it: the top or bottom panel, or the
-// Favorites tab's while that's the current tab. The others are hidden
+// Puts each view in the panel that shows it: the top, middle or bottom panel,
+// or the Favorites tab's while that's the current tab. The others are hidden
 void AttachSidebarViews(MainWindow* win) {
     SidebarPanel* top = win->sidebarTop;
+    SidebarPanel* middle = win->sidebarMiddle;
     SidebarPanel* bottom = win->sidebarBottom;
     SidebarPanel* favTab = win->favoritesTabPanel;
-    if (!top || !bottom || !favTab) {
+    if (!top || !middle || !bottom || !favTab) {
         return;
     }
     bool favTabActive = win->CurrentTab() && win->CurrentTab()->IsFavoritesTab();
@@ -499,9 +532,11 @@ void AttachSidebarViews(MainWindow* win) {
             hostOf[i] = top;
         } else if (bottom->view == v) {
             hostOf[i] = bottom;
+        } else if (middle->view == v) {
+            hostOf[i] = middle;
         }
     }
-    SidebarPanel* panels[] = {top, bottom, favTab};
+    SidebarPanel* panels[] = {top, middle, bottom, favTab};
     for (SidebarPanel* p : panels) {
         ILayout* view = nullptr;
         if (hostOf[(int)p->view] == p) {
@@ -527,7 +562,7 @@ void AttachSidebarViews(MainWindow* win) {
 }
 
 void UpdateSidebarPanelsText(MainWindow* win) {
-    SidebarPanel* panels[] = {win->sidebarTop, win->sidebarBottom, win->favoritesTabPanel};
+    SidebarPanel* panels[] = {win->sidebarTop, win->sidebarMiddle, win->sidebarBottom, win->favoritesTabPanel};
     for (SidebarPanel* p : panels) {
         if (!p) {
             continue;
@@ -539,7 +574,7 @@ void UpdateSidebarPanelsText(MainWindow* win) {
 }
 
 void UpdateSidebarPanelsIcons(MainWindow* win) {
-    SidebarPanel* panels[] = {win->sidebarTop, win->sidebarBottom, win->favoritesTabPanel};
+    SidebarPanel* panels[] = {win->sidebarTop, win->sidebarMiddle, win->sidebarBottom, win->favoritesTabPanel};
     for (SidebarPanel* p : panels) {
         if (p) {
             UpdateViewIcons(p, DpiGetForHwnd(p->hwnd));
@@ -548,7 +583,7 @@ void UpdateSidebarPanelsIcons(MainWindow* win) {
 }
 
 void UpdateSidebarPanelsDpi(MainWindow* win, int dpi) {
-    SidebarPanel* panels[] = {win->sidebarTop, win->sidebarBottom, win->favoritesTabPanel};
+    SidebarPanel* panels[] = {win->sidebarTop, win->sidebarMiddle, win->sidebarBottom, win->favoritesTabPanel};
     for (SidebarPanel* p : panels) {
         if (!p) {
             continue;

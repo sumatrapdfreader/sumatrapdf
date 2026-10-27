@@ -6,6 +6,9 @@ enum class SidebarPanelKind {
     Top,
     // app-wide: ShowFavorites, SidebarBottomView
     Bottom,
+    // app-wide: ShowSidebarMiddle; shows only with the other two, and the view
+    // neither of them shows
+    Middle,
     // the full-window Favorites tab: only favorites, no view icons
     FavoritesTab,
 };

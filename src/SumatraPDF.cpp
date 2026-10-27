@@ -249,6 +249,7 @@ static void CloseDocumentInCurrentTab(MainWindow* /*win*/, bool keepUIEnabled, b
 static void SetFrameTitleForTab(WindowTab* tab, bool needRefresh);
 static void OnSidebarSplitterMove(VirtSplitter::MoveEvent* /*ev*/);
 static void OnPanelsSplitterMove(VirtSplitter::MoveEvent* /*ev*/);
+static void OnMiddleSplitterMove(VirtSplitter::MoveEvent* /*ev*/);
 
 // the per-document settings to hand to a load running off the UI thread
 static FileEBookUI* CopyFileEBookUIForPath(Str filePath) {
@@ -779,6 +780,9 @@ static void UpdateWindowRtlLayout(MainWindow* win) {
         SetSidebarVisibility(win, topVisible, bottomVisible);
         if (topVisible) {
             SendMessageW(win->sidebarTop->hwnd, WM_SIZE, 0, 0);
+        }
+        if (win->uiState.sidebarMiddleVisible) {
+            SendMessageW(win->sidebarMiddle->hwnd, WM_SIZE, 0, 0);
         }
         if (bottomVisible) {
             SendMessageW(win->sidebarBottom->hwnd, WM_SIZE, 0, 0);
@@ -2445,7 +2449,8 @@ void FrameSyncSplitters(MainWindow* win) {
     if (win->captionLayout) {
         CollectVirtCtrls(win->captionLayout, tops);
     }
-    VirtSplitter* all[] = {win->sidebarSplitter, win->sidebarPanelsSplitter, win->aiChatSplitter};
+    VirtSplitter* all[] = {win->sidebarSplitter, win->sidebarPanelsSplitter, win->sidebarMiddleSplitter,
+                           win->aiChatSplitter};
     for (VirtSplitter* s : all) {
         if (s) {
             VecAppend(tops, s);
@@ -2543,6 +2548,7 @@ static void CreateCaptionLayout(MainWindow* win) {
 // they are simply collapsed.
 static void CreateFrameLayout(MainWindow* win) {
     win->sidebarTopSlot = new HwndSlot();
+    win->sidebarMiddleSlot = new HwndSlot();
     win->sidebarBottomSlot = new HwndSlot();
     win->favoritesTabSlot = new HwndSlot();
     win->canvasSlot = new HwndSlot();
@@ -2564,6 +2570,8 @@ static void CreateFrameLayout(MainWindow* win) {
     sidebar->alignCross = CrossAxisAlign::Stretch;
     sidebar->AddChild(win->sidebarTopSlot);
     sidebar->AddChild(win->sidebarPanelsSplitter);
+    sidebar->AddChild(win->sidebarMiddleSlot);
+    sidebar->AddChild(win->sidebarMiddleSplitter);
     sidebar->AddChild(win->sidebarBottomSlot, 1);
 
     // canvas and the Favorites tab share this box; only one HWND is shown
@@ -2599,6 +2607,7 @@ static void CreateSidebar(MainWindow* win) {
     FrameSyncSplitters(win);
 
     win->sidebarTop = CreateSidebarPanel(win, SidebarPanelKind::Top);
+    win->sidebarMiddle = CreateSidebarPanel(win, SidebarPanelKind::Middle);
     win->sidebarBottom = CreateSidebarPanel(win, SidebarPanelKind::Bottom);
     win->favoritesTabPanel = CreateSidebarPanel(win, SidebarPanelKind::FavoritesTab);
     CreateToc(win);
@@ -2606,6 +2615,9 @@ static void CreateSidebar(MainWindow* win) {
     win->sidebarPanelsSplitter = NewFrameSplitter(SplitterType::Horiz, true);
     win->sidebarPanelsSplitter->thickness = kSplitterDy;
     win->sidebarPanelsSplitter->onMove = MkFunc1Void(OnPanelsSplitterMove);
+    win->sidebarMiddleSplitter = NewFrameSplitter(SplitterType::Horiz, true);
+    win->sidebarMiddleSplitter->thickness = kSplitterDy;
+    win->sidebarMiddleSplitter->onMove = MkFunc1Void(OnMiddleSplitterMove);
     FrameSyncSplitters(win);
 
     CreateFrameLayout(win);
@@ -6503,9 +6515,9 @@ static bool IsUiLayoutEq(UILayout* s1, UILayout* s2) {
            s1->isFullScreen == s2->isFullScreen && s1->tabsVisible == s2->tabsVisible &&
            s1->isToolbarVisible == s2->isToolbarVisible && s1->isToolbarOverlay == s2->isToolbarOverlay &&
            s1->sidebarTopVisible == s2->sidebarTopVisible && s1->sidebarBottomVisible == s2->sidebarBottomVisible &&
-           s1->favoritesAsTab == s2->favoritesAsTab && s1->showMenuBarRebar == s2->showMenuBarRebar &&
-           s1->aiChatVisible == s2->aiChatVisible && s1->aiChatDx == s2->aiChatDx &&
-           s1->sidebarOnRight == s2->sidebarOnRight;
+           s1->sidebarMiddleVisible == s2->sidebarMiddleVisible && s1->favoritesAsTab == s2->favoritesAsTab &&
+           s1->showMenuBarRebar == s2->showMenuBarRebar && s1->aiChatVisible == s2->aiChatVisible &&
+           s1->aiChatDx == s2->aiChatDx && s1->sidebarOnRight == s2->sidebarOnRight;
 }
 
 // Favorites-only must not reserve a tab row (issue #5861)
@@ -6660,6 +6672,7 @@ static bool RelayoutFrame(MainWindow* win, bool updateToolbars, int sidebarDx) {
     curState.isToolbarVisible = win->isToolbarVisible;
     curState.isToolbarOverlay = win->isToolbarOverlay;
     curState.sidebarTopVisible = win->uiState.sidebarTopVisible;
+    curState.sidebarMiddleVisible = win->uiState.sidebarMiddleVisible;
     bool favAsTabNow = win->CurrentTab() && win->CurrentTab()->IsFavoritesTab();
     // favoritesAsTab must differ so switching to and from the Favorites tab never
     // skips RelayoutFrame (otherwise the canvas stays hidden until another tab switch)
@@ -6707,11 +6720,14 @@ static bool RelayoutFrame(MainWindow* win, bool updateToolbars, int sidebarDx) {
         WindowTab* cur = win->CurrentTab();
         bool favAsTab = cur && cur->IsFavoritesTab();
         bool topVis = !favAsTab && ui.sidebarTopVisible;
+        bool middleVis = !favAsTab && ui.sidebarMiddleVisible;
         bool bottomVis = !favAsTab && ui.sidebarBottomVisible;
         bool aiVis = !favAsTab && ui.aiChatVisible;
         win->sidebarSplitter->SetIsVisible(topVis || bottomVis);
         HwndSetVisible(win->sidebarTop->hwnd, topVis);
         win->sidebarPanelsSplitter->SetIsVisible(topVis && bottomVis);
+        HwndSetVisible(win->sidebarMiddle->hwnd, middleVis);
+        win->sidebarMiddleSplitter->SetIsVisible(middleVis);
         HwndSetVisible(win->sidebarBottom->hwnd, bottomVis);
         HwndSetVisible(win->favoritesTabPanel->hwnd, favAsTab);
         // canvas stays sized under a Favorites tab (only hidden) so switching
@@ -6780,6 +6796,7 @@ static bool RelayoutFrame(MainWindow* win, bool updateToolbars, int sidebarDx) {
     WindowTab* curTab = win->CurrentTab();
     bool favAsTab = curTab && curTab->IsFavoritesTab();
     bool topVisible = !favAsTab && win->uiState.sidebarTopVisible;
+    bool middleVisible = !favAsTab && win->uiState.sidebarMiddleVisible;
     bool bottomVisible = !favAsTab && win->uiState.sidebarBottomVisible;
     bool sidebarVisible = topVisible || bottomVisible;
     bool aiChatVisible = !favAsTab && win->uiState.aiChatVisible && win->hwndAiChatBox;
@@ -6857,6 +6874,8 @@ static bool RelayoutFrame(MainWindow* win, bool updateToolbars, int sidebarDx) {
     int chromeDy = captionHeight + (showTabsBar ? tabHeight : 0) + menuBarDy + rebarDy;
     int contentDy = std::max(rc.dy - chromeDy, 0);
 
+    // the bottom panel takes what the top and middle ones leave
+    int nPanels = middleVisible ? 3 : 2;
     int tocDy = 0;
     if (topVisible) {
         if (!bottomVisible) {
@@ -6866,10 +6885,16 @@ static bool RelayoutFrame(MainWindow* win, bool updateToolbars, int sidebarDx) {
             if (tocDy > 0) {
                 tocDy = limitValue(gSettings->tocDy, 0, contentDy);
             } else {
-                tocDy = contentDy / 2;
+                tocDy = contentDy / nPanels;
             }
-            tocDy = limitValue(tocDy, kTocMinDy, contentDy - kTocMinDy);
+            tocDy = limitValue(tocDy, kTocMinDy, contentDy - (nPanels - 1) * kTocMinDy);
         }
+    }
+    int middleDy = 0;
+    if (middleVisible) {
+        int restDy = contentDy - tocDy - kSplitterDy;
+        middleDy = gSettings->sidebarMiddleDy > 0 ? gSettings->sidebarMiddleDy : restDy / 2;
+        middleDy = limitValue(middleDy, kTocMinDy, std::max(kTocMinDy, restDy - kTocMinDy));
     }
 
     int aiChatDx = 0;
@@ -6884,6 +6909,8 @@ static bool RelayoutFrame(MainWindow* win, bool updateToolbars, int sidebarDx) {
     }
 
     SetVis(win->sidebarTopSlot, topVisible);
+    SetVis(win->sidebarMiddleSlot, middleVisible);
+    SetVis(win->sidebarMiddleSplitter, middleVisible);
     SetVis(win->sidebarBottomSlot, bottomVisible);
     SetVis(win->favoritesTabSlot, favAsTab);
     SetVis(win->sidebarPanelsSplitter, topVisible && bottomVisible);
@@ -6893,6 +6920,8 @@ static bool RelayoutFrame(MainWindow* win, bool updateToolbars, int sidebarDx) {
 
     win->sidebarTopSlot->dx = sidebarDxApplied;
     win->sidebarTopSlot->dy = tocDy;
+    win->sidebarMiddleSlot->dx = sidebarDxApplied;
+    win->sidebarMiddleSlot->dy = middleDy;
     win->sidebarBottomSlot->dx = sidebarDxApplied;
     win->aiChatSlot->dx = aiChatDx;
     if (win->frameLayout) {
@@ -6912,8 +6941,10 @@ static bool RelayoutFrame(MainWindow* win, bool updateToolbars, int sidebarDx) {
     BindSlot(win->toolbarTopSlot, win->hwndToolbar, &dh, updateToolbars && showToolbar && !toolbarBottom);
     BindSlot(win->toolbarBottomSlot, win->hwndToolbar, &dh, updateToolbars && showToolbar && toolbarBottom);
     HWND topHwnd = win->sidebarTop->hwnd;
+    HWND middleHwnd = win->sidebarMiddle->hwnd;
     HWND bottomHwnd = win->sidebarBottom->hwnd;
     BindSlot(win->sidebarTopSlot, topHwnd, &dh, topVisible && !isFrameResize && !isSplitterDrag);
+    BindSlot(win->sidebarMiddleSlot, middleHwnd, &dh, middleVisible && !isFrameResize && !isSplitterDrag);
     BindSlot(win->sidebarBottomSlot, bottomHwnd, &dh, bottomVisible && !isFrameResize && !isSplitterDrag);
     BindSlot(win->favoritesTabSlot, win->favoritesTabPanel->hwnd, &dh, favAsTab);
     BindSlot(win->canvasSlot, win->hwndCanvas, &dh, !discardCanvasBits);
@@ -6930,6 +6961,9 @@ static bool RelayoutFrame(MainWindow* win, bool updateToolbars, int sidebarDx) {
         if (topVisible) {
             StretchHwndHeight(dh, topHwnd, win->sidebarTopSlot->lastBounds);
         }
+        if (middleVisible) {
+            StretchHwndHeight(dh, middleHwnd, win->sidebarMiddleSlot->lastBounds);
+        }
         if (bottomVisible) {
             StretchHwndHeight(dh, bottomHwnd, win->sidebarBottomSlot->lastBounds);
         }
@@ -6937,15 +6971,18 @@ static bool RelayoutFrame(MainWindow* win, bool updateToolbars, int sidebarDx) {
         if (topVisible) {
             StretchHwndWidth(dh, topHwnd, win->sidebarTopSlot->lastBounds);
         }
+        if (middleVisible) {
+            StretchHwndWidth(dh, middleHwnd, win->sidebarMiddleSlot->lastBounds);
+        }
         if (bottomVisible) {
             StretchHwndWidth(dh, bottomHwnd, win->sidebarBottomSlot->lastBounds);
         }
     }
 
-    HwndSlot* chromeSlots[] = {win->tabsSlot,          win->menuSlot,       win->toolbarTopSlot,
-                               win->toolbarBottomSlot, win->capMenuSlot,    win->capTabsRow1,
-                               win->capTabsRow2,       win->sidebarTopSlot, win->sidebarBottomSlot,
-                               win->favoritesTabSlot,  win->canvasSlot,     win->aiChatSlot};
+    HwndSlot* chromeSlots[] = {
+        win->tabsSlot,         win->menuSlot,    win->toolbarTopSlot, win->toolbarBottomSlot, win->capMenuSlot,
+        win->capTabsRow1,      win->capTabsRow2, win->sidebarTopSlot, win->sidebarMiddleSlot, win->sidebarBottomSlot,
+        win->favoritesTabSlot, win->canvasSlot,  win->aiChatSlot};
     for (HwndSlot* s : chromeSlots) {
         ClearSlotDefer(s);
     }
@@ -7015,6 +7052,9 @@ static bool RelayoutFrame(MainWindow* win, bool updateToolbars, int sidebarDx) {
         }
         if (topVisible && bottomVisible) {
             win->sidebarPanelsSplitter->Invalidate();
+        }
+        if (middleVisible) {
+            win->sidebarMiddleSplitter->Invalidate();
         }
     }
     if (updateToolbars && win->isToolbarVisible) {
@@ -7172,6 +7212,10 @@ static void FrameUpdateUi(MainWindow* win) {
         if (topVisible) {
             RedrawWindow(win->sidebarTop->hwnd, nullptr, nullptr, RDW_ERASE | RDW_INVALIDATE | RDW_ALLCHILDREN);
         }
+        if (ui.sidebarMiddleVisible) {
+            RedrawWindow(win->sidebarMiddle->hwnd, nullptr, nullptr, RDW_ERASE | RDW_INVALIDATE | RDW_ALLCHILDREN);
+            win->sidebarMiddleSplitter->Invalidate();
+        }
         if (bottomVisible) {
             RedrawWindow(win->sidebarBottom->hwnd, nullptr, nullptr, RDW_ERASE | RDW_INVALIDATE | RDW_ALLCHILDREN);
         }
@@ -7252,7 +7296,7 @@ static void ApplySidebarDpiFonts(MainWindow* win, int dpi) {
         win->favFilterEdit->SetFont(appFont);
     }
     // re-layout the panels
-    SidebarPanel* panels[] = {win->sidebarTop, win->sidebarBottom, win->favoritesTabPanel};
+    SidebarPanel* panels[] = {win->sidebarTop, win->sidebarMiddle, win->sidebarBottom, win->favoritesTabPanel};
     for (SidebarPanel* p : panels) {
         if (p) {
             SendMessageW(p->hwnd, WM_SIZE, 0, 0);
@@ -8018,7 +8062,7 @@ void AdvanceFocus(MainWindow* win) {
     bool hasToolbar = !win->isFullScreen && !win->presentation && gSettings->showToolbar && win->IsDocLoaded();
     int direction = IsShiftPressed() ? -1 : 1;
 
-    constexpr int kMaxWindows = 6;
+    constexpr int kMaxWindows = 7;
     HWND tabOrder[kMaxWindows] = {win->hwndFrame};
     int nWindows = 1;
     if (hasToolbar && ShowChapterUi(win->ctrl) && win->chapterEdit) {
@@ -8029,9 +8073,12 @@ void AdvanceFocus(MainWindow* win) {
     }
     // note: the find edit is no longer in the toolbar tab order; it lives in the
     // floating findBar and is reached via Ctrl+F / the search toolbar icon
-    // the sidebar panels, top then bottom
+    // the sidebar panels, top to bottom
     if (win->uiState.sidebarTopVisible) {
         tabOrder[nWindows++] = SidebarPanelFocusHwnd(win->sidebarTop);
+    }
+    if (win->uiState.sidebarMiddleVisible) {
+        tabOrder[nWindows++] = SidebarPanelFocusHwnd(win->sidebarMiddle);
     }
     if (win->uiState.sidebarBottomVisible) {
         tabOrder[nWindows++] = SidebarPanelFocusHwnd(win->sidebarBottom);
@@ -8494,6 +8541,33 @@ static void OnPanelsSplitterMove(VirtSplitter::MoveEvent* ev) {
     ScheduleUiUpdate(win, kUiRelayout | kUiNoToolbars | kUiPanelsDrag);
 }
 
+// the splitter between the middle and bottom panels sets the middle one's height
+static void OnMiddleSplitterMove(VirtSplitter::MoveEvent* ev) {
+    MainWindow* win = FindMainWindowByHwnd(ev->w->GetHwnd());
+    if (!win) {
+        return;
+    }
+
+    // both panels are visible while this splitter is, so their rects are current
+    Rect rTop = HwndClientRect(win->sidebarTop->hwnd);
+    Rect rMiddle = HwndClientRect(win->sidebarMiddle->hwnd);
+    Rect rBottom = HwndClientRect(win->sidebarBottom->hwnd);
+    Point pcur = HwndGetCursorPos(win->hwndCanvas);
+    int middleDy = pcur.y - rTop.dy - kSplitterDy;
+
+    int minDy = std::min(kTocMinDy, rMiddle.dy);
+    int maxDy = std::max(rMiddle.dy + rBottom.dy - kTocMinDy, rMiddle.dy);
+    if (middleDy < minDy || middleDy > maxDy) {
+        ev->resizeAllowed = false;
+        return;
+    }
+    if (ev->queryOnly || middleDy == gSettings->sidebarMiddleDy) {
+        return;
+    }
+    gSettings->sidebarMiddleDy = middleDy;
+    ScheduleUiUpdate(win, kUiRelayout | kUiNoToolbars | kUiPanelsDrag);
+}
+
 // the width the sidebar window has now
 int SidebarNativeDx(MainWindow* win) {
     return win->sidebarTop ? HwndClientRect(win->sidebarTop->hwnd).dx : 0;
@@ -8599,6 +8673,7 @@ void SetSidebarVisibility(MainWindow* win, bool topVisible, bool bottomVisible, 
     WindowTab* tab = win->CurrentTab();
     ResolveSidebarViews(win);
     SidebarPanel* top = win->sidebarTop;
+    SidebarPanel* middle = win->sidebarMiddle;
     SidebarPanel* bottom = win->sidebarBottom;
 
     bool requestedTop = topVisible;
@@ -8608,23 +8683,31 @@ void SetSidebarVisibility(MainWindow* win, bool topVisible, bool bottomVisible, 
     bool topAvailable = IsSidebarViewAvailable(win, top->view);
     topVisible = topVisible && topAvailable;
     bottomVisible = bottomVisible && IsSidebarViewAvailable(win, bottom->view);
+    // the middle panel shows only with the other two
+    bool middleVisible =
+        gSettings->showSidebarMiddle && topVisible && bottomVisible && IsSidebarViewAvailable(win, middle->view);
 
     if (PM_BLACK_SCREEN == win->presentation || PM_WHITE_SCREEN == win->presentation) {
         topVisible = false;
+        middleVisible = false;
         bottomVisible = false;
     }
 
     // the bookmarks tree is loaded when a panel shows it
     bool bookmarks = (topVisible && top->view == SidebarView::Bookmarks) ||
+                     (middleVisible && middle->view == SidebarView::Bookmarks) ||
                      (bottomVisible && bottom->view == SidebarView::Bookmarks);
     if (bookmarks) {
         LoadTocTree(win);
         if (!win->tocLoaded) {
             topVisible = topVisible && top->view != SidebarView::Bookmarks;
+            middleVisible = middleVisible && middle->view != SidebarView::Bookmarks;
             bottomVisible = bottomVisible && bottom->view != SidebarView::Bookmarks;
         }
     }
+    middleVisible = middleVisible && topVisible && bottomVisible;
     bool favorites = (topVisible && top->view == SidebarView::Favorites) ||
+                     (middleVisible && middle->view == SidebarView::Favorites) ||
                      (bottomVisible && bottom->view == SidebarView::Favorites);
     if (favorites) {
         PopulateFavTreeIfNeeded(win);
@@ -8646,13 +8729,15 @@ void SetSidebarVisibility(MainWindow* win, bool topVisible, bool bottomVisible, 
 
     // a panel going away takes the focus with it
     bool topFocused = SidebarPanelHasFocus(top);
+    bool middleFocused = SidebarPanelHasFocus(middle);
     bool bottomFocused = SidebarPanelHasFocus(bottom);
-    if ((!topVisible && topFocused) || (!bottomVisible && bottomFocused)) {
+    if ((!topVisible && topFocused) || (!middleVisible && middleFocused) || (!bottomVisible && bottomFocused)) {
         HwndSetFocus(win->hwndFrame);
     }
 
     bool wasSidebar = win->uiState.sidebarTopVisible || win->uiState.sidebarBottomVisible;
     win->uiState.sidebarTopVisible = topVisible;
+    win->uiState.sidebarMiddleVisible = middleVisible;
     win->uiState.sidebarBottomVisible = bottomVisible;
     AttachSidebarViews(win);
     bool nowSidebar = topVisible || bottomVisible;
@@ -13017,8 +13102,8 @@ static LRESULT CALLBACK WndProcSumatraFrame(HWND hwnd, UINT msg, WPARAM wp, LPAR
             // default COLOR_BTNFACE brush puts a bright #f0f0f0 band across a
             // dark sidebar, which reads as a light divider (issue #5893)
             HWND hwndCtl = (HWND)lp;
-            bool isPanel = win && (hwndCtl == win->sidebarTop->hwnd || hwndCtl == win->sidebarBottom->hwnd ||
-                                   hwndCtl == win->favoritesTabPanel->hwnd);
+            bool isPanel = win && (hwndCtl == win->sidebarTop->hwnd || hwndCtl == win->sidebarMiddle->hwnd ||
+                                   hwndCtl == win->sidebarBottom->hwnd || hwndCtl == win->favoritesTabPanel->hwnd);
             if (!isPanel) {
                 break;
             }

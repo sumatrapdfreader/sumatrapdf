@@ -1069,6 +1069,9 @@ struct Settings {
     // visible, this is the height of the bookmarks (table of contents)
     // part, in screen pixels
     int tocDy;
+    // if the sidebar's middle panel is visible, this is its height, in
+    // screen pixels
+    int sidebarMiddleDy;
     // size of the toolbar icons in pixels at 100% display scaling (8-64);
     // the toolbar itself is a few pixels taller
     int toolbarSize;
@@ -1172,6 +1175,9 @@ struct Settings {
     // if true, show the sidebar's bottom panel: Favorites, unless
     // SidebarBottomView says otherwise
     bool showFavorites;
+    // if true, and the sidebar's top and bottom panels are visible, show a
+    // middle panel between them with the view neither of them shows
+    bool showSidebarMiddle;
     // if true, favorites within each file are sorted alphabetically by
     // name (or page label); if false (the default), they are sorted by
     // page number

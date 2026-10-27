@@ -1564,6 +1564,13 @@ const globalPrefs: Field[] = [
     .emptyMeans("favorites")
     .ver("3.7"),
   field(
+    "ShowSidebarMiddle",
+    Bool,
+    false,
+    "if true, and the sidebar's top and bottom panels are visible, show a middle panel between them " +
+      "with the view neither of them shows",
+  ).ver("3.7"),
+  field(
     "SortFavoritesByName",
     Bool,
     false,
@@ -1852,6 +1859,12 @@ const globalPrefs: Field[] = [
     0,
     "if both the favorites and the bookmarks part of the sidebar are visible, this is " +
       "the height of the bookmarks (table of contents) part, in screen pixels",
+  ).internal(),
+  field(
+    "SidebarMiddleDy",
+    Int,
+    0,
+    "if the sidebar's middle panel is visible, this is its height, in screen pixels",
   ).internal(),
   field(
     "ToolbarCustomLayout",
@@ -2237,6 +2250,7 @@ const globalPrefsLayout = [
   "ReadingBar",
   "TabWidth",
   "TocDy",
+  "SidebarMiddleDy",
   "ToolbarSize",
   "TreeFontSize",
   "UIFontSize",
@@ -2275,6 +2289,7 @@ const globalPrefsLayout = [
   "ShowToolbar",
   "SearchUIFloating",
   "ShowFavorites",
+  "ShowSidebarMiddle",
   "SortFavoritesByName",
   "ShowToc",
   "AlwaysShowSidebar",

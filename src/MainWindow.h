@@ -277,9 +277,10 @@ struct MainWindow { // NOLINT(clang-analyzer-optin.performance.Padding)
     // chapter number edit, next to pageEdit; only for HasChapters() docs
     Edit* chapterEdit = nullptr;
 
-    // the sidebar's two panels, top and bottom, and the full-window Favorites
-    // tab's; each shows one of the views below (see SidebarPanel.h)
+    // the sidebar's panels, top, middle and bottom, and the full-window
+    // Favorites tab's; each shows one of the views below (see SidebarPanel.h)
     SidebarPanel* sidebarTop = nullptr;
+    SidebarPanel* sidebarMiddle = nullptr;
     SidebarPanel* sidebarBottom = nullptr;
     SidebarPanel* favoritesTabPanel = nullptr;
 
@@ -348,6 +349,8 @@ struct MainWindow { // NOLINT(clang-analyzer-optin.performance.Padding)
 
     // horizontal splitter between the sidebar's top and bottom panels
     VirtSplitter* sidebarPanelsSplitter = nullptr;
+    // horizontal splitter between the middle and bottom panels
+    VirtSplitter* sidebarMiddleSplitter = nullptr;
 
     TabsCtrl* tabsCtrl = nullptr;
     bool tabsVisible = false;
@@ -490,6 +493,7 @@ struct MainWindow { // NOLINT(clang-analyzer-optin.performance.Padding)
     // splitter | AI chat
     HBox* frameLayout = nullptr;
     HwndSlot* sidebarTopSlot = nullptr;
+    HwndSlot* sidebarMiddleSlot = nullptr;
     HwndSlot* sidebarBottomSlot = nullptr;
     // favoritesTabPanel; shown instead of the canvas when the Favorites tab is
     // selected
@@ -568,6 +572,7 @@ struct MainWindow { // NOLINT(clang-analyzer-optin.performance.Padding)
             bool isToolbarVisible = false;
             bool isToolbarOverlay = false;
             bool sidebarTopVisible = false;
+            bool sidebarMiddleVisible = false;
             bool sidebarBottomVisible = false;
             // full-window Favorites tab vs. sidebar panel: different geometry
             bool favoritesAsTab = false;
@@ -581,6 +586,7 @@ struct MainWindow { // NOLINT(clang-analyzer-optin.performance.Padding)
         // desired visibility of the sidebar / AI chat panels; applied
         // (HwndSetVisible) by RelayoutFrame
         bool sidebarTopVisible = false;
+        bool sidebarMiddleVisible = false;
         bool sidebarBottomVisible = false;
         bool aiChatVisible = false;
         bool updatePending = false; // a FrameUpdateUi uitask is queued

@@ -8,19 +8,21 @@
 import { mkdirSync, rmSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 import { ControlClient, ControlCommand } from "./control.ts";
-import { cmdId, makePdf, runStandalone, tmpPath } from "./util.ts";
+import { USE_NG, cmdId, makePdf, runStandalone, tmpPath } from "./util.ts";
 import { sleep } from "./winapi.ts";
 import { killAndWait, launchControlled, sendCommand } from "./win-automation.ts";
 
-// what the panels show, e.g. "thumbnails/favorites" ("-" for a hidden panel)
+// what the panels show, e.g. "thumbnails/favorites" ("-" for a hidden panel);
+// a visible middle panel goes between them
 async function panels(client: ControlClient): Promise<string> {
   const res = await client.request(ControlCommand.TestSidebarThumbnails, []);
   const raw = String(res[1] ?? "");
-  const m = / top=\d+,(\d),(\w+),.* bottom=\d+,(\d),(\w+),/.exec(raw);
+  const m = / top=\d+,(\d),(\w+),.*?(?: middle=\d+,(\d),(\w+),.*)? bottom=\d+,(\d),(\w+),/.exec(raw);
   if (!m) {
     throw new Error(`sidebar-thumbnails-close: TestSidebarThumbnails: ${raw}`);
   }
-  return `${m[1] === "1" ? m[2] : "-"}/${m[3] === "1" ? m[4] : "-"}`;
+  const middle = m[3] === "1" ? `${m[4]}/` : "";
+  return `${m[1] === "1" ? m[2] : "-"}/${middle}${m[5] === "1" ? m[6] : "-"}`;
 }
 
 async function waitFor(what: string, f: () => Promise<boolean>) {
@@ -50,10 +52,22 @@ export async function testit(): Promise<void> {
     await want("bookmarks/-");
     sendCommand(frame, cmdId("CmdFavoriteToggle"));
     await want("bookmarks/favorites");
-    sendCommand(frame, cmdId("CmdToggleThumbnails"));
-    await want("thumbnails/favorites");
-    sendCommand(frame, cmdId("CmdToggleBookmarks"));
-    await want("bookmarks/favorites");
+    if (USE_NG) {
+      sendCommand(frame, cmdId("CmdToggleThumbnails"));
+      await want("thumbnails/favorites");
+      sendCommand(frame, cmdId("CmdToggleBookmarks"));
+      await want("bookmarks/favorites");
+    } else {
+      // the thumbnails open in the middle panel and move to the top one
+      sendCommand(frame, cmdId("CmdToggleThumbnails"));
+      await want("bookmarks/thumbnails/favorites");
+      sendCommand(frame, cmdId("CmdToggleBookmarks"));
+      await want("thumbnails/favorites");
+      sendCommand(frame, cmdId("CmdToggleThumbnails"));
+      await want("-/favorites");
+      sendCommand(frame, cmdId("CmdToggleBookmarks"));
+      await want("bookmarks/favorites");
+    }
 
     await client.quit();
     quit = true;

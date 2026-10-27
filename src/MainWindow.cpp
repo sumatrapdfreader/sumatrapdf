@@ -132,9 +132,10 @@ MainWindow::~MainWindow() {
 
     // the panels hand the views' layouts back before those are deleted
     DeleteSidebarPanel(sidebarTop);
+    DeleteSidebarPanel(sidebarMiddle);
     DeleteSidebarPanel(sidebarBottom);
     DeleteSidebarPanel(favoritesTabPanel);
-    sidebarTop = sidebarBottom = favoritesTabPanel = nullptr;
+    sidebarTop = sidebarMiddle = sidebarBottom = favoritesTabPanel = nullptr;
     HomePageDestroySearch(this);
     HomePageDestroyChrome(this);
 
