@@ -174,7 +174,6 @@ Edit* PDFScriptWnd::NewEdit(Str text, PlatformFont* font, Color col, bool isMult
     args.isRtl = IsUIRtl();
     args.isMultiLine = isMultiLine;
     args.noWrap = isMultiLine;
-    args.noScrollBars = isMultiLine;
     auto* e = new Edit();
     e->SetColors(col, colBg);
     e->Create(args);
