@@ -190,6 +190,7 @@ import { testit as annotContentsClickAway } from "./annot-contents-click-away.ts
 import { testit as annotColorDropdown } from "./annot-color-dropdown.ts";
 import { testit as inkThickness } from "./ink-thickness.ts";
 import { testit as issue6388 } from "./issue-6388.ts";
+import { testit as issue6385 } from "./issue-6385.ts";
 import { testit as issue6137Contents } from "./issue-6137-contents.ts";
 import { testit as issue6093 } from "./issue-6093.ts";
 import { testit as toolbarHoverDropdown } from "./toolbar-hover-dropdown.ts";
@@ -518,6 +519,7 @@ export const tests: NamedTest[] = [
   ["issue-2799", issue2799],
   ["ink-thickness", inkThickness],
   ["issue-6388", issue6388],
+  ["issue-6385", issue6385],
   ["ink-annotation-placement", inkAnnotationPlacement],
   ["annot-moveable-types", annotMoveableTypes],
   ["move-polygon-polyline-ink", movePolygonPolylineInk],

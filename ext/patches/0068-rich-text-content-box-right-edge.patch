@@ -1,0 +1,28 @@
+pdf-appearance: rich free text pads the right side like the left
+
+write_rich_content passed a width (w - b*2) as the content box x1, so
+the right padding was twice the left and centered text sat left of
+center by the border width (#6385).
+---
+diff --git a/source/pdf/pdf-appearance.c b/source/pdf/pdf-appearance.c
+index 4db105a7d..c3b39c6d8 100644
+--- a/source/pdf/pdf-appearance.c
++++ b/source/pdf/pdf-appearance.c
+@@ -2349,7 +2349,7 @@ write_rich_content(fz_context *ctx, pdf_annot *annot, fz_buffer *buf, pdf_obj **
+ 	 * We know a clipping rectangle will have been set to the proper rectangle
+ 	 * so we can allow text to flow out the bottom of the rectangle rather than
+ 	 * just missing it out. This matches adobe. */
+-	fz_rect content_box = fz_make_rect(b, b, w - b*2, h + size * 2);
++	fz_rect content_box = fz_make_rect(b, b, w - b, h + size * 2);
+ 
+ 	fz_buffer *inbuf = fz_new_buffer_from_copied_data(ctx, (const unsigned char *)rc, strlen(rc)+1);
+ 	fz_story *story = NULL;
+@@ -2369,7 +2369,7 @@ write_rich_content(fz_context *ctx, pdf_annot *annot, fz_buffer *buf, pdf_obj **
+ 	if (!multiline)
+ 	{
+ 		float gap = (h - b*2 - size) / 2;
+-		content_box = fz_make_rect(b, b + gap, w - b * 2, h + gap + size * 2);
++		content_box = fz_make_rect(b, b + gap, w - b, h + gap + size * 2);
+ 	}
+ 
+ 	fz_try(ctx)

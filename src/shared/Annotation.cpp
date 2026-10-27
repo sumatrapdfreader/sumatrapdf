@@ -192,6 +192,8 @@ static bool UpdateAnnotIf(Annotation* annot, Update update) {
             changed = update(access.ctx, access.annot);
             if (changed) {
                 pdf_update_annot(access.ctx, access.annot);
+                // e.g. a border width change moves /Rect
+                annot->bounds = PdfAnnotBounds(access.ctx, access.annot);
             }
         }
         fz_catch(access.ctx) {
