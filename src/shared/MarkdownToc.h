@@ -19,3 +19,4 @@ void CollectMarkdownFiles(Str baseDir, Str openedFile, bool htmlMode, StrVec& fi
 void ParseMarkdownTocsParallel(StrVec& files, bool htmlMode, Vec<MarkdownFileToc>& tocsOut);
 
 Str MarkdownToHtmlPage(Str markdown);
+Str MermaidRunJs();

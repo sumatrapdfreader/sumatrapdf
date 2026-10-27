@@ -715,6 +715,27 @@ TempStr MarkdownFollowLinkResultTemp(Str href, bool follow, int* exitCodeOut) {
     return ToStrTemp(out);
 }
 
+// Urls the current markdown document's browser view was served, one per line,
+// so a test can see what the page loaded. Used by tests/issue-6380.ts.
+TempStr MarkdownServedResultTemp(int* exitCodeOut) {
+    MainWindow* win = len(gWindows) > 0 ? gWindows[0] : nullptr;
+    MarkdownModel* mm = win && win->ctrl ? win->ctrl->AsMarkdown() : nullptr;
+    if (exitCodeOut) {
+        *exitCodeOut = mm ? 0 : 2;
+    }
+    if (!mm) {
+        return str::DupTemp(StrL("NOTREADY no-markdown\n"));
+    }
+    StrVec urls;
+    mm->GetCachedUrls(urls);
+    str::Builder out;
+    out.Append(StrL("OK\n"));
+    for (Str url : urls) {
+        out.Append(fmt("%s\n", url));
+    }
+    return ToStrTemp(out);
+}
+
 static void AppendTocItems(str::Builder& out, TocItem* item, int depth = 0) {
     for (; item; item = item->next) {
         if (item->title) {

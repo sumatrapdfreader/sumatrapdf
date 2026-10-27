@@ -657,6 +657,8 @@ enum class ControlCmd : u16 {
     // [brightness, contrast] applied to the current file as the Brightness /
     // Contrast dialog's OK does; returns the current values
     TestPageAdjust = 138,
+    // urls the current markdown document's browser view was served
+    TestMarkdownServed = 139,
 };
 
 static_assert((u16)ControlCmd::Quit == (u16)ControlFrameCmd::Quit);
@@ -1483,6 +1485,13 @@ static void ExecuteControlRequest(ControlRequest* req) {
             }
             int exitCode = 0;
             Str res = MarkdownFollowLinkResultTemp(href, follow != 0, &exitCode);
+            AppendTestResult(req, exitCode, res);
+            break;
+        }
+
+        case ControlCmd::TestMarkdownServed: {
+            int exitCode = 0;
+            Str res = MarkdownServedResultTemp(&exitCode);
             AppendTestResult(req, exitCode, res);
             break;
         }

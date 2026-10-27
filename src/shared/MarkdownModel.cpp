@@ -498,6 +498,8 @@ Str MarkdownModel::GetDataForUrl(Str url) {
             data = str::Dup(Str((const char*)js, n));
         }
         free(js);
+    } else if (str::EndsWithI(plainUrl, StrL("/mermaid-run.js"))) {
+        data = str::Dup(MermaidRunJs());
     } else {
         TempStr filePath = VirtualUrlToFileTemp(plainUrl);
         // in html mode every resource (the page, images, linked pages) is served raw;

@@ -399,6 +399,14 @@ Str BrowserDocController::CacheData(Str url, Str data) {
     return entry->data;
 }
 
+// urls the browser view was served, for tests
+void BrowserDocController::GetCachedUrls(StrVec& urls) {
+    ScopedMutex scope(&docAccess);
+    for (CacheEntry* entry : dataCache) {
+        urls.Append(entry->url);
+    }
+}
+
 void BrowserDocController::ClearDataCache() {
     DeleteVecMembers(dataCache);
     VecReset(dataCache);

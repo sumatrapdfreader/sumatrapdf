@@ -349,11 +349,16 @@ static int RewriteMermaidCodeBlocks(str::Builder& out, Str body) {
     return nRewritten;
 }
 
-// mermaid.min.js lives in IDR_EMBEDDED_PAK and is served from the markdown
-// virtual host (GetDataForUrl). Must match kMdVirtualHost in MarkdownModel.cpp.
+// mermaid.min.js lives in IDR_EMBEDDED_PAK and mermaid-run.js is kMermaidRunJs,
+// both served from the markdown virtual host (GetDataForUrl). Not inline, so
+// kMarkdownCsp can allow just these two scripts. Must match kMdVirtualHost in
+// MarkdownModel.cpp.
 static const char kMermaidBootstrap[] = R"HTML(
 <script src="https://sumatrapdf.markdown/mermaid.min.js"></script>
-<script>
+<script src="https://sumatrapdf.markdown/mermaid-run.js"></script>
+)HTML";
+
+static const char kMermaidRunJs[] = R"JS(
 (function () {
   if (typeof mermaid === "undefined") return;
   var bg = getComputedStyle(document.body).backgroundColor || "";
@@ -370,8 +375,19 @@ static const char kMermaidBootstrap[] = R"HTML(
   });
   mermaid.run({ querySelector: "pre.mermaid" }).catch(function () {});
 })();
-</script>
-)HTML";
+)JS";
+
+// Raw HTML in markdown is rendered (#6380), so the page must not run the
+// document's script (e.g. <img onerror=...>): only our two mermaid scripts.
+static const char kMarkdownCsp[] =
+    "<meta http-equiv=\"Content-Security-Policy\" content=\""
+    "default-src 'self' data:; img-src * data:; media-src * data:; style-src 'self' 'unsafe-inline'; "
+    "script-src https://sumatrapdf.markdown/mermaid.min.js https://sumatrapdf.markdown/mermaid-run.js; "
+    "object-src 'none'; frame-src 'none'; base-uri 'none'; form-action 'none'\">";
+
+Str MermaidRunJs() {
+    return Str(kMermaidRunJs, (int)(sizeof(kMermaidRunJs) - 1));
+}
 
 // page colors follow the document color mode: ThemePageRenderColors gives
 // black-on-white (or FixedPageUI overrides) when DocumentColorsFollowTheme
@@ -561,7 +577,8 @@ static char* MarkdownToHtmlBody(Str markdown, int options = CMARK_OPT_DEFAULT) {
 
 // Convert markdown source to a full HTML page (body only is rendered with cmark-gfm).
 Str MarkdownToHtmlPage(Str markdown) {
-    int options = CMARK_OPT_DEFAULT;
+    // raw HTML is kept; tagfilter and kMarkdownCsp keep it from running script
+    int options = CMARK_OPT_DEFAULT | CMARK_OPT_UNSAFE;
     if (gSettings && gSettings->markdownUI.preserveLineBreaks) {
         options |= CMARK_OPT_HARDBREAKS;
     }
@@ -573,8 +590,9 @@ Str MarkdownToHtmlPage(Str markdown) {
     str::Builder html;
     html.Append(
         StrL("<!DOCTYPE html><html><head><meta charset=\"utf-8\">"
-             "<meta name=\"viewport\" content=\"width=device-width, initial-scale=1\">"
-             "<style>"));
+             "<meta name=\"viewport\" content=\"width=device-width, initial-scale=1\">"));
+    html.Append(Str(kMarkdownCsp, (int)(sizeof(kMarkdownCsp) - 1)));
+    html.Append(StrL("<style>"));
     html.Append(Str(MarkdownPageCssTemp()));
     html.Append(StrL("</style></head><body>"));
     int nMermaid = RewriteMermaidCodeBlocks(html, Str(body));

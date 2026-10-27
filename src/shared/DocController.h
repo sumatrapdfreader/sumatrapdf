@@ -242,6 +242,7 @@ struct BrowserDocController : DocController {
     void RestoreHtmlScrollPos();
     Str GetCachedData(Str url) const;
     Str CacheData(Str url, Str data);
+    void GetCachedUrls(StrVec& urls);
 
     StrVec pages;
     int currentPageNo = 1;
