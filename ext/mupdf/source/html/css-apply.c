@@ -2317,7 +2317,11 @@ fz_apply_css_style(fz_context *ctx, fz_html_font_set *set, fz_css_style *style, 
 const char *
 fz_get_css_match_content(fz_css_match *match)
 {
-	return string_from_property(match, PRO_CONTENT, NULL);
+	/* only a string: counter() and the like are unsupported, keywords mean no content */
+	fz_css_value *value = value_from_property(match, PRO_CONTENT);
+	if (!value || value->type != CSS_STRING)
+		return NULL;
+	return value->data;
 }
 
 void

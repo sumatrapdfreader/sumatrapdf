@@ -1,0 +1,24 @@
+css: only a string is pseudo-element content
+
+fz_get_css_match_content returned the first value's text whatever its
+type, so `content: counters(section, ".") ". "` rendered the function
+name ("countersTITLE") (#6409).
+Return content only for a string value.
+---
+diff --git a/source/html/css-apply.c b/source/html/css-apply.c
+index e84468983..e10243acc 100644
+--- a/source/html/css-apply.c
++++ b/source/html/css-apply.c
+@@ -2317,7 +2317,11 @@ fz_apply_css_style(fz_context *ctx, fz_html_font_set *set, fz_css_style *style,
+ const char *
+ fz_get_css_match_content(fz_css_match *match)
+ {
+-	return string_from_property(match, PRO_CONTENT, NULL);
++	/* only a string: counter() and the like are unsupported, keywords mean no content */
++	fz_css_value *value = value_from_property(match, PRO_CONTENT);
++	if (!value || value->type != CSS_STRING)
++		return NULL;
++	return value->data;
+ }
+ 
+ void
