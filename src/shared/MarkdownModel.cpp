@@ -95,6 +95,27 @@ static TempStr UrlFragmentTemp(Str url) {
     return url::DecodeTemp(Str(frag.s + 1, frag.len - 1));
 }
 
+// A decoded url path must stay inside the document's folder. WebView2 collapses
+// "../" in urls but not an encoded "%2e%2e%5c", which decodes to "..\".
+static bool IsRelPathInDir(Str rel) {
+    auto isSep = [](char c) { return c == '/' || c == '\\'; };
+    if (path::IsAbsolute(rel) || (len(rel) > 0 && isSep(rel.s[0]))) {
+        return false;
+    }
+    // reject any ".." segment: "a\..\..\b"
+    int segStart = 0;
+    for (int i = 0; i <= len(rel); i++) {
+        if (i < len(rel) && !isSep(rel.s[i])) {
+            continue;
+        }
+        if (str::Eq(Str(rel.s + segStart, i - segStart), StrL(".."))) {
+            return false;
+        }
+        segStart = i + 1;
+    }
+    return true;
+}
+
 static TempStr RelPathFromBaseTemp(Str filePath, Str baseDir) {
     TempStr normFile = path::NormalizeTemp(filePath);
     TempStr normBase = path::NormalizeTemp(baseDir);
@@ -253,6 +274,9 @@ TempStr MarkdownModel::VirtualUrlToFileTemp(Str url) const {
     }
     // url path -> file path: decode first, a '/' or '\' can't be in a file name
     TempStr rel = str::ReplaceTemp(url::DecodeTemp(pathPart), StrL("/"), StrL(kPathSep));
+    if (!IsRelPathInDir(rel)) {
+        return {};
+    }
     if (isHtml) {
         // page urls keep their real name; images/links resolve against baseDir too
         return path::JoinTemp(baseDir, rel);
@@ -308,6 +332,9 @@ TempStr MarkdownModel::LinkedDocPathTemp(Str url) const {
         return {};
     }
     TempStr rel = str::ReplaceTemp(url::DecodeTemp(urlPath), StrL("/"), StrL(kPathSep));
+    if (!IsRelPathInDir(rel)) {
+        return {};
+    }
     return path::NormalizeTemp(path::JoinTemp(baseDir, rel));
 }
 
