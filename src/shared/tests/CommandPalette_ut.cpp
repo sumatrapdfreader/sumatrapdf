@@ -9,6 +9,28 @@
 // must be last due to assert() over-write
 #include "base/tests/UtAssert.h"
 
+static void PaletteSwitchLabel_UnitTests() {
+    struct {
+        const char* label;
+        const char* prefix;
+        const char* expected;
+    } cases[] = {
+        {"& Thumbnails", "&", "Thumbnails"},
+        {"& 缩略图", "&", "缩略图"},
+        {"缩略图", "&", "缩略图"},
+        {"&缩略图", "&", "缩略图"},
+        {"縮圖", "&", "縮圖"},
+        {"Vignettes (&)", "&", "Vignettes (&)"},
+        {"@ 标签页", "@", "标签页"},
+        {"= Settings", "=", "Settings"},
+        {"", "&", ""},
+        {"&", "&", ""},
+    };
+    for (auto& c : cases) {
+        utassert(str::Eq(PaletteSwitchLabel(Str(c.label), Str(c.prefix)), Str(c.expected)));
+    }
+}
+
 // A pure model of the command palette's list + filtering, with no window
 // attached, so the filtering can be tested without a UI.
 struct CommandPaletteEntry {
@@ -87,6 +109,7 @@ static void PalettePrefixes_UnitTests() {
 }
 
 void CommandPaletteModel_UnitTests() {
+    PaletteSwitchLabel_UnitTests();
     PalettePrefixes_UnitTests();
     const int commands[] = {CmdOpenFile, CmdRotateLeft, CmdRotateRight, CmdZoomFitWidth};
     CommandPaletteModel model;

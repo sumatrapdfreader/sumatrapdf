@@ -38,6 +38,7 @@
 #include "FileHistory.h"
 #include "Menu.h"
 #include "Translations.h"
+#include "FilterUtil.h"
 #include "PagePosition.h"
 #include "Installer.h"
 #include "RegistryPreview.h"
@@ -891,7 +892,7 @@ void CommandPaletteWnd::FillSwitchRow() {
         PaletteSwitch& sw = switches[i];
         bool active = PaletteSwitchIsActive(filter, sw.prefix);
         auto* t = new PaletteSwitchCtrl();
-        InitKeyHint(t, PaletteFont(kPaletteMetaFontPx), Str(sw.label.s, 1), Str(sw.label.s + 2, len(sw.label) - 2),
+        InitKeyHint(t, PaletteFont(kPaletteMetaFontPx), sw.prefix, PaletteSwitchLabel(sw.label, sw.prefix),
                     active ? colTxt : colMuted, colBg);
         t->wnd = this;
         t->prefix = sw.prefix;
