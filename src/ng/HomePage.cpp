@@ -359,7 +359,13 @@ struct HomePageUI {
     // LayoutHomePage needs their widths, and gpui measures text only while
     // painting
     gpui::Bounds openGroupBounds{};
+    gpui::Bounds openTextBounds{};
     gpui::Bounds brandBounds{};
+    // the header row last frame: what the test state reports (issue #6367)
+    bool brandShown = true;
+    gpui::Bounds viewBtnsBounds{};
+    float tipPadL = 0;
+    float tipPadR = 0;
     // the entries as laid out last frame, for the hover tooltip
     Vec<gpui::Bounds> entryBounds;
     // each thumbnail's selection ring, drawn for the selected one
@@ -1635,7 +1641,6 @@ gp::El* HomePageBuild(MainWindow* win, gp::Ctx* cx) {
         thumbsStartX = kInnerPadding;
     }
     float startX = (float)thumbsStartX;
-    float endX = std::max(0.f, frameDx - startX - (float)contentDx);
 
     // orig scrolls the entries from a wheel anywhere on the page
     gp::El* root = gp::Div(cx->a)
@@ -1669,21 +1674,6 @@ gp::El* HomePageBuild(MainWindow* win, gp::Ctx* cx) {
         brandDx = HomeBrandStripesDx() + kHomeBrandGap + (len(logoName) * 8);
     }
 
-    // [open] "Open..."  [thumbnails] [list]
-    Str openTxt = Tr("Open...");
-    int openTextGap = 6;
-    gp::El* openGroup = gp::Div(cx->a)
-                            ->FlexRow()
-                            ->ItemsCenter()
-                            ->Gap((float)openTextGap)
-                            ->Shrink0()
-                            ->BoundsOut(&h->openGroupBounds)
-                            ->Cursor(gp::CursorKind::Pointer)
-                            ->PathClick(GStrL("home-open-doc"))
-                            ->OnClick(gp::ListenTo(Ui(win)->view, &HomeView::OnOpenDoc));
-    openGroup->Child(HomeSvgIcon(cx, gIconFileOpen, (float)HomePageIconSize(), colText));
-    openGroup->Child(gp::TextEl(cx->a, GpuiDup(cx->a, openTxt))->Font((float)kHomeTextFontPx)->Fg(ToGpui(colText)));
-
     if (!h->search) {
         h->search = new gp::InputState();
         h->search->focus = gp::FocusHandleNew(cx->app);
@@ -1695,38 +1685,70 @@ gp::El* HomePageBuild(MainWindow* win, gp::Ctx* cx) {
     gp::InputSetPlaceholder(h->search, ToGpui(cue));
     h->search->onChange = gp::ListenTo(Ui(win)->view, &HomeView::OnSearch);
 
-    // the search box is centered; the brand and the Open group bound its width
+    // orig's LayoutHomeHeader inputs
+    Str openTxt = Tr("Open...");
     int iconGap = 4;
     int viewBtnDx = HomePageIconSize() + 6;
     int viewIconsDx = (2 * viewBtnDx) + iconGap;
-    int openGroupDx = (int)h->openGroupBounds.w;
-    if (openGroupDx <= 0) {
+    int openTextDx = (int)h->openTextBounds.w;
+    if (openTextDx <= 0) {
         // first frame: not measured yet
-        openGroupDx = HomePageIconSize() + openTextGap + (len(openTxt) * 7);
+        openTextDx = len(openTxt) * 7;
     }
-    int rowGapX = 16;
-    int leftDx = std::max(brandDx, frame.dx) + rowGapX;
-    int rightDx = openGroupDx + rowGapX + viewIconsDx + rowGapX;
-    int flankDx = std::max(leftDx, rightDx);
-    int borderDx = std::min(contentDx - (2 * flankDx), kHomeSearchMaxDx);
-    borderDx = std::max(borderDx, 200);
+    HomeHeaderIn hin;
+    hin.gridX = thumbsStartX;
+    hin.gridDx = contentDx;
+    hin.pageX = kInnerPadding;
+    hin.pageDx = (int)frameDx - (2 * kInnerPadding);
+    hin.firstColDx = frame.dx;
+    hin.brandDx = brandDx;
+    hin.openIconDx = HomePageIconSize();
+    hin.openTextGap = 6;
+    hin.openTextDx = openTextDx;
+    hin.viewIconsDx = viewIconsDx;
+    hin.gapX = 16;
+    hin.searchMinDx = 200;
+    hin.searchMaxDx = kHomeSearchMaxDx;
+    HomeHeaderOut hdrRow;
+    LayoutHomeHeader(hin, hdrRow);
+    h->brandShown = hdrRow.showBrand;
+
+    // [open] "Open..."  [thumbnails] [list]
+    gp::El* openGroup = gp::Div(cx->a)
+                            ->FlexRow()
+                            ->ItemsCenter()
+                            ->Gap((float)hin.openTextGap)
+                            ->Shrink0()
+                            ->BoundsOut(&h->openGroupBounds)
+                            ->Cursor(gp::CursorKind::Pointer)
+                            ->PathClick(GStrL("home-open-doc"))
+                            ->OnClick(gp::ListenTo(Ui(win)->view, &HomeView::OnOpenDoc));
+    openGroup->Child(HomeSvgIcon(cx, gIconFileOpen, (float)HomePageIconSize(), colText));
+    if (hdrRow.showOpenText) {
+        openGroup->Child(gp::TextEl(cx->a, GpuiDup(cx->a, openTxt))
+                             ->Font((float)kHomeTextFontPx)
+                             ->Fg(ToGpui(colText))
+                             ->BoundsOut(&h->openTextBounds));
+    }
+
     int borderDy = AppShellDpiPx(win, kSearchEditDy) + 2; // 1px border on each side
     int rowDy = std::max({viewBtnDx, borderDy, kHomeBrandStripeDy});
 
     // every row item (brand, link, search box, view icons) is centered on the
-    // row's vertical centerline. Both flanks are as wide, so the middle is
-    // centered over the grid
-    gp::El* toolRow = gp::Div(cx->a)->FlexRow()->W((float)contentDx)->H((float)rowDy)->Shrink0()->ItemsCenter();
-    gp::El* brandBox = gp::Div(cx->a)
-                           ->FlexRow()
-                           ->W((float)std::max(frame.dx, brandDx))
-                           ->Shrink0()
-                           ->ItemsCenter()
-                           ->JustifyEnd()
-                           ->Child(brand);
-    toolRow->Child(gp::Div(cx->a)->FlexRow()->W((float)flankDx)->Shrink0()->ItemsCenter()->Child(brandBox));
+    // row's vertical centerline, at the x LayoutHomeHeader picked
+    gp::El* toolRow = gp::Div(cx->a)->FlexRow()->W((float)hdrRow.rowDx)->H((float)rowDy)->Shrink0()->ItemsCenter();
+    gp::El* lead = gp::Div(cx->a)
+                       ->FlexRow()
+                       ->W((float)(hdrRow.searchX - hdrRow.rowX))
+                       ->Shrink0()
+                       ->ItemsCenter()
+                       ->PadL((float)(hdrRow.brandX - hdrRow.rowX));
+    if (hdrRow.showBrand) {
+        lead->Child(brand);
+    }
+    toolRow->Child(lead);
     gp::El* searchBox = gp::Div(cx->a)
-                            ->W((float)borderDx)
+                            ->W((float)hdrRow.searchDx)
                             ->Shrink0()
                             ->H((float)borderDy)
                             ->BoundsOut(&h->searchBounds)
@@ -1736,24 +1758,20 @@ gp::El* HomePageBuild(MainWindow* win, gp::Ctx* cx) {
                                         ->IntoEl()
                                         ->Font((float)AppShellDpiPx(win, kHomeSearchFontPx))
                                         ->H((float)borderDy));
-    toolRow->Child(gp::Div(cx->a)->FlexRow()->Flex1()->MinW(0)->ItemsCenter()->JustifyCenter()->Child(searchBox));
-    gp::El* viewBtns = gp::Div(cx->a)->FlexRow()->ItemsCenter()->Gap((float)iconGap)->Shrink0();
+    toolRow->Child(searchBox);
+    int searchEnd = hdrRow.searchX + hdrRow.searchDx;
+    toolRow->Child(gp::Div(cx->a)->W((float)(hdrRow.openX - searchEnd))->Shrink0());
+    gp::El* viewBtns =
+        gp::Div(cx->a)->FlexRow()->ItemsCenter()->Gap((float)iconGap)->Shrink0()->BoundsOut(&h->viewBtnsBounds);
     viewBtns->Child(HomeViewModeBtn(win, cx, false));
     viewBtns->Child(HomeViewModeBtn(win, cx, true));
-    toolRow->Child(gp::Div(cx->a)
-                       ->FlexRow()
-                       ->W((float)flankDx)
-                       ->Shrink0()
-                       ->ItemsCenter()
-                       ->JustifyEnd()
-                       ->Gap((float)rowGapX)
-                       ->Child(openGroup)
-                       ->Child(viewBtns));
+    toolRow->Child(
+        gp::Div(cx->a)->FlexRow()->Flex1()->ItemsCenter()->JustifyBetween()->Child(openGroup)->Child(viewBtns));
     root->Child(gp::Div(cx->a)
                     ->FlexRow()
                     ->W(gp::kFill)
                     ->Shrink0()
-                    ->PadL(startX)
+                    ->PadL((float)hdrRow.rowX)
                     ->PadT((float)kHomeHeaderTopY)
                     ->PadB((float)kSearchThumbnailsGapY)
                     ->Child(toolRow));
@@ -1804,7 +1822,10 @@ gp::El* HomePageBuild(MainWindow* win, gp::Ctx* cx) {
     // orig: thumbsBottomY = rc.dy - tipHeight - kThumbsMiddleMargin
     root->Child(gp::Div(cx->a)->W(gp::kFill)->H((float)kThumbsMiddleMargin)->Shrink0());
     h->tipBounds = {};
-    gp::El* tip = HomeTipBandEl(win, cx, startX, endX);
+    // the tip wraps at the header row's width
+    h->tipPadL = (float)hdrRow.rowX;
+    h->tipPadR = std::max(0.f, frameDx - (float)(hdrRow.rowX + hdrRow.rowDx));
+    gp::El* tip = HomeTipBandEl(win, cx, h->tipPadL, h->tipPadR);
     if (tip) {
         tip->BoundsOut(&h->tipBounds);
         root->Child(tip);
@@ -1904,13 +1925,22 @@ TempStr HomeSelectionForWindowTemp(int* exitCodeOut, int winIdx) {
         lastCaption = BoundsRect(h->entryBounds[len(h->entryBounds) - 1]);
     }
     Rect tipRect = BoundsRect(h->tipBounds);
+    // the header row's items, which must not overlap (issue #6367)
+    Rect logo = h->brandShown ? BoundsRect(h->brandBounds) : Rect{};
+    Rect tipText;
+    if (!tipRect.IsEmpty()) {
+        tipText = {tipRect.x + (int)h->tipPadL, tipRect.y, tipRect.dx - (int)(h->tipPadL + h->tipPadR), tipRect.dy};
+    }
+    TempStr header = fmt("vbar=%d logo=%s open=%s views=%s tipText=%s", h->vbarShown ? 1 : 0, RectCsvTemp(logo),
+                         RectCsvTemp(BoundsRect(h->openGroupBounds)), RectCsvTemp(BoundsRect(h->viewBtnsBounds)),
+                         RectCsvTemp(tipText));
     return finish(
         0, fmt("OK sel=%d entries=%d searchFocus=%d searchBox=%d search=%s outline=%s outlineFull=%s path=%s "
-               "listView=%d listIcon=%s thumbsArea=%s lastCaption=%s tip=%d,%d tipRect=%s vbar=%d",
+               "listView=%d listIcon=%s thumbsArea=%s lastCaption=%s tip=%d,%d tipRect=%s %s",
                sel, h->entryCount, searchFocus ? 1 : 0, searchBox, RectCsvTemp(search), RectCsvTemp(outline),
                RectCsvTemp(outlineFull), path, HomePageIsListView() ? 1 : 0, RectCsvTemp(BoundsRect(h->listIconBounds)),
                RectCsvTemp(BoundsRect(h->entriesView)), RectCsvTemp(lastCaption), gSelectedIsPromo ? 1 : 0,
-               gSelectedTipIdx, RectCsvTemp(tipRect), h->vbarShown ? 1 : 0));
+               gSelectedTipIdx, RectCsvTemp(tipRect), header));
 }
 
 TempStr HomeSelectionResultTemp(int* exitCodeOut) {

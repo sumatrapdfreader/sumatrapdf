@@ -165,6 +165,12 @@ export type HomeSelection = {
   tipRect: number[];
   // a vertical scrollbar is shown for the entries
   vbar: boolean;
+  // header row: brand (empty when hidden), Open icon + text, view-mode icons;
+  // and the tip's wrap rect
+  logo: number[];
+  open: number[];
+  views: number[];
+  tipText: number[];
   raw: string;
 };
 
@@ -616,11 +622,15 @@ export class ControlClient {
         tip: "",
         tipRect: [0, 0, 0, 0],
         vbar: false,
+        logo: [0, 0, 0, 0],
+        open: [0, 0, 0, 0],
+        views: [0, 0, 0, 0],
+        tipText: [0, 0, 0, 0],
         raw,
       };
     }
     const m =
-      /OK sel=(-?\d+) entries=(\d+) searchFocus=(\d) searchBox=(\d) search=(-?\d+),(-?\d+),(-?\d+),(-?\d+) outline=(-?\d+),(-?\d+),(-?\d+),(-?\d+) outlineFull=(-?\d+),(-?\d+),(-?\d+),(-?\d+) path=(.*) listView=(\d) listIcon=(-?\d+),(-?\d+),(-?\d+),(-?\d+) thumbsArea=(-?\d+),(-?\d+),(-?\d+),(-?\d+) lastCaption=(-?\d+),(-?\d+),(-?\d+),(-?\d+) tip=(\d,-?\d+) tipRect=(-?\d+),(-?\d+),(-?\d+),(-?\d+) vbar=(\d)$/.exec(
+      /OK sel=(-?\d+) entries=(\d+) searchFocus=(\d) searchBox=(\d) search=(-?\d+),(-?\d+),(-?\d+),(-?\d+) outline=(-?\d+),(-?\d+),(-?\d+),(-?\d+) outlineFull=(-?\d+),(-?\d+),(-?\d+),(-?\d+) path=(.*) listView=(\d) listIcon=(-?\d+),(-?\d+),(-?\d+),(-?\d+) thumbsArea=(-?\d+),(-?\d+),(-?\d+),(-?\d+) lastCaption=(-?\d+),(-?\d+),(-?\d+),(-?\d+) tip=(\d,-?\d+) tipRect=(-?\d+),(-?\d+),(-?\d+),(-?\d+) vbar=(\d) logo=(-?\d+),(-?\d+),(-?\d+),(-?\d+) open=(-?\d+),(-?\d+),(-?\d+),(-?\d+) views=(-?\d+),(-?\d+),(-?\d+),(-?\d+) tipText=(-?\d+),(-?\d+),(-?\d+),(-?\d+)$/.exec(
         raw,
       );
     if (!m) {
@@ -643,6 +653,10 @@ export class ControlClient {
       tip: m[31],
       tipRect: [parseInt(m[32], 10), parseInt(m[33], 10), parseInt(m[34], 10), parseInt(m[35], 10)],
       vbar: m[36] === "1",
+      logo: m.slice(37, 41).map((v) => parseInt(v, 10)),
+      open: m.slice(41, 45).map((v) => parseInt(v, 10)),
+      views: m.slice(45, 49).map((v) => parseInt(v, 10)),
+      tipText: m.slice(49, 53).map((v) => parseInt(v, 10)),
       raw,
     };
   }

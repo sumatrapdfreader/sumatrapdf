@@ -118,6 +118,64 @@ int CountHomePageFiles() {
     return n;
 }
 
+// lays the header out in a row, the brand at its start: false if the search
+// box would be narrower than searchMinDx (unless `force`)
+static bool PlaceHomeHeader(const HomeHeaderIn& in, int rowX, int rowDx, HomeHeaderOut& out, bool force) {
+    int leftDx = out.showBrand ? in.brandDx + in.gapX : 0;
+    int openDx = in.openIconDx + (out.showOpenText ? in.openTextGap + in.openTextDx : 0);
+    int rightDx = in.gapX + openDx + in.gapX + in.viewIconsDx;
+    int availDx = rowDx - leftDx - rightDx;
+    if (availDx < in.searchMinDx && !force) {
+        return false;
+    }
+    out.rowX = rowX;
+    out.rowDx = rowDx;
+    out.brandX = rowX;
+    out.viewIconsX = rowX + rowDx - in.viewIconsDx;
+    out.openX = out.viewIconsX - in.gapX - openDx;
+    out.searchDx = std::min(std::max(availDx, in.searchMinDx / 2), in.searchMaxDx);
+    // centered on the row unless a flank is in the way
+    int x = rowX + ((rowDx - out.searchDx) / 2);
+    x = std::min(x, out.openX - in.gapX - out.searchDx);
+    out.searchX = std::max(x, rowX + leftDx);
+    return true;
+}
+
+// The brand ends on the first column's right edge, the Open link and view
+// icons on the last column's, the search box is centered. When the grid is too
+// narrow for that (one or two columns, issue #6367), the row spans the page
+// and drops the "Open..." text, then the brand, before anything overlaps.
+void LayoutHomeHeader(const HomeHeaderIn& in, HomeHeaderOut& out) {
+    out = {};
+    int openDx = in.openIconDx + in.openTextGap + in.openTextDx;
+    int leftDx = std::max(in.brandDx, in.firstColDx) + in.gapX;
+    int rightDx = in.gapX + openDx + in.gapX + in.viewIconsDx;
+    int flankDx = std::max(leftDx, rightDx);
+    int searchDx = std::min(in.gridDx - (2 * flankDx), in.searchMaxDx);
+    if (searchDx >= in.searchMinDx) {
+        out.rowX = in.gridX;
+        out.rowDx = in.gridDx;
+        out.brandX = in.gridX + std::max(in.firstColDx - in.brandDx, 0);
+        out.viewIconsX = in.gridX + in.gridDx - in.viewIconsDx;
+        out.openX = out.viewIconsX - in.gapX - openDx;
+        out.searchDx = searchDx;
+        out.searchX = in.gridX + ((in.gridDx - searchDx) / 2);
+        return;
+    }
+    if (PlaceHomeHeader(in, in.gridX, in.gridDx, out, false)) {
+        return;
+    }
+    if (PlaceHomeHeader(in, in.pageX, in.pageDx, out, false)) {
+        return;
+    }
+    out.showOpenText = false;
+    if (PlaceHomeHeader(in, in.pageX, in.pageDx, out, false)) {
+        return;
+    }
+    out.showBrand = false;
+    PlaceHomeHeader(in, in.pageX, in.pageDx, out, true);
+}
+
 // "Page 24 of 47" while a document is being read, otherwise its page count;
 // a chapter position ("3:12") is shown as stored
 TempStr HomeThumbnailMetaTemp(FileState* fs, float* progressOut) {

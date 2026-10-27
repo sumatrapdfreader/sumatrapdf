@@ -127,13 +127,14 @@ export async function testit(): Promise<void> {
     if (!second) {
       throw new Error("home-two-windows: second window never appeared");
     }
+    // narrow enough that the search box is below its maximum width
     if (IS_MAC) {
-      const placed = await client.request(ControlCommand.TestUiState, ["place", 40, 40, 700, 620, 1]);
+      const placed = await client.request(ControlCommand.TestUiState, ["place", 40, 40, 520, 620, 1]);
       if (placed[0] !== 0) {
         throw new Error(`home-two-windows: could not resize the second window (${placed[1]})`);
       }
     } else {
-      moveWindow(second, 40, 40, 700, 620);
+      moveWindow(second, 40, 40, 520, 620);
       repaintWindow(second);
     }
     let secondDx = 0;
