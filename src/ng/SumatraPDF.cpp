@@ -1718,7 +1718,14 @@ static MainWindow* LoadDocumentFinish(MainWindow* win, Str fullPath, DocControll
             if (page < 1 || page > ctrl->PageCount()) {
                 page = 1;
             }
-            ctrl->GoToPage(page, false);
+            // same file (reload, session restore): keep its scroll position
+            bool hasScroll = fs && (fs->scrollPos.x > 0 || fs->scrollPos.y > 0);
+            if (hasScroll && path::IsSame(fs->filePath, ctrl->GetFilePath())) {
+                RectF r(fs->scrollPos.x, fs->scrollPos.y, 0, 0);
+                ctrl->AsMarkdown()->ScrollTo(page, r, kInvalidZoom);
+            } else {
+                ctrl->GoToPage(page, false);
+            }
         } else if (chm && fs) {
             RectF r(fs->scrollPos.x, fs->scrollPos.y, 0, 0);
             chm->ScrollTo(limitValue(ss.page, 1, ctrl->PageCount()), r, kInvalidZoom);

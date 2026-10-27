@@ -2039,7 +2039,14 @@ static void ReplaceDocumentInCurrentTab(LoadArgs* args, DocController* ctrl, Fil
                     page = 1;
                 }
                 ss.page = page;
-                win->ctrl->GoToPage(page, false);
+                // same file (reload, session restore): keep its scroll position
+                bool hasScroll = fs && (fs->scrollPos.x > 0 || fs->scrollPos.y > 0);
+                if (hasScroll && path::IsSame(fs->filePath, win->ctrl->GetFilePath())) {
+                    RectF r(fs->scrollPos.x, fs->scrollPos.y, 0, 0);
+                    win->AsMarkdown()->ScrollTo(page, r, kInvalidZoom);
+                } else {
+                    win->ctrl->GoToPage(page, false);
+                }
             } else {
                 ss.page = limitValue(ss.page, 1, win->ctrl->PageCount());
                 if (fs) {

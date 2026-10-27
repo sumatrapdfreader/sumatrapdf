@@ -151,6 +151,7 @@ import { testit as issue6364 } from "./issue-6364.ts";
 import { testit as issue6365 } from "./issue-6365.ts";
 import { testit as issue6378 } from "./issue-6378.ts";
 import { testit as issue6380 } from "./issue-6380.ts";
+import { testit as issue6379 } from "./issue-6379.ts";
 import { testit as markdownPathTraversal } from "./markdown-path-traversal.ts";
 import { testit as issue4753 } from "./issue-4753.ts";
 import { testit as issue4055 } from "./issue-4055.ts";
@@ -711,6 +712,7 @@ export const tests: NamedTest[] = [
   ["issue-6364", issue6364],
   ["issue-6365", issue6365],
   ["issue-6378", issue6378],
+  ["issue-6379", issue6379],
   ["issue-6380", issue6380],
   ["markdown-path-traversal", markdownPathTraversal],
   ["issue-5780", issue5780],
