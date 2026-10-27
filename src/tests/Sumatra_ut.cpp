@@ -62,6 +62,7 @@ void CryptoUtilTest();
 void CssParser_UnitTests();
 void DictTest();
 void DirRemoveAllTest();
+void UncExistsTest();
 void FileUtilTest();
 void UpdateTempFileTests();
 void GuessFileTypeTest();
@@ -550,6 +551,7 @@ int RunAppUnitTests(bool forAi) {
     CssParser_UnitTests();
     DictTest();
     DirRemoveAllTest();
+    UncExistsTest();
     FileUtilTest();
     UpdateTempFileTests();
     GuessFileTypeTest();

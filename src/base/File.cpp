@@ -663,7 +663,11 @@ static bool ProbeDriveRootAccessible(Str driveKey) {
         root = str::JoinTemp(driveKey, StrL("\\"));
     }
     WIN32_FILE_ATTRIBUTE_DATA data{};
-    return GetFileAttributesExW(CWStrTemp(root), GetFileExInfoStandard, &data) != 0;
+    if (GetFileAttributesExW(CWStrTemp(root), GetFileExInfoStandard, &data)) {
+        return true;
+    }
+    // a share whose root the user can't read is online: files below may be readable (#6398)
+    return GetLastError() == ERROR_ACCESS_DENIED;
 }
 
 // Like GetFileAttributesExW(..., GetFileExInfoStandard, ...). Network paths
@@ -767,11 +771,8 @@ bool GetCachedAttributesEx(Str path, WIN32_FILE_ATTRIBUTE_DATA* out) {
         }
     }
 
-    if (network) {
-        //      data.dwFileAttributes);
-        AutoUnlockMutex lock(&gAttrsCacheMutex);
-        StoreAttrsCache(path, GetTickCount64(), false, data);
-    }
+    // failures aren't cached: a file created later must be found (#6398).
+    // Offline shares already fail fast via the drive availability cache.
     return false;
 }
 

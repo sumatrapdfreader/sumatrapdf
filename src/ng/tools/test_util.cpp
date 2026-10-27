@@ -17,6 +17,7 @@ extern void CryptoUtilTest();
 extern void CssParser_UnitTests();
 extern void DictTest();
 extern void DirRemoveAllTest();
+extern void UncExistsTest();
 extern void FileUtilTest();
 extern void GuessFileTypeTest();
 extern void JsonTest();
@@ -150,6 +151,7 @@ int main(int argc, char** argv) {
     CssParser_UnitTests();
     DictTest();
     DirRemoveAllTest();
+    UncExistsTest();
     FileUtilTest();
     GuessFileTypeTest();
     JsonTest();
