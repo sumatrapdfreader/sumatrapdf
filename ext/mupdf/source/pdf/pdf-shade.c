@@ -78,7 +78,7 @@ make_sampled_shade_function(fz_context *ctx, fz_shade *shade, int funcs, pdf_fun
 
 /* Type 1-3 -- Function-based, linear and radial shadings */
 
-#define FUNSEGS 256 /* size of sampled mesh for function-based shadings */
+#define FUNSEGS 64 /* size of sampled mesh for function-based shadings (256 was slow, #6402) */
 
 static void
 pdf_load_function_based_shading(fz_context *ctx, pdf_document *doc, fz_shade *shade, pdf_obj *dict, int funcs, pdf_function **func)

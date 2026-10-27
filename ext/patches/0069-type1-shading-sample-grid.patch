@@ -1,0 +1,92 @@
+shade: sample type 1 shadings on a coarser grid
+
+Function-based shadings were sampled on a 257x257 grid at load (66K
+function calls each) and drawn as 65K quads regardless of their device
+size. Edge-printed pages with a dozen small PostScript-function shadings
+took 200-700 ms per page (#6402). Sample a 65x65 grid and, when
+drawing, skip samples finer than ~2 device pixels.
+---
+diff --git a/source/fitz/shade.c b/source/fitz/shade.c
+index 35bd2b06b..60bc20483 100644
+--- a/source/fitz/shade.c
++++ b/source/fitz/shade.c
+@@ -93,6 +93,16 @@ fz_prepare_vertex(fz_context *ctx, fz_mesh_processor *painter, fz_vertex *v, fz_
+ 	}
+ }
+ 
++/* largest power-of-two step dividing divs that keeps cells at most 2 device pixels long */
++static int
++type1_sample_step(int divs, float devlen)
++{
++	int step = 1;
++	while ((divs % (step * 2)) == 0 && devlen * step * 2 / divs <= 2)
++		step *= 2;
++	return step;
++}
++
+ static void
+ fz_process_shade_type1(fz_context *ctx, fz_shade *shade, fz_matrix ctm, fz_mesh_processor *painter)
+ {
+@@ -104,6 +114,8 @@ fz_process_shade_type1(fz_context *ctx, fz_shade *shade, fz_matrix ctm, fz_mesh_
+ 	float x1 = shade->u.f.domain[1][0];
+ 	float y1 = shade->u.f.domain[1][1];
+ 	int xx, yy;
++	int xstep, ystep;
++	int row;
+ 	float y, yn, x;
+ 	fz_vertex vs[2][2];
+ 	fz_vertex *v = vs[0];
+@@ -112,24 +124,30 @@ fz_process_shade_type1(fz_context *ctx, fz_shade *shade, fz_matrix ctm, fz_mesh_
+ 
+ 	ctm = fz_concat(shade->u.f.matrix, ctm);
+ 
++	/* skip samples finer than a device pixel (#6402) */
++	xstep = type1_sample_step(xdivs, fabsf(x1 - x0) * sqrtf(ctm.a * ctm.a + ctm.b * ctm.b));
++	ystep = type1_sample_step(ydivs, fabsf(y1 - y0) * sqrtf(ctm.c * ctm.c + ctm.d * ctm.d));
++	row = (xdivs + 1) * n;
++
+ 	y = y0;
+-	for (yy = 0; yy < ydivs; yy++)
++	for (yy = 0; yy < ydivs; yy += ystep)
+ 	{
+-		yn = y0 + (y1 - y0) * (yy + 1) / ydivs;
++		float *r0 = p + yy * row;
++		float *r1 = r0 + ystep * row;
++
++		yn = y0 + (y1 - y0) * (yy + ystep) / ydivs;
+ 
+ 		x = x0;
+ 
+-		fz_prepare_vertex(ctx, painter, &v[0], ctm, x, y, p);
+-		p += n;
+-		fz_prepare_vertex(ctx, painter, &v[1], ctm, x, yn, p + xdivs * n);
++		fz_prepare_vertex(ctx, painter, &v[0], ctm, x, y, r0);
++		fz_prepare_vertex(ctx, painter, &v[1], ctm, x, yn, r1);
+ 
+-		for (xx = 0; xx < xdivs; xx++)
++		for (xx = 0; xx < xdivs; xx += xstep)
+ 		{
+-			x = x0 + (x1 - x0) * (xx + 1) / xdivs;
++			x = x0 + (x1 - x0) * (xx + xstep) / xdivs;
+ 
+-			fz_prepare_vertex(ctx, painter, &vn[0], ctm, x, y, p);
+-			p += n;
+-			fz_prepare_vertex(ctx, painter, &vn[1], ctm, x, yn, p + xdivs * n);
++			fz_prepare_vertex(ctx, painter, &vn[0], ctm, x, y, r0 + (xx + xstep) * n);
++			fz_prepare_vertex(ctx, painter, &vn[1], ctm, x, yn, r1 + (xx + xstep) * n);
+ 
+ 			paint_quad(ctx, painter, &v[0], &vn[0], &vn[1], &v[1]);
+ 			SWAP(v,vn);
+diff --git a/source/pdf/pdf-shade.c b/source/pdf/pdf-shade.c
+index 822da16a1..b4a23e21c 100644
+--- a/source/pdf/pdf-shade.c
++++ b/source/pdf/pdf-shade.c
+@@ -78,7 +78,7 @@ make_sampled_shade_function(fz_context *ctx, fz_shade *shade, int funcs, pdf_fun
+ 
+ /* Type 1-3 -- Function-based, linear and radial shadings */
+ 
+-#define FUNSEGS 256 /* size of sampled mesh for function-based shadings */
++#define FUNSEGS 64 /* size of sampled mesh for function-based shadings (256 was slow, #6402) */
+ 
+ static void
+ pdf_load_function_based_shading(fz_context *ctx, pdf_document *doc, fz_shade *shade, pdf_obj *dict, int funcs, pdf_function **func)
