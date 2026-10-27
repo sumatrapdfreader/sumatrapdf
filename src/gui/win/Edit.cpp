@@ -249,6 +249,12 @@ HWND Edit::Create(const CreateArgs& args) {
     if (!hwnd) {
         return nullptr;
     }
+    if (args.isMultiLine) {
+        // break lines on bare LF / CR too, e.g. text pasted from a browser (Win10 1809+, no-op before)
+        constexpr UINT kEmSetExtendedStyle = 0x1500 + 10; // EM_SETEXTENDEDSTYLE
+        constexpr LPARAM kEsExAllowEolAll = 0x3;          // ES_EX_ALLOWEOL_ALL
+        SendMessageW(hwnd, kEmSetExtendedStyle, kEsExAllowEolAll, kEsExAllowEolAll);
+    }
     if (args.noTheme || createdWithFrame) {
         // strip the Win11 CFD/fluent style so it cannot draw a blue accent
         SetWindowTheme(hwnd, L"", L"");
