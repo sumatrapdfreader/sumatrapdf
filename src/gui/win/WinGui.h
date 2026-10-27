@@ -683,7 +683,6 @@ void TooltipRemoveAll(HWND hwnd);
 using TextChangedHandler = Func0;
 
 void PostDelayedEditSelectAll(HWND);
-void PostDelayedEditCtrlBack(HWND);
 
 // The base/Win.h edit helpers, taking the control rather than its HWND, so a
 // caller that holds an Edit* can pass it straight in. A null control is the

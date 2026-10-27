@@ -149,6 +149,7 @@ import { testit as ghsaP2ph2rvmQ37m } from "./security-ghsa-p2ph-2rvm-q37m.ts";
 import { testit as ghsa5wm7225j9qcj } from "./security-ghsa-5wm7-225j-9qcj.ts";
 import { testit as issue6364 } from "./issue-6364.ts";
 import { testit as issue6365 } from "./issue-6365.ts";
+import { testit as issue6378 } from "./issue-6378.ts";
 import { testit as issue4753 } from "./issue-4753.ts";
 import { testit as issue4055 } from "./issue-4055.ts";
 import { testit as issue2165 } from "./issue-2165.ts";
@@ -705,6 +706,7 @@ export const tests: NamedTest[] = [
   ["security-ghsa-5wm7-225j-9qcj", ghsa5wm7225j9qcj],
   ["issue-6364", issue6364],
   ["issue-6365", issue6365],
+  ["issue-6378", issue6378],
   ["issue-5780", issue5780],
   ["issue-5845", issue5845],
   ["issue-5963", issue5963],

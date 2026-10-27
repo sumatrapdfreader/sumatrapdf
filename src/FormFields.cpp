@@ -176,6 +176,11 @@ static LRESULT CALLBACK WndProcFormCtrl(HWND hwnd, UINT msg, WPARAM wp, LPARAM l
                 return 0;
             }
             break;
+        case WM_CHAR:
+            if (!isChoice && EditHandleCtrlBack(hwnd, wp)) {
+                return 0;
+            }
+            break;
         case WM_LBUTTONUP:
             if (isChoice) {
                 // let the listbox finalize the clicked selection, then commit it

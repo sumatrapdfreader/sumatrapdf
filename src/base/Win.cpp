@@ -713,6 +713,32 @@ void EditSetPasswordVisible(HWND hwnd, bool show) {
     HwndInvalidate(hwnd, true);
 }
 
+// Ctrl+Backspace reaches an edit as WM_CHAR 0x7F, which it would insert as a box.
+// Call on WM_CHAR: for 0x7F, deletes the selection or the word before the caret.
+bool EditHandleCtrlBack(HWND hwnd, WPARAM ch) {
+    constexpr WPARAM kCtrlBackChar = 0x7F;
+    if (!hwnd || ch != kCtrlBackChar) {
+        return false;
+    }
+    int selStart = 0;
+    int selEnd = 0;
+    EditGetSelection(hwnd, selStart, selEnd);
+    if (selStart == selEnd) {
+        // "foo bar  |" => "foo |"
+        TempWStr text = HwndGetTextWTemp(hwnd);
+        selStart = std::min(selStart, len(text));
+        for (; selStart > 0 && wstr::IsWs(text.s[selStart - 1]); selStart--) {
+            ;
+        }
+        for (; selStart > 0 && !wstr::IsWs(text.s[selStart - 1]); selStart--) {
+            ;
+        }
+        EditSelectText(hwnd, selStart, selEnd);
+    }
+    SendMessageW(hwnd, WM_CLEAR, 0, 0);
+    return true;
+}
+
 //--- list box
 
 int LbAddString(HWND hwnd, WStr text) {

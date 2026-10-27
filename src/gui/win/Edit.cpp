@@ -88,46 +88,6 @@ void PostDelayedEditSelectAll(HWND hwnd) {
     uitask::Post(MkFunc0(DelayedEditSelectAll, hwnd), "DelayedEditSelectAll");
 }
 
-// Delete the word behind the cursor after Ctrl+Backspace inserts its temporary glyph.
-static void EditImplementCtrlBack(HWND hwnd) {
-    // we calc selection in WCHAR space because it's easier
-    TempWStr text = HwndGetTextWTemp(hwnd);
-    int selStart = 0;
-    int selEnd = 0;
-    EditGetSelection(hwnd, selStart, selEnd);
-    selEnd = selStart;
-    // remove the rectangle produced by Ctrl+Backspace
-    if (selStart > 0 && text.s[selStart - 1] == '\x7F') {
-        memmove(text.s + selStart - 1, text.s + selStart, len(text.s + selStart - 1) * sizeof(WCHAR));
-        TempStr s = ToUtf8Temp(text);
-        HwndSetText(hwnd, s);
-        selStart = selEnd = selStart - 1;
-    }
-    // remove the previous word (and any spacing after it)
-    for (; selStart > 0 && wstr::IsWs(text.s[selStart - 1]); selStart--) {
-        ;
-    }
-    for (; selStart > 0 && !wstr::IsWs(text.s[selStart - 1]); selStart--) {
-        ;
-    }
-    EditSelectText(hwnd, selStart, selEnd);
-    SendMessageW(hwnd, WM_CLEAR, 0, 0); // delete selected text
-}
-
-// after WM_KEYDOWN so the edit does not insert the Ctrl+Backspace glyph first
-static void DelayedEditCtrlBack(HWND hwnd) {
-    if (hwnd && ::IsWindow(hwnd)) {
-        EditImplementCtrlBack(hwnd);
-    }
-}
-
-void PostDelayedEditCtrlBack(HWND hwnd) {
-    if (!hwnd) {
-        return;
-    }
-    uitask::Post(MkFunc0(DelayedEditCtrlBack, hwnd), "DelayedEditCtrlBack");
-}
-
 // https://docs.microsoft.com/en-us/windows/win32/controls/edit-controls
 
 // TODO:
@@ -366,6 +326,11 @@ void Edit::WndProc(ControlBase::WndProcEvent* ev) {
         }
 
         case WM_CHAR: {
+            if (EditHandleCtrlBack(hwnd, wp)) {
+                ev->result = 0;
+                ev->didHandle = true;
+                return;
+            }
             if (onChar.IsValid()) {
                 CharEvent ce;
                 ce.c = (int)wp;
@@ -432,17 +397,6 @@ void Edit::WndProc(ControlBase::WndProcEvent* ev) {
         case WM_PASTE: {
             if (PasteWithCRLF(hwnd)) {
                 ev->result = 0;
-                ev->didHandle = true;
-                return;
-            }
-            break;
-        }
-
-        case WM_KEYDOWN: {
-            bool isCtrlBack = (VK_BACK == wp) && IsCtrlPressed() && !IsShiftPressed();
-            if (isCtrlBack) {
-                PostDelayedEditCtrlBack(hwnd);
-                ev->result = true;
                 ev->didHandle = true;
                 return;
             }

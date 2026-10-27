@@ -1917,6 +1917,9 @@ static LRESULT CALLBACK WndProcFreeTextInPlaceEdit(HWND hwnd, UINT msg, WPARAM w
             if (wp == VK_ESCAPE) {
                 return 0;
             }
+            if (EditHandleCtrlBack(hwnd, wp)) {
+                return 0;
+            }
             break;
         case WM_NCCALCSIZE: {
             // reserve a 1px frame, drawn in WM_NCPAINT

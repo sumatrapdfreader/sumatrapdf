@@ -60,6 +60,13 @@ static LRESULT CALLBACK DropDownProc(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp, 
     return res;
 }
 
+static LRESULT CALLBACK DropDownEditProc(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp, UINT_PTR, DWORD_PTR) {
+    if (msg == WM_CHAR && EditHandleCtrlBack(hwnd, wp)) {
+        return 0;
+    }
+    return DefSubclassProc(hwnd, msg, wp, lp);
+}
+
 void DropDown::OnCommand(ControlBase::CommandEvent* ev) {
     if (suppressNotify) {
         return;
@@ -198,8 +205,9 @@ HWND DropDown::Create(const CreateArgs& args) {
     }
 
     // SetDropDownItems(hwnd, items);
-    if (CbEditHwnd(hwnd)) {
+    if (HWND hwndEdit = CbEditHwnd(hwnd)) {
         SetWindowSubclass(hwnd, DropDownProc, 0, 0);
+        SetWindowSubclass(hwndEdit, DropDownEditProc, 0, 0);
     }
     CbSetCurrentSelection(hwnd, -1);
     CbSetMinVisible(hwnd, 10);

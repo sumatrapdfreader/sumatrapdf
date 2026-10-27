@@ -128,6 +128,7 @@ void EditSetCueText(HWND hwnd, Str);
 void EditSetMargins(HWND hwnd, int left, int right);
 void EditSetNumbersOnly(HWND hwnd, bool);
 void EditSetPasswordVisible(HWND hwnd, bool);
+bool EditHandleCtrlBack(HWND hwnd, WPARAM ch);
 
 //--- list box
 
