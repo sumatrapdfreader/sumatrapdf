@@ -236,7 +236,35 @@ static void Splitter_ShrinkTest() {
     delete col;
 }
 
+// a link wrapped onto a second line gets one underline per line (issue #6367)
+static void TipLinkUnderlines_Test() {
+    VirtRichText* tip = ParseTip(StrL("You can [have documents read aloud](CmdFoo)."));
+    // lay out by hand: "You can have" / "documents read" / "aloud."
+    int pos[][2] = {{0, 0}, {30, 0}, {60, 0}, {0, 20}, {60, 20}, {0, 40}, {30, 40}};
+    int i = 0;
+    for (TipWord* w = tip->words.next; w; w = w->next, i++) {
+        utassert(i < dimofi(pos));
+        w->x = pos[i][0];
+        w->y = pos[i][1];
+        w->dx = 25;
+        w->dy = 16;
+    }
+    utassert(i == 7);
+    TipLink* link = tip->links.next;
+    utassert(link && !link->next);
+
+    Vec<Rect> lines;
+    TipLinkUnderlines(link, lines);
+    utassert(len(lines) == 3);
+    // underline sits 3px above the word's bottom
+    utassert(VirtCtrlRectEq(lines[0], 60, 13, 25, 0));
+    utassert(VirtCtrlRectEq(lines[1], 0, 33, 85, 0));
+    utassert(VirtCtrlRectEq(lines[2], 0, 53, 25, 0));
+    delete tip;
+}
+
 void VirtCtrl_UnitTests() {
+    TipLinkUnderlines_Test();
     Table_TestGrid();
     Table_TestAlign();
     Table_TestSpan();

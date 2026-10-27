@@ -990,6 +990,7 @@ struct VirtFixedLinesText : VirtRichText {
 };
 
 VirtRichText* ParseTip(Str s);
+void TipLinkUnderlines(TipLink* link, Vec<Rect>& out);
 // "Enter run": the key as a key cap before the words, padded 8 on each side
 void InitKeyHint(VirtRichText* t, PlatformFont* font, Str key, Str desc, Color colTxt, Color colBg);
 VirtRichText* NewKeyHint(PlatformFont* font, Str key, Str desc, Color colTxt, Color colBg);

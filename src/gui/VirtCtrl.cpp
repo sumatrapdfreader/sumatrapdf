@@ -4388,6 +4388,28 @@ void VirtRichText::SetBounds(Rect r) {
     LayoutText(content.dx);
 }
 
+// one underline per line the link's words wrapped onto, in word coordinates
+void TipLinkUnderlines(TipLink* link, Vec<Rect>& out) {
+    TipWord* last = link->lastWord;
+    TipWord* lineStart = link->firstWord;
+    if (!lineStart || !last) {
+        return;
+    }
+    for (TipWord* w = lineStart; w; w = w->next) {
+        // a wrapped word starts back at the left (y differs within a line: VCenter)
+        bool lineEnds = w == last || w->next->x <= w->x;
+        if (!lineEnds) {
+            continue;
+        }
+        int y = lineStart->y + lineStart->dy - 3;
+        VecAppend(out, Rect(lineStart->x, y, w->x + w->dx - lineStart->x, 0));
+        if (w == last) {
+            break;
+        }
+        lineStart = w->next;
+    }
+}
+
 // draws the words (link words in kColRichLink, underlined; others in kColRichText;
 // isKbd words as key-caps like the keyboard help sheet)
 void VirtRichText::Paint(VirtPaintCtx& ctx) {
@@ -4426,16 +4448,14 @@ void VirtRichText::Paint(VirtPaintCtx& ctx) {
         gfx->DrawText(w->text, rc, wordFmt | gfxTextLeft, use, w->isLink ? linkCol : textCol);
     }
     // underline each link
+    Vec<Rect> lines;
     for (TipLink* link = links.next; link; link = link->next) {
-        TipWord* first = link->firstWord;
-        TipWord* last = link->lastWord;
-        if (!first || !last) {
-            continue;
+        VecReset(lines);
+        TipLinkUnderlines(link, lines);
+        for (Rect r : lines) {
+            r.Offset(offX, offY);
+            gfx->DrawLine(r, linkCol);
         }
-        int underlineY = offY + first->y + first->dy - 3;
-        int x1 = offX + first->x;
-        int x2 = offX + last->x + last->dx;
-        gfx->DrawLine(Rect(x1, underlineY, x2 - x1, 0), linkCol);
     }
 }
 
