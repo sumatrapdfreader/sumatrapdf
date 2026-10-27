@@ -1,0 +1,48 @@
+murun: embedded-file and name-tree helpers on PDFs without /Names
+
+PDFObject.get() returns JS null for a missing key; the helpers, ported
+from the wasm library (which returns a Null object), called methods on
+it. getEmbeddedFiles, insertEmbeddedFile, deleteEmbeddedFile and
+loadNameTree threw on a PDF without /Names, and _loadNameTreeRec called
+an undefined loadNameTreeRec for any tree with /Kids.
+---
+diff --git a/source/tools/murun.c b/source/tools/murun.c
+index c57d6e1e6..ec57783dd 100644
+--- a/source/tools/murun.c
++++ b/source/tools/murun.c
+@@ -547,7 +547,7 @@ static const char *postfix_js =
+ 	"mupdf.PDFDocument.prototype.getEmbeddedFiles = function () {\n"
+ 	"	function _getEmbeddedFilesRec(result, N) {\n"
+ 	"		var i, n\n"
+-	"		if (N.isDictionary()) {\n"
++	"		if (N && N.isDictionary()) {\n"
+ 	"			var NN = N.get('Names')\n"
+ 	"			if (NN)\n"
+ 	"				for (i = 0, n = NN.length; i < n; i += 2)\n"
+@@ -575,7 +575,7 @@ static const char *postfix_js =
+ 	"	var efs_keys = Object.keys(efs)\n"
+ 	"	var root = this.getTrailer().get('Root')\n"
+ 	"	var root_names = root.get('Names')\n"
+-	"	if (!root_names.isDictionary())\n"
++	"	if (!root_names || !root_names.isDictionary())\n"
+ 	"		root_names = root.put('Names', this.newDictionary(1))\n"
+ 	"	var root_names_efs = root_names.put('EmbeddedFiles', this.newDictionary(1))\n"
+ 	"	var root_names_efs_names = root_names_efs.put('Names', this.newArray(efs_keys.length * 2))\n"
+@@ -585,7 +585,7 @@ static const char *postfix_js =
+ 	"	}\n"
+ 	"}\n"
+ 	"mupdf.PDFDocument.prototype.loadNameTree = function loadNameTree(treeName) {\n"
+-	"	var root = this.getTrailer().get('Root').get('Names').get(treeName)\n"
++	"	var root = this.getTrailer().get('Root', 'Names', treeName)\n"
+ 	"	var dict = {}\n"
+ 	"	if (root && root.isDictionary())\n"
+ 	"		this._loadNameTreeRec(dict, root)\n"
+@@ -595,7 +595,7 @@ static const char *postfix_js =
+ 	"	var kids = node.get('Kids')\n"
+ 	"	if (kids && kids.isArray())\n"
+ 	"		for (var i = 0; i < kids.length; i += 1)\n"
+-	"			loadNameTreeRec(dict, kids[i])\n"
++	"			this._loadNameTreeRec(dict, kids[i])\n"
+ 	"	var names = node.get('Names')\n"
+ 	"	if (names && names.isArray())\n"
+ 	"		for (var i = 0; i < names.length; i += 2)\n"
