@@ -227,6 +227,7 @@ bool EngineMupdfCadEnhanceActive(EngineBase* engine);
 void EngineMupdfInvalidateDarkMode(EngineBase* engine);
 Str EngineMupdfLoadAttachment(EngineBase*, int attachmentNo);
 Str EngineMupdfLoadAnnotAttachment(EngineBase*, int objNum);
+Str EngineMupdfLoadEmbedded(EngineBase*, PageDestination*);
 TempStr EngineMupdfGetPdfInfo(Str path);
 TempStr EngineMupdfGetPdfOutline(Str path);
 #if !OS_WIN

@@ -1156,11 +1156,11 @@ void WindowContextMenuCommand(MainWindow* win, int cmdId) {
             }
             IPageDestination* elDest = pageEl->AsLink();
             auto* pd = (PageDestination*)elDest;
-            if (!pd || pd->embedObjNum <= 0) {
+            if (!pd) {
                 return;
             }
             // attachments are arbitrary binary
-            Str data = EngineMupdfLoadAnnotAttachment(engine, pd->embedObjNum);
+            Str data = EngineMupdfLoadEmbedded(engine, pd);
             if (len(data) == 0) {
                 return;
             }

@@ -813,6 +813,11 @@ TempStr PageLinksResultTemp(Str path, int pageNo, int* exitCodeOut) {
         Str value = dest->GetValue();
         TempStr valueShown = str::ReplaceTemp(value, StrL("\r\n"), StrL("|"));
         valueShown = str::ReplaceTemp(valueShown, StrL("\n"), StrL("|"));
+        if (dest->GetKind() == kindDestinationLaunchEmbedded) {
+            Str data = EngineMupdfLoadEmbedded(engine, (PageDestination*)dest);
+            valueShown = fmt("%s size=%d", valueShown, len(data));
+            str::Free(data);
+        }
         RectF src = el->GetRect();
         RectF destRc = dest->GetRect();
         out.Append(fmt("kind=%s page=%d src=%g,%g,%g,%g dest=%g,%g,%g,%g value=%s\n", Str(dest->GetKind()),

@@ -168,11 +168,8 @@ DocControllerCallback* CreateControllerCallbackHandler(MainWindow* win) {
 // menu destination (orig's TrackPopupMenu at the cursor; the port has no popup
 // it can open from code and wait on). It is marked below.
 static void LaunchEmbeddedDestination(MainWindow* win, PageDestination* pd) {
-    if (pd->embedObjNum <= 0) {
-        return;
-    }
     EngineBase* engine = win->CurrentTab()->AsFixed()->GetEngine();
-    Str data = EngineMupdfLoadAnnotAttachment(engine, pd->embedObjNum);
+    Str data = EngineMupdfLoadEmbedded(engine, pd);
     if (len(data) == 0) {
         return;
     }

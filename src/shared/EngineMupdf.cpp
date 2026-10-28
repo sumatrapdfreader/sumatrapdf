@@ -460,6 +460,20 @@ static bool IsMupdfLocalFileLink(Str uri, TempStr* pathOut, Str* fragmentOut) {
     return true;
 }
 
+// a link from an EPUB page to a file in the EPUB that isn't a chapter, e.g. the
+// media of a <video> (#6421). The app extracts the file and opens it
+static bool IsEpubEmbeddedFileLink(EngineMupdf* e, Str uri) {
+    if (len(uri) == 0 || str::Contains(uri, StrL("#")) || IsExternalLink(uri)) {
+        return false;
+    }
+    if (GuessFileTypeFromName(e->FilePath()) != FileType::Epub) {
+        return false;
+    }
+    // a chapter link that didn't resolve isn't a file to open
+    Str ext = path::GetExtTemp(uri);
+    return !str::EqI(ext, StrL(".html")) && !str::EqI(ext, StrL(".xhtml")) && !str::EqI(ext, StrL(".htm"));
+}
+
 template <typename T, typename... Args>
 static T* AllocDest(Arena* a, Args&&... args) {
     if (a) {
@@ -557,6 +571,13 @@ static IPageDestination* NewPageDestinationMupdf(EngineMupdf* e, fz_link* link, 
         Str localFragment;
         if (IsMupdfLocalFileLink(uri, &localPath, &localFragment)) {
             auto* res = AllocDest<PageDestinationFile>(destArena, localPath, localFragment);
+            res->rect = FzGetRectF(link);
+            return res;
+        }
+        if (IsEpubEmbeddedFileLink(e, uri)) {
+            auto* res = AllocDest<PageDestination>(destArena);
+            res->kind = kindDestinationLaunchEmbedded;
+            res->value = str::Dup(uri);
             res->rect = FzGetRectF(link);
             return res;
         }
@@ -10334,6 +10355,65 @@ Str EngineMupdfLoadAnnotAttachment(EngineBase* engine, int objNum) {
     }
     ScopedRecursiveMutex scope(&epdf->docLock);
     return PdfLoadAnnotationAttachment(epdf->Ctx(), epdf->pdfdoc, objNum);
+}
+
+// caller must free. A file stored in the document's archive, e.g. an EPUB video (#6421)
+static Str LoadArchiveEntry(EngineMupdf* e, Str name) {
+    auto* ctx = e->Ctx();
+    fz_buffer* fileBytes = nullptr;
+    fz_stream* stm = nullptr;
+    fz_archive* arch = nullptr;
+    fz_buffer* buf = nullptr;
+    Str res;
+    fz_var(fileBytes);
+    fz_var(stm);
+    fz_var(arch);
+    fz_var(buf);
+    fz_var(res);
+
+    {
+        ScopedRecursiveMutex scope(&e->docLock);
+        fileBytes = fz_keep_buffer(ctx, e->fileBytes);
+    }
+    fz_try(ctx) {
+        if (fileBytes) {
+            stm = fz_open_buffer(ctx, fileBytes);
+        } else {
+            stm = FzOpenOrReadFile(ctx, e->FilePath(), &fileBytes);
+        }
+        if (stm) {
+            arch = fz_open_archive_with_stream(ctx, stm);
+            buf = fz_read_archive_entry(ctx, arch, CStrTemp(name));
+            u8* data = nullptr;
+            size_t n = fz_buffer_storage(ctx, buf, &data);
+            if (data && n > 0 && n <= (size_t)INT_MAX) {
+                res = str::Dup(Str((char*)data, (int)n));
+            }
+        }
+    }
+    fz_always(ctx) {
+        fz_drop_buffer(ctx, buf);
+        fz_drop_archive(ctx, arch);
+        fz_drop_stream(ctx, stm);
+        fz_drop_buffer(ctx, fileBytes);
+    }
+    fz_catch(ctx) {
+        fz_report_error(ctx);
+        logf("LoadArchiveEntry: failed to read '%s'\n", name);
+    }
+    return res;
+}
+
+// caller must free. The file a kindDestinationLaunchEmbedded opens
+Str EngineMupdfLoadEmbedded(EngineBase* engine, PageDestination* pd) {
+    if (pd->embedObjNum > 0) {
+        return EngineMupdfLoadAnnotAttachment(engine, pd->embedObjNum);
+    }
+    EngineMupdf* e = AsEngineMupdf(engine);
+    if (!e || len(pd->GetValue()) == 0) {
+        return {};
+    }
+    return LoadArchiveEntry(e, pd->GetValue());
 }
 
 static Annotation* FindAnnotAtPos(const Vec<Annotation*>& annots, PointF pos, float padding,

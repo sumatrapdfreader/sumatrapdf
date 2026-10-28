@@ -1341,31 +1341,116 @@ static void gen2_image_common(fz_context *ctx, struct genstate *g, fz_html_box *
 	}
 }
 
+static void gen2_image_sized(fz_context *ctx, struct genstate *g, fz_html_box *root_box, fz_xml *node, fz_image *img, int display, fz_css_style *style)
+{
+	fz_css_style local_style = *style;
+	int w, h;
+	const char *w_att = fz_xml_att(node, "width");
+	const char *h_att = fz_xml_att(node, "height");
+
+	if (w_att && (w = fz_atoi(w_att)) > 0)
+	{
+		local_style.width.value = w;
+		local_style.width.unit = strchr(w_att, '%') ? N_PERCENT : N_LENGTH;
+	}
+	if (h_att && (h = fz_atoi(h_att)) > 0)
+	{
+		local_style.height.value = h;
+		local_style.height.unit = strchr(h_att, '%') ? N_PERCENT : N_LENGTH;
+	}
+
+	gen2_image_common(ctx, g, root_box, node, img, display, &local_style);
+}
+
 static void gen2_image_html(fz_context *ctx, struct genstate *g, fz_html_box *root_box, fz_xml *node, int display, fz_css_style *style)
 {
 	const char *src = fz_xml_att(node, "src");
 	if (src)
+		gen2_image_sized(ctx, g, root_box, node, load_html_image(ctx, g->zip, g->base_uri, src), display, style);
+}
+
+/* SumatraPDF: <video> / <audio> can't play on a page. Draw its poster or a
+ * "[video: name]" label as a link to the media file, which the app opens (#6421). */
+static const char *media_src(fz_xml *node)
+{
+	const char *src = fz_xml_att(node, "src");
+	fz_xml *child;
+
+	if (src)
+		return src;
+	for (child = fz_xml_down(node); child; child = fz_xml_next(child))
 	{
-		fz_css_style local_style = *style;
-		fz_image *img;
-		int w, h;
-		const char *w_att = fz_xml_att(node, "width");
-		const char *h_att = fz_xml_att(node, "height");
-
-		if (w_att && (w = fz_atoi(w_att)) > 0)
-		{
-			local_style.width.value = w;
-			local_style.width.unit = strchr(w_att, '%') ? N_PERCENT : N_LENGTH;
-		}
-		if (h_att && (h = fz_atoi(h_att)) > 0)
-		{
-			local_style.height.value = h;
-			local_style.height.unit = strchr(h_att, '%') ? N_PERCENT : N_LENGTH;
-		}
-
-		img = load_html_image(ctx, g->zip, g->base_uri, src);
-		gen2_image_common(ctx, g, root_box, node, img, display, &local_style);
+		const char *tag = fz_xml_tag(child);
+		if (tag && !strcmp(tag, "source") && (src = fz_xml_att(child, "src")) != NULL)
+			return src;
 	}
+	return NULL;
+}
+
+static void gen2_media_label(fz_context *ctx, struct genstate *g, fz_html_box *root_box, fz_xml *node, const char *label, int display, fz_css_style *style)
+{
+	fz_html_box *box;
+
+	if (display == DIS_INLINE || display == DIS_INLINE_BLOCK)
+	{
+		root_box = find_inline_context(ctx, g, root_box);
+		box = new_box(ctx, g, node, BOX_INLINE, style);
+		append_box(ctx, root_box, box);
+	}
+	else
+	{
+		fz_css_style text_style = *style;
+		fz_html_box *block_box;
+
+		/* the inner box inherits the block's font size, don't apply it twice */
+		text_style.font_size.value = 1;
+		text_style.font_size.unit = N_SCALE;
+
+		root_box = find_block_context(ctx, root_box);
+		block_box = new_box(ctx, g, node, BOX_BLOCK, style);
+		append_box(ctx, root_box, block_box);
+		root_box = find_inline_context(ctx, g, block_box);
+		box = new_box(ctx, g, NULL, BOX_INLINE, &text_style);
+		append_box(ctx, root_box, box);
+	}
+	generate_text(ctx, box, label, g->markup_lang, g);
+}
+
+static void gen2_tag(fz_context *ctx, struct genstate *g, fz_html_box *root_box, fz_xml *node,
+	fz_css_match *match, int display, fz_css_style *style);
+
+static void gen2_media(fz_context *ctx, struct genstate *g, fz_html_box *root_box, fz_xml *node,
+	fz_css_match *match, int display, fz_css_style *style)
+{
+	const char *tag = fz_xml_tag(node);
+	const char *src = media_src(node);
+	const char *poster = fz_xml_att(node, "poster");
+	const char *name;
+	char *save_href = g->href;
+	fz_image *img = NULL;
+	char label[256];
+
+	if (!src || display == DIS_NONE)
+	{
+		gen2_tag(ctx, g, root_box, node, match, display, style);
+		return;
+	}
+
+	g->href = fz_pool_strdup(ctx, g->pool, src);
+	if (poster)
+		img = load_html_image(ctx, g->zip, g->base_uri, poster);
+	if (img)
+	{
+		gen2_image_sized(ctx, g, root_box, node, img, display, style);
+	}
+	else
+	{
+		name = strrchr(src, '/');
+		name = name ? name + 1 : src;
+		fz_snprintf(label, sizeof label, "[%s: %s]", tag, name);
+		gen2_media_label(ctx, g, root_box, node, label, display, style);
+	}
+	g->href = save_href;
 }
 
 static void gen2_image_fb2(fz_context *ctx, struct genstate *g, fz_html_box *root_box, fz_xml *node, int display, fz_css_style *style)
@@ -1641,6 +1726,10 @@ static void gen2_children(fz_context *ctx, struct genstate *g, fz_html_box *root
 			else if (tag[0]=='s' && tag[1]=='v' && tag[2]=='g' && tag[3]==0)
 			{
 				gen2_image_svg(ctx, g, root_box, node, display, &style);
+			}
+			else if (!strcmp(tag, "video") || !strcmp(tag, "audio"))
+			{
+				gen2_media(ctx, g, root_box, node, &match, display, &style);
 			}
 			else if (tag[0]=='c' && tag[1]=='o' && tag[2]=='l' && tag[3]==0)
 			{
