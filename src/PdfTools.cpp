@@ -85,7 +85,7 @@ static void BrowseForDest(HWND owner, Edit* edit, WStr filter, WStr defExt) {
     }
 }
 
-// PNG / JPEG / BMP, same core formats as the Save Image dialog
+// PNG / JPEG / BMP / GIF, same core formats as the Save Image dialog
 struct ConvertImageFormat {
     Str label;
     Str ext; // including the dot, e.g. ".png"
@@ -97,6 +97,7 @@ static const ConvertImageFormat kConvertImageFormats[] = {
     {StrL("PNG"), StrL(".png"), L"image/png", L"png"},
     {StrL("JPEG"), StrL(".jpg"), L"image/jpeg", L"jpg"},
     {StrL("BMP"), StrL(".bmp"), L"image/bmp", L"bmp"},
+    {StrL("GIF"), StrL(".gif"), L"image/gif", L"gif"},
 };
 
 static int ConvertImageFormatCount() {
@@ -118,7 +119,7 @@ struct PdfToolDialog : WindowBase {
 
     VBox* mainBox = nullptr;
     Edit* destEdit = nullptr;
-    // PNG / JPEG / BMP next to the destination of the image tools
+    // PNG / JPEG / BMP / GIF next to the destination of the image tools
     DropDown* dropFormat = nullptr;
     bool syncingFormat = false;
     VirtButton* browseBtn = nullptr;
@@ -338,7 +339,7 @@ static void PaintSrcPath(PdfToolDialog* dlg, VirtPaintCtx* ctx) {
     ctx->gfx->DrawText(name, {r.x + dirDx, r.y, r.dx - dirDx, r.dy}, flags | gfxTextEllipsis, font, dlg->colTxt);
 }
 
-// PNG / JPEG / BMP, as the Save Image dialog has them
+// PNG / JPEG / BMP / GIF, as the Save Image dialog has them
 static DropDown* NewFormatDropDown(HWND parent, PlatformFont* font) {
     auto* dd = new DropDown();
     DropDown::CreateArgs args;
@@ -1373,7 +1374,7 @@ void ConvertPdfToImagesDialog::OnBrowseTemplate(VirtMouseEvent*) {
     ofn.hwndOwner = hwnd;
     ofn.lpstrFile = dstFileName;
     ofn.nMaxFile = dimof(dstFileName);
-    ofn.lpstrFilter = L"PNG\0*.png\0JPEG\0*.jpg;*.jpeg\0BMP\0*.bmp\0All Files\0*.*\0";
+    ofn.lpstrFilter = L"PNG\0*.png\0JPEG\0*.jpg;*.jpeg\0BMP\0*.bmp\0GIF\0*.gif\0All Files\0*.*\0";
     ofn.nFilterIndex = (DWORD)(fmtIdx + 1);
     ofn.Flags = OFN_OVERWRITEPROMPT | OFN_PATHMUSTEXIST | OFN_HIDEREADONLY;
     ofn.lpstrDefExt = kConvertImageFormats[fmtIdx].defExt.s;
@@ -1601,7 +1602,7 @@ void SaveSelectionAsImageDialog::OnBrowseDest(VirtMouseEvent*) {
     ofn.hwndOwner = hwnd;
     ofn.lpstrFile = dstFileName;
     ofn.nMaxFile = dimof(dstFileName);
-    ofn.lpstrFilter = L"PNG\0*.png\0JPEG\0*.jpg;*.jpeg\0BMP\0*.bmp\0All Files\0*.*\0";
+    ofn.lpstrFilter = L"PNG\0*.png\0JPEG\0*.jpg;*.jpeg\0BMP\0*.bmp\0GIF\0*.gif\0All Files\0*.*\0";
     ofn.nFilterIndex = (DWORD)(fmtIdx + 1);
     ofn.Flags = OFN_OVERWRITEPROMPT | OFN_PATHMUSTEXIST | OFN_HIDEREADONLY;
     ofn.lpstrDefExt = kConvertImageFormats[fmtIdx].defExt.s;

@@ -13,7 +13,7 @@ RememberOpenedFiles = false
 RememberStatePerDocument = false
 `;
 
-function makeTwoPagePdf(): Buffer {
+export function makeTwoPagePdf(): Buffer {
   const objs = [
     `<< /Type /Catalog /Pages 2 0 R >>`,
     `<< /Type /Pages /Kids [3 0 R 4 0 R] /Count 2 >>`,
@@ -43,7 +43,7 @@ function pngSize(buf: Buffer): { w: number; h: number } {
   return { w: buf.readUInt32BE(16), h: buf.readUInt32BE(20) };
 }
 
-async function convert(client: ControlClient, template: string, pages: string, dpi?: number): Promise<string> {
+export async function convert(client: ControlClient, template: string, pages: string, dpi?: number): Promise<string> {
   const args = dpi === undefined ? [template, pages] : [template, pages, dpi];
   const deadline = Date.now() + 30_000;
   let last = "";

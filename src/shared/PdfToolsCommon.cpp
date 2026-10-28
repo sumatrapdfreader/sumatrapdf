@@ -388,12 +388,16 @@ int ConvertImageFormatIdxFromPath(Str path) {
     if (str::EndsWithI(path, StrL(".bmp"))) {
         return 2;
     }
+    if (str::EndsWithI(path, StrL(".gif"))) {
+        return 3;
+    }
     return 0; // PNG
 }
 
 bool IsSupportedConvertImageExt(Str path) {
     return str::EndsWithI(path, StrL(".png")) || str::EndsWithI(path, StrL(".jpg")) ||
-           str::EndsWithI(path, StrL(".jpeg")) || str::EndsWithI(path, StrL(".bmp"));
+           str::EndsWithI(path, StrL(".jpeg")) || str::EndsWithI(path, StrL(".bmp")) ||
+           str::EndsWithI(path, StrL(".gif"));
 }
 
 bool PathHasPagePlaceholder(Str path) {

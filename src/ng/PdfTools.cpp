@@ -62,7 +62,7 @@
 
 // --- the image formats the two image dialogs offer --------------------------
 
-// PNG / JPEG / BMP, same core formats as the Save Image dialog
+// PNG / JPEG / BMP / GIF, same core formats as the Save Image dialog
 // ng: orig also carries the GDI+ mime type and the OPENFILENAME default
 // extension; the encoders here are the portable ones of the image editor
 struct ConvertImageFormat {
@@ -74,6 +74,7 @@ static const ConvertImageFormat kConvertImageFormats[] = {
     {StrL("PNG"), StrL(".png")},
     {StrL("JPEG"), StrL(".jpg")},
     {StrL("BMP"), StrL(".bmp")},
+    {StrL("GIF"), StrL(".gif")},
 };
 
 static int ConvertImageFormatCount() {
@@ -2615,7 +2616,7 @@ void PdfToolView::OnBrowse(PdfToolView*, gp::Ctx* cx, const gp::ClickEvent*) {
     args->initialPath = str::Dup(DestPathTemp());
     args->defExt = str::Dup(ext);
     if (HasFormatDropDown()) {
-        args->filter = str::Dup(StrL("PNG\1*.png\1JPEG\1*.jpg;*.jpeg\1BMP\1*.bmp\1All Files\1*.*\1"));
+        args->filter = str::Dup(StrL("PNG\1*.png\1JPEG\1*.jpg;*.jpeg\1BMP\1*.bmp\1GIF\1*.gif\1All Files\1*.*\1"));
         args->filterIndex = SelectedFormatIdx() + 1;
         // < and > are illegal in Windows filenames; show {N} in the save dialog
         TempStr shown = str::ReplaceTemp(DestPathTemp(), StrL("<N>"), StrL("{N}"));
