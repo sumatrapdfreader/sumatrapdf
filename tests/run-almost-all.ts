@@ -485,6 +485,7 @@ export const tests: NamedTest[] = [
   // first: it drives the home page, whose thumbnail selection follows the
   // mouse, so it is the one test that cares what the machine was doing before
   ["issue-5978", issue5978],
+  ["issue-6388", issue6388],
   ["issue-6360", issue6360],
   ["issue-6385", issue6385],
   ["pdf-script", pdfScript],
@@ -539,7 +540,6 @@ export const tests: NamedTest[] = [
   ["annot-contents-click-away", annotContentsClickAway],
   ["issue-2799", issue2799],
   ["ink-thickness", inkThickness],
-  ["issue-6388", issue6388],
   ["ink-annotation-placement", inkAnnotationPlacement],
   ["annot-moveable-types", annotMoveableTypes],
   ["move-polygon-polyline-ink", movePolygonPolylineInk],

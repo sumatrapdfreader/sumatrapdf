@@ -202,13 +202,21 @@ export async function testit(): Promise<void> {
         throw new Error("issue-6388: the color chip's drop-down did not open");
       }
       pr = getWindowRect(popup);
+      // the system sends moves at the real cursor; keep it at the drag's end
+      setCursorPos(ex, sy);
       sendMessage(popup, WM_MOUSEMOVE, 0, packCoords(sx - pr.left, sy - pr.top));
       sendMessage(popup, WM_LBUTTONDOWN, MK_LBUTTON, packCoords(sx - pr.left, sy - pr.top));
       sendMessage(popup, WM_MOUSEMOVE, MK_LBUTTON, packCoords(ex - pr.left, sy - pr.top));
     }
     await client.waitForRenderIdle();
+    // a stray system move (at the real cursor) can undo ours: drag there again
     const during = await pollUntil(
-      () => inkWidth(client),
+      () => {
+        if (!USE_NG) {
+          sendMessage(popup, WM_MOUSEMOVE, MK_LBUTTON, packCoords(ex - pr.left, sy - pr.top));
+        }
+        return inkWidth(client);
+      },
       (w) => w === 1,
       { timeoutMs: 3000, error: (w) => `issue-6388: the stroke stayed ${w} points wide during the drag, want 1` },
     );
