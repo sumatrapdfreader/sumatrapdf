@@ -7,7 +7,7 @@ import { mkdirSync, rmSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 import { ControlClient, ControlCommand } from "./control.ts";
 import { IS_MAC } from "./host.ts";
-import { USE_NG, cmdId, runStandalone, tmpPath } from "./util.ts";
+import { cmdId, runStandalone, tmpPath } from "./util.ts";
 import { killAndWait, launchControlled, sendCommand } from "./win-automation.ts";
 import { WM_KEYDOWN, postMessage, sleep } from "./winapi.ts";
 
@@ -59,8 +59,8 @@ async function keyScrolls(
 }
 
 export async function testit(): Promise<void> {
-  if (IS_MAC || USE_NG) {
-    console.log("issue-6419: skipped, ng routes keys to its browser view itself");
+  if (IS_MAC) {
+    console.log("issue-6419: skipped, the keys are posted as Windows messages");
     return;
   }
   const dir = tmpPath("issue-6419");
