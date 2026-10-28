@@ -185,7 +185,6 @@ static AnnotTextPopup* GetOrCreatePopup(MainWindow* win) {
     }
     auto* popup = new AnnotTextPopup();
     popup->win = win;
-    popup->font = GetAppFontForDpi(DpiGetForHwnd(win->hwndCanvas));
 
     VirtHost::CreateArgs args;
     args.parent = win->hwndFrame;
@@ -372,6 +371,8 @@ bool ShowAnnotationTextPopup(MainWindow* win, Annotation* annot) {
         return false;
     }
     HideAnnotationTextPopup(win); // start from a clean card, keep the host
+    // looked up per show so an edited PopupFontSize applies to the next card
+    popup->font = GetAnnotPopupFontForDpi(DpiGetForHwnd(win->hwndCanvas));
 
     Edit::CreateArgs args;
     args.parent = popup->host->native;

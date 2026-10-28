@@ -1184,6 +1184,12 @@ void UnregisterSettingsForFileChanges() {
 
 constexpr int kMinFontSize = 9;
 
+// Annotations.PopupFontSize, used as-is at every dpi; 0 when not set
+int GetAnnotPopupFontSize() {
+    int fntSize = gSettings->annotations.popupFontSize;
+    return fntSize >= kMinFontSize ? fntSize : 0;
+}
+
 #if !defined(SUMATRA_NG)
 // metrics for an explicit DPI (system dpi when GetNonClientMetricsForDpi fails)
 static void GetNonClientMetricsForDpiValue(int dpi, NONCLIENTMETRICS* ncm) {
@@ -1263,6 +1269,14 @@ PlatformFont* GetAppBiggerFontForDpi(int dpi) {
 
 PlatformFont* GetAppBiggerFont() {
     return GetAppBiggerFontForDpi(DpiGet());
+}
+
+PlatformFont* GetAnnotPopupFontForDpi(int dpi) {
+    int fntSize = GetAnnotPopupFontSize();
+    if (fntSize == 0) {
+        return GetAppFontForDpi(dpi);
+    }
+    return GetUserGuiFont(StrL("auto"), fntSize);
 }
 
 PlatformFont* GetAppTreeFontExForDpi(int dpi, bool bold, bool italic) {

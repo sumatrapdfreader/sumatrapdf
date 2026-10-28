@@ -40,6 +40,8 @@ bool IsAppFontSizeDefault();
 PlatformFont* GetAppMenuFont();
 PlatformFont* GetAppMenuFontForDpi(int dpi);
 PlatformFont* GetAppBiggerFont();
+int GetAnnotPopupFontSize();
+PlatformFont* GetAnnotPopupFontForDpi(int dpi);
 PlatformFont* GetAppBiggerFontForDpi(int dpi);
 PlatformFont* GetAppTreeFont();
 PlatformFont* GetAppTreeFontForDpi(int dpi);

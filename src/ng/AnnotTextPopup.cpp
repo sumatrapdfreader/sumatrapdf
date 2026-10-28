@@ -33,6 +33,10 @@
 #include "AppHelpersCommon.h"
 #include "AnnotTextPopupCommon.h"
 
+// text size when PopupFontSize is unset, and the average char width it gives
+constexpr int kDefaultTextPx = 13;
+constexpr int kDefaultCharDx = 8;
+
 struct AnnotTextPopup {
     MainWindow* win = nullptr;
     WindowTab* tab = nullptr;
@@ -135,7 +139,12 @@ gp::El* AnnotTextPopupBuild(MainWindow* win, gp::Ctx* cx) {
     Color bg = PopupBg();
     Color fg = PopupText();
     float margin = (float)DpiScale(kMargin);
-    float maxW = (float)std::max(DpiScale(kMinWidth), std::min(win->canvasRc.dx - 32, kMaxLineChars * 8));
+    // Annotations.PopupFontSize sizes the text; the header stays a px smaller
+    int textPx = GetAnnotPopupFontSize();
+    textPx = textPx > 0 ? textPx : kDefaultTextPx;
+    int headerPx = textPx - 1;
+    int charDx = kDefaultCharDx * textPx / kDefaultTextPx;
+    float maxW = (float)std::max(DpiScale(kMinWidth), std::min(win->canvasRc.dx - 32, kMaxLineChars * charDx));
     float maxH = (float)(win->canvasRc.dy * kMaxHeightPercent / 100);
 
     gp::El* card = gp::Div(cx->a)
@@ -150,9 +159,10 @@ gp::El* AnnotTextPopupBuild(MainWindow* win, gp::Ctx* cx) {
     // author on the left, date on the right, with a rule underneath
     gp::El* header = gp::Div(cx->a)->FlexRow()->ItemsCenter()->Gap(12)->W(gp::kFill);
     Str author = p->author;
-    header->Child(gp::TextEl(cx->a, GpuiDup(cx->a, author))->Font(12)->Bold()->Fg(ToGpui(fg))->Flex1()->Truncate());
+    header->Child(
+        gp::TextEl(cx->a, GpuiDup(cx->a, author))->Font((float)headerPx)->Bold()->Fg(ToGpui(fg))->Flex1()->Truncate());
     if (len(p->date) > 0) {
-        header->Child(gp::TextEl(cx->a, GpuiDup(cx->a, p->date))->Font(12)->Fg(ToGpui(PopupMutedText())));
+        header->Child(gp::TextEl(cx->a, GpuiDup(cx->a, p->date))->Font((float)headerPx)->Fg(ToGpui(PopupMutedText())));
     }
     header->Child(gpc::Button::New(cx, GStrL("annot-popup-close"))
                       ->Icon(gp::IconName::Close)
@@ -164,7 +174,7 @@ gp::El* AnnotTextPopupBuild(MainWindow* win, gp::Ctx* cx) {
                       ->IntoEl());
     card->Child(header);
     card->Child(gp::Div(cx->a)->W(gp::kFill)->H(1)->MarginB((float)DpiScale(kRuleGap))->Bg(ToGpui(PopupRuleColor())));
-    card->Child(gp::TextEl(cx->a, GpuiDup(cx->a, p->text))->Font(13)->Fg(ToGpui(fg))->Wrap()->W(gp::kFill));
+    card->Child(gp::TextEl(cx->a, GpuiDup(cx->a, p->text))->Font((float)textPx)->Fg(ToGpui(fg))->Wrap()->W(gp::kFill));
     card->BoundsOut(&p->measured);
 
     // under the annotation, above it when there is no room

@@ -813,6 +813,10 @@ struct Annotations {
     // Image stamps on the page. If not set, or the file is missing, Sign
     // With Image asks for an image
     Str signatureImage;
+    // font size of the card that shows an annotation's text when it is
+    // clicked, in pixels; 0 uses UIFontSize. Not scaled by the display
+    // scaling
+    int popupFontSize;
 };
 
 // reading bar (View menu): a horizontal band on the page to keep your

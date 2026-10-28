@@ -398,15 +398,16 @@ static const FieldInfo gAnnotationsFields[] = {
      "note"},
     {offsetof(Annotations, defaultAuthor), SettingType::String, (intptr_t)""},
     {offsetof(Annotations, signatureImage), SettingType::String, 0},
+    {offsetof(Annotations, popupFontSize), SettingType::Int, 0},
 };
 static const StructInfo gAnnotationsInfo = {
     sizeof(Annotations),
-    26,
+    27,
     gAnnotationsFields,
     "HighlightColor\0UnderlineColor\0SquigglyColor\0StrikeOutColor\0FreeTextColor\0FreeTextBackgroundColor\0FreeTextOpa"
     "city\0FreeTextSize\0FreeTextBorderWidth\0FreeTextAlignment\0PresetColors\0TextIconColor\0LineColor\0PolyLineColor"
     "\0SquareColor\0CircleColor\0PolygonColor\0InkColor\0InkColors\0InkBorderWidth\0StampColor\0CaretColor\0FileAttachm"
-    "entColor\0TextIconType\0DefaultAuthor\0SignatureImage",
+    "entColor\0TextIconType\0DefaultAuthor\0SignatureImage\0PopupFontSize",
     "color of newly created highlight annotations. Use an #aarrggbb value to set default opacity (00 = transparent, FF "
     "= opaque); #rrggbb is fully opaque\0color of newly created underline annotations. #aarrggbb sets default opacity "
     "the same way as HighlightColor\0color of newly created squiggly underline annotations. #aarrggbb sets default "
@@ -433,7 +434,8 @@ static const StructInfo gAnnotationsInfo = {
     "new paragraph, note or paragraph. If not set, note is used\0author recorded on newly created annotations. If not "
     "set, the Windows user name is used; set it to (none) to leave the author out entirely\0image (e.g. a transparent "
     ".png of your signature) that Sign With Image stamps on the page. If not set, or the file is missing, Sign With "
-    "Image asks for an image",
+    "Image asks for an image\0font size of the card that shows an annotation's text when it is clicked, in pixels; 0 "
+    "uses UIFontSize. Not scaled by the display scaling",
     false};
 
 static const FieldInfo gExternalViewerFields[] = {

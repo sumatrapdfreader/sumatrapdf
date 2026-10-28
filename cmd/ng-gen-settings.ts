@@ -1028,6 +1028,13 @@ const annotations: Field[] = [
     "image (e.g. a transparent .png of your signature) that Sign With Image stamps on the page. " +
       "If not set, or the file is missing, Sign With Image asks for an image",
   ).ver("3.7"),
+  field(
+    "PopupFontSize",
+    Int,
+    0,
+    "font size of the card that shows an annotation's text when it is clicked, in pixels; " +
+      "0 uses UIFontSize. Not scaled by the display scaling",
+  ).ver("3.7"),
 ];
 
 const favorite: Field[] = [
