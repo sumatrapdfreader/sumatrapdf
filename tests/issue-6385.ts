@@ -232,7 +232,21 @@ export async function testit(): Promise<void> {
     await sleep(200);
     await client.waitForRenderIdle();
     const after = await selectedRect(client);
-    const { offset, band } = textCenterOffset(canvas, after);
+    // render idle can come before the re-rendered page is painted
+    let lastErr = "";
+    const measured = await pollUntil(
+      () => {
+        try {
+          return textCenterOffset(canvas, after);
+        } catch (e) {
+          lastErr = String(e);
+          return null;
+        }
+      },
+      (m) => m !== null,
+      { error: () => lastErr },
+    );
+    const { offset, band } = measured!;
 
     // the border grows /Rect by half its width on every side
     const grow = band / 2;
