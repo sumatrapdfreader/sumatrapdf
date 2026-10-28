@@ -216,6 +216,10 @@ EXPORTS
 	pdf_dict_put_int
 	pdf_dict_put_dict
 	pdf_dict_put_array
+	pdf_dict_put_rect
+	pdf_array_get_real
+	pdf_annot_push_local_xref
+	pdf_annot_pop_local_xref
 	pdf_signature_byte_range
 
 	pdf_new_utf8_from_pdf_string_obj
