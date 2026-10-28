@@ -16109,7 +16109,14 @@ int APIENTRY WinMain(_In_ HINSTANCE /*hInstance*/, _In_opt_ HINSTANCE /*hPrevIns
     }
 
     if (flags.appdataDir) {
-        SetAppDataDir(flags.appdataDir);
+        // a path we can't create (e.g. pasted with a stray quote) falls back to the default
+        Str dir = path::NormalizeTemp(flags.appdataDir);
+        if (dir::Exists(dir) || dir::CreateAll(dir)) {
+            SetAppDataDir(dir);
+        } else {
+            logf("-appdata: can't create '%s', using the default\n", dir);
+            LogLastError();
+        }
     }
 
 #if IS_DEBUG
