@@ -1,0 +1,79 @@
+font: cache bold fallback fonts apart from regular ones
+
+fz_load_fallback_font cached one font per script and serif/sans,
+whatever the weight asked for. The first bold heading of a script
+decided it, so every later regular paragraph was drawn with the bold
+system face (#6420). Keep a bold slot; without a bold system font it
+shares the regular one.
+---
+diff --git a/source/fitz/font.c b/source/fitz/font.c
+index 963bdae44..2d4680444 100644
+--- a/source/fitz/font.c
++++ b/source/fitz/font.c
+@@ -305,7 +305,7 @@ struct fz_font_context
+ 	/* Cached fallback fonts */
+ 	fz_font *base14[14];
+ 	fz_font *cjk[4];
+-	struct { fz_font *serif, *sans; } fallback[256];
++	struct { fz_font *serif, *sans, *serif_bold, *sans_bold; } fallback[256];
+ 	fz_font *symbol1, *symbol2, *math, *music, *boxes;
+ 	fz_font *emoji;
+ };
+@@ -412,6 +412,8 @@ void fz_drop_font_context(fz_context *ctx)
+ 		{
+ 			fz_drop_font(ctx, ctx->font->fallback[i].serif);
+ 			fz_drop_font(ctx, ctx->font->fallback[i].sans);
++			fz_drop_font(ctx, ctx->font->fallback[i].serif_bold);
++			fz_drop_font(ctx, ctx->font->fallback[i].sans_bold);
+ 		}
+ 		fz_drop_font(ctx, ctx->font->symbol1);
+ 		fz_drop_font(ctx, ctx->font->symbol2);
+@@ -498,6 +500,7 @@ fz_font *fz_load_system_fallback_font(fz_context *ctx, int script, int language,
+ fz_font *fz_load_fallback_font(fz_context *ctx, int script, int language, int serif, int bold, int italic)
+ {
+ 	fz_font **fontp;
++	fz_font **boldp = NULL;
+ 	const unsigned char *data;
+ 	int ordering = FZ_ADOBE_JAPAN;
+ 	int index;
+@@ -507,7 +510,7 @@ fz_font *fz_load_fallback_font(fz_context *ctx, int script, int language, int se
+ 	if (script < 0 || script >= (int)nelem(ctx->font->fallback))
+ 		return NULL;
+ 
+-	/* TODO: bold and italic */
++	/* TODO: italic */
+ 
+ 	index = script;
+ 	if (script == UCDN_SCRIPT_HAN)
+@@ -531,9 +534,21 @@ fz_font *fz_load_fallback_font(fz_context *ctx, int script, int language, int se
+ 	else
+ 		fontp = &ctx->font->fallback[index].sans;
+ 
++	/* SumatraPDF: cache bold apart, or the first bold heading makes all later
++	   regular text in that script bold (#6420). Without a bold system font it
++	   shares the regular one. */
++	if (bold)
++	{
++		boldp = serif ? &ctx->font->fallback[index].serif_bold : &ctx->font->fallback[index].sans_bold;
++		if (!*boldp)
++			*boldp = fz_load_system_fallback_font(ctx, script, language, serif, bold, italic);
++		if (*boldp)
++			fontp = boldp;
++	}
++
+ 	if (!*fontp)
+ 	{
+-		*fontp = fz_load_system_fallback_font(ctx, script, language, serif, bold, italic);
++		*fontp = fz_load_system_fallback_font(ctx, script, language, serif, 0, italic);
+ 		if (!*fontp)
+ 		{
+ 			data = fz_lookup_noto_font(ctx, script, language, &size, &subfont);
+@@ -545,6 +560,8 @@ fz_font *fz_load_fallback_font(fz_context *ctx, int script, int language, int se
+ 			}
+ 		}
+ 	}
++	if (boldp && !*boldp)
++		*boldp = fz_keep_font(ctx, *fontp);
+ 
+ 	switch (script)
+ 	{

@@ -71,6 +71,7 @@ relative to `ext/mupdf`, so `-p1` from inside that directory.
 | `0068-rich-text-content-box-right-edge` | rich (`/DS`, `/RC`) free text pads the right side like the left; centered styled text sat left of center (#6385) |
 | `0069-type1-shading-sample-grid` | function-based (type 1) shadings: 64-cell sample grid, draw no finer than ~2 device px; Edge-printed PDFs rendered 16x slower (#6402) |
 | `0070-css-content-strings-only` | pseudo-element `content` renders only a string; `counters(...)` rendered its function name (#6409) |
+| `0071-fallback-font-cache-bold` | bold system fallback fonts cached apart from regular; a bold heading made later regular CJK text bold (#6420) |
 
 That is the whole list: `ext/mupdf` is byte-for-byte `1.28.5` plus these
 patches, and nothing else.

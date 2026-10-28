@@ -34,7 +34,7 @@ const CJK_FONT = IS_MAC ? "Heiti SC" : "SimSun";
 
 type Entry = { name: string; data: Uint8Array; store: boolean };
 
-function zip(entries: Entry[]): Uint8Array {
+export function zip(entries: Entry[]): Uint8Array {
   const chunks: Uint8Array[] = [];
   const central: Uint8Array[] = [];
   let offset = 0;
@@ -85,12 +85,12 @@ function zip(entries: Entry[]): Uint8Array {
 
 // --- fixtures --------------------------------------------------------------
 
-const CONTAINER =
+export const CONTAINER =
   `<?xml version="1.0"?>\n<container version="1.0" ` +
   `xmlns="urn:oasis:names:tc:opendocument:xmlns:container"><rootfiles>` +
   `<rootfile full-path="OEBPS/content.opf" media-type="application/oebps-package+xml"/></rootfiles></container>`;
 
-const OPF =
+export const OPF =
   `<?xml version="1.0" encoding="utf-8"?>\n<package xmlns="http://www.idpf.org/2007/opf" version="3.0" ` +
   `unique-identifier="id"><metadata xmlns:dc="http://purl.org/dc/elements/1.1/">` +
   `<dc:identifier id="id">urn:uuid:font-test</dc:identifier><dc:title>font test</dc:title>` +
