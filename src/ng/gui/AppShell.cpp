@@ -2737,6 +2737,15 @@ void ShellView::OnKeyDown(ShellView* self, gp::Ctx* cx, const gp::KeyEvent* ev) 
         gp::Notify(cx);
         return;
     }
+#if !OS_WIN
+    // a CHM / markdown / HTML page scrolls; Windows does this in its WndProc
+    bool noMods = !ev->ctrl && !ev->shift && !ev->alt && !ev->platform;
+    if (noMods && !editFocused && !self->overlayUp && ScrollBrowserDocKey(win, (int)ev->vk)) {
+        mut->propagate = false;
+        gp::Notify(cx);
+        return;
+    }
+#endif
     // orig routes the arrow keys, Enter and Del on the start page to the file
     // list instead of scrolling (issue #1136)
     // only without modifiers: Shift + Up, Alt + Left &c stay accelerators.

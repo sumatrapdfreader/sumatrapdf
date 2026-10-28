@@ -10,6 +10,7 @@
 // chrome.webview.postMessage (window.ipc on mac and Linux).
 
 #include "gui/GpuiBridge.h"
+#include "VirtKeys.h"
 
 #include "base/GuessFileType.h"
 #include "base/Win.h"
@@ -641,6 +642,38 @@ void BrowserViewFindClear(BrowserView* bv) {
 // one arrow key, in CSS pixels. A page key uses the window height instead.
 constexpr int kBrowserArrowStep = 40;
 
+void BrowserViewScrollKey(BrowserView* bv, int vk) {
+    if (!bv || !Raw(bv)) {
+        return;
+    }
+    switch (vk) {
+        case VK_DOWN:
+            Eval(bv, fmt("window.scrollBy(0, %d)", kBrowserArrowStep));
+            break;
+        case VK_UP:
+            Eval(bv, fmt("window.scrollBy(0, %d)", -kBrowserArrowStep));
+            break;
+        case VK_RIGHT:
+            Eval(bv, fmt("window.scrollBy(%d, 0)", kBrowserArrowStep));
+            break;
+        case VK_LEFT:
+            Eval(bv, fmt("window.scrollBy(%d, 0)", -kBrowserArrowStep));
+            break;
+        case VK_NEXT:
+            Eval(bv, StrL("window.scrollBy(0, window.innerHeight || 400)"));
+            break;
+        case VK_PRIOR:
+            Eval(bv, StrL("window.scrollBy(0, -(window.innerHeight || 400))"));
+            break;
+        case VK_HOME:
+            Eval(bv, StrL("window.scrollTo(0, 0)"));
+            break;
+        case VK_END:
+            Eval(bv, StrL("window.scrollTo(0, document.documentElement.scrollHeight)"));
+            break;
+    }
+}
+
 // Chromium ignores WM_MOUSEWHEEL on the host window, and an arrow key sent to
 // the frame never reaches the page. Both scroll from here.
 LRESULT BrowserViewPassUIMsg(BrowserView* bv, UINT msg, WPARAM wp, LPARAM) {
@@ -649,32 +682,7 @@ LRESULT BrowserViewPassUIMsg(BrowserView* bv, UINT msg, WPARAM wp, LPARAM) {
         return 0;
     }
     if (msg == WM_KEYDOWN) {
-        switch ((int)wp) {
-            case VK_DOWN:
-                Eval(bv, fmt("window.scrollBy(0, %d)", kBrowserArrowStep));
-                break;
-            case VK_UP:
-                Eval(bv, fmt("window.scrollBy(0, %d)", -kBrowserArrowStep));
-                break;
-            case VK_RIGHT:
-                Eval(bv, fmt("window.scrollBy(%d, 0)", kBrowserArrowStep));
-                break;
-            case VK_LEFT:
-                Eval(bv, fmt("window.scrollBy(%d, 0)", -kBrowserArrowStep));
-                break;
-            case VK_NEXT:
-                Eval(bv, StrL("window.scrollBy(0, window.innerHeight || 400)"));
-                break;
-            case VK_PRIOR:
-                Eval(bv, StrL("window.scrollBy(0, -(window.innerHeight || 400))"));
-                break;
-            case VK_HOME:
-                Eval(bv, StrL("window.scrollTo(0, 0)"));
-                break;
-            case VK_END:
-                Eval(bv, StrL("window.scrollTo(0, document.documentElement.scrollHeight)"));
-                break;
-        }
+        BrowserViewScrollKey(bv, (int)wp);
         return 0;
     }
     if (msg == WM_KEYUP) {

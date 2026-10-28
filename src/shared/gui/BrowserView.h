@@ -85,6 +85,8 @@ void BrowserViewFindAllPages(BrowserView*, const StrVec& pageUrls, Str term, boo
 void BrowserViewFindGoto(BrowserView*, int idx);
 void BrowserViewFindClear(BrowserView*);
 LRESULT BrowserViewPassUIMsg(BrowserView*, UINT msg, WPARAM wp, LPARAM lp);
+// scroll the page as a navigation key (VK_DOWN, VK_NEXT, …) does in a browser
+void BrowserViewScrollKey(BrowserView*, int vk);
 
 bool BrowserViewCreateInProgress();
 

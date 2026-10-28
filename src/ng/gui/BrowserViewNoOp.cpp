@@ -89,6 +89,8 @@ LRESULT BrowserViewPassUIMsg(BrowserView*, UINT, WPARAM, LPARAM) {
     return 0;
 }
 
+void BrowserViewScrollKey(BrowserView*, int) {}
+
 gpui::El* BrowserViewBuild(BrowserView*, gpui::Ctx*, int) {
     return nullptr;
 }

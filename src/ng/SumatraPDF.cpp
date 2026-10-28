@@ -1446,6 +1446,35 @@ bool ForwardBrowserMsg(MainWindow* win, UINT msg, WPARAM wp, LPARAM lp) {
     return true;
 }
 
+// orig's MaybeTranslateAccelerator: in a CHM / markdown / HTML tab the arrows,
+// Home/End and PageUp/PageDown scroll the page instead of running their
+// page-flip accelerators (#6419). Windows gets there via ForwardBrowserMsg.
+bool ScrollBrowserDocKey(MainWindow* win, int vk) {
+    switch (vk) {
+        case VK_LEFT:
+        case VK_RIGHT:
+        case VK_UP:
+        case VK_DOWN:
+        case VK_HOME:
+        case VK_END:
+        case VK_PRIOR:
+        case VK_NEXT:
+            break;
+        default:
+            return false;
+    }
+    BrowserDocController* doc = win ? win->AsChm() : nullptr;
+    if (!doc && win) {
+        doc = win->AsMarkdown();
+    }
+    // no browser view (none on this system): the keys keep their commands
+    if (!doc || !doc->docView) {
+        return false;
+    }
+    BrowserViewScrollKey(doc->docView, vk);
+    return true;
+}
+
 // A failed open still gets a tab: the canvas shows the error, and the file
 // stays available to "show in folder" (issue #3595). Page number stays 0.
 static void ShowLoadErrorTab(MainWindow* win, Str fullPath, LoadReuse reuse) {
