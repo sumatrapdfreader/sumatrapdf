@@ -505,14 +505,56 @@ const brotliSeals: Record<string, string[]> = {
   "compress_fragment_two_pass.c": ["MIN_RATIO"],
 };
 
+// Public headers in dependency order, concatenated into brotli.h.
+const brotliPublicHeaders = ["types.h", "port.h", "shared_dictionary.h", "decode.h", "encode.h"];
+
+// Headers that keep their upstream path and forward to brotli.h, for includers
+// (mupdf, freetype, heicdec) that use `#include <brotli/decode.h>`.
+const brotliForwarders = ["decode.h", "encode.h"];
+
+const brotliPublicIncludeRe = /^\s*#\s*include\s*<brotli\/[^>]+>.*\n?/gm;
+
+function dropBrotliPublicIncludes(text: string): string {
+  return text.replace(brotliPublicIncludeRe, "");
+}
+
+// Unconditional includes of a .c file that resolve to a fully guarded header:
+// those can move into brotli_internal.h. Includes under #if stay in place.
+function brotliHoistable(path: string, rules: IncludeRules): string[] {
+  const out: string[] = [];
+  let depth = 0;
+  for (const line of readText(path).split("\n")) {
+    if (/^\s*#\s*if/.test(line)) {
+      depth++;
+    } else if (/^\s*#\s*endif/.test(line)) {
+      depth--;
+    }
+    const m = includeRe.exec(line);
+    if (depth > 0 || !m) {
+      continue;
+    }
+    const incPath = rules.resolve?.(path, m[1]);
+    if (incPath && hasFullFileGuard(incPath)) {
+      out.push(incPath);
+    }
+  }
+  return out;
+}
+
+// brotli.h has the public API, brotli_internal.h every private header that a
+// .c file includes unconditionally, brotli.c the rest.
 function genBrotli(ctx: Ctx): void {
   const root = join(ctx.checkoutDir, "c");
 
-  // Ship the public headers under brotli/ so `#include <brotli/decode.h>` keeps
-  // working with ext/a-brotli on the include path.
   const incDir = join(root, "include", "brotli");
-  for (const path of listFiles(incDir, ".h")) {
-    ctx.files.set(join("brotli", basename(path)), readText(path));
+  const found = listFiles(incDir, ".h").map((path) => basename(path));
+  if (found.sort().join() !== [...brotliPublicHeaders].sort().join()) {
+    throw new Error(`brotli public headers changed: ${found.join(", ")}, update brotliPublicHeaders`);
+  }
+  const pub = brotliPublicHeaders.map((name) => dropBrotliPublicIncludes(readText(join(incDir, name))));
+  ctx.files.set("brotli.h", normalizeBlankLines(pub.join("\n")));
+  for (const name of brotliForwarders) {
+    ctx.files.set(join("brotli", name), `#include "../brotli.h"\n`);
   }
 
   // Every quoted include is relative to the including file. The *_inc.h X-macro
@@ -523,9 +565,19 @@ function genBrotli(ctx: Ctx): void {
     seen: new Set(),
     dedupOnlyGuarded: true,
   };
-  const chunks: string[] = [];
+  const internal: string[] = [`#include "brotli.h"`];
+  const chunks: string[] = [`#include "brotli_internal.h"`];
   for (const dir of brotliDirs) {
     for (const path of listFiles(join(root, dir), ".c")) {
+      // Hoisted headers land in `seen`, so prepare() below skips them.
+      for (const incPath of brotliHoistable(path, rules)) {
+        if (rules.seen!.has(incPath)) {
+          continue;
+        }
+        rules.seen!.add(incPath);
+        internal.push(prepare(incPath, rules));
+      }
+
       const name = basename(path);
       let chunk = prepare(path, rules);
       if (brotliSeals[name]) {
@@ -537,7 +589,8 @@ function genBrotli(ctx: Ctx): void {
       chunks.push(chunk);
     }
   }
-  ctx.files.set("brotli.c", joinChunks(chunks));
+  ctx.files.set("brotli_internal.h", dropBrotliPublicIncludes(joinChunks(internal)));
+  ctx.files.set("brotli.c", dropBrotliPublicIncludes(joinChunks(chunks)));
 }
 
 // --- bzip2 -----------------------------------------------------------------
@@ -1522,7 +1575,8 @@ const libs: Lib[] = [
     homepage: "https://github.com/google/brotli",
     repo: "https://github.com/ArtifexSoftware/thirdparty-brotli",
     rev: "4328e148b38241843f0cab041ade2efee338e9ba",
-    writes: "brotli/*.h, brotli.c, LICENSE",
+    writes: "brotli.h, brotli_internal.h, brotli/{decode,encode}.h, brotli.c, LICENSE",
+    wipeOutDir: true,
     generate: genBrotli,
     copies: ["LICENSE"],
     compile: {

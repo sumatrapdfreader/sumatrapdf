@@ -25,7 +25,7 @@ description: Regenerate the amalgamated Brotli copy in ext/a-brotli from upstrea
 
    Keep the revision in sync with the brotli submodule of the vendored mupdf (`ext/versions.txt`).
 
-   It writes `brotli/*.h` (the headers keep their directory so `#include <brotli/decode.h>` works), `brotli.c`, `LICENSE` and `version.txt` into `ext/a-brotli/`.
+   It writes `brotli.h` (public API), `brotli_internal.h` (private headers, included only by `brotli.c`), `brotli.c`, `LICENSE` and `version.txt` into `ext/a-brotli/`, plus `brotli/decode.h` and `brotli/encode.h`, which forward to `brotli.h` so `#include <brotli/decode.h>` keeps working.
    Add `-keep` to reuse the existing checkout while iterating on the amalgamation rules.
 
 2. Check `ext/a-brotli/version.txt` — it records the project homepage, source repo URL, requested

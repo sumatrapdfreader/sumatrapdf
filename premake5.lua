@@ -788,10 +788,10 @@ workspace "SumatraPDF"
     kind "StaticLib"
     language "C"
     optimized_conf()
-    disablewarnings { "4100", "4201" }
+    disablewarnings { "4100", "4201", "4456" }
     includedirs { "ext/a-brotli" }
     files {
-      "ext/a-brotli/brotli.c", "ext/a-brotli/brotli/*.h",
+      "ext/a-brotli/brotli.c", "ext/a-brotli/*.h", "ext/a-brotli/brotli/*.h",
       "ext/a-brotli/version.txt", "ext/a-brotli/LICENSE",
     }
 

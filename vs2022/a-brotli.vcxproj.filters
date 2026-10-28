@@ -6,21 +6,14 @@
     </Filter>
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="..\ext\a-brotli\brotli.h" />
     <ClInclude Include="..\ext\a-brotli\brotli\decode.h">
       <Filter>brotli</Filter>
     </ClInclude>
     <ClInclude Include="..\ext\a-brotli\brotli\encode.h">
       <Filter>brotli</Filter>
     </ClInclude>
-    <ClInclude Include="..\ext\a-brotli\brotli\port.h">
-      <Filter>brotli</Filter>
-    </ClInclude>
-    <ClInclude Include="..\ext\a-brotli\brotli\shared_dictionary.h">
-      <Filter>brotli</Filter>
-    </ClInclude>
-    <ClInclude Include="..\ext\a-brotli\brotli\types.h">
-      <Filter>brotli</Filter>
-    </ClInclude>
+    <ClInclude Include="..\ext\a-brotli\brotli_internal.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\ext\a-brotli\brotli.c" />
