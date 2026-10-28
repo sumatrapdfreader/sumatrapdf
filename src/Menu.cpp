@@ -235,6 +235,10 @@ static MenuDef menuDefContext[] = {
         CmdToggleCaption,
     },
     {
+        TrN("Auto-hide Sidebar"),
+        CmdToggleSidebarAutoHide,
+    },
+    {
         StrL(kMenuSeparator),
         kMenuSeparatorID,
     },
@@ -903,6 +907,7 @@ static void MenuUpdateStateForWindow(MainWindow* win) {
     }
     MenuSetChecked(win->menu, CmdToggleMenuBar, gSettings->showMenubar);
     MenuSetChecked(win->menu, CmdToggleCaption, gSettings->showCaption);
+    MenuSetChecked(win->menu, CmdToggleSidebarAutoHide, gSettings->sidebarAutoHide);
     // CmdChangeScrollbar doesn't need a check mark - it opens a dialog
     MenuUpdateDisplayMode(win);
     MenuUpdateZoom(win);

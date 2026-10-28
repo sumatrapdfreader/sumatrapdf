@@ -4689,6 +4689,10 @@ static void OnTimer(MainWindow* win, HWND hwnd, WPARAM timerId) {
             FinishAnnotationNudge(win);
             break;
 
+        case kSidebarOverlayTimerID:
+            UpdateSidebarOverlay(win, SidebarOverlayUpdate::Mouse);
+            break;
+
         case kTouchLongPressTimerID: {
             KillTimer(hwnd, kTouchLongPressTimerID);
             if (win->touchState.panDidScroll || win->touchState.longPressFired) {

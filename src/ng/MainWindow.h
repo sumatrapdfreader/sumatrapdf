@@ -440,6 +440,11 @@ struct MainWindow {
     int aiChatDx = 0;
     // width of the sidebar in dips; orig's win->sidebarDx
     int sidebarDx = 0;
+    // SidebarAutoHide: the floating sidebar is shown (by the mouse or the
+    // keyboard) and whether the mouse is over it
+    bool sidebarOverlayShown = false;
+    bool sidebarOverlayByMouse = false;
+    bool sidebarOverlayHovered = false;
     // frame pixels SidebarWindowSize = grow added for the sidebar (0: none)
     int sidebarGrewFrameDx = 0;
     // Windows: the frame's last non-maximized rectangle in screen pixels, for

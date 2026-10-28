@@ -1177,7 +1177,7 @@ void NavFilesView::OnClose(NavFilesView*, gp::Ctx* cx, const gp::ClickEvent*) {
 // what the panel may take without leaving the canvas less than kMinDocCanvasDx
 static int NavMaxDx(MainWindow* win) {
     int sidebarDx = 0;
-    if (win->uiState.tocVisible || win->uiState.favVisible) {
+    if ((win->uiState.tocVisible || win->uiState.favVisible) && !AppShellSidebarFloats(win)) {
         sidebarDx = win->sidebarDx + kSplitterDx;
     }
     int avail = win->frameRc.dx - sidebarDx - AIChatPanelDx(win) - kMinDocCanvasDx - kSplitterDx;

@@ -6517,7 +6517,8 @@ static bool IsUiLayoutEq(UILayout* s1, UILayout* s2) {
            s1->sidebarTopVisible == s2->sidebarTopVisible && s1->sidebarBottomVisible == s2->sidebarBottomVisible &&
            s1->sidebarMiddleVisible == s2->sidebarMiddleVisible && s1->favoritesAsTab == s2->favoritesAsTab &&
            s1->showMenuBarRebar == s2->showMenuBarRebar && s1->aiChatVisible == s2->aiChatVisible &&
-           s1->aiChatDx == s2->aiChatDx && s1->sidebarOnRight == s2->sidebarOnRight;
+           s1->aiChatDx == s2->aiChatDx && s1->sidebarOnRight == s2->sidebarOnRight &&
+           s1->sidebarAutoHide == s2->sidebarAutoHide;
 }
 
 // Favorites-only must not reserve a tab row (issue #5861)
@@ -6655,6 +6656,19 @@ enum class CaptionUpdate {
 
 static void UpdateCaptionOverlay(MainWindow* win, CaptionUpdate update);
 
+// SidebarAutoHide: a shown sidebar floats over the canvas instead of taking
+// its own column (#5819). Not over a Favorites tab, nor in presentation.
+static bool SidebarFloats(MainWindow* win) {
+    if (!gSettings->sidebarAutoHide || win->presentation) {
+        return false;
+    }
+    WindowTab* tab = win->CurrentTab();
+    if (tab && tab->IsFavoritesTab()) {
+        return false;
+    }
+    return win->uiState.sidebarTopVisible || win->uiState.sidebarBottomVisible;
+}
+
 static bool RelayoutFrame(MainWindow* win, bool updateToolbars, int sidebarDx) {
     DpiSetFromHwnd(win->hwndFrame);
     Rect rc = HwndClientRect(win->hwndFrame);
@@ -6682,6 +6696,7 @@ static bool RelayoutFrame(MainWindow* win, bool updateToolbars, int sidebarDx) {
     curState.aiChatVisible = win->uiState.aiChatVisible;
     curState.aiChatDx = win->aiChatDx;
     curState.sidebarOnRight = SidebarOnRightLayout();
+    curState.sidebarAutoHide = SidebarFloats(win);
 
     // A top-level size change is already a live, batched sibling resize.
     // Toggling WM_SETREDRAW on the frame for every step makes Windows discard
@@ -6723,12 +6738,15 @@ static bool RelayoutFrame(MainWindow* win, bool updateToolbars, int sidebarDx) {
         bool middleVis = !favAsTab && ui.sidebarMiddleVisible;
         bool bottomVis = !favAsTab && ui.sidebarBottomVisible;
         bool aiVis = !favAsTab && ui.aiChatVisible;
-        win->sidebarSplitter->SetIsVisible(topVis || bottomVis);
-        HwndSetVisible(win->sidebarTop->hwnd, topVis);
-        win->sidebarPanelsSplitter->SetIsVisible(topVis && bottomVis);
-        HwndSetVisible(win->sidebarMiddle->hwnd, middleVis);
-        win->sidebarMiddleSplitter->SetIsVisible(middleVis);
-        HwndSetVisible(win->sidebarBottom->hwnd, bottomVis);
+        // a floating sidebar has no splitters and shows only when revealed
+        bool floats = SidebarFloats(win);
+        bool panelsShown = !floats || win->sidebarOverlayShown;
+        win->sidebarSplitter->SetIsVisible((topVis || bottomVis) && !floats);
+        HwndSetVisible(win->sidebarTop->hwnd, topVis && panelsShown);
+        win->sidebarPanelsSplitter->SetIsVisible(topVis && bottomVis && !floats);
+        HwndSetVisible(win->sidebarMiddle->hwnd, middleVis && panelsShown);
+        win->sidebarMiddleSplitter->SetIsVisible(middleVis && !floats);
+        HwndSetVisible(win->sidebarBottom->hwnd, bottomVis && panelsShown);
         HwndSetVisible(win->favoritesTabPanel->hwnd, favAsTab);
         // canvas stays sized under a Favorites tab (only hidden) so switching
         // back does not SetViewPortSize with a 0x0 canvas
@@ -6799,6 +6817,12 @@ static bool RelayoutFrame(MainWindow* win, bool updateToolbars, int sidebarDx) {
     bool middleVisible = !favAsTab && win->uiState.sidebarMiddleVisible;
     bool bottomVisible = !favAsTab && win->uiState.sidebarBottomVisible;
     bool sidebarVisible = topVisible || bottomVisible;
+    bool sidebarFloats = sidebarVisible && SidebarFloats(win);
+    // what takes a column in the layout; a floating sidebar is placed over the canvas
+    bool layTop = topVisible && !sidebarFloats;
+    bool layMiddle = middleVisible && !sidebarFloats;
+    bool layBottom = bottomVisible && !sidebarFloats;
+    bool laySidebar = sidebarVisible && !sidebarFloats;
     bool aiChatVisible = !favAsTab && win->uiState.aiChatVisible && win->hwndAiChatBox;
     bool showCaption = !win->presentation && !win->isFullScreen && win->tabsInTitlebar && gSettings->showCaption;
     bool showingMenuBar = IsShowingMenuBarRebar(win);
@@ -6855,7 +6879,8 @@ static bool RelayoutFrame(MainWindow* win, bool updateToolbars, int sidebarDx) {
     // 1px caption-border inset can disagree with the HWND's x. Only pin when
     // the sidebar is on the left: on the right, side.x is the right pane and
     // using it as rc.x stacked fav+canvas at the same x (issue-2165).
-    if ((isFrameResize || isSplitterDrag) && sidebarVisible && prevSidebar && !SidebarOnRightLayout()) {
+    if ((isFrameResize || isSplitterDrag) && laySidebar && prevSidebar && !prevLayout.sidebarAutoHide &&
+        !SidebarOnRightLayout()) {
         HWND sideHwnd = topVisible ? win->sidebarTop->hwnd : win->sidebarBottom->hwnd;
         if (sideHwnd) {
             Rect side = ChildPosWithinParent(sideHwnd);
@@ -6903,18 +6928,18 @@ static bool RelayoutFrame(MainWindow* win, bool updateToolbars, int sidebarDx) {
         if (aiChatDx <= 0) {
             aiChatDx = rc.dx * 3 / 8;
         }
-        int availDx = rc.dx - (sidebarVisible ? sidebarDxApplied + kSplitterDx : 0);
+        int availDx = rc.dx - (laySidebar ? sidebarDxApplied + kSplitterDx : 0);
         aiChatDx = limitValue(aiChatDx, kSidebarMinDx, availDx / 2);
         win->aiChatDx = aiChatDx;
     }
 
-    SetVis(win->sidebarTopSlot, topVisible);
-    SetVis(win->sidebarMiddleSlot, middleVisible);
-    SetVis(win->sidebarMiddleSplitter, middleVisible);
-    SetVis(win->sidebarBottomSlot, bottomVisible);
+    SetVis(win->sidebarTopSlot, layTop);
+    SetVis(win->sidebarMiddleSlot, layMiddle);
+    SetVis(win->sidebarMiddleSplitter, layMiddle);
+    SetVis(win->sidebarBottomSlot, layBottom);
     SetVis(win->favoritesTabSlot, favAsTab);
-    SetVis(win->sidebarPanelsSplitter, topVisible && bottomVisible);
-    SetVis(win->sidebarSplitter, sidebarVisible);
+    SetVis(win->sidebarPanelsSplitter, layTop && layBottom);
+    SetVis(win->sidebarSplitter, laySidebar);
     SetVis(win->aiChatSplitter, aiChatVisible);
     SetVis(win->aiChatSlot, aiChatVisible);
 
@@ -6943,9 +6968,9 @@ static bool RelayoutFrame(MainWindow* win, bool updateToolbars, int sidebarDx) {
     HWND topHwnd = win->sidebarTop->hwnd;
     HWND middleHwnd = win->sidebarMiddle->hwnd;
     HWND bottomHwnd = win->sidebarBottom->hwnd;
-    BindSlot(win->sidebarTopSlot, topHwnd, &dh, topVisible && !isFrameResize && !isSplitterDrag);
-    BindSlot(win->sidebarMiddleSlot, middleHwnd, &dh, middleVisible && !isFrameResize && !isSplitterDrag);
-    BindSlot(win->sidebarBottomSlot, bottomHwnd, &dh, bottomVisible && !isFrameResize && !isSplitterDrag);
+    BindSlot(win->sidebarTopSlot, topHwnd, &dh, layTop && !isFrameResize && !isSplitterDrag);
+    BindSlot(win->sidebarMiddleSlot, middleHwnd, &dh, layMiddle && !isFrameResize && !isSplitterDrag);
+    BindSlot(win->sidebarBottomSlot, bottomHwnd, &dh, layBottom && !isFrameResize && !isSplitterDrag);
     BindSlot(win->favoritesTabSlot, win->favoritesTabPanel->hwnd, &dh, favAsTab);
     BindSlot(win->canvasSlot, win->hwndCanvas, &dh, !discardCanvasBits);
     BindSlot(win->aiChatSlot, win->hwndAiChatBox, &dh, aiChatVisible);
@@ -6958,23 +6983,23 @@ static bool RelayoutFrame(MainWindow* win, bool updateToolbars, int sidebarDx) {
     // Frame resize: keep the sidebar's x/width, only stretch its height.
     // Splitter drag: keep x/y/height, only stretch its width.
     if (isFrameResize) {
-        if (topVisible) {
+        if (layTop) {
             StretchHwndHeight(dh, topHwnd, win->sidebarTopSlot->lastBounds);
         }
-        if (middleVisible) {
+        if (layMiddle) {
             StretchHwndHeight(dh, middleHwnd, win->sidebarMiddleSlot->lastBounds);
         }
-        if (bottomVisible) {
+        if (layBottom) {
             StretchHwndHeight(dh, bottomHwnd, win->sidebarBottomSlot->lastBounds);
         }
     } else if (isSplitterDrag) {
-        if (topVisible) {
+        if (layTop) {
             StretchHwndWidth(dh, topHwnd, win->sidebarTopSlot->lastBounds);
         }
-        if (middleVisible) {
+        if (layMiddle) {
             StretchHwndWidth(dh, middleHwnd, win->sidebarMiddleSlot->lastBounds);
         }
-        if (bottomVisible) {
+        if (layBottom) {
             StretchHwndWidth(dh, bottomHwnd, win->sidebarBottomSlot->lastBounds);
         }
     }
@@ -7003,6 +7028,17 @@ static bool RelayoutFrame(MainWindow* win, bool updateToolbars, int sidebarDx) {
 
     dh.End();
     UpdateCaptionOverlay(win, CaptionUpdate::Layout);
+
+    // the floating sidebar's column: the canvas edge on the sidebar's side
+    if (sidebarFloats) {
+        Rect canvasRc = win->canvasSlot->lastBounds;
+        int dx = std::min(sidebarDxApplied, canvasRc.dx);
+        int x = SidebarOnRightLayout() ? canvasRc.x + canvasRc.dx - dx : canvasRc.x;
+        win->sidebarOverlayRc = {x, canvasRc.y, dx, canvasRc.dy};
+        win->sidebarOverlayTopDy = bottomVisible ? tocDy : canvasRc.dy;
+        win->sidebarOverlayMiddleDy = middleDy;
+    }
+    UpdateSidebarOverlay(win, SidebarOverlayUpdate::Layout);
 
     if (isSplitterDrag) {
         if (discardCanvasBits) {
@@ -7047,13 +7083,13 @@ static bool RelayoutFrame(MainWindow* win, bool updateToolbars, int sidebarDx) {
     // A frame-size drag does not move the splitter; invalidating it paints a
     // 1-2px strip against the TOC and looks like the tree is shimmering.
     if (!isFrameResize) {
-        if (sidebarVisible) {
+        if (laySidebar) {
             win->sidebarSplitter->Invalidate();
         }
-        if (topVisible && bottomVisible) {
+        if (layTop && layBottom) {
             win->sidebarPanelsSplitter->Invalidate();
         }
-        if (middleVisible) {
+        if (layMiddle) {
             win->sidebarMiddleSplitter->Invalidate();
         }
     }
@@ -8576,6 +8612,10 @@ int SidebarNativeDx(MainWindow* win) {
 // SidebarWindowSize = grow opts in; by default the window keeps its size (#6205)
 static bool FrameCanResizeForSidebar(MainWindow* win) {
     if (!win || !win->hwndFrame || gPluginMode) {
+        return false;
+    }
+    // a floating sidebar takes no space
+    if (gSettings->sidebarAutoHide) {
         return false;
     }
     if (!str::EqI(gSettings->sidebarWindowSize, StrL("grow"))) {
@@ -10469,6 +10509,10 @@ static LRESULT FrameOnCommand(MainWindow* win, HWND hwnd, UINT msg, WPARAM wp, L
 
         case CmdToggleCaption:
             ToggleCaption(cmd);
+            break;
+
+        case CmdToggleSidebarAutoHide:
+            ToggleSidebarAutoHide(cmd);
             break;
 
         case CmdToggleToolbar:
@@ -13023,6 +13067,149 @@ static void UpdateCaptionOverlay(MainWindow* win, CaptionUpdate update) {
 }
 
 // --- End caption code ---
+
+static LRESULT CALLBACK SidebarOverlayEdgeProc(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp) {
+    if (msg == WM_PAINT) {
+        PAINTSTRUCT ps;
+        HDC hdc = BeginPaint(hwnd, &ps);
+        HdcFillRect(hdc, HwndClientRect(hwnd), ThemeEdgeColor());
+        EndPaint(hwnd, &ps);
+        return 0;
+    }
+    // the mouse goes to the canvas under it
+    if (msg == WM_NCHITTEST) {
+        return HTTRANSPARENT;
+    }
+    return DefWindowProcW(hwnd, msg, wp, lp);
+}
+
+static HWND SidebarOverlayEdge(MainWindow* win) {
+    if (win->hwndSidebarOverlayEdge) {
+        return win->hwndSidebarOverlayEdge;
+    }
+    WNDCLASSW cls{};
+    cls.lpfnWndProc = SidebarOverlayEdgeProc;
+    cls.hInstance = GetModuleHandleW(nullptr);
+    cls.lpszClassName = L"SumatraSidebarOverlayEdge";
+    RegisterClassW(&cls);
+    win->hwndSidebarOverlayEdge = CreateWindowExW(WS_EX_NOACTIVATE, cls.lpszClassName, L"", WS_CHILD | WS_CLIPSIBLINGS,
+                                                  0, 0, 0, 0, win->hwndFrame, nullptr, cls.hInstance, nullptr);
+    return win->hwndSidebarOverlayEdge;
+}
+
+// stacks the visible panels in the floating sidebar's column, or hides them
+static void PlaceSidebarOverlay(MainWindow* win) {
+    const MainWindow::UIState& ui = win->uiState;
+    Rect col = win->sidebarOverlayRc;
+    HWND edge = SidebarOverlayEdge(win);
+    if (!win->sidebarOverlayShown) {
+        ShowWindow(edge, SW_HIDE);
+    } else {
+        int edgeDx = std::min(DpiScale(1), col.dx);
+        int edgeX = SidebarOnRightLayout() ? col.x : col.x + col.dx - edgeDx;
+        SetWindowPos(edge, HWND_TOP, edgeX, col.y, edgeDx, col.dy, SWP_NOACTIVATE | SWP_SHOWWINDOW);
+        HwndInvalidate(edge);
+        col.dx -= edgeDx;
+        if (SidebarOnRightLayout()) {
+            col.x += edgeDx;
+        }
+    }
+    SidebarPanel* panels[] = {win->sidebarTop, win->sidebarMiddle, win->sidebarBottom};
+    bool visible[] = {ui.sidebarTopVisible, ui.sidebarMiddleVisible, ui.sidebarBottomVisible};
+    int dys[] = {win->sidebarOverlayTopDy, win->sidebarOverlayMiddleDy, col.dy};
+    int y = col.y;
+    for (int i = 0; i < 3; i++) {
+        HWND hwnd = panels[i] ? panels[i]->hwnd : nullptr;
+        if (!hwnd || !visible[i]) {
+            continue;
+        }
+        if (!win->sidebarOverlayShown) {
+            ShowWindow(hwnd, SW_HIDE);
+            continue;
+        }
+        // the last visible panel takes the rest of the column
+        int dy = std::min(dys[i], col.y + col.dy - y);
+        SetWindowPos(hwnd, HWND_TOP, col.x, y, col.dx, dy, SWP_NOACTIVATE | SWP_SHOWWINDOW);
+        y += dy;
+    }
+}
+
+static bool SidebarOverlayContains(MainWindow* win, HWND hwnd) {
+    SidebarPanel* panels[] = {win->sidebarTop, win->sidebarMiddle, win->sidebarBottom};
+    for (SidebarPanel* p : panels) {
+        if (hwnd && p && (hwnd == p->hwnd || IsChild(p->hwnd, hwnd))) {
+            return true;
+        }
+    }
+    return false;
+}
+
+// typing into a sidebar's filter box keeps it shown after the mouse leaves
+static bool FocusIsEditBox() {
+    WCHAR cls[16]{};
+    HWND focus = GetFocus();
+    return focus && GetClassNameW(focus, cls, dimof(cls)) > 0 && _wcsicmp(cls, WC_EDITW) == 0;
+}
+
+// SidebarAutoHide (#5819): a poll shows the floating sidebar when the mouse
+// reaches the canvas edge on the sidebar's side, or the focus moves into it
+// (F12, Tab). It hides when the mouse leaves it, or the focus does when the
+// keyboard showed it.
+void UpdateSidebarOverlay(MainWindow* win, SidebarOverlayUpdate update) {
+    constexpr int kRevealDx = 8;
+    constexpr uint kPollMs = 50;
+    if (!SidebarFloats(win)) {
+        KillTimer(win->hwndCanvas, kSidebarOverlayTimerID);
+        win->sidebarOverlayShown = false;
+        return;
+    }
+    if (update == SidebarOverlayUpdate::Layout) {
+        SetTimer(win->hwndCanvas, kSidebarOverlayTimerID, kPollMs, nullptr);
+    }
+
+    POINT cursor;
+    GetCursorPos(&cursor);
+    Point pt = HwndScreenToClient(win->hwndFrame, Point(cursor.x, cursor.y));
+    bool overFrame = GetAncestor(WindowFromPoint(cursor), GA_ROOT) == win->hwndFrame;
+    Rect col = win->sidebarOverlayRc;
+    Rect strip = col;
+    strip.dx = std::min(DpiScale(kRevealDx), col.dx);
+    if (SidebarOnRightLayout()) {
+        strip.x = col.x + col.dx - strip.dx;
+    }
+    GUITHREADINFO gui{sizeof(gui)};
+    GetGUIThreadInfo(GetCurrentThreadId(), &gui);
+    bool menuUp = gui.hwndActive == win->hwndFrame && (gui.flags & GUI_INMENUMODE) != 0;
+    HWND capture = GetCapture();
+    bool focusIn = SidebarOverlayContains(win, GetFocus());
+
+    if (!win->sidebarOverlayShown) {
+        // a drag on the canvas (selection, pan) passing the edge doesn't reveal it
+        bool byMouse = overFrame && !capture && !menuUp && strip.Contains(pt);
+        if (!byMouse && !focusIn) {
+            return;
+        }
+        win->sidebarOverlayByMouse = byMouse;
+        win->sidebarOverlayShown = true;
+        PlaceSidebarOverlay(win);
+        return;
+    }
+
+    bool keyboardKeeps = focusIn && (!win->sidebarOverlayByMouse || FocusIsEditBox());
+    bool keep = (overFrame && col.Contains(pt)) || menuUp || SidebarOverlayContains(win, capture) || keyboardKeeps;
+    if (keep) {
+        if (update == SidebarOverlayUpdate::Layout) {
+            PlaceSidebarOverlay(win);
+        }
+        return;
+    }
+    win->sidebarOverlayShown = false;
+    // keys must not go to a hidden tree
+    if (focusIn) {
+        HwndSetFocus(win->hwndCanvas);
+    }
+    PlaceSidebarOverlay(win);
+}
 
 HWND gLastActiveFrameHwnd = nullptr;
 

@@ -1064,6 +1064,10 @@ static TempStr UpdateCommandNameTemp(MainWindow* win, int cmdId, Str s) {
             isToggle = true;
             newIsOn = !gSettings->showCaption;
         } break;
+        case CmdToggleSidebarAutoHide: {
+            isToggle = true;
+            newIsOn = !gSettings->sidebarAutoHide;
+        } break;
         case CmdToggleBookmarks:
         case CmdToggleTableOfContents: {
             isToggle = true;

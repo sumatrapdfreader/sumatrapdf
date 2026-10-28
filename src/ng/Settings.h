@@ -1202,6 +1202,10 @@ struct Settings {
     // window (left is the default; right-to-left UI languages already put
     // it on the right)
     bool sidebarOnRight;
+    // if true, the bookmarks / favorites sidebar takes no space: it slides
+    // over the document when the mouse reaches the window's edge and hides
+    // when the mouse leaves it
+    bool sidebarAutoHide;
     // what showing / hiding the bookmarks / favorites sidebar does to the
     // window: empty or keep (the window keeps its size and position, the
     // document area shrinks), or grow (the window grows by the sidebar

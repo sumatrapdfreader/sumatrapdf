@@ -349,6 +349,7 @@ const commandsRaw = [
     "CmdToggleCaption", "Toggle Caption",
     "CmdAdjustBrightness", "Adjust Brightness...",
     "CmdAdjustContrast", "Adjust Contrast...",
+    "CmdToggleSidebarAutoHide", "Toggle Sidebar Auto-hide",
 ];
 
 // removed slots are dropped: nothing outside the generators should see them

@@ -2710,12 +2710,22 @@ static void ExecuteControlRequest(ControlRequest* req) {
                 sideX = canvas.x + canvas.dx + kSplitterDx;
             }
             Rect sideRc{sideX, topDy, sidebarDx, canvas.dy};
-            AppendLayoutRect(out, SidebarContentToStr(topContent), win->uiState.tocVisible, sideRc);
-            AppendLayoutRect(out, SidebarContentToStr(win->sidebarBottomContent), win->uiState.favVisible, sideRc);
+            // SidebarAutoHide: over the canvas edge, and only while shown
+            bool floats = AppShellSidebarFloats(win);
+            bool sideShown = !floats || win->sidebarOverlayShown;
+            if (floats) {
+                bool onRight = gSettings && gSettings->sidebarOnRight;
+                sideRc = {onRight ? canvas.x + canvas.dx - sidebarDx : canvas.x, canvas.y, sidebarDx, canvas.dy};
+            }
+            bool topShown = win->uiState.tocVisible && sideShown;
+            bool middleShown = win->uiState.middleVisible && sideShown;
+            bool bottomShown = win->uiState.favVisible && sideShown;
+            AppendLayoutRect(out, SidebarContentToStr(topContent), topShown, sideRc);
+            AppendLayoutRect(out, SidebarContentToStr(win->sidebarBottomContent), bottomShown, sideRc);
             // orig names the panes sidebarTop / sidebarBottom, whatever they show
-            AppendLayoutRect(out, StrL("sidebarTop"), win->uiState.tocVisible, sideRc);
-            AppendLayoutRect(out, StrL("sidebarMiddle"), win->uiState.middleVisible, sideRc);
-            AppendLayoutRect(out, StrL("sidebarBottom"), win->uiState.favVisible, sideRc);
+            AppendLayoutRect(out, StrL("sidebarTop"), topShown, sideRc);
+            AppendLayoutRect(out, StrL("sidebarMiddle"), middleShown, sideRc);
+            AppendLayoutRect(out, StrL("sidebarBottom"), bottomShown, sideRc);
             // dips per document pixel; click tests scale canvas points by this
             out.Append(fmt("canvasScale=%.3f\n", (double)CanvasScale(win)));
             // same range GetScrollInfo reads off the canvas HWND on Windows

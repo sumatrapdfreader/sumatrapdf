@@ -377,6 +377,15 @@ struct MainWindow { // NOLINT(clang-analyzer-optin.performance.Padding)
     Rect captionRect;
     HWND hwndCaptionOverlay = nullptr;
     bool captionOverlayShown = false;
+    // SidebarAutoHide: the sidebar floats over the canvas in sidebarOverlayRc
+    // (frame client coords), shown while the mouse or the focus is in it
+    bool sidebarOverlayShown = false;
+    bool sidebarOverlayByMouse = false;
+    Rect sidebarOverlayRc;
+    int sidebarOverlayTopDy = 0;
+    int sidebarOverlayMiddleDy = 0;
+    // a 1px edge between the floating sidebar and the document
+    HWND hwndSidebarOverlayEdge = nullptr;
 
     Tooltip* infotip = nullptr;
 
@@ -580,6 +589,7 @@ struct MainWindow { // NOLINT(clang-analyzer-optin.performance.Padding)
             bool aiChatVisible = false;
             int aiChatDx = 0;
             bool sidebarOnRight = false;
+            bool sidebarAutoHide = false;
         };
         Layout layout;    // last applied layout state
         Rect lastFrameRc; // previous frame client size; a change skips WM_SETREDRAW

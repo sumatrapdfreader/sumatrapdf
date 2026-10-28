@@ -3861,6 +3861,7 @@ void DocCanvasView::OnMove(DocCanvasView* self, gp::Ctx* cx, const gp::MouseMove
     // orig's canvas does the same: the overlay toolbar shows while the cursor
     // is in the band at the top (or bottom) of the canvas
     UpdateOverlayToolbarForMouse(win, Point{(int)ev->x, (int)ev->y});
+    AppShellSidebarCanvasMove(win, ev);
     OverlayScrollbarsOnMouse(win, pt.x, pt.y, onCanvas);
     if (!onCanvas && win->mouseAction == MouseAction::None) {
         // the laser dot and the presentation auto-hide only own the canvas

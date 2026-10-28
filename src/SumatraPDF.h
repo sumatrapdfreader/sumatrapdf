@@ -33,6 +33,13 @@ constexpr int kRepaintMessageDelayInMs = 1000;
 
 constexpr int kAutoReloadTimerID = 5;
 
+// polls the mouse for the floating sidebar (SidebarAutoHide)
+constexpr UINT_PTR kSidebarOverlayTimerID = 18;
+enum class SidebarOverlayUpdate {
+    Layout,
+    Mouse
+};
+
 // debounce: coalesce bursts of file-change notifications (a single save can
 // fire several) into one reload. SetTimer() with the same id resets it, so the
 // reload only happens once the file has been quiet for this long (#5690).
@@ -57,6 +64,7 @@ bool AreLoadThreadsActive();
 // tells the frame's virtual tree which splitters exist (they are created
 // with their panes)
 void FrameSyncSplitters(MainWindow*);
+void UpdateSidebarOverlay(MainWindow*, SidebarOverlayUpdate);
 void SetAnnotCreateArgs(AnnotCreateArgs&, CustomCommand*);
 void BeginPdfEditOperation(MainWindow*, const char* name);
 void EndPdfEditOperation(MainWindow*);

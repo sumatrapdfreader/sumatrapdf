@@ -2853,3 +2853,10 @@ void ToggleCaption(CustomCommand* cmd) {
         ToggleSettingsBool(&gSettings->showCaption);
     }
 }
+
+void ToggleSidebarAutoHide(CustomCommand* cmd) {
+    bool on = GetCommandBoolArg(cmd, kCmdArgState, !gSettings->sidebarAutoHide);
+    if (on != gSettings->sidebarAutoHide) {
+        ToggleSettingsBool(&gSettings->sidebarAutoHide);
+    }
+}

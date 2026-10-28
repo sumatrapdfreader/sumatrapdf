@@ -164,6 +164,10 @@ static MenuDef menuDefContext[] = {
         CmdToggleCaption,
     },
     {
+        TrN("Auto-hide Sidebar"),
+        CmdToggleSidebarAutoHide,
+    },
+    {
         StrL(kMenuSeparator),
         kMenuSeparatorID,
     },
@@ -686,6 +690,10 @@ static void SetMenuChecks(MenuModel* menu, MainWindow* win) {
         }
         if (it.cmdId == CmdToggleCaption) {
             it.checked = gSettings->showCaption;
+            continue;
+        }
+        if (it.cmdId == CmdToggleSidebarAutoHide) {
+            it.checked = gSettings->sidebarAutoHide;
             continue;
         }
         if (it.cmdId == CmdToggleBookmarks || it.cmdId == CmdToggleTableOfContents) {

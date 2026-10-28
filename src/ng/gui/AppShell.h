@@ -7,6 +7,7 @@
 namespace gpui {
 struct App;
 struct Window;
+struct MouseMoveEvent;
 } // namespace gpui
 
 struct MainWindow;
@@ -94,6 +95,8 @@ bool AppShellCaptionRects(MainWindow* win, Rect* menuOut, Rect* tabsOut, int* dy
 bool AppShellSysMenuRect(MainWindow* win, Rect* out);
 // the border the frame keeps around its content while it has the caption
 int AppShellFrameBorder(MainWindow* win);
+bool AppShellSidebarFloats(MainWindow* win);
+void AppShellSidebarCanvasMove(MainWindow* win, const gpui::MouseMoveEvent* ev);
 // gpui's client-side title bar for the frame, without touching the flag
 // (fullscreen has no caption of either kind)
 void AppShellSetClientTitleBar(MainWindow* win, bool on);

@@ -1862,6 +1862,77 @@ static gp::El* BuildCanvas(ShellView* self, gp::Ctx* cx, bool overlayUp) {
 static void BuildNotifications(MainWindow* win, gp::Ctx* cx, gp::El* parent);
 static bool HasNotificationsFor(MainWindow* win);
 
+// SidebarAutoHide (#5819): a shown sidebar floats over the canvas instead of
+// taking a column. Not in presentation.
+bool AppShellSidebarFloats(MainWindow* win) {
+    if (!gSettings->sidebarAutoHide || win->presentation) {
+        return false;
+    }
+    return win->uiState.tocVisible || win->uiState.favVisible;
+}
+
+// a mouse move on the canvas, which is under the floating sidebar: one at the
+// edge on the sidebar's side shows it, one past its column hides it (orig
+// polls the cursor instead)
+void AppShellSidebarCanvasMove(MainWindow* win, const gp::MouseMoveEvent* ev) {
+    constexpr float kRevealDx = 8;
+    if (!AppShellSidebarFloats(win)) {
+        return;
+    }
+    bool onRight = gSettings->sidebarOnRight;
+    float fromEdge = onRight ? ev->el.Right() - ev->x : ev->x - ev->el.x;
+    bool inColumn = fromEdge < (float)win->sidebarDx;
+    if (!win->sidebarOverlayShown) {
+        // a drag on the canvas (selection, pan) passing the edge doesn't show it
+        if (ev->pressed || fromEdge >= kRevealDx) {
+            return;
+        }
+        win->sidebarOverlayShown = true;
+        win->sidebarOverlayByMouse = true;
+    }
+    if (inColumn == win->sidebarOverlayHovered) {
+        return;
+    }
+    win->sidebarOverlayHovered = inColumn;
+    AppShellInvalidate(win);
+}
+
+// orig's UpdateSidebarOverlay: shown while the mouse is over it, a context
+// menu of it is up, or the keyboard put the focus in it
+static void UpdateSidebarOverlayState(MainWindow* win, gp::Ctx* cx) {
+    bool focusIn = SidebarHasFocus(win);
+    if (!win->sidebarOverlayShown) {
+        if (focusIn) {
+            win->sidebarOverlayShown = true;
+            win->sidebarOverlayByMouse = false;
+        }
+        return;
+    }
+    bool keep = win->sidebarOverlayHovered || SidebarMenuOpen(win, cx) || (focusIn && !win->sidebarOverlayByMouse);
+    if (keep) {
+        return;
+    }
+    win->sidebarOverlayShown = false;
+    // keys must not go to a hidden tree
+    if (focusIn) {
+        gp::FocusHandleFocus(cx->win, win->shell->frameFocus);
+    }
+}
+
+// the floating sidebar over the canvas column
+static void AddSidebarOverlay(ShellView* self, gp::Ctx* cx, gp::El* canvasCol, gp::El* sidebar) {
+    MainWindow* win = self->win;
+    UpdateSidebarOverlayState(win, cx);
+    if (!win->sidebarOverlayShown) {
+        return;
+    }
+    const gp::Theme& th = gp::ThemeNow(cx->app);
+    bool onRight = gSettings->sidebarOnRight;
+    gp::El* el = gp::Div(cx->a)->Absolute()->Top(0)->Bottom(0)->FlexCol()->W((float)win->sidebarDx)->Child(sidebar);
+    el = onRight ? el->Right(0)->BorderL(1, th.border) : el->Left(0)->BorderR(1, th.border);
+    canvasCol->Child(el);
+}
+
 // the sidebar, the splitter and the canvas; orig's RelayoutFrame puts the same
 // three side by side with a SplitterCtrl between them
 static gp::El* BuildBody(ShellView* self, gp::Ctx* cx, bool overlayUp) {
@@ -1876,6 +1947,10 @@ static gp::El* BuildBody(ShellView* self, gp::Ctx* cx, bool overlayUp) {
         canvas = box;
     }
     gp::El* sidebar = SidebarBuild(win, cx);
+    bool floats = sidebar && AppShellSidebarFloats(win);
+    if (!floats) {
+        win->sidebarOverlayShown = false;
+    }
     gp::El* aiChat = overlayUp ? nullptr : AIChatPanelBuild(win, cx);
     // orig docks the folder picker's window beside the frame; here it is the
     // frame's last column
@@ -1887,7 +1962,7 @@ static gp::El* BuildBody(ShellView* self, gp::Ctx* cx, bool overlayUp) {
     gp::El* row = gp::Div(cx->a)->FlexRow()->Flex1()->W(gp::kFill)->MinH(0);
     gp::El* sidebarBox = nullptr;
     gp::El* splitter = nullptr;
-    if (sidebar) {
+    if (sidebar && !floats) {
         sidebarBox = gp::Div(cx->a)->FlexCol()->W((float)win->sidebarDx)->H(gp::kFill)->Shrink0()->Child(sidebar);
         splitter = gp::Div(cx->a)
                        ->W((float)kSplitterDx)
@@ -1905,7 +1980,11 @@ static gp::El* BuildBody(ShellView* self, gp::Ctx* cx, bool overlayUp) {
             row->Child(splitter);
         }
     }
-    row->Child(gp::Div(cx->a)->FlexCol()->Flex1()->MinW(0)->H(gp::kFill)->Child(canvas));
+    gp::El* canvasCol = gp::Div(cx->a)->FlexCol()->Flex1()->MinW(0)->H(gp::kFill)->Child(canvas);
+    if (floats) {
+        AddSidebarOverlay(self, cx, canvasCol, sidebar);
+    }
+    row->Child(canvasCol);
     if (sidebarBox && gSettings->sidebarOnRight) {
         row->Child(splitter);
         row->Child(sidebarBox);
@@ -2997,7 +3076,7 @@ static Rect CanvasRcForFrame(MainWindow* win, int frameDx, int frameDy, bool men
         chromeDy += toolbarDy;
     }
     int sidebarDx = 0;
-    if (win->uiState.tocVisible || win->uiState.favVisible) {
+    if ((win->uiState.tocVisible || win->uiState.favVisible) && !AppShellSidebarFloats(win)) {
         sidebarDx = win->sidebarDx + kSplitterDx;
     }
     int bodyDy = frameDy - 2 * border - chromeDy - (tbAtBottom ? toolbarDy : 0);

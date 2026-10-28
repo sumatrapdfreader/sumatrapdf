@@ -64,4 +64,6 @@ TempStr SidebarTestToc(MainWindow*, Str op, int arg);
 enum class SidebarSlot;
 bool SidebarPanelVisible(MainWindow*, SidebarSlot);
 bool SidebarPanelHasFocus(MainWindow*, SidebarSlot);
+bool SidebarHasFocus(MainWindow*);
+bool SidebarMenuOpen(MainWindow*, gpui::Ctx* cx);
 void SidebarFocusPanel(MainWindow*, SidebarSlot);

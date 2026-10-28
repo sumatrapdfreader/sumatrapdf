@@ -416,6 +416,27 @@ bool SidebarPanelHasFocus(MainWindow* win, SidebarSlot slot) {
     return focus.IsValid() && gp::FocusHandleIsFocused(win->gpuiWin, focus);
 }
 
+bool SidebarHasFocus(MainWindow* win) {
+    return SidebarPanelHasFocus(win, SidebarSlot::Top) || SidebarPanelHasFocus(win, SidebarSlot::Middle) ||
+           SidebarPanelHasFocus(win, SidebarSlot::Bottom);
+}
+
+// a context menu of the bookmarks or favorites is up
+bool SidebarMenuOpen(MainWindow* win, gp::Ctx* cx) {
+    SidebarUI* ui = win ? Ui(win) : nullptr;
+    if (!ui) {
+        return false;
+    }
+    gp::Entity<gp::PopupMenuState> popups[] = {ui->tocPopup, ui->favPopup};
+    for (auto& e : popups) {
+        auto* st = e.IsValid() ? (gp::PopupMenuState*)gp::EntityGet(cx->app, e.id) : nullptr;
+        if (st && st->open) {
+            return true;
+        }
+    }
+    return false;
+}
+
 // the panel with the keyboard, if any
 static bool FocusedSlot(MainWindow* win, SidebarSlot* slotOut) {
     SidebarSlot slots[] = {SidebarSlot::Top, SidebarSlot::Middle, SidebarSlot::Bottom};
@@ -621,8 +642,9 @@ static void ToggleContent(MainWindow* win, SidebarContent content) {
     SetSidebarVisibility(win, top, bottom, SidebarResizeFrame::Adjust);
     if (content == SidebarContent::Favorites) {
         SidebarFocusFavorites(win);
-    } else if (content == SidebarContent::Thumbnails) {
-        // showing the pane puts the keyboard there, same as the favorites tree
+    } else if (content == SidebarContent::Thumbnails || gSettings->sidebarAutoHide) {
+        // showing the pane puts the keyboard there, same as the favorites tree.
+        // A floating sidebar shows while it has the keyboard (SidebarAutoHide)
         SidebarFocusPanel(win, slot);
     }
     ScheduleSaveSettings();

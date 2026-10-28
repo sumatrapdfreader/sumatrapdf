@@ -24,6 +24,7 @@ void UpdatePageInfoHelper(DocController* ctrl, NotificationWnd* wnd, int pageNo)
 bool ShouldUseBrowserView(FileType kind);
 struct CustomCommand;
 void ToggleCaption(CustomCommand* cmd);
+void ToggleSidebarAutoHide(CustomCommand* cmd);
 bool showTocByDefault(Str path, EngineBase* engine);
 bool IsEbookFileType(FileType ft);
 DisplayMode DisplayModeForNewDocument(Str path, EngineBase* engine);

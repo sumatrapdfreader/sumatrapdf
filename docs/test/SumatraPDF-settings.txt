@@ -34,6 +34,7 @@ SortFavoritesByName = false
 ShowToc = true
 AlwaysShowSidebar = false
 SidebarOnRight = false
+SidebarAutoHide = false
 ShowLinks = false
 HighlightFormFields = true
 ClickEdgeToTurnPage = false

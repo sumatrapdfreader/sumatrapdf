@@ -3679,6 +3679,10 @@ static void SyncCanvasAfterSidebar(MainWindow* win) {
 // none). Skip if already grown (tab switch). Hide undoes the grow.
 // The sidebar and the canvas margin are in dips, the frame in pixels.
 static void AdjustFrameForSidebarNow(MainWindow* win, bool show) {
+    // a floating sidebar takes no space
+    if (show && gSettings->sidebarAutoHide) {
+        return;
+    }
 #if OS_WIN
     if (!FrameCanResizeForSidebar(win)) {
         if (!show) {
@@ -5345,6 +5349,10 @@ void ExecuteCmd(MainWindow* win, int cmdId) {
 
         case CmdToggleCaption:
             ToggleCaption(cmd);
+            break;
+
+        case CmdToggleSidebarAutoHide:
+            ToggleSidebarAutoHide(cmd);
             break;
 
         case CmdToggleToolbar:

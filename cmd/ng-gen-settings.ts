@@ -1579,6 +1579,13 @@ const globalPrefs: Field[] = [
       "(left is the default; right-to-left UI languages already put it on the right)",
   ).ver("3.7"),
   field(
+    "SidebarAutoHide",
+    Bool,
+    false,
+    "if true, the bookmarks / favorites sidebar takes no space: it slides over the document " +
+      "when the mouse reaches the window's edge and hides when the mouse leaves it",
+  ).ver("3.7"),
+  field(
     "SidebarWindowSize",
     Str,
     "",
@@ -2270,6 +2277,7 @@ const globalPrefsLayout = [
   "ShowToc",
   "AlwaysShowSidebar",
   "SidebarOnRight",
+  "SidebarAutoHide",
   "SidebarWindowSize",
   "ShowLinks",
   "HighlightFormFields",

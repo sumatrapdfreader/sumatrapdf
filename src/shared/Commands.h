@@ -342,8 +342,9 @@ enum {
     CmdToggleCaption = 536,
     CmdAdjustBrightness = 537,
     CmdAdjustContrast = 538,
+    CmdToggleSidebarAutoHide = 539,
 
-    CmdLast = 538,
+    CmdLast = 539,
     CmdFirstCustom = CmdLast + 100,
 
     // aliases, at the end to not mess ordering
