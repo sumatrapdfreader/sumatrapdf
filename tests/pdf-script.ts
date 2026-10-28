@@ -1,4 +1,4 @@
-import { copyFileSync, existsSync, mkdirSync, readdirSync, writeFileSync } from "node:fs";
+import { copyFileSync, existsSync, mkdirSync, readdirSync, readFileSync, writeFileSync } from "node:fs";
 import { basename, dirname, join, resolve } from "node:path";
 import { ControlCommand, type ControlClient } from "./control.ts";
 import { websiteDocsDir } from "../cmd/util.ts";
@@ -66,6 +66,14 @@ async function checkExamples(): Promise<void> {
       throw new Error(`${name}: no output file`);
     }
   }
+}
+
+// position in the embedded bundle; gen-pdf-scripts.ts orders it, so adding a script shifts indices
+function exampleIndex(info: string): number {
+  const scripts = readFileSync(resolve(import.meta.dir, "../.work/scripts.js"), "utf8").split("\n// ---\n");
+  const idx = scripts.findIndex((s) => s.includes(`// Info: ${info}\n`));
+  if (idx < 0) throw new Error(`no example script '${info}'`);
+  return idx;
 }
 
 type Node = { x: number; y: number; w: number; h: number; role: number; label: string; value: string };
@@ -151,7 +159,7 @@ async function ngUi(client: ControlClient) {
     async examples() {
       await click((await layout()).find((n) => n.label === "Example Scripts")!);
     },
-    async pickExample(index: number, name: string) {
+    async pickExample(name: string) {
       name = name.replace(/\.$/, "");
       const list = await pollUntil(
         layout,
@@ -272,8 +280,8 @@ async function originalUi(pid: number, client: ControlClient) {
     async examples() {
       await scriptCmd("examples");
     },
-    async pickExample(index: number) {
-      await scriptCmd("pick", index);
+    async pickExample(name: string) {
+      await scriptCmd("pick", exampleIndex(name));
     },
     async script() {
       return getControlText(scriptEdit());
@@ -310,7 +318,7 @@ export async function testit(): Promise<void> {
         { timeoutMs: 10000, error: (s) => `one-argument script: ${JSON.stringify(s)}` },
       );
       await ui.examples();
-      await ui.pickExample(1, "Add a free-text annotation to the first page.");
+      await ui.pickExample("Add a free-text annotation to the first page.");
       await pollUntil(
         () => ui.script(),
         (s) => s.includes("Add a free-text annotation to the first page."),
@@ -331,7 +339,7 @@ export async function testit(): Promise<void> {
       );
       await ui.setArg("discard this value");
       await ui.examples();
-      await ui.pickExample(2, "Render every page as a PNG at 96 DPI.");
+      await ui.pickExample("Render every page as a PNG at 96 DPI.");
       await pollUntil(
         () => ui.args(),
         (args) => args.length === 2 && args[1] === join(dirname(input), basename(stem) + "-[page].png"),
@@ -342,7 +350,7 @@ export async function testit(): Promise<void> {
       if (JSON.stringify((await ui.argumentIds()).slice(0, 1)) !== JSON.stringify(argumentIds)) {
         throw new Error("selecting an example recreated its first argument control");
       }
-      await ui.pickExample(4, "Copy bookmarks from another document.");
+      await ui.pickExample("Copy bookmarks from another document.");
       await pollUntil(
         () => ui.args(),
         (args) => args.length === 3 && args[2] === "",
@@ -350,7 +358,7 @@ export async function testit(): Promise<void> {
           error: (args) => `empty hinted argument: ${JSON.stringify(args)}`,
         },
       );
-      await ui.pickExample(5, "Create a PDF with one blank page.");
+      await ui.pickExample("Create a PDF with one blank page.");
       await pollUntil(
         () => ui.args(),
         (args) => args.length === 1 && args[0] === stem + ".3.pdf",
@@ -358,7 +366,7 @@ export async function testit(): Promise<void> {
           error: (args) => `output-only example: ${JSON.stringify(args)}`,
         },
       );
-      await ui.pickExample(10, "Crop page margins using rendered content bounds.");
+      await ui.pickExample("Crop page margins using rendered content bounds.");
       await pollUntil(
         () => ui.args(),
         (args) => args.length === 4 && args[2] === "6" && args[3] === "all",
@@ -366,7 +374,7 @@ export async function testit(): Promise<void> {
           error: (args) => `numeric and text defaults: ${JSON.stringify(args)}`,
         },
       );
-      await ui.pickExample(1, "Add a free-text annotation to the first page.");
+      await ui.pickExample("Add a free-text annotation to the first page.");
       await pollUntil(
         () => ui.args(),
         (args) => args.length === 2,
