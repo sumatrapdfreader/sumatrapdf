@@ -122,6 +122,7 @@ const user32 = loadDll("user32.dll", {
   GetClipboardData: { args: [FFIType.u32], returns: FFIType.u64 },
   EnumClipboardFormats: { args: [FFIType.u32], returns: FFIType.u32 },
   EmptyClipboard: { args: [], returns: FFIType.bool },
+  GetClipboardSequenceNumber: { args: [], returns: FFIType.u32 },
   SetClipboardData: { args: [FFIType.u32, FFIType.u64], returns: FFIType.u64 },
 });
 
@@ -1303,6 +1304,11 @@ export function setClipboardText(text: string): boolean {
   } finally {
     user32.symbols.CloseClipboard();
   }
+}
+
+// Changes on every clipboard update; reading it doesn't open the clipboard.
+export function clipboardSeqNo(): number {
+  return user32.symbols.GetClipboardSequenceNumber();
 }
 
 export function emptyClipboard(): boolean {
