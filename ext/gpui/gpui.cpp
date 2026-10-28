@@ -5567,6 +5567,88 @@ WinSize WindowSize(Window* win) {
     return ws;
 }
 
+static float ClampAxis(float v, float hi) {
+    if (v < 0) {
+        v = 0;
+    }
+    if (v > hi) {
+        v = hi;
+    }
+    return v;
+}
+
+Bounds WindowFullyVisibleBounds(const Window* win) {
+    if (!win) {
+        return {};
+    }
+    float vw = win->paint.viewW;
+    float vh = win->paint.viewH;
+    float insetTop = win->safeAreaInsets.top > win->imeInsets.top
+                         ? win->safeAreaInsets.top
+                         : win->imeInsets.top;
+    float insetRight = win->safeAreaInsets.right > win->imeInsets.right
+                           ? win->safeAreaInsets.right
+                           : win->imeInsets.right;
+    float insetBottom = win->safeAreaInsets.bottom > win->imeInsets.bottom
+                            ? win->safeAreaInsets.bottom
+                            : win->imeInsets.bottom;
+    float insetLeft = win->safeAreaInsets.left > win->imeInsets.left
+                          ? win->safeAreaInsets.left
+                          : win->imeInsets.left;
+    float left = ClampAxis(insetLeft, vw);
+    float top = ClampAxis(insetTop, vh);
+    float right = vw - (insetRight > 0 ? insetRight : 0);
+    float bottom = vh - (insetBottom > 0 ? insetBottom : 0);
+    if (right < left) {
+        right = left;
+    }
+    if (bottom < top) {
+        bottom = top;
+    }
+    Bounds safe = {left, top, right - left, bottom - top};
+    Bounds visual =
+        win->hasVisualViewport ? win->visualViewport : Bounds{0, 0, vw, vh};
+    float x0 = safe.x > visual.x ? safe.x : visual.x;
+    float y0 = safe.y > visual.y ? safe.y : visual.y;
+    float x1 = safe.Right() < visual.Right() ? safe.Right() : visual.Right();
+    float y1 =
+        safe.Bottom() < visual.Bottom() ? safe.Bottom() : visual.Bottom();
+    if (x1 < x0) {
+        x1 = x0;
+    }
+    if (y1 < y0) {
+        y1 = y0;
+    }
+    return {x0, y0, x1 - x0, y1 - y0};
+}
+
+void WindowSetVisualViewport(Window* win, Bounds bounds) {
+    if (!win) {
+        return;
+    }
+    win->hasVisualViewport = true;
+    win->visualViewport = bounds;
+    AppInvalidate(win);
+}
+
+void WindowClearVisualViewport(Window* win) {
+    if (!win) {
+        return;
+    }
+    win->hasVisualViewport = false;
+    win->visualViewport = {};
+    AppInvalidate(win);
+}
+
+void WindowSetInsets(Window* win, Edges safeArea, Edges ime) {
+    if (!win) {
+        return;
+    }
+    win->safeAreaInsets = safeArea;
+    win->imeInsets = ime;
+    AppInvalidate(win);
+}
+
 const DragPayload* WindowActiveDrag(Ctx* cx) {
     if (!cx || !cx->win || !cx->win->activeDrag.IsValid()) {
         return nullptr;
@@ -6173,37 +6255,62 @@ Hsla HslaNew(float h, float s, float l, float a) {
     return Hsla{Clamp01(h), Clamp01(s), Clamp01(l), Clamp01(a)};
 }
 
-Rgba HslaToRgba(Hsla c) {
+static void HslaFloats(Hsla c, float* r, float* g, float* b) {
     float h = c.h, s = c.s, l = c.l;
     float k = (1.f - fabsf(2.f * l - 1.f)) * s;
     float x = k * (1.f - fabsf(fmodf(h * 6.f, 2.f) - 1.f));
     float m = l - k * 0.5f;
     float km = k + m;
     float xm = x + m;
-    float r = 0, g = 0, b = 0;
+    float rr = 0, gg = 0, bb = 0;
     switch ((int)floorf(h * 6.f)) {
         case 0:
         case 6:
-            r = km, g = xm, b = m;
+            rr = km, gg = xm, bb = m;
             break;
         case 1:
-            r = xm, g = km, b = m;
+            rr = xm, gg = km, bb = m;
             break;
         case 2:
-            r = m, g = km, b = xm;
+            rr = m, gg = km, bb = xm;
             break;
         case 3:
-            r = m, g = xm, b = km;
+            rr = m, gg = xm, bb = km;
             break;
         case 4:
-            r = xm, g = m, b = km;
+            rr = xm, gg = m, bb = km;
             break;
         default:
-            r = km, g = m, b = xm;
+            rr = km, gg = m, bb = xm;
             break;
     }
+    *r = rr;
+    *g = gg;
+    *b = bb;
+}
+
+static uint8_t RoundByte(float v01) {
+    if (v01 <= 0.f) {
+        return 0;
+    }
+    if (v01 >= 1.f) {
+        return 255;
+    }
+    return (uint8_t)(v01 * 255.f + 0.5f);
+}
+
+Rgba HslaToRgba(Hsla c) {
+    float r = 0, g = 0, b = 0;
+    HslaFloats(c, &r, &g, &b);
     return Rgba{ToByte(Clamp01(r)), ToByte(Clamp01(g)), ToByte(Clamp01(b)),
                 ToByte(c.a)};
+}
+
+Rgba HslaToRgbaRounded(Hsla c) {
+    float r = 0, g = 0, b = 0;
+    HslaFloats(c, &r, &g, &b);
+    return Rgba{RoundByte(Clamp01(r)), RoundByte(Clamp01(g)),
+                RoundByte(Clamp01(b)), RoundByte(Clamp01(c.a))};
 }
 
 Hsla HslaFromRgba(Rgba c) {
@@ -6555,6 +6662,38 @@ El* IconEl(Arena* a, IconName name, float size) {
     e->style.width = size;
     e->style.height = size;
     return e;
+}
+
+struct IconPathHook {
+    IconPathResolveFn fn = nullptr;
+    void* user = nullptr;
+};
+
+void IconPathResolverSet(App* app, IconPathResolveFn fn, void* user) {
+    if (!app) {
+        return;
+    }
+    IconPathHook* hook = AppGlobalEnsure<IconPathHook>(app);
+    hook->fn = fn;
+    hook->user = user;
+}
+
+Str IconPathResolve(Str path, const App* app, Arena* a) {
+    if (!path.s || len(path) == 0 || !app) {
+        return path;
+    }
+    IconPathHook* hook = AppGlobalGet<IconPathHook>(app);
+    if (!hook || !hook->fn) {
+        return path;
+    }
+    Str out = {};
+    if (!hook->fn(path, app, hook->user, &out)) {
+        return path;
+    }
+    if (!a) {
+        return out;
+    }
+    return out.s ? StrDup(a, out) : Str{};
 }
 
 El* ImageEl(Arena* a, Str src, Str alt) {
@@ -7450,6 +7589,10 @@ void StyleApplyFields(Style* into, const Style& over, uint32_t fields) {
         into->bg = over.bg;
         into->hasBg = true;
     }
+    if (fields & StyleFieldShadow) {
+        into->shadows = over.shadows;
+        into->shadowCount = over.shadowCount;
+    }
     if (fields & StyleFieldColor) {
         into->color = over.color;
         into->hasColor = true;
@@ -7496,6 +7639,18 @@ void StyleApplyFields(Style* into, const Style& over, uint32_t fields) {
     }
     if (fields & StyleFieldFontSize) {
         into->fontSize = over.fontSize;
+    }
+    if (fields & StyleFieldFontWeight) {
+        into->fontWeight = over.fontWeight;
+        into->fontBold = over.fontBold;
+        into->fontSemibold = over.fontSemibold;
+        into->fontMedium = over.fontMedium;
+    }
+    if (fields & StyleFieldFontMono) {
+        into->fontMono = over.fontMono;
+    }
+    if (fields & StyleFieldFontFamily) {
+        into->fontFamily = over.fontFamily;
     }
     if (fields & StyleFieldWidth) {
         into->width = over.width;
@@ -8609,7 +8764,7 @@ Str FontFamilyName(uint8_t id) {
     return gFontFamilies[id];
 }
 
-static uint16_t ElTextWeight(const El* e) {
+uint16_t ElTextWeight(const El* e) {
     uint16_t w = kFontWeightNormal;
     switch ((FontWeight)e->style.fontWeight) {
         case FontWeight::Thin:
@@ -9587,24 +9742,22 @@ static taffy::Overflow ToTaffyOverflow(Overflow o) {
     }
 }
 
-static taffy::OptAlignItems ToTaffyAlignItems(FlexAlign a, bool self) {
+static taffy::AlignItems ToTaffyAlignItems(FlexAlign a, bool self) {
     using K = taffy::AlignItemsKeyword;
     switch (a) {
         case FlexAlign::Start:
-            return taffy::OptAlignItems(
-                taffy::AlignItems{self ? K::Start : K::FlexStart});
+            return taffy::AlignItems{self ? K::Start : K::FlexStart};
         case FlexAlign::Center:
-            return taffy::OptAlignItems(taffy::AlignItems{K::Center});
+            return taffy::AlignItems{K::Center};
         case FlexAlign::End:
-            return taffy::OptAlignItems(
-                taffy::AlignItems{self ? K::End : K::FlexEnd});
+            return taffy::AlignItems{self ? K::End : K::FlexEnd};
         case FlexAlign::Baseline:
-            return taffy::OptAlignItems(taffy::AlignItems{K::Baseline});
+            return taffy::AlignItems{K::Baseline};
         case FlexAlign::Stretch:
-            return taffy::OptAlignItems(taffy::AlignItems{K::Stretch});
+            return taffy::AlignItems{K::Stretch};
         default:
 
-            return taffy::OptAlignItems();
+            return taffy::AlignItems{K::Normal};
     }
 }
 
@@ -9621,27 +9774,24 @@ static taffy::FlexDirection ToTaffyFlexDir(FlexDir d) {
     }
 }
 
-static taffy::OptJustifyContent ToTaffyJustify(Justify j) {
+static taffy::AlignContent ToTaffyJustify(Justify j) {
     using K = taffy::AlignContentKeyword;
     switch (j) {
         case Justify::Center:
-            return taffy::OptJustifyContent(taffy::AlignContent{K::Center});
+            return taffy::AlignContent{K::Center};
         case Justify::End:
-            return taffy::OptJustifyContent(taffy::AlignContent{K::End});
+            return taffy::AlignContent{K::End};
         case Justify::SpaceBetween:
-            return taffy::OptJustifyContent(
-                taffy::AlignContent{K::SpaceBetween});
+            return taffy::AlignContent{K::SpaceBetween};
         case Justify::SpaceAround:
-            return taffy::OptJustifyContent(
-                taffy::AlignContent{K::SpaceAround});
+            return taffy::AlignContent{K::SpaceAround};
         case Justify::SpaceEvenly:
-            return taffy::OptJustifyContent(
-                taffy::AlignContent{K::SpaceEvenly});
+            return taffy::AlignContent{K::SpaceEvenly};
         case Justify::Start:
-            return taffy::OptJustifyContent(taffy::AlignContent{K::Start});
+            return taffy::AlignContent{K::Start};
         default:
 
-            return taffy::OptJustifyContent();
+            return taffy::AlignContent{K::Normal};
     }
 }
 
@@ -9667,12 +9817,12 @@ static taffy::Style ToTaffyStyle(const El* e) {
                  : s.flexWrapReverse ? taffy::FlexWrap::WrapReverse
                                      : taffy::FlexWrap::Wrap;
     if (s.alignContent != 0) {
-        t.alignContent = taffy::OptAlignContent(taffy::AlignContent{
-            (taffy::AlignContentKeyword)(s.alignContent - 1)});
+        t.alignContent = taffy::AlignContent{
+            (taffy::AlignContentKeyword)(s.alignContent - 1)};
     }
     t.alignItems = ToTaffyAlignItems(s.align, false);
     if (s.hasAlignSelf) {
-        t.alignSelf = ToTaffyAlignItems(s.alignSelf, true);
+        t.alignSelf = taffy::OptAlignSelf(ToTaffyAlignItems(s.alignSelf, true));
     }
     t.justifyContent = ToTaffyJustify(s.justify);
     t.overflow = {ToTaffyOverflow(s.overflowX), ToTaffyOverflow(s.overflowY)};
@@ -9740,12 +9890,16 @@ static taffy::Style ToTaffyStyle(const El* e) {
                    ToInset(s.absRight, s.absRightRel),
                    ToInsetY(s.absTop, s.absTopRel),
                    ToInsetY(s.absBottom, s.absBottomRel)};
+    } else {
+
+        t.position = taffy::Position::Relative;
     }
     return t;
 }
 
 struct LayoutMeasureCtx {
     PaintCtx* ctx;
+    taffy::CalcResolver calc;
 };
 
 static float TextMeasureWidth(const El* e, taffy::SizeFOpt known,
@@ -9767,16 +9921,18 @@ static float TextMeasureWidth(const El* e, taffy::SizeFOpt known,
     return 0.0f;
 }
 
-static taffy::SizeF LayoutMeasure(taffy::SizeFOpt known, taffy::SizeAvail avail,
-                                  taffy::NodeId node, void* nodeContext,
-                                  const taffy::Style* nodeStyle,
-                                  void* userData) {
-    (void)node;
-    (void)nodeStyle;
+struct LayoutMeasureSizeCtx {
+    LayoutMeasureCtx* mc;
+    LayoutNode* rec;
+};
 
-    LayoutNode* rec = (LayoutNode*)nodeContext;
+static taffy::SizeF LayoutMeasureSize(taffy::SizeFOpt known,
+                                      taffy::SizeAvail avail, void* user) {
+    LayoutMeasureSizeCtx* sc = (LayoutMeasureSizeCtx*)user;
+
+    LayoutNode* rec = sc->rec;
     El* e = rec ? rec->el : nullptr;
-    LayoutMeasureCtx* mc = (LayoutMeasureCtx*)userData;
+    LayoutMeasureCtx* mc = sc->mc;
     if (!e) {
         return taffy::SizeF::Zero();
     }
@@ -9827,6 +9983,18 @@ static taffy::SizeF LayoutMeasure(taffy::SizeFOpt known, taffy::SizeAvail avail,
         default:
             return taffy::SizeF::Zero();
     }
+}
+
+static taffy::LayoutOutput LayoutMeasure(const taffy::LayoutInput& inputs,
+                                         taffy::NodeId node, void* nodeContext,
+                                         const taffy::Style* nodeStyle,
+                                         void* userData) {
+    (void)node;
+    LayoutMeasureSizeCtx sc = {(LayoutMeasureCtx*)userData,
+                               (LayoutNode*)nodeContext};
+    taffy::CalcResolver calc = sc.mc ? sc.mc->calc : taffy::CalcResolver{};
+    return taffy::ComputeLeafLayout(inputs, *nodeStyle, calc, LayoutMeasureSize,
+                                    &sc);
 }
 
 static bool ElIsMeasured(const El* e) {
@@ -10490,8 +10658,14 @@ static void WriteBackEl(LayoutCache* lc, PaintCtx* ctx, El* e, float originX,
     e->y = originY + l.location.y;
     e->w = l.size.w;
     e->h = l.size.h;
-    e->contentW = l.contentSize.w;
-    e->contentH = l.contentSize.h;
+
+    e->contentW = l.scrollableOverflowRect.right;
+    e->contentH = l.scrollableOverflowRect.bottom;
+
+    if (e->input && e->style.overflowX == Overflow::Scroll &&
+        len(e->input->text) == 0 && e->contentW > e->w) {
+        e->contentW = e->w;
+    }
     ResolveRelLengths(e, l);
 
     if (e->kind == ElKind::Text) {
@@ -10905,7 +11079,7 @@ static void LayoutElIn(LayoutCache* lc, PaintCtx* ctx, El* e, float x, float y,
                                   : taffy::AvailableSpace::MaxContent();
     }
 
-    LayoutMeasureCtx mc = {ctx};
+    LayoutMeasureCtx mc = {ctx, lc->tree.calc};
     lc->tree.ComputeLayoutWithMeasure(root, space, LayoutMeasure, &mc);
 
     WriteBackEl(lc, ctx, e, x, y);
@@ -12686,6 +12860,9 @@ static void PaintCaretAt(PaintCtx* ctx, El* e, float font, int off,
     CaretPlace place = MeasureCaretPlace(ctx, e, font, off, lineEndAffinity);
     if (primary) {
         ApplyPrimaryCaret(e, place);
+        if (e->input && ctx && ctx->window) {
+            e->input->caretGeomFrame = ctx->window->frameSeq;
+        }
     }
     if (e->caretColor.a != 0) {
 
@@ -13054,6 +13231,7 @@ static void PaintElNodeInner(PaintCtx* ctx, El* e, bool skipOverlay) {
 
         ctx->hitParent = ctx->hits.len - 1;
     }
+    int scrollSlot = -1;
     if (e->style.overflowY == Overflow::Scroll ||
         e->style.overflowX == Overflow::Scroll) {
         ScrollRect sr;
@@ -13063,6 +13241,12 @@ static void PaintElNodeInner(PaintCtx* ctx, El* e, bool skipOverlay) {
         sr.scrollY = e->scrollY;
         sr.contentW = e->contentW;
         sr.scrollX = e->scrollX;
+
+        if (e->input && e->style.overflowY == Overflow::Scroll &&
+            e->input->contentH > 0 && e->input->viewH > 0) {
+            sr.contentH = e->input->contentH;
+            sr.viewportH = e->input->viewH;
+        }
         sr.mode = ElScrollMode(e, ctx->app);
         sr.barX = !e->noScrollbar && !e->noScrollbarX;
         sr.barY = !e->noScrollbar && !e->noScrollbarY;
@@ -13082,6 +13266,7 @@ static void PaintElNodeInner(PaintCtx* ctx, El* e, bool skipOverlay) {
         sr.maskHit = e->scrollMaskAxes ? ctx->hitParent : -1;
         sr.onScroll = e->onScroll;
         sr.input = e->input;
+        scrollSlot = ctx->scrolls.len;
         VecAppend(ctx->scrolls, sr);
     }
 
@@ -13164,22 +13349,40 @@ static void PaintElNodeInner(PaintCtx* ctx, El* e, bool skipOverlay) {
         ctx->hasHitMask = true;
     }
 
+    bool recordedInput = false;
     if (e->input && e->kind != ElKind::Text) {
         bool seen = false;
         for (int i = 0; i < ctx->inputs.len && !seen; i++) {
             seen = ctx->inputs[i] == e->input;
         }
         if (!seen) {
+            recordedInput = true;
             e->input->inputBounds = e->Bounds();
 
-            e->input->viewW = e->w - e->style.pad.HorizontalAxisSum();
+            float viewW = e->w - e->style.pad.HorizontalAxisSum();
+            float viewH = e->input->viewH;
 
             if (e->style.overflowY == Overflow::Scroll ||
                 e->style.overflowY == Overflow::Hidden) {
                 float vh = e->h - e->style.pad.VerticalAxisSum();
                 if (vh > 0) {
-                    e->input->viewH = vh;
+                    viewH = vh;
                 }
+            }
+
+            float lineH = e->input->lastLineH;
+            InputRevealCaretOnResize(e->input, viewW, viewH, lineH);
+            e->input->viewW = viewW;
+            if (viewH > 0 && (e->style.overflowY == Overflow::Scroll ||
+                              e->style.overflowY == Overflow::Hidden)) {
+                e->input->viewH = viewH;
+            }
+            InputRememberCaretGeometry(e->input);
+
+            if (scrollSlot >= 0 && e->style.overflowY == Overflow::Scroll &&
+                e->input->contentH > 0 && e->input->viewH > 0) {
+                ctx->scrolls[scrollSlot].contentH = e->input->contentH;
+                ctx->scrolls[scrollSlot].viewportH = e->input->viewH;
             }
 
             if (e->style.overflowX == Overflow::Scroll) {
@@ -13200,6 +13403,10 @@ static void PaintElNodeInner(PaintCtx* ctx, El* e, bool skipOverlay) {
         th.map = e->selMap;
         th.scope = ElSelectionScope(ctx, e);
         th.paintLayer = ctx->paintLayer;
+        if (ctx->tableCellDepth > 0) {
+            th.inCell = true;
+            th.cell = ctx->tableCell;
+        }
         VecAppend(ctx->texts, th);
         ctx->textDocLen += 1;
     }
@@ -13215,6 +13422,10 @@ static void PaintElNodeInner(PaintCtx* ctx, El* e, bool skipOverlay) {
         th.atom = true;
         th.scope = ElSelectionScope(ctx, e);
         th.paintLayer = ctx->paintLayer;
+        if (ctx->tableCellDepth > 0) {
+            th.inCell = true;
+            th.cell = ctx->tableCell;
+        }
         VecAppend(ctx->texts, th);
         ctx->textDocLen += 1;
     }
@@ -13248,6 +13459,10 @@ static void PaintElNodeInner(PaintCtx* ctx, El* e, bool skipOverlay) {
 
             th.scope = ElSelectionScope(ctx, e);
             th.paintLayer = ctx->paintLayer;
+            if (ctx->tableCellDepth > 0) {
+                th.inCell = true;
+                th.cell = ctx->tableCell;
+            }
             VecAppend(ctx->texts, th);
             ctx->textDocLen += len(e->text) + 1;
             int a = ctx->selA;
@@ -13477,6 +13692,8 @@ static void PaintElNodeInner(PaintCtx* ctx, El* e, bool skipOverlay) {
             SvgDrawXml(ctx, e->iconSvg, e->x, e->y, s, c, e->style.rotate);
         } else {
             Str path = e->iconPath.s ? e->iconPath : IconNamePath(e->icon);
+
+            path = IconPathResolve(path, ctx->app, e->arena);
             SvgDraw(ctx, path, e->x, e->y, s, c, e->style.rotate);
         }
     } else if (e->kind == ElKind::Progress) {
@@ -13514,6 +13731,13 @@ static void PaintElNodeInner(PaintCtx* ctx, El* e, bool skipOverlay) {
     if (e->selBlockPlugin) {
         ctx->blockPluginDepth++;
     }
+    Bounds savedTableCell = ctx->tableCell;
+    int savedTableCellDepth = ctx->tableCellDepth;
+    if (e->selTableCell) {
+        VecAppend(ctx->tableCells, e->Bounds());
+        ctx->tableCell = e->Bounds();
+        ctx->tableCellDepth++;
+    }
     for (El* c = e->first; c; c = c->next) {
         if (c->style.zIndex != 0) {
             sorted = true;
@@ -13537,12 +13761,18 @@ static void PaintElNodeInner(PaintCtx* ctx, El* e, bool skipOverlay) {
     } else {
         for (El* c = e->first; c; c = c->next) PaintElNode(ctx, c, skipOverlay);
     }
+
+    if (recordedInput) {
+        InputRequestReveal(e->input, ctx->window);
+    }
     if (pushed) {
         ctx->window->imageCacheStack.len--;
     }
     if (e->selBlockPlugin) {
         ctx->blockPluginDepth--;
     }
+    ctx->tableCell = savedTableCell;
+    ctx->tableCellDepth = savedTableCellDepth;
 
     if (e->selBlockPlugin && e->selectable && ctx->selPoints &&
         ctx->selA != ctx->selB) {
@@ -13572,20 +13802,38 @@ static void PaintElNodeInner(PaintCtx* ctx, El* e, bool skipOverlay) {
 
     ScrollbarMode barMode = ElScrollMode(e, ctx->app);
     bool overBox = e->Bounds().Contains({ctx->mouseX, ctx->mouseY});
+    bool covered = false;
+    if (e->scrollId != 0 && ctx->window) {
+        for (int i = 0; i < ctx->window->scrollbarOccluded.len; i++) {
+            if (ctx->window->scrollbarOccluded[i] == e->scrollId) {
+                covered = true;
+                break;
+            }
+        }
+    }
     bool dragging = ctx->scrollDragId != 0 && ctx->scrollDragId == e->scrollId;
     ScrollbarMotion barMotion =
         e->scrollThemeSet ? e->scrollMotion : ScrollbarMotionFor(barMode);
     float trackW = ScrollbarTrackWidth(e);
     if (trackW < 0) trackW = 0;
+
+    float scrollContentH = e->contentH;
+    float scrollViewportH = e->h;
+    if (e->input && e->style.overflowY == Overflow::Scroll &&
+        e->input->contentH > 0 && e->input->viewH > 0) {
+        scrollContentH = e->input->contentH;
+        scrollViewportH = e->input->viewH;
+    }
     bool canVertical = !e->noScrollbarY &&
                        e->style.overflowY == Overflow::Scroll &&
-                       e->contentH > e->h + 1.f && e->h > 0;
+                       scrollContentH > scrollViewportH + 1.f && e->h > 0;
     bool canHorizontal = !e->noScrollbarX &&
                          e->style.overflowX == Overflow::Scroll &&
                          e->contentW > e->w + 1.f && e->w > 0;
-    bool onBand =
-        overBox && ((canVertical && ctx->mouseX >= e->x + e->w - trackW) ||
-                    (canHorizontal && ctx->mouseY >= e->y + e->h - trackW));
+
+    bool onBand = overBox && !covered &&
+                  ((canVertical && ctx->mouseX >= e->x + e->w - trackW) ||
+                   (canHorizontal && ctx->mouseY >= e->y + e->h - trackW));
     bool barVisible = !e->noScrollbar;
     float barAlpha = 1.f;
     float barSlide = 0.f;
@@ -13632,6 +13880,10 @@ static void PaintElNodeInner(PaintCtx* ctx, El* e, bool skipOverlay) {
         }
     }
 
+    if (scrollSlot >= 0 && scrollSlot < ctx->scrolls.len) {
+        ctx->scrolls[scrollSlot].barHit = ctx->hits.len;
+    }
+
     ScrollFade* barState =
         e->scrollId != 0 ? ScrollFadeFor(e->scrollId, e->scrollY, e->scrollX)
                          : nullptr;
@@ -13640,10 +13892,10 @@ static void PaintElNodeInner(PaintCtx* ctx, El* e, bool skipOverlay) {
     bool hasVertical = barVisible && canVertical;
     bool hasHorizontal = barVisible && canHorizontal;
     if (hasVertical) {
-        bool onBar = overBox && ctx->mouseX >= e->x + e->w - trackW;
+        bool onBar = overBox && !covered && ctx->mouseX >= e->x + e->w - trackW;
         float normalInset = ScrollbarThumbInset(e, ScrollbarPaintState::Normal);
         ScrollbarThumbGeometry normal = ScrollbarGeometry(
-            e->y, e->h, e->contentH, 0, normalInset,
+            e->y, e->h, scrollViewportH, scrollContentH, 0, normalInset,
             ScrollbarThumbMinLength(e, ScrollbarPaintState::Normal));
         float normalStart = normal.Start(e->scrollY);
         bool pointerOnThumb = onBar &&
@@ -13659,8 +13911,8 @@ static void PaintElNodeInner(PaintCtx* ctx, El* e, bool skipOverlay) {
                                            : ScrollbarPaintState::Normal));
         float inset = ScrollbarThumbInset(e, state);
         ScrollbarThumbGeometry geometry =
-            ScrollbarGeometry(e->y, e->h, e->contentH, 0, inset,
-                              ScrollbarThumbMinLength(e, state));
+            ScrollbarGeometry(e->y, e->h, scrollViewportH, scrollContentH, 0,
+                              inset, ScrollbarThumbMinLength(e, state));
         float thumbH = geometry.length;
         float wantW = ScrollbarThumbWidth(e, state);
         float thumbW = wantW;
@@ -13681,11 +13933,11 @@ static void PaintElNodeInner(PaintCtx* ctx, El* e, bool skipOverlay) {
     }
     if (hasHorizontal) {
 
-        bool onBar = overBox && ctx->mouseY >= e->y + e->h - trackW;
+        bool onBar = overBox && !covered && ctx->mouseY >= e->y + e->h - trackW;
         float marginEnd = hasVertical ? trackW : 0;
         float normalInset = ScrollbarThumbInset(e, ScrollbarPaintState::Normal);
         ScrollbarThumbGeometry normal = ScrollbarGeometry(
-            e->x, e->w, e->contentW, marginEnd, normalInset,
+            e->x, e->w, e->w, e->contentW, marginEnd, normalInset,
             ScrollbarThumbMinLength(e, ScrollbarPaintState::Normal));
         float normalStart = normal.Start(e->scrollX);
         bool pointerOnThumb = onBar &&
@@ -13701,7 +13953,7 @@ static void PaintElNodeInner(PaintCtx* ctx, El* e, bool skipOverlay) {
                                            : ScrollbarPaintState::Normal));
         float inset = ScrollbarThumbInset(e, state);
         ScrollbarThumbGeometry geometry =
-            ScrollbarGeometry(e->x, e->w, e->contentW, marginEnd, inset,
+            ScrollbarGeometry(e->x, e->w, e->w, e->contentW, marginEnd, inset,
                               ScrollbarThumbMinLength(e, state));
         float thumbW = geometry.length;
         float wantH = ScrollbarThumbWidth(e, state);
@@ -13831,9 +14083,18 @@ static float DistToInterval(float v, float lo, float hi) {
     return 0.f;
 }
 
+static bool TextHitInCell(const TextHit& hit, const Bounds* cell) {
+    if (!cell) {
+        return true;
+    }
+    return hit.inCell && hit.cell.x == cell->x && hit.cell.y == cell->y &&
+           hit.cell.w == cell->w && hit.cell.h == cell->h;
+}
+
 static const TextHit* TextHitFind(PaintCtx* ctx, float x, float y, bool nearest,
                                   Point* outRel, int scope = -1,
-                                  int minLayer = 0) {
+                                  int minLayer = 0,
+                                  const Bounds* cell = nullptr) {
     if (!ctx) {
         return nullptr;
     }
@@ -13845,6 +14106,9 @@ static const TextHit* TextHitFind(PaintCtx* ctx, float x, float y, bool nearest,
             continue;
         }
         if (scope >= 0 && h.scope != scope) {
+            continue;
+        }
+        if (!TextHitInCell(h, cell)) {
             continue;
         }
         if (h.bounds.Contains({x, y})) {
@@ -13893,14 +14157,28 @@ static int TextHitLocal(PaintCtx* ctx, const TextHit* h, Point rel) {
     return local;
 }
 
+bool TextTableCellAt(const PaintCtx* ctx, float x, float y, Bounds* out) {
+    if (!ctx || !out) {
+        return false;
+    }
+    for (int i = ctx->tableCells.len - 1; i >= 0; i--) {
+        if (ctx->tableCells[i].Contains({x, y})) {
+            *out = ctx->tableCells[i];
+            return true;
+        }
+    }
+    return false;
+}
+
 int TextHitOffsetAt(PaintCtx* ctx, float x, float y, bool nearest) {
     return TextHitOffsetIn(ctx, x, y, nearest, -1, nullptr);
 }
 
 int TextHitOffsetIn(PaintCtx* ctx, float x, float y, bool nearest, int scope,
-                    int* outScope, int minLayer) {
+                    int* outScope, int minLayer, const Bounds* cell) {
     Point rel = {};
-    const TextHit* h = TextHitFind(ctx, x, y, nearest, &rel, scope, minLayer);
+    const TextHit* h =
+        TextHitFind(ctx, x, y, nearest, &rel, scope, minLayer, cell);
     if (!h) {
         return -1;
     }
@@ -14116,9 +14394,53 @@ static bool AtomReached(PaintCtx* ctx, int i, int a, int b, EntityId owner) {
     return a < pos - 1 && b >= pos - 1;
 }
 
+static bool AcrossStylesUsesSource(PaintCtx* ctx, int a, int b, int scope,
+                                   EntityId owner) {
+    const SelBlock* blk = nullptr;
+    const SelSource* grp = nullptr;
+    bool saw = false;
+    for (int i = 0; i < ctx->texts.len; i++) {
+        const TextHit& t = ctx->texts[i];
+        if ((scope >= 0 && t.scope != scope) ||
+            !TextHitOwnerMatches(t, owner)) {
+            continue;
+        }
+        bool take = false;
+        bool object = false;
+        if (t.blockPlugin) {
+            take = BlockPluginHitSelected(ctx, t, a, b);
+            object = take;
+        } else {
+            int pos = t.docOff;
+            int plen = len(t.text);
+            int lo = a > pos ? a : pos;
+            int hi = b < pos + plen ? b : pos + plen;
+            bool atom = t.atom && t.src && AtomReached(ctx, i, a, b, owner);
+            take = (lo < hi && t.text.s) || atom;
+            object = atom;
+        }
+        if (!take) {
+            continue;
+        }
+        const SelBlock* want = t.src ? t.src->block : nullptr;
+        const SelSource* mark = t.src;
+        if (!saw) {
+            saw = true;
+            blk = want;
+            grp = mark;
+        } else if (want != blk || mark != grp) {
+            return true;
+        }
+        if (object) {
+            return true;
+        }
+    }
+    return false;
+}
+
 static int CopyTextHitsFiltered(PaintCtx* ctx, int a, int b, int scope,
                                 EntityId owner, char* out, int cap,
-                                SelectionFormat fmt) {
+                                SelectionFormat fmt, const Bounds* cell) {
     if (!out || cap <= 0) {
         return 0;
     }
@@ -14131,6 +14453,11 @@ static int CopyTextHitsFiltered(PaintCtx* ctx, int a, int b, int scope,
         a = b;
         b = t;
     }
+    if (fmt == SelectionFormat::SourceAcrossStyles) {
+        fmt = AcrossStylesUsesSource(ctx, a, b, scope, owner)
+                  ? SelectionFormat::Source
+                  : SelectionFormat::Plain;
+    }
     bool src = fmt == SelectionFormat::Source;
     CopyOut o = {out, cap, 0};
 
@@ -14142,7 +14469,7 @@ static int CopyTextHitsFiltered(PaintCtx* ctx, int a, int b, int scope,
     for (int i = 0; i < ctx->texts.len && o.n < cap - 1; i++) {
         const TextHit& t = ctx->texts[i];
         if ((scope >= 0 && t.scope != scope) ||
-            !TextHitOwnerMatches(t, owner)) {
+            !TextHitOwnerMatches(t, owner) || !TextHitInCell(t, cell)) {
             continue;
         }
         if (t.blockPlugin) {
@@ -14185,7 +14512,8 @@ static int CopyTextHitsFiltered(PaintCtx* ctx, int a, int b, int scope,
             (lo < hi && t.text.s) ? Str(t.text.s + (lo - pos), hi - lo) : Str{};
 
         const SelSource* s = t.src;
-        const SelBlock* want = s ? s->block : nullptr;
+
+        const SelBlock* want = (cell || !s) ? nullptr : s->block;
 
         if (!(src && s && s == grp && t.join)) {
             if (src && grp) {
@@ -14234,18 +14562,23 @@ static int CopyTextHitsFiltered(PaintCtx* ctx, int a, int b, int scope,
     if (any && sep) {
         CopyPut(&o, Str("\n", 1));
     }
+    if (cell && fmt == SelectionFormat::Source && any && o.n > 0 &&
+        out[o.n - 1] != '\n') {
+        CopyPut(&o, Str("\n", 1));
+    }
     out[o.n] = 0;
     return o.n;
 }
 
 int CopyTextHitsIn(PaintCtx* ctx, int a, int b, int scope, char* out, int cap,
-                   SelectionFormat fmt) {
-    return CopyTextHitsFiltered(ctx, a, b, scope, {}, out, cap, fmt);
+                   SelectionFormat fmt, const Bounds* cell) {
+    return CopyTextHitsFiltered(ctx, a, b, scope, {}, out, cap, fmt, cell);
 }
 
 int CopyTextHitsInEntity(PaintCtx* ctx, int a, int b, int scope, EntityId owner,
-                         char* out, int cap, SelectionFormat fmt) {
-    return CopyTextHitsFiltered(ctx, a, b, scope, owner, out, cap, fmt);
+                         char* out, int cap, SelectionFormat fmt,
+                         const Bounds* cell) {
+    return CopyTextHitsFiltered(ctx, a, b, scope, owner, out, cap, fmt, cell);
 }
 
 static void CollectFocus(El* e, Window* win, int trap, Listener increment,
@@ -16654,10 +16987,15 @@ static int PredParse(Str spec, bool* ok) {
     return root;
 }
 
-static bool PredEval(int ix, const CtxLevel* levels, int n) {
+static bool PredEval(int ix, const CtxLevel* levels, int n, const CtxLevel* all,
+                     int nAll) {
     if (ix < 0 || n <= 0) {
 
         return false;
+    }
+    if (!all) {
+        all = levels;
+        nAll = n;
     }
     const PredNode p = gPreds[ix];
     uint32_t val = 0;
@@ -16670,14 +17008,23 @@ static bool PredEval(int ix, const CtxLevel* levels, int n) {
 
             return !ContextValue(levels[0], p.a, &val) || val != p.b;
         case PredOp::Not:
-            return !PredEval(p.l, levels, n);
+
+            for (int i = 0; i < nAll; i++) {
+                if (PredEval(p.l, all + i, nAll - i, all, nAll)) {
+                    return false;
+                }
+            }
+            return true;
         case PredOp::And:
-            return PredEval(p.l, levels, n) && PredEval(p.r, levels, n);
+            return PredEval(p.l, levels, n, all, nAll) &&
+                   PredEval(p.r, levels, n, all, nAll);
         case PredOp::Or:
-            return PredEval(p.l, levels, n) || PredEval(p.r, levels, n);
+            return PredEval(p.l, levels, n, all, nAll) ||
+                   PredEval(p.r, levels, n, all, nAll);
         case PredOp::Child:
 
-            return PredEval(p.r, levels, n) && PredEval(p.l, levels + 1, n - 1);
+            return PredEval(p.r, levels, n, all, nAll) &&
+                   PredEval(p.l, levels + 1, n - 1, all, nAll);
     }
     return false;
 }
@@ -16817,18 +17164,20 @@ void KeymapBind(const KeyBinding* bindings, int n) {
     }
 }
 
-static bool BindingApplies(const BoundKey& b, const CtxLevel* levels, int n) {
+static bool BindingApplies(const BoundKey& b, const CtxLevel* levels, int n,
+                           const CtxLevel* all, int nAll) {
     if (n == 0) {
         return b.pred < 0;
     }
-    return b.pred >= 0 && PredEval(b.pred, levels, n);
+    return b.pred >= 0 && PredEval(b.pred, levels, n, all, nAll);
 }
 
-static uint32_t MatchIn(const CtxLevel* levels, int n, bool* pending,
-                        int64_t* arg) {
+static uint32_t MatchIn(const CtxLevel* levels, int n, const CtxLevel* all,
+                        int nAll, bool* pending, int64_t* arg) {
     for (int i = len(gBindings) - 1; i >= 0; i--) {
         const BoundKey& b = gBindings[i];
-        if (!BindingApplies(b, levels, n) || b.nStrokes < gNPending) {
+        if (!BindingApplies(b, levels, n, all, nAll) ||
+            b.nStrokes < gNPending) {
             continue;
         }
         bool begins = true;
@@ -16854,18 +17203,20 @@ static uint32_t MatchIn(const CtxLevel* levels, int n, bool* pending,
 static uint32_t MatchStack(const CtxLevel* levels, int n, bool* pending,
                            int64_t* arg) {
     for (int lvl = 0; lvl < n; lvl++) {
-        uint32_t action = MatchIn(levels + lvl, n - lvl, pending, arg);
+        uint32_t action =
+            MatchIn(levels + lvl, n - lvl, levels, n, pending, arg);
         if (action) {
             return action;
         }
     }
-    return MatchIn(nullptr, 0, pending, arg);
+    return MatchIn(nullptr, 0, levels, n, pending, arg);
 }
 
 static bool BindingNames(const BoundKey& b, uint32_t action,
-                         const CtxLevel* levels, int n, KeyChord* out) {
+                         const CtxLevel* levels, int n, const CtxLevel* all,
+                         int nAll, KeyChord* out) {
     if (b.action != action || b.nStrokes <= 0 ||
-        !BindingApplies(b, levels, n)) {
+        !BindingApplies(b, levels, n, all, nAll)) {
         return false;
     }
     *out = b.strokes[0];
@@ -16891,13 +17242,14 @@ bool KeymapBindingForAction(uint32_t action, const uint32_t* contexts,
     for (int lvl = 0; lvl < nContexts; lvl++) {
         for (int i = len(gBindings) - 1; i >= 0; i--) {
             if (BindingNames(gBindings[i], action, levels + lvl,
-                             nContexts - lvl, out)) {
+                             nContexts - lvl, levels, nContexts, out)) {
                 return true;
             }
         }
     }
     for (int i = len(gBindings) - 1; i >= 0; i--) {
-        if (BindingNames(gBindings[i], action, nullptr, 0, out)) {
+        if (BindingNames(gBindings[i], action, nullptr, 0, levels, nContexts,
+                         out)) {
             return true;
         }
     }
@@ -20723,14 +21075,15 @@ void TestSimulateMouseMove(Window* win, Point position, bool pressed,
 }
 
 void TestSimulateMouseDown(Window* win, Point position, MouseButton button,
-                           Modifiers modifiers) {
-    Simulate(win, InputMouseDown(button, position.x, position.y, modifiers, 1,
-                                 false));
+                           Modifiers modifiers, int clickCount) {
+    Simulate(win, InputMouseDown(button, position.x, position.y, modifiers,
+                                 clickCount, false));
 }
 
 void TestSimulateMouseUp(Window* win, Point position, MouseButton button,
-                         Modifiers modifiers) {
-    Simulate(win, InputMouseUp(button, position.x, position.y, modifiers, 1));
+                         Modifiers modifiers, int clickCount) {
+    Simulate(win, InputMouseUp(button, position.x, position.y, modifiers,
+                               clickCount));
 }
 
 void TestSimulateScrollWheel(Window* win, Point position, Point delta,
@@ -20742,6 +21095,13 @@ void TestSimulateScrollWheel(Window* win, Point position, Point delta,
 void TestSimulateClick(Window* win, Point position, Modifiers modifiers) {
     TestSimulateMouseDown(win, position, MouseButton::Left, modifiers);
     TestSimulateMouseUp(win, position, MouseButton::Left, modifiers);
+}
+
+void TestDispatchInputRaw(Window* win, const PlatformInput& input) {
+    if (!win) {
+        return;
+    }
+    WindowDispatchInput(win, &input);
 }
 
 bool TestDispatchAction(Window* win, uint32_t action, int64_t arg) {
@@ -21114,6 +21474,8 @@ static uint64_t AccessibilityTreeHash(const Vec<AccessibilityNode>& nodes) {
 
 static void HitChain(Window* win, float x, float y, Vec<int>* out);
 
+static void NoteScrollbarOcclusion(Window* win);
+
 static void DrawFrame(Window* win, void* native, int pxW, int pxH, float dipW,
                       float dipH, bool headless) {
     if (!win) {
@@ -21160,6 +21522,8 @@ static void DrawFrame(Window* win, void* native, int pxW, int pxH, float dipW,
         VecReset(chain);
     }
 #endif
+
+    NoteScrollbarOcclusion(win);
     VecClear(win->paint.hits);
 
     {
@@ -21176,6 +21540,8 @@ static void DrawFrame(Window* win, void* native, int pxW, int pxH, float dipW,
     }
     VecClear(win->paint.scrolls);
     VecClear(win->paint.texts);
+    VecClear(win->paint.tableCells);
+    win->paint.tableCellDepth = 0;
     VecClear(win->paint.inputs);
     win->paint.textDocLen = 0;
     win->paint.selA = -1;
@@ -21355,6 +21721,8 @@ static void DrawFrame(Window* win, void* native, int pxW, int pxH, float dipW,
     WindowMotionSweep(win);
 
     WindowKeyedSweep(win);
+
+    TooltipDismissRemoved(win);
 
     if (HttpFetchPending() > 0) {
         PlatSetTimer(win, WindowTimerMs(win));
@@ -22032,6 +22400,11 @@ static void InputPress(Window* win, const MouseDownEvent& in) {
         return;
     }
 
+    if (in.button == MouseButton::Left && BaseIsTouchPress(win->app) &&
+        !s->readonly) {
+        WindowRequestVirtualKeyboard(win);
+    }
+
     InputFocus(s, win->app, win);
     BlinkPause(win->app, win, &s->blink);
 
@@ -22080,11 +22453,18 @@ static void InputPress(Window* win, const MouseDownEvent& in) {
     s->selecting = true;
 }
 
+static float ScrollViewportH(const ScrollRect& s) {
+    return s.viewportH > 0 ? s.viewportH : s.bounds.h;
+}
+static float ScrollViewportW(const ScrollRect& s) {
+    return s.viewportW > 0 ? s.viewportW : s.bounds.w;
+}
+
 static bool ScrollsY(const ScrollRect& s) {
-    return s.contentH > s.bounds.h + 1.f;
+    return s.contentH > ScrollViewportH(s) + 1.f;
 }
 static bool ScrollsX(const ScrollRect& s) {
-    return s.contentW > s.bounds.w + 1.f;
+    return s.contentW > ScrollViewportW(s) + 1.f;
 }
 
 static float ClampScroll(float off, float content, float viewport) {
@@ -22124,10 +22504,52 @@ static ScrollRect* ScrollbarAt(PaintCtx* ctx, float x, float y,
     return nullptr;
 }
 
+static bool ScrollbarCovered(const PaintCtx& paint, const ScrollRect& s,
+                             float x, float y) {
+    if (s.barHit < 0) {
+        return false;
+    }
+    int leaf = -1;
+    for (int i = paint.hits.len - 1; i >= 0; i--) {
+        if (paint.hits[i].bounds.Contains({x, y})) {
+            leaf = i;
+            break;
+        }
+    }
+    for (int i = leaf; i >= 0; i = paint.hits[i].parent) {
+        if (i >= s.barHit && paint.hits[i].stopMouseDown) {
+            return true;
+        }
+    }
+    return false;
+}
+
+static void NoteScrollbarOcclusion(Window* win) {
+    VecClear(win->scrollbarOccluded);
+    for (int i = 0; i < win->paint.scrolls.len; i++) {
+        const ScrollRect& s = win->paint.scrolls[i];
+        if (s.id == 0) {
+            continue;
+        }
+        bool onY = s.barY && ScrollsY(s) && win->mouseY >= s.bounds.y &&
+                   win->mouseY <= s.bounds.Bottom() &&
+                   win->mouseX >= s.bounds.Right() - s.trackWidth &&
+                   win->mouseX <= s.bounds.Right();
+        bool onX = s.barX && ScrollsX(s) && win->mouseX >= s.bounds.x &&
+                   win->mouseX <= s.bounds.Right() &&
+                   win->mouseY >= s.bounds.Bottom() - s.trackWidth &&
+                   win->mouseY <= s.bounds.Bottom();
+        if ((onY || onX) &&
+            ScrollbarCovered(win->paint, s, win->mouseX, win->mouseY)) {
+            VecAppend(win->scrollbarOccluded, s.id);
+        }
+    }
+}
+
 static void ScrollbarStore(Window* win, ScrollRect* s, float offsetX,
                            float offsetY) {
-    offsetX = ClampScroll(offsetX, s->contentW, s->bounds.w);
-    offsetY = ClampScroll(offsetY, s->contentH, s->bounds.h);
+    offsetX = ClampScroll(offsetX, s->contentW, ScrollViewportW(*s));
+    offsetY = ClampScroll(offsetY, s->contentH, ScrollViewportH(*s));
     s->scrollX = offsetX;
     s->scrollY = offsetY;
 
@@ -22217,13 +22639,15 @@ enum class ScrollbarPressKind : uint8_t {
 static bool ScrollbarPress(Window* win, ScrollRect* s, float x, float y,
                            bool horizontal, ScrollbarPressKind kind) {
     float track = horizontal ? s->bounds.w : s->bounds.h;
+    float viewport = horizontal ? ScrollViewportW(*s) : ScrollViewportH(*s);
     float content = horizontal ? s->contentW : s->contentH;
     float origin = horizontal ? s->bounds.x : s->bounds.y;
     float at = horizontal ? x : y;
     float marginEnd = horizontal && s->barY && ScrollsY(*s) ? s->trackWidth : 0;
     float current = horizontal ? s->scrollX : s->scrollY;
-    ScrollbarThumbGeometry geometry = ScrollbarGeometry(
-        origin, track, content, marginEnd, s->thumbInset, s->thumbMinLength);
+    ScrollbarThumbGeometry geometry =
+        ScrollbarGeometry(origin, track, viewport, content, marginEnd,
+                          s->thumbInset, s->thumbMinLength);
     float thumbStart = geometry.Start(current);
     float thumbLength = geometry.length;
     bool crossInside = horizontal ? y <= s->bounds.Bottom() - s->thumbInset
@@ -22233,7 +22657,7 @@ static bool ScrollbarPress(Window* win, ScrollRect* s, float x, float y,
     if (!onThumb) {
 
         ScrollbarThumbGeometry hover =
-            ScrollbarGeometry(origin, track, content, marginEnd,
+            ScrollbarGeometry(origin, track, viewport, content, marginEnd,
                               s->thumbHoverInset, s->thumbHoverMinLength);
         float hoverStart = hover.Start(current);
         float hoverLength = hover.length;
@@ -22249,7 +22673,7 @@ static bool ScrollbarPress(Window* win, ScrollRect* s, float x, float y,
     if (onThumb) {
 
         geometry =
-            ScrollbarGeometry(origin, track, content, marginEnd,
+            ScrollbarGeometry(origin, track, viewport, content, marginEnd,
                               s->thumbHoverInset, s->thumbHoverMinLength);
         thumbStart = geometry.Start(current);
         thumbLength = geometry.length;
@@ -22268,7 +22692,7 @@ static bool ScrollbarPress(Window* win, ScrollRect* s, float x, float y,
         win->scrollDragLastNotify = TimeNow();
 
         ScrollbarThumbGeometry active =
-            ScrollbarGeometry(origin, track, content, marginEnd,
+            ScrollbarGeometry(origin, track, viewport, content, marginEnd,
                               s->thumbActiveInset, s->thumbActiveMinLength);
         float off = active.DragOffset(at, win->scrollDragGrab, current);
         ScrollbarQueueDrag(win, s, horizontal ? off : s->scrollX,
@@ -22282,8 +22706,8 @@ static bool ScrollbarPress(Window* win, ScrollRect* s, float x, float y,
         off = geometry.DragOffset(at, geometry.length * .5f, current);
     } else {
         float direction = at < thumbStart ? -1.f : 1.f;
-        float viewport = horizontal ? s->bounds.w : s->bounds.h;
-        off = current + direction * viewport;
+        float page = horizontal ? s->bounds.w : s->bounds.h;
+        off = current + direction * page;
     }
     ScrollbarEmit(win, s, horizontal ? off : s->scrollX,
                   horizontal ? s->scrollY : off);
@@ -22338,13 +22762,14 @@ static bool ScrollbarDrag(Window* win, float x, float y,
     }
     bool horizontal = win->scrollDragHorizontal;
     float track = horizontal ? s->bounds.w : s->bounds.h;
+    float viewport = horizontal ? ScrollViewportW(*s) : ScrollViewportH(*s);
     float content = horizontal ? s->contentW : s->contentH;
     float origin = horizontal ? s->bounds.x : s->bounds.y;
     float at = horizontal ? x : y;
     float marginEnd = horizontal && s->barY && ScrollsY(*s) ? s->trackWidth : 0;
     float current = horizontal ? s->scrollX : s->scrollY;
     ScrollbarThumbGeometry geometry =
-        ScrollbarGeometry(origin, track, content, marginEnd,
+        ScrollbarGeometry(origin, track, viewport, content, marginEnd,
                           s->thumbActiveInset, s->thumbActiveMinLength);
     float off = geometry.DragOffset(at, win->scrollDragGrab, current);
     if (off == current && !immediate) return false;
@@ -22504,10 +22929,13 @@ static void DispatchMouseMove(Window* win, const MouseMoveEvent& in) {
                         win->tooltipPressedTrigger.w == tipAt.w &&
                         win->tooltipPressedTrigger.h == tipAt.h;
             if (!held) {
+                win->tooltipOwner = true;
+                win->tooltipOwnerPath = now->pathId;
                 TooltipRequestShow(win, tip, tipAt, tipPlacement, tipRoot,
                                    tipDelay);
             }
         } else {
+            win->tooltipOwner = false;
             TooltipRequestHide(win);
         }
         AppInvalidate(win);
@@ -22845,6 +23273,9 @@ static void DispatchMouseDown(Window* win, const MouseDownEvent& in) {
     }
     bool barHorizontal = false;
     ScrollRect* bar = ScrollbarAt(&win->paint, x, y, &barHorizontal);
+    if (bar && ScrollbarCovered(win->paint, *bar, x, y)) {
+        bar = nullptr;
+    }
     if (bar) {
         SetMouseDown(win, true);
         ScrollbarPressKind kind = in.modifiers.shift
@@ -23182,7 +23613,45 @@ static void DispatchScrollWheel(Window* win, const ScrollWheelEvent& in) {
         if (!s.onScroll.IsValid() || !s.bounds.Contains({in.x, in.y})) {
             continue;
         }
-        if (s.maskAxes) {
+
+        if (s.maskAxes & 4) {
+
+            if (!ScrollMaskIsTopmost(win, s, in.x, in.y)) {
+                AppInvalidate(win);
+                return;
+            }
+        }
+        if ((s.maskAxes & 4) && in.deltaX == 0) {
+            float dy = in.deltaY;
+            bool finite = dy == dy && (dy - dy) == 0.f;
+            if (!in.precise && dy != 0 && finite) {
+                float axisMax = s.contentW - s.bounds.w;
+                if (axisMax < 0) {
+                    axisMax = 0;
+                }
+                float current = s.scrollX;
+                if (current < 0) {
+                    current = 0;
+                }
+                if (current > axisMax) {
+                    current = axisMax;
+                }
+
+                float next = current - dy;
+                if (next < 0) {
+                    next = 0;
+                }
+                if (next > axisMax) {
+                    next = axisMax;
+                }
+                if (next != current) {
+                    ScrollbarEmit(win, &s, next, s.scrollY);
+                    return;
+                }
+            }
+            continue;
+        }
+        if (s.maskAxes & 3) {
 
             if (!ScrollMaskIsTopmost(win, s, in.x, in.y)) {
                 AppInvalidate(win);
@@ -23206,6 +23675,13 @@ static void DispatchScrollWheel(Window* win, const ScrollWheelEvent& in) {
                 takeY = !takeX;
             }
             if (takeX) {
+
+                if (horizontal.x != 0) {
+                    float axisMax = s.contentW - s.bounds.w;
+                    float moved = HorizontalScrollMoved(-s.scrollX,
+                                                        horizontal.x, axisMax);
+                    NoteHorizontalScrollClaim(moved);
+                }
                 float offX = ClampScroll(s.scrollX - horizontal.x, s.contentW,
                                          s.bounds.w);
                 if (offX != s.scrollX) {
@@ -23217,8 +23693,8 @@ static void DispatchScrollWheel(Window* win, const ScrollWheelEvent& in) {
                 return;
             }
             if (takeY) {
-                float offY =
-                    ClampScroll(s.scrollY - vertical.y, s.contentH, s.bounds.h);
+                float offY = ClampScroll(s.scrollY - vertical.y, s.contentH,
+                                         ScrollViewportH(s));
                 if (offY == s.scrollY) {
 
                     continue;
@@ -23234,17 +23710,19 @@ static void DispatchScrollWheel(Window* win, const ScrollWheelEvent& in) {
         if (!canY && !canX) {
             continue;
         }
-
         float dx = in.deltaX;
         float dy = in.deltaY;
-        if (canX && !canY && dx == 0) {
+
+        if (canX && !canY && dx == 0 && (s.maskAxes & 4) == 0) {
             dx = dy;
             dy = 0;
         }
-        float offY = canY ? ClampScroll(s.scrollY - dy, s.contentH, s.bounds.h)
-                          : s.scrollY;
-        float offX = canX ? ClampScroll(s.scrollX - dx, s.contentW, s.bounds.w)
-                          : s.scrollX;
+        float offY =
+            canY ? ClampScroll(s.scrollY - dy, s.contentH, ScrollViewportH(s))
+                 : s.scrollY;
+        float offX =
+            canX ? ClampScroll(s.scrollX - dx, s.contentW, ScrollViewportW(s))
+                 : s.scrollX;
         if (offX == s.scrollX && offY == s.scrollY) {
             AppInvalidate(win);
             return;
@@ -23297,6 +23775,11 @@ void WindowDispatchInput(Window* win, const PlatformInput* input) {
                 ScrollRect* bar =
                     ScrollbarAt(&win->paint, touch.startPosition.x,
                                 touch.startPosition.y, &horizontal);
+                if (bar &&
+                    ScrollbarCovered(win->paint, *bar, touch.startPosition.x,
+                                     touch.startPosition.y)) {
+                    bar = nullptr;
+                }
                 win->touchScrollbarDrag =
                     bar && ScrollbarPress(win, bar, touch.startPosition.x,
                                           touch.startPosition.y, horizontal,
@@ -23769,15 +24252,17 @@ bool WindowScrollApply(Window* win, float x, float y, float dx, float dy) {
         if (!s.onScroll.IsValid() || !s.bounds.Contains({x, y})) {
             continue;
         }
-        bool canY = s.contentH > s.bounds.h + 1.f;
-        bool canX = s.contentW > s.bounds.w + 1.f;
+        bool canY = s.contentH > ScrollViewportH(s) + 1.f;
+        bool canX = s.contentW > ScrollViewportW(s) + 1.f;
         if (!canY && !canX) {
             continue;
         }
-        float offY = canY ? ClampScroll(s.scrollY - dy, s.contentH, s.bounds.h)
-                          : s.scrollY;
-        float offX = canX ? ClampScroll(s.scrollX - dx, s.contentW, s.bounds.w)
-                          : s.scrollX;
+        float offY =
+            canY ? ClampScroll(s.scrollY - dy, s.contentH, ScrollViewportH(s))
+                 : s.scrollY;
+        float offX =
+            canX ? ClampScroll(s.scrollX - dx, s.contentW, ScrollViewportW(s))
+                 : s.scrollX;
         if (offX == s.scrollX && offY == s.scrollY) {
             return false;
         }
@@ -23833,6 +24318,10 @@ void WindowTouchMove(Window* win, float x, float y) {
         bool horizontal = false;
         ScrollRect* bar = ScrollbarAt(&win->paint, win->touchHostStart.x,
                                       win->touchHostStart.y, &horizontal);
+        if (bar && ScrollbarCovered(win->paint, *bar, win->touchHostStart.x,
+                                    win->touchHostStart.y)) {
+            bar = nullptr;
+        }
         if (bar) {
             win->touchHost = TouchHostKind::BarDrag;
             TouchHostEmitDrag(win, TouchPhase::Started, win->touchHostStart);
@@ -23897,30 +24386,52 @@ void WindowTouchCancel(Window* win) {
     TouchHostReset(win);
 }
 
-static const int kBlinkIntervalMs = 500;
 static const int kBlinkPauseMs = 300;
+
+struct BlinkRegistry {
+    Vec<EntityId> ids;
+};
 
 static BlinkCursor* BlinkGet(App* app, EntityId handle) {
     return (BlinkCursor*)EntityGet(app, handle);
 }
 
-void BlinkCursor::OnFlip(BlinkCursor* self, Ctx* cx, const TickEvent*) {
-    if (self->paused) {
-        return;
-    }
-    self->visible = !self->visible;
-    Notify(cx);
+static BlinkRegistry* BlinkRegistryOf(App* app) {
+    return AppGlobalGet<BlinkRegistry>(app);
 }
 
-void BlinkCursor::OnResume(BlinkCursor* self, Ctx* cx, const TickEvent*) {
+static void BlinkRegister(App* app, EntityId id) {
+    BlinkRegistry* reg = AppGlobalEnsure<BlinkRegistry>(app);
+    if (!reg || !id.IsValid()) {
+        return;
+    }
+    for (int i = 0; i < reg->ids.len; i++) {
+        if (reg->ids[i] == id) {
+            return;
+        }
+    }
+    VecAppend(reg->ids, id);
+}
 
-    self->paused = false;
-    self->visible = !self->visible;
-    Listener flip;
-    flip.SetFn(&BlinkCursor::OnFlip);
-    flip.view = cx->self;
-    self->timer = WindowSetInterval(cx->win, kBlinkIntervalMs, flip);
-    Notify(cx);
+static void BlinkUnregister(App* app, EntityId id) {
+    BlinkRegistry* reg = BlinkRegistryOf(app);
+    if (!reg) {
+        return;
+    }
+    for (int i = 0; i < reg->ids.len; i++) {
+        if (reg->ids[i] != id) {
+            continue;
+        }
+        reg->ids[i] = reg->ids[reg->ids.len - 1];
+        reg->ids.len--;
+        return;
+    }
+}
+
+BlinkCursor::~BlinkCursor() {
+    if (app) {
+        BlinkUnregister(app, self);
+    }
 }
 
 template <typename T, typename E>
@@ -23931,29 +24442,184 @@ static Listener BlinkListener(EntityId handle, void (*fn)(T*, Ctx*, const E*)) {
     return l;
 }
 
+static CursorBlink BlinkPolicyNow(App* app) {
+    const BaseTheme* theme = BaseThemeGlobal(app);
+    if (!theme) {
+        return {};
+    }
+    return theme->cursorBlink.Normalized();
+}
+
+static bool BlinkPolicySame(CursorBlink a, CursorBlink b) {
+    a = a.Normalized();
+    b = b.Normalized();
+    return a.intervalMs == b.intervalMs && a.idleTimeoutMs == b.idleTimeoutMs;
+}
+
+static int64_t BlinkNowMs() {
+    double ms = TimeNow() * 1000.0;
+    if (ms <= 0) {
+        return 0;
+    }
+    return (int64_t)(ms + 0.5);
+}
+
+static int BlinkElapsedMs(const BlinkCursor* b) {
+    if (!b || b->lastActivityMs < 0) {
+        return 0;
+    }
+    int64_t delta = BlinkNowMs() - b->lastActivityMs;
+    if (delta <= 0) {
+        return 0;
+    }
+    if (delta > 2000000000) {
+        return 2000000000;
+    }
+    return (int)delta;
+}
+
+static void BlinkSetVisible(BlinkCursor* b, bool visible) {
+    if (!b || b->visible == visible) {
+        return;
+    }
+    b->visible = visible;
+    if (b->win) {
+        AppInvalidate(b->win);
+    }
+}
+
+static void BlinkCancelTimer(BlinkCursor* b) {
+    if (b->timer && b->win) {
+        WindowCancelTimer(b->win, b->timer);
+    }
+    b->timer = 0;
+}
+
+static bool BlinkDelay(const BlinkCursor* b, int* outMs) {
+    if (!b || b->lastActivityMs < 0) {
+        return false;
+    }
+    int interval = 0;
+    if (!b->policy.Interval(&interval)) {
+        return false;
+    }
+    int elapsed = BlinkElapsedMs(b);
+    int delay = b->paused && elapsed < kBlinkPauseMs ? kBlinkPauseMs - elapsed
+                                                     : interval;
+    int idle = 0;
+    if (b->policy.IdleTimeout(&idle)) {
+        if (elapsed >= idle) {
+            return false;
+        }
+        int remain = idle - elapsed;
+        if (remain < delay) {
+            delay = remain;
+        }
+    }
+    if (delay < 1) {
+        delay = 1;
+    }
+    if (outMs) {
+        *outMs = delay;
+    }
+    return true;
+}
+
+static void BlinkSchedule(BlinkCursor* b);
+
+void BlinkCursor::OnTick(BlinkCursor* self, Ctx* cx, const TickEvent*) {
+    self->timer = 0;
+    if (self->epoch != self->armedEpoch) {
+        return;
+    }
+    int delay = 0;
+    if (BlinkDelay(self, &delay)) {
+
+        self->paused = false;
+        BlinkSetVisible(self, !self->visible);
+    }
+    BlinkSchedule(self);
+    (void)cx;
+}
+
+static void BlinkSchedule(BlinkCursor* b) {
+    BlinkCancelTimer(b);
+    int delay = 0;
+    if (!BlinkDelay(b, &delay)) {
+
+        b->paused = false;
+        BlinkSetVisible(b, true);
+        return;
+    }
+    if (!b->win) {
+        return;
+    }
+    b->armedEpoch = b->epoch;
+    b->timer = WindowSetTimeout(b->win, delay,
+                                BlinkListener(b->self, &BlinkCursor::OnTick));
+
+    int64_t fireAt = b->lastActivityMs + BlinkElapsedMs(b) + delay;
+    double due = (double)fireAt / 1000.0;
+    for (int i = 0; i < b->win->timers.len; i++) {
+        if (b->win->timers[i].id == b->timer) {
+            b->win->timers[i].dueAt = due;
+            break;
+        }
+    }
+}
+
+void BlinkRetarget(App* app, const CursorBlink& policy) {
+    BlinkRegistry* reg = BlinkRegistryOf(app);
+    if (!reg) {
+        return;
+    }
+    CursorBlink next = policy.Normalized();
+    for (int i = 0; i < reg->ids.len; i++) {
+        BlinkCursor* b = BlinkGet(app, reg->ids[i]);
+        if (!b || BlinkPolicySame(b->policy, next)) {
+            continue;
+        }
+        b->policy = next;
+
+        if (b->lastActivityMs < 0) {
+            continue;
+        }
+        b->epoch++;
+        BlinkSetVisible(b, true);
+        BlinkSchedule(b);
+    }
+}
+
 void BlinkStart(App* app, Window* win, EntityId* handle) {
     if (!app || !win || !handle) {
         return;
     }
     if (!handle->IsValid()) {
 
-        *handle = EntityNewRaw(app, new BlinkCursor(), nullptr,
-                               &EntityDropT<BlinkCursor>);
+        BlinkCursor* created = new BlinkCursor();
+        *handle =
+            EntityNewRaw(app, created, nullptr, &EntityDropT<BlinkCursor>);
+        if (!handle->IsValid()) {
+            delete created;
+            return;
+        }
+        created->app = app;
+        created->self = *handle;
+        created->win = win;
+        created->policy = BlinkPolicyNow(app);
+        BlinkRegister(app, *handle);
     }
     BlinkCursor* b = BlinkGet(app, *handle);
     if (!b) {
         return;
     }
 
-    if (b->timer) {
-        WindowCancelTimer(win, b->timer);
-        b->timer = 0;
-    }
+    b->win = win;
+    b->epoch++;
+    b->lastActivityMs = BlinkNowMs();
     b->paused = false;
-    b->visible = true;
-    b->timer = WindowSetInterval(win, kBlinkIntervalMs,
-                                 BlinkListener(*handle, &BlinkCursor::OnFlip));
-    AppInvalidate(win);
+    BlinkSetVisible(b, true);
+    BlinkSchedule(b);
 }
 
 void BlinkStop(App* app, Window* win, EntityId* handle) {
@@ -23964,11 +24630,12 @@ void BlinkStop(App* app, Window* win, EntityId* handle) {
     if (!b) {
         return;
     }
-    WindowCancelTimer(win, b->timer);
-    b->timer = 0;
+    b->win = win;
+    b->epoch++;
+    b->lastActivityMs = -1;
     b->paused = false;
-    b->visible = false;
-    AppInvalidate(win);
+    BlinkCancelTimer(b);
+    BlinkSetVisible(b, false);
 }
 
 void BlinkPause(App* app, Window* win, EntityId* handle) {
@@ -23976,24 +24643,22 @@ void BlinkPause(App* app, Window* win, EntityId* handle) {
         return;
     }
     BlinkCursor* b = BlinkGet(app, *handle);
-    if (!b || !b->timer) {
+
+    if (!b || b->lastActivityMs < 0) {
         return;
     }
-    WindowCancelTimer(win, b->timer);
+    b->win = win;
+    b->epoch++;
+    b->lastActivityMs = BlinkNowMs();
     b->paused = true;
-    b->visible = true;
-    b->timer = WindowSetTimeout(win, kBlinkPauseMs,
-                                BlinkListener(*handle, &BlinkCursor::OnResume));
-    AppInvalidate(win);
+    BlinkSetVisible(b, true);
+    BlinkSchedule(b);
 }
 
 bool BlinkVisible(App* app, EntityId handle) {
     BlinkCursor* b = BlinkGet(app, handle);
-    if (!b || !b->timer) {
-        return false;
-    }
 
-    return b->paused || b->visible;
+    return b && b->visible;
 }
 
 static const double kAnimationFrameInterval = 0.016;
@@ -24261,6 +24926,7 @@ static void AppRelease(App* app, bool platform) {
         VecReset(w->plotAppearScopes);
         VecReset(w->debugViewRoots);
         VecReset(w->debugHoveredPaths);
+        VecReset(w->scrollbarOccluded);
         WindowKeyedFree(w);
         WindowMotionFree(w);
         delete w;
@@ -24289,6 +24955,13 @@ void AppFree(App* app) {
 
 void AppFreeHeadless(App* app) {
     AppRelease(app, false);
+}
+
+void WindowRequestVirtualKeyboard(Window* win) {
+    if (!win) {
+        return;
+    }
+    win->virtualKeyboardRequests++;
 }
 
 void WindowRequestAnimationFrame(Window* win) {
@@ -24810,6 +25483,7 @@ namespace action {
     }
 
 GPUI_ACTION(Confirm, "ui::Confirm")
+GPUI_ACTION(NoAction, "gpui::NoAction")
 GPUI_ACTION(Cancel, "ui::Cancel")
 GPUI_ACTION(SelectUp, "ui::SelectUp")
 GPUI_ACTION(SelectDown, "ui::SelectDown")
@@ -25299,6 +25973,10 @@ El* Button::New(Ctx* cx, Str id, bool disabled, Listener onClick,
                 ->AriaDisabled(disabled);
     ApplyStyles(e, styles, selected, disabled);
     if (disabled) {
+
+        if (focusable) {
+            e->PathId(id)->TabStop(false);
+        }
         return e;
     }
     if (focusable) {
@@ -26344,7 +27022,8 @@ void ColorPickerSyncPending(ColorPickerState* s) {
 }
 
 uint32_t ColorPickerSliderColor(const ColorPickerState* s) {
-    Rgba c = HslaToRgba(s->sliders.Read());
+
+    Rgba c = HslaToRgbaRounded(s->sliders.Read());
     uint32_t rgb = ((uint32_t)c.r << 16) | ((uint32_t)c.g << 8) | (uint32_t)c.b;
 
     return c.a == 255 ? rgb : ((uint32_t)c.a << 24) | rgb;
@@ -27031,13 +27710,28 @@ void TableSetSelection(TableState* s, Ctx* cx, TableSelection selection) {
     }
 }
 
+void SelectOnModifierClick(TableState* s, bool value) {
+    if (s) {
+        s->selectOnModifierClick = value;
+    }
+}
+
+bool TableSelectsRowOnClick(const TableState* s, const Modifiers& modifiers) {
+    if (!s) {
+        return false;
+    }
+    return s->selectOnModifierClick ||
+           !(modifiers.Secondary() || modifiers.shift);
+}
+
 bool TableEscalatesToRow(const TableState* s, int row, int col,
-                         bool doubleClick) {
+                         bool doubleClick, const Modifiers& modifiers) {
     int cellRow = -1;
     int cellCol = -1;
     bool reselect = TableSelectedCell(s, &cellRow, &cellCol) &&
                     cellRow == row && cellCol == col;
-    return !s->rowHeader && s->rowSelectable && reselect && !doubleClick;
+    return !s->rowHeader && s->rowSelectable && reselect && !doubleClick &&
+           TableSelectsRowOnClick(s, modifiers);
 }
 
 void TableClearSelection(TableState* s, Ctx* cx) {
@@ -27222,7 +27916,10 @@ void TableState::OnRowClick(TableState* self, Ctx* cx, const ClickEvent* ev,
                             int64_t row) {
 
     WindowStopPropagation(cx);
-    TableSetSelectedRow(self, cx, (int)row);
+    Modifiers modifiers = ev ? ev->modifiers : Modifiers{};
+    if (TableSelectsRowOnClick(self, modifiers)) {
+        TableSetSelectedRow(self, cx, (int)row);
+    }
     if (ev->clickCount == 2) {
         TableEmit(self, cx, TableEventKind::DoubleClickedRow, (int)row, -1,
                   ColumnSort::Default);
@@ -27237,7 +27934,8 @@ void TableState::OnCellClick(TableState* self, Ctx* cx, const ClickEvent* ev,
     int row = TableCellRow(packed);
     int col = TableCellCol(packed);
     bool isDouble = ev->clickCount == 2;
-    if (TableEscalatesToRow(self, row, col, isDouble)) {
+    if (TableEscalatesToRow(self, row, col, isDouble,
+                            ev ? ev->modifiers : Modifiers{})) {
         TableSetSelectedRow(self, cx, row);
         return;
     }
@@ -28809,6 +29507,7 @@ namespace gpui {
 static uint64_t gNextPaneNodeId = 1;
 
 static const char kTabPanelName[] = "TabPanel";
+static const char kStackPanelName[] = "StackPanel";
 
 PaneNode* PaneNode::Split(NodeId id, Axis axis) {
     PaneNode* node = new PaneNode();
@@ -29494,6 +30193,11 @@ static PaneNode* BuildStateNode(PaneTree* tree, const DockAreaState* st, int ix,
         node->activeIx = sn.activeIndex;
         return node;
     }
+
+    if (sn.kind == PanelInfoKind::Panel &&
+        StrEq(sn.panelName, kStackPanelName)) {
+        return PaneNode::Split(id, Axis::Horizontal);
+    }
     PaneNode* node = PaneNode::Tabs(id);
     if (StrEq(sn.panelName, kTabPanelName)) {
         return node;
@@ -29520,8 +30224,10 @@ static void CollectTabPanels(const DockAreaState* st, int ix,
             CollectTabPanels(st, childIx, builder, out);
             continue;
         }
+
         if (child.kind == PanelInfoKind::Panel &&
-            StrEq(child.panelName, kTabPanelName)) {
+            (StrEq(child.panelName, kTabPanelName) ||
+             StrEq(child.panelName, kStackPanelName))) {
             continue;
         }
         if (builder.build) {
@@ -29984,6 +30690,8 @@ static int PanelForName(DockState* s, const PanelStateNode* saved, Arena* a,
             return DockAddPanelDef(s, built);
         }
     }
+
+    logf("the `%s` panel type is not registered in PanelRegistry", name);
     DockPanelDef def;
     def.name = StrDup(a, name);
     def.title = def.name;
@@ -30020,6 +30728,11 @@ static int LoadNode(DockState* s, const DockAreaState* st, int ix, Arena* a,
         return node;
     }
 
+    if (sn.kind == PanelInfoKind::Panel &&
+        StrEq(sn.panelName, StrL("StackPanel"))) {
+        return DockNewSplit(s, Axis::Horizontal);
+    }
+
     int node = DockNewTabs(s);
     if (node < 0) {
         return -1;
@@ -30029,6 +30742,11 @@ static int LoadNode(DockState* s, const DockAreaState* st, int ix, Arena* a,
             const PanelStateNode& leaf = st->nodes[sn.children[i]];
 
             if (leaf.kind != PanelInfoKind::Panel) {
+                continue;
+            }
+
+            if (StrEq(leaf.panelName, StrL("TabPanel")) ||
+                StrEq(leaf.panelName, StrL("StackPanel"))) {
                 continue;
             }
             int panelIx =
@@ -30270,6 +30988,19 @@ static void DockEmit(DockState* s, Ctx* cx) {
         ListenerCall(cx->app, cx->win, s->onEvent, &ev);
     }
     Notify(cx);
+}
+
+static void DockReportUserToggle(DockState* s, Ctx* cx, DockPlacement p,
+                                 bool wasOpen) {
+    DockSide* side = DockSideOf(s, p);
+    bool open = side && side->open;
+    if (open == wasOpen || !s->onUserToggle.IsValid()) {
+        return;
+    }
+    DockToggleEvent ev;
+    ev.placement = p;
+    ev.open = open;
+    ListenerCall(cx->app, cx->win, s->onUserToggle, &ev);
 }
 
 int DockPanelByName(const DockState* s, Str name) {
@@ -31403,7 +32134,9 @@ void DockState::OnTabClick(DockState* self, Ctx* cx, const ClickEvent*,
     DockPlacement p = DockPlacementOfNode(self, node);
     DockSide* side = DockSideOf(self, p);
     if (side && !side->open) {
+        bool wasOpen = side->open;
         DockToggleSide(self, cx, p);
+        DockReportUserToggle(self, cx, p, wasOpen);
     }
 }
 
@@ -31420,7 +32153,12 @@ void DockState::OnZoomClick(DockState* self, Ctx* cx, const ClickEvent*,
 
 void DockState::OnToggleSide(DockState* self, Ctx* cx, const ClickEvent*,
                              int64_t placement) {
-    DockToggleSide(self, cx, (DockPlacement)placement);
+
+    DockPlacement p = (DockPlacement)placement;
+    DockSide* side = DockSideOf(self, p);
+    bool wasOpen = side && side->open;
+    DockToggleSide(self, cx, p);
+    DockReportUserToggle(self, cx, p, wasOpen);
 }
 
 void DockState::OnTabDragMove(DockState* self, Ctx* cx,
@@ -31541,11 +32279,19 @@ void DockState::OnResizeDrag(DockState* self, Ctx* cx,
     if (!base::StrEq(ev->drag.kind, kDockResizeDrag)) {
         return;
     }
+
+    bool starting = !self->resizing;
     self->resizing = true;
     int node = DockUnpackNode(ev->drag.ix);
 
     if (node >= kDockSideBase) {
         DockPlacement p = (DockPlacement)(node - kDockSideBase);
+        if (starting || self->resizingSide != p) {
+            if (DockSide* side = DockSideOf(self, p)) {
+                self->resizeStartedOpen = side->open;
+                self->resizeTrackUser = true;
+            }
+        }
         self->resizingSide = p;
         if (DockSide* side = DockSideOf(self, p)) {
             side->SetResizing(true);
@@ -31577,14 +32323,21 @@ void DockState::OnResizeEnd(DockState* self, Ctx* cx, const MouseUpEvent*) {
     }
     self->resizing = false;
 
-    if (self->resizingSide != DockPlacement::Center) {
-        DockEndSideResize(self, cx, self->resizingSide);
+    DockPlacement placement = self->resizingSide;
+    bool wasOpen = self->resizeStartedOpen;
+    bool track = self->resizeTrackUser;
+    self->resizeTrackUser = false;
+    if (placement != DockPlacement::Center) {
+        DockEndSideResize(self, cx, placement);
     }
     self->left.SetResizing(false);
     self->right.SetResizing(false);
     self->bottom.SetResizing(false);
     self->resizingSide = DockPlacement::Center;
     DockEmit(self, cx);
+    if (track) {
+        DockReportUserToggle(self, cx, placement, wasOpen);
+    }
 }
 
 }
@@ -31602,6 +32355,7 @@ El* FocusTrapContainer::New(Ctx* cx, Str id, FocusHandle focus, El* child) {
     if (!cx || !child || !focus.IsValid()) {
         return child;
     }
+
     return child->Id(id)->TrackFocus(focus)->TrapId(focus.id);
 }
 
@@ -31625,9 +32379,34 @@ int FocusTrapActive(const Window* win) {
     return FocusTrapOf(win, win->focusId);
 }
 
+static bool TrapOffersTabStop(const Window* win, int trapId) {
+    for (int i = 0; i < win->focusEls.len; i++) {
+        if (win->focusEls[i].trapId == trapId && win->focusEls[i].tabStop) {
+            return true;
+        }
+    }
+    return false;
+}
+
 int FocusTrapTab(Window* win, bool backward) {
 
-    return FocusNext(win, FocusTrapActive(win), backward);
+    int trap = FocusTrapActive(win);
+    if (!trap) {
+        return FocusNext(win, 0, backward);
+    }
+    if (TrapOffersTabStop(win, trap)) {
+        return FocusNext(win, trap, backward);
+    }
+
+    if (win->focusId != trap) {
+        for (int i = 0; i < win->focusEls.len; i++) {
+            if (win->focusEls[i].id == trap) {
+                WindowSetFocusId(win, trap);
+                break;
+            }
+        }
+    }
+    return win->focusId;
 }
 
 bool FocusTrapEnter(Window* win, int trapId, bool backward) {
@@ -31698,9 +32477,47 @@ void BaseGlobalStateInit(App* app) {
 }
 
 void BaseSelectionFrameBegin(App* app) {
-    if (BaseGlobalState* state = BaseGlobalStateOf(app)) {
-        state->selectionDocumentOrder = 1;
+
+    (void)app;
+}
+
+static bool base_global_state_SamePoint(Point a, Point b) {
+    return a.x == b.x && a.y == b.y;
+}
+
+static bool base_global_state_SameBounds(Bounds a, Bounds b) {
+    return a.x == b.x && a.y == b.y && a.w == b.w && a.h == b.h;
+}
+
+bool ConfineToCell(bool hasAnchor, Point cellAnchor, Bounds cell, bool painting,
+                   Bounds paintingCell, Point anchor, Point cursor,
+                   Point* outAnchor, Point* outCursor) {
+    if (!hasAnchor || !base_global_state_SamePoint(cellAnchor, anchor)) {
+        if (outAnchor) {
+            *outAnchor = anchor;
+        }
+        if (outCursor) {
+            *outCursor = cursor;
+        }
+        return true;
     }
+    if (!painting || !base_global_state_SameBounds(paintingCell, cell)) {
+        return false;
+    }
+    Point clamped = cursor;
+    float right = cell.x + cell.w;
+    float bottom = cell.y + cell.h;
+    if (clamped.x < cell.x) clamped.x = cell.x;
+    if (clamped.x > right) clamped.x = right;
+    if (clamped.y < cell.y) clamped.y = cell.y;
+    if (clamped.y > bottom) clamped.y = bottom;
+    if (outAnchor) {
+        *outAnchor = anchor;
+    }
+    if (outCursor) {
+        *outCursor = clamped;
+    }
+    return true;
 }
 
 uint64_t BaseSelectionNextDocumentOrder(App* app) {
@@ -32031,7 +32848,16 @@ HoverCard* HoverCard::OnOpenChange(Listener fn) {
     return this;
 }
 
+HoverCard* HoverCard::Refine(const Style& s, uint32_t fields) {
+    style = s;
+    styleSet = fields;
+    return this;
+}
+
 El* HoverCard::IntoEl() {
+    if (styleSet && root) {
+        root->Refine(style, styleSet);
+    }
     return root;
 }
 }
@@ -32696,7 +33522,7 @@ Str TabSize::ToString(Arena* a) const {
 }
 
 int TabSize::IndentCount(Str line) const {
-    int tab = std::max(1, tabSize);
+    int tab = tabSize;
     int count = 0;
     for (int i = 0; i < len(line);) {
         uint32_t c = 0;
@@ -32705,7 +33531,10 @@ int TabSize::IndentCount(Str line) const {
             break;
         }
         if (c == '\t') {
-            count += tab;
+
+            if (tab > 0) {
+                count += tab - count % tab;
+            }
         } else if (c == ' ') {
             count++;
         } else {
@@ -32714,6 +33543,161 @@ int TabSize::IndentCount(Str line) const {
         i += n;
     }
     return count;
+}
+
+namespace {
+
+struct TabGlyph {
+    int index = 0;
+    float x = 0;
+};
+
+double TabFloor(double x) {
+    if (x <= 0) {
+        return 0;
+    }
+    return (double)(int64_t)x;
+}
+
+}
+
+float TabExpandedWidth(Str text, float stop,
+                       float (*measure)(void* user, Str text), void* user) {
+    if (!measure || len(text) <= 0) {
+        return 0;
+    }
+    bool has = false;
+    for (int i = 0; i < len(text); i++) {
+        if (text.s[i] == '\t') {
+            has = true;
+            break;
+        }
+    }
+    if (!has || stop <= 0.f) {
+        return measure(user, text);
+    }
+    double shaped = 0;
+    double shift = 0;
+    int i = 0;
+    while (i < len(text)) {
+        if (text.s[i] == '\t') {
+            float tabW = measure(user, Str(text.s + i, 1));
+            double start = shaped + shift;
+            double end = shaped + (double)tabW;
+            double next = (double)stop * (TabFloor(start / (double)stop) + 1.0);
+            shift = next - end;
+            shaped = end;
+            i++;
+            continue;
+        }
+        int j = i + 1;
+        while (j < len(text) && text.s[j] != '\t') {
+            j++;
+        }
+        shaped += (double)measure(user, Str(text.s + i, j - i));
+        i = j;
+    }
+    return (float)(shaped + shift);
+}
+
+bool TabExpandGlyphXs(Str text, float stop, float advance, float tabAdvance,
+                      float* xs, int cap, int* nOut, float* width) {
+    struct Adv {
+        float advance;
+        float tabAdvance;
+    };
+    Adv adv = {advance, tabAdvance};
+    auto measure = [](void* user, Str slice) -> float {
+        Adv* a = (Adv*)user;
+        float w = 0;
+        for (int i = 0; i < len(slice);) {
+            uint32_t c = 0;
+            int n = Utf8At(slice, i, &c);
+            if (n <= 0) {
+                break;
+            }
+            w += c == '\t' ? a->tabAdvance : a->advance;
+            i += n;
+        }
+        return w;
+    };
+    float shapedW = measure(&adv, text);
+    if (width) {
+        *width = shapedW;
+    }
+    Vec<TabGlyph> glyphs;
+    float x = 0;
+    for (int i = 0; i < len(text);) {
+        uint32_t c = 0;
+        int n = Utf8At(text, i, &c);
+        if (n <= 0) {
+            break;
+        }
+        TabGlyph g;
+        g.index = i;
+        g.x = x;
+        VecAppend(glyphs, g);
+        x += c == '\t' ? tabAdvance : advance;
+        i += n;
+    }
+    if (nOut) {
+        *nOut = len(glyphs);
+    }
+    bool has = false;
+    for (int i = 0; i < len(text); i++) {
+        if (text.s[i] == '\t') {
+            has = true;
+            break;
+        }
+    }
+    if (!has || stop <= 0.f) {
+        if (xs) {
+            for (int i = 0; i < len(glyphs) && i < cap; i++) {
+                xs[i] = glyphs[i].x;
+            }
+        }
+        return false;
+    }
+
+    Vec<int> tabAt;
+    Vec<float> tabShift;
+    double shift = 0;
+    int gCursor = 0;
+    for (int i = 0; i < len(text); i++) {
+        if (text.s[i] != '\t') {
+            continue;
+        }
+        while (gCursor < len(glyphs) && glyphs[gCursor].index < i) {
+            gCursor++;
+        }
+        float startX = gCursor < len(glyphs) ? glyphs[gCursor].x : shapedW;
+        int gEnd = gCursor;
+        while (gEnd < len(glyphs) && glyphs[gEnd].index < i + 1) {
+            gEnd++;
+        }
+        float endX = gEnd < len(glyphs) ? glyphs[gEnd].x : shapedW;
+        double start = (double)startX + shift;
+        double next = (double)stop * (TabFloor(start / (double)stop) + 1.0);
+        shift = next - (double)endX;
+        VecAppend(tabAt, i);
+        VecAppend(tabShift, (float)shift);
+    }
+    if (xs) {
+        int t = 0;
+        float s = 0;
+        for (int i = 0; i < len(glyphs) && i < cap; i++) {
+            while (t < len(tabAt) && tabAt[t] < glyphs[i].index) {
+                s = tabShift[t];
+                t++;
+            }
+            xs[i] = glyphs[i].x + s;
+        }
+    }
+    if (width) {
+        *width =
+            shapedW + (len(tabShift) > 0 ? tabShift[len(tabShift) - 1] : 0.f);
+    }
+    return true;
 }
 
 TextDecoration TextDecoration::New(Selection range, const TextSpan& style) {
@@ -33007,7 +33991,7 @@ int DecorationCollections::BuildSpans(TextSpan* out, int cap) const {
 
 TextDecorationCollection InputCreateDecorationsCollection(
     InputState* s, const TextDecoration* decorations, int n) {
-    if (!s) {
+    if (!s || s->kind != InputKind::Editor) {
         return TextDecorationCollection{};
     }
     if (!s->textDecorations) {
@@ -34097,6 +35081,159 @@ void LineBreakOpportunities(Str text, Vec<int>* out) {
     }
 }
 
+bool WidthRange::Fits(float measured, float available, float indent) {
+    bool fits = measured <= available;
+    float boundary = measured + indent;
+    if (fits) {
+        float up = nextafterf(boundary, HUGE_VALF);
+        if (up == up && up > minimum) {
+            minimum = up;
+        }
+    } else {
+        float down = nextafterf(boundary, -HUGE_VALF);
+        if (down == down && down < maximum) {
+            maximum = down;
+        }
+    }
+    return fits;
+}
+
+static int FittingCount(const int* candidates, int nCandidates, Str text,
+                        int start, float available, float indent, int limit,
+                        bool hasLimit, WidthRange* valid, WrapMeasureFn measure,
+                        void* user) {
+    auto fits = [&](int end) -> int {
+        if (hasLimit && end > limit) {
+            return -1;
+        }
+        float measured = measure(user, Str(text.s + start, end - start));
+        return valid->Fits(measured, available, indent) ? 1 : 0;
+    };
+    int low = 0;
+    int high = 1;
+    while (high <= nCandidates) {
+        int answer = fits(candidates[high - 1]);
+        if (answer < 0) {
+            return -1;
+        }
+        if (answer == 0) {
+            break;
+        }
+        low = high;
+        if (high == nCandidates) {
+            break;
+        }
+        high = high > nCandidates / 2 ? nCandidates : high * 2;
+    }
+    while (low + 1 < high) {
+        int mid = (low + high) / 2;
+        int answer = fits(candidates[mid - 1]);
+        if (answer < 0) {
+            return -1;
+        }
+        if (answer) {
+            low = mid;
+        } else {
+            high = mid;
+        }
+    }
+    return low;
+}
+
+void MeasuredWrap(Str text, float width, WrappingIndent indentMode,
+                  WrapMeasureFn measure, void* user, Vec<WrapBoundary>* out,
+                  WidthRange* valid) {
+    WidthRange local = WidthRange::All();
+    if (!valid) {
+        valid = &local;
+    } else {
+        *valid = WidthRange::All();
+    }
+    int n = len(text);
+    if (n <= 0 || !measure) {
+        return;
+    }
+    int indent = 0;
+    if (indentMode == WrappingIndent::Same) {
+        while (indent < n && text.s[indent] == ' ' &&
+               indent < kLineWrapperMaxIndent) {
+            indent++;
+        }
+    }
+    float indentWidth = measure(user, Str(text.s, indent));
+    Vec<int> ends;
+    for (int at = 0; at < n;) {
+        uint32_t c = 0;
+        int bytes = Utf8At(text, at, &c);
+        at += bytes > 0 ? bytes : 1;
+        if (TextIsGraphemeBoundary(text, at)) {
+            VecAppend(ends, at);
+        }
+    }
+    if (len(ends) == 0 || ends[len(ends) - 1] != n) {
+        VecAppend(ends, n);
+    }
+    Vec<int> all;
+    LineBreakOpportunities(text, &all);
+    Vec<int> opportunities;
+    for (int i = 0; i < len(all); i++) {
+        if (TextIsGraphemeBoundary(text, all[i])) {
+            VecAppend(opportunities, all[i]);
+        }
+    }
+
+    const int kMaxWordProbeGraphemes = 256;
+    int first = 0;
+    int start = 0;
+    while (first < len(ends)) {
+        float available = start == 0 ? width : width - indentWidth;
+        float rowIndent = start == 0 ? 0.f : indentWidth;
+        int wordProbeEnd = n;
+        if (len(ends) - first >= kMaxWordProbeGraphemes) {
+            wordProbeEnd = ends[first + kMaxWordProbeGraphemes - 1];
+        }
+        int firstWord = 0;
+        while (firstWord < len(opportunities)) {
+            int ix = opportunities[firstWord];
+            bool skip = ix <= start || (start == 0 && ix <= indent);
+            if (!skip) {
+                break;
+            }
+            firstWord++;
+        }
+        const int* words = opportunities.els + firstWord;
+        int nWords = len(opportunities) - firstWord;
+        int wordCount =
+            FittingCount(words, nWords, text, start, available, rowIndent,
+                         wordProbeEnd, true, valid, measure, user);
+        int end = 0;
+        if (wordCount > 0) {
+            end = words[wordCount - 1];
+        } else {
+            int count = FittingCount(ends.els + first, len(ends) - first, text,
+                                     start, available, rowIndent, 0, false,
+                                     valid, measure, user);
+            int fittingEnd = ends[first + std::max(count, 1) - 1];
+            if (fittingEnd == n) {
+                break;
+            }
+            int wc = 0;
+            while (wc < nWords && words[wc] <= fittingEnd) {
+                wc++;
+            }
+            end = wc >= 1 ? words[wc - 1] : fittingEnd;
+        }
+        if (end == n) {
+            break;
+        }
+        VecAppend(*out, WrapBoundary{end, indent});
+        while (first < len(ends) && ends[first] <= end) {
+            first++;
+        }
+        start = end;
+    }
+}
+
 void MeasuredWrapBoundaries(Str text, float width, WrappingIndent indentMode,
                             WrapMeasureFn measure, void* user,
                             Vec<WrapBoundary>* out, WrapCharWidth hint,
@@ -34708,6 +35845,25 @@ Lsp& Lsp::CompletionMenu(const CompletionMenuOptions& options) {
     return *this;
 }
 
+Lsp& Lsp::WithCompletionHighlighter(CompletionHighlighter highlighter) {
+    SetCompletionHighlighter(highlighter);
+    return *this;
+}
+
+void Lsp::SetCompletionHighlighter(CompletionHighlighter highlighter) {
+    completionHighlighter = highlighter;
+    if (state) {
+        state->completionHighlight = completionHighlighter;
+        if (state->focusWin) {
+            AppInvalidate(state->focusWin);
+        }
+    }
+}
+
+CompletionHighlighter Lsp::GetCompletionHighlighter() const {
+    return completionHighlighter;
+}
+
 void Lsp::Install(InputState* input) {
     state = input;
     if (!state) {
@@ -34718,6 +35874,7 @@ void Lsp::Install(InputState* input) {
     state->codeActionProvider = nullptr;
     state->codeActionData = nullptr;
     completionProvider.Install(state, completionMenu);
+    state->completionHighlight = completionHighlighter;
     hoverProvider.Install(state);
     definitionProvider.Install(state);
     documentColorProvider.Install(state);
@@ -34783,6 +35940,306 @@ int Lsp::SemanticTokensForRange(Selection visible,
         }
         total++;
     }
+    return total;
+}
+
+static uint32_t CompletionLower(uint32_t c) {
+    if (c >= 'A' && c <= 'Z') {
+        return c + 0x20;
+    }
+    if ((c >= 0x00c0 && c <= 0x00d6) || (c >= 0x00d8 && c <= 0x00de)) {
+        return c + 0x20;
+    }
+    if (c >= 0x0100 && c <= 0x012f && (c & 1) == 0) {
+        return c + 1;
+    }
+    if (c >= 0x0132 && c <= 0x0137 && (c & 1) == 0) {
+        return c + 1;
+    }
+    if (c >= 0x014a && c <= 0x0177 && (c & 1) == 0) {
+        return c + 1;
+    }
+    if (c >= 0x0391 && c <= 0x03a1) {
+        return c + 0x20;
+    }
+    if (c >= 0x03a3 && c <= 0x03ab) {
+        return c + 0x20;
+    }
+    if (c >= 0x0410 && c <= 0x042f) {
+        return c + 0x20;
+    }
+    if (c >= 0x0400 && c <= 0x040f) {
+        return c + 0x50;
+    }
+    if (c >= 0x0531 && c <= 0x0556) {
+        return c + 0x30;
+    }
+    return c;
+}
+
+static bool CharsEqIgnoreCase(uint32_t left, uint32_t right) {
+    if (left == right) {
+        return true;
+    }
+    uint32_t al = left;
+    uint32_t ar = right;
+    if (al >= 'A' && al <= 'Z') {
+        al += 0x20;
+    }
+    if (ar >= 'A' && ar <= 'Z') {
+        ar += 0x20;
+    }
+    if (al < 0x80 && ar < 0x80 && al == ar) {
+        return true;
+    }
+    return CompletionLower(left) == CompletionLower(right);
+}
+
+static int base_input_lsp_Utf8Next(Str s, int i, uint32_t* cp) {
+    if (i < 0 || i >= len(s) || !s.s) {
+        return 0;
+    }
+    unsigned char c = (unsigned char)s.s[i];
+    int n = 1;
+    uint32_t v = c;
+    if (c < 0x80) {
+        *cp = c;
+        return 1;
+    }
+    if ((c & 0xE0) == 0xC0) {
+        n = 2;
+        v = c & 0x1F;
+    } else if ((c & 0xF0) == 0xE0) {
+        n = 3;
+        v = c & 0x0F;
+    } else if ((c & 0xF8) == 0xF0) {
+        n = 4;
+        v = c & 0x07;
+    } else {
+        *cp = 0xFFFD;
+        return 1;
+    }
+    if (i + n > len(s)) {
+        *cp = 0xFFFD;
+        return 1;
+    }
+    for (int k = 1; k < n; k++) {
+        unsigned char cc = (unsigned char)s.s[i + k];
+        if ((cc & 0xC0) != 0x80) {
+            *cp = 0xFFFD;
+            return 1;
+        }
+        v = (v << 6) | (cc & 0x3F);
+    }
+    *cp = v;
+    return n;
+}
+
+static bool base_input_lsp_Utf8Boundary(Str s, int index) {
+    if (index < 0 || index > len(s)) {
+        return false;
+    }
+    if (index == 0 || index == len(s)) {
+        return true;
+    }
+    return ((unsigned char)s.s[index] & 0xC0) != 0x80;
+}
+
+static int FloorCharBoundary(Str s, int index) {
+    if (index < 0) {
+        return 0;
+    }
+    if (index > len(s)) {
+        index = len(s);
+    }
+    while (index > 0 && !base_input_lsp_Utf8Boundary(s, index)) {
+        index--;
+    }
+    return index;
+}
+
+static int WriteRanges(const ByteRange* ranges, int n, ByteRange* out,
+                       int cap) {
+    int write = 0;
+    if (out && cap > 0) {
+        write = n < cap ? n : cap;
+        for (int i = 0; i < write; i++) {
+            out[i] = ranges[i];
+        }
+    }
+    return n;
+}
+
+int HighlightPrefix(void* data, Str query, const CompletionItem* item,
+                    ByteRange* out, int cap) {
+    (void)data;
+    if (!item) {
+        return 0;
+    }
+    int matched = item->hasFilterText ? len(item->filterText) : len(query);
+    if (matched > len(item->label)) {
+        matched = len(item->label);
+    }
+    int end = FloorCharBoundary(item->label, matched);
+    if (end == 0) {
+        return 0;
+    }
+    ByteRange range = {0, end};
+    return WriteRanges(&range, 1, out, cap);
+}
+
+int HighlightContains(void* data, Str query, const CompletionItem* item,
+                      ByteRange* out, int cap) {
+    (void)data;
+    if (!item || len(query) == 0 || !query.s || !item->label.s) {
+        return 0;
+    }
+    int queryChars = 0;
+    for (int i = 0; i < len(query);) {
+        uint32_t cp = 0;
+        int adv = base_input_lsp_Utf8Next(query, i, &cp);
+        if (adv <= 0) {
+            break;
+        }
+        i += adv;
+        queryChars++;
+    }
+    if (queryChars == 0) {
+        return 0;
+    }
+    int labelChars = 0;
+    for (int i = 0; i < len(item->label);) {
+        uint32_t cp = 0;
+        int adv = base_input_lsp_Utf8Next(item->label, i, &cp);
+        if (adv <= 0) {
+            break;
+        }
+        i += adv;
+        labelChars++;
+    }
+    if (labelChars < queryChars) {
+        return 0;
+    }
+    int startByte = 0;
+    for (int start = 0; start <= labelChars - queryChars; start++) {
+        int li = startByte;
+        int qi = 0;
+        int lastEnd = startByte;
+        bool matched = true;
+        for (int k = 0; k < queryChars; k++) {
+            uint32_t qc = 0;
+            uint32_t lc = 0;
+            int qa = base_input_lsp_Utf8Next(query, qi, &qc);
+            int la = base_input_lsp_Utf8Next(item->label, li, &lc);
+            if (qa <= 0 || la <= 0 || !CharsEqIgnoreCase(qc, lc)) {
+                matched = false;
+                break;
+            }
+            qi += qa;
+            li += la;
+            lastEnd = li;
+        }
+        if (matched) {
+            ByteRange range = {startByte, lastEnd};
+            return WriteRanges(&range, 1, out, cap);
+        }
+        uint32_t skip = 0;
+        int sa = base_input_lsp_Utf8Next(item->label, startByte, &skip);
+        if (sa <= 0) {
+            break;
+        }
+        startByte += sa;
+    }
+    return 0;
+}
+
+int HighlightCharacters(void* data, Str query, const CompletionItem* item,
+                        ByteRange* out, int cap) {
+    (void)data;
+    if (!item || len(query) == 0 || !query.s) {
+        return 0;
+    }
+    Vec<ByteRange> ranges;
+    int base = 0;
+    Str rest = item->label;
+    for (int qi = 0; qi < len(query);) {
+        uint32_t qc = 0;
+        int qa = base_input_lsp_Utf8Next(query, qi, &qc);
+        if (qa <= 0) {
+            break;
+        }
+        qi += qa;
+        int index = 0;
+        int matchedLen = 0;
+        bool found = false;
+        for (int i = 0; i < len(rest);) {
+            uint32_t lc = 0;
+            int la = base_input_lsp_Utf8Next(rest, i, &lc);
+            if (la <= 0) {
+                break;
+            }
+            if (CharsEqIgnoreCase(qc, lc)) {
+                index = i;
+                matchedLen = la;
+                found = true;
+                break;
+            }
+            i += la;
+        }
+        if (!found) {
+            return 0;
+        }
+        int start = base + index;
+        int end = start + matchedLen;
+        int next = index + matchedLen;
+        base += next;
+        if (rest.s) {
+            rest = Str(rest.s + next, len(rest) - next);
+        }
+        if (len(ranges) > 0 && ranges[len(ranges) - 1].end == start) {
+            ranges[len(ranges) - 1].end = end;
+        } else {
+            ByteRange range = {start, end};
+            VecAppend(ranges, range);
+        }
+    }
+    int n = len(ranges);
+    WriteRanges(ranges.els, n, out, cap);
+    return n;
+}
+
+int RetainHighlightRanges(Str label, const ByteRange* ranges, int n,
+                          ByteRange* out, int cap) {
+    Vec<ByteRange> kept;
+    for (int i = 0; i < n; i++) {
+        const ByteRange& range = ranges[i];
+        if (range.start < range.end && range.end <= len(label) &&
+            base_input_lsp_Utf8Boundary(label, range.start) &&
+            base_input_lsp_Utf8Boundary(label, range.end)) {
+            VecAppend(kept, range);
+        }
+    }
+    for (int i = 1; i < len(kept); i++) {
+        ByteRange key = kept[i];
+        int j = i - 1;
+        while (j >= 0 && kept[j].start > key.start) {
+            kept[j + 1] = kept[j];
+            j--;
+        }
+        kept[j + 1] = key;
+    }
+    Vec<ByteRange> merged;
+    for (int i = 0; i < len(kept); i++) {
+        if (len(merged) > 0 && kept[i].start <= merged[len(merged) - 1].end) {
+            if (kept[i].end > merged[len(merged) - 1].end) {
+                merged[len(merged) - 1].end = kept[i].end;
+            }
+        } else {
+            VecAppend(merged, kept[i]);
+        }
+    }
+    int total = len(merged);
+    WriteRanges(merged.els, total, out, cap);
     return total;
 }
 
@@ -35553,6 +37010,94 @@ InputEditorStyle InputEditorStyleResolve(const InputEditorStyle& projected,
     return out;
 }
 
+InputAccessibility InputAccessibility::New(const AccessibilityRole* role) {
+    InputAccessibility out;
+    if (role && *role != AccessibilityRole::None) {
+        out.hasRole = true;
+        out.role = *role;
+    }
+    return out;
+}
+
+InputAccessibility InputAccessibility::WithLabel(Str value) const {
+    InputAccessibility out = *this;
+    out.label = value;
+    return out;
+}
+
+InputAccessibility InputAccessibility::WithPlaceholder(Str value) const {
+    InputAccessibility out = *this;
+    out.placeholder = value;
+    return out;
+}
+
+InputAccessibility InputAccessibility::WithAccessibilityId(Str value) const {
+    InputAccessibility out = *this;
+    out.accessibilityId = value;
+    return out;
+}
+
+InputAccessibility InputAccessibility::WithValueExposed(bool exposed) const {
+    InputAccessibility out = *this;
+    out.valueExposed = exposed;
+    return out;
+}
+
+void InputSetAccessibility(InputState* state, const InputAccessibility& value) {
+    if (!state) {
+        return;
+    }
+    state->accessibilitySet = true;
+    state->accessibilityHasRole = value.hasRole;
+    state->accessibilityRole = value.role;
+    state->accessibilityLabel = value.label;
+    state->accessibilityPlaceholder = value.placeholder;
+    state->accessibilityAuthorId = value.accessibilityId;
+    state->accessibilityValueExposed = value.valueExposed;
+}
+
+void InputAccessibilityFocus(InputState* state, Window* win) {
+    if (!state || state->disabled || !win) {
+        return;
+    }
+    FocusHandleFocus(win, state->focus);
+}
+
+bool InputAccessibilitySetValue(InputState* state, App* app, Window* win,
+                                const Str* value) {
+    if (!state || !value || !InputIsEditable(state)) {
+        return false;
+    }
+    InputReplaceAll(state, app, win, *value);
+    return true;
+}
+
+static void ApplyEditorAccessibility(El* el, const InputState* state,
+                                     bool masked, Str value) {
+    if (!el || !state || !state->accessibilitySet) {
+        return;
+    }
+    el->Id(StrL("input-state"));
+    if (state->accessibilityHasRole) {
+        el->Role(state->accessibilityRole);
+    }
+    if (state->accessibilityLabel.s) {
+        el->AriaLabel(state->accessibilityLabel);
+    }
+    if (state->accessibilityPlaceholder.s) {
+        el->AriaPlaceholder(state->accessibilityPlaceholder);
+    }
+    if (state->accessibilityAuthorId.s) {
+        el->AccessibilityId(state->accessibilityAuthorId);
+    }
+    if (state->accessibilityValueExposed && !masked) {
+        el->AriaValue(value.s ? value : StrL(""));
+    }
+    if (state->disabled) {
+        el->AriaDisabled(true);
+    }
+}
+
 El* InputBase::New(Ctx* cx, Str id, bool interactive, AccessibilityRole role) {
     Arena* a = cx->a;
     return (interactive ? Div(a)->PathId(id) : Div(a)->Id(id))
@@ -35570,9 +37115,22 @@ El* InputBase::New(Ctx* cx, Str id, const InputPresentation& presentation,
     return element;
 }
 
+static int MapTabOff(const int* map, int n, int src) {
+    if (!map) {
+        return src;
+    }
+    if (src < 0) {
+        return 0;
+    }
+    if (src > n) {
+        src = n;
+    }
+    return map[src];
+}
+
 static El* RowMatchWashes(Arena* a, El* el, const InputEditorStyle& style,
-                          const InputState* state, int start, int len,
-                          int* at) {
+                          const InputState* state, int start, int len, int* at,
+                          const int* tabMap) {
     int nColors = 0;
     if (state) {
         for (int i = 0; i < state->documentColors.len; i++) {
@@ -35601,8 +37159,8 @@ static El* RowMatchWashes(Arena* a, El* el, const InputEditorStyle& style,
             if (hi <= lo) {
                 continue;
             }
-            w[n].lo = lo;
-            w[n].hi = hi;
+            w[n].lo = MapTabOff(tabMap, len, lo);
+            w[n].hi = MapTabOff(tabMap, len, hi);
             w[n].bg = dc.color;
             n++;
         }
@@ -35634,8 +37192,8 @@ static El* RowMatchWashes(Arena* a, El* el, const InputEditorStyle& style,
         if (hi <= lo) {
             continue;
         }
-        w[n].lo = lo;
-        w[n].hi = hi;
+        w[n].lo = MapTabOff(tabMap, len, lo);
+        w[n].hi = MapTabOff(tabMap, len, hi);
         w[n].bg =
             ix == style.currentMatch ? style.currentMatchBg : style.matchBg;
         n++;
@@ -35653,8 +37211,8 @@ static El* RowMatchWashes(Arena* a, El* el, const InputEditorStyle& style,
         if (hi <= lo) {
             continue;
         }
-        w[n].lo = lo;
-        w[n].hi = hi;
+        w[n].lo = MapTabOff(tabMap, len, lo);
+        w[n].hi = MapTabOff(tabMap, len, hi);
         w[n].bg = dc.color;
         n++;
     }
@@ -35707,6 +37265,8 @@ struct InputWrapNode {
     int height = 1;
     int lines = 1;
     int rows = 1;
+
+    WidthRange valid = {};
 };
 static int WrapHeight(InputWrapNode* n) {
     return n ? n->height : 0;
@@ -35721,6 +37281,13 @@ static void WrapSummarize(InputWrapNode* n) {
     n->height = 1 + std::max(WrapHeight(n->left), WrapHeight(n->right));
     n->lines = 1 + WrapLines(n->left) + WrapLines(n->right);
     n->rows = n->line.nRows + WrapRows(n->left) + WrapRows(n->right);
+    n->valid = n->line.validWidths;
+    if (n->left) {
+        n->valid.Intersect(n->left->valid);
+    }
+    if (n->right) {
+        n->valid.Intersect(n->right->valid);
+    }
 }
 static InputWrapNode* WrapRotateLeft(InputWrapNode* n) {
     auto* r = n->right;
@@ -35754,7 +37321,11 @@ static InputWrapNode* WrapBalance(InputWrapNode* n) {
 }
 static InputWrapNode* WrapInsert(InputWrapNode* n, int at,
                                  InputWrapNode* item) {
-    if (!n) return item;
+
+    if (!n) {
+        WrapSummarize(item);
+        return item;
+    }
     int before = WrapLines(n->left);
     if (at <= before)
         n->left = WrapInsert(n->left, at, item);
@@ -35856,13 +37427,17 @@ int InputWrapTree::LineAtRow(int row) const {
     }
     return index;
 }
+bool InputWrapTree::ContainsWidth(float width) const {
+    return !root || root->valid.Contains(width);
+}
 void InputWrapTree::Insert(int index, const int* starts, int nRows,
-                           float indent) {
+                           float indent, WidthRange valid) {
     auto* n = new InputWrapNode();
     n->line.starts = (int*)Alloc(nullptr, sizeof(int) * nRows);
     memcpy(n->line.starts, starts, sizeof(int) * nRows);
     n->line.nRows = nRows;
     n->line.indent = indent;
+    n->line.validWidths = valid;
     n->rows = nRows;
     root = WrapInsert(root, std::max(0, std::min(index, LineCount())), n);
 }
@@ -35944,6 +37519,8 @@ struct WrapLineUser {
     const InlineTokenSpan* spans = nullptr;
     const float* widths = nullptr;
     int nSpans = 0;
+
+    WidthRange* valid = nullptr;
 };
 
 static float WrapTokenWidth(WrapLineUser* u, int i) {
@@ -35965,11 +37542,8 @@ static float WrapTokenWidth(WrapLineUser* u, int i) {
     return w > 1 ? w : 1;
 }
 
-static float WrapShapedWidth(void* user, Str text) {
+static float WrapMeasureSlice(void* user, Str text) {
     WrapMeasure* wm = (WrapMeasure*)user;
-    if (len(text) <= 0) {
-        return 0;
-    }
     float w = 0;
     if (WrapAdvance(wm, text, &w)) {
         return w;
@@ -35983,14 +37557,407 @@ static float WrapShapedWidth(void* user, Str text) {
     return w;
 }
 
+struct WidthCache {
+    struct Slot {
+        char* text = nullptr;
+        int len = 0;
+        float width = 0;
+        uint32_t hash = 0;
+        uint8_t state = 0;
+    };
+    Slot* slots = nullptr;
+    int cap = 0;
+    int live = 0;
+    int tombs = 0;
+    int textBytes = 0;
+    int* fifo = nullptr;
+    int fifoHead = 0;
+    int fifoLen = 0;
+};
+
+static const int kWidthCacheMaxEntries = 32768;
+static const int kWidthCacheMaxBytes = 4 * 1024 * 1024;
+
+static uint32_t WidthCacheHash(Str text) {
+    uint32_t hash = 2166136261u;
+    for (int i = 0; i < len(text); i++) {
+        hash ^= (uint8_t)text.s[i];
+        hash *= 16777619u;
+    }
+    return hash ? hash : 1u;
+}
+
+static void WidthCacheFree(WidthCache* cache) {
+    if (!cache) {
+        return;
+    }
+    for (int i = 0; i < cache->cap; i++) {
+        Free(nullptr, cache->slots[i].text);
+    }
+    Free(nullptr, cache->slots);
+    Free(nullptr, cache->fifo);
+    delete cache;
+}
+
+static void WidthCacheDrop(InputWrapMap* map) {
+    if (!map) {
+        return;
+    }
+    WidthCacheFree(map->widths);
+    map->widths = nullptr;
+}
+
+static int WidthCacheLookup(WidthCache* cache, Str text, uint32_t hash,
+                            int* tomb) {
+    int mask = cache->cap - 1;
+    int at = (int)(hash & (uint32_t)mask);
+    *tomb = -1;
+    for (int n = 0; n < cache->cap; n++) {
+        WidthCache::Slot& slot = cache->slots[at];
+        if (slot.state == 0) {
+            return at;
+        }
+        if (slot.state == 2) {
+            if (*tomb < 0) {
+                *tomb = at;
+            }
+        } else if (slot.hash == hash && slot.len == len(text) &&
+                   memcmp(slot.text, text.s, (size_t)len(text)) == 0) {
+            return at;
+        }
+        at = (at + 1) & mask;
+    }
+    return *tomb >= 0 ? *tomb : 0;
+}
+
+static bool WidthCacheGet(WidthCache* cache, Str text, float* out) {
+    if (!cache || cache->cap == 0 || len(text) <= 0) {
+        return false;
+    }
+    int tomb = -1;
+    int at = WidthCacheLookup(cache, text, WidthCacheHash(text), &tomb);
+    if (cache->slots[at].state != 1) {
+        return false;
+    }
+    *out = cache->slots[at].width;
+    return true;
+}
+
+static void WidthCacheEvictOne(WidthCache* cache) {
+    if (cache->fifoLen <= 0) {
+        return;
+    }
+    int at = cache->fifo[cache->fifoHead];
+    cache->fifoHead++;
+    if (cache->fifoHead == kWidthCacheMaxEntries) {
+        cache->fifoHead = 0;
+    }
+    cache->fifoLen--;
+    WidthCache::Slot& slot = cache->slots[at];
+    if (slot.state == 1) {
+        cache->textBytes -= slot.len;
+        cache->live--;
+        Free(nullptr, slot.text);
+        slot.text = nullptr;
+        slot.len = 0;
+        slot.state = 2;
+        cache->tombs++;
+    }
+}
+
+static void WidthCachePut(InputWrapMap* map, Str text, float width) {
+    if (!map || len(text) <= 0 || len(text) > kWidthCacheMaxBytes) {
+        return;
+    }
+    if (!map->widths) {
+        map->widths = new WidthCache();
+    }
+    WidthCache* cache = map->widths;
+    uint32_t hash = WidthCacheHash(text);
+    if (cache->cap > 0) {
+        int tomb = -1;
+        int at = WidthCacheLookup(cache, text, hash, &tomb);
+        if (cache->slots[at].state == 1 && cache->slots[at].hash == hash &&
+            cache->slots[at].len == len(text) &&
+            memcmp(cache->slots[at].text, text.s, (size_t)len(text)) == 0) {
+            cache->slots[at].width = width;
+            return;
+        }
+    }
+    if (cache->cap == 0) {
+        cache->cap = kWidthCacheMaxEntries * 2;
+        cache->slots = (WidthCache::Slot*)Alloc(
+            nullptr, cache->cap * (int)sizeof(WidthCache::Slot));
+
+        if (cache->slots) {
+            for (int i = 0; i < cache->cap; i++) {
+                cache->slots[i] = {};
+            }
+        }
+        cache->fifo =
+            (int*)Alloc(nullptr, kWidthCacheMaxEntries * (int)sizeof(int));
+    }
+    while (cache->live >= kWidthCacheMaxEntries ||
+           cache->textBytes + len(text) > kWidthCacheMaxBytes) {
+        if (cache->fifoLen <= 0) {
+            break;
+        }
+        WidthCacheEvictOne(cache);
+    }
+    int tomb = -1;
+    int at = WidthCacheLookup(cache, text, hash, &tomb);
+    if (cache->slots[at].state == 0 && tomb >= 0) {
+        at = tomb;
+    }
+    WidthCache::Slot& slot = cache->slots[at];
+    if (slot.state == 2) {
+        cache->tombs--;
+    }
+    char* copy = (char*)Alloc(nullptr, len(text));
+    memcpy(copy, text.s, (size_t)len(text));
+    slot.text = copy;
+    slot.len = len(text);
+    slot.width = width;
+    slot.hash = hash;
+    slot.state = 1;
+    cache->live++;
+    cache->textBytes += len(text);
+    int tail = cache->fifoHead + cache->fifoLen;
+    if (tail >= kWidthCacheMaxEntries) {
+        tail -= kWidthCacheMaxEntries;
+    }
+    cache->fifo[tail] = at;
+    cache->fifoLen++;
+}
+
+static float WrapShapedWidth(void* user, Str text) {
+    WrapMeasure* wm = (WrapMeasure*)user;
+    if (len(text) <= 0) {
+        return 0;
+    }
+    float cached = 0;
+    if (wm->map && WidthCacheGet(wm->map->widths, text, &cached)) {
+        return cached;
+    }
+    float stop = 0;
+    if (wm->map && wm->map->tabSize > 0 && wm->map->spaceWidth > 0) {
+        stop = wm->map->spaceWidth * (float)wm->map->tabSize;
+    }
+    bool tab = false;
+    for (int i = 0; i < len(text); i++) {
+        if (text.s[i] == '\t') {
+            tab = true;
+            break;
+        }
+    }
+    float width = tab && stop > 0
+                      ? TabExpandedWidth(text, stop, &WrapMeasureSlice, wm)
+                      : WrapMeasureSlice(wm, text);
+    if (wm->map) {
+        WidthCachePut(wm->map, text, width);
+    }
+    return width;
+}
+
+struct TabShown {
+    Str text = {};
+    int* map = nullptr;
+    int srcLen = 0;
+};
+
+static int MapTab(const TabShown& shown, int src) {
+    if (!shown.map) {
+        return src;
+    }
+    if (src < 0) {
+        return 0;
+    }
+    if (src > shown.srcLen) {
+        src = shown.srcLen;
+    }
+    return shown.map[src];
+}
+
+struct TabSliceMeasure {
+    PaintCtx* ctx = nullptr;
+    float font = 14;
+    uint16_t word = 0;
+};
+
+static float TabSliceWidth(void* user, Str text) {
+    TabSliceMeasure* m = (TabSliceMeasure*)user;
+    if (m->ctx && len(text) > 0) {
+        float x = 0, y = 0, h = 0;
+        if (TextPointAt(m->ctx, text, m->font, 0, false, len(text), &x, &y, &h,
+                        m->word)) {
+            return x;
+        }
+    }
+    float w = 0;
+    float em = m->font > 0 ? m->font * 0.6f : 8.f;
+    for (int i = 0; i < len(text);) {
+        uint32_t c = 0;
+        int n = Utf8At(text, i, &c);
+        w += em;
+        i += n > 0 ? n : 1;
+    }
+    return w;
+}
+
+static double TabFloorPos(double x) {
+    if (x <= 0) {
+        return 0;
+    }
+    return (double)(int64_t)x;
+}
+
+static TabShown ShowTabs(Arena* a, PaintCtx* ctx, const InputState* s,
+                         Str line) {
+    TabShown shown;
+    shown.text = line;
+    shown.srcLen = len(line);
+    if (!a || !s || len(line) <= 0) {
+        return shown;
+    }
+    bool tab = false;
+    for (int i = 0; i < len(line); i++) {
+        if (line.s[i] == '\t') {
+            tab = true;
+            break;
+        }
+    }
+    if (!tab) {
+        return shown;
+    }
+    int tabSize = s->mode.tabSize > 0 ? s->mode.tabSize : 2;
+    float font = s->lastFont > 0 ? s->lastFont : 14.f;
+    TabSliceMeasure measure = {ctx, font, s->lastFontWord};
+    float space = TabSliceWidth(&measure, StrL(" "));
+    if (space <= 0) {
+        space = font * 0.6f;
+    }
+    float stop = space * (float)tabSize;
+    int cap = len(line) * (tabSize + 1) + 8;
+    char* buf = (char*)Alloc(a, cap + 1);
+    int* map = (int*)Alloc(a, (int)sizeof(int) * (len(line) + 1));
+    if (!buf || !map) {
+        return shown;
+    }
+    int di = 0;
+    double shaped = 0;
+    double shift = 0;
+    int i = 0;
+    while (i < len(line)) {
+        map[i] = di;
+        if (line.s[i] == '\t') {
+            float tabW = TabSliceWidth(&measure, Str(line.s + i, 1));
+            double expanded = shaped + shift;
+            double end = shaped + (double)tabW;
+            double next =
+                (double)stop * (TabFloorPos(expanded / (double)stop) + 1.0);
+            int nsp = (int)((next - expanded) / (double)space + 0.5);
+            if (nsp < 1) {
+                nsp = 1;
+            }
+            if (di + nsp > cap) {
+                return shown;
+            }
+            for (int k = 0; k < nsp; k++) {
+                buf[di++] = ' ';
+            }
+            shift = next - end;
+            shaped = end;
+            i++;
+            continue;
+        }
+        int j = i + 1;
+        while (j < len(line) && line.s[j] != '\t') {
+            j++;
+        }
+        if (di + (j - i) > cap) {
+            return shown;
+        }
+        for (int k = i; k < j; k++) {
+            map[k] = di + (k - i);
+            buf[di + (k - i)] = line.s[k];
+        }
+        di += j - i;
+        shaped += (double)TabSliceWidth(&measure, Str(line.s + i, j - i));
+        i = j;
+    }
+    map[len(line)] = di;
+    buf[di] = 0;
+    shown.text = Str(buf, di);
+    shown.map = map;
+    return shown;
+}
+
+static int TabSourceAtX(PaintCtx* ctx, const InputState* s, Str text, float x) {
+    if (len(text) <= 0 || x <= 0) {
+        return 0;
+    }
+    int tabSize = s && s->mode.tabSize > 0 ? s->mode.tabSize : 2;
+    float font = s && s->lastFont > 0 ? s->lastFont : 14.f;
+    uint16_t word = s ? s->lastFontWord : 0;
+    TabSliceMeasure measure = {ctx, font, word};
+    float space = TabSliceWidth(&measure, StrL(" "));
+    if (space <= 0) {
+        space = font * 0.6f;
+    }
+    float stop = space * (float)tabSize;
+    double shaped = 0;
+    double shift = 0;
+    int i = 0;
+    while (i < len(text)) {
+        if (text.s[i] == '\t') {
+            float tabW = TabSliceWidth(&measure, Str(text.s + i, 1));
+            double expanded = shaped + shift;
+            double end = shaped + (double)tabW;
+            double next =
+                (double)stop * (TabFloorPos(expanded / (double)stop) + 1.0);
+            if (x < (float)next) {
+                return i;
+            }
+            shift = next - end;
+            shaped = end;
+            i++;
+            continue;
+        }
+        int j = i + 1;
+        while (j < len(text) && text.s[j] != '\t') {
+            j++;
+        }
+        Str run = Str(text.s + i, j - i);
+        float w = TabSliceWidth(&measure, run);
+        double runX = shaped + shift;
+        if (x < (float)(runX + (double)w)) {
+            int local =
+                TextIndexAt(ctx, run, font, 0, false, x - (float)runX, 0, word);
+            if (local < 0) {
+                local = 0;
+            }
+            if (local > len(run)) {
+                local = len(run);
+            }
+            return i + local;
+        }
+        shaped += (double)w;
+        i = j;
+    }
+    return len(text);
+}
+
 static void WrapLineFragments(void* user, Str slice, int base,
                               Vec<WrapBoundary>* out) {
     WrapLineUser* u = (WrapLineUser*)user;
     if (u->nSpans == 0) {
 
-        MeasuredWrapBoundaries(slice, u->width, u->wrappingIndent,
-                               &WrapShapedWidth, u->measure, out,
-                               &WrapCharWidthOf, u->measure);
+        WidthRange range;
+        MeasuredWrap(slice, u->width, u->wrappingIndent, &WrapShapedWidth,
+                     u->measure, out, &range);
+        if (u->valid) {
+            u->valid->Intersect(range);
+        }
         return;
     }
     Vec<LineFragment> frags;
@@ -36017,10 +37984,14 @@ static void WrapLineFragments(void* user, Str slice, int base,
     }
     LineWrapperWrapLine(frags.els, len(frags), u->width, &WrapCharWidthOf,
                         u->measure, out);
+
+    if (u->valid) {
+        u->valid->Intersect(WidthRange::Empty());
+    }
 }
 
-static void WrapOneLine(InputState* s, WrapMeasure* wm, int line,
-                        Vec<int>* rows, float* indentOut) {
+static WidthRange WrapOneLine(InputState* s, WrapMeasure* wm, int line,
+                              Vec<int>* rows, float* indentOut) {
     s->wrap.wrappedLines++;
     InputWrapMap* m = &s->wrap;
     const Vec<int>& lineStarts = InputLineStarts(s);
@@ -36062,6 +38033,8 @@ static void WrapOneLine(InputState* s, WrapMeasure* wm, int line,
     WrappingIndent indent =
         m->wrappingIndent ? WrappingIndent::Same : WrappingIndent::None;
     u.wrappingIndent = indent;
+    WidthRange valid = WidthRange::All();
+    u.valid = &valid;
     int indentChars = 0;
     VecClear(*rows);
     TextWrapperWrapItem(str, m->width > 0, indent, &WrapLineFragments, &u, rows,
@@ -36081,6 +38054,7 @@ static void WrapOneLine(InputState* s, WrapMeasure* wm, int line,
         }
         *indentOut = x;
     }
+    return valid;
 }
 
 static void WrapMapCaughtUp(InputState* s) {
@@ -36103,8 +38077,8 @@ static void WrapMapRebuild(InputState* s, PaintCtx* ctx) {
     Vec<int> rows;
     for (int line = 0; line < len(InputLineStarts(s)); line++) {
         float indent = 0;
-        WrapOneLine(s, &wm, line, &rows, &indent);
-        m->tree.Insert(line, rows.els, len(rows), indent);
+        WidthRange valid = WrapOneLine(s, &wm, line, &rows, &indent);
+        m->tree.Insert(line, rows.els, len(rows), indent, valid);
     }
     m->totalRows = m->tree.RowCount();
 }
@@ -36116,8 +38090,8 @@ static void WrapMapReplaceLines(InputState* s, WrapMeasure* wm, int first,
     Vec<int> rows;
     for (int i = 0; i < newCount; i++) {
         float indent = 0;
-        WrapOneLine(s, wm, first + i, &rows, &indent);
-        m->tree.Insert(first + i, rows.els, len(rows), indent);
+        WidthRange valid = WrapOneLine(s, wm, first + i, &rows, &indent);
+        m->tree.Insert(first + i, rows.els, len(rows), indent, valid);
     }
     m->totalRows = m->tree.RowCount();
 }
@@ -36135,12 +38109,35 @@ static int WrapLineOfOffset(const Vec<int>& lineStarts, int offset) {
     return lo;
 }
 
+static void WrapMapReflowWidth(InputState* s, PaintCtx* ctx) {
+    InputWrapMap* m = &s->wrap;
+    if (m->tree.ContainsWidth(m->width)) {
+        return;
+    }
+    WrapMeasure wm;
+    wm.map = m;
+    wm.ctx = ctx;
+    if (m->spaceWidth <= 0) {
+        m->spaceWidth = WrapCharWidthOf(&wm, ' ');
+    }
+    int n = m->tree.LineCount();
+    for (int i = 0; i < n; i++) {
+        const InputWrapLine* line = m->tree.Line(i);
+        if (line && line->validWidths.Contains(m->width)) {
+            continue;
+        }
+        WrapMapReplaceLines(s, &wm, i, 1, 1);
+    }
+}
+
 static void WrapMapCatchUp(InputState* s, PaintCtx* ctx) {
     InputWrapMap* m = &s->wrap;
     bool edited = m->docVersion != s->docVersion;
     if (!edited && len(m->dirtyLines) == 0) {
         return;
     }
+
+    WidthCacheDrop(m);
     if (edited && (!m->hasEdit || m->editWhole)) {
         WrapMapRebuild(s, ctx);
         return;
@@ -36224,16 +38221,29 @@ void InputUpdateWrapMap(InputState* s, PaintCtx* ctx, float width,
         width = 0;
     }
 
-    bool same = m->valid && m->width == width && m->fontSize == fontSize &&
-                m->fontWord == fontWord &&
-                m->wrappingIndent == s->wrappingIndent;
-    if (same) {
+    int tabSize = s->mode.tabSize > 0 ? s->mode.tabSize : 2;
+    bool fontSame = m->valid && m->fontSize == fontSize &&
+                    m->fontWord == fontWord && m->tabSize == tabSize &&
+                    m->wrappingIndent == s->wrappingIndent;
+    if (fontSame && m->width == width) {
         WrapMapCatchUp(s, ctx);
         return;
     }
+
+    if (fontSame && m->width > 0 && width > 0) {
+        bool edited = m->docVersion != s->docVersion || len(m->dirtyLines) > 0;
+        if (edited) {
+            WrapMapCatchUp(s, ctx);
+        }
+        m->width = width;
+        WrapMapReflowWidth(s, ctx);
+        return;
+    }
+    WidthCacheDrop(m);
     m->width = width;
     m->fontSize = fontSize;
     m->fontWord = fontWord;
+    m->tabSize = tabSize;
     m->wrappingIndent = s->wrappingIndent;
     WrapMapRebuild(s, ctx);
 }
@@ -36302,7 +38312,8 @@ static int WrapRowOfOffset(const int* starts, int nRows, int local,
 
 static void RowExtraCursors(Arena* a, El* el, const InputState* state,
                             const InputEditorStyle& style, int start, int len,
-                            bool caret, bool lastRow, bool showSel) {
+                            bool caret, bool lastRow, bool showSel,
+                            const int* tabMap) {
     int n = state->extraCursors.len;
     auto* sels = (Selection*)Alloc(a, n * (int)sizeof(Selection));
     auto* carets = (int*)Alloc(a, n * (int)sizeof(int));
@@ -36322,12 +38333,13 @@ static void RowExtraCursors(Arena* a, El* el, const InputState* state,
             hi = len;
         }
         if (showSel && !c.IsEmpty() && lo < hi) {
-            sels[nSels++] = Selection{lo, hi};
+            sels[nSels++] = Selection{MapTabOff(tabMap, len, lo),
+                                      MapTabOff(tabMap, len, hi)};
         }
         int cur = c.Cursor();
         if (caret && cur >= start && cur <= start + len &&
             (lastRow || cur < start + len)) {
-            carets[nCarets++] = cur - start;
+            carets[nCarets++] = MapTabOff(tabMap, len, cur - start);
         }
     }
     if (nSels > 0) {
@@ -36765,6 +38777,7 @@ El* Input::New(Ctx* cx, InputState* state, const InputEditorStyle& projected) {
     } else if (style.align == 2) {
         row->W(kFill)->JustifyEnd();
     }
+    ApplyEditorAccessibility(row, state, masked, text);
 
     if (len(text) == 0) {
 
@@ -36806,7 +38819,13 @@ El* Input::New(Ctx* cx, InputState* state, const InputEditorStyle& projected) {
                           sel, caret, cursor);
         return row->Child(line);
     }
-    El* el = TextEl(a, run)
+    TabShown shown;
+    shown.text = run;
+    shown.srcLen = len(run);
+    if (!masked) {
+        shown = ShowTabs(a, cx->win ? &cx->win->paint : nullptr, state, run);
+    }
+    El* el = TextEl(a, shown.text)
                  ->Font(font)
                  ->LineHeight(lineMult)
                  ->Fg(style.foreground)
@@ -36814,16 +38833,17 @@ El* Input::New(Ctx* cx, InputState* state, const InputEditorStyle& projected) {
 
     if (!masked) {
         int matchAt = 0;
-        RowMatchWashes(a, el, style, state, 0, len(run), &matchAt);
+        RowMatchWashes(a, el, style, state, 0, len(run), &matchAt, shown.map);
     }
     if (!sel.IsEmpty()) {
-        el->SelRange(sel.start, sel.end, style.selection);
+        el->SelRange(MapTab(shown, sel.start), MapTab(shown, sel.end),
+                     style.selection);
     }
     if (marking) {
-        el->MarkRange(mark.start, mark.end);
+        el->MarkRange(MapTab(shown, mark.start), MapTab(shown, mark.end));
     }
     if (caret) {
-        el->Caret(cursor, style.caret);
+        el->Caret(MapTab(shown, cursor), style.caret);
     }
     return row->Child(el);
 }
@@ -37254,6 +39274,87 @@ bool InputLastActiveLine(const InputState* s, const Window* win, Bounds* out) {
     return true;
 }
 
+static void NoteUnwrappedExtent(InputState* state, PaintCtx* paint,
+                                float laidFont, uint16_t word, int firstRow,
+                                int endRow) {
+    if (!state || state->softWrap) {
+        return;
+    }
+    const Vec<int>& starts = InputLineStarts(state);
+    int n = len(starts);
+    int total = len(state->text);
+    int row = 0;
+    int bestLen = -1;
+    for (int i = 0; i < n; i++) {
+        int a = starts[i];
+        int b = i + 1 < n ? starts[i + 1] - 1 : total;
+        int lineLen = b - a;
+        if (lineLen > bestLen) {
+            bestLen = lineLen;
+            row = i;
+        }
+    }
+    Str longest = InputSliceLine(state, row);
+    int tab = state->mode.tabSize > 0 ? state->mode.tabSize : 2;
+    bool same =
+        state->longestLineSet && state->longestLineDoc == state->docVersion &&
+        state->longestLineRow == row && state->longestLineLen == len(longest) &&
+        state->longestLineFont == laidFont && state->longestLineWord == word &&
+        state->longestLineTab == tab;
+    struct ExtentMeasure {
+        PaintCtx* paint;
+        float font;
+        uint16_t word;
+    };
+    ExtentMeasure em = {paint, laidFont, word};
+    auto slice = [](void* user, Str text) -> float {
+        ExtentMeasure* m = (ExtentMeasure*)user;
+        return MeasureText(m->paint, text, m->font, 0, false, m->word).w;
+    };
+    float space = slice(&em, StrL(" "));
+    float stop = space * (float)tab;
+    auto widened = [&](Str line) -> float {
+        if (len(line) <= 0) {
+            return 0;
+        }
+        return TabExpandedWidth(line, stop, slice, &em);
+    };
+    float width = 0;
+    if (len(state->text) == 0) {
+        width = 0;
+    } else if (same) {
+        width = state->longestLineW;
+    } else if (len(longest) > 0) {
+        width = widened(longest);
+    }
+    if (len(state->text) > 0) {
+        int lo = firstRow < 0 ? 0 : firstRow;
+        int hi = endRow > n ? n : endRow;
+        for (int i = lo; i < hi; i++) {
+            if (LayoutModeIsFolding(state->mode) &&
+                FoldMapLineHidden(&state->folds, i)) {
+                continue;
+            }
+            Str line = InputSliceLine(state, i);
+            if (len(line) <= 0) {
+                continue;
+            }
+            float w = widened(line);
+            if (w > width) {
+                width = w;
+            }
+        }
+    }
+    state->longestLineSet = true;
+    state->longestLineDoc = state->docVersion;
+    state->longestLineRow = row;
+    state->longestLineLen = len(longest);
+    state->longestLineFont = laidFont;
+    state->longestLineWord = word;
+    state->longestLineTab = tab;
+    state->longestLineW = width;
+}
+
 El* Textarea::New(Ctx* cx, InputState* state) {
     return New(cx, state, InputEditorStyle{});
 }
@@ -37286,6 +39387,7 @@ El* Textarea::New(Ctx* cx, InputState* state, const InputEditorStyle& projected,
 
     El* col = Div(a)->FlexCol()->W(kFill)->BindInput(state);
     col->BoundsOut(&state->contentBox);
+    ApplyEditorAccessibility(col, state, style.mask || state->masked, text);
     if (len(text) == 0) {
         if (caret) {
             col->Caret(0, style.caret);
@@ -37617,6 +39719,26 @@ El* Textarea::New(Ctx* cx, InputState* state, const InputEditorStyle& projected,
             docSpans = hl;
             nDocSpans = nHl;
         }
+    } else if (state->kind == InputKind::Editor) {
+
+        int nOwn = InputDecorationSpans(state, nullptr, 0);
+        if (nOwn > 0) {
+            TextSpan* own = (TextSpan*)Alloc(a, (int)sizeof(TextSpan) * nOwn);
+            nOwn = own ? InputDecorationSpans(state, own, nOwn) : 0;
+            int cap = style.nSpans + 2 * nOwn;
+            auto* buf = (TextSpan*)Alloc(a, (int)sizeof(TextSpan) * cap);
+            auto* tmp = (TextSpan*)Alloc(a, (int)sizeof(TextSpan) * cap);
+            if (own && buf && tmp && nOwn > 0) {
+                int n = 0;
+                if (style.nSpans > 0 && style.spans) {
+                    memcpy(buf, style.spans,
+                           (size_t)style.nSpans * sizeof(TextSpan));
+                    n = style.nSpans;
+                }
+                nDocSpans = InputComposeSpans(buf, n, own, nOwn, cap, tmp);
+                docSpans = buf;
+            }
+        }
     }
 
     RangeDecorationPaint* rangePaint = nullptr;
@@ -37724,6 +39846,9 @@ El* Textarea::New(Ctx* cx, InputState* state, const InputEditorStyle& projected,
             int segHi = vis + 1 < nVis ? wrapStarts[vis + 1] : len(lineText);
             int start = lineStart + segLo;
             Str line = Str(lineText.s + segLo, segHi - segLo);
+            TabShown shown;
+            shown.text = line;
+            shown.srcLen = len(line);
             bool firstSeg = vis == 0;
             bool lastSeg = vis == nVis - 1;
             bool tokenLine =
@@ -37747,8 +39872,12 @@ El* Textarea::New(Ctx* cx, InputState* state, const InputEditorStyle& projected,
                 AppendTokenPieces(el, cx, state, style, font, lineMult, lineH,
                                   line, start, sel, caret, cursor);
             } else {
-                el = TextEl(a, line)->Font(font)->LineHeight(lineMult)->Fg(
-                    style.foreground);
+                shown = ShowTabs(a, cx->win ? &cx->win->paint : nullptr, state,
+                                 line);
+                el = TextEl(a, shown.text)
+                         ->Font(font)
+                         ->LineHeight(lineMult)
+                         ->Fg(style.foreground);
                 InputFace(el, style);
             }
             if (paintedRow) {
@@ -37786,8 +39915,8 @@ El* Textarea::New(Ctx* cx, InputState* state, const InputEditorStyle& projected,
                             continue;
                         }
                         rowSpans[nRowSpans] = sp;
-                        rowSpans[nRowSpans].lo = lo;
-                        rowSpans[nRowSpans].hi = hi;
+                        rowSpans[nRowSpans].lo = MapTab(shown, lo);
+                        rowSpans[nRowSpans].hi = MapTab(shown, hi);
                         nRowSpans++;
                     }
                     if (nRowSpans > 0) {
@@ -37834,8 +39963,8 @@ El* Textarea::New(Ctx* cx, InputState* state, const InputEditorStyle& projected,
                         if (c.a == 0) {
                             continue;
                         }
-                        runs[n].lo = lo;
-                        runs[n].hi = hi;
+                        runs[n].lo = MapTab(shown, lo);
+                        runs[n].hi = MapTab(shown, hi);
                         runs[n].color = c;
                         runs[n].bg = Rgba{0, 0, 0, 0};
                         runs[n].underline = true;
@@ -37862,8 +39991,8 @@ El* Textarea::New(Ctx* cx, InputState* state, const InputEditorStyle& projected,
                 if (hi > lo) {
                     auto* run = (TextSpan*)Alloc(a, (int)sizeof(TextSpan));
                     if (run) {
-                        run->lo = lo;
-                        run->hi = hi;
+                        run->lo = MapTab(shown, lo);
+                        run->hi = MapTab(shown, hi);
                         run->color = style.linkText;
                         run->bg = Rgba{0, 0, 0, 0};
                         run->underline = true;
@@ -37872,7 +40001,8 @@ El* Textarea::New(Ctx* cx, InputState* state, const InputEditorStyle& projected,
                     }
 
                     if (sym.start >= start || firstSeg) {
-                        el->RangeOut(lo, hi, &state->hoverDef.bounds);
+                        el->RangeOut(MapTab(shown, lo), MapTab(shown, hi),
+                                     &state->hoverDef.bounds);
                     }
                 }
             }
@@ -37894,11 +40024,12 @@ El* Textarea::New(Ctx* cx, InputState* state, const InputEditorStyle& projected,
                     state->popoverTriggerBounds = {};
                     WindowRequestAnimationFrame(cx->win);
                 }
-                el->RangeOut(popoverLo, popoverHi,
+                el->RangeOut(MapTab(shown, popoverLo), MapTab(shown, popoverHi),
                              &state->popoverTriggerBounds);
             }
             if (!tokenLine) {
-                RowMatchWashes(a, el, style, state, start, len(line), &matchAt);
+                RowMatchWashes(a, el, style, state, start, len(line), &matchAt,
+                               shown.map);
             }
 
             if (row == 0 && firstSeg) {
@@ -37917,7 +40048,8 @@ El* Textarea::New(Ctx* cx, InputState* state, const InputEditorStyle& projected,
                 hi = len(line);
             }
             if (!tokenLine && !sel.IsEmpty() && lo < hi) {
-                el->SelRange(lo, hi, style.selection);
+                el->SelRange(MapTab(shown, lo), MapTab(shown, hi),
+                             style.selection);
             }
 
             bool caretHere = cursor >= start && cursor <= start + len(line);
@@ -37934,19 +40066,19 @@ El* Textarea::New(Ctx* cx, InputState* state, const InputEditorStyle& projected,
                     el->Caret(0, style.caret);
                 }
             } else if (!tokenLine && caret && caretHere) {
-                el->Caret(cursor - start, style.caret, base::PlatCaretWidth(),
-                          state->cursorLineEndAffinity);
+                el->Caret(MapTab(shown, cursor - start), style.caret,
+                          base::PlatCaretWidth(), state->cursorLineEndAffinity);
 
                 el->CaretOut(&state->caretWinX, &state->caretWinY);
             } else if (!tokenLine && !caretFolded && caretHere) {
 
-                el->Caret(cursor - start, Rgba{0, 0, 0, 0},
+                el->Caret(MapTab(shown, cursor - start), Rgba{0, 0, 0, 0},
                           base::PlatCaretWidth(), state->cursorLineEndAffinity);
                 el->CaretOut(&state->caretWinX, &state->caretWinY);
             }
             if (!tokenLine && state->extraCursors.len > 0) {
                 RowExtraCursors(a, el, state, style, start, len(line), caret,
-                                lastSeg, showSel);
+                                lastSeg, showSel, shown.map);
             }
 
             if (indentGuides && firstSeg) {
@@ -38030,6 +40162,21 @@ El* Textarea::New(Ctx* cx, InputState* state, const InputEditorStyle& projected,
     }
     if (padBottom > 0) {
         col->Child(Div(a)->W(kFill)->Shrink0()->H(padBottom));
+    }
+
+    if (!state->softWrap) {
+        float rem = cx->win ? WindowRemSize(cx->win) : 16.f;
+        float laidFont = font * (rem / 16.f);
+        NoteUnwrappedExtent(state, cx->win ? &cx->win->paint : nullptr,
+                            laidFont, InputFontWord(style), firstRow, endRow);
+        if (state->longestLineW > 0) {
+            float gutter = 0;
+            if (lineNumbers) {
+                gutter = numW + kLineNumberRightMargin + foldW;
+            }
+
+            col->MinW(state->longestLineW + gutter + kEditorRightMargin);
+        }
     }
 
     if (state->focused && InputHasInlineCompletion(state) &&
@@ -38179,6 +40326,9 @@ InputState::~InputState() {
     if (contextMenuDrop && contextMenuData) {
         contextMenuDrop(contextMenuData);
     }
+    if (scrollbarRendererDrop && scrollbarRendererUser) {
+        scrollbarRendererDrop(scrollbarRendererUser);
+    }
     InputSyntaxCacheFree(this);
 
     if (focusWin) {
@@ -38199,6 +40349,7 @@ InputState::~InputState() {
     }
     delete overscroll;
     overscroll = nullptr;
+    WidthCacheDrop(&wrap);
 }
 
 static void TextReserve(InputState* s, int want) {
@@ -39058,6 +41209,213 @@ float InputCursorSurroundingPadding(bool isAutoGrow, int overrideLines,
     return raw < half ? raw : half;
 }
 
+float InputRevealRow(float scrollY, float rowTop, float lineH, float viewH,
+                     float edge) {
+    if (!(viewH > 0)) {
+        return scrollY < 0 ? 0 : scrollY;
+    }
+    float rowH = lineH < viewH ? lineH : viewH;
+    if (rowH < 0) {
+        rowH = 0;
+    }
+    float bottom = edge > rowH ? edge : rowH;
+    if (bottom > viewH) {
+        bottom = viewH;
+    }
+    float room = viewH - bottom;
+    if (room < 0) {
+        room = 0;
+    }
+    float top = edge < room ? edge : room;
+    float lo = rowTop - (viewH - bottom);
+    float hi = rowTop - top;
+    if (scrollY < lo) {
+        scrollY = lo;
+    }
+    if (scrollY > hi) {
+        scrollY = hi;
+    }
+    if (scrollY < 0) {
+        scrollY = 0;
+    }
+    return scrollY;
+}
+
+static float InputOffsetDisplayY(const InputState* s, int offset, float lineH) {
+    if (!s || lineH <= 0) {
+        return 0;
+    }
+    int row = RopeOffsetToPoint(InputValue(s), offset).row;
+    if (FoldMapLineHidden(&s->folds, row)) {
+        row = FoldMapNearestVisibleLine(&s->folds, row);
+        return DisplayRowDocY(s, row, lineH);
+    }
+    float y = DisplayRowDocY(s, row, lineH);
+
+    const InputWrapMap* m = &s->wrap;
+    if (!s->softWrap || !m->valid || m->width <= 0 || row < 0 ||
+        row >= m->tree.LineCount()) {
+        return y;
+    }
+    const InputWrapLine& item = *m->tree.Line(row);
+    if (item.nRows > 1 && item.starts) {
+        bool affinity = offset == InputCursor(s) && s->cursorLineEndAffinity;
+        int lineStart = RopeLineStartOffset(InputValue(s), row);
+        int local = offset - lineStart;
+        if (local < 0) {
+            local = 0;
+        }
+        y += (float)WrapRowOfOffset(item.starts, item.nRows, local, affinity) *
+             lineH;
+    }
+    return y;
+}
+
+static float InputLayoutCursorEdge(const InputState* s, float lineH,
+                                   float viewH) {
+    int visible = lineH > 0 ? (int)(viewH / lineH) : 0;
+    bool autoGrow = s->mode.kind == LayoutModeKind::AutoGrow;
+    return InputCursorSurroundingPadding(autoGrow, s->cursorSurroundingLines,
+                                         visible, lineH);
+}
+
+static bool InputRangeIsWholeText(const InputState* s) {
+    int n = len(InputValue(s));
+    return s->selectedRange.end - s->selectedRange.start == n;
+}
+
+static void InputClampScrollY(InputState* s, float viewH) {
+    float mostY = s->contentH - viewH;
+    if (mostY < 0) {
+        mostY = 0;
+    }
+    if (s->scrollY > mostY) {
+        s->scrollY = mostY;
+    }
+    if (s->scrollY < 0) {
+        s->scrollY = 0;
+    }
+}
+
+bool InputRevealCaretOnResize(InputState* s, float newViewW, float newViewH,
+                              float lineH) {
+    if (!s) {
+        return false;
+    }
+    if (lineH <= 0) {
+        lineH = s->lastLineH > 0 ? s->lastLineH : kInputLineH;
+    }
+    bool resized = s->caretGeomValid && (newViewW != s->caretGeomViewW ||
+                                         newViewH != s->caretGeomViewH ||
+                                         lineH != s->caretGeomLineH);
+    if (!resized) {
+        return false;
+    }
+    bool revealed = false;
+    if (s->focused && !s->autoScroll.IsActive() && newViewH > 0 &&
+        !InputRangeIsWholeText(s)) {
+        bool same = s->scrollX == s->caretGeomScrollX &&
+                    s->scrollY == s->caretGeomScrollY;
+        bool visible = false;
+        if (!s->resizeRevealOwned) {
+            float top = s->caretGeomY - s->scrollY;
+            float left = s->caretGeomX - s->scrollX;
+            visible = top >= 0 && top + s->caretGeomH <= s->caretGeomViewH &&
+                      left >= 0 && left + s->caretGeomW <= s->caretGeomViewW;
+        }
+        if (s->resizeRevealOwned ? same : visible) {
+            float y = InputOffsetDisplayY(s, InputCursor(s), lineH);
+            float edge = InputLayoutCursorEdge(s, lineH, newViewH);
+            float wasX = s->scrollX;
+            s->scrollY = InputRevealRow(s->scrollY, y, lineH, newViewH, edge);
+            InputClampScrollY(s, newViewH);
+            s->scrollX = wasX;
+            s->caretGeomScrollX = s->scrollX;
+            s->caretGeomScrollY = s->scrollY;
+            s->caretGeomViewW = newViewW;
+            s->caretGeomViewH = newViewH;
+            s->caretGeomLineH = lineH;
+            revealed = true;
+        }
+    }
+    s->resizeRevealOwned = revealed;
+    return revealed;
+}
+
+void InputRememberCaretGeometry(InputState* s) {
+    if (!s) {
+        return;
+    }
+    float lineH = s->lastLineH > 0 ? s->lastLineH : kInputLineH;
+    float caretH = 0.85f * lineH;
+    float docY = InputOffsetDisplayY(s, InputCursor(s), lineH);
+    s->caretGeomX = s->caretX;
+    s->caretGeomY = docY + (lineH - caretH) * 0.5f;
+    s->caretGeomW = base::PlatCaretWidth();
+    s->caretGeomH = caretH;
+    s->caretGeomScrollX = s->scrollX;
+    s->caretGeomScrollY = s->scrollY;
+    s->caretGeomViewW = s->viewW;
+    s->caretGeomViewH = s->viewH;
+    s->caretGeomLineH = lineH;
+    s->caretGeomValid = true;
+}
+
+static bool RevealBoundsSame(Bounds a, Bounds b) {
+    return a.x == b.x && a.y == b.y && a.w == b.w && a.h == b.h;
+}
+
+void InputRequestReveal(InputState* s, Window* win) {
+    if (!s || !win) {
+        return;
+    }
+
+    const float kRevealMargin = 8.f;
+    const float kRevealMaxH = 120.f;
+    bool focused = s->focused && s->focusWin == win;
+    Bounds viewport = WindowFullyVisibleBounds(win);
+    bool changed = !s->hasRevealedViewport ||
+                   !RevealBoundsSame(s->revealedViewport, viewport);
+    if (focused) {
+        s->hasRevealedViewport = true;
+        s->revealedViewport = viewport;
+    } else {
+        s->hasRevealedViewport = false;
+    }
+    if (!focused || !changed || s->inputBounds.h <= 0.f) {
+        return;
+    }
+    float top = s->inputBounds.y;
+    float height = s->inputBounds.h;
+    if (!InputIsSingleLine(s)) {
+        float lineH = s->lastLineH > 0.f ? s->lastLineH : kInputLineH;
+        if (s->caretGeomFrame == win->frameSeq && lineH > 0.f) {
+            float caretTop = s->caretWinY - lineH;
+            if (caretTop < s->inputBounds.y) {
+                caretTop = s->inputBounds.y;
+            }
+            if (caretTop > s->inputBounds.Bottom()) {
+                caretTop = s->inputBounds.Bottom();
+            }
+            float room = s->inputBounds.Bottom() - caretTop;
+            if (room < 0.f) {
+                room = 0.f;
+            }
+            top = caretTop;
+            height = lineH < room ? lineH : room;
+        } else {
+            height =
+                s->inputBounds.h < kRevealMaxH ? s->inputBounds.h : kRevealMaxH;
+        }
+    }
+    Bounds request = {s->inputBounds.x, top, s->inputBounds.w, height};
+    request.x -= kRevealMargin;
+    request.y -= kRevealMargin;
+    request.w += kRevealMargin * 2.f;
+    request.h += kRevealMargin * 2.f;
+    WindowRequestAutoscroll(win, request);
+}
+
 void InputScrollToCaret(InputState* s, float caretX, float caretY,
                         InputMoveDir dir) {
 
@@ -39095,37 +41453,18 @@ void InputScrollToCaretWithPadding(InputState* s, float caretX, float caretY,
     }
 
     if (s->viewH > 0) {
-        bool surrounding = padding == InputScrollPadding::SurroundingLines &&
-                           s->mode.kind == LayoutModeKind::CodeEditor;
-        if (surrounding) {
-            int visible = lineH > 0 ? (int)(s->viewH / lineH) : 0;
-            float edge = InputCursorSurroundingPadding(
-                false, s->cursorSurroundingLines, visible, lineH);
-            if (caretY - edge + lineH < s->scrollY) {
-                s->scrollY = caretY - edge + lineH;
-            } else if (caretY + edge > s->scrollY + s->viewH) {
-                s->scrollY = caretY + edge - s->viewH;
-            }
-        } else if (caretY - lineH < s->scrollY) {
-            s->scrollY = caretY - lineH;
-        } else if (caretY + lineH + lineH > s->scrollY + s->viewH) {
-            s->scrollY = caretY + lineH + lineH - s->viewH;
+        float edge = 0;
+        if (padding == InputScrollPadding::SurroundingLines &&
+            s->mode.kind == LayoutModeKind::CodeEditor) {
+            edge = InputLayoutCursorEdge(s, lineH, s->viewH);
         }
+        s->scrollY = InputRevealRow(s->scrollY, caretY, lineH, s->viewH, edge);
 
         if ((dir == InputMoveDir::Up && s->scrollY > wasY) ||
             (dir == InputMoveDir::Down && s->scrollY < wasY)) {
             s->scrollY = wasY;
         }
-        float mostY = s->contentH - s->viewH;
-        if (mostY < 0) {
-            mostY = 0;
-        }
-        if (s->scrollY > mostY) {
-            s->scrollY = mostY;
-        }
-        if (s->scrollY < 0) {
-            s->scrollY = 0;
-        }
+        InputClampScrollY(s, s->viewH);
     }
 }
 
@@ -39134,11 +41473,8 @@ void InputScrollToCursor(InputState* s, InputMoveDir dir) {
         return;
     }
     float lineH = s->lastLineH > 0 ? s->lastLineH : kInputLineH;
-    int row = RopeOffsetToPoint(InputValue(s), InputCursor(s)).row;
 
-    row = FoldMapNearestVisibleLine(&s->folds, row);
-
-    float caretY = DisplayRowDocY(s, row, lineH);
+    float caretY = InputOffsetDisplayY(s, InputCursor(s), lineH);
     InputScrollToCaret(s, s->caretX, caretY, dir);
 }
 
@@ -39265,6 +41601,71 @@ float InputBouncePaint(InputState* s, Window* win) {
     return s->overscroll->Offset();
 }
 
+Point EditorScrollbarContext::Offset() const {
+    if (!state) return {};
+    return {-state->scrollX, -state->scrollY};
+}
+
+void EditorScrollbarContext::SetOffset(Point value) const {
+    if (!state) return;
+    state->scrollX = -value.x;
+    state->scrollY = -value.y;
+}
+
+Size EditorScrollbarContext::ContentSize() const {
+    return {content.w + (viewport.w - scrollViewport.w),
+            content.h + (viewport.h - scrollViewport.h)};
+}
+
+void InputSetEditorPaddings(InputState* s, Edges paddings) {
+    if (!s) return;
+    s->editorPaddings = paddings;
+    s->editorPaddingsSet = true;
+}
+
+void SetScrollbarRenderer(InputState* s, EditorScrollbarRenderer renderer,
+                          void* user, void (*drop)(void*)) {
+    if (!s) return;
+    if (s->scrollbarRendererDrop && s->scrollbarRendererUser &&
+        s->scrollbarRendererUser != user) {
+        s->scrollbarRendererDrop(s->scrollbarRendererUser);
+    }
+    if (!renderer) {
+        user = nullptr;
+        drop = nullptr;
+    }
+    s->scrollbarRenderer = renderer;
+    s->scrollbarRendererUser = user;
+    s->scrollbarRendererDrop = drop;
+}
+
+void EditorScrollbarPrePaint(PaintCtx* ctx, El* e, void*) {
+    if (!e || !e->input || !e->input->scrollbarRenderer) return;
+    InputState* s = e->input;
+    e->noScrollbar = true;
+    Edges pad = s->editorPaddingsSet ? s->editorPaddings : Edges{};
+    Bounds outer = e->Bounds();
+    Bounds inputBounds = {outer.x + pad.left, outer.y + pad.top,
+                          outer.w - pad.left - pad.right,
+                          outer.h - pad.top - pad.bottom};
+    if (inputBounds.w < 0) inputBounds.w = 0;
+    if (inputBounds.h < 0) inputBounds.h = 0;
+    EditorScrollbarContext presented;
+    presented.state = s;
+    presented.viewport = {inputBounds.x, inputBounds.y - pad.top,
+                          inputBounds.w + pad.right,
+                          inputBounds.h + pad.top + pad.bottom};
+    presented.scrollViewport = {presented.viewport.w, inputBounds.h};
+    presented.content = {s->contentW, s->contentH};
+    presented
+        .axis = s->softWrap ? ScrollbarAxis::Vertical : ScrollbarAxis::Both;
+    if (!ctx || !ctx->window || !ctx->window->frameArena) return;
+    Ctx cx = {ctx->app, ctx->window, ctx->window->frameArena, {}};
+    El* bar = s->scrollbarRenderer(s->scrollbarRendererUser, &presented, &cx);
+    if (!bar) return;
+    e->Child(bar);
+}
+
 void InputSetScrollBounce(InputState* s, bool on) {
     if (!s || s->scrollBounce == on) return;
     s->scrollBounce = on;
@@ -39285,9 +41686,7 @@ void InputScrollToOffsetWithPadding(InputState* s, int offset, InputMoveDir dir,
         return;
     }
     float lineH = s->lastLineH > 0 ? s->lastLineH : kInputLineH;
-    int row = RopeOffsetToPoint(InputValue(s), offset).row;
-    row = FoldMapNearestVisibleLine(&s->folds, row);
-    float y = DisplayRowDocY(s, row, lineH);
+    float y = InputOffsetDisplayY(s, offset, lineH);
     InputScrollToCaretWithPadding(s, -1, y, dir, padding);
 }
 
@@ -39295,19 +41694,12 @@ static void InputScrollToSearchOffset(InputState* s, Window* win, int offset) {
     if (!s) {
         return;
     }
-    float lineH = s->lastLineH > 0 ? s->lastLineH : kInputLineH;
-    int row = RopeOffsetToPoint(InputValue(s), offset).row;
-    row = FoldMapNearestVisibleLine(&s->folds, row);
-    float y = DisplayRowDocY(s, row, lineH);
-    if (WrapMapOf(s, win ? &win->paint : nullptr)) {
 
-        int lineStart = RopeLineStartOffset(InputValue(s), row);
-        const int* starts = nullptr;
-        int nRows = InputWrapRows(s, row, &starts, nullptr);
-        int k = WrapRowOfOffset(starts, nRows, std::max(0, offset - lineStart),
-                                false);
-        y += (float)k * lineH;
+    if (win) {
+        WrapMapOf(s, &win->paint);
     }
+    float lineH = s->lastLineH > 0 ? s->lastLineH : kInputLineH;
+    float y = InputOffsetDisplayY(s, offset, lineH);
     InputScrollToCaretWithPadding(s, -1, y, InputMoveDir::None,
                                   InputScrollPadding::SurroundingLines);
 }
@@ -40450,7 +42842,15 @@ bool InputReplaceTextInRange(InputState* s, App* app, Window* win,
     }
 
     if (InputIsMultiLine(s)) {
-        InputScrollToOffset(s, InputCursor(s), InputMoveDir::None);
+        float lineH = s->lastLineH > 0 ? s->lastLineH : kInputLineH;
+        float y = InputOffsetDisplayY(s, InputCursor(s), lineH);
+        float edge = InputLayoutCursorEdge(s, lineH, s->viewH);
+        float wasX = s->scrollX;
+        if (s->viewH > 0) {
+            s->scrollY = InputRevealRow(s->scrollY, y, lineH, s->viewH, edge);
+            InputClampScrollY(s, s->viewH);
+        }
+        s->scrollX = wasX;
     }
     highlightChange.Finish();
     base_input_Emit(s, app, win, InputEvent{InputEventKind::Change});
@@ -40961,6 +43361,38 @@ void InputSetMaskPattern(InputState* s, MaskPattern pattern) {
     if (len(cue) > 0) {
         InputSetPlaceholder(s, cue);
     }
+}
+
+void InputSetInputAction(InputState* s, TextInputAction action) {
+    s->hasInputAction = true;
+    s->inputAction = action;
+}
+
+void InputSetAutocorrect(InputState* s, bool autocorrect) {
+    s->hasAutocorrect = true;
+    s->autocorrect = autocorrect;
+}
+
+void InputSetAutocapitalize(InputState* s, Autocapitalize mode) {
+    s->hasAutocapitalize = true;
+    s->autocapitalize = mode;
+}
+
+TextInputConfiguration InputTextInputConfiguration(const InputState* s) {
+
+    TextInputConfiguration c;
+    c.autocorrect = s->hasAutocorrect && s->autocorrect;
+    c.suggestions = c.autocorrect;
+    c.autocapitalize =
+        s->hasAutocapitalize ? s->autocapitalize : Autocapitalize::None;
+    if (s->hasInputAction) {
+        c.inputAction = s->inputAction;
+    } else if (InputIsMultiLine(s) && !s->submitOnEnter) {
+        c.inputAction = TextInputAction::Enter;
+    } else {
+        c.inputAction = TextInputAction::Done;
+    }
+    return c;
 }
 
 static bool CompletionWordChar(char c) {
@@ -42131,6 +44563,23 @@ static float WrapFontOf(const InputState* s) {
 }
 
 static float WrapTextAdvance(PaintCtx* ctx, const InputState* s, Str text) {
+    bool tab = false;
+    for (int i = 0; i < len(text); i++) {
+        if (text.s[i] == '\t') {
+            tab = true;
+            break;
+        }
+    }
+    if (tab && s) {
+        int tabSize = s->mode.tabSize > 0 ? s->mode.tabSize : 2;
+        TabSliceMeasure measure = {ctx, WrapFontOf(s), s->lastFontWord};
+        float space = TabSliceWidth(&measure, StrL(" "));
+        if (space <= 0) {
+            space = WrapFontOf(s) * 0.6f;
+        }
+        return TabExpandedWidth(text, space * (float)tabSize, &TabSliceWidth,
+                                &measure);
+    }
     float x = 0, y = 0, h = 0;
     if (len(text) > 0 && ctx) {
         TextPointAt(ctx, text, WrapFontOf(s), 0, false, len(text), &x, &y, &h,
@@ -42222,6 +44671,16 @@ static int WrapRowIndexAt(PaintCtx* ctx, const InputState* s, Str line,
         Str text = Str(line.s + f.lo, f.hi - f.lo);
         float w = WrapTextAdvance(ctx, s, text);
         if (x < at + w || i == n - 1) {
+            bool tab = false;
+            for (int k = 0; k < len(text); k++) {
+                if (text.s[k] == '\t') {
+                    tab = true;
+                    break;
+                }
+            }
+            if (tab) {
+                return f.lo + TabSourceAtX(ctx, s, text, x - at);
+            }
             return f.lo + TextIndexAt(ctx, text, font, 0, false, x - at, 0,
                                       s->lastFontWord);
         }
@@ -43460,7 +45919,8 @@ bool InputPerform(InputState* s, App* app, Window* win, InputAction action,
                 InputDismissTouchSelection(s, app, win);
                 return true;
             }
-            if (s->cleanOnEscape) {
+
+            if (s->cleanOnEscape && PlatCleanOnEscape()) {
                 InputClean(s, app, win);
                 return true;
             }
@@ -43643,9 +46103,16 @@ void InputSetSearchQuery(InputState* s, App* app, Window* win, Str query,
     if (!s) {
         return;
     }
+
+    bool queryChanged = !StrEq(query, s->search.query) ||
+                        insensitive != s->search.caseInsensitive;
+    s->search.anchorOffset = queryChanged ? FirstVisibleOffset(s) : -1;
     s->search.active = true;
     SearchSessionSetQuery(&s->search, query, insensitive);
     SearchMatcherUpdate(&s->search.matcher, InputValue(s));
+    if (queryChanged && s->search.anchorOffset >= 0) {
+        SearchMatcherCursorByOffset(&s->search.matcher, s->search.anchorOffset);
+    }
     Notify(app, win);
 }
 
@@ -43780,6 +46247,8 @@ void InputBlur(InputState* s, App* app, Window* win) {
         return;
     }
 
+    s->hasRevealedViewport = false;
+
     UndoBreakCoalescing(&s->undo);
 
     if (!InputIsContextMenuOpen(s)) {
@@ -43850,6 +46319,16 @@ int InputIndexForPosition(const InputState* s, PaintCtx* ctx, float x, float y,
         }
         if (x <= b.x) {
             return 0;
+        }
+        bool tab = false;
+        for (int i = 0; i < len(t); i++) {
+            if (t.s[i] == '\t') {
+                tab = true;
+                break;
+            }
+        }
+        if (tab) {
+            return TabSourceAtX(ctx, s, t, x - b.x);
         }
         return TextIndexAt(ctx, t, font, 0, false, x - b.x, 0, s->lastFontWord);
     }
@@ -49900,9 +52379,13 @@ void PopoverInitKeys() {
         return;
     }
     generation = current;
+
     KeyBinding bindings[] = {
         {"enter", action::Confirm(), "Popover"},
         {"space", action::Confirm(), "Popover"},
+        {"escape", action::Cancel(), "PopoverContent"},
+        {"enter", action::NoAction(), "PopoverContent"},
+        {"space", action::NoAction(), "PopoverContent"},
     };
     KeymapBind(bindings, dimof(bindings));
 }
@@ -49982,6 +52465,15 @@ void PopoverConfirm(PopoverState* self, Ctx* cx, const ActionEvent* ev) {
         return;
     }
     PopoverSetOpenFocused(self, cx, !self->open);
+    Notify(cx);
+}
+
+void PopoverCancel(PopoverState* self, Ctx* cx, const ActionEvent* ev) {
+    if (!self || ev->action != action::Cancel() || !self->open) {
+        const_cast<ActionEvent*>(ev)->propagate = true;
+        return;
+    }
+    PopoverSetOpenFocused(self, cx, false);
     Notify(cx);
 }
 
@@ -50094,6 +52586,11 @@ Popover* Popover::Content(El* e) {
         e->Role(AccessibilityRole::Dialog);
 
         e->TrackFocus(focus)->FocusRing(false);
+        if (state.IsValid()) {
+            PopoverInitKeys();
+            e->KeyContext(StrL("PopoverContent"))
+                ->OnAction(action::Cancel(), ListenTo(state, &PopoverCancel));
+        }
         if (overlayClosable && state.IsValid()) {
             e->OnMouseDownOut(ListenTo(state, &PopoverDismissOnMouseDown));
         }
@@ -50176,35 +52673,40 @@ int PopupMenuNextIndex(const bool* clickable, int n, int selected) {
     if (n <= 0) {
         return -1;
     }
-    if (selected < 0) {
-
-        return 0;
-    }
-    for (int i = selected + 1; i < n; i++) {
-        if (clickable[i]) {
+    int start = selected < 0 ? -1 : selected;
+    for (int i = start + 1; i < n; i++) {
+        if (clickable && clickable[i]) {
             return i;
         }
     }
-    return 0;
+
+    if (selected >= 0) {
+        for (int i = 0; i < n; i++) {
+            if (clickable && clickable[i]) {
+                return i;
+            }
+        }
+    }
+    return -1;
 }
 
 int PopupMenuPrevIndex(const bool* clickable, int n, int selected) {
     if (n <= 0) {
         return -1;
     }
+
     int ix = selected < 0 ? 0 : selected;
     for (int i = ix - 1; i >= 0; i--) {
-        if (clickable[i]) {
+        if (clickable && clickable[i]) {
             return i;
         }
     }
-
     for (int i = n - 1; i >= 0; i--) {
-        if (clickable[i]) {
+        if (clickable && clickable[i]) {
             return i;
         }
     }
-    return 0;
+    return -1;
 }
 
 void PopupMenuOpen(PopupMenuState* s, Ctx* cx) {
@@ -50244,7 +52746,8 @@ void PopupMenuDismissAll(PopupMenuState* s, Ctx* cx) {
     }
 }
 
-void PopupMenuConfirm(PopupMenuState* s, Ctx* cx, int ix) {
+void PopupMenuConfirm(PopupMenuState* s, Ctx* cx, int ix,
+                      const ClickEvent* ev) {
 
     PopupMenuRow row = {};
     bool have = ix >= 0 && ix < len(s->rows);
@@ -50252,13 +52755,13 @@ void PopupMenuConfirm(PopupMenuState* s, Ctx* cx, int ix) {
         row = s->rows[ix];
     }
 
+    ClickEvent fallback = {};
+    const ClickEvent* use = ev ? ev : &fallback;
     if (have && row.handler.IsValid()) {
-        ClickEvent ev = {};
-        ListenerCall(cx->app, cx->win, row.handler, &ev);
+        ListenerCall(cx->app, cx->win, row.handler, use);
     }
     if (s->onConfirm.IsValid()) {
-        ClickEvent ev = {};
-        ListenerCall(cx->app, cx->win, ListenerFill(s->onConfirm, ix), &ev);
+        ListenerCall(cx->app, cx->win, ListenerFill(s->onConfirm, ix), use);
     }
 
     if (have && row.action && !row.handler.IsValid()) {
@@ -50276,22 +52779,30 @@ void PopupMenuConfirm(PopupMenuState* s, Ctx* cx, int ix) {
 void PopupMenuPerform(PopupMenuState* s, Ctx* cx, PopupMenuAction act,
                       const bool* clickable, const bool* hasSubmenu, int n) {
     switch (act) {
-        case PopupMenuAction::SelectPrev:
-            s->selected = PopupMenuPrevIndex(clickable, n, s->selected);
-            s->openSubmenu = -1;
-            Notify(cx);
+        case PopupMenuAction::SelectPrev: {
+            int prev = PopupMenuPrevIndex(clickable, n, s->selected);
+
+            if (prev >= 0 && prev != s->selected) {
+                s->selected = prev;
+                s->openSubmenu = -1;
+                Notify(cx);
+            }
             break;
-        case PopupMenuAction::SelectNext:
-            s->selected = PopupMenuNextIndex(clickable, n, s->selected);
-            s->openSubmenu = -1;
-            Notify(cx);
+        }
+        case PopupMenuAction::SelectNext: {
+            int next = PopupMenuNextIndex(clickable, n, s->selected);
+            if (next >= 0 && next != s->selected) {
+                s->selected = next;
+                s->openSubmenu = -1;
+                Notify(cx);
+            }
             break;
+        }
         case PopupMenuAction::Confirm:
+
             if (s->selected >= 0 && s->selected < n && clickable[s->selected]) {
                 if (hasSubmenu && hasSubmenu[s->selected]) {
-
-                    s->openSubmenu = s->selected;
-                    Notify(cx);
+                    PopupMenuEnterSubmenu(s, cx, s->selected);
                 } else {
                     PopupMenuConfirm(s, cx, s->selected);
                 }
@@ -50309,8 +52820,7 @@ void PopupMenuPerform(PopupMenuState* s, Ctx* cx, PopupMenuAction act,
         case PopupMenuAction::OpenSubmenu:
             if (s->selected >= 0 && s->selected < n && hasSubmenu &&
                 hasSubmenu[s->selected]) {
-                s->openSubmenu = s->selected;
-                Notify(cx);
+                PopupMenuEnterSubmenu(s, cx, s->selected);
             }
             break;
         case PopupMenuAction::CloseSubmenu:
@@ -50394,9 +52904,9 @@ void PopupMenuState::OnAction(PopupMenuState* self, Ctx* cx,
 }
 
 void PopupMenuState::OnItemClick(PopupMenuState* self, Ctx* cx,
-                                 const ClickEvent*, int64_t ix) {
+                                 const ClickEvent* ev, int64_t ix) {
     self->selected = (int)ix;
-    PopupMenuConfirm(self, cx, (int)ix);
+    PopupMenuConfirm(self, cx, (int)ix, ev);
 }
 
 void PopupMenuState::OnTriggerClick(PopupMenuState* self, Ctx* cx,
@@ -50463,11 +52973,35 @@ void PopupMenuState::OnItemHover(PopupMenuState* self, Ctx* cx,
     Notify(cx);
 }
 
+void PopupMenuEnterSubmenu(PopupMenuState* s, Ctx* cx, int ix) {
+    if (!s) {
+        return;
+    }
+    s->selected = ix;
+    s->openSubmenu = ix;
+    PopupMenuState* child = nullptr;
+    int first = -1;
+    if (cx && ix >= 0 && ix < s->rows.len) {
+        child = s->rows[ix].submenuState.Get(cx);
+        first = s->rows[ix].submenuSelect;
+    }
+    if (child) {
+        child->open = true;
+        child->selected = first;
+        if (cx && !child->focus.IsValid()) {
+            child->focus = FocusHandleNew(cx);
+        }
+        if (cx && cx->win && child->focus.IsValid()) {
+            FocusHandleFocus(cx->win, child->focus);
+        }
+    }
+    Notify(cx);
+}
+
 void PopupMenuState::OnSubmenuClick(PopupMenuState* self, Ctx* cx,
                                     const ClickEvent*, int64_t ix) {
-    self->selected = (int)ix;
-    self->openSubmenu = (int)ix;
-    Notify(cx);
+
+    PopupMenuEnterSubmenu(self, cx, (int)ix);
 }
 
 void PopupMenuState::OnSubmenuHover(PopupMenuState* self, Ctx* cx,
@@ -52882,6 +55416,8 @@ bool ResizableState::ResizePanel(Ctx* cx, int ix, float size) {
         ResizablePanelResize(sizes.els, mins.els, maxs.els, sizes.len, handle,
                              requested, ContainerSize(), fixedFlags);
 
+    dragging = -1;
+
     if (onResized.IsValid()) {
         ResizablePanelEvent ev = {sizes.els, sizes.len};
         ListenerCall(cx->app, cx->win, onResized, &ev);
@@ -54533,6 +57069,8 @@ const float kOverscrollFrame = 1.f / 60.f;
 
 const double kOverscrollSpeedSpan = 0.05;
 
+const float kOverscrollRounding = 0.01f;
+
 static const float kBounceTau = 6.2831853071795864769f;
 
 static float BounceOmega(const ScrollBounceMotion& motion) {
@@ -54758,11 +57296,13 @@ bool ScrollOverscroll::Packet(float dy, TouchPhase phase, float extent,
         float rest = Offset() != 0 ? physics.Pull(dy) : dy;
         if (rest != 0 && scroll) {
             float unused = rest - scroll(user, rest);
-            if (unused != 0) physics.Pull(unused);
+            if (fabsf(unused) > kOverscrollRounding) physics.Pull(unused);
         }
         if (phase == TouchPhase::Ended || phase == TouchPhase::Cancelled) {
             bool moving = hasMoved && now - movedAt < kOverscrollStill;
-            physics.LetGo((moving ? velocity : 0) * kOverscrollCarry);
+
+            float speed = moving && Offset() != 0 ? velocity : 0;
+            physics.LetGo(speed * kOverscrollCarry);
             thrown = true;
             spent = Offset() != 0;
         }
@@ -54771,7 +57311,7 @@ bool ScrollOverscroll::Packet(float dy, TouchPhase phase, float extent,
         if (scroll) scroll(user, dy);
     } else if (scroll) {
         float unused = dy - scroll(user, dy);
-        if (unused != 0) {
+        if (fabsf(unused) > kOverscrollRounding) {
             physics.LetGo(velocity * kOverscrollCarry);
             thrown = true;
             spent = true;
@@ -54988,12 +57528,15 @@ struct OwnedScroll {
 static float OwnedScrollBy(void* user, float dy) {
     OwnedScroll* a = (OwnedScroll*)user;
     Point before = a->handle.Offset();
-    float y = before.y + dy;
+
+    float requested = before.y + dy;
+    float y = requested;
     if (y < -a->max) y = -a->max;
     if (y > 0) y = 0;
     Point next = before;
     next.y = y;
     a->handle.SetOffset(next);
+    if (y == requested) return dy;
     return next.y - before.y;
 }
 
@@ -55313,6 +57856,56 @@ namespace gpui {
 
 static const float kNotchPi = 3.14159265f;
 
+static const float kClaimEpsilon = 0.5f;
+
+static bool gHasHorizontalClaim = false;
+static HorizontalScrollClaim gHorizontalClaim = {};
+
+float HorizontalScrollMoved(float rustOffset, float deltaX, float axisMax) {
+    if (axisMax < 0) {
+        axisMax = 0;
+    }
+    float current = rustOffset;
+    if (current < -axisMax) {
+        current = -axisMax;
+    }
+    if (current > 0) {
+        current = 0;
+    }
+    float next = rustOffset + deltaX;
+    if (next < -axisMax) {
+        next = -axisMax;
+    }
+    if (next > 0) {
+        next = 0;
+    }
+    return next - current;
+}
+
+void NoteHorizontalScrollClaim(float moved) {
+    if (moved < kClaimEpsilon && moved > -kClaimEpsilon) {
+        return;
+    }
+    gHasHorizontalClaim = true;
+    gHorizontalClaim.at = TimeNow();
+    gHorizontalClaim.deltaX = moved;
+}
+
+bool LastHorizontalScrollClaim(HorizontalScrollClaim* out) {
+    if (!gHasHorizontalClaim) {
+        return false;
+    }
+    if (out) {
+        *out = gHorizontalClaim;
+    }
+    return true;
+}
+
+void ClearHorizontalScrollClaim() {
+    gHasHorizontalClaim = false;
+    gHorizontalClaim = {};
+}
+
 CornerNotch CornerNotchGeometry(float cornerX, float cornerY, float xDir,
                                 float yDir, float radius) {
 
@@ -55437,11 +58030,29 @@ ScrollableMask* ScrollableMask::New(Ctx* cx, Axis axis, El* element) {
     return mask;
 }
 
+ScrollableMask* ScrollableMask::VerticalWheel(Ctx* cx, El* element) {
+    ScrollableMask* mask = New(cx, Axis::Horizontal, element);
+    mask->verticalWheel = true;
+    return mask;
+}
+
 El* ScrollableMask::Apply(El* element, Axis axis) {
     if (!element) {
         return nullptr;
     }
     element->ScrollMask(axis);
+    if (!element->scrollId && !element->scrollFromPath) {
+        element->ScrollFromPath();
+    }
+    return element;
+}
+
+El* ScrollableMask::ApplyVerticalWheel(El* element) {
+    if (!element) {
+        return nullptr;
+    }
+
+    element->scrollMaskAxes |= 4;
     if (!element->scrollId && !element->scrollFromPath) {
         element->ScrollFromPath();
     }
@@ -55459,7 +58070,8 @@ ScrollableMask* ScrollableMask::Debug(bool v) {
 }
 
 El* ScrollableMask::IntoEl() {
-    El* result = Apply(element, axis);
+    El* result =
+        verticalWheel ? ApplyVerticalWheel(element) : Apply(element, axis);
     if (!result) {
         return Div(a);
     }
@@ -55635,20 +58247,22 @@ static El* ApplyScrollbarTheme(Ctx* cx, El* box) {
 
 static const float kMinThumb = 48.f;
 
-ScrollbarThumbGeometry ScrollbarGeometry(float origin, float container,
-                                         float content, float marginEnd,
-                                         float inset, float minLength) {
+ScrollbarThumbGeometry ScrollbarGeometry(float origin, float trackSize,
+                                         float viewport, float content,
+                                         float marginEnd, float inset,
+                                         float minLength) {
     ScrollbarThumbGeometry out;
     out.origin = origin;
-    float track = container - marginEnd;
+    float track = trackSize - marginEnd;
     if (track < 0) track = 0;
-    float logical = content > 0 ? container / content * container : 0;
+
+    float logical = content > 0 ? viewport / content * track : 0;
     logical = ClampF(logical, minLength, track);
     float maxInset = logical * .5f;
     out.inset = ClampF(inset, 0, maxInset);
     out.length = logical - out.inset * 2.f;
     out.travel = track - logical;
-    out.extent = content - container;
+    out.extent = content - viewport;
     return out;
 }
 
@@ -55705,7 +58319,8 @@ float ScrollbarThumbPos(float track, float thumb, float offset, float container,
 
 AxisPrepaintState ScrollbarPrepaintAxis(Axis axis, Bounds track, float offset,
                                         float containerSize, float contentSize,
-                                        const ScrollbarThumbStyle& style) {
+                                        const ScrollbarThumbStyle& style,
+                                        float viewportSize) {
     AxisPrepaintState out;
     out.axis = axis;
     out.barHitbox = track;
@@ -55714,17 +58329,18 @@ AxisPrepaintState ScrollbarPrepaintAxis(Axis axis, Bounds track, float offset,
     out.containerSize = containerSize;
     out.trackWidth = axis == Axis::Vertical ? track.w : track.h;
 
+    float viewport = viewportSize > 0 ? viewportSize : containerSize;
     float trackLength = axis == Axis::Vertical ? track.h : track.w;
-    if (trackLength <= 0 || containerSize <= 0 ||
-        contentSize <= containerSize) {
+    if (trackLength <= 0 || containerSize <= 0 || viewport <= 0 ||
+        contentSize <= viewport) {
         return out;
     }
 
     float minLength = style.hasMinLength ? style.minLength : kMinThumb;
     float inset = style.hasInset ? style.inset : 4.f;
-    ScrollbarThumbGeometry geometry =
-        ScrollbarGeometry(axis == Axis::Vertical ? track.y : track.x,
-                          containerSize, contentSize, 0, inset, minLength);
+    ScrollbarThumbGeometry geometry = ScrollbarGeometry(
+        axis == Axis::Vertical ? track.y : track.x, containerSize, viewport,
+        contentSize, 0, inset, minLength);
     float thumbStart = geometry.Start(offset);
     float thumbLength = geometry.length;
     float thumbWidth = style.hasWidth ? style.width : 6.f;
@@ -55875,6 +58491,8 @@ void SelectInitKeys() {
     bound = KeymapGeneration();
     const char* ctx = "Select";
     KeyBinding bindings[] = {
+
+        {"space", action::Confirm(), "Select && !Input"},
         {"up", action::SelectUp(), ctx},
         {"down", action::SelectDown(), ctx},
         {"enter", action::Confirm(), ctx},
@@ -57194,7 +59812,11 @@ struct Project {
     bool hasHighlight = false;
     Str href = {};
     bool raw = false;
+
+    bool rawDropLf = false;
     bool tableHead = false;
+
+    bool endsWithBreak = false;
 };
 
 static MdNode* NewMd(Project* p, MdKind kind) {
@@ -57209,14 +59831,73 @@ static MdNode* NewMd(Project* p, MdKind kind) {
     return node;
 }
 
+static bool TextKind(MdKind kind) {
+    return kind == MdKind::Paragraph || kind == MdKind::Heading ||
+           kind == MdKind::Cell || kind == MdKind::Code || kind == MdKind::Item;
+}
+
+static MdNode* OpenText(Project* p) {
+    if (TextKind(p->cur->kind)) return p->cur;
+    return p->para;
+}
+
 static MdNode* TextTarget(Project* p) {
-    MdKind kind = p->cur->kind;
-    if (kind == MdKind::Paragraph || kind == MdKind::Heading ||
-        kind == MdKind::Cell || kind == MdKind::Code || kind == MdKind::Item) {
-        return p->cur;
-    }
+    if (TextKind(p->cur->kind)) return p->cur;
     if (!p->para) p->para = NewMd(p, MdKind::Paragraph);
     return p->para;
+}
+
+static void DropLastRun(MdNode* node) {
+    if (!node || !node->runFirst) return;
+    if (node->runFirst == node->runLast) {
+        node->runFirst = nullptr;
+        node->runLast = nullptr;
+        return;
+    }
+    MdRun* prev = node->runFirst;
+    while (prev->next && prev->next != node->runLast) prev = prev->next;
+    prev->next = nullptr;
+    node->runLast = prev;
+}
+
+static void ShortenRun(MdRun* run) {
+    if (!run || len(run->text) <= 0) return;
+    run->text = Str(run->text.s, len(run->text) - 1);
+}
+
+static void TrimTrailingBreak(MdNode* node) {
+    if (!node || !node->runLast) return;
+    MdRun* only = node->runFirst;
+    if (only == node->runLast && len(only->imgSrc) == 0 &&
+        len(only->text) == 1 && only->text.s[0] == '\n') {
+        return;
+    }
+    MdRun* last = node->runLast;
+    if (len(last->imgSrc) > 0 || len(last->text) <= 0) return;
+    if (last->text.s[len(last->text) - 1] != '\n') return;
+    if (len(last->text) == 1)
+        DropLastRun(node);
+    else
+        ShortenRun(last);
+}
+
+static void FlushBreak(Project* p) {
+    if (!p->endsWithBreak) return;
+    TrimTrailingBreak(OpenText(p));
+    p->endsWithBreak = false;
+}
+
+static void StripSpaceBeforeBreak(Project* p) {
+    if (p->raw) return;
+    MdNode* node = OpenText(p);
+    if (!node || !node->runLast) return;
+    MdRun* last = node->runLast;
+    if (len(last->imgSrc) > 0 || len(last->text) <= 0) return;
+    if (last->text.s[len(last->text) - 1] != ' ') return;
+    if (len(last->text) == 1)
+        DropLastRun(node);
+    else
+        ShortenRun(last);
 }
 
 static bool TargetEmpty(Project* p) {
@@ -57242,13 +59923,17 @@ static void AddRun(Project* p, Str text) {
     else
         target->runFirst = run;
     target->runLast = run;
+    p->endsWithBreak = false;
 }
 
 static void base_text_format_AddText(Project* p, Str text) {
     if (len(text) <= 0) return;
     if (p->raw) {
-        if (!p->cur->runFirst && text.s[0] == '\n') {
-            text = Str(text.s + 1, len(text) - 1);
+        if (p->rawDropLf) {
+            p->rawDropLf = false;
+            if (text.s[0] == '\n') {
+                text = Str(text.s + 1, len(text) - 1);
+            }
         }
         AddRun(p, text);
         return;
@@ -57267,7 +59952,12 @@ static void base_text_format_AddText(Project* p, Str text) {
     }
     bool empty = TargetEmpty(p);
     int start = empty && n > 0 && out[0] == ' ' ? 1 : 0;
+
+    if (p->endsWithBreak) {
+        while (start < n && out[start] == ' ') start++;
+    }
     if (n - start == 1 && out[start] == ' ' && empty) return;
+    if (n - start <= 0) return;
     out[n] = 0;
     AddRun(p, Str(out + start, n - start));
 }
@@ -57330,6 +60020,8 @@ static void ProjectChildren(Project* p, const html5ever::Node* source) {
 }
 
 static void ProjectElement(Project* p, const html5ever::Node* source) {
+
+    if (p->rawDropLf) p->rawDropLf = false;
     Str name = html5ever::NodeName(p->a, source);
     if (StrEqI(name, "head") || StrEqI(name, "title") ||
         StrEqI(name, "script") || StrEqI(name, "style")) {
@@ -57341,10 +60033,24 @@ static void ProjectElement(Project* p, const html5ever::Node* source) {
         return;
     }
     if (StrEqI(name, "br")) {
+        StripSpaceBeforeBreak(p);
         AddRun(p, StrL("\n"));
+        p->endsWithBreak = true;
+        return;
+    }
+    if (StrEqI(name, "textarea")) {
+
+        bool oldRaw = p->raw;
+        bool oldDrop = p->rawDropLf;
+        p->raw = true;
+        p->rawDropLf = true;
+        ProjectChildren(p, source);
+        p->raw = oldRaw;
+        p->rawDropLf = oldDrop;
         return;
     }
     if (StrEqI(name, "hr")) {
+        FlushBreak(p);
         p->para = nullptr;
         NewMd(p, MdKind::Rule);
         return;
@@ -57364,6 +60070,7 @@ static void ProjectElement(Project* p, const html5ever::Node* source) {
     MdKind kind = MdKind::Group;
     uint8_t level = 0;
     if (BlockKind(p->a, source, &kind, &level)) {
+        FlushBreak(p);
         p->para = nullptr;
         MdNode* parent = p->cur;
         MdNode* node = NewMd(p, kind);
@@ -57383,7 +60090,9 @@ static void ProjectElement(Project* p, const html5ever::Node* source) {
             if (StrEqI(name, "th") && node->parent) node->parent->head = true;
         }
         bool oldRaw = p->raw;
+        bool oldDropLf = p->rawDropLf;
         p->raw = kind == MdKind::Code;
+        p->rawDropLf = p->raw;
         p->cur = node;
         const html5ever::Node* first = html5ever::NodeFirst(p->a, source);
         if (kind == MdKind::Code && first &&
@@ -57395,9 +60104,11 @@ static void ProjectElement(Project* p, const html5ever::Node* source) {
             }
         }
         ProjectChildren(p, source);
+        FlushBreak(p);
         p->cur = parent;
         p->para = nullptr;
         p->raw = oldRaw;
+        p->rawDropLf = oldDropLf;
         return;
     }
     uint8_t oldMarks = p->marks;
@@ -57431,6 +60142,8 @@ static void ProjectNode(Project* p, const html5ever::Node* source) {
         base_text_format_AddText(p, html5ever::NodeData(p->a, source));
     } else if (source->kind == html5ever::NodeKind::Element) {
         ProjectElement(p, source);
+    } else if (source->kind == html5ever::NodeKind::Comment) {
+        if (p->rawDropLf) p->rawDropLf = false;
     } else if (source->kind == html5ever::NodeKind::Document) {
         ProjectChildren(p, source);
     }
@@ -57446,6 +60159,7 @@ void HtmlParseInto(Arena* a, MdNode* parent, Str source) {
     project.a = a;
     project.cur = parent;
     ProjectNode(&project, dom);
+    FlushBreak(&project);
 }
 
 MdNode* HtmlParse(Arena* a, Str source) {
@@ -57459,6 +60173,7 @@ MdNode* HtmlParse(Arena* a, Str source) {
     project.a = a;
     project.cur = doc;
     ProjectNode(&project, dom);
+    FlushBreak(&project);
     return doc;
 }
 
@@ -57570,6 +60285,8 @@ struct TextSelectionParticipantState {
     Window* window = nullptr;
     TextSelectionSnapshot snapshot = {};
     bool hasSnapshot = false;
+
+    bool drawChanged = false;
     bool localSelection = false;
     bool registered = false;
     bool hasProjectedCopyText = false;
@@ -57607,14 +60324,14 @@ static TextSelectionParticipantState* ParticipantState(
     return app ? handle.state.Get((App*)app) : nullptr;
 }
 
-static bool SamePoint(Point a, Point b) {
+static bool base_text_selection_SamePoint(Point a, Point b) {
     return a.x == b.x && a.y == b.y;
 }
 
 static bool SameEndpoint(const TextSelectionEndpoint& a,
                          const TextSelectionEndpoint& b) {
     return a.entity == b.entity && a.hasEntity == b.hasEntity &&
-           SamePoint(a.point, b.point) && a.contentKey == b.contentKey &&
+           base_text_selection_SamePoint(a.point, b.point) && a.contentKey == b.contentKey &&
            a.hasContentKey == b.hasContentKey;
 }
 
@@ -57624,8 +60341,8 @@ static bool SameSnapshot(const TextSelectionSnapshot& a,
            SameEndpoint(a.cursor, b.cursor) && a.selecting == b.selecting &&
            a.hasWindowPoints == b.hasWindowPoints &&
            (!a.hasWindowPoints ||
-            (SamePoint(a.windowPoints.anchor, b.windowPoints.anchor) &&
-             SamePoint(a.windowPoints.cursor, b.windowPoints.cursor))) &&
+            (base_text_selection_SamePoint(a.windowPoints.anchor, b.windowPoints.anchor) &&
+             base_text_selection_SamePoint(a.windowPoints.cursor, b.windowPoints.cursor))) &&
            a.coverage == b.coverage;
 }
 
@@ -57888,24 +60605,53 @@ static bool ComputeParticipantSnapshot(TextSelectionParticipantState* receiver,
     return true;
 }
 
-static void ParticipantSetSnapshot(TextSelectionParticipantState* state,
-                                   App* app, bool hasSnapshot,
-                                   const TextSelectionSnapshot& snapshot) {
-    if (!state) return;
-    if (state->hasSnapshot == hasSnapshot &&
-        (!hasSnapshot || SameSnapshot(state->snapshot, snapshot))) {
-        return;
-    }
+static bool ParticipantSnapshotSame(const TextSelectionParticipantState* state,
+                                    bool hasSnapshot,
+                                    const TextSelectionSnapshot& snapshot) {
+    return state->hasSnapshot == hasSnapshot &&
+           (!hasSnapshot || SameSnapshot(state->snapshot, snapshot));
+}
+
+static void ParticipantStoreSnapshot(TextSelectionParticipantState* state,
+                                     bool hasSnapshot,
+                                     const TextSelectionSnapshot& snapshot) {
     state->hasSnapshot = hasSnapshot;
     if (hasSnapshot) state->snapshot = snapshot;
     StrFree(state->projectedCopyText);
     state->projectedCopyText = {};
     state->hasProjectedCopyText = false;
+}
+
+static void ParticipantEmitChanged(TextSelectionParticipantState* state,
+                                   App* app,
+                                   const TextSelectionSnapshot& snapshot) {
+    state->drawChanged = false;
     TextSelectionEvent event;
     event.kind = TextSelectionEventKind::SelectionChanged;
-    event.hasSnapshot = hasSnapshot;
+    event.hasSnapshot = state->hasSnapshot;
     event.snapshot = snapshot;
     EntityEmit(app, state->window, state->self, &event);
+}
+
+static void ParticipantSetSnapshot(TextSelectionParticipantState* state,
+                                   App* app, bool hasSnapshot,
+                                   const TextSelectionSnapshot& snapshot) {
+    if (!state) return;
+    bool same = ParticipantSnapshotSame(state, hasSnapshot, snapshot);
+
+    if (same && !state->drawChanged) return;
+    if (!same) ParticipantStoreSnapshot(state, hasSnapshot, snapshot);
+    ParticipantEmitChanged(state, app, snapshot);
+}
+
+static void ParticipantRememberSnapshot(TextSelectionParticipantState* state,
+                                        bool hasSnapshot,
+                                        const TextSelectionSnapshot& snapshot) {
+    if (!state || ParticipantSnapshotSame(state, hasSnapshot, snapshot)) {
+        return;
+    }
+    ParticipantStoreSnapshot(state, hasSnapshot, snapshot);
+    state->drawChanged = true;
 }
 
 static void WindowSelectionPublish(Window* window) {
@@ -58040,7 +60786,11 @@ void TextSelectionHandle::Register(TextSelectionRegistration value,
         }
     }
     if (!found) VecAppend(selection->participants, state.id);
-    WindowSelectionPublish(window);
+
+    TextSelectionSnapshot snapshot;
+    bool has = ComputeParticipantSnapshot(participant, app, &snapshot);
+    participant = ParticipantState(*this, app);
+    ParticipantRememberSnapshot(participant, has, snapshot);
 }
 
 static bool PointInSelectionBand(Point position, float charWidth,
@@ -58376,8 +61126,13 @@ void WindowSelectionClear(Window* win) {
     s->cursor = -1;
     s->scope = 0;
     s->hasWindowPoints = false;
+    s->hasAnchorCell = false;
     s->touchMenuOpen = false;
     s->hasTouchEdgeDrag = false;
+    s->unitHeld = false;
+    s->unitClickCount = 0;
+    s->unitStart = 0;
+    s->unitEnd = 0;
     if (win->app) {
         Vec<EntityId> participants;
         for (int i = 0; i < len(s->participants); i++) {
@@ -58391,6 +61146,7 @@ void WindowSelectionClear(Window* win) {
             TextSelectionClearFn clear = participant->clear;
             void* clearUser = participant->clearUser;
             participant->hasSnapshot = false;
+            participant->drawChanged = false;
             participant->localSelection = false;
             StrFree(participant->projectedCopyText);
             participant->projectedCopyText = {};
@@ -58406,6 +61162,7 @@ void WindowSelectionClear(Window* win) {
         VecReset(participants);
     }
     s->clearing = false;
+    WindowSelectionApply(win);
 }
 
 bool WindowSelectionHas(const Window* win) {
@@ -58426,6 +61183,73 @@ static bool AnchorResolves(Window* win, const WindowSelection* s) {
     return participant && participant->registered && participant->window == win;
 }
 
+static void ClampDragToAnchorCell(const WindowSelection* s, float* x,
+                                  float* y) {
+    if (!s || !s->hasAnchorCell || !x || !y) {
+        return;
+    }
+    Point anchorOut;
+    Point cursorOut;
+    if (!ConfineToCell(true, s->anchorPoint, s->anchorCell, true, s->anchorCell,
+                       s->anchorPoint, {*x, *y}, &anchorOut, &cursorOut)) {
+        return;
+    }
+    *x = cursorOut.x;
+    *y = cursorOut.y;
+}
+
+static const Bounds* AnchorCellOf(const WindowSelection* s) {
+    return s && s->hasAnchorCell ? &s->anchorCell : nullptr;
+}
+
+static void SelectionUnitHold(WindowSelection* s, int clickCount, int a,
+                              int b) {
+    s->unitHeld = true;
+    s->unitClickCount = clickCount < 2 ? 2 : clickCount;
+    s->unitStart = a < b ? a : b;
+    s->unitEnd = a < b ? b : a;
+}
+
+static void SelectionUnitExtend(Window* win, float x, float y) {
+    WindowSelection* s = win ? win->sel : nullptr;
+    if (!s || !s->unitHeld) {
+        return;
+    }
+    PaintCtx* ctx = &win->paint;
+    float qx = x;
+    float qy = y;
+    ClampDragToAnchorCell(s, &qx, &qy);
+    const Bounds* cell = AnchorCellOf(s);
+    TextSelectionExtend(
+        &s->gesture,
+        TextHitOffsetIn(ctx, qx, qy, false, s->scope, nullptr, 0, cell) >= 0);
+    int off = TextHitOffsetIn(ctx, qx, qy, true, s->scope, nullptr, 0, cell);
+    s->cursorPoint = {qx, qy};
+    s->hasWindowPoints = true;
+    if (off < 0) {
+        return;
+    }
+    if (off >= s->unitStart && off < s->unitEnd) {
+        s->anchor = s->unitStart;
+        s->cursor = s->unitEnd;
+        s->gesture.didHitText = true;
+        return;
+    }
+    int edgeA = 0;
+    int edgeB = 0;
+    bool before = off < s->unitStart;
+    bool snapped = TextMultiClickRangeIn(ctx, qx, qy, s->unitClickCount,
+                                         s->scope, &edgeA, &edgeB, nullptr);
+    if (before) {
+        s->anchor = s->unitEnd;
+        s->cursor = snapped ? edgeA : off;
+    } else {
+        s->anchor = s->unitStart;
+        s->cursor = snapped ? edgeB : off;
+    }
+    s->gesture.didHitText = true;
+}
+
 void WindowSelectionPress(Window* win, float x, float y, int clickCount,
                           bool extend) {
     if (win && BaseIsTextSelectionSuppressed(win->app)) {
@@ -58444,6 +61268,13 @@ void WindowSelectionPress(Window* win, float x, float y, int clickCount,
         Point anchorPoint = s->anchorPoint;
         bool anchorInsideText = s->anchorInsideText;
         EntityId anchorParticipant = s->anchorParticipant;
+        bool hasAnchorCell = s->hasAnchorCell;
+        Bounds anchorCell = s->anchorCell;
+
+        bool keepUnit = extend && s->unitHeld;
+        int unitClickCount = s->unitClickCount;
+        int unitStart = s->unitStart;
+        int unitEnd = s->unitEnd;
         WindowSelectionClear(win);
         if (keep) {
             s->anchor = anchor;
@@ -58454,19 +61285,34 @@ void WindowSelectionPress(Window* win, float x, float y, int clickCount,
             s->hasWindowPoints = true;
             s->anchorInsideText = anchorInsideText;
             s->anchorParticipant = anchorParticipant;
+            s->hasAnchorCell = hasAnchorCell;
+            s->anchorCell = anchorCell;
+            if (keepUnit) {
+                s->unitHeld = true;
+                s->unitClickCount = unitClickCount;
+                s->unitStart = unitStart;
+                s->unitEnd = unitEnd;
+            }
         }
     }
     PaintCtx* ctx = &win->paint;
 
     if (extend && s->anchor >= 0 && AnchorResolves(win, s)) {
-        int off = TextHitOffsetIn(ctx, x, y, true, s->scope, nullptr);
+        float qx = x;
+        float qy = y;
+        ClampDragToAnchorCell(s, &qx, &qy);
+        int off = TextHitOffsetIn(ctx, qx, qy, true, s->scope, nullptr, 0,
+                                  AnchorCellOf(s));
         if (off >= 0) {
             s->cursor = off;
-            s->cursorPoint = {x, y};
+            s->cursorPoint = {qx, qy};
             s->hasWindowPoints = true;
             bool inside =
                 TextHitOffsetIn(ctx, x, y, false, s->scope, nullptr) >= 0;
             TextSelectionBegin(&s->gesture, s->anchorInsideText || inside);
+            if (s->unitHeld) {
+                SelectionUnitExtend(win, x, y);
+            }
         }
         WindowSelectionPublish(win);
         return;
@@ -58491,8 +61337,13 @@ void WindowSelectionPress(Window* win, float x, float y, int clickCount,
         s->anchorInsideText = true;
         s->anchorParticipant = {};
         ParticipantAt(win, s->anchorPoint, &s->anchorParticipant);
+        s->hasAnchorCell = TextTableCellAt(ctx, x, y, &s->anchorCell);
         TextSelectionBegin(&s->gesture, true);
-        TextSelectionEnd(&s->gesture);
+        if (BaseIsTouchPress(win->app)) {
+            TextSelectionEnd(&s->gesture);
+        } else {
+            SelectionUnitHold(s, clickCount, a, b);
+        }
         WindowSelectionPublish(win);
         return;
     }
@@ -58515,10 +61366,12 @@ void WindowSelectionPress(Window* win, float x, float y, int clickCount,
         TextSelectionParticipantState* participant =
             ParticipantAt(win, s->anchorPoint, &participantId);
         s->anchorParticipant = participant ? participantId : EntityId{};
+        s->hasAnchorCell = TextTableCellAt(ctx, x, y, &s->anchorCell);
         if (participant && participant->focus) {
             participant->focus(participant->focusUser, win, win->app);
         }
         WindowSelectionPublish(win);
+        WindowSelectionApply(win);
         return;
     }
     WindowSelectionClear(win);
@@ -58540,6 +61393,8 @@ bool WindowSelectionLongPressStart(Window* win, float x, float y) {
     WindowSelectionPress(win, x, y, 2, false);
     WindowSelection* selection = win ? win->sel : nullptr;
     if (!selection || !WindowSelectionHas(win)) return false;
+
+    selection->unitHeld = false;
     selection->gesture.selecting = true;
     selection->gesture.didHitText = true;
     selection->touchMenuOpen = false;
@@ -58594,16 +61449,28 @@ void WindowSelectionDrag(Window* win, float x, float y) {
     }
     PaintCtx* ctx = &win->paint;
 
-    TextSelectionExtend(
-        &s->gesture, TextHitOffsetIn(ctx, x, y, false, s->scope, nullptr) >= 0);
-    int off = TextHitOffsetIn(ctx, x, y, true, s->scope, nullptr);
-    if (off >= 0) {
-        s->cursor = off;
-        s->cursorPoint = {x, y};
-        s->hasWindowPoints = true;
+    float qx = x;
+    float qy = y;
+    ClampDragToAnchorCell(s, &qx, &qy);
+    const Bounds* cell = AnchorCellOf(s);
+    if (s->unitHeld) {
+        SelectionUnitExtend(win, x, y);
+    } else {
+        TextSelectionExtend(
+            &s->gesture, TextHitOffsetIn(ctx, qx, qy, false, s->scope, nullptr,
+                                         0, cell) >= 0);
+        int off =
+            TextHitOffsetIn(ctx, qx, qy, true, s->scope, nullptr, 0, cell);
+        if (off >= 0) {
+            s->cursor = off;
+            s->cursorPoint = {qx, qy};
+            s->hasWindowPoints = true;
+        }
     }
     ParticipantAutoScroll(win, {x, y}, false);
     WindowSelectionPublish(win);
+
+    WindowSelectionApply(win);
 }
 
 void WindowSelectionRelease(Window* win) {
@@ -58612,6 +61479,7 @@ void WindowSelectionRelease(Window* win) {
         ParticipantAutoScroll(win, s->cursorPoint, true);
         TextSelectionEnd(&s->gesture);
         WindowSelectionPublish(win);
+        WindowSelectionApply(win);
     }
 }
 
@@ -58625,7 +61493,7 @@ int WindowSelectionTextAs(Window* win, char* out, int cap,
     }
     WindowSelection* s = win->sel;
     return CopyTextHitsIn(&win->paint, s->anchor, s->cursor, s->scope, out, cap,
-                          fmt);
+                          fmt, AnchorCellOf(s));
 }
 
 int WindowSelectionText(Window* win, char* out, int cap) {
@@ -58660,7 +61528,7 @@ int WindowSelectionTextForEntity(Window* win, EntityId owner, char* out,
     WindowSelection* selection = win->sel;
     return CopyTextHitsInEntity(&win->paint, selection->anchor,
                                 selection->cursor, selection->scope, owner, out,
-                                cap, fmt);
+                                cap, fmt, AnchorCellOf(selection));
 }
 
 void WindowSelectionSelectAll(Window* win, EntityId owner) {
@@ -58703,6 +61571,7 @@ void WindowSelectionSelectAll(Window* win, EntityId owner) {
     selection->cursorPoint = {lastBounds.x + lastBounds.w,
                               lastBounds.y + lastBounds.h};
     selection->hasWindowPoints = true;
+    selection->hasAnchorCell = false;
     TextSelectionBegin(&selection->gesture, true);
     TextSelectionEnd(&selection->gesture);
     WindowSelectionPublish(win);
@@ -58822,6 +61691,31 @@ int TextSelection::SelectedText(Window* window, App* app, char* out, int cap) {
     VecReset(active);
     out[written] = 0;
     if (written > 0) return written;
+
+    if (selection && app && WindowSelectionHas(window)) {
+        int lo = selection->anchor < selection->cursor ? selection->anchor
+                                                       : selection->cursor;
+        int hi = selection->anchor < selection->cursor ? selection->cursor
+                                                       : selection->anchor;
+        for (int i = 0; i < window->paint.texts.len; i++) {
+            const TextHit& hit = window->paint.texts[i];
+            if (selection->scope && hit.scope != selection->scope) {
+                continue;
+            }
+            int hitEnd = hit.docOff + (hit.atom ? 1 : len(hit.text));
+            if (hitEnd <= lo || hit.docOff >= hi) {
+                continue;
+            }
+            if (!EntityHasDrop(app, hit.owner, &EntityDropT<TextViewState>)) {
+                continue;
+            }
+            TextViewState* view = (TextViewState*)EntityGet(app, hit.owner);
+            if (view && !view->CopyDocumentReady()) {
+                out[0] = 0;
+                return 0;
+            }
+        }
+    }
     return WindowSelectionText(window, out, cap);
 }
 
@@ -58914,6 +61808,18 @@ bool WindowSelectionLayerLive(const Window* win) {
            win->sel->layerFrame >= win->frameSeq;
 }
 
+static bool SelectionIdListed(const Vec<EntityId>& ids, EntityId id) {
+    if (!id.IsValid()) {
+        return false;
+    }
+    for (int i = 0; i < len(ids); i++) {
+        if (ids[i] == id) {
+            return true;
+        }
+    }
+    return false;
+}
+
 void WindowSelectionFinishFrame(Window* win) {
     WindowSelection* selection = win ? win->sel : nullptr;
     if (selection) {
@@ -58925,8 +61831,28 @@ void WindowSelectionFinishFrame(Window* win) {
     if (!selection || !win->app) return;
 
     Vec<EntityId> participants;
+    Vec<EntityId> stale;
     for (int i = 0; i < len(selection->participants); i++) {
-        VecAppend(participants, selection->participants[i]);
+        EntityId id = selection->participants[i];
+        VecAppend(participants, id);
+        TextSelectionParticipantState* participant =
+            (TextSelectionParticipantState*)EntityGet(win->app, id);
+        if (participant && participant->window == win &&
+            participant->registrationGeneration == selection->frameGeneration) {
+            continue;
+        }
+        VecAppend(stale, id);
+    }
+
+    bool endpointDeparted =
+        SelectionIdListed(stale, selection->anchorParticipant);
+    if (!endpointDeparted && selection->hasWindowPoints) {
+        EntityId cursorId = {};
+        ParticipantAt(win, selection->cursorPoint, &cursorId);
+        endpointDeparted = SelectionIdListed(stale, cursorId);
+    }
+    if (endpointDeparted) {
+        WindowSelectionClear(win);
     }
     for (int i = 0; i < len(participants); i++) {
         EntityId id = participants[i];
@@ -58950,6 +61876,7 @@ void WindowSelectionFinishFrame(Window* win) {
             participant->registered = false;
             participant->window = nullptr;
             participant->hasSnapshot = false;
+            participant->drawChanged = false;
             participant->localSelection = false;
             StrFree(participant->projectedCopyText);
             participant->projectedCopyText = {};
@@ -59384,6 +62311,40 @@ TextViewStyle& TextViewStyle::WithInlineCode(const gpui::Style& value,
     return *this;
 }
 
+static gpui::Style NormalizeInlineCodeStyle(gpui::Style style,
+                                            uint32_t* fields) {
+    if (fields && (*fields & StyleFieldFontSize)) {
+        float size = style.fontSize;
+
+        if (!(size > 0.f) || size > 1.0e20f || size != size) {
+            *fields &= ~StyleFieldFontSize;
+        }
+    }
+    return style;
+}
+
+TextViewStyle& TextViewStyle::WithInlineCodeStyle(const gpui::Style& value,
+                                                  uint32_t fields) {
+    uint32_t kept = fields;
+    inlineCodeStyle = NormalizeInlineCodeStyle(value, &kept);
+    inlineCodeStyleFields = kept;
+    return *this;
+}
+
+TextViewStyle& TextViewStyle::WithListStyle(const gpui::Style& value,
+                                            uint32_t fields) {
+    listStyle = value;
+    listStyleFields = fields;
+    return *this;
+}
+
+TextViewStyle& TextViewStyle::WithBlockquoteStyle(const gpui::Style& value,
+                                                  uint32_t fields) {
+    blockquoteStyle = value;
+    blockquoteStyleFields = fields;
+    return *this;
+}
+
 TextViewStyle& TextViewStyle::WithDark(bool value) {
     isDark = value;
     return *this;
@@ -59473,6 +62434,13 @@ static bool StyleFieldsEqual(const gpui::Style& a, const gpui::Style& b,
     if ((fields & StyleFieldBorderL) && a.borderL != b.borderL) return false;
     if ((fields & StyleFieldBorderR) && a.borderR != b.borderR) return false;
     if ((fields & StyleFieldFontSize) && a.fontSize != b.fontSize) return false;
+    if ((fields & StyleFieldFontWeight) &&
+        (a.fontWeight != b.fontWeight || a.fontBold != b.fontBold ||
+         a.fontSemibold != b.fontSemibold || a.fontMedium != b.fontMedium))
+        return false;
+    if ((fields & StyleFieldFontMono) && a.fontMono != b.fontMono) return false;
+    if ((fields & StyleFieldFontFamily) && a.fontFamily != b.fontFamily)
+        return false;
     if ((fields & StyleFieldWidth) && a.width != b.width) return false;
     if ((fields & StyleFieldHeight) && a.height != b.height) return false;
     if ((fields & StyleFieldMinWidth) && a.minW != b.minW) return false;
@@ -59507,7 +62475,11 @@ bool TextViewStyle::Equals(const TextViewStyle& other) const {
         tableFields != other.tableFields ||
         tableHeadFields != other.tableHeadFields ||
         tableCellFields != other.tableCellFields ||
-        inlineCodeFields != other.inlineCodeFields || isDark != other.isDark ||
+        inlineCodeFields != other.inlineCodeFields ||
+        inlineCodeStyleFields != other.inlineCodeStyleFields ||
+        listStyleFields != other.listStyleFields ||
+        blockquoteStyleFields != other.blockquoteStyleFields ||
+        isDark != other.isDark ||
         hasTableBackground != other.hasTableBackground ||
         (hasTableBackground &&
          !TextRgbaEq(tableBackground, other.tableBackground)) ||
@@ -59515,17 +62487,24 @@ bool TextViewStyle::Equals(const TextViewStyle& other) const {
         !StyleFieldsEqual(table, other.table, tableFields) ||
         !StyleFieldsEqual(tableHead, other.tableHead, tableHeadFields) ||
         !StyleFieldsEqual(tableCell, other.tableCell, tableCellFields) ||
-        !StyleFieldsEqual(inlineCode, other.inlineCode, inlineCodeFields)) {
+        !StyleFieldsEqual(inlineCode, other.inlineCode, inlineCodeFields) ||
+        !StyleFieldsEqual(inlineCodeStyle, other.inlineCodeStyle,
+                          inlineCodeStyleFields) ||
+        !StyleFieldsEqual(listStyle, other.listStyle, listStyleFields) ||
+        !StyleFieldsEqual(blockquoteStyle, other.blockquoteStyle,
+                          blockquoteStyleFields)) {
         return false;
     }
 
-    for (uint8_t level = 1; level <= 6; level++) {
-        gpui::Style mine;
-        gpui::Style theirs;
-        uint32_t fields = Heading(level, &mine);
-        if (fields != other.Heading(level, &theirs) ||
-            !StyleFieldsEqual(mine, theirs, fields)) {
-            return false;
+    if (heading != other.heading || headingData != other.headingData) {
+        for (uint8_t level = 1; level <= 6; level++) {
+            gpui::Style mine;
+            gpui::Style theirs;
+            uint32_t fields = Heading(level, &mine);
+            if (fields != other.Heading(level, &theirs) ||
+                !StyleFieldsEqual(mine, theirs, fields)) {
+                return false;
+            }
         }
     }
     return true;
@@ -59663,22 +62642,29 @@ void TextViewState::SetSelectionFormat(gpui::SelectionFormat value, App* app,
 }
 
 int TextViewState::SelectedText(Window* window, char* out, int cap) const {
+    if (!CopyDocumentReady()) {
+        if (out && cap > 0) {
+            out[0] = 0;
+        }
+        return 0;
+    }
     const WindowSelection* selection = window ? window->sel : nullptr;
-    if (format == TextViewFormat::Markdown &&
-        selectionFormat == SelectionFormat::Source && out && cap > 0 &&
-        selection && selectAllAnchor >= 0 &&
-        selection->anchor == selectAllAnchor &&
-        selection->cursor == selectAllCursor) {
+
+    bool selectAll = out && cap > 0 && selection && selectAllAnchor >= 0 &&
+                     selection->anchor == selectAllAnchor &&
+                     selection->cursor == selectAllCursor;
+    if (selectAll && format == TextViewFormat::Markdown &&
+        selectionFormat != SelectionFormat::Plain) {
         Str selected = Source();
         int n = std::min(len(selected), cap - 1);
         if (n > 0) memcpy(out, selected.s, (size_t)n);
         out[n] = 0;
         return n;
     }
-    return WindowSelectionTextForEntity(window, self, out, cap,
-                                        format == TextViewFormat::Html
-                                            ? gpui::SelectionFormat::Plain
-                                            : selectionFormat);
+    bool plain = format == TextViewFormat::Html;
+    return WindowSelectionTextForEntity(
+        window, self, out, cap,
+        plain ? gpui::SelectionFormat::Plain : selectionFormat);
 }
 
 SourceRangeSelection SourceRangeSelection::MappedRange(int start, int end) {
@@ -59963,6 +62949,10 @@ void TextViewState::OnAction(TextViewState* state, Ctx* cx,
         return;
     }
     if (event->action == input::Copy()) {
+
+        if (!state->CopyDocumentReady()) {
+            return;
+        }
         if (!WindowSelectionCopy(cx->win)) {
             const_cast<ActionEvent*>(event)->propagate = true;
         }
@@ -59999,6 +62989,8 @@ namespace md = markdown;
 struct MdDef {
     Str identifier;
     Str url;
+
+    Str title;
 };
 
 template <typename T>
@@ -60523,7 +63515,7 @@ static void base_text_AddText(MdBuild* b, Str s,
 }
 
 static void base_text_AddImage(MdBuild* b, Str src, Str alt, float w, float h,
-                     const md::Node* node = nullptr) {
+                     const md::Node* node = nullptr, Str title = {}) {
     if (len(src) <= 0) {
         return;
     }
@@ -60532,6 +63524,7 @@ static void base_text_AddImage(MdBuild* b, Str src, Str alt, float w, float h,
 
     r->hasImgSpan = node && MdNodeSpan(b, node, &r->imgSpan);
     r->imgSrc = src;
+    r->imgTitle = title;
     r->text = alt;
     r->imgW = w;
     r->imgH = h;
@@ -60921,13 +63914,18 @@ static void MdMarked(MdBuild* b, const md::Node* n, uint8_t mark) {
     b->marks = saved;
 }
 
-static Str MdDefUrl(MdBuild* b, Str identifier) {
+static const MdDef* MdDefFind(MdBuild* b, Str identifier) {
     for (const MdDef& def : b->defs) {
         if (StrEq(def.identifier, identifier)) {
-            return def.url;
+            return &def;
         }
     }
-    return {};
+    return nullptr;
+}
+
+static Str MdDefUrl(MdBuild* b, Str identifier) {
+    const MdDef* def = MdDefFind(b, identifier);
+    return def ? def->url : Str{};
 }
 
 static bool MdClaimedInline(MdBuild* b, const md::Node* n, MarkdownNode* out) {
@@ -61046,12 +64044,27 @@ static void MdInlineNode(MdBuild* b, const md::Node* n) {
         }
         case md::NodeKind::Image:
             base_text_AddImage(b, V(b, n, md::NodeStrKind::Url),
-                     V(b, n, md::NodeStrKind::Alt), 0, 0, n);
+                     V(b, n, md::NodeStrKind::Alt), 0, 0, n,
+                     V(b, n, md::NodeStrKind::Title));
             break;
-        case md::NodeKind::ImageReference:
-            base_text_AddImage(b, MdDefUrl(b, V(b, n, md::NodeStrKind::Identifier)),
-                     V(b, n, md::NodeStrKind::Alt), 0, 0, n);
+        case md::NodeKind::ImageReference: {
+
+            const MdDef* def =
+                MdDefFind(b, V(b, n, md::NodeStrKind::Identifier));
+            if (def) {
+                base_text_AddImage(b, def->url, V(b, n, md::NodeStrKind::Alt), 0, 0, n,
+                         def->title);
+            } else {
+                Span span;
+                Str raw;
+                if (MdNodeSpan(b, n, &span) && MdSourceSlice(b, span, &raw)) {
+                    Vec<SourceSegment> segments;
+                    MdSourceSegments(b, n, raw, false, segments);
+                    base_text_AddText(b, raw, &segments);
+                }
+            }
             break;
+        }
         case md::NodeKind::FootnoteReference: {
 
             uint8_t saved = b->marks;
@@ -61103,6 +64116,9 @@ static void MdCodeBlock(MdBuild* b, Str value, Str lang,
                         const md::Node* node = nullptr) {
     MdNode* n = base_text_Push(b, MdKind::Code);
     n->lang = lang;
+    if (node) {
+        n->meta = V(b, node, md::NodeStrKind::Meta);
+    }
     MdSetLeaf(b, n, node);
     Vec<SourceSegment> segments;
     if (node) {
@@ -61172,10 +64188,6 @@ static void MdTable(MdBuild* b, const md::Node* n) {
             }
             MdTableCell(b, align, cellIndex, cell, hasTableSpan,
                         tableSpan.start, &ordinal);
-            cellIndex++;
-        }
-        while (cellIndex < nCols) {
-            MdTableCell(b, align, cellIndex, nullptr, false, 0, &ordinal);
             cellIndex++;
         }
         base_text_Pop(b);
@@ -61300,8 +64312,13 @@ static void MdBlockNode(MdBuild* b, const md::Node* n) {
             base_text_Pop(b);
             break;
         }
-        case md::NodeKind::Definition:
+        case md::NodeKind::Definition: {
 
+            MdNode* d = base_text_Push(b, MdKind::Definition);
+            d->raw = V(b, n, md::NodeStrKind::Identifier);
+            base_text_Pop(b);
+            break;
+        }
         default:
             break;
     }
@@ -61309,11 +64326,15 @@ static void MdBlockNode(MdBuild* b, const md::Node* n) {
 
 static void MdCollectDefs(MdBuild* b, const md::Node* n) {
     if (n->kind == md::NodeKind::Definition) {
-        MdDef def;
-        def.identifier = V(b, n, md::NodeStrKind::Identifier);
-        def.url = V(b, n, md::NodeStrKind::Url);
-        b->defs.Append(b->a, def);
-        return;
+
+        Str id = V(b, n, md::NodeStrKind::Identifier);
+        if (!MdDefFind(b, id)) {
+            MdDef def;
+            def.identifier = id;
+            def.url = V(b, n, md::NodeStrKind::Url);
+            def.title = V(b, n, md::NodeStrKind::Title);
+            b->defs.Append(b->a, def);
+        }
     }
     for (const md::Node* child : md::NodeKids(b->a, n)) {
         MdCollectDefs(b, child);
@@ -61860,7 +64881,8 @@ El* TextView::Word(Str w, float font, Rgba color, uint8_t marks, int weight,
     if (marks & MdItalic) {
         t->Italic();
     }
-    if (marks & (MdLink | MdUnderline)) {
+
+    if ((marks & MdUnderline) || (marks & MdLink)) {
 
         TextSpan* sp = ArenaNew<TextSpan>(a);
         sp->lo = 0;
@@ -61881,14 +64903,54 @@ El* TextView::Word(Str w, float font, Rgba color, uint8_t marks, int weight,
         t->Bg(markBg);
     } else if (marks & MdCode) {
 
+        float sized = font * 0.875f;
+        bool namedSize = false;
+        float padL = 4.f;
+        float padR = 4.f;
+        float padT = 0.f;
+        float padB = 0.f;
+        auto take = [&](const gpui::Style& s, uint32_t fields) {
+            if ((fields & StyleFieldFontSize) && s.fontSize > 0.f) {
+                sized = s.fontSize;
+                namedSize = true;
+            }
+            if (fields & StyleFieldPad) {
+                padL = s.pad.left;
+                padR = s.pad.right;
+                padT = s.pad.top;
+                padB = s.pad.bottom;
+            }
+        };
+        take(textViewStyle.inlineCode, textViewStyle.inlineCodeFields);
+        take(textViewStyle.inlineCodeStyle, textViewStyle
+                                                .inlineCodeStyleFields);
         float radius = base_theme::Theme::Global(cx->app).tokens.radius.sm;
-        t->Font(font * 0.875f)
-            ->Mono()
-            ->PadX(4)
+        t->Mono()
+            ->PadL(padL)
+            ->PadR(padR)
+            ->PadT(padT)
+            ->PadB(padB)
             ->Radius(radius)
             ->Bg(textViewStyle.InlineCodeBackground());
-        if (textViewStyle.inlineCodeFields) {
-            t->Refine(textViewStyle.inlineCode, textViewStyle.inlineCodeFields);
+
+        uint32_t codeFields =
+            textViewStyle.inlineCodeFields & ~StyleFieldFontSize;
+        uint32_t boxFields =
+            textViewStyle.inlineCodeStyleFields & ~StyleFieldFontSize;
+        if (codeFields) {
+            t->Refine(textViewStyle.inlineCode, codeFields);
+        }
+        if (boxFields) {
+            t->Refine(textViewStyle.inlineCodeStyle, boxFields);
+        }
+        if (namedSize) {
+            float windowRem = cx && cx->win ? WindowRemSize(cx->win) : 16.f;
+            if (!(windowRem > 0.f)) {
+                windowRem = 16.f;
+            }
+            t->Font(sized * 16.f / windowRem);
+        } else {
+            t->Font(sized);
         }
     }
     if (selectable) {
@@ -61929,8 +64991,213 @@ static El* AlignRow(El* row, uint8_t align) {
     return row;
 }
 
+struct EditorHostScope {
+    int leafBegin = 0;
+};
+
+static Vec<EditorHostScope> gEditorHostScopes;
+static Vec<LeafGeometry> gEditorLeaves;
+
+static bool EditorHostOn() {
+    return len(gEditorHostScopes) > 0;
+}
+
+static void EditorHostFreeRange(int begin, int end) {
+    for (int i = begin; i < end; i++) {
+        StrFree(gEditorLeaves[i].text);
+        gEditorLeaves[i].text = {};
+    }
+}
+
+void EditorHostBegin() {
+    if (!EditorHostOn()) {
+        EditorHostFreeRange(0, len(gEditorLeaves));
+        VecReset(gEditorLeaves);
+    }
+    EditorHostScope scope;
+    scope.leafBegin = len(gEditorLeaves);
+    VecAppend(gEditorHostScopes, scope);
+}
+
+void EditorHostEnd() {
+    if (!EditorHostOn()) {
+        return;
+    }
+    int begin = gEditorHostScopes[len(gEditorHostScopes) - 1].leafBegin;
+    EditorHostFreeRange(begin, len(gEditorLeaves));
+    if (begin < len(gEditorLeaves)) {
+        VecRemoveAtN(gEditorLeaves, begin, len(gEditorLeaves) - begin);
+    }
+    VecPop(gEditorHostScopes);
+}
+
+bool EditorHostActive() {
+    return EditorHostOn();
+}
+
+static int EditorHostLeafBegin() {
+    if (!EditorHostOn()) {
+        return 0;
+    }
+    return gEditorHostScopes[len(gEditorHostScopes) - 1].leafBegin;
+}
+
+const LeafGeometry* EditorHostLeaf(uint64_t key) {
+    for (int i = EditorHostLeafBegin(); i < len(gEditorLeaves); i++) {
+        if (gEditorLeaves[i].key == key) {
+            return &gEditorLeaves[i];
+        }
+    }
+    return nullptr;
+}
+
+int EditorHostLeafCount() {
+    return len(gEditorLeaves) - EditorHostLeafBegin();
+}
+
+void MdSetLeafKey(MdNode* n, uint64_t key) {
+    if (!n) {
+        return;
+    }
+    n->hasEditorKey = true;
+    n->editorKey = key;
+}
+
+MdNode* ParseMarkdown(Arena* a, Str source) {
+    return MdParse(a, source);
+}
+
+Point LeafGeometry::PositionForIndex(int index) const {
+    if (!paint || !text.s) {
+        return {originX, originY};
+    }
+    if (index < 0) {
+        index = 0;
+    }
+    if (index > textLen) {
+        index = textLen;
+    }
+    float x = 0;
+    float y = 0;
+    float h = 0;
+    if (!TextPointAt(paint, text, font, maxW, wrap, index, &x, &y, &h, weight,
+                     lineH)) {
+        return {originX, originY};
+    }
+    return {originX + x, originY + y};
+}
+
+int LeafGeometry::IndexForPosition(Point at) const {
+    if (!paint || textLen <= 0) {
+        return 0;
+    }
+    if (at.y < bounds.y && at.x < bounds.x) {
+        return 0;
+    }
+    if (at.y > bounds.Bottom() && at.x > bounds.Right()) {
+        return textLen;
+    }
+    float relX = at.x - originX;
+    float relY = at.y - originY;
+    if (relX < 0) {
+        relX = 0;
+    }
+    if (relY < 0) {
+        relY = 0;
+    }
+    int hit = TextIndexAt(paint, text, font, maxW, wrap, relX, relY, weight,
+                          lineH, TextAlign::Left);
+    if (hit < 0) {
+        return 0;
+    }
+    if (hit > textLen) {
+        return textLen;
+    }
+    return hit;
+}
+
+static void EditorHostFill(LeafGeometry* g, PaintCtx* ctx, El* e,
+                           uint64_t key) {
+    g->key = key;
+    g->text = StrDup(e->text);
+    g->textLen = len(g->text);
+    g->bounds = e->Bounds();
+    g->font = e->laidFont > 0 ? e->laidFont : e->style.fontSize;
+    g->lineH = e->style.lineHeight;
+    g->maxW = e->laidMaxW > 0 ? e->laidMaxW : e->w;
+    g->weight = ElTextWeight(e);
+    g->wrap = e->style.wrap;
+    g->paint = ctx;
+    g->originX = e->x;
+    g->originY = e->y;
+    float x = 0;
+    float y = 0;
+    float h = 0;
+    if (ctx && TextPointAt(ctx, g->text, g->font, g->maxW, g->wrap, 0, &x, &y,
+                           &h, g->weight, g->lineH)) {
+        g->lineHeight = h;
+    }
+    if (g->lineHeight <= 0) {
+        float ratio = g->lineH > 0 ? g->lineH : kLineHeight;
+        g->lineHeight = g->font * ratio;
+    }
+    if (g->lineHeight <= 0) {
+        g->lineHeight = e->h;
+    }
+
+    g->caretHeight = g->lineHeight * 0.85f;
+    if (g->caretHeight > g->lineHeight) {
+        g->caretHeight = g->lineHeight;
+    }
+}
+
+static void EditorHostOnPrepaint(PaintCtx* ctx, El* e, void* user) {
+    if (!EditorHostOn() || !e || !user) {
+        return;
+    }
+    uint64_t key = *(uint64_t*)user;
+    int begin = gEditorHostScopes[len(gEditorHostScopes) - 1].leafBegin;
+    for (int i = begin; i < len(gEditorLeaves); i++) {
+        if (gEditorLeaves[i].key == key) {
+            StrFree(gEditorLeaves[i].text);
+            gEditorLeaves[i] = {};
+            EditorHostFill(&gEditorLeaves[i], ctx, e, key);
+            return;
+        }
+    }
+    LeafGeometry g = {};
+    EditorHostFill(&g, ctx, e, key);
+    VecAppend(gEditorLeaves, g);
+}
+
+static void EditorHostWatch(Arena* a, El* el, MdNode* n) {
+    if (!EditorHostOn() || !a || !el || !n || !n->hasEditorKey) {
+        return;
+    }
+    if (el->prePaint) {
+        return;
+    }
+    uint64_t* key = ArenaNew<uint64_t>(a);
+    if (!key) {
+        return;
+    }
+    *key = n->editorKey;
+    el->prePaint = EditorHostOnPrepaint;
+    el->customUser = key;
+}
+
 El* TextView::Inline(MdNode* n, float font, Rgba color, int weight,
                      uint8_t align) {
+
+    if (!n->runFirst) {
+        if (!n->hasEditorKey || !EditorHostOn()) {
+            return Div(a);
+        }
+        El* t = TextEl(a, StrL(""))->Font(font)->Wrap()->W(kFill);
+        t->MinH(FontLen(cx, font * kLineHeight));
+        EditorHostWatch(a, t, n);
+        return t;
+    }
 
     if (IsPlainRun(n->runFirst)) {
         El* t = TextEl(a, n->runFirst->text)->Font(font)->Wrap();
@@ -61954,7 +65221,9 @@ El* TextView::Inline(MdNode* n, float font, Rgba color, int weight,
         } else if (align == MdAlignRight) {
             t->TextRight();
         }
-        return t->W(kFill)->ReportLineSpan(FontLen(cx, font * kLineHeight));
+        t->W(kFill)->ReportLineSpan(FontLen(cx, font * kLineHeight));
+        EditorHostWatch(a, t, n);
+        return t;
     }
 
     bool inFlow = false;
@@ -61998,7 +65267,7 @@ El* TextView::Inline(MdNode* n, float font, Rgba color, int weight,
             SrcMap(w, wordRun->segments, wordRun->segmentCount, wordStart);
             RangeWashes(w, n, runOffset + wordStart,
                         runOffset + wordStart + wordLen,
-                        (marks & MdHighlight) != 0);
+                        (marks & MdHighlight) != 0, (marks & MdCode) != 0);
 
             if (hasReveal && revealOut &&
                 runOffset + wordStart + wordLen > revealOffset) {
@@ -62035,7 +65304,8 @@ El* TextView::Inline(MdNode* n, float font, Rgba color, int weight,
             context.textStyle.fontMedium = inheritedWeight == 1;
             context.textStyle.italic = (marks & MdItalic) != 0;
             context.textStyle.fontMono = (marks & MdCode) != 0;
-            context.textStyle.underline = (marks & (MdLink | MdUnderline)) != 0;
+            context.textStyle
+                .underline = (marks & MdUnderline) || (marks & MdLink);
             context.textStyle.strike = (marks & MdDel) != 0;
             if (marks & MdLink) {
                 context.textStyle.color = textViewStyle.link;
@@ -62356,7 +65626,9 @@ El* TextView::CodeBlock(MdNode* n) {
         if (RevealIn(n, &reveal)) {
             RevealMark(t, 0, reveal);
         }
-        box->Child(t->ReportLineSpan(FontLen(cx, codeFont * 1.6f)));
+        t->ReportLineSpan(FontLen(cx, codeFont * 1.6f));
+        EditorHostWatch(a, t, n);
+        box->Child(t);
     }
     El* actionsBox = nullptr;
     if (codeActions) {
@@ -62611,6 +65883,55 @@ static void CellFont(const TextView* tv, bool head, float* size, int* weight) {
             w = (int)FontWeight::Medium;
         }
     }
+
+    if (tv->quoteOn && w == 0 && (tv->quoteFields & StyleFieldFontWeight)) {
+        switch ((FontWeight)tv->quoteStyle.fontWeight) {
+            case FontWeight::Thin:
+                w = kFontWeightThin;
+                break;
+            case FontWeight::ExtraLight:
+                w = kFontWeightExtraLight;
+                break;
+            case FontWeight::Light:
+                w = kFontWeightLight;
+                break;
+            case FontWeight::Normal:
+                w = kFontWeightExplicitNormal;
+                break;
+            case FontWeight::Medium:
+                w = kFontWeightMedium;
+                break;
+            case FontWeight::Semibold:
+                w = kFontWeightSemibold;
+                break;
+            case FontWeight::Bold:
+                w = kFontWeightBold;
+                break;
+            case FontWeight::ExtraBold:
+                w = kFontWeightExtraBold;
+                break;
+            case FontWeight::Black:
+                w = kFontWeightBlack;
+                break;
+            default:
+                if (tv->quoteStyle.fontBold) {
+                    w = kFontWeightBold;
+                } else if (tv->quoteStyle.fontSemibold) {
+                    w = kFontWeightSemibold;
+                } else if (tv->quoteStyle.fontMedium) {
+                    w = kFontWeightMedium;
+                }
+                break;
+        }
+    }
+    if (tv->quoteOn && (tv->quoteFields & StyleFieldFontMono) &&
+        tv->quoteStyle.fontMono) {
+        w |= kFontMono;
+    }
+    if (tv->quoteOn && (tv->quoteFields & StyleFieldFontFamily) &&
+        tv->quoteStyle.fontFamily) {
+        w |= FontFamilyBits(tv->quoteStyle.fontFamily);
+    }
     *size = font;
     *weight = w;
 }
@@ -62643,13 +65964,49 @@ static float CellTextWidth(TextView* tv, MdNode* cell, bool head) {
             }
             if (i > start) {
                 Str seg(text.s + start, i - start);
+                float segSize = size;
+                int segWeight = weight;
+                float extra = 0;
+                if (run->marks & MdCode) {
+                    float codeFont = size * 0.875f;
+                    float padL = 4.f;
+                    float padR = 4.f;
+                    float borderL = 0;
+                    float borderR = 0;
+                    auto take = [&](const gpui::Style& s, uint32_t fields) {
+                        if ((fields & StyleFieldFontSize) && s.fontSize > 0.f) {
+                            codeFont = s.fontSize;
+                        }
+                        if (fields & StyleFieldPad) {
+                            padL = s.pad.left;
+                            padR = s.pad.right;
+                        }
+                        if (fields & StyleFieldBorder) {
+                            borderL = s.border;
+                            borderR = s.border;
+                        }
+                        if (fields & StyleFieldBorderL) {
+                            borderL = s.borderL;
+                        }
+                        if (fields & StyleFieldBorderR) {
+                            borderR = s.borderR;
+                        }
+                    };
+                    take(tv->textViewStyle.inlineCode, tv->textViewStyle
+                                                           .inlineCodeFields);
+                    take(tv->textViewStyle.inlineCodeStyle,
+                         tv->textViewStyle.inlineCodeStyleFields);
+                    segSize = codeFont;
+                    segWeight = weight | (int)kFontMono;
+                    extra = padL + padR + borderL + borderR;
+                }
                 float w = 0;
                 if (paint) {
-                    w = MeasureText(paint, seg, size, 0, false, weight).w;
+                    w = MeasureText(paint, seg, segSize, 0, false, segWeight).w;
                 } else {
-                    w = (float)(i - start) * size * 0.5f;
+                    w = (float)(i - start) * segSize * 0.5f;
                 }
-                line += w;
+                line += w + extra;
             }
             if (i >= n) {
                 break;
@@ -62792,6 +66149,7 @@ void TextView::AppendTableCells(El* row, MdNode* r, const float* maxW,
                        ->ClipX()
                        ->PadX(12)
                        ->PadY(7);
+        cell->selTableCell = true;
         if (tv->textViewStyle.tableCellFields) {
             cell->Refine(tv->textViewStyle.tableCell, tv->textViewStyle
                                                           .tableCellFields);
@@ -62981,7 +66339,10 @@ static El* TaskBox(const Ctx* cx, Arena* a, const TextViewStyle& style,
                   ->ItemsCenter()
                   ->JustifyCenter()
                   ->Radius(4)
-                  ->Border(1.5f, on ? style.link : style.mutedForeground);
+                  ->Border(1.5f, on ? style.link
+                                 : (style.listStyleFields & StyleFieldColor)
+                                     ? style.listStyle.color
+                                     : style.mutedForeground);
     if (on) {
         Rgba tick = style.isDark ? RgbaHex(0x000000) : RgbaHex(0xffffff);
         box->Bg(style.link)
@@ -63037,15 +66398,29 @@ El* TextView::Item(MdNode* n, Str marker, int depth) {
         if (len(shown) > 0 && shown.s[len(shown) - 1] == ' ') {
             shown.len--;
         }
-        row->Child(Div(a)
-                       ->W(indent)
-                       ->Shrink0()
-                       ->PadR(indent * 0.3f)
-                       ->Child(TextEl(a, shown)
-                                   ->Font(baseFont)
-                                   ->W(kFill)
-                                   ->TextRight()
-                                   ->Fg(textViewStyle.mutedForeground)));
+        Rgba markerFg = textViewStyle.mutedForeground;
+        float markerFont = baseFont;
+        const gpui::Style& markerStyle = textViewStyle.listStyle;
+        uint32_t markerFields = textViewStyle.listStyleFields;
+        if (markerFields & StyleFieldColor) {
+            markerFg = markerStyle.color;
+        }
+        if ((markerFields & StyleFieldFontSize) && markerStyle.fontSize > 0) {
+            markerFont = markerStyle.fontSize;
+        }
+
+        El* column =
+            Div(a)
+                ->W(indent)
+                ->Shrink0()
+                ->PadR(indent * 0.3f)
+                ->TextRight()
+                ->Child(
+                    TextEl(a, shown)->Font(markerFont)->W(kFill)->Fg(markerFg));
+        if (markerFields) {
+            column->Refine(markerStyle, markerFields);
+        }
+        row->Child(column);
     }
     return row->Child(content);
 }
@@ -63283,6 +66658,7 @@ struct RenderedIndexBuilder {
             case MdKind::Row:
             case MdKind::Cell:
             case MdKind::Rule:
+            case MdKind::Definition:
                 break;
         }
         if (len(text) > start) {
@@ -63796,6 +67172,7 @@ struct TextViewParse {
     MdNode* doc = nullptr;
     Str source = {};
     bool html = false;
+    TextViewFormat format = TextViewFormat::Markdown;
     uint64_t fingerprint = 0;
 };
 
@@ -63828,6 +67205,7 @@ struct TextViewParseJob {
     int from = 0;
     bool append = false;
     bool html = false;
+    TextViewFormat format = TextViewFormat::Markdown;
     bool frontmatter = false;
     bool mdx = false;
     uint64_t fingerprint = 0;
@@ -63861,9 +67239,10 @@ static MarkdownExtensions CopyParserExtensions(Arena* a,
     return copy;
 }
 
-static MdNode* TextViewParseSource(Arena* a, Str source, int from, bool html,
+static MdNode* TextViewParseSource(Arena* a, Str source, int from,
+                                   TextViewFormat format,
                                    const MarkdownExtensions* extensions) {
-    if (html) {
+    if (format == TextViewFormat::Html) {
         return HtmlParse(a, Str(source.s + from, len(source) - from));
     }
     return MdParseWithExtensions(a, source, extensions, from);
@@ -63878,7 +67257,7 @@ static void TextViewParseDetach(TextViewParseJob* job) {
 static void TextViewParseWork(TextViewParseJob* job) {
     job->arena = ArenaNew();
     job->doc = TextViewParseSource(job->arena, job->source, job->from,
-                                   job->html, &job->extensions);
+                                   job->format, &job->extensions);
     ArenaDelete(job->parserArena);
     job->parserArena = nullptr;
 }
@@ -63888,6 +67267,7 @@ static bool TextViewParseAppend(const TextViewState* s, uint64_t fingerprint,
     const TextViewParse* p = s->parsed;
     bool html = s->format == TextViewFormat::Html;
     if (!p || p->fingerprint != fingerprint || p->html != html ||
+        p->format != s->format ||
         s->fullUpdateRevision > s->committedRevision || s->baselinePending ||
         len(s->text) <= len(p->source) || !StrStartsWith(s->text, p->source)) {
         *from = 0;
@@ -63949,6 +67329,7 @@ static void TextViewCommit(TextViewState* s, App* app, Arena* arena,
         p = next;
     }
     p->html = s->format == TextViewFormat::Html;
+    p->format = s->format;
     p->fingerprint = fingerprint;
     s->committedRevision = revision;
     s->ReconcileRangeHighlights(p->doc, p->source, now, tailOnly,
@@ -63981,6 +67362,10 @@ Str TextViewState::Source() const {
     return parsed ? parsed->source : Str{};
 }
 
+const MdNode* TextViewState::ParsedDocument() const {
+    return parsed && parsed->doc ? parsed->doc : nullptr;
+}
+
 int TextViewState::ParsedBlockCount() const {
     int n = 0;
     for (const MdNode* c = parsed && parsed->doc ? parsed->doc->first : nullptr;
@@ -63994,7 +67379,8 @@ void TextViewState::StartParse(App* app, Window* window,
                                const MarkdownExtensions* extensions, bool now) {
     (void)window;
     bool html = format == TextViewFormat::Html;
-    if (extensions && !html) {
+    bool plain = format != TextViewFormat::Markdown;
+    if (extensions && !plain) {
         Arena* next = ArenaNew();
         parserExtensions = CopyParserExtensions(next, *extensions);
         ArenaDelete(parserArena);
@@ -64005,13 +67391,13 @@ void TextViewState::StartParse(App* app, Window* window,
         parserPlugins = extensions->blockParsers.len > 0 ||
                         extensions->inlineParsers.len > 0;
     }
-    uint64_t fingerprint = html ? 0 : parserFingerprint;
+    uint64_t fingerprint = plain ? 0 : parserFingerprint;
     if (parseFlight) {
         parseQueued = true;
         return;
     }
     if (parsed && committedRevision == updateRevision &&
-        parsed->fingerprint == fingerprint && parsed->html == html) {
+        parsed->fingerprint == fingerprint && parsed->format == format) {
         return;
     }
     int from = 0;
@@ -64023,7 +67409,7 @@ void TextViewState::StartParse(App* app, Window* window,
         Arena* arena = ArenaNew();
         Str source = StrDup(text);
         MdNode* doc =
-            TextViewParseSource(arena, source, from, html, &parserExtensions);
+            TextViewParseSource(arena, source, from, format, &parserExtensions);
         TextViewCommit(this, app, arena, doc, source, append, from,
                        updateRevision, fingerprint, kFadeAtFirstFrame);
         if (!append && app && self.IsValid()) {
@@ -64044,6 +67430,7 @@ void TextViewState::StartParse(App* app, Window* window,
     job->from = from;
     job->append = append;
     job->html = html;
+    job->format = format;
     job->frontmatter = parserFrontmatter;
     job->mdx = parserMdx;
     job->fingerprint = fingerprint;
@@ -64068,9 +67455,9 @@ static void TextViewParseJobDiscard(TextViewParseJob* job) {
 
 void TextViewState::CommitParsedUpdate(TextViewParseJob* job) {
     TextViewState* s = job->state;
-    if (job->fingerprint !=
-            (s->format == TextViewFormat::Html ? 0 : s->parserFingerprint) ||
-        job->revision < s->fullUpdateRevision ||
+    bool plain = s->format != TextViewFormat::Markdown;
+    if (job->fingerprint != (plain ? 0 : s->parserFingerprint) ||
+        job->format != s->format || job->revision < s->fullUpdateRevision ||
         job->revision <= s->committedRevision) {
         TextViewParseJobDiscard(job);
         return;
@@ -64104,13 +67491,15 @@ void TextViewState::ParseLanded(TextViewParseJob* job) {
 
 TextViewParseJob* TextViewParseNowForTest(TextViewState* s, App* app) {
     bool html = s->format == TextViewFormat::Html;
-    uint64_t fingerprint = html ? 0 : s->parserFingerprint;
+    bool plain = s->format != TextViewFormat::Markdown;
+    uint64_t fingerprint = plain ? 0 : s->parserFingerprint;
     auto* job = new TextViewParseJob();
     job->state = s;
     job->app = app;
     job->source = StrDup(s->text);
     job->append = TextViewParseAppend(s, fingerprint, &job->from);
     job->html = html;
+    job->format = s->format;
     job->frontmatter = s->parserFrontmatter;
     job->mdx = s->parserMdx;
     job->fingerprint = fingerprint;
@@ -64250,8 +67639,14 @@ int TextViewState::StreamFadeFrame(Arena* a, double now,
     return n;
 }
 
+static Rgba FadeRgba(Rgba c, float fadeOut) {
+    float keep = 1.f - (fadeOut < 0.f ? 0.f : (fadeOut > 1.f ? 1.f : fadeOut));
+    c.a = (uint8_t)((float)c.a * keep + 0.5f);
+    return c;
+}
+
 El* TextView::RangeWashes(El* t, const MdNode* leaf, int lo, int hi,
-                          bool markOver) {
+                          bool markOver, bool fadeCodeBox) {
 
     if (t && nStreamFades > 0 && leaf && leaf->leafStart >= 0 && hi > lo) {
         TextLeafKey key{leaf->leafStart, leaf->leafOrdinal};
@@ -64275,6 +67670,25 @@ El* TextView::RangeWashes(El* t, const MdNode* leaf, int lo, int hi,
                 }
             }
             t->Fades(fades, at);
+        }
+    }
+    if (fadeCodeBox && t) {
+
+        int nFades = 0;
+        const TextFade* fades = t->FadesGet(&nFades);
+        float fadeOut = 0;
+        int textLen = len(t->text);
+        for (int i = 0; i < nFades; i++) {
+            if (fades[i].lo <= 0 && fades[i].hi >= textLen &&
+                fades[i].fadeOut > fadeOut) {
+                fadeOut = fades[i].fadeOut;
+            }
+        }
+        if (fadeOut > 0.f) {
+            if (t->style.hasBg) {
+                t->style.bg.color = FadeRgba(t->style.bg.color, fadeOut);
+            }
+            t->style.borderColor = FadeRgba(t->style.borderColor, fadeOut);
         }
     }
     if (!t || !rangeHighlights || !leaf || leaf->leafStart < 0 || hi <= lo) {
@@ -64579,10 +67993,17 @@ El* TextView::Block(MdNode* n, int depth, bool inList, bool isLast) {
 
     float mb = (inList || isLast) ? 0.f : gap;
     switch (n->kind) {
-        case MdKind::Paragraph:
+        case MdKind::Paragraph: {
+
+            float font = baseFont;
+            if (quoteOn && (quoteFields & StyleFieldFontSize) &&
+                quoteStyle.fontSize > 0) {
+                font = quoteStyle.fontSize;
+            }
             SrcOpen({}, {});
             return Div(a)->W(kFill)->PadB(mb)->Child(
-                Inline(n, baseFont, BlockFg(), 0));
+                Inline(n, font, BlockFg(), 0));
+        }
         case MdKind::Heading: {
             float scale = 1.f;
             float line = 1.35f;
@@ -64655,17 +68076,31 @@ El* TextView::Block(MdNode* n, int depth, bool inList, bool isLast) {
                 ->Child(Div(a)->H(1)->W(kFill)->Bg(textViewStyle.border));
         }
         case MdKind::Quote: {
+            Rgba quoteFg = textViewStyle.mutedForeground;
+            if (textViewStyle.blockquoteStyleFields & StyleFieldColor) {
+                quoteFg = textViewStyle.blockquoteStyle.color;
+            }
             El* inner = Div(a)
                             ->FlexCol()
                             ->W(kFill)
-                            ->Fg(textViewStyle.mutedForeground)
+                            ->Fg(quoteFg)
                             ->BorderL(2, textViewStyle.border)
                             ->PadL(baseFont * 0.9f);
+            if (textViewStyle.blockquoteStyleFields) {
+                inner->Refine(textViewStyle.blockquoteStyle,
+                              textViewStyle.blockquoteStyleFields);
+            }
 
             Rgba savedFg = blockFg;
             bool savedSet = blockFgSet;
-            blockFg = textViewStyle.mutedForeground;
+            blockFg = quoteFg;
             blockFgSet = true;
+            gpui::Style savedQuote = quoteStyle;
+            uint32_t savedQuoteFields = quoteFields;
+            bool savedQuoteOn = quoteOn;
+            quoteStyle = textViewStyle.blockquoteStyle;
+            quoteFields = textViewStyle.blockquoteStyleFields;
+            quoteOn = quoteFields != 0;
 
             Str savedPre = srcLinePre;
             srcLinePre = SrcCat(a, srcLinePre, StrL("> "));
@@ -64676,6 +68111,9 @@ El* TextView::Block(MdNode* n, int depth, bool inList, bool isLast) {
             srcLinePre = savedPre;
             blockFg = savedFg;
             blockFgSet = savedSet;
+            quoteStyle = savedQuote;
+            quoteFields = savedQuoteFields;
+            quoteOn = savedQuoteOn;
             return Div(a)->W(kFill)->PadB(mb)->Child(inner);
         }
         case MdKind::List: {
@@ -64739,6 +68177,7 @@ El* TextView::Block(MdNode* n, int depth, bool inList, bool isLast) {
         case MdKind::Row:
         case MdKind::Cell:
         case MdKind::Custom:
+        case MdKind::Definition:
             return nullptr;
     }
     return nullptr;
@@ -64763,6 +68202,14 @@ void TextView::PrepareInheritedColor(PaintCtx*, El* element, Rgba inherited,
     element->style.color = resolved->style.color;
     element->style.hasColor = resolved->style.hasColor;
     element->lifecycle = resolved->lifecycle;
+}
+
+El* TextView::RenderDocument(MdNode* doc) {
+    El* col = Div(a)->FlexCol()->W(kFill);
+    if (doc) {
+        Blocks(col, doc, 0, false);
+    }
+    return col;
 }
 
 El* TextView::IntoEl() {
@@ -64792,6 +68239,26 @@ El* TextView::IntoEl() {
             resolved = resolved.OnTextColor(outerStyle.color);
         }
         textViewStyle = resolved;
+    }
+    if (inlineCodeStyleSet) {
+        gpui::Style merged = textViewStyle.inlineCodeStyle;
+        StyleApplyFields(&merged, inlineCodeStyle, inlineCodeStyleFields);
+        textViewStyle
+            .WithInlineCodeStyle(merged, textViewStyle.inlineCodeStyleFields |
+                                             inlineCodeStyleFields);
+    }
+    if (listStyleSet) {
+        gpui::Style merged = textViewStyle.listStyle;
+        StyleApplyFields(&merged, listStyle, listStyleFields);
+        textViewStyle.WithListStyle(
+            merged, textViewStyle.listStyleFields | listStyleFields);
+    }
+    if (blockquoteStyleSet) {
+        gpui::Style merged = textViewStyle.blockquoteStyle;
+        StyleApplyFields(&merged, blockquoteStyle, blockquoteStyleFields);
+        textViewStyle
+            .WithBlockquoteStyle(merged, textViewStyle.blockquoteStyleFields |
+                                             blockquoteStyleFields);
     }
     if (!state.IsValid()) {
         uint32_t kind = (uint32_t)HashClickId(
@@ -65098,6 +68565,28 @@ TextView* TextView::Style(const TextViewStyle& value) {
     return this;
 }
 
+TextView* TextView::InlineCodeStyle(const gpui::Style& style, uint32_t fields) {
+    uint32_t kept = fields;
+    inlineCodeStyle = NormalizeInlineCodeStyle(style, &kept);
+    inlineCodeStyleFields = kept;
+    inlineCodeStyleSet = true;
+    return this;
+}
+
+TextView* TextView::ListStyle(const gpui::Style& style, uint32_t fields) {
+    listStyle = style;
+    listStyleFields = fields;
+    listStyleSet = true;
+    return this;
+}
+
+TextView* TextView::BlockquoteStyle(const gpui::Style& style, uint32_t fields) {
+    blockquoteStyle = style;
+    blockquoteStyleFields = fields;
+    blockquoteStyleSet = true;
+    return this;
+}
+
 TextView* TextView::CodeBlockHighlighter(CodeBlockHighlighterFn fn,
                                          void* data) {
     codeHighlighter = fn;
@@ -65346,8 +68835,17 @@ const BaseTheme* BaseThemeGlobal(const App* app) {
 
 void BaseThemeSet(App* app, const BaseTheme& theme) {
     BaseTheme* current = BaseThemeGlobal(app);
-    if (current) {
-        *current = theme;
+    if (!current) {
+        return;
+    }
+    CursorBlink before = current->cursorBlink;
+    *current = theme;
+
+    CursorBlink after = current->cursorBlink.Normalized();
+    CursorBlink was = before.Normalized();
+    if (was.intervalMs != after.intervalMs ||
+        was.idleTimeoutMs != after.idleTimeoutMs) {
+        BlinkRetarget(app, after);
     }
 }
 
@@ -65811,11 +69309,27 @@ void TimeFieldState::OnKeyDown(TimeFieldState* self, Ctx* cx,
     TimeFieldEdited(self, cx, changed);
 }
 
-void TimeFieldState::OnSegmentDown(TimeFieldState* self, Ctx* cx,
-                                   const MouseDownEvent*, int64_t segment) {
-    if (!self) {
+void TimeFieldState::OnFieldDown(TimeFieldState* self, Ctx* cx,
+                                 const MouseDownEvent* ev) {
+    if (!self || !ev || ev->button != MouseButton::Left) {
         return;
     }
+    FocusHandleFocus(cx->win, self->focus);
+    TimeSegment all[4];
+    int n = self->editor.Segments(all);
+    if (n > 0) {
+        self->editor.SelectSegment(all[0]);
+    }
+    Notify(cx);
+}
+
+void TimeFieldState::OnSegmentDown(TimeFieldState* self, Ctx* cx,
+                                   const MouseDownEvent* ev, int64_t segment) {
+    if (!self || !ev || ev->button != MouseButton::Left) {
+        return;
+    }
+
+    WindowStopPropagation(cx);
     FocusHandleFocus(cx->win, self->focus);
     self->editor.SelectSegment((TimeSegment)segment);
     Notify(cx);
@@ -65882,6 +69396,7 @@ El* TimeField::IntoEl() {
                    ->PathId(id)
                    ->Role(AccessibilityRole::TimeInput)
                    ->AriaValue(TimeFormat(a, format, editor.time))
+                   ->AriaDisabled(disabled)
                    ->TrackFocus(st->focus)
                    ->TabStop(!disabled);
     if (!disabled) {
@@ -65894,7 +69409,8 @@ El* TimeField::IntoEl() {
             ->OnAction(action::SelectRight(), onAction)
             ->OnAction(action::SelectNextColumn(), onAction)
             ->OnAction(action::SelectPrevColumn(), onAction)
-            ->OnKeyDown(ListenTo(state, &TimeFieldState::OnKeyDown));
+            ->OnKeyDown(ListenTo(state, &TimeFieldState::OnKeyDown))
+            ->OnMouseDown(ListenTo(state, &TimeFieldState::OnFieldDown));
     }
 
     IdScope scope(cx, id);
@@ -66378,6 +69894,10 @@ void ToolbarState::OnKeyDown(ToolbarState* self, Ctx* cx, const KeyEvent* ev) {
     Notify(cx);
 }
 
+void ToolbarState::OnMouseDown(ToolbarState*, Ctx* cx, const MouseDownEvent*) {
+    WindowPreventDefault(cx);
+}
+
 Toolbar* Toolbar::New(Ctx* cx, Str id) {
     Toolbar* t = ArenaNew<Toolbar>(cx->a);
     t->cx = cx;
@@ -66411,7 +69931,8 @@ El* Toolbar::IntoEl() {
     }
     return root->Role(AccessibilityRole::Toolbar)
         ->AriaOrientation(AccessibilityOrientation::Horizontal)
-        ->OnKeyDown(ListenTo(state, &ToolbarState::OnKeyDown));
+        ->OnKeyDown(ListenTo(state, &ToolbarState::OnKeyDown))
+        ->OnMouseDown(ListenTo(state, &ToolbarState::OnMouseDown));
 }
 
 ToolbarGroup* ToolbarGroup::New(Ctx* cx, Str id) {
@@ -66845,6 +70366,21 @@ void TooltipRequestHide(Window* win) {
         Ctx cx = TooltipContext(win, win->rootTooltip);
         overlay->RequestHide(win, &cx);
     }
+}
+
+void TooltipDismissRemoved(Window* win) {
+    if (!win || !win->tooltipOwner) return;
+    const TooltipOverlay* showing = TooltipShowing(win);
+    if (!showing || (!showing->hasContent && !showing->hasPending)) {
+        win->tooltipOwner = false;
+        return;
+    }
+    for (int i = 0; i < win->paint.hits.len; i++) {
+        const HitRect& hr = win->paint.hits[i];
+        if (hr.pathId == win->tooltipOwnerPath && hr.tooltip.s) return;
+    }
+    TooltipHide(win);
+    win->tooltipOwner = false;
 }
 
 void TooltipHide(Window* win) {
@@ -67337,8 +70873,12 @@ void TreePerform(TreeState* s, Ctx* cx, TreeAction act) {
     Notify(cx);
 }
 
-void TreeState::OnRowClick(TreeState* self, Ctx* cx, const ClickEvent*,
+void TreeState::OnRowClick(TreeState* self, Ctx* cx, const ClickEvent* ev,
                            int64_t entryIx) {
+
+    if (ev && ev->button != MouseButton::Left) {
+        return;
+    }
     TreeClickEntry(self, cx, (int)entryIx);
 }
 
@@ -67393,6 +70933,7 @@ static El* TreeRows(Ctx* cx, Entity<TreeState> state, TreeRowFn row, void* user,
                                    ListenerArg(click, i))
                        ->FlexCol()
                        ->W(kFill);
+
         if (!it->disabled) {
             wrap->OnMouseDown(ListenerArg(down, i));
         }
@@ -67639,9 +71180,9 @@ float VirtualListPixelFromLogical(const float* sizes, int count, int item,
     item = ClampI(item, 0, count);
     float pixel = 0;
     if (sizes) {
+
         for (int i = 0; i < item && i < count; i++) {
-            if (sizes[i] <= 0) return pixel;
-            pixel += sizes[i];
+            if (sizes[i] > 0) pixel += sizes[i];
         }
     }
     return pixel + (into > 0 ? into : 0);
@@ -67653,12 +71194,18 @@ void VirtualListLogicalFromPixel(const float* sizes, int count, float rowH,
     int ix = 0;
     float rest = pixel;
     if (sizes) {
-        while (ix < count) {
-            float h = sizes[ix];
-            if (h <= 0) break;
-            if (rest < h) break;
-            rest -= h;
-            ix++;
+
+        int first = 0;
+        while (first < count && sizes[first] <= 0) first++;
+        if (first < count) {
+            ix = first;
+            while (ix < count) {
+                float h = sizes[ix];
+                if (h <= 0) break;
+                if (rest < h) break;
+                rest -= h;
+                ix++;
+            }
         }
     } else if (rowH > 0 && count > 0) {
         ix = (int)(pixel / rowH);
@@ -67812,6 +71359,13 @@ struct VirtualListPaint {
     Window* win = nullptr;
 };
 
+void VirtualListSetLogicalTop(void* paintUser, int item, float into) {
+    auto* paint = (VirtualListPaint*)paintUser;
+    if (!paint) return;
+    paint->opts.topItem = item;
+    paint->opts.topInto = into;
+}
+
 static void VirtualListAfterPaint(PaintCtx* ctx, El* e, void* user) {
     auto* paint = (VirtualListPaint*)user;
     const VirtualListOpts& o = paint->opts;
@@ -67821,10 +71375,12 @@ static void VirtualListAfterPaint(PaintCtx* ctx, El* e, void* user) {
     float top = e->y + o.pad;
     float height = std::max(e->h - o.pad * 2, 0.f);
     float contentTop = top - e->scrollY;
-    if (want.x >= e->x + e->w || want.x + want.w <= e->x ||
-        want.y < contentTop - 0.5f ||
-        want.y + want.h > contentTop + e->contentH + 0.5f) {
+    float contentH = e->contentH;
 
+    bool overlaps = want.x < e->x + e->w && want.Right() > e->x &&
+                    want.y < contentTop + contentH &&
+                    want.Bottom() > contentTop;
+    if (!overlaps) {
         WindowRequestAutoscroll(ctx->window, want);
         return;
     }
@@ -67883,13 +71439,45 @@ static void VirtualListBindRows(PaintCtx* ctx, El* e, VirtualListPaint* paint,
     cx.app = paint->app;
     cx.win = paint->win;
     cx.a = paint->a;
+    cx.self = o.view;
     e->first = nullptr;
     e->last = nullptr;
     if (o.logicalScroll) {
         int ix = o.topItem;
         if (ix < 0) ix = 0;
+        if (ix > o.count) ix = o.count;
         float along = -o.topInto;
         float origin = offset + along;
+
+        if (o.overdraw > 0 && o.sizes && ix > 0) {
+            float back = along;
+            int above = ix;
+            while (above > 0 && back > -o.overdraw) {
+                int prev = above - 1;
+                float extent =
+                    prev < layout->sizes.len ? layout->sizes[prev] : 0;
+                if (extent <= 0) {
+                    El* made = nullptr;
+                    if (o.row) {
+                        made = o.row(o.user, &cx, prev);
+                    } else if (o.range) {
+                        El* one = nullptr;
+                        o.range(o.user, &cx, prev, prev + 1, &one);
+                        made = one;
+                    }
+                    if (made) {
+                        extent =
+                            VirtualListMeasureItem(ctx, e, made, axis, o.rowH);
+                        const_cast<float*>(o.sizes)[prev] = extent;
+                        if (prev < layout->sizes.len)
+                            layout->sizes[prev] = extent;
+                    }
+                }
+                if (extent <= 0) break;
+                back -= extent;
+                above = prev;
+            }
+        }
         while (ix < o.count && along < viewport + o.overdraw) {
             El* made = nullptr;
             if (o.row) {
@@ -68004,6 +71592,7 @@ static void VirtualListPrePaint(PaintCtx* ctx, El* e, void* user) {
         rowCx.app = paint->app;
         rowCx.win = paint->win;
         rowCx.a = paint->a;
+        rowCx.self = o.view;
 
         for (int pass = 0; pass < o.count; pass++) {
             VirtualRange range = VirtualListVisibleRangeFromLayout(
@@ -68068,17 +71657,20 @@ static void VirtualListPrePaint(PaintCtx* ctx, El* e, void* user) {
         float bottom = top + innerH;
         float contentTop = top - offset;
         float extent = layout.contentSize.h;
-        bool inside = want.x < e->x + e->w && want.x + want.w > e->x &&
-                      want.y >= contentTop - 0.5f &&
-                      want.y + want.h <= contentTop + extent + 0.5f;
+
+        bool inside = want.x < e->x + e->w && want.Right() > e->x &&
+                      want.y < contentTop + extent &&
+                      want.Bottom() > contentTop;
         float delta = 0;
-        if (inside && want.h <= innerH) {
+        if (!inside) {
+            WindowRequestAutoscroll(paint->win, want);
+        } else if (want.h <= innerH) {
             if (want.y < top) {
                 delta = want.y - top;
             } else if (want.y + want.h > bottom) {
                 delta = want.y + want.h - bottom;
             }
-        } else if (inside) {
+        } else {
             delta = want.y - top;
         }
         float most = extent > innerH ? extent - innerH : 0.f;
@@ -68121,6 +71713,8 @@ El* VirtualList::New(Ctx* cx, Str id, const VirtualListOpts& o) {
     }
     auto* paint = ArenaNew<VirtualListPaint>(a);
     paint->opts = o;
+
+    if (cx) paint->opts.view = cx->self;
     paint->a = a;
     paint->app = cx->app;
     paint->win = cx->win;
@@ -69537,6 +73131,7 @@ El* AttachmentGroup::IntoEl() {
                   ->ScrollId(scrollId)
 
                   ->ScrollMask(Axis::Horizontal);
+    ScrollableMask::ApplyVerticalWheel(row);
     if (report.IsValid()) {
         row->OnScroll(report);
     }
@@ -70738,6 +74333,11 @@ Button* Button::FocusRing(bool v) {
     focusRing = v;
     return this;
 }
+Button* Button::TrackFocus(FocusHandle handle) {
+    focus = handle;
+    hasFocus = handle.IsValid();
+    return this;
+}
 Button* Button::Tooltip(Str s) {
     tooltip = s;
     return this;
@@ -71068,18 +74668,23 @@ El* Button::IntoEl() {
                 ->Role(role)
                 ->AriaDisabled(!interactive)
                 ->TabIndex(tabIndex)
-                ->TabStop(tabStop)
+
+                ->TabStop(tabStop && interactive)
                 ->FocusRing(focusRing)
                 ->FocusLineStyle(focusLine,
-                                 RgbaOpacity(normalFg, kFocusLineOpacity))
-                ->H(h > 0 ? h : kAuto)
-                ->PadX(padX)
-                ->ItemsCenter()
-                ->JustifyCenter()
-                ->LineHeight(1.25f)
-                ->Gap(gap)
-                ->Corners(cornerTL ? rounding : 0.f, cornerTR ? rounding : 0.f,
-                          cornerBR ? rounding : 0.f, cornerBL ? rounding : 0.f);
+                                 RgbaOpacity(normalFg, kFocusLineOpacity));
+
+    if (hasFocus) {
+        e->TrackFocus(focus);
+    }
+    e = e->H(h > 0 ? h : kAuto)
+            ->PadX(padX)
+            ->ItemsCenter()
+            ->JustifyCenter()
+            ->LineHeight(1.25f)
+            ->Gap(gap)
+            ->Corners(cornerTL ? rounding : 0.f, cornerTR ? rounding : 0.f,
+                      cornerBR ? rounding : 0.f, cornerBL ? rounding : 0.f);
     if (accessibilityId.s) {
         e->AccessibilityId(accessibilityId);
     }
@@ -77787,9 +81392,8 @@ El* Command::IntoEl() {
     listBox->customUser = probe;
     if (s->rows.len == 0) {
 
-        listBox->Pad(inset);
-
         if (!s->loading) {
+            listBox->Pad(inset);
             listBox->Child(empty ? empty : ui_command_DefaultEmpty(cx));
         }
     } else {
@@ -78112,6 +81716,12 @@ static Easing gDialogEnterEase = Easing::EaseOut();
 static float DialogEnterEase(float t) {
 
     return ClampF01(gDialogEnterEase.Sample(t));
+}
+
+static DialogMount* gDialogMount = nullptr;
+
+void DialogBindMount(DialogMount* mount) {
+    gDialogMount = mount;
 }
 
 float DialogFadeSlideOffset(float top, float topLimit, float travel,
@@ -78461,6 +82071,10 @@ Dialog* Dialog::MarginTop(float px) {
     marginTop = px;
     return this;
 }
+Dialog* Dialog::Centered() {
+    centered = true;
+    return this;
+}
 Dialog* Dialog::Entrance(DialogEntrance value) {
     entrance = value;
     return this;
@@ -78667,13 +82281,24 @@ El* Dialog::IntoEl(WinSize size) {
         return Div(a);
     }
     const Theme& th = ThemeNow(cx->app);
+    DialogMount* mountEarly = gDialogMount;
+    if (mountEarly && mountEarly->bound) {
+        layerIx = mountEarly->layerIx;
+    }
     Edges windowPadding = WindowPaddings(cx->win);
     float viewW = size.dipW - windowPadding.left - windowPadding.right;
     float viewH = size.dipH - windowPadding.top - windowPadding.bottom;
 
     const float viewportMargin = 16.f;
     float layerOffset = (float)layerIx * 16.f;
-    float y = (hasMarginTop ? marginTop : viewH * 0.1f) + layerOffset;
+
+    Anchor anchor = Anchor::TopLeft;
+    float y = hasMarginTop ? marginTop : viewH * 0.1f;
+    if (centered) {
+        anchor = Anchor::LeftCenter;
+        y = viewH * 0.5f;
+    }
+    y += layerOffset;
     float panelW = std::min(width, std::max(0.f, viewW - viewportMargin * 2));
     float panelX = (viewW - panelW) * 0.5f;
     float panelMaxH = std::max(0.f, viewH - viewportMargin * 2 - layerOffset);
@@ -78699,6 +82324,7 @@ El* Dialog::IntoEl(WinSize size) {
         panel->Child(Header());
         panel->Child(Actions());
     }
+    panel->Id(StrL("surface"));
     if (closeButton) {
 
         El* x = DialogClose::New(cx)
@@ -78711,12 +82337,49 @@ El* Dialog::IntoEl(WinSize size) {
         panel->Child(x);
     }
 
+    DialogMount* mount = gDialogMount;
+    bool mounted = mount && mount->bound;
+    bool closing = mounted && mount->closing;
     bool reduce = MotionReduced();
-    bool animated = entrance != DialogEntrance::None && !reduce &&
+    float exitMs = 0;
+    if (!reduce) {
+        if (entrance == DialogEntrance::SlideDown) {
+            exitMs = ANIMATION_DURATION;
+        } else if (entrance != DialogEntrance::None) {
+            exitMs = th.motion.durationNormalMs;
+        }
+    }
+    if (mounted) {
+        mount->exitEnabled = exitMs > 0;
+    }
+    bool animated = !mounted && entrance != DialogEntrance::None && !reduce &&
                     (entrance == DialogEntrance::SlideDown ||
                      th.motion.durationNormalMs != 0);
     float delta = 1.f;
-    if (animated) {
+    if (mounted) {
+        motion::Transition transition = motion::Transition::New(exitMs);
+        if (entrance == DialogEntrance::SlideDown) {
+            transition = transition.Ease(DialogEase);
+        } else {
+            gDialogEnterEase = th.motion.easingEnter;
+            transition = transition.Ease(DialogEnterEase);
+        }
+        uint32_t key =
+            MotionId(StrL("dialog-presence"), fmt("%u", (unsigned)mount->id));
+        PresenceSample sample =
+            Presence::New(key, !closing).Transition(transition).Sample(cx);
+        if (closing && !sample.ShouldRender()) {
+            mount->unmount = true;
+        }
+        delta = sample.progress;
+        if (delta < 0) {
+            delta = 0;
+        }
+        if (delta > 1) {
+            delta = 1;
+        }
+        mount->visibility = delta;
+    } else if (animated) {
         uint32_t key = MotionId(StrL("dialog"), StrDup(a, fmt("%d", layerIx)));
         if (entrance == DialogEntrance::SlideDown) {
             delta = MotionAppear(cx, key, ANIMATION_DURATION, DialogEase);
@@ -78726,29 +82389,60 @@ El* Dialog::IntoEl(WinSize size) {
                                  DialogEnterEase);
         }
     }
-    DialogShadow(panel, animated ? delta : 1.f);
+    float shade = mounted || animated ? delta : 1.f;
+    DialogShadow(panel, shade);
+    if (mounted) {
+
+        panel->Opacity(delta);
+    }
+    bool paintOverlay = overlay;
+    bool closable = overlayClosable;
+    if (mounted) {
+        paintOverlay = overlay && mount->showOverlay;
+        closable = overlayClosable && !closing && mount->topmost;
+    }
     El* backdrop = DialogBackdrop::New(cx)
                        ->Fixed()
                        ->Top(windowPadding.top)
                        ->Left(windowPadding.left)
                        ->W(viewW)
                        ->H(viewH);
-    if (overlay) {
+    if (paintOverlay) {
         backdrop->Bg(th.tokens.overlay);
+        if (closing) {
+            backdrop->Opacity(delta);
+        }
     }
-    if (overlayClosable) {
+    if (closable) {
         backdrop->PathClick(LayerId(StrL("dialog-backdrop")))
             ->OnClickAction(action::Cancel());
     }
+    if (closing) {
+
+        panel->Child(Div(a)
+                         ->Absolute()
+                         ->Left(0)
+                         ->Top(0)
+                         ->Right(0)
+                         ->Bottom(0)
+                         ->StopMouseDown());
+    }
 
     Point resting = {windowPadding.left + panelX, windowPadding.top + y};
-    Positioner* positioner = Positioner::Corner(cx, Anchor::TopLeft, resting)
+    float drawnY = resting.y;
+    if ((mounted || animated) && entrance == DialogEntrance::SlideDown) {
+        drawnY = windowPadding.top + y * delta;
+    }
+    if (mounted) {
+        mount->surfaceY = drawnY;
+    }
+    Positioner* positioner = Positioner::Corner(cx, anchor, resting)
                                  ->Margin(viewportMargin);
-    if (animated && entrance == DialogEntrance::SlideDown) {
-        positioner->Position({resting.x, windowPadding.top + y * delta});
+    if ((mounted || animated) && entrance == DialogEntrance::SlideDown) {
+        positioner->Position({resting.x, drawnY});
     }
     El* placed = positioner->Child(panel)->IntoEl();
-    if (animated && entrance == DialogEntrance::FadeSlide) {
+    if ((mounted || animated) && entrance == DialogEntrance::FadeSlide) {
         DialogFadeSlideHook* hook = ArenaNew<DialogFadeSlideHook>(a);
         float rem = WindowRemSize(cx->win);
         hook->travel = th.motion.distanceShort * (rem > 0 ? rem / 16.f : 1.f);
@@ -78766,9 +82460,16 @@ El* Dialog::IntoEl(WinSize size) {
                     ->W(viewW)
                     ->H(viewH)
                     ->Child(placed);
-    Str trap = StrDup(a, fmt("dialog-%d", layerIx));
 
-    if (keyboard) {
+    if (closing) {
+        popup->stopMouseDown = false;
+    }
+    Str trap = StrDup(a, fmt("dialog-%d", layerIx));
+    if (mounted) {
+        mount->trapFocus = FocusTrapId(trap);
+    }
+
+    if (keyboard && !closing) {
         DialogBindKeys(cx, popup, trap, buttonProps.onCancel, buttonProps.onOk,
                        buttonProps.onClose);
     }
@@ -78787,6 +82488,9 @@ El* Dialog::IntoEl(WinSize size) {
                    ->IntoEl();
     }
 
+    if (mounted) {
+        return host->Opacity(delta);
+    }
     return animated ? host->Opacity(delta) : host;
 }
 
@@ -78823,6 +82527,10 @@ AlertDialog* AlertDialog::W(float value) {
 }
 AlertDialog* AlertDialog::MarginTop(float value) {
     base->MarginTop(value);
+    return this;
+}
+AlertDialog* AlertDialog::Centered() {
+    base->Centered();
     return this;
 }
 AlertDialog* AlertDialog::Entrance(DialogEntrance value) {
@@ -79016,6 +82724,69 @@ DiffAnnotation DiffAnnotation::Line(Str id, DiffLinePosition position) {
     a.hasPosition = true;
     a.position = position;
     return a;
+}
+
+DiffDecoration DiffDecoration::New(DiffLineRange range) {
+    DiffDecoration d;
+    d.range = range;
+    return d;
+}
+
+DiffDecoration DiffDecoration::WithBackground(Rgba fill) const {
+    DiffDecoration d = *this;
+    d.hasBackground = true;
+    d.background = fill;
+    return d;
+}
+
+DiffGutterMarker DiffGutterMarker::New(Str id, DiffLinePosition position) {
+    DiffGutterMarker m;
+    m.id = id;
+    m.position = position;
+    return m;
+}
+
+DiffGutterMarker DiffGutterMarker::WithLabel(Str text) const {
+    DiffGutterMarker m = *this;
+    m.label = text;
+    return m;
+}
+
+static bool DecorationCovers(const DiffDecoration& decoration, DiffSide side,
+                             int line) {
+    const DiffLineRange& range = decoration.range;
+    if (range.IsSingleSide()) {
+        if (side != range.side) return false;
+        return line >= range.start && line <= range.end;
+    }
+    if (side == range.side) return line >= range.start;
+    return line <= range.end;
+}
+
+static bool SamePosition(const DiffLinePosition& a, const DiffLinePosition& b) {
+    return a.side == b.side && a.line == b.line && StrEq(a.path, b.path);
+}
+
+const DiffDecoration* DiffDecorationAt(const DiffDecoration* items, int count,
+                                       const DiffLinePosition& position) {
+    const DiffDecoration* found = nullptr;
+    if (!items || count <= 0) return nullptr;
+    for (int i = 0; i < count; i++) {
+        if (!StrEq(items[i].range.path, position.path)) continue;
+        if (DecorationCovers(items[i], position.side, position.line))
+            found = &items[i];
+    }
+    return found;
+}
+
+const DiffGutterMarker* DiffGutterMarkerAt(const DiffGutterMarker* items,
+                                           int count,
+                                           const DiffLinePosition& position) {
+    if (!items || count <= 0) return nullptr;
+    for (int i = 0; i < count; i++) {
+        if (SamePosition(items[i].position, position)) return &items[i];
+    }
+    return nullptr;
 }
 
 DiffAnnotation DiffAnnotation::File(Str id, Str path) {
@@ -79701,6 +83472,10 @@ struct OpenFile {
     bool headers = false;
     bool renamed = false;
     bool copied = false;
+
+    bool hasLastHunk = false;
+    int lastHunkOld = 0;
+    int lastHunkNew = 0;
     bool hasPrefixes = false;
     const char* oldPrefix = "";
     const char* newPrefix = "";
@@ -79731,6 +83506,9 @@ struct OpenFile {
         headers = false;
         renamed = false;
         copied = false;
+        hasLastHunk = false;
+        lastHunkOld = 0;
+        lastHunkNew = 0;
         hasPrefixes = false;
         oldPrefix = "";
         newPrefix = "";
@@ -79771,9 +83549,11 @@ static bool HunkHeader(Str line, int number, int* oldStart, int* oldCount,
         uint64_t s = 0;
         uint64_t c = 0;
         if (!ParseU64(sPart, &s) || !ParseU64(cPart, &c)) return false;
-        if ((c > 0 && s == 0) || s > UINT64_MAX - c) return false;
+
+        uint64_t span = c == 0 ? 1 : c;
+        if ((c > 0 && s == 0) || s > UINT64_MAX - span) return false;
         if (s > (uint64_t)INT_MAX || c > (uint64_t)INT_MAX ||
-            s + c > (uint64_t)INT_MAX)
+            s + span > (uint64_t)INT_MAX)
             return false;
         *start = (int)s;
         *count = (int)c;
@@ -79792,15 +83572,54 @@ static int LastNumber(const SideBuild& side) {
     return side.number[len(side.number) - 1];
 }
 
+static bool TruncatedFileHeader(Str* lines, int nLines, int start,
+                                int oldRemaining, int newRemaining, int* out) {
+    bool header = false;
+    int headerIx = 0;
+    for (int ix = start; ix < nLines; ix++) {
+        Str line = lines[ix];
+        if (StrEq(line, "\\ No newline at end of file")) continue;
+        if (oldRemaining == 0 && newRemaining == 0) return false;
+        if (!header && Starts(line, "--- ") && ix + 1 < nLines &&
+            Starts(lines[ix + 1], "+++ ")) {
+            header = true;
+            headerIx = ix;
+        }
+        char tag = line.len == 0 ? ' ' : line.s[0];
+        if (tag == ' ' && oldRemaining > 0 && newRemaining > 0) {
+            oldRemaining--;
+            newRemaining--;
+        } else if (tag == '-' && oldRemaining > 0) {
+            oldRemaining--;
+        } else if (tag == '+' && newRemaining > 0) {
+            newRemaining--;
+        } else {
+            if (!header) return false;
+            *out = headerIx;
+            return true;
+        }
+    }
+    if ((oldRemaining == 0 && newRemaining == 0) || !header) return false;
+    *out = headerIx;
+    return true;
+}
+
 static bool ParseHunk(OpenFile* open, Str* lines, int nLines, int* ix,
-                      DiffParseError* error) {
+                      DiffParseOptions options, DiffParseError* error) {
     int oldStart = 0, oldCount = 0, newStart = 0, newCount = 0;
     if (!HunkHeader(lines[*ix], *ix + 1, &oldStart, &oldCount, &newStart,
                     &newCount, error))
         return false;
+
+    int firstOriginal = oldStart + (oldCount == 0 ? 1 : 0);
+    int firstModified = newStart + (newCount == 0 ? 1 : 0);
     int lastOld = LastNumber(open->original);
     int lastNew = LastNumber(open->modified);
-    if ((lastOld >= 0 && lastOld >= oldStart && oldCount > 0) ||
+
+    bool backwards = options.truncatedHunks && open->hasLastHunk &&
+                     (firstOriginal < open->lastHunkOld ||
+                      firstModified < open->lastHunkNew);
+    if (backwards || (lastOld >= 0 && lastOld >= oldStart && oldCount > 0) ||
         (lastNew >= 0 && lastNew >= newStart && newCount > 0)) {
         *error = Err(*ix + 1, "overlapping or unordered hunks");
         return false;
@@ -79815,12 +83634,18 @@ static bool ParseHunk(OpenFile* open, Str* lines, int nLines, int* ix,
     int modifiedStart = len(open->modified.number);
     int headerLine = *ix;
     (*ix)++;
+    bool stopAtFile = false;
+    int nextFile = 0;
+    if (options.truncatedHunks)
+        stopAtFile = TruncatedFileHeader(lines, nLines, *ix, oldCount, newCount,
+                                         &nextFile);
     int oldUsed = 0;
     int newUsed = 0;
     Vec<int> deleted;
     Vec<int> added;
     int last = 0;
     while (*ix < nLines) {
+        if (stopAtFile && *ix == nextFile) break;
         Str content = lines[*ix];
         if (StrEq(content, "\\ No newline at end of file")) {
             if (last == '-')
@@ -79840,19 +83665,14 @@ static bool ParseHunk(OpenFile* open, Str* lines, int nLines, int* ix,
             continue;
         }
         if (oldUsed == oldCount && newUsed == newCount) break;
-        char tag = ' ';
-        Str text = {};
-        if (content.len == 0) {
-            tag = ' ';
-            text = {};
-        } else {
-            tag = content.s[0];
-            text = Slice(content, 1, content.len);
-        }
+
+        char tag = content.len == 0 ? ' ' : content.s[0];
         if (tag != ' ' && tag != '+' && tag != '-') {
+            if (options.truncatedHunks) break;
             *error = Err(*ix + 1, "hunk ended before its declared line counts");
             return false;
         }
+        Str text = content.len == 0 ? Str{} : Slice(content, 1, content.len);
         if ((tag != '+' && open->original.noNewline) ||
             (tag != '-' && open->modified.noNewline)) {
             *error = Err(*ix + 1,
@@ -79892,7 +83712,8 @@ static bool ParseHunk(OpenFile* open, Str* lines, int nLines, int* ix,
         last = tag;
         (*ix)++;
     }
-    if (oldUsed != oldCount || newUsed != newCount) {
+    bool truncated = oldUsed != oldCount || newUsed != newCount;
+    if (truncated && !options.truncatedHunks) {
         *error = Err(*ix + 1, "hunk ended before its declared line counts");
         return false;
     }
@@ -79905,10 +83726,13 @@ static bool ParseHunk(OpenFile* open, Str* lines, int nLines, int* ix,
     hunk.modifiedStart = modifiedStart;
     hunk.modifiedEnd = len(open->modified.number);
     hunk.label = ui_diff_Own(open->file->arena, lines[headerLine]);
-    int first = oldStart + (oldCount == 0 ? 1 : 0);
-    hunk.originalLinesStart = first;
-    hunk.originalLinesEnd = first + oldCount;
+    hunk.originalLinesStart = firstOriginal;
+    hunk.originalLinesEnd = firstOriginal + oldUsed;
+    hunk.truncated = truncated;
     VecAppend(open->file->hunks, hunk);
+    open->hasLastHunk = true;
+    open->lastHunkOld = firstOriginal;
+    open->lastHunkNew = firstModified;
     return true;
 }
 
@@ -79936,6 +83760,18 @@ static DiffFile* AllocFile() {
 }
 
 bool DiffFile::Parse(Str patch, Vec<DiffFile*>* out, DiffParseError* error) {
+    return ParseWith(patch, DiffParseOptions{}, out, error);
+}
+
+bool DiffFile::IsTruncated() const {
+    for (int i = 0; i < len(hunks); i++) {
+        if (hunks[i].truncated) return true;
+    }
+    return false;
+}
+
+bool DiffFile::ParseWith(Str patch, DiffParseOptions options,
+                         Vec<DiffFile*>* out, DiffParseError* error) {
     Vec<Str> raw;
     int i = 0;
     if (patch.len == 0) {
@@ -80091,7 +83927,7 @@ bool DiffFile::Parse(Str patch, Vec<DiffFile*>* out, DiffParseError* error) {
                     ix + 1, "hunk requires original and modified file headers");
                 return false;
             }
-            if (!ParseHunk(&open, raw.els, len(raw), &ix, error)) {
+            if (!ParseHunk(&open, raw.els, len(raw), &ix, options, error)) {
                 delete open.file;
                 for (int f = 0; f < len(*out); f++) delete (*out)[f];
                 VecClear(*out);
@@ -81233,7 +85069,165 @@ static void Rebuild(DiffState* state, bool reset) {
     (void)anchor;
 }
 
+static bool ui_diff_Utf8Boundary(Str text, int i) {
+    if (i < 0 || i > text.len) return false;
+    if (i == text.len) return true;
+    return ((unsigned char)text.s[i] & 0xc0) != 0x80;
+}
+
+static int DisplayOff(const DiffFileSide* side, const DiffSourceLine& line,
+                      int sourceOff) {
+    if (sourceOff < 0) sourceOff = 0;
+    if (sourceOff > line.text.len) sourceOff = line.text.len;
+    int prev = -1;
+    for (int i = 0; i < line.tabCount; i++) {
+        const DiffDisplayTab& tab = side->tabs[line.tabBegin + i];
+        if (tab.sourceOffset < sourceOff)
+            prev = i;
+        else
+            break;
+    }
+    int expansion = 0;
+    if (prev >= 0) {
+        const DiffDisplayTab& tab = side->tabs[line.tabBegin + prev];
+        expansion = tab.displayOffset + tab.width - tab.sourceOffset - 1;
+    }
+    return sourceOff + expansion;
+}
+
+static Str SyntaxLanguage(const DiffFile* file, const DiffFileSide* side) {
+    if (file->hasLanguage) return file->language;
+    if (side->hasPath) return DetectedLanguage(side->path);
+    return file->Language();
+}
+
+static void CollectSyntaxSide(const DiffFile* file, int fileIx, DiffSide side,
+                              int maxLen, DiffSyntaxHighlighter fn, void* data,
+                              Vec<DiffSyntaxSpan>* out) {
+    const DiffFileSide* src =
+        side == DiffSide::Original ? &file->original : &file->modified;
+    int nLines = len(src->lines);
+    if (nLines == 0 || !fn) return;
+    Str language = SyntaxLanguage(file, src);
+    if (!language.s || language.len == 0 || StrEq(language, "text")) return;
+    int nHunks = len(file->hunks);
+    int ranges = nHunks == 0 ? 1 : nHunks;
+    for (int h = 0; h < ranges; h++) {
+        int begin = 0;
+        int end = nLines;
+        if (nHunks > 0) {
+            begin = side == DiffSide::Original ? file->hunks[h].originalStart
+                                               : file->hunks[h].modifiedStart;
+            end = side == DiffSide::Original ? file->hunks[h].originalEnd
+                                             : file->hunks[h].modifiedEnd;
+        }
+        if (begin < 0) begin = 0;
+        if (end > nLines) end = nLines;
+        if (begin >= end) continue;
+        int base = src->lines[begin].sourceStart;
+        int last = src->lines[end - 1].sourceEnd;
+        Str text = Slice(src->source, base, last);
+        Vec<DiffSyntaxStyle> hits;
+        fn(data, language, text, &hits);
+        for (int k = 0; k < len(hits); k++) {
+            int hs = hits[k].start;
+            int he = hits[k].end;
+            if (hs < 0 || he < hs || he > text.len) continue;
+            if (!ui_diff_Utf8Boundary(text, hs) || !ui_diff_Utf8Boundary(text, he)) continue;
+            int absStart = hs + base;
+            int absEnd = he + base;
+            int count = end - begin;
+            int lo = 0;
+            int hi = count;
+            while (lo < hi) {
+                int mid = (lo + hi) / 2;
+                if (src->lines[begin + mid].sourceEnd <= absStart)
+                    lo = mid + 1;
+                else
+                    hi = mid;
+            }
+            for (int offset = lo; begin + offset < end; offset++) {
+                const DiffSourceLine& line = src->lines[begin + offset];
+                if (line.sourceStart >= absEnd) break;
+                if (line.contentEnd - line.sourceStart > maxLen) continue;
+                int start =
+                    absStart > line.sourceStart ? absStart : line.sourceStart;
+                int stop = absEnd < line.contentEnd ? absEnd : line.contentEnd;
+                if (start >= stop) continue;
+                DiffSyntaxSpan span;
+                span.file = fileIx;
+                span.side = (uint8_t)side;
+                span.line = begin + offset;
+                span.start = DisplayOff(src, line, start - line.sourceStart);
+                span.end = DisplayOff(src, line, stop - line.sourceStart);
+                span.weight = hits[k].weight;
+                span.italic = hits[k].italic;
+                span.hasColor = hits[k].hasColor;
+                span.color = hits[k].color;
+                span.hasBackground = hits[k].hasBackground;
+                span.background = hits[k].background;
+                span.underline = hits[k].underline;
+                VecAppend(*out, span);
+            }
+        }
+    }
+}
+
+void DiffState::EnsureSyntax() {
+    if (syntaxPrepared) return;
+    VecClear(syntaxSpans);
+    syntaxPrepared = true;
+    if (!syntaxFn) return;
+
+    for (int i = 0; i < len(files); i++) {
+        CollectSyntaxSide(files[i], i, DiffSide::Original, syntaxMaxLineLength,
+                          syntaxFn, syntaxData, &syntaxSpans);
+        CollectSyntaxSide(files[i], i, DiffSide::Modified, syntaxMaxLineLength,
+                          syntaxFn, syntaxData, &syntaxSpans);
+    }
+}
+
+static DiffSyntaxStyle StyleOf(const DiffSyntaxSpan& span) {
+    DiffSyntaxStyle style;
+    style.start = span.start;
+    style.end = span.end;
+    style.weight = span.weight;
+    style.italic = span.italic;
+    style.hasColor = span.hasColor;
+    style.color = span.color;
+    style.hasBackground = span.hasBackground;
+    style.background = span.background;
+    style.underline = span.underline;
+    return style;
+}
+
+int DiffState::SyntaxStyleCount(int file, DiffSide side, int line) const {
+    int n = 0;
+    for (int i = 0; i < len(syntaxSpans); i++) {
+        const DiffSyntaxSpan& span = syntaxSpans[i];
+        if (span.file == file && span.side == (uint8_t)side &&
+            span.line == line)
+            n++;
+    }
+    return n;
+}
+
+DiffSyntaxStyle DiffState::SyntaxStyleAt(int file, DiffSide side, int line,
+                                         int ix) const {
+    int n = 0;
+    for (int i = 0; i < len(syntaxSpans); i++) {
+        const DiffSyntaxSpan& span = syntaxSpans[i];
+        if (span.file != file || span.side != (uint8_t)side ||
+            span.line != line)
+            continue;
+        if (n == ix) return StyleOf(span);
+        n++;
+    }
+    return {};
+}
+
 void DiffState::EnsurePresentation() {
+    EnsureSyntax();
     if (!inlineOn) {
         for (int i = 0; i < len(files); i++) {
             VecClear(files[i]->inlineRuns[0]);
@@ -81284,6 +85278,7 @@ void DiffState::SetFiles(DiffFile** next, int count, Ctx* cx) {
     hasAnchor = false;
     hasCursor = false;
     selecting = false;
+    syntaxPrepared = false;
     Rebuild(this, true);
     EnsurePresentation();
     if (cx) Notify(cx);
@@ -81320,7 +85315,33 @@ DiffState* DiffState::WithInlineMaxLineLength(int length) {
 
 DiffState* DiffState::WithSyntaxMaxLineLength(int length) {
     syntaxMaxLineLength = length < 0 ? 0 : length;
+    syntaxPrepared = false;
     return this;
+}
+
+DiffState* DiffState::WithSyntaxHighlighter(DiffSyntaxHighlighter fn,
+                                            void* data) {
+    syntaxFn = fn;
+    syntaxData = data;
+    syntaxPrepared = false;
+    return this;
+}
+
+void DiffState::SetSyntaxHighlighter(DiffSyntaxHighlighter fn, void* data,
+                                     Ctx* cx) {
+    syntaxFn = fn;
+    syntaxData = data;
+    syntaxPrepared = false;
+    EnsureSyntax();
+    if (cx) Notify(cx);
+}
+
+void DiffState::ClearSyntaxHighlighter(Ctx* cx) {
+    syntaxFn = nullptr;
+    syntaxData = nullptr;
+    syntaxPrepared = false;
+    EnsureSyntax();
+    if (cx) Notify(cx);
 }
 
 DiffFile** DiffState::Files(int* count) const {
@@ -81391,6 +85412,7 @@ void DiffState::SetSyntaxMaxLineLength(int length, Ctx* cx) {
     if (syntaxMaxLineLength == length) return;
     syntaxMaxLineLength = length;
 
+    syntaxPrepared = false;
     if (cx) Notify(cx);
 }
 
@@ -81922,10 +85944,45 @@ static void OnChoose(DiffState* self, Ctx* cx, const ClickEvent*,
         self->ChooseConflict(file, ix, true, DiffConflictResolution::Both, cx);
 }
 
-static El* CodeText(Ctx* cx, const DiffFile* file, DiffSide side, int ix,
-                    bool syntax) {
+static void PaintSyntaxRun(Ctx* cx, El* row, Str text,
+                           const DiffSyntaxSpan* span) {
+    El* bit = TextEl(cx->a, text)->Mono();
+    if (span) {
+        if (span->weight) bit->Weight((FontWeight)span->weight);
+        if (span->italic) bit->Italic();
+        if (span->hasColor) bit->Fg(span->color);
+        if (span->hasBackground) bit->Bg(span->background);
+        if (span->underline) bit->Underline();
+    }
+    row->Child(bit);
+}
+
+static El* CodeText(Ctx* cx, const DiffState* state, int fileIx,
+                    const DiffFile* file, DiffSide side, int ix, bool syntax) {
     const DiffSourceLine& line = SideOf(file, side)->lines[ix];
     El* row = Div(cx->a)->FlexRow();
+    if (syntax && state && state->syntaxFn) {
+        int at = 0;
+        for (int i = 0; i < len(state->syntaxSpans); i++) {
+            const DiffSyntaxSpan& span = state->syntaxSpans[i];
+            if (span.file != fileIx || span.side != (uint8_t)side ||
+                span.line != ix)
+                continue;
+            int lo = span.start;
+            int hi = span.end;
+            if (lo < at) lo = at;
+            if (hi > line.display.len) hi = line.display.len;
+            if (lo > at)
+                PaintSyntaxRun(cx, row, Slice(line.display, at, lo), nullptr);
+            if (lo < hi)
+                PaintSyntaxRun(cx, row, Slice(line.display, lo, hi), &span);
+            if (hi > at) at = hi;
+        }
+        if (at < line.display.len)
+            PaintSyntaxRun(cx, row, Slice(line.display, at, line.display.len),
+                           nullptr);
+        return row;
+    }
     if (!syntax) {
         row->Child(TextEl(cx->a, line.display)->Mono());
         return row;
@@ -82113,7 +86170,39 @@ static El* ui_diff_RenderRow(void* user, Ctx* cx, int ix) {
         return head;
     }
     bool split = state->mode == DiffMode::Split && !file->IsSingleColumn();
-    auto cell = [&](DiffSide side, int line, bool changed, bool present) {
+
+    bool markerLane = diff->gutterMarkerContent && diff->gutterMarkerCount > 0;
+    auto lineSelected = [&](DiffSide side, int line) {
+        if (line < 0 || !state->hasSelection) return false;
+        int number = SideOf(file, side)->lines[line].lineNumber;
+        const DiffLineRange& range = state->selected;
+        if (!StrEq(range.path, file->path)) return false;
+        if (range.IsSingleSide()) {
+            if (side != range.side) return false;
+            int lo = range.start < range.end ? range.start : range.end;
+            int hi = range.start > range.end ? range.start : range.end;
+            return number >= lo && number <= hi;
+        }
+        if (side == range.side) return number >= range.start;
+        if (side == range.endSide) return number <= range.end;
+        return false;
+    };
+    auto decorationAt = [&](DiffSide side, int line) -> const DiffDecoration* {
+        if (line < 0 || !diff->decorations) return nullptr;
+        int number = SideOf(file, side)->lines[line].lineNumber;
+        DiffLinePosition pos = DiffLinePosition::New(file->path, side, number);
+        return DiffDecorationAt(diff->decorations, diff->decorationCount, pos);
+    };
+    auto markerAt = [&](DiffSide side, int line) -> const DiffGutterMarker* {
+        if (line < 0 || !diff->gutterMarkers) return nullptr;
+        int number = SideOf(file, side)->lines[line].lineNumber;
+        DiffLinePosition pos = DiffLinePosition::New(file->path, side, number);
+        return DiffGutterMarkerAt(diff->gutterMarkers, diff->gutterMarkerCount,
+                                  pos);
+    };
+    auto cell = [&](DiffSide side, int line, bool changed, bool present,
+                    const DiffDecoration* rowDeco,
+                    const DiffGutterMarker* rowMarker, bool useRowMarks) {
         El* box = Div(cx->a)->FlexRow()->H(24)->Grow()->ItemsCenter();
         if (!present) {
 
@@ -82122,17 +86211,57 @@ static El* ui_diff_RenderRow(void* user, Ctx* cx, int ix) {
         }
 
         box->PadX(8);
+        int number = SideOf(file, side)->lines[line].lineNumber;
+        bool selected = lineSelected(side, line);
         Rgba bg = changed ? (side == DiffSide::Original ? theme.danger
                                                         : theme.success)
                           : theme.background;
-        if (changed && diff->changeBackground) box->Bg(Tint(bg, 30));
+        if (selected) {
+            box->Bg(theme.selection);
+        } else if (changed && diff->changeBackground) {
+            box->Bg(Tint(bg, 30));
+        }
+
+        const DiffDecoration* deco = nullptr;
+        if (!selected) {
+            deco = useRowMarks ? rowDeco : decorationAt(side, line);
+        }
+        if (deco) {
+            Rgba fill = deco->hasBackground ? deco->background
+                                            : RgbaOpacity(theme.warning, 0.2f);
+            box->Child(Div(cx->a)
+                           ->Absolute()
+                           ->Top(0)
+                           ->Left(0)
+                           ->Right(0)
+                           ->Bottom(0)
+                           ->Bg(fill));
+        }
         if (diff->lineNumber) {
-            int number = SideOf(file, side)->lines[line].lineNumber;
             int width = file->lineNumberDigits * 8 + 12;
             box->Child(Div(cx->a)
                            ->W((float)width)
                            ->Child(TextEl(cx->a, fmt("%d", number))
                                        ->Fg(theme.mutedFg)));
+        }
+        if (markerLane) {
+            El* lane = Div(cx->a)
+                           ->Id(StrL("marker-lane"))
+                           ->W(24)
+                           ->H(24)
+                           ->Shrink(0)
+                           ->FlexRow()
+                           ->ItemsCenter()
+                           ->JustifyCenter()
+                           ->StopMouseDown();
+            const DiffGutterMarker* marker =
+                useRowMarks ? rowMarker : markerAt(side, line);
+            if (marker) {
+                El* child = diff->gutterMarkerContent(cx, marker,
+                                                      diff->gutterMarkerUser);
+                if (child) lane->Child(child);
+            }
+            box->Child(lane);
         }
         if (diff->changeIndicator == DiffChangeIndicator::Signs && changed) {
             box->Child(TextEl(cx->a, side == DiffSide::Original ? StrL("-")
@@ -82145,12 +86274,11 @@ static El* ui_diff_RenderRow(void* user, Ctx* cx, int ix) {
                 side == DiffSide::Original ? theme.danger : theme.success));
         }
         box->Child(CodeText(
-            cx, file, side, line,
+            cx, state, row.file, file, side, line,
             diff->syntaxHighlight && SideOf(file, side)->lines[line].text.len <=
                                          state->syntaxMaxLineLength));
 
         if (present && diff->annotationContent && diff->annotations) {
-            int number = SideOf(file, side)->lines[line].lineNumber;
             for (int i = 0; i < diff->annotationCount; i++) {
                 const DiffAnnotation& ann = diff->annotations[i];
                 if (!ann.hasPosition || !StrEq(ann.path, file->path)) continue;
@@ -82166,14 +86294,26 @@ static El* ui_diff_RenderRow(void* user, Ctx* cx, int ix) {
     if (split) {
         El* both = Div(cx->a)->FlexRow()->W(kFill);
         both->Child(cell(DiffSide::Original, row.original, row.changed,
-                         row.original >= 0));
+                         row.original >= 0, nullptr, nullptr, false));
         both->Child(cell(DiffSide::Modified, row.modified, row.changed,
-                         row.modified >= 0));
+                         row.modified >= 0, nullptr, nullptr, false));
         return both;
     }
     DiffSide side = row.modified >= 0 ? DiffSide::Modified : DiffSide::Original;
     int line = row.modified >= 0 ? row.modified : row.original;
-    return cell(side, line, row.changed, true)->W(kFill);
+
+    const DiffDecoration* deco = nullptr;
+    if (!lineSelected(side, line)) {
+        if (row.original >= 0)
+            deco = decorationAt(DiffSide::Original, row.original);
+        if (!deco && row.modified >= 0)
+            deco = decorationAt(DiffSide::Modified, row.modified);
+    }
+    const DiffGutterMarker* marker = nullptr;
+    if (row.original >= 0) marker = markerAt(DiffSide::Original, row.original);
+    if (!marker && row.modified >= 0)
+        marker = markerAt(DiffSide::Modified, row.modified);
+    return cell(side, line, row.changed, true, deco, marker, true)->W(kFill);
 }
 
 static uint32_t Act(const char* name) {
@@ -82266,6 +86406,22 @@ Diff* Diff::Annotations(const DiffAnnotation* items, int count) {
     annotationCount = count;
     return this;
 }
+Diff* Diff::Decorations(const DiffDecoration* items, int count) {
+    decorations = items;
+    decorationCount = count;
+    return this;
+}
+Diff* Diff::GutterMarkers(const DiffGutterMarker* items, int count) {
+    gutterMarkers = items;
+    gutterMarkerCount = count;
+    return this;
+}
+Diff* Diff::RenderGutterMarker(El* (*fn)(Ctx*, const DiffGutterMarker*, void*),
+                               void* user) {
+    gutterMarkerContent = fn;
+    gutterMarkerUser = user;
+    return this;
+}
 Diff* Diff::RenderAnnotation(El* (*fn)(Ctx*, const DiffAnnotation*, void*),
                              void* user) {
     annotationContent = fn;
@@ -82336,6 +86492,7 @@ El* Diff::IntoEl() {
     DiffInitKeys();
     DiffState* st = state.Get(cx);
     if (!st) return Div(a);
+    st->EnsureSyntax();
     st->listScroll.itemsCount = len(st->rows);
 
     El* root = Div(a)
@@ -82441,10 +86598,9 @@ void DockSkin::SetCloseButtonVisible(App* app, Window* win, bool visible) {
 }
 
 El* DockInvalidPanelRender(Ctx* cx, void* data) {
+    (void)data;
     Arena* a = cx->a;
     const Theme& th = ThemeNow(cx->app);
-    auto* info = (DockInvalidPanel*)data;
-    Str name = info ? info->name : StrL("");
 
     return Div(a)
         ->SizeFull()
@@ -82452,10 +86608,7 @@ El* DockInvalidPanelRender(Ctx* cx, void* data) {
         ->FlexCol()
         ->ItemsCenter()
         ->JustifyCenter()
-        ->Child(TextEl(a, StrDup(a, fmt("The `%s` panel type is not "
-                                        "registered in PanelRegistry.",
-                                        name)))
-                    ->Fg(th.mutedFg));
+        ->Child(TextEl(a, Tr("Dock.Unavailable Panel"))->Fg(th.mutedFg));
 }
 
 DockArea* DockArea::New(Ctx* cx, Str id, Entity<DockState> state) {
@@ -83997,48 +88150,101 @@ static El* CompletionMenuContent(CompletionMenu* self, Ctx* cx, float maxW,
     Entity<InputMenuViewState> view =
         InputMenuView(cx, editor, "completion-menu");
 
-    El* list = PopoverSurface(
-        cx,
+    El* list =
+        PopoverSurface(cx,
 
-        Div(a)->FlexCol()->MinW(120)->MaxW(maxW)->MaxH(240)->ClipY()->Pad(
-            Rems(cx, 0.25f)));
+                       Div(a)
+                           ->FlexCol()
+                           ->MinW(120)
+                           ->MaxW(maxW)
+                           ->MaxH(240)
+                           ->ClipY()
+                           ->Font(14)
+                           ->PadT(Rems(cx, 0.25f))
+                           ->PadL(Rems(cx, 0.25f))
+                           ->PadR(Rems(cx, 0.25f))
+                           ->PadB(Rems(cx, 0.125f)));
+    CompletionHighlightFn highlight = editor->completionHighlight.fn
+                                          ? editor->completionHighlight.fn
+                                          : HighlightPrefix;
+    void* highlightData = editor->completionHighlight.data;
     for (int i = 0; i < editor->completion.items.len; i++) {
         const CompletionItem& item = editor->completion.items[i];
         bool selected = i == editor->completion.selected;
+
         El* row = Div(a)
                       ->FlexRow()
-
-                      ->Gap(Rems(cx, 0.5f))
-                      ->Pad(Rems(cx, 0.25f))
+                      ->W(kFill)
+                      ->H(Rems(cx, 26.f / 16.f))
+                      ->PadX(Rems(cx, 0.5f))
+                      ->PadY(0)
+                      ->MarginB(Rems(cx, 0.125f))
                       ->ItemsCenter()
-                      ->Radius(theme.radius * 0.5f)
-                      ->Font(12)
-                      ->HoverBg(BackgroundOpacity(theme.tokens.accent, 0.8f))
+                      ->Radius(theme.radius)
+                      ->Font(14)
+                      ->AriaLabel(item.label)
+                      ->HoverBg(theme.tokens.accent)
+                      ->HoverFg(theme.accentFg)
                       ->OnClick(ListenTo(
                           view, &InputMenuViewState::CompletionClick, i))
                       ->OnHover(ListenTo(
                           view, &InputMenuViewState::CompletionHover, i));
-        if (selected) row->Bg(theme.tokens.accent)->Fg(theme.accentFg);
-        El* label = TextEl(a, item.label)->LineHeight(1.f);
-        int matched = len(editor->completion.query);
-        if (matched > len(item.label)) matched = len(item.label);
-        if (matched > 0) {
-            TextSpan* prefix = ArenaNew<TextSpan>(a);
-            prefix->lo = 0;
-            prefix->hi = matched;
-            prefix->color = theme.blue;
-            label->Spans(prefix, 1);
+        if (selected) {
+            row->Bg(theme.tokens.accent)->Fg(theme.accentFg);
         }
-        if (item.deprecated) label->Strikethrough();
-        row->Child(label);
+        El* inner = Div(a)
+                        ->FlexRow()
+                        ->W(kFill)
+                        ->Gap(Rems(cx, 0.75f))
+                        ->ItemsCenter()
+                        ->JustifyBetween();
+        El* label = TextEl(a, item.label)->LineHeight(1.f);
+        int nRaw = highlight(highlightData, editor->completion.query, &item,
+                             nullptr, 0);
+        if (nRaw > 0) {
+            ByteRange* raw =
+                (ByteRange*)Alloc(a, nRaw * (int)sizeof(ByteRange));
+            if (raw) {
+                highlight(highlightData, editor->completion.query, &item, raw,
+                          nRaw);
+                int nKept =
+                    RetainHighlightRanges(item.label, raw, nRaw, nullptr, 0);
+                if (nKept > 0) {
+                    ByteRange* kept =
+                        (ByteRange*)Alloc(a, nKept * (int)sizeof(ByteRange));
+                    TextSpan* spans =
+                        (TextSpan*)Alloc(a, nKept * (int)sizeof(TextSpan));
+                    if (kept && spans) {
+                        RetainHighlightRanges(item.label, raw, nRaw, kept,
+                                              nKept);
+                        for (int s = 0; s < nKept; s++) {
+                            spans[s].lo = kept[s].start;
+                            spans[s].hi = kept[s].end;
+                            spans[s].color = theme.blue;
+                            spans[s].bg = Rgba{0, 0, 0, 0};
+                            spans[s].underline = false;
+                            spans[s].wavy = false;
+                        }
+                        label->Spans(spans, nKept);
+                    }
+                }
+            }
+        }
+        if (item.deprecated) {
+            label->Strikethrough();
+        }
+        inner->Child(label);
         if (len(item.detail) > 0) {
             El* detail = TextEl(a, item.detail)
                              ->LineHeight(1.f)
                              ->Italic()
                              ->Fg(selected ? theme.accentFg : theme.mutedFg);
-            if (item.deprecated) detail->Strikethrough();
-            row->Child(detail);
+            if (item.deprecated) {
+                detail->Strikethrough();
+            }
+            inner->Child(detail);
         }
+        row->Child(inner);
         list->Child(row);
     }
     El* menu = Div(a)->Gap(gap)->ItemsStart()->Child(list);
@@ -84065,7 +88271,7 @@ static El* CompletionMenuContent(CompletionMenu* self, Ctx* cx, float maxW,
                                        ->PadX(Rems(cx, 0.5f))
                                        ->PadY(Rems(cx, 0.25f)))
                         ->Child(TextView::New(cx, documentation)
-                                    ->Font(12)
+                                    ->Font(14)
                                     ->Style(textStyle)
                                     ->Selectable()
                                     ->IntoEl()));
@@ -84850,7 +89056,9 @@ El* Highlighter::IntoEl() {
     }
 
     if (state && h > 0) {
-        state->viewH = h - editorPad.top - editorPad.bottom;
+        float vh = h - editorPad.top - editorPad.bottom;
+        InputRevealCaretOnResize(state, state->viewW, vh, state->lastLineH);
+        state->viewH = vh;
     }
 
     style.activeLineBleedL = editorPad.left;
@@ -84874,17 +89082,19 @@ El* Highlighter::IntoEl() {
     }
     if (h > 0) {
 
-        scroller =
-            InputBase::New(cx, id, true, AccessibilityRole::MultilineTextInput)
-                ->BindInputText(state)
-                ->FlexCol()
-                ->W(kFill)
-                ->H(h)
-                ->ClipY()
-                ->ScrollY(state ? state->scrollY : 0)
-                ->ScrollFromPath();
+        scroller = InputBase::New(cx, id, true, AccessibilityRole::None)
+                       ->BindInputText(state)
+                       ->FlexCol()
+                       ->W(kFill)
+                       ->H(h)
+                       ->ClipY()
+                       ->ScrollY(state ? state->scrollY : 0)
+                       ->ScrollFromPath();
         if (state && !state->softWrap) {
             scroller->ScrollX(state->scrollX);
+        }
+        if (state && state->scrollbarRenderer) {
+            scroller->prePaint = &EditorScrollbarPrePaint;
         }
         scroller->Child(editor);
         if (padded) {
@@ -85008,6 +89218,11 @@ HoverCard* HoverCard::Anchor(HoverCardAnchor v) {
     anchor = v;
     return this;
 }
+HoverCard* HoverCard::TriggerStyle(const Style& s, uint32_t fields) {
+    triggerStyle = s;
+    triggerStyleSet = fields;
+    return this;
+}
 
 El* HoverCard::IntoEl() {
     Str cardId = id.s ? id : StrL("hover-card");
@@ -85030,11 +89245,14 @@ El* HoverCard::IntoEl() {
         }
         PopupPlaceContent(card, anchor);
     }
-    return gpui::HoverCard::New(cx, cardId, st)
-        ->OnOpenChange(onOpenChange)
-        ->Trigger(trigger)
-        ->Content(card)
-        ->IntoEl();
+    gpui::HoverCard* base = gpui::HoverCard::New(cx, cardId, st)
+                                ->OnOpenChange(onOpenChange)
+                                ->Trigger(trigger)
+                                ->Content(card);
+    if (triggerStyleSet) {
+        base->Refine(triggerStyle, triggerStyleSet);
+    }
+    return base->IntoEl();
 }
 
 }
@@ -85207,12 +89425,27 @@ Icon* Icon::Rotate(float turns) {
     return Transform(turns);
 }
 
+void SetIconResolver(App* app, IconPathResolveFn fn, void* user) {
+    IconPathResolverSet(app, fn, user);
+}
+
+Str ResolveIconPath(Str path, const App* app, Arena* a) {
+    return IconPathResolve(path, app, a);
+}
+
 El* Icon::IntoEl() {
     El* e = hasSize ? IconEl(a, name, size) : IconEl(a, name);
     if (source == IconSource::Data) {
         e->iconSvg = data;
-    } else if (path.s) {
-        e->iconPath = path;
+    } else {
+
+        Str drawn = path.s ? path : e->iconPath;
+        if (cx && cx->app) {
+            drawn = ResolveIconPath(drawn, cx->app, a);
+        }
+        if (drawn.s) {
+            e->iconPath = drawn;
+        }
     }
     if (hasColor) {
         e->Fg(color);
@@ -85865,17 +90098,24 @@ El* Editor::IntoEl() {
     if (fontSize > 0) highlighter->Font(fontSize);
     highlighter->FontFamily(fontFamily);
 
-    float unusedH = 0, padX = 0, padY = 0, unusedFont = 0;
-    InputSizeMetrics(cx, size, &unusedH, &padX, &padY, &unusedFont);
-    float left = padX < 6.f ? padX : 6.f;
-    highlighter->editorPad = Edges::New(left, padX, padY, padY);
+    if (state->editorPaddingsSet) {
+        highlighter->editorPad = state->editorPaddings;
+    } else {
+        float unusedH = 0, padX = 0, padY = 0, unusedFont = 0;
+        InputSizeMetrics(cx, size, &unusedH, &padX, &padY, &unusedFont);
+        float left = padX < 6.f ? padX : 6.f;
+        highlighter->editorPad = Edges::New(left, padX, padY, padY);
+    }
+    InputAccessibility access = InputAccessibility::New(&accessibilityRole)
+                                    .WithValueExposed(true);
+    if (ariaLabel.s) {
+        access = access.WithLabel(ariaLabel);
+    }
+    InputSetAccessibility(state, access);
     El* element = highlighter->IntoEl();
 
     const Theme& theme = ThemeNow(cx->app);
-    element->TabIndex(tabIndex)
-        ->Role(accessibilityRole)
-        ->AriaDisabled(disabled);
-    if (ariaLabel.s) element->AriaLabel(ariaLabel);
+    element->TabIndex(tabIndex);
     if (appearance) element->Bg(theme.inputBg);
     if (bordered) element->Border(1, theme.inputBorder)->Radius(theme.radius);
     if (disabled) element->Opacity(0.5f);
@@ -86214,16 +90454,35 @@ El* Input::IntoEl() {
     if (disabled) {
         editor.foreground = th.mutedFg;
     }
-    bool password = masked || (state && state->masked) ||
-                    InputContentIsSecret(hasContentType, contentType);
+
+    bool maskedNow = masked || (state && state->masked);
+    bool roleHasType = hasContentType || maskedNow;
+    InputContentType roleType =
+        hasContentType ? contentType : InputContentType::Password;
     AccessibilityRole role =
-        hasAccessibilityRole
-            ? accessibilityRole
-            : InputAccessibilityRole(hasContentType, contentType);
-    El* field = InputBase::New(cx, id, !disabled,
-                               password && !hasAccessibilityRole
-                                   ? AccessibilityRole::PasswordInput
-                                   : role)
+        hasAccessibilityRole ? accessibilityRole
+                             : InputAccessibilityRole(roleHasType, roleType);
+
+    bool valueExposed = !InputContentIsSecret(hasContentType, contentType);
+    if (state) {
+        InputAccessibility access = InputAccessibility::New(&role);
+        Str aria = ariaLabel.s ? ariaLabel : label;
+        if (!aria.s && state->placeholder.s) {
+            aria = state->placeholder;
+        }
+        if (aria.s) {
+            access = access.WithLabel(aria);
+        }
+        if (state->placeholder.s) {
+            access = access.WithPlaceholder(state->placeholder);
+        }
+        if (accessibilityId.s) {
+            access = access.WithAccessibilityId(accessibilityId);
+        }
+        InputSetAccessibility(state, access.WithValueExposed(valueExposed));
+    }
+
+    El* field = InputBase::New(cx, id, !disabled, AccessibilityRole::None)
                     ->BindInput(disabled ? nullptr : state)
                     ->FlexRow()
                     ->W(col ? kFill : width)
@@ -86235,24 +90494,6 @@ El* Input::IntoEl() {
 
                     ->ClipX();
     if (!disabled) InputTrackFrameFocus(cx, field, state);
-    if (state) {
-        if (state->placeholder.s) {
-            field->AriaPlaceholder(state->placeholder);
-        }
-        if (!password) {
-            field->AriaValue(InputValue(state));
-        }
-    }
-    if (accessibilityId.s) {
-        field->AccessibilityId(accessibilityId);
-    }
-    if (ariaLabel.s) {
-        field->AriaLabel(ariaLabel);
-    } else if (label.s) {
-        field->AriaLabel(label);
-    } else if (state && state->placeholder.s) {
-        field->AriaLabel(state->placeholder);
-    }
 
     field->FocusRing(appearance && focusRing);
     if (appearance) {
@@ -86278,14 +90519,18 @@ El* Input::IntoEl() {
         field->Child(gpui::Input::New(cx, state, editor));
     }
     if (maskToggle) {
-        field->Child(Button::New(cx, StrL("mask"))
-                         ->Text()
-                         ->WithSize(UiSize::XSmall)
-                         ->Icon(IconName::Eye)
-                         ->TabStop(false)
-                         ->OnClick(onToggleMask)
-                         ->IntoEl()
-                         ->StopClick());
+
+        field->Child(
+            Button::New(cx, StrL("mask"))
+                ->Text()
+                ->WithSize(UiSize::XSmall)
+                ->Icon(IconName::Eye)
+                ->TabStop(false)
+                ->AccessibilityLabel(Tr(maskedNow ? "Input.Show Password"
+                                                  : "Input.Hide Password"))
+                ->OnClick(onToggleMask)
+                ->IntoEl()
+                ->StopClick());
     }
     if (cleanable && hasValue && !disabled) {
 
@@ -86294,6 +90539,7 @@ El* Input::IntoEl() {
                          ->WithSize(UiSize::XSmall)
                          ->Icon(IconName::X)
                          ->TabStop(false)
+                         ->AccessibilityLabel(Tr("Input.Clear"))
                          ->OnClick(onClear)
                          ->IntoEl()
                          ->StopClick());
@@ -86448,10 +90694,32 @@ El* Textarea::IntoEl() {
                   : (float)shownRows * Rems(cx, 1.25f) + 2 * padY + 2;
 
     if (state && h > 0) {
-        state->viewH = h - 2 * padY;
+
+        float vh = h - 2 * padY;
+        InputRevealCaretOnResize(state, state->viewW, vh, state->lastLineH);
+        state->viewH = vh;
     }
     bool interactive = state && !state->disabled && !disabled;
-    El* box = InputBase::New(cx, id, interactive, accessibilityRole)
+    if (state) {
+        InputAccessibility access = InputAccessibility::New(&accessibilityRole)
+                                        .WithValueExposed(true);
+        Str aria = ariaLabel;
+        if (!aria.s && state->placeholder.s) {
+            aria = state->placeholder;
+        }
+        if (aria.s) {
+            access = access.WithLabel(aria);
+        }
+        if (state->placeholder.s) {
+            access = access.WithPlaceholder(state->placeholder);
+        }
+        if (accessibilityId.s) {
+            access = access.WithAccessibilityId(accessibilityId);
+        }
+        InputSetAccessibility(state, access);
+    }
+
+    El* box = InputBase::New(cx, id, interactive, AccessibilityRole::None)
                   ->BindInput(interactive ? state : nullptr)
                   ->W(kFill)
                   ->H(h)
@@ -86462,33 +90730,21 @@ El* Textarea::IntoEl() {
                   ->ScrollFromPath()
 
                   ->ScrollY(state ? state->scrollY : 0);
+    if (state && state->scrollbarRenderer) {
+        box->prePaint = &EditorScrollbarPrePaint;
+    }
     El* text = gpui::Textarea::New(cx, state, editor);
 
     float stretch = InputBouncePaint(state, cx->win);
     if (stretch != 0) text->PaintOffset(0, stretch);
     box->Child(text);
     if (interactive) InputTrackFrameFocus(cx, box, state);
-    if (accessibilityId.s) {
-        box->AccessibilityId(accessibilityId);
-    }
     if (appearance) {
         box->Radius(th.radius)->Bg(th.inputBg);
         if (bordered) {
             box->Border(1, focused ? th.ring : th.inputBorder)
                 ->FocusRing(focusRing);
         }
-    }
-    if (state) {
-        box->AriaValue(InputValue(state));
-        if (state->placeholder.s) {
-            box->AriaPlaceholder(state->placeholder);
-            if (!ariaLabel.s) {
-                box->AriaLabel(state->placeholder);
-            }
-        }
-    }
-    if (ariaLabel.s) {
-        box->AriaLabel(ariaLabel);
     }
     InputTouchSelectionLayer(cx, box, id, state);
     BindInputContextMenu(cx, box, id, state, disabled, contextMenu,
@@ -86531,6 +90787,10 @@ NumberInput* NumberInput::Appearance(bool v) {
 }
 NumberInput* NumberInput::FocusRing(bool v) {
     focusRing = v;
+    return this;
+}
+NumberInput* NumberInput::AccessibilityLabel(Str label) {
+    accessibilityLabel = label;
     return this;
 }
 NumberInput* NumberInput::Suffix(El* el) {
@@ -86689,6 +90949,10 @@ El* NumberInput::IntoEl() {
     El* content = gpui::NumberInput::Compose(
         cx, base, state, disabled, dec,
         Div(a)->H(kFill)->Child(editor->IntoEl()), inc);
+
+    if (accessibilityLabel.s) {
+        content->AriaLabel(accessibilityLabel);
+    }
     if (onInc.IsValid()) {
         content->OnAccessibilityIncrement(onInc);
     } else {
@@ -89462,138 +93726,166 @@ namespace gpui {
 
 namespace component {
 
-extern const char* const kLocaleNames[] = {"en",    "zh-CN", "zh-HK",
+extern const char* const kLocaleNames[] = {"en",    "pt-BR", "zh-CN", "zh-HK",
                                            "zh-TW", "it",    "fr"};
-extern const int kLocaleCount = 6;
+extern const int kLocaleCount = 7;
 
-static const char* const kV_Attachment_Remove[] = {"Remove", "移除",  "移除",
-                                                   "移除",   nullptr, nullptr};
-static const char* const kV_Attachment_Retry[] = {"Retry", "重试",  "重試",
-                                                  "重試",  nullptr, nullptr};
+static const char* const kV_Attachment_Remove[] = {
+    "Remove", "Remover", "移除", "移除", "移除", nullptr, nullptr};
+static const char* const kV_Attachment_Retry[] = {
+    "Retry", "Tentar de novo", "重试", "重試", "重試", nullptr, nullptr};
 static const char* const kV_Calendar_month_April[] = {
-    "April", "四月", "四月", "四月", "Aprile", "Avril"};
+    "April", "Abril", "四月", "四月", "四月", "Aprile", "Avril"};
 static const char* const kV_Calendar_month_August[] = {
-    "August", "八月", "八月", "八月", "Agosto", "Août"};
+    "August", "Agosto", "八月", "八月", "八月", "Agosto", "Août"};
 static const char* const kV_Calendar_month_December[] = {
-    "December", "十二月", "十二月", "十二月", "Dicembre", "Décembre"};
+    "December", "Dezembro", "十二月",  "十二月",
+    "十二月",   "Dicembre", "Décembre"};
 static const char* const kV_Calendar_month_February[] = {
-    "February", "二月", "二月", "二月", "Febbraio", "Février"};
+    "February", "Fevereiro", "二月", "二月", "二月", "Febbraio", "Février"};
 static const char* const kV_Calendar_month_January[] = {
-    "January", "一月", "一月", "一月", "Gennaio", "Janvier"};
+    "January", "Janeiro", "一月", "一月", "一月", "Gennaio", "Janvier"};
 static const char* const kV_Calendar_month_July[] = {
-    "July", "七月", "七月", "七月", "Luglio", "Juillet"};
-static const char* const kV_Calendar_month_June[] = {"June", "六月",   "六月",
-                                                     "六月", "Giugno", "Juin"};
-static const char* const kV_Calendar_month_March[] = {"March", "三月",  "三月",
-                                                      "三月",  "Marzo", "Mars"};
-static const char* const kV_Calendar_month_May[] = {"May",  "五月",   "五月",
-                                                    "五月", "Maggio", "Mai"};
+    "July", "Julho", "七月", "七月", "七月", "Luglio", "Juillet"};
+static const char* const kV_Calendar_month_June[] = {
+    "June", "Junho", "六月", "六月", "六月", "Giugno", "Juin"};
+static const char* const kV_Calendar_month_March[] = {
+    "March", "Março", "三月", "三月", "三月", "Marzo", "Mars"};
+static const char* const kV_Calendar_month_May[] = {
+    "May", "Maio", "五月", "五月", "五月", "Maggio", "Mai"};
 static const char* const kV_Calendar_month_November[] = {
-    "November", "十一月", "十一月", "十一月", "Novembre", "Novembre"};
+    "November", "Novembro", "十一月",  "十一月",
+    "十一月",   "Novembre", "Novembre"};
 static const char* const kV_Calendar_month_October[] = {
-    "October", "十月", "十月", "十月", "Ottobre", "Octobre"};
+    "October", "Outubro", "十月", "十月", "十月", "Ottobre", "Octobre"};
 static const char* const kV_Calendar_month_September[] = {
-    "September", "九月", "九月", "九月", "Settembre", "Septembre"};
-static const char* const kV_Calendar_week_0[] = {"Su", "日", "日",
+    "September", "Setembro", "九月", "九月", "九月", "Settembre", "Septembre"};
+static const char* const kV_Calendar_week_0[] = {"Su", "Do", "日", "日",
                                                  "日", "Do", "Di"};
-static const char* const kV_Calendar_week_1[] = {"Mo", "一", "一",
+static const char* const kV_Calendar_week_1[] = {"Mo", "Se", "一", "一",
                                                  "一", "Lu", "Lu"};
-static const char* const kV_Calendar_week_2[] = {"Tu", "二", "二",
+static const char* const kV_Calendar_week_2[] = {"Tu", "Te", "二", "二",
                                                  "二", "Ma", "Ma"};
-static const char* const kV_Calendar_week_3[] = {"We", "三", "三",
+static const char* const kV_Calendar_week_3[] = {"We", "Qa", "三", "三",
                                                  "三", "Me", "Me"};
-static const char* const kV_Calendar_week_4[] = {"Th", "四", "四",
+static const char* const kV_Calendar_week_4[] = {"Th", "Qi", "四", "四",
                                                  "四", "Gi", "Je"};
-static const char* const kV_Calendar_week_5[] = {"Fr", "五", "五",
+static const char* const kV_Calendar_week_5[] = {"Fr", "Sx", "五", "五",
                                                  "五", "Ve", "Ve"};
-static const char* const kV_Calendar_week_6[] = {"Sa", "六", "六",
+static const char* const kV_Calendar_week_6[] = {"Sa", "Sá", "六", "六",
                                                  "六", "Sa", "Sa"};
-static const char* const kV_Carousel_go_to_slide[] = {"Go to slide %{current}",
-                                                      "前往第 %{current} 张",
-                                                      "前往第 %{current} 張",
-                                                      "前往第 %{current} 張",
-                                                      nullptr,
-                                                      nullptr};
-static const char* const kV_Carousel_label[] = {"Carousel", "轮播",  "輪播",
-                                                "輪播",     nullptr, nullptr};
-static const char* const kV_Carousel_next[] = {"Next slide", "下一张", "下一張",
-                                               "下一張",     nullptr,  nullptr};
+static const char* const kV_Carousel_go_to_slide[] = {
+    "Go to slide %{current}",
+    "Ir para o slide %{current}",
+    "前往第 %{current} 张",
+    "前往第 %{current} 張",
+    "前往第 %{current} 張",
+    nullptr,
+    nullptr};
+static const char* const kV_Carousel_label[] = {
+    "Carousel", "Carrossel", "轮播", "輪播", "輪播", nullptr, nullptr};
+static const char* const kV_Carousel_next[] = {
+    "Next slide", "Próximo slide", "下一张", "下一張",
+    "下一張",     nullptr,         nullptr};
 static const char* const kV_Carousel_pagination[] = {"Carousel pagination",
+                                                     "Páginas do carrossel",
                                                      "轮播分页",
                                                      "輪播分頁",
                                                      "輪播分頁",
                                                      nullptr,
                                                      nullptr};
 static const char* const kV_Carousel_previous[] = {
-    "Previous slide", "上一张", "上一張", "上一張", nullptr, nullptr};
+    "Previous slide", "Slide anterior", "上一张", "上一張",
+    "上一張",         nullptr,          nullptr};
 static const char* const kV_Carousel_slide[] = {
     "Slide %{current} of %{total}",
+    "Slide %{current} de %{total}",
     "第 %{current} 张，共 %{total} 张",
     "第 %{current} 張，共 %{total} 張",
     "第 %{current} 張，共 %{total} 張",
     nullptr,
     nullptr};
-static const char* const kV_Chart_close[] = {"Close", "收盘",  "收市",
-                                             "收盤",  nullptr, nullptr};
-static const char* const kV_Chart_high[] = {"High", "最高",  "最高",
-                                            "最高", nullptr, nullptr};
-static const char* const kV_Chart_low[] = {"Low",  "最低",  "最低",
-                                           "最低", nullptr, nullptr};
-static const char* const kV_Chart_open[] = {"Open", "开盘",  "開市",
-                                            "開盤", nullptr, nullptr};
-static const char* const kV_ColorPicker_Alpha[] = {"Alpha",  "透明度", "透明度",
-                                                   "透明度", "Alfa",   nullptr};
-static const char* const kV_ColorPicker_HSLA[] = {"HSLA", "HSLA", "HSLA",
-                                                  "HSLA", "HSLA", nullptr};
-static const char* const kV_ColorPicker_Hue[] = {"Hue",  "色相",     "色相",
-                                                 "色相", "Tonalità", nullptr};
+static const char* const kV_Chart_close[] = {
+    "Close", "Fechamento", "收盘", "收市", "收盤", nullptr, nullptr};
+static const char* const kV_Chart_high[] = {"High", "Máxima", "最高", "最高",
+                                            "最高", nullptr,  nullptr};
+static const char* const kV_Chart_low[] = {"Low",  "Mínima", "最低", "最低",
+                                           "最低", nullptr,  nullptr};
+static const char* const kV_Chart_open[] = {"Open", "Abertura", "开盘", "開市",
+                                            "開盤", nullptr,    nullptr};
+static const char* const kV_ColorPicker_Alpha[] = {
+    "Alpha", "Opacidade", "透明度", "透明度", "透明度", "Alfa", nullptr};
+static const char* const kV_ColorPicker_HSLA[] = {
+    "HSLA", "HSLA", "HSLA", "HSLA", "HSLA", "HSLA", nullptr};
+static const char* const kV_ColorPicker_Hue[] = {
+    "Hue", "Matiz", "色相", "色相", "色相", "Tonalità", nullptr};
 static const char* const kV_ColorPicker_Lightness[] = {
-    "Lightness", "亮度", "亮度", "亮度", "Luminosità", nullptr};
+    "Lightness", "Luminosidade", "亮度", "亮度", "亮度", "Luminosità", nullptr};
 static const char* const kV_ColorPicker_Palette[] = {
-    "Palette", "调色板", "調色板", "調色盤", "Tavolozza", nullptr};
+    "Palette", "Paleta", "调色板", "調色板", "調色盤", "Tavolozza", nullptr};
 static const char* const kV_ColorPicker_Saturation[] = {
-    "Saturation", "饱和度", "飽和度", "飽和度", "Saturazione", nullptr};
-static const char* const kV_ComboBox_empty[] = {"No results",       "暂无数据",
-                                                "暫無數據",         "沒有結果",
-                                                "Nessun risultato", nullptr};
+    "Saturation", "Saturação",   "饱和度", "飽和度",
+    "飽和度",     "Saturazione", nullptr};
+static const char* const kV_ComboBox_empty[] = {
+    "No results", "Nada encontrado",  "暂无数据", "暫無數據",
+    "沒有結果",   "Nessun risultato", nullptr};
 static const char* const kV_ComboBox_placeholder[] = {
-    "Please select", "请选择", "請選擇", "請選擇", "Seleziona", nullptr};
+    "Please select", "Escolha",   "请选择", "請選擇",
+    "請選擇",        "Seleziona", nullptr};
 static const char* const kV_ComboBox_search_placeholder[] = {
-    "Search...", "搜索...", "搜索...", "搜尋...", "Cerca...", nullptr};
-static const char* const kV_Command_empty[] = {
-    "No results found.",         "未找到结果。", "未找到結果。", "未找到結果。",
-    "Nessun risultato trovato.", nullptr};
+    "Search...", "Buscar…",  "搜索...", "搜索...",
+    "搜尋...",   "Cerca...", nullptr};
+static const char* const kV_Command_empty[] = {"No results found.",
+                                               "Nada encontrado.",
+                                               "未找到结果。",
+                                               "未找到結果。",
+                                               "未找到結果。",
+                                               "Nessun risultato trovato.",
+                                               nullptr};
 static const char* const kV_Command_placeholder[] = {
     "Type a command or search...",
+    "Digite um comando ou busque…",
     "输入命令或搜索...",
     "輸入命令或搜尋...",
     "輸入命令或搜尋...",
     "Digita un comando o cerca...",
     nullptr};
 static const char* const kV_DatePicker_placeholder[] = {
-    "Select date", "选择日期",       "選擇日期",
-    "選取日期",    "Seleziona data", "Sélectionner une date"};
-static const char* const kV_DatePicker_time[] = {"Time",  "时间",  "時間",
-                                                 nullptr, nullptr, nullptr};
-static const char* const kV_Dialog_cancel[] = {"Cancel", "取消",    "取消",
-                                               "取消",   "Annulla", nullptr};
-static const char* const kV_Dialog_ok[] = {"OK",   "确定", "確定",
-                                           "確定", "OK",   nullptr};
+    "Select date",
+    "Escolha uma data",
+    "选择日期",
+    "選擇日期",
+    "選取日期",
+    "Seleziona data",
+    "Sélectionner une date"};
+static const char* const kV_DatePicker_time[] = {
+    "Time", "Hora", "时间", "時間", nullptr, nullptr, nullptr};
+static const char* const kV_Dialog_cancel[] = {
+    "Cancel", "Cancelar", "取消", "取消", "取消", "Annulla", nullptr};
+static const char* const kV_Dialog_ok[] = {"OK",   "OK", "确定", "確定",
+                                           "確定", "OK", nullptr};
 static const char* const kV_Diff_AcceptBoth[] = {
-    "Accept Both", "保留双方更改", "保留雙方變更", nullptr, nullptr, nullptr};
+    "Accept Both", "Aceitar as duas", "保留双方更改", "保留雙方變更",
+    nullptr,       nullptr,           nullptr};
 static const char* const kV_Diff_AcceptCurrent[] = {
-    "Accept Current", "采用当前更改", "採用目前變更",
-    nullptr,          nullptr,        nullptr};
-static const char* const kV_Diff_AcceptIncoming[] = {
-    "Accept Incoming", "采用传入的更改", "採用傳入的變更",
-    nullptr,           nullptr,          nullptr};
+    "Accept Current", "Aceitar a atual", "采用当前更改", "採用目前變更",
+    nullptr,          nullptr,           nullptr};
+static const char* const kV_Diff_AcceptIncoming[] = {"Accept Incoming",
+                                                     "Aceitar a que chega",
+                                                     "采用传入的更改",
+                                                     "採用傳入的變更",
+                                                     nullptr,
+                                                     nullptr,
+                                                     nullptr};
 static const char* const kV_Diff_AcceptedBoth[] = {"Accepted both changes",
+                                                   "As duas aceitas",
                                                    "已保留双方更改",
                                                    "已保留雙方變更",
                                                    nullptr,
                                                    nullptr,
                                                    nullptr};
 static const char* const kV_Diff_AcceptedCurrent[] = {"Accepted current change",
+                                                      "Atual aceita",
                                                       "已采用当前更改",
                                                       "已採用目前變更",
                                                       nullptr,
@@ -89601,6 +93893,7 @@ static const char* const kV_Diff_AcceptedCurrent[] = {"Accepted current change",
                                                       nullptr};
 static const char* const kV_Diff_AcceptedIncoming[] = {
     "Accepted incoming change",
+    "A que chega foi aceita",
     "已采用传入的更改",
     "已採用傳入的變更",
     nullptr,
@@ -89608,177 +93901,243 @@ static const char* const kV_Diff_AcceptedIncoming[] = {
     nullptr};
 static const char* const kV_Diff_AddAnnotation[] = {
     "Add annotation to line %{line}",
+    "Anotar a linha %{line}",
     "为第 %{line} 行添加批注",
     "為第 %{line} 行新增批註",
     nullptr,
     nullptr,
     nullptr};
 static const char* const kV_Diff_AddedFile[] = {
-    "Added file", "新增文件", "新增檔案", nullptr, nullptr, nullptr};
-static const char* const kV_Diff_AddedLine[] = {"%{side} line %{line}, added",
-                                                "%{side}第 %{line} 行，新增",
-                                                "%{side}第 %{line} 行，新增",
-                                                nullptr,
-                                                nullptr,
-                                                nullptr};
+    "Added file", "Arquivo novo", "新增文件", "新增檔案",
+    nullptr,      nullptr,        nullptr};
+static const char* const kV_Diff_AddedLine[] = {
+    "%{side} line %{line}, added",
+    "%{side} linha %{line}, adicionada",
+    "%{side}第 %{line} 行，新增",
+    "%{side}第 %{line} 行，新增",
+    nullptr,
+    nullptr,
+    nullptr};
 static const char* const kV_Diff_BaseChange[] = {
-    "Common ancestor", "共同祖先", "共同祖先", nullptr, nullptr, nullptr};
+    "Common ancestor", "Ancestral comum", "共同祖先", "共同祖先",
+    nullptr,           nullptr,           nullptr};
 static const char* const kV_Diff_BinaryChanges[] = {"Binary file changed",
+                                                    "Arquivo binário alterado",
                                                     "二进制文件已变更",
                                                     "二進位檔案已變更",
                                                     nullptr,
                                                     nullptr,
                                                     nullptr};
 static const char* const kV_Diff_CollapseFile[] = {"Collapse %{name}",
+                                                   "Recolher %{name}",
                                                    "收起 %{name}",
                                                    "收起 %{name}",
                                                    nullptr,
                                                    nullptr,
                                                    nullptr};
 static const char* const kV_Diff_ConflictedFile[] = {
-    "Conflicts", "有冲突", "有衝突", nullptr, nullptr, nullptr};
-static const char* const kV_Diff_CopiedFile[] = {"Copied", "已复制", "已複製",
-                                                 nullptr,  nullptr,  nullptr};
+    "Conflicts", "Conflitos", "有冲突", "有衝突", nullptr, nullptr, nullptr};
+static const char* const kV_Diff_CopiedFile[] = {
+    "Copied", "Copiado", "已复制", "已複製", nullptr, nullptr, nullptr};
 static const char* const kV_Diff_CurrentChange[] = {
-    "Current change", "当前更改", "目前變更", nullptr, nullptr, nullptr};
+    "Current change", "Alteração atual", "当前更改", "目前變更",
+    nullptr,          nullptr,           nullptr};
 static const char* const kV_Diff_DeletedFile[] = {
-    "Deleted file", "已删除文件", "已刪除檔案", nullptr, nullptr, nullptr};
+    "Deleted file", "Arquivo apagado", "已删除文件", "已刪除檔案",
+    nullptr,        nullptr,           nullptr};
 static const char* const kV_Diff_EmptyFile[] = {
-    "Empty file", "空文件", "空檔案", nullptr, nullptr, nullptr};
-static const char* const kV_Diff_ExpandAbove[] = {"Show %{count} lines above",
-                                                  "显示上方 %{count} 行",
-                                                  "顯示上方 %{count} 行",
-                                                  nullptr,
-                                                  nullptr,
-                                                  nullptr};
-static const char* const kV_Diff_ExpandBelow[] = {"Show %{count} lines below",
-                                                  "显示下方 %{count} 行",
-                                                  "顯示下方 %{count} 行",
-                                                  nullptr,
-                                                  nullptr,
-                                                  nullptr};
+    "Empty file", "Arquivo vazio", "空文件", "空檔案",
+    nullptr,      nullptr,         nullptr};
+static const char* const kV_Diff_ExpandAbove[] = {
+    "Show %{count} lines above",
+    "Mostrar %{count} linhas acima",
+    "显示上方 %{count} 行",
+    "顯示上方 %{count} 行",
+    nullptr,
+    nullptr,
+    nullptr};
+static const char* const kV_Diff_ExpandBelow[] = {
+    "Show %{count} lines below",
+    "Mostrar %{count} linhas abaixo",
+    "显示下方 %{count} 行",
+    "顯示下方 %{count} 行",
+    nullptr,
+    nullptr,
+    nullptr};
 static const char* const kV_Diff_ExpandFile[] = {
-    "Expand %{name}", "展开 %{name}", "展開 %{name}",
-    nullptr,          nullptr,        nullptr};
+    "Expand %{name}", "Expandir %{name}",
+    "展开 %{name}",   "展開 %{name}",
+    nullptr,          nullptr,
+    nullptr};
 static const char* const kV_Diff_ExpandLines[] = {
     "Expand %{count} unchanged lines",
+    "Expandir %{count} linhas sem mudança",
     "展开 %{count} 行未变更内容",
     "展開 %{count} 行未變更內容",
     nullptr,
     nullptr,
     nullptr};
-static const char* const kV_Diff_HiddenLines[] = {"%{count} lines not in patch",
-                                                  "patch 中未包含 %{count} 行",
-                                                  "patch 中未包含 %{count} 行",
-                                                  nullptr,
-                                                  nullptr,
-                                                  nullptr};
-static const char* const kV_Diff_IncomingChange[] = {
-    "Incoming change", "传入的更改", "傳入的變更", nullptr, nullptr, nullptr};
-static const char* const kV_Diff_Modified[] = {"Modified", "新版",  "新版",
-                                               nullptr,    nullptr, nullptr};
+static const char* const kV_Diff_HiddenLines[] = {
+    "%{count} lines not in patch",
+    "%{count} linhas fora do patch",
+    "patch 中未包含 %{count} 行",
+    "patch 中未包含 %{count} 行",
+    nullptr,
+    nullptr,
+    nullptr};
+static const char* const kV_Diff_IncomingChange[] = {"Incoming change",
+                                                     "Alteração que chega",
+                                                     "传入的更改",
+                                                     "傳入的變更",
+                                                     nullptr,
+                                                     nullptr,
+                                                     nullptr};
+static const char* const kV_Diff_Modified[] = {
+    "Modified", "Alterado", "新版", "新版", nullptr, nullptr, nullptr};
 static const char* const kV_Diff_NoChanges[] = {
-    "No changes", "没有变更", "沒有變更", nullptr, nullptr, nullptr};
-static const char* const kV_Diff_NoNewline[] = {"No newline at end of file",
-                                                "文件末尾没有换行",
-                                                "檔案末尾沒有換行",
-                                                nullptr,
-                                                nullptr,
-                                                nullptr};
+    "No changes", "Sem alterações", "没有变更", "沒有變更",
+    nullptr,      nullptr,          nullptr};
+static const char* const kV_Diff_NoNewline[] = {
+    "No newline at end of file",
+    "Sem quebra de linha no fim do arquivo",
+    "文件末尾没有换行",
+    "檔案末尾沒有換行",
+    nullptr,
+    nullptr,
+    nullptr};
 static const char* const kV_Diff_NoTextChanges[] = {
     "No text changes in this patch",
+    "Nenhuma mudança de texto neste patch",
     "此 patch 没有文本变更",
     "此 patch 沒有文字變更",
     nullptr,
     nullptr,
     nullptr};
-static const char* const kV_Diff_Original[] = {"Original", "原版",  "原版",
-                                               nullptr,    nullptr, nullptr};
+static const char* const kV_Diff_Original[] = {
+    "Original", "Original", "原版", "原版", nullptr, nullptr, nullptr};
 static const char* const kV_Diff_RemovedLine[] = {
     "%{side} line %{line}, removed",
+    "%{side} linha %{line}, removida",
     "%{side}第 %{line} 行，删除",
     "%{side}第 %{line} 行，刪除",
     nullptr,
     nullptr,
     nullptr};
 static const char* const kV_Diff_RenamedFile[] = {
-    "Renamed", "已重命名", "已重新命名", nullptr, nullptr, nullptr};
-static const char* const kV_Diff_SelectLine[] = {"Select %{side} line %{line}",
-                                                 "选择%{side}第 %{line} 行",
-                                                 "選擇%{side}第 %{line} 行",
-                                                 nullptr,
-                                                 nullptr,
-                                                 nullptr};
+    "Renamed", "Renomeado", "已重命名", "已重新命名",
+    nullptr,   nullptr,     nullptr};
+static const char* const kV_Diff_SelectLine[] = {
+    "Select %{side} line %{line}",
+    "Selecionar %{side} linha %{line}",
+    "选择%{side}第 %{line} 行",
+    "選擇%{side}第 %{line} 行",
+    nullptr,
+    nullptr,
+    nullptr};
 static const char* const kV_Diff_SourceLine[] = {"%{side} line %{line}",
+                                                 "%{side} linha %{line}",
                                                  "%{side}第 %{line} 行",
                                                  "%{side}第 %{line} 行",
                                                  nullptr,
                                                  nullptr,
                                                  nullptr};
-static const char* const kV_Diff_UnchangedLines[] = {"%{count} unchanged lines",
-                                                     "%{count} 行未变更内容",
-                                                     "%{count} 行未變更內容",
-                                                     nullptr,
-                                                     nullptr,
-                                                     nullptr};
-static const char* const kV_Diff_UndoResolution[] = {"Undo",  "撤销",  "復原",
-                                                     nullptr, nullptr, nullptr};
+static const char* const kV_Diff_UnchangedLines[] = {
+    "%{count} unchanged lines",
+    "%{count} linhas sem mudança",
+    "%{count} 行未变更内容",
+    "%{count} 行未變更內容",
+    nullptr,
+    nullptr,
+    nullptr};
+static const char* const kV_Diff_UndoResolution[] = {
+    "Undo", "Desfazer", "撤销", "復原", nullptr, nullptr, nullptr};
 static const char* const kV_Diff_Viewer[] = {"Diff for %{name}",
+                                             "Diff de %{name}",
                                              "%{name} 的差异",
                                              "%{name} 的差異",
                                              nullptr,
                                              nullptr,
                                              nullptr};
 static const char* const kV_Diff_ViewerFiles[] = {"Diff for %{count} files",
+                                                  "Diff de %{count} arquivos",
                                                   "%{count} 个文件的差异",
                                                   "%{count} 個檔案的差異",
                                                   nullptr,
                                                   nullptr,
                                                   nullptr};
-static const char* const kV_Dock_Close[] = {"Close", "关闭",   "關閉",
+static const char* const kV_Dock_Close[] = {"Close", "Fechar", "关闭", "關閉",
                                             "關閉",  "Chiudi", nullptr};
-static const char* const kV_Dock_Collapse[] = {"Collapse", "隐藏",     "隱藏",
-                                               "收合",     "Nascondi", nullptr};
-static const char* const kV_Dock_Expand[] = {"Expand", "展开",    "展開",
-                                             "展開",   "Espandi", nullptr};
-static const char* const kV_Dock_Unnamed[] = {"Unnamed", "未命名",     "未命名",
-                                              "未命名",  "Senza nome", nullptr};
-static const char* const kV_Dock_Zoom_In[] = {"Zoom In", "放大",    "放大",
-                                              "放大",    "Zoom In", nullptr};
-static const char* const kV_Dock_Zoom_Out[] = {"Zoom Out", "缩小",     "縮小",
-                                               "縮小",     "Zoom Out", nullptr};
+static const char* const kV_Dock_Collapse[] = {
+    "Collapse", "Recolher", "隐藏", "隱藏", "收合", "Nascondi", nullptr};
+static const char* const kV_Dock_Expand[] = {
+    "Expand", "Expandir", "展开", "展開", "展開", "Espandi", nullptr};
+static const char* const kV_Dock_Unavailable_Panel[] = {
+    "This panel isn’t available in this version.",
+    "Este painel não está disponível nesta versão.",
+    "当前版本无法显示该面板。",
+    "目前版本無法顯示此面板。",
+    "目前版本無法顯示此面板。",
+    "Questo pannello non è disponibile in questa versione.",
+    nullptr};
+static const char* const kV_Dock_Unnamed[] = {
+    "Unnamed", "Sem nome", "未命名", "未命名", "未命名", "Senza nome", nullptr};
+static const char* const kV_Dock_Zoom_In[] = {
+    "Zoom In", "Ampliar", "放大", "放大", "放大", "Zoom In", nullptr};
+static const char* const kV_Dock_Zoom_Out[] = {
+    "Zoom Out", "Reduzir", "缩小", "縮小", "縮小", "Zoom Out", nullptr};
 static const char* const kV_DropdownButton_more_options[] = {
-    "More options", "更多选项", "更多選項", "更多選項", nullptr, nullptr};
-static const char* const kV_Input_Copy[] = {"Copy", "复制",  "複製",
-                                            "複製", nullptr, nullptr};
-static const char* const kV_Input_Cut[] = {"Cut",  "剪切",  "剪切",
-                                           "剪下", nullptr, nullptr};
-static const char* const kV_Input_Decrement[] = {"Decrement", "减少",  "減少",
-                                                 "減少",      nullptr, nullptr};
-static const char* const kV_Input_Go_to_Definition[] = {
-    "Go to Definition", "跳转到定义", "跳轉到定義",
-    "前往定義",         nullptr,      nullptr};
-static const char* const kV_Input_Increment[] = {"Increment", "增加",  "增加",
-                                                 "增加",      nullptr, nullptr};
-static const char* const kV_Input_Paste[] = {"Paste", "粘贴",  "貼上",
+    "More options", "Mais opções", "更多选项", "更多選項",
+    "更多選項",     nullptr,       nullptr};
+static const char* const kV_Input_Clear[] = {"Clear", "Limpar", "清除", "清除",
+                                             "清除",  nullptr,  nullptr};
+static const char* const kV_Input_Copy[] = {"Copy", "Copiar", "复制", "複製",
+                                            "複製", nullptr,  nullptr};
+static const char* const kV_Input_Cut[] = {"Cut",  "Recortar", "剪切", "剪切",
+                                           "剪下", nullptr,    nullptr};
+static const char* const kV_Input_Decrement[] = {
+    "Decrement", "Diminuir", "减少", "減少", "減少", nullptr, nullptr};
+static const char* const kV_Input_Go_to_Definition[] = {"Go to Definition",
+                                                        "Ir para a definição",
+                                                        "跳转到定义",
+                                                        "跳轉到定義",
+                                                        "前往定義",
+                                                        nullptr,
+                                                        nullptr};
+static const char* const kV_Input_Hide_Password[] = {
+    "Hide password", "Esconder senha", "隐藏密码", "隱藏密碼",
+    "隱藏密碼",      nullptr,          nullptr};
+static const char* const kV_Input_Increment[] = {
+    "Increment", "Aumentar", "增加", "增加", "增加", nullptr, nullptr};
+static const char* const kV_Input_Paste[] = {"Paste", "Colar", "粘贴", "貼上",
                                              "貼上",  nullptr, nullptr};
-static const char* const kV_Input_Replace[] = {"Replace", "替换",  "替換",
-                                               "取代",    nullptr, nullptr};
+static const char* const kV_Input_Replace[] = {
+    "Replace", "Substituir", "替换", "替換", "取代", nullptr, nullptr};
 static const char* const kV_Input_Replace_All[] = {
-    "Replace All", "全部替换", "全部替換", "全部取代", nullptr, nullptr};
+    "Replace All", "Substituir tudo", "全部替换", "全部替換",
+    "全部取代",    nullptr,           nullptr};
 static const char* const kV_Input_Select_All[] = {
-    "Select All", "全选", "全選", "全選", nullptr, nullptr};
+    "Select All", "Selecionar tudo", "全选", "全選", "全選", nullptr, nullptr};
 static const char* const kV_Input_Show_Code_Actions[] = {
-    "Show Code Actions", "显示代码操作", "顯示代碼操作",
-    "顯示程式碼動作",    nullptr,        nullptr};
+    "Show Code Actions",
+    "Mostrar ações de código",
+    "显示代码操作",
+    "顯示代碼操作",
+    "顯示程式碼動作",
+    nullptr,
+    nullptr};
+static const char* const kV_Input_Show_Password[] = {
+    "Show password", "Mostrar senha", "显示密码", "顯示密碼",
+    "顯示密碼",      nullptr,         nullptr};
 static const char* const kV_List_search_placeholder[] = {
-    "Search...", "搜索...", "搜索...", "搜尋...", "Ricerca...", nullptr};
-static const char* const kV_Pagination_next[] = {"Next",   "下一页", "下一頁",
-                                                 "下一頁", nullptr,  nullptr};
+    "Search...", "Buscar…",    "搜索...", "搜索...",
+    "搜尋...",   "Ricerca...", nullptr};
+static const char* const kV_Pagination_next[] = {
+    "Next", "Próxima", "下一页", "下一頁", "下一頁", nullptr, nullptr};
 static const char* const kV_Pagination_previous[] = {
-    "Previous", "上一页", "上一頁", "上一頁", nullptr, nullptr};
+    "Previous", "Anterior", "上一页", "上一頁", "上一頁", nullptr, nullptr};
 static const char* const kV_Questionnaire_error_optional[] = {
     "Choose an answer or skip this question.",
+    "Escolha uma resposta ou pule esta pergunta.",
     "请选择一个答案，或跳过此题。",
     "請選擇一個答案，或跳過此題。",
     "請選擇一個答案，或跳過此題。",
@@ -89786,41 +94145,67 @@ static const char* const kV_Questionnaire_error_optional[] = {
     nullptr};
 static const char* const kV_Questionnaire_error_required[] = {
     "Choose an answer to continue.",
+    "Escolha uma resposta para continuar.",
     "请选择一个答案后继续。",
     "請選擇一個答案後繼續。",
     "請選擇一個答案後繼續。",
     nullptr,
     nullptr};
 static const char* const kV_Questionnaire_next[] = {
-    "Next", "下一题", "下一題", "下一題", nullptr, nullptr};
+    "Next", "Próxima", "下一题", "下一題", "下一題", nullptr, nullptr};
 static const char* const kV_Questionnaire_previous[] = {
-    "Previous", "上一题", "上一題", "上一題", nullptr, nullptr};
+    "Previous", "Anterior", "上一题", "上一題", "上一題", nullptr, nullptr};
 static const char* const kV_Questionnaire_progress[] = {
     "Question %{current} of %{total}",
+    "Pergunta %{current} de %{total}",
     "第 %{current} 题，共 %{total} 题",
     "第 %{current} 題，共 %{total} 題",
     "第 %{current} 題，共 %{total} 題",
     nullptr,
     nullptr};
-static const char* const kV_Questionnaire_skip[] = {"Skip", "跳过",  "跳過",
-                                                    "跳過", nullptr, nullptr};
+static const char* const kV_Questionnaire_skip[] = {
+    "Skip", "Pular", "跳过", "跳過", "跳過", nullptr, nullptr};
 static const char* const kV_Questionnaire_submit[] = {
-    "Submit", "提交", "提交", "提交", nullptr, nullptr};
+    "Submit", "Enviar", "提交", "提交", "提交", nullptr, nullptr};
 static const char* const kV_Select_placeholder[] = {
-    "Please select", "请选择", "請選擇", "請選擇", "Seleziona", nullptr};
+    "Please select", "Escolha",   "请选择", "請選擇",
+    "請選擇",        "Seleziona", nullptr};
 static const char* const kV_Settings_Reset_All[] = {
-    "Reset All", "重置全部", "重置全部", "全部重設", "Resetta Tutto", nullptr};
+    "Reset All", "Restaurar tudo", "重置全部", "重置全部",
+    "全部重設",  "Resetta Tutto",  nullptr};
+static const char* const kV_Settings_no_results[] = {
+    "No matching settings",
+    "Nenhuma configuração encontrada",
+    "没有匹配的设置",
+    "沒有相符的設定",
+    "沒有相符的設定",
+    "Nessuna impostazione corrispondente",
+    nullptr};
+static const char* const kV_Settings_no_results_description[] = {
+    "Try a different keyword.",
+    "Tente outra palavra-chave.",
+    "请尝试其他关键词。",
+    "請嘗試其他關鍵字。",
+    "請嘗試其他關鍵字。",
+    "Prova con un'altra parola chiave.",
+    nullptr};
 static const char* const kV_Settings_search_placeholder[] = {
-    "Search...", "搜索...", "搜索...", "搜尋...", "Ricerca...", nullptr};
+    "Search...", "Buscar…",    "搜索...", "搜索...",
+    "搜尋...",   "Ricerca...", nullptr};
 static const char* const kV_Speech_Start[] = {
-    "Dictate", "语音输入", "語音輸入", "語音輸入", nullptr, nullptr};
-static const char* const kV_Speech_Stop[] = {"Stop dictation", "停止语音输入",
-                                             "停止語音輸入",   "停止語音輸入",
-                                             nullptr,          nullptr};
-static const char* const kV_Speech_Unavailable[] = {
-    "Dictation unavailable", "语音输入不可用", "語音輸入不可用",
-    "語音輸入不可用",        nullptr,          nullptr};
+    "Dictate", "Ditar", "语音输入", "語音輸入", "語音輸入", nullptr, nullptr};
+static const char* const kV_Speech_Stop[] = {
+    "Stop dictation", "Parar o ditado", "停止语音输入", "停止語音輸入",
+    "停止語音輸入",   nullptr,          nullptr};
+static const char* const kV_Speech_Unavailable[] = {"Dictation unavailable",
+                                                    "Ditado indisponível",
+                                                    "语音输入不可用",
+                                                    "語音輸入不可用",
+                                                    "語音輸入不可用",
+                                                    nullptr,
+                                                    nullptr};
 static const char* const kV_Table_SortBy[] = {"Sort by %{column}",
+                                              "Ordenar por %{column}",
                                               "按 %{column} 排序",
                                               "按 %{column} 排序",
                                               "依 %{column} 排序",
@@ -89913,20 +94298,24 @@ extern const LocaleRow kLocaleRows[] = {
     {"Dock.Close", kV_Dock_Close},
     {"Dock.Collapse", kV_Dock_Collapse},
     {"Dock.Expand", kV_Dock_Expand},
+    {"Dock.Unavailable Panel", kV_Dock_Unavailable_Panel},
     {"Dock.Unnamed", kV_Dock_Unnamed},
     {"Dock.Zoom In", kV_Dock_Zoom_In},
     {"Dock.Zoom Out", kV_Dock_Zoom_Out},
     {"DropdownButton.more_options", kV_DropdownButton_more_options},
+    {"Input.Clear", kV_Input_Clear},
     {"Input.Copy", kV_Input_Copy},
     {"Input.Cut", kV_Input_Cut},
     {"Input.Decrement", kV_Input_Decrement},
     {"Input.Go to Definition", kV_Input_Go_to_Definition},
+    {"Input.Hide Password", kV_Input_Hide_Password},
     {"Input.Increment", kV_Input_Increment},
     {"Input.Paste", kV_Input_Paste},
     {"Input.Replace", kV_Input_Replace},
     {"Input.Replace All", kV_Input_Replace_All},
     {"Input.Select All", kV_Input_Select_All},
     {"Input.Show Code Actions", kV_Input_Show_Code_Actions},
+    {"Input.Show Password", kV_Input_Show_Password},
     {"List.search_placeholder", kV_List_search_placeholder},
     {"Pagination.next", kV_Pagination_next},
     {"Pagination.previous", kV_Pagination_previous},
@@ -89939,13 +94328,15 @@ extern const LocaleRow kLocaleRows[] = {
     {"Questionnaire.submit", kV_Questionnaire_submit},
     {"Select.placeholder", kV_Select_placeholder},
     {"Settings.Reset All", kV_Settings_Reset_All},
+    {"Settings.no_results", kV_Settings_no_results},
+    {"Settings.no_results_description", kV_Settings_no_results_description},
     {"Settings.search_placeholder", kV_Settings_search_placeholder},
     {"Speech.Start", kV_Speech_Start},
     {"Speech.Stop", kV_Speech_Stop},
     {"Speech.Unavailable", kV_Speech_Unavailable},
     {"Table.SortBy", kV_Table_SortBy},
 };
-extern const int kLocaleRowCount = 116;
+extern const int kLocaleRowCount = 122;
 
 }
 }
@@ -90603,7 +94994,9 @@ El* PopupMenu::IntoEl() {
         root->BoundsOut(&s->bounds)
             ->OnMouseUpOut(ListenTo(state, &PopupMenuState::OnPressOutside));
     }
-    if (s && s->openSubmenu < 0) {
+
+    bool focusedHere = cx->win && FocusHandleContainsFocused(cx->win, focus);
+    if (s && s->openSubmenu < 0 && (!s->parent.IsValid() || focusedHere)) {
         FocusTrapArm(cx->win, focus.id);
     }
     Listener onAction = ListenTo(state, &PopupMenuState::OnAction);
@@ -90621,6 +95014,19 @@ El* PopupMenu::IntoEl() {
         row.clickable = it.kind != PopupMenuItem::Separator &&
                         it.kind != PopupMenuItem::Label && !it.disabled;
         row.submenu = it.submenu != nullptr;
+        if (it.submenu) {
+            row.submenuState = it.submenu->state;
+            row.submenuSelect = -1;
+            for (int k = 0; k < it.submenu->items.len; k++) {
+                const MenuItem& child = it.submenu->items[k];
+                if (child.kind == MenuItemKind::Separator ||
+                    child.kind == MenuItemKind::Label || child.disabled) {
+                    continue;
+                }
+                row.submenuSelect = k;
+                break;
+            }
+        }
         row.link = it.isLink;
         row.href = it.href;
         row.handler = it.onClick;
@@ -90758,18 +95164,27 @@ El* PopupMenu::IntoEl() {
         if (it.submenu) {
             row->Child(IconEl(a, IconName::ChevronRight, icon)->Fg(th.mutedFg));
         }
-        if (it.kind != PopupMenuItem::Label && !it.disabled) {
+        if (it.kind != PopupMenuItem::Label) {
             if (it.submenu) {
-                BindClick(row, StrDup(a, fmt("%d", i)),
-                          ListenerArg(submenuClick, i));
+
+                if (!it.disabled) {
+                    BindClick(row, StrDup(a, fmt("%d", i)),
+                              ListenerArg(submenuClick, i));
+                } else {
+
+                    row->PathId(StrDup(a, fmt("%d", i)));
+                }
                 row->OnHover(ListenerArg(submenuHover, i));
-            } else if (it.isLink && it.href.s) {
+            } else if (!it.disabled && it.isLink && it.href.s) {
                 BindClick(row, StrDup(a, fmt("%d", i)),
                           ListenerArg(linkClick, (int64_t)&it.href));
                 row->OnHover(ListenerArg(hover, i));
-            } else {
+            } else if (!it.disabled) {
                 BindClick(row, StrDup(a, fmt("%d", i)), ListenerArg(click, i));
 
+                row->OnHover(ListenerArg(hover, i));
+            } else {
+                row->PathId(StrDup(a, fmt("%d", i)));
                 row->OnHover(ListenerArg(hover, i));
             }
         }
@@ -91050,6 +95465,12 @@ void AppMenuBarSelect(AppMenuBarState* s, Ctx* cx, int ix) {
     Notify(cx);
 }
 
+void AppMenuBarState::OnScroll(AppMenuBarState* self, Ctx* cx,
+                               const ScrollEvent* ev) {
+    self->scrollX = ev->offsetX;
+    Notify(cx);
+}
+
 void AppMenuBarState::OnMenuClick(AppMenuBarState* self, Ctx* cx,
                                   const ClickEvent*, int64_t ix) {
 
@@ -91117,6 +95538,13 @@ El* AppMenuBar::IntoEl() {
                   ->Gap(2)
                   ->H(28)
                   ->W(kFill);
+
+    if (s) {
+        bar->ScrollX(s->scrollX)
+            ->ScrollFromPath()
+            ->OnScroll(ListenTo(state, &AppMenuBarState::OnScroll));
+        ScrollableMask::ApplyVerticalWheel(bar);
+    }
     if (s) {
         Listener actionListener = ListenTo(state, &AppMenuBarState::OnAction);
         bar->KeyContext(AppMenuBarContext())
@@ -91278,6 +95706,17 @@ bool MessageScrollerState::Splice(Ctx* cx, int start, int end, int count) {
         if (neighbor >= 0 && neighbor != last) {
             heights[neighbor] = kMessageScrollerEstimatedRowHeight;
             needsMeasure[neighbor] = 1;
+        }
+    }
+
+    if (start == 0) {
+        int marks[2] = {0, count};
+        for (int m = 0; m < 2; m++) {
+            int index = marks[m];
+            if (index >= 0 && index < heights.len && index != last) {
+                heights[index] = kMessageScrollerEstimatedRowHeight;
+                needsMeasure[index] = 1;
+            }
         }
     }
     if (cx) {
@@ -91450,36 +95889,42 @@ struct MessageScrollerRowCtx {
     int count = 0;
     float insetL = 0;
     float insetR = 0;
-    float padTop = 0;
-    float padBottom = 0;
+    float listTop = 0;
+    float listBottom = 0;
+
+    bool hasListPad = false;
 };
 
 static El* MessageScrollerRow(void* user, Ctx* cx, int index) {
     MessageScrollerRowCtx* rc = (MessageScrollerRowCtx*)user;
     Arena* a = cx->a;
-    El* row = Div(a)->W(kFill)->MinW(0)->PadX(Rems(cx, 0.75f));
-    if (rc->insetL > 0) {
 
-        row->PadL(rc->insetL);
-    }
-    if (rc->insetR > 0) {
-        row->PadR(rc->insetR);
+    El* inner = Div(a)->W(kFill)->MinW(0)->PadX(Rems(cx, 0.75f));
+    if (rc->hasListPad) {
+
+        inner->PadL(rc->insetL);
+        inner->PadR(rc->insetR);
     }
 
     if (index + 1 < rc->count) {
-        row->PadB(Rems(cx, 2.f));
-    }
-    if (index == 0 && rc->padTop > 0) {
-        row->PadT(rc->padTop);
-    }
-    if (index + 1 == rc->count && rc->padBottom > 0) {
-        row->PadB(rc->padBottom);
+        inner->PadB(Rems(cx, 2.f));
     }
     if (rc->scroller->rowStyleSet) {
-        row->Refine(rc->scroller->rowStyle, rc->scroller->rowStyleSet);
+        inner->Refine(rc->scroller->rowStyle, rc->scroller->rowStyleSet);
     }
     if (rc->scroller->renderer) {
-        row->Child(rc->scroller->renderer(rc->scroller->user, cx, index));
+        inner->Child(rc->scroller->renderer(rc->scroller->user, cx, index));
+    }
+    El* row = Div(a)->W(kFill)->Child(inner);
+    bool first = index == 0;
+    bool last = index + 1 == rc->count;
+    if (first) {
+        float top = rc->hasListPad ? rc->listTop : Rems(cx, 0.5f);
+        row->PadT(top);
+    }
+    if (last) {
+        float bottom = rc->hasListPad ? rc->listBottom : Rems(cx, 0.5f);
+        row->PadB(bottom);
     }
     return row;
 }
@@ -91493,14 +95938,13 @@ El* MessageScroller::IntoEl() {
 
     int count = st->heights.len;
 
-    float py2 = Rems(cx, 0.5f);
-    float insetL = 0, insetR = 0, padTop = py2, padBottom = py2;
-    if (listStyleSet & StyleFieldPad) {
+    float insetL = 0, insetR = 0, listTop = 0, listBottom = 0;
+    bool hasListPad = (listStyleSet & StyleFieldPad) != 0;
+    if (hasListPad) {
         insetL = listStyle.pad.left;
         insetR = listStyle.pad.right;
-
-        padTop = py2 + listStyle.pad.top;
-        padBottom = py2 + listStyle.pad.bottom;
+        listTop = listStyle.pad.top;
+        listBottom = listStyle.pad.bottom;
     }
 
     if (st->followTail) {
@@ -91512,8 +95956,9 @@ El* MessageScroller::IntoEl() {
     rc->count = count;
     rc->insetL = insetL;
     rc->insetR = insetR;
-    rc->padTop = padTop;
-    rc->padBottom = padBottom;
+    rc->listTop = listTop;
+    rc->listBottom = listBottom;
+    rc->hasListPad = hasListPad;
 
     El* list = VirtualList::New(cx, count)
                    ->Id(id)
@@ -93235,7 +97680,10 @@ El* NotificationList::IntoEl() {
     }
 
     const Theme& th = ThemeNow(cx->app);
-    WinSize win = WindowSize(cx->win);
+
+    Bounds visibleArea = WindowFullyVisibleBounds(cx->win);
+    float viewW = visibleArea.w;
+    float viewH = visibleArea.h;
     El* root = Div(a)->SizeFull();
     Spring geometry = SpringNew((float)kToastTransitionMs);
     geometry.epsilon = 0.1f;
@@ -93277,7 +97725,7 @@ El* NotificationList::IntoEl() {
                         ->Fixed()
                         ->W(settings.width)
                         ->H(stackH)
-                        ->MaxH(win.dipH)
+                        ->MaxH(viewH)
                         ->Id(stackId)
                         ->Click(HashClickId(stackId))
                         ->TrackFocus(s->stackFocus[aix])
@@ -93289,13 +97737,13 @@ El* NotificationList::IntoEl() {
                      anchor == Anchor::BottomRight;
         bool center =
             anchor == Anchor::TopCenter || anchor == Anchor::BottomCenter;
-        float left = right ? win.dipW - settings.width - settings.margins.right
-                           : (center ? (win.dipW - settings.width) * 0.5f
+        float left = right ? viewW - settings.width - settings.margins.right
+                           : (center ? (viewW - settings.width) * 0.5f
                                      : settings.margins.left);
-        float top = bottom ? win.dipH - stackH - settings.margins.bottom
+        float top = bottom ? viewH - stackH - settings.margins.bottom
                            : settings.margins.top;
         if (anchor == Anchor::LeftCenter || anchor == Anchor::RightCenter) {
-            top = (win.dipH - stackH) * 0.5f;
+            top = (viewH - stackH) * 0.5f;
         }
         layer->Left(left)->Top(top);
 
@@ -96189,14 +100637,24 @@ namespace gpui {
 
 namespace component {
 
-int RootDialogOverlayIndex(const bool* wantsOverlay, int n) {
-    int ix = -1;
+int RootDialogOverlayIndex(const bool* wantsOverlay, const bool* closing,
+                           int n) {
+    int openIx = -1;
+    int anyIx = -1;
     for (int i = 0; i < n; i++) {
-        if (wantsOverlay && wantsOverlay[i]) {
-            ix = i;
+        if (!wantsOverlay || !wantsOverlay[i]) {
+            continue;
+        }
+        anyIx = i;
+        if (!closing || !closing[i]) {
+            openIx = i;
         }
     }
-    return ix;
+    return openIx >= 0 ? openIx : anyIx;
+}
+
+int RootDialogOverlayIndex(const bool* wantsOverlay, int n) {
+    return RootDialogOverlayIndex(wantsOverlay, nullptr, n);
 }
 
 Edges RootNotificationInsets(bool hasSheet, SheetPlacement placement,
@@ -96243,13 +100701,22 @@ El* WindowStateLayers(Ctx* cx) {
         El* list = NotificationList::New(cx, wl->notifications)->IntoEl();
         Edges in = RootNotificationInsets(wl->hasSheet, wl->sheet.placement,
                                           wl->sheet.size);
-        El* layer = Div(a)
+
+        Edges safe = WindowSafeInsets(cx->win);
+        El* inner = Div(a)
                         ->Absolute()
                         ->Left(in.left)
                         ->Top(in.top)
                         ->Right(in.right)
                         ->Bottom(in.bottom)
                         ->Child(list);
+        El* layer = Div(a)
+                        ->Absolute()
+                        ->Left(safe.left)
+                        ->Top(safe.top)
+                        ->Right(safe.right)
+                        ->Bottom(safe.bottom)
+                        ->Child(inner);
         add(layer->Deferred());
     }
     if (wl->hasSheet) {
@@ -96259,8 +100726,69 @@ El* WindowStateLayers(Ctx* cx) {
     }
 
     for (int i = 0; i < wl->dialogs.len; i++) {
-        if (El* d = EntityRender(cx->app, cx->win, a, wl->dialogs[i].view)) {
-            add(d->Deferred());
+        WindowLayer& dialog = wl->dialogs[i];
+        if (!dialog.closing || !dialog.trapFocus) {
+            continue;
+        }
+        int focused = cx->win->focusId;
+        if (focused != dialog.trapFocus &&
+            !WindowFocusContains(cx->win, dialog.trapFocus, focused)) {
+            continue;
+        }
+        if (dialog.previousFocus.IsValid()) {
+            FocusHandleRestore(cx->win, dialog.previousFocus);
+        } else {
+            WindowSetFocusId(cx->win, 0);
+        }
+    }
+
+    Vec<bool> wantsOverlay;
+    Vec<bool> closing;
+    int topOpen = -1;
+    for (int i = 0; i < wl->dialogs.len; i++) {
+        VecAppend(wantsOverlay, wl->dialogs[i].overlay);
+        VecAppend(closing, wl->dialogs[i].closing);
+        if (!wl->dialogs[i].closing) {
+            topOpen = i;
+        }
+    }
+    int overlaySlot =
+        RootDialogOverlayIndex(wantsOverlay.els, closing.els, wl->dialogs.len);
+    Vec<uint32_t> dropIds;
+    for (int i = 0; i < wl->dialogs.len; i++) {
+        DialogMount mount;
+        mount.bound = true;
+        mount.id = wl->dialogs[i].id;
+        mount.layerIx = i;
+        mount.closing = wl->dialogs[i].closing;
+        mount.topmost = i == topOpen;
+        mount.showOverlay = i == overlaySlot;
+        DialogBindMount(&mount);
+        El* dialog = EntityRender(cx->app, cx->win, a, wl->dialogs[i].view);
+        DialogBindMount(nullptr);
+        wl->dialogs[i].exitEnabled = mount.exitEnabled;
+        wl->dialogs[i].visibility = mount.visibility;
+        wl->dialogs[i].surfaceY = mount.surfaceY;
+        wl->dialogs[i].trapFocus = mount.trapFocus;
+        if (mount.unmount) {
+            VecAppend(dropIds, wl->dialogs[i].id);
+            continue;
+        }
+        if (dialog) {
+            add(dialog->Deferred());
+        }
+    }
+
+    for (int d = 0; d < len(dropIds); d++) {
+        for (int i = wl->dialogs.len - 1; i >= 0; i--) {
+            if (wl->dialogs[i].id != dropIds[d] || !wl->dialogs[i].closing) {
+                continue;
+            }
+            EntityId view = wl->dialogs[i].view;
+            VecRemoveAt(wl->dialogs, i);
+            EntityDrop(cx->app, view);
+            Notify(cx);
+            break;
         }
     }
     return layers;
@@ -96389,6 +100917,52 @@ Scrollable* Scrollable::ScrollBounce(bool v) {
     return this;
 }
 
+static void HoldScrollArea(El* wrap, El* area, ScrollAxis axis) {
+    Style& from = area->style;
+    Style& to = wrap->style;
+    to.width = from.width;
+    to.height = from.height;
+    to.widthFrac = from.widthFrac;
+    to.heightFrac = from.heightFrac;
+    to.minW = from.minW;
+    to.minH = from.minH;
+    to.maxW = from.maxW;
+    to.maxH = from.maxH;
+    to.flexGrow = from.flexGrow;
+    to.flexShrink = from.flexShrink;
+    to.flexBasis = from.flexBasis;
+    to.flexBasisFrac = from.flexBasisFrac;
+    to.flexBasisPercent = from.flexBasisPercent;
+    to.alignSelf = from.alignSelf;
+    to.hasAlignSelf = from.hasAlignSelf;
+    to.relLengths = (uint16_t)((to.relLengths &
+                                (uint16_t)~(kRelMinW | kRelMinH | kRelMaxH)) |
+                               (from.relLengths &
+                                (uint16_t)(kRelMinW | kRelMinH | kRelMaxH)));
+    wrap->FlexCol();
+    if (axis == ScrollAxis::Vertical || axis == ScrollAxis::Both) {
+        from.maxH = 1e9f;
+        from.height = kFill;
+        from.heightFrac = 0;
+
+        from.minH = kFill;
+        from.relLengths =
+            (uint16_t)(from.relLengths & (uint16_t)~(kRelMaxH | kRelMinH));
+    }
+    if (axis == ScrollAxis::Both) {
+        from.maxW = 1e9f;
+        from.width = kFill;
+        from.widthFrac = 0;
+        from.minW = kFill;
+        from.relLengths = (uint16_t)(from.relLengths & (uint16_t)~kRelMinW);
+    }
+    from.flexGrow = 0;
+    from.flexShrink = 1;
+    from.flexBasis = kAuto;
+    from.flexBasisFrac = 0;
+    from.flexBasisPercent = false;
+}
+
 El* Scrollable::IntoEl() {
 
     Str scrollId = id.s ? id : StrL("scrollable");
@@ -96400,6 +100974,7 @@ El* Scrollable::IntoEl() {
     }
 
     if (axis == ScrollAxis::Horizontal) {
+        ScrollableMask::ApplyVerticalWheel(box);
         return box;
     }
     Entity<ScrollBounceMetrics> met =
@@ -96413,7 +100988,9 @@ El* Scrollable::IntoEl() {
             ->Measure(&m->slot);
     if (scrollBounce >= 0) bounce->Enabled(scrollBounce == 1);
     if (onScroll.IsValid()) bounce->OnScroll(onScroll);
-    return bounce->IntoEl();
+    El* wrapped = bounce->IntoEl();
+    if (wrapped != box) HoldScrollArea(wrapped, box, axis);
+    return wrapped;
 }
 
 El* ScrollableElement::Scrollbar(Ctx* cx, El* element, Str id, float scrollY,
@@ -97131,6 +101708,10 @@ void SearchableListState::OnRowClick(SearchableListState* self, Ctx* cx,
     self->list.selected = m;
     int index = self->matches[m];
 
+    if (!SearchableListIsEnabled(self, self->items, self->nItems, index)) {
+        return;
+    }
+
     bool wasOpen = self->open;
     if (SearchableListClick(self, index)) {
         self->closedByConfirm = wasOpen;
@@ -97613,7 +102194,55 @@ void SelectState::Searchable(bool value) {
 }
 
 void SelectState::SetItems(const SearchableItem* items, int nItems) {
+
+    Str cursorValue = {};
+    bool hadCursor = false;
+    if (state.items && state.list.selected >= 0 &&
+        state.list.selected < state.matches.len) {
+        int ix = state.matches[state.list.selected];
+        if (ix >= 0 && ix < state.nItems) {
+            cursorValue = state.items[ix].value;
+            hadCursor = true;
+        }
+    }
+    Vec<int> kept;
+    if (state.items) {
+        for (int i = 0; i < state.selected.len; i++) {
+            int old = state.selected[i];
+            if (old < 0 || old >= state.nItems) {
+                continue;
+            }
+            Str value = state.items[old].value;
+            for (int j = 0; j < nItems; j++) {
+                if (items && base::StrEq(items[j].value, value)) {
+                    VecAppend(kept, j);
+                    break;
+                }
+            }
+        }
+    }
+    int cursor = -1;
+    if (hadCursor) {
+        for (int j = 0; j < nItems; j++) {
+            if (items && base::StrEq(items[j].value, cursorValue)) {
+                cursor = j;
+                break;
+            }
+        }
+    }
     SearchableListSearch(&state, items, nItems, Str{});
+    VecClear(state.selected);
+    for (int i = 0; i < kept.len; i++) {
+        VecAppend(state.selected, kept[i]);
+    }
+    state.list.selected = -1;
+    for (int i = 0; i < state.matches.len; i++) {
+        if (state.matches[i] == cursor) {
+            state.list.selected = i;
+            break;
+        }
+    }
+    VecReset(kept);
 }
 
 void SelectState::SetSelectedIndex(const IndexPath* selected, Ctx* cx) {
@@ -97654,10 +102283,11 @@ void SelectState::SetSelectedValue(Str value, Ctx* cx) {
 }
 
 bool SelectState::SelectedIndex(IndexPath* out) const {
-    if (state.selected.len <= 0) {
+
+    if (state.list.selected < 0 || state.list.selected >= state.matches.len) {
         return false;
     }
-    IndexPath path = SelectPath(&state, state.selected[0]);
+    IndexPath path = SelectPath(&state, state.matches[state.list.selected]);
     if (path.row < 0) {
         return false;
     }
@@ -98109,6 +102739,7 @@ El* Select::IntoEl() {
                            ->Text()
                            ->WithSize(UiSize::XSmall)
                            ->Icon(IconName::X)
+                           ->AccessibilityLabel(Tr("Input.Clear"))
                            ->OnClick(onClear)
                            ->IntoEl()
                            ->StopClick());
@@ -98493,22 +103124,100 @@ void SettingsState::OnPageScroll(SettingsState* self, Ctx* cx,
     Notify(cx);
 }
 
+struct SettingsGroupRow {
+    int groupIx = 0;
+    uint8_t titled = 0;
+    El* row = nullptr;
+};
+
 struct SettingsPageScroll {
     Entity<SettingsState> state = {};
     El* target = nullptr;
+
+    bool userScrolled = false;
+    int selectedGroup = -1;
+    int nGroups = 0;
+    SettingsGroupRow* groups = nullptr;
 };
+
+static int GroupAtScrollTop(const SettingsGroupRow* groups, int n,
+                            int selectedGroup, int topItemIx, bool atEnd) {
+    int selectedPos = -1;
+    if (selectedGroup >= 0) {
+        for (int i = 0; i < n; i++) {
+            if (groups[i].groupIx == selectedGroup) {
+                selectedPos = i;
+                break;
+            }
+        }
+    }
+    if (atEnd && selectedPos >= 0 && selectedPos > topItemIx) {
+        return selectedGroup;
+    }
+    if (n <= 0) {
+        return -1;
+    }
+    int topPos = atEnd ? n - 1 : topItemIx;
+    if (topPos < 0) {
+        return -1;
+    }
+    if (topPos >= n) {
+        topPos = n - 1;
+    }
+    for (int i = topPos; i >= 0; i--) {
+        if (groups[i].titled) {
+            return groups[i].groupIx;
+        }
+    }
+    return -1;
+}
+
+static int TopGroupItem(El* e, const SettingsGroupRow* groups, int n) {
+    float scroll = e->scrollY;
+    int topIx = 0;
+    for (int i = 0; i < n; i++) {
+        El* row = groups[i].row;
+        if (!row) {
+            continue;
+        }
+        float top = row->y - (e->y - e->scrollY) - e->style.pad.top;
+        if (top <= scroll + 0.5f) {
+            topIx = i;
+        }
+    }
+    return topIx;
+}
 
 static void SettingsPageScrollPaint(PaintCtx* ctx, El* e, void* user) {
     auto* m = (SettingsPageScroll*)user;
     SettingsState* st = m ? m->state.Get(ctx->app) : nullptr;
-    if (!st || st->pendingScrollGroup < 0 || !m->target) {
+    if (!st) {
         return;
     }
-    float top = m->target->y - (e->y - e->scrollY) - e->style.pad.top;
-    float most = e->contentH - e->h;
-    most = most > 0 ? most : 0;
-    st->scrollY = top < 0 ? 0 : (top > most ? most : top);
-    st->pendingScrollGroup = -1;
+    bool notify = false;
+    if (st->pendingScrollGroup >= 0 && m->target) {
+        float top = m->target->y - (e->y - e->scrollY) - e->style.pad.top;
+        float most = e->contentH - e->h;
+        most = most > 0 ? most : 0;
+        st->scrollY = top < 0 ? 0 : (top > most ? most : top);
+        st->pendingScrollGroup = -1;
+        notify = true;
+    }
+    if (m->userScrolled && m->nGroups > 0 && m->groups) {
+        float most = e->contentH - e->h;
+        most = most > 0 ? most : 0;
+        bool atEnd = e->scrollY >= most - 0.5f;
+        int topIx = TopGroupItem(e, m->groups, m->nGroups);
+        int group = GroupAtScrollTop(m->groups, m->nGroups, m->selectedGroup,
+                                     topIx, atEnd);
+        if (group != st->group) {
+            st->group = group;
+            notify = true;
+        }
+    }
+    if (!notify) {
+        return;
+    }
     Ctx cx = {ctx->app, ctx->window, nullptr, m->state.id};
     Notify(&cx);
 }
@@ -98526,10 +103235,12 @@ struct SettingsContainerQuery {
     int scrollGroup = -1;
 
     int fieldsLen = 0;
+    bool userScrolled = false;
 };
 
 static void SettingsBuildPage(Ctx* cx, Settings* s, El* pane, int selected,
-                              Str query, Axis pageLayout, int scrollGroup);
+                              Str query, Axis pageLayout, int scrollGroup,
+                              bool userScrolled);
 
 static void SettingsContainerPrePaint(PaintCtx* ctx, El* e, void* user) {
     auto* q = (SettingsContainerQuery*)user;
@@ -98558,7 +103269,7 @@ static void SettingsContainerPrePaint(PaintCtx* ctx, El* e, void* user) {
     e->last = nullptr;
     Ctx cx = q->cx;
     SettingsBuildPage(&cx, q->settings, e, q->selected, q->query, want,
-                      q->scrollGroup);
+                      q->scrollGroup, q->userScrolled);
     IdsCollectChildren(e);
     LayoutEl(ctx, e, e->x, e->y, e->w, e->h, e->laidFont, e->style.color);
 }
@@ -99023,7 +103734,9 @@ static FieldEl ui_setting_RenderField(Ctx* cx, Settings* s, const SettingItem& i
                   : kFill;
     switch (it.field) {
         case SettingFieldKind::Switch:
+
             out.el = Switch::New(cx, id)
+                         ->AccessibilityLabel(it.title)
                          ->Checked(it.boolValue && *it.boolValue)
                          ->Disabled(options.disabled)
                          ->OnClick(click)
@@ -99033,6 +103746,7 @@ static FieldEl ui_setting_RenderField(Ctx* cx, Settings* s, const SettingItem& i
             break;
         case SettingFieldKind::Checkbox:
             out.el = Checkbox::New(cx, id)
+                         ->AccessibilityLabel(it.title)
                          ->Checked(it.boolValue && *it.boolValue)
                          ->Disabled(options.disabled)
                          ->OnClick(click)
@@ -99041,8 +103755,10 @@ static FieldEl ui_setting_RenderField(Ctx* cx, Settings* s, const SettingItem& i
             out.dirty = it.boolValue && *it.boolValue != it.defBool;
             break;
         case SettingFieldKind::Input:
+
             out.el = Input::New(cx, id, input)
                          ->W(w)
+                         ->AriaLabel(it.title)
                          ->Disabled(options.disabled)
                          ->WithSize(options.size)
                          ->IntoEl();
@@ -99052,6 +103768,7 @@ static FieldEl ui_setting_RenderField(Ctx* cx, Settings* s, const SettingItem& i
 
             out.el = NumberInput::New(cx, id, input)
                          ->W(w)
+                         ->AccessibilityLabel(it.title)
                          ->Disabled(options.disabled)
                          ->WithSize(options.size)
                          ->Step(it.num.step)
@@ -99066,8 +103783,13 @@ static FieldEl ui_setting_RenderField(Ctx* cx, Settings* s, const SettingItem& i
             Str label = current >= 0 && current < it.nItems
                             ? it.items[current].title
                             : Str{};
+
+            Str title = it.title.s ? it.title : StrL("");
+            Str option = label.s ? label : StrL("");
+            Str name = StrDup(cx->a, fmt("%s: %s", title, option));
             Button* btn = Button::New(cx, StrL("btn"))
                               ->Label(label)
+                              ->AccessibilityLabel(name)
                               ->DropdownCaret(true)
                               ->Outline()
                               ->Disabled(options.disabled)
@@ -99182,7 +103904,8 @@ static El* ui_setting_RenderItem(Ctx* cx, Settings* s, const SettingItem& it, St
 }
 
 static void SettingsBuildPage(Ctx* cx, Settings* s, El* pane, int selected,
-                              Str query, Axis pageLayout, int scrollGroup) {
+                              Str query, Axis pageLayout, int scrollGroup,
+                              bool userScrolled) {
     Arena* a = cx->a;
     const Theme& th = ThemeNow(cx->app);
     Entity<SettingsState> state = s->state;
@@ -99193,6 +103916,13 @@ static void SettingsBuildPage(Ctx* cx, Settings* s, El* pane, int selected,
     bool anyDirty = false;
     SettingsPageScroll* scroll = ArenaNew<SettingsPageScroll>(a);
     scroll->state = state;
+    scroll->userScrolled = userScrolled;
+    scroll->selectedGroup = st ? st->group : -1;
+    int nGroups = p.groups.len;
+    if (nGroups > 0) {
+        scroll->groups = (SettingsGroupRow*)Alloc(
+            a, nGroups * (int)sizeof(SettingsGroupRow));
+    }
 
     El* body =
         Div(a)
@@ -99271,6 +104001,13 @@ static void SettingsBuildPage(Ctx* cx, Settings* s, El* pane, int selected,
         if (g == scrollGroup) {
             scroll->target = row;
         }
+        if (scroll->groups && scroll->nGroups < nGroups) {
+            SettingsGroupRow* mark = &scroll->groups[scroll->nGroups];
+            mark->groupIx = g;
+            mark->titled = grp.title.s ? 1 : 0;
+            mark->row = row;
+            scroll->nGroups++;
+        }
         body->Child(row);
     }
 
@@ -99326,6 +104063,25 @@ static void SettingsBuildPage(Ctx* cx, Settings* s, El* pane, int selected,
     }
     pane->Child(head);
     pane->Child(body);
+}
+
+static El* SettingsNoResults(Ctx* cx) {
+    Arena* a = cx->a;
+    return Div(a)
+        ->Id(StrL("settings-no-results"))
+        ->SizeFull()
+        ->Child(
+            Empty::New(cx)
+                ->Header(
+                    EmptyHeader::New(cx)
+                        ->Media(EmptyMedia::New(cx)
+                                    ->WithVariant(EmptyMediaVariant::Icon)
+                                    ->Child(IconEl(a, IconName::Search)))
+                        ->Title(EmptyTitle::New(cx)->Child(
+                            TextEl(a, Tr("Settings.no_results"))))
+                        ->Description(EmptyDescription::New(cx)->Child(
+                            TextEl(a, Tr("Settings.no_results_description")))))
+                ->IntoEl());
 }
 
 El* Settings::IntoEl() {
@@ -99434,19 +104190,32 @@ El* Settings::IntoEl() {
         PageHasMatchingGroup(pages[selected], query)) {
 
         int scrollGroup = -1;
+        bool userScrolled = false;
         if (st) {
             uint32_t queryKey = IdFoldName(0, query);
-            bool changed =
-                st->listPage != selected || st->listQuery != queryKey;
-            if (changed) {
+            bool hadList = st->listPage >= 0;
+            bool changed = hadList && (st->listPage != selected ||
+                                       st->listQuery != queryKey);
+            if (!hadList || changed) {
                 st->listPage = selected;
                 st->listQuery = queryKey;
-                st->scrollY = 0;
+                if (changed) {
+                    st->scrollY = 0;
+                }
             }
+
             scrollGroup = st->deferredScrollGroup >= 0
                               ? st->deferredScrollGroup
-                              : (changed ? st->group : -1);
+                              : ((changed || !hadList) ? st->group : -1);
             st->deferredScrollGroup = -1;
+
+            bool programmatic = changed || scrollGroup >= 0;
+            userScrolled = !programmatic && !st->scrolledProgrammatically &&
+                           st->scrollFollowValid &&
+                           st->scrollFollowY != st->scrollY;
+            st->scrolledProgrammatically = programmatic;
+            st->scrollFollowY = st->scrollY;
+            st->scrollFollowValid = true;
         }
         query_->settings = this;
         query_->cx = *cx;
@@ -99454,8 +104223,21 @@ El* Settings::IntoEl() {
         query_->query = query;
         query_->scrollGroup = scrollGroup;
         query_->fieldsLen = st ? st->fields.len : 0;
+        query_->userScrolled = userScrolled;
         SettingsBuildPage(cx, this, pane, selected, query, pageLayout,
-                          scrollGroup);
+                          scrollGroup, userScrolled);
+    } else {
+
+        bool anyMatch = false;
+        for (const SettingPage& p : pages) {
+            if (PageHasMatchingGroup(p, query)) {
+                anyMatch = true;
+                break;
+            }
+        }
+        if (!anyMatch) {
+            pane->Child(SettingsNoResults(cx));
+        }
     }
 
     return component::Resizable::New(cx, id)
@@ -99556,6 +104338,20 @@ El* Sheet::IntoEl(WinSize win) {
     const Theme& th = ThemeNow(cx->app);
 
     Edges windowPadding = WindowContentInsets(cx->win);
+
+    Edges safe = WindowSafeInsets(cx->win);
+    if (safe.top > windowPadding.top) {
+        windowPadding.top = safe.top;
+    }
+    if (safe.right > windowPadding.right) {
+        windowPadding.right = safe.right;
+    }
+    if (safe.bottom > windowPadding.bottom) {
+        windowPadding.bottom = safe.bottom;
+    }
+    if (safe.left > windowPadding.left) {
+        windowPadding.left = safe.left;
+    }
     float viewW = win.dipW - windowPadding.left - windowPadding.right;
     float viewH = win.dipH - windowPadding.top - windowPadding.bottom;
     bool horizontal =
@@ -99564,6 +104360,8 @@ El* Sheet::IntoEl(WinSize win) {
     float marginTop =
         placement == SheetPlacement::Bottom ? 0.f : th.sheet.marginTop;
     El* surface = Div(a)
+                      ->Id(StrL("sheet-content"))
+                      ->Click(HashClickId(StrL("sheet-content")))
                       ->Absolute()
                       ->FlexCol()
                       ->Bg(th.tokens.background)
@@ -104078,43 +108876,6 @@ static TabStyle TabDisabled(TabVariant v, bool selected, const Theme& th) {
     return s;
 }
 
-static El* TabMenuButton(TabBar* tabs, const Theme&, float, Listener confirm) {
-    Ctx* cx = tabs->cx;
-
-    IdScope scope(cx, tabs->id);
-    Str menuId = StrL("menu");
-    Entity<PopupMenuState> st = PopupMenuStateFor(cx, menuId);
-    if (PopupMenuState* s = st.Get(cx)) {
-        s->onConfirm = confirm.IsValid() ? confirm : tabs->onChange;
-    }
-    PopupMenu* menu = PopupMenu::New(cx, menuId, st)->Scrollable();
-    int i = -1;
-    for (const component::Tab& it : tabs->items) {
-        i++;
-
-        if (it.label.s) {
-            menu->MenuWithCheck(it.label, i == tabs->selected);
-        } else if (it.icon != IconName::None) {
-            menu->Element(IconEl(cx->a, it.icon, Rems(cx, 1.f)));
-            menu->Checked(i == tabs->selected);
-        } else {
-            menu->MenuWithCheck(Tr("Dock.Unnamed"), i == tabs->selected);
-        }
-        if (it.disabled) {
-            menu->Disabled(true);
-        }
-    }
-    return DropdownMenu::New(cx, StrL("more"))
-        ->Trigger(Button::New(cx, StrL("more-btn"))
-                      ->Ghost()
-                      ->WithSize(UiSize::XSmall)
-                      ->DropdownCaret()
-                      ->IntoEl())
-        ->Menu(menu)
-        ->AnchorRight()
-        ->IntoEl();
-}
-
 static constexpr float kFolderTabGap = 4.f;
 
 static constexpr float kQuarterCircle = 0.5522848f;
@@ -104196,6 +108957,29 @@ static void RecordTabBound(PaintCtx*, El* e, void* user) {
     }
 }
 
+struct TabIndicatorWatch {
+    float placedX = 0;
+    float placedW = 0;
+    El* strip = nullptr;
+    Window* win = nullptr;
+    void* paintUser = nullptr;
+};
+
+static void TabIndicatorPrePaint(PaintCtx*, El* e, void* user) {
+    auto* watch = (TabIndicatorWatch*)user;
+    if (!watch || !watch->strip || !watch->win) return;
+    if (!(watch->strip->w > 0)) return;
+    float rel = e->x - watch->strip->x;
+    if (rel != watch->placedX || e->w != watch->placedW) {
+        WindowRequestAnimationFrame(watch->win);
+    }
+}
+
+static void RecordTabBoundWatched(PaintCtx* ctx, El* e, void* user) {
+    auto* watch = (TabIndicatorWatch*)user;
+    RecordTabBound(ctx, e, watch ? watch->paintUser : nullptr);
+}
+
 static float TabRevealPeek(UiSize size) {
     switch (size) {
         case UiSize::XSmall:
@@ -104213,7 +108997,6 @@ struct TabBarScrollState {
     TabRevealRun run = {};
     float peek = 32.f;
     uint32_t motionKey = 0;
-    Listener onBarClick = {};
     Vec<Listener> clicks;
     Vec<Bounds> tabs;
     Bounds viewport = {};
@@ -104294,17 +109077,50 @@ struct TabBarScrollState {
             ListenerCall(cx->app, cx->win, self->clicks[ix], ev);
         }
     }
+};
 
-    static void OnMenu(TabBarScrollState* self, Ctx* cx, const ClickEvent* ev,
-                       int64_t packed) {
-        int ix = (int)packed;
-        Start(self, cx, ix);
-        if (self->onBarClick.IsValid()) {
-            ListenerCall(cx->app, cx->win, ListenerFill(self->onBarClick, ix),
-                         ev);
+static El* TabMenuButton(TabBar* tabs, const Theme&, float,
+                         Entity<TabBarScrollState> scroll) {
+    Ctx* cx = tabs->cx;
+
+    IdScope scope(cx, tabs->id);
+    Str menuId = StrL("menu");
+    Entity<PopupMenuState> st = PopupMenuStateFor(cx, menuId);
+    if (PopupMenuState* s = st.Get(cx)) {
+
+        if (!scroll.IsValid()) {
+            s->onConfirm = tabs->onChange;
         }
     }
-};
+    PopupMenu* menu = PopupMenu::New(cx, menuId, st)->Scrollable();
+    int i = -1;
+    for (const component::Tab& it : tabs->items) {
+        i++;
+
+        if (it.label.s) {
+            menu->MenuWithCheck(it.label, i == tabs->selected);
+        } else if (it.icon != IconName::None) {
+            menu->Element(IconEl(cx->a, it.icon, Rems(cx, 1.f)));
+            menu->Checked(i == tabs->selected);
+        } else {
+            menu->MenuWithCheck(Tr("Dock.Unnamed"), i == tabs->selected);
+        }
+        if (it.disabled) {
+            menu->Disabled(true);
+        } else if (scroll.IsValid()) {
+            menu->OnClick(ListenTo(scroll, &TabBarScrollState::OnTabClick, i));
+        }
+    }
+    return DropdownMenu::New(cx, StrL("more"))
+        ->Trigger(Button::New(cx, StrL("more-btn"))
+                      ->Ghost()
+                      ->WithSize(UiSize::XSmall)
+                      ->DropdownCaret()
+                      ->IntoEl())
+        ->Menu(menu)
+        ->AnchorRight()
+        ->IntoEl();
+}
 
 El* TabBar::IntoEl() {
     const Theme& th = ThemeNow(cx->app);
@@ -104396,7 +109212,6 @@ El* TabBar::IntoEl() {
             }
         }
         scrollState->peek = TabRevealPeek(size);
-        scrollState->onBarClick = onChange;
         VecResize(scrollState->tabs, items.len);
         VecResize(scrollState->clicks, items.len);
         for (int c = 0; c < scrollState->clicks.len; c++) {
@@ -104412,6 +109227,8 @@ El* TabBar::IntoEl() {
                     ->ScrollX(activeScrollX)
                     ->ScrollId(activeScrollId)
                     ->OnScroll(activeOnScroll);
+
+    ScrollableMask::ApplyVerticalWheel(strip);
     if (scrollState) {
         strip->customPaint = &TabBarScrollState::RecordStrip;
         strip->customUser = scrollState;
@@ -104436,17 +109253,24 @@ El* TabBar::IntoEl() {
     Spring indSpring = th.motion.springMove;
     float indX = 0;
     float indW = 0;
-    bool sliding = false;
 
-    if (!folder && selBox && selBox->w > 0) {
+    bool showIndicator = !folder && selBox && selBox->w > 0 && stripBox;
+    if (showIndicator) {
         indX = SpringValue(cx, MotionId(StrL("tab-ind-x"), id), selBox->x,
                            indSpring);
         indW = SpringValue(cx, MotionId(StrL("tab-ind-w"), id), selBox->w,
                            indSpring);
+    }
+    TabIndicatorWatch* indicator = nullptr;
+    if (!folder) {
+        indicator = ArenaNew<TabIndicatorWatch>(a);
+        indicator->strip = strip;
+        indicator->win = cx->win;
 
-        float dx = indX - selBox->x;
-        float dw = indW - selBox->w;
-        sliding = (dx < -0.5f || dx > 0.5f) || (dw < -0.5f || dw > 0.5f);
+        if (showIndicator) {
+            indicator->placedX = selBox->x - stripBox->x;
+            indicator->placedW = selBox->w;
+        }
     }
     Entity<FolderHover> folderHover = {};
     int folderHovered = -1;
@@ -104461,11 +109285,11 @@ El* TabBar::IntoEl() {
     for (const component::Tab& item : items) {
         i++;
         bool on = selected >= 0 ? i == selected : item.selected;
-        TabStyle st = item.disabled      ? TabDisabled(variant, on, th)
-                      : (on && !sliding) ? TabSelected(variant, th)
-                                         : TabNormal(variant, th);
-        if (on && sliding && !item.disabled) {
 
+        TabStyle st = item.disabled            ? TabDisabled(variant, on, th)
+                      : (on && !showIndicator) ? TabSelected(variant, th)
+                                               : TabNormal(variant, th);
+        if (on && showIndicator && !item.disabled) {
             st.fg = TabSelected(variant, th).fg;
         }
         Str tabId = StrDup(a, fmt("%d", i));
@@ -104653,13 +109477,21 @@ El* TabBar::IntoEl() {
                 tab->customPaint = &RecordTabBound;
                 tab->customUser = &scrollState->tabs[i];
             }
+            if (on && indicator) {
+                indicator->paintUser = tab->customUser;
+                if (tab->customPaint) {
+                    tab->customPaint = &RecordTabBoundWatched;
+                }
+                tab->customUser = indicator;
+                tab->prePaint = &TabIndicatorPrePaint;
+            }
             strip->Child(tab);
         }
     }
     if ((suffix || menu) && lastEmptySpace) {
         strip->Child(lastEmptySpace);
     }
-    if (sliding && stripBox) {
+    if (showIndicator) {
 
         float x = indX - stripBox->x;
         El* ind = Div(a)->Absolute()->Left(x)->W(indW);
@@ -104694,11 +109526,7 @@ El* TabBar::IntoEl() {
     viewport->Child(strip);
     bar->Child(viewport);
     if (menu) {
-        Listener menuClick = {};
-        if (scrollState && onChange.IsValid()) {
-            menuClick = ListenTo(scrollEntity, &TabBarScrollState::OnMenu);
-        }
-        bar->Child(TabMenuButton(this, th, font, menuClick));
+        bar->Child(TabMenuButton(this, th, font, scrollEntity));
     }
     if (suffix) {
         bar->Child(suffix);
@@ -105115,6 +109943,7 @@ DataTable* DataTable::Delegate(const TableDelegate& value) {
     visibleRowsChanged = value.visibleRowsChanged;
     visibleColsChanged = value.visibleColumnsChanged;
     cellText = value.cellText;
+    cellLabel = value.cellLabel;
     return this;
 }
 DataTable* DataTable::Rows(int n, void* d,
@@ -105130,6 +109959,10 @@ DataTable* DataTable::Stripe(bool v) {
 }
 DataTable* DataTable::Bordered(bool v) {
     bordered = v;
+    return this;
+}
+DataTable* DataTable::FocusRing(bool v) {
+    focusRingEnabled = v;
     return this;
 }
 DataTable* DataTable::FixedColsBorder(bool v) {
@@ -105180,6 +110013,10 @@ DataTable* DataTable::OnVisibleCols(void (*fn)(Ctx*, void*, int, int)) {
 }
 DataTable* DataTable::CellText(Str (*fn)(Ctx*, void*, int, int)) {
     cellText = fn;
+    return this;
+}
+DataTable* DataTable::CellLabel(Str (*fn)(Ctx*, void*, int, int)) {
+    cellLabel = fn;
     return this;
 }
 DataTable* DataTable::FitColumn(bool (*fn)(Ctx*, void*, int, float*)) {
@@ -105514,6 +110351,7 @@ El* DataTable::BuildEl() {
         visibleRowsChanged = delegate.visibleRowsChanged;
         visibleColsChanged = delegate.visibleColumnsChanged;
         cellText = delegate.cellText;
+        cellLabel = delegate.cellLabel;
         if (delegate.groupHeaders) {
             delegate.groupHeaders(cx, data, this);
         }
@@ -105566,7 +110404,7 @@ El* DataTable::BuildEl() {
     }
     float scrollX = s ? s->scrollX : 0;
 
-    El* box = gpui::Table::New(cx, id, nRows, nColumns)->FlexCol()->W(kFill);
+    El* box = Div(a)->PathClick(id)->FlexCol()->W(kFill);
     if (bordered) {
         box->Radius(th.radius)->Border(1, th.border);
     }
@@ -105599,7 +110437,16 @@ El* DataTable::BuildEl() {
         box->OnMouseDownOut(ListenTo(state, &TableState::OnRightClickOutside));
     }
 
-    El* main = Div(a)->FlexRow()->W(kFill)->ItemsStart();
+    bool grid = !s || s->rowSelectable || s->cellSelectable;
+    El* main =
+        Div(a)
+            ->Id(StrL("table-inner"))
+            ->Role(grid ? AccessibilityRole::Grid : AccessibilityRole::Table)
+            ->AriaRowCount(nRows + 1)
+            ->AriaColumnCount(nColumns)
+            ->FlexRow()
+            ->W(kFill)
+            ->ItemsStart();
     El* fixedPane = Div(a)->FlexCol()->Shrink0();
     El* scrollPane = Div(a)->FlexCol()->Flex1()->ClipX();
 
@@ -105663,6 +110510,8 @@ El* DataTable::BuildEl() {
     Listener sortClick = ListenTo(state, &TableState::OnSortClick, 0);
 
     El* headFixed = gpui::TableHeader::New(cx, StrL("head-fixed"))
+                        ->Role(AccessibilityRole::Row)
+                        ->AriaRowIndex(0)
                         ->FlexRow()
                         ->Shrink0()
                         ->H(headerH)
@@ -105684,6 +110533,7 @@ El* DataTable::BuildEl() {
     }
     headScroll->PathClick(StrL("head"))
         ->Role(AccessibilityRole::Row)
+        ->AriaRowIndex(0)
         ->FlexRow()
         ->Shrink0();
     headWrap->Child(headScroll);
@@ -105699,11 +110549,18 @@ El* DataTable::BuildEl() {
         int c = s ? TableColAt(s, d) : d;
         const TableColumn& col = columns[c];
         Str colLabel = TableColumnLabel(col);
-        El* th_ = gpui::TableHead::New(cx, StrDup(a, fmt("th-%d", c)), c + 1)
+
+        El* th_ = gpui::TableHead::New(cx, StrDup(a, fmt("th-%d", c)), c)
                       ->AriaLabel(colLabel)
                       ->FlexRow()
                       ->Shrink0()
                       ->W(ColWidth(s, c));
+
+        if (col.center) {
+            th_->TextCenter();
+        } else if (col.right) {
+            th_->TextRight();
+        }
         if (s) {
 
             th_->BoundsOut(&s->colBounds[d]);
@@ -105721,22 +110578,23 @@ El* DataTable::BuildEl() {
         El* content =
             Div(a)->FlexRow()->Flex1()->ItemsCenter()->JustifyBetween();
         TableColumnPadding(content, col);
-        if (!col.sortable) {
-            if (col.center) {
-                content->JustifyCenter();
-            } else if (col.right) {
-                content->JustifyEnd();
-            }
+
+        if (col.center) {
+            content->TextCenter();
+        } else if (col.right) {
+            content->TextRight();
         }
         El* customHead = hasDelegate && delegate.renderTh
                              ? delegate.renderTh(cx, data, c)
                              : nullptr;
-        content->Child(customHead ? customHead
-                                  : TextEl(a, colLabel)
-                                        ->Font(UiTableCellFontPx(size) > 0
-                                                   ? UiTableCellFontPx(size)
-                                                   : 14.f)
-                                        ->LineHeight(1.f));
+        El* label = customHead ? customHead
+                               : TextEl(a, colLabel)
+                                     ->Font(UiTableCellFontPx(size) > 0
+                                                ? UiTableCellFontPx(size)
+                                                : 14.f)
+                                     ->LineHeight(1.f);
+
+        content->Child(label->Flex1());
         if (col.selectable) {
             BindPathClick(content,
                           ElementIdNamed(a, StrL("col-header"), (uint64_t)c),
@@ -105927,7 +110785,7 @@ El* DataTable::BuildEl() {
             int c = s ? TableColAt(s, d) : d;
             El* cellEl = cell ? cell(cx, data, r, c) : nullptr;
             Str cellId = StrDup(a, fmt("cell-%d-%d", r, c));
-            El* td = gpui::TableCell::New(cx, cellId, c + 1)
+            El* td = gpui::TableCell::New(cx, cellId, c)
                          ->FlexRow()
                          ->Shrink0()
                          ->W(ColWidth(s, c))
@@ -105937,10 +110795,11 @@ El* DataTable::BuildEl() {
             if (float font = UiTableCellFontPx(size)) {
                 td->Font(font);
             }
-            if (columns[c].right) {
-                td->JustifyEnd();
-            } else if (columns[c].center) {
-                td->JustifyCenter();
+
+            if (columns[c].center) {
+                td->TextCenter();
+            } else if (columns[c].right) {
+                td->TextRight();
             }
             if (s && TableSelectedCol(s) == c) {
                 td->Bg(BackgroundOpacity(th.tokens.accent, 0.5f));
@@ -105961,6 +110820,20 @@ El* DataTable::BuildEl() {
             }
 
             if (s && s->cellSelectable) {
+                int selRow = -1;
+                int selCol = -1;
+                bool selected = TableSelectedCell(s, &selRow, &selCol) &&
+                                selRow == r && selCol == c;
+                td->Role(AccessibilityRole::GridCell)->AriaSelected(selected);
+            }
+            if (cellLabel) {
+                Str label = cellLabel(cx, data, r, c);
+                if (label.s && len(label) > 0) {
+                    td->AriaLabel(label);
+                }
+            }
+
+            if (s && s->cellSelectable) {
                 BindPathClick(td, cellId,
                               ListenerArg(cellClick, TableCellPack(r, c)));
                 td->OnMouseDown(ListenerArg(cellDown, TableCellPack(r, c)));
@@ -105972,7 +110845,8 @@ El* DataTable::BuildEl() {
                         ? columns[c].paddings.left + columns[c].paddings.right
                         : 16.f;
                 float inner = ColWidth(s, c) - padding;
-                cellEl->MaxW(inner > 1 ? inner : 1)->Truncate();
+
+                cellEl->Flex1()->MaxW(inner > 1 ? inner : 1)->Truncate();
                 td->Child(cellEl);
             }
             (d < nFixed ? rowFixed : rowScroll)->Child(td);
@@ -106078,7 +110952,8 @@ El* DataTable::BuildEl() {
         box->TrackFocus(s->focus);
     }
 
-    box->FocusRing(WindowLastInputWasKeyboard(cx->win))->FocusOnPress();
+    box->FocusRing(focusRingEnabled && WindowLastInputWasKeyboard(cx->win))
+        ->FocusOnPress();
     TableBindKeys(cx, box, state);
     return box;
 }
@@ -108082,6 +112957,8 @@ void ThemeEndUpdate(ThemeUpdateScope* scope) {
         return;
     }
     Theme* t = &state->active[(int)scope->modeBefore];
+
+    CursorBlink blink = t->cursorBlink;
     ThemeTokensReconcile(t, &scope->colorsBefore, &scope->tokensBefore);
     ThemeMode modeAfter = t->mode;
     bool modeChanged = modeAfter != scope->modeBefore;
@@ -108095,6 +112972,7 @@ void ThemeEndUpdate(ThemeUpdateScope* scope) {
             state->active[(int)modeAfter] = *t;
             state->active[(int)scope->modeBefore] = scope->colorsBefore;
         } else {
+
             t->mode = scope->modeBefore;
         }
         state->mode = modeAfter;
@@ -108113,6 +112991,8 @@ void ThemeEndUpdate(ThemeUpdateScope* scope) {
             state->mode = modeAfter;
         }
     }
+    state->active[0].cursorBlink = blink;
+    state->active[1].cursorBlink = blink;
     ThemeDidChange(app, state);
     AppRefreshWindows(app);
 }
@@ -108155,8 +113035,12 @@ const Theme& ThemeDark(const App* app) {
 void ThemeInstall(App* app, ThemeMode mode, const Theme& t) {
     AppThemeState* state = ThemeStateOf(app);
     if (state) {
+
+        CursorBlink blink = state->active[(int)state->mode].cursorBlink;
         state->active[(int)mode] = t;
         state->active[(int)mode].mode = mode;
+        state->active[0].cursorBlink = blink;
+        state->active[1].cursorBlink = blink;
         ThemeDidChange(app, state);
     }
 }
@@ -108341,6 +113225,7 @@ void ThemeSyncBase(App* app) {
                                                  : BaseThemeAppearance::Light;
     base.tokens = ThemeSemanticTokens(ui, ThemeFontSize(app));
     base.scrollbar.mode = ScrollbarModeNow(app);
+
     base.scrollbar.motion = ScrollbarMotionFor(base.scrollbar.mode);
 
     base.plot = base_theme::PlotTheme::New().WithMotion(
@@ -108394,6 +113279,7 @@ void ThemeSyncBase(App* app) {
     base.resizable.activeHandle = ui.dragBorder;
     base.resizable.hasHandle = true;
     base.resizable.hasActiveHandle = true;
+    base.cursorBlink = ui.cursorBlink;
     BaseThemeSet(app, base);
 
     component::TextViewInstallDefaults(app);
@@ -111382,6 +116268,7 @@ static El* RetainedDatePickerIntoEl(DatePicker* self) {
                                   ->Text()
                                   ->WithSize(UiSize::XSmall)
                                   ->Icon(IconName::X)
+                                  ->AccessibilityLabel(Tr("Input.Clear"))
                                   ->OnClick(clear)
                                   ->IntoEl()
                                   ->StopClick());
@@ -111543,6 +116430,7 @@ El* DatePicker::IntoEl() {
                            ->Text()
                            ->WithSize(UiSize::XSmall)
                            ->Icon(IconName::X)
+                           ->AccessibilityLabel(Tr("Input.Clear"))
                            ->OnClick(onClear)
                            ->IntoEl()
                            ->StopClick());
@@ -111824,21 +116712,21 @@ El* Toolbar::IntoEl() {
     switch (size.kind) {
         case UiSize::Kind::XSmall:
 
-            root->H(Rems(cx, 1.75f))
+            root->MinH(Rems(cx, 1.75f))
                 ->Pad(Rems(cx, 0.25f))
                 ->Gap(Rems(cx, 0.25f))
                 ->Font(12);
             break;
         case UiSize::Kind::Small:
 
-            root->H(Rems(cx, 2.f))
+            root->MinH(Rems(cx, 2.f))
                 ->Pad(Rems(cx, 0.25f))
                 ->Gap(Rems(cx, 0.25f))
                 ->Font(14);
             break;
         default:
 
-            root->H(Rems(cx, 3.f))
+            root->MinH(Rems(cx, 3.f))
                 ->Pad(Rems(cx, 0.5f))
                 ->Gap(Rems(cx, 0.5f))
                 ->Font(14);
@@ -112345,6 +117233,20 @@ Edges WindowContentInsets(Window* window) {
     return insets;
 }
 
+Edges WindowSafeInsets(Window* window) {
+    if (!window) {
+        return {};
+    }
+    WinSize view = WindowSize(window);
+    Bounds visible = WindowFullyVisibleBounds(window);
+    Edges insets = {};
+    insets.top = visible.y;
+    insets.left = visible.x;
+    insets.right = view.dipW - visible.Right();
+    insets.bottom = view.dipH - visible.Bottom();
+    return insets;
+}
+
 WindowEdge WindowResizeEdge(float x, float y, float w, float h, Edges insets,
                             WindowTiling tiling, float hitSize) {
     float innerLeft = insets.left;
@@ -112562,12 +117464,33 @@ void WindowOpenDialog(Ctx* cx, EntityId view, bool overlay) {
     WindowLayer layer;
     layer.view = view;
     layer.overlay = overlay;
+    layer.id = l->nextDialogId++;
+    layer.previousFocus = WindowFocused(cx->win);
     VecAppend(l->dialogs, layer);
     Notify(cx);
 }
 
+static int NewestOpenDialog(const WindowLayers* l) {
+    if (!l) {
+        return -1;
+    }
+    for (int i = l->dialogs.len - 1; i >= 0; i--) {
+        if (!l->dialogs[i].closing) {
+            return i;
+        }
+    }
+    return -1;
+}
+
+static void RestoreDialogFocus(Ctx* cx, FocusHandle previous) {
+    if (previous.IsValid()) {
+        FocusHandleRestore(cx->win, previous);
+    }
+}
+
 bool WindowHasActiveDialog(Ctx* cx) {
-    return WindowDialogCount(cx) > 0;
+    WindowLayers* l = LayersOf(cx);
+    return NewestOpenDialog(l) >= 0;
 }
 
 int WindowDialogCount(Ctx* cx) {
@@ -112577,11 +117500,20 @@ int WindowDialogCount(Ctx* cx) {
 
 void WindowCloseDialog(Ctx* cx) {
     WindowLayers* l = LayersOf(cx);
-    if (!l || l->dialogs.len == 0) {
+    int ix = NewestOpenDialog(l);
+    if (ix < 0) {
         return;
     }
-    l->dialogs.len--;
-    EntityDrop(cx->app, l->dialogs[l->dialogs.len].view);
+    FocusHandle previous = l->dialogs[ix].previousFocus;
+    if (l->dialogs[ix].exitEnabled) {
+
+        l->dialogs[ix].closing = true;
+    } else {
+        EntityId view = l->dialogs[ix].view;
+        VecRemoveAt(l->dialogs, ix);
+        EntityDrop(cx->app, view);
+    }
+    RestoreDialogFocus(cx, previous);
     Notify(cx);
 }
 
@@ -112590,10 +117522,17 @@ void WindowCloseAllDialogs(Ctx* cx) {
     if (!l || l->dialogs.len == 0) {
         return;
     }
-    for (int i = 0; i < l->dialogs.len; i++) {
-        EntityDrop(cx->app, l->dialogs[i].view);
+    FocusHandle previous = l->dialogs[0].previousFocus;
+    for (int i = l->dialogs.len - 1; i >= 0; i--) {
+        if (l->dialogs[i].closing || l->dialogs[i].exitEnabled) {
+            l->dialogs[i].closing = true;
+            continue;
+        }
+        EntityId view = l->dialogs[i].view;
+        VecRemoveAt(l->dialogs, i);
+        EntityDrop(cx->app, view);
     }
-    l->dialogs.len = 0;
+    RestoreDialogFocus(cx, previous);
     Notify(cx);
 }
 
@@ -115843,6 +120782,204 @@ static bool RecordJumpButtonLabel(PayloadBuild* build,
     return true;
 }
 
+static bool RowNumber(const shell::ComponentDataValue* value, int* out) {
+    if (!value || value->kind != shell::DataKind::Number) return false;
+    double n = value->number;
+    if (!isfinite(n) || n != floor(n) || n < 0.0 || n > (double)INT_MAX)
+        return false;
+    *out = (int)n;
+    return true;
+}
+
+static bool ItemRange(const shell::ComponentDataValue* value, int* start,
+                      int* end) {
+    if (!value || value->kind != shell::DataKind::Object) return false;
+    return RowNumber(value->Get(StrL("start")), start) &&
+           RowNumber(value->Get(StrL("end")), end);
+}
+
+static component::MessageScrollerState* ScrollerOf(void* state) {
+    EntityState<component::MessageScrollerState>* held =
+        (EntityState<component::MessageScrollerState>*)state;
+    if (!held || !held->app) return nullptr;
+    return held->entity.Get(held->app);
+}
+
+static Ctx CallCtx(shell::StateCall* call) {
+    Ctx cx;
+    cx.app = call->app;
+    cx.win = call->window;
+    cx.a = call->a;
+    return cx;
+}
+
+static bool NoArgs(shell::StateCall* call, int count, const char* context) {
+    if (count == 0) return true;
+    return call->Fail(fmt("%s expects no arguments", Str(context)));
+}
+
+static bool OneRow(shell::StateCall* call,
+                   const shell::ComponentDataValue* args, int count, int* out,
+                   const char* context) {
+    if (count == 1 && RowNumber(args, out)) return true;
+    return call->Fail(fmt("%s expects a non-negative integer", Str(context)));
+}
+
+static bool ItemCount(shell::StateCall* call, void* state,
+                      const shell::ComponentDataValue*, int count) {
+    if (!NoArgs(call, count, "MessageScrollerState.item_count")) return false;
+    component::MessageScrollerState* s = ScrollerOf(state);
+    if (!s) return call->Fail(StrL("MessageScrollerState is gone"));
+    call->out = shell::ComponentDataValue::Number(s->ItemCount());
+    return true;
+}
+
+static bool IsFollowingTail(shell::StateCall* call, void* state,
+                            const shell::ComponentDataValue*, int count) {
+    if (!NoArgs(call, count, "MessageScrollerState.is_following_tail"))
+        return false;
+    component::MessageScrollerState* s = ScrollerOf(state);
+    if (!s) return call->Fail(StrL("MessageScrollerState is gone"));
+    call->out = shell::ComponentDataValue::Boolean(s->IsFollowingTail());
+    return true;
+}
+
+static bool IsScrolledUp(shell::StateCall* call, void* state,
+                         const shell::ComponentDataValue*, int count) {
+    if (!NoArgs(call, count, "MessageScrollerState.is_scrolled_up"))
+        return false;
+    component::MessageScrollerState* s = ScrollerOf(state);
+    if (!s) return call->Fail(StrL("MessageScrollerState is gone"));
+    call->out = shell::ComponentDataValue::Boolean(s->IsScrolledUp());
+    return true;
+}
+
+static bool LogicalScrollTop(shell::StateCall* call, void* state,
+                             const shell::ComponentDataValue*, int count) {
+    if (!NoArgs(call, count, "MessageScrollerState.logical_scroll_top"))
+        return false;
+    component::MessageScrollerState* s = ScrollerOf(state);
+    if (!s) return call->Fail(StrL("MessageScrollerState is gone"));
+    component::ListOffset top = s->LogicalScrollTop();
+    shell::ComponentDataValue* items = (shell::ComponentDataValue*)Alloc(
+        call->a, (int)sizeof(shell::ComponentDataValue) * 2);
+    Str* keys = (Str*)Alloc(call->a, (int)sizeof(Str) * 2);
+    items[0] = shell::ComponentDataValue::Number(top.itemIx);
+    items[1] = shell::ComponentDataValue::Number(top.offsetInItem);
+    keys[0] = StrL("item_ix");
+    keys[1] = StrL("offset_in_item");
+    call->out.kind = shell::DataKind::Object;
+    call->out.items = items;
+    call->out.keys = keys;
+    call->out.count = 2;
+    return true;
+}
+
+static bool ResetCount(shell::StateCall* call, void* state,
+                       const shell::ComponentDataValue* args, int count) {
+    int n = 0;
+    if (!OneRow(call, args, count, &n, "MessageScrollerState.reset"))
+        return false;
+    component::MessageScrollerState* s = ScrollerOf(state);
+    if (!s) return call->Fail(StrL("MessageScrollerState is gone"));
+    Ctx cx = CallCtx(call);
+    s->Reset(&cx, n);
+    call->out = shell::ComponentDataValue::Null();
+    return true;
+}
+
+static bool SpliceRows(shell::StateCall* call, void* state,
+                       const shell::ComponentDataValue* args, int count) {
+    int start = 0, end = 0, n = 0;
+    if (count != 2 || !ItemRange(args, &start, &end) ||
+        !RowNumber(args + 1, &n)) {
+        return call->Fail(
+            StrL("MessageScrollerState.splice expects an ItemRange and a "
+                 "non-negative integer count"));
+    }
+    component::MessageScrollerState* s = ScrollerOf(state);
+    if (!s) return call->Fail(StrL("MessageScrollerState is gone"));
+    Ctx cx = CallCtx(call);
+    call->out =
+        shell::ComponentDataValue::Boolean(s->Splice(&cx, start, end, n));
+    return true;
+}
+
+static bool AppendRows(shell::StateCall* call, void* state,
+                       const shell::ComponentDataValue* args, int count) {
+    int n = 0;
+    if (!OneRow(call, args, count, &n, "MessageScrollerState.append"))
+        return false;
+    component::MessageScrollerState* s = ScrollerOf(state);
+    if (!s) return call->Fail(StrL("MessageScrollerState is gone"));
+    Ctx cx = CallCtx(call);
+    call->out = shell::ComponentDataValue::Boolean(s->Append(&cx, n));
+    return true;
+}
+
+static bool PrependRows(shell::StateCall* call, void* state,
+                        const shell::ComponentDataValue* args, int count) {
+    int n = 0;
+    if (!OneRow(call, args, count, &n, "MessageScrollerState.prepend"))
+        return false;
+    component::MessageScrollerState* s = ScrollerOf(state);
+    if (!s) return call->Fail(StrL("MessageScrollerState is gone"));
+    Ctx cx = CallCtx(call);
+    call->out = shell::ComponentDataValue::Boolean(s->Prepend(&cx, n));
+    return true;
+}
+
+static bool RemeasureAll(shell::StateCall* call, void* state,
+                         const shell::ComponentDataValue*, int count) {
+    if (!NoArgs(call, count, "MessageScrollerState.remeasure")) return false;
+    component::MessageScrollerState* s = ScrollerOf(state);
+    if (!s) return call->Fail(StrL("MessageScrollerState is gone"));
+    Ctx cx = CallCtx(call);
+    s->Remeasure(&cx);
+    call->out = shell::ComponentDataValue::Null();
+    return true;
+}
+
+static bool RemeasureRange(shell::StateCall* call, void* state,
+                           const shell::ComponentDataValue* args, int count) {
+    int start = 0, end = 0;
+    if (count != 1 || !ItemRange(args, &start, &end)) {
+        return call->Fail(
+            StrL("MessageScrollerState.remeasure_items expects an ItemRange of "
+                 "non-negative integer start and end"));
+    }
+    component::MessageScrollerState* s = ScrollerOf(state);
+    if (!s) return call->Fail(StrL("MessageScrollerState is gone"));
+    Ctx cx = CallCtx(call);
+    call->out =
+        shell::ComponentDataValue::Boolean(s->RemeasureItems(&cx, start, end));
+    return true;
+}
+
+static bool ScrollToItem(shell::StateCall* call, void* state,
+                         const shell::ComponentDataValue* args, int count) {
+    int n = 0;
+    if (!OneRow(call, args, count, &n, "MessageScrollerState.scroll_to_item"))
+        return false;
+    component::MessageScrollerState* s = ScrollerOf(state);
+    if (!s) return call->Fail(StrL("MessageScrollerState is gone"));
+    Ctx cx = CallCtx(call);
+    call->out = shell::ComponentDataValue::Boolean(s->ScrollToItem(&cx, n));
+    return true;
+}
+
+static bool ScrollToEnd(shell::StateCall* call, void* state,
+                        const shell::ComponentDataValue*, int count) {
+    if (!NoArgs(call, count, "MessageScrollerState.scroll_to_end"))
+        return false;
+    component::MessageScrollerState* s = ScrollerOf(state);
+    if (!s) return call->Fail(StrL("MessageScrollerState is gone"));
+    Ctx cx = CallCtx(call);
+    s->ScrollToEnd(&cx);
+    call->out = shell::ComponentDataValue::Null();
+    return true;
+}
+
 static bool NewMessageScrollerState(shell::StateBuild* build,
                                     const ComponentArgument* args, int count) {
 
@@ -115971,13 +121108,32 @@ static constexpr ComponentDescriptor kShimmerText = {
 
 static constexpr ArgumentDescriptor component_shell_chat_kStateArgs[] = {
     {"item_count", SchemaNumber()}};
+static constexpr shell::StateMethodDescriptor kScrollerStateMethods[] = {
+    {"item_count", "(): number", true, &ItemCount},
+    {"is_following_tail", "(): boolean", true, &IsFollowingTail},
+    {"is_scrolled_up", "(): boolean", true, &IsScrolledUp},
+    {"logical_scroll_top", "(): { item_ix: number; offset_in_item: number }",
+     true, &LogicalScrollTop},
+    {"reset", "(item_count: number): void", false, &ResetCount},
+    {"splice",
+     "(range: import(\"gpui-kit\").ItemRange, count: number): boolean", false,
+     &SpliceRows},
+    {"append", "(count: number): boolean", false, &AppendRows},
+    {"prepend", "(count: number): boolean", false, &PrependRows},
+    {"remeasure", "(): void", false, &RemeasureAll},
+    {"remeasure_items", "(range: import(\"gpui-kit\").ItemRange): boolean",
+     false, &RemeasureRange},
+    {"scroll_to_item", "(index: number): boolean", false, &ScrollToItem},
+    {"scroll_to_end", "(): void", false, &ScrollToEnd},
+};
 static constexpr shell::StateDescriptor kMessageScrollerState = {
     "MessageScrollerState",
     "MessageScrollerState",
     component_shell_chat_kStateArgs,
     "Retained virtual-list and tail-following state for a message transcript.",
     &NewMessageScrollerState,
-    {}};
+    kScrollerStateMethods,
+};
 
 static constexpr ArgumentDescriptor kScrollerArgs[] = {
     {"id", SchemaString()},
@@ -117966,6 +123122,7 @@ struct ButtonOp {
     enum Kind : uint8_t {
         Size,
         Label,
+        AccessibilityLabel,
         Tooltip,
         Loading,
         Outline,
@@ -118054,6 +123211,9 @@ static El* component_shell_controls_action_MaterializeButton(MaterializeRequest*
                 break;
             case ButtonOp::Label:
                 button->Label(op.text);
+                break;
+            case ButtonOp::AccessibilityLabel:
+                button->AccessibilityLabel(op.text);
                 break;
             case ButtonOp::Tooltip:
                 button->Tooltip(op.text);
@@ -118244,6 +123404,8 @@ static El* component_shell_controls_action_MaterializeToggle(MaterializeRequest*
 
 static constexpr ArgumentDescriptor component_shell_controls_action_kIdArgs[] = {{"id", SchemaString()}};
 static constexpr ArgumentDescriptor component_shell_controls_action_kLabelArgs[] = {{"label", SchemaString()}};
+static constexpr ArgumentDescriptor kAccessibilityLabelArgs[] = {
+    {"accessibility_label", SchemaString()}};
 static constexpr ArgumentDescriptor component_shell_controls_action_kTooltipArgs[] = {
     {"tooltip", SchemaString()}};
 static constexpr ArgumentDescriptor component_shell_controls_action_kLoadingArgs[] = {
@@ -118260,6 +123422,9 @@ static constexpr MethodDescriptor component_shell_controls_action_kButtonMethods
     kDisabledMethod,
     {"label", component_shell_controls_action_kLabelArgs, "Sets the visible button label.",
      &RecordButtonString<ButtonOp::Label>},
+    {"accessibility_label", kAccessibilityLabelArgs,
+     "Sets the accessible name independently of the visible button label.",
+     &RecordButtonString<ButtonOp::AccessibilityLabel>},
     {"tooltip", component_shell_controls_action_kTooltipArgs, "Sets concise hover help.",
      &RecordButtonString<ButtonOp::Tooltip>},
     {"loading", component_shell_controls_action_kLoadingArgs, "Sets the loading presentation.",
@@ -118317,7 +123482,7 @@ static constexpr MethodDescriptor kTooltipMethod = {"tooltip", component_shell_c
 static constexpr MethodDescriptor kCheckedMethod = {
     "checked", component_shell_controls_action_kCheckedArgs, "Sets the controlled checked state.",
     &support::RecordChecked};
-static constexpr MethodDescriptor kStateMethods[] = {
+static constexpr MethodDescriptor component_shell_controls_action_kStateMethods[] = {
     kLabelMethod,         kTooltipMethod,         kCheckedMethod,
     support::kSizeMethod, support::kChangeMethod, kDisabledMethod};
 
@@ -118339,10 +123504,10 @@ static constexpr ConstructorDescriptor component_shell_controls_action_kToggleCo
     {"Toggle", component_shell_controls_action_kIdArgs, &ConstructToggle}};
 
 static constexpr ComponentDescriptor kCheckbox = {
-    "Checkbox", kCheckboxConstructors, kStateMethods, kStateDocumentation,
+    "Checkbox", kCheckboxConstructors, component_shell_controls_action_kStateMethods, kStateDocumentation,
     &MaterializeCheckbox};
 static constexpr ComponentDescriptor kSwitch = {
-    "Switch", kSwitchConstructors, kStateMethods, kStateDocumentation,
+    "Switch", kSwitchConstructors, component_shell_controls_action_kStateMethods, kStateDocumentation,
     &MaterializeSwitch};
 static constexpr ComponentDescriptor component_shell_controls_action_kToggle = {
     "Toggle", component_shell_controls_action_kToggleConstructors, component_shell_controls_action_kToggleMethods, kStateDocumentation,
@@ -122856,6 +128021,16 @@ static void Initializer(App* app) {
     Init(app);
 }
 
+bool Registry(shell::ComponentRegistry* registry, shell::RegistryError* error) {
+    if (!registry || !registry->Open(shell::kComponentRegistryApiVersion,
+                                     shell::kDefaultComponentModule, error)) {
+        return false;
+    }
+    registry->WithInitializer(&Initializer);
+    registry->WithWindowOpener(&OpenWindowWithRoot);
+    return Register(registry, error);
+}
+
 const shell::FrozenComponentRegistry* Components() {
     static shell::FrozenComponentRegistry frozen;
     static bool built = false;
@@ -122863,13 +128038,7 @@ const shell::FrozenComponentRegistry* Components() {
     built = true;
     shell::ComponentRegistry registry;
     shell::RegistryError error;
-    if (!registry.Open(shell::kComponentRegistryApiVersion,
-                       shell::kDefaultComponentModule, &error)) {
-        return &frozen;
-    }
-    registry.WithInitializer(&Initializer);
-    registry.WithWindowOpener(&OpenWindowWithRoot);
-    if (!Register(&registry, &error)) {
+    if (!Registry(&registry, &error) && error.IsSet()) {
         Arena* a = ArenaNew();
         logf("gpui-component-shell: %s\n",
              shell::RegistryErrorMessage(a, error));
@@ -123881,7 +129050,558 @@ bool RegisterMedia(shell::ComponentRegistry* registry,
                    shell::RegistryError* error) {
     return RegisterMediaImage(registry, error) &&
            RegisterMediaEditor(registry, error) &&
-           RegisterMediaDiff(registry, error);
+           RegisterMediaDiff(registry, error) &&
+           RegisterMediaWebView(registry, error);
+}
+
+}
+
+#line 1 "src/component_shell/media/webview.cpp"
+
+namespace gpui::component_shell::media::webview {
+
+constexpr int kEventQueue = 1024;
+constexpr int kMessageLimit = 1024 * 1024;
+
+bool WebDocumentNavigable(Str url) {
+    if (StrStartsWith(url, "about:")) return true;
+    int colon = -1;
+    for (int i = 0; i < len(url); i++) {
+        char c = url.s[i];
+        if (c == ':') {
+            colon = i;
+            break;
+        }
+        bool ok = (c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z') ||
+                  (c >= '0' && c <= '9') || c == '+' || c == '-' || c == '.';
+        if (!ok) return false;
+    }
+    if (colon <= 0) return false;
+    Str scheme = Str(url.s, colon);
+    if (!StrEqI(scheme, "http") && !StrEqI(scheme, "https")) return false;
+    if (colon + 3 > len(url) || url.s[colon + 1] != '/' ||
+        url.s[colon + 2] != '/')
+        return false;
+    int host = colon + 3;
+    int authEnd = host;
+    while (authEnd < len(url) && url.s[authEnd] != '/' &&
+           url.s[authEnd] != '?' && url.s[authEnd] != '#')
+        authEnd++;
+    for (int i = host; i < authEnd; i++) {
+        if (url.s[i] == '@') host = i + 1;
+    }
+    if (host >= authEnd) return false;
+    if (url.s[host] == '[') {
+        int close = host + 1;
+        while (close < authEnd && url.s[close] != ']') close++;
+        return close < authEnd && close > host + 1;
+    }
+    int end = host;
+    while (end < authEnd && url.s[end] != ':') end++;
+    return end > host;
+}
+
+enum class PageTheme : uint8_t {
+    Light,
+    Dark,
+    System
+};
+
+struct PageEvent {
+    uint8_t kind = 0;
+    Str text;
+};
+
+struct Bridge {
+    bool dead = false;
+    bool posted = false;
+    bool draining = false;
+    bool dropAfterDrain = false;
+    App* dropApp = nullptr;
+    EntityId dropId = {};
+    EntityId selfId = {};
+    Window* window = nullptr;
+    App* app = nullptr;
+    ShellRuntime* runtime = nullptr;
+    shell::ComponentCallback message = {};
+    shell::ComponentCallback load = {};
+    Vec<PageEvent> queue;
+
+    ~Bridge() {
+        for (int i = 0; i < queue.len; i++) StrFree(queue.els[i].text);
+    }
+
+    static void OnDrain(Bridge* self, Ctx* cx, const void*);
+};
+
+struct ShellWebView {
+    App* app = nullptr;
+    Entity<WebView> view;
+    Entity<Bridge> bridge;
+    bool followApp = true;
+    PageTheme chosen = PageTheme::Light;
+    bool hasApplied = false;
+    PageTheme applied = PageTheme::Light;
+
+    ~ShellWebView();
+    bool ApplyTheme(App* app);
+};
+
+static void PostDrain(Bridge* self) {
+    if (!self || self->posted || self->dead || !self->window) return;
+    self->posted = true;
+    Listener listener;
+    listener.SetFn(&Bridge::OnDrain);
+    listener.view = self->selfId;
+    WindowPost(self->window, listener);
+}
+
+static void Enqueue(Bridge* self, uint8_t kind, Str text) {
+    if (!self || self->dead) return;
+    if (self->queue.len >= kEventQueue) {
+        logf("dropped a WebView event; the script is not keeping up\n");
+        return;
+    }
+    PageEvent event;
+    event.kind = kind;
+    event.text = StrDup(text);
+    VecAppend(self->queue, event);
+    PostDrain(self);
+}
+
+static void OnIpc(void* ctx, Str, Str body) {
+    if (len(body) > kMessageLimit) {
+        logf("dropped a %d byte WebView message; the limit is %d\n", len(body),
+             kMessageLimit);
+        return;
+    }
+    Enqueue((Bridge*)ctx, 0, body);
+}
+
+static void OnPageLoad(void* ctx, wry::PageLoadEvent event, Str url) {
+    if (event != wry::PageLoadEvent::Finished) return;
+    Enqueue((Bridge*)ctx, 1, url);
+}
+
+static bool OnNavigate(void*, Str url) {
+    return WebDocumentNavigable(url);
+}
+
+static void Deliver(Bridge* self, Ctx* cx, const PageEvent& event) {
+    shell::ComponentCallback callback =
+        event.kind == 1 ? self->load : self->message;
+    if (!callback.IsSet() || !self->runtime || !event.text.s) return;
+    const char* context = event.kind == 1 ? "WebView load callback failed"
+                                          : "WebView message callback failed";
+    Arena* arena = ArenaNew();
+    shell::ComponentDataValue argument =
+        shell::ComponentDataValue::String(StrDup(arena, event.text));
+    callback.InvokeAndReport(self->runtime, context, &argument, 1, cx->win,
+                             cx->app);
+    ArenaDelete(arena);
+}
+
+void Bridge::OnDrain(Bridge* self, Ctx* cx, const void*) {
+    if (!self || self->dead) return;
+    self->draining = true;
+    self->posted = false;
+    int count = self->queue.len;
+    for (int i = 0; i < count; i++) {
+        PageEvent event = self->queue.els[i];
+        self->queue.els[i].text = {};
+        if (!self->dead) Deliver(self, cx, event);
+        StrFree(event.text);
+        if (self->dropAfterDrain) {
+            for (int j = i + 1; j < self->queue.len; j++) {
+                StrFree(self->queue.els[j].text);
+                self->queue.els[j].text = {};
+            }
+            self->queue.len = 0;
+            App* app = self->dropApp;
+            EntityId id = self->dropId;
+            self->dropAfterDrain = false;
+            EntityDrop(app, id);
+            return;
+        }
+    }
+    int rest = self->queue.len - count;
+    if (rest < 0) rest = 0;
+    for (int i = 0; i < rest; i++)
+        self->queue.els[i] = self->queue.els[count + i];
+    self->queue.len = rest;
+    self->draining = false;
+    if (rest) PostDrain(self);
+}
+
+ShellWebView::~ShellWebView() {
+    Bridge* bridgeState = bridge.Get(app);
+    if (bridgeState) bridgeState->dead = true;
+    if (!app) return;
+    if (view.id.IsValid()) {
+        EntityId id = view.id;
+        view.id = {};
+        EntityDrop(app, id);
+    }
+    if (!bridge.id.IsValid()) return;
+    if (bridgeState && bridgeState->draining) {
+        bridgeState->dropAfterDrain = true;
+        bridgeState->dropApp = app;
+        bridgeState->dropId = bridge.id;
+        bridge.id = {};
+        return;
+    }
+    EntityId id = bridge.id;
+    bridge.id = {};
+    EntityDrop(app, id);
+}
+
+bool ShellWebView::ApplyTheme(App* themeApp) {
+    PageTheme theme =
+        followApp ? (ThemeGet(themeApp) == ThemeMode::Dark ? PageTheme::Dark
+                                                           : PageTheme::Light)
+                  : chosen;
+    if (hasApplied && applied == theme) return true;
+    wry::Theme native = theme == PageTheme::Dark    ? wry::Theme::Dark
+                        : theme == PageTheme::Light ? wry::Theme::Light
+                                                    : wry::Theme::Auto;
+    if (!WebViewSetPageTheme(view.Get(themeApp), native)) return false;
+    applied = theme;
+    hasApplied = true;
+    return true;
+}
+
+static bool CreationFailed(shell::StateBuild* build) {
+    Str reason = wry::WebViewLastError();
+    Str why = reason.s && len(reason) ? reason : StrL("no native webview");
+    TempStr message = fmt("WebViewState could not create a webview: %s", why);
+    if (reason.s && StrContains(reason, StrL("X11"))) {
+        message =
+            fmt("%s. In a Wayland session, start gpui-shell with "
+                "`WAYLAND_DISPLAY=` to run under XWayland",
+                Str(message));
+    }
+    return build->Fail(message);
+}
+
+static bool NewWebViewState(shell::StateBuild* build,
+                            const ComponentArgument* args, int count) {
+    if (count != 1 || !args ||
+        args[0].kind != shell::ComponentArgumentKind::String) {
+        return build->Fail(StrL("WebViewState expects one http or https URL"));
+    }
+    Str url = args[0].string;
+    if (!WebDocumentNavigable(url)) {
+        return build->Fail(
+            fmt("WebViewState expects an http or https URL, got `%s`", url));
+    }
+    ShellWebView* state = build->New<ShellWebView>();
+    state->app = build->app;
+    state->bridge = EntityNewState<Bridge>(build->app);
+    Bridge* bridge = state->bridge.Get(build->app);
+    if (!bridge) return CreationFailed(build);
+    bridge->window = build->window;
+    bridge->app = build->app;
+    bridge->selfId = state->bridge.id;
+
+    wry::WebViewAttributes attrs;
+    attrs.url = url;
+    attrs.ctx = bridge;
+    attrs.navigationHandler = &OnNavigate;
+    attrs.ipcHandler = &OnIpc;
+    attrs.onPageLoadHandler = &OnPageLoad;
+    Ctx cx = {};
+    cx.app = build->app;
+    cx.win = build->window;
+    state->view = WebViewNew(&cx, &attrs);
+    WebView* page = state->view.Get(build->app);
+    if (!page || !WebViewRaw(page)) return CreationFailed(build);
+    if (!state->ApplyTheme(build->app)) {
+        return build->Fail(
+            StrL("WebViewState could not create a webview: set_theme failed"));
+    }
+    return true;
+}
+
+static WebView* PageOf(void* state) {
+    ShellWebView* self = (ShellWebView*)state;
+    return self ? self->view.Get(self->app) : nullptr;
+}
+
+static bool OneString(shell::StateCall* call,
+                      const shell::ComponentDataValue* args, int count,
+                      const char* context, Str* out) {
+    if (count == 1 && args && args[0].kind == shell::DataKind::String) {
+        *out = args[0].string;
+        return true;
+    }
+    return call->Fail(fmt("%s expects one string", Str(context)));
+}
+
+static bool RequireUrl(shell::StateCall* call, Str url, const char* context) {
+    if (WebDocumentNavigable(url)) return true;
+    return call->Fail(
+        fmt("%s expects an http or https URL, got `%s`", Str(context), url));
+}
+
+static bool LoadUrl(shell::StateCall* call, void* state,
+                    const shell::ComponentDataValue* args, int count) {
+    Str url;
+    if (!OneString(call, args, count, "WebViewState.load_url", &url) ||
+        !RequireUrl(call, url, "WebViewState.load_url"))
+        return false;
+    wry::WebView* raw = WebViewRaw(PageOf(state));
+    if (!raw || !wry::WebViewLoadUrl(raw, url)) {
+        return call->Fail(StrL("WebViewState.load_url could not navigate"));
+    }
+    call->out = shell::ComponentDataValue::Null();
+    return true;
+}
+
+static bool Url(shell::StateCall* call, void* state,
+                const shell::ComponentDataValue*, int count) {
+    if (count != 0)
+        return call->Fail(StrL("WebViewState.url expects no arguments"));
+    wry::WebView* raw = WebViewRaw(PageOf(state));
+    Str url = raw ? wry::WebViewUrlTemp(raw) : Str{};
+    if (!url.s) return call->Fail(StrL("WebViewState.url could not be read"));
+    call->out = shell::ComponentDataValue::String(StrDup(call->a, url));
+    return true;
+}
+
+static bool History(shell::StateCall* call, void* state, int count,
+                    const char* name, const char* script) {
+    if (count != 0) {
+        return call->Fail(fmt("%s expects no arguments", Str(name)));
+    }
+    wry::WebView* raw = WebViewRaw(PageOf(state));
+    if (!raw || !wry::WebViewEval(raw, Str(script))) {
+        return call->Fail(fmt("%s failed", Str(name)));
+    }
+    call->out = shell::ComponentDataValue::Null();
+    return true;
+}
+
+static bool Back(shell::StateCall* call, void* state,
+                 const shell::ComponentDataValue*, int count) {
+    return History(call, state, count, "WebViewState.back", "history.back();");
+}
+
+static bool Forward(shell::StateCall* call, void* state,
+                    const shell::ComponentDataValue*, int count) {
+    return History(call, state, count, "WebViewState.forward",
+                   "history.forward();");
+}
+
+static bool Reload(shell::StateCall* call, void* state,
+                   const shell::ComponentDataValue*, int count) {
+    if (count != 0) {
+        return call->Fail(StrL("WebViewState.reload expects no arguments"));
+    }
+    wry::WebView* raw = WebViewRaw(PageOf(state));
+    if (!raw || !wry::WebViewReload(raw)) {
+        return call->Fail(StrL("WebViewState.reload failed"));
+    }
+    call->out = shell::ComponentDataValue::Null();
+    return true;
+}
+
+static bool SetZoom(shell::StateCall* call, void* state,
+                    const shell::ComponentDataValue* args, int count) {
+    if (count != 1 || !args || args[0].kind != shell::DataKind::Number ||
+        !isfinite(args[0].number) || !(args[0].number > 0)) {
+        return call->Fail(
+            StrL("WebViewState.set_zoom expects a positive number, where 1 is "
+                 "the page's natural size"));
+    }
+    if (!WebViewSetPageZoom(PageOf(state), args[0].number)) {
+        return call->Fail(StrL("WebViewState.set_zoom could not be applied"));
+    }
+    call->out = shell::ComponentDataValue::Null();
+    return true;
+}
+
+static bool Zoom(shell::StateCall* call, void* state,
+                 const shell::ComponentDataValue*, int count) {
+    if (count != 0)
+        return call->Fail(StrL("WebViewState.zoom expects no arguments"));
+    WebView* page = PageOf(state);
+    if (!page) return call->Fail(StrL("WebViewState.zoom could not be read"));
+    call->out = shell::ComponentDataValue::Number(WebViewPageZoom(page));
+    return true;
+}
+
+static bool component_shell_media_webview_SetTheme(shell::StateCall* call, void* state,
+                     const shell::ComponentDataValue* args, int count) {
+    Str name;
+    if (!OneString(call, args, count, "WebViewState.set_theme", &name))
+        return false;
+    ShellWebView* self = (ShellWebView*)state;
+    if (StrEq(name, "auto")) {
+        self->followApp = true;
+    } else if (StrEq(name, "light")) {
+        self->followApp = false;
+        self->chosen = PageTheme::Light;
+    } else if (StrEq(name, "dark")) {
+        self->followApp = false;
+        self->chosen = PageTheme::Dark;
+    } else if (StrEq(name, "system")) {
+        self->followApp = false;
+        self->chosen = PageTheme::System;
+    } else {
+        return call->Fail(
+            fmt("WebViewState.set_theme expects \"auto\", \"light\", \"dark\" "
+                "or \"system\", got `%s`",
+                name));
+    }
+    if (!self->ApplyTheme(call->app)) {
+        return call->Fail(StrL("WebViewState.set_theme could not be applied"));
+    }
+    call->out = shell::ComponentDataValue::Null();
+    return true;
+}
+
+static bool EvaluateScript(shell::StateCall* call, void* state,
+                           const shell::ComponentDataValue* args, int count) {
+    Str script;
+    if (!OneString(call, args, count, "WebViewState.evaluate_script", &script))
+        return false;
+    wry::WebView* raw = WebViewRaw(PageOf(state));
+    if (!raw || !wry::WebViewEval(raw, script)) {
+        return call->Fail(StrL("WebViewState.evaluate_script could not run"));
+    }
+    call->out = shell::ComponentDataValue::Null();
+    return true;
+}
+
+struct Op {
+    enum Kind : uint8_t {
+        Message,
+        Load
+    } kind = Message;
+    ComponentArgument callback = {};
+};
+
+static El* component_shell_media_webview_Materialize(MaterializeRequest* request) {
+    const ComponentArgument* argument = request->PayloadAs<ComponentArgument>();
+    if (!argument) {
+        return request->Fail(StrL("WebView received an incompatible payload"));
+    }
+    if (request->ChildrenLen() != 0) {
+        return request->Fail(StrL("WebView does not accept children"));
+    }
+    ShellWebView* state =
+        request->StateAs<ShellWebView>(*argument, "WebViewState");
+    if (!state) return nullptr;
+    Bridge* bridge = state->bridge.Get(request->cx->app);
+    if (!bridge) return request->Fail(StrL("WebViewState has no page"));
+
+    bridge->runtime = request->runtime;
+    bridge->message = {};
+    bridge->load = {};
+    for (int i = 0; i < request->MethodCount(); i++) {
+        shell::RecordedComponentMethod method = request->Method(i);
+        const Op* op = shell::PayloadAs<Op>(method.payload);
+        if (!op) continue;
+        shell::ComponentCallback callback = request
+                                                ->ResolveCallback(op->callback);
+        if (op->kind == Op::Message)
+            bridge->message = callback;
+        else
+            bridge->load = callback;
+    }
+    if (!state->ApplyTheme(request->cx->app)) {
+        return request->Fail(StrL("WebView could not apply its theme"));
+    }
+    El* box = Div(request->cx->a)->Child(WebViewEl(state->view, request->cx));
+    return request->ApplyStyle(box);
+}
+
+static bool component_shell_media_webview_Construct(PayloadBuild* build, const ComponentArgument* args,
+                      int count) {
+    if (count != 1 || args[0].kind != shell::ComponentArgumentKind::Entity) {
+        return build->Fail(StrL("WebView expects one WebViewState"));
+    }
+    *build->New<ComponentArgument>() = args[0];
+    return true;
+}
+
+static bool RecordListener(PayloadBuild* build, const ComponentArgument* args,
+                           int count, Op::Kind kind, const char* name) {
+    if (count != 1 || args[0].kind != shell::ComponentArgumentKind::Callback) {
+        return build->Fail(fmt("%s expects a listener", Str(name)));
+    }
+    Op* op = build->New<Op>();
+    op->kind = kind;
+    op->callback = args[0];
+    return true;
+}
+
+static bool component_shell_media_webview_RecordMessage(PayloadBuild* build, const ComponentArgument* args,
+                          int count) {
+    return RecordListener(build, args, count, Op::Message,
+                          "WebView.on_message");
+}
+
+static bool RecordLoad(PayloadBuild* build, const ComponentArgument* args,
+                       int count) {
+    return RecordListener(build, args, count, Op::Load, "WebView.on_load");
+}
+
+static constexpr ArgumentDescriptor component_shell_media_webview_kStateArgs[] = {{"url", SchemaString()}};
+static constexpr shell::StateMethodDescriptor component_shell_media_webview_kStateMethods[] = {
+    {"load_url", "(url: string): void", false, &LoadUrl},
+    {"url", "(): string", true, &Url},
+    {"back", "(): void", false, &Back},
+    {"forward", "(): void", false, &Forward},
+    {"reload", "(): void", false, &Reload},
+    {"set_zoom", "(zoom: number): void", false, &SetZoom},
+    {"zoom", "(): number", true, &Zoom},
+    {"set_theme", "(theme: \"auto\" | \"light\" | \"dark\" | \"system\"): void",
+     false, &component_shell_media_webview_SetTheme},
+    {"evaluate_script", "(script: string): void", false, &EvaluateScript},
+};
+static constexpr shell::StateDescriptor component_shell_media_webview_kState = {
+    "WebViewState",
+    "WebViewState",
+    component_shell_media_webview_kStateArgs,
+    "A retained native web page loaded from an http or https URL. The page "
+    "posts text to the script with `window.ipc.postMessage(text)`.",
+    &NewWebViewState,
+    component_shell_media_webview_kStateMethods,
+};
+
+static constexpr ArgumentDescriptor component_shell_media_webview_kConstructorArgs[] = {
+    {"state", SchemaEntity("WebViewState")}};
+static constexpr ConstructorDescriptor component_shell_media_webview_kConstructors[] = {
+    {"WebView", component_shell_media_webview_kConstructorArgs, &component_shell_media_webview_Construct}};
+static constexpr ArgumentDescriptor kMessageArgs[] = {
+    {"listener", SchemaCallback("(message: string, cx: Context) => void")}};
+static constexpr ArgumentDescriptor kLoadArgs[] = {
+    {"listener", SchemaCallback("(url: string, cx: Context) => void")}};
+static constexpr MethodDescriptor component_shell_media_webview_kMethods[] = {
+    {"on_message", kMessageArgs,
+     "Receives the text a page sends with `window.ipc.postMessage(text)`.",
+     &component_shell_media_webview_RecordMessage},
+    {"on_load", kLoadArgs,
+     "Receives the URL of each document that finishes loading, whether the "
+     "script or the page navigated.",
+     &RecordLoad},
+};
+static constexpr ComponentDescriptor kWebView = {
+    "WebView", component_shell_media_webview_kConstructors, component_shell_media_webview_kMethods,
+    "Places a WebViewState's page in the layout. Shell style sizes it; "
+    "children are rejected. The native page draws above GPUI content it "
+    "overlaps on Windows, and on Linux needs an X11 or XWayland window.",
+    &component_shell_media_webview_Materialize};
+
+}
+
+namespace gpui::component_shell {
+
+bool RegisterMediaWebView(shell::ComponentRegistry* registry,
+                          shell::RegistryError* error) {
+    return registry->RegisterState(&media::webview::component_shell_media_webview_kState, error) &&
+           registry->Register(&media::webview::kWebView, error);
 }
 
 }
@@ -130113,7 +135833,7 @@ static bool component_shell_window_effects_mod_RecordDescription(PayloadBuild* b
     return component_shell_window_effects_mod_RecordText<Op::Description>(build, args, count) ||
            TextFailure(build, "description");
 }
-static bool RecordMessage(PayloadBuild* build, const ComponentArgument* args,
+static bool component_shell_window_effects_mod_RecordMessage(PayloadBuild* build, const ComponentArgument* args,
                           int count) {
     return component_shell_window_effects_mod_RecordText<Op::Description>(build, args, count) ||
            TextFailure(build, "message");
@@ -130266,7 +135986,7 @@ static constexpr ConstructorDescriptor kNotificationConstructors[] = {
     {"Notification", component_shell_window_effects_mod_kArguments, &component_shell_window_effects_mod_Construct<3>}};
 static constexpr MethodDescriptor kNotificationMethods[] = {
     kTitle,
-    {"message", component_shell_window_effects_mod_kTextArgs, kMethodDocumentation, &RecordMessage},
+    {"message", component_shell_window_effects_mod_kTextArgs, kMethodDocumentation, &component_shell_window_effects_mod_RecordMessage},
     {"type", kTypeArgs, kMethodDocumentation, &RecordType},
     {"on_click", kCallbackArgs, kMethodDocumentation,
      &component_shell_window_effects_mod_RecordCallback<Op::OnClick>},
@@ -157874,7 +163594,9 @@ bool ComponentRegistry::RegisterState(const StateDescriptor* d,
             if (strcmp(d->methods[j].name, d->methods[i].name) == 0)
                 repeated = true;
         }
-        if (!IsJavaScriptIdentifier(S(d->methods[i].name)) || repeated) {
+
+        if (!IsJavaScriptIdentifier(S(d->methods[i].name)) || repeated ||
+            strcmp(d->methods[i].name, "release") == 0) {
             RegistryError e;
             e.kind = RegistryErrorKind::InvalidMethod;
             e.component = d->kind;
@@ -157993,6 +163715,9 @@ Str FrozenComponentRegistry::JavaScriptModuleSource(Str stateProof) const {
                 StrL("on:(event,handler)=>globalThis.__component_input_on("
                      "__stateProof,handle,event,handler),"));
         }
+        source.Append(StrL("release:()=>globalThis.__gpui_components["));
+        shell_component_registry_AppendQuoted(&source, fmt("%s.release", Str(state->exportName)));
+        source.Append(StrL("](__stateProof, handle),"));
         source
             .Append(StrL("}); __stateHandles.set(value, handle); return "
                          "value; }\n"));
@@ -158102,10 +163827,17 @@ static void AppendJsdoc(StrBuilder* out, const char* documentation,
     out->Append(StrL(" */\n"));
 }
 
+static const char* shell_component_registry_CatalogModule(const FrozenComponentRegistry* components) {
+    const char* name = components ? components->ModuleSpecifier() : nullptr;
+    if (!name || name[0] == 0) return kDefaultComponentModule;
+    return name;
+}
+
 void AppendComponentElementUnion(StrBuilder* out,
                                  const FrozenComponentRegistry* components) {
+    TempStr prefix = fmt(" | import(\"%s\").", Str(shell_component_registry_CatalogModule(components)));
     for (int i = 0; components && i < components->DescriptorCount(); i++) {
-        out->Append(StrL(" | import(\"gpui-component\")."));
+        out->Append(prefix);
         out->Append(S(components->Descriptor((uint32_t)i)->name));
         out->Append(StrL("Element"));
     }
@@ -158114,7 +163846,8 @@ void AppendComponentElementUnion(StrBuilder* out,
 void AppendComponentDeclarations(StrBuilder* out,
                                  const FrozenComponentRegistry* components,
                                  Str inlineTokenTypes) {
-    out->Append(StrL("declare module \"gpui-component\" {\n"));
+    out->Append(
+        fmt("declare module \"%s\" {\n", Str(shell_component_registry_CatalogModule(components))));
     out
         ->Append(StrL("  import { ClickEvent, Context, Element, NativeElement "
                       "} from \"gpui-kit\";\n"));
@@ -158145,6 +163878,12 @@ void AppendComponentDeclarations(StrBuilder* out,
                 "\"blur\", handler: (event: InputEvent, cx: Context) => "
                 "void): boolean"));
         }
+        out->Append(StrL(
+            ";\n    /** Releases the state and its subscriptions now rather "
+            "than with the application. Returns `false` when it was already "
+            "released; a method called afterwards throws. Not allowed during "
+            "render. */\n"
+            "    release(): boolean"));
         out->Append(StrL(" }\n"));
         AppendJsdoc(out, state->documentation, nullptr, "  ");
 
@@ -158353,6 +164092,20 @@ void* ComponentStateStore::Get(uint64_t handle, const char* kind, Str* error,
     if (error)
         *error = StrDup(a, StrL("retained state handle has been released"));
     return nullptr;
+}
+
+bool ComponentStateStore::Remove(uint64_t handle, const char* kind) {
+    if (!kind) return false;
+    for (int i = 0; i < len(entries); i++) {
+        if (entries[i].handle != handle) continue;
+        if (strcmp(entries[i].kind, kind) != 0) return false;
+        Entry entry = entries[i];
+        if (entry.destroy) entry.destroy(entry.value);
+        for (int j = i + 1; j < len(entries); j++) entries[j - 1] = entries[j];
+        entries.len--;
+        return true;
+    }
+    return false;
 }
 
 void ComponentStateStore::ReleaseApplication(void* application) {
@@ -161515,6 +167268,11 @@ source of truth over this guide.
   theme. `#rrggbb` literals bypass the theme and break dark mode.
 - A number length is pixels; a string length is `"auto"`, `"50%"`, `"12px"`
   or `"1rem"`, as far as the Rust signature allows.
+- `.bg(...)` takes a colour or a `Background` from `"gpui-kit"`:
+  `.bg(Background.linear_gradient(180, Background.stop(top, 0), Background.stop(bottom, 1)))`
+  — stop positions are fractions from 0 to 1. `.shadow([...])` takes CSS-like
+  records, `{ x, y, blur, spread, color, inset }`, with CSS blur and CSS
+  stacking (first on top); `[]` clears.
 - `svg(path)` and `image(path)` resolve against the **application root**, not
   the importing file. Keep assets in a directory named after the application.
 - Use `.when(condition, (el) => el.…)` to keep a builder chain in one piece.
@@ -162017,7 +167775,7 @@ static Str EntryText(Str name, bool styled) {
                  "      .size_full()\n"
                  "      .bg(cx.theme().colors.background)\n"
                  "      .child(\n"
-                 "        new TitleBar().child(\n"
+                 "        TitleBar.new().child(\n"
                  "          "
                  "div().text_size(13).font_medium().text_color(cx.theme()."
                  "colors.foreground).child("));
@@ -162036,7 +167794,7 @@ static Str EntryText(Str name, bool styled) {
             ".child(div().text_color(cx.theme().colors.foreground).child(`"
             "Clicked ${this.count} times`))\n"
             "          .child(\n"
-            "            new Button(\"increment\").primary().label(\"Click "
+            "            Button.new(\"increment\").primary().label(\"Click "
             "me\").on_click((_event, cx) => {\n"
             "              this.count += 1;\n"
             "              cx.notify();\n"
@@ -163852,6 +169610,12 @@ InlineTokenHoverListener InlineTokenCallbacks::HoverListener() const {
 
 namespace gpui {
 
+enum class ShellFollowMode : uint8_t {
+    Unset,
+    Normal,
+    Tail
+};
+
 struct MaterialBehavior {
     Str key;
     Str accessibilityLabel;
@@ -163888,6 +169652,7 @@ struct MaterialBehavior {
     bool hasPosition = false;
     int itemToMeasure = 0;
     bool hasItemToMeasure = false;
+    ShellFollowMode followMode = ShellFollowMode::Unset;
     PopupAnchor anchor = PopupAnchor::TopLeft;
     bool hasAnchor = false;
     float fpsFrameBudget = 0;
@@ -163921,6 +169686,8 @@ struct MaterialBehavior {
     shell::CallbackId onLinkClick = 0;
 
     shell::CallbackId onItemSecondaryClick = 0;
+
+    shell::CallbackId onVisibleRangeChange = 0;
     shell::CallbackId onToken = 0;
     shell::CallbackId onTokenClick = 0;
     shell::CallbackId onTokenHover = 0;
@@ -164045,6 +169812,8 @@ static void ResolveBehavior(const shell::SpecNode* node,
                 out->onTokenHover = op.callback;
             else if (StrEq(op.name, StrL("on_item_secondary_click")))
                 out->onItemSecondaryClick = op.callback;
+            else if (StrEq(op.name, StrL("on_visible_range_change")))
+                out->onVisibleRangeChange = op.callback;
             else if (StrEq(op.name, StrL("on_key_down")))
                 out->onKeyDown = op.callback;
             else if (StrEq(op.name, StrL("on_key_up")))
@@ -164236,6 +170005,12 @@ static void ResolveBehavior(const shell::SpecNode* node,
         } else if (StrEq(op.name, StrL("with_item_to_measure_index"))) {
             out->itemToMeasure = (int)AsNumber(op, 0);
             out->hasItemToMeasure = true;
+        } else if (StrEq(op.name, StrL("with_follow_mode"))) {
+            Str mode = AsString(op, 0);
+            if (StrEq(mode, StrL("tail")))
+                out->followMode = ShellFollowMode::Tail;
+            else if (StrEq(mode, StrL("normal")))
+                out->followMode = ShellFollowMode::Normal;
         } else if (StrEq(op.name, StrL("key_context"))) {
             out->keyContext = AsString(op, 0);
         } else if (StrEq(op.name, StrL("aria_level"))) {
@@ -164466,23 +170241,11 @@ static void PathEllipticalArc(Path* path, Point from, Point to, float rx,
 
 static bool MaterialPathBackground(const shell::BackgroundSpec& spec,
                                    Background* out) {
-    Hsla first = {}, second = {};
-    shell::Bridged value = shell::Bridged::String(
-        spec.kind == shell::BackgroundKind::LinearGradient ? spec.fromColor
-                                                           : spec.color);
-    if (!shell::BridgedAsColor(value, &first)) return false;
-    Background result = HslaToRgba(first);
-    if (spec.kind == shell::BackgroundKind::LinearGradient) {
-        if (!shell::BridgedAsColor(shell::Bridged::String(spec.toColor),
-                                   &second))
-            return false;
-        result = BackgroundLinear(
-            spec.angle, ColorStopAt(HslaToRgba(first), spec.fromPosition),
-            ColorStopAt(HslaToRgba(second), spec.toPosition));
-    }
 
-    *out = BackgroundOpacity(result, spec.opacity);
-    return true;
+    ShellError ignored;
+    bool ok = shell::BackgroundSpecResolve(spec, out, &ignored);
+    ShellErrorClear(&ignored);
+    return ok;
 }
 
 static void PaintMaterialPath(PaintCtx* ctx, El* element, void* user) {
@@ -164884,7 +170647,65 @@ static void MaterialVirtualRange(void* user, Ctx* cx, int first, int end,
     }
 }
 
+void ListKeySearchInit(ListKeySearch* search, int index, int oldCount,
+                       int newCount) {
+    if (!search) return;
+    *search = {};
+    search->index = index;
+    search->newCount = newCount;
+    search->distance = 1;
+    search->maxDistance = index > newCount ? index : newCount;
+
+    if (oldCount >= 0 &&
+        (long long)index + (long long)newCount >= (long long)oldCount) {
+        long long shifted =
+            (long long)index + (long long)newCount - (long long)oldCount;
+        if (shifted != index && shifted >= 0 && shifted <= 0x7fffffffLL) {
+            search->shifted = (int)shifted;
+        }
+    }
+}
+
+int ListKeySearchNext(ListKeySearch* search) {
+    if (!search) return -1;
+    int limit = search->maxDistance * 4 + 8;
+    if (limit < 8) limit = 8;
+    for (int guard = 0; guard < limit; guard++) {
+        int candidate = -1;
+        if (search->phase == 0) {
+            candidate = search->index;
+            search->phase = 1;
+        } else if (search->phase == 1) {
+            search->phase = 2;
+            if (search->shifted < 0) continue;
+            candidate = search->shifted;
+        } else {
+            if (search->distance > search->maxDistance) return -1;
+            if (search->side == 0) {
+                long long added = (long long)search->index + search->distance;
+                search->side = 1;
+                if (added > 0x7fffffffLL) continue;
+                candidate = (int)added;
+            } else {
+                long long below = (long long)search->index - search->distance;
+                search->side = 0;
+                search->distance++;
+                if (below < 0) continue;
+                candidate = (int)below;
+            }
+            if (candidate == search->shifted) continue;
+        }
+        if (candidate >= 0 && candidate < search->newCount) return candidate;
+    }
+    return -1;
+}
+
 static const float kListOverdraw = 160;
+
+enum class ListFollow : uint8_t {
+    Normal,
+    Tail
+};
 
 struct LazyListState {
 
@@ -164897,22 +170718,307 @@ struct LazyListState {
 
     float rowH = 0;
 
-    ~LazyListState() { VecReset(measured); }
+    bool placed = false;
+
+    ListFollow follow = ListFollow::Normal;
+    bool following = false;
+    bool followsTail = false;
+    float viewport = 0;
+
+    bool hasTop = false;
+    int topKeyIndex = -1;
+    shell::CallbackId topGetKey = 0;
+    Str topKey = {};
+
+    bool hasReported = false;
+    int reportedStart = 0;
+    int reportedEnd = 0;
+    int reportedCount = 0;
+
+    ~LazyListState() {
+        VecReset(measured);
+        StrFree(topKey);
+    }
 };
+
+static void ClearListTop(LazyListState* state) {
+    if (!state || !state->hasTop) return;
+    StrFree(state->topKey);
+    state->topKey = {};
+    state->hasTop = false;
+    state->topKeyIndex = -1;
+    state->topGetKey = 0;
+}
+
+static void RememberListTop(ShellRuntime* runtime, LazyListState* state,
+                            shell::CallbackId getKey, int count, Ctx* cx) {
+    if (!state) return;
+    if (state->topItem < 0 || state->topItem >= count) {
+        ClearListTop(state);
+        return;
+    }
+    if (state->hasTop && state->topKeyIndex == state->topItem &&
+        state->topGetKey == getKey) {
+        return;
+    }
+    Str key =
+        runtime ? runtime->ListItemKey(getKey, state->topItem, cx) : Str{};
+    if (!key.s) {
+        ClearListTop(state);
+        return;
+    }
+    ClearListTop(state);
+    state->topKey = key;
+    state->hasTop = true;
+    state->topKeyIndex = state->topItem;
+    state->topGetKey = getKey;
+}
+
+static void SpliceListCount(ShellRuntime* runtime, LazyListState* state,
+                            shell::CallbackId getKey, int count, Ctx* cx) {
+    int oldCount = state->itemCount;
+    int position = state->topItem;
+    float into = state->topInto;
+    if (position >= oldCount) {
+        state->topItem = count;
+        state->topInto = 0;
+    } else if (state->hasTop && runtime) {
+        int found = runtime->FindListItemKey(
+            getKey, state->topKey, state->topKeyIndex, oldCount, count, cx);
+        if (found >= 0) {
+            long long at = (long long)found + (long long)position -
+                           (long long)state->topKeyIndex;
+            if (at < 0) at = 0;
+            if (at > count) at = count;
+            state->topItem = (int)at;
+        } else if (position > count) {
+            state->topItem = count;
+        }
+        state->topInto = into;
+    } else {
+        if (position < 0) position = 0;
+        if (position > count) position = count;
+        state->topItem = position;
+        state->topInto = into;
+    }
+    ClearListTop(state);
+}
 
 static uint32_t LazyListKey(Str id) {
     return KeyedKey((uint32_t)HashClickId(id),
                     (uint32_t)HashClickId(StrL("gpui-shell-lazy-list")));
 }
 
+struct VisibleRangePost {
+    ShellRuntime* runtime = nullptr;
+    shell::CallbackId callback = 0;
+    int start = 0;
+    int end = 0;
+    int count = 0;
+    Window* window = nullptr;
+    App* app = nullptr;
+};
+
+static void RunVisibleRangePost(VisibleRangePost* post) {
+    if (post->runtime) {
+        post->runtime
+            ->DispatchVisibleRange(post->callback, post->start, post->end,
+                                   post->count, post->window, post->app);
+        post->runtime->Release();
+    }
+    Free(nullptr, post);
+}
+
+static void ListVisibleRange(const LazyListState* state, float height,
+                             float padTop, float padBottom, int* startOut,
+                             int* endOut) {
+    int count = state->itemCount;
+    int start = state->topItem;
+    if (start < 0) start = 0;
+    if (start > count) start = count;
+    int end = start;
+    if (height > padTop + padBottom) {
+        float room = height - padTop - padBottom;
+        float along = -state->topInto;
+        while (end < count) {
+            if (along >= room) break;
+            float h = end < state->measured.len ? state->measured[end] : 0;
+            if (h <= 0) break;
+            end++;
+            along += h;
+        }
+    }
+    *startOut = start;
+    *endOut = end;
+}
+
+struct ListRangeHook {
+    void (*inner)(PaintCtx*, El*, void*) = nullptr;
+    void* innerUser = nullptr;
+    ShellRuntime* runtime = nullptr;
+    LazyListState* state = nullptr;
+    shell::CallbackId callback = 0;
+    Window* window = nullptr;
+    App* app = nullptr;
+};
+
+static void ListRangePrePaint(PaintCtx* ctx, El* e, void* user) {
+    auto* hook = (ListRangeHook*)user;
+    if (hook->inner) hook->inner(ctx, e, hook->innerUser);
+    LazyListState* state = hook->state;
+    if (!state) return;
+    if (!hook->callback) {
+        state->hasReported = false;
+        return;
+    }
+    int start = 0;
+    int end = 0;
+    ListVisibleRange(state, e->h, e->style.pad.top, e->style.pad.bottom, &start,
+                     &end);
+    int count = state->itemCount;
+    if (state->hasReported && state->reportedStart == start &&
+        state->reportedEnd == end && state->reportedCount == count) {
+        return;
+    }
+    state->hasReported = true;
+    state->reportedStart = start;
+    state->reportedEnd = end;
+    state->reportedCount = count;
+    if (!hook->runtime || !hook->window || !hook->app) return;
+    auto* post = AllocArray<VisibleRangePost>(1);
+    if (!post) return;
+    post->runtime = hook->runtime->Retain();
+    post->callback = hook->callback;
+    post->start = start;
+    post->end = end;
+    post->count = count;
+    post->window = hook->window;
+    post->app = hook->app;
+    ExecPost(MkFunc0(RunVisibleRangePost, post));
+}
+
 static void OnLazyListScroll(ScriptView*, Ctx* cx, const ScrollEvent* event,
                              int64_t key) {
     LazyListState* state = KeyedState<LazyListState>(cx, (uint32_t)key);
     if (!state || !event) return;
-    state->offset = event->offsetY;
+
+    float next = event->offsetY;
+    if (next < 0) next = 0;
+    if (state->viewport > 0) {
+        float content = VirtualListContentSize(
+            state->measured.len ? state->measured.els : nullptr,
+            state->itemCount);
+        float most = content - state->viewport;
+        if (most < 0) most = 0;
+        if (next > most) next = most;
+    }
+
+    bool towardStart = next + 0.5f < state->offset;
+    state->offset = next;
     VirtualListLogicalFromPixel(
         state->measured.len ? state->measured.els : nullptr, state->itemCount,
-        state->rowH, event->offsetY, &state->topItem, &state->topInto);
+        state->rowH, next, &state->topItem, &state->topInto);
+    if (state->follow == ListFollow::Tail && towardStart) {
+        state->following = false;
+    }
+}
+
+struct ListFollowHook {
+    void (*inner)(PaintCtx*, El*, void*) = nullptr;
+    void* innerUser = nullptr;
+    LazyListState* state = nullptr;
+    ShellRuntime* runtime = nullptr;
+    shell::CallbackId render = 0;
+    shell::CallbackId getKey = 0;
+    shell::CallbackId onItemClick = 0;
+    shell::CallbackId onItemSecondaryClick = 0;
+    Arena* arena = nullptr;
+    App* app = nullptr;
+    Window* window = nullptr;
+};
+
+static float MeasureFollowItem(PaintCtx* ctx, ListFollowHook* hook, int ix) {
+    Ctx cx = {};
+    cx.app = hook->app;
+    cx.win = hook->window;
+    cx.a = hook->arena;
+    El* probe = nullptr;
+    if (hook->runtime) {
+        hook->runtime->RenderVirtualItems(
+            hook->render, hook->getKey, hook->onItemClick,
+            hook->onItemSecondaryClick, ix, ix + 1, &cx, &probe);
+    }
+    if (!probe) return 1.f;
+    float got = MeasureEl(ctx, probe).h;
+    if (got <= 0) got = 1.f;
+    return got;
+}
+
+static void StickListToTail(PaintCtx* ctx, ListFollowHook* hook,
+                            float viewport) {
+    LazyListState* state = hook->state;
+    int count = state->itemCount;
+    float* sizes = state->measured.len ? state->measured.els : nullptr;
+    if (count <= 0 || !sizes) {
+        state->topItem = 0;
+        state->topInto = 0;
+        state->offset = 0;
+        return;
+    }
+    float budget = viewport + kListOverdraw;
+    if (budget < viewport) budget = viewport;
+    float filled = 0;
+    int ix = count;
+    while (ix > 0 && filled < budget) {
+        ix--;
+        float h = MeasureFollowItem(ctx, hook, ix);
+        sizes[ix] = h;
+        filled += h;
+    }
+    float content = VirtualListContentSize(sizes, count);
+    float most = content - viewport;
+    if (most < 0) most = 0;
+    int top = 0;
+    float into = 0;
+    VirtualListLogicalFromPixel(sizes, count, 0, most, &top, &into);
+    state->topItem = top;
+    state->topInto = into;
+    state->offset = most;
+}
+
+static bool ListAtMeasuredEnd(const LazyListState* state, float viewport) {
+    if (!state) return false;
+    const float* sizes = state->measured.len ? state->measured.els : nullptr;
+    float content = VirtualListContentSize(sizes, state->itemCount);
+    float pixel = VirtualListPixelFromLogical(sizes, state->itemCount,
+                                              state->topItem, state->topInto);
+
+    return pixel + viewport >= content - 1.f;
+}
+
+static void ListFollowPrePaint(PaintCtx* ctx, El* e, void* user) {
+    auto* hook = (ListFollowHook*)user;
+    if (!hook) return;
+    float viewport = e && e->h > 0 ? e->h : 0;
+    if (hook->state) hook->state->viewport = viewport;
+    LazyListState* state = hook->state;
+    bool wasFollowing = state && state->following;
+    if (wasFollowing) {
+        StickListToTail(ctx, hook, viewport);
+        VirtualListSetLogicalTop(hook->innerUser, state->topItem,
+                                 state->topInto);
+    }
+    if (hook->inner) hook->inner(ctx, e, hook->innerUser);
+
+    if (!wasFollowing && state && state->follow == ListFollow::Tail &&
+        ListAtMeasuredEnd(state, viewport)) {
+        state->following = true;
+        StickListToTail(ctx, hook, viewport);
+        VirtualListSetLogicalTop(hook->innerUser, state->topItem,
+                                 state->topInto);
+        if (hook->inner) hook->inner(ctx, e, hook->innerUser);
+    }
+    if (state && e) state->offset = e->scrollY;
 }
 
 static El* LazyListElement(Ctx* cx, ShellRuntime* runtime,
@@ -164928,6 +171034,17 @@ static El* LazyListElement(Ctx* cx, ShellRuntime* runtime,
             "GPUI's own, filed under the id it was built with, which is where "
             "a Scrollbar of that name finds it\n",
             name);
+    }
+    if (uniform && behavior.onVisibleRangeChange) {
+        logf(
+            "shell: on_visible_range_change is ignored on a uniform_list: it "
+            "is list that reports its visible range after the frame\n");
+    }
+    if (uniform && behavior.followMode != ShellFollowMode::Unset) {
+        logf(
+            "shell: with_follow_mode is ignored on a uniform_list: GPUI's "
+            "uniform list has no follow mode. It is list that follows its "
+            "tail\n");
     }
     if (!uniform && behavior.hasItemToMeasure) {
         logf(
@@ -164977,12 +171094,35 @@ static El* LazyListElement(Ctx* cx, ShellRuntime* runtime,
         return VirtualList::New(cx, spec->id, opts)->SizeFull();
     }
 
+    bool wantTail = behavior.followMode == ShellFollowMode::Tail;
+    if (state->followsTail != wantTail) {
+        state->followsTail = wantTail;
+        if (wantTail) {
+            state->follow = ListFollow::Tail;
+            state->following = true;
+            state->topItem = count;
+            state->topInto = 0;
+        } else {
+            state->follow = ListFollow::Normal;
+            state->following = false;
+        }
+    }
+    if (!state->placed) {
+        state->placed = true;
+        if (!state->following && state->topItem >= count) state->topItem = 0;
+    } else if (state->itemCount != count && !state->following) {
+
+        SpliceListCount(runtime, state, spec->getKey, count, cx);
+    }
     if (state->itemCount != count) {
         VecClear(state->measured);
         for (int i = 0; i < count; i++) VecAppend(state->measured, 0.f);
         state->itemCount = count;
-        if (state->topItem >= count) state->topItem = 0;
     }
+    if (state->following)
+        ClearListTop(state);
+    else
+        RememberListTop(runtime, state, spec->getKey, count, cx);
     VirtualListOpts opts;
     opts.count = count;
     opts.sizes = state->measured.len ? state->measured.els : nullptr;
@@ -164995,7 +171135,36 @@ static El* LazyListElement(Ctx* cx, ShellRuntime* runtime,
     opts.user = user;
     opts.scrollId = scrollId;
     opts.onScroll = onScroll;
-    return VirtualList::New(cx, spec->id, opts)->SizeFull();
+    El* list = VirtualList::New(cx, spec->id, opts)->SizeFull();
+    if (state->follow == ListFollow::Tail) {
+        auto* follow = ArenaNew<ListFollowHook>(cx->a);
+        follow->inner = list->prePaint;
+        follow->innerUser = list->customUser;
+        follow->state = state;
+        follow->runtime = runtime;
+        follow->render = spec->renderItems;
+        follow->getKey = spec->getKey;
+        follow->onItemClick = behavior.onItemClick;
+        follow->onItemSecondaryClick = behavior.onItemSecondaryClick;
+        follow->arena = cx->a;
+        follow->app = cx->app;
+        follow->window = cx->win;
+        list->prePaint = &ListFollowPrePaint;
+        list->customUser = follow;
+    }
+    if (behavior.onVisibleRangeChange || state->hasReported) {
+        auto* hook = ArenaNew<ListRangeHook>(cx->a);
+        hook->inner = list->prePaint;
+        hook->innerUser = list->customUser;
+        hook->runtime = runtime;
+        hook->state = state;
+        hook->callback = behavior.onVisibleRangeChange;
+        hook->window = cx->win;
+        hook->app = cx->app;
+        list->prePaint = &ListRangePrePaint;
+        list->customUser = hook;
+    }
+    return list;
 }
 
 static El* DockAreaElement(Ctx* cx, ShellRuntime* runtime,
@@ -165666,6 +171835,23 @@ static El* shell_materialize_Construct(Ctx* cx, ShellRuntime* runtime,
             user->getKey = list->getKey;
             user->onItemClick = behavior.onItemClick;
             user->onItemSecondaryClick = behavior.onItemSecondaryClick;
+            if (behavior.onVisibleRangeChange) {
+                logf(
+                    "shell: on_visible_range_change is ignored on a %s: it "
+                    "is list that reports its visible range after the frame\n",
+                    list->axis == Axis::Horizontal ? StrL("h_virtual_list")
+                                                   : StrL("v_virtual_list"));
+            }
+            if (behavior.followMode != ShellFollowMode::Unset) {
+                logf(
+                    "shell: with_follow_mode is ignored on a %s: it places "
+                    "rows by the sizes the script states and has no follow "
+                    "mode. `scroll_to_bottom` on its "
+                    "VirtualListScrollHandle is how a script keeps it at "
+                    "the end\n",
+                    list->axis == Axis::Horizontal ? StrL("h_virtual_list")
+                                                   : StrL("v_virtual_list"));
+            }
             VirtualListOpts opts;
             opts.count = list->sizeCount;
             opts.sizes = sizes;
@@ -171618,6 +177804,71 @@ static bool JsArrayString(JSContext* ctx, JSValueConst array, uint32_t index,
     return ok;
 }
 
+static bool ParseFiniteText(Str text, float* out);
+
+static bool FillBackgroundSpec(Str kind, Str* values, int count, float opacity,
+                               Str colorSpace, shell::BackgroundSpec* out,
+                               const char** error) {
+    if (!isfinite(opacity) || opacity < 0) {
+        *error = "background opacity must be finite and non-negative";
+        return false;
+    }
+    *out = {};
+    out->opacity = opacity;
+    out->colorSpace = colorSpace;
+    if (StrEq(kind, StrL("solid"))) {
+        if (count < 1) {
+            *error = "solid background needs a color";
+            return false;
+        }
+        out->kind = shell::BackgroundKind::Solid;
+        out->color = values[0];
+        return true;
+    }
+    if (StrEq(kind, StrL("linear-gradient"))) {
+        float angle = 0, from = 0, to = 0;
+        if (count < 5 || !ParseFiniteText(values[0], &angle) ||
+            !ParseFiniteText(values[2], &from) ||
+            !ParseFiniteText(values[4], &to)) {
+            *error = "gradient angle, colors and stop positions must be finite";
+            return false;
+        }
+        out->kind = shell::BackgroundKind::LinearGradient;
+        out->angle = angle;
+        out->fromColor = values[1];
+        out->fromPosition = from;
+        out->toColor = values[3];
+        out->toPosition = to;
+        return true;
+    }
+    if (StrEq(kind, StrL("pattern-slash"))) {
+        float width = 0, interval = 0;
+        if (count < 3 || !ParseFiniteText(values[1], &width) ||
+            !ParseFiniteText(values[2], &interval)) {
+            *error = "slash pattern width and interval must be finite";
+            return false;
+        }
+        out->kind = shell::BackgroundKind::PatternSlash;
+        out->color = values[0];
+        out->width = width;
+        out->interval = interval;
+        return true;
+    }
+    if (StrEq(kind, StrL("checkerboard"))) {
+        float size = 0;
+        if (count < 2 || !ParseFiniteText(values[1], &size)) {
+            *error = "checkerboard size must be finite";
+            return false;
+        }
+        out->kind = shell::BackgroundKind::Checkerboard;
+        out->color = values[0];
+        out->size = size;
+        return true;
+    }
+    *error = "unknown Background kind";
+    return false;
+}
+
 static bool ParseFiniteText(Str text, float* out) {
     if (!text.s || len(text) <= 0 || len(text) >= 64) return false;
     TempStr buf = StrDupTemp(text);
@@ -171662,41 +177913,12 @@ static JSValue NativePath(JSContext* ctx, JSValueConst, int argc,
     component.kind = JS_ToBool(ctx, argv[0]) ? shell::ComponentKind::PathFill
                                              : shell::ComponentKind::PathStroke;
     component.strokeWidth = (float)width;
-    component.background.opacity = (float)opacity;
-    component.background.colorSpace = colorSpace;
-    bool valid = true;
-    if (StrEq(kind, StrL("solid"))) {
-        component.background.kind = shell::BackgroundKind::Solid;
-        valid = count64 >= 1;
-        if (valid) component.background.color = values[0];
-    } else if (StrEq(kind, StrL("linear-gradient"))) {
-        component.background.kind = shell::BackgroundKind::LinearGradient;
-        valid =
-            count64 >= 5 &&
-            ParseFiniteText(values[0], &component.background.angle) &&
-            ParseFiniteText(values[2], &component.background.fromPosition) &&
-            ParseFiniteText(values[4], &component.background.toPosition);
-        if (valid) {
-            component.background.fromColor = values[1];
-            component.background.toColor = values[3];
-        }
-    } else if (StrEq(kind, StrL("pattern-slash"))) {
-        component.background.kind = shell::BackgroundKind::PatternSlash;
-        valid = count64 >= 3 &&
-                ParseFiniteText(values[1], &component.background.width) &&
-                ParseFiniteText(values[2], &component.background.interval);
-        if (valid) component.background.color = values[0];
-    } else if (StrEq(kind, StrL("checkerboard"))) {
-        component.background.kind = shell::BackgroundKind::Checkerboard;
-        valid = count64 >= 2 &&
-                ParseFiniteText(values[1], &component.background.size);
-        if (valid) component.background.color = values[0];
-    } else {
-        valid = false;
-    }
-    if (!valid) {
+    const char* why = nullptr;
+    if (!FillBackgroundSpec(kind, values, (int)count64, (float)opacity,
+                            colorSpace, &component.background, &why)) {
         ArenaDelete(arena);
-        return JS_ThrowTypeError(ctx, "invalid path Background description");
+        return JS_ThrowTypeError(
+            ctx, "%s", why ? why : "invalid path Background description");
     }
     shell::SpecId id = impl->scratch->Push(component);
     ArenaDelete(arena);
@@ -171796,7 +178018,7 @@ static JSValue NativeSlot(JSContext* ctx, JSValueConst, int argc,
 static bool IsCallbackMethod(Str name) {
     static const char names[] =
         "on_click\0on_mouse_move\0on_hover\0on_item_click\0"
-        "on_item_secondary_click\0on_change\0"
+        "on_item_secondary_click\0on_visible_range_change\0on_change\0"
         "on_open_change\0on_confirm\0on_dismiss\0on_step\0on_resize\0"
         "on_key_down\0on_key_up\0on_mouse_down_out\0on_scroll_wheel\0"
 
@@ -171851,7 +178073,7 @@ static bool IsBehavior(Str name) {
         "open\0default_open\0overlay_closable\0anchor\0mouse_button\0"
         "open_delay\0close_delay\0transition\0spring\0selectable\0"
         "scrollable\0"
-        "with_item_to_measure_index\0close\0"
+        "with_item_to_measure_index\0with_follow_mode\0close\0"
         "key_context\0aria_level\0keep_mounted\0"
         "readonly\0invalid\0focus_ring\0aria_label\0masked\0placeholder\0"
         "content_type\0align\0label\0icon\0variant\0loading\0outline\0"
@@ -171860,6 +178082,174 @@ static bool IsBehavior(Str name) {
         if (StrEq(name, at)) return true;
     }
     return false;
+}
+
+static bool ShadowFieldKnown(const char* key) {
+    return key && (strcmp(key, "x") == 0 || strcmp(key, "y") == 0 ||
+                   strcmp(key, "blur") == 0 || strcmp(key, "spread") == 0 ||
+                   strcmp(key, "color") == 0 || strcmp(key, "inset") == 0);
+}
+
+static bool ShadowNumber(JSContext* ctx, JSValueConst object, const char* field,
+                         bool nonNegative, int index, float* out) {
+    JSValue value = JS_GetPropertyStr(ctx, object, field);
+    if (JS_IsUndefined(value)) {
+        JS_FreeValue(ctx, value);
+        *out = 0;
+        return true;
+    }
+    double number = 0;
+    bool ok = JS_IsNumber(value) && JS_ToFloat64(ctx, &number, value) == 0 &&
+              isfinite(number) && (!nonNegative || number >= 0);
+    JS_FreeValue(ctx, value);
+    if (!ok) {
+        JS_ThrowTypeError(ctx,
+                          "shadow %d: `%s` must be a finite%s number of pixels",
+                          index, field, nonNegative ? ", non-negative" : "");
+        return false;
+    }
+    *out = (float)number;
+    return true;
+}
+
+static bool BridgeShadowList(JSContext* ctx, JSValueConst array, Arena* arena,
+                             shell::Bridged* out) {
+    int64_t length = 0;
+    if (JS_GetLength(ctx, array, &length) < 0) return false;
+    if (length > 32) {
+        JS_ThrowTypeError(ctx, "shadow list is too large");
+        return false;
+    }
+    shell::ShadowSpec* specs =
+        length > 0
+            ? (shell::ShadowSpec*)Alloc(
+                  arena, (int)(sizeof(shell::ShadowSpec) * (size_t)length))
+            : nullptr;
+    for (int64_t i = 0; i < length; i++) {
+        JSValue entry = JS_GetPropertyUint32(ctx, array, (uint32_t)i);
+        bool object = JS_IsObject(entry) && !JS_IsArray(entry) &&
+                      !JS_IsFunction(ctx, entry);
+        if (!object) {
+            JS_FreeValue(ctx, entry);
+            JS_ThrowTypeError(ctx,
+                              "shadow %d: expected an object like { y: 1, "
+                              "blur: 2, color: \"#00000066\" }",
+                              (int)i);
+            return false;
+        }
+        JSPropertyEnum* properties = nullptr;
+        uint32_t count = 0;
+        if (JS_GetOwnPropertyNames(ctx, &properties, &count, entry,
+                                   JS_GPN_STRING_MASK | JS_GPN_ENUM_ONLY) < 0) {
+            JS_FreeValue(ctx, entry);
+            return false;
+        }
+        bool known = true;
+        for (uint32_t p = 0; known && p < count; p++) {
+            const char* key = JS_AtomToCString(ctx, properties[p].atom);
+            known = ShadowFieldKnown(key);
+            if (!known) {
+                JS_ThrowTypeError(ctx,
+                                  "shadow %d: unknown field `%s`; a shadow "
+                                  "takes x, y, blur, spread, color, inset",
+                                  (int)i, key ? key : "");
+            }
+            JS_FreeCString(ctx, key);
+        }
+        JS_FreePropertyEnum(ctx, properties, count);
+        if (!known) {
+            JS_FreeValue(ctx, entry);
+            return false;
+        }
+        shell::ShadowSpec spec = {};
+        if (!ShadowNumber(ctx, entry, "x", false, (int)i, &spec.x) ||
+            !ShadowNumber(ctx, entry, "y", false, (int)i, &spec.y) ||
+            !ShadowNumber(ctx, entry, "blur", true, (int)i, &spec.blur) ||
+            !ShadowNumber(ctx, entry, "spread", false, (int)i, &spec.spread)) {
+            JS_FreeValue(ctx, entry);
+            return false;
+        }
+        JSValue color = JS_GetPropertyStr(ctx, entry, "color");
+        Str text;
+        bool colorOk = JS_IsString(color) && JsString(ctx, color, arena, &text);
+        JS_FreeValue(ctx, color);
+        if (!colorOk) {
+            JS_FreeValue(ctx, entry);
+            JS_ThrowTypeError(ctx,
+                              "shadow %d: `color` is required and must be a "
+                              "#rgb, #rrggbb or #rrggbbaa string",
+                              (int)i);
+            return false;
+        }
+        spec.color = text;
+        JSValue inset = JS_GetPropertyStr(ctx, entry, "inset");
+        if (JS_IsUndefined(inset)) {
+            spec.inset = false;
+        } else if (JS_IsBool(inset)) {
+            spec.inset = JS_ToBool(ctx, inset) != 0;
+        } else {
+            JS_FreeValue(ctx, inset);
+            JS_FreeValue(ctx, entry);
+            JS_ThrowTypeError(ctx, "shadow %d: `inset` must be a boolean",
+                              (int)i);
+            return false;
+        }
+        JS_FreeValue(ctx, inset);
+        JS_FreeValue(ctx, entry);
+        specs[i] = spec;
+    }
+    *out = shell::Bridged::Shadows(specs, (int)length);
+    return true;
+}
+
+static bool BridgeBackgroundObject(JSContext* ctx, JSValueConst value,
+                                   Arena* arena, shell::Bridged* out) {
+    if (!JS_IsObject(value) || JS_IsArray(value) || JS_IsFunction(ctx, value))
+        return false;
+    JSValue marker = JS_GetPropertyStr(ctx, value, "__background");
+    bool isBackground = !JS_IsException(marker) && !JS_IsUndefined(marker) &&
+                        JS_ToBool(ctx, marker) != 0;
+    if (JS_IsException(marker)) {
+        JS_FreeValue(ctx, marker);
+        return false;
+    }
+    JS_FreeValue(ctx, marker);
+    if (!isBackground) return false;
+
+    JSValue kindV = JS_GetPropertyStr(ctx, value, "kind");
+    JSValue valuesV = JS_GetPropertyStr(ctx, value, "values");
+    JSValue opacityV = JS_GetPropertyStr(ctx, value, "opacityFactor");
+    JSValue spaceV = JS_GetPropertyStr(ctx, value, "colorSpace");
+    Str kind, colorSpace;
+    double opacity = 0;
+    int64_t count = 0;
+    bool ok = JsString(ctx, kindV, arena, &kind) && JS_IsArray(valuesV) &&
+              JS_GetLength(ctx, valuesV, &count) == 0 && count >= 0 &&
+              count <= 8 && JS_ToFloat64(ctx, &opacity, opacityV) == 0 &&
+              JsString(ctx, spaceV, arena, &colorSpace);
+    Str values[8] = {};
+    for (int i = 0; ok && i < (int)count; i++) {
+        ok = JsArrayString(ctx, valuesV, (uint32_t)i, arena, &values[i]);
+    }
+    JS_FreeValue(ctx, kindV);
+    JS_FreeValue(ctx, valuesV);
+    JS_FreeValue(ctx, opacityV);
+    JS_FreeValue(ctx, spaceV);
+    if (!ok) {
+        if (!JS_HasException(ctx)) {
+            JS_ThrowTypeError(ctx, "invalid Background description");
+        }
+        return false;
+    }
+    shell::BackgroundSpec* spec = ArenaNew<shell::BackgroundSpec>(arena);
+    const char* why = nullptr;
+    if (!FillBackgroundSpec(kind, values, (int)count, (float)opacity,
+                            colorSpace, spec, &why)) {
+        JS_ThrowTypeError(ctx, "%s", why ? why : "invalid Background");
+        return false;
+    }
+    *out = shell::Bridged::Background(spec);
+    return true;
 }
 
 static bool BridgeValue(JSContext* ctx, JSValueConst value, Arena* arena,
@@ -171884,10 +178274,46 @@ static bool BridgeValue(JSContext* ctx, JSValueConst value, Arena* arena,
         *out = shell::Bridged::String(text);
         return true;
     }
+    if (BridgeBackgroundObject(ctx, value, arena, out)) return true;
+    if (JS_HasException(ctx)) return false;
     JS_ThrowTypeError(ctx,
-                      "script values crossing into an element method must be "
-                      "nil, boolean, number or string");
+                      "unsupported argument type; expected null, boolean, "
+                      "number, string, Background or function");
     return false;
+}
+
+static bool BridgeStyleValue(JSContext* ctx, Str name, JSValueConst value,
+                             Arena* arena, shell::Bridged* out) {
+    if (StrEq(name, StrL("shadow"))) {
+        if (JS_IsArray(value)) return BridgeShadowList(ctx, value, arena, out);
+        if (JS_IsObject(value)) {
+            JS_ThrowTypeError(
+                ctx,
+                "`shadow` expects an array of shadows; wrap a single one in "
+                "[ ]: shadow([{ y: 1, blur: 2, color: \"#00000066\" }])");
+            return false;
+        }
+    } else if (JS_IsArray(value)) {
+        JS_ThrowTypeError(ctx, "`%.*s` does not take an array", len(name),
+                          name.s);
+        return false;
+    }
+    return BridgeValue(ctx, value, arena, out);
+}
+
+static bool StyleArgumentAccepts(JSContext* ctx, const shell::SpecOp& op) {
+    Arena* arena = ArenaNew();
+    El* element = Div(arena);
+    ShellError error;
+    bool ok = shell::ApplyParamStyle(element, op, &error);
+    if (!ok) {
+        const char* message =
+            error.message.s ? error.message.s : "invalid style";
+        JS_ThrowTypeError(ctx, "%s", message);
+    }
+    ShellErrorClear(&error);
+    ArenaDelete(arena);
+    return ok;
 }
 
 static const char kTemplateSentinel[] = "__slot";
@@ -172113,14 +178539,17 @@ static JSValue NativeTemplateEnd(JSContext* ctx, JSValueConst, int argc,
 }
 
 static bool SlotValueOf(JSContext* ctx, ShellRuntimeImpl* impl,
-                        const shell::Slot& slot, JSValueConst argument,
-                        Arena* arena, shell::SlotValue* out) {
+                        const shell::Template* tmpl, const shell::Slot& slot,
+                        JSValueConst argument, Arena* arena,
+                        shell::SlotValue* out) {
     switch (slot.site.kind) {
         case shell::SlotSiteKind::Text: {
 
             shell::Bridged bridged = {};
             if (!BridgeValue(ctx, argument, arena, &bridged)) return false;
-            if (bridged.kind == shell::BridgedKind::Nil) {
+            if (bridged.kind == shell::BridgedKind::Nil ||
+                bridged.kind == shell::BridgedKind::Background ||
+                bridged.kind == shell::BridgedKind::Shadows) {
                 JS_ThrowTypeError(ctx,
                                   "this template argument fills a text child "
                                   "and must be a string, a number or a "
@@ -172132,7 +178561,27 @@ static bool SlotValueOf(JSContext* ctx, ShellRuntimeImpl* impl,
         }
         case shell::SlotSiteKind::Argument: {
             out->kind = shell::SlotValueKind::Value;
-            return BridgeValue(ctx, argument, arena, &out->value);
+            const shell::SpecNode* node =
+                tmpl && tmpl->arena ? tmpl->arena->Node(slot.node) : nullptr;
+            Str styleName = {};
+            if (node && (int)slot.site.op < node->ops.len &&
+                node->ops[slot.site.op].kind == shell::SpecOpKind::ParamStyle) {
+                styleName = node->ops[slot.site.op].name;
+            }
+            bool ok = styleName.s
+                          ? BridgeStyleValue(ctx, styleName, argument, arena,
+                                             &out->value)
+                          : BridgeValue(ctx, argument, arena, &out->value);
+            if (!ok) return false;
+            if (styleName.s) {
+                shell::SpecOp op = {};
+                op.kind = shell::SpecOpKind::ParamStyle;
+                op.name = styleName;
+                op.args = &out->value;
+                op.argCount = 1;
+                if (!StyleArgumentAccepts(ctx, op)) return false;
+            }
+            return true;
         }
         case shell::SlotSiteKind::Handler: {
             if (!JS_IsFunction(ctx, argument)) {
@@ -172199,9 +178648,9 @@ static JSValue NativeTemplateInstantiate(JSContext* ctx, JSValueConst, int argc,
     for (int i = 0; i < len(tmpl->slots); i++) {
         JSValue argument =
             JS_GetPropertyUint32(ctx, argv[1], tmpl->slots[i].argument);
-        bool ok =
-            !JS_IsException(argument) &&
-            SlotValueOf(ctx, impl, tmpl->slots[i], argument, arena, &values[i]);
+        bool ok = !JS_IsException(argument) &&
+                  SlotValueOf(ctx, impl, tmpl, tmpl->slots[i], argument, arena,
+                              &values[i]);
         JS_FreeValue(ctx, argument);
         if (!ok) {
             ArenaDelete(arena);
@@ -172835,6 +179284,39 @@ static JSValue NativeRegisteredState(JSContext* ctx, JSValueConst, int argc,
     return JS_NewFloat64(ctx, (double)handle);
 }
 
+static JSValue NativeRegisteredStateRelease(JSContext* ctx, JSValueConst,
+                                            int argc, JSValueConst* argv,
+                                            int magic) {
+    ShellRuntimeImpl* impl = (ShellRuntimeImpl*)JS_GetContextOpaque(ctx);
+    const shell::StateDescriptor* descriptor =
+        impl && impl->components && magic >= 0 &&
+                magic < impl->components->StateCount()
+            ? impl->components->State(magic)
+            : nullptr;
+    if (!descriptor || argc < 2)
+        return JS_ThrowTypeError(ctx, "unknown registered state operation");
+    Arena* a = ArenaNew();
+    Str proof;
+    double handle = 0;
+    if (!JS_IsString(argv[0]) || !JsString(ctx, argv[0], a, &proof) ||
+        !StrEq(proof, impl->componentStateProof) ||
+        JS_ToFloat64(ctx, &handle, argv[1]) < 0) {
+        ArenaDelete(a);
+        return JS_ThrowTypeError(ctx, "state belongs to another runtime");
+    }
+    ScopePhase phase = shell::ScopeCurrentPhase();
+    if (shell::ScopeHasCurrent() &&
+        (phase == ScopePhase::Render || phase == ScopePhase::Layout)) {
+        ArenaDelete(a);
+        return JS_ThrowTypeError(
+            ctx, "state cannot be released during render or layout");
+    }
+    bool removed = impl->componentStates
+                       .Remove((uint64_t)handle, descriptor->kind);
+    ArenaDelete(a);
+    return removed ? JS_TRUE : JS_FALSE;
+}
+
 static JSValue NativeRegisteredStateMethod(JSContext* ctx, JSValueConst,
                                            int argc, JSValueConst* argv,
                                            int magic) {
@@ -172938,6 +179420,11 @@ static void InstallComponentCatalog(ShellRuntimeImpl* impl) {
             ctx, module, state->exportName,
             JS_NewCFunctionMagic(ctx, NativeRegisteredState, state->exportName,
                                  1, JS_CFUNC_generic_magic, s));
+        TempStr release = fmt("%s.release", Str(state->exportName));
+        JS_SetPropertyStr(
+            ctx, module, release.s,
+            JS_NewCFunctionMagic(ctx, NativeRegisteredStateRelease, release.s,
+                                 2, JS_CFUNC_generic_magic, s));
     }
     int flatConstructor = 0;
     for (int d = 0; components && d < components->DescriptorCount(); d++) {
@@ -173283,7 +179770,11 @@ static JSValue NativeApply(JSContext* ctx, JSValueConst, int argc,
                     slotSite = shell::SlotSiteKind::Argument;
                     continue;
                 }
-                if (!BridgeValue(ctx, value, arena, &op.args[i])) {
+                bool bridged =
+                    op.kind == shell::SpecOpKind::ParamStyle
+                        ? BridgeStyleValue(ctx, name, value, arena, &op.args[i])
+                        : BridgeValue(ctx, value, arena, &op.args[i]);
+                if (!bridged) {
                     JS_FreeValue(ctx, value);
                     ArenaDelete(arena);
                     return JS_EXCEPTION;
@@ -173317,6 +179808,19 @@ static JSValue NativeApply(JSContext* ctx, JSValueConst, int argc,
                 return thrown;
             }
         }
+        if (StrEq(name, StrL("with_follow_mode"))) {
+
+            Str mode =
+                argCount == 1 && op.args[0].kind == shell::BridgedKind::String
+                    ? op.args[0].string
+                    : Str{};
+            if (!StrEq(mode, StrL("normal")) && !StrEq(mode, StrL("tail"))) {
+                ArenaDelete(arena);
+                return JS_ThrowTypeError(
+                    ctx,
+                    "with_follow_mode(mode) expects \"normal\" or \"tail\"");
+            }
+        }
         if (StrEq(name, StrL("role"))) {
             if (argCount != 1 || op.args[0]
                                          .kind != shell::BridgedKind::String) {
@@ -173341,6 +179845,11 @@ static JSValue NativeApply(JSContext* ctx, JSValueConst, int argc,
                 return thrown;
             }
         }
+    }
+    if (op.kind == shell::SpecOpKind::ParamStyle && slotPosition < 0 &&
+        !StyleArgumentAccepts(ctx, op)) {
+        ArenaDelete(arena);
+        return JS_EXCEPTION;
     }
     shell::SpecError failure = {};
     if (!impl->scratch->PushOp(id, op, &failure)) {
@@ -174682,6 +181191,9 @@ static JSValue NativeTextareaRows(JSContext* ctx, JSValueConst, int argc,
         return JS_ThrowTypeError(ctx, "textarea setter needs a live host call");
     if (magic == 2) {
         entry->input->softWrap = JS_ToBool(ctx, argv[1]) != 0;
+    } else if (magic == 3) {
+
+        entry->input->submitOnEnter = JS_ToBool(ctx, argv[1]) != 0;
     } else {
         int32_t first = 0, second = 0;
         if (JS_ToInt32(ctx, &first, argv[1]) < 0 || first <= 0) {
@@ -179429,6 +185941,7 @@ globalThis.__gpui = (() => {
     set_rows: (rows) => __textarea_set_rows(handle, Number(rows)),
     set_auto_grow: (min, max) => __textarea_set_auto_grow(handle, Number(min), Number(max)),
     set_soft_wrap: (value) => __textarea_set_soft_wrap(handle, Boolean(value)),
+    set_submit_on_enter: (submit) => __textarea_set_submit_on_enter(handle, Boolean(submit)),
     on: (event, handler) => __textarea_on(handle, String(event), handler),
     release: () => __textarea_release(handle),
   });
@@ -181590,6 +188103,9 @@ static bool InstallRuntime(ShellRuntimeImpl* impl, ShellError* error) {
                            NativeTextareaRows, 3, 1);
     SetGlobalMagicFunction(impl->context, global, "__textarea_set_soft_wrap",
                            NativeTextareaRows, 2, 2);
+    SetGlobalMagicFunction(impl->context, global,
+                           "__textarea_set_submit_on_enter", NativeTextareaRows,
+                           2, 3);
     SetGlobalFunction(impl->context, global, "__slider_state_new",
                       NativeSliderStateNew, 5);
     SetGlobalFunction(impl->context, global, "__slider_value",
@@ -182580,6 +189096,18 @@ void ShellRuntime::DispatchItemSecondaryClick(shell::CallbackId callback,
     DispatchArgs(this, callback, leading, 2, window, app);
 }
 
+void ShellRuntime::DispatchVisibleRange(shell::CallbackId callback, int start,
+                                        int end, int count, Window* window,
+                                        App* app) {
+    JSValue range = JS_NewObject(impl->context);
+    JS_SetPropertyStr(impl->context, range, "start",
+                      JS_NewInt32(impl->context, start));
+    JS_SetPropertyStr(impl->context, range, "end",
+                      JS_NewInt32(impl->context, end));
+    JSValue leading[2] = {range, JS_NewInt32(impl->context, count)};
+    DispatchArgs(this, callback, leading, 2, window, app);
+}
+
 void ShellRuntime::DispatchMouseMove(shell::CallbackId callback,
                                      const MouseMoveEvent& event,
                                      Window* window, App* app) {
@@ -182945,6 +189473,145 @@ void ShellRuntime::DispatchOtpEvent(shell::EntityHandle handle,
         Dispatch(this, callbacks[i], JS_NewObject(impl->context), window, app);
     }
     VecReset(callbacks);
+}
+
+static bool JsString(JSContext* ctx, JSValueConst value, Arena* arena,
+                     Str* out);
+
+static void LogListKeyError(ShellRuntimeImpl* impl) {
+    Arena* arena = ArenaNew();
+    Str message = ExceptionText(arena, impl->context);
+    if (!message.s) message = StrL("");
+    logf("shell: error in a list's get_key: %s\n", message);
+    ArenaDelete(arena);
+}
+
+typedef bool (*ListKeyAsk)(void* user, JSContext* ctx, JSValue function,
+                           int index, Arena* keys);
+
+static bool WithListKeys(ShellRuntime* runtime, ShellRuntimeImpl* impl,
+                         shell::CallbackId keyId, Ctx* cx, ListKeyAsk ask,
+                         void* user) {
+    if (!runtime || !impl || !cx || !cx->win || !cx->app || !ask) return false;
+    CallbackEntry* key = impl->callbacks.Get(keyId);
+    if (!key) return false;
+    if (key->view.IsValid() && !EntityGet(cx->app, key->view)) return false;
+    double started = TimeNow();
+    {
+        shell::CallScopeGuard scope =
+            shell::ScopeEnter(cx->win, cx->app, ScopePhase::Layout, key->view,
+                              key->policy, runtime, key->application);
+        shell::ScopeAdopt(key->registeredIn);
+        BeginExecution(impl);
+        Arena* keys = ArenaNew();
+        bool failed = false;
+        if (!ask(user, impl->context, key->function, 0, keys) &&
+            JS_HasException(impl->context)) {
+            failed = true;
+        }
+
+        if (JS_HasException(impl->context)) failed = true;
+        if (failed) LogListKeyError(impl);
+        ArenaDelete(keys);
+        if (failed) {
+            double elapsed = TimeNow() - started;
+            shell::MetricsAdd(&impl->metrics,
+                              shell::MetricsTimerKind::FrameScript,
+                              elapsed <= 0 ? 0 : (uint64_t)(elapsed * 1e9));
+            return false;
+        }
+    }
+    double elapsed = TimeNow() - started;
+    shell::MetricsAdd(&impl->metrics, shell::MetricsTimerKind::FrameScript,
+                      elapsed <= 0 ? 0 : (uint64_t)(elapsed * 1e9));
+    return true;
+}
+
+struct OneKeyAsk {
+    int index = 0;
+    Str key = {};
+    bool ok = false;
+};
+
+static bool AskOneKey(void* user, JSContext* ctx, JSValue function, int,
+                      Arena* keys) {
+    OneKeyAsk* ask = (OneKeyAsk*)user;
+    JSValue value = JS_NewInt32(ctx, ask->index);
+    JSValue result = JS_Call(ctx, function, JS_UNDEFINED, 1, &value);
+    JS_FreeValue(ctx, value);
+    if (JS_IsException(result)) {
+        JS_FreeValue(ctx, result);
+        return false;
+    }
+    Str text;
+    bool parsed = JsString(ctx, result, keys, &text);
+    JS_FreeValue(ctx, result);
+    if (!parsed) {
+        if (!JS_HasException(ctx)) {
+            JS_ThrowTypeError(ctx, "a list's get_key must return a string");
+        }
+        return false;
+    }
+    ask->key = StrDup(text);
+    ask->ok = ask->key.s != nullptr;
+    return false;
+}
+
+struct FindKeyAsk {
+    Str want = {};
+    ListKeySearch search = {};
+    int found = -1;
+};
+
+static bool AskFindKey(void* user, JSContext* ctx, JSValue function, int,
+                       Arena* keys) {
+    FindKeyAsk* ask = (FindKeyAsk*)user;
+    for (;;) {
+        int candidate = ListKeySearchNext(&ask->search);
+        if (candidate < 0) return false;
+        JSValue value = JS_NewInt32(ctx, candidate);
+        JSValue result = JS_Call(ctx, function, JS_UNDEFINED, 1, &value);
+        JS_FreeValue(ctx, value);
+        if (JS_IsException(result)) {
+            JS_FreeValue(ctx, result);
+            ask->found = -1;
+            return false;
+        }
+        Str text;
+        bool parsed = JsString(ctx, result, keys, &text);
+        JS_FreeValue(ctx, result);
+        if (!parsed) {
+            if (!JS_HasException(ctx)) {
+                JS_ThrowTypeError(ctx, "a list's get_key must return a string");
+            }
+            ask->found = -1;
+            return false;
+        }
+        if (StrEq(text, ask->want)) {
+            ask->found = candidate;
+            return false;
+        }
+    }
+}
+
+Str ShellRuntime::ListItemKey(shell::CallbackId getKey, int index, Ctx* cx) {
+    OneKeyAsk ask;
+    ask.index = index;
+    if (!WithListKeys(this, impl, getKey, cx, &AskOneKey, &ask) || !ask.ok) {
+        StrFree(ask.key);
+        return {};
+    }
+    return ask.key;
+}
+
+int ShellRuntime::FindListItemKey(shell::CallbackId getKey, Str want, int index,
+                                  int oldCount, int newCount, Ctx* cx) {
+    if (!want.s || newCount <= 0) return -1;
+    FindKeyAsk ask;
+    ask.want = want;
+    ListKeySearchInit(&ask.search, index, oldCount, newCount);
+    if (!WithListKeys(this, impl, getKey, cx, &AskFindKey, &ask)) return -1;
+    return ask.found;
 }
 
 void ShellRuntime::RenderVirtualItems(shell::CallbackId renderId,
@@ -184704,6 +191371,31 @@ Component SpecArena::CopyComponent(const Component& source) {
     return out;
 }
 
+static Bridged DupBridged(Arena* arena, const Bridged& source) {
+    Bridged out = source;
+    if (out.kind == BridgedKind::String) {
+        out.string = StrDup(arena, source.string);
+    } else if (out.kind == BridgedKind::Background && source.background) {
+        BackgroundSpec* spec = ArenaNew<BackgroundSpec>(arena);
+        *spec = *source.background;
+        spec->color = StrDup(arena, source.background->color);
+        spec->fromColor = StrDup(arena, source.background->fromColor);
+        spec->toColor = StrDup(arena, source.background->toColor);
+        spec->colorSpace = StrDup(arena, source.background->colorSpace);
+        out.background = spec;
+    } else if (out.kind == BridgedKind::Shadows && source.shadowCount > 0 &&
+               source.shadows) {
+        ShadowSpec* specs = (ShadowSpec*)Alloc(
+            arena, source.shadowCount * (int)sizeof(ShadowSpec));
+        for (int i = 0; i < source.shadowCount; i++) {
+            specs[i] = source.shadows[i];
+            specs[i].color = StrDup(arena, source.shadows[i].color);
+        }
+        out.shadows = specs;
+    }
+    return out;
+}
+
 SpecOp SpecArena::CopyOp(const SpecOp& source) {
     SpecOp out = source;
     out.name = StrDup(arena, source.name);
@@ -184711,10 +191403,7 @@ SpecOp SpecArena::CopyOp(const SpecOp& source) {
         out.args = (Bridged*)Alloc(
             arena, (int)(sizeof(Bridged) * (size_t)source.argCount));
         for (int i = 0; i < source.argCount; i++) {
-            out.args[i] = source.args[i];
-            if (out.args[i].kind == BridgedKind::String) {
-                out.args[i].string = StrDup(arena, source.args[i].string);
-            }
+            out.args[i] = DupBridged(arena, source.args[i]);
         }
     }
     return out;
@@ -184920,11 +191609,7 @@ bool SpecArena::WriteSlot(SpecId base, const Slot& slot, const SlotValue& value,
             SetSpecError(error, SpecErrorKind::Expired);
             return false;
         }
-        Bridged written = value.value;
-        if (written.kind == BridgedKind::String) {
-            written.string = StrDup(arena, written.string);
-        }
-        op.args[slot.site.argument] = written;
+        op.args[slot.site.argument] = DupBridged(arena, value.value);
         return true;
     }
     if (slot.site.kind == SlotSiteKind::Handler &&
@@ -184969,6 +191654,24 @@ static void AppendBridged(StrBuilder* out, const Bridged& value) {
             out->AppendChar('"');
             out->Append(value.string);
             out->AppendChar('"');
+            break;
+        case BridgedKind::Background:
+            out->Append(StrL("Background("));
+            if (value.background) {
+                const BackgroundSpec& spec = *value.background;
+                if (spec.kind == BackgroundKind::LinearGradient) {
+                    out->Append(fmt("linear-gradient %g %s@%g %s@%g",
+                                    (double)spec.angle, spec.fromColor,
+                                    (double)spec.fromPosition, spec.toColor,
+                                    (double)spec.toPosition));
+                } else {
+                    out->Append(spec.color);
+                }
+            }
+            out->AppendChar(')');
+            break;
+        case BridgedKind::Shadows:
+            out->Append(fmt("Shadows([%d])", value.shadowCount));
             break;
     }
 }
@@ -187274,6 +193977,7 @@ static const ParamName kOtherParamNames[] = {
     {"flex_grow"},   {"flex_shrink"}, {"flex_basis"}, {"bg"},
     {"text_color"},  {"text_bg"},     {"text_size"},  {"font_family"},
     {"font_weight"}, {"line_height"}, {"opacity"},    {"border_color"},
+    {"shadow"},
 };
 
 static bool IsOtherParam(Str name) {
@@ -187392,8 +194096,27 @@ static bool ApplyOtherParam(El* e, Str name, const Bridged& value,
         s.flexBasisFrac = l.kind == LenKind::Frac ? l.v : 0;
         s.flexBasisPercent = l.kind == LenKind::Frac;
     } else if (StrEq(name, StrL("bg"))) {
-        if (!Color(value, &color, error)) return false;
-        e->Bg(color);
+        Background fill;
+        if (!BridgedAsBackground(value, &fill, error)) return false;
+        if (e) e->Bg(fill);
+    } else if (StrEq(name, StrL("shadow"))) {
+        if (value.kind != BridgedKind::Shadows) {
+            if (error) {
+                Arena* arena = GetTempArena();
+                ShellErrorSet(error, fmt("expected an array of shadows, got %s",
+                                         BridgedDescribe(arena, value)));
+            }
+            return false;
+        }
+        BoxShadow stack[32];
+        int count = 0;
+        if (value.shadowCount > (int)dimof(stack)) {
+            ShellErrorSet(error, StrL("shadow list is too large"));
+            return false;
+        }
+        if (!BridgedAsShadows(value, stack, (int)dimof(stack), &count, error))
+            return false;
+        if (e) e->Shadows(count > 0 ? stack : nullptr, count);
     } else if (StrEq(name, StrL("text_color"))) {
         if (!Color(value, &color, error)) return false;
         e->Fg(color);
@@ -187703,6 +194426,7 @@ bool ApplyParamStyle(El* element, const SpecOp& op, ShellError* error,
 
 uint32_t StyleFieldsOf(Str name) {
     if (StrEq(name, StrL("bg"))) return StyleFieldBg;
+    if (StrEq(name, StrL("shadow"))) return StyleFieldShadow;
     if (StrEq(name, StrL("text_color"))) return StyleFieldColor;
     if (StrEq(name, StrL("border_color"))) return StyleFieldBorderColor;
     if (StrEq(name, StrL("opacity"))) return StyleFieldOpacity;
@@ -187928,7 +194652,7 @@ namespace gpui::shell {
 
 static const char kShellTypes0[] = R"GPUI_DTS(// Auto-generated — add `gpui-kit.d.ts` to your .gitignore.
 //
-// The built-in modules, as TypeScript declarations, for gpui-shell 0.7.3.
+// The built-in modules, as TypeScript declarations, for gpui-shell 0.8.0.
 // Do not edit: gpui-shell rewrites this on every run, in every directory that
 // imports one of them, from the runtime that is about to execute the script. A
 // committed copy could only ever be the stale one.
@@ -188316,7 +195040,8 @@ declare module "gpui-kit" {
 
     /**
      * Calls `body(cx)` and adopts the promise it returns, so a rejection is
-     * reported rather than swallowed. `App::spawn`.
+)GPUI_DTS";
+static const char kShellTypes1[] = R"GPUI_DTS(     * reported rather than swallowed. `App::spawn`.
      *
      * The `cx` the body receives is an [`AsyncContext`] — valid across `await`,
      * the way GPUI's `AsyncApp` is — so the whole body can keep using it.
@@ -188333,8 +195058,7 @@ declare module "gpui-kit" {
   /**
    * A context that may be held across an `await`.
    *
-)GPUI_DTS";
-static const char kShellTypes1[] = R"GPUI_DTS(   * The mirror of GPUI's `AsyncApp`. An ordinary [`Context`] speaks for one
+   * The mirror of GPUI's `AsyncApp`. An ordinary [`Context`] speaks for one
    * host call and reports clearly once that call has returned — which is what
    * catches a `cx` stashed in a closure. This one names no call at all: it
    * resolves whichever is running when a member is used, and refuses only when
@@ -188598,7 +195322,8 @@ static const char kShellTypes1[] = R"GPUI_DTS(   * The mirror of GPUI's `AsyncAp
     /** Fills an `Avatar`'s `fallback` slot, which takes an `AvatarFallback`. */
     fallback<Self extends Element>(this: Self, element: Element): Self;
     /** Fills an `AccordionItem`'s `header` slot, which takes an `AccordionHeader`. */
-    header<Self extends Element>(this: Self, element: Element): Self;
+)GPUI_DTS";
+static const char kShellTypes2[] = R"GPUI_DTS(    header<Self extends Element>(this: Self, element: Element): Self;
     /** Fills a component's named `footer` slot. */
     footer<Self extends Element>(this: Self, element: Element): Self;
     /** Fills an `AccordionItem`'s `panel` slot, which takes an `AccordionPanel`. */
@@ -188608,8 +195333,7 @@ static const char kShellTypes1[] = R"GPUI_DTS(   * The mirror of GPUI's `AsyncAp
      * that is on screen while the surface is closed, and that opens it.
      *
      * Consumed exactly as `content` is. A surface with no trigger draws
-)GPUI_DTS";
-static const char kShellTypes2[] = R"GPUI_DTS(     * nothing at all. A `Popup` takes its trigger in `Popup.new(id, trigger)`
+     * nothing at all. A `Popup` takes its trigger in `Popup.new(id, trigger)`
      * instead, because its trigger's bounds are what the content is anchored
      * to.
      */
@@ -188810,6 +195534,27 @@ static const char kShellTypes2[] = R"GPUI_DTS(     * nothing at all. A `Popup` t
       handler: (key: string, event: MouseButtonEvent, cx: Context) => void,
     ): Self;
     /**
+     * `handler(range, count, cx)` after a frame in which the items a `list`
+     * shows, or how many it has, changed. `range` is the visible items as a
+     * half-open `[start, end)`, and `count` is the list's `item_count`.
+     *
+     * It is called once the frame is done, as an event handler is, so it may
+     * change state and call `cx.notify()`: load the page above when
+     * `range.start` reaches 0, or the next one when `range.end` reaches
+     * `count`. The item renderer cannot do this, because it runs inside
+     * layout.
+     *
+)GPUI_DTS";
+static const char kShellTypes3[] = R"GPUI_DTS(     * What calls it is the range itself, not what moved it: the first frame,
+     * a wheel or trackpad scroll, a `Scrollbar` drag, a change of
+     * `item_count`, a change of the list's height. A frame that leaves both
+     * the same calls nothing. Only `list` reports it; on `uniform_list` and
+     * the virtual lists it is ignored.
+     */
+    on_visible_range_change<Self extends Element>(this: Self,
+      handler: (range: ItemRange, count: number, cx: Context) => void,
+    ): Self;
+    /**
      * `handler(value, cx)`, on a toggle. The script owns the new value.
      *
      * A `Radio` only ever reports `true`. It cannot deselect itself, so an
@@ -188822,8 +195567,7 @@ static const char kShellTypes2[] = R"GPUI_DTS(     * nothing at all. A `Popup` t
      * `handler(action, cx)` on a `NumberInput`, where `action` is
      * `"increment"` or `"decrement"`.
      *
-)GPUI_DTS";
-static const char kShellTypes3[] = R"GPUI_DTS(     * **Replaces the built-in stepping.** Without a handler the control steps
+     * **Replaces the built-in stepping.** Without a handler the control steps
      * itself: it adds or subtracts the state's `set_step(...)`, clamps to
      * `set_min(...)` and `set_max(...)`, and re-applies the numeric mask. All
      * of that lives in the closure this replaces, so once a handler is set none
@@ -188993,6 +195737,19 @@ static const char kShellTypes3[] = R"GPUI_DTS(     * **Replaces the built-in ste
      */
     with_item_to_measure_index<Self extends Element>(this: Self, index: number): Self;
     /**
+     * Whether a `list` follows its tail — GPUI's `FollowMode`. With `"tail"`
+     * the list opens at its end and stays there as items are added and as the
+     * last one grows, the way a transcript being written is read. Scrolling
+     * up stops it; scrolling back to the end, with the wheel or a
+     * `Scrollbar`, starts it again. `"normal"`, the default, never scrolls on
+     * its own.
+     *
+     * Switching to `"tail"` scrolls to the end once, on the frame it is
+     * switched on; keeping it on does not pull a reader who scrolled up back
+     * down. Only `list` has a follow mode; on other elements it is ignored.
+     */
+    with_follow_mode<Self extends Element>(this: Self, mode: "normal" | "tail"): Self;
+    /**
      * The handle a `Select` or `Combobox` moves the keyboard to when it opens,
      * and away from when Escape closes it.
      *
@@ -189017,7 +195774,8 @@ static const char kShellTypes3[] = R"GPUI_DTS(     * **Replaces the built-in ste
      */
     tab_stop<Self extends Element>(this: Self, value: boolean): Self;
     /** Sets the absolute HTTP(S) target opened by a `Link`. */
-    href<Self extends Element>(this: Self, url: string): Self;
+)GPUI_DTS";
+static const char kShellTypes4[] = R"GPUI_DTS(    href<Self extends Element>(this: Self, url: string): Self;
     /**
      * A stable name for this element, used as its identity.
      *
@@ -189049,8 +195807,7 @@ static const char kShellTypes3[] = R"GPUI_DTS(     * **Replaces the built-in ste
     mode<Self extends Element>(this: Self, value: import("gpui-base").ScrollbarMode): Self;
     /**
      * The content size a `Scrollbar` measures its thumb against, in pixels,
-)GPUI_DTS";
-static const char kShellTypes4[] = R"GPUI_DTS(     * for when the script knows it and the scroll area does not — a list that
+     * for when the script knows it and the scroll area does not — a list that
      * paints a window of rows rather than all of them.
      */
     scroll_size<Self extends Element>(this: Self, width: number, height: number): Self;
@@ -189233,7 +195990,8 @@ static const char kShellTypes4[] = R"GPUI_DTS(     * for when the script knows i
      */
     drag_tab<Self extends Element>(this: Self, group: import("gpui-base").DockGroup, index: number): Self;
     /**
-     * Accepts a dragged panel here. `index` is the slot it lands in; leave it
+)GPUI_DTS";
+static const char kShellTypes5[] = R"GPUI_DTS(     * Accepts a dragged panel here. `index` is the slot it lands in; leave it
      * out to append, which is what a drop past the last tab means.
      */
     drop_tab<Self extends Element>(this: Self, group: import("gpui-base").DockGroup, index?: number): Self;
@@ -189252,8 +196010,8 @@ static const char kShellTypes4[] = R"GPUI_DTS(     * for when the script knows i
     // accepts follows its Rust signature, so `.p("auto")` and
     // `.rounded("50%")` are type errors here for the same reason they
     // throw at run time.
-    /** Sets the background colour. */
-    bg<Self extends Element>(this: Self, value: Color): Self;
+    /** Sets the background: a colour, or a `Background` such as `Background.linear_gradient(...)`, drawn inside the rounded corners. */
+    bg<Self extends Element>(this: Self, value: Color | Background): Self;
     /** Sets the border width on all four sides. Draws nothing without a colour. */
     border<Self extends Element>(this: Self, value: AbsoluteLength): Self;
     /** Sets the border width on the bottom. */
@@ -189261,8 +196019,7 @@ static const char kShellTypes4[] = R"GPUI_DTS(     * for when the script knows i
     /** Sets the border colour. Draws nothing without a width. */
     border_color<Self extends Element>(this: Self, value: Color): Self;
     /** Sets the border width on the left. */
-)GPUI_DTS";
-static const char kShellTypes5[] = R"GPUI_DTS(    border_l<Self extends Element>(this: Self, value: AbsoluteLength): Self;
+    border_l<Self extends Element>(this: Self, value: AbsoluteLength): Self;
     /** Sets the border width on the right. */
     border_r<Self extends Element>(this: Self, value: AbsoluteLength): Self;
     /** Sets the border width on the top. */
@@ -189359,6 +196116,8 @@ static const char kShellTypes5[] = R"GPUI_DTS(    border_l<Self extends Element>
     rounded_tl<Self extends Element>(this: Self, value: AbsoluteLength): Self;
     /** Sets the corner radius on the top-right corner. */
     rounded_tr<Self extends Element>(this: Self, value: AbsoluteLength): Self;
+    /** Sets the box shadows, CSS-like: the first in the list paints on top, and `[]` removes them. An inset shadow paints above the fill but beneath the children and the border. */
+    shadow<Self extends Element>(this: Self, value: readonly BoxShadowSpec[]): Self;
     /** Sets the width and the height together. */
     size<Self extends Element>(this: Self, value: Length): Self;
     /** Sets the background painted behind the text itself. */
@@ -189469,7 +196228,8 @@ static const char kShellTypes5[] = R"GPUI_DTS(    border_l<Self extends Element>
      * Sets the border width of the element. [Docs](https://tailwindcss.com/docs/border-width)
      *
      * 5px
-     */
+)GPUI_DTS";
+static const char kShellTypes6[] = R"GPUI_DTS(     */
     border_5<Self extends Element>(this: Self): Self;
     /**
      * Sets the border width of the element. [Docs](https://tailwindcss.com/docs/border-width)
@@ -189532,8 +196292,7 @@ static const char kShellTypes5[] = R"GPUI_DTS(    border_l<Self extends Element>
      */
     border_b_16<Self extends Element>(this: Self): Self;
     /**
-)GPUI_DTS";
-static const char kShellTypes6[] = R"GPUI_DTS(     * Sets the border width of the bottom side of the element. [Docs](https://tailwindcss.com/docs/border-width#individual-sides)
+     * Sets the border width of the bottom side of the element. [Docs](https://tailwindcss.com/docs/border-width#individual-sides)
      *
      * 2px
      */
@@ -189799,7 +196558,8 @@ static const char kShellTypes6[] = R"GPUI_DTS(     * Sets the border width of th
      */
     border_r_8<Self extends Element>(this: Self): Self;
     /**
-     * Sets the border width of the right side of the element. [Docs](https://tailwindcss.com/docs/border-width#individual-sides)
+)GPUI_DTS";
+static const char kShellTypes7[] = R"GPUI_DTS(     * Sets the border width of the right side of the element. [Docs](https://tailwindcss.com/docs/border-width#individual-sides)
      *
      * 9px
      */
@@ -189857,8 +196617,7 @@ static const char kShellTypes6[] = R"GPUI_DTS(     * Sets the border width of th
      *
      * 24px
      */
-)GPUI_DTS";
-static const char kShellTypes7[] = R"GPUI_DTS(    border_t_24<Self extends Element>(this: Self): Self;
+    border_t_24<Self extends Element>(this: Self): Self;
     /**
      * Sets the border width of the top side of the element. [Docs](https://tailwindcss.com/docs/border-width#individual-sides)
      *
@@ -190110,7 +196869,8 @@ static const char kShellTypes7[] = R"GPUI_DTS(    border_t_24<Self extends Eleme
      *
      * 9px
      */
-    border_y_9<Self extends Element>(this: Self): Self;
+)GPUI_DTS";
+static const char kShellTypes8[] = R"GPUI_DTS(    border_y_9<Self extends Element>(this: Self): Self;
     /**
      * Sets the bottom value of a positioned element. [Docs](https://tailwindcss.com/docs/top-right-bottom-left)
      *
@@ -190170,8 +196930,7 @@ static const char kShellTypes7[] = R"GPUI_DTS(    border_t_24<Self extends Eleme
      *
      * 8% (1/12)
      */
-)GPUI_DTS";
-static const char kShellTypes8[] = R"GPUI_DTS(    bottom_1_12<Self extends Element>(this: Self): Self;
+    bottom_1_12<Self extends Element>(this: Self): Self;
     /**
      * Sets the bottom value of a positioned element. [Docs](https://tailwindcss.com/docs/top-right-bottom-left)
      *
@@ -190449,7 +197208,8 @@ static const char kShellTypes8[] = R"GPUI_DTS(    bottom_1_12<Self extends Eleme
      */
     bottom_neg_1_2<Self extends Element>(this: Self): Self;
     /**
-     * Sets the bottom value of a positioned element. [Docs](https://tailwindcss.com/docs/top-right-bottom-left)
+)GPUI_DTS";
+static const char kShellTypes9[] = R"GPUI_DTS(     * Sets the bottom value of a positioned element. [Docs](https://tailwindcss.com/docs/top-right-bottom-left)
      *
      * 33% (1/3)
      */
@@ -190509,8 +197269,7 @@ static const char kShellTypes8[] = R"GPUI_DTS(    bottom_1_12<Self extends Eleme
      */
     bottom_neg_2_4<Self extends Element>(this: Self): Self;
     /**
-)GPUI_DTS";
-static const char kShellTypes9[] = R"GPUI_DTS(     * Sets the bottom value of a positioned element. [Docs](https://tailwindcss.com/docs/top-right-bottom-left)
+     * Sets the bottom value of a positioned element. [Docs](https://tailwindcss.com/docs/top-right-bottom-left)
      *
      * 40% (2/5)
      */
@@ -190778,7 +197537,8 @@ static const char kShellTypes9[] = R"GPUI_DTS(     * Sets the bottom value of a 
      *
      * [Docs](https://tailwindcss.com/docs/cursor)
      */
-    cursor_grabbing<Self extends Element>(this: Self): Self;
+)GPUI_DTS";
+static const char kShellTypes10[] = R"GPUI_DTS(    cursor_grabbing<Self extends Element>(this: Self): Self;
     /**
      * Sets cursor style when hovering over an element to `move`.
      *
@@ -190840,8 +197600,7 @@ static const char kShellTypes9[] = R"GPUI_DTS(     * Sets the bottom value of a 
      */
     cursor_s_resize<Self extends Element>(this: Self): Self;
     /**
-)GPUI_DTS";
-static const char kShellTypes10[] = R"GPUI_DTS(     * Sets cursor style when hovering over an element to `text`.
+     * Sets cursor style when hovering over an element to `text`.
      *
      * [Docs](https://tailwindcss.com/docs/cursor)
      */
@@ -191114,7 +197873,8 @@ static const char kShellTypes10[] = R"GPUI_DTS(     * Sets cursor style when hov
      */
     gap_2_5<Self extends Element>(this: Self): Self;
     /**
-     * Sets the gap between rows and columns in flex layouts. [Docs](https://tailwindcss.com/docs/gap)
+)GPUI_DTS";
+static const char kShellTypes11[] = R"GPUI_DTS(     * Sets the gap between rows and columns in flex layouts. [Docs](https://tailwindcss.com/docs/gap)
      *
      * 10px (0.625rem)
      */
@@ -191178,8 +197938,7 @@ static const char kShellTypes10[] = R"GPUI_DTS(     * Sets cursor style when hov
      *
      * 20px (1.25rem)
      */
-)GPUI_DTS";
-static const char kShellTypes11[] = R"GPUI_DTS(    gap_5<Self extends Element>(this: Self): Self;
+    gap_5<Self extends Element>(this: Self): Self;
     /**
      * Sets the gap between rows and columns in flex layouts. [Docs](https://tailwindcss.com/docs/gap)
      *
@@ -191473,7 +198232,8 @@ static const char kShellTypes11[] = R"GPUI_DTS(    gap_5<Self extends Element>(t
      *
      * 28px (1.75rem)
      */
-    gap_neg_7<Self extends Element>(this: Self): Self;
+)GPUI_DTS";
+static const char kShellTypes12[] = R"GPUI_DTS(    gap_neg_7<Self extends Element>(this: Self): Self;
     /**
      * Sets the gap between rows and columns in flex layouts. [Docs](https://tailwindcss.com/docs/gap)
      *
@@ -191535,8 +198295,7 @@ static const char kShellTypes11[] = R"GPUI_DTS(    gap_5<Self extends Element>(t
      */
     gap_x_0p5<Self extends Element>(this: Self): Self;
     /**
-)GPUI_DTS";
-static const char kShellTypes12[] = R"GPUI_DTS(     * Sets the gap between columns in flex layouts. [Docs](https://tailwindcss.com/docs/gap#changing-row-and-column-gaps-independently)
+     * Sets the gap between columns in flex layouts. [Docs](https://tailwindcss.com/docs/gap#changing-row-and-column-gaps-independently)
      *
      * 4px (0.25rem)
      */
@@ -191788,7 +198547,8 @@ static const char kShellTypes12[] = R"GPUI_DTS(     * Sets the gap between colum
      */
     gap_x_full<Self extends Element>(this: Self): Self;
     /**
-     * Sets the gap between columns in flex layouts. [Docs](https://tailwindcss.com/docs/gap#changing-row-and-column-gaps-independently)
+)GPUI_DTS";
+static const char kShellTypes13[] = R"GPUI_DTS(     * Sets the gap between columns in flex layouts. [Docs](https://tailwindcss.com/docs/gap#changing-row-and-column-gaps-independently)
      *
      * 0px
      */
@@ -191842,8 +198602,7 @@ static const char kShellTypes12[] = R"GPUI_DTS(     * Sets the gap between colum
      */
     gap_x_neg_16<Self extends Element>(this: Self): Self;
     /**
-)GPUI_DTS";
-static const char kShellTypes13[] = R"GPUI_DTS(     * Sets the gap between columns in flex layouts. [Docs](https://tailwindcss.com/docs/gap#changing-row-and-column-gaps-independently)
+     * Sets the gap between columns in flex layouts. [Docs](https://tailwindcss.com/docs/gap#changing-row-and-column-gaps-independently)
      *
      * 8% (1/12)
      */
@@ -192093,7 +198852,8 @@ static const char kShellTypes13[] = R"GPUI_DTS(     * Sets the gap between colum
      *
      * 44px (2.75rem)
      */
-    gap_y_11<Self extends Element>(this: Self): Self;
+)GPUI_DTS";
+static const char kShellTypes14[] = R"GPUI_DTS(    gap_y_11<Self extends Element>(this: Self): Self;
     /**
      * Sets the gap between rows in flex layouts. [Docs](https://tailwindcss.com/docs/gap#changing-row-and-column-gaps-independently)
      *
@@ -192149,8 +198909,7 @@ static const char kShellTypes13[] = R"GPUI_DTS(     * Sets the gap between colum
      */
     gap_y_1_5<Self extends Element>(this: Self): Self;
     /**
-)GPUI_DTS";
-static const char kShellTypes14[] = R"GPUI_DTS(     * Sets the gap between rows in flex layouts. [Docs](https://tailwindcss.com/docs/gap#changing-row-and-column-gaps-independently)
+     * Sets the gap between rows in flex layouts. [Docs](https://tailwindcss.com/docs/gap#changing-row-and-column-gaps-independently)
      *
      * 16% (1/6)
      */
@@ -192402,7 +199161,8 @@ static const char kShellTypes14[] = R"GPUI_DTS(     * Sets the gap between rows 
      */
     gap_y_neg_1_3<Self extends Element>(this: Self): Self;
     /**
-     * Sets the gap between rows in flex layouts. [Docs](https://tailwindcss.com/docs/gap#changing-row-and-column-gaps-independently)
+)GPUI_DTS";
+static const char kShellTypes15[] = R"GPUI_DTS(     * Sets the gap between rows in flex layouts. [Docs](https://tailwindcss.com/docs/gap#changing-row-and-column-gaps-independently)
      *
      * 25% (1/4)
      */
@@ -192459,8 +199219,7 @@ static const char kShellTypes14[] = R"GPUI_DTS(     * Sets the gap between rows 
      * Sets the gap between rows in flex layouts. [Docs](https://tailwindcss.com/docs/gap#changing-row-and-column-gaps-independently)
      *
      * 40% (2/5)
-)GPUI_DTS";
-static const char kShellTypes15[] = R"GPUI_DTS(     */
+     */
     gap_y_neg_2_5<Self extends Element>(this: Self): Self;
     /**
      * Sets the gap between rows in flex layouts. [Docs](https://tailwindcss.com/docs/gap#changing-row-and-column-gaps-independently)
@@ -192745,7 +199504,8 @@ static const char kShellTypes15[] = R"GPUI_DTS(     */
      */
     h_2_5<Self extends Element>(this: Self): Self;
     /**
-     * Sets the height of the element. [Docs](https://tailwindcss.com/docs/height)
+)GPUI_DTS";
+static const char kShellTypes16[] = R"GPUI_DTS(     * Sets the height of the element. [Docs](https://tailwindcss.com/docs/height)
      *
      * 10px (0.625rem)
      */
@@ -192821,8 +199581,7 @@ static const char kShellTypes15[] = R"GPUI_DTS(     */
      *
      * 80% (5/6)
      */
-)GPUI_DTS";
-static const char kShellTypes16[] = R"GPUI_DTS(    h_5_6<Self extends Element>(this: Self): Self;
+    h_5_6<Self extends Element>(this: Self): Self;
     /**
      * Sets the height of the element. [Docs](https://tailwindcss.com/docs/height)
      *
@@ -193142,7 +199901,8 @@ static const char kShellTypes16[] = R"GPUI_DTS(    h_5_6<Self extends Element>(t
      */
     h_neg_64<Self extends Element>(this: Self): Self;
     /**
-     * Sets the height of the element. [Docs](https://tailwindcss.com/docs/height)
+)GPUI_DTS";
+static const char kShellTypes17[] = R"GPUI_DTS(     * Sets the height of the element. [Docs](https://tailwindcss.com/docs/height)
      *
      * 28px (1.75rem)
      */
@@ -193214,8 +199974,7 @@ static const char kShellTypes16[] = R"GPUI_DTS(    h_5_6<Self extends Element>(t
      */
     inset_0p5<Self extends Element>(this: Self): Self;
     /**
-)GPUI_DTS";
-static const char kShellTypes17[] = R"GPUI_DTS(     * Sets the top, right, bottom, and left values of a positioned element. [Docs](https://tailwindcss.com/docs/top-right-bottom-left)
+     * Sets the top, right, bottom, and left values of a positioned element. [Docs](https://tailwindcss.com/docs/top-right-bottom-left)
      *
      * 4px (0.25rem)
      */
@@ -193465,7 +200224,8 @@ static const char kShellTypes17[] = R"GPUI_DTS(     * Sets the top, right, botto
      *
      * Auto
      */
-    inset_auto<Self extends Element>(this: Self): Self;
+)GPUI_DTS";
+static const char kShellTypes18[] = R"GPUI_DTS(    inset_auto<Self extends Element>(this: Self): Self;
     /**
      * Sets the top, right, bottom, and left values of a positioned element. [Docs](https://tailwindcss.com/docs/top-right-bottom-left)
      *
@@ -193521,8 +200281,7 @@ static const char kShellTypes17[] = R"GPUI_DTS(     * Sets the top, right, botto
      */
     inset_neg_128<Self extends Element>(this: Self): Self;
     /**
-)GPUI_DTS";
-static const char kShellTypes18[] = R"GPUI_DTS(     * Sets the top, right, bottom, and left values of a positioned element. [Docs](https://tailwindcss.com/docs/top-right-bottom-left)
+     * Sets the top, right, bottom, and left values of a positioned element. [Docs](https://tailwindcss.com/docs/top-right-bottom-left)
      *
      * 64px (4rem)
      */
@@ -193772,7 +200531,8 @@ static const char kShellTypes18[] = R"GPUI_DTS(     * Sets the top, right, botto
      *
      * [Docs](https://tailwindcss.com/docs/align-items#center)
      */
-    items_center<Self extends Element>(this: Self): Self;
+)GPUI_DTS";
+static const char kShellTypes19[] = R"GPUI_DTS(    items_center<Self extends Element>(this: Self): Self;
     /**
      * Sets the element to align flex items to the end of the container's cross axis.
      *
@@ -193828,8 +200588,7 @@ static const char kShellTypes18[] = R"GPUI_DTS(     * Sets the top, right, botto
      *
      * each item when using justify-around.
      *
-)GPUI_DTS";
-static const char kShellTypes19[] = R"GPUI_DTS(     * [Docs](https://tailwindcss.com/docs/justify-content#space-evenly)
+     * [Docs](https://tailwindcss.com/docs/justify-content#space-evenly)
      */
     justify_evenly<Self extends Element>(this: Self): Self;
     /**
@@ -194113,7 +200872,8 @@ static const char kShellTypes19[] = R"GPUI_DTS(     * [Docs](https://tailwindcss
      *
      * 0px
      */
-    left_neg_0<Self extends Element>(this: Self): Self;
+)GPUI_DTS";
+static const char kShellTypes20[] = R"GPUI_DTS(    left_neg_0<Self extends Element>(this: Self): Self;
     /**
      * Sets the left value of a positioned element. [Docs](https://tailwindcss.com/docs/top-right-bottom-left)
      *
@@ -194175,8 +200935,7 @@ static const char kShellTypes19[] = R"GPUI_DTS(     * [Docs](https://tailwindcss
      */
     left_neg_1_2<Self extends Element>(this: Self): Self;
     /**
-)GPUI_DTS";
-static const char kShellTypes20[] = R"GPUI_DTS(     * Sets the left value of a positioned element. [Docs](https://tailwindcss.com/docs/top-right-bottom-left)
+     * Sets the left value of a positioned element. [Docs](https://tailwindcss.com/docs/top-right-bottom-left)
      *
      * 33% (1/3)
      */
@@ -194468,7 +201227,8 @@ static const char kShellTypes20[] = R"GPUI_DTS(     * Sets the left value of a p
      *
      * 25% (1/4)
      */
-    m_1_4<Self extends Element>(this: Self): Self;
+)GPUI_DTS";
+static const char kShellTypes21[] = R"GPUI_DTS(    m_1_4<Self extends Element>(this: Self): Self;
     /**
      * Sets the margin of the element. [Docs](https://tailwindcss.com/docs/margin)
      *
@@ -194542,8 +201302,7 @@ static const char kShellTypes20[] = R"GPUI_DTS(     * Sets the left value of a p
      */
     m_32<Self extends Element>(this: Self): Self;
     /**
-)GPUI_DTS";
-static const char kShellTypes21[] = R"GPUI_DTS(     * Sets the margin of the element. [Docs](https://tailwindcss.com/docs/margin)
+     * Sets the margin of the element. [Docs](https://tailwindcss.com/docs/margin)
      *
      * 75% (3/4)
      */
@@ -194873,7 +201632,8 @@ static const char kShellTypes21[] = R"GPUI_DTS(     * Sets the margin of the ele
      */
     m_neg_5_6<Self extends Element>(this: Self): Self;
     /**
-     * Sets the margin of the element. [Docs](https://tailwindcss.com/docs/margin)
+)GPUI_DTS";
+static const char kShellTypes22[] = R"GPUI_DTS(     * Sets the margin of the element. [Docs](https://tailwindcss.com/docs/margin)
      *
      * 24px (1.5rem)
      */
@@ -194945,8 +201705,7 @@ static const char kShellTypes21[] = R"GPUI_DTS(     * Sets the margin of the ele
      */
     max_h_0<Self extends Element>(this: Self): Self;
     /**
-)GPUI_DTS";
-static const char kShellTypes22[] = R"GPUI_DTS(     * Sets the maximum height of the element. [Docs](https://tailwindcss.com/docs/max-height)
+     * Sets the maximum height of the element. [Docs](https://tailwindcss.com/docs/max-height)
      *
      * 2px (0.125rem)
      */
@@ -195252,7 +202011,8 @@ static const char kShellTypes22[] = R"GPUI_DTS(     * Sets the maximum height of
      */
     max_h_neg_12<Self extends Element>(this: Self): Self;
     /**
-     * Sets the maximum height of the element. [Docs](https://tailwindcss.com/docs/max-height)
+)GPUI_DTS";
+static const char kShellTypes23[] = R"GPUI_DTS(     * Sets the maximum height of the element. [Docs](https://tailwindcss.com/docs/max-height)
      *
      * 512px (32rem)
      */
@@ -195318,8 +202078,7 @@ static const char kShellTypes22[] = R"GPUI_DTS(     * Sets the maximum height of
      */
     max_h_neg_20<Self extends Element>(this: Self): Self;
     /**
-)GPUI_DTS";
-static const char kShellTypes23[] = R"GPUI_DTS(     * Sets the maximum height of the element. [Docs](https://tailwindcss.com/docs/max-height)
+     * Sets the maximum height of the element. [Docs](https://tailwindcss.com/docs/max-height)
      *
      * 96px (6rem)
      */
@@ -195655,7 +202414,8 @@ static const char kShellTypes23[] = R"GPUI_DTS(     * Sets the maximum height of
      */
     max_size_3p5<Self extends Element>(this: Self): Self;
     /**
-     * Sets the maximum width and height of the element.
+)GPUI_DTS";
+static const char kShellTypes24[] = R"GPUI_DTS(     * Sets the maximum width and height of the element.
      *
      * 16px (1rem)
      */
@@ -195737,8 +202497,7 @@ static const char kShellTypes23[] = R"GPUI_DTS(     * Sets the maximum height of
      *
      * 36px (2.25rem)
      */
-)GPUI_DTS";
-static const char kShellTypes24[] = R"GPUI_DTS(    max_size_9<Self extends Element>(this: Self): Self;
+    max_size_9<Self extends Element>(this: Self): Self;
     /**
      * Sets the maximum width and height of the element.
      *
@@ -196094,7 +202853,8 @@ static const char kShellTypes24[] = R"GPUI_DTS(    max_size_9<Self extends Eleme
      */
     max_w_1_12<Self extends Element>(this: Self): Self;
     /**
-     * Sets the maximum width of the element. [Docs](https://tailwindcss.com/docs/max-width)
+)GPUI_DTS";
+static const char kShellTypes25[] = R"GPUI_DTS(     * Sets the maximum width of the element. [Docs](https://tailwindcss.com/docs/max-width)
      *
      * 50% (1/2)
      */
@@ -196164,8 +202924,7 @@ static const char kShellTypes24[] = R"GPUI_DTS(    max_size_9<Self extends Eleme
      *
      * 40% (2/5)
      */
-)GPUI_DTS";
-static const char kShellTypes25[] = R"GPUI_DTS(    max_w_2_5<Self extends Element>(this: Self): Self;
+    max_w_2_5<Self extends Element>(this: Self): Self;
     /**
      * Sets the maximum width of the element. [Docs](https://tailwindcss.com/docs/max-width)
      *
@@ -196471,7 +203230,8 @@ static const char kShellTypes25[] = R"GPUI_DTS(    max_w_2_5<Self extends Elemen
      *
      * 14px (0.875rem)
      */
-    max_w_neg_3p5<Self extends Element>(this: Self): Self;
+)GPUI_DTS";
+static const char kShellTypes26[] = R"GPUI_DTS(    max_w_neg_3p5<Self extends Element>(this: Self): Self;
     /**
      * Sets the maximum width of the element. [Docs](https://tailwindcss.com/docs/max-width)
      *
@@ -196539,8 +203299,7 @@ static const char kShellTypes25[] = R"GPUI_DTS(    max_w_2_5<Self extends Elemen
      */
     max_w_neg_72<Self extends Element>(this: Self): Self;
     /**
-)GPUI_DTS";
-static const char kShellTypes26[] = R"GPUI_DTS(     * Sets the maximum width of the element. [Docs](https://tailwindcss.com/docs/max-width)
+     * Sets the maximum width of the element. [Docs](https://tailwindcss.com/docs/max-width)
      *
      * 32px (2rem)
      */
@@ -196822,7 +203581,8 @@ static const char kShellTypes26[] = R"GPUI_DTS(     * Sets the maximum width of 
      */
     mb_8<Self extends Element>(this: Self): Self;
     /**
-     * Sets the bottom margin of the element. [Docs](https://tailwindcss.com/docs/margin#add-margin-to-a-single-side)
+)GPUI_DTS";
+static const char kShellTypes27[] = R"GPUI_DTS(     * Sets the bottom margin of the element. [Docs](https://tailwindcss.com/docs/margin#add-margin-to-a-single-side)
      *
      * 320px (20rem)
      */
@@ -196882,8 +203642,7 @@ static const char kShellTypes26[] = R"GPUI_DTS(     * Sets the maximum width of 
      */
     mb_neg_11<Self extends Element>(this: Self): Self;
     /**
-)GPUI_DTS";
-static const char kShellTypes27[] = R"GPUI_DTS(     * Sets the bottom margin of the element. [Docs](https://tailwindcss.com/docs/margin#add-margin-to-a-single-side)
+     * Sets the bottom margin of the element. [Docs](https://tailwindcss.com/docs/margin#add-margin-to-a-single-side)
      *
      * 448px (28rem)
      */
@@ -197160,7 +203919,8 @@ static const char kShellTypes27[] = R"GPUI_DTS(     * Sets the bottom margin of 
     min_h_11<Self extends Element>(this: Self): Self;
     /**
      * Sets the minimum height of the element. [Docs](https://tailwindcss.com/docs/min-height)
-     *
+)GPUI_DTS";
+static const char kShellTypes28[] = R"GPUI_DTS(     *
      * 448px (28rem)
      */
     min_h_112<Self extends Element>(this: Self): Self;
@@ -197227,8 +203987,7 @@ static const char kShellTypes27[] = R"GPUI_DTS(     * Sets the bottom margin of 
     /**
      * Sets the minimum height of the element. [Docs](https://tailwindcss.com/docs/min-height)
      *
-)GPUI_DTS";
-static const char kShellTypes28[] = R"GPUI_DTS(     * 8px (0.5rem)
+     * 8px (0.5rem)
      */
     min_h_2<Self extends Element>(this: Self): Self;
     /**
@@ -197536,7 +204295,8 @@ static const char kShellTypes28[] = R"GPUI_DTS(     * 8px (0.5rem)
      *
      * 10px (0.625rem)
      */
-    min_h_neg_2p5<Self extends Element>(this: Self): Self;
+)GPUI_DTS";
+static const char kShellTypes29[] = R"GPUI_DTS(    min_h_neg_2p5<Self extends Element>(this: Self): Self;
     /**
      * Sets the minimum height of the element. [Docs](https://tailwindcss.com/docs/min-height)
      *
@@ -197599,8 +204359,7 @@ static const char kShellTypes28[] = R"GPUI_DTS(     * 8px (0.5rem)
     min_h_neg_5<Self extends Element>(this: Self): Self;
     /**
      * Sets the minimum height of the element. [Docs](https://tailwindcss.com/docs/min-height)
-)GPUI_DTS";
-static const char kShellTypes29[] = R"GPUI_DTS(     *
+     *
      * 224px (14rem)
      */
     min_h_neg_56<Self extends Element>(this: Self): Self;
@@ -197963,7 +204722,8 @@ static const char kShellTypes29[] = R"GPUI_DTS(     *
      *
      * 4px (0.25rem)
      */
-    min_size_neg_1<Self extends Element>(this: Self): Self;
+)GPUI_DTS";
+static const char kShellTypes30[] = R"GPUI_DTS(    min_size_neg_1<Self extends Element>(this: Self): Self;
     /**
      * Sets the minimum width and height of the element.
      *
@@ -198041,8 +204801,7 @@ static const char kShellTypes29[] = R"GPUI_DTS(     *
      *
      * 6px (0.375rem)
      */
-)GPUI_DTS";
-static const char kShellTypes30[] = R"GPUI_DTS(    min_size_neg_1p5<Self extends Element>(this: Self): Self;
+    min_size_neg_1p5<Self extends Element>(this: Self): Self;
     /**
      * Sets the minimum width and height of the element.
      *
@@ -198383,7 +205142,8 @@ static const char kShellTypes30[] = R"GPUI_DTS(    min_size_neg_1p5<Self extends
      * Sets the minimum width of the element. [Docs](https://tailwindcss.com/docs/min-width)
      *
      * 60% (3/5)
-     */
+)GPUI_DTS";
+static const char kShellTypes31[] = R"GPUI_DTS(     */
     min_w_3_5<Self extends Element>(this: Self): Self;
     /**
      * Sets the minimum width of the element. [Docs](https://tailwindcss.com/docs/min-width)
@@ -198448,8 +205208,7 @@ static const char kShellTypes30[] = R"GPUI_DTS(    min_size_neg_1p5<Self extends
     /**
      * Sets the minimum width of the element. [Docs](https://tailwindcss.com/docs/min-width)
      *
-)GPUI_DTS";
-static const char kShellTypes31[] = R"GPUI_DTS(     * 28px (1.75rem)
+     * 28px (1.75rem)
      */
     min_w_7<Self extends Element>(this: Self): Self;
     /**
@@ -198758,7 +205517,8 @@ static const char kShellTypes31[] = R"GPUI_DTS(     * 28px (1.75rem)
      * 100%
      */
     min_w_neg_full<Self extends Element>(this: Self): Self;
-    /**
+)GPUI_DTS";
+static const char kShellTypes32[] = R"GPUI_DTS(    /**
      * Sets the minimum width of the element. [Docs](https://tailwindcss.com/docs/min-width)
      *
      * 1px
@@ -198819,8 +205579,7 @@ static const char kShellTypes31[] = R"GPUI_DTS(     * 28px (1.75rem)
      */
     ml_128<Self extends Element>(this: Self): Self;
     /**
-)GPUI_DTS";
-static const char kShellTypes32[] = R"GPUI_DTS(     * Sets the left margin of the element. [Docs](https://tailwindcss.com/docs/margin#add-margin-to-a-single-side)
+     * Sets the left margin of the element. [Docs](https://tailwindcss.com/docs/margin#add-margin-to-a-single-side)
      *
      * 64px (4rem)
      */
@@ -199102,7 +205861,8 @@ static const char kShellTypes32[] = R"GPUI_DTS(     * Sets the left margin of th
      */
     ml_neg_1_12<Self extends Element>(this: Self): Self;
     /**
-     * Sets the left margin of the element. [Docs](https://tailwindcss.com/docs/margin#add-margin-to-a-single-side)
+)GPUI_DTS";
+static const char kShellTypes33[] = R"GPUI_DTS(     * Sets the left margin of the element. [Docs](https://tailwindcss.com/docs/margin#add-margin-to-a-single-side)
      *
      * 50% (1/2)
      */
@@ -199160,8 +205920,7 @@ static const char kShellTypes32[] = R"GPUI_DTS(     * Sets the left margin of th
      *
      * 66% (2/3)
      */
-)GPUI_DTS";
-static const char kShellTypes33[] = R"GPUI_DTS(    ml_neg_2_3<Self extends Element>(this: Self): Self;
+    ml_neg_2_3<Self extends Element>(this: Self): Self;
     /**
      * Sets the left margin of the element. [Docs](https://tailwindcss.com/docs/margin#add-margin-to-a-single-side)
      *
@@ -199441,7 +206200,8 @@ static const char kShellTypes33[] = R"GPUI_DTS(    ml_neg_2_3<Self extends Eleme
     /**
      * Sets the right margin of the element. [Docs](https://tailwindcss.com/docs/margin#add-margin-to-a-single-side)
      *
-     * 50% (2/4)
+)GPUI_DTS";
+static const char kShellTypes34[] = R"GPUI_DTS(     * 50% (2/4)
      */
     mr_2_4<Self extends Element>(this: Self): Self;
     /**
@@ -199499,8 +206259,7 @@ static const char kShellTypes33[] = R"GPUI_DTS(    ml_neg_2_3<Self extends Eleme
      */
     mr_40<Self extends Element>(this: Self): Self;
     /**
-)GPUI_DTS";
-static const char kShellTypes34[] = R"GPUI_DTS(     * Sets the right margin of the element. [Docs](https://tailwindcss.com/docs/margin#add-margin-to-a-single-side)
+     * Sets the right margin of the element. [Docs](https://tailwindcss.com/docs/margin#add-margin-to-a-single-side)
      *
      * 192px (12rem)
      */
@@ -199781,7 +206540,8 @@ static const char kShellTypes34[] = R"GPUI_DTS(     * Sets the right margin of t
      * 80% (4/5)
      */
     mr_neg_4_5<Self extends Element>(this: Self): Self;
-    /**
+)GPUI_DTS";
+static const char kShellTypes35[] = R"GPUI_DTS(    /**
      * Sets the right margin of the element. [Docs](https://tailwindcss.com/docs/margin#add-margin-to-a-single-side)
      *
      * 20px (1.25rem)
@@ -199836,8 +206596,7 @@ static const char kShellTypes34[] = R"GPUI_DTS(     * Sets the right margin of t
      */
     mr_neg_80<Self extends Element>(this: Self): Self;
     /**
-)GPUI_DTS";
-static const char kShellTypes35[] = R"GPUI_DTS(     * Sets the right margin of the element. [Docs](https://tailwindcss.com/docs/margin#add-margin-to-a-single-side)
+     * Sets the right margin of the element. [Docs](https://tailwindcss.com/docs/margin#add-margin-to-a-single-side)
      *
      * 36px (2.25rem)
      */
@@ -200125,7 +206884,8 @@ static const char kShellTypes35[] = R"GPUI_DTS(     * Sets the right margin of t
      */
     mt_96<Self extends Element>(this: Self): Self;
     /**
-     * Sets the top margin of the element. [Docs](https://tailwindcss.com/docs/margin#add-margin-to-a-single-side)
+)GPUI_DTS";
+static const char kShellTypes36[] = R"GPUI_DTS(     * Sets the top margin of the element. [Docs](https://tailwindcss.com/docs/margin#add-margin-to-a-single-side)
      *
      * Auto
      */
@@ -200179,8 +206939,7 @@ static const char kShellTypes35[] = R"GPUI_DTS(     * Sets the right margin of t
      */
     mt_neg_12<Self extends Element>(this: Self): Self;
     /**
-)GPUI_DTS";
-static const char kShellTypes36[] = R"GPUI_DTS(     * Sets the top margin of the element. [Docs](https://tailwindcss.com/docs/margin#add-margin-to-a-single-side)
+     * Sets the top margin of the element. [Docs](https://tailwindcss.com/docs/margin#add-margin-to-a-single-side)
      *
      * 512px (32rem)
      */
@@ -200466,7 +207225,8 @@ static const char kShellTypes36[] = R"GPUI_DTS(     * Sets the top margin of the
      *
      * 64px (4rem)
      */
-    mx_16<Self extends Element>(this: Self): Self;
+)GPUI_DTS";
+static const char kShellTypes37[] = R"GPUI_DTS(    mx_16<Self extends Element>(this: Self): Self;
     /**
      * Sets the horizontal margin of the element. [Docs](https://tailwindcss.com/docs/margin#add-horizontal-margin)
      *
@@ -200520,8 +207280,7 @@ static const char kShellTypes36[] = R"GPUI_DTS(     * Sets the top margin of the
      *
      * 80px (5rem)
      */
-)GPUI_DTS";
-static const char kShellTypes37[] = R"GPUI_DTS(    mx_20<Self extends Element>(this: Self): Self;
+    mx_20<Self extends Element>(this: Self): Self;
     /**
      * Sets the horizontal margin of the element. [Docs](https://tailwindcss.com/docs/margin#add-horizontal-margin)
      *
@@ -200807,7 +207566,8 @@ static const char kShellTypes37[] = R"GPUI_DTS(    mx_20<Self extends Element>(t
     /**
      * Sets the horizontal margin of the element. [Docs](https://tailwindcss.com/docs/margin#add-horizontal-margin)
      *
-     * 50% (2/4)
+)GPUI_DTS";
+static const char kShellTypes38[] = R"GPUI_DTS(     * 50% (2/4)
      */
     mx_neg_2_4<Self extends Element>(this: Self): Self;
     /**
@@ -200859,8 +207619,7 @@ static const char kShellTypes37[] = R"GPUI_DTS(    mx_20<Self extends Element>(t
      */
     mx_neg_4<Self extends Element>(this: Self): Self;
     /**
-)GPUI_DTS";
-static const char kShellTypes38[] = R"GPUI_DTS(     * Sets the horizontal margin of the element. [Docs](https://tailwindcss.com/docs/margin#add-horizontal-margin)
+     * Sets the horizontal margin of the element. [Docs](https://tailwindcss.com/docs/margin#add-horizontal-margin)
      *
      * 160px (10rem)
      */
@@ -201154,7 +207913,8 @@ static const char kShellTypes38[] = R"GPUI_DTS(     * Sets the horizontal margin
      */
     my_4_5<Self extends Element>(this: Self): Self;
     /**
-     * Sets the vertical margin of the element. [Docs](https://tailwindcss.com/docs/margin#add-vertical-margin)
+)GPUI_DTS";
+static const char kShellTypes39[] = R"GPUI_DTS(     * Sets the vertical margin of the element. [Docs](https://tailwindcss.com/docs/margin#add-vertical-margin)
      *
      * 20px (1.25rem)
      */
@@ -201206,8 +207966,7 @@ static const char kShellTypes38[] = R"GPUI_DTS(     * Sets the horizontal margin
      *
      * 320px (20rem)
      */
-)GPUI_DTS";
-static const char kShellTypes39[] = R"GPUI_DTS(    my_80<Self extends Element>(this: Self): Self;
+    my_80<Self extends Element>(this: Self): Self;
     /**
      * Sets the vertical margin of the element. [Docs](https://tailwindcss.com/docs/margin#add-vertical-margin)
      *
@@ -201497,7 +208256,8 @@ static const char kShellTypes39[] = R"GPUI_DTS(    my_80<Self extends Element>(t
      */
     my_neg_full<Self extends Element>(this: Self): Self;
     /**
-     * Sets the vertical margin of the element. [Docs](https://tailwindcss.com/docs/margin#add-vertical-margin)
+)GPUI_DTS";
+static const char kShellTypes40[] = R"GPUI_DTS(     * Sets the vertical margin of the element. [Docs](https://tailwindcss.com/docs/margin#add-vertical-margin)
      *
      * 1px
      */
@@ -201549,8 +208309,7 @@ static const char kShellTypes39[] = R"GPUI_DTS(    my_80<Self extends Element>(t
      *
      * 4px (0.25rem)
      */
-)GPUI_DTS";
-static const char kShellTypes40[] = R"GPUI_DTS(    p_1<Self extends Element>(this: Self): Self;
+    p_1<Self extends Element>(this: Self): Self;
     /**
      * Sets the padding of the element. [Docs](https://tailwindcss.com/docs/padding)
      *
@@ -201888,7 +208647,8 @@ static const char kShellTypes40[] = R"GPUI_DTS(    p_1<Self extends Element>(thi
      */
     p_neg_1_6<Self extends Element>(this: Self): Self;
     /**
-     * Sets the padding of the element. [Docs](https://tailwindcss.com/docs/padding)
+)GPUI_DTS";
+static const char kShellTypes41[] = R"GPUI_DTS(     * Sets the padding of the element. [Docs](https://tailwindcss.com/docs/padding)
      *
      * 6px (0.375rem)
      */
@@ -201952,8 +208712,7 @@ static const char kShellTypes40[] = R"GPUI_DTS(    p_1<Self extends Element>(thi
      *
      * 75% (3/4)
      */
-)GPUI_DTS";
-static const char kShellTypes41[] = R"GPUI_DTS(    p_neg_3_4<Self extends Element>(this: Self): Self;
+    p_neg_3_4<Self extends Element>(this: Self): Self;
     /**
      * Sets the padding of the element. [Docs](https://tailwindcss.com/docs/padding)
      *
@@ -202253,7 +209012,8 @@ static const char kShellTypes41[] = R"GPUI_DTS(    p_neg_3_4<Self extends Elemen
      *
      * 160px (10rem)
      */
-    pb_40<Self extends Element>(this: Self): Self;
+)GPUI_DTS";
+static const char kShellTypes42[] = R"GPUI_DTS(    pb_40<Self extends Element>(this: Self): Self;
     /**
      * Sets the bottom padding of the element. [Docs](https://tailwindcss.com/docs/padding#add-padding-to-a-single-side)
      *
@@ -202307,8 +209067,7 @@ static const char kShellTypes41[] = R"GPUI_DTS(    p_neg_3_4<Self extends Elemen
      *
      * 288px (18rem)
      */
-)GPUI_DTS";
-static const char kShellTypes42[] = R"GPUI_DTS(    pb_72<Self extends Element>(this: Self): Self;
+    pb_72<Self extends Element>(this: Self): Self;
     /**
      * Sets the bottom padding of the element. [Docs](https://tailwindcss.com/docs/padding#add-padding-to-a-single-side)
      *
@@ -202584,7 +209343,8 @@ static const char kShellTypes42[] = R"GPUI_DTS(    pb_72<Self extends Element>(t
      *
      * 320px (20rem)
      */
-    pb_neg_80<Self extends Element>(this: Self): Self;
+)GPUI_DTS";
+static const char kShellTypes43[] = R"GPUI_DTS(    pb_neg_80<Self extends Element>(this: Self): Self;
     /**
      * Sets the bottom padding of the element. [Docs](https://tailwindcss.com/docs/padding#add-padding-to-a-single-side)
      *
@@ -202638,8 +209398,7 @@ static const char kShellTypes42[] = R"GPUI_DTS(    pb_72<Self extends Element>(t
      *
      * 40px (2.5rem)
      */
-)GPUI_DTS";
-static const char kShellTypes43[] = R"GPUI_DTS(    pl_10<Self extends Element>(this: Self): Self;
+    pl_10<Self extends Element>(this: Self): Self;
     /**
      * Sets the left padding of the element. [Docs](https://tailwindcss.com/docs/padding#add-padding-to-a-single-side)
      *
@@ -202922,7 +209681,8 @@ static const char kShellTypes43[] = R"GPUI_DTS(    pl_10<Self extends Element>(t
      * 48px (3rem)
      */
     pl_neg_12<Self extends Element>(this: Self): Self;
-    /**
+)GPUI_DTS";
+static const char kShellTypes44[] = R"GPUI_DTS(    /**
      * Sets the left padding of the element. [Docs](https://tailwindcss.com/docs/padding#add-padding-to-a-single-side)
      *
      * 512px (32rem)
@@ -202975,8 +209735,7 @@ static const char kShellTypes43[] = R"GPUI_DTS(    pl_10<Self extends Element>(t
      *
      * 6px (0.375rem)
      */
-)GPUI_DTS";
-static const char kShellTypes44[] = R"GPUI_DTS(    pl_neg_1p5<Self extends Element>(this: Self): Self;
+    pl_neg_1p5<Self extends Element>(this: Self): Self;
     /**
      * Sets the left padding of the element. [Docs](https://tailwindcss.com/docs/padding#add-padding-to-a-single-side)
      *
@@ -203257,7 +210016,8 @@ static const char kShellTypes44[] = R"GPUI_DTS(    pl_neg_1p5<Self extends Eleme
      * Sets the right padding of the element. [Docs](https://tailwindcss.com/docs/padding#add-padding-to-a-single-side)
      *
      * 8px (0.5rem)
-     */
+)GPUI_DTS";
+static const char kShellTypes45[] = R"GPUI_DTS(     */
     pr_2<Self extends Element>(this: Self): Self;
     /**
      * Sets the right padding of the element. [Docs](https://tailwindcss.com/docs/padding#add-padding-to-a-single-side)
@@ -203309,8 +210069,7 @@ static const char kShellTypes44[] = R"GPUI_DTS(    pl_neg_1p5<Self extends Eleme
     pr_32<Self extends Element>(this: Self): Self;
     /**
      * Sets the right padding of the element. [Docs](https://tailwindcss.com/docs/padding#add-padding-to-a-single-side)
-)GPUI_DTS";
-static const char kShellTypes45[] = R"GPUI_DTS(     *
+     *
      * 75% (3/4)
      */
     pr_3_4<Self extends Element>(this: Self): Self;
@@ -203591,7 +210350,8 @@ static const char kShellTypes45[] = R"GPUI_DTS(     *
      */
     pr_neg_3p5<Self extends Element>(this: Self): Self;
     /**
-     * Sets the right padding of the element. [Docs](https://tailwindcss.com/docs/padding#add-padding-to-a-single-side)
+)GPUI_DTS";
+static const char kShellTypes46[] = R"GPUI_DTS(     * Sets the right padding of the element. [Docs](https://tailwindcss.com/docs/padding#add-padding-to-a-single-side)
      *
      * 16px (1rem)
      */
@@ -203645,8 +210405,7 @@ static const char kShellTypes45[] = R"GPUI_DTS(     *
      */
     pr_neg_64<Self extends Element>(this: Self): Self;
     /**
-)GPUI_DTS";
-static const char kShellTypes46[] = R"GPUI_DTS(     * Sets the right padding of the element. [Docs](https://tailwindcss.com/docs/padding#add-padding-to-a-single-side)
+     * Sets the right padding of the element. [Docs](https://tailwindcss.com/docs/padding#add-padding-to-a-single-side)
      *
      * 28px (1.75rem)
      */
@@ -203928,7 +210687,8 @@ static const char kShellTypes46[] = R"GPUI_DTS(     * Sets the right padding of 
      */
     pt_7<Self extends Element>(this: Self): Self;
     /**
-     * Sets the top padding of the element. [Docs](https://tailwindcss.com/docs/padding#add-padding-to-a-single-side)
+)GPUI_DTS";
+static const char kShellTypes47[] = R"GPUI_DTS(     * Sets the top padding of the element. [Docs](https://tailwindcss.com/docs/padding#add-padding-to-a-single-side)
      *
      * 288px (18rem)
      */
@@ -203982,8 +210742,7 @@ static const char kShellTypes46[] = R"GPUI_DTS(     * Sets the right padding of 
      */
     pt_neg_1<Self extends Element>(this: Self): Self;
     /**
-)GPUI_DTS";
-static const char kShellTypes47[] = R"GPUI_DTS(     * Sets the top padding of the element. [Docs](https://tailwindcss.com/docs/padding#add-padding-to-a-single-side)
+     * Sets the top padding of the element. [Docs](https://tailwindcss.com/docs/padding#add-padding-to-a-single-side)
      *
      * 40px (2.5rem)
      */
@@ -204263,7 +211022,8 @@ static const char kShellTypes47[] = R"GPUI_DTS(     * Sets the top padding of th
      *
      * 40px (2.5rem)
      */
-    px_10<Self extends Element>(this: Self): Self;
+)GPUI_DTS";
+static const char kShellTypes48[] = R"GPUI_DTS(    px_10<Self extends Element>(this: Self): Self;
     /**
      * Sets the horizontal padding of the element. [Docs](https://tailwindcss.com/docs/padding#add-horizontal-padding)
      *
@@ -204317,8 +211077,7 @@ static const char kShellTypes47[] = R"GPUI_DTS(     * Sets the top padding of th
      *
      * 25% (1/4)
      */
-)GPUI_DTS";
-static const char kShellTypes48[] = R"GPUI_DTS(    px_1_4<Self extends Element>(this: Self): Self;
+    px_1_4<Self extends Element>(this: Self): Self;
     /**
      * Sets the horizontal padding of the element. [Docs](https://tailwindcss.com/docs/padding#add-horizontal-padding)
      *
@@ -204600,7 +211359,8 @@ static const char kShellTypes48[] = R"GPUI_DTS(    px_1_4<Self extends Element>(
      *
      * 6px (0.375rem)
      */
-    px_neg_1p5<Self extends Element>(this: Self): Self;
+)GPUI_DTS";
+static const char kShellTypes49[] = R"GPUI_DTS(    px_neg_1p5<Self extends Element>(this: Self): Self;
     /**
      * Sets the horizontal padding of the element. [Docs](https://tailwindcss.com/docs/padding#add-horizontal-padding)
      *
@@ -204653,8 +211413,7 @@ static const char kShellTypes48[] = R"GPUI_DTS(    px_1_4<Self extends Element>(
      * Sets the horizontal padding of the element. [Docs](https://tailwindcss.com/docs/padding#add-horizontal-padding)
      *
      * 128px (8rem)
-)GPUI_DTS";
-static const char kShellTypes49[] = R"GPUI_DTS(     */
+     */
     px_neg_32<Self extends Element>(this: Self): Self;
     /**
      * Sets the horizontal padding of the element. [Docs](https://tailwindcss.com/docs/padding#add-horizontal-padding)
@@ -204939,7 +211698,8 @@ static const char kShellTypes49[] = R"GPUI_DTS(     */
      */
     py_3_4<Self extends Element>(this: Self): Self;
     /**
-     * Sets the vertical padding of the element. [Docs](https://tailwindcss.com/docs/padding#add-vertical-padding)
+)GPUI_DTS";
+static const char kShellTypes50[] = R"GPUI_DTS(     * Sets the vertical padding of the element. [Docs](https://tailwindcss.com/docs/padding#add-vertical-padding)
      *
      * 60% (3/5)
      */
@@ -204993,8 +211753,7 @@ static const char kShellTypes49[] = R"GPUI_DTS(     */
      */
     py_5_6<Self extends Element>(this: Self): Self;
     /**
-)GPUI_DTS";
-static const char kShellTypes50[] = R"GPUI_DTS(     * Sets the vertical padding of the element. [Docs](https://tailwindcss.com/docs/padding#add-vertical-padding)
+     * Sets the vertical padding of the element. [Docs](https://tailwindcss.com/docs/padding#add-vertical-padding)
      *
      * 24px (1.5rem)
      */
@@ -205280,7 +212039,8 @@ static const char kShellTypes50[] = R"GPUI_DTS(     * Sets the vertical padding 
      *
      * 288px (18rem)
      */
-    py_neg_72<Self extends Element>(this: Self): Self;
+)GPUI_DTS";
+static const char kShellTypes51[] = R"GPUI_DTS(    py_neg_72<Self extends Element>(this: Self): Self;
     /**
      * Sets the vertical padding of the element. [Docs](https://tailwindcss.com/docs/padding#add-vertical-padding)
      *
@@ -205334,8 +212094,7 @@ static const char kShellTypes50[] = R"GPUI_DTS(     * Sets the vertical padding 
      *
      * 0px
      */
-)GPUI_DTS";
-static const char kShellTypes51[] = R"GPUI_DTS(    right_0<Self extends Element>(this: Self): Self;
+    right_0<Self extends Element>(this: Self): Self;
     /**
      * Sets the right value of a positioned element. [Docs](https://tailwindcss.com/docs/top-right-bottom-left)
      *
@@ -205625,7 +212384,8 @@ static const char kShellTypes51[] = R"GPUI_DTS(    right_0<Self extends Element>
      */
     right_neg_10<Self extends Element>(this: Self): Self;
     /**
-     * Sets the right value of a positioned element. [Docs](https://tailwindcss.com/docs/top-right-bottom-left)
+)GPUI_DTS";
+static const char kShellTypes52[] = R"GPUI_DTS(     * Sets the right value of a positioned element. [Docs](https://tailwindcss.com/docs/top-right-bottom-left)
      *
      * 44px (2.75rem)
      */
@@ -205678,8 +212438,7 @@ static const char kShellTypes51[] = R"GPUI_DTS(    right_0<Self extends Element>
      * 25% (1/4)
      */
     right_neg_1_4<Self extends Element>(this: Self): Self;
-)GPUI_DTS";
-static const char kShellTypes52[] = R"GPUI_DTS(    /**
+    /**
      * Sets the right value of a positioned element. [Docs](https://tailwindcss.com/docs/top-right-bottom-left)
      *
      * 20% (1/5)
@@ -205956,7 +212715,8 @@ static const char kShellTypes52[] = R"GPUI_DTS(    /**
      */
     rounded_bl_3xl<Self extends Element>(this: Self): Self;
     /**
-     * Sets the border radius of the bottom left corner of the element. [Docs](https://tailwindcss.com/docs/border-radius#rounding-corners-separately)
+)GPUI_DTS";
+static const char kShellTypes53[] = R"GPUI_DTS(     * Sets the border radius of the bottom left corner of the element. [Docs](https://tailwindcss.com/docs/border-radius#rounding-corners-separately)
      *
      * 9999px
      */
@@ -205998,8 +212758,7 @@ static const char kShellTypes52[] = R"GPUI_DTS(    /**
      */
     rounded_bl_xs<Self extends Element>(this: Self): Self;
     /**
-)GPUI_DTS";
-static const char kShellTypes53[] = R"GPUI_DTS(     * Sets the border radius of the bottom right corner of the element. [Docs](https://tailwindcss.com/docs/border-radius#rounding-corners-separately)
+     * Sets the border radius of the bottom right corner of the element. [Docs](https://tailwindcss.com/docs/border-radius#rounding-corners-separately)
      *
      * 16px (1rem)
      */
@@ -206255,7 +213014,8 @@ static const char kShellTypes53[] = R"GPUI_DTS(     * Sets the border radius of 
      *
      * 24px (1.5rem)
      */
-    rounded_tl_3xl<Self extends Element>(this: Self): Self;
+)GPUI_DTS";
+static const char kShellTypes54[] = R"GPUI_DTS(    rounded_tl_3xl<Self extends Element>(this: Self): Self;
     /**
      * Sets the border radius of the top left corner of the element. [Docs](https://tailwindcss.com/docs/border-radius#rounding-corners-separately)
      *
@@ -206298,8 +213058,7 @@ static const char kShellTypes53[] = R"GPUI_DTS(     * Sets the border radius of 
      * 2px (0.125rem)
      */
     rounded_tl_xs<Self extends Element>(this: Self): Self;
-)GPUI_DTS";
-static const char kShellTypes54[] = R"GPUI_DTS(    /**
+    /**
      * Sets the border radius of the top right corner of the element. [Docs](https://tailwindcss.com/docs/border-radius#rounding-corners-separately)
      *
      * 16px (1rem)
@@ -206636,7 +213395,8 @@ static const char kShellTypes54[] = R"GPUI_DTS(    /**
      */
     size_4<Self extends Element>(this: Self): Self;
     /**
-     * Sets the width and height of the element.
+)GPUI_DTS";
+static const char kShellTypes55[] = R"GPUI_DTS(     * Sets the width and height of the element.
      *
      * 160px (10rem)
      */
@@ -206710,8 +213470,7 @@ static const char kShellTypes54[] = R"GPUI_DTS(    /**
     /**
      * Sets the width and height of the element.
      *
-)GPUI_DTS";
-static const char kShellTypes55[] = R"GPUI_DTS(     * 36px (2.25rem)
+     * 36px (2.25rem)
      */
     size_9<Self extends Element>(this: Self): Self;
     /**
@@ -207089,7 +213848,8 @@ static const char kShellTypes55[] = R"GPUI_DTS(     * 36px (2.25rem)
      *
      * Note: This doesn't exist in Tailwind CSS.
      */
-    text_ellipsis_middle<Self extends Element>(this: Self): Self;
+)GPUI_DTS";
+static const char kShellTypes56[] = R"GPUI_DTS(    text_ellipsis_middle<Self extends Element>(this: Self): Self;
     /**
      * Sets the truncate overflowing text with an ellipsis (…) at the start if needed.
      *
@@ -207139,8 +213899,7 @@ static const char kShellTypes55[] = R"GPUI_DTS(     * 36px (2.25rem)
      */
     top_0p5<Self extends Element>(this: Self): Self;
     /**
-)GPUI_DTS";
-static const char kShellTypes56[] = R"GPUI_DTS(     * Sets the top value of a positioned element. [Docs](https://tailwindcss.com/docs/top-right-bottom-left)
+     * Sets the top value of a positioned element. [Docs](https://tailwindcss.com/docs/top-right-bottom-left)
      *
      * 4px (0.25rem)
      */
@@ -207438,7 +214197,8 @@ static const char kShellTypes56[] = R"GPUI_DTS(     * Sets the top value of a po
      *
      * 48px (3rem)
      */
-    top_neg_12<Self extends Element>(this: Self): Self;
+)GPUI_DTS";
+static const char kShellTypes57[] = R"GPUI_DTS(    top_neg_12<Self extends Element>(this: Self): Self;
     /**
      * Sets the top value of a positioned element. [Docs](https://tailwindcss.com/docs/top-right-bottom-left)
      *
@@ -207488,8 +214248,7 @@ static const char kShellTypes56[] = R"GPUI_DTS(     * Sets the top value of a po
      */
     top_neg_1_6<Self extends Element>(this: Self): Self;
     /**
-)GPUI_DTS";
-static const char kShellTypes57[] = R"GPUI_DTS(     * Sets the top value of a positioned element. [Docs](https://tailwindcss.com/docs/top-right-bottom-left)
+     * Sets the top value of a positioned element. [Docs](https://tailwindcss.com/docs/top-right-bottom-left)
      *
      * 6px (0.375rem)
      */
@@ -207798,7 +214557,8 @@ static const char kShellTypes57[] = R"GPUI_DTS(     * Sets the top value of a po
     w_1p5<Self extends Element>(this: Self): Self;
     /**
      * Sets the width of the element. [Docs](https://tailwindcss.com/docs/width)
-     *
+)GPUI_DTS";
+static const char kShellTypes58[] = R"GPUI_DTS(     *
      * 8px (0.5rem)
      */
     w_2<Self extends Element>(this: Self): Self;
@@ -207857,8 +214617,7 @@ static const char kShellTypes57[] = R"GPUI_DTS(     * Sets the top value of a po
      */
     w_3_4<Self extends Element>(this: Self): Self;
     /**
-)GPUI_DTS";
-static const char kShellTypes58[] = R"GPUI_DTS(     * Sets the width of the element. [Docs](https://tailwindcss.com/docs/width)
+     * Sets the width of the element. [Docs](https://tailwindcss.com/docs/width)
      *
      * 60% (3/5)
      */
@@ -208210,7 +214969,8 @@ static const char kShellTypes58[] = R"GPUI_DTS(     * Sets the width of the elem
      *
      * 32px (2rem)
      */
-    w_neg_8<Self extends Element>(this: Self): Self;
+)GPUI_DTS";
+static const char kShellTypes59[] = R"GPUI_DTS(    w_neg_8<Self extends Element>(this: Self): Self;
     /**
      * Sets the width of the element. [Docs](https://tailwindcss.com/docs/width)
      *
@@ -208265,8 +215025,7 @@ static const char kShellTypes58[] = R"GPUI_DTS(     * Sets the width of the elem
   export function div(): NativeElement;
 
   /**
-)GPUI_DTS";
-static const char kShellTypes59[] = R"GPUI_DTS(   * A vector image from the application's own directory.
+   * A vector image from the application's own directory.
    *
    * The path resolves against the application root — the directory passed to
    * gpui-shell — not against the file that asked for it, the way a web
@@ -208325,6 +215084,22 @@ static const char kShellTypes59[] = R"GPUI_DTS(   * A vector image from the appl
    * the other two throw. A duplicate key there quietly gives both items one
    * identity, and `on_item_click` reports it for either.
    *
+   * When `item_count` changes, the reader stays on the item they were
+   * reading: the list remembers the key of the item at the top of the
+   * viewport and, after the change, finds that key again and scrolls back to
+   * it, the same distance into it. So a page of older items put above, or a
+   * new one added below, leaves the view where it was — also at the very top,
+   * where the new items stay above the fold. If that item is gone, the view
+   * stays at the same index. A list scrolled past its last item, or following
+   * its tail (`with_follow_mode("tail")`), stays at the end. To find the key,
+   * `get_key` is called near the item's old index from inside layout, so it
+   * must stay a plain lookup.
+   *
+   * To load more items as the reader nears either end, use
+   * `on_visible_range_change`: it reports which items are shown once the
+   * frame is done, where state may change. The item renderer cannot be used
+   * for that, because it runs inside layout.
+   *
    * @param id      Identity, and the name a `Scrollbar` pairs with.
    * @param item_count How many items the collection has, visible or not.
    * @param get_key An item's stable domain key, from its current index; the
@@ -208375,13 +215150,48 @@ static const char kShellTypes59[] = R"GPUI_DTS(   * A vector image from the appl
     fill(): PathBuilder;
     stroke(width: number): PathBuilder;
   };
+  /**
+   * One box shadow for `.shadow([...])`, written like a CSS `box-shadow`
+   * layer. Every length is in pixels and defaults to 0. As in CSS, the first
+   * shadow in the list paints on top of the ones after it.
+   *
+   * `blur` has CSS semantics — the blur radius, twice the gaussian's standard
+   * deviation — and is halved for GPUI, so a value copied from a stylesheet
+   * looks the same here. `spread` may be negative.
+   *
+   * An `inset` shadow is painted inside the element: above its fill, but
+   * beneath its children and its border. Outer shadows paint beneath the fill.
+   */
+  export interface BoxShadowSpec {
+    /** Horizontal offset in pixels. */
+    x?: number;
+    /** Vertical offset in pixels. */
+    y?: number;
+    /** CSS blur radius in pixels; non-negative. */
+    blur?: number;
+    /** Spread in pixels; negative shrinks the shadow. */
+    spread?: number;
+    /** The shadow colour, usually with alpha (`#00000066`). */
+    color: Color;
+    /** Paint inside the element instead of around it. */
+    inset?: boolean;
+  }
   export interface BackgroundStop {}
+  /**
+   * A native GPUI background: what `window.paint_path` fills with, and what
+   * `.bg(...)` accepts besides a colour. A gradient set with `.bg` is drawn
+   * inside the element's rounded corners.
+   */
   export interface Background {
     opacity(factor: number): Background;
     color_space(space: "srgb" | "oklab"): Background;
   }
   export const Background: {
     solid(color: Color): Background;
+    /**
+     * A gradient stop. `percentage` is a fraction of the gradient line, from
+     * 0 (start) to 1 (end) — not 0 to 100.
+     */
     stop(color: Color, percentage: number): BackgroundStop;
     linear_gradient(angle: number, from: Color | BackgroundStop, to: Color | BackgroundStop): Background;
     pattern_slash(color: Color, width: number, interval: number): Background;
@@ -208431,7 +215241,8 @@ static const char kShellTypes59[] = R"GPUI_DTS(   * A vector image from the appl
      */
     open_sheet(content: () => Element): void;
     /** The same, anchored at the `gpui-base` placement you name. */
-    open_sheet_at(placement: import("gpui-base").Placement, content: () => Element): void;
+)GPUI_DTS";
+static const char kShellTypes60[] = R"GPUI_DTS(    open_sheet_at(placement: import("gpui-base").Placement, content: () => Element): void;
     /** Closes the sheet, and answers whether one was open. */
     close_sheet(): boolean;
     /** Whether the sheet is open. Legal from `render`, unlike the rest. */
@@ -208522,8 +215333,7 @@ static const char kShellTypes59[] = R"GPUI_DTS(   * A vector image from the appl
      * lot -- so calling it where `cx.notify()` would do turns one view's update
      * into all of them, and calling it per incoming message turns a data feed
      * into a frame-rate problem. An application that pushed a quote through it
-)GPUI_DTS";
-static const char kShellTypes60[] = R"GPUI_DTS(     * for each tick of a live market watchlist measured seven frames a second.
+     * for each tick of a live market watchlist measured seven frames a second.
      *
      * Reach for it only when there is genuinely no view to notify:
      *
@@ -208727,7 +215537,8 @@ declare module "gpui-base" {
    * It carries the progress role and the `0..=100` value a screen reader reads
    * out, and draws exactly what any other empty element draws — nothing. The
    * visible bar is a `ProgressTrack` you size and color, holding a
-   * `ProgressIndicator` whose width you set from the same number you passed to
+)GPUI_DTS";
+static const char kShellTypes61[] = R"GPUI_DTS(   * `ProgressIndicator` whose width you set from the same number you passed to
    * `value`. `Progress.new(...)` on its own puts nothing on screen.
    */
   export const Progress: ComponentType;
@@ -208827,8 +215638,7 @@ declare module "gpui-base" {
    */
   export const Accordion: ComponentType;
   /**
-)GPUI_DTS";
-static const char kShellTypes61[] = R"GPUI_DTS(   * One item. `open(...)` in, and the trigger's `on_change(...)` out.
+   * One item. `open(...)` in, and the trigger's `on_change(...)` out.
    *
    * `disabled(true)` stops the trigger under it responding, whatever the
    * trigger itself says.
@@ -209008,7 +215818,8 @@ static const char kShellTypes61[] = R"GPUI_DTS(   * One item. `open(...)` in, an
    *
    * Children are `resizable_panel()` calls. Anything else is wrapped in a panel
    * with base's default constraints, which is convenient and lossy — a wrapped
-   * element has no `size`, `size_range` or `visible` — so name the panels
+)GPUI_DTS";
+static const char kShellTypes62[] = R"GPUI_DTS(   * element has no `size`, `size_range` or `visible` — so name the panels
    * whenever any of the three matters.
    *
    * The group has no size of its own: it fills whatever it is put in, exactly as
@@ -209093,8 +215904,7 @@ static const char kShellTypes61[] = R"GPUI_DTS(   * One item. `open(...)` in, an
    * It measures its trigger, pins the chosen corner of the content to it,
    * paints that content in a layer above the rest of the window and keeps it
    * clear of the window edges. It owns nothing else — no press handling, no
-)GPUI_DTS";
-static const char kShellTypes62[] = R"GPUI_DTS(   * dismissal, no open state. That is the point: a `Select` already owns those,
+   * dismissal, no open state. That is the point: a `Select` already owns those,
    * and a `Popover` underneath it would be a second control fighting the first
    * for the same Escape key.
    *
@@ -209261,7 +216071,8 @@ static const char kShellTypes62[] = R"GPUI_DTS(   * dismissal, no open state. Th
    *   .child(v_virtual_list("rows", this.rows.length, 28,
    *     (index) => this.rows[index].id,
    *     (range) => this.rows.slice(range.start, range.end).map(row => text(row.name))))
-   *   .child(Scrollbar.vertical("rows").absolute().inset_0());
+)GPUI_DTS";
+static const char kShellTypes63[] = R"GPUI_DTS(   *   .child(Scrollbar.vertical("rows").absolute().inset_0());
    * ```
    *
    * @param id      Identity, and the name a `Scrollbar` pairs with.
@@ -209357,8 +216168,7 @@ static const char kShellTypes62[] = R"GPUI_DTS(   * dismissal, no open state. Th
      */
     set_step(step: number | null): void;
     /** The lowest value stepping and blurring clamp to. `null` removes it. */
-)GPUI_DTS";
-static const char kShellTypes63[] = R"GPUI_DTS(    set_min(min: number | null): void;
+    set_min(min: number | null): void;
     /** The highest value stepping and blurring clamp to. `null` removes it. */
     set_max(max: number | null): void;
     /** Draws the text as a password. */
@@ -209421,6 +216231,16 @@ static const char kShellTypes63[] = R"GPUI_DTS(    set_min(min: number | null): 
     set_auto_grow(min_rows: number, max_rows: number): void;
     /** Wraps long lines instead of scrolling sideways. Default is on. */
     set_soft_wrap(wrap: boolean): void;
+    /**
+     * Makes Enter submit instead of starting a new line. Default is off.
+     *
+     * Off, Enter inserts a line break and then reports `submit`, so a handler
+     * that sends the text finds the break at its end. On, Enter leaves the text
+     * as it is and reports `submit` with `shift: false`. Shift+Enter inserts a
+     * line break either way, and also reports `submit`, with `shift: true` —
+     * a handler that sends should return when `event.shift` is set.
+     */
+    set_submit_on_enter(submit: boolean): void;
     release(): boolean;
   }
 
@@ -209531,7 +216351,8 @@ static const char kShellTypes63[] = R"GPUI_DTS(    set_min(min: number | null): 
   /**
    * Retained one-time-code state, created once and kept on the view.
    *
-   * Like `InputState.new(...)` this needs a live host call, so it belongs in
+)GPUI_DTS";
+static const char kShellTypes64[] = R"GPUI_DTS(   * Like `InputState.new(...)` this needs a live host call, so it belongs in
    * `init` or in an event handler — never in `render`.
    *
    * The length is fixed when the state is created, because it is what the
@@ -209648,8 +216469,7 @@ static const char kShellTypes63[] = R"GPUI_DTS(    set_min(min: number | null): 
     readonly tabs: readonly DockTab[];
   }
 
-)GPUI_DTS";
-static const char kShellTypes64[] = R"GPUI_DTS(  /** One dock, as the `dock` handler is given it. */
+  /** One dock, as the `dock` handler is given it. */
   export interface DockRegion {
     readonly placement: DockPlacement;
     /** Its extent along its own axis: width for left and right, height for bottom. */
@@ -209813,7 +216633,8 @@ static const char kShellTypes64[] = R"GPUI_DTS(  /** One dock, as the `dock` han
      * resize handle. Whatever this returns replaces the content, so put
      * `dock_content()` where the panels belong.
      */
-    dock(handler: (dock: DockRegion, cx: Context) => Element | null): DockAreaElement;
+)GPUI_DTS";
+static const char kShellTypes65[] = R"GPUI_DTS(    dock(handler: (dock: DockRegion, cx: Context) => Element | null): DockAreaElement;
   }
 
   /**
@@ -209922,8 +216743,7 @@ declare module "gpui-component" {
 }
 
 declare module "gpui-shell" {
-)GPUI_DTS";
-static const char kShellTypes65[] = R"GPUI_DTS(  /** The string forms accepted by gpui-shell's length bridge. */
+  /** The string forms accepted by gpui-shell's length bridge. */
   export type LengthString = `${number}px` | `${number}rem` | `${number}%`;
 
   /** The gpui-shell call scope reported by `cx.phase()`; unrelated to gpui::DispatchPhase. */
@@ -210011,7 +216831,8 @@ declare module "gpui-fps" {
    * whether and where, and nothing the script renders can move it, rebuild
    * it, or count against it. Calling it again moves or reconfigures the HUD
    * that is already up; the monitor behind it keeps its history across a hide
-   * and a show. Needs a live host call: `init()`, an event handler or a task.
+   * and a show. Call it from an event handler or a task: `init()` runs before
+   * the window has its root, so it throws there.
    */
   export function show_fps_monitor(options?: FpsMonitorOptions): void;
   /** Takes the HUD down. `true` if one was up. */
@@ -210115,7 +216936,8 @@ declare module "process" {
    */
   export interface ChildProcess {
     readonly pid: number;
-    on(event: "stdout" | "stderr", handler: (text: string, cx: import("gpui-kit").AsyncContext) => void): ChildProcess;
+)GPUI_DTS";
+static const char kShellTypes66[] = R"GPUI_DTS(    on(event: "stdout" | "stderr", handler: (text: string, cx: import("gpui-kit").AsyncContext) => void): ChildProcess;
     on(event: "exit", handler: (result: ExitResult, cx: import("gpui-kit").AsyncContext) => void): ChildProcess;
     /** Needs `stdin: "pipe"`; throws otherwise, or after `end()`. */
     write(text: string): void;
@@ -210289,8 +217111,7 @@ interface ImportMeta {
  * unlike `cx`, nothing hands it to you.
  *
  * Ambient: every call reads the host call that is running now, and throws
-)GPUI_DTS";
-static const char kShellTypes66[] = R"GPUI_DTS( * outside one. There is no handle to hold, so there is nothing to hold past the
+ * outside one. There is no handle to hold, so there is nothing to hold past the
  * call that would have made it stale.
  *
  * An overlay belongs to the window rather than to the view that opened it —
@@ -210406,18 +217227,28 @@ static TempStr shell_typings_JoinPathTemp(Str directory, Str name) {
     return fmt("%s%c%s", directory, base::PlatPathSep(), name);
 }
 
-static bool SourceImportsBuiltins(Str source) {
-    static const char* specifiers[] = {"gpui-kit",   "gpui",
-                                       "gpui-base",  "gpui-component",
+static const char* shell_typings_CatalogModule(const FrozenComponentRegistry* components) {
+    const char* name = components ? components->ModuleSpecifier() : nullptr;
+    if (!name || name[0] == 0) return kDefaultComponentModule;
+    return name;
+}
+
+static bool SourceQuotes(Str source, const char* specifier) {
+    TempStr quoted = fmt("\"%s\"", Str(specifier));
+    if (StrContains(source, quoted)) return true;
+    quoted = fmt("'%s'", Str(specifier));
+    return StrContains(source, quoted);
+}
+
+static bool SourceImportsBuiltins(Str source, const char* componentModule) {
+
+    static const char* specifiers[] = {"gpui-kit", "gpui", "gpui-base",
                                        "gpui-shell", "gpui-fps"};
     for (int i = 0; i < (int)(sizeof(specifiers) / sizeof(specifiers[0]));
          i++) {
-        TempStr quoted = fmt("\"%s\"", Str(specifiers[i]));
-        if (StrContains(source, quoted)) return true;
-        quoted = fmt("'%s'", Str(specifiers[i]));
-        if (StrContains(source, quoted)) return true;
+        if (SourceQuotes(source, specifiers[i])) return true;
     }
-    return false;
+    return componentModule && SourceQuotes(source, componentModule);
 }
 
 static bool IsScript(Str name) {
@@ -210736,7 +217567,8 @@ bool ShellWriteTypeDeclarations(Str root, const HostModules* modules,
                         ? ReadBoundedFileTemp(sourcePath, kTypesMaxSourceBytes)
                         : TempStr{};
                 if (source.s) {
-                    imports = SourceImportsBuiltins(source);
+                    imports = SourceImportsBuiltins(source,
+                                                    shell_typings_CatalogModule(components));
                 }
             }
         }
@@ -210791,6 +217623,21 @@ Bridged Bridged::String(Str value) {
     return out;
 }
 
+Bridged Bridged::Background(const BackgroundSpec* spec) {
+    Bridged out;
+    out.kind = BridgedKind::Background;
+    out.background = spec;
+    return out;
+}
+
+Bridged Bridged::Shadows(const ShadowSpec* specs, int count) {
+    Bridged out;
+    out.kind = BridgedKind::Shadows;
+    out.shadows = specs;
+    out.shadowCount = count;
+    return out;
+}
+
 Str BridgedDescribe(Arena* arena, const Bridged& value) {
     switch (value.kind) {
         case BridgedKind::Nil:
@@ -210803,6 +217650,10 @@ Str BridgedDescribe(Arena* arena, const Bridged& value) {
             return StrDup(arena, fmt("number (%g)", value.number));
         case BridgedKind::String:
             return StrDup(arena, fmt("string (\"%s\")", value.string));
+        case BridgedKind::Background:
+            return StrDup(arena, StrL("a Background"));
+        case BridgedKind::Shadows:
+            return StrDup(arena, StrL("a shadow list"));
     }
     return {};
 }
@@ -210904,6 +217755,97 @@ bool BridgedAsColor(const Bridged& value, Hsla* out, ShellError* error) {
     return false;
 }
 
+static bool ColorLiteral(Str text, Hsla* out, ShellError* error) {
+    return BridgedAsColor(Bridged::String(text), out, error);
+}
+
+bool BackgroundSpecResolve(const BackgroundSpec& spec, ::gpui::Background* out,
+                           ShellError* error) {
+    if (!out) return false;
+    Hsla first = {};
+    Str literal = spec.kind == BackgroundKind::LinearGradient ? spec.fromColor
+                                                              : spec.color;
+    if (!ColorLiteral(literal, &first, error)) return false;
+    ::gpui::Background result = HslaToRgba(first);
+    if (spec.kind == BackgroundKind::LinearGradient) {
+        Hsla second = {};
+        if (!ColorLiteral(spec.toColor, &second, error)) return false;
+        result = BackgroundLinear(
+            spec.angle, ColorStopAt(HslaToRgba(first), spec.fromPosition),
+            ColorStopAt(HslaToRgba(second), spec.toPosition));
+    }
+
+    *out = BackgroundOpacity(result, spec.opacity);
+    return true;
+}
+
+bool BridgedAsBackground(const Bridged& value, ::gpui::Background* out,
+                         ShellError* error) {
+    if (value.kind == BridgedKind::Background) {
+        if (!value.background) {
+            ShellErrorSet(error, StrL("expected a color or a Background"));
+            return false;
+        }
+        return BackgroundSpecResolve(*value.background, out, error);
+    }
+    if (value.kind == BridgedKind::String) {
+        Hsla color = {};
+        if (!BridgedAsColor(value, &color, error)) return false;
+        if (out) *out = HslaToRgba(color);
+        return true;
+    }
+    if (error) {
+        Arena* arena = GetTempArena();
+        Str got = BridgedDescribe(arena, value);
+        ShellErrorSet(error,
+                      fmt("expected a color or a Background, got %s", got));
+    }
+    return false;
+}
+
+bool BridgedAsShadows(const Bridged& value, ::gpui::BoxShadow* out, int cap,
+                      int* count, ShellError* error) {
+    if (value.kind != BridgedKind::Shadows) {
+        if (error) {
+            Arena* arena = GetTempArena();
+            Str got = BridgedDescribe(arena, value);
+            ShellErrorSet(error,
+                          fmt("expected an array of shadows, got %s", got));
+        }
+        return false;
+    }
+    int n = value.shadowCount;
+    if (n < 0) n = 0;
+    if (count) *count = n;
+    if (n == 0) return true;
+    if (!out || cap < n || !value.shadows) {
+        ShellErrorSet(error, StrL("shadow list is too large"));
+        return false;
+    }
+
+    for (int i = 0; i < n; i++) {
+        int from = n - 1 - i;
+        const ShadowSpec& spec = value.shadows[from];
+        Hsla color = {};
+        ShellError colorError;
+        if (!ColorLiteral(spec.color, &color, &colorError)) {
+            ShellErrorSet(error,
+                          fmt("shadow %d: %s", from, colorError.message));
+            ShellErrorClear(&colorError);
+            return false;
+        }
+        ::gpui::BoxShadow shadow = {};
+        shadow.x = spec.x;
+        shadow.y = spec.y;
+        shadow.blur = spec.blur / 2.f;
+        shadow.spread = spec.spread;
+        shadow.color = HslaToRgba(color);
+        shadow.inset = spec.inset;
+        out[i] = shadow;
+    }
+    return true;
+}
+
 bool BridgedIsTruthy(const Bridged& value) {
     switch (value.kind) {
         case BridgedKind::Nil:
@@ -210914,6 +217856,9 @@ bool BridgedIsTruthy(const Bridged& value) {
             return value.number != 0.0 && !isnan(value.number);
         case BridgedKind::String:
             return len(value.string) != 0;
+        case BridgedKind::Background:
+        case BridgedKind::Shadows:
+            return true;
     }
     return false;
 }
@@ -211766,16 +218711,20 @@ struct PlacedFloatedBox {
     float y = 0.0f;
 };
 
+static constexpr float kFitTolerance = 0.001f;
+
 static bool FloatFitsHorizontally(float width, FloatDirection direction,
                                   float bfcWidth, const float floatInsets[2],
                                   const float cbInsets[2]) {
     int lead = (int)direction;
     int trail = 1 - lead;
     float xInset = F32Max(floatInsets[lead], cbInsets[lead]);
-    bool fitsOpposite = floatInsets[trail] == 0.0f ||
-                        xInset + width <= bfcWidth - floatInsets[trail];
-    bool fitsContaining = floatInsets[lead] == 0.0f ||
-                          xInset + width <= bfcWidth - cbInsets[trail];
+    bool fitsOpposite =
+        floatInsets[trail] == 0.0f ||
+        xInset + width <= bfcWidth - floatInsets[trail] + kFitTolerance;
+    bool fitsContaining =
+        floatInsets[lead] == 0.0f ||
+        xInset + width <= bfcWidth - cbInsets[trail] + kFitTolerance;
     return fitsOpposite && fitsContaining;
 }
 
@@ -212246,14 +219195,24 @@ BfcSlot FloatContext::FindBfcSlot(float minY,
 
 struct FloatIntrinsicWidthCalculator {
     AvailableSpace availableWidth;
+
+    float sideSums[2] = {};
     float contribution = 0.0f;
     float widest = 0.0f;
 
-    void AddFloat(float width) {
+    void AddFloat(float width, FloatDirection direction, Clear clear) {
         switch (availableWidth.kind) {
             case AvailableSpace::Kind::Definite:
             case AvailableSpace::Kind::MaxContent:
-                contribution += width;
+
+                if (clear == Clear::Left || clear == Clear::Both) {
+                    sideSums[0] = 0.0f;
+                }
+                if (clear == Clear::Right || clear == Clear::Both) {
+                    sideSums[1] = 0.0f;
+                }
+                sideSums[(int)direction] += width;
+                contribution = F32Max(contribution, sideSums[0] + sideSums[1]);
                 break;
             case AvailableSpace::Kind::MinContent:
                 contribution = F32Max(contribution, width);
@@ -212282,7 +219241,7 @@ struct BlockContext {
 
     float contentBoxInsets[2] = {0.0f, 0.0f};
 
-    float floatContentContribution = 0.0f;
+    float floatContentContribution = -INFINITY;
     bool isRoot = false;
     bool adjoiningFloats[2] = {false, false};
     bool topAdjoiningFloats[2] = {false, false};
@@ -212402,7 +219361,7 @@ struct BlockItem {
 
     bool isTable = false;
 
-    bool isReplaced = false;
+    bool isCompressibleReplaced = false;
 
     bool isInSameBfc = false;
 
@@ -212410,13 +219369,20 @@ struct BlockItem {
     Clear clear = Clear::None;
 
     SizeFOpt size = SizeFOptNone();
+
+    SizeDim sizeStyle;
     SizeFOpt minSize = SizeFOptNone();
     SizeFOpt maxSize = SizeFOptNone();
 
     PointOverflow overflow;
+    Contain contain;
     float scrollbarWidth = 0.0f;
 
-    Position position = Position::Relative;
+    Position position = Position::Static;
+
+    Direction direction = Direction::Ltr;
+    OptAlignSelf alignSelf;
+    OptAlignSelf justifySelf;
     RectLpa inset;
     RectLpa margin;
     RectF padding;
@@ -212430,6 +219396,9 @@ struct BlockItem {
 
     bool hasFinalLayout = false;
     Layout finalLayout;
+
+    int oofStart = 0;
+    int oofCount = 0;
 };
 
 void GenerateItemList(TaffyTree* tree, NodeId node, SizeFOpt nodeInnerSize,
@@ -212445,8 +219414,9 @@ void GenerateItemList(TaffyTree* tree, NodeId node, SizeFOpt nodeInnerSize,
         }
 
         Optf aspectRatio = cs.aspectRatio;
-        RectF padding = cs.padding.ResolveOrZero(nodeInnerSize, calc);
-        RectF border = cs.border.ResolveOrZero(nodeInnerSize, calc);
+
+        RectF padding = cs.padding.ResolveOrZero(nodeInnerSize.w, calc);
+        RectF border = cs.border.ResolveOrZero(nodeInnerSize.w, calc);
         SizeF pbSum = (padding + border).SumAxes();
         SizeF boxSizingAdjustment =
             cs.boxSizing == BoxSizing::ContentBox ? pbSum : SizeF::Zero();
@@ -212455,20 +219425,28 @@ void GenerateItemList(TaffyTree* tree, NodeId node, SizeFOpt nodeInnerSize,
         item.nodeId = childNodeId;
         item.order = order++;
         item.isTable = cs.itemIsTable;
-        item.isReplaced = cs.IsCompressibleReplaced();
+        item.isCompressibleReplaced = cs.IsCompressibleReplaced();
         item.floatMode = cs.floatMode;
         item.clear = cs.clear;
         item.position = cs.position;
+        item.direction = cs.direction;
+        item.alignSelf = cs.alignSelf;
+        item.justifySelf = cs.justifySelf;
         item.overflow = cs.overflow;
+        item.contain = cs.contain;
         item.scrollbarWidth = cs.scrollbarWidth;
 
         bool isNotFloated = cs.floatMode == Float::None;
         bool isScrollContainer = IsScrollContainer(cs.overflow.x) ||
                                  IsScrollContainer(cs.overflow.y);
-        item.isInSameBfc = cs.IsBlock() && !cs.itemIsTable &&
-                           cs.position != Position::Absolute && isNotFloated &&
-                           !isScrollContainer;
 
+        item.isInSameBfc =
+            cs.IsBlock() && !cs.itemIsTable && !IsOutOfFlow(cs.position) &&
+            isNotFloated && !isScrollContainer &&
+            !cs.contain.EstablishesIndependentFormattingContext() &&
+            cs.alignContent.keyword == AlignContentKeyword::Normal;
+
+        item.sizeStyle = cs.size;
         item.size = MaybeAdd(
             MaybeApplyAspectRatio(cs.size.MaybeResolve(nodeInnerSize, calc),
                                   aspectRatio),
@@ -212490,6 +219468,21 @@ void GenerateItemList(TaffyTree* tree, NodeId node, SizeFOpt nodeInnerSize,
     }
 }
 
+Optf ResolveStretchHeight(Dimension heightStyle, Optf containerInnerHeight,
+                          RectF itemMargin, LineBool marginsTreatedAsZero) {
+    if (!heightStyle.IsStretch() || !IsSome(containerInnerHeight)) {
+        return None();
+    }
+    float height = containerInnerHeight;
+    if (!marginsTreatedAsZero.start) {
+        height -= itemMargin.top;
+    }
+    if (!marginsTreatedAsZero.end) {
+        height -= itemMargin.bottom;
+    }
+    return Some(height);
+}
+
 float DetermineContentBasedContainerWidth(TaffyTree* tree,
                                           const Vec<BlockItem>& items,
                                           AvailableSpace availableWidth) {
@@ -212502,7 +219495,7 @@ float DetermineContentBasedContainerWidth(TaffyTree* tree,
 
     for (int i = 0; i < len(items); i++) {
         const BlockItem& item = items[i];
-        if (item.position == Position::Absolute) {
+        if (IsOutOfFlow(item.position)) {
             continue;
         }
         SizeFOpt knownDimensions =
@@ -212515,16 +219508,26 @@ float DetermineContentBasedContainerWidth(TaffyTree* tree,
             width = knownDimensions.w;
         } else {
             SizeAvail childAvail = availableSpace;
-            childAvail.width = MaybeSub(childAvail.width, itemXMarginSum);
+            SizingKeywordResolution keyword = ResolveSizingKeyword(
+                item.sizeStyle.width, None(), None(), calc);
+            if (keyword.isSome && keyword.kind == SizingKeywordKind::Exact) {
+                childAvail.width = AvailableSpace::Definite(keyword.exact);
+            } else if (keyword.isSome) {
+                childAvail.width = keyword.measure;
+            } else {
+                childAvail.width = MaybeSub(childAvail.width, itemXMarginSum);
+            }
+
             width = tree->MeasureChildSize(
                 item.nodeId, knownDimensions, SizeFOptNone(), childAvail,
                 SizingMode::InherentSize, AbsoluteAxis::Horizontal,
-                LineBool::True());
+                item.isInSameBfc ? LineBool::True() : LineBool::False());
         }
         width = F32Max(width, item.paddingBorderSum.w) + itemXMarginSum;
 
         if (IsFloated(item.floatMode)) {
-            floatContribution.AddFloat(width);
+            floatContribution
+                .AddFloat(width, FloatDir(item.floatMode).val, item.clear);
             continue;
         }
         maxChildWidth = F32Max(maxChildWidth, width);
@@ -212534,7 +219537,7 @@ float DetermineContentBasedContainerWidth(TaffyTree* tree,
 }
 
 struct InFlowResult {
-    SizeF inflowContentSize;
+    RectF inflowOverflowRect;
     float intrinsicOuterHeight = 0.0f;
     CollapsibleMarginSet firstChildTopMarginSet;
     CollapsibleMarginSet lastChildBottomMarginSet;
@@ -212543,13 +219546,18 @@ struct InFlowResult {
 
 InFlowResult PerformFinalLayoutOnInFlowChildren(
     TaffyTree* tree, RunMode runMode, Vec<BlockItem>* items,
-    float containerOuterWidth, Optf containerPercentageResolutionHeight,
-    RectF contentBoxInset, RectF resolvedContentBoxInset, RectF resolvedBorder,
-    TextAlign textAlign, Direction direction,
-    LineBool ownMarginsCollapseWithChildren, BlockContext* blockCtx) {
+    Vec<OofCandidate>* oofPool, float containerOuterWidth,
+    Optf containerPercentageResolutionHeight, RectF contentBoxInset,
+    RectF resolvedContentBoxInset, RectF resolvedBorder, TextAlign textAlign,
+    AlignItems justifyItems, Direction direction,
+    LineBool ownMarginsCollapseWithChildren,
+    LineBool childrenMarginsAdjoinOwnEdges, bool isScrollContainer,
+    BlockContext* blockCtx) {
     CalcResolver calc = tree->calc;
-    float containerInnerWidth = containerOuterWidth - resolvedContentBoxInset
-                                                          .HorizontalAxisSum();
+
+    float containerInnerWidth =
+        F32Max(0.0f, containerOuterWidth - resolvedContentBoxInset
+                                               .HorizontalAxisSum());
     Optf percentageResolutionHeight =
         MaybeSub(containerPercentageResolutionHeight, resolvedContentBoxInset
                                                           .VerticalAxisSum());
@@ -212580,7 +219588,7 @@ InFlowResult PerformFinalLayoutOnInFlowChildren(
 
     for (int itemIdx = 0; itemIdx < items->len; itemIdx++) {
         BlockItem& item = (*items)[itemIdx];
-        if (item.position == Position::Absolute) {
+        if (IsOutOfFlow(item.position)) {
             float x = direction == Direction::Ltr
                           ? resolvedContentBoxInset.left
                           : containerOuterWidth - resolvedContentBoxInset.right;
@@ -212603,11 +219611,28 @@ InFlowResult PerformFinalLayoutOnInFlowChildren(
         if (floatDirection.IsSome()) {
             hasActiveFloats = true;
 
-            float availableWidth = containerInnerWidth - itemNonAutoXMarginSum;
+            float availableWidth =
+                F32Max(0.0f, containerInnerWidth - itemNonAutoXMarginSum);
+            Optf itemKnownWidth = None();
+            AvailableSpace itemAvailableWidth =
+                AvailableSpace::Definite(availableWidth);
+            SizingKeywordResolution keywordWidth =
+                ResolveSizingKeyword(item.sizeStyle.width, Some(availableWidth),
+                                     Some(containerInnerWidth), calc);
+            if (keywordWidth.isSome &&
+                keywordWidth.kind == SizingKeywordKind::Measure) {
+                itemAvailableWidth = keywordWidth.measure;
+            } else if (keywordWidth.isSome) {
+                itemKnownWidth = Some(keywordWidth.exact);
+                itemAvailableWidth =
+                    AvailableSpace::Definite(keywordWidth.exact);
+            }
+            Optf itemKnownHeight = ResolveStretchHeight(
+                item.sizeStyle.height, percentageResolutionHeight,
+                itemNonAutoMargin, LineBool::False());
             LayoutOutput itemLayout = tree->PerformChildLayout(
-                item.nodeId, SizeFOptNone(), parentSize,
-                {AvailableSpace::Definite(availableWidth),
-                 AvailableSpace::MaxContent()},
+                item.nodeId, {itemKnownWidth, itemKnownHeight}, parentSize,
+                {itemAvailableWidth, AvailableSpace::MaxContent()},
                 SizingMode::InherentSize, LineBool::False());
             SizeF marginBox = itemLayout.size + itemNonAutoMargin.SumAxes();
 
@@ -212624,26 +219649,30 @@ InFlowResult PerformFinalLayoutOnInFlowChildren(
             location.y += itemNonAutoMargin.top;
             location.x += itemNonAutoMargin.left;
 
-            Layout layout;
-            layout.order = item.order;
-            layout.size = itemLayout.size;
-            layout.contentSize = itemLayout.contentSize;
-            layout.scrollbarSize = scrollbarSize;
-            layout.location = location;
-            layout.padding = item.padding;
-            layout.border = item.border;
-            layout.margin = itemNonAutoMargin;
-            tree->SetUnroundedLayout(item.nodeId, layout);
+            item.hasFinalLayout = true;
+            item.finalLayout.order = item.order;
+            item.finalLayout.size = itemLayout.size;
+            item.finalLayout
+                .scrollableOverflowRect = itemLayout.scrollableOverflowRect;
+            item.finalLayout.scrollbarSize = scrollbarSize;
+            item.finalLayout.location = location;
+            item.finalLayout.padding = item.padding;
+            item.finalLayout.border = item.border;
+            item.finalLayout.margin = itemNonAutoMargin;
+            OofCandRange range;
+            OofAppendRange(oofPool, &range, itemLayout.oofCandidates);
+            item.oofStart = range.start;
+            item.oofCount = range.count;
 
-            res.inflowContentSize = Max(
-                res.inflowContentSize,
-                ComputeContentSizeContribution(
+            res.inflowOverflowRect = res.inflowOverflowRect.Union(
+                ComputeScrollableOverflowContribution(
                     {IsRtl(direction) ? containerOuterWidth -
                                             (location.x + itemLayout.size.w) -
                                             resolvedBorder.right
                                       : location.x - resolvedBorder.left,
                      location.y - resolvedBorder.top},
-                    itemLayout.size, itemLayout.contentSize, item.overflow));
+                    itemLayout.size, itemLayout.scrollableOverflowRect,
+                    item.overflow, item.contain, isScrollContainer));
             continue;
         }
 
@@ -212655,7 +219684,8 @@ InFlowResult PerformFinalLayoutOnInFlowChildren(
         bool itemPushedBelowFloat = false;
 
         if (item.isInSameBfc) {
-            stretchWidth = containerInnerWidth - itemNonAutoXMarginSum;
+            stretchWidth =
+                F32Max(0.0f, containerInnerWidth - itemNonAutoXMarginSum);
             floatAvoidingPosition = {0.0f, 0.0f};
             floatAvoidingWidth = 0.0f;
         } else {
@@ -212680,9 +219710,10 @@ InFlowResult PerformFinalLayoutOnInFlowChildren(
                     }
                     float width = MaybeClamp(
                         UnwrapOr(item.size.w,
-                                 F32Max(slot.stretchWidth, minAutoWidth)),
+                                 F32Max(F32Max(slot.stretchWidth, minAutoWidth),
+                                        0.0f)),
                         item.minSize.w, item.maxSize.w);
-                    if (width <= slot.borderWidth + 0.001f) {
+                    if (width <= slot.borderWidth + kFitTolerance) {
                         break;
                     }
                     after = slot.segmentId;
@@ -212690,21 +219721,53 @@ InFlowResult PerformFinalLayoutOnInFlowChildren(
                 itemPushedBelowFloat = slot.y > minY;
                 hasActiveFloats = slot.segmentId >= 0;
                 itemAvoidsFloats = true;
-                stretchWidth = F32Max(slot.stretchWidth, minAutoWidth);
+                stretchWidth =
+                    F32Max(F32Max(slot.stretchWidth, minAutoWidth), 0.0f);
                 floatAvoidingPosition = {slot.x, slot.y};
                 floatAvoidingWidth = slot.borderWidth;
             } else {
-                stretchWidth = containerInnerWidth - itemNonAutoXMarginSum;
+                stretchWidth =
+                    F32Max(0.0f, containerInnerWidth - itemNonAutoXMarginSum);
                 floatAvoidingPosition = {resolvedContentBoxInset.left, minY};
                 floatAvoidingWidth = containerInnerWidth;
             }
         }
 
+        AlignItems justifySelf =
+            ResolveSelfRelative(item.justifySelf.UnwrapOr(justifyItems),
+                                item.direction, direction, true);
+        bool isStretch = justifySelf.keyword == AlignItemsKeyword::Stretch;
+        bool hasNonStretchJustify =
+            justifySelf.keyword != AlignItemsKeyword::Normal && !isStretch;
+
         SizeFOpt knownDimensions = SizeFOptNone();
-        if (!item.isTable && !item.isReplaced) {
+        if (!(item.isTable || item.isCompressibleReplaced) || isStretch) {
+
+            Dimension widthStyle = item.sizeStyle.width;
+            if (hasNonStretchJustify && widthStyle.IsAuto()) {
+                widthStyle = Dimension::FitContent();
+            }
+            Optf keywordWidth = None();
+            SizingKeywordResolution keyword =
+                ResolveSizingKeyword(widthStyle, Some(stretchWidth),
+                                     Some(containerInnerWidth), calc);
+            if (keyword.isSome && keyword.kind == SizingKeywordKind::Exact) {
+                keywordWidth = Some(keyword.exact);
+            } else if (keyword.isSome) {
+                keywordWidth = Some(tree->MeasureChildSize(
+                    item.nodeId, SizeFOptNone(), parentSize,
+                    {keyword.measure, AvailableSpace::MaxContent()},
+                    SizingMode::InherentSize, AbsoluteAxis::Horizontal,
+                    item.isInSameBfc ? LineBool::True() : LineBool::False()));
+            }
+            Optf keywordHeight = ResolveStretchHeight(
+                item.sizeStyle.height, percentageResolutionHeight,
+                itemNonAutoMargin, childrenMarginsAdjoinOwnEdges);
             SizeFOpt sized = item.size;
-            sized.w = Some(MaybeClamp(UnwrapOr(sized.w, stretchWidth),
-                                      item.minSize.w, item.maxSize.w));
+            sized.w = Some(
+                MaybeClamp(UnwrapOr(Or(sized.w, keywordWidth), stretchWidth),
+                           item.minSize.w, item.maxSize.w));
+            sized.h = Or(sized.h, keywordHeight);
             knownDimensions = MaybeClamp(sized, item.minSize, item.maxSize);
         }
 
@@ -212713,6 +219776,9 @@ InFlowResult PerformFinalLayoutOnInFlowChildren(
         inputs.sizingMode = SizingMode::InherentSize;
         inputs.axis = RequestedAxis::Both;
         inputs.knownDimensions = knownDimensions;
+
+        inputs.knownDimensionsAreDefiniteW = true;
+        inputs.knownDimensionsAreDefiniteH = true;
         inputs.parentSize = parentSize;
         inputs.availableSpace = availableSpace;
         inputs.availableSpace.width = AvailableSpace::Definite(stretchWidth);
@@ -212723,22 +219789,27 @@ InFlowResult PerformFinalLayoutOnInFlowChildren(
         float clearPos = UnwrapOr(clearThreshold, -INFINITY);
 
         LayoutOutput itemLayout;
+
+        float childFloatContribution = -INFINITY;
         if (item.isInSameBfc) {
 
-            float width = UnwrapOr(knownDimensions.w, stretchWidth);
+            float width = F32Max(UnwrapOr(knownDimensions.w, stretchWidth),
+                                 item.paddingBorderSum.w);
 
             float insetLeft = itemNonAutoMargin.left + contentBoxInset.left;
             float insetRight = containerOuterWidth - width - insetLeft;
             float insets[2] = {insetLeft, insetRight};
 
-            BlockContext childBlockCtx = blockCtx->SubContext(
-                F32Max(yOffsetForAbsolute + itemNonAutoMargin.top, clearPos),
-                insets);
+            float estimatedY = committedYOffset +
+                               activeCollapsibleMarginSet
+                                   .CollapseWithMargin(itemNonAutoMargin.top)
+                                   .Resolve();
+            BlockContext childBlockCtx =
+                blockCtx->SubContext(F32Max(estimatedY, clearPos), insets);
             itemLayout = tree->ComputeBlockChildLayout(item.nodeId, inputs,
                                                        &childBlockCtx);
-            blockCtx->AddChildFloatedContentHeightContribution(
-                yOffsetForAbsolute + childBlockCtx
-                                         .FloatedContentHeightContribution());
+            childFloatContribution = childBlockCtx
+                                         .FloatedContentHeightContribution();
             bool childFlags[2];
             childBlockCtx.GetTopAdjoiningFloats(childFlags);
             blockCtx->MergeAdjoiningFloats(childFlags);
@@ -212759,25 +219830,29 @@ InFlowResult PerformFinalLayoutOnInFlowChildren(
                               (IsSome(itemMargin.right) ? 0 : 1);
         float xAxisAutoMarginSize =
             autoMarginCount > 0 ? freeXSpace / (float)autoMarginCount : 0.0f;
+
         RectF resolvedMargin = {UnwrapOr(itemMargin.left, xAxisAutoMarginSize),
                                 UnwrapOr(itemMargin.right, xAxisAutoMarginSize),
-                                topMarginSet.Resolve(),
-                                bottomMarginSet.Resolve()};
+                                UnwrapOr(itemMargin.top, 0.0f),
+                                UnwrapOr(itemMargin.bottom, 0.0f)};
 
-        RectFOpt inset = item.inset.MaybeResolveZip(
-            {Some(containerInnerWidth), Some(0.0f)}, calc);
-        Optf negRight = inset.right;
-        if (IsSome(negRight)) {
-            negRight = -negRight;
+        PointF insetOffset = {0.0f, 0.0f};
+        if (item.position == Position::Relative) {
+            RectFOpt inset = item.inset.MaybeResolveZip(
+                {Some(containerInnerWidth), percentageResolutionHeight}, calc);
+            Optf negRight = inset.right;
+            if (IsSome(negRight)) {
+                negRight = -negRight;
+            }
+            Optf negBottom = inset.bottom;
+            if (IsSome(negBottom)) {
+                negBottom = -negBottom;
+            }
+            insetOffset = {IsRtl(direction)
+                               ? UnwrapOr(Or(negRight, inset.left), 0.0f)
+                               : UnwrapOr(Or(inset.left, negRight), 0.0f),
+                           UnwrapOr(Or(inset.top, negBottom), 0.0f)};
         }
-        Optf negBottom = inset.bottom;
-        if (IsSome(negBottom)) {
-            negBottom = -negBottom;
-        }
-        PointF insetOffset = {IsRtl(direction)
-                                  ? UnwrapOr(Or(negRight, inset.left), 0.0f)
-                                  : UnwrapOr(Or(inset.left, negRight), 0.0f),
-                              UnwrapOr(Or(inset.top, negBottom), 0.0f)};
 
         if (item.isInSameBfc && (!isCollapsingWithFirstMarginSet ||
                                  !ownMarginsCollapseWithChildren.start)) {
@@ -212850,9 +219925,43 @@ InFlowResult PerformFinalLayoutOnInFlowChildren(
                 floatAvoidingPosition.y + insetOffset.y};
         }
 
+        if (item.isInSameBfc) {
+            blockCtx->AddChildFloatedContentHeightContribution(
+                location.y - insetOffset.y + childFloatContribution);
+        }
+
         float itemOuterWidth = itemLayout.size.w + resolvedMargin
                                                        .HorizontalAxisSum();
-        if (itemOuterWidth < containerInnerWidth) {
+        bool hasAutoXMargin =
+            !IsSome(itemMargin.left) || !IsSome(itemMargin.right);
+        if (hasNonStretchJustify && !hasAutoXMargin) {
+
+            float containerStart;
+            float freeX;
+            if (itemAvoidsFloats) {
+                containerStart = floatAvoidingPosition.x - resolvedMargin.left;
+                freeX = floatAvoidingWidth - itemLayout.size.w;
+            } else {
+                containerStart = resolvedContentBoxInset.left;
+                freeX = containerInnerWidth - itemOuterWidth;
+            }
+            AlignItemsKeyword keyword = justifySelf.keyword;
+            if (justifySelf.safety == AlignmentSafety::Safe && freeX < 0.0f) {
+                keyword = AlignItemsKeyword::Start;
+            }
+            float offset;
+            if (keyword == AlignItemsKeyword::Center) {
+                offset = freeX / 2.0f;
+            } else {
+                bool alignToEnd = keyword == AlignItemsKeyword::End ||
+                                  keyword == AlignItemsKeyword::FlexEnd ||
+                                  keyword == AlignItemsKeyword::SelfEnd;
+                offset = (alignToEnd != IsRtl(direction)) ? freeX : 0.0f;
+            }
+            location.x =
+                containerStart + resolvedMargin.left + insetOffset.x + offset;
+        } else if (!hasNonStretchJustify &&
+                   itemOuterWidth < containerInnerWidth) {
             float free = containerInnerWidth - itemOuterWidth;
             switch (textAlign) {
                 case TextAlign::LegacyLeft:
@@ -212873,29 +219982,54 @@ InFlowResult PerformFinalLayoutOnInFlowChildren(
             }
         }
 
-        if (!IsSome(res.firstBaseline) && IsSome(itemLayout.firstBaselines.y)) {
-            res.firstBaseline = Some(location.y + itemLayout.firstBaselines.y);
+        if (!IsSome(res.firstBaseline)) {
+            Optf childBaseline = itemLayout.baselines.first;
+            if (IsScrollContainer(item.overflow.y)) {
+                float raw = UnwrapOr(childBaseline, itemLayout.size.h);
+                childBaseline =
+                    Some(F32Max(0.0f, F32Min(raw, itemLayout.size.h)));
+            }
+            if (IsSome(childBaseline)) {
+                res.firstBaseline = Some(location.y + childBaseline);
+            }
         }
 
         item.hasFinalLayout = true;
         item.finalLayout.order = item.order;
         item.finalLayout.size = itemLayout.size;
-        item.finalLayout.contentSize = itemLayout.contentSize;
+        item.finalLayout.scrollableOverflowRect = itemLayout
+                                                      .scrollableOverflowRect;
         item.finalLayout.scrollbarSize = scrollbarSize;
         item.finalLayout.location = location;
         item.finalLayout.padding = item.padding;
         item.finalLayout.border = item.border;
-        item.finalLayout.margin = resolvedMargin;
 
-        res.inflowContentSize =
-            Max(res.inflowContentSize,
-                ComputeContentSizeContribution(
-                    {IsRtl(direction)
-                         ? containerOuterWidth - (location.x + finalSize.w) -
-                               resolvedBorder.right
-                         : location.x - resolvedBorder.left,
-                     location.y - resolvedBorder.top},
-                    finalSize, itemLayout.contentSize, item.overflow));
+        if (itemAvoidsFloats) {
+            if (!IsSome(itemMargin.left)) {
+                resolvedMargin.left +=
+                    floatAvoidingPosition.x - resolvedContentBoxInset.left;
+            }
+            if (!IsSome(itemMargin.right)) {
+                resolvedMargin.right +=
+                    containerOuterWidth - resolvedContentBoxInset.right -
+                    floatAvoidingPosition.x - floatAvoidingWidth;
+            }
+        }
+        item.finalLayout.margin = resolvedMargin;
+        OofCandRange range;
+        OofAppendRange(oofPool, &range, itemLayout.oofCandidates);
+        item.oofStart = range.start;
+        item.oofCount = range.count;
+
+        res.inflowOverflowRect =
+            res.inflowOverflowRect.Union(ComputeScrollableOverflowContribution(
+                {IsRtl(direction)
+                     ? containerOuterWidth - (location.x + finalSize.w) -
+                           resolvedBorder.right
+                     : location.x - resolvedBorder.left,
+                 location.y - resolvedBorder.top},
+                finalSize, itemLayout.scrollableOverflowRect, item.overflow,
+                item.contain, isScrollContainer));
 
         if (isCollapsingWithFirstMarginSet && itemPushedBelowFloat) {
             isCollapsingWithFirstMarginSet = false;
@@ -212948,188 +220082,6 @@ InFlowResult PerformFinalLayoutOnInFlowChildren(
     committedYOffset += resolvedContentBoxInset.bottom + bottomYMarginOffset;
     res.intrinsicOuterHeight = F32Max(0.0f, committedYOffset);
     return res;
-}
-
-SizeF PerformAbsoluteLayoutOnAbsoluteChildren(TaffyTree* tree,
-                                              const Vec<BlockItem>& items,
-                                              SizeF areaSize, PointF areaOffset,
-                                              Direction direction) {
-    CalcResolver calc = tree->calc;
-    float areaWidth = areaSize.w;
-    float areaHeight = areaSize.h;
-    SizeF absoluteContentSize = SizeF::Zero();
-
-    for (int i = 0; i < len(items); i++) {
-        const BlockItem& item = items[i];
-        if (item.position != Position::Absolute) {
-            continue;
-        }
-        const Style& cs = tree->GetStyle(item.nodeId);
-        if (cs.BoxGenMode() == BoxGenerationMode::None ||
-            cs.position != Position::Absolute) {
-            continue;
-        }
-
-        Optf aspectRatio = cs.aspectRatio;
-        RectFOpt margin = cs.margin.MaybeResolve(Some(areaWidth), calc);
-        RectF padding = cs.padding.ResolveOrZero(Some(areaWidth), calc);
-        RectF border = cs.border.ResolveOrZero(Some(areaWidth), calc);
-        SizeF paddingBorderSum = (padding + border).SumAxes();
-        SizeF boxSizingAdjustment = cs.boxSizing == BoxSizing::ContentBox
-                                        ? paddingBorderSum
-                                        : SizeF::Zero();
-
-        RectFOpt inset = cs.inset.MaybeResolveZip(AsOptional(areaSize), calc);
-        Optf left = inset.left;
-        Optf right = inset.right;
-        Optf top = inset.top;
-        Optf bottom = inset.bottom;
-
-        SizeFOpt styleSize = MaybeAdd(
-            MaybeApplyAspectRatio(
-                cs.size.MaybeResolve(AsOptional(areaSize), calc), aspectRatio),
-            boxSizingAdjustment);
-        SizeFOpt minSize = MaybeMax(
-            Or(MaybeAdd(MaybeApplyAspectRatio(
-                            cs.minSize.MaybeResolve(AsOptional(areaSize), calc),
-                            aspectRatio),
-                        boxSizingAdjustment),
-               AsOptional(paddingBorderSum)),
-            paddingBorderSum);
-        SizeFOpt maxSize =
-            MaybeAdd(MaybeApplyAspectRatio(
-                         cs.maxSize.MaybeResolve(AsOptional(areaSize), calc),
-                         aspectRatio),
-                     boxSizingAdjustment);
-        SizeFOpt knownDimensions = MaybeClamp(styleSize, minSize, maxSize);
-
-        if (!IsSome(knownDimensions.w) && IsSome(left) && IsSome(right)) {
-            float newWidthRaw =
-                MaybeSub(MaybeSub(areaWidth, margin.left), margin.right) -
-                left - right;
-            knownDimensions.w = Some(F32Max(newWidthRaw, 0.0f));
-            knownDimensions =
-                MaybeClamp(MaybeApplyAspectRatio(knownDimensions, aspectRatio),
-                           minSize, maxSize);
-        }
-        if (!IsSome(knownDimensions.h) && IsSome(top) && IsSome(bottom)) {
-            float newHeightRaw =
-                MaybeSub(MaybeSub(areaHeight, margin.top), margin.bottom) -
-                top - bottom;
-            knownDimensions.h = Some(F32Max(newHeightRaw, 0.0f));
-            knownDimensions =
-                MaybeClamp(MaybeApplyAspectRatio(knownDimensions, aspectRatio),
-                           minSize, maxSize);
-        }
-
-        SizeAvail childAvail = {AvailableSpace::Definite(MaybeClamp(
-                                    areaWidth, minSize.w, maxSize.w)),
-                                AvailableSpace::Definite(MaybeClamp(
-                                    areaHeight, minSize.h, maxSize.h))};
-
-        SizeF measuredSize = tree->MeasureChildSizeBoth(
-            item.nodeId, knownDimensions, AsOptional(areaSize), childAvail,
-            SizingMode::ContentSize, LineBool::False());
-        SizeF finalSize = MaybeClamp(UnwrapOr(knownDimensions, measuredSize),
-                                     minSize, maxSize);
-
-        LayoutOutput layoutOutput = tree->PerformChildLayout(
-            item.nodeId, AsOptional(finalSize), AsOptional(areaSize),
-            childAvail, SizingMode::ContentSize, LineBool::False());
-
-        RectF nonAutoMargin = {
-            IsSome(left) ? UnwrapOr(margin.left, 0.0f) : 0.0f,
-            IsSome(right) ? UnwrapOr(margin.right, 0.0f) : 0.0f,
-            IsSome(top) ? UnwrapOr(margin.top, 0.0f) : 0.0f,
-            IsSome(bottom) ? UnwrapOr(margin.bottom, 0.0f) : 0.0f};
-
-        PointF absoluteAutoMarginSpace = {
-            IsSome(right) ? areaSize.w - right - UnwrapOr(left, 0.0f)
-                          : finalSize.w,
-            IsSome(bottom) ? areaSize.h - bottom - UnwrapOr(top, 0.0f)
-                           : finalSize.h};
-        SizeF freeSpace = {absoluteAutoMarginSpace.x - finalSize.w -
-                               nonAutoMargin.HorizontalAxisSum(),
-                           absoluteAutoMarginSpace.y - finalSize.h -
-                               nonAutoMargin.VerticalAxisSum()};
-
-        int autoW =
-            (IsSome(margin.left) ? 0 : 1) + (IsSome(margin.right) ? 0 : 1);
-        int autoH =
-            (IsSome(margin.top) ? 0 : 1) + (IsSome(margin.bottom) ? 0 : 1);
-        SizeF autoMarginSize;
-        if (autoW == 2 &&
-            (!IsSome(styleSize.w) || styleSize.w >= freeSpace.w)) {
-            autoMarginSize.w = 0.0f;
-        } else if (autoW > 0) {
-            autoMarginSize.w = freeSpace.w / (float)autoW;
-        }
-        if (autoH == 2 &&
-            (!IsSome(styleSize.h) || styleSize.h >= freeSpace.h)) {
-            autoMarginSize.h = 0.0f;
-        } else if (autoH > 0) {
-            autoMarginSize.h = freeSpace.h / (float)autoH;
-        }
-        RectF autoMargin = {IsSome(margin.left) ? 0.0f : autoMarginSize.w,
-                            IsSome(margin.right) ? 0.0f : autoMarginSize.w,
-                            IsSome(margin.top) ? 0.0f : autoMarginSize.h,
-                            IsSome(margin.bottom) ? 0.0f : autoMarginSize.h};
-        RectF resolvedMargin = {UnwrapOr(margin.left, autoMargin.left),
-                                UnwrapOr(margin.right, autoMargin.right),
-                                UnwrapOr(margin.top, autoMargin.top),
-                                UnwrapOr(margin.bottom, autoMargin.bottom)};
-
-        float xOffset;
-        if (IsSome(left) && IsSome(right)) {
-            xOffset = IsRtl(direction) ? areaSize.w - finalSize.w - right -
-                                             resolvedMargin.right
-                                       : left + resolvedMargin.left;
-        } else if (IsSome(left)) {
-            xOffset = left + resolvedMargin.left;
-        } else if (IsSome(right)) {
-            xOffset = areaSize.w - finalSize.w - right - resolvedMargin.right;
-        } else {
-            xOffset = IsRtl(direction) ? item.staticPosition.x - finalSize.w -
-                                             resolvedMargin.right - areaOffset.x
-                                       : item.staticPosition.x +
-                                             resolvedMargin.left - areaOffset.x;
-        }
-
-        float yLocation;
-        if (IsSome(top)) {
-            yLocation = top + resolvedMargin.top + areaOffset.y;
-        } else if (IsSome(bottom)) {
-            yLocation = areaSize.h - finalSize.h - bottom -
-                        resolvedMargin.bottom + areaOffset.y;
-        } else {
-            yLocation = item.staticPosition.y + resolvedMargin.top;
-        }
-        PointF location = {xOffset + areaOffset.x, yLocation};
-
-        SizeF scrollbarSize = {
-            item.overflow.y == Overflow::Scroll ? item.scrollbarWidth : 0.0f,
-            item.overflow.x == Overflow::Scroll ? item.scrollbarWidth : 0.0f};
-
-        Layout layout;
-        layout.order = item.order;
-        layout.size = finalSize;
-        layout.contentSize = layoutOutput.contentSize;
-        layout.scrollbarSize = scrollbarSize;
-        layout.location = location;
-        layout.padding = padding;
-        layout.border = border;
-        layout.margin = resolvedMargin;
-        tree->SetUnroundedLayout(item.nodeId, layout);
-
-        PointF relativeLocation = {location.x - areaOffset.x,
-                                   location.y - areaOffset.y};
-        absoluteContentSize = Max(absoluteContentSize,
-                                  ComputeContentSizeContribution(
-                                      relativeLocation, finalSize,
-                                      layoutOutput.contentSize, item.overflow));
-    }
-
-    return absoluteContentSize;
 }
 
 LayoutOutput ComputeInner(TaffyTree* tree, NodeId nodeId,
@@ -213185,28 +220137,40 @@ LayoutOutput ComputeInner(TaffyTree* tree, NodeId nodeId,
                    minSize, maxSize);
     SizeFOpt knownDimensions = {Or(knownDimensionsIn.w, derived.w),
                                 Or(knownDimensionsIn.h, derived.h)};
+
+    SizeFOpt percentageBasisDimensions = knownDimensions;
+    if (!inputs.knownDimensionsAreDefiniteH) {
+        percentageBasisDimensions.h = None();
+    }
     SizeFOpt containerContentBoxSize =
-        MaybeSub(knownDimensions, contentBoxInset.SumAxes());
+        MaybeSub(percentageBasisDimensions, contentBoxInset.SumAxes());
 
     bool isScrollContainer = IsScrollContainer(style.overflow.x) ||
                              IsScrollContainer(style.overflow.y);
 
-    LineBool ownMarginsCollapseWithChildren = {
-        verticalMarginsAreCollapsible.start && !isScrollContainer &&
-            style.position == Position::Relative && padding.top == 0.0f &&
+    bool establishesNewBfc =
+        isScrollContainer ||
+        style.alignContent.keyword != AlignContentKeyword::Normal ||
+        style.contain.EstablishesIndependentFormattingContext();
+
+    LineBool childrenMarginsAdjoinOwnEdges = {
+        verticalMarginsAreCollapsible.start && !establishesNewBfc &&
+            !IsOutOfFlow(style.position) && padding.top == 0.0f &&
             border.top == 0.0f,
-        verticalMarginsAreCollapsible.end && !isScrollContainer &&
-            style.position == Position::Relative && padding.bottom == 0.0f &&
-            border.bottom == 0.0f && !IsSome(size.h)};
+        verticalMarginsAreCollapsible.end && !establishesNewBfc &&
+            !IsOutOfFlow(style.position) && padding.bottom == 0.0f &&
+            border.bottom == 0.0f};
+    LineBool ownMarginsCollapseWithChildren = {
+        childrenMarginsAdjoinOwnEdges.start,
+        childrenMarginsAdjoinOwnEdges.end && !IsSome(size.h)};
     bool hasStylesPreventingBeingCollapsedThrough =
-        !style.IsBlock() || blockCtx->IsBfcRoot() || isScrollContainer ||
-        style.position == Position::Absolute || padding.top > 0.0f ||
-        padding.bottom > 0.0f || border.top > 0.0f || border.bottom > 0.0f ||
-        (IsSome(size.h) && size.h > 0.0f) ||
-        (IsSome(minSize.h) && minSize.h > 0.0f);
+        !style.IsBlock() || blockCtx->IsBfcRoot() || establishesNewBfc ||
+        IsOutOfFlow(style.position) || padding.top > 0.0f ||
+        padding.bottom > 0.0f || border.top > 0.0f || border.bottom > 0.0f;
 
     TextAlign textAlign = style.textAlign;
-    OptAlignContent alignContent = style.alignContent;
+    AlignContent alignContent = style.alignContent;
+    AlignItems justifyItems = style.justifyItems;
 
     Vec<BlockItem> items;
     GenerateItemList(tree, nodeId, containerContentBoxSize, &items);
@@ -213234,25 +220198,32 @@ LayoutOutput ComputeInner(TaffyTree* tree, NodeId nodeId,
         return LayoutOutput::FromOuterSize({containerOuterWidth, 0.0f});
     }
 
+    Optf ownHeightBasis = inputs.sizingMode == SizingMode::InherentSize
+                              ? MaybeMax(size.h, minSize.h)
+                              : None();
     Optf containerPercentageResolutionHeight =
-        Or(Or(knownDimensions.h, MaybeMax(size.h, minSize.h)), minSize.h);
+        Or(percentageBasisDimensions.h, ownHeightBasis);
 
-    RectF resolvedPadding = rawPadding
-                                .ResolveOrZero(Some(containerOuterWidth), calc);
-    RectF resolvedBorder = rawBorder
-                               .ResolveOrZero(Some(containerOuterWidth), calc);
+    float percentageResolutionWidth =
+        UnwrapOr(parentSize.w, containerOuterWidth);
+    RectF resolvedPadding =
+        rawPadding.ResolveOrZero(Some(percentageResolutionWidth), calc);
+    RectF resolvedBorder =
+        rawBorder.ResolveOrZero(Some(percentageResolutionWidth), calc);
     RectF resolvedContentBoxInset =
         resolvedPadding + resolvedBorder + scrollbarGutter;
 
+    Vec<OofCandidate> oofPool;
     InFlowResult inFlow = PerformFinalLayoutOnInFlowChildren(
-        tree, runMode, &items, containerOuterWidth,
+        tree, runMode, &items, &oofPool, containerOuterWidth,
         containerPercentageResolutionHeight, contentBoxInset,
-        resolvedContentBoxInset, resolvedBorder, textAlign, direction,
-        ownMarginsCollapseWithChildren, blockCtx);
-    SizeF inflowContentSize = inFlow.inflowContentSize;
+        resolvedContentBoxInset, resolvedBorder, textAlign, justifyItems,
+        direction, ownMarginsCollapseWithChildren,
+        childrenMarginsAdjoinOwnEdges, isScrollContainer, blockCtx);
+    RectF inflowOverflowRect = inFlow.inflowOverflowRect;
     float intrinsicOuterHeight = inFlow.intrinsicOuterHeight;
 
-    if (blockCtx->IsBfcRoot() || isScrollContainer) {
+    if (blockCtx->IsBfcRoot() || establishesNewBfc) {
         intrinsicOuterHeight = F32Max(
             intrinsicOuterHeight, blockCtx->FloatedContentHeightContribution());
     }
@@ -213263,47 +220234,51 @@ LayoutOutput ComputeInner(TaffyTree* tree, NodeId nodeId,
         Some(paddingBorderSize.h));
     SizeF finalOuterSize = {containerOuterWidth, containerOuterHeight};
 
-    if (alignContent.IsSome()) {
+    bool heightConstrainedByMinHeight = IsSome(minSize.h) && minSize.h > 0.0f &&
+                                        minSize.h >= containerOuterHeight;
+    bool ownBottomMarginCollapsesWithChildren =
+        ownMarginsCollapseWithChildren.end && !heightConstrainedByMinHeight;
+
+    if (alignContent.keyword != AlignContentKeyword::Normal) {
         float containerInnerHeight =
             containerOuterHeight - resolvedContentBoxInset.VerticalAxisSum();
         float inflowContentHeight =
             intrinsicOuterHeight - resolvedContentBoxInset.VerticalAxisSum();
         float freeSpace = containerInnerHeight - inflowContentHeight;
+
+        AlignContentKeyword keyword =
+            ApplyAlignmentFallback(freeSpace, 1, alignContent);
+        float groupOffset =
+            ComputeAlignmentOffset(freeSpace, 1, 0.0f, keyword, false, true);
+        if (IsSome(inFlow.firstBaseline)) {
+            inFlow.firstBaseline += groupOffset;
+        }
         bool anyInFlow = false;
         for (int i = 0; i < len(items); i++) {
             if (items[i].hasFinalLayout) {
+                items[i].finalLayout.location.y += groupOffset;
                 anyInFlow = true;
-                break;
+            }
+            if (IsOutOfFlow(items[i].position)) {
+                items[i].staticPosition.y += groupOffset;
             }
         }
         if (anyInFlow) {
-            AlignContentKeyword keyword =
-                ApplyAlignmentFallback(freeSpace, 1, alignContent.val);
-            float groupOffset = ComputeAlignmentOffset(freeSpace, 1, 0.0f,
-                                                       keyword, false, true);
-            if (IsSome(inFlow.firstBaseline)) {
-                inFlow.firstBaseline += groupOffset;
-            }
-            for (int i = 0; i < len(items); i++) {
-                if (items[i].hasFinalLayout) {
-                    items[i].finalLayout.location.y += groupOffset;
-                }
-            }
-            inflowContentSize = SizeF::Zero();
+            inflowOverflowRect = RectF::Zero();
             for (int i = 0; i < len(items); i++) {
                 if (!items[i].hasFinalLayout) {
                     continue;
                 }
                 const Layout& l = items[i].finalLayout;
-                inflowContentSize = Max(
-                    inflowContentSize,
-                    ComputeContentSizeContribution(
+                inflowOverflowRect = inflowOverflowRect.Union(
+                    ComputeScrollableOverflowContribution(
                         {IsRtl(direction)
                              ? containerOuterWidth - (l.location.x + l.size.w) -
                                    resolvedBorder.right
                              : l.location.x - resolvedBorder.left,
                          l.location.y - resolvedBorder.top},
-                        l.size, l.contentSize, items[i].overflow));
+                        l.size, l.scrollableOverflowRect, items[i].overflow,
+                        items[i].contain, isScrollContainer));
             }
         }
     }
@@ -213313,25 +220288,27 @@ LayoutOutput ComputeInner(TaffyTree* tree, NodeId nodeId,
         if (IsFloated(items[i].floatMode)) {
             continue;
         }
-        if (items[i].position != Position::Absolute &&
-            !items[i].canBeCollapsedThrough) {
+        if (!IsOutOfFlow(items[i].position) && !items[i]
+                                                    .canBeCollapsedThrough) {
             allInFlowChildrenCanBeCollapsedThrough = false;
             break;
         }
     }
+
     bool canBeCollapsedThrough = !hasStylesPreventingBeingCollapsedThrough &&
+                                 containerOuterHeight == 0.0f &&
                                  allInFlowChildrenCanBeCollapsedThrough;
 
     LayoutOutput output;
     output.size = finalOuterSize;
-    output.firstBaselines.y = inFlow.firstBaseline;
+    output.baselines = BaselinesFromFirst(inFlow.firstBaseline);
     output.topMargin =
         ownMarginsCollapseWithChildren.start
             ? inFlow.firstChildTopMarginSet
             : CollapsibleMarginSet::FromMargin(UnwrapOr(
                   rawMargin.MaybeResolve(parentSize.w, calc).top, 0.0f));
     output.bottomMargin =
-        ownMarginsCollapseWithChildren.end
+        ownBottomMarginCollapsesWithChildren
             ? inFlow.lastChildBottomMarginSet
             : CollapsibleMarginSet::FromMargin(UnwrapOr(
                   rawMargin.MaybeResolve(parentSize.w, calc).bottom, 0.0f));
@@ -213347,18 +220324,51 @@ LayoutOutput ComputeInner(TaffyTree* tree, NodeId nodeId,
         }
     }
 
-    RectF absolutePositionInset = resolvedBorder + scrollbarGutter;
-    SizeF absolutePositionArea = finalOuterSize - absolutePositionInset
-                                                      .SumAxes();
-    PointF absolutePositionOffset = {absolutePositionInset.left,
-                                     absolutePositionInset.top};
-    SizeF absoluteContentSize = PerformAbsoluteLayoutOnAbsoluteChildren(
-        tree, items, absolutePositionArea, absolutePositionOffset, direction);
+    OofCandidates candidates;
+    for (int i = 0; i < len(items); i++) {
+        BlockItem& item = items[i];
+        if (IsOutOfFlow(item.position)) {
+            OofCandidate candidate;
+            candidate.node = item.nodeId;
+            candidate.order = item.order;
+            candidate.position = item.position;
 
-    inflowContentSize
-        .w += IsRtl(direction) ? resolvedPadding.left : resolvedPadding.right;
-    inflowContentSize.h += resolvedPadding.bottom;
-    output.contentSize = Max(inflowContentSize, absoluteContentSize);
+            float inlineStart = resolvedContentBoxInset.left;
+            float inlineEnd = containerOuterWidth - resolvedContentBoxInset
+                                                        .right;
+            AlignItems itemJustify =
+                ResolveSelfRelative(item.justifySelf.UnwrapOr(justifyItems),
+                                    item.direction, direction, true);
+            AlignItems itemAlign = ResolveSelfRelative(
+                item.alignSelf.UnwrapOr(AlignItems{AlignItemsKeyword::Normal}),
+                item.direction, direction, false);
+            candidate.staticX = AxisStaticPosition::FromAlignment(
+                itemJustify, inlineStart, inlineEnd, IsRtl(direction));
+            candidate.staticY = AxisStaticPosition::FromAlignment(
+                itemAlign, item.staticPosition.y, item.staticPosition.y, false);
+            candidates.Push(candidate);
+        } else if (item.oofCount > 0) {
+            OofCandRange range = {item.oofStart, item.oofCount};
+            if (item.hasFinalLayout) {
+                OofTranslateRange(&oofPool, range, item.finalLayout.location);
+            }
+            OofAppendPoolRange(&candidates, oofPool, range);
+        }
+    }
+    RectF absolutePositionInset = resolvedBorder + scrollbarGutter;
+    output.oofCandidates = candidates;
+    output.hasOofPositioningArea = true;
+    output.oofPositioningArea.size = finalOuterSize - absolutePositionInset
+                                                          .SumAxes();
+    output.oofPositioningArea
+        .offset = {absolutePositionInset.left, absolutePositionInset.top};
+
+    if (isScrollContainer) {
+        inflowOverflowRect.right +=
+            IsRtl(direction) ? resolvedPadding.left : resolvedPadding.right;
+        inflowOverflowRect.bottom += resolvedPadding.bottom;
+    }
+    output.scrollableOverflowRect = inflowOverflowRect;
 
     int len = tree->ChildCount(nodeId);
     for (int order = 0; order < len; order++) {
@@ -213387,6 +220397,12 @@ LayoutOutput ComputeBlockLayout(TaffyTree* tree, NodeId nodeId,
 
     bool isScrollContainer = IsScrollContainer(style.overflow.x) ||
                              IsScrollContainer(style.overflow.y);
+
+    Contain contain = style.contain;
+    bool establishesNewBfc = isScrollContainer ||
+                             style.alignContent
+                                     .keyword != AlignContentKeyword::Normal ||
+                             contain.EstablishesIndependentFormattingContext();
     Optf aspectRatio = style.aspectRatio;
     RectF padding = style.padding.ResolveOrZero(parentSize.w, calc);
     RectF border = style.border.ResolveOrZero(parentSize.w, calc);
@@ -213440,17 +220456,23 @@ LayoutOutput ComputeBlockLayout(TaffyTree* tree, NodeId nodeId,
     LayoutInput next = inputs;
     next.knownDimensions = styledBasedKnownDimensions;
 
-    if (blockCtx && !isScrollContainer) {
-        return ComputeInner(tree, nodeId, next, blockCtx);
+    LayoutOutput out;
+    if (blockCtx && !establishesNewBfc) {
+        out = ComputeInner(tree, nodeId, next, blockCtx);
+    } else {
+        BlockFormattingContext rootBfc;
+        BlockContext rootCtx;
+        rootCtx.bfc = &rootBfc;
+        rootCtx.isRoot = true;
+        out = ComputeInner(tree, nodeId, next, &rootCtx);
+        VecReset(rootBfc.floatContext.leftFloats);
+        VecReset(rootBfc.floatContext.rightFloats);
+        VecReset(rootBfc.floatContext.segments);
     }
-    BlockFormattingContext rootBfc;
-    BlockContext rootCtx;
-    rootCtx.bfc = &rootBfc;
-    rootCtx.isRoot = true;
-    LayoutOutput out = ComputeInner(tree, nodeId, next, &rootCtx);
-    VecReset(rootBfc.floatContext.leftFloats);
-    VecReset(rootBfc.floatContext.rightFloats);
-    VecReset(rootBfc.floatContext.segments);
+
+    if (contain.SuppressesBaseline()) {
+        out.baselines = BaselinesFromFirst(None());
+    }
     return out;
 }
 
@@ -213479,19 +220501,24 @@ struct FlexItem {
     uint32_t order = 0;
 
     SizeFOpt size = SizeFOptNone();
+
+    SizeDim sizeStyle;
     SizeFOpt minSize = SizeFOptNone();
     SizeFOpt maxSize = SizeFOptNone();
     Optf aspectRatio = None();
     AlignSelf alignSelf;
 
     PointOverflow overflow;
+    Contain contain;
     float scrollbarWidth = 0.0f;
     float flexShrink = 0.0f;
     float flexGrow = 0.0f;
 
+    bool flexBasisIsDefinite = false;
+
     float resolvedMinimumMainSize = 0.0f;
 
-    RectFOpt inset = RectFOptNone();
+    SizeF relativeInset = SizeF::Zero();
     RectF margin;
     RectBool marginIsAuto;
     RectF padding;
@@ -213512,11 +220539,19 @@ struct FlexItem {
 
     float baseline = 0.0f;
 
+    int oofStart = 0;
+    int oofCount = 0;
+
     float offsetMain = 0.0f;
     float offsetCross = 0.0f;
 
     bool IsScroll() const {
         return IsScrollContainer(overflow.x) || IsScrollContainer(overflow.y);
+    }
+
+    bool ParticipatesInBaselineAlignment(FlexDirection dir) const {
+        return alignSelf.keyword == AlignItemsKeyword::Baseline &&
+               !marginIsAuto.CrossStart(dir) && !marginIsAuto.CrossEnd(dir);
     }
 };
 
@@ -213534,21 +220569,39 @@ struct AlgoConstants {
     bool isColumn = false;
     bool isWrap = false;
     bool isWrapReverse = false;
+    bool isBalance = false;
+
+    int lineCount = 0;
+
+    float DividedCrossSpace(float crossAvailable) const {
+        if (lineCount > 1) {
+            float n = (float)lineCount;
+            return (crossAvailable - (n - 1.0f) * Cross(gap, dir)) / n;
+        }
+        return crossAvailable;
+    }
 
     SizeFOpt minSize = SizeFOptNone();
     SizeFOpt maxSize = SizeFOptNone();
-    RectF margin;
     RectF border;
 
     RectF contentBoxInset;
     PointF scrollbarGutter;
+
+    bool isScrollContainer = false;
     SizeF gap;
     AlignItems alignItems;
     AlignContent alignContent;
-    OptJustifyContent justifyContent;
+    AlignContent justifyContent;
 
     SizeFOpt nodeOuterSize = SizeFOptNone();
     SizeFOpt nodeInnerSize = SizeFOptNone();
+
+    bool knownMainSizeIsDefinite = true;
+    bool hasDefiniteMainSize = false;
+    bool hasDefiniteCrossSize = false;
+
+    bool crossAxisAvailableSpaceIsDefinite = false;
 
     SizeF containerSize;
     SizeF innerContainerSize;
@@ -213566,19 +220619,32 @@ Optf Filter(Optf v, bool keep) {
     return keep ? v : None();
 }
 
+AlignItems ResolveNormalAlignment(AlignItems alignment) {
+    if (alignment.keyword == AlignItemsKeyword::Normal) {
+        return AlignItems{AlignItemsKeyword::Stretch};
+    }
+    return alignment;
+}
+
 AlgoConstants ComputeConstants(TaffyTree* tree, const Style& style,
-                               SizeFOpt knownDimensions, SizeFOpt parentSize) {
+                               SizeFOpt knownDimensions,
+                               bool knownDimensionsAreDefiniteW,
+                               bool knownDimensionsAreDefiniteH,
+                               SizeFOpt parentSize, SizeAvail availableSpace) {
     CalcResolver calc = tree->calc;
     AlgoConstants c;
     c.dir = style.flexDirection;
     c.isRow = IsRow(c.dir);
     c.isColumn = IsColumn(c.dir);
-    c.isWrap = style.flexWrap == FlexWrap::Wrap ||
-               style.flexWrap == FlexWrap::WrapReverse;
-    c.isWrapReverse = style.flexWrap == FlexWrap::WrapReverse;
+    c.isWrap = FlexWrapIsMultiLine(style.flexWrap);
+    c.isWrapReverse = FlexWrapIsReverse(style.flexWrap);
+    c.isBalance = FlexWrapIsBalance(style.flexWrap);
+    c.lineCount = 0;
+    if (c.isWrap) {
+        c.lineCount = style.flexLineCount < 1 ? 1 : (int)style.flexLineCount;
+    }
 
     Optf aspectRatio = style.aspectRatio;
-    c.margin = style.margin.ResolveOrZero(parentSize.w, calc);
     RectF padding = style.padding.ResolveOrZero(parentSize.w, calc);
     c.border = style.border.ResolveOrZero(parentSize.w, calc);
     SizeF paddingBorderSum = padding.SumAxes() + c.border.SumAxes();
@@ -213586,14 +220652,20 @@ AlgoConstants ComputeConstants(TaffyTree* tree, const Style& style,
                                     ? paddingBorderSum
                                     : SizeF::Zero();
 
-    c.alignItems = style.alignItems
-                       .UnwrapOr(AlignItems{AlignItemsKeyword::Stretch});
-    c.alignContent = style.alignContent
-                         .UnwrapOr(AlignContent{AlignContentKeyword::Stretch});
-    c.justifyContent = style.justifyContent;
+    c.alignItems = ResolveNormalAlignment(style.alignItems);
+
+    c.alignContent = style.alignContent.keyword == AlignContentKeyword::Normal
+                         ? AlignContent{AlignContentKeyword::Stretch}
+                         : style.alignContent;
+    c.justifyContent = style.justifyContent
+                                   .keyword == AlignContentKeyword::Normal
+                           ? AlignContent{AlignContentKeyword::FlexStart}
+                           : style.justifyContent;
     c.layoutDirection = style.direction;
 
     PointOverflow t = style.overflow.Transpose();
+    c.isScrollContainer = IsScrollContainer(style.overflow.x) ||
+                          IsScrollContainer(style.overflow.y);
     c.scrollbarGutter = {t.x == Overflow::Scroll ? style.scrollbarWidth : 0.0f,
                          t.y == Overflow::Scroll ? style.scrollbarWidth : 0.0f};
     c.contentBoxInset = padding + c.border;
@@ -213606,6 +220678,18 @@ AlgoConstants ComputeConstants(TaffyTree* tree, const Style& style,
 
     c.nodeOuterSize = knownDimensions;
     c.nodeInnerSize = MaybeSub(c.nodeOuterSize, c.contentBoxInset.SumAxes());
+    bool knownMainDefinite =
+        c.isRow ? knownDimensionsAreDefiniteW : knownDimensionsAreDefiniteH;
+    bool knownCrossDefinite =
+        c.isRow ? knownDimensionsAreDefiniteH : knownDimensionsAreDefiniteW;
+    c.knownMainSizeIsDefinite = knownMainDefinite;
+    c.hasDefiniteMainSize =
+        knownMainDefinite && IsSome(Main(knownDimensions, c.dir));
+    c.hasDefiniteCrossSize =
+        knownCrossDefinite && IsSome(Cross(knownDimensions, c.dir));
+    c.crossAxisAvailableSpaceIsDefinite =
+        c.hasDefiniteCrossSize ||
+        availableSpace.Cross(c.dir).kind == AvailableSpace::Kind::Definite;
     c.gap = style.gap.ResolveOrZero(Or(c.nodeInnerSize, SizeFOpt{0, 0}), calc);
 
     c.minSize =
@@ -213617,6 +220701,38 @@ AlgoConstants ComputeConstants(TaffyTree* tree, const Style& style,
                      style.maxSize.MaybeResolve(parentSize, calc), aspectRatio),
                  boxSizingAdjustment);
     return c;
+}
+
+static SizeF ResolveRelativeInset(RectFOpt inset, const AlgoConstants& c) {
+    FlexDirection direction = c.dir;
+    bool isRtlRow = IsRow(direction) && IsRtl(c.layoutDirection);
+    bool isRtlColumn = IsColumn(direction) && IsRtl(c.layoutDirection);
+
+    Optf negMainStart = MainStart(inset, direction);
+    if (IsSome(negMainStart)) {
+        negMainStart = -negMainStart;
+    }
+    Optf negMainEnd = MainEnd(inset, direction);
+    if (IsSome(negMainEnd)) {
+        negMainEnd = -negMainEnd;
+    }
+    float main =
+        isRtlRow ? UnwrapOr(Or(MainEnd(inset, direction), negMainStart), 0.0f)
+                 : UnwrapOr(Or(MainStart(inset, direction), negMainEnd), 0.0f);
+
+    Optf negCrossEnd = CrossEnd(inset, direction);
+    if (IsSome(negCrossEnd)) {
+        negCrossEnd = -negCrossEnd;
+    }
+    float cross =
+        isRtlColumn
+            ? UnwrapOr(Or(negCrossEnd, CrossStart(inset, direction)), 0.0f)
+            : UnwrapOr(Or(CrossStart(inset, direction), negCrossEnd), 0.0f);
+
+    SizeF out = SizeF::Zero();
+    SetMain(&out, direction, main);
+    SetCross(&out, direction, cross);
+    return out;
 }
 
 void GenerateAnonymousFlexItems(TaffyTree* tree, NodeId node,
@@ -213631,7 +220747,7 @@ void GenerateAnonymousFlexItems(TaffyTree* tree, NodeId node,
     for (int index = 0; index < n; index++) {
         NodeId child = tree->GetChildId(node, index);
         const Style& cs = tree->GetStyle(child);
-        if (cs.position == Position::Absolute ||
+        if (IsOutOfFlow(cs.position) ||
             cs.BoxGenMode() == BoxGenerationMode::None) {
             continue;
         }
@@ -213643,29 +220759,41 @@ void GenerateAnonymousFlexItems(TaffyTree* tree, NodeId node,
         SizeF boxSizingAdjustment =
             cs.boxSizing == BoxSizing::ContentBox ? pbSum : SizeF::Zero();
 
+        SizeFOpt percentResolutionSize = c.nodeInnerSize;
+        if (!c.knownMainSizeIsDefinite) {
+            SetMain(&percentResolutionSize, c.dir, None());
+        }
+
         FlexItem item;
         item.node = child;
         item.order = (uint32_t)index;
+        item.sizeStyle = cs.size;
         item.size = MaybeAdd(
-            MaybeApplyAspectRatio(cs.size.MaybeResolve(c.nodeInnerSize, calc),
-                                  aspectRatio),
+            MaybeApplyAspectRatio(
+                cs.size.MaybeResolve(percentResolutionSize, calc), aspectRatio),
             boxSizingAdjustment);
-        item.minSize = MaybeAdd(cs.minSize.MaybeResolve(c.nodeInnerSize, calc),
-                                boxSizingAdjustment);
-        item.maxSize = MaybeAdd(cs.maxSize.MaybeResolve(c.nodeInnerSize, calc),
-                                boxSizingAdjustment);
+        item.minSize =
+            MaybeAdd(cs.minSize.MaybeResolve(percentResolutionSize, calc),
+                     boxSizingAdjustment);
+        item.maxSize =
+            MaybeAdd(cs.maxSize.MaybeResolve(percentResolutionSize, calc),
+                     boxSizingAdjustment);
         item.aspectRatio = aspectRatio;
 
-        item.inset = cs.inset.MaybeResolveZip(c.nodeInnerSize, calc);
+        if (cs.position == Position::Relative) {
+            RectFOpt inset = cs.inset.MaybeResolveZip(c.nodeInnerSize, calc);
+            item.relativeInset = ResolveRelativeInset(inset, c);
+        }
         item.margin = cs.margin.ResolveOrZero(c.nodeInnerSize.w, calc);
         item.marginIsAuto = {cs.margin.left.IsAuto(), cs.margin.right.IsAuto(),
                              cs.margin.top.IsAuto(), cs.margin.bottom.IsAuto()};
         item.padding = padding;
         item.border = border;
-        item.alignSelf =
-            ResolveSelfRelative(cs.alignSelf.UnwrapOr(c.alignItems),
-                                cs.direction, c.layoutDirection, c.isColumn);
+        item.alignSelf = ResolveSelfRelative(
+            ResolveNormalAlignment(cs.alignSelf.UnwrapOr(c.alignItems)),
+            cs.direction, c.layoutDirection, c.isColumn);
         item.overflow = cs.overflow;
+        item.contain = cs.contain;
         item.scrollbarWidth = cs.scrollbarWidth;
         item.flexGrow = cs.flexGrow;
         item.flexShrink = cs.flexShrink;
@@ -213679,20 +220807,20 @@ SizeAvail DetermineAvailableSpace(SizeFOpt knownDimensions,
 
     SizeAvail out;
     if (IsSome(knownDimensions.w)) {
-        out.width = AvailableSpace::Definite(
-            knownDimensions.w - c.contentBoxInset.HorizontalAxisSum());
+        out.width = AvailableSpace::Definite(F32Max(
+            0.0f, knownDimensions.w - c.contentBoxInset.HorizontalAxisSum()));
     } else {
-        out.width = MaybeSub(
-            MaybeSub(outerAvailableSpace.width, c.margin.HorizontalAxisSum()),
-            c.contentBoxInset.HorizontalAxisSum());
+        out.width = MaybeMax(MaybeSub(outerAvailableSpace.width,
+                                      c.contentBoxInset.HorizontalAxisSum()),
+                             0.0f);
     }
     if (IsSome(knownDimensions.h)) {
-        out.height = AvailableSpace::Definite(
-            knownDimensions.h - c.contentBoxInset.VerticalAxisSum());
+        out.height = AvailableSpace::Definite(F32Max(
+            0.0f, knownDimensions.h - c.contentBoxInset.VerticalAxisSum()));
     } else {
-        out.height = MaybeSub(
-            MaybeSub(outerAvailableSpace.height, c.margin.VerticalAxisSum()),
-            c.contentBoxInset.VerticalAxisSum());
+        out.height = MaybeMax(MaybeSub(outerAvailableSpace.height,
+                                       c.contentBoxInset.VerticalAxisSum()),
+                              0.0f);
     }
     return out;
 }
@@ -213710,23 +220838,22 @@ void DetermineFlexBaseSize(TaffyTree* tree, const AlgoConstants& c,
         Optf crossAxisParentSize = Cross(c.nodeInnerSize, dir);
         SizeFOpt childParentSize = SizeFOptFromCross(dir, crossAxisParentSize);
 
-        float crossAxisMarginSum = CrossAxisSum(c.margin, dir);
         SizeFOpt transferredMinSize =
             MaybeApplyAspectRatio(child.minSize, child.aspectRatio);
         SizeFOpt transferredMaxSize =
             MaybeApplyAspectRatio(child.maxSize, child.aspectRatio);
-        Optf childMinCross =
-            MaybeAdd(Cross(transferredMinSize, dir), crossAxisMarginSum);
-        Optf childMaxCross =
-            MaybeAdd(Cross(transferredMaxSize, dir), crossAxisMarginSum);
+        Optf childMinCross = Cross(transferredMinSize, dir);
+        Optf childMaxCross = Cross(transferredMaxSize, dir);
 
         AvailableSpace crossAxisAvailableSpace;
         AvailableSpace crossIn = availableSpace.Cross(dir);
         switch (crossIn.kind) {
             case AvailableSpace::Kind::Definite:
-                crossAxisAvailableSpace = AvailableSpace::Definite(
-                    MaybeClamp(UnwrapOr(crossAxisParentSize, crossIn.value),
-                               childMinCross, childMaxCross));
+                crossAxisAvailableSpace = AvailableSpace::Definite(MaybeClamp(
+                    F32Max(0.0f, c.DividedCrossSpace(UnwrapOr(
+                                     crossAxisParentSize, crossIn.value)) -
+                                     CrossAxisSum(child.margin, dir)),
+                    childMinCross, childMaxCross));
                 break;
             case AvailableSpace::Kind::MinContent:
                 crossAxisAvailableSpace =
@@ -213742,6 +220869,7 @@ void DetermineFlexBaseSize(TaffyTree* tree, const AlgoConstants& c,
                 break;
         }
 
+        bool childCrossSizeIsDefinite = IsSome(Cross(child.size, dir));
         SizeFOpt childKnownDimensions = child.size;
         SetMain(&childKnownDimensions, dir, None());
         SetCross(&childKnownDimensions, dir,
@@ -213753,33 +220881,89 @@ void DetermineFlexBaseSize(TaffyTree* tree, const AlgoConstants& c,
             !child.marginIsAuto.CrossEnd(dir) &&
             !IsSome(Cross(childKnownDimensions, dir))) {
             SetCross(&childKnownDimensions, dir,
-                     MaybeSub(crossAxisAvailableSpace.IntoOption(),
-                              CrossAxisSum(child.margin, dir)));
+                     crossAxisAvailableSpace.IntoOption());
+
+            childCrossSizeIsDefinite = !c.isWrap && c.hasDefiniteCrossSize &&
+                                       IsSome(crossAxisParentSize);
         }
 
-        Optf containerWidth = Main(c.nodeInnerSize, dir);
+        Optf containerWidth = c.nodeInnerSize.w;
+
+        Optf percentResolutionMainSize =
+            c.knownMainSizeIsDefinite ? Main(c.nodeInnerSize, dir) : None();
         float boxSizingAdjustment = 0.0f;
         if (cs.boxSizing == BoxSizing::ContentBox) {
             RectF padding = cs.padding.ResolveOrZero(containerWidth, calc);
             RectF border = cs.border.ResolveOrZero(containerWidth, calc);
             boxSizingAdjustment = Main((padding + border).SumAxes(), dir);
         }
-        Optf flexBasis =
-            MaybeAdd(cs.flexBasis.MaybeResolve(containerWidth, calc),
-                     boxSizingAdjustment);
+        Dimension flexBasisStyle = cs.flexBasis;
+        Optf flexBasis = MaybeAdd(
+            flexBasisStyle.MaybeResolve(percentResolutionMainSize, calc),
+            boxSizingAdjustment);
 
         Optf mainSize = Main(child.size, dir);
-        Optf definiteBasis = Or(flexBasis, mainSize);
-        if (IsSome(definiteBasis)) {
-            child.flexBasis = definiteBasis;
-        } else {
+        Optf mainStretch =
+            MaybeMax(MaybeSub(percentResolutionMainSize,
+                              Some(MainAxisSum(child.margin, dir))),
+                     0.0f);
 
+        bool measureBasis = true;
+        AvailableSpace keywordMain = AvailableSpace::MaxContent();
+        bool hasKeywordMain = false;
+        if (flexBasisStyle.IsContent()) {
+
+        } else if (flexBasisStyle.IsSizingKeyword()) {
+            SizingKeywordResolution keyword = ResolveSizingKeyword(
+                flexBasisStyle, mainStretch, percentResolutionMainSize, calc);
+            if (keyword.isSome && keyword.kind == SizingKeywordKind::Exact) {
+                child.flexBasisIsDefinite = true;
+                child.flexBasis = keyword.exact;
+                measureBasis = false;
+            } else if (keyword.isSome) {
+                keywordMain = keyword.measure;
+                hasKeywordMain = true;
+            }
+        } else if (IsSome(flexBasis) ||
+                   (flexBasisStyle.IsAuto() && IsSome(mainSize))) {
+            child.flexBasisIsDefinite = true;
+            child.flexBasis = IsSome(flexBasis) ? flexBasis : mainSize;
+            measureBasis = false;
+        } else if (flexBasisStyle.IsAuto()) {
+            SizingKeywordResolution keyword =
+                ResolveSizingKeyword(child.sizeStyle.Main(dir), mainStretch,
+                                     percentResolutionMainSize, calc);
+            if (keyword.isSome && keyword.kind == SizingKeywordKind::Exact) {
+                child.flexBasisIsDefinite = true;
+                child.flexBasis = keyword.exact;
+                measureBasis = false;
+            } else if (keyword.isSome) {
+                keywordMain = keyword.measure;
+                hasKeywordMain = true;
+            }
+        }
+        if (measureBasis && childCrossSizeIsDefinite) {
+
+            Optf cross = Cross(childKnownDimensions, dir);
+            if (IsSome(child.aspectRatio) && IsSome(cross)) {
+                child.flexBasisIsDefinite = true;
+                child.flexBasis = c.isRow ? cross * child.aspectRatio
+                                          : cross / child.aspectRatio;
+                measureBasis = false;
+            }
+        }
+        if (measureBasis) {
+
+            AvailableSpace mainAvailable =
+                availableSpace.Main(dir)
+                            .kind == AvailableSpace::Kind::MinContent
+                    ? AvailableSpace::MinContent()
+                    : AvailableSpace::MaxContent();
+            if (hasKeywordMain) {
+                mainAvailable = keywordMain;
+            }
             SizeAvail childAvailableSpace = SizeAvail::MaxContent();
-            childAvailableSpace
-                .SetMain(dir, availableSpace.Main(dir).kind ==
-                                      AvailableSpace::Kind::MinContent
-                                  ? AvailableSpace::MinContent()
-                                  : AvailableSpace::MaxContent());
+            childAvailableSpace.SetMain(dir, mainAvailable);
             childAvailableSpace.SetCross(dir, crossAxisAvailableSpace);
             child.flexBasis = tree->MeasureChildSize(
                 child.node, childKnownDimensions, childParentSize,
@@ -213839,7 +221023,7 @@ void CollectFlexLines(const AlgoConstants& c, SizeAvail availableSpace,
     FlexItem* items = flexItems->els;
     int total = flexItems->len;
 
-    if (!c.isWrap) {
+    if (!c.isWrap || !c.knownMainSizeIsDefinite) {
         VecAppend(*lines, {items, total, 0.0f, 0.0f});
         return;
     }
@@ -213847,9 +221031,19 @@ void CollectFlexLines(const AlgoConstants& c, SizeAvail availableSpace,
     AvailableSpace mainAxisAvailableSpace;
     Optf maxMain = Main(c.maxSize, c.dir);
     if (IsSome(maxMain)) {
+        float available =
+            UnwrapOr(availableSpace.Main(c.dir).IntoOption(), maxMain);
+
+        if (!c.hasDefiniteMainSize) {
+            available = F32Min(available, maxMain);
+        }
         mainAxisAvailableSpace = AvailableSpace::Definite(
-            MaybeMax(UnwrapOr(availableSpace.Main(c.dir).IntoOption(), maxMain),
-                     Main(c.minSize, c.dir)));
+            MaybeMax(available, Main(c.minSize, c.dir)));
+    } else if (!c.isRow && !c.hasDefiniteMainSize &&
+               availableSpace.Main(c.dir)
+                       .kind == AvailableSpace::Kind::Definite) {
+
+        mainAxisAvailableSpace = AvailableSpace::MaxContent();
     } else {
         mainAxisAvailableSpace = availableSpace.Main(c.dir);
     }
@@ -213887,6 +221081,64 @@ void CollectFlexLines(const AlgoConstants& c, SizeAvail availableSpace,
         }
         VecAppend(*lines, {items + start, index - start, 0.0f, 0.0f});
         start = index;
+    }
+}
+
+void CollectBalancedFlexLines(const AlgoConstants& c, SizeAvail availableSpace,
+                              Vec<FlexItem>* flexItems, Vec<FlexLine>* lines) {
+    FlexItem* items = flexItems->els;
+    int total = flexItems->len;
+    if (total == 0) {
+        return;
+    }
+
+    AvailableSpace mainAxisAvailableSpace;
+    if (!c.knownMainSizeIsDefinite) {
+        mainAxisAvailableSpace = AvailableSpace::MaxContent();
+    } else {
+        Optf maxMain = Main(c.maxSize, c.dir);
+        if (IsSome(maxMain)) {
+            float available =
+                UnwrapOr(availableSpace.Main(c.dir).IntoOption(), maxMain);
+            if (!c.hasDefiniteMainSize) {
+                available = F32Min(available, maxMain);
+            }
+            mainAxisAvailableSpace = AvailableSpace::Definite(
+                MaybeMax(available, Main(c.minSize, c.dir)));
+        } else if (!c.isRow && !c.hasDefiniteMainSize &&
+                   availableSpace.Main(c.dir)
+                           .kind == AvailableSpace::Kind::Definite) {
+            mainAxisAvailableSpace = AvailableSpace::MaxContent();
+        } else {
+            mainAxisAvailableSpace = availableSpace.Main(c.dir);
+        }
+    }
+
+    if (mainAxisAvailableSpace.kind == AvailableSpace::Kind::MinContent) {
+        for (int i = 0; i < total; i++) {
+            VecAppend(*lines, {items + i, 1, 0.0f, 0.0f});
+        }
+        return;
+    }
+
+    float lineBreak = mainAxisAvailableSpace
+                                  .kind == AvailableSpace::Kind::Definite
+                          ? mainAxisAvailableSpace.value
+                          : INFINITY;
+    Vec<float> itemSizes;
+    for (int i = 0; i < total; i++) {
+        VecAppend(itemSizes, Main(items[i].hypotheticalOuterSize, c.dir));
+    }
+    Vec<int> counts;
+    int* slots = VecAppendBlanks(counts, total);
+    int minLines = c.lineCount < 1 ? 1 : c.lineCount;
+    int nLines = BalancedLineItemCounts(itemSizes.els, total, lineBreak,
+                                        Main(c.gap, c.dir), minLines, slots);
+    int start = 0;
+    for (int i = 0; i < nLines; i++) {
+        int count = slots[i];
+        VecAppend(*lines, {items + start, count, 0.0f, 0.0f});
+        start += count;
     }
 }
 
@@ -213930,8 +221182,54 @@ void DetermineContainerMainSize(TaffyTree* tree, SizeAvail availableSpace,
         if (mainAvail.kind == AvailableSpace::Kind::Definite) {
             float longest = LongestLineLength(lines, *c);
             float size = longest + mainContentBoxInset;
-            outerMainSize =
-                lines->len > 1 ? F32Max(size, mainAvail.value) : size;
+            if (c->isBalance) {
+
+                int itemCount = 0;
+                for (int i = 0; i < lines->len; i++) {
+                    itemCount += (*lines)[i].count;
+                }
+                if (itemCount == 0) {
+                    outerMainSize = size;
+                } else {
+                    Vec<float> itemLengths;
+                    for (int li = 0; li < lines->len; li++) {
+                        FlexLine& line = (*lines)[li];
+                        for (int ii = 0; ii < line.count; ii++) {
+                            const FlexItem& child = line.items[ii];
+                            float paddingBorderSum =
+                                MainAxisSum(child.padding + child.border, dir);
+                            float itemLen =
+                                F32Max(MaybeMax(child.flexBasis,
+                                                Main(child.minSize, dir)) +
+                                           MainAxisSum(child.margin, dir),
+                                       paddingBorderSum);
+                            VecAppend(itemLengths, itemLen);
+                        }
+                    }
+                    Vec<int> counts;
+                    int* slots = VecAppendBlanks(counts, itemCount);
+                    int minLines = c->lineCount < 1 ? 1 : c->lineCount;
+                    int nLines = BalancedLineItemCounts(
+                        itemLengths.els, itemCount, INFINITY, Main(c->gap, dir),
+                        minLines, slots);
+                    float widest = 0.0f;
+                    int index = 0;
+                    for (int li = 0; li < nLines; li++) {
+                        float lineLength = 0.0f;
+                        for (int k = 0; k < slots[li]; k++) {
+                            lineLength += itemLengths[index++];
+                        }
+                        lineLength += SumAxisGaps(Main(c->gap, dir), slots[li]);
+                        widest = F32Max(widest, lineLength);
+                    }
+                    float maxContent = widest + mainContentBoxInset;
+                    outerMainSize =
+                        F32Max(size, F32Min(maxContent, mainAvail.value));
+                }
+            } else {
+                outerMainSize =
+                    lines->len > 1 ? F32Max(size, mainAvail.value) : size;
+            }
         } else if (mainAvail.kind == AvailableSpace::Kind::MinContent &&
                    c->isWrap) {
             outerMainSize = LongestLineLength(lines, *c) + mainContentBoxInset;
@@ -213947,7 +221245,9 @@ void DetermineContainerMainSize(TaffyTree* tree, SizeAvail availableSpace,
                     Optf styleMax = Main(item.maxSize, dir);
 
                     Optf clampingBasis =
-                        MaybeMax(Some(item.flexBasis), stylePreferred);
+                        c->isRow
+                            ? MaybeMax(Some(item.flexBasis), stylePreferred)
+                            : Some(item.flexBasis);
                     Optf flexBasisMin =
                         Filter(clampingBasis, item.flexShrink == 0.0f);
                     Optf flexBasisMax =
@@ -213977,20 +221277,38 @@ void DetermineContainerMainSize(TaffyTree* tree, SizeAvail availableSpace,
                     } else if (item.IsScroll()) {
                         contentContribution =
                             item.flexBasis + MainAxisSum(item.margin, dir);
+                    } else if (IsSome(stylePreferred)) {
+
+                        float itemPbMain = MainAxisSum(item.padding, dir) +
+                                           MainAxisSum(item.border, dir);
+                        float innerMainSize =
+                            F32Max(stylePreferred, itemPbMain);
+                        float marginSum = MainAxisSum(item.margin, dir);
+
+                        if (c->isRow) {
+                            contentContribution = MaybeClamp(
+                                innerMainSize + marginSum, styleMin, styleMax);
+                        } else {
+                            contentContribution = MaybeClamp(
+                                F32Max(innerMainSize, item.flexBasis) +
+                                    marginSum,
+                                styleMin, styleMax);
+                        }
                     } else {
                         Optf crossAxisParentSize = Cross(c->nodeInnerSize, dir);
-                        float crossAxisMarginSum = CrossAxisSum(c->margin, dir);
-                        Optf childMinCross = MaybeAdd(Cross(item.minSize, dir),
-                                                      crossAxisMarginSum);
-                        Optf childMaxCross = MaybeAdd(Cross(item.maxSize, dir),
-                                                      crossAxisMarginSum);
+
+                        Optf childMinCross = Cross(item.minSize, dir);
+                        Optf childMaxCross = Cross(item.maxSize, dir);
                         AvailableSpace crossAxisAvailableSpace =
                             availableSpace.Cross(dir);
                         if (crossAxisAvailableSpace
                                 .kind == AvailableSpace::Kind::Definite) {
-                            crossAxisAvailableSpace = AvailableSpace::Definite(
-                                UnwrapOr(crossAxisParentSize,
-                                         crossAxisAvailableSpace.value));
+                            crossAxisAvailableSpace =
+                                AvailableSpace::Definite(F32Max(
+                                    0.0f, c->DividedCrossSpace(UnwrapOr(
+                                              crossAxisParentSize,
+                                              crossAxisAvailableSpace.value)) -
+                                              CrossAxisSum(item.margin, dir)));
                         }
                         crossAxisAvailableSpace =
                             MaybeClamp(crossAxisAvailableSpace, childMinCross,
@@ -214002,29 +221320,44 @@ void DetermineContainerMainSize(TaffyTree* tree, SizeAvail availableSpace,
 
                         SizeFOpt childKnownDimensions = item.size;
                         SetMain(&childKnownDimensions, dir, None());
+
+                        SizeFOpt transferredMinSize = MaybeApplyAspectRatio(
+                            item.minSize, item.aspectRatio);
+                        SizeFOpt transferredMaxSize = MaybeApplyAspectRatio(
+                            item.maxSize, item.aspectRatio);
+                        SetCross(&childKnownDimensions, dir,
+                                 MaybeClamp(Cross(childKnownDimensions, dir),
+                                            Cross(transferredMinSize, dir),
+                                            Cross(transferredMaxSize, dir)));
                         if (item.alignSelf
                                     .keyword == AlignItemsKeyword::Stretch &&
                             !IsSome(Cross(childKnownDimensions, dir))) {
-                            SetCross(
-                                &childKnownDimensions, dir,
-                                MaybeSub(crossAxisAvailableSpace.IntoOption(),
-                                         CrossAxisSum(item.margin, dir)));
+                            SetCross(&childKnownDimensions, dir,
+                                     crossAxisAvailableSpace.IntoOption());
                         }
 
-                        float contentMainSize =
-                            tree->MeasureChildSize(
-                                item.node, childKnownDimensions,
-                                c->nodeInnerSize, childAvailableSpace,
-                                SizingMode::InherentSize, MainAxis(dir),
-                                LineBool::False()) +
-                            MainAxisSum(item.margin, dir);
+                        float measuredMainSize = tree->MeasureChildSize(
+                            item.node, childKnownDimensions, c->nodeInnerSize,
+                            childAvailableSpace, SizingMode::ContentSize,
+                            MainAxis(dir), LineBool::False());
+
+                        Optf cross = Cross(childKnownDimensions, dir);
+                        float innerMainSize = measuredMainSize;
+                        if (IsSome(item.aspectRatio) && IsSome(cross)) {
+                            float transferred = c->isRow
+                                                    ? cross * item.aspectRatio
+                                                    : cross / item.aspectRatio;
+                            innerMainSize = F32Max(innerMainSize, transferred);
+                        }
+                        float marginSum = MainAxisSum(item.margin, dir);
 
                         if (c->isRow) {
-                            contentContribution =
-                                MaybeClamp(contentMainSize, styleMin, styleMax);
+                            contentContribution = MaybeClamp(
+                                innerMainSize + marginSum, styleMin, styleMax);
                         } else {
                             contentContribution = MaybeClamp(
-                                F32Max(contentMainSize, item.flexBasis),
+                                F32Max(innerMainSize, item.flexBasis) +
+                                    marginSum,
                                 styleMin, styleMax);
                         }
                     }
@@ -214035,7 +221368,7 @@ void DetermineContainerMainSize(TaffyTree* tree, SizeAvail availableSpace,
                             diff / F32Max(1.0f, item.flexGrow);
                     } else if (diff < 0.0f) {
                         float scaledShrinkFactor =
-                            F32Max(1.0f, item.flexShrink * item.innerFlexBasis);
+                            F32Max(1.0f, item.flexShrink) * item.innerFlexBasis;
                         item.contentFlexFraction = diff / scaledShrinkFactor;
                     } else {
                         item.contentFlexFraction = 0.0f;
@@ -214053,7 +221386,10 @@ void DetermineContainerMainSize(TaffyTree* tree, SizeAvail availableSpace,
                     } else if (item.contentFlexFraction < 0.0f) {
                         float scaledShrinkFactor =
                             F32Max(1.0f, item.flexShrink) * item.innerFlexBasis;
-                        flexContribution = scaledShrinkFactor * flexFraction;
+                        flexContribution =
+                            scaledShrinkFactor == 0.0f
+                                ? 0.0f
+                                : scaledShrinkFactor * flexFraction;
                     }
                     float size = item.flexBasis + flexContribution;
                     SetMain(&item.outerTargetSize, dir, size);
@@ -214232,6 +221568,38 @@ void ResolveFlexibleLengths(FlexLine* line, const AlgoConstants& c) {
     }
 }
 
+bool ItemCrossIsDefinite(const AlgoConstants& c, const FlexItem& item) {
+    FlexDirection dir = c.dir;
+    bool hasCrossAutoMargins =
+        item.marginIsAuto.CrossStart(dir) || item.marginIsAuto.CrossEnd(dir);
+    Dimension crossSize = item.sizeStyle.Cross(dir);
+    bool isStretched =
+        !hasCrossAutoMargins &&
+        (crossSize.IsStretch() ||
+         (item.alignSelf == AlignSelf{AlignItemsKeyword::Stretch} &&
+          crossSize.IsAuto()));
+    return isStretched || IsSome(Cross(item.size, dir)) ||
+           (!c.isRow && c.crossAxisAvailableSpaceIsDefinite);
+}
+
+LayoutInput ItemLayoutInput(const AlgoConstants& c, const FlexItem& item,
+                            RunMode runMode, RequestedAxis axis, SizeFOpt known,
+                            SizeAvail available) {
+    bool mainDefinite = c.hasDefiniteMainSize || item.flexBasisIsDefinite;
+    bool crossDefinite = ItemCrossIsDefinite(c, item);
+    LayoutInput in;
+    in.runMode = runMode;
+    in.sizingMode = SizingMode::ContentSize;
+    in.axis = axis;
+    in.knownDimensions = known;
+    in.knownDimensionsAreDefiniteW = c.isRow ? mainDefinite : crossDefinite;
+    in.knownDimensionsAreDefiniteH = c.isRow ? crossDefinite : mainDefinite;
+    in.parentSize = c.nodeInnerSize;
+    in.availableSpace = available;
+    in.verticalMarginsAreCollapsible = LineBool::False();
+    return in;
+}
+
 void DetermineHypotheticalCrossSize(TaffyTree* tree, FlexLine* line,
                                     const AlgoConstants& c,
                                     SizeAvail availableSpace) {
@@ -214241,8 +221609,8 @@ void DetermineHypotheticalCrossSize(TaffyTree* tree, FlexLine* line,
         float paddingBorderSum =
             CrossAxisSum(child.padding + child.border, dir);
 
-        AvailableSpace childKnownMain =
-            AvailableSpace::Definite(Main(c.containerSize, dir));
+        AvailableSpace childAvailableMain = AvailableSpace::Definite(F32Max(
+            0.0f, Main(c.containerSize, dir) - MainAxisSum(child.margin, dir)));
 
         Optf transferredMinCross =
             Cross(MaybeApplyAspectRatio(child.minSize, child.aspectRatio), dir);
@@ -214254,10 +221622,29 @@ void DetermineHypotheticalCrossSize(TaffyTree* tree, FlexLine* line,
                                 transferredMaxCross),
                      paddingBorderSum);
 
-        AvailableSpace childAvailableCross =
-            MaybeMax(MaybeClamp(availableSpace.Cross(dir), transferredMinCross,
-                                transferredMaxCross),
-                     paddingBorderSum);
+        AvailableSpace crossAvail = availableSpace.Cross(dir);
+        if (crossAvail.kind == AvailableSpace::Kind::Definite) {
+            crossAvail = AvailableSpace::Definite(
+                F32Max(0.0f, c.DividedCrossSpace(crossAvail.value) -
+                                 CrossAxisSum(child.margin, dir)));
+        }
+        AvailableSpace childAvailableCross = MaybeMax(
+            MaybeClamp(crossAvail, transferredMinCross, transferredMaxCross),
+            paddingBorderSum);
+
+        Optf innerCross = Cross(c.nodeInnerSize, dir);
+        if (IsSome(innerCross)) {
+            innerCross = Some(c.DividedCrossSpace(innerCross));
+        }
+        Optf crossStretch = MaybeMax(
+            MaybeSub(innerCross, Some(CrossAxisSum(child.margin, dir))), 0.0f);
+        SizingKeywordResolution crossKeyword =
+            ResolveSizingKeyword(child.sizeStyle.Cross(dir), crossStretch,
+                                 Cross(c.nodeInnerSize, dir), tree->calc);
+        if (crossKeyword.isSome &&
+            crossKeyword.kind == SizingKeywordKind::Measure) {
+            childAvailableCross = crossKeyword.measure;
+        }
 
         float childInnerCross;
         if (IsSome(childCross)) {
@@ -214265,11 +221652,15 @@ void DetermineHypotheticalCrossSize(TaffyTree* tree, FlexLine* line,
         } else {
             SizeFOpt known = {c.isRow ? Some(child.targetSize.w) : childCross,
                               c.isRow ? childCross : Some(child.targetSize.h)};
-            SizeAvail avail = {c.isRow ? childKnownMain : childAvailableCross,
-                               c.isRow ? childAvailableCross : childKnownMain};
-            float measured = tree->MeasureChildSize(
-                child.node, known, c.nodeInnerSize, avail,
-                SizingMode::ContentSize, CrossAxis(dir), LineBool::False());
+            SizeAvail avail = {
+                c.isRow ? childAvailableMain : childAvailableCross,
+                c.isRow ? childAvailableCross : childAvailableMain};
+            LayoutOutput measuredOut = tree->ComputeChildLayout(
+                child.node, ItemLayoutInput(c, child, RunMode::ComputeSize,
+                                            c.isRow ? RequestedAxis::Vertical
+                                                    : RequestedAxis::Horizontal,
+                                            known, avail));
+            float measured = GetAbs(measuredOut.size, CrossAxis(dir));
             childInnerCross = F32Max(
                 MaybeClamp(measured, transferredMinCross, transferredMaxCross),
                 paddingBorderSum);
@@ -214295,8 +221686,7 @@ void CalculateChildrenBaseLines(TaffyTree* tree, SizeFOpt nodeSize,
 
         int participating = 0;
         for (int i = 0; i < line.count; i++) {
-            if (line.items[i]
-                    .alignSelf.keyword == AlignItemsKeyword::Baseline) {
+            if (line.items[i].ParticipatesInBaselineAlignment(c.dir)) {
                 participating++;
             }
         }
@@ -214306,22 +221696,28 @@ void CalculateChildrenBaseLines(TaffyTree* tree, SizeFOpt nodeSize,
 
         for (int i = 0; i < line.count; i++) {
             FlexItem& child = line.items[i];
-            if (child.alignSelf.keyword != AlignItemsKeyword::Baseline) {
+            if (!child.ParticipatesInBaselineAlignment(c.dir)) {
                 continue;
             }
             SizeFOpt known = {c.isRow ? Some(child.targetSize.w)
                                       : Some(child.hypotheticalInnerSize.w),
                               c.isRow ? Some(child.hypotheticalInnerSize.h)
                                       : Some(child.targetSize.h)};
+
             SizeAvail avail = {
                 c.isRow ? AvailableSpace::Definite(c.containerSize.w)
                         : availableSpace.width.MaybeSet(nodeSize.w),
                 c.isRow ? availableSpace.height.MaybeSet(nodeSize.h)
                         : AvailableSpace::Definite(c.containerSize.h)};
-            LayoutOutput out = tree->PerformChildLayout(
-                child.node, known, c.nodeInnerSize, avail,
-                SizingMode::ContentSize, LineBool::False());
-            float baseline = UnwrapOr(out.firstBaselines.y, out.size.h);
+            SizeF marginSum = child.margin.SumAxes();
+            avail.width =
+                MaybeMax(MaybeSub(avail.width, Some(marginSum.w)), Some(0.0f));
+            avail.height =
+                MaybeMax(MaybeSub(avail.height, Some(marginSum.h)), Some(0.0f));
+            LayoutOutput out = tree->ComputeChildLayout(
+                child.node, ItemLayoutInput(c, child, RunMode::PerformLayout,
+                                            RequestedAxis::Both, known, avail));
+            float baseline = UnwrapOr(out.baselines.first, out.size.h);
             if (IsScrollContainer(child.overflow.y)) {
                 baseline = F32Max(0.0f, F32Min(baseline, out.size.h));
             }
@@ -214359,9 +221755,7 @@ void CalculateCrossSize(Vec<FlexLine>* lines, SizeFOpt nodeSize,
         for (int i = 0; i < line.count; i++) {
             FlexItem& child = line.items[i];
             float v;
-            if (child.alignSelf.keyword == AlignItemsKeyword::Baseline &&
-                !child.marginIsAuto.CrossStart(dir) &&
-                !child.marginIsAuto.CrossEnd(dir)) {
+            if (child.ParticipatesInBaselineAlignment(dir)) {
                 v = maxBaseline - child.baseline +
                     Cross(child.hypotheticalOuterSize, dir);
             } else {
@@ -214424,14 +221818,18 @@ void DetermineUsedCrossSize(TaffyTree* tree, Vec<FlexLine>* lines,
         for (int i = 0; i < line.count; i++) {
             FlexItem& child = line.items[i];
             const Style& cs = tree->GetStyle(child.node);
-            float used;
-            if (child.alignSelf.keyword == AlignItemsKeyword::Stretch &&
-                !child.marginIsAuto.CrossStart(dir) &&
-                !child.marginIsAuto.CrossEnd(dir) &&
-                cs.size.Cross(dir).IsAuto()) {
 
-                RectF padding = cs.padding.ResolveOrZero(c.nodeInnerSize, calc);
-                RectF border = cs.border.ResolveOrZero(c.nodeInnerSize, calc);
+            bool crossIsStretch = child.sizeStyle.Cross(dir).IsStretch();
+            float used;
+            if (!child.marginIsAuto.CrossStart(dir) &&
+                !child.marginIsAuto.CrossEnd(dir) &&
+                (crossIsStretch ||
+                 (child.alignSelf.keyword == AlignItemsKeyword::Stretch &&
+                  cs.size.Cross(dir).IsAuto()))) {
+
+                RectF padding = cs.padding
+                                    .ResolveOrZero(c.nodeInnerSize.w, calc);
+                RectF border = cs.border.ResolveOrZero(c.nodeInnerSize.w, calc);
                 SizeF pbSum = (padding + border).SumAxes();
                 SizeF boxSizingAdjustment =
                     cs.boxSizing == BoxSizing::ContentBox ? pbSum
@@ -214439,10 +221837,11 @@ void DetermineUsedCrossSize(TaffyTree* tree, Vec<FlexLine>* lines,
                 SizeFOpt maxSizeIgnoringAspectRatio =
                     MaybeAdd(cs.maxSize.MaybeResolve(c.nodeInnerSize, calc),
                              boxSizingAdjustment);
-                used =
-                    MaybeClamp(lineCrossSize - CrossAxisSum(child.margin, dir),
-                               Cross(child.minSize, dir),
-                               Cross(maxSizeIgnoringAspectRatio, dir));
+                used = MaybeClamp(
+                    F32Max(0.0f,
+                           lineCrossSize - CrossAxisSum(child.margin, dir)),
+                    Cross(child.minSize, dir),
+                    Cross(maxSizeIgnoringAspectRatio, dir));
             } else {
                 used = Cross(child.hypotheticalInnerSize, dir);
             }
@@ -214495,16 +221894,15 @@ void DistributeRemainingFreeSpace(Vec<FlexLine>* lines,
                     }
                 }
             }
+
+            freeSpace = 0.0f;
         }
 
         int numItems = line.count;
         bool layoutReverse = IsReverse(dir);
         float gap = Main(c.gap, dir);
-        JustifyContent rawMode =
-            c.justifyContent
-                .UnwrapOr(AlignContent{AlignContentKeyword::FlexStart});
         AlignContentKeyword mode =
-            ApplyAlignmentFallback(freeSpace, numItems, rawMode);
+            ApplyAlignmentFallback(freeSpace, numItems, c.justifyContent);
 
         for (int i = 0; i < numItems; i++) {
             FlexItem& child =
@@ -214570,8 +221968,7 @@ void ResolveCrossAxisAutoMargins(Vec<FlexLine>* lines, const AlgoConstants& c) {
         float maxBaselineToBottomDistance = 0.0f;
         for (int i = 0; i < line.count; i++) {
             maxBaseline = F32Max(maxBaseline, line.items[i].baseline);
-            if (line.items[i]
-                    .alignSelf.keyword == AlignItemsKeyword::Baseline) {
+            if (line.items[i].ParticipatesInBaselineAlignment(c.dir)) {
                 maxBaselineToBottomDistance =
                     F32Max(maxBaselineToBottomDistance,
                            Cross(line.items[i].outerTargetSize, c.dir) -
@@ -214661,42 +222058,39 @@ void AlignFlexLinesPerAlignContent(Vec<FlexLine>* lines, const AlgoConstants& c,
 
 void CalculateFlexItem(TaffyTree* tree, FlexItem* item, float* totalOffsetMain,
                        float totalOffsetCross, float lineOffsetCross,
-                       SizeF* totalContentSize, SizeF containerSize,
-                       SizeFOpt nodeInnerSize, FlexDirection direction,
-                       Direction layoutDirection) {
-    LayoutOutput layoutOutput = tree->PerformChildLayout(
-        item->node, AsOptional(item->targetSize), nodeInnerSize,
-        SizeAvail::Definite(containerSize), SizingMode::ContentSize,
-        LineBool::False());
+                       RectF* totalOverflowRect, const AlgoConstants& c,
+                       Vec<OofCandidate>* oofPool) {
+    FlexDirection direction = c.dir;
+    Direction layoutDirection = c.layoutDirection;
+    SizeF containerSize = c.containerSize;
+    bool mainDefinite = c.hasDefiniteMainSize || item->flexBasisIsDefinite;
+    bool crossDefinite = ItemCrossIsDefinite(c, *item);
+    LayoutInput childInput;
+    childInput.runMode = RunMode::PerformLayout;
+    childInput.sizingMode = SizingMode::ContentSize;
+    childInput.axis = RequestedAxis::Both;
+    childInput.knownDimensions = AsOptional(item->targetSize);
+    childInput.knownDimensionsAreDefiniteW =
+        IsRow(direction) ? mainDefinite : crossDefinite;
+    childInput.knownDimensionsAreDefiniteH =
+        IsRow(direction) ? crossDefinite : mainDefinite;
+    childInput.parentSize = c.nodeInnerSize;
+
+    SizeF childMarginSum = item->margin.SumAxes();
+    childInput.availableSpace =
+        SizeAvail::Definite({F32Max(0.0f, containerSize.w - childMarginSum.w),
+                             F32Max(0.0f, containerSize.h - childMarginSum.h)});
+    childInput.verticalMarginsAreCollapsible = LineBool::False();
+    LayoutOutput layoutOutput =
+        tree->ComputeChildLayout(item->node, childInput);
     SizeF size = layoutOutput.size;
-    SizeF contentSize = layoutOutput.contentSize;
+    RectF scrollableOverflowRect = layoutOutput.scrollableOverflowRect;
 
     bool isRtlRow = IsRow(direction) && IsRtl(layoutDirection);
     bool isRtlColumn = IsColumn(direction) && IsRtl(layoutDirection);
 
-    Optf negMainStart = MainStart(item->inset, direction);
-    if (IsSome(negMainStart)) {
-        negMainStart = -negMainStart;
-    }
-    Optf negMainEnd = MainEnd(item->inset, direction);
-    if (IsSome(negMainEnd)) {
-        negMainEnd = -negMainEnd;
-    }
-    float mainRelativeInset =
-        isRtlRow
-            ? UnwrapOr(Or(MainEnd(item->inset, direction), negMainStart), 0.0f)
-            : UnwrapOr(Or(MainStart(item->inset, direction), negMainEnd), 0.0f);
-
-    Optf negCrossEnd = CrossEnd(item->inset, direction);
-    if (IsSome(negCrossEnd)) {
-        negCrossEnd = -negCrossEnd;
-    }
-    float crossRelativeInset =
-        isRtlColumn
-            ? UnwrapOr(Or(negCrossEnd, CrossStart(item->inset, direction)),
-                       0.0f)
-            : UnwrapOr(Or(CrossStart(item->inset, direction), negCrossEnd),
-                       0.0f);
+    float mainRelativeInset = Main(item->relativeInset, direction);
+    float crossRelativeInset = Cross(item->relativeInset, direction);
 
     float effectiveLineOffsetCross = isRtlColumn ? 0.0f : lineOffsetCross;
 
@@ -214711,7 +222105,7 @@ void CalculateFlexItem(TaffyTree* tree, FlexItem* item, float* totalOffsetMain,
         totalOffsetCross + item->offsetCross + effectiveLineOffsetCross +
         CrossStart(item->margin, direction) + crossRelativeInset;
 
-    float innerBaseline = UnwrapOr(layoutOutput.firstBaselines.y, size.h);
+    float innerBaseline = UnwrapOr(layoutOutput.baselines.first, size.h);
     if (IsRow(direction) && IsScrollContainer(item->overflow.y)) {
         innerBaseline = F32Max(0.0f, F32Min(innerBaseline, size.h));
     }
@@ -214735,13 +222129,21 @@ void CalculateFlexItem(TaffyTree* tree, FlexItem* item, float* totalOffsetMain,
     Layout layout;
     layout.order = item->order;
     layout.size = size;
-    layout.contentSize = contentSize;
+    layout.scrollableOverflowRect = scrollableOverflowRect;
     layout.scrollbarSize = scrollbarSize;
     layout.location = location;
     layout.padding = item->padding;
     layout.border = item->border;
     layout.margin = item->margin;
     tree->SetUnroundedLayout(item->node, layout);
+
+    OofCandRange range;
+    OofAppendRange(oofPool, &range, layoutOutput.oofCandidates);
+    if (range.count > 0) {
+        OofTranslateRange(oofPool, range, location);
+    }
+    item->oofStart = range.start;
+    item->oofCount = range.count;
 
     float advance = item->offsetMain + MainAxisSum(item->margin, direction) +
                     Main(size, direction);
@@ -214753,19 +222155,22 @@ void CalculateFlexItem(TaffyTree* tree, FlexItem* item, float* totalOffsetMain,
 
     PointF contributionLocation =
         IsRtl(layoutDirection)
-            ? PointF{containerSize.w - (location.x + size.w), location.y}
-            : location;
-    *totalContentSize =
-        Max(*totalContentSize,
-            ComputeContentSizeContribution(contributionLocation, size,
-                                           contentSize, item->overflow));
+            ? PointF{containerSize.w - (location.x + size.w) - c.border.right,
+                     location.y - c.border.top}
+            : PointF{location.x - c.border.left, location.y - c.border.top};
+    *totalOverflowRect =
+        totalOverflowRect->Union(ComputeScrollableOverflowContribution(
+            contributionLocation, size, scrollableOverflowRect, item->overflow,
+            item->contain, c.isScrollContainer));
 }
 
 void CalculateLayoutLine(TaffyTree* tree, FlexLine* line,
-                         float* totalOffsetCross, SizeF* contentSize,
-                         SizeF containerSize, SizeFOpt nodeInnerSize,
-                         RectF paddingBorder, FlexDirection direction,
-                         Direction layoutDirection) {
+                         float* totalOffsetCross, RectF* overflowRect,
+                         const AlgoConstants& c, Vec<OofCandidate>* oofPool) {
+    FlexDirection direction = c.dir;
+    Direction layoutDirection = c.layoutDirection;
+    SizeF containerSize = c.containerSize;
+    RectF paddingBorder = c.contentBoxInset;
     float totalOffsetMain =
         (IsRtl(layoutDirection) && IsRow(direction))
             ? containerSize.w - MainEnd(paddingBorder, direction)
@@ -214782,8 +222187,7 @@ void CalculateLayoutLine(TaffyTree* tree, FlexLine* line,
                              ? &line->items[line->count - 1 - i]
                              : &line->items[i];
         CalculateFlexItem(tree, item, &totalOffsetMain, *totalOffsetCross,
-                          lineOffsetCross, contentSize, containerSize,
-                          nodeInnerSize, direction, layoutDirection);
+                          lineOffsetCross, overflowRect, c, oofPool);
     }
 
     if (!isRtlColumn) {
@@ -214791,332 +222195,170 @@ void CalculateLayoutLine(TaffyTree* tree, FlexLine* line,
     }
 }
 
-SizeF FinalLayoutPass(TaffyTree* tree, Vec<FlexLine>* lines,
-                      const AlgoConstants& c) {
+RectF FinalLayoutPass(TaffyTree* tree, Vec<FlexLine>* lines,
+                      const AlgoConstants& c, Vec<OofCandidate>* oofPool) {
     float totalOffsetCross =
         (c.isColumn && IsRtl(c.layoutDirection))
             ? c.containerSize.w - CrossEnd(c.contentBoxInset, c.dir)
             : CrossStart(c.contentBoxInset, c.dir);
 
-    SizeF contentSize = SizeF::Zero();
+    RectF overflowRect = RectF::Zero();
 
     for (int i = 0; i < lines->len; i++) {
         FlexLine& line =
             c.isWrapReverse ? (*lines)[lines->len - 1 - i] : (*lines)[i];
-        CalculateLayoutLine(tree, &line, &totalOffsetCross, &contentSize,
-                            c.containerSize, c.nodeInnerSize, c.contentBoxInset,
-                            c.dir, c.layoutDirection);
+        CalculateLayoutLine(tree, &line, &totalOffsetCross, &overflowRect, c,
+                            oofPool);
     }
 
-    contentSize.w +=
-        IsRtl(c.layoutDirection)
-            ? c.contentBoxInset.left - c.border.left - c.scrollbarGutter.x
-            : c.contentBoxInset.right - c.border.right - c.scrollbarGutter.x;
-    contentSize
-        .h += c.contentBoxInset.bottom - c.border.bottom - c.scrollbarGutter.y;
+    if (c.isScrollContainer) {
+        overflowRect.right +=
+            IsRtl(c.layoutDirection)
+                ? c.contentBoxInset.left - c.border.left - c.scrollbarGutter.x
+                : c.contentBoxInset.right - c.border.right -
+                      c.scrollbarGutter.x;
+        overflowRect.bottom +=
+            c.contentBoxInset.bottom - c.border.bottom - c.scrollbarGutter.y;
+    }
 
-    return contentSize;
+    return overflowRect;
 }
 
-SizeF PerformAbsoluteLayoutOnAbsoluteChildren(TaffyTree* tree, NodeId node,
-                                              const AlgoConstants& c) {
-    CalcResolver calc = tree->calc;
-    float containerWidth = c.containerSize.w;
-    float containerHeight = c.containerSize.h;
-    SizeF insetRelativeSize =
-        c.containerSize - c.border.SumAxes() - IntoSize(c.scrollbarGutter);
+void CollectOofCandidates(TaffyTree* tree, NodeId node, const AlgoConstants& c,
+                          Vec<FlexLine>* flexLines, Vec<OofCandidate>* pool,
+                          OofCandidates* candidates) {
+    int lineIx = 0;
+    int itemIx = 0;
+    auto nextWithCandidates = [&]() -> FlexItem* {
+        while (lineIx < len(*flexLines)) {
+            FlexLine& line = (*flexLines)[lineIx];
+            while (itemIx < line.count) {
+                FlexItem* item = &line.items[itemIx];
+                itemIx += 1;
+                if (item->oofCount > 0) {
+                    return item;
+                }
+            }
+            lineIx += 1;
+            itemIx = 0;
+        }
+        return nullptr;
+    };
+    FlexItem* next = nextWithCandidates();
 
-    SizeF contentSize = SizeF::Zero();
+    FlexDirection dir = c.dir;
+    bool mainIsRtl = c.isRow && IsRtl(c.layoutDirection);
+    bool crossIsRtl = !c.isRow && IsRtl(c.layoutDirection);
+    bool mainReversed = IsReverse(dir) != mainIsRtl;
+    bool crossReversed = c.isWrapReverse != crossIsRtl;
+
+    float mainStart = MainStart(c.contentBoxInset, dir);
+    float mainEnd =
+        Main(c.containerSize, dir) - MainEnd(c.contentBoxInset, dir);
+    float crossStart = CrossStart(c.contentBoxInset, dir);
+    float crossEnd =
+        Cross(c.containerSize, dir) - CrossEnd(c.contentBoxInset, dir);
+
+    auto crossEdge = [&](AlignItemsKeyword keyword) {
+        bool startPosition = true;
+        if (keyword == AlignItemsKeyword::Start ||
+            keyword == AlignItemsKeyword::Baseline) {
+            startPosition = !crossIsRtl;
+        } else if (keyword == AlignItemsKeyword::End) {
+            startPosition = crossIsRtl;
+        }
+        if (keyword == AlignItemsKeyword::Start ||
+            keyword == AlignItemsKeyword::End ||
+            keyword == AlignItemsKeyword::Baseline) {
+            return startPosition ? AxisStaticEdge::Start : AxisStaticEdge::End;
+        }
+        if (keyword == AlignItemsKeyword::Center) {
+            return AxisStaticEdge::Center;
+        }
+        if (keyword == AlignItemsKeyword::FlexEnd) {
+            return crossReversed ? AxisStaticEdge::Start : AxisStaticEdge::End;
+        }
+
+        return crossReversed ? AxisStaticEdge::End : AxisStaticEdge::Start;
+    };
 
     int n = tree->ChildCount(node);
     for (int order = 0; order < n; order++) {
         NodeId child = tree->GetChildId(node, order);
         const Style& cs = tree->GetStyle(child);
-
-        if (cs.BoxGenMode() == BoxGenerationMode::None ||
-            cs.position != Position::Absolute) {
+        if (cs.BoxGenMode() == BoxGenerationMode::None) {
+            continue;
+        }
+        if (!IsOutOfFlow(cs.position)) {
+            if (next && next->order == (uint32_t)order) {
+                OofCandRange range = {next->oofStart, next->oofCount};
+                OofAppendPoolRange(candidates, *pool, range);
+                next = nextWithCandidates();
+            }
             continue;
         }
 
-        PointOverflow overflow = cs.overflow;
-        float scrollbarWidth = cs.scrollbarWidth;
-        Optf aspectRatio = cs.aspectRatio;
-        AlignSelf alignSelf =
-            ResolveSelfRelative(cs.alignSelf.UnwrapOr(c.alignItems),
-                                cs.direction, c.layoutDirection, c.isColumn);
-        RectFOpt margin = cs.margin
-                              .MaybeResolve(Some(insetRelativeSize.w), calc);
-        RectF padding = cs.padding
-                            .ResolveOrZero(Some(insetRelativeSize.w), calc);
-        RectF border = cs.border.ResolveOrZero(Some(insetRelativeSize.w), calc);
-        SizeF paddingBorderSum = (padding + border).SumAxes();
-        SizeF boxSizingAdjustment = cs.boxSizing == BoxSizing::ContentBox
-                                        ? paddingBorderSum
-                                        : SizeF::Zero();
+        AlignItems alignSelf = ResolveSelfRelative(
+            ResolveNormalAlignment(cs.alignSelf.UnwrapOr(c.alignItems)),
+            cs.direction, c.layoutDirection, c.isColumn);
 
-        RectFOpt inset =
-            cs.inset.MaybeResolveZip(AsOptional(insetRelativeSize), calc);
-        Optf left = inset.left;
-        Optf right = inset.right;
-        Optf top = inset.top;
-        Optf bottom = inset.bottom;
-
-        SizeFOpt styleSize = MaybeAdd(
-            MaybeApplyAspectRatio(
-                cs.size.MaybeResolve(AsOptional(insetRelativeSize), calc),
-                aspectRatio),
-            boxSizingAdjustment);
-        SizeFOpt minSize =
-            MaybeMax(Or(MaybeAdd(MaybeApplyAspectRatio(
-                                     cs.minSize.MaybeResolve(
-                                         AsOptional(insetRelativeSize), calc),
-                                     aspectRatio),
-                                 boxSizingAdjustment),
-                        AsOptional(paddingBorderSum)),
-                     paddingBorderSum);
-        SizeFOpt maxSize = MaybeAdd(
-            MaybeApplyAspectRatio(
-                cs.maxSize.MaybeResolve(AsOptional(insetRelativeSize), calc),
-                aspectRatio),
-            boxSizingAdjustment);
-        SizeFOpt knownDimensions = MaybeClamp(styleSize, minSize, maxSize);
-
-        if (!IsSome(knownDimensions.w) && IsSome(left) && IsSome(right)) {
-            float newWidthRaw =
-                MaybeSub(MaybeSub(insetRelativeSize.w, margin.left),
-                         margin.right) -
-                left - right;
-            knownDimensions.w = Some(F32Max(newWidthRaw, 0.0f));
-            knownDimensions =
-                MaybeClamp(MaybeApplyAspectRatio(knownDimensions, aspectRatio),
-                           minSize, maxSize);
+        AlignContentKeyword mainKeyword = c.justifyContent.Keyword();
+        bool mainStartPosition = true;
+        if (mainKeyword == AlignContentKeyword::Start) {
+            mainStartPosition = !mainIsRtl;
+        } else if (mainKeyword == AlignContentKeyword::End) {
+            mainStartPosition = mainIsRtl;
         }
-        if (!IsSome(knownDimensions.h) && IsSome(top) && IsSome(bottom)) {
-            float newHeightRaw =
-                MaybeSub(MaybeSub(insetRelativeSize.h, margin.top),
-                         margin.bottom) -
-                top - bottom;
-            knownDimensions.h = Some(F32Max(newHeightRaw, 0.0f));
-            knownDimensions =
-                MaybeClamp(MaybeApplyAspectRatio(knownDimensions, aspectRatio),
-                           minSize, maxSize);
+        AxisStaticEdge mainEdge = AxisStaticEdge::Center;
+        switch (mainKeyword) {
+            case AlignContentKeyword::SpaceBetween:
+            case AlignContentKeyword::Normal:
+            case AlignContentKeyword::Stretch:
+            case AlignContentKeyword::FlexStart:
+                mainEdge =
+                    mainReversed ? AxisStaticEdge::End : AxisStaticEdge::Start;
+                break;
+            case AlignContentKeyword::FlexEnd:
+                mainEdge =
+                    mainReversed ? AxisStaticEdge::Start : AxisStaticEdge::End;
+                break;
+            case AlignContentKeyword::Start:
+            case AlignContentKeyword::End:
+                mainEdge = mainStartPosition ? AxisStaticEdge::Start
+                                             : AxisStaticEdge::End;
+                break;
+            default:
+                mainEdge = AxisStaticEdge::Center;
+                break;
         }
 
-        SizeAvail childAvail = {AvailableSpace::Definite(MaybeClamp(
-                                    containerWidth, minSize.w, maxSize.w)),
-                                AvailableSpace::Definite(MaybeClamp(
-                                    containerHeight, minSize.h, maxSize.h))};
+        AxisStaticAlign crossAlign;
+        crossAlign.keyword = crossEdge(alignSelf.keyword);
+        crossAlign.safety = alignSelf.safety;
+        crossAlign
+            .fallback = crossEdge(ResolveSelfAlignmentSafety(alignSelf, true));
+        AxisStaticPosition mainPos;
+        mainPos.start = mainStart;
+        mainPos.end = mainEnd;
+        mainPos.align = AxisStaticAlign::FromKeyword(mainEdge);
+        AxisStaticPosition crossPos;
+        crossPos.start = crossStart;
+        crossPos.end = crossEnd;
+        crossPos.align = crossAlign;
 
-        SizeF measuredSize = tree->MeasureChildSizeBoth(
-            child, knownDimensions, c.nodeInnerSize, childAvail,
-            SizingMode::InherentSize, LineBool::False());
-        SizeF finalSize = MaybeClamp(UnwrapOr(knownDimensions, measuredSize),
-                                     minSize, maxSize);
-
-        LayoutOutput layoutOutput = tree->PerformChildLayout(
-            child, AsOptional(finalSize), c.nodeInnerSize, childAvail,
-            SizingMode::InherentSize, LineBool::False());
-
-        RectF nonAutoMargin = {
-            UnwrapOr(margin.left, 0.0f), UnwrapOr(margin.right, 0.0f),
-            UnwrapOr(margin.top, 0.0f), UnwrapOr(margin.bottom, 0.0f)};
-
-        SizeF freeSpace = Max(SizeF{c.containerSize.w - finalSize.w -
-                                        nonAutoMargin.HorizontalAxisSum(),
-                                    c.containerSize.h - finalSize.h -
-                                        nonAutoMargin.VerticalAxisSum()},
-                              SizeF::Zero());
-
-        int autoW =
-            (IsSome(margin.left) ? 0 : 1) + (IsSome(margin.right) ? 0 : 1);
-        int autoH =
-            (IsSome(margin.top) ? 0 : 1) + (IsSome(margin.bottom) ? 0 : 1);
-        SizeF autoMarginSize = {autoW > 0 && IsSome(left) && IsSome(right)
-                                    ? freeSpace.w / (float)autoW
-                                    : 0.0f,
-                                autoH > 0 && IsSome(top) && IsSome(bottom)
-                                    ? freeSpace.h / (float)autoH
-                                    : 0.0f};
-        RectF resolvedMargin = {UnwrapOr(margin.left, autoMarginSize.w),
-                                UnwrapOr(margin.right, autoMarginSize.w),
-                                UnwrapOr(margin.top, autoMarginSize.h),
-                                UnwrapOr(margin.bottom, autoMarginSize.h)};
-
-        Optf startMain = c.isRow ? left : top;
-        Optf endMain = c.isRow ? right : bottom;
-        Optf startCross = c.isRow ? top : left;
-        Optf endCross = c.isRow ? bottom : right;
-        bool mainIsRtl = c.isRow && IsRtl(c.layoutDirection);
-        bool crossIsRtl = !c.isRow && IsRtl(c.layoutDirection);
-        bool mainAxisFlexStartReversed = IsReverse(c.dir) != mainIsRtl;
-        bool crossAxisFlexStartReversed = c.isWrapReverse != crossIsRtl;
-        float mainStartScrollbarOffset =
-            mainIsRtl ? Main(c.scrollbarGutter, c.dir) : 0.0f;
-        float crossStartScrollbarOffset =
-            crossIsRtl ? Cross(c.scrollbarGutter, c.dir) : 0.0f;
-        float mainEndScrollbarOffset =
-            mainIsRtl ? 0.0f : Main(c.scrollbarGutter, c.dir);
-        float crossEndScrollbarOffset =
-            crossIsRtl ? 0.0f : Cross(c.scrollbarGutter, c.dir);
-
-        float alignedToMainEnd =
-            Main(c.containerSize, c.dir) - MainEnd(c.border, c.dir) -
-            mainEndScrollbarOffset - Main(finalSize, c.dir) -
-            UnwrapOr(endMain, 0.0f) - MainEnd(resolvedMargin, c.dir);
-        float offsetMain;
-        if (IsSome(startMain) || IsSome(endMain)) {
-            if (IsSome(startMain) && !(mainIsRtl && IsSome(endMain))) {
-                offsetMain = startMain + MainStart(c.border, c.dir) +
-                             mainStartScrollbarOffset +
-                             MainStart(resolvedMargin, c.dir);
-            } else {
-                offsetMain = alignedToMainEnd;
-            }
+        OofCandidate candidate;
+        candidate.node = child;
+        candidate.order = (uint32_t)order;
+        candidate.position = cs.position;
+        if (c.isRow) {
+            candidate.staticX = mainPos;
+            candidate.staticY = crossPos;
         } else {
-
-            float startPos = MainStart(c.contentBoxInset, c.dir) +
-                             MainStart(resolvedMargin, c.dir);
-            float endPos = Main(c.containerSize, c.dir) -
-                           MainEnd(c.contentBoxInset, c.dir) -
-                           Main(finalSize, c.dir) -
-                           MainEnd(resolvedMargin, c.dir);
-            AlignContentKeyword jc =
-                c.justifyContent
-                    .UnwrapOr(AlignContent{AlignContentKeyword::FlexStart})
-                    .Keyword();
-            bool rev = mainAxisFlexStartReversed;
-            bool startPosition = jc == AlignContentKeyword::Start ? !mainIsRtl
-                                 : jc == AlignContentKeyword::End ? mainIsRtl
-                                                                  : true;
-            switch (jc) {
-                case AlignContentKeyword::SpaceBetween:
-                case AlignContentKeyword::Stretch:
-                case AlignContentKeyword::FlexStart:
-                    offsetMain = rev ? endPos : startPos;
-                    break;
-                case AlignContentKeyword::FlexEnd:
-                    offsetMain = rev ? startPos : endPos;
-                    break;
-                case AlignContentKeyword::Start:
-                case AlignContentKeyword::End:
-                    offsetMain = startPosition ? startPos : endPos;
-                    break;
-                default:
-                    offsetMain = (Main(c.containerSize, c.dir) +
-                                  MainStart(c.contentBoxInset, c.dir) -
-                                  MainEnd(c.contentBoxInset, c.dir) -
-                                  Main(finalSize, c.dir) +
-                                  MainStart(resolvedMargin, c.dir) -
-                                  MainEnd(resolvedMargin, c.dir)) /
-                                 2.0f;
-                    break;
-            }
+            candidate.staticX = crossPos;
+            candidate.staticY = mainPos;
         }
-
-        float alignedToCrossEnd =
-            Cross(c.containerSize, c.dir) - CrossEnd(c.border, c.dir) -
-            crossEndScrollbarOffset - Cross(finalSize, c.dir) -
-            UnwrapOr(endCross, 0.0f) - CrossEnd(resolvedMargin, c.dir);
-        float offsetCross;
-        if (IsSome(startCross) || IsSome(endCross)) {
-            if (IsSome(startCross) && !(crossIsRtl && IsSome(endCross))) {
-                offsetCross = startCross + CrossStart(c.border, c.dir) +
-                              crossStartScrollbarOffset +
-                              CrossStart(resolvedMargin, c.dir);
-            } else {
-                offsetCross = alignedToCrossEnd;
-            }
-        } else {
-            bool crossOverflows =
-                Cross(finalSize, c.dir) + CrossAxisSum(resolvedMargin, c.dir) >
-                Cross(c.containerSize, c.dir) -
-                    CrossAxisSum(c.contentBoxInset, c.dir);
-            AlignItemsKeyword ck =
-                ResolveSelfAlignmentSafety(alignSelf, crossOverflows);
-            float startPos = CrossStart(c.contentBoxInset, c.dir) +
-                             CrossStart(resolvedMargin, c.dir);
-            float endPos = Cross(c.containerSize, c.dir) -
-                           CrossEnd(c.contentBoxInset, c.dir) -
-                           Cross(finalSize, c.dir) -
-                           CrossEnd(resolvedMargin, c.dir);
-            bool rev = crossAxisFlexStartReversed;
-            bool startPosition = ck == AlignItemsKeyword::Start ||
-                                         ck == AlignItemsKeyword::Baseline
-                                     ? !crossIsRtl
-                                 : ck == AlignItemsKeyword::End ? crossIsRtl
-                                                                : true;
-            switch (ck) {
-                case AlignItemsKeyword::Start:
-                case AlignItemsKeyword::End:
-                case AlignItemsKeyword::Baseline:
-                    offsetCross = startPosition ? startPos : endPos;
-                    break;
-                case AlignItemsKeyword::Center:
-                    offsetCross = (Cross(c.containerSize, c.dir) +
-                                   CrossStart(c.contentBoxInset, c.dir) -
-                                   CrossEnd(c.contentBoxInset, c.dir) -
-                                   Cross(finalSize, c.dir) +
-                                   CrossStart(resolvedMargin, c.dir) -
-                                   CrossEnd(resolvedMargin, c.dir)) /
-                                  2.0f;
-                    break;
-                case AlignItemsKeyword::FlexEnd:
-                    offsetCross = rev ? startPos : endPos;
-                    break;
-                default:
-
-                    offsetCross = rev ? endPos : startPos;
-                    break;
-            }
-        }
-
-        PointF location = c.isRow ? PointF{offsetMain, offsetCross}
-                                  : PointF{offsetCross, offsetMain};
-        SizeF scrollbarSize = {
-            overflow.y == Overflow::Scroll ? scrollbarWidth : 0.0f,
-            overflow.x == Overflow::Scroll ? scrollbarWidth : 0.0f};
-
-        Layout layout;
-        layout.order = (uint32_t)order;
-        layout.size = finalSize;
-        layout.contentSize = layoutOutput.contentSize;
-        layout.scrollbarSize = scrollbarSize;
-        layout.location = location;
-        layout.padding = padding;
-        layout.border = border;
-        layout.margin = resolvedMargin;
-        tree->SetUnroundedLayout(child, layout);
-
-        SizeF sizeContribution = {
-            overflow.x == Overflow::Visible
-                ? F32Max(finalSize.w, layoutOutput.contentSize.w)
-                : finalSize.w,
-            overflow.y == Overflow::Visible
-                ? F32Max(finalSize.h, layoutOutput.contentSize.h)
-                : finalSize.h};
-        if (HasNonZeroArea(sizeContribution)) {
-            PointF absoluteAreaOffset = {
-                c.border.left +
-                    (IsRtl(c.layoutDirection) ? c.scrollbarGutter.x : 0.0f),
-                c.border.top};
-            PointF relativeLocation = {location.x - absoluteAreaOffset.x,
-                                       location.y - absoluteAreaOffset.y};
-            SizeF contribution;
-            if (IsRtl(c.layoutDirection)) {
-                float overflowExtraWidth =
-                    F32Max(sizeContribution.w - finalSize.w, 0.0f);
-                contribution.w =
-                    F32Max(insetRelativeSize.w - relativeLocation.x, 0.0f) +
-                    overflowExtraWidth;
-            } else {
-                contribution.w = relativeLocation.x + sizeContribution.w;
-            }
-            contribution.h = relativeLocation.y + sizeContribution.h;
-            contentSize = Max(contentSize, contribution);
-        }
+        candidates->Push(candidate);
     }
-
-    return contentSize;
 }
 
 LayoutOutput ComputePreliminary(TaffyTree* tree, NodeId node,
@@ -215125,8 +222367,10 @@ LayoutOutput ComputePreliminary(TaffyTree* tree, NodeId node,
     SizeFOpt parentSize = inputs.parentSize;
     RunMode runMode = inputs.runMode;
 
-    AlgoConstants constants = ComputeConstants(tree, tree->GetStyle(node),
-                                               knownDimensions, parentSize);
+    AlgoConstants constants = ComputeConstants(
+        tree, tree->GetStyle(node), knownDimensions,
+        inputs.knownDimensionsAreDefiniteW, inputs.knownDimensionsAreDefiniteH,
+        parentSize, inputs.availableSpace);
 
     Vec<FlexItem> flexItems;
 
@@ -215142,7 +222386,12 @@ LayoutOutput ComputePreliminary(TaffyTree* tree, NodeId node,
     DetermineFlexBaseSize(tree, constants, availableSpace, flexItems.els,
                           len(flexItems));
 
-    CollectFlexLines(constants, availableSpace, &flexItems, &flexLines);
+    if (constants.isBalance) {
+        CollectBalancedFlexLines(constants, availableSpace, &flexItems,
+                                 &flexLines);
+    } else {
+        CollectFlexLines(constants, availableSpace, &flexItems, &flexLines);
+    }
 
     Optf innerMainKnown = Main(constants.nodeInnerSize, constants.dir);
     if (IsSome(innerMainKnown)) {
@@ -215166,6 +222415,20 @@ LayoutOutput ComputePreliminary(TaffyTree* tree, NodeId node,
             style.gap.ResolveOrZero(Some(innerContainerSize), tree->calc);
         SetMain(&constants.gap, constants.dir,
                 Main(resolvedGap, constants.dir));
+    }
+
+    if (runMode == RunMode::ComputeSize) {
+        bool mainIsRequested =
+            (inputs.axis == RequestedAxis::Horizontal && constants.isRow) ||
+            (inputs.axis == RequestedAxis::Vertical && !constants.isRow);
+        if (mainIsRequested) {
+            SizeF size = SizeF::Zero();
+            SetMain(&size, constants.dir,
+                    Main(constants.containerSize, constants.dir));
+            VecReset(flexItems);
+            VecReset(flexLines);
+            return LayoutOutput::FromOuterSize(size);
+        }
     }
 
     for (int i = 0; i < len(flexLines); i++) {
@@ -215201,10 +222464,13 @@ LayoutOutput ComputePreliminary(TaffyTree* tree, NodeId node,
 
     AlignFlexLinesPerAlignContent(&flexLines, constants, totalLineCrossSize);
 
-    SizeF inflowContentSize = FinalLayoutPass(tree, &flexLines, constants);
+    Vec<OofCandidate> oofPool;
+    RectF inflowOverflowRect =
+        FinalLayoutPass(tree, &flexLines, constants, &oofPool);
 
-    SizeF absoluteContentSize =
-        PerformAbsoluteLayoutOnAbsoluteChildren(tree, node, constants);
+    OofCandidates candidates;
+    CollectOofCandidates(tree, node, constants, &flexLines, &oofPool,
+                         &candidates);
 
     int nChildren = tree->ChildCount(node);
     for (int order = 0; order < nChildren; order++) {
@@ -215213,7 +222479,7 @@ LayoutOutput ComputePreliminary(TaffyTree* tree, NodeId node,
             tree->SetUnroundedLayout(child, Layout::WithOrder((uint32_t)order));
             tree->PerformChildLayout(
                 child, SizeFOptNone(), SizeFOptNone(), SizeAvail::MaxContent(),
-                SizingMode::InherentSize, LineBool::False());
+                SizingMode::ContentSize, LineBool::False());
         }
     }
 
@@ -215221,27 +222487,48 @@ LayoutOutput ComputePreliminary(TaffyTree* tree, NodeId node,
     int firstLineIdx = constants.isWrapReverse ? len(flexLines) - 1 : 0;
     if (firstLineIdx >= 0 && flexLines[firstLineIdx].count > 0) {
         FlexLine& firstLine = flexLines[firstLineIdx];
+
         const FlexItem* chosen = nullptr;
-        for (int i = 0; i < firstLine.count; i++) {
-            const FlexItem& item = firstLine.items[i];
-            if (constants.isColumn ||
-                item.alignSelf.keyword == AlignItemsKeyword::Baseline) {
-                chosen = &item;
-                break;
+        if (constants.isColumn) {
+            chosen = IsReverse(constants.dir)
+                         ? &firstLine.items[firstLine.count - 1]
+                         : &firstLine.items[0];
+        } else {
+            for (int i = 0; i < firstLine.count; i++) {
+                const FlexItem& item = firstLine.items[i];
+                if (item.ParticipatesInBaselineAlignment(constants.dir)) {
+                    chosen = &item;
+                    break;
+                }
             }
-        }
-        if (!chosen) {
-            chosen = &firstLine.items[0];
+            if (!chosen) {
+                chosen = &firstLine.items[0];
+            }
         }
         firstVerticalBaseline = Some(chosen->baseline);
     }
 
+    RectF areaInset = constants.border;
+    if (IsRtl(constants.layoutDirection)) {
+        areaInset.left += constants.scrollbarGutter.x;
+    } else {
+        areaInset.right += constants.scrollbarGutter.x;
+    }
+    areaInset.bottom += constants.scrollbarGutter.y;
+
     VecReset(flexItems);
     VecReset(flexLines);
+    VecReset(oofPool);
 
-    return LayoutOutput::FromSizesAndBaselines(
-        constants.containerSize, Max(inflowContentSize, absoluteContentSize),
-        PointFOpt{None(), firstVerticalBaseline});
+    LayoutOutput output = LayoutOutput::FromSizesAndBaselines(
+        constants.containerSize, inflowOverflowRect,
+        BaselinesFromFirst(firstVerticalBaseline));
+    output.oofCandidates = candidates;
+    output.hasOofPositioningArea = true;
+    output.oofPositioningArea.size = constants.containerSize - areaInset
+                                                                   .SumAxes();
+    output.oofPositioningArea.offset = {areaInset.left, areaInset.top};
+    return output;
 }
 
 }
@@ -215253,6 +222540,7 @@ LayoutOutput ComputeFlexboxLayout(TaffyTree* tree, NodeId node,
     SizeFOpt parentSize = inputs.parentSize;
     RunMode runMode = inputs.runMode;
     const Style& style = tree->GetStyle(node);
+    Contain contain = style.contain;
 
     Optf aspectRatio = style.aspectRatio;
     RectF padding = style.padding.ResolveOrZero(parentSize.w, calc);
@@ -215306,7 +222594,16 @@ LayoutOutput ComputeFlexboxLayout(TaffyTree* tree, NodeId node,
 
     LayoutInput next = inputs;
     next.knownDimensions = styledBasedKnownDimensions;
-    return ComputePreliminary(tree, node, next);
+    next.knownDimensionsAreDefiniteW =
+        inputs.knownDimensionsAreDefiniteW || !IsSome(knownDimensions.w);
+    next.knownDimensionsAreDefiniteH =
+        inputs.knownDimensionsAreDefiniteH || !IsSome(knownDimensions.h);
+    LayoutOutput out = ComputePreliminary(tree, node, next);
+
+    if (contain.SuppressesBaseline()) {
+        out.baselines = BaselinesFromFirst(None());
+    }
+    return out;
 }
 
 }
@@ -215390,6 +222687,8 @@ struct GridTrack {
 
     bool infinitelyGrowable = false;
 
+    float fitContentLimit = INFINITY;
+
     static GridTrack New(MinTrackSizingFunction mn, MaxTrackSizingFunction mx) {
         GridTrack t;
         t.kind = GridTrackKind::Track;
@@ -215408,6 +222707,7 @@ struct GridTrack {
         isCollapsed = true;
         minTrackSizingFunction = MinTrackSizingFunction::Zero();
         maxTrackSizingFunction = MaxTrackSizingFunction::Zero();
+        fitContentLimit = INFINITY;
     }
     bool IsFlexible() const { return maxTrackSizingFunction.IsFr(); }
     bool UsesPercentage() const {
@@ -215418,21 +222718,14 @@ struct GridTrack {
         return minTrackSizingFunction.raw.IsIntrinsic() ||
                maxTrackSizingFunction.IsIntrinsic();
     }
-    float FitContentLimit(Optf axisAvailableGridSpace) const {
-        switch (maxTrackSizingFunction.raw.Tag()) {
-            case CompactLength::kFitContentPxTag:
-                return maxTrackSizingFunction.raw.Value();
-            case CompactLength::kFitContentPercentTag:
-                return IsSome(axisAvailableGridSpace)
-                           ? axisAvailableGridSpace * maxTrackSizingFunction.raw
-                                                          .Value()
-                           : INFINITY;
-            default:
-                return INFINITY;
-        }
+    void ResolveFitContentLimit(Optf axisInnerNodeSize, CalcResolver calc) {
+        fitContentLimit = UnwrapOr(
+            maxTrackSizingFunction.FitContentLimit(axisInnerNodeSize, calc),
+            INFINITY);
     }
-    float FitContentLimitedGrowthLimit(Optf axisAvailableGridSpace) const {
-        return F32Min(growthLimit, FitContentLimit(axisAvailableGridSpace));
+    float FitContentLimit() const { return fitContentLimit; }
+    float FitContentLimitedGrowthLimit() const {
+        return F32Min(growthLimit, fitContentLimit);
     }
     float FlexFactor() const {
         return maxTrackSizingFunction.IsFr()
@@ -215447,12 +222740,62 @@ enum class CellOccupancyState : uint8_t {
     AutoPlaced
 };
 
+struct SparseCursor {
+    bool set = false;
+    int16_t line = 0;
+};
+
 struct CellOccupancyMatrix {
     Vec<uint8_t> inner;
+    Vec<SparseCursor> rowCursor;
+    Vec<SparseCursor> colCursor;
     int nRows = 0;
     int nCols = 0;
     TrackCounts columns;
     TrackCounts rows;
+
+    static void ResetCursors(Vec<SparseCursor>& cursors, int count) {
+        VecReset(cursors);
+        if (count <= 0) {
+            return;
+        }
+        SparseCursor* p = VecAppendBlanks(cursors, count);
+        if (p) {
+
+            for (int i = 0; i < count; i++) {
+                p[i] = {};
+            }
+        }
+    }
+
+    static void ShiftCursors(Vec<SparseCursor>& cursors, int oldCount,
+                             int reqNeg, int reqPos) {
+        if (reqNeg == 0 && reqPos == 0) {
+            return;
+        }
+        int newCount = oldCount + reqNeg + reqPos;
+        Vec<SparseCursor> next;
+        SparseCursor* p =
+            newCount > 0 ? VecAppendBlanks(next, newCount) : nullptr;
+        if (newCount > 0 && !p) {
+            return;
+        }
+        if (p) {
+            for (int i = 0; i < newCount; i++) {
+                p[i] = {};
+            }
+            if (oldCount > 0 && cursors.els) {
+                for (int i = 0; i < oldCount; i++) {
+                    p[reqNeg + i] = cursors.els[i];
+                }
+            }
+        }
+        VecReset(cursors);
+        cursors = next;
+        next.els = nullptr;
+        next.len = 0;
+        next.cap = 0;
+    }
 
     void Init(TrackCounts cols, TrackCounts rws) {
         columns = cols;
@@ -215467,8 +222810,14 @@ struct CellOccupancyMatrix {
                 memset(p, 0, (size_t)n);
             }
         }
+        ResetCursors(rowCursor, nRows);
+        ResetCursors(colCursor, nCols);
     }
-    void Free() { VecReset(inner); }
+    void Free() {
+        VecReset(inner);
+        VecReset(rowCursor);
+        VecReset(colCursor);
+    }
 
     CellOccupancyState Get(int row, int col) const {
         if (row < 0 || row >= nRows || col < 0 || col >= nCols) {
@@ -215537,6 +222886,36 @@ struct CellOccupancyMatrix {
             (uint16_t)(columns.negativeImplicit + reqNegCols);
         columns.positiveImplicit =
             (uint16_t)(columns.positiveImplicit + reqPosCols);
+        ShiftCursors(rowCursor, oldRowCount, reqNegRows, reqPosRows);
+        ShiftCursors(colCursor, oldColCount, reqNegCols, reqPosCols);
+    }
+
+    void AdvanceAutoPlacementCursor(AbsoluteAxis primaryAxis,
+                                    OriginZeroLine secondaryStart,
+                                    OriginZeroLine primaryEnd) {
+        int trackIndex = Counts(OtherAxis(primaryAxis))
+                             .OzLineToNextTrack(secondaryStart);
+        Vec<SparseCursor>& tracks =
+            primaryAxis == AbsoluteAxis::Horizontal ? rowCursor : colCursor;
+        if (trackIndex < 0 || trackIndex >= len(tracks)) {
+            return;
+        }
+        SparseCursor& cursor = tracks.els[trackIndex];
+        if (!cursor.set || primaryEnd.v > cursor.line) {
+            cursor.set = true;
+            cursor.line = primaryEnd.v;
+        }
+    }
+
+    OptOriginZeroLine AutoPlacementCursor(AbsoluteAxis trackType,
+                                          OriginZeroLine startAt) const {
+        int idx = Counts(OtherAxis(trackType)).OzLineToNextTrack(startAt);
+        const Vec<SparseCursor>& tracks =
+            trackType == AbsoluteAxis::Horizontal ? rowCursor : colCursor;
+        if (idx < 0 || idx >= len(tracks) || !tracks.els[idx].set) {
+            return OptOriginZeroLine();
+        }
+        return OptOriginZeroLine(OriginZeroLine{tracks.els[idx].line});
     }
 
     void MarkAreaAs(AbsoluteAxis primaryAxis, LineOzl primarySpan,
@@ -215560,6 +222939,13 @@ struct CellOccupancyMatrix {
             colEnd = columns.OzLineToNextTrack(colSpan.end);
             rowStart = rows.OzLineToNextTrack(rowSpan.start);
             rowEnd = rows.OzLineToNextTrack(rowSpan.end);
+        }
+
+        if (value == CellOccupancyState::AutoPlaced &&
+            primarySpan.start < primarySpan.end &&
+            secondarySpan.start < secondarySpan.end) {
+            AdvanceAutoPlacementCursor(primaryAxis, secondarySpan.start,
+                                       primarySpan.end);
         }
 
         for (int x = rowStart; x < rowEnd; x++) {
@@ -215604,8 +222990,7 @@ struct CellOccupancyMatrix {
 
     OptOriginZeroLine LineAreaCollisionJump(AbsoluteAxis primaryAxis,
                                             LineOzl primarySpan,
-                                            LineOzl secondarySpan,
-                                            bool reversed) const {
+                                            LineOzl secondarySpan) const {
         const TrackCounts& pc = Counts(primaryAxis);
         const TrackCounts& sc = Counts(OtherAxis(primaryAxis));
         int primaryStart = pc.OzLineToNextTrack(primarySpan.start);
@@ -215634,35 +223019,18 @@ struct CellOccupancyMatrix {
                 }
 
                 int extent = primary;
-                if (reversed) {
-                    while (extent > 0) {
-                        int r = primaryAxis == AbsoluteAxis::Horizontal
-                                    ? secondary
-                                    : extent - 1;
-                        int c = primaryAxis == AbsoluteAxis::Horizontal
-                                    ? extent - 1
-                                    : secondary;
-                        if (Get(r, c) == CellOccupancyState::Unoccupied) {
-                            break;
-                        }
-                        extent--;
+                while (extent + 1 < primaryLen) {
+                    int r = primaryAxis == AbsoluteAxis::Horizontal
+                                ? secondary
+                                : extent + 1;
+                    int c = primaryAxis == AbsoluteAxis::Horizontal ? extent + 1
+                                                                    : secondary;
+                    if (Get(r, c) == CellOccupancyState::Unoccupied) {
+                        break;
                     }
-                    best = !found || extent < best ? extent : best;
-                } else {
-                    while (extent + 1 < primaryLen) {
-                        int r = primaryAxis == AbsoluteAxis::Horizontal
-                                    ? secondary
-                                    : extent + 1;
-                        int c = primaryAxis == AbsoluteAxis::Horizontal
-                                    ? extent + 1
-                                    : secondary;
-                        if (Get(r, c) == CellOccupancyState::Unoccupied) {
-                            break;
-                        }
-                        extent++;
-                    }
-                    best = !found || extent > best ? extent : best;
+                    extent++;
                 }
+                best = !found || extent > best ? extent : best;
                 found = true;
             }
         }
@@ -215670,7 +223038,7 @@ struct CellOccupancyMatrix {
             return OptOriginZeroLine();
         }
         OriginZeroLine line = pc.TrackToPrevOzLine((uint16_t)best);
-        int32_t next = (int32_t)line.v + (reversed ? -1 : 1);
+        int32_t next = (int32_t)line.v + 1;
         next = next < INT16_MIN   ? INT16_MIN
                : next > INT16_MAX ? INT16_MAX
                                   : next;
@@ -215699,59 +223067,6 @@ struct CellOccupancyMatrix {
         }
         return false;
     }
-
-    OptOriginZeroLine LastOfType(AbsoluteAxis trackType, OriginZeroLine startAt,
-                                 CellOccupancyState kind) const {
-        const TrackCounts& tc = Counts(OtherAxis(trackType));
-        int idx = tc.OzLineToNextTrack(startAt);
-        if (trackType == AbsoluteAxis::Horizontal) {
-            if (idx < 0 || idx >= nRows) {
-                return OptOriginZeroLine();
-            }
-            for (int c = nCols - 1; c >= 0; c--) {
-                if (Get(idx, c) == kind) {
-                    return OptOriginZeroLine(tc.TrackToPrevOzLine((uint16_t)c));
-                }
-            }
-        } else {
-            if (idx < 0 || idx >= nCols) {
-                return OptOriginZeroLine();
-            }
-            for (int r = nRows - 1; r >= 0; r--) {
-                if (Get(r, idx) == kind) {
-                    return OptOriginZeroLine(tc.TrackToPrevOzLine((uint16_t)r));
-                }
-            }
-        }
-        return OptOriginZeroLine();
-    }
-
-    OptOriginZeroLine FirstOfType(AbsoluteAxis trackType,
-                                  OriginZeroLine startAt,
-                                  CellOccupancyState kind) const {
-        const TrackCounts& tc = Counts(OtherAxis(trackType));
-        int idx = tc.OzLineToNextTrack(startAt);
-        if (trackType == AbsoluteAxis::Horizontal) {
-            if (idx < 0 || idx >= nRows) {
-                return OptOriginZeroLine();
-            }
-            for (int c = 0; c < nCols; c++) {
-                if (Get(idx, c) == kind) {
-                    return OptOriginZeroLine(tc.TrackToPrevOzLine((uint16_t)c));
-                }
-            }
-        } else {
-            if (idx < 0 || idx >= nCols) {
-                return OptOriginZeroLine();
-            }
-            for (int r = 0; r < nRows; r++) {
-                if (Get(r, idx) == kind) {
-                    return OptOriginZeroLine(tc.TrackToPrevOzLine((uint16_t)r));
-                }
-            }
-        }
-        return OptOriginZeroLine();
-    }
 };
 
 struct GridItem {
@@ -215763,6 +223078,8 @@ struct GridItem {
     LineOzl column;
 
     bool isCompressibleReplaced = false;
+
+    bool isReplaced = false;
     PointOverflow overflow;
     BoxSizing boxSizing = BoxSizing::BorderBox;
     SizeDim size;
@@ -215777,6 +223094,13 @@ struct GridItem {
     Optf baseline = None();
 
     float baselineShim = 0.0f;
+
+    bool IsStretchAligned(AlignSelf alignment) const {
+        if (alignment.keyword == AlignItemsKeyword::Stretch) {
+            return true;
+        }
+        return alignment.keyword == AlignItemsKeyword::Normal && !isReplaced;
+    }
 
     LineU16 rowIndexes;
     LineU16 columnIndexes;
@@ -215795,6 +223119,22 @@ struct GridItem {
     float yPosition = 0.0f;
     float height = 0.0f;
 
+    int oofStart = 0;
+    int oofCount = 0;
+
+    bool HasAutoBlockMargin() const {
+        return margin.top.IsAuto() || margin.bottom.IsAuto();
+    }
+
+    bool HasCyclicBlockSizeDependency() const {
+        return size.height.raw.UsesPercentage() &&
+               (crossesIntrinsicRow || crossesFlexibleRow);
+    }
+    bool ParticipatesInBaselineAlignment() const {
+        return alignSelf.keyword == AlignItemsKeyword::Baseline &&
+               !HasAutoBlockMargin() && !HasCyclicBlockSizeDependency();
+    }
+
     LineOzl Placement(AbstractAxis axis) const {
         return axis == AbstractAxis::Block ? row : column;
     }
@@ -215807,6 +223147,19 @@ struct GridItem {
     }
     int TrackRangeEnd(AbstractAxis axis) const {
         return (int)PlacementIndexes(axis).end;
+    }
+
+    template <typename Pred>
+    bool SpansTrackMatching(AbstractAxis axis, const GridTrack* tracks,
+                            Pred pred) const {
+        int from = TrackRangeStart(axis);
+        int end = TrackRangeEnd(axis);
+        for (int k = from; k < end; k++) {
+            if (pred(tracks[k])) {
+                return true;
+            }
+        }
+        return false;
     }
     uint16_t Span(AbstractAxis axis) const { return Placement(axis).Span(); }
     bool CrossesFlexibleTrack(AbstractAxis axis) const {
@@ -215893,22 +223246,50 @@ void StableSort(T* items, int n, Less less) {
     base::Free(nullptr, (void*)scratch);
 }
 
-enum class NameSuffix : uint8_t {
-    None,
-    Start,
-    End
-};
-
 struct LineNameEntry {
     Str name;
-    NameSuffix suffix = NameSuffix::None;
     Vec<uint32_t> lines;
 };
+
+struct AreaLines {
+    Str name;
+    uint32_t rowStart = 0;
+    uint32_t rowEnd = 0;
+    uint32_t colStart = 0;
+    uint32_t colEnd = 0;
+
+    uint32_t Edge(GridAreaAxis axis, GridAreaEnd end) const {
+        if (axis == GridAreaAxis::Row) {
+            return end == GridAreaEnd::Start ? rowStart : rowEnd;
+        }
+        return end == GridAreaEnd::Start ? colStart : colEnd;
+    }
+    uint32_t& EdgeMut(GridAreaAxis axis, GridAreaEnd end) {
+        if (axis == GridAreaAxis::Row) {
+            return end == GridAreaEnd::Start ? rowStart : rowEnd;
+        }
+        return end == GridAreaEnd::Start ? colStart : colEnd;
+    }
+};
+
+bool SplitAreaEdgeName(Str name, Str* area, GridAreaEnd* end) {
+    if (StrEndsWith(name, "-start") && len(name) > 6) {
+        *area = Str(name.s, len(name) - 6);
+        *end = GridAreaEnd::Start;
+        return true;
+    }
+    if (StrEndsWith(name, "-end") && len(name) > 4) {
+        *area = Str(name.s, len(name) - 4);
+        *end = GridAreaEnd::End;
+        return true;
+    }
+    return false;
+}
 
 struct NamedLineResolver {
     Vec<LineNameEntry> rowLines;
     Vec<LineNameEntry> columnLines;
-    Slice<GridTemplateArea> areas;
+    Vec<AreaLines> areaLines;
     uint16_t areaColumnCount = 0;
     uint16_t areaRowCount = 0;
     uint16_t explicitColumnCount = 0;
@@ -215923,13 +223304,51 @@ struct NamedLineResolver {
         }
         VecReset(rowLines);
         VecReset(columnLines);
+        VecReset(areaLines);
     }
 
-    static void Upsert(Vec<LineNameEntry>* map, Str name, NameSuffix suffix,
-                       uint32_t value) {
+    AreaLines* FindArea(Str name) {
+        for (int i = 0; i < len(areaLines); i++) {
+            if (base::StrEq(areaLines[i].name, name)) {
+                return &areaLines[i];
+            }
+        }
+        return nullptr;
+    }
+    const AreaLines* FindArea(Str name) const {
+        for (int i = 0; i < len(areaLines); i++) {
+            if (base::StrEq(areaLines[i].name, name)) {
+                return &areaLines[i];
+            }
+        }
+        return nullptr;
+    }
+    uint32_t AreaEdge(Str name, GridAreaAxis axis, GridAreaEnd end) const {
+        const AreaLines* area = FindArea(name);
+        return area ? area->Edge(axis, end) : 0;
+    }
+
+    void Upsert(Vec<LineNameEntry>* map, GridAreaAxis axis, Str name,
+                uint32_t value) {
+        uint32_t priorEdge = 0;
+        Str areaName;
+        GridAreaEnd edgeEnd;
+        if (SplitAreaEdgeName(name, &areaName, &edgeEnd)) {
+            AreaLines* area = FindArea(areaName);
+            if (!area) {
+                AreaLines created;
+                created.name = areaName;
+                VecAppend(areaLines, created);
+                area = &areaLines[len(areaLines) - 1];
+            }
+            uint32_t& edge = area->EdgeMut(axis, edgeEnd);
+            priorEdge = edge;
+            edge = priorEdge == 0 || value < priorEdge ? value : priorEdge;
+        }
+
         for (int i = 0; i < map->len; i++) {
             LineNameEntry& e = (*map)[i];
-            if (e.suffix == suffix && base::StrEq(e.name, name)) {
+            if (base::StrEq(e.name, name)) {
                 for (int k = 0; k < e.lines.len; k++) {
                     if (e.lines[k] == value) {
                         return;
@@ -215941,20 +223360,41 @@ struct NamedLineResolver {
         }
         LineNameEntry e;
         e.name = name;
-        e.suffix = suffix;
-        VecAppend(e.lines, value);
+        if (priorEdge != 0) {
+            VecAppend(e.lines, priorEdge);
+        }
+        if (priorEdge != value) {
+            VecAppend(e.lines, value);
+        }
         VecAppend(*map, e);
     }
 
-    static const Vec<uint32_t>* Find(const Vec<LineNameEntry>& map, Str name,
-                                     NameSuffix suffix) {
+    static const Vec<uint32_t>* Find(const Vec<LineNameEntry>& map, Str name) {
         for (int i = 0; i < len(map); i++) {
-            const LineNameEntry& e = map[i];
-            if (e.suffix == suffix && base::StrEq(e.name, name)) {
-                return &e.lines;
+            if (base::StrEq(map[i].name, name)) {
+                return &map[i].lines;
             }
         }
         return nullptr;
+    }
+
+    static void SortUnique(Vec<uint32_t>& lines) {
+        for (int i = 1; i < lines.len; i++) {
+            uint32_t v = lines[i];
+            int j = i;
+            while (j > 0 && lines[j - 1] > v) {
+                lines[j] = lines[j - 1];
+                j--;
+            }
+            lines[j] = v;
+        }
+        int w = 0;
+        for (int i = 0; i < lines.len; i++) {
+            if (w == 0 || lines[w - 1] != lines[i]) {
+                lines[w++] = lines[i];
+            }
+        }
+        lines.len = w;
     }
 
     void Init(const Style& style, uint16_t columnAutoRepetitions,
@@ -215967,21 +223407,54 @@ struct NamedLineResolver {
         return ResolveLineNames(line, GridAreaAxis::Column);
     }
 
-    GridLine FindLineIndex(Str name, int32_t idx, GridAreaAxis axis,
-                           GridAreaEnd end, int filterFrom, int filterTo) const;
+    GridLine FindNamedLine(Str name, int16_t idx, GridAreaAxis axis,
+                           GridAreaEnd end) const;
+    OriginZeroLine LastExplicitLine(GridAreaAxis axis) const;
+
+    OriginZeroLine NthLineForwards(const uint32_t* lines, int count,
+                                   int32_t firstOz, int32_t n,
+                                   GridAreaAxis axis) const;
+    OriginZeroLine NthLineBackwards(const uint32_t* lines, int count,
+                                    int32_t lastOz, int32_t n,
+                                    GridAreaAxis axis) const;
+
+    int CollectLines(Str name, GridAreaAxis axis, const uint32_t** data,
+                     uint32_t* single) const;
 };
+
+static int32_t OzOfStored(uint32_t line) {
+    return (int32_t)line - 1;
+}
+
+static OriginZeroLine ClampedOz(int32_t line) {
+    if (line < (int32_t)kMinOzLine) {
+        line = kMinOzLine;
+    } else if (line > (int32_t)kMaxOzLine) {
+        line = kMaxOzLine;
+    }
+    return OriginZeroLine{(int16_t)line};
+}
+
+static GridLine IntoGridLine(OriginZeroLine line, uint16_t explicitTrackCount) {
+    int32_t explicitLineCount = (int32_t)explicitTrackCount + 1;
+    int32_t value =
+        line.v >= 0 ? (int32_t)line.v + 1 : (int32_t)line.v - explicitLineCount;
+    return GridLine{(int16_t)value};
+}
 
 void NamedLineResolver::Init(const Style& style, uint16_t columnAutoRepetitions,
                              uint16_t rowAutoRepetitions) {
-    areas = style.gridTemplateAreas.areas;
     areaColumnCount = style.gridTemplateAreas.columnCount;
     areaRowCount = style.gridTemplateAreas.rowCount;
-    for (int i = 0; i < areas.len; i++) {
-        const GridTemplateArea& area = areas[i];
-        Upsert(&columnLines, area.name, NameSuffix::Start, area.columnStart);
-        Upsert(&columnLines, area.name, NameSuffix::End, area.columnEnd);
-        Upsert(&rowLines, area.name, NameSuffix::Start, area.rowStart);
-        Upsert(&rowLines, area.name, NameSuffix::End, area.rowEnd);
+    for (int i = 0; i < style.gridTemplateAreas.areas.len; i++) {
+        const GridTemplateArea& area = style.gridTemplateAreas.areas[i];
+        AreaLines lines;
+        lines.name = area.name;
+        lines.rowStart = area.rowStart;
+        lines.rowEnd = area.rowEnd;
+        lines.colStart = area.columnStart;
+        lines.colEnd = area.columnEnd;
+        VecAppend(areaLines, lines);
     }
 
     struct Axis {
@@ -215989,11 +223462,12 @@ void NamedLineResolver::Init(const Style& style, uint16_t columnAutoRepetitions,
         Slice<LineNameSet> names;
         uint16_t autoRepetitions;
         Vec<LineNameEntry>* map;
+        GridAreaAxis axis;
     };
     Axis axes[2] = {{style.gridTemplateColumns, style.gridTemplateColumnNames,
-                     columnAutoRepetitions, &columnLines},
+                     columnAutoRepetitions, &columnLines, GridAreaAxis::Column},
                     {style.gridTemplateRows, style.gridTemplateRowNames,
-                     rowAutoRepetitions, &rowLines}};
+                     rowAutoRepetitions, &rowLines, GridAreaAxis::Row}};
 
     for (const Axis& ax : axes) {
         uint32_t currentLine = 0;
@@ -216002,7 +223476,7 @@ void NamedLineResolver::Init(const Style& style, uint16_t columnAutoRepetitions,
             currentLine += 1;
             const LineNameSet& set = ax.names[i];
             for (int k = 0; k < set.names.len; k++) {
-                Upsert(ax.map, set.names[k], NameSuffix::None, currentLine);
+                Upsert(ax.map, ax.axis, set.names[k], currentLine);
             }
             if (trackIdx >= ax.tracks.len) {
                 continue;
@@ -216015,92 +223489,141 @@ void NamedLineResolver::Init(const Style& style, uint16_t columnAutoRepetitions,
             uint16_t repeatCount = comp.repeat.count.IsAuto()
                                        ? ax.autoRepetitions
                                        : comp.repeat.count.count;
-            for (uint16_t r = 0; r < repeatCount; r++) {
-                for (int s = 0; s < comp.repeat.lineNames.len; s++) {
-                    const LineNameSet& ls = comp.repeat.lineNames[s];
-                    for (int k = 0; k < ls.names.len; k++) {
-                        Upsert(ax.map, ls.names[k], NameSuffix::None,
-                               currentLine);
-                    }
-                    currentLine += 1;
-                }
 
-                currentLine -= 1;
+            uint32_t lineNameSetCount = (uint32_t)comp.repeat.lineNames.len;
+            uint32_t linesPerRep = comp.repeat.TrackCount();
+            bool namesOk =
+                lineNameSetCount == 0 || lineNameSetCount == linesPerRep + 1;
+            for (uint16_t r = 0; r < repeatCount; r++) {
+                if (namesOk) {
+                    for (int s = 0; s < comp.repeat.lineNames.len; s++) {
+                        uint32_t line = currentLine + (uint32_t)s;
+                        const LineNameSet& ls = comp.repeat.lineNames[s];
+                        for (int k = 0; k < ls.names.len; k++) {
+                            Upsert(ax.map, ax.axis, ls.names[k], line);
+                        }
+                    }
+                }
+                currentLine += linesPerRep;
+
+                if (currentLine > kMaxGridTracks) {
+                    break;
+                }
             }
-            if (repeatCount > 0) {
+
+            if (repeatCount > 0 && currentLine > 0) {
                 currentLine -= 1;
             }
         }
     }
 
+    for (int i = 0; i < len(columnLines); i++) {
+        SortUnique(columnLines[i].lines);
+    }
+    for (int i = 0; i < len(rowLines); i++) {
+        SortUnique(rowLines[i].lines);
+    }
 }
 
-GridLine NamedLineResolver::FindLineIndex(Str name, int32_t idx,
-                                          GridAreaAxis axis, GridAreaEnd end,
-                                          int filterFrom, int filterTo) const {
-    int32_t explicitTrackCount =
-        axis == GridAreaAxis::Row ? explicitRowCount : explicitColumnCount;
-    auto gridLine = [](int64_t value) {
-        value = value < INT16_MIN   ? INT16_MIN
-                : value > INT16_MAX ? INT16_MAX
-                                    : value;
-        return GridLine{(int16_t)value};
-    };
-
-    if (idx == 0) {
-        idx = 1;
-    }
-
+int NamedLineResolver::CollectLines(Str name, GridAreaAxis axis,
+                                    const uint32_t** data,
+                                    uint32_t* single) const {
     const Vec<LineNameEntry>& lookup =
         axis == GridAreaAxis::Row ? rowLines : columnLines;
-    const Vec<uint32_t>* lines = Find(lookup, name, NameSuffix::None);
-    if (!lines) {
-        lines = Find(
-            lookup, name,
-            end == GridAreaEnd::Start ? NameSuffix::Start : NameSuffix::End);
+    const Vec<uint32_t>* lines = Find(lookup, name);
+    if (lines && lines->len > 0) {
+        *data = lines->els;
+        return lines->len;
     }
-
-    if (lines) {
-        int from = filterFrom < 0 ? 0 : filterFrom;
-        int to = filterTo < 0 || filterTo > lines->len ? lines->len : filterTo;
-        int count = to - from;
-        if (count < 0) {
-            count = 0;
+    Str areaName;
+    GridAreaEnd edge;
+    if (SplitAreaEdgeName(name, &areaName, &edge)) {
+        uint32_t value = AreaEdge(areaName, axis, edge);
+        if (value != 0) {
+            *single = value;
+            *data = single;
+            return 1;
         }
-        uint32_t absIdx = idx < 0 ? (uint32_t)(-(int64_t)idx) : (uint32_t)idx;
-        if (absIdx <= (uint32_t)count) {
-            if (idx > 0) {
-                return gridLine((*lines)[from + (int)absIdx - 1]);
-            }
-            return gridLine((*lines)[from + count - (int)absIdx]);
-        }
-        int64_t remaining =
-            (int64_t)(absIdx - (uint32_t)count) * (idx > 0 ? 1 : -1);
-        if (idx > 0) {
-            return gridLine((int64_t)explicitTrackCount + 1 + remaining);
-        }
-        return gridLine(-((int64_t)explicitTrackCount + 1 + remaining));
     }
-
-    if (idx > 0) {
-        return gridLine((int64_t)explicitTrackCount + 1 + idx);
-    }
-    return gridLine(-((int64_t)explicitTrackCount + 1 + idx));
+    *data = nullptr;
+    return 0;
 }
 
-int PartitionPoint(const Vec<uint32_t>* lines, uint32_t bound, bool inclusive) {
-    if (!lines) {
-        return 0;
+OriginZeroLine NamedLineResolver::LastExplicitLine(GridAreaAxis axis) const {
+    uint16_t tracks =
+        axis == GridAreaAxis::Row ? explicitRowCount : explicitColumnCount;
+    return OriginZeroLine{(int16_t)tracks};
+}
+
+OriginZeroLine NamedLineResolver::NthLineForwards(const uint32_t* lines,
+                                                  int count, int32_t firstOz,
+                                                  int32_t n,
+                                                  GridAreaAxis axis) const {
+
+    int32_t first = firstOz > 0 ? firstOz : 0;
+    int start = 0;
+    while (start < count && OzOfStored(lines[start]) < first) {
+        start++;
     }
-    int n = 0;
-    for (int i = 0; i < lines->len; i++) {
-        bool keep = inclusive ? ((*lines)[i] <= bound) : ((*lines)[i] < bound);
-        if (!keep) {
-            break;
+    int kept = count - start;
+    int32_t oz;
+    if (n >= 1 && (n - 1) < kept) {
+        oz = OzOfStored(lines[start + (int)(n - 1)]);
+    } else {
+
+        int32_t afterExplicit = (int32_t)LastExplicitLine(axis).v + 1;
+        int32_t base = first > afterExplicit ? first : afterExplicit;
+        oz = base + (n - kept) - 1;
+    }
+    return ClampedOz(oz);
+}
+
+OriginZeroLine NamedLineResolver::NthLineBackwards(const uint32_t* lines,
+                                                   int count, int32_t lastOz,
+                                                   int32_t n,
+                                                   GridAreaAxis axis) const {
+    int32_t lastExplicit = LastExplicitLine(axis).v;
+    int32_t last = lastOz < lastExplicit ? lastOz : lastExplicit;
+    int end = 0;
+    while (end < count && OzOfStored(lines[end]) <= last) {
+        end++;
+    }
+    int32_t oz;
+    if (n >= 0 && (uint32_t)n <= (uint32_t)end) {
+        oz = OzOfStored(lines[end - (int)n]);
+    } else {
+
+        int32_t base = last < -1 ? last : -1;
+        oz = base - (n - end) + 1;
+    }
+    return ClampedOz(oz);
+}
+
+GridLine NamedLineResolver::FindNamedLine(Str name, int16_t idx,
+                                          GridAreaAxis axis,
+                                          GridAreaEnd end) const {
+    uint16_t explicitCount =
+        axis == GridAreaAxis::Row ? explicitRowCount : explicitColumnCount;
+
+    if (idx == 0) {
+        uint32_t edge = AreaEdge(name, axis, end);
+        if (edge != 0) {
+            return IntoGridLine(ClampedOz(OzOfStored(edge)), explicitCount);
         }
-        n++;
     }
-    return n;
+
+    uint32_t single = 0;
+    const uint32_t* data = nullptr;
+    int count = CollectLines(name, axis, &data, &single);
+    OriginZeroLine line;
+    if (idx >= 0) {
+        int32_t n = idx < 1 ? 1 : (int32_t)idx;
+        line = NthLineForwards(data, count, 0, n, axis);
+    } else {
+        line = NthLineBackwards(data, count, (int32_t)LastExplicitLine(axis).v,
+                                -(int32_t)idx, axis);
+    }
+    return IntoGridLine(line, explicitCount);
 }
 
 LinePlain NamedLineResolver::ResolveLineNames(LinePlacement line,
@@ -216110,47 +223633,43 @@ LinePlain NamedLineResolver::ResolveLineNames(LinePlacement line,
 
     if (start.kind == GridPlacementKind::NamedLine) {
         start = GridPlacement::FromLineIndex(
-            FindLineIndex(start.name, start.line, axis, GridAreaEnd::Start, -1,
-                          -1)
-                .v);
+            FindNamedLine(start.name, start.line, axis, GridAreaEnd::Start).v);
     }
     if (end.kind == GridPlacementKind::NamedLine) {
         end = GridPlacement::FromLineIndex(
-            FindLineIndex(end.name, end.line, axis, GridAreaEnd::End, -1, -1)
-                .v);
+            FindNamedLine(end.name, end.line, axis, GridAreaEnd::End).v);
     }
 
-    int16_t explicitTrackCount = axis == GridAreaAxis::Row
-                                     ? (int16_t)explicitRowCount
-                                     : (int16_t)explicitColumnCount;
-    const Vec<LineNameEntry>& lookup =
-        axis == GridAreaAxis::Row ? rowLines : columnLines;
+    uint16_t explicitTrackCount =
+        axis == GridAreaAxis::Row ? explicitRowCount : explicitColumnCount;
 
     if (start.kind == GridPlacementKind::Line &&
-        end.kind == GridPlacementKind::NamedSpan) {
-        int16_t normalizedStart =
-            start.line > 0
-                ? start.line
-                : (int16_t)F32Max((float)(explicitTrackCount + 1 + start.line),
-                                  0.0f);
-        const Vec<uint32_t>* lines = Find(lookup, end.name, NameSuffix::None);
-        int point = PartitionPoint(lines, (uint32_t)normalizedStart, true);
-        GridLine endLine = FindLineIndex(end.name, (int32_t)end.span, axis,
-                                         GridAreaEnd::End, point, -1);
+        end.kind == GridPlacementKind::NamedSpan && start.line != 0) {
+        int32_t after = (int32_t)IntoOriginZeroLine(GridLine{start.line},
+                                                    explicitTrackCount)
+                            .v +
+                        1;
+        uint32_t single = 0;
+        const uint32_t* data = nullptr;
+        int count = CollectLines(end.name, axis, &data, &single);
+        int32_t n = end.span < 1 ? 1 : (int32_t)end.span;
+        GridLine endLine = IntoGridLine(
+            NthLineForwards(data, count, after, n, axis), explicitTrackCount);
         return {PlainPlacement::AtLine(start.line),
                 PlainPlacement::AtLine(endLine.v)};
     }
     if (start.kind == GridPlacementKind::NamedSpan &&
-        end.kind == GridPlacementKind::Line) {
-        int16_t normalizedEnd =
-            end.line > 0
-                ? end.line
-                : (int16_t)F32Max((float)(explicitTrackCount + 1 + end.line),
-                                  0.0f);
-        const Vec<uint32_t>* lines = Find(lookup, start.name, NameSuffix::None);
-        int point = PartitionPoint(lines, (uint32_t)normalizedEnd, false);
-        GridLine startLine = FindLineIndex(start.name, (int32_t)start.span,
-                                           axis, GridAreaEnd::Start, 0, point);
+        end.kind == GridPlacementKind::Line && end.line != 0) {
+        int32_t before =
+            (int32_t)IntoOriginZeroLine(GridLine{end.line}, explicitTrackCount)
+                .v -
+            1;
+        uint32_t single = 0;
+        const uint32_t* data = nullptr;
+        int count = CollectLines(start.name, axis, &data, &single);
+        int32_t n = start.span < 1 ? 1 : (int32_t)start.span;
+        GridLine startLine = IntoGridLine(
+            NthLineBackwards(data, count, before, n, axis), explicitTrackCount);
         return {PlainPlacement::AtLine(startLine.v),
                 PlainPlacement::AtLine(end.line)};
     }
@@ -216177,10 +223696,19 @@ struct MinMaxSpan {
     uint16_t span = 0;
 };
 
-MinMaxSpan ChildMinLineMaxLineSpan(LinePlacement line,
-                                   uint16_t explicitTrackCount) {
+struct PlacementChild {
+    int index = 0;
+    NodeId node;
+    LinePlain horizontal;
+    LinePlain vertical;
 
-    LinePlain oz = line.IntoOriginZeroIgnoringNamed(explicitTrackCount);
+    LinePlain Get(AbsoluteAxis a) const {
+        return a == AbsoluteAxis::Horizontal ? horizontal : vertical;
+    }
+};
+
+MinMaxSpan ChildMinLineMaxLineSpan(LinePlain oz) {
+
     OriginZeroLine t1 = oz.start.Ozl();
     OriginZeroLine t2 = oz.end.Ozl();
 
@@ -216195,7 +223723,8 @@ MinMaxSpan ChildMinLineMaxLineSpan(LinePlacement line,
         out.minLine = t1;
         out.maxLine = t1 + oz.end.span;
     } else if (oz.start.IsAuto() && oz.end.IsLine()) {
-        out.minLine = t2;
+
+        out.minLine = t2 - (uint16_t)1;
         out.maxLine = t2;
     } else if (oz.start.IsSpan() && oz.end.IsLine()) {
         out.minLine = t2 - oz.start.span;
@@ -216212,14 +223741,9 @@ MinMaxSpan ChildMinLineMaxLineSpan(LinePlacement line,
     return out;
 }
 
-struct ChildPlacementStyles {
-    LinePlacement column;
-    LinePlacement row;
-};
-
 void ComputeGridSizeEstimate(uint16_t explicitColCount,
-                             uint16_t explicitRowCount, Direction direction,
-                             const ChildPlacementStyles* children, int n,
+                             uint16_t explicitRowCount,
+                             const PlacementChild* children, int n,
                              TrackCounts* outCols, TrackCounts* outRows) {
     OriginZeroLine colMin{0};
     OriginZeroLine colMax{0};
@@ -216229,19 +223753,9 @@ void ComputeGridSizeEstimate(uint16_t explicitColCount,
     uint16_t rowMaxSpan = 0;
 
     for (int i = 0; i < n; i++) {
-        MinMaxSpan colEst =
-            ChildMinLineMaxLineSpan(children[i].column, explicitColCount);
-        MinMaxSpan rowEst =
-            ChildMinLineMaxLineSpan(children[i].row, explicitRowCount);
+        MinMaxSpan colEst = ChildMinLineMaxLineSpan(children[i].horizontal);
+        MinMaxSpan rowEst = ChildMinLineMaxLineSpan(children[i].vertical);
 
-        if (IsRtl(direction) && (colEst.minLine != OriginZeroLine{0} ||
-                                 colEst.maxLine != OriginZeroLine{0})) {
-            int16_t endLine = (int16_t)explicitColCount;
-            OriginZeroLine mirroredMin{(int16_t)(endLine - colEst.maxLine.v)};
-            OriginZeroLine mirroredMax{(int16_t)(endLine - colEst.minLine.v)};
-            colEst.minLine = mirroredMin;
-            colEst.maxLine = mirroredMax;
-        }
         if (colEst.minLine < colMin) {
             colMin = colEst.minLine;
         }
@@ -216730,31 +224244,53 @@ SizeFOpt ItemKnownDimensions(const GridItem& item, TaffyTree* tree,
         MaybeAdd(MaybeApplyAspectRatio(
                      item.size.MaybeResolve(gridAreaSize, calc), aspectRatio),
                  boxSizingAdjustment);
+
     SizeFOpt minSize = MaybeAdd(
         MaybeApplyAspectRatio(item.minSize.MaybeResolve(gridAreaSize, calc),
                               aspectRatio),
         boxSizingAdjustment);
+    minSize = Or(minSize, paddingBorderSize);
+    minSize = MaybeMax(minSize, paddingBorderSize);
     SizeFOpt maxSize = MaybeAdd(
         MaybeApplyAspectRatio(item.maxSize.MaybeResolve(gridAreaSize, calc),
                               aspectRatio),
         boxSizingAdjustment);
 
-    SizeFOpt gridAreaMinusItemMargins = MaybeSub(gridAreaSize, margins);
+    SizeFOpt gridAreaMinusItemMargins =
+        MaybeMax(MaybeSub(gridAreaSize, margins), SizeFOpt{0.0f, 0.0f});
 
     Optf width = inherentSize.w;
-    if (!IsSome(width) && !item.margin.left.IsAuto() &&
-        !item.margin.right.IsAuto() &&
-        item.justifySelf.keyword == AlignItemsKeyword::Stretch) {
-        width = gridAreaMinusItemMargins.w;
+    if (!IsSome(width)) {
+
+        if (item.size.width.IsSizingKeyword()) {
+            SizingKeywordResolution keyword = ResolveSizingKeyword(
+                item.size.width, gridAreaMinusItemMargins.w, gridAreaSize.w,
+                calc);
+            if (keyword.isSome && keyword.kind == SizingKeywordKind::Exact) {
+                width = Some(keyword.exact);
+            }
+        } else if (!item.margin.left.IsAuto() && !item.margin.right.IsAuto() &&
+                   item.IsStretchAligned(item.justifySelf)) {
+
+            width = gridAreaMinusItemMargins.w;
+        }
     }
     SizeFOpt sized =
         MaybeApplyAspectRatio(SizeFOpt{width, inherentSize.h}, aspectRatio);
 
     Optf height = sized.h;
-    if (!IsSome(height) && !item.margin.top.IsAuto() &&
-        !item.margin.bottom.IsAuto() &&
-        item.alignSelf.keyword == AlignItemsKeyword::Stretch) {
-        height = gridAreaMinusItemMargins.h;
+    if (!IsSome(height)) {
+        if (item.size.height.IsSizingKeyword()) {
+            SizingKeywordResolution keyword = ResolveSizingKeyword(
+                item.size.height, gridAreaMinusItemMargins.h, gridAreaSize.h,
+                calc);
+            if (keyword.isSome && keyword.kind == SizingKeywordKind::Exact) {
+                height = Some(keyword.exact);
+            }
+        } else if (!item.margin.top.IsAuto() && !item.margin.bottom.IsAuto() &&
+                   item.IsStretchAligned(item.alignSelf)) {
+            height = gridAreaMinusItemMargins.h;
+        }
     }
     sized = MaybeApplyAspectRatio(SizeFOpt{sized.w, height}, aspectRatio);
     return MaybeClamp(sized, minSize, maxSize);
@@ -216824,16 +224360,69 @@ SizeFOpt ItemGridAreaSizeCached(GridItem* item, AbstractAxis axis,
     return s;
 }
 
+SizeAvail KeywordAdjustedAvailableSpace(const GridItem& item,
+                                        SizeFOpt gridAreaSize,
+                                        SizeAvail available, TaffyTree* tree) {
+    if (!item.size.width.IsSizingKeyword() && !item.size.height
+                                                   .IsSizingKeyword()) {
+        return available;
+    }
+    SizeF margins =
+        MarginsAxisSumsWithBaselineShims(item, gridAreaSize.w, tree->calc);
+    SizeAvail adjusted = available;
+    AbstractAxis axes[2] = {AbstractAxis::Inline, AbstractAxis::Block};
+    for (int i = 0; i < 2; i++) {
+        AbstractAxis axis = axes[i];
+        Dimension sizeStyle = item.size.Get(axis);
+        if (!sizeStyle.IsSizingKeyword()) {
+            continue;
+        }
+        Optf stretch = MaybeMax(
+            MaybeSub(Get(gridAreaSize, axis), Some(Get(margins, axis))), 0.0f);
+        SizingKeywordResolution keyword = ResolveSizingKeyword(
+            sizeStyle, stretch, Get(gridAreaSize, axis), tree->calc);
+        if (keyword.isSome && keyword.kind == SizingKeywordKind::Measure) {
+            adjusted.Set(axis, keyword.measure);
+        }
+    }
+    return adjusted;
+}
+
+SizeFOpt AvailableSpaceMinusMargins(const GridItem& item, SizeFOpt gridAreaSize,
+                                    SizeFOpt availableSpace, TaffyTree* tree) {
+    if (!IsSome(availableSpace.w) && !IsSome(availableSpace.h)) {
+        return availableSpace;
+    }
+    RectF margin = item.margin.ResolveOrZero(gridAreaSize.w, tree->calc);
+    SizeFOpt out = availableSpace;
+    if (IsSome(out.w)) {
+        out.w = F32Max(out.w - margin.HorizontalAxisSum(), 0.0f);
+    }
+    if (IsSome(out.h)) {
+        out.h =
+            F32Max(out.h - margin.VerticalAxisSum() - item.baselineShim, 0.0f);
+    }
+    return out;
+}
+
 float ItemMinContentContribution(const GridItem& item, AbstractAxis axis,
                                  TaffyTree* tree, SizeFOpt gridAreaSize,
                                  SizeFOpt availableSpace) {
     SizeFOpt knownDimensions = ItemKnownDimensions(item, tree, gridAreaSize);
 
+    Optf known = Get(knownDimensions, axis);
+    if (IsSome(known)) {
+        return known;
+    }
+
+    availableSpace =
+        AvailableSpaceMinusMargins(item, gridAreaSize, availableSpace, tree);
     SizeAvail avail = {
         IsSome(availableSpace.w) ? AvailableSpace::Definite(availableSpace.w)
                                  : AvailableSpace::MinContent(),
         IsSome(availableSpace.h) ? AvailableSpace::Definite(availableSpace.h)
                                  : AvailableSpace::MinContent()};
+    avail = KeywordAdjustedAvailableSpace(item, gridAreaSize, avail, tree);
     return tree->MeasureChildSize(item.node, knownDimensions, gridAreaSize,
                                   avail, SizingMode::InherentSize,
                                   AsAbsNaive(axis), LineBool::False());
@@ -216856,11 +224445,18 @@ float ItemMaxContentContribution(const GridItem& item, AbstractAxis axis,
                                  TaffyTree* tree, SizeFOpt gridAreaSize,
                                  SizeFOpt availableSpace) {
     SizeFOpt knownDimensions = ItemKnownDimensions(item, tree, gridAreaSize);
+    Optf known = Get(knownDimensions, axis);
+    if (IsSome(known)) {
+        return known;
+    }
+    availableSpace =
+        AvailableSpaceMinusMargins(item, gridAreaSize, availableSpace, tree);
     SizeAvail avail = {
         IsSome(availableSpace.w) ? AvailableSpace::Definite(availableSpace.w)
                                  : AvailableSpace::MaxContent(),
         IsSome(availableSpace.h) ? AvailableSpace::Definite(availableSpace.h)
                                  : AvailableSpace::MaxContent()};
+    avail = KeywordAdjustedAvailableSpace(item, gridAreaSize, avail, tree);
     return tree->MeasureChildSize(item.node, knownDimensions, gridAreaSize,
                                   avail, SizingMode::InherentSize,
                                   AsAbsNaive(axis), LineBool::False());
@@ -216896,10 +224492,37 @@ float ItemMinimumContribution(GridItem* item, TaffyTree* tree,
                                  item->aspectRatio),
                              boxSizingAdjustment),
                     axis);
+
+    if (IsSome(size) && (!item->minSize.Get(axis).IsAuto() ||
+                         !item->maxSize.Get(axis).IsAuto())) {
+        Optf basis =
+            axis == AbstractAxis::Inline ? gridAreaSize.w : gridAreaSize.h;
+        Optf maxBasis =
+            item->isCompressibleReplaced ? Or(basis, Some(0.0f)) : basis;
+        float adjustment = Get(boxSizingAdjustment, axis);
+        Optf minResolved =
+            MaybeAdd(item->minSize.Get(axis).MaybeResolve(basis, calc),
+                     Some(adjustment));
+        Optf maxResolved =
+            MaybeAdd(item->maxSize.Get(axis).MaybeResolve(maxBasis, calc),
+                     Some(adjustment));
+        size = MaybeClamp(size, minResolved, maxResolved);
+    }
     if (!IsSome(size)) {
-        size = Get(MaybeAdd(MaybeApplyAspectRatio(
-                                item->minSize.MaybeResolve(gridAreaSize, calc),
-                                item->aspectRatio),
+
+        Dimension pref = item->size.Get(axis);
+        if (pref.IsSizingKeyword() && !pref.IsStretch()) {
+            size = Some(ItemMinContentContributionCached(
+                item, axis, tree, gridAreaSize, gridAreaSize));
+        }
+    }
+    if (!IsSome(size)) {
+
+        SizeFOpt cyclicMinBasis = {Some(UnwrapOr(gridAreaSize.w, 0.0f)),
+                                   Some(UnwrapOr(gridAreaSize.h, 0.0f))};
+        size = Get(MaybeAdd(MaybeApplyAspectRatio(item->minSize.MaybeResolve(
+                                                      cyclicMinBasis, calc),
+                                                  item->aspectRatio),
                             boxSizingAdjustment),
                    axis);
     }
@@ -216910,10 +224533,14 @@ float ItemMinimumContribution(GridItem* item, TaffyTree* tree,
     }
     if (!IsSome(size)) {
 
+        (void)axisTrackCount;
         bool spansAutoMinTrack = false;
         bool spansAFlexibleTrack = false;
-        for (int i = 0; i < axisTrackCount; i++) {
-            if (axisTracks[i].minTrackSizingFunction.IsAuto()) {
+        int from = item->TrackRangeStart(axis);
+        int to = item->TrackRangeEnd(axis);
+        for (int i = from; i < to; i++) {
+            if (axisTracks[i].minTrackSizingFunction.BehavesAsAuto(
+                    Get(innerNodeSize, axis))) {
                 spansAutoMinTrack = true;
             }
             if (axisTracks[i].maxTrackSizingFunction.IsFr()) {
@@ -216936,15 +224563,19 @@ float ItemMinimumContribution(GridItem* item, TaffyTree* tree,
                 minimumContribution =
                     MaybeMin(MaybeMin(minimumContribution, pref), mx);
             }
-            size = Some(minimumContribution);
+
+            Optf limit = SpannedFixedTrackLimit(*item, axis, axisTracks,
+                                                Get(innerNodeSize, axis), calc);
+            if (IsSome(limit)) {
+                limit = F32Max(limit, Get(paddingBorderSize, axis));
+            }
+            size = Some(MaybeMin(minimumContribution, limit));
         } else {
             size = Some(0.0f);
         }
     }
 
-    Optf limit = SpannedFixedTrackLimit(*item, axis, axisTracks,
-                                        Get(innerNodeSize, axis), calc);
-    return MaybeMin(size, limit);
+    return UnwrapOr(size, 0.0f);
 }
 
 float ItemMinimumContributionCached(GridItem* item, TaffyTree* tree,
@@ -216963,97 +224594,45 @@ float ItemMinimumContributionCached(GridItem* item, TaffyTree* tree,
     return size;
 }
 
-bool AxisIsReversed(Direction direction, AbsoluteAxis axis) {
-    return IsRtl(direction) && axis == AbsoluteAxis::Horizontal;
-}
-
-OriginZeroLine AdvancePosition(OriginZeroLine position, bool reversed) {
-    int32_t value = (int32_t)position.v + (reversed ? -1 : 1);
+OriginZeroLine AdvancePosition(OriginZeroLine position) {
+    int32_t value = (int32_t)position.v + 1;
     value = value < INT16_MIN   ? INT16_MIN
             : value > INT16_MAX ? INT16_MAX
                                 : value;
     return OriginZeroLine{(int16_t)value};
 }
 
-OriginZeroLine SearchStartLine(OriginZeroLine gridStartLine,
-                               OriginZeroLine gridEndLine, bool reversed) {
-    return reversed ? gridEndLine - (uint16_t)1 : gridStartLine;
-}
-
-LineOzl ResolveIndefiniteGridSpan(OriginZeroLine position, uint16_t span,
-                                  bool reversed) {
+LineOzl ResolveIndefiniteGridSpan(OriginZeroLine position, uint16_t span) {
     auto line = [](int32_t value) {
         value = value < INT16_MIN   ? INT16_MIN
                 : value > INT16_MAX ? INT16_MAX
                                     : value;
         return OriginZeroLine{(int16_t)value};
     };
-    if (reversed) {
-        return {line((int32_t)position.v - span + 1),
-                line((int32_t)position.v + 1)};
-    }
     return {position, line((int32_t)position.v + span)};
 }
 
-LineOzl ClampSpanToLimitedGrid(LineOzl span, int16_t minLine, int16_t maxLine) {
+LineOzl ClampSpanToLimitedGrid(LineOzl span) {
     int32_t start = span.start.v;
-    start = start<minLine ? minLine : start>(int32_t) maxLine - 1
-                ? (int32_t)maxLine - 1
+    start = start<kMinOzLine ? kMinOzLine : start>(int32_t) kMaxOzLine - 1
+                ? (int32_t)kMaxOzLine - 1
                 : start;
     int32_t end = span.end.v;
-    end = end < start + 1 ? start + 1 : end > maxLine ? maxLine : end;
+    end = end<start + 1 ? start + 1 : end>(int32_t) kMaxOzLine
+              ? (int32_t)kMaxOzLine
+              : end;
     return {OriginZeroLine{(int16_t)start}, OriginZeroLine{(int16_t)end}};
 }
-
-LineOzl MirrorHorizontalSpan(LineOzl span, uint16_t explicitColCount) {
-    int16_t endLine = (int16_t)explicitColCount;
-    return {OriginZeroLine{(int16_t)(endLine - span.end.v)},
-            OriginZeroLine{(int16_t)(endLine - span.start.v)}};
-}
-
-LineOzl MaybeMirrorSpan(LineOzl span, AbsoluteAxis axis, Direction direction,
-                        uint16_t explicitColCount) {
-    if (axis == AbsoluteAxis::Horizontal && IsRtl(direction)) {
-        return MirrorHorizontalSpan(
-            ClampSpanToLimitedGrid(span, kMinOzLine, kMaxOzLine),
-            explicitColCount);
-    }
-    return span;
-}
-
-LineOzl ClampSpanForAxis(LineOzl span, AbsoluteAxis axis, Direction direction,
-                         uint16_t explicitColCount) {
-    if (axis == AbsoluteAxis::Horizontal && IsRtl(direction)) {
-        int16_t explicitEnd = (int16_t)explicitColCount;
-        return ClampSpanToLimitedGrid(span, (int16_t)(explicitEnd - kMaxOzLine),
-                                      (int16_t)(explicitEnd - kMinOzLine));
-    }
-    return ClampSpanToLimitedGrid(span, kMinOzLine, kMaxOzLine);
-}
-
-struct PlacementChild {
-    int index = 0;
-    NodeId node;
-    LinePlain horizontal;
-    LinePlain vertical;
-
-    LinePlain Get(AbsoluteAxis a) const {
-        return a == AbsoluteAxis::Horizontal ? horizontal : vertical;
-    }
-};
 
 void RecordGridPlacement(CellOccupancyMatrix* matrix, Vec<GridItem>* items,
                          TaffyTree* tree, NodeId node, int index,
                          AlignItems parentAlignItems,
                          AlignItems parentJustifyItems,
-                         AbsoluteAxis primaryAxis, Direction direction,
-                         uint16_t explicitColCount, LineOzl primarySpan,
+                         AbsoluteAxis primaryAxis, LineOzl primarySpan,
                          LineOzl secondarySpan,
                          CellOccupancyState placementType) {
-    primarySpan =
-        ClampSpanForAxis(primarySpan, primaryAxis, direction, explicitColCount);
-    secondarySpan = ClampSpanForAxis(secondarySpan, OtherAxis(primaryAxis),
-                                     direction, explicitColCount);
+    primarySpan = ClampSpanToLimitedGrid(primarySpan);
+    secondarySpan = ClampSpanToLimitedGrid(secondarySpan);
     matrix->MarkAreaAs(primaryAxis, primarySpan, secondarySpan, placementType);
 
     LineOzl colSpan =
@@ -217068,6 +224647,7 @@ void RecordGridPlacement(CellOccupancyMatrix* matrix, Vec<GridItem>* items,
     item.row = rowSpan;
     item.column = colSpan;
     item.isCompressibleReplaced = s.IsCompressibleReplaced();
+    item.isReplaced = s.IsReplaced();
     item.overflow = s.overflow;
     item.boxSizing = s.boxSizing;
     item.size = s.size;
@@ -217083,10 +224663,8 @@ void RecordGridPlacement(CellOccupancyMatrix* matrix, Vec<GridItem>* items,
 }
 
 LineOzl PlaceDefiniteGridItemAxis(const PlacementChild& child,
-                                  AbsoluteAxis axis, Direction direction,
-                                  uint16_t explicitColCount) {
-    return MaybeMirrorSpan(child.Get(axis).ResolveDefiniteGridLines(), axis,
-                           direction, explicitColCount);
+                                  AbsoluteAxis axis) {
+    return child.Get(axis).ResolveDefiniteGridLines();
 }
 
 struct SpanPair {
@@ -217096,44 +224674,31 @@ struct SpanPair {
 
 SpanPair PlaceDefiniteSecondaryAxisItem(const CellOccupancyMatrix& matrix,
                                         const PlacementChild& child,
-                                        GridAutoFlow autoFlow,
-                                        Direction direction,
-                                        uint16_t explicitColCount) {
+                                        GridAutoFlow autoFlow) {
     AbsoluteAxis primaryAxis = PrimaryAxis(autoFlow);
     AbsoluteAxis secondaryAxis = OtherAxis(primaryAxis);
-    bool primaryReversed = AxisIsReversed(direction, primaryAxis);
     OriginZeroLine primaryStart = matrix.Counts(primaryAxis)
                                       .ImplicitStartLine();
-    OriginZeroLine primaryEnd = matrix.Counts(primaryAxis).ImplicitEndLine();
 
-    LineOzl secondaryPlacement =
-        MaybeMirrorSpan(child.Get(secondaryAxis).ResolveDefiniteGridLines(),
-                        secondaryAxis, direction, explicitColCount);
+    LineOzl secondaryPlacement = child.Get(secondaryAxis)
+                                     .ResolveDefiniteGridLines();
 
-    OriginZeroLine startingPosition;
-    if (IsDense(autoFlow)) {
-        startingPosition =
-            SearchStartLine(primaryStart, primaryEnd, primaryReversed);
-    } else {
+    OriginZeroLine startingPosition = primaryStart;
+    if (!IsDense(autoFlow)) {
         OptOriginZeroLine lookup =
-            primaryReversed
-                ? matrix.FirstOfType(primaryAxis, secondaryPlacement.start,
-                                     CellOccupancyState::AutoPlaced)
-                : matrix.LastOfType(primaryAxis, secondaryPlacement.start,
-                                    CellOccupancyState::AutoPlaced);
-        startingPosition =
-            lookup.IsSome()
-                ? lookup.val
-                : SearchStartLine(primaryStart, primaryEnd, primaryReversed);
+            matrix.AutoPlacementCursor(primaryAxis, secondaryPlacement.start);
+        if (lookup.IsSome()) {
+            startingPosition = lookup.val;
+        }
     }
     uint16_t primarySpanLen = child.Get(primaryAxis).IndefiniteSpan();
 
     OriginZeroLine position = startingPosition;
     while (true) {
-        LineOzl primaryPlacement = ResolveIndefiniteGridSpan(
-            position, primarySpanLen, primaryReversed);
+        LineOzl primaryPlacement =
+            ResolveIndefiniteGridSpan(position, primarySpanLen);
         OptOriginZeroLine collision = matrix.LineAreaCollisionJump(
-            primaryAxis, primaryPlacement, secondaryPlacement, primaryReversed);
+            primaryAxis, primaryPlacement, secondaryPlacement);
         if (!collision.IsSome()) {
             return {primaryPlacement, secondaryPlacement};
         }
@@ -217145,13 +224710,9 @@ SpanPair PlaceIndefinitelyPositionedItem(const CellOccupancyMatrix& matrix,
                                          const PlacementChild& child,
                                          GridAutoFlow autoFlow,
                                          OriginZeroLine gridPrimary,
-                                         OriginZeroLine gridSecondary,
-                                         Direction direction,
-                                         uint16_t explicitColCount) {
+                                         OriginZeroLine gridSecondary) {
     AbsoluteAxis primaryAxis = PrimaryAxis(autoFlow);
     AbsoluteAxis secondaryAxis = OtherAxis(primaryAxis);
-    bool primaryReversed = AxisIsReversed(direction, primaryAxis);
-    bool secondaryReversed = AxisIsReversed(direction, secondaryAxis);
 
     LinePlain primaryStyle = child.Get(primaryAxis);
     LinePlain secondaryStyle = child.Get(secondaryAxis);
@@ -217164,36 +224725,23 @@ SpanPair PlaceIndefinitelyPositionedItem(const CellOccupancyMatrix& matrix,
                                         .ImplicitEndLine();
     OriginZeroLine secondaryGridStart = matrix.Counts(secondaryAxis)
                                             .ImplicitStartLine();
-    OriginZeroLine secondaryGridEnd = matrix.Counts(secondaryAxis)
-                                          .ImplicitEndLine();
-    OriginZeroLine primaryStartPosition =
-        SearchStartLine(primaryGridStart, primaryGridEnd, primaryReversed);
-    OriginZeroLine secondaryStartPosition = SearchStartLine(
-        secondaryGridStart, secondaryGridEnd, secondaryReversed);
 
     OriginZeroLine primaryIdx = gridPrimary;
     OriginZeroLine secondaryIdx = gridSecondary;
 
     if (hasDefinitePrimary) {
-        LineOzl primarySpan =
-            MaybeMirrorSpan(primaryStyle.ResolveDefiniteGridLines(),
-                            primaryAxis, direction, explicitColCount);
+        LineOzl primarySpan = primaryStyle.ResolveDefiniteGridLines();
         if (IsDense(autoFlow)) {
-            secondaryIdx = secondaryStartPosition;
-        } else {
-            bool shouldAdvance = primaryReversed
-                                     ? primarySpan.start > primaryIdx
-                                     : primarySpan.start < primaryIdx;
-            if (shouldAdvance) {
-                secondaryIdx = AdvancePosition(secondaryIdx, secondaryReversed);
-            }
+            secondaryIdx = secondaryGridStart;
+        } else if (primarySpan.start < primaryIdx) {
+            secondaryIdx = AdvancePosition(secondaryIdx);
         }
 
         while (true) {
-            LineOzl secondarySpan = ResolveIndefiniteGridSpan(
-                secondaryIdx, secondarySpanLen, secondaryReversed);
+            LineOzl secondarySpan =
+                ResolveIndefiniteGridSpan(secondaryIdx, secondarySpanLen);
             OptOriginZeroLine collision = matrix.LineAreaCollisionJump(
-                secondaryAxis, secondarySpan, primarySpan, secondaryReversed);
+                secondaryAxis, secondarySpan, primarySpan);
             if (!collision.IsSome()) {
                 return {primarySpan, secondarySpan};
             }
@@ -217204,21 +224752,22 @@ SpanPair PlaceIndefinitelyPositionedItem(const CellOccupancyMatrix& matrix,
     uint16_t primarySpanLen = primaryStyle.IndefiniteSpan();
 
     while (true) {
-        LineOzl primarySpan = ResolveIndefiniteGridSpan(
-            primaryIdx, primarySpanLen, primaryReversed);
-        LineOzl secondarySpan = ResolveIndefiniteGridSpan(
-            secondaryIdx, secondarySpanLen, secondaryReversed);
+        LineOzl primarySpan =
+            ResolveIndefiniteGridSpan(primaryIdx, primarySpanLen);
+        LineOzl secondarySpan =
+            ResolveIndefiniteGridSpan(secondaryIdx, secondarySpanLen);
 
-        bool primaryOutOfBounds = primaryReversed
-                                      ? primarySpan.start < primaryGridStart
-                                      : primarySpan.end > primaryGridEnd;
-        if (primaryOutOfBounds) {
-            secondaryIdx = AdvancePosition(secondaryIdx, secondaryReversed);
-            primaryIdx = primaryStartPosition;
+        if (primarySpan.end > primaryGridEnd) {
+
+            if (primaryIdx == primaryGridStart) {
+                return {primarySpan, secondarySpan};
+            }
+            secondaryIdx = AdvancePosition(secondaryIdx);
+            primaryIdx = primaryGridStart;
             continue;
         }
         OptOriginZeroLine collision = matrix.LineAreaCollisionJump(
-            primaryAxis, primarySpan, secondarySpan, primaryReversed);
+            primaryAxis, primarySpan, secondarySpan);
         if (collision.IsSome()) {
             primaryIdx = collision.val;
             continue;
@@ -217229,25 +224778,21 @@ SpanPair PlaceIndefinitelyPositionedItem(const CellOccupancyMatrix& matrix,
 
 void PlaceGridItems(CellOccupancyMatrix* matrix, Vec<GridItem>* items,
                     TaffyTree* tree, const Vec<PlacementChild>& children,
-                    Direction direction, GridAutoFlow gridAutoFlow,
-                    AlignItems alignItems, AlignItems justifyItems) {
+                    GridAutoFlow gridAutoFlow, AlignItems alignItems,
+                    AlignItems justifyItems) {
     AbsoluteAxis primaryAxis = PrimaryAxis(gridAutoFlow);
     AbsoluteAxis secondaryAxis = OtherAxis(primaryAxis);
-    uint16_t explicitColCount = matrix->Counts(AbsoluteAxis::Horizontal)
-                                    .explicitCount;
 
     for (int i = 0; i < len(children); i++) {
         const PlacementChild& c = children[i];
         if (!c.horizontal.IsDefinite() || !c.vertical.IsDefinite()) {
             continue;
         }
-        LineOzl primarySpan = PlaceDefiniteGridItemAxis(
-            c, primaryAxis, direction, explicitColCount);
-        LineOzl secondarySpan = PlaceDefiniteGridItemAxis(
-            c, secondaryAxis, direction, explicitColCount);
+        LineOzl primarySpan = PlaceDefiniteGridItemAxis(c, primaryAxis);
+        LineOzl secondarySpan = PlaceDefiniteGridItemAxis(c, secondaryAxis);
         RecordGridPlacement(matrix, items, tree, c.node, c.index, alignItems,
-                            justifyItems, primaryAxis, direction,
-                            explicitColCount, primarySpan, secondarySpan,
+                            justifyItems, primaryAxis, primarySpan,
+                            secondarySpan,
                             CellOccupancyState::DefinitelyPlaced);
     }
 
@@ -217257,22 +224802,17 @@ void PlaceGridItems(CellOccupancyMatrix* matrix, Vec<GridItem>* items,
                                                       .IsDefinite()) {
             continue;
         }
-        SpanPair spans = PlaceDefiniteSecondaryAxisItem(
-            *matrix, c, gridAutoFlow, direction, explicitColCount);
+        SpanPair spans =
+            PlaceDefiniteSecondaryAxisItem(*matrix, c, gridAutoFlow);
         RecordGridPlacement(matrix, items, tree, c.node, c.index, alignItems,
-                            justifyItems, primaryAxis, direction,
-                            explicitColCount, spans.primary, spans.secondary,
-                            CellOccupancyState::AutoPlaced);
+                            justifyItems, primaryAxis, spans.primary,
+                            spans.secondary, CellOccupancyState::AutoPlaced);
     }
 
-    bool primaryReversed = AxisIsReversed(direction, primaryAxis);
-    OriginZeroLine startPrimary = SearchStartLine(
-        matrix->Counts(primaryAxis).ImplicitStartLine(),
-        matrix->Counts(primaryAxis).ImplicitEndLine(), primaryReversed);
-    OriginZeroLine startSecondary =
-        SearchStartLine(matrix->Counts(secondaryAxis).ImplicitStartLine(),
-                        matrix->Counts(secondaryAxis).ImplicitEndLine(),
-                        AxisIsReversed(direction, secondaryAxis));
+    OriginZeroLine startPrimary = matrix->Counts(primaryAxis)
+                                      .ImplicitStartLine();
+    OriginZeroLine startSecondary = matrix->Counts(secondaryAxis)
+                                        .ImplicitStartLine();
     OriginZeroLine posPrimary = startPrimary;
     OriginZeroLine posSecondary = startSecondary;
 
@@ -217282,19 +224822,16 @@ void PlaceGridItems(CellOccupancyMatrix* matrix, Vec<GridItem>* items,
             continue;
         }
         SpanPair spans = PlaceIndefinitelyPositionedItem(
-            *matrix, c, gridAutoFlow, posPrimary, posSecondary, direction,
-            explicitColCount);
+            *matrix, c, gridAutoFlow, posPrimary, posSecondary);
         RecordGridPlacement(matrix, items, tree, c.node, c.index, alignItems,
-                            justifyItems, primaryAxis, direction,
-                            explicitColCount, spans.primary, spans.secondary,
-                            CellOccupancyState::AutoPlaced);
+                            justifyItems, primaryAxis, spans.primary,
+                            spans.secondary, CellOccupancyState::AutoPlaced);
 
         if (IsDense(gridAutoFlow)) {
             posPrimary = startPrimary;
             posSecondary = startSecondary;
         } else {
-            posPrimary =
-                primaryReversed ? spans.primary.start : spans.primary.end;
+            posPrimary = spans.primary.end;
             posSecondary = spans.secondary.start;
         }
     }
@@ -217422,6 +224959,7 @@ float ComputeAlignmentGutterAdjustment(AlignContent alignment,
             outerGutterWeight = 1;
             innerGutterWeight = 0;
             break;
+        case AlignContentKeyword::Normal:
         case AlignContentKeyword::Stretch:
             outerGutterWeight = 0;
             innerGutterWeight = 0;
@@ -217572,7 +225110,7 @@ void ResolveItemBaselines(TaffyTree* tree, AbstractAxis axis, GridItem* items,
 
         int baselineCount = 0;
         for (int i = start; i < end; i++) {
-            if (items[i].alignSelf.keyword == AlignItemsKeyword::Baseline) {
+            if (items[i].ParticipatesInBaselineAlignment()) {
                 baselineCount++;
             }
         }
@@ -217583,6 +225121,9 @@ void ResolveItemBaselines(TaffyTree* tree, AbstractAxis axis, GridItem* items,
 
         for (int i = start; i < end; i++) {
             GridItem& item = items[i];
+            if (!item.ParticipatesInBaselineAlignment()) {
+                continue;
+            }
             LayoutOutput out = tree->PerformChildLayout(
                 item.node, SizeFOptNone(), innerNodeSize,
                 SizeAvail::MinContent(), SizingMode::InherentSize,
@@ -217592,16 +225133,26 @@ void ResolveItemBaselines(TaffyTree* tree, AbstractAxis axis, GridItem* items,
                                LengthPercentageAuto::Zero()};
             float marginTop = topOnly.ResolveOrZero(innerNodeSize.w, tree->calc)
                                   .top;
-            item.baseline =
-                Some(UnwrapOr(out.firstBaselines.y, out.size.h) + marginTop);
+
+            float baseline = UnwrapOr(out.baselines.first, out.size.h);
+            if (IsScrollContainer(item.overflow.y)) {
+                baseline = F32Max(0.0f, F32Min(baseline, out.size.h));
+            }
+            item.baseline = Some(baseline + marginTop);
         }
 
         float rowMaxBaseline = 0.0f;
         for (int i = start; i < end; i++) {
+            if (!items[i].ParticipatesInBaselineAlignment()) {
+                continue;
+            }
             rowMaxBaseline =
                 F32Max(rowMaxBaseline, UnwrapOr(items[i].baseline, 0.0f));
         }
         for (int i = start; i < end; i++) {
+            if (!items[i].ParticipatesInBaselineAlignment()) {
+                continue;
+            }
             items[i].baselineShim =
                 rowMaxBaseline - UnwrapOr(items[i].baseline, 0.0f);
         }
@@ -217619,7 +225170,11 @@ float DistributeSpaceUpToLimits(float spaceToDistribute, GridTrack* tracks,
 
     const float kThreshold = 0.01f;
 
-    while (spaceToDistribute > kThreshold) {
+    int maxIterations = n + 1;
+    for (int iter = 0; iter < maxIterations; iter++) {
+        if (spaceToDistribute <= kThreshold) {
+            break;
+        }
         float proportionSum = 0.0f;
         for (int i = 0; i < n; i++) {
             const GridTrack& t = tracks[i];
@@ -217676,8 +225231,7 @@ template <typename Affected, typename Proportion, typename Limit>
 void DistributeItemSpaceToBaseSizeInner(
     float space, GridTrack* tracks, int n, Affected trackIsAffected,
     Proportion trackDistributionProportion, Limit trackLimit,
-    IntrinsicContributionType intrinsicContributionType,
-    Optf axisInnerNodeSize) {
+    IntrinsicContributionType intrinsicContributionType) {
     if (space == 0.0f) {
         return;
     }
@@ -217740,9 +225294,8 @@ void DistributeItemSpaceToBaseSizeInner(
         };
         DistributeSpaceUpToLimits(
             extraSpace, tracks, n, filter, trackDistributionProportion,
-            getBaseSize, [&](const GridTrack& t) {
-                return t.FitContentLimit(axisInnerNodeSize);
-            });
+            getBaseSize,
+            [](const GridTrack& t) { return t.FitContentLimit(); });
     }
 
     for (int i = 0; i < n; i++) {
@@ -217758,8 +225311,7 @@ template <typename Affected, typename Limit>
 void DistributeItemSpaceToBaseSize(
     bool isFlex, bool, float space, GridTrack* tracks, int n,
     Affected trackIsAffected, Limit trackLimit,
-    IntrinsicContributionType intrinsicContributionType,
-    Optf axisInnerNodeSize) {
+    IntrinsicContributionType intrinsicContributionType) {
     auto one = [](const GridTrack&) { return 1.0f; };
     if (isFlex) {
         auto filter = [&](const GridTrack& t) {
@@ -217773,25 +225325,23 @@ void DistributeItemSpaceToBaseSize(
         }
         if (flexFactorSum > 0.0f) {
             auto flexFactor = [](const GridTrack& t) { return t.FlexFactor(); };
-            DistributeItemSpaceToBaseSizeInner(
-                space, tracks, n, filter, flexFactor, trackLimit,
-                intrinsicContributionType, axisInnerNodeSize);
+            DistributeItemSpaceToBaseSizeInner(space, tracks, n, filter,
+                                               flexFactor, trackLimit,
+                                               intrinsicContributionType);
         } else {
-            DistributeItemSpaceToBaseSizeInner(
-                space, tracks, n, filter, one, trackLimit,
-                intrinsicContributionType, axisInnerNodeSize);
+            DistributeItemSpaceToBaseSizeInner(space, tracks, n, filter, one,
+                                               trackLimit,
+                                               intrinsicContributionType);
         }
         return;
     }
     DistributeItemSpaceToBaseSizeInner(space, tracks, n, trackIsAffected, one,
-                                       trackLimit, intrinsicContributionType,
-                                       axisInnerNodeSize);
+                                       trackLimit, intrinsicContributionType);
 }
 
 template <typename Affected>
 void DistributeItemSpaceToGrowthLimit(float space, GridTrack* tracks, int n,
-                                      Affected trackIsAffected,
-                                      Optf axisInnerNodeSize) {
+                                      Affected trackIsAffected) {
     if (space == 0.0f) {
         return;
     }
@@ -217812,35 +225362,24 @@ void DistributeItemSpaceToGrowthLimit(float space, GridTrack* tracks, int n,
     }
     float extraSpace = F32Max(0.0f, space - trackSizes);
 
+    auto growthLimitOrBaseSize = [](const GridTrack& t) {
+        return t.growthLimit == INFINITY ? t.baseSize : t.growthLimit;
+    };
+    auto one = [](const GridTrack&) { return 1.0f; };
+    auto fitContentLimit = [](const GridTrack& t) {
+        return t.FitContentLimit();
+    };
     auto growable = [&](const GridTrack& t) {
         return trackIsAffected(t) &&
-               (t.infinitelyGrowable ||
-                t.FitContentLimitedGrowthLimit(axisInnerNodeSize) == INFINITY);
+               (t.infinitelyGrowable || t.growthLimit == INFINITY);
     };
-    int growableCount = 0;
-    for (int i = 0; i < n; i++) {
-        if (growable(tracks[i])) {
-            growableCount++;
-        }
-    }
-    if (growableCount > 0) {
-        float increase = extraSpace / (float)growableCount;
-        for (int i = 0; i < n; i++) {
-            if (growable(tracks[i])) {
-                tracks[i].itemIncurredIncrease = increase;
-            }
-        }
-    } else {
+    extraSpace =
+        DistributeSpaceUpToLimits(extraSpace, tracks, n, growable, one,
+                                  growthLimitOrBaseSize, fitContentLimit);
 
-        DistributeSpaceUpToLimits(
-            extraSpace, tracks, n, trackIsAffected,
-            [](const GridTrack&) { return 1.0f; },
-            [](const GridTrack& t) {
-                return t.growthLimit == INFINITY ? t.baseSize : t.growthLimit;
-            },
-            [&](const GridTrack& t) {
-                return t.FitContentLimit(axisInnerNodeSize);
-            });
+    if (extraSpace > 0.0f) {
+        DistributeSpaceUpToLimits(extraSpace, tracks, n, trackIsAffected, one,
+                                  growthLimitOrBaseSize, fitContentLimit);
     }
 
     for (int i = 0; i < n; i++) {
@@ -217850,6 +225389,26 @@ void DistributeItemSpaceToGrowthLimit(float space, GridTrack* tracks, int n,
         }
         t.itemIncurredIncrease = 0.0f;
     }
+}
+
+float CrossedFlexFactorSum(const GridTrack* tracks, int count) {
+    float sum = 0.0f;
+    for (int i = 0; i < count; i++) {
+        if (tracks[i].maxTrackSizingFunction.IsFr()) {
+            sum += tracks[i].FlexFactor();
+        }
+    }
+    return sum;
+}
+
+float InflexibleTrackBaseSizes(const GridTrack* tracks, int count) {
+    float sum = 0.0f;
+    for (int i = 0; i < count; i++) {
+        if (!tracks[i].maxTrackSizingFunction.IsFr()) {
+            sum += tracks[i].baseSize;
+        }
+    }
+    return sum;
 }
 
 void ResolveIntrinsicTrackSizes(TaffyTree* tree, AbstractAxis axis,
@@ -217893,103 +225452,82 @@ void ResolveIntrinsicTrackSizes(TaffyTree* tree, AbstractAxis axis,
                                             : item->overflow.y;
 
                 float newBaseSize = track.baseSize;
-                switch (track.minTrackSizingFunction.raw.Tag()) {
-                    case CompactLength::kMinContentTag:
-                        newBaseSize = F32Max(
-                            track.baseSize,
-                            sizer.MinContentContribution(item, axisTracks));
-                        break;
-                    case CompactLength::kPercentTag:
+                uint64_t minTag = track.minTrackSizingFunction.raw.Tag();
+                if (minTag == CompactLength::kMinContentTag) {
+                    newBaseSize =
+                        F32Max(track.baseSize,
+                               sizer.MinContentContribution(item, axisTracks));
+                } else if (minTag == CompactLength::kMaxContentTag) {
+                    newBaseSize =
+                        F32Max(track.baseSize,
+                               sizer.MaxContentContribution(item, axisTracks));
+                } else if (track.minTrackSizingFunction
+                               .BehavesAsAuto(axisInnerNodeSize)) {
 
-                        if (!IsSome(axisInnerNodeSize)) {
-                            newBaseSize = F32Max(
-                                track.baseSize,
-                                sizer.MinContentContribution(item, axisTracks));
-                        }
-                        break;
-                    case CompactLength::kMaxContentTag:
-                        newBaseSize = F32Max(
-                            track.baseSize,
-                            sizer.MaxContentContribution(item, axisTracks));
-                        break;
-                    case CompactLength::kAutoTag: {
-                        float space;
-                        bool minOrMaxConstraint =
-                            axisAvailableGridSpace
-                                    .kind == AvailableSpace::Kind::MinContent ||
-                            axisAvailableGridSpace
-                                    .kind == AvailableSpace::Kind::MaxContent;
+                    float space;
+                    bool minOrMaxConstraint =
+                        axisAvailableGridSpace
+                                .kind == AvailableSpace::Kind::MinContent ||
+                        axisAvailableGridSpace
+                                .kind == AvailableSpace::Kind::MaxContent;
 
-                        if (minOrMaxConstraint &&
-                            !IsScrollContainer(axisOverflow)) {
-                            float axisMinimumSize = sizer.MinimumContribution(
-                                item, axisTracks, nAxisTracks);
-                            float axisMinContentSize =
-                                sizer.MinContentContribution(item, axisTracks);
-                            Optf limit =
-                                track.maxTrackSizingFunction
-                                    .DefiniteLimit(axisInnerNodeSize, calc);
-                            space = F32Max(MaybeMin(axisMinContentSize, limit),
-                                           axisMinimumSize);
-                        } else {
-                            space = sizer.MinimumContribution(item, axisTracks,
-                                                              nAxisTracks);
-                        }
-                        newBaseSize = F32Max(track.baseSize, space);
-                        break;
+                    if (minOrMaxConstraint &&
+                        !IsScrollContainer(axisOverflow)) {
+                        float axisMinimumSize = sizer.MinimumContribution(
+                            item, axisTracks, nAxisTracks);
+                        float axisMinContentSize =
+                            sizer.MinContentContribution(item, axisTracks);
+                        Optf limit = track.maxTrackSizingFunction.DefiniteLimit(
+                            axisInnerNodeSize, calc);
+                        space = F32Max(MaybeMin(axisMinContentSize, limit),
+                                       axisMinimumSize);
+                    } else {
+                        space = sizer.MinimumContribution(item, axisTracks,
+                                                          nAxisTracks);
                     }
-                    case CompactLength::kLengthTag:
-
-                        break;
-                    default:
-
-                        if (track.minTrackSizingFunction.raw.IsCalc() &&
-                            !IsSome(axisInnerNodeSize)) {
-                            newBaseSize = F32Max(
-                                track.baseSize,
-                                sizer.MinContentContribution(item, axisTracks));
-                        }
-                        break;
+                    newBaseSize = F32Max(track.baseSize, space);
                 }
-
-                bool haveGrowthLimitMinContent =
-                    !IsScrollContainer(axisOverflow);
-                float growthLimitMinContent =
-                    haveGrowthLimitMinContent
-                        ? sizer.MinContentContribution(item, axisTracks)
-                        : 0.0f;
-                float growthLimitMaxContent =
-                    sizer.MaxContentContribution(item, axisTracks);
-                float growthLimitIntrinsicMinContent =
-                    sizer.MinContentContribution(item, axisTracks);
 
                 GridTrack& t = axisTracks[trackIndex];
                 t.baseSize = newBaseSize;
 
-                if (t.maxTrackSizingFunction.IsFitContent()) {
-
-                    if (haveGrowthLimitMinContent) {
-                        t.growthLimitPlannedIncrease =
-                            F32Max(t.growthLimitPlannedIncrease,
-                                   growthLimitMinContent);
-                    }
-
-                    float fitContentLimit =
-                        t.FitContentLimit(axisInnerNodeSize);
+                MaxTrackSizingFunction maxFn = t.maxTrackSizingFunction;
+                bool hasMinContent = t.HasIntrinsicSizingFunction();
+                float minContentContribution = 0.0f;
+                if (hasMinContent) {
+                    minContentContribution =
+                        sizer.MinContentContribution(item, axisTracks);
+                }
+                bool havePlanned = false;
+                float planned = 0.0f;
+                if (maxFn.IsFitContent()) {
+                    float fitContentLimit = t.FitContentLimit();
                     float maxContentContribution =
-                        F32Min(growthLimitMaxContent, fitContentLimit);
-                    t.growthLimitPlannedIncrease = F32Max(
-                        t.growthLimitPlannedIncrease, maxContentContribution);
-                } else if (t.maxTrackSizingFunction.IsMaxContentAlike() ||
-                           (t.maxTrackSizingFunction.UsesPercentage() &&
+                        F32Min(sizer.MaxContentContribution(item, axisTracks),
+                               fitContentLimit);
+
+                    if (hasMinContent && !IsScrollContainer(axisOverflow)) {
+                        planned = F32Max(minContentContribution,
+                                         maxContentContribution);
+                    } else {
+                        planned = maxContentContribution;
+                    }
+                    havePlanned = true;
+                } else if (maxFn.IsMaxContentAlike() ||
+                           (maxFn.UsesPercentage() &&
                             !IsSome(axisInnerNodeSize))) {
 
-                    t.growthLimitPlannedIncrease = F32Max(
-                        t.growthLimitPlannedIncrease, growthLimitMaxContent);
-                } else if (t.maxTrackSizingFunction.IsIntrinsic()) {
+                    planned = sizer.MaxContentContribution(item, axisTracks);
+                    havePlanned = true;
+                } else if (maxFn.IsIntrinsic()) {
+                    if (hasMinContent) {
+                        planned = minContentContribution;
+                        havePlanned = true;
+                    }
+                }
+                if (havePlanned) {
                     t.growthLimitPlannedIncrease =
-                        F32Max(t.growthLimitPlannedIncrease,
-                               growthLimitIntrinsicMinContent);
+                        F32Max(t.growthLimitPlannedIncrease, planned);
                 }
             }
 
@@ -218032,8 +225570,22 @@ void ResolveIntrinsicTrackSizes(TaffyTree* tree, AbstractAxis axis,
                     sizer.MinContentContribution(item, axisTracks);
                 Optf limit = SpannedTrackLimit(*item, axis, axisTracks,
                                                axisInnerNodeSize, calc);
-                space = F32Max(MaybeMin(axisMinContentSize, limit),
-                               axisMinimumSize);
+                float limitedMinContent = F32Max(
+                    MaybeMin(axisMinContentSize, limit), axisMinimumSize);
+
+                if (isFlex) {
+                    int from = item->TrackRangeStart(axis);
+                    int count = item->TrackRangeEnd(axis) - from;
+                    float inflexible =
+                        InflexibleTrackBaseSizes(axisTracks + from, count);
+                    float scale = F32Min(
+                        CrossedFlexFactorSum(axisTracks + from, count), 1.0f);
+                    float excess = F32Max(limitedMinContent - inflexible, 0.0f);
+                    space =
+                        F32Max(axisMinimumSize, inflexible + excess * scale);
+                } else {
+                    space = limitedMinContent;
+                }
             } else {
                 space = sizer
                             .MinimumContribution(item, axisTracks, nAxisTracks);
@@ -218049,17 +225601,16 @@ void ResolveIntrinsicTrackSizes(TaffyTree* tree, AbstractAxis axis,
                     DistributeItemSpaceToBaseSize(
                         isFlex, useFlexFactorForDistribution, space,
                         axisTracks + from, count, hasIntrinsicMin,
-                        [&](const GridTrack& t) {
-                            return t.FitContentLimitedGrowthLimit(
-                                axisInnerNodeSize);
+                        [](const GridTrack& t) {
+                            return t.FitContentLimitedGrowthLimit();
                         },
-                        IntrinsicContributionType::Minimum, axisInnerNodeSize);
+                        IntrinsicContributionType::Minimum);
                 } else {
                     DistributeItemSpaceToBaseSize(
                         isFlex, useFlexFactorForDistribution, space,
                         axisTracks + from, count, hasIntrinsicMin,
                         [](const GridTrack& t) { return t.growthLimit; },
-                        IntrinsicContributionType::Minimum, axisInnerNodeSize);
+                        IntrinsicContributionType::Minimum);
                 }
             }
         }
@@ -218070,6 +225621,10 @@ void ResolveIntrinsicTrackSizes(TaffyTree* tree, AbstractAxis axis,
         };
         for (int bi = 0; bi < batchLen; bi++) {
             GridItem* item = &batch[bi];
+            if (!item->SpansTrackMatching(axis, axisTracks,
+                                          hasMinOrMaxContentMin)) {
+                continue;
+            }
             Overflow axisOverflow = axis == AbstractAxis::Inline
                                         ? item->overflow.x
                                         : item->overflow.y;
@@ -218081,17 +225636,16 @@ void ResolveIntrinsicTrackSizes(TaffyTree* tree, AbstractAxis axis,
                     DistributeItemSpaceToBaseSize(
                         isFlex, useFlexFactorForDistribution, space,
                         axisTracks + from, count, hasMinOrMaxContentMin,
-                        [&](const GridTrack& t) {
-                            return t.FitContentLimitedGrowthLimit(
-                                axisInnerNodeSize);
+                        [](const GridTrack& t) {
+                            return t.FitContentLimitedGrowthLimit();
                         },
-                        IntrinsicContributionType::Minimum, axisInnerNodeSize);
+                        IntrinsicContributionType::Minimum);
                 } else {
                     DistributeItemSpaceToBaseSize(
                         isFlex, useFlexFactorForDistribution, space,
                         axisTracks + from, count, hasMinOrMaxContentMin,
                         [](const GridTrack& t) { return t.growthLimit; },
-                        IntrinsicContributionType::Minimum, axisInnerNodeSize);
+                        IntrinsicContributionType::Minimum);
                 }
             }
         }
@@ -218108,11 +225662,29 @@ void ResolveIntrinsicTrackSizes(TaffyTree* tree, AbstractAxis axis,
             };
             for (int bi = 0; bi < batchLen; bi++) {
                 GridItem* item = &batch[bi];
+                if (!item->SpansTrackMatching(
+                        axis, axisTracks, [&](const GridTrack& t) {
+                            return hasAutoMin(t) || hasMaxContentMin(t);
+                        })) {
+                    continue;
+                }
                 float axisMaxContentSize =
                     sizer.MaxContentContribution(item, axisTracks);
                 Optf limit = SpannedTrackLimit(*item, axis, axisTracks,
                                                axisInnerNodeSize, calc);
                 float space = MaybeMin(axisMaxContentSize, limit);
+
+                if (isFlex) {
+                    int fromFlex = item->TrackRangeStart(axis);
+                    int countFlex = item->TrackRangeEnd(axis) - fromFlex;
+                    float inflexible = InflexibleTrackBaseSizes(
+                        axisTracks + fromFlex, countFlex);
+                    float scale = F32Min(
+                        CrossedFlexFactorSum(axisTracks + fromFlex, countFlex),
+                        1.0f);
+                    space =
+                        inflexible + F32Max(space - inflexible, 0.0f) * scale;
+                }
                 int from = item->TrackRangeStart(axis);
                 int count = item->TrackRangeEnd(axis) - from;
                 if (space <= 0.0f || count <= 0) {
@@ -218131,16 +225703,15 @@ void ResolveIntrinsicTrackSizes(TaffyTree* tree, AbstractAxis axis,
                         isFlex, useFlexFactorForDistribution, space,
                         axisTracks + from, count, hasMaxContentMin,
                         [](const GridTrack&) { return INFINITY; },
-                        IntrinsicContributionType::Maximum, axisInnerNodeSize);
+                        IntrinsicContributionType::Maximum);
                 } else {
                     DistributeItemSpaceToBaseSize(
                         isFlex, useFlexFactorForDistribution, space,
                         axisTracks + from, count, hasAutoMin,
-                        [&](const GridTrack& t) {
-                            return t.FitContentLimitedGrowthLimit(
-                                axisInnerNodeSize);
+                        [](const GridTrack& t) {
+                            return t.FitContentLimitedGrowthLimit();
                         },
-                        IntrinsicContributionType::Maximum, axisInnerNodeSize);
+                        IntrinsicContributionType::Maximum);
                 }
             }
             FlushPlannedBaseSizeIncreases(axisTracks, nAxisTracks);
@@ -218151,6 +225722,10 @@ void ResolveIntrinsicTrackSizes(TaffyTree* tree, AbstractAxis axis,
         };
         for (int bi = 0; bi < batchLen; bi++) {
             GridItem* item = &batch[bi];
+            if (!item->SpansTrackMatching(axis, axisTracks,
+                                          hasMaxContentMinFn)) {
+                continue;
+            }
             float space = sizer.MaxContentContribution(item, axisTracks);
             int from = item->TrackRangeStart(axis);
             int count = item->TrackRangeEnd(axis) - from;
@@ -218159,7 +225734,7 @@ void ResolveIntrinsicTrackSizes(TaffyTree* tree, AbstractAxis axis,
                     isFlex, useFlexFactorForDistribution, space,
                     axisTracks + from, count, hasMaxContentMinFn,
                     [](const GridTrack& t) { return t.growthLimit; },
-                    IntrinsicContributionType::Maximum, axisInnerNodeSize);
+                    IntrinsicContributionType::Maximum);
             }
         }
         FlushPlannedBaseSizeIncreases(axisTracks, nAxisTracks);
@@ -218178,13 +225753,16 @@ void ResolveIntrinsicTrackSizes(TaffyTree* tree, AbstractAxis axis,
             };
             for (int bi = 0; bi < batchLen; bi++) {
                 GridItem* item = &batch[bi];
+                if (!item->SpansTrackMatching(axis, axisTracks,
+                                              hasIntrinsicMax)) {
+                    continue;
+                }
                 float space = sizer.MinContentContribution(item, axisTracks);
                 int from = item->TrackRangeStart(axis);
                 int count = item->TrackRangeEnd(axis) - from;
                 if (space > 0.0f && count > 0) {
                     DistributeItemSpaceToGrowthLimit(space, axisTracks + from,
-                                                     count, hasIntrinsicMax,
-                                                     axisInnerNodeSize);
+                                                     count, hasIntrinsicMax);
                 }
             }
 
@@ -218197,13 +225775,16 @@ void ResolveIntrinsicTrackSizes(TaffyTree* tree, AbstractAxis axis,
             };
             for (int bi = 0; bi < batchLen; bi++) {
                 GridItem* item = &batch[bi];
+                if (!item->SpansTrackMatching(axis, axisTracks,
+                                              hasMaxContentMax)) {
+                    continue;
+                }
                 float space = sizer.MaxContentContribution(item, axisTracks);
                 int from = item->TrackRangeStart(axis);
                 int count = item->TrackRangeEnd(axis) - from;
                 if (space > 0.0f && count > 0) {
                     DistributeItemSpaceToGrowthLimit(space, axisTracks + from,
-                                                     count, hasMaxContentMax,
-                                                     axisInnerNodeSize);
+                                                     count, hasMaxContentMax);
                 }
             }
             FlushPlannedGrowthLimitIncreases(axisTracks, nAxisTracks, false);
@@ -218217,7 +225798,7 @@ void ResolveIntrinsicTrackSizes(TaffyTree* tree, AbstractAxis axis,
     }
 }
 
-void MaximiseTracks(GridTrack* axisTracks, int n, Optf axisInnerNodeSize,
+void MaximiseTracks(GridTrack* axisTracks, int n,
                     AvailableSpace axisAvailableGridSpace) {
     float usedSpace = 0.0f;
     for (int i = 0; i < n; i++) {
@@ -218233,8 +225814,8 @@ void MaximiseTracks(GridTrack* axisTracks, int n, Optf axisInnerNodeSize,
             freeSpace, axisTracks, n, [](const GridTrack&) { return true; },
             [](const GridTrack&) { return 1.0f; },
             [](const GridTrack& t) { return t.baseSize; },
-            [&](const GridTrack& t) {
-                return t.FitContentLimitedGrowthLimit(axisInnerNodeSize);
+            [](const GridTrack& t) {
+                return t.FitContentLimitedGrowthLimit();
             });
         for (int i = 0; i < n; i++) {
             axisTracks[i].baseSize += axisTracks[i].itemIncurredIncrease;
@@ -218251,7 +225832,9 @@ float FindSizeOfFr(const GridTrack* tracks, int n, float spaceToFill) {
 
     float hypotheticalFrSize = INFINITY;
     float previousIterHypotheticalFrSize;
-    while (true) {
+
+    int maxIterations = n + 1;
+    for (int iter = 0; iter < maxIterations; iter++) {
         float usedSpace = 0.0f;
         float naiveFlexFactorSum = 0.0f;
         for (int i = 0; i < n; i++) {
@@ -218292,9 +225875,10 @@ float FindSizeOfFr(const GridTrack* tracks, int n, float spaceToFill) {
 
 void ExpandFlexibleTracks(TaffyTree* tree, AbstractAxis axis,
                           GridTrack* axisTracks, int nAxisTracks,
-                          GridItem* items, int nItems, Optf axisMinSize,
-                          Optf axisMaxSize,
-                          AvailableSpace axisAvailableSpaceForExpansion) {
+                          const GridTrack* otherAxisTracks, GridItem* items,
+                          int nItems, Optf axisMinSize, Optf axisMaxSize,
+                          AvailableSpace axisAvailableSpaceForExpansion,
+                          SizeFOpt innerNodeSize, TrackSizeEstimate estimate) {
     float flexFraction = 0.0f;
     if (axisAvailableSpaceForExpansion.kind == AvailableSpace::Kind::Definite) {
         float availableSpace = axisAvailableSpaceForExpansion.value;
@@ -218323,6 +225907,12 @@ void ExpandFlexibleTracks(TaffyTree* tree, AbstractAxis axis,
             trackMax = F32Max(trackMax, v);
         }
         float itemMax = 0.0f;
+        IntrinsicSizeMeasurer sizer;
+        sizer.tree = tree;
+        sizer.otherAxisTracks = otherAxisTracks;
+        sizer.estimate = estimate;
+        sizer.axis = axis;
+        sizer.innerNodeSize = innerNodeSize;
         for (int i = 0; i < nItems; i++) {
             GridItem* item = &items[i];
             if (!item->CrossesFlexibleTrack(axis)) {
@@ -218331,8 +225921,8 @@ void ExpandFlexibleTracks(TaffyTree* tree, AbstractAxis axis,
             int from = item->TrackRangeStart(axis);
             int count = item->TrackRangeEnd(axis) - from;
 
-            float maxContentContribution = ItemMaxContentContributionCached(
-                item, axis, tree, SizeFOptNone(), SizeFOptNone());
+            float maxContentContribution =
+                sizer.MaxContentContribution(item, axisTracks);
             itemMax = F32Max(itemMax, FindSizeOfFr(axisTracks + from, count,
                                                    maxContentContribution));
         }
@@ -218413,13 +226003,21 @@ void TrackSizingAlgorithm(TaffyTree* tree, AbstractAxis axis, Optf axisMinSize,
     Optf percentageBasis = Or(Get(innerNodeSize, axis), axisMinSize);
     InitializeTrackSizes(tree, axisTracks, nAxisTracks, percentageBasis);
 
+    Optf axisInnerNodeSize = Get(innerNodeSize, axis);
+    for (int i = 0; i < nAxisTracks; i++) {
+        axisTracks[i].ResolveFitContentLimit(axisInnerNodeSize, tree->calc);
+    }
+
     if (hasBaselineAlignedItem) {
         ResolveItemBaselines(tree, axis, items, nItems, innerNodeSize);
     }
 
     bool allAtLimit = true;
     for (int i = 0; i < nAxisTracks; i++) {
-        if (axisTracks[i].baseSize != axisTracks[i].growthLimit) {
+        const GridTrack& t = axisTracks[i];
+        if (t.baseSize != t.growthLimit ||
+            !IsSome(t.minTrackSizingFunction
+                        .DefiniteValue(percentageBasis, tree->calc))) {
             allAtLimit = false;
             break;
         }
@@ -218442,23 +226040,24 @@ void TrackSizingAlgorithm(TaffyTree* tree, AbstractAxis axis, Optf axisMinSize,
         tree, axis, axisTracks, nAxisTracks, otherAxisTracks, items, nItems,
         availableGridSpace.Get(axis), innerNodeSize, estimate);
 
-    MaximiseTracks(axisTracks, nAxisTracks, Get(innerNodeSize, axis),
-                   availableGridSpace.Get(axis));
+    MaximiseTracks(axisTracks, nAxisTracks, availableGridSpace.Get(axis));
 
     AvailableSpace axisAvailableSpaceForExpansion;
     Optf innerAxis = Get(innerNodeSize, axis);
     if (IsSome(innerAxis)) {
         axisAvailableSpaceForExpansion = AvailableSpace::Definite(innerAxis);
-    } else if (availableGridSpace.Get(axis)
-                   .kind == AvailableSpace::Kind::MinContent) {
+    } else if (axis == AbstractAxis::Inline &&
+               availableGridSpace.Get(axis)
+                       .kind == AvailableSpace::Kind::MinContent) {
         axisAvailableSpaceForExpansion = AvailableSpace::MinContent();
     } else {
         axisAvailableSpaceForExpansion = AvailableSpace::MaxContent();
     }
 
-    ExpandFlexibleTracks(tree, axis, axisTracks, nAxisTracks, items, nItems,
-                         axisMinSize, axisMaxSize,
-                         axisAvailableSpaceForExpansion);
+    ExpandFlexibleTracks(tree, axis, axisTracks, nAxisTracks, otherAxisTracks,
+                         items, nItems, axisMinSize, axisMaxSize,
+                         axisAvailableSpaceForExpansion, innerNodeSize,
+                         estimate);
 
     if (axisAlignment.keyword == AlignContentKeyword::Stretch) {
         StretchAutoTracks(axisTracks, nAxisTracks, axisMinSize,
@@ -218498,9 +226097,8 @@ void AlignTracks(float gridContainerContentBoxSize, LineF padding, LineF border,
             : 0.0f;
     float totalOffset = origin + emptyGridOffset;
     bool seenNonCollapsedTrack = false;
-    for (int i = 0; i < n; i++) {
-        GridTrack& track = tracks[i];
 
+    auto positionTrack = [&](int i, GridTrack& track) {
         bool isGutter = (i % 2) == 0;
         bool isNonCollapsedTrack = !isGutter && !track.isCollapsed;
         bool isFirst = isNonCollapsedTrack && !seenNonCollapsedTrack;
@@ -218514,6 +226112,15 @@ void AlignTracks(float gridContainerContentBoxSize, LineF padding, LineF border,
         totalOffset = totalOffset + offset + track.baseSize;
         if (isNonCollapsedTrack) {
             seenNonCollapsedTrack = true;
+        }
+    };
+    if (axisIsReversed) {
+        for (int i = 0; i < n; i++) {
+            positionTrack(i, tracks[n - 1 - i]);
+        }
+    } else {
+        for (int i = 0; i < n; i++) {
+            positionTrack(i, tracks[i]);
         }
     }
 }
@@ -218575,7 +226182,7 @@ AlignedAxis AlignItemWithinArea(LineF gridArea, AlignSelf alignmentStyle,
     }
 
     float offsetWithinArea = alignmentBasedOffset;
-    if (position == Position::Absolute) {
+    if (IsOutOfFlow(position)) {
         if (IsSome(insetStart) && IsSome(insetEnd)) {
             offsetWithinArea =
                 IsRtl(direction)
@@ -218603,99 +226210,134 @@ AlignedAxis AlignItemWithinArea(LineF gridArea, AlignSelf alignmentStyle,
 }
 
 struct AlignedItem {
-    SizeF contentSizeContribution;
+    RectF overflowContribution;
     float yPosition = 0.0f;
     float height = 0.0f;
+    int oofStart = 0;
+    int oofCount = 0;
 };
 
-AlignedItem AlignAndPositionItem(TaffyTree* tree, NodeId node, uint32_t order,
-                                 RectF gridArea,
-                                 OptAlignItems containerJustifyItems,
-                                 OptAlignItems containerAlignItems,
-                                 float baselineShim, Direction direction,
-                                 float containerBorderBoxWidth,
-                                 RectF containerBorder) {
+AlignedItem AlignAndPositionItem(
+    TaffyTree* tree, NodeId node, uint32_t order, RectF gridArea,
+    SizeF containingBlock, AlignItems containerJustifyItems,
+    AlignItems containerAlignItems, float baselineShim, Direction direction,
+    float containerBorderBoxWidth, RectF containerBorder,
+    bool containerIsScrollContainer, Vec<OofCandidate>* oofPool) {
     CalcResolver calc = tree->calc;
     SizeF gridAreaSize = {gridArea.right - gridArea.left,
                           gridArea.bottom - gridArea.top};
+    SizeFOpt containingOpt = AsOptional(containingBlock);
 
     const Style& style = tree->GetStyle(node);
     PointOverflow overflow = style.overflow;
+    Contain contain = style.contain;
     float scrollbarWidth = style.scrollbarWidth;
     Optf aspectRatio = style.aspectRatio;
-    OptAlignItems justifySelf = style.justifySelf;
-    if (justifySelf.IsSome()) {
-        justifySelf.val = ResolveSelfRelative(justifySelf.val, style.direction,
-                                              direction, true);
-    }
-    OptAlignItems alignSelf = style.alignSelf;
-    if (alignSelf.IsSome()) {
-        alignSelf.val = ResolveSelfRelative(alignSelf.val, style.direction,
-                                            direction, false);
-    }
-    if (containerJustifyItems.IsSome()) {
-        containerJustifyItems.val = ResolveSelfRelative(
-            containerJustifyItems.val, style.direction, direction, true);
-    }
-    if (containerAlignItems.IsSome()) {
-        containerAlignItems.val = ResolveSelfRelative(
-            containerAlignItems.val, style.direction, direction, false);
-    }
+    bool isReplaced = style.IsReplaced();
+
+    AlignItems justifySelf =
+        ResolveSelfRelative(style.justifySelf.UnwrapOr(containerJustifyItems),
+                            style.direction, direction, true);
+    AlignItems alignSelf =
+        ResolveSelfRelative(style.alignSelf.UnwrapOr(containerAlignItems),
+                            style.direction, direction, false);
     Position position = style.position;
 
-    RectFOpt inset = style.inset
-                         .MaybeResolveZip(AsOptional(gridAreaSize), calc);
-    RectF padding = style.padding.ResolveOrZero(Some(gridAreaSize.w), calc);
-    RectF border = style.border.ResolveOrZero(Some(gridAreaSize.w), calc);
+    RectFOpt inset = style.inset.MaybeResolveZip(containingOpt, calc);
+    RectF padding = style.padding.ResolveOrZero(Some(containingBlock.w), calc);
+    RectF border = style.border.ResolveOrZero(Some(containingBlock.w), calc);
     SizeF paddingBorderSize = (padding + border).SumAxes();
     SizeF boxSizingAdjustment = style.boxSizing == BoxSizing::ContentBox
                                     ? paddingBorderSize
                                     : SizeF::Zero();
 
-    SizeFOpt gridAreaOpt = AsOptional(gridAreaSize);
+    SizeDim sizeStyle = style.size;
     SizeFOpt inherentSize =
         MaybeAdd(MaybeApplyAspectRatio(
-                     style.size.MaybeResolve(gridAreaOpt, calc), aspectRatio),
+                     sizeStyle.MaybeResolve(containingOpt, calc), aspectRatio),
                  boxSizingAdjustment);
     SizeFOpt minSize = MaybeApplyAspectRatio(
-        MaybeMax(Or(MaybeAdd(style.minSize.MaybeResolve(gridAreaOpt, calc),
+        MaybeMax(Or(MaybeAdd(style.minSize.MaybeResolve(containingOpt, calc),
                              boxSizingAdjustment),
                     AsOptional(paddingBorderSize)),
                  paddingBorderSize),
         aspectRatio);
     SizeFOpt maxSize = MaybeAdd(
-        MaybeApplyAspectRatio(style.maxSize.MaybeResolve(gridAreaOpt, calc),
+        MaybeApplyAspectRatio(style.maxSize.MaybeResolve(containingOpt, calc),
                               aspectRatio),
         boxSizingAdjustment);
 
-    AlignItems horizontalAlignment =
-        justifySelf.Or(containerJustifyItems)
-            .UnwrapOr(IsSome(inherentSize.w)
-                          ? AlignItems{AlignItemsKeyword::Start}
-                          : AlignItems{AlignItemsKeyword::Stretch});
-    AlignItems verticalAlignment =
-        alignSelf.Or(containerAlignItems)
-            .UnwrapOr((IsSome(inherentSize.h) || IsSome(aspectRatio))
-                          ? AlignItems{AlignItemsKeyword::Start}
-                          : AlignItems{AlignItemsKeyword::Stretch});
+    AlignItems horizontalAlignment = justifySelf;
+    if (justifySelf.keyword == AlignItemsKeyword::Normal) {
+        horizontalAlignment = (IsSome(inherentSize.w) ||
+                               sizeStyle.width.IsSizingKeyword() || isReplaced)
+                                  ? AlignItems{AlignItemsKeyword::Start}
+                                  : AlignItems{AlignItemsKeyword::Stretch};
+    }
+    AlignItems verticalAlignment = alignSelf;
+    if (alignSelf.keyword == AlignItemsKeyword::Normal) {
+        verticalAlignment =
+            (IsSome(inherentSize.h) || sizeStyle.height.IsSizingKeyword() ||
+             IsSome(aspectRatio) || isReplaced)
+                ? AlignItems{AlignItemsKeyword::Start}
+                : AlignItems{AlignItemsKeyword::Stretch};
+    }
 
-    RectFOpt margin = style.margin.MaybeResolve(Some(gridAreaSize.w), calc);
+    RectFOpt margin = style.margin.MaybeResolve(Some(containingBlock.w), calc);
 
     SizeF gridAreaMinusItemMarginsSize = {
-        MaybeSub(MaybeSub(gridAreaSize.w, margin.left), margin.right),
-        MaybeSub(MaybeSub(gridAreaSize.h, margin.top), margin.bottom) -
-            baselineShim};
+        F32Max(MaybeSub(MaybeSub(gridAreaSize.w, margin.left), margin.right),
+               0.0f),
+        F32Max(MaybeSub(MaybeSub(gridAreaSize.h, margin.top), margin.bottom) -
+                   baselineShim,
+               0.0f)};
+
+    SizingKeywordResolution keywordWidth;
+    if (!IsSome(inherentSize.w)) {
+        keywordWidth = ResolveSizingKeyword(
+            sizeStyle.width, Some(gridAreaMinusItemMarginsSize.w),
+            Some(containingBlock.w), calc);
+    }
+    SizingKeywordResolution keywordHeight;
+    if (!IsSome(inherentSize.h)) {
+        keywordHeight = ResolveSizingKeyword(
+            sizeStyle.height, Some(gridAreaMinusItemMarginsSize.h),
+            Some(containingBlock.h), calc);
+    }
+
+    SizeFOpt keywordMeasured = SizeFOptNone();
+    if (!IsOutOfFlow(position) && keywordWidth.isSome && keywordHeight.isSome &&
+        keywordWidth.kind == SizingKeywordKind::Measure &&
+        keywordHeight.kind == SizingKeywordKind::Measure) {
+        keywordMeasured = AsOptional(tree->MeasureChildSizeBoth(
+            node, SizeFOptNone(), containingOpt,
+            {keywordWidth.measure, keywordHeight.measure},
+            SizingMode::InherentSize, LineBool::False()));
+    }
 
     Optf width = inherentSize.w;
     if (!IsSome(width)) {
-        if (position == Position::Absolute && IsSome(inset.left) &&
+        if (IsOutOfFlow(position) && IsSome(inset.left) &&
             IsSome(inset.right)) {
             width = Some(F32Max(
                 gridAreaMinusItemMarginsSize.w - inset.left - inset.right,
                 0.0f));
+        } else if (keywordWidth.isSome) {
+            if (keywordWidth.kind == SizingKeywordKind::Exact) {
+                width = Some(keywordWidth.exact);
+            } else if (IsSome(keywordMeasured.w)) {
+                width = keywordMeasured.w;
+            } else {
+                width = Some(tree->MeasureChildSize(
+                    node, SizeFOptNone(), containingOpt,
+                    {keywordWidth.measure,
+                     AvailableSpace::Definite(gridAreaMinusItemMarginsSize.h)},
+                    SizingMode::InherentSize, AbsoluteAxis::Horizontal,
+                    LineBool::False()));
+            }
         } else if (IsSome(margin.left) && IsSome(margin.right) &&
                    horizontalAlignment.keyword == AlignItemsKeyword::Stretch &&
-                   position != Position::Absolute) {
+                   !IsOutOfFlow(position)) {
             width = Some(gridAreaMinusItemMarginsSize.w);
         }
     }
@@ -218704,14 +226346,30 @@ AlignedItem AlignAndPositionItem(TaffyTree* tree, NodeId node, uint32_t order,
 
     Optf height = sized.h;
     if (!IsSome(height)) {
-        if (position == Position::Absolute && IsSome(inset.top) &&
+        if (IsOutOfFlow(position) && IsSome(inset.top) &&
             IsSome(inset.bottom)) {
             height = Some(F32Max(
                 gridAreaMinusItemMarginsSize.h - inset.top - inset.bottom,
                 0.0f));
+        } else if (keywordHeight.isSome) {
+            if (keywordHeight.kind == SizingKeywordKind::Exact) {
+                height = Some(keywordHeight.exact);
+            } else if (IsSome(keywordMeasured.h)) {
+                height = keywordMeasured.h;
+            } else {
+                AvailableSpace widthAvail =
+                    IsSome(width) ? AvailableSpace::Definite(width)
+                                  : AvailableSpace::Definite(
+                                        gridAreaMinusItemMarginsSize.w);
+                height = Some(tree->MeasureChildSize(
+                    node, {width, None()}, containingOpt,
+                    {widthAvail, keywordHeight.measure},
+                    SizingMode::InherentSize, AbsoluteAxis::Vertical,
+                    LineBool::False()));
+            }
         } else if (IsSome(margin.top) && IsSome(margin.bottom) &&
                    verticalAlignment.keyword == AlignItemsKeyword::Stretch &&
-                   position != Position::Absolute) {
+                   !IsOutOfFlow(position)) {
             height = Some(gridAreaMinusItemMarginsSize.h);
         }
     }
@@ -218720,29 +226378,26 @@ AlignedItem AlignAndPositionItem(TaffyTree* tree, NodeId node, uint32_t order,
 
     SizeAvail avail = SizeAvail::Definite(gridAreaMinusItemMarginsSize);
     SizeFOpt size = sized;
-    if (position == Position::Absolute &&
-        (!IsSome(sized.w) || !IsSome(sized.h))) {
+    if (IsOutOfFlow(position) && (!IsSome(sized.w) || !IsSome(sized.h))) {
         SizeF measured = tree->MeasureChildSizeBoth(
-            node, sized, gridAreaOpt, avail, SizingMode::InherentSize,
+            node, sized, containingOpt, avail, SizingMode::InherentSize,
             LineBool::False());
         size = AsOptional(measured);
     }
 
     LayoutOutput layoutOutput =
-        tree->PerformChildLayout(node, size, gridAreaOpt, avail,
+        tree->PerformChildLayout(node, size, containingOpt, avail,
                                  SizingMode::InherentSize, LineBool::False());
 
     SizeF finalSize =
         MaybeClamp(UnwrapOr(size, layoutOutput.size), minSize, maxSize);
 
     AlignedAxis xr = AlignItemWithinArea(
-        {gridArea.left, gridArea.right},
-        justifySelf.UnwrapOr(horizontalAlignment), finalSize.w, position, inset,
-        false, margin, 0.0f, direction);
-    AlignedAxis yr = AlignItemWithinArea({gridArea.top, gridArea.bottom},
-                                         alignSelf.UnwrapOr(verticalAlignment),
-                                         finalSize.h, position, inset, true,
-                                         margin, baselineShim, Direction::Ltr);
+        {gridArea.left, gridArea.right}, horizontalAlignment, finalSize.w,
+        position, inset, false, margin, 0.0f, direction);
+    AlignedAxis yr = AlignItemWithinArea(
+        {gridArea.top, gridArea.bottom}, verticalAlignment, finalSize.h,
+        position, inset, true, margin, baselineShim, Direction::Ltr);
 
     SizeF scrollbarSize = {
         overflow.y == Overflow::Scroll ? scrollbarWidth : 0.0f,
@@ -218752,7 +226407,7 @@ AlignedItem AlignAndPositionItem(TaffyTree* tree, NodeId node, uint32_t order,
     layout.order = order;
     layout.location = {xr.start, yr.start};
     layout.size = finalSize;
-    layout.contentSize = layoutOutput.contentSize;
+    layout.scrollableOverflowRect = layoutOutput.scrollableOverflowRect;
     layout.scrollbarSize = scrollbarSize;
     layout.padding = padding;
     layout.border = border;
@@ -218760,62 +226415,61 @@ AlignedItem AlignAndPositionItem(TaffyTree* tree, NodeId node, uint32_t order,
                      yr.margin.end};
     tree->SetUnroundedLayout(node, layout);
 
-    SizeF contribution = ComputeContentSizeContribution(
+    RectF contribution = ComputeScrollableOverflowContribution(
         {IsRtl(direction) ? containerBorderBoxWidth - (xr.start + finalSize.w) -
                                 containerBorder.right
                           : xr.start - containerBorder.left,
          yr.start - containerBorder.top},
-        finalSize, layoutOutput.contentSize, overflow);
-    return {contribution, yr.start, finalSize.h};
+        finalSize, layoutOutput.scrollableOverflowRect, overflow, contain,
+        containerIsScrollContainer);
+    OofCandRange range;
+    OofAppendRange(oofPool, &range, layoutOutput.oofCandidates);
+    if (range.count > 0) {
+        OofTranslateRange(oofPool, range, {xr.start, yr.start});
+    }
+    return {contribution, yr.start, finalSize.h, range.start, range.count};
 }
 
-void ReverseNonGutterTracks(GridTrack* tracks, int n, TrackCounts trackCounts) {
-
-    if (trackCounts.explicitCount <= 1) {
-        const int kMinTrackVecLenToReverseColumns = 5;
-        if (n < kMinTrackVecLenToReverseColumns) {
-            return;
-        }
-        int left = 1;
-        int right = n - 2;
-        while (left < right) {
-            GridTrack tmp = tracks[left];
-            tracks[left] = tracks[right];
-            tracks[right] = tmp;
-            left += 2;
-            right = right >= 2 ? right - 2 : 0;
-        }
+void StoreGridOofSnapshot(TaffyTree* tree, NodeId node, uint16_t colAuto,
+                          uint16_t rowAuto, TrackCounts colCounts,
+                          TrackCounts rowCounts, const Vec<GridTrack>& columns,
+                          const Vec<GridTrack>& rows) {
+    NodeData* d = tree->Get(node);
+    if (!d) {
         return;
     }
-
-    int explicitTrackCount = (int)trackCounts.explicitCount;
-    if (explicitTrackCount < 2) {
-        return;
-    }
-    int left = (int)trackCounts.negativeImplicit;
-    int right = left + explicitTrackCount - 1;
-    while (left < right) {
-        int li = 2 * left + 1;
-        int ri = 2 * right + 1;
-        GridTrack tmp = tracks[li];
-        tracks[li] = tracks[ri];
-        tracks[ri] = tmp;
-        left += 1;
-        right = right >= 1 ? right - 1 : 0;
-    }
-}
-
-int RtlColumnOccupancyIndexForInitialization(int columnIndex,
-                                             TrackCounts trackCounts) {
-    if (trackCounts.explicitCount <= 1) {
-        return trackCounts.Len() - columnIndex - 1;
-    }
-    int explicitStart = (int)trackCounts.negativeImplicit;
-    int explicitEnd = explicitStart + (int)trackCounts.explicitCount;
-    if (columnIndex >= explicitStart && columnIndex < explicitEnd) {
-        return explicitStart + (explicitEnd - columnIndex - 1);
-    }
-    return columnIndex;
+    auto fill = [](GridAxisPositions* axis, uint16_t autoRep,
+                   TrackCounts counts, const Vec<GridTrack>& tracks) {
+        axis->negativeImplicit = counts.negativeImplicit;
+        axis->explicitCount = counts.explicitCount;
+        axis->positiveImplicit = counts.positiveImplicit;
+        axis->autoRepetitions = autoRep;
+        for (int i = 0; i < len(tracks); i++) {
+            if (tracks[i].kind != GridTrackKind::Track) {
+                continue;
+            }
+            if (tracks[i].isCollapsed) {
+                int index = len(axis->spans);
+                if (len(axis->collapsed) > 0 &&
+                    axis->collapsed[len(axis->collapsed) - 1].end == index) {
+                    axis->collapsed[len(axis->collapsed) - 1].end = index + 1;
+                } else {
+                    CollapsedRun run;
+                    run.start = index;
+                    run.end = index + 1;
+                    VecAppend(axis->collapsed, run);
+                }
+            }
+            GridTrackSpan span;
+            span.start = tracks[i].offset;
+            span.end = tracks[i].offset + tracks[i].baseSize;
+            VecAppend(axis->spans, span);
+        }
+    };
+    d->gridOof.Clear();
+    d->gridOof.live = true;
+    fill(&d->gridOof.columns, colAuto, colCounts, columns);
+    fill(&d->gridOof.rows, rowAuto, rowCounts, rows);
 }
 
 }
@@ -218830,6 +226484,7 @@ LayoutOutput ComputeGridLayout(TaffyTree* tree, NodeId node,
 
     const Style& style = tree->GetStyle(node);
     Direction direction = style.direction;
+    Contain contain = style.contain;
 
     Optf aspectRatio = style.aspectRatio;
     RectF padding = style.padding.ResolveOrZero(parentSize.w, calc);
@@ -218857,6 +226512,8 @@ LayoutOutput ComputeGridLayout(TaffyTree* tree, NodeId node,
     }
 
     PointOverflow t = style.overflow.Transpose();
+    bool isScrollContainer = IsScrollContainer(style.overflow.x) ||
+                             IsScrollContainer(style.overflow.y);
     PointF scrollbarGutter = {
         t.x == Overflow::Scroll ? style.scrollbarWidth : 0.0f,
         t.y == Overflow::Scroll ? style.scrollbarWidth : 0.0f};
@@ -218869,12 +226526,15 @@ LayoutOutput ComputeGridLayout(TaffyTree* tree, NodeId node,
     }
 
     AlignContent alignContent =
-        style.alignContent.UnwrapOr(AlignContent{AlignContentKeyword::Stretch});
+        style.alignContent.keyword == AlignContentKeyword::Normal
+            ? AlignContent{AlignContentKeyword::Stretch}
+            : style.alignContent;
     AlignContent justifyContent =
-        style.justifyContent
-            .UnwrapOr(AlignContent{AlignContentKeyword::Stretch});
-    OptAlignItems alignItems = style.alignItems;
-    OptAlignItems justifyItems = style.justifyItems;
+        style.justifyContent.keyword == AlignContentKeyword::Normal
+            ? AlignContent{AlignContentKeyword::Stretch}
+            : style.justifyContent;
+    AlignItems alignItems = style.alignItems;
+    AlignItems justifyItems = style.justifyItems;
 
     SizeFOpt sizeOrPreferred = Or(knownDimensions, preferredSize);
 
@@ -218966,14 +226626,13 @@ LayoutOutput ComputeGridLayout(TaffyTree* tree, NodeId node,
     nameResolver.explicitRowCount = explicitRowCount;
 
     Vec<PlacementChild> children;
-    Vec<ChildPlacementStyles> childPlacements;
     int childCount = tree->ChildCount(node);
 
     for (int i = 0; i < childCount; i++) {
         NodeId child = tree->GetChildId(node, i);
         const Style& cs = tree->GetStyle(child);
         if (cs.BoxGenMode() == BoxGenerationMode::None ||
-            cs.position == Position::Absolute) {
+            IsOutOfFlow(cs.position)) {
             continue;
         }
         PlacementChild pc;
@@ -218984,23 +226643,18 @@ LayoutOutput ComputeGridLayout(TaffyTree* tree, NodeId node,
         pc.vertical = nameResolver.ResolveRowNames(cs.gridRow)
                           .IntoOriginZero(explicitRowCount);
         VecAppend(children, pc);
-        VecAppend(childPlacements, {cs.gridColumn, cs.gridRow});
     }
 
     TrackCounts estColCounts;
     TrackCounts estRowCounts;
-    ComputeGridSizeEstimate(explicitColCount, explicitRowCount, direction,
-                            childPlacements.els, len(childPlacements),
-                            &estColCounts, &estRowCounts);
+    ComputeGridSizeEstimate(explicitColCount, explicitRowCount, children.els,
+                            len(children), &estColCounts, &estRowCounts);
 
     Vec<GridItem> items;
     CellOccupancyMatrix cellOccupancyMatrix;
     cellOccupancyMatrix.Init(estColCounts, estRowCounts);
-    PlaceGridItems(&cellOccupancyMatrix, &items, tree, children, direction,
-                   style.gridAutoFlow,
-                   alignItems.UnwrapOr(AlignItems{AlignItemsKeyword::Stretch}),
-                   justifyItems
-                       .UnwrapOr(AlignItems{AlignItemsKeyword::Stretch}));
+    PlaceGridItems(&cellOccupancyMatrix, &items, tree, children,
+                   style.gridAutoFlow, alignItems, justifyItems);
 
     TrackCounts finalColCounts = cellOccupancyMatrix
                                      .Counts(AbsoluteAxis::Horizontal);
@@ -219009,29 +226663,15 @@ LayoutOutput ComputeGridLayout(TaffyTree* tree, NodeId node,
 
     Vec<GridTrack> columns;
     Vec<GridTrack> rows;
-    TrackCounts columnTrackCountsForInit = finalColCounts;
-    if (IsRtl(direction) && finalColCounts.explicitCount <= 1) {
-        columnTrackCountsForInit.negativeImplicit = finalColCounts
-                                                        .positiveImplicit;
-        columnTrackCountsForInit.positiveImplicit = finalColCounts
-                                                        .negativeImplicit;
-    }
-    InitializeGridTracks(
-        &columns, columnTrackCountsForInit, style, AbsoluteAxis::Horizontal,
-        [&](int columnIndex) {
-            int occupancyIndex = IsRtl(direction)
-                                     ? RtlColumnOccupancyIndexForInitialization(
-                                           columnIndex, finalColCounts)
-                                     : columnIndex;
-            return cellOccupancyMatrix.ColumnIsOccupied(occupancyIndex);
-        });
+    InitializeGridTracks(&columns, finalColCounts, style,
+                         AbsoluteAxis::Horizontal, [&](int columnIndex) {
+                             return cellOccupancyMatrix
+                                 .ColumnIsOccupied(columnIndex);
+                         });
     InitializeGridTracks(&rows, finalRowCounts, style, AbsoluteAxis::Vertical,
                          [&](int rowIndex) {
                              return cellOccupancyMatrix.RowIsOccupied(rowIndex);
                          });
-    if (IsRtl(direction)) {
-        ReverseNonGutterTracks(columns.els, len(columns), finalColCounts);
-    }
 
     ResolveItemTrackIndexes(items.els, len(items), finalColCounts,
                             finalRowCounts);
@@ -219040,7 +226680,7 @@ LayoutOutput ComputeGridLayout(TaffyTree* tree, NodeId node,
 
     bool hasBaselineAlignedItem = false;
     for (int i = 0; i < len(items); i++) {
-        if (items[i].alignSelf.keyword == AlignItemsKeyword::Baseline) {
+        if (items[i].ParticipatesInBaselineAlignment()) {
             hasBaselineAlignedItem = true;
             break;
         }
@@ -219060,6 +226700,21 @@ LayoutOutput ComputeGridLayout(TaffyTree* tree, NodeId node,
         innerNodeSize.w = Some(initialColumnSum);
     }
 
+    if (runMode == RunMode::ComputeSize &&
+        inputs.axis == RequestedAxis::Horizontal) {
+        float width = F32Max(
+            MaybeClamp(initialColumnSum + contentBoxInset.HorizontalAxisSum(),
+                       minSize.w, maxSize.w),
+            paddingBorderSize.w);
+        VecReset(items);
+        VecReset(columns);
+        VecReset(rows);
+        VecReset(children);
+        cellOccupancyMatrix.Free();
+        nameResolver.Free();
+        return LayoutOutput::FromOuterSize({width, 0.0f});
+    }
+
     for (int i = 0; i < len(items); i++) {
         items[i].hasGridAreaSizeCache = false;
     }
@@ -219074,9 +226729,6 @@ LayoutOutput ComputeGridLayout(TaffyTree* tree, NodeId node,
     float initialRowSum = 0.0f;
     for (int i = 0; i < len(rows); i++) {
         initialRowSum += rows[i].baseSize;
-    }
-    if (!IsSome(innerNodeSize.h)) {
-        innerNodeSize.h = Some(initialRowSum);
     }
 
     SizeFOpt resolvedStyleSize = Or(knownDimensions, preferredSize);
@@ -219101,32 +226753,12 @@ LayoutOutput ComputeGridLayout(TaffyTree* tree, NodeId node,
         VecReset(columns);
         VecReset(rows);
         VecReset(children);
-        VecReset(childPlacements);
         cellOccupancyMatrix.Free();
         nameResolver.Free();
         return LayoutOutput::FromOuterSize(containerBorderBox);
     }
 
-    if (!availableGridSpace.width.IsDefinite()) {
-        for (int i = 0; i < len(columns); i++) {
-            GridTrack& c = columns[i];
-            Optf mn = c.minTrackSizingFunction
-                          .ResolvedPercentageSize(containerContentBox.w, calc);
-            Optf mx = c.maxTrackSizingFunction
-                          .ResolvedPercentageSize(containerContentBox.w, calc);
-            c.baseSize = MaybeClamp(c.baseSize, mn, mx);
-        }
-    }
-    if (!availableGridSpace.height.IsDefinite()) {
-        for (int i = 0; i < len(rows); i++) {
-            GridTrack& r = rows[i];
-            Optf mn = r.minTrackSizingFunction
-                          .ResolvedPercentageSize(containerContentBox.h, calc);
-            Optf mx = r.maxTrackSizingFunction
-                          .ResolvedPercentageSize(containerContentBox.h, calc);
-            r.baseSize = MaybeClamp(r.baseSize, mn, mx);
-        }
-    }
+    innerNodeSize = {Some(containerContentBox.w), Some(containerContentBox.h)};
 
     bool hasPercentageColumn = false;
     for (int i = 0; i < len(columns); i++) {
@@ -219142,11 +226774,13 @@ LayoutOutput ComputeGridLayout(TaffyTree* tree, NodeId node,
             break;
         }
     }
-    bool parentWidthIndefinite = !availableSpace.width.IsDefinite();
+
+    bool parentWidthIndefinite = !IsSome(outerNodeSize.w);
     bool rerunColumnSizing = parentWidthIndefinite && hasPercentageColumn;
     bool intrinsicColumnContributionChanged = false;
 
     if (!rerunColumnSizing) {
+
         for (int i = 0; i < len(items); i++) {
             GridItem* item = &items[i];
             if (!item->crossesIntrinsicColumn) {
@@ -219181,7 +226815,18 @@ LayoutOutput ComputeGridLayout(TaffyTree* tree, NodeId node,
         }
     }
 
+    bool parentHeightIndefinite = !IsSome(outerNodeSize.h);
+    bool rerunRowSizing = parentHeightIndefinite && hasPercentageRow;
     bool intrinsicRowContributionChanged = false;
+    if (rerunRowSizing) {
+        for (int i = 0; i < len(items); i++) {
+            items[i].hasGridAreaSizeCache = false;
+            items[i].minContentContributionCache.h = None();
+            items[i].maxContentContributionCache.h = None();
+            items[i].minimumContributionCache.h = None();
+        }
+    }
+
     if (rerunColumnSizing) {
         TrackSizingAlgorithm(
             tree, AbstractAxis::Inline, Get(innerMinSize, AbstractAxis::Inline),
@@ -219190,13 +226835,11 @@ LayoutOutput ComputeGridLayout(TaffyTree* tree, NodeId node,
             len(columns), rows.els, len(rows), items.els, len(items),
             TrackSizeEstimate::BaseSize, hasBaselineAlignedItem);
 
-        bool parentHeightIndefinite = !availableSpace.height.IsDefinite();
-        bool rerunRowSizing = parentHeightIndefinite && hasPercentageRow;
-
         if (!rerunRowSizing) {
+
             for (int i = 0; i < len(items); i++) {
                 GridItem* item = &items[i];
-                if (!item->crossesIntrinsicColumn) {
+                if (!item->crossesIntrinsicRow) {
                     continue;
                 }
                 SizeFOpt gridAreaSize = ItemGridAreaSize(
@@ -219219,24 +226862,16 @@ LayoutOutput ComputeGridLayout(TaffyTree* tree, NodeId node,
                 }
             }
             rerunRowSizing = intrinsicRowContributionChanged;
-        } else {
-            for (int i = 0; i < len(items); i++) {
-                items[i].hasGridAreaSizeCache = false;
-                items[i].minContentContributionCache.h = None();
-                items[i].maxContentContributionCache.h = None();
-                items[i].minimumContributionCache.h = None();
-            }
         }
+    }
 
-        if (rerunRowSizing) {
-            TrackSizingAlgorithm(
-                tree, AbstractAxis::Block,
-                Get(innerMinSize, AbstractAxis::Block),
-                Get(innerMaxSize, AbstractAxis::Block), alignContent,
-                justifyContent, availableGridSpace, innerNodeSize, rows.els,
-                len(rows), columns.els, len(columns), items.els, len(items),
-                TrackSizeEstimate::BaseSize, false);
-        }
+    if (rerunRowSizing) {
+        TrackSizingAlgorithm(
+            tree, AbstractAxis::Block, Get(innerMinSize, AbstractAxis::Block),
+            Get(innerMaxSize, AbstractAxis::Block), alignContent,
+            justifyContent, availableGridSpace, innerNodeSize, rows.els,
+            len(rows), columns.els, len(columns), items.els, len(items),
+            TrackSizeEstimate::BaseSize, false);
     }
 
     if ((intrinsicColumnContributionChanged && !hasPercentageColumn) ||
@@ -219289,8 +226924,12 @@ LayoutOutput ComputeGridLayout(TaffyTree* tree, NodeId node,
                 {padding.top, padding.bottom}, {border.top, border.bottom},
                 rows.els, len(rows), alignContent, false);
 
-    SizeF itemContentSizeContribution = SizeF::Zero();
-    SizeF absoluteContentSize = SizeF::Zero();
+    RectF itemOverflowRect = RectF::Zero();
+    Vec<OofCandidate> oofPool;
+    OofCandidates oofCandidates;
+    StoreGridOofSnapshot(tree, node, colSize.autoRepetitionCount,
+                         rowSize.autoRepetitionCount, finalColCounts,
+                         finalRowCounts, columns, rows);
 
     StableSort(items.els, len(items), [](const GridItem& a, const GridItem& b) {
         return a.sourceOrder < b.sourceOrder;
@@ -219298,25 +226937,71 @@ LayoutOutput ComputeGridLayout(TaffyTree* tree, NodeId node,
 
     for (int index = 0; index < len(items); index++) {
         GridItem& item = items[index];
-        RectF gridArea = {columns[(int)item.columnIndexes.start + 1].offset,
-                          columns[(int)item.columnIndexes.end].offset,
+
+        float gridLeft = IsRtl(direction)
+                             ? columns[(int)item.columnIndexes.end - 1].offset
+                             : columns[(int)item.columnIndexes.start + 1]
+                                   .offset;
+        float gridRight = IsRtl(direction)
+                              ? columns[(int)item.columnIndexes.start].offset
+                              : columns[(int)item.columnIndexes.end].offset;
+        RectF gridArea = {gridLeft, gridRight,
                           rows[(int)item.rowIndexes.start + 1].offset,
                           rows[(int)item.rowIndexes.end].offset};
-        AlignedItem placed =
-            AlignAndPositionItem(tree, item.node, (uint32_t)index, gridArea,
-                                 justifyItems, alignItems, item.baselineShim,
-                                 direction, containerBorderBox.w, border);
+
+        SizeF containingBlock = {gridArea.right - gridArea.left,
+                                 gridArea.bottom - gridArea.top};
+        AlignedItem placed = AlignAndPositionItem(
+            tree, item.node, (uint32_t)index, gridArea, containingBlock,
+            justifyItems, alignItems, item.baselineShim, direction,
+            containerBorderBox.w, border, isScrollContainer, &oofPool);
         item.yPosition = placed.yPosition;
         item.height = placed.height;
-        itemContentSizeContribution =
-            Max(itemContentSizeContribution, placed.contentSizeContribution);
+        item.oofStart = placed.oofStart;
+        item.oofCount = placed.oofCount;
+        itemOverflowRect = itemOverflowRect.Union(placed.overflowContribution);
     }
 
+    int itemCursor = 0;
     uint32_t order = (uint32_t)len(items);
+    ContainingBlockClaims claims = ContainingBlockFor(style.position);
+    auto lineAsStartEdge = [](const Vec<GridTrack>& tracks, int index) {
+        return index + 1 < len(tracks) ? tracks[index + 1].offset
+                                       : tracks[index].offset;
+    };
+    auto lineAsEndEdge = [](const Vec<GridTrack>& tracks, int index) {
+        if (index == 0) {
+            return len(tracks) > 1 ? tracks[1].offset : tracks[0].offset;
+        }
+        return tracks[index].offset;
+    };
+    auto rtlLineAsStartEdge = [](const Vec<GridTrack>& tracks, int index) {
+        if (index + 1 < len(tracks)) {
+            return tracks[index].offset;
+        }
+        if (index == 0) {
+            return tracks[0].offset;
+        }
+        return tracks[index - 1].offset;
+    };
+    auto rtlLineAsEndEdge = [](const Vec<GridTrack>& tracks, int index) {
+        if (index == 0) {
+            return tracks[0].offset;
+        }
+        return tracks[index - 1].offset;
+    };
     for (int index = 0; index < childCount; index++) {
+        if (itemCursor < len(items) &&
+            items[itemCursor].sourceOrder == (uint16_t)index) {
+            OofCandRange range = {items[itemCursor].oofStart, items[itemCursor]
+                                                                  .oofCount};
+            OofAppendPoolRange(&oofCandidates, oofPool, range);
+            itemCursor += 1;
+            continue;
+        }
+
         NodeId child = tree->GetChildId(node, index);
         const Style& cs = tree->GetStyle(child);
-
         if (cs.BoxGenMode() == BoxGenerationMode::None) {
             tree->SetUnroundedLayout(child, Layout::WithOrder(order));
             tree->PerformChildLayout(
@@ -219325,97 +227010,112 @@ LayoutOutput ComputeGridLayout(TaffyTree* tree, NodeId node,
             order += 1;
             continue;
         }
-        if (cs.position != Position::Absolute) {
+        if (!IsOutOfFlow(cs.position)) {
             continue;
         }
 
-        LineOptOzl colLines = nameResolver.ResolveColumnNames(cs.gridColumn)
-                                  .IntoOriginZero(finalColCounts.explicitCount)
-                                  .ResolveAbsolutelyPositionedGridTracks();
-        int colStartIdx = -1;
-        int colEndIdx = -1;
-        if (colLines.start.IsSome()) {
-            OriginZeroLine l = colLines.start.val;
+        RectF area;
+        if (claims.ForPosition(cs.position)) {
+            LineOptOzl colLines =
+                nameResolver.ResolveColumnNames(cs.gridColumn)
+                    .IntoOriginZero(finalColCounts.explicitCount)
+                    .ResolveAbsolutelyPositionedGridTracks();
+            int colStartIdx = -1;
+            int colEndIdx = -1;
+            if (colLines.start.IsSome()) {
+                TryIntoTrackVecIndex(colLines.start.val, finalColCounts,
+                                     &colStartIdx);
+            }
+            if (colLines.end.IsSome()) {
+                TryIntoTrackVecIndex(colLines.end.val, finalColCounts,
+                                     &colEndIdx);
+            }
+            LineOptOzl rowLines =
+                nameResolver.ResolveRowNames(cs.gridRow)
+                    .IntoOriginZero(finalRowCounts.explicitCount)
+                    .ResolveAbsolutelyPositionedGridTracks();
+            int rowStartIdx = -1;
+            int rowEndIdx = -1;
+            if (rowLines.start.IsSome()) {
+                TryIntoTrackVecIndex(rowLines.start.val, finalRowCounts,
+                                     &rowStartIdx);
+            }
+            if (rowLines.end.IsSome()) {
+                TryIntoTrackVecIndex(rowLines.end.val, finalRowCounts,
+                                     &rowEndIdx);
+            }
+            area.top = rowStartIdx >= 0 ? lineAsStartEdge(rows, rowStartIdx)
+                                        : border.top;
+            area.bottom =
+                rowEndIdx >= 0
+                    ? lineAsEndEdge(rows, rowEndIdx)
+                    : containerBorderBox.h - border.bottom - scrollbarGutter.y;
             if (IsRtl(direction)) {
-                l = OriginZeroLine{
-                    (int16_t)((int16_t)finalColCounts.explicitCount - l.v)};
+                area.left = colEndIdx >= 0
+                                ? rtlLineAsEndEdge(columns, colEndIdx)
+                                : border.left + scrollbarGutter.x;
+                area.right = colStartIdx >= 0
+                                 ? rtlLineAsStartEdge(columns, colStartIdx)
+                                 : containerBorderBox.w - border.right;
+            } else {
+                area.left = colStartIdx >= 0
+                                ? lineAsStartEdge(columns, colStartIdx)
+                                : border.left;
+                area.right = colEndIdx >= 0
+                                 ? lineAsEndEdge(columns, colEndIdx)
+                                 : containerBorderBox.w - border.right -
+                                       scrollbarGutter.x;
             }
-            TryIntoTrackVecIndex(l, finalColCounts, &colStartIdx);
-        }
-        if (colLines.end.IsSome()) {
-            OriginZeroLine l = colLines.end.val;
-            if (IsRtl(direction)) {
-                l = OriginZeroLine{
-                    (int16_t)((int16_t)finalColCounts.explicitCount - l.v)};
-            }
-            TryIntoTrackVecIndex(l, finalColCounts, &colEndIdx);
-        }
-        if (IsRtl(direction)) {
-            int tmp = colStartIdx;
-            colStartIdx = colEndIdx;
-            colEndIdx = tmp;
+        } else {
+
+            area.left = border.left + padding.left +
+                        (IsRtl(direction) ? scrollbarGutter.x : 0.0f);
+            area.right = containerBorderBox.w - border.right - padding.right -
+                         (IsRtl(direction) ? 0.0f : scrollbarGutter.x);
+            area.top = border.top + padding.top;
+            area.bottom = containerBorderBox.h - border.bottom -
+                          padding.bottom - scrollbarGutter.y;
         }
 
-        LineOptOzl rowLines = nameResolver.ResolveRowNames(cs.gridRow)
-                                  .IntoOriginZero(finalRowCounts.explicitCount)
-                                  .ResolveAbsolutelyPositionedGridTracks();
-        int rowStartIdx = -1;
-        int rowEndIdx = -1;
-        if (rowLines.start.IsSome()) {
-            TryIntoTrackVecIndex(rowLines.start.val, finalRowCounts,
-                                 &rowStartIdx);
-        }
-        if (rowLines.end.IsSome()) {
-            TryIntoTrackVecIndex(rowLines.end.val, finalRowCounts, &rowEndIdx);
-        }
+        AlignItems justifySelf =
+            ResolveSelfRelative(cs.justifySelf.UnwrapOr(justifyItems),
+                                cs.direction, direction, true);
+        AlignItems alignSelf = ResolveSelfRelative(
+            cs.alignSelf.UnwrapOr(alignItems), cs.direction, direction, false);
 
-        auto lineAsStartEdge = [](const Vec<GridTrack>& tracks, int index) {
-            return index + 1 < len(tracks) ? tracks[index + 1].offset
-                                           : tracks[index].offset;
-        };
-        auto lineAsEndEdge = [](const Vec<GridTrack>& tracks, int index) {
-            if (index == 0) {
-                return len(tracks) > 1 ? tracks[1].offset : tracks[0].offset;
-            }
-            return tracks[index].offset;
-        };
-
-        RectF gridArea;
-        gridArea.top =
-            rowStartIdx >= 0 ? lineAsStartEdge(rows, rowStartIdx) : border.top;
-        gridArea.bottom =
-            rowEndIdx >= 0
-                ? lineAsEndEdge(rows, rowEndIdx)
-                : containerBorderBox.h - border.bottom - scrollbarGutter.y;
-        gridArea
-            .left = colStartIdx >= 0
-                        ? lineAsStartEdge(columns, colStartIdx)
-                        : (IsRtl(direction) ? border.left + scrollbarGutter.x
-                                            : border.left);
-        gridArea.right =
-            colEndIdx >= 0
-                ? lineAsEndEdge(columns, colEndIdx)
-                : (IsRtl(direction) ? containerBorderBox.w - border.right
-                                    : containerBorderBox.w - border.right -
-                                          scrollbarGutter.x);
-
-        AlignedItem placed = AlignAndPositionItem(
-            tree, child, order, gridArea, justifyItems, alignItems, 0.0f,
-            direction, containerBorderBox.w, border);
-        absoluteContentSize =
-            Max(absoluteContentSize, placed.contentSizeContribution);
+        OofCandidate candidate;
+        candidate.node = child;
+        candidate.order = order;
+        candidate.position = cs.position;
+        candidate.staticX = AxisStaticPosition::FromAlignment(
+            justifySelf, area.left, area.right, IsRtl(direction));
+        candidate.staticY = AxisStaticPosition::FromAlignment(
+            alignSelf, area.top, area.bottom, false);
+        oofCandidates.Push(candidate);
         order += 1;
     }
 
-    itemContentSizeContribution
-        .w += IsRtl(direction) ? padding.left : padding.right;
-    itemContentSizeContribution.h += padding.bottom;
-    SizeF finalContentSize =
-        Max(itemContentSizeContribution, absoluteContentSize);
+    RectF absolutePositionInset = border;
+    if (IsRtl(direction)) {
+        absolutePositionInset.left += scrollbarGutter.x;
+    } else {
+        absolutePositionInset.right += scrollbarGutter.x;
+    }
+    absolutePositionInset.bottom += scrollbarGutter.y;
+
+    auto withEndPadding = [&](RectF overflowRect) {
+        if (isScrollContainer) {
+            overflowRect
+                .right += IsRtl(direction) ? padding.left : padding.right;
+            overflowRect.bottom += padding.bottom;
+        }
+        return overflowRect;
+    };
 
     LayoutOutput out;
     if (len(items) == 0) {
-        out = LayoutOutput::FromOuterSize(containerBorderBox);
+        out = LayoutOutput::FromSizes(containerBorderBox,
+                                      withEndPadding(itemOverflowRect));
     } else {
 
         StableSort(items.els, len(items),
@@ -219429,26 +227129,142 @@ LayoutOutput ComputeGridLayout(TaffyTree* tree, NodeId node,
         }
         const GridItem* chosen = &items[0];
         for (int i = 0; i < rowEnd; i++) {
-            if (items[i].alignSelf.keyword == AlignItemsKeyword::Baseline) {
+            if (items[i].ParticipatesInBaselineAlignment()) {
                 chosen = &items[i];
                 break;
             }
         }
-        float gridContainerBaseline =
-            chosen->yPosition + UnwrapOr(chosen->baseline, chosen->height);
+
+        Optf gridContainerBaseline = None();
+        if (!contain.SuppressesBaseline()) {
+            gridContainerBaseline = Some(
+                chosen->yPosition + UnwrapOr(chosen->baseline, chosen->height));
+        }
         out = LayoutOutput::FromSizesAndBaselines(
-            containerBorderBox, finalContentSize,
-            PointFOpt{None(), Some(gridContainerBaseline)});
+            containerBorderBox, withEndPadding(itemOverflowRect),
+            BaselinesFromFirst(gridContainerBaseline));
     }
+
+    out.oofCandidates = oofCandidates;
+    out.hasOofPositioningArea = true;
+    out.oofPositioningArea.size = containerBorderBox - absolutePositionInset
+                                                           .SumAxes();
+    out.oofPositioningArea
+        .offset = {absolutePositionInset.left, absolutePositionInset.top};
 
     VecReset(items);
     VecReset(columns);
     VecReset(rows);
     VecReset(children);
-    VecReset(childPlacements);
+    VecReset(oofPool);
     cellOccupancyMatrix.Free();
     nameResolver.Free();
     return out;
+}
+
+bool GridOofArea(TaffyTree* tree, NodeId grid, NodeId child, RectF paddingBox,
+                 RectF* out) {
+    NodeData* d = tree->Get(grid);
+    if (!d || !d->gridOof.live) {
+        return false;
+    }
+    const Style& gridStyle = tree->GetStyle(grid);
+    const Style& childStyle = tree->GetStyle(child);
+    const GridOofSnapshot& snap = d->gridOof;
+    NamedLineResolver resolver;
+    resolver.Init(gridStyle, snap.columns.autoRepetitions,
+                  snap.rows.autoRepetitions);
+    resolver.explicitColumnCount = snap.columns.explicitCount;
+    resolver.explicitRowCount = snap.rows.explicitCount;
+
+    auto spanIndex = [](OptOriginZeroLine line, TrackCounts counts) {
+        if (!line.IsSome()) {
+            return -1;
+        }
+        int16_t minLine = -(int16_t)counts.negativeImplicit;
+        int16_t maxLine =
+            (int16_t)(counts.explicitCount + counts.positiveImplicit);
+        if (line.val.v < minLine || line.val.v > maxLine) {
+            return -1;
+        }
+        int trackVec = 0;
+        if (!TryIntoTrackVecIndex(line.val, counts, &trackVec)) {
+            return -1;
+        }
+        return trackVec / 2;
+    };
+    auto resolveAxis = [&](LinePlacement placement,
+                           const GridAxisPositions& axis, float padStart,
+                           float padEnd, bool rows, bool reversed) {
+        TrackCounts counts;
+        counts.negativeImplicit = axis.negativeImplicit;
+        counts.explicitCount = axis.explicitCount;
+        counts.positiveImplicit = axis.positiveImplicit;
+        LinePlain plain = rows ? resolver.ResolveRowNames(placement)
+                               : resolver.ResolveColumnNames(placement);
+        LineOptOzl lines = plain.IntoOriginZero(axis.explicitCount)
+                               .ResolveAbsolutelyPositionedGridTracks();
+        int startIdx = spanIndex(lines.start, counts);
+        int endIdx = spanIndex(lines.end, counts);
+
+        auto trackEdge = [&](int index, bool isStart) {
+            int nRuns = len(axis.collapsed);
+            int rangeIndex = 0;
+            while (rangeIndex < nRuns && axis.collapsed[rangeIndex]
+                                                 .end <= index) {
+                rangeIndex++;
+            }
+            int use = index;
+            if (rangeIndex < nRuns &&
+                index >= axis.collapsed[rangeIndex].start &&
+                index < axis.collapsed[rangeIndex].end) {
+                const CollapsedRun& range = axis.collapsed[rangeIndex];
+                int adjacent = isStart ? range.end : range.start - 1;
+                if (adjacent >= 0 && adjacent < len(axis.spans)) {
+                    use = adjacent;
+                }
+            }
+            const GridTrackSpan& track = axis.spans[use];
+            return (isStart != reversed) ? track.start : track.end;
+        };
+        float startPos;
+        float endPos;
+        if (startIdx >= 0 && startIdx < len(axis.spans)) {
+            startPos = trackEdge(startIdx, true);
+        } else if (startIdx >= 0 && len(axis.spans) > 0) {
+            const GridTrackSpan& last = axis.spans[len(axis.spans) - 1];
+            startPos = reversed ? last.start : last.end;
+        } else {
+            startPos = reversed ? padEnd : padStart;
+        }
+        if (endIdx > 0 && endIdx - 1 < len(axis.spans)) {
+            endPos = trackEdge(endIdx - 1, false);
+        } else if (endIdx >= 0 && len(axis.spans) > 0) {
+            endPos = reversed ? axis.spans[0].end : axis.spans[0].start;
+        } else {
+            endPos = reversed ? padStart : padEnd;
+        }
+
+        float left;
+        float right;
+        if (reversed) {
+            left = F32Min(startPos, endPos);
+            right = startPos;
+        } else {
+            left = startPos;
+            right = F32Max(startPos, endPos);
+        }
+        return RectF{left, right, 0.0f, 0.0f};
+    };
+
+    RectF cols =
+        resolveAxis(childStyle.gridColumn, snap.columns, paddingBox.left,
+                    paddingBox.right, false, IsRtl(gridStyle.direction));
+    RectF row = resolveAxis(childStyle.gridRow, snap.rows, paddingBox.top,
+                            paddingBox.bottom, true, false);
+    resolver.Free();
+    *out = {cols.left, cols.right, row.left, row.right};
+    return true;
 }
 
 void GridExplicitSizeForTest(const Style& style, Optf autoFitContainerSize,
@@ -219467,25 +227283,30 @@ void GridExplicitSizeForTest(const Style& style, Optf autoFitContainerSize,
 void GridChildMinMaxSpanForTest(LinePlacement line, uint16_t explicitTrackCount,
                                 int16_t* outMinLine, int16_t* outMaxLine,
                                 uint16_t* outSpan) {
-    MinMaxSpan r = ChildMinLineMaxLineSpan(line, explicitTrackCount);
+    MinMaxSpan r = ChildMinLineMaxLineSpan(
+        line.IntoOriginZeroIgnoringNamed(explicitTrackCount));
     *outMinLine = r.minLine.v;
     *outMaxLine = r.maxLine.v;
     *outSpan = r.span;
 }
 
 void GridSizeEstimateForTest(uint16_t explicitColCount,
-                             uint16_t explicitRowCount, Direction direction,
+                             uint16_t explicitRowCount,
                              const LinePlacement* columns,
                              const LinePlacement* rows, int n,
                              uint16_t* outColCounts, uint16_t* outRowCounts) {
-    Vec<ChildPlacementStyles> children;
+    Vec<PlacementChild> children;
     for (int i = 0; i < n; i++) {
-        VecAppend(children, {columns[i], rows[i]});
+        PlacementChild pc;
+        pc.horizontal = columns[i]
+                            .IntoOriginZeroIgnoringNamed(explicitColCount);
+        pc.vertical = rows[i].IntoOriginZeroIgnoringNamed(explicitRowCount);
+        VecAppend(children, pc);
     }
     TrackCounts cols;
     TrackCounts rws;
-    ComputeGridSizeEstimate(explicitColCount, explicitRowCount, direction,
-                            children.els, len(children), &cols, &rws);
+    ComputeGridSizeEstimate(explicitColCount, explicitRowCount, children.els,
+                            len(children), &cols, &rws);
     VecReset(children);
     outColCounts[0] = cols.negativeImplicit;
     outColCounts[1] = cols.explicitCount;
@@ -219525,13 +227346,12 @@ int GridPlaceForTest(TaffyTree* tree, NodeId parent, uint16_t explicitColCount,
     nameResolver.explicitRowCount = explicitRowCount;
 
     Vec<PlacementChild> children;
-    Vec<ChildPlacementStyles> childPlacements;
     int childCount = tree->ChildCount(parent);
     for (int i = 0; i < childCount; i++) {
         NodeId child = tree->GetChildId(parent, i);
         const Style& cs = tree->GetStyle(child);
         if (cs.BoxGenMode() == BoxGenerationMode::None ||
-            cs.position == Position::Absolute) {
+            IsOutOfFlow(cs.position)) {
             continue;
         }
         PlacementChild pc;
@@ -219542,19 +227362,17 @@ int GridPlaceForTest(TaffyTree* tree, NodeId parent, uint16_t explicitColCount,
         pc.vertical = nameResolver.ResolveRowNames(cs.gridRow)
                           .IntoOriginZero(explicitRowCount);
         VecAppend(children, pc);
-        VecAppend(childPlacements, {cs.gridColumn, cs.gridRow});
     }
 
     TrackCounts estCols;
     TrackCounts estRows;
-    ComputeGridSizeEstimate(explicitColCount, explicitRowCount, Direction::Ltr,
-                            childPlacements.els, len(childPlacements), &estCols,
-                            &estRows);
+    ComputeGridSizeEstimate(explicitColCount, explicitRowCount, children.els,
+                            len(children), &estCols, &estRows);
 
     Vec<GridItem> items;
     CellOccupancyMatrix matrix;
     matrix.Init(estCols, estRows);
-    PlaceGridItems(&matrix, &items, tree, children, Direction::Ltr, flow,
+    PlaceGridItems(&matrix, &items, tree, children, flow,
                    AlignItems{AlignItemsKeyword::Start},
                    AlignItems{AlignItemsKeyword::Start});
 
@@ -219576,10 +227394,576 @@ int GridPlaceForTest(TaffyTree* tree, NodeId parent, uint16_t explicitColCount,
 
     VecReset(items);
     VecReset(children);
-    VecReset(childPlacements);
     matrix.Free();
     nameResolver.Free();
     return n;
+}
+
+}
+
+#line 1 "src/taffy/compute_oof.cpp"
+
+namespace taffy {
+
+static float AlignInLine(float start, float end, float size,
+                         AxisStaticEdge edge) {
+    if (edge == AxisStaticEdge::End) {
+        return end - size;
+    }
+    if (edge == AxisStaticEdge::Center) {
+        return (start + end - size) / 2.0f;
+    }
+    return start;
+}
+
+float ResolveStaticOffsetAxis(AxisStaticPosition position, float size,
+                              float marginStart, float marginEnd) {
+    float marginBox = size + marginStart + marginEnd;
+    bool overflows = position.align.safety == AlignmentSafety::Safe &&
+                     marginBox > position.end - position.start;
+    AxisStaticEdge keyword =
+        overflows ? position.align.fallback : position.align.keyword;
+    return AlignInLine(position.start, position.end, marginBox, keyword) +
+           marginStart;
+}
+
+enum class OofAlignment : uint8_t {
+    Normal,
+    Stretch,
+    Start,
+    Center,
+    End
+};
+
+static OofAlignment OofAlignmentFromResolved(AlignItems alignment) {
+    switch (alignment.keyword) {
+        case AlignItemsKeyword::Normal:
+            return OofAlignment::Normal;
+        case AlignItemsKeyword::Stretch:
+            return OofAlignment::Stretch;
+        case AlignItemsKeyword::Center:
+            return OofAlignment::Center;
+        case AlignItemsKeyword::End:
+        case AlignItemsKeyword::FlexEnd:
+        case AlignItemsKeyword::SelfEnd:
+            return OofAlignment::End;
+        case AlignItemsKeyword::Start:
+        case AlignItemsKeyword::FlexStart:
+        case AlignItemsKeyword::SelfStart:
+        case AlignItemsKeyword::Baseline:
+        default:
+            return OofAlignment::Start;
+    }
+}
+
+static AxisStaticEdge OofPhysicalEdge(OofAlignment alignment, bool reversed) {
+    if (alignment == OofAlignment::Center) {
+        return AxisStaticEdge::Center;
+    }
+    bool isEnd = alignment == OofAlignment::End;
+    return (isEnd != reversed) ? AxisStaticEdge::End : AxisStaticEdge::Start;
+}
+
+struct OofAxis {
+    float cbSize = 0.0f;
+    Optf insetStart = None();
+    Optf insetEnd = None();
+    Optf marginStart = None();
+    Optf marginEnd = None();
+    AxisStaticPosition staticPosition;
+    OofAlignment alignment = OofAlignment::Normal;
+    AlignmentSafety safety = AlignmentSafety::Default;
+    bool isInline = false;
+    bool reversed = false;
+    bool isScrollAxis = false;
+
+    AxisStaticEdge StartEdge() const {
+        return reversed ? AxisStaticEdge::End : AxisStaticEdge::Start;
+    }
+    AxisStaticEdge EndEdge() const {
+        return reversed ? AxisStaticEdge::Start : AxisStaticEdge::End;
+    }
+
+    void InsetModifiedContainingBlock(float* start, float* end) const {
+        AxisStaticEdge weaker;
+        if (IsSome(insetStart) && IsSome(insetEnd)) {
+            *start = insetStart;
+            *end = cbSize - insetEnd;
+            weaker = EndEdge();
+        } else if (IsSome(insetStart)) {
+            *start = insetStart;
+            *end = cbSize;
+            weaker = AxisStaticEdge::End;
+        } else if (IsSome(insetEnd)) {
+            *start = 0.0f;
+            *end = cbSize - insetEnd;
+            weaker = AxisStaticEdge::Start;
+        } else {
+            AxisStaticEdge keyword = staticPosition.align.keyword;
+            if (keyword == AxisStaticEdge::End) {
+                *start = 0.0f;
+                *end = staticPosition.end;
+            } else if (keyword == AxisStaticEdge::Center) {
+                float center =
+                    (staticPosition.start + staticPosition.end) / 2.0f;
+                float startDistance = center;
+                float endDistance = cbSize - center;
+                float startAbs =
+                    startDistance < 0.0f ? -startDistance : startDistance;
+                float endAbs = endDistance < 0.0f ? -endDistance : endDistance;
+                if (startAbs <= endAbs) {
+                    *start = 0.0f;
+                    *end = 2.0f * startDistance;
+                } else {
+                    *start = cbSize - 2.0f * endDistance;
+                    *end = cbSize;
+                }
+            } else {
+                *start = staticPosition.start;
+                *end = cbSize;
+            }
+            weaker = EndEdge();
+        }
+        if (*end < *start) {
+            if (weaker == AxisStaticEdge::Start) {
+                *start = *end;
+            } else {
+                *end = *start;
+            }
+        }
+    }
+
+    float InsetModifiedContainingBlockSize() const {
+        float start = 0.0f;
+        float end = 0.0f;
+        InsetModifiedContainingBlock(&start, &end);
+        return end - start;
+    }
+
+    float StretchFitSize() const {
+        float margins = UnwrapOr(marginStart, 0.0f) + UnwrapOr(marginEnd, 0.0f);
+        return F32Max(InsetModifiedContainingBlockSize() - margins, 0.0f);
+    }
+
+    bool IsStretchSized(bool isReplaced, bool isTable) const {
+        if (!(IsSome(insetStart) && IsSome(insetEnd))) {
+            return false;
+        }
+        if (alignment == OofAlignment::Stretch) {
+            return true;
+        }
+        if (alignment == OofAlignment::Normal) {
+            return !isReplaced && !isTable;
+        }
+        return false;
+    }
+
+    void ResolveMargins(float size, float* start, float* end) const {
+        bool bothInsets = IsSome(insetStart) && IsSome(insetEnd);
+        float imcbStart = 0.0f;
+        float imcbEnd = 0.0f;
+        InsetModifiedContainingBlock(&imcbStart, &imcbEnd);
+        float freeSpace = imcbEnd - imcbStart - size;
+        if (IsSome(marginStart) && IsSome(marginEnd)) {
+            *start = marginStart;
+            *end = marginEnd;
+            return;
+        }
+        if (!bothInsets) {
+            *start = UnwrapOr(marginStart, 0.0f);
+            *end = UnwrapOr(marginEnd, 0.0f);
+            return;
+        }
+        if (IsSome(marginStart)) {
+            *start = marginStart;
+            *end = freeSpace - marginStart;
+            return;
+        }
+        if (IsSome(marginEnd)) {
+            *end = marginEnd;
+            *start = freeSpace - marginEnd;
+            return;
+        }
+
+        if (freeSpace < 0.0f && isInline) {
+            if (reversed) {
+                *start = freeSpace;
+                *end = 0.0f;
+            } else {
+                *start = 0.0f;
+                *end = freeSpace;
+            }
+            return;
+        }
+        *start = freeSpace / 2.0f;
+        *end = freeSpace / 2.0f;
+    }
+
+    float Position(float size, float marginStartResolved,
+                   float marginEndResolved) const {
+        float imcbStart = 0.0f;
+        float imcbEnd = 0.0f;
+        InsetModifiedContainingBlock(&imcbStart, &imcbEnd);
+        if (!IsSome(insetStart) && !IsSome(insetEnd)) {
+
+            float marginBox = size + marginStartResolved + marginEndResolved;
+            float imcbSize = imcbEnd - imcbStart;
+            bool safeOverflow = staticPosition.align
+                                        .safety == AlignmentSafety::Safe &&
+                                marginBox > imcbSize;
+            float offset;
+            if (safeOverflow) {
+                offset =
+                    AlignInLine(imcbStart, imcbEnd, marginBox, StartEdge());
+            } else {
+                offset = AlignInLine(staticPosition.start, staticPosition.end,
+                                     marginBox, staticPosition.align.keyword);
+            }
+            return offset + marginStartResolved;
+        }
+        if (IsSome(insetStart) && !IsSome(insetEnd)) {
+            return imcbStart + marginStartResolved;
+        }
+        if (!IsSome(insetStart) && IsSome(insetEnd)) {
+            return imcbEnd - size - marginEndResolved;
+        }
+        if (!IsSome(marginStart) || !IsSome(marginEnd)) {
+            return imcbStart + marginStartResolved;
+        }
+        float marginBox = size + marginStartResolved + marginEndResolved;
+        float imcbSize = imcbEnd - imcbStart;
+        AxisStaticEdge edge = OofPhysicalEdge(alignment, reversed);
+        float marginBoxStart;
+        if (safety == AlignmentSafety::Unsafe) {
+            marginBoxStart = AlignInLine(imcbStart, imcbEnd, marginBox, edge);
+        } else if (safety == AlignmentSafety::Safe) {
+            AxisStaticEdge used = marginBox > imcbSize ? StartEdge() : edge;
+            marginBoxStart = AlignInLine(imcbStart, imcbEnd, marginBox, used);
+        } else if (marginBox <= imcbSize || alignment == OofAlignment::Normal) {
+            marginBoxStart = AlignInLine(imcbStart, imcbEnd, marginBox, edge);
+        } else {
+
+            float limitStart = F32Min(imcbStart, 0.0f);
+            float limitEnd = F32Max(imcbEnd, cbSize);
+            if (isScrollAxis) {
+                if (reversed) {
+                    limitStart = -INFINITY;
+                } else {
+                    limitEnd = INFINITY;
+                }
+            }
+            if (marginBox <= limitEnd - limitStart) {
+                float aligned =
+                    AlignInLine(imcbStart, imcbEnd, marginBox, edge);
+                marginBoxStart =
+                    F32Max(F32Min(aligned, limitEnd - marginBox), limitStart);
+            } else {
+                marginBoxStart =
+                    AlignInLine(limitStart, limitEnd, marginBox, StartEdge());
+            }
+        }
+        return marginBoxStart + marginStartResolved;
+    }
+};
+
+OofBoxLayout LayoutOofBox(TaffyTree* tree, const OofCandidate& candidate,
+                          SizeF areaSize, PointF areaOffset,
+                          Direction direction, bool resolveGridArea,
+                          NodeId gridOwner, PointOverflow containerOverflow,
+                          bool* cacheHit) {
+    OofBoxLayout result;
+    SizeF usedArea = areaSize;
+    PointF usedOffset = areaOffset;
+    if (resolveGridArea) {
+        RectF paddingBox = {areaOffset.x, areaOffset.x + areaSize.w,
+                            areaOffset.y, areaOffset.y + areaSize.h};
+        RectF gridArea;
+        if (GridOofArea(tree, gridOwner, candidate.node, paddingBox,
+                        &gridArea)) {
+            usedArea = {gridArea.right - gridArea.left,
+                        gridArea.bottom - gridArea.top};
+            usedOffset = {gridArea.left, gridArea.top};
+        }
+    }
+    float areaWidth = usedArea.w;
+    float areaHeight = usedArea.h;
+
+    CalcResolver calc = tree->calc;
+    const Style& cs = tree->GetStyle(candidate.node);
+    Optf aspectRatio = cs.aspectRatio;
+    RectFOpt margin = cs.margin.MaybeResolve(Some(areaWidth), calc);
+    RectF padding = cs.padding.ResolveOrZero(Some(areaWidth), calc);
+    RectF border = cs.border.ResolveOrZero(Some(areaWidth), calc);
+    SizeF paddingBorderSum = (padding + border).SumAxes();
+    SizeF boxSizingAdjustment = cs.boxSizing == BoxSizing::ContentBox
+                                    ? paddingBorderSum
+                                    : SizeF::Zero();
+    RectFOpt inset = cs.inset.MaybeResolveZip(AsOptional(usedArea), calc);
+    Optf left = inset.left;
+    Optf right = inset.right;
+    Optf top = inset.top;
+    Optf bottom = inset.bottom;
+    SizeDim sizeStyle = cs.size;
+    PointOverflow overflow = cs.overflow;
+    Contain contain = cs.contain;
+    float scrollbarWidth = cs.scrollbarWidth;
+
+    SizeFOpt styleSize = MaybeAdd(
+        MaybeApplyAspectRatio(
+            sizeStyle.MaybeResolve(AsOptional(usedArea), calc), aspectRatio),
+        boxSizingAdjustment);
+    SizeFOpt minSize = MaybeMax(
+        Or(MaybeAdd(MaybeApplyAspectRatio(
+                        cs.minSize.MaybeResolve(AsOptional(usedArea), calc),
+                        aspectRatio),
+                    boxSizingAdjustment),
+           AsOptional(paddingBorderSum)),
+        paddingBorderSum);
+    SizeFOpt maxSize = MaybeAdd(
+        MaybeApplyAspectRatio(
+            cs.maxSize.MaybeResolve(AsOptional(usedArea), calc), aspectRatio),
+        boxSizingAdjustment);
+    SizeFOpt knownDimensions = MaybeClamp(styleSize, minSize, maxSize);
+
+    bool isReplaced = cs.IsReplaced();
+    bool isTable = cs.itemIsTable;
+    Direction itemDirection = cs.direction;
+
+    AlignItems justifySelf = ResolveSelfRelative(
+        cs.justifySelf.UnwrapOr(AlignItems{AlignItemsKeyword::Normal}),
+        itemDirection, direction, true);
+    AlignItems alignSelf = ResolveSelfRelative(
+        cs.alignSelf.UnwrapOr(AlignItems{AlignItemsKeyword::Normal}),
+        itemDirection, direction, false);
+
+    AxisStaticPosition staticX = candidate.staticX;
+    staticX.start -= usedOffset.x;
+    staticX.end -= usedOffset.x;
+    AxisStaticPosition staticY = candidate.staticY;
+    staticY.start -= usedOffset.y;
+    staticY.end -= usedOffset.y;
+
+    OofAxis horizontal;
+    horizontal.cbSize = areaWidth;
+    horizontal.insetStart = left;
+    horizontal.insetEnd = right;
+    horizontal.marginStart = margin.left;
+    horizontal.marginEnd = margin.right;
+    horizontal.staticPosition = staticX;
+    horizontal.alignment = OofAlignmentFromResolved(justifySelf);
+    horizontal.safety = justifySelf.safety;
+    horizontal.isInline = true;
+    horizontal.reversed = IsRtl(direction);
+    horizontal.isScrollAxis = IsScrollContainer(containerOverflow.x);
+
+    OofAxis vertical;
+    vertical.cbSize = areaHeight;
+    vertical.insetStart = top;
+    vertical.insetEnd = bottom;
+    vertical.marginStart = margin.top;
+    vertical.marginEnd = margin.bottom;
+    vertical.staticPosition = staticY;
+    vertical.alignment = OofAlignmentFromResolved(alignSelf);
+    vertical.safety = alignSelf.safety;
+    vertical.isInline = false;
+    vertical.reversed = false;
+    vertical.isScrollAxis = IsScrollContainer(containerOverflow.y);
+
+    float stretchWidth = horizontal.StretchFitSize();
+    float stretchHeight = vertical.StretchFitSize();
+
+    float availWidth = stretchWidth;
+    float availHeight = stretchHeight;
+    if (isTable) {
+        float nonAutoW =
+            UnwrapOr(margin.left, 0.0f) + UnwrapOr(margin.right, 0.0f);
+        float nonAutoH =
+            UnwrapOr(margin.top, 0.0f) + UnwrapOr(margin.bottom, 0.0f);
+        availWidth = F32Min(availWidth, F32Max(areaWidth - nonAutoW, 0.0f));
+        availHeight = F32Min(availHeight, F32Max(areaHeight - nonAutoH, 0.0f));
+    }
+    SizeFOpt availClamped =
+        MaybeClamp(SizeFOpt{availWidth, availHeight}, minSize, maxSize);
+    SizeAvail childAvail =
+        SizeAvail::Definite({availClamped.w, availClamped.h});
+
+    if (sizeStyle.width.IsSizingKeyword() || sizeStyle.height
+                                                 .IsSizingKeyword()) {
+        ResolveAbsoluteSizingKeywords(tree, candidate.node, &knownDimensions,
+                                      sizeStyle, usedArea, inset, margin,
+                                      SizingMode::ContentSize);
+        knownDimensions =
+            MaybeClamp(MaybeApplyAspectRatio(knownDimensions, aspectRatio),
+                       minSize, maxSize);
+    }
+
+    bool stretchW = !IsSome(knownDimensions.w) &&
+                    horizontal.IsStretchSized(isReplaced, isTable);
+    bool stretchH = !IsSome(knownDimensions.h) &&
+                    vertical.IsStretchSized(isReplaced, isTable);
+    bool bothExplicitStretch = horizontal.alignment == OofAlignment::Stretch &&
+                               vertical.alignment == OofAlignment::Stretch;
+    Optf stretchAspect =
+        (stretchW && stretchH && bothExplicitStretch) ? None() : aspectRatio;
+    if (stretchW) {
+        if (isTable) {
+            minSize.w = Some(F32Max(UnwrapOr(minSize.w, 0.0f), stretchWidth));
+        } else {
+            knownDimensions.w = Some(stretchWidth);
+            knownDimensions = MaybeClamp(
+                MaybeApplyAspectRatio(knownDimensions, stretchAspect), minSize,
+                maxSize);
+        }
+    }
+    if (!IsSome(knownDimensions.h) && stretchH) {
+        if (isTable) {
+            minSize.h = Some(F32Max(UnwrapOr(minSize.h, 0.0f), stretchHeight));
+        } else {
+            knownDimensions.h = Some(stretchHeight);
+            knownDimensions = MaybeClamp(
+                MaybeApplyAspectRatio(knownDimensions, stretchAspect), minSize,
+                maxSize);
+        }
+    }
+
+    SizeF finalSize;
+    if (IsSome(knownDimensions.w) && IsSome(knownDimensions.h)) {
+        finalSize = {knownDimensions.w, knownDimensions.h};
+    } else {
+        SizeF measured = tree->MeasureChildSizeBoth(
+            candidate.node, knownDimensions, AsOptional(usedArea), childAvail,
+            SizingMode::ContentSize, LineBool::False());
+        finalSize = UnwrapOr(knownDimensions, measured);
+    }
+    finalSize = MaybeClamp(finalSize, minSize, maxSize);
+
+    LayoutInput layoutInput;
+    layoutInput.knownDimensions = AsOptional(finalSize);
+    layoutInput.parentSize = AsOptional(usedArea);
+    layoutInput.availableSpace = childAvail;
+    layoutInput.sizingMode = SizingMode::ContentSize;
+    layoutInput.axis = RequestedAxis::Both;
+    layoutInput.runMode = RunMode::PerformLayout;
+    layoutInput.verticalMarginsAreCollapsible = LineBool::False();
+    if (cacheHit) {
+        LayoutOutput probe;
+        *cacheHit = tree->CacheGet(candidate.node, layoutInput, &probe);
+    }
+    LayoutOutput layoutOutput =
+        tree->ComputeChildLayout(candidate.node, layoutInput);
+
+    float marginLeft = 0.0f;
+    float marginRight = 0.0f;
+    float marginTop = 0.0f;
+    float marginBottom = 0.0f;
+    horizontal.ResolveMargins(finalSize.w, &marginLeft, &marginRight);
+    vertical.ResolveMargins(finalSize.h, &marginTop, &marginBottom);
+    RectF resolvedMargin = {marginLeft, marginRight, marginTop, marginBottom};
+    PointF location = {
+        horizontal.Position(finalSize.w, marginLeft, marginRight) + usedOffset
+                                                                        .x,
+        vertical.Position(finalSize.h, marginTop, marginBottom) + usedOffset.y};
+
+    SizeF scrollbarSize = {
+        overflow.y == Overflow::Scroll ? scrollbarWidth : 0.0f,
+        overflow.x == Overflow::Scroll ? scrollbarWidth : 0.0f};
+
+    Layout layout;
+    layout.order = candidate.order;
+    layout.size = finalSize;
+    layout.scrollableOverflowRect = layoutOutput.scrollableOverflowRect;
+    layout.scrollbarSize = scrollbarSize;
+    layout.location = location;
+    layout.padding = padding;
+    layout.border = border;
+    layout.margin = resolvedMargin;
+    tree->SetUnroundedLayout(candidate.node, layout);
+
+    if (!layoutOutput.oofCandidates.IsEmpty()) {
+        result.surfaced = layoutOutput.oofCandidates;
+    }
+
+    float relX = location.x - usedOffset.x;
+    PointF relativeLocation = {
+        IsRtl(direction) ? usedArea.w - relX - finalSize.w : relX,
+        location.y - usedOffset.y};
+    result.layout = layout;
+    bool isScrollContainer = IsScrollContainer(containerOverflow.x) ||
+                             IsScrollContainer(containerOverflow.y);
+    result.overflowContribution = ComputeScrollableOverflowContribution(
+        relativeLocation, finalSize, layoutOutput.scrollableOverflowRect,
+        overflow, contain, isScrollContainer);
+    return result;
+}
+
+void PerformOofLayout(TaffyTree* tree, NodeId nodeId, OofCandidates candidates,
+                      SizeF areaSize, PointF areaOffset, Direction direction,
+                      ContainingBlockClaims claims,
+                      PointOverflow containerOverflow, Vec<NodeId>* hoisted,
+                      OofCandidates* unclaimed, RectF* overflowOut) {
+    RectF absoluteOverflowRect = RectF::Zero();
+    if (candidates.IsEmpty()) {
+        *overflowOut = absoluteOverflowRect;
+        return;
+    }
+
+    Vec<OofCandidate> work;
+    for (int i = 0; i < len(candidates.inner); i++) {
+        const OofCandidate& candidate = candidates.inner[i];
+        if (claims.ForPosition(candidate.position)) {
+            VecAppend(work, candidate);
+        } else {
+            unclaimed->Push(candidate);
+        }
+    }
+
+    int index = 0;
+    while (index < len(work)) {
+        OofCandidate candidate = work[index];
+        index += 1;
+        VecAppend(*hoisted, candidate.node);
+        OofBoxLayout box =
+            LayoutOofBox(tree, candidate, areaSize, areaOffset, direction, true,
+                         nodeId, containerOverflow, nullptr);
+        if (!box.surfaced.IsEmpty()) {
+            box.surfaced.Translate(box.layout.location);
+        }
+        for (int s = 0; s < len(box.surfaced.inner); s++) {
+            const OofCandidate& surfaced = box.surfaced.inner[s];
+            if (claims.ForPosition(surfaced.position)) {
+                VecAppend(work, surfaced);
+            } else {
+                unclaimed->Push(surfaced);
+            }
+        }
+        absoluteOverflowRect = absoluteOverflowRect
+                                   .Union(box.overflowContribution);
+    }
+
+    *overflowOut = absoluteOverflowRect;
+}
+
+void ComputeOofLayout(TaffyTree* tree, NodeId node, LayoutOutput* output) {
+    if (!output->hasOofPositioningArea) {
+        return;
+    }
+    const Style& style = tree->GetStyle(node);
+    Direction direction = style.direction;
+    ContainingBlockClaims claims = ContainingBlockFor(style.position);
+    OofCandidates candidates = output->oofCandidates;
+    output->oofCandidates.Clear();
+
+    Vec<NodeId> hoisted;
+    OofCandidates unclaimed;
+    RectF overflow = RectF::Zero();
+    PerformOofLayout(tree, node, candidates, output->oofPositioningArea.size,
+                     output->oofPositioningArea.offset, direction, claims,
+                     style.overflow, &hoisted, &unclaimed, &overflow);
+    tree->ClearHoistedChildren(node);
+    tree->AddHoistedChildren(node, hoisted);
+    output->oofCandidates = unclaimed;
+    output->scrollableOverflowRect = output->scrollableOverflowRect
+                                         .Union(overflow);
 }
 
 }
@@ -219589,88 +227973,186 @@ int GridPlaceForTest(TaffyTree* tree, NodeId parent, uint16_t explicitColCount,
 namespace taffy {
 
 void ComputeRootLayout(TaffyTree* tree, NodeId root, SizeAvail availableSpace) {
-    SizeFOpt knownDimensions = SizeFOptNone();
     CalcResolver calc = tree->calc;
+    Position rootPosition = tree->GetStyle(root).position;
+    Direction rootDirection = tree->GetStyle(root).direction;
+    SizeFOpt icbSize = availableSpace.IntoOptions();
 
-    {
-        SizeFOpt parentSize = availableSpace.IntoOptions();
+    bool oofRoot =
+        IsOutOfFlow(rootPosition) && IsSome(icbSize.w) && IsSome(icbSize.h);
+
+    bool rootIsCached = false;
+    Layout layout;
+    OofCandidates candidates;
+
+    if (oofRoot) {
+        OofCandidate self;
+        self.node = root;
+        self.order = 0;
+        self.position = rootPosition;
+        float xAnchor = IsRtl(rootDirection) ? icbSize.w : 0.0f;
+        self.staticX = AxisStaticPosition::FromEdge(
+            xAnchor,
+            IsRtl(rootDirection) ? AxisStaticEdge::End : AxisStaticEdge::Start);
+        self.staticY =
+            AxisStaticPosition::FromEdge(0.0f, AxisStaticEdge::Start);
+
+        PointOverflow icbOverflow = {Overflow::Visible, Overflow::Visible};
+        OofBoxLayout box = LayoutOofBox(tree, self, {icbSize.w, icbSize.h},
+                                        {0.0f, 0.0f}, rootDirection, false,
+                                        root, icbOverflow, &rootIsCached);
+        layout = box.layout;
+        candidates = box.surfaced;
+    } else {
+        SizeFOpt knownDimensions = SizeFOptNone();
+
+        const Style& rootStyle = tree->GetStyle(root);
+        RectF rootMargin = rootStyle.margin.ResolveOrZero(
+            availableSpace.width.IntoOption(), calc);
+        SizeF rootMarginSum = rootMargin.SumAxes();
+        SizeAvail rootAvailableSpace = {
+            MaybeMax(MaybeSub(availableSpace.width, Some(rootMarginSum.w)),
+                     Some(0.0f)),
+            MaybeMax(MaybeSub(availableSpace.height, Some(rootMarginSum.h)),
+                     Some(0.0f))};
+
+        {
+            SizeFOpt parentSize = availableSpace.IntoOptions();
+            const Style& style = tree->GetStyle(root);
+
+            if (style.IsBlock()) {
+                Optf aspectRatio = style.aspectRatio;
+                RectF padding = style.padding.ResolveOrZero(parentSize.w, calc);
+                RectF border = style.border.ResolveOrZero(parentSize.w, calc);
+                SizeF paddingBorderSize = (padding + border).SumAxes();
+                SizeF boxSizingAdjustment =
+                    style.boxSizing == BoxSizing::ContentBox ? paddingBorderSize
+                                                             : SizeF::Zero();
+
+                SizeFOpt minSize =
+                    MaybeAdd(MaybeApplyAspectRatio(
+                                 style.minSize.MaybeResolve(parentSize, calc),
+                                 aspectRatio),
+                             boxSizingAdjustment);
+                SizeFOpt maxSize =
+                    MaybeAdd(MaybeApplyAspectRatio(
+                                 style.maxSize.MaybeResolve(parentSize, calc),
+                                 aspectRatio),
+                             boxSizingAdjustment);
+                SizeFOpt clampedStyleSize = MaybeClamp(
+                    MaybeAdd(MaybeApplyAspectRatio(
+                                 style.size.MaybeResolve(parentSize, calc),
+                                 aspectRatio),
+                             boxSizingAdjustment),
+                    minSize, maxSize);
+
+                SizeFOpt minMaxDefiniteSize = SizeFOptNone();
+                if (IsSome(minSize.w) && IsSome(maxSize.w) &&
+                    maxSize.w <= minSize.w) {
+                    minMaxDefiniteSize.w = minSize.w;
+                }
+                if (IsSome(minSize.h) && IsSome(maxSize.h) &&
+                    maxSize.h <= minSize.h) {
+                    minMaxDefiniteSize.h = minSize.h;
+                }
+
+                SizeFOpt availableSpaceBasedSize = SizeFOptNone();
+                availableSpaceBasedSize.w = rootAvailableSpace.width
+                                                .IntoOption();
+
+                SizeFOpt known = Or(knownDimensions, minMaxDefiniteSize);
+                known = Or(known, clampedStyleSize);
+                known = Or(known, availableSpaceBasedSize);
+                knownDimensions = MaybeMax(known, paddingBorderSize);
+            }
+        }
+
+        LayoutInput rootInput;
+        rootInput.knownDimensions = knownDimensions;
+        rootInput.parentSize = availableSpace.IntoOptions();
+        rootInput.availableSpace = rootAvailableSpace;
+        rootInput.sizingMode = SizingMode::InherentSize;
+        rootInput.axis = RequestedAxis::Both;
+        rootInput.runMode = RunMode::PerformLayout;
+        rootInput.verticalMarginsAreCollapsible = LineBool::False();
+        LayoutOutput cachedProbe;
+
+        rootIsCached = tree->CacheGet(root, rootInput, &cachedProbe);
+
+        LayoutOutput output = tree->PerformChildLayout(
+            root, knownDimensions, availableSpace.IntoOptions(),
+            rootAvailableSpace, SizingMode::InherentSize, LineBool::False());
+
         const Style& style = tree->GetStyle(root);
+        Optf widthOpt = availableSpace.width.IntoOption();
+        RectF padding = style.padding.ResolveOrZero(widthOpt, calc);
+        RectF border = style.border.ResolveOrZero(widthOpt, calc);
+        RectF margin = style.margin.ResolveOrZero(widthOpt, calc);
 
-        if (style.IsBlock()) {
-            Optf aspectRatio = style.aspectRatio;
-            RectF margin = style.margin.ResolveOrZero(parentSize.w, calc);
-            RectF padding = style.padding.ResolveOrZero(parentSize.w, calc);
-            RectF border = style.border.ResolveOrZero(parentSize.w, calc);
-            SizeF paddingBorderSize = (padding + border).SumAxes();
-            SizeF boxSizingAdjustment = style.boxSizing == BoxSizing::ContentBox
-                                            ? paddingBorderSize
-                                            : SizeF::Zero();
+        SizeF scrollbarSize = {
+            style.overflow.y == Overflow::Scroll ? style.scrollbarWidth : 0.0f,
+            style.overflow.x == Overflow::Scroll ? style.scrollbarWidth : 0.0f};
 
-            SizeFOpt minSize = MaybeAdd(
-                MaybeApplyAspectRatio(
-                    style.minSize.MaybeResolve(parentSize, calc), aspectRatio),
-                boxSizingAdjustment);
-            SizeFOpt maxSize = MaybeAdd(
-                MaybeApplyAspectRatio(
-                    style.maxSize.MaybeResolve(parentSize, calc), aspectRatio),
-                boxSizingAdjustment);
-            SizeFOpt clampedStyleSize = MaybeClamp(
-                MaybeAdd(
-                    MaybeApplyAspectRatio(
-                        style.size.MaybeResolve(parentSize, calc), aspectRatio),
-                    boxSizingAdjustment),
-                minSize, maxSize);
+        PointF location = {margin.left, margin.top};
+        if (IsRtl(style.direction) && IsSome(widthOpt)) {
+            location.x = widthOpt - output.size.w - margin.right;
+        }
 
-            SizeFOpt minMaxDefiniteSize = SizeFOptNone();
-            if (IsSome(minSize.w) && IsSome(maxSize.w) &&
-                maxSize.w <= minSize.w) {
-                minMaxDefiniteSize.w = minSize.w;
+        if (style.position == Position::Relative) {
+            RectFOpt inset = style.inset.MaybeResolveZip(icbSize, calc);
+            Optf negRight = inset.right;
+            if (IsSome(negRight)) {
+                negRight = -negRight;
             }
-            if (IsSome(minSize.h) && IsSome(maxSize.h) &&
-                maxSize.h <= minSize.h) {
-                minMaxDefiniteSize.h = minSize.h;
+            Optf negBottom = inset.bottom;
+            if (IsSome(negBottom)) {
+                negBottom = -negBottom;
             }
+            Optf dx = IsRtl(style.direction) ? Or(negRight, inset.left)
+                                             : Or(inset.left, negRight);
+            location.x += UnwrapOr(dx, 0.0f);
+            location.y += UnwrapOr(Or(inset.top, negBottom), 0.0f);
+        }
 
-            SizeFOpt availableSpaceBasedSize = SizeFOptNone();
-            availableSpaceBasedSize.w = MaybeSub(
-                availableSpace.width.IntoOption(), margin.HorizontalAxisSum());
+        layout.order = 0;
+        layout.location = location;
+        layout.size = output.size;
+        layout.scrollableOverflowRect = output.scrollableOverflowRect;
+        layout.scrollbarSize = scrollbarSize;
+        layout.padding = padding;
+        layout.border = border;
 
-            SizeFOpt known = Or(knownDimensions, minMaxDefiniteSize);
-            known = Or(known, clampedStyleSize);
-            known = Or(known, availableSpaceBasedSize);
-            knownDimensions = MaybeMax(known, paddingBorderSize);
+        layout.margin = margin;
+        tree->SetUnroundedLayout(root, layout);
+        candidates = output.oofCandidates;
+    }
+
+    if (!candidates.IsEmpty()) {
+        RectF areaInset = layout.border;
+        areaInset.right += layout.scrollbarSize.w;
+        areaInset.bottom += layout.scrollbarSize.h;
+        SizeF rootPaddingBox = layout.size - areaInset.SumAxes();
+        SizeF areaSize = rootPaddingBox;
+        PointF areaOffset = {areaInset.left, areaInset.top};
+        if (IsSome(icbSize.w)) {
+            areaSize.w = F32Max(icbSize.w - layout.scrollbarSize.w, 0.0f);
+            areaOffset.x = -layout.location.x;
+        }
+        if (IsSome(icbSize.h)) {
+            areaSize.h = F32Max(icbSize.h - layout.scrollbarSize.h, 0.0f);
+            areaOffset.y = -layout.location.y;
+        }
+        const Style& tailStyle = tree->GetStyle(root);
+        Vec<NodeId> hoisted;
+        OofCandidates unclaimed;
+        RectF overflow = RectF::Zero();
+        PerformOofLayout(tree, root, candidates, areaSize, areaOffset,
+                         rootDirection, ContainingBlockClaims::All(),
+                         tailStyle.overflow, &hoisted, &unclaimed, &overflow);
+        if (!rootIsCached) {
+            tree->AddHoistedChildren(root, hoisted);
         }
     }
-
-    LayoutOutput output = tree->PerformChildLayout(
-        root, knownDimensions, availableSpace.IntoOptions(), availableSpace,
-        SizingMode::InherentSize, LineBool::False());
-
-    const Style& style = tree->GetStyle(root);
-    Optf widthOpt = availableSpace.width.IntoOption();
-    RectF padding = style.padding.ResolveOrZero(widthOpt, calc);
-    RectF border = style.border.ResolveOrZero(widthOpt, calc);
-    RectF margin = style.margin.ResolveOrZero(widthOpt, calc);
-
-    SizeF scrollbarSize = {
-        style.overflow.y == Overflow::Scroll ? style.scrollbarWidth : 0.0f,
-        style.overflow.x == Overflow::Scroll ? style.scrollbarWidth : 0.0f};
-    PointF location;
-    if (IsRtl(style.direction) && IsSome(widthOpt)) {
-        location.x = widthOpt - output.size.w;
-    }
-
-    Layout layout;
-    layout.order = 0;
-    layout.location = location;
-    layout.size = output.size;
-    layout.contentSize = output.contentSize;
-    layout.scrollbarSize = scrollbarSize;
-    layout.padding = padding;
-    layout.border = border;
-
-    layout.margin = margin;
-    tree->SetUnroundedLayout(root, layout);
 }
 
 LayoutOutput ComputeHiddenLayout(TaffyTree* tree, NodeId node) {
@@ -219690,11 +228172,13 @@ static void RoundLayoutInner(TaffyTree* tree, NodeId nodeId, float cumulativeX,
     Layout unrounded = tree->GetUnroundedLayout(nodeId);
     Layout layout = unrounded;
 
+    float parentX = cumulativeX;
+    float parentY = cumulativeY;
     cumulativeX += unrounded.location.x;
     cumulativeY += unrounded.location.y;
 
-    layout.location.x = F32Round(unrounded.location.x);
-    layout.location.y = F32Round(unrounded.location.y);
+    layout.location.x = F32Round(cumulativeX) - F32Round(parentX);
+    layout.location.y = F32Round(cumulativeY) - F32Round(parentY);
     layout.size
         .w = F32Round(cumulativeX + unrounded.size.w) - F32Round(cumulativeX);
     layout.size
@@ -219721,16 +228205,31 @@ static void RoundLayoutInner(TaffyTree* tree, NodeId nodeId, float cumulativeX,
     layout.padding.bottom =
         F32Round(cumulativeY + unrounded.size.h) -
         F32Round(cumulativeY + unrounded.size.h - unrounded.padding.bottom);
-    layout.contentSize.w =
-        F32Round(cumulativeX + unrounded.contentSize.w) - F32Round(cumulativeX);
-    layout.contentSize.h =
-        F32Round(cumulativeY + unrounded.contentSize.h) - F32Round(cumulativeY);
+    layout.scrollableOverflowRect
+        .left = F32Round(cumulativeX + unrounded.scrollableOverflowRect.left) -
+                F32Round(cumulativeX);
+    layout.scrollableOverflowRect.right =
+        F32Round(cumulativeX + unrounded.scrollableOverflowRect.right) -
+        F32Round(cumulativeX);
+    layout.scrollableOverflowRect
+        .top = F32Round(cumulativeY + unrounded.scrollableOverflowRect.top) -
+               F32Round(cumulativeY);
+    layout.scrollableOverflowRect.bottom =
+        F32Round(cumulativeY + unrounded.scrollableOverflowRect.bottom) -
+        F32Round(cumulativeY);
 
     tree->SetFinalLayout(nodeId, layout);
 
     int n = tree->ChildCount(nodeId);
     for (int i = 0; i < n; i++) {
-        RoundLayoutInner(tree, tree->GetChildId(nodeId, i), cumulativeX,
+        NodeId child = tree->GetChildId(nodeId, i);
+        if (!IsOutOfFlow(tree->GetStyle(child).position)) {
+            RoundLayoutInner(tree, child, cumulativeX, cumulativeY);
+        }
+    }
+    int hoisted = tree->HoistedChildCount(nodeId);
+    for (int i = 0; i < hoisted; i++) {
+        RoundLayoutInner(tree, tree->HoistedChildAt(nodeId, i), cumulativeX,
                          cumulativeY);
     }
 }
@@ -219746,7 +228245,6 @@ LayoutOutput ComputeLeafLayout(const LayoutInput& inputs, const Style& style,
     SizeFOpt parentSize = inputs.parentSize;
     SizeAvail availableSpaceIn = inputs.availableSpace;
 
-    RectF margin = style.margin.ResolveOrZero(parentSize.w, calc);
     RectF padding = style.padding.ResolveOrZero(parentSize.w, calc);
     RectF border = style.border.ResolveOrZero(parentSize.w, calc);
     RectF paddingBorder = padding + border;
@@ -219788,10 +228286,10 @@ LayoutOutput ComputeLeafLayout(const LayoutInput& inputs, const Style& style,
 
     bool hasStylesPreventingBeingCollapsedThrough =
         !style.IsBlock() || IsScrollContainer(style.overflow.x) ||
-        IsScrollContainer(style.overflow.y) ||
-        style.position == Position::Absolute || padding.top > 0.0f ||
-        padding.bottom > 0.0f || border.top > 0.0f || border.bottom > 0.0f ||
-        (IsSome(nodeSize.h) && nodeSize.h > 0.0f) ||
+        IsScrollContainer(style.overflow.y) || IsOutOfFlow(style.position) ||
+        style.contain.EstablishesIndependentFormattingContext() ||
+        padding.top > 0.0f || padding.bottom > 0.0f || border.top > 0.0f ||
+        border.bottom > 0.0f || (IsSome(nodeSize.h) && nodeSize.h > 0.0f) ||
         (IsSome(nodeMinSize.h) && nodeMinSize.h > 0.0f);
 
     if (inputs.runMode == RunMode::ComputeSize &&
@@ -219808,8 +228306,7 @@ LayoutOutput ComputeLeafLayout(const LayoutInput& inputs, const Style& style,
     AvailableSpace availWidth =
         IsSome(knownDimensions.w) ? AvailableSpace::Definite(knownDimensions.w)
                                   : availableSpaceIn.width;
-    availableSpace.width = MaybeSub(availWidth, margin.HorizontalAxisSum())
-                               .MaybeSet(knownDimensions.w)
+    availableSpace.width = availWidth.MaybeSet(knownDimensions.w)
                                .MaybeSet(nodeSize.w);
     if (availableSpace.width.IsDefinite()) {
         availableSpace.width =
@@ -219820,8 +228317,7 @@ LayoutOutput ComputeLeafLayout(const LayoutInput& inputs, const Style& style,
     AvailableSpace availHeight =
         IsSome(knownDimensions.h) ? AvailableSpace::Definite(knownDimensions.h)
                                   : availableSpaceIn.height;
-    availableSpace.height = MaybeSub(availHeight, margin.VerticalAxisSum())
-                                .MaybeSet(knownDimensions.h)
+    availableSpace.height = availHeight.MaybeSet(knownDimensions.h)
                                 .MaybeSet(nodeSize.h);
     if (availableSpace.height.IsDefinite()) {
         availableSpace.height =
@@ -219849,7 +228345,18 @@ LayoutOutput ComputeLeafLayout(const LayoutInput& inputs, const Style& style,
 
     LayoutOutput out;
     out.size = size;
-    out.contentSize = measuredSize + padding.SumAxes();
+
+    bool isScrollContainer = IsScrollContainer(style.overflow.x) ||
+                             IsScrollContainer(style.overflow.y);
+    bool isRtl = IsRtl(style.direction);
+    float startPadding = isRtl ? padding.right : padding.left;
+    float endPadding = isRtl ? padding.left : padding.right;
+    out.scrollableOverflowRect = {
+        0.0f,
+        startPadding + measuredSize.w + (isScrollContainer ? endPadding : 0.0f),
+        0.0f,
+        padding.top + measuredSize.h +
+            (isScrollContainer ? padding.bottom : 0.0f)};
     out.marginsCanCollapseThrough = !hasStylesPreventingBeingCollapsedThrough &&
                                     size.h == 0.0f && measuredSize.h == 0.0f;
     return out;
@@ -219857,7 +228364,11 @@ LayoutOutput ComputeLeafLayout(const LayoutInput& inputs, const Style& style,
 
 AlignContentKeyword ApplyAlignmentFallback(float freeSpace, int numItems,
                                            AlignContent alignmentMode) {
-    AlignContentKeyword keyword = alignmentMode.keyword;
+
+    AlignContentKeyword keyword =
+        alignmentMode.keyword == AlignContentKeyword::Normal
+            ? AlignContentKeyword::Stretch
+            : alignmentMode.keyword;
     bool isSafe = alignmentMode.safety == AlignmentSafety::Safe;
 
     if (numItems <= 1 || freeSpace <= 0.0f) {
@@ -219898,6 +228409,7 @@ float ComputeAlignmentOffset(float freeSpace, int numItems, float gap,
                 return layoutIsFlexReversed ? 0.0f : freeSpace;
             case AlignContentKeyword::Center:
                 return freeSpace / 2.0f;
+            case AlignContentKeyword::Normal:
             case AlignContentKeyword::Stretch:
             case AlignContentKeyword::SpaceBetween:
                 return 0.0f;
@@ -219927,22 +228439,37 @@ float ComputeAlignmentOffset(float freeSpace, int numItems, float gap,
     }
 }
 
-SizeF ComputeContentSizeContribution(PointF location, SizeF size,
-                                     SizeF contentSize,
-                                     PointOverflow overflow) {
-    SizeF contribution = {
-        overflow.x == Overflow::Visible ? F32Max(size.w, contentSize.w)
-                                        : size.w,
-        overflow.y == Overflow::Visible ? F32Max(size.h, contentSize.h)
-                                        : size.h};
-    if (contribution.w > 0.0f && contribution.h > 0.0f) {
-        float maxX = F32Max(location.x + contribution.w, 0.0f);
-        float minX = F32Min(location.x, 0.0f);
-        float maxY = F32Max(location.y + contribution.h, 0.0f);
-        float minY = F32Min(location.y, 0.0f);
-        return {maxX - minX, maxY - minY};
+RectF ComputeScrollableOverflowContribution(PointF location, SizeF size,
+                                            RectF scrollableOverflowRect,
+                                            PointOverflow overflow,
+                                            Contain contain,
+                                            bool parentIsScrollContainer) {
+    bool isScrollContainer =
+        IsScrollContainer(overflow.x) || IsScrollContainer(overflow.y);
+
+    bool overflowIsContained = contain.ContainsScrollableOverflow();
+
+    bool propagatesX = !isScrollContainer && !overflowIsContained &&
+                       overflow.x == Overflow::Visible;
+    bool propagatesY = !isScrollContainer && !overflowIsContained &&
+                       overflow.y == Overflow::Visible;
+    SizeF endExtent = {
+        propagatesX ? F32Max(size.w, scrollableOverflowRect.right) : size.w,
+        propagatesY ? F32Max(size.h, scrollableOverflowRect.bottom) : size.h};
+    if (endExtent.w <= 0.0f || endExtent.h <= 0.0f) {
+        return RectF::Zero();
     }
-    return SizeF::Zero();
+    PointF startExtent = {
+        propagatesX ? F32Min(0.0f, scrollableOverflowRect.left) : 0.0f,
+        propagatesY ? F32Min(0.0f, scrollableOverflowRect.top) : 0.0f};
+    RectF contribution = {location.x + startExtent.x, location.x + endExtent.w,
+                          location.y + startExtent.y, location.y + endExtent.h};
+    bool whollyUnreachable =
+        contribution.right <= 0.0f || contribution.bottom <= 0.0f;
+    if (parentIsScrollContainer && whollyUnreachable) {
+        return RectF::Zero();
+    }
+    return contribution;
 }
 
 }
@@ -219960,6 +228487,15 @@ static Optf MaybeResolveRaw(CompactLength raw, Optf context,
             return Some(raw.Value());
         case CompactLength::kPercentTag:
             return IsSome(context) ? Some(context * raw.Value()) : None();
+
+        case CompactLength::kMinContentTag:
+        case CompactLength::kMaxContentTag:
+        case CompactLength::kFitContentPxTag:
+        case CompactLength::kFitContentPercentTag:
+        case CompactLength::kFitContentKeywordTag:
+        case CompactLength::kStretchTag:
+        case CompactLength::kContentTag:
+            return None();
         default:
             break;
     }
@@ -220063,11 +228599,18 @@ OriginZeroLine IntoOriginZeroLine(GridLine line, uint16_t explicitTrackCount) {
     return OriginZeroLine{(int16_t)value};
 }
 
+static uint16_t ClampGridSpan(uint16_t span) {
+    if (span < 1) {
+        return 1;
+    }
+    return span > kMaxGridTracks ? kMaxGridTracks : span;
+}
+
 static PlainPlacement IntoOriginZeroIgnoringNamed(const GridPlacement& p,
                                                   uint16_t explicitTrackCount) {
     switch (p.kind) {
         case GridPlacementKind::Span:
-            return PlainPlacement::Spanning(p.span);
+            return PlainPlacement::Spanning(ClampGridSpan(p.span));
         case GridPlacementKind::Line:
 
             if (p.line == 0) {
@@ -220110,7 +228653,7 @@ bool LinePlain::IsDefiniteGridLine() const {
 static PlainPlacement PlainIntoOriginZero(PlainPlacement p,
                                           uint16_t explicitTrackCount) {
     if (p.IsSpan()) {
-        return p;
+        return PlainPlacement::Spanning(ClampGridSpan(p.span));
     }
     if (p.IsLine()) {
         if (p.line == 0) {
@@ -220232,8 +228775,14 @@ Optf MaxTrackSizingFunction::DefiniteLimit(Optf parentSize,
         case CompactLength::kFitContentPercentTag:
             return IsSome(parentSize) ? Some(raw.Value() * parentSize) : None();
         default:
-            return DefiniteValue(parentSize, calc);
+            break;
     }
+    if (raw.IsFitContentCalc()) {
+        return IsSome(parentSize)
+                   ? Some(calc.Resolve(raw.CalcValue(), parentSize))
+                   : None();
+    }
+    return DefiniteValue(parentSize, calc);
 }
 
 Optf MinTrackSizingFunction::DefiniteValue(Optf parentSize,
@@ -220254,11 +228803,13 @@ Optf MinTrackSizingFunction::DefiniteValue(Optf parentSize,
 
 bool operator==(const Style& a, const Style& b) {
     return a.display == b.display && a.itemIsTable == b.itemIsTable &&
-           a.itemIsReplaced == b.itemIsReplaced && a.boxSizing == b.boxSizing &&
-           a.direction == b.direction &&
+           a.itemIsReplaced == b.itemIsReplaced &&
+           a.itemIsCompressibleReplaced == b.itemIsCompressibleReplaced &&
+           a.boxSizing == b.boxSizing && a.direction == b.direction &&
 
            a.overflow == b.overflow &&
            SameFloatBits(a.scrollbarWidth, b.scrollbarWidth) &&
+           a.contain == b.contain &&
 
            a.floatMode == b.floatMode && a.clear == b.clear &&
 
@@ -220278,6 +228829,7 @@ bool operator==(const Style& a, const Style& b) {
            a.textAlign == b.textAlign &&
 
            a.flexDirection == b.flexDirection && a.flexWrap == b.flexWrap &&
+           a.flexLineCount == b.flexLineCount &&
 
            a.flexBasis == b.flexBasis &&
            SameFloatBits(a.flexGrow, b.flexGrow) &&
@@ -220388,6 +228940,8 @@ static NodeId InsertNode(TaffyTree* tree, const Style& style) {
     d->generation = generation;
     d->alive = true;
     d->children.len = 0;
+    d->hoisted.len = 0;
+    d->gridOof.Clear();
     d->parent = NodeId{};
     d->hasParent = false;
 
@@ -220456,6 +229010,8 @@ void TaffyTree::Remove(NodeId node) {
             }
             p->children.len = w;
         }
+
+        MarkDirty(d->parent);
     }
 
     for (int i = 0; i < d->children.len; i++) {
@@ -220827,22 +229383,34 @@ void TaffyTree::CacheClear(NodeId node) {
     }
 }
 
-struct LeafMeasureCtx {
-    TaffyTree* tree;
-    NodeId node;
-    void* nodeContext;
-    const Style* style;
-};
-
-static SizeF LeafMeasureThunk(SizeFOpt knownDimensions,
-                              SizeAvail availableSpace, void* ctx) {
-    LeafMeasureCtx* c = (LeafMeasureCtx*)ctx;
-    if (!c->tree->measureFn) {
-        return SizeF::Zero();
+void TaffyTree::ClearHoistedChildren(NodeId node) {
+    NodeData* d = Get(node);
+    if (d) {
+        VecReset(d->hoisted);
     }
-    return c->tree
-        ->measureFn(knownDimensions, availableSpace, c->node, c->nodeContext,
-                    c->style, c->tree->measureUserData);
+}
+
+void TaffyTree::AddHoistedChildren(NodeId node, const Vec<NodeId>& ids) {
+    NodeData* d = Get(node);
+    if (!d) {
+        return;
+    }
+    for (int i = 0; i < len(ids); i++) {
+        VecAppend(d->hoisted, ids[i]);
+    }
+}
+
+int TaffyTree::HoistedChildCount(NodeId node) const {
+    NodeData* d = Get(node);
+    return d ? len(d->hoisted) : 0;
+}
+
+NodeId TaffyTree::HoistedChildAt(NodeId node, int index) const {
+    NodeData* d = Get(node);
+    if (!d || index < 0 || index >= len(d->hoisted)) {
+        return NodeId{};
+    }
+    return d->hoisted[index];
 }
 
 LayoutOutput TaffyTree::ComputeBlockChildLayout(NodeId node, LayoutInput inputs,
@@ -220858,20 +229426,27 @@ LayoutOutput TaffyTree::ComputeBlockChildLayout(NodeId node, LayoutInput inputs,
     }
     CacheKey key = CacheKey::From(inputs);
     LayoutOutput cached;
-    if (d->cache.GetWithKey(key, inputs.runMode, &cached)) {
+    if (d->cache.ModeMatches(inputs) &&
+        d->cache.GetWithKey(key, inputs.runMode, &cached)) {
         return cached;
     }
 
     Display displayMode = d->style.display;
     bool hasChildren = d->children.len > 0;
 
+    d->gridOof.Clear();
+
     LayoutOutput out;
     if (displayMode == Display::None) {
         out = ComputeHiddenLayout(this, node);
     } else if (!hasChildren) {
-        LeafMeasureCtx ctx = {this, node, d->hasContext ? d->context : nullptr,
-                              &d->style};
-        out = ComputeLeafLayout(inputs, d->style, calc, LeafMeasureThunk, &ctx);
+
+        if (measureFn) {
+            out = measureFn(inputs, node, d->hasContext ? d->context : nullptr,
+                            &d->style, measureUserData);
+        } else {
+            out = ComputeLeafLayout(inputs, d->style, calc, nullptr, nullptr);
+        }
     } else {
         switch (displayMode) {
             case Display::Block:
@@ -220887,6 +229462,10 @@ LayoutOutput TaffyTree::ComputeBlockChildLayout(NodeId node, LayoutInput inputs,
                 out = ComputeFlexboxLayout(this, node, inputs);
                 break;
         }
+    }
+
+    if (inputs.runMode == RunMode::PerformLayout) {
+        ComputeOofLayout(this, node, &out);
     }
 
     d->cache.StoreWithKey(key, inputs, out);
@@ -220967,10 +229546,13 @@ static void PrintNode(TaffyTree* tree, NodeId node, bool hasSibling,
 
     base::log(base::fmt(
         "%s%s%s [x: %-4g y: %-4g w: %-4g h: %-4g "
-        "content_w: %-4g content_h: %-4g",
+        "overflow: l:%g r:%g t:%g b:%g",
         Str(linesString), Str(fork), Str(displayStr), (double)layout.location.x,
         (double)layout.location.y, (double)layout.size.w, (double)layout.size.h,
-        (double)layout.contentSize.w, (double)layout.contentSize.h));
+        (double)layout.scrollableOverflowRect.left,
+        (double)layout.scrollableOverflowRect.right,
+        (double)layout.scrollableOverflowRect.top,
+        (double)layout.scrollableOverflowRect.bottom));
     base::log(
         base::fmt(" border: l:%g r:%g t:%g b:%g, "
                   "padding: l:%g r:%g t:%g b:%g] (%llu)\n",
@@ -221068,6 +229650,11 @@ CacheKey CacheKey::From(const LayoutInput& input) {
         SizeMixedCacheKey(input.knownDimensions, input.availableSpace);
     key.parentSize =
         (SizeOptionCacheKey(input.parentSize) & kNonSignBitsMask) | extraBits;
+
+    key.knownDimensionsAreDefiniteW =
+        input.knownDimensionsAreDefiniteW || !IsSome(input.knownDimensions.w);
+    key.knownDimensionsAreDefiniteH =
+        input.knownDimensionsAreDefiniteH || !IsSome(input.knownDimensions.h);
     return key;
 }
 
@@ -221075,31 +229662,16 @@ uint64_t CacheKey::XAxisParentSize() const {
     return parentSize & (kXAxisValueMask & kNonSignBitsMask);
 }
 
-static int ComputeCacheSlot(SizeFOpt knownDimensions,
-                            SizeAvail availableSpace) {
-    bool hasKnownWidth = IsSome(knownDimensions.w);
-    bool hasKnownHeight = IsSome(knownDimensions.h);
-
-    if (hasKnownWidth && hasKnownHeight) {
-        return 0;
-    }
-    bool heightIsMin = availableSpace.height
-                           .kind == AvailableSpace::Kind::MinContent;
-    bool widthIsMin = availableSpace.width
-                          .kind == AvailableSpace::Kind::MinContent;
-    if (hasKnownWidth && !hasKnownHeight) {
-        return 1 + (heightIsMin ? 1 : 0);
-    }
-    if (hasKnownHeight && !hasKnownWidth) {
-        return 3 + (widthIsMin ? 1 : 0);
-    }
-    if (!widthIsMin) {
-        return heightIsMin ? 6 : 5;
-    }
-    return heightIsMin ? 8 : 7;
+bool CacheKey::SizeIsValidFor(CacheKey other) const {
+    uint64_t entryAxis = parentSize & kBothSignBitsMask;
+    return entryAxis == kBothSignBitsMask ||
+           entryAxis == (other.parentSize & kBothSignBitsMask);
 }
 
-bool Cache::Get(const LayoutInput& input, LayoutOutput* out) const {
+bool Cache::Get(const LayoutInput& input, LayoutOutput* out) {
+    if (!ModeMatches(input)) {
+        return false;
+    }
     return GetWithKey(CacheKey::From(input), input.runMode, out);
 }
 
@@ -221107,7 +229679,7 @@ void Cache::Store(const LayoutInput& input, const LayoutOutput& output) {
     StoreWithKey(CacheKey::From(input), input, output);
 }
 
-bool Cache::GetWithKey(CacheKey key, RunMode runMode, LayoutOutput* out) const {
+bool Cache::GetWithKey(CacheKey key, RunMode runMode, LayoutOutput* out) {
     switch (runMode) {
         case RunMode::PerformLayout:
             if ((presentMask & kFinalBit) && finalLayoutEntry.key == key) {
@@ -221124,7 +229696,13 @@ bool Cache::GetWithKey(CacheKey key, RunMode runMode, LayoutOutput* out) const {
                 }
                 const CacheEntry<SizeF>& e = measureEntries[i];
                 if (e.key.kdAvailableSpace == key.kdAvailableSpace &&
-                    e.key.XAxisParentSize() == xAxis) {
+                    e.key.knownDimensionsAreDefiniteW ==
+                        key.knownDimensionsAreDefiniteW &&
+                    e.key.knownDimensionsAreDefiniteH ==
+                        key.knownDimensionsAreDefiniteH &&
+                    e.key.XAxisParentSize() == xAxis &&
+                    e.key.SizeIsValidFor(key)) {
+                    recentlyUsedEntries |= (uint16_t)(1u << i);
                     *out = LayoutOutput::FromOuterSize(e.content);
                     return true;
                 }
@@ -221138,6 +229716,15 @@ bool Cache::GetWithKey(CacheKey key, RunMode runMode, LayoutOutput* out) const {
 
 void Cache::StoreWithKey(CacheKey key, const LayoutInput& input,
                          const LayoutOutput& output) {
+
+    if (input.runMode == RunMode::PerformHiddenLayout) {
+        return;
+    }
+    uint8_t nextMode = CacheModeOf(input);
+    if (mode != nextMode) {
+        Clear();
+        mode = nextMode;
+    }
     switch (input.runMode) {
         case RunMode::PerformLayout:
             isEmpty = false;
@@ -221145,11 +229732,41 @@ void Cache::StoreWithKey(CacheKey key, const LayoutInput& input,
             finalLayoutEntry = {key, output};
             break;
         case RunMode::ComputeSize: {
+
+            if (output.marginsCanCollapseThrough ||
+                output.topMargin.positive != 0.0f ||
+                output.topMargin.negative != 0.0f ||
+                output.bottomMargin.positive != 0.0f ||
+                output.bottomMargin.negative != 0.0f) {
+                return;
+            }
             isEmpty = false;
-            int slot =
-                ComputeCacheSlot(input.knownDimensions, input.availableSpace);
-            presentMask |= MeasureBit(slot);
-            measureEntries[slot] = {key, output.size};
+            for (int i = 0; i < kCacheSize; i++) {
+                if ((presentMask & MeasureBit(i)) == 0) {
+                    continue;
+                }
+                if (measureEntries[i].key == key) {
+                    measureEntries[i].content = output.size;
+                    recentlyUsedEntries |= (uint16_t)(1u << i);
+                    return;
+                }
+            }
+            while ((recentlyUsedEntries & (uint16_t)(1u << nextMeasureEntry)) !=
+                   0) {
+                recentlyUsedEntries &= (uint16_t)~(1u << nextMeasureEntry);
+                nextMeasureEntry = (uint8_t)(nextMeasureEntry + 1);
+                if (nextMeasureEntry == (uint8_t)kCacheSize) {
+                    nextMeasureEntry = 0;
+                }
+            }
+            int entryIndex = nextMeasureEntry;
+            presentMask |= MeasureBit(entryIndex);
+            measureEntries[entryIndex] = {key, output.size};
+            recentlyUsedEntries |= (uint16_t)(1u << entryIndex);
+            nextMeasureEntry = (uint8_t)(nextMeasureEntry + 1);
+            if (nextMeasureEntry == (uint8_t)kCacheSize) {
+                nextMeasureEntry = 0;
+            }
             break;
         }
         default:
@@ -221164,6 +229781,8 @@ bool Cache::Clear() {
     isEmpty = true;
 
     presentMask = 0;
+    recentlyUsedEntries = 0;
+    nextMeasureEntry = 0;
     return true;
 }
 
@@ -221447,6 +230066,28 @@ void WebViewForward(WebView* self) {
     }
 }
 
+bool WebViewSetPageZoom(WebView* self, double zoom) {
+    wry::WebView* raw = WebViewRaw(self);
+    if (!self || !raw) {
+        return false;
+    }
+
+    self->zoom = zoom;
+    return wry::WebViewSetUserZoom(raw, zoom);
+}
+
+double WebViewPageZoom(const WebView* self) {
+    return self ? self->zoom : 1;
+}
+
+bool WebViewSetPageTheme(WebView* self, wry::Theme theme) {
+    wry::WebView* raw = WebViewRaw(self);
+    if (!raw) {
+        return false;
+    }
+    return wry::WebViewSetTheme(raw, theme);
+}
+
 struct PageClickJob {
     App* app = nullptr;
     EntityId id = {};
@@ -221572,26 +230213,27 @@ static void PaintWebView(PaintCtx* ctx, El* e, void* user) {
                          ? ClipIntersect(document, ctx->hitMask)
                          : document;
     bool empty = visible.w <= 0.f || visible.h <= 0.f;
-    bool partial = !empty && !BoundsSame(visible, document);
-    if (empty || (partial && PlatWebViewPartialClipHides())) {
-        if (partial && !self->clipWarned) {
-            self->clipWarned = true;
-            logf(
-                "webview: a partial clip needs a native composition "
-                "surface, so the view is hidden\n");
-        }
+    if (empty) {
         HideNative(self, raw);
         return;
     }
     bool same = self->hasApplied && BoundsSame(self->applied, document);
-    if (!same) {
-        self->applied = document;
-        self->hasApplied = true;
+    if (!same || self->geometryFailed) {
 
         wry::Rect r;
         r.position = wry::LogicalPosition(document.x, document.y);
         r.size = wry::LogicalSize(document.w, document.h);
-        wry::WebViewSetBounds(raw, r);
+        if (!wry::WebViewSetBounds(raw, r)) {
+            if (!self->geometryFailed) {
+                self->geometryFailed = true;
+                logf("WebView geometry update failed\n");
+            }
+            HideNative(self, raw);
+            return;
+        }
+        self->applied = document;
+        self->hasApplied = true;
+        self->geometryFailed = false;
     }
     if (!self->nativeShown) {
         wry::WebViewSetVisible(raw, true);
@@ -221827,6 +230469,16 @@ Str SyntheticMouseEventJsTemp(const SyntheticMouseEvent* ev) {
              "            window.history.forward();\n          }\n"
              "        }\n      })()"));
     return b.TakeStr();
+}
+
+static const char* gWebViewLastError = nullptr;
+
+Str WebViewLastError() {
+    return gWebViewLastError ? Str(gWebViewLastError) : Str();
+}
+
+void WebViewSetLastError(const char* message) {
+    gWebViewLastError = message;
 }
 
 }
@@ -224384,6 +233036,10 @@ static bool AccessibilityInvokePattern(const AccessibilityNode& node) {
              AccessibilitySelectionItemRole(node.info.role));
 }
 
+static float DipScale(const Window* win) {
+    return win && win->paint.dpi > 0 ? win->paint.dpi / 96.f : 1.f;
+}
+
 struct WinAccessibility : IRawElementProviderSimple,
                           IRawElementProviderFragment,
                           IRawElementProviderFragmentRoot {
@@ -224929,11 +233585,13 @@ HRESULT WinAccessibility::ElementProviderFromPoint(
     }
     POINT point = {(LONG)x, (LONG)y};
     ScreenToClient(hwnd, &point);
+    float scale = DipScale(win);
+    float px = (float)point.x / scale;
+    float py = (float)point.y / scale;
     int found = -1;
     for (int i = 0; i < win->accessibility.len; i++) {
         const Bounds& b = win->accessibility[i].bounds;
-        if ((float)point.x >= b.x && (float)point.x <= b.Right() &&
-            (float)point.y >= b.y && (float)point.y <= b.Bottom()) {
+        if (px >= b.x && px <= b.Right() && py >= b.y && py <= b.Bottom()) {
 
             found = i;
         }
@@ -225173,9 +233831,10 @@ HRESULT WinAccessibilityNode::GetPropertyValue(PROPERTYID property,
     } else if (property == UIA_IsOffscreenPropertyId && root->hwnd) {
         RECT client = {};
         GetClientRect(root->hwnd, &client);
+        float scale = DipScale(root->win);
         bool off = node->bounds.Right() <= 0 || node->bounds.Bottom() <= 0 ||
-                   node->bounds.x >= (float)client.right ||
-                   node->bounds.y >= (float)client.bottom;
+                   node->bounds.x * scale >= (float)client.right ||
+                   node->bounds.y * scale >= (float)client.bottom;
         VariantBool(out, off);
     }
     return S_OK;
@@ -225277,10 +233936,11 @@ HRESULT WinAccessibilityNode::get_BoundingRectangle(UiaRect* out) {
     }
     POINT origin = {};
     ClientToScreen(root->hwnd, &origin);
-    out->left = (float)origin.x + node->bounds.x;
-    out->top = (float)origin.y + node->bounds.y;
-    out->width = node->bounds.w;
-    out->height = node->bounds.h;
+    float scale = DipScale(root->win);
+    out->left = (float)origin.x + node->bounds.x * scale;
+    out->top = (float)origin.y + node->bounds.y * scale;
+    out->width = node->bounds.w * scale;
+    out->height = node->bounds.h * scale;
     return S_OK;
 }
 
@@ -226155,9 +234815,10 @@ HRESULT WinTextRange::GetBoundingRectangles(SAFEARRAY** out) {
     if (start != end) {
         POINT origin = {};
         ClientToScreen(root->hwnd, &origin);
-        double values[4] = {(double)origin.x + node->bounds.x,
-                            (double)origin.y + node->bounds.y, node->bounds.w,
-                            node->bounds.h};
+        double scale = DipScale(root->win);
+        double values[4] = {(double)origin.x + node->bounds.x * scale,
+                            (double)origin.y + node->bounds.y * scale,
+                            node->bounds.w * scale, node->bounds.h * scale};
         for (LONG i = 0; i < 4; i++) {
             HRESULT hr = SafeArrayPutElement(*out, &i, &values[i]);
             if (FAILED(hr)) {
@@ -228008,13 +236669,15 @@ int TextLayoutRangeRects(TextLayout* tl, Str s, int u8a, int u8b, Bounds* out,
         return 0;
     }
     (void)s;
-    float pad = BoxPad(tl);
     int n = 0;
+    int lineNo = 0;
     PangoLayoutIter* iter = pango_layout_get_iter(tl->layout);
     if (!iter) {
         return 0;
     }
     do {
+
+        int thisLine = lineNo++;
         PangoLayoutLine* line = pango_layout_iter_get_line_readonly(iter);
         if (!line) {
             continue;
@@ -228029,8 +236692,6 @@ int TextLayoutRangeRects(TextLayout* tl, Str s, int u8a, int u8b, Bounds* out,
         int x0 = 0, x1 = 0;
         pango_layout_line_index_to_x(line, lo, FALSE, &x0);
         pango_layout_line_index_to_x(line, hi, FALSE, &x1);
-        int y0 = 0, y1 = 0;
-        pango_layout_iter_get_line_yrange(iter, &y0, &y1);
 
         PangoRectangle logical = {};
         pango_layout_iter_get_line_extents(iter, nullptr, &logical);
@@ -228041,10 +236702,11 @@ int TextLayoutRangeRects(TextLayout* tl, Str s, int u8a, int u8b, Bounds* out,
             left = right;
             right = t;
         }
+
         out[n].x = left;
-        out[n].y = (float)y0 / PANGO_SCALE + pad;
+        out[n].y = (float)thisLine * tl->box;
         out[n].w = right - left;
-        out[n].h = (float)(y1 - y0) / PANGO_SCALE;
+        out[n].h = tl->box;
         n++;
     } while (n < max && pango_layout_iter_next_line(iter));
     pango_layout_iter_free(iter);
@@ -230362,7 +239024,6 @@ EM_JS(int, GpJsTextRangeRects,
     const c = G.measurer();
     const prev = c.font;
     c.font = e.font;
-    const pad = (e.box - e.natural) * 0.5;
     let n = 0;
     for (let i = 0; i < e.lines.length && n < max; i++) {
         const line = e.lines[i];
@@ -230376,10 +239037,11 @@ EM_JS(int, GpJsTextRangeRects,
         const x0 = c.measureText(line.slice(0, G.u16at(line, lo - start))).width;
         const x1 = c.measureText(line.slice(0, G.u16at(line, hi - start))).width;
         const o = (out >> 2) + n * 4;
+
         HEAPF32[o] = x0 + e.dx[i];
-        HEAPF32[o + 1] = pad + i * e.box;
+        HEAPF32[o + 1] = i * e.box;
         HEAPF32[o + 2] = x1 - x0;
-        HEAPF32[o + 3] = e.natural;
+        HEAPF32[o + 3] = e.box;
         n++;
     }
     c.font = prev;
@@ -231588,7 +240250,6 @@ bool PaintTargetBegin(PaintCtx* ctx, void* native, int pxW, int pxH) {
             delete t;
             return false;
         }
-        t->dc->SetDpi(96.f, 96.f);
         if (t->transparent) {
 
             t->dc->SetTextAntialiasMode(D2D1_TEXT_ANTIALIAS_MODE_GRAYSCALE);
@@ -231627,6 +240288,9 @@ bool PaintTargetBegin(PaintCtx* ctx, void* native, int pxW, int pxH) {
 
         scene::Invalidate(ctx);
     }
+
+    float dpi = ctx->dpi > 0 ? ctx->dpi : 96.f;
+    ctx->rt->rt->SetDpi(dpi, dpi);
     ctx->rt->rt->BeginDraw();
     ctx->rt->rt->SetTransform(D2D1::Matrix3x2F::Identity());
 
@@ -232222,8 +240886,10 @@ void PathRealize(PaintCtx* ctx, Path* p) {
         return;
     }
 
-    dc->CreateFilledGeometryRealization(g, D2D1_DEFAULT_FLATTENING_TOLERANCE,
-                                        &p->fillReal);
+    float dpi = ctx->dpi > 0 ? ctx->dpi : 96.f;
+    float tolerance = D2D1::ComputeFlatteningTolerance(
+        D2D1::Matrix3x2F::Identity(), dpi, dpi);
+    dc->CreateFilledGeometryRealization(g, tolerance, &p->fillReal);
 }
 
 static bool PathOffsetBegin(PaintCtx* ctx, float dx, float dy) {
@@ -237342,7 +246008,7 @@ static int KeyFor(KeySym ks) {
     return 0;
 }
 
-static int Utf8Next(const char* s, int len, uint32_t* out) {
+static int gpui_window_linux_Utf8Next(const char* s, int len, uint32_t* out) {
     if (len <= 0) {
         return 0;
     }
@@ -237398,7 +246064,7 @@ static int Utf8ByteOfChar(const char* s, int len, int chars) {
     int c = 0;
     while (i < len && c < chars) {
         uint32_t cp = 0;
-        int adv = Utf8Next(s + i, len - i, &cp);
+        int adv = gpui_window_linux_Utf8Next(s + i, len - i, &cp);
         if (adv <= 0) {
             break;
         }
@@ -237547,7 +246213,7 @@ static void OnKeyPress(Window* win, XKeyEvent* ke) {
     int i = 0;
     while (i < n) {
         uint32_t cp = 0;
-        int adv = Utf8Next(buf + i, n - i, &cp);
+        int adv = gpui_window_linux_Utf8Next(buf + i, n - i, &cp);
         if (adv <= 0) {
             break;
         }
@@ -237635,7 +246301,10 @@ static bool ClientDecorated(Window* win) {
 
 static int ResizeEdge(Window* win, int x, int y) {
     PlatWindow* pw = win->plat;
-    if (!pw || !ClientDecorated(win) || win->maximized) {
+
+    if (!pw || win->maximized ||
+        !component::WindowBorderOffersResize(
+            ClientDecorated(win), win->opts.resizable, win->tiling)) {
         return -1;
     }
 
@@ -239193,6 +247862,14 @@ Window* WindowOpen(App* app, Str title, int dipW, int dipH, WinOpts opts) {
                     (unsigned char*)&xdndVersion, 1);
     if (opts.borderless || opts.clientTitleBar) {
         SetUndecorated(pw->xwin);
+    }
+
+    if (!opts.resizable) {
+        XSizeHints hints = {};
+        hints.flags = PMinSize | PMaxSize;
+        hints.min_width = hints.max_width = dipW;
+        hints.min_height = hints.max_height = dipH;
+        XSetWMNormalHints(gDpy, pw->xwin, &hints);
     }
     AppSetTitle(win, title);
 
@@ -241365,15 +250042,21 @@ Window* WindowOpen(App* app, Str title, int dipW, int dipH, WinOpts opts) {
         return nullptr;
     }
     @autoreleasepool {
-        NSWindowStyleMask style =
-            NSWindowStyleMaskTitled | NSWindowStyleMaskClosable |
-            NSWindowStyleMaskMiniaturizable | NSWindowStyleMaskResizable;
+        NSWindowStyleMask style = NSWindowStyleMaskTitled |
+                                  NSWindowStyleMaskClosable |
+                                  NSWindowStyleMaskMiniaturizable;
+        if (opts.resizable) {
+            style |= NSWindowStyleMaskResizable;
+        }
         if (opts.clientTitleBar) {
             style |= NSWindowStyleMaskFullSizeContentView;
         }
         if (opts.borderless) {
-            style = NSWindowStyleMaskBorderless | NSWindowStyleMaskResizable |
-                    NSWindowStyleMaskMiniaturizable;
+            style =
+                NSWindowStyleMaskBorderless | NSWindowStyleMaskMiniaturizable;
+            if (opts.resizable) {
+                style |= NSWindowStyleMaskResizable;
+            }
         }
 
         NSRect screen = [[NSScreen mainScreen] visibleFrame];
@@ -242730,8 +251413,8 @@ static void ImeMoveCandidateWindow(Window* win, HIMC imc) {
     }
     float x = in->lastBounds.x + in->caretX - in->scrollX;
     float y = in->lastBounds.y - in->scrollY;
-
-    POINT pt = {(LONG)x, (LONG)(y + in->lastLineH)};
+    POINT pt = {DipToPx(&win->paint, x),
+                DipToPx(&win->paint, y + in->lastLineH)};
     COMPOSITIONFORM cf = {};
     cf.dwStyle = CFS_POINT;
     cf.ptCurrentPos = pt;
@@ -242803,6 +251486,31 @@ typedef UINT(WINAPI* GetDpiForWindowFn)(HWND);
 
 static GetDpiForWindowFn kNoDpiFn = (GetDpiForWindowFn)1;
 
+typedef UINT(WINAPI* GetDpiForSystemFn)();
+
+static float DpiOverride() {
+    static float dpi = -1;
+    if (dpi < 0) {
+        const char* env = getenv("GPUI_DPI");
+        dpi = env ? (float)atoi(env) : 0;
+        if (dpi < 48 || dpi > 960) {
+            dpi = 0;
+        }
+    }
+    return dpi;
+}
+
+static float DrawDpi(UINT monitorDpi) {
+    if (PaintGpuOn()) {
+        return 96;
+    }
+    float dpi = DpiOverride();
+    if (dpi > 0) {
+        return dpi;
+    }
+    return monitorDpi > 0 ? (float)monitorDpi : 96.f;
+}
+
 static float HostDpi(HWND hwnd) {
     static GetDpiForWindowFn getDpiForWindow = nullptr;
     if (!getDpiForWindow) {
@@ -242815,11 +251523,15 @@ static float HostDpi(HWND hwnd) {
             getDpiForWindow = kNoDpiFn;
         }
     }
-    UINT dpi = getDpiForWindow != kNoDpiFn ? getDpiForWindow(hwnd) : 96;
-    if (dpi == 0) {
-        dpi = 96;
-    }
-    return (float)dpi;
+    return DrawDpi(getDpiForWindow != kNoDpiFn ? getDpiForWindow(hwnd) : 96);
+}
+
+static float SystemDpi() {
+    HMODULE user = GetModuleHandleW(L"user32.dll");
+    auto getDpiForSystem =
+        user ? (GetDpiForSystemFn)GetProcAddress(user, "GetDpiForSystem")
+             : nullptr;
+    return DrawDpi(getDpiForSystem ? getDpiForSystem() : 96);
 }
 
 static void RenderFrame(Window* win) {
@@ -242829,14 +251541,14 @@ static void RenderFrame(Window* win) {
     }
     RECT rc = {};
     GetClientRect(hwnd, &rc);
-
-    win->paint.dpi = 96;
+    win->paint.dpi = HostDpi(hwnd);
     WINDOWPLACEMENT wp = {sizeof(wp)};
     GetWindowPlacement(hwnd, &wp);
     win->maximized = wp.showCmd == SW_SHOWMAXIMIZED;
     int pxW = rc.right - rc.left;
     int pxH = rc.bottom - rc.top;
-    WindowDrawFrame(win, hwnd, pxW, pxH, (float)pxW, (float)pxH);
+    WindowDrawFrame(win, hwnd, pxW, pxH, PxToDip(&win->paint, pxW),
+                    PxToDip(&win->paint, pxH));
 }
 
 static int BorderPx() {
@@ -243352,7 +252064,8 @@ static LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam,
             POINT pt = {GET_X_LPARAM(lParam), GET_Y_LPARAM(lParam)};
             ScreenToClient(hwnd, &pt);
 
-            if (ClientDecorated(win) && !IsZoomed(hwnd) && pt.y < BorderYPx()) {
+            if (ClientDecorated(win) && win->opts.resizable &&
+                !IsZoomed(hwnd) && pt.y < BorderYPx()) {
                 RECT rc = {};
                 GetClientRect(hwnd, &rc);
                 if (pt.x < BorderPx()) {
@@ -243398,6 +252111,8 @@ static LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam,
             SetWindowPos(hwnd, nullptr, r->left, r->top, r->right - r->left,
                          r->bottom - r->top, SWP_NOZORDER | SWP_NOACTIVATE);
             PaintTargetFree(&win->paint);
+
+            InvalidateRect(hwnd, nullptr, FALSE);
             return 0;
         }
         case WM_TIMER:
@@ -244392,10 +253107,16 @@ Window* WindowOpen(App* app, Str title, int dipW, int dipH, WinOpts opts) {
     win->plat = new PlatWindow();
 
     DWORD style = WS_OVERLAPPEDWINDOW;
+    if (!opts.resizable) {
+        style &= ~WS_THICKFRAME;
+    }
     if (ClientDecorated(win)) {
 
         style = WS_OVERLAPPEDWINDOW & ~WS_CAPTION;
-        style |= WS_THICKFRAME | WS_SYSMENU | WS_MINIMIZEBOX | WS_MAXIMIZEBOX;
+        style |= WS_SYSMENU | WS_MINIMIZEBOX | WS_MAXIMIZEBOX;
+        if (opts.resizable) {
+            style |= WS_THICKFRAME;
+        }
     }
 
     RECT wa = {0, 0, GetSystemMetrics(SM_CXSCREEN),
@@ -244403,8 +253124,11 @@ Window* WindowOpen(App* app, Str title, int dipW, int dipH, WinOpts opts) {
     SystemParametersInfoW(SPI_GETWORKAREA, 0, &wa, 0);
     int sx = wa.right - wa.left;
     int sy = wa.bottom - wa.top;
-    WindowClampToDisplay(&dipW, &dipH, sx, sy);
-    RECT wr = {0, 0, dipW, dipH};
+    float scale = SystemDpi() / 96.f;
+    WindowClampToDisplay(&dipW, &dipH, (int)((float)sx / scale),
+                         (int)((float)sy / scale));
+    RECT wr = {0, 0, (LONG)lroundf((float)dipW * scale),
+               (LONG)lroundf((float)dipH * scale)};
     AdjustWindowRectEx(&wr, style, FALSE, 0);
     int pxW = wr.right - wr.left;
     int pxH = wr.bottom - wr.top;
@@ -250431,11 +259155,11 @@ float PlatCaretWidth() {
 bool PlatScrollBounce() {
     return true;
 }
+bool PlatCleanOnEscape() {
+    return false;
+}
 bool PlatScrollBounceTouch() {
     return true;
-}
-bool PlatWebViewPartialClipHides() {
-    return false;
 }
 const char* PlatMonoFontName() {
     return "DejaVu Sans Mono";
@@ -250493,11 +259217,11 @@ float PlatCaretWidth() {
 bool PlatScrollBounce() {
     return true;
 }
-bool PlatScrollBounceTouch() {
+bool PlatCleanOnEscape() {
     return true;
 }
-bool PlatWebViewPartialClipHides() {
-    return false;
+bool PlatScrollBounceTouch() {
+    return true;
 }
 const char* PlatMonoFontName() {
     return "DejaVu Sans Mono";
@@ -250595,11 +259319,11 @@ float PlatCaretWidth() {
 bool PlatScrollBounce() {
     return false;
 }
+bool PlatCleanOnEscape() {
+    return true;
+}
 bool PlatScrollBounceTouch() {
     return false;
-}
-bool PlatWebViewPartialClipHides() {
-    return true;
 }
 const char* PlatMonoFontName() {
     return "DejaVu Sans Mono";
@@ -250698,11 +259422,11 @@ float PlatCaretWidth() {
 bool PlatScrollBounce() {
     return true;
 }
+bool PlatCleanOnEscape() {
+    return true;
+}
 bool PlatScrollBounceTouch() {
     return false;
-}
-bool PlatWebViewPartialClipHides() {
-    return true;
 }
 const char* PlatMonoFontName() {
     return "Menlo";
@@ -251131,10 +259855,10 @@ float PlatCaretWidth() {
 bool PlatScrollBounce() {
     return false;
 }
-bool PlatScrollBounceTouch() {
-    return false;
+bool PlatCleanOnEscape() {
+    return true;
 }
-bool PlatWebViewPartialClipHides() {
+bool PlatScrollBounceTouch() {
     return false;
 }
 const char* PlatMonoFontName() {
@@ -251526,10 +260250,10 @@ float PlatCaretWidth() {
 bool PlatScrollBounce() {
     return false;
 }
-bool PlatScrollBounceTouch() {
-    return false;
+bool PlatCleanOnEscape() {
+    return true;
 }
-bool PlatWebViewPartialClipHides() {
+bool PlatScrollBounceTouch() {
     return false;
 }
 const char* PlatMonoFontName() {
@@ -255022,11 +263746,14 @@ static bool EnsureGtk() {
 
     gtk_disable_setlocale();
     if (!gtk_init_check(nullptr, nullptr)) {
+
+        WebViewSetLastError("GTK could not open an X11 display");
         logf("wry: GTK could not open the X display\n");
         return false;
     }
     GdkDisplay* display = gdk_display_get_default();
     if (!display || !GDK_IS_X11_DISPLAY(display)) {
+        WebViewSetLastError("GTK did not open an X11 display");
         logf("wry: GTK did not open an X11 display\n");
         return false;
     }
@@ -255142,6 +263869,9 @@ struct WebView {
     bool followsParent = false;
 
     bool inspectorOpen = false;
+
+    double userZoom = 1;
+    float matchedScale = 1;
 
     Vec<Str> pendingScripts;
     bool pendingOpen = true;
@@ -256124,6 +264854,7 @@ WebView* WebViewNew(void* parentWindow, const WebViewAttributes* attrs,
     ::Window parent = (::Window)(uintptr_t)parentWindow;
     if (!parent) {
 
+        WebViewSetLastError("a webview needs an X11 window to go in");
         logf("wry: a webview needs an X11 window to go in\n");
         return nullptr;
     }
@@ -256135,6 +264866,7 @@ WebView* WebViewNew(void* parentWindow, const WebViewAttributes* attrs,
 
     ::Window container = CreateContainer(xdpy, parent, attrs, asChild);
     if (!container) {
+        WebViewSetLastError("could not make the webview's X11 window");
         logf("wry: could not make the webview's X11 window\n");
         return nullptr;
     }
@@ -256157,6 +264889,7 @@ WebView* WebViewNew(void* parentWindow, const WebViewAttributes* attrs,
         WebViewSetVisible(wv, false);
     }
     wv->hasX11 = true;
+    WebViewSetLastError(nullptr);
     if (!asChild) {
         XTrap trap(display);
         XSelectInput(xdpy, parent, StructureNotifyMask);
@@ -256400,6 +265133,14 @@ bool WebViewZoom(WebView* wv, double scaleFactor) {
     return true;
 }
 
+bool WebViewSetUserZoom(WebView* wv, double zoom) {
+    if (!wv || !(zoom > 0)) {
+        return false;
+    }
+    wv->userZoom = zoom;
+    return WebViewMatchPageScale(wv, wv->matchedScale);
+}
+
 bool WebViewMatchPageScale(WebView* wv, float gpuiScale) {
     if (!wv || !wv->webview) {
         return false;
@@ -256411,7 +265152,9 @@ bool WebViewMatchPageScale(WebView* wv, float gpuiScale) {
     if (gpuiScale <= 0) {
         gpuiScale = 1;
     }
-    return WebViewZoom(wv, (double)gpuiScale / (double)gdk);
+    wv->matchedScale = gpuiScale;
+
+    return WebViewZoom(wv, (double)gpuiScale / (double)gdk * wv->userZoom);
 }
 
 void WebViewSetPageClick(WebView* wv, WebViewPageClick fn, void* user) {
@@ -256432,8 +265175,13 @@ bool WebViewSetBackgroundColor(WebView* wv, Rgba color) {
     return true;
 }
 
-bool WebViewSetTheme(WebView*, Theme) {
-    return false;
+bool WebViewSetTheme(WebView*, Theme theme) {
+    GtkSettings* settings = gtk_settings_get_default();
+    if (settings) {
+        g_object_set(settings, "gtk-application-prefer-dark-theme",
+                     theme == Theme::Dark, nullptr);
+    }
+    return true;
 }
 bool WebViewSetMemoryUsageLevel(WebView*, MemoryUsageLevel) {
     return false;
@@ -256712,6 +265460,7 @@ static void wry_wry_linux_Unsupported() {
 }
 
 WebView* WebViewNew(void*, const WebViewAttributes*, bool) {
+    WebViewSetLastError("built without WebKitGTK, so there is no webview here");
     wry_wry_linux_Unsupported();
     return nullptr;
 }
@@ -256756,6 +265505,9 @@ bool WebViewFocusParent(WebView*) {
     return false;
 }
 bool WebViewZoom(WebView*, double) {
+    return false;
+}
+bool WebViewSetUserZoom(WebView*, double) {
     return false;
 }
 bool WebViewMatchPageScale(WebView*, float) {
@@ -258149,6 +266901,10 @@ bool WebViewZoom(WebView* wv, double scaleFactor) {
     return true;
 }
 
+bool WebViewSetUserZoom(WebView* wv, double zoom) {
+    return WebViewZoom(wv, zoom);
+}
+
 bool WebViewMatchPageScale(WebView*, float) {
     return true;
 }
@@ -258160,8 +266916,18 @@ bool WebViewSetBackgroundColor(WebView*, Rgba) {
     return true;
 }
 
-bool WebViewSetTheme(WebView*, Theme) {
-    return false;
+bool WebViewSetTheme(WebView* wv, Theme theme) {
+    if (!wv || !wv->webview) {
+        return false;
+    }
+    NSAppearanceName name = nil;
+    if (theme == Theme::Dark) {
+        name = NSAppearanceNameDarkAqua;
+    } else if (theme == Theme::Light) {
+        name = NSAppearanceNameAqua;
+    }
+    wv->webview.appearance = name ? [NSAppearance appearanceNamed:name] : nil;
+    return true;
 }
 
 bool WebViewSetMemoryUsageLevel(WebView*, MemoryUsageLevel) {
@@ -258533,6 +267299,9 @@ bool WebViewFocusParent(WebView*) {
     return false;
 }
 bool WebViewZoom(WebView*, double) {
+    return false;
+}
+bool WebViewSetUserZoom(WebView*, double) {
     return false;
 }
 bool WebViewMatchPageScale(WebView*, float) {
@@ -261605,7 +270374,7 @@ static HRESULT SetThemeInner(ICoreWebView2* webview, Theme theme) {
     return hr;
 }
 
-static bool SetTheme(ICoreWebView2* webview, Theme theme) {
+static bool wry_wry_win_SetTheme(ICoreWebView2* webview, Theme theme) {
     return SUCCEEDED(SetThemeInner(webview, theme));
 }
 
@@ -263495,6 +272264,10 @@ bool WebViewZoom(WebView* wv, double scaleFactor) {
     return SUCCEEDED(wv->controller->put_ZoomFactor(scaleFactor));
 }
 
+bool WebViewSetUserZoom(WebView* wv, double zoom) {
+    return WebViewZoom(wv, zoom);
+}
+
 bool WebViewMatchPageScale(WebView*, float) {
     return true;
 }
@@ -263512,7 +272285,7 @@ bool WebViewSetTheme(WebView* wv, Theme theme) {
     if (!wv) {
         return false;
     }
-    return SetTheme(wv->webview, theme);
+    return wry_wry_win_SetTheme(wv->webview, theme);
 }
 
 bool WebViewSetMemoryUsageLevel(WebView* wv, MemoryUsageLevel level) {
