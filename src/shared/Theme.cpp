@@ -1111,6 +1111,26 @@ Color ThemeNotificationsHighlightTextColor() {
     return GetThemeCol(gCurrentTheme->notificationHighlightTextColor, fallback);
 }
 
+// the padding around the citation hover preview's page snippet: the classic
+// tooltip yellow in a light theme, which glares in a dark one (#6328)
+Color ThemeHoverPreviewBackgroundColor() {
+    if (gUseHighContrast) {
+        return SysWindowBgColor();
+    }
+    Color fallback = ThemeHotBackgroundColor();
+    if (IsLightColor(ThemeWindowControlBackgroundColor())) {
+        fallback = MkRgb(255, 252, 200);
+    }
+    return GetThemeCol(gCurrentTheme->hoverPreviewBackgroundColor, fallback);
+}
+
+Color ThemeHoverPreviewEdgeColor() {
+    if (gUseHighContrast) {
+        return SysWindowTextColor();
+    }
+    return GetThemeCol(gCurrentTheme->hoverPreviewEdgeColor, ThemeHotEdgeColor());
+}
+
 // Links inside a warning notification. The theme's link color is picked to sit on
 // the window background and can vanish on the amber warning background (Dracula's
 // cyan, Choco's yellow). Links are underlined, so reusing the warning text color

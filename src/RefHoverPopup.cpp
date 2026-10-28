@@ -12,6 +12,7 @@
 #include "EngineBase.h"
 #include "RefHover.h"
 #include "RefHoverPopupCommon.h"
+#include "Theme.h"
 
 static int gClassRegistered = 0;
 
@@ -31,9 +32,12 @@ static LRESULT CALLBACK RefHoverWndProc(HWND hwnd, UINT msg, WPARAM wp, LPARAM l
         PAINTSTRUCT ps;
         HDC hdc = BeginPaint(hwnd, &ps);
 
-        HBRUSH hbg = CreateSolidBrush(MkRgb(255, 252, 200));
-        HdcFillRect(hdc, HwndClientRect(hwnd), hbg);
-        DeleteObject(hbg);
+        // themed edge, then the frame inside it (WS_BORDER would be system gray)
+        Rect rc = HwndClientRect(hwnd);
+        int edge = DpiScale(1);
+        HdcFillRect(hdc, rc, ThemeHoverPreviewEdgeColor());
+        Rect inner = {rc.x + edge, rc.y + edge, rc.dx - (2 * edge), rc.dy - (2 * edge)};
+        HdcFillRect(hdc, inner, ThemeHoverPreviewBackgroundColor());
 
         RefHoverState* s = (RefHoverState*)GetWindowLongPtrW(hwnd, GWLP_USERDATA);
         if (s && s->bmp) {
@@ -97,8 +101,8 @@ bool RefHoverPopupCreate(RefHoverState* s, HWND hwndCanvas) {
     if (!RegisterClassIfNeeded()) {
         return false;
     }
-    HWND hwnd = CreateWindowExW(WS_EX_TOOLWINDOW, kRefHoverClass, nullptr, WS_POPUP | WS_BORDER, 0, 0, 10, 10,
-                                hwndCanvas, nullptr, GetModuleHandleW(nullptr), nullptr);
+    HWND hwnd = CreateWindowExW(WS_EX_TOOLWINDOW, kRefHoverClass, nullptr, WS_POPUP, 0, 0, 10, 10, hwndCanvas, nullptr,
+                                GetModuleHandleW(nullptr), nullptr);
     if (!hwnd) {
         return false;
     }

@@ -609,16 +609,18 @@ static const FieldInfo gThemeFields[] = {
     {offsetof(Theme, notificationBackgroundColor), SettingType::Color, (intptr_t)""},
     {offsetof(Theme, notificationHighlightColor), SettingType::Color, (intptr_t)""},
     {offsetof(Theme, notificationHighlightTextColor), SettingType::Color, (intptr_t)""},
+    {offsetof(Theme, hoverPreviewBackgroundColor), SettingType::Color, (intptr_t)""},
+    {offsetof(Theme, hoverPreviewEdgeColor), SettingType::Color, (intptr_t)""},
     {offsetof(Theme, colorizeControls), SettingType::Bool, false},
 };
 static const StructInfo gThemeInfo = {
     sizeof(Theme),
-    18,
+    20,
     gThemeFields,
     "Name\0TextColor\0BackgroundColor\0ControlBackgroundColor\0ActiveTabBackgroundColor\0InactiveTabBackgroundColor\0Li"
     "nkColor\0DisabledTextColor\0DarkerTextColor\0HotBackgroundColor\0EdgeColor\0HotEdgeColor\0DisabledEdgeColor\0Error"
-    "BackgroundColor\0NotificationBackgroundColor\0NotificationHighlightColor\0NotificationHighlightTextColor\0Colorize"
-    "Controls",
+    "BackgroundColor\0NotificationBackgroundColor\0NotificationHighlightColor\0NotificationHighlightTextColor\0HoverPre"
+    "viewBackgroundColor\0HoverPreviewEdgeColor\0ColorizeControls",
     "name of the theme, as shown in the Settings / Theme menu\0color of text in menus, toolbar, tabs and "
     "sidebars\0background color of the window around the document\0background color of toolbar, tabs, sidebars and "
     "dialogs\0background color of the active tab; if empty, uses ControlBackgroundColor\0background color of inactive "
@@ -630,8 +632,9 @@ static const StructInfo gThemeInfo = {
     "empty, derived from the colors above\0background color of error messages; if empty, derived from the colors "
     "above\0background color of notification tips; if empty, derived from the colors above\0background color of a "
     "highlighted notification tip; if empty, derived from the colors above\0text color of a highlighted notification "
-    "tip; if empty, derived from the colors above\0if true, apply the theme colors to Windows controls and window "
-    "areas too",
+    "tip; if empty, derived from the colors above\0background of the citation hover preview's frame; if empty, pale "
+    "yellow in light themes, HotBackgroundColor in dark ones\0border color of the citation hover preview; if empty, "
+    "uses HotEdgeColor\0if true, apply the theme colors to Windows controls and window areas too",
     false};
 
 static const FieldInfo gTabFileFields[] = {
@@ -1339,16 +1342,18 @@ static const FieldInfo gTheme_1_Fields[] = {
     {offsetof(Theme, notificationBackgroundColor), SettingType::Color, (intptr_t)""},
     {offsetof(Theme, notificationHighlightColor), SettingType::Color, (intptr_t)""},
     {offsetof(Theme, notificationHighlightTextColor), SettingType::Color, (intptr_t)""},
+    {offsetof(Theme, hoverPreviewBackgroundColor), SettingType::Color, (intptr_t)""},
+    {offsetof(Theme, hoverPreviewEdgeColor), SettingType::Color, (intptr_t)""},
     {offsetof(Theme, colorizeControls), SettingType::Bool, false},
 };
 static const StructInfo gTheme_1_Info = {
     sizeof(Theme),
-    18,
+    20,
     gTheme_1_Fields,
     "Name\0TextColor\0BackgroundColor\0ControlBackgroundColor\0ActiveTabBackgroundColor\0InactiveTabBackgroundColor\0Li"
     "nkColor\0DisabledTextColor\0DarkerTextColor\0HotBackgroundColor\0EdgeColor\0HotEdgeColor\0DisabledEdgeColor\0Error"
-    "BackgroundColor\0NotificationBackgroundColor\0NotificationHighlightColor\0NotificationHighlightTextColor\0Colorize"
-    "Controls",
+    "BackgroundColor\0NotificationBackgroundColor\0NotificationHighlightColor\0NotificationHighlightTextColor\0HoverPre"
+    "viewBackgroundColor\0HoverPreviewEdgeColor\0ColorizeControls",
     "name of the theme, as shown in the Settings / Theme menu\0color of text in menus, toolbar, tabs and "
     "sidebars\0background color of the window around the document\0background color of toolbar, tabs, sidebars and "
     "dialogs\0background color of the active tab; if empty, uses ControlBackgroundColor\0background color of inactive "
@@ -1360,8 +1365,9 @@ static const StructInfo gTheme_1_Info = {
     "empty, derived from the colors above\0background color of error messages; if empty, derived from the colors "
     "above\0background color of notification tips; if empty, derived from the colors above\0background color of a "
     "highlighted notification tip; if empty, derived from the colors above\0text color of a highlighted notification "
-    "tip; if empty, derived from the colors above\0if true, apply the theme colors to Windows controls and window "
-    "areas too",
+    "tip; if empty, derived from the colors above\0background of the citation hover preview's frame; if empty, pale "
+    "yellow in light themes, HotBackgroundColor in dark ones\0border color of the citation hover preview; if empty, "
+    "uses HotEdgeColor\0if true, apply the theme colors to Windows controls and window areas too",
     false};
 
 static const FieldInfo gThemesFields[] = {

@@ -329,6 +329,18 @@ const theme: Field[] = [
     "",
     "text color of a highlighted notification tip; if empty, derived from the colors above",
   ).ver("3.7"),
+  field(
+    "HoverPreviewBackgroundColor",
+    Color,
+    "",
+    "background of the citation hover preview's frame; if empty, pale yellow in light themes, HotBackgroundColor in dark ones",
+  ).ver("3.7"),
+  field(
+    "HoverPreviewEdgeColor",
+    Color,
+    "",
+    "border color of the citation hover preview; if empty, uses HotEdgeColor",
+  ).ver("3.7"),
   field("ColorizeControls", Bool, false, "if true, apply the theme colors to Windows controls and window areas too"),
 ];
 

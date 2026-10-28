@@ -23,11 +23,7 @@
 #include "gui/DocCanvas.h"
 #include "RefHover.h"
 #include "RefHoverPopupCommon.h"
-
-// orig's WM_PAINT fills the popup with this before blitting the strip
-static Color RefHoverBg() {
-    return MkRgb(255, 252, 200);
-}
+#include "Theme.h"
 
 void RefHoverFreeRenderImage(RefHoverState* s) {
     if (!s || !s->renderImage) {
@@ -269,8 +265,8 @@ gp::El* RefHoverBuild(MainWindow* win, gp::Ctx* cx) {
                        ->W((float)rc.dx * k)
                        ->H((float)rc.dy * k)
                        ->Pad(border)
-                       ->Bg(ToGpui(RefHoverBg()))
-                       ->Border(1, ToGpui(kColBlack))
+                       ->Bg(ToGpui(ThemeHoverPreviewBackgroundColor()))
+                       ->Border(1, ToGpui(ThemeHoverPreviewEdgeColor()))
                        ->Cursor((gp::CursorKind)s->popupCursor)
                        ->OnMouseMove(gp::ListenTo(gRefHoverView, &RefHoverView::OnMove))
                        ->OnMouseDown(gp::ListenTo(gRefHoverView, &RefHoverView::OnDown))

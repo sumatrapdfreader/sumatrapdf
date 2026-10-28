@@ -186,6 +186,12 @@ struct Theme {
     // text color of a highlighted notification tip; if empty, derived from
     // the colors above
     ParsedColor notificationHighlightTextColor;
+    // background of the citation hover preview's frame; if empty, pale
+    // yellow in light themes, HotBackgroundColor in dark ones
+    ParsedColor hoverPreviewBackgroundColor;
+    // border color of the citation hover preview; if empty, uses
+    // HotEdgeColor
+    ParsedColor hoverPreviewEdgeColor;
     // if true, apply the theme colors to Windows controls and window areas
     // too
     bool colorizeControls;
