@@ -1299,10 +1299,20 @@ bool WindowHasDocumentLoading(MainWindow* win) {
     return false;
 }
 
-// an image next to the document with the same base name (Calibre puts a
+// ebook and comic formats, where a same-named image is a cover; next to a PDF
+// it's often unrelated (a plot exported as "a.pdf" and "a.png", #6414)
+static bool HasSiblingCover(FileType ft) {
+    return ft == FileType::Epub || ft == FileType::Mobi || ft == FileType::Fb2 || ft == FileType::Fb2z ||
+           ft == FileType::PalmDoc || ft == FileType::Lit || IsEngineCbxSupportedFileType(ft);
+}
+
+// an image next to an ebook with the same base name (Calibre puts a
 // "Title.jpg" cover next to "Title.epub") beats page 1 as the thumbnail
 TempStr FindCoverImageTemp(Str docPath) {
     static const char* kCoverExts[] = {".jpg", ".jpeg", ".png"};
+    if (!HasSiblingCover(GuessFileTypeFromName(docPath, true))) {
+        return {};
+    }
     TempStr noExt = path::GetPathNoExtTemp(docPath);
     for (const char* ext : kCoverExts) {
         TempStr cover = str::JoinTemp(noExt, Str(ext));

@@ -1,4 +1,4 @@
-// A sibling image with the book's base name (Calibre's "Title.epub" +
+// A sibling image with an ebook's base name (Calibre's "Title.epub" +
 // "Title.jpg"), or else the cover an EPUB declares in its OPF, is the home
 // page thumbnail instead of page 1 (issue #6236).
 // issue-6236.jpg is a solid red 200x300 JPEG:
@@ -63,8 +63,8 @@ function storedZip(entries: [string, Uint8Array][]): Buffer {
 
 // EPUB whose first spine page is text and whose OPF names a cover image the
 // EPUB 2 way (<meta name="cover">) or the EPUB 3 way (properties="cover-image");
-// the cover is not in the spine
-function writeEpubWithCover(path: string, version: 2 | 3): void {
+// the cover is not in the spine. Version 0 declares no cover
+function writeEpubWithCover(path: string, version: 0 | 2 | 3): void {
   const utf8 = (s: string) => new TextEncoder().encode(s);
   const container = `<?xml version="1.0"?>
 <container version="1.0" xmlns="urn:oasis:names:tc:opendocument:xmlns:container">
@@ -78,29 +78,32 @@ ${version === 2 ? '<meta name="cover" content="cover-img"/>' : ""}
 </metadata>
 <manifest>
 <item id="page" href="page.xhtml" media-type="application/xhtml+xml"/>
-<item id="cover-img" href="images/cover.jpg" media-type="image/jpeg"${version === 3 ? ' properties="cover-image"' : ""}/>
+${version === 0 ? "" : `<item id="cover-img" href="images/cover.jpg" media-type="image/jpeg"${version === 3 ? ' properties="cover-image"' : ""}/>`}
 </manifest>
 <spine><itemref idref="page"/></spine>
 </package>`;
   const page = `<?xml version="1.0"?>
 <html xmlns="http://www.w3.org/1999/xhtml"><head><title>p</title></head><body><p>Chapter one.</p></body></html>`;
-  const zip = storedZip([
+  const entries: [string, Uint8Array][] = [
     ["mimetype", utf8("application/epub+zip")],
     ["META-INF/container.xml", utf8(container)],
     ["OEBPS/content.opf", utf8(opf)],
     ["OEBPS/page.xhtml", utf8(page)],
-    ["OEBPS/images/cover.jpg", new Uint8Array(readFileSync(COVER))],
-  ]);
+  ];
+  if (version !== 0) {
+    entries.push(["OEBPS/images/cover.jpg", new Uint8Array(readFileSync(COVER))]);
+  }
+  const zip = storedZip(entries);
   writeFileSync(path, zip);
 }
 
 // mirrors GetThumbnailPathTemp: md5 of the path, lowercase hex, .png
-function thumbnailPath(appData: string, docPath: string): string {
+export function thumbnailPath(appData: string, docPath: string): string {
   const hash = new Bun.CryptoHasher("md5").update(docPath).digest("hex");
   return join(appData, "sumatrapdfcache", `${hash}.png`);
 }
 
-async function waitForFile(path: string, what: string): Promise<void> {
+export async function waitForFile(path: string, what: string): Promise<void> {
   const deadline = Date.now() + 15_000;
   while (Date.now() < deadline) {
     if (existsSync(path)) {
@@ -113,7 +116,7 @@ async function waitForFile(path: string, what: string): Promise<void> {
   throw new Error(`issue-6236: ${what}: thumbnail not written: ${path}`);
 }
 
-function centerPixel(path: string): [number, number, number] {
+export function centerPixel(path: string): [number, number, number] {
   const img = loadPng(path);
   return pngPixel(img, Math.floor(img.w / 2), Math.floor(img.h / 2));
 }
@@ -127,9 +130,9 @@ export async function testit(): Promise<void> {
     join(appData, "SumatraPDF-settings.txt"),
     ["UiLanguage = en", "CheckForUpdates = false", "RememberOpenedFiles = true", "ShowStartPage = true", ""].join("\n"),
   );
-  const withCover = join(root, "book.pdf");
+  const withCover = join(root, "book.epub");
   const plain = join(root, "plain.pdf");
-  copyFileSync(SRC_PDF, withCover);
+  writeEpubWithCover(withCover, 0);
   copyFileSync(COVER, join(root, "book.jpg"));
   copyFileSync(SRC_PDF, plain);
   const epub2 = join(root, "embedded2.epub");
@@ -140,7 +143,7 @@ export async function testit(): Promise<void> {
   const { proc, client } = await launchControlled(["-appdata", appData, withCover, plain, epub2, epub3]);
   try {
     await client.waitForRenderIdle();
-    await waitForFile(thumbnailPath(appData, withCover), "book.pdf");
+    await waitForFile(thumbnailPath(appData, withCover), "book.epub");
     await waitForFile(thumbnailPath(appData, plain), "plain.pdf");
     await waitForFile(thumbnailPath(appData, epub2), "embedded2.epub");
     await waitForFile(thumbnailPath(appData, epub3), "embedded3.epub");
