@@ -14088,6 +14088,11 @@ static HACCEL FindAcceleratorsForHwnd(HWND hwnd, HWND* hwndAccel, bool* forwardS
 // after Ctrl is up; F is CmdToggleFullscreen and steals find/search focus.
 static WPARAM gIgnoreRepeatKey = 0;
 
+static bool IsBrowserScrollKey(WPARAM key) {
+    return key == VK_LEFT || key == VK_RIGHT || key == VK_UP || key == VK_DOWN || key == VK_HOME || key == VK_END ||
+           key == VK_PRIOR || key == VK_NEXT;
+}
+
 static bool MaybeTranslateAccelerator(MSG& msg) {
     // TODO: why mouse events?
     bool doAccels = ((msg.message >= WM_KEYFIRST && msg.message <= WM_KEYLAST) ||
@@ -14218,6 +14223,17 @@ static bool MaybeTranslateAccelerator(MSG& msg) {
                 msg.hwnd = win->hwndCanvas;
                 return false;
             }
+        }
+    }
+
+    // In an HTML / Markdown / CHM tab the arrows, Home/End and PageUp/PageDown
+    // scroll the page, as they do when the browser itself has the focus. Their
+    // accelerators flip pages, so let FrameOnKeydown forward them (#6419).
+    if (msg.message == WM_KEYDOWN && !IsCtrlPressed() && !IsShiftPressed() && !IsAltPressed()) {
+        MainWindow* win = FindMainWindowByHwnd(msg.hwnd);
+        bool isFrameOrCanvas = win && (msg.hwnd == win->hwndFrame || msg.hwnd == win->hwndCanvas);
+        if (isFrameOrCanvas && IsBrowserDocController(win->ctrl) && IsBrowserScrollKey(msg.wParam)) {
+            return false;
         }
     }
 
