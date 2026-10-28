@@ -202,6 +202,7 @@ Annotations [
 	InkColor = #66ffff00
 	InkColors = #66ffff00 #668bf05d #6699defa #66f199d2 #66e24745
 	InkBorderWidth = 16
+	PopupFontSize = 0
 ]
 
 ExternalViewers [
