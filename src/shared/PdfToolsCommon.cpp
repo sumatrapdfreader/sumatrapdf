@@ -488,6 +488,8 @@ int ConvertPagesToImages(EngineBase* engine, int rotation, Str templatePath, con
         }
         px->xres = (float)dpi;
         px->yres = (float)dpi;
+        // the destination folder may not exist yet (issue #6424)
+        dir::CreateForFile(dest);
         bool ok = SavePixmapAsImageFile(px, dest);
         FreePixmap(px);
         if (!ok) {
