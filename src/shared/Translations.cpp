@@ -36,9 +36,16 @@ static TempStr UnescapeTemp(Str sOrig) {
             continue;
         }
         c2 = *src;
+        if (!c2) {
+            *dst++ = c;
+            break;
+        }
+        src++;
         switch (c2) {
             case '\\':
-                *dst++ = '\\';
+            case '"':
+            case '\'':
+                *dst++ = c2;
                 break;
             case 't':
                 *dst++ = '\t';
@@ -49,13 +56,27 @@ static TempStr UnescapeTemp(Str sOrig) {
             case 'r':
                 *dst++ = '\r';
                 break;
+            case 'x': {
+                // "\xC2\xB7" is the UTF-8 of U+00B7, as in the Tr() literal
+                int hi = str::HexDigitVal(src[0]);
+                int lo = hi < 0 ? -1 : str::HexDigitVal(src[1]);
+                if (lo < 0) {
+                    *dst++ = c;
+                    *dst++ = c2;
+                    break;
+                }
+                *dst++ = (char)(hi * 16 + lo);
+                src += 2;
+                break;
+            }
             default:
                 *dst++ = c;
+                *dst++ = c2;
                 break;
         }
-        src++;
     }
     *dst = 0;
+    s.len = (int)(dst - s.s);
     return s;
 }
 
@@ -297,6 +318,30 @@ void Destroy() {
 }
 
 } // namespace trans
+
+#if IS_DEBUG
+// translations.txt keeps C escapes; unescaped they must equal the compiled Tr() literal
+bool Translations_UnitTestUnescape() {
+    struct {
+        Str escaped;
+        Str want;
+    } tests[] = {
+        {StrL("Font \\\"%s\\\" not found"), StrL("Font \"%s\" not found")},
+        {StrL("Paused \\xC2\\xB7 %s"), StrL("Paused \xC2\xB7 %s")},
+        {StrL("a\\nb\\tc\\\\d\\re"), StrL("a\nb\tc\\d\re")},
+        {StrL("it\\'s"), StrL("it's")},
+    };
+    for (auto& t : tests) {
+        TempStr got = trans::UnescapeTemp(t.escaped);
+        // GetTranslation() matches on len first
+        if (len(got) != len(t.want) || !str::Eq(got, t.want)) {
+            logf("Translations_UnitTestUnescape: '%s' => '%s', want '%s'\n", t.escaped, got, t.want);
+            return false;
+        }
+    }
+    return true;
+}
+#endif
 
 Str Tr(Str s) {
     return trans::GetTranslation(s);

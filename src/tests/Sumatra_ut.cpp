@@ -92,6 +92,7 @@ void EngineDjvuDec_UnitTests();
 void Layout_UnitTests();
 void VirtCtrl_UnitTests();
 bool TableOfContents_UnitTestSnapshotNamedDest();
+bool Translations_UnitTestUnescape();
 bool MarkdownModel_UnitTestBrowserNavigationUrl();
 bool MarkdownToc_UnitTestHtmlLinks();
 bool MarkdownToc_UnitTestHtmlHeadings();
@@ -584,6 +585,7 @@ int RunAppUnitTests(bool forAi) {
     LayoutWin_UnitTests();
     VirtCtrl_UnitTests();
     utassert(TableOfContents_UnitTestSnapshotNamedDest());
+    utassert(Translations_UnitTestUnescape());
     utassert(MarkdownModel_UnitTestBrowserNavigationUrl());
     utassert(MarkdownToc_UnitTestHtmlLinks());
     utassert(MarkdownToc_UnitTestHtmlHeadings());
