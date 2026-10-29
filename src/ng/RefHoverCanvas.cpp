@@ -80,8 +80,22 @@ static bool IsPopupLink(RefHoverState* s, IPageElement* el) {
     return shown || pending;
 }
 
+// as in orig: a move reported at the same point (the mouse didn't move) must
+// not cancel or replace a popup
+static bool IsRepeatedMove(MainWindow* win, int x, int y) {
+    static MainWindow* lastWin = nullptr;
+    static Point lastPt{-1, -1};
+    bool same = win == lastWin && lastPt.x == x && lastPt.y == y;
+    lastWin = win;
+    lastPt = Point(x, y);
+    return same;
+}
+
 void RefHoverOnCanvasMouseMove(RefHoverState*& s, MainWindow* win, DocController* ctrl, ILinkHandler* linkHandler,
                                DisplayModel* dm, int x, int y, IPageElement* el, int srcPageNo, int hoverDelayMs) {
+    if (IsRepeatedMove(win, x, y)) {
+        return;
+    }
     if (hoverDelayMs < 0) {
         // no hover popups, so a shown one is from a click on an EPUB footnote
         // link: it stays while the cursor is on that link or on the popup. One

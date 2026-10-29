@@ -91,8 +91,22 @@ static bool IsPopupLink(RefHoverState* s, IPageElement* el) {
     return shown || pending;
 }
 
+// Windows sends WM_MOUSEMOVE without the mouse moving (a window appearing under
+// a resting cursor); such a move must not cancel or replace a popup
+static bool IsRepeatedMove(HWND hwndCanvas, int x, int y) {
+    static HWND lastHwnd = nullptr;
+    static Point lastPt{-1, -1};
+    bool same = hwndCanvas == lastHwnd && lastPt.x == x && lastPt.y == y;
+    lastHwnd = hwndCanvas;
+    lastPt = Point(x, y);
+    return same;
+}
+
 void RefHoverOnCanvasMouseMove(RefHoverState*& s, HWND hwndCanvas, DocController* ctrl, ILinkHandler* linkHandler,
                                DisplayModel* dm, int x, int y, IPageElement* el, int srcPageNo, int hoverDelayMs) {
+    if (IsRepeatedMove(hwndCanvas, x, y)) {
+        return;
+    }
     if (hoverDelayMs < 0) {
         // no hover popups, so a shown one is from a click on an EPUB footnote
         // link: it stays while the cursor is on that link or on the popup. One

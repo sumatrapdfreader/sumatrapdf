@@ -10,7 +10,7 @@ import { mkdirSync, rmSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 import { ControlClient, ControlCommand } from "./control";
 import { assemblePdf, runStandalone, tmpPath, USE_NG } from "./util";
-import { clientToScreen, getClientRect, postMessage, sleep } from "./winapi";
+import { clientToScreen, getClientRect, packCoords, postMessage, sendMessage, sleep, WM_MOUSEMOVE } from "./winapi";
 import { findCanvas, killAndWait, launchControlled, ngInput } from "./win-automation";
 
 export const WM_MOUSEWHEEL = 0x020a;
@@ -137,9 +137,19 @@ export async function testit(): Promise<void> {
     const x = Math.floor((rc.right - rc.left) / 2);
     const y = Math.floor((rc.bottom - rc.top) / 3);
     const onLink = clientToScreen(canvas, x, y);
+    // a resting cursor off the link: Windows sends its position again (a
+    // window appearing under it) without the mouse moving, which must not
+    // cancel the popup
+    const resting = packCoords(5, 5);
+    if (!USE_NG) {
+      sendMessage(canvas, WM_MOUSEMOVE, 0, resting);
+    }
     const res = await client.request(ControlCommand.TestRefHover, ["show", x, y]);
     if (res[0] !== 0) {
       throw new Error(`issue-6252: could not show the popup: ${res[1]}`);
+    }
+    if (!USE_NG) {
+      sendMessage(canvas, WM_MOUSEMOVE, 0, resting);
     }
     let p = await waitFor(client, "the popup did not open", (p) => p.visible && p.page === 2);
     const link = { x, y, scale: p.scale };
