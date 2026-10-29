@@ -1276,13 +1276,15 @@ static HWND GetClipboardOwnerWnd() {
 // --- end: merged from former src/common/win_util.cpp ---
 
 // OpenClipboard fails when another process still holds it (Explorer, a just-
-// exited Set-Clipboard). Retry briefly rather than silently dropping the copy.
+// exited Set-Clipboard, rdpclip syncing a change). Retry rather than silently
+// dropping the copy.
 bool OpenClipboardForUpdate() {
+    constexpr int kTries = 100; // 2 secs
     HWND owner = GetClipboardOwnerWnd();
     if (!owner) {
         return false;
     }
-    for (int i = 0; i < 10; i++) {
+    for (int i = 0; i < kTries; i++) {
         if (OpenClipboard(owner)) {
             if (EmptyClipboard()) {
                 return true;

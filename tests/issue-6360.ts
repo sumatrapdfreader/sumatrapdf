@@ -16,6 +16,7 @@ import {
   getClassName,
   getClientRect,
   getClipboardDibInfo,
+  holdClipboard,
   isWindowVisible,
   postMessage,
   sleep,
@@ -33,6 +34,7 @@ import {
 
 const IMG_DX = 4;
 const IMG_DY = 4;
+const kHoldMs = 1000;
 
 // one page that is mostly one 4x4 image of red and blue pixels
 function makePdf(): string {
@@ -116,7 +118,12 @@ export async function testit(): Promise<void> {
   const { proc, client, frame } = await launchControlled(["-view", "single page", "-zoom", "fit page", pdf]);
   try {
     await client.waitForRenderIdle();
+    // a clipboard listener holding the clipboard must delay the copy, not drop it
+    const held = holdClipboard(kHoldMs);
     await copyImageFromMenu(client, frame);
+    if (!(await held)) {
+      throw new Error("issue-6360: could not open the clipboard");
+    }
 
     // opening the clipboard while the app copies would make its OpenClipboard fail
     const deadline = Date.now() + 5000;
