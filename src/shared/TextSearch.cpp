@@ -65,6 +65,7 @@ void TextSearch::Clear() {
 void TextSearch::Reset() {
     pageText = {};
     pageTextLen = 0;
+    ResetByteIdx();
     TextSelection::Reset();
 }
 
@@ -206,6 +207,7 @@ void TextSearch::SetLastResult(TextSelection* sel) {
     findPage = std::max(startPage, endPage);
     findIndex = (findPage == endPage ? endGlyph : startGlyph);
     pageText = engine->GetTextForPage(findPage, &pageTextLen);
+    ResetByteIdx();
     forward = true;
 }
 
@@ -269,6 +271,24 @@ static bool StartsWithAtByte(Str text, int byteIdx, Str prefix) {
            memcmp(text.s + byteIdx, prefix.s, prefix.len) == 0;
 }
 
+void TextSearch::ResetByteIdx() const {
+    byteIdxCp = 0;
+    byteIdxByte = 0;
+}
+
+// Byte offset of codepoint cp in pageText. Continues from the last lookup so a
+// forward search walks each page once instead of rescanning from its start.
+int TextSearch::ByteIdxOf(int cp) const {
+    if (cp < byteIdxCp) {
+        ResetByteIdx();
+    }
+    while (byteIdxCp < cp && byteIdxByte < pageText.len) {
+        Utf8CodepointNext(pageText, byteIdxByte);
+        byteIdxCp++;
+    }
+    return byteIdxByte;
+}
+
 int TextSearch::FindAnchor() const {
     if (len(pageText) == 0 || len(anchor) == 0) {
         return -1;
@@ -282,7 +302,7 @@ int TextSearch::FindAnchor() const {
     int lastStart = matchCase ? end - anchorLen : end - 1;
     int result = -1;
     int start = forward ? findIndex : 0;
-    int byteIdx = Utf8CodepointToByteIndex(pageText, start);
+    int byteIdx = ByteIdxOf(start);
     for (int i = start; i <= lastStart; i++) {
         bool matches = matchCase ? StartsWithAtByte(pageText, byteIdx, anchor)
                                  : MatchesFoldedAt(pageText, pageTextLen, i, byteIdx, anchor, anchorLen, end);
@@ -317,7 +337,7 @@ TextSearch::PageAndOffset TextSearch::MatchEnd(int startOff) const {
     int matchIdx = 0;
     int matchByteIdx = 0;
     int endIdx = startOff;
-    int endByteIdx = Utf8CodepointToByteIndex(currentPageText, endIdx);
+    int endByteIdx = ByteIdxOf(endIdx);
 
     if (matchWordStart && startOff > 0 && InsideWordAtByte(pageText, endByteIdx)) {
         return notFound;
@@ -523,6 +543,7 @@ TextSearch::PageSearchResult TextSearch::SearchPage(int pageNo) {
     Reset();
     bool abortSearch = false;
     pageText = GetSearchPageText(engine, pageNo, pageTextLen, progressCb, abortSearch);
+    ResetByteIdx();
     if (abortSearch) {
         return PageSearchResult::Canceled;
     }
@@ -541,6 +562,7 @@ TextSearch::PageSearchResult TextSearch::SearchPage(int pageNo) {
         if (findPage != r.page) {
             findPage = r.page;
             pageText = GetSearchPageText(engine, findPage, pageTextLen, progressCb, abortSearch);
+            ResetByteIdx();
             if (abortSearch) {
                 return PageSearchResult::Canceled;
             }
@@ -572,6 +594,10 @@ Vec<TextSel>* TextSearch::FindNext() {
     PageAndOffset finalGlyph;
     if (FindTextInPage(findPage, &finalGlyph)) {
         if (forward) {
+            // keep the byte cursor while the match ends on the same page
+            if (findPage != finalGlyph.page) {
+                ResetByteIdx();
+            }
             findPage = finalGlyph.page;
             findIndex = finalGlyph.offset;
             bool abortSearch = false;
