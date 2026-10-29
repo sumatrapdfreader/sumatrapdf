@@ -145,6 +145,8 @@ export enum ControlCommand {
   // orig: urls the current markdown document's browser view was served
   TestMarkdownServed = 139,
   TestTemporaryFile = 140,
+  // orig: [x, y] frame client point the auto-hide sidebar takes as the cursor; x < 0 clears
+  TestSidebarCursor = 141,
 }
 
 export type ControlArg = number | string | Uint8Array | ControlArg[];

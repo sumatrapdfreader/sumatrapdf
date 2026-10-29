@@ -5,9 +5,9 @@
 
 import { mkdirSync, rmSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
-import type { ControlClient, LayoutInfo, LayoutRect } from "./control.ts";
+import { type ControlClient, ControlCommand, type LayoutInfo, type LayoutRect } from "./control.ts";
 import { assemblePdf, cmdId, runStandalone, tmpPath, USE_NG } from "./util.ts";
-import { clientToScreen, getCursorPos, postMessage, setCursorPos, sleep } from "./winapi.ts";
+import { postMessage, sleep } from "./winapi.ts";
 import { findCanvas, killAndWait, launchControlled, ngInput, parkCursorAway, sendCommand } from "./win-automation.ts";
 
 const sidebarDx = 250;
@@ -47,18 +47,14 @@ async function waitSidebar(client: ControlClient, visible: boolean, what: string
   }
 }
 
-// orig polls GetCursorPos, so the cursor must really be there; ng takes the
-// move through TestInput
-async function moveCursor(client: ControlClient, frame: number, x: number, y: number): Promise<void> {
+// orig polls the cursor, overridden by TestSidebarCursor (a locked desktop
+// refuses SetCursorPos); ng takes the move through TestInput
+async function moveCursor(client: ControlClient, x: number, y: number): Promise<void> {
   if (USE_NG) {
     await ngInput(client, ["move", x, y, 0, 0]);
     return;
   }
-  const p = clientToScreen(frame, x, y);
-  const c = setCursorPos(p.x, p.y) ? getCursorPos() : null;
-  if (!c || c.x !== p.x || c.y !== p.y) {
-    throw new Error(`issue-5819: could not move the cursor to ${p.x},${p.y}`);
-  }
+  await client.request(ControlCommand.TestSidebarCursor, [x, y]);
 }
 
 export async function testit(): Promise<void> {
@@ -90,7 +86,7 @@ export async function testit(): Promise<void> {
 
     // the mouse at the left edge shows it over the canvas, which keeps its size
     const midY = canvas.y + Math.floor(canvas.dy / 2);
-    await moveCursor(client, frame, canvas.x + 2, midY);
+    await moveCursor(client, canvas.x + 2, midY);
     layout = await waitSidebar(client, true, "the mouse at the left edge should show the sidebar");
     const toc = item(layout, "sidebarTop").rect;
     const canvas2 = item(layout, "canvas").rect;
@@ -101,10 +97,10 @@ export async function testit(): Promise<void> {
     }
 
     // still shown over it, hidden once the mouse leaves it
-    await moveCursor(client, frame, toc.x + Math.floor(toc.dx / 2), midY);
+    await moveCursor(client, toc.x + Math.floor(toc.dx / 2), midY);
     await sleep(300);
     await waitSidebar(client, true, "the sidebar should stay while the mouse is over it");
-    await moveCursor(client, frame, toc.x + toc.dx + 100, midY);
+    await moveCursor(client, toc.x + toc.dx + 100, midY);
     await waitSidebar(client, false, "the sidebar should hide when the mouse leaves it");
 
     // F12 off and on puts the focus in the bookmarks, which shows them

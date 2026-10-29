@@ -65,6 +65,7 @@ bool AreLoadThreadsActive();
 // with their panes)
 void FrameSyncSplitters(MainWindow*);
 void UpdateSidebarOverlay(MainWindow*, SidebarOverlayUpdate);
+void SetSidebarTestCursor(Point pt);
 void SetAnnotCreateArgs(AnnotCreateArgs&, CustomCommand*);
 void BeginPdfEditOperation(MainWindow*, const char* name);
 void EndPdfEditOperation(MainWindow*);
