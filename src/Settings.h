@@ -1206,6 +1206,9 @@ struct Settings {
     // if true, every document with bookmarks opens with the Bookmarks
     // sidebar, even one that was closed with it hidden
     bool alwaysShowSidebar;
+    // if true, a document without bookmarks (and with more than one page)
+    // opens with the sidebar showing page thumbnails
+    bool showThumbnailsIfNoToc;
     // if true, put the bookmarks / favorites sidebar on the right of the
     // window (left is the default; right-to-left UI languages already put
     // it on the right)

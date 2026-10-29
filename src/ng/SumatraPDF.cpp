@@ -1555,6 +1555,24 @@ MainWindow* LoadDocument(MainWindow* win, Str path, LoadPrefs prefs, LoadReuse r
     return LoadDocumentFinish(win, fullPath, ctrl, prefs, reuse, timeStart);
 }
 
+// ShowThumbnailsIfNoToc: a document without bookmarks opens with page
+// thumbnails in the sidebar's top panel instead of no sidebar (#6407).
+// Bookmarks still being generated from headings count as bookmarks
+static bool OpensWithThumbnails(MainWindow* win, WindowTab* tab) {
+    if (!gSettings->showThumbnailsIfNoToc || !tab || win->InPresentation()) {
+        return false;
+    }
+    // a top panel the user switched to favorites or thumbnails keeps that
+    if (tab->sidebarContent != SidebarContent::Bookmarks) {
+        return false;
+    }
+    DisplayModel* dm = tab->AsFixed();
+    if (!dm || dm->PageCount() < 2 || EngineMupdfHeadingTocPending(dm->GetEngine())) {
+        return false;
+    }
+    return !win->ctrl->HasToc();
+}
+
 // Puts a freshly created controller on screen.
 static MainWindow* LoadDocumentFinish(MainWindow* win, Str fullPath, DocController* ctrl, LoadPrefs prefs,
                                       LoadReuse reuse, TimeStamp timeStart) {
@@ -1801,6 +1819,10 @@ static MainWindow* LoadDocumentFinish(MainWindow* win, Str fullPath, DocControll
     if (win->InPresentation()) {
         // orig's LoadModelIntoTab: presentation mode has its own sidebar state
         showToc = tab->showTocPresentation;
+    }
+    if (OpensWithThumbnails(win, tab)) {
+        tab->sidebarContent = SidebarContent::Thumbnails;
+        showToc = true;
     }
     SetSidebarVisibility(win, showToc, gSettings->showFavorites);
 

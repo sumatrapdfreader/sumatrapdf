@@ -1808,6 +1808,24 @@ static void FinishPendingDocumentRelayout(MainWindow* win) {
 //   to be resized and placed
 static void SetTabLoadError(WindowTab* tab, Str path);
 
+// ShowThumbnailsIfNoToc: a document without bookmarks opens with page
+// thumbnails in the sidebar's top panel instead of no sidebar (#6407).
+// Bookmarks still being generated from headings count as bookmarks
+static bool OpensWithThumbnails(MainWindow* win, WindowTab* tab) {
+    if (!gSettings->showThumbnailsIfNoToc || !tab || win->presentation) {
+        return false;
+    }
+    // a top panel the user switched to favorites or thumbnails keeps that
+    if (tab->sidebarView != SidebarView::Bookmarks || !CanShowThumbnails(tab)) {
+        return false;
+    }
+    DisplayModel* dm = tab->AsFixed();
+    if (!dm || dm->PageCount() < 2 || EngineMupdfHeadingTocPending(dm->GetEngine())) {
+        return false;
+    }
+    return !win->ctrl->HasToc();
+}
+
 // placeWindow : if true then the Window will be moved/sized according
 //   to the 'state' information even if the window was already placed
 //   before (isNewWindow=false)
@@ -2169,6 +2187,10 @@ static void ReplaceDocumentInCurrentTab(LoadArgs* args, DocController* ctrl, Fil
 
     if (!IsMainWindowValidAndNotClosing(win)) {
         return;
+    }
+    if (OpensWithThumbnails(win, tab)) {
+        tab->sidebarView = SidebarView::Thumbnails;
+        showToc = true;
     }
     SetSidebarVisibility(win, showToc, gSettings->showFavorites);
     if (dm) {

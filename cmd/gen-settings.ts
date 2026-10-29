@@ -1605,6 +1605,13 @@ const globalPrefs: Field[] = [
       "even one that was closed with it hidden",
   ).ver("3.7"),
   field(
+    "ShowThumbnailsIfNoToc",
+    Bool,
+    false,
+    "if true, a document without bookmarks (and with more than one page) opens with " +
+      "the sidebar showing page thumbnails",
+  ).ver("3.7"),
+  field(
     "SidebarOnRight",
     Bool,
     false,
@@ -2319,6 +2326,7 @@ const globalPrefsLayout = [
   "SortFavoritesByName",
   "ShowToc",
   "AlwaysShowSidebar",
+  "ShowThumbnailsIfNoToc",
   "SidebarOnRight",
   "SidebarAutoHide",
   "SidebarWindowSize",
