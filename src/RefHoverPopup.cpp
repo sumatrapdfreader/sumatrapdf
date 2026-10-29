@@ -32,17 +32,24 @@ static LRESULT CALLBACK RefHoverWndProc(HWND hwnd, UINT msg, WPARAM wp, LPARAM l
         PAINTSTRUCT ps;
         HDC hdc = BeginPaint(hwnd, &ps);
 
+        RefHoverState* s = (RefHoverState*)GetWindowLongPtrW(hwnd, GWLP_USERDATA);
+        int border = DpiScale(kRefHoverBorder);
+
         // themed edge, then the frame inside it (WS_BORDER would be system gray)
+        // clipped to outside the bitmap: painting it under the bitmap flickers (#6428)
+        int savedDC = SaveDC(hdc);
+        if (s && s->bmp) {
+            ExcludeClipRect(hdc, border, border, border + s->bmp->width, border + s->bmp->height);
+        }
         Rect rc = HwndClientRect(hwnd);
         int edge = DpiScale(1);
         HdcFillRect(hdc, rc, ThemeHoverPreviewEdgeColor());
         Rect inner = {rc.x + edge, rc.y + edge, rc.dx - (2 * edge), rc.dy - (2 * edge)};
         HdcFillRect(hdc, inner, ThemeHoverPreviewBackgroundColor());
+        RestoreDC(hdc, savedDC);
 
-        RefHoverState* s = (RefHoverState*)GetWindowLongPtrW(hwnd, GWLP_USERDATA);
         if (s && s->bmp) {
             Size bmpSize = Size(s->bmp->width, s->bmp->height);
-            int border = DpiScale(kRefHoverBorder);
             HDC bmpDC = CreateCompatibleDC(hdc);
             HGDIOBJ oldBmp = bmpDC ? SelectObject(bmpDC, s->bmp->hbmp) : nullptr;
             if (oldBmp) {
