@@ -70,7 +70,13 @@ struct TextSearch : public TextSelection {
 
   private:
     int FindAnchor() const;
+    int ByteIdxOf(int cp) const;
+    void ResetByteIdx() const;
     int RestrictPage(Direction direction) const;
+
+    // last ByteIdxOf() lookup: codepoint index and its byte offset in pageText
+    mutable int byteIdxCp = 0;
+    mutable int byteIdxByte = 0;
 
     enum class PageSearchResult {
         Canceled,
