@@ -19,6 +19,9 @@ import { FRAME_CLASS, sendCommandSync } from "./win-automation";
 import { sleep, waitForTopWindow } from "./winapi";
 
 const HOST = "https://sumatrapdf.markdown/";
+// polls end as soon as the state is there; the limit is for a loaded machine
+// (pre-release runs tests next to a build, on an ASan exe)
+const SETTLE_MS = 10000;
 
 // 1x1 transparent png
 const PNG = Buffer.from(
@@ -92,7 +95,7 @@ export async function testit(): Promise<void> {
       const follow = async (href: string): Promise<Result> => {
         const res = await client.request(ControlCommand.TestMarkdownFollowLink, [href, 1]);
         const clicked = parse(String(res[1] ?? ""));
-        const deadline = Date.now() + 4000;
+        const deadline = Date.now() + SETTLE_MS;
         let settled = clicked;
         while (Date.now() < deadline) {
           const res2 = await client.request(ControlCommand.TestMarkdownFollowLink, ["", 0]);
@@ -137,26 +140,36 @@ export async function testit(): Promise<void> {
         fail(`opening sub/deep.pdf should have left 2 tabs, there are ${r.tabs.length}`, r);
       }
 
+      // let deep.pdf finish loading (a loading tab has no page yet), so the
+      // close below doesn't race the load
+      const tabsNow = async () =>
+        parse(String((await client.request(ControlCommand.TestMarkdownFollowLink, ["", 0]))[1] ?? ""));
+      const loadDeadline = Date.now() + SETTLE_MS;
+      r = await tabsNow();
+      while (Date.now() < loadDeadline && !r.tabs.some((t) => endsWithFile(t.file, "/sub/deep.pdf") && t.pageNo > 0)) {
+        await sleep(30);
+        r = await tabsNow();
+      }
+
       // Return to the markdown tab and reuse the process for the full virtual
       // URL form used by TOC destinations and new-window requests.
       sendCommandSync(frame, cmdId("CmdClose"));
-      const closeDeadline = Date.now() + 4000;
-      let markdownCurrent = false;
+      const closeDeadline = Date.now() + SETTLE_MS;
+      let closed = await tabsNow();
       while (Date.now() < closeDeadline) {
-        const closed = parse(String((await client.request(ControlCommand.TestMarkdownFollowLink, ["", 0]))[1] ?? ""));
         if (closed.tabs.length === 1 && endsWithFile(closed.tabs[0]!.file, "/index.md")) {
-          markdownCurrent = true;
           break;
         }
         await sleep(30);
+        closed = await tabsNow();
       }
-      if (!markdownCurrent) {
-        throw new Error("issue-5924: closing deep.pdf did not return to index.md");
+      if (closed.tabs.length !== 1 || !endsWithFile(closed.tabs[0]!.file, "/index.md")) {
+        fail("closing deep.pdf did not return to index.md", closed);
       }
 
       const res = await client.request(ControlCommand.TestMarkdownFollowLink, [`${HOST}doc.pdf`, 1]);
       const clicked = parse(String(res[1] ?? ""));
-      const deadline = Date.now() + 4000;
+      const deadline = Date.now() + SETTLE_MS;
       let settled = clicked;
       while (Date.now() < deadline) {
         const res2 = await client.request(ControlCommand.TestMarkdownFollowLink, ["", 0]);
