@@ -175,6 +175,7 @@ import { testit as issue6360 } from "./issue-6360.ts";
 import { testit as issue6361 } from "./issue-6361.ts";
 import { testit as issue6362 } from "./issue-6362.ts";
 import { testit as issue6276 } from "./issue-6276.ts";
+import { testit as issue6402 } from "./issue-6402.ts";
 import { testit as issue6279 } from "./issue-6279.ts";
 import { testit as issue6280 } from "./issue-6280.ts";
 import { testit as issue6322 } from "./issue-6322.ts";
@@ -533,6 +534,7 @@ export const tests: NamedTest[] = [
   ["issue-2423", issue2423],
   ["jpeg-xl-pdf", jpegXlPdf],
   ["issue-6276", issue6276],
+  ["issue-6402", issue6402],
   ["issue-6269", issue6269],
   ["toolbar-hover-dropdown", toolbarHoverDropdown],
   ["session-restore-tab-state", sessionRestoreTabState],

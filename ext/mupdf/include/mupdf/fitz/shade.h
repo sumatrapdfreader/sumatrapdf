@@ -96,6 +96,8 @@ typedef struct
 			int ydivs;
 			float domain[2][2];
 			float *fn_vals;
+			float *xs; /* xdivs+1 grid line positions in the domain, not evenly spaced */
+			float *ys; /* ydivs+1 */
 		} f;
 	} u;
 

@@ -93,30 +93,27 @@ fz_prepare_vertex(fz_context *ctx, fz_mesh_processor *painter, fz_vertex *v, fz_
 	}
 }
 
-/* largest power-of-two step dividing divs that keeps cells at most 2 device pixels long */
+/* index of the next grid line to draw after k: the farthest one at most 2 device pixels away (#6402) */
 static int
-type1_sample_step(int divs, float devlen)
+type1_next_line(const float *pos, int last, int k, float scale)
 {
-	int step = 1;
-	while ((divs % (step * 2)) == 0 && devlen * step * 2 / divs <= 2)
-		step *= 2;
-	return step;
+	int j = k + 1;
+	while (j < last && fabsf(pos[j + 1] - pos[k]) * scale <= 2)
+		j++;
+	return j;
 }
 
 static void
 fz_process_shade_type1(fz_context *ctx, fz_shade *shade, fz_matrix ctm, fz_mesh_processor *painter)
 {
 	float *p = shade->u.f.fn_vals;
+	const float *xs = shade->u.f.xs;
+	const float *ys = shade->u.f.ys;
 	int xdivs = shade->u.f.xdivs;
 	int ydivs = shade->u.f.ydivs;
-	float x0 = shade->u.f.domain[0][0];
-	float y0 = shade->u.f.domain[0][1];
-	float x1 = shade->u.f.domain[1][0];
-	float y1 = shade->u.f.domain[1][1];
-	int xx, yy;
-	int xstep, ystep;
+	int xx, yy, xn, yn;
+	float xscale, yscale;
 	int row;
-	float y, yn, x;
 	fz_vertex vs[2][2];
 	fz_vertex *v = vs[0];
 	fz_vertex *vn = vs[1];
@@ -124,35 +121,31 @@ fz_process_shade_type1(fz_context *ctx, fz_shade *shade, fz_matrix ctm, fz_mesh_
 
 	ctm = fz_concat(shade->u.f.matrix, ctm);
 
-	/* skip samples finer than a device pixel (#6402) */
-	xstep = type1_sample_step(xdivs, fabsf(x1 - x0) * sqrtf(ctm.a * ctm.a + ctm.b * ctm.b));
-	ystep = type1_sample_step(ydivs, fabsf(y1 - y0) * sqrtf(ctm.c * ctm.c + ctm.d * ctm.d));
+	xscale = sqrtf(ctm.a * ctm.a + ctm.b * ctm.b);
+	yscale = sqrtf(ctm.c * ctm.c + ctm.d * ctm.d);
 	row = (xdivs + 1) * n;
 
-	y = y0;
-	for (yy = 0; yy < ydivs; yy += ystep)
+	for (yy = 0; yy < ydivs; yy = yn)
 	{
-		float *r0 = p + yy * row;
-		float *r1 = r0 + ystep * row;
+		float *r0, *r1;
 
-		yn = y0 + (y1 - y0) * (yy + ystep) / ydivs;
+		yn = type1_next_line(ys, ydivs, yy, yscale);
+		r0 = p + yy * row;
+		r1 = p + yn * row;
 
-		x = x0;
+		fz_prepare_vertex(ctx, painter, &v[0], ctm, xs[0], ys[yy], r0);
+		fz_prepare_vertex(ctx, painter, &v[1], ctm, xs[0], ys[yn], r1);
 
-		fz_prepare_vertex(ctx, painter, &v[0], ctm, x, y, r0);
-		fz_prepare_vertex(ctx, painter, &v[1], ctm, x, yn, r1);
-
-		for (xx = 0; xx < xdivs; xx += xstep)
+		for (xx = 0; xx < xdivs; xx = xn)
 		{
-			x = x0 + (x1 - x0) * (xx + xstep) / xdivs;
+			xn = type1_next_line(xs, xdivs, xx, xscale);
 
-			fz_prepare_vertex(ctx, painter, &vn[0], ctm, x, y, r0 + (xx + xstep) * n);
-			fz_prepare_vertex(ctx, painter, &vn[1], ctm, x, yn, r1 + (xx + xstep) * n);
+			fz_prepare_vertex(ctx, painter, &vn[0], ctm, xs[xn], ys[yy], r0 + xn * n);
+			fz_prepare_vertex(ctx, painter, &vn[1], ctm, xs[xn], ys[yn], r1 + xn * n);
 
 			paint_quad(ctx, painter, &v[0], &vn[0], &vn[1], &v[1]);
 			SWAP(v,vn);
 		}
-		y = yn;
 	}
 }
 
@@ -1130,7 +1123,11 @@ fz_drop_shade_imp(fz_context *ctx, fz_storable *shade_)
 
 	fz_drop_colorspace(ctx, shade->colorspace);
 	if (shade->type == FZ_FUNCTION_BASED)
+	{
 		fz_free(ctx, shade->u.f.fn_vals);
+		fz_free(ctx, shade->u.f.xs);
+		fz_free(ctx, shade->u.f.ys);
+	}
 	fz_drop_compressed_buffer(ctx, shade->buffer);
 	fz_free(ctx, shade->function);
 	fz_free(ctx, shade);

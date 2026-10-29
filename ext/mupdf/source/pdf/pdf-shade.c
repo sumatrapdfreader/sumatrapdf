@@ -79,17 +79,127 @@ make_sampled_shade_function(fz_context *ctx, fz_shade *shade, int funcs, pdf_fun
 /* Type 1-3 -- Function-based, linear and radial shadings */
 
 #define FUNSEGS 64 /* size of sampled mesh for function-based shadings (256 was slow, #6402) */
+#define FUNSEG_DEPTH 6 /* how many times a cell is halved where the function jumps */
+#define FUNSEG_EXTRA 256 /* most grid lines added per axis */
+#define FUNSEG_JUMP 0.125f /* color difference between neighbouring samples that adds a line */
+
+/* grid lines along one axis: positions and, per line, samples across the other axis */
+typedef struct
+{
+	float *pos;
+	float *vals;
+	int count, cap, stride;
+	int added;
+} fun_lines;
+
+static void
+eval_fun_point(fz_context *ctx, int funcs, pdf_function **func, float x, float y, float *out, int n)
+{
+	float fv[2];
+	int i;
+
+	fv[0] = x;
+	fv[1] = y;
+	if (funcs == 1)
+	{
+		pdf_eval_function(ctx, func[0], fv, 2, out, n);
+		return;
+	}
+	for (i = 0; i < n; i++)
+		pdf_eval_function(ctx, func[i], fv, 2, out + i, 1);
+}
+
+/* samples of the line at t on axis (0: x, 1: y), at other[0..m) on the other axis */
+static void
+eval_fun_line(fz_context *ctx, int funcs, pdf_function **func, int n, int axis, float t, const float *other, int m, float *out)
+{
+	int i;
+
+	for (i = 0; i < m; i++, out += n)
+	{
+		if (axis == 0)
+			eval_fun_point(ctx, funcs, func, t, other[i], out, n);
+		else
+			eval_fun_point(ctx, funcs, func, other[i], t, out, n);
+	}
+}
+
+/* append a line at t and return its samples for the caller to fill */
+static float *
+add_fun_line(fz_context *ctx, fun_lines *lines, float t)
+{
+	if (lines->count == lines->cap)
+	{
+		int cap = lines->cap ? lines->cap * 2 : FUNSEGS + 1;
+		lines->pos = fz_realloc_array(ctx, lines->pos, cap, float);
+		lines->vals = fz_realloc_array(ctx, lines->vals, (size_t)cap * lines->stride, float);
+		lines->cap = cap;
+	}
+	lines->pos[lines->count] = t;
+	return lines->vals + (size_t)lines->count++ * lines->stride;
+}
+
+static int
+fun_lines_jump(const float *a, const float *b, int len)
+{
+	int i;
+
+	for (i = 0; i < len; i++)
+		if (fabsf(a[i] - b[i]) > FUNSEG_JUMP)
+			return 1;
+	return 0;
+}
+
+/* add lines strictly between a and b, halving the gap while neighbouring samples jump (#6402) */
+static void
+refine_fun_lines(fz_context *ctx, int funcs, pdf_function **func, int n, int axis, const float *other,
+	float a, const float *va, float b, const float *vb, int depth, float *scratch, fun_lines *out)
+{
+	int stride = out->stride;
+	float mid = (a + b) / 2;
+	float *vm = scratch + (size_t)depth * stride;
+
+	if (depth >= FUNSEG_DEPTH || out->added >= FUNSEG_EXTRA || !fun_lines_jump(va, vb, stride))
+		return;
+
+	eval_fun_line(ctx, funcs, func, n, axis, mid, other, stride / n, vm);
+	refine_fun_lines(ctx, funcs, func, n, axis, other, a, va, mid, vm, depth + 1, scratch, out);
+	memcpy(add_fun_line(ctx, out, mid), vm, stride * sizeof(float));
+	out->added++;
+	refine_fun_lines(ctx, funcs, func, n, axis, other, mid, vm, b, vb, depth + 1, scratch, out);
+}
+
+/* copy the lines of in to out, adding refined lines where the function jumps */
+static void
+refine_fun_axis(fz_context *ctx, int funcs, pdf_function **func, int n, int axis, const float *other,
+	fun_lines *in, float *scratch, fun_lines *out)
+{
+	int stride = in->stride;
+	int i;
+
+	for (i = 0; i < in->count; i++)
+	{
+		float *v = in->vals + (size_t)i * stride;
+		if (i > 0)
+			refine_fun_lines(ctx, funcs, func, n, axis, other, in->pos[i - 1], v - stride, in->pos[i], v, 0, scratch, out);
+		memcpy(add_fun_line(ctx, out, in->pos[i]), v, stride * sizeof(float));
+	}
+}
 
 static void
 pdf_load_function_based_shading(fz_context *ctx, pdf_document *doc, fz_shade *shade, pdf_obj *dict, int funcs, pdf_function **func)
 {
 	pdf_obj *obj;
 	float x0, y0, x1, y1;
-	float fv[2];
-	int xx, yy, zz;
-	int xdivs, ydivs;
+	float xs0[FUNSEGS + 1];
+	fun_lines rows = { 0 }, ys = { 0 }, cols = { 0 }, xs = { 0 };
+	float *scratch = NULL;
 	float *p;
+	int xx, yy, nx, ny;
 	int n = fz_colorspace_n(ctx, shade->colorspace);
+
+	if (funcs != 1 && funcs != n)
+		fz_throw(ctx, FZ_ERROR_SYNTAX, "Expected 1 2in, n-out function, or n 2 in, 1-out functions");
 
 	x0 = y0 = 0;
 	x1 = y1 = 1;
@@ -102,55 +212,77 @@ pdf_load_function_based_shading(fz_context *ctx, pdf_document *doc, fz_shade *sh
 		y1 = pdf_array_get_real(ctx, obj, 3);
 	}
 
-	xdivs = FUNSEGS;
-	ydivs = FUNSEGS;
-
 	shade->u.f.matrix = pdf_dict_get_matrix(ctx, dict, PDF_NAME(Matrix));
-	shade->u.f.xdivs = xdivs;
-	shade->u.f.ydivs = ydivs;
-	shade->u.f.fn_vals = Memento_label(fz_malloc(ctx, (xdivs+1)*(ydivs+1)*n*sizeof(float)), "shade_fn_vals");
 	shade->u.f.domain[0][0] = x0;
 	shade->u.f.domain[0][1] = y0;
 	shade->u.f.domain[1][0] = x1;
 	shade->u.f.domain[1][1] = y1;
 
-	p = shade->u.f.fn_vals;
-	if (funcs == 1)
+	for (xx = 0; xx <= FUNSEGS; xx++)
+		xs0[xx] = x0 + (x1 - x0) * xx / FUNSEGS;
+
+	/* sample a coarse grid, then add rows and columns where the function jumps:
+	 * a jump smeared over a coarse cell shows as a dark border (#6402) */
+	fz_var(scratch);
+	fz_var(rows.pos);
+	fz_var(rows.vals);
+	fz_var(ys.pos);
+	fz_var(ys.vals);
+	fz_var(cols.pos);
+	fz_var(cols.vals);
+	fz_var(xs.pos);
+	fz_var(xs.vals);
+	fz_try(ctx)
 	{
-		for (yy = 0; yy <= ydivs; yy++)
+		rows.stride = ys.stride = (FUNSEGS + 1) * n;
+		for (yy = 0; yy <= FUNSEGS; yy++)
 		{
-			fv[1] = y0 + (y1 - y0) * yy / ydivs;
-
-			for (xx = 0; xx <= xdivs; xx++)
-			{
-				fv[0] = x0 + (x1 - x0) * xx / xdivs;
-
-				pdf_eval_function(ctx, func[0], fv, 2, p, n);
-				p += n;
-			}
+			float y = y0 + (y1 - y0) * yy / FUNSEGS;
+			eval_fun_line(ctx, funcs, func, n, 1, y, xs0, FUNSEGS + 1, add_fun_line(ctx, &rows, y));
 		}
+		scratch = fz_malloc_array(ctx, (size_t)FUNSEG_DEPTH * rows.stride, float);
+		refine_fun_axis(ctx, funcs, func, n, 1, xs0, &rows, scratch, &ys);
+		ny = ys.count;
+
+		/* columns across all rows */
+		cols.stride = xs.stride = ny * n;
+		for (xx = 0; xx <= FUNSEGS; xx++)
+		{
+			float *c = add_fun_line(ctx, &cols, xs0[xx]);
+			for (yy = 0; yy < ny; yy++)
+				memcpy(c + yy * n, ys.vals + (size_t)yy * ys.stride + xx * n, n * sizeof(float));
+		}
+		scratch = fz_realloc_array(ctx, scratch, (size_t)FUNSEG_DEPTH * cols.stride, float);
+		refine_fun_axis(ctx, funcs, func, n, 0, ys.pos, &cols, scratch, &xs);
+		nx = xs.count;
+
+		shade->u.f.fn_vals = Memento_label(fz_malloc_array(ctx, (size_t)nx * ny * n, float), "shade_fn_vals");
+		p = shade->u.f.fn_vals;
+		for (yy = 0; yy < ny; yy++)
+			for (xx = 0; xx < nx; xx++, p += n)
+				memcpy(p, xs.vals + (size_t)xx * xs.stride + yy * n, n * sizeof(float));
+
+		shade->u.f.xdivs = nx - 1;
+		shade->u.f.ydivs = ny - 1;
+		shade->u.f.xs = xs.pos;
+		shade->u.f.ys = ys.pos;
+		xs.pos = NULL;
+		ys.pos = NULL;
 	}
-	else
+	fz_always(ctx)
 	{
-		if (funcs != n)
-			fz_throw(ctx, FZ_ERROR_SYNTAX, "Expected 1 2in, n-out function, or n 2 in, 1-out functions");
-
-		for (yy = 0; yy <= ydivs; yy++)
-		{
-			fv[1] = y0 + (y1 - y0) * yy / ydivs;
-
-			for (xx = 0; xx <= xdivs; xx++)
-			{
-				fv[0] = x0 + (x1 - x0) * xx / xdivs;
-
-				for (zz = 0; zz < n; zz++)
-				{
-					pdf_eval_function(ctx, func[zz], fv, 2, p, 1);
-					p ++;
-				}
-			}
-		}
+		fz_free(ctx, scratch);
+		fz_free(ctx, rows.pos);
+		fz_free(ctx, rows.vals);
+		fz_free(ctx, ys.pos);
+		fz_free(ctx, ys.vals);
+		fz_free(ctx, cols.pos);
+		fz_free(ctx, cols.vals);
+		fz_free(ctx, xs.pos);
+		fz_free(ctx, xs.vals);
 	}
+	fz_catch(ctx)
+		fz_rethrow(ctx);
 }
 
 static void
@@ -486,7 +618,7 @@ fz_shade_size(fz_context *ctx, fz_shade *s)
 	if (s->function_stride)
 		f = sizeof(float) * s->function_stride * 256;
 	if (s->type == FZ_FUNCTION_BASED)
-		return sizeof(*s) + sizeof(float) * s->u.f.xdivs * s->u.f.ydivs * fz_colorspace_n(ctx, s->colorspace) + f;
+		return sizeof(*s) + sizeof(float) * ((s->u.f.xdivs + 1) * (s->u.f.ydivs + 1) * fz_colorspace_n(ctx, s->colorspace) + s->u.f.xdivs + s->u.f.ydivs + 2) + f;
 	return sizeof(*s) + fz_compressed_buffer_size(s->buffer) + f;
 }
 
