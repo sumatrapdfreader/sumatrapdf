@@ -1124,7 +1124,9 @@ bool IsInTempDir(Str path) {
     if (len(dir) > 0 && !IsSep(dir.s[len(dir) - 1])) {
         dir = str::JoinTemp(dir, StrL("\\"));
     }
-    TempStr p = LongPathTemp(NormalizeTemp(path));
+    // long form of the parent: GetLongPathName() fails for a file that doesn't exist
+    TempStr p = NormalizeTemp(path);
+    p = path::JoinTemp(LongPathTemp(path::GetDirTemp(p)), path::GetBaseNameTemp(p));
     return len(p) > len(dir) && str::StartsWithI(p, dir);
 }
 
