@@ -40,6 +40,9 @@ bool IsSupportedConvertImageExt(Str path);
 bool PathHasPagePlaceholder(Str path);
 TempStr EnsurePagePlaceholderTemp(Str path, bool multiPage);
 TempStr WithDefaultImageExtTemp(Str path);
+int CountExistingImages(Str templatePath, const Vec<int>& pages);
+TempStr UniqueImagesTemplateTemp(Str templatePath, const Vec<int>& pages);
+TempStr ExistingImagesTextTemp(int nExisting);
 bool PagesFitDpi(EngineBase* engine, const Vec<int>& pages, int dpi);
 int ConvertPagesToImages(EngineBase* engine, int rotation, Str templatePath, const Vec<int>& pages, int dpi,
                          Str* firstPathOwnedOut);

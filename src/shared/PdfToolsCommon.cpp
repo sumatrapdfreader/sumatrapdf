@@ -440,6 +440,56 @@ static TempStr ReplacePagePlaceholderTemp(Str path, int pageNo) {
     return s;
 }
 
+// the template ConvertPagesToImages writes: with an image extension and, for
+// more than one page, <N>
+static TempStr ImagesTemplateTemp(Str templatePath, int nPages) {
+    TempStr withExt = WithDefaultImageExtTemp(templatePath);
+    if (len(withExt) == 0) {
+        return {};
+    }
+    return EnsurePagePlaceholderTemp(withExt, nPages > 1);
+}
+
+// how many of the files converting pages to templatePath writes already exist
+int CountExistingImages(Str templatePath, const Vec<int>& pages) {
+    TempStr templ = ImagesTemplateTemp(templatePath, len(pages));
+    if (len(templ) == 0) {
+        return 0;
+    }
+    int n = 0;
+    for (int pageNo : pages) {
+        if (file::Exists(ReplacePagePlaceholderTemp(templ, pageNo))) {
+            n++;
+        }
+    }
+    return n;
+}
+
+// templatePath with ".<k>" before the extension, the smallest k that
+// overwrites none of the files: book-<N>.png => book-<N>.1.png (#6439)
+TempStr UniqueImagesTemplateTemp(Str templatePath, const Vec<int>& pages) {
+    if (CountExistingImages(templatePath, pages) == 0) {
+        return str::DupTemp(templatePath);
+    }
+    TempStr templ = ImagesTemplateTemp(templatePath, len(pages));
+    TempStr noExt = path::GetPathNoExtTemp(templ);
+    TempStr ext = path::GetExtTemp(templ);
+    for (int k = 1; k < 10000; k++) {
+        TempStr candidate = fmt("%s.%d%s", noExt, k, ext);
+        if (CountExistingImages(candidate, pages) == 0) {
+            return candidate;
+        }
+    }
+    return str::DupTemp(templatePath);
+}
+
+TempStr ExistingImagesTextTemp(int nExisting) {
+    if (nExisting == 1) {
+        return str::DupTemp(Tr("1 file already exists"));
+    }
+    return fmt(Tr("%d files already exist").s, nExisting);
+}
+
 static bool PageFitsDpi(EngineBase* engine, int pageNo, int dpi) {
     float zoom = SaveSelectionZoom(engine, (float)dpi);
     int w = 0;
