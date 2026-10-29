@@ -66,6 +66,7 @@ TempStr AppShellPromptForFileTemp(MainWindow* win);
 // the same prompt with a title of its own (certificate, image, ...); filter is
 // orig's lpstrFilter with \1 for \0, which only Windows' dialog can apply
 TempStr AppShellPromptForPathTemp(MainWindow* win, Str title, Str filter, Str initialPath = {});
+TempStr AppShellPromptForFolderTemp(MainWindow* win, Str title);
 // false on a Linux without zenity / kdialog, which gpui's prompt runs
 bool AppShellHasOsFilePicker();
 // ng: where the platform's open prompt cannot answer at once (the browser's

@@ -52,6 +52,7 @@ extern "C" {
 #include "EbookBase.h"
 #include "ChmFile.h"
 #include "RefHover.h"
+#include "Notifications.h"
 #include "SumatraTest.h"
 
 // internal LZX test hook, defined in chm.c but not exposed in chm.h
@@ -1315,6 +1316,29 @@ TempStr RefHoverResultTemp(Str action, int x, int y, int* exitCodeOut) {
     auto& d = s->displayed;
     return fmt("OK visible=1 hwnd=%d page=%d y=%d zoom=%d x=%d", (int)(INT_PTR)s->hwndPopup, d.destPage,
                (int)d.region.y, (int)(d.userZoom * 100), (int)d.region.x);
+}
+
+// The current document: from a temporary folder?, is the notification about
+// that up, and its path. "dismiss" closes the notification the way its close
+// button does. Used by tests/issue-6437.ts
+TempStr TemporaryFileResultTemp(Str action, int* exitCodeOut) {
+    if (exitCodeOut) {
+        *exitCodeOut = 0;
+    }
+    MainWindow* win = len(gWindows) > 0 ? gWindows[0] : nullptr;
+    WindowTab* tab = win ? win->CurrentTab() : nullptr;
+    if (!tab || len(tab->filePath) == 0 || !win->IsDocLoaded()) {
+        if (exitCodeOut) {
+            *exitCodeOut = 2;
+        }
+        return str::DupTemp(StrL("NOTREADY no-doc"));
+    }
+    NotificationWnd* wnd = GetNotificationForGroup(win, kNotifTemporaryFile);
+    if (str::Eq(action, StrL("dismiss")) && wnd) {
+        CloseNotification(wnd, NotifCloseReason::User);
+    }
+    return fmt("OK temp=%d notif=%d show=%d path=%s", IsTemporaryFile(tab->filePath) ? 1 : 0, wnd ? 1 : 0,
+               gSettings->temporaryFileShowNotification ? 1 : 0, tab->filePath);
 }
 
 // The current tab's pages: each page's width, which a test gives a unique value

@@ -659,6 +659,8 @@ enum class ControlCmd : u16 {
     TestPageAdjust = 138,
     // urls the current markdown document's browser view was served
     TestMarkdownServed = 139,
+    // the current document: from a temporary folder?, its notification, its path
+    TestTemporaryFile = 140,
 };
 
 static_assert((u16)ControlCmd::Quit == (u16)ControlFrameCmd::Quit);
@@ -1488,6 +1490,13 @@ static void ExecuteControlRequest(ControlRequest* req) {
             }
             int exitCode = 0;
             Str res = MarkdownFollowLinkResultTemp(href, follow != 0, &exitCode);
+            AppendTestResult(req, exitCode, res);
+            break;
+        }
+
+        case ControlCmd::TestTemporaryFile: {
+            int exitCode = 0;
+            Str res = TemporaryFileResultTemp(StringArg(req, 0), &exitCode);
             AppendTestResult(req, exitCode, res);
             break;
         }

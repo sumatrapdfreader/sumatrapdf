@@ -340,3 +340,5 @@ void ShowFileInFolder(MainWindow* win, Str path);
 void SmartZoom(MainWindow* win, float factor, Point* pt, bool smartZoom);
 TempStr GetSumatraDataDirTemp();
 TempStr GetSumatraBuildSpecificDirTemp();
+
+extern Kind kNotifTemporaryFile;

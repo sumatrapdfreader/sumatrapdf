@@ -826,6 +826,8 @@ enum class ControlCmd : u16 {
     // [brightness, contrast] applied to the current file as the Brightness /
     // Contrast dialog's OK does; returns the current values
     TestPageAdjust = 138,
+    // the current document: from a temporary folder?, its notification, its path
+    TestTemporaryFile = 140,
 };
 
 static_assert((u16)ControlCmd::Quit == (u16)ControlFrameCmd::Quit);
@@ -2110,6 +2112,13 @@ static void ExecuteControlRequest(ControlRequest* req) {
             }
             SetChapterLayoutHold(hold != 0);
             AppendTestResult(req, 0, StrL("OK"));
+            break;
+        }
+
+        case ControlCmd::TestTemporaryFile: {
+            int exitCode = 0;
+            Str res = TemporaryFileResultTemp(StringArg(req, 0), &exitCode);
+            AppendTestResult(req, exitCode, res);
             break;
         }
 

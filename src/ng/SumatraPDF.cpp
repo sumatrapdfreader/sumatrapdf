@@ -1537,6 +1537,13 @@ MainWindow* LoadDocument(MainWindow* win, Str path, LoadPrefs prefs, LoadReuse r
     }
     auto timeStart = TimeGet();
     TempStr fullPath = path::NormalizeTemp(path);
+#if !OS_WASM
+    // TemporaryFileAutoMove: open the copy in TemporaryFileDestDir (#6437)
+    TempStr permanent = MaybeAutoCopyTemporaryFile(fullPath);
+    if (len(permanent) > 0) {
+        fullPath = permanent;
+    }
+#endif
     SumatraPasswordUI pwdUI;
     DocController* ctrl = CreateControllerForFile(win, fullPath, &pwdUI);
     if (!ctrl) {
@@ -1554,6 +1561,8 @@ MainWindow* LoadDocument(MainWindow* win, Str path, LoadPrefs prefs, LoadReuse r
     }
     return LoadDocumentFinish(win, fullPath, ctrl, prefs, reuse, timeStart);
 }
+
+static void MaybeShowTemporaryFileNotification(MainWindow* win, WindowTab* tab);
 
 // ShowThumbnailsIfNoToc: a document without bookmarks opens with page
 // thumbnails in the sidebar's top panel instead of no sidebar (#6407).
@@ -1825,6 +1834,7 @@ static MainWindow* LoadDocumentFinish(MainWindow* win, Str fullPath, DocControll
         showToc = true;
     }
     SetSidebarVisibility(win, showToc, gSettings->showFavorites);
+    MaybeShowTemporaryFileNotification(win, tab);
 
     UpdateWindowTitle(win);
     RebuildMenuBar(win);
@@ -2955,6 +2965,106 @@ struct RenameFileCtx {
 
 // the work half of Rename File: moves srcPath to dstPath and reloads the
 // document from there. false when the move failed
+static Kind kNotifTemporaryFile = "notifTemporaryFile";
+
+static void OnTemporaryFileNotifClosed(NotificationClosedEvent* ev) {
+    // closing it means "don't tell me again"
+    if (ev->reason == NotifCloseReason::User) {
+        gSettings->temporaryFileShowNotification = false;
+        ScheduleSaveSettings();
+    }
+    RemoveNotification(ev->wnd);
+}
+
+// TemporaryFileShowNotification: say the document is from a temporary folder
+// and offer to copy it to a permanent one, once per file (#6437)
+static void MaybeShowTemporaryFileNotification(MainWindow* win, WindowTab* tab) {
+#if OS_WASM
+    (void)win;
+    (void)tab;
+#else
+    if (!gSettings->temporaryFileShowNotification || !CanAccessDisk() || !tab) {
+        return;
+    }
+    if (tab->temporaryFileNotified || !IsTemporaryFile(tab->filePath)) {
+        return;
+    }
+    tab->temporaryFileNotified = true;
+    NotificationCreateArgs args;
+    args.win = win;
+    args.groupId = kNotifTemporaryFile;
+    args.tab = tab;
+    args.corner = NotifCorner::BottomLeft;
+    args.timeoutMs = kNotifNoTimeout;
+    args.msg = fmt("%s ([%s](Help/Handling-temporary-files)). [%s](CmdCopyTemporaryFileToNonTemporary)",
+                   Tr("File from a temporary folder"), Tr("learn more"), Tr("Copy to a permanent folder"));
+    args.onClosed = MkFunc1Void(OnTemporaryFileNotifClosed);
+    ShowNotification(args);
+#endif
+}
+
+// CmdCopyTemporaryFileToNonTemporary: copies the document from a temporary
+// folder to TemporaryFileDestDir (asked for when not set) and re-opens it from
+// there; its history entry moves along (#6437)
+static void CopyTemporaryFileToPermanent(MainWindow* win) {
+    if (!CanAccessDisk() || !win->IsDocLoaded()) {
+        return;
+    }
+    WindowTab* tab = win->CurrentTab();
+    TempStr srcPath = str::DupTemp(tab->filePath);
+    if (!IsTemporaryFile(srcPath) || !file::Exists(srcPath)) {
+        return;
+    }
+    TempStr dir = TemporaryFileDestDirTemp();
+    if (len(dir) == 0) {
+        dir = AppShellPromptForFolderTemp(win, Tr("Copy temporary files to"));
+        if (len(dir) == 0 || !dir::Exists(dir)) {
+            return;
+        }
+        str::ReplaceWithCopy(&gSettings->temporaryFileDestDir, dir);
+        ScheduleSaveSettings();
+    }
+    TempStr dstPath = CopyTemporaryFileTo(srcPath, dir);
+    if (len(dstPath) == 0) {
+        ShowWarningNotification(win, Tr("Failed to copy the file"), kNotif5SecsTimeOut);
+        return;
+    }
+    RemoveNotificationsForGroup(win, kNotifTemporaryFile);
+    UpdateTabFileDisplayStateForTab(tab);
+    RenameFileInHistory(srcPath, dstPath);
+    LoadDocument(win, dstPath, LoadPrefs::Save, LoadReuse::CurrentTab);
+    if (!IsMainWindowValidAndNotClosing(win)) {
+        return;
+    }
+    UpdateWindowTitle(win);
+    TabsUIOnTabsChanged(win);
+    ShowPlainNotification(win, fmt("%s %s", Tr("Copied to"), dstPath), kNotif5SecsTimeOut);
+}
+
+// The current document: from a temporary folder?, is the notification about
+// that up, and its path. "dismiss" closes the notification the way its close
+// button does. Used by tests/issue-6437.ts
+TempStr TemporaryFileResultTemp(Str action, int* exitCodeOut) {
+    if (exitCodeOut) {
+        *exitCodeOut = 0;
+    }
+    MainWindow* win = len(gWindows) > 0 ? gWindows[0] : nullptr;
+    WindowTab* tab = win ? win->CurrentTab() : nullptr;
+    if (!tab || len(tab->filePath) == 0 || !win->IsDocLoaded()) {
+        if (exitCodeOut) {
+            *exitCodeOut = 2;
+        }
+        return str::DupTemp(StrL("NOTREADY no-doc"));
+    }
+    NotificationWnd* wnd = GetNotificationForGroup(win, kNotifTemporaryFile);
+    if (str::Eq(action, StrL("dismiss")) && wnd) {
+        CloseNotification(wnd, NotifCloseReason::User);
+        wnd = GetNotificationForGroup(win, kNotifTemporaryFile);
+    }
+    return fmt("OK temp=%d notif=%d show=%d path=%s", IsTemporaryFile(tab->filePath) ? 1 : 0, wnd ? 1 : 0,
+               gSettings->temporaryFileShowNotification ? 1 : 0, tab->filePath);
+}
+
 static bool RenameCurrentFileTo(MainWindow* win, Str srcPath, Str dstPath) {
     dstPath = path::NormalizeTemp(dstPath);
     if (path::IsSame(path::NormalizeTemp(srcPath), dstPath)) {
@@ -5025,6 +5135,10 @@ void ExecuteCmd(MainWindow* win, int cmdId) {
 
         case CmdRenameFile:
             RenameCurrentFile(win);
+            break;
+
+        case CmdCopyTemporaryFileToNonTemporary:
+            CopyTemporaryFileToPermanent(win);
             break;
 
         case CmdDeleteFile:

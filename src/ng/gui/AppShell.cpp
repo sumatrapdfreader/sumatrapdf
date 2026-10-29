@@ -1213,6 +1213,19 @@ TempStr AppShellPromptForPathTemp(MainWindow* win, Str title, Str filter, Str in
     return str::DupTemp(FromGpui(path));
 }
 
+// a folder, with gpui's prompt (it has no initial folder)
+TempStr AppShellPromptForFolderTemp(MainWindow* win, Str title) {
+    if (!win || !win->gpuiWin) {
+        return {};
+    }
+    gp::PathPrompt prompt;
+    prompt.files = false;
+    prompt.directories = true;
+    prompt.title = ToGpui(title);
+    gp::TempStr path = gp::PromptForPathTemp(win->gpuiWin, prompt);
+    return str::DupTemp(FromGpui(path));
+}
+
 #if OS_WASM
 // WasmShell.js calls this. gpui leaves Ctrl+K / Cmd+K with the browser, so
 // the accelerator never runs.

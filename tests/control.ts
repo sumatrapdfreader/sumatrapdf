@@ -144,6 +144,7 @@ export enum ControlCommand {
   TestPageAdjust = 138,
   // orig: urls the current markdown document's browser view was served
   TestMarkdownServed = 139,
+  TestTemporaryFile = 140,
 }
 
 export type ControlArg = number | string | Uint8Array | ControlArg[];

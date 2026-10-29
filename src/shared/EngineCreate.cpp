@@ -254,6 +254,85 @@ void DeleteOpenCacheCopy(Str path) {
     file::Delete(path);
 }
 
+// A file the user can easily lose: in the temporary folder, in a host app's
+// cache (Outlook, OneNote) or our open-cache copy of one (#6437)
+bool IsTemporaryFile(Str path) {
+    return path::IsInTempDir(path) || path::IsEphemeralHostFile(path) || IsOpenCachePath(path);
+}
+
+// TemporaryFileDestDir when it names an existing folder
+TempStr TemporaryFileDestDirTemp() {
+    Str dir = gSettings->temporaryFileDestDir;
+    if (len(dir) == 0 || !dir::Exists(dir)) {
+        return {};
+    }
+    return str::DupTemp(dir);
+}
+
+static bool SameFileContent(Str path1, Str path2) {
+    if (file::GetSize(path1) != file::GetSize(path2)) {
+        return false;
+    }
+    Str d1 = file::ReadFile(path1);
+    Str d2 = file::ReadFile(path2);
+    bool same = len(d1) > 0 && str::Eq(d1, d2);
+    str::Free(d1);
+    str::Free(d2);
+    return same;
+}
+
+// Where src goes in dir: under its own name, or with ".<N>" before the
+// extension when that's taken (report.pdf, report.1.pdf, report.2.pdf). A file
+// there with the same content is used as is: *reuse is set then
+TempStr TemporaryFileCopyPathTemp(Str src, Str dir, bool* reuse) {
+    *reuse = false;
+    TempStr name = path::GetBaseNameTemp(src);
+    TempStr ext = path::GetExtTemp(name);
+    Str stem(name.s, len(name) - len(ext));
+    for (int n = 0;; n++) {
+        TempStr candidate = n == 0 ? name : fmt("%s.%d%s", stem, n, ext);
+        TempStr dst = path::JoinTemp(dir, candidate);
+        if (!file::Exists(dst)) {
+            return dst;
+        }
+        if (SameFileContent(src, dst)) {
+            *reuse = true;
+            return dst;
+        }
+    }
+}
+
+// Copies a temporary file into dir (see TemporaryFileCopyPathTemp). The
+// original stays: the app that made it may still need it. Returns the path
+// to open, {} on failure
+TempStr CopyTemporaryFileTo(Str src, Str dir) {
+    bool reuse = false;
+    TempStr dst = TemporaryFileCopyPathTemp(src, dir, &reuse);
+    if (reuse) {
+        logf("CopyTemporaryFileTo: '%s' is already in '%s'\n", src, dst);
+        return dst;
+    }
+    if (!CopyUnlockingSource(dst, src)) {
+        logf("CopyTemporaryFileTo: copy '%s' -> '%s' failed\n", src, dst);
+        return {};
+    }
+    logf("CopyTemporaryFileTo: '%s' -> '%s'\n", src, dst);
+    return dst;
+}
+
+// TemporaryFileAutoMove: a temporary file opens from its copy in
+// TemporaryFileDestDir. {} when that doesn't apply or the copy failed
+TempStr MaybeAutoCopyTemporaryFile(Str path) {
+    if (!gSettings->temporaryFileAutoMove || !IsTemporaryFile(path) || !file::Exists(path)) {
+        return {};
+    }
+    TempStr dir = TemporaryFileDestDirTemp();
+    if (len(dir) == 0) {
+        return {};
+    }
+    return CopyTemporaryFileTo(path, dir);
+}
+
 /* EngineCreate.cpp */
 bool IsSupportedFileType(FileType kind, bool enableEngineEbooks) {
     if (kind == FileType::Unknown || kind == FileType::Directory) {

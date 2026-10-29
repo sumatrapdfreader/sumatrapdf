@@ -350,6 +350,7 @@ const CommandInfo gCommands[] = {
     {CmdAdjustContrast, "CmdAdjustContrast\0", StrL("Adjust Contrast...")},
     {CmdToggleSidebarAutoHide, "CmdToggleSidebarAutoHide\0", StrL("Toggle Sidebar Auto-hide")},
     {CmdDebugShowCrashMiniDumps, "CmdDebugShowCrashMiniDumps\0", StrL("Debug: Show Crash Minidumps")},
+    {CmdCopyTemporaryFileToNonTemporary, "CmdCopyTemporaryFileToNonTemporary\0", StrL("Copy Temporary File to Permanent Folder")},
 };
 const int gCommandsCount = dimofi(gCommands);
 

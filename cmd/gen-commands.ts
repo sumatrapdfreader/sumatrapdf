@@ -351,6 +351,7 @@ const commandsRaw = [
     "CmdAdjustContrast", "Adjust Contrast...",
     "CmdToggleSidebarAutoHide", "Toggle Sidebar Auto-hide",
     "CmdDebugShowCrashMiniDumps", "Debug: Show Crash Minidumps",
+    "CmdCopyTemporaryFileToNonTemporary", "Copy Temporary File to Permanent Folder",
 ];
 
 // removed slots are dropped: nothing outside the generators should see them

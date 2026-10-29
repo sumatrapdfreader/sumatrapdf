@@ -344,8 +344,9 @@ enum {
     CmdAdjustContrast = 538,
     CmdToggleSidebarAutoHide = 539,
     CmdDebugShowCrashMiniDumps = 540,
+    CmdCopyTemporaryFileToNonTemporary = 541,
 
-    CmdLast = 540,
+    CmdLast = 541,
     CmdFirstCustom = CmdLast + 100,
 
     // aliases, at the end to not mess ordering

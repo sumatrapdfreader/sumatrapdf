@@ -90,7 +90,7 @@ void SetNotifWindow(NotificationCreateArgs&, MainWindow*);
 void NotificationUpdateMessage(NotificationWnd* wnd, Str msg, int timeoutInMS = 0, bool highlight = false);
 TempStr NotificationGetMessageTemp(NotificationWnd* wnd);
 void RemoveNotification(NotificationWnd*);
-void CloseNotification(NotificationWnd*);
+void CloseNotification(NotificationWnd*, NotifCloseReason reason = NotifCloseReason::Program);
 bool AreNotificationsEnabled();
 void SetNotificationsEnabled(bool);
 bool RemoveNotificationsForGroup(HWND, Kind);

@@ -214,6 +214,30 @@ bool IsEphemeralHostFile(Str /*path*/) {
     return false;
 }
 
+// Is path inside a temporary folder ($TMPDIR, /tmp)? macOS gives /var/folders/...
+// for $TMPDIR, which is /private/var/folders/... once resolved (#6437)
+bool IsInTempDir(Str path) {
+    if (len(path) == 0) {
+        return false;
+    }
+    Str dirs[4] = {Str(getenv("TMPDIR")), StrL("/tmp/"), StrL("/private/tmp/"), {}};
+    if (len(dirs[0]) > 0) {
+        dirs[3] = str::JoinTemp(StrL("/private"), dirs[0]);
+    }
+    for (Str dir : dirs) {
+        if (len(dir) == 0) {
+            continue;
+        }
+        if (dir.s[len(dir) - 1] != '/') {
+            dir = str::JoinTemp(dir, StrL("/"));
+        }
+        if (len(path) > len(dir) && str::StartsWith(path, dir)) {
+            return true;
+        }
+    }
+    return false;
+}
+
 bool IsOnFixedDrive(Str path) {
     return !IsOnNetworkDrive(path);
 }

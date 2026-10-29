@@ -1098,6 +1098,36 @@ bool IsEphemeralHostFile(Str path) {
     return false;
 }
 
+// long form of an existing path: GetTempPath() can return an 8.3 short one
+// (C:\Users\JOHNDO~1\AppData\Local\Temp)
+static TempStr LongPathTemp(Str path) {
+    WCHAR buf[MAX_PATH * 2];
+    DWORD n = GetLongPathNameW(CWStrTemp(path), buf, dimof(buf));
+    if (n == 0 || n >= dimof(buf)) {
+        return str::DupTemp(path);
+    }
+    return ToUtf8Temp(WStr(buf, (int)n));
+}
+
+// Is path inside the user's temporary folder (%TEMP%)? Files there get deleted
+// by whatever put them there, or by Disk Cleanup (#6437)
+bool IsInTempDir(Str path) {
+    if (len(path) == 0) {
+        return false;
+    }
+    WCHAR dirW[MAX_PATH + 1];
+    DWORD n = GetTempPathW(dimof(dirW), dirW);
+    if (n == 0 || n > MAX_PATH) {
+        return false;
+    }
+    TempStr dir = LongPathTemp(ToUtf8Temp(WStr(dirW, (int)n)));
+    if (len(dir) > 0 && !IsSep(dir.s[len(dir) - 1])) {
+        dir = str::JoinTemp(dir, StrL("\\"));
+    }
+    TempStr p = LongPathTemp(NormalizeTemp(path));
+    return len(p) > len(dir) && str::StartsWithI(p, dir);
+}
+
 bool IsOnFixedDrive(Str path) {
     WCHAR* ws = CWStrTemp(path);
     if (PathIsNetworkPathW(ws)) {

@@ -1808,6 +1808,8 @@ static void FinishPendingDocumentRelayout(MainWindow* win) {
 //   to be resized and placed
 static void SetTabLoadError(WindowTab* tab, Str path);
 
+static void MaybeShowTemporaryFileNotification(MainWindow* win, WindowTab* tab);
+
 // ShowThumbnailsIfNoToc: a document without bookmarks opens with page
 // thumbnails in the sidebar's top panel instead of no sidebar (#6407).
 // Bookmarks still being generated from headings count as bookmarks
@@ -2193,6 +2195,7 @@ static void ReplaceDocumentInCurrentTab(LoadArgs* args, DocController* ctrl, Fil
         showToc = true;
     }
     SetSidebarVisibility(win, showToc, gSettings->showFavorites);
+    MaybeShowTemporaryFileNotification(win, tab);
     if (dm) {
         if (dm->pendingRelayout) {
             // canvas not yet sized; RelayoutFrame / ShowWindow WM_SIZE will
@@ -4128,6 +4131,12 @@ void StartLoadDocuments(StrVec& paths, MainWindow* win, bool skipHistory) {
 // exclusively to sync. Copy to our open-cache and load that instead (#4705).
 static void MaybeDetachEphemeralHostFile(LoadArgs* args) {
     Str path = args->FilePath();
+    // TemporaryFileAutoMove: open the copy in TemporaryFileDestDir (#6437)
+    TempStr permanent = MaybeAutoCopyTemporaryFile(path);
+    if (len(permanent) > 0) {
+        args->SetFilePath(permanent);
+        return;
+    }
     if (!path::IsEphemeralHostFile(path) || IsOpenCachePath(path)) {
         return;
     }
@@ -5787,6 +5796,120 @@ static void DeleteCurrentFile(MainWindow* win) {
 }
 
 static bool RenameCurrentFileTo(MainWindow* win, Str dstFilePath);
+
+Kind kNotifTemporaryFile = "notifTemporaryFile";
+
+static void OnTemporaryFileNotifClosed(NotificationClosedEvent* ev) {
+    // closing it means "don't tell me again"
+    if (ev->reason == NotifCloseReason::User) {
+        gSettings->temporaryFileShowNotification = false;
+        ScheduleSaveSettings();
+    }
+    RemoveNotification(ev->wnd);
+}
+
+// TemporaryFileShowNotification: say the document is from a temporary folder
+// and offer to copy it to a permanent one, once per file (#6437)
+static void MaybeShowTemporaryFileNotification(MainWindow* win, WindowTab* tab) {
+    if (!gSettings->temporaryFileShowNotification || gPluginMode || !CanAccessDisk() || !tab) {
+        return;
+    }
+    if (tab->temporaryFileNotified || !IsTemporaryFile(tab->filePath)) {
+        return;
+    }
+    tab->temporaryFileNotified = true;
+    NotificationCreateArgs args;
+    args.win = win;
+    args.groupId = kNotifTemporaryFile;
+    args.tab = tab;
+    args.corner = NotifCorner::BottomLeft;
+    args.timeoutMs = kNotifNoTimeout;
+    args.msg = fmt("%s ([%s](Help/Handling-temporary-files)). [%s](CmdCopyTemporaryFileToNonTemporary)",
+                   Tr("File from a temporary folder"), Tr("learn more"), Tr("Copy to a permanent folder"));
+    args.onClosed = MkFunc1Void(OnTemporaryFileNotifClosed);
+    ShowNotification(args);
+}
+
+static TempStr KnownFolderTemp(const KNOWNFOLDERID& id) {
+    PWSTR pathW = nullptr;
+    if (FAILED(SHGetKnownFolderPath(id, 0, nullptr, &pathW)) || !pathW) {
+        return {};
+    }
+    TempStr res = ToUtf8Temp(pathW);
+    CoTaskMemFree(pathW);
+    return res;
+}
+
+// asks for the folder temporary files are copied to, starting in Downloads
+// (or Documents)
+static TempStr AskTemporaryFileDestDirTemp(MainWindow* win) {
+    AutoReleaseComPtr<IFileOpenDialog> dlg;
+    HRESULT hr = CoCreateInstance(CLSID_FileOpenDialog, nullptr, CLSCTX_INPROC_SERVER, IID_PPV_ARGS(&dlg));
+    if (FAILED(hr) || !dlg) {
+        logf("AskTemporaryFileDestDirTemp: CoCreateInstance(CLSID_FileOpenDialog) failed: 0x%x\n", (uint)hr);
+        return {};
+    }
+    DWORD opts = 0;
+    dlg->GetOptions(&opts);
+    dlg->SetOptions(opts | FOS_PICKFOLDERS | FOS_FORCEFILESYSTEM | FOS_PATHMUSTEXIST);
+    dlg->SetTitle(CWStrTemp(Tr("Copy temporary files to")));
+    TempStr startDir = KnownFolderTemp(FOLDERID_Downloads);
+    if (!dir::Exists(startDir)) {
+        startDir = KnownFolderTemp(FOLDERID_Documents);
+    }
+    AutoReleaseComPtr<IShellItem> startItem;
+    if (len(startDir) > 0 &&
+        SUCCEEDED(SHCreateItemFromParsingName(CWStrTemp(startDir), nullptr, IID_PPV_ARGS(&startItem)))) {
+        dlg->SetFolder(startItem);
+    }
+    hr = dlg->Show(win->hwndFrame);
+    if (FAILED(hr)) {
+        return {};
+    }
+    AutoReleaseComPtr<IShellItem> result;
+    PWSTR pathW = nullptr;
+    if (FAILED(dlg->GetResult(&result)) || !result || FAILED(result->GetDisplayName(SIGDN_FILESYSPATH, &pathW))) {
+        return {};
+    }
+    TempStr res = ToUtf8Temp(pathW);
+    CoTaskMemFree(pathW);
+    return res;
+}
+
+// CmdCopyTemporaryFileToNonTemporary: copies the document from a temporary
+// folder to TemporaryFileDestDir (asked for when not set) and re-opens it from
+// there; its history entry moves along (#6437)
+static void CopyTemporaryFileToPermanent(MainWindow* win) {
+    if (!CanAccessDisk() || gPluginMode || !win->IsDocLoaded()) {
+        return;
+    }
+    WindowTab* tab = win->CurrentTab();
+    TempStr srcPath = str::DupTemp(tab->filePath);
+    if (!IsTemporaryFile(srcPath) || !file::Exists(srcPath)) {
+        return;
+    }
+    TempStr dir = TemporaryFileDestDirTemp();
+    if (len(dir) == 0) {
+        dir = AskTemporaryFileDestDirTemp(win);
+        if (len(dir) == 0) {
+            return;
+        }
+        str::ReplaceWithCopy(&gSettings->temporaryFileDestDir, dir);
+        ScheduleSaveSettings();
+    }
+    TempStr dstPath = CopyTemporaryFileTo(srcPath, dir);
+    if (len(dstPath) == 0) {
+        ShowWarningNotification(win, Tr("Failed to copy the file"), kNotif5SecsTimeOut);
+        return;
+    }
+    RemoveNotificationsForGroup(win, kNotifTemporaryFile);
+    UpdateTabFileDisplayStateForTab(tab);
+    RenameFileInHistory(srcPath, dstPath);
+    LoadArgs args(dstPath, win);
+    args.forceReuse = true;
+    LoadDocument(&args);
+    ShowPlainNotification(win, fmt("%s %s", Tr("Copied to"), dstPath), kNotif5SecsTimeOut);
+}
 
 static void RenameCurrentFile(MainWindow* win) {
     if (!CanAccessDisk()) {
@@ -10256,6 +10379,10 @@ static LRESULT FrameOnCommand(MainWindow* win, HWND hwnd, UINT msg, WPARAM wp, L
 
         case CmdRenameFile:
             RenameCurrentFile(win);
+            break;
+
+        case CmdCopyTemporaryFileToNonTemporary:
+            CopyTemporaryFileToPermanent(win);
             break;
 
         case CmdDeleteFile:

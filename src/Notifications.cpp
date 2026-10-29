@@ -891,11 +891,11 @@ void RemoveNotification(NotificationWnd* wnd) {
     NotifsRemoveNotification(wnd);
 }
 
-void CloseNotification(NotificationWnd* wnd) {
+void CloseNotification(NotificationWnd* wnd, NotifCloseReason reason) {
     if (!wnd) {
         return;
     }
-    wnd->ScheduleRemove(NotifCloseReason::Program);
+    wnd->ScheduleRemove(reason);
 }
 
 // Turning them off also takes down the ones already on screen, so a test can

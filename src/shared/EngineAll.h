@@ -254,6 +254,11 @@ EngineBase* CreateEngineFromData(Str data, Str nameHint, PasswordUI* pwdUI);
 bool IsOpenCachePath(Str path);
 TempStr MaybeCopyEphemeralHostFile(Str path);
 void DeleteOpenCacheCopy(Str path);
+bool IsTemporaryFile(Str path);
+TempStr TemporaryFileDestDirTemp();
+TempStr TemporaryFileCopyPathTemp(Str src, Str dir, bool* reuse);
+TempStr CopyTemporaryFileTo(Str src, Str dir);
+TempStr MaybeAutoCopyTemporaryFile(Str path);
 
 bool EngineSupportsAnnotations(EngineBase*);
 bool EngineGetAnnotations(EngineBase*, Vec<Annotation*>&);

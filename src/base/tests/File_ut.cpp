@@ -84,6 +84,15 @@ void FileUtilTest() {
     utassert(!path::IsEphemeralHostFile(StrL("C:\\docs\\paper.pdf")));
     utassert(!path::IsEphemeralHostFile(StrL("C:\\docs\\OneNotePDFs\\a.pdf")));
     utassert(!path::IsEphemeralHostFile(StrL("C:\\docs\\my-onenote-export.pdf")));
+    {
+        WCHAR tempDirW[MAX_PATH + 1];
+        DWORD n = GetTempPathW(dimof(tempDirW), tempDirW);
+        utassert(n > 0 && n <= MAX_PATH);
+        TempStr tempDir = ToUtf8Temp(WStr(tempDirW, (int)n));
+        utassert(path::IsInTempDir(path::JoinTemp(tempDir, StrL("Outlook attachment.pdf"))));
+        utassert(!path::IsInTempDir(tempDir));
+        utassert(!path::IsInTempDir(StrL("C:\\docs\\paper.pdf")));
+    }
     utassert(!path::Match(StrL("C:\\file.pdf"), StrL("f??f.p?f")));
     utassert(!path::Match(StrL("C:\\.pdf"), StrL("?.pdf")));
     {

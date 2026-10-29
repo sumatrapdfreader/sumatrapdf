@@ -42,6 +42,7 @@ void WindowTab::SetFilePath(Str path) {
     bool changed = filePath && !path::IsSame(filePath, path);
     if (changed) {
         DeleteOpenCacheCopy(filePath);
+        temporaryFileNotified = false;
     }
     if (changed) {
         str::FreePtr(&pendingFindText);
