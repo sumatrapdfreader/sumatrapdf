@@ -190,14 +190,22 @@ void RefHoverSchedule(RefHoverState* s, HWND hwndCanvas, int delayMs, Point scre
 void RefHoverHide(RefHoverState* s, HWND hwndCanvas);
 void RefHoverScheduleHide(RefHoverState* s, HWND hwndCanvas, int delayMs);
 void RefHoverOnHideTimer(RefHoverState* s, HWND hwndCanvas);
-void RefHoverOnWheel(RefHoverState* s, EngineBase* engine, UINT msg, WPARAM wp);
+// where a wheel message meant for the popup landed
+enum class RefHoverWheelAt {
+    Link,
+    Popup
+};
+void RefHoverOnWheel(RefHoverState* s, EngineBase* engine, UINT msg, WPARAM wp, LPARAM lp, RefHoverWheelAt at);
 #endif
 
 void RefHoverHandlePopupClick(RefHoverState* s, IPageDestination* dest);
 void RefHoverOnTimer(RefHoverState* s, EngineBase* engine, float pageZoom);
 int RefHoverPopupWidthCap(RefHoverState* s, int minWidth);
-bool RefHoverWheelZoom(RefHoverState* s, EngineBase* engine, int wheelDelta);
+// a RefHoverWheelZoom anchor off the popup: zoom around the content's center
+const Point kRefHoverNoAnchor{-1, -1};
+bool RefHoverWheelZoom(RefHoverState* s, EngineBase* engine, int wheelDelta, Point anchor);
 bool RefHoverWheelScroll(RefHoverState* s, EngineBase* engine, int wheelDelta);
+bool RefHoverWheelScrollX(RefHoverState* s, EngineBase* engine, int wheelDelta);
 
 //--- layout detection (RefHoverDetect.cpp)
 

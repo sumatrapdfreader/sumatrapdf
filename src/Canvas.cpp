@@ -3529,7 +3529,7 @@ static bool RefHoverTakesWheel(MainWindow* win, UINT msg, WPARAM wp, LPARAM lp) 
     if (!s->displayed.srcRect.Contains(pagePt)) {
         return false;
     }
-    RefHoverOnWheel(s, dm->GetEngine(), msg, wp);
+    RefHoverOnWheel(s, dm->GetEngine(), msg, wp, lp, RefHoverWheelAt::Link);
     return true;
 }
 

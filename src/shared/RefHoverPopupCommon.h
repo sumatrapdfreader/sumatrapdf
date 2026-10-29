@@ -11,3 +11,4 @@ constexpr int kWheelDelta = 120;
 
 // implemented by each app
 bool RefHoverPopupShown(RefHoverState* s);
+Size RefHoverPopupClientSize(RefHoverState* s);

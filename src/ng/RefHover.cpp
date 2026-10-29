@@ -252,6 +252,6 @@ TempStr RefHoverResultTemp(Str action, int x, int y, int* exitCodeOut) {
     }
     int popX = (int)((float)win->canvasRc.x / k + (float)s->popupRc.x + (float)s->popupRc.dx / 2.f);
     int popY = (int)((float)win->canvasRc.y / k + (float)s->popupRc.y + (float)s->popupRc.dy / 2.f);
-    return fmt("OK visible=1 page=%d y=%d zoom=%d pop=%d,%d scale=%.4f", d.destPage, (int)d.region.y,
-               (int)(d.userZoom * 100), popX, popY, (double)k);
+    return fmt("OK visible=1 page=%d y=%d zoom=%d pop=%d,%d scale=%.4f x=%d", d.destPage, (int)d.region.y,
+               (int)(d.userZoom * 100), popX, popY, (double)k, (int)d.region.x);
 }

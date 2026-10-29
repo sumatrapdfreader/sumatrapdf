@@ -119,53 +119,12 @@ void RefHoverShowPopup(RefHoverState* s, Point screenPt) {
     AppShellInvalidate(s->win);
 }
 
-// Re-render the popup at adjusted zoom in response to a mouse-wheel event.
-// Popup keeps its size; only the rendered content scales. Positive delta zooms
-// in, negative zooms out. Returns true if the zoom changed and a re-render
-// happened.
-bool RefHoverWheelZoom(RefHoverState* s, EngineBase* engine, int wheelDelta) {
-    if (!s || !RefHoverPopupShown(s) || s->displayed.destPage <= 0 || !engine) {
-        return false;
-    }
-    float factor = (wheelDelta > 0) ? kRefHoverUserZoomStep : (1.f / kRefHoverUserZoomStep);
-    float newZoom = s->displayed.userZoom * factor;
-    if (newZoom < kRefHoverMinUserZoom) {
-        newZoom = kRefHoverMinUserZoom;
-    } else if (newZoom > kRefHoverMaxUserZoom) {
-        newZoom = kRefHoverMaxUserZoom;
-    }
-    if (newZoom == s->displayed.userZoom) {
-        return false;
-    }
-    s->displayed.userZoom = newZoom;
-
-    int border = DpiScale(kRefHoverBorder);
-    float clientW = (float)(s->popupRc.dx - (2 * border));
-    float clientH = (float)(s->popupRc.dy - (2 * border));
-    float zoom = s->displayed.baseZoom * s->displayed.userZoom;
-    if (zoom <= 0.f || clientW <= 0.f || clientH <= 0.f) {
-        return false;
-    }
-
-    RectF mediabox = engine->PageMediabox(s->displayed.destPage);
-    RectF region = s->displayed.region;
-    region.dx = clientW / zoom;
-    region.dy = clientH / zoom;
-    if (region.x + region.dx > mediabox.dx) {
-        region.dx = mediabox.dx - region.x;
-    }
-    if (region.y + region.dy > mediabox.dy) {
-        region.dy = mediabox.dy - region.y;
-    }
-    if (region.dx <= 0.f || region.dy <= 0.f) {
-        return false;
-    }
-
-    return RefHoverRerenderDisplayedRegion(s, engine, s->displayed.destPage, region);
-}
-
 bool RefHoverPopupShown(RefHoverState* s) {
     return s->visible;
+}
+
+Size RefHoverPopupClientSize(RefHoverState* s) {
+    return Size(s->popupRc.dx, s->popupRc.dy);
 }
 
 // --- the popup element ------------------------------------------------------
@@ -209,8 +168,9 @@ void RefHoverView::OnDown(RefHoverView* self, gp::Ctx* cx, const gp::MouseDownEv
     gp::Notify(cx);
 }
 
-// The popup owns wheel input under the cursor. Ctrl zooms; every other wheel
-// scrolls, including horizontal wheels synthesized for Shift + wheel.
+// The popup owns wheel input under the cursor. Ctrl zooms around the cursor.
+// A horizontal wheel and Shift + wheel scroll a zoomed-in popup sideways
+// (issue #6429), else vertically. Any other wheel scrolls.
 void RefHoverView::OnWheel(RefHoverView* self, gp::Ctx* cx, const gp::ScrollWheelEvent* ev) {
     RefHoverState* s = self->win ? self->win->refHover : nullptr;
     if (!s || !s->visible || !s->hitEngine) {
@@ -220,14 +180,17 @@ void RefHoverView::OnWheel(RefHoverView* self, gp::Ctx* cx, const gp::ScrollWhee
     if (notch <= 0) {
         notch = 1;
     }
-    float raw = ev->deltaY != 0 ? ev->deltaY : ev->deltaX;
+    bool horizontal = ev->deltaY == 0;
+    float raw = horizontal ? ev->deltaX : ev->deltaY;
     int delta = (int)((raw / notch) * kWheelDelta);
     if (delta == 0) {
         return;
     }
+    // a negative delta (wheel down, tilt right) goes right
+    bool sideways = horizontal || ev->modifiers.shift;
     if (ev->modifiers.control || ev->modifiers.platform) {
-        RefHoverWheelZoom(s, s->hitEngine, delta);
-    } else {
+        RefHoverWheelZoom(s, s->hitEngine, delta, PopupClientPt(s, ev->x, ev->y));
+    } else if (!sideways || !RefHoverWheelScrollX(s, s->hitEngine, -delta)) {
         RefHoverWheelScroll(s, s->hitEngine, delta);
     }
     gp::WindowStopPropagation(cx);

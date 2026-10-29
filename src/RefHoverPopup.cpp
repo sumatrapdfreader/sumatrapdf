@@ -71,7 +71,7 @@ static LRESULT CALLBACK RefHoverWndProc(HWND hwnd, UINT msg, WPARAM wp, LPARAM l
     if (msg == WM_MOUSEWHEEL || msg == WM_MOUSEHWHEEL) {
         RefHoverState* s = (RefHoverState*)GetWindowLongPtrW(hwnd, GWLP_USERDATA);
         if (s && s->hitEngine) {
-            RefHoverOnWheel(s, s->hitEngine, msg, wp);
+            RefHoverOnWheel(s, s->hitEngine, msg, wp, lp, RefHoverWheelAt::Popup);
         }
         return 0;
     }
@@ -193,65 +193,38 @@ void RefHoverShowPopup(RefHoverState* s, Point screenPt) {
     HwndInvalidate(s->hwndPopup, true);
 }
 
-// Re-render the popup at adjusted zoom in response to a mouse-wheel event.
-// Popup window keeps its initial size; only the rendered content scales.
-// Positive delta zooms in, negative zooms out. Returns true if the zoom
-// changed and a re-render happened.
-bool RefHoverWheelZoom(RefHoverState* s, EngineBase* engine, int wheelDelta) {
-    if (!s || !RefHoverPopupShown(s) || s->displayed.destPage <= 0 || !engine) {
-        return false;
-    }
-    float factor = (wheelDelta > 0) ? kRefHoverUserZoomStep : (1.f / kRefHoverUserZoomStep);
-    float newZoom = s->displayed.userZoom * factor;
-    newZoom = ClampF(newZoom, kRefHoverMinUserZoom, kRefHoverMaxUserZoom);
-    if (newZoom == s->displayed.userZoom) {
-        return false;
-    }
-    s->displayed.userZoom = newZoom;
-
-    Rect rc = HwndClientRect(s->hwndPopup);
-    int border = DpiScale(kRefHoverBorder);
-    float clientW = (float)(rc.dx - (2 * border));
-    float clientH = (float)(rc.dy - (2 * border));
-    float zoom = s->displayed.baseZoom * s->displayed.userZoom;
-    if (zoom <= 0.f || clientW <= 0.f || clientH <= 0.f) {
-        return false;
-    }
-
-    RectF mediabox = engine->PageMediabox(s->displayed.destPage);
-    RectF region = s->displayed.region;
-    region.dx = clientW / zoom;
-    region.dy = clientH / zoom;
-    if (region.x + region.dx > mediabox.dx) {
-        region.dx = mediabox.dx - region.x;
-    }
-    if (region.y + region.dy > mediabox.dy) {
-        region.dy = mediabox.dy - region.y;
-    }
-    if (region.dx <= 0.f || region.dy <= 0.f) {
-        return false;
-    }
-
-    return RefHoverRerenderDisplayedRegion(s, engine, s->displayed.destPage, region);
-}
-
 bool RefHoverPopupShown(RefHoverState* s) {
     return s->hwndPopup != nullptr;
 }
 
-// A wheel message meant for the popup: Ctrl + wheel zooms, any other wheel
-// scrolls. So does a horizontal wheel, which is how mouse software often sends
-// Shift + wheel (issue #6252); right scrolls down, as Shift + wheel down does.
-void RefHoverOnWheel(RefHoverState* s, EngineBase* engine, UINT msg, WPARAM wp) {
+Size RefHoverPopupClientSize(RefHoverState* s) {
+    return HwndClientRect(s->hwndPopup).Size();
+}
+
+// A wheel message meant for the popup: Ctrl + wheel zooms, around the cursor
+// when it's on the popup. A horizontal wheel and Shift + wheel (right and down
+// go right) scroll a zoomed-in popup sideways (issue #6429), else down / up:
+// mouse software often sends Shift + wheel as a horizontal one (issue #6252).
+// Any other wheel scrolls.
+void RefHoverOnWheel(RefHoverState* s, EngineBase* engine, UINT msg, WPARAM wp, LPARAM lp, RefHoverWheelAt at) {
     int delta = GET_WHEEL_DELTA_WPARAM(wp);
-    if (msg == WM_MOUSEHWHEEL) {
-        RefHoverWheelScroll(s, engine, -delta);
-        return;
-    }
     bool isCtrl = (LOWORD(wp) & MK_CONTROL) || IsCtrlPressed();
-    if (isCtrl) {
-        RefHoverWheelZoom(s, engine, delta);
+    bool isShift = (LOWORD(wp) & MK_SHIFT) || IsShiftPressed();
+    if (msg == WM_MOUSEWHEEL && isCtrl) {
+        Point anchor = kRefHoverNoAnchor;
+        if (at == RefHoverWheelAt::Popup) {
+            anchor = HwndScreenToClient(s->hwndPopup, {GET_X_LPARAM(lp), GET_Y_LPARAM(lp)});
+        }
+        RefHoverWheelZoom(s, engine, delta, anchor);
         return;
     }
-    RefHoverWheelScroll(s, engine, delta);
+    if (msg == WM_MOUSEWHEEL && !isShift) {
+        RefHoverWheelScroll(s, engine, delta);
+        return;
+    }
+    int right = (msg == WM_MOUSEHWHEEL) ? delta : -delta;
+    if (at == RefHoverWheelAt::Popup && RefHoverWheelScrollX(s, engine, right)) {
+        return;
+    }
+    RefHoverWheelScroll(s, engine, -right);
 }

@@ -1516,7 +1516,7 @@ static bool RefHoverTakesWheel(MainWindow* win, int delta, bool isCtrl, bool isS
         return false;
     }
     if (isCtrl) {
-        RefHoverWheelZoom(s, dm->GetEngine(), delta);
+        RefHoverWheelZoom(s, dm->GetEngine(), delta, kRefHoverNoAnchor);
     } else {
         RefHoverWheelScroll(s, dm->GetEngine(), delta);
     }

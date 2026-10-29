@@ -1291,8 +1291,8 @@ TempStr RefHoverResultTemp(Str action, int x, int y, int* exitCodeOut) {
         return fmt("OK visible=0");
     }
     auto& d = s->displayed;
-    return fmt("OK visible=1 hwnd=%d page=%d y=%d zoom=%d", (int)(INT_PTR)s->hwndPopup, d.destPage, (int)d.region.y,
-               (int)(d.userZoom * 100));
+    return fmt("OK visible=1 hwnd=%d page=%d y=%d zoom=%d x=%d", (int)(INT_PTR)s->hwndPopup, d.destPage,
+               (int)d.region.y, (int)(d.userZoom * 100), (int)d.region.x);
 }
 
 // The current tab's pages: each page's width, which a test gives a unique value

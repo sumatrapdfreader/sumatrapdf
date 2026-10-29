@@ -164,3 +164,88 @@ bool RefHoverWheelScroll(RefHoverState* s, EngineBase* engine, int wheelDelta) {
 
     return RefHoverRerenderDisplayedRegion(s, engine, page, region);
 }
+
+// Fit [x, x + dx] into [0, extent]: shift it, and cut it when wider.
+static void FitSpan(float& x, float& dx, float extent) {
+    dx = std::min(dx, extent);
+    x = ClampF(x, 0.f, extent - dx);
+}
+
+// Re-render the popup at adjusted zoom in response to a mouse-wheel event.
+// Popup window keeps its size; only the rendered content scales, around the
+// page point under anchor (popup client pixels), or the content's center when
+// anchor is off it. Positive delta zooms in, negative zooms out. Returns true
+// if the zoom changed and a re-render happened.
+bool RefHoverWheelZoom(RefHoverState* s, EngineBase* engine, int wheelDelta, Point anchor) {
+    if (!s || !RefHoverPopupShown(s) || s->displayed.destPage <= 0 || !engine) {
+        return false;
+    }
+    float factor = (wheelDelta > 0) ? kRefHoverUserZoomStep : (1.f / kRefHoverUserZoomStep);
+    float newUserZoom = s->displayed.userZoom * factor;
+    newUserZoom = ClampF(newUserZoom, kRefHoverMinUserZoom, kRefHoverMaxUserZoom);
+    if (newUserZoom == s->displayed.userZoom) {
+        return false;
+    }
+
+    Size client = RefHoverPopupClientSize(s);
+    int border = DpiScale(kRefHoverBorder);
+    float clientW = (float)(client.dx - (2 * border));
+    float clientH = (float)(client.dy - (2 * border));
+    float oldZoom = s->displayed.baseZoom * s->displayed.userZoom;
+    float zoom = s->displayed.baseZoom * newUserZoom;
+    if (oldZoom <= 0.f || zoom <= 0.f || clientW <= 0.f || clientH <= 0.f) {
+        return false;
+    }
+    s->displayed.userZoom = newUserZoom;
+
+    // keep the anchor's page point at the same pixel
+    RectF region = s->displayed.region;
+    float shownW = region.dx * oldZoom;
+    float shownH = region.dy * oldZoom;
+    float ax = (float)(anchor.x - border);
+    float ay = (float)(anchor.y - border);
+    if (ax < 0.f || ay < 0.f || ax > shownW || ay > shownH) {
+        ax = shownW / 2.f;
+        ay = shownH / 2.f;
+    }
+    region.x += (ax / oldZoom) - (ax / zoom);
+    region.y += (ay / oldZoom) - (ay / zoom);
+    region.dx = clientW / zoom;
+    region.dy = clientH / zoom;
+
+    RectF mediabox = engine->PageMediabox(s->displayed.destPage);
+    FitSpan(region.x, region.dx, mediabox.dx);
+    FitSpan(region.y, region.dy, mediabox.dy);
+    if (region.dx <= 0.f || region.dy <= 0.f) {
+        return false;
+    }
+
+    return RefHoverRerenderDisplayedRegion(s, engine, s->displayed.destPage, region);
+}
+
+// Scroll a zoomed-in popup's region sideways by a wheel notch; positive delta
+// goes right. Returns false when not zoomed in or the region spans the page
+// width, so the caller scrolls vertically instead; true at an edge too.
+bool RefHoverWheelScrollX(RefHoverState* s, EngineBase* engine, int wheelDelta) {
+    if (!s || !RefHoverPopupShown(s) || s->displayed.destPage <= 0 || !engine) {
+        return false;
+    }
+    float zoom = s->displayed.baseZoom * s->displayed.userZoom;
+    if (zoom <= 0.f || s->displayed.userZoom <= 1.f) {
+        return false;
+    }
+    RectF region = s->displayed.region;
+    RectF mediabox = engine->PageMediabox(s->displayed.destPage);
+    if (region.dx >= mediabox.dx) {
+        return false;
+    }
+
+    float scrollStep = (float)DpiScale(kRefHoverScrollStepPx);
+    float scrollPt = scrollStep * ((float)wheelDelta / (float)kWheelDelta) / zoom;
+    float newX = ClampF(region.x + scrollPt, 0.f, mediabox.dx - region.dx);
+    if (newX == region.x) {
+        return true;
+    }
+    region.x = newX;
+    return RefHoverRerenderDisplayedRegion(s, engine, s->displayed.destPage, region);
+}
