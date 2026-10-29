@@ -95,8 +95,10 @@ void RefHoverOnCanvasMouseMove(RefHoverState*& s, HWND hwndCanvas, DocController
                                DisplayModel* dm, int x, int y, IPageElement* el, int srcPageNo, int hoverDelayMs) {
     if (hoverDelayMs < 0) {
         // no hover popups, so a shown one is from a click on an EPUB footnote
-        // link: it stays while the cursor is on that link or on the popup
-        if (!s) {
+        // link: it stays while the cursor is on that link or on the popup. One
+        // not shown yet stays too: Windows sends a move without the mouse
+        // moving when a window appears under the cursor
+        if (!s || !HwndIsVisible(s->hwndPopup)) {
             return;
         }
         if (IsPopupLink(s, el)) {

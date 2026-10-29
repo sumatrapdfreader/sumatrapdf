@@ -7,7 +7,7 @@
 import { writeFileSync } from "node:fs";
 import { ControlClient, ControlCommand, withControlledSumatra } from "./control";
 import { EXE, extractPageText, makeZip, runStandalone, tmpPath, USE_NG, type ZipEntry } from "./util";
-import { MK_LBUTTON, packCoords, sendMessage, sleep, WM_LBUTTONDOWN, WM_LBUTTONUP } from "./winapi";
+import { MK_LBUTTON, packCoords, sendMessage, sleep, WM_LBUTTONDOWN, WM_LBUTTONUP, WM_MOUSEMOVE } from "./winapi";
 import { findCanvas, FRAME_CLASS, ngInput } from "./win-automation";
 import { waitForTopWindow } from "./winapi";
 
@@ -89,6 +89,9 @@ export async function testit(): Promise<void> {
         const lp = packCoords(+m[1]!, +m[2]!);
         sendMessage(canvas, WM_LBUTTONDOWN, MK_LBUTTON, lp);
         sendMessage(canvas, WM_LBUTTONUP, 0, lp);
+        // Windows sends a move without the mouse moving (a window appearing
+        // under the cursor); off the link, it must not cancel the popup
+        sendMessage(canvas, WM_MOUSEMOVE, 0, packCoords(5, 5));
       }
       await popupVisible(client);
     },
