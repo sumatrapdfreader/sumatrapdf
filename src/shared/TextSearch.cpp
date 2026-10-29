@@ -289,6 +289,20 @@ int TextSearch::ByteIdxOf(int cp) const {
     return byteIdxByte;
 }
 
+// FoldCaseForSearch() of the codepoint at byteIdx; advances byteIdx.
+// ASCII skips UTF-8 decoding and folds to lower case, as FoldCaseForSearch() does.
+static int NextFolded(Str s, int& byteIdx) {
+    if (byteIdx >= s.len) {
+        return 0;
+    }
+    u8 b = (u8)s.s[byteIdx];
+    if (b >= 0x80) {
+        return FoldCaseForSearch(Utf8CodepointNext(s, byteIdx));
+    }
+    byteIdx++;
+    return ('A' <= b && b <= 'Z') ? b + ('a' - 'A') : b;
+}
+
 int TextSearch::FindAnchor() const {
     if (len(pageText) == 0 || len(anchor) == 0) {
         return -1;
@@ -303,7 +317,17 @@ int TextSearch::FindAnchor() const {
     int result = -1;
     int start = forward ? findIndex : 0;
     int byteIdx = ByteIdxOf(start);
+    // Reject on the first folded codepoint before the full match. Not for
+    // s / ß: they match each other as "ss".
+    int firstByte = 0;
+    int first = NextFolded(anchor, firstByte);
+    bool prefilter = !matchCase && first != 's' && first != 0x00df;
     for (int i = start; i <= lastStart; i++) {
+        int nextByte = byteIdx;
+        if (prefilter && NextFolded(pageText, nextByte) != first) {
+            byteIdx = nextByte;
+            continue;
+        }
         bool matches = matchCase ? StartsWithAtByte(pageText, byteIdx, anchor)
                                  : MatchesFoldedAt(pageText, pageTextLen, i, byteIdx, anchor, anchorLen, end);
         if (matches) {
