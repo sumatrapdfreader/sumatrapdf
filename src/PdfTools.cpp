@@ -849,6 +849,9 @@ void PdfDeletePageDialog::DoIt(VirtMouseEvent*) {
         inputPath = tmpPath;
     }
 
+    // the destination folder may not exist yet (issue #6424)
+    dir::CreateForFile(destPath);
+
     // equivalent of: clean -gggg -e 100 -f -i -t -Z input.pdf output.pdf <page-range>
     // use the same compression flags as Compress PDF so the result is re-written
     // compactly; otherwise the kept pages drag along the original's full content

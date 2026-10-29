@@ -335,6 +335,7 @@ TempStr ExtractPdfPagesResultTemp(Str destPath, Str pagesSpec, int annotsOnly, i
         }
         inputPath = tmpPath;
     }
+    dir::CreateForFile(destPath);
     char* argv[] = {(char*)"clean",      (char*)"-gggg",     (char*)"-e",        (char*)"100",
                     (char*)"-f",         (char*)"-i",        (char*)"-t",        (char*)"-Z",
                     CStrTemp(inputPath), CStrTemp(destPath), CStrTemp(pageRange)};
@@ -587,6 +588,8 @@ bool WriteSelectionPixmap(Pixmap* px, Str destPath) {
     if (!px || len(destPath) == 0) {
         return false;
     }
+    // the destination folder may not exist yet (issue #6424)
+    dir::CreateForFile(destPath);
     bool ok = false;
     if (str::EndsWithI(destPath, StrL(".png"))) {
         // lodepng (no pHYs, so EngineImages displays 1:1) now, zopfli in the
