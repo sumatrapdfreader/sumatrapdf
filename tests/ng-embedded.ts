@@ -10,7 +10,7 @@ import {
   writeFileSync,
 } from "node:fs";
 import { dirname, join, resolve, sep } from "node:path";
-import { embedLzsa, fontPatterns, packEmbedded } from "../cmd/helper/embedded";
+import { embedLzsa, extScripts, fontPatterns, packEmbedded } from "../cmd/helper/embedded";
 import { findToolchain, hostPlatform } from "../cmd/helper/ng-toolchain";
 import { root as ROOT } from "../cmd/helper/ng-compile";
 import { extractStringsToTranslate } from "../cmd/trans-dl";
@@ -58,7 +58,7 @@ export async function testit(): Promise<void> {
     return out;
   };
   try {
-    for (const name of ["marked.min.js", "mermaid.min.js"]) put(`ext/${name}`, "test");
+    for (const name of extScripts) put(`ext/${name}`, "test");
     for (const [forge, patterns] of fontPatterns) {
       for (const pattern of patterns)
         put(`ext/mupdf/resources/fonts/${forge}/${pattern.replace("*", "Regular")}`, "font");

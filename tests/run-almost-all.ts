@@ -494,6 +494,7 @@ export const tests: NamedTest[] = [
   // first: it drives the home page, whose thumbnail selection follows the
   // mouse, so it is the one test that cares what the machine was doing before
   ["issue-5978", issue5978],
+  ["ng-embedded", ngEmbedded],
   ["issue-6431", issue6431],
   ["issue-5924", issue5924],
   ["issue-6388", issue6388],
@@ -648,7 +649,6 @@ export const tests: NamedTest[] = [
   // --- no Sumatra process -------------------------------------------------
   ["lint-command-ids", lintCommandIds],
   ["build-cli", buildCli],
-  ["ng-embedded", ngEmbedded],
   ["parse-tip-brackets", parseTipBrackets],
   ["combining-mark-first", combiningMarkFirst],
   ["issue-5840", issue5840],
