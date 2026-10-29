@@ -126,8 +126,10 @@ TempStr SearchResultTemp(Str pdfPath, Str needle, Str password) {
 }
 
 // Headless search restricted to pages first..last (0 = unbounded). Reports
-// every match page in document order. Used by tests/issue-5694.ts.
-TempStr FindPageRangeResultTemp(Str pdfPath, Str needle, int first, int last, Str spec, int* exitCodeOut) {
+// every match page in the order found: document order, or reversed for a
+// backward search. Used by tests/issue-5694.ts and tests/issue-6434.ts.
+TempStr FindPageRangeResultTemp(Str pdfPath, Str needle, int first, int last, Str spec, int* exitCodeOut,
+                                FindDirection dir) {
     str::Builder out;
     auto finish = [&](int code) -> TempStr {
         if (exitCodeOut) {
@@ -141,8 +143,9 @@ TempStr FindPageRangeResultTemp(Str pdfPath, Str needle, int first, int last, St
         out.Append(fmt("ERROR engine-create-failed pdf=%s\n", pdfPath));
         return finish(1);
     }
+    bool backward = dir == FindDirection::Backward;
     auto* ts = new TextSearch(engine);
-    ts->SetDirection(TextSearch::Direction::Forward);
+    ts->SetDirection(backward ? TextSearch::Direction::Backward : TextSearch::Direction::Forward);
     ts->SetMatchCase(false);
     Vec<bool> allowed;
     if (spec) {
@@ -162,7 +165,7 @@ TempStr FindPageRangeResultTemp(Str pdfPath, Str needle, int first, int last, St
     }
     ts->SetAllowedPages(allowed);
     int n = 0;
-    Vec<TextSel>* sel = ts->FindFirst(ts->RestrictFirst(), needle);
+    Vec<TextSel>* sel = ts->FindFirst(backward ? ts->RestrictLast() : ts->RestrictFirst(), needle);
     while (sel && len(*sel) > 0) {
         out.Append(fmt("page=%d\n", (*sel)[0].pageNo));
         n++;

@@ -5,8 +5,12 @@ void EnsureTestSettings();
 TempStr SynctexResultTemp(Str pdfPath, Str srcPath, int line);
 TempStr InverseSearchResultTemp(Str pdfPath, int pageNo, int x, int y);
 TempStr SearchResultTemp(Str pdfPath, Str needle, Str password = Str());
-TempStr FindPageRangeResultTemp(Str pdfPath, Str needle, int first, int last, Str spec = {},
-                                int* exitCodeOut = nullptr);
+enum class FindDirection {
+    Forward,
+    Backward
+};
+TempStr FindPageRangeResultTemp(Str pdfPath, Str needle, int first, int last, Str spec = {}, int* exitCodeOut = nullptr,
+                                FindDirection dir = FindDirection::Forward);
 TempStr DestResultTemp(Str pdfPath, int destNo);
 TempStr NamedDestResultTemp(Str pdfPath, Str destName);
 TempStr ChmResultTemp(Str chmPath, int* exitCodeOut = nullptr);

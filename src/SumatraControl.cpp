@@ -1343,7 +1343,10 @@ static void ExecuteControlRequest(ControlRequest* req) {
                 break;
             }
             int exitCode = 0;
-            Str res = FindPageRangeResultTemp(pdf, needle, first, last, spec, &exitCode);
+            i32 backward = 0;
+            IntArg(req, 5, backward); // optional: 1 searches backward
+            FindDirection dir = backward ? FindDirection::Backward : FindDirection::Forward;
+            Str res = FindPageRangeResultTemp(pdf, needle, first, last, spec, &exitCode, dir);
             AppendTestResult(req, exitCode, res);
             break;
         }

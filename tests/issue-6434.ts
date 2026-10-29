@@ -5,7 +5,8 @@
 // Every line mixes non-ASCII letters (so byte and codepoint offsets drift
 // apart along the page) with several case variants of the needle and a ß.
 // A full-document find (FindFirst + FindNext, case-insensitive) must report
-// exactly the matches the text holds, on the right pages.
+// exactly the matches the text holds, on the right pages. Searching backward
+// must find the same matches in reverse: there the cursor has to move back.
 //
 // Run: bun tests/issue-6434.ts [--no-build]
 import { writeFileSync } from "node:fs";
@@ -48,16 +49,14 @@ function buildPdf(): Buffer {
   return Buffer.from(pdf, "latin1");
 }
 
-// match count per page, in the order FindNext reported them
-function countPerPage(raw: string): number[] {
+// match pages in the order FindNext reported them
+function matchPages(raw: string): number[] {
+  return [...raw.matchAll(/^page=(\d+)$/gm)].map((m) => +m[1]!);
+}
+
+function countPerPage(pages: number[]): number[] {
   const counts = Array(PAGES).fill(0);
-  let last = 0;
-  for (const m of raw.matchAll(/^page=(\d+)$/gm)) {
-    const page = +m[1]!;
-    if (page < last) {
-      throw new Error(`#6434: matches out of order: page ${page} after ${last}`);
-    }
-    last = page;
+  for (const page of pages) {
     counts[page - 1]++;
   }
   return counts;
@@ -81,10 +80,25 @@ export async function testit(): Promise<void> {
   await withControlledSumatra(EXE, async (client) => {
     for (const c of cases) {
       const [exitCode, raw] = await client.request(ControlCommand.TestFindPageRange, [pdf, c.needle, 0, 0]);
-      const got = countPerPage(String(raw ?? ""));
+      const fwd = matchPages(String(raw ?? ""));
+      const got = countPerPage(fwd);
       console.log(`  "${c.needle}": ${got.join(",")}`);
       if (exitCode !== 0 || got.some((n, i) => n !== c.perPage[i])) {
         throw new Error(`#6434: "${c.needle}": want ${c.perPage.join(",")} per page, got ${got.join(",")}`);
+      }
+      if (fwd.some((page, i) => i > 0 && page < fwd[i - 1]!)) {
+        throw new Error(`#6434: "${c.needle}": forward matches out of page order`);
+      }
+
+      const [bwdCode, bwdRaw] = await client.request(ControlCommand.TestFindPageRange, [pdf, c.needle, 0, 0, "", 1]);
+      const bwd = matchPages(String(bwdRaw ?? ""));
+      const want = [...fwd].reverse();
+      console.log(`  "${c.needle}" backward: ${countPerPage(bwd).join(",")}`);
+      if (bwdCode !== 0 || bwd.length !== want.length || bwd.some((page, i) => page !== want[i])) {
+        throw new Error(
+          `#6434: "${c.needle}" backward: want ${countPerPage(want).join(",")} per page in reverse, ` +
+            `got ${countPerPage(bwd).join(",")} (${bwd.length} matches)`,
+        );
       }
     }
   });
