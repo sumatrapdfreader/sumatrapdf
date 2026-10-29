@@ -48,9 +48,6 @@
 #define kCrashSubmitUrl ""
 #endif
 
-// where InstallCrashHandler() writes the .dmp, in the crash arena
-static Str gCrashDumpPath;
-
 // ng: orig has GetSumatraBuildSpecificDirTemp(); here the crash info goes next
 // to the screenshots, under the application data directory
 TempStr GetCrashInfoDirTemp() {
@@ -124,7 +121,7 @@ static void ShowCrashHandlerMessage() {
         return;
     }
 #if OS_WIN
-    Str msg = StrL("SumatraPDF crashed.\n\nPress 'Cancel' to see the crash report.");
+    Str msg = StrL("SumatraPDF crashed.\n\nPress 'Cancel' to see how to report the crash.");
     uint flags = MB_ICONERROR | MB_OKCANCEL | MB_SETFOREGROUND | MB_TOPMOST;
     int res = MessageBoxW(nullptr, CWStrTemp(msg), L"SumatraPDF crashed", flags);
     if (IDCANCEL != res) {
@@ -147,7 +144,7 @@ static Str GetCrashComment(Arena* a, Str condStr, Str fileLine, bool isCrash) {
     } else {
         b.Append(StrL("Type: debug report (not crash)\n"));
     }
-    b.Append(str::Format(a, "Minidump: %s\n", gCrashDumpPath));
+    b.Append(str::Format(a, "Minidump: %s\n", CrashHandlerDumpPath()));
 #else
     b.Append(isCrash ? StrL("Type: crash\n") : StrL("Type: debug report (not crash)\n"));
 #endif
@@ -223,12 +220,6 @@ void InstallSumatraCrashHandler(bool localOnly) {
     if (gIsAsanBuild) {
         return;
     }
-    // a crash report we could never send is not worth the machinery, so this
-    // must run after InitializePolicies()
-    if (!HasPermission(Perm::InternetAccess)) {
-        log(StrL("InstallSumatraCrashHandler: skipping, no Perm::InternetAccess\n"));
-        return;
-    }
 
     TempStr crashInfoDir = GetCrashInfoDirTemp();
 
@@ -246,6 +237,14 @@ void InstallSumatraCrashHandler(bool localOnly) {
         cfg.uploadCrashes = false;
         cfg.uploadDebugReports = false;
     }
+    // a policy without internet access still gets a local .dmp to attach to
+    // an issue; must run after InitializePolicies()
+    if (!HasPermission(Perm::InternetAccess)) {
+        log(StrL("InstallSumatraCrashHandler: no Perm::InternetAccess, not uploading\n"));
+        cfg.submitUrl = {};
+        cfg.uploadCrashes = false;
+        cfg.uploadDebugReports = false;
+    }
     cfg.getCrashComment = GetCrashComment;
     cfg.onCrashBegin = OnCrashBegin;
     cfg.showCrashMessage = ShowCrashHandlerMessage;
@@ -253,10 +252,6 @@ void InstallSumatraCrashHandler(bool localOnly) {
     cfg.canEndCrashedThread = TtsOnEngineCrash;
 
     InstallCrashHandler(cfg);
-    Arena* a = CrashHandlerArena();
-    if (a) {
-        gCrashDumpPath = str::Dup(a, cfg.crashDumpPath);
-    }
     logf("InstallSumatraCrashHandler: dump '%s', localOnly=%d\n", cfg.crashDumpPath, (int)localOnly);
     CaptureSettings();
 }

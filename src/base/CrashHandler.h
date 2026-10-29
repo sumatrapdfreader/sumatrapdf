@@ -31,6 +31,9 @@ void UninstallCrashHandler();
 // pre-allocated, so that a crash doesn't have to touch the process heap
 Arena* CrashHandlerArena();
 
+// the .dmp the report being built is written to; getCrashComment() can name it
+Str CrashHandlerDumpPath();
+
 // os, cpu, memory and graphics driver info, gathered at install time so that
 // getCrashComment() can use it without asking the system anything
 Str CrashHandlerSystemInfo();

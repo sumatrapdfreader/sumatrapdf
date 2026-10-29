@@ -349,6 +349,7 @@ const CommandInfo gCommands[] = {
     {CmdAdjustBrightness, "CmdAdjustBrightness\0", StrL("Adjust Brightness...")},
     {CmdAdjustContrast, "CmdAdjustContrast\0", StrL("Adjust Contrast...")},
     {CmdToggleSidebarAutoHide, "CmdToggleSidebarAutoHide\0", StrL("Toggle Sidebar Auto-hide")},
+    {CmdDebugShowCrashMiniDumps, "CmdDebugShowCrashMiniDumps\0", StrL("Debug: Show Crash Minidumps")},
 };
 const int gCommandsCount = dimofi(gCommands);
 

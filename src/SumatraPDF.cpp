@@ -9017,6 +9017,48 @@ static TempStr GetCrashInfoDirTemp() {
     return path::JoinTemp(buildDir, StrL("crashinfo"));
 }
 
+// newest .dmp in dir, empty if none
+static TempStr NewestMiniDumpTemp(Str dir) {
+    if (!dir::Exists(dir)) {
+        return {};
+    }
+    TempStr newest;
+    FILETIME newestTime{};
+    DirIter di{dir};
+    for (DirIterEntry* de : di) {
+        if (!str::EqI(path::GetExtTemp(de->name), StrL(".dmp"))) {
+            continue;
+        }
+        if (newest && CompareFileTime(&de->modificationTime, &newestTime) <= 0) {
+            continue;
+        }
+        newest = str::DupTemp(de->filePath);
+        newestTime = de->modificationTime;
+    }
+    return newest;
+}
+
+// Each build has its own crashinfo folder in the data dir: show every one
+// that has minidumps, with its newest selected.
+static void ShowCrashMiniDumps(MainWindow* win) {
+    TempStr dataDir = GetSumatraDataDirTemp();
+    int nShown = 0;
+    DirIter builds{dataDir};
+    builds.includeFiles = false;
+    builds.includeDirs = true;
+    for (DirIterEntry* de : builds) {
+        TempStr dmp = NewestMiniDumpTemp(path::JoinTemp(de->filePath, StrL("crashinfo")));
+        if (len(dmp) == 0) {
+            continue;
+        }
+        OpenPathInDefaultFileManager(dmp);
+        nShown++;
+    }
+    if (nShown == 0 && win) {
+        ShowTemporaryNotification(win, fmt("No crash minidumps in %s", dataDir), kNotif5SecsTimeOut);
+    }
+}
+
 static void ShowLogFileSmart() {
     TempStr path = gLogFilePath;
     if (len(path) == 0) {
@@ -10291,6 +10333,10 @@ static LRESULT FrameOnCommand(MainWindow* win, HWND hwnd, UINT msg, WPARAM wp, L
 
         case CmdShowLog:
             ShowLogFileSmart();
+            break;
+
+        case CmdDebugShowCrashMiniDumps:
+            ShowCrashMiniDumps(win);
             break;
 
         case CmdScreenshot:
@@ -15818,7 +15864,7 @@ static void ShowCrashHandlerMessage() {
         return;
     }
 
-    Str msg = Tr("SumatraPDF crashed.\n\nPress 'Cancel' to see the crash report.");
+    Str msg = Tr("SumatraPDF crashed.\n\nPress 'Cancel' to see how to report the crash.");
     uint flags = MB_ICONERROR | MB_OK | MB_OKCANCEL | MbRtlReadingMaybe();
     flags |= MB_SETFOREGROUND | MB_TOPMOST;
 
@@ -15836,9 +15882,6 @@ static void ShowCrashHandlerMessage() {
 #else
 #define kMinidumpSubmitUrl "https://www.sumatrapdfreader.org/app/sumatrapdf/uploadminidump"
 #endif
-
-// where InstallCrashHandler() writes the .dmp, in the crash arena
-static Str gCrashDumpPath;
 
 // Message from MuPDF's uncaught-throw abort (error.c). Looked up at crash time
 // so we do not need a hard link for every tool that builds CrashHandlerNoOp.
@@ -15876,7 +15919,7 @@ static Str GetCrashComment(Arena* a, Str condStr, Str fileLine, bool isCrash) {
     } else {
         b.Append(StrL("Type: debug report (not crash)\n"));
     }
-    b.Append(str::Format(a, "Minidump: %s\n", gCrashDumpPath));
+    b.Append(str::Format(a, "Minidump: %s\n", CrashHandlerDumpPath()));
     if (condStr) {
         b.Append(str::Format(a, "Cond: %s @ %s\n", condStr, fileLine));
     }
@@ -15949,12 +15992,6 @@ static void InstallSumatraCrashHandler(bool localOnly) {
     if (gIsAsanBuild) {
         return;
     }
-    // a crash report we could never send is not worth the machinery, so this
-    // must run after InitializePolicies()
-    if (!HasPermission(Perm::InternetAccess)) {
-        log(StrL("InstallSumatraCrashHandler: skipping, no Perm::InternetAccess\n"));
-        return;
-    }
 
     TempStr crashInfoDir = GetCrashInfoDirTemp();
 
@@ -15974,16 +16011,20 @@ static void InstallSumatraCrashHandler(bool localOnly) {
         cfg.uploadCrashes = false;
         cfg.uploadDebugReports = false;
     }
+    // a policy without internet access still gets a local .dmp to attach to
+    // an issue; must run after InitializePolicies()
+    if (!HasPermission(Perm::InternetAccess)) {
+        log(StrL("InstallSumatraCrashHandler: no Perm::InternetAccess, not uploading\n"));
+        cfg.submitUrl = {};
+        cfg.uploadCrashes = false;
+        cfg.uploadDebugReports = false;
+    }
     cfg.getCrashComment = GetCrashComment;
     cfg.onCrashBegin = OnCrashBegin;
     cfg.showCrashMessage = ShowCrashHandlerMessage;
     cfg.canEndCrashedThread = TtsOnEngineCrash;
 
     InstallCrashHandler(cfg);
-    Arena* a = CrashHandlerArena();
-    if (a) {
-        gCrashDumpPath = str::Dup(a, cfg.crashDumpPath);
-    }
     CaptureSettings();
 }
 

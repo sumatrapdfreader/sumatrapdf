@@ -74,6 +74,7 @@ static const i32 gNoDocWhitelist[] = {
     CmdFavoriteShowInTab,
     CmdGoToHomePage,
     CmdShowLog,
+    CmdDebugShowCrashMiniDumps,
     CmdClearHistory,
     CmdRemoveDeletedFilesFromHistory,
     CmdDeleteCachedFiles,
@@ -240,6 +241,7 @@ static const i32 removeIfNoDiskAccessPerm[] = {
     CmdCreateShortcutToFile,
     CmdSaveEmbeddedFile,
     CmdShowLog,
+    CmdDebugShowCrashMiniDumps,
     CmdShowGeneratedHTML,
     0,
 };

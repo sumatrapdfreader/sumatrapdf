@@ -127,9 +127,34 @@ static void WriteCrashInfoToStdErr(Str d) {
     WriteFile(h, (u8*)d.s, (DWORD)d.len, &written, nullptr);
 }
 
+// path of the .dmp the report being built goes to, see BuildCrashComment()
+static Str gDumpPath;
+
+// crashDumpPath with "-<unix epoch in minutes>" before the extension, so a
+// dump doesn't overwrite earlier ones: sumatrapdfcrash-29871234.dmp. A second
+// dump in the same minute gets "-2" and so on.
+static Str UniqueDumpPath() {
+    Arena* a = gCrashHandlerArena;
+    Str path = gCfg.crashDumpPath;
+    Str ext = path::GetExtTemp(path);
+    Str base = Str(path.s, len(path) - len(ext));
+    i64 minutes = UnixTimeMsNow() / (60 * 1000);
+    Str res = str::Format(a, "%s-%d%s", base, minutes, ext);
+    for (int i = 2; i < 100 && file::Exists(res); i++) {
+        res = str::Format(a, "%s-%d-%d%s", base, minutes, i, ext);
+    }
+    return res;
+}
+
+Str CrashHandlerDumpPath() {
+    return gDumpPath;
+}
+
 // The report text is the app's to write; we only say when and give it the
-// arena to write into.
+// arena to write into. Every report builds its text before writing its .dmp,
+// so this is where the .dmp gets its name: the text can then say where it is.
 static Str BuildCrashComment(Str condStr, Str fileLine, bool isCrash) {
+    gDumpPath = UniqueDumpPath();
     if (!gCfg.getCrashComment) {
         return {};
     }
@@ -145,8 +170,11 @@ static void WriteAndUploadMinidump(Str logText, MINIDUMP_EXCEPTION_INFORMATION* 
     if (len(gCfg.fullDumpEnvVar) > 0) {
         fullDump = GetEnvironmentVariableA(CStrTemp(gCfg.fullDumpEnvVar), nullptr, 0) != 0;
     }
-    dir::CreateForFile(gCfg.crashDumpPath);
-    TempWStr ws = ToWStrTemp(gCfg.crashDumpPath);
+    if (len(gDumpPath) == 0) {
+        gDumpPath = UniqueDumpPath();
+    }
+    dir::CreateForFile(gDumpPath);
+    TempWStr ws = ToWStrTemp(gDumpPath);
     dbghelp::WriteMiniDump(ws, mei, fullDump, logText);
 
     if (!shouldUpload) {
@@ -162,7 +190,7 @@ static void WriteAndUploadMinidump(Str logText, MINIDUMP_EXCEPTION_INFORMATION* 
         return;
     }
 
-    Str dump = file::ReadFileWithArena(gCfg.crashDumpPath, gCrashHandlerArena);
+    Str dump = file::ReadFileWithArena(gDumpPath, gCrashHandlerArena);
     if (len(dump) == 0) {
         log(StrL("WriteAndUploadMinidump: empty dump, not uploading\n"));
         return;

@@ -350,6 +350,7 @@ const commandsRaw = [
     "CmdAdjustBrightness", "Adjust Brightness...",
     "CmdAdjustContrast", "Adjust Contrast...",
     "CmdToggleSidebarAutoHide", "Toggle Sidebar Auto-hide",
+    "CmdDebugShowCrashMiniDumps", "Debug: Show Crash Minidumps",
 ];
 
 // removed slots are dropped: nothing outside the generators should see them

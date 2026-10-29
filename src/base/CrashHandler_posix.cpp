@@ -36,6 +36,10 @@ Arena* CrashHandlerArena() {
     return gCrashHandlerArena;
 }
 
+Str CrashHandlerDumpPath() {
+    return gCfg.crashDumpPath;
+}
+
 Str CrashHandlerSystemInfo() {
     return gSysInfo;
 }

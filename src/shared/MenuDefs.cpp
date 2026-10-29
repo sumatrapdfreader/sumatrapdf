@@ -657,6 +657,10 @@ MenuDef menuDefDebug[] = {
         CmdDebugShowNotif,
     },
     {
+        StrL("Show crash minidumps"),
+        CmdDebugShowCrashMiniDumps,
+    },
+    {
         {},
         0,
     },

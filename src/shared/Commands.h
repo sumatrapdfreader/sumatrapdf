@@ -343,8 +343,9 @@ enum {
     CmdAdjustBrightness = 537,
     CmdAdjustContrast = 538,
     CmdToggleSidebarAutoHide = 539,
+    CmdDebugShowCrashMiniDumps = 540,
 
-    CmdLast = 539,
+    CmdLast = 540,
     CmdFirstCustom = CmdLast + 100,
 
     // aliases, at the end to not mess ordering

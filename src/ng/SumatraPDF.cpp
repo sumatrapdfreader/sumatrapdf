@@ -6137,6 +6137,17 @@ void ExecuteCmd(MainWindow* win, int cmdId) {
             break;
         }
 
+        // ng: one crashinfo folder for all builds
+        case CmdDebugShowCrashMiniDumps: {
+            TempStr dir = GetCrashInfoDirTemp();
+            if (!dir::Exists(dir)) {
+                ShowTemporaryNotification(win, fmt("No crash reports in %s", dir), kNotif5SecsTimeOut);
+                break;
+            }
+            OpenPathInDefaultFileManager(dir);
+            break;
+        }
+
 #if OS_WIN
         // open the OS "Open with" / Default apps UI for this extension
         case CmdFixDefaultApp: {
