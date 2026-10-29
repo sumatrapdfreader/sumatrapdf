@@ -352,6 +352,7 @@ const commandsRaw = [
     "CmdToggleSidebarAutoHide", "Toggle Sidebar Auto-hide",
     "CmdDebugShowCrashMiniDumps", "Debug: Show Crash Minidumps",
     "CmdCopyTemporaryFileToNonTemporary", "Copy Temporary File to Permanent Folder",
+    "CmdConvertEpubToPdf", "Convert EPUB to PDF...",
 ];
 
 // removed slots are dropped: nothing outside the generators should see them

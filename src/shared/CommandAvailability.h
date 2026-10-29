@@ -31,6 +31,7 @@ struct AppCommandCtx {
     bool isMarkdown = false;
     bool isCbx = false;
     bool isImageCollection = false;
+    bool isEpub = false;
     // reflowable document (epub, mobi, fb2, ...): the ebook settings apply
     bool isReflowable = false;
     bool isFixedPage = false;

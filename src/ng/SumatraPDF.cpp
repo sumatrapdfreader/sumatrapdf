@@ -6484,6 +6484,10 @@ void ExecuteCmd(MainWindow* win, int cmdId) {
             ShowConvertToPdfDialog(win);
             break;
 
+        case CmdConvertEpubToPdf:
+            ShowConvertEpubToPdfDialog(win);
+            break;
+
         case CmdConvertPdfToImages:
             ShowConvertPdfToImagesDialog(win);
             break;

@@ -717,6 +717,10 @@ CommandVisibility GetCommandVisibility(int cmdId, const AppCommandCtx& ctx, Comm
         return CommandVisibility::Hide;
     }
 
+    if (cmdId == CmdConvertEpubToPdf && !ctx.isEpub) {
+        return CommandVisibility::Hide;
+    }
+
     if (cmdId == CmdConvertToPDF) {
         // comic books, image folders, single images (issue #4118)
         if (!ctx.isDocLoaded || !ctx.isImageCollection) {

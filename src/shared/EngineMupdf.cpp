@@ -10766,6 +10766,61 @@ TempStr EngineMupdfGetPdfOutline(Str path) {
     return res;
 }
 
+// lays out an ebook (EPUB, ...) into pages of pageDx x pageDy points with text
+// of fontSize points and writes them as a PDF that keeps the text, as
+// `sumatrapdf-tool convert` does. Returns the number of pages, 0 on failure.
+int EngineMupdfEbookToPdf(Str srcPath, Str dstPath, float pageDx, float pageDy, float fontSize) {
+    fz_context* ctx = fz_new_context(nullptr, nullptr, FZ_STORE_DEFAULT);
+    if (!ctx) {
+        return 0;
+    }
+    fz_register_document_handlers(ctx);
+    // same image fix as the viewer (#5805)
+    const char* userCss = "img { height: auto !important; max-width: 100% !important; }\n";
+    int nPages = 0;
+    fz_document* doc = nullptr;
+    fz_document_writer* wri = nullptr;
+    fz_page* page = nullptr;
+    fz_var(doc);
+    fz_var(wri);
+    fz_var(page);
+    fz_var(nPages);
+    fz_try(ctx) {
+        doc = fz_open_document(ctx, CStrTemp(srcPath));
+        fz_style_document(ctx, doc, 1, userCss);
+        fz_layout_document(ctx, doc, pageDx, pageDy, fontSize);
+        int count = fz_count_pages(ctx, doc);
+        wri = fz_new_pdf_writer(ctx, CStrTemp(dstPath), "compress");
+        for (int i = 0; i < count; i++) {
+            page = fz_load_page(ctx, doc, i);
+            fz_rect box = fz_bound_page_box(ctx, page, FZ_CROP_BOX);
+            fz_matrix ctm = fz_translate(-box.x0, -box.y0);
+            box = fz_transform_rect(box, ctm);
+            fz_device* dev = fz_begin_page(ctx, wri, box);
+            fz_run_page(ctx, page, dev, ctm, nullptr);
+            fz_end_page(ctx, wri);
+            fz_drop_page(ctx, page);
+            page = nullptr;
+        }
+        fz_close_document_writer(ctx, wri);
+        nPages = count;
+    }
+    fz_always(ctx) {
+        fz_drop_page(ctx, page);
+        fz_drop_document_writer(ctx, wri);
+        fz_drop_document(ctx, doc);
+    }
+    fz_catch(ctx) {
+        fz_report_error(ctx);
+        nPages = 0;
+    }
+    fz_drop_context(ctx);
+    if (nPages == 0) {
+        file::Delete(dstPath);
+    }
+    return nPages;
+}
+
 TempStr EngineMupdfGetPdfInfo(Str path) {
     fz_context* ctx = fz_new_context(nullptr, nullptr, FZ_STORE_UNLIMITED);
     if (!ctx) {

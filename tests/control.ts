@@ -147,6 +147,8 @@ export enum ControlCommand {
   TestTemporaryFile = 140,
   // orig: [x, y] frame client point the auto-hide sidebar takes as the cursor; x < 0 clears
   TestSidebarCursor = 141,
+  // [destPath, pageSizeIdx, fontSize]: Convert EPUB to PDF without its dialog
+  TestConvertEpubToPdf = 142,
 }
 
 export type ControlArg = number | string | Uint8Array | ControlArg[];

@@ -828,6 +828,8 @@ enum class ControlCmd : u16 {
     TestPageAdjust = 138,
     // the current document: from a temporary folder?, its notification, its path
     TestTemporaryFile = 140,
+    // [destPath, pageSizeIdx, fontSize]: Convert EPUB to PDF without its dialog
+    TestConvertEpubToPdf = 142,
 };
 
 static_assert((u16)ControlCmd::Quit == (u16)ControlFrameCmd::Quit);
@@ -2112,6 +2114,20 @@ static void ExecuteControlRequest(ControlRequest* req) {
             }
             SetChapterLayoutHold(hold != 0);
             AppendTestResult(req, 0, StrL("OK"));
+            break;
+        }
+
+        case ControlCmd::TestConvertEpubToPdf: {
+            Str destPath = StringArg(req, 0);
+            i32 pageSizeIdx = 0;
+            i32 fontSize = 0;
+            if (len(destPath) == 0 || !IntArg(req, 1, pageSizeIdx) || !IntArg(req, 2, fontSize)) {
+                AppendError(req, StrL("TestConvertEpubToPdf expects string destPath, int pageSizeIdx, int fontSize"));
+                break;
+            }
+            int exitCode = 0;
+            Str res = ConvertEpubToPdfResultTemp(destPath, pageSizeIdx, fontSize, &exitCode);
+            AppendTestResult(req, exitCode, res);
             break;
         }
 

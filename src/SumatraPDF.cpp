@@ -11349,6 +11349,10 @@ static LRESULT FrameOnCommand(MainWindow* win, HWND hwnd, UINT msg, WPARAM wp, L
             ShowConvertToPdfDialog(win);
             break;
 
+        case CmdConvertEpubToPdf:
+            ShowConvertEpubToPdfDialog(win);
+            break;
+
         case CmdConvertPdfToImages:
             ShowConvertPdfToImagesDialog(win);
             break;

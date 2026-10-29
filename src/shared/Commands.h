@@ -345,8 +345,9 @@ enum {
     CmdToggleSidebarAutoHide = 539,
     CmdDebugShowCrashMiniDumps = 540,
     CmdCopyTemporaryFileToNonTemporary = 541,
+    CmdConvertEpubToPdf = 542,
 
-    CmdLast = 541,
+    CmdLast = 542,
     CmdFirstCustom = CmdLast + 100,
 
     // aliases, at the end to not mess ordering

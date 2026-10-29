@@ -663,6 +663,8 @@ enum class ControlCmd : u16 {
     TestTemporaryFile = 140,
     // [x, y] frame client point the auto-hide sidebar takes as the cursor; x < 0 clears
     TestSidebarCursor = 141,
+    // [destPath, pageSizeIdx, fontSize]: Convert EPUB to PDF without its dialog
+    TestConvertEpubToPdf = 142,
 };
 
 static_assert((u16)ControlCmd::Quit == (u16)ControlFrameCmd::Quit);
@@ -1499,6 +1501,20 @@ static void ExecuteControlRequest(ControlRequest* req) {
         case ControlCmd::TestTemporaryFile: {
             int exitCode = 0;
             Str res = TemporaryFileResultTemp(StringArg(req, 0), &exitCode);
+            AppendTestResult(req, exitCode, res);
+            break;
+        }
+
+        case ControlCmd::TestConvertEpubToPdf: {
+            Str destPath = StringArg(req, 0);
+            i32 pageSizeIdx = 0;
+            i32 fontSize = 0;
+            if (len(destPath) == 0 || !IntArg(req, 1, pageSizeIdx) || !IntArg(req, 2, fontSize)) {
+                AppendError(req, StrL("TestConvertEpubToPdf expects string destPath, int pageSizeIdx, int fontSize"));
+                break;
+            }
+            int exitCode = 0;
+            Str res = ConvertEpubToPdfResultTemp(destPath, pageSizeIdx, fontSize, &exitCode);
             AppendTestResult(req, exitCode, res);
             break;
         }

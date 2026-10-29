@@ -501,6 +501,7 @@ AppCommandCtx NewAppCommandCtx(MainWindow* win, Point cursorPos) {
             ctx.isImageCollection = true;
         }
         ctx.isReflowable = engine && engine->isReflowable;
+        ctx.isEpub = IsEpubDoc(ctx.tab);
         ctx.engineKind = ctx.tab->GetEngineType();
         ctx.engineHasErrors = engine && engine->HasErrors();
 #ifndef DISABLE_DOCUMENT_RESTRICTIONS

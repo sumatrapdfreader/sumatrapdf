@@ -1206,6 +1206,121 @@ void ShowConvertToPdfDialog(MainWindow* win) {
     }
 }
 
+// --- Convert EPUB to PDF dialog ---
+
+// the page sizes of kEbookPdfPageSizes, A5 first
+static DropDown* NewPageSizeDropDown(HWND parent, PlatformFont* font) {
+    auto* dd = new DropDown();
+    DropDown::CreateArgs args;
+    args.parent = parent;
+    args.font = font;
+    args.isRtl = IsUIRtl();
+    dd->Create(args);
+    StrVec items;
+    for (const EbookPdfPageSize& ps : kEbookPdfPageSizes) {
+        items.Append(ps.label);
+    }
+    dd->SetItems(items);
+    CbSetCurrentSelection(dd, 0);
+    dd->SetColors(ThemeWindowTextColor(), ThemeWindowControlBackgroundColor());
+    return dd;
+}
+
+// editable combo listing kEbookPdfFontSizes; any other size can be typed in
+static DropDown* NewFontSizeCombo(HWND parent, PlatformFont* font) {
+    DropDown::CreateArgs args;
+    args.parent = parent;
+    args.font = font;
+    args.isRtl = IsUIRtl();
+    args.isEditable = true;
+    auto* dd = new DropDown();
+    dd->Create(args);
+    StrVec items;
+    for (int size : kEbookPdfFontSizes) {
+        items.Append(fmt("%d", size));
+    }
+    dd->SetItems(items);
+    dd->SetText(fmt("%d", kEbookPdfDefaultFontSize));
+    dd->SetColors(ThemeWindowTextColor(), ThemeWindowControlBackgroundColor());
+    return dd;
+}
+
+// lays the book out into pages of the chosen size and writes them as a PDF
+// that keeps the text, then opens it
+struct ConvertEpubToPdfDialog : PdfToolDialog {
+    DropDown* dropPageSize = nullptr;
+    DropDown* dropFontSize = nullptr;
+
+    bool Create(MainWindow* win, WindowTab* tab);
+    void DoIt(VirtMouseEvent* ev = nullptr) override;
+};
+
+void ConvertEpubToPdfDialog::DoIt(VirtMouseEvent*) {
+    TempStr destPath = destEdit->GetTextTemp();
+    if (len(destPath) == 0) {
+        return;
+    }
+    int fontSize = EbookPdfFontSizeFromText(dropFontSize->GetTextTemp());
+    if (fontSize == 0) {
+        MessageBoxWarning(hwnd, Tr("Invalid font size"), Tr("Convert EPUB to PDF"));
+        return;
+    }
+    int idx = CbGetCurrentSelection(dropPageSize);
+    if (idx < 0 || idx >= dimofi(kEbookPdfPageSizes)) {
+        idx = 0;
+    }
+    const EbookPdfPageSize& ps = kEbookPdfPageSizes[idx];
+    logf("ConvertEpubToPdf: '%s' -> '%s', %s, %d pt\n", srcPath, destPath, ps.label, fontSize);
+
+    HCURSOR prev = SetCursor(LoadCursor(nullptr, IDC_WAIT));
+    int nPages = EngineMupdfEbookToPdf(srcPath, destPath, ps.dx, ps.dy, (float)fontSize);
+    SetCursor(prev);
+    if (nPages == 0) {
+        MessageBoxWarning(hwnd, Tr("Failed to save a file"), Tr("Convert EPUB to PDF"));
+        return;
+    }
+    logf("ConvertEpubToPdf: wrote %d pages\n", nPages);
+    MainWindow* w = win;
+    TempStr path = str::DupTemp(destPath);
+    Close();
+    LoadArgs args(path, w);
+    StartLoadDocument(&args);
+}
+
+bool ConvertEpubToPdfDialog::Create(MainWindow* w, WindowTab* tab) {
+    if (!CreateToolDialog(w, tab, Tr("Convert EPUB to PDF"))) {
+        return false;
+    }
+    AddLine(Tr("Page size"));
+    dropPageSize = NewPageSizeDropDown(hwnd, fontText);
+    lastLine->AddChild(dropPageSize);
+
+    AddLine(Tr("Font size"));
+    dropFontSize = NewFontSizeCombo(hwnd, fontText);
+    lastLine->AddChild(dropFontSize);
+
+    AddFilesBlock(DefaultPdfDestPathTemp(srcPath), L"PDF Files\0*.pdf\0All Files\0*.*\0", L"pdf");
+    AddFooter(Tr("Convert to PDF"));
+    FinishDialog(destEdit);
+    return true;
+}
+
+void ShowConvertEpubToPdfDialog(MainWindow* win) {
+    if (!win || !win->IsDocLoaded()) {
+        return;
+    }
+    WindowTab* tab = win->CurrentTab();
+    if (!IsEpubDoc(tab)) {
+        return;
+    }
+    logf("ShowConvertEpubToPdfDialog: opening for '%s'\n", tab->filePath);
+
+    auto* dlg = new ConvertEpubToPdfDialog();
+    if (!dlg->Create(win, tab)) {
+        delete dlg;
+    }
+}
+
 // --- Convert PDF to Images dialog (issue #5991) ---
 
 // editable combo listing kImageDpiChoices; any other DPI can be typed in

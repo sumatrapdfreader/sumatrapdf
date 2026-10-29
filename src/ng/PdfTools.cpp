@@ -158,6 +158,7 @@ enum class PdfToolKind {
     ConvertToImages,
     SaveSelectionAsImage,
     Merge,
+    ConvertEpubToPdf,
 };
 
 // orig's three "Pages:" radios of the Convert PDF to Images dialog
@@ -451,6 +452,8 @@ static Str ToolTitleFor(PdfToolKind kind) {
             return Tr("Save Selection As Image");
         case PdfToolKind::Merge:
             return Tr("Merge PDF");
+        case PdfToolKind::ConvertEpubToPdf:
+            return Tr("Convert EPUB to PDF");
     }
     return {};
 }
@@ -490,6 +493,8 @@ static Str (*ToolTitleFn(PdfToolKind kind))() {
             return ToolTitleOf<PdfToolKind::ConvertToImages>;
         case PdfToolKind::SaveSelectionAsImage:
             return ToolTitleOf<PdfToolKind::SaveSelectionAsImage>;
+        case PdfToolKind::ConvertEpubToPdf:
+            return ToolTitleOf<PdfToolKind::ConvertEpubToPdf>;
         case PdfToolKind::Merge:
             break;
     }
@@ -512,6 +517,8 @@ static Str ToolActionText() {
             return Tr("Save");
         case PdfToolKind::Merge:
             return Tr("Save");
+        case PdfToolKind::ConvertEpubToPdf:
+            return Tr("Convert to PDF");
         default:
             return ToolTitle();
     }
@@ -537,7 +544,7 @@ static int SelectedFormatIdx() {
 }
 
 static bool HasDpiCombo() {
-    return HasFormatDropDown();
+    return HasFormatDropDown() || gTool.kind == PdfToolKind::ConvertEpubToPdf;
 }
 
 // orig's DpiFromComboText: 0 if what is typed is not a usable DPI
@@ -932,6 +939,34 @@ static void PdfDecryptDoIt() {
     logf("PdfDecryptDoIt: pdfclean_main failed with %d, src: '%s', password len: %d\n", res, gTool.srcPath,
          len(gTool.password));
     MessageBoxWarning(win, StrL("Failed to decrypt PDF file."), Tr("Decrypt PDF"));
+}
+
+// orig's ConvertEpubToPdfDialog::DoIt: ddFormat holds the page size and the
+// DPI combo the font size
+static void ConvertEpubToPdfDoIt() {
+    TempStr destPath = DestPathTemp();
+    if (len(destPath) == 0) {
+        return;
+    }
+    MainWindow* win = gTool.win;
+    int fontSize = EbookPdfFontSizeFromText(InputTextTemp(gTool.dpiEdit));
+    if (fontSize == 0) {
+        MessageBoxWarning(win, Tr("Invalid font size"), Tr("Convert EPUB to PDF"));
+        return;
+    }
+    int idx = gTool.ddFormat.sel;
+    if (idx < 0 || idx >= dimofi(kEbookPdfPageSizes)) {
+        idx = 0;
+    }
+    const EbookPdfPageSize& ps = kEbookPdfPageSizes[idx];
+    logf("ConvertEpubToPdf: '%s' -> '%s', %s, %d pt\n", gTool.srcPath, destPath, ps.label, fontSize);
+    int nPages = EngineMupdfEbookToPdf(gTool.srcPath, destPath, ps.dx, ps.dy, (float)fontSize);
+    if (nPages == 0) {
+        MessageBoxWarning(win, Tr("Failed to save a file"), Tr("Convert EPUB to PDF"));
+        return;
+    }
+    logf("ConvertEpubToPdf: wrote %d pages\n", nPages);
+    CloseAndLoad(destPath);
 }
 
 static void ConvertToPdfDoIt() {
@@ -2074,6 +2109,9 @@ static bool ActionEnabled() {
         // there is nothing to encrypt with until a password is typed
         return len(InputTextTemp(gTool.passwordEdit)) > 0;
     }
+    if (gTool.kind == PdfToolKind::ConvertEpubToPdf) {
+        return EbookPdfFontSizeFromText(InputTextTemp(gTool.dpiEdit)) > 0;
+    }
     if (gTool.kind == PdfToolKind::ConvertToImages) {
         if (SelectedDpi() < 1) {
             return false;
@@ -2139,6 +2177,9 @@ static void PdfToolDoIt() {
             break;
         case PdfToolKind::ConvertToPdf:
             ConvertToPdfDoIt();
+            break;
+        case PdfToolKind::ConvertEpubToPdf:
+            ConvertEpubToPdfDoIt();
             break;
         case PdfToolKind::ConvertToImages:
             ConvertPdfToImagesDoIt();
@@ -2775,6 +2816,8 @@ static const char* ToolWindowName(PdfToolKind kind) {
             return "pdfdecrypt";
         case PdfToolKind::ConvertToPdf:
             return "converttopdf";
+        case PdfToolKind::ConvertEpubToPdf:
+            return "convertepubtopdf";
         case PdfToolKind::ConvertToImages:
             return "converttoimages";
         case PdfToolKind::SaveSelectionAsImage:
@@ -3052,6 +3095,27 @@ void ShowConvertToPdfDialog(MainWindow* win) {
     AppShellInvalidate(win);
 }
 
+static void InitPageSizeDropDown(MainWindow* win);
+static void InitFontSizeCombo(MainWindow* win);
+
+void ShowConvertEpubToPdfDialog(MainWindow* win) {
+    ToolScope scope;
+    if (!CanShowToolDialog(win, false)) {
+        return;
+    }
+    WindowTab* tab = win->CurrentTab();
+    if (!IsEpubDoc(tab)) {
+        return;
+    }
+    logf("ShowConvertEpubToPdfDialog: opening for '%s'\n", tab->filePath);
+    if (!StartToolDialog(win, PdfToolKind::ConvertEpubToPdf, DefaultPdfDestPathTemp(tab->filePath), StrL(".pdf"))) {
+        return;
+    }
+    InitPageSizeDropDown(win);
+    InitFontSizeCombo(win);
+    AppShellInvalidate(win);
+}
+
 // orig's NewDpiCombo
 static void InitDpiCombo(MainWindow* win, int dpi) {
     gp::App* app = win->gpuiWin ? win->gpuiWin->app : nullptr;
@@ -3066,6 +3130,33 @@ static void InitDpiCombo(MainWindow* win, int dpi) {
     }
     gTool.ddDpi.SetItems(dpis, selIdx);
     gTool.dpiEdit = NewInput(win, fmt("%d", dpi));
+}
+
+// orig's NewPageSizeDropDown, in ddFormat
+static void InitPageSizeDropDown(MainWindow* win) {
+    gp::App* app = win->gpuiWin ? win->gpuiWin->app : nullptr;
+    gTool.ddFormat.Init(app);
+    StrVec items;
+    for (const EbookPdfPageSize& ps : kEbookPdfPageSizes) {
+        items.Append(ps.label);
+    }
+    gTool.ddFormat.SetItems(items, 0);
+}
+
+// orig's NewFontSizeCombo, in the DPI combo's fields
+static void InitFontSizeCombo(MainWindow* win) {
+    gp::App* app = win->gpuiWin ? win->gpuiWin->app : nullptr;
+    gTool.ddDpi.Init(app);
+    StrVec sizes;
+    int selIdx = -1;
+    for (int i = 0; i < dimofi(kEbookPdfFontSizes); i++) {
+        sizes.Append(fmt("%d", kEbookPdfFontSizes[i]));
+        if (kEbookPdfFontSizes[i] == kEbookPdfDefaultFontSize) {
+            selIdx = i;
+        }
+    }
+    gTool.ddDpi.SetItems(sizes, selIdx);
+    gTool.dpiEdit = NewInput(win, fmt("%d", kEbookPdfDefaultFontSize));
 }
 
 static void InitFormatDropDown(MainWindow* win, int sel) {
@@ -3961,6 +4052,15 @@ static gp::El* PdfToolColumn(MainWindow* win, gp::Ctx* cx) {
             nLines += 2;
             hint = Tr("Use <N> for the page number");
             break;
+        case PdfToolKind::ConvertEpubToPdf:
+            col->Child(ToolLine(cx, Tr("Page size"))
+                           ->Child(gp::Div(cx->a)
+                                       ->W(kToolDlgComboDx)
+                                       ->Shrink0()
+                                       ->Child(gTool.ddFormat.Build(cx, StrL("pdftool-pagesize"), kToolDlgComboDx))));
+            col->Child(ToolLine(cx, Tr("Font size"))->Child(ToolDpiCombo(cx)));
+            nLines += 2;
+            break;
         case PdfToolKind::SaveSelectionAsImage:
             col->Child(ToolLine(cx, Tr("Resolution (DPI)"))
                            ->Child(ToolDpiCombo(cx))
@@ -4009,6 +4109,9 @@ static gp::El* PdfToolBuildCurrent(MainWindow* win, gp::Ctx* cx) {
     }
     if (HasFormatDropDown() && gTool.ddFormat.PollChanged(cx->app)) {
         SetDestExtFromFormat();
+    }
+    if (gTool.kind == PdfToolKind::ConvertEpubToPdf) {
+        gTool.ddFormat.PollChanged(cx->app);
     }
     if (HasDpiCombo()) {
         gTool.dpiEdit->onChange = gp::ListenTo(gToolView, &PdfToolView::OnInput);

@@ -219,3 +219,4 @@ bool SaveDataToFile(HWND hwndParent, Str fileName, Str data);
 #endif
 
 bool IsPdfDoc(WindowTab* tab);
+bool IsEpubDoc(WindowTab* tab);

@@ -503,6 +503,14 @@ bool IsPdfDoc(WindowTab* tab) {
     return !engine || EngineMupdfIsPdf(engine);
 }
 
+// Convert EPUB to PDF is offered for EPUB only
+bool IsEpubDoc(WindowTab* tab) {
+    if (!tab || len(tab->filePath) == 0) {
+        return false;
+    }
+    return GuessFileTypeFromName(tab->filePath, true) == FileType::Epub;
+}
+
 // substitutions in cmdLine:
 //  %1 : file path (else the file path is appended)
 //  %d : directory in which file is

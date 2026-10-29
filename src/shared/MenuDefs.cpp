@@ -1091,6 +1091,10 @@ MenuDef menuDefDocumentOperations[] = {
         CmdConvertPdfToImages,
     },
     {
+        TrN("Convert EPUB to PDF..."),
+        CmdConvertEpubToPdf,
+    },
+    {
         TrN("Show in fo&lder"),
         CmdShowInFolder,
     },

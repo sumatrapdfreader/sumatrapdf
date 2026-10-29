@@ -141,6 +141,7 @@ import { testit as issue6407 } from "./issue-6407.ts";
 import { testit as issue6435 } from "./issue-6435.ts";
 import { testit as issue6437 } from "./issue-6437.ts";
 import { testit as issue6439 } from "./issue-6439.ts";
+import { testit as convertEpubToPdf } from "./convert-epub-to-pdf.ts";
 import { testit as installerDesktopShortcut } from "./installer-desktop-shortcut.ts";
 import { testit as issue4291 } from "./issue-4291.ts";
 import { testit as issue6271 } from "./issue-6271.ts";
@@ -528,6 +529,7 @@ export const tests: NamedTest[] = [
   ["issue-6435", issue6435],
   ["issue-6437", issue6437],
   ["issue-6439", issue6439],
+  ["convert-epub-to-pdf", convertEpubToPdf],
   ["issue-6239", issue6239],
   ["issue-3755", issue3755],
   ["pdf-save-dedup-stream", pdfSaveDedupStream],

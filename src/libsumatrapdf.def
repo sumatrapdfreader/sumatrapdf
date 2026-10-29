@@ -209,6 +209,12 @@ EXPORTS
 
 	fz_new_pdf_writer_with_output
 
+	fz_new_pdf_writer
+
+	fz_close_document_writer
+
+	fz_drop_document_writer
+
 	pdf_obj_num_is_stream
 
 	pdf_dict_get_inheritable

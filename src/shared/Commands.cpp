@@ -351,6 +351,7 @@ const CommandInfo gCommands[] = {
     {CmdToggleSidebarAutoHide, "CmdToggleSidebarAutoHide\0", StrL("Toggle Sidebar Auto-hide")},
     {CmdDebugShowCrashMiniDumps, "CmdDebugShowCrashMiniDumps\0", StrL("Debug: Show Crash Minidumps")},
     {CmdCopyTemporaryFileToNonTemporary, "CmdCopyTemporaryFileToNonTemporary\0", StrL("Copy Temporary File to Permanent Folder")},
+    {CmdConvertEpubToPdf, "CmdConvertEpubToPdf\0", StrL("Convert EPUB to PDF...")},
 };
 const int gCommandsCount = dimofi(gCommands);
 

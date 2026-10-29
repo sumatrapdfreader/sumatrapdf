@@ -762,6 +762,7 @@ AppCommandCtx NewAppCommandCtx(MainWindow* win, Point cursorPos) {
         EngineBase* engine = ctx.tab->GetEngine();
         ctx.isCbx = engine && engine->kind == kindEngineComicBooks;
         ctx.isImageCollection = engine && engine->isImageCollection;
+        ctx.isEpub = IsEpubDoc(ctx.tab);
         ctx.isReflowable = engine && engine->isReflowable;
         ctx.engineKind = ctx.tab->GetEngineType();
         ctx.engineHasErrors = engine && engine->HasErrors();

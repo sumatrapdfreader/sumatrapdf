@@ -21,6 +21,8 @@ void ShowPdfDecryptDialog(MainWindow* win);
 // comic books / image folders / single images → multi-page PDF (issue #4118)
 void ShowConvertToPdfDialog(MainWindow* win);
 TempStr ConvertImageCollectionToPdfResultTemp(Str srcPath, Str destPath, int* exitCodeOut);
+void ShowConvertEpubToPdfDialog(MainWindow* win);
+TempStr ConvertEpubToPdfResultTemp(Str destPath, int pageSizeIdx, int fontSize, int* exitCodeOut);
 TempStr ExtractPdfPagesResultTemp(Str destPath, Str pagesSpec, int annotsOnly, int* exitCodeOut);
 // PDF pages → PNG / JPEG / BMP files (issue #5991)
 void ShowConvertPdfToImagesDialog(MainWindow* win);

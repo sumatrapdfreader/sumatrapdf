@@ -271,6 +271,41 @@ bool ConvertImageCollectionToPdf(EngineBase* engine, Str destPath) {
     return PdfCreator::SaveImageCollectionAsPdf(destPath, engine, toOptimizedPng);
 }
 
+// 0 if not a usable font size
+int EbookPdfFontSizeFromText(Str s) {
+    str::TrimWsBoth(s);
+    int n = ParseInt(s);
+    if (n < 1 || n > kEbookPdfMaxFontSize) {
+        return 0;
+    }
+    return n;
+}
+
+// Convert EPUB to PDF on the current document without its dialog. Used by
+// tests/convert-epub-to-pdf.ts
+TempStr ConvertEpubToPdfResultTemp(Str destPath, int pageSizeIdx, int fontSize, int* exitCodeOut) {
+    auto finish = [&](int code, TempStr s) -> TempStr {
+        if (exitCodeOut) {
+            *exitCodeOut = code;
+        }
+        return s;
+    };
+    MainWindow* win = len(gWindows) > 0 ? gWindows[0] : nullptr;
+    WindowTab* tab = win ? win->CurrentTab() : nullptr;
+    if (!IsEpubDoc(tab)) {
+        return finish(2, str::DupTemp(StrL("NOTREADY no-epub")));
+    }
+    if (pageSizeIdx < 0 || pageSizeIdx >= dimofi(kEbookPdfPageSizes) || fontSize < 1) {
+        return finish(1, str::DupTemp(StrL("ERROR bad-args")));
+    }
+    const EbookPdfPageSize& ps = kEbookPdfPageSizes[pageSizeIdx];
+    int n = EngineMupdfEbookToPdf(tab->filePath, destPath, ps.dx, ps.dy, (float)fontSize);
+    if (n == 0) {
+        return finish(1, str::DupTemp(StrL("ERROR convert-failed")));
+    }
+    return finish(0, fmt("OK pages=%d", n));
+}
+
 TempStr ConvertImageCollectionToPdfResultTemp(Str srcPath, Str destPath, int* exitCodeOut) {
     auto finish = [&](int code, TempStr s) -> TempStr {
         if (exitCodeOut) {

@@ -230,6 +230,7 @@ Str EngineMupdfLoadAnnotAttachment(EngineBase*, int objNum);
 Str EngineMupdfLoadEmbedded(EngineBase*, PageDestination*);
 TempStr EngineMupdfGetPdfInfo(Str path);
 TempStr EngineMupdfGetPdfOutline(Str path);
+int EngineMupdfEbookToPdf(Str srcPath, Str dstPath, float pageDx, float pageDy, float fontSize);
 #if !OS_WIN
 struct Pixmap;
 struct IPageElement;
