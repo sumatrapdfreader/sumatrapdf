@@ -85,7 +85,8 @@ export async function packEmbedded(
   const translations = join(inputRoot, ".work/translations.txt");
   if (!existsSync(translations)) writeChanged(translations, "");
   inputs.set("translations.txt", translations);
-  for (const name of ["marked.min.js", "mermaid.min.js"]) inputs.set(name, join(inputRoot, "ext", name));
+  for (const name of ["marked.min.js", "mermaid.min.js", "microlighter.min.js"])
+    inputs.set(name, join(inputRoot, "ext", name));
   if (opts.fonts) {
     for (const [forge, patterns] of fontPatterns) {
       const fontDir = join(inputRoot, "ext/mupdf/resources/fonts", forge);

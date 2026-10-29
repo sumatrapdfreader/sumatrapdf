@@ -144,6 +144,11 @@ jxldec          dist       2026-10-22
   amalgamated dist/jxl.c + dist/jxl.h only
   Replaces libjxl + highway + skcms for JPEG XL decode.
 
+microlighter    2.2.0      2026-09-11
+  https://github.com/davatron5000/microlighter
+  syntax highlighting of markdown code blocks (CSS Custom Highlight API)
+  ext/microlighter.min.js: core + all grammars bundled by cmd/update-microlighter.ts
+
 zopfli         1.0.3+     2024-04-11
   https://github.com/google/zopfli
   https://github.com/google/zopfli/commit/ccf9f0588d4a4509cb1040310ec122243e670ee6

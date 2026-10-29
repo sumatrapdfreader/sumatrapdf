@@ -508,6 +508,33 @@ void MarkdownModel::OnDocumentComplete(Str url) {
     FinishDocumentLoad(pageNo);
 }
 
+static bool IsPageScriptUrl(Str url, Str name) {
+    return str::EqI(url, name) || (str::EndsWithI(url, name) && url.s[len(url) - len(name) - 1] == '/');
+}
+
+// scripts the page MarkdownToHtmlPage makes loads: mermaid for ```mermaid
+// fences, microlighter and code-run.js for code blocks
+static Str PageScriptData(Str url) {
+    Str embedded[] = {StrL("mermaid.min.js"), StrL("microlighter.min.js")};
+    for (Str name : embedded) {
+        if (!IsPageScriptUrl(url, name)) {
+            continue;
+        }
+        int n = 0;
+        u8* js = GetEmbeddedFileData(name, &n);
+        Str res = (js && n > 0) ? str::Dup(Str((const char*)js, n)) : Str{};
+        free(js);
+        return res;
+    }
+    if (IsPageScriptUrl(url, StrL("mermaid-run.js"))) {
+        return str::Dup(MermaidRunJs());
+    }
+    if (IsPageScriptUrl(url, StrL("code-run.js"))) {
+        return str::Dup(CodeRunJs());
+    }
+    return {};
+}
+
 Str MarkdownModel::GetDataForUrl(Str url) {
     ScopedMutex scope(&docAccess);
     TempStr plainUrl = NormalizeMarkdownUrlTemp(url);
@@ -516,18 +543,8 @@ Str MarkdownModel::GetDataForUrl(Str url) {
         return cached;
     }
 
-    Str data;
-    // mermaid runtime from IDR_EMBEDDED_PAK for ```mermaid fences (see MarkdownToHtmlPage)
-    if (str::EndsWithI(plainUrl, StrL("/mermaid.min.js")) || str::EqI(plainUrl, StrL("mermaid.min.js"))) {
-        int n = 0;
-        u8* js = GetEmbeddedFileData(StrL("mermaid.min.js"), &n);
-        if (js && n > 0) {
-            data = str::Dup(Str((const char*)js, n));
-        }
-        free(js);
-    } else if (str::EndsWithI(plainUrl, StrL("/mermaid-run.js"))) {
-        data = str::Dup(MermaidRunJs());
-    } else {
+    Str data = PageScriptData(plainUrl);
+    if (len(data) == 0) {
         TempStr filePath = VirtualUrlToFileTemp(plainUrl);
         // in html mode every resource (the page, images, linked pages) is served raw;
         // in markdown mode .md/.markdown/.html are rendered to a styled page and other

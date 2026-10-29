@@ -294,21 +294,58 @@ code { background: var(--code-bg); padding: .2em .4em; border-radius: 6px; }
 pre code { background: transparent; padding: 0; }
 pre.mermaid { background: transparent; text-align: center; overflow: visible; }
 pre.mermaid svg { max-width: 100%%; height: auto; }
+pre[data-lang]::before { content: attr(data-lang); display: block; margin-bottom: 8px; color: var(--muted);
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif; }
+.code-block { position: relative; }
+.code-copy { position: absolute; top: 8px; right: 8px; padding: 5px; line-height: 0; color: var(--muted);
+  background: var(--code-bg); border: 1px solid var(--border); border-radius: 6px; cursor: pointer; opacity: 0; }
+.code-block:hover .code-copy, .code-copy:focus-visible { opacity: 1; }
+.code-copy:hover { color: var(--fg); }
+::highlight(comment), ::highlight(quote) { color: var(--syntax-comment); }
+::highlight(keyword), ::highlight(storage), ::highlight(at-rule), ::highlight(doctype), ::highlight(important),
+  ::highlight(section) { color: var(--syntax-keyword); }
+::highlight(string), ::highlight(regexp), ::highlight(attribute-value), ::highlight(link), ::highlight(raw)
+  { color: var(--syntax-string); }
+::highlight(numeric), ::highlight(boolean), ::highlight(constant), ::highlight(symbol), ::highlight(character-entity),
+  ::highlight(anchor), ::highlight(entity) { color: var(--syntax-constant); }
+::highlight(function), ::highlight(decorator), ::highlight(animation) { color: var(--syntax-function); }
+::highlight(type), ::highlight(support), ::highlight(selector) { color: var(--syntax-type); }
+::highlight(variable), ::highlight(interpolation) { color: var(--syntax-variable); }
+::highlight(property), ::highlight(key), ::highlight(attribute-name) { color: var(--syntax-constant); }
+::highlight(tag), ::highlight(inserted) { color: var(--syntax-tag); }
+::highlight(deleted) { color: var(--syntax-keyword); }
 blockquote { margin: 0; padding: 0 1em; color: var(--muted); border-left: .25em solid var(--border); }
 table { border-collapse: collapse; }
 table th, table td { border: 1px solid var(--border); padding: 6px 13px; }
 img { max-width: 100%%; }
 )";
 
+struct CodeBlockCounts {
+    int mermaid = 0;
+    // fences that name a language other than mermaid: highlighted
+    int withLang = 0;
+    // fences without a language
+    int plain = 0;
+};
+
 // cmark emits <pre><code class="language-mermaid">…</code></pre> for ```mermaid
 // fences. mermaid.js looks for <pre class="mermaid"> (or elements with that class).
-// Returns how many blocks were rewritten.
-static int RewriteMermaidCodeBlocks(str::Builder& out, Str body) {
+// Other languages get <pre data-lang="python">, which the page shows as a label.
+static CodeBlockCounts RewriteCodeBlocks(str::Builder& out, Str body) {
+    CodeBlockCounts counts;
+    for (Str rest = body; rest;) {
+        Str after;
+        if (!str::Cut(rest, StrL("<pre><code>"), nullptr, &after)) {
+            break;
+        }
+        counts.plain++;
+        rest = after;
+    }
+
     const Str kOpen = StrL("<pre><code class=\"language-");
     const Str kCloseCodePre = StrL("</code></pre>");
     constexpr int kMaxFenceAttrLen = 64;
 
-    int nRewritten = 0;
     Str rest = body;
     while (rest) {
         Str before, afterOpen;
@@ -329,8 +366,14 @@ static int RewriteMermaidCodeBlocks(str::Builder& out, Str body) {
         while (langLen < len(attrs) && attrs.s[langLen] != '"' && attrs.s[langLen] != ' ') {
             langLen++;
         }
-        if (!str::EqI(Str(attrs.s, langLen), StrL("mermaid"))) {
-            out.Append(Str(fromOpen.s, len(kOpen) + len(attrs) + 1));
+        Str lang(attrs.s, langLen);
+        if (!str::EqI(lang, StrL("mermaid"))) {
+            // cmark has already HTML-escaped the language name
+            out.Append(StrL("<pre data-lang=\""));
+            out.Append(lang);
+            out.Append(StrL("\"><code class=\"language-"));
+            out.Append(Str(attrs.s, len(attrs) + 1));
+            counts.withLang++;
             rest = content;
             continue;
         }
@@ -344,9 +387,9 @@ static int RewriteMermaidCodeBlocks(str::Builder& out, Str body) {
         out.Append(StrL("<pre class=\"mermaid\">"));
         out.Append(block);
         out.Append(StrL("</pre>"));
-        nRewritten++;
+        counts.mermaid++;
     }
-    return nRewritten;
+    return counts;
 }
 
 // mermaid.min.js lives in IDR_EMBEDDED_PAK and mermaid-run.js is kMermaidRunJs,
@@ -378,15 +421,58 @@ static const char kMermaidRunJs[] = R"JS(
 )JS";
 
 // Raw HTML in markdown is rendered (#6380), so the page must not run the
-// document's script (e.g. <img onerror=...>): only our two mermaid scripts.
+// document's script (e.g. <img onerror=...>): only our mermaid and code scripts.
 static const char kMarkdownCsp[] =
     "<meta http-equiv=\"Content-Security-Policy\" content=\""
     "default-src 'self' data:; img-src * data:; media-src * data:; style-src 'self' 'unsafe-inline'; "
-    "script-src https://sumatrapdf.markdown/mermaid.min.js https://sumatrapdf.markdown/mermaid-run.js; "
+    "script-src https://sumatrapdf.markdown/mermaid.min.js https://sumatrapdf.markdown/mermaid-run.js "
+    "https://sumatrapdf.markdown/microlighter.min.js https://sumatrapdf.markdown/code-run.js; "
     "object-src 'none'; frame-src 'none'; base-uri 'none'; form-action 'none'\">";
 
 Str MermaidRunJs() {
     return Str(kMermaidRunJs, (int)(sizeof(kMermaidRunJs) - 1));
+}
+
+// microlighter.min.js (ext/, in IDR_EMBEDDED_PAK) colors code blocks that name a
+// language; code-run.js is kCodeRunJs. Both from the markdown virtual host.
+static const char kCodeHighlightScript[] =
+    "<script src=\"https://sumatrapdf.markdown/microlighter.min.js\"></script>\n";
+static const char kCodeRunScript[] = "<script src=\"https://sumatrapdf.markdown/code-run.js\"></script>\n";
+
+// A copy button on every code block, then syntax coloring through the CSS Custom
+// Highlight API (where missing, code stays plain).
+static const char kCodeRunJs[] = R"JS(
+(function () {
+  var svg = '<svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor" aria-hidden="true"><path d="';
+  var copyIcon = svg + 'M0 6.75C0 5.78.78 5 1.75 5h1.5a.75.75 0 0 1 0 1.5h-1.5a.25.25 0 0 0-.25.25v7.5c0 .14.11.25.25.25h7.5a.25.25 0 0 0 .25-.25v-1.5a.75.75 0 0 1 1.5 0v1.5A1.75 1.75 0 0 1 9.25 16h-7.5A1.75 1.75 0 0 1 0 14.25Zm5-5C5 .78 5.78 0 6.75 0h7.5C15.22 0 16 .78 16 1.75v7.5A1.75 1.75 0 0 1 14.25 11h-7.5A1.75 1.75 0 0 1 5 9.25Zm1.75-.25a.25.25 0 0 0-.25.25v7.5c0 .14.11.25.25.25h7.5a.25.25 0 0 0 .25-.25v-7.5a.25.25 0 0 0-.25-.25Z"/></svg>';
+  var doneIcon = svg + 'M13.78 4.22a.75.75 0 0 1 0 1.06l-7.25 7.25a.75.75 0 0 1-1.06 0L2.22 9.28a.75.75 0 0 1 1.06-1.06L6 10.94l6.72-6.72a.75.75 0 0 1 1.06 0Z"/></svg>';
+  document.querySelectorAll("pre > code").forEach(function (code) {
+    var pre = code.parentElement;
+    var box = document.createElement("div");
+    box.className = "code-block";
+    pre.parentNode.insertBefore(box, pre);
+    box.appendChild(pre);
+    var btn = document.createElement("button");
+    btn.type = "button";
+    btn.className = "code-copy";
+    btn.title = "Copy";
+    btn.innerHTML = copyIcon;
+    btn.addEventListener("click", function () {
+      navigator.clipboard.writeText(code.textContent).then(function () {
+        btn.innerHTML = doneIcon;
+        setTimeout(function () { btn.innerHTML = copyIcon; }, 1500);
+      });
+    });
+    box.appendChild(btn);
+  });
+  if (window.microlighter && window.CSS && CSS.highlights && window.Highlight) {
+    microlighter.highlightAll().catch(function () {});
+  }
+})();
+)JS";
+
+Str CodeRunJs() {
+    return Str(kCodeRunJs, (int)(sizeof(kCodeRunJs) - 1));
 }
 
 // page colors follow the document color mode: ThemePageRenderColors gives
@@ -408,7 +494,16 @@ static TempStr MarkdownPageCssTemp() {
 
     TempStr cssVars =
         fmt("--bg:%s; --fg:%s; --link:%s; --muted:%s; --border:%s; --code-bg:%s;", bg, fg, link, muted, border, codeBg);
-    return fmt(kMarkdownPageCssFmt, cssVars);
+    // code colors: GitHub's light or dark palette
+    Str syntax = dark ? StrL(
+                            "--syntax-comment:#8b949e; --syntax-keyword:#ff7b72; --syntax-string:#a5d6ff; "
+                            "--syntax-constant:#79c0ff; --syntax-function:#d2a8ff; --syntax-type:#d2a8ff; "
+                            "--syntax-variable:#ffa657; --syntax-tag:#7ee787;")
+                      : StrL(
+                            "--syntax-comment:#6e7781; --syntax-keyword:#cf222e; --syntax-string:#0a3069; "
+                            "--syntax-constant:#0550ae; --syntax-function:#8250df; --syntax-type:#8250df; "
+                            "--syntax-variable:#953800; --syntax-tag:#116329;");
+    return fmt(kMarkdownPageCssFmt, str::JoinTemp(cssVars, StrL(" "), syntax));
 }
 
 // Markdown pages are exposed to WebView2 as generated .html resources. Keep
@@ -595,13 +690,19 @@ Str MarkdownToHtmlPage(Str markdown) {
     html.Append(StrL("<style>"));
     html.Append(Str(MarkdownPageCssTemp()));
     html.Append(StrL("</style></head><body>"));
-    int nMermaid = RewriteMermaidCodeBlocks(html, Str(body));
+    CodeBlockCounts counts = RewriteCodeBlocks(html, Str(body));
     cmark_mem* mem = cmark_get_default_mem_allocator();
     mem->free(body);
 
-    // Mermaid diagrams need JS (WebView2). Fixed-page MuPDF path has no scripts.
-    if (nMermaid > 0) {
+    // Mermaid diagrams and code coloring need JS (WebView2). Fixed-page MuPDF path has no scripts.
+    if (counts.mermaid > 0) {
         html.Append(Str(kMermaidBootstrap, (int)(sizeof(kMermaidBootstrap) - 1)));
+    }
+    if (counts.withLang > 0) {
+        html.Append(Str(kCodeHighlightScript, (int)(sizeof(kCodeHighlightScript) - 1)));
+    }
+    if (counts.withLang + counts.plain > 0) {
+        html.Append(Str(kCodeRunScript, (int)(sizeof(kCodeRunScript) - 1)));
     }
     html.Append(StrL("</body></html>"));
 
@@ -729,23 +830,25 @@ bool MarkdownToc_UnitTestMermaid() {
         return false;
     }
     str::Builder rewritten;
-    int n = RewriteMermaidCodeBlocks(rewritten, Str(body));
+    CodeBlockCounts n = RewriteCodeBlocks(rewritten, Str(body));
     cmark_get_default_mem_allocator()->free(body);
     Str html = ToStr(rewritten);
-    bool ok = (n == 1) && str::Contains(html, StrL("<pre class=\"mermaid\">")) &&
+    bool ok = (n.mermaid == 1) && (n.withLang == 0) && str::Contains(html, StrL("<pre class=\"mermaid\">")) &&
               str::Contains(html, StrL("flowchart TD")) && !str::Contains(html, StrL("language-mermaid"));
 
-    // other language fences stay as cmark emitted them
-    body = MarkdownToHtmlBody(StrL("```js\nnot mermaid\n```\n"));
+    // other language fences keep their class and get a data-lang label (#6433);
+    // fences without a language are only counted
+    body = MarkdownToHtmlBody(StrL("```js\nnot mermaid\n```\n\n```\nplain\n```\n"));
     if (!body) {
         return false;
     }
     str::Builder plainB;
-    int nPlain = RewriteMermaidCodeBlocks(plainB, Str(body));
+    CodeBlockCounts nPlain = RewriteCodeBlocks(plainB, Str(body));
     cmark_get_default_mem_allocator()->free(body);
     Str plain = ToStr(plainB);
-    ok = ok && (nPlain == 0) && str::Contains(plain, StrL("language-js")) &&
-         !str::Contains(plain, StrL("pre class=\"mermaid\""));
+    ok = ok && (nPlain.mermaid == 0) && (nPlain.withLang == 1) && (nPlain.plain == 1) &&
+         str::Contains(plain, StrL("<pre data-lang=\"js\"><code class=\"language-js\">")) &&
+         str::Contains(plain, StrL("<pre><code>plain")) && !str::Contains(plain, StrL("pre class=\"mermaid\""));
     return ok;
 }
 

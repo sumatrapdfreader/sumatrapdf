@@ -12,7 +12,7 @@ REM                       passed as extra files
 REM
 REM Staged (in-archive names are relative to the staging dir):
 REM   .work\translations.txt  (created empty when trans-dl.ts never ran)
-REM   ext\marked.min.js, ext\mermaid.min.js
+REM   ext\marked.min.js, ext\mermaid.min.js, ext\microlighter.min.js
 REM   fonts\*                 mupdf's built-in fonts, picked from
 REM                           ext\mupdf\resources\fonts (see :fonts below).
 REM                           Skipped when SUMATRA_NO_EMBED_FONTS=1; the app
@@ -80,6 +80,7 @@ if exist "%WORK%\scripts.js" (
 )
 copy /y "%ROOT%\ext\marked.min.js" "%STAGING%\marked.min.js" >nul || exit /b 1
 copy /y "%ROOT%\ext\mermaid.min.js" "%STAGING%\mermaid.min.js" >nul || exit /b 1
+copy /y "%ROOT%\ext\microlighter.min.js" "%STAGING%\microlighter.min.js" >nul || exit /b 1
 
 REM base 14 (URW), CJK fallback (Droid), Charis SIL for EPUB, a few Noto for
 REM math / music / symbols / emoji. Not packed: NimbusBoxes, Source Han and the
