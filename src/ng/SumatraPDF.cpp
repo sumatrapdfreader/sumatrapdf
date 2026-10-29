@@ -2655,8 +2655,10 @@ void SaveAnnotationsToMaybeNewPdfFile(WindowTab* tab, const Func1<bool>& onDone)
     }
     TempStr srcFileName = str::DupTemp(engine->FilePath());
     // Seed the dialog with "foo Copy.pdf" so Save doesn't overwrite the source
-    // unless the user deliberately picks the original name.
-    TempStr noExt = path::GetPathNoExtTemp(srcFileName);
+    // unless the user deliberately picks the original name. For our copy of an
+    // Outlook / OneNote attachment, just the name: not our cache folder (#6435)
+    TempStr seed = IsOpenCachePath(srcFileName) ? path::GetBaseNameTemp(srcFileName) : srcFileName;
+    TempStr noExt = path::GetPathNoExtTemp(seed);
     TempStr ext = path::GetExtTemp(srcFileName);
     TempStr suggested = fmt("%s Copy%s", noExt, ext);
 

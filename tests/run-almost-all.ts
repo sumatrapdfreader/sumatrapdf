@@ -138,6 +138,7 @@ import { testit as issue6431 } from "./issue-6431.ts";
 import { testit as issue6433 } from "./issue-6433.ts";
 import { testit as issue6434 } from "./issue-6434.ts";
 import { testit as issue6407 } from "./issue-6407.ts";
+import { testit as issue6435 } from "./issue-6435.ts";
 import { testit as installerDesktopShortcut } from "./installer-desktop-shortcut.ts";
 import { testit as issue4291 } from "./issue-4291.ts";
 import { testit as issue6271 } from "./issue-6271.ts";
@@ -520,6 +521,7 @@ export const tests: NamedTest[] = [
   ["issue-6433", issue6433],
   ["issue-6434", issue6434],
   ["issue-6407", issue6407],
+  ["issue-6435", issue6435],
   ["issue-6239", issue6239],
   ["issue-3755", issue3755],
   ["pdf-save-dedup-stream", pdfSaveDedupStream],

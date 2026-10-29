@@ -4925,8 +4925,10 @@ bool SaveAnnotationsToMaybeNewPdfFile(WindowTab* tab) {
 
     TempStr srcFileName = str::DupTemp(engine->FilePath());
     // Seed the dialog with "foo Copy.pdf" so Save doesn't overwrite the source
-    // unless the user deliberately picks the original name.
-    TempStr noExt = path::GetPathNoExtTemp(srcFileName);
+    // unless the user deliberately picks the original name. For our copy of an
+    // Outlook / OneNote attachment, just the name: not our cache folder (#6435)
+    TempStr seed = IsOpenCachePath(srcFileName) ? path::GetBaseNameTemp(srcFileName) : srcFileName;
+    TempStr noExt = path::GetPathNoExtTemp(seed);
     TempStr ext = path::GetExtTemp(srcFileName);
     TempStr suggested = fmt("%s Copy%s", noExt, ext);
     TempWStr suggestedW = ToWStrTemp(suggested);
@@ -15324,7 +15326,8 @@ static void DeleteOldPdfPreviewLogs(int keep) {
     }
 }
 
-// Copies of OneNote/Outlook extracts. Delete leftovers from a crash; live
+// Copies of OneNote/Outlook extracts, a folder each (files directly in
+// open-cache are from older versions). Delete leftovers from a crash; live
 // tabs delete their own copy when the tab closes.
 static void DeleteStaleOpenCacheFiles() {
     TempStr dataDir = GetSumatraDataDirTemp();
@@ -15345,9 +15348,10 @@ static void DeleteStaleOpenCacheFiles() {
 
     DirIter di{cacheDir};
     di.includeFiles = true;
-    di.includeDirs = false;
+    di.includeDirs = true;
     for (DirIterEntry* de : di) {
-        FILETIME atime = de->accessTime;
+        // listing a folder updates its access time, writing its copy doesn't
+        FILETIME atime = de->isDir ? de->modificationTime : de->accessTime;
         ULARGE_INTEGER a;
         a.LowPart = atime.dwLowDateTime;
         a.HighPart = atime.dwHighDateTime;
@@ -15355,7 +15359,7 @@ static void DeleteStaleOpenCacheFiles() {
         if (ageSec < kMaxAgeSec) {
             continue;
         }
-        bool ok = file::Delete(de->filePath);
+        bool ok = de->isDir ? dir::RemoveAll(de->filePath) : file::Delete(de->filePath);
         logf("DeleteStaleOpenCacheFiles: delete '%s' (age %lld h) -> %d\n", de->filePath, (long long)(ageSec / 3600),
              (int)ok);
     }

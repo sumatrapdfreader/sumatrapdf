@@ -167,7 +167,8 @@ static TempStr GetOpenCacheDirTemp() {
     return path::JoinTemp(dataDir, StrL("open-cache"));
 }
 
-// Copies we made of OneNote / Outlook extracts live under <dataDir>/open-cache.
+// Copies we made of OneNote / Outlook extracts live under <dataDir>/open-cache,
+// each in a folder of its own: open-cache/<id>/<attachment name>.
 bool IsOpenCachePath(Str path) {
     TempStr dir = GetOpenCacheDirTemp();
     if (len(path) == 0 || len(dir) == 0) {
@@ -218,16 +219,39 @@ TempStr MaybeCopyEphemeralHostFile(Str path) {
         logf("MaybeCopyEphemeralHostFile: dir::CreateAll('%s') failed\n", dir);
         return {};
     }
-    TempStr ext = path::GetExtTemp(path);
-    int seq = AtomicIntInc(&gOpenCacheSeq);
-    TempStr name = fmt("%d%s", seq, ext);
-    TempStr dst = path::JoinTemp(dir, name);
+    // a folder per copy keeps the attachment's name, which Save As suggests
+    // (#6435); the time keeps instances apart, as each counts from 1
+    TempStr copyDir;
+    do {
+        int seq = AtomicIntInc(&gOpenCacheSeq);
+        copyDir = path::JoinTemp(dir, fmt("%d-%d", UnixTimeMsNow(), seq));
+    } while (dir::Exists(copyDir));
+    if (!dir::Create(copyDir)) {
+        logf("MaybeCopyEphemeralHostFile: dir::Create('%s') failed\n", copyDir);
+        return {};
+    }
+    TempStr dst = path::JoinTemp(copyDir, path::GetBaseNameTemp(path));
     if (!CopyUnlockingSource(dst, path)) {
         logf("MaybeCopyEphemeralHostFile: copy '%s' -> '%s' failed\n", path, dst);
+        dir::RemoveAll(copyDir);
         return {};
     }
     logf("MaybeCopyEphemeralHostFile: '%s' -> '%s'\n", path, dst);
     return dst;
+}
+
+// Deletes a copy MaybeCopyEphemeralHostFile() made, with its folder. A copy
+// directly in open-cache is from a version that didn't use folders.
+void DeleteOpenCacheCopy(Str path) {
+    if (!IsOpenCachePath(path)) {
+        return;
+    }
+    TempStr copyDir = path::GetDirTemp(path);
+    if (IsOpenCachePath(copyDir)) {
+        dir::RemoveAll(copyDir);
+        return;
+    }
+    file::Delete(path);
 }
 
 /* EngineCreate.cpp */
