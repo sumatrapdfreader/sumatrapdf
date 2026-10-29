@@ -8558,6 +8558,9 @@ struct Window {
     bool anim = false;
 
     bool animFrame = false;
+    bool inDrawFrame = false;
+
+    bool redrawAfterFrame = false;
 
     double frameNow = 0;
 
