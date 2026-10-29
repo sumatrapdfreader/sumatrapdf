@@ -1286,6 +1286,28 @@ TempStr RefHoverResultTemp(Str action, int x, int y, int* exitCodeOut) {
             return fmt("ERROR no-link x=%d y=%d", x, y);
         }
     }
+    // canvas point of the current page's x-th EPUB footnote link, to click
+    if (str::Eq(action, StrL("noteref")) && dm) {
+        int pageNo = dm->CurrentPageNo();
+        int n = 0;
+        for (IPageElement* el : dm->GetEngine()->GetElements(pageNo)) {
+            IPageDestination* dest = el && el->Is(kindPageElementDest) ? el->AsLink() : nullptr;
+            if (!dest || !dest->isNoteRef) {
+                continue;
+            }
+            // skip the zero-width link mupdf adds at the <a>'s anchor
+            RectF r = el->GetRect();
+            if (r.dx <= 0.f || n++ < x) {
+                continue;
+            }
+            Point pt = dm->CvtToScreen(pageNo, PointF(r.x + (r.dx / 2), r.y + (r.dy / 2)));
+            return fmt("OK noteref=%d,%d page=%d rect=%g,%g,%g,%g", pt.x, pt.y, pageNo, r.x, r.y, r.dx, r.dy);
+        }
+        if (exitCodeOut) {
+            *exitCodeOut = 1;
+        }
+        return fmt("ERROR no-noteref page=%d", pageNo);
+    }
     RefHoverState* s = win ? win->refHover : nullptr;
     if (!s || !s->hwndPopup || !HwndIsVisible(s->hwndPopup)) {
         return fmt("OK visible=0");

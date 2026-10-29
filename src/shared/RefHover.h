@@ -74,6 +74,8 @@ struct RefHoverState {
         // (destX, destY) at this zoom — honouring the link author's intent
         // (e.g. "goto top-left at 2x").
         float destZoom = 0.f;
+        // an EPUB footnote link: the region is the note's text
+        bool noteRef = false;
         // Source link location, used to recover a more specific destY when
         // the PDF link is page-level (destY < 0). We extract the source
         // link's text from srcPage at srcRect and search for that text on
@@ -165,6 +167,8 @@ void RefHoverOnCanvasMouseMove(RefHoverState*& s, MainWindow* win, DocController
                                DisplayModel* dm, int x, int y, IPageElement* el, int srcPageNo, int hoverDelayMs);
 void RefHoverOnCanvasMouseLeave(RefHoverState* s, int hoverDelayMs);
 void RefHoverOnCanvasLeftButtonDown(RefHoverState* s);
+bool RefHoverShowNoteRef(RefHoverState*& s, MainWindow* win, DocController* ctrl, ILinkHandler* linkHandler,
+                         DisplayModel* dm, int x, int y, IPageElement* el);
 // ng: what orig's two WM_TIMERs do, driven by the shell's tick
 void RefHoverTick(MainWindow* win, int elapsedMs);
 void RefHoverSchedule(RefHoverState* s, int delayMs, Point screenPt, int destPage, float destX, float destY,
@@ -180,6 +184,8 @@ constexpr UINT_PTR kRefHoverHideTimerID = 10;
 RefHoverState* RefHoverCreate(HWND hwndCanvas);
 bool RefHoverScheduleLink(RefHoverState* s, HWND hwndCanvas, DisplayModel* dm, int x, int y, IPageElement* el,
                           int delayMs);
+bool RefHoverShowNoteRef(RefHoverState*& s, HWND hwndCanvas, DocController* ctrl, ILinkHandler* linkHandler,
+                         DisplayModel* dm, int x, int y, IPageElement* el);
 void RefHoverOnCanvasMouseMove(RefHoverState*& s, HWND hwndCanvas, DocController* ctrl, ILinkHandler* linkHandler,
                                DisplayModel* dm, int x, int y, IPageElement* el, int srcPageNo, int hoverDelayMs);
 void RefHoverOnCanvasMouseLeave(RefHoverState* s, HWND hwndCanvas, int hoverDelayMs);
@@ -222,6 +228,7 @@ void NormalizeGlyphLines(const Rect* coords, Rect* out, int glyphCount);
 int StripWatermarkGlyphs(WStr text, const Rect* coords, WCHAR* outText, Rect* outCoords);
 
 RectF LandscapeBox(RectF mediabox, float destX, float destY, WStr text, const Rect* coords);
+RectF NoteBox(RectF mediabox, float destY, WStr text, const Rect* coords);
 
 RectF DetectEquationBox(WStr text, const Rect* coords, RectF mediabox, float destX, float destY);
 

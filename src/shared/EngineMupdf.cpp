@@ -6125,6 +6125,9 @@ static FzPageInfo* GetFzPageInfoLocked(EngineMupdf* e, Location loc, bool loadQu
             // a link that goes somewhere in this document has no URL to show,
             // so show the description the PDF gives it, like other viewers do
             auto* dest = (PageDestinationMupdf*)pel->AsLink();
+            if (dest && (link->flags & FZ_LINK_FLAG_NOTEREF)) {
+                dest->isNoteRef = true;
+            }
             if (dest && len(dest->GetValue()) == 0) {
                 dest->value = PdfLinkContents(ctx, e->pdfdoc, pdfpage, pageNo, link->rect);
             }

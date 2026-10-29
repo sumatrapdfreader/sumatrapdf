@@ -73,6 +73,7 @@ relative to `ext/mupdf`, so `-p1` from inside that directory.
 | `0070-css-content-strings-only` | pseudo-element `content` renders only a string; `counters(...)` rendered its function name (#6409) |
 | `0071-fallback-font-cache-bold` | bold system fallback fonts cached apart from regular; a bold heading made later regular CJK text bold (#6420) |
 | `0072-html-media-link` | `<video>` / `<audio>` drawn as its poster or a `[video: name]` label linking to the media file, which the app opens in the system player (#6421) |
+| `0073-epub-footnotes` | EPUB 3 `<aside epub:type="footnote">` moved to the end of its chapter; `<a epub:type="noteref">` links get `FZ_LINK_FLAG_NOTEREF` so the app shows the note in a popup (#6431) |
 
 That is the whole list: `ext/mupdf` is byte-for-byte `1.28.5` plus these
 patches, and nothing else.

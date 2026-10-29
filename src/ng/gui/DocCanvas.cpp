@@ -3149,6 +3149,13 @@ static void OnMouseLeftButtonUp(MainWindow* win, int x, int y) {
             return;
         }
 
+        // an EPUB footnote link shows the note in a popup instead of jumping to it
+        if (dest && dest->isNoteRef &&
+            RefHoverShowNoteRef(win->refHover, win, win->ctrl, win->linkHandler, dm, x, y, link)) {
+            AppShellInvalidate(win);
+            return;
+        }
+
         win->ctrl->HandleLink(dest, win->linkHandler);
         AppShellInvalidate(win);
         return;

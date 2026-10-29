@@ -15,25 +15,38 @@ enum class MissingEntry {
     Landscape,
 };
 
-static RectF DetectRegion(EngineBase* engine, int pageNo, RectF mediabox, float destX, float destY, RectF* continuation,
-                          MissingEntry missingEntry) {
-    AutoArenaSavepoint tempScope;
-
+// the page's text with watermark glyphs dropped and glyphs snapped to lines
+static TempWStr RegionTextTemp(EngineBase* engine, int pageNo, Rect** coordsOut) {
     Rect* coords = nullptr;
     int textLen = 0;
     Str textUtf8 = engine->GetTextForPage(pageNo, &textLen, &coords);
     TempWStr text = RefHoverPageTextToWStrTemp(textUtf8);
-    WCHAR* cleanText = nullptr;
-    Rect* cleanCoords = nullptr;
-    Rect* normCoords = coords;
-    if (coords && len(text) > 0) {
-        cleanText = AllocArrayTemp<WCHAR>(textLen);
-        cleanCoords = AllocArrayTemp<Rect>(textLen);
-        int cleanLen = StripWatermarkGlyphs(text, coords, cleanText, cleanCoords);
-        text = WStr(cleanText, cleanLen);
-        normCoords = AllocArrayTemp<Rect>(cleanLen);
-        NormalizeGlyphLines(cleanCoords, normCoords, cleanLen);
+    *coordsOut = coords;
+    if (!coords || len(text) == 0) {
+        return text;
     }
+    WCHAR* cleanText = AllocArrayTemp<WCHAR>(textLen);
+    Rect* cleanCoords = AllocArrayTemp<Rect>(textLen);
+    int cleanLen = StripWatermarkGlyphs(text, coords, cleanText, cleanCoords);
+    Rect* normCoords = AllocArrayTemp<Rect>(cleanLen);
+    NormalizeGlyphLines(cleanCoords, normCoords, cleanLen);
+    *coordsOut = normCoords;
+    return WStr(cleanText, cleanLen);
+}
+
+static RectF DetectNoteRegion(EngineBase* engine, int pageNo, RectF mediabox, float destY) {
+    AutoArenaSavepoint tempScope;
+    Rect* coords = nullptr;
+    TempWStr text = RegionTextTemp(engine, pageNo, &coords);
+    return NoteBox(mediabox, destY, text, coords);
+}
+
+static RectF DetectRegion(EngineBase* engine, int pageNo, RectF mediabox, float destX, float destY, RectF* continuation,
+                          MissingEntry missingEntry) {
+    AutoArenaSavepoint tempScope;
+
+    Rect* normCoords = nullptr;
+    TempWStr text = RegionTextTemp(engine, pageNo, &normCoords);
 
     RectF region = DetectEquationBox(text, normCoords, mediabox, destX, destY);
     if (region.dx <= 0.f || region.dy <= 0.f) {
@@ -86,7 +99,10 @@ void RefHoverOnTimer(RefHoverState* s, EngineBase* engine, float pageZoom) {
     // "[63]"): a second crop, stitched below `region` in the delivered
     // bitmap. Empty (dx/dy <= 0) otherwise.
     RectF continuation{};
-    if (useLinkZoom) {
+    RectF noteRegion = s->pending.noteRef ? DetectNoteRegion(engine, destPage, mediabox, destY) : RectF{};
+    if (noteRegion.dx > 0.f && noteRegion.dy > 0.f) {
+        region = noteRegion;
+    } else if (useLinkZoom) {
         region = RectF{0.f, destY, mediabox.dx, mediabox.dy - destY};
     } else {
         region = DetectRegion(engine, destPage, mediabox, destX, destY, &continuation, MissingEntry::Empty);

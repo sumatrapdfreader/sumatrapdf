@@ -65,6 +65,7 @@ void RefHoverSchedule(RefHoverState* s, HWND hwndCanvas, int delayMs, Point scre
     s->pending.destX = destX;
     s->pending.destY = destY;
     s->pending.destZoom = destZoom;
+    s->pending.noteRef = false;
     s->pending.srcPage = srcPage;
     s->pending.srcRect = srcRect;
     s->pending.pageScreenRect = pageScreenRect;

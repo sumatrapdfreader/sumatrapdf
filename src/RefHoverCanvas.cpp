@@ -36,24 +36,74 @@ bool RefHoverScheduleLink(RefHoverState* s, HWND hwndCanvas, DisplayModel* dm, i
         return false;
     }
     IPageDestination* dest = el->AsLink();
+    // chaptered doc (EPUB): the page is known once the dest is resolved
+    if (PageDestGetPageNo(dest) < 1) {
+        dm->ResolveDest(dest);
+    }
     int destPage = PageDestGetPageNo(dest);
+    if (!dm->ValidPageNo(destPage)) {
+        return false;
+    }
     RectF destPt = PageDestGetDestPoint(dest);
-    float destZoom = dest->GetZoom();
+    // a footnote's region is detected from its text, not the rest of the page
+    float destZoom = dest->isNoteRef ? 0.f : dest->GetZoom();
     Point screenPt = HwndClientToScreen(hwndCanvas, Point(x, y));
     int srcPage = el->GetPageNo();
     RectF srcRect = el->GetRect();
     Rect pageScreenRect = PageScreenRectToScreen(hwndCanvas, dm, srcPage);
     RefHoverSchedule(s, hwndCanvas, delayMs, screenPt, destPage, destPt.x, destPt.y, destZoom, srcPage, srcRect,
                      pageScreenRect);
+    s->pending.noteRef = dest->isNoteRef;
     return true;
+}
+
+// Show the popup for a click on an EPUB footnote link right away. False if
+// there's nothing to show, so the click follows the link.
+bool RefHoverShowNoteRef(RefHoverState*& s, HWND hwndCanvas, DocController* ctrl, ILinkHandler* linkHandler,
+                         DisplayModel* dm, int x, int y, IPageElement* el) {
+    if (!s) {
+        s = RefHoverCreate(hwndCanvas);
+    }
+    if (!s) {
+        return false;
+    }
+    s->ctrl = ctrl;
+    s->linkHandler = linkHandler;
+    if (!RefHoverScheduleLink(s, hwndCanvas, dm, x, y, el, 0)) {
+        return false;
+    }
+    // tracking a cursor that isn't over the canvas would hide the popup at once
+    if (HwndIsCursorOverWindow(hwndCanvas)) {
+        TrackMouseLeave(hwndCanvas);
+    }
+    return true;
+}
+
+// is el the link the shown (or pending) popup is for?
+static bool IsPopupLink(RefHoverState* s, IPageElement* el) {
+    if (!el || !el->Is(kindPageElementDest)) {
+        return false;
+    }
+    int page = el->GetPageNo();
+    RectF rect = el->GetRect();
+    bool shown = s->displayed.srcPage == page && s->displayed.srcRect == rect;
+    bool pending = s->pending.srcPage == page && s->pending.srcRect == rect;
+    return shown || pending;
 }
 
 void RefHoverOnCanvasMouseMove(RefHoverState*& s, HWND hwndCanvas, DocController* ctrl, ILinkHandler* linkHandler,
                                DisplayModel* dm, int x, int y, IPageElement* el, int srcPageNo, int hoverDelayMs) {
     if (hoverDelayMs < 0) {
-        if (s) {
-            RefHoverHide(s, hwndCanvas);
+        // no hover popups, so a shown one is from a click on an EPUB footnote
+        // link: it stays while the cursor is on that link or on the popup
+        if (!s) {
+            return;
         }
+        if (IsPopupLink(s, el)) {
+            KillTimer(hwndCanvas, kRefHoverHideTimerID);
+            return;
+        }
+        RefHoverScheduleHide(s, hwndCanvas, 0);
         return;
     }
 

@@ -86,6 +86,7 @@ void RefHoverSchedule(RefHoverState* s, int delayMs, Point screenPt, int destPag
     s->pending.destX = destX;
     s->pending.destY = destY;
     s->pending.destZoom = destZoom;
+    s->pending.noteRef = false;
     s->pending.srcPage = srcPage;
     s->pending.srcRect = srcRect;
     s->pending.pageScreenRect = pageScreenRect;
@@ -239,6 +240,34 @@ TempStr RefHoverResultTemp(Str action, int x, int y, int* exitCodeOut) {
         if (s->showLeftMs >= 0) {
             RefHoverTick(win, 1000);
         }
+    }
+    // frame point of the current page's x-th EPUB footnote link, to click
+    if (str::Eq(action, StrL("noteref")) && dm) {
+        float k = CanvasScale(win);
+        if (k <= 0.f) {
+            k = 1.f;
+        }
+        int pageNo = dm->CurrentPageNo();
+        int n = 0;
+        for (IPageElement* el : dm->GetEngine()->GetElements(pageNo)) {
+            IPageDestination* dest = el && el->Is(kindPageElementDest) ? el->AsLink() : nullptr;
+            if (!dest || !dest->isNoteRef) {
+                continue;
+            }
+            // skip the zero-width link mupdf adds at the <a>'s anchor
+            RectF r = el->GetRect();
+            if (r.dx <= 0.f || n++ < x) {
+                continue;
+            }
+            Point pt = dm->CvtToScreen(pageNo, PointF(r.x + (r.dx / 2), r.y + (r.dy / 2)));
+            int fx = (int)((float)win->canvasRc.x / k) + pt.x;
+            int fy = (int)((float)win->canvasRc.y / k) + pt.y;
+            return fmt("OK noteref=%d,%d page=%d scale=%.4f", fx, fy, pageNo, (double)k);
+        }
+        if (exitCodeOut) {
+            *exitCodeOut = 1;
+        }
+        return fmt("ERROR no-noteref page=%d", pageNo);
     }
     RefHoverState* s = win ? win->refHover : nullptr;
     if (!s || !s->visible) {

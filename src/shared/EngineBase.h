@@ -120,6 +120,8 @@ struct IPageDestination : KindBase {
     float zoom = 0.f;
     // chapter-aware equivalent of pageNo; invalid until resolved
     Location loc;
+    // an EPUB footnote reference: a click shows the note in a popup
+    bool isNoteRef = false;
 
     virtual ~IPageDestination() = default;
 

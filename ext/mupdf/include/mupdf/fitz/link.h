@@ -61,7 +61,11 @@ typedef struct fz_link
 	fz_link_set_rect_fn *set_rect_fn;
 	fz_link_set_uri_fn *set_uri_fn;
 	fz_link_drop_link_fn *drop;
+	int flags; /* FZ_LINK_FLAG_* */
 } fz_link;
+
+/* an EPUB <a epub:type="noteref">: readers show the note in a popup */
+#define FZ_LINK_FLAG_NOTEREF 1
 
 typedef enum
 {

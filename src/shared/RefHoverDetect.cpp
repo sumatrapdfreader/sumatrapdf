@@ -257,6 +257,41 @@ int StripWatermarkGlyphs(WStr text, const Rect* coords, WCHAR* outText, Rect* ou
     return outLen;
 }
 
+// An EPUB footnote, from its anchor: the lines of text that follow it, up to
+// the first gap taller than most of a line (the next note) or the page end.
+RectF NoteBox(RectF mediabox, float destY, WStr text, const Rect* coords) {
+    if (!coords) {
+        return {};
+    }
+    float anchor = std::max(destY - kAnchorTopMarginPt, 0.f);
+    int firstTop = -1;
+    int bottom = -1;
+    int lineH = 0;
+    for (int i = 0; i < len(text); i++) {
+        if (IsGlyphSpace(text.s[i])) {
+            continue;
+        }
+        Rect r = coords[i];
+        if ((float)(r.y + r.dy) <= anchor) {
+            continue;
+        }
+        if (bottom >= 0 && r.y > bottom + (lineH * 7 / 10)) {
+            break;
+        }
+        if (firstTop < 0) {
+            firstTop = r.y;
+        }
+        bottom = std::max(r.y + r.dy, bottom);
+        lineH = std::max(r.dy, lineH);
+    }
+    if (bottom < 0) {
+        return {};
+    }
+    // from the first line, not the anchor: the note's block may start with a margin
+    float top = std::max((float)firstTop - kAnchorTopMarginPt, 0.f);
+    return RectF{0.f, top, mediabox.dx, (float)bottom + kAnchorTopMarginPt - top};
+}
+
 // Full-width strip from destY to the last glyph or caption block.
 // Used when no entry or equation can be identified.
 RectF LandscapeBox(RectF mediabox, float destX, float destY, WStr text, const Rect* coords) {

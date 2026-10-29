@@ -509,6 +509,9 @@ struct fz_html_box_s
 	// to indicate when an inline formatting context has been finished (when interrupted by a block level block)
 	unsigned int stop : 1;
 
+	// inside <a epub:type="noteref">: a link to a footnote
+	unsigned int is_noteref : 1;
+
 	fz_html_box *up, *down, *next;
 
 	const char *tag, *id, *href;

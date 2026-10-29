@@ -103,6 +103,8 @@ static fz_link *load_link_flow(fz_context *ctx, fz_html_flow *flow, fz_link *hea
 				}
 
 				link = fz_new_derived_link(ctx, fz_link, bbox, dest);
+				if (flow->box->is_noteref)
+					link->flags |= FZ_LINK_FLAG_NOTEREF;
 				link->next = head;
 				head = link;
 			}
