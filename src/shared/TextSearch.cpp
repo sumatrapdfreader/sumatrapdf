@@ -63,9 +63,7 @@ void TextSearch::Clear() {
 }
 
 void TextSearch::Reset() {
-    pageText = {};
-    pageTextLen = 0;
-    ResetByteIdx();
+    SetPageText(0, {}, 0);
     TextSelection::Reset();
 }
 
@@ -206,8 +204,9 @@ void TextSearch::SetLastResult(TextSelection* sel) {
 
     findPage = std::max(startPage, endPage);
     findIndex = (findPage == endPage ? endGlyph : startGlyph);
-    pageText = engine->GetTextForPage(findPage, &pageTextLen);
-    ResetByteIdx();
+    int textLen = 0;
+    Str text = engine->GetTextForPage(findPage, &textLen);
+    SetPageText(findPage, text, textLen);
     forward = true;
 }
 
@@ -274,6 +273,26 @@ static bool StartsWithAtByte(Str text, int byteIdx, Str prefix) {
 void TextSearch::ResetByteIdx() const {
     byteIdxCp = 0;
     byteIdxByte = 0;
+}
+
+// pageText changes only here. The ByteIdxOf() cursor stays valid while the text
+// is for the same page: fetching a page again gives the same text.
+void TextSearch::SetPageText(int pageNo, Str text, int textLen) {
+    if (pageNo != pageTextPageNo) {
+        ResetByteIdx();
+    }
+    pageTextPageNo = pageNo;
+    pageText = text;
+    pageTextLen = textLen;
+}
+
+// pageNo's text for searching, through SetPageText(); false if canceled
+bool TextSearch::LoadPageText(int pageNo) {
+    bool abortSearch = false;
+    int textLen = 0;
+    Str text = GetSearchPageText(engine, pageNo, textLen, progressCb, abortSearch);
+    SetPageText(pageNo, text, textLen);
+    return !abortSearch;
 }
 
 // Byte offset of codepoint cp in pageText. Continues from the last lookup so a
@@ -565,10 +584,7 @@ Vec<TextSel>* TextSearch::FindFirst(int page, Str text) {
 
 TextSearch::PageSearchResult TextSearch::SearchPage(int pageNo) {
     Reset();
-    bool abortSearch = false;
-    pageText = GetSearchPageText(engine, pageNo, pageTextLen, progressCb, abortSearch);
-    ResetByteIdx();
-    if (abortSearch) {
+    if (!LoadPageText(pageNo)) {
         return PageSearchResult::Canceled;
     }
     findIndex = pageTextLen;
@@ -585,9 +601,7 @@ TextSearch::PageSearchResult TextSearch::SearchPage(int pageNo) {
     if (forward) {
         if (findPage != r.page) {
             findPage = r.page;
-            pageText = GetSearchPageText(engine, findPage, pageTextLen, progressCb, abortSearch);
-            ResetByteIdx();
-            if (abortSearch) {
+            if (!LoadPageText(findPage)) {
                 return PageSearchResult::Canceled;
             }
         }
@@ -618,15 +632,9 @@ Vec<TextSel>* TextSearch::FindNext() {
     PageAndOffset finalGlyph;
     if (FindTextInPage(findPage, &finalGlyph)) {
         if (forward) {
-            // keep the byte cursor while the match ends on the same page
-            if (findPage != finalGlyph.page) {
-                ResetByteIdx();
-            }
             findPage = finalGlyph.page;
             findIndex = finalGlyph.offset;
-            bool abortSearch = false;
-            pageText = GetSearchPageText(engine, findPage, pageTextLen, progressCb, abortSearch);
-            if (abortSearch) {
+            if (!LoadPageText(findPage)) {
                 return nullptr;
             }
         }
