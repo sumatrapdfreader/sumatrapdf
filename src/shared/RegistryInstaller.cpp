@@ -28,7 +28,7 @@ static const struct {
     {StrL(".djvu"), 6}, {StrL(".chm"), 5}, {StrL(".mobi"), 9}, {StrL(".epub"), 3},
     {StrL(".md"), kDefaultFileIcon}, {StrL(".markdown"), kDefaultFileIcon}, {StrL(".svg"), kDefaultFileIcon}, {StrL(".azw"), 9},
     {StrL(".azw3"), 9}, {StrL(".azw4"), 9}, {StrL(".fb2"), kDefaultFileIcon}, {StrL(".fb2z"), kDefaultFileIcon},
-    {StrL(".prc"), 9}, {StrL(".tif"), 7}, {StrL(".tiff"), 7}, {StrL(".jp2"), 7},
+    {StrL(".prc"), 9}, {StrL(".lit"), 9}, {StrL(".tif"), 7}, {StrL(".tiff"), 7}, {StrL(".jp2"), 7},
     {StrL(".png"), 7}, {StrL(".jpg"), 7}, {StrL(".jpeg"), 7}, {StrL(".tga"), 7},
     {StrL(".gif"), 7}, {StrL(".avif"), 7}, {StrL(".heic"), 7}, {StrL(".heif"), 7},
     {StrL(".jfif"), 7}, {StrL(".webp"), 7}, {StrL(".jxl"), 7}, {StrL(".bmp"), 7},
