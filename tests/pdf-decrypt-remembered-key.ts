@@ -8,7 +8,7 @@ import { EXE, USE_NG, cmdId, extractPageText, makeTextPdf, pollUntil, runStandal
 import { launchControlled, pressEnter, sendCommand, waitToolWindow } from "./win-automation.ts";
 import { findChildWindow, getControlText } from "./winapi.ts";
 
-const kPassword = "pw";
+export const kPassword = "pw";
 const kText = "decrypted line";
 const kDecryptTitle = "Decrypt PDF";
 const kKeyLen = 32;
@@ -32,7 +32,7 @@ function hexField(pdf: string, re: RegExp): Buffer {
 }
 
 // what file history stores: md5 of the file, then the key (PDF spec algorithm 2, RC4 40-bit)
-function rememberedKey(path: string): string {
+export function rememberedKey(path: string): string {
   const bytes = readFileSync(path);
   const pdf = bytes.toString("latin1");
   const o = hexField(pdf, /\/O\s*<([0-9a-fA-F]+)>/);

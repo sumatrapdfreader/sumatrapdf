@@ -3543,7 +3543,6 @@ EngineMupdf::~EngineMupdf() {
     }
     fz_drop_context(ctx);
 
-    str::Free(pdfPassword);
     if (pageLabels) {
         pageLabels->~StrVec();
         pageLabels = nullptr;
@@ -3587,8 +3586,6 @@ static void ForEachPageInfo(EngineMupdf* e, const Fn& fn) {
         }
     }
 }
-
-constexpr int kPdfCryptKeyLen = 32;
 
 class PasswordCloner : public PasswordUI {
     u8* cryptKey = nullptr;
@@ -4418,9 +4415,6 @@ bool EngineMupdf::LoadFromStream(fz_stream* stm, Str nameHint, PasswordUI* pwdUI
             ok = fz_authenticate_password(ctx, _doc, pwdA.s);
         }
 #endif
-        if (ok) {
-            str::ReplaceWithCopy(&pdfPassword, pwdA);
-        }
         str::Free(pwd);
     }
 
@@ -8782,10 +8776,7 @@ bool EngineMupdfIsEncrypted(EngineBase* engine) {
     return epdf && epdf->pdfdoc && epdf->pdfdoc->crypt;
 }
 
-Str EngineMupdfGetPassword(EngineBase* engine) {
-    EngineMupdf* epdf = AsEngineMupdf(engine);
-    return epdf ? epdf->pdfPassword : Str{};
-}
+constexpr int kPdfCryptKeyLen = 32;
 
 //--- saving a file whose bytes are in memory (discussion #6256)
 
@@ -8796,6 +8787,23 @@ static bool FileUnchangedSinceLoad(EngineMupdf* e, Str path) {
     }
     FILETIME t = file::GetModificationTime(path);
     return FileTimeEq(t, e->fileTimeAtLoad);
+}
+
+// The password for a tool re-opening srcPath, the file the engine has open: the
+// engine's key, since one remembered in file history comes without a password.
+// Empty when none is needed or the key may no longer fit the file.
+TempStr EngineMupdfToolPasswordTemp(EngineBase* engine, Str srcPath) {
+    EngineMupdf* e = AsEngineMupdf(engine);
+    if (!e || !e->isPasswordProtected || !e->pdfdoc || !str::EqI(e->FilePath(), srcPath)) {
+        return str::DupTemp(StrL(""));
+    }
+    if (!FileUnchangedSinceLoad(e, srcPath)) {
+        logf("EngineMupdfToolPasswordTemp: '%s' changed since it was opened\n", srcPath);
+        return str::DupTemp(StrL(""));
+    }
+    ScopedRecursiveMutex scope(&e->docLock);
+    u8* key = pdf_crypt_key(e->Ctx(), e->pdfdoc->crypt);
+    return fmt("%s%s", StrL(PDF_RAW_KEY_PASSWORD_PREFIX), str::MemToHexTemp(Str((char*)key, kPdfCryptKeyLen)));
 }
 
 // Point the document at the whole file in memory. Takes the locks every
@@ -10010,52 +10018,6 @@ static void SyncPagesAfterUndoRedo(EngineMupdf* e, Vec<Annotation*>& removedOut)
     });
 }
 
-//--- decrypting PDFs
-
-// Writes an unencrypted copy of srcPath, the file the engine has open. Uses the
-// engine's key: one remembered in file history comes without its password.
-bool EngineMupdfSaveDecrypted(EngineBase* engine, Str srcPath, Str destPath) {
-    EngineMupdf* e = AsEngineMupdf(engine);
-    if (!e || !e->pdfdoc || !e->pdfdoc->crypt || !str::Eq(e->FilePath(), srcPath)) {
-        return false;
-    }
-    // the key only fits the bytes it was derived for
-    if (!FileUnchangedSinceLoad(e, srcPath)) {
-        logf("EngineMupdfSaveDecrypted: '%s' changed since it was opened\n", srcPath);
-        return false;
-    }
-    u8 key[kPdfCryptKeyLen];
-    {
-        ScopedRecursiveMutex scope(&e->docLock);
-        memcpy(key, pdf_crypt_key(e->Ctx(), e->pdfdoc->crypt), sizeof(key));
-    }
-
-    fz_context* ctx = fz_new_context(nullptr, nullptr, FZ_STORE_DEFAULT);
-    if (!ctx) {
-        return false;
-    }
-    bool ok = false;
-    pdf_document* doc = nullptr;
-    fz_var(doc);
-    fz_try(ctx) {
-        doc = pdf_open_document(ctx, CStrTemp(srcPath));
-        memcpy(pdf_crypt_key(ctx, doc->crypt), key, sizeof(key));
-        pdf_write_options opts = gPdfDefaultWriteOptions;
-        opts.do_encrypt = PDF_ENCRYPT_NONE;
-        pdf_save_document(ctx, doc, CStrTemp(destPath), &opts);
-        ok = true;
-    }
-    fz_always(ctx) {
-        pdf_drop_document(ctx, doc);
-    }
-    fz_catch(ctx) {
-        fz_report_error(ctx);
-        logf("EngineMupdfSaveDecrypted: saving '%s' failed: '%s'\n", destPath, Str(fz_caught_message(ctx)));
-    }
-    fz_drop_context(ctx);
-    return ok;
-}
-
 //--- merging PDFs
 
 static pdf_document* OpenPdfForMerge(fz_context* ctx, const PdfMergeSource& src) {
@@ -10764,7 +10726,7 @@ Annotation* MakeAnnotationWrapper(EngineMupdf* engine, pdf_annot* annot, int pag
     return res;
 }
 
-extern "C" fz_buffer* pdfinfo_to_buffer(fz_context* ctx, const char* filename);
+extern "C" fz_buffer* pdfinfo_to_buffer(fz_context* ctx, const char* filename, const char* password);
 
 static void outline_to_buffer_rec(fz_context* ctx, fz_output* out, fz_outline* outline, int level) {
     while (outline) {
@@ -10871,7 +10833,7 @@ int EngineMupdfEbookToPdf(Str srcPath, Str dstPath, float pageDx, float pageDy, 
     return nPages;
 }
 
-TempStr EngineMupdfGetPdfInfo(Str path) {
+TempStr EngineMupdfGetPdfInfo(Str path, Str password) {
     fz_context* ctx = fz_new_context(nullptr, nullptr, FZ_STORE_UNLIMITED);
     if (!ctx) {
         return {};
@@ -10880,7 +10842,7 @@ TempStr EngineMupdfGetPdfInfo(Str path) {
     TempStr res;
     fz_buffer* buf = nullptr;
     fz_try(ctx) {
-        buf = pdfinfo_to_buffer(ctx, path.s);
+        buf = pdfinfo_to_buffer(ctx, path.s, CStrTemp(password));
         unsigned char* data;
         size_t n = fz_buffer_storage(ctx, buf, &data);
         res = str::DupTemp(Str((char*)data, (int)n));

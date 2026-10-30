@@ -150,8 +150,7 @@ enum class HeadingTocStart {
 };
 void EngineMupdfStartHeadingToc(EngineBase* engine, const Func0& onDone, HeadingTocStart start);
 void EngineMupdfCancelHeadingToc(EngineBase* engine);
-Str EngineMupdfGetPassword(EngineBase* engine);
-bool EngineMupdfSaveDecrypted(EngineBase* engine, Str srcPath, Str destPath);
+TempStr EngineMupdfToolPasswordTemp(EngineBase* engine, Str srcPath);
 bool EngineMupdfSaveUpdated(EngineBase* engine, Str path, const ShowErrorCb& showErrorFunc);
 bool EngineMupdfSaveCopy(EngineBase* engine, Str path);
 
@@ -229,7 +228,7 @@ void EngineMupdfInvalidateDarkMode(EngineBase* engine);
 Str EngineMupdfLoadAttachment(EngineBase*, int attachmentNo);
 Str EngineMupdfLoadAnnotAttachment(EngineBase*, int objNum);
 Str EngineMupdfLoadEmbedded(EngineBase*, PageDestination*);
-TempStr EngineMupdfGetPdfInfo(Str path);
+TempStr EngineMupdfGetPdfInfo(Str path, Str password);
 TempStr EngineMupdfGetPdfOutline(Str path);
 int EngineMupdfEbookToPdf(Str srcPath, Str dstPath, float pageDx, float pageDy, float fontSize);
 #if !OS_WIN

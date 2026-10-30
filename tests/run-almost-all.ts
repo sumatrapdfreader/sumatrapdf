@@ -167,6 +167,7 @@ import { testit as issue4055 } from "./issue-4055.ts";
 import { testit as issue2165 } from "./issue-2165.ts";
 import { testit as issue3472 } from "./issue-3472.ts";
 import { testit as pdfDecryptRememberedKey } from "./pdf-decrypt-remembered-key.ts";
+import { testit as pdfToolsEncrypted } from "./pdf-tools-encrypted.ts";
 import { testit as pdfOnlyMenuItems } from "./pdf-only-menu-items.ts";
 import { testit as issue2258 } from "./issue-2258.ts";
 import { testit as issue2737 } from "./issue-2737.ts";
@@ -764,6 +765,7 @@ export const tests: NamedTest[] = [
   ["issue-5950", issue5950],
   ["issue-3472", issue3472],
   ["pdf-only-menu-items", pdfOnlyMenuItems],
+  ["pdf-tools-encrypted", pdfToolsEncrypted],
   ["pdf-decrypt-remembered-key", pdfDecryptRememberedKey],
   ["security-ghsa-p2ph-2rvm-q37m", ghsaP2ph2rvmQ37m],
   ["security-ghsa-5wm7-225j-9qcj", ghsa5wm7225j9qcj],

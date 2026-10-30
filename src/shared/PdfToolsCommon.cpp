@@ -37,6 +37,12 @@ extern "C" int muconvert_main(int argc, char** argv);
 extern "C" void fz_set_optind(int val);
 
 // a usable page range: Delete Pages cannot take every page
+// the value of -p for a tool re-opening srcPath, the current tab's file
+char* PdfToolPasswordTemp(MainWindow* win, Str srcPath) {
+    WindowTab* tab = win ? win->CurrentTab() : nullptr;
+    return CStrTemp(EngineMupdfToolPasswordTemp(tab ? tab->GetEngine() : nullptr, srcPath));
+}
+
 bool PageRangeOk(Str s, int pageCount, bool isExtract, Vec<int>& pages) {
     if (!ParseDeletePages(s, pageCount, pages)) {
         return false;
@@ -371,11 +377,14 @@ TempStr ExtractPdfPagesResultTemp(Str destPath, Str pagesSpec, int annotsOnly, i
         inputPath = tmpPath;
     }
     dir::CreateForFile(destPath);
-    char* argv[] = {(char*)"clean",      (char*)"-gggg",     (char*)"-e",        (char*)"100",
-                    (char*)"-f",         (char*)"-i",        (char*)"-t",        (char*)"-Z",
-                    CStrTemp(inputPath), CStrTemp(destPath), CStrTemp(pageRange)};
+    char* argv[] = {
+        (char*)"clean",     (char*)"-p",         CStrTemp(EngineMupdfToolPasswordTemp(engine, tab->filePath)),
+        (char*)"-gggg",     (char*)"-e",         (char*)"100",
+        (char*)"-f",        (char*)"-i",         (char*)"-t",
+        (char*)"-Z",        CStrTemp(inputPath), CStrTemp(destPath),
+        CStrTemp(pageRange)};
     fz_set_optind(0);
-    int res = pdfclean_main(11, argv);
+    int res = pdfclean_main(dimofi(argv), argv);
     if (tmpPath) {
         file::Delete(tmpPath);
     }

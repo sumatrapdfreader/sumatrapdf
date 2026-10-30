@@ -1464,7 +1464,7 @@ static void OnMergeWndDestroy(WindowBase::DestroyEvent* ev) {
 MergeSource* MergePdfWnd::AddSource(Str path, EngineBase* engine) {
     auto* src = new MergeSource();
     src->path = str::Dup(path);
-    src->password = str::Dup(EngineMupdfGetPassword(engine));
+    src->password = str::Dup(EngineMupdfToolPasswordTemp(engine, path));
     src->engine = engine;
     src->pageCount = engine->PageCount();
     src->color = kSourceColors[len(sources->all) % dimof(kSourceColors)];

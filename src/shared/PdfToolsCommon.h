@@ -3,6 +3,7 @@
 
 // --- shared by PdfToolsCommon.cpp and each app's PdfTools.cpp ---
 
+char* PdfToolPasswordTemp(MainWindow* win, Str srcPath);
 bool ParseDeletePages(Str s, int pageCount, Vec<int>& pagesToDelete);
 bool PageRangeOk(Str s, int pageCount, bool isExtract, Vec<int>& pages);
 TempStr PageRangeCountTemp(Str s, int pageCount, bool isExtract);

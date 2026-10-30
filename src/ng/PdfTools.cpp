@@ -723,8 +723,9 @@ static void PdfBakeDoIt() {
     logf("PdfBakeDoIt: baking '%s' to '%s'\n", inputPath, destPath);
 
     // build argv for pdfbake_main: "bake" input output
-    char* argv[] = {(char*)"bake", CStrTemp(inputPath), CStrTemp(destPath)};
-    int argc = 3;
+    char* argv[] = {(char*)"bake", (char*)"-p", PdfToolPasswordTemp(win, gTool.srcPath), CStrTemp(inputPath),
+                    CStrTemp(destPath)};
+    int argc = dimofi(argv);
 
     fz_set_optind(0);
     int res = pdfbake_main(argc, argv);
@@ -758,8 +759,10 @@ static void PdfExtractTextDoIt() {
     bool isPdf = tab && IsPdfDoc(tab);
     if (isPdf) {
         // use muconvert for PDF
-        char* argv[] = {(char*)"convert", (char*)"-o", CStrTemp(destPath), CStrTemp(gTool.srcPath), CStrTemp(pages)};
-        int argc = 5;
+        char* argv[] = {(char*)"convert", (char*)"-p",        PdfToolPasswordTemp(win, gTool.srcPath),
+                        (char*)"-o",      CStrTemp(destPath), CStrTemp(gTool.srcPath),
+                        CStrTemp(pages)};
+        int argc = dimofi(argv);
         fz_set_optind(0);
         ok = muconvert_main(argc, argv) == 0;
     } else {
@@ -789,12 +792,14 @@ static void PdfCleanDoIt(bool decompress) {
 
     // compress is: clean -gggg -e 100 -f -i -t -Z input output
     // decompress is: clean -d input output
+    char* pwd = PdfToolPasswordTemp(gTool.win, gTool.srcPath);
     char* compressArgv[] = {
-        (char*)"clean", (char*)"-gggg",          (char*)"-e",       (char*)"100", (char*)"-f", (char*)"-i", (char*)"-t",
-        (char*)"-Z",    CStrTemp(gTool.srcPath), CStrTemp(destPath)};
-    char* decompressArgv[] = {(char*)"clean", (char*)"-d", CStrTemp(gTool.srcPath), CStrTemp(destPath)};
+        (char*)"clean", (char*)"-p", pwd,         (char*)"-gggg",          (char*)"-e",       (char*)"100", (char*)"-f",
+        (char*)"-i",    (char*)"-t", (char*)"-Z", CStrTemp(gTool.srcPath), CStrTemp(destPath)};
+    char* decompressArgv[] = {(char*)"clean",          (char*)"-p",       pwd, (char*)"-d",
+                              CStrTemp(gTool.srcPath), CStrTemp(destPath)};
     char** argv = decompress ? decompressArgv : compressArgv;
-    int argc = decompress ? 4 : 10;
+    int argc = decompress ? dimofi(decompressArgv) : dimofi(compressArgv);
 
     fz_set_optind(0);
     int res = pdfclean_main(argc, argv);
@@ -859,10 +864,12 @@ static void PdfDeletePageDoIt() {
     // use the same compression flags as Compress PDF so the result is re-written
     // compactly; otherwise the kept pages drag along the original's full content
     // and the output is nearly as big as the source
-    char* argv[] = {(char*)"clean",      (char*)"-gggg",     (char*)"-e",        (char*)"100",
-                    (char*)"-f",         (char*)"-i",        (char*)"-t",        (char*)"-Z",
-                    CStrTemp(inputPath), CStrTemp(destPath), CStrTemp(pageRange)};
-    int argc = 11;
+    char* argv[] = {(char*)"clean",     (char*)"-p",         PdfToolPasswordTemp(win, gTool.srcPath),
+                    (char*)"-gggg",     (char*)"-e",         (char*)"100",
+                    (char*)"-f",        (char*)"-i",         (char*)"-t",
+                    (char*)"-Z",        CStrTemp(inputPath), CStrTemp(destPath),
+                    CStrTemp(pageRange)};
+    int argc = dimofi(argv);
 
     fz_set_optind(0);
     int res = pdfclean_main(argc, argv);
@@ -920,8 +927,13 @@ static void PdfDecryptDoIt() {
 
     logf("PdfDecryptDoIt: decrypting '%s' to '%s'\n", gTool.srcPath, destPath);
 
-    WindowTab* tab = win ? win->CurrentTab() : nullptr;
-    if (EngineMupdfSaveDecrypted(tab ? tab->GetEngine() : nullptr, gTool.srcPath, destPath)) {
+    // equivalent of: clean -p <key> -D input output
+    char* argv[] = {(char*)"clean",          (char*)"-p",       PdfToolPasswordTemp(win, gTool.srcPath), (char*)"-D",
+                    CStrTemp(gTool.srcPath), CStrTemp(destPath)};
+
+    fz_set_optind(0);
+    int res = pdfclean_main(dimofi(argv), argv);
+    if (res == 0) {
         logf("PdfDecryptDoIt: decrypted successfully\n");
         CloseAndLoad(destPath);
         return;
@@ -1662,7 +1674,7 @@ static bool AddMergeSource(Str filePath, int at) {
     }
     MergeSourceDlg source;
     source.path = str::Dup(filePath);
-    source.password = str::Dup(EngineMupdfGetPassword(engine));
+    source.password = str::Dup(EngineMupdfToolPasswordTemp(engine, filePath));
     source.pageCount = engine->PageCount();
     source.thumbStart = len(gTool.mergeThumbs->thumbs);
     source.color = kSourceColors[len(gTool.mergeSources) % dimofi(kSourceColors)];
@@ -3001,7 +3013,7 @@ void ShowMergePdfDialog(MainWindow* win) {
     MergeSourceDlg source;
     source.color = kSourceColors[0];
     source.path = str::Dup(tab->filePath);
-    source.password = str::Dup(EngineMupdfGetPassword(engine));
+    source.password = str::Dup(EngineMupdfToolPasswordTemp(engine, tab->filePath));
     source.pageCount = engine->PageCount();
     source.engine = engine;
     engine->AddRef();

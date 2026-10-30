@@ -783,6 +783,41 @@ static void pdf_saslprep_from_utf8(char *password, const char *utf8, int n)
 	fz_strlcpy(password, utf8, n);
 }
 
+static int
+hex_value(int c)
+{
+	if (c >= '0' && c <= '9')
+		return c - '0';
+	if (c >= 'a' && c <= 'f')
+		return c - 'a' + 10;
+	if (c >= 'A' && c <= 'F')
+		return c - 'A' + 10;
+	return -1;
+}
+
+/* SumatraPDF: see PDF_RAW_KEY_PASSWORD_PREFIX */
+static int
+authenticate_raw_key(pdf_crypt *crypt, const char *pwd)
+{
+	size_t prefix = strlen(PDF_RAW_KEY_PASSWORD_PREFIX);
+	const char *hex = pwd + prefix;
+	unsigned char key[32];
+	size_t i;
+
+	if (strncmp(pwd, PDF_RAW_KEY_PASSWORD_PREFIX, prefix) != 0 || strlen(hex) != 2 * sizeof key)
+		return 0;
+	for (i = 0; i < sizeof key; i++)
+	{
+		int hi = hex_value(hex[2 * i]);
+		int lo = hex_value(hex[2 * i + 1]);
+		if (hi < 0 || lo < 0)
+			return 0;
+		key[i] = (unsigned char)(hi * 16 + lo);
+	}
+	memcpy(crypt->key, key, sizeof key);
+	return 1;
+}
+
 int
 pdf_authenticate_password(fz_context *ctx, pdf_document *doc, const char *pwd_utf8)
 {
@@ -790,6 +825,12 @@ pdf_authenticate_password(fz_context *ctx, pdf_document *doc, const char *pwd_ut
 
 	if (!doc->crypt)
 		return 1; /* No password required */
+
+	if (pwd_utf8 && authenticate_raw_key(doc->crypt, pwd_utf8))
+	{
+		doc->crypt->access = 2;
+		return doc->crypt->access;
+	}
 
 	password[0] = 0;
 	if (pwd_utf8)

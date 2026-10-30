@@ -38,6 +38,7 @@ static int usage(void)
 		"\t-A\tkeep annotations\n"
 		"\t-F\tkeep forms\n"
 		"\t-O -\tcomma separated list of output options\n"
+		"\t-p -\tpassword\n"
 	);
 	return 1;
 }
@@ -51,12 +52,13 @@ int pdfbake_main(int argc, char **argv)
 	int bake_widgets = 1;
 	char *output = "out.pdf";
 	char *flags = "garbage";
+	char *password = "";
 	char *input;
 	int c, code = EXIT_SUCCESS;
 
 	fz_optind = 1;
 
-	while ((c = fz_getopt(argc, argv, "AFO:")) != -1)
+	while ((c = fz_getopt(argc, argv, "AFO:p:")) != -1)
 	{
 		switch (c)
 		{
@@ -68,6 +70,9 @@ int pdfbake_main(int argc, char **argv)
 			break;
 		case 'O':
 			flags = fz_optarg;
+			break;
+		case 'p':
+			password = fz_optarg;
 			break;
 		default:
 			return usage();
@@ -93,6 +98,9 @@ int pdfbake_main(int argc, char **argv)
 	fz_try(ctx)
 	{
 		doc = pdf_open_document(ctx, input);
+		if (pdf_needs_password(ctx, doc))
+			if (!pdf_authenticate_password(ctx, doc, password))
+				fz_throw(ctx, FZ_ERROR_ARGUMENT, "cannot authenticate password: %s", input);
 
 		pdf_bake_document(ctx, doc, bake_annots, bake_widgets);
 

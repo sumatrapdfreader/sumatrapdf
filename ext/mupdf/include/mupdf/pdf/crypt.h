@@ -64,6 +64,10 @@ unsigned char *pdf_crypt_user_encryption(fz_context *ctx, pdf_crypt *crypt);
 unsigned char *pdf_crypt_permissions_encryption(fz_context *ctx, pdf_crypt *crypt);
 unsigned char *pdf_crypt_key(fz_context *ctx, pdf_crypt *crypt);
 
+/* SumatraPDF: a password of this prefix + the 32 bytes of pdf_crypt_key() in
+ * hex unlocks a document, for tools re-opening one the app already unlocked. */
+#define PDF_RAW_KEY_PASSWORD_PREFIX "\001key:"
+
 void pdf_print_crypt(fz_context *ctx, fz_output *out, pdf_crypt *crypt);
 
 void pdf_write_digest(fz_context *ctx, fz_output *out, pdf_obj *byte_range, pdf_obj *field, size_t digest_offset, size_t digest_length, pdf_pkcs7_signer *signer);

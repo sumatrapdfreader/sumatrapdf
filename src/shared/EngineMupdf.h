@@ -208,7 +208,6 @@ class EngineMupdf : public EngineBase {
     int pendingHeadingTocIdCounter = 0;
 
     // password used to decrypt the document (needed for re-encryption/decryption)
-    TempStr pdfPassword;
 
     // used to track "dirty" state of annotations. not perfect because if we add and delete
     // the same annotation, we should be back to 0

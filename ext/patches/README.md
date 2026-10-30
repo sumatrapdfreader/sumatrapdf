@@ -74,6 +74,9 @@ relative to `ext/mupdf`, so `-p1` from inside that directory.
 | `0071-fallback-font-cache-bold` | bold system fallback fonts cached apart from regular; a bold heading made later regular CJK text bold (#6420) |
 | `0072-html-media-link` | `<video>` / `<audio>` drawn as its poster or a `[video: name]` label linking to the media file, which the app opens in the system player (#6421) |
 | `0073-epub-footnotes` | EPUB 3 `<aside epub:type="footnote">` moved to the end of its chapter; `<a epub:type="noteref">` links get `FZ_LINK_FLAG_NOTEREF` so the app shows the note in a popup (#6431) |
+| `0074-pdf-raw-key-password` | a password of `PDF_RAW_KEY_PASSWORD_PREFIX` + the key in hex unlocks a PDF, so tools can re-open one unlocked with a remembered key |
+| `0075-pdfbake-password` | `pdfbake -p`: it could not open a password-protected PDF |
+| `0076-pdfinfo-to-buffer-password` | `pdfinfo_to_buffer` takes a password, for PDF Info on a password-protected PDF |
 
 That is the whole list: `ext/mupdf` is byte-for-byte `1.28.5` plus these
 patches, and nothing else.

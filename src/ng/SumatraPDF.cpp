@@ -6538,7 +6538,8 @@ void ExecuteCmd(MainWindow* win, int cmdId) {
 
         case CmdPdfShowInfo:
             if (tab && len(tab->filePath) > 0 && CouldBePDFDoc(tab)) {
-                TempStr info = EngineMupdfGetPdfInfo(tab->filePath);
+                TempStr info =
+                    EngineMupdfGetPdfInfo(tab->filePath, EngineMupdfToolPasswordTemp(tab->GetEngine(), tab->filePath));
                 if (info) {
                     ShowTextInWindow(win, StrL("PDF Info"), info);
                 }
