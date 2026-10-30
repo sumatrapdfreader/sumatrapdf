@@ -2833,7 +2833,9 @@ static void OnMouseLeftButtonDown(MainWindow* win, int x, int y) {
     }
 #endif
 
-    bool startDrag = !canCopy || ((isShift || !isOverText) && !isCtrl);
+    // DisableLeftDragPan: where there's no text, a drag selects instead of panning (#6444)
+    bool panOffText = !gSettings->disableLeftDragPan;
+    bool startDrag = !canCopy || ((isShift || (!isOverText && panOffText)) && !isCtrl);
     logf("OnMouseLeftButtonDown: %d,%d overText %d ctrl %d shift %d -> %s\n", x, y, isOverText ? 1 : 0, isCtrl ? 1 : 0,
          isShift ? 1 : 0, startDrag ? StrL("drag") : StrL("select"));
     if (startDrag) {

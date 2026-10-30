@@ -1648,6 +1648,13 @@ const globalPrefs: Field[] = [
       "(useful for drawings with many links); if false, clicking a link follows it",
   ).ver("3.7"),
   field(
+    "DisableLeftDragPan",
+    Bool,
+    false,
+    "if true, dragging with the left mouse button where there is no text selects text " +
+      "instead of panning the page. Shift + left drag, right drag and the scrollbars still pan",
+  ).ver("3.7"),
+  field(
     "ExplorerQuickLook",
     Bool,
     false,
@@ -2315,6 +2322,7 @@ const globalPrefsLayout = [
   "HighlightFormFields",
   "ClickEdgeToTurnPage",
   "DisableLinks",
+  "DisableLeftDragPan",
   "ExplorerQuickLook",
   "RememberViewOffsetOnPageTurn",
   "MouseWheelTurnsPage",

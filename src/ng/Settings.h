@@ -1239,6 +1239,10 @@ struct Settings {
     // (useful for drawings with many links); if false, clicking a link
     // follows it
     bool disableLinks;
+    // if true, dragging with the left mouse button where there is no text
+    // selects text instead of panning the page. Shift + left drag, right
+    // drag and the scrollbars still pan
+    bool disableLeftDragPan;
     // if true, Space in File Explorer (or on the desktop) previews the
     // selected file in a popup window, like macOS Quick Look. Esc or Space
     // closes it; Left / Right open the previous / next file in the folder.

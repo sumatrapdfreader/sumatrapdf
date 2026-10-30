@@ -832,6 +832,8 @@ enum class ControlCmd : u16 {
     TestConvertEpubToPdf = 142,
     // [path, pageNo]: image element rects of a page
     TestPageImages = 143,
+    // the first window's page and scroll position
+    TestScrollState = 144,
 };
 
 static_assert((u16)ControlCmd::Quit == (u16)ControlFrameCmd::Quit);
@@ -1889,6 +1891,13 @@ static void ExecuteControlRequest(ControlRequest* req) {
             }
             int exitCode = 0;
             Str res = SelectionTranslateResultTemp(backend, srcLang, dstLang, text, &exitCode);
+            AppendTestResult(req, exitCode, res);
+            break;
+        }
+
+        case ControlCmd::TestScrollState: {
+            int exitCode = 0;
+            Str res = ScrollStateResultTemp(&exitCode);
             AppendTestResult(req, exitCode, res);
             break;
         }

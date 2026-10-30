@@ -1675,8 +1675,10 @@ static void OnMouseLeftButtonDown(MainWindow* win, int x, int y, WPARAM key) {
     // A finger doesn't rubber-band: dragging pans the page and a long press
     // selects, so letting touch start a selection here only flashes a
     // rectangle before the gesture takes over (issue #538).
+    // DisableLeftDragPan: where there's no text, a drag selects instead of panning (#6444)
+    bool panOffText = !gSettings->disableLeftDragPan;
     bool startDrag = resizeHandle != ResizeHandle::None || isMoveableAnnot || !canCopy || win->lastInputWasTouch ||
-                     (isShift || !isOverText) && !isCtrl;
+                     (isShift || (!isOverText && panOffText)) && !isCtrl;
     if (startDrag) {
         StartMouseDrag(win, x, y);
     } else {

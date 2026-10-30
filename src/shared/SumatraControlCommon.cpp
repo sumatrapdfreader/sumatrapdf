@@ -574,6 +574,19 @@ bool WriteControlResponse(ControlConn h, ControlRequest* req) {
     return WriteExact(h, ToStr(packet));
 }
 
+// "OK page=<n> x=<x> y=<y>": the first window's scroll position, in page units
+TempStr ScrollStateResultTemp(int* exitCodeOut) {
+    *exitCodeOut = 2;
+    MainWindow* win = len(gWindows) > 0 ? gWindows[0] : nullptr;
+    DisplayModel* dm = win && win->IsDocLoaded() ? win->AsFixed() : nullptr;
+    if (!dm) {
+        return fmt("NOTREADY no-doc\n");
+    }
+    ScrollState ss = dm->GetScrollState();
+    *exitCodeOut = 0;
+    return fmt("OK page=%d x=%g y=%g\n", ss.page, ss.x, ss.y);
+}
+
 TempStr FavoriteNavResultTemp(Str action, int pageNo, int* exitCodeOut) {
     str::Builder out;
     auto finish = [&](Str msg, int code) -> TempStr {

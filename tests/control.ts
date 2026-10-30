@@ -151,6 +151,8 @@ export enum ControlCommand {
   TestConvertEpubToPdf = 142,
   // [path, pageNo]: image element rects of a page
   TestPageImages = 143,
+  // the first window's page and scroll position
+  TestScrollState = 144,
 }
 
 export type ControlArg = number | string | Uint8Array | ControlArg[];
