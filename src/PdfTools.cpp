@@ -1054,17 +1054,9 @@ void ShowPdfEncryptDialog(MainWindow* win) {
 // --- Decrypt PDF dialog ---
 
 struct PdfDecryptDialog : PdfToolDialog {
-    // the password the document was opened with
-    Str password;
-
-    ~PdfDecryptDialog() override;
-    bool Create(MainWindow* win, WindowTab* tab, Str pwd);
+    bool Create(MainWindow* win, WindowTab* tab);
     void DoIt(VirtMouseEvent* ev = nullptr) override;
 };
-
-PdfDecryptDialog::~PdfDecryptDialog() {
-    str::FreePtr(&password);
-}
 
 void PdfDecryptDialog::DoIt(VirtMouseEvent*) {
     TempStr destPath = destEdit->GetTextTemp();
@@ -1072,17 +1064,10 @@ void PdfDecryptDialog::DoIt(VirtMouseEvent*) {
         return;
     }
 
-    logf("PdfDecryptDoIt: decrypting '%s' to '%s', password len: %d\n", srcPath, destPath, len(password));
+    logf("PdfDecryptDoIt: decrypting '%s' to '%s'\n", srcPath, destPath);
 
-    // equivalent of: clean -p <pwd> -D input output
-    // -p provides the password to open the encrypted input, -D removes encryption from output
-    char* argv[] = {(char*)"clean", (char*)"-p",       CStrTemp(password),
-                    (char*)"-D",    CStrTemp(srcPath), CStrTemp(destPath)};
-    int argc = 6;
-
-    fz_set_optind(0);
-    int res = pdfclean_main(argc, argv);
-    if (res == 0) {
+    WindowTab* tab = win ? win->CurrentTab() : nullptr;
+    if (EngineMupdfSaveDecrypted(tab ? tab->GetEngine() : nullptr, srcPath, destPath)) {
         logf("PdfDecryptDoIt: decrypted successfully\n");
         MainWindow* w = win;
         TempStr path = str::DupTemp(destPath);
@@ -1090,17 +1075,15 @@ void PdfDecryptDialog::DoIt(VirtMouseEvent*) {
         LoadArgs args(path, w);
         StartLoadDocument(&args);
     } else {
-        logf("PdfDecryptDoIt: pdfclean_main failed with %d, src: '%s', password len: %d\n", res, srcPath,
-             len(password));
-        MessageBoxWarning(hwnd, StrL("Failed to decrypt PDF file."), Tr("Decrypt PDF"));
+        logf("PdfDecryptDoIt: failed, src: '%s'\n", srcPath);
+        ShowWarningNotification(win, Tr("Failed to decrypt PDF file."), kNotif5SecsTimeOut);
     }
 }
 
-bool PdfDecryptDialog::Create(MainWindow* w, WindowTab* tab, Str pwd) {
+bool PdfDecryptDialog::Create(MainWindow* w, WindowTab* tab) {
     if (!CreateToolDialog(w, tab, Tr("Decrypt PDF"))) {
         return false;
     }
-    password = str::Dup(pwd);
     AddFilesBlock(MakeUniqueFilePathTemp(srcPath), L"PDF Files\0*.pdf\0All Files\0*.*\0", L"pdf");
     AddFooter(Tr("Decrypt PDF"));
     FinishDialog(destEdit);
@@ -1123,15 +1106,10 @@ void ShowPdfDecryptDialog(MainWindow* win) {
         logf("ShowPdfDecryptDialog: '%s' is not encrypted, skipping\n", tab->filePath);
         return;
     }
-    Str pwd = EngineMupdfGetPassword(engine);
-    if (len(pwd) == 0) {
-        logf("ShowPdfDecryptDialog: '%s' is encrypted but no password available\n", tab->filePath);
-        return;
-    }
-    logf("ShowPdfDecryptDialog: opening for '%s', password len: %d\n", tab->filePath, len(pwd));
+    logf("ShowPdfDecryptDialog: opening for '%s'\n", tab->filePath);
 
     auto* dlg = new PdfDecryptDialog();
-    if (!dlg->Create(win, tab, pwd)) {
+    if (!dlg->Create(win, tab)) {
         delete dlg;
     }
 }

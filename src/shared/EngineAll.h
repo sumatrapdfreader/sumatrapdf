@@ -151,6 +151,7 @@ enum class HeadingTocStart {
 void EngineMupdfStartHeadingToc(EngineBase* engine, const Func0& onDone, HeadingTocStart start);
 void EngineMupdfCancelHeadingToc(EngineBase* engine);
 Str EngineMupdfGetPassword(EngineBase* engine);
+bool EngineMupdfSaveDecrypted(EngineBase* engine, Str srcPath, Str destPath);
 bool EngineMupdfSaveUpdated(EngineBase* engine, Str path, const ShowErrorCb& showErrorFunc);
 bool EngineMupdfSaveCopy(EngineBase* engine, Str path);
 

@@ -258,7 +258,6 @@ struct PdfToolDlg {
     bool visible = false;
     PdfToolKind kind = PdfToolKind::Bake;
     Str srcPath;   // owned
-    Str password;  // owned; the password Decrypt re-opens the document with
     Str browseExt; // owned; the default extension of the "..." save dialog
     // ExistingImageCount() for the inputs in existKey (owned): a frame doesn't
     // touch the disk
@@ -647,8 +646,6 @@ static void FreeToolState(gp::Window* toolWin) {
     str::FreePtr(&gTool.mergeClipText);
     str::Free(gTool.srcPath);
     gTool.srcPath = {};
-    str::Free(gTool.password);
-    gTool.password = {};
     str::Free(gTool.browseExt);
     gTool.browseExt = {};
     str::Free(gTool.existKey);
@@ -921,24 +918,16 @@ static void PdfDecryptDoIt() {
     }
     MainWindow* win = gTool.win;
 
-    logf("PdfDecryptDoIt: decrypting '%s' to '%s', password len: %d\n", gTool.srcPath, destPath, len(gTool.password));
+    logf("PdfDecryptDoIt: decrypting '%s' to '%s'\n", gTool.srcPath, destPath);
 
-    // equivalent of: clean -p <pwd> -D input output
-    // -p provides the password to open the encrypted input, -D removes encryption from output
-    char* argv[] = {(char*)"clean",          (char*)"-p",       CStrTemp(gTool.password), (char*)"-D",
-                    CStrTemp(gTool.srcPath), CStrTemp(destPath)};
-    int argc = 6;
-
-    fz_set_optind(0);
-    int res = pdfclean_main(argc, argv);
-    if (res == 0) {
+    WindowTab* tab = win ? win->CurrentTab() : nullptr;
+    if (EngineMupdfSaveDecrypted(tab ? tab->GetEngine() : nullptr, gTool.srcPath, destPath)) {
         logf("PdfDecryptDoIt: decrypted successfully\n");
         CloseAndLoad(destPath);
         return;
     }
-    logf("PdfDecryptDoIt: pdfclean_main failed with %d, src: '%s', password len: %d\n", res, gTool.srcPath,
-         len(gTool.password));
-    MessageBoxWarning(win, StrL("Failed to decrypt PDF file."), Tr("Decrypt PDF"));
+    logf("PdfDecryptDoIt: failed, src: '%s'\n", gTool.srcPath);
+    ShowWarningNotification(win, Tr("Failed to decrypt PDF file."), kNotif5SecsTimeOut);
 }
 
 // orig's ConvertEpubToPdfDialog::DoIt: ddFormat holds the page size and the
@@ -3062,16 +3051,10 @@ void ShowPdfDecryptDialog(MainWindow* win) {
         logf("ShowPdfDecryptDialog: '%s' is not encrypted, skipping\n", tab->filePath);
         return;
     }
-    Str pwd = EngineMupdfGetPassword(engine);
-    if (len(pwd) == 0) {
-        logf("ShowPdfDecryptDialog: '%s' is encrypted but no password available\n", tab->filePath);
-        return;
-    }
-    logf("ShowPdfDecryptDialog: opening for '%s', password len: %d\n", tab->filePath, len(pwd));
+    logf("ShowPdfDecryptDialog: opening for '%s'\n", tab->filePath);
     if (!StartToolDialog(win, PdfToolKind::Decrypt, MakeUniqueFilePathTemp(tab->filePath), StrL(".pdf"))) {
         return;
     }
-    gTool.password = str::Dup(pwd);
     AppShellInvalidate(win);
 }
 

@@ -3588,6 +3588,8 @@ static void ForEachPageInfo(EngineMupdf* e, const Fn& fn) {
     }
 }
 
+constexpr int kPdfCryptKeyLen = 32;
+
 class PasswordCloner : public PasswordUI {
     u8* cryptKey = nullptr;
 
@@ -10006,6 +10008,52 @@ static void SyncPagesAfterUndoRedo(EngineMupdf* e, Vec<Annotation*>& removedOut)
         InvalidateFzPageAfterContentChange(e, pi);
         e->InvalidateTextForPage(pi->pageNo);
     });
+}
+
+//--- decrypting PDFs
+
+// Writes an unencrypted copy of srcPath, the file the engine has open. Uses the
+// engine's key: one remembered in file history comes without its password.
+bool EngineMupdfSaveDecrypted(EngineBase* engine, Str srcPath, Str destPath) {
+    EngineMupdf* e = AsEngineMupdf(engine);
+    if (!e || !e->pdfdoc || !e->pdfdoc->crypt || !str::Eq(e->FilePath(), srcPath)) {
+        return false;
+    }
+    // the key only fits the bytes it was derived for
+    if (!FileUnchangedSinceLoad(e, srcPath)) {
+        logf("EngineMupdfSaveDecrypted: '%s' changed since it was opened\n", srcPath);
+        return false;
+    }
+    u8 key[kPdfCryptKeyLen];
+    {
+        ScopedRecursiveMutex scope(&e->docLock);
+        memcpy(key, pdf_crypt_key(e->Ctx(), e->pdfdoc->crypt), sizeof(key));
+    }
+
+    fz_context* ctx = fz_new_context(nullptr, nullptr, FZ_STORE_DEFAULT);
+    if (!ctx) {
+        return false;
+    }
+    bool ok = false;
+    pdf_document* doc = nullptr;
+    fz_var(doc);
+    fz_try(ctx) {
+        doc = pdf_open_document(ctx, CStrTemp(srcPath));
+        memcpy(pdf_crypt_key(ctx, doc->crypt), key, sizeof(key));
+        pdf_write_options opts = gPdfDefaultWriteOptions;
+        opts.do_encrypt = PDF_ENCRYPT_NONE;
+        pdf_save_document(ctx, doc, CStrTemp(destPath), &opts);
+        ok = true;
+    }
+    fz_always(ctx) {
+        pdf_drop_document(ctx, doc);
+    }
+    fz_catch(ctx) {
+        fz_report_error(ctx);
+        logf("EngineMupdfSaveDecrypted: saving '%s' failed: '%s'\n", destPath, Str(fz_caught_message(ctx)));
+    }
+    fz_drop_context(ctx);
+    return ok;
 }
 
 //--- merging PDFs
