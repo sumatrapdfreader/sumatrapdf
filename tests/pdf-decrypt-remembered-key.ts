@@ -23,20 +23,46 @@ function md5(...parts: Uint8Array[]): Buffer {
   return Buffer.from(h.digest());
 }
 
-function hexField(pdf: string, re: RegExp): Buffer {
+// the PDF string after re: mupdf writes one in hex or as a literal, depending on its bytes
+function stringField(pdf: string, re: RegExp): Buffer {
   const m = re.exec(pdf);
   if (!m) {
     throw new Error(`pdf-decrypt-remembered-key: no ${re} in the encrypted file`);
   }
-  return Buffer.from(m[1]!, "hex");
+  let i = m.index + m[0].length;
+  if (pdf[i] === "<") {
+    return Buffer.from(pdf.slice(i + 1, pdf.indexOf(">", i)), "hex");
+  }
+  const kEscapes: Record<string, string> = { n: "\n", r: "\r", t: "\t", b: "\b", f: "\f" };
+  const out: number[] = [];
+  let depth = 1;
+  for (i++; depth > 0; i++) {
+    let c = pdf[i]!;
+    if (c === "\\") {
+      const next = pdf[++i]!;
+      const octal = /^[0-7]{1,3}/.exec(pdf.slice(i, i + 3));
+      if (octal) {
+        out.push(parseInt(octal[0], 8) & 0xff);
+        i += octal[0].length - 1;
+        continue;
+      }
+      c = kEscapes[next] ?? next;
+    } else if (c === "(") {
+      depth++;
+    } else if (c === ")" && --depth === 0) {
+      break;
+    }
+    out.push(c.charCodeAt(0));
+  }
+  return Buffer.from(out);
 }
 
 // what file history stores: md5 of the file, then the key (PDF spec algorithm 2, RC4 40-bit)
 export function rememberedKey(path: string): string {
   const bytes = readFileSync(path);
   const pdf = bytes.toString("latin1");
-  const o = hexField(pdf, /\/O\s*<([0-9a-fA-F]+)>/);
-  const id = hexField(pdf, /\/ID\s*\[\s*<([0-9a-fA-F]+)>/);
+  const o = stringField(pdf, /\/O\s*(?=[<(])/);
+  const id = stringField(pdf, /\/ID\s*\[\s*/);
   const pm = /\/P\s+(-?\d+)/.exec(pdf);
   if (!pm) {
     throw new Error("pdf-decrypt-remembered-key: no /P in the encrypted file");
