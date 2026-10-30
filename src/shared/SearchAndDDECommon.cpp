@@ -2012,7 +2012,10 @@ void FindThread(FindThreadData* ftd) {
     data->textSel = nullptr;
     data->loopedAround = false;
 
-    if (!win->findCancelled && rect) {
+    // a cancel that arrives after the match was found (find-as-you-type giving
+    // up) must not drop it: dm->textSearch already holds it, so the view has to
+    // go there. A real abort is dropped by FindEndTask (findThread changed).
+    if (rect) {
         data->textSel = rect;
         data->wasModifiedCanceled = ftd->wasModified;
         data->loopedAround = loopedAround;
