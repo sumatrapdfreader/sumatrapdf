@@ -24,6 +24,7 @@ TempStr ScrollToLinkResultTemp(int minViewportDelta, int* exitCodeOut = nullptr)
 TempStr I18nErrorStringResultTemp(int* exitCodeOut = nullptr);
 TempStr GetTocResultTemp(Str path, int* exitCodeOut = nullptr);
 TempStr PageLinksResultTemp(Str path, int pageNo, int* exitCodeOut = nullptr);
+TempStr PageImagesResultTemp(Str path, int pageNo, int* exitCodeOut = nullptr);
 TempStr PageCommentsResultTemp(Str path, int pageNo, int* exitCodeOut = nullptr);
 TempStr TocNavigateResultTemp(int destNo, int* exitCodeOut = nullptr);
 TempStr TocSidebarNavResultTemp(int destNo, int* exitCodeOut = nullptr);

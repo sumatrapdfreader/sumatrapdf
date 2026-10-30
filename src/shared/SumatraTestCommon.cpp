@@ -780,6 +780,33 @@ TempStr GetTocResultTemp(Str path, int* exitCodeOut) {
     return ToStrTemp(out);
 }
 
+// Headless test for page image elements. Returns one line per image:
+// "image rect=<x>,<y>,<dx>,<dy>". Used by tests/issue-6441.ts.
+TempStr PageImagesResultTemp(Str path, int pageNo, int* exitCodeOut) {
+    *exitCodeOut = 1;
+    EngineBase* engine = CreateEngineFromFile(path, nullptr, false);
+    if (!engine) {
+        return fmt("ERROR engine-create-failed path=%s\n", path);
+    }
+    if (!engine->BenchLoadPage(pageNo)) {
+        SafeEngineRelease(&engine);
+        return fmt("ERROR page-load-failed page=%d\n", pageNo);
+    }
+
+    str::Builder out;
+    Vec<IPageElement*> els = engine->GetElements(pageNo);
+    for (IPageElement* el : els) {
+        if (!el || !el->Is(kindPageElementImage)) {
+            continue;
+        }
+        RectF r = el->GetRect();
+        out.Append(fmt("image rect=%g,%g,%g,%g\n", r.x, r.y, r.dx, r.dy));
+    }
+    *exitCodeOut = 0;
+    SafeEngineRelease(&engine);
+    return ToStrTemp(out);
+}
+
 // Headless test for page link elements. Returns one line per link:
 // "kind=<kind> value=<value>". Used by tests/ad-hoc-md-links.ts.
 TempStr PageLinksResultTemp(Str path, int pageNo, int* exitCodeOut) {

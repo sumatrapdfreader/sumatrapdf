@@ -149,6 +149,8 @@ export enum ControlCommand {
   TestSidebarCursor = 141,
   // [destPath, pageSizeIdx, fontSize]: Convert EPUB to PDF without its dialog
   TestConvertEpubToPdf = 142,
+  // [path, pageNo]: image element rects of a page
+  TestPageImages = 143,
 }
 
 export type ControlArg = number | string | Uint8Array | ControlArg[];

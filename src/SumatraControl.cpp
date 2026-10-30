@@ -665,6 +665,8 @@ enum class ControlCmd : u16 {
     TestSidebarCursor = 141,
     // [destPath, pageSizeIdx, fontSize]: Convert EPUB to PDF without its dialog
     TestConvertEpubToPdf = 142,
+    // [path, pageNo]: image element rects of a page
+    TestPageImages = 143,
 };
 
 static_assert((u16)ControlCmd::Quit == (u16)ControlFrameCmd::Quit);
@@ -1088,6 +1090,19 @@ static void ExecuteControlRequest(ControlRequest* req) {
             }
             int exitCode = 0;
             Str res = GetTocResultTemp(path, &exitCode);
+            AppendTestResult(req, exitCode, res);
+            break;
+        }
+
+        case ControlCmd::TestPageImages: {
+            Str path = StringArg(req, 0);
+            i32 pageNo = 1;
+            if (len(path) == 0 || !IntArg(req, 1, pageNo)) {
+                AppendError(req, StrL("TestPageImages expects string path, int pageNo"));
+                break;
+            }
+            int exitCode = 0;
+            Str res = PageImagesResultTemp(path, pageNo, &exitCode);
             AppendTestResult(req, exitCode, res);
             break;
         }
