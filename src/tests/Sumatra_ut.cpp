@@ -11,6 +11,7 @@
 #include "base/Pixmap.h"
 #include "base/GuessFileType.h"
 #include "base/SettingsUtil.h"
+#include "base/Win.h"
 
 #include "gui/UIModels.h"
 #include "gui/Layout.h"
@@ -34,6 +35,7 @@
 #include "SvgIcons.h"
 #include "AppUnitTests.h"
 #include "PDFScript.h"
+#include "RegistryPreview.h"
 
 // must be last to over-write assert()
 #include "base/tests/UtAssert.h"
@@ -305,6 +307,78 @@ static void PDFScriptArgHintTest() {
     utassert(str::EndsWith(values[0], StrL("a-[page].png")));
 }
 
+#define kUtThumbnailIid "{e357fccd-a995-4576-b01f-234630154e96}"
+#define kUtPreviewIid "{8895b1c6-b41f-4c1c-a562-0d564250836f}"
+#define kUtForeignClsid "{11111111-2222-3333-4444-555555555555}"
+#define kUtStaleClsid "{66666666-7777-8888-9999-000000000000}"
+
+static TempStr UtShellExTemp(Str ext, Str iid) {
+    return ReadRegStrTemp(HKEY_CURRENT_USER, fmt("Software\\Classes\\%s\\shellex\\%s", ext, iid), {});
+}
+
+// PdfPreview.dll (un)registration leaves other apps' handlers alone (#6442).
+// HKCR, HKCU and HKLM are redirected to scratch keys; HKCR doesn't merge the
+// HKCU one, so a handler Explorer would see is written to both.
+static void PreviewHandlersTest() {
+    Str root = StrL("Software\\SumatraPDF-unit-tests\\preview-handlers");
+    DeleteRegKey(HKEY_CURRENT_USER, root);
+    HKEY predefs[3] = {HKEY_CLASSES_ROOT, HKEY_CURRENT_USER, HKEY_LOCAL_MACHINE};
+    Str names[3] = {StrL("cr"), StrL("cu"), StrL("lm")};
+    HKEY keys[3]{};
+    for (int i = 0; i < 3; i++) {
+        WCHAR* path = CWStrTemp(fmt("%s\\%s", root, names[i]));
+        LSTATUS st =
+            RegCreateKeyExW(HKEY_CURRENT_USER, path, 0, nullptr, 0, KEY_ALL_ACCESS, nullptr, &keys[i], nullptr);
+        utassert(st == ERROR_SUCCESS);
+    }
+    bool overridden = true;
+    for (int i = 0; i < 3; i++) {
+        overridden &= RegOverridePredefKey(predefs[i], keys[i]) == ERROR_SUCCESS;
+    }
+    utassert(overridden);
+    if (!overridden) {
+        goto Exit;
+    }
+
+    {
+        // another app's thumbnailer for .epub, a stale one for .mobi
+        Str epubThumb = StrL(".epub\\shellex\\" kUtThumbnailIid);
+        WriteRegStr(HKEY_CLASSES_ROOT, epubThumb, {}, StrL(kUtForeignClsid));
+        CreateRegKey(HKEY_CLASSES_ROOT, StrL("CLSID\\" kUtForeignClsid "\\InProcServer32"));
+        WriteRegStr(HKEY_CURRENT_USER, fmt("Software\\Classes\\%s", epubThumb), {}, StrL(kUtForeignClsid));
+        WriteRegStr(HKEY_CLASSES_ROOT, StrL(".mobi\\shellex\\" kUtThumbnailIid), {}, StrL(kUtStaleClsid));
+
+        PreviewHandlers foreign = GetForeignPreviewHandlers();
+        utassert(foreign.preview == 0);
+        utassert(foreign.thumbnails != 0 && (foreign.thumbnails & (foreign.thumbnails - 1)) == 0);
+
+        PreviewHandlers which{kAllPreviewExts, kAllPreviewExts & ~foreign.thumbnails};
+        utassert(InstallPreviewDll(StrL("C:\\SumatraPDF\\PdfPreview.dll"), false, which));
+        utassert(str::Eq(UtShellExTemp(StrL(".epub"), StrL(kUtThumbnailIid)), StrL(kUtForeignClsid)));
+        utassert(str::Eq(UtShellExTemp(StrL(".epub"), StrL(kUtPreviewIid)), StrL(kEpubPreviewClsid)));
+        utassert(str::Eq(UtShellExTemp(StrL(".pdf"), StrL(kUtThumbnailIid)), StrL(kPdfPreviewClsid)));
+        utassert(str::Eq(UtShellExTemp(StrL(".mobi"), StrL(kUtThumbnailIid)), StrL(kMobiPreviewClsid)));
+
+        // preview pane only
+        UninstallPreviewDll();
+        utassert(InstallPreviewDll(StrL("C:\\SumatraPDF\\PdfPreview.dll"), false, {kAllPreviewExts, 0}));
+        utassert(len(UtShellExTemp(StrL(".pdf"), StrL(kUtThumbnailIid))) == 0);
+        utassert(str::Eq(UtShellExTemp(StrL(".pdf"), StrL(kUtPreviewIid)), StrL(kPdfPreviewClsid)));
+
+        UninstallPreviewDll();
+        utassert(str::Eq(UtShellExTemp(StrL(".epub"), StrL(kUtThumbnailIid)), StrL(kUtForeignClsid)));
+        utassert(len(UtShellExTemp(StrL(".pdf"), StrL(kUtPreviewIid))) == 0);
+        utassert(len(UtShellExTemp(StrL(".epub"), StrL(kUtPreviewIid))) == 0);
+    }
+
+Exit:
+    for (int i = 0; i < 3; i++) {
+        RegOverridePredefKey(predefs[i], nullptr);
+        RegCloseKey(keys[i]);
+    }
+    DeleteRegKey(HKEY_CURRENT_USER, StrL("Software\\SumatraPDF-unit-tests"));
+}
+
 static void SumatraPDF_UnitTests() {
     RestrictedUseConfigTest();
     ControlFrameActionTest();
@@ -324,6 +398,7 @@ static void SumatraPDF_UnitTests() {
     hexstrTest();
     ExpandPDFScriptTest();
     PDFScriptArgHintTest();
+    PreviewHandlersTest();
 }
 
 static void ParseTipExpectWordsLinks(Str input, int expWords, int expLinks) {

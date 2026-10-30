@@ -10877,7 +10877,7 @@ static LRESULT FrameOnCommand(MainWindow* win, HWND hwnd, UINT msg, WPARAM wp, L
                 if (IsPreviewInstalled()) {
                     UnRegisterPreviewer();
                 } else {
-                    RegisterPreviewer(info.allUsers, info.installationDir);
+                    RegisterPreviewer(info.allUsers, info.installationDir, {kAllPreviewExts, kAllPreviewExts});
                 }
             }
             break;

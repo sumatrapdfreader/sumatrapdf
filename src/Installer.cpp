@@ -62,6 +62,7 @@ struct InstallerWnd {
     Checkbox* checkboxForAllUsers = nullptr;
     Checkbox* checkboxRegisterSearchFilter = nullptr;
     Checkbox* checkboxRegisterPreview = nullptr;
+    Checkbox* checkboxRegisterThumbnails = nullptr;
     Checkbox* checkboxDesktopShortcut = nullptr;
     int currProgress = 0;
     Progress* progressBar = nullptr;
@@ -955,6 +956,25 @@ static bool ExtractInstallerFiles(lzma::SimpleArchive* archive, Str destDir) {
     return true;
 }
 
+// handlers chosen in the installer. An update keeps the handlers other apps
+// put in place of ours, e.g. SageThumbs for thumbnails (#6442).
+static PreviewHandlers PreviewHandlersToInstall(Flags* cli) {
+    PreviewHandlers which;
+    if (cli->withPreview) {
+        which.preview = kAllPreviewExts;
+        if (gPrevInstall.previewInstalled) {
+            which.preview &= ~gPrevInstall.foreignPreview;
+        }
+    }
+    if (cli->withThumbnails) {
+        which.thumbnails = kAllPreviewExts;
+        if (gPrevInstall.thumbnailsInstalled) {
+            which.thumbnails &= ~gPrevInstall.foreignThumbnails;
+        }
+    }
+    return which;
+}
+
 static void InstallerThread(Flags* cli) {
     bool ok;
 
@@ -963,9 +983,10 @@ static void InstallerThread(Flags* cli) {
     TempStr installedExePath = path::JoinTemp(cli->installDir, Str(kExeName));
     auto allUsers = cli->allUsers;
     logf(
-        "InstallerThread: cli->allUsers: %d, cli->withFilter: %d, cli->withPreview: %d, "
+        "InstallerThread: cli->allUsers: %d, cli->withFilter: %d, cli->withPreview: %d, cli->withThumbnails: %d, "
         "installerExePath: '%s'\n",
-        (int)cli->allUsers, (int)cli->withFilter, (int)cli->withPreview, installedExePath);
+        (int)cli->allUsers, (int)cli->withFilter, (int)cli->withPreview, (int)cli->withThumbnails, installedExePath);
+    PreviewHandlers previewHandlers = PreviewHandlersToInstall(cli);
     HKEY key = cli->allUsers ? HKEY_LOCAL_MACHINE : HKEY_CURRENT_USER;
 
     // Unregister shell extensions and kill holders BEFORE extract. PdfFilter.dll
@@ -1004,13 +1025,14 @@ static void InstallerThread(Flags* cli) {
     // mark them as uninstalled
     gPrevInstall.searchFilterInstalled = false;
     gPrevInstall.previewInstalled = false;
+    gPrevInstall.thumbnailsInstalled = false;
 
     if (cli->withFilter) {
         RegisterSearchFilter(allUsers, cli->installDir);
     }
 
-    if (cli->withPreview) {
-        RegisterPreviewer(allUsers, cli->installDir);
+    if (previewHandlers.preview || previewHandlers.thumbnails) {
+        RegisterPreviewer(allUsers, cli->installDir, previewHandlers);
     }
 
     CreateAppShortcuts(allUsers, !cli->noDesktopShortcut, installedExePath);
@@ -1069,6 +1091,9 @@ TempStr InstallerShellExtArgsTemp(Flags* cli) {
     if (cli->withPreview) {
         args = str::JoinTemp(args, StrL(" -with-preview"));
     }
+    if (cli->withThumbnails) {
+        args = str::JoinTemp(args, StrL(" -with-thumbnails"));
+    }
     return args;
 }
 
@@ -1109,6 +1134,7 @@ static void StartInstallation(InstallerWnd* wnd) {
     DeleteWnd(&wnd->checkboxForAllUsers);
     DeleteWnd(&wnd->checkboxRegisterSearchFilter);
     DeleteWnd(&wnd->checkboxRegisterPreview);
+    DeleteWnd(&wnd->checkboxRegisterThumbnails);
     DeleteWnd(&wnd->checkboxDesktopShortcut);
     DeleteWnd(&wnd->btnOptions);
 
@@ -1164,6 +1190,7 @@ static void OnButtonInstall(InstallerWnd* wnd) {
     cli->withFilter = wnd->checkboxRegisterSearchFilter && wnd->checkboxRegisterSearchFilter->IsChecked();
     // note: this checkbox isn't created on Windows 2000 and XP
     cli->withPreview = wnd->checkboxRegisterPreview && wnd->checkboxRegisterPreview->IsChecked();
+    cli->withThumbnails = wnd->checkboxRegisterThumbnails && wnd->checkboxRegisterThumbnails->IsChecked();
     cli->noDesktopShortcut = !wnd->checkboxDesktopShortcut->IsChecked();
 
     // Program Files always needs machine-style install + elevation
@@ -1376,6 +1403,7 @@ static void UpdateUIForOptionsState(InstallerWnd* wnd) {
     ShowAndEnable(wnd->checkboxForAllUsers, showOpts);
     ShowAndEnable(wnd->checkboxRegisterSearchFilter, showOpts);
     ShowAndEnable(wnd->checkboxRegisterPreview, showOpts);
+    ShowAndEnable(wnd->checkboxRegisterThumbnails, showOpts);
     ShowAndEnable(wnd->checkboxDesktopShortcut, showOpts);
 
     auto* btnOptions = wnd->btnOptions;
@@ -1509,10 +1537,10 @@ static void SetTabOrder(HWND* hwnds, int nHwnds) {
 //[ ACCESSKEY_GROUP Installer
 static void CreateInstallerWindowControls(InstallerWnd* wnd, Flags* cli) {
     logf(
-        "CreateInstallerWindowControls: cli->allUsers: %d, cli->withPreview: %d, "
+        "CreateInstallerWindowControls: cli->allUsers: %d, cli->withPreview: %d, cli->withThumbnails: %d, "
         "cli->withFilter: %d, install dir: "
         "'%s'\n",
-        (int)cli->allUsers, (int)cli->withPreview, (int)cli->withFilter, cli->installDir);
+        (int)cli->allUsers, (int)cli->withPreview, (int)cli->withThumbnails, (int)cli->withFilter, cli->installDir);
     // show options if user chose non-defaults via cmd-line
     // or if previous install had them enabled
     bool showOptions = false;
@@ -1535,13 +1563,20 @@ static void CreateInstallerWindowControls(InstallerWnd* wnd, Flags* cli) {
     // only show these if the CPU arch of DLL and OS match
     // (assuming that the installer has the same CPU arch as its content!)
     if (IsProcessAndOsArchSame()) {
-        // for Windows XP, this means only basic thumbnail support
+        PreviewHandlers ours = GetOurPreviewHandlers();
         Str s = Tr("Let Windows show &previews of PDF documents");
-        bool isChecked = cli->withPreview || IsPreviewInstalled();
+        bool isChecked = cli->withPreview || ours.preview != 0;
         if (isChecked) {
             showOptions = true;
         }
         wnd->checkboxRegisterPreview = CreateCheckbox(hwnd, s, isChecked);
+
+        s = Tr("Let Windows show &thumbnails of PDF documents");
+        isChecked = cli->withThumbnails || ours.thumbnails != 0;
+        if (isChecked) {
+            showOptions = true;
+        }
+        wnd->checkboxRegisterThumbnails = CreateCheckbox(hwnd, s, isChecked);
 
         isChecked = cli->withFilter || IsSearchFilterInstalled();
         if (isChecked) {
@@ -1616,6 +1651,7 @@ static void CreateInstallerWindowControls(InstallerWnd* wnd, Flags* cli) {
     addCheck(wnd->checkboxRegisterSearchFilter, opts);
     addCheck(wnd->checkboxDesktopShortcut, opts);
     addCheck(wnd->checkboxRegisterPreview, opts);
+    addCheck(wnd->checkboxRegisterThumbnails, opts);
     wnd->optionsBox = new Padding(opts, Insets{0, margin, 0, margin});
 
     // options sit at the bottom of the branded area, above the button row
@@ -1656,6 +1692,9 @@ static void CreateInstallerWindowControls(InstallerWnd* wnd, Flags* cli) {
     hwnds[nHwnds++] = wnd->checkboxDesktopShortcut->hwnd;
     if (wnd->checkboxRegisterPreview) {
         hwnds[nHwnds++] = wnd->checkboxRegisterPreview->hwnd;
+    }
+    if (wnd->checkboxRegisterThumbnails) {
+        hwnds[nHwnds++] = wnd->checkboxRegisterThumbnails->hwnd;
     }
     hwnds[nHwnds++] = wnd->btnOptions->hwnd;
     SetTabOrder(hwnds, nHwnds);
@@ -2081,6 +2120,7 @@ int RunInstaller() {
     gCliNew.allUsers = gCli->allUsers;
     gCliNew.withFilter = gCli->withFilter;
     gCliNew.withPreview = gCli->withPreview;
+    gCliNew.withThumbnails = gCli->withThumbnails;
     gCliNew.noDesktopShortcut = gCli->noDesktopShortcut;
     gCliNew.silent = gCli->silent;
     gCliNew.runInstallNow = gCli->runInstallNow;
@@ -2113,6 +2153,9 @@ int RunInstaller() {
         }
         if (!gCliNew.withPreview) {
             gCliNew.withPreview = gPrevInstall.previewInstalled;
+        }
+        if (!gCliNew.withThumbnails) {
+            gCliNew.withThumbnails = gPrevInstall.thumbnailsInstalled;
         }
         if (!gCliNew.noDesktopShortcut) {
             gCliNew.noDesktopShortcut = !gPrevInstall.desktopShortcut;

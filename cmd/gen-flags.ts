@@ -100,6 +100,7 @@ const args = [
     "StartPerfLog", "start-perf-log",
     "LogPerfFile", "log-perf-file",
     "ConfigureRestrictedUse", "configure-restricted-use",
+    "WithThumbnails", "with-thumbnails",
 ];
 
 function generateCode(): string {

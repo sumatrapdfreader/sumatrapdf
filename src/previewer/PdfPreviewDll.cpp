@@ -150,7 +150,7 @@ STDAPI DllRegisterServer() {
     // in 3.4 we call this code from the installer
     // pre-3.4 we would write to both HKLM (if permissions) and HKCU
     // in 3.4+ this will only install for current user (HKCU)
-    bool ok = InstallPreviewDll(dllPath, false);
+    bool ok = InstallPreviewDll(dllPath, false, {kAllPreviewExts, kAllPreviewExts});
     if (!ok) {
         log(StrL("DllRegisterServer failed!\n"));
         return E_FAIL;

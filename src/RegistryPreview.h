@@ -10,9 +10,19 @@
 #define kCbxPreviewClsid "{C29D3E2B-8FF6-4033-A4E8-54221D859D74}"
 #define kTgaPreviewClsid "{CB1D63A6-FE5E-4DED-BEA5-3F6AF1A70D08}"
 
-bool InstallPreviewDll(Str dllPath, bool allUsers);
+// Explorer handlers of PdfPreview.dll, a bit per extension (see gPreviewers)
+struct PreviewHandlers {
+    u32 preview = 0;
+    u32 thumbnails = 0;
+};
+
+constexpr u32 kAllPreviewExts = 0xffffffff;
+
+bool InstallPreviewDll(Str dllPath, bool allUsers, PreviewHandlers which);
 bool UninstallPreviewDll();
 void DisablePreviewInstallExts(Str cmdLine);
+PreviewHandlers GetOurPreviewHandlers();
+PreviewHandlers GetForeignPreviewHandlers();
 bool IsPreviewInstalled();
 
 // opt-in file logging for the preview handler (PdfPreview.dll), controlled by a

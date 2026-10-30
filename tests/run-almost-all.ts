@@ -181,6 +181,7 @@ import { testit as issue4788 } from "./issue-4788.ts";
 import { testit as issue6359 } from "./issue-6359.ts";
 import { testit as issue6360 } from "./issue-6360.ts";
 import { testit as issue6441 } from "./issue-6441.ts";
+import { testit as issue6442 } from "./issue-6442.ts";
 import { testit as issue6361 } from "./issue-6361.ts";
 import { testit as issue6362 } from "./issue-6362.ts";
 import { testit as issue6276 } from "./issue-6276.ts";
@@ -956,6 +957,7 @@ export const tests: NamedTest[] = [
   ["file-link-no-dest", fileLinkNoDest],
   ["control-pipe-busy", controlPipeBusy],
   ["issue-6441", issue6441],
+  ["issue-6442", issue6442],
 ];
 
 export async function testit(opts?: SuiteOptions): Promise<void> {

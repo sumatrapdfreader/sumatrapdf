@@ -48,7 +48,7 @@ const DESKTOP_LABEL = "desktop shortcut";
 
 type Ctrl = { hwnd: number; text: string; r: Rect };
 
-function buttons(frame: number): Ctrl[] {
+export function buttons(frame: number): Ctrl[] {
   const res: Ctrl[] = [];
   enumChildWindows(frame, (h) => {
     if (getClassName(h) === "Button") {
@@ -64,7 +64,7 @@ function isCheckbox(c: Ctrl): boolean {
 }
 
 // the visible option checkboxes, top to bottom, after the Options button showed them
-async function showOptions(frame: number): Promise<Ctrl[]> {
+export async function showOptions(frame: number): Promise<Ctrl[]> {
   const opts = buttons(frame).find((b) => b.text.endsWith("Options"));
   if (!opts) {
     throw new Error("installer-desktop-shortcut: no Options button");
@@ -83,7 +83,7 @@ async function showOptions(frame: number): Promise<Ctrl[]> {
   return checks;
 }
 
-function checkLayout(frame: number, checks: Ctrl[], opts: Rect): void {
+export function checkLayout(frame: number, checks: Ctrl[], opts: Rect): void {
   const client = getClientRect(frame);
   const origin = clientToScreen(frame, 0, 0);
   for (let i = 0; i < checks.length; i++) {

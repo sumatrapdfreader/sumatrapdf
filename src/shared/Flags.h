@@ -121,6 +121,7 @@ struct Flags {
     bool uninstall = false;
     bool withFilter = false;
     bool withPreview = false;
+    bool withThumbnails = false;
     bool noDesktopShortcut = false;
     bool justExtractFiles = false;
     bool log = false;

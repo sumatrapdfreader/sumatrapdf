@@ -20,6 +20,10 @@ struct PreviousInstallationInfo {
     PreviousInstallationType typ = PreviousInstallationType::None;
     bool searchFilterInstalled = false;
     bool previewInstalled = false;
+    bool thumbnailsInstalled = false;
+    // other apps' handlers, a bit per extension (see PreviewHandlers)
+    u32 foreignPreview = 0;
+    u32 foreignThumbnails = 0;
     bool allUsers = false;
     // installs before the DesktopShortcut registry value always created one
     bool desktopShortcut = true;
@@ -81,7 +85,8 @@ bool InstallNeedsElevation(Str installDir, bool allUsers);
 
 TempStr GetInstallationFilePathTemp(Str installDir, Str name);
 
-void RegisterPreviewer(bool allUsers, Str installDir);
+struct PreviewHandlers;
+void RegisterPreviewer(bool allUsers, Str installDir, const PreviewHandlers& which);
 void UnRegisterPreviewer();
 
 void RegisterSearchFilter(bool allUsers, Str installDir);
@@ -93,7 +98,9 @@ void UnRegisterSearchFilter();
 // filled for RestoreShellExtensions if install fails later.
 struct ShellExtInstallState {
     bool searchFilter = false;
-    bool preview = false;
+    // our preview pane / thumbnail handlers, a bit per extension
+    u32 ourPreview = 0;
+    u32 ourThumbnails = 0;
     bool allUsers = false;
     Str installDir;
 };
