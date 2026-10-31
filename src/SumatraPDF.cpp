@@ -14721,7 +14721,10 @@ static bool MaybeTranslateAccelerator(MSG& msg) {
     // would swallow them. Retarget the system-key messages to the frame so its
     // menu still responds (issue #4614). Retargeting before TranslateMessage()
     // also makes the generated WM_SYSCHAR go to the frame.
-    if (forwardSysKeys && (msg.message == WM_SYSKEYDOWN || msg.message == WM_SYSKEYUP || msg.message == WM_SYSCHAR)) {
+    // Alt+Up / Alt+Down aren't for the menu: they open and close a combo's list.
+    bool isComboKey = msg.message != WM_SYSCHAR && (msg.wParam == VK_DOWN || msg.wParam == VK_UP);
+    if (forwardSysKeys && !isComboKey &&
+        (msg.message == WM_SYSKEYDOWN || msg.message == WM_SYSKEYUP || msg.message == WM_SYSCHAR)) {
         msg.hwnd = hwndAccel;
     }
     return false;
