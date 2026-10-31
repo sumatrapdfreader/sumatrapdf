@@ -69,6 +69,10 @@ void BrowserViewSelectAll(BrowserView*) {}
 
 void BrowserViewCopySelection(BrowserView*) {}
 
+bool BrowserViewCapturePng(BrowserView*, const Func1<Str>&) {
+    return false;
+}
+
 void BrowserViewPrint(BrowserView*, bool) {}
 
 void BrowserViewFindInPageUI(BrowserView*) {}

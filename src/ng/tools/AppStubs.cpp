@@ -151,6 +151,7 @@ void HomePageInvalidateLayoutCache() {}
 
 struct FileState;
 void HomePageThumbnailChanged(FileState*) {}
+void SetThumbnailFromImage(Str, Str) {}
 
 // SumatraPDFCommon.cpp, which only the app builds
 void OnThumbnailsTypeChanged() {}
