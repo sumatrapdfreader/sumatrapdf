@@ -2171,6 +2171,7 @@
     <ClCompile Include="..\src\shared\EbookSettingsDialogCommon.cpp" />
     <ClCompile Include="..\src\shared\EmbeddedResources.cpp" />
     <ClCompile Include="..\src\shared\EngineBase.cpp" />
+    <ClCompile Include="..\src\shared\EngineCaj.cpp" />
     <ClCompile Include="..\src\shared\EngineCreate.cpp" />
     <ClCompile Include="..\src\shared\EngineDjvuDec.cpp" />
     <ClCompile Include="..\src\shared\EngineDvi.cpp" />

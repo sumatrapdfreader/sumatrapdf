@@ -1749,7 +1749,7 @@ static bool ShouldUsePageAspectForView(Str path) {
     }
     FileType ft = GuessFileTypeFromName(path, true);
     return ft == FileType::PDF || ft == FileType::Xps || ft == FileType::DjVu || ft == FileType::PS ||
-           ft == FileType::Dvi;
+           ft == FileType::Dvi || ft == FileType::Caj;
 }
 
 static void ApplyPageAspectView(EngineBase* engine, DisplayMode* modeOut, float* zoomOut) {
@@ -5607,8 +5607,9 @@ static bool SaveDocAs(MainWindow* win, Str dstPath) {
     EngineBase* engine = dm ? dm->GetEngine() : nullptr;
 
     TempStr realDstFileName = str::DupTemp(dstPath);
-    bool convertedAsPdf = engine && str::EndsWithI(realDstFileName, StrL(".pdf")) &&
-                          (engine->kind == kindEnginePostScript || engine->kind == kindEngineDvi);
+    bool convertedAsPdf =
+        engine && str::EndsWithI(realDstFileName, StrL(".pdf")) &&
+        (engine->kind == kindEnginePostScript || engine->kind == kindEngineDvi || engine->kind == kindEngineCaj);
 
     // Make sure that the file has a valid extension
     Str defExt = ctrl->GetDefaultFileExt();
@@ -15512,6 +15513,7 @@ static void DeleteStaleOpenCacheFiles() {
 static void DeleteStaleFilesAsync() {
     DeleteStaleCbxCacheFiles();
     DeleteStaleDviCache();
+    DeleteStaleCajCache();
     DeleteStaleOpenCacheFiles();
     DeleteOldPdfPreviewLogs(32);
 
@@ -15578,7 +15580,7 @@ static void DeleteStaleFilesAsync() {
     di.includeDirs = true;
     for (DirIterEntry* de : di) {
         Str name = de->name;
-        if (str::Eq(name, StrL("cbx-cache")) || str::Eq(name, StrL("dvi-cache"))) {
+        if (str::Eq(name, StrL("cbx-cache")) || str::Eq(name, StrL("dvi-cache")) || str::Eq(name, StrL("caj2pdf"))) {
             continue;
         }
 

@@ -719,9 +719,11 @@ bool AppendFileFilterForDoc(DocController* ctrl, str::Builder& fileFilter) {
         fileFilter.Append(fmt(Tr("Image files (*.%s)").s, imgDefExt));
     } else if (type == kindEngineImageDir) {
         return false; // only show "All files"
-    } else if (type == kindEnginePostScript || type == kindEngineDvi) {
+    } else if (type == kindEnginePostScript || type == kindEngineDvi || type == kindEngineCaj) {
         // also offer the PDF the converter produced (SaveFileAs writes it)
-        if (type == kindEngineDvi) {
+        if (type == kindEngineCaj) {
+            fileFilter.Append(Tr("CAJ documents"));
+        } else if (type == kindEngineDvi) {
             fileFilter.Append(Tr("DVI documents"));
         } else {
             fileFilter.Append(Tr("PostScript documents"));
@@ -2013,8 +2015,9 @@ void CreateThumbnailForFile(MainWindow* win, FileState* ds) {
     EngineBase* clone = nullptr;
     DisplayModel* dm = win->IsDocLoaded() ? win->AsFixed() : nullptr;
     EngineBase* engine = dm ? dm->GetEngine() : nullptr;
-    if (engine && (engine->kind == kindEnginePostScript || engine->kind == kindEngineDvi) &&
-        str::Eq(engine->FilePath(), ds->filePath)) {
+    bool isConverted = engine && (engine->kind == kindEnginePostScript || engine->kind == kindEngineDvi ||
+                                  engine->kind == kindEngineCaj);
+    if (isConverted && str::Eq(engine->FilePath(), ds->filePath)) {
         clone = engine->Clone();
     }
 

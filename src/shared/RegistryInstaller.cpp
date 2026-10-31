@@ -33,6 +33,7 @@ static const struct {
     {StrL(".gif"), 7}, {StrL(".avif"), 7}, {StrL(".heic"), 7}, {StrL(".heif"), 7},
     {StrL(".jfif"), 7}, {StrL(".webp"), 7}, {StrL(".jxl"), 7}, {StrL(".bmp"), 7},
     {StrL(".ico"), 7}, {StrL(".jxr"), 7}, {StrL(".hdp"), 7}, {StrL(".wdp"), 7},
+    {StrL(".caj"), kDefaultFileIcon}, {StrL(".kdh"), kDefaultFileIcon}, {StrL(".nh"), kDefaultFileIcon},
 };
 // clang-format on
 

@@ -1253,6 +1253,9 @@
     <ClCompile Include="..\src\shared\EngineBase.cpp">
       <Filter>src\shared</Filter>
     </ClCompile>
+    <ClCompile Include="..\src\shared\EngineCaj.cpp">
+      <Filter>src\shared</Filter>
+    </ClCompile>
     <ClCompile Include="..\src\shared\EngineCreate.cpp">
       <Filter>src\shared</Filter>
     </ClCompile>

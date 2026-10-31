@@ -31,6 +31,7 @@ void BuildOpenFileFilters(OpenFileFilterList& out) {
         {Tr("DjVu documents"), StrL("*.djvu"), true},
         {Tr("PostScript documents"), StrL("*.ps;*.eps"), IsEnginePsAvailable()},
         {Tr("DVI documents"), StrL("*.dvi"), IsEngineDviAvailable()},
+        {Tr("CAJ documents"), StrL("*.caj;*.kdh;*.nh"), true},
         {Tr("Comic books"), StrL("*.cbz;*.cbr;*.cb7;*.cbt"), true},
         {Tr("CHM documents"), StrL("*.chm"), true},
         {Tr("SVG documents"), StrL("*.svg"), true},

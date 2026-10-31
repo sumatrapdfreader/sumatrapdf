@@ -287,6 +287,7 @@ export const sharedFiles = [
   "src/shared/EngineBase.h",
   "src/shared/EngineCreate.cpp",
   "src/shared/EngineDjvuDec.cpp",
+  "src/shared/EngineCaj.cpp",
   "src/shared/EngineDvi.cpp",
   "src/shared/EngineEbook.cpp",
   "src/shared/EngineImages.cpp",

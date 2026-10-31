@@ -341,8 +341,8 @@ bool IsSupportedFileType(FileType kind, bool enableEngineEbooks) {
     }
     if (IsEngineMupdfSupportedFileType(kind) || IsEngineDjVuSupportedFileType(kind) ||
         IsEngineImageSupportedFileType(kind) || IsEngineCbxSupportedFileType(kind) ||
-        IsEnginePsSupportedFileType(kind) || IsEngineDviSupportedFileType(kind) || kind == FileType::Lit ||
-        kind == FileType::Rtf) {
+        IsEnginePsSupportedFileType(kind) || IsEngineDviSupportedFileType(kind) || IsEngineCajSupportedFileType(kind) ||
+        kind == FileType::Lit || kind == FileType::Rtf) {
         return true;
     }
     if (!enableEngineEbooks) {
@@ -393,6 +393,9 @@ static EngineBase* CreateEngineForKind(FileType kind, FileType contentHintKind, 
     }
     if (IsEngineDviSupportedFileType(kind)) {
         return CreateEngineDviFromFile(path);
+    }
+    if (IsEngineCajSupportedFileType(kind)) {
+        return CreateEngineCajFromFile(path);
     }
     if (kind == FileType::Lit) {
         return CreateEngineLitFromFile(path, pwdUI);

@@ -1075,7 +1075,7 @@ static bool ShouldUsePageAspect(Str path) {
     }
     FileType ft = GuessFileTypeFromName(path, true);
     return ft == FileType::PDF || ft == FileType::Xps || ft == FileType::DjVu || ft == FileType::PS ||
-           ft == FileType::Dvi;
+           ft == FileType::Dvi || ft == FileType::Caj;
 }
 
 static void ApplyPageAspect(EngineBase* engine, DisplayMode* modeOut, float* zoomOut) {
@@ -2828,8 +2828,10 @@ static void OnSaveFileAsPathPicked(SaveFileAsCtx* ctx, SavePathArgs* args) {
     EngineBase* engine = dm ? dm->GetEngine() : nullptr;
     logf("SaveCurrentFileAs: '%s' -> '%s'\n", srcFileName, dstFilePath);
 
-    bool convertedAsPdf = engine && (engine->kind == kindEngineDvi || engine->kind == kindEnginePostScript) &&
-                          str::EndsWithI(dstFilePath, StrL(".pdf"));
+    bool convertedAsPdf =
+        engine &&
+        (engine->kind == kindEngineDvi || engine->kind == kindEnginePostScript || engine->kind == kindEngineCaj) &&
+        str::EndsWithI(dstFilePath, StrL(".pdf"));
     // Make sure that the file has a valid extension
     if (!convertedAsPdf && !str::EndsWithI(dstFilePath, defExt)) {
         dstFilePath = str::JoinTemp(dstFilePath, defExt);
@@ -7237,6 +7239,7 @@ int GpuiMain(int argc, char** argv) {
     DetectExternalViewers();
     FileWatcherInit();
     RunAsync(MkFunc0Void(DeleteStaleDviCache), StrL("DeleteStaleDviCache"));
+    RunAsync(MkFunc0Void(DeleteStaleCajCache), StrL("DeleteStaleCajCache"));
     gRenderCache = new RenderCache();
 
     gp::App* app = gp::AppNew();

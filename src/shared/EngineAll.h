@@ -247,6 +247,11 @@ bool IsEngineDviSupportedFileType(FileType);
 EngineBase* CreateEngineDviFromFile(Str fileName);
 void DeleteStaleDviCache();
 
+/* EngineCaj.cpp */
+bool IsEngineCajSupportedFileType(FileType);
+EngineBase* CreateEngineCajFromFile(Str fileName);
+void DeleteStaleCajCache();
+
 bool IsSupportedFileType(FileType kind, bool enableEngineEbooks);
 
 EngineBase* CreateEngineFromFile(Str filePath, PasswordUI* pwdUI, bool enableChmEngine);
