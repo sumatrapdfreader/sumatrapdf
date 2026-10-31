@@ -3508,6 +3508,7 @@ static void FreePageInfo(fz_context* ctx, FzPageInfo* pi) {
 }
 
 EngineMupdf::~EngineMupdf() {
+    FreeProps(epubSidecarProps);
     pagesLock.Lock();
 
     auto* ctx = _ctx;
@@ -4856,6 +4857,7 @@ bool EngineMupdf::FinishLoading() {
     // page-progression-direction, so a manga EPUB came out left-to-right
     // (#1264). Read it ourselves.
     if (GuessFileTypeFromName(FilePath()) == FileType::Epub) {
+        EpubGetSidecarMetadata(FilePath(), epubSidecarProps);
         EpubReadingDirection dir = EpubGetReadingDirection(FilePath());
         preferredLayout.r2lDeclared = dir.declared;
         if (dir.rtl) {
@@ -7989,6 +7991,11 @@ TempStr EngineMupdf::GetPropertyTemp(DocProp prop) {
         return ExtractFontListTemp();
     }
 
+    Str sidecarVal = GetPropValueTemp(epubSidecarProps, prop);
+    if (len(sidecarVal) > 0) {
+        return str::DupTemp(sidecarVal);
+    }
+
     auto* ctx = Ctx();
     ScopedRecursiveMutex ctxScope(&docLock);
 
@@ -8701,6 +8708,10 @@ void EngineMupdf::GetProperties(Props& propsOut) {
     // for epub files, list all files in the archive
     Str path = FilePath();
     if (path && str::EndsWithI(path, StrL(".epub"))) {
+        for (const PropValue& p : epubSidecarProps) {
+            AddProp(propsOut, p.prop, str::DupTemp(p.val));
+        }
+
         // mupdf only exposes the title and the author
         Props epubProps;
         EpubGetMetadata(path, epubProps);

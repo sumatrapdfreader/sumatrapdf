@@ -344,6 +344,8 @@ bool EpubDoc::Load() {
     }
 
     Str content(contentFi->data, contentFi->fileSizeUncompressed);
+    // first value wins, so the sidecar overrides the package
+    EpubGetSidecarMetadata(fileName, props);
     ParseMetadata(content, props);
     GumboDoc contentDoc(content, GumboMode::XmlFragment);
     const GumboNode* node = GumboFindDescendantByTag(contentDoc.Document(), StrL("manifest"), HtmlNameMatch::Local);
@@ -735,6 +737,19 @@ EpubReadingDirection EpubGetReadingDirection(Str path) {
     GumboDoc doc(Str(contentFi->data, contentFi->fileSizeUncompressed), GumboMode::XmlFragment);
     const GumboNode* spine = GumboFindDescendantByTag(doc.Document(), StrL("spine"), HtmlNameMatch::Local);
     return EpubSpineDirection(spine);
+}
+
+// Metadata from foo.opf next to foo.epub. Free with FreeProps.
+void EpubGetSidecarMetadata(Str epubPath, Props& props) {
+    if (len(epubPath) == 0) {
+        return;
+    }
+    TempStr opfPath = str::JoinTemp(path::GetPathNoExtTemp(epubPath), StrL(".opf"));
+    Str data = file::ReadFile(opfPath);
+    if (len(data) > 0) {
+        ParseMetadata(data, props);
+    }
+    str::Free(data);
 }
 
 // The package's metadata, without building a whole EpubDoc. Free with FreeProps.

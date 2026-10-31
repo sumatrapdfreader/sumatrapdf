@@ -2,8 +2,10 @@
 // source, language, dates and a description stored as escaped HTML, here without a
 // dc: prefix. The OPF follows what a user reported for a retail EPUB.
 //
+// A foo.opf next to foo.epub overrides the EPUB's values; the EPUB fills in the rest.
+//
 // Run: bun tests/epub-metadata-properties.ts [--no-build]
-import { writeFileSync } from "node:fs";
+import { rmSync, writeFileSync } from "node:fs";
 import { ControlCommand } from "./control.ts";
 import { cmdId, makeZip, runStandalone, tmpPath, USE_NG, type ZipEntry } from "./util.ts";
 import { killAndWait, launchControlled, sendCommand } from "./win-automation.ts";
@@ -137,6 +139,44 @@ export async function testit(): Promise<void> {
     await client.quit();
   } finally {
     await killAndWait(proc);
+  }
+
+  await testSidecarOpf();
+}
+
+async function testSidecarOpf(): Promise<void> {
+  const epub = tmpPath("epub-metadata-sidecar.epub");
+  const opf = tmpPath("epub-metadata-sidecar.opf");
+  writeFileSync(epub, makeEpub());
+  writeFileSync(
+    opf,
+    `<?xml version="1.0" encoding="utf-8"?>
+<package xmlns="http://www.idpf.org/2007/opf" version="2.0">` +
+      `<metadata xmlns:dc="http://purl.org/dc/elements/1.1/">` +
+      `<dc:title>Sidecar Title</dc:title><dc:publisher>Sidecar Press</dc:publisher>` +
+      `<dc:description>Sidecar description</dc:description></metadata></package>`,
+  );
+  const { proc, client } = await launchControlled([epub]);
+  try {
+    await client.waitForRenderIdle();
+    const res = await client.request(ControlCommand.TestDocumentProperties);
+    const props = parseProps(String(res[1] ?? ""));
+    const wanted: Record<string, string> = {
+      title: "Sidecar Title",
+      publisher: "Sidecar Press",
+      subject: "Sidecar description",
+      author: "An Author",
+      identifier: "9781982142605",
+    };
+    for (const [key, val] of Object.entries(wanted)) {
+      if (props[key] !== val) {
+        throw new Error(`epub-metadata-properties: sidecar ${key}: wanted '${val}', got ${JSON.stringify(props)}`);
+      }
+    }
+    await client.quit();
+  } finally {
+    await killAndWait(proc);
+    rmSync(opf, { force: true });
   }
 }
 
