@@ -546,7 +546,8 @@ bool showTocByDefault(Str path, EngineBase* engine) {
 
 bool IsEbookFileType(FileType ft) {
     return ft == FileType::Epub || ft == FileType::Mobi || ft == FileType::Fb2 || ft == FileType::Fb2z ||
-           ft == FileType::PalmDoc || ft == FileType::HTML || ft == FileType::Txt || ft == FileType::Lit;
+           ft == FileType::PalmDoc || ft == FileType::HTML || ft == FileType::Txt || ft == FileType::Lit ||
+           ft == FileType::Rtf;
 }
 
 // Per-type DefaultDisplayMode (empty = inherit the global DefaultDisplayMode).

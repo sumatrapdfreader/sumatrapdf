@@ -4189,6 +4189,23 @@ int utf8StrLen(const u8* s) {
 
 // --- end of Unicode, Inc. utf8 code
 
+void str::AppendBase64(str::Builder& out, const u8* data, size_t size) {
+    static constexpr char table[] = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";
+    for (size_t i = 0; i < size; i += 3) {
+        u32 value = (u32)data[i] << 16;
+        if (i + 1 < size) {
+            value |= (u32)data[i + 1] << 8;
+        }
+        if (i + 2 < size) {
+            value |= data[i + 2];
+        }
+        out.AppendChar(table[(value >> 18) & 63]);
+        out.AppendChar(table[(value >> 12) & 63]);
+        out.AppendChar(i + 1 < size ? table[(value >> 6) & 63] : '=');
+        out.AppendChar(i + 2 < size ? table[value & 63] : '=');
+    }
+}
+
 void str::Utf8Encode(char* buf, int& off, int c) {
     u8* tmp = (u8*)(buf + off);
     if (c < 0x00080) {

@@ -39,6 +39,9 @@
     <ClInclude Include="..\src\shared\PdfDarkMode.h">
       <Filter>shared</Filter>
     </ClInclude>
+    <ClInclude Include="..\src\shared\RtfDoc.h">
+      <Filter>shared</Filter>
+    </ClInclude>
     <ClInclude Include="..\src\shared\TextSearch.h">
       <Filter>shared</Filter>
     </ClInclude>
@@ -98,6 +101,9 @@
       <Filter>shared</Filter>
     </ClCompile>
     <ClCompile Include="..\src\shared\PdfCad.cpp">
+      <Filter>shared</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\shared\RtfDoc.cpp">
       <Filter>shared</Filter>
     </ClCompile>
     <ClCompile Include="..\src\shared\TextSearch.cpp">

@@ -592,6 +592,7 @@ const enginesSources = [
   "src/ng/ImageReader.cpp",
   "src/ng/JxlReader.cpp",
   "src/ng/LitDoc.cpp",
+  "src/ng/RtfDoc.cpp",
   "src/ng/MobiDoc.cpp",
   "src/PalmDbReader.cpp",
   "src/ng/PdfCad.cpp",

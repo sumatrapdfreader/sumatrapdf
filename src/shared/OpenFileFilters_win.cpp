@@ -44,6 +44,7 @@ void BuildOpenFileFilters(OpenFileFilterList& out) {
          StrL("*.bmp;*.dib;*.gif;*.jpg;*.jpeg;*.jfif;*.jxr;*.hdp;*.wdp;*.png;*.tga;*.tif;*.tiff;*.webp;*.heic;*.heif;"
               "*.avif;*.jxl;*.jp2;*.j2k;*.jpx;*.jpf;*.jpm;*.j2c;*.ico"),
          true},
+        {Tr("Rich Text documents"), StrL("*.rtf"), true},
         {Tr("Text documents"), StrL("*.txt;*.log;*.nfo;file_id.diz;read.me;*.tcr"), true},
     };
 

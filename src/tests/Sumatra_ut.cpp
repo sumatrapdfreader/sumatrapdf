@@ -81,6 +81,7 @@ void WinUtilTest();
 // in src/tests/*_ut.cpp
 void ChapterTable_UnitTests();
 void LitDoc_UnitTests();
+void RtfDoc_UnitTests();
 void MobiDoc_UnitTests();
 void PagePosition_UnitTests();
 void PdfSync_UnitTests();
@@ -644,6 +645,7 @@ int RunAppUnitTests(bool forAi) {
 
     ChapterTable_UnitTests();
     LitDoc_UnitTests();
+    RtfDoc_UnitTests();
     MobiDoc_UnitTests();
     PagePosition_UnitTests();
     PdfSync_UnitTests();

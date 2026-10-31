@@ -19,6 +19,7 @@ type DocType = { name: string; utis?: string[]; exts?: string[] };
 const docTypes: DocType[] = [
   { name: "PDF Document", utis: ["com.adobe.pdf"] },
   { name: "EPUB Document", utis: ["org.idpf.epub-container"] },
+  { name: "RTF Document", utis: ["public.rtf"] },
   { name: "Image", utis: ["public.png", "public.jpeg", "public.tiff", "com.compuserve.gif", "com.microsoft.bmp"] },
   { name: "Comic Book", exts: ["cbz", "cbr", "cb7", "cbt"] },
   { name: "DjVu Document", exts: ["djvu", "djv"] },

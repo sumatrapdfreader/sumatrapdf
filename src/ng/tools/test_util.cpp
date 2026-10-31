@@ -31,6 +31,7 @@ extern bool AnnotSearch_UnitTests();
 extern void ChapterTable_UnitTests();
 extern void MobiDoc_UnitTests();
 extern void LitDoc_UnitTests();
+extern void RtfDoc_UnitTests();
 extern void PdfSync_UnitTests();
 extern void TextSelection_UnitTests();
 extern void PagePosition_UnitTests();
@@ -166,6 +167,7 @@ int main(int argc, char** argv) {
     ChapterTable_UnitTests();
     MobiDoc_UnitTests();
     LitDoc_UnitTests();
+    RtfDoc_UnitTests();
     PdfSync_UnitTests();
     TextSelection_UnitTests();
     PagePosition_UnitTests();

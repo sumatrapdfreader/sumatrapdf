@@ -558,6 +558,9 @@
     <ClInclude Include="..\src\shared\RestrictedUseConfig.h">
       <Filter>src\shared</Filter>
     </ClInclude>
+    <ClInclude Include="..\src\shared\RtfDoc.h">
+      <Filter>src\shared</Filter>
+    </ClInclude>
     <ClInclude Include="..\src\shared\Screenshot.h">
       <Filter>src\shared</Filter>
     </ClInclude>
@@ -1469,6 +1472,9 @@
     <ClCompile Include="..\src\shared\RestrictedUseConfig.cpp">
       <Filter>src\shared</Filter>
     </ClCompile>
+    <ClCompile Include="..\src\shared\RtfDoc.cpp">
+      <Filter>src\shared</Filter>
+    </ClCompile>
     <ClCompile Include="..\src\shared\ScreenshotCommon.cpp">
       <Filter>src\shared</Filter>
     </ClCompile>
@@ -1596,6 +1602,9 @@
       <Filter>src\shared\tests</Filter>
     </ClCompile>
     <ClCompile Include="..\src\shared\tests\RenderCache_ut.cpp">
+      <Filter>src\shared\tests</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\shared\tests\RtfDoc_ut.cpp">
       <Filter>src\shared\tests</Filter>
     </ClCompile>
     <ClCompile Include="..\src\shared\tests\SimpleLog_ut.cpp">

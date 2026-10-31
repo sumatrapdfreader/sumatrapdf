@@ -42,6 +42,7 @@ ShowLinks = false
 HighlightFormFields = true
 ClickEdgeToTurnPage = false
 DisableLinks = false
+DisableLeftDragPan = false
 ExplorerQuickLook = false
 RememberViewOffsetOnPageTurn = false
 MouseWheelTurnsPage = false

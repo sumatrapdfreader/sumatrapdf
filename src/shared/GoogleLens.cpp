@@ -43,23 +43,6 @@ static void GoogleLensNotify(WindowTab* tab, Str message) {
     ShowNotification(args);
 }
 
-static void AppendBase64(str::Builder& out, const u8* data, size_t size) {
-    static constexpr char table[] = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";
-    for (size_t i = 0; i < size; i += 3) {
-        u32 value = (u32)data[i] << 16;
-        if (i + 1 < size) {
-            value |= (u32)data[i + 1] << 8;
-        }
-        if (i + 2 < size) {
-            value |= data[i + 2];
-        }
-        out.AppendChar(table[(value >> 18) & 63]);
-        out.AppendChar(table[(value >> 12) & 63]);
-        out.AppendChar(i + 1 < size ? table[(value >> 6) & 63] : '=');
-        out.AppendChar(i + 2 < size ? table[value & 63] : '=');
-    }
-}
-
 static bool WriteGoogleLensPage(WindowTab* tab, const u8* png, size_t pngSize) {
     if (pngSize == 0 || pngSize > kMaxGoogleLensPngBytes) {
         GoogleLensNotify(tab, Tr("The selected area is too large for Google Lens."));
@@ -71,7 +54,7 @@ static bool WriteGoogleLensPage(WindowTab* tab, const u8* png, size_t pngSize) {
         StrL("<!doctype html><meta charset=\"utf-8\"><title>Google Lens</title>\n"
              "<p>Opening Google Lens...</p><script>\n"
              "const b=atob('"));
-    AppendBase64(html, png, pngSize);
+    str::AppendBase64(html, png, pngSize);
     html.Append(
         StrL("');const a=Uint8Array.from(b,c=>c.charCodeAt(0));"
              "const f=new File([a],'sumatra.png',{type:'image/png'});"

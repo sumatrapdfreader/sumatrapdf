@@ -2220,6 +2220,7 @@ int utf8RuneLen(const u8* s);
 
 namespace str {
 void Utf8Encode(char* buf, int& off, int c);
+void AppendBase64(str::Builder& out, const u8* data, size_t size);
 int VsnprintfUtf8(Str buf, const char* fmt, va_list args);
 } // namespace str
 
