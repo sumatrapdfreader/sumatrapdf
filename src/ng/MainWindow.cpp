@@ -39,6 +39,7 @@
 #include "AIChatPanel.h"
 #include "OverlayScrollbar.h"
 #include "MainWindow.h"
+#include "SearchAndDDECommon.h"
 #include "WindowTab.h"
 #include "gui/AppShell.h"
 #include "gui/DocCanvas.h"
@@ -128,8 +129,10 @@ struct ControllerCallbackHandler : DocControllerCallback {
     }
     void FocusFrame(bool) override {}
     void SaveDownload(Str, Str) override {}
-    void FindResultReceived(int, int, int) override {}
-    void FindAllResultReceived(Str) override {}
+    void FindResultReceived(int gen, int current, int total) override {
+        BrowserFindResultReceived(win, gen, current, total);
+    }
+    void FindAllResultReceived(Str payload) override { BrowserFindAllResultReceived(win, payload); }
     void TocChanged(DocController* ctrl) override;
     void PagesRenumbered(DisplayModel* dm) override {
         if (win->AsFixed() == dm) {

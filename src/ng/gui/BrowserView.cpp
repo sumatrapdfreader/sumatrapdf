@@ -766,7 +766,7 @@ static void CreateWebView(BrowserView* bv, gp::Ctx* cx) {
     attrs.customProtocols = &protocol;
     attrs.customProtocolCount = 1;
     attrs.initializationScripts = scripts;
-    attrs.initializationScriptCount = 3;
+    attrs.initializationScriptCount = dimofi(scripts);
     attrs.ctx = bv;
     attrs.navigationHandler = OnNavigationStarting;
     attrs.onPageLoadHandler = OnPageLoad;
