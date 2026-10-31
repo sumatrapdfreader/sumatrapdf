@@ -185,7 +185,16 @@ class EngineImages : public EngineBase {
     void GetImageProperties(int pageNo, Props& propsOut);
 };
 
+// Live engines. Cache trimming holds this lock, so ~EngineImages can't free under it.
+static RecursiveMutex gImageEnginesLock;
+static Vec<EngineImages*> gImageEngines;
+
 EngineImages::EngineImages() {
+    {
+        ScopedRecursiveMutex scope(&gImageEnginesLock);
+        VecAppend(gImageEngines, this);
+    }
+
     kind = kindEngineImage;
 
     preferredLayout = PageLayout();
@@ -222,6 +231,11 @@ EngineImages::~EngineImages() {
     // logged so a leaked engine can be identified: its creation is logged by
     // CreateEngineImageFromFile et al. but this line will be missing
     logf("~EngineImages: '%s'\n", FilePath());
+    {
+        ScopedRecursiveMutex scope(&gImageEnginesLock);
+        VecRemove(gImageEngines, this);
+    }
+
     cacheLock.Lock();
     while (len(pageCache) > 0) {
         ImagePage* lastPage = VecLast(pageCache);
@@ -1028,30 +1042,48 @@ bool EngineImages::SaveFileAs(Str dstPath) {
     return SaveFileOrData(FilePath(), sourceData, dstPath);
 }
 
-static bool ImagePageCanFree(WindowTab* currTab, CachedObject* o) {
-    (void)currTab;
-    auto* page = (ImagePage*)o->id;
-    if (!page || page->loading) {
-        return false;
-    }
-    if (AtomicIntGet(&page->refs) > 1) {
-        return false;
-    }
-    return page->ownPixmap && page->pixmap;
-}
+enum class ImagePageTrim {
+    Check,
+    Free,
+};
 
-static bool ImagePageFree(WindowTab* currTab, CachedObject* o) {
-    (void)currTab;
+// o comes from an unlocked snapshot: don't touch its engine or page until found
+// in the live lists. A page out of pageCache only has refs of its users, not ours.
+// Trimming is best-effort, so busy locks skip the page rather than risk a deadlock.
+static bool TrimImagePage(CachedObject* o, ImagePageTrim action) {
     auto* page = (ImagePage*)o->id;
     auto* eng = (EngineImages*)o->engine;
-    if (!page || !eng) {
+    if (!gImageEnginesLock.TryLock()) {
         return false;
     }
-    if (AtomicIntGet(&page->refs) > 1) {
+    defer {
+        gImageEnginesLock.Unlock();
+    };
+    if (!VecContains(gImageEngines, eng) || !eng->cacheLock.TryLock()) {
         return false;
     }
-    eng->DropPage(page, true);
+    defer {
+        eng->cacheLock.Unlock();
+    };
+
+    if (!VecContains(eng->pageCache, page) || page->loading || AtomicIntGet(&page->refs) > 1) {
+        return false;
+    }
+    if (!page->ownPixmap || !page->pixmap) {
+        return false;
+    }
+    if (action == ImagePageTrim::Free) {
+        eng->DropPage(page, true);
+    }
     return true;
+}
+
+static bool ImagePageCanFree(WindowTab* /*currTab*/, CachedObject* o) {
+    return TrimImagePage(o, ImagePageTrim::Check);
+}
+
+static bool ImagePageFree(WindowTab* /*currTab*/, CachedObject* o) {
+    return TrimImagePage(o, ImagePageTrim::Free);
 }
 
 ImagePage* EngineImages::GetPage(int pageNo, bool tryOnly) {

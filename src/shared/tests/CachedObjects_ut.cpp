@@ -2,9 +2,14 @@
    License: GPLv3 */
 
 #include "base/Base.h"
+#include "base/File.h"
+#include "base/GuessFileType.h"
+#include "base/Pixmap.h"
+#include "base/TgaReader.h"
 
 #include "gui/UIModels.h"
 #include "EngineBase.h"
+#include "EngineAll.h"
 #include "CachedObjects.h"
 
 #include "base/tests/UtAssert.h"
@@ -55,6 +60,72 @@ static void TabLookupOffUIThreadTest() {
     utassert(JoinThread(&thread, 5000));
     utassert(AtomicIntGet(&gFindTabCalls) == 0);
     gFindTabByEngine = saved;
+}
+
+static bool FindPageObject(EngineBase* engine, int pageNo, CachedObject* out) {
+    for (int i = 0; i < len(gCachedObjects); i++) {
+        if (gCachedObjects[i].engine == engine && gCachedObjects[i].pageNo == pageNo) {
+            *out = gCachedObjects[i];
+            return true;
+        }
+    }
+    return false;
+}
+
+static bool IsRegistered(uintptr_t id) {
+    for (int i = 0; i < len(gCachedObjects); i++) {
+        if (gCachedObjects[i].id == id) {
+            return true;
+        }
+    }
+    return false;
+}
+
+// FreeMatching walks a snapshot: entries may outlive their page or engine
+static void StaleImagePageTest() {
+    // one more than kMaxImagePageCache, to evict page 1
+    constexpr int kPages = 33;
+
+    TempStr dir = str::JoinTemp(GetTempFilePathTemp(StrL("cached-img")), StrL("-dir"));
+    utassert(dir::CreateAll(dir));
+
+    // TGA: not decodable by mupdf, so pages take the cached pixmap path
+    Pixmap* px = AllocPixmap(4, 4);
+    Str tga = tga::PixmapToTgaFormat(px);
+    FreePixmap(px);
+    for (int i = 1; i <= kPages; i++) {
+        utassert(file::WriteFile(path::JoinTemp(dir, fmt("%03d.tga", i)), tga));
+    }
+    str::Free(tga);
+
+    EngineBase* engine = CreateEngineImageDirFromFile(dir);
+    utassert(engine && engine->PageCount() == kPages);
+
+    utassert(engine->BenchLoadPage(1));
+    CachedObject evicted{};
+    utassert(FindPageObject(engine, 1, &evicted));
+    utassert(evicted.canFree(nullptr, &evicted));
+
+    for (int i = 2; i <= kPages; i++) {
+        utassert(engine->BenchLoadPage(i));
+    }
+    CachedObject ignore{};
+    utassert(!FindPageObject(engine, 1, &ignore));
+    // the allocator may reuse the evicted address for a new page, which is then live
+    if (!IsRegistered(evicted.id)) {
+        utassert(!evicted.canFree(nullptr, &evicted));
+        utassert(!evicted.free(nullptr, &evicted));
+    }
+
+    CachedObject live{};
+    utassert(FindPageObject(engine, 2, &live));
+    utassert(live.canFree(nullptr, &live));
+
+    engine->Release();
+    utassert(!live.canFree(nullptr, &live));
+    utassert(!live.free(nullptr, &live));
+
+    dir::RemoveAll(dir);
 }
 
 static void ResetCacheTest() {
@@ -145,6 +216,9 @@ void CachedObjects_UnitTests() {
     utassert(str::Contains(t, StrL("image")));
     utassert(str::Contains(t, StrL("6.0 KB")));
     utassert(str::IndexOf(t, StrL("image")) < str::IndexOf(t, StrL("render")));
+
+    ResetCacheTest();
+    StaleImagePageTest();
 
     ResetCacheTest();
     if (kHasThreads) {
