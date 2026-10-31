@@ -593,6 +593,10 @@ gp::El* FindBarBuild(MainWindow* win, gp::Ctx* cx) {
         str::ReplaceWithCopy(&ui->historyFirst, first);
         ui->ddHistory.SetItems(history, -1);
     }
+    if (win->findHistoryWantOpen) {
+        win->findHistoryWantOpen = false;
+        ui->ddHistory.OpenCombo();
+    }
     // picking an entry out of the open history list is a search request;
     // walking the list with the arrow keys only fills the box, and waits for
     // Enter
@@ -663,5 +667,17 @@ gp::El* FindBarBuild(MainWindow* win, gp::Ctx* cx) {
 void FindBarSetMatchCaseChecked(MainWindow*, bool) {}
 
 void FindBarSetMatchWholeWordChecked(MainWindow*, bool) {}
+
+void FindEditShowHistory(MainWindow* win) {
+    win->findHistoryWantOpen = true;
+    AppShellInvalidate(win);
+}
+
+bool IsFindHistoryOpen(MainWindow* win) {
+    if (win->findBar && win->findBar->ui && win->findBar->ui->ddHistory.comboOpen) {
+        return true;
+    }
+    return FindWindowHistoryOpen(win);
+}
 
 void FindBarSyncHistory(MainWindow*) {}

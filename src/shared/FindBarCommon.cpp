@@ -78,8 +78,8 @@ TempStr FindUiStateResultTemp(Str action, int* exitCodeOut) {
     int page = first->ctrl ? first->ctrl->CurrentPageNo() : 0;
     out.Append(
         fmt("OK windows=%d docs=%d pref=%d compact=%d floating=%d firstTextLen=%d matches=%d hitPage=%d "
-            "busy=%d page=%d\n",
+            "busy=%d page=%d historyOpen=%d\n",
             len(gWindows), docs, gSettings->searchUIFloating ? 1 : 0, compact, floating, firstTextLen, matches, hitPage,
-            busy ? 1 : 0, page));
+            busy ? 1 : 0, page, IsFindHistoryOpen(first) ? 1 : 0));
     return finish(0);
 }

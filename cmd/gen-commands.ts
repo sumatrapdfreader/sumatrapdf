@@ -354,6 +354,7 @@ const commandsRaw = [
     "CmdCopyTemporaryFileToNonTemporary", "Copy Temporary File to Permanent Folder",
     "CmdConvertEpubToPdf", "Convert EPUB to PDF...",
     "CmdConvertCajToPDF", "Convert CAJ to PDF...",
+    "CmdFindHistory", "Find History",
 ];
 
 // removed slots are dropped: nothing outside the generators should see them

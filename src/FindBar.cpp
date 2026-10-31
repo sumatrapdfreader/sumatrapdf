@@ -812,6 +812,17 @@ void FocusFindEditSelectAll(MainWindow* win) {
     CbEditSelectAll(win->findEdit);
 }
 
+// drops the search field's history list; an empty one has nothing to show
+void FindEditShowHistory(MainWindow* win) {
+    if (win->findEdit && SendMessageW(win->findEdit->hwnd, CB_GETCOUNT, 0, 0) > 0) {
+        SendMessageW(win->findEdit->hwnd, CB_SHOWDROPDOWN, TRUE, 0);
+    }
+}
+
+bool IsFindHistoryOpen(MainWindow* win) {
+    return win->findEdit && CbIsDropped(win->findEdit);
+}
+
 void FindBarSyncHistory(MainWindow* win) {
     if (win && win->findBar && win->findBar->edit) {
         ApplyFindHistory(win->findBar->edit);

@@ -69,6 +69,8 @@ void FindEditSetText(MainWindow* win, Str s);
 bool FindEditIsModified(MainWindow* win);
 void FindEditSetModified(MainWindow* win, bool modified);
 bool IsFindEditFocused(MainWindow* win);
+void FindEditShowHistory(MainWindow* win);
+bool IsFindHistoryOpen(MainWindow* win);
 #if defined(SUMATRA_NG)
 TempStr FindEditTestTemp(MainWindow* win, Str action, Str arg, int* exitCodeOut = nullptr);
 void FindBarApplyDpi(MainWindow* win);

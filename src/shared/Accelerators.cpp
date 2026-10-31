@@ -88,6 +88,10 @@ static Accel gBuiltInAccelerators[] = {
     {{kShift | kCtrl | kVirt, 'Z'}, CmdRedo},
     {{kCtrl | kVirt, 'D'}, CmdProperties},
     {{kCtrl | kVirt, 'F'}, CmdFindFirst},
+#if !OS_DARWIN
+    // a Mac has this for scrolling a page, see gPlatformAccelerators
+    {{kAlt | kVirt, VK_DOWN}, CmdFindHistory},
+#endif
     {{kCtrl | kVirt, 'G'}, CmdGoToPage},
     {{kVirt, 'G'}, CmdGoToPage},
     {{kCtrl | kVirt, 'K'}, CmdCommandPalette},
@@ -421,7 +425,8 @@ static bool isSafeOutsideEditAccel(const Accel& a) {
     if (!isChord) {
         return false;
     }
-    return a.cmd == CmdOpenNextFileInFolder || a.cmd == CmdOpenPrevFileInFolder || a.cmd == CmdNavigateFilesInFolder;
+    return a.cmd == CmdOpenNextFileInFolder || a.cmd == CmdOpenPrevFileInFolder || a.cmd == CmdNavigateFilesInFolder ||
+           a.cmd == CmdFindHistory;
 }
 
 // keys the tree uses to move / activate; those stay with the control even
@@ -740,6 +745,12 @@ bool Accelerators_UnitTestFolderNavIsSafe() {
     if (SafeAcceleratorCmd(VK_UP, ctrl, true, false, cmd) != CmdNavigateFilesInFolder) {
         return false;
     }
+#if !OS_DARWIN
+    // opens the find history from a document in the WebView2 too
+    if (SafeAcceleratorCmd(VK_DOWN, false, false, true) != CmdFindHistory) {
+        return false;
+    }
+#endif
     // a bare arrow still belongs to the control, so it can scroll / move the selection
     return SafeAcceleratorCmd(VK_RIGHT, false, false, false) == 0;
 }

@@ -397,6 +397,9 @@ struct MainWindow {
     bool findCountPendingMatchCase = false;
     bool findCountPendingMatchWholeWord = false;
     // also used by PaintAllFindMatches to highlight every find hit
+    // CmdFindHistory: the search field's list opens when it's next drawn, it
+    // may not exist yet
+    bool findHistoryWantOpen = false;
     Vec<FindMatch> findMatches;
     bool findCountHasSnippets = false;
 

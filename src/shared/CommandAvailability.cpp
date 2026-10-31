@@ -553,7 +553,7 @@ CommandVisibility GetCommandVisibility(int cmdId, const AppCommandCtx& ctx, Comm
         return CommandVisibility::Hide;
     }
     // search has nothing to scan; the item stays, greyed, as in the Go To menu
-    if (cmdId == CmdFindFirst && ctx.isImageCollection) {
+    if ((cmdId == CmdFindFirst || cmdId == CmdFindHistory) && ctx.isImageCollection) {
         return MapForSurface(CommandVisibility::Disable, surface);
     }
 

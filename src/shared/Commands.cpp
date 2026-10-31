@@ -353,6 +353,7 @@ const CommandInfo gCommands[] = {
     {CmdCopyTemporaryFileToNonTemporary, "CmdCopyTemporaryFileToNonTemporary\0", StrL("Copy Temporary File to Permanent Folder")},
     {CmdConvertEpubToPdf, "CmdConvertEpubToPdf\0", StrL("Convert EPUB to PDF...")},
     {CmdConvertCajToPDF, "CmdConvertCajToPDF\0", StrL("Convert CAJ to PDF...")},
+    {CmdFindHistory, "CmdFindHistory\0", StrL("Find History")},
 };
 const int gCommandsCount = dimofi(gCommands);
 

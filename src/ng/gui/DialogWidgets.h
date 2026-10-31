@@ -34,6 +34,7 @@ struct DialogSelect {
                          float fontPx = 0);
     // set once a row was picked, until asked; lets a dialog react to a pick
     bool TakeComboPicked();
+    void OpenCombo();
     // the same for a pick with the mouse out of the dropped list only
     bool TakeComboListPick();
 

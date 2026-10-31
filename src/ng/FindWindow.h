@@ -54,6 +54,7 @@ void FindWindowApplyDpi(MainWindow* win);
 bool FindWindowNextOrPrev(MainWindow* win, bool forward);
 // orig's FindWindowWnd::OnKeyDown: F3 and the keys borrowed from the search edit
 bool FindWindowOnKeyDown(MainWindow* win, int vk, bool ctrl, bool shift, bool alt);
+bool FindWindowHistoryOpen(MainWindow* win);
 gpui::El* FindWindowBuild(MainWindow* win, gpui::Ctx* cx);
 gpui::Window* FindWindowHostGpui(MainWindow* win);
 bool FindWindowHasKeyboard(MainWindow* win);

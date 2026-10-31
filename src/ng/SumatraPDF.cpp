@@ -6031,12 +6031,16 @@ void ExecuteCmd(MainWindow* win, int cmdId) {
             ToggleKeyboardLinkFollowing(win);
             break;
 
+        case CmdFindHistory:
         case CmdFindFirst:
             // orig: Ctrl+F on the start page filters the file list instead
             if (win->IsCurrentTabAbout()) {
                 HomePageFocusSearch(win);
             } else {
                 FindFirst(win);
+                if (cmdId == CmdFindHistory) {
+                    FindEditShowHistory(win);
+                }
             }
             break;
 

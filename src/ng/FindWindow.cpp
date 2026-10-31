@@ -357,6 +357,10 @@ bool FindWindowHasKeyboard(MainWindow* win) {
     return ToolWindowIsActive(w->tw);
 }
 
+bool FindWindowHistoryOpen(MainWindow* win) {
+    return win->findWindow && win->findWindow->ui && win->findWindow->ui->ddHistory.comboOpen;
+}
+
 bool FindWindowOnKeyDown(MainWindow* win, int vk, bool ctrl, bool shift, bool alt) {
     if (!IsFindWindowVisible(win)) {
         return false;
@@ -988,6 +992,10 @@ static gp::El* FindWindowContentEl(MainWindow* win, gp::Ctx* cx, bool ownWindow)
         ui->historyLen = len(history);
         str::ReplaceWithCopy(&ui->historyFirst, first);
         ui->ddHistory.SetItems(history, -1);
+    }
+    if (win->findHistoryWantOpen) {
+        win->findHistoryWantOpen = false;
+        ui->ddHistory.OpenCombo();
     }
     // orig's OnHistoryCommitted: picking an entry out of the open history list
     // is a search request; walking the list with the arrow keys only fills the

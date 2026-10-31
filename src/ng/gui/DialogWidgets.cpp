@@ -487,6 +487,10 @@ void DialogComboView::OnKey(DialogComboView* self, gp::Ctx* cx, const gp::KeyEve
     gp::AppInvalidate(cx->win);
 }
 
+void DialogSelect::OpenCombo() {
+    ComboSetOpen(this, true);
+}
+
 bool DialogSelect::TakeComboListPick() {
     bool res = comboListPick;
     comboListPick = false;
