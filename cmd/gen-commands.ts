@@ -355,6 +355,7 @@ const commandsRaw = [
     "CmdConvertEpubToPdf", "Convert EPUB to PDF...",
     "CmdConvertCajToPDF", "Convert CAJ to PDF...",
     "CmdFindHistory", "Find History",
+    "CmdSumatraOnline", "Sumatra Online...",
 ];
 
 // removed slots are dropped: nothing outside the generators should see them

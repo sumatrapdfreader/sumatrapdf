@@ -1143,12 +1143,14 @@ static const FieldInfo gSettingsFields[] = {
     {offsetof(Settings, openCountWeek), SettingType::Int, 0, true},
     {offsetof(Settings, propWinPos), SettingType::Compact, (intptr_t)&gPointInfo, true},
     {offsetof(Settings, checkForUpdates), SettingType::Bool, true, true},
+    {offsetof(Settings, onlineApiKey), SettingType::String, 0, true},
+    {offsetof(Settings, onlineServer), SettingType::String, 0, true},
     {(size_t)-1, SettingType::Comment, 0, true},
     {(size_t)-1, SettingType::Comment, (intptr_t)"Settings below are not recognized by the current version", true},
 };
 const StructInfo gSettingsInfo = {
     sizeof(Settings),
-    178,
+    180,
     gSettingsFields,
     "\0\0DefaultDisplayMode\0DefaultZoom\0DisableJavaScript\0AllowExternalImages\0EnableTeXEnhancements\0EscToExit\0Ful"
     "lPathInTitle\0InverseSearchCmdLine\0LazyLoading\0MainWindowBackground\0NoHomeTab\0NoCaj2pdfConverterDownload\0Home"
@@ -1172,7 +1174,7 @@ const StructInfo gSettingsInfo = {
     "\0\0ExternalViewers\0\0ForwardSearch\0\0PrinterDefaults\0\0Fullscreen\0\0SelectionHandlers\0\0TextSnippets\0\0Shor"
     "tcuts\0\0Themes\0\0TabGroups\0\0CustomScreenDPI\0\0\0DefaultPasswords\0UiLanguage\0VersionToSkip\0WindowState\0Win"
     "dowPos\0SearchUIWindowPos\0AnnotationsWindowShowNote\0HelpWindowPos\0FileStates\0SessionData\0ReopenOnce\0TimeOfLa"
-    "stUpdateCheck\0OpenCountWeek\0PropWinPos\0CheckForUpdates\0\0",
+    "stUpdateCheck\0OpenCountWeek\0PropWinPos\0CheckForUpdates\0OnlineApiKey\0OnlineServer\0\0",
     "\0\0default layout of pages. page aspect (3.7+): first open of a PDF, XPS, DjVu or PostScript file uses page 1 — "
     "taller than wide is continuous + fit width, wider than tall is single page + fit page; a remembered FileState "
     "still wins\0default zoom. valid values: fit page, fit width, fit height, fit content, fit visible or percent like "
@@ -1343,8 +1345,9 @@ const StructInfo gSettingsInfo = {
     "cleared\0windows and tabs still open when SumatraPDF was last closed; reopened at startup if RestoreSession is "
     "true\0data required for reloading documents after an auto-update\0data required to determine when SumatraPDF last "
     "checked for updates\0value required to determine recency for the OpenCount value in FileStates\0position of the "
-    "document properties window\0if true, check once a day whether an update is available\0\0Settings below are not "
-    "recognized by the current version",
+    "document properties window\0if true, check once a day whether an update is available\0API key for Sumatra Online. "
+    "Set from File / Link Sumatra Online. Do not share the settings file.\0an empty value means the public Sumatra "
+    "Online site. The dialog does not edit it.\0\0Settings below are not recognized by the current version",
     false};
 static const FieldInfo gTheme_1_Fields[] = {
     {offsetof(Theme, name), SettingType::String, (intptr_t)""},

@@ -1354,6 +1354,12 @@ struct Settings {
     HtmlUI htmlUI;
     // if true, check once a day whether an update is available
     bool checkForUpdates;
+    // API key for Sumatra Online. Set from File / Link Sumatra Online. Do
+    // not share the settings file.
+    Str onlineApiKey;
+    // an empty value means the public Sumatra Online site. The dialog does
+    // not edit it.
+    Str onlineServer;
 };
 // for parsing themes
 struct Themes {

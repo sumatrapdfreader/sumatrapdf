@@ -354,6 +354,7 @@ const CommandInfo gCommands[] = {
     {CmdConvertEpubToPdf, "CmdConvertEpubToPdf\0", StrL("Convert EPUB to PDF...")},
     {CmdConvertCajToPDF, "CmdConvertCajToPDF\0", StrL("Convert CAJ to PDF...")},
     {CmdFindHistory, "CmdFindHistory\0", StrL("Find History")},
+    {CmdSumatraOnline, "CmdSumatraOnline\0", StrL("Sumatra Online...")},
 };
 const int gCommandsCount = dimofi(gCommands);
 

@@ -348,8 +348,9 @@ enum {
     CmdConvertEpubToPdf = 542,
     CmdConvertCajToPDF = 543,
     CmdFindHistory = 544,
+    CmdSumatraOnline = 545,
 
-    CmdLast = 544,
+    CmdLast = 545,
     CmdFirstCustom = CmdLast + 100,
 
     // aliases, at the end to not mess ordering
