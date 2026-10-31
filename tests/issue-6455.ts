@@ -9,12 +9,25 @@
 import { createHash } from "node:crypto";
 import { existsSync, mkdirSync, readFileSync, rmSync, utimesSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
-import { EXE_FROM_ARGV, ROOT, runStandalone, tmpPath } from "./util.ts";
+import { EXE_FROM_ARGV, ROOT, runStandalone, tmpPath, USE_NG, writeAppdata } from "./util.ts";
+import { enumWindows, getClassName, getWindowText, postMessage, sendMessage } from "./winapi.ts";
 import { killAndWait, launchControlled } from "./win-automation.ts";
 
 const kDayMs = 24 * 60 * 60 * 1000;
 const kPollTimeoutMs = 20000;
 const kPollIntervalMs = 50;
+const kDialogClass = "#32770";
+const kDialogTitle = "Download caj2pdf";
+const WM_USER = 0x0400;
+const TDM_CLICK_BUTTON = WM_USER + 102;
+const TDM_CLICK_VERIFICATION = WM_USER + 113;
+const kIdCancel = 2; // IDCANCEL
+const kIdDownload = 100; // kBtnIdDownloadCaj2pdf
+
+interface DialogAnswer {
+  button: number;
+  dontAsk: boolean;
+}
 
 interface Published {
   ver: string;
@@ -59,14 +72,40 @@ async function pollUntil(what: string, cond: () => boolean): Promise<void> {
   }
 }
 
+function findDownloadDialog(): number {
+  let found = 0;
+  enumWindows((hwnd) => {
+    if (getClassName(hwnd) === kDialogClass && getWindowText(hwnd) === kDialogTitle) {
+      found = hwnd;
+      return false;
+    }
+    return true;
+  });
+  return found;
+}
+
+// the task dialog takes these from any process; they carry no pointers
+async function answerDialog(answer: DialogAnswer): Promise<void> {
+  let dlg = 0;
+  await pollUntil("the download dialog", () => {
+    dlg = findDownloadDialog();
+    return dlg !== 0;
+  });
+  if (answer.dontAsk) {
+    sendMessage(dlg, TDM_CLICK_VERIFICATION, 1, 0);
+  }
+  postMessage(dlg, TDM_CLICK_BUTTON, answer.button, 0);
+}
+
 function age(path: string, ms: number): void {
   const t = new Date(Date.now() - ms);
   utimesSync(path, t, t);
 }
 
 export async function testit(): Promise<void> {
-  if (process.platform !== "win32" || isReleaseExe() || !hasCl()) {
-    console.log("issue-6455: skipped, needs a Windows debug build and cl.exe");
+  // ng's dialog is gpui: it has no task dialog messages to answer
+  if (process.platform !== "win32" || USE_NG || isReleaseExe() || !hasCl()) {
+    console.log("issue-6455: skipped, needs a Windows debug build of the original app and cl.exe");
     return;
   }
 
@@ -102,11 +141,22 @@ export async function testit(): Promise<void> {
 
   const readLog = () => (existsSync(logPath) ? readFileSync(logPath, "latin1") : "");
 
+  // a document on the command line is loaded before the control pipe is up, so
+  // the dialog is answered while connecting
+  const launchAnswering = async (args: string[], opts: { saveSettings?: boolean }, answer?: DialogAnswer | null) => {
+    const launch = launchControlled(args, { env, ...opts });
+    if (!answer) {
+      return await launch;
+    }
+    const [launched] = await Promise.all([launch, answerDialog(answer)]);
+    return launched;
+  };
+
   // after(): checks made while the document is open, for what runs in the background
-  const open = async (after?: () => Promise<void>): Promise<string> => {
+  const open = async (after?: () => Promise<void>, answer?: DialogAnswer): Promise<string> => {
     rmSync(logPath, { force: true });
     requests.length = 0;
-    const { proc, client } = await launchControlled(["-log-to-file", logPath, doc], { env });
+    const { proc, client } = await launchAnswering(["-log-to-file", logPath, doc], {}, answer);
     try {
       await client.waitForRenderIdle(kPollTimeoutMs);
       const info = await client.chapterInfo();
@@ -123,9 +173,47 @@ export async function testit(): Promise<void> {
 
   const exeOf = (ver: string) => join(cajDir, ver, "caj2pdf.exe");
 
+  // opens a document that won't load, answering the dialog if one is expected
+  const openDeclined = async (answer: DialogAnswer | null, appdata: string): Promise<void> => {
+    rmSync(logPath, { force: true });
+    requests.length = 0;
+    const { proc, client } = await launchAnswering(
+      ["-appdata", appdata, "-log-to-file", logPath, doc],
+      { saveSettings: true },
+      answer,
+    );
+    try {
+      await pollUntil("the declined download", () => readLog().includes("download declined"));
+      if (!answer && findDownloadDialog() !== 0) {
+        throw new Error("issue-6455: asked although NoCaj2pdfConverterDownload is set");
+      }
+      if (requests.length !== 0 || existsSync(latestPath)) {
+        throw new Error(`issue-6455: declined, but requested ${requests.join(" ")}`);
+      }
+      await client.quit();
+    } finally {
+      await killAndWait(proc);
+    }
+  };
+
   try {
+    // Cancel downloads nothing and, without "Don't ask again", the next open asks again
+    const appdata = writeAppdata("issue-6455-settings", "RestoreSession = false\nCheckForUpdates = false");
+    const settingsPath = join(appdata, "SumatraPDF-settings.txt");
+    await openDeclined({ button: kIdCancel, dontAsk: false }, appdata);
+    if (readFileSync(settingsPath, "utf8").includes("NoCaj2pdfConverterDownload = true")) {
+      throw new Error("issue-6455: plain Cancel remembered the answer");
+    }
+
+    // "Don't ask again" is saved, and then nothing asks
+    await openDeclined({ button: kIdCancel, dontAsk: true }, appdata);
+    if (!readFileSync(settingsPath, "utf8").includes("NoCaj2pdfConverterDownload = true")) {
+      throw new Error("issue-6455: \"Don't ask again\" wasn't saved");
+    }
+    await openDeclined(null, appdata);
+
     // a download that doesn't match latestver.json is not installed
-    const bad = await launchControlled(["-log-to-file", logPath, doc], { env });
+    const bad = await launchAnswering(["-log-to-file", logPath, doc], {}, { button: kIdDownload, dontAsk: false });
     try {
       await pollUntil("the rejected download", () => readLog().includes("doesn't match latestver.json"));
       if (existsSync(exeOf("1.0.0")) || existsSync(latestPath)) {
@@ -138,12 +226,30 @@ export async function testit(): Promise<void> {
 
     // first open installs the converter
     published = { ver: "1.0.0", exe: fake };
-    let log = await open();
+    let log = await open(undefined, { button: kIdDownload, dontAsk: false });
     if (!log.includes("caj2pdf: converted") || !existsSync(exeOf("1.0.0"))) {
       throw new Error("issue-6455: first open didn't install and convert");
     }
     if (!requests.includes("/latestver.json") || !requests.includes("/1.0.0/caj2pdf.exe")) {
       throw new Error(`issue-6455: first open requested ${requests.join(" ")}`);
+    }
+
+    // the setting only stops downloads: a converter we already have still works
+    {
+      rmSync(logPath, { force: true });
+      const { proc, client } = await launchControlled(["-appdata", appdata, "-log-to-file", logPath, doc], {
+        env,
+        saveSettings: true,
+      });
+      try {
+        await client.waitForRenderIdle(kPollTimeoutMs);
+        if ((await client.chapterInfo()).pageCount < 1) {
+          throw new Error("issue-6455: NoCaj2pdfConverterDownload stopped an installed converter");
+        }
+        await client.quit();
+      } finally {
+        await killAndWait(proc);
+      }
     }
 
     // second open uses the cached PDF and stays off the network

@@ -249,7 +249,7 @@ void DeleteStaleDviCache();
 
 /* EngineCaj.cpp */
 bool IsEngineCajSupportedFileType(FileType);
-EngineBase* CreateEngineCajFromFile(Str fileName);
+EngineBase* CreateEngineCajFromFile(Str fileName, PasswordUI* pwdUI);
 void DeleteStaleCajCache();
 
 bool IsSupportedFileType(FileType kind, bool enableEngineEbooks);

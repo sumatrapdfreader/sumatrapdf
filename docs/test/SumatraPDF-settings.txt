@@ -10,6 +10,7 @@ FullPathInTitle = false
 LazyLoading = false
 MainWindowBackground = #80fff200
 NoHomeTab = false
+NoCaj2pdfConverterDownload = false
 HomePageSortByFrequentlyRead = false
 HomePageViewMode = thumbnails
 ThumbnailsType = full

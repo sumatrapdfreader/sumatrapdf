@@ -681,6 +681,8 @@ extern Func1<EngineBase*> gOnEngineDestroyed;
 
 struct PasswordUI {
     virtual Str GetPassword(Str path, u8* fileDigest, u8 decryptionKeyOut[32], bool* saveKey) = 0;
+    // whether caj2pdf may be downloaded; a load nobody is watching can't ask
+    virtual bool ConfirmCaj2pdfDownload() { return false; }
     virtual ~PasswordUI() = default;
 };
 

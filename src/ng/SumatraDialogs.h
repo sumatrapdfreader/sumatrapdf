@@ -130,6 +130,16 @@ void CloseGetPasswordDialog();
 bool IsGetPasswordDialogVisible();
 gpui::El* GetPasswordDialogBuild(MainWindow* win, gpui::Ctx* cx);
 
+struct Caj2pdfDownloadDialogResult {
+    bool download = false;
+    bool dontAskAgain = false;
+};
+
+void ShowCaj2pdfDownloadDialog(MainWindow* win, Func1<Caj2pdfDownloadDialogResult*> onDone);
+void CloseCaj2pdfDownloadDialog();
+bool IsCaj2pdfDownloadDialogVisible();
+gpui::El* Caj2pdfDownloadDialogBuild(MainWindow* win, gpui::Ctx* cx);
+
 void ShowCustomZoomDialog(MainWindow* win);
 bool CustomZoomMoveSelection(int dir);
 void CustomZoomOk();

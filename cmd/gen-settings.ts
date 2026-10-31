@@ -1419,6 +1419,12 @@ const globalPrefs: Field[] = [
   ),
   field("NoHomeTab", Bool, false, "if true, doesn't open Home tab"),
   field(
+    "NoCaj2pdfConverterDownload",
+    Bool,
+    false,
+    "if true, doesn't offer to download the caj2pdf converter. CAJ files open only if it's already downloaded",
+  ),
+  field(
     "HomePageSortByFrequentlyRead",
     Bool,
     false,
@@ -2335,6 +2341,7 @@ const globalPrefsLayout = [
   "FullPathInTitle",
   "LazyLoading",
   "NoHomeTab",
+  "NoCaj2pdfConverterDownload",
   "HomePageSortByFrequentlyRead",
   "ReloadModifiedDocuments",
   "TemporaryFileShowNotification",

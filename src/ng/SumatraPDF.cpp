@@ -893,9 +893,25 @@ struct SumatraPasswordUI : PasswordUI {
     bool needsPassword = false;
     bool canAsk = true;
     bool rememberPassword = false;
+    bool needsCaj2pdfConsent = false;
 
     Str GetPassword(Str path, u8* fileDigest, u8 decryptionKeyOut[32], bool* saveKey) override;
+    bool ConfirmCaj2pdfDownload() override;
 };
+
+// the user's yes, for the one load that runs after the dialog answers
+static bool gCaj2pdfDownloadAllowed = false;
+
+bool SumatraPasswordUI::ConfirmCaj2pdfDownload() {
+    if (gCaj2pdfDownloadAllowed) {
+        gCaj2pdfDownloadAllowed = false;
+        return true;
+    }
+    if (!gSettings->noCaj2pdfConverterDownload && !IsStressTesting() && canAsk) {
+        needsCaj2pdfConsent = true;
+    }
+    return false;
+}
 
 // the passwords the user typed this session, so a reload does not ask again
 struct SessionPassword {
@@ -1260,6 +1276,40 @@ static void OnPasswordEntered(PasswordRetry* retry, PasswordDialogResult* res) {
     LoadDocument(win, path, prefs, reuse);
 }
 
+static void OnCaj2pdfDownloadAnswered(PasswordRetry* retry, Caj2pdfDownloadDialogResult* res) {
+    MainWindow* win = retry->win;
+    TempStr path = str::DupTemp(retry->path);
+    LoadPrefs prefs = retry->prefs;
+    LoadReuse reuse = retry->reuse;
+    str::Free(retry->path);
+    delete retry;
+    if (!res->download && res->dontAskAgain) {
+        gSettings->noCaj2pdfConverterDownload = true;
+        ScheduleSaveSettings();
+    }
+    if (!IsMainWindowValidAndNotClosing(win)) {
+        return;
+    }
+    if (!res->download) {
+        TempStr msg = fmt(Tr("Error loading %s").s, path);
+        ShowWarningNotification(win, msg, kNotif5SecsTimeOut);
+        AppShellInvalidate(win);
+        return;
+    }
+    gCaj2pdfDownloadAllowed = true;
+    LoadDocument(win, path, prefs, reuse);
+    gCaj2pdfDownloadAllowed = false;
+}
+
+static void AskForCaj2pdfAndLoad(MainWindow* win, Str path, LoadPrefs prefs, LoadReuse reuse) {
+    auto* retry = new PasswordRetry();
+    retry->win = win;
+    retry->path = str::Dup(path);
+    retry->prefs = prefs;
+    retry->reuse = reuse;
+    ShowCaj2pdfDownloadDialog(win, MkFunc1(OnCaj2pdfDownloadAnswered, retry));
+}
+
 static void AskForPasswordAndLoad(MainWindow* win, Str path, LoadPrefs prefs, LoadReuse reuse) {
     auto* retry = new PasswordRetry();
     retry->win = win;
@@ -1552,6 +1602,10 @@ MainWindow* LoadDocument(MainWindow* win, Str path, LoadPrefs prefs, LoadReuse r
         // and the load is run again with what the user typed
         if (pwdUI.needsPassword) {
             AskForPasswordAndLoad(win, fullPath, prefs, reuse);
+            return nullptr;
+        }
+        if (pwdUI.needsCaj2pdfConsent) {
+            AskForCaj2pdfAndLoad(win, fullPath, prefs, reuse);
             return nullptr;
         }
         TempStr msg = fmt(Tr("Error loading %s").s, fullPath);

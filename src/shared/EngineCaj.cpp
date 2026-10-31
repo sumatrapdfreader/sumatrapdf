@@ -24,7 +24,7 @@
 Kind kindEngineCaj = "engineCaj";
 
 // CAJ, KDH and NH are converted to a cached PDF by caj2pdf, an exe we publish
-// (hack/sumatrapdf/caj2pdf/release.ts) and download on first use.
+// (hack/sumatrapdf/caj2pdf/release.ts) and download when the user agrees to it.
 //
 //   files.sumatrapdfreader.org/software/caj2pdf/rel/x64/latestver.json
 //                                                      /<ver>/caj2pdf.exe
@@ -265,7 +265,7 @@ static TempStr InstalledCaj2pdfTemp() {
     return file::Exists(exePath) ? exePath : TempStr{};
 }
 
-static TempStr EnsureCaj2pdfTemp() {
+static TempStr EnsureCaj2pdfTemp(PasswordUI* pwdUI) {
     TempStr exePath = InstalledCaj2pdfTemp();
     if (len(exePath) > 0) {
         MaybeCheckForCaj2pdfUpdate(Caj2pdfDirTemp());
@@ -281,6 +281,11 @@ static TempStr EnsureCaj2pdfTemp() {
     exePath = InstalledCaj2pdfTemp();
     if (len(exePath) > 0) {
         return exePath;
+    }
+    // under the lock, so documents opened together ask one at a time
+    if (!pwdUI || !pwdUI->ConfirmCaj2pdfDownload()) {
+        logf("caj2pdf: not installed, download declined\n");
+        return {};
     }
     auto timeStart = TimeGet();
     if (!UpdateCaj2pdfLocked()) {
@@ -333,7 +338,7 @@ static TempStr CajPdfPathTemp(Str dir, Str src) {
 }
 
 // A hit bumps the access time, which keeps it from DeleteStaleCajCache.
-static TempStr EnsureCajPdfTemp(Str src) {
+static TempStr EnsureCajPdfTemp(Str src, PasswordUI* pwdUI) {
     TempStr dir = CajCacheDirTemp();
     if (len(dir) == 0 || !dir::CreateAll(dir)) {
         logf("caj2pdf: cache dir unavailable\n");
@@ -349,7 +354,7 @@ static TempStr EnsureCajPdfTemp(Str src) {
         return pdfPath;
     }
 
-    TempStr exePath = EnsureCaj2pdfTemp();
+    TempStr exePath = EnsureCaj2pdfTemp(pwdUI);
     if (len(exePath) == 0) {
         return {};
     }
@@ -435,7 +440,7 @@ class EngineCaj : public EnginePdfProxy {
 
     Str cachedPdf;
 
-    bool Load(Str fileName) {
+    bool Load(Str fileName, PasswordUI* pwdUI) {
         pageCount = 0;
         if (len(fileName) == 0) {
             return false;
@@ -446,7 +451,7 @@ class EngineCaj : public EnginePdfProxy {
             str::Free(defaultExt);
             defaultExt = str::Dup(ext);
         }
-        TempStr pdf = EnsureCajPdfTemp(fileName);
+        TempStr pdf = EnsureCajPdfTemp(fileName, pwdUI);
         if (len(pdf) == 0) {
             return false;
         }
@@ -460,9 +465,9 @@ class EngineCaj : public EnginePdfProxy {
     }
 };
 
-EngineBase* CreateEngineCajFromFile(Str fileName) {
+EngineBase* CreateEngineCajFromFile(Str fileName, PasswordUI* pwdUI) {
     EngineCaj* engine = new EngineCaj();
-    if (!engine->Load(fileName)) {
+    if (!engine->Load(fileName, pwdUI)) {
         SafeEngineRelease(&engine);
         return nullptr;
     }
@@ -475,7 +480,7 @@ bool IsEngineCajSupportedFileType(FileType kind) {
 
 #else
 
-EngineBase* CreateEngineCajFromFile(Str) {
+EngineBase* CreateEngineCajFromFile(Str, PasswordUI*) {
     return nullptr;
 }
 

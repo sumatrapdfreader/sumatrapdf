@@ -395,7 +395,7 @@ static EngineBase* CreateEngineForKind(FileType kind, FileType contentHintKind, 
         return CreateEngineDviFromFile(path);
     }
     if (IsEngineCajSupportedFileType(kind)) {
-        return CreateEngineCajFromFile(path);
+        return CreateEngineCajFromFile(path, pwdUI);
     }
     if (kind == FileType::Lit) {
         return CreateEngineLitFromFile(path, pwdUI);

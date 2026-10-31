@@ -582,6 +582,9 @@ gp::El* DialogsBuild(MainWindow* win, gp::Ctx* cx) {
     if (gp::El* e = TabGroupsDialogBuild(win, cx)) {
         return e;
     }
+    if (gp::El* e = Caj2pdfDownloadDialogBuild(win, cx)) {
+        return e;
+    }
     if (gp::El* e = GetPasswordDialogBuild(win, cx)) {
         return e;
     }
@@ -781,6 +784,126 @@ bool DialogsOnEnter(MainWindow*) {
     return AdvancedSettingsOnEnter();
 }
 
+// --- the "Download caj2pdf" dialog ------------------------------------------
+
+// ng: orig's task dialog from inside the load. A gpui frame can't wait, so the
+// answer goes to onDone and the caller loads again, like the password dialog.
+struct Caj2pdfDlg {
+    MainWindow* win = nullptr;
+    bool visible = false;
+    bool dontAskAgain = false;
+    Func1<Caj2pdfDownloadDialogResult*> onDone;
+};
+
+static Caj2pdfDlg gCaj2pdf;
+static ToolWindow* gCaj2pdfTw = nullptr;
+constexpr float kCaj2pdfDlgDx = 400;
+
+struct Caj2pdfView {
+    static void OnDownload(Caj2pdfView* self, gp::Ctx* cx, const gp::ClickEvent*);
+    static void OnCancel(Caj2pdfView* self, gp::Ctx* cx, const gp::ClickEvent*);
+    static void OnDontAsk(Caj2pdfView* self, gp::Ctx* cx, const gp::ClickEvent*);
+};
+
+static gp::Entity<Caj2pdfView> gCaj2pdfView;
+
+// the dialog in the frame; a window of its own is not the frame's business
+bool IsCaj2pdfDownloadDialogVisible() {
+    return gCaj2pdf.visible && !gCaj2pdfTw;
+}
+
+static Str Caj2pdfDlgTitle() {
+    return Tr("Download caj2pdf");
+}
+
+static void FinishCaj2pdfDialog(bool download) {
+    if (!gCaj2pdf.visible) {
+        return;
+    }
+    gCaj2pdf.visible = false;
+    DlgWindowClose(&gCaj2pdfTw);
+    MainWindow* win = gCaj2pdf.win;
+    Caj2pdfDownloadDialogResult res;
+    res.download = download;
+    res.dontAskAgain = gCaj2pdf.dontAskAgain;
+    Func1<Caj2pdfDownloadDialogResult*> onDone = gCaj2pdf.onDone;
+    gCaj2pdf.onDone = {};
+    logf("Caj2pdfDownloadDialog: download %d, don't ask again %d\n", (int)download, (int)res.dontAskAgain);
+    onDone.Call(&res);
+    AppShellInvalidate(win);
+}
+
+void CloseCaj2pdfDownloadDialog() {
+    FinishCaj2pdfDialog(false);
+}
+
+void ShowCaj2pdfDownloadDialog(MainWindow* win, Func1<Caj2pdfDownloadDialogResult*> onDone) {
+    if (!IsMainWindowValidAndNotClosing(win)) {
+        Caj2pdfDownloadDialogResult res;
+        onDone.Call(&res);
+        return;
+    }
+    CloseCaj2pdfDownloadDialog();
+    gCaj2pdf.win = win;
+    gCaj2pdf.dontAskAgain = false;
+    gCaj2pdf.onDone = onDone;
+    gCaj2pdf.visible = true;
+    DlgWindowSpec spec;
+    spec.name = "caj2pdf-download";
+    spec.title = Caj2pdfDlgTitle;
+    spec.build = Caj2pdfDownloadDialogBuild;
+    spec.close = CloseCaj2pdfDownloadDialog;
+    spec.clientDx = kCaj2pdfDlgDx;
+    gCaj2pdfTw = DlgWindowOpen(spec, win);
+    AppShellInvalidate(win);
+}
+
+void Caj2pdfView::OnDownload(Caj2pdfView*, gp::Ctx* cx, const gp::ClickEvent*) {
+    FinishCaj2pdfDialog(true);
+    gp::Notify(cx);
+}
+
+void Caj2pdfView::OnCancel(Caj2pdfView*, gp::Ctx* cx, const gp::ClickEvent*) {
+    FinishCaj2pdfDialog(false);
+    gp::Notify(cx);
+}
+
+void Caj2pdfView::OnDontAsk(Caj2pdfView*, gp::Ctx* cx, const gp::ClickEvent*) {
+    gCaj2pdf.dontAskAgain = !gCaj2pdf.dontAskAgain;
+    gp::Notify(cx);
+    AppShellInvalidate(gCaj2pdf.win);
+}
+
+gp::El* Caj2pdfDownloadDialogBuild(MainWindow* win, gp::Ctx* cx) {
+    if (!gCaj2pdf.visible || gCaj2pdf.win != win) {
+        return nullptr;
+    }
+    if (gCaj2pdfTw && !DlgWindowIsHost(cx)) {
+        return nullptr;
+    }
+    if (!gCaj2pdfView.IsValid()) {
+        gCaj2pdfView = gp::EntityNewState<Caj2pdfView>(cx->app);
+    }
+    gp::Listener onDownload = gp::ListenTo(gCaj2pdfView, &Caj2pdfView::OnDownload);
+    gp::Listener onCancel = gp::ListenTo(gCaj2pdfView, &Caj2pdfView::OnCancel);
+    DlgSetDefault(cx, onDownload);
+
+    gp::El* col = gp::Div(cx->a)->FlexCol()->W(gp::kFill);
+    col->Child(DlgCaption(cx, Tr("Opening CAJ files needs the caj2pdf converter")));
+    gp::El* box = DlgAccelEl(cx, gpc::Checkbox::New(cx, GStrL("caj2pdf-dont-ask"))->Checked(gCaj2pdf.dontAskAgain),
+                             Tr("Do&n't ask again"), gp::ListenTo(gCaj2pdfView, &Caj2pdfView::OnDontAsk));
+    col->Child(gp::Div(cx->a)
+                   ->FlexRow()
+                   ->ItemsCenter()
+                   ->W(gp::kFill)
+                   ->H(kToolDlgRowDy)
+                   ->Shrink0()
+                   ->PadX(kToolDlgPadDx)
+                   ->Child(box->Font(kToolDlgTextFontPx)));
+    col->Child(DlgFooter(cx, Tr("&Download caj2pdf"), onDownload, onCancel));
+    return DlgToolContent(cx, col, Caj2pdfDlgTitle(), kCaj2pdfDlgDx, onCancel);
+}
+
 // --- the "Unsaved changes" dialog -------------------------------------------
 
 // ng: orig asks with a win32 TASKDIALOG whose four buttons are the four
@@ -947,6 +1070,10 @@ bool DialogsOnEscape(MainWindow* win) {
     }
     if (IsTabGroupsDialogVisible()) {
         CloseTabGroupsDialog();
+        return true;
+    }
+    if (IsCaj2pdfDownloadDialogVisible()) {
+        CloseCaj2pdfDownloadDialog();
         return true;
     }
     if (IsGetPasswordDialogVisible()) {

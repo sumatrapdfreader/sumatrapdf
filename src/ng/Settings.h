@@ -1144,6 +1144,9 @@ struct Settings {
     bool lazyLoading;
     // if true, doesn't open Home tab
     bool noHomeTab;
+    // if true, doesn't offer to download the caj2pdf converter. CAJ files
+    // open only if it's already downloaded
+    bool noCaj2pdfConverterDownload;
     // if true, the home page lists documents by how often they've been
     // opened (the pre-3.6 behavior); if false, the most recently opened
     // come first
