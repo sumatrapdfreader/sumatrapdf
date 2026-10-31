@@ -34,6 +34,10 @@
     V(".dvi", FileType::Dvi)           \
     V(".lit", FileType::Lit)           \
     V(".rtf", FileType::Rtf)           \
+    V(".caj", FileType::Caj)           \
+    V(".kdh", FileType::Caj)           \
+    V(".nh", FileType::Caj)            \
+    V(".teb", FileType::Caj)           \
     V(".fb2", FileType::Fb2)           \
     V(".fb2z", FileType::Fb2z)         \
     V(".fbz", FileType::Fb2z)          \
@@ -171,6 +175,11 @@ int FileTypeIndexOf(const FileType* types, int nTypes, FileType ft) {
     V(0, "PK\x03\x04", FileType::Zip)                     \
     V(0, "ITOLITLS", FileType::Lit)                       \
     V(0, "{\\rtf", FileType::Rtf)                         \
+    V(0, "CAJ\0", FileType::Caj)                          \
+    V(0, "KDH ", FileType::Caj)                           \
+    V(0, "HN\0\0", FileType::Caj)                         \
+    V(0, "\xc8\0\0\0", FileType::Caj)                     \
+    V(0, "TEB", FileType::Caj)                            \
     V(0, "ITSF", FileType::Chm)                           \
     V(0x3c, "BOOKMOBI", FileType::Mobi)                   \
     V(0x3c, "TEXtREAd", FileType::PalmDoc)                \
