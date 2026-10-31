@@ -36,6 +36,10 @@ TempStr GetSumatraDataDirTemp() {
     return {};
 }
 
+TempStr GetConverterDataDirTemp() {
+    return {};
+}
+
 bool IsStressTesting() {
     return false;
 }

@@ -1312,6 +1312,59 @@ void ShowConvertEpubToPdfDialog(MainWindow* win) {
     }
 }
 
+// runs caj2pdf on the open CAJ file, then opens the PDF
+struct ConvertCajToPdfDialog : PdfToolDialog {
+    bool Create(MainWindow* win, WindowTab* tab);
+    void DoIt(VirtMouseEvent* ev = nullptr) override;
+};
+
+void ConvertCajToPdfDialog::DoIt(VirtMouseEvent*) {
+    TempStr destPath = destEdit->GetTextTemp();
+    if (len(destPath) == 0) {
+        return;
+    }
+    logf("ConvertCajToPdf: '%s' -> '%s'\n", srcPath, destPath);
+
+    HCURSOR prev = SetCursor(LoadCursor(nullptr, IDC_WAIT));
+    bool ok = ConvertCajToPdf(srcPath, destPath);
+    SetCursor(prev);
+    if (!ok) {
+        MessageBoxWarning(hwnd, CajErrorReasonTemp(srcPath), Tr("Convert CAJ to PDF"));
+        return;
+    }
+    MainWindow* w = win;
+    TempStr path = str::DupTemp(destPath);
+    Close();
+    LoadArgs args(path, w);
+    StartLoadDocument(&args);
+}
+
+bool ConvertCajToPdfDialog::Create(MainWindow* w, WindowTab* tab) {
+    if (!CreateToolDialog(w, tab, Tr("Convert CAJ to PDF"))) {
+        return false;
+    }
+    AddFilesBlock(DefaultPdfDestPathTemp(srcPath), L"PDF Files\0*.pdf\0All Files\0*.*\0", L"pdf");
+    AddFooter(Tr("Convert to PDF"));
+    FinishDialog(destEdit);
+    return true;
+}
+
+void ShowConvertCajToPdfDialog(MainWindow* win) {
+    if (!win || !win->IsDocLoaded()) {
+        return;
+    }
+    WindowTab* tab = win->CurrentTab();
+    if (!IsCajDoc(tab)) {
+        return;
+    }
+    logf("ShowConvertCajToPdfDialog: opening for '%s'\n", tab->filePath);
+
+    auto* dlg = new ConvertCajToPdfDialog();
+    if (!dlg->Create(win, tab)) {
+        delete dlg;
+    }
+}
+
 // --- Convert PDF to Images dialog (issue #5991) ---
 
 // editable combo listing kImageDpiChoices; any other DPI can be typed in

@@ -287,6 +287,26 @@ int EbookPdfFontSizeFromText(Str s) {
     return n;
 }
 
+// why caj2pdf failed for this file, {} if it didn't
+TempStr CajErrorReasonTemp(Str path) {
+    u32 code = 0;
+    switch (GetCajError(path, &code)) {
+        case CajError::None:
+            return {};
+        case CajError::NoConverter:
+            return str::DupTemp(Tr("Opening CAJ files needs the caj2pdf converter"));
+        case CajError::DownloadFailed:
+            return str::DupTemp(Tr("Downloading the caj2pdf converter failed"));
+        case CajError::ConverterDidNotRun:
+            return fmt(Tr("The caj2pdf converter failed to run (error 0x%x)").s, code);
+        case CajError::ConversionFailed:
+            return fmt(Tr("The caj2pdf converter couldn't convert this file (exit code %d)").s, (int)code);
+        case CajError::TimedOut:
+            return str::DupTemp(Tr("The caj2pdf converter took too long"));
+    }
+    return {};
+}
+
 // Convert EPUB to PDF on the current document without its dialog. Used by
 // tests/convert-epub-to-pdf.ts
 TempStr ConvertEpubToPdfResultTemp(Str destPath, int pageSizeIdx, int fontSize, int* exitCodeOut) {

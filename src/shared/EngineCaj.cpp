@@ -35,7 +35,7 @@ Kind kindEngineCaj = "engineCaj";
 #if OS_WIN
 
 bool HasPermission(Perm permission);
-TempStr GetSumatraDataDirTemp();
+TempStr GetConverterDataDirTemp();
 
 constexpr const char* kCaj2pdfBaseUrl = "https://files.sumatrapdfreader.org/software/caj2pdf/rel/x64";
 constexpr i64 kMaxCaj2pdfSize = 256LL * 1024 * 1024;
@@ -43,9 +43,35 @@ constexpr i64 kUpdateCheckAgeSec = 24LL * 60 * 60;
 constexpr i64 kCajCacheMaxAgeSec = 7LL * 24 * 60 * 60;
 constexpr i64 kCajTmpMaxAgeSec = 24LL * 60 * 60;
 constexpr DWORD kConvertTimeoutMs = 5 * 60 * 1000;
+// exit codes from here up are NTSTATUS: the exe didn't load or it crashed
+constexpr DWORD kFirstNtStatusError = 0xC0000000;
 
 // serializes installing a new caj2pdf.exe
 static Mutex gCaj2pdfUpdateLock;
+
+// why the last conversion failed; a load runs on another thread than the UI that reports it
+static Mutex gCajErrorLock;
+static Str gCajErrorPath;
+static CajError gCajError = CajError::None;
+static u32 gCajErrorCode = 0;
+
+static void SetCajError(Str path, CajError err, u32 code = 0) {
+    ScopedMutex scope(&gCajErrorLock);
+    str::ReplaceWithCopy(&gCajErrorPath, path);
+    gCajError = err;
+    gCajErrorCode = code;
+}
+
+CajError GetCajError(Str path, u32* codeOut) {
+    ScopedMutex scope(&gCajErrorLock);
+    if (!str::EqI(path, gCajErrorPath)) {
+        return CajError::None;
+    }
+    if (codeOut) {
+        *codeOut = gCajErrorCode;
+    }
+    return gCajError;
+}
 
 struct Caj2pdfVer {
     Str ver;
@@ -76,7 +102,7 @@ static TempStr Caj2pdfDirTemp() {
     if (len(dir) > 0) {
         return dir;
     }
-    TempStr dataDir = GetSumatraDataDirTemp();
+    TempStr dataDir = GetConverterDataDirTemp();
     return len(dataDir) > 0 ? path::JoinTemp(dataDir, StrL("caj2pdf")) : TempStr{};
 }
 
@@ -265,7 +291,7 @@ static TempStr InstalledCaj2pdfTemp() {
     return file::Exists(exePath) ? exePath : TempStr{};
 }
 
-static TempStr EnsureCaj2pdfTemp(PasswordUI* pwdUI) {
+static TempStr EnsureCaj2pdfTemp(Str src, PasswordUI* pwdUI) {
     TempStr exePath = InstalledCaj2pdfTemp();
     if (len(exePath) > 0) {
         MaybeCheckForCaj2pdfUpdate(Caj2pdfDirTemp());
@@ -273,6 +299,7 @@ static TempStr EnsureCaj2pdfTemp(PasswordUI* pwdUI) {
     }
     if (!HasPermission(Perm::InternetAccess)) {
         logf("caj2pdf: not installed, internet access is restricted\n");
+        SetCajError(src, CajError::NoConverter);
         return {};
     }
 
@@ -285,10 +312,12 @@ static TempStr EnsureCaj2pdfTemp(PasswordUI* pwdUI) {
     // under the lock, so documents opened together ask one at a time
     if (!pwdUI || !pwdUI->ConfirmCaj2pdfDownload()) {
         logf("caj2pdf: not installed, download declined\n");
+        SetCajError(src, CajError::NoConverter);
         return {};
     }
     auto timeStart = TimeGet();
     if (!UpdateCaj2pdfLocked()) {
+        SetCajError(src, CajError::DownloadFailed);
         return {};
     }
     logf("caj2pdf: installed in %.2f ms\n", TimeSinceInMs(timeStart));
@@ -301,6 +330,7 @@ static bool RunCaj2pdf(Str exe, Str src, Str dst) {
     HANDLE process = LaunchProcessInDir(cmdLine, {}, CREATE_NO_WINDOW);
     if (!process) {
         logf("caj2pdf: CreateProcess failed: %s\n", cmdLine);
+        SetCajError(src, CajError::ConverterDidNotRun, GetLastError());
         return false;
     }
     DWORD wait = WaitForSingleObject(process, kConvertTimeoutMs);
@@ -312,10 +342,13 @@ static bool RunCaj2pdf(Str exe, Str src, Str dst) {
     }
     CloseHandle(process);
     if (wait != WAIT_OBJECT_0) {
+        SetCajError(src, CajError::TimedOut);
         return false;
     }
     if (exitCode != EXIT_SUCCESS) {
         logf("caj2pdf: exit %u: %s\n", exitCode, cmdLine);
+        bool didNotRun = exitCode >= kFirstNtStatusError;
+        SetCajError(src, didNotRun ? CajError::ConverterDidNotRun : CajError::ConversionFailed, exitCode);
         return false;
     }
     return true;
@@ -354,7 +387,7 @@ static TempStr EnsureCajPdfTemp(Str src, PasswordUI* pwdUI) {
         return pdfPath;
     }
 
-    TempStr exePath = EnsureCaj2pdfTemp(pwdUI);
+    TempStr exePath = EnsureCaj2pdfTemp(src, pwdUI);
     if (len(exePath) == 0) {
         return {};
     }
@@ -375,6 +408,22 @@ static TempStr EnsureCajPdfTemp(Str src, PasswordUI* pwdUI) {
     }
     logf("caj2pdf: converted '%s' to '%s' with '%s' in %.2f ms\n", src, pdfPath, exePath, TimeSinceInMs(timeStart));
     return pdfPath;
+}
+
+// the converter writes dst only once it succeeded
+bool ConvertCajToPdf(Str src, Str dst) {
+    SetCajError(src, CajError::None);
+    TempStr exePath = InstalledCaj2pdfTemp();
+    if (len(exePath) == 0) {
+        SetCajError(src, CajError::NoConverter);
+        return false;
+    }
+    auto timeStart = TimeGet();
+    if (!RunCaj2pdf(exePath, src, dst)) {
+        return false;
+    }
+    logf("caj2pdf: converted '%s' to '%s' in %.2f ms\n", src, dst, TimeSinceInMs(timeStart));
+    return true;
 }
 
 void DeleteStaleCajCache() {
@@ -451,6 +500,7 @@ class EngineCaj : public EnginePdfProxy {
             str::Free(defaultExt);
             defaultExt = str::Dup(ext);
         }
+        SetCajError(fileName, CajError::None);
         TempStr pdf = EnsureCajPdfTemp(fileName, pwdUI);
         if (len(pdf) == 0) {
             return false;
@@ -474,8 +524,13 @@ EngineBase* CreateEngineCajFromFile(Str fileName, PasswordUI* pwdUI) {
     return engine;
 }
 
+// caj2pdf is x64 only
+bool IsEngineCajAvailable() {
+    return IsOs64() && len(DebugEnvTemp("SUMATRAPDF_CAJ2PDF_32BIT_OS")) == 0;
+}
+
 bool IsEngineCajSupportedFileType(FileType kind) {
-    return kind == FileType::Caj;
+    return kind == FileType::Caj && IsEngineCajAvailable();
 }
 
 #else
@@ -484,7 +539,19 @@ EngineBase* CreateEngineCajFromFile(Str, PasswordUI*) {
     return nullptr;
 }
 
+bool IsEngineCajAvailable() {
+    return false;
+}
+
 bool IsEngineCajSupportedFileType(FileType) {
+    return false;
+}
+
+CajError GetCajError(Str, u32*) {
+    return CajError::None;
+}
+
+bool ConvertCajToPdf(Str, Str) {
     return false;
 }
 

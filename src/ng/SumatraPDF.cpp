@@ -1276,6 +1276,13 @@ static void OnPasswordEntered(PasswordRetry* retry, PasswordDialogResult* res) {
     LoadDocument(win, path, prefs, reuse);
 }
 
+// "Error loading foo.caj: <why>" when the converter is what failed
+static TempStr LoadErrorMsgTemp(Str path) {
+    TempStr msg = fmt(Tr("Error loading %s").s, path);
+    TempStr reason = CajErrorReasonTemp(path);
+    return len(reason) > 0 ? fmt("%s: %s", msg, reason) : msg;
+}
+
 static void OnCaj2pdfDownloadAnswered(PasswordRetry* retry, Caj2pdfDownloadDialogResult* res) {
     MainWindow* win = retry->win;
     TempStr path = str::DupTemp(retry->path);
@@ -1291,8 +1298,7 @@ static void OnCaj2pdfDownloadAnswered(PasswordRetry* retry, Caj2pdfDownloadDialo
         return;
     }
     if (!res->download) {
-        TempStr msg = fmt(Tr("Error loading %s").s, path);
-        ShowWarningNotification(win, msg, kNotif5SecsTimeOut);
+        ShowWarningNotification(win, LoadErrorMsgTemp(path), kNotif5SecsTimeOut);
         AppShellInvalidate(win);
         return;
     }
@@ -1608,8 +1614,7 @@ MainWindow* LoadDocument(MainWindow* win, Str path, LoadPrefs prefs, LoadReuse r
             AskForCaj2pdfAndLoad(win, fullPath, prefs, reuse);
             return nullptr;
         }
-        TempStr msg = fmt(Tr("Error loading %s").s, fullPath);
-        ShowWarningNotification(win, msg, kNotif5SecsTimeOut);
+        ShowWarningNotification(win, LoadErrorMsgTemp(fullPath), kNotif5SecsTimeOut);
         ShowLoadErrorTab(win, fullPath, reuse);
         return nullptr;
     }
@@ -2988,6 +2993,11 @@ TempStr GetSumatraDataDirTemp() {
         return {};
     }
     return path::JoinTemp(dir, StrL("data"));
+}
+
+// already next to the exe for a portable copy
+TempStr GetConverterDataDirTemp() {
+    return GetSumatraDataDirTemp();
 }
 
 // ng: orig's CloseDocumentInCurrentTab. The tab keeps its identity and its
@@ -6542,6 +6552,10 @@ void ExecuteCmd(MainWindow* win, int cmdId) {
 
         case CmdConvertEpubToPdf:
             ShowConvertEpubToPdfDialog(win);
+            break;
+
+        case CmdConvertCajToPDF:
+            ShowConvertCajToPdfDialog(win);
             break;
 
         case CmdConvertPdfToImages:

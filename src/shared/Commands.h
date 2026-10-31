@@ -346,8 +346,9 @@ enum {
     CmdDebugShowCrashMiniDumps = 540,
     CmdCopyTemporaryFileToNonTemporary = 541,
     CmdConvertEpubToPdf = 542,
+    CmdConvertCajToPDF = 543,
 
-    CmdLast = 542,
+    CmdLast = 543,
     CmdFirstCustom = CmdLast + 100,
 
     // aliases, at the end to not mess ordering

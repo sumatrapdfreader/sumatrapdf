@@ -511,6 +511,13 @@ bool IsEpubDoc(WindowTab* tab) {
     return GuessFileTypeFromName(tab->filePath, true) == FileType::Epub;
 }
 
+// Convert CAJ to PDF is offered once caj2pdf opened the file
+bool IsCajDoc(WindowTab* tab) {
+    DisplayModel* dm = tab ? tab->AsFixed() : nullptr;
+    EngineBase* engine = dm ? dm->GetEngine() : nullptr;
+    return engine && engine->kind == kindEngineCaj;
+}
+
 // substitutions in cmdLine:
 //  %1 : file path (else the file path is appended)
 //  %d : directory in which file is

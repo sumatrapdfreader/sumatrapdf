@@ -22,6 +22,8 @@ void ShowPdfDecryptDialog(MainWindow* win);
 void ShowConvertToPdfDialog(MainWindow* win);
 TempStr ConvertImageCollectionToPdfResultTemp(Str srcPath, Str destPath, int* exitCodeOut);
 void ShowConvertEpubToPdfDialog(MainWindow* win);
+void ShowConvertCajToPdfDialog(MainWindow* win);
+TempStr CajErrorReasonTemp(Str path);
 TempStr ConvertEpubToPdfResultTemp(Str destPath, int pageSizeIdx, int fontSize, int* exitCodeOut);
 TempStr ExtractPdfPagesResultTemp(Str destPath, Str pagesSpec, int annotsOnly, int* exitCodeOut);
 // PDF pages → PNG / JPEG / BMP files (issue #5991)

@@ -1095,6 +1095,10 @@ MenuDef menuDefDocumentOperations[] = {
         CmdConvertEpubToPdf,
     },
     {
+        TrN("Convert CAJ to PDF..."),
+        CmdConvertCajToPDF,
+    },
+    {
         TrN("Show in fo&lder"),
         CmdShowInFolder,
     },

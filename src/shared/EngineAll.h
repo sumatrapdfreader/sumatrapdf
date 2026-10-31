@@ -248,7 +248,19 @@ EngineBase* CreateEngineDviFromFile(Str fileName);
 void DeleteStaleDviCache();
 
 /* EngineCaj.cpp */
+enum class CajError {
+    None,
+    NoConverter,
+    DownloadFailed,
+    ConverterDidNotRun,
+    ConversionFailed,
+    TimedOut,
+};
+
+bool IsEngineCajAvailable();
 bool IsEngineCajSupportedFileType(FileType);
+CajError GetCajError(Str path, u32* codeOut);
+bool ConvertCajToPdf(Str src, Str dst);
 EngineBase* CreateEngineCajFromFile(Str fileName, PasswordUI* pwdUI);
 void DeleteStaleCajCache();
 

@@ -352,6 +352,7 @@ const CommandInfo gCommands[] = {
     {CmdDebugShowCrashMiniDumps, "CmdDebugShowCrashMiniDumps\0", StrL("Debug: Show Crash Minidumps")},
     {CmdCopyTemporaryFileToNonTemporary, "CmdCopyTemporaryFileToNonTemporary\0", StrL("Copy Temporary File to Permanent Folder")},
     {CmdConvertEpubToPdf, "CmdConvertEpubToPdf\0", StrL("Convert EPUB to PDF...")},
+    {CmdConvertCajToPDF, "CmdConvertCajToPDF\0", StrL("Convert CAJ to PDF...")},
 };
 const int gCommandsCount = dimofi(gCommands);
 

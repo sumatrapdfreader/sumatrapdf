@@ -22,7 +22,7 @@ const WM_USER = 0x0400;
 const TDM_CLICK_BUTTON = WM_USER + 102;
 const TDM_CLICK_VERIFICATION = WM_USER + 113;
 const kIdCancel = 2; // IDCANCEL
-const kIdDownload = 100; // kBtnIdDownloadCaj2pdf
+export const kIdDownload = 100; // kBtnIdDownloadCaj2pdf
 
 interface DialogAnswer {
   button: number;
@@ -36,12 +36,12 @@ interface Published {
 }
 
 // EXE is a copy under .work, so go by what was asked for. The default is the debug build.
-function isReleaseExe(): boolean {
+export function isReleaseExe(): boolean {
   const source = EXE_FROM_ARGV || process.env.SUMATRA_TEST_EXE || "";
   return /[\\/]rel[^\\/]*[\\/]/i.test(source);
 }
 
-function hasCl(): boolean {
+export function hasCl(): boolean {
   try {
     return Bun.spawnSync(["where.exe", "cl.exe"], { stdout: "ignore", stderr: "ignore" }).exitCode === 0;
   } catch {
@@ -49,7 +49,7 @@ function hasCl(): boolean {
   }
 }
 
-function buildFakeConverter(dir: string): Buffer {
+export function buildFakeConverter(dir: string): Buffer {
   const src = join(ROOT, "tests", "issue-6455.fake-caj2pdf.c");
   const r = Bun.spawnSync(["cl.exe", "/nologo", "/MT", "/Fe:fake.exe", src], {
     cwd: dir,
@@ -62,7 +62,7 @@ function buildFakeConverter(dir: string): Buffer {
   return readFileSync(join(dir, "fake.exe"));
 }
 
-async function pollUntil(what: string, cond: () => boolean): Promise<void> {
+export async function pollUntil(what: string, cond: () => boolean): Promise<void> {
   const deadline = Date.now() + kPollTimeoutMs;
   while (!cond()) {
     if (Date.now() > deadline) {
@@ -85,7 +85,7 @@ function findDownloadDialog(): number {
 }
 
 // the task dialog takes these from any process; they carry no pointers
-async function answerDialog(answer: DialogAnswer): Promise<void> {
+export async function answerDialog(answer: DialogAnswer): Promise<void> {
   let dlg = 0;
   await pollUntil("the download dialog", () => {
     dlg = findDownloadDialog();

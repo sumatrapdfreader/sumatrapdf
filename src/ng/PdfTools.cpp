@@ -159,6 +159,7 @@ enum class PdfToolKind {
     SaveSelectionAsImage,
     Merge,
     ConvertEpubToPdf,
+    ConvertCajToPdf,
 };
 
 // orig's three "Pages:" radios of the Convert PDF to Images dialog
@@ -453,6 +454,8 @@ static Str ToolTitleFor(PdfToolKind kind) {
             return Tr("Merge PDF");
         case PdfToolKind::ConvertEpubToPdf:
             return Tr("Convert EPUB to PDF");
+        case PdfToolKind::ConvertCajToPdf:
+            return Tr("Convert CAJ to PDF");
     }
     return {};
 }
@@ -494,6 +497,8 @@ static Str (*ToolTitleFn(PdfToolKind kind))() {
             return ToolTitleOf<PdfToolKind::SaveSelectionAsImage>;
         case PdfToolKind::ConvertEpubToPdf:
             return ToolTitleOf<PdfToolKind::ConvertEpubToPdf>;
+        case PdfToolKind::ConvertCajToPdf:
+            return ToolTitleOf<PdfToolKind::ConvertCajToPdf>;
         case PdfToolKind::Merge:
             break;
     }
@@ -517,6 +522,7 @@ static Str ToolActionText() {
         case PdfToolKind::Merge:
             return Tr("Save");
         case PdfToolKind::ConvertEpubToPdf:
+        case PdfToolKind::ConvertCajToPdf:
             return Tr("Convert to PDF");
         default:
             return ToolTitle();
@@ -967,6 +973,20 @@ static void ConvertEpubToPdfDoIt() {
         return;
     }
     logf("ConvertEpubToPdf: wrote %d pages\n", nPages);
+    CloseAndLoad(destPath);
+}
+
+// orig's ConvertCajToPdfDialog::DoIt
+static void ConvertCajToPdfDoIt() {
+    TempStr destPath = DestPathTemp();
+    if (len(destPath) == 0) {
+        return;
+    }
+    logf("ConvertCajToPdf: '%s' -> '%s'\n", gTool.srcPath, destPath);
+    if (!ConvertCajToPdf(gTool.srcPath, destPath)) {
+        MessageBoxWarning(gTool.win, CajErrorReasonTemp(gTool.srcPath), Tr("Convert CAJ to PDF"));
+        return;
+    }
     CloseAndLoad(destPath);
 }
 
@@ -2182,6 +2202,9 @@ static void PdfToolDoIt() {
         case PdfToolKind::ConvertEpubToPdf:
             ConvertEpubToPdfDoIt();
             break;
+        case PdfToolKind::ConvertCajToPdf:
+            ConvertCajToPdfDoIt();
+            break;
         case PdfToolKind::ConvertToImages:
             ConvertPdfToImagesDoIt();
             break;
@@ -2819,6 +2842,8 @@ static const char* ToolWindowName(PdfToolKind kind) {
             return "converttopdf";
         case PdfToolKind::ConvertEpubToPdf:
             return "convertepubtopdf";
+        case PdfToolKind::ConvertCajToPdf:
+            return "convertcajtopdf";
         case PdfToolKind::ConvertToImages:
             return "converttoimages";
         case PdfToolKind::SaveSelectionAsImage:
@@ -3108,6 +3133,22 @@ void ShowConvertEpubToPdfDialog(MainWindow* win) {
     }
     InitPageSizeDropDown(win);
     InitFontSizeCombo(win);
+    AppShellInvalidate(win);
+}
+
+void ShowConvertCajToPdfDialog(MainWindow* win) {
+    ToolScope scope;
+    if (!CanShowToolDialog(win, false)) {
+        return;
+    }
+    WindowTab* tab = win->CurrentTab();
+    if (!IsCajDoc(tab)) {
+        return;
+    }
+    logf("ShowConvertCajToPdfDialog: opening for '%s'\n", tab->filePath);
+    if (!StartToolDialog(win, PdfToolKind::ConvertCajToPdf, DefaultPdfDestPathTemp(tab->filePath), StrL(".pdf"))) {
+        return;
+    }
     AppShellInvalidate(win);
 }
 

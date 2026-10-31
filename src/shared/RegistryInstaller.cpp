@@ -44,6 +44,14 @@ static void ShellNotifyAssociationsChanged() {
     SHChangeNotify(SHCNE_ASSOCCHANGED, SHCNF_IDLIST, nullptr, nullptr);
 }
 
+// CAJ files need caj2pdf, which is x64 only
+static bool IsExtUsable(Str ext) {
+    if (IsOs64()) {
+        return true;
+    }
+    return !str::Eq(ext, StrL(".caj")) && !str::Eq(ext, StrL(".kdh")) && !str::Eq(ext, StrL(".nh"));
+}
+
 static bool HasRegistryValue(HKEY hkey, Str keyName, Str valName) {
     WCHAR* keyW = CWStrTemp(keyName);
     WCHAR* valW = CWStrTemp(valName);
@@ -63,7 +71,7 @@ static bool HasOurOpenWithEntry(HKEY hkey, Str ext) {
 static bool HasAllOurOpenWithEntries(HKEY hkey) {
     for (const auto& type : gSupportedExts) {
         Str ext = type.ext;
-        if (!HasOurOpenWithEntry(hkey, ext)) {
+        if (IsExtUsable(ext) && !HasOurOpenWithEntry(hkey, ext)) {
             return false;
         }
     }
@@ -152,6 +160,9 @@ static bool RegisterForDefaultPrograms(HKEY hkey, Str installedExePath) {
 
     for (const auto& type : gSupportedExts) {
         Str ext = type.ext;
+        if (!IsExtUsable(ext)) {
+            continue;
+        }
         // must match the per-extension ProgID created by RegisterForOpenWith
         // (e.g. "SumatraPDF.pdf"); Default Apps UI hides the app if the
         // FileAssociations ProgID can't be resolved under HKCR
@@ -174,6 +185,9 @@ static bool RegisterForOpenWith(HKEY hkey, Str installedExePath) {
     bool ok = true;
     for (const auto& type : gSupportedExts) {
         Str ext = type.ext;
+        if (!IsExtUsable(ext)) {
+            continue;
+        }
         TempStr progIDName = str::JoinTemp(StrL(kAppName), ext);
         TempStr progIDKey = str::JoinTemp(StrL("Software\\Classes\\"), progIDName);
 
