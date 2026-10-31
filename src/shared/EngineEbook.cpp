@@ -1012,6 +1012,12 @@ class EngineEpub : public EngineEbook {
     EngineBase* Clone() override;
 
     TempStr GetBookPropTemp(DocProp prop) override { return GetPropValueTemp(doc->props, prop); }
+    void GetProperties(Props& propsOut) override {
+        EngineBase::GetProperties(propsOut);
+        for (const PropValue& p : doc->props) {
+            AddProp(propsOut, p.prop, p.val);
+        }
+    }
 
     bool HasToc() override;
     TocTree* GetToc() override;

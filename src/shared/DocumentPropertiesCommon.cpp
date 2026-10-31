@@ -394,6 +394,10 @@ static const PropLabel propToName[] = {
     {DocProp::SceneType, TrN("Scene Type:")},
     {DocProp::ImageFileSize, TrN("Image File Size:")},
     {DocProp::ImagePath, TrN("Path:")},
+    {DocProp::Publisher, TrN("Publisher:")},
+    {DocProp::Identifier, TrN("Identifier:")},
+    {DocProp::Source, TrN("Source:")},
+    {DocProp::Language, TrN("Language:")},
     {DocProp::None, {}},
 };
 
@@ -474,8 +478,14 @@ void GetPropsText(DocController* ctrl, str::Builder& out) {
     AppendPropTranslated(out, DocProp::Subject, GetPropValueTemp(props, DocProp::Subject));
     AppendPropTranslated(out, DocProp::Author, GetPropValueTemp(props, DocProp::Author));
     AppendPropTranslated(out, DocProp::Copyright, GetPropValueTemp(props, DocProp::Copyright));
+    AppendPropTranslated(out, DocProp::Publisher, GetPropValueTemp(props, DocProp::Publisher));
+    AppendPropTranslated(out, DocProp::Identifier, GetPropValueTemp(props, DocProp::Identifier));
+    AppendPropTranslated(out, DocProp::Source, GetPropValueTemp(props, DocProp::Source));
+    AppendPropTranslated(out, DocProp::Language, GetPropValueTemp(props, DocProp::Language));
 
-    bool isPdfDate = dm && kindEngineMupdf == dm->engineType;
+    // EngineMupdf also renders EPUB, whose dates are ISO 8601
+    bool isEpub = GuessFileTypeFromName(path) == FileType::Epub;
+    bool isPdfDate = dm && kindEngineMupdf == dm->engineType && !isEpub;
     Str val = GetPropValueTemp(props, DocProp::CreationDate);
     AppendDateProp(out, Tr("Created:"), val, isPdfDate);
     val = GetPropValueTemp(props, DocProp::ModificationDate);
@@ -520,6 +530,7 @@ void GetPropsText(DocController* ctrl, str::Builder& out) {
         DocProp::CreatorApp, DocProp::PdfProducer, DocProp::PdfVersion,
         DocProp::PdfFileStructure, DocProp::Files,
         DocProp::UnsupportedFeatures, DocProp::FontList,
+        DocProp::Publisher, DocProp::Identifier, DocProp::Source, DocProp::Language,
         DocProp::None,
     };
     // clang-format on

@@ -117,6 +117,7 @@ import { testit as issue2155 } from "./issue-2155.ts";
 import { testit as issue2254 } from "./issue-2254.ts";
 import { testit as issue1846 } from "./issue-1846.ts";
 import { testit as xmpProperties } from "./xmp-properties.ts";
+import { testit as epubMetadataProperties } from "./epub-metadata-properties.ts";
 import { testit as issue5950 } from "./issue-5950.ts";
 import { testit as issue5993 } from "./issue-5993.ts";
 import { testit as issue5845 } from "./issue-5845.ts";
@@ -772,6 +773,7 @@ export const tests: NamedTest[] = [
   ["issue-2254", issue2254],
   ["issue-1846", issue1846],
   ["xmp-properties", xmpProperties],
+  ["epub-metadata-properties", epubMetadataProperties],
   ["issue-5950", issue5950],
   ["issue-3472", issue3472],
   ["pdf-only-menu-items", pdfOnlyMenuItems],

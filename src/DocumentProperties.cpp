@@ -403,17 +403,25 @@ void PropertiesWnd::SizeToContent() {
     int footerDy = footer->MinIntrinsicHeight(footerDx) + (2 * DpiScale(kToolDlgFootPadDy));
     int textDx = maxLineDx + editProps->GetLeftTextMargin() + sbDx;
     int wantedDx = std::max(textDx, footerDx) + (2 * padDx);
-    int textDy = (nLines + 1) * PlatformFontLineHeight(propsFont);
-    int wantedDy = textDy + (2 * padDy) + footerDy;
 
     Rect wr = HwndWindowRect(hwnd);
     Rect cr = HwndClientRect(hwnd);
     Rect work = GetWorkAreaRect(wr, hwnd);
     int maxDx = (work.dx * 80 / 100) - (wr.dx - cr.dx);
     int maxDy = (work.dy * 80 / 100) - (wr.dy - cr.dy);
-    ShowScrollBar(editProps->hwnd, SB_VERT, wantedDy > maxDy);
-    ResizeHwndToClientArea(hwnd, std::min(wantedDx, maxDx), std::min(wantedDy, maxDy), false);
-    DoLayout();
+    auto sizeForLines = [&](int lines) {
+        int wantedDy = ((lines + 1) * PlatformFontLineHeight(propsFont)) + (2 * padDy) + footerDy;
+        ShowScrollBar(editProps->hwnd, SB_VERT, wantedDy > maxDy);
+        ResizeHwndToClientArea(hwnd, std::min(wantedDx, maxDx), std::min(wantedDy, maxDy), false);
+        DoLayout();
+    };
+    sizeForLines(nLines);
+
+    // a value wider than the window (an EPUB description) wraps into more lines
+    int wrappedLines = (int)SendMessageW(editProps->hwnd, EM_GETLINECOUNT, 0, 0);
+    if (wrappedLines > nLines) {
+        sizeForLines(wrappedLines);
+    }
 }
 
 void PropertiesWnd::ApplyDarkMode() {

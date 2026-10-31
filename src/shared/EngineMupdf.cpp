@@ -8701,6 +8701,14 @@ void EngineMupdf::GetProperties(Props& propsOut) {
     // for epub files, list all files in the archive
     Str path = FilePath();
     if (path && str::EndsWithI(path, StrL(".epub"))) {
+        // mupdf only exposes the title and the author
+        Props epubProps;
+        EpubGetMetadata(path, epubProps);
+        for (const PropValue& p : epubProps) {
+            AddProp(propsOut, p.prop, str::DupTemp(p.val));
+        }
+        FreeProps(epubProps);
+
         ArchiveExtractProgressCb emptyCb;
         Archive* zip = OpenArchiveFromFile(path, /*eagerLoad=*/false, emptyCb);
         if (zip) {
