@@ -461,6 +461,7 @@ import { testit as issue6137 } from "./issue-6137.ts";
 import { testit as issue6140 } from "./issue-6140.ts";
 import { testit as issue6142 } from "./issue-6142.ts";
 import { testit as issue6419 } from "./issue-6419.ts";
+import { testit as issue6448 } from "./issue-6448.ts";
 import { testit as issue6143 } from "./issue-6143.ts";
 import { testit as issue6144 } from "./issue-6144.ts";
 import { testit as toolbarTabSwitchPos } from "./toolbar-tab-switch-pos.ts";
@@ -612,6 +613,7 @@ export const tests: NamedTest[] = [
   ["ad-hoc-md-missing-file", mdMissingFile],
   ["issue-6142", issue6142],
   ["issue-6419", issue6419],
+  ["issue-6448", issue6448],
   ["issue-6148", issue6148],
   ["issue-6393", issue6393],
   ["issue-6397", issue6397],

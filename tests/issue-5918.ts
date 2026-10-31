@@ -1,4 +1,5 @@
 // #5918: opening a .html file parsed every sibling .html file to build the TOC
+// (HTML now opens as a single file, #6448; .md keeps folder mode, so this uses .md)
 // before showing the document, which hangs for minutes in a directory with
 // thousands of files. The TOC now starts as a flat list of the files and a
 // background thread replaces it with the real one (headings included).
@@ -42,17 +43,11 @@ function makeFolder(): string {
   rmSync(dir, { recursive: true, force: true });
   mkdirSync(dir, { recursive: true });
   for (let i = 0; i < nFiles; i++) {
-    const name = `page-${String(i).padStart(4, "0")}.html`;
+    const name = `page-${String(i).padStart(4, "0")}.md`;
     // 3 headings each, plus filler so parsing isn't free
-    const body = [
-      `<h1>Title ${i}</h1>`,
-      `<p>${"lorem ipsum dolor sit amet ".repeat(200)}</p>`,
-      `<h2>Section ${i}.1</h2>`,
-      `<p>${"lorem ipsum dolor sit amet ".repeat(200)}</p>`,
-      `<h2>Section ${i}.2</h2>`,
-      `<p>${"lorem ipsum dolor sit amet ".repeat(200)}</p>`,
-    ].join("\n");
-    writeFileSync(join(dir, name), `<html><head><title>Page ${i}</title></head><body>\n${body}\n</body></html>\n`);
+    const filler = "lorem ipsum dolor sit amet ".repeat(200);
+    const body = [`# Title ${i}`, filler, `## Section ${i}.1`, filler, `## Section ${i}.2`, filler].join("\n\n");
+    writeFileSync(join(dir, name), body + "\n");
   }
   return dir;
 }
@@ -146,14 +141,14 @@ async function waitForTocTree(frame: number, client: ControlClient | null, timeo
 // folder then navigates within the browser view instead of reloading (a reload
 // would drop the TOC back to the flat file list)
 async function testTocAndNextFile(dir: string): Promise<void> {
-  const { proc, client, frame: launchedFrame } = await launch(dir, "page-0000.html");
+  const { proc, client, frame: launchedFrame } = await launch(dir, "page-0000.md");
   const wantFull = nFiles * (1 + headingsPerFile);
   try {
     const frame = launchedFrame || (await waitForFrame(proc.pid!));
     if (IS_MAC && client) {
-      await waitForFile(client, "page-0000.html", 60000);
+      await waitForFile(client, "page-0000.md", 60000);
     } else {
-      await waitForTitle(frame, (t) => t.startsWith("page-0000.html"), 60000);
+      await waitForTitle(frame, (t) => t.startsWith("page-0000.md"), 60000);
     }
     sendCommand(frame, cmdId("CmdToggleBookmarks"));
     const first = await waitForTocTree(frame, client);
@@ -177,8 +172,8 @@ async function testTocAndNextFile(dir: string): Promise<void> {
       }
       const opened =
         IS_MAC && client
-          ? (await currentFile(client)).endsWith("page-0001.html")
-          : getWindowText(frame).startsWith("page-0001.html");
+          ? (await currentFile(client)).endsWith("page-0001.md")
+          : getWindowText(frame).startsWith("page-0001.md");
       if (opened) {
         switched = true;
         break;
@@ -200,7 +195,7 @@ async function testTocAndNextFile(dir: string): Promise<void> {
 // closing the document while the background build is still running must not
 // crash: the build has no model left to deliver its result to
 async function testCloseDuringBuild(dir: string): Promise<void> {
-  const { proc, client, frame: launchedFrame } = await launch(dir, "page-0001.html");
+  const { proc, client, frame: launchedFrame } = await launch(dir, "page-0001.md");
   const wantFull = nFiles * (1 + headingsPerFile);
   try {
     const frame = launchedFrame || (await waitForFrame(proc.pid!));

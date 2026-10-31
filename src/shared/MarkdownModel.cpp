@@ -739,8 +739,13 @@ bool MarkdownModel::Load(Str fileName) {
     str::ReplaceWithCopy(&baseDir, path::GetDirTemp(fileName));
     isHtml = IsHtmlFileType(GuessFileType(fileName, true));
 
+    // .md files in a folder are usually one set of docs, .html files usually aren't (#6448)
     StrVec mdFiles;
-    CollectMarkdownFiles(baseDir, fileName, isHtml, mdFiles);
+    if (isHtml) {
+        mdFiles.Append(fileName);
+    } else {
+        CollectMarkdownFiles(baseDir, fileName, false, mdFiles);
+    }
     if (len(mdFiles) == 0) {
         return false;
     }
