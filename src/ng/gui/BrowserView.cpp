@@ -25,6 +25,9 @@
 #include "gui/AppShell.h"
 #include "gui/BrowserView.h"
 #include "BrowserViewCommon.h"
+#if OS_WIN
+#include "WebViewCapture.h"
+#endif
 
 #include "SumatraLog.h"
 
@@ -564,9 +567,26 @@ void BrowserViewCopySelection(BrowserView* bv) {
     Eval(bv, StrL("document.execCommand('copy', false, null)"));
 }
 
+#if OS_WIN
+// async png of the visible page; false if not supported (done is then not called)
+bool BrowserViewCapturePng(BrowserView* bv, const Func1<Str>& done) {
+    auto* controller = (ICoreWebView2Controller*)wry::WebViewControllerRaw(Raw(bv));
+    HWND hwnd = nullptr;
+    ICoreWebView2* webview = nullptr;
+    if (!controller || FAILED(controller->get_ParentWindow(&hwnd)) || FAILED(controller->get_CoreWebView2(&webview))) {
+        return false;
+    }
+    bool ok = WebView2CapturePng(webview, hwnd, done);
+    if (webview) {
+        webview->Release();
+    }
+    return ok;
+}
+#else
 bool BrowserViewCapturePng(BrowserView*, const Func1<Str>&) {
     return false;
 }
+#endif
 
 void BrowserViewPrint(BrowserView* bv, bool) {
     Eval(bv, StrL("window.print()"));

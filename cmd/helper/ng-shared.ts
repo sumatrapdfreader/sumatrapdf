@@ -173,6 +173,8 @@ export const sharedFiles = [
   "src/shared/NotificationsCommon.h",
   "src/shared/OleDragDropCommon.h",
   "src/shared/OleDragDropCommon_win.cpp",
+  "src/shared/WebViewCapture.h",
+  "src/shared/WebViewCapture_win.cpp",
   "src/shared/OpenFileFilters.h",
   "src/shared/OpenFileFilters_win.cpp",
   "src/shared/OverlayScrollbarCommon.cpp",

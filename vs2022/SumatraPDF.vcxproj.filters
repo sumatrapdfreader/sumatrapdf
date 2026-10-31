@@ -666,6 +666,9 @@
     <ClInclude Include="..\src\shared\VirtualDesktop.h">
       <Filter>src\shared</Filter>
     </ClInclude>
+    <ClInclude Include="..\src\shared\WebViewCapture.h">
+      <Filter>src\shared</Filter>
+    </ClInclude>
     <ClInclude Include="..\src\shared\WebpReader.h">
       <Filter>src\shared</Filter>
     </ClInclude>
@@ -1554,6 +1557,9 @@
       <Filter>src\shared</Filter>
     </ClCompile>
     <ClCompile Include="..\src\shared\UpdateTemp.cpp">
+      <Filter>src\shared</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\shared\WebViewCapture_win.cpp">
       <Filter>src\shared</Filter>
     </ClCompile>
     <ClCompile Include="..\src\shared\WebpReader.cpp">

@@ -5,6 +5,7 @@
 import { existsSync, mkdirSync, rmSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 import { ControlClient, ControlCommand } from "./control";
+import { IS_WIN } from "./host";
 import { cmdId, loadPng, makePng, runStandalone, tmpPath, USE_NG } from "./util";
 import { findChildWindow, sendMessage, sleep, treeExpandRecursively, TVE_EXPAND, TVM_GETCOUNT } from "./winapi";
 import {
@@ -95,8 +96,8 @@ function thumbCenter(path: string): number[] | null {
 }
 
 async function testThumbnail(dir: string): Promise<void> {
-  if (USE_NG) {
-    console.log("issue-6448: ng has no browser view capture, skipping the thumbnail check");
+  if (USE_NG && !IS_WIN) {
+    console.log("issue-6448: ng only captures the browser view on Windows, skipping the thumbnail check");
     return;
   }
   const appData = join(dir, "appdata");
