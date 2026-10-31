@@ -122,6 +122,7 @@ struct WebviewWnd : WindowBase {
     void Focus();
     void ShowFindUI();
     bool ShowPrintUI();
+    bool CapturePreviewPng(const Func1<Str>& done);
     void RegisterForwardingDropTarget();
     void RevokeForwardingDropTarget();
     bool Embed(WebViewMsgCb& cb);

@@ -41,6 +41,7 @@ struct MarkdownModel : BrowserDocController {
     // true when displaying .html/.htm files: they are served to the browser raw
     // instead of being rendered from markdown, and the sibling TOC scans .html
     bool isHtml = false;
+    bool didCaptureThumbnail = false;
     TocTree* tocTree = nullptr;
     // set while the full TOC (file headings included) is built in the background
     MarkdownTocBuildTask* tocBuildTask = nullptr;
@@ -50,6 +51,7 @@ struct MarkdownModel : BrowserDocController {
 
     bool Load(Str fileName);
     void SetToc(TocTree*);
+    void MaybeCaptureThumbnail(Str filePath);
     bool DisplayPage(Str pageUrl) override;
 
     TempStr NormalizeScrollUrlTemp(Str url) const override;

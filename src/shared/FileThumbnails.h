@@ -25,6 +25,7 @@ void RegenerateMissingThumbnails();
 Pixmap* LoadThumbnail(FileState* fs);
 bool HasThumbnail(FileState* fs);
 void SetThumbnail(FileState* fs, Pixmap* bmp);
+void SetThumbnailFromImage(Str filePath, Str imageData);
 void SaveThumbnail(FileState* fs);
 void RemoveThumbnail(FileState* fs);
 

@@ -19,6 +19,7 @@
 #include "SumatraPDF.h"
 #include "EmbeddedResources.h"
 #include "MarkdownToc.h"
+#include "FileThumbnails.h"
 #include "PagePosition.h"
 #include "MarkdownModel.h"
 
@@ -481,12 +482,37 @@ bool MarkdownModel::OnBeforeNavigate(Str url, bool newWindow) {
     return true;
 }
 
+// a capture outlives its model when the tab closes first, so it only keeps the path
+struct HtmlThumbnailCapture {
+    Str filePath;
+};
+
+static void HtmlThumbnailCaptured(HtmlThumbnailCapture* d, Str png) {
+    SetThumbnailFromImage(d->filePath, png);
+    str::Free(d->filePath);
+    delete d;
+}
+
+// the thumbnail is a picture of the loaded page, taken once, before the saved scroll position is restored
+void MarkdownModel::MaybeCaptureThumbnail(Str filePath) {
+    if (!isHtml || didCaptureThumbnail || !path::IsSame(filePath, pages[0])) {
+        return;
+    }
+    didCaptureThumbnail = true;
+    auto* d = new HtmlThumbnailCapture{str::Dup(filePath)};
+    if (!BrowserViewCapturePng(docView, MkFunc1(HtmlThumbnailCaptured, d))) {
+        str::Free(d->filePath);
+        delete d;
+    }
+}
+
 void MarkdownModel::OnDocumentComplete(Str url) {
     if (len(url) == 0) {
         return;
     }
     TempStr plainUrl = NormalizeMarkdownUrlTemp(url);
     TempStr filePath = VirtualUrlToFileTemp(plainUrl);
+    MaybeCaptureThumbnail(filePath);
     int pageNo = pages.Find(filePath) + 1;
     if (pageNo < 1) {
         pageNo = currentPageNo;

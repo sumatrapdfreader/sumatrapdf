@@ -75,6 +75,7 @@ void BrowserViewEval(BrowserView*, Str js);
 
 void BrowserViewSelectAll(BrowserView*);
 void BrowserViewCopySelection(BrowserView*);
+bool BrowserViewCapturePng(BrowserView*, const Func1<Str>& done);
 void BrowserViewPrint(BrowserView*, bool showUI = true);
 // the browser's own find bar (orig's FindInCurrentPage)
 void BrowserViewFindInPageUI(BrowserView*);

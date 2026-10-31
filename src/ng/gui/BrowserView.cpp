@@ -564,6 +564,10 @@ void BrowserViewCopySelection(BrowserView* bv) {
     Eval(bv, StrL("document.execCommand('copy', false, null)"));
 }
 
+bool BrowserViewCapturePng(BrowserView*, const Func1<Str>&) {
+    return false;
+}
+
 void BrowserViewPrint(BrowserView* bv, bool) {
     Eval(bv, StrL("window.print()"));
 }

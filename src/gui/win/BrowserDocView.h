@@ -54,6 +54,7 @@ class BrowserDocView {
     void Eval(Str js);
     void SelectAll();
     void CopySelection();
+    bool CapturePng(const Func1<Str>& done);
     LRESULT SendMsg(UINT msg, WPARAM wp, LPARAM lp);
 
   private:

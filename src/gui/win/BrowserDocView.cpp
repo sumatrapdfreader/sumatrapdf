@@ -622,6 +622,11 @@ void BrowserDocView::SelectAll() {
     }
 }
 
+// WebView2 only; see WebviewWnd::CapturePreviewPng
+bool BrowserDocView::CapturePng(const Func1<Str>& done) {
+    return backend == Backend::WebView2 && wv && wv->CapturePreviewPng(done);
+}
+
 void BrowserDocView::CopySelection() {
     if (backend == Backend::WebView2 && wv) {
         wv->Eval(StrL("document.execCommand('copy', false, null)"));
@@ -816,6 +821,11 @@ void BrowserViewCopySelection(BrowserView* bv) {
     if (bv) {
         bv->view->CopySelection();
     }
+}
+
+// async png of the visible page; false if not supported (done is then not called)
+bool BrowserViewCapturePng(BrowserView* bv, const Func1<Str>& done) {
+    return bv && bv->view->CapturePng(done);
 }
 
 void BrowserViewPrint(BrowserView* bv, bool showUI) {

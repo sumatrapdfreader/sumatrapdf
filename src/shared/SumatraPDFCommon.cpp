@@ -528,6 +528,13 @@ bool ShouldUseBrowserView(FileType kind) {
     return false;
 }
 
+// html shown in the browser view gets its thumbnail from a picture of the page
+// (SetThumbnailFromImage): MuPDF lays html out differently and drops images
+static bool IsBrowserCapturedThumbnail(Str path) {
+    FileType kind = GuessFileTypeFromName(path);
+    return MarkdownModel::IsHtmlFileType(kind) && ShouldUseBrowserView(kind);
+}
+
 bool showTocByDefault(Str path, EngineBase* engine) {
     if (gSettings->alwaysShowSidebar) {
         return true;
@@ -1978,7 +1985,7 @@ bool OpenFileExternally(Str path) {
 }
 
 void CreateThumbnailForFile(MainWindow* win, FileState* ds) {
-    if (!ds || !ShouldSaveThumbnail(ds)) {
+    if (!ds || !ShouldSaveThumbnail(ds) || IsBrowserCapturedThumbnail(ds->filePath)) {
         return;
     }
 
@@ -2582,10 +2589,32 @@ void OnFrameKeyB(MainWindow* win, bool isShift) {
     }
 }
 
-// the cover, or else the first page, of d->filePath as the home page shows it:
-// ThumbnailsType legacy is the top of the page as wide as the frame, full the
-// whole page scaled to fit the frame. Releases d->engine
+// page 1 as the home page shows it: ThumbnailsType legacy is the top of the
+// page as wide as the frame, full the whole page scaled to fit the frame
+static Pixmap* RenderEngineThumbnail(EngineBase* engine) {
+    RectF pageRect = engine->PageMediabox(1);
+    if (pageRect.IsEmpty()) {
+        return nullptr;
+    }
+    pageRect = engine->Transform(pageRect, 1, 1.0f, 0);
+    Size frame = ThumbnailFrameSize();
+    float zoom = (float)frame.dx / pageRect.dx;
+    if (ThumbnailsAreFullPage()) {
+        zoom = std::min(zoom, (float)frame.dy / pageRect.dy);
+    } else {
+        pageRect.dy = std::min(pageRect.dy, (float)frame.dy / zoom);
+    }
+    pageRect = engine->Transform(pageRect, 1, 1.0f, 0, true);
+    RenderPageArgs args(1, zoom, 0, &pageRect);
+    return engine->RenderPage(args);
+}
+
+// the cover, or else the first page, of d->filePath. Releases d->engine
 static Pixmap* RenderFileThumbnail(CreateThumbnailFromFileData* d) {
+    if (IsBrowserCapturedThumbnail(d->filePath)) {
+        SafeEngineRelease(&d->engine);
+        return nullptr;
+    }
     EngineBase* engine = d->engine;
     TempStr cover = FindCoverImageTemp(d->filePath);
     if (len(cover) > 0) {
@@ -2608,24 +2637,25 @@ static Pixmap* RenderFileThumbnail(CreateThumbnailFromFileData* d) {
     if (!engine) {
         return nullptr;
     }
-    Pixmap* bmp = nullptr;
-    RectF pageRect = engine->PageMediabox(1);
-    if (!pageRect.IsEmpty()) {
-        pageRect = engine->Transform(pageRect, 1, 1.0f, 0);
-        Size frame = ThumbnailFrameSize();
-        float zoom = (float)frame.dx / pageRect.dx;
-        if (ThumbnailsAreFullPage()) {
-            zoom = std::min(zoom, (float)frame.dy / pageRect.dy);
-        } else {
-            pageRect.dy = std::min(pageRect.dy, (float)frame.dy / zoom);
-        }
-        pageRect = engine->Transform(pageRect, 1, 1.0f, 0, true);
-        RenderPageArgs args(1, zoom, 0, &pageRect);
-        bmp = engine->RenderPage(args);
-    }
+    Pixmap* bmp = RenderEngineThumbnail(engine);
     engine->Release();
     d->engine = nullptr;
     return bmp;
+}
+
+// imageData is a picture of the document (a png, ...), e.g. a screenshot of the browser view
+void SetThumbnailFromImage(Str filePath, Str imageData) {
+    FileState* fs = FileHistoryFindByPath(filePath);
+    if (!fs || !ShouldSaveThumbnail(fs) || len(imageData) == 0) {
+        return;
+    }
+    EngineBase* engine = CreateEngineImageFromData(imageData);
+    if (!engine) {
+        return;
+    }
+    Pixmap* bmp = RenderEngineThumbnail(engine);
+    engine->Release();
+    SetThumbnail(fs, bmp);
 }
 
 // thumbnail threads read gSettings and file history, so a settings reload
