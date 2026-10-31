@@ -74,6 +74,19 @@ void RtfDoc_UnitTests() {
     RtfHas(skipped, StrL("visible</p>"));
     RtfHas(skipped, StrL("<img src=\"data:image/png;base64,iVBORw0KGgo=\"/>"));
 
+    // a WMF (WordPad) or EMF picture wrapping a 1x1 24-bit DIB shows as BMP
+    Str wmf = StrL(
+        "{\\rtf1{\\pict\\wmetafile8\\picw1\\pich1 010009000003300000000000240000000000"
+        "24000000430f2000cc00000001000100000000000100010000000000280000000100000001000000010018000000"
+        "000004000000000000000000000000000000000000000000ff00030000000000}}");
+    RtfHas(wmf, StrL("<img src=\"data:image/png;base64,Qk"));
+    Str emf = StrL(
+        "{\\rtf1{\\pict\\emfblip 0100000008000000510000007c000000000000000000000000000000000000000000000000"
+        "0000000000000000000000010000000100000050000000280000007800000004000000000000002000cc0001000000"
+        "01000000280000000100000001000000010018000000000004000000000000000000000000000000000000000000ff00"
+        "0e00000008000000}}");
+    RtfHas(emf, StrL("<img src=\"data:image/png;base64,Qk"));
+
     // paragraphs, headings and page breaks
     RtfHas(StrL("{\\rtf1\\pard\\qc\\li720 centered\\par}"), StrL("<p style=\"text-align:center;margin-left:36pt;\">"));
     RtfHas(StrL("{\\rtf1\\pard\\outlinelevel1 Chapter\\par}"), StrL("<h2>Chapter</h2>"));

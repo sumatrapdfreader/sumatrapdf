@@ -10,7 +10,7 @@
    page (\'hh, plain bytes) or from \uN. Each sink builds paragraphs, tables and
    their runs; footnotes get their own sink and are appended at the end.
 
-   Not converted: headers / footers, EMF / WMF pictures, floating shapes, text
+   Not converted: headers / footers, vector EMF / WMF pictures, floating shapes, text
    boxes, exact tab stops and columns. */
 
 #include "base/Base.h"
@@ -117,7 +117,9 @@ enum class RtfPicKind : u8 {
     Png,
     Jpeg,
     Dib,
-    Unsupported, // EMF, WMF, device-dependent bitmaps
+    Wmf,
+    Emf,
+    Unsupported, // device-dependent bitmaps
 };
 
 struct RtfCharFmt {
@@ -475,6 +477,92 @@ static TempStr DibToBmpTemp(Str dib) {
     AppendLe32(b, bitsOffset);
     b.Append(dib);
     return b.TakeStr();
+}
+
+static u16 ReadLe16(Str d, int off) {
+    const u8* p = (const u8*)d.s + off;
+    return (u16)(p[0] | (p[1] << 8));
+}
+
+// We don't render metafiles. WordPad and Word wrap a bitmap in one; show the first such bitmap.
+// WMF records: u32 size in words, u16 function, params. The DIB follows the params.
+static Str WmfDib(Str wmf) {
+    constexpr u32 kPlaceableKey = 0x9AC6CDD7;
+    constexpr int kPlaceableHeaderSize = 22;
+    constexpr u16 kMetaEof = 0x0000;
+    constexpr u16 kMetaDibBitBlt = 0x0940;
+    constexpr u16 kMetaDibStretchBlt = 0x0B41;
+    constexpr u16 kMetaStretchDib = 0x0F43;
+
+    int off = 0;
+    if (len(wmf) >= 4 && ReadLe32(wmf, 0) == kPlaceableKey) {
+        off = kPlaceableHeaderSize;
+    }
+    if (off + 4 > len(wmf)) {
+        return {};
+    }
+    off += ReadLe16(wmf, off + 2) * 2; // header size in words
+
+    while (off + 6 <= len(wmf)) {
+        i64 size = (i64)ReadLe32(wmf, off) * 2;
+        u16 fn = ReadLe16(wmf, off + 4);
+        if (fn == kMetaEof || size < 6 || off + size > len(wmf)) {
+            break;
+        }
+        int paramsSize = -1;
+        if (fn == kMetaStretchDib) {
+            paramsSize = 22;
+        } else if (fn == kMetaDibStretchBlt) {
+            paramsSize = 20;
+        } else if (fn == kMetaDibBitBlt) {
+            paramsSize = 16;
+        }
+        int dibOff = off + 6 + paramsSize;
+        int dibLen = off + (int)size - dibOff;
+        if (paramsSize >= 0 && dibLen >= kBitmapInfoHeaderSize && ReadLe32(wmf, dibOff) >= kBitmapInfoHeaderSize) {
+            return Str(wmf.s + dibOff, dibLen);
+        }
+        off += (int)size;
+    }
+    return {};
+}
+
+// EMF records: u32 type, u32 size in bytes. Bitmap records point to their BITMAPINFO and bits.
+static TempStr EmfDibTemp(Str emf) {
+    constexpr u32 kEmrEof = 14;
+    constexpr u32 kEmrBitBlt = 76;
+    constexpr u32 kEmrStretchBlt = 77;
+    constexpr u32 kEmrSetDiBitsToDevice = 80;
+    constexpr u32 kEmrStretchDiBits = 81;
+
+    int off = 0;
+    while (off + 8 <= len(emf)) {
+        u32 type = ReadLe32(emf, off);
+        u32 size = ReadLe32(emf, off + 4);
+        if (type == kEmrEof || size < 8 || size > (u32)(len(emf) - off)) {
+            break;
+        }
+        int fieldsOff = -1; // offBmiSrc, cbBmiSrc, offBitsSrc, cbBitsSrc
+        if (type == kEmrStretchDiBits || type == kEmrSetDiBitsToDevice) {
+            fieldsOff = 48;
+        } else if (type == kEmrBitBlt || type == kEmrStretchBlt) {
+            fieldsOff = 84;
+        }
+        if (fieldsOff >= 0 && (u32)fieldsOff + 16 <= size) {
+            Str rec(emf.s + off, (int)size);
+            u32 offBmi = ReadLe32(rec, fieldsOff);
+            u32 cbBmi = ReadLe32(rec, fieldsOff + 4);
+            u32 offBits = ReadLe32(rec, fieldsOff + 8);
+            u32 cbBits = ReadLe32(rec, fieldsOff + 12);
+            bool ok = cbBmi >= kBitmapInfoHeaderSize && cbBits > 0 && offBmi <= size && cbBmi <= size - offBmi &&
+                      offBits <= size && cbBits <= size - offBits;
+            if (ok) {
+                return str::JoinTemp(Str(rec.s + offBmi, (int)cbBmi), Str(rec.s + offBits, (int)cbBits));
+            }
+        }
+        off += (int)size;
+    }
+    return {};
 }
 
 void RtfParser::PushGroup() {
@@ -973,6 +1061,12 @@ void RtfParser::EmitPicture() {
             // MuPDF reads images by their content, whatever the data URI says
             data = DibToBmpTemp(data);
             break;
+        case RtfPicKind::Wmf:
+            data = DibToBmpTemp(WmfDib(data));
+            break;
+        case RtfPicKind::Emf:
+            data = DibToBmpTemp(EmfDibTemp(data));
+            break;
         default:
             data = {};
             break;
@@ -1366,8 +1460,12 @@ void RtfParser::Keyword(RtfKw kw, bool hasParam, int param) {
         case RtfKw::Dibitmap:
             picKind = RtfPicKind::Dib;
             break;
-        case RtfKw::Emfblip:
         case RtfKw::Wmetafile:
+            picKind = RtfPicKind::Wmf;
+            break;
+        case RtfKw::Emfblip:
+            picKind = RtfPicKind::Emf;
+            break;
         case RtfKw::Wbitmap:
             picKind = RtfPicKind::Unsupported;
             break;
@@ -1638,7 +1736,7 @@ Str RtfParser::BuildHtml() {
     }
     out.Append(StrL("</body></html>\n"));
     if (nSkippedPics > 0) {
-        logf("RtfToHtml: skipped %d pictures in formats we don't convert (EMF, WMF, DDB)\n", nSkippedPics);
+        logf("RtfToHtml: skipped %d pictures in formats we don't convert (vector EMF / WMF, DDB)\n", nSkippedPics);
     }
     return out.TakeStr();
 }
