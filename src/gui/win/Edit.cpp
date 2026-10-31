@@ -278,8 +278,22 @@ HBRUSH Edit::CtlColorBrush(HDC hdc) {
     return br;
 }
 
+// Clipboard history and rdpclip open the clipboard the moment it changes, so
+// OpenClipboard right after a copy often fails. Same pause as OpenClipboardForUpdate.
+static bool OpenClipboardRetry(HWND hwnd) {
+    constexpr int kTries = 10;
+    constexpr int kPauseMs = 20;
+    for (int i = 0; i < kTries; i++) {
+        if (OpenClipboard(hwnd)) {
+            return true;
+        }
+        Sleep(kPauseMs);
+    }
+    return false;
+}
+
 static WStr GetClipboardTextTemp(HWND hwnd) {
-    if (!OpenClipboard(hwnd)) {
+    if (!OpenClipboardRetry(hwnd)) {
         return {};
     }
     WStr res;
