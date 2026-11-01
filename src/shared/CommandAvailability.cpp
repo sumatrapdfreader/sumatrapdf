@@ -130,8 +130,8 @@ static const i32 removeIfNoExtractedText[] = {
     0,
 };
 
-// annotations created from a text selection; a rectangular selection has no
-// text to mark up. checked after !supportsAnnots already hid them for non-PDF
+// annotations created from a text selection; only Highlight can also fill a
+// drawn rectangle. checked after !supportsAnnots already hid them for non-PDF
 static const i32 createAnnotFromSelection[] = {
     CmdCreateAnnotHighlight,
     CmdCreateAnnotSquiggly,
@@ -618,7 +618,8 @@ CommandVisibility GetCommandVisibility(int cmdId, const AppCommandCtx& ctx, Comm
         }
     }
 
-    if (!ctx.hasTextSelection && CmdIdInList(cmdId, createAnnotFromSelection)) {
+    bool canFillRect = cmdId == CmdCreateAnnotHighlight && ctx.hasDrawnRectSelection;
+    if (!ctx.hasTextSelection && !canFillRect && CmdIdInList(cmdId, createAnnotFromSelection)) {
         return MapForSurface(CommandVisibility::Disable, surface);
     }
 

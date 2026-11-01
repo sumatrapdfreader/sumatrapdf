@@ -64,6 +64,15 @@ void CommandAvailability_UnitTests() {
     doc.allowsPrinting = false;
     utassert(MenuVis(CmdPrintSelection, doc) == CommandVisibility::Disable);
     doc.allowsPrinting = true;
+
+    // a drawn rectangle can be highlighted, but not underlined
+    doc.supportsAnnots = true;
+    utassert(MenuVis(CmdCreateAnnotHighlight, doc) == CommandVisibility::Disable);
+    doc.hasDrawnRectSelection = true;
+    utassert(MenuVis(CmdCreateAnnotHighlight, doc) == CommandVisibility::Show);
+    utassert(MenuVis(CmdCreateAnnotUnderline, doc) == CommandVisibility::Disable);
+    doc.hasDrawnRectSelection = false;
+    doc.supportsAnnots = false;
     doc.hasSelection = false;
 
     // the palette doesn't list itself

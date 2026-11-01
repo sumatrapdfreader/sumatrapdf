@@ -153,6 +153,7 @@ export enum ControlCommand {
   TestPageImages = 143,
   // the first window's page and scroll position
   TestScrollState = 144,
+  TestDrawRectSelection = 145,
 }
 
 export type ControlArg = number | string | Uint8Array | ControlArg[];

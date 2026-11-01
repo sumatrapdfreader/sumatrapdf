@@ -47,7 +47,7 @@ async function waitForState(client: ControlClient, pred: (s: State) => boolean, 
 
 // Select a line of text without the mouse: injected mouse input is dropped on
 // this machine, so the keyboard selection mode is the only way to get a real
-// text selection (a rectangular Select All does not mark up text).
+// text selection (Select All's rectangle does not mark up text).
 async function selectLineWithKeyboard(client: ControlClient, frame: number): Promise<void> {
   const deadline = Date.now() + 4_000 * SLOW_BUILD_FACTOR;
   // F7 toggles. A highlight leaves caret mode on, so turn it off before entering.

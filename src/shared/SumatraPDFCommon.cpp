@@ -2235,11 +2235,11 @@ Annotation* MakeAnnotationsFromSelection(WindowTab* tab, AnnotCreateArgs* args) 
     if (!ok) {
         return nullptr;
     }
-    // highlight / underline / squiggly / strike out mark up runs of *text*. A
-    // rectangular selection (Ctrl+drag, Select All) isn't one - marking up its
-    // bounding boxes produced bars over whitespace - so do nothing.
+    // underline / squiggly / strike out mark up runs of *text*. Highlight can also
+    // fill a Ctrl+drag area (#6467), but not Select All's whole pages.
     bool isTextSelection = dm->textSelection && dm->textSelection->result.len > 0;
-    if (!isTextSelection) {
+    bool isHighlightArea = args->annotType == AnnotationType::Highlight && IsDrawnRectSelection(win);
+    if (!isTextSelection && !isHighlightArea) {
         return nullptr;
     }
 

@@ -834,6 +834,7 @@ enum class ControlCmd : u16 {
     TestPageImages = 143,
     // the first window's page and scroll position
     TestScrollState = 144,
+    TestDrawRectSelection = 145,
 };
 
 static_assert((u16)ControlCmd::Quit == (u16)ControlFrameCmd::Quit);
@@ -1922,6 +1923,13 @@ static void ExecuteControlRequest(ControlRequest* req) {
             }
             int exitCode = 0;
             Str res = TripleClickLineResultTemp(pdf, clickWord, expectedLine, &exitCode);
+            AppendTestResult(req, exitCode, res);
+            break;
+        }
+
+        case ControlCmd::TestDrawRectSelection: {
+            int exitCode = 0;
+            Str res = DrawRectSelectionResultTemp(StringArg(req, 0), &exitCode);
             AppendTestResult(req, exitCode, res);
             break;
         }

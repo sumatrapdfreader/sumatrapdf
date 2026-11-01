@@ -60,6 +60,7 @@
 #include "Canvas.h"
 #include "HomePage.h"
 #include "MainWindow.h"
+#include "Selection.h"
 #include "MainWindowCommon.h"
 
 static void SafeDeleteTabsCtrl(TabsCtrl* tabsCtrl) {
@@ -799,6 +800,7 @@ AppCommandCtx NewAppCommandCtx(MainWindow* win, Point cursorPos) {
         ctx.isFixedPage = true;
         EngineBase* engine = dm->GetEngine();
         ctx.hasTextSelection = ctx.hasSelection && len(dm->textSelection->result) > 0;
+        ctx.hasDrawnRectSelection = ctx.hasSelection && IsDrawnRectSelection(win);
         ctx.supportsAnnots = EngineSupportsAnnotations(engine);
         ctx.hasUnsavedAnnotations = EngineHasUnsavedAnnotations(engine);
         ctx.hasRedactMarks = EngineHasRedactMarksNoWait(engine);

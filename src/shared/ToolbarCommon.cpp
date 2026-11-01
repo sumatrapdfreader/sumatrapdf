@@ -20,6 +20,7 @@
 #include "TextSearch.h"
 #include "SumatraPDF.h"
 #include "MainWindow.h"
+#include "Selection.h"
 #include "AnnotPlacement.h"
 #include "WindowTab.h"
 #include "Commands.h"
@@ -386,7 +387,10 @@ bool CanCreateAnnotFromSelection(MainWindow* win, int cmdId) {
         return false;
     }
     DisplayModel* dm = win->AsFixed();
-    return dm && dm->textSelection && dm->textSelection->result.len > 0;
+    if (dm && dm->textSelection && dm->textSelection->result.len > 0) {
+        return true;
+    }
+    return cmdId == CmdCreateAnnotHighlight && IsDrawnRectSelection(win);
 }
 
 // alpha 0 and 0xff both mean opaque, so a palette color matches an

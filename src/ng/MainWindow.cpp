@@ -39,6 +39,7 @@
 #include "AIChatPanel.h"
 #include "OverlayScrollbar.h"
 #include "MainWindow.h"
+#include "Selection.h"
 #include "SearchAndDDECommon.h"
 #include "WindowTab.h"
 #include "gui/AppShell.h"
@@ -543,6 +544,7 @@ AppCommandCtx NewAppCommandCtx(MainWindow* win, Point cursorPos) {
         ctx.isFixedPage = true;
         auto* engine = dm->GetEngine();
         ctx.hasTextSelection = ctx.hasSelection && dm->textSelection->result.len > 0;
+        ctx.hasDrawnRectSelection = ctx.hasSelection && IsDrawnRectSelection(win);
         ctx.supportsAnnots = EngineSupportsAnnotations(engine);
         ctx.hasUnsavedAnnotations = EngineHasUnsavedAnnotations(engine);
         ctx.hasRedactMarks = EngineHasRedactMarksNoWait(engine);

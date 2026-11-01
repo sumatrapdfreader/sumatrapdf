@@ -89,6 +89,7 @@ void HideTouchSelHandles(MainWindow* win);
 #endif
 
 bool IsRectangularSelection(MainWindow* win);
+bool IsDrawnRectSelection(MainWindow* win);
 Rect GetRectangularSelectionScreenRect(MainWindow* win);
 bool GetSelectionScreenRect(WindowTab* tab, Rect& out);
 TempStr FormatSelectionPositionTemp(WindowTab* tab);

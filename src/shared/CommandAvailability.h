@@ -42,6 +42,8 @@ struct AppCommandCtx {
     bool hasSelection = false;
     // selection is text (as opposed to rectangular block selection)
     bool hasTextSelection = false;
+    // rectangle drawn with Ctrl+drag, which Highlight can fill
+    bool hasDrawnRectSelection = false;
     bool isCursorOnPage = false;
     Annotation* annotationUnderCursor = nullptr;
     Annotation* selectedAnnotation = nullptr;

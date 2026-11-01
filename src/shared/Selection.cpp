@@ -229,6 +229,14 @@ bool IsRectangularSelection(MainWindow* win) {
     return len(dm->textSelection->result) == 0;
 }
 
+// Select All's selectionRect starts here; a rectangle drawn on screen can't.
+constexpr int kSelectAllOrigin = INT_MIN / 2;
+
+// A rectangle the user drew (Ctrl+drag), not Select All's page-sized ones.
+bool IsDrawnRectSelection(MainWindow* win) {
+    return IsRectangularSelection(win) && win->selectionRect.x != kSelectAllOrigin;
+}
+
 static Rect SelectionBounds(DisplayModel* dm, Vec<SelectionOnPage>* selections) {
     Rect bounds;
     for (SelectionOnPage& sel : *selections) {
@@ -1021,7 +1029,7 @@ void OnSelectAll(MainWindow* win, bool textOnly) {
         UpdateTextSelection(win);
     } else {
         DeleteOldSelectionInfo(win, true);
-        win->selectionRect = Rect::FromXY(INT_MIN / 2, INT_MIN / 2, INT_MAX, INT_MAX);
+        win->selectionRect = Rect::FromXY(kSelectAllOrigin, kSelectAllOrigin, INT_MAX, INT_MAX);
         win->CurrentTab()->selectionOnPage = SelectionOnPage::FromRectangle(dm, win->selectionRect);
     }
 

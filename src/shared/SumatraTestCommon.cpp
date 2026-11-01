@@ -480,6 +480,42 @@ TempStr GoToFindMatchResultTemp(Str word, Str typed, int* exitCodeOut) {
     return ToStrTemp(out);
 }
 
+// Draws a rectangle around `word` through the Ctrl+drag code path, for tests:
+// a real Ctrl key state can't be injected.
+TempStr DrawRectSelectionResultTemp(Str word, int* exitCodeOut) {
+    auto finish = [&](Str msg, int code) -> TempStr {
+        if (exitCodeOut) {
+            *exitCodeOut = code;
+        }
+        return str::DupTemp(msg);
+    };
+    MainWindow* win = len(gWindows) > 0 ? gWindows[0] : nullptr;
+    DisplayModel* dm = win ? win->AsFixed() : nullptr;
+    if (!dm) {
+        return finish(StrL("NOTREADY no-doc"), 1);
+    }
+    const int pageNo = 1;
+    double wx = 0, wy = 0;
+    if (!FindWordCenter(dm->GetEngine(), pageNo, word, &wx, &wy)) {
+        return finish(StrL("ERROR word-not-found"), 1);
+    }
+    Point center = dm->CvtToScreen(pageNo, PointF((float)wx, (float)wy));
+    const int half = 40;
+    int x = center.x - half;
+    int y = center.y - (half / 2);
+#if defined(SUMATRA_NG)
+    OnSelectionStart(win, x, y, true);
+#else
+    OnSelectionStart(win, x, y, 0, true);
+#endif
+    OnSelectionStop(win, center.x + half, center.y + (half / 2), false);
+    win->mouseAction = MouseAction::None;
+    if (!IsDrawnRectSelection(win)) {
+        return finish(StrL("ERROR not-drawn-rect"), 1);
+    }
+    return finish(StrL("OK"), 0);
+}
+
 bool FindWordCenter(EngineBase* engine, int pageNo, Str word, double* xOut, double* yOut) {
     if (!engine || len(word) == 0 || !xOut || !yOut) {
         return false;

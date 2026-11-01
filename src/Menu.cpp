@@ -585,10 +585,10 @@ HMENU BuildMenuFromDef(MenuDef* menuDef, HMENU menu, BuildMenuCtx* ctx) {
         }
         if (ctx) {
             removeMenu |= !ctx->isCursorOnPage && (subMenuDef == menuDefCreateAnnotUnderCursor);
-            // these annotations need text to mark up, so a rectangular
-            // selection doesn't count
-            removeMenu |=
-                (!ctx->hasTextSelection || !ctx->supportsAnnots) && (subMenuDef == menuDefCreateAnnotFromSelection);
+            // these annotations need text to mark up, except Highlight, which can
+            // fill a drawn rectangle
+            bool canMarkUp = ctx->hasTextSelection || ctx->hasDrawnRectSelection;
+            removeMenu |= (!canMarkUp || !ctx->supportsAnnots) && (subMenuDef == menuDefCreateAnnotFromSelection);
             // in the context menu only show translate / search items for a text
             // selection (the menubar variant is live-updated via
             // SetMenuStateForSelection instead)
