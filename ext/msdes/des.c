@@ -115,14 +115,14 @@ des(const DesKey *dk, const unsigned char *inblock, unsigned char *outblock) {
 
 static void
 scrunch(const unsigned char *outof, unsigned long *into) {
-    *into = (*outof++ & 0xffL) << 24;
-    *into |= (*outof++ & 0xffL) << 16;
-    *into |= (*outof++ & 0xffL) << 8;
-    *into++ |= (*outof++ & 0xffL);
-    *into = (*outof++ & 0xffL) << 24;
-    *into |= (*outof++ & 0xffL) << 16;
-    *into |= (*outof++ & 0xffL) << 8;
-    *into |= (*outof & 0xffL);
+    *into = (*outof++ & 0xffUL) << 24;
+    *into |= (*outof++ & 0xffUL) << 16;
+    *into |= (*outof++ & 0xffUL) << 8;
+    *into++ |= (*outof++ & 0xffUL);
+    *into = (*outof++ & 0xffUL) << 24;
+    *into |= (*outof++ & 0xffUL) << 16;
+    *into |= (*outof++ & 0xffUL) << 8;
+    *into |= (*outof & 0xffUL);
     return;
 }
 

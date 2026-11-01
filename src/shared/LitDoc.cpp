@@ -22,7 +22,7 @@
 #include "EngineAll.h"
 
 extern "C" {
-// public domain d3des, in ext/msdes
+// d3des, in ext/msdes
 #include <d3des.h>
 
 // the LZX decompressor inside ext/chmdec/chm.c
@@ -761,10 +761,13 @@ Str LitFile::GetSection(int section) {
             int n = len(view);
             int nPadded = RoundUp(n, 8);
             u8* dec = AllocArray<u8>(nPadded);
-            u8* src = AllocArray<u8>(nPadded);
+            AutoFree<u8> src(AllocArray<u8>(nPadded));
+            if (!dec || !src.Get()) {
+                Free(nullptr, dec);
+                return {};
+            }
             memcpy(src, view.s, (size_t)n);
             LitDesDecrypt(dec, src, nPadded, bookKey);
-            Free(nullptr, src);
             next = Str((char*)dec, n);
         } else if (str::Eq(guid, Str(kLzxGuid))) {
             Str resetTable = GetFile(fmt("%s/Transform/%s/InstanceData/ResetTable", Str(base), Str(kLzxGuid)));

@@ -558,7 +558,7 @@ workspace "SumatraPDF"
     disablewarnings { "4018", "4244", "4267", "4456", "4996" }
     files { "ext/chmdec/*.c", "ext/chmdec/*.h" }
 
-  -- msdes: public domain d3des, used by LitDoc.cpp to unseal .lit DRM1.
+  -- msdes: d3des with GPL tables from openclit, used by LitDoc.cpp to unseal .lit DRM1.
   -- Linked into libsumatrapdf.dll (and the static EXE); dynamic consumers
   -- import the required functions through libsumatrapdf.def.
   project "msdes"
