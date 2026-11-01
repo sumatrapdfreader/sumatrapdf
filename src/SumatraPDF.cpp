@@ -43,6 +43,7 @@
 #include "DocController.h"
 #include "EngineBase.h"
 #include "EngineAll.h"
+#include "EutlTrust.h"
 #include "PdfDarkMode.h"
 #include "Annotation.h"
 #include "FormFields.h"
@@ -1853,6 +1854,7 @@ static void FinishPendingDocumentRelayout(MainWindow* win) {
 static void SetTabLoadError(WindowTab* tab, Str path);
 
 static void MaybeShowTemporaryFileNotification(MainWindow* win, WindowTab* tab);
+static void MaybeShowSignatureStatus(MainWindow* win, WindowTab* tab);
 
 // ShowThumbnailsIfNoToc: a document without bookmarks opens with page
 // thumbnails in the sidebar's top panel instead of no sidebar (#6407).
@@ -2240,6 +2242,7 @@ static void ReplaceDocumentInCurrentTab(LoadArgs* args, DocController* ctrl, Fil
     }
     SetSidebarVisibility(win, showToc, gSettings->showFavorites);
     MaybeShowTemporaryFileNotification(win, tab);
+    MaybeShowSignatureStatus(win, tab);
     if (dm) {
         if (dm->pendingRelayout) {
             // canvas not yet sized; RelayoutFrame / ShowWindow WM_SIZE will
@@ -5878,6 +5881,76 @@ static void OnTemporaryFileNotifClosed(NotificationClosedEvent* ev) {
         ScheduleSaveSettings();
     }
     RemoveNotification(ev->wnd);
+}
+
+Kind kNotifSignatureStatus = "notifSignatureStatus";
+
+struct SigStatusJob {
+    WindowTab* tab = nullptr;
+    EngineBase* engine = nullptr;
+    PdfSigSummary sum;
+};
+
+static void OnSigStatusDone(SigStatusJob* job) {
+    WindowTab* tab = job->tab;
+    EngineBase* engine = job->engine;
+    PdfSigSummary sum = job->sum;
+    delete job;
+    defer {
+        engine->Release();
+    };
+    if (!IsWindowTabValid(tab) || !tab->AsFixed() || tab->AsFixed()->GetEngine() != engine || sum.nSigned == 0) {
+        return;
+    }
+    // what's shown may be about what this tab held before a reload
+    MainWindow* win = tab->win;
+    RemoveNotificationsForGroup(win, kNotifSignatureStatus);
+    Str msg;
+    bool problem = true;
+    if (sum.anyInvalid) {
+        msg = Tr("At least one signature is invalid.");
+    } else if (sum.anyUnknown) {
+        msg = Tr("At least one signature has problems.");
+    } else {
+        problem = false;
+        msg = sum.nQualified > 0 ? Tr("Signed with a qualified signature. All signatures are valid.")
+                                 : Tr("Signed and all signatures are valid.");
+    }
+    NotificationCreateArgs args;
+    args.win = win;
+    args.groupId = kNotifSignatureStatus;
+    args.tab = tab;
+    args.corner = NotifCorner::TopLeft;
+    args.timeoutMs = kNotifNoTimeout;
+    args.warning = problem;
+    args.msg = fmt("%s [%s](CmdProperties)", msg, Tr("Signature details"));
+    ShowNotification(args);
+}
+
+static void SigStatusThread(SigStatusJob* job) {
+    if (EutlNeedsUpdate()) {
+        EutlUpdate(nullptr);
+    }
+    job->sum = EngineMupdfSignatureSummary(job->engine);
+    uitask::Post(MkFunc0<SigStatusJob>(OnSigStatusDone, job), "SigStatusDone");
+}
+
+// says what a signed document's signatures amount to, like Acrobat's bar above
+// the document. On a thread: it hashes the file and may update the EU list.
+static void MaybeShowSignatureStatus(MainWindow* win, WindowTab* tab) {
+    if (!gSettings->showSignatureStatus || gPluginMode || !tab || !tab->AsFixed()) {
+        return;
+    }
+    EngineBase* engine = tab->AsFixed()->GetEngine();
+    if (!EngineMupdfIsPdf(engine) || EngineMupdfCountSignedSignatures(engine) == 0) {
+        return;
+    }
+    EutlRegisterLookup();
+    auto* job = new SigStatusJob;
+    job->tab = tab;
+    job->engine = engine;
+    engine->AddRef();
+    RunAsync(MkFunc0<SigStatusJob>(SigStatusThread, job), StrL("SigStatus"));
 }
 
 // TemporaryFileShowNotification: say the document is from a temporary folder

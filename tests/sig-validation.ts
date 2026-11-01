@@ -4,7 +4,7 @@
 // The PKI is generated, and the signed PDFs are built directly, so nothing goes
 // into a certificate store and no network is needed. See pki-chain.ts.
 
-import { rmSync } from "node:fs";
+import { readFileSync, rmSync, writeFileSync } from "node:fs";
 import { IS_MAC } from "./host.ts";
 import { ControlCommand, type ControlClient, withControlledSumatra } from "./control.ts";
 import {
@@ -314,6 +314,88 @@ async function testOcsp(): Promise<void> {
   expectHas(raw, REV_NOT_CHECKED, "OCSP from a stranger");
 }
 
+const STATUS_QUALIFIED = /Status: Valid qualified electronic signature\./;
+const STATUS_SEAL = /Status: Valid qualified electronic seal\./;
+const STATUS_VALID = /Status: Valid signature\./;
+const STATUS_UNKNOWN = /Status: Validity unknown: the signer's identity/;
+const STATUS_REVOKED = /Status: Invalid: the signer's certificate was revoked/;
+const STATUS_TAMPERED = /Status: Invalid: the signed part/;
+const BAR_READY_MS = 15_000;
+
+async function barFor(spec: PdfSignSpec, list: EutlEntry[] | null, edit?: (path: string) => void) {
+  gCase++;
+  const pdf = tmpPath(`sig-validation-${gCase}.pdf`);
+  writeSignedPdf(pdf, spec);
+  edit?.(pdf);
+  const appdata = writeAppdata(`sig-validation-${gCase}`, SETTINGS);
+  rmSync(`${appdata}/eutl-services.txt`, { force: true });
+  if (list) {
+    writeEutlCache(appdata, list);
+  }
+  return withControlledSumatra(
+    EXE,
+    async (client) => {
+      const props = await signaturesOf(client);
+      const deadline = Date.now() + BAR_READY_MS;
+      for (;;) {
+        const bar = String((await client.request(ControlCommand.TestSignatureStatus))[1] ?? "");
+        if (bar) {
+          return { props, bar };
+        }
+        if (Date.now() > deadline) {
+          throw new Error(`sig-validation: no status bar\n${props}`);
+        }
+        await Bun.sleep(50);
+      }
+    },
+    ["-appdata", appdata, pdf],
+  );
+}
+
+// flips a byte the signature covers
+function tamper(path: string): void {
+  const pdf = readFileSync(path);
+  const at = pdf.indexOf("MediaBox [0 0 300 300]");
+  pdf.write("301", at + "MediaBox [0 0 ".length, "latin1");
+  writeFileSync(path, pdf);
+}
+
+async function testVerdict(): Promise<void> {
+  const { ca, leaf } = makePki("esign");
+  const list: EutlEntry[] = [{ cert: ca, granted: [{ from: LONG_AGO }] }];
+  const spec = { signer: leaf, extraCerts: [ca] };
+
+  let res = await barFor(spec, list);
+  expectHas(res.props, STATUS_QUALIFIED, "qualified");
+  expectHas(res.bar, /Signed with a qualified signature\. All signatures are valid\./, "qualified bar");
+  expectHas(res.bar, /CmdProperties/, "the bar links to Properties");
+
+  const seal = makePki("eseal");
+  res = await barFor({ signer: seal.leaf, extraCerts: [seal.ca] }, [{ cert: seal.ca, granted: [{ from: LONG_AGO }] }]);
+  expectHas(res.props, STATUS_SEAL, "seal");
+
+  const plain = makePki();
+  res = await barFor({ signer: plain.leaf, extraCerts: [plain.ca] }, [
+    { cert: plain.ca, granted: [{ from: LONG_AGO }] },
+  ]);
+  expectHas(res.props, STATUS_VALID, "trusted, not qualified");
+  expectHas(res.bar, /^Signed and all signatures are valid\./, "trusted, not qualified bar");
+
+  res = await barFor(spec, null);
+  expectHas(res.props, STATUS_UNKNOWN, "no list");
+  expectHas(res.bar, /At least one signature has problems/, "no list bar");
+
+  const revoked = makeCrl({ issuer: ca, revoked: [{ cert: leaf, date: days(-5) }] });
+  res = await barFor({ ...spec, crls: [revoked] }, list);
+  expectHas(res.props, STATUS_REVOKED, "revoked");
+  expectHas(res.bar, /At least one signature is invalid/, "revoked bar");
+
+  res = await barFor(spec, list, tamper);
+  expectHas(res.props, STATUS_TAMPERED, "tampered");
+  expectHas(res.bar, /At least one signature is invalid/, "tampered bar");
+  expectNot(res.props, STATUS_QUALIFIED, "tampered");
+}
+
 export async function testit(): Promise<void> {
   if (IS_MAC) {
     console.log("SKIP sig-validation: the checks are in the Windows PKCS#7 backend");
@@ -323,6 +405,7 @@ export async function testit(): Promise<void> {
   await testSigningTime();
   await testRevocation();
   await testOcsp();
+  await testVerdict();
 }
 
 if (import.meta.main) {

@@ -200,6 +200,14 @@ void ListWindowsSigningCertificates(StrVec& thumbprints, StrVec& labels);
 struct EutlLookup;
 void SetEutlLookup(const EutlLookup* lookup);
 void EngineMupdfFetchRevocation(EngineBase* engine);
+struct PdfSigSummary {
+    // not counting document timestamps
+    int nSigned = 0;
+    int nQualified = 0;
+    bool anyInvalid = false;
+    bool anyUnknown = false;
+};
+PdfSigSummary EngineMupdfSignatureSummary(EngineBase* engine);
 struct PdfSigCert {
     PdfSigCert* next = nullptr;
     Str label;

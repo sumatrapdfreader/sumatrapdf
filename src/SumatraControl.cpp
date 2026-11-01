@@ -672,6 +672,8 @@ enum class ControlCmd : u16 {
     TestDrawRectSelection = 145,
     TestEutlUpdate = 146,
     TestFetchRevocation = 147,
+    // the message of the signature status bar, empty if there is none
+    TestSignatureStatus = 148,
 };
 
 static_assert((u16)ControlCmd::Quit == (u16)ControlFrameCmd::Quit);
@@ -1009,6 +1011,13 @@ static void ExecuteControlRequest(ControlRequest* req) {
             int exitCode = 0;
             Str res = ClickClearsSelectionResultTemp(word, &exitCode);
             AppendTestResult(req, exitCode, res);
+            break;
+        }
+
+        case ControlCmd::TestSignatureStatus: {
+            NotificationWnd* wnd =
+                len(gWindows) > 0 ? GetNotificationForGroup(gWindows[0], kNotifSignatureStatus) : nullptr;
+            AppendTestResult(req, 0, wnd ? NotificationGetMessageTemp(wnd) : TempStr{});
             break;
         }
 

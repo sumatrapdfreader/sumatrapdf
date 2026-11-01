@@ -8537,6 +8537,51 @@ static pkcs7_windows_rev_data* LoadDssRevocation(fz_context* ctx, pdf_document* 
     return rev;
 }
 
+static void AppendVerdict(str::Builder& s, PdfSigSummary* sum, bool isDocTs, SigLevel level,
+                          const pkcs7_windows_chain_info& chain, pdf_signature_error digErr, int edits, int laterSigs,
+                          i64 provenTime) {
+    bool trusted = chain.os_trusted || chain.eu_chain_ok;
+    Str status;
+    bool invalid = false;
+    bool unknown = false;
+    bool qualified = false;
+    if (isDocTs) {
+        if (provenTime > 0 && trusted) {
+            status = StrL("Valid document timestamp.");
+        } else {
+            status = StrL("Validity unknown: the document timestamp couldn't be verified.");
+            unknown = true;
+        }
+    } else if (digErr != PDF_SIGNATURE_ERROR_OKAY) {
+        status = StrL("Invalid: the signed part of the document doesn't match the signature.");
+        invalid = true;
+    } else if (chain.revocation == PKCS7_REV_REVOKED) {
+        status = StrL("Invalid: the signer's certificate was revoked.");
+        invalid = true;
+    } else if (!trusted) {
+        status = StrL("Validity unknown: the signer's identity couldn't be verified.");
+        unknown = true;
+    } else if (edits && laterSigs == 0) {
+        status = StrL("Validity unknown: the document was changed after this signature.");
+        unknown = true;
+    } else if (level == SigLevel::QualifiedESig) {
+        status = StrL("Valid qualified electronic signature.");
+        qualified = true;
+    } else if (level == SigLevel::QualifiedESeal) {
+        status = StrL("Valid qualified electronic seal.");
+        qualified = true;
+    } else {
+        status = StrL("Valid signature.");
+    }
+    s.Append(fmt("  Status: %s\n", status));
+    if (sum) {
+        sum->anyInvalid |= invalid;
+        sum->anyUnknown |= unknown;
+        sum->nSigned += isDocTs ? 0 : 1;
+        sum->nQualified += qualified ? 1 : 0;
+    }
+}
+
 static pdf_signature_error CertErrFromChain(const pkcs7_windows_chain_info& chain) {
     if (chain.no_certificate) {
         return PDF_SIGNATURE_ERROR_NO_CERTIFICATE;
@@ -8592,7 +8637,7 @@ static void AppendPadesLevel(str::Builder& s, bool isCades, bool hasTs, bool ltv
 static void AppendSignatureFieldInfo(fz_context* ctx, str::Builder& s, pdf_pkcs7_verifier* verifier,
                                      pdf_document* pdfdoc, pdf_obj* sigObj, int sigNo, int pageNo, bool docHasDss,
                                      bool docHasDocTs, int laterSigs, void* eutlList, const Vec<pdf_obj*>& fields,
-                                     pkcs7_windows_rev_data* docRev) {
+                                     pkcs7_windows_rev_data* docRev, PdfSigSummary* sum) {
     if (len(s) > 0) {
         s.AppendChar('\n');
     }
@@ -8683,6 +8728,18 @@ static void AppendSignatureFieldInfo(fz_context* ctx, str::Builder& s, pdf_pkcs7
         fz_report_error(ctx);
     }
 
+    pdf_signature_error digErr = PDF_SIGNATURE_ERROR_UNKNOWN;
+    int edits = 0;
+    fz_try(ctx) {
+        digErr = pdf_check_digest(ctx, verifier, pdfdoc, sigObj);
+        edits = pdf_signature_incremental_change_since_signing(ctx, pdfdoc, sigObj);
+    }
+    fz_catch(ctx) {
+        fz_report_error(ctx);
+    }
+    SigLevel level = QualifiedLevel(info, chain);
+    AppendVerdict(s, sum, isDocTs, level, chain, digErr, edits, laterSigs, provenTime);
+
     s.Append(isDocTs ? StrL("  Timestamp certificate:\n") : StrL("  User certificate:\n"));
     AppendTrustSource(s, chain);
     if (info.signer_cn && info.signer_cn[0]) {
@@ -8714,7 +8771,7 @@ static void AppendSignatureFieldInfo(fz_context* ctx, str::Builder& s, pdf_pkcs7
     }
     if (!isDocTs) {
         Str listDate = (gEutlLookup && eutlList) ? gEutlLookup->date(eutlList) : Str();
-        AppendQualifiedLine(s, QualifiedLevel(info, chain), listDate);
+        AppendQualifiedLine(s, level, listDate);
     }
 
     if (!isDocTs) {
@@ -8731,15 +8788,6 @@ static void AppendSignatureFieldInfo(fz_context* ctx, str::Builder& s, pdf_pkcs7
     }
 
     pdf_signature_error certErr = CertErrFromChain(chain);
-    pdf_signature_error digErr = PDF_SIGNATURE_ERROR_UNKNOWN;
-    int edits = 0;
-    fz_try(ctx) {
-        digErr = pdf_check_digest(ctx, verifier, pdfdoc, sigObj);
-        edits = pdf_signature_incremental_change_since_signing(ctx, pdfdoc, sigObj);
-    }
-    fz_catch(ctx) {
-        fz_report_error(ctx);
-    }
     if (!isDocTs) {
         AppendSigValidation(s, certErr, digErr, edits, laterSigs);
     }
@@ -8802,6 +8850,19 @@ static void AppendSignatureFieldInfo(fz_context* ctx, str::Builder& s, pdf_pkcs7
 PdfSigCert::~PdfSigCert() {
     str::Free(label);
     str::Free(der);
+}
+
+static TempStr GetSignatures(EngineMupdf* e, PdfSigSummary* sum = nullptr);
+
+// The verdict over all signatures: for showing it without opening Properties.
+PdfSigSummary EngineMupdfSignatureSummary(EngineBase* engine) {
+    PdfSigSummary sum;
+    EngineMupdf* e = AsEngineMupdf(engine);
+    if (e && e->pdfdoc) {
+        ScopedRecursiveMutex scope(&e->docLock);
+        GetSignatures(e, &sum);
+    }
+    return sum;
 }
 
 // Asks the CAs about this document's signers: slow, and leaves the answers in
@@ -8948,7 +9009,7 @@ static void AppendOpenSslSigText(fz_context* ctx, str::Builder& out, pdf_pkcs7_v
 }
 #endif
 
-static TempStr GetSignatures(EngineMupdf* e) {
+static TempStr GetSignatures(EngineMupdf* e, PdfSigSummary* sum) {
 #if OS_WIN || OS_DARWIN || defined(SUMATRA_HAVE_OPENSSL)
     pdf_document* pdfdoc = e->pdfdoc;
     if (!pdfdoc) {
@@ -8994,7 +9055,7 @@ static TempStr GetSignatures(EngineMupdf* e) {
             ++sigNo;
             int pageNo = PageNoForSigField(ctx, pdfdoc, field);
             AppendSignatureFieldInfo(ctx, sigs, verifier, pdfdoc, field, sigNo, pageNo, hasDss, hasDocTs,
-                                     LaterSignatures(ctx, pdfdoc, fields, field), eutlList, fields, docRev);
+                                     LaterSignatures(ctx, pdfdoc, fields, field), eutlList, fields, docRev, sum);
         }
 #else
         for (int i = 0; i < len(fields); i++) {

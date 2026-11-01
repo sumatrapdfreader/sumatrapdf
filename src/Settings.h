@@ -1156,6 +1156,9 @@ struct Settings {
     // if true, a document will be reloaded automatically whenever it's
     // changed (currently doesn't work for documents shown in the ebook UI)
     bool reloadModifiedDocuments;
+    // if true, opening a digitally signed PDF shows whether its signatures
+    // are valid
+    bool showSignatureStatus;
     // if true, opening a file from a temporary folder (e.g. an Outlook
     // attachment) shows a notification offering to copy it to a permanent
     // folder. Closing that notification sets this to false

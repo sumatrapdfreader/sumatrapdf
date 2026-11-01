@@ -1466,6 +1466,12 @@ const globalPrefs: Field[] = [
       "(currently doesn't work for documents shown in the ebook UI)",
   ).ver("2.5"),
   field(
+    "ShowSignatureStatus",
+    Bool,
+    true,
+    "if true, opening a digitally signed PDF shows whether its signatures are valid",
+  ).ver("3.7"),
+  field(
     "TemporaryFileShowNotification",
     Bool,
     true,
@@ -2322,6 +2328,7 @@ const globalPrefsLayout = [
   "NoCaj2pdfConverterDownload",
   "HomePageSortByFrequentlyRead",
   "ReloadModifiedDocuments",
+  "ShowSignatureStatus",
   "TemporaryFileShowNotification",
   "TemporaryFileDestDir",
   "TemporaryFileAutoMove",
