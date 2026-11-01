@@ -114,7 +114,7 @@ bool ZipCreator::AddFileData(Str name, Str data, u32 dosdate) {
     if (!compressed) {
         return false;
     }
-    uLongf compressedSize = zip_compress(compressed, (u32)size, data.s, (u32)size);
+    uLongf compressedSize = storeOnly ? 0 : zip_compress(compressed, (u32)size, data.s, (u32)size);
     if (!compressedSize) {
         method = 0; // Store
         memcpy(compressed, data.s, size);

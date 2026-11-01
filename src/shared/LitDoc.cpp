@@ -1427,6 +1427,8 @@ Str LitToEpubConvert(Str litData) {
 
     str::Builder zipData;
     ZipCreator zc(zipData);
+    // read back right away, compressing would only cost time
+    zc.storeOnly = true;
     bool ok = zc.AddFileData(StrL("mimetype"), StrL("application/epub+zip"));
     ok &= zc.AddFileData(StrL("META-INF/container.xml"), Str(kContainerXml));
     {

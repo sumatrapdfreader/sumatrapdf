@@ -1,0 +1,56 @@
+bidi: skip resolving levels of text with no RTL
+
+fz_bidi_fragment_text ran every resolve pass on every flow, a third of
+what was left of loading a big book after the other speedups. Text at
+base level 0 with no RTL or explicit types always resolves to level 0.
+
+diff --git a/source/fitz/bidi.c b/source/fitz/bidi.c
+index 6210f8ceb..a998ea40c 100644
+--- a/source/fitz/bidi.c
++++ b/source/fitz/bidi.c
+@@ -684,6 +684,32 @@ classify_quoted_blocks(const uint32_t *text,
+  * given text. Also determines the base level and returns it in
+  * *baseDir if *baseDir does not initially contain a valid direction.
+  */
++/* SumatraPDF: without these types, all of the text at base level 0 resolves to level 0 */
++static int
++has_rtl_or_explicit_types(const fz_bidi_chartype *types, size_t len)
++{
++	size_t i;
++
++	for (i = 0; i < len; i++)
++	{
++		switch (types[i])
++		{
++		case BDI_R:
++		case BDI_AL:
++		case BDI_AN:
++		case BDI_RLO:
++		case BDI_RLE:
++		case BDI_LRO:
++		case BDI_LRE:
++		case BDI_PDF:
++			return TRUE;
++		default:
++			break;
++		}
++	}
++	return FALSE;
++}
++
+ static fz_bidi_level *
+ create_levels(fz_context *ctx,
+ 		const uint32_t *text,
+@@ -722,6 +748,12 @@ create_levels(fz_context *ctx,
+ 			baseLevel = (fz_bidi_level)*baseDir;
+ 		}
+ 
++		if (baseLevel == 0 && !has_rtl_or_explicit_types(types, len))
++		{
++			memset(levels, 0, len * sizeof(*levels));
++			break;
++		}
++
+ 		{
+ 			/* Replace tab with base direction, i.e. make tab appear as
+ 			 * 'strong left' if the base direction is left-to-right and

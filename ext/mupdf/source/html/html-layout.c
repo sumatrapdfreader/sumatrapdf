@@ -350,6 +350,56 @@ static void measure_string_w(fz_context *ctx, fz_html_flow *node, hb_buffer_t *h
 	}
 }
 
+/* SumatraPDF: shaping every word of a big book takes seconds and its words repeat
+ * a lot, so remember widths (per em) while measuring. A direct-mapped cache: a
+ * collision overwrites. Lives only for layout_update_widths, while node text
+ * can't change: layout_flow splits words later. */
+#define WIDTH_CACHE_SIZE (1 << 16)
+
+typedef struct
+{
+	const char *text;
+	fz_font *font;
+	float w;
+	int script;
+	int language;
+	int rtl_small_caps;
+} width_cache_entry;
+
+static width_cache_entry *width_cache_find(width_cache_entry *cache, const char *text)
+{
+	unsigned int h = 2166136261u; /* FNV-1a */
+	for (; *text; ++text)
+		h = (h ^ (unsigned char)*text) * 16777619u;
+	return &cache[(h ^ (h >> 16)) & (WIDTH_CACHE_SIZE - 1)];
+}
+
+static void measure_string_w_cached(fz_context *ctx, fz_html_flow *node, hb_buffer_t *hb_buf, width_cache_entry *cache)
+{
+	float em = node->box->s.layout.em;
+	const char *text = get_node_text(ctx, node);
+	width_cache_entry *e = width_cache_find(cache, text);
+	fz_font *font = node->box->style->font;
+	int rtl_small_caps = (node->bidi_level & 1) | (node->box->style->small_caps << 1);
+
+	if (e->text && e->font == font && e->script == node->script && e->language == node->markup_lang &&
+		e->rtl_small_caps == rtl_small_caps && !strcmp(e->text, text))
+	{
+		node->w = e->w * em;
+		return;
+	}
+
+	measure_string_w(ctx, node, hb_buf);
+	if (em <= 0)
+		return;
+	e->text = text;
+	e->font = font;
+	e->w = node->w / em;
+	e->script = node->script;
+	e->language = node->markup_lang;
+	e->rtl_small_caps = rtl_small_caps;
+}
+
 static void measure_string_h(fz_context *ctx, fz_html_flow *node)
 {
 	float em = node->box->s.layout.em;
@@ -3124,7 +3174,7 @@ static void layout_update_styles(fz_context *ctx, fz_html_box *box, fz_html_box 
 	}
 }
 
-static void layout_update_widths(fz_context *ctx, fz_html_box *box, fz_html_box *top, hb_buffer_t *hb_buf)
+static void layout_update_widths(fz_context *ctx, fz_html_box *box, fz_html_box *top, hb_buffer_t *hb_buf, width_cache_entry *cache)
 {
 	while (box)
 	{
@@ -3141,12 +3191,12 @@ static void layout_update_widths(fz_context *ctx, fz_html_box *box, fz_html_box 
 					node->w = fz_from_css_number(node->box->style->width, top->s.layout.em, node->w, node->w);
 				}
 				else if (node->type == FLOW_WORD || node->type == FLOW_SPACE || node->type == FLOW_SHYPHEN)
-					measure_string_w(ctx, node, hb_buf);
+					measure_string_w_cached(ctx, node, hb_buf, cache);
 			}
 		}
 
 		if (box->down)
-			layout_update_widths(ctx, box->down, box, hb_buf);
+			layout_update_widths(ctx, box->down, box, hb_buf, cache);
 
 		box = box->next;
 	}
@@ -3283,9 +3333,11 @@ fz_restartable_layout_html(fz_context *ctx, fz_html_tree *tree, float start_x, f
 	int unlocked = 0;
 	layout_data ld = { 0 };
 	fz_html_box *box = tree->root;
+	width_cache_entry *cache = NULL;
 
 	fz_var(ld.hb_buf);
 	fz_var(unlocked);
+	fz_var(cache);
 
 	// nothing to layout
 	if (!box->down)
@@ -3329,7 +3381,10 @@ fz_restartable_layout_html(fz_context *ctx, fz_html_tree *tree, float start_x, f
 			box->s.layout.x = start_x;
 			box->s.layout.w = page_w;
 			layout_update_styles(ctx, box->down, box);
-			layout_update_widths(ctx, box->down, box, ld.hb_buf);
+			cache = fz_calloc(ctx, WIDTH_CACHE_SIZE, sizeof(width_cache_entry));
+			layout_update_widths(ctx, box->down, box, ld.hb_buf, cache);
+			fz_free(ctx, cache);
+			cache = NULL;
 			layout_collapse_margins(ctx, box->down, box);
 		}
 
@@ -3342,6 +3397,7 @@ fz_restartable_layout_html(fz_context *ctx, fz_html_tree *tree, float start_x, f
 			fz_hb_lock(ctx);
 		hb_buffer_destroy(ld.hb_buf);
 		fz_hb_unlock(ctx);
+		fz_free(ctx, cache);
 	}
 	fz_catch(ctx)
 	{

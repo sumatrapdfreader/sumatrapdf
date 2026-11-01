@@ -79,6 +79,8 @@ relative to `ext/mupdf`, so `-p1` from inside that directory.
 | `0076-pdfinfo-to-buffer-password` | `pdfinfo_to_buffer` takes a password, for PDF Info on a password-protected PDF |
 | `0077-html-image-first-on-empty-page` | a page-tall image first in a chapter no longer leaves a blank page before it |
 | `0078-css-invalid-color-ignored` | an invalid CSS color is ignored, not black: `background-color:whi` hid the text of LIT books |
+| `0079-html-word-width-cache` | word widths are cached while measuring, shaping dominated loading big books |
+| `0080-bidi-skip-ltr-only-text` | no bidi resolve passes for text with no RTL or explicit types |
 
 That is the whole list: `ext/mupdf` is byte-for-byte `1.28.5` plus these
 patches, and nothing else.

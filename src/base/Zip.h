@@ -12,6 +12,8 @@ class ZipCreator {
     bool WriteData(const void* data, size_t size);
 
   public:
+    bool storeOnly = false;
+
     bool AddFileData(Str name, Str data, u32 dosdate = 0);
     explicit ZipCreator(Str zipFilePath);
     explicit ZipCreator(str::Builder& zipOut);

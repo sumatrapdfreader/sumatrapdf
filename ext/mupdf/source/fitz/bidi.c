@@ -684,6 +684,32 @@ classify_quoted_blocks(const uint32_t *text,
  * given text. Also determines the base level and returns it in
  * *baseDir if *baseDir does not initially contain a valid direction.
  */
+/* SumatraPDF: without these types, all of the text at base level 0 resolves to level 0 */
+static int
+has_rtl_or_explicit_types(const fz_bidi_chartype *types, size_t len)
+{
+	size_t i;
+
+	for (i = 0; i < len; i++)
+	{
+		switch (types[i])
+		{
+		case BDI_R:
+		case BDI_AL:
+		case BDI_AN:
+		case BDI_RLO:
+		case BDI_RLE:
+		case BDI_LRO:
+		case BDI_LRE:
+		case BDI_PDF:
+			return TRUE;
+		default:
+			break;
+		}
+	}
+	return FALSE;
+}
+
 static fz_bidi_level *
 create_levels(fz_context *ctx,
 		const uint32_t *text,
@@ -720,6 +746,12 @@ create_levels(fz_context *ctx,
 		else
 		{
 			baseLevel = (fz_bidi_level)*baseDir;
+		}
+
+		if (baseLevel == 0 && !has_rtl_or_explicit_types(types, len))
+		{
+			memset(levels, 0, len * sizeof(*levels));
+			break;
 		}
 
 		{
