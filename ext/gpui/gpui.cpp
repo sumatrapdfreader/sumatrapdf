@@ -33583,6 +33583,40 @@ double TabFloor(double x) {
 
 }
 
+Str TextNoLineBreaks(Arena* a, Str text) {
+    char* out = nullptr;
+    for (int i = 0; i < len(text); i++) {
+        unsigned char c = (unsigned char)text.s[i];
+        unsigned char next =
+            i + 1 < len(text) ? (unsigned char)text.s[i + 1] : 0;
+        unsigned char third =
+            i + 2 < len(text) ? (unsigned char)text.s[i + 2] : 0;
+        bool ascii = c == 0x0b || c == 0x0c || c == 0x0d;
+        bool nel = c == 0xc2 && next == 0x85;
+        bool sep =
+            c == 0xe2 && next == 0x80 && (third == 0xa8 || third == 0xa9);
+        if (!ascii && !nel && !sep) {
+            continue;
+        }
+        if (!out) {
+            out = (char*)Alloc(a, len(text) + 1);
+            if (!out) {
+                return text;
+            }
+            memcpy(out, text.s, (size_t)len(text));
+            out[len(text)] = 0;
+        }
+        if (ascii) {
+            out[i] = ' ';
+        } else if (nel) {
+            out[i + 1] = '\xa0';
+        } else {
+            out[i + 2] = '\x82';
+        }
+    }
+    return out ? Str(out, len(text)) : text;
+}
+
 float TabExpandedWidth(Str text, float stop,
                        float (*measure)(void* user, Str text), void* user) {
     if (!measure || len(text) <= 0) {
@@ -37477,12 +37511,47 @@ struct WrapMeasure {
 static bool WrapAdvance(const WrapMeasure* wm, Str bytes, float* out) {
     const InputWrapMap* m = wm->map;
     float x = 0, y = 0, h = 0;
-    if (!wm->ctx || !TextPointAt(wm->ctx, bytes, m->fontSize, 0, false,
-                                 len(bytes), &x, &y, &h, m->fontWord)) {
+    if (!wm->ctx ||
+        !TextPointAt(wm->ctx, TextNoLineBreaks(GetTempArena(), bytes),
+                     m->fontSize, 0, false, len(bytes), &x, &y, &h,
+                     m->fontWord)) {
         return false;
     }
     *out = x;
     return true;
+}
+
+static WrapCharWidthSlot* WrapOtherWidthFind(InputWrapMap* m, uint32_t c) {
+    int cap = len(m->otherWidths);
+    if (cap == 0) {
+        return nullptr;
+    }
+    for (uint32_t at = c * 2654435761u;; at++) {
+        WrapCharWidthSlot* slot =
+            &m->otherWidths[(int)(at & (uint32_t)(cap - 1))];
+        if (slot->c == c || slot->c == 0) {
+            return slot;
+        }
+    }
+}
+
+static void WrapOtherWidthAdd(InputWrapMap* m, uint32_t c, float width) {
+    int cap = len(m->otherWidths);
+    if ((m->nOtherWidths + 1) * 2 > cap) {
+        Vec<WrapCharWidthSlot> old;
+        for (const WrapCharWidthSlot& slot : m->otherWidths) {
+            VecAppend(old, slot);
+        }
+        VecClear(m->otherWidths);
+        VecResize(m->otherWidths, cap > 0 ? cap * 2 : 256);
+        for (const WrapCharWidthSlot& slot : old) {
+            if (slot.c != 0) {
+                *WrapOtherWidthFind(m, slot.c) = slot;
+            }
+        }
+    }
+    *WrapOtherWidthFind(m, c) = {c, width};
+    m->nOtherWidths++;
 }
 
 static float WrapCharWidthOf(void* user, uint32_t c) {
@@ -37494,28 +37563,16 @@ static float WrapCharWidthOf(void* user, uint32_t c) {
         for (float& w : m->asciiWidths) {
             w = -1;
         }
-        for (uint32_t& k : m->otherChars) {
-            k = 0;
-        }
+        VecClear(m->otherWidths);
+        m->nOtherWidths = 0;
     }
-    int slot = -1;
     if (c < 128) {
         if (m->asciiWidths[c] >= 0) {
             return m->asciiWidths[c];
         }
-    } else {
-        const int kSlots = (int)dimof(m->otherChars);
-        int at = (int)((c * 2654435761u) >> 24) % kSlots;
-        for (int probe = 0; probe < kSlots; probe++) {
-            int i = (at + probe) % kSlots;
-            if (m->otherChars[i] == c) {
-                return m->otherWidths[i];
-            }
-            if (m->otherChars[i] == 0) {
-                slot = i;
-                break;
-            }
-        }
+    } else if (const WrapCharWidthSlot* found = WrapOtherWidthFind(m, c);
+               found && found->c == c) {
+        return found->width;
     }
     char buf[4];
     int n = WrapEncodeUtf8(c, buf);
@@ -37526,9 +37583,8 @@ static float WrapCharWidthOf(void* user, uint32_t c) {
     }
     if (c < 128) {
         m->asciiWidths[c] = w;
-    } else if (slot >= 0) {
-        m->otherChars[slot] = c;
-        m->otherWidths[slot] = w;
+    } else {
+        WrapOtherWidthAdd(m, c, w);
     }
     return w;
 }
@@ -37543,7 +37599,19 @@ struct WrapLineUser {
     int nSpans = 0;
 
     WidthRange* valid = nullptr;
+    bool byChars = false;
 };
+
+static const int kWrapShapedMaxBytes = 128 * 1024;
+
+static float WrapCharOrTabWidth(void* user, uint32_t c) {
+    WrapMeasure* wm = (WrapMeasure*)user;
+    const InputWrapMap* m = wm->map;
+    if (c == '\t' && m->tabSize > 0 && m->spaceWidth > 0) {
+        return m->spaceWidth * (float)m->tabSize;
+    }
+    return WrapCharWidthOf(user, c);
+}
 
 static float WrapTokenWidth(WrapLineUser* u, int i) {
     if (u->widths) {
@@ -37810,8 +37878,8 @@ static float TabSliceWidth(void* user, Str text) {
     TabSliceMeasure* m = (TabSliceMeasure*)user;
     if (m->ctx && len(text) > 0) {
         float x = 0, y = 0, h = 0;
-        if (TextPointAt(m->ctx, text, m->font, 0, false, len(text), &x, &y, &h,
-                        m->word)) {
+        if (TextPointAt(m->ctx, TextNoLineBreaks(GetTempArena(), text), m->font,
+                        0, false, len(text), &x, &y, &h, m->word)) {
             return x;
         }
     }
@@ -37841,6 +37909,8 @@ static TabShown ShowTabs(Arena* a, PaintCtx* ctx, const InputState* s,
     if (!a || !s || len(line) <= 0) {
         return shown;
     }
+    line = TextNoLineBreaks(a, line);
+    shown.text = line;
     bool tab = false;
     for (int i = 0; i < len(line); i++) {
         if (line.s[i] == '\t') {
@@ -37953,8 +38023,8 @@ static int TabSourceAtX(PaintCtx* ctx, const InputState* s, Str text, float x) {
         float w = TabSliceWidth(&measure, run);
         double runX = shaped + shift;
         if (x < (float)(runX + (double)w)) {
-            int local =
-                TextIndexAt(ctx, run, font, 0, false, x - (float)runX, 0, word);
+            int local = TextIndexAt(ctx, TextNoLineBreaks(GetTempArena(), run),
+                                    font, 0, false, x - (float)runX, 0, word);
             if (local < 0) {
                 local = 0;
             }
@@ -37972,6 +38042,16 @@ static int TabSourceAtX(PaintCtx* ctx, const InputState* s, Str text, float x) {
 static void WrapLineFragments(void* user, Str slice, int base,
                               Vec<WrapBoundary>* out) {
     WrapLineUser* u = (WrapLineUser*)user;
+    if (u->nSpans == 0 && u->byChars) {
+
+        LineFragment frag = LineFragment::Text(slice);
+        LineWrapperWrapLine(&frag, 1, u->width, &WrapCharOrTabWidth, u->measure,
+                            out);
+        if (u->valid) {
+            u->valid->Intersect(WidthRange::Empty());
+        }
+        return;
+    }
     if (u->nSpans == 0) {
 
         WidthRange range;
@@ -38026,6 +38106,7 @@ static WidthRange WrapOneLine(InputState* s, WrapMeasure* wm, int line,
     u.measure = wm;
     u.width = m->width;
     u.lineStart = start;
+    u.byChars = len(text) > kWrapShapedMaxBytes;
     const Vec<InlineTokenSpan>* spans =
         InputTokensVisible(s) ? InputTokens(s) : nullptr;
     int nSpans = spans ? len(*spans) : 0;
@@ -44604,8 +44685,8 @@ static float WrapTextAdvance(PaintCtx* ctx, const InputState* s, Str text) {
     }
     float x = 0, y = 0, h = 0;
     if (len(text) > 0 && ctx) {
-        TextPointAt(ctx, text, WrapFontOf(s), 0, false, len(text), &x, &y, &h,
-                    s->lastFontWord);
+        TextPointAt(ctx, TextNoLineBreaks(GetTempArena(), text), WrapFontOf(s),
+                    0, false, len(text), &x, &y, &h, s->lastFontWord);
     }
     return x;
 }
@@ -44703,8 +44784,9 @@ static int WrapRowIndexAt(PaintCtx* ctx, const InputState* s, Str line,
             if (tab) {
                 return f.lo + TabSourceAtX(ctx, s, text, x - at);
             }
-            return f.lo + TextIndexAt(ctx, text, font, 0, false, x - at, 0,
-                                      s->lastFontWord);
+            return f.lo +
+                   TextIndexAt(ctx, TextNoLineBreaks(GetTempArena(), text),
+                               font, 0, false, x - at, 0, s->lastFontWord);
         }
         at += w;
     }
@@ -46352,7 +46434,8 @@ int InputIndexForPosition(const InputState* s, PaintCtx* ctx, float x, float y,
         if (tab) {
             return TabSourceAtX(ctx, s, t, x - b.x);
         }
-        return TextIndexAt(ctx, t, font, 0, false, x - b.x, 0, s->lastFontWord);
+        return TextIndexAt(ctx, TextNoLineBreaks(GetTempArena(), t), font, 0,
+                           false, x - b.x, 0, s->lastFontWord);
     }
     float lineH = s->lastLineH > 0 ? s->lastLineH : b.h;
     int rows = InputLinesLen(s);
@@ -47602,8 +47685,8 @@ bool InputLastCaretPoint(const InputState* s, Window* win, int offset,
             at = MaskedOffset(text, offset);
         }
         float x = 0, y = 0, h = 0;
-        if (!TextPointAt(ctx, run, font, 0, false, at, &x, &y, &h,
-                         s->lastFontWord)) {
+        if (!TextPointAt(ctx, TextNoLineBreaks(GetTempArena(), run), font, 0,
+                         false, at, &x, &y, &h, s->lastFontWord)) {
             return false;
         }
         *out = {b.x + x, b.y + y};
@@ -47642,8 +47725,9 @@ bool InputLastCaretPoint(const InputState* s, Window* win, int offset,
 
         float lineMult = lineH * 16.f / WindowRemSize(win) / font;
         float x = 0, y = 0, h = 0;
-        if (!TextPointAt(ctx, line, font, 0, false, offset - row.start, &x, &y,
-                         &h, s->lastFontWord, lineMult, affinity)) {
+        if (!TextPointAt(ctx, TextNoLineBreaks(GetTempArena(), line), font, 0,
+                         false, offset - row.start, &x, &y, &h, s->lastFontWord,
+                         lineMult, affinity)) {
             return false;
         }
         *out = {row.text->x + x, row.text->y + y};
@@ -71245,6 +71329,8 @@ float VirtualListScrollTo(float origin, float size, float offset,
     float want = offset;
     if (strategy == ScrollStrategy::Center) {
         want = origin + size * 0.5f - viewport * 0.5f;
+    } else if (strategy == ScrollStrategy::Start) {
+        want = origin;
     } else if (origin < offset) {
         want = origin;
     } else if (origin + size > offset + viewport) {
@@ -84514,102 +84600,46 @@ void DiffFile::PrepareInline(DiffInlineUnit unit, int maxLineLength) {
     VecReset(inlineRuns[1]);
     VecReset(inlineStarts[0]);
     VecReset(inlineStarts[1]);
-    VecResize(inlineStarts[0], len(original.lines) + 1);
-    VecResize(inlineStarts[1], len(modified.lines) + 1);
-    inlineStarts[0][0] = 0;
-    inlineStarts[1][0] = 0;
-    Vec<Vec<DiffRun>*> scratch;
+    int nOld = len(original.lines);
+    int nNew = len(modified.lines);
+    VecResize(inlineStarts[0], nOld + 1);
+    VecResize(inlineStarts[1], nNew + 1);
 
-    Vec<DiffRun> oldLine;
-    Vec<DiffRun> newLine;
-    Vec<int> oldCount;
-    Vec<int> newCount;
-    VecResize(oldCount, len(original.lines));
-    VecResize(newCount, len(modified.lines));
-    Vec<DiffRun> oldAll;
-    Vec<DiffRun> newAll;
+    Vec<int> pairOfOld;
+    Vec<int> pairOfNew;
+    VecResize(pairOfOld, nOld);
+    VecResize(pairOfNew, nNew);
+    for (int i = 0; i < nOld; i++) pairOfOld[i] = -1;
+    for (int i = 0; i < nNew; i++) pairOfNew[i] = -1;
     for (int p = 0; p < len(pairs); p++) {
-        if (!pairs[p].changed || pairs[p].original < 0 || pairs[p].modified < 0)
-            continue;
-        Str oldText = original.lines[pairs[p].original].text;
-        Str newText = modified.lines[pairs[p].modified].text;
-        if (oldText.len > maxLineLength || newText.len > maxLineLength)
-            continue;
-        if (oldText.len == newText.len &&
-            memcmp(oldText.s ? oldText.s : "", newText.s ? newText.s : "",
-                   (size_t)oldText.len) == 0)
-            continue;
-        VecClear(oldLine);
-        VecClear(newLine);
-        DiffChangedRuns(oldText, newText, unit, &oldLine, &newLine);
-        for (int i = 0; i < len(oldLine); i++) VecAppend(oldAll, oldLine[i]);
-        for (int i = 0; i < len(newLine); i++) VecAppend(newAll, newLine[i]);
-        oldCount[pairs[p].original] = len(oldLine);
-        newCount[pairs[p].modified] = len(newLine);
+        const DiffLinePair& pair = pairs[p];
+        if (!pair.changed || pair.original < 0 || pair.modified < 0) continue;
+        if (pairOfOld[pair.original] < 0) pairOfOld[pair.original] = p;
+        if (pairOfNew[pair.modified] < 0) pairOfNew[pair.modified] = p;
     }
-    int at = 0;
-    for (int i = 0; i < len(original.lines); i++) {
-        inlineStarts[0][i] = at;
-        at += oldCount[i];
-    }
-    inlineStarts[0][len(original.lines)] = at;
-    at = 0;
-    for (int i = 0; i < len(modified.lines); i++) {
-        inlineStarts[1][i] = at;
-        at += newCount[i];
-    }
-    inlineStarts[1][len(modified.lines)] = at;
-
-    VecClear(oldAll);
-    VecClear(newAll);
-    Vec<DiffRun>* bags[2] = {&oldAll, &newAll};
-    (void)bags;
     Vec<DiffRun> perOld;
     Vec<DiffRun> perNew;
-
-    for (int line = 0; line < len(original.lines); line++) {
-        inlineStarts[0][line] = len(inlineRuns[0]);
-        for (int p = 0; p < len(pairs); p++) {
-            if (pairs[p].original != line || pairs[p].modified < 0 ||
-                !pairs[p].changed)
-                continue;
-            Str oldText = original.lines[line].text;
-            Str newText = modified.lines[pairs[p].modified].text;
+    for (int which = 0; which < 2; which++) {
+        const Vec<int>& pairOf = which == 0 ? pairOfOld : pairOfNew;
+        for (int line = 0; line < len(pairOf); line++) {
+            inlineStarts[which][line] = len(inlineRuns[which]);
+            if (pairOf[line] < 0) continue;
+            const DiffLinePair& pair = pairs[pairOf[line]];
+            Str oldText = original.lines[pair.original].text;
+            Str newText = modified.lines[pair.modified].text;
             if (oldText.len > maxLineLength || newText.len > maxLineLength)
-                break;
-            VecClear(perOld);
-            VecClear(perNew);
-            DiffChangedRuns(oldText, newText, unit, &perOld, &perNew);
-            for (int i = 0; i < len(perOld); i++)
-                VecAppend(inlineRuns[0], perOld[i]);
-            break;
-        }
-    }
-    inlineStarts[0][len(original.lines)] = len(inlineRuns[0]);
-    for (int line = 0; line < len(modified.lines); line++) {
-        inlineStarts[1][line] = len(inlineRuns[1]);
-        for (int p = 0; p < len(pairs); p++) {
-            if (pairs[p].modified != line || pairs[p].original < 0 ||
-                !pairs[p].changed)
                 continue;
-            Str oldText = original.lines[pairs[p].original].text;
-            Str newText = modified.lines[line].text;
-            if (oldText.len > maxLineLength || newText.len > maxLineLength)
-                break;
-            VecClear(perOld);
-            VecClear(perNew);
             DiffChangedRuns(oldText, newText, unit, &perOld, &perNew);
-            for (int i = 0; i < len(perNew); i++)
-                VecAppend(inlineRuns[1], perNew[i]);
-            break;
+            const Vec<DiffRun>& runs = which == 0 ? perOld : perNew;
+            for (int i = 0; i < len(runs); i++)
+                VecAppend(inlineRuns[which], runs[i]);
         }
+        inlineStarts[which][len(pairOf)] = len(inlineRuns[which]);
     }
-    inlineStarts[1][len(modified.lines)] = len(inlineRuns[1]);
-    (void)oldCount;
-    (void)newCount;
-    (void)oldAll;
-    (void)newAll;
-    (void)scratch;
+    VecReset(pairOfOld);
+    VecReset(pairOfNew);
+    VecReset(perOld);
+    VecReset(perNew);
 }
 
 int DiffFile::InlineCount(DiffSide side, int line) const {
@@ -85754,8 +85784,9 @@ static void MoveChange(DiffState* self, bool forward, Ctx* cx) {
         target = i > 0 ? self->changeRows[i - 1] : self->changeRows[n - 1];
     }
     self->scrollItem = target;
+
     VirtualListScrollToItemDeferred(&self->listScroll, target,
-                                    ScrollStrategy::Top);
+                                    ScrollStrategy::Start);
     if (cx) Notify(cx);
 }
 
@@ -95091,7 +95122,7 @@ El* PopupMenu::IntoEl() {
             rows->Child(Div(a)
                             ->W(kFill)
                             ->PadY(Rems(cx, 0.125f))
-                            ->Child(Div(a)->W(kFill)->H(2)->Bg(th.border)));
+                            ->Child(Div(a)->W(kFill)->H(1)->Bg(th.border)));
             continue;
         }
         bool lit =

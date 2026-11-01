@@ -6967,6 +6967,11 @@ struct InputWrapTree {
 
 struct WidthCache;
 
+struct WrapCharWidthSlot {
+    uint32_t c = 0;
+    float width = 0;
+};
+
 struct InputWrapMap {
     InputWrapTree tree;
 
@@ -6989,8 +6994,8 @@ struct InputWrapMap {
     float charFont = 0;
     uint16_t charWord = 0;
     float asciiWidths[128] = {};
-    uint32_t otherChars[256] = {};
-    float otherWidths[256] = {};
+    Vec<WrapCharWidthSlot> otherWidths;
+    int nOtherWidths = 0;
     float spaceWidth = 0;
 
     Vec<float> tokenWidths;
@@ -13571,6 +13576,8 @@ struct TabSize {
 float TabExpandedWidth(Str text, float stop,
                        float (*measure)(void* user, Str text), void* user);
 
+Str TextNoLineBreaks(Arena* a, Str text);
+
 bool TabExpandGlyphXs(Str text, float stop, float advance, float tabAdvance,
                       float* xs, int cap, int* nOut, float* width);
 
@@ -19931,7 +19938,8 @@ float VirtualListItemOrigin(const float* sizes, int count, int ix);
 enum class ScrollStrategy : uint8_t {
     Top,
     Center,
-    Bottom
+    Bottom,
+    Start
 };
 
 float VirtualListScrollTo(float origin, float size, float offset,
