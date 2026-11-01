@@ -538,10 +538,10 @@ static bool IsPageScriptUrl(Str url, Str name) {
     return str::EqI(url, name) || (str::EndsWithI(url, name) && url.s[len(url) - len(name) - 1] == '/');
 }
 
-// scripts the page MarkdownToHtmlPage makes loads: mermaid for ```mermaid
+// scripts the page MarkdownToHtmlPage makes loads: pele for ```mermaid
 // fences, microlighter and code-run.js for code blocks
 static Str PageScriptData(Str url) {
-    Str embedded[] = {StrL("mermaid.min.js"), StrL("microlighter.min.js")};
+    Str embedded[] = {StrL("pele.min.js"), StrL("microlighter.min.js")};
     for (Str name : embedded) {
         if (!IsPageScriptUrl(url, name)) {
             continue;

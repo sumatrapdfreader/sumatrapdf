@@ -294,7 +294,10 @@ code, pre { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospac
 pre { background: var(--code-bg); padding: 16px; overflow: auto; border-radius: 6px; }
 code { background: var(--code-bg); padding: .2em .4em; border-radius: 6px; }
 pre code { background: transparent; padding: 0; }
-pre.mermaid { background: transparent; text-align: center; overflow: visible; }
+pre.mermaid { background: transparent; text-align: center; overflow: visible;
+  --pele-bg: transparent; --pele-fg: var(--fg); --pele-muted: var(--muted); --pele-line: var(--fg);
+  --pele-surface: var(--code-bg); --pele-surface-alt: var(--border); --pele-border: var(--border);
+  --pele-accent: var(--link); }
 pre.mermaid svg { max-width: 100%%; height: auto; }
 pre[data-lang]::before { content: attr(data-lang); display: block; margin-bottom: 8px; color: var(--muted);
   font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif; }
@@ -331,8 +334,8 @@ struct CodeBlockCounts {
 };
 
 // cmark emits <pre><code class="language-mermaid">…</code></pre> for ```mermaid
-// fences. mermaid.js looks for <pre class="mermaid"> (or elements with that class).
-// Other languages get <pre data-lang="python">, which the page shows as a label.
+// fences. Pele mounts <pre class="mermaid">. Other languages get
+// <pre data-lang="python">, which the page shows as a label.
 static CodeBlockCounts RewriteCodeBlocks(str::Builder& out, Str body) {
     CodeBlockCounts counts;
     for (Str rest = body; rest;) {
@@ -394,40 +397,30 @@ static CodeBlockCounts RewriteCodeBlocks(str::Builder& out, Str body) {
     return counts;
 }
 
-// mermaid.min.js lives in IDR_EMBEDDED_PAK and mermaid-run.js is kMermaidRunJs,
-// both served from the markdown virtual host (GetDataForUrl). Not inline, so
-// kMarkdownCsp can allow just these two scripts. Must match kMdVirtualHost in
-// MarkdownModel.cpp.
+// pele.min.js (Pele 1.13.0, a Mermaid renderer) lives in IDR_EMBEDDED_PAK and
+// mermaid-run.js is kMermaidRunJs, both served from the markdown virtual host
+// (GetDataForUrl). Not inline, so kMarkdownCsp can allow just these two scripts.
+// Must match kMdVirtualHost in MarkdownModel.cpp.
 static const char kMermaidBootstrap[] = R"HTML(
-<script src="https://sumatrapdf.markdown/mermaid.min.js"></script>
+<script src="https://sumatrapdf.markdown/pele.min.js"></script>
 <script src="https://sumatrapdf.markdown/mermaid-run.js"></script>
 )HTML";
 
 static const char kMermaidRunJs[] = R"JS(
 (function () {
-  if (typeof mermaid === "undefined") return;
-  var bg = getComputedStyle(document.body).backgroundColor || "";
-  var dark = false;
-  var m = bg.match(/rgba?\(\s*(\d+)\s*,\s*(\d+)\s*,\s*(\d+)/i);
-  if (m) {
-    var r = +m[1], g = +m[2], b = +m[3];
-    dark = (0.2126 * r + 0.7152 * g + 0.0722 * b) < 140;
-  }
-  mermaid.initialize({
-    startOnLoad: false,
-    securityLevel: "strict",
-    theme: dark ? "dark" : "default"
+  if (typeof pele === "undefined" || !pele.mount) return;
+  document.querySelectorAll("pre.mermaid").forEach(function (el) {
+    pele.mount(el, el.textContent);
   });
-  mermaid.run({ querySelector: "pre.mermaid" }).catch(function () {});
 })();
 )JS";
 
 // Raw HTML in markdown is rendered (#6380), so the page must not run the
-// document's script (e.g. <img onerror=...>): only our mermaid and code scripts.
+// document's script (e.g. <img onerror=...>): only our pele and code scripts.
 static const char kMarkdownCsp[] =
     "<meta http-equiv=\"Content-Security-Policy\" content=\""
     "default-src 'self' data:; img-src * data:; media-src * data:; style-src 'self' 'unsafe-inline'; "
-    "script-src https://sumatrapdf.markdown/mermaid.min.js https://sumatrapdf.markdown/mermaid-run.js "
+    "script-src https://sumatrapdf.markdown/pele.min.js https://sumatrapdf.markdown/mermaid-run.js "
     "https://sumatrapdf.markdown/microlighter.min.js https://sumatrapdf.markdown/code-run.js; "
     "object-src 'none'; frame-src 'none'; base-uri 'none'; form-action 'none'\">";
 
@@ -1084,7 +1077,7 @@ bool MarkdownToc_UnitTestHtmlHeadings() {
 }
 
 // ```mermaid fences become <pre class="mermaid">; the page path also injects
-// mermaid.min.js when any were rewritten (#5927). Avoid MarkdownToHtmlPage here
+// pele.min.js when any were rewritten (#5927). Avoid MarkdownToHtmlPage here
 // — it needs a live theme for CSS (not set up in -unit-tests).
 bool MarkdownToc_UnitTestMermaid() {
     Str md = StrL("before\n\n```mermaid\nflowchart TD\n    A --> B\n```\n\nafter\n");
@@ -1112,6 +1105,8 @@ bool MarkdownToc_UnitTestMermaid() {
     ok = ok && (nPlain.mermaid == 0) && (nPlain.withLang == 1) && (nPlain.plain == 1) &&
          str::Contains(plain, StrL("<pre data-lang=\"js\"><code class=\"language-js\">")) &&
          str::Contains(plain, StrL("<pre><code>plain")) && !str::Contains(plain, StrL("pre class=\"mermaid\""));
+    Str run = MermaidRunJs();
+    ok = ok && str::Contains(run, StrL("pele.mount"));
     return ok;
 }
 

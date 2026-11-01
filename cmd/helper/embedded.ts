@@ -15,8 +15,8 @@ import type { Toolchain } from "./ng-toolchain";
 import { genPDFScripts } from "../gen-pdf-scripts";
 
 const root = resolve(import.meta.dir, "../..");
-// scripts from ext/ the app embeds as is (markdown rendering, mermaid, code highlighting)
-export const extScripts = ["marked.min.js", "mermaid.min.js", "microlighter.min.js"];
+// scripts from ext/ the app embeds as is (markdown rendering, pele, code highlighting)
+export const extScripts = ["marked.min.js", "pele.min.js", "microlighter.min.js"];
 
 export const fontPatterns: [string, string[]][] = [
   ["urw", ["Dingbats.cff", "NimbusMonoPS-*.cff", "NimbusRoman-*.cff", "NimbusSans-*.cff", "StandardSymbolsPS.cff"]],

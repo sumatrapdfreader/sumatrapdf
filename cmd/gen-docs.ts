@@ -323,7 +323,7 @@ export async function main(opts: GenDocsOptions = {}) {
   }
 
   // the build's prebuild (cmd/pack-embedded-prebuild.cmd) stages .work/docs
-  // with translations + marked/mermaid under out/<cfg>/embedded[-static]
+  // with translations + marked/pele under out/<cfg>/embedded[-static]
   // and packs IDR_EMBEDDED_PAK, so rebuild the exe to pick up the new manual
   console.log(
     `To preview on-demand rendering, open: file://${resolve(join(manualOutDir, "manual.shell.html"))} (needs a local server or in-app help)`,

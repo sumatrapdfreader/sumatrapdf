@@ -29,7 +29,7 @@
 #define IDC_STATIC (-1)
 
 // LzSA archive with everything embedded in the exe: translations.txt,
-// marked.min.js, mermaid.min.js, fonts\* (mupdf's built-in fonts), in-app
+// marked.min.js, pele.min.js, fonts\* (mupdf's built-in fonts), in-app
 // manual and (non-static builds only)
 // the installer payload: libsumatrapdf.dll, PdfFilter.dll, PdfPreview.dll,
 // sumatrapdf-tool.exe. Packed by cmd/pack-embedded-prebuild.cmd.

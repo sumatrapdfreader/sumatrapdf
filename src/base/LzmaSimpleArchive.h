@@ -13,7 +13,7 @@ struct FileInfo {
     const u8* compressedData;
 };
 
-// translations + marked + mermaid + in-app manual assets share one LzSA
+// translations + marked + pele + in-app manual assets share one LzSA
 constexpr int kMaxLzmaArchiveFiles = 256;
 
 struct SimpleArchive {

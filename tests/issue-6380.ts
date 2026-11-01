@@ -4,7 +4,7 @@
 //
 // The page's resource requests show what happened: a span's background image
 // loads only if raw HTML and its style= survived, an <img onerror> handler would
-// request pwned.png, and a mermaid fence requests mermaid.min.js and mermaid-run.js.
+// request pwned.png, and a mermaid fence requests pele.min.js and mermaid-run.js.
 import { mkdirSync, rmSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 import { ControlClient, ControlCommand, withControlledSumatra } from "./control";
@@ -62,7 +62,7 @@ export async function testit(): Promise<void> {
   await withControlledSumatra(
     EXE,
     async (client) => {
-      await waitServed(client, ["styled.png", "mermaid.min.js", "mermaid-run.js"]);
+      await waitServed(client, ["styled.png", "pele.min.js", "mermaid-run.js"]);
       // give a blocked handler time to show itself
       await sleep(1000);
       const s = await served(client);
