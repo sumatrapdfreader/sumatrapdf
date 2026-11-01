@@ -35,6 +35,8 @@ import { killAndWait, launchControlled, sendCommand, sendCommandSync } from "./w
 type Rect = { x: number; y: number; dx: number; dy: number };
 type View = "bookmarks" | "thumbnails" | "favorites";
 const views: View[] = ["bookmarks", "thumbnails", "favorites"];
+// orig's fourth view icon, Signatures, is off: the test document isn't signed
+const NO_SIG = USE_NG ? "" : "0";
 type Panel = {
   hwnd: number;
   visible: boolean;
@@ -241,7 +243,7 @@ export async function testit(): Promise<void> {
     sendCommand(frame, cmdId("CmdToggleThumbnails"));
     await want("Thumbnails didn't show in the bottom panel", "bookmarks/thumbnails");
     let s = await sidebar(client);
-    if (s.bottom.enabled !== "111" || s.bottom.selected !== "010") {
+    if (s.bottom.enabled !== `111${NO_SIG}` || s.bottom.selected !== `010${NO_SIG}`) {
       throw new Error(`sidebar-thumbnails: want all view icons, Thumbnails selected: ${s.raw}`);
     }
     sendCommand(frame, cmdId("CmdToggleBookmarks"));
@@ -251,7 +253,7 @@ export async function testit(): Promise<void> {
     sendCommand(frame, cmdId("CmdFavoriteToggle"));
     await want("Favorites didn't show in the middle panel", "bookmarks/favorites/thumbnails");
     s = await sidebar(client);
-    if (s.middle!.selected !== "001") {
+    if (s.middle!.selected !== `001${NO_SIG}`) {
       throw new Error(`sidebar-thumbnails: want Favorites selected in the middle panel: ${s.raw}`);
     }
     // the middle panel's icons swap views like the others
@@ -278,7 +280,7 @@ export async function testit(): Promise<void> {
       await waitFor("clicking Thumbnails didn't repaint the sidebar", async () => frameOnScreen(await sidebar(client)));
     }
     s = await sidebar(client);
-    if (s.hwnd !== s.top.hwnd || s.top.selected !== "010" || s.bottom.selected !== "100") {
+    if (s.hwnd !== s.top.hwnd || s.top.selected !== `010${NO_SIG}` || s.bottom.selected !== `100${NO_SIG}`) {
       throw new Error(`sidebar-thumbnails: after the swap: ${s.raw}`);
     }
     await clickIcon(async () => (await sidebar(client)).bottom, "thumbnails");
