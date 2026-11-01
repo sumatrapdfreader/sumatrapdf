@@ -1157,8 +1157,8 @@ void ShowSearchResult(MainWindow* win, Vec<TextSel>* result, bool goToPage) {
     }
 
     DisplayModel* dm = win->AsFixed();
-    if (goToPage || !dm->PageShown((*result)[0].pageNo) ||
-        (dm->GetZoomVirtual() == kZoomFitPage || dm->GetZoomVirtual() == kZoomFitContent)) {
+    float zoom = dm->GetZoomVirtual();
+    if (goToPage || !dm->PageShown((*result)[0].pageNo) || zoom == kZoomFitPage || zoom == kZoomFitContent) {
         // nor must dwelling on a match turn it into a history entry
         bool suppress = dm->stableNavPoint.suppress;
         dm->stableNavPoint.suppress = true;
@@ -1981,8 +1981,8 @@ void FindThread(FindThreadData* ftd) {
     Vec<TextSel>* rect;
     textSearch->progressCb = MkFunc1<FindThreadData, ProgressUpdateData*>(UpdateSearchProgress, ftd);
     textSearch->SetDirection(ftd->direction);
-    if (ftd->wasModified || !ctrl->ValidPageNo(textSearch->GetCurrentPageNo()) ||
-        !(bool)dm->GetPageInfo(textSearch->GetCurrentPageNo())->visibleRatio) {
+    int currPageNo = textSearch->GetCurrentPageNo();
+    if (ftd->wasModified || !ctrl->ValidPageNo(currPageNo) || !(bool)dm->GetPageInfo(currPageNo)->visibleRatio) {
         rect = textSearch->FindFirst(ctrl->CurrentPageNo(), ftd->text);
     } else {
         rect = textSearch->FindNext();

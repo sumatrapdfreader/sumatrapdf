@@ -1008,8 +1008,9 @@ HRESULT STDMETHODCALLTYPE SumatraUIAutomationTextRange::GetChildren(SAFEARRAY** 
 
     SumatraUIAutomationPageProvider* it = document->GetFirstPage();
     while (it) {
-        if (it->GetPageNum() >= startPage && it->GetPageNum() <= endPage) {
-            LONG index = it->GetPageNum() - startPage;
+        int pageNum = it->GetPageNum();
+        if (pageNum >= startPage && pageNum <= endPage) {
+            LONG index = pageNum - startPage;
 
             HRESULT hr = SafeArrayPutElement(psa, &index, it);
             ReportIf(FAILED(hr));

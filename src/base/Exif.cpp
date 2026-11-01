@@ -663,9 +663,10 @@ void ParseMakerNote(ExifParser& parser, int dataOff, u32 count, int depth) {
     int mnBase = dataOff;
     int mnOff = 8;
     int makerNoteEndian = 0;
-    if (count > 10 && (r.UInt8(dataOff) == 'I' || r.UInt8(dataOff) == 'M')) {
+    int firstByte = count > 10 ? r.UInt8(dataOff) : 0;
+    if (firstByte == 'I' || firstByte == 'M') {
         mnOff = 0;
-        makerNoteEndian = r.UInt8(dataOff);
+        makerNoteEndian = firstByte;
     } else if (count > 10 && r.UInt8(dataOff + 6) == 'I' && r.UInt8(dataOff + 7) == 'I') {
         mnOff = 8;
         makerNoteEndian = 'I';

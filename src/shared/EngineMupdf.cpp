@@ -1363,6 +1363,11 @@ static int RuneAt(Utf8PageText pageText, int off) {
     return pageText.codepoints[off];
 }
 
+// not isdigit(): a code point above 255 is out of its range
+static bool RuneIsDigit(int c) {
+    return c >= '0' && c <= '9';
+}
+
 static Str SliceByRuneOff(Utf8PageText pageText, int startOff, int endOff) {
     startOff = limitValue(startOff, 0, pageText.len);
     endOff = limitValue(endOff, startOff, pageText.len);
@@ -1462,6 +1467,10 @@ static bool EndsURL(int c) {
     // https://github.com/sumatrapdfreader/sumatrapdf/issues/1313
     // 0xff0c is ","
     return c == 0xff0c;
+}
+
+static bool EndsDoi(int c) {
+    return EndsURL(c) || c == '"' || c == '<' || c == '>';
 }
 
 // Trim trailing punctuation that likely belongs to surrounding sentence text, not
@@ -1590,7 +1599,7 @@ static int LinkifyEmailAddressOff(int startOff, Utf8PageText pageText) {
 // Detect a printed DOI ("10." + 4-9 digit registrant + "/" + non-empty suffix),
 // e.g. "10.1109/WICSA.2015.29". `start` must point at the leading '1'. Returns
 // the end ptr (exclusive) past the suffix, or nullptr if `start` is not a DOI.
-// The suffix runs to the first EndsURL() terminator (whitespace, fullwidth
+// The suffix runs to the first EndsDoi() terminator (whitespace, fullwidth
 // comma) or quote/angle bracket; trailing sentence punctuation is trimmed.
 static int LinkifyFindDoiEndOff(int startOff, Utf8PageText pageText) {
     if (!StartsWithAscii(pageText, startOff, "10.")) {
@@ -1599,8 +1608,7 @@ static int LinkifyFindDoiEndOff(int startOff, Utf8PageText pageText) {
     int p = startOff + 3;
     int regStart = p;
     int pageEnd = pageText.len;
-    // not isdigit(): a code point above 255 is out of its range
-    while (p < pageEnd && RuneAt(pageText, p) >= '0' && RuneAt(pageText, p) <= '9') {
+    while (p < pageEnd && RuneIsDigit(RuneAt(pageText, p))) {
         p++;
     }
     int regLen = p - regStart;
@@ -1609,8 +1617,7 @@ static int LinkifyFindDoiEndOff(int startOff, Utf8PageText pageText) {
     }
     p++; // skip '/'
     int suffixStart = p;
-    while (p < pageEnd && !EndsURL(RuneAt(pageText, p)) && RuneAt(pageText, p) != '"' && RuneAt(pageText, p) != '<' &&
-           RuneAt(pageText, p) != '>') {
+    while (p < pageEnd && !EndsDoi(RuneAt(pageText, p))) {
         p++;
     }
     if (p == suffixStart) {
@@ -1635,6 +1642,7 @@ static LinkRectList* LinkifyText(Utf8PageText pageText, Rect* coords) {
         Str protocol;
 
         int startChar = RuneAt(pageText, startOff);
+        int prevChar = startOff > 0 ? RuneAt(pageText, startOff - 1) : ' ';
         if ('@' == startChar) {
             // potential email address without mailto:
             int emailOff = LinkifyFindEmailOff(pageText, startOff);
@@ -1643,17 +1651,14 @@ static LinkRectList* LinkifyText(Utf8PageText pageText, Rect* coords) {
             if (endOff >= 0) {
                 startOff = emailOff;
             }
-        } else if (startOff > 0 &&
-                   (RuneAt(pageText, startOff - 1) == '/' || IsAlphaNumRune(RuneAt(pageText, startOff - 1)))) {
+        } else if (prevChar == '/' || IsAlphaNumRune(prevChar)) {
             // hyperlinks must not be preceded by a slash (indicates a different protocol)
             // or an alphanumeric character (indicates part of a different protocol)
         } else if ('h' == startChar && (StartsWithAscii(pageText, startOff, "http://") ||
                                         StartsWithAscii(pageText, startOff, "https://"))) {
-            int prevChar = startOff > 0 ? RuneAt(pageText, startOff - 1) : ' ';
             endOff = LinkifyFindEndOff(startOff, prevChar, pageText);
             multiline = LinkifyCheckMultiline(pageText, startOff, endOff, coords);
         } else if ('w' == startChar && StartsWithAscii(pageText, startOff, "www.")) {
-            int prevChar = startOff > 0 ? RuneAt(pageText, startOff - 1) : ' ';
             endOff = LinkifyFindEndOff(startOff, prevChar, pageText);
             multiline = LinkifyCheckMultiline(pageText, startOff, endOff, coords);
             protocol = StrL("http://");

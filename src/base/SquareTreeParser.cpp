@@ -60,6 +60,11 @@ static char Peek(Str data, int i) {
     return data.s[i];
 }
 
+static bool IsLineEnd(Str data, int off) {
+    char c = Peek(data, off);
+    return !c || c == '\n';
+}
+
 static int SkipWs(Str data, int off, bool stopAtLineEnd = false) {
     for (;;) {
         char c = Peek(data, off);
@@ -83,7 +88,7 @@ static int SkipWsAndComments(Str data, int off) {
         off = SkipWs(data, off);
         char c = Peek(data, off);
         if (c == '#' || c == ';') {
-            for (; Peek(data, off) && Peek(data, off) != '\n'; off++) {
+            for (; !IsLineEnd(data, off); off++) {
                 ;
             }
         } else {
@@ -243,30 +248,31 @@ static LineScan ScanLine(Str data, int off) {
         }
         off++;
     }
-    if (!Peek(data, off) || Peek(data, off) == '\n') {
+    if (IsLineEnd(data, off)) {
         // use first whitespace as a fallback separator
         for (off = line.keyOff; Peek(data, off) && !str::IsWs(Peek(data, off)); off++) {
             ;
         }
     }
     line.sepOff = off;
-    if (Peek(data, off) && Peek(data, off) != '\n') {
+    if (!IsLineEnd(data, off)) {
         // skip to the first non-whitespace character on the same line (value)
         off = SkipWs(data, off + 1, true);
     }
     line.valOff = off;
-    for (; Peek(data, off) && Peek(data, off) != '\n'; off++) {
+    for (; !IsLineEnd(data, off); off++) {
         ;
     }
     line.lineEnd = off;
 
+    char sep = Peek(data, line.sepOff);
     if (IsNodeOpenLine(data, line.sepOff, line.valOff, line.lineEnd)) {
         line.kind = LineKind::NodeOpen;
     } else if (Peek(data, line.keyOff) == ']') {
         line.kind = LineKind::CloseBracket;
     } else if (IsIniSectionLine(data, line.keyOff, line.valOff, line.lineEnd)) {
         line.kind = LineKind::IniSection;
-    } else if ((line.lineEnd < data.len && Peek(data, line.sepOff) == '[') || Peek(data, line.sepOff) == ']') {
+    } else if ((line.lineEnd < data.len && sep == '[') || sep == ']') {
         line.kind = LineKind::Invalid;
     } else {
         line.kind = LineKind::KeyValue;
