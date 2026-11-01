@@ -356,7 +356,7 @@ const CommandInfo gCommands[] = {
     {CmdFindHistory, "CmdFindHistory\0", StrL("Find History")},
     {CmdSumatraOnline, "CmdSumatraOnline\0", StrL("Sumatra Online...")},
     {CmdDebugSaveSettings, "CmdDebugSaveSettings\0", StrL("Debug: Save Settings")},
-    {CmdNewHomeTab, "CmdNewHomeTab\0", StrL("New Home Tab")},
+    {CmdNewTab, "CmdNewTab\0", StrL("New Tab")},
 };
 const int gCommandsCount = dimofi(gCommands);
 

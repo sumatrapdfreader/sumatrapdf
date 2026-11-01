@@ -1364,6 +1364,7 @@ void HomePageFocusSearch(MainWindow* win) {
     if (win->homeSearch) {
         win->homeSearch->SetIsVisible(true);
         EditSetFocus(win->homeSearch);
+        EditSelectAll(win->homeSearch);
     }
 }
 

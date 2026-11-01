@@ -323,6 +323,7 @@ struct HomeView;
 struct HomePageUI {
     gp::Entity<HomeView> view;
     gpui::InputState* search = nullptr;
+    bool focusSearchOnBuild = false;
     Str searchQuery;
     float scrollY = 0;
     // scrollY the last laid-out frame used, so a bottom scroll can measure
@@ -1681,6 +1682,10 @@ gp::El* HomePageBuild(MainWindow* win, gp::Ctx* cx) {
             gp::InputSetValue(h->search, ToGpui(h->searchQuery));
         }
     }
+    if (h->focusSearchOnBuild) {
+        h->focusSearchOnBuild = false;
+        HomePageFocusSearch(win);
+    }
     TempStr cue = fmt(Tr("Search %d files (Ctrl + F)").s, CountHomePageFiles());
     gp::InputSetPlaceholder(h->search, ToGpui(cue));
     h->search->onChange = gp::ListenTo(Ui(win)->view, &HomeView::OnSearch);
@@ -2027,7 +2032,12 @@ Str HomePageSelectedFilePathTemp(MainWindow* win) {
 
 void HomePageFocusSearch(MainWindow* win) {
     HomePageUI* h = Ui(win);
-    if (!h->search || !win->gpuiWin) {
+    if (!h->search) {
+        // not built yet: HomePageBuild comes back here
+        h->focusSearchOnBuild = true;
+        return;
+    }
+    if (!win->gpuiWin) {
         return;
     }
     gp::InputFocus(h->search, win->gpuiWin->app, win->gpuiWin);

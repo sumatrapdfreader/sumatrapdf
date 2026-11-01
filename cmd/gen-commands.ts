@@ -357,7 +357,7 @@ const commandsRaw = [
     "CmdFindHistory", "Find History",
     "CmdSumatraOnline", "Sumatra Online...",
     "CmdDebugSaveSettings", "Debug: Save Settings",
-    "CmdNewHomeTab", "New Home Tab",
+    "CmdNewTab", "New Tab",
 ];
 
 // removed slots are dropped: nothing outside the generators should see them

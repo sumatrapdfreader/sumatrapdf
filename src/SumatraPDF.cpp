@@ -3275,6 +3275,9 @@ static void ShowLoadErrorInTab(MainWindow* win, LoadArgs* args, Str path) {
             tab = nullptr;
         }
     }
+    if (!tab && !args->forceNewWindow) {
+        tab = HomeTabToReuse(win);
+    }
     bool isNewTab = false;
     if (!tab && win->tabsCtrl && !gPluginMode) {
         // AddTabToWindow changes the selected index without sending the tab
@@ -3355,6 +3358,10 @@ MainWindow* LoadDocumentFinish(LoadArgs* args) {
 
     bool openNewTab = SettingsUseTabs() && !args->forceReuse;
     ReportIf(openNewTab && args->forceReuse);
+    if (!targetTab && openNewTab) {
+        targetTab = HomeTabToReuse(win);
+        args->targetTab = targetTab;
+    }
 
     // Clear any tip from the previous document/tab (LoadModelIntoTab also does
     // this on tab switch; cover the first open / about-page case here too).
@@ -4011,14 +4018,18 @@ void StartLoadDocument(LoadArgs* argsIn) {
             SaveCurrentWindowTab(win);
             CloseDocumentInCurrentTab(win, true, false);
         }
-        WindowTab* tab = new WindowTab(win);
+        WindowTab* homeTab = HomeTabToReuse(win);
+        WindowTab* tab = homeTab ? homeTab : new WindowTab(win);
         tab->SetFilePath(path);
         tab->SetDisplayName(argsIn->DisplayName());
         tab->loadState = WindowTab::LoadState::Loading;
         tab->skipHistory = argsIn->skipHistory;
-        argsIn->targetTab = AddTabToWindow(win, tab);
+        argsIn->targetTab = homeTab ? homeTab : AddTabToWindow(win, tab);
         win->currentTabTemp = argsIn->targetTab;
         LoadModelIntoTab(argsIn->targetTab);
+        if (homeTab) {
+            TabsOnChangedDoc(win);
+        }
     } else if (argsIn->forceReuse && win->CurrentTab() && !win->IsCurrentTabAbout()) {
         // Reuse current tab (next/prev in folder, navigate dialog, etc.): drop the
         // old document immediately so the canvas paints the standard "Loading ..."
@@ -4156,18 +4167,26 @@ void StartLoadDocuments(StrVec& paths, MainWindow* win, bool skipHistory) {
         SaveCurrentWindowTab(win);
     }
 
+    WindowTab* homeTab = HomeTabToReuse(win);
     Vec<WindowTab*> tabs;
     for (int i = 0; i < len(pathsToLoad); i++) {
-        WindowTab* tab = new WindowTab(win);
+        // the first file takes over an extra Home tab, the others get tabs
+        WindowTab* tab = homeTab;
+        homeTab = nullptr;
+        bool isNewTab = !tab;
+        if (isNewTab) {
+            tab = new WindowTab(win);
+        }
         tab->SetFilePath(pathsToLoad[i]);
         tab->loadState = WindowTab::LoadState::Loading;
         tab->skipHistory = skipHistory;
         bool deferUpdate = i != len(pathsToLoad) - 1;
-        VecAppend(tabs, AddTabToWindow(win, tab, deferUpdate));
+        VecAppend(tabs, isNewTab ? AddTabToWindow(win, tab, deferUpdate) : tab);
     }
     WindowTab* visibleTab = tabs[0];
     win->tabsCtrl->SetSelected(win->GetTabIdx(visibleTab));
     LoadModelIntoTab(visibleTab);
+    TabsOnChangedDoc(win);
 
     for (int i = 0; i < len(pathsToLoad); i++) {
         LoadArgs args(pathsToLoad[i], win);
@@ -11812,7 +11831,7 @@ static LRESULT FrameOnCommand(MainWindow* win, HWND hwnd, UINT msg, WPARAM wp, L
             GoToHomeTab(win);
             break;
 
-        case CmdNewHomeTab:
+        case CmdNewTab:
             AddExtraHomeTab(win);
             break;
 

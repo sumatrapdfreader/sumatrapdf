@@ -115,6 +115,13 @@ WindowTab* FindHomeTab(MainWindow* win) {
     return nullptr;
 }
 
+// the current tab if a file should open in it instead of in a new tab: an extra
+// Home tab is replaced, like a browser's new tab. The pinned Home tab stays
+WindowTab* HomeTabToReuse(MainWindow* win) {
+    WindowTab* tab = win->CurrentTab();
+    return (tab && tab->IsAboutTab() && tab->isExtraHome) ? tab : nullptr;
+}
+
 // every tab "close all" takes: all but the pinned Home tab
 void CollectClosableTabs(MainWindow* win, Vec<WindowTab*>& out) {
     for (WindowTab* tab : win->Tabs()) {

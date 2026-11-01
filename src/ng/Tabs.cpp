@@ -48,6 +48,7 @@
 #include "SessionState.h"
 #include "AIChatCommon.h"
 #include "AIChatPanel.h"
+#include "HomePage.h"
 #include "Tabs.h"
 #include "MenuDefs.h"
 #include "TabsCommon.h"
@@ -237,6 +238,7 @@ void GoToHomeTab(MainWindow* win) {
     WindowTab* homeTab = FindHomeTab(win);
     if (homeTab) {
         TabsSelect(win, win->GetTabIdx(homeTab));
+        HomePageFocusSearch(win);
         return;
     }
 
@@ -245,6 +247,7 @@ void GoToHomeTab(MainWindow* win) {
     VecInsertAt(win->tabs, 0, homeTab);
     TabsUIOnTabsChanged(win);
     LoadModelIntoTab(homeTab);
+    HomePageFocusSearch(win);
 }
 
 // the "+" button: another Home tab after the last one. It stays out of the
@@ -253,7 +256,9 @@ void AddExtraHomeTab(MainWindow* win) {
     if (!win || !SettingsUseTabs()) {
         return;
     }
-    if (win->TabCount() == 0) {
+    // the first Home tab is pinned, unless NoHomeTab: a file opened from it must
+    // not leave a Home tab behind
+    if (win->TabCount() == 0 && !gSettings->noHomeTab) {
         GoToHomeTab(win);
         return;
     }
@@ -262,6 +267,7 @@ void AddExtraHomeTab(MainWindow* win) {
     VecAppend(win->tabs, homeTab);
     TabsUIOnTabsChanged(win);
     LoadModelIntoTab(homeTab);
+    HomePageFocusSearch(win);
 }
 
 void RemoveTab(WindowTab* tab) {

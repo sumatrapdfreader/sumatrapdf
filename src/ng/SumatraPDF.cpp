@@ -1541,6 +1541,9 @@ static void ShowLoadErrorTab(MainWindow* win, Str fullPath, LoadReuse reuse) {
             tab = nullptr;
         }
     }
+    if (!tab) {
+        tab = HomeTabToReuse(win);
+    }
     if (tab) {
         HideFindBar(win);
         HideSelectionToolbar(win);
@@ -1648,7 +1651,8 @@ static MainWindow* LoadDocumentFinish(MainWindow* win, Str fullPath, DocControll
     // next / prev file in folder need: the tab keeps its identity, its
     // controller is swapped
     WindowTab* reuseTab = win->CurrentTab();
-    if (reuse == LoadReuse::CurrentTab && reuseTab && !reuseTab->IsNonDocumentTab()) {
+    bool replaceDoc = reuse == LoadReuse::CurrentTab && reuseTab && !reuseTab->IsNonDocumentTab();
+    if (replaceDoc || HomeTabToReuse(win)) {
         HideFindBar(win);
         HideSelectionToolbar(win);
         // orig's CloseDocumentInCurrentTab: the document the session reads is
@@ -6105,7 +6109,7 @@ void ExecuteCmd(MainWindow* win, int cmdId) {
             GoToHomeTab(win);
             break;
 
-        case CmdNewHomeTab:
+        case CmdNewTab:
             AddExtraHomeTab(win);
             break;
 

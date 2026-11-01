@@ -29,6 +29,7 @@ enum class HomeTabKind {
 };
 WindowTab* NewHomeTab(MainWindow*, HomeTabKind);
 WindowTab* FindHomeTab(MainWindow*);
+WindowTab* HomeTabToReuse(MainWindow*);
 void CollectClosableTabs(MainWindow*, Vec<WindowTab*>&);
 struct AppCommandCtx;
 void SetTabCloseFlags(AppCommandCtx&);

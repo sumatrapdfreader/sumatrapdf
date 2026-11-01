@@ -2,11 +2,21 @@
 // - the first Home tab is only as wide as its label plus margins
 // - a "+" after the tabs is always there and takes its space from them
 // - "+" adds a Home tab at the end, which can be closed and isn't restored
+// - that tab focuses its filter, and a file opened from it replaces it
 
 import { copyFileSync, writeFileSync } from "node:fs";
 import { ControlCommand, type ControlClient, type VirtCtrlInfo } from "./control.ts";
 import { cmdId, makeTextPdf, runStandalone, tmpPath, writeAppdata } from "./util.ts";
-import { packCoords, sendMessage, sleep, WM_LBUTTONDOWN, WM_LBUTTONUP, WM_MOUSEMOVE, MK_LBUTTON } from "./winapi.ts";
+import {
+  packCoords,
+  sendCopyDataW,
+  sendMessage,
+  sleep,
+  WM_LBUTTONDOWN,
+  WM_LBUTTONUP,
+  WM_MOUSEMOVE,
+  MK_LBUTTON,
+} from "./winapi.ts";
 import { killAndWait, launchControlled, sendCommandSync } from "./win-automation.ts";
 
 const TAB_KIND = "tabCtrl";
@@ -15,6 +25,7 @@ const BAR_KIND = "tabs";
 const HOME_TAB_MAX_DIVISOR = 2;
 const TABS_READY_MS = 10_000;
 const CROWDED_DOCS = 14;
+const DDE_COPYDATA_ID = 0x44646557;
 
 type Bar = { tabs: VirtCtrlInfo[]; plus: VirtCtrlInfo | undefined; bar: VirtCtrlInfo | undefined };
 
@@ -62,8 +73,96 @@ function clickPlus(plus: VirtCtrlInfo): void {
   sendMessage(plus.hwnd, WM_LBUTTONUP, 0, pt);
 }
 
+// the way a file arrives from outside: LoadDocument with no reuse requested
+function openFile(frame: number, path: string): void {
+  check(sendCopyDataW(frame, DDE_COPYDATA_ID, `[Open("${path}", 0, 1, 0)]`), "could not send Open");
+}
+
+async function expectSearchFocus(client: ControlClient): Promise<void> {
+  const deadline = Date.now() + TABS_READY_MS;
+  for (;;) {
+    if ((await client.homeSelection()).searchFocus) {
+      return;
+    }
+    check(Date.now() < deadline, "the Home filter should have focus");
+    await sleep(50);
+  }
+}
+
+async function waitForDocument(client: ControlClient): Promise<void> {
+  const deadline = Date.now() + TABS_READY_MS;
+  while (!(await onDocument(client))) {
+    check(Date.now() < deadline, "the document should be the current tab");
+    await sleep(50);
+  }
+  await client.waitForRenderIdle();
+}
+
+async function testOpenInHomeTab(paths: string[], appdata: string): Promise<void> {
+  const { proc, client, frame } = await launchControlled(["-appdata", appdata, paths[0]!]);
+  try {
+    await client.waitForRenderIdle();
+    const homeDx = (await waitForTabs(client, 2)).tabs[0]!.rect.dx;
+
+    sendCommandSync(frame, cmdId("CmdNewTab"));
+    await waitForTabs(client, 3);
+    await expectSearchFocus(client);
+
+    // the extra Home tab turns into the document
+    openFile(frame, paths[1]!);
+    await waitForDocument(client);
+    await waitForTabs(client, 3);
+
+    // the pinned Home tab stays: the file gets a tab of its own
+    sendCommandSync(frame, cmdId("CmdGoToHomePage"));
+    await expectSearchFocus(client);
+    openFile(frame, paths[2]!);
+    await waitForDocument(client);
+    const b = await waitForTabs(client, 4);
+    check(b.tabs[0]!.rect.dx === homeDx, "the pinned Home should have stayed");
+  } finally {
+    await killAndWait(proc);
+  }
+}
+
+// NoHomeTab: "+" still works, and opening a file leaves no Home tab behind
+async function testNoHomeTab(paths: string[], appdata: string): Promise<void> {
+  const withDoc = await launchControlled(["-appdata", appdata, paths[0]!]);
+  try {
+    await withDoc.client.waitForRenderIdle();
+    const docDx = (await waitForTabs(withDoc.client, 1)).tabs[0]!.rect.dx;
+    sendCommandSync(withDoc.frame, cmdId("CmdNewTab"));
+    await waitForTabs(withDoc.client, 2);
+    await expectSearchFocus(withDoc.client);
+    openFile(withDoc.frame, paths[1]!);
+    await waitForDocument(withDoc.client);
+    const b = await waitForTabs(withDoc.client, 2);
+    check(b.tabs[0]!.rect.dx === b.tabs[1]!.rect.dx, "neither tab should be a compact Home");
+    check(b.tabs[0]!.rect.dx <= docDx, "tabs shouldn't grow");
+  } finally {
+    await killAndWait(withDoc.proc);
+  }
+
+  // an empty window: the Home tab it gets is replaced too
+  const empty = await launchControlled(["-appdata", appdata]);
+  try {
+    const deadline = Date.now() + TABS_READY_MS;
+    while (!(await empty.client.homeSelection()).ready) {
+      check(Date.now() < deadline, "the Home page should have appeared");
+      await sleep(50);
+    }
+    sendCommandSync(empty.frame, cmdId("CmdNewTab"));
+    await expectSearchFocus(empty.client);
+    openFile(empty.frame, paths[0]!);
+    await waitForDocument(empty.client);
+    await waitForTabs(empty.client, 1);
+  } finally {
+    await killAndWait(empty.proc);
+  }
+}
+
 async function expectPinnedHomeKept(client: ControlClient, frame: number, homeDx: number): Promise<void> {
-  sendCommandSync(frame, cmdId("CmdNewHomeTab"));
+  sendCommandSync(frame, cmdId("CmdNewTab"));
   const b = await waitForTabs(client, 2);
   check(b.tabs[0]!.rect.dx === homeDx, "the pinned Home should have stayed");
 }
@@ -106,7 +205,7 @@ async function testLayoutAndPlus(pdf: string, appdata: string): Promise<void> {
     await expectPinnedHomeKept(client, frame, home!.rect.dx);
 
     // "close all" takes extra Home tabs along and keeps the pinned one
-    sendCommandSync(frame, cmdId("CmdNewHomeTab"));
+    sendCommandSync(frame, cmdId("CmdNewTab"));
     await waitForTabs(client, 3);
     sendCommandSync(frame, cmdId("CmdCloseAllTabs"));
     await expectPinnedHomeKept(client, frame, home!.rect.dx);
@@ -134,7 +233,7 @@ async function testNotRestored(pdf: string, appdata: string): Promise<void> {
   const first = await launchControlled(["-appdata", appdata, pdf], { saveSettings: true });
   try {
     await first.client.waitForRenderIdle();
-    sendCommandSync(first.frame, cmdId("CmdNewHomeTab"));
+    sendCommandSync(first.frame, cmdId("CmdNewTab"));
     await waitForTabs(first.client, 3);
     await first.client.quit();
   } finally {
@@ -163,6 +262,8 @@ export async function testit(): Promise<void> {
   const settings = "RestoreSession = false\nCheckForUpdates = false\n";
   await testLayoutAndPlus(pdf, writeAppdata("issue-6464-appdata", settings));
   await testCrowded(paths, writeAppdata("issue-6464-crowded", settings));
+  await testOpenInHomeTab(paths, writeAppdata("issue-6464-open", settings));
+  await testNoHomeTab(paths, writeAppdata("issue-6464-nohome", settings + "NoHomeTab = true\n"));
   // without -for-testing, ReuseInstance would hand the launch to any running instance
   const sessionSettings = "RestoreSession = true\nReuseInstance = false\nCheckForUpdates = false\n";
   await testNotRestored(pdf, writeAppdata("issue-6464-session", sessionSettings));

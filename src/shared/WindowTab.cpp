@@ -39,6 +39,7 @@ WindowTab::WindowTab(MainWindow* win) {
 
 void WindowTab::SetFilePath(Str path) {
     type = Type::Document;
+    isExtraHome = false;
     bool changed = filePath && !path::IsSame(filePath, path);
     if (changed) {
         DeleteOpenCacheCopy(filePath);
