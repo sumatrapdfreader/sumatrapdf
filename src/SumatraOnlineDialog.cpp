@@ -39,6 +39,8 @@ struct OnlineVerifyResult {
     DWORD error = 0;
     Str token;
     Str message;
+    // set only when OnlineURLAllowed rejected the URL before WinHttpOpen
+    bool urlRejected = false;
     ~OnlineVerifyResult() {
         str::Free(token);
         str::Free(message);
@@ -55,25 +57,20 @@ struct OnlineVerifyReq {
     }
 };
 
-static bool IsOnlineKeyChar(char c) {
-    bool digit = c >= '0' && c <= '9';
-    bool upper = c >= 'A' && c <= 'Z';
-    bool lower = c >= 'a' && c <= 'z';
-    return digit || upper || lower;
-}
-
 // ^so_[0-9A-Za-z]{10}_[0-9A-Za-z]{32}$
 static bool IsOnlineApiKey(Str s) {
     if (len(s) != kOnlineApiKeyLen || !s.s || s.s[0] != 's' || s.s[1] != 'o' || s.s[2] != '_' || s.s[13] != '_') {
         return false;
     }
     for (int i = 3; i < 13; i++) {
-        if (!IsOnlineKeyChar(s.s[i])) {
+        char c = s.s[i];
+        if (!((c >= '0' && c <= '9') || (c >= 'A' && c <= 'Z') || (c >= 'a' && c <= 'z'))) {
             return false;
         }
     }
     for (int i = 14; i < kOnlineApiKeyLen; i++) {
-        if (!IsOnlineKeyChar(s.s[i])) {
+        char c = s.s[i];
+        if (!((c >= '0' && c <= '9') || (c >= 'A' && c <= 'Z') || (c >= 'a' && c <= 'z'))) {
             return false;
         }
     }
@@ -206,7 +203,7 @@ void SumatraOnlineWnd::FinishVerify(OnlineVerifyResult* res) {
         SetStatus(fmt("HTTP %d", (int)res->status));
         return;
     }
-    if (res->error == ERROR_INVALID_PARAMETER) {
+    if (res->urlRejected) {
         SetStatus(Tr("The server address is not allowed."));
         return;
     }
@@ -237,7 +234,9 @@ static void VerifyOnlineKeyThread(OnlineVerifyReq* req) {
     res->status = rsp.httpStatusCode;
     res->error = rsp.error;
     res->token = str::Dup(req->token);
-    if (rsp.httpStatusCode == (DWORD)-1 && rsp.error != 0 && rsp.error != ERROR_INVALID_PARAMETER) {
+    // ERROR_INVALID_PARAMETER is also a WinHTTP failure after the session opens
+    res->urlRejected = !OnlineURLAllowed(req->url);
+    if (!res->urlRejected && rsp.httpStatusCode == (DWORD)-1 && rsp.error != 0) {
         DWORD err = rsp.error;
         TempStr msg = GetLastErrorStrTemp(err);
         str::TrimWSInPlace(msg, str::TrimOpt::Both);

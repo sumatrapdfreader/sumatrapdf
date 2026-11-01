@@ -87,6 +87,7 @@ static const i32 gNoDocWhitelist[] = {
     CmdTabGroupRestore,
     CmdSetScreenshotHotkey,
     CmdStopReadAloud,
+    CmdSumatraOnline,
     0,
 };
 
@@ -522,6 +523,12 @@ CommandVisibility GetCommandVisibility(int cmdId, const AppCommandCtx& ctx, Comm
             return CommandVisibility::Show;
         }
         return MapForSurface(CommandVisibility::Disable, surface);
+    }
+
+    // The whitelist returns before the permission lists. This command is on
+    // that list, so the internet and prefs checks have to happen here.
+    if (cmdId == CmdSumatraOnline && (!HasPermission(Perm::InternetAccess) || !HasPermission(Perm::SavePreferences))) {
+        return CommandVisibility::Hide;
     }
 
     if (CmdWorksWithoutDocument(cmdId)) {
