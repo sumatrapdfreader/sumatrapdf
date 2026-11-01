@@ -82,6 +82,7 @@ relative to `ext/mupdf`, so `-p1` from inside that directory.
 | `0079-html-word-width-cache` | word widths are cached while measuring, shaping dominated loading big books |
 | `0080-bidi-skip-ltr-only-text` | no bidi resolve passes for text with no RTL or explicit types |
 | `0081-html-pre-wraps` | `pre` defaults to `pre-wrap`: pages can't scroll, a book made from a text file lost most of each line |
+| `0082-html-table-margin-auto` | `margin-left` and `margin-right` `auto` center a table; RTF's `\trqc` needs it |
 
 That is the whole list: `ext/mupdf` is byte-for-byte `1.28.5` plus these
 patches, and nothing else.

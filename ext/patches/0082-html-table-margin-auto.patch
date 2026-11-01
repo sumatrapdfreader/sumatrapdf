@@ -1,0 +1,21 @@
+html: margin auto centers a table
+
+A table narrower than its container stayed at the left edge whatever its
+margins said, and a width alone can't center it because the container's
+width is only known at layout. RTF's 	rqc needs this.
+
+diff --git a/source/html/html-layout.c b/source/html/html-layout.c
+index 8dbcd5ff7..84ff2608f 100644
+--- a/source/html/html-layout.c
++++ b/source/html/html-layout.c
+@@ -2825,6 +2825,10 @@ static int layout_table(fz_context *ctx, layout_data *ld, fz_html_box *box)
+ 			}
+ 		}
+ 
++		/* margin-left and margin-right auto center a table narrower than its container. */
++		if (box->style->margin[L].unit == N_AUTO && box->style->margin[R].unit == N_AUTO && box->s.layout.w < avail_w)
++			box->s.layout.x += (avail_w - box->s.layout.w) / 2;
++
+ 		/* Layout each row in turn. */
+ 		for (row = box->down, y = 0; row && y < table->h; row = row->next, y++)
+ 		{

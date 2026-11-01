@@ -36,6 +36,11 @@ constexpr int kBmpFileHeaderSize = 14;
 constexpr int kBitmapInfoHeaderSize = 40;
 // twips: 360pt, a little under the text width of our default page
 constexpr int kMaxFixedRowDx = 7200;
+constexpr int kMaxTableDepth = 16; // \itap beyond it stays at this depth
+constexpr int kSingleLineSpacing = 240;
+constexpr float kCssSingleLine = 1.2f; // MuPDF's line-height: normal
+constexpr int kMaxTiledDx = 32768;
+constexpr i64 kMaxTiledBytes = 1 << 28;
 
 // sorted: keywords are found with a binary search
 enum class RtfKw : u8 {
@@ -44,10 +49,10 @@ enum class RtfKw : u8 {
     Brdrth, Bullet, Caps, Cb, Cell, Cellx, Cf, Chftn, Clbrdrb, Clbrdrl, Clbrdrr, Clbrdrt, Colortbl, Cpg, Deff,
     Deleted, Dibitmap, Do, Emdash, Emfblip, Emspace, Endash, Enspace, F, Fcharset, Fdecor, Fi, Field, Fldinst,
     Fldrslt, Fmodern, Fnil, Fonttbl, Footer, Footerf, Footerl, Footerr, Footnote, Froman, Fs, Fscript, Fswiss,
-    Ftech, Green, Header, Headerf, Headerl, Headerr, Highlight, I, Info, Intbl, Jpegblip, Ldblquote, Li, Line,
-    Lquote, Mac, Nestcell, Nestrow, Nonshppict, Nosupersub, Outlinelevel, Page, Pagebb, Par, Pard, Pc, Pca, Pich, Pichgoal,
+    Ftech, Green, Header, Headerf, Headerl, Headerr, Highlight, I, Info, Intbl, Itap, Jpegblip, Ldblquote, Li, Line,
+    Lquote, Mac, Nestcell, Nestrow, Nesttableprops, Nonesttables, Nonshppict, Nosupersub, Outlinelevel, Page, Pagebb, Par, Pard, Pc, Pca, Pich, Pichgoal,
     Picscalex, Picscaley, Pict, Picw, Picwgoal, Plain, Pngblip, Qc, Qj, Ql, Qr, Rdblquote, Red, Revtbl, Ri, Row,
-    Rquote, Sa, Sb, Sbkcol, Sbknone, Scaps, Sect, Shppict, Strike, Striked, Stylesheet, Sub, Subject, Super, Tab, Tc, Title, Trowd,
+    Rquote, Sa, Sb, Sbkcol, Sbknone, Scaps, Sect, Shppict, Sl, Slmult, Strike, Striked, Stylesheet, Sub, Subject, Super, Tab, Tc, Title, Trowd, Trqc,
     U, Uc, Ud, Ul, Uld, Uldash, Uldashd, Uldb, Ulhwave, Ulnone, Ulth, Ulw, Ulwave, Upr, V, Wbitmap, Wmetafile, Xe,
     Zwj, Zwnj,
     // clang-format on
@@ -61,12 +66,12 @@ static const char* gRtfKeywords[] = {
     "clbrdrl", "clbrdrr", "clbrdrt", "colortbl", "cpg", "deff", "deleted", "dibitmap", "do", "emdash", "emfblip",
     "emspace", "endash", "enspace", "f", "fcharset", "fdecor", "fi", "field", "fldinst", "fldrslt", "fmodern",
     "fnil", "fonttbl", "footer", "footerf", "footerl", "footerr", "footnote", "froman", "fs", "fscript", "fswiss",
-    "ftech", "green", "header", "headerf", "headerl", "headerr", "highlight", "i", "info", "intbl", "jpegblip",
-    "ldblquote", "li", "line", "lquote", "mac", "nestcell", "nestrow", "nonshppict", "nosupersub", "outlinelevel",
+    "ftech", "green", "header", "headerf", "headerl", "headerr", "highlight", "i", "info", "intbl", "itap", "jpegblip",
+    "ldblquote", "li", "line", "lquote", "mac", "nestcell", "nestrow", "nesttableprops", "nonesttables", "nonshppict", "nosupersub", "outlinelevel",
     "page", "pagebb", "par", "pard", "pc", "pca", "pich", "pichgoal", "picscalex", "picscaley", "pict", "picw", "picwgoal",
     "plain", "pngblip", "qc", "qj", "ql", "qr", "rdblquote", "red", "revtbl", "ri", "row", "rquote", "sa", "sb",
-    "sbkcol", "sbknone", "scaps", "sect", "shppict", "strike", "striked", "stylesheet", "sub", "subject", "super", "tab", "tc", "title",
-    "trowd", "u", "uc", "ud", "ul", "uld", "uldash", "uldashd", "uldb", "ulhwave", "ulnone", "ulth", "ulw",
+    "sbkcol", "sbknone", "scaps", "sect", "shppict", "sl", "slmult", "strike", "striked", "stylesheet", "sub", "subject", "super", "tab", "tc", "title",
+    "trowd", "trqc", "u", "uc", "ud", "ul", "uld", "uldash", "uldashd", "uldb", "ulhwave", "ulnone", "ulth", "ulw",
     "ulwave", "upr", "v", "wbitmap", "wmetafile", "xe", "zwj", "zwnj",
     // clang-format on
 };
@@ -149,8 +154,11 @@ struct RtfParaFmt {
     int spaceBefore = 0;
     int spaceAfter = 0;
     int outlineLevel = -1; // 0..5 become h1..h6
+    int lineSpacing = 0;   // \sl: 0 auto, < 0 exact, > 0 at least or, with lineMultiple, 240ths of a line
+    bool lineMultiple = false;
     bool pageBreakBefore = false;
     bool inTable = false;
+    int tableDepth = 0; // \itap
 };
 
 struct RtfGroup {
@@ -160,6 +168,7 @@ struct RtfGroup {
     RtfDest uprParentDest = RtfDest::Skip; // \ud shows what \upr hid
     int uc = 1;                            // fallback chars to skip after \uN
     bool startsFootnote = false;
+    bool inNestProps = false; // \trowd, \cellx etc. describe a nested row
 };
 
 struct RtfFont {
@@ -169,6 +178,13 @@ struct RtfFont {
     bool isSymbol = false;
     const char* family = nullptr; // CSS generic family
     int nameIdx = -1;             // into RtfParser::fontNames
+};
+
+// a table inside a cell
+struct RtfNestedTable {
+    str::Builder rows;
+    StrVec cells;      // finished cells of the open row
+    str::Builder cell; // paragraphs of the open cell
 };
 
 // html of the document body or of one footnote
@@ -186,9 +202,24 @@ struct RtfSink {
     bool breakPending = false;
 
     bool tableOpen = false;
+    bool tableCentered = false;
     str::Builder row;  // finished cells of the open row
     str::Builder cell; // paragraphs of the open cell
     int cellIdx = 0;
+    Vec<RtfNestedTable*> nested; // [0] is at \itap2
+
+    ~RtfSink() {
+        for (RtfNestedTable* t : nested) {
+            delete t;
+        }
+    }
+};
+
+struct RtfRowProps {
+    Vec<int> cellx; // right cell edges, in twips
+    bool borders = false;
+    bool borderPending = false;
+    bool centered = false;
 };
 
 struct RtfParser {
@@ -220,9 +251,8 @@ struct RtfParser {
     str::Builder bookmark;
     StrVec links;
 
-    Vec<int> cellx; // right cell edges of the current row, in twips
-    bool rowBorders = false;
-    bool borderPending = false;
+    RtfRowProps rowProps;
+    RtfRowProps nestRowProps; // written after the row's cells
 
     RtfPicKind picKind = RtfPicKind::Unknown;
     int picw = 0;
@@ -247,6 +277,7 @@ struct RtfParser {
     Str BuildHtml();
 
     RtfSink* Sink() { return sinks[len(sinks) - 1]; }
+    RtfRowProps& RowProps() { return g.inNestProps ? nestRowProps : rowProps; }
     void PushGroup();
     void PopGroup();
     void SetDest(RtfDest d);
@@ -272,7 +303,11 @@ struct RtfParser {
     void EndPara(bool explicitPar);
     void EndCell();
     void EndRow();
+    void EndNestedCell();
+    void EndNestedRow();
     void CloseTable(RtfSink* s);
+    str::Builder& CellAtDepth(RtfSink* s, int depth);
+    void CloseNested(RtfSink* s, int depth);
     void PageBreak();
     void WritePendingBreak(RtfSink* s);
     void FinishSink(RtfSink* s);
@@ -455,14 +490,14 @@ static void AppendLe32(str::Builder& b, u32 v) {
     }
 }
 
-// a \dibitmap is a BMP file without its 14-byte file header
-static TempStr DibToBmpTemp(Str dib) {
+// where a DIB's pixels start, 0 if it isn't one
+static u32 DibBitsOffset(Str dib) {
     if (len(dib) < kBitmapInfoHeaderSize) {
-        return {};
+        return 0;
     }
     u32 hdrSize = ReadLe32(dib, 0);
     if (hdrSize < kBitmapInfoHeaderSize || hdrSize > (u32)len(dib)) {
-        return {};
+        return 0;
     }
     u32 bitCount = (u8)dib.s[14] | ((u8)dib.s[15] << 8);
     u32 compression = ReadLe32(dib, 16);
@@ -471,15 +506,141 @@ static TempStr DibToBmpTemp(Str dib) {
         nColors = 1u << bitCount;
     }
     u32 masks = (hdrSize == kBitmapInfoHeaderSize && compression == kBiBitfields) ? 12 : 0;
-    u32 bitsOffset = kBmpFileHeaderSize + hdrSize + masks + nColors * 4;
+    return hdrSize + masks + nColors * 4;
+}
 
+// a \dibitmap is a BMP file without its 14-byte file header
+static TempStr DibToBmpTemp(Str dib) {
+    u32 bitsOffset = DibBitsOffset(dib);
+    if (bitsOffset == 0) {
+        return {};
+    }
     str::Builder b(GetTempArena());
     b.Append(StrL("BM"));
     AppendLe32(b, (u32)(kBmpFileHeaderSize + len(dib)));
     AppendLe32(b, 0);
-    AppendLe32(b, bitsOffset);
+    AppendLe32(b, kBmpFileHeaderSize + bitsOffset);
     b.Append(dib);
     return b.TakeStr();
+}
+
+// a bitmap drawn by a metafile, and where
+struct MetaDib {
+    Str dib;
+    int x = 0;
+    int y = 0;
+    int dx = 0;
+    int dy = 0;
+};
+
+// A later bitmap in the same place replaces the earlier one: Word draws a mask,
+// then the picture over it, and the mask is the picture inverted.
+static void AddMetaDib(Vec<MetaDib>& dibs, const MetaDib& d) {
+    for (MetaDib& prev : dibs) {
+        if (prev.x == d.x && prev.y == d.y && prev.dx == d.dx && prev.dy == d.dy) {
+            prev = d;
+            return;
+        }
+    }
+    VecAppend(dibs, d);
+}
+
+// Tiles we can join: uncompressed, unscaled, byte-aligned, one format and palette.
+static bool CanJoinTiles(const Vec<MetaDib>& dibs) {
+    Str first = dibs[0].dib;
+    u32 bitsOffset = DibBitsOffset(first);
+    for (const MetaDib& d : dibs) {
+        if (bitsOffset == 0 || DibBitsOffset(d.dib) != bitsOffset || d.x < 0 || d.y < 0 || d.dx <= 0 || d.dy <= 0) {
+            return false;
+        }
+        u32 bitCount = (u8)d.dib.s[14] | ((u8)d.dib.s[15] << 8);
+        bool byteAligned = bitCount == 8 || bitCount == 24 || bitCount == 32;
+        if (!byteAligned || ReadLe32(d.dib, 16) != 0 || ReadLe32(d.dib, 0) != ReadLe32(first, 0)) {
+            return false;
+        }
+        if (memcmp(d.dib.s + 14, first.s + 14, 2) != 0) {
+            return false;
+        }
+        u32 hdrSize = ReadLe32(d.dib, 0);
+        if (memcmp(d.dib.s + hdrSize, first.s + hdrSize, bitsOffset - hdrSize) != 0) {
+            return false;
+        }
+        i64 w = (int)ReadLe32(d.dib, 4);
+        i64 h = (int)ReadLe32(d.dib, 8);
+        h = h < 0 ? -h : h;
+        i64 stride = ((w * bitCount + 31) / 32) * 4;
+        if (w != d.dx || h != d.dy || (i64)bitsOffset + stride * h > (i64)len(d.dib)) {
+            return false;
+        }
+    }
+    return true;
+}
+
+static TempStr JoinTilesTemp(const Vec<MetaDib>& dibs) {
+    int dx = 0;
+    int dy = 0;
+    for (const MetaDib& d : dibs) {
+        if (d.dx > kMaxTiledDx - d.x || d.dy > kMaxTiledDx - d.y) {
+            return {};
+        }
+        dx = std::max(dx, d.x + d.dx);
+        dy = std::max(dy, d.y + d.dy);
+    }
+    Str first = dibs[0].dib;
+    u32 bitsOffset = DibBitsOffset(first);
+    int bytesPerPixel = ((u8)first.s[14] | ((u8)first.s[15] << 8)) / 8;
+    i64 stride = (((i64)dx * bytesPerPixel + 3) / 4) * 4;
+    i64 nBits = stride * dy;
+    if (nBits + (i64)bitsOffset > kMaxTiledBytes) {
+        return {};
+    }
+
+    int size = (int)(bitsOffset + nBits);
+    char* res = (char*)AllocZero(GetTempArena(), (size_t)size + 1);
+    memcpy(res, first.s, bitsOffset);
+    auto setLe32 = [&](int off, int v) {
+        for (int i = 0; i < 4; i++) {
+            res[off + i] = (char)(((u32)v >> (i * 8)) & 0xff);
+        }
+    };
+    setLe32(4, dx);
+    setLe32(8, dy);
+    setLe32(20, (int)nBits);
+
+    // bottom-up rows, as in a DIB with a positive height
+    char* bits = res + bitsOffset;
+    for (const MetaDib& d : dibs) {
+        int h = (int)ReadLe32(d.dib, 8);
+        int srcStride = ((d.dx * bytesPerPixel + 3) / 4) * 4;
+        const char* srcBits = d.dib.s + bitsOffset;
+        for (int row = 0; row < d.dy; row++) {
+            int srcRow = h > 0 ? d.dy - 1 - row : row;
+            i64 dstRow = dy - 1 - (d.y + row);
+            memcpy(bits + dstRow * stride + (i64)d.x * bytesPerPixel, srcBits + (i64)srcRow * srcStride,
+                   (size_t)d.dx * bytesPerPixel);
+        }
+    }
+    return TempStr(res, size);
+}
+
+// the picture a metafile draws, as one DIB. If tiles can't be joined, the largest one.
+static TempStr MetaDibsToDibTemp(const Vec<MetaDib>& dibs) {
+    if (len(dibs) == 0) {
+        return {};
+    }
+    if (len(dibs) > 1 && CanJoinTiles(dibs)) {
+        TempStr joined = JoinTilesTemp(dibs);
+        if (len(joined) > 0) {
+            return joined;
+        }
+    }
+    const MetaDib* best = &dibs[0];
+    for (const MetaDib& d : dibs) {
+        if ((i64)d.dx * d.dy > (i64)best->dx * best->dy) {
+            best = &d;
+        }
+    }
+    return TempStr(best->dib.s, len(best->dib));
 }
 
 static u16 ReadLe16(Str d, int off) {
@@ -487,9 +648,10 @@ static u16 ReadLe16(Str d, int off) {
     return (u16)(p[0] | (p[1] << 8));
 }
 
-// We don't render metafiles. WordPad and Word wrap a bitmap in one; show the first such bitmap.
-// WMF records: u32 size in words, u16 function, params. The DIB follows the params.
-static Str WmfDib(Str wmf) {
+// We don't render metafiles. WordPad and Word wrap a bitmap in one; show that.
+// WMF records: u32 size in words, u16 function, params. The DIB follows the params,
+// whose last four i16 are the destination: dy, dx, y, x.
+static TempStr WmfDibTemp(Str wmf) {
     constexpr u32 kPlaceableKey = 0x9AC6CDD7;
     constexpr int kPlaceableHeaderSize = 22;
     constexpr u16 kMetaEof = 0x0000;
@@ -506,6 +668,7 @@ static Str WmfDib(Str wmf) {
     }
     off += ReadLe16(wmf, off + 2) * 2; // header size in words
 
+    Vec<MetaDib> dibs;
     while (off + 6 <= len(wmf)) {
         i64 size = (i64)ReadLe32(wmf, off) * 2;
         u16 fn = ReadLe16(wmf, off + 4);
@@ -523,11 +686,17 @@ static Str WmfDib(Str wmf) {
         int dibOff = off + 6 + paramsSize;
         int dibLen = off + (int)size - dibOff;
         if (paramsSize >= 0 && dibLen >= kBitmapInfoHeaderSize && ReadLe32(wmf, dibOff) >= kBitmapInfoHeaderSize) {
-            return Str(wmf.s + dibOff, dibLen);
+            MetaDib d;
+            d.dib = Str(wmf.s + dibOff, dibLen);
+            d.dy = (i16)ReadLe16(wmf, dibOff - 8);
+            d.dx = (i16)ReadLe16(wmf, dibOff - 6);
+            d.y = (i16)ReadLe16(wmf, dibOff - 4);
+            d.x = (i16)ReadLe16(wmf, dibOff - 2);
+            AddMetaDib(dibs, d);
         }
         off += (int)size;
     }
-    return {};
+    return MetaDibsToDibTemp(dibs);
 }
 
 // EMF records: u32 type, u32 size in bytes. Bitmap records point to their BITMAPINFO and bits.
@@ -538,6 +707,7 @@ static TempStr EmfDibTemp(Str emf) {
     constexpr u32 kEmrSetDiBitsToDevice = 80;
     constexpr u32 kEmrStretchDiBits = 81;
 
+    Vec<MetaDib> dibs;
     int off = 0;
     while (off + 8 <= len(emf)) {
         u32 type = ReadLe32(emf, off);
@@ -560,12 +730,21 @@ static TempStr EmfDibTemp(Str emf) {
             bool ok = cbBmi >= kBitmapInfoHeaderSize && cbBits > 0 && offBmi <= size && cbBmi <= size - offBmi &&
                       offBits <= size && cbBits <= size - offBits;
             if (ok) {
-                return str::JoinTemp(Str(rec.s + offBmi, (int)cbBmi), Str(rec.s + offBits, (int)cbBits));
+                // xDest, yDest, then the size, which for these two is the source's unless given later
+                bool isBlt = type == kEmrBitBlt || type == kEmrStretchBlt;
+                bool isStretchDib = type == kEmrStretchDiBits && size >= 80;
+                MetaDib d;
+                d.dib = str::JoinTemp(Str(rec.s + offBmi, (int)cbBmi), Str(rec.s + offBits, (int)cbBits));
+                d.x = (int)ReadLe32(rec, 24);
+                d.y = (int)ReadLe32(rec, 28);
+                d.dx = (int)ReadLe32(rec, isBlt ? 32 : (isStretchDib ? 72 : 40));
+                d.dy = (int)ReadLe32(rec, isBlt ? 36 : (isStretchDib ? 76 : 44));
+                AddMetaDib(dibs, d);
             }
         }
         off += (int)size;
     }
-    return {};
+    return MetaDibsToDibTemp(dibs);
 }
 
 void RtfParser::PushGroup() {
@@ -903,6 +1082,50 @@ void RtfParser::CloseTable(RtfSink* s) {
     s->tableOpen = false;
 }
 
+// the builder of the open cell at \itap depth; 1 is the outermost table
+str::Builder& RtfParser::CellAtDepth(RtfSink* s, int depth) {
+    if (depth <= 1) {
+        return s->cell;
+    }
+    while (len(s->nested) < depth - 1) {
+        VecAppend(s->nested, new RtfNestedTable());
+    }
+    return s->nested[depth - 2]->cell;
+}
+
+static void AppendNestedRow(RtfNestedTable* t, bool borders) {
+    t->rows.Append(StrL("<tr>"));
+    for (Str cell : t->cells) {
+        t->rows.Append(borders ? StrL("<td class=\"b\">") : StrL("<td>"));
+        t->rows.Append(cell);
+        t->rows.Append(StrL("</td>"));
+    }
+    t->rows.Append(StrL("</tr>\n"));
+    t->cells.Reset();
+}
+
+// tables deeper than depth are done: they go into the open cell above them
+void RtfParser::CloseNested(RtfSink* s, int depth) {
+    for (int i = len(s->nested) - 1; i >= 0 && i + 2 > depth; i--) {
+        RtfNestedTable* t = s->nested[i];
+        if (len(t->cell) > 0) {
+            t->cells.Append(ToStr(t->cell));
+            t->cell.Reset();
+        }
+        if (len(t->cells) > 0) {
+            AppendNestedRow(t, nestRowProps.borders);
+        }
+        if (len(t->rows) == 0) {
+            continue;
+        }
+        str::Builder& parent = CellAtDepth(s, i + 1);
+        parent.Append(StrL("<table>\n"));
+        parent.Append(ToStr(t->rows));
+        parent.Append(StrL("</table>\n"));
+        t->rows.Reset();
+    }
+}
+
 void RtfParser::EndPara(bool explicitPar) {
     if (g.dest != RtfDest::Text) {
         return;
@@ -915,12 +1138,15 @@ void RtfParser::EndPara(bool explicitPar) {
         s->para.Reset();
         return;
     }
-    if (!inCell) {
+    const RtfParaFmt& pf = g.pf;
+    int depth = std::clamp(pf.tableDepth, 1, kMaxTableDepth);
+    if (inCell) {
+        CloseNested(s, depth);
+    } else {
         CloseTable(s);
     }
-    str::Builder& out = inCell ? s->cell : s->html;
+    str::Builder& out = inCell ? CellAtDepth(s, depth) : s->html;
 
-    const RtfParaFmt& pf = g.pf;
     bool isHeading = pf.outlineLevel >= 0 && pf.outlineLevel < kMaxHeadingLevel;
     TempStr tag = isHeading ? fmt("h%d", pf.outlineLevel + 1) : StrL("p");
     if (!inCell) {
@@ -956,6 +1182,19 @@ void RtfParser::EndPara(bool explicitPar) {
     if (pf.spaceAfter > 0) {
         style.Append(fmt("margin-bottom:%gpt;", TwipsToPt(pf.spaceAfter)));
     }
+    // the font of \par sizes a blank line and a line spacing given in points
+    float fontPt = (float)g.cf.fontSize / 2.f;
+    if (pf.lineSpacing < 0) {
+        style.Append(fmt("line-height:%gpt;", TwipsToPt(-pf.lineSpacing)));
+    } else if (pf.lineMultiple && pf.lineSpacing > 0 && pf.lineSpacing != kSingleLineSpacing) {
+        float lines = (float)pf.lineSpacing / (float)kSingleLineSpacing;
+        style.Append(fmt("line-height:%g;", lines * kCssSingleLine));
+    } else if (!pf.lineMultiple && TwipsToPt(pf.lineSpacing) > fontPt * kCssSingleLine) {
+        style.Append(fmt("line-height:%gpt;", TwipsToPt(pf.lineSpacing)));
+    }
+    if (!s->paraHasContent && g.cf.fontSize != kDefaultFontSize) {
+        style.Append(fmt("font-size:%gem;", (float)g.cf.fontSize / (float)kDefaultFontSize));
+    }
 
     out.Append(fmt("<%s", tag));
     if (len(style) > 0) {
@@ -976,12 +1215,17 @@ void RtfParser::EndCell() {
         return;
     }
     bool wasInTable = g.pf.inTable;
+    int wasDepth = g.pf.tableDepth;
     g.pf.inTable = true; // the cell's last paragraph has no \par
+    g.pf.tableDepth = 1; // \nestcell ends the deeper ones
     EndPara(false);
     g.pf.inTable = wasInTable;
+    g.pf.tableDepth = wasDepth;
 
     RtfSink* s = Sink();
+    CloseNested(s, 1);
     int idx = s->cellIdx++;
+    const Vec<int>& cellx = rowProps.cellx;
     s->row.Append(StrL("<td"));
     // MuPDF never shrinks a cell with a width, and takes a % of the font size
     // rather than of the table, so a row too wide for the page gets none
@@ -993,7 +1237,7 @@ void RtfParser::EndCell() {
             s->row.Append(fmt(" style=\"width:%gpt\"", TwipsToPt(dx)));
         }
     }
-    if (rowBorders) {
+    if (rowProps.borders) {
         s->row.Append(StrL(" class=\"b\""));
     }
     s->row.AppendChar('>');
@@ -1007,22 +1251,63 @@ void RtfParser::EndRow() {
         return;
     }
     RtfSink* s = Sink();
+    CloseNested(s, 1);
     if (s->paraHasContent || len(s->cell) > 0) {
         EndCell();
     }
     if (s->cellIdx == 0) {
         return;
     }
+    // a row is placed on its own, a table has one place
+    if (s->tableOpen && s->tableCentered != rowProps.centered) {
+        CloseTable(s);
+    }
     if (!s->tableOpen) {
         WritePendingBreak(s);
-        s->html.Append(StrL("<table>\n"));
+        s->html.Append(rowProps.centered ? StrL("<table style=\"margin-left:auto;margin-right:auto\">\n")
+                                         : StrL("<table>\n"));
         s->tableOpen = true;
+        s->tableCentered = rowProps.centered;
     }
     s->html.Append(StrL("<tr>"));
     s->html.Append(ToStr(s->row));
     s->html.Append(StrL("</tr>\n"));
     s->row.Reset();
     s->cellIdx = 0;
+}
+
+void RtfParser::EndNestedCell() {
+    if (g.dest != RtfDest::Text) {
+        return;
+    }
+    RtfParaFmt pf = g.pf;
+    int depth = std::clamp(pf.tableDepth, 2, kMaxTableDepth);
+    g.pf.inTable = true;
+    g.pf.tableDepth = depth;
+    EndPara(false);
+    g.pf = pf;
+
+    RtfSink* s = Sink();
+    CloseNested(s, depth);
+    str::Builder& cell = CellAtDepth(s, depth);
+    RtfNestedTable* t = s->nested[depth - 2];
+    t->cells.Append(ToStr(cell));
+    cell.Reset();
+}
+
+// the row is at the deepest level with cells: anything deeper closed with its cell
+void RtfParser::EndNestedRow() {
+    if (g.dest != RtfDest::Text) {
+        return;
+    }
+    RtfSink* s = Sink();
+    for (int i = len(s->nested) - 1; i >= 0; i--) {
+        RtfNestedTable* t = s->nested[i];
+        if (len(t->cells) > 0) {
+            AppendNestedRow(t, nestRowProps.borders);
+            return;
+        }
+    }
 }
 
 void RtfParser::PageBreak() {
@@ -1054,6 +1339,7 @@ void RtfParser::FinishSink(RtfSink* s) {
     if (s->paraHasContent) {
         EndPara(false);
     }
+    CloseNested(s, 1);
     if (s->cellIdx > 0 || len(s->cell) > 0) {
         EndRow();
     }
@@ -1096,7 +1382,7 @@ void RtfParser::EmitPicture() {
             data = DibToBmpTemp(data);
             break;
         case RtfPicKind::Wmf:
-            data = DibToBmpTemp(WmfDib(data));
+            data = DibToBmpTemp(WmfDibTemp(data));
             break;
         case RtfPicKind::Emf:
             data = DibToBmpTemp(EmfDibTemp(data));
@@ -1378,6 +1664,15 @@ void RtfParser::Keyword(RtfKw kw, bool hasParam, int param) {
         case RtfKw::Intbl:
             pf.inTable = true;
             break;
+        case RtfKw::Itap:
+            pf.tableDepth = param;
+            break;
+        case RtfKw::Sl:
+            pf.lineSpacing = param;
+            break;
+        case RtfKw::Slmult:
+            pf.lineMultiple = on;
+            break;
         case RtfKw::Ql:
             pf.align = RtfAlign::Left;
             break;
@@ -1434,13 +1729,19 @@ void RtfParser::Keyword(RtfKw kw, bool hasParam, int param) {
             break;
 
         // tables
-        case RtfKw::Trowd:
-            VecReset(cellx);
-            rowBorders = false;
-            borderPending = false;
+        case RtfKw::Trowd: {
+            RtfRowProps& props = RowProps();
+            VecReset(props.cellx);
+            props.borders = false;
+            props.borderPending = false;
+            props.centered = false;
+            break;
+        }
+        case RtfKw::Trqc:
+            RowProps().centered = true;
             break;
         case RtfKw::Cellx:
-            VecAppend(cellx, param);
+            VecAppend(RowProps().cellx, param);
             break;
         case RtfKw::Cell:
             EndCell();
@@ -1449,16 +1750,23 @@ void RtfParser::Keyword(RtfKw kw, bool hasParam, int param) {
             EndRow();
             break;
         case RtfKw::Nestcell:
-            Emit(StrL(" "));
+            EndNestedCell();
             break;
         case RtfKw::Nestrow:
-            WriteRaw(StrL("<br/>"));
+            EndNestedRow();
+            break;
+        case RtfKw::Nesttableprops:
+            g.inNestProps = true;
+            break;
+        case RtfKw::Nonesttables:
+            // what a reader without nested tables shows in their place
+            SetDest(RtfDest::Skip);
             break;
         case RtfKw::Clbrdrb:
         case RtfKw::Clbrdrl:
         case RtfKw::Clbrdrr:
         case RtfKw::Clbrdrt:
-            borderPending = true;
+            RowProps().borderPending = true;
             break;
         case RtfKw::Brdrs:
         case RtfKw::Brdrth:
@@ -1466,12 +1774,12 @@ void RtfParser::Keyword(RtfKw kw, bool hasParam, int param) {
         case RtfKw::Brdrdb:
         case RtfKw::Brdrdot:
         case RtfKw::Brdrdash:
-            rowBorders |= borderPending;
-            borderPending = false;
+            RowProps().borders |= RowProps().borderPending;
+            RowProps().borderPending = false;
             break;
         case RtfKw::Brdrnone:
         case RtfKw::Brdrnil:
-            borderPending = false;
+            RowProps().borderPending = false;
             break;
 
         // pictures

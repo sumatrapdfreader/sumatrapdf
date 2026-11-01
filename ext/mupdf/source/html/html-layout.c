@@ -2825,6 +2825,10 @@ static int layout_table(fz_context *ctx, layout_data *ld, fz_html_box *box)
 			}
 		}
 
+		/* margin-left and margin-right auto center a table narrower than its container. */
+		if (box->style->margin[L].unit == N_AUTO && box->style->margin[R].unit == N_AUTO && box->s.layout.w < avail_w)
+			box->s.layout.x += (avail_w - box->s.layout.w) / 2;
+
 		/* Layout each row in turn. */
 		for (row = box->down, y = 0; row && y < table->h; row = row->next, y++)
 		{

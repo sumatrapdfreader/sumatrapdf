@@ -108,6 +108,40 @@ void RtfDoc_UnitTests() {
         "0e00000008000000}}");
     RtfHas(emf, StrL("<img src=\"data:image/png;base64,Qk"));
 
+    // two bitmaps in one place are a mask and the picture drawn over it: show the last
+    Str maskPair = StrL(
+        "{\\rtf1{\\pict\\wmetafile8\\picw1\\pich1 010009000003300000000000240000000000"
+        "24000000430f2000cc00000001000100000000000100010000000000280000000100000001000000010018000000"
+        "000004000000000000000000000000000000000000000000ff00"
+        "24000000430f2000cc00000001000100000000000100010000000000280000000100000001000000010018000000"
+        "000004000000"
+        "00000000000000000000000000000000"
+        "00ff0000"
+        "030000000000}}");
+    RtfHas(maskPair, StrL("base64,Qk06AAAAAAAAADYAAAAoAAAAAQAAAAEAAAABABgAAAAAAAQAAAAAAAAAAAAAAAAAAAAAAAAAAP8AAA=="));
+
+    // bitmaps side by side are tiles of one picture
+    Str tiles = StrL(
+        "{\\rtf1{\\pict\\emfblip "
+        "510000007c000000000000000000000000000000000000000000000000000000000000000000000001000000010000005000000028"
+        "0000007800000004000000000000002000cc000100000001000000280000000100000001000000010018000000000004000000000000"
+        "000000000000000000000000000000ff00"
+        "510000007c000000000000000000000000000000000000000100000000000000000000000000000001000000010000005000000028"
+        "0000007800000004000000000000002000cc000100000001000000280000000100000001000000010018000000000004000000000000"
+        "0000000000000000000000000000ff0000"
+        "0e00000008000000}}");
+    RtfHas(tiles, StrL("base64,Qk0+AAAAAAAAADYAAAAoAAAAAgAAAAEAAAABABgAAAAAAAgAAAAAAAAAAAAAAAAAAAAAAAAAAAD/AP8AAAA="));
+
+    // line spacing: a multiple of a line, exact, at least, and single, which is the default
+    RtfHas(StrL("{\\rtf1\\pard\\sl360\\slmult1 a\\par}"), StrL("<p style=\"line-height:1.8;\">a</p>"));
+    RtfHas(StrL("{\\rtf1\\pard\\sl-300 a\\par}"), StrL("<p style=\"line-height:15pt;\">a</p>"));
+    RtfHas(StrL("{\\rtf1\\pard\\sl400\\slmult0 a\\par}"), StrL("<p style=\"line-height:20pt;\">a</p>"));
+    RtfHas(StrL("{\\rtf1\\pard\\sl200\\slmult0 a\\par}"), StrL("<p>a</p>"));
+    RtfHas(StrL("{\\rtf1\\pard\\sl240\\slmult1 a\\par}"), StrL("<p>a</p>"));
+    RtfHas(StrL("{\\rtf1\\pard\\sl360\\slmult1 a\\par\\pard b\\par}"), StrL("<p>b</p>"));
+    // a blank line is as tall as the font of its \par
+    RtfHas(StrL("{\\rtf1 a\\par{\\fs48\\par}b\\par}"), StrL("<p style=\"font-size:2em;\">&#160;</p>"));
+
     // paragraphs, headings and page breaks
     RtfHas(StrL("{\\rtf1\\pard\\qc\\li720 centered\\par}"), StrL("<p style=\"text-align:center;margin-left:36pt;\">"));
     RtfHas(StrL("{\\rtf1\\pard\\outlinelevel1 Chapter\\par}"), StrL("<h2>Chapter</h2>"));
@@ -130,6 +164,32 @@ void RtfDoc_UnitTests() {
     Str wide = StrL("{\\rtf1\\trowd\\cellx3000\\cellx9000\\intbl a\\cell b\\cell\\row}");
     RtfHas(wide, StrL("<td><p>a</p>"));
     RtfLacks(wide, StrL("width:"));
+
+    // a centered row: each row is placed on its own, so a change starts a new table
+    Str centered = StrL(
+        "{\\rtf1\\trowd\\trqc\\cellx1440\\intbl a\\cell\\row"
+        "\\trowd\\trqc\\cellx1440\\intbl b\\cell\\row"
+        "\\trowd\\cellx1440\\intbl c\\cell\\row}");
+    RtfHas(centered,
+           StrL("<table style=\"margin-left:auto;margin-right:auto\">\n<tr><td style=\"width:72pt\"><p>a</p>"));
+    RtfHas(centered, StrL("</td></tr>\n<tr><td style=\"width:72pt\"><p>b</p>"));
+    RtfHas(centered, StrL("</table>\n<table>\n<tr><td style=\"width:72pt\"><p>c</p>"));
+
+    // a nested table: its row's properties come after its cells, and don't touch the outer row
+    Str nested = StrL(
+        "{\\rtf1\\trowd\\cellx4000\\pard\\intbl\\itap1 before\\par"
+        "\\pard\\intbl\\itap2 n1\\nestcell n2\\nestcell"
+        "{\\*\\nesttableprops\\trowd\\clbrdrt\\brdrs\\cellx1000\\cellx2000\\nestrow}{\\nonesttables\\par}"
+        "\\pard\\intbl\\itap2 n3\\nestcell n4\\nestcell"
+        "{\\*\\nesttableprops\\trowd\\cellx1000\\cellx2000\\nestrow}{\\nonesttables\\par}"
+        "\\pard\\intbl\\itap1 outer\\cell\\row\\pard after\\par}");
+    RtfHas(nested, StrL("<td style=\"width:200pt\"><p>before</p>\n<table>\n<tr>"));
+    RtfHas(nested, StrL("<tr><td class=\"b\"><p>n1</p>\n</td><td class=\"b\"><p>n2</p>\n</td></tr>"));
+    RtfHas(nested, StrL("<tr><td><p>n3</p>\n</td><td><p>n4</p>\n</td></tr>\n</table>\n<p>outer</p>"));
+    RtfOrder(nested, StrL("outer"), StrL("after"));
+    // deeper than we keep track of, and a cell that never ends: nothing is lost
+    RtfHas(StrL("{\\rtf1\\pard\\intbl\\itap99999 deep\\nestcell\\nestrow\\cell\\row}"), StrL("deep"));
+    RtfHas(StrL("{\\rtf1\\pard\\intbl\\itap2 open\\nestcell"), StrL("open"));
 
     // links and bookmarks
     RtfHas(StrL("{\\rtf1{\\field{\\*\\fldinst HYPERLINK \"https://x.org/?a=1&b=2\"}{\\fldrslt link}}}"),
