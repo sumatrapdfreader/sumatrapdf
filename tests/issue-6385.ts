@@ -206,8 +206,16 @@ export async function testit(): Promise<void> {
       (h) => h !== 0,
       { error: "issue-6385: creating a free text did not open the editor" },
     );
-    sendMessage(edit, WM_KEYDOWN, VK_ESCAPE, 0);
-    sendMessage(edit, WM_KEYUP, VK_ESCAPE, 0);
+    // the window exists before the app handles its keys, and an Esc that early is lost
+    await pollUntil(
+      async () => {
+        sendMessage(edit, WM_KEYDOWN, VK_ESCAPE, 0);
+        sendMessage(edit, WM_KEYUP, VK_ESCAPE, 0);
+        return markupDump(client);
+      },
+      (d) => /freeTextEdit active=0/.test(d),
+      { error: "issue-6385: Esc did not close the editor" },
+    );
     await pollUntil(
       () => toolbarLine(client),
       (l) => /visible=1/.test(l),
