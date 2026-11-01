@@ -9022,13 +9022,13 @@ static TempStr GetSignatures(EngineMupdf* e, PdfSigSummary* sum) {
     str::Builder sigs;
     pdf_pkcs7_verifier* verifier = nullptr;
     Vec<pdf_obj*> fields;
-    void* eutlList = nullptr;
 #if OS_WIN
+    void* eutlList = nullptr;
     pkcs7_windows_rev_data* docRev = nullptr;
+    fz_var(eutlList);
     fz_var(docRev);
 #endif
     fz_var(verifier);
-    fz_var(eutlList);
     fz_try(ctx) {
 #if OS_WIN
         verifier = pkcs7_windows_new_verifier(ctx);
@@ -9069,10 +9069,10 @@ static TempStr GetSignatures(EngineMupdf* e, PdfSigSummary* sum) {
             pdf_drop_obj(ctx, field);
         }
         pdf_drop_verifier(ctx, verifier);
+#if OS_WIN
         if (gEutlLookup && eutlList) {
             gEutlLookup->close(eutlList);
         }
-#if OS_WIN
         pkcs7_windows_rev_free(docRev);
 #endif
     }
