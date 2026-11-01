@@ -7406,6 +7406,9 @@ int GpuiMain(int argc, char** argv) {
         }
     }
     gApplyCliViewToEbookLayout = false;
+#if OS_WASM
+    AddStartupHomeTab(win);
+#endif
 #if OS_DARWIN
     AppShellOpenDocsReady();
 #endif

@@ -71,7 +71,8 @@ bool TabIsDirty(WindowTab* tab) {
 }
 
 // Hide a lone Home tab. Favorites is a closable tab, so it must remain visible
-// even when it is the only tab left.
+// even when it is the only tab left. On wasm Home has no toolbar, so the strip
+// stays for its menu button.
 bool TabsAreVisible(MainWindow* win) {
     if (win->isQuickLook || (win->tabsInTitlebar && !gSettings->showCaption && !win->captionOverlayShown)) {
         return false;
@@ -84,7 +85,7 @@ bool TabsAreVisible(MainWindow* win) {
     if (nTabs == 0) {
         return false;
     }
-    bool onlyHomeTab = nTabs == 1 && win->GetTab(0)->IsAboutTab();
+    bool onlyHomeTab = !OS_WASM && nTabs == 1 && win->GetTab(0)->IsAboutTab();
     bool showSingleTab = SettingsUseTabs();
     return !onlyHomeTab && ((nTabs > 1) || (showSingleTab && (nTabs > 0)));
 }
@@ -249,6 +250,20 @@ void GoToHomeTab(MainWindow* win) {
     LoadModelIntoTab(homeTab);
     HomePageFocusSearch(win);
 }
+
+#if OS_WASM
+// A window has no tabs until its first document; wasm shows Home in the strip
+// from the start.
+void AddStartupHomeTab(MainWindow* win) {
+    if (!SettingsUseTabs() || gSettings->noHomeTab || win->TabCount() > 0) {
+        return;
+    }
+    WindowTab* homeTab = NewHomeTab(win, HomeTabKind::Pinned);
+    VecAppend(win->tabs, homeTab);
+    TabsUIOnTabsChanged(win);
+    LoadModelIntoTab(homeTab);
+}
+#endif
 
 // the "+" button: another Home tab after the last one. It stays out of the
 // session, which only stores documents

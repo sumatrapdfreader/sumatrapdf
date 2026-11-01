@@ -23,6 +23,7 @@
 #include "Selection.h"
 #include "AnnotPlacement.h"
 #include "WindowTab.h"
+#include "Tabs.h"
 #include "Commands.h"
 #include "CommandAvailability.h"
 #include "Menu.h"
@@ -536,6 +537,12 @@ bool ShouldShowToolbar(MainWindow* win) {
     if (win->presentation || win->isQuickLook) {
         return false;
     }
+#if OS_WASM
+    // the tab strip and its menu button replace the toolbar on Home
+    if (win->IsCurrentTabAbout() && TabsAreVisible(win)) {
+        return false;
+    }
+#endif
     int mode = ToolbarModeForWindow(win);
     return mode == kToolbarShow;
 }

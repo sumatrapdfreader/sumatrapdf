@@ -22,9 +22,19 @@ const ENTER_VK = 13;
 const HELP_COMMAND = "help manual";
 export const EXIT_COMMAND = "exit application";
 const SAVE_AS_COMMAND = "save file as";
+const SECOND_NAME = "opened-from-document.pdf";
+const THIRD_NAME = "opened-from-home.pdf";
+const ESCAPE_VK = 27;
+// the tab strip's first cell
+const MENU_BUTTON = { x: 14, y: 12 };
+const HOME_TAB = { x: 52, y: 12 };
+const HOME_OPEN_BUTTON = { x: 612, y: 63 };
 // the toolbar's first button
-const OPEN_BUTTON = { x: 20, y: 18 };
 const OPEN_BUTTON_UNDER_TABS = { x: 20, y: 42 };
+const BELOW_TABS_Y = 30;
+// beside the page: hovers nothing
+const NEUTRAL_POINT = { x: 100, y: 300 };
+const SETTLE_MS = 1500;
 const PALETTE_INPUT = { x: 300, y: 64 };
 const OVERWRITE_YES = { x: 575, y: 437 };
 
@@ -133,6 +143,68 @@ export async function runFromPalette(cdp: Cdp, title: string): Promise<void> {
   await pressKey(cdp, "Enter", "Enter", ENTER_VK);
 }
 
+async function saveShot(cdp: Cdp, name: string): Promise<void> {
+  const shot = await cdp.send("Page.captureScreenshot");
+  writeFileSync(tmpPath(`ad-hoc-wasm-host-${name}.png`), Buffer.from(shot.data, "base64"));
+}
+
+// the page under the tab strip: toolbar and document, not the tab titles
+async function belowTabs(cdp: Cdp): Promise<string> {
+  await cdp.send("Input.dispatchMouseEvent", { type: "mouseMoved", ...NEUTRAL_POINT });
+  await Bun.sleep(SETTLE_MS);
+  const [width, height] = await cdp.eval(`[innerWidth, innerHeight]`);
+  const clip = { x: 0, y: BELOW_TABS_Y, width, height: height - BELOW_TABS_Y, scale: 1 };
+  return (await cdp.send("Page.captureScreenshot", { clip })).data;
+}
+
+async function pickCount(cdp: Cdp): Promise<number> {
+  return cdp.eval(`window.__calls.filter((c) => c === "pickFile").length`);
+}
+
+// Home has the tab strip with the menu button instead of the toolbar; documents
+// keep the toolbar, sized the same whether they were opened from Home or not
+async function testHomeTab(cdp: Cdp): Promise<void> {
+  await saveShot(cdp, "home");
+  await clickAt(cdp, MENU_BUTTON.x, MENU_BUTTON.y);
+  await Bun.sleep(400);
+  await saveShot(cdp, "home-menu");
+  await pressKey(cdp, "Escape", "Escape", ESCAPE_VK);
+  await Bun.sleep(200);
+  await clickAt(cdp, OPEN_BUTTON_UNDER_TABS.x, OPEN_BUTTON_UNDER_TABS.y);
+  await Bun.sleep(400);
+  if ((await pickCount(cdp)) !== 0) throw new Error("ad-hoc-wasm-host: Home has a toolbar");
+
+  await clickAt(cdp, HOME_OPEN_BUTTON.x, HOME_OPEN_BUTTON.y);
+  await waitFor(cdp, `window.__calls.includes("pickFile")`, "the pickFile hook");
+  await waitFor(cdp, `Module.FS.analyzePath("/uploads/${PICKED_NAME}").exists`, "the picked file in /uploads");
+  await Bun.sleep(SETTLE_MS);
+  await saveShot(cdp, "document");
+
+  await cdp.eval(`window.__pickName = "${SECOND_NAME}"`);
+  await clickAt(cdp, OPEN_BUTTON_UNDER_TABS.x, OPEN_BUTTON_UNDER_TABS.y);
+  await waitFor(cdp, `Module.FS.analyzePath("/uploads/${SECOND_NAME}").exists`, "a document's toolbar");
+  await Bun.sleep(SETTLE_MS);
+  const fromDocument = await belowTabs(cdp);
+
+  await clickAt(cdp, HOME_TAB.x, HOME_TAB.y);
+  await Bun.sleep(SETTLE_MS);
+  await saveShot(cdp, "home-with-tabs");
+  const picks = await pickCount(cdp);
+  await clickAt(cdp, OPEN_BUTTON_UNDER_TABS.x, OPEN_BUTTON_UNDER_TABS.y);
+  await Bun.sleep(400);
+  if ((await pickCount(cdp)) !== picks) throw new Error("ad-hoc-wasm-host: Home has a toolbar next to documents");
+
+  await cdp.eval(`window.__pickName = "${THIRD_NAME}"`);
+  await clickAt(cdp, HOME_OPEN_BUTTON.x, HOME_OPEN_BUTTON.y);
+  await waitFor(cdp, `Module.FS.analyzePath("/uploads/${THIRD_NAME}").exists`, "the document opened from Home");
+  await Bun.sleep(SETTLE_MS);
+  await saveShot(cdp, "opened-from-home");
+  if ((await belowTabs(cdp)) !== fromDocument) {
+    throw new Error("ad-hoc-wasm-host: a document opened from Home is laid out differently");
+  }
+  console.log("ad-hoc-wasm-host: ok: Home has tabs instead of the toolbar");
+}
+
 // records every call, and answers the way the page under test wants
 function hostScript(pdfB64: string): string {
   return `
@@ -142,7 +214,8 @@ function hostScript(pdfB64: string): string {
       pickFile(done) {
         window.__calls.push("pickFile");
         const bytes = Uint8Array.from(atob(${JSON.stringify(pdfB64)}), (c) => c.charCodeAt(0));
-        setTimeout(() => done({ name: "dir/${PICKED_NAME}", bytes }), 0);
+        const name = "dir/" + (window.__pickName || "${PICKED_NAME}");
+        setTimeout(() => done({ name, bytes }), 0);
         return true;
       },
       download({ name, path, bytes }) {
@@ -230,11 +303,8 @@ export async function testit(): Promise<void> {
     await cdp.eval(`document.getElementById("gpui-canvas").focus()`);
     await Bun.sleep(500);
 
-    // pickFile: the bytes land in /uploads, without the directory part
-    await clickAt(cdp, OPEN_BUTTON.x, OPEN_BUTTON.y);
-    await waitFor(cdp, `window.__calls.includes("pickFile")`, "the pickFile hook");
-    const uploaded = `Module.FS.analyzePath("/uploads/${PICKED_NAME}").exists`;
-    await waitFor(cdp, uploaded, "the picked file in /uploads");
+    // also pickFile: the bytes land in /uploads, without the directory part
+    await testHomeTab(cdp);
 
     // download: Save As, then accepting the name the dialog offers
     await waitFor(cdp, `Module.FS.analyzePath("/uploads/${PICKED_NAME}").exists`, "the document");

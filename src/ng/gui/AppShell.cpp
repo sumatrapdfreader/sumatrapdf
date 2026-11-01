@@ -3163,6 +3163,16 @@ Rect AppShellPredictCanvasRc(MainWindow* win, CanvasPredict predict) {
     bool menuBarShown = win->isMenuBarVisible && !gp::AppHasMenuBar();
     Rect canvas = CanvasRcForFrame(win, frameDx, frameDy, menuBarShown, tabsVisible);
     win->isMaximized = wasMaximized;
+#if OS_WASM
+    // Home has no toolbar, the document about to replace it does
+    if (predict == CanvasPredict::DocumentTab && win->IsCurrentTabAbout() && !win->isToolbarVisible) {
+        int toolbarDy = ToolbarDocTabDy(win);
+        canvas.dy -= toolbarDy;
+        if (!ToolbarAtBottom()) {
+            canvas.y += toolbarDy;
+        }
+    }
+#endif
     return canvas;
 }
 

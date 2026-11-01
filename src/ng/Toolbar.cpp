@@ -292,6 +292,14 @@ int ToolbarDy(MainWindow* win) {
     return AnnotRowVisible(win) ? (2 * tb->rowDy) : tb->rowDy;
 }
 
+// The row a document tab gets, for sizing a document while Home is current.
+int ToolbarDocTabDy(MainWindow* win) {
+    if (win->presentation || win->isQuickLook || ToolbarModeForWindow(win) != kToolbarShow) {
+        return 0;
+    }
+    return Tb(win)->rowDy;
+}
+
 // ng: every button's state is recomputed while the row is built, so these are
 // only a repaint request. They keep orig's names so the callers stay unchanged.
 void ToolbarUpdateStateForWindow(MainWindow* win, bool) {

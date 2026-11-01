@@ -23,6 +23,7 @@ void TabsOnChangedDoc(MainWindow*);
 void TabsSelect(MainWindow* win, int tabIndex);
 void GoToHomeTab(MainWindow*);
 void AddExtraHomeTab(MainWindow*);
+void AddStartupHomeTab(MainWindow*);
 enum class HomeTabKind {
     Pinned,
     Extra,

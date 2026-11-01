@@ -101,6 +101,7 @@ void UpdateToolbarAfterThemeChange(MainWindow*);
 int ToolbarIconSize();
 // height the toolbar takes in the frame, 0 when it is hidden or floating
 int ToolbarDy(MainWindow*);
+int ToolbarDocTabDy(MainWindow*);
 // ng: orig's GetToolbarButtonScreenRect is in screen coordinates, for the
 // popup windows it anchors; here everything is drawn in the frame
 Rect GetToolbarButtonRect(MainWindow*, int cmdId);
