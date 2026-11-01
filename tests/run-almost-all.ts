@@ -514,6 +514,7 @@ export const tests: NamedTest[] = [
   // first: it drives the home page, whose thumbnail selection follows the
   // mouse, so it is the one test that cares what the machine was doing before
   ["issue-5978", issue5978],
+  ["issue-4788", issue4788],
   ["issue-6373", issue6373],
   ["issue-6468", issue6468],
   ["issue-6230", issue6230],
@@ -825,7 +826,6 @@ export const tests: NamedTest[] = [
   ["epub-first-page-image", epubFirstPageImage],
   ["css-invalid-color", cssInvalidColor],
   ["epub-pre-wraps", epubPreWraps],
-  ["issue-4788", issue4788],
   ["issue-6359", issue6359],
   ["issue-6361", issue6361],
   ["issue-6362", issue6362],

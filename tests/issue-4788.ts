@@ -14,6 +14,7 @@ import { assemblePdf, cmdId, runStandalone, tmpPath } from "./util.ts";
 import { findCanvas, killAndWait, launchControlled } from "./win-automation.ts";
 import {
   captureWindowPixels,
+  ensureModifierKeysUp,
   enumWindows,
   getClassName,
   getWindowPid,
@@ -162,6 +163,8 @@ export async function testit(): Promise<void> {
     if (!kbdDlg) {
       throw new Error(`issue-4788: CmdAdjustBrightness did not open the "${DIALOG_TITLE}" dialog`);
     }
+    // the slider reads the live key state: a Ctrl stuck down mid-run (RDP) makes an arrow a big step
+    await ensureModifierKeysUp();
     postMessage(kbdDlg, WM_CHAR, "b".charCodeAt(0), 0);
     for (let i = 0; i < 3; i++) {
       postMessage(kbdDlg, WM_KEYDOWN, VK_RIGHT, 0);
