@@ -1105,7 +1105,6 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClInclude Include="..\ext\msdes\d3des.h" />
-    <ClInclude Include="..\ext\msdes\spr.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\ext\msdes\des.c" />

@@ -1517,7 +1517,7 @@ static void LitDesThread(LitDesThreadData* d) {
     Free(nullptr, out);
 }
 
-// expected is the output of unmodified d3des; not standard DES because of spr.h
+// expected is the output of unmodified d3des; not standard DES because of its SP tables
 bool LitDoc_UnitTestDes() {
     const u8 key[8] = {0x13, 0x34, 0x57, 0x79, 0x9B, 0xBC, 0xDF, 0xF1};
     const u8 src[8] = {0x85, 0xE8, 0x13, 0x54, 0x0F, 0x0A, 0xB4, 0x05};
