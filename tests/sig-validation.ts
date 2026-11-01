@@ -150,12 +150,78 @@ async function testTrustedList(): Promise<void> {
   expectHas(raw, NO_SOURCE, "self-signed and listed");
 }
 
+const AS_OF_TIMESTAMP = /validated as of the secure \(timestamp\) time/;
+const AS_OF_NOW = /validated as of the current time/;
+const EXPIRED_NO_PROOF = /isn't valid at that time, and no trusted timestamp proves/;
+const BAD_TIMESTAMP = /This timestamp couldn't be verified/;
+
+async function testSigningTime(): Promise<void> {
+  const root = makeCert({ name: "Test EU Root", isCa: true, notBefore: days(-3000), notAfter: days(3000) });
+  const ca = makeCert({
+    name: "Test Qualified CA",
+    issuer: root,
+    isCa: true,
+    notBefore: days(-2000),
+    notAfter: days(2000),
+  });
+  const tsa = makeCert({ name: "Test TSA", issuer: ca, isTsa: true, notBefore: days(-2000), notAfter: days(2000) });
+  const expired = makeCert({
+    name: "Jan Kowalski",
+    issuer: ca,
+    qualified: "esign",
+    notBefore: days(-400),
+    notAfter: days(-10),
+  });
+  const signedAt = days(-100);
+  const listCa: EutlEntry = { cert: ca, granted: [{ from: days(-1500) }] };
+  const listTsa: EutlEntry = { cert: ca, kind: "TSA", granted: [{ from: days(-1500) }] };
+  const spec = { signer: expired, extraCerts: [ca], signingTime: signedAt };
+  const stamp = { tsa, chain: [tsa, ca], time: signedAt };
+
+  // expired since, but a trusted timestamp proves it was valid when signed
+  let raw = await propsFor({ ...spec, timestamp: stamp }, [listCa, listTsa]);
+  expectHas(raw, QUALIFIED_SIG, "expired, with a timestamp");
+  expectHas(raw, AS_OF_TIMESTAMP, "expired, with a timestamp");
+  expectNot(raw, UNTRUSTED, "expired, with a timestamp");
+
+  // without proof the signer's clock counts for nothing
+  raw = await propsFor(spec, [listCa, listTsa]);
+  expectHas(raw, AS_OF_NOW, "expired, no timestamp");
+  expectHas(raw, EXPIRED_NO_PROOF, "expired, no timestamp");
+  expectHas(raw, UNTRUSTED, "expired, no timestamp");
+  expectNot(raw, QUALIFIED_SIG, "expired, no timestamp");
+
+  // a timestamp of something else
+  raw = await propsFor({ ...spec, timestamp: { ...stamp, forgeImprint: true } }, [listCa, listTsa]);
+  expectHas(raw, BAD_TIMESTAMP, "forged timestamp");
+  expectHas(raw, EXPIRED_NO_PROOF, "forged timestamp");
+
+  // a timestamp nobody vouches for
+  const stranger = makeCert({ name: "Unknown TSA", isTsa: true, notBefore: days(-2000), notAfter: days(2000) });
+  raw = await propsFor({ ...spec, timestamp: { tsa: stranger, chain: [stranger], time: signedAt } }, [listCa, listTsa]);
+  expectHas(raw, BAD_TIMESTAMP, "untrusted TSA");
+  expectHas(raw, EXPIRED_NO_PROOF, "untrusted TSA");
+
+  // what counts is the service's status when signed, not today
+  raw = await propsFor({ ...spec, timestamp: stamp }, [
+    { cert: ca, granted: [{ from: days(-1500), to: days(-50) }] },
+    listTsa,
+  ]);
+  expectHas(raw, QUALIFIED_SIG, "withdrawn after signing");
+  raw = await propsFor({ ...spec, timestamp: stamp }, [
+    { cert: ca, granted: [{ from: days(-1500), to: days(-200) }] },
+    listTsa,
+  ]);
+  expectHas(raw, CLAIM_ONLY, "withdrawn before signing");
+}
+
 export async function testit(): Promise<void> {
   if (IS_MAC) {
     console.log("SKIP sig-validation: the checks are in the Windows PKCS#7 backend");
     return;
   }
   await testTrustedList();
+  await testSigningTime();
 }
 
 if (import.meta.main) {

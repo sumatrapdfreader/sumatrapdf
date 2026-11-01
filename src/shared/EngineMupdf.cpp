@@ -8385,6 +8385,72 @@ static void AppendTrustSource(str::Builder& s, const pkcs7_windows_chain_info& c
     }
 }
 
+// a timestamp only proves a time if its own signer is trusted at that time
+static bool TimestampIsTrusted(fz_context* ctx, unsigned char* tok, size_t tokLen, i64 genTime, void* eutlList) {
+    if (genTime <= 0) {
+        return false;
+    }
+    EutlAnchorArgs anchor;
+    anchor.list = eutlList;
+    anchor.when = genTime;
+    anchor.kind = EutlKind::TSA;
+    void* store = (gEutlLookup && eutlList) ? gEutlLookup->store(eutlList) : nullptr;
+    pkcs7_windows_chain_info chain{};
+    pkcs7_windows_check_chain(ctx, tok, tokLen, genTime, store, EutlAnchorStatus, &anchor, &chain);
+    return chain.os_trusted || chain.eu_chain_ok;
+}
+
+// where in the file what the signature covers ends
+static i64 SigCoveredEnd(fz_context* ctx, pdf_obj* vDict) {
+    pdf_obj* range = pdf_dict_get(ctx, vDict, PDF_NAME(ByteRange));
+    int n = range ? pdf_array_len(ctx, range) : 0;
+    if (n < 2) {
+        return 0;
+    }
+    return pdf_to_int64(ctx, pdf_array_get(ctx, range, n - 2)) + pdf_to_int64(ctx, pdf_array_get(ctx, range, n - 1));
+}
+
+// A trusted document timestamp also proves when the signatures it covers
+// existed (PAdES B-LTA). Returns 0 if none does.
+static i64 DocTimestampCovering(fz_context* ctx, pdf_document* pdfdoc, const Vec<pdf_obj*>& fields, pdf_obj* sigV,
+                                void* eutlList) {
+    i64 sigEnd = SigCoveredEnd(ctx, sigV);
+    i64 earliest = 0;
+    for (pdf_obj* field : fields) {
+        pdf_obj* v = pdf_dict_get(ctx, field, PDF_NAME(V));
+        if (!v || v == sigV || !SubFilterIsDocTimeStamp(SigSubFilter(ctx, v)) || SigCoveredEnd(ctx, v) <= sigEnd) {
+            continue;
+        }
+        char* contents = nullptr;
+        fz_stream* stm = nullptr;
+        fz_buffer* stamped = nullptr;
+        fz_var(contents);
+        fz_var(stm);
+        fz_var(stamped);
+        fz_try(ctx) {
+            size_t n = pdf_signature_contents(ctx, pdfdoc, field, &contents);
+            stm = pdf_signature_hash_bytes(ctx, pdfdoc, field);
+            stamped = fz_read_all(ctx, stm, 64 * 1024);
+            i64 genTime = 0;
+            bool ok = n > 0 &&
+                      pkcs7_windows_verify_ts(ctx, (unsigned char*)contents, n, stamped->data, stamped->len, &genTime);
+            if (ok && TimestampIsTrusted(ctx, (unsigned char*)contents, n, genTime, eutlList) &&
+                (earliest == 0 || genTime < earliest)) {
+                earliest = genTime;
+            }
+        }
+        fz_always(ctx) {
+            fz_drop_buffer(ctx, stamped);
+            fz_drop_stream(ctx, stm);
+            fz_free(ctx, contents);
+        }
+        fz_catch(ctx) {
+            fz_report_error(ctx);
+        }
+    }
+    return earliest;
+}
+
 static void AppendQualifiedLine(str::Builder& s, SigLevel level, Str listDate) {
     switch (level) {
         case SigLevel::None:
@@ -8474,7 +8540,7 @@ static void AppendPadesLevel(str::Builder& s, bool isCades, bool hasTs, bool ltv
 
 static void AppendSignatureFieldInfo(fz_context* ctx, str::Builder& s, pdf_pkcs7_verifier* verifier,
                                      pdf_document* pdfdoc, pdf_obj* sigObj, int sigNo, int pageNo, bool docHasDss,
-                                     bool docHasDocTs, int laterSigs, void* eutlList) {
+                                     bool docHasDocTs, int laterSigs, void* eutlList, const Vec<pdf_obj*>& fields) {
     if (len(s) > 0) {
         s.AppendChar('\n');
     }
@@ -8509,12 +8575,52 @@ static void AppendSignatureFieldInfo(fz_context* ctx, str::Builder& s, pdf_pkcs7
     anchor.when = time(nullptr);
     anchor.kind = isDocTs ? EutlKind::TSA : EutlKind::CA;
     void* eutlStore = (gEutlLookup && eutlList) ? gEutlLookup->store(eutlList) : nullptr;
+    // the time this signature is checked as of: a trusted timestamp proves
+    // when it was made, without one all we have is now
+    i64 provenTime = 0;
     fz_try(ctx) {
         contentsLen = pdf_signature_contents(ctx, pdfdoc, sigObj, &contents);
         if (contentsLen > 0) {
             pkcs7_windows_inspect(ctx, (unsigned char*)contents, contentsLen, &info);
-            pkcs7_windows_check_chain(ctx, (unsigned char*)contents, contentsLen, 0, eutlStore, EutlAnchorStatus,
-                                      &anchor, &chain);
+            for (int ti = 0; ti < info.n_ts; ti++) {
+                pkcs7_windows_ts_info& ts = info.ts[ti];
+                if (ts.verified && TimestampIsTrusted(ctx, ts.token, ts.token_len, ts.gen_time_unix, eutlList)) {
+                    if (provenTime == 0 || ts.gen_time_unix < provenTime) {
+                        provenTime = ts.gen_time_unix;
+                    }
+                } else {
+                    ts.verified = 0;
+                }
+            }
+            if (provenTime == 0 && !isDocTs) {
+                provenTime = DocTimestampCovering(ctx, pdfdoc, fields, vDict, eutlList);
+            }
+            if (isDocTs) {
+                // a document timestamp's own time, once checked
+                fz_stream* stm = pdf_signature_hash_bytes(ctx, pdfdoc, sigObj);
+                fz_buffer* stamped = nullptr;
+                fz_var(stamped);
+                fz_try(ctx) {
+                    stamped = fz_read_all(ctx, stm, 64 * 1024);
+                    i64 genTime = 0;
+                    if (pkcs7_windows_verify_ts(ctx, (unsigned char*)contents, contentsLen, stamped->data, stamped->len,
+                                                &genTime)) {
+                        provenTime = genTime;
+                    }
+                }
+                fz_always(ctx) {
+                    fz_drop_buffer(ctx, stamped);
+                    fz_drop_stream(ctx, stm);
+                }
+                fz_catch(ctx) {
+                    fz_rethrow(ctx);
+                }
+            }
+            if (provenTime > 0) {
+                anchor.when = provenTime;
+            }
+            pkcs7_windows_check_chain(ctx, (unsigned char*)contents, contentsLen, provenTime, eutlStore,
+                                      EutlAnchorStatus, &anchor, &chain);
         }
     }
     fz_always(ctx) {
@@ -8543,8 +8649,10 @@ static void AppendSignatureFieldInfo(fz_context* ctx, str::Builder& s, pdf_pkcs7
     }
     if (signedAt) {
         s.Append(fmt("  Signature time: %s\n", signedAt));
-        if (isDocTs) {
+        if (isDocTs && provenTime > 0) {
             s.Append(StrL("  The time and date displayed is from the secure time & date server.\n"));
+        } else if (isDocTs) {
+            s.Append(StrL("  This timestamp couldn't be verified.\n"));
         } else {
             s.Append(StrL("  The time and date displayed is from the user device.\n"));
         }
@@ -8555,6 +8663,19 @@ static void AppendSignatureFieldInfo(fz_context* ctx, str::Builder& s, pdf_pkcs7
     if (!isDocTs) {
         Str listDate = (gEutlLookup && eutlList) ? gEutlLookup->date(eutlList) : Str();
         AppendQualifiedLine(s, QualifiedLevel(info, chain), listDate);
+    }
+
+    if (!isDocTs) {
+        if (provenTime > 0) {
+            s.Append(StrL("  The signature was validated as of the secure (timestamp) time.\n"));
+        } else {
+            s.Append(StrL("  The signature was validated as of the current time.\n"));
+        }
+        if (chain.not_time_valid) {
+            s.Append(
+                StrL("  The certificate isn't valid at that time, and no trusted timestamp proves the "
+                     "signature was made while it was.\n"));
+        }
     }
 
     pdf_signature_error certErr = CertErrFromChain(chain);
@@ -8603,7 +8724,11 @@ static void AppendSignatureFieldInfo(fz_context* ctx, str::Builder& s, pdf_pkcs7
         TempStr tsTime = FormatUnixTimeTemp(ts.gen_time_unix);
         if (tsTime) {
             s.Append(fmt("  Signature time: %s\n", tsTime));
-            s.Append(StrL("  The time and date displayed is from the secure time & date server.\n"));
+            if (ts.verified) {
+                s.Append(StrL("  The time and date displayed is from the secure time & date server.\n"));
+            } else {
+                s.Append(StrL("  This timestamp couldn't be verified, so this time proves nothing.\n"));
+            }
         }
         if (ts.issuer_cn && ts.issuer_cn[0]) {
             s.Append(fmt("  Certificate issued by: %s\n", Str(ts.issuer_cn)));
@@ -8768,7 +8893,7 @@ static TempStr GetSignatures(EngineMupdf* e) {
             ++sigNo;
             int pageNo = PageNoForSigField(ctx, pdfdoc, field);
             AppendSignatureFieldInfo(ctx, sigs, verifier, pdfdoc, field, sigNo, pageNo, hasDss, hasDocTs,
-                                     LaterSignatures(ctx, pdfdoc, fields, field), eutlList);
+                                     LaterSignatures(ctx, pdfdoc, fields, field), eutlList, fields);
         }
 #else
         for (int i = 0; i < len(fields); i++) {

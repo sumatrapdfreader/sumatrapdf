@@ -901,6 +901,25 @@ static void parse_tstinfo(fz_context* ctx, const unsigned char* p, size_t n, pkc
         q += hdr + body;
         left -= hdr + body;
     }
+    // messageImprint: SEQ { SEQ { algorithm OID, ... }, OCTET STRING }
+    if (left >= 2 && q[0] == 0x30 && asn1_len(q, left, &hdr, &body) == 0) {
+        const unsigned char* mi = q + hdr;
+        size_t miLeft = body;
+        size_t h2, b2;
+        if (miLeft >= 2 && mi[0] == 0x30 && asn1_len(mi, miLeft, &h2, &b2) == 0) {
+            const unsigned char* alg = mi + h2;
+            size_t h3, b3;
+            if (b2 >= 2 && alg[0] == 0x06 && asn1_len(alg, b2, &h3, &b3) == 0) {
+                ts->imprint_oid = oid_to_dotted(ctx, alg + h3, b3);
+            }
+            mi += h2 + b2;
+            miLeft -= h2 + b2;
+            if (miLeft >= 2 && mi[0] == 0x04 && asn1_len(mi, miLeft, &h3, &b3) == 0) {
+                ts->imprint = dup_bytes(ctx, mi + h3, (int)b3);
+                ts->imprint_len = (int)b3;
+            }
+        }
+    }
     if (asn1_skip(&q, &left) != 0) {
         return;
     }
@@ -922,6 +941,8 @@ static void parse_tstinfo(fz_context* ctx, const unsigned char* p, size_t n, pkc
         }
     }
 }
+
+static void free_ts(fz_context* ctx, pkcs7_windows_ts_info* ts);
 
 static void inspect_timestamp_token(fz_context* ctx, unsigned char* tok, DWORD tok_len, pkcs7_windows_ts_info* ts) {
     HCRYPTMSG hMsg = NULL;
@@ -966,6 +987,63 @@ static void inspect_timestamp_token(fz_context* ctx, unsigned char* tok, DWORD t
 
 done:
     close_metadata(hMsg, hStore, si, cert);
+}
+
+static LPCWSTR cng_hash_name(const char* oid) {
+    if (!strcmp(oid, szOID_NIST_sha256)) {
+        return L"SHA256";
+    }
+    if (!strcmp(oid, szOID_NIST_sha384)) {
+        return L"SHA384";
+    }
+    if (!strcmp(oid, szOID_NIST_sha512)) {
+        return L"SHA512";
+    }
+    if (!strcmp(oid, szOID_OIWSEC_sha1)) {
+        return L"SHA1";
+    }
+    return NULL;
+}
+
+// does the imprint match these bytes?
+static int imprint_matches(const pkcs7_windows_ts_info* ts, const unsigned char* data, size_t n) {
+    BYTE digest[64];
+    DWORD cb = sizeof(digest);
+    LPCWSTR alg;
+    if (!ts->imprint_oid || !ts->imprint || !data) {
+        return 0;
+    }
+    alg = cng_hash_name(ts->imprint_oid);
+    if (!alg || !CryptHashCertificate2(alg, 0, NULL, data, (DWORD)n, digest, &cb)) {
+        return 0;
+    }
+    return (int)cb == ts->imprint_len && memcmp(digest, ts->imprint, cb) == 0;
+}
+
+// the token is a SignedData that carries what it signs
+static int token_signature_ok(const unsigned char* tok, DWORD tok_len) {
+    CRYPT_VERIFY_MESSAGE_PARA para;
+    ZeroMemory(&para, sizeof(para));
+    para.cbSize = sizeof(para);
+    para.dwMsgAndCertEncodingType = PKCS_7_ASN_ENCODING | X509_ASN_ENCODING;
+    return CryptVerifyMessageSignature(&para, 0, tok, tok_len, NULL, NULL, NULL) ? 1 : 0;
+}
+
+// A document timestamp stamps the bytes its /ByteRange names. Returns non-zero
+// if the token is good, and when it says that was.
+int pkcs7_windows_verify_ts(fz_context* ctx, unsigned char* tok, size_t tok_len, const unsigned char* stamped,
+                            size_t stamped_len, int64_t* gen_time_out) {
+    pkcs7_windows_ts_info ts;
+    int ok;
+    memset(&ts, 0, sizeof(ts));
+    tok_len = trim_sig(tok, tok_len);
+    inspect_timestamp_token(ctx, tok, (DWORD)tok_len, &ts);
+    ok = token_signature_ok(tok, (DWORD)tok_len) && imprint_matches(&ts, stamped, stamped_len);
+    if (gen_time_out) {
+        *gen_time_out = ts.gen_time_unix;
+    }
+    free_ts(ctx, &ts);
+    return ok;
 }
 
 static int bytes_contain(const BYTE* p, DWORD n, const unsigned char* needle, DWORD needle_len) {
@@ -1135,6 +1213,9 @@ static void free_ts(fz_context* ctx, pkcs7_windows_ts_info* ts) {
     fz_free(ctx, ts->hash_algo);
     fz_free(ctx, ts->policy_oid);
     fz_free(ctx, ts->cert_der);
+    fz_free(ctx, ts->imprint_oid);
+    fz_free(ctx, ts->imprint);
+    fz_free(ctx, ts->token);
 }
 
 void pkcs7_windows_sig_info_free(fz_context* ctx, pkcs7_windows_sig_info* info) {
@@ -1159,7 +1240,9 @@ static int ts_filled(const pkcs7_windows_ts_info* ts) {
     return ts->signer_cn || ts->gen_time_unix || ts->cert_der;
 }
 
-static void add_ts_token(fz_context* ctx, unsigned char* p, DWORD n, pkcs7_windows_sig_info* info) {
+// sig_value is what a signature timestamp stamps: the signature's own value
+static void add_ts_token(fz_context* ctx, unsigned char* p, DWORD n, const CRYPT_DATA_BLOB* sig_value,
+                         pkcs7_windows_sig_info* info) {
     pkcs7_windows_ts_info* dst;
     if (!info || info->n_ts >= PKCS7_WINDOWS_MAX_TS || !p || n == 0) {
         return;
@@ -1172,6 +1255,9 @@ static void add_ts_token(fz_context* ctx, unsigned char* p, DWORD n, pkcs7_windo
         memset(dst, 0, sizeof(*dst));
         return;
     }
+    dst->token = dup_bytes(ctx, p, (int)n);
+    dst->token_len = (int)n;
+    dst->verified = token_signature_ok(p, n) && imprint_matches(dst, sig_value->pbData, sig_value->cbData);
     info->n_ts++;
     info->has_timestamp = 1;
 }
@@ -1182,7 +1268,8 @@ static int is_ts_oid(const char* oid) {
                    !strcmp(oid, "0.4.0.19122.1.1"));
 }
 
-static void collect_ts_from_unauth(fz_context* ctx, PCRYPT_ATTRIBUTES attrs, pkcs7_windows_sig_info* info) {
+static void collect_ts_from_unauth(fz_context* ctx, PCRYPT_ATTRIBUTES attrs, const CRYPT_DATA_BLOB* sig_value,
+                                   pkcs7_windows_sig_info* info) {
     DWORD i, v;
     if (!attrs) {
         return;
@@ -1193,12 +1280,13 @@ static void collect_ts_from_unauth(fz_context* ctx, PCRYPT_ATTRIBUTES attrs, pkc
             continue;
         }
         for (v = 0; v < attr->cValue; v++) {
-            add_ts_token(ctx, attr->rgValue[v].pbData, attr->rgValue[v].cbData, info);
+            add_ts_token(ctx, attr->rgValue[v].pbData, attr->rgValue[v].cbData, sig_value, info);
         }
     }
 }
 
-static void collect_ts_from_raw(fz_context* ctx, unsigned char* sig, size_t sig_len, pkcs7_windows_sig_info* info) {
+static void collect_ts_from_raw(fz_context* ctx, unsigned char* sig, size_t sig_len, const CRYPT_DATA_BLOB* sig_value,
+                                pkcs7_windows_sig_info* info) {
     static const unsigned char kOid14[] = {0x06, 0x0B, 0x2A, 0x86, 0x48, 0x86, 0xF7,
                                            0x0D, 0x01, 0x09, 0x10, 0x02, 0x0E};
     static const unsigned char kOid27[] = {0x06, 0x0B, 0x2A, 0x86, 0x48, 0x86, 0xF7,
@@ -1231,7 +1319,7 @@ static void collect_ts_from_raw(fz_context* ctx, unsigned char* sig, size_t sig_
             if (left < 2 || p[0] != 0x30 || asn1_len(p, left, &hdr, &body) != 0) {
                 continue;
             }
-            add_ts_token(ctx, (unsigned char*)p, (DWORD)(hdr + body), info);
+            add_ts_token(ctx, (unsigned char*)p, (DWORD)(hdr + body), sig_value, info);
         }
         i += (size_t)hit - 1;
     }
@@ -1299,9 +1387,9 @@ int pkcs7_windows_inspect(fz_context* ctx, unsigned char* sig, size_t sig_len, p
     if (find_attr(&si->AuthAttrs, "1.2.840.113549.1.9.16.2.15")) {
         info->has_sig_policy_attr = 1;
     }
-    collect_ts_from_unauth(ctx, &si->UnauthAttrs, info);
+    collect_ts_from_unauth(ctx, &si->UnauthAttrs, &si->EncryptedHash, info);
     if (info->n_ts == 0) {
-        collect_ts_from_raw(ctx, sig, sig_len, info);
+        collect_ts_from_raw(ctx, sig, sig_len, &si->EncryptedHash, info);
     }
     {
         DWORD cb = 0;
@@ -1313,6 +1401,8 @@ int pkcs7_windows_inspect(fz_context* ctx, unsigned char* sig, size_t sig_len, p
                 parse_tstinfo(ctx, inner, cb, &ts);
                 info->gen_time_unix = ts.gen_time_unix;
                 info->policy_oid = ts.policy_oid;
+                fz_free(ctx, ts.imprint_oid);
+                fz_free(ctx, ts.imprint);
             }
             if (inner) {
                 LocalFree(inner);

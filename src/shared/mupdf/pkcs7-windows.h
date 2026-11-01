@@ -35,6 +35,15 @@ typedef struct {
     int64_t not_after_unix;
     unsigned char* cert_der;
     int cert_der_len;
+    // what the token says it stamps
+    char* imprint_oid;
+    unsigned char* imprint;
+    int imprint_len;
+    // the token's signature is good and it stamps what it should
+    int verified;
+    // the token itself, to check its signer's chain
+    unsigned char* token;
+    int token_len;
 } pkcs7_windows_ts_info;
 
 #define PKCS7_WINDOWS_MAX_TS 8
@@ -90,6 +99,8 @@ typedef struct {
 
 void pkcs7_windows_sig_info_clear(pkcs7_windows_sig_info* info);
 void pkcs7_windows_sig_info_free(fz_context* ctx, pkcs7_windows_sig_info* info);
+int pkcs7_windows_verify_ts(fz_context* ctx, unsigned char* tok, size_t tok_len, const unsigned char* stamped,
+                            size_t stamped_len, int64_t* gen_time_out);
 void pkcs7_windows_check_chain(fz_context* ctx, unsigned char* sig, size_t sig_len, int64_t when_unix,
                                void* extra_store, pkcs7_windows_anchor_fn anchor_fn, void* anchor_ud,
                                pkcs7_windows_chain_info* out);

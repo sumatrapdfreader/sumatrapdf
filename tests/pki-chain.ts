@@ -222,7 +222,7 @@ function makeSignedData(spec: SignedDataSpec): { cms: Buffer; signature: Buffer 
   }
   const encap = spec.content ? seq(oid(spec.contentType), ctx(0, octets(spec.content))) : seq(oid(spec.contentType));
   const signedData = seq(
-    int(1),
+    int(spec.content ? 3 : 1),
     set(digestAlg),
     encap,
     ctx(0, ...spec.certs.map((c) => c.der)),
