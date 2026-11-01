@@ -43,6 +43,7 @@ void CommandAvailability_UnitTests() {
     utassert(MenuVis(CmdTogglePageGrid, noDoc) == CommandVisibility::Hide);
     utassert(MenuVis(CmdToggleTransparencyGrid, noDoc) == CommandVisibility::Hide);
     utassert(!CmdWorksWithoutDocument(CmdTogglePageGrid));
+    utassert(PaletteVis(CmdShowSignatures, noDoc) == CommandVisibility::Hide);
 
     bool remove = false, disable = false;
     GetCommandIdState(&noDoc, CmdPrint, &remove, &disable);

@@ -416,6 +416,9 @@ CommandVisibility GetCommandVisibility(int cmdId, const AppCommandCtx& ctx, Comm
     if (cmdId == CmdInsertTextSnippet) {
         return CommandVisibility::Hide;
     }
+    if (cmdId == CmdShowSignatures && !ctx.hasSignatures) {
+        return CommandVisibility::Hide;
+    }
     // only a document from a temporary folder has somewhere to be copied (#6437)
     if (cmdId == CmdCopyTemporaryFileToNonTemporary) {
 #if OS_WASM

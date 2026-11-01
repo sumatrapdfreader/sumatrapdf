@@ -11027,6 +11027,12 @@ static LRESULT FrameOnCommand(MainWindow* win, HWND hwnd, UINT msg, WPARAM wp, L
             break;
         }
 
+        case CmdShowSignatures:
+            if (win) {
+                ShowSidebarView(win, SidebarView::Signatures);
+            }
+            break;
+
         case CmdSignDocument: {
             bool certify = cmd && GetCommandBoolArg(cmd, kCmdArgCertify, false);
             ShowSignDocumentDialog(win, {}, false, certify ? kPdfCertifyNoChanges : 0);

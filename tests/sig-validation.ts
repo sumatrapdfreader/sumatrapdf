@@ -455,6 +455,8 @@ async function testUi(): Promise<void> {
         throw new Error(`sig-validation: ${s.rows} rows\n${s.text}`);
       }
 
+      sendCommand(await waitForFrame(proc.pid!), cmdId("CmdShowSignatures"));
+      await waitForState(client, (st) => st.panel, "the command shows no panel");
       s = await uiState(client, "panel");
       if (!s.panel) {
         throw new Error(`sig-validation: the bar's button shows no panel\n${s.text}`);
@@ -486,6 +488,11 @@ async function testUi(): Promise<void> {
     async (client, proc) => {
       const frame = await waitForFrame(proc.pid!);
       await waitForState(client, (st) => st.bar === "" && st.rows === 0, "an unsigned tab shows a bar");
+      sendCommand(frame, cmdId("CmdShowSignatures"));
+      await Bun.sleep(300);
+      if ((await uiState(client)).panel) {
+        throw new Error("sig-validation: the command shows the panel for an unsigned document");
+      }
       sendCommand(frame, cmdId("CmdPrevTab"));
       await waitForState(client, (st) => st.bar !== "" && st.rows === 1, "the signed tab shows no bar");
       sendCommand(frame, cmdId("CmdNextTab"));

@@ -358,6 +358,7 @@ const commandsRaw = [
     "CmdSumatraOnline", "Sumatra Online...",
     "CmdDebugSaveSettings", "Debug: Save Settings",
     "CmdNewTab", "New Tab",
+    "CmdShowSignatures", "Show Signatures",
 ];
 
 // removed slots are dropped: nothing outside the generators should see them

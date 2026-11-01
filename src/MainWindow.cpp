@@ -769,6 +769,7 @@ AppCommandCtx NewAppCommandCtx(MainWindow* win, Point cursorPos) {
 
     ctx.isSpeaking = TtsIsSpeaking();
     ctx.clipboardHasImage = IsClipboardFormatAvailable(CF_BITMAP);
+    ctx.hasSignatures = TabHasSignatures(ctx.tab);
     ctx.aiChatAvailable = IsAIChatAvailable();
     ctx.aiChatSupported = IsAIChatSupportedForTab(ctx.tab);
     ctx.grokInstalled = IsBackendInstalled(AIChatBackend::Grok);
