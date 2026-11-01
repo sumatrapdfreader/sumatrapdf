@@ -49,6 +49,9 @@ static void OnPaintAbout(MainWindow* win) {
     DrawCanvasKeyboardFocusIfNeeded(win, hdc);
 
     EndPaint(win->hwndCanvas, &ps);
+    if (drawHome) {
+        HomePageRepaintWinScrollbar(win);
+    }
     win->ShowFrameRateDur(TimeSinceInMs(t));
 }
 

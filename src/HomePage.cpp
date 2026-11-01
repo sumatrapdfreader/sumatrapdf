@@ -3062,15 +3062,29 @@ static void UpdateHomeWinScrollbar(MainWindow* win) {
     }
     // may resize the canvas, which re-lays out the page
     ShowWinScrollBar(win->hwndCanvas, SB_VERT, show);
+}
 
-    // The canvas is created with WS_VSCROLL, so no state change repaints the bar
-    // and a non-client paint lost while hidden would leave a blank strip (#6462).
-    if (!show) {
-        win->homeWinScrollbarDrawn = false;
-    } else if (!win->homeWinScrollbarDrawn && HwndIsVisible(win->hwndCanvas)) {
-        win->homeWinScrollbarDrawn = true;
-        RedrawWindow(win->hwndCanvas, nullptr, nullptr, RDW_FRAME | RDW_INVALIDATE);
+void HomePageRepaintWinScrollbar(MainWindow* win) {
+    if (!win || !win->hwndCanvas || !HwndIsVisible(win->hwndCanvas)) {
+        return;
     }
+    if (ScrollbarsAreHidden() || ScrollbarsUseOverlay()) {
+        return;
+    }
+    auto& c = HomeLayout(win);
+    if (!c.valid || c.totalContentDy <= c.thumbsVisibleDy) {
+        return;
+    }
+    // relayout runs before ShowWindow, and again before the scrollbar theme is
+    // applied. Those frame paints are dropped. This runs after a visible client
+    // paint, which is when a resize would repaint the bar.
+    static bool repainting = false;
+    if (repainting) {
+        return;
+    }
+    repainting = true;
+    SendMessageW(win->hwndCanvas, WM_NCPAINT, 1, 0);
+    repainting = false;
 }
 
 void HomePageCreate(MainWindow* win) {

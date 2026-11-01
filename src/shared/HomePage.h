@@ -51,6 +51,9 @@ void HomePageRelayout(MainWindow* win);
 void HomePageHideSearch(MainWindow* win);
 void HomePageOnVScroll(MainWindow* win, WPARAM wp);
 void HomePageOnMouseWheel(MainWindow* win, int delta);
+// native home scrollbar: a frame paint lost at startup stays black until
+// something else invalidates the non-client area (#6462)
+void HomePageRepaintWinScrollbar(MainWindow* win);
 void HomePageUpdateSearchColors(MainWindow* win);
 void HomePageOnDpiChanged(MainWindow* win, int dpi);
 void HomePageDestroySearch(MainWindow* win);
