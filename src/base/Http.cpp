@@ -423,15 +423,19 @@ Exit2:
     return ok;
 }
 
-// Same POST as HttpPostUrl, but a 3xx is an error. WinHTTP would otherwise
-// follow it and send the caller's headers, including Authorization, to Location.
-// HttpPostUrl stays on the default policy for crash reports and selection.
+// A 3xx is an error; redirects are not followed.
 bool HttpPostUrlNoRedirect(Str url, Str contentType, Str extraHeaders, Str body, HttpRsp* rspOut) {
     bool ok = false;
     DWORD sc = 0;
     HINTERNET hSession = nullptr, hConnect = nullptr, hRequest = nullptr;
     rspOut->error = ERROR_SUCCESS;
     rspOut->httpStatusCode = (DWORD)-1;
+
+    if (!OnlineURLAllowed(url)) {
+        rspOut->error = ERROR_INVALID_PARAMETER;
+        logf("HttpPostUrlNoRedirect: url: '%s' status: %d\n", url, -1);
+        return false;
+    }
 
     URL_COMPONENTS uc{};
     uc.dwStructSize = sizeof(uc);
@@ -447,8 +451,13 @@ bool HttpPostUrlNoRedirect(Str url, Str contentType, Str extraHeaders, Str body,
     }
 
     {
+        int pathLen = (uc.dwUrlPathLength == (DWORD)-1) ? 0 : (int)uc.dwUrlPathLength;
+        int extraLen = (uc.dwExtraInfoLength == (DWORD)-1) ? 0 : (int)uc.dwExtraInfoLength;
         TempWStr host = str::DupTemp(WStr(uc.lpszHostName, (int)uc.dwHostNameLength));
-        TempWStr pathAndQuery = str::DupTemp(WStr(uc.lpszUrlPath, (int)(uc.dwUrlPathLength + uc.dwExtraInfoLength)));
+        TempWStr pathAndQuery = str::DupTemp(WStr(uc.lpszUrlPath, pathLen + extraLen));
+        if (len(pathAndQuery) == 0) {
+            pathAndQuery = str::DupTemp(WStrL(L"/"));
+        }
 
         hSession = WinHttpOpen(kUserAgent, WINHTTP_ACCESS_TYPE_AUTOMATIC_PROXY, WINHTTP_NO_PROXY_NAME,
                                WINHTTP_NO_PROXY_BYPASS, 0);
@@ -710,13 +719,11 @@ static bool WriteAllBytes(HANDLE h, const void* data, DWORD n) {
     return true;
 }
 
-// Writes the body to destPath. Blocks; call it off the UI thread. Refuses a URL
-// OnlineURLAllowed rejects before WinHttpOpen, does not follow redirects, and
-// does not relax certificate checks. Logs the URL and the status only.
-// A body past 50 MiB deletes the partial file and sets ERROR_FILE_TOO_LARGE.
+// Does not follow redirects. A body over 50 MiB deletes the partial file.
 bool HttpDownloadWithHeaders(Str url, Str extraHeaders, Str destPath, HttpRsp* rspOut) {
     bool ok = false;
     bool created = false;
+    TempStr partPath;
     HINTERNET hSession = nullptr;
     HINTERNET hConnect = nullptr;
     HINTERNET hRequest = nullptr;
@@ -813,7 +820,9 @@ bool HttpDownloadWithHeaders(Str url, Str extraHeaders, Str destPath, HttpRsp* r
             }
         }
 
-        hFile = CreateFileW(CWStrTemp(destPath), GENERIC_WRITE, FILE_SHARE_READ, nullptr, CREATE_ALWAYS,
+        // A failed transfer must not truncate the last good copy of destPath.
+        partPath = str::JoinTemp(destPath, StrL(".part"));
+        hFile = CreateFileW(CWStrTemp(partPath), GENERIC_WRITE, FILE_SHARE_READ, nullptr, CREATE_ALWAYS,
                             FILE_ATTRIBUTE_NORMAL, nullptr);
         if (hFile == INVALID_HANDLE_VALUE) {
             rspOut->error = GetLastError();
@@ -863,8 +872,13 @@ ExitDl:
         CloseHandle(hFile);
         hFile = INVALID_HANDLE_VALUE;
     }
+    if (ok && !file::RenameReplace(destPath, partPath)) {
+        DWORD err = GetLastError();
+        rspOut->error = err != 0 ? err : (DWORD)ERROR_GEN_FAILURE;
+        ok = false;
+    }
     if (created && !ok) {
-        file::Delete(destPath);
+        file::Delete(partPath);
     }
     if (hRequest) {
         WinHttpCloseHandle(hRequest);

@@ -27,9 +27,7 @@ TempStr HttpNormalizeHeadersTemp(Str headers);
 #if OS_WIN
 bool OnlineURLAllowed(Str url);
 bool HttpGetWithHeaders(Str url, Str extraHeaders, HttpRsp* rspOut);
-// POST that does not follow redirects. HttpPostUrl keeps the default policy.
 bool HttpPostUrlNoRedirect(Str url, Str contentType, Str extraHeaders, Str body, HttpRsp* rspOut);
-// GET that writes the body to destPath. Stops at 50 MiB. Does not follow redirects.
 bool HttpDownloadWithHeaders(Str url, Str extraHeaders, Str destPath, HttpRsp* rspOut);
 #endif
 

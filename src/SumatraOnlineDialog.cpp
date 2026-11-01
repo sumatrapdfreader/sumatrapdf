@@ -254,7 +254,6 @@ struct SumatraOnlineWnd : WindowBase {
     void UpdateFileButtons();
     bool CanUploadDoc() const;
     void ClearFileList();
-    void ReplaceFileList(Vec<OnlineListedFile>& files);
     void DrawFileRow(VirtListBox::DrawItemEvent* ev);
     void OnFileSel();
     void OnLogin(VirtMouseEvent* ev = nullptr);
@@ -346,22 +345,6 @@ void SumatraOnlineWnd::ClearFileList() {
     if (listBox) {
         listBox->SetModel(fileModel);
     }
-}
-
-void SumatraOnlineWnd::ReplaceFileList(Vec<OnlineListedFile>& files) {
-    VecReset(fileSizes);
-    if (fileModel) {
-        fileModel->strings.Reset();
-        for (OnlineListedFile& f : files) {
-            fileModel->strings.Append(f.name);
-            VecAppend(fileSizes, f.size);
-        }
-    }
-    FreeOnlineFiles(files);
-    if (listBox && fileModel) {
-        listBox->SetModel(fileModel);
-    }
-    UpdateFileButtons();
 }
 
 void SumatraOnlineWnd::DrawFileRow(VirtListBox::DrawItemEvent* ev) {
@@ -694,7 +677,18 @@ void SumatraOnlineWnd::FinishList(OnlineJobResult* res) {
         UpdateFileButtons();
         return;
     }
-    ReplaceFileList(parsed);
+    VecReset(fileSizes);
+    if (fileModel) {
+        fileModel->strings.Reset();
+        for (OnlineListedFile& f : parsed) {
+            fileModel->strings.Append(f.name);
+            VecAppend(fileSizes, f.size);
+        }
+    }
+    FreeOnlineFiles(parsed);
+    if (listBox && fileModel) {
+        listBox->SetModel(fileModel);
+    }
     if (clearListStatus) {
         SetStatus({});
     }
@@ -801,12 +795,16 @@ void SumatraOnlineWnd::BeginUpload(Str localPath) {
         SetStatus(Tr("That is not a Sumatra Online API key."));
         return;
     }
-    TempStr base = path::GetBaseNameTemp(localPath);
-    if (!ValidUploadName(base)) {
+    // MsgBox pumps. localPath may be tab->filePath, freed when a load finishes.
+    Str pathOwned = str::Dup(localPath);
+    AutoFree<char> pathFree(pathOwned.s);
+    Str baseOwned = str::Dup(path::GetBaseNameTemp(pathOwned));
+    AutoFree<char> baseFree(baseOwned.s);
+    if (!ValidUploadName(baseOwned)) {
         SetStatus(Tr("That file name cannot be uploaded."));
         return;
     }
-    i64 sz = file::GetSize(localPath);
+    i64 sz = file::GetSize(pathOwned);
     if (sz < 0) {
         SetStatus(Tr("Could not read the file."));
         return;
@@ -817,9 +815,10 @@ void SumatraOnlineWnd::BeginUpload(Str localPath) {
         return;
     }
 
-    bool known = fileModel && fileModel->strings.Contains(base);
-    TempStr question = known ? fmt(Tr("Replace %s on Sumatra Online?").s, base)
-                             : fmt(Tr("Upload %s? If that name already exists on the server, it is replaced.").s, base);
+    bool known = fileModel && fileModel->strings.Contains(baseOwned);
+    TempStr question =
+        known ? fmt(Tr("Replace %s on Sumatra Online?").s, baseOwned)
+              : fmt(Tr("Upload %s? If that name already exists on the server, it is replaced.").s, baseOwned);
     int answer = MsgBox(hwnd, question, Tr("Link Sumatra Online"), MB_YESNO | MB_ICONQUESTION);
     if (answer != IDYES) {
         return;
@@ -831,7 +830,7 @@ void SumatraOnlineWnd::BeginUpload(Str localPath) {
         return;
     }
 
-    TempStr url = fmt("%s/api/files?name=%s", OnlineOrigin(), url::EncodeTemp(base));
+    TempStr url = fmt("%s/api/files?name=%s", OnlineOrigin(), url::EncodeTemp(baseOwned));
     if (!OnlineURLAllowed(url)) {
         SetStatus(Tr("The server address is not allowed."));
         return;
@@ -840,7 +839,7 @@ void SumatraOnlineWnd::BeginUpload(Str localPath) {
     req->job = OnlineJob::Upload;
     req->url = str::Dup(url);
     req->token = str::Dup(gSettings->onlineApiKey);
-    req->filePath = str::Dup(localPath);
+    req->filePath = str::Dup(pathOwned);
     StartJob(req);
 }
 
