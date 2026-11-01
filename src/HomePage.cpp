@@ -3061,7 +3061,16 @@ static void UpdateHomeWinScrollbar(MainWindow* win) {
         SetScrollInfo(win->hwndCanvas, SB_VERT, &si, TRUE);
     }
     // may resize the canvas, which re-lays out the page
-    ShowScrollBar(win->hwndCanvas, SB_VERT, show);
+    ShowWinScrollBar(win->hwndCanvas, SB_VERT, show);
+
+    // The canvas is created with WS_VSCROLL, so no state change repaints the bar
+    // and a non-client paint lost while hidden would leave a blank strip (#6462).
+    if (!show) {
+        win->homeWinScrollbarDrawn = false;
+    } else if (!win->homeWinScrollbarDrawn && HwndIsVisible(win->hwndCanvas)) {
+        win->homeWinScrollbarDrawn = true;
+        RedrawWindow(win->hwndCanvas, nullptr, nullptr, RDW_FRAME | RDW_INVALIDATE);
+    }
 }
 
 void HomePageCreate(MainWindow* win) {

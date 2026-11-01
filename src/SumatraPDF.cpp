@@ -1192,7 +1192,7 @@ static bool WinScrollBarHasClientGap(HWND hwnd, int bar) {
 // If the bit is already on but the bar was never laid out (hidden restore),
 // hide then show so WM_NCCALCSIZE runs. ShowScrollBar(TRUE) alone does not
 // layout when the bit is already set.
-static void ShowWinScrollBar(HWND hwnd, int bar, BOOL show) {
+void ShowWinScrollBar(HWND hwnd, int bar, BOOL show) {
     DWORD bit = (bar == SB_HORZ) ? WS_HSCROLL : WS_VSCROLL;
     DWORD style = (DWORD)GetWindowLongW(hwnd, GWL_STYLE);
     bool isShown = (style & bit) != 0;

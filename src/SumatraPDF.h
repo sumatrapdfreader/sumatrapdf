@@ -57,6 +57,7 @@ struct FileHistory;
 struct MainWindow;
 extern Func1<MainWindow*> gAfterLayout;
 extern Func0 gOnSessionRestored;
+void ShowWinScrollBar(HWND hwnd, int bar, BOOL show);
 void NotifySessionRestoreFinished();
 bool IsSessionRestoreFinished();
 bool HasPendingDocumentLoads();
