@@ -391,6 +391,8 @@ CommandVisibility GetCommandVisibility(int cmdId, const AppCommandCtx& ctx, Comm
 #endif
 #if OS_WASM
     if (cmdId == CmdRunPDFScript) return CommandVisibility::Hide;
+    // a browser tab has one canvas, so one window
+    if (cmdId == CmdNewWindow || cmdId == CmdDuplicateInNewWindow) return CommandVisibility::Hide;
 #endif
     if (cmdId <= CmdFirst) {
         return CommandVisibility::Hide;

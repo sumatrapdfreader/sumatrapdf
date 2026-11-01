@@ -3375,6 +3375,12 @@ MainWindow* AppShellCreateWindow(gp::App* app, int dipW, int dipH) {
     gp::WinOpts opts;
     opts.clientTitleBar = CanHaveTabsInTitlebar() && (SettingsUseTabs() || !gSettings->showCaption);
     gp::Window* gw = gp::WindowOpenView(app, GStrL("SumatraPDF"), dipW, dipH, ui->view.id, opts);
+    // wasm has one window: a browser tab has one canvas
+    if (!gw) {
+        logf("AppShellCreateWindow: gpui didn't open a window\n");
+        delete ui;
+        return nullptr;
+    }
     auto* win = new MainWindow(gw);
     // The first paint replaces this. Ebook layout runs before that paint and
     // needs the size the window was opened at (#3472).

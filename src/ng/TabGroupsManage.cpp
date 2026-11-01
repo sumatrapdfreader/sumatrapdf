@@ -246,10 +246,11 @@ static void OpenTabGroup(MainWindow* win) {
     if (!group->tabFiles || len(*group->tabFiles) == 0) {
         return;
     }
-    bool hasFiles = HasOpenedDocuments(win);
-    logf("OpenTabGroup: '%s', %d tabs, new window %d\n", group->name, GroupTabCount(group), hasFiles ? 1 : 0);
+    // wasm has one window, so the group joins the tabs already there
+    bool newWindow = !OS_WASM && HasOpenedDocuments(win);
+    logf("OpenTabGroup: '%s', %d tabs, new window %d\n", group->name, GroupTabCount(group), newWindow ? 1 : 0);
     CloseCurrentDlg();
-    MainWindow* targetWin = hasFiles ? CreateAndShowMainWindow(nullptr) : win;
+    MainWindow* targetWin = newWindow ? CreateAndShowMainWindow(nullptr) : win;
     if (!targetWin) {
         return;
     }

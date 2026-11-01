@@ -22,12 +22,15 @@ const ENTER_VK = 13;
 const HELP_COMMAND = "help manual";
 export const EXIT_COMMAND = "exit application";
 const SAVE_AS_COMMAND = "save file as";
+const NEW_WINDOW_COMMAND = "new window";
 const SECOND_NAME = "opened-from-document.pdf";
 const THIRD_NAME = "opened-from-home.pdf";
 const ESCAPE_VK = 27;
 // the tab strip's first cell
 const MENU_BUTTON = { x: 14, y: 12 };
 const HOME_TAB = { x: 52, y: 12 };
+const SECOND_DOC_TAB = { x: 376, y: 12 };
+const MENU_FILE_ITEM = { x: 40, y: 36 };
 const HOME_OPEN_BUTTON = { x: 612, y: 63 };
 // the toolbar's first button
 const OPEN_BUTTON_UNDER_TABS = { x: 20, y: 42 };
@@ -122,7 +125,7 @@ async function pressCtrl(cdp: Cdp, letter: string): Promise<void> {
 }
 
 // the browser keeps Ctrl+Q and F1, so go the way a user of the page does
-export async function runFromPalette(cdp: Cdp, title: string): Promise<void> {
+async function typeInPalette(cdp: Cdp, title: string): Promise<void> {
   await pressCtrl(cdp, "K");
   await Bun.sleep(400);
   await clickAt(cdp, PALETTE_INPUT.x, PALETTE_INPUT.y);
@@ -140,6 +143,10 @@ export async function runFromPalette(cdp: Cdp, title: string): Promise<void> {
     await Bun.sleep(30);
   }
   await Bun.sleep(600);
+}
+
+export async function runFromPalette(cdp: Cdp, title: string): Promise<void> {
+  await typeInPalette(cdp, title);
   await pressKey(cdp, "Enter", "Enter", ENTER_VK);
 }
 
@@ -206,6 +213,62 @@ async function testHomeTab(cdp: Cdp): Promise<void> {
 }
 
 // records every call, and answers the way the page under test wants
+// drops a tab below the strip, where it would move to a window of its own
+async function dragTabOut(cdp: Cdp): Promise<void> {
+  const { x, y } = SECOND_DOC_TAB;
+  await cdp.send("Input.dispatchMouseEvent", { type: "mouseMoved", x, y });
+  await Bun.sleep(100);
+  const held = { button: "left", buttons: 1 };
+  await cdp.send("Input.dispatchMouseEvent", { type: "mousePressed", x, y, clickCount: 1, ...held });
+  for (const dy of [10, 40, 120, 250]) {
+    await cdp.send("Input.dispatchMouseEvent", { type: "mouseMoved", x, y: y + dy, ...held });
+    await Bun.sleep(100);
+  }
+  await cdp.send("Input.dispatchMouseEvent", { type: "mouseReleased", x, y: y + 250, clickCount: 1, ...held });
+}
+
+async function wholePage(cdp: Cdp): Promise<string> {
+  await cdp.send("Input.dispatchMouseEvent", { type: "mouseMoved", ...NEUTRAL_POINT });
+  await Bun.sleep(SETTLE_MS);
+  return (await cdp.send("Page.captureScreenshot")).data;
+}
+
+// a browser tab has one canvas, so one window: nothing offers another, and
+// what would make one leaves the tabs alone
+async function testNoSecondWindow(cdp: Cdp): Promise<void> {
+  cdp.events.length = 0;
+  await typeInPalette(cdp, NEW_WINDOW_COMMAND);
+  await saveShot(cdp, "palette-new-window");
+  await pressKey(cdp, "Escape", "Escape", ESCAPE_VK);
+  await Bun.sleep(200);
+  await pressCtrl(cdp, "N");
+  await Bun.sleep(SETTLE_MS);
+
+  await clickAt(cdp, SECOND_DOC_TAB.x, SECOND_DOC_TAB.y);
+  const beforeDrag = await wholePage(cdp);
+  await dragTabOut(cdp);
+  if ((await wholePage(cdp)) !== beforeDrag) {
+    await saveShot(cdp, "tab-dragged-out");
+    throw new Error("ad-hoc-wasm-host: dragging a tab out of the strip changed the tabs");
+  }
+
+  await clickAt(cdp, MENU_BUTTON.x, MENU_BUTTON.y);
+  await Bun.sleep(400);
+  await clickAt(cdp, MENU_FILE_ITEM.x, MENU_FILE_ITEM.y);
+  await Bun.sleep(400);
+  await saveShot(cdp, "file-menu");
+  await pressKey(cdp, "Escape", "Escape", ESCAPE_VK);
+  await pressKey(cdp, "Escape", "Escape", ESCAPE_VK);
+  await Bun.sleep(200);
+
+  const crash = cdp.events.find((e) => e.method === "Runtime.exceptionThrown");
+  if (crash) {
+    const { exception, text } = crash.params.exceptionDetails;
+    throw new Error(`ad-hoc-wasm-host: asking for a new window crashed: ${exception?.description ?? text}`);
+  }
+  console.log("ad-hoc-wasm-host: ok: asking for a new window doesn't crash");
+}
+
 function hostScript(pdfB64: string): string {
   return `
     window.__calls = [];
@@ -305,6 +368,7 @@ export async function testit(): Promise<void> {
 
     // also pickFile: the bytes land in /uploads, without the directory part
     await testHomeTab(cdp);
+    await testNoSecondWindow(cdp);
 
     // download: Save As, then accepting the name the dialog offers
     await waitFor(cdp, `Module.FS.analyzePath("/uploads/${PICKED_NAME}").exists`, "the document");

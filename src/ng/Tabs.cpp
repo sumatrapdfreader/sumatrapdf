@@ -333,6 +333,11 @@ void MaybeMigrateTab(WindowTab* tab, MainWindow* newWin) {
     if (tab->IsNonDocumentTab()) {
         return;
     }
+    // wasm has one window: there is nowhere for the tab to go, and it must not
+    // be removed below
+    if (OS_WASM && !newWin) {
+        return;
+    }
     // don't migrate a lone document tab unless it is dropped on another window
     int nDocTabs = 0;
     for (WindowTab* t : oldWin->Tabs()) {
