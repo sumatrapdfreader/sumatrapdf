@@ -592,6 +592,8 @@ typedef struct
 
 	hb_buffer_t *hb_buf;
 	fz_html_restarter *restart;
+	/* SumatraPDF: 1-based page of the last line laid out, 0 if none */
+	int last_line_page;
 } layout_data;
 
 /* "are we in a restarting context, and still skipping?" */
@@ -606,8 +608,16 @@ typedef struct
 /* SumatraPDF: page height for content laid out without page breaks */
 #define UNPAGINATED_H 1e7f
 
+/* SumatraPDF: least share of the page an image is shrunk to, to stay on an empty page */
+#define MIN_FIT_ON_EMPTY_PAGE 0.75f
+
 #define TRBLCPY(DST,SRC) \
 do { DST[T] = SRC[T] ; DST[R] = SRC[R]; DST[B] = SRC[B]; DST[L] = SRC[L]; } while (0)
+
+static int page_of(layout_data *ld, float y)
+{
+	return 1 + (int)floorf((y - ld->page[T]) / (ld->page[B] - ld->page[T]));
+}
 
 static int flush_line(fz_context *ctx, fz_html_box *box, layout_data *ld, float line_w, int align, float indent, fz_html_flow *a, fz_html_flow *b, fz_html_restarter *restart)
 {
@@ -639,6 +649,7 @@ static int flush_line(fz_context *ctx, fz_html_box *box, layout_data *ld, float 
 			}
 			box->s.layout.b += avail;
 		}
+		ld->last_line_page = page_of(ld, box->s.layout.b);
 	}
 	layout_line(ctx, indent, page_w, line_w, align, a, b, box, baseline, line_h);
 	box->s.layout.b += line_h;
@@ -919,6 +930,7 @@ static void layout_flow(fz_context *ctx, layout_data *ld, fz_html_box *box, fz_h
 	float line_w, candidate_w, desperate_w, indent, bounds_w;
 	int justify_align;
 	int align;
+	int seen_content = 0;
 	fz_html_restarter *restart = ld->restart;
 
 	float em = box->s.layout.em;
@@ -1011,6 +1023,7 @@ static void layout_flow(fz_context *ctx, layout_data *ld, fz_html_box *box, fz_h
 			float aspect = 1;
 			float max_w = ld->bounds[R] - ld->bounds[L]; // current block content box width
 			float max_h = ld->page[B] - ld->page[T]; // page height (excluding page margins)
+			float fit_h = max_h;
 
 			/* NOTE: We ignore the image DPI here, since most images in EPUB files have bogus values. */
 			node->w = node->content.image->w * 72.0f / 96.0f;
@@ -1026,14 +1039,25 @@ static void layout_flow(fz_context *ctx, layout_data *ld, fz_html_box *box, fz_h
 			if (node->box->style->width.unit != N_AUTO && node->box->style->height.unit == N_AUTO)
 				node->h = (aspect == 0) ? 0 : (node->w / aspect);
 
+			/* SumatraPDF: with only margins above it, moving on would leave a blank page */
+			if (max_h > 0 && !seen_content && ld->last_line_page < page_of(ld, box->s.layout.b))
+			{
+				float avail = max_h - fmodf(box->s.layout.b - ld->page[T], max_h);
+				if (avail >= max_h * MIN_FIT_ON_EMPTY_PAGE)
+					fit_h = avail;
+			}
+
 			/* Shrink image to fit on one page if needed */
 			if (max_w > 0 && node->w > max_w)
 				xs = max_w / node->w;
-			if (max_h > 0 && node->h > max_h)
-				ys = max_h / node->h;
+			if (max_h > 0 && node->h > fit_h)
+				ys = fit_h / node->h;
 			s = fz_min(xs, ys);
 			node->w = node->w * s;
 			node->h = node->h * s;
+			/* SumatraPDF: rounding must not make it too tall for the line to fit */
+			if (max_h > 0 && node->h > fit_h)
+				node->h = fit_h;
 
 		}
 		else if (node->type == FLOW_ANCHOR)
@@ -1045,6 +1069,8 @@ static void layout_flow(fz_context *ctx, layout_data *ld, fz_html_box *box, fz_h
 			/* Note: already measured width in layout_update_widths */
 			measure_string_h(ctx, node);
 		}
+		if (node->type != FLOW_ANCHOR && node->type != FLOW_SPACE && node->type != FLOW_SBREAK)
+			seen_content = 1;
 	}
 
 	node = box->u.flow.head;

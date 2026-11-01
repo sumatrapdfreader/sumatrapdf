@@ -77,6 +77,7 @@ relative to `ext/mupdf`, so `-p1` from inside that directory.
 | `0074-pdf-raw-key-password` | a password of `PDF_RAW_KEY_PASSWORD_PREFIX` + the key in hex unlocks a PDF, so tools can re-open one unlocked with a remembered key |
 | `0075-pdfbake-password` | `pdfbake -p`: it could not open a password-protected PDF |
 | `0076-pdfinfo-to-buffer-password` | `pdfinfo_to_buffer` takes a password, for PDF Info on a password-protected PDF |
+| `0077-html-image-first-on-empty-page` | a page-tall image first in a chapter no longer leaves a blank page before it |
 
 That is the whole list: `ext/mupdf` is byte-for-byte `1.28.5` plus these
 patches, and nothing else.

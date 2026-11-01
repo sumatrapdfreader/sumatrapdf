@@ -182,6 +182,7 @@ import { testit as issue6330 } from "./issue-6330.ts";
 import { testit as issue6332 } from "./issue-6332.ts";
 import { testit as issue6339 } from "./issue-6339.ts";
 import { testit as issue1293 } from "./issue-1293.ts";
+import { testit as epubFirstPageImage } from "./epub-first-page-image.ts";
 import { testit as issue4788 } from "./issue-4788.ts";
 import { testit as issue6359 } from "./issue-6359.ts";
 import { testit as issue6360 } from "./issue-6360.ts";
@@ -815,6 +816,7 @@ export const tests: NamedTest[] = [
   ["issue-6332", issue6332],
   ["issue-6339", issue6339],
   ["issue-1293", issue1293],
+  ["epub-first-page-image", epubFirstPageImage],
   ["issue-4788", issue4788],
   ["issue-6359", issue6359],
   ["issue-6361", issue6361],
