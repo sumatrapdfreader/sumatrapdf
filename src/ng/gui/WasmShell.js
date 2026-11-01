@@ -289,6 +289,28 @@
     );
   };
 
+  // Asks the page embedding us (docs/wasm-host-api.md). True when the host took
+  // the call; otherwise the caller does what it does without a host.
+  var kHostApiVersion = 1;
+  var hostChecked = false;
+  Module.sumatraHostCall = function (name, arg) {
+    var host = window.sumatraHost;
+    if (!host) return false;
+    if (!hostChecked) {
+      hostChecked = true;
+      if (host.apiVersion !== kHostApiVersion) {
+        console.warn("sumatraHost.apiVersion is", host.apiVersion, "want", kHostApiVersion);
+      }
+    }
+    if (typeof host[name] !== "function") return false;
+    try {
+      return !!host[name](arg);
+    } catch (e) {
+      console.error("sumatraHost." + name + " failed", e);
+      return false;
+    }
+  };
+
   Module.preRun = Module.preRun || [];
   Module.preRun.push(function () {
     try {

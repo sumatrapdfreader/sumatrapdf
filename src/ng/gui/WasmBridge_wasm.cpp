@@ -17,19 +17,53 @@ static char gPickedPath[1024];
 // NOLINTNEXTLINE
 EM_JS(void, WasmJsPickFile, (const char* dir, int dirLen, char* out, int outCap), {
     var dirPath = UTF8ToString(dir, dirLen);
-    var input = document.createElement("input");
-    input.type = "file";
-    input.style.display = "none";
-    document.body.appendChild(input);
+    var input = null;
     var settled = false;
     var done = function(path) {
         if (settled) return;
         settled = true;
-        input.remove();
+        if (input) input.remove();
         stringToUTF8(path ? path : "", out, outCap);
         _sumatra_wasm_file_picked();
         if (Module.sumatraFocusCanvas) Module.sumatraFocusCanvas();
     };
+    var store = function(name, bytes) {
+        var path = dirPath + "/" + name;
+        try {
+            FS.writeFile(path, new Uint8Array(bytes));
+        } catch (e) {
+            console.error("writing " + path + " failed", e);
+            done(null);
+            return;
+        }
+        var save = Module.sumatraStorageSave;
+        if (!save) {
+            console.error("saving " + path + " to OPFS failed", "storage is not initialized");
+            done(path);
+            return;
+        }
+        save(function(err) {
+            if (err) {
+                console.error("saving " + path + " to OPFS failed", err);
+            }
+            done(path);
+        });
+    };
+    var fromHost = function(file) {
+        if (!file || !file.name || !file.bytes) {
+            done(null);
+            return;
+        }
+        var name = String(file.name);
+        store(name.substring(name.lastIndexOf("/") + 1), file.bytes);
+    };
+    if (Module.sumatraHostCall && Module.sumatraHostCall("pickFile", fromHost)) {
+        return;
+    }
+    input = document.createElement("input");
+    input.type = "file";
+    input.style.display = "none";
+    document.body.appendChild(input);
     input.addEventListener("cancel", function() { done(null); });
     input.addEventListener(
         "change", function() {
@@ -39,28 +73,7 @@ EM_JS(void, WasmJsPickFile, (const char* dir, int dirLen, char* out, int outCap)
                 return;
             }
             file.arrayBuffer().then(
-                function(bytes) {
-                    var path = dirPath + "/" + file.name;
-                    try {
-                        FS.writeFile(path, new Uint8Array(bytes));
-                    } catch (e) {
-                        console.error("writing " + path + " failed", e);
-                        done(null);
-                        return;
-                    }
-                    var save = Module.sumatraStorageSave;
-                    if (!save) {
-                        console.error("saving " + path + " to OPFS failed", "storage is not initialized");
-                        done(path);
-                        return;
-                    }
-                    save(function(err) {
-                        if (err) {
-                            console.error("saving " + path + " to OPFS failed", err);
-                        }
-                        done(path);
-                    });
-                },
+                function(bytes) { store(file.name, bytes); },
                 function(e) {
                     console.error("reading the picked file failed", e);
                     done(null);
@@ -74,24 +87,31 @@ EM_JS(void, WasmJsPickFile, (const char* dir, int dirLen, char* out, int outCap)
 EM_JS(void, WasmJsDownload, (const char* path, int pathLen, const char* name, int nameLen), {
     var filePath = UTF8ToString(path, pathLen);
     var fileName = UTF8ToString(name, nameLen);
-    var bytes;
-    try {
-        bytes = FS.readFile(filePath);
-    } catch (e) {
-        console.error("reading " + filePath + " failed", e);
-        return;
-    }
-    var url = URL.createObjectURL(new Blob([bytes], {
-        type:
-            "application/octet-stream"
-    }));
-    var a = document.createElement("a");
-    a.href = url;
-    a.download = fileName;
-    document.body.appendChild(a);
-    a.click();
-    a.remove();
-    setTimeout(function() { URL.revokeObjectURL(url); }, 10000);
+    // bytes() copies out of MEMFS, so a host that declines doesn't pay for it
+    var hostArg = {name : fileName, path : filePath, bytes : function(){return FS.readFile(filePath); }
+}
+;
+if (Module.sumatraHostCall && Module.sumatraHostCall("download", hostArg)) {
+    return;
+}
+var bytes;
+try {
+    bytes = FS.readFile(filePath);
+} catch (e) {
+    console.error("reading " + filePath + " failed", e);
+    return;
+}
+var url = URL.createObjectURL(new Blob([bytes], {
+type:
+    "application/octet-stream"
+}));
+var a = document.createElement("a");
+a.href = url;
+a.download = fileName;
+document.body.appendChild(a);
+a.click();
+a.remove();
+setTimeout(function() { URL.revokeObjectURL(url); }, 10000);
 });
 
 // NOLINTNEXTLINE
@@ -280,6 +300,25 @@ bool WasmPrintPdf(Str path) {
 void WasmPersistSettings() {
     Str dir((char*)kWasmSettingsDir);
     WasmJsPersist(dir.s, dir.len);
+}
+
+// NOLINTNEXTLINE
+EM_JS(void, WasmJsExit, (), {
+    var notify = function(err) {
+        if (err) console.error("saving to OPFS before exit failed", err);
+        if (Module.sumatraHostCall) Module.sumatraHostCall("exit", {saved : !err});
+    };
+    if (Module.sumatraStorageSave) {
+        Module.sumatraStorageSave(notify);
+        return;
+    }
+    notify("storage is not initialized");
+});
+
+// The app is quitting and its settings are in MEMFS: finish the write to OPFS,
+// then tell the host, which may navigate away.
+void WasmNotifyExit() {
+    WasmJsExit();
 }
 
 // NOLINTNEXTLINE

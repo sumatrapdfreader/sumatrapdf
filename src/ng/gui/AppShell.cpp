@@ -908,6 +908,9 @@ void AppShellFocusFrame(MainWindow* win) {
 }
 
 void AppShellQuit() {
+#if OS_WASM
+    WasmNotifyExit();
+#endif
     if (gApp) {
         gp::AppQuitAll(gApp);
     }

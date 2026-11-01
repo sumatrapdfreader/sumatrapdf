@@ -143,7 +143,8 @@ settings in OPFS `/settings` (mirrored in MEMFS); fonts are embedded. Wasm embed
 (help opens the website) and stores the embedded archive uncompressed
 (`MakeLZSA -store`): the web server compresses the `.wasm`. Wasm has no pthreads:
 `StartThread()` runs inline and render loops drain in main-thread slices.
-Console targets use Node and NODERAWFS.
+Console targets use Node and NODERAWFS. A page embedding the app can take over
+browser operations through `window.sumatraHost`; see `docs/wasm-host-api.md`.
 
 Ng unit tests are the `test_util` target:
 `bun cmd/ng-build.ts -dbg test_util -run -- -for-ai`.

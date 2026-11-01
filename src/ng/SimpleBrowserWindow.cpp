@@ -174,7 +174,7 @@ void SimpleBrowserWindowShow(const SimpleBrowserCreateArgs& args) {
     }
     if (!BrowserViewAvailable()) {
         logf("SimpleBrowserWindowShow: no embedded browser, opening '%s' externally\n", args.url);
-        gp::OpenUrl(ToGpui(args.url));
+        SumatraLaunchBrowser(args.url);
         return;
     }
     // orig: an open window navigates and comes to the front
@@ -201,7 +201,7 @@ void SimpleBrowserWindowShow(const SimpleBrowserCreateArgs& args) {
     // the WebView's dark canvas
     BrowserViewSetBackground(gBrowser.view, ThemeWindowBackgroundColor());
     if (!gBrowser.view) {
-        gp::OpenUrl(ToGpui(args.url));
+        SumatraLaunchBrowser(args.url);
         return;
     }
     BrowserViewSetVisible(gBrowser.view, true);

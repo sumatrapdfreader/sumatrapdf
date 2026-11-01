@@ -13,6 +13,9 @@
 // NOLINTNEXTLINE
 EM_JS(void, WasmOpenUrl, (const char* s, int n), {
     var url = UTF8ToString(s, n);
+    if (Module.sumatraHostCall && Module.sumatraHostCall("openUrl", {url : url})) {
+        return;
+    }
     window.open(url, "_blank", "noopener");
 });
 

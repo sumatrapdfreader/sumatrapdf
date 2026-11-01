@@ -192,7 +192,12 @@ bool SumatraLaunchBrowser(Str url) {
 
     // ng: orig's LaunchFileShell(url, {}, "open")
     logf("SumatraLaunchBrowser: '%s'\n", url);
+#if OS_WASM
+    // goes through the host's openUrl hook
+    LaunchBrowser(url);
+#else
     gp::OpenUrl(ToGpui(url));
+#endif
     return true;
 }
 

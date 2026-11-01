@@ -36,6 +36,8 @@ bool WasmPrintPdf(Str path);
 // many calls in a row cost one sync. Unchanged files are not rewritten.
 void WasmPersistSettings();
 
+void WasmNotifyExit();
+
 // The page's `?file=` query parameter, a path in MEMFS. It is the browser's
 // version of a file name on the command line.
 TempStr WasmQueryFileTemp();

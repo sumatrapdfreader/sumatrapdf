@@ -126,7 +126,7 @@ Str AIChatResources::GetDataForUrl(Str url) {
 bool AIChatResources::OnBeforeNavigate(Str url, bool newWindow) {
     if (newWindow) {
         // a link in an answer opens in the user's browser, not in the panel
-        gp::OpenUrl(ToGpui(url));
+        SumatraLaunchBrowser(url);
         return false;
     }
     return true;
