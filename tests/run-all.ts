@@ -6,6 +6,7 @@
 // (print-to-PDF, LaTeX, a measured wait, high-zoom tile settle, a huge
 // fixture, or copying the exe next to restrict.ini). Those go in `slowTests`.
 
+import { testit as sigValidation } from "./sig-validation.ts";
 import {
   formatDuration,
   runNamedTests,
@@ -62,6 +63,7 @@ export const notInPreReleaseTests: NamedTest[] = [
 ];
 
 export const slowTests: NamedTest[] = [
+  ["sig-validation", sigValidation],
   // WebView TOC
   ["issue-5842", issue5842],
   ["issue-6003", issue6003],
