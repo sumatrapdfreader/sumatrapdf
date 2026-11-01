@@ -10581,7 +10581,11 @@ static bool FormFieldValueIsEmpty(int wt, const char* val) {
 void EngineMupdfGetPageWidgets(EngineBase* engine, int pageNo, Vec<Annotation*>& out) {
     VecClear(out);
     EngineMupdf* epdf = AsEngineMupdf(engine);
-    FzPageInfo* pi = GetPdfPageInfo(epdf, pageNo);
+    if (!epdf || !epdf->pdfdoc) {
+        return;
+    }
+    // blocking: the try-lock lookup reports no widgets while another thread holds the page locks
+    FzPageInfo* pi = epdf->GetFzPageInfo(pageNo, true);
     if (!pi) {
         return;
     }
