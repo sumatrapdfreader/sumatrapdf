@@ -141,13 +141,7 @@ void TabGroupsWnd::OpenTabGroup() {
 
     // reuse current window if it has no files open (only about tab or empty)
     MainWindow* targetMain = win;
-    bool hasFiles = false;
-    for (WindowTab* tab : targetMain->Tabs()) {
-        if (!tab->IsAboutTab()) {
-            hasFiles = true;
-            break;
-        }
-    }
+    bool hasFiles = HasOpenedDocuments(targetMain);
     MainWindow* targetWin = hasFiles ? CreateAndShowMainWindow(nullptr) : targetMain;
     if (!targetWin) {
         return;

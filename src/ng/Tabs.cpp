@@ -197,10 +197,7 @@ WindowTab* AddTabToWindow(MainWindow* win, WindowTab* tab, bool deferUpdate) {
     bool noHomeTab = gSettings->noHomeTab;
     bool createHomeTab = useTabs && !noHomeTab && (idx == 0);
     if (createHomeTab) {
-        auto* homeTab = new WindowTab(win);
-        homeTab->type = WindowTab::Type::About;
-        homeTab->canvasRc = win->canvasRc;
-        VecAppend(win->tabs, homeTab);
+        VecAppend(win->tabs, NewHomeTab(win, HomeTabKind::Pinned));
         idx++;
     }
 
@@ -237,18 +234,32 @@ void GoToHomeTab(MainWindow* win) {
     if (!win || !SettingsUseTabs()) {
         return;
     }
-    for (int i = 0; i < win->TabCount(); i++) {
-        if (win->GetTab(i)->IsAboutTab()) {
-            TabsSelect(win, i);
-            return;
-        }
+    WindowTab* homeTab = FindHomeTab(win);
+    if (homeTab) {
+        TabsSelect(win, win->GetTabIdx(homeTab));
+        return;
     }
 
     SaveCurrentWindowTab(win);
-    auto* homeTab = new WindowTab(win);
-    homeTab->type = WindowTab::Type::About;
-    homeTab->canvasRc = win->canvasRc;
+    homeTab = NewHomeTab(win, HomeTabKind::Pinned);
     VecInsertAt(win->tabs, 0, homeTab);
+    TabsUIOnTabsChanged(win);
+    LoadModelIntoTab(homeTab);
+}
+
+// the "+" button: another Home tab after the last one. It stays out of the
+// session, which only stores documents
+void AddExtraHomeTab(MainWindow* win) {
+    if (!win || !SettingsUseTabs()) {
+        return;
+    }
+    if (win->TabCount() == 0) {
+        GoToHomeTab(win);
+        return;
+    }
+    SaveCurrentWindowTab(win);
+    WindowTab* homeTab = NewHomeTab(win, HomeTabKind::Extra);
+    VecAppend(win->tabs, homeTab);
     TabsUIOnTabsChanged(win);
     LoadModelIntoTab(homeTab);
 }
@@ -379,14 +390,7 @@ void CloseAllTabs(MainWindow* win) {
     }
     // can't close while iterating over the tabs so collect them first
     Vec<WindowTab*> toClose;
-    int nTabs = win->TabCount();
-    for (int i = 0; i < nTabs; i++) {
-        WindowTab* t = win->GetTab(i);
-        if (t->IsAboutTab()) {
-            continue;
-        }
-        VecAppend(toClose, t);
-    }
+    CollectClosableTabs(win, toClose);
     CloseCollectedTabs(win, toClose);
 }
 
@@ -411,6 +415,9 @@ void MoveTab(MainWindow* win, int dir) {
     int idx = win->GetTabIdx(win->CurrentTab());
     int newIdx = idx + dir;
     if (idx < 0 || newIdx < 0 || newIdx >= nTabs) {
+        return;
+    }
+    if (win->GetTab(idx)->IsPinnedHomeTab() || win->GetTab(newIdx)->IsPinnedHomeTab()) {
         return;
     }
     WindowTab* tmp = win->tabs[idx];

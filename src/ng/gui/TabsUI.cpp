@@ -72,6 +72,7 @@ struct TabsView {
     static void OnTabDown(TabsView* self, gp::Ctx* cx, const gp::MouseDownEvent* ev, int64_t idx);
     static void OnTabUp(TabsView* self, gp::Ctx* cx, const gp::MouseUpEvent* ev, int64_t idx);
     static void OnBarDown(TabsView* self, gp::Ctx* cx, const gp::MouseDownEvent* ev);
+    static void OnPlusClick(TabsView* self, gp::Ctx* cx, const gp::ClickEvent*);
     static void OnBarWheel(TabsView* self, gp::Ctx* cx, const gp::ScrollWheelEvent* ev);
     static void OnFillerDrop(TabsView* self, gp::Ctx* cx, const gp::DropEvent* ev);
     static void OnTabHover(TabsView* self, gp::Ctx* cx, const gp::HoverEvent* ev, int64_t idx);
@@ -115,7 +116,7 @@ void TabsUIOnTabsChanged(MainWindow* win) {
 
 // orig: a pinned tab (the Home tab) is neither dragged nor a drop target
 static bool IsPinnedTab(WindowTab* tab) {
-    return tab->IsAboutTab();
+    return tab->IsPinnedHomeTab();
 }
 
 static Color TabBgColor(WindowTab* tab, bool isSelected, bool isUnderMouse) {
@@ -149,10 +150,11 @@ static int TabWidth(MainWindow* win, int barDx) {
     if (ui->widthFrozen && ui->frozenDx > 0) {
         return ui->frozenDx;
     }
-    int restDx = barDx - 5;
+    // the "+" is square and always there
+    int restDx = barDx - 5 - ui->barDy;
     int nRest = nTabs;
     for (int i = 0; i < nTabs; i++) {
-        if (!win->GetTab(i)->IsAboutTab()) {
+        if (!IsPinnedTab(win->GetTab(i))) {
             continue;
         }
         nRest--;
@@ -391,6 +393,11 @@ void TabsView::OnTabClose(TabsView* self, gp::Ctx* cx, const gp::ClickEvent*, in
     gp::Notify(cx);
 }
 
+void TabsView::OnPlusClick(TabsView* self, gp::Ctx* cx, const gp::ClickEvent*) {
+    AddExtraHomeTab(self->win);
+    gp::Notify(cx);
+}
+
 // ng: orig's TrackPopupMenu returns the command only after the menu is gone.
 // gpui's popup is still up when the action fires, and it holds the keyboard and
 // the mouse, so a command that opens a dialog would open it behind a layer that
@@ -464,7 +471,7 @@ static gp::El* BuildTab(MainWindow* win, gp::Ctx* cx, int idx, int tabDx) {
     }
 
     // orig: Home is as wide as its label plus margins, with no room for a close
-    bool isHome = tab->IsAboutTab();
+    bool isHome = IsPinnedTab(tab);
     gp::El* el = gp::Div(cx->a)
                      ->FlexRow()
                      ->H(gp::kFill)
@@ -649,6 +656,16 @@ gp::El* TabsUIBuild(MainWindow* win, gp::Ctx* cx, int barDy) {
     for (int i = 0; i < nTabs; i++) {
         bar->Child(BuildTab(win, cx, i, tabDx));
     }
+    bar->Child(gpc::Button::New(cx, GStrL("sumatra-tabs-plus"))
+                   ->Icon(gp::IconName::Plus)
+                   ->Ghost()
+                   ->Compact()
+                   ->WithSize(gp::UiSize::XSmall)
+                   ->OnClick(gp::ListenTo(Ui(win)->view, &TabsView::OnPlusClick))
+                   ->IntoEl()
+                   ->W((float)ui->barDy)
+                   ->H(gp::kFill)
+                   ->Shrink0());
     // orig answers WM_NCHITTEST with HTCAPTION for the strip's empty area: a
     // drag there moves the window, a double-click maximizes it and a right
     // click shows the system menu. A tab dropped there leaves the window

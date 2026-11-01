@@ -3555,6 +3555,8 @@ void CloseTab(WindowTab* tab, bool quitIfLast) {
     if (win->GetTabIdx(tab) < 0) {
         return;
     }
+    // closing a Home tab isn't "the last document is gone"
+    bool closedHome = tab->IsAboutTab();
     RemoveTab(tab);
     delete tab;
     if (!IsMainWindowValid(win)) {
@@ -3562,7 +3564,7 @@ void CloseTab(WindowTab* tab, bool quitIfLast) {
     }
     // only the home tab left, and another window is open: this one goes away
     WindowTab* lastTab = (win->TabCount() == 1) ? win->GetTab(0) : nullptr;
-    if (lastTab && lastTab->IsAboutTab() && len(gWindows) > 1) {
+    if (lastTab && lastTab->IsAboutTab() && len(gWindows) > 1 && !closedHome) {
         CloseWindow(win, false, false);
         return;
     }
@@ -6101,6 +6103,10 @@ void ExecuteCmd(MainWindow* win, int cmdId) {
 
         case CmdGoToHomePage:
             GoToHomeTab(win);
+            break;
+
+        case CmdNewHomeTab:
+            AddExtraHomeTab(win);
             break;
 
         case CmdFavoriteAdd:

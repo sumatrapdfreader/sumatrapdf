@@ -28,6 +28,7 @@ MainWindow* FindMainWindowByHwnd(HWND hwnd);
 
 static Kind kindTabs = "tabs";
 static Kind kindTabCtrl = "tabCtrl";
+static Kind kindTabsPlus = "tabsPlus";
 
 using Gdiplus::Bitmap;
 using Gdiplus::CompositingQualityHighQuality;
@@ -316,6 +317,60 @@ void TabCtrl::OnCloseClick(VirtMouseEvent*) {
     tabsCtrl->CloseTab(Idx());
 }
 
+//--- TabsPlusBtn: the "+" after the tabs
+
+struct TabsPlusBtn : VirtCtrl {
+    TabsCtrl* tabsCtrl = nullptr;
+
+    TabsPlusBtn();
+    ~TabsPlusBtn() override = default;
+
+    Size GetIdealSize() override;
+    void Paint(VirtPaintCtx&) override;
+    void OnInvalidate();
+    void OnClick(VirtMouseEvent*);
+};
+
+TabsPlusBtn::TabsPlusBtn() {
+    kind = kindTabsPlus;
+    colorDefaults = gColsTab;
+    nColors = kColTabCount;
+    cursor = CursorId::Hand;
+    onMouseEnter = MkMethod0<TabsPlusBtn, &TabsPlusBtn::OnInvalidate>(this);
+    onMouseLeave = MkMethod0<TabsPlusBtn, &TabsPlusBtn::OnInvalidate>(this);
+    onClick = MkMethod1<TabsPlusBtn, VirtMouseEvent*, &TabsPlusBtn::OnClick>(this);
+}
+
+Size TabsPlusBtn::GetIdealSize() {
+    return bounds.Size();
+}
+
+void TabsPlusBtn::Paint(VirtPaintCtx& ctx) {
+    Gfx* gfx = ctx.gfx;
+    Rect r = ctx.bounds;
+    Color bgCol = GetColor(kColTabBg);
+    if (HasFlag(vwfHovered)) {
+        bgCol = AccentColor(GetColor(kColTabInactiveBg), 10);
+        gfx->FillRect(r, bgCol);
+    }
+    Color col = TabTextColorForBackground(GetColor(kColTabText), bgCol);
+    int cx = r.x + (r.dx / 2);
+    int cy = r.y + (r.dy / 2);
+    int arm = r.dy / 5;
+    gfx->DrawLineAA({cx - arm, cy}, {cx + arm, cy}, col, 2.0f, 255);
+    gfx->DrawLineAA({cx, cy - arm}, {cx, cy + arm}, col, 2.0f, 255);
+}
+
+void TabsPlusBtn::OnInvalidate() {
+    Invalidate();
+}
+
+void TabsPlusBtn::OnClick(VirtMouseEvent*) {
+    if (tabsCtrl->onPlusClick.IsValid()) {
+        tabsCtrl->onPlusClick.Call();
+    }
+}
+
 //--- TabsCtrl host window
 
 static LRESULT CALLBACK TabsCtrlWindowProc(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam) {
@@ -434,6 +489,9 @@ void TabsCtrl::RebuildTabCtrls() {
         VecAppend(tabCtrls, w);
         AddChild(w);
     }
+    plusBtn = new TabsPlusBtn();
+    plusBtn->tabsCtrl = this;
+    AddChild(plusBtn);
 }
 
 // label plus 1rem (the font's size in pixels) on each side
@@ -461,8 +519,10 @@ void TabsCtrl::LayoutTabs() {
         // (issue #5861). The parent hides the control when there are no tabs.
         return;
     }
-    // fit-to-label tabs take what their label needs, the others share the rest
-    int availDx = rect.dx - 5;
+    // the "+" is square and always there. Fit-to-label tabs take what their label
+    // needs, the others share the rest
+    int plusDx = dy;
+    int availDx = rect.dx - 5 - plusDx;
     int restDx = availDx;
     int nRest = 0;
     for (int i = 0; i < nTabs; i++) {
@@ -493,12 +553,17 @@ void TabsCtrl::LayoutTabs() {
     // pack tabs left-to-right (LTR) or right-aligned with reversed order (RTL)
     bool isRtl = IsTabsRtl(hwnd);
     int x = 0;
-    if (isRtl && totalW < rect.dx) {
-        x = rect.dx - totalW;
+    if (isRtl && totalW + plusDx < rect.dx) {
+        x = rect.dx - totalW - plusDx;
     }
     vroot->SetBounds(rect);
     VirtCtrl::SetBounds(rect);
 
+    // RTL: the tabs run right to left, so what comes after them is on the left
+    if (isRtl) {
+        plusBtn->SetBounds({rect.x + x, rect.y, plusDx, dy});
+        x += plusDx;
+    }
     for (int i = 0; i < nTabs; i++) {
         int idx = isRtl ? (nTabs - 1 - i) : i;
         TabCtrl* t = tabCtrls[idx];
@@ -506,6 +571,9 @@ void TabsCtrl::LayoutTabs() {
         // absolute client coords; TabCtrl::SetBounds rebases via parent origin
         t->SetBounds({rect.x + r.x, rect.y + r.y, r.dx, r.dy});
         x += r.dx;
+    }
+    if (!isRtl) {
+        plusBtn->SetBounds({rect.x + x, rect.y, plusDx, dy});
     }
 }
 
@@ -843,7 +911,7 @@ LRESULT TabsCtrl::WndProc(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp) {
             }
             mousePos = HwndScreenToClient(hwnd, mousePos);
             tabState = TabStateFromMousePosition(mousePos);
-            if (tabState.tabIdx >= 0) {
+            if (tabState.tabIdx >= 0 || (plusBtn && plusBtn->BoundsInWindow().Contains(mousePos))) {
                 return HTCLIENT;
             }
             return HTTRANSPARENT;

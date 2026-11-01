@@ -73,6 +73,7 @@ static const i32 gNoDocWhitelist[] = {
     CmdFavoriteToggle,
     CmdFavoriteShowInTab,
     CmdGoToHomePage,
+    CmdNewHomeTab,
     CmdShowLog,
     CmdDebugShowCrashMiniDumps,
     CmdDebugSaveSettings,
@@ -340,6 +341,7 @@ static const i32 gBlacklistCommandsFromPalette[] = {
     CmdFileHistory,
     CmdFavorite,
     CmdGoToHomePage,
+    CmdNewHomeTab,
     0,
 };
 
@@ -499,7 +501,7 @@ CommandVisibility GetCommandVisibility(int cmdId, const AppCommandCtx& ctx, Comm
         }
         return ctx.hasOpenDocuments ? CommandVisibility::Show : CommandVisibility::Disable;
     }
-    if (cmdId == CmdGoToHomePage) {
+    if (cmdId == CmdGoToHomePage || cmdId == CmdNewHomeTab) {
         return SettingsUseTabs() ? CommandVisibility::Show : CommandVisibility::Hide;
     }
     if (cmdId == CmdNextTab || cmdId == CmdPrevTab || cmdId == CmdNextTabSmart || cmdId == CmdPrevTabSmart ||

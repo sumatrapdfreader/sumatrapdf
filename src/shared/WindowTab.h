@@ -163,6 +163,8 @@ struct WindowTab {
     bool reloadOnFocus = false;
     // opened via CmdOpenFileNoHistory: do not write File History / Windows Recent
     bool skipHistory = false;
+    // a Home tab from the "+" button: an ordinary tab, unlike the pinned first one
+    bool isExtraHome = false;
     // the temporary-folder notification was shown for filePath (#6437)
     bool temporaryFileNotified = false;
 
@@ -193,6 +195,7 @@ struct WindowTab {
     ~WindowTab();
 
     bool IsAboutTab() const;
+    bool IsPinnedHomeTab() const;
     bool IsFavoritesTab() const;
     bool IsNonDocumentTab() const;
 

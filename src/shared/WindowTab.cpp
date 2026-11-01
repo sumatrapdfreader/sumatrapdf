@@ -78,6 +78,11 @@ Str SidebarViewToStr(SidebarView v) {
 
 #endif
 
+// the first Home tab: compact and fixed in place. IsAboutTab() is any Home tab
+bool WindowTab::IsPinnedHomeTab() const {
+    return IsAboutTab() && !isExtraHome;
+}
+
 bool WindowTab::IsFavoritesTab() const {
     ReportIf(type == WindowTab::Type::None);
     return type == WindowTab::Type::Favorites;

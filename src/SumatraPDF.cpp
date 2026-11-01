@@ -5304,6 +5304,8 @@ void CloseTab(WindowTab* tab, bool quitIfLast) {
         return;
     }
 
+    // closing a Home tab isn't "the last document is gone": see below
+    bool closedHome = tab->IsAboutTab();
     int tabCount = win->TabCount();
     if (tabCount == 1 || (tabCount == 0 && quitIfLast)) {
         if (CanCloseWindow(win)) {
@@ -5338,7 +5340,7 @@ void CloseTab(WindowTab* tab, bool quitIfLast) {
 
     tabCount = win->TabCount();
     WindowTab* lastTab = (tabCount == 1) ? win->GetTab(0) : nullptr;
-    if (lastTab && lastTab->type == WindowTab::Type::About) {
+    if (lastTab && lastTab->type == WindowTab::Type::About && !closedHome) {
         // showing only home page tab so remove it
         // if there are other windows, close this one
         if (len(gWindows) > 1) {
@@ -11808,6 +11810,10 @@ static LRESULT FrameOnCommand(MainWindow* win, HWND hwnd, UINT msg, WPARAM wp, L
 
         case CmdGoToHomePage:
             GoToHomeTab(win);
+            break;
+
+        case CmdNewHomeTab:
+            AddExtraHomeTab(win);
             break;
 
         case CmdToggleFavoritesSort:

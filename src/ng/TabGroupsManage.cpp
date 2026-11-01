@@ -246,13 +246,7 @@ static void OpenTabGroup(MainWindow* win) {
     if (!group->tabFiles || len(*group->tabFiles) == 0) {
         return;
     }
-    bool hasFiles = false;
-    for (WindowTab* tab : win->Tabs()) {
-        if (!tab->IsAboutTab()) {
-            hasFiles = true;
-            break;
-        }
-    }
+    bool hasFiles = HasOpenedDocuments(win);
     logf("OpenTabGroup: '%s', %d tabs, new window %d\n", group->name, GroupTabCount(group), hasFiles ? 1 : 0);
     CloseCurrentDlg();
     MainWindow* targetWin = hasFiles ? CreateAndShowMainWindow(nullptr) : win;

@@ -61,6 +61,7 @@
 #include "HomePage.h"
 #include "MainWindow.h"
 #include "Selection.h"
+#include "Tabs.h"
 #include "MainWindowCommon.h"
 
 static void SafeDeleteTabsCtrl(TabsCtrl* tabsCtrl) {
@@ -719,23 +720,7 @@ static void PopulateTabCloseFlags(AppCommandCtx& ctx) {
 
     int nTabs = ctx.win->TabCount();
     ctx.nTabs = nTabs;
-    WindowTab* currTab = ctx.tab;
-    int tabIdx = ctx.win->GetTabIdx(currTab);
-    ctx.canCloseTabsToRight = tabIdx < (nTabs - 1);
-    int nFirstDocTab = 0;
-    for (int i = 0; i < nTabs; i++) {
-        WindowTab* tab = ctx.win->GetTab(i);
-        if (tab->IsAboutTab()) {
-            nFirstDocTab = 1;
-            continue;
-        }
-        ctx.hasDocTabs = true;
-        if (tab == currTab) {
-            ctx.canCloseTabsToLeft = i > nFirstDocTab;
-            continue;
-        }
-        ctx.canCloseOtherTabs = true;
-    }
+    SetTabCloseFlags(ctx);
 }
 
 AppCommandCtx NewAppCommandCtx(MainWindow* win, Point cursorPos) {

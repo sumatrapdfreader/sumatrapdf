@@ -11,6 +11,7 @@ constexpr int kTabMinDx = 100;
 struct TabsCtrl;
 struct TabInfo;
 struct TabCtrl;
+struct TabsPlusBtn;
 struct VirtRoot;
 struct VirtCloseButton;
 struct VirtMouseEvent;
@@ -107,6 +108,8 @@ struct TabsCtrl : VirtCtrl {
     VirtRoot* vroot = nullptr;
     // in tab order (children are reversed when the UI is RTL)
     Vec<TabCtrl*> tabCtrls;
+    // the "+" after the tabs, always there
+    TabsPlusBtn* plusBtn = nullptr;
     int selectedIdx = -1;
 
     // tracking state of which tab is highlighted etc.
@@ -129,6 +132,8 @@ struct TabsCtrl : VirtCtrl {
     SelectionChangedHandler onSelectionChanged;
     MigrationHandler onTabMigration;
     DraggedHandler onTabDragged;
+    // must not change the tabs directly: that deletes the button being clicked
+    Func0 onPlusClick;
 
     // colors: kColTab* (the unselected and hovered shades are derived from
     // kColTabBg; a tab with a TabInfo::tabColor of its own overrides it)

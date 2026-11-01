@@ -454,26 +454,7 @@ static void PopulateTabCloseFlags(AppCommandCtx& ctx) {
     }
     int nTabs = ctx.win->TabCount();
     ctx.nTabs = nTabs;
-    WindowTab* currTab = ctx.tab;
-    int tabIdx = ctx.win->GetTabIdx(currTab);
-    ctx.canCloseTabsToRight = tabIdx < (nTabs - 1);
-    ctx.canCloseTabsToLeft = false;
-    int nFirstDocTab = 0;
-    for (int i = 0; i < nTabs; i++) {
-        WindowTab* t = ctx.win->GetTab(i);
-        if (t->IsAboutTab()) {
-            nFirstDocTab = 1;
-            continue;
-        }
-        ctx.hasDocTabs = true;
-        if (t == currTab) {
-            if (i > nFirstDocTab) {
-                ctx.canCloseTabsToLeft = true;
-            }
-            continue;
-        }
-        ctx.canCloseOtherTabs = true;
-    }
+    SetTabCloseFlags(ctx);
 }
 
 AppCommandCtx NewAppCommandCtx(MainWindow* win, Point cursorPos) {
