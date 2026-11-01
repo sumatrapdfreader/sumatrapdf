@@ -87,6 +87,8 @@ function setClipboard(value: string): void {
 
 const kCanvasClass = "SUMATRA_PDF_CANVAS";
 const kAboutHoverClass = "SUMATRA_ABOUT_HOVER";
+const kHoverAttempts = 5;
+const kHoverAttemptMs = 2000;
 
 function centerOf(r: LayoutRect): { x: number; y: number } {
   return { x: r.x + Math.floor(r.dx / 2), y: r.y + Math.floor(r.dy / 2) };
@@ -127,18 +129,29 @@ function postMove(hwnd: number, x: number, y: number): void {
 }
 
 // one enter, then keep the real cursor on the title until the hover timer fires.
-// a move on every poll restarts that timer, so the popup never opens.
-async function showByHover(canvas: number, logo: { x: number; y: number }, pid: number): Promise<number> {
-  const screen = clientToScreen(canvas, logo.x, logo.y);
-  postMove(canvas, logo.x, logo.y);
-  const deadline = Date.now() + 2000;
-  while (Date.now() < deadline) {
-    setCursorPos(screen.x, screen.y);
-    const hover = findHover(pid);
-    if (hover) {
-      return hover;
+// a move on every poll restarts that timer, so the popup never opens. Only an
+// enter arms it, and the frame losing activation kills it: re-enter.
+async function showByHover(
+  client: ControlClient,
+  frame: number,
+  canvas: number,
+  pid: number,
+): Promise<{ hover: number; from: { x: number; y: number } }> {
+  for (let attempt = 0; attempt < kHoverAttempts; attempt++) {
+    forceForeground(frame);
+    const logo = centerOf(await waitNamed(client, kCanvasClass, "homeLogo"));
+    const screen = clientToScreen(canvas, logo.x, logo.y);
+    postMove(canvas, 0, 0);
+    postMove(canvas, logo.x, logo.y);
+    const deadline = Date.now() + kHoverAttemptMs;
+    while (Date.now() < deadline) {
+      setCursorPos(screen.x, screen.y);
+      const hover = findHover(pid);
+      if (hover) {
+        return { hover, from: screen };
+      }
+      await sleep(40);
     }
-    await sleep(40);
   }
   throw new Error("issue-6269: About popup did not appear on hover");
 }
@@ -202,23 +215,20 @@ export async function testit(): Promise<void> {
   const { proc, client, frame } = await launchControlled([]);
   try {
     const canvas = findCanvas(frame);
-    const logo = centerOf(await waitNamed(client, kCanvasClass, "homeLogo"));
-    const logoScreen = clientToScreen(canvas, logo.x, logo.y);
-
-    forceForeground(frame);
-    const hover = await showByHover(canvas, logo, proc.pid!);
-    await clickCopy(client, hover, logoScreen);
+    const { hover, from } = await showByHover(client, frame, canvas, proc.pid!);
+    await clickCopy(client, hover, from);
 
     // clicking the title puts the frame in front. Copy used to fail on every
     // later try, not only on the first hover.
     setClipboard("issue-6269-sentinel");
+    const logo = centerOf(await waitNamed(client, kCanvasClass, "homeLogo"));
     postMove(canvas, logo.x, logo.y);
     const lp = packCoords(logo.x, logo.y);
     sendMessage(canvas, WM_LBUTTONDOWN, MK_LBUTTON, lp);
     sendMessage(canvas, WM_LBUTTONUP, 0, lp);
     forceForeground(frame);
-    const again = isWindowVisible(hover) ? hover : await showByHover(canvas, logo, proc.pid!);
-    await clickCopy(client, again, logoScreen);
+    const again = isWindowVisible(hover) ? { hover, from } : await showByHover(client, frame, canvas, proc.pid!);
+    await clickCopy(client, again.hover, again.from);
   } finally {
     await ensureModifierKeysUp();
     await killAndWait(proc);
