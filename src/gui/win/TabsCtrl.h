@@ -26,6 +26,8 @@ struct TabInfo {
     bool isDirty = false;
     // document failed to load: the title paints in red
     bool isError = false;
+    // as wide as its label plus margins, with no room for a close button (Home)
+    bool fitToLabel = false;
     UINT_PTR userData = 0;
     Color tabColor = (Color)0xfeffffff; // kColorUnset; use default tab color
 

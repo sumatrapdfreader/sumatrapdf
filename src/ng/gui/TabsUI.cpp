@@ -134,8 +134,12 @@ static Color TabBgColor(WindowTab* tab, bool isSelected, bool isUnderMouse) {
     return isUnderMouse ? AccentColor(inactive, 10) : inactive;
 }
 
-// orig's LayoutTabs: every tab is as wide as TabWidth allows, shrinking so all
-// of them fit the bar
+// the tab label's size; Home's margins are 1rem of it
+constexpr float kTabFontSize = 12;
+
+// orig's LayoutTabs: every document tab is as wide as TabWidth allows, shrinking
+// so all of them fit the bar. Home is sized by its label, so the others get what
+// it took in the last frame: its width is only known after layout
 static int TabWidth(MainWindow* win, int barDx) {
     TabsUI* ui = Ui(win);
     int nTabs = win->TabCount();
@@ -145,8 +149,18 @@ static int TabWidth(MainWindow* win, int barDx) {
     if (ui->widthFrozen && ui->frozenDx > 0) {
         return ui->frozenDx;
     }
-    int maxDx = (barDx - 5) / nTabs;
-    return std::min(gSettings->tabWidth, maxDx);
+    int restDx = barDx - 5;
+    int nRest = nTabs;
+    for (int i = 0; i < nTabs; i++) {
+        if (!win->GetTab(i)->IsAboutTab()) {
+            continue;
+        }
+        nRest--;
+        if (i < len(ui->tabBounds)) {
+            restDx -= (int)ui->tabBounds[i].w;
+        }
+    }
+    return std::min(gSettings->tabWidth, restDx / std::max(nRest, 1));
 }
 
 // --- input ------------------------------------------------------------------
@@ -449,15 +463,16 @@ static gp::El* BuildTab(MainWindow* win, gp::Ctx* cx, int idx, int tabDx) {
         textCol = IsLightColor(bgCol) ? MkRgb(0xC4, 0x1E, 0x1E) : MkRgb(0xFF, 0x6A, 0x6A);
     }
 
+    // orig: Home is as wide as its label plus margins, with no room for a close
+    bool isHome = tab->IsAboutTab();
     gp::El* el = gp::Div(cx->a)
                      ->FlexRow()
-                     ->W((float)tabDx)
                      ->H(gp::kFill)
                      ->Shrink0()
                      ->ItemsCenter()
                      ->Gap(2)
-                     ->PadL(8)
-                     ->PadR(isSelected ? 2.f : 8.f)
+                     ->PadL(isHome ? kTabFontSize : 8.f)
+                     ->PadR(isHome ? kTabFontSize : (isSelected ? 2.f : 8.f))
                      ->Bg(ToGpui(bgCol))
                      ->Role(gp::AccessibilityRole::Tab)
                      ->AriaLabel(GpuiDup(cx->a, tab->GetTabTitle()))
@@ -474,12 +489,11 @@ static gp::El* BuildTab(MainWindow* win, gp::Ctx* cx, int idx, int tabDx) {
     // (OnTabDrop refuses the position a pinned tab holds)
     el->OnDrop(GStrL("sumatra-tab"), gp::ListenTo(Ui(win)->view, &TabsView::OnTabDrop, (intptr_t)idx));
 
-    gp::El* title = gp::TextEl(cx->a, GpuiDup(cx->a, tab->GetTabTitle()))
-                        ->Font(12)
-                        ->Fg(ToGpui(textCol))
-                        ->Flex1()
-                        ->MinW(0)
-                        ->Truncate();
+    gp::El* title = gp::TextEl(cx->a, GpuiDup(cx->a, tab->GetTabTitle()))->Font(kTabFontSize)->Fg(ToGpui(textCol));
+    if (!isHome) {
+        el->W((float)tabDx);
+        title->Flex1()->MinW(0)->Truncate();
+    }
     el->Child(title);
 
     TempStr pageText = TabPageSuffixTemp(tab);
@@ -492,7 +506,7 @@ static gp::El* BuildTab(MainWindow* win, gp::Ctx* cx, int idx, int tabDx) {
     }
     // like Chrome: only the selected tab shows its ✕, so a click on another
     // tab always selects it and can't accidentally close it
-    if (isSelected) {
+    if (isSelected && !isHome) {
         el->Child(CloseButton(win, cx, idx));
     }
     return el;

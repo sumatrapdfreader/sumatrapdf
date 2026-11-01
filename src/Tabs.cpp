@@ -596,6 +596,7 @@ static WindowTab* InsertHomeTab(MainWindow* win, bool deferUpdate) {
     newTab->tooltip = {};
     newTab->isPinned = true;
     newTab->canClose = true;
+    newTab->fitToLabel = true;
     newTab->userData = (UINT_PTR)homeTab;
     int insertedIdx = win->tabsCtrl->InsertTab(0, newTab, !deferUpdate);
     ReportIf(insertedIdx != 0);

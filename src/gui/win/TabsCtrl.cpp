@@ -199,7 +199,7 @@ void TabCtrl::SetBounds(Rect r) {
 // like Chrome: only the selected tab shows (and hit-tests) its ✕, so a click
 // on a non-selected tab always selects it and can't accidentally close it
 bool TabCtrl::CloseVisible() {
-    return ti->canClose && IsSelected();
+    return ti->canClose && !ti->fitToLabel && IsSelected();
 }
 
 void TabCtrl::Paint(VirtPaintCtx& ctx) {
@@ -263,6 +263,11 @@ void TabCtrl::Paint(VirtPaintCtx& ctx) {
     }
 
     u32 fmt = gfxTextEllipsis | gfxTextVCenter | (isRtl ? gfxTextRight : gfxTextLeft);
+    if (ti->fitToLabel) {
+        // the margins are the tab's own: see FitToLabelDx()
+        rFile = r;
+        fmt = gfxTextEllipsis | gfxTextVCenter | gfxTextCenter;
+    }
     gfx->DrawText(ti->text, rFile, fmt, font, textColor);
     if (pageDx > 0) {
         Color pageCol = AccentColor(textColor, 40);
@@ -431,6 +436,17 @@ void TabsCtrl::RebuildTabCtrls() {
     }
 }
 
+// label plus 1rem (the font's size in pixels) on each side
+static int FitToLabelDx(TabsCtrl* tabs, TabInfo* ti) {
+    PlatformFont* font = tabs->GetFont();
+    if (!font) {
+        return tabs->tabDefaultDx;
+    }
+    constexpr float kPxPerPt = 96.f / 72.f;
+    int rem = DpiScale((int)(font->GetSize() * kPxPerPt + 0.5f));
+    return PlatformFontMeasureText(font, ti->text).dx + (2 * rem);
+}
+
 // Calculates the size of a tab and lays the children out.
 void TabsCtrl::LayoutTabs() {
     if (!hwnd || !vroot) {
@@ -445,22 +461,37 @@ void TabsCtrl::LayoutTabs() {
         // (issue #5861). The parent hides the control when there are no tabs.
         return;
     }
+    // fit-to-label tabs take what their label needs, the others share the rest
+    int availDx = rect.dx - 5;
+    int restDx = availDx;
+    int nRest = 0;
+    for (int i = 0; i < nTabs; i++) {
+        if (!tabs[i]->fitToLabel) {
+            nRest++;
+            continue;
+        }
+        int fitDx = std::min(FitToLabelDx(this, tabs[i]), availDx / nTabs);
+        tabCtrls[i]->idealSize = {fitDx, dy};
+        restDx -= fitDx;
+    }
     int dx;
     if (tabWidthFrozen && frozenTabDx > 0) {
         dx = frozenTabDx;
     } else {
-        auto maxDx = (rect.dx - 5) / nTabs;
-        dx = std::min(tabDefaultDx, maxDx);
+        dx = std::min(tabDefaultDx, nRest > 0 ? restDx / nRest : restDx);
     }
     tabSize = {dx, dy};
 
+    int totalW = 0;
     for (int i = 0; i < nTabs; i++) {
-        tabCtrls[i]->idealSize = tabSize;
+        if (!tabs[i]->fitToLabel) {
+            tabCtrls[i]->idealSize = tabSize;
+        }
+        totalW += tabCtrls[i]->idealSize.dx;
     }
 
     // pack tabs left-to-right (LTR) or right-aligned with reversed order (RTL)
     bool isRtl = IsTabsRtl(hwnd);
-    int totalW = nTabs * tabSize.dx;
     int x = 0;
     if (isRtl && totalW < rect.dx) {
         x = rect.dx - totalW;
@@ -471,10 +502,10 @@ void TabsCtrl::LayoutTabs() {
     for (int i = 0; i < nTabs; i++) {
         int idx = isRtl ? (nTabs - 1 - i) : i;
         TabCtrl* t = tabCtrls[idx];
-        Rect r = {x, 0, tabSize.dx, tabSize.dy};
+        Rect r = {x, 0, t->idealSize.dx, t->idealSize.dy};
         // absolute client coords; TabCtrl::SetBounds rebases via parent origin
         t->SetBounds({rect.x + r.x, rect.y + r.y, r.dx, r.dy});
-        x += tabSize.dx;
+        x += r.dx;
     }
 }
 
