@@ -129,6 +129,10 @@ MenuDef menuDefFile[] = {
         CmdPrint,
     },
     {
+        TrN("Lin&k Sumatra Online..."),
+        CmdSumatraOnline,
+    },
+    {
         StrL(kMenuSeparator),
         0,
     },

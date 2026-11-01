@@ -423,4 +423,165 @@ Exit2:
     return ok;
 }
 
+// Scheme, host, and port. A prefix of the production host is a different host.
+bool OnlineURLAllowed(Str url) {
+    if (len(url) == 0) {
+        return false;
+    }
+    URL_COMPONENTS uc{};
+    uc.dwStructSize = sizeof(uc);
+    uc.dwSchemeLength = (DWORD)-1;
+    uc.dwHostNameLength = (DWORD)-1;
+    uc.dwUserNameLength = (DWORD)-1;
+    uc.dwPasswordLength = (DWORD)-1;
+    uc.dwUrlPathLength = (DWORD)-1;
+    uc.dwExtraInfoLength = (DWORD)-1;
+    if (!InternetCrackUrlW(CWStrTemp(url), 0, 0, &uc)) {
+        return false;
+    }
+    if (!uc.lpszHostName || uc.dwHostNameLength == 0 || uc.dwHostNameLength == (DWORD)-1 || uc.dwHostNameLength > 253) {
+        return false;
+    }
+    // length left at (DWORD)-1 means that component was absent
+    bool user = uc.dwUserNameLength != 0 && uc.dwUserNameLength != (DWORD)-1;
+    bool pass = uc.dwPasswordLength != 0 && uc.dwPasswordLength != (DWORD)-1;
+    if (user || pass) {
+        return false;
+    }
+    WStr host(uc.lpszHostName, (int)uc.dwHostNameLength);
+    if (uc.nScheme == INTERNET_SCHEME_HTTPS && uc.nPort == 443 &&
+        wstr::EqI(host, WStrL(L"online.sumatrapdfreader.org"))) {
+        return true;
+    }
+    if (uc.nScheme == INTERNET_SCHEME_HTTP && uc.nPort == 9332 &&
+        (wstr::EqI(host, WStrL(L"localhost")) || wstr::EqI(host, WStrL(L"127.0.0.1")))) {
+        return true;
+    }
+    return false;
+}
+
+// The list / key check. Blocks; call it off the UI thread. Keeps at most 1 MiB
+// of body and does not follow redirects. Logs the URL and the status only, so
+// the URL must not contain the key. A rejected URL never reaches WinHttpOpen.
+constexpr int kHttpMemBodyCap = 1024 * 1024;
+
+bool HttpGetWithHeaders(Str url, Str extraHeaders, HttpRsp* rspOut) {
+    bool ok = false;
+    HINTERNET hSession = nullptr;
+    HINTERNET hConnect = nullptr;
+    HINTERNET hRequest = nullptr;
+    rspOut->error = ERROR_SUCCESS;
+    rspOut->httpStatusCode = (DWORD)-1;
+
+    if (!OnlineURLAllowed(url)) {
+        rspOut->error = ERROR_INVALID_PARAMETER;
+        logf("HttpGetWithHeaders: url: '%s' status: %d\n", url, -1);
+        return false;
+    }
+
+    URL_COMPONENTS uc{};
+    uc.dwStructSize = sizeof(uc);
+    uc.dwSchemeLength = (DWORD)-1;
+    uc.dwHostNameLength = (DWORD)-1;
+    uc.dwUrlPathLength = (DWORD)-1;
+    uc.dwExtraInfoLength = (DWORD)-1;
+    if (!InternetCrackUrlW(CWStrTemp(url), 0, 0, &uc)) {
+        rspOut->error = GetLastError();
+        logf("HttpGetWithHeaders: url: '%s' status: %d\n", url, -1);
+        return false;
+    }
+
+    {
+        int pathLen = (uc.dwUrlPathLength == (DWORD)-1) ? 0 : (int)uc.dwUrlPathLength;
+        int extraLen = (uc.dwExtraInfoLength == (DWORD)-1) ? 0 : (int)uc.dwExtraInfoLength;
+        TempWStr host = str::DupTemp(WStr(uc.lpszHostName, (int)uc.dwHostNameLength));
+        TempWStr pathAndQuery = str::DupTemp(WStr(uc.lpszUrlPath, pathLen + extraLen));
+        if (len(pathAndQuery) == 0) {
+            pathAndQuery = str::DupTemp(WStrL(L"/"));
+        }
+
+        hSession = WinHttpOpen(kUserAgent, WINHTTP_ACCESS_TYPE_AUTOMATIC_PROXY, WINHTTP_NO_PROXY_NAME,
+                               WINHTTP_NO_PROXY_BYPASS, 0);
+        if (!hSession) {
+            rspOut->error = GetLastError();
+            goto ExitGet;
+        }
+        hConnect = WinHttpConnect(hSession, host.s, (INTERNET_PORT)uc.nPort, 0);
+        if (!hConnect) {
+            rspOut->error = GetLastError();
+            goto ExitGet;
+        }
+        DWORD flags = (uc.nScheme == INTERNET_SCHEME_HTTPS) ? WINHTTP_FLAG_SECURE : 0;
+        hRequest = WinHttpOpenRequest(hConnect, L"GET", pathAndQuery.s, nullptr, WINHTTP_NO_REFERER,
+                                      WINHTTP_DEFAULT_ACCEPT_TYPES, flags);
+        if (!hRequest) {
+            rspOut->error = GetLastError();
+            goto ExitGet;
+        }
+
+        DWORD policy = WINHTTP_OPTION_REDIRECT_POLICY_NEVER;
+        if (!WinHttpSetOption(hRequest, WINHTTP_OPTION_REDIRECT_POLICY, &policy, sizeof(policy))) {
+            rspOut->error = GetLastError();
+            goto ExitGet;
+        }
+
+        TempStr extra = HttpNormalizeHeadersTemp(extraHeaders);
+        TempWStr hdrsW;
+        LPCWSTR hdrs = WINHTTP_NO_ADDITIONAL_HEADERS;
+        if (!str::IsEmptyOrWhiteSpace(extra)) {
+            hdrsW = ToWStrTemp(extra);
+            hdrs = hdrsW.s;
+        }
+
+        BOOL sent = WinHttpSendRequest(hRequest, hdrs, (DWORD)-1, WINHTTP_NO_REQUEST_DATA, 0, 0, 0);
+        if (!sent || !WinHttpReceiveResponse(hRequest, nullptr)) {
+            rspOut->error = GetLastError();
+            goto ExitGet;
+        }
+
+        DWORD sc = 0;
+        DWORD scSize = sizeof(sc);
+        if (!WinHttpQueryHeaders(hRequest, WINHTTP_QUERY_STATUS_CODE | WINHTTP_QUERY_FLAG_NUMBER,
+                                 WINHTTP_HEADER_NAME_BY_INDEX, &sc, &scSize, WINHTTP_NO_HEADER_INDEX)) {
+            rspOut->error = GetLastError();
+            goto ExitGet;
+        }
+        rspOut->httpStatusCode = sc;
+
+        for (;;) {
+            int room = kHttpMemBodyCap - len(rspOut->data);
+            if (room <= 0) {
+                break;
+            }
+            DWORD avail = 0;
+            if (!WinHttpQueryDataAvailable(hRequest, &avail) || avail == 0) {
+                break;
+            }
+            if ((int)avail > room) {
+                avail = (DWORD)room;
+            }
+            char* buf = AllocArrayTemp<char>((int)avail + 1);
+            DWORD read = 0;
+            if (!WinHttpReadData(hRequest, buf, avail, &read) || read == 0) {
+                break;
+            }
+            rspOut->data.Append(Str(buf, (int)read));
+        }
+        ok = sc == 200;
+    }
+
+ExitGet:
+    logf("HttpGetWithHeaders: url: '%s' status: %d\n", url, (int)rspOut->httpStatusCode);
+    if (hRequest) {
+        WinHttpCloseHandle(hRequest);
+    }
+    if (hConnect) {
+        WinHttpCloseHandle(hConnect);
+    }
+    if (hSession) {
+        WinHttpCloseHandle(hSession);
+    }
+    return ok;
+}
+
 #endif

@@ -24,6 +24,11 @@ bool HttpGetToFile(Str url, Str destFilePath, const Func1<HttpProgress*>& cbProg
 bool HttpPostUrl(Str url, Str contentType, Str extraHeaders, Str body, HttpRsp* rspOut);
 TempStr HttpNormalizeHeadersTemp(Str headers);
 
+#if OS_WIN
+bool OnlineURLAllowed(Str url);
+bool HttpGetWithHeaders(Str url, Str extraHeaders, HttpRsp* rspOut);
+#endif
+
 // How much URL-encoded text we're willing to put in a URL. ShellExecuteW hands
 // the URL to the browser as a command line, so the hard ceiling is
 // CreateProcess's 32767 WCHARs; browsers give up well before that and each has

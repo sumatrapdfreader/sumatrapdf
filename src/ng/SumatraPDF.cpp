@@ -6661,6 +6661,10 @@ void ExecuteCmd(MainWindow* win, int cmdId) {
             OnMenuExit();
             return;
 
+        case CmdSumatraOnline:
+            ShowTemporaryNotification(win, StrL("Sumatra Online is not in this build yet."), kNotif5SecsTimeOut);
+            break;
+
         default:
             // ng: cmd/port-commands.ts reads this through the automation
             // channel to confirm its static "not handled" list

@@ -2,6 +2,7 @@
    License: GPLv3 */
 
 #include "base/Base.h"
+#include "base/Http.h"
 
 #if IS_DEBUG
 
@@ -380,7 +381,22 @@ Exit:
     DeleteRegKey(HKEY_CURRENT_USER, StrL("Software\\SumatraPDF-unit-tests"));
 }
 
+static void OnlineURLAllowedTest() {
+    utassert(OnlineURLAllowed(StrL("https://online.sumatrapdfreader.org/api/files")));
+    utassert(OnlineURLAllowed(StrL("http://localhost:9332/desktop")));
+    utassert(OnlineURLAllowed(StrL("http://127.0.0.1:9332/api/files")));
+    utassert(OnlineURLAllowed(StrL("https://online.sumatrapdfreader.org")));
+    utassert(OnlineURLAllowed(StrL("http://localhost:9332")));
+    utassert(OnlineURLAllowed(StrL("http://127.0.0.1:9332")));
+    utassert(OnlineURLAllowed(StrL("https://online.sumatrapdfreader.org:443/api/files")));
+    utassert(!OnlineURLAllowed(StrL("https://online.sumatrapdfreader.org.evil.example/api/files")));
+    utassert(!OnlineURLAllowed(StrL("http://localhost")));
+    utassert(!OnlineURLAllowed(StrL("http://localhost:80")));
+    utassert(!OnlineURLAllowed(StrL("https://user@online.sumatrapdfreader.org/api/files")));
+}
+
 static void SumatraPDF_UnitTests() {
+    OnlineURLAllowedTest();
     RestrictedUseConfigTest();
     ControlFrameActionTest();
     OpenDdeCmdTest();

@@ -154,6 +154,7 @@ static const i32 removeIfNoInternetPerms[] = {
     CmdHelpOpenManualOnWebsite,
     CmdHelpOpenKeyboardShortcuts,
     CmdContributeTranslation,
+    CmdSumatraOnline,
     0,
 };
 
@@ -177,6 +178,7 @@ static const i32 removeIfNoPrefsPerms[] = {
     CmdToggleFavoritesSort,
     CmdGoToNextFavorite,
     CmdGoToPrevFavorite,
+    CmdSumatraOnline,
     0,
 };
 
