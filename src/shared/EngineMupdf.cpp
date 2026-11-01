@@ -1599,7 +1599,8 @@ static int LinkifyFindDoiEndOff(int startOff, Utf8PageText pageText) {
     int p = startOff + 3;
     int regStart = p;
     int pageEnd = pageText.len;
-    while (p < pageEnd && isdigit(RuneAt(pageText, p))) {
+    // not isdigit(): a code point above 255 is out of its range
+    while (p < pageEnd && RuneAt(pageText, p) >= '0' && RuneAt(pageText, p) <= '9') {
         p++;
     }
     int regLen = p - regStart;
@@ -4170,6 +4171,16 @@ static TempStr AssemblePdfTemp(const char* const* objs, int nObjs) {
     b.Append(fmt("trailer\n<< /Size %d /Root 1 0 R >>\nstartxref\n%d\n", nObjs + 1, xref));
     b.Append(StrL("%%EOF\n"));
     return ToStrTemp(b);
+}
+
+// a code point above 255 after "10." is not a digit, and must not reach isdigit()
+bool EngineMupdf_UnitTestDoi() {
+    Utf8PageText good = MakeUtf8PageTextTemp(StrL("10.1234/abc def"));
+    if (LinkifyFindDoiEndOff(0, good) != 11) {
+        return false;
+    }
+    Utf8PageText notDoi = MakeUtf8PageTextTemp(StrL("10.\xc5\x82\xc3\xb3"));
+    return LinkifyFindDoiEndOff(0, notDoi) == -1;
 }
 
 bool EngineMupdf_UnitTestPageLabels() {
