@@ -206,11 +206,13 @@ static Str MkLitNameLenWrap() {
 
 #if IS_DEBUG
 bool LitDoc_UnitTestManifest();
+bool LitDoc_UnitTestDesThreads();
 #endif
 
 void LitDoc_UnitTests() {
 #if IS_DEBUG
     utassert(LitDoc_UnitTestManifest());
+    utassert(LitDoc_UnitTestDesThreads());
 #endif
     LitMustReject(MkLitHdrLenWrap());
     LitMustReject(MkLitPosOverflow());

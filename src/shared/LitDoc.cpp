@@ -583,7 +583,11 @@ static bool LitParseSectionNames(LitFile* lit) {
     return true;
 }
 
+// d3des keeps the key in a global, and books can load at the same time
+static Mutex gDesMutex;
+
 static void LitDesDecrypt(u8* dst, const u8* src, int n, const u8 key[8]) {
+    ScopedMutex lock(&gDesMutex);
     u8 k[8];
     memcpy(k, key, 8);
     deskey(k, DE1);
@@ -1456,6 +1460,56 @@ EngineBase* CreateEngineLitFromFile(Str path, PasswordUI* pwdUI) {
 }
 
 #if IS_DEBUG
+struct LitDesThreadData {
+    Str src;
+    Str want;
+    u8 key[8] = {};
+    bool ok = true;
+};
+
+static void LitDesThread(LitDesThreadData* d) {
+    constexpr int kRounds = 300;
+    int n = len(d->src);
+    u8* out = AllocArray<u8>(n);
+    for (int i = 0; i < kRounds && d->ok; i++) {
+        LitDesDecrypt(out, (const u8*)d->src.s, n, d->key);
+        d->ok = MemEq(out, d->want.s, n);
+    }
+    Free(nullptr, out);
+}
+
+// books loading at the same time decrypt with different keys
+bool LitDoc_UnitTestDesThreads() {
+    constexpr int kThreads = 4;
+    constexpr int kSize = 4096;
+    u8* src = AllocArray<u8>(kSize);
+    for (int i = 0; i < kSize; i++) {
+        src[i] = (u8)(i * 7);
+    }
+    LitDesThreadData data[kThreads];
+    u8* wants[kThreads];
+    for (int t = 0; t < kThreads; t++) {
+        LitDesThreadData& d = data[t];
+        memset(d.key, 0x11 * (t + 1), sizeof(d.key));
+        wants[t] = AllocArray<u8>(kSize);
+        LitDesDecrypt(wants[t], src, kSize, d.key);
+        d.src = Str((char*)src, kSize);
+        d.want = Str((char*)wants[t], kSize);
+    }
+    ThreadHandle threads[kThreads];
+    for (int t = 0; t < kThreads; t++) {
+        threads[t] = StartThread(MkFunc0(LitDesThread, &data[t]), StrL("LitDesTest"));
+    }
+    bool ok = true;
+    for (int t = 0; t < kThreads; t++) {
+        JoinThread(&threads[t], 60 * 1000);
+        ok = ok && data[t].ok;
+        Free(nullptr, wants[t]);
+    }
+    Free(nullptr, src);
+    return ok;
+}
+
 bool LitDoc_UnitTestManifest() {
     const Str cases[][4] = {
         {StrL("same/a.html"), StrL("same/b.html"), StrL("a.html"), StrL("b.html")},
