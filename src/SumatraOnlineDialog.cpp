@@ -4,6 +4,9 @@
 #include "base/Base.h"
 #include "base/Win.h"
 #include "base/Http.h"
+#include "base/File.h"
+#include "base/JsonParser.h"
+#include "base/AutoWin.h"
 #include "base/UITask.h"
 #include "gui/Dpi.h"
 
@@ -16,7 +19,9 @@
 
 #include "Settings.h"
 #include "AppSettings.h"
+#include "AppTools.h"
 #include "MainWindow.h"
+#include "WindowTab.h"
 #include "Theme.h"
 #include "SumatraConfig.h"
 #include "SumatraPDF.h"
@@ -30,8 +35,139 @@ constexpr int kOnlineApiKeyLen = 46;
 constexpr DWORD kHttpStatusOk = 200;
 constexpr DWORD kHttpStatusUnauthorized = 401;
 
+// Desktop cap. The website still accepts 200 MiB; refusing here keeps a transfer
+// inside the server's existing timeouts. Exactly 50 MiB is allowed.
+constexpr i64 kOnlineMaxBytes = (i64)50 << 20;
+constexpr int kOnlineFileLines = 6;
+
 // 0: nothing in flight. A finished request whose id does not match is dropped.
 static u32 gOnlineReqSeq = 0;
+
+// The server's validUploadName: empty, "." and ".." and any of / \ : " ; CR LF NUL.
+// ';' is legal in a Windows file name, so the picker can still return one.
+static bool ValidUploadName(Str name) {
+    if (len(name) == 0 || str::Eq(name, StrL(".")) || str::Eq(name, StrL(".."))) {
+        return false;
+    }
+    for (int i = 0; i < len(name); i++) {
+        char c = name.s[i];
+        if (c == '/' || c == '\\' || c == ':' || c == '"' || c == ';' || c == '\r' || c == '\n' || c == '\0') {
+            return false;
+        }
+    }
+    return true;
+}
+
+enum class OnlineJob : int {
+    List = 1,
+    Upload,
+    Download,
+};
+
+struct OnlineListedFile {
+    Str name;
+    i64 size = 0;
+};
+
+struct OnlineNameAcc {
+    int idx = -1;
+    Str name;
+    i64 size = 0;
+    bool haveName = false;
+    bool haveSize = false;
+};
+
+static void FreeOnlineFiles(Vec<OnlineListedFile>& v) {
+    for (OnlineListedFile& f : v) {
+        str::Free(f.name);
+        f.name = {};
+    }
+    VecReset(v);
+}
+
+static void PushOnlineName(Vec<OnlineListedFile>& out, OnlineNameAcc& cur) {
+    if (cur.haveName && len(cur.name) > 0) {
+        OnlineListedFile f;
+        f.name = cur.name;
+        f.size = cur.haveSize ? cur.size : 0;
+        cur.name = {};
+        VecAppend(out, f);
+    } else {
+        str::Free(cur.name);
+    }
+    cur = {};
+}
+
+// {"files":[{"name":"...","size":N}]} — name bytes are copied; the parser reuses its buffer.
+static bool ParseOnlineFiles(Str body, Vec<OnlineListedFile>& out) {
+    json::Reader r(body);
+    OnlineNameAcc cur;
+    for (json::Value& v : r) {
+        bool isName = json::PathMatch(v.path, StrL("/files"), StrL("*"), StrL("/name"));
+        bool isSize = json::PathMatch(v.path, StrL("/files"), StrL("*"), StrL("/size"));
+        if (!isName && !isSize) {
+            continue;
+        }
+        int idx = json::PathSegIndex(json::PathNth(v.path, 1));
+        if (idx < 0) {
+            continue;
+        }
+        if (cur.idx != idx) {
+            PushOnlineName(out, cur);
+            cur.idx = idx;
+        }
+        if (isName && v.type == json::Type::String) {
+            str::Free(cur.name);
+            cur.name = str::Dup(v.value);
+            cur.haveName = true;
+        } else if (isSize && v.type == json::Type::Number) {
+            cur.size = ParseInt64(v.value);
+            cur.haveSize = true;
+        }
+    }
+    PushOnlineName(out, cur);
+    if (!r.Ok()) {
+        FreeOnlineFiles(out);
+        return false;
+    }
+    return true;
+}
+
+struct OnlineJobResult {
+    u32 id = 0;
+    OnlineJob job = OnlineJob::List;
+    DWORD status = (DWORD)-1;
+    DWORD error = 0;
+    Str message;
+    Str body;
+    Str cachePath;
+    Str displayName;
+    bool urlRejected = false;
+    bool tooBig = false;
+    ~OnlineJobResult() {
+        str::Free(message);
+        str::Free(body);
+        str::Free(cachePath);
+        str::Free(displayName);
+    }
+};
+
+struct OnlineJobReq {
+    u32 id = 0;
+    OnlineJob job = OnlineJob::List;
+    Str url;
+    Str token;
+    Str filePath;
+    Str destPath;
+    Str displayName;
+    ~OnlineJobReq() {
+        str::Free(url);
+        str::Free(token);
+        str::Free(filePath);
+        str::Free(destPath);
+        str::Free(displayName);
+    }
+};
 
 struct OnlineVerifyResult {
     u32 id = 0;
@@ -97,20 +233,46 @@ struct SumatraOnlineWnd : WindowBase {
     VirtText* status = nullptr;
     VirtButton* btnLogin = nullptr;
     VirtButton* btnForget = nullptr;
+    VirtButton* btnUpload = nullptr;
+    VirtButton* btnUploadDoc = nullptr;
+    VirtButton* btnOpen = nullptr;
     VirtButton* btnCancel = nullptr;
     VirtButton* btnOk = nullptr;
+    VirtListBox* listBox = nullptr;
+    ListBoxModelStrings* fileModel = nullptr; // owned by listBox
+    Vec<i64> fileSizes;
+    // last /api/files status. 401 blocks another POST until a later response is not 401.
+    DWORD lastHttpStatus = 0;
     bool inFlight = false;
+    bool clearListStatus = false;
     u32 reqId = 0;
 
     bool Create(MainWindow* win);
     void SetStatus(Str s);
     void SetOkEnabled(bool enabled);
     void SetForgetEnabled(bool enabled);
+    void UpdateFileButtons();
+    bool CanUploadDoc() const;
+    void ClearFileList();
+    void ReplaceFileList(Vec<OnlineListedFile>& files);
+    void DrawFileRow(VirtListBox::DrawItemEvent* ev);
+    void OnFileSel();
     void OnLogin(VirtMouseEvent* ev = nullptr);
     void OnForget(VirtMouseEvent* ev = nullptr);
     void OnCancel(VirtMouseEvent* ev = nullptr);
     void OnOk(VirtMouseEvent* ev = nullptr);
+    void OnUpload(VirtMouseEvent* ev = nullptr);
+    void OnUploadDoc(VirtMouseEvent* ev = nullptr);
+    void OnOpen(VirtMouseEvent* ev = nullptr);
+    void BeginUpload(Str localPath);
+    void StartJob(OnlineJobReq* req);
+    void StartList();
+    bool ShowTransportError(OnlineJobResult* res);
     void FinishVerify(OnlineVerifyResult* res);
+    void FinishList(OnlineJobResult* res);
+    void FinishUpload(OnlineJobResult* res);
+    void FinishDownload(OnlineJobResult* res);
+    void FinishJob(OnlineJobResult* res);
 };
 
 static SumatraOnlineWnd* gSumatraOnlineWnd = nullptr;
@@ -145,6 +307,76 @@ void SumatraOnlineWnd::SetForgetEnabled(bool enabled) {
     SetDlgButtonEnabled(btnForget, DlgButtonStyle::Ghost, enabled);
 }
 
+bool SumatraOnlineWnd::CanUploadDoc() const {
+    if (!win) {
+        return false;
+    }
+    WindowTab* tab = win->CurrentTab();
+    // Home and Favorites leave filePath empty. Do not invent a path.
+    if (!tab || len(tab->filePath) == 0 || !file::Exists(tab->filePath)) {
+        return false;
+    }
+    return true;
+}
+
+void SumatraOnlineWnd::UpdateFileButtons() {
+    bool busy = inFlight;
+    SetOkEnabled(!busy);
+    bool keyOk = gSettings && IsOnlineApiKey(gSettings->onlineApiKey);
+    bool blocked = lastHttpStatus == kHttpStatusUnauthorized;
+    bool can = !busy && keyOk && !blocked;
+    if (btnUpload) {
+        SetDlgButtonEnabled(btnUpload, DlgButtonStyle::Ghost, can);
+    }
+    if (btnUploadDoc) {
+        SetDlgButtonEnabled(btnUploadDoc, DlgButtonStyle::Ghost, can && CanUploadDoc());
+    }
+    int sel = listBox ? listBox->GetCurrentSelection() : -1;
+    if (btnOpen) {
+        SetDlgButtonEnabled(btnOpen, DlgButtonStyle::Ghost, can && sel >= 0);
+    }
+}
+
+void SumatraOnlineWnd::ClearFileList() {
+    VecReset(fileSizes);
+    if (!fileModel) {
+        return;
+    }
+    fileModel->strings.Reset();
+    if (listBox) {
+        listBox->SetModel(fileModel);
+    }
+}
+
+void SumatraOnlineWnd::ReplaceFileList(Vec<OnlineListedFile>& files) {
+    VecReset(fileSizes);
+    if (fileModel) {
+        fileModel->strings.Reset();
+        for (OnlineListedFile& f : files) {
+            fileModel->strings.Append(f.name);
+            VecAppend(fileSizes, f.size);
+        }
+    }
+    FreeOnlineFiles(files);
+    if (listBox && fileModel) {
+        listBox->SetModel(fileModel);
+    }
+    UpdateFileButtons();
+}
+
+void SumatraOnlineWnd::DrawFileRow(VirtListBox::DrawItemEvent* ev) {
+    Str name = ev->listBox->model ? ev->listBox->model->Item(ev->itemIndex) : Str{};
+    Str meta;
+    if (ev->itemIndex >= 0 && ev->itemIndex < len(fileSizes)) {
+        meta = str::FormatSizeShortTemp(fileSizes[ev->itemIndex]);
+    }
+    DrawDlgListItem(ev->listBox, ev->gfx, ev->itemRect, ev->selected, name, meta);
+}
+
+void SumatraOnlineWnd::OnFileSel() {
+    UpdateFileButtons();
+}
+
 void SumatraOnlineWnd::OnLogin(VirtMouseEvent*) {
     Str origin = OnlineOrigin();
     TempStr url = fmt("%s/desktop", origin);
@@ -164,12 +396,15 @@ void SumatraOnlineWnd::OnForget(VirtMouseEvent*) {
     ScheduleSaveSettings();
     reqId = 0;
     inFlight = false;
-    SetOkEnabled(true);
+    lastHttpStatus = 0;
+    clearListStatus = false;
+    ClearFileList();
     SetForgetEnabled(false);
     if (edit) {
         edit->SetText(Str{});
     }
     SetStatus(Tr("Key removed from this computer."));
+    UpdateFileButtons();
 }
 
 void SumatraOnlineWnd::OnCancel(VirtMouseEvent*) {
@@ -181,37 +416,50 @@ void SumatraOnlineWnd::OnCancel(VirtMouseEvent*) {
 void SumatraOnlineWnd::FinishVerify(OnlineVerifyResult* res) {
     reqId = 0;
     inFlight = false;
-    SetOkEnabled(true);
     if (!gSettings) {
+        UpdateFileButtons();
         return;
     }
     if (res->status == kHttpStatusOk) {
+        // A different key must not keep the previous account's names for the replace prompt.
+        bool same = str::Eq(gSettings->onlineApiKey, res->token);
         str::ReplaceWithCopy(&gSettings->onlineApiKey, res->token);
         ScheduleSaveSettings();
+        if (!same) {
+            ClearFileList();
+        }
+        lastHttpStatus = kHttpStatusOk;
         if (edit) {
             edit->SetText(res->token);
         }
         SetForgetEnabled(true);
+        // Verify does not draw the file list. Listing happens when the dialog opens with a saved key.
         SetStatus(Tr("Key saved."));
+        UpdateFileButtons();
         return;
     }
     if (res->status == kHttpStatusUnauthorized) {
         SetStatus(Tr("That key was rejected. Create a new key on the website and paste it again."));
+        UpdateFileButtons();
         return;
     }
     if (res->status >= 100 && res->status < 600) {
         SetStatus(fmt("HTTP %d", (int)res->status));
+        UpdateFileButtons();
         return;
     }
     if (res->urlRejected) {
         SetStatus(Tr("The server address is not allowed."));
+        UpdateFileButtons();
         return;
     }
     if (len(res->message) > 0) {
         SetStatus(res->message);
+        UpdateFileButtons();
         return;
     }
     SetStatus(Tr("Could not reach Sumatra Online."));
+    UpdateFileButtons();
 }
 
 static void VerifyOnlineKeyDone(OnlineVerifyResult* res) {
@@ -263,13 +511,401 @@ void SumatraOnlineWnd::OnOk(VirtMouseEvent*) {
 
     inFlight = true;
     reqId = ++gOnlineReqSeq;
-    SetOkEnabled(false);
+    UpdateFileButtons();
 
     auto* req = new OnlineVerifyReq();
     req->id = reqId;
     req->url = str::Dup(url);
     req->token = str::Dup(token);
     RunAsync(MkFunc0(VerifyOnlineKeyThread, req), StrL("SumatraOnlineKey"));
+}
+
+static void NoteHttp(OnlineJobResult* res, const HttpRsp& rsp) {
+    res->status = rsp.httpStatusCode;
+    res->error = rsp.error;
+    if (res->status != (DWORD)-1 || rsp.error == 0 || rsp.error == ERROR_INVALID_PARAMETER ||
+        rsp.error == ERROR_FILE_TOO_LARGE || rsp.error == ERROR_READ_FAULT) {
+        return;
+    }
+    DWORD err = rsp.error;
+    TempStr msg = GetLastErrorStrTemp(err);
+    str::TrimWSInPlace(msg, str::TrimOpt::Both);
+    res->message = str::Dup(msg);
+}
+
+static void OnlineJobDone(OnlineJobResult* res);
+
+static void OnlineJobThread(OnlineJobReq* req) {
+    AutoDelete del(req);
+    auto* res = new OnlineJobResult();
+    res->id = req->id;
+    res->job = req->job;
+    res->urlRejected = !OnlineURLAllowed(req->url);
+    if (res->urlRejected) {
+        res->error = ERROR_INVALID_PARAMETER;
+        uitask::Post(MkFunc0(OnlineJobDone, res), "OnlineJobDone");
+        return;
+    }
+
+    TempStr hdr = fmt("Authorization: Bearer %s", req->token);
+    if (req->job == OnlineJob::Upload) {
+        i64 sz = file::GetSize(req->filePath);
+        if (sz < 0 || sz > kOnlineMaxBytes) {
+            res->tooBig = sz > kOnlineMaxBytes;
+            res->error = res->tooBig ? (DWORD)ERROR_FILE_TOO_LARGE : (DWORD)ERROR_READ_FAULT;
+            uitask::Post(MkFunc0(OnlineJobDone, res), "OnlineJobDone");
+            return;
+        }
+        Str body = file::ReadFile(req->filePath);
+        if ((i64)len(body) > kOnlineMaxBytes) {
+            str::Free(body);
+            res->tooBig = true;
+            res->error = ERROR_FILE_TOO_LARGE;
+            uitask::Post(MkFunc0(OnlineJobDone, res), "OnlineJobDone");
+            return;
+        }
+        if ((i64)len(body) != sz) {
+            str::Free(body);
+            res->error = ERROR_READ_FAULT;
+            uitask::Post(MkFunc0(OnlineJobDone, res), "OnlineJobDone");
+            return;
+        }
+        HttpRsp rsp;
+        HttpPostUrlNoRedirect(req->url, StrL("application/octet-stream"), hdr, body, &rsp);
+        str::Free(body);
+        NoteHttp(res, rsp);
+        uitask::Post(MkFunc0(OnlineJobDone, res), "OnlineJobDone");
+        return;
+    }
+
+    if (req->job == OnlineJob::Download) {
+        res->cachePath = str::Dup(req->destPath);
+        res->displayName = str::Dup(req->displayName);
+        HttpRsp rsp;
+        HttpDownloadWithHeaders(req->url, hdr, req->destPath, &rsp);
+        NoteHttp(res, rsp);
+        if (rsp.error == ERROR_FILE_TOO_LARGE) {
+            res->tooBig = true;
+        }
+        uitask::Post(MkFunc0(OnlineJobDone, res), "OnlineJobDone");
+        return;
+    }
+
+    HttpRsp rsp;
+    HttpGetWithHeaders(req->url, hdr, &rsp);
+    NoteHttp(res, rsp);
+    if (rsp.httpStatusCode == kHttpStatusOk) {
+        res->body = str::Dup(ToStr(rsp.data));
+    }
+    uitask::Post(MkFunc0(OnlineJobDone, res), "OnlineJobDone");
+}
+
+void SumatraOnlineWnd::StartJob(OnlineJobReq* req) {
+    inFlight = true;
+    reqId = ++gOnlineReqSeq;
+    req->id = reqId;
+    UpdateFileButtons();
+    RunAsync(MkFunc0(OnlineJobThread, req), StrL("SumatraOnlineFile"));
+}
+
+void SumatraOnlineWnd::StartList() {
+    if (inFlight || !gSettings || !IsOnlineApiKey(gSettings->onlineApiKey)) {
+        return;
+    }
+    TempStr url = fmt("%s/api/files", OnlineOrigin());
+    if (!OnlineURLAllowed(url)) {
+        SetStatus(Tr("The server address is not allowed."));
+        return;
+    }
+    if (!status || len(status->s) == 0) {
+        SetStatus(Tr("Contacting Sumatra Online..."));
+        clearListStatus = true;
+    } else {
+        clearListStatus = false;
+    }
+    auto* req = new OnlineJobReq();
+    req->job = OnlineJob::List;
+    req->url = str::Dup(url);
+    req->token = str::Dup(gSettings->onlineApiKey);
+    StartJob(req);
+}
+
+// true when the caller should stop. A 401 keeps the saved key.
+bool SumatraOnlineWnd::ShowTransportError(OnlineJobResult* res) {
+    if (res->tooBig || res->error == ERROR_FILE_TOO_LARGE) {
+        if (res->status >= 100 && res->status < 600) {
+            lastHttpStatus = res->status;
+        }
+        if (res->job == OnlineJob::Download) {
+            SetStatus(Tr("This file is over 50 MiB. SumatraPDF will not download it."));
+        } else {
+            SetStatus(
+                Tr("This file is over 50 MiB. SumatraPDF will not upload it. The website still accepts files up to 200 "
+                   "MiB."));
+        }
+        return true;
+    }
+    if (res->status == kHttpStatusUnauthorized) {
+        lastHttpStatus = kHttpStatusUnauthorized;
+        SetStatus(Tr("The server rejected the saved API key. It may have been revoked."));
+        return true;
+    }
+    if (res->status == kHttpStatusOk && res->error != ERROR_SUCCESS) {
+        lastHttpStatus = kHttpStatusOk;
+        SetStatus(res->job == OnlineJob::Download ? Tr("Could not save the download.")
+                                                  : Tr("Could not reach Sumatra Online."));
+        return true;
+    }
+    if (res->status == kHttpStatusOk) {
+        lastHttpStatus = kHttpStatusOk;
+        return false;
+    }
+    if (res->status >= 100 && res->status < 600) {
+        lastHttpStatus = res->status;
+        SetStatus(fmt("HTTP %d", (int)res->status));
+        return true;
+    }
+    if (res->urlRejected) {
+        SetStatus(Tr("The server address is not allowed."));
+        return true;
+    }
+    if (res->error == ERROR_READ_FAULT) {
+        SetStatus(Tr("Could not read the file."));
+        return true;
+    }
+    if (len(res->message) > 0) {
+        SetStatus(res->message);
+        return true;
+    }
+    SetStatus(Tr("Could not reach Sumatra Online."));
+    return true;
+}
+
+void SumatraOnlineWnd::FinishList(OnlineJobResult* res) {
+    if (ShowTransportError(res)) {
+        clearListStatus = false;
+        UpdateFileButtons();
+        return;
+    }
+    Vec<OnlineListedFile> parsed;
+    if (!ParseOnlineFiles(res->body, parsed)) {
+        SetStatus(Tr("Could not read the file list."));
+        clearListStatus = false;
+        UpdateFileButtons();
+        return;
+    }
+    ReplaceFileList(parsed);
+    if (clearListStatus) {
+        SetStatus({});
+    }
+    clearListStatus = false;
+    UpdateFileButtons();
+}
+
+void SumatraOnlineWnd::FinishUpload(OnlineJobResult* res) {
+    if (ShowTransportError(res)) {
+        UpdateFileButtons();
+        return;
+    }
+    SetStatus(Tr("Uploaded."));
+    UpdateFileButtons();
+    StartList();
+}
+
+void SumatraOnlineWnd::FinishDownload(OnlineJobResult* res) {
+    if (ShowTransportError(res)) {
+        UpdateFileButtons();
+        return;
+    }
+    UpdateFileButtons();
+    if (len(res->cachePath) == 0) {
+        return;
+    }
+    // Cache path must not become a File / History entry. The tab title is the server name.
+    LoadArgs args(res->cachePath, win);
+    args.skipHistory = true;
+    args.SetDisplayName(res->displayName);
+    StartLoadDocument(&args);
+}
+
+void SumatraOnlineWnd::FinishJob(OnlineJobResult* res) {
+    inFlight = false;
+    reqId = 0;
+    if (res->job == OnlineJob::List) {
+        FinishList(res);
+        return;
+    }
+    if (res->job == OnlineJob::Upload) {
+        FinishUpload(res);
+        return;
+    }
+    FinishDownload(res);
+}
+
+static void OnlineJobDone(OnlineJobResult* res) {
+    AutoDelete del(res);
+    SumatraOnlineWnd* wnd = gSumatraOnlineWnd;
+    if (!wnd || wnd->reqId != res->id) {
+        return;
+    }
+    wnd->FinishJob(res);
+}
+
+// One filesystem path. Not OpenFile: that picker is multi-select and loads the file.
+static TempStr PickUploadPath(HWND owner) {
+    AutoReleaseComPtr<IFileOpenDialog> dlg;
+    HRESULT hr = CoCreateInstance(CLSID_FileOpenDialog, nullptr, CLSCTX_INPROC_SERVER, IID_PPV_ARGS(&dlg));
+    if (FAILED(hr) || !dlg) {
+        logf("PickUploadPath: CoCreateInstance failed: 0x%x\n", (uint)hr);
+        return {};
+    }
+    DWORD opts = 0;
+    dlg->GetOptions(&opts);
+    opts |= FOS_FORCEFILESYSTEM | FOS_PATHMUSTEXIST | FOS_FILEMUSTEXIST;
+    opts &= ~(DWORD)FOS_ALLOWMULTISELECT;
+    dlg->SetOptions(opts);
+
+    hr = dlg->Show(owner);
+    if (hr == HRESULT_FROM_WIN32(ERROR_CANCELLED)) {
+        return {};
+    }
+    if (FAILED(hr)) {
+        logf("PickUploadPath: Show failed: 0x%x\n", (uint)hr);
+        return {};
+    }
+
+    AutoReleaseComPtr<IShellItem> item;
+    hr = dlg->GetResult(&item);
+    if (FAILED(hr) || !item) {
+        return {};
+    }
+    PWSTR pathW = nullptr;
+    hr = item->GetDisplayName(SIGDN_FILESYSPATH, &pathW);
+    if (FAILED(hr) || !pathW) {
+        return {};
+    }
+    TempStr path = ToUtf8Temp(WStr(pathW));
+    CoTaskMemFree(pathW);
+    return path;
+}
+
+void SumatraOnlineWnd::BeginUpload(Str localPath) {
+    if (inFlight) {
+        return;
+    }
+    if (lastHttpStatus == kHttpStatusUnauthorized) {
+        SetStatus(Tr("The server rejected the saved API key. It may have been revoked."));
+        return;
+    }
+    if (!gSettings || !IsOnlineApiKey(gSettings->onlineApiKey)) {
+        SetStatus(Tr("That is not a Sumatra Online API key."));
+        return;
+    }
+    TempStr base = path::GetBaseNameTemp(localPath);
+    if (!ValidUploadName(base)) {
+        SetStatus(Tr("That file name cannot be uploaded."));
+        return;
+    }
+    i64 sz = file::GetSize(localPath);
+    if (sz < 0) {
+        SetStatus(Tr("Could not read the file."));
+        return;
+    }
+    if (sz > kOnlineMaxBytes) {
+        SetStatus(Tr(
+            "This file is over 50 MiB. SumatraPDF will not upload it. The website still accepts files up to 200 MiB."));
+        return;
+    }
+
+    bool known = fileModel && fileModel->strings.Contains(base);
+    TempStr question = known ? fmt(Tr("Replace %s on Sumatra Online?").s, base)
+                             : fmt(Tr("Upload %s? If that name already exists on the server, it is replaced.").s, base);
+    int answer = MsgBox(hwnd, question, Tr("Link Sumatra Online"), MB_YESNO | MB_ICONQUESTION);
+    if (answer != IDYES) {
+        return;
+    }
+    if (inFlight || lastHttpStatus == kHttpStatusUnauthorized) {
+        if (lastHttpStatus == kHttpStatusUnauthorized) {
+            SetStatus(Tr("The server rejected the saved API key. It may have been revoked."));
+        }
+        return;
+    }
+
+    TempStr url = fmt("%s/api/files?name=%s", OnlineOrigin(), url::EncodeTemp(base));
+    if (!OnlineURLAllowed(url)) {
+        SetStatus(Tr("The server address is not allowed."));
+        return;
+    }
+    auto* req = new OnlineJobReq();
+    req->job = OnlineJob::Upload;
+    req->url = str::Dup(url);
+    req->token = str::Dup(gSettings->onlineApiKey);
+    req->filePath = str::Dup(localPath);
+    StartJob(req);
+}
+
+void SumatraOnlineWnd::OnUpload(VirtMouseEvent*) {
+    if (inFlight) {
+        return;
+    }
+    TempStr path = PickUploadPath(hwnd);
+    if (len(path) == 0) {
+        return;
+    }
+    BeginUpload(path);
+}
+
+void SumatraOnlineWnd::OnUploadDoc(VirtMouseEvent*) {
+    if (inFlight || !CanUploadDoc()) {
+        UpdateFileButtons();
+        return;
+    }
+    BeginUpload(win->CurrentTab()->filePath);
+}
+
+void SumatraOnlineWnd::OnOpen(VirtMouseEvent*) {
+    if (inFlight || !listBox || !fileModel) {
+        return;
+    }
+    if (lastHttpStatus == kHttpStatusUnauthorized) {
+        SetStatus(Tr("The server rejected the saved API key. It may have been revoked."));
+        return;
+    }
+    if (!gSettings || !IsOnlineApiKey(gSettings->onlineApiKey)) {
+        return;
+    }
+    int sel = listBox->GetCurrentSelection();
+    if (sel < 0 || sel >= fileModel->ItemsCount() || sel >= len(fileSizes)) {
+        return;
+    }
+    Str name = fileModel->Item(sel);
+    if (fileSizes[sel] > kOnlineMaxBytes) {
+        SetStatus(Tr("This file is over 50 MiB. SumatraPDF will not download it."));
+        return;
+    }
+    if (!ValidUploadName(name)) {
+        SetStatus(Tr("That file name cannot be downloaded."));
+        return;
+    }
+    // <appdata>/SumatraPDF-online/<base name>, only after the name check. The same name overwrites.
+    TempStr dir = GetPathInAppDataDirTemp(StrL("SumatraPDF-online"));
+    if (!dir::CreateAll(dir)) {
+        SetStatus(Tr("Could not save the download."));
+        return;
+    }
+    TempStr cachePath = path::JoinTemp(dir, name);
+    TempStr url = fmt("%s/api/file?name=%s", OnlineOrigin(), url::EncodeTemp(name));
+    if (!OnlineURLAllowed(url)) {
+        SetStatus(Tr("The server address is not allowed."));
+        return;
+    }
+    auto* req = new OnlineJobReq();
+    req->job = OnlineJob::Download;
+    req->url = str::Dup(url);
+    req->token = str::Dup(gSettings->onlineApiKey);
+    req->destPath = str::Dup(cachePath);
+    req->displayName = str::Dup(name);
+    StartJob(req);
 }
 
 static void OnClose(WindowBase::CloseEvent*) {
@@ -318,10 +954,22 @@ bool SumatraOnlineWnd::Create(MainWindow* mainWin) {
     vbox->AddChild(
         NewOnlineNote(Tr("Forget key removes it from this computer. To revoke it, use the button on the website."),
                       fontText, colMuted));
+    vbox->AddChild(NewOnlineNote(
+        Tr("This is a copy. Edits stay on this computer until you upload again. Save does not update Sumatra Online."),
+        fontText, colMuted));
 
     edit = NewDlgEdit(hwnd, fontText, saved, kOnlineApiKeyLen);
     Insets fieldPad = DpiScaledInsets(8, kToolDlgPadDx, 4, kToolDlgPadDx);
     vbox->AddChild(new Padding(NewDlgUnderlined(edit), fieldPad));
+
+    listBox = NewDlgList(GetDpi(), fontText);
+    listBox->idealSizeLines = kOnlineFileLines;
+    fileModel = new ListBoxModelStrings();
+    listBox->SetModel(fileModel);
+    listBox->onDrawItem =
+        MkMethod1<SumatraOnlineWnd, VirtListBox::DrawItemEvent*, &SumatraOnlineWnd::DrawFileRow>(this);
+    listBox->onSelectionChanged = MkMethod0<SumatraOnlineWnd, &SumatraOnlineWnd::OnFileSel>(this);
+    vbox->AddChild(NewDlgListBox(listBox));
 
     status = NewVirtText({.s = {}, .font = fontText, .textColor = colTxt, .isRtl = isRtl, .ellipsis = true});
     int pad = DpiScale(kToolDlgPadDx);
@@ -332,11 +980,23 @@ bool SumatraOnlineWnd::Create(MainWindow* mainWin) {
     btnLogin->onClick = MkMethod1<SumatraOnlineWnd, VirtMouseEvent*, &SumatraOnlineWnd::OnLogin>(this);
     btnForget = NewDlgButton(hwnd, Tr("Forget key"), fontText, DlgButtonStyle::Ghost, false);
     btnForget->onClick = MkMethod1<SumatraOnlineWnd, VirtMouseEvent*, &SumatraOnlineWnd::OnForget>(this);
+    btnUpload = NewDlgButton(hwnd, Tr("Upload..."), fontText, DlgButtonStyle::Ghost, false);
+    btnUpload->onClick = MkMethod1<SumatraOnlineWnd, VirtMouseEvent*, &SumatraOnlineWnd::OnUpload>(this);
+    btnUploadDoc = NewDlgButton(hwnd, Tr("Upload this document"), fontText, DlgButtonStyle::Ghost, false);
+    btnUploadDoc->onClick = MkMethod1<SumatraOnlineWnd, VirtMouseEvent*, &SumatraOnlineWnd::OnUploadDoc>(this);
+    btnOpen = NewDlgButton(hwnd, Tr("Open"), fontText, DlgButtonStyle::Ghost, false);
+    btnOpen->onClick = MkMethod1<SumatraOnlineWnd, VirtMouseEvent*, &SumatraOnlineWnd::OnOpen>(this);
     btnCancel = NewDlgButton(hwnd, Tr("Cancel"), fontText, DlgButtonStyle::Outline, false);
     btnCancel->onClick = MkMethod1<SumatraOnlineWnd, VirtMouseEvent*, &SumatraOnlineWnd::OnCancel>(this);
     btnOk = NewDlgButton(hwnd, Tr("OK"), fontText, DlgButtonStyle::Filled, true);
     btnOk->onClick = MkMethod1<SumatraOnlineWnd, VirtMouseEvent*, &SumatraOnlineWnd::OnOk>(this);
     SetForgetEnabled(len(saved) > 0);
+
+    HBox* fileRow = NewDlgRow();
+    fileRow->AddChild(btnUpload);
+    fileRow->AddChild(btnUploadDoc);
+    fileRow->AddChild(btnOpen);
+    vbox->AddChild(new Padding(fileRow, DpiScaledInsets(0, kToolDlgPadDx, 4, kToolDlgPadDx)));
 
     HBox* row = NewDlgRow();
     row->AddChild(btnLogin);
@@ -355,6 +1015,7 @@ bool SumatraOnlineWnd::Create(MainWindow* mainWin) {
     HwndCenterDialog(hwnd, win ? win->hwndFrame : nullptr);
     UpdateTheme();
 
+    UpdateFileButtons();
     SetIsVisible(true);
     HwndSetFocus(edit->hwnd);
     return true;
@@ -383,5 +1044,6 @@ void ShowSumatraOnlineDialog(MainWindow* win) {
         return;
     }
     gSumatraOnlineWnd = wnd;
+    wnd->StartList();
     RunModalWindow(wnd->hwnd, win ? win->hwndFrame : nullptr);
 }
