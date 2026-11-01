@@ -9,6 +9,7 @@
 
 #if OS_WIN
 #include <shlwapi.h>
+#include <crtdbg.h>
 #endif
 
 extern "C" {
@@ -29,6 +30,7 @@ extern "C" {
 #include "ProgressUpdateUI.h"
 #include "TextSearch.h"
 #include "LitDoc.h"
+#include "RtfDoc.h"
 #include "DisplayModel.h"
 #include "EbookBase.h"
 #include "ChmFile.h"
@@ -50,6 +52,7 @@ static void Usage() {
     printf("       test_engines <path> -list-annots      list annotations\n");
     printf("       test_engines <path> -select-all-text  exercise text selection and extraction\n");
     printf("       test_engines <path> -find-text <term> search all pages for text\n");
+    printf("       test_engines <path> -dump-text <out.txt> write the text of all pages\n");
     printf("       test_engines <path> -list-toc        list table-of-contents entries\n");
     printf("       test_engines <path> -list-properties list document properties\n");
     printf("       test_engines <path> -layout [zoom] [display-mode] lay out pages, print rects\n");
@@ -89,6 +92,9 @@ static EngineBase* CreateEngineForPath(Str path) {
     }
     if (kind == FileType::Lit) {
         return CreateEngineLitFromFile(path, nullptr);
+    }
+    if (kind == FileType::Rtf) {
+        return CreateEngineRtfFromFile(path, nullptr);
     }
     if (IsEngineMupdfSupportedFileType(kind)) {
         return CreateEngineMupdfFromFile(path, kind, 96, nullptr);
@@ -264,6 +270,25 @@ static bool ListAnnots(Str path) {
     printf("annotations: %d\n", len(annots));
     engine->Release();
     return true;
+}
+
+// the text of every page, to compare with another program's
+static bool DumpText(Str path, Str outPath) {
+    EngineBase* engine = CreateEngineForPath(path);
+    if (!engine) {
+        printf("failed to load: %.*s\n", path.len, path.s);
+        return false;
+    }
+    str::Builder text;
+    for (int pageNo = 1; pageNo <= engine->PageCount(); pageNo++) {
+        PageText pt = engine->ExtractPageText(pageNo);
+        text.Append(pt.text);
+        text.AppendChar('\n');
+        FreePageText(&pt);
+    }
+    bool ok = file::WriteFile(outPath, ToStr(text));
+    engine->Release();
+    return ok;
 }
 
 static bool SelectAllText(Str path) {
@@ -685,6 +710,13 @@ static bool ListModelToc(Str path) {
 }
 
 int main(int argc, char** argv) {
+#if OS_WIN && defined(_DEBUG)
+    // a debug CRT assert must not stop an unattended run on a modal dialog
+    _CrtSetReportMode(_CRT_ASSERT, _CRTDBG_MODE_FILE);
+    _CrtSetReportFile(_CRT_ASSERT, _CRTDBG_FILE_STDERR);
+    _CrtSetReportMode(_CRT_ERROR, _CRTDBG_MODE_FILE);
+    _CrtSetReportFile(_CRT_ERROR, _CRTDBG_FILE_STDERR);
+#endif
     if ((argc == 3 || argc == 4) && argv[2][0] != '-') {
         int pageNo = (argc == 4) ? atoi(argv[3]) : 1;
         bool ok = RenderPageToPng(Str(argv[1]), Str(argv[2]), pageNo);
@@ -753,6 +785,11 @@ int main(int argc, char** argv) {
     }
     if (argc == 3 && str::Eq(Str(argv[2]), StrL("-select-all-text"))) {
         bool ok = SelectAllText(Str(argv[1]));
+        DestroyTempArena();
+        return ok ? 0 : 1;
+    }
+    if (argc == 4 && str::Eq(Str(argv[2]), StrL("-dump-text"))) {
+        bool ok = DumpText(Str(argv[1]), Str(argv[3]));
         DestroyTempArena();
         return ok ? 0 : 1;
     }

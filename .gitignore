@@ -25,6 +25,7 @@ node_modules
 pipe-preview-results
 nul
 docs/scratch.txt
+docs/rtf_to_check.md
 bin/zopflipng.exe
 
 cmd/tmp/
