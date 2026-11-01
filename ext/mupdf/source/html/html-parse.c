@@ -63,7 +63,7 @@ static const char *html_default_css =
 "menu{display:block;list-style-type:disc;margin:1em 0;padding:0 0 0 30pt}"
 "ol{display:block;list-style-type:decimal;margin:1em 0;padding:0 0 0 30pt}"
 "p{display:block;margin:1em 0}"
-"pre{display:block;font-family:monospace;margin:1em 0;white-space:pre}"
+"pre{display:block;font-family:monospace;margin:1em 0;white-space:pre-wrap}"
 "q:before{content:'\xe2\x80\x9c'}"
 "q:after{content:'\xe2\x80\x9d'}"
 "s{text-decoration:line-through}"

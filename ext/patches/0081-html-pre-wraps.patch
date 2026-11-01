@@ -1,0 +1,20 @@
+html: wrap long lines of pre
+
+Pages can't scroll sideways, so text past the edge of a pre was lost. A
+book made from a text file is one big pre, which cut off nearly every
+line. Default to pre-wrap: newlines and indentation stay, long lines
+wrap. An explicit white-space:pre or nowrap is kept.
+
+diff --git a/source/html/html-parse.c b/source/html/html-parse.c
+index d1f781107..2c3958f15 100644
+--- a/source/html/html-parse.c
++++ b/source/html/html-parse.c
+@@ -63,7 +63,7 @@ static const char *html_default_css =
+ "menu{display:block;list-style-type:disc;margin:1em 0;padding:0 0 0 30pt}"
+ "ol{display:block;list-style-type:decimal;margin:1em 0;padding:0 0 0 30pt}"
+ "p{display:block;margin:1em 0}"
+-"pre{display:block;font-family:monospace;margin:1em 0;white-space:pre}"
++"pre{display:block;font-family:monospace;margin:1em 0;white-space:pre-wrap}"
+ "q:before{content:'\xe2\x80\x9c'}"
+ "q:after{content:'\xe2\x80\x9d'}"
+ "s{text-decoration:line-through}"
