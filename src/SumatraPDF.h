@@ -344,4 +344,4 @@ TempStr GetSumatraDataDirTemp();
 TempStr GetSumatraBuildSpecificDirTemp();
 
 extern Kind kNotifTemporaryFile;
-extern Kind kNotifSignatureStatus;
+

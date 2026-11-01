@@ -196,6 +196,27 @@ bool IsUnsignedSignatureWidget(Annotation*, TempStr* fieldNameOut);
 bool EngineMupdfSignDocument(EngineBase*, const PdfSignArgs&, Str* errOut);
 void ListWindowsSigningCertificates(StrVec& thumbprints, StrVec& labels);
 
+enum class SigVerdict {
+    ValidQualified,
+    Valid,
+    Unknown,
+    Invalid,
+};
+// one signature, for showing without going back to the engine
+struct PdfSigEntry {
+    SigVerdict verdict = SigVerdict::Unknown;
+    bool isDocTimestamp = false;
+    int pageNo = 0;
+    // in page coordinates; empty for a signature that isn't visible
+    RectF rect;
+    Str signer;
+    Str status;
+    // the lines of details that say why that's the status
+    Str validity;
+    Str details;
+    Str certDer;
+    ~PdfSigEntry();
+};
 struct PdfSigSummary {
     // not counting document timestamps
     int nSigned = 0;
@@ -203,12 +224,19 @@ struct PdfSigSummary {
     bool anyInvalid = false;
     bool anyUnknown = false;
 };
+struct PdfSigResult {
+    PdfSigSummary sum;
+    Vec<PdfSigEntry*> entries;
+    // closed for this tab
+    bool barDismissed = false;
+    ~PdfSigResult();
+};
 
 #if OS_WIN
 struct EutlLookup;
 void SetEutlLookup(const EutlLookup* lookup);
 void EngineMupdfFetchRevocation(EngineBase* engine);
-PdfSigSummary EngineMupdfSignatureSummary(EngineBase* engine);
+PdfSigResult* EngineMupdfCheckSignatures(EngineBase* engine);
 struct PdfSigCert {
     PdfSigCert* next = nullptr;
     Str label;

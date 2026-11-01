@@ -44,6 +44,7 @@
 #include "EngineBase.h"
 #include "EngineAll.h"
 #include "EutlTrust.h"
+#include "SignatureUI.h"
 #include "PdfDarkMode.h"
 #include "Annotation.h"
 #include "FormFields.h"
@@ -2630,6 +2631,7 @@ static void CreateFrameLayout(MainWindow* win) {
     win->menuSlot = new HwndSlot();
     win->menuSlot->mapRtlX = true;
     win->toolbarTopSlot = new HwndSlot();
+    win->sigBarSlot = new HwndSlot();
     win->toolbarBottomSlot = new HwndSlot();
     CreateCaptionLayout(win);
 
@@ -2666,6 +2668,7 @@ static void CreateFrameLayout(MainWindow* win) {
     chrome->AddChild(win->tabsSlot);
     chrome->AddChild(win->menuSlot);
     chrome->AddChild(win->toolbarTopSlot);
+    chrome->AddChild(win->sigBarSlot);
     chrome->AddChild(win->frameLayout, 1);
     chrome->AddChild(win->toolbarBottomSlot);
     win->chromeLayout = chrome;
@@ -5883,66 +5886,60 @@ static void OnTemporaryFileNotifClosed(NotificationClosedEvent* ev) {
     RemoveNotification(ev->wnd);
 }
 
-Kind kNotifSignatureStatus = "notifSignatureStatus";
-
 struct SigStatusJob {
     WindowTab* tab = nullptr;
     EngineBase* engine = nullptr;
-    PdfSigSummary sum;
+    PdfSigResult* res = nullptr;
 };
 
 static void OnSigStatusDone(SigStatusJob* job) {
     WindowTab* tab = job->tab;
     EngineBase* engine = job->engine;
-    PdfSigSummary sum = job->sum;
+    PdfSigResult* res = job->res;
     delete job;
     defer {
         engine->Release();
     };
-    if (!IsWindowTabValid(tab) || !tab->AsFixed() || tab->AsFixed()->GetEngine() != engine || sum.nSigned == 0) {
+    if (!IsWindowTabValid(tab) || !tab->AsFixed() || tab->AsFixed()->GetEngine() != engine) {
+        delete res;
         return;
     }
-    // what's shown may be about what this tab held before a reload
-    MainWindow* win = tab->win;
-    RemoveNotificationsForGroup(win, kNotifSignatureStatus);
-    Str msg;
-    bool problem = true;
-    if (sum.anyInvalid) {
-        msg = Tr("At least one signature is invalid.");
-    } else if (sum.anyUnknown) {
-        msg = Tr("At least one signature has problems.");
-    } else {
-        problem = false;
-        msg = sum.nQualified > 0 ? Tr("Signed with a qualified signature. All signatures are valid.")
-                                 : Tr("Signed and all signatures are valid.");
+    // a reload: the bar stays closed if it was
+    if (tab->signatures) {
+        res->barDismissed = tab->signatures->barDismissed;
     }
-    NotificationCreateArgs args;
-    args.win = win;
-    args.groupId = kNotifSignatureStatus;
-    args.tab = tab;
-    args.corner = NotifCorner::TopLeft;
-    args.timeoutMs = kNotifNoTimeout;
-    args.warning = problem;
-    args.msg = fmt("%s [%s](CmdProperties)", msg, Tr("Signature details"));
-    ShowNotification(args);
+    delete tab->signatures;
+    tab->signatures = res;
+
+    MainWindow* win = tab->win;
+    if (!IsCurrentTab(win, tab)) {
+        return;
+    }
+    UpdateSignaturesCtrl(win);
+    ApplySidebarPanels(win);
+    SigBarUpdate(win);
+    ScheduleUiUpdate(win, kUiForceRelayout | kUiRelayout);
+    ScheduleRepaint(win, 0);
 }
 
 static void SigStatusThread(SigStatusJob* job) {
     if (EutlNeedsUpdate()) {
         EutlUpdate(nullptr);
     }
-    job->sum = EngineMupdfSignatureSummary(job->engine);
+    job->res = EngineMupdfCheckSignatures(job->engine);
     uitask::Post(MkFunc0<SigStatusJob>(OnSigStatusDone, job), "SigStatusDone");
 }
 
-// says what a signed document's signatures amount to, like Acrobat's bar above
-// the document. On a thread: it hashes the file and may update the EU list.
+// checks a signed document's signatures, for the bar, the sidebar view and the
+// marks. On a thread: it hashes the file and may update the EU list.
 static void MaybeShowSignatureStatus(MainWindow* win, WindowTab* tab) {
-    if (!gSettings->showSignatureStatus || gPluginMode || !tab || !tab->AsFixed()) {
+    if (gPluginMode || !tab || !tab->AsFixed()) {
         return;
     }
     EngineBase* engine = tab->AsFixed()->GetEngine();
     if (!EngineMupdfIsPdf(engine) || EngineMupdfCountSignedSignatures(engine) == 0) {
+        delete tab->signatures;
+        tab->signatures = nullptr;
         return;
     }
     EutlRegisterLookup();
@@ -6808,9 +6805,9 @@ static bool IsUiLayoutEq(UILayout* s1, UILayout* s2) {
            s1->isToolbarVisible == s2->isToolbarVisible && s1->isToolbarOverlay == s2->isToolbarOverlay &&
            s1->sidebarTopVisible == s2->sidebarTopVisible && s1->sidebarBottomVisible == s2->sidebarBottomVisible &&
            s1->sidebarMiddleVisible == s2->sidebarMiddleVisible && s1->favoritesAsTab == s2->favoritesAsTab &&
-           s1->showMenuBarRebar == s2->showMenuBarRebar && s1->aiChatVisible == s2->aiChatVisible &&
-           s1->aiChatDx == s2->aiChatDx && s1->sidebarOnRight == s2->sidebarOnRight &&
-           s1->sidebarAutoHide == s2->sidebarAutoHide;
+           s1->sigBarVisible == s2->sigBarVisible && s1->showMenuBarRebar == s2->showMenuBarRebar &&
+           s1->aiChatVisible == s2->aiChatVisible && s1->aiChatDx == s2->aiChatDx &&
+           s1->sidebarOnRight == s2->sidebarOnRight && s1->sidebarAutoHide == s2->sidebarAutoHide;
 }
 
 // Favorites-only must not reserve a tab row (issue #5861)
@@ -6984,6 +6981,7 @@ static bool RelayoutFrame(MainWindow* win, bool updateToolbars, int sidebarDx) {
     // skips RelayoutFrame (otherwise the canvas stays hidden until another tab switch)
     curState.sidebarBottomVisible = win->uiState.sidebarBottomVisible || favAsTabNow;
     curState.favoritesAsTab = favAsTabNow;
+    curState.sigBarVisible = !favAsTabNow && SigBarWanted(win);
     curState.showMenuBarRebar = IsShowingMenuBarRebar(win);
     curState.aiChatVisible = win->uiState.aiChatVisible;
     curState.aiChatDx = win->aiChatDx;
@@ -7055,6 +7053,7 @@ static bool RelayoutFrame(MainWindow* win, bool updateToolbars, int sidebarDx) {
     }
 
     if (PM_BLACK_SCREEN == win->presentation || PM_WHITE_SCREEN == win->presentation) {
+        SigBarSetVisible(win, false);
         // make the black/white canvas cover the entire window
         HwndMoveWindow(win->hwndCanvas, &rc);
         gAfterLayout.Call(win);
@@ -7143,6 +7142,12 @@ static bool RelayoutFrame(MainWindow* win, bool updateToolbars, int sidebarDx) {
     win->menuSlot->dy = menuBarDy;
     win->toolbarTopSlot->dy = rebarDy;
     win->toolbarBottomSlot->dy = rebarDy;
+    bool showSigBar = !favAsTab && SigBarWanted(win);
+    HWND hwndSigBar = showSigBar ? SigBarEnsure(win) : nullptr;
+    showSigBar = hwndSigBar != nullptr;
+    int sigBarDy = showSigBar ? SigBarDy(win) : 0;
+    SetVis(win->sigBarSlot, showSigBar);
+    win->sigBarSlot->dy = sigBarDy;
 
     // leave at least this much canvas for the document when sidebar is open
     constexpr int kMinDocCanvasDx = 200;
@@ -7188,7 +7193,7 @@ static bool RelayoutFrame(MainWindow* win, bool updateToolbars, int sidebarDx) {
         }
     }
 
-    int chromeDy = captionHeight + (showTabsBar ? tabHeight : 0) + menuBarDy + rebarDy;
+    int chromeDy = captionHeight + (showTabsBar ? tabHeight : 0) + menuBarDy + rebarDy + sigBarDy;
     int contentDy = std::max(rc.dy - chromeDy, 0);
 
     // the bottom panel takes what the top and middle ones leave
@@ -7257,6 +7262,7 @@ static bool RelayoutFrame(MainWindow* win, bool updateToolbars, int sidebarDx) {
              updateToolbars && capTwoRow && capHasFileTabs);
     BindSlot(win->toolbarTopSlot, win->hwndToolbar, &dh, updateToolbars && showToolbar && !toolbarBottom);
     BindSlot(win->toolbarBottomSlot, win->hwndToolbar, &dh, updateToolbars && showToolbar && toolbarBottom);
+    BindSlot(win->sigBarSlot, hwndSigBar, &dh, showSigBar);
     HWND topHwnd = win->sidebarTop->hwnd;
     HWND middleHwnd = win->sidebarMiddle->hwnd;
     HWND bottomHwnd = win->sidebarBottom->hwnd;
@@ -7299,7 +7305,7 @@ static bool RelayoutFrame(MainWindow* win, bool updateToolbars, int sidebarDx) {
     HwndSlot* chromeSlots[] = {
         win->tabsSlot,         win->menuSlot,    win->toolbarTopSlot, win->toolbarBottomSlot, win->capMenuSlot,
         win->capTabsRow1,      win->capTabsRow2, win->sidebarTopSlot, win->sidebarMiddleSlot, win->sidebarBottomSlot,
-        win->favoritesTabSlot, win->canvasSlot,  win->aiChatSlot};
+        win->favoritesTabSlot, win->canvasSlot,  win->aiChatSlot,     win->sigBarSlot};
     for (HwndSlot* s : chromeSlots) {
         ClearSlotDefer(s);
     }
@@ -7319,6 +7325,10 @@ static bool RelayoutFrame(MainWindow* win, bool updateToolbars, int sidebarDx) {
     }
 
     dh.End();
+    SigBarSetVisible(win, showSigBar);
+    if (showSigBar) {
+        SigBarUpdate(win);
+    }
     UpdateCaptionOverlay(win, CaptionUpdate::Layout);
 
     // the floating sidebar's column: the canvas edge on the sidebar's side
@@ -7617,6 +7627,8 @@ static void ApplySidebarDpiFonts(MainWindow* win, int dpi) {
         win->pageThumbs->dpi = dpi;
         SidebarPagesChanged(win);
     }
+    SignaturesCtrlColorsAndDpi(win, dpi);
+    SigBarUpdate(win);
     if (win->tocFilterEdit) {
         win->tocFilterEdit->SetFont(appFont);
     }

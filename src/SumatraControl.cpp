@@ -63,6 +63,7 @@
 #include "Menu.h"
 #include "EngineAll.h"
 #include "EutlTrust.h"
+#include "SignatureUI.h"
 #include "CommandPalette.h"
 #include "PdfTools.h"
 #include "MergePdf.h"
@@ -672,7 +673,7 @@ enum class ControlCmd : u16 {
     TestDrawRectSelection = 145,
     TestEutlUpdate = 146,
     TestFetchRevocation = 147,
-    // the message of the signature status bar, empty if there is none
+    // [action]: the state of the signature bar, panel, marks and dialog
     TestSignatureStatus = 148,
 };
 
@@ -1015,9 +1016,8 @@ static void ExecuteControlRequest(ControlRequest* req) {
         }
 
         case ControlCmd::TestSignatureStatus: {
-            NotificationWnd* wnd =
-                len(gWindows) > 0 ? GetNotificationForGroup(gWindows[0], kNotifSignatureStatus) : nullptr;
-            AppendTestResult(req, 0, wnd ? NotificationGetMessageTemp(wnd) : TempStr{});
+            MainWindow* win = len(gWindows) > 0 ? gWindows[0] : nullptr;
+            AppendTestResult(req, 0, win ? SignatureUiStateTemp(win, StringArg(req, 0)) : TempStr{});
             break;
         }
 

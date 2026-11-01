@@ -171,6 +171,9 @@
     <ClInclude Include="..\src\SidebarPanel.h">
       <Filter>src</Filter>
     </ClInclude>
+    <ClInclude Include="..\src\SignatureUI.h">
+      <Filter>src</Filter>
+    </ClInclude>
     <ClInclude Include="..\src\SimpleBrowserWindow.h">
       <Filter>src</Filter>
     </ClInclude>
@@ -927,6 +930,9 @@
       <Filter>src</Filter>
     </ClCompile>
     <ClCompile Include="..\src\SignDocumentDialog.cpp">
+      <Filter>src</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\SignatureUI.cpp">
       <Filter>src</Filter>
     </ClCompile>
     <ClCompile Include="..\src\SimpleBrowserWindow.cpp">

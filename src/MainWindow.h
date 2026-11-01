@@ -13,6 +13,8 @@ struct ReadingAutoScrollBar;
 struct VirtText;
 struct VirtCloseButton;
 struct PageThumbnailsCtrl;
+struct SignaturesCtrl;
+struct SigBar;
 struct SidebarPanel;
 struct VirtRoot;
 struct VirtSplitter;
@@ -290,6 +292,8 @@ struct MainWindow { // NOLINT(clang-analyzer-optin.performance.Padding)
     TreeView* tocTreeView = nullptr;
     // the Thumbnails view: the document's page thumbnails
     PageThumbnailsCtrl* pageThumbs = nullptr;
+    SignaturesCtrl* signaturesCtrl = nullptr;
+    SigBar* sigBar = nullptr;
     TocTree* tocFilteredTree = nullptr;
 
     // whether the current tab's ToC has been loaded into the tree
@@ -503,6 +507,7 @@ struct MainWindow { // NOLINT(clang-analyzer-optin.performance.Padding)
     HBox* frameLayout = nullptr;
     HwndSlot* sidebarTopSlot = nullptr;
     HwndSlot* sidebarMiddleSlot = nullptr;
+    HwndSlot* sigBarSlot = nullptr;
     HwndSlot* sidebarBottomSlot = nullptr;
     // favoritesTabPanel; shown instead of the canvas when the Favorites tab is
     // selected
@@ -585,6 +590,7 @@ struct MainWindow { // NOLINT(clang-analyzer-optin.performance.Padding)
             bool sidebarBottomVisible = false;
             // full-window Favorites tab vs. sidebar panel: different geometry
             bool favoritesAsTab = false;
+            bool sigBarVisible = false;
             bool showMenuBarRebar = false;
             bool aiChatVisible = false;
             int aiChatDx = 0;

@@ -18,7 +18,10 @@ import {
   type EutlEntry,
   type PdfSignSpec,
 } from "./pki-chain.ts";
-import { EXE, runStandalone, tmpPath, writeAppdata } from "./util.ts";
+import { join } from "node:path";
+import { cmdId, EXE, ROOT, runStandalone, tmpPath, writeAppdata } from "./util.ts";
+import { findCanvas, sendCommand, waitForFrame } from "./win-automation.ts";
+import { postMessage, WM_LBUTTONDOWN, WM_LBUTTONUP } from "./winapi.ts";
 
 const SIGNATURES_READY_MS = 20_000;
 const NOT_READY = 2;
@@ -322,6 +325,45 @@ const STATUS_REVOKED = /Status: Invalid: the signer's certificate was revoked/;
 const STATUS_TAMPERED = /Status: Invalid: the signed part/;
 const BAR_READY_MS = 15_000;
 
+type SigUiState = {
+  bar: string;
+  rows: number;
+  panel: boolean;
+  page: number;
+  mark: number[];
+  dialog: boolean;
+  text: string;
+};
+
+async function uiState(client: ControlClient, action = ""): Promise<SigUiState> {
+  const out = String((await client.request(ControlCommand.TestSignatureStatus, [action]))[1] ?? "");
+  const line = (name: string) => out.match(new RegExp(`^${name}=(.*)$`, "m"))?.[1].trim() ?? "";
+  const bar = line("bar");
+  return {
+    bar: bar.startsWith("1 ") ? bar.slice(2) : "",
+    rows: Number(line("rows")),
+    panel: line("panel") === "1",
+    page: Number(line("page")),
+    mark: line("mark").split(",").map(Number),
+    dialog: line("dialog") === "1",
+    text: out,
+  };
+}
+
+async function waitForState(client: ControlClient, ok: (s: SigUiState) => boolean, what: string): Promise<SigUiState> {
+  const deadline = Date.now() + BAR_READY_MS;
+  for (;;) {
+    const s = await uiState(client);
+    if (ok(s)) {
+      return s;
+    }
+    if (Date.now() > deadline) {
+      throw new Error(`sig-validation: ${what}\n${s.text}`);
+    }
+    await Bun.sleep(50);
+  }
+}
+
 async function barFor(spec: PdfSignSpec, list: EutlEntry[] | null, edit?: (path: string) => void) {
   gCase++;
   const pdf = tmpPath(`sig-validation-${gCase}.pdf`);
@@ -338,9 +380,9 @@ async function barFor(spec: PdfSignSpec, list: EutlEntry[] | null, edit?: (path:
       const props = await signaturesOf(client);
       const deadline = Date.now() + BAR_READY_MS;
       for (;;) {
-        const bar = String((await client.request(ControlCommand.TestSignatureStatus))[1] ?? "");
-        if (bar) {
-          return { props, bar };
+        const state = await uiState(client);
+        if (state.bar) {
+          return { props, bar: state.bar };
         }
         if (Date.now() > deadline) {
           throw new Error(`sig-validation: no status bar\n${props}`);
@@ -368,7 +410,6 @@ async function testVerdict(): Promise<void> {
   let res = await barFor(spec, list);
   expectHas(res.props, STATUS_QUALIFIED, "qualified");
   expectHas(res.bar, /Signed with a qualified signature\. All signatures are valid\./, "qualified bar");
-  expectHas(res.bar, /CmdProperties/, "the bar links to Properties");
 
   const seal = makePki("eseal");
   res = await barFor({ signer: seal.leaf, extraCerts: [seal.ca] }, [{ cert: seal.ca, granted: [{ from: LONG_AGO }] }]);
@@ -396,6 +437,64 @@ async function testVerdict(): Promise<void> {
   expectNot(res.props, STATUS_QUALIFIED, "tampered");
 }
 
+// the bar, the sidebar view, the mark on the page and the dialog
+async function testUi(): Promise<void> {
+  const { ca, leaf } = makePki("esign");
+  const pdf = tmpPath("sig-validation-ui.pdf");
+  writeSignedPdf(pdf, { signer: leaf, extraCerts: [ca], rect: [50, 50, 200, 100], leadingPage: true });
+  const appdata = writeAppdata("sig-validation-ui", SETTINGS);
+  writeEutlCache(appdata, [{ cert: ca, granted: [{ from: LONG_AGO }] }]);
+  const unsigned = join(ROOT, "ext", "a-zlib", "zlib.3.pdf");
+
+  await withControlledSumatra(
+    EXE,
+    async (client, proc) => {
+      let s = await waitForState(client, (st) => st.bar !== "", "no bar");
+      expectHas(s.bar, /qualified signature/, "bar");
+      if (s.rows !== 1) {
+        throw new Error(`sig-validation: ${s.rows} rows\n${s.text}`);
+      }
+
+      s = await uiState(client, "panel");
+      if (!s.panel) {
+        throw new Error(`sig-validation: the bar's button shows no panel\n${s.text}`);
+      }
+
+      await uiState(client, "row 0");
+      s = await waitForState(client, (st) => st.page === 2, "a row doesn't go to its page");
+      s = await waitForState(client, (st) => st.mark[2] > 0, "no mark on the signature");
+
+      const frame = await waitForFrame(proc.pid!);
+      const canvas = findCanvas(frame);
+      const [x, y, dx, dy] = s.mark;
+      postMessage(canvas, WM_LBUTTONDOWN, 1, ((y + (dy >> 1)) << 16) | (x + (dx >> 1)));
+      postMessage(canvas, WM_LBUTTONUP, 0, ((y + (dy >> 1)) << 16) | (x + (dx >> 1)));
+      s = await waitForState(client, (st) => st.dialog, "clicking the signature opens no dialog");
+      expectHas(s.text, /Validity Summary/, "dialog");
+      expectHas(s.text, /Signer Info/, "dialog");
+      expectHas(s.text, /Qualified/i, "dialog");
+
+      await uiState(client, "close");
+      await waitForState(client, (st) => st.bar === "", "closing leaves the bar");
+    },
+    ["-appdata", appdata, pdf],
+  );
+
+  // another tab has its own: an unsigned document shows nothing, and back
+  await withControlledSumatra(
+    EXE,
+    async (client, proc) => {
+      const frame = await waitForFrame(proc.pid!);
+      await waitForState(client, (st) => st.bar === "" && st.rows === 0, "an unsigned tab shows a bar");
+      sendCommand(frame, cmdId("CmdPrevTab"));
+      await waitForState(client, (st) => st.bar !== "" && st.rows === 1, "the signed tab shows no bar");
+      sendCommand(frame, cmdId("CmdNextTab"));
+      await waitForState(client, (st) => st.bar === "" && st.rows === 0, "the bar stays on the unsigned tab");
+    },
+    ["-appdata", appdata, pdf, unsigned],
+  );
+}
+
 export async function testit(): Promise<void> {
   if (IS_MAC) {
     console.log("SKIP sig-validation: the checks are in the Windows PKCS#7 backend");
@@ -406,6 +505,7 @@ export async function testit(): Promise<void> {
   await testRevocation();
   await testOcsp();
   await testVerdict();
+  await testUi();
 }
 
 if (import.meta.main) {

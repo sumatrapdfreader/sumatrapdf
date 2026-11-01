@@ -311,6 +311,7 @@ function sumatrapdf_files()
     "WebViewCapture.h",
     "WebViewCapture_win.cpp",
     "PageThumbnails.*",
+    "SignatureUI.*",
     "MergePdf.*",
     "AnnotPlacement.*",
     "AnnotPlacementCursors_win.*",

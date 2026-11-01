@@ -28,6 +28,7 @@
 #include "Favorites.h"
 #include "PageThumbnails.h"
 #include "TableOfContents.h"
+#include "SignatureUI.h"
 #include "SidebarPanel.h"
 
 constexpr int kViewIconDx = 16;
@@ -39,6 +40,8 @@ static const char* ViewIcon(SidebarView v) {
             return gIconSidebarBookmarks;
         case SidebarView::Thumbnails:
             return gIconHomeThumbnails;
+        case SidebarView::Signatures:
+            return gIconSidebarSignatures;
         default:
             return gIconSidebarFavorites;
     }
@@ -50,6 +53,8 @@ static Str ViewName(SidebarView v) {
             return Tr("Bookmarks");
         case SidebarView::Thumbnails:
             return Tr("Thumbnails");
+        case SidebarView::Signatures:
+            return Tr("Signatures");
         default:
             return Tr("Favorites");
     }
@@ -62,6 +67,8 @@ static ILayout* ViewLayout(MainWindow* win, SidebarView v) {
             return win->tocViewLayout;
         case SidebarView::Thumbnails:
             return win->pageThumbs;
+        case SidebarView::Signatures:
+            return SignaturesView(win);
         default:
             return win->favViewLayout;
     }
@@ -88,6 +95,8 @@ bool IsSidebarViewAvailable(MainWindow* win, SidebarView v) {
             return win->IsDocLoaded() && win->ctrl && win->ctrl->HasToc();
         case SidebarView::Thumbnails:
             return CanShowThumbnails(win->CurrentTab());
+        case SidebarView::Signatures:
+            return TabHasSignatures(win->CurrentTab());
         default:
             return !gPluginMode && CanAccessDisk();
     }
@@ -176,11 +185,24 @@ void ApplySidebarPanels(MainWindow* win) {
     SetSidebarVisibility(win, RequestedTopVisible(win), gSettings->showFavorites);
 }
 
+static void OnViewClick(SidebarPanel* p, SidebarView v);
+
 // First free panel: the top one, the bottom one, then the middle one; with
 // all shown, the top one switches to v. Without a tab the top panel has nowhere
 // to keep its view (e.g. Favorites on the home page), so the bottom one shows v
 void ShowSidebarView(MainWindow* win, SidebarView v) {
     if (!IsSidebarViewAvailable(win, v)) {
+        return;
+    }
+    // about this document only, so only the panel that belongs to the document
+    if (v == SidebarView::Signatures) {
+        OnViewClick(win->sidebarTop, v);
+        WindowTab* tab = win->CurrentTab();
+        if (tab) {
+            tab->showToc = true;
+        }
+        SetSidebarVisibility(win, true, gSettings->showFavorites, SidebarResizeFrame::Adjust);
+        FocusSidebarPanel(win->sidebarTop);
         return;
     }
     if (SidebarPanel* shown = SidebarPanelShowing(win, v)) {
@@ -254,6 +276,10 @@ static void OnThumbnailsClick(SidebarPanel* p, VirtMouseEvent*) {
 
 static void OnFavoritesClick(SidebarPanel* p, VirtMouseEvent*) {
     OnViewClick(p, SidebarView::Favorites);
+}
+
+static void OnSignaturesClick(SidebarPanel* p, VirtMouseEvent*) {
+    OnViewClick(p, SidebarView::Signatures);
 }
 
 // ✕: hides the panel; on the Favorites tab, closes the tab
@@ -383,6 +409,9 @@ static LRESULT CALLBACK WndProcSidebarPanel(HWND hwnd, UINT msg, WPARAM wp, LPAR
     if ((msg == WM_SETFOCUS || msg == WM_KILLFOCUS) && p->root && thumbs) {
         p->root->SetFocus(msg == WM_SETFOCUS ? win->pageThumbs : nullptr);
     }
+    if (msg == WM_SETFOCUS && p->root && win->signaturesCtrl && p->hosted == SignaturesView(win)) {
+        p->root->SetFocus(SignaturesView(win));
+    }
 
     // with the thumbnails focused, every key they don't take goes to the canvas,
     // as if it had the focus (Tab included: it moves the focus on)
@@ -422,6 +451,10 @@ static void UpdateViewIcons(SidebarPanel* p, int dpi) {
         b->padding = Insets{pad, pad, pad, pad};
         b->isSelected = p->view == v && p->hosted;
         b->SetIsEnabled(IsSidebarViewAvailable(p->win, v));
+        if (v == SidebarView::Signatures) {
+            // only where it can be shown: other documents have no use for it
+            b->SetIsVisible(p->kind == SidebarPanelKind::Top && IsSidebarViewAvailable(p->win, v));
+        }
         b->Invalidate();
     }
 }
@@ -446,7 +479,8 @@ SidebarPanel* CreateSidebarPanel(MainWindow* win, SidebarPanelKind kind) {
     header->alignMain = MainAxisAlign::MainStart;
     header->alignCross = CrossAxisAlign::CrossCenter;
     using ClickFn = void (*)(SidebarPanel*, VirtMouseEvent*);
-    const ClickFn onClick[kSidebarViewCount] = {OnBookmarksClick, OnThumbnailsClick, OnFavoritesClick};
+    const ClickFn onClick[kSidebarViewCount] = {OnBookmarksClick, OnThumbnailsClick, OnFavoritesClick,
+                                                OnSignaturesClick};
     for (int i = 0; i < kSidebarViewCount; i++) {
         auto* b = new VirtIconButton();
         b->onClick = MkFunc1(onClick[i], p);
@@ -555,6 +589,10 @@ void AttachSidebarViews(MainWindow* win) {
         thumbs->SetFlag(vwfFocused, false);
     }
     UpdateSidebarThumbnails(win);
+    if (win->signaturesCtrl) {
+        SignaturesView(win)->SetIsVisible(hostOf[(int)SidebarView::Signatures] != nullptr);
+        UpdateSignaturesCtrl(win);
+    }
     for (SidebarPanel* p : panels) {
         UpdateViewIcons(p, DpiGetForHwnd(p->hwnd));
         RelayoutSidebarPanel(p);

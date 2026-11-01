@@ -62,7 +62,7 @@ bool WindowTab::IsAboutTab() const {
 
 #if !defined(SUMATRA_NG)
 // the SidebarView / SidebarBottomView settings
-static const char* kSidebarViewNames[kSidebarViewCount] = {"bookmarks", "thumbnails", "favorites"};
+static const char* kSidebarViewNames[kSidebarViewCount] = {"bookmarks", "thumbnails", "favorites", "signatures"};
 
 SidebarView SidebarViewFromStr(Str s, SidebarView def) {
     for (int i = 0; i < kSidebarViewCount; i++) {
@@ -96,6 +96,9 @@ bool WindowTab::IsNonDocumentTab() const {
 
 WindowTab::~WindowTab() {
     logf("~WindowTab: 0x%p, dm: 0x%p\n", this, AsFixed());
+#if !defined(SUMATRA_NG)
+    delete signatures;
+#endif
     // Nothing may point at a tab that is going away.
     ReadAloudForgetTab(this);
 #if !defined(SUMATRA_NG)

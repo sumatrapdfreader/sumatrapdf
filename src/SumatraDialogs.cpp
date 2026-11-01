@@ -399,7 +399,9 @@ ILayout* NewDlgFooter(VirtButton* cancel, VirtButton* ok, VirtButton* extra) {
         row->AddChild(extra);
     }
     row->AddChild(new Spacer(0, 0), 1);
-    row->AddChild(cancel);
+    if (cancel) {
+        row->AddChild(cancel);
+    }
     row->AddChild(ok);
     auto* box = new VBox();
     box->alignCross = CrossAxisAlign::Stretch;

@@ -24,13 +24,16 @@ enum class SidebarContent {
     Favorites,
 };
 #else
+struct PdfSigResult;
+
 // what a sidebar panel shows
 enum class SidebarView {
     Bookmarks,
     Thumbnails,
     Favorites,
+    Signatures,
 };
-constexpr int kSidebarViewCount = 3;
+constexpr int kSidebarViewCount = 4;
 
 SidebarView SidebarViewFromStr(Str s, SidebarView def);
 Str SidebarViewToStr(SidebarView);
@@ -158,6 +161,8 @@ struct WindowTab {
 #else
     // what the sidebar's top panel shows (showToc: whether it does)
     SidebarView sidebarView = SidebarView::Bookmarks;
+    // what checking the signatures found; set by a background job. Owned
+    PdfSigResult* signatures = nullptr;
 #endif
     // whether to auto-reload the document when the tab is selected
     bool reloadOnFocus = false;

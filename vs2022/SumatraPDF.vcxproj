@@ -1428,6 +1428,7 @@
     <ClInclude Include="..\src\SearchAndDDE.h" />
     <ClInclude Include="..\src\Settings.h" />
     <ClInclude Include="..\src\SidebarPanel.h" />
+    <ClInclude Include="..\src\SignatureUI.h" />
     <ClInclude Include="..\src\SimpleBrowserWindow.h" />
     <ClInclude Include="..\src\SumatraDialogs.h" />
     <ClInclude Include="..\src\SumatraPDF.h" />
@@ -1710,6 +1711,7 @@
     <ClCompile Include="..\src\SettingsDialog.cpp" />
     <ClCompile Include="..\src\SidebarPanel.cpp" />
     <ClCompile Include="..\src\SignDocumentDialog.cpp" />
+    <ClCompile Include="..\src\SignatureUI.cpp" />
     <ClCompile Include="..\src\SimpleBrowserWindow.cpp" />
     <ClCompile Include="..\src\SumatraControl.cpp" />
     <ClCompile Include="..\src\SumatraDialogs.cpp" />

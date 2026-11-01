@@ -287,7 +287,7 @@ PropertiesWnd::~PropertiesWnd() {
 }
 
 // CryptUIDlgViewContext lives in cryptui.dll, loaded only when a certificate is viewed
-static void ViewCertDer(HWND parent, Str der) {
+void ViewCertDer(HWND parent, Str der) {
     if (len(der) == 0) {
         return;
     }

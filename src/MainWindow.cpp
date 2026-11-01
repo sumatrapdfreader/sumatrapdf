@@ -63,6 +63,7 @@
 #include "Selection.h"
 #include "Tabs.h"
 #include "MainWindowCommon.h"
+#include "SignatureUI.h"
 
 static void SafeDeleteTabsCtrl(TabsCtrl* tabsCtrl) {
     logf("SafeDeleteTabsCtrl: 0x%p\n", tabsCtrl);
@@ -223,6 +224,8 @@ MainWindow::~MainWindow() {
     // the views' layouts own their controls
     delete tocViewLayout;
     delete pageThumbs;
+    DeleteSignaturesCtrl(this);
+    DeleteSigBar(this);
     delete tocFilteredTree;
     if (favTreeView) {
         delete favTreeView->treeModel;

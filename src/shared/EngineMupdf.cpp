@@ -8128,6 +8128,28 @@ static void CollectSignatureFields(fz_context* ctx, pdf_document* pdfdoc, Vec<pd
     fields = walk.fields;
 }
 
+// where the signature shows on its page, in the coordinates the app uses
+static RectF SigFieldRect(fz_context* ctx, pdf_obj* field) {
+    RectF res;
+    pdf_obj* page = pdf_dict_get(ctx, field, PDF_NAME(P));
+    if (!page) {
+        return res;
+    }
+    fz_try(ctx) {
+        fz_rect r = pdf_dict_get_rect(ctx, field, PDF_NAME(Rect));
+        if (!fz_is_empty_rect(r)) {
+            fz_matrix ctm;
+            pdf_page_obj_transform(ctx, page, nullptr, &ctm);
+            r = fz_transform_rect(r, ctm);
+            res = RectF(r.x0, r.y0, r.x1 - r.x0, r.y1 - r.y0);
+        }
+    }
+    fz_catch(ctx) {
+        fz_report_error(ctx);
+    }
+    return res;
+}
+
 static int PageNoForSigField(fz_context* ctx, pdf_document* pdfdoc, pdf_obj* field) {
     pdf_obj* page = pdf_dict_get(ctx, field, PDF_NAME(P));
     if (!page) {
@@ -8537,7 +8559,7 @@ static pkcs7_windows_rev_data* LoadDssRevocation(fz_context* ctx, pdf_document* 
     return rev;
 }
 
-static void AppendVerdict(str::Builder& s, PdfSigSummary* sum, bool isDocTs, SigLevel level,
+static void AppendVerdict(str::Builder& s, PdfSigSummary* sum, PdfSigEntry* entry, bool isDocTs, SigLevel level,
                           const pkcs7_windows_chain_info& chain, pdf_signature_error digErr, int edits, int laterSigs,
                           i64 provenTime) {
     bool trusted = chain.os_trusted || chain.eu_chain_ok;
@@ -8574,6 +8596,13 @@ static void AppendVerdict(str::Builder& s, PdfSigSummary* sum, bool isDocTs, Sig
         status = StrL("Valid signature.");
     }
     s.Append(fmt("  Status: %s\n", status));
+    if (entry) {
+        entry->status = str::Dup(status);
+        entry->verdict = invalid     ? SigVerdict::Invalid
+                         : unknown   ? SigVerdict::Unknown
+                         : qualified ? SigVerdict::ValidQualified
+                                     : SigVerdict::Valid;
+    }
     if (sum) {
         sum->anyInvalid |= invalid;
         sum->anyUnknown |= unknown;
@@ -8637,10 +8666,11 @@ static void AppendPadesLevel(str::Builder& s, bool isCades, bool hasTs, bool ltv
 static void AppendSignatureFieldInfo(fz_context* ctx, str::Builder& s, pdf_pkcs7_verifier* verifier,
                                      pdf_document* pdfdoc, pdf_obj* sigObj, int sigNo, int pageNo, bool docHasDss,
                                      bool docHasDocTs, int laterSigs, void* eutlList, const Vec<pdf_obj*>& fields,
-                                     pkcs7_windows_rev_data* docRev, PdfSigSummary* sum) {
+                                     pkcs7_windows_rev_data* docRev, PdfSigResult* res) {
     if (len(s) > 0) {
         s.AppendChar('\n');
     }
+    int sectionStart = len(s);
     pdf_obj* vDict = pdf_dict_get(ctx, sigObj, PDF_NAME(V));
     if (!vDict) {
         vDict = sigObj;
@@ -8738,7 +8768,8 @@ static void AppendSignatureFieldInfo(fz_context* ctx, str::Builder& s, pdf_pkcs7
         fz_report_error(ctx);
     }
     SigLevel level = QualifiedLevel(info, chain);
-    AppendVerdict(s, sum, isDocTs, level, chain, digErr, edits, laterSigs, provenTime);
+    PdfSigEntry* entry = res ? new PdfSigEntry() : nullptr;
+    AppendVerdict(s, res ? &res->sum : nullptr, entry, isDocTs, level, chain, digErr, edits, laterSigs, provenTime);
 
     s.Append(isDocTs ? StrL("  Timestamp certificate:\n") : StrL("  User certificate:\n"));
     AppendTrustSource(s, chain);
@@ -8769,6 +8800,7 @@ static void AppendSignatureFieldInfo(fz_context* ctx, str::Builder& s, pdf_pkcs7
     if (info.issuer_cn && info.issuer_cn[0]) {
         s.Append(fmt("  Certificate issued by: %s\n", Str(info.issuer_cn)));
     }
+    int validityStart = len(s);
     if (!isDocTs) {
         Str listDate = (gEutlLookup && eutlList) ? gEutlLookup->date(eutlList) : Str();
         AppendQualifiedLine(s, level, listDate);
@@ -8796,6 +8828,7 @@ static void AppendSignatureFieldInfo(fz_context* ctx, str::Builder& s, pdf_pkcs7
     bool ltv = docHasDss;
     // long-term validation needs the document to carry the proof itself
     AppendLtvLine(s, chain.revocation_embedded && chain.revocation == PKCS7_REV_GOOD, info.not_after_unix);
+    int validityEnd = len(s);
     if (info.hash_algo) {
         s.Append(fmt("  Hash algorithm: %s\n", Str(info.hash_algo)));
     }
@@ -8844,6 +8877,17 @@ static void AppendSignatureFieldInfo(fz_context* ctx, str::Builder& s, pdf_pkcs7
         }
     }
 
+    if (entry) {
+        Str all = ToStr(s);
+        entry->isDocTimestamp = isDocTs;
+        entry->pageNo = pageNo;
+        entry->signer = str::Dup(Str(info.signer_cn));
+        entry->validity = str::Dup(Str(all.s + validityStart, validityEnd - validityStart));
+        entry->details = str::Dup(Str(all.s + sectionStart, len(all) - sectionStart));
+        entry->certDer = str::Dup(Str((const char*)info.cert_der, info.cert_der_len));
+        entry->rect = SigFieldRect(ctx, sigObj);
+        VecAppend(res->entries, entry);
+    }
     pkcs7_windows_sig_info_free(ctx, &info);
 }
 
@@ -8852,17 +8896,29 @@ PdfSigCert::~PdfSigCert() {
     str::Free(der);
 }
 
-static TempStr GetSignatures(EngineMupdf* e, PdfSigSummary* sum);
+static TempStr GetSignatures(EngineMupdf* e, PdfSigResult* res);
 
-// The verdict over all signatures: for showing it without opening Properties.
-PdfSigSummary EngineMupdfSignatureSummary(EngineBase* engine) {
-    PdfSigSummary sum;
+PdfSigEntry::~PdfSigEntry() {
+    str::Free(signer);
+    str::Free(status);
+    str::Free(validity);
+    str::Free(details);
+    str::Free(certDer);
+}
+
+PdfSigResult::~PdfSigResult() {
+    DeleteVecMembers(entries);
+}
+
+// Every signature's verdict, for showing them without opening Properties.
+PdfSigResult* EngineMupdfCheckSignatures(EngineBase* engine) {
+    auto* res = new PdfSigResult();
     EngineMupdf* e = AsEngineMupdf(engine);
     if (e && e->pdfdoc) {
         ScopedRecursiveMutex scope(&e->docLock);
-        GetSignatures(e, &sum);
+        GetSignatures(e, res);
     }
-    return sum;
+    return res;
 }
 
 // Asks the CAs about this document's signers: slow, and leaves the answers in
@@ -9009,7 +9065,7 @@ static void AppendOpenSslSigText(fz_context* ctx, str::Builder& out, pdf_pkcs7_v
 }
 #endif
 
-static TempStr GetSignatures(EngineMupdf* e, PdfSigSummary* sum) {
+static TempStr GetSignatures(EngineMupdf* e, PdfSigResult* res) {
 #if OS_WIN || OS_DARWIN || defined(SUMATRA_HAVE_OPENSSL)
     pdf_document* pdfdoc = e->pdfdoc;
     if (!pdfdoc) {
@@ -9055,7 +9111,7 @@ static TempStr GetSignatures(EngineMupdf* e, PdfSigSummary* sum) {
             ++sigNo;
             int pageNo = PageNoForSigField(ctx, pdfdoc, field);
             AppendSignatureFieldInfo(ctx, sigs, verifier, pdfdoc, field, sigNo, pageNo, hasDss, hasDocTs,
-                                     LaterSignatures(ctx, pdfdoc, fields, field), eutlList, fields, docRev, sum);
+                                     LaterSignatures(ctx, pdfdoc, fields, field), eutlList, fields, docRev, res);
         }
 #else
         for (int i = 0; i < len(fields); i++) {

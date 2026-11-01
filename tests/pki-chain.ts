@@ -342,6 +342,10 @@ function makeTimestampToken(tsa: Cert, chain: Cert[], imprintOf: Buffer, genTime
 
 export type PdfSignSpec = {
   signer: Cert;
+  // where the signature shows; invisible without it
+  rect?: [number, number, number, number];
+  // an unsigned page before the signed one
+  leadingPage?: boolean;
   // what the signature carries besides the signer; the chain's top is usually left out
   extraCerts?: Cert[];
   signingTime?: Date;
@@ -362,17 +366,21 @@ function pdfDate(d: Date): string {
   return "D:" + d.toISOString().replace(/[-:T]/g, "").slice(0, 14) + "Z";
 }
 
-function assemblePdf(sigDict: string, dssCrls: Buffer[] = []): Buffer {
+function assemblePdf(sigDict: string, spec: PdfSignSpec): Buffer {
+  const dssCrls = spec.dssCrls ?? [];
   const firstCrlObj = 6;
   const dssRefs = dssCrls.map((_, i) => `${firstCrlObj + i} 0 R`).join(" ");
   const dss = dssCrls.length > 0 ? ` /DSS << /CRLs [${dssRefs}] >>` : "";
   const objs = [
     `<< /Type /Catalog /Pages 2 0 R /AcroForm << /SigFlags 3 /Fields [4 0 R] >>${dss} >>`,
-    "<< /Type /Pages /Kids [3 0 R] /Count 1 >>",
+    spec.leadingPage
+      ? `<< /Type /Pages /Kids [${firstCrlObj + dssCrls.length} 0 R 3 0 R] /Count 2 >>`
+      : "<< /Type /Pages /Kids [3 0 R] /Count 1 >>",
     "<< /Type /Page /Parent 2 0 R /MediaBox [0 0 300 300] /Annots [4 0 R] >>",
-    "<< /Type /Annot /Subtype /Widget /FT /Sig /T (Signature1) /Rect [0 0 0 0] /F 4 /P 3 0 R /V 5 0 R >>",
+    `<< /Type /Annot /Subtype /Widget /FT /Sig /T (Signature1) /Rect [${(spec.rect ?? [0, 0, 0, 0]).join(" ")}] /F 4 /P 3 0 R /V 5 0 R >>`,
     sigDict,
     ...dssCrls.map((crl) => `<< /Length ${crl.length} >>\nstream\n${crl.toString("latin1")}\nendstream`),
+    ...(spec.leadingPage ? ["<< /Type /Page /Parent 2 0 R /MediaBox [0 0 300 300] >>"] : []),
   ];
   let body = "%PDF-1.7\n";
   const offsets: number[] = [];
@@ -397,12 +405,12 @@ export function writeSignedPdf(path: string, spec: PdfSignSpec): void {
     `<< /Type /Sig /Filter /Adobe.PPKLite /SubFilter /ETSI.CAdES.detached /M (${pdfDate(signingTime)}) ` +
     `/ByteRange [${range}] /Contents <${contents}> >>`;
 
-  let pdf = assemblePdf(dict(BYTE_RANGE_PLACEHOLDER, placeholder), spec.dssCrls);
+  let pdf = assemblePdf(dict(BYTE_RANGE_PLACEHOLDER, placeholder), spec);
   const contentsAt = pdf.indexOf(`<${placeholder}>`);
   const afterContents = contentsAt + placeholder.length + 2;
   const fmt = (n: number) => String(n).padStart(10, "0");
   const range = `0 ${fmt(contentsAt)} ${fmt(afterContents)} ${fmt(pdf.length - afterContents)}`;
-  pdf = assemblePdf(dict(range, placeholder), spec.dssCrls);
+  pdf = assemblePdf(dict(range, placeholder), spec);
   const signedBytes = Buffer.concat([pdf.subarray(0, contentsAt), pdf.subarray(afterContents)]);
 
   const certs = [spec.signer, ...(spec.extraCerts ?? [])];
