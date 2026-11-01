@@ -48,7 +48,12 @@ void RtfDoc_UnitTests() {
         "{\\rtf1\\ansi\\deff0{\\fonttbl{\\f0\\froman Times;}{\\f1\\fmodern Courier New;}}"
         "Hello {\\b bold} {\\f1 code} a<b & \\{c\\}\\par}");
     RtfHas(doc, StrL("<span style=\"font-weight:bold;\">bold</span>"));
-    RtfHas(doc, StrL("font-family:\"Courier New\",monospace;"));
+    RtfHas(doc, StrL("<span style=\"font-family:'Courier New',monospace;\">code</span>"));
+    // a quoted font name must not end the style attribute, dropping the formatting after it
+    Str fontThenBold = StrL("{\\rtf1\\deff0{\\fonttbl{\\f0 Times;}{\\f1\\fswiss Segoe UI;}}{\\f1\\fs48\\b\\i Title}}");
+    RtfHas(
+        fontThenBold,
+        StrL("<span style=\"font-weight:bold;font-style:italic;font-size:2em;font-family:'Segoe UI',sans-serif;\">"));
     RtfHas(doc, StrL("a&lt;b &amp; {c}"));
     RtfHas(doc, StrL("<body style=\"font-family:'Times',serif\">"));
 

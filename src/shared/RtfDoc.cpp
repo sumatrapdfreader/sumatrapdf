@@ -783,8 +783,9 @@ TempStr RtfParser::CharStyleTemp(const RtfCharFmt& cf) {
     if (cf.font >= 0 && cf.font != defaultFont) {
         const RtfFont& f = fonts[cf.font];
         Str name = f.nameIdx >= 0 ? fontNames.At(f.nameIdx) : Str();
-        if (len(name) > 0 && !str::ContainsChar(name, '"')) {
-            b.Append(fmt("font-family:\"%s\"", name));
+        // single quotes: the style goes into a "..." attribute unescaped
+        if (len(name) > 0 && !str::ContainsCharAny(name, StrL("\"'&<"))) {
+            b.Append(fmt("font-family:'%s'", name));
             if (f.family) {
                 b.Append(fmt(",%s", Str(f.family)));
             }
