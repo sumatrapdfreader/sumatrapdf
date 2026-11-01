@@ -67,6 +67,13 @@ void RtfDoc_UnitTests() {
     RtfHas(StrL("{\\rtf1\\ansi{\\fonttbl{\\f0 Arial CYR;}}\\f0 \\'cf}"), StrL("\xd0\x9f"));
     // an explicit \fcharset wins over the name
     RtfHas(StrL("{\\rtf1\\ansi{\\fonttbl{\\f0\\fcharset204 Arial CE;}}\\f0 \\'cf}"), StrL("\xd0\x9f"));
+    // \fcharset0 is Windows-1252 whatever the document's code page, unless the name says otherwise
+    RtfHas(StrL("{\\rtf1\\ansi\\ansicpg1251{\\fonttbl{\\f0\\fcharset0 Arial;}}\\f0 \\'cf}"), StrL("\xc3\x8f"));
+    RtfHas(StrL("{\\rtf1\\ansi\\ansicpg932{\\fonttbl{\\f0\\fcharset0 Arial;}}\\f0 hab\\'eda}"), StrL("hab\xc3\xad"));
+    RtfHas(StrL("{\\rtf1\\ansi\\ansicpg1252{\\fonttbl{\\f0\\fcharset0 Arial Cyr;}}\\f0 \\'cf}"), StrL("\xd0\x9f"));
+    // no \fcharset, and \fcharset1 (default): the document's code page
+    RtfHas(StrL("{\\rtf1\\ansi\\ansicpg1251{\\fonttbl{\\f0 Arial;}}\\f0 \\'cf}"), StrL("\xd0\x9f"));
+    RtfHas(StrL("{\\rtf1\\ansi\\ansicpg1251{\\fonttbl{\\f0\\fcharset1 Arial;}}\\f0 \\'cf}"), StrL("\xd0\x9f"));
     // not a suffix of a word
     RtfHas(StrL("{\\rtf1\\ansi{\\fonttbl{\\f0 Space;}}\\f0 caf\\'e9}"), StrL("caf\xc3\xa9"));
 

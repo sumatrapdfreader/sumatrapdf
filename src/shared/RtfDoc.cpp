@@ -162,7 +162,8 @@ struct RtfGroup {
 
 struct RtfFont {
     int num = 0;
-    uint codePage = 0; // 0: the document's code page
+    uint codePage = 0;          // 0: the document's code page
+    bool isAnsiCharset = false; // \fcharset0
     bool isSymbol = false;
     const char* family = nullptr; // CSS generic family
     int nameIdx = -1;             // into RtfParser::fontNames
@@ -656,6 +657,9 @@ void RtfParser::FinishFont() {
     uint nameCodePage = TrimFontNameCharset(name);
     if (curFont.codePage == 0) {
         curFont.codePage = nameCodePage;
+    }
+    if (curFont.codePage == 0 && curFont.isAnsiCharset) {
+        curFont.codePage = kDefaultCodePage;
     }
     curFont.nameIdx = len(name) > 0 ? len(fontNames) : -1;
     if (len(name) > 0) {
@@ -1262,6 +1266,7 @@ void RtfParser::Keyword(RtfKw kw, bool hasParam, int param) {
         case RtfKw::Fcharset:
             if (inFontTable && inFontEntry) {
                 curFont.codePage = CharsetToCodePage(param);
+                curFont.isAnsiCharset = param == 0;
                 curFont.isSymbol = param == 2;
             }
             break;
