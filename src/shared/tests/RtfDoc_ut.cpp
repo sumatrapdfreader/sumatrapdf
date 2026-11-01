@@ -60,6 +60,15 @@ void RtfDoc_UnitTests() {
     // code pages: the document's and a font's
     RtfHas(StrL("{\\rtf1\\ansi\\ansicpg1251 \\'cf\\'f0\\'e8}"), StrL("\xd0\x9f\xd1\x80\xd0\xb8"));
     RtfHas(StrL("{\\rtf1\\ansi{\\fonttbl{\\f0\\fcharset204 Arial;}}\\f0 \\'cf}"), StrL("\xd0\x9f"));
+    // no \fcharset: the code page comes from the font name's suffix, which isn't part of the real name
+    Str fontCe = StrL("{\\rtf1\\ansi\\deff0{\\fonttbl{\\f0\\froman Times New Roman CE;}}si\\'ea}");
+    RtfHas(fontCe, StrL("si\xc4\x99"));
+    RtfHas(fontCe, StrL("<body style=\"font-family:'Times New Roman',serif\">"));
+    RtfHas(StrL("{\\rtf1\\ansi{\\fonttbl{\\f0 Arial CYR;}}\\f0 \\'cf}"), StrL("\xd0\x9f"));
+    // an explicit \fcharset wins over the name
+    RtfHas(StrL("{\\rtf1\\ansi{\\fonttbl{\\f0\\fcharset204 Arial CE;}}\\f0 \\'cf}"), StrL("\xd0\x9f"));
+    // not a suffix of a word
+    RtfHas(StrL("{\\rtf1\\ansi{\\fonttbl{\\f0 Space;}}\\f0 caf\\'e9}"), StrL("caf\xc3\xa9"));
 
     // \uN with its fallback skipped, and a surrogate pair
     RtfHas(StrL("{\\rtf1\\uc1 \\u20320?\\u22909?}"), StrL("\xe4\xbd\xa0\xe5\xa5\xbd"));

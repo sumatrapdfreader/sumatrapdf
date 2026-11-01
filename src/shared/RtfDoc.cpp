@@ -626,6 +626,26 @@ uint RtfParser::CodePage() {
     return ansiCodePage;
 }
 
+// "Arial CE" is Windows' alias for Arial in a code page, not a font of its own.
+// Takes the suffix off and returns its code page, 0 if there's none. RichEdit
+// also goes by it, unless the font has a nonzero \fcharset.
+static uint TrimFontNameCharset(Str& name) {
+    static const struct {
+        Str suffix;
+        uint codePage;
+    } kSuffixes[] = {
+        {StrL(" CE"), 1250},  {StrL(" Cyr"), 1251},    {StrL(" Greek"), 1253},
+        {StrL(" Tur"), 1254}, {StrL(" Baltic"), 1257},
+    };
+    for (auto& s : kSuffixes) {
+        if (str::EndsWithI(name, s.suffix)) {
+            name.len -= len(s.suffix);
+            return s.codePage;
+        }
+    }
+    return 0;
+}
+
 void RtfParser::FinishFont() {
     if (!inFontEntry) {
         return;
@@ -633,6 +653,10 @@ void RtfParser::FinishFont() {
     inFontEntry = false;
     Str name = ToStr(fontName);
     str::TrimWs(name);
+    uint nameCodePage = TrimFontNameCharset(name);
+    if (curFont.codePage == 0) {
+        curFont.codePage = nameCodePage;
+    }
     curFont.nameIdx = len(name) > 0 ? len(fontNames) : -1;
     if (len(name) > 0) {
         fontNames.Append(name);
