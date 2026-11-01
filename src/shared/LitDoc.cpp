@@ -583,18 +583,11 @@ static bool LitParseSectionNames(LitFile* lit) {
     return true;
 }
 
-// d3des keeps the key in a global, and books can load at the same time
-static Mutex gDesMutex;
-
 static void LitDesDecrypt(u8* dst, const u8* src, int n, const u8 key[8]) {
-    ScopedMutex lock(&gDesMutex);
-    u8 k[8];
-    memcpy(k, key, 8);
-    deskey(k, DE1);
+    DesKey dk;
+    deskey(&dk, key, DE1);
     for (int off = 0; off + 8 <= n; off += 8) {
-        u8 in[8];
-        memcpy(in, src + off, 8);
-        des(in, dst + off);
+        des(&dk, src + off, dst + off);
     }
 }
 
@@ -1517,6 +1510,16 @@ static void LitDesThread(LitDesThreadData* d) {
         d->ok = MemEq(out, d->want.s, n);
     }
     Free(nullptr, out);
+}
+
+// expected is the output of unmodified d3des; not standard DES because of spr.h
+bool LitDoc_UnitTestDes() {
+    const u8 key[8] = {0x13, 0x34, 0x57, 0x79, 0x9B, 0xBC, 0xDF, 0xF1};
+    const u8 src[8] = {0x85, 0xE8, 0x13, 0x54, 0x0F, 0x0A, 0xB4, 0x05};
+    const u8 want[8] = {0xDE, 0x72, 0xC5, 0x07, 0xA3, 0xB0, 0x33, 0x8C};
+    u8 got[8];
+    LitDesDecrypt(got, src, sizeof(got), key);
+    return MemEq(got, want, sizeof(got));
 }
 
 // books loading at the same time decrypt with different keys

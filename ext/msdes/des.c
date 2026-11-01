@@ -17,12 +17,11 @@
 
 #include "d3des.h"
 
-static void scrunch(unsigned char *, unsigned long *);
+static void scrunch(const unsigned char *, unsigned long *);
 static void unscrun(unsigned long *, unsigned char *);
-static void desfunc(unsigned long *, unsigned long *);
-static void cookey(unsigned long *);
+static void desfunc(unsigned long *, const unsigned long *);
+static void cookey(DesKey *, unsigned long *);
 
-static unsigned long KnL[32] = {0L};
 /*
 static unsigned long KnR[32] = { 0L };
 static unsigned long Kn3[32] = { 0L };
@@ -48,7 +47,7 @@ static unsigned char pc2[48] = {13, 16, 10, 23, 0,  4,  2,  27, 14, 5,  20, 9,  
                                 40, 51, 30, 36, 46, 54, 29, 39, 50, 44, 32, 47, 43, 48, 38, 55, 33, 52, 45, 41, 49, 35, 28, 31};
 
 void
-deskey(unsigned char *key, short edf) /* Thanks to James Gillogly & Phil Karn! */
+deskey(DesKey *dk, const unsigned char *key, short edf) /* Thanks to James Gillogly & Phil Karn! */
 {
     int i, j, l, m, n;
     unsigned char pc1m[56], pcr[56];
@@ -79,17 +78,16 @@ deskey(unsigned char *key, short edf) /* Thanks to James Gillogly & Phil Karn! *
             if (pcr[pc2[j + 24]]) kn[n] |= bigbyte[j];
         }
     }
-    cookey(kn);
+    cookey(dk, kn);
     return;
 }
 
 static void
-cookey(unsigned long *raw1) {
+cookey(DesKey *dk, unsigned long *raw1) {
     unsigned long *cook, *raw0;
-    unsigned long dough[32];
     int i;
 
-    cook = dough;
+    cook = dk->kn;
     for (i = 0; i < 16; i++, raw1++) {
         raw0 = raw1++;
         *cook = (*raw0 & 0x00fc0000L) << 6;
@@ -101,41 +99,22 @@ cookey(unsigned long *raw1) {
         *cook |= (*raw1 & 0x0003f000L) >> 4;
         *cook++ |= (*raw1 & 0x0000003fL);
     }
-    usekey(dough);
     return;
 }
 
 void
-cpkey(unsigned long *into) {
-    unsigned long *from, *endp;
-
-    from = KnL, endp = &KnL[32];
-    while (from < endp) *into++ = *from++;
-    return;
-}
-
-void
-usekey(unsigned long *from) {
-    unsigned long *to, *endp;
-
-    to = KnL, endp = &KnL[32];
-    while (to < endp) *to++ = *from++;
-    return;
-}
-
-void
-des(unsigned char *inblock, unsigned char *outblock) {
+des(const DesKey *dk, const unsigned char *inblock, unsigned char *outblock) {
     unsigned long work[2];
 
     scrunch(inblock, work);
-    desfunc(work, KnL);
+    desfunc(work, dk->kn);
     unscrun(work, outblock);
     return;
 }
 
 
 static void
-scrunch(unsigned char *outof, unsigned long *into) {
+scrunch(const unsigned char *outof, unsigned long *into) {
     *into = (*outof++ & 0xffL) << 24;
     *into |= (*outof++ & 0xffL) << 16;
     *into |= (*outof++ & 0xffL) << 8;
@@ -310,7 +289,7 @@ static unsigned long SP8[64] = {
 
 
 static void
-desfunc(unsigned long *block, unsigned long *keys) {
+desfunc(unsigned long *block, const unsigned long *keys) {
     unsigned long fval, work, right, leftt;
     int round;
 
