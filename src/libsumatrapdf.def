@@ -2018,6 +2018,7 @@ EXPORTS
 	pkcs7_windows_check_digest
 	pkcs7_windows_distinguished_name
 	pkcs7_windows_inspect
+	pkcs7_windows_check_chain
 	pkcs7_windows_sig_info_clear
 	pkcs7_windows_sig_info_free
 

@@ -608,9 +608,9 @@ static void AppendOneCert(str::Builder& out, PdfSigCert* c) {
     if (CertGetCertificateContextProperty(cert, CERT_HASH_PROP_ID, hash, &hashLen) && hashLen > 0) {
         AppendProp(out, Tr("SHA-1:"), HexBytesTemp(hash, (int)hashLen, false));
     }
-    Str trust = EutlCertIsEuTrusted((const u8*)c->der.s, len(c->der)) ? StrL("European Union Trusted List (EUTL)")
-                                                                      : StrL("Windows Certificate Store");
-    AppendProp(out, Tr("Trust:"), trust);
+    if (EutlCertIsListed((const u8*)c->der.s, len(c->der))) {
+        AppendProp(out, Tr("Trust:"), StrL("European Union Trusted List (EUTL)"));
+    }
     CertFreeCertificateContext(cert);
 }
 
@@ -635,6 +635,7 @@ void AppendCertsText(str::Builder& out, PdfSigCert* certs) {
 void EutlUpdateThread(EutlUpdateJob* job) {
     Str err;
     job->ok = EutlUpdate(&err);
+    job->refreshed = job->ok;
     TempStr msg = job->ok ? EutlCacheInfoTemp() : (err ? str::DupTemp(err) : StrL("update failed"));
     job->msg = str::Dup(msg);
     str::Free(err);

@@ -968,11 +968,159 @@ done:
     close_metadata(hMsg, hStore, si, cert);
 }
 
-static int cert_has_qc_statement(PCCERT_CONTEXT cert) {
-    if (!cert || !cert->pCertInfo) {
-        return 0;
+static int bytes_contain(const BYTE* p, DWORD n, const unsigned char* needle, DWORD needle_len) {
+    DWORD i;
+    for (i = 0; n >= needle_len && i <= n - needle_len; i++) {
+        if (memcmp(p + i, needle, needle_len) == 0) {
+            return 1;
+        }
     }
-    return CertFindExtension(szOID_QC_STATEMENTS, cert->pCertInfo->cExtension, cert->pCertInfo->rgExtension) != NULL;
+    return 0;
+}
+
+static void read_qc_statements(PCCERT_CONTEXT cert, pkcs7_windows_sig_info* info) {
+    // DER of the ETSI EN 319 412-5 OIDs 0.4.0.1862.1.{1,4} and 1.6.{1,2,3}
+    static const unsigned char kCompliance[] = {0x06, 0x06, 0x04, 0x00, 0x8E, 0x46, 0x01, 0x01};
+    static const unsigned char kSscd[] = {0x06, 0x06, 0x04, 0x00, 0x8E, 0x46, 0x01, 0x04};
+    static const unsigned char kEsign[] = {0x06, 0x07, 0x04, 0x00, 0x8E, 0x46, 0x01, 0x06, 0x01};
+    static const unsigned char kEseal[] = {0x06, 0x07, 0x04, 0x00, 0x8E, 0x46, 0x01, 0x06, 0x02};
+    static const unsigned char kWeb[] = {0x06, 0x07, 0x04, 0x00, 0x8E, 0x46, 0x01, 0x06, 0x03};
+    PCERT_EXTENSION ext;
+    const BYTE* p;
+    DWORD n;
+    if (!cert || !cert->pCertInfo) {
+        return;
+    }
+    ext = CertFindExtension(szOID_QC_STATEMENTS, cert->pCertInfo->cExtension, cert->pCertInfo->rgExtension);
+    if (!ext) {
+        return;
+    }
+    info->has_qc_statement = 1;
+    p = ext->Value.pbData;
+    n = ext->Value.cbData;
+    info->qc_compliance = bytes_contain(p, n, kCompliance, sizeof(kCompliance));
+    info->qc_sscd = bytes_contain(p, n, kSscd, sizeof(kSscd));
+    // a qualified certificate without a type is for electronic signatures
+    info->qc_type = info->qc_compliance ? PKCS7_QC_TYPE_ESIGN : PKCS7_QC_TYPE_NONE;
+    if (bytes_contain(p, n, kEseal, sizeof(kEseal))) {
+        info->qc_type = PKCS7_QC_TYPE_ESEAL;
+    } else if (bytes_contain(p, n, kWeb, sizeof(kWeb))) {
+        info->qc_type = PKCS7_QC_TYPE_WEB;
+    } else if (bytes_contain(p, n, kEsign, sizeof(kEsign))) {
+        info->qc_type = PKCS7_QC_TYPE_ESIGN;
+    }
+}
+
+static void unix_to_filetime(int64_t secs, FILETIME* ft) {
+    ULARGE_INTEGER u;
+    const uint64_t kEpochDiff = 11644473600ULL;
+    u.QuadPart = ((uint64_t)secs + kEpochDiff) * 10000000ULL;
+    ft->dwLowDateTime = u.LowPart;
+    ft->dwHighDateTime = u.HighPart;
+}
+
+// errors that say nothing against a chain stopping at an EU-listed CA, which
+// Windows may not know as a root
+#define kChainErrorsAboveAnchor                                                                          \
+    (CERT_TRUST_IS_UNTRUSTED_ROOT | CERT_TRUST_IS_PARTIAL_CHAIN | CERT_TRUST_REVOCATION_STATUS_UNKNOWN | \
+     CERT_TRUST_IS_OFFLINE_REVOCATION)
+
+// Builds the signer's chain as of when_unix (0 means now). extra_store holds
+// certificates a chain may need that the signature doesn't carry.
+void pkcs7_windows_check_chain(fz_context* ctx, unsigned char* sig, size_t sig_len, int64_t when_unix,
+                               void* extra_store, pkcs7_windows_anchor_fn anchor_fn, void* anchor_ud,
+                               pkcs7_windows_chain_info* out) {
+    HCRYPTMSG hMsg = NULL;
+    HCERTSTORE hMsgStore = NULL;
+    HCERTSTORE hAll = NULL;
+    PCMSG_SIGNER_INFO si = NULL;
+    PCCERT_CONTEXT cert = NULL;
+    PCCERT_CHAIN_CONTEXT chain = NULL;
+    CERT_CHAIN_PARA para;
+    FILETIME when;
+    DWORD status, i;
+
+    memset(out, 0, sizeof(*out));
+    out->no_certificate = 1;
+    hMsg = open_msg_for_metadata(sig, sig_len);
+    if (!hMsg || get_signer_count(hMsg) == 0) {
+        goto done;
+    }
+    hMsgStore = CertOpenStore(CERT_STORE_PROV_MSG, 0, 0, 0, hMsg);
+    si = get_signer_info(hMsg, 0);
+    if (!hMsgStore || !si) {
+        goto done;
+    }
+    cert = find_signer_cert(hMsgStore, si);
+    if (!cert) {
+        goto done;
+    }
+    out->no_certificate = 0;
+
+    hAll = CertOpenStore(CERT_STORE_PROV_COLLECTION, 0, 0, 0, NULL);
+    if (!hAll) {
+        goto done;
+    }
+    CertAddStoreToCollection(hAll, hMsgStore, 0, 0);
+    if (extra_store) {
+        CertAddStoreToCollection(hAll, (HCERTSTORE)extra_store, 0, 0);
+    }
+
+    ZeroMemory(&para, sizeof(para));
+    para.cbSize = sizeof(para);
+    if (when_unix > 0) {
+        unix_to_filetime(when_unix, &when);
+    }
+    if (!CertGetCertificateChain(NULL, cert, when_unix > 0 ? &when : NULL, hAll, &para, 0, NULL, &chain)) {
+        warn_gle(ctx, "check_chain CertGetCertificateChain", GetLastError());
+        goto done;
+    }
+
+    status = chain->TrustStatus.dwErrorStatus;
+    out->os_trusted = status == CERT_TRUST_NO_ERROR;
+    if (chain->cChain > 0 && chain->rgpChain[0]->cElement > 0) {
+        PCERT_SIMPLE_CHAIN simple = chain->rgpChain[0];
+        int bad_below_anchor = 0;
+        out->not_time_valid = (simple->rgpElement[0]->TrustStatus.dwErrorStatus & CERT_TRUST_IS_NOT_TIME_VALID) != 0;
+        out->self_signed = simple->cElement == 1 && (status & CERT_TRUST_IS_UNTRUSTED_ROOT) != 0;
+        out->untrusted_root = (status & (CERT_TRUST_IS_UNTRUSTED_ROOT | CERT_TRUST_IS_PARTIAL_CHAIN)) != 0;
+        for (i = 0; i < simple->cElement; i++) {
+            PCERT_CHAIN_ELEMENT el = simple->rgpElement[i];
+            DWORD err = el->TrustStatus.dwErrorStatus;
+            int anchor =
+                anchor_fn ? anchor_fn(anchor_ud, el->pCertContext->pbCertEncoded, (int)el->pCertContext->cbCertEncoded)
+                          : 0;
+            // the end entity itself is not an anchor: the list names CAs
+            if (anchor && i > 0) {
+                // the anchor's own validity is the list's business
+                err &= ~(DWORD)(kChainErrorsAboveAnchor | CERT_TRUST_IS_NOT_TIME_VALID | CERT_TRUST_IS_NOT_TIME_NESTED);
+                if (err) {
+                    bad_below_anchor = 1;
+                }
+                out->eu_status = anchor;
+                break;
+            }
+            if (err & ~(DWORD)kChainErrorsAboveAnchor) {
+                bad_below_anchor = 1;
+            }
+        }
+        out->eu_chain_ok = out->eu_status != 0 && !bad_below_anchor;
+    }
+    {
+        DWORD known = CERT_TRUST_IS_UNTRUSTED_ROOT | CERT_TRUST_IS_PARTIAL_CHAIN | CERT_TRUST_IS_NOT_TIME_VALID |
+                      CERT_TRUST_IS_NOT_TIME_NESTED | CERT_TRUST_REVOCATION_STATUS_UNKNOWN |
+                      CERT_TRUST_IS_OFFLINE_REVOCATION;
+        out->other_error = (status & ~known) != 0;
+    }
+
+done:
+    if (chain) {
+        CertFreeCertificateChain(chain);
+    }
+    if (hAll) {
+        CertCloseStore(hAll, 0);
+    }
+    close_metadata(hMsg, hMsgStore, si, cert);
 }
 
 void pkcs7_windows_sig_info_clear(pkcs7_windows_sig_info* info) {
@@ -1124,7 +1272,7 @@ int pkcs7_windows_inspect(fz_context* ctx, unsigned char* sig, size_t sig_len, p
         info->not_after_unix = filetime_to_unix(&cert->pCertInfo->NotAfter);
         info->cert_der_len = (int)cert->cbCertEncoded;
         info->cert_der = dup_bytes(ctx, cert->pbCertEncoded, info->cert_der_len);
-        info->has_qc_statement = cert_has_qc_statement(cert);
+        read_qc_statements(cert, info);
     }
     if (si->HashAlgorithm.pszObjId) {
         const char* name = hash_algo_name(si->HashAlgorithm.pszObjId);

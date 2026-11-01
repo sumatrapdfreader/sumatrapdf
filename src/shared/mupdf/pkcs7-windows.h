@@ -39,6 +39,32 @@ typedef struct {
 
 #define PKCS7_WINDOWS_MAX_TS 8
 
+typedef enum {
+    PKCS7_QC_TYPE_NONE,
+    PKCS7_QC_TYPE_ESIGN,
+    PKCS7_QC_TYPE_ESEAL,
+    PKCS7_QC_TYPE_WEB,
+} pkcs7_windows_qc_type;
+
+// non-zero if der is a trust anchor; the value ends up in eu_status
+typedef int (*pkcs7_windows_anchor_fn)(void* ud, const unsigned char* der, int der_len);
+
+typedef struct {
+    // the chain reaches a root Windows trusts, with no errors
+    int os_trusted;
+    // what anchor_fn said about the certificate the chain reached; 0 if none
+    int eu_status;
+    // the chain up to that anchor has no errors of its own
+    int eu_chain_ok;
+    int self_signed;
+    int untrusted_root;
+    // the signer's certificate wasn't valid at the time checked
+    int not_time_valid;
+    // anything else wrong: a bad signature in the chain, wrong usage, ...
+    int other_error;
+    int no_certificate;
+} pkcs7_windows_chain_info;
+
 typedef struct {
     char* signer_cn;
     char* issuer_cn;
@@ -49,6 +75,10 @@ typedef struct {
     int64_t gen_time_unix;
     int64_t not_after_unix;
     int has_qc_statement;
+    // from the qcStatements extension (ETSI EN 319 412-5)
+    int qc_compliance;
+    int qc_sscd;
+    pkcs7_windows_qc_type qc_type;
     int has_cades_attr;
     int has_sig_policy_attr;
     unsigned char* cert_der;
@@ -60,6 +90,9 @@ typedef struct {
 
 void pkcs7_windows_sig_info_clear(pkcs7_windows_sig_info* info);
 void pkcs7_windows_sig_info_free(fz_context* ctx, pkcs7_windows_sig_info* info);
+void pkcs7_windows_check_chain(fz_context* ctx, unsigned char* sig, size_t sig_len, int64_t when_unix,
+                               void* extra_store, pkcs7_windows_anchor_fn anchor_fn, void* anchor_ud,
+                               pkcs7_windows_chain_info* out);
 int pkcs7_windows_inspect(fz_context* ctx, unsigned char* sig, size_t sig_len, pkcs7_windows_sig_info* info);
 
 #ifdef __cplusplus

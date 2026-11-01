@@ -670,6 +670,7 @@ enum class ControlCmd : u16 {
     // the first window's page and scroll position
     TestScrollState = 144,
     TestDrawRectSelection = 145,
+    TestEutlUpdate = 146,
 };
 
 static_assert((u16)ControlCmd::Quit == (u16)ControlFrameCmd::Quit);
@@ -1007,6 +1008,14 @@ static void ExecuteControlRequest(ControlRequest* req) {
             int exitCode = 0;
             Str res = ClickClearsSelectionResultTemp(word, &exitCode);
             AppendTestResult(req, exitCode, res);
+            break;
+        }
+
+        case ControlCmd::TestEutlUpdate: {
+            Str err;
+            bool ok = EutlUpdate(&err);
+            AppendTestResult(req, ok ? 0 : 1, ok ? EutlCacheInfoTemp() : str::DupTemp(err));
+            str::Free(err);
             break;
         }
 

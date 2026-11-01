@@ -143,7 +143,7 @@ export async function testit(): Promise<void> {
           await new Promise((r) => setTimeout(r, 150));
         }
         requireLine(raw, /Signed by:/, "Signed by");
-        requireLine(raw, /Source of trust: Windows Certificate Store/, "Windows trust source");
+        requireLine(raw, /Source of trust: none/, "no trust source for a self-signed certificate");
         requireLine(raw, /Hash algorithm: SHA/i, "hash algorithm");
         requireLine(raw, /Signature algorithm:/, "signature algorithm");
         requireLine(raw, /Certificate issued by:/i, "issuer");

@@ -57,6 +57,9 @@ struct PropertiesWnd : WindowBase {
     str::Builder propsText;
     Point initialPos;
     PdfSigCert* certs = nullptr;
+    HWND parentHwnd = nullptr;
+    // kept apart so a rebuilt text can put it back
+    str::Builder fontsText;
 
     ~PropertiesWnd() override;
     bool Create(HWND parent);
@@ -343,8 +346,36 @@ void PropertiesWnd::ViewCertificate(VirtMouseEvent*) {
     }
 }
 
+// the signatures' text depends on the list, the fonts part doesn't
+static void RebuildPropsText(PropertiesWnd* w) {
+    MainWindow* win = FindMainWindowByHwnd(w->parentHwnd);
+    if (!win || !win->ctrl) {
+        return;
+    }
+    str::Builder text;
+    GetPropsText(win->ctrl, text);
+    AppendCertsText(text, w->certs);
+    AlignPropertiesText(text);
+    Str props = ToStr(w->propsText);
+    int fonts = len(w->fontsText) > 0 ? str::IndexOf(props, ToStr(w->fontsText)) : -1;
+    EndWithSingleNewline(text);
+    if (fonts >= 0) {
+        text.Append(ToStr(w->fontsText));
+    }
+    w->propsText.Reset();
+    w->propsText.Append(ToStr(text));
+    w->SetPropsText(ToStr(w->propsText));
+}
+
 void OnEutlUpdateDone(EutlUpdateJob* job) {
-    if (job->hwnd && IsWindow(job->hwnd)) {
+    if (job->refreshed) {
+        for (PropertiesWnd* w : gPropertiesWindows) {
+            if (w->certs) {
+                RebuildPropsText(w);
+            }
+        }
+    }
+    if (!job->silent && job->hwnd && IsWindow(job->hwnd)) {
         MessageBoxW(job->hwnd, CWStrTemp(job->msg), L"EU Trusted List",
                     MB_OK | (job->ok ? MB_ICONINFORMATION : MB_ICONWARNING));
     }
@@ -572,6 +603,8 @@ void OnGetFontsFinished(GetFontsResult* result) {
         // fontsText starts with "\n" to separate it with a single empty line
         EndWithSingleNewline(w->propsText);
         w->propsText.Append(ToStr(result->fontsText));
+        w->fontsText.Reset();
+        w->fontsText.Append(ToStr(result->fontsText));
         w->SetPropsText(ToStr(w->propsText));
         w->SizeToContent();
     }
@@ -590,12 +623,18 @@ void ShowProperties(HWND parent, DocController* ctrl) {
     }
 
     auto* wnd = new PropertiesWnd();
+    wnd->parentHwnd = parent;
     VecAppend(gPropertiesWindows, wnd);
     DisplayModel* dm = ctrl->AsFixed();
     EngineBase* engine = dm ? dm->GetEngine() : nullptr;
     if (EngineMupdfIsPdf(engine)) {
         EutlRegisterLookup();
         wnd->certs = EngineMupdfGetSignatureCerts(engine);
+    }
+    if (wnd->certs && EutlNeedsUpdate()) {
+        auto* job = new EutlUpdateJob;
+        job->silent = true;
+        RunAsync(MkFunc0<EutlUpdateJob>(EutlUpdateThread, job), StrL("EutlAutoUpdate"));
     }
     GetPropsText(ctrl, wnd->propsText);
     AppendCertsText(wnd->propsText, wnd->certs);

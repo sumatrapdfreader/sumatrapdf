@@ -413,6 +413,12 @@ void PropertiesView::OnViewCert(PropertiesView*, gp::Ctx* cx, const gp::ClickEve
 
 void OnEutlUpdateDone(EutlUpdateJob* job) {
     gProps.eutlUpdating = false;
+    if (job->silent) {
+        // reopening Properties shows what the new list says
+        str::Free(job->msg);
+        delete job;
+        return;
+    }
     if (IsMainWindowValidAndNotClosing(job->win)) {
         if (job->ok) {
             ShowTemporaryNotification(job->win, job->msg, kNotif5SecsTimeOut);
@@ -484,6 +490,11 @@ void ShowProperties(MainWindow* win, DocController* ctrl) {
     if (EngineMupdfIsPdf(engine)) {
         EutlRegisterLookup();
         gProps.certs = EngineMupdfGetSignatureCerts(engine);
+        if (gProps.certs && EutlNeedsUpdate()) {
+            auto* eutlJob = new EutlUpdateJob;
+            eutlJob->silent = true;
+            RunAsync(MkFunc0<EutlUpdateJob>(EutlUpdateThread, eutlJob), StrL("EutlAutoUpdate"));
+        }
         if (gProps.certs) {
             StrVec labels;
             for (PdfSigCert* cert = gProps.certs; cert; cert = cert->next) {

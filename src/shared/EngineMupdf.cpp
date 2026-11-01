@@ -42,6 +42,7 @@ extern "C" {
 #include "EngineBase.h"
 #include "PdfDarkMode.h"
 #include "EngineAll.h"
+#include "EutlTrust.h"
 #include "EbookBase.h"
 #include "EbookDoc.h"
 #include "Settings.h"
@@ -8248,17 +8249,10 @@ static void AppendSigValidation(str::Builder& out, pdf_signature_error certErr, 
 #endif
 
 #if OS_WIN
-static bool (*gEutlLookupFn)(const u8* der, int derLen) = nullptr;
+static const EutlLookup* gEutlLookup = nullptr;
 
-void SetEutlLookupFn(bool (*fn)(const u8* der, int derLen)) {
-    gEutlLookupFn = fn;
-}
-
-static bool CertIsEuTrusted(const u8* der, int derLen) {
-    if (!gEutlLookupFn || !der || derLen <= 0) {
-        return false;
-    }
-    return gEutlLookupFn(der, derLen);
+void SetEutlLookup(const EutlLookup* lookup) {
+    gEutlLookup = lookup;
 }
 
 static TempStr FormatUnixTimeTemp(int64_t unixSecs) {
@@ -8337,12 +8331,109 @@ static bool SubFilterIsCades(const char* sf) {
     return sf && str::StartsWith(Str(sf), StrL("ETSI.CAdES"));
 }
 
-static void AppendTrustSource(str::Builder& s, const u8* der, int derLen) {
-    if (CertIsEuTrusted(der, derLen)) {
-        s.Append(StrL("  Source of trust: European Union Trusted List (EUTL)\n"));
-    } else {
-        s.Append(StrL("  Source of trust: Windows Certificate Store\n"));
+// what an open list says about one chain, as anchor_fn
+struct EutlAnchorArgs {
+    void* list = nullptr;
+    i64 when = 0;
+    EutlKind kind = EutlKind::CA;
+};
+
+static int EutlAnchorStatus(void* ud, const unsigned char* der, int derLen) {
+    auto* args = (EutlAnchorArgs*)ud;
+    if (!gEutlLookup || !args->list) {
+        return 0;
     }
+    return gEutlLookup->status(args->list, (const u8*)der, derLen, args->when, args->kind);
+}
+
+// what makes a signature qualified: a qualified certificate on a qualified
+// device, from a CA the list says was granted that service when it was signed
+enum class SigLevel {
+    None,
+    // claims to be qualified, but the list doesn't back it
+    QualifiedClaim,
+    AdvancedOnQc,
+    QualifiedESig,
+    QualifiedESeal,
+};
+
+static SigLevel QualifiedLevel(const pkcs7_windows_sig_info& info, const pkcs7_windows_chain_info& chain) {
+    if (!info.has_qc_statement) {
+        return SigLevel::None;
+    }
+    if (!info.qc_compliance || !chain.eu_chain_ok) {
+        return SigLevel::QualifiedClaim;
+    }
+    bool isSeal = info.qc_type == PKCS7_QC_TYPE_ESEAL;
+    int need = isSeal ? kEutlESeal : kEutlESig;
+    if (info.qc_type == PKCS7_QC_TYPE_WEB || (chain.eu_status & need) == 0) {
+        return SigLevel::QualifiedClaim;
+    }
+    if (!info.qc_sscd) {
+        return SigLevel::AdvancedOnQc;
+    }
+    return isSeal ? SigLevel::QualifiedESeal : SigLevel::QualifiedESig;
+}
+
+static void AppendTrustSource(str::Builder& s, const pkcs7_windows_chain_info& chain) {
+    if (chain.eu_chain_ok && chain.eu_status != 0) {
+        s.Append(StrL("  Source of trust: European Union Trusted List (EUTL)\n"));
+    } else if (chain.os_trusted) {
+        s.Append(StrL("  Source of trust: Windows Certificate Store\n"));
+    } else {
+        s.Append(StrL("  Source of trust: none\n"));
+    }
+}
+
+static void AppendQualifiedLine(str::Builder& s, SigLevel level, Str listDate) {
+    switch (level) {
+        case SigLevel::None:
+            break;
+        case SigLevel::QualifiedClaim:
+            if (len(listDate) == 0) {
+                s.Append(StrL("  The certificate says it is qualified, but the EU Trusted List isn't downloaded.\n"));
+            } else {
+                s.Append(
+                    fmt("  The certificate says it is qualified, but the EU Trusted List (last checked on %s) "
+                        "doesn't confirm it.\n",
+                        listDate));
+            }
+            break;
+        case SigLevel::AdvancedOnQc:
+            s.Append(
+                fmt("  This is an advanced electronic signature with a qualified certificate, based on EU "
+                    "Trusted List information last checked on %s.\n",
+                    listDate));
+            break;
+        case SigLevel::QualifiedESig:
+            s.Append(
+                fmt("  This is a Qualified Electronic Signature according to EU Regulation 910/2014, based on "
+                    "EU Trusted List information last checked on %s.\n",
+                    listDate));
+            break;
+        case SigLevel::QualifiedESeal:
+            s.Append(
+                fmt("  This is a Qualified Electronic Seal according to EU Regulation 910/2014, based on EU "
+                    "Trusted List information last checked on %s.\n",
+                    listDate));
+            break;
+    }
+}
+
+static pdf_signature_error CertErrFromChain(const pkcs7_windows_chain_info& chain) {
+    if (chain.no_certificate) {
+        return PDF_SIGNATURE_ERROR_NO_CERTIFICATE;
+    }
+    if (chain.os_trusted || chain.eu_chain_ok) {
+        return PDF_SIGNATURE_ERROR_OKAY;
+    }
+    if (chain.self_signed) {
+        return PDF_SIGNATURE_ERROR_SELF_SIGNED;
+    }
+    if (chain.untrusted_root) {
+        return PDF_SIGNATURE_ERROR_SELF_SIGNED_IN_CHAIN;
+    }
+    return PDF_SIGNATURE_ERROR_NOT_TRUSTED;
 }
 
 static void AppendLtvLine(str::Builder& s, bool ltv, int64_t notAfterUnix) {
@@ -8383,7 +8474,7 @@ static void AppendPadesLevel(str::Builder& s, bool isCades, bool hasTs, bool ltv
 
 static void AppendSignatureFieldInfo(fz_context* ctx, str::Builder& s, pdf_pkcs7_verifier* verifier,
                                      pdf_document* pdfdoc, pdf_obj* sigObj, int sigNo, int pageNo, bool docHasDss,
-                                     bool docHasDocTs, int laterSigs) {
+                                     bool docHasDocTs, int laterSigs, void* eutlList) {
     if (len(s) > 0) {
         s.AppendChar('\n');
     }
@@ -8412,10 +8503,18 @@ static void AppendSignatureFieldInfo(fz_context* ctx, str::Builder& s, pdf_pkcs7
     char* contents = nullptr;
     size_t contentsLen = 0;
     pkcs7_windows_sig_info info{};
+    pkcs7_windows_chain_info chain{};
+    EutlAnchorArgs anchor;
+    anchor.list = eutlList;
+    anchor.when = time(nullptr);
+    anchor.kind = isDocTs ? EutlKind::TSA : EutlKind::CA;
+    void* eutlStore = (gEutlLookup && eutlList) ? gEutlLookup->store(eutlList) : nullptr;
     fz_try(ctx) {
         contentsLen = pdf_signature_contents(ctx, pdfdoc, sigObj, &contents);
         if (contentsLen > 0) {
             pkcs7_windows_inspect(ctx, (unsigned char*)contents, contentsLen, &info);
+            pkcs7_windows_check_chain(ctx, (unsigned char*)contents, contentsLen, 0, eutlStore, EutlAnchorStatus,
+                                      &anchor, &chain);
         }
     }
     fz_always(ctx) {
@@ -8427,7 +8526,7 @@ static void AppendSignatureFieldInfo(fz_context* ctx, str::Builder& s, pdf_pkcs7
     }
 
     s.Append(isDocTs ? StrL("  Timestamp certificate:\n") : StrL("  User certificate:\n"));
-    AppendTrustSource(s, info.cert_der, info.cert_der_len);
+    AppendTrustSource(s, chain);
     if (info.signer_cn && info.signer_cn[0]) {
         s.Append(fmt("  Signed by: %s\n", Str(info.signer_cn)));
     } else {
@@ -8453,15 +8552,15 @@ static void AppendSignatureFieldInfo(fz_context* ctx, str::Builder& s, pdf_pkcs7
     if (info.issuer_cn && info.issuer_cn[0]) {
         s.Append(fmt("  Certificate issued by: %s\n", Str(info.issuer_cn)));
     }
-    if (info.has_qc_statement) {
-        s.Append(StrL("  Qualified certificate (eIDAS qcStatements).\n"));
+    if (!isDocTs) {
+        Str listDate = (gEutlLookup && eutlList) ? gEutlLookup->date(eutlList) : Str();
+        AppendQualifiedLine(s, QualifiedLevel(info, chain), listDate);
     }
 
-    pdf_signature_error certErr = PDF_SIGNATURE_ERROR_UNKNOWN;
+    pdf_signature_error certErr = CertErrFromChain(chain);
     pdf_signature_error digErr = PDF_SIGNATURE_ERROR_UNKNOWN;
     int edits = 0;
     fz_try(ctx) {
-        certErr = pdf_check_certificate(ctx, verifier, pdfdoc, sigObj);
         digErr = pdf_check_digest(ctx, verifier, pdfdoc, sigObj);
         edits = pdf_signature_incremental_change_since_signing(ctx, pdfdoc, sigObj);
     }
@@ -8498,7 +8597,6 @@ static void AppendSignatureFieldInfo(fz_context* ctx, str::Builder& s, pdf_pkcs7
         const pkcs7_windows_ts_info& ts = info.ts[ti];
         s.Append(StrL("  -----\n"));
         s.Append(StrL("  Included Time Stamp:\n"));
-        AppendTrustSource(s, ts.cert_der, ts.cert_der_len);
         if (ts.signer_cn && ts.signer_cn[0]) {
             s.Append(fmt("  Signed by: %s\n", Str(ts.signer_cn)));
         }
@@ -8642,7 +8740,9 @@ static TempStr GetSignatures(EngineMupdf* e) {
     str::Builder sigs;
     pdf_pkcs7_verifier* verifier = nullptr;
     Vec<pdf_obj*> fields;
+    void* eutlList = nullptr;
     fz_var(verifier);
+    fz_var(eutlList);
     fz_try(ctx) {
 #if OS_WIN
         verifier = pkcs7_windows_new_verifier(ctx);
@@ -8653,6 +8753,7 @@ static TempStr GetSignatures(EngineMupdf* e) {
 #endif
         CollectSignatureFields(ctx, pdfdoc, fields);
 #if OS_WIN
+        eutlList = gEutlLookup ? gEutlLookup->open() : nullptr;
         bool hasDss = PdfHasDssRevocation(ctx, pdfdoc);
         bool hasDocTs = false;
         for (pdf_obj* field : fields) {
@@ -8667,7 +8768,7 @@ static TempStr GetSignatures(EngineMupdf* e) {
             ++sigNo;
             int pageNo = PageNoForSigField(ctx, pdfdoc, field);
             AppendSignatureFieldInfo(ctx, sigs, verifier, pdfdoc, field, sigNo, pageNo, hasDss, hasDocTs,
-                                     LaterSignatures(ctx, pdfdoc, fields, field));
+                                     LaterSignatures(ctx, pdfdoc, fields, field), eutlList);
         }
 #else
         for (int i = 0; i < len(fields); i++) {
@@ -8681,6 +8782,9 @@ static TempStr GetSignatures(EngineMupdf* e) {
             pdf_drop_obj(ctx, field);
         }
         pdf_drop_verifier(ctx, verifier);
+        if (gEutlLookup && eutlList) {
+            gEutlLookup->close(eutlList);
+        }
     }
     fz_catch(ctx) {
         fz_report_error(ctx);

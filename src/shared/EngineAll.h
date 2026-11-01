@@ -197,7 +197,8 @@ bool EngineMupdfSignDocument(EngineBase*, const PdfSignArgs&, Str* errOut);
 void ListWindowsSigningCertificates(StrVec& thumbprints, StrVec& labels);
 
 #if OS_WIN
-void SetEutlLookupFn(bool (*fn)(const u8* der, int derLen));
+struct EutlLookup;
+void SetEutlLookup(const EutlLookup* lookup);
 struct PdfSigCert {
     PdfSigCert* next = nullptr;
     Str label;
