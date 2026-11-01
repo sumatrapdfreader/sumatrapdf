@@ -34,6 +34,8 @@ constexpr int kMaxHeadingLevel = 6;
 constexpr int kBiBitfields = 3;
 constexpr int kBmpFileHeaderSize = 14;
 constexpr int kBitmapInfoHeaderSize = 40;
+// twips: 360pt, a little under the text width of our default page
+constexpr int kMaxFixedRowDx = 7200;
 
 // sorted: keywords are found with a binary search
 enum class RtfKw : u8 {
@@ -981,7 +983,10 @@ void RtfParser::EndCell() {
     RtfSink* s = Sink();
     int idx = s->cellIdx++;
     s->row.Append(StrL("<td"));
-    if (idx < len(cellx)) {
+    // MuPDF never shrinks a cell with a width, and takes a % of the font size
+    // rather than of the table, so a row too wide for the page gets none
+    bool isFixedWidth = len(cellx) > 0 && cellx[len(cellx) - 1] <= kMaxFixedRowDx;
+    if (isFixedWidth && idx < len(cellx)) {
         int left = idx > 0 ? cellx[idx - 1] : 0;
         int dx = cellx[idx] - left;
         if (dx > 0) {

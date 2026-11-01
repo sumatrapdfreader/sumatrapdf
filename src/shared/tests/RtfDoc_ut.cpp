@@ -126,6 +126,11 @@ void RtfDoc_UnitTests() {
     RtfHas(table, StrL("<td style=\"width:72pt\" class=\"b\"><p>a</p>"));
     RtfOrder(table, StrL("</table>"), StrL("after"));
 
+    // a row too wide for the page has no fixed widths, so that it can shrink to fit
+    Str wide = StrL("{\\rtf1\\trowd\\cellx3000\\cellx9000\\intbl a\\cell b\\cell\\row}");
+    RtfHas(wide, StrL("<td><p>a</p>"));
+    RtfLacks(wide, StrL("width:"));
+
     // links and bookmarks
     RtfHas(StrL("{\\rtf1{\\field{\\*\\fldinst HYPERLINK \"https://x.org/?a=1&b=2\"}{\\fldrslt link}}}"),
            StrL("<a href=\"https://x.org/?a=1&amp;b=2\">link</a>"));
