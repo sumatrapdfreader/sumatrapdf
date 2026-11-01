@@ -21,6 +21,9 @@
     <ClCompile Include="..\ext\cmark-gfm\extensions\ext_scanners.c">
       <Filter>extensions</Filter>
     </ClCompile>
+    <ClCompile Include="..\ext\cmark-gfm\extensions\highlight.c">
+      <Filter>extensions</Filter>
+    </ClCompile>
     <ClCompile Include="..\ext\cmark-gfm\extensions\strikethrough.c">
       <Filter>extensions</Filter>
     </ClCompile>

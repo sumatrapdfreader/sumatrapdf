@@ -672,7 +672,7 @@ function cmark_gfm_files()
     "syntax_extension.c", "utf8.c",
   })
   files_in_dir("ext/cmark-gfm/extensions", {
-    "autolink.c", "core-extensions.c", "ext_scanners.c", "strikethrough.c",
+    "autolink.c", "core-extensions.c", "ext_scanners.c", "highlight.c", "strikethrough.c",
     "table.c", "tagfilter.c", "tasklist.c", "autoheaderid.c",
   })
 end

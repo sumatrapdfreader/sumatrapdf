@@ -1128,6 +1128,7 @@
     <ClCompile Include="..\ext\cmark-gfm\extensions\autolink.c" />
     <ClCompile Include="..\ext\cmark-gfm\extensions\core-extensions.c" />
     <ClCompile Include="..\ext\cmark-gfm\extensions\ext_scanners.c" />
+    <ClCompile Include="..\ext\cmark-gfm\extensions\highlight.c" />
     <ClCompile Include="..\ext\cmark-gfm\extensions\strikethrough.c" />
     <ClCompile Include="..\ext\cmark-gfm\extensions\table.c" />
     <ClCompile Include="..\ext\cmark-gfm\extensions\tagfilter.c" />
