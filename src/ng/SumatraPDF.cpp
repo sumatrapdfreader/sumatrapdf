@@ -6356,6 +6356,10 @@ void ExecuteCmd(MainWindow* win, int cmdId) {
             break;
         }
 
+        case CmdDebugSaveSettings:
+            SaveSettingsNow();
+            break;
+
 #if OS_WIN
         // open the OS "Open with" / Default apps UI for this extension
         case CmdFixDefaultApp: {

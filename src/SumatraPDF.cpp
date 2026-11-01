@@ -10550,6 +10550,10 @@ static LRESULT FrameOnCommand(MainWindow* win, HWND hwnd, UINT msg, WPARAM wp, L
             ShowCrashMiniDumps(win);
             break;
 
+        case CmdDebugSaveSettings:
+            SaveSettingsNow();
+            break;
+
         case CmdScreenshot:
             TakeScreenshots(win->hwndFrame);
             break;

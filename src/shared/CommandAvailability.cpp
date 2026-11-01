@@ -75,6 +75,7 @@ static const i32 gNoDocWhitelist[] = {
     CmdGoToHomePage,
     CmdShowLog,
     CmdDebugShowCrashMiniDumps,
+    CmdDebugSaveSettings,
     CmdClearHistory,
     CmdRemoveDeletedFilesFromHistory,
     CmdDeleteCachedFiles,
@@ -180,6 +181,7 @@ static const i32 removeIfNoPrefsPerms[] = {
     CmdGoToNextFavorite,
     CmdGoToPrevFavorite,
     CmdSumatraOnline,
+    CmdDebugSaveSettings,
     0,
 };
 

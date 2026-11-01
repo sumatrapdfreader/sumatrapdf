@@ -21,6 +21,7 @@ import { setTestWindowLayout } from "./winapi.ts";
 import { beginSharedControlledSession, endSharedControlledSession } from "./win-automation.ts";
 import { testit as lintCommandIds } from "./lint-command-ids.ts";
 import { testit as jbig2ResizeOverflow } from "./jbig2-resize-overflow.ts";
+import { testit as issue6468 } from "./issue-6468.ts";
 import { testit as jpegXlPdf } from "./jpeg-xl-pdf.ts";
 import { testit as buildCli } from "./build-cli.ts";
 import { testit as ngEmbedded } from "./ng-embedded.ts";
@@ -513,6 +514,7 @@ export const tests: NamedTest[] = [
   // mouse, so it is the one test that cares what the machine was doing before
   ["issue-5978", issue5978],
   ["issue-6373", issue6373],
+  ["issue-6468", issue6468],
   ["issue-6230", issue6230],
   ["issue-6360", issue6360],
   ["issue-5819", issue5819],

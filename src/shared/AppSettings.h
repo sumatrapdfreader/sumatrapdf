@@ -24,6 +24,7 @@ bool LoadSettings();
 void OpenSettingsFile();
 void ScheduleSaveSettings();
 void FlushScheduledSaveSettings();
+void SaveSettingsNow();
 void ForceReloadSettings();
 void ReloadDeferredSettings();
 void ApplySettingsToOpenWindows();

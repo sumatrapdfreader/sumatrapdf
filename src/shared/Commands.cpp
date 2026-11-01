@@ -355,6 +355,7 @@ const CommandInfo gCommands[] = {
     {CmdConvertCajToPDF, "CmdConvertCajToPDF\0", StrL("Convert CAJ to PDF...")},
     {CmdFindHistory, "CmdFindHistory\0", StrL("Find History")},
     {CmdSumatraOnline, "CmdSumatraOnline\0", StrL("Sumatra Online...")},
+    {CmdDebugSaveSettings, "CmdDebugSaveSettings\0", StrL("Debug: Save Settings")},
 };
 const int gCommandsCount = dimofi(gCommands);
 

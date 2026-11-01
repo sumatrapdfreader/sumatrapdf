@@ -827,6 +827,12 @@ void FlushScheduledSaveSettings() {
     SaveSettings();
 }
 
+// Settings aren't written on every change; this gets the current state, including
+// the session, into the file. Still honors -for-testing and restricted use.
+void SaveSettingsNow() {
+    SaveSettings();
+}
+
 bool LoadSettings() {
     ReportIf(gSettings);
 

@@ -356,6 +356,7 @@ const commandsRaw = [
     "CmdConvertCajToPDF", "Convert CAJ to PDF...",
     "CmdFindHistory", "Find History",
     "CmdSumatraOnline", "Sumatra Online...",
+    "CmdDebugSaveSettings", "Debug: Save Settings",
 ];
 
 // removed slots are dropped: nothing outside the generators should see them
