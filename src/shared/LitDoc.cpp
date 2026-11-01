@@ -889,6 +889,38 @@ static bool LitParseManifest(LitFile* lit) {
     return len(lit->manifest) > 0;
 }
 
+static int LitHexVal(char c) {
+    if (c >= '0' && c <= '9') {
+        return c - '0';
+    }
+    if (c >= 'a' && c <= 'f') {
+        return c - 'a' + 10;
+    }
+    if (c >= 'A' && c <= 'F') {
+        return c - 'A' + 10;
+    }
+    return -1;
+}
+
+// Manifest paths are url-encoded and mupdf decodes the OPF's hrefs: "a %26 b.htm" is looked up as "a & b.htm"
+static TempStr LitZipNameTemp(Str path) {
+    TempStr res = str::DupTemp(path);
+    int n = 0;
+    for (int i = 0; i < len(path); i++) {
+        char c = path.s[i];
+        int hi = (c == '%' && i + 2 < len(path)) ? LitHexVal(path.s[i + 1]) : -1;
+        int lo = hi >= 0 ? LitHexVal(path.s[i + 2]) : -1;
+        if (lo >= 0) {
+            c = (char)((hi << 4) | lo);
+            i += 2;
+        }
+        res.s[n++] = c;
+    }
+    res.s[n] = 0;
+    res.len = n;
+    return res;
+}
+
 static LitManifestItem* LitFindManifest(LitFile* lit, Str internal) {
     for (LitManifestItem& it : lit->manifest) {
         if (str::Eq(it.internal, internal)) {
@@ -1428,7 +1460,7 @@ Str LitToEpubConvert(Str litData) {
                 continue;
             }
         }
-        ok &= zc.AddFileData(item.path, data);
+        ok &= zc.AddFileData(LitZipNameTemp(item.path), data);
         nAdded++;
     }
     if (!ok || nAdded == 0) {
@@ -1508,6 +1540,118 @@ bool LitDoc_UnitTestDesThreads() {
     }
     Free(nullptr, src);
     return ok;
+}
+
+// LZX bits go MSB first into little-endian 16-bit words
+struct LzxBitWriter {
+    u8 d[256] = {};
+    int off = 0;
+    u32 word = 0;
+    int nBits = 0;
+
+    void Put(u32 v, int n) {
+        for (int i = n - 1; i >= 0; i--) {
+            word = (word << 1) | ((v >> i) & 1);
+            nBits++;
+            if (nBits == 16) {
+                d[off++] = (u8)word;
+                d[off++] = (u8)(word >> 8);
+                word = 0;
+                nBits = 0;
+            }
+        }
+    }
+    void Flush() {
+        if (nBits > 0) {
+            Put(0, 16 - nBits);
+        }
+    }
+    // pretree where symbols 15..18 have 2-bit codes, in that order
+    void Pretree() {
+        for (int sym = 0; sym < 20; sym++) {
+            Put(sym >= 15 && sym <= 18 ? 2 : 0, 4);
+        }
+    }
+    void ZeroLens(int n) {
+        while (n >= 20) {
+            int run = std::min(n, 51);
+            Put(3, 2); // symbol 18
+            Put(run - 20, 5);
+            n -= run;
+        }
+        if (n > 0) {
+            Put(2, 2); // symbol 17
+            Put(n - 4, 4);
+        }
+    }
+};
+
+// A match running past the frame end: its tail is the start of the next frame.
+// "ab" + a 6-byte match of "b" + "ab", with frames of 4 and 6 bytes.
+bool LitDoc_UnitTestLzxOverrun() {
+    constexpr int kWindowBits = 15;
+    constexpr u32 kBlockVerbatim = 1;
+    constexpr u32 kBlockLen = 10;
+    constexpr u32 kCodeA = 2, kCodeB = 3; // main tree: 'a' and 'b' are 2 bits
+    constexpr u32 kCodeMatch = 0;         // symbol 260: 1 bit, R0 (offset 1), length 6
+
+    LzxBitWriter f1;
+    f1.Put(0, 1); // no E8 translation
+    f1.Put(kBlockVerbatim, 3);
+    f1.Put(0, 16);
+    f1.Put(kBlockLen, 8);
+    f1.Pretree();
+    f1.ZeroLens('a');
+    f1.Put(0, 2); // 'a': length 0 - 15 + 17 = 2
+    f1.Put(0, 2); // 'b'
+    f1.ZeroLens(256 - 'b' - 1);
+    f1.Pretree();
+    f1.ZeroLens(4);
+    f1.Put(1, 2); // symbol 260: length 0 - 16 + 17 = 1
+    f1.ZeroLens(496 - 261);
+    f1.Pretree();
+    f1.ZeroLens(249); // no length tree
+    f1.Put(kCodeA, 2);
+    f1.Put(kCodeB, 2);
+    f1.Put(kCodeMatch, 1);
+    f1.Flush();
+
+    LzxBitWriter f2;
+    f2.Put(kCodeA, 2);
+    f2.Put(kCodeB, 2);
+    f2.Flush();
+
+    struct LZXstate* lzx = LZXinit(kWindowBits);
+    if (!lzx) {
+        return false;
+    }
+    AutoCall teardown(LZXteardown, lzx);
+
+    char out[6];
+    if (LZXdecompress(lzx, f1.d, (u8*)out, f1.off, 4) != kLzxOk || !MemEq(out, "abbb", 4)) {
+        return false;
+    }
+    if (LZXdecompress(lzx, f2.d, (u8*)out, f2.off, 6) != kLzxOk || !MemEq(out, "bbbbab", 6)) {
+        return false;
+    }
+    return true;
+}
+
+bool LitDoc_UnitTestZipName() {
+    const Str cases[][2] = {
+        {StrL("Robots %26 Empire.htm"), StrL("Robots & Empire.htm")},
+        {StrL("%C4%99.htm"), StrL("\xc4\x99.htm")},
+        {StrL("plain.htm"), StrL("plain.htm")},
+        {StrL("100%.htm"), StrL("100%.htm")},
+        {StrL("a%2"), StrL("a%2")},
+        {StrL("a%zz.htm"), StrL("a%zz.htm")},
+    };
+    for (const auto& c : cases) {
+        if (!str::Eq(LitZipNameTemp(c[0]), c[1])) {
+            return false;
+        }
+    }
+    return true;
 }
 
 bool LitDoc_UnitTestManifest() {
