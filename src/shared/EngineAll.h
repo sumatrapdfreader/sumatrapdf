@@ -199,6 +199,7 @@ void ListWindowsSigningCertificates(StrVec& thumbprints, StrVec& labels);
 #if OS_WIN
 struct EutlLookup;
 void SetEutlLookup(const EutlLookup* lookup);
+void EngineMupdfFetchRevocation(EngineBase* engine);
 struct PdfSigCert {
     PdfSigCert* next = nullptr;
     Str label;

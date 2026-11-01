@@ -189,6 +189,59 @@ function sortedAttrs(attrs: Buffer[]): Buffer[] {
   return [...attrs].sort(Buffer.compare);
 }
 
+export type CrlSpec = {
+  issuer: Cert;
+  revoked?: { cert: Cert; date: Date }[];
+  thisUpdate?: Date;
+  nextUpdate?: Date;
+  // signed by someone else
+  signingKey?: KeyObject;
+};
+
+export function makeCrl(spec: CrlSpec): Buffer {
+  const sigAlg = seq(oid(OID_SHA256_RSA), derNull());
+  const parts = [
+    int(1),
+    sigAlg,
+    nameOf(spec.issuer.name),
+    utcTime(spec.thisUpdate ?? days(-1)),
+    utcTime(spec.nextUpdate ?? days(30)),
+  ];
+  if (spec.revoked && spec.revoked.length > 0) {
+    parts.push(seq(...spec.revoked.map((r) => seq(r.cert.serial, utcTime(r.date)))));
+  }
+  const tbs = seq(...parts);
+  const sig = rsaSign("sha256", tbs, spec.signingKey ?? spec.issuer.privateKey);
+  return seq(tbs, sigAlg, tlv(TAG_BIT_STRING, Buffer.from([0]), sig));
+}
+
+const OID_SHA1 = "1.3.14.3.2.26";
+const OID_OCSP_BASIC = "1.3.6.1.5.5.7.48.1.1";
+const OID_REVOCATION_ARCHIVAL = "1.2.840.113583.1.1.8";
+const TAG_ENUMERATED = 0x0a;
+
+const sha1 = (data: Uint8Array) => createHash("sha1").update(data).digest();
+
+// an OCSP response from the certificate's issuer
+export function makeOcsp(cert: Cert, issuer: Cert, opts: { revokedOn?: Date } = {}): Buffer {
+  const spki = readDer(issuer.publicKey.export({ type: "spki", format: "der" }) as Buffer, 0).body;
+  const algLen = readDer(spki, 0).raw.length;
+  const keyBits = readDer(spki, algLen).body.subarray(1);
+  const certId = seq(
+    seq(oid(OID_SHA1), derNull()),
+    octets(sha1(nameOf(issuer.name))),
+    octets(sha1(keyBits)),
+    cert.serial,
+  );
+  const status = opts.revokedOn ? tlv(0xa1, generalizedTime(opts.revokedOn)) : tlv(0x80);
+  const single = seq(certId, status, generalizedTime(days(-1)), ctx(0, generalizedTime(days(6))));
+  const tbs = seq(ctx(1, nameOf(issuer.name)), generalizedTime(days(-1)), seq(single));
+  const sigAlg = seq(oid(OID_SHA256_RSA), derNull());
+  const sig = rsaSign("sha256", tbs, issuer.privateKey);
+  const basic = seq(tbs, sigAlg, tlv(TAG_BIT_STRING, Buffer.from([0]), sig), ctx(0, seq(issuer.der)));
+  return seq(tlv(TAG_ENUMERATED, Buffer.from([0])), ctx(0, seq(oid(OID_OCSP_BASIC), octets(basic))));
+}
+
 type SignedDataSpec = {
   signer: Cert;
   certs: Cert[];
@@ -198,6 +251,8 @@ type SignedDataSpec = {
   content?: Buffer;
   signingTime?: Date;
   unsignedAttrs?: Buffer[];
+  crls?: Buffer[];
+  signedAttrs?: Buffer[];
 };
 
 function makeSignedData(spec: SignedDataSpec): { cms: Buffer; signature: Buffer } {
@@ -206,6 +261,7 @@ function makeSignedData(spec: SignedDataSpec): { cms: Buffer; signature: Buffer 
     attr(OID_CONTENT_TYPE, oid(spec.contentType)),
     attr(OID_MESSAGE_DIGEST, octets(spec.digest)),
     attr(OID_SIGNING_TIME, utcTime(spec.signingTime ?? new Date())),
+    ...(spec.signedAttrs ?? []),
   ]);
   // signed as a SET, stored as [0]
   const signature = rsaSign("sha256", set(...signed), spec.signer.privateKey);
@@ -226,6 +282,7 @@ function makeSignedData(spec: SignedDataSpec): { cms: Buffer; signature: Buffer 
     set(digestAlg),
     encap,
     ctx(0, ...spec.certs.map((c) => c.der)),
+    ...(spec.crls && spec.crls.length > 0 ? [ctx(1, ...spec.crls)] : []),
     set(seq(...signerInfoParts)),
   );
   return { cms: seq(oid(OID_PKCS7_SIGNED_DATA), ctx(0, signedData)), signature };
@@ -289,6 +346,13 @@ export type PdfSignSpec = {
   extraCerts?: Cert[];
   signingTime?: Date;
   timestamp?: { tsa: Cert; chain: Cert[]; time: Date; forgeImprint?: boolean };
+  // in the signature's SignedData
+  crls?: Buffer[];
+  // in Adobe's revocation archive, signed along with the signature
+  archivedCrls?: Buffer[];
+  archivedOcsps?: Buffer[];
+  // in the document's security store
+  dssCrls?: Buffer[];
 };
 
 const CONTENTS_HEX_LEN = 32000;
@@ -298,13 +362,17 @@ function pdfDate(d: Date): string {
   return "D:" + d.toISOString().replace(/[-:T]/g, "").slice(0, 14) + "Z";
 }
 
-function assemblePdf(sigDict: string): Buffer {
+function assemblePdf(sigDict: string, dssCrls: Buffer[] = []): Buffer {
+  const firstCrlObj = 6;
+  const dssRefs = dssCrls.map((_, i) => `${firstCrlObj + i} 0 R`).join(" ");
+  const dss = dssCrls.length > 0 ? ` /DSS << /CRLs [${dssRefs}] >>` : "";
   const objs = [
-    "<< /Type /Catalog /Pages 2 0 R /AcroForm << /SigFlags 3 /Fields [4 0 R] >> >>",
+    `<< /Type /Catalog /Pages 2 0 R /AcroForm << /SigFlags 3 /Fields [4 0 R] >>${dss} >>`,
     "<< /Type /Pages /Kids [3 0 R] /Count 1 >>",
     "<< /Type /Page /Parent 2 0 R /MediaBox [0 0 300 300] /Annots [4 0 R] >>",
     "<< /Type /Annot /Subtype /Widget /FT /Sig /T (Signature1) /Rect [0 0 0 0] /F 4 /P 3 0 R /V 5 0 R >>",
     sigDict,
+    ...dssCrls.map((crl) => `<< /Length ${crl.length} >>\nstream\n${crl.toString("latin1")}\nendstream`),
   ];
   let body = "%PDF-1.7\n";
   const offsets: number[] = [];
@@ -329,15 +397,23 @@ export function writeSignedPdf(path: string, spec: PdfSignSpec): void {
     `<< /Type /Sig /Filter /Adobe.PPKLite /SubFilter /ETSI.CAdES.detached /M (${pdfDate(signingTime)}) ` +
     `/ByteRange [${range}] /Contents <${contents}> >>`;
 
-  let pdf = assemblePdf(dict(BYTE_RANGE_PLACEHOLDER, placeholder));
+  let pdf = assemblePdf(dict(BYTE_RANGE_PLACEHOLDER, placeholder), spec.dssCrls);
   const contentsAt = pdf.indexOf(`<${placeholder}>`);
   const afterContents = contentsAt + placeholder.length + 2;
   const fmt = (n: number) => String(n).padStart(10, "0");
   const range = `0 ${fmt(contentsAt)} ${fmt(afterContents)} ${fmt(pdf.length - afterContents)}`;
-  pdf = assemblePdf(dict(range, placeholder));
+  pdf = assemblePdf(dict(range, placeholder), spec.dssCrls);
   const signedBytes = Buffer.concat([pdf.subarray(0, contentsAt), pdf.subarray(afterContents)]);
 
   const certs = [spec.signer, ...(spec.extraCerts ?? [])];
+  const archive: Buffer[] = [];
+  if (spec.archivedCrls?.length) {
+    archive.push(ctx(0, seq(...spec.archivedCrls)));
+  }
+  if (spec.archivedOcsps?.length) {
+    archive.push(ctx(1, seq(...spec.archivedOcsps)));
+  }
+  const signedAttrs = archive.length > 0 ? [attr(OID_REVOCATION_ARCHIVAL, seq(...archive))] : [];
   const sign = (unsignedAttrs?: Buffer[]) =>
     makeSignedData({
       signer: spec.signer,
@@ -346,6 +422,8 @@ export function writeSignedPdf(path: string, spec: PdfSignSpec): void {
       digest: sha256(signedBytes),
       signingTime,
       unsignedAttrs,
+      crls: spec.crls,
+      signedAttrs,
     });
 
   let cms = sign().cms;

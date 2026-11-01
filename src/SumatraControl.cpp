@@ -671,6 +671,7 @@ enum class ControlCmd : u16 {
     TestScrollState = 144,
     TestDrawRectSelection = 145,
     TestEutlUpdate = 146,
+    TestFetchRevocation = 147,
 };
 
 static_assert((u16)ControlCmd::Quit == (u16)ControlFrameCmd::Quit);
@@ -1008,6 +1009,15 @@ static void ExecuteControlRequest(ControlRequest* req) {
             int exitCode = 0;
             Str res = ClickClearsSelectionResultTemp(word, &exitCode);
             AppendTestResult(req, exitCode, res);
+            break;
+        }
+
+        case ControlCmd::TestFetchRevocation: {
+            DisplayModel* dm = len(gWindows) > 0 && gWindows[0] ? gWindows[0]->AsFixed() : nullptr;
+            if (dm) {
+                EngineMupdfFetchRevocation(dm->GetEngine());
+            }
+            AppendTestResult(req, dm ? 0 : 1, StrL("done"));
             break;
         }
 

@@ -634,8 +634,15 @@ void AppendCertsText(str::Builder& out, PdfSigCert* certs) {
 #if OS_WIN
 void EutlUpdateThread(EutlUpdateJob* job) {
     Str err;
-    job->ok = EutlUpdate(&err);
-    job->refreshed = job->ok;
+    if (job->update) {
+        job->ok = EutlUpdate(&err);
+    }
+    if (job->engine) {
+        EngineMupdfFetchRevocation(job->engine);
+        job->engine->Release();
+        job->engine = nullptr;
+    }
+    job->refreshed = job->ok || job->silent;
     TempStr msg = job->ok ? EutlCacheInfoTemp() : (err ? str::DupTemp(err) : StrL("update failed"));
     job->msg = str::Dup(msg);
     str::Free(err);

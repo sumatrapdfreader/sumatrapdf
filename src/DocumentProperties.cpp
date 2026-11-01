@@ -631,10 +631,14 @@ void ShowProperties(HWND parent, DocController* ctrl) {
         EutlRegisterLookup();
         wnd->certs = EngineMupdfGetSignatureCerts(engine);
     }
-    if (wnd->certs && EutlNeedsUpdate()) {
+    if (wnd->certs && !gForTesting && HasPermission(Perm::InternetAccess)) {
+        // both only refresh what the text says: it's there already
         auto* job = new EutlUpdateJob;
         job->silent = true;
-        RunAsync(MkFunc0<EutlUpdateJob>(EutlUpdateThread, job), StrL("EutlAutoUpdate"));
+        job->update = EutlNeedsUpdate();
+        job->engine = engine;
+        engine->AddRef();
+        RunAsync(MkFunc0<EutlUpdateJob>(EutlUpdateThread, job), StrL("SigOnlineChecks"));
     }
     GetPropsText(ctrl, wnd->propsText);
     AppendCertsText(wnd->propsText, wnd->certs);

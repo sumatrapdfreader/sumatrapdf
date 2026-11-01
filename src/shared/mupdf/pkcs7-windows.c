@@ -1097,6 +1097,298 @@ static void unix_to_filetime(int64_t secs, FILETIME* ft) {
     ft->dwHighDateTime = u.HighPart;
 }
 
+// ---- revocation ----------------------------------------------------------
+
+#define PKCS7_MAX_OCSP 32
+
+struct pkcs7_windows_rev_data {
+    HCERTSTORE crls;
+    int n_ocsp;
+    unsigned char* ocsp[PKCS7_MAX_OCSP];
+    DWORD ocsp_len[PKCS7_MAX_OCSP];
+    fz_context* ctx;
+};
+
+pkcs7_windows_rev_data* pkcs7_windows_rev_new(void) {
+    pkcs7_windows_rev_data* rev = (pkcs7_windows_rev_data*)calloc(1, sizeof(pkcs7_windows_rev_data));
+    if (rev) {
+        rev->crls = CertOpenStore(CERT_STORE_PROV_MEMORY, 0, 0, 0, NULL);
+    }
+    return rev;
+}
+
+void pkcs7_windows_rev_free(pkcs7_windows_rev_data* rev) {
+    int i;
+    if (!rev) {
+        return;
+    }
+    for (i = 0; i < rev->n_ocsp; i++) {
+        free(rev->ocsp[i]);
+    }
+    if (rev->crls) {
+        CertCloseStore(rev->crls, 0);
+    }
+    free(rev);
+}
+
+void pkcs7_windows_rev_add_crl(pkcs7_windows_rev_data* rev, const unsigned char* der, size_t n) {
+    if (rev && rev->crls && der && n > 0) {
+        CertAddEncodedCRLToStore(rev->crls, X509_ASN_ENCODING | PKCS_7_ASN_ENCODING, der, (DWORD)n,
+                                 CERT_STORE_ADD_USE_EXISTING, NULL);
+    }
+}
+
+void pkcs7_windows_rev_add_ocsp(fz_context* ctx, pkcs7_windows_rev_data* rev, const unsigned char* der, size_t n) {
+    unsigned char* copy;
+    (void)ctx;
+    if (!rev || !der || n == 0 || rev->n_ocsp >= PKCS7_MAX_OCSP) {
+        return;
+    }
+    copy = (unsigned char*)malloc(n);
+    if (!copy) {
+        return;
+    }
+    memcpy(copy, der, n);
+    rev->ocsp[rev->n_ocsp] = copy;
+    rev->ocsp_len[rev->n_ocsp] = (DWORD)n;
+    rev->n_ocsp++;
+}
+
+// Adobe's revocation archive, an attribute signed along with the signature:
+// SEQ { [0] { SEQ OF CRL }, [1] { SEQ OF OCSPResponse } }
+static void read_archival_attr(PCMSG_SIGNER_INFO si, pkcs7_windows_rev_data* rev) {
+    CRYPT_ATTRIBUTE* attr = find_attr(&si->AuthAttrs, "1.2.840.113583.1.1.8");
+    const unsigned char* p;
+    size_t left, hdr, body;
+    if (!attr || attr->cValue == 0) {
+        return;
+    }
+    p = attr->rgValue[0].pbData;
+    left = attr->rgValue[0].cbData;
+    if (left < 2 || p[0] != 0x30 || asn1_len(p, left, &hdr, &body) != 0) {
+        return;
+    }
+    p += hdr;
+    left = body;
+    while (left >= 2) {
+        const unsigned char* list;
+        size_t list_left, h2, b2;
+        unsigned char tag = p[0];
+        if (asn1_len(p, left, &hdr, &body) != 0) {
+            return;
+        }
+        list = p + hdr;
+        list_left = body;
+        p += hdr + body;
+        left -= hdr + body;
+        if (list_left < 2 || list[0] != 0x30 || asn1_len(list, list_left, &h2, &b2) != 0) {
+            continue;
+        }
+        list += h2;
+        list_left = b2;
+        while (list_left >= 2) {
+            size_t h3, b3;
+            if (asn1_len(list, list_left, &h3, &b3) != 0) {
+                break;
+            }
+            if (tag == 0xA0) {
+                pkcs7_windows_rev_add_crl(rev, list, h3 + b3);
+            } else if (tag == 0xA1) {
+                pkcs7_windows_rev_add_ocsp(NULL, rev, list, h3 + b3);
+            }
+            list += h3 + b3;
+            list_left -= h3 + b3;
+        }
+    }
+}
+
+// What the CRLs we hold say about cert. One issued after the time checked is
+// what proves it wasn't revoked by then; an older one that was still current
+// at that time says the same.
+static pkcs7_windows_rev_status crl_status(HCERTSTORE crls, PCCERT_CONTEXT cert, PCCERT_CONTEXT issuer, FILETIME when,
+                                           int* revoked_later) {
+    pkcs7_windows_rev_status res = PKCS7_REV_UNKNOWN;
+    PCCRL_CONTEXT crl = NULL;
+    while ((crl = CertFindCRLInStore(crls, X509_ASN_ENCODING | PKCS_7_ASN_ENCODING, CRL_FIND_ISSUED_BY_SIGNATURE_FLAG,
+                                     CRL_FIND_ISSUED_BY, issuer, crl)) != NULL) {
+        PCRL_ENTRY entry = NULL;
+        PCRL_INFO info = crl->pCrlInfo;
+        int covers = CompareFileTime(&info->NextUpdate, &when) >= 0;
+        if (!CertFindCertificateInCRL(cert, crl, 0, NULL, &entry)) {
+            continue;
+        }
+        if (entry && CompareFileTime(&entry->RevocationDate, &when) <= 0) {
+            CertFreeCRLContext(crl);
+            return PKCS7_REV_REVOKED;
+        }
+        if (entry) {
+            *revoked_later = 1;
+        }
+        if (covers) {
+            res = PKCS7_REV_GOOD;
+        }
+    }
+    return res;
+}
+
+// the responder is the issuer itself, or a certificate from it for this purpose
+static int ocsp_responder_ok(PCCERT_CONTEXT responder, PCCERT_CONTEXT issuer) {
+    BYTE usage[256];
+    DWORD cb = sizeof(usage);
+    PCERT_ENHKEY_USAGE eku = (PCERT_ENHKEY_USAGE)usage;
+    DWORD i;
+    if (CertCompareCertificate(X509_ASN_ENCODING, responder->pCertInfo, issuer->pCertInfo)) {
+        return 1;
+    }
+    if (!CryptVerifyCertificateSignatureEx(0, X509_ASN_ENCODING, CRYPT_VERIFY_CERT_SIGN_SUBJECT_CERT, (void*)responder,
+                                           CRYPT_VERIFY_CERT_SIGN_ISSUER_CERT, (void*)issuer, 0, NULL)) {
+        return 0;
+    }
+    if (!CertGetEnhancedKeyUsage(responder, CERT_FIND_EXT_ONLY_ENHKEY_USAGE_FLAG, eku, &cb)) {
+        return 0;
+    }
+    for (i = 0; i < eku->cUsageIdentifier; i++) {
+        if (!strcmp(eku->rgpszUsageIdentifier[i], szOID_PKIX_KP_OCSP_SIGNING)) {
+            return 1;
+        }
+    }
+    return 0;
+}
+
+// checks a BasicOCSPResponse: SEQ { tbsResponseData, sigAlg, signature, [0] certs }.
+// Re-wrapped without the certs it has the shape the verify API takes.
+static int ocsp_signature_ok(const unsigned char* basic, size_t basic_len, POCSP_BASIC_SIGNED_RESPONSE_INFO signed_info,
+                             PCCERT_CONTEXT issuer) {
+    size_t hdr, body, h2, b2;
+    const unsigned char* p;
+    size_t left, signed_len = 0;
+    int i, ok = 0;
+    unsigned char* wrapped;
+    DWORD wrapped_len = 0;
+    DWORD k;
+    if (basic_len < 2 || basic[0] != 0x30 || asn1_len(basic, basic_len, &hdr, &body) != 0) {
+        return 0;
+    }
+    p = basic + hdr;
+    left = body;
+    for (i = 0; i < 3; i++) {
+        if (left < 2 || asn1_len(p + signed_len, left - signed_len, &h2, &b2) != 0) {
+            return 0;
+        }
+        signed_len += h2 + b2;
+    }
+    wrapped = (unsigned char*)malloc(signed_len + 8);
+    if (!wrapped) {
+        return 0;
+    }
+    wrapped[0] = 0x30;
+    if (signed_len < 0x80) {
+        wrapped[1] = (unsigned char)signed_len;
+        wrapped_len = 2;
+    } else {
+        int n = signed_len > 0xFFFFFF ? 4 : signed_len > 0xFFFF ? 3 : signed_len > 0xFF ? 2 : 1;
+        int b;
+        wrapped[1] = (unsigned char)(0x80 | n);
+        for (b = 0; b < n; b++) {
+            wrapped[2 + b] = (unsigned char)(signed_len >> (8 * (n - 1 - b)));
+        }
+        wrapped_len = (DWORD)(2 + n);
+    }
+    memcpy(wrapped + wrapped_len, p, signed_len);
+    wrapped_len += (DWORD)signed_len;
+
+    // try the certificates it carries, and the issuer in case it carries none
+    for (k = 0; !ok && k <= signed_info->SignatureInfo.cCertEncoded; k++) {
+        PCCERT_CONTEXT responder = issuer;
+        if (k < signed_info->SignatureInfo.cCertEncoded) {
+            CERT_BLOB* blob = &signed_info->SignatureInfo.rgCertEncoded[k];
+            responder = CertCreateCertificateContext(X509_ASN_ENCODING, blob->pbData, blob->cbData);
+            if (!responder) {
+                continue;
+            }
+        }
+        {
+            CRYPT_DATA_BLOB subject;
+            subject.cbData = wrapped_len;
+            subject.pbData = wrapped;
+            ok = ocsp_responder_ok(responder, issuer) &&
+                 CryptVerifyCertificateSignatureEx(0, X509_ASN_ENCODING, CRYPT_VERIFY_CERT_SIGN_SUBJECT_BLOB, &subject,
+                                                   CRYPT_VERIFY_CERT_SIGN_ISSUER_CERT, (void*)responder, 0, NULL);
+        }
+        if (responder != issuer) {
+            CertFreeCertificateContext(responder);
+        }
+    }
+    free(wrapped);
+    return ok;
+}
+
+static int ocsp_id_matches(const OCSP_CERT_ID* id, PCCERT_CONTEXT cert) {
+    BYTE digest[64];
+    DWORD cb = sizeof(digest);
+    LPCWSTR alg = cng_hash_name(id->HashAlgorithm.pszObjId);
+    if (!alg || !CertCompareIntegerBlob((PCRYPT_INTEGER_BLOB)&id->SerialNumber, &cert->pCertInfo->SerialNumber)) {
+        return 0;
+    }
+    if (!CryptHashCertificate2(alg, 0, NULL, cert->pCertInfo->Issuer.pbData, cert->pCertInfo->Issuer.cbData, digest,
+                               &cb)) {
+        return 0;
+    }
+    return cb == id->IssuerNameHash.cbData && memcmp(digest, id->IssuerNameHash.pbData, cb) == 0;
+}
+
+// the same rules as for a CRL, from the OCSP responses we hold
+static pkcs7_windows_rev_status ocsp_status(pkcs7_windows_rev_data* rev, PCCERT_CONTEXT cert, PCCERT_CONTEXT issuer,
+                                            FILETIME when, int* revoked_later) {
+    pkcs7_windows_rev_status res = PKCS7_REV_UNKNOWN;
+    int k;
+    if (!rev) {
+        return res;
+    }
+    for (k = 0; k < rev->n_ocsp && res != PKCS7_REV_REVOKED; k++) {
+        POCSP_RESPONSE_INFO outer = NULL;
+        POCSP_BASIC_SIGNED_RESPONSE_INFO signed_info = NULL;
+        POCSP_BASIC_RESPONSE_INFO info = NULL;
+        DWORD cb = 0, e;
+        if (!CryptDecodeObjectEx(X509_ASN_ENCODING, OCSP_RESPONSE, rev->ocsp[k], rev->ocsp_len[k],
+                                 CRYPT_DECODE_ALLOC_FLAG, NULL, &outer, &cb)) {
+            continue;
+        }
+        if (outer->dwStatus == 0 && outer->pszObjId &&
+            !strcmp(outer->pszObjId, szOID_PKIX_OCSP_BASIC_SIGNED_RESPONSE) &&
+            CryptDecodeObjectEx(X509_ASN_ENCODING, OCSP_BASIC_SIGNED_RESPONSE, outer->Value.pbData, outer->Value.cbData,
+                                CRYPT_DECODE_ALLOC_FLAG, NULL, &signed_info, &cb) &&
+            ocsp_signature_ok(outer->Value.pbData, outer->Value.cbData, signed_info, issuer) &&
+            CryptDecodeObjectEx(X509_ASN_ENCODING, OCSP_BASIC_RESPONSE, signed_info->ToBeSigned.pbData,
+                                signed_info->ToBeSigned.cbData, CRYPT_DECODE_ALLOC_FLAG, NULL, &info, &cb)) {
+            for (e = 0; e < info->cResponseEntry; e++) {
+                POCSP_BASIC_RESPONSE_ENTRY entry = &info->rgResponseEntry[e];
+                if (!ocsp_id_matches(&entry->CertId, cert)) {
+                    continue;
+                }
+                if (entry->dwCertStatus == OCSP_BASIC_REVOKED_CERT_STATUS) {
+                    if (!entry->pRevokedInfo || CompareFileTime(&entry->pRevokedInfo->RevocationDate, &when) <= 0) {
+                        res = PKCS7_REV_REVOKED;
+                        break;
+                    }
+                    *revoked_later = 1;
+                    res = PKCS7_REV_GOOD;
+                } else if (entry->dwCertStatus == OCSP_BASIC_GOOD_CERT_STATUS &&
+                           CompareFileTime(&entry->NextUpdate, &when) >= 0) {
+                    res = PKCS7_REV_GOOD;
+                }
+            }
+        }
+        LocalFree(info);
+        LocalFree(signed_info);
+        LocalFree(outer);
+    }
+    return res;
+}
+
+#define kChainRevocationFlags \
+    (CERT_CHAIN_REVOCATION_CHECK_CHAIN_EXCLUDE_ROOT | CERT_CHAIN_REVOCATION_ACCUMULATIVE_TIMEOUT)
+
 // errors that say nothing against a chain stopping at an EU-listed CA, which
 // Windows may not know as a root
 #define kChainErrorsAboveAnchor                                                                          \
@@ -1106,8 +1398,8 @@ static void unix_to_filetime(int64_t secs, FILETIME* ft) {
 // Builds the signer's chain as of when_unix (0 means now). extra_store holds
 // certificates a chain may need that the signature doesn't carry.
 void pkcs7_windows_check_chain(fz_context* ctx, unsigned char* sig, size_t sig_len, int64_t when_unix,
-                               void* extra_store, pkcs7_windows_anchor_fn anchor_fn, void* anchor_ud,
-                               pkcs7_windows_chain_info* out) {
+                               void* extra_store, pkcs7_windows_rev_data* doc_rev, pkcs7_windows_anchor_fn anchor_fn,
+                               void* anchor_ud, pkcs7_windows_chain_info* out) {
     HCRYPTMSG hMsg = NULL;
     HCERTSTORE hMsgStore = NULL;
     HCERTSTORE hAll = NULL;
@@ -1117,6 +1409,8 @@ void pkcs7_windows_check_chain(fz_context* ctx, unsigned char* sig, size_t sig_l
     CERT_CHAIN_PARA para;
     FILETIME when;
     DWORD status, i;
+    DWORD chain_flags = kChainRevocationFlags | CERT_CHAIN_REVOCATION_CHECK_CACHE_ONLY;
+    pkcs7_windows_rev_data* sig_rev = NULL;
 
     memset(out, 0, sizeof(*out));
     out->no_certificate = 1;
@@ -1143,18 +1437,26 @@ void pkcs7_windows_check_chain(fz_context* ctx, unsigned char* sig, size_t sig_l
     if (extra_store) {
         CertAddStoreToCollection(hAll, (HCERTSTORE)extra_store, 0, 0);
     }
+    sig_rev = pkcs7_windows_rev_new();
+    if (sig_rev) {
+        read_archival_attr(si, sig_rev);
+    }
 
     ZeroMemory(&para, sizeof(para));
     para.cbSize = sizeof(para);
     if (when_unix > 0) {
         unix_to_filetime(when_unix, &when);
+    } else {
+        GetSystemTimeAsFileTime(&when);
     }
-    if (!CertGetCertificateChain(NULL, cert, when_unix > 0 ? &when : NULL, hAll, &para, 0, NULL, &chain)) {
+    if (!CertGetCertificateChain(NULL, cert, &when, hAll, &para, chain_flags, NULL, &chain)) {
         warn_gle(ctx, "check_chain CertGetCertificateChain", GetLastError());
         goto done;
     }
 
-    status = chain->TrustStatus.dwErrorStatus;
+    // no data about revocation isn't an error in the chain itself
+    status = chain->TrustStatus.dwErrorStatus &
+             ~(DWORD)(CERT_TRUST_REVOCATION_STATUS_UNKNOWN | CERT_TRUST_IS_OFFLINE_REVOCATION);
     out->os_trusted = status == CERT_TRUST_NO_ERROR;
     if (chain->cChain > 0 && chain->rgpChain[0]->cElement > 0) {
         PCERT_SIMPLE_CHAIN simple = chain->rgpChain[0];
@@ -1183,6 +1485,57 @@ void pkcs7_windows_check_chain(fz_context* ctx, unsigned char* sig, size_t sig_l
             }
         }
         out->eu_chain_ok = out->eu_status != 0 && !bad_below_anchor;
+
+        // the revocation status of each certificate up to the anchor or root
+        {
+            DWORD last = simple->cElement - 1;
+            int all_good = simple->cElement > 1;
+            int all_embedded = all_good;
+            for (i = 0; i < last; i++) {
+                PCERT_CHAIN_ELEMENT el = simple->rgpElement[i];
+                PCCERT_CONTEXT issuer = simple->rgpElement[i + 1]->pCertContext;
+                pkcs7_windows_rev_status st = PKCS7_REV_UNKNOWN;
+                DWORD err = el->TrustStatus.dwErrorStatus;
+                if (doc_rev && doc_rev->crls) {
+                    st = crl_status(doc_rev->crls, el->pCertContext, issuer, when, &out->revoked_later);
+                }
+                if (st == PKCS7_REV_UNKNOWN && sig_rev && sig_rev->crls) {
+                    st = crl_status(sig_rev->crls, el->pCertContext, issuer, when, &out->revoked_later);
+                }
+                if (st == PKCS7_REV_UNKNOWN) {
+                    st = crl_status(hMsgStore, el->pCertContext, issuer, when, &out->revoked_later);
+                }
+                if (st == PKCS7_REV_UNKNOWN) {
+                    st = ocsp_status(doc_rev, el->pCertContext, issuer, when, &out->revoked_later);
+                }
+                if (st == PKCS7_REV_UNKNOWN) {
+                    st = ocsp_status(sig_rev, el->pCertContext, issuer, when, &out->revoked_later);
+                }
+                if (st == PKCS7_REV_REVOKED || (err & CERT_TRUST_IS_REVOKED)) {
+                    out->revocation = PKCS7_REV_REVOKED;
+                    out->revoked_later = 0;
+                    out->os_trusted = 0;
+                    out->eu_chain_ok = 0;
+                    goto done;
+                }
+                if (st != PKCS7_REV_GOOD) {
+                    all_embedded = 0;
+                    if (err & (CERT_TRUST_REVOCATION_STATUS_UNKNOWN | CERT_TRUST_IS_OFFLINE_REVOCATION)) {
+                        all_good = 0;
+                    }
+                }
+                if (anchor_fn && i + 1 <= last && out->eu_status != 0 &&
+                    anchor_fn(anchor_ud, issuer->pbCertEncoded, (int)issuer->cbCertEncoded)) {
+                    break;
+                }
+            }
+            if (all_good) {
+                out->revocation = PKCS7_REV_GOOD;
+                out->revocation_embedded = all_embedded;
+            } else {
+                out->revocation_embedded = 0;
+            }
+        }
     }
     {
         DWORD known = CERT_TRUST_IS_UNTRUSTED_ROOT | CERT_TRUST_IS_PARTIAL_CHAIN | CERT_TRUST_IS_NOT_TIME_VALID |
@@ -1192,9 +1545,52 @@ void pkcs7_windows_check_chain(fz_context* ctx, unsigned char* sig, size_t sig_l
     }
 
 done:
+    pkcs7_windows_rev_free(sig_rev);
     if (chain) {
         CertFreeCertificateChain(chain);
     }
+    if (hAll) {
+        CertCloseStore(hAll, 0);
+    }
+    close_metadata(hMsg, hMsgStore, si, cert);
+}
+
+void pkcs7_windows_fetch_revocation(unsigned char* sig, size_t sig_len, int64_t when_unix, void* extra_store) {
+    HCRYPTMSG hMsg = open_msg_for_metadata(sig, sig_len);
+    HCERTSTORE hMsgStore = NULL;
+    HCERTSTORE hAll = NULL;
+    PCMSG_SIGNER_INFO si = NULL;
+    PCCERT_CONTEXT cert = NULL;
+    PCCERT_CHAIN_CONTEXT chain = NULL;
+    CERT_CHAIN_PARA para;
+    FILETIME when;
+
+    if (!hMsg || get_signer_count(hMsg) == 0) {
+        goto done;
+    }
+    hMsgStore = CertOpenStore(CERT_STORE_PROV_MSG, 0, 0, 0, hMsg);
+    si = get_signer_info(hMsg, 0);
+    cert = (hMsgStore && si) ? find_signer_cert(hMsgStore, si) : NULL;
+    hAll = CertOpenStore(CERT_STORE_PROV_COLLECTION, 0, 0, 0, NULL);
+    if (!cert || !hAll) {
+        goto done;
+    }
+    CertAddStoreToCollection(hAll, hMsgStore, 0, 0);
+    if (extra_store) {
+        CertAddStoreToCollection(hAll, (HCERTSTORE)extra_store, 0, 0);
+    }
+    ZeroMemory(&para, sizeof(para));
+    para.cbSize = sizeof(para);
+    if (when_unix > 0) {
+        unix_to_filetime(when_unix, &when);
+    } else {
+        GetSystemTimeAsFileTime(&when);
+    }
+    if (CertGetCertificateChain(NULL, cert, &when, hAll, &para, kChainRevocationFlags, NULL, &chain)) {
+        CertFreeCertificateChain(chain);
+    }
+
+done:
     if (hAll) {
         CertCloseStore(hAll, 0);
     }

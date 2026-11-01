@@ -55,6 +55,13 @@ typedef enum {
     PKCS7_QC_TYPE_WEB,
 } pkcs7_windows_qc_type;
 
+typedef enum {
+    // no data says either way
+    PKCS7_REV_UNKNOWN,
+    PKCS7_REV_GOOD,
+    PKCS7_REV_REVOKED,
+} pkcs7_windows_rev_status;
+
 // non-zero if der is a trust anchor; the value ends up in eu_status
 typedef int (*pkcs7_windows_anchor_fn)(void* ud, const unsigned char* der, int der_len);
 
@@ -72,7 +79,19 @@ typedef struct {
     // anything else wrong: a bad signature in the chain, wrong usage, ...
     int other_error;
     int no_certificate;
+    pkcs7_windows_rev_status revocation;
+    // the document carries what proves that status
+    int revocation_embedded;
+    // revoked, but only after the time checked
+    int revoked_later;
 } pkcs7_windows_chain_info;
+
+// revocation data from the document's security store (/DSS); may be NULL
+typedef struct pkcs7_windows_rev_data pkcs7_windows_rev_data;
+pkcs7_windows_rev_data* pkcs7_windows_rev_new(void);
+void pkcs7_windows_rev_free(pkcs7_windows_rev_data* rev);
+void pkcs7_windows_rev_add_crl(pkcs7_windows_rev_data* rev, const unsigned char* der, size_t n);
+void pkcs7_windows_rev_add_ocsp(fz_context* ctx, pkcs7_windows_rev_data* rev, const unsigned char* der, size_t n);
 
 typedef struct {
     char* signer_cn;
@@ -102,8 +121,11 @@ void pkcs7_windows_sig_info_free(fz_context* ctx, pkcs7_windows_sig_info* info);
 int pkcs7_windows_verify_ts(fz_context* ctx, unsigned char* tok, size_t tok_len, const unsigned char* stamped,
                             size_t stamped_len, int64_t* gen_time_out);
 void pkcs7_windows_check_chain(fz_context* ctx, unsigned char* sig, size_t sig_len, int64_t when_unix,
-                               void* extra_store, pkcs7_windows_anchor_fn anchor_fn, void* anchor_ud,
-                               pkcs7_windows_chain_info* out);
+                               void* extra_store, pkcs7_windows_rev_data* rev, pkcs7_windows_anchor_fn anchor_fn,
+                               void* anchor_ud, pkcs7_windows_chain_info* out);
+// asks the CAs online, which leaves the answers in Windows' cache for the check
+// above. Blocks for up to a few seconds per certificate.
+void pkcs7_windows_fetch_revocation(unsigned char* sig, size_t sig_len, int64_t when_unix, void* extra_store);
 int pkcs7_windows_inspect(fz_context* ctx, unsigned char* sig, size_t sig_len, pkcs7_windows_sig_info* info);
 
 #ifdef __cplusplus

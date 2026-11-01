@@ -8396,7 +8396,7 @@ static bool TimestampIsTrusted(fz_context* ctx, unsigned char* tok, size_t tokLe
     anchor.kind = EutlKind::TSA;
     void* store = (gEutlLookup && eutlList) ? gEutlLookup->store(eutlList) : nullptr;
     pkcs7_windows_chain_info chain{};
-    pkcs7_windows_check_chain(ctx, tok, tokLen, genTime, store, EutlAnchorStatus, &anchor, &chain);
+    pkcs7_windows_check_chain(ctx, tok, tokLen, genTime, store, nullptr, EutlAnchorStatus, &anchor, &chain);
     return chain.os_trusted || chain.eu_chain_ok;
 }
 
@@ -8486,6 +8486,57 @@ static void AppendQualifiedLine(str::Builder& s, SigLevel level, Str listDate) {
     }
 }
 
+static void AppendRevocationLine(str::Builder& s, const pkcs7_windows_chain_info& chain) {
+    switch (chain.revocation) {
+        case PKCS7_REV_REVOKED:
+            s.Append(StrL("  Revocation: the certificate was revoked.\n"));
+            break;
+        case PKCS7_REV_GOOD:
+            if (chain.revoked_later) {
+                s.Append(StrL("  Revocation: the certificate was revoked, but only after this signature was made.\n"));
+            } else {
+                s.Append(StrL("  Revocation: the certificate wasn't revoked.\n"));
+            }
+            break;
+        case PKCS7_REV_UNKNOWN:
+            s.Append(StrL("  Revocation: not checked, no revocation data is available.\n"));
+            break;
+    }
+}
+
+// the CRLs and OCSP responses in the document's security store
+static pkcs7_windows_rev_data* LoadDssRevocation(fz_context* ctx, pdf_document* pdfdoc) {
+    pdf_obj* root = pdf_dict_get(ctx, pdf_trailer(ctx, pdfdoc), PDF_NAME(Root));
+    pdf_obj* dss = root ? pdf_dict_gets(ctx, root, "DSS") : nullptr;
+    if (!dss) {
+        return nullptr;
+    }
+    pkcs7_windows_rev_data* rev = pkcs7_windows_rev_new();
+    for (int isOcsp = 0; rev && isOcsp < 2; isOcsp++) {
+        pdf_obj* arr = pdf_dict_gets(ctx, dss, isOcsp ? "OCSPs" : "CRLs");
+        int n = arr ? pdf_array_len(ctx, arr) : 0;
+        for (int i = 0; i < n; i++) {
+            fz_buffer* buf = nullptr;
+            fz_var(buf);
+            fz_try(ctx) {
+                buf = pdf_load_stream(ctx, pdf_array_get(ctx, arr, i));
+                if (isOcsp) {
+                    pkcs7_windows_rev_add_ocsp(ctx, rev, buf->data, buf->len);
+                } else {
+                    pkcs7_windows_rev_add_crl(rev, buf->data, buf->len);
+                }
+            }
+            fz_always(ctx) {
+                fz_drop_buffer(ctx, buf);
+            }
+            fz_catch(ctx) {
+                fz_report_error(ctx);
+            }
+        }
+    }
+    return rev;
+}
+
 static pdf_signature_error CertErrFromChain(const pkcs7_windows_chain_info& chain) {
     if (chain.no_certificate) {
         return PDF_SIGNATURE_ERROR_NO_CERTIFICATE;
@@ -8540,7 +8591,8 @@ static void AppendPadesLevel(str::Builder& s, bool isCades, bool hasTs, bool ltv
 
 static void AppendSignatureFieldInfo(fz_context* ctx, str::Builder& s, pdf_pkcs7_verifier* verifier,
                                      pdf_document* pdfdoc, pdf_obj* sigObj, int sigNo, int pageNo, bool docHasDss,
-                                     bool docHasDocTs, int laterSigs, void* eutlList, const Vec<pdf_obj*>& fields) {
+                                     bool docHasDocTs, int laterSigs, void* eutlList, const Vec<pdf_obj*>& fields,
+                                     pkcs7_windows_rev_data* docRev) {
     if (len(s) > 0) {
         s.AppendChar('\n');
     }
@@ -8619,7 +8671,7 @@ static void AppendSignatureFieldInfo(fz_context* ctx, str::Builder& s, pdf_pkcs7
             if (provenTime > 0) {
                 anchor.when = provenTime;
             }
-            pkcs7_windows_check_chain(ctx, (unsigned char*)contents, contentsLen, provenTime, eutlStore,
+            pkcs7_windows_check_chain(ctx, (unsigned char*)contents, contentsLen, provenTime, eutlStore, docRev,
                                       EutlAnchorStatus, &anchor, &chain);
         }
     }
@@ -8692,8 +8744,10 @@ static void AppendSignatureFieldInfo(fz_context* ctx, str::Builder& s, pdf_pkcs7
         AppendSigValidation(s, certErr, digErr, edits, laterSigs);
     }
 
+    AppendRevocationLine(s, chain);
     bool ltv = docHasDss;
-    AppendLtvLine(s, ltv, info.not_after_unix);
+    // long-term validation needs the document to carry the proof itself
+    AppendLtvLine(s, chain.revocation_embedded && chain.revocation == PKCS7_REV_GOOD, info.not_after_unix);
     if (info.hash_algo) {
         s.Append(fmt("  Hash algorithm: %s\n", Str(info.hash_algo)));
     }
@@ -8748,6 +8802,48 @@ static void AppendSignatureFieldInfo(fz_context* ctx, str::Builder& s, pdf_pkcs7
 PdfSigCert::~PdfSigCert() {
     str::Free(label);
     str::Free(der);
+}
+
+// Asks the CAs about this document's signers: slow, and leaves the answers in
+// Windows' cache, where the next look at the signatures finds them.
+void EngineMupdfFetchRevocation(EngineBase* engine) {
+    EngineMupdf* e = AsEngineMupdf(engine);
+    if (!e || !e->pdfdoc) {
+        return;
+    }
+    fz_context* ctx = e->Ctx();
+    StrVec blobs;
+    {
+        ScopedRecursiveMutex scope(&e->docLock);
+        Vec<pdf_obj*> fields;
+        fz_try(ctx) {
+            CollectSignatureFields(ctx, e->pdfdoc, fields);
+            for (pdf_obj* field : fields) {
+                char* contents = nullptr;
+                size_t n = pdf_signature_contents(ctx, e->pdfdoc, field, &contents);
+                if (n > 0) {
+                    blobs.Append(Str(contents, (int)n));
+                }
+                fz_free(ctx, contents);
+            }
+        }
+        fz_always(ctx) {
+            for (pdf_obj* field : fields) {
+                pdf_drop_obj(ctx, field);
+            }
+        }
+        fz_catch(ctx) {
+            fz_report_error(ctx);
+        }
+    }
+    void* list = gEutlLookup ? gEutlLookup->open() : nullptr;
+    void* store = (gEutlLookup && list) ? gEutlLookup->store(list) : nullptr;
+    for (Str blob : blobs) {
+        pkcs7_windows_fetch_revocation((unsigned char*)blob.s, (size_t)len(blob), 0, store);
+    }
+    if (gEutlLookup && list) {
+        gEutlLookup->close(list);
+    }
 }
 
 PdfSigCert* EngineMupdfGetSignatureCerts(EngineBase* engine) {
@@ -8866,6 +8962,10 @@ static TempStr GetSignatures(EngineMupdf* e) {
     pdf_pkcs7_verifier* verifier = nullptr;
     Vec<pdf_obj*> fields;
     void* eutlList = nullptr;
+#if OS_WIN
+    pkcs7_windows_rev_data* docRev = nullptr;
+    fz_var(docRev);
+#endif
     fz_var(verifier);
     fz_var(eutlList);
     fz_try(ctx) {
@@ -8879,6 +8979,7 @@ static TempStr GetSignatures(EngineMupdf* e) {
         CollectSignatureFields(ctx, pdfdoc, fields);
 #if OS_WIN
         eutlList = gEutlLookup ? gEutlLookup->open() : nullptr;
+        docRev = LoadDssRevocation(ctx, pdfdoc);
         bool hasDss = PdfHasDssRevocation(ctx, pdfdoc);
         bool hasDocTs = false;
         for (pdf_obj* field : fields) {
@@ -8893,7 +8994,7 @@ static TempStr GetSignatures(EngineMupdf* e) {
             ++sigNo;
             int pageNo = PageNoForSigField(ctx, pdfdoc, field);
             AppendSignatureFieldInfo(ctx, sigs, verifier, pdfdoc, field, sigNo, pageNo, hasDss, hasDocTs,
-                                     LaterSignatures(ctx, pdfdoc, fields, field), eutlList, fields);
+                                     LaterSignatures(ctx, pdfdoc, fields, field), eutlList, fields, docRev);
         }
 #else
         for (int i = 0; i < len(fields); i++) {
@@ -8910,6 +9011,9 @@ static TempStr GetSignatures(EngineMupdf* e) {
         if (gEutlLookup && eutlList) {
             gEutlLookup->close(eutlList);
         }
+#if OS_WIN
+        pkcs7_windows_rev_free(docRev);
+#endif
     }
     fz_catch(ctx) {
         fz_report_error(ctx);

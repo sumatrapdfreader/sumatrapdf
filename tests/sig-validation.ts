@@ -10,6 +10,8 @@ import { ControlCommand, type ControlClient, withControlledSumatra } from "./con
 import {
   days,
   makeCert,
+  makeCrl,
+  makeOcsp,
   writeEutlCache,
   writeSignedPdf,
   type Cert,
@@ -215,6 +217,103 @@ async function testSigningTime(): Promise<void> {
   expectHas(raw, CLAIM_ONLY, "withdrawn before signing");
 }
 
+const REV_NOT_CHECKED = /Revocation: not checked/;
+const REV_GOOD = /Revocation: the certificate wasn't revoked/;
+const REV_REVOKED = /Revocation: the certificate was revoked\./;
+const REV_LATER = /Revocation: the certificate was revoked, but only after/;
+const LTV = /This signature is LTV enabled/;
+
+async function testRevocation(): Promise<void> {
+  const root = makeCert({ name: "Test EU Root", isCa: true, notBefore: days(-3000), notAfter: days(3000) });
+  const ca = makeCert({
+    name: "Test Qualified CA",
+    issuer: root,
+    isCa: true,
+    notBefore: days(-2000),
+    notAfter: days(2000),
+  });
+  const tsa = makeCert({ name: "Test TSA", issuer: ca, isTsa: true, notBefore: days(-2000), notAfter: days(2000) });
+  const leaf = makeCert({ name: "Jan Kowalski", issuer: ca, qualified: "esign", notBefore: days(-400) });
+  const list: EutlEntry[] = [
+    { cert: ca, granted: [{ from: days(-1500) }] },
+    { cert: ca, kind: "TSA", granted: [{ from: days(-1500) }] },
+  ];
+  const spec = { signer: leaf, extraCerts: [ca] };
+  const signedAt = days(-100);
+  const stamped = { ...spec, signingTime: signedAt, timestamp: { tsa, chain: [tsa, ca], time: signedAt } };
+
+  let raw = await propsFor(spec, list);
+  expectHas(raw, REV_NOT_CHECKED, "no revocation data");
+  expectHas(raw, QUALIFIED_SIG, "no revocation data");
+  expectNot(raw, LTV, "no revocation data");
+
+  const clean = makeCrl({ issuer: ca });
+  raw = await propsFor({ ...spec, crls: [clean] }, list);
+  expectHas(raw, REV_GOOD, "clean CRL in the signature");
+  expectHas(raw, LTV, "clean CRL in the signature");
+
+  raw = await propsFor({ ...spec, archivedCrls: [clean] }, list);
+  expectHas(raw, REV_GOOD, "clean CRL in the archive attribute");
+
+  raw = await propsFor({ ...spec, dssCrls: [clean] }, list);
+  expectHas(raw, REV_GOOD, "clean CRL in the DSS");
+
+  const revoked = makeCrl({ issuer: ca, revoked: [{ cert: leaf, date: days(-5) }] });
+  raw = await propsFor({ ...spec, crls: [revoked] }, list);
+  expectHas(raw, REV_REVOKED, "revoked");
+  expectHas(raw, UNTRUSTED, "revoked");
+  expectNot(raw, QUALIFIED_SIG, "revoked");
+
+  raw = await propsFor({ ...spec, dssCrls: [revoked] }, list);
+  expectHas(raw, REV_REVOKED, "revoked, in the DSS");
+
+  // a signature made before the revocation stays good
+  raw = await propsFor({ ...stamped, crls: [revoked] }, list);
+  expectHas(raw, REV_LATER, "revoked after signing");
+  expectHas(raw, QUALIFIED_SIG, "revoked after signing");
+
+  const before = makeCrl({ issuer: ca, revoked: [{ cert: leaf, date: days(-200) }] });
+  raw = await propsFor({ ...stamped, crls: [before] }, list);
+  expectHas(raw, REV_REVOKED, "revoked before signing");
+  expectNot(raw, QUALIFIED_SIG, "revoked before signing");
+
+  // nobody's signature on it: says nothing
+  const forged = makeCrl({ issuer: ca, signingKey: leaf.privateKey });
+  raw = await propsFor({ ...spec, crls: [forged] }, list);
+  expectHas(raw, REV_NOT_CHECKED, "forged CRL");
+
+  // stopped being current before the time checked
+  const stale = makeCrl({ issuer: ca, thisUpdate: days(-60), nextUpdate: days(-30) });
+  raw = await propsFor({ ...spec, crls: [stale] }, list);
+  expectHas(raw, REV_NOT_CHECKED, "stale CRL");
+}
+
+async function testOcsp(): Promise<void> {
+  const root = makeCert({ name: "Test EU Root", isCa: true, notAfter: days(3000) });
+  const ca = makeCert({ name: "Test Qualified CA", issuer: root, isCa: true, notAfter: days(2000) });
+  const leaf = makeCert({ name: "Jan Kowalski", issuer: ca, qualified: "esign" });
+  const list: EutlEntry[] = [{ cert: ca, granted: [{ from: days(-1500) }] }];
+  const spec = { signer: leaf, extraCerts: [ca] };
+
+  let raw = await propsFor({ ...spec, archivedOcsps: [makeOcsp(leaf, ca)] }, list);
+  expectHas(raw, REV_GOOD, "OCSP good");
+  expectHas(raw, LTV, "OCSP good");
+
+  raw = await propsFor({ ...spec, archivedOcsps: [makeOcsp(leaf, ca, { revokedOn: days(-3) })] }, list);
+  expectHas(raw, REV_REVOKED, "OCSP revoked");
+  expectNot(raw, QUALIFIED_SIG, "OCSP revoked");
+
+  // about someone else
+  const other = makeCert({ name: "Someone Else", issuer: ca });
+  raw = await propsFor({ ...spec, archivedOcsps: [makeOcsp(other, ca)] }, list);
+  expectHas(raw, REV_NOT_CHECKED, "OCSP for another certificate");
+
+  // signed by someone with no standing to answer
+  const stranger = makeCert({ name: "Test Qualified CA", isCa: true });
+  raw = await propsFor({ ...spec, archivedOcsps: [makeOcsp(leaf, stranger)] }, list);
+  expectHas(raw, REV_NOT_CHECKED, "OCSP from a stranger");
+}
+
 export async function testit(): Promise<void> {
   if (IS_MAC) {
     console.log("SKIP sig-validation: the checks are in the Windows PKCS#7 backend");
@@ -222,6 +321,8 @@ export async function testit(): Promise<void> {
   }
   await testTrustedList();
   await testSigningTime();
+  await testRevocation();
+  await testOcsp();
 }
 
 if (import.meta.main) {

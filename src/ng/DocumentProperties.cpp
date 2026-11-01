@@ -490,10 +490,13 @@ void ShowProperties(MainWindow* win, DocController* ctrl) {
     if (EngineMupdfIsPdf(engine)) {
         EutlRegisterLookup();
         gProps.certs = EngineMupdfGetSignatureCerts(engine);
-        if (gProps.certs && EutlNeedsUpdate()) {
+        if (gProps.certs && !gForTesting && HasPermission(Perm::InternetAccess)) {
             auto* eutlJob = new EutlUpdateJob;
             eutlJob->silent = true;
-            RunAsync(MkFunc0<EutlUpdateJob>(EutlUpdateThread, eutlJob), StrL("EutlAutoUpdate"));
+            eutlJob->update = EutlNeedsUpdate();
+            eutlJob->engine = engine;
+            engine->AddRef();
+            RunAsync(MkFunc0<EutlUpdateJob>(EutlUpdateThread, eutlJob), StrL("SigOnlineChecks"));
         }
         if (gProps.certs) {
             StrVec labels;
