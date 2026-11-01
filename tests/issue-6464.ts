@@ -163,7 +163,9 @@ export async function testit(): Promise<void> {
   const settings = "RestoreSession = false\nCheckForUpdates = false\n";
   await testLayoutAndPlus(pdf, writeAppdata("issue-6464-appdata", settings));
   await testCrowded(paths, writeAppdata("issue-6464-crowded", settings));
-  await testNotRestored(pdf, writeAppdata("issue-6464-session", "RestoreSession = true\nCheckForUpdates = false\n"));
+  // without -for-testing, ReuseInstance would hand the launch to any running instance
+  const sessionSettings = "RestoreSession = true\nReuseInstance = false\nCheckForUpdates = false\n";
+  await testNotRestored(pdf, writeAppdata("issue-6464-session", sessionSettings));
 }
 
 if (import.meta.main) {
