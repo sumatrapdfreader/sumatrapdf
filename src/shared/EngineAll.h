@@ -196,10 +196,6 @@ bool IsUnsignedSignatureWidget(Annotation*, TempStr* fieldNameOut);
 bool EngineMupdfSignDocument(EngineBase*, const PdfSignArgs&, Str* errOut);
 void ListWindowsSigningCertificates(StrVec& thumbprints, StrVec& labels);
 
-#if OS_WIN
-struct EutlLookup;
-void SetEutlLookup(const EutlLookup* lookup);
-void EngineMupdfFetchRevocation(EngineBase* engine);
 struct PdfSigSummary {
     // not counting document timestamps
     int nSigned = 0;
@@ -207,6 +203,11 @@ struct PdfSigSummary {
     bool anyInvalid = false;
     bool anyUnknown = false;
 };
+
+#if OS_WIN
+struct EutlLookup;
+void SetEutlLookup(const EutlLookup* lookup);
+void EngineMupdfFetchRevocation(EngineBase* engine);
 PdfSigSummary EngineMupdfSignatureSummary(EngineBase* engine);
 struct PdfSigCert {
     PdfSigCert* next = nullptr;

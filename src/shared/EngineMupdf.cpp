@@ -8852,7 +8852,7 @@ PdfSigCert::~PdfSigCert() {
     str::Free(der);
 }
 
-static TempStr GetSignatures(EngineMupdf* e, PdfSigSummary* sum = nullptr);
+static TempStr GetSignatures(EngineMupdf* e, PdfSigSummary* sum);
 
 // The verdict over all signatures: for showing it without opening Properties.
 PdfSigSummary EngineMupdfSignatureSummary(EngineBase* engine) {
@@ -9110,7 +9110,7 @@ void EngineMupdf::GetProperties(Props& propsOut) {
         AddProp(propsOut, DocProp::Encryption, val);
     }
 
-    TempStr sigs = GetSignatures(this);
+    TempStr sigs = GetSignatures(this, nullptr);
     if (len(sigs) > 0) {
         AddProp(propsOut, DocProp::Signatures, sigs);
     }
