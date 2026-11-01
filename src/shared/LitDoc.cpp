@@ -1094,7 +1094,7 @@ static void LitEmitTextChar(str::Builder& out, int c) {
 }
 
 // port of calibre's UnBinary.binary_to_text state machine
-static bool LitBinaryToText(UnBinaryCtx* ctx, int depth) {
+static bool LitBinaryToText(UnBinaryCtx* ctx, int depth, Str parent) {
     if (depth > 128) {
         return false;
     }
@@ -1107,6 +1107,7 @@ static bool LitBinaryToText(UnBinaryCtx* ctx, int depth) {
     int count = 0;
     bool inCensorship = false;
     bool isGoingdown = false;
+    bool hasStrayText = false;
     bool tagIsAtom = false;
     int tag = 0;
     Str tagName;
@@ -1124,6 +1125,8 @@ static bool LitBinaryToText(UnBinaryCtx* ctx, int depth) {
                     state = 1;
                 } else {
                     LitEmitTextChar(out, c);
+                    // only a lost opening tag leaves text directly in dc-metadata
+                    hasStrayText = hasStrayText || (c > ' ' && !ctx->isHtml && str::Eq(parent, StrL("dc-metadata")));
                 }
                 break;
             case 1: // get flags
@@ -1158,6 +1161,12 @@ static bool LitBinaryToText(UnBinaryCtx* ctx, int depth) {
                     tagName = name ? Str(name) : fmt("x-lit-tag-%d", tag);
                     out.Append(Str(tagName));
                 } else if (flags & kLitFlagClosing) {
+                    if (hasStrayText) {
+                        // this closes the lost tag, not the parent
+                        hasStrayText = false;
+                        state = 0;
+                        break;
+                    }
                     if (depth == 0) {
                         return false;
                     }
@@ -1174,7 +1183,7 @@ static bool LitBinaryToText(UnBinaryCtx* ctx, int depth) {
                     } else {
                         out.Append(StrL(">"));
                         // recursively emit children until the closing token
-                        if (!LitBinaryToText(ctx, depth + 1)) {
+                        if (!LitBinaryToText(ctx, depth + 1, tagName)) {
                             return false;
                         }
                         if (len(tagName) == 0) {
@@ -1363,7 +1372,7 @@ static Str LitUnBinary(LitFile* lit, Str bin, Str path, bool isHtml, LitAtoms* a
     ctx.atoms = atoms;
     int lastSlash = str::LastIndexOfChar(path, '/');
     ctx.dir = lastSlash >= 0 ? Str(path.s, lastSlash) : StrL("");
-    if (!LitBinaryToText(&ctx, 0)) {
+    if (!LitBinaryToText(&ctx, 0, {})) {
         return {};
     }
     Str raw = ToStr(ctx.out);
@@ -1635,6 +1644,42 @@ bool LitDoc_UnitTestLzxOverrun() {
         return false;
     }
     return true;
+}
+
+// <dc-metadata> holding text whose opening tag is missing, so its close token is one too many
+bool LitDoc_UnitTestOpfStrayClose() {
+    constexpr int kTagPackage = 1, kTagMetadata = 0x14, kTagDcMetadata = 0x15, kTagTitle = 2, kTagManifest = 0x10;
+    str::Builder b;
+    auto open = [&b](int tag) {
+        b.AppendChar(0);
+        b.AppendChar(1);
+        b.AppendChar((char)tag);
+        b.AppendChar(0);
+    };
+    auto close = [&b]() {
+        b.AppendChar(0);
+        b.AppendChar(2);
+        b.AppendChar(0);
+    };
+    open(kTagPackage);
+    open(kTagMetadata);
+    open(kTagDcMetadata);
+    open(kTagTitle);
+    b.Append(StrL("T"));
+    close();
+    b.Append(StrL(" PENGUIN"));
+    close(); // stray
+    close(); // dc-metadata
+    close(); // metadata
+    open(kTagManifest);
+    close();
+    close(); // package
+
+    LitFile lit;
+    Str opf = LitUnBinary(&lit, ToStr(b), StrL("content.opf"), false, nullptr);
+    bool ok = str::EndsWith(opf, StrL("</dc-metadata></metadata><manifest></manifest></package>"));
+    str::Free(opf);
+    return ok;
 }
 
 bool LitDoc_UnitTestZipName() {
