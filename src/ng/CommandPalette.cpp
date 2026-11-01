@@ -1609,8 +1609,11 @@ void PaletteView::OnInput(PaletteView*, gp::Ctx* cx, const gp::InputEvent* ev) {
         return;
     }
     if (ev->kind == gp::InputEventKind::PressEnter) {
-        ExecuteCurrentSelection();
-        gp::Notify(cx);
+        // in the frame the key goes on to CommandPaletteOnKeyDown, which runs the row
+        if (ToolWindowsAvailable()) {
+            ExecuteCurrentSelection();
+            gp::Notify(cx);
+        }
         return;
     }
     if (ev->kind != gp::InputEventKind::Change) {
