@@ -2751,6 +2751,7 @@ static void ShowThumbnailProgress(ThumbnailProgress* p) {
         NotificationCreateArgs args;
         args.win = win;
         args.groupId = kNotifThumbnailProgress;
+        args.corner = NotifCorner::BottomLeft;
         args.plainText = true;
         args.msg = msg;
         ShowNotification(args);
