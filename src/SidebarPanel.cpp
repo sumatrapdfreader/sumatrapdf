@@ -330,6 +330,9 @@ void FocusSidebarPanel(SidebarPanel* p) {
     if (p->view == SidebarView::Thumbnails && p->root) {
         p->root->SetFocus(p->win->pageThumbs);
     }
+    if (p->view == SidebarView::Signatures && p->root) {
+        p->root->SetFocus(SignaturesView(win));
+    }
 }
 
 void LayoutSidebarPanel(SidebarPanel* p) {
@@ -409,8 +412,14 @@ static LRESULT CALLBACK WndProcSidebarPanel(HWND hwnd, UINT msg, WPARAM wp, LPAR
     if ((msg == WM_SETFOCUS || msg == WM_KILLFOCUS) && p->root && thumbs) {
         p->root->SetFocus(msg == WM_SETFOCUS ? win->pageThumbs : nullptr);
     }
-    if (msg == WM_SETFOCUS && p->root && win->signaturesCtrl && p->hosted == SignaturesView(win)) {
-        p->root->SetFocus(SignaturesView(win));
+    bool signatures = p->hosted && win->signaturesCtrl && p->hosted == SignaturesView(win);
+    if ((msg == WM_SETFOCUS || msg == WM_KILLFOCUS) && p->root && signatures) {
+        p->root->SetFocus(msg == WM_SETFOCUS ? SignaturesView(win) : nullptr);
+    }
+    // the root may have forgotten the control, which then keeps its focus ring
+    if (msg == WM_KILLFOCUS && signatures) {
+        SignaturesView(win)->SetFlag(vwfFocused, false);
+        SignaturesView(win)->Invalidate();
     }
 
     // with the thumbnails focused, every key they don't take goes to the canvas,
@@ -591,6 +600,9 @@ void AttachSidebarViews(MainWindow* win) {
     UpdateSidebarThumbnails(win);
     if (win->signaturesCtrl) {
         SignaturesView(win)->SetIsVisible(hostOf[(int)SidebarView::Signatures] != nullptr);
+        if (!SidebarPanelHasFocus(hostOf[(int)SidebarView::Signatures])) {
+            SignaturesView(win)->SetFlag(vwfFocused, false);
+        }
         UpdateSignaturesCtrl(win);
     }
     for (SidebarPanel* p : panels) {

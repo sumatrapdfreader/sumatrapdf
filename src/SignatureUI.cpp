@@ -643,6 +643,8 @@ TempStr SignatureUiStateTemp(MainWindow* win, Str action) {
     out.Append(fmt("rows=%d\n", win->signaturesCtrl ? win->signaturesCtrl->ItemsCount() : 0));
     bool panelShown = SidebarPanelShowing(win, SidebarView::Signatures) != nullptr;
     out.Append(fmt("panel=%d\n", panelShown ? 1 : 0));
+    bool listFocused = win->signaturesCtrl && win->signaturesCtrl->HasFlag(vwfFocused);
+    out.Append(fmt("listFocused=%d\n", listFocused ? 1 : 0));
     out.Append(fmt("page=%d\n", win->ctrl ? win->ctrl->CurrentPageNo() : 0));
     Rect mark;
     if (res && win->AsFixed()) {

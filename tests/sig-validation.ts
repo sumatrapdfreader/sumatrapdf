@@ -20,7 +20,7 @@ import {
 } from "./pki-chain.ts";
 import { join } from "node:path";
 import { cmdId, EXE, ROOT, runStandalone, tmpPath, writeAppdata } from "./util.ts";
-import { findCanvas, sendCommand, waitForFrame } from "./win-automation.ts";
+import { clickAt, findCanvas, sendCommand, waitForFrame } from "./win-automation.ts";
 import { postMessage, WM_LBUTTONDOWN, WM_LBUTTONUP } from "./winapi.ts";
 
 const SIGNATURES_READY_MS = 20_000;
@@ -329,6 +329,7 @@ type SigUiState = {
   bar: string;
   rows: number;
   panel: boolean;
+  listFocused: boolean;
   page: number;
   mark: number[];
   dialog: boolean;
@@ -343,6 +344,7 @@ async function uiState(client: ControlClient, action = ""): Promise<SigUiState> 
     bar: bar.startsWith("1 ") ? bar.slice(2) : "",
     rows: Number(line("rows")),
     panel: line("panel") === "1",
+    listFocused: line("listFocused") === "1",
     page: Number(line("page")),
     mark: line("mark").split(",").map(Number),
     dialog: line("dialog") === "1",
@@ -456,7 +458,9 @@ async function testUi(): Promise<void> {
       }
 
       sendCommand(await waitForFrame(proc.pid!), cmdId("CmdShowSignatures"));
-      await waitForState(client, (st) => st.panel, "the command shows no panel");
+      await waitForState(client, (st) => st.panel && st.listFocused, "the command doesn't focus the list");
+      await clickAt(findCanvas(await waitForFrame(proc.pid!)), 5, 5);
+      await waitForState(client, (st) => !st.listFocused, "a click on the document leaves the list focused");
       s = await uiState(client, "panel");
       if (!s.panel) {
         throw new Error(`sig-validation: the bar's button shows no panel\n${s.text}`);

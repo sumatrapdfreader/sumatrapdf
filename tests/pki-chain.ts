@@ -346,6 +346,8 @@ export type PdfSignSpec = {
   rect?: [number, number, number, number];
   // an unsigned page before the signed one
   leadingPage?: boolean;
+  // what the signed page shows, a content stream using font /F1
+  pageContent?: string;
   // what the signature carries besides the signer; the chain's top is usually left out
   extraCerts?: Cert[];
   signingTime?: Date;
@@ -371,16 +373,21 @@ function assemblePdf(sigDict: string, spec: PdfSignSpec): Buffer {
   const firstCrlObj = 6;
   const dssRefs = dssCrls.map((_, i) => `${firstCrlObj + i} 0 R`).join(" ");
   const dss = dssCrls.length > 0 ? ` /DSS << /CRLs [${dssRefs}] >>` : "";
+  const contentsObj = firstCrlObj + dssCrls.length + (spec.leadingPage ? 1 : 0);
+  const contentsRef = spec.pageContent
+    ? ` /Contents ${contentsObj} 0 R /Resources << /Font << /F1 << /Type /Font /Subtype /Type1 /BaseFont /Helvetica >> >> >>`
+    : "";
   const objs = [
     `<< /Type /Catalog /Pages 2 0 R /AcroForm << /SigFlags 3 /Fields [4 0 R] >>${dss} >>`,
     spec.leadingPage
       ? `<< /Type /Pages /Kids [${firstCrlObj + dssCrls.length} 0 R 3 0 R] /Count 2 >>`
       : "<< /Type /Pages /Kids [3 0 R] /Count 1 >>",
-    "<< /Type /Page /Parent 2 0 R /MediaBox [0 0 300 300] /Annots [4 0 R] >>",
+    `<< /Type /Page /Parent 2 0 R /MediaBox [0 0 300 300] /Annots [4 0 R]${contentsRef} >>`,
     `<< /Type /Annot /Subtype /Widget /FT /Sig /T (Signature1) /Rect [${(spec.rect ?? [0, 0, 0, 0]).join(" ")}] /F 4 /P 3 0 R /V 5 0 R >>`,
     sigDict,
     ...dssCrls.map((crl) => `<< /Length ${crl.length} >>\nstream\n${crl.toString("latin1")}\nendstream`),
     ...(spec.leadingPage ? ["<< /Type /Page /Parent 2 0 R /MediaBox [0 0 300 300] >>"] : []),
+    ...(spec.pageContent ? [`<< /Length ${spec.pageContent.length} >>\nstream\n${spec.pageContent}\nendstream`] : []),
   ];
   let body = "%PDF-1.7\n";
   const offsets: number[] = [];
