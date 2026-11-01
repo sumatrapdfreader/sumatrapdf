@@ -1680,6 +1680,15 @@ hash_color(const char *data)
 	return make_color(r, g, b, a);
 }
 
+/* SumatraPDF: an invalid color is ignored, not black: background-color:whi hid the text */
+static int
+is_hex_color(const char *data)
+{
+	size_t n = hexlen(data);
+
+	return data[n] == 0 && (n == 3 || n == 4 || n == 6 || n == 8);
+}
+
 static fz_css_color
 color_from_value(fz_css_value *value, fz_css_color initial)
 {
@@ -1689,7 +1698,7 @@ color_from_value(fz_css_value *value, fz_css_color initial)
 	if (value->type == CSS_HASH)
 	{
 hex_color:
-		return hash_color(value->data);
+		return is_hex_color(value->data) ? hash_color(value->data) : initial;
 	}
 
 	if (value->type == '(' && !strcmp(value->data, "rgb"))
@@ -1735,13 +1744,17 @@ fz_css_color
 fz_css_color_from_string(const char *str)
 {
 	const fz_css_color *named;
+	fz_css_color transparent = { 0, 0, 0, 0 };
 
 	if (*str == '#')
-		return hash_color(str+1);
-	named = lookup_named_color(str);
-	if (named)
-		return *named;
-	return hash_color(str);
+		str++;
+	else
+	{
+		named = lookup_named_color(str);
+		if (named)
+			return *named;
+	}
+	return is_hex_color(str) ? hash_color(str) : transparent;
 }
 
 static fz_css_color
