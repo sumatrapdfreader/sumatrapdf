@@ -855,11 +855,13 @@ static bool SendAsEmailAttachmentWithMail(Str filePath) {
 }
 #endif
 
+#if !OS_WASM
 static bool SendAsEmailAttachmentWithMailto(Str filePath) {
     TempStr name = path::GetBaseNameTemp(filePath);
     TempStr url = fmt("mailto:?subject=%s&body=%s", name, filePath);
     return LaunchBrowser(url);
 }
+#endif
 
 #endif
 
@@ -890,7 +892,17 @@ bool SendAsEmailAttachment(WindowTab* tab) {
     if (WasmShareFile(tab->filePath)) {
         return true;
     }
+    // No share sheet (Firefox, Chrome on Linux): a mailto link can't carry the
+    // file, and its path is one inside the page. Download the file, to attach
+    // it, and start the email with its name.
+    if (!WasmDownloadFile(tab->filePath)) {
+        return false;
+    }
+    TempStr name = path::GetBaseNameTemp(tab->filePath);
+    return LaunchBrowser(fmt("mailto:?subject=%s", name));
 #endif
+#if !OS_WASM
     return SendAsEmailAttachmentWithMailto(tab->filePath);
+#endif
 #endif
 }

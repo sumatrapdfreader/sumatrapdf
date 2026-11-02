@@ -38,8 +38,29 @@ and `tests/ad-hoc-wasm-commands.ts`. Where the work differs from the plan:
   `uitask::Post` are coalesced (`WakeForUiTasks`): with a drain queued per
   post, one frame ran slice after slice.
 
-Open: 5.2 for ebook layout and the PDF tools (no "working" overlay yet),
-phase 6.
+- 6, Firefox and Safari: checked by `tests/ad-hoc-wasm-browsers.ts` in
+  Chrome, Firefox 157 and WebKit 27.2 (Playwright's builds; WebKit on Windows
+  isn't Safari, and nothing here ran on a Mac or iPhone). Firefox works as
+  Chrome does: storage, search, zoom, file input, downloads. Found and fixed:
+  - Safari before 26 has no `createWritable`. Files are then written from a
+    worker with a sync access handle (Safari 15.2+), in `WasmShell.js` and in
+    the site's `src/opfswrite.ts`. Tested in Chrome with `createWritable`
+    removed.
+  - WebKit on Windows takes OPFS writes and keeps an empty file. Every write
+    now checks the file's size, so a failed save is reported instead of a
+    document seeming saved. WebKit in a private window has no OPFS at all; the
+    app says changes won't be saved.
+  - Safari reports a trackpad pinch as gesture events and zooms the page. They
+    become Ctrl+wheel, which zooms the document. Ctrl+wheel was already right
+    in every browser.
+  - Without `navigator.share` (Firefox, Chrome on Linux), Send by email put the
+    internal path in a mailto body. It now downloads the file and opens a
+    mailto with its name.
+
+Open: 5.2 for ebook layout and the PDF tools (no "working" overlay yet).
+Phase 6: touch (decide whether to support it; gpui has no touch input on wasm,
+so on phones and tablets a drag doesn't scroll the document), and a run on real
+Safari, macOS and iOS.
 
 Already done before this plan: a second window no longer crashes (`ed228d347`). Fonts download on
 any origin thanks to a CORS rule on the R2 bucket `files`. That rule exists only

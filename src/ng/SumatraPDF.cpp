@@ -7636,4 +7636,13 @@ extern "C" EMSCRIPTEN_KEEPALIVE int sumatra_test_page() {
     }
     return win->ctrl->CurrentPageNo();
 }
+
+// the zoom in percent, as it's shown
+extern "C" EMSCRIPTEN_KEEPALIVE int sumatra_test_zoom() {
+    MainWindow* win = len(gWindows) > 0 ? gWindows[0] : nullptr;
+    if (!TestHooksEnabled() || !win || !win->ctrl) {
+        return 0;
+    }
+    return (int)(win->ctrl->GetZoomVirtual(true) + 0.5f);
+}
 #endif

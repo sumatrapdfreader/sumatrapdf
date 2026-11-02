@@ -236,6 +236,59 @@
     return root.getDirectoryHandle(memPath.slice(1), { create: create });
   }
 
+  // Safari before 26 has no createWritable: there an OPFS file can only be
+  // written from a worker, with a sync access handle (Safari 15.2+)
+  var kWriterSource =
+    "onmessage = async function (e) {\n" +
+    "  var m = e.data;\n" +
+    "  try {\n" +
+    "    var dir = await navigator.storage.getDirectory();\n" +
+    "    for (var i = 0; i < m.dirs.length; i++) dir = await dir.getDirectoryHandle(m.dirs[i], { create: true });\n" +
+    "    var fh = await dir.getFileHandle(m.name, { create: true });\n" +
+    "    var h = await fh.createSyncAccessHandle();\n" +
+    "    try { h.truncate(0); h.write(m.bytes, { at: 0 }); h.flush(); } finally { h.close(); }\n" +
+    "    postMessage({ id: m.id });\n" +
+    "  } catch (err) {\n" +
+    "    postMessage({ id: m.id, error: String((err && err.message) || err) });\n" +
+    "  }\n" +
+    "};\n";
+  var writer = null;
+  var writerCalls = {};
+  var writerNextId = 1;
+
+  function writeInWorker(path, data) {
+    if (!writer) {
+      var url = URL.createObjectURL(new Blob([kWriterSource], { type: "text/javascript" }));
+      writer = new Worker(url);
+      writer.onmessage = function (e) {
+        var call = writerCalls[e.data.id];
+        delete writerCalls[e.data.id];
+        if (!call) return;
+        if (e.data.error) call.reject(new Error(e.data.error));
+        else call.resolve();
+      };
+    }
+    var parts = path.slice(1).split("/");
+    var id = writerNextId++;
+    return new Promise(function (resolve, reject) {
+      writerCalls[id] = { resolve: resolve, reject: reject };
+      writer.postMessage({ id: id, dirs: parts.slice(0, -1), name: parts[parts.length - 1], bytes: data });
+    });
+  }
+
+  async function writeOpfsFile(fh, path, data) {
+    if (!fh.createWritable) {
+      await writeInWorker(path, data);
+      return;
+    }
+    var writable = await fh.createWritable();
+    try {
+      await writable.write(data);
+    } finally {
+      await writable.close();
+    }
+  }
+
   async function reconcile(memPath, dirHandle) {
     var live = {};
     var names = [];
@@ -258,12 +311,15 @@
       var key = stampOf(path);
       if (stamp[path] === key || lazyFailed[path]) continue;
       var fh = await dirHandle.getFileHandle(name, { create: true });
-      var writable = await fh.createWritable();
-      try {
-        // copy out of the wasm heap before the await
-        await writable.write(new Uint8Array(fs().readFile(path)));
-      } finally {
-        await writable.close();
+      // copy out of the wasm heap before the await
+      var data = new Uint8Array(fs().readFile(path));
+      await writeOpfsFile(fh, path, data);
+      // A browser can take the write and keep nothing (WebKit's Windows port
+      // keeps an empty file). Fail the save, so it's reported, rather than let
+      // a document look saved.
+      var kept = (await fh.getFile()).size;
+      if (kept !== data.length) {
+        throw new Error("the browser kept " + kept + " of " + data.length + " bytes of " + path);
       }
       stamp[path] = key;
     }
@@ -687,6 +743,34 @@
     },
     true,
   );
+  // Other browsers report a trackpad pinch as Ctrl+wheel, which gpui cancels
+  // and the app zooms the document on. Safari sends gesture events instead,
+  // and zooms the whole page unless they're cancelled. Pass each change on as
+  // that Ctrl+wheel; the app adds up the deltas of a gesture into its zoom.
+  var gestureScale = 1;
+  function onGesture(e) {
+    e.preventDefault();
+    if (e.type === "gesturestart") gestureScale = 1;
+    if (e.type !== "gesturechange" || !e.scale) return;
+    var deltaY = (gestureScale - e.scale) * 100;
+    gestureScale = e.scale;
+    var canvas = document.getElementById("gpui-canvas");
+    if (!canvas || !deltaY) return;
+    var wheel = {
+      deltaY: deltaY,
+      deltaMode: 0,
+      ctrlKey: true,
+      clientX: e.clientX,
+      clientY: e.clientY,
+      bubbles: true,
+      cancelable: true,
+    };
+    canvas.dispatchEvent(new WheelEvent("wheel", wheel));
+  }
+  ["gesturestart", "gesturechange", "gestureend"].forEach(function (type) {
+    document.addEventListener(type, onGesture, { passive: false });
+  });
+
   // The native menu clashes with the app's context menu, which opens on the
   // right-button down.
   document.addEventListener(
