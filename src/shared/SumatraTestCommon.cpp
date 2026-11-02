@@ -844,8 +844,10 @@ TempStr PageImagesResultTemp(Str path, int pageNo, int* exitCodeOut) {
 }
 
 // Headless test for page link elements. Returns one line per link:
-// "kind=<kind> value=<value>". Used by tests/ad-hoc-md-links.ts.
-TempStr PageLinksResultTemp(Str path, int pageNo, int* exitCodeOut) {
+// "kind=<kind> value=<value>". With hit, also "hit=<kind>" for the element at
+// that page point, "hit=none" if there is none (tests/issue-6472.ts).
+// Used by tests/ad-hoc-md-links.ts.
+TempStr PageLinksResultTemp(Str path, int pageNo, int* exitCodeOut, const PointF* hit) {
     str::Builder out;
     EngineBase* engine = CreateEngineFromFile(path, nullptr, false);
     if (!engine) {
@@ -889,6 +891,10 @@ TempStr PageLinksResultTemp(Str path, int pageNo, int* exitCodeOut) {
         out.Append(fmt("kind=%s page=%d src=%g,%g,%g,%g dest=%g,%g,%g,%g value=%s\n", Str(dest->GetKind()),
                        PageDestGetPageNo(dest), src.x, src.y, src.dx, src.dy, destRc.x, destRc.y, destRc.dx, destRc.dy,
                        valueShown));
+    }
+    if (hit) {
+        IPageElement* el = engine->GetElementAtPos(pageNo, *hit);
+        out.Append(fmt("hit=%s\n", el ? Str(el->GetKind()) : StrL("none")));
     }
     if (nLinks == 0) {
         if (exitCodeOut) {

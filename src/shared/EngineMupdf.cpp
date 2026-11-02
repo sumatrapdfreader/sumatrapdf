@@ -599,10 +599,35 @@ static IPageDestination* NewPageDestinationMupdf(EngineMupdf* e, fz_link* link, 
     return dest;
 }
 
+// mupdf's fz_link doesn't hand out the annotation object it came from, so find
+// it in the page's /Annots by rect (issue #1724). Can throw.
+static pdf_obj* FindLinkAnnot(fz_context* ctx, pdf_document* pdfdoc, int pageNo, fz_rect linkRect, fz_matrix ctm) {
+    pdf_obj* pageObj = pdf_lookup_page_obj(ctx, pdfdoc, pageNo - 1);
+    pdf_obj* annots = pdf_dict_get(ctx, pageObj, PDF_NAME(Annots));
+    int n = pdf_array_len(ctx, annots);
+    for (int i = 0; i < n; i++) {
+        pdf_obj* annot = pdf_array_get(ctx, annots, i);
+        pdf_obj* subtype = pdf_dict_get(ctx, annot, PDF_NAME(Subtype));
+        if (!pdf_name_eq(ctx, subtype, PDF_NAME(Link))) {
+            continue;
+        }
+        // /Rect is in page space, fz_link::rect has the page's transform
+        // applied, so compare in the same space
+        fz_rect r = pdf_dict_get_rect(ctx, annot, PDF_NAME(Rect));
+        r = fz_transform_rect(r, ctm);
+        constexpr float kMaxDiff = 1.f;
+        bool same = fabsf(r.x0 - linkRect.x0) < kMaxDiff && fabsf(r.y0 - linkRect.y0) < kMaxDiff &&
+                    fabsf(r.x1 - linkRect.x1) < kMaxDiff && fabsf(r.y1 - linkRect.y1) < kMaxDiff;
+        if (same) {
+            return annot;
+        }
+    }
+    return nullptr;
+}
+
 // A link annotation can carry a human-readable description of where it goes in
 // its /Contents, which is what a viewer has to show for a link that has no URL
-// to show instead. mupdf's fz_link doesn't hand out the annotation object it
-// came from, so find it in the page's /Annots by rect (issue #1724).
+// to show instead.
 static Str PdfLinkContents(fz_context* ctx, pdf_document* pdfdoc, pdf_page* pdfpage, int pageNo, fz_rect linkRect) {
     if (!pdfdoc || !pdfpage) {
         return {};
@@ -612,36 +637,87 @@ static Str PdfLinkContents(fz_context* ctx, pdf_document* pdfdoc, pdf_page* pdfp
         fz_rect mediabox;
         fz_matrix ctm;
         pdf_page_transform(ctx, pdfpage, &mediabox, &ctm);
-        pdf_obj* pageObj = pdf_lookup_page_obj(ctx, pdfdoc, pageNo - 1);
-        pdf_obj* annots = pdf_dict_get(ctx, pageObj, PDF_NAME(Annots));
-        int n = pdf_array_len(ctx, annots);
-        for (int i = 0; i < n; i++) {
-            pdf_obj* annot = pdf_array_get(ctx, annots, i);
-            pdf_obj* subtype = pdf_dict_get(ctx, annot, PDF_NAME(Subtype));
-            if (!pdf_name_eq(ctx, subtype, PDF_NAME(Link))) {
-                continue;
-            }
-            // /Rect is in page space, fz_link::rect has the page's transform
-            // applied, so compare in the same space
-            fz_rect r = pdf_dict_get_rect(ctx, annot, PDF_NAME(Rect));
-            r = fz_transform_rect(r, ctm);
-            constexpr float kMaxDiff = 1.f;
-            bool same = fabsf(r.x0 - linkRect.x0) < kMaxDiff && fabsf(r.y0 - linkRect.y0) < kMaxDiff &&
-                        fabsf(r.x1 - linkRect.x1) < kMaxDiff && fabsf(r.y1 - linkRect.y1) < kMaxDiff;
-            if (!same) {
-                continue;
-            }
-            const char* s = pdf_dict_get_text_string(ctx, annot, PDF_NAME(Contents));
-            if (s && *s) {
-                res = str::Dup(Str(s));
-            }
-            break;
+        pdf_obj* annot = FindLinkAnnot(ctx, pdfdoc, pageNo, linkRect, ctm);
+        const char* s = annot ? pdf_dict_get_text_string(ctx, annot, PDF_NAME(Contents)) : nullptr;
+        if (s && *s) {
+            res = str::Dup(Str(s));
         }
     }
     fz_catch(ctx) {
         fz_report_error(ctx);
     }
     return res;
+}
+
+// A link's /QuadPoints are its clickable areas within /Rect: a link broken over
+// two lines is one annotation with a quad per line (PDF/UA-2), or a link isn't
+// rectangular at all (issue #6472). Malformed ones are ignored: /Rect it is.
+static void PdfLinkQuads(fz_context* ctx, pdf_document* pdfdoc, pdf_page* pdfpage, int pageNo, fz_rect linkRect,
+                         Vec<QuadF>& quadsOut) {
+    if (!pdfdoc || !pdfpage) {
+        return;
+    }
+    fz_try(ctx) {
+        fz_rect mediabox;
+        fz_matrix ctm;
+        pdf_page_transform(ctx, pdfpage, &mediabox, &ctm);
+        pdf_obj* annot = FindLinkAnnot(ctx, pdfdoc, pageNo, linkRect, ctm);
+        pdf_obj* qp = annot ? pdf_dict_get(ctx, annot, PDF_NAME(QuadPoints)) : nullptr;
+        int n = pdf_array_len(ctx, qp);
+        if (n > 0 && n % 8 == 0) {
+            auto pt = [&](int i) {
+                fz_point p = {pdf_array_get_real(ctx, qp, i), pdf_array_get_real(ctx, qp, i + 1)};
+                p = fz_transform_point(p, ctm);
+                return PointF(p.x, p.y);
+            };
+            for (int i = 0; i < n; i += 8) {
+                VecAppend(quadsOut, QuadF{pt(i), pt(i + 2), pt(i + 4), pt(i + 6)});
+            }
+        }
+    }
+    fz_catch(ctx) {
+        fz_report_error(ctx);
+        VecReset(quadsOut);
+    }
+}
+
+static bool PointInPolygon(PointF pt, const PointF* poly, int n) {
+    bool inside = false;
+    for (int i = 0, j = n - 1; i < n; j = i++) {
+        const PointF& a = poly[i];
+        const PointF& b = poly[j];
+        if ((a.y > pt.y) != (b.y > pt.y) && pt.x < ((b.x - a.x) * (pt.y - a.y) / (b.y - a.y)) + a.x) {
+            inside = !inside;
+        }
+    }
+    return inside;
+}
+
+// Writers list a quad's corners in Acrobat's order (UL, UR, LL, LR) or, as the
+// spec says, around it: either way counts
+static bool PointInLinkQuad(PointF pt, const QuadF& q) {
+    PointF acrobatOrder[4] = {q.ul, q.ur, q.lr, q.ll};
+    PointF polygonOrder[4] = {q.ul, q.ur, q.ll, q.lr};
+    return PointInPolygon(pt, acrobatOrder, 4) || PointInPolygon(pt, polygonOrder, 4);
+}
+
+static bool LinkContainsPoint(IPageElement* el, PointF pt) {
+    if (!el->GetRect().Contains(pt)) {
+        return false;
+    }
+    if (!el->Is(kindPageElementDest)) {
+        return true;
+    }
+    auto* link = (PageElementDestination*)el;
+    if (len(link->quads) == 0) {
+        return true;
+    }
+    for (const QuadF& q : link->quads) {
+        if (PointInLinkQuad(pt, q)) {
+            return true;
+        }
+    }
+    return false;
 }
 
 static PageElementDestination* NewLinkDestination(int srcPageNo, EngineMupdf* e, fz_link* link, fz_outline* outline) {
@@ -2025,7 +2101,7 @@ NO_INLINE static IPageElement* FzGetElementAtPos(FzPageInfo* pageInfo, PointF pt
     Vec<IPageElement*> res;
 
     for (auto* pel : pageInfo->links) {
-        if (pel->GetRect().Contains(pt)) {
+        if (LinkContainsPoint(pel, pt)) {
             VecAppend(res, pel);
         }
     }
@@ -6148,6 +6224,7 @@ static FzPageInfo* GetFzPageInfoLocked(EngineMupdf* e, Location loc, bool loadQu
             if (dest && len(dest->GetValue()) == 0) {
                 dest->value = PdfLinkContents(ctx, e->pdfdoc, pdfpage, pageNo, link->rect);
             }
+            PdfLinkQuads(ctx, e->pdfdoc, pdfpage, pageNo, link->rect, pel->quads);
             VecAppend(pageInfo->links, pel);
         }
         link = link->next;

@@ -1152,8 +1152,13 @@ static void ExecuteControlRequest(ControlRequest* req) {
                 AppendError(req, StrL("TestPageLinks expects string path, int pageNo"));
                 break;
             }
+            // optional int x, y: also report the element at that page point
+            i32 hitX = 0;
+            i32 hitY = 0;
+            bool hasHit = IntArg(req, 2, hitX) && IntArg(req, 3, hitY);
+            PointF hit{(float)hitX, (float)hitY};
             int exitCode = 0;
-            Str res = PageLinksResultTemp(path, pageNo, &exitCode);
+            Str res = PageLinksResultTemp(path, pageNo, &exitCode, hasHit ? &hit : nullptr);
             AppendTestResult(req, exitCode, res);
             break;
         }

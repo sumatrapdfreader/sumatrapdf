@@ -298,6 +298,9 @@ struct PageElementComment : IPageElement {
 struct PageElementDestination : IPageElement {
     IPageDestination* dest;
     bool destOwned = true; // false if dest is engine-owned (GetNamedDest)
+    // a PDF link's /QuadPoints, in page coordinates: when there are any, only
+    // these areas within rect are the link (a link broken over two lines)
+    Vec<QuadF> quads;
 
     PageElementDestination(IPageDestination* d, bool owned = true) {
         kind = kindPageElementDest;
