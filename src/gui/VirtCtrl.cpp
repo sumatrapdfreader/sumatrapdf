@@ -1840,6 +1840,9 @@ int VirtListBox::ViewportDy() {
 // the list reads as a rendering glitch, so the strip below the last whole row
 // is left empty and never scrolled into
 int VirtListBox::UsableDy() {
+    if (!wholeRows) {
+        return ViewportDy();
+    }
     int dy = GetItemHeight();
     int usable = (ViewportDy() / dy) * dy;
     return usable > 0 ? usable : ViewportDy();
@@ -2183,6 +2186,9 @@ Rect VirtListBox::ItemRect(int idx) {
     content.dy = UsableDy();
     int dy = GetItemHeight();
     Rect r = {content.x, content.y + (idx * dy) - scrollY, content.dx - ScrollbarDx(), dy};
+    if (!wholeRows && r.Bottom() > content.y && r.y < content.Bottom()) {
+        return r; // shown, maybe cut by an edge
+    }
     if (r.y < content.y || r.Bottom() > content.Bottom()) {
         return {}; // not (fully) visible
     }
@@ -2204,7 +2210,7 @@ void VirtListBox::Paint(VirtPaintCtx& ctx) {
         // from it by the strip the scrollbar takes on the right
         Rect items = ctx.content;
         items.dx -= ScrollbarDx();
-        // only whole rows: the strip below the last one stays background
+        // whole rows only unless !wholeRows: the strip below the last one stays background
         items.dy = UsableDy();
         int dy = GetItemHeight();
         int first = scrollY / dy;

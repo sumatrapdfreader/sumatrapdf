@@ -467,6 +467,8 @@ struct VirtListBox : VirtCtrl {
     bool multiSelect = false;
     // the dashed outline while the list has the keys
     bool showFocusRing = true;
+    // false: rows cut by the viewport's edges are shown too
+    bool wholeRows = true;
 
     VirtListBox();
     ~VirtListBox() override;
@@ -502,7 +504,7 @@ struct VirtListBox : VirtCtrl {
     Rect ItemRect(int idx);
     void EnsureVisible(int idx);
     int ViewportDy();
-    // ViewportDy() rounded down to whole rows
+    // ViewportDy() rounded down to whole rows, if wholeRows
     int UsableDy();
     int MaxScrollY();
     bool ScrollTo(int y);

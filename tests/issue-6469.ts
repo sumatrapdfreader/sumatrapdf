@@ -3,6 +3,7 @@
 // 4: Close Other Tabs (or Left / Right) from a command left the tab bar blank:
 //    the strip rebuilt its tabs and was never repainted
 // 5: Go To Home Page and New Tab were missing from the command palette
+// 6: the thumbnails sidebar drew only whole rows, leaving the strip below empty
 // 7: a click in the thumbnails sidebar drew the keyboard's dotted focus ring
 //
 // Run: bun tests/issue-6469.ts [--no-build]
@@ -102,6 +103,40 @@ function tabColors(tabs: number): number {
   return new Set(row).size;
 }
 
+// enough pages that the thumbnails don't fit; widths 600.. keep them apart
+const MANY_PAGES = 40;
+
+// a row cut by the sidebar's bottom edge is drawn, so its thumbnails have a rect
+async function checkPartialRow(): Promise<void> {
+  const pdf = tmpPath("issue-6469-many.pdf");
+  writeFileSync(pdf, makePdf(MANY_PAGES, 600, 0, 0), "latin1");
+  const { proc, client, frame } = await launchControlled(["-view", "single page", pdf]);
+  try {
+    await client.waitForRenderIdle();
+    sendCommand(frame, cmdId("CmdToggleThumbnails"));
+    const state = async () => String((await client.request(ControlCommand.TestSidebarThumbnails, []))[1] ?? "");
+    const shown = await pollUntil(state, (s) => /thumbnails=1 .*rects=1:\d+,\d+,[1-9]/.test(s), {
+      error: (s) => `issue-6469: the thumbnails didn't show: ${s}`,
+    });
+    const hwnd = +/hwnd=(\d+)/.exec(shown)![1]!;
+    const rc = getClientRect(hwnd);
+    const panelDy = rc.bottom - rc.top;
+    const rects = [...shown.matchAll(/(\d+):(-?\d+),(-?\d+),(\d+),(\d+);/g)].map((m) => ({
+      y: +m[3]!,
+      dy: +m[5]!,
+    }));
+    const cut = rects.some((r) => r.dy > 0 && r.y < panelDy && r.y + r.dy > panelDy);
+    // a row can end exactly at the edge; only then is nothing cut
+    const fits = rects.some((r) => r.dy > 0 && r.y + r.dy === panelDy);
+    if (!cut && !fits) {
+      throw new Error(`issue-6469: no thumbnail row is cut by the bottom edge (panel ${panelDy}): ${shown}`);
+    }
+  } finally {
+    client.close();
+    await killAndWait(proc);
+  }
+}
+
 export async function testit(): Promise<void> {
   if (USE_NG) {
     console.log("SKIP issue-6469: orig's toolbar and tab strip");
@@ -138,11 +173,12 @@ export async function testit(): Promise<void> {
       { error: (n) => `issue-6469: Close Other Tabs left the tab strip blank (${n} colors)` },
     );
     await checkThumbnailsFocusRing(client, frame);
-    console.log("issue-6469: OK");
   } finally {
     client.close();
     await killAndWait(proc);
   }
+  await checkPartialRow();
+  console.log("issue-6469: OK");
 }
 
 if (import.meta.main) {

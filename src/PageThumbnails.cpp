@@ -231,6 +231,9 @@ PageThumbnailsCtrl::PageThumbnailsCtrl(MainWindow* win, PlatformFont* font, int 
     this->dpi = dpi;
     // the palette's edit box keeps the keyboard focus; the sidebar takes it
     SetFlag(vwfFocusable, host == ThumbnailsHost::Sidebar);
+    // the sidebar shows a cut-off last row: more pages are below (#6469).
+    // The palette spreads whole rows over its height
+    wholeRows = host == ThumbnailsHost::Palette;
     SetColor(kColListText, ThemeWindowTextColor());
     SetColor(kColListBg, ThemeWindowControlBackgroundColor());
 
@@ -661,8 +664,11 @@ void PageThumbnailsCtrl::StartRendering() {
         return;
     }
 
-    int visibleRows = std::max(1, UsableDy() / itemDy);
-    int firstVisible = ((scrollY / itemDy) * cols) + 1;
+    // rows cut by the top and bottom edges count as visible
+    int firstRow = scrollY / itemDy;
+    int lastRow = (scrollY + std::max(1, UsableDy()) - 1) / itemDy;
+    int visibleRows = lastRow - firstRow + 1;
+    int firstVisible = (firstRow * cols) + 1;
     int perScreen = std::max(1, visibleRows * cols);
     int lastVisible = std::min(pageCount, firstVisible + perScreen - 1);
     int firstPage = std::max(1, firstVisible - (kThumbnailRenderScreens * perScreen));
