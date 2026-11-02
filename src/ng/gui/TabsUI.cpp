@@ -119,6 +119,14 @@ static bool IsPinnedTab(WindowTab* tab) {
     return tab->IsPinnedHomeTab();
 }
 
+// orig: every Home tab is as wide as its label; a "+" one keeps room for its ✕ (#6469)
+static bool IsLabelSizedTab(WindowTab* tab) {
+    return tab->IsAboutTab();
+}
+
+// the ✕ of a tab, and the room a label-sized tab keeps for it when it's hidden
+constexpr float kTabCloseDx = 20;
+
 static Color TabBgColor(WindowTab* tab, bool isSelected, bool isUnderMouse) {
     Color selected = ThemeActiveTabBackgroundColor();
     Color inactive = ThemeInactiveTabBackgroundColor();
@@ -154,7 +162,7 @@ static int TabWidth(MainWindow* win, int barDx) {
     int restDx = barDx - 5 - ui->barDy;
     int nRest = nTabs;
     for (int i = 0; i < nTabs; i++) {
-        if (!IsPinnedTab(win->GetTab(i))) {
+        if (!IsLabelSizedTab(win->GetTab(i))) {
             continue;
         }
         nRest--;
@@ -450,7 +458,9 @@ static gp::El* CloseButton(MainWindow* win, gp::Ctx* cx, int idx) {
         ->Compact()
         ->WithSize(gp::UiSize::XSmall)
         ->OnClick(gp::ListenTo(Ui(win)->view, &TabsView::OnTabClose, (intptr_t)idx))
-        ->IntoEl();
+        ->IntoEl()
+        ->W(kTabCloseDx)
+        ->Shrink0();
 }
 
 static gp::El* BuildTab(MainWindow* win, gp::Ctx* cx, int idx, int tabDx) {
@@ -470,8 +480,16 @@ static gp::El* BuildTab(MainWindow* win, gp::Ctx* cx, int idx, int tabDx) {
         textCol = IsLightColor(bgCol) ? MkRgb(0xC4, 0x1E, 0x1E) : MkRgb(0xFF, 0x6A, 0x6A);
     }
 
-    // orig: Home is as wide as its label plus margins, with no room for a close
-    bool isHome = IsPinnedTab(tab);
+    // orig: Home is as wide as its label plus margins. The pinned one has no room
+    // for a close, a "+" one keeps it
+    bool isHome = IsLabelSizedTab(tab);
+    bool isPinnedHome = IsPinnedTab(tab);
+    float padR = isSelected ? 2.f : 8.f;
+    if (isPinnedHome) {
+        padR = kTabFontSize;
+    } else if (isHome) {
+        padR = 2.f;
+    }
     gp::El* el = gp::Div(cx->a)
                      ->FlexRow()
                      ->H(gp::kFill)
@@ -479,7 +497,7 @@ static gp::El* BuildTab(MainWindow* win, gp::Ctx* cx, int idx, int tabDx) {
                      ->ItemsCenter()
                      ->Gap(2)
                      ->PadL(isHome ? kTabFontSize : 8.f)
-                     ->PadR(isHome ? kTabFontSize : (isSelected ? 2.f : 8.f))
+                     ->PadR(padR)
                      ->Bg(ToGpui(bgCol))
                      ->Role(gp::AccessibilityRole::Tab)
                      ->AriaLabel(GpuiDup(cx->a, tab->GetTabTitle()))
@@ -513,8 +531,11 @@ static gp::El* BuildTab(MainWindow* win, gp::Ctx* cx, int idx, int tabDx) {
     }
     // like Chrome: only the selected tab shows its ✕, so a click on another
     // tab always selects it and can't accidentally close it
-    if (isSelected && !isHome) {
+    if (isSelected && !isPinnedHome) {
         el->Child(CloseButton(win, cx, idx));
+    } else if (isHome && !isPinnedHome) {
+        // the label stays where it is when the tab is selected
+        el->Child(gp::Div(cx->a)->W(kTabCloseDx)->Shrink0());
     }
     return el;
 }
