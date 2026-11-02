@@ -29,6 +29,10 @@ bool WasmCopyImageFile(Str path);
 // browser cannot share files, so callers can fall back to a URL.
 bool WasmShareFile(Str path);
 
+// Opens an html file from MEMFS in a new browser tab. False if the browser
+// blocked the tab.
+bool WasmOpenHtmlFile(Str path);
+
 // Opens the browser print dialog for a PDF in the virtual file system.
 bool WasmPrintPdf(Str path);
 
@@ -43,5 +47,15 @@ void WasmNotifyExit();
 TempStr WasmQueryFileTemp();
 
 void WasmFocusCanvas();
+
+// Paths of files dropped on the page, already stored in kWasmUploadDir by
+// WasmShell.js. The strings are temp-allocated.
+void WasmTakeDroppedPathsTemp(Vec<Str>& out);
+
+// why the last save to OPFS failed (WasmShell.js), for sumatra_wasm_storage_error
+TempStr WasmStorageErrorTemp();
+
+// empty when the stored documents and settings loaded at startup
+TempStr WasmStorageLoadErrorTemp();
 
 #endif

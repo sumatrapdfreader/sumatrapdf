@@ -27,3 +27,8 @@ bool IsSafeTreeAccel(const Accel&);
 #if OS_WIN
 HACCEL* GetAcceleratorTables();
 #endif
+
+#if OS_WASM
+bool IsBrowserReservedShortcut(const KeyShortcut&);
+int WasmAcceleratorCmd(u16 vk, u32 ch, bool ctrl, bool shift, bool alt);
+#endif

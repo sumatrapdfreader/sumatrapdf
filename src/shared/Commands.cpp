@@ -487,6 +487,17 @@ Str GetCommandName(int commandId) {
 }
 
 Str GetCommandDescription(int commandId) {
+#if OS_WASM
+    // the folder is the stored documents (/uploads); same names as MenuDefs.cpp
+    switch (commandId) {
+        case CmdOpenNextFileInFolder:
+            return StrL("Open Next Document");
+        case CmdOpenPrevFileInFolder:
+            return StrL("Open Previous Document");
+        case CmdNavigateFilesInFolder:
+            return StrL("Browse Documents...");
+    }
+#endif
     int idx = FindCommandIndex(commandId);
     return idx < 0 ? Str{} : gCommands[idx].description;
 }

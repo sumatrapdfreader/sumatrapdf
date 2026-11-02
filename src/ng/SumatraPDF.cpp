@@ -4533,7 +4533,12 @@ static void LaunchBrowserWithSelection(WindowTab* tab, Str urlPattern) {
     uri = str::ReplaceNoCaseTemp(uri, StrL("${selectionposition}"), FormatSelectionPositionTemp(tab));
     uri = str::ReplaceNoCaseTemp(uri, StrL("${selection}"), encodedSelection);
     logf("LaunchBrowserWithSelection: '%s'\n", uri);
+#if OS_WASM
+    // through the host's openUrl hook, like every other link
+    LaunchBrowser(uri);
+#else
     gp::OpenUrl(ToGpui(uri));
+#endif
 }
 
 // orig's CmdSelectionHandler case: one SelectionHandlers entry from the
@@ -6355,8 +6360,16 @@ void ExecuteCmd(MainWindow* win, int cmdId) {
             if (len(path) == 0) {
                 path = GetTempFilePathTemp(StrL("slog"));
             }
+#if OS_WASM
+            // no program to show it in; the user gets the file, e.g. for a bug
+            // report, named after what it is
+            path = path::JoinTemp(GetTempDirPathTemp(), StrL("SumatraPDF-log.txt"));
+            WriteCurrentLogToFile(path);
+            WasmDownloadFile(path);
+#else
             WriteCurrentLogToFile(path);
             LaunchFileIfExists(path);
+#endif
             break;
         }
 
@@ -7408,6 +7421,11 @@ int GpuiMain(int argc, char** argv) {
     gApplyCliViewToEbookLayout = false;
 #if OS_WASM
     AddStartupHomeTab(win);
+    if (TempStr err = WasmStorageLoadErrorTemp(); len(err) > 0) {
+        TempStr msg =
+            fmt("%s (%s)", Tr("Stored documents and settings didn't load, changes in this tab won't be saved"), err);
+        ShowPlainWarningNotification(win, msg, kNotifNoTimeout);
+    }
 #endif
 #if OS_DARWIN
     AppShellOpenDocsReady();
@@ -7453,7 +7471,10 @@ int GpuiMain(int argc, char** argv) {
     if (len(gFlags->search) > 0) {
         StartSearchFromCommandLine(win, gFlags->search);
     }
+#if !OS_WASM
+    // a web app is always the latest version
     StartAsyncUpdateCheck(win, UpdateCheck::Automatic);
+#endif
 #if OS_WIN
     // home-page bottom bar if we lost default-app status for registered extensions
     if (win->IsCurrentTabAbout()) {

@@ -451,7 +451,7 @@ void GetPropsText(DocController* ctrl, str::Builder& out) {
     ReportIf(!ctrl);
 
     Str path = gPluginMode ? gPluginURL : Str(ctrl->GetFilePath());
-    AppendProp(out, Tr("File:"), len(path) == 0 ? StrL("(not available)") : path);
+    AppendProp(out, Tr("File:"), len(path) == 0 ? StrL("(not available)") : PathForDisplayTemp(path));
 
     DisplayModel* dm = ctrl->AsFixed();
     i64 fileSize = file::GetSize(path); // can be gPluginURL

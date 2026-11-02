@@ -619,3 +619,11 @@ int CurrentProcessId() {
 }
 
 #endif // OS_WIN
+
+TempStr PathForDisplayTemp(Str path) {
+#if OS_WASM
+    return path::GetBaseNameTemp(path);
+#else
+    return str::DupTemp(path);
+#endif
+}

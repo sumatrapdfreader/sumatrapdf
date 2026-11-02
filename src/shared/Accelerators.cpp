@@ -290,11 +290,60 @@ static bool AccelIsForCmd(const Accel& a, int cmdId) {
     return cmd && cmd->origId == cmdId;
 }
 
+#if OS_WASM
+// Keys a page never gets, or that people need the browser to keep (reload,
+// developer tools, the address bar). WasmShell.js asks the app about every
+// other chord the browser would take.
+bool IsBrowserReservedShortcut(const KeyShortcut& sc) {
+    if (!sc.isVirt) {
+        return false;
+    }
+    u16 k = sc.vk;
+    if (sc.alt) {
+        return k == VK_F4 || k == VK_LEFT || k == VK_RIGHT || k == VK_HOME;
+    }
+    if (!sc.ctrl && !sc.cmd) {
+        return k == VK_F5 || k == VK_F12;
+    }
+    if (k == VK_TAB || k == VK_PRIOR || k == VK_NEXT || k == VK_F4 || k == VK_F5) {
+        return true;
+    }
+    if (sc.shift) {
+        return k == 'I' || k == 'J' || k == 'C' || k == 'N' || k == 'T' || k == 'W' || k == 'R' || k == VK_DELETE;
+    }
+    return k == 'R' || k == 'L' || k == 'W' || k == 'N' || k == 'T';
+}
+
+// The command bound to a key, or 0. ch is the character the key types, for
+// shortcuts given as a character ('?', '+').
+int WasmAcceleratorCmd(u16 vk, u32 ch, bool ctrl, bool shift, bool alt) {
+    int n = 0;
+    const Accel* accels = GetAcceleratorTable(n);
+    for (int i = 0; i < n; i++) {
+        const KeyShortcut& sc = accels[i].sc;
+        if (sc.ctrl != ctrl || sc.alt != alt || sc.cmd) {
+            continue;
+        }
+        bool match = sc.isVirt ? (sc.vk == vk && sc.shift == shift) : (ch != 0 && sc.vk == ch);
+        if (match && !IsBrowserReservedShortcut(sc)) {
+            return accels[i].cmd;
+        }
+    }
+    return 0;
+}
+#endif
+
 // the key cmdId is bound to, appended to a menu string. Parsing shortcut
 // strings lives in ShortcutParse.h.
 TempStr AppendAccelKeyToMenuStringTemp(TempStr menuStr, int cmdId) {
     for (int i = 0; i < gAccelsCount; i++) {
         const Accel& a = gAccels[i];
+#if OS_WASM
+        // the menu shouldn't promise a key the browser keeps
+        if (IsBrowserReservedShortcut(a.sc)) {
+            continue;
+        }
+#endif
         if (AccelIsForCmd(a, cmdId)) {
             return AppendAccelKeyToMenuStringTemp(menuStr, a.sc);
         }
@@ -315,6 +364,11 @@ TempStr ShortcutsForCmdTemp(int cmdId, int maxCount) {
         if (!AccelIsForCmd(a, cmdId)) {
             continue;
         }
+#if OS_WASM
+        if (IsBrowserReservedShortcut(a.sc)) {
+            continue;
+        }
+#endif
         TempStr withTab = AppendAccelKeyToMenuStringTemp(StrL(""), a.sc);
         if (len(withTab) == 0 || withTab.s[0] != '\t') {
             continue;

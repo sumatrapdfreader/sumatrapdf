@@ -1230,13 +1230,103 @@ TempStr AppShellPromptForFolderTemp(MainWindow* win, Str title) {
 }
 
 #if OS_WASM
-// WasmShell.js calls this. gpui leaves Ctrl+K / Cmd+K with the browser, so
-// the accelerator never runs.
-extern "C" EMSCRIPTEN_KEEPALIVE void sumatra_wasm_command_palette() {
-    if (len(gWindows) == 0) {
+// WasmShell.js calls the sumatra_wasm_* functions below. A browser tab has
+// one canvas, so one MainWindow.
+static MainWindow* WasmMainWindow() {
+    if (len(gWindows) == 0 || !IsMainWindowValidAndNotClosing(gWindows[0])) {
+        return nullptr;
+    }
+    return gWindows[0];
+}
+
+// Ctrl+arrows, Ctrl+Backspace and the like move or delete by word in a text
+// field, and gpui leaves every Ctrl chord but A/C/X/Y/Z with the browser
+static bool IsTextEditKey(int vk) {
+    return vk == VK_LEFT || vk == VK_RIGHT || vk == VK_UP || vk == VK_DOWN || vk == VK_HOME || vk == VK_END ||
+           vk == VK_BACK || vk == VK_DELETE;
+}
+
+// gpui left the key with the browser. 1 if the app should get it instead: a
+// command is bound to it, or a focused text field uses it.
+extern "C" EMSCRIPTEN_KEEPALIVE int sumatra_wasm_key_wanted(int vk, int ch, int shift, int ctrl, int alt) {
+    MainWindow* win = WasmMainWindow();
+    if (!win || !win->gpuiWin) {
+        return 0;
+    }
+    KeyShortcut sc;
+    sc.vk = (u16)vk;
+    sc.shift = shift != 0;
+    sc.ctrl = ctrl != 0;
+    sc.alt = alt != 0;
+    sc.isVirt = true;
+    if (IsBrowserReservedShortcut(sc)) {
+        return 0;
+    }
+    gp::Window* gw = win->gpuiWin;
+    bool inTextField = gw->input && gp::FocusHandleIsFocused(gw, gw->input->focus);
+    if (inTextField && ctrl && !alt && IsTextEditKey(vk)) {
+        return 1;
+    }
+    return WasmAcceleratorCmd((u16)vk, (u32)ch, ctrl != 0, shift != 0, alt != 0) != 0 ? 1 : 0;
+}
+
+// the key the page took from the browser, delivered the way gpui delivers keys
+extern "C" EMSCRIPTEN_KEEPALIVE void sumatra_wasm_key(int vk, int shift, int ctrl, int alt, int down, int repeat) {
+    MainWindow* win = WasmMainWindow();
+    if (!win || !win->gpuiWin) {
         return;
     }
-    ExecuteCmd(gWindows[0], CmdCommandPalette);
+    if (!down) {
+        gp::WindowKeyUp(win->gpuiWin, vk, shift != 0, ctrl != 0, alt != 0);
+        return;
+    }
+    gp::KeyDownFlags flags;
+    flags.held = repeat != 0;
+    gp::WindowKeyDown(win->gpuiWin, vk, shift != 0, ctrl != 0, alt != 0, false, false, flags);
+}
+
+// files dropped on the page, stored by WasmShell.js
+extern "C" EMSCRIPTEN_KEEPALIVE void sumatra_wasm_open_dropped() {
+    Vec<Str> paths;
+    WasmTakeDroppedPathsTemp(paths);
+    MainWindow* win = WasmMainWindow();
+    if (!win || paths.len == 0) {
+        return;
+    }
+    OpenDroppedFiles(win, paths.els, paths.len);
+}
+
+// a save to OPFS failed: the document or setting is only in this tab
+extern "C" EMSCRIPTEN_KEEPALIVE void sumatra_wasm_storage_error() {
+    MainWindow* win = WasmMainWindow();
+    if (!win) {
+        return;
+    }
+    TempStr msg = fmt("%s: %s", Tr("Couldn't save to the browser's storage, changes are lost when the tab is closed"),
+                      WasmStorageErrorTemp());
+    ShowPlainWarningNotification(win, msg, kNotifNoTimeout);
+}
+
+// the page is being hidden and may be discarded: put the settings and the
+// session into MEMFS now, WasmShell.js then copies them to OPFS
+extern "C" EMSCRIPTEN_KEEPALIVE void sumatra_wasm_flush() {
+    if (!WasmMainWindow()) {
+        return;
+    }
+    SaveSettingsNow();
+}
+
+// for the page's "leave site?" prompt
+extern "C" EMSCRIPTEN_KEEPALIVE int sumatra_wasm_has_unsaved() {
+    for (MainWindow* win : gWindows) {
+        for (WindowTab* tab : win->Tabs()) {
+            DisplayModel* dm = tab->AsFixed();
+            if (dm && EngineHasUnsavedAnnotations(dm->GetEngine())) {
+                return 1;
+            }
+        }
+    }
+    return 0;
 }
 
 // the browser's file input answers on a later event-loop turn, so the document

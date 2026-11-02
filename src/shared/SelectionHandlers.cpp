@@ -35,6 +35,9 @@
 #include "TextSelection.h"
 #include "Selection.h"
 #include "SelectionHandlers.h"
+#if OS_WASM
+#include "gui/WasmBridge.h"
+#endif
 
 constexpr const char* kUserLangStr = "${userlang}";
 constexpr const char* kSelectionStr = "${selection}";
@@ -158,7 +161,12 @@ static void PostRequestFinished(PostRequest* req) {
     }
     bool ok = req->statusCode >= 200 && req->statusCode < 300;
     TempStr msg;
-    if (req->winErr != 0) {
+    if (req->winErr != 0 && OS_WASM) {
+        // a page may only POST to a server that allows its origin (CORS)
+        msg =
+            Tr("Sending selection failed: the server doesn't accept requests from web pages (CORS). Use Method = "
+               "POST-VIA-BROWSER");
+    } else if (req->winErr != 0) {
         msg = fmt(Tr("Sending selection failed (error %d)").s, (int)req->winErr);
     } else if (ok) {
         msg = fmt(Tr("Sent selection (HTTP %d)").s, (int)req->statusCode);
@@ -344,7 +352,15 @@ void SelectionHandlerPostViaBrowser(WindowTab* tab, Str url, Str bodyPattern, St
         ShowSelectionHandlerNotification(tab, Tr("Couldn't create a temporary file"), true);
         return;
     }
+#if OS_WASM
+    // a MEMFS file isn't something the browser can open by path; it gets the
+    // page as a blob in a new tab, and the form posts from there
+    if (!WasmOpenHtmlFile(path)) {
+        ShowSelectionHandlerNotification(tab, Tr("Couldn't open a browser tab, it may have been blocked"), true);
+    }
+#else
     // the file stays behind after the browser reads it; it's overwritten on the
     // next use and lives in the temp directory, which the system cleans up
     LaunchFileShell(path, Str(), StrL("open"));
+#endif
 }

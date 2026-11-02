@@ -206,9 +206,12 @@
       }
       stamp[path] = key;
     }
+    // Only what this tab loaded or wrote and has since deleted. Another tab, or
+    // the site's own pages, may have added entries this tab never saw.
     var doomed = [];
     for await (var entry of dirHandle.entries()) {
-      if (!live[entry[0]]) doomed.push(entry[0]);
+      if (live[entry[0]]) continue;
+      if (knew(memPath + "/" + entry[0])) doomed.push(entry[0]);
     }
     for (var j = 0; j < doomed.length; j++) {
       try {
@@ -227,6 +230,22 @@
     }
   }
 
+  function knew(path) {
+    if (stamp[path] !== undefined) return true;
+    var prefix = path + "/";
+    for (var key in stamp) {
+      if (key.indexOf(prefix) === 0) return true;
+    }
+    return false;
+  }
+
+  // Other tabs of this origin, and the site's pages, take the same lock
+  // (navigator.locks is per origin) before they change these directories.
+  function withLock(fn) {
+    if (!navigator.locks) return fn();
+    return navigator.locks.request("sumatra-opfs", fn);
+  }
+
   async function saveTrees() {
     for (var i = 0; i < roots.length; i++) {
       var handle = await opfsDir(roots[i], true);
@@ -234,19 +253,41 @@
     }
   }
 
+  function saveTreesLocked() {
+    return withLock(saveTrees);
+  }
+
+  // Set when OPFS didn't load. Saving then would write over the documents and
+  // settings that are still there with whatever this tab has.
+  var loadError = "";
+
+  // The first failure is reported to the app; later ones wait for a save to
+  // work again, so a broken storage doesn't put up a notification per save.
+  var reportedError = false;
+  function reportStorageError(err) {
+    if (reportedError) return;
+    reportedError = true;
+    Module.__storageError = String((err && err.message) || err);
+    var report = Module._sumatra_wasm_storage_error;
+    if (report) report();
+  }
+
   function pump() {
     if (saving || queued.length === 0) return;
     var batch = queued;
     queued = [];
     saving = true;
-    saveTrees().then(
+    saveTreesLocked().then(
       function () {
         saving = false;
+        reportedError = false;
         for (var i = 0; i < batch.length; i++) batch[i](null);
         pump();
       },
       function (err) {
         saving = false;
+        console.error("saving to OPFS failed", err);
+        reportStorageError(err);
         for (var i = 0; i < batch.length; i++) batch[i](err);
         pump();
       },
@@ -254,8 +295,94 @@
   }
 
   Module.sumatraStorageSave = function (done) {
-    queued.push(done || function () {});
+    done = done || function () {};
+    if (loadError) {
+      done("storage didn't load: " + loadError);
+      return;
+    }
+    queued.push(done);
     pump();
+  };
+
+  function saveAsync() {
+    return new Promise(function (resolve) {
+      Module.sumatraStorageSave(resolve);
+    });
+  }
+
+  function sameBytes(a, b) {
+    if (a.length !== b.length) return false;
+    for (var i = 0; i < a.length; i++) {
+      if (a[i] !== b[i]) return false;
+    }
+    return true;
+  }
+
+  // "report.pdf", 2 -> "report (2).pdf"
+  function numberedName(name, n) {
+    var dot = name.lastIndexOf(".");
+    if (dot <= 0) return name + " (" + n + ")";
+    return name.slice(0, dot) + " (" + n + ")" + name.slice(dot);
+  }
+
+  function memBytes(path) {
+    try {
+      return fs().readFile(path);
+    } catch (e) {
+      return null;
+    }
+  }
+
+  async function opfsBytes(dirHandle, name) {
+    if (!dirHandle) return null;
+    try {
+      var fh = await dirHandle.getFileHandle(name);
+      var file = await fh.getFile();
+      return new Uint8Array(await file.arrayBuffer());
+    } catch (e) {
+      return null;
+    }
+  }
+
+  // Puts an uploaded or dropped file into dirPath (MEMFS, then OPFS) and
+  // answers its path. A different file under the same name, in this tab or
+  // stored by another one, gets a numbered name; the same bytes reuse it.
+  var asked = false;
+  Module.sumatraStoreUpload = async function (dirPath, name, data) {
+    var bytes = new Uint8Array(data);
+    name = String(name);
+    name = name.substring(name.lastIndexOf("/") + 1) || "document";
+    ensureDir(dirPath);
+    var path = await withLock(async function () {
+      var dirHandle = null;
+      if (!loadError && navigator.storage && navigator.storage.getDirectory) {
+        try {
+          dirHandle = await opfsDir(dirPath, true);
+        } catch (e) {
+          dirHandle = null;
+        }
+      }
+      for (var n = 1; ; n++) {
+        var candidate = n === 1 ? name : numberedName(name, n);
+        var p = dirPath + "/" + candidate;
+        var inMem = memBytes(p);
+        var existing = inMem || (await opfsBytes(dirHandle, candidate));
+        if (existing && !sameBytes(existing, bytes)) continue;
+        if (!inMem) fs().writeFile(p, bytes);
+        return p;
+      }
+    });
+    var err = await saveAsync();
+    if (err) {
+      console.error("saving " + path + " to OPFS failed", err);
+      reportStorageError(err);
+    } else if (!asked && navigator.storage && navigator.storage.persist) {
+      // documents are the user's; ask the browser not to evict them under
+      // storage pressure. It may say no, which changes nothing.
+      asked = true;
+      navigator.storage.persist().catch(function () {});
+    }
+    return path;
   };
 
   Module.sumatraStorageLoad = function (done) {
@@ -274,7 +401,7 @@
         if (importLegacy(memPath, rows) > 0) imported.push(memPath);
       }
       if (imported.length > 0) {
-        await saveTrees();
+        await saveTreesLocked();
         for (var j = 0; j < imported.length; j++) indexedDB.deleteDatabase(imported[j]);
       }
       stamp = {};
@@ -325,10 +452,90 @@
     Module.addRunDependency("opfs-data");
     Module.sumatraStorageLoad(function (err) {
       window.__sumatraStorage = err ? "load failed: " + err : "ready";
-      if (err) console.error("loading OPFS directories failed", err);
+      if (err) {
+        loadError = String((err && err.message) || err);
+        console.error("loading OPFS directories failed", err);
+      }
       Module.removeRunDependency("opfs-data");
     });
   });
+
+  // What didn't reach OPFS yet is lost with the tab. A hidden page may be
+  // discarded without another event, and OPFS writes are async, so they
+  // can't be counted on to finish in pagehide: save when the page is hidden.
+  function flushNow() {
+    if (Module.__exited || loadError) return;
+    var flush = Module._sumatra_wasm_flush;
+    if (!flush) return;
+    flush();
+    if (Module.__persistTimer) {
+      clearTimeout(Module.__persistTimer);
+      Module.__persistTimer = 0;
+    }
+    Module.sumatraStorageSave();
+  }
+  document.addEventListener("visibilitychange", function () {
+    if (document.visibilityState === "hidden") flushNow();
+  });
+  window.addEventListener("pagehide", flushNow);
+  // annotations live in the document's bytes, which only Save writes
+  window.addEventListener("beforeunload", function (e) {
+    if (Module.__exited) return;
+    var has = Module._sumatra_wasm_has_unsaved;
+    if (!has || !has()) return;
+    e.preventDefault();
+    e.returnValue = "";
+  });
+
+  // Files dropped on the page. gpui's own drop handler (on the canvas) passes
+  // only the names, which aren't paths here, so it never sees the event.
+  function hasFiles(dt) {
+    var types = (dt && dt.types) || [];
+    for (var i = 0; i < types.length; i++) {
+      if (types[i] === "Files") return true;
+    }
+    return false;
+  }
+  document.addEventListener(
+    "dragover",
+    function (e) {
+      if (!hasFiles(e.dataTransfer)) return;
+      // without this the browser opens the file in place of the page
+      e.preventDefault();
+      e.dataTransfer.dropEffect = "copy";
+    },
+    false,
+  );
+  document.addEventListener(
+    "drop",
+    function (e) {
+      var files = e.dataTransfer && e.dataTransfer.files;
+      if (!files || files.length === 0) return;
+      e.preventDefault();
+      e.stopPropagation();
+      // gpui saw the drag enter; tell it the drag is over
+      var canvas = document.getElementById("gpui-canvas");
+      if (canvas) canvas.dispatchEvent(new DragEvent("dragleave", { clientX: e.clientX, clientY: e.clientY }));
+      var list = Array.prototype.slice.call(files);
+      (async function () {
+        var paths = [];
+        for (var i = 0; i < list.length; i++) {
+          try {
+            var bytes = await list[i].arrayBuffer();
+            paths.push(await Module.sumatraStoreUpload("/uploads", list[i].name, bytes));
+          } catch (err) {
+            console.error("reading the dropped file " + list[i].name + " failed", err);
+          }
+        }
+        if (paths.length === 0) return;
+        Module.__droppedPaths = paths;
+        var open = Module._sumatra_wasm_open_dropped;
+        if (open) open();
+        focusCanvas();
+      })();
+    },
+    true,
+  );
 
   // gpui delivers keys only to #gpui-canvas, and its mousedown handler cancels
   // the click, which is what would have focused the canvas. The control inside
@@ -354,29 +561,62 @@
     focusCanvas();
   };
 
-  // Ctrl+K focuses the address bar in Chrome and Firefox (Cmd+K on mac). gpui
-  // leaves that chord with the browser, so the page takes it and asks the app
-  // to open the command palette. The native menu is the same kind of clash
-  // with the app's context menu, which opens on the right-button down.
+  // gpui leaves every Ctrl/Cmd chord except A, C, X, Y, Z with the browser, and
+  // F1-F12 (BrowserKeepsIt in gpui). So Ctrl+F would open the browser's search
+  // and Ctrl+P print the page. For each such key the page asks the app whether
+  // it's bound (custom shortcuts included) or a focused text field uses it, and
+  // if so hands it to the app instead. The app's answer leaves out the keys
+  // people need the browser to keep (IsBrowserReservedShortcut).
   var mac =
     /Mac|iPhone|iPad|iPod/.test(navigator.platform || "") ||
     (navigator.userAgentData && navigator.userAgentData.platform === "macOS");
+  var kEditingChords = { 65: 1, 67: 1, 88: 1, 89: 1, 90: 1 };
+  function browserGetsIt(e) {
+    var vk = e.keyCode;
+    var altGraph = e.ctrlKey && e.altKey && e.key && e.key.length === 1;
+    if (altGraph) return false;
+    if (e.ctrlKey || e.metaKey) return !kEditingChords[vk] || (e.shiftKey && vk === 67);
+    return vk >= 112 && vk <= 123;
+  }
+  // on mac the app's Ctrl shortcuts are on Cmd, as gpui does for A/C/X/Y/Z
+  function chordOf(e) {
+    if (mac) return e.metaKey && !e.ctrlKey ? 1 : e.ctrlKey || e.metaKey ? -1 : 0;
+    return e.ctrlKey && !e.metaKey ? 1 : e.metaKey ? -1 : 0;
+  }
+  var taken = {};
   document.addEventListener(
     "keydown",
     function (e) {
-      if (e.altKey || e.shiftKey) return;
-      if (e.code !== "KeyK") return;
-      var chord = mac ? e.metaKey && !e.ctrlKey : e.ctrlKey && !e.metaKey;
-      if (!chord) return;
+      if (!browserGetsIt(e)) return;
+      var ctrl = chordOf(e);
+      if (ctrl < 0) return;
+      var wanted = Module._sumatra_wasm_key_wanted;
+      var send = Module._sumatra_wasm_key;
+      if (!wanted || !send) return;
+      var ch = e.key && e.key.length === 1 ? e.key.codePointAt(0) : 0;
+      if (!wanted(e.keyCode, ch, e.shiftKey ? 1 : 0, ctrl, e.altKey ? 1 : 0)) return;
       e.preventDefault();
       e.stopPropagation();
-      if (e.repeat) return;
+      taken[e.keyCode] = true;
       focusCanvas();
-      var open = Module._sumatra_wasm_command_palette;
-      if (open) open();
+      send(e.keyCode, e.shiftKey ? 1 : 0, ctrl, e.altKey ? 1 : 0, 1, e.repeat ? 1 : 0);
     },
     true,
   );
+  document.addEventListener(
+    "keyup",
+    function (e) {
+      if (!taken[e.keyCode]) return;
+      delete taken[e.keyCode];
+      e.preventDefault();
+      e.stopPropagation();
+      var send = Module._sumatra_wasm_key;
+      if (send) send(e.keyCode, e.shiftKey ? 1 : 0, chordOf(e) > 0 ? 1 : 0, e.altKey ? 1 : 0, 0, 0);
+    },
+    true,
+  );
+  // The native menu clashes with the app's context menu, which opens on the
+  // right-button down.
   document.addEventListener(
     "contextmenu",
     function (e) {

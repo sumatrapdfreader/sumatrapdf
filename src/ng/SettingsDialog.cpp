@@ -189,7 +189,8 @@ void ShowSettingsDialog(MainWindow* win) {
     }
     CloseSettingsDialog();
     gSettingsDlg.win = win;
-    gSettingsDlg.showInverseSearch = gSettings->enableTeXEnhancements && CanAccessDisk();
+    // inverse search launches an editor, which a page can't
+    gSettingsDlg.showInverseSearch = !OS_WASM && gSettings->enableTeXEnhancements && CanAccessDisk();
     gp::App* app = win->gpuiWin ? win->gpuiWin->app : nullptr;
 
     auto* ez = new gp::InputState();
@@ -349,8 +350,11 @@ gp::El* SettingsDialogBuild(MainWindow* win, gp::Ctx* cx) {
     gp::El* advanced = DlgSection(cx);
     advanced->Child(DlgSectionHeader(cx, Tr("Advanced")));
     advanced->Child(check(StrL("opt-tabs"), Tr("Use &tabs"), gSettingsDlg.useTabs, false, 2));
-    advanced->Child(check(StrL("opt-updates"), Tr("Automatically check for &updates"), gSettingsDlg.checkUpdates,
-                          !HasPermission(Perm::InternetAccess), 3));
+    // a web app is always the latest version
+    if (!OS_WASM) {
+        advanced->Child(check(StrL("opt-updates"), Tr("Automatically check for &updates"), gSettingsDlg.checkUpdates,
+                              !HasPermission(Perm::InternetAccess), 3));
+    }
     advanced->Child(check(StrL("opt-opened"), Tr("Remember &opened files"), gSettingsDlg.rememberOpened, false, 4));
     col->Child(advanced);
 

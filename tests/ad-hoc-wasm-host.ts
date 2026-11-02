@@ -39,7 +39,9 @@ const BELOW_TABS_Y = 30;
 const NEUTRAL_POINT = { x: 100, y: 300 };
 const SETTLE_MS = 1500;
 const PALETTE_INPUT = { x: 300, y: 64 };
-const OVERWRITE_YES = { x: 575, y: 437 };
+const OTHER_TAB_NAME = "from-another-tab.pdf";
+const DROPPED_NAME = "dropped-on-page.pdf";
+const CLOSED_MARKER = "SumatraPDF was closed";
 
 type Pending = { resolve: (v: any) => void; reject: (e: Error) => void };
 
@@ -269,6 +271,95 @@ async function testNoSecondWindow(cdp: Cdp): Promise<void> {
   console.log("ad-hoc-wasm-host: ok: asking for a new window doesn't crash");
 }
 
+function opfsHas(dir: string, name: string): string {
+  return `navigator.storage.getDirectory()
+    .then((r) => r.getDirectoryHandle(${JSON.stringify(dir)}))
+    .then((d) => d.getFileHandle(${JSON.stringify(name)}))
+    .then(() => true, () => false)`;
+}
+
+// A second tab of the same origin stores a document, then this tab saves.
+// The save must not delete what this tab never saw (it used to).
+async function testOtherTabKeepsItsDocument(cdp: Cdp, wsUrl: string, pageUrl: string): Promise<void> {
+  const other = await Cdp.connect(wsUrl);
+  try {
+    const { targetId } = await other.send("Target.createTarget", { url: "about:blank" });
+    const { sessionId } = await other.send("Target.attachToTarget", { targetId, flatten: true });
+    other.attach(sessionId);
+    await other.send("Runtime.enable");
+    await other.send("Page.navigate", { url: `${pageUrl}?nohost` });
+    await waitFor(other, `window.__sumatraStorage === "ready" && !!Module._sumatra_wasm_flush`, "the second tab");
+    const stored = await other.eval(`Module.sumatraStoreUpload("/uploads", ${JSON.stringify(OTHER_TAB_NAME)},
+      new TextEncoder().encode("%PDF-1.4 another tab"))`);
+    if (stored !== `/uploads/${OTHER_TAB_NAME}`) throw new Error(`ad-hoc-wasm-host: second tab stored ${stored}`);
+    await waitFor(cdp, opfsHas("uploads", OTHER_TAB_NAME), "the second tab's document in OPFS");
+    await other.send("Target.closeTarget", { targetId });
+  } finally {
+    other.close();
+  }
+  const err = await cdp.eval(`new Promise((r) => Module.sumatraStorageSave((e) => r(e ? String(e) : "")))`);
+  if (err) throw new Error(`ad-hoc-wasm-host: saving failed: ${err}`);
+  if (!(await cdp.eval(opfsHas("uploads", OTHER_TAB_NAME)))) {
+    throw new Error("ad-hoc-wasm-host: this tab's save deleted a document another tab stored");
+  }
+  console.log("ad-hoc-wasm-host: ok: a save keeps documents another tab stored");
+}
+
+// A different file under a name already stored gets a numbered name; the same
+// bytes reuse the stored file.
+async function testSameNameUpload(cdp: Cdp): Promise<void> {
+  const other = makeTextPdf("a different file, same name").toString("base64");
+  // the File menu from testNoSecondWindow can still be up
+  await clickAt(cdp, NEUTRAL_POINT.x, NEUTRAL_POINT.y);
+  await Bun.sleep(400);
+  await cdp.eval(`window.__pickName = "${PICKED_NAME}"; window.__pickB64 = "${other}"`);
+  await clickAt(cdp, OPEN_BUTTON_UNDER_TABS.x, OPEN_BUTTON_UNDER_TABS.y);
+  const renamed = PICKED_NAME.replace(".pdf", " (2).pdf");
+  await waitFor(cdp, `Module.FS.analyzePath("/uploads/${renamed}").exists`, "the renamed upload");
+  await waitFor(cdp, opfsHas("uploads", renamed), "the renamed upload in OPFS");
+  await cdp.eval(`window.__pickB64 = ""`);
+  const again = await cdp.eval(`Module.sumatraStoreUpload("/uploads", "${PICKED_NAME}",
+    Module.FS.readFile("/uploads/${PICKED_NAME}"))`);
+  if (again !== `/uploads/${PICKED_NAME}`) throw new Error(`ad-hoc-wasm-host: the same bytes went to ${again}`);
+  await Bun.sleep(SETTLE_MS);
+  console.log("ad-hoc-wasm-host: ok: a same-named upload doesn't overwrite");
+}
+
+// gpui passes only the names of dropped files; the page stores the bytes
+async function testDrop(cdp: Cdp): Promise<void> {
+  const local = tmpPath(DROPPED_NAME);
+  writeFileSync(local, makeTextPdf("dropped on the page"));
+  const at = { x: 400, y: 300 };
+  const data = { items: [], files: [local], dragOperationsMask: 1 };
+  for (const type of ["dragEnter", "dragOver", "drop"]) {
+    await cdp.send("Input.dispatchDragEvent", { type, ...at, data });
+  }
+  await waitFor(cdp, `Module.FS.analyzePath("/uploads/${DROPPED_NAME}").exists`, "the dropped file in /uploads");
+  await Bun.sleep(SETTLE_MS);
+  await saveShot(cdp, "dropped");
+  console.log("ad-hoc-wasm-host: ok: a dropped file is stored");
+}
+
+// Chords gpui leaves with the browser go to the app when bound; the ones the
+// browser has to keep stay with it
+async function testKeyRouting(cdp: Cdp): Promise<void> {
+  await cdp.eval(`window.__keysSeen = [];
+    window.addEventListener("keydown", (e) => window.__keysSeen.push(e.code + ":" + e.defaultPrevented));`);
+  await pressKey(cdp, "g", "KeyG", 71, CTRL_MODIFIER);
+  await Bun.sleep(400);
+  await saveShot(cdp, "ctrl-g");
+  await pressKey(cdp, "Escape", "Escape", ESCAPE_VK);
+  // Ctrl+L only: of the keys the browser keeps, F5 reloads the page and F12
+  // opens developer tools, which shrinks the page even when headless
+  await pressKey(cdp, "l", "KeyL", 76, CTRL_MODIFIER);
+  const seen: string[] = await cdp.eval(`window.__keysSeen`);
+  if (seen.some((k) => k.startsWith("KeyG:"))) throw new Error(`ad-hoc-wasm-host: Ctrl+G reached the browser: ${seen}`);
+  if (!seen.includes("KeyL:false")) {
+    throw new Error(`ad-hoc-wasm-host: Ctrl+L didn't stay with the browser: ${seen}`);
+  }
+  console.log("ad-hoc-wasm-host: ok: bound chords go to the app, Ctrl+L to the browser");
+}
+
 function hostScript(pdfB64: string): string {
   return `
     window.__calls = [];
@@ -276,7 +367,8 @@ function hostScript(pdfB64: string): string {
       apiVersion: 1,
       pickFile(done) {
         window.__calls.push("pickFile");
-        const bytes = Uint8Array.from(atob(${JSON.stringify(pdfB64)}), (c) => c.charCodeAt(0));
+        const b64 = window.__pickB64 || ${JSON.stringify(pdfB64)};
+        const bytes = Uint8Array.from(atob(b64), (c) => c.charCodeAt(0));
         const name = "dir/" + (window.__pickName || "${PICKED_NAME}");
         setTimeout(() => done({ name, bytes }), 0);
         return true;
@@ -343,12 +435,21 @@ export async function testit(): Promise<void> {
   try {
     const portFile = join(profile, "DevToolsActivePort");
     const deadline = Date.now() + STEP_TIMEOUT_MS;
-    while (!existsSync(portFile) || readFileSync(portFile, "utf8").split("\n").length < 2) {
+    // the browser may still hold the file open (EBUSY on Windows)
+    const portLines = () => {
+      try {
+        return readFileSync(portFile, "utf8").split("\n").length;
+      } catch {
+        return 0;
+      }
+    };
+    while (portLines() < 2) {
       if (Date.now() > deadline) throw new Error("ad-hoc-wasm-host: the browser didn't start");
       await Bun.sleep(100);
     }
     const [port, wsPath] = readFileSync(portFile, "utf8").split("\n");
-    cdp = await Cdp.connect(`ws://127.0.0.1:${port}${wsPath}`);
+    const wsUrl = `ws://127.0.0.1:${port}${wsPath}`;
+    cdp = await Cdp.connect(wsUrl);
     const { targetId } = await cdp.send("Target.createTarget", { url: "about:blank" });
     const { sessionId } = await cdp.send("Target.attachToTarget", { targetId, flatten: true });
     cdp.attach(sessionId);
@@ -369,6 +470,10 @@ export async function testit(): Promise<void> {
     // also pickFile: the bytes land in /uploads, without the directory part
     await testHomeTab(cdp);
     await testNoSecondWindow(cdp);
+    await testOtherTabKeepsItsDocument(cdp, wsUrl, `http://localhost:${server.port}/`);
+    await testSameNameUpload(cdp);
+    await testDrop(cdp);
+    await testKeyRouting(cdp);
 
     // download: Save As, then accepting the name the dialog offers
     await waitFor(cdp, `Module.FS.analyzePath("/uploads/${PICKED_NAME}").exists`, "the document");
@@ -377,7 +482,8 @@ export async function testit(): Promise<void> {
     await Bun.sleep(600);
     await pressKey(cdp, "Enter", "Enter", ENTER_VK);
     await Bun.sleep(400);
-    await clickAt(cdp, OVERWRITE_YES.x, OVERWRITE_YES.y);
+    // the name is taken: Enter again is Yes
+    await pressKey(cdp, "Enter", "Enter", ENTER_VK);
     await waitFor(
       cdp,
       `window.__calls.some((c) => c.startsWith("download ") && c.endsWith(" true"))`,
@@ -428,6 +534,12 @@ export async function testit(): Promise<void> {
     await cdp.send("DOM.setFileInputFiles", { files: [local], backendNodeId: chooser.params.backendNodeId });
     await waitFor(cdp, `Module.FS.analyzePath("/uploads/${LOCAL_NAME}").exists`, "the chosen file in /uploads");
     console.log("ad-hoc-wasm-host: ok: the file input works without a host");
+
+    // exit without a host: nothing navigates away, so the page says so
+    await Bun.sleep(SETTLE_MS);
+    await runFromPalette(cdp, EXIT_COMMAND);
+    await waitFor(cdp, `document.body.innerText.includes(${JSON.stringify(CLOSED_MARKER)})`, "the closed page");
+    console.log("ad-hoc-wasm-host: ok: exit without a host shows the closed page");
   } catch (e) {
     console.log("calls:", await cdp?.eval("JSON.stringify(window.__calls)").catch(() => "?"));
     const shot = await cdp?.send("Page.captureScreenshot").catch(() => null);

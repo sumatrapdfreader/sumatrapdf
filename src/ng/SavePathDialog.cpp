@@ -214,7 +214,13 @@ void ShowSavePathDialog(SavePathArgs* args) {
     gSave.args = args;
     TempStr dir = path::GetDirTemp(args->initialPath);
     if (len(dir) == 0 || !dir::Exists(dir)) {
+#if OS_WASM
+        // the settings directory isn't where documents go
+        dir = str::DupTemp(Str((char*)kWasmUploadDir));
+        dir::CreateAll(dir);
+#else
         dir = GetAppDataDirTemp();
+#endif
     }
     str::ReplaceWithCopy(&gSave.dir, dir);
     ReadDir(gSave.dir);
@@ -321,17 +327,8 @@ void SavePathView::OnName(SavePathView*, gp::Ctx* cx, const gp::InputEvent* ev) 
     gp::Notify(cx);
 }
 
-gp::El* SavePathDialogBuild(MainWindow* win, gp::Ctx* cx) {
-    if (!gSave.visible || !gSave.args || gSave.args->win != win) {
-        return nullptr;
-    }
-    if (!gSavePathView.IsValid()) {
-        gSavePathView = gp::EntityNewState<SavePathView>(cx->app);
-    }
-    const gp::Theme& th = gp::ThemeNow(cx->app);
-    gSave.nameEdit->onChange = gp::ListenTo(gSavePathView, &SavePathView::OnName);
-
-    gp::El* body = gp::Div(cx->a)->FlexCol()->Gap(6)->W(gp::kFill);
+// the directory line, the directories and matching files in it, and paging
+static void AddDirBrowser(gp::Ctx* cx, const gp::Theme& th, gp::El* body) {
     gp::El* dirRow = gp::Div(cx->a)->FlexRow()->ItemsCenter()->Gap(6)->W(gp::kFill);
     dirRow->Child(gpc::Button::New(cx, GStrL("save-up"))
                       ->Label(GStrL(".."))
@@ -383,6 +380,24 @@ gp::El* SavePathDialogBuild(MainWindow* win, gp::Ctx* cx) {
                          ->OnClick(gp::ListenTo(gSavePathView, &SavePathView::OnPage, (intptr_t)1))
                          ->IntoEl());
         body->Child(pager);
+    }
+}
+
+gp::El* SavePathDialogBuild(MainWindow* win, gp::Ctx* cx) {
+    if (!gSave.visible || !gSave.args || gSave.args->win != win) {
+        return nullptr;
+    }
+    if (!gSavePathView.IsValid()) {
+        gSavePathView = gp::EntityNewState<SavePathView>(cx->app);
+    }
+    const gp::Theme& th = gp::ThemeNow(cx->app);
+    gSave.nameEdit->onChange = gp::ListenTo(gSavePathView, &SavePathView::OnName);
+
+    gp::El* body = gp::Div(cx->a)->FlexCol()->Gap(6)->W(gp::kFill);
+    // ng: in a browser tab the directories are the page's own (/uploads) and
+    // the file goes to the user as a download, so only the name is asked for
+    if (!OS_WASM) {
+        AddDirBrowser(cx, th, body);
     }
     body->Child(
         gpc::Input::New(cx, GStrL("save-name"), gSave.nameEdit)->WithSize(gp::UiSize::Small)->W(gp::kFill)->IntoEl());

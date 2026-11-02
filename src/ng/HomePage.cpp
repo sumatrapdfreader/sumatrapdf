@@ -626,7 +626,7 @@ void HomeView::OnEntryHover(HomeView* self, gp::Ctx* cx, const gp::HoverEvent* e
     }
     // Same text as the keyboard selection's: path + size (size looked up only
     // when shown)
-    TempStr tip = str::DupTemp(fs->filePath);
+    TempStr tip = PathForDisplayTemp(fs->filePath);
     i64 size = file::GetSize(fs->filePath);
     if (size >= 0) {
         tip = fmt("%s  %s", tip, str::FormatSizeShortTemp(size, nullptr));
@@ -1463,7 +1463,9 @@ static gp::El* HomeListRowEl(MainWindow* win, gp::Ctx* cx, int idx, bool isSelec
     row->Child(
         FilterHighlightText(cx, path::GetBaseNameTemp(fs->filePath), filterWords, ToGpui(colText), kHomeTextFontPx)
             ->Shrink0());
-    row->Child(gp::TextEl(cx->a, GpuiDup(cx->a, path::GetDirTemp(fs->filePath)))
+    // the wasm build's directories are the page's own (/uploads)
+    TempStr dir = OS_WASM ? TempStr{} : path::GetDirTemp(fs->filePath);
+    row->Child(gp::TextEl(cx->a, GpuiDup(cx->a, dir))
                    ->Font(12)
                    ->Fg(ToGpui(colDim))
                    ->Flex1()

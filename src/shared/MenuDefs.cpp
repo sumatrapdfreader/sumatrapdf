@@ -61,6 +61,21 @@ MenuDef menuDefFileOpen[] = {
         StrL(kMenuSeparator),
         0,
     },
+#if OS_WASM
+    // the folder is the stored documents (/uploads)
+    {
+        TrN("&Next Document"),
+        CmdOpenNextFileInFolder,
+    },
+    {
+        TrN("&Previous Document"),
+        CmdOpenPrevFileInFolder,
+    },
+    {
+        TrN("&Browse Documents..."),
+        CmdNavigateFilesInFolder,
+    },
+#else
     {
         TrN("&Next File In Folder"),
         CmdOpenNextFileInFolder,
@@ -73,6 +88,7 @@ MenuDef menuDefFileOpen[] = {
         TrN("&Browse Files In Folder..."),
         CmdNavigateFilesInFolder,
     },
+#endif
     {
         {},
         0,

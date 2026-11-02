@@ -27,6 +27,7 @@
 #include "TableOfContents.h"
 #include "FileHistory.h"
 #include "Translations.h"
+#include "AppTools.h"
 #include "Tabs.h"
 #include "TabsCommon.h"
 
@@ -41,9 +42,9 @@ TempStr MakeTabTooltipTemp(Str path, bool dirty) {
     TempStr tip;
     i64 size = file::GetSize(path);
     if (size >= 0) {
-        tip = fmt("%s  %s", path, str::FormatSizeShortTemp(size, nullptr));
+        tip = fmt("%s  %s", PathForDisplayTemp(path), str::FormatSizeShortTemp(size, nullptr));
     } else {
-        tip = path;
+        tip = PathForDisplayTemp(path);
     }
     if (dirty) {
         tip = str::JoinTemp(tip, StrL(" "), Tr("(unsaved annotations)"));

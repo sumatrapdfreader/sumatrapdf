@@ -2625,6 +2625,33 @@ function metadataStorage(name: string): string {
   return exportedMetadata.includes(name) ? "" : "static ";
 }
 
+// Top-level settings with no meaning in a browser tab: they launch programs,
+// print through the OS, position windows or watch files on disk. Hidden from
+// the advanced settings dialog in the wasm build only, and kept in the file,
+// which can be shared with a desktop install. A new desktop-only setting goes
+// here (docs/wasm-browser-plan.md, 3.3).
+const desktopOnlySettings = new Set([
+  "EnableTeXEnhancements",
+  "InverseSearchCmdLine",
+  "NoCaj2pdfConverterDownload",
+  "FilePicker",
+  "PrinterUI",
+  "ReloadModifiedDocuments",
+  "TemporaryFileShowNotification",
+  "TemporaryFileDestDir",
+  "TemporaryFileAutoMove",
+  "ReuseInstance",
+  "ExplorerQuickLook",
+  "ClaudeCode",
+  "GrokBuild",
+  "CodexBuild",
+  "AntiGravity",
+  "ExternalViewers",
+  "ForwardSearch",
+  "PrinterDefaults",
+  "CustomScreenDPI",
+]);
+
 function buildMetaData(struc: Field, built: Record<string, number>): string {
   const lines: string[] = [];
   const names: string[] = [];
@@ -2664,6 +2691,8 @@ function buildMetaData(struc: Field, built: Record<string, number>): string {
     }
     if (field.Internal || internalRest) {
       dataLine.push("true");
+    } else if (struc.StructName === "Settings" && desktopOnlySettings.has(field.Name)) {
+      dataLine.push("OS_WASM != 0");
     }
     if (field.EnumValues) {
       if (field.Type !== Str) {

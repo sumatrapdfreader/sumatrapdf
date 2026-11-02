@@ -27,35 +27,21 @@ EM_JS(void, WasmJsPickFile, (const char* dir, int dirLen, char* out, int outCap)
         _sumatra_wasm_file_picked();
         if (Module.sumatraFocusCanvas) Module.sumatraFocusCanvas();
     };
+    // WasmShell.js picks the name (no silent overwrite) and saves to OPFS
     var store = function(name, bytes) {
-        var path = dirPath + "/" + name;
-        try {
-            FS.writeFile(path, new Uint8Array(bytes));
-        } catch (e) {
-            console.error("writing " + path + " failed", e);
-            done(null);
-            return;
-        }
-        var save = Module.sumatraStorageSave;
-        if (!save) {
-            console.error("saving " + path + " to OPFS failed", "storage is not initialized");
-            done(path);
-            return;
-        }
-        save(function(err) {
-            if (err) {
-                console.error("saving " + path + " to OPFS failed", err);
-            }
-            done(path);
-        });
+        Module.sumatraStoreUpload(dirPath, name, bytes)
+            .then(
+                done, function(e) {
+                    console.error("storing " + name + " failed", e);
+                    done(null);
+                });
     };
     var fromHost = function(file) {
         if (!file || !file.name || !file.bytes) {
             done(null);
             return;
         }
-        var name = String(file.name);
-        store(name.substring(name.lastIndexOf("/") + 1), file.bytes);
+        store(String(file.name), file.bytes);
     };
     if (Module.sumatraHostCall && Module.sumatraHostCall("pickFile", fromHost)) {
         return;
@@ -297,6 +283,36 @@ bool WasmPrintPdf(Str path) {
     return WasmJsPrintPdf(path.s, path.len) != 0;
 }
 
+// NOLINTNEXTLINE
+EM_JS(int, WasmJsOpenHtml, (const char* path, int pathLen), {
+    var filePath = UTF8ToString(path, pathLen);
+    var bytes;
+    try {
+        bytes = FS.readFile(filePath);
+    } catch (e) {
+        console.error("reading " + filePath + " failed", e);
+        return 0;
+    }
+    var url = URL.createObjectURL(new Blob([bytes], {
+        type:
+            "text/html"
+    }));
+    // no "noopener": with it window.open answers null, so a blocked tab
+    // couldn't be told apart
+    var w = window.open(url, "_blank");
+    setTimeout(function() { URL.revokeObjectURL(url); }, 60000);
+    if (!w) return 0;
+    w.opener = null;
+    return 1;
+});
+
+bool WasmOpenHtmlFile(Str path) {
+    if (!file::Exists(path)) {
+        return false;
+    }
+    return WasmJsOpenHtml(path.s, path.len) != 0;
+}
+
 void WasmPersistSettings() {
     Str dir((char*)kWasmSettingsDir);
     WasmJsPersist(dir.s, dir.len);
@@ -304,9 +320,26 @@ void WasmPersistSettings() {
 
 // NOLINTNEXTLINE
 EM_JS(void, WasmJsExit, (), {
+    // the app is gone: no more flushes, and no prompt when the host navigates
+    Module.__exited = true;
+    // without a host nothing navigates away, and the canvas would stay up,
+    // frozen on the last frame
+    var showClosed = function() {
+        var canvas = document.getElementById("gpui-canvas");
+        if (canvas) canvas.style.display = "none";
+        var div = document.createElement("div");
+        div.style.cssText = "font: 16px system-ui, sans-serif; padding: 48px; text-align: center";
+        div.textContent = "SumatraPDF was closed. ";
+        var a = document.createElement("a");
+        a.href = location.href;
+        a.textContent = "Open it again";
+        div.appendChild(a);
+        document.body.appendChild(div);
+    };
     var notify = function(err) {
         if (err) console.error("saving to OPFS before exit failed", err);
-        if (Module.sumatraHostCall) Module.sumatraHostCall("exit", {saved : !err});
+        var handled = Module.sumatraHostCall && Module.sumatraHostCall("exit", {saved : !err});
+        if (!handled) showClosed();
     };
     if (Module.sumatraStorageSave) {
         Module.sumatraStorageSave(notify);
@@ -340,6 +373,45 @@ EM_JS(void, WasmJsFocusCanvas, (), {
 // #gpui-canvas is the only element whose keys gpui receives.
 void WasmFocusCanvas() {
     WasmJsFocusCanvas();
+}
+
+// NOLINTNEXTLINE
+EM_JS(int, WasmJsTakeDropped, (char* out, int outCap), {
+    var paths = Module.__droppedPaths;
+    if (!paths || paths.length == 0) return 0;
+    stringToUTF8(paths.shift(), out, outCap);
+    return 1;
+});
+
+void WasmTakeDroppedPathsTemp(Vec<Str>& out) {
+    char buf[1024];
+    while (WasmJsTakeDropped(buf, (int)dimof(buf))) {
+        VecAppend(out, (Str)str::DupTemp(Str(buf)));
+    }
+}
+
+// NOLINTNEXTLINE
+EM_JS(void, WasmJsStorageError, (char* out, int outCap), { stringToUTF8(Module.__storageError || "", out, outCap); });
+
+TempStr WasmStorageErrorTemp() {
+    char buf[512];
+    WasmJsStorageError(buf, (int)dimof(buf));
+    return str::DupTemp(Str(buf));
+}
+
+// NOLINTNEXTLINE
+EM_JS(void, WasmJsStorageLoadError, (char* out, int outCap), {
+    var s = window.__sumatraStorage || "";
+    stringToUTF8(s == "ready" ? "" : s, out, outCap);
+});
+
+TempStr WasmStorageLoadErrorTemp() {
+    char buf[512];
+    WasmJsStorageLoadError(buf, (int)dimof(buf));
+    if (buf[0] == 0) {
+        return {};
+    }
+    return str::DupTemp(Str(buf));
 }
 
 TempStr WasmQueryFileTemp() {

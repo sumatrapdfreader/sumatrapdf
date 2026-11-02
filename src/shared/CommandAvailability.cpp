@@ -93,6 +93,52 @@ static const i32 gNoDocWhitelist[] = {
     0,
 };
 
+#if OS_WASM
+// No meaning in a browser tab: hidden from menus and the palette rather than
+// showing "not supported" (docs/wasm-browser-plan.md).
+static const i32 gHiddenOnWasm[] = {
+    CmdRunPDFScript,
+    // a browser tab has one canvas, so one window
+    CmdNewWindow,
+    CmdDuplicateInNewWindow,
+    // the web app is always the latest version
+    CmdCheckUpdate,
+    CmdInstallPrereleaseUpdate,
+    // this is Sumatra Online already
+    CmdSumatraOnline,
+    // a page can't register a global hotkey, start programs or list printers
+    CmdSetScreenshotHotkey,
+    CmdSetInverseSearch,
+    CmdInvokeInverseSearch,
+    CmdToggleInverseSearch,
+    CmdExec,
+    CmdViewWithExternalViewer,
+    CmdListPrinters,
+    CmdFixDefaultApp,
+    CmdCreateShortcutToFile,
+    CmdOpenSettingsFile,
+    CmdDebugShowCrashMiniDumps,
+    CmdConfigureRestrictedUse,
+    // there's one file picker here, the browser's
+    CmdToggleFilePicker,
+    CmdOpenFileWithSumatraFilePicker,
+    CmdOpenFileWithOSFilePicker,
+    // the path is internal to the page (/uploads)
+    CmdShowInFolder,
+    CmdCopyFilePath,
+    0,
+};
+
+static bool IsHiddenOnWasm(int cmdId) {
+    for (int i = 0; gHiddenOnWasm[i]; i++) {
+        if (gHiddenOnWasm[i] == cmdId) {
+            return true;
+        }
+    }
+    return false;
+}
+#endif
+
 uintptr_t disableIfNoSelection[] = {
     CmdCopySelection,
     CmdZoomToSelection,
@@ -390,9 +436,9 @@ CommandVisibility GetCommandVisibility(int cmdId, const AppCommandCtx& ctx, Comm
     }
 #endif
 #if OS_WASM
-    if (cmdId == CmdRunPDFScript) return CommandVisibility::Hide;
-    // a browser tab has one canvas, so one window
-    if (cmdId == CmdNewWindow || cmdId == CmdDuplicateInNewWindow) return CommandVisibility::Hide;
+    if (IsHiddenOnWasm(cmdId)) {
+        return CommandVisibility::Hide;
+    }
 #endif
     if (cmdId <= CmdFirst) {
         return CommandVisibility::Hide;

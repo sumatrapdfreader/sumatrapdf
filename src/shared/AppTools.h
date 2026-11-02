@@ -33,6 +33,9 @@ void DeleteAppTools();
 
 void SetAppDataDir(Str dir);
 TempStr GetAppDataDirTemp();
+// a document's path as the user should see it. In the wasm build paths are
+// the page's own (/uploads/x.pdf), so only the name is shown.
+TempStr PathForDisplayTemp(Str path);
 TempStr GetPathInAppDataDirTemp(Str fileName);
 TempStr GetTempDirPathTemp();
 int CurrentProcessId();
