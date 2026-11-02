@@ -115,6 +115,8 @@ int OriginalCommandId(int cmdId) {
 
 TempStr ToolbarTipTemp(int cmdId, Str tip, bool translate) {
     TempStr s = translate ? trans::GetTranslation(tip) : TempStr(tip);
+    // some tips are menu strings: "Rotate &Left" shows as "Rotate Left" (#6469)
+    s = ParseMenuAccelTextTemp(s).display;
     TempStr accelStr = AppendAccelKeyToMenuStringTemp({}, cmdId);
     if (accelStr) {
         Str accel = accelStr.len > 1 ? Str(accelStr.s + 1, accelStr.len - 1) : accelStr;

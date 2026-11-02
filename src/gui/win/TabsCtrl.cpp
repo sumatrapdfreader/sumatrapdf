@@ -1240,6 +1240,11 @@ UINT_PTR TabsCtrl::RemoveTab(int idx) {
         selectedIdx = -1;
     }
     LayoutTabs();
+    // the rebuilt tabs only show once painted; a close not from a tab's X (a
+    // command, the context menu) has nothing else repaint the strip (#6469)
+    if (TabCount() > 0) {
+        ScheduleRepaint();
+    }
     TabsCtrlUpdateAfterChangingTabsCount(this);
     return userData;
 }

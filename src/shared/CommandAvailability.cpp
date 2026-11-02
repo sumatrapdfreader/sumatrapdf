@@ -386,8 +386,6 @@ static const i32 gBlacklistCommandsFromPalette[] = {
     CmdSetDocumentColorsFollowTheme,
     CmdFileHistory,
     CmdFavorite,
-    CmdGoToHomePage,
-    CmdNewTab,
     0,
 };
 

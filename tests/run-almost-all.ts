@@ -213,6 +213,7 @@ import { testit as annotColorDropdown } from "./annot-color-dropdown.ts";
 import { testit as inkThickness } from "./ink-thickness.ts";
 import { testit as issue6388 } from "./issue-6388.ts";
 import { testit as issue6385 } from "./issue-6385.ts";
+import { testit as issue6469 } from "./issue-6469.ts";
 import { testit as issue6137Contents } from "./issue-6137-contents.ts";
 import { testit as issue6093 } from "./issue-6093.ts";
 import { testit as toolbarHoverDropdown } from "./toolbar-hover-dropdown.ts";
@@ -868,6 +869,7 @@ export const tests: NamedTest[] = [
   ["issue-5850", issue5850],
   ["issue-6028", issue6028],
   ["issue-6228", issue6228],
+  ["issue-6469", issue6469],
   ["issue-6232", issue6232],
   ["issue-6232-filter", issue6232Filter],
   ["issue-6232-refresh", issue6232Refresh],
