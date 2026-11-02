@@ -16,6 +16,7 @@ struct Pixmap;
 struct RenderedBitmap;
 
 bool ImageDecodedPixmapWouldBeHuge(Str);
+int FzOrientationToExif(u8 fzOrientation);
 
 Pixmap* PixmapFromDataFz(Str);
 

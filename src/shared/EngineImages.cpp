@@ -545,6 +545,8 @@ static void CapFzImageDecodeSize(const fz_image* img, int* w, int* h) {
     }
 }
 
+// MuPDF decodes the image as stored and leaves its orientation to the caller:
+// a JPEG with EXIF orientation 6 came out sideways in its upright page (#6470)
 static Pixmap* FzImageToPixmap(fz_context* ctx, fz_image* img) {
     if (FzImageTooBigToFullyDecode(img)) {
         return nullptr;
@@ -563,7 +565,7 @@ static Pixmap* FzImageToPixmap(fz_context* ctx, fz_image* img) {
     }
     Pixmap* res = FzPixmapToPixmap(ctx, pixmap);
     fz_drop_pixmap(ctx, pixmap);
-    return res;
+    return PixmapApplyExifOrientation(res, FzOrientationToExif(img->orientation));
 }
 
 static inline int ClampInt(int v, int minVal, int maxVal) {

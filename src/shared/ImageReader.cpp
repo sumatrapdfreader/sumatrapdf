@@ -375,10 +375,19 @@ void fz_drop_context_windows(fz_context* ctx) {
 
 static Pixmap* PixmapFromFzPixmap(fz_context* ctx, fz_pixmap* pix);
 
+// fz_image::orientation, in MuPDF's numbering, as the EXIF Orientation value
+int FzOrientationToExif(u8 fzOrientation) {
+    static const u8 kExif[9] = {0, 1, 8, 3, 6, 2, 5, 4, 7};
+    return fzOrientation < dimof(kExif) ? kExif[fzOrientation] : 0;
+}
+
+// MuPDF decodes the image as stored and leaves its EXIF orientation to the
+// caller: a JPEG with orientation 6 showed sideways (#6470)
 static Pixmap* PixmapFromImageData(fz_context* ctx, const u8* data, size_t n) {
     fz_buffer* buf = nullptr;
     fz_image* img = nullptr;
     fz_pixmap* pix = nullptr;
+    int exifOrientation = 0;
 
     fz_var(buf);
     fz_var(img);
@@ -387,6 +396,7 @@ static Pixmap* PixmapFromImageData(fz_context* ctx, const u8* data, size_t n) {
     fz_try(ctx) {
         buf = fz_new_buffer_from_shared_data(ctx, data, n);
         img = fz_new_image_from_buffer(ctx, buf);
+        exifOrientation = FzOrientationToExif(img->orientation);
         pix = fz_get_pixmap_from_image(ctx, img, nullptr, nullptr, nullptr, nullptr);
     }
     fz_always(ctx) {
@@ -399,7 +409,8 @@ static Pixmap* PixmapFromImageData(fz_context* ctx, const u8* data, size_t n) {
         return nullptr;
     }
 
-    return pix ? PixmapFromFzPixmap(ctx, pix) : nullptr;
+    Pixmap* res = pix ? PixmapFromFzPixmap(ctx, pix) : nullptr;
+    return PixmapApplyExifOrientation(res, exifOrientation);
 }
 
 // Standalone JPEG → packed C,M,Y,K (stride = w*4). 0 = no ink (PDF polarity).
