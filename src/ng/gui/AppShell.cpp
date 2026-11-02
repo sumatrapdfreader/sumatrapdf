@@ -1296,6 +1296,16 @@ extern "C" EMSCRIPTEN_KEEPALIVE void sumatra_wasm_open_dropped() {
     OpenDroppedFiles(win, paths.els, paths.len);
 }
 
+// the browser left fullscreen by itself, e.g. on Esc, which the page never
+// sees. A no-op when the app left it, as it exits its mode first.
+extern "C" EMSCRIPTEN_KEEPALIVE void sumatra_wasm_fullscreen_left() {
+    for (MainWindow* win : gWindows) {
+        if (win->isFullScreen || win->InPresentation()) {
+            ExitFullScreen(win);
+        }
+    }
+}
+
 // a save to OPFS failed: the document or setting is only in this tab
 extern "C" EMSCRIPTEN_KEEPALIVE void sumatra_wasm_storage_error() {
     MainWindow* win = WasmMainWindow();

@@ -771,6 +771,18 @@
     document.addEventListener(type, onGesture, { passive: false });
   });
 
+  // The browser leaves fullscreen on its own (Esc, or its "exit full screen"
+  // UI) and doesn't pass that Esc to the page, or refuses to enter it (e.g.
+  // the request came too long after the key press): tell the app, so it
+  // leaves its fullscreen or presentation mode too.
+  function fullscreenLeft() {
+    if (document.fullscreenElement) return;
+    var left = Module._sumatra_wasm_fullscreen_left;
+    if (left) left();
+  }
+  document.addEventListener("fullscreenchange", fullscreenLeft);
+  document.addEventListener("fullscreenerror", fullscreenLeft);
+
   // The native menu clashes with the app's context menu, which opens on the
   // right-button down.
   document.addEventListener(

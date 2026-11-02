@@ -7645,4 +7645,13 @@ extern "C" EMSCRIPTEN_KEEPALIVE int sumatra_test_zoom() {
     }
     return (int)(win->ctrl->GetZoomVirtual(true) + 0.5f);
 }
+
+// 1 in fullscreen, 2 in presentation, 0 otherwise
+extern "C" EMSCRIPTEN_KEEPALIVE int sumatra_test_fullscreen() {
+    MainWindow* win = len(gWindows) > 0 ? gWindows[0] : nullptr;
+    if (!TestHooksEnabled() || !win) {
+        return 0;
+    }
+    return win->InPresentation() ? 2 : (win->isFullScreen ? 1 : 0);
+}
 #endif
