@@ -27,7 +27,22 @@ const TABS_READY_MS = 10_000;
 const CROWDED_DOCS = 14;
 const DDE_COPYDATA_ID = 0x44646557;
 
-type Bar = { tabs: VirtCtrlInfo[]; plus: VirtCtrlInfo | undefined; bar: VirtCtrlInfo | undefined };
+const CLOSE_KIND = "virtCtrlCloseButton";
+
+type Bar = {
+  tabs: VirtCtrlInfo[];
+  plus: VirtCtrlInfo | undefined;
+  bar: VirtCtrlInfo | undefined;
+  closes: VirtCtrlInfo[];
+};
+
+// a shown ✕ whose center is in the tab
+function closeButtonIn(b: Bar, tab: VirtCtrlInfo): boolean {
+  return b.closes.some((c) => {
+    const x = c.rect.x + Math.floor(c.rect.dx / 2);
+    return x >= tab.rect.x && x < tab.rect.x + tab.rect.dx;
+  });
+}
 
 function check(cond: boolean, what: string): void {
   if (!cond) {
@@ -41,6 +56,7 @@ async function readBar(client: ControlClient): Promise<Bar> {
     tabs: all.filter((c) => c.kind === TAB_KIND).sort((a, b) => a.rect.x - b.rect.x),
     plus: all.find((c) => c.kind === PLUS_KIND),
     bar: all.find((c) => c.kind === BAR_KIND),
+    closes: all.filter((c) => c.kind === CLOSE_KIND),
   };
 }
 
@@ -178,12 +194,18 @@ async function testLayoutAndPlus(pdf: string, appdata: string): Promise<void> {
     check(!!b.plus, "no + button");
     check(b.plus!.rect.x === doc!.rect.x + doc!.rect.dx, "+ should follow the last tab");
 
-    // a real click adds a selected, regular-width Home tab at the end
+    // a real click adds a selected Home tab at the end, sized to its label like
+    // the pinned one but with room for its ✕, which it shows (#6469)
     clickPlus(b.plus!);
     b = await waitForTabs(client, 3);
     const extra = b.tabs[2]!;
     check(!(await onDocument(client)), "the new Home tab should be selected");
-    check(extra.rect.dx === doc!.rect.dx, `new Home is ${extra.rect.dx}, document ${doc!.rect.dx}`);
+    check(
+      extra.rect.dx > home!.rect.dx && extra.rect.dx < doc!.rect.dx,
+      `new Home is ${extra.rect.dx}, pinned Home ${home!.rect.dx}, document ${doc!.rect.dx}`,
+    );
+    check(closeButtonIn(b, extra), "the new Home tab should show its ✕");
+    check(!closeButtonIn(b, home!), "the pinned Home tab has no ✕");
     check(b.plus!.rect.x === extra.rect.x + extra.rect.dx, "+ should follow the new tab");
 
     // the pinned Home neither moves nor lets anything take its place

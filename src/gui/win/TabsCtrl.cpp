@@ -143,6 +143,25 @@ Size TabCtrl::GetIdealSize() {
     return idealSize;
 }
 
+// Close glyph grows with tab height (taller UI fonts / tab bar) so it
+// stays usable on touch; floor 16 DIP, cap 28 DIP (issue #5220).
+static int CloseGlyphDx(int tabDy) {
+    int closeDy = limitValue(tabDy - DpiScale(6), DpiScale(16), DpiScale(28));
+    return std::min(closeDy, tabDy);
+}
+
+// Padding between circle and tab edge; grow with the button.
+static int CloseGlyphPad(int closeDx) {
+    return std::max(DpiScale(6), closeDx / 2);
+}
+
+// what the ✕ takes from a tab sized to its label: the glyph, its padding and
+// the gap before the label
+static int CloseRoomDx(int tabDy) {
+    int closeDx = CloseGlyphDx(tabDy);
+    return closeDx + CloseGlyphPad(closeDx) + DpiScale(4);
+}
+
 // the ✕ is inset from the tab's edge, but its hit area is the whole gutter
 // (~40 DIP, full height) so it stays easy to hit
 void TabCtrl::SetBounds(Rect r) {
@@ -151,19 +170,9 @@ void TabCtrl::SetBounds(Rect r) {
     int dx = r.dx;
     int dy = r.dy;
 
-    // Close glyph grows with tab height (taller UI fonts / tab bar) so it
-    // stays usable on touch; floor 16 DIP, cap 28 DIP (issue #5220).
-    int closeMin = DpiScale(16);
-    int closeMax = DpiScale(28);
-    int closeDy = dy - DpiScale(6);
-    closeDy = limitValue(closeDy, closeMin, closeMax);
-    if (closeDy > dy) {
-        closeDy = dy;
-    }
-    int closeDx = closeDy;
-
-    // Padding between circle and tab edge; grow with the button.
-    int closePad = std::max(DpiScale(6), closeDx / 2);
+    int closeDx = CloseGlyphDx(dy);
+    int closeDy = closeDx;
+    int closePad = CloseGlyphPad(closeDx);
     // Keep the glyph inside the tab when tabs are very narrow.
     if (closeDx + closePad > dx && dx > 0) {
         closeDx = std::min(closeDx, std::max(DpiScale(12), dx - 2));
@@ -198,9 +207,11 @@ void TabCtrl::SetBounds(Rect r) {
 }
 
 // like Chrome: only the selected tab shows (and hit-tests) its ✕, so a click
-// on a non-selected tab always selects it and can't accidentally close it
+// on a non-selected tab always selects it and can't accidentally close it.
+// The pinned Home tab has no room for one
 bool TabCtrl::CloseVisible() {
-    return ti->canClose && !ti->fitToLabel && IsSelected();
+    bool hasRoom = !ti->fitToLabel || !ti->isPinned;
+    return ti->canClose && hasRoom && IsSelected();
 }
 
 void TabCtrl::Paint(VirtPaintCtx& ctx) {
@@ -265,8 +276,16 @@ void TabCtrl::Paint(VirtPaintCtx& ctx) {
 
     u32 fmt = gfxTextEllipsis | gfxTextVCenter | (isRtl ? gfxTextRight : gfxTextLeft);
     if (ti->fitToLabel) {
-        // the margins are the tab's own: see FitToLabelDx()
+        // the margins are the tab's own: see FitToLabelDx(). The label keeps its
+        // place whether the ✕ shows or not
         rFile = r;
+        if (!ti->isPinned) {
+            int room = CloseRoomDx(r.dy);
+            rFile.dx = std::max(0, rFile.dx - room);
+            if (isRtl) {
+                rFile.x += room;
+            }
+        }
         fmt = gfxTextEllipsis | gfxTextVCenter | gfxTextCenter;
     }
     gfx->DrawText(ti->text, rFile, fmt, font, textColor);
@@ -494,15 +513,20 @@ void TabsCtrl::RebuildTabCtrls() {
     AddChild(plusBtn);
 }
 
-// label plus 1rem (the font's size in pixels) on each side
-static int FitToLabelDx(TabsCtrl* tabs, TabInfo* ti) {
+// label plus 1rem (the font's size in pixels) on each side, and room for the
+// ✕ unless it's the pinned Home tab (#6469)
+static int FitToLabelDx(TabsCtrl* tabs, TabInfo* ti, int tabDy) {
     PlatformFont* font = tabs->GetFont();
     if (!font) {
         return tabs->tabDefaultDx;
     }
     constexpr float kPxPerPt = 96.f / 72.f;
     int rem = DpiScale((int)(font->GetSize() * kPxPerPt + 0.5f));
-    return PlatformFontMeasureText(font, ti->text).dx + (2 * rem);
+    int dx = PlatformFontMeasureText(font, ti->text).dx + (2 * rem);
+    if (!ti->isPinned) {
+        dx += CloseRoomDx(tabDy);
+    }
+    return dx;
 }
 
 // Calculates the size of a tab and lays the children out.
@@ -530,7 +554,7 @@ void TabsCtrl::LayoutTabs() {
             nRest++;
             continue;
         }
-        int fitDx = std::min(FitToLabelDx(this, tabs[i]), availDx / nTabs);
+        int fitDx = std::min(FitToLabelDx(this, tabs[i], dy), availDx / nTabs);
         tabCtrls[i]->idealSize = {fitDx, dy};
         restDx -= fitDx;
     }

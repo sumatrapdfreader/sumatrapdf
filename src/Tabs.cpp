@@ -62,6 +62,11 @@ static void UpdateTabTitle(WindowTab* tab) {
         dirty = EngineHasUnsavedAnnotations(tab->AsFixed()->GetEngine());
     }
     TempStr tooltip = MakeTabTooltipTemp(tab->filePath, dirty);
+    // a "+" Home tab a document was opened in is sized like the other documents
+    TabInfo* ti = win->tabsCtrl->GetTab(idx);
+    if (ti) {
+        ti->fitToLabel = tab->IsAboutTab();
+    }
     win->tabsCtrl->SetTextAndTooltip(idx, title, tooltip);
     UpdateTabPageText(tab);
 }
@@ -594,7 +599,8 @@ static WindowTab* InsertHomeTab(MainWindow* win, int idx, HomeTabKind kind, bool
     newTab->tooltip = {};
     newTab->isPinned = isPinned;
     newTab->canClose = true;
-    newTab->fitToLabel = isPinned;
+    // every Home tab is sized to its label; the extra ones keep room for a ✕ (#6469)
+    newTab->fitToLabel = true;
     newTab->userData = (UINT_PTR)homeTab;
     int insertedIdx = win->tabsCtrl->InsertTab(idx, newTab, !deferUpdate);
     ReportIf(insertedIdx != idx);
