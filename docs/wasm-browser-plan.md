@@ -11,7 +11,27 @@ Base: `ed228d347`. Findings are marked by how they were checked:
 - **Code**: read in the code, not run.
 - **Suspected**: not confirmed.
 
-Already done: a second window no longer crashes (`ed228d347`). Fonts download on
+## Status
+
+Done: phases 1-4, 5.1, 5.3, 7.1 and 7.2, checked by `tests/ad-hoc-wasm-host.ts`
+and `tests/ad-hoc-wasm-commands.ts`. Where the work differs from the plan:
+
+- 2.2: the page asks the app about every key gpui leaves with the browser
+  (`sumatra_wasm_key_wanted`); the browser's keys are one list in C++
+  (`IsBrowserReservedShortcut`), which also keeps them out of menus and help.
+- 3.3: desktop-only settings are a list in `cmd/ng-gen-settings.ts`, not a tag
+  on each field.
+- 4.5: POST-VIA-BROWSER works: the form opens in a new tab from a blob URL.
+  `Customize-search-translation-services.md` isn't in this repo, so the CORS
+  limit of plain POST is only in the error message.
+- 5.1: a document's bytes are read when it's first opened (a lazy
+  `node.contents`), so opening stays synchronous. They aren't dropped when its
+  last tab closes.
+- 7.2: there's no notification when a font download fails.
+
+Open: 5.2 (decision deferred), phase 6.
+
+Already done before this plan: a second window no longer crashes (`ed228d347`). Fonts download on
 any origin thanks to a CORS rule on the R2 bucket `files`. That rule exists only
 in the Cloudflare dashboard, so step 7.2 adds a check for it.
 

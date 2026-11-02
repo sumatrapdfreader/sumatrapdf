@@ -7426,6 +7426,7 @@ int GpuiMain(int argc, char** argv) {
             fmt("%s (%s)", Tr("Stored documents and settings didn't load, changes in this tab won't be saved"), err);
         ShowPlainWarningNotification(win, msg, kNotifNoTimeout);
     }
+    PrefetchCommonFonts();
 #endif
 #if OS_DARWIN
     AppShellOpenDocsReady();
@@ -7535,3 +7536,83 @@ int GpuiMain(int argc, char** argv) {
     DestroyPerfLog();
     return res;
 }
+
+#if OS_WASM
+// Hooks for tests/ad-hoc-wasm-commands.ts, which runs every command in a real
+// browser. Inert unless the page was opened with ?test-hooks.
+
+#include <emscripten/emscripten.h>
+
+// NOLINTNEXTLINE
+EM_JS(int, WasmJsTestHooksEnabled, (), { return new URLSearchParams(location.search).has("test-hooks") ? 1 : 0; });
+
+// NOLINTNEXTLINE
+EM_JS(void, WasmJsTestSetVisibility, (const char* s, int n), { window.__testVisibility = UTF8ToString(s, n); });
+
+static bool TestHooksEnabled() {
+    static int enabled = -1;
+    if (enabled < 0) {
+        enabled = WasmJsTestHooksEnabled();
+    }
+    return enabled == 1;
+}
+
+static Str VisibilityName(CommandVisibility v) {
+    if (v == CommandVisibility::Hide) {
+        return StrL("hide");
+    }
+    return v == CommandVisibility::Disable ? StrL("disable") : StrL("show");
+}
+
+// id, name, menu and palette visibility of every command, one per line, in
+// window.__testVisibility
+extern "C" EMSCRIPTEN_KEEPALIVE void sumatra_test_visibility() {
+    MainWindow* win = len(gWindows) > 0 ? gWindows[0] : nullptr;
+    if (!TestHooksEnabled() || !win) {
+        return;
+    }
+    AppCommandCtx ctx = NewAppCommandCtx(win, Point{});
+    str::Builder out;
+    for (int i = 0; i < gCommandsCount; i++) {
+        int id = gCommands[i].id;
+        Str menu = VisibilityName(GetCommandVisibility(id, ctx, CommandSurface::Menu));
+        Str palette = VisibilityName(GetCommandVisibility(id, ctx, CommandSurface::Palette));
+        out.Append(fmt("%d\t%s\t%s\t%s\n", id, GetCommandName(id), menu, palette));
+    }
+    Str s = ToStr(out);
+    WasmJsTestSetVisibility(s.s, len(s));
+}
+
+static void TestRunCmd(void* data) {
+    int id = (int)(intptr_t)data;
+    MainWindow* win = len(gWindows) > 0 ? gWindows[0] : nullptr;
+    if (win) {
+        ExecuteCmd(win, id);
+    }
+}
+
+// on the main loop, the way a menu click runs it
+extern "C" EMSCRIPTEN_KEEPALIVE void sumatra_test_run(int id) {
+    if (!TestHooksEnabled()) {
+        return;
+    }
+    uitask::Post(MkFunc0(TestRunCmd, (void*)(intptr_t)id), "TestRunCmd");
+}
+
+static int gTestPong = 0;
+static void TestPing(void*) {
+    gTestPong++;
+}
+
+// sumatra_test_pong() grows after sumatra_test_ping() once the main loop runs
+extern "C" EMSCRIPTEN_KEEPALIVE void sumatra_test_ping() {
+    if (!TestHooksEnabled()) {
+        return;
+    }
+    uitask::Post(MkFunc0(TestPing, (void*)nullptr), "TestPing");
+}
+
+extern "C" EMSCRIPTEN_KEEPALIVE int sumatra_test_pong() {
+    return gTestPong;
+}
+#endif

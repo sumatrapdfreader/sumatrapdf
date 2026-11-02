@@ -1,7 +1,8 @@
 // ng: spliced into ext/gpui/web/shell.html by cmd/helper/compile.ts, ahead of
-// the module script. It loads /settings and /uploads from OPFS into MEMFS and
-// holds main() back (addRunDependency) until that finishes, so GlobalPrefs
-// sees the settings saved on an earlier visit. C++ keeps using synchronous
+// the module script. It loads /settings from OPFS into MEMFS, lists /uploads
+// (documents are read when first opened, see addLazyFile) and holds main()
+// back (addRunDependency) until that finishes, so GlobalPrefs sees the
+// settings saved on an earlier visit. C++ keeps using synchronous
 // MEMFS calls; writes are copied back to OPFS. The sync OPFS API only exists
 // in a worker, and this page runs on the main thread.
 //
@@ -151,7 +152,64 @@
     return n;
   }
 
-  async function loadDir(dirHandle, memPath) {
+  // Documents aren't read at startup, only listed: a file's bytes are read the
+  // first time something reads it (MEMFS gets them through node.contents), so
+  // startup time and memory don't grow with the library. A synchronous XHR of a
+  // blob URL is the one synchronous way to read a File on the main thread.
+  // path -> true for documents whose bytes were read, for tests
+  var lazyLoaded = (Module.sumatraLazyLoaded = {});
+  // path -> true when reading failed: the empty contents must not be saved
+  // over the stored file
+  var lazyFailed = {};
+
+  function readFileSync(path, file) {
+    var url = URL.createObjectURL(file);
+    try {
+      var xhr = new XMLHttpRequest();
+      xhr.open("GET", url, false);
+      xhr.overrideMimeType("text/plain; charset=x-user-defined");
+      xhr.send(null);
+      var text = xhr.responseText;
+      if (text.length !== file.size) throw new Error("read " + text.length + " of " + file.size + " bytes");
+      var bytes = new Uint8Array(text.length);
+      for (var i = 0; i < text.length; i++) bytes[i] = text.charCodeAt(i) & 255;
+      return bytes;
+    } finally {
+      URL.revokeObjectURL(url);
+    }
+  }
+
+  function addLazyFile(path, file) {
+    fs().writeFile(path, new Uint8Array(0));
+    var node = fs().lookupPath(path).node;
+    var data = null;
+    Object.defineProperty(node, "contents", {
+      configurable: true,
+      enumerable: true,
+      get: function () {
+        if (data !== null) return data;
+        try {
+          data = readFileSync(path, file);
+          lazyLoaded[path] = true;
+        } catch (e) {
+          // e.g. another tab replaced the file since this one listed it
+          console.error("reading " + path + " from OPFS failed", e);
+          lazyFailed[path] = true;
+          data = new Uint8Array(0);
+          node.usedBytes = 0;
+        }
+        return data;
+      },
+      set: function (v) {
+        data = v;
+        delete lazyFailed[path];
+      },
+    });
+    node.usedBytes = file.size;
+    node.atime = node.mtime = node.ctime = file.lastModified;
+  }
+
+  async function loadDir(dirHandle, memPath, lazy) {
     var n = 0;
     ensureDir(memPath);
     for await (var entry of dirHandle.entries()) {
@@ -159,13 +217,16 @@
       var handle = entry[1];
       var path = memPath + "/" + name;
       if (handle.kind === "directory") {
-        n += await loadDir(handle, path);
-      } else {
-        var file = await handle.getFile();
-        var bytes = new Uint8Array(await file.arrayBuffer());
-        fs().writeFile(path, bytes);
-        n++;
+        n += await loadDir(handle, path, lazy);
+        continue;
       }
+      var file = await handle.getFile();
+      if (lazy) {
+        addLazyFile(path, file);
+      } else {
+        fs().writeFile(path, new Uint8Array(await file.arrayBuffer()));
+      }
+      n++;
     }
     return n;
   }
@@ -195,7 +256,7 @@
         continue;
       }
       var key = stampOf(path);
-      if (stamp[path] === key) continue;
+      if (stamp[path] === key || lazyFailed[path]) continue;
       var fh = await dirHandle.getFileHandle(name, { create: true });
       var writable = await fh.createWritable();
       try {
@@ -325,6 +386,14 @@
     return name.slice(0, dot) + " (" + n + ")" + name.slice(dot);
   }
 
+  function memSize(path) {
+    try {
+      return fs().stat(path).size;
+    } catch (e) {
+      return -1;
+    }
+  }
+
   function memBytes(path) {
     try {
       return fs().readFile(path);
@@ -365,7 +434,10 @@
       for (var n = 1; ; n++) {
         var candidate = n === 1 ? name : numberedName(name, n);
         var p = dirPath + "/" + candidate;
-        var inMem = memBytes(p);
+        var size = memSize(p);
+        // a stored document's bytes are read only when the sizes match
+        if (size >= 0 && size !== bytes.length) continue;
+        var inMem = size >= 0 ? memBytes(p) : null;
         var existing = inMem || (await opfsBytes(dirHandle, candidate));
         if (existing && !sameBytes(existing, bytes)) continue;
         if (!inMem) fs().writeFile(p, bytes);
@@ -395,7 +467,7 @@
       for (var i = 0; i < roots.length; i++) {
         var memPath = roots[i];
         var handle = await opfsDir(memPath, true);
-        var n = await loadDir(handle, memPath);
+        var n = await loadDir(handle, memPath, memPath === "/uploads");
         if (n > 0) continue;
         var rows = await readLegacyDb(memPath);
         if (importLegacy(memPath, rows) > 0) imported.push(memPath);

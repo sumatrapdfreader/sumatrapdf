@@ -145,6 +145,40 @@ EM_JS(int, WasmDownloadFont, (const char* url, int urlLen, const char* path, int
         return 0;
     }
 });
+
+// "url\tpath\n" lines. fetch() is async, so this doesn't block the tab the way
+// WasmDownloadFont does; a font mupdf asks for before it arrives is still
+// downloaded then.
+EM_JS(void, WasmJsPrefetchFonts, (const char* list, int listLen), {
+    var lines = UTF8ToString(list, listLen).split("\n").filter(function(l) { return l; });
+    var have = function(p) {
+        try {
+            FS.stat(p);
+            return true;
+        } catch (e) {
+            return false;
+        }
+    };
+    var one = function(line) {
+        var parts = line.split("\t");
+        var url = parts[0];
+        var path = parts[1];
+        return fetch(url)
+            .then(function(r) { return r.ok ? r.arrayBuffer() : null; })
+            .then(function(b) {
+                if (!b || have(path)) return false;
+                FS.writeFile(path, new Uint8Array(b));
+                return true;
+            })
+            .catch(function(e) {
+                console.warn("prefetching font failed", url, e);
+                return false;
+            });
+    };
+    Promise.all(lines.map(one)).then(function(wrote) {
+        if (wrote.indexOf(true) >= 0 && Module.sumatraStorageSave) Module.sumatraStorageSave();
+    });
+});
 #endif
 
 // %LOCALAPPDATA%\SumatraPDF\fonts, or the XDG / macOS equivalent. Not the
@@ -218,6 +252,43 @@ static bool DownloadFont(Str url, Str dest) {
     return true;
 #endif
 }
+
+#if OS_WASM
+// The base 14 PDF fonts, which documents most often use without embedding them.
+// Fetched in the background on startup so opening such a document doesn't wait
+// on a synchronous download.
+void PrefetchCommonFonts() {
+    static const char* names[] = {
+        "NimbusSans-Regular.cff",   "NimbusSans-Bold.cff",   "NimbusSans-Italic.cff",   "NimbusSans-BoldItalic.cff",
+        "NimbusRoman-Regular.cff",  "NimbusRoman-Bold.cff",  "NimbusRoman-Italic.cff",  "NimbusRoman-BoldItalic.cff",
+        "NimbusMonoPS-Regular.cff", "NimbusMonoPS-Bold.cff", "NimbusMonoPS-Italic.cff", "NimbusMonoPS-BoldItalic.cff",
+        "StandardSymbolsPS.cff",    "Dingbats.cff",
+    };
+    TempStr dir = FontCacheDirTemp();
+    dir::CreateAll(dir);
+    str::Builder list;
+    for (const char* name : names) {
+        const char* url = sumatra_lookup_font_url(name);
+        const char* slash = url ? strrchr(url, '/') : nullptr;
+        if (!slash || !slash[1]) {
+            continue;
+        }
+        TempStr path = path::JoinTemp(dir, Str(slash + 1));
+        if (file::Exists(path)) {
+            continue;
+        }
+        list.Append(Str((char*)url));
+        list.AppendChar('\t');
+        list.Append(path);
+        list.AppendChar('\n');
+    }
+    Str s = ToStr(list);
+    if (len(s) == 0) {
+        return;
+    }
+    WasmJsPrefetchFonts(s.s, len(s));
+}
+#endif
 
 // Embedded archive first, then the cache file named by the URL, then a download
 // into that cache. The bytes are kept for the process: mupdf holds the pointer.

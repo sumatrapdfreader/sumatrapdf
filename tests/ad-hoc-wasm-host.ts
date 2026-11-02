@@ -360,6 +360,19 @@ async function testKeyRouting(cdp: Cdp): Promise<void> {
   console.log("ad-hoc-wasm-host: ok: bound chords go to the app, Ctrl+L to the browser");
 }
 
+// Stored documents are listed at startup and read when opened: the restored
+// session's document is read, the one another tab stored isn't, and it still
+// has its size and its bytes when something reads it.
+async function testLazyDocuments(cdp: Cdp): Promise<void> {
+  const loaded: string[] = await cdp.eval(`Object.keys(Module.sumatraLazyLoaded)`);
+  const other = `/uploads/${OTHER_TAB_NAME}`;
+  if (loaded.length === 0) throw new Error("ad-hoc-wasm-host: the restored session read no document");
+  if (loaded.includes(other)) throw new Error(`ad-hoc-wasm-host: startup read a document nobody opened: ${loaded}`);
+  const text = await cdp.eval(`new TextDecoder().decode(Module.FS.readFile("${other}"))`);
+  if (text !== "%PDF-1.4 another tab") throw new Error(`ad-hoc-wasm-host: lazy read gave ${JSON.stringify(text)}`);
+  console.log(`ad-hoc-wasm-host: ok: startup read only ${loaded.join(", ")}`);
+}
+
 function hostScript(pdfB64: string): string {
   return `
     window.__calls = [];
@@ -520,6 +533,7 @@ export async function testit(): Promise<void> {
       "the page without a host",
     );
     await Bun.sleep(1500);
+    await testLazyDocuments(cdp);
     cdp.events.length = 0;
     // the session brought the document back, so the tab bar pushed the toolbar down
     await clickAt(cdp, OPEN_BUTTON_UNDER_TABS.x, OPEN_BUTTON_UNDER_TABS.y);
