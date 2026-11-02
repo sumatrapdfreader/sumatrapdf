@@ -471,7 +471,18 @@ void PageThumbnailsCtrl::OpenSelectedPage() {
     onPageOpened.Call();
 }
 
+// The dotted ring is for the keyboard, as in win32: a click that gave the
+// sidebar the focus hides it, the keys bring it back (issue #6469)
+void PageThumbnailsCtrl::ShowFocusRing(bool show) {
+    if (host != ThumbnailsHost::Sidebar || showFocusRing == show) {
+        return;
+    }
+    showFocusRing = show;
+    Invalidate();
+}
+
 void PageThumbnailsCtrl::OnThumbMouseDown(VirtMouseEvent* ev) {
+    ShowFocusRing(false);
     int pageNo = PageAtPoint(ev->pt);
     if (pageNo > 0 && host == ThumbnailsHost::Palette) {
         SelectPage(pageNo);
@@ -595,6 +606,7 @@ void PageThumbnailsCtrl::OnThumbKeyDown(VirtKeyEvent* ev) {
     if (ev->vkey != VK_UP && ev->vkey != VK_DOWN) {
         return;
     }
+    ShowFocusRing(true);
     int pageNo = PageForKey(this, ev->vkey);
     SelectPage(pageNo);
     OpenSelectedPage();

@@ -411,6 +411,10 @@ static LRESULT CALLBACK WndProcSidebarPanel(HWND hwnd, UINT msg, WPARAM wp, LPAR
     bool thumbs = PanelHostsThumbnails(p);
     if ((msg == WM_SETFOCUS || msg == WM_KILLFOCUS) && p->root && thumbs) {
         p->root->SetFocus(msg == WM_SETFOCUS ? win->pageThumbs : nullptr);
+        // a click that brought the focus hides the ring again in its mouse down
+        if (msg == WM_SETFOCUS) {
+            win->pageThumbs->ShowFocusRing(true);
+        }
     }
     bool signatures = p->hosted && win->signaturesCtrl && p->hosted == SignaturesView(win);
     if ((msg == WM_SETFOCUS || msg == WM_KILLFOCUS) && p->root && signatures) {

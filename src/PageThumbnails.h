@@ -46,6 +46,7 @@ struct PageThumbnailsCtrl : VirtListBox {
     void OnThumbMouseWheel(VirtMouseEvent*);
     void OnThumbDoubleClick(VirtMouseEvent*);
     void OnThumbKeyDown(VirtKeyEvent*);
+    void ShowFocusRing(bool show);
     void Activate();
     void Deactivate();
     void HandleKey(int vkey);
