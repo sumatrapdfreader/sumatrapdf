@@ -26,6 +26,17 @@ struct TextSearch : public TextSelection {
 
     ProgressUpdateCb progressCb;
 
+    // For running in slices (see kUiSliceMs). With sliceMs set, a search that
+    // is still looking sliceMs after sliceStart (GetTickCount64()) stops before
+    // its next page and sets paused; Resume() carries on from there. Each
+    // slice resets sliceStart. sliceMs 0 (the default) searches to the end.
+    int sliceMs = 0;
+    u64 sliceStart = 0;
+    bool paused = false;
+    void StartSlice(int ms);
+    bool SliceUsedUp() const;
+    Vec<TextSel>* Resume();
+
     // Lightweight container for page and offset within the page to use as return value of MatchEnd
     struct PageAndOffset {
         int page;
@@ -78,6 +89,8 @@ struct TextSearch : public TextSelection {
 
     // page pageText is for (0: none)
     int pageTextPageNo = 0;
+    // the page a paused search resumes at
+    int resumePage = 0;
     // last ByteIdxOf() lookup: codepoint index and its byte offset in pageText
     mutable int byteIdxCp = 0;
     mutable int byteIdxByte = 0;

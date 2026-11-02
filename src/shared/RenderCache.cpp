@@ -182,7 +182,7 @@ struct RenderThreadData {
 // running between pages. Slot 0 of curReqs is the pump's, as a thread's would
 // be. `active` is cleared when the cache goes away, so a pump still in the
 // queue finds nothing to touch.
-constexpr int kPumpSliceMs = 20;
+constexpr int kPumpSliceMs = kUiSliceMs;
 
 struct RenderCachePump {
     AtomicInt refs = 1;

@@ -263,6 +263,7 @@ struct ThumbRenderWorker {
     Vec<int> pages;
     Vec<Location> locs;
     int rotation = 0;
+    int next = 0; // pages[next] is rendered next
 };
 
 static void FinishThumbRender(ThumbRenderTask* task) {
@@ -299,27 +300,31 @@ static void FinishThumbWorker(ThumbnailCache* cache) {
     StartThumbnailRendering();
 }
 
+// Without threads (see kUiSliceMs) this runs in slices, each posting the next
 static void RenderThumbsInBackground(ThumbRenderWorker* worker) {
     ThumbnailCache* cache = worker->cache;
+    u64 sliceStart = GetTickCount64();
     if (worker->sourceEngine) {
         cache->renderEngine = worker->sourceEngine->Clone();
         worker->sourceEngine->Release();
         worker->sourceEngine = nullptr;
     }
     EngineBase* engine = cache->renderEngine;
-    if (engine) {
-        int n = len(worker->pages);
-        for (int i = 0; i < n; i++) {
-            if (AtomicIntGet(&cache->cancelRendering) != 0) {
-                break;
-            }
-            Location loc = i < len(worker->locs) ? worker->locs[i] : kInvalidLocation;
-            auto* task = new ThumbRenderTask;
-            task->cache = cache;
-            task->pageNo = worker->pages[i];
-            task->bitmap = RenderPageThumbnail(engine, worker->pages[i], loc, worker->rotation);
-            uitask::Post(MkFunc0<ThumbRenderTask>(FinishThumbRender, task));
+    while (engine && worker->next < len(worker->pages)) {
+        if (AtomicIntGet(&cache->cancelRendering) != 0) {
+            break;
         }
+        if (!kHasThreads && GetTickCount64() - sliceStart >= (u64)kUiSliceMs) {
+            uitask::Post(MkFunc0<ThumbRenderWorker>(RenderThumbsInBackground, worker), "CommandPaletteThumbnailRender");
+            return;
+        }
+        int i = worker->next++;
+        Location loc = i < len(worker->locs) ? worker->locs[i] : kInvalidLocation;
+        auto* task = new ThumbRenderTask;
+        task->cache = cache;
+        task->pageNo = worker->pages[i];
+        task->bitmap = RenderPageThumbnail(engine, worker->pages[i], loc, worker->rotation);
+        uitask::Post(MkFunc0<ThumbRenderTask>(FinishThumbRender, task));
     }
     uitask::Post(MkFunc0<ThumbnailCache>(FinishThumbWorker, cache));
     delete worker;
@@ -417,7 +422,12 @@ static void StartThumbnailRendering() {
     }
     AtomicIntSet(&cache->cancelRendering, 0);
     cache->workerRunning = true;
-    RunAsync(MkFunc0<ThumbRenderWorker>(RenderThumbsInBackground, worker), StrL("CommandPaletteThumbnailRender"));
+    auto fn = MkFunc0<ThumbRenderWorker>(RenderThumbsInBackground, worker);
+    if (kHasThreads) {
+        RunAsync(fn, StrL("CommandPaletteThumbnailRender"));
+    } else {
+        uitask::Post(fn, "CommandPaletteThumbnailRender");
+    }
 }
 
 static void SetThumbnailMode(bool enabled) {

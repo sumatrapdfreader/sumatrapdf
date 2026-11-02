@@ -21,6 +21,10 @@ void AtomicBoolSet(AtomicBool* p, bool v) {
     __atomic_store_n(p, v ? 1 : 0, __ATOMIC_SEQ_CST);
 }
 
+bool AtomicBoolSwap(AtomicBool* p, bool v) {
+    return __atomic_exchange_n(p, v ? 1 : 0, __ATOMIC_SEQ_CST) != 0;
+}
+
 int AtomicIntGet(AtomicInt* p) {
     return __atomic_load_n(p, __ATOMIC_SEQ_CST);
 }

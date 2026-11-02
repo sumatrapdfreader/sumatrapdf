@@ -7615,4 +7615,25 @@ extern "C" EMSCRIPTEN_KEEPALIVE void sumatra_test_ping() {
 extern "C" EMSCRIPTEN_KEEPALIVE int sumatra_test_pong() {
     return gTestPong;
 }
+
+// -1 while a find or a match count runs, then the number of matches counted
+// (-2 when there's no count)
+extern "C" EMSCRIPTEN_KEEPALIVE int sumatra_test_find() {
+    MainWindow* win = len(gWindows) > 0 ? gWindows[0] : nullptr;
+    if (!TestHooksEnabled() || !win) {
+        return -2;
+    }
+    if (win->findThread || win->findCountThread) {
+        return -1;
+    }
+    return win->findCountValid ? len(win->findCountPositions) : -2;
+}
+
+extern "C" EMSCRIPTEN_KEEPALIVE int sumatra_test_page() {
+    MainWindow* win = len(gWindows) > 0 ? gWindows[0] : nullptr;
+    if (!TestHooksEnabled() || !win || !win->ctrl) {
+        return 0;
+    }
+    return win->ctrl->CurrentPageNo();
+}
 #endif

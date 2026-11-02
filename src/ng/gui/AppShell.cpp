@@ -3172,6 +3172,23 @@ void ShellView::OnTick(ShellView* self, gp::Ctx* cx, const gp::TickEvent* ev) {
 }
 
 // Document area under the caption, menu, tabs and toolbar.
+// At most one drain queued: every uitask::Post wakes, and a second drain in
+// the same batch runs what the first one posted. A job that runs in slices
+// (see kUiSliceMs) then runs slice after slice without the browser getting a
+// turn, and each slice's posts queue more drains.
+static AtomicBool gUiDrainQueued = 0;
+
+static void DrainUiTasks() {
+    AtomicBoolSet(&gUiDrainQueued, false);
+    uitask::DrainQueue();
+}
+
+static void WakeForUiTasks() {
+    if (!AtomicBoolSwap(&gUiDrainQueued, true)) {
+        gp::ExecPost(gp::MkFunc0Void(DrainUiTasks));
+    }
+}
+
 static Rect CanvasRcForFrame(MainWindow* win, int frameDx, int frameDy, bool menuBarShown, bool tabsVisible) {
     int chromeDy;
     if (ShowCaption(win)) {
@@ -3488,7 +3505,7 @@ MainWindow* AppShellCreateWindow(gp::App* app, int dipW, int dipH) {
         BindKeys();
         // uitask::Post from a worker wakes the main loop; the interval is the
         // fallback that also expires notifications
-        uitask::SetWakeupFn([] { gp::ExecPost(gp::MkFunc0Void(uitask::DrainQueue)); });
+        uitask::SetWakeupFn(WakeForUiTasks);
     }
     RebuildMenuBar(win);
     CreateToolbar(win);

@@ -529,7 +529,26 @@ void TextSearch::EnsureFullyLaidOut() {
     VecResize(pagesToSkip, nPages);
 }
 
+void TextSearch::StartSlice(int ms) {
+    sliceMs = ms;
+    sliceStart = GetTickCount64();
+}
+
+bool TextSearch::SliceUsedUp() const {
+    return sliceMs > 0 && GetTickCount64() - sliceStart >= (u64)sliceMs;
+}
+
+// continues a search that paused (see sliceMs) where it stopped
+Vec<TextSel>* TextSearch::Resume() {
+    ReportIf(!paused);
+    if (FindStartingAtPage(resumePage)) {
+        return &result;
+    }
+    return nullptr;
+}
+
 bool TextSearch::FindStartingAtPage(int pageNo) {
+    paused = false;
     if (len(findText) == 0) {
         return false;
     }
@@ -546,6 +565,11 @@ bool TextSearch::FindStartingAtPage(int pageNo) {
 
     int next = forward ? 1 : -1;
     while ((lo <= pageNo) && (pageNo <= hi) && !WasCanceled(progressCb)) {
+        if (SliceUsedUp()) {
+            paused = true;
+            resumePage = pageNo;
+            return false;
+        }
         UpdateProgress(progressCb, pageNo, nPages);
 
         if (!PageAllowed(pageNo) || pagesToSkip[pageNo - 1]) {

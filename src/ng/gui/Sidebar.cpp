@@ -1831,6 +1831,7 @@ struct SidebarThumbWorker {
     SidebarThumbCache* cache = nullptr;
     Vec<int> pages;
     Vec<Location> locs;
+    int next = 0; // pages[next] is rendered next
 };
 
 static Pixmap* RenderSidebarThumb(EngineBase* engine, int pageNo, Location loc, int rotation) {
@@ -1882,19 +1883,24 @@ static void FinishSidebarWorker(SidebarThumbCache* cache) {
     AppShellInvalidate(cache->win);
 }
 
+// Without threads (see kUiSliceMs) this runs in slices, each posting the next
 static void RenderSidebarThumbs(SidebarThumbWorker* worker) {
     SidebarThumbCache* cache = worker->cache;
-    if (cache->renderEngine) {
-        for (int i = 0; i < len(worker->pages); i++) {
-            if (AtomicIntGet(&cache->cancelRendering) != 0) {
-                break;
-            }
-            auto* task = new SidebarThumbTask;
-            task->cache = cache;
-            task->pageNo = worker->pages[i];
-            task->bitmap = RenderSidebarThumb(cache->renderEngine, task->pageNo, worker->locs[i], cache->rotation);
-            uitask::Post(MkFunc0<SidebarThumbTask>(FinishSidebarThumb, task));
+    u64 sliceStart = GetTickCount64();
+    while (cache->renderEngine && worker->next < len(worker->pages)) {
+        if (AtomicIntGet(&cache->cancelRendering) != 0) {
+            break;
         }
+        if (!kHasThreads && GetTickCount64() - sliceStart >= (u64)kUiSliceMs) {
+            uitask::Post(MkFunc0<SidebarThumbWorker>(RenderSidebarThumbs, worker), "SidebarThumbnailRender");
+            return;
+        }
+        int i = worker->next++;
+        auto* task = new SidebarThumbTask;
+        task->cache = cache;
+        task->pageNo = worker->pages[i];
+        task->bitmap = RenderSidebarThumb(cache->renderEngine, task->pageNo, worker->locs[i], cache->rotation);
+        uitask::Post(MkFunc0<SidebarThumbTask>(FinishSidebarThumb, task));
     }
     uitask::Post(MkFunc0<SidebarThumbCache>(FinishSidebarWorker, cache));
     delete worker;
@@ -1955,7 +1961,12 @@ static void StartSidebarThumbs(MainWindow* win, int firstPage, int lastPage) {
     worker->cache = cache;
     cache->workerRunning = true;
     AtomicIntSet(&cache->cancelRendering, 0);
-    RunAsync(MkFunc0<SidebarThumbWorker>(RenderSidebarThumbs, worker), StrL("SidebarThumbnailRender"));
+    auto fn = MkFunc0<SidebarThumbWorker>(RenderSidebarThumbs, worker);
+    if (kHasThreads) {
+        RunAsync(fn, StrL("SidebarThumbnailRender"));
+    } else {
+        uitask::Post(fn, "SidebarThumbnailRender");
+    }
 }
 
 void SidebarRefreshThumbnailPage(MainWindow* win, int pageNo) {

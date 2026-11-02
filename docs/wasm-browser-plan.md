@@ -28,8 +28,18 @@ and `tests/ad-hoc-wasm-commands.ts`. Where the work differs from the plan:
   `node.contents`), so opening stays synchronous. They aren't dropped when its
   last tab closes.
 - 7.2: there's no notification when a font download fails.
+- 5.2, search and thumbnails: done, checked by `tests/ad-hoc-wasm-slices.ts`
+  (the page doesn't stall more than about 100 ms on a 2000-page PDF). Before
+  this, search froze the page for good: the inline "thread" waited for its own
+  handle. `TextSearch` stops between pages once a slice's time is used up
+  (`sliceMs`) and `Resume()` carries on. The find and count jobs get a handle
+  of their own (`NewSlicedJobHandle`), so a slice can tell its job was aborted.
+  The thumbnail workers render pages until the slice is used up. Wakes for
+  `uitask::Post` are coalesced (`WakeForUiTasks`): with a drain queued per
+  post, one frame ran slice after slice.
 
-Open: 5.2 (decision deferred), phase 6.
+Open: 5.2 for ebook layout and the PDF tools (no "working" overlay yet),
+phase 6.
 
 Already done before this plan: a second window no longer crashes (`ed228d347`). Fonts download on
 any origin thanks to a CORS rule on the R2 bucket `files`. That rule exists only

@@ -521,12 +521,21 @@ ThreadHandle StartThread(const Func0& fn, Str threadName) {
 #endif
 }
 
+#if OS_WASM
+ThreadHandle NewSlicedJobHandle() {
+    return new ThreadHandlePosix();
+}
+#endif
+
 bool SafeCloseThreadHandle(ThreadHandle* hPtr) {
     ThreadHandle h = *hPtr;
     if (!h) {
         return false;
     }
 #if OS_WASM
+    if (h != &gInlineThread) {
+        delete h;
+    }
     *hPtr = nullptr;
     return true;
 #else
@@ -639,7 +648,7 @@ bool JoinThread(ThreadHandle* hPtr, int timeoutMs) {
     }
 #if OS_WASM
     // it already ran to completion inside StartThread()
-    *hPtr = nullptr;
+    SafeCloseThreadHandle(hPtr);
     return true;
 #else
     pthread_mutex_lock(&h->mutex);
