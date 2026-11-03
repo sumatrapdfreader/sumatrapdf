@@ -14,6 +14,8 @@ void PickAnotherRandomTip();
 TempStr TrimGitTemp(Str s);
 int CountHomePageFiles();
 TempStr HomeThumbnailMetaTemp(FileState* fs, float* progressOut);
+constexpr i64 kHomeFileSizePending = -2;
+i64 GetHomeFileSize(Str path);
 extern Str sumatraTips;
 
 // the header row: [brand] [search] [Open icon "Open..."] [view icons]

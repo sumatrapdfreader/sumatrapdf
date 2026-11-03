@@ -5,7 +5,6 @@
 #include "base/AutoWin.h"
 #include "base/File.h"
 #include "base/Pixmap.h"
-#include "base/UITask.h"
 #include "base/Win.h"
 #include "gui/Dpi.h"
 
@@ -903,65 +902,15 @@ struct ThumbnailLayout {
 
 static TempStr FileSizeForHomeListTemp(i64 size);
 
-// Sizes of files on network drives, looked up on a thread: a file on a share
-// that's away waits out a network timeout (#6474). kSizeNotFetched while pending
-struct NetFileSize {
-    Str path;
-    i64 size = kSizeNotFetched;
-};
-static Vec<NetFileSize> gNetFileSizes;
-
-static NetFileSize* FindNetFileSize(Str path) {
-    for (NetFileSize& e : gNetFileSizes) {
-        if (str::Eq(e.path, path)) {
-            return &e;
-        }
-    }
-    return nullptr;
-}
-
-static void NetFileSizeDone(NetFileSize* res) {
-    NetFileSize* e = FindNetFileSize(res->path);
-    if (e) {
-        e->size = res->size;
-    }
-    str::Free(res->path);
-    delete res;
-
-    for (MainWindow* win : gWindows) {
-        if (win->IsCurrentTabAbout()) {
-            HwndInvalidate(win->hwndCanvas);
-        }
-    }
-}
-
-static void NetFileSizeThread(NetFileSize* res) {
-    res->size = file::GetSize(res->path);
-    uitask::Post(MkFunc0<NetFileSize>(NetFileSizeDone, res), "NetFileSizeDone");
-}
-
 // size of t's file, kSizeFetchFail if unknown or still being looked up
 static i64 HomeFileSize(ThumbnailLayout& t) {
     if (t.fileSize != kSizeNotFetched) {
         return t.fileSize;
     }
-    Str path = t.fs->filePath;
-    i64 size;
-    if (!path::IsOnNetworkDrive(path)) {
-        size = file::GetSize(path);
-    } else {
-        NetFileSize* e = FindNetFileSize(path);
-        if (!e) {
-            VecAppend(gNetFileSizes, NetFileSize{str::Dup(path), kSizeNotFetched});
-            auto* res = new NetFileSize{str::Dup(path), kSizeNotFetched};
-            RunAsync(MkFunc0<NetFileSize>(NetFileSizeThread, res), StrL("NetFileSize"));
-            return kSizeFetchFail;
-        }
-        // not cached in t while pending, so the repaint after the lookup sees it
-        if (e->size == kSizeNotFetched) {
-            return kSizeFetchFail;
-        }
-        size = e->size;
+    i64 size = GetHomeFileSize(t.fs->filePath);
+    // not cached in t while pending, so the repaint after the lookup sees it
+    if (size == kHomeFileSizePending) {
+        return kSizeFetchFail;
     }
     t.fileSize = size < 0 ? kSizeFetchFail : size;
     return t.fileSize;

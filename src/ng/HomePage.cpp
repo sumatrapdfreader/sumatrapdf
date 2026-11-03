@@ -627,7 +627,7 @@ void HomeView::OnEntryHover(HomeView* self, gp::Ctx* cx, const gp::HoverEvent* e
     // Same text as the keyboard selection's: path + size (size looked up only
     // when shown)
     TempStr tip = PathForDisplayTemp(fs->filePath);
-    i64 size = file::GetSize(fs->filePath);
+    i64 size = GetHomeFileSize(fs->filePath);
     if (size >= 0) {
         tip = fmt("%s  %s", tip, str::FormatSizeShortTemp(size, nullptr));
     }
@@ -1472,7 +1472,7 @@ static gp::El* HomeListRowEl(MainWindow* win, gp::Ctx* cx, int idx, bool isSelec
                    ->MinW(0)
                    ->Truncate()
                    ->BoundsOut(&Ui(win)->listPathBounds[idx]));
-    i64 size = file::GetSize(fs->filePath);
+    i64 size = GetHomeFileSize(fs->filePath);
     if (size >= 0) {
         row->Child(gp::TextEl(cx->a, GpuiDup(cx->a, str::FormatSizeShortTemp(size)))
                        ->Font(12)
@@ -1989,7 +1989,11 @@ TempStr HomeListRowsResultTemp(int* exitCodeOut) {
         return finish(2);
     }
     for (int i = 0; i < n; i++) {
-        i64 size = file::GetSize(h->files[i]->filePath);
+        i64 size = GetHomeFileSize(h->files[i]->filePath);
+        if (size == kHomeFileSizePending) {
+            out.Append(StrL("NOTREADY size-pending\n"));
+            return finish(2);
+        }
         gpui::Bounds& b = h->listSizeBounds[i];
         if (size >= 0 && (b.w <= 0 || b.h <= 0)) {
             out.Append(StrL("NOTREADY no-layout\n"));
@@ -1999,7 +2003,7 @@ TempStr HomeListRowsResultTemp(int* exitCodeOut) {
     out.Append(fmt("OK rows=%d\n", n));
     for (int i = 0; i < n; i++) {
         FileState* fs = h->files[i];
-        i64 size = file::GetSize(fs->filePath);
+        i64 size = GetHomeFileSize(fs->filePath);
         TempStr sizeText = size < 0 ? str::DupTemp(StrL("")) : str::FormatSizeShortTemp(size);
         Rect r = size < 0 ? Rect{} : BoundsRect(h->listSizeBounds[i]);
         TempStr progress;
