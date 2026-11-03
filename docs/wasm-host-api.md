@@ -58,6 +58,24 @@ Documents are in the OPFS directory `uploads`, settings in `settings` and downlo
 
 PDFs that don't embed their fonts use fonts the app downloads from `files.sumatrapdfreader.org` (the Cloudflare R2 bucket `files`), with a synchronous XHR. That needs a CORS rule on the bucket allowing `GET` from any origin. Without it such PDFs open with blank pages. The rule exists only in the Cloudflare dashboard; `tests/ad-hoc-wasm-commands.ts` checks it.
 
+## Rendering pages without the app
+
+With `?render-api` in the page URL the app doesn't start: there's no window, and the page renders a document's pages itself, for example to compare them with other renderers. A host loads it in a hidden same-origin iframe:
+
+```js
+const M = iframe.contentWindow.Module;
+// wait until M.sumatraRenderReady is true
+M.FS.writeFile("/tmp/doc.pdf", bytes);
+M.sumatraRenderPath = "/tmp/doc.pdf";
+const pageCount = M._sumatra_render_open(); // 0 if it didn't open
+const ptr = M._sumatra_render_page(pageNo, maxDx, maxDy); // 1-based page, 0 on failure
+const dx = M._sumatra_render_dx(), dy = M._sumatra_render_dy();
+const rgba = M.HEAPU8.slice(ptr, ptr + dx * dy * 4);
+M._sumatra_render_close();
+```
+
+The page is rendered as large as fits in `maxDx` x `maxDy` pixels. The pixels are RGBA without row padding and stay valid until the next call. Opening a document closes the previous one. The settings are loaded but never written back.
+
 ## Test hooks
 
 With `?test-hooks` in the page URL, `Module._sumatra_test_visibility()`, `_sumatra_test_run(id)`, `_sumatra_test_ping()` and `_sumatra_test_pong()` let `tests/ad-hoc-wasm-commands.ts` list and run every command. Without the parameter they do nothing.

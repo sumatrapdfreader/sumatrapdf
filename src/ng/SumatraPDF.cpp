@@ -7122,6 +7122,10 @@ static void TestExtractPages(const Flags& ci) {
 }
 #endif
 
+#if OS_WASM
+static bool WasmRenderApiStart();
+#endif
+
 int GpuiMain(int argc, char** argv) {
     int toolRes = MaybeRunCliTool(argc, argv);
     if (toolRes != kNoCliTool) {
@@ -7260,6 +7264,12 @@ int GpuiMain(int argc, char** argv) {
         SetCurrentLang(gFlags->lang);
     }
     UpdateSettings(*gFlags);
+#if OS_WASM
+    // ?render-api: no window, the page only renders pages (sumatra_render_*)
+    if (WasmRenderApiStart()) {
+        return 0;
+    }
+#endif
     // the console-only dump modes; orig runs them from WinMain the same way
     if (gFlags->dumpExif) {
         gLogToConsole = false;
@@ -7665,5 +7675,119 @@ extern "C" EMSCRIPTEN_KEEPALIVE int sumatra_test_fullscreen() {
         return 0;
     }
     return win->InPresentation() ? 2 : (win->isFullScreen ? 1 : 0);
+}
+
+// Rendering without the app, for a page that compares how engines render a
+// document (sumatra-online). With ?render-api in the URL main() makes no
+// window and returns to the browser with the runtime alive; the page then
+// sets Module.sumatraRenderPath to a file in MEMFS and calls
+// sumatra_render_open() and sumatra_render_page(). See docs/wasm-host-api.md.
+
+// NOLINTNEXTLINE
+EM_JS(int, WasmJsRenderApiEnabled, (), { return new URLSearchParams(location.search).has("render-api") ? 1 : 0; });
+
+// NOLINTNEXTLINE
+EM_JS(void, WasmJsRenderApiReady, (), {
+    // the settings aren't changed here, nothing to write back to OPFS
+    Module.__exited = true;
+    Module.sumatraRenderReady = true;
+});
+
+// NOLINTNEXTLINE
+EM_JS(void, WasmJsRenderPath, (char* out, int outCap), { stringToUTF8(Module.sumatraRenderPath || "", out, outCap); });
+
+static EngineBase* gRenderEngine = nullptr;
+static u8* gRenderPixels = nullptr;
+static int gRenderDx = 0;
+static int gRenderDy = 0;
+
+static bool WasmRenderApiStart() {
+    if (!WasmJsRenderApiEnabled()) {
+        return false;
+    }
+    WasmJsRenderApiReady();
+    emscripten_exit_with_live_runtime();
+    return true;
+}
+
+static void FreeRenderPixels() {
+    free(gRenderPixels);
+    gRenderPixels = nullptr;
+    gRenderDx = 0;
+    gRenderDy = 0;
+}
+
+// opens Module.sumatraRenderPath, closing the previous document. Returns the
+// page count, 0 if it didn't open
+extern "C" EMSCRIPTEN_KEEPALIVE int sumatra_render_open() {
+    FreeRenderPixels();
+    SafeEngineRelease(&gRenderEngine);
+    char path[1024];
+    WasmJsRenderPath(path, (int)dimof(path));
+    if (!path[0]) {
+        return 0;
+    }
+    gRenderEngine = CreateEngineFromFile(Str(path), nullptr, false);
+    return gRenderEngine ? gRenderEngine->PageCount() : 0;
+}
+
+extern "C" EMSCRIPTEN_KEEPALIVE void sumatra_render_close() {
+    FreeRenderPixels();
+    SafeEngineRelease(&gRenderEngine);
+}
+
+// Renders page pageNo (1-based) as large as fits in dx x dy pixels. Returns
+// RGBA pixels, 4 bytes each with no row padding, valid until the next call;
+// their size is in sumatra_render_dx() and sumatra_render_dy(). Null on failure
+extern "C" EMSCRIPTEN_KEEPALIVE u8* sumatra_render_page(int pageNo, int dx, int dy) {
+    FreeRenderPixels();
+    EngineBase* engine = gRenderEngine;
+    if (!engine || pageNo < 1 || pageNo > engine->PageCount() || dx <= 0 || dy <= 0) {
+        return nullptr;
+    }
+    // the size at zoom 1, with the page's own rotation
+    RectF box = engine->Transform(engine->PageMediabox(pageNo), pageNo, 1.0f, 0);
+    if (box.dx <= 0 || box.dy <= 0) {
+        return nullptr;
+    }
+    float zoom = std::min((float)dx / box.dx, (float)dy / box.dy);
+    RenderPageArgs args(pageNo, zoom, 0);
+    Pixmap* px = engine->RenderPage(args);
+    int bpp = px ? PixmapBytesPerPixel(px->format) : 0;
+    if (!px || !px->data || bpp == 0) {
+        FreePixmap(px);
+        return nullptr;
+    }
+    int w = px->width;
+    int h = px->height;
+    u8* out = (u8*)malloc((size_t)w * (size_t)h * 4);
+    if (!out) {
+        FreePixmap(px);
+        return nullptr;
+    }
+    bool bgr = px->format != PixmapFormat::RGBA8;
+    for (int y = 0; y < h; y++) {
+        const u8* s = px->data + (size_t)y * (size_t)px->stride;
+        u8* d = out + (size_t)y * (size_t)w * 4;
+        for (int x = 0; x < w; x++, s += bpp, d += 4) {
+            d[0] = bgr ? s[2] : s[0];
+            d[1] = s[1];
+            d[2] = bgr ? s[0] : s[2];
+            d[3] = (bpp == 4 && px->hasAlpha) ? s[3] : 255;
+        }
+    }
+    FreePixmap(px);
+    gRenderPixels = out;
+    gRenderDx = w;
+    gRenderDy = h;
+    return out;
+}
+
+extern "C" EMSCRIPTEN_KEEPALIVE int sumatra_render_dx() {
+    return gRenderDx;
+}
+
+extern "C" EMSCRIPTEN_KEEPALIVE int sumatra_render_dy() {
+    return gRenderDy;
 }
 #endif
