@@ -55,6 +55,10 @@ const user32 = loadDll("user32.dll", {
   GetWindow: { args: [FFIType.ptr, FFIType.u32], returns: FFIType.u64 },
   PostMessageW: { args: [FFIType.ptr, FFIType.u32, FFIType.i64, FFIType.i64], returns: FFIType.bool },
   SendMessageW: { args: [FFIType.ptr, FFIType.u32, FFIType.i64, FFIType.i64], returns: FFIType.i64 },
+  SendMessageTimeoutW: {
+    args: [FFIType.ptr, FFIType.u32, FFIType.i64, FFIType.i64, FFIType.u32, FFIType.u32, FFIType.ptr],
+    returns: FFIType.i64,
+  },
   MoveWindow: {
     args: [FFIType.ptr, FFIType.i32, FFIType.i32, FFIType.i32, FFIType.i32, FFIType.bool],
     returns: FFIType.bool,
@@ -827,6 +831,13 @@ export async function postChar(hwnd: number, ch: string): Promise<boolean> {
 // target window to finish handling the message before reading state. Returns the
 // LRESULT as a bigint -- TreeView messages return HTREEITEM pointers that can
 // exceed 2^53, so they must not be coerced to a JS number.
+const WM_NULL = 0x0000;
+
+// whether hwnd's thread answers a WM_NULL within timeoutMs: false while it's busy
+export function windowResponds(hwnd: number, timeoutMs: number): boolean {
+  return user32.symbols.SendMessageTimeoutW(hwnd, WM_NULL, 0n, 0n, 0, timeoutMs, null) !== 0n;
+}
+
 export function sendMessage(hwnd: number, msg: number, wParam: number | bigint, lParam: number | bigint): bigint {
   if (ngInput(hwnd, msg, wParam, lParam, false)) {
     return 0n;

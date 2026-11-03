@@ -216,6 +216,7 @@ import { testit as issue6385 } from "./issue-6385.ts";
 import { testit as issue6469 } from "./issue-6469.ts";
 import { testit as issue6470 } from "./issue-6470.ts";
 import { testit as issue6472 } from "./issue-6472.ts";
+import { testit as issue6474 } from "./issue-6474.ts";
 import { testit as issue6137Contents } from "./issue-6137-contents.ts";
 import { testit as issue6093 } from "./issue-6093.ts";
 import { testit as toolbarHoverDropdown } from "./toolbar-hover-dropdown.ts";
@@ -875,6 +876,7 @@ export const tests: NamedTest[] = [
   ["issue-6469", issue6469],
   ["issue-6470", issue6470],
   ["issue-6472", issue6472],
+  ["issue-6474", issue6474],
   ["issue-6232", issue6232],
   ["issue-6232-filter", issue6232Filter],
   ["issue-6232-refresh", issue6232Refresh],

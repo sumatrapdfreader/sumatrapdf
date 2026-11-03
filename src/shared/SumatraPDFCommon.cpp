@@ -2707,23 +2707,6 @@ void CreateThumbnailFromFileAsync(FileState* ds, EngineBase* engine) {
     RunAsync(fn, StrL("CreateThumbnailFromFile"));
 }
 
-// the history entries whose files still exist, in the order the home page shows them
-static void CollectThumbnailFiles(Vec<FileState*>& list) {
-    Vec<FileState*> all;
-    if (gSettings->homePageSortByFrequentlyRead) {
-        FileHistoryGetFrequencyOrder(all);
-    } else {
-        FileHistoryGetRecentlyOpenedOrder(all);
-    }
-    for (FileState* fs : all) {
-        Str path = fs->filePath;
-        if (len(path) == 0 || path::IsCloudPlaceholder(path) || !DocumentPathExists(path)) {
-            continue;
-        }
-        VecAppend(list, fs);
-    }
-}
-
 static CreateThumbnailFromFileData* NewThumbnailData(FileState* fs) {
     auto* d = new CreateThumbnailFromFileData();
     d->filePath = str::Dup(fs->filePath);
@@ -2731,9 +2714,64 @@ static CreateThumbnailFromFileData* NewThumbnailData(FileState* fs) {
     return d;
 }
 
+enum class ThumbnailsToMake {
+    All,
+    Missing,
+};
+
 struct RegenerateThumbnailsData {
     Vec<CreateThumbnailFromFileData*> files;
+    ThumbnailsToMake which = ThumbnailsToMake::All;
 };
+
+// The history entries, in the order the home page shows them. Only copies: the
+// thumbnail thread finds out which files still exist, because checking a file on
+// a network share that's away waits out a network timeout (#6474)
+static RegenerateThumbnailsData* NewRegenerateThumbnailsData(ThumbnailsToMake which) {
+    Vec<FileState*> all;
+    if (gSettings->homePageSortByFrequentlyRead) {
+        FileHistoryGetFrequencyOrder(all);
+    } else {
+        FileHistoryGetRecentlyOpenedOrder(all);
+    }
+    auto* data = new RegenerateThumbnailsData();
+    data->which = which;
+    for (FileState* fs : all) {
+        if (len(fs->filePath) > 0) {
+            VecAppend(data->files, NewThumbnailData(fs));
+        }
+    }
+    return data;
+}
+
+// whether it's in our thumbnail cache, a local folder: cheap to check up front
+static bool HasCachedThumbnail(Str path) {
+    TempStr thumbPath = GetThumbnailPathTemp(path);
+    return len(thumbPath) == 0 || file::Exists(thumbPath);
+}
+
+// can be slow: a drive that's away (unplugged, offline share) waits out a timeout
+// once, then is known to be away, so the files after it aren't held up
+static bool DocumentIsThere(Str path) {
+    return path::IsOnAvailableDrive(path) && !path::IsCloudPlaceholder(path) && DocumentPathExists(path);
+}
+
+// on the thumbnail thread: drop the files whose thumbnails are cached
+static void DropCachedThumbnailFiles(RegenerateThumbnailsData* data) {
+    if (data->which != ThumbnailsToMake::Missing) {
+        return;
+    }
+    Vec<CreateThumbnailFromFileData*> missing;
+    for (CreateThumbnailFromFileData* d : data->files) {
+        if (HasCachedThumbnail(d->filePath)) {
+            delete d;
+        } else {
+            VecAppend(missing, d);
+        }
+    }
+    data->files = missing;
+    ResetTempArena();
+}
 
 struct ThumbnailProgress {
     Str name;
@@ -2774,12 +2812,20 @@ static void RegenerateThumbnailsDone() {
 // renders one file at a time; each finished thumbnail is set and shown on
 // the UI thread before the next file starts
 static void RegenerateThumbnailsThread(RegenerateThumbnailsData* data) {
+    DropCachedThumbnailFiles(data);
+    logf("RegenerateThumbnailsThread: %d files\n", len(data->files));
     int total = len(data->files);
     int done = 0;
     for (CreateThumbnailFromFileData* d : data->files) {
+        done++;
+        if (!DocumentIsThere(d->filePath)) {
+            delete d;
+            ResetTempArena();
+            continue;
+        }
         auto* p = new ThumbnailProgress();
         p->name = str::Dup(path::GetBaseNameTemp(d->filePath));
-        p->done = ++done;
+        p->done = done;
         p->total = total;
         uitask::Post(MkFunc0<ThumbnailProgress>(ShowThumbnailProgress, p), "ThumbnailProgress");
         d->bmp = RenderFileThumbnail(d);
@@ -2810,12 +2856,7 @@ void OnThumbnailsTypeChanged() {
         return;
     }
 
-    Vec<FileState*> list;
-    CollectThumbnailFiles(list);
-    auto* data = new RegenerateThumbnailsData();
-    for (FileState* fs : list) {
-        VecAppend(data->files, NewThumbnailData(fs));
-    }
+    auto* data = NewRegenerateThumbnailsData(ThumbnailsToMake::All);
     auto fn = MkFunc0<RegenerateThumbnailsData>(RegenerateThumbnailsThread, data);
     ThumbnailThreadStarted();
     RunAsync(fn, StrL("RegenerateThumbnails"));
@@ -2831,21 +2872,11 @@ void RegenerateMissingThumbnails() {
     // StartThread runs inline, so a batch of renders would freeze startup
     return;
 #endif
-    Vec<FileState*> list;
-    CollectThumbnailFiles(list);
-    auto* data = new RegenerateThumbnailsData();
-    for (FileState* fs : list) {
-        TempStr thumbPath = GetThumbnailPathTemp(fs->filePath);
-        if (len(thumbPath) == 0 || file::Exists(thumbPath)) {
-            continue;
-        }
-        VecAppend(data->files, NewThumbnailData(fs));
-    }
+    auto* data = NewRegenerateThumbnailsData(ThumbnailsToMake::Missing);
     if (len(data->files) == 0) {
         delete data;
         return;
     }
-    logf("RegenerateMissingThumbnails: %d\n", len(data->files));
     auto fn = MkFunc0<RegenerateThumbnailsData>(RegenerateThumbnailsThread, data);
     ThumbnailThreadStarted();
     RunAsync(fn, StrL("RegenerateThumbnails"));
