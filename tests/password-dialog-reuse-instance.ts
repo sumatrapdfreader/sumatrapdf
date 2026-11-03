@@ -8,6 +8,7 @@ import { EXE, USE_NG, makeTextPdf, pollUntil, runStandalone, tmpPath } from "./u
 import { killAndWait, launchControlled, pressEnter, waitForTitle } from "./win-automation.ts";
 import {
   captureWindowDCRegionPixels,
+  clientToScreen,
   enumWindows,
   findChildWindow,
   getClassName,
@@ -47,14 +48,15 @@ function findDialog(pid: number): number {
   return found;
 }
 
-// below the caption, whose title is painted either way
+// client area only: the caption is painted either way and the invisible
+// resize borders read as black
 function countDarkPixels(hwnd: number): number {
   const rc = getWindowRect(hwnd);
-  const dx = rc.right - rc.left;
-  const dy = rc.bottom - rc.top;
   const client = getClientRect(hwnd);
-  const clientDy = client.bottom - client.top;
-  const data = captureWindowDCRegionPixels(hwnd, 0, dy - clientDy, dx, clientDy);
+  const origin = clientToScreen(hwnd, 0, 0);
+  const x = origin.x - rc.left;
+  const y = origin.y - rc.top;
+  const data = captureWindowDCRegionPixels(hwnd, x, y, client.right - client.left, client.bottom - client.top);
   let n = 0;
   for (let i = 0; data && i < data.length; i += kBytesPerPixel) {
     if (data[i]! < kDarkLevel && data[i + 1]! < kDarkLevel && data[i + 2]! < kDarkLevel) {

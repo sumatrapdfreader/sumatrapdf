@@ -520,6 +520,7 @@ export const tests: NamedTest[] = [
   // first: it drives the home page, whose thumbnail selection follows the
   // mouse, so it is the one test that cares what the machine was doing before
   ["issue-5978", issue5978],
+  ["password-dialog-reuse-instance", passwordDialogReuseInstance],
   ["issue-6269", issue6269],
   ["sidebar-thumbnails", sidebarThumbnails],
   ["issue-6385", issue6385],
@@ -792,7 +793,6 @@ export const tests: NamedTest[] = [
   ["issue-3472", issue3472],
   ["pdf-only-menu-items", pdfOnlyMenuItems],
   ["pdf-tools-encrypted", pdfToolsEncrypted],
-  ["password-dialog-reuse-instance", passwordDialogReuseInstance],
   ["pdf-decrypt-remembered-key", pdfDecryptRememberedKey],
   ["security-ghsa-p2ph-2rvm-q37m", ghsaP2ph2rvmQ37m],
   ["security-ghsa-5wm7-225j-9qcj", ghsa5wm7225j9qcj],
