@@ -107,6 +107,7 @@ void UpdateTabWidth(MainWindow* win) {
     if (win->tabsCtrl) {
         HWND hwnd = win->tabsCtrl->hwnd ? win->tabsCtrl->hwnd : win->hwndFrame;
         win->tabsCtrl->tabDefaultDx = DpiScale(gSettings->tabWidth);
+        win->tabsCtrl->equalWidth = gSettings->tabsEqualWidth;
     }
     // Lay out only when the bar stays visible. Hiding it right after
     // TabCtrl_SetItemSize invalidated the control leaves a pending WM_PAINT for
@@ -502,6 +503,7 @@ void CreateTabbar(MainWindow* win) {
     args.font = GetAppFont();
     // logical TabWidth → physical (see UpdateTabWidth / issue #3850)
     args.tabDefaultDx = DpiScale(gSettings->tabWidth);
+    args.equalWidth = gSettings->tabsEqualWidth;
     args.isRtl = false; // LTR hwnd; RTL tab order follows parent frame (see UpdateWindowRtlLayout)
 
     TabsCtrl* tabsCtrl = new TabsCtrl();

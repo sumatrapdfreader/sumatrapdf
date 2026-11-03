@@ -45,6 +45,7 @@ struct TabsCtrl : VirtCtrl {
         bool withToolTips = false;
         int ctrlID = 0;
         int tabDefaultDx = 300;
+        bool equalWidth = true;
         bool isRtl = false;
     };
 
@@ -102,6 +103,8 @@ struct TabsCtrl : VirtCtrl {
     bool draggingTab = false;
     // dx of tab if there's more space available
     int tabDefaultDx = 300;
+    // false: a tab is as wide as its name, up to tabDefaultDx
+    bool equalWidth = true;
 
     Vec<TabInfo*> tabs;
     // VirtRoot over this control on `hwnd`; does not own us
@@ -158,6 +161,7 @@ struct TabsCtrl : VirtCtrl {
 
     int InsertTab(int idx, TabInfo*, bool update = true);
     TabInfo* GetTab(int idx);
+    int TabDx(int idx);
     void SwapTabs(int idx1, int idx2);
 
     void SetTextAndTooltip(int idx, Str text, Str tooltip);

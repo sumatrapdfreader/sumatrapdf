@@ -165,6 +165,25 @@ int setMinMax(int& v, int minVal, int maxVal) {
     return v;
 }
 
+// The cap c for which the sum of min(dx[i], c) fits availDx: the width equal
+// items would each get, except the ones needing less keep their own.
+// e.g. dx {50, 200, 300}, availDx 400 -> 175 (50 + 175 + 175)
+int FairShareCap(const Vec<int>& dx, int availDx) {
+    Vec<int> sorted;
+    VecAppendVec(sorted, dx);
+    int n = len(sorted);
+    std::sort(sorted.els, sorted.els + n);
+    int rest = availDx;
+    for (int i = 0; i < n; i++) {
+        int share = rest / (n - i);
+        if (sorted[i] > share) {
+            return share;
+        }
+        rest -= sorted[i];
+    }
+    return n > 0 ? sorted[n - 1] : 0;
+}
+
 //--- Geom.cpp ----------------------------------------------------------------
 
 bool QuadF::IsEmpty() const {

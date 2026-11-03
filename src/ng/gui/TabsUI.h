@@ -22,3 +22,4 @@ gpui::El* TabsUIMenuButton(MainWindow*, gpui::Ctx*);
 void TabsUIDelete(MainWindow*);
 // tabs were added, removed or reordered: drop the hover / drag state
 void TabsUIOnTabsChanged(MainWindow*);
+TempStr TabsUIWidthsTemp(MainWindow*);

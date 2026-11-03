@@ -1882,6 +1882,12 @@ const globalPrefs: Field[] = [
     "if true, prevents the screen from turning off when in fullscreen or presentation mode",
   ),
   field("TabWidth", Int, 300, "maximum width of a single tab, in pixels at 100% display scaling (at least 60)"),
+  field(
+    "TabsEqualWidth",
+    Bool,
+    true,
+    "if true, all tabs are equally wide. If false, a tab is as wide as its file name needs, up to TabWidth",
+  ).ver("3.7"),
   // Built-in names must stay in sync with themesTxt in src/Theme.cpp (plus System)
   field(
     "Theme",
@@ -2341,6 +2347,7 @@ const globalPrefsLayout = [
   "ReadingAutoScrollSpeed",
   "ReadingBar",
   "TabWidth",
+  "TabsEqualWidth",
   "TocDy",
   "SidebarMiddleDy",
   "ToolbarSize",

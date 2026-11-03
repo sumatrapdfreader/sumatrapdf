@@ -529,6 +529,33 @@ static int FitToLabelDx(TabsCtrl* tabs, TabInfo* ti, int tabDy) {
     return dx;
 }
 
+// a document tab sized to its file name (TabsEqualWidth = false): the margins
+// TabCtrl::Paint() uses, so the name isn't ellipsized. Room for the ✕ is kept
+// when it's hidden, so selecting a tab doesn't resize it
+static int FitToNameDx(TabsCtrl* tabs, TabInfo* ti, int tabDy) {
+    PlatformFont* font = tabs->GetFont();
+    if (!font) {
+        return tabs->tabDefaultDx;
+    }
+    int dx = DpiScale(8) + PlatformFontMeasureText(font, ti->text).dx + 1;
+    if (len(ti->pageText) > 0) {
+        PlatformFont* pageFont = GetScaledPlatformFont(font, 85);
+        dx += PlatformFontMeasureText(pageFont ? pageFont : font, ti->pageText).dx;
+    }
+    if (ti->isDirty) {
+        dx += DpiScale(9); // the red dot
+    }
+    dx += CloseRoomDx(tabDy);
+    return std::min(dx, tabs->tabDefaultDx);
+}
+
+int TabsCtrl::TabDx(int idx) {
+    if (idx < 0 || idx >= len(tabCtrls)) {
+        return 0;
+    }
+    return tabCtrls[idx]->idealSize.dx;
+}
+
 // Calculates the size of a tab and lays the children out.
 void TabsCtrl::LayoutTabs() {
     if (!hwnd || !vroot) {
@@ -558,18 +585,32 @@ void TabsCtrl::LayoutTabs() {
         tabCtrls[i]->idealSize = {fitDx, dy};
         restDx -= fitDx;
     }
+    // TabsEqualWidth = false: as wide as the name, shrunk like equal-width
+    // tabs when they don't fit, but never wider than the name needs
+    Vec<int> nameDx;
+    if (!equalWidth) {
+        for (int i = 0; i < nTabs; i++) {
+            if (!tabs[i]->fitToLabel) {
+                VecAppend(nameDx, FitToNameDx(this, tabs[i], dy));
+            }
+        }
+    }
     int dx;
     if (tabWidthFrozen && frozenTabDx > 0) {
         dx = frozenTabDx;
-    } else {
+    } else if (equalWidth) {
         dx = std::min(tabDefaultDx, nRest > 0 ? restDx / nRest : restDx);
+    } else {
+        dx = FairShareCap(nameDx, restDx);
     }
     tabSize = {dx, dy};
 
     int totalW = 0;
+    int nameIdx = 0;
     for (int i = 0; i < nTabs; i++) {
         if (!tabs[i]->fitToLabel) {
-            tabCtrls[i]->idealSize = tabSize;
+            int tabDx = equalWidth ? dx : std::min(dx, nameDx[nameIdx++]);
+            tabCtrls[i]->idealSize = {tabDx, dy};
         }
         totalW += tabCtrls[i]->idealSize.dx;
     }
@@ -1151,6 +1192,7 @@ HWND TabsCtrl::Create(TabsCtrl::CreateArgs& args) {
     RegisterTabsCtrlClass();
     withToolTips = args.withToolTips;
     tabDefaultDx = args.tabDefaultDx;
+    equalWidth = args.equalWidth;
     font = args.font;
     ctrlID = args.ctrlID;
 
@@ -1208,6 +1250,9 @@ void TabsCtrl::SetPageText(int idx, Str page) {
         return;
     }
     str::ReplaceWithCopy(&tab->pageText, page);
+    if (!equalWidth) {
+        LayoutTabs();
+    }
     ScheduleRepaint();
 }
 

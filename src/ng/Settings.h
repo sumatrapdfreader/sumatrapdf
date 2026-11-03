@@ -1075,6 +1075,9 @@ struct Settings {
     // maximum width of a single tab, in pixels at 100% display scaling (at
     // least 60)
     int tabWidth;
+    // if true, all tabs are equally wide. If false, a tab is as wide as
+    // its file name needs, up to TabWidth
+    bool tabsEqualWidth;
     // if both the favorites and the bookmarks part of the sidebar are
     // visible, this is the height of the bookmarks (table of contents)
     // part, in screen pixels

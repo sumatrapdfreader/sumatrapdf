@@ -1583,6 +1583,8 @@ int VecFind(const Vec<T>& v, const T& el, int startAt = 0);
 template <typename T>
 bool VecContains(const Vec<T>& v, const T& el);
 
+int FairShareCap(const Vec<int>& dx, int availDx);
+
 //--- the vec itself ---------------------------------------------------------
 
 template <typename T>

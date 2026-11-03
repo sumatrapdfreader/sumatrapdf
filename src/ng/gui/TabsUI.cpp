@@ -13,6 +13,7 @@
 #include "base/UITask.h"
 
 #include "gui/Dpi.h"
+#include "gui/PlatformFont.h"
 #include "gui/UIModels.h"
 
 #include "Settings.h"
@@ -146,6 +147,36 @@ static Color TabBgColor(WindowTab* tab, bool isSelected, bool isUnderMouse) {
 // the tab label's size; Home's margins are 1rem of it
 constexpr float kTabFontSize = 12;
 
+// TabsEqualWidth = false: what a tab sized to its name needs, in dips, as
+// BuildTab lays it out: margins, page suffix, dirty dot and room for the ✕
+static int FitToNameDx(MainWindow* win, WindowTab* tab) {
+    int dpi = std::max(AppShellWindowDpi(win), 96);
+    Str family = FromGpui(gp::PaintSystemUIFontMappedFamily());
+    auto measure = [&](Str s, float fontSize) {
+        PlatformFont* font = GetUserGuiFont(family, MulDiv((int)fontSize, dpi, 96));
+        return MulDiv(PlatformFontMeasureText(font, s).dx, 96, dpi);
+    };
+    int dx = 8 + measure(tab->GetTabTitle(), kTabFontSize);
+    TempStr pageText = TabPageSuffixTemp(tab);
+    if (len(pageText) > 0) {
+        dx += 2 + measure(pageText, 10);
+    }
+    if (TabIsDirty(tab)) {
+        dx += 2 + 6;
+    }
+    return dx + 2 + (int)kTabCloseDx + 2 + 1;
+}
+
+// for -dbg-control: each tab's laid-out width, one "dx=<n> text=<title>" line per tab
+TempStr TabsUIWidthsTemp(MainWindow* win) {
+    TabsUI* ui = Ui(win);
+    str::Builder out;
+    for (int i = 0; i < win->TabCount() && i < len(ui->tabBounds); i++) {
+        out.Append(fmt("dx=%d text=%s\n", (int)ui->tabBounds[i].w, win->GetTab(i)->GetTabTitle()));
+    }
+    return ToStrTemp(out);
+}
+
 // orig's LayoutTabs: every document tab is as wide as TabWidth allows, shrinking
 // so all of them fit the bar. Home is sized by its label, so the others get what
 // it took in the last frame: its width is only known after layout
@@ -170,7 +201,19 @@ static int TabWidth(MainWindow* win, int barDx) {
             restDx -= (int)ui->tabBounds[i].w;
         }
     }
-    return std::min(gSettings->tabWidth, restDx / std::max(nRest, 1));
+    if (gSettings->tabsEqualWidth) {
+        return std::min(gSettings->tabWidth, restDx / std::max(nRest, 1));
+    }
+    // as wide as the name, shrunk like equal-width tabs when they don't fit,
+    // but never wider than the name needs (BuildTab caps each at this)
+    Vec<int> nameDx;
+    for (int i = 0; i < nTabs; i++) {
+        WindowTab* tab = win->GetTab(i);
+        if (!IsLabelSizedTab(tab)) {
+            VecAppend(nameDx, std::min(FitToNameDx(win, tab), gSettings->tabWidth));
+        }
+    }
+    return FairShareCap(nameDx, restDx);
 }
 
 // --- input ------------------------------------------------------------------
@@ -484,10 +527,12 @@ static gp::El* BuildTab(MainWindow* win, gp::Ctx* cx, int idx, int tabDx) {
     // for a close, a "+" one keeps it
     bool isHome = IsLabelSizedTab(tab);
     bool isPinnedHome = IsPinnedTab(tab);
+    // a tab sized by its label keeps the ✕'s room, so selecting it doesn't resize it
+    bool keepsCloseRoom = isHome || !gSettings->tabsEqualWidth;
     float padR = isSelected ? 2.f : 8.f;
     if (isPinnedHome) {
         padR = kTabFontSize;
-    } else if (isHome) {
+    } else if (keepsCloseRoom) {
         padR = 2.f;
     }
     gp::El* el = gp::Div(cx->a)
@@ -515,9 +560,12 @@ static gp::El* BuildTab(MainWindow* win, gp::Ctx* cx, int idx, int tabDx) {
     el->OnDrop(GStrL("sumatra-tab"), gp::ListenTo(Ui(win)->view, &TabsView::OnTabDrop, (intptr_t)idx));
 
     gp::El* title = gp::TextEl(cx->a, GpuiDup(cx->a, tab->GetTabTitle()))->Font(kTabFontSize)->Fg(ToGpui(textCol));
-    if (!isHome) {
+    if (!isHome && gSettings->tabsEqualWidth) {
         el->W((float)tabDx);
         title->Flex1()->MinW(0)->Truncate();
+    } else if (!isHome) {
+        el->MaxW((float)tabDx);
+        title->Shrink(1)->MinW(0)->Truncate();
     }
     el->Child(title);
 
@@ -533,7 +581,7 @@ static gp::El* BuildTab(MainWindow* win, gp::Ctx* cx, int idx, int tabDx) {
     // tab always selects it and can't accidentally close it
     if (isSelected && !isPinnedHome) {
         el->Child(CloseButton(win, cx, idx));
-    } else if (isHome && !isPinnedHome) {
+    } else if (keepsCloseRoom && !isPinnedHome) {
         // the label stays where it is when the tab is selected
         el->Child(gp::Div(cx->a)->W(kTabCloseDx)->Shrink0());
     }

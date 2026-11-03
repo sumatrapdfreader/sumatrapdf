@@ -675,6 +675,8 @@ enum class ControlCmd : u16 {
     TestFetchRevocation = 147,
     // [action]: the state of the signature bar, panel, marks and dialog
     TestSignatureStatus = 148,
+    // the first window's tab widths, one "dx=<n> text=<title>" line per tab
+    TestTabWidths = 149,
 };
 
 static_assert((u16)ControlCmd::Quit == (u16)ControlFrameCmd::Quit);
@@ -1012,6 +1014,21 @@ static void ExecuteControlRequest(ControlRequest* req) {
             int exitCode = 0;
             Str res = ClickClearsSelectionResultTemp(word, &exitCode);
             AppendTestResult(req, exitCode, res);
+            break;
+        }
+
+        case ControlCmd::TestTabWidths: {
+            MainWindow* win = len(gWindows) > 0 ? gWindows[0] : nullptr;
+            TabsCtrl* tabs = win ? win->tabsCtrl : nullptr;
+            if (!tabs) {
+                AppendTestResult(req, 2, StrL("NOTREADY no-tabs"));
+                break;
+            }
+            str::Builder out;
+            for (int i = 0; i < tabs->TabCount(); i++) {
+                out.Append(fmt("dx=%d text=%s\n", tabs->TabDx(i), tabs->GetTab(i)->text));
+            }
+            AppendTestResult(req, 0, ToStrTemp(out));
             break;
         }
 

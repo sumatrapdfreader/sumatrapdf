@@ -217,6 +217,7 @@ import { testit as issue6469 } from "./issue-6469.ts";
 import { testit as issue6470 } from "./issue-6470.ts";
 import { testit as issue6472 } from "./issue-6472.ts";
 import { testit as issue6474 } from "./issue-6474.ts";
+import { testit as issue6476 } from "./issue-6476.ts";
 import { testit as issue6137Contents } from "./issue-6137-contents.ts";
 import { testit as issue6093 } from "./issue-6093.ts";
 import { testit as toolbarHoverDropdown } from "./toolbar-hover-dropdown.ts";
@@ -521,6 +522,7 @@ export const tests: NamedTest[] = [
   // mouse, so it is the one test that cares what the machine was doing before
   ["issue-5978", issue5978],
   ["issue-6474", issue6474],
+  ["issue-6476", issue6476],
   ["password-dialog-reuse-instance", passwordDialogReuseInstance],
   ["issue-6269", issue6269],
   ["sidebar-thumbnails", sidebarThumbnails],

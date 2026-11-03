@@ -84,6 +84,7 @@
 #include "gui/NativeFileDlg.h"
 #include "gui/NativeMsgBox.h"
 #include "gui/DocCanvas.h"
+#include "gui/TabsUI.h"
 #include "gui/Sidebar.h"
 #if OS_WIN
 #include "gui/Dpi.h"
@@ -835,6 +836,8 @@ enum class ControlCmd : u16 {
     // the first window's page and scroll position
     TestScrollState = 144,
     TestDrawRectSelection = 145,
+    // the first window's tab widths, one "dx=<n> text=<title>" line per tab
+    TestTabWidths = 149,
 };
 
 static_assert((u16)ControlCmd::Quit == (u16)ControlFrameCmd::Quit);
@@ -1924,6 +1927,12 @@ static void ExecuteControlRequest(ControlRequest* req) {
             int exitCode = 0;
             Str res = TripleClickLineResultTemp(pdf, clickWord, expectedLine, &exitCode);
             AppendTestResult(req, exitCode, res);
+            break;
+        }
+
+        case ControlCmd::TestTabWidths: {
+            MainWindow* win = len(gWindows) > 0 ? gWindows[0] : nullptr;
+            AppendTestResult(req, win ? 0 : 2, win ? TabsUIWidthsTemp(win) : StrL("NOTREADY no-window"));
             break;
         }
 
