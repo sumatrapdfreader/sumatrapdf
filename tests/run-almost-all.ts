@@ -358,6 +358,7 @@ import { testit as issue6371 } from "./issue-6371.ts";
 import { testit as issue6372 } from "./issue-6372.ts";
 import { testit as issue5890 } from "./issue-5890.ts";
 import { testit as wheelWhileClosing } from "./wheel-while-closing.ts";
+import { testit as hwheelHome } from "./hwheel-home.ts";
 import { testit as printDialogMultiFile } from "./print-dialog-multi-file.ts";
 import { testit as issue6259 } from "./issue-6259.ts";
 import { testit as fullscreenSessionRestore } from "./fullscreen-session-restore.ts";
@@ -899,6 +900,7 @@ export const tests: NamedTest[] = [
   ["command-palette-thumbnails", commandPaletteThumbnails],
   ["sidebar-thumbnails-close", sidebarThumbnailsClose],
   ["wheel-while-closing", wheelWhileClosing],
+  ["hwheel-home", hwheelHome],
   ["print-dialog-multi-file", printDialogMultiFile],
   ["issue-6259", issue6259],
   ["fullscreen-session-restore", fullscreenSessionRestore],
