@@ -786,6 +786,51 @@ TempStr GetHomeDirTemp() {
     return str::DupTemp(Str(home));
 }
 
+// Linux: XDG_DOWNLOAD_DIR="$HOME/Downloads" in ~/.config/user-dirs.dirs
+static TempStr XdgDownloadDirTemp(Str home) {
+    const char* configHome = getenv("XDG_CONFIG_HOME");
+    TempStr config =
+        configHome && configHome[0] ? str::DupTemp(Str(configHome)) : path::JoinTemp(home, StrL(".config"));
+    Str data = file::ReadFile(path::JoinTemp(config, StrL("user-dirs.dirs")));
+    TempStr res;
+    StrVec lines;
+    Split(&lines, data, StrL("\n"));
+    for (int i = 0; i < len(lines); i++) {
+        Str line = lines[i];
+        Str prefix = StrL("XDG_DOWNLOAD_DIR=\"");
+        if (!str::StartsWith(line, prefix) || !str::EndsWith(line, StrL("\""))) {
+            continue;
+        }
+        Str val = Str(line.s + len(prefix), len(line) - len(prefix) - 1);
+        if (str::StartsWith(val, StrL("$HOME"))) {
+            val = str::JoinTemp(home, Str(val.s + 5, len(val) - 5));
+        }
+        res = str::DupTemp(val);
+        break;
+    }
+    str::Free(data);
+    return res;
+}
+
+// the user's Downloads folder, where web browsers save files by default
+TempStr GetDownloadsDirTemp() {
+#if OS_WASM
+    return str::DupTemp(StrL("/uploads"));
+#else
+    TempStr home = GetHomeDirTemp();
+    if (len(home) == 0) {
+        return {};
+    }
+#if !OS_DARWIN
+    TempStr xdg = XdgDownloadDirTemp(home);
+    if (len(xdg) > 0) {
+        return xdg;
+    }
+#endif
+    return path::JoinTemp(home, StrL("Downloads"));
+#endif
+}
+
 TempStr ExpandEnvVarTemp(Str varName) {
     const char* val = getenv(CStrTemp(varName));
     if (!val) {

@@ -573,6 +573,9 @@ gp::El* DialogsBuild(MainWindow* win, gp::Ctx* cx) {
     if (gp::El* e = AddFavoriteDialogBuild(win, cx)) {
         return e;
     }
+    if (gp::El* e = OpenFromUrlDialogBuild(win, cx)) {
+        return e;
+    }
     if (gp::El* e = PropertiesDialogBuild(win, cx)) {
         return e;
     }
@@ -687,14 +690,15 @@ DialogAccels DialogsAccelTable(MainWindow* win) {
     }
     bool any = IsMsgBoxVisible() || IsSimpleBrowserWindowVisible() || IsAIChatNotInstalledDialogVisible() ||
                IsSelectionTranslateDialogVisible() || IsAboutWindowVisible() || IsAddFavoriteDialogVisible() ||
-               IsGoToPageDialogVisible() || IsTabGroupsDialogVisible() || IsGetPasswordDialogVisible() ||
-               IsCustomZoomDialogVisible() || IsChangeScrollbarDialogVisible() || IsChangeLanguageDialogVisible() ||
-               IsChangeThemeDialogVisible() || IsChangeColorDialogVisible() || IsBrightnessContrastDialogVisible() ||
-               IsPDFScriptDialogVisible() || IsInverseSearchDialogVisible() || IsSignDocumentDialogVisible() ||
-               IsPdfToolDialogVisible() || IsImageEditWindowVisible() || IsSetScreenshotHotkeyDialogVisible() ||
-               IsEbookSettingsDialogVisible() || IsSettingsDialogVisible() || IsAdvancedSettingsDialogVisible() ||
-               IsConfigureRestrictedUseDialogVisible() || IsPageGridDialogVisible() || IsKeyboardHelpVisible() ||
-               IsUnsavedAnnotationsDialogVisible() || IsSavePathDialogVisible();
+               IsOpenFromUrlDialogVisible() || IsGoToPageDialogVisible() || IsTabGroupsDialogVisible() ||
+               IsGetPasswordDialogVisible() || IsCustomZoomDialogVisible() || IsChangeScrollbarDialogVisible() ||
+               IsChangeLanguageDialogVisible() || IsChangeThemeDialogVisible() || IsChangeColorDialogVisible() ||
+               IsBrightnessContrastDialogVisible() || IsPDFScriptDialogVisible() || IsInverseSearchDialogVisible() ||
+               IsSignDocumentDialogVisible() || IsPdfToolDialogVisible() || IsImageEditWindowVisible() ||
+               IsSetScreenshotHotkeyDialogVisible() || IsEbookSettingsDialogVisible() || IsSettingsDialogVisible() ||
+               IsAdvancedSettingsDialogVisible() || IsConfigureRestrictedUseDialogVisible() ||
+               IsPageGridDialogVisible() || IsKeyboardHelpVisible() || IsUnsavedAnnotationsDialogVisible() ||
+               IsSavePathDialogVisible();
     (void)win;
     return any ? DialogAccels::None : DialogAccels::All;
 }
@@ -1062,6 +1066,10 @@ bool DialogsOnEscape(MainWindow* win) {
     }
     if (IsAddFavoriteDialogVisible()) {
         CloseAddFavoriteDialog();
+        return true;
+    }
+    if (IsOpenFromUrlDialogVisible()) {
+        CloseOpenFromUrlDialog();
         return true;
     }
     if (IsGoToPageDialogVisible()) {

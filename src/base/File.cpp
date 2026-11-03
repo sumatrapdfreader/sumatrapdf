@@ -2099,6 +2099,17 @@ Str SmartResolveDirectory(Str dir) {
 
 #if OS_WIN
 
+// the user's Downloads folder, where web browsers save files by default
+TempStr GetDownloadsDirTemp() {
+    PWSTR pathW = nullptr;
+    TempStr res;
+    if (SUCCEEDED(SHGetKnownFolderPath(FOLDERID_Downloads, 0, nullptr, &pathW)) && pathW) {
+        res = ToUtf8Temp(pathW);
+    }
+    CoTaskMemFree(pathW);
+    return res;
+}
+
 TempWStr GetSelfExePathW() {
     return GetModulePathTemp((HMODULE)&__ImageBase, MAX_PATH + 1);
 }

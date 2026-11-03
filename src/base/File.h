@@ -187,6 +187,7 @@ Str FindFirstValidParentDir(Str path);
 Str PathGetDirTemp(Str path);
 Str PathGetNameTemp(Str path);
 Str SmartResolveDirectory(Str dir);
+TempStr GetDownloadsDirTemp();
 
 bool FileTimeEq(const FILETIME& a, const FILETIME& b);
 int FileTimeDiffInSecs(const FILETIME& ft1, const FILETIME& ft2);

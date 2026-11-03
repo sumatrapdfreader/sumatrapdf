@@ -137,6 +137,7 @@
 #include "TextViewWnd.h"
 #include "SumatraPDFCommon.h"
 #include "VirtualDesktop.h"
+#include "OpenFromUrlCommon.h"
 
 RenderCache* gRenderCache = nullptr;
 static Flags* gFlags = nullptr;
@@ -3078,6 +3079,11 @@ static void MaybeShowTemporaryFileNotification(MainWindow* win, WindowTab* tab) 
 #endif
 }
 
+// Open from URL...: the download finished (OpenFromUrlCommon.cpp)
+void OpenDownloadedFile(MainWindow* win, Str path) {
+    LoadDocument(win, path);
+}
+
 // CmdCopyTemporaryFileToNonTemporary: copies the document from a temporary
 // folder to TemporaryFileDestDir (asked for when not set) and re-opens it from
 // there; its history entry moves along (#6437)
@@ -5082,6 +5088,12 @@ void ExecuteCmd(MainWindow* win, int cmdId) {
 
         case CmdOpenFileWithSumatraFilePicker:
             ShowNavFilesInFolder(win, {}, false);
+            break;
+
+        case CmdOpenFromURL:
+            if (CanAccessDisk()) {
+                ShowOpenFromUrlDialog(win);
+            }
             break;
 
         case CmdClose:

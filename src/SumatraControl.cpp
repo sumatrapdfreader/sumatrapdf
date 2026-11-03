@@ -73,6 +73,7 @@
 #include "NavFilesInFolder.h"
 #include "PerfLog.h"
 #include "BrightnessContrastDialogCommon.h"
+#include "OpenFromUrlCommon.h"
 #include "SumatraControl.h"
 #include "SumatraControlCommon.h"
 
@@ -677,6 +678,8 @@ enum class ControlCmd : u16 {
     TestSignatureStatus = 148,
     // the first window's tab widths, one "dx=<n> text=<title>" line per tab
     TestTabWidths = 149,
+    // [url, dir]: Open from URL as the dialog's Download starts it
+    TestOpenFromUrl = 150,
 };
 
 static_assert((u16)ControlCmd::Quit == (u16)ControlFrameCmd::Quit);
@@ -1014,6 +1017,13 @@ static void ExecuteControlRequest(ControlRequest* req) {
             int exitCode = 0;
             Str res = ClickClearsSelectionResultTemp(word, &exitCode);
             AppendTestResult(req, exitCode, res);
+            break;
+        }
+
+        case ControlCmd::TestOpenFromUrl: {
+            MainWindow* win = len(gWindows) > 0 ? gWindows[0] : nullptr;
+            bool ok = win && StartOpenFromUrl(win, StringArg(req, 0), StringArg(req, 1));
+            AppendTestResult(req, ok ? 0 : 1, ok ? StrL("OK") : StrL("FAIL"));
             break;
         }
 

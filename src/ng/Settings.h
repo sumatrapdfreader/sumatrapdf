@@ -1168,6 +1168,10 @@ struct Settings {
     // or not a folder, Copy Temporary File to Permanent Folder asks for
     // one and remembers it here
     Str temporaryFileDestDir;
+    // folder that Open from URL... saves downloaded files to. When empty,
+    // the dialog offers the Downloads folder and remembers the folder used
+    // here
+    Str downloadDirectory;
     // if true and TemporaryFileDestDir is set, a file from a temporary
     // folder is copied there when it opens, and opened from there
     bool temporaryFileAutoMove;

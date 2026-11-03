@@ -1519,6 +1519,7 @@
     <ClInclude Include="..\src\shared\NavFilesInFolderCommon.h" />
     <ClInclude Include="..\src\shared\NotificationsCommon.h" />
     <ClInclude Include="..\src\shared\OleDragDropCommon.h" />
+    <ClInclude Include="..\src\shared\OpenFromUrlCommon.h" />
     <ClInclude Include="..\src\shared\OverlayScrollbarCommon.h" />
     <ClInclude Include="..\src\shared\PDFScript.h" />
     <ClInclude Include="..\src\shared\PageGridDialogCommon.h" />
@@ -1674,6 +1675,7 @@
     <ClCompile Include="..\src\MergePdf.cpp" />
     <ClCompile Include="..\src\NavFilesInFolder.cpp" />
     <ClCompile Include="..\src\Notifications.cpp" />
+    <ClCompile Include="..\src\OpenFromUrlDialog.cpp" />
     <ClCompile Include="..\src\OverlayScrollbar.cpp" />
     <ClCompile Include="..\src\PDFScriptDialog.cpp" />
     <ClCompile Include="..\src\PageGridDialog.cpp" />
@@ -2210,6 +2212,7 @@
     <ClCompile Include="..\src\shared\NotificationsCommon.cpp" />
     <ClCompile Include="..\src\shared\OleDragDropCommon_win.cpp" />
     <ClCompile Include="..\src\shared\OpenFileFilters_win.cpp" />
+    <ClCompile Include="..\src\shared\OpenFromUrlCommon.cpp" />
     <ClCompile Include="..\src\shared\OverlayScrollbarCommon.cpp">
       <PrecompiledHeader>NotUsing</PrecompiledHeader>
     </ClCompile>

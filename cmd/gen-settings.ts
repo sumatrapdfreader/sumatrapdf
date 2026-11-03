@@ -1506,6 +1506,13 @@ const globalPrefs: Field[] = [
       "Copy Temporary File to Permanent Folder asks for one and remembers it here",
   ).ver("3.7"),
   field(
+    "DownloadDirectory",
+    Str,
+    null,
+    "folder that Open from URL... saves downloaded files to. When empty, the dialog offers the Downloads folder " +
+      "and remembers the folder used here",
+  ).ver("3.7"),
+  field(
     "TemporaryFileAutoMove",
     Bool,
     true,
@@ -2379,6 +2386,7 @@ const globalPrefsLayout = [
   "ShowSignatureStatus",
   "TemporaryFileShowNotification",
   "TemporaryFileDestDir",
+  "DownloadDirectory",
   "TemporaryFileAutoMove",
   "RememberOpenedFiles",
   "RememberStatePerDocument",

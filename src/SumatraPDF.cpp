@@ -149,6 +149,7 @@
 #include "VirtualDesktop.h"
 #include "SumatraCrashCommon.h"
 #include "OpenFileFilters.h"
+#include "OpenFromUrlCommon.h"
 #include "SumatraLog.h"
 
 using Gdiplus::Graphics;
@@ -5982,29 +5983,24 @@ static TempStr KnownFolderTemp(const KNOWNFOLDERID& id) {
     return res;
 }
 
-// asks for the folder temporary files are copied to, starting in Downloads
-// (or Documents)
-static TempStr AskTemporaryFileDestDirTemp(MainWindow* win) {
+// the folder picker, starting in startDir; {} when cancelled
+TempStr AskForFolderTemp(HWND owner, Str title, Str startDir) {
     AutoReleaseComPtr<IFileOpenDialog> dlg;
     HRESULT hr = CoCreateInstance(CLSID_FileOpenDialog, nullptr, CLSCTX_INPROC_SERVER, IID_PPV_ARGS(&dlg));
     if (FAILED(hr) || !dlg) {
-        logf("AskTemporaryFileDestDirTemp: CoCreateInstance(CLSID_FileOpenDialog) failed: 0x%x\n", (uint)hr);
+        logf("AskForFolderTemp: CoCreateInstance(CLSID_FileOpenDialog) failed: 0x%x\n", (uint)hr);
         return {};
     }
     DWORD opts = 0;
     dlg->GetOptions(&opts);
     dlg->SetOptions(opts | FOS_PICKFOLDERS | FOS_FORCEFILESYSTEM | FOS_PATHMUSTEXIST);
-    dlg->SetTitle(CWStrTemp(Tr("Copy temporary files to")));
-    TempStr startDir = KnownFolderTemp(FOLDERID_Downloads);
-    if (!dir::Exists(startDir)) {
-        startDir = KnownFolderTemp(FOLDERID_Documents);
-    }
+    dlg->SetTitle(CWStrTemp(title));
     AutoReleaseComPtr<IShellItem> startItem;
     if (len(startDir) > 0 &&
         SUCCEEDED(SHCreateItemFromParsingName(CWStrTemp(startDir), nullptr, IID_PPV_ARGS(&startItem)))) {
         dlg->SetFolder(startItem);
     }
-    hr = dlg->Show(win->hwndFrame);
+    hr = dlg->Show(owner);
     if (FAILED(hr)) {
         return {};
     }
@@ -6016,6 +6012,16 @@ static TempStr AskTemporaryFileDestDirTemp(MainWindow* win) {
     TempStr res = ToUtf8Temp(pathW);
     CoTaskMemFree(pathW);
     return res;
+}
+
+// asks for the folder temporary files are copied to, starting in Downloads
+// (or Documents)
+static TempStr AskTemporaryFileDestDirTemp(MainWindow* win) {
+    TempStr startDir = KnownFolderTemp(FOLDERID_Downloads);
+    if (!dir::Exists(startDir)) {
+        startDir = KnownFolderTemp(FOLDERID_Documents);
+    }
+    return AskForFolderTemp(win->hwndFrame, Tr("Copy temporary files to"), startDir);
 }
 
 // CmdCopyTemporaryFileToNonTemporary: copies the document from a temporary
@@ -6051,6 +6057,12 @@ static void CopyTemporaryFileToPermanent(MainWindow* win) {
     args.forceReuse = true;
     LoadDocument(&args);
     ShowPlainNotification(win, fmt("%s %s", Tr("Copied to"), dstPath), kNotif5SecsTimeOut);
+}
+
+// Open from URL...: the download finished (OpenFromUrlCommon.cpp)
+void OpenDownloadedFile(MainWindow* win, Str path) {
+    LoadArgs args(path, win);
+    LoadDocument(&args);
 }
 
 static void RenameCurrentFile(MainWindow* win) {
@@ -10545,6 +10557,12 @@ static LRESULT FrameOnCommand(MainWindow* win, HWND hwnd, UINT msg, WPARAM wp, L
 
         case CmdCopyTemporaryFileToNonTemporary:
             CopyTemporaryFileToPermanent(win);
+            break;
+
+        case CmdOpenFromURL:
+            if (CanAccessDisk() && !gPluginMode) {
+                ShowOpenFromUrlDialog(win);
+            }
             break;
 
         case CmdDeleteFile:

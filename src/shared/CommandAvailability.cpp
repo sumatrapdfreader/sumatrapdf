@@ -204,6 +204,7 @@ static const i32 removeIfNoInternetPerms[] = {
     CmdHelpOpenKeyboardShortcuts,
     CmdContributeTranslation,
     CmdSumatraOnline,
+    CmdOpenFromURL,
     0,
 };
 
@@ -264,6 +265,7 @@ static const i32 removeIfNoDiskAccessPerm[] = {
     CmdOpenFileNoHistory,
     CmdOpenFileWithOSFilePicker,
     CmdOpenFileWithSumatraFilePicker,
+    CmdOpenFromURL,
     CmdToggleFilePicker,
     CmdOpenNextFileInFolder,
     CmdOpenPrevFileInFolder,

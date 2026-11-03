@@ -489,6 +489,9 @@
     <ClInclude Include="..\src\shared\OleDragDropCommon.h">
       <Filter>src\shared</Filter>
     </ClInclude>
+    <ClInclude Include="..\src\shared\OpenFromUrlCommon.h">
+      <Filter>src\shared</Filter>
+    </ClInclude>
     <ClInclude Include="..\src\shared\OverlayScrollbarCommon.h">
       <Filter>src\shared</Filter>
     </ClInclude>
@@ -867,6 +870,9 @@
       <Filter>src</Filter>
     </ClCompile>
     <ClCompile Include="..\src\Notifications.cpp">
+      <Filter>src</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\OpenFromUrlDialog.cpp">
       <Filter>src</Filter>
     </ClCompile>
     <ClCompile Include="..\src\OverlayScrollbar.cpp">
@@ -1389,6 +1395,9 @@
       <Filter>src\shared</Filter>
     </ClCompile>
     <ClCompile Include="..\src\shared\OpenFileFilters_win.cpp">
+      <Filter>src\shared</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\shared\OpenFromUrlCommon.cpp">
       <Filter>src\shared</Filter>
     </ClCompile>
     <ClCompile Include="..\src\shared\OverlayScrollbarCommon.cpp">

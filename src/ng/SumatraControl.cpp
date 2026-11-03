@@ -120,6 +120,7 @@ extern "C" {
 #include "SumatraControl.h"
 #include "SumatraControlCommon.h"
 #include "BrightnessContrastDialogCommon.h"
+#include "OpenFromUrlCommon.h"
 
 #include "SumatraLog.h"
 
@@ -838,6 +839,8 @@ enum class ControlCmd : u16 {
     TestDrawRectSelection = 145,
     // the first window's tab widths, one "dx=<n> text=<title>" line per tab
     TestTabWidths = 149,
+    // [url, dir]: Open from URL as the dialog's Download starts it
+    TestOpenFromUrl = 150,
 };
 
 static_assert((u16)ControlCmd::Quit == (u16)ControlFrameCmd::Quit);
@@ -1927,6 +1930,13 @@ static void ExecuteControlRequest(ControlRequest* req) {
             int exitCode = 0;
             Str res = TripleClickLineResultTemp(pdf, clickWord, expectedLine, &exitCode);
             AppendTestResult(req, exitCode, res);
+            break;
+        }
+
+        case ControlCmd::TestOpenFromUrl: {
+            MainWindow* win = len(gWindows) > 0 ? gWindows[0] : nullptr;
+            bool ok = win && StartOpenFromUrl(win, StringArg(req, 0), StringArg(req, 1));
+            AppendTestResult(req, ok ? 0 : 1, ok ? StrL("OK") : StrL("FAIL"));
             break;
         }
 

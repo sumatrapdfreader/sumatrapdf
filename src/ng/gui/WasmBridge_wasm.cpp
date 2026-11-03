@@ -143,6 +143,88 @@ void WasmPickFile(const Func1<Str>& onPicked) {
     WasmJsPickFile(dir.s, dir.len, gPickedPath, (int)dimof(gPickedPath));
 }
 
+// Open from URL: the fetches in flight, each with the buffer its stored path
+// comes back in ("" when it failed)
+struct WasmUrlFetch {
+    Func1<Str> onStored;
+    char path[1024];
+};
+static WasmUrlFetch gUrlFetches[8];
+
+// NOLINTNEXTLINE
+EM_JS(void, WasmJsFetchUrl,
+      (const char* url, int urlLen, const char* name, int nameLen, int slot, char* out, int outCap), {
+          var u = UTF8ToString(url, urlLen);
+          var n = UTF8ToString(name, nameLen);
+          var settled = false;
+          var done = function(path) {
+              if (settled) return;
+              settled = true;
+              stringToUTF8(path ? path : "", out, outCap);
+              _sumatra_wasm_url_fetched(slot);
+          };
+          // stored like a dropped file: a taken name gets a numbered one
+          var store = function(file) {
+              if (!file || !file.bytes) {
+                  done(null);
+                  return;
+              }
+              Module.sumatraStoreUpload("/uploads", String(file.name || n), file.bytes)
+                  .then(
+                      done, function(e) {
+                          console.error("storing " + n + " failed", e);
+                          done(null);
+                      });
+          };
+          // a host can fetch it another way, e.g. through its server for a site
+          // that doesn't allow cross-origin requests (docs/wasm-host-api.md)
+          if (Module.sumatraHostCall && Module.sumatraHostCall("fetchUrl", {url : u, name : n, done : store})) {
+              return;
+          }
+          fetch(u)
+              .then(function(r) {
+                  if (!r.ok) throw new Error("HTTP " + r.status);
+                  return r.arrayBuffer();
+              })
+              .then(
+                  function(bytes) { store({name : n, bytes : bytes}); },
+                  function(e) {
+                      console.error("fetching " + u + " failed", e);
+                      done(null);
+                  });
+      });
+
+extern "C" EMSCRIPTEN_KEEPALIVE void sumatra_wasm_url_fetched(int slot) {
+    if (slot < 0 || slot >= (int)dimof(gUrlFetches)) {
+        return;
+    }
+    WasmUrlFetch& f = gUrlFetches[slot];
+    Func1<Str> cb = f.onStored;
+    f.onStored = {};
+    TempStr path = str::DupTemp(Str(f.path));
+    f.path[0] = 0;
+    logf("sumatra_wasm_url_fetched: '%s'\n", path);
+    cb.Call(path);
+}
+
+// fetches url (or has the host fetch it) and stores it in kWasmUploadDir under
+// name; onStored gets its path, "" when it failed
+void WasmFetchUrl(Str url, Str name, const Func1<Str>& onStored) {
+    dir::CreateAll(Str((char*)kWasmUploadDir));
+    for (int i = 0; i < (int)dimof(gUrlFetches); i++) {
+        WasmUrlFetch& f = gUrlFetches[i];
+        if (f.onStored.IsValid()) {
+            continue;
+        }
+        f.onStored = onStored;
+        f.path[0] = 0;
+        WasmJsFetchUrl(url.s, url.len, name.s, name.len, i, f.path, (int)dimof(f.path));
+        return;
+    }
+    logf("WasmFetchUrl: too many downloads at once\n");
+    onStored.Call(Str());
+}
+
 bool WasmDownloadFile(Str path) {
     if (!file::Exists(path)) {
         logf("WasmDownloadFile: '%s' does not exist\n", path);

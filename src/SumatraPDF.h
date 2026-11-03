@@ -106,6 +106,7 @@ void CrashHandlerSetSettings(Str settings);
 void InitializePolicies(bool restrict);
 bool HasPermission(Perm permission);
 bool CanAccessDisk();
+TempStr AskForFolderTemp(HWND owner, Str title, Str startDir);
 bool AnnotationsAreDisabled();
 bool IsUIRtl();
 bool SumatraLaunchBrowser(Str url);
@@ -344,4 +345,3 @@ TempStr GetSumatraDataDirTemp();
 TempStr GetSumatraBuildSpecificDirTemp();
 
 extern Kind kNotifTemporaryFile;
-

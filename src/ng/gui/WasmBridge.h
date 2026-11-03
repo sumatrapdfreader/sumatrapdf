@@ -19,6 +19,7 @@ constexpr const char* kWasmSettingsDir = "/settings";
 // the callback runs on the main thread with its path; it is not called if the
 // user cancels. Only one pick can be in flight.
 void WasmPickFile(const Func1<Str>& onPicked);
+void WasmFetchUrl(Str url, Str name, const Func1<Str>& onStored);
 
 // Hands the file's bytes to the browser as a download named after it.
 bool WasmDownloadFile(Str path);

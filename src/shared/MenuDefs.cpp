@@ -54,6 +54,10 @@ MenuDef menuDefFileOpen[] = {
         CmdOpenFileWithSumatraFilePicker,
     },
     {
+        TrN("Open from &URL..."),
+        CmdOpenFromURL,
+    },
+    {
         TrN("Use SumatraPDF File Picker"),
         CmdToggleFilePicker,
     },

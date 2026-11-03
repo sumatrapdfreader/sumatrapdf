@@ -116,6 +116,9 @@ void ShowAddFavoriteDialog(MainWindow* win, Str filePath, int pageNo, Str pageLa
 void CloseAddFavoriteDialog();
 bool IsAddFavoriteDialogVisible();
 gpui::El* AddFavoriteDialogBuild(MainWindow* win, gpui::Ctx* cx);
+void CloseOpenFromUrlDialog();
+bool IsOpenFromUrlDialogVisible();
+gpui::El* OpenFromUrlDialogBuild(MainWindow* win, gpui::Ctx* cx);
 
 // what the user typed in the password dialog; only valid during the callback
 struct PasswordDialogResult {

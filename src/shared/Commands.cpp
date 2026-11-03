@@ -358,6 +358,7 @@ const CommandInfo gCommands[] = {
     {CmdDebugSaveSettings, "CmdDebugSaveSettings\0", StrL("Debug: Save Settings")},
     {CmdNewTab, "CmdNewTab\0", StrL("New Tab")},
     {CmdShowSignatures, "CmdShowSignatures\0", StrL("Show Signatures")},
+    {CmdOpenFromURL, "CmdOpenFromURL\0", StrL("Open from URL...")},
 };
 const int gCommandsCount = dimofi(gCommands);
 

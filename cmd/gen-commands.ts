@@ -359,6 +359,7 @@ const commandsRaw = [
     "CmdDebugSaveSettings", "Debug: Save Settings",
     "CmdNewTab", "New Tab",
     "CmdShowSignatures", "Show Signatures",
+    "CmdOpenFromURL", "Open from URL...",
 ];
 
 // removed slots are dropped: nothing outside the generators should see them

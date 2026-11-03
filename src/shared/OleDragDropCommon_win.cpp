@@ -225,19 +225,6 @@ static bool IsImageUrl(Str url) {
     return false;
 }
 
-// Get the user's Downloads folder path
-TempStr GetDownloadsDirTemp() {
-    WCHAR* pathW = nullptr;
-    HRESULT hr = SHGetKnownFolderPath(FOLDERID_Downloads, 0, nullptr, &pathW);
-    if (FAILED(hr) || !pathW) {
-        CoTaskMemFree(pathW);
-        return {};
-    }
-    TempStr res = ToUtf8Temp(pathW);
-    CoTaskMemFree(pathW);
-    return res;
-}
-
 static void AdvanceUrlPathUntilSuffix(Str& p, Str& lastSlash) {
     while (len(p) > 0 && p.s[0] != '?' && p.s[0] != '#') {
         if (p.s[0] == '/') {

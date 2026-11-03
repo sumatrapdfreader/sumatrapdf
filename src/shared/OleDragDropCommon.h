@@ -12,7 +12,6 @@ void FinishDragDrop(IDataObject* dataObj);
 HGLOBAL EncodeBitmapToPngGlobal(HBITMAP hbmp);
 HBITMAP CreateProportionalDragThumbnail(HBITMAP src, int maxEdge);
 HIMAGELIST CreateDragImageList(HBITMAP hbmp);
-TempStr GetDownloadsDirTemp();
 TempStr FileNameFromUrlTemp(Str url);
 TempStr GetTextFromDataObject(IDataObject* dataObj);
 TempStr GetUrlFromDataObject(IDataObject* dataObj);

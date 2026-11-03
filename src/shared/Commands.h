@@ -352,8 +352,9 @@ enum {
     CmdDebugSaveSettings = 546,
     CmdNewTab = 547,
     CmdShowSignatures = 548,
+    CmdOpenFromURL = 549,
 
-    CmdLast = 548,
+    CmdLast = 549,
     CmdFirstCustom = CmdLast + 100,
 
     // aliases, at the end to not mess ordering
