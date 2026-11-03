@@ -5,6 +5,7 @@
 #include "base/AutoWin.h"
 #include "base/File.h"
 #include "base/Pixmap.h"
+#include "base/UITask.h"
 #include "base/Win.h"
 #include "gui/Dpi.h"
 
@@ -901,6 +902,70 @@ struct ThumbnailLayout {
 };
 
 static TempStr FileSizeForHomeListTemp(i64 size);
+
+// Sizes of files on network drives, looked up on a thread: a file on a share
+// that's away waits out a network timeout (#6474). kSizeNotFetched while pending
+struct NetFileSize {
+    Str path;
+    i64 size = kSizeNotFetched;
+};
+static Vec<NetFileSize> gNetFileSizes;
+
+static NetFileSize* FindNetFileSize(Str path) {
+    for (NetFileSize& e : gNetFileSizes) {
+        if (str::Eq(e.path, path)) {
+            return &e;
+        }
+    }
+    return nullptr;
+}
+
+static void NetFileSizeDone(NetFileSize* res) {
+    NetFileSize* e = FindNetFileSize(res->path);
+    if (e) {
+        e->size = res->size;
+    }
+    str::Free(res->path);
+    delete res;
+
+    for (MainWindow* win : gWindows) {
+        if (win->IsCurrentTabAbout()) {
+            HwndInvalidate(win->hwndCanvas);
+        }
+    }
+}
+
+static void NetFileSizeThread(NetFileSize* res) {
+    res->size = file::GetSize(res->path);
+    uitask::Post(MkFunc0<NetFileSize>(NetFileSizeDone, res), "NetFileSizeDone");
+}
+
+// size of t's file, kSizeFetchFail if unknown or still being looked up
+static i64 HomeFileSize(ThumbnailLayout& t) {
+    if (t.fileSize != kSizeNotFetched) {
+        return t.fileSize;
+    }
+    Str path = t.fs->filePath;
+    i64 size;
+    if (!path::IsOnNetworkDrive(path)) {
+        size = file::GetSize(path);
+    } else {
+        NetFileSize* e = FindNetFileSize(path);
+        if (!e) {
+            VecAppend(gNetFileSizes, NetFileSize{str::Dup(path), kSizeNotFetched});
+            auto* res = new NetFileSize{str::Dup(path), kSizeNotFetched};
+            RunAsync(MkFunc0<NetFileSize>(NetFileSizeThread, res), StrL("NetFileSize"));
+            return kSizeFetchFail;
+        }
+        // not cached in t while pending, so the repaint after the lookup sees it
+        if (e->size == kSizeNotFetched) {
+            return kSizeFetchFail;
+        }
+        size = e->size;
+    }
+    t.fileSize = size < 0 ? kSizeFetchFail : size;
+    return t.fileSize;
+}
 
 // true if r overlaps the visible thumbs band (optionally with a small margin)
 static bool IsHomeThumbOnScreen(const Rect& r, const Rect& thumbsArea, int marginY = 0) {
@@ -1998,11 +2063,7 @@ static void DrawHomeListRow(Gfx* gfx, ThumbnailLayout& thumb, const StrVec& filt
     // file::GetSize once per row, then cache on ThumbnailLayout (scroll reuses
     // it). kSizeNotFetched = not tried; kSizeFetchFail = GetSize failed; >= 0
     // is a real size (including empty files).
-    if (thumb.fileSize == kSizeNotFetched) {
-        i64 sz = file::GetSize(path);
-        thumb.fileSize = (sz < 0) ? kSizeFetchFail : sz;
-    }
-    TempStr fileSize = FileSizeForHomeListTemp(thumb.fileSize);
+    TempStr fileSize = FileSizeForHomeListTemp(HomeFileSize(thumb));
     u32 sizeFmt = gfxTextVCenter | gfxTextEllipsis | (isRtl ? gfxTextLeft : gfxTextRight);
     Rect sizeRect = thumb.rcListSize;
     gfx->DrawText(fileSize, sizeRect, sizeFmt, fontText, ThemeWindowTextColor());
@@ -3318,7 +3379,7 @@ static void HomePageShowSelectionTooltip(MainWindow* win) {
 
     // Same text as hover: path + size (size looked up only when shown)
     TempStr tip = str::DupTemp(fs->filePath);
-    i64 size = file::GetSize(fs->filePath);
+    i64 size = HomeFileSize(t);
     if (size >= 0) {
         tip = fmt("%s  %s", tip, str::FormatSizeShortTemp(size, nullptr));
     }

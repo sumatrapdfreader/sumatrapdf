@@ -520,6 +520,7 @@ export const tests: NamedTest[] = [
   // first: it drives the home page, whose thumbnail selection follows the
   // mouse, so it is the one test that cares what the machine was doing before
   ["issue-5978", issue5978],
+  ["issue-6474", issue6474],
   ["password-dialog-reuse-instance", passwordDialogReuseInstance],
   ["issue-6269", issue6269],
   ["sidebar-thumbnails", sidebarThumbnails],
@@ -876,7 +877,6 @@ export const tests: NamedTest[] = [
   ["issue-6469", issue6469],
   ["issue-6470", issue6470],
   ["issue-6472", issue6472],
-  ["issue-6474", issue6474],
   ["issue-6232", issue6232],
   ["issue-6232-filter", issue6232Filter],
   ["issue-6232-refresh", issue6232Refresh],
