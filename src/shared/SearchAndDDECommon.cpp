@@ -2304,7 +2304,7 @@ static bool LaunchInverseSearchCmd(Str cmdLine) {
 }
 
 bool OnInverseSearch(MainWindow* win, int x, int y) {
-    if (!CanAccessDisk() || gPluginMode) {
+    if (OS_WASM || !CanAccessDisk() || gPluginMode) {
         return false;
     }
     WindowTab* tab = win->CurrentTab();

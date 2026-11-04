@@ -49,6 +49,10 @@ void CollectTipsFromString(Str src, StrVec* out) {
         if (str::IsEmptyOrWhiteSpace(line)) {
             continue;
         }
+        // a browser tab has no LaTeX integration
+        if (OS_WASM && str::Contains(line, StrL("(Help/LaTeX-integration)"))) {
+            continue;
+        }
         out->Append(line);
     }
 }

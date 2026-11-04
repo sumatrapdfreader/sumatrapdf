@@ -3,7 +3,9 @@
 
 #include "base/Base.h"
 #include <errno.h>
+#if !OS_WASM
 #include <synctex_parser.h>
+#endif
 #include "base/Win.h"
 #include "base/File.h"
 #include "base/Zip.h"
@@ -60,6 +62,7 @@ struct Pdfsync : Synchronizer {
     Vec<int> sheetIndex;             // start of entries for a sheet in <points>
 };
 
+#if !OS_WASM
 // Synchronizer based on .synctex file generated with SyncTex
 struct SyncTex : Synchronizer {
     SyncTex(Str syncfilename, Str pdffilename, EngineBase* engineIn) : Synchronizer(syncfilename, pdffilename) {
@@ -78,6 +81,7 @@ struct SyncTex : Synchronizer {
     EngineBase* engine; // needed for converting between coordinate systems
     synctex_scanner_p scanner;
 };
+#endif
 
 static i64 GetSyncFileTimestamp(Str path) {
     FILETIME ft = file::GetModificationTime(path);
@@ -134,6 +138,11 @@ int Synchronizer::Create(Str pdffilename, EngineBase* engine, Synchronizer** syn
         return PDFSYNCERR_INVALID_ARGUMENT;
     }
 
+#if OS_WASM
+    // a browser tab has no TeX editor to sync with: no LaTeX integration
+    (void)pdffilename;
+    return PDFSYNCERR_SYNCFILE_NOTFOUND;
+#else
     if (!str::EndsWithI(pdffilename, StrL(".pdf"))) {
         return PDFSYNCERR_INVALID_ARGUMENT;
     }
@@ -159,6 +168,7 @@ int Synchronizer::Create(Str pdffilename, EngineBase* engine, Synchronizer** syn
     }
 
     return PDFSYNCERR_SYNCFILE_NOTFOUND;
+#endif
 }
 
 // PDFSYNC synchronizer
@@ -471,6 +481,7 @@ int Pdfsync::SourceToDoc(Str srcfilename, int line, int col, int* page, Vec<Rect
     return PDFSYNCERR_NOSYNCPOINT_FOR_LINERECORD;
 }
 
+#if !OS_WASM
 static bool PathHasNonAscii(Str s) {
     if (len(s) == 0) {
         return false;
@@ -505,6 +516,7 @@ static Str ConvertLocalToUTF8(Str localStr) {
     return strconv::WStrToUtf8(WStr(wBuf, wLen - 1));
 #endif
 }
+#endif
 
 // The temp files WriteTempSyncFile() wrote. A synctex scanner reads its file
 // for as long as it lives, so they can only go once, on the way out.
@@ -518,6 +530,7 @@ void DeleteSyncTempFiles() {
     gSyncTempFiles = nullptr;
 }
 
+#if !OS_WASM
 // SyncTeX requires .synctex. Replace crash leftovers when renaming the unique .tmp file.
 static TempStr WriteTempSyncFile(Str data, Str who) {
     TempStr tempPath = GetTempFilePathTemp(StrL("stx")); // stxabcdef.tmp
@@ -826,3 +839,4 @@ int SyncTex::SourceToDoc(Str srcfilename, int line, int col, int* page, Vec<Rect
     }
     return PDFSYNCERR_SUCCESS;
 }
+#endif // !OS_WASM

@@ -1243,9 +1243,11 @@ export const targets: Target[] = [
   },
   {
     // synctex: TeX source <-> PDF position mapping (orig compiles it into the
-    // app; a static lib keeps the warning relaxation out of our sources)
+    // app; a static lib keeps the warning relaxation out of our sources).
+    // Not on wasm: a browser tab has no LaTeX integration (PdfSync.cpp)
     name: "synctex",
     kind: "staticlib",
+    platforms: ["win", "linux", "mac"],
     sources: ["ext/synctex/synctex_parser.c", "ext/synctex/synctex_parser_utils.c"],
     includes: ["ext/synctex", "ext/a-zlib"],
     deps: ["a-zlib"],
