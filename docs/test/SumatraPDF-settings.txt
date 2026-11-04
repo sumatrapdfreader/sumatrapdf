@@ -77,6 +77,7 @@ ReadingBar [
 FastScrollOverScrollbar = false
 PreventSleepInFullscreen = true
 TabWidth = 300
+TabsEqualWidth = true
 Theme = Light
 HelpTheme = app
 DocumentColorsFollowTheme = off

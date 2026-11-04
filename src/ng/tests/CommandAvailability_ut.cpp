@@ -38,7 +38,7 @@ void CommandAvailability_UnitTests() {
     utassert(MenuVis(CmdNone, noDoc) == CommandVisibility::Hide);
     utassert(MenuVis(CmdOpenFile, noDoc) == CommandVisibility::Show);
     utassert(MenuVis(CmdGoToHomePage, noDoc) == CommandVisibility::Show);
-    utassert(PaletteVis(CmdGoToHomePage, noDoc) == CommandVisibility::Hide);
+    utassert(PaletteVis(CmdGoToHomePage, noDoc) == CommandVisibility::Show);
     utassert(MenuVis(CmdPrint, noDoc) == CommandVisibility::Hide);
     utassert(MenuVis(CmdTogglePageGrid, noDoc) == CommandVisibility::Hide);
     utassert(MenuVis(CmdToggleTransparencyGrid, noDoc) == CommandVisibility::Hide);
