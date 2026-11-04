@@ -2399,53 +2399,65 @@ write_rich_content(fz_context *ctx, pdf_annot *annot, fz_buffer *buf, pdf_obj **
 
 #if FZ_ENABLE_HTML_ENGINE
 
+/* SumatraPDF: each line of plain text becomes its own <p dir="auto">, so a
+ * Persian or Hebrew line gets a right-to-left base direction (and its
+ * text-align:left becomes the start of the line, i.e. right) while a Latin
+ * line stays left-to-right. As one left-to-right block, a Persian sentence
+ * with a Latin word in it came out in the wrong order and left-aligned. An
+ * empty line keeps its height with a no-break space. */
 static char *
 escape_text(fz_context *ctx, const char *s)
 {
-	size_t len = 1;
-	char c;
+	static const char p_open[] = "<p dir=\"auto\">";
+	static const char p_close[] = "</p>";
+	static const char nbsp[] = "&#160;";
+	size_t len = 1 + sizeof p_open + sizeof p_close + sizeof nbsp;
 	const char *s2;
 	char *d, *d2;
+	char c;
+	int empty = 1;
 
 	for (s2 = s; (c = *s2++) != 0; len++)
 	{
-		if (c == '<')
-			len += 3; /* &lt; */
-		else if (c == '>')
-			len += 3; /* &gt; */
+		if (c == '<' || c == '>')
+			len += 3; /* &lt; &gt; */
 		else if (c == '&')
 			len += 4; /* &amp; */
+		else if (c == '\n' || c == '\r')
+			len += sizeof p_close + sizeof p_open + sizeof nbsp;
 	}
 
 	d = d2 = fz_malloc(ctx, len);
 
+#define APPEND(str) (memcpy(d, str, sizeof str - 1), d += sizeof str - 1)
+	APPEND(p_open);
 	for (s2 = s; (c = *s2++) != 0; )
 	{
+		if (c == '\r' || c == '\n')
+		{
+			if (c == '\r' && *s2 == '\n')
+				s2++;
+			if (empty)
+				APPEND(nbsp);
+			APPEND(p_close);
+			APPEND(p_open);
+			empty = 1;
+			continue;
+		}
+		empty = 0;
 		if (c == '<')
-		{
-			*d++ = '&';
-			*d++ = 'l';
-			*d++ = 't';
-			*d++ = ';';
-		}
+			APPEND("&lt;");
 		else if (c == '>')
-		{
-			*d++ = '&';
-			*d++ = 'g';
-			*d++ = 't';
-			*d++ = ';';
-		}
+			APPEND("&gt;");
 		else if (c == '&')
-		{
-			*d++ = '&';
-			*d++ = 'a';
-			*d++ = 'm';
-			*d++ = 'p';
-			*d++ = ';';
-		}
+			APPEND("&amp;");
 		else
 			*d++ = c;
 	}
+	if (empty)
+		APPEND(nbsp);
+	APPEND(p_close);
+#undef APPEND
 	*d++ = 0;
 
 	return d2;
