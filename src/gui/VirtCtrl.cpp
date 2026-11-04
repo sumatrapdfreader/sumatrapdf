@@ -31,7 +31,6 @@ VirtButton* NewThemedButton(HWND hwndForDpi, Str text, PlatformFont* font, bool 
 }
 
 constexpr int kStyledBtnHoverShift = 14;
-constexpr int kStyledBtnFaintShift = 25;
 // a black fill moved by 14 is still black; hover has to read as a lighter gray
 constexpr int kFilledDarkHoverShift = 48;
 
@@ -53,9 +52,8 @@ void SetVirtButtonStyle(VirtButton* b, VirtButtonStyle style) {
             border = gColsLine[kColLineFg];
             break;
         case VirtButtonStyle::Ghost:
-            fg = gColsBtn[kColBtnTextDisabled];
-            // muted already: disabled, it fades further
-            b->SetColor(kColBtnTextDisabled, AccentColor(colBg, kStyledBtnFaintShift));
+            // full text color: a muted label is indistinguishable from the
+            // disabled one once that is lifted off the background (#6478)
             break;
     }
     b->SetColor(kColBtnText, fg);

@@ -4639,6 +4639,10 @@ static void RerenderFixedPage() {
 }
 
 void UpdateDocumentColors() {
+    // unit tests switch themes without a render cache
+    if (!gRenderCache) {
+        return;
+    }
     Color bg;
     Color text = ThemePageRenderColors(bg);
     bool pagesDark = !IsLightColor(bg);

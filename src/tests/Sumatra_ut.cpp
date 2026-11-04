@@ -18,6 +18,7 @@
 #include "gui/Layout.h"
 #include "gui/PlatformFont.h"
 #include "gui/Gfx.h"
+#include "gui/GuiColors.h"
 #include "gui/VirtCtrl.h"
 
 #include "AppTools.h"
@@ -35,6 +36,7 @@
 #include "CommandPaletteCommon.h"
 #include "SvgIcons.h"
 #include "AppUnitTests.h"
+#include "Theme.h"
 #include "PDFScript.h"
 #include "RegistryPreview.h"
 
@@ -156,6 +158,37 @@ static void PaletteRowColorTest() {
     utassert(!PaletteRowColor(&typed, StrL("not a color"), &col));
 
     if (!prevSettings) {
+        DeleteSettings(gSettings);
+        gSettings = nullptr;
+    }
+}
+
+// a disabled ghost button (Merge PDF's Remove) must look different from an
+// enabled one in every built-in theme (#6478)
+static void GhostButtonDisabledTest() {
+    Settings* prevSettings = gSettings;
+    if (!gSettings) {
+        gSettings = NewSettings({});
+    }
+    CreateThemeCommands();
+
+    int nBuiltIn = ThemeGetCount() - len(*gSettings->themes);
+    for (int i = 0; i < nBuiltIn; i++) {
+        SetThemeByIndex(i);
+        VirtButton b(StrL("Remove"), nullptr);
+        SetVirtButtonStyle(&b, VirtButtonStyle::Ghost);
+        Color bg = b.GetColor(kColBtnBg);
+        Color enabled = b.TextColor(bg);
+        b.SetFlag(vwfEnabled, false);
+        Color disabled = b.TextColor(bg);
+        // Solarized Dark's own text and disabled colors are only ~24 apart
+        float delta = GetLightness(enabled) - GetLightness(disabled);
+        utassert(delta > 20 || delta < -20);
+    }
+
+    SetThemeByIndex(0);
+    if (!prevSettings) {
+        FreeThemes();
         DeleteSettings(gSettings);
         gSettings = nullptr;
     }
@@ -406,6 +439,7 @@ static void SumatraPDF_UnitTests() {
     CachedObjects_UnitTests();
     CommandPaletteModel_UnitTests();
     PaletteRowColorTest();
+    GhostButtonDisabledTest();
     DocPropertiesTest();
     parseCommandsTest();
     colorTest();
