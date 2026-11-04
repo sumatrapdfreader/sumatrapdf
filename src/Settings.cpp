@@ -1280,7 +1280,7 @@ const StructInfo gSettingsInfo = {
     "positive value like 300 to enable it\0voice id for Read Aloud text-to-speech; empty or unset means system "
     "default. Voice ids match those used internally by the Read Aloud Voice menu (WinRT voice id or SAPI token "
     "id)\0playback speed multiplier for Read Aloud text-to-speech (0.5 .. 3.0), 1 is normal speed; can also be changed "
-    "from the Read Aloud playback bar\0pixels per second for Automatically Scroll (View menu / Ctrl+Shift+H). 8 to "
+    "from the Read Aloud playback bar\0pixels per second for Automatically Scroll (View menu / Ctrl+Shift+H). 1 to "
     "320; also changed from the auto-scroll bar and the arrow keys while scrolling\0reading bar (View menu): a "
     "horizontal band on the page to keep your place. Highlight fills the band; Invert dims everything else\0if true, "
     "mouse wheel scrolling is faster when mouse is over a scrollbar\0if true, prevents the screen from turning off "

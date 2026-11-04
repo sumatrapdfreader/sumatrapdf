@@ -1836,7 +1836,7 @@ const globalPrefs: Field[] = [
     "ReadingAutoScrollSpeed",
     Float,
     40,
-    "pixels per second for Automatically Scroll (View menu / Ctrl+Shift+H). 8 to 320; also changed from the auto-scroll bar and the arrow keys while scrolling",
+    "pixels per second for Automatically Scroll (View menu / Ctrl+Shift+H). 1 to 320; also changed from the auto-scroll bar and the arrow keys while scrolling",
   ).ver("3.7"),
   struct(
     "ReadingBar",

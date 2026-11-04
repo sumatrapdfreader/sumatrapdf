@@ -4,7 +4,7 @@
 // --- shared by ReadingAutoScrollCommon.cpp and each app's ReadingAutoScroll.cpp ---
 
 // Arrow keys step these. Finer than Acrobat's 0-9 so speed is tunable.
-static const float kSpeeds[] = {8, 12, 16, 20, 24, 32, 40, 48, 56, 64, 80, 96, 120, 160, 200, 260, 320};
+static const float kSpeeds[] = {1, 2, 3, 4, 6, 8, 12, 16, 20, 24, 32, 40, 48, 56, 64, 80, 96, 120, 160, 200, 260, 320};
 int SpeedCount();
 float CurrentSpeed();
 int ClosestSpeedIdx(float s);

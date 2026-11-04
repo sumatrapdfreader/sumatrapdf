@@ -1067,7 +1067,7 @@ struct Settings {
     // playback bar
     float readAloudSpeed;
     // pixels per second for Automatically Scroll (View menu /
-    // Ctrl+Shift+H). 8 to 320; also changed from the auto-scroll bar and
+    // Ctrl+Shift+H). 1 to 320; also changed from the auto-scroll bar and
     // the arrow keys while scrolling
     float readingAutoScrollSpeed;
     // reading bar (View menu): a horizontal band on the page to keep your
