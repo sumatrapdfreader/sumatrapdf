@@ -562,7 +562,7 @@ void MergeGrid::DrawCell(Gfx* gfx, int idx) {
     r.Offset(origin.x, origin.y);
     Color colBg = GetColor(kColListBg);
     Color colTxt = ThemeWindowTextColor();
-    Color colMuted = ThemeWindowTextDisabledColor();
+    Color colMuted = ThemeWindowDarkerTextColor();
     bool isFocused = HasFlag(vwfFocused);
     int labelDy = DpiScaleByDpi(dpi, kLabelDy);
 
@@ -1693,7 +1693,7 @@ bool InsertPosWnd::Create(HWND owner, Str what, int n, int afterPage) {
     onClose = MkFunc1Void(OnInsertPosClose);
     colTxt = ThemeWindowTextColor();
     colBg = ThemeWindowControlBackgroundColor();
-    colMuted = ThemeWindowTextDisabledColor();
+    colMuted = ThemeWindowDarkerTextColor();
     PlatformFont* fontQuery = DlgUiFont(kToolDlgQueryFontPx);
     PlatformFont* fontText = DlgUiFont(kToolDlgTextFontPx);
     PlatformFont* fontMeta = DlgUiFont(kToolDlgMetaFontPx);
@@ -2020,7 +2020,7 @@ bool MergePdfWnd::Create(MainWindow* w, WindowTab* tab) {
 
     colTxt = ThemeWindowTextColor();
     colBg = ThemeWindowControlBackgroundColor();
-    colMuted = ThemeWindowTextDisabledColor();
+    colMuted = ThemeWindowDarkerTextColor();
     fontText = DlgUiFont(kToolDlgTextFontPx);
     fontMeta = DlgUiFont(kToolDlgMetaFontPx);
     SetFont(fontText);

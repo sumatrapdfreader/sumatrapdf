@@ -217,7 +217,7 @@ bool PdfToolDialog::CreateToolDialog(MainWindow* w, WindowTab* tab, Str title) {
     srcPath = str::Dup(tab->filePath);
     colTxt = ThemeWindowTextColor();
     colBg = ThemeWindowControlBackgroundColor();
-    colMuted = ThemeWindowTextDisabledColor();
+    colMuted = ThemeWindowDarkerTextColor();
     closeOnEsc = true;
     onClose = MkFunc1Void(PdfToolDialogOnClose);
 

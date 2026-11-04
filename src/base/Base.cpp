@@ -6924,6 +6924,58 @@ Color EnsureContrast(Color fg, Color bg, int minDelta) {
     return AdjustLightness2(fg, sign * ((float)minDelta - ad));
 }
 
+static float SrgbToLinear(u8 c) {
+    float v = (float)c / 255.f;
+    return v <= 0.03928f ? v / 12.92f : powf((v + 0.055f) / 1.055f, 2.4f);
+}
+
+static float RelativeLuminance(Color c) {
+    u8 r, g, b;
+    UnpackColor(c, r, g, b);
+    return 0.2126f * SrgbToLinear(r) + 0.7152f * SrgbToLinear(g) + 0.0722f * SrgbToLinear(b);
+}
+
+// WCAG contrast ratio, 1 (same) to 21 (black on white); text wants 4.5
+float ContrastRatio(Color a, Color b) {
+    float la = RelativeLuminance(a);
+    float lb = RelativeLuminance(b);
+    if (la < lb) {
+        std::swap(la, lb);
+    }
+    return (la + 0.05f) / (lb + 0.05f);
+}
+
+constexpr float kContrastStep = 4.f;
+
+// the least shift of `fg` lightness in direction `sign` that reaches `minRatio`,
+// or the furthest one
+static Color ShiftForContrast(Color fg, Color bg, float minRatio, float sign) {
+    Color c = fg;
+    for (float units = kContrastStep; units <= 255.f; units += kContrastStep) {
+        c = AdjustLightness2(fg, sign * units);
+        if (ContrastRatio(c, bg) >= minRatio) {
+            break;
+        }
+    }
+    return c;
+}
+
+// Shift `fg` away from `bg` until their contrast ratio is at least `minRatio`.
+// Hue is kept; e.g. Nord's #4c566a on #3b4252 (1.4) becomes a lighter slate.
+Color EnsureContrastRatio(Color fg, Color bg, float minRatio) {
+    if (IsSpecialColor(fg) || IsSpecialColor(bg) || ContrastRatio(fg, bg) >= minRatio) {
+        return fg;
+    }
+    float sign = RelativeLuminance(fg) >= RelativeLuminance(bg) ? 1.f : -1.f;
+    Color c = ShiftForContrast(fg, bg, minRatio, sign);
+    if (ContrastRatio(c, bg) >= minRatio) {
+        return c;
+    }
+    // e.g. a mid-gray background: the other side may have more room
+    Color other = ShiftForContrast(fg, bg, minRatio, -sign);
+    return ContrastRatio(other, bg) > ContrastRatio(c, bg) ? other : c;
+}
+
 DWORD PremultiplyPixel(Color c, u8 alpha) {
     u8 r, g, b;
     UnpackColor(c, r, g, b);

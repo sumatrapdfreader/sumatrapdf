@@ -980,9 +980,24 @@ static Color BlendTextAndBgHalfway() {
     return MkRgb(r, g, b);
 }
 
+// WCAG minimums: 4.5 for text, 3 for disabled (WCAG exempts it, users don't)
+constexpr float kMinSecondaryTextContrast = 4.5f;
+constexpr float kMinDisabledTextContrast = 3.f;
+
+// a theme's muted color lifted to `minRatio` against the dialog background, but
+// never past the theme's own text (Solarized Dark's text is only 4.1)
+static Color WithMinContrast(Color col, float minRatio) {
+    Color bg = ThemeWindowControlBackgroundColor();
+    float textRatio = ContrastRatio(ThemeWindowTextColor(), bg);
+    return EnsureContrastRatio(col, bg, std::min(minRatio, textRatio));
+}
+
 Color ThemeWindowTextDisabledColor() {
-    return gUseHighContrast ? SysDisabledTextColor()
-                            : GetThemeCol(gCurrentTheme->disabledTextColor, BlendTextAndBgHalfway());
+    if (gUseHighContrast) {
+        return SysDisabledTextColor();
+    }
+    Color col = GetThemeCol(gCurrentTheme->disabledTextColor, BlendTextAndBgHalfway());
+    return WithMinContrast(col, kMinDisabledTextContrast);
 }
 
 Color ThemeWindowDarkerTextColor() {
@@ -992,7 +1007,8 @@ Color ThemeWindowDarkerTextColor() {
     }
     // fallback: slightly muted primary text (not as flat as disabled)
     Color fallback = AccentColor(ThemeWindowTextColor(), 40);
-    return GetThemeCol(gCurrentTheme->darkerTextColor, fallback);
+    Color col = GetThemeCol(gCurrentTheme->darkerTextColor, fallback);
+    return WithMinContrast(col, kMinSecondaryTextContrast);
 }
 
 Color ThemeWindowControlBackgroundColor() {

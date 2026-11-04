@@ -359,7 +359,7 @@ void AdvancedSettingsWnd::DrawListBoxItem(VirtListBox::DrawItemEvent* ev) {
     if (IsSpecialColor(colText)) {
         colText = GetSysColor(COLOR_WINDOWTEXT);
     }
-    Color colMuted = ThemeWindowTextDisabledColor();
+    Color colMuted = ThemeWindowDarkerTextColor();
     gfx->FillRect(rc, colBg);
     bool isRtl = HwndIsRtl(lb->GetHwnd());
 
@@ -1048,7 +1048,7 @@ void AdvancedSettingsWnd::UpdateHints() {
     }
     VecReset(hintRow->children);
     Color colBg = ThemeWindowControlBackgroundColor();
-    Color colMuted = ThemeWindowTextDisabledColor();
+    Color colMuted = ThemeWindowDarkerTextColor();
     AdvHint hints[kAdvMaxHints];
     int n = AdvSettingsHints(state, hints);
     for (int i = 0; i < n; i++) {
@@ -1102,7 +1102,7 @@ bool AdvancedSettingsWnd::Create(MainWindow* mainWin) {
 
     auto colBg = ThemeWindowControlBackgroundColor();
     auto colTxt = ThemeWindowTextColor();
-    auto colMuted = ThemeWindowTextDisabledColor();
+    auto colMuted = ThemeWindowDarkerTextColor();
     SetColors(colTxt, colBg);
     bool isRtl = IsUIRtl();
 

@@ -194,7 +194,7 @@ bool GoToPageWnd::Create(MainWindow* mainWin) {
 
     colTxt = ThemeWindowTextColor();
     colBg = ThemeWindowControlBackgroundColor();
-    colMuted = ThemeWindowTextDisabledColor();
+    colMuted = ThemeWindowDarkerTextColor();
     fontText = DlgUiFont(kToolDlgTextFontPx);
     fontQuery = DlgUiFont(kToolDlgQueryFontPx);
     fontMeta = DlgUiFont(kToolDlgMetaFontPx);

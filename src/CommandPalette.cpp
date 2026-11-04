@@ -885,7 +885,7 @@ void CommandPaletteWnd::FillSwitchRow() {
     }
     Color colBg = ThemeWindowControlBackgroundColor();
     Color colTxt = ThemeWindowTextColor();
-    Color colMuted = ThemeWindowTextDisabledColor();
+    Color colMuted = ThemeWindowDarkerTextColor();
     PaletteSwitch switches[kPaletteMaxSwitches];
     int n = PaletteSwitches(*this, win && win->AsFixed(), switches);
     for (int i = 0; i < n; i++) {
@@ -934,7 +934,7 @@ void CommandPaletteWnd::UpdateHelpRow() {
     countText = nullptr;
 
     Color colBg = ThemeWindowControlBackgroundColor();
-    Color colMuted = ThemeWindowTextDisabledColor();
+    Color colMuted = ThemeWindowDarkerTextColor();
     PaletteHint hints[kPaletteMaxHints];
     int nHelp = PaletteHelpHints(kind, hints);
     for (int i = 0; i < nHelp; i++) {
@@ -1836,7 +1836,7 @@ void CommandPaletteWnd::DrawListBoxItem(VirtListBox::DrawItemEvent* ev) {
 
     TempStr rightStr = PaletteRightColumnTemp(data);
     PlatformFont* rightFont = PaletteFont(kPaletteMetaFontPx);
-    Color rightCol = ThemeWindowTextDisabledColor();
+    Color rightCol = ThemeWindowDarkerTextColor();
     // a setting's value reads as part of the row; one off its default is bold
     if (IsSettingRow(data) && len(data->settingPath) == 0) {
         rightCol = colText;

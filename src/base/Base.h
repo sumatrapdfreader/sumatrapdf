@@ -2758,6 +2758,8 @@ float GetLightness(Color c);
 bool IsLightColor(Color c);
 Color AccentColor(Color col, int light, int dark = 0);
 Color EnsureContrast(Color fg, Color bg, int minDelta = 80);
+float ContrastRatio(Color a, Color b);
+Color EnsureContrastRatio(Color fg, Color bg, float minRatio);
 bool IsNearBlack(Color c);
 DWORD PremultiplyPixel(Color c, u8 alpha);
 

@@ -184,7 +184,15 @@ static void GhostButtonDisabledTest() {
         // Solarized Dark's own text and disabled colors are only ~24 apart
         float delta = GetLightness(enabled) - GetLightness(disabled);
         utassert(delta > 20 || delta < -20);
+
+        // secondary text (dialog labels, hints) and disabled text stay readable;
+        // neither has to beat the theme's own text (Solarized Dark's is 4.1)
+        Color ctlBg = ThemeWindowControlBackgroundColor();
+        float textRatio = ContrastRatio(ThemeWindowTextColor(), ctlBg);
+        utassert(ContrastRatio(ThemeWindowDarkerTextColor(), ctlBg) >= std::min(4.5f, textRatio) - 0.05f);
+        utassert(ContrastRatio(ThemeWindowTextDisabledColor(), ctlBg) >= std::min(3.f, textRatio) - 0.05f);
     }
+    utassert(ContrastRatio(kColBlack, kColWhite) > 20.9f);
 
     SetThemeByIndex(0);
     if (!prevSettings) {

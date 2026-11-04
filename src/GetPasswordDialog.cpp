@@ -103,7 +103,7 @@ void GetPasswordWnd::OnOk(VirtMouseEvent*) {
 bool GetPasswordWnd::Create() {
     Color colTxt = ThemeWindowTextColor();
     Color colBg = ThemeWindowControlBackgroundColor();
-    Color colMuted = ThemeWindowTextDisabledColor();
+    Color colMuted = ThemeWindowDarkerTextColor();
     PlatformFont* fontText = DlgUiFont(kToolDlgTextFontPx);
     PlatformFont* fontQuery = DlgUiFont(kToolDlgQueryFontPx);
     SetFont(fontText);

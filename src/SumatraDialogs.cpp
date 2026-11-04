@@ -428,7 +428,7 @@ void DrawDlgListItem(VirtListBox* lb, Gfx* gfx, Rect rc, bool selected, Str text
     bool isRtl = IsUIRtl();
     if (len(meta) > 0) {
         u32 fmtMeta = gfxTextVCenter | (isRtl ? (gfxTextLeft | gfxTextRtl) : gfxTextRight);
-        gfx->DrawText(meta, rcText, fmtMeta, lb->font, ThemeWindowTextDisabledColor());
+        gfx->DrawText(meta, rcText, fmtMeta, lb->font, ThemeWindowDarkerTextColor());
         int metaDx = gfx->MeasureText(meta, lb->font).dx + DpiScaleByDpi(lb->dpi, kToolDlgGapDx);
         rcText.dx -= metaDx;
         if (isRtl) {

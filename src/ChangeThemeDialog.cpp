@@ -187,7 +187,7 @@ void ChangeThemeWnd::Recolor() {
     if (listBox) {
         SetDlgListColors(listBox);
     }
-    labelDocumentColorsFollowTheme->SetColor(kColText, ThemeWindowTextDisabledColor());
+    labelDocumentColorsFollowTheme->SetColor(kColText, ThemeWindowDarkerTextColor());
     SetDlgButtonColors(btnCancel, DlgButtonStyle::Outline);
     SetDlgButtonColors(btnChange, DlgButtonStyle::Filled);
     HwndInvalidate(hwnd);
@@ -304,7 +304,7 @@ bool ChangeThemeWnd::Create(MainWindow* mainWin) {
     {
         HBox* row = NewDlgRow();
         labelDocumentColorsFollowTheme =
-            NewDlgLabel(Tr("Document colors follow theme"), fontText, ThemeWindowTextDisabledColor(), kToolDlgLineDy);
+            NewDlgLabel(Tr("Document colors follow theme"), fontText, ThemeWindowDarkerTextColor(), kToolDlgLineDy);
         row->AddChild(labelDocumentColorsFollowTheme);
         row->AddChild(new Spacer(0, 0), 1);
 

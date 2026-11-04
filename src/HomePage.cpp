@@ -412,7 +412,7 @@ void AboutCtrl::Sync() {
     PlatformFont* fontText = HomePageFont(kAboutTextFontSize);
     PlatformFont* fontMeta = HomePageFont(kAboutMetaFontSize);
     Color colText = ThemeWindowTextColor();
-    Color colMuted = ThemeWindowTextDisabledColor();
+    Color colMuted = ThemeWindowDarkerTextColor();
 
     version->SetText(AboutVersionLineTemp());
     version->font = fontMeta;
@@ -2006,7 +2006,7 @@ static void DrawHomeListRow(Gfx* gfx, ThumbnailLayout& thumb, const StrVec& filt
         TempStr dirPath = path::GetDirTemp(path);
         u32 pathFmt = gfxTextVCenter | gfxTextPathEllipsis | (isRtl ? gfxTextLeft : gfxTextRight);
         Rect pathRect = thumb.rcListPath;
-        gfx->DrawText(dirPath, pathRect, pathFmt, fontText, ThemeWindowTextDisabledColor());
+        gfx->DrawText(dirPath, pathRect, pathFmt, fontText, ThemeWindowDarkerTextColor());
     }
 
     // file::GetSize once per row, then cache on ThumbnailLayout (scroll reuses
@@ -2092,7 +2092,7 @@ static void DrawHomeThumbnail(Gfx* gfx, ThumbnailLayout& thumb, const StrVec& fi
                              fontText, ThemeWindowTextColor());
     if (len(meta) > 0) {
         Rect rcMeta(rcName.x, rcName.y + rcName.dy, rcName.dx, thumb.rcText.dy - rcName.dy);
-        gfx->DrawText(meta, rcMeta, fmt, HomePageFont(12), ThemeWindowTextDisabledColor());
+        gfx->DrawText(meta, rcMeta, fmt, HomePageFont(12), ThemeWindowDarkerTextColor());
     }
 }
 

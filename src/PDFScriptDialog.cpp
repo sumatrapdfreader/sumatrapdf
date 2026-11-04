@@ -408,7 +408,7 @@ void PDFScriptWnd::Create(MainWindow* owner, Str path) {
     input = str::Dup(path);
     colTxt = ThemeWindowTextColor();
     colBg = ThemeWindowControlBackgroundColor();
-    colMuted = ThemeWindowTextDisabledColor();
+    colMuted = ThemeWindowDarkerTextColor();
     fontText = DlgUiFont(kToolDlgTextFontPx);
     fontMeta = DlgUiFont(kToolDlgMetaFontPx);
     fontCode = GetUserGuiFont(StrL("Consolas"), DpiScale(kScriptCodeFontPx));

@@ -2309,7 +2309,7 @@ void DrawAnnotationListRow(Gfx* gfx, PlatformFont* font, Rect rc, Annotation* an
                 gfx->PushClip(rcContents);
                 DrawMaybeHighlightedText(gfx, rcContents, oneLine, filterWords, hlScratch, colBg, false, false,
                                          gfxTextEllipsis | gfxTextVCenter | gfxTextLeft, font,
-                                         EnsureContrast(ThemeWindowTextDisabledColor(), colBg));
+                                         EnsureContrast(ThemeWindowDarkerTextColor(), colBg));
                 gfx->PopClip();
             }
         }
@@ -2387,7 +2387,7 @@ static void BuildAnnotationHoverOverlay(AnnotationHoverOverlay* overlay, Annotat
     CollectAnnotationHoverRows(annot, rows);
 
     Color textColor = AnnotationHoverText();
-    Color labelColor = ThemeWindowTextDisabledColor();
+    Color labelColor = ThemeWindowDarkerTextColor();
     auto* title = NewVirtText({
         .s = AnnotationReadableNameTemp(Type(annot)),
         .font = GetBoldPlatformFont(overlay->font),
