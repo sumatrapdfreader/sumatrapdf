@@ -59,6 +59,7 @@ extern bool MarkdownToc_UnitTestHighlightWikilinks();
 #if IS_DEBUG
 extern bool PdfDarkModeImageStats_UnitTest();
 extern bool EbookDoc_UnitTestLoading();
+extern bool EbookDoc_UnitTestLinearNo();
 bool GumboHtmlParser_UnitTest();
 bool DisplayMode_UnitTestZoom();
 bool Translations_UnitTestUnescape();
@@ -196,6 +197,7 @@ int main(int argc, char** argv) {
     utassert(PdfDarkModeImageStats_UnitTest());
     utassert(Accelerators_UnitTestFolderNavIsSafe());
     utassert(EbookDoc_UnitTestLoading());
+    utassert(EbookDoc_UnitTestLinearNo());
     utassert(GumboHtmlParser_UnitTest());
     utassert(DisplayMode_UnitTestZoom());
     utassert(Translations_UnitTestUnescape());
