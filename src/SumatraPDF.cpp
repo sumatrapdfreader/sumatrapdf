@@ -1240,6 +1240,11 @@ static void HideCanvasScrollbars(MainWindow* win) {
     // would still describe the smaller area, so the next paint stops a
     // scrollbar's width short and the old bars stay on screen (issue #6062).
     win->UpdateCanvasSize();
+    // Home laid out for the narrower canvas would leave that strip black and
+    // not show its own bar again, as WM_SIZE would have (issue #6462)
+    if (win->IsCurrentTabAbout()) {
+        HomePageRelayout(win);
+    }
     HwndInvalidate(hwnd);
 }
 
