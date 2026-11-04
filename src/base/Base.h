@@ -2702,7 +2702,7 @@ constexpr bool ColorSkipsPaint(Color c) {
 }
 
 // PdfColor is aarrggbb, where 0xff alpha is opaque and 0x0 alpha is transparent
-// Color is ggrrbb (Win32 COLORREF layout) and typically has no alpha
+// Color is bbggrr (Win32 COLORREF layout) and typically has no alpha
 using PdfColor = uint64_t;
 
 // A color setting: the text the user wrote (e.g. "#ff0000", "checkered") and
