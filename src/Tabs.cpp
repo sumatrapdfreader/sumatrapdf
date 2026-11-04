@@ -393,10 +393,16 @@ static void TabsContextMenu(TabsCtrl* tabsCtrl, VirtMouseEvent* ev) {
         RemoveBadMenuSeparators(popup);
     }
     MarkMenuOwnerDraw(popup);
+    // handled: the menu loop can close the window and free tabsCtrl, so the
+    // event must not bubble up to it
+    ev->didHandle = true;
     uint flags = TPM_RETURNCMD | TPM_RIGHTBUTTON;
     int cmdId = TrackPopupMenu(popup, flags, pt.x, pt.y, 0, win->hwndFrame, nullptr);
     FreeMenuOwnerDrawInfoData(popup);
     DestroyMenu(popup);
+    if (!IsMainWindowValidAndNotClosing(win)) {
+        return;
+    }
     switch (cmdId) {
         case CmdClose: {
             CloseTab(tabUnderMouse, false);
