@@ -198,6 +198,9 @@ EXPORTS
 	fz_outline_iterator_next
 	fz_outline_iterator_down
 	fz_outline_iterator_up
+	fz_outline_iterator_prev
+	fz_outline_iterator_insert
+	fz_is_external_link
 
 	fz_load_page
 
@@ -1323,6 +1326,10 @@ EXPORTS
 	pdf_delete_page_range
 
 	pdf_page_write
+	pdf_create_link
+	pdf_new_outline_iterator
+	pdf_new_uri_from_explicit_dest
+	pdf_parse_write_options
 
 
 

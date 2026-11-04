@@ -11344,9 +11344,78 @@ TempStr EngineMupdfGetPdfOutline(Str path) {
     return res;
 }
 
+// an ebook link as a PDF link: "#note1" becomes "#page=N&view=..." pointing
+// at the PDF page it lands on; external links stay. nullptr if unresolvable.
+static char* EbookLinkToPdfUri(fz_context* ctx, fz_document* doc, const char* uri) {
+    if (!uri) {
+        return nullptr;
+    }
+    if (fz_is_external_link(ctx, uri)) {
+        return fz_strdup(ctx, uri);
+    }
+    fz_link_dest dest = fz_resolve_link_dest(ctx, doc, uri);
+    int pageNo = fz_page_number_from_location(ctx, doc, dest.loc);
+    if (pageNo < 0) {
+        return nullptr;
+    }
+    dest.loc = fz_make_location(0, pageNo);
+    return pdf_new_uri_from_explicit_dest(ctx, dest);
+}
+
+// adds links to pdf page pageNo; their rects are already in its coordinates
+static void AddEbookLinks(fz_context* ctx, fz_document* doc, pdf_document* pdf, int pageNo, fz_link* links) {
+    pdf_page* page = pdf_load_page(ctx, pdf, pageNo);
+    for (fz_link* l = links; l; l = l->next) {
+        char* uri = nullptr;
+        fz_var(uri);
+        fz_try(ctx) {
+            uri = EbookLinkToPdfUri(ctx, doc, l->uri);
+            if (uri) {
+                fz_drop_link(ctx, pdf_create_link(ctx, page, l->rect, uri));
+            }
+        }
+        fz_always(ctx) {
+            fz_free(ctx, uri);
+        }
+        fz_catch(ctx) {
+            // one broken link shouldn't fail the conversion
+            fz_report_error(ctx);
+        }
+    }
+    fz_drop_page(ctx, (fz_page*)page);
+}
+
+// copies the ebook's ToC tree as PDF bookmarks, inserting at iter
+static void AddEbookOutline(fz_context* ctx, fz_document* doc, fz_outline_iterator* iter, fz_outline* o) {
+    for (; o; o = o->next) {
+        fz_outline_item item{};
+        item.title = o->title;
+        item.uri = EbookLinkToPdfUri(ctx, doc, o->uri);
+        item.is_open = o->is_open;
+        fz_try(ctx) {
+            fz_outline_iterator_insert(ctx, iter, &item);
+        }
+        fz_always(ctx) {
+            fz_free(ctx, item.uri);
+        }
+        fz_catch(ctx) {
+            fz_rethrow(ctx);
+        }
+        if (!o->down) {
+            continue;
+        }
+        // insert leaves iter after the new item: step onto it, then into it
+        fz_outline_iterator_prev(ctx, iter);
+        fz_outline_iterator_down(ctx, iter);
+        AddEbookOutline(ctx, doc, iter, o->down);
+        fz_outline_iterator_up(ctx, iter);
+        fz_outline_iterator_next(ctx, iter);
+    }
+}
+
 // lays out an ebook (EPUB, ...) into pages of pageDx x pageDy points with text
-// of fontSize points and writes them as a PDF that keeps the text, as
-// `sumatrapdf-tool convert` does. Returns the number of pages, 0 on failure.
+// of fontSize points and writes them as a PDF that keeps the text, links and
+// ToC (issue #6480). Returns the number of pages, 0 on failure.
 int EngineMupdfEbookToPdf(Str srcPath, Str dstPath, float pageDx, float pageDy, float fontSize) {
     fz_context* ctx = fz_new_context(nullptr, nullptr, FZ_STORE_DEFAULT);
     if (!ctx) {
@@ -11357,35 +11426,85 @@ int EngineMupdfEbookToPdf(Str srcPath, Str dstPath, float pageDx, float pageDy, 
     const char* userCss = "img { height: auto !important; max-width: 100% !important; }\n";
     int nPages = 0;
     fz_document* doc = nullptr;
-    fz_document_writer* wri = nullptr;
+    pdf_document* pdf = nullptr;
     fz_page* page = nullptr;
+    fz_device* dev = nullptr;
+    pdf_obj* resources = nullptr;
+    fz_buffer* contents = nullptr;
+    pdf_obj* pageObj = nullptr;
+    fz_outline* outline = nullptr;
+    fz_outline_iterator* iter = nullptr;
+    // per page, in the PDF page's coordinates; added once every page exists,
+    // since a link can point at a later page
+    Vec<fz_link*> links;
     fz_var(doc);
-    fz_var(wri);
+    fz_var(pdf);
     fz_var(page);
+    fz_var(dev);
+    fz_var(resources);
+    fz_var(contents);
+    fz_var(pageObj);
+    fz_var(outline);
+    fz_var(iter);
     fz_var(nPages);
     fz_try(ctx) {
         doc = fz_open_document(ctx, CStrTemp(srcPath));
         fz_style_document(ctx, doc, 1, userCss);
         fz_layout_document(ctx, doc, pageDx, pageDy, fontSize);
         int count = fz_count_pages(ctx, doc);
-        wri = fz_new_pdf_writer(ctx, CStrTemp(dstPath), "compress");
+        pdf = pdf_create_document(ctx);
         for (int i = 0; i < count; i++) {
             page = fz_load_page(ctx, doc, i);
             fz_rect box = fz_bound_page_box(ctx, page, FZ_CROP_BOX);
             fz_matrix ctm = fz_translate(-box.x0, -box.y0);
             box = fz_transform_rect(box, ctm);
-            fz_device* dev = fz_begin_page(ctx, wri, box);
+            dev = pdf_page_write(ctx, pdf, box, &resources, &contents);
             fz_run_page(ctx, page, dev, ctm, nullptr);
-            fz_end_page(ctx, wri);
+            fz_close_device(ctx, dev);
+            fz_drop_device(ctx, dev);
+            dev = nullptr;
+            pageObj = pdf_add_page(ctx, pdf, box, 0, resources, contents);
+            pdf_insert_page(ctx, pdf, -1, pageObj);
+            pdf_drop_obj(ctx, pageObj);
+            pageObj = nullptr;
+            pdf_drop_obj(ctx, resources);
+            resources = nullptr;
+            fz_drop_buffer(ctx, contents);
+            contents = nullptr;
+
+            fz_link* pageLinks = fz_load_links(ctx, page);
+            VecAppend(links, pageLinks);
+            for (fz_link* l = pageLinks; l; l = l->next) {
+                l->rect = fz_transform_rect(l->rect, ctm);
+            }
             fz_drop_page(ctx, page);
             page = nullptr;
         }
-        fz_close_document_writer(ctx, wri);
+        for (int i = 0; i < count; i++) {
+            AddEbookLinks(ctx, doc, pdf, i, links[i]);
+        }
+        outline = fz_load_outline(ctx, doc);
+        if (outline) {
+            iter = pdf_new_outline_iterator(ctx, pdf);
+            AddEbookOutline(ctx, doc, iter, outline);
+        }
+        pdf_write_options opts{};
+        pdf_parse_write_options(ctx, &opts, "compress");
+        pdf_save_document(ctx, pdf, CStrTemp(dstPath), &opts);
         nPages = count;
     }
     fz_always(ctx) {
+        fz_drop_outline_iterator(ctx, iter);
+        fz_drop_outline(ctx, outline);
+        for (fz_link* l : links) {
+            fz_drop_link(ctx, l);
+        }
+        fz_drop_device(ctx, dev);
+        pdf_drop_obj(ctx, pageObj);
+        pdf_drop_obj(ctx, resources);
+        fz_drop_buffer(ctx, contents);
         fz_drop_page(ctx, page);
-        fz_drop_document_writer(ctx, wri);
+        pdf_drop_document(ctx, pdf);
         fz_drop_document(ctx, doc);
     }
     fz_catch(ctx) {
