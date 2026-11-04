@@ -37,12 +37,28 @@ WindowTab::WindowTab(MainWindow* win) {
     this->win = win;
 }
 
+// our open-cache copy goes when its last tab does: a moved or duplicated tab
+// shows the same copy (issue #6481)
+static void DeleteOpenCacheCopyOf(WindowTab* self, Str path) {
+    if (!IsOpenCachePath(path)) {
+        return;
+    }
+    for (MainWindow* win : gWindows) {
+        for (WindowTab* tab : win->Tabs()) {
+            if (tab != self && path::IsSame(tab->filePath, path)) {
+                return;
+            }
+        }
+    }
+    DeleteOpenCacheCopy(path);
+}
+
 void WindowTab::SetFilePath(Str path) {
     type = Type::Document;
     isExtraHome = false;
     bool changed = filePath && !path::IsSame(filePath, path);
     if (changed) {
-        DeleteOpenCacheCopy(filePath);
+        DeleteOpenCacheCopyOf(this, filePath);
         temporaryFileNotified = false;
     }
     if (changed) {
@@ -155,7 +171,7 @@ WindowTab::~WindowTab() {
     }
     delete pendingLoadArgs;
 #endif
-    DeleteOpenCacheCopy(filePath);
+    DeleteOpenCacheCopyOf(this, filePath);
     str::Free(filePath);
     filePath = {};
     str::Free(displayName);

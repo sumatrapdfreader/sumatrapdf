@@ -159,6 +159,7 @@ export enum ControlCommand {
   TestSignatureStatus = 148,
   TestTabWidths = 149,
   TestOpenFromUrl = 150,
+  TestMigrateTab = 151,
 }
 
 export type ControlArg = number | string | Uint8Array | ControlArg[];

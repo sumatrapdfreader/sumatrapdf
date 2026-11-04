@@ -41,6 +41,7 @@ extern "C" {
 #include "Translations.h"
 #include "MarkdownModel.h"
 #include "TableOfContents.h"
+#include "Tabs.h"
 #include "SumatraTest.h"
 
 #include "SumatraLog.h"
@@ -813,6 +814,32 @@ TempStr GetTocResultTemp(Str path, int* exitCodeOut) {
         }
         SafeEngineRelease(&engine);
     }
+    return ToStrTemp(out);
+}
+
+// Moves tab tabIdx of window srcWin to window dstWin (-1: a new one), as a
+// drag out of the strip does; tabIdx < 0 only lists. Returns one line per tab:
+// "win=<i> tab=<j> ctrl=<0|1> path=<path>" (tests/issue-6481.ts).
+TempStr MigrateTabResultTemp(int srcWin, int tabIdx, int dstWin, int* exitCodeOut) {
+    *exitCodeOut = 1;
+    if (tabIdx >= 0) {
+        MainWindow* src = srcWin >= 0 && srcWin < len(gWindows) ? gWindows[srcWin] : nullptr;
+        MainWindow* dst = dstWin >= 0 && dstWin < len(gWindows) ? gWindows[dstWin] : nullptr;
+        WindowTab* tab = src && tabIdx < src->TabCount() ? src->GetTab(tabIdx) : nullptr;
+        if (!tab || (dstWin >= 0 && !dst)) {
+            return str::DupTemp(StrL("ERROR bad-args\n"));
+        }
+        MaybeMigrateTab(tab, dst);
+    }
+    str::Builder out;
+    for (int i = 0; i < len(gWindows); i++) {
+        MainWindow* win = gWindows[i];
+        for (int j = 0; j < win->TabCount(); j++) {
+            WindowTab* t = win->GetTab(j);
+            out.Append(fmt("win=%d tab=%d ctrl=%d path=%s\n", i, j, t->ctrl ? 1 : 0, t->filePath));
+        }
+    }
+    *exitCodeOut = 0;
     return ToStrTemp(out);
 }
 

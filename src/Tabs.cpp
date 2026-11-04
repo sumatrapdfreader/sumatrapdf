@@ -274,9 +274,15 @@ static void MaybeMigrateTab(WindowTab* tab, MainWindow* newWin, Point releasePt)
     args.forceReuse = true;
     args.noSavePrefs = true;
     LoadDocument(&args);
+    // newTab owns the file now: don't let ~WindowTab delete an open-cache copy
+    str::FreePtr(&tab->filePath);
     delete tab;
 
     CloseWindowIfNoDocuments(oldWin);
+}
+
+void MaybeMigrateTab(WindowTab* tab, MainWindow* newWin) {
+    MaybeMigrateTab(tab, newWin, Point{});
 }
 
 // Selects the given tab (0-based index)

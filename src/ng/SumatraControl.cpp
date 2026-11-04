@@ -841,6 +841,9 @@ enum class ControlCmd : u16 {
     TestTabWidths = 149,
     // [url, dir]: Open from URL as the dialog's Download starts it
     TestOpenFromUrl = 150,
+    // [srcWin, tabIdx, dstWin]: move a tab as a drag does (-1 = new window);
+    // tabIdx < 0 only lists every window's tabs
+    TestMigrateTab = 151,
 };
 
 static_assert((u16)ControlCmd::Quit == (u16)ControlFrameCmd::Quit);
@@ -1937,6 +1940,20 @@ static void ExecuteControlRequest(ControlRequest* req) {
             MainWindow* win = len(gWindows) > 0 ? gWindows[0] : nullptr;
             bool ok = win && StartOpenFromUrl(win, StringArg(req, 0), StringArg(req, 1));
             AppendTestResult(req, ok ? 0 : 1, ok ? StrL("OK") : StrL("FAIL"));
+            break;
+        }
+
+        case ControlCmd::TestMigrateTab: {
+            i32 srcWin = 0;
+            i32 tabIdx = 0;
+            i32 dstWin = 0;
+            if (!IntArg(req, 0, srcWin) || !IntArg(req, 1, tabIdx) || !IntArg(req, 2, dstWin)) {
+                AppendError(req, StrL("TestMigrateTab expects int srcWin, int tabIdx, int dstWin"));
+                break;
+            }
+            int exitCode = 0;
+            Str res = MigrateTabResultTemp(srcWin, tabIdx, dstWin, &exitCode);
+            AppendTestResult(req, exitCode, res);
             break;
         }
 

@@ -356,6 +356,8 @@ void MaybeMigrateTab(WindowTab* tab, MainWindow* newWin) {
     Str displayName = str::Dup(tab->displayName);
     TabState* state = NewTabStateFromTab(tab);
     RemoveTab(tab);
+    // the new tab takes the file: don't let ~WindowTab delete an open-cache copy
+    str::FreePtr(&tab->filePath);
     delete tab;
 
     if (!newWin) {
