@@ -275,7 +275,7 @@ class EngineMupdf : public EngineBase {
     void RunCadDetection();
     void ToggleCadEnhanceOverride();
 
-    bool Load(Str filePath, PasswordUI* pwdUI = nullptr);
+    bool Load(Str filePath, PasswordUI* pwdUI = nullptr, FileType kindHint = FileType::Unknown);
     bool LoadFromStream(fz_stream* stm, Str nameHint, PasswordUI* pwdUI = nullptr);
     bool FinishLoading();
     RenderedBitmap* GetPageImage(int pageNo, RectF rect, int imageIdx);

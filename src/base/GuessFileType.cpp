@@ -51,6 +51,7 @@
     V(".pdf", FileType::PDF)           \
     V(".ai", FileType::PDF)            \
     V(".xps", FileType::Xps)           \
+    V(".ofd", FileType::Ofd)           \
     V(".oxps", FileType::Xps)          \
     V(".xod", FileType::Xps)           \
     V(".dwfx", FileType::Xps)          \
@@ -1393,6 +1394,9 @@ FileType GuessFileTypeFromFile(Str path) {
     }
     if (IsFb2Archive(archive)) {
         res = FileType::Fb2z;
+    }
+    if (archive->GetFileId(StrL("OFD.xml")) >= 0) {
+        res = FileType::Ofd;
     }
     delete archive;
     return res;

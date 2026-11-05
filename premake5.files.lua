@@ -691,6 +691,10 @@ function mupdf_files()
     "src/shared/mupdf/pkcs7-windows.h",
     "src/shared/mupdf/load-jxl.cpp",
     "src/shared/mupdf/load-jxl.h",
+    "src/shared/mupdf/ofd.c",
+    "src/shared/mupdf/ofd.h",
+    "src/shared/mupdf/ofd-seal.c",
+    "src/shared/mupdf/ofd-seal.h",
   }
 
   files_in_dir("ext/mupdf/source/cbz", {

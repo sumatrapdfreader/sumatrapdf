@@ -25,6 +25,7 @@
 
 extern "C" {
 #include <mupdf/pdf.h>
+#include "mupdf/ofd.h"
 #if OS_WIN
 #include "mupdf/pkcs7-windows.h"
 #elif OS_DARWIN
@@ -3539,6 +3540,7 @@ EngineMupdf::EngineMupdf() {
 #endif
     InstallEmbeddedFontLoader();
     fz_register_document_handlers(_ctx);
+    fz_register_ofd_handler(_ctx);
 }
 
 fz_context* EngineMupdf::Ctx() const {
@@ -3709,7 +3711,7 @@ EngineBase* EngineMupdf::Clone() {
     EngineMupdf* clone = nullptr;
     if (FilePath()) {
         clone = new EngineMupdf();
-        if (!clone->Load(FilePath(), pwdUI)) {
+        if (!clone->Load(FilePath(), pwdUI, GuessFileTypeFromName(defaultExt, true))) {
             delete clone;
             clone = nullptr;
         }
@@ -3879,7 +3881,7 @@ static Str PalmDocToHTML(Str path) {
     return html;
 }
 
-bool EngineMupdf::Load(Str path, PasswordUI* pwdUI) {
+bool EngineMupdf::Load(Str path, PasswordUI* pwdUI, FileType kindHint) {
     bool ok;
     auto* ctx = Ctx();
     ReportIf(FilePath() || _doc);
@@ -3894,7 +3896,7 @@ bool EngineMupdf::Load(Str path, PasswordUI* pwdUI) {
     int streamNo = -1;
     TempStr fnCopy = ParseEmbeddedStreamNumber(path, &streamNo);
 
-    FileType kind = GuessFileTypeFromName(path);
+    FileType kind = kindHint == FileType::Unknown ? GuessFileTypeFromName(path) : kindHint;
     auto loadHtml = [&](Str data) {
         if (len(data) == 0) {
             return false;
@@ -3921,7 +3923,9 @@ bool EngineMupdf::Load(Str path, PasswordUI* pwdUI) {
     i64 fileSize = file::GetSize(fnCopy);
     FILETIME fileTime = file::GetModificationTime(fnCopy);
     fz_stream* file = FzOpenOrReadFile(ctx, fnCopy, &fileBytes);
-    ok = LoadFromStream(file, FilePath(), pwdUI);
+    // A .zip suffix would give MuPDF's comic handler priority over OFD.
+    Str streamName = kind == FileType::Ofd ? StrL("file.ofd") : FilePath();
+    ok = LoadFromStream(file, streamName, pwdUI);
     if (!ok) {
         return false;
     }
@@ -3948,7 +3952,7 @@ bool EngineMupdf::Load(Str path, PasswordUI* pwdUI) {
         if (!file) {
             return false;
         }
-        ok = LoadFromStream(file, FilePath(), pwdUI);
+        ok = LoadFromStream(file, streamName, pwdUI);
         if (!ok) {
             return false;
         }
@@ -9877,7 +9881,7 @@ int EngineMupdf::GetPageByLabel(Str label) const {
 bool IsEngineMupdfSupportedFileType(FileType kind) {
     return kind == FileType::PDF || kind == FileType::Epub || kind == FileType::Markdown || kind == FileType::Fb2 ||
            kind == FileType::Fb2z || kind == FileType::HTML || kind == FileType::Svg || kind == FileType::Xps ||
-           kind == FileType::Txt || kind == FileType::PalmDoc || IsOfficeFileType(kind);
+           kind == FileType::Txt || kind == FileType::PalmDoc || kind == FileType::Ofd || IsOfficeFileType(kind);
 }
 
 EngineBase* CreateEngineMupdfFromFile(Str path, FileType kind, int displayDPI, PasswordUI* pwdUI) {
@@ -9916,7 +9920,7 @@ EngineBase* CreateEngineMupdfFromFile(Str path, FileType kind, int displayDPI, P
         displayDPI = 96;
     }
     engine->displayDPI = displayDPI;
-    if (!engine->Load(path, pwdUI)) {
+    if (!engine->Load(path, pwdUI, kind)) {
         SafeEngineRelease(&engine);
         return nullptr;
     }
