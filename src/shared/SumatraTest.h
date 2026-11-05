@@ -20,6 +20,7 @@ TempStr ClickClearsSelectionResultTemp(Str word, int* exitCodeOut = nullptr);
 TempStr RectSelectionDragResultTemp(Str word, int* exitCodeOut = nullptr);
 TempStr DrawRectSelectionResultTemp(Str word, int* exitCodeOut = nullptr);
 TempStr RotatedTextMouseDragResultTemp(Str word, int* exitCodeOut = nullptr);
+TempStr SelectWordEdgesResultTemp(Str word, int* exitCodeOut = nullptr);
 TempStr GoToFindMatchResultTemp(Str word, Str typed, int* exitCodeOut = nullptr);
 TempStr ScrollToLinkResultTemp(int minViewportDelta, int* exitCodeOut = nullptr);
 TempStr I18nErrorStringResultTemp(int* exitCodeOut = nullptr);

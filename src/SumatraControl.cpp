@@ -686,6 +686,8 @@ enum class ControlCmd : u16 {
     TestMigrateTab = 151,
     // [action]: "toggle <row>" or "show", then the Layers view's rows
     TestLayers = 152,
+    // [word]: drag-select it from edge to edge, then the selected text
+    TestSelectWordEdges = 153,
 };
 
 static_assert((u16)ControlCmd::Quit == (u16)ControlFrameCmd::Quit);
@@ -1514,6 +1516,13 @@ static void ExecuteControlRequest(ControlRequest* req) {
         case ControlCmd::TestReadAloudPlaybackBar: {
             int exitCode = 0;
             Str res = ReadAloudPlaybackBarStateTemp(&exitCode);
+            AppendTestResult(req, exitCode, res);
+            break;
+        }
+
+        case ControlCmd::TestSelectWordEdges: {
+            int exitCode = 0;
+            Str res = SelectWordEdgesResultTemp(StringArg(req, 0), &exitCode);
             AppendTestResult(req, exitCode, res);
             break;
         }

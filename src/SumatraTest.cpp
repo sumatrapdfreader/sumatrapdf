@@ -357,6 +357,75 @@ TempStr RectSelectionDragResultTemp(Str word, int* exitCodeOut) {
     return ToStrTemp(out);
 }
 
+// Drag-selects `word` on page 1 from its first glyph's outer edge to its last
+// glyph's (issue #6488): in right-to-left text the first glyph's outer edge is
+// its right one. Reports the selected text and the glyph range.
+TempStr SelectWordEdgesResultTemp(Str word, int* exitCodeOut) {
+    str::Builder out;
+    auto fail = [&](Str msg) -> Str {
+        out.Append(msg);
+        out.AppendChar('\n');
+        if (exitCodeOut) {
+            *exitCodeOut = 1;
+        }
+        return ToStrTemp(out);
+    };
+
+    if (len(gWindows) == 0) {
+        return fail(StrL("NOTREADY no-window"));
+    }
+    DisplayModel* dm = gWindows[0]->AsFixed();
+    if (!dm || !dm->textSelection) {
+        return fail(StrL("NOTREADY no-doc"));
+    }
+    const int pageNo = 1;
+    Rect* coords = nullptr;
+    int textLen = 0;
+    Str text = dm->GetEngine()->GetTextForPage(pageNo, &textLen, &coords);
+    int wordLen = Utf8CodepointCount(word);
+    int first = -1;
+    for (int i = 0; i <= textLen - wordLen; i++) {
+        if (str::Eq(Utf8SliceByCodepoints(text, i, wordLen), word)) {
+            first = i;
+            break;
+        }
+    }
+    if (first < 0 || wordLen < 2) {
+        return fail(StrL("ERROR word-not-found"));
+    }
+    int last = first + wordLen - 1;
+
+    // a point inside glyph i, near its edge away from glyph `other`
+    auto outerEdge = [&](int i, int other) -> PointF {
+        const Rect& r = coords[i];
+        float cx = (float)r.x + ((float)r.dx / 2.f);
+        float ocx = (float)coords[other].x + ((float)coords[other].dx / 2.f);
+        float dx = (float)r.dx * 0.4f;
+        return {ocx < cx ? cx + dx : cx - dx, (float)r.y + ((float)r.dy / 2.f)};
+    };
+    PointF p0 = outerEdge(first, first + 1);
+    PointF p1 = outerEdge(last, last - 1);
+
+    for (int i = std::max(first - 2, 0); i <= std::min(last + 2, textLen - 1); i++) {
+        const Rect& r = coords[i];
+        out.Append(fmt("glyph %d: x=%d dx=%d y=%d dy=%d\n", i, r.x, r.dx, r.y, r.dy));
+    }
+    out.Append(fmt("p0=%g,%g p1=%g,%g\n", p0.x, p0.y, p1.x, p1.y));
+
+    TextSelection* sel = dm->textSelection;
+    sel->Reset();
+    sel->StartAt(pageNo, p0.x, p0.y);
+    sel->SelectUpTo(pageNo, p1.x, p1.y);
+    TempStr selected = sel->ExtractTextTemp(StrL(" "));
+    out.Append(
+        fmt("OK first=%d last=%d start=%d end=%d\ntext=%s\n", first, last, sel->startGlyph, sel->endGlyph, selected));
+    sel->Reset();
+    if (exitCodeOut) {
+        *exitCodeOut = 0;
+    }
+    return ToStrTemp(out);
+}
+
 // Mouse-drag text selection of rotated glyphs (issue #4839). Finds `word`,
 // clicks the first glyph and drags to the last, then reports whether that
 // stayed a text selection with tilted quads rather than a rubber-band rect.

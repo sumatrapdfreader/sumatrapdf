@@ -38,6 +38,29 @@ static bool GlyphContains(Rect coord, const QuadF* quads, int i, PointF pt, Poin
     return coord.Contains(pti);
 }
 
+// true when glyph i belongs to right-to-left text: the next glyph on its line
+// (or else the previous one) is to its left (or right)
+static bool GlyphRunsRtl(EngineBase* engine, int pageNo, Rect* coords, int textLen, int i) {
+    RectF box = engine->Transform(ToRectF(coords[i]), pageNo, 1.0, 0);
+    double cx = box.x + (box.dx / 2);
+    auto onLine = [&](int j, RectF* out) -> bool {
+        if (j < 0 || j >= textLen || (!coords[j].x && !coords[j].dx)) {
+            return false;
+        }
+        *out = engine->Transform(ToRectF(coords[j]), pageNo, 1.0, 0);
+        double overlap = std::min(box.y + box.dy, out->y + out->dy) - std::max(box.y, out->y);
+        return overlap > 0.5 * std::min(box.dy, out->dy);
+    };
+    RectF other;
+    if (onLine(i + 1, &other)) {
+        return other.x + (other.dx / 2) < cx;
+    }
+    if (onLine(i - 1, &other)) {
+        return other.x + (other.dx / 2) > cx;
+    }
+    return false;
+}
+
 // returns the index of the glyph closest to the right of the given coordinates
 // (i.e. when over the right half of a glyph, the returned index will be for the
 // glyph following it, which will be the first glyph (not) to be selected)
@@ -109,7 +132,10 @@ int FindClosestGlyphIn(EngineBase* engine, int pageNo, Rect* coords, QuadF* quad
     } else {
         RectF bbox = engine->Transform(ToRectF(coords[result]), pageNo, 1.0, 0);
         PointF ptT = engine->Transform(pt, pageNo, 1.0, 0);
-        pastMid = ptT.x > bbox.x + (0.5 * bbox.dx);
+        double mid = bbox.x + (0.5 * bbox.dx);
+        // right-to-left text (Arabic, Hebrew) runs along -x (#6488)
+        bool rtl = GlyphRunsRtl(engine, pageNo, coords, textLen, result);
+        pastMid = rtl ? ptT.x < mid : ptT.x > mid;
     }
     // for some (DjVu) documents, all glyphs of a word share the same bbox.
     // Rotated glyphs are told apart by their quads: small rotated text can
