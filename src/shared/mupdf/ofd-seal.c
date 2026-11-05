@@ -324,6 +324,8 @@ static void ofd_verify_ses(fz_context* ctx, ofd_der input, const unsigned char* 
     ofd_check_sm2(ctx, out, alg, value, 1, to_sign_full);
 }
 
+static int ofd_content_matches(fz_context* ctx, ofd_der content, const unsigned char* tbs, size_t tbs_len);
+
 // GB/T 35275: PKCS#7 SignedData with SM2 / SM3, detached over Signature.xml
 static void ofd_verify_pkcs7(fz_context* ctx, ofd_der input, const unsigned char* tbs, size_t tbs_len,
                              ofd_sig_check* out) {
@@ -336,10 +338,12 @@ static void ofd_verify_pkcs7(fz_context* ctx, ofd_der input, const unsigned char
     ofd_der_take(ctx, &sd, OFD_DER_SET);
     ofd_der content_info = ofd_der_take(ctx, &sd, OFD_DER_SEQUENCE);
     ofd_der content = {tbs, tbs_len};
+    int embedded = 0;
     ofd_der_take(ctx, &content_info, OFD_DER_OID);
     if (ofd_der_peek(&content_info) == OFD_DER_CONTEXT_0) {
         ofd_der wrapped = ofd_der_take(ctx, &content_info, OFD_DER_CONTEXT_0);
         content = ofd_der_take(ctx, &wrapped, OFD_DER_OCTET_STRING);
+        embedded = 1;
     }
     ofd_der cert = {NULL, 0};
     if (ofd_der_peek(&sd) == OFD_DER_CONTEXT_0) {
@@ -385,6 +389,11 @@ static void ofd_verify_pkcs7(fz_context* ctx, ofd_der input, const unsigned char
         } else {
             ofd_check_sm2(ctx, out, alg, value, 0, signed_bytes);
         }
+        // an embedded content stands for the signed file: the file itself or its SM3 hash
+        if (embedded && !ofd_content_matches(ctx, content, tbs, tbs_len)) {
+            out->data = OFD_CHECK_FAILED;
+            ofd_set_problem(out, "the signed file was changed after signing");
+        }
     }
     fz_always(ctx) {
         fz_free(ctx, attrs_copy);
@@ -392,6 +401,19 @@ static void ofd_verify_pkcs7(fz_context* ctx, ofd_der input, const unsigned char
     fz_catch(ctx) {
         fz_rethrow(ctx);
     }
+}
+
+// content is tbs, SM3(tbs), or SM3(tbs) as base64 text (older writers)
+static int ofd_content_matches(fz_context* ctx, ofd_der content, const unsigned char* tbs, size_t tbs_len) {
+    if (content.len == tbs_len && !memcmp(content.data, tbs, tbs_len)) return 1;
+    unsigned char digest[OFD_SM3_SIZE];
+    ofd_sm3(tbs, tbs_len, digest);
+    if (content.len == sizeof(digest)) return !memcmp(content.data, digest, sizeof(digest));
+    int ok = 0;
+    fz_buffer* decoded = fz_new_buffer_from_base64(ctx, (const char*)content.data, content.len);
+    ok = decoded->len == sizeof(digest) && !memcmp(decoded->data, digest, sizeof(digest));
+    fz_drop_buffer(ctx, decoded);
+    return ok;
 }
 
 static int ofd_is_pkcs7(ofd_der input) {
@@ -426,4 +448,59 @@ void ofd_verify_signed_value(fz_context* ctx, fz_buffer* signed_value, int is_se
         out->signature = OFD_CHECK_UNCHECKED;
         ofd_set_problem(out, "the signature data couldn't be read");
     }
+}
+
+// The X.501 names of a certificate (raw DER, for comparing) and what its issuer signed.
+typedef struct {
+    ofd_der tbs;     // TBSCertificate with its header
+    ofd_der issuer;  // Name with its header
+    ofd_der subject; // Name with its header
+    ofd_der alg;
+    ofd_der sig;
+    int has_key;
+    unsigned char key[64];
+} ofd_cert_parts;
+
+static void ofd_cert_split(fz_context* ctx, ofd_der cert, ofd_cert_parts* p) {
+    memset(p, 0, sizeof(*p));
+    ofd_der body = ofd_der_take(ctx, &cert, OFD_DER_SEQUENCE);
+    int tag;
+    ofd_der tbs = ofd_der_next(ctx, &body, &tag, &p->tbs);
+    if (tag != OFD_DER_SEQUENCE) fz_throw(ctx, FZ_ERROR_FORMAT, "Invalid certificate");
+    ofd_der alg = ofd_der_take(ctx, &body, OFD_DER_SEQUENCE);
+    p->alg = ofd_der_take(ctx, &alg, OFD_DER_OID);
+    p->sig = ofd_der_take(ctx, &body, OFD_DER_BIT_STRING);
+    if (ofd_der_peek(&tbs) == OFD_DER_CONTEXT_0) ofd_der_next(ctx, &tbs, NULL, NULL);
+    ofd_der_take(ctx, &tbs, OFD_DER_INTEGER);
+    ofd_der_take(ctx, &tbs, OFD_DER_SEQUENCE);
+    ofd_der_next(ctx, &tbs, NULL, &p->issuer);
+    ofd_der_take(ctx, &tbs, OFD_DER_SEQUENCE);
+    ofd_der_next(ctx, &tbs, NULL, &p->subject);
+    ofd_der spki = ofd_der_take(ctx, &tbs, OFD_DER_SEQUENCE);
+    ofd_der_take(ctx, &spki, OFD_DER_SEQUENCE);
+    ofd_der key = ofd_der_take(ctx, &spki, OFD_DER_BIT_STRING);
+    p->has_key = key.len == 66 && key.data[0] == 0 && key.data[1] == 4;
+    if (p->has_key) memcpy(p->key, key.data + 2, sizeof(p->key));
+}
+
+// 1 if issuer is the certificate that issued cert: its subject is cert's issuer and its
+// SM2 key verifies cert's signature
+int ofd_cert_issued_by(fz_context* ctx, const unsigned char* cert, size_t cert_len, const unsigned char* issuer,
+                       size_t issuer_len) {
+    int ok = 0;
+    fz_try(ctx) {
+        ofd_cert_parts c, i;
+        ofd_cert_split(ctx, (ofd_der){cert, cert_len}, &c);
+        ofd_cert_split(ctx, (ofd_der){issuer, issuer_len}, &i);
+        unsigned char r[32], s[32];
+        ok = c.issuer.len == i.subject.len && !memcmp(c.issuer.data, i.subject.data, c.issuer.len) && i.has_key &&
+             ofd_der_is(c.alg, oid_sm2_sm3, sizeof(oid_sm2_sm3)) && ofd_parse_sm2_sig(ctx, c.sig, 1, r, s) &&
+             ofd_sm2_verify(i.key, c.tbs.data, c.tbs.len, r, s);
+    }
+    fz_catch(ctx) {
+        fz_rethrow_if(ctx, FZ_ERROR_SYSTEM);
+        fz_ignore_error(ctx);
+        ok = 0;
+    }
+    return ok;
 }

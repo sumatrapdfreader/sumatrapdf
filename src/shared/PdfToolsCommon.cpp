@@ -346,7 +346,9 @@ TempStr ConvertImageCollectionToPdfResultTemp(Str srcPath, Str destPath, int* ex
     if (!engine) {
         return finish(1, str::DupTemp(StrL("ERROR engine-create-failed")));
     }
-    bool ok = ConvertImageCollectionToPdf(engine, destPath);
+    // as the Convert to PDF dialog: OFD as vector pages
+    bool ok = EngineMupdfIsOfd(engine) ? EngineMupdfSaveAsPdf(engine, destPath)
+                                       : ConvertImageCollectionToPdf(engine, destPath);
     SafeEngineRelease(&engine);
     if (!ok) {
         return finish(1, str::DupTemp(StrL("ERROR convert-failed")));

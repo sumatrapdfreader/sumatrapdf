@@ -423,6 +423,9 @@
     <ClInclude Include="..\src\shared\mupdf\ofd-crypto.h">
       <Filter>src\shared\mupdf</Filter>
     </ClInclude>
+    <ClInclude Include="..\src\shared\mupdf\ofd-decrypt.h">
+      <Filter>src\shared\mupdf</Filter>
+    </ClInclude>
     <ClInclude Include="..\src\shared\mupdf\ofd-seal.h">
       <Filter>src\shared\mupdf</Filter>
     </ClInclude>
@@ -1221,6 +1224,9 @@
       <Filter>src\shared\mupdf</Filter>
     </ClCompile>
     <ClCompile Include="..\src\shared\mupdf\ofd-crypto.c">
+      <Filter>src\shared\mupdf</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\shared\mupdf\ofd-decrypt.c">
       <Filter>src\shared\mupdf</Filter>
     </ClCompile>
     <ClCompile Include="..\src\shared\mupdf\ofd-seal.c">

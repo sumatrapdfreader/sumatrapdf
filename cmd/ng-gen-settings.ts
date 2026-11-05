@@ -1471,6 +1471,17 @@ const globalPrefs: Field[] = [
     true,
     "if true, opening a digitally signed PDF shows whether its signatures are valid",
   ).ver("3.7"),
+  compactArray(
+    "OfdTrustedCertificates",
+    Str,
+    null,
+    "certificate files (DER or PEM) trusted as roots for OFD signatures",
+  )
+    .ver("3.7")
+    .doc(
+      "paths of certificate files (DER or PEM) trusted as roots when checking OFD signatures, in addition to " +
+        "the Windows trusted root store (paths containing spaces must be quoted)",
+    ),
   field(
     "TemporaryFileShowNotification",
     Bool,
@@ -2343,6 +2354,7 @@ const globalPrefsLayout = [
   "HomePageSortByFrequentlyRead",
   "ReloadModifiedDocuments",
   "ShowSignatureStatus",
+  "OfdTrustedCertificates",
   "TemporaryFileShowNotification",
   "TemporaryFileDestDir",
   "DownloadDirectory",

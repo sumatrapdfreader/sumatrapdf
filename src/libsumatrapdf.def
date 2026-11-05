@@ -17,6 +17,9 @@ EXPORTS
 	ofd_count_signatures
 	ofd_check_signatures
 	ofd_drop_signature_infos
+	ofd_cert_issued_by
+	ofd_load_attachments
+	ofd_load_attachment
 
 	fz_write_byte
 

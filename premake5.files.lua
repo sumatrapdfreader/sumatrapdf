@@ -694,6 +694,8 @@ function mupdf_files()
     "src/shared/mupdf/ofd.c",
     "src/shared/mupdf/ofd-crypto.c",
     "src/shared/mupdf/ofd-crypto.h",
+    "src/shared/mupdf/ofd-decrypt.c",
+    "src/shared/mupdf/ofd-decrypt.h",
     "src/shared/mupdf/ofd.h",
     "src/shared/mupdf/ofd-seal.c",
     "src/shared/mupdf/ofd-seal.h",

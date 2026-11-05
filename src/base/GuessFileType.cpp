@@ -1415,7 +1415,8 @@ static FileType GuessArchiveType(Archive* archive) {
     if (IsFb2Archive(archive)) {
         res = FileType::Fb2z;
     }
-    if (archive->GetFileId(StrL("OFD.xml")) >= 0) {
+    // an encrypted OFD has only Encryptions.xml in the clear
+    if (archive->GetFileId(StrL("OFD.xml")) >= 0 || archive->GetFileId(StrL("Encryptions.xml")) >= 0) {
         res = FileType::Ofd;
     }
     return res;

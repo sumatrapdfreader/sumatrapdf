@@ -1,5 +1,5 @@
 // Native OFD documents (#1909): templates, inherited paint, text, paths, seals, the features of
-// the OFDRW samples, packages with several documents, attachments and signature checks.
+// the OFDRW samples, packages, encryption, links, attachments, conversion and signature checks.
 // Run: bun tests/issue-1909.ts [--no-build]
 
 import { copyFileSync, readFileSync, writeFileSync } from "node:fs";
@@ -22,6 +22,7 @@ import {
   runStandalone,
   SLOW_BUILD_FACTOR,
   tmpPath,
+  writeAppdata,
 } from "./util.ts";
 import { killAndWait, launchControlled } from "./win-automation.ts";
 
@@ -372,6 +373,8 @@ const red =
   `<FillColor Value="255 0 0"/><AbbreviatedData>${rectangle(20, 20)}</AbbreviatedData></PathObject>`;
 const redPath = (data: string, fill: string) =>
   `<PathObject ID="5" Boundary="4 4 20 20" Fill="true" Stroke="false">${fill}<AbbreviatedData>${data}</AbbreviatedData></PathObject>`;
+const meshPoint = (x: number, y: number, color: string, edgeFlag?: number) =>
+  `<Point X="${x}" Y="${y}"${edgeFlag === undefined ? "" : ` EdgeFlag="${edgeFlag}"`}><Color Value="${color}"/></Point>`;
 const redUnit = `<CompositeGraphicUnits><CompositeGraphicUnit ID="10" Width="20" Height="20"><Content>${red}</Content></CompositeGraphicUnit></CompositeGraphicUnits>`;
 
 type Counts = { red: number; blue: number; nonwhite: number; right: number };
@@ -561,10 +564,37 @@ const cases: Case[] = [
     check: (c) => c.blue > 3000 && c.red === 0,
   },
   {
-    // an unsupported mesh gradient skips its object, not the page
+    // an object that can't be drawn (unknown path command) is skipped, not the page
     name: "unsupported-object",
-    body: red + redPath(rectangle(5, 5), `<FillColor><GouraudShd><Point X="0" Y="0"/></GouraudShd></FillColor>`),
-    check: (c) => c.red > 3000,
+    body: red + redPath(`M 0 0 Z 5 5`, `<FillColor Value="0 0 255"/>`),
+    check: (c) => c.red > 3000 && c.blue === 0,
+  },
+  {
+    // two Gouraud triangles over the square: red corner, blue corner
+    name: "gouraud",
+    body: redPath(
+      rectangle(20, 20),
+      `<FillColor><GouraudShd>` +
+        meshPoint(0, 0, "255 0 0", 0) +
+        meshPoint(20, 0, "255 0 0", 0) +
+        meshPoint(0, 20, "0 0 255", 0) +
+        meshPoint(20, 20, "0 0 255", 1) +
+        `</GouraudShd></FillColor>`,
+    ),
+    check: (c) => c.red > 300 && c.blue > 300 && c.nonwhite > 3000,
+  },
+  {
+    name: "lattice-gouraud",
+    body: redPath(
+      rectangle(20, 20),
+      `<FillColor><LaGouraudShd VerticesPerRow="2">` +
+        meshPoint(0, 0, "255 0 0") +
+        meshPoint(20, 0, "0 0 255") +
+        meshPoint(0, 20, "255 0 0") +
+        meshPoint(20, 20, "0 0 255") +
+        `</LaGouraudShd></FillColor>`,
+    ),
+    check: (c) => c.red > 300 && c.blue > 300 && c.nonwhite > 3000,
   },
 ];
 
@@ -715,8 +745,8 @@ const appendSpace = (d: Uint8Array) => new Uint8Array(Buffer.concat([d, Buffer.f
 
 type SigCase = { name: string; file: string; bar: RegExp; details: RegExp[] };
 
-async function signatureState(file: string): Promise<string> {
-  const { proc, client } = await launchControlled([file]);
+async function signatureState(file: string, args: string[] = []): Promise<string> {
+  const { proc, client } = await launchControlled([...args, file]);
   try {
     await client.waitForRenderIdle();
     const state = await pollUntil(
@@ -785,6 +815,132 @@ async function testSignatures(): Promise<void> {
   if (failures.length) throw new Error(failures.join("\n\n"));
 }
 
+// --- encrypted packages, integrity protection, trusted roots, links, attachments, conversion
+
+async function testEncrypted(): Promise<void> {
+  const file = join(dataDir, "encrypted.ofd");
+  // without the password nothing opens
+  await withControlledSumatra(EXE, async (client) => {
+    const res = await client.request(ControlCommand.TestRenderPageColors, [file, 1, 100]);
+    if (res[0] === 0) throw new Error(`OFD encrypted: opened without a password: ${res[1]}`);
+  });
+  const { proc, client } = await launchControlled(["-pwd", "sumatra", file]);
+  try {
+    const info = await pollUntil(
+      async () => String((await client.request(ControlCommand.TestPageInfo, []))[1] ?? ""),
+      (r) => /pages=2 /.test(r),
+      { timeoutMs: 8000 * SLOW_BUILD_FACTOR, error: (r) => `OFD encrypted: expected 2 pages with the password: ${r}` },
+    );
+    console.log(`OFD encrypted: ${info.split(" ")[0]}`);
+  } finally {
+    client.close();
+    await killAndWait(proc);
+  }
+}
+
+async function testIntegrityAndTrust(): Promise<void> {
+  const withExtra = tmpPath("ofd-integrity-extra.ofd");
+  const entries = readZip(readFileSync(join(dataDir, "hello-integrity.ofd")));
+  entries.push({ name: "Doc_0/added.xml", data: Buffer.from("<added/>") });
+  writeFileSync(withExtra, makeZip(entries));
+  const appdata = writeAppdata(
+    "ofd-trust",
+    `OfdTrustedCertificates = "${join(dataDir, "chain-root.pem").replace(/\\/g, "/")}"`,
+  );
+  const cases: SigCase[] = [
+    {
+      name: "integrity",
+      file: join(dataDir, "hello-integrity.ofd"),
+      bar: /bar=1 At least one signature has problems/,
+      details: [/The package has the files it had when it was protected \(5 files\)/],
+    },
+    {
+      name: "integrity-added-file",
+      file: withExtra,
+      bar: /bar=1 At least one signature is invalid/,
+      details: [/1 files aren't covered by the protection, e.g. Doc_0\/added.xml/],
+    },
+    {
+      name: "untrusted-chain",
+      file: join(dataDir, "chain-signed.ofd"),
+      bar: /bar=1 At least one signature has problems/,
+      details: [/doesn't chain to a trusted root/],
+    },
+  ];
+  const failures: string[] = [];
+  const check = (c: SigCase, state: string) => {
+    const missing = [c.bar, ...c.details].filter((re) => !re.test(state));
+    console.log(`OFD signature ${c.name}: ${missing.length ? "FAILED" : "ok"}`);
+    if (missing.length) failures.push(`${c.name}: expected ${missing.join(", ")} in:\n${state}`);
+  };
+  for (const c of cases) check(c, await signatureState(c.file));
+  check(
+    {
+      name: "trusted-chain",
+      file: "",
+      bar: /bar=1 Signed and all signatures are valid/,
+      details: [/chains to the trusted root SumatraPDF Test Root/],
+    },
+    await signatureState(join(dataDir, "chain-signed.ofd"), ["-appdata", appdata]),
+  );
+  if (failures.length) throw new Error(failures.join("\n\n"));
+}
+
+// page 1 links to page 2 and to a URL; the package has an attachment
+function linksFixture(): Buffer {
+  const action = (inner: string) => `<Actions><Action Event="CLICK">${inner}</Action></Actions>`;
+  const area = (id: number, y: number, inner: string) =>
+    `<PathObject ID="${id}" Boundary="5 ${y} 30 8" Visible="false">${action(inner)}` +
+    `<AbbreviatedData>M 0 0 L 30 0 L 30 8 L 0 8 C</AbbreviatedData></PathObject>`;
+  const files: [string, string | Buffer][] = [
+    ["OFD.xml", `<OFD ${ns}><DocBody><DocRoot>Doc/main.xml</DocRoot></DocBody></OFD>`],
+    [
+      "Doc/main.xml",
+      `<Document ${ns}><CommonData><PageArea><PhysicalBox>0 0 50 50</PhysicalBox></PageArea></CommonData>` +
+        `<Pages><Page ID="1" BaseLoc="p1.xml"/><Page ID="2" BaseLoc="p2.xml"/></Pages>` +
+        `<Attachments>Attachs/Attachments.xml</Attachments></Document>`,
+    ],
+    [
+      "Doc/p1.xml",
+      `<Page ${ns}><Content><Layer>` +
+        area(10, 5, `<Goto><Dest Type="XYZ" PageID="2" Left="0" Top="10"/></Goto>`) +
+        area(11, 20, `<URI URI="https://www.sumatrapdfreader.org/"/>`) +
+        `</Layer></Content></Page>`,
+    ],
+    ["Doc/p2.xml", `<Page ${ns}><Content/></Page>`],
+    [
+      "Doc/Attachs/Attachments.xml",
+      `<Attachments ${ns}><Attachment ID="20" Name="invoice" Format="xml"><FileLoc>invoice.xml</FileLoc></Attachment></Attachments>`,
+    ],
+    ["Doc/Attachs/invoice.xml", "<invoice/>"],
+  ];
+  return makeZip(files.map(([name, data]) => ({ name, data: Buffer.from(data) })));
+}
+
+async function testLinksAttachmentsConvert(): Promise<void> {
+  const file = tmpPath("ofd-links.ofd");
+  writeFileSync(file, linksFixture());
+  const pdf = tmpPath("ofd-converted.pdf");
+  await withControlledSumatra(EXE, async (client) => {
+    const links = String((await client.request(ControlCommand.TestPageLinks, [file, 1]))[1] ?? "");
+    if (!/page=2 /.test(links) || !links.includes("https://www.sumatrapdfreader.org/")) {
+      throw new Error(`OFD links: expected a link to page 2 and a URL:\n${links}`);
+    }
+    const toc = String((await client.request(ControlCommand.TestGetToc, [file]))[1] ?? "");
+    if (!toc.includes("invoice.xml")) throw new Error(`OFD attachments: expected invoice.xml in:\n${toc}`);
+
+    // Convert to PDF keeps OFD text as text
+    const res = await client.request(ControlCommand.TestConvertToPdf, [
+      join(dataDir, "../issue-1909-data/chain-signed.ofd"),
+      pdf,
+    ]);
+    if (res[0] !== 0) throw new Error(`OFD to PDF: ${res[1]}`);
+    const render = String((await client.request(ControlCommand.TestRenderPageColors, [pdf, 1, 100]))[1] ?? "");
+    if (!/blue=[1-9]\d{3,}/.test(render)) throw new Error(`OFD to PDF: page content missing: ${render}`);
+  });
+  console.log("OFD links, attachments and conversion: ok");
+}
+
 export async function testit(): Promise<void> {
   await testBasic();
   await testPathFill();
@@ -793,6 +949,9 @@ export async function testit(): Promise<void> {
   await testPackage();
   await testMemory();
   await testSignatures();
+  await testEncrypted();
+  await testIntegrityAndTrust();
+  await testLinksAttachmentsConvert();
 }
 
 if (import.meta.main) {

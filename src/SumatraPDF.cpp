@@ -5901,6 +5901,8 @@ struct SigStatusJob {
     EngineBase* engine = nullptr;
     // only PDF signatures are checked against the EU trusted list
     bool needsEutl = false;
+    // OfdTrustedCertificates, copied: the check runs on a thread
+    StrVec trustedCerts;
     PdfSigResult* res = nullptr;
 };
 
@@ -5938,7 +5940,11 @@ static void SigStatusThread(SigStatusJob* job) {
     if (job->needsEutl && EutlNeedsUpdate()) {
         EutlUpdate(nullptr);
     }
-    job->res = EngineMupdfCheckSignatures(job->engine);
+    Vec<Str> trusted;
+    for (int i = 0; i < len(job->trustedCerts); i++) {
+        VecAppend(trusted, job->trustedCerts.At(i));
+    }
+    job->res = EngineMupdfCheckSignatures(job->engine, &trusted);
     uitask::Post(MkFunc0<SigStatusJob>(OnSigStatusDone, job), "SigStatusDone");
 }
 
@@ -5961,6 +5967,11 @@ static void MaybeShowSignatureStatus(MainWindow* win, WindowTab* tab) {
     job->tab = tab;
     job->engine = engine;
     job->needsEutl = isPdf;
+    if (gSettings->ofdTrustedCertificates) {
+        for (Str path : *gSettings->ofdTrustedCertificates) {
+            job->trustedCerts.Append(path);
+        }
+    }
     engine->AddRef();
     RunAsync(MkFunc0<SigStatusJob>(SigStatusThread, job), StrL("SigStatus"));
 }

@@ -4865,6 +4865,12 @@ static void FinishNonPDFLoading(EngineMupdf* e) {
         fz_report_error(ctx);
         fz_warn(ctx, "Couldn't load outline");
     }
+    fz_try(ctx) {
+        e->attachments = ofd_load_attachments(ctx, e->_doc);
+    }
+    fz_catch(ctx) {
+        fz_report_error(ctx);
+    }
 }
 
 // Resolve an external-file image stream (issue #3731): the PDF's /F entry
@@ -9003,49 +9009,168 @@ PdfSigResult::~PdfSigResult() {
     DeleteVecMembers(entries);
 }
 
-// One OFD signature as the signature bar, sidebar and dialog show it. Nothing vouches for
-// OFD (SM2) certificates here, so an intact signature's signer stays unverified.
-static PdfSigEntry* OfdSigEntry(const ofd_signature_info* info, int sigNo, PdfSigSummary* sum) {
+// Certificates OFD signer certificates can chain to: roots are trusted, intermediates only
+// connect a signer to a root. Both as DER.
+struct OfdTrust {
+    StrVec roots;
+    StrVec intermediates;
+};
+
+static void AppendStoreCerts(const WCHAR* storeName, StrVec& out) {
+    HCERTSTORE store = CertOpenSystemStoreW(0, storeName);
+    if (!store) {
+        return;
+    }
+    for (PCCERT_CONTEXT c = CertEnumCertificatesInStore(store, nullptr); c; c = CertEnumCertificatesInStore(store, c)) {
+        out.Append(Str((const char*)c->pbCertEncoded, (int)c->cbCertEncoded));
+    }
+    CertCloseStore(store, 0);
+}
+
+// a certificate file, DER or PEM ("-----BEGIN CERTIFICATE-----")
+static void AppendCertFile(Str path, StrVec& out) {
+    Str data = file::ReadFile(path);
+    if (len(data) == 0) {
+        logf("OfdTrustedCertificates: can't read '%s'\n", path);
+        return;
+    }
+    if (!str::Contains(data, StrL("-----BEGIN"))) {
+        out.Append(data);
+        str::Free(data);
+        return;
+    }
+    DWORD n = 0;
+    if (CryptStringToBinaryA(data.s, (DWORD)data.len, CRYPT_STRING_BASE64HEADER, nullptr, &n, nullptr, nullptr)) {
+        Str der = AllocStrTemp((int)n);
+        if (CryptStringToBinaryA(data.s, (DWORD)data.len, CRYPT_STRING_BASE64HEADER, (BYTE*)der.s, &n, nullptr,
+                                 nullptr)) {
+            out.Append(Str(der.s, (int)n));
+        }
+    }
+    str::Free(data);
+}
+
+static void LoadOfdTrust(const Vec<Str>* trustedFiles, OfdTrust& trust) {
+    AppendStoreCerts(L"ROOT", trust.roots);
+    AppendStoreCerts(L"CA", trust.intermediates);
+    if (!trustedFiles) {
+        return;
+    }
+    for (Str path : *trustedFiles) {
+        AppendCertFile(path, trust.roots);
+    }
+}
+
+static TempStr CertSubjectTemp(Str der) {
+    PCCERT_CONTEXT c = CertCreateCertificateContext(X509_ASN_ENCODING, (const BYTE*)der.s, (DWORD)der.len);
+    if (!c) {
+        return {};
+    }
+    WCHAR name[256]{};
+    CertGetNameStringW(c, CERT_NAME_SIMPLE_DISPLAY_TYPE, 0, nullptr, name, dimof(name));
+    CertFreeCertificateContext(c);
+    return ToUtf8Temp(WStr(name));
+}
+
+// The trusted root the certificate chains to, empty if none. SM2 certificates are
+// checked here: Windows' own chain building doesn't know SM2.
+static TempStr OfdTrustedRootTemp(fz_context* ctx, Str cert, OfdTrust& trust) {
+    constexpr int kMaxChain = 8;
+    auto issuedBy = [ctx](Str c, Str issuer) {
+        return ofd_cert_issued_by(ctx, (const u8*)c.s, (size_t)c.len, (const u8*)issuer.s, (size_t)issuer.len) != 0;
+    };
+    Str cur = cert;
+    for (int depth = 0; depth < kMaxChain && len(cur) > 0; depth++) {
+        for (Str root : trust.roots) {
+            if (str::Eq(root, cur) || issuedBy(cur, root)) {
+                return CertSubjectTemp(root);
+            }
+        }
+        Str next;
+        for (Str ca : trust.intermediates) {
+            if (!str::Eq(ca, cur) && issuedBy(cur, ca)) {
+                next = ca;
+                break;
+            }
+        }
+        cur = next;
+    }
+    return {};
+}
+
+// One OFD signature, or the package's integrity protection, as the signature bar, sidebar
+// and dialog show it. A signature is valid when it's intact and its certificate chains to a
+// trusted root.
+static PdfSigEntry* OfdSigEntry(fz_context* ctx, const ofd_signature_info* info, int sigNo, OfdTrust& trust,
+                                PdfSigSummary* sum) {
     const ofd_sig_check& c = info->check;
+    bool integrity = info->kind == OFD_SIG_INTEGRITY;
     bool filesChanged = info->bad_file[0] != 0;
-    bool filesUnchecked = !filesChanged && info->files_ok < info->files_total;
+    bool filesAdded = info->files_extra > 0;
+    bool filesUnchecked = !integrity && !filesChanged && info->files_ok < info->files_total;
     bool hashChanged = c.data == OFD_CHECK_FAILED;
     bool badSignature = c.signature == OFD_CHECK_FAILED;
-    bool invalid = filesChanged || hashChanged || badSignature;
+    bool invalid = filesChanged || filesAdded || hashChanged || badSignature;
     bool intact = !invalid && !filesUnchecked && c.signature == OFD_CHECK_OK;
+    // same "YYYY-MM-DD hh:mm:ss UTC" format, so they compare as strings
+    bool timeKnown = c.time[0] && c.not_before[0] && c.not_after[0];
+    bool certExpired = timeKnown && (strcmp(c.time, c.not_before) < 0 || strcmp(c.time, c.not_after) > 0);
+    TempStr root;
+    if (intact && c.cert) {
+        root = OfdTrustedRootTemp(ctx, Str((const char*)c.cert->data, (int)c.cert->len), trust);
+    }
+    bool valid = intact && len(root) > 0 && !certExpired;
 
     Str status;
-    if (filesChanged || hashChanged) {
+    if (integrity && filesAdded) {
+        status = StrL("Invalid: files were added to the package after it was protected.");
+    } else if (integrity && filesChanged) {
+        status = StrL("Invalid: files were removed from the package after it was protected.");
+    } else if (filesChanged || hashChanged) {
         status = StrL("Invalid: the signed part of the document doesn't match the signature.");
     } else if (badSignature) {
         status = StrL("Invalid: the signature doesn't match the signer's certificate.");
     } else if (!intact) {
         status = StrL("Validity unknown: the signature couldn't be checked.");
-    } else {
+    } else if (!valid) {
         status = StrL("Validity unknown: the signer's identity couldn't be verified.");
+    } else {
+        status = StrL("Valid signature.");
     }
 
     str::Builder validity;
-    if (filesChanged) {
+    if (integrity && filesChanged) {
+        validity.Append(fmt("  %s is missing.\n", Str(info->bad_file)));
+    } else if (filesChanged) {
         validity.Append(fmt("  %s was changed or removed after signing.\n", Str(info->bad_file)));
+    }
+    if (filesAdded) {
+        validity.Append(
+            fmt("  %d files aren't covered by the protection, e.g. %s.\n", info->files_extra, Str(info->extra_file)));
     }
     if (c.problem && !filesChanged) {
         validity.Append(fmt("  The signature couldn't be checked: %s.\n", Str(c.problem)));
     } else if (filesUnchecked) {
         validity.Append(StrL("  The signed files couldn't be checked: their digest algorithm isn't supported.\n"));
     }
-    // same "YYYY-MM-DD hh:mm:ss UTC" format, so they compare as strings
-    bool timeKnown = c.time[0] && c.not_before[0] && c.not_after[0];
-    if (timeKnown && (strcmp(c.time, c.not_before) < 0 || strcmp(c.time, c.not_after) > 0)) {
+    if (certExpired) {
         validity.Append(StrL("  The signer's certificate wasn't valid at the signature time.\n"));
     }
-    if (intact) {
+    if (intact && integrity) {
+        validity.Append(fmt("  The package has the files it had when it was protected (%d files).\n", info->files_ok));
+    } else if (intact) {
         validity.Append(fmt("  The document wasn't changed after it was signed (%d files checked).\n", info->files_ok));
-        validity.Append(StrL("  OFD certificates aren't checked against trusted roots.\n"));
+    }
+    if (intact && len(root) > 0) {
+        validity.Append(fmt("  The signer's certificate chains to the trusted root %s.\n", root));
+    } else if (intact) {
+        validity.Append(StrL("  The signer's certificate doesn't chain to a trusted root.\n"));
     }
 
     str::Builder d;
-    if (info->page >= 0) {
+    if (integrity) {
+        d.Append(StrL("Integrity protection:\n"));
+    } else if (info->page >= 0) {
         d.Append(fmt("Signature %d (page %d):\n", sigNo, info->page + 1));
     } else {
         d.Append(fmt("Signature %d:\n", sigNo));
@@ -9072,7 +9197,7 @@ static PdfSigEntry* OfdSigEntry(const ofd_signature_info* info, int sigNo, PdfSi
     }
 
     auto* entry = new PdfSigEntry();
-    entry->verdict = invalid ? SigVerdict::Invalid : SigVerdict::Unknown;
+    entry->verdict = invalid ? SigVerdict::Invalid : valid ? SigVerdict::Valid : SigVerdict::Unknown;
     entry->pageNo = info->page + 1;
     entry->rect = RectF(info->rect.x0, info->rect.y0, info->rect.x1 - info->rect.x0, info->rect.y1 - info->rect.y0);
     entry->signer = str::Dup(Str(c.signer[0] ? c.signer : c.seal_name));
@@ -9084,11 +9209,11 @@ static PdfSigEntry* OfdSigEntry(const ofd_signature_info* info, int sigNo, PdfSi
     }
     sum->nSigned++;
     sum->anyInvalid |= invalid;
-    sum->anyUnknown |= !invalid;
+    sum->anyUnknown |= !invalid && !valid;
     return entry;
 }
 
-static void GetOfdSignatures(EngineMupdf* e, PdfSigResult* res) {
+static void GetOfdSignatures(EngineMupdf* e, PdfSigResult* res, const Vec<Str>* trustedCerts) {
     fz_context* ctx = e->Ctx();
     ofd_signature_info* infos = nullptr;
     fz_try(ctx) {
@@ -9097,15 +9222,24 @@ static void GetOfdSignatures(EngineMupdf* e, PdfSigResult* res) {
     fz_catch(ctx) {
         fz_report_error(ctx);
     }
+    if (!infos) {
+        return;
+    }
+    OfdTrust trust;
+    LoadOfdTrust(trustedCerts, trust);
     int sigNo = 0;
     for (ofd_signature_info* info = infos; info; info = info->next) {
-        VecAppend(res->entries, OfdSigEntry(info, ++sigNo, &res->sum));
+        if (info->kind == OFD_SIG_SIGNATURE) {
+            ++sigNo;
+        }
+        VecAppend(res->entries, OfdSigEntry(ctx, info, sigNo, trust, &res->sum));
     }
     ofd_drop_signature_infos(ctx, infos);
 }
 
 // Every signature's verdict, for showing them without opening Properties.
-PdfSigResult* EngineMupdfCheckSignatures(EngineBase* engine) {
+// trustedCerts: certificate files trusted as roots for OFD signatures
+PdfSigResult* EngineMupdfCheckSignatures(EngineBase* engine, const Vec<Str>* trustedCerts) {
     auto* res = new PdfSigResult();
     EngineMupdf* e = AsEngineMupdf(engine);
     if (e && e->pdfdoc) {
@@ -9113,7 +9247,7 @@ PdfSigResult* EngineMupdfCheckSignatures(EngineBase* engine) {
         GetSignatures(e, res);
     } else if (e && e->_doc) {
         ScopedRecursiveMutex scope(&e->docLock);
-        GetOfdSignatures(e, res);
+        GetOfdSignatures(e, res, trustedCerts);
     }
     return res;
 }
@@ -10889,6 +11023,55 @@ bool EngineMupdfIsPdf(EngineBase* engine) {
     return epdf && epdf->pdfdoc != nullptr;
 }
 
+bool EngineMupdfIsOfd(EngineBase* engine) {
+    EngineMupdf* e = AsEngineMupdf(engine);
+    if (!e || e->pdfdoc || !e->_doc) {
+        return false;
+    }
+    ScopedRecursiveMutex scope(&e->docLock);
+    char format[16]{};
+    fz_lookup_metadata(e->Ctx(), e->_doc, FZ_META_FORMAT, format, sizeof(format));
+    return str::Eq(Str(format), StrL("OFD"));
+}
+
+// Writes every page to a new PDF as vector content, keeping text and paths (OFD to PDF)
+bool EngineMupdfSaveAsPdf(EngineBase* engine, Str destPath) {
+    EngineMupdf* e = AsEngineMupdf(engine);
+    if (!e || !e->_doc) {
+        return false;
+    }
+    fz_context* ctx = e->Ctx();
+    ScopedRecursiveMutex scope(&e->docLock);
+    fz_document_writer* writer = nullptr;
+    fz_page* page = nullptr;
+    bool ok = false;
+    fz_var(writer);
+    fz_var(page);
+    fz_try(ctx) {
+        writer = fz_new_pdf_writer(ctx, CStrTemp(destPath), nullptr);
+        int n = fz_count_pages(ctx, e->_doc);
+        for (int i = 0; i < n; i++) {
+            page = fz_load_page(ctx, e->_doc, i);
+            fz_device* dev = fz_begin_page(ctx, writer, fz_bound_page(ctx, page));
+            fz_run_page(ctx, page, dev, fz_identity, nullptr);
+            fz_end_page(ctx, writer);
+            fz_drop_page(ctx, page);
+            page = nullptr;
+        }
+        fz_close_document_writer(ctx, writer);
+        ok = true;
+    }
+    fz_always(ctx) {
+        fz_drop_page(ctx, page);
+        fz_drop_document_writer(ctx, writer);
+    }
+    fz_catch(ctx) {
+        fz_report_error(ctx);
+        logf("EngineMupdfSaveAsPdf: failed for '%s'\n", destPath);
+    }
+    return ok;
+}
+
 bool EngineMupdfHasOfdSignatures(EngineBase* engine) {
     EngineMupdf* e = AsEngineMupdf(engine);
     if (!e || e->pdfdoc || !e->_doc) {
@@ -11045,10 +11228,32 @@ void EngineMupdfToggleCadEnhance(EngineBase* engine) {
 }
 
 // caller must free
+// OFD attachments, numbered as in ofd_load_attachments()
+static Str OfdLoadAttachment(EngineMupdf* e, int attachmentNo) {
+    fz_context* ctx = e->Ctx();
+    ScopedRecursiveMutex scope(&e->docLock);
+    Str res;
+    fz_buffer* buf = nullptr;
+    fz_var(buf);
+    fz_try(ctx) {
+        buf = ofd_load_attachment(ctx, e->_doc, attachmentNo);
+        if (buf) {
+            res = str::Dup(Str((char*)buf->data, (int)buf->len));
+        }
+    }
+    fz_always(ctx) {
+        fz_drop_buffer(ctx, buf);
+    }
+    fz_catch(ctx) {
+        fz_report_error(ctx);
+    }
+    return res;
+}
+
 Str EngineMupdfLoadAttachment(EngineBase* engine, int attachmentNo) {
     EngineMupdf* epdf = AsEngineMupdf(engine);
     if (!epdf->pdfdoc) {
-        return {};
+        return epdf->_doc ? OfdLoadAttachment(epdf, attachmentNo) : Str{};
     }
 
     return PdfLoadAttachment(epdf->Ctx(), epdf->pdfdoc, attachmentNo);

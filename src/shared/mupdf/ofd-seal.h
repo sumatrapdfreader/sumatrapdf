@@ -33,3 +33,5 @@ typedef struct {
 
 void ofd_verify_signed_value(fz_context* ctx, fz_buffer* signed_value, int is_seal, const unsigned char* tbs,
                              size_t tbs_len, ofd_sig_check* out);
+int ofd_cert_issued_by(fz_context* ctx, const unsigned char* cert, size_t cert_len, const unsigned char* issuer,
+                       size_t issuer_len);

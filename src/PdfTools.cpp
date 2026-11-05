@@ -1144,13 +1144,15 @@ void ConvertToPdfDialog::DoIt(VirtMouseEvent*) {
     }
     DisplayModel* dm = win->AsFixed();
     EngineBase* engine = dm ? dm->GetEngine() : nullptr;
-    if (!engine || !engine->isImageCollection) {
+    bool isOfd = EngineMupdfIsOfd(engine);
+    if (!engine || !(engine->isImageCollection || isOfd)) {
         MessageBoxWarning(hwnd, Tr("Failed to save a file"), Tr("Convert to PDF"));
         return;
     }
 
     logf("ConvertToPdf: converting '%s' to '%s'\n", srcPath, destPath);
-    bool ok = ConvertImageCollectionToPdf(engine, destPath);
+    // OFD keeps its text and vector paths; image collections become one image per page
+    bool ok = isOfd ? EngineMupdfSaveAsPdf(engine, destPath) : ConvertImageCollectionToPdf(engine, destPath);
     if (ok) {
         logf("ConvertToPdf: converted successfully\n");
         MainWindow* w = win;
@@ -1183,7 +1185,7 @@ void ShowConvertToPdfDialog(MainWindow* win) {
         return;
     }
     EngineBase* engine = tab->GetEngine();
-    if (!engine || !engine->isImageCollection) {
+    if (!engine || !(engine->isImageCollection || EngineMupdfIsOfd(engine))) {
         return;
     }
     if (!engine->AllowsPrinting()) {
@@ -1730,7 +1732,7 @@ void ShowConvertPdfToImagesDialog(MainWindow* win) {
     if (!tab || len(tab->filePath) == 0) {
         return;
     }
-    if (!IsPdfDoc(tab)) {
+    if (!IsPdfDoc(tab) && !EngineMupdfIsOfd(tab->GetEngine())) {
         return;
     }
     logf("ShowConvertPdfToImagesDialog: opening for '%s'\n", tab->filePath);

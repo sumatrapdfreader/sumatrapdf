@@ -193,6 +193,8 @@ constexpr int kPdfCertifyFormsSigningAndAnnots = 3;
 void EngineMupdfGetUnsignedSignatureFields(EngineBase*, StrVec& names, Vec<int>& pageNos);
 int EngineMupdfCountSignedSignatures(EngineBase*);
 bool EngineMupdfHasOfdSignatures(EngineBase*);
+bool EngineMupdfIsOfd(EngineBase*);
+bool EngineMupdfSaveAsPdf(EngineBase*, Str destPath);
 bool IsUnsignedSignatureWidget(Annotation*, TempStr* fieldNameOut);
 bool EngineMupdfSignDocument(EngineBase*, const PdfSignArgs&, Str* errOut);
 void ListWindowsSigningCertificates(StrVec& thumbprints, StrVec& labels);
@@ -237,7 +239,7 @@ struct PdfSigResult {
 struct EutlLookup;
 void SetEutlLookup(const EutlLookup* lookup);
 void EngineMupdfFetchRevocation(EngineBase* engine);
-PdfSigResult* EngineMupdfCheckSignatures(EngineBase* engine);
+PdfSigResult* EngineMupdfCheckSignatures(EngineBase* engine, const Vec<Str>* trustedCerts = nullptr);
 struct PdfSigCert {
     PdfSigCert* next = nullptr;
     Str label;

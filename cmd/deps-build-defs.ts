@@ -547,6 +547,7 @@ export const mupdf: LibDef = {
         "ofd.c",
         "ofd-seal.c",
         "ofd-crypto.c",
+        "ofd-decrypt.c",
       ],
     },
     { dir: "ext/mupdf/source/cbz", patterns: ["mucbz.c", "muimg.c"] },

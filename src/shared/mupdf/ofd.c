@@ -4,6 +4,7 @@
 #include "mupdf/fitz.h"
 #include <ctype.h>
 #include "ofd-crypto.h"
+#include "ofd-decrypt.h"
 #include "ofd-seal.h"
 #include "ofd.h"
 
@@ -51,7 +52,9 @@ typedef struct {
     char path[OFD_PATH_SIZE];
     char signatures[OFD_PATH_SIZE];
     int count;
+    int first_page; // of this document in the package
     int seal_depth;
+    fz_link** links_tail; // while a page is built: where its links go
 } ofd_document;
 
 // The fz_document: an OFD package, its documents' pages one after another.
@@ -62,6 +65,7 @@ typedef struct {
     ofd_document* docs;
     int ndocs;
     int seal_depth;
+    int locked; // encrypted, waiting for the password
 } ofd_package;
 
 static fz_document* ofd_open_document(fz_context* ctx, const fz_document_handler* handler, fz_stream* stream,
@@ -71,6 +75,7 @@ typedef struct {
     fz_page super;
     fz_rect bounds;
     fz_display_list* list;
+    fz_link* links;
 } ofd_page;
 
 typedef struct {
@@ -768,6 +773,8 @@ static fz_xml* ofd_complex_color(fz_xml* color) {
     fz_xml* node = ofd_child(color, "Pattern");
     if (!node) node = ofd_child(color, "AxialShd");
     if (!node) node = ofd_child(color, "RadialShd");
+    if (!node) node = ofd_child(color, "GouraudShd");
+    if (!node) node = ofd_child(color, "LaGouraudShd");
     return node;
 }
 
@@ -836,10 +843,102 @@ static void ofd_gradient(fz_context* ctx, ofd_document* doc, fz_xml* node, fz_de
     }
 }
 
+enum {
+    OFD_MESH_COORD_BYTES = 3,
+    OFD_MESH_COMP_BYTES = 2
+};
+
+// 0..1 as 0..max; in double, as float rounds 1 * (2^24 - 1) + 0.5 up to 2^24
+static unsigned int ofd_quantize(float f, unsigned int max) {
+    return (unsigned int)(fz_clamp(f, 0, 1) * (double)max + 0.5);
+}
+
+static void ofd_put_be(fz_context* ctx, fz_buffer* buf, unsigned int v, int bytes) {
+    for (int i = bytes - 1; i >= 0; --i) fz_append_byte(ctx, buf, (v >> (8 * i)) & 0xff);
+}
+
+// Gouraud-shaded triangles as a MuPDF mesh shading: GouraudShd is free-form triangles with
+// PDF type 4 edge flags, LaGouraudShd a lattice of VerticesPerRow points (type 5). Each
+// Point has X, Y, EdgeFlag and a Color; vertex alpha isn't supported, the first one applies.
+static void ofd_mesh(fz_context* ctx, ofd_document* doc, fz_xml* node, fz_device* dev, fz_matrix ctm, float alpha) {
+    int lattice = ofd_is(node, "LaGouraudShd");
+    int n = 0;
+    float x0 = 0, x1 = 0, y0 = 0, y1 = 0;
+    for (fz_xml* pt = fz_xml_down(node); pt; pt = fz_xml_next(pt)) {
+        if (!ofd_is(pt, "Point")) continue;
+        float x = ofd_attr(pt, "X", 0), y = ofd_attr(pt, "Y", 0);
+        if (!n++) {
+            x0 = x1 = x;
+            y0 = y1 = y;
+        }
+        x0 = fz_min(x0, x), x1 = fz_max(x1, x), y0 = fz_min(y0, y), y1 = fz_max(y1, y);
+    }
+    int vprow = (int)ofd_attr(node, "VerticesPerRow", 0);
+    if (n < 3 || (lattice && (vprow < 2 || n < 2 * vprow)))
+        fz_throw(ctx, FZ_ERROR_FORMAT, "OFD mesh gradient needs more points");
+    if (x1 == x0) x1 = x0 + 1;
+    if (y1 == y0) y1 = y0 + 1;
+
+    fz_shade* shade = fz_malloc_struct(ctx, fz_shade);
+    FZ_INIT_STORABLE(shade, 1, fz_drop_shade_imp);
+    fz_buffer* data = NULL;
+    fz_var(data);
+    fz_try(ctx) {
+        shade->type = lattice ? FZ_MESH_TYPE5 : FZ_MESH_TYPE4;
+        shade->bbox = fz_infinite_rect;
+        shade->matrix = fz_identity;
+        shade->colorspace = fz_keep_colorspace(ctx, fz_device_rgb(ctx));
+        shade->u.m.vprow = vprow;
+        shade->u.m.bpflag = 8;
+        shade->u.m.bpcoord = 8 * OFD_MESH_COORD_BYTES;
+        shade->u.m.bpcomp = 8 * OFD_MESH_COMP_BYTES;
+        shade->u.m.x0 = x0;
+        shade->u.m.x1 = x1;
+        shade->u.m.y0 = y0;
+        shade->u.m.y1 = y1;
+        for (int k = 0; k < 3; ++k) shade->u.m.c1[k] = 1;
+
+        const unsigned int coord_max = (1u << (8 * OFD_MESH_COORD_BYTES)) - 1;
+        const unsigned int comp_max = (1u << (8 * OFD_MESH_COMP_BYTES)) - 1;
+        float first_alpha = -1;
+        data = fz_new_buffer(ctx, (size_t)n * 16);
+        for (fz_xml* pt = fz_xml_down(node); pt; pt = fz_xml_next(pt)) {
+            if (!ofd_is(pt, "Point")) continue;
+            float rgba[OFD_RGB_ALPHA];
+            fz_colorspace* cs;
+            float color[FZ_MAX_COLORS] = {0};
+            rgba[3] = ofd_color(ctx, doc, NULL, ofd_child(pt, "Color"), &cs, color);
+            fz_convert_color(ctx, cs, color, fz_device_rgb(ctx), rgba, NULL, fz_default_color_params);
+            if (first_alpha < 0) first_alpha = rgba[3];
+            if (!lattice) fz_append_byte(ctx, data, (int)fz_clamp(ofd_attr(pt, "EdgeFlag", 0), 0, 2));
+            float fx = (ofd_attr(pt, "X", 0) - x0) / (x1 - x0), fy = (ofd_attr(pt, "Y", 0) - y0) / (y1 - y0);
+            ofd_put_be(ctx, data, ofd_quantize(fx, coord_max), OFD_MESH_COORD_BYTES);
+            ofd_put_be(ctx, data, ofd_quantize(fy, coord_max), OFD_MESH_COORD_BYTES);
+            for (int k = 0; k < 3; ++k) ofd_put_be(ctx, data, ofd_quantize(rgba[k], comp_max), OFD_MESH_COMP_BYTES);
+        }
+        shade->buffer = fz_new_compressed_buffer(ctx);
+        shade->buffer->params.type = FZ_IMAGE_RAW;
+        shade->buffer->buffer = data;
+        data = NULL;
+        fz_fill_shade(ctx, dev, shade, ctm, alpha * first_alpha, fz_default_color_params);
+    }
+    fz_always(ctx) {
+        fz_drop_buffer(ctx, data);
+        fz_drop_shade(ctx, shade);
+    }
+    fz_catch(ctx) {
+        fz_rethrow(ctx);
+    }
+}
+
 static void ofd_brush(fz_context* ctx, ofd_document* doc, fz_xml* color, fz_device* dev, fz_rect area, fz_matrix ctm,
                       float alpha, int depth) {
     if (depth > OFD_MAX_DEPTH) fz_throw(ctx, FZ_ERROR_LIMIT, "OFD pattern nesting too deep");
     fz_xml* node = ofd_complex_color(color);
+    if (ofd_is(node, "GouraudShd") || ofd_is(node, "LaGouraudShd")) {
+        ofd_mesh(ctx, doc, node, dev, ctm, alpha);
+        return;
+    }
     if (!ofd_is(node, "Pattern")) {
         ofd_gradient(ctx, doc, node, dev, ctm, alpha);
         return;
@@ -854,7 +953,17 @@ static void ofd_brush(fz_context* ctx, ofd_document* doc, fz_xml* color, fz_devi
         fz_begin_tile(ctx, dev, coverage, fz_make_rect(0, 0, w, h), xstep, ystep, matrix);
         fz_try(ctx) {
             ofd_paint paint = {NULL, NULL, 0.353f};
-            ofd_draw_tree(ctx, doc, fz_xml_down(ofd_child(node, "CellContent")), dev, matrix, depth + 1, paint);
+            fz_link** links_tail = doc->links_tail;
+            doc->links_tail = NULL;
+            fz_try(ctx) {
+                ofd_draw_tree(ctx, doc, fz_xml_down(ofd_child(node, "CellContent")), dev, matrix, depth + 1, paint);
+            }
+            fz_always(ctx) {
+                doc->links_tail = links_tail;
+            }
+            fz_catch(ctx) {
+                fz_rethrow(ctx);
+            }
         }
         fz_always(ctx) {
             fz_end_tile(ctx, dev);
@@ -1026,10 +1135,43 @@ static void ofd_apply_clips(fz_context* ctx, ofd_document* doc, fz_xml* node, fz
     }
 }
 
+static int ofd_page_by_id(ofd_document* doc, const char* id);
+
+// Click actions of a graphic unit become links: Goto a page (Dest PageID, Top in mm) or a URI.
+// The link covers the unit's boundary.
+static void ofd_collect_links(fz_context* ctx, ofd_document* doc, fz_xml* node, fz_matrix parent) {
+    fz_xml* actions = ofd_child(node, "Actions");
+    if (!actions || !fz_xml_att(node, "Boundary")) return;
+    fz_rect rect = fz_transform_rect(ofd_box(fz_xml_att(node, "Boundary")), parent);
+    for (fz_xml* action = fz_xml_down(actions); action; action = fz_xml_next(action)) {
+        if (!ofd_is(action, "Action")) continue;
+        const char* event = fz_xml_att(action, "Event");
+        if (event && strcmp(event, "CLICK")) continue;
+        char uri[64];
+        const char* target = NULL;
+        fz_xml* dest = ofd_child(ofd_child(action, "Goto"), "Dest");
+        fz_xml* link = ofd_child(action, "URI");
+        if (dest) {
+            int page = ofd_page_by_id(doc, fz_xml_att(dest, "PageID"));
+            if (page < 0) continue;
+            fz_snprintf(uri, sizeof(uri), "#page=%d&y=%g", doc->first_page + page + 1,
+                        ofd_attr(dest, "Top", 0) * ofd_points_per_mm);
+            target = uri;
+        } else if (link && fz_xml_att(link, "URI")) {
+            target = fz_xml_att(link, "URI");
+        }
+        if (!target) continue;
+        *doc->links_tail = fz_new_link_of_size(ctx, sizeof(fz_link), rect, target);
+        doc->links_tail = &(*doc->links_tail)->next;
+    }
+}
+
 static void ofd_draw_tree(fz_context* ctx, ofd_document* doc, fz_xml* node, fz_device* dev, fz_matrix parent, int depth,
                           ofd_paint inherited) {
     if (depth > OFD_MAX_DEPTH) fz_throw(ctx, FZ_ERROR_LIMIT, "OFD nesting too deep");
     for (; node; node = fz_xml_next(node)) {
+        // link areas are often invisible paths
+        if (doc->links_tail) ofd_collect_links(ctx, doc, node, parent);
         if (fz_xml_att_eq(node, "Visible", "false") || ofd_attr(node, "Alpha", 255) <= 0) continue;
         fz_matrix ctm = ofd_matrix(node, parent);
         int container = ofd_is(node, "Content") || ofd_is(node, "Layer") || ofd_is(node, "PageBlock") ||
@@ -1131,6 +1273,24 @@ static void ofd_draw_page_xml(fz_context* ctx, ofd_document* doc, fz_xml* root, 
 
 static void ofd_drop_page(fz_context* ctx, fz_page* page) {
     fz_drop_display_list(ctx, ((ofd_page*)page)->list);
+    fz_drop_link(ctx, ((ofd_page*)page)->links);
+}
+
+// a new list each time: callers reorder the one they get
+static fz_link* ofd_load_links(fz_context* ctx, fz_page* page) {
+    fz_link* head = NULL;
+    fz_link** tail = &head;
+    fz_try(ctx) {
+        for (fz_link* l = ((ofd_page*)page)->links; l; l = l->next) {
+            *tail = fz_new_link_of_size(ctx, sizeof(fz_link), l->rect, l->uri);
+            tail = &(*tail)->next;
+        }
+    }
+    fz_catch(ctx) {
+        fz_drop_link(ctx, head);
+        fz_rethrow(ctx);
+    }
+    return head;
 }
 
 static fz_rect ofd_bound_page(fz_context* ctx, fz_page* page, fz_box_type box) {
@@ -1322,6 +1482,7 @@ static fz_page* ofd_load_page(fz_context* ctx, fz_document* doc_, int chapter, i
     page->super.drop_page = ofd_drop_page;
     page->super.bound_page = ofd_bound_page;
     page->super.run_page_contents = ofd_run_page;
+    page->super.load_links = ofd_load_links;
     fz_xml* xml = NULL;
     fz_device* dev = NULL;
     fz_var(xml);
@@ -1340,6 +1501,7 @@ static fz_page* ofd_load_page(fz_context* ctx, fz_document* doc_, int chapter, i
         page->bounds = fz_transform_rect(box, ctm);
         page->list = fz_new_display_list(ctx, page->bounds);
         dev = fz_new_list_device(ctx, page->list);
+        doc->links_tail = &page->links;
         ofd_draw_page_xml(ctx, doc, root, path, dev, ctm, 0);
         fz_try(ctx) {
             ofd_annots(ctx, doc, fz_xml_att(entry, "ID"), dev, ctm);
@@ -1347,6 +1509,7 @@ static fz_page* ofd_load_page(fz_context* ctx, fz_document* doc_, int chapter, i
         fz_catch(ctx) {
             ofd_skip(ctx, "annotations");
         }
+        doc->links_tail = NULL; // a seal's links would be another document's
         fz_try(ctx) {
             ofd_signatures(ctx, doc, fz_xml_att(entry, "ID"), dev, ctm);
         }
@@ -1356,6 +1519,7 @@ static fz_page* ofd_load_page(fz_context* ctx, fz_document* doc_, int chapter, i
         fz_close_device(ctx, dev);
     }
     fz_always(ctx) {
+        doc->links_tail = NULL;
         fz_drop_device(ctx, dev);
         fz_drop_xml(ctx, xml);
     }
@@ -1386,6 +1550,7 @@ static int ofd_metadata(fz_context* ctx, fz_document* doc_, const char* key, cha
     };
     ofd_package* pkg = (ofd_package*)doc_;
     if (!strcmp(key, FZ_META_FORMAT)) return 1 + (int)fz_strlcpy(buf, "OFD", size);
+    if (!pkg->ndocs) return -1;
     for (size_t i = 0; i < nelem(info_keys); ++i) {
         if (strcmp(key, info_keys[i].key)) continue;
         fz_xml* node = ofd_child(pkg->docs[0].info, info_keys[i].tag);
@@ -1452,6 +1617,7 @@ static fz_outline* ofd_outline_elems(fz_context* ctx, ofd_package* pkg, int doc_
 // The documents' own outlines; with several documents, an entry per document over its outline.
 static fz_outline* ofd_load_outline(fz_context* ctx, fz_document* doc_) {
     ofd_package* pkg = (ofd_package*)doc_;
+    if (!pkg->ndocs) return NULL;
     if (pkg->ndocs == 1) {
         fz_xml* outlines = ofd_child(fz_xml_root(pkg->docs[0].xml), "Outlines");
         return ofd_outline_elems(ctx, pkg, 0, fz_xml_down(outlines), 0);
@@ -1480,12 +1646,14 @@ static fz_outline* ofd_load_outline(fz_context* ctx, fz_document* doc_) {
     return head;
 }
 
-// Only "#page=N" (1-based, across all documents), as written by ofd_new_outline().
+// "#page=N" (1-based, across all documents) with an optional "&y=" in points, as written by
+// ofd_new_outline() and ofd_collect_links().
 static fz_link_dest ofd_resolve_link(fz_context* ctx, fz_document* doc, const char* uri) {
     if (!uri || strncmp(uri, "#page=", 6)) return fz_make_link_dest_none();
     int number = atoi(uri + 6) - 1;
     if (number < 0 || number >= fz_count_pages(ctx, doc)) return fz_make_link_dest_none();
-    return fz_make_link_dest_xyz(0, number, 0, 0, 0);
+    const char* y = strstr(uri, "&y=");
+    return fz_make_link_dest_xyz(0, number, 0, y ? fz_atof(y + 3) : 0, 0);
 }
 
 static void ofd_drop_body(fz_context* ctx, ofd_document* doc) {
@@ -1529,6 +1697,51 @@ static void ofd_open_body(fz_context* ctx, ofd_document* doc, fz_xml* body) {
     if (!doc->count) fz_throw(ctx, FZ_ERROR_FORMAT, "OFD document contains no pages");
 }
 
+// Opens the package's documents from OFD.xml.
+static void ofd_open_bodies(fz_context* ctx, ofd_package* pkg) {
+    pkg->index = fz_parse_xml_archive_entry(ctx, pkg->archive, "OFD.xml", 0);
+    fz_xml* root = fz_xml_root(pkg->index);
+    int n = 0;
+    for (fz_xml* body = fz_xml_down(root); body; body = fz_xml_next(body)) n += ofd_is(body, "DocBody");
+    if (!n) fz_throw(ctx, FZ_ERROR_FORMAT, "OFD contains no documents");
+    pkg->docs = fz_calloc(ctx, n, sizeof(ofd_document));
+    // a document that can't be opened is skipped, unless it is the only one
+    for (fz_xml* body = fz_xml_down(root); body; body = fz_xml_next(body)) {
+        if (!ofd_is(body, "DocBody")) continue;
+        ofd_document* doc = &pkg->docs[pkg->ndocs];
+        doc->archive = pkg->archive;
+        fz_try(ctx) {
+            ofd_open_body(ctx, doc, body);
+            ++pkg->ndocs;
+        }
+        fz_catch(ctx) {
+            ofd_drop_body(ctx, doc);
+            memset(doc, 0, sizeof(*doc));
+            if (n == 1) fz_rethrow(ctx);
+            ofd_skip(ctx, "document");
+        }
+    }
+    if (!pkg->ndocs) fz_throw(ctx, FZ_ERROR_FORMAT, "OFD contains no readable documents");
+    for (int i = 0; i < pkg->ndocs; ++i) pkg->docs[i].first_page = ofd_first_page(pkg, i);
+}
+
+static int ofd_needs_password(fz_context* ctx, fz_document* doc) {
+    return ((ofd_package*)doc)->locked;
+}
+
+// Decrypts the package with the password and opens its documents; 0 for a wrong password.
+static int ofd_authenticate(fz_context* ctx, fz_document* doc, const char* password) {
+    ofd_package* pkg = (ofd_package*)doc;
+    if (!pkg->locked) return 1;
+    fz_archive* plain = ofd_decrypt_package(ctx, pkg->archive, password);
+    if (!plain) return 0;
+    fz_drop_archive(ctx, pkg->archive);
+    pkg->archive = plain;
+    pkg->locked = 0;
+    ofd_open_bodies(ctx, pkg);
+    return 1;
+}
+
 /* Open OFD directly so rendering, text extraction and printing share the same display list. */
 static fz_document* ofd_open_document(fz_context* ctx, const fz_document_handler* handler, fz_stream* stream,
                                       fz_stream* accel, fz_archive* dir, void* state) {
@@ -1539,37 +1752,120 @@ static fz_document* ofd_open_document(fz_context* ctx, const fz_document_handler
     pkg->super.lookup_metadata = ofd_metadata;
     pkg->super.load_outline = ofd_load_outline;
     pkg->super.resolve_link_dest = ofd_resolve_link;
+    pkg->super.needs_password = ofd_needs_password;
+    pkg->super.authenticate_password = ofd_authenticate;
     fz_try(ctx) {
         pkg->archive = fz_open_archive_with_stream(ctx, stream);
-        pkg->index = fz_parse_xml_archive_entry(ctx, pkg->archive, "OFD.xml", 0);
-        fz_xml* root = fz_xml_root(pkg->index);
-        int n = 0;
-        for (fz_xml* body = fz_xml_down(root); body; body = fz_xml_next(body)) n += ofd_is(body, "DocBody");
-        if (!n) fz_throw(ctx, FZ_ERROR_FORMAT, "OFD contains no documents");
-        pkg->docs = fz_calloc(ctx, n, sizeof(ofd_document));
-        // a document that can't be opened is skipped, unless it is the only one
-        for (fz_xml* body = fz_xml_down(root); body; body = fz_xml_next(body)) {
-            if (!ofd_is(body, "DocBody")) continue;
-            ofd_document* doc = &pkg->docs[pkg->ndocs];
-            doc->archive = pkg->archive;
-            fz_try(ctx) {
-                ofd_open_body(ctx, doc, body);
-                ++pkg->ndocs;
-            }
-            fz_catch(ctx) {
-                ofd_drop_body(ctx, doc);
-                memset(doc, 0, sizeof(*doc));
-                if (n == 1) fz_rethrow(ctx);
-                ofd_skip(ctx, "document");
-            }
+        // an encrypted package's documents open once the password is given
+        if (!fz_has_archive_entry(ctx, pkg->archive, "OFD.xml") && ofd_is_encrypted(ctx, pkg->archive)) {
+            pkg->locked = 1;
+        } else {
+            ofd_open_bodies(ctx, pkg);
         }
-        if (!pkg->ndocs) fz_throw(ctx, FZ_ERROR_FORMAT, "OFD contains no readable documents");
     }
     fz_catch(ctx) {
         fz_drop_document(ctx, &pkg->super);
         fz_rethrow(ctx);
     }
     return &pkg->super;
+}
+
+static int ofd_is_package(fz_document* doc);
+
+//--- attachments
+
+// Calls fn for every attachment of every document, numbered from 1; stops when fn returns 1.
+typedef int (*ofd_attachment_fn)(fz_context* ctx, ofd_document* doc, fz_xml* attachment, const char* list_path, int no,
+                                 void* opaque);
+
+static void ofd_each_attachment(fz_context* ctx, ofd_package* pkg, ofd_attachment_fn fn, void* opaque) {
+    int no = 0;
+    for (int i = 0; i < pkg->ndocs; ++i) {
+        ofd_document* doc = &pkg->docs[i];
+        fz_xml* loc = ofd_child(fz_xml_root(doc->xml), "Attachments");
+        if (!loc) continue;
+        char path[OFD_PATH_SIZE];
+        ofd_resolve(ctx, path, doc->path, ofd_text(loc));
+        if (!fz_has_archive_entry(ctx, doc->archive, path)) continue;
+        fz_xml* list = ofd_read_xml(ctx, doc, path);
+        int stop = 0;
+        fz_try(ctx) {
+            for (fz_xml* a = fz_xml_down(fz_xml_root(list)); a && !stop; a = fz_xml_next(a)) {
+                if (ofd_is(a, "Attachment")) stop = fn(ctx, doc, a, path, ++no, opaque);
+            }
+        }
+        fz_always(ctx) {
+            fz_drop_xml(ctx, list);
+        }
+        fz_catch(ctx) {
+            fz_rethrow(ctx);
+        }
+        if (stop) return;
+    }
+}
+
+// Name with the Format as extension when the name has none: Name="invoice" Format="xml"
+static void ofd_attachment_name(fz_xml* a, char* out, size_t size) {
+    const char* name = fz_xml_att(a, "Name");
+    const char* format = fz_xml_att(a, "Format");
+    if (!name || !*name) name = "attachment";
+    if (format && *format && !strchr(name, '.'))
+        fz_snprintf(out, size, "%s.%s", name, format);
+    else
+        fz_strlcpy(out, name, size);
+}
+
+static int ofd_outline_attachment(fz_context* ctx, ofd_document* doc, fz_xml* a, const char* list_path, int no,
+                                  void* opaque) {
+    fz_outline*** tail = (fz_outline***)opaque;
+    char name[OFD_PATH_SIZE];
+    ofd_attachment_name(a, name, sizeof(name));
+    fz_outline* item = fz_new_outline(ctx);
+    **tail = item;
+    *tail = &item->next;
+    item->title = fz_strdup(ctx, name);
+    item->uri = fz_strdup(ctx, name);
+    item->page.page = no;
+    return 0;
+}
+
+// The package's attachments as a list for the bookmarks tree: title is the file name,
+// page.page the number for ofd_load_attachment(). NULL for none or another kind of document.
+fz_outline* ofd_load_attachments(fz_context* ctx, fz_document* doc) {
+    if (!ofd_is_package(doc)) return NULL;
+    fz_outline* head = NULL;
+    fz_outline** tail = &head;
+    fz_try(ctx) {
+        ofd_each_attachment(ctx, (ofd_package*)doc, ofd_outline_attachment, &tail);
+    }
+    fz_catch(ctx) {
+        fz_drop_outline(ctx, head);
+        fz_rethrow(ctx);
+    }
+    return head;
+}
+
+typedef struct {
+    int no;
+    fz_buffer* data;
+} ofd_attachment_request;
+
+static int ofd_read_attachment(fz_context* ctx, ofd_document* doc, fz_xml* a, const char* list_path, int no,
+                               void* opaque) {
+    ofd_attachment_request* req = (ofd_attachment_request*)opaque;
+    if (no != req->no) return 0;
+    char path[OFD_PATH_SIZE];
+    ofd_resolve(ctx, path, list_path, ofd_text(ofd_child(a, "FileLoc")));
+    req->data = fz_read_archive_entry(ctx, doc->archive, path);
+    return 1;
+}
+
+// the contents of attachment no (1-based, as in ofd_load_attachments()), NULL if there's none
+fz_buffer* ofd_load_attachment(fz_context* ctx, fz_document* doc, int no) {
+    if (!ofd_is_package(doc)) return NULL;
+    ofd_attachment_request req = {no, NULL};
+    ofd_each_attachment(ctx, (ofd_package*)doc, ofd_read_attachment, &req);
+    return req.data;
 }
 
 //--- signature verification
@@ -1581,7 +1877,7 @@ static int ofd_is_package(fz_document* doc) {
 int ofd_count_signatures(fz_context* ctx, fz_document* doc_) {
     if (!ofd_is_package(doc_)) return -1;
     ofd_package* pkg = (ofd_package*)doc_;
-    int n = 0;
+    int n = pkg->archive && fz_has_archive_entry(ctx, pkg->archive, "OFDEntries.xml");
     for (int i = 0; i < pkg->ndocs; ++i) {
         ofd_document* doc = &pkg->docs[i];
         if (!doc->signatures[0]) continue;
@@ -1740,6 +2036,74 @@ static void ofd_check_signature(fz_context* ctx, ofd_package* pkg, int chapter, 
     }
 }
 
+// GM/T 0099 integrity protection: OFDEntries.xml lists every file of the package and is
+// signed (GB/T 35275, over its SM3 hash). A file added to or removed from the package
+// after protecting it no longer matches the list.
+static void ofd_check_integrity(fz_context* ctx, ofd_package* pkg, ofd_signature_info* info) {
+    fz_buffer* manifest = NULL;
+    fz_buffer* value = NULL;
+    fz_xml* xml = NULL;
+    fz_var(manifest);
+    fz_var(value);
+    fz_var(xml);
+    info->kind = OFD_SIG_INTEGRITY;
+    info->page = -1;
+    fz_try(ctx) {
+        manifest = fz_read_archive_entry(ctx, pkg->archive, "OFDEntries.xml");
+        xml = fz_parse_xml(ctx, manifest, 0);
+        fz_xml* root = fz_xml_root(xml);
+        char value_path[OFD_PATH_SIZE];
+        const char* loc = ofd_text(ofd_child(root, "SignedValueLoc"));
+        ofd_resolve(ctx, value_path, "OFDEntries.xml", *loc ? loc : "signedvalue.dat");
+
+        // listed files must be there
+        fz_xml* list = ofd_child(root, "FileList");
+        for (fz_xml* file = fz_xml_down(list); file; file = fz_xml_next(file)) {
+            if (!ofd_is(file, "File")) continue;
+            char path[OFD_PATH_SIZE];
+            ofd_resolve(ctx, path, "OFDEntries.xml", fz_xml_att(file, "FileLoc"));
+            ++info->files_total;
+            if (fz_has_archive_entry(ctx, pkg->archive, path)) {
+                ++info->files_ok;
+            } else if (!info->bad_file[0]) {
+                fz_strlcpy(info->bad_file, path, sizeof(info->bad_file));
+            }
+        }
+        // and nothing else may be
+        int n = fz_count_archive_entries(ctx, pkg->archive);
+        for (int i = 0; i < n; ++i) {
+            const char* name = fz_list_archive_entry(ctx, pkg->archive, i);
+            if (!name || name[strlen(name) - 1] == '/') continue;
+            if (!strcmp(name, "OFDEntries.xml") || !strcmp(name, value_path)) continue;
+            int listed = 0;
+            for (fz_xml* file = fz_xml_down(list); file && !listed; file = fz_xml_next(file)) {
+                char path[OFD_PATH_SIZE];
+                if (!ofd_is(file, "File")) continue;
+                ofd_resolve(ctx, path, "OFDEntries.xml", fz_xml_att(file, "FileLoc"));
+                listed = !strcmp(path, name);
+            }
+            if (listed) continue;
+            if (!info->files_extra++) fz_strlcpy(info->extra_file, name, sizeof(info->extra_file));
+        }
+
+        value = fz_read_archive_entry(ctx, pkg->archive, value_path);
+        unsigned char* bytes;
+        size_t len = fz_buffer_storage(ctx, manifest, &bytes);
+        ofd_verify_signed_value(ctx, value, 0, bytes, len, &info->check);
+        info->check.format = "integrity protection (GM/T 0099)";
+    }
+    fz_always(ctx) {
+        fz_drop_xml(ctx, xml);
+        fz_drop_buffer(ctx, value);
+        fz_drop_buffer(ctx, manifest);
+    }
+    fz_catch(ctx) {
+        fz_rethrow_if(ctx, FZ_ERROR_SYSTEM);
+        fz_report_error(ctx);
+        if (!info->check.problem) info->check.problem = "the integrity protection couldn't be read";
+    }
+}
+
 void ofd_drop_signature_infos(fz_context* ctx, ofd_signature_info* info) {
     while (info) {
         ofd_signature_info* next = info->next;
@@ -1758,6 +2122,11 @@ ofd_signature_info* ofd_check_signatures(fz_context* ctx, fz_document* doc_) {
     fz_xml* index = NULL;
     fz_var(index);
     fz_try(ctx) {
+        if (fz_has_archive_entry(ctx, pkg->archive, "OFDEntries.xml")) {
+            *tail = fz_malloc_struct(ctx, ofd_signature_info);
+            ofd_check_integrity(ctx, pkg, *tail);
+            tail = &(*tail)->next;
+        }
         for (int i = 0; i < pkg->ndocs; ++i) {
             ofd_document* doc = &pkg->docs[i];
             if (!doc->signatures[0] || !fz_has_archive_entry(ctx, doc->archive, doc->signatures)) continue;
@@ -1791,7 +2160,7 @@ static int ofd_recognize(fz_context* ctx, const fz_document_handler* handler, fz
     fz_var(score);
     fz_try(ctx) {
         archive = fz_open_archive_with_stream(ctx, stream);
-        score = fz_has_archive_entry(ctx, archive, "OFD.xml") ? 100 : 0;
+        score = fz_has_archive_entry(ctx, archive, "OFD.xml") || ofd_is_encrypted(ctx, archive) ? 100 : 0;
     }
     fz_always(ctx) {
         fz_drop_archive(ctx, archive);

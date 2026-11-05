@@ -1199,6 +1199,7 @@
     <ClInclude Include="..\src\shared\mupdf\load-jxl.h" />
     <ClInclude Include="..\src\shared\mupdf\noto_sumatra.h" />
     <ClInclude Include="..\src\shared\mupdf\ofd-crypto.h" />
+    <ClInclude Include="..\src\shared\mupdf\ofd-decrypt.h" />
     <ClInclude Include="..\src\shared\mupdf\ofd-seal.h" />
     <ClInclude Include="..\src\shared\mupdf\ofd.h" />
     <ClInclude Include="..\src\shared\mupdf\pkcs7-windows.h" />
@@ -1551,6 +1552,7 @@
     <ClCompile Include="..\src\shared\mupdf\mupdf_load_system_font.c" />
     <ClCompile Include="..\src\shared\mupdf\noto_sumatra.c" />
     <ClCompile Include="..\src\shared\mupdf\ofd-crypto.c" />
+    <ClCompile Include="..\src\shared\mupdf\ofd-decrypt.c" />
     <ClCompile Include="..\src\shared\mupdf\ofd-seal.c" />
     <ClCompile Include="..\src\shared\mupdf\ofd.c" />
     <ClCompile Include="..\src\shared\mupdf\pkcs7-windows.c" />

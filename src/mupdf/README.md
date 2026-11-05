@@ -37,6 +37,6 @@ additions live in `src/shared/mupdf`.
 `src/shared/mupdf/ofd.c` is a MuPDF document handler for OFD (GB/T 33190),
 registered by `EngineMupdf`. It builds a display list per page; a package's
 documents are one page sequence. `ofd-seal.c` reads and checks SES / GB/T 35275
-signatures with the SM2 / SM3 code in `ofd-crypto.c`; certificates aren't
-checked against trusted roots. Tests: `tests/issue-1909.ts`; sample corpus:
+signatures and certificate chains with the SM2 / SM3 / SM4 code in
+`ofd-crypto.c`; `ofd-decrypt.c` opens password-encrypted packages. Tests: `tests/issue-1909.ts`; sample corpus:
 `tests/ad-hoc-ofd-corpus.ts`.

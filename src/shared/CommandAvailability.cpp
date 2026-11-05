@@ -692,7 +692,8 @@ CommandVisibility GetCommandVisibility(int cmdId, const AppCommandCtx& ctx, Comm
         return CommandVisibility::Hide;
     }
 
-    if (!ctx.isPdf) {
+    // OFD pages render to images like PDF pages
+    if (!ctx.isPdf && !(ctx.isOfd && cmdId == CmdConvertPdfToImages)) {
         if (cmdId == CmdPdfShowInfo || cmdId == CmdPdfBake || cmdId == CmdPdfCompress || cmdId == CmdPdfDecompress ||
             cmdId == CmdPdfEncrypt || cmdId == CmdPdfDecrypt || cmdId == CmdPdfDeletePages ||
             cmdId == CmdPdfExtractPages || cmdId == CmdTogglePageBoxes || cmdId == CmdConvertPdfToImages ||
@@ -792,8 +793,8 @@ CommandVisibility GetCommandVisibility(int cmdId, const AppCommandCtx& ctx, Comm
     }
 
     if (cmdId == CmdConvertToPDF) {
-        // comic books, image folders, single images (issue #4118)
-        if (!ctx.isDocLoaded || !ctx.isImageCollection) {
+        // comic books, image folders, single images (issue #4118), OFD
+        if (!ctx.isDocLoaded || !(ctx.isImageCollection || ctx.isOfd)) {
             return CommandVisibility::Hide;
         }
     }
