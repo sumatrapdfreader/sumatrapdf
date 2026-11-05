@@ -35,8 +35,9 @@ import { killAndWait, launchControlled, sendCommand, sendCommandSync } from "./w
 type Rect = { x: number; y: number; dx: number; dy: number };
 type View = "bookmarks" | "thumbnails" | "favorites";
 const views: View[] = ["bookmarks", "thumbnails", "favorites"];
-// orig's fourth view icon, Signatures, is off: the test document isn't signed
-const NO_SIG = USE_NG ? "" : "0";
+// orig's fourth and fifth view icons, Signatures and Layers, are off: the test
+// document isn't signed and has no layers
+const NO_SIG = USE_NG ? "" : "00";
 type Panel = {
   hwnd: number;
   visible: boolean;
