@@ -11327,7 +11327,10 @@ static LRESULT FrameOnCommand(MainWindow* win, HWND hwnd, UINT msg, WPARAM wp, L
                 return 0;
             }
             if (dm && dm->NeedHScroll()) {
-                SendMessageW(win->hwndCanvas, WM_HSCROLL, SB_LINELEFT, 0);
+                int n = GetCommandIntArg(cmd, kCmdArgN, 1);
+                for (int i = 0; i < n; i++) {
+                    SendMessageW(win->hwndCanvas, WM_HSCROLL, SB_LINELEFT, 0);
+                }
             } else if (dm) {
                 // manga (R2L): Left advances (issue #3964)
                 // toRight=false → goNext when R2L (same as GoToPageHorizontal)
@@ -11351,7 +11354,10 @@ static LRESULT FrameOnCommand(MainWindow* win, HWND hwnd, UINT msg, WPARAM wp, L
                 return 0;
             }
             if (dm && dm->NeedHScroll()) {
-                SendMessageW(win->hwndCanvas, WM_HSCROLL, SB_LINERIGHT, 0);
+                int n = GetCommandIntArg(cmd, kCmdArgN, 1);
+                for (int i = 0; i < n; i++) {
+                    SendMessageW(win->hwndCanvas, WM_HSCROLL, SB_LINERIGHT, 0);
+                }
             } else if (dm) {
                 // manga (R2L): Right goes back (issue #3964)
                 // toRight=true → goNext when LTR

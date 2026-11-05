@@ -411,7 +411,7 @@ static const ArgSpec argSpecs[] = {
     {CmdCreateAnnotText, kCmdArgFocusEdit, CommandArg::Type::Bool},
     {CmdCreateAnnotText, kCmdArgFocusList, CommandArg::Type::Bool},
 
-    // and  CmdScrollDown, CmdGoToNextPage, CmdGoToPrevPage
+    // and CmdScrollDown, CmdScrollLeft, CmdScrollRight, CmdGoToNextPage, CmdGoToPrevPage
     {CmdScrollUp, kCmdArgN, CommandArg::Type::Int}, // default
 
     {CmdSetTheme, kCmdArgTheme, CommandArg::Type::String}, // default
@@ -850,7 +850,8 @@ CustomCommand* CreateCommandFromDefinition(Str definition) {
     int argCmdId = cmdId;
     if (cmdId >= CmdCreateAnnotFirst && cmdId <= CmdCreateAnnotLast) {
         argCmdId = CmdCreateAnnotText;
-    } else if (cmdId == CmdScrollUp || cmdId == CmdScrollDown || cmdId == CmdGoToNextPage || cmdId == CmdGoToPrevPage) {
+    } else if (cmdId == CmdScrollUp || cmdId == CmdScrollDown || cmdId == CmdScrollLeft || cmdId == CmdScrollRight ||
+               cmdId == CmdGoToNextPage || cmdId == CmdGoToPrevPage) {
         argCmdId = CmdScrollUp;
     }
 

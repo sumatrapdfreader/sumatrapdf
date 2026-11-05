@@ -5636,10 +5636,13 @@ void ExecuteCmd(MainWindow* win, int cmdId) {
             if (!win->IsDocLoaded()) {
                 break;
             }
-            if (cmdId == CmdGoToPrevPage) {
-                ctrl->GoToPrevPage();
-            } else {
-                ctrl->GoToNextPage();
+            int n = GetCommandIntArg(cmd, kCmdArgN, 1);
+            for (int i = 0; i < n; i++) {
+                if (cmdId == CmdGoToPrevPage) {
+                    ctrl->GoToPrevPage();
+                } else {
+                    ctrl->GoToNextPage();
+                }
             }
             OnDocumentVerticalScrollIntent(win, cmdId == CmdGoToNextPage);
             break;
@@ -5690,7 +5693,10 @@ void ExecuteCmd(MainWindow* win, int cmdId) {
                 break;
             }
             if (dm && dm->NeedVScroll() && dm->GetZoomVirtual() != kZoomFitContent) {
-                CanvasOnVScroll(win, cmdId == CmdScrollUp ? ScrollMsg::LineUp : ScrollMsg::LineDown);
+                int n = GetCommandIntArg(cmd, kCmdArgN, 1);
+                for (int i = 0; i < n; i++) {
+                    CanvasOnVScroll(win, cmdId == CmdScrollUp ? ScrollMsg::LineUp : ScrollMsg::LineDown);
+                }
             } else if (cmdId == CmdScrollUp) {
                 // in single page view or fit content, scrolls by page
                 ctrl->GoToPrevPage(true);
@@ -5749,7 +5755,10 @@ void ExecuteCmd(MainWindow* win, int cmdId) {
             }
             bool right = cmdId == CmdScrollRight;
             if (dm && dm->NeedHScroll()) {
-                CanvasOnHScroll(win, right ? ScrollMsg::LineRight : ScrollMsg::LineLeft);
+                int n = GetCommandIntArg(cmd, kCmdArgN, 1);
+                for (int i = 0; i < n; i++) {
+                    CanvasOnHScroll(win, right ? ScrollMsg::LineRight : ScrollMsg::LineLeft);
+                }
             } else if (dm) {
                 // manga (R2L): Left advances, Right goes back (issue #3964)
                 bool goNext = right != dm->GetDisplayR2L();
