@@ -3881,6 +3881,11 @@ static Str PalmDocToHTML(Str path) {
     return html;
 }
 
+bool EngineMupdf::Load(Str path, PasswordUI* pwdUI) {
+    return Load(path, pwdUI, FileType::Unknown);
+}
+
+// kindHint only overrides the name for OFD, which is detected by content (e.g. a renamed .zip)
 bool EngineMupdf::Load(Str path, PasswordUI* pwdUI, FileType kindHint) {
     bool ok;
     auto* ctx = Ctx();
@@ -3896,7 +3901,7 @@ bool EngineMupdf::Load(Str path, PasswordUI* pwdUI, FileType kindHint) {
     int streamNo = -1;
     TempStr fnCopy = ParseEmbeddedStreamNumber(path, &streamNo);
 
-    FileType kind = kindHint == FileType::Unknown ? GuessFileTypeFromName(path) : kindHint;
+    FileType kind = kindHint == FileType::Ofd ? kindHint : GuessFileTypeFromName(path);
     auto loadHtml = [&](Str data) {
         if (len(data) == 0) {
             return false;

@@ -1,0 +1,623 @@
+// Native OFD documents (#1909): templates, inherited paint, text, paths, seals and the
+// features of the OFDRW samples, all from generated fixtures.
+// Run: bun tests/issue-1909.ts [--no-build]
+
+import { copyFileSync, readFileSync, writeFileSync } from "node:fs";
+import { join } from "node:path";
+import { deflateSync } from "node:zlib";
+import { ControlCommand, withControlledSumatra } from "./control.ts";
+import { IS_WIN } from "./host.ts";
+import {
+  EXE,
+  extractPageText,
+  loadPng,
+  makePng,
+  makeZip,
+  pngChunk,
+  pngPixel,
+  ROOT,
+  runStandalone,
+  tmpPath,
+} from "./util.ts";
+
+const ns = 'xmlns="http://www.ofdspec.org/2016"';
+
+// --- basic: templates, inherited paint, annotation images, renamed .zip
+
+function makeOfd(): Buffer {
+  const ns = 'xmlns:o="http://www.ofdspec.org/2016"';
+  const xml = (tag: string, body: string) => `<o:${tag} ${ns}>${body}</o:${tag}>`;
+  const text = (value: string, y: number) =>
+    `<o:TextObject Boundary="10 ${y} 80 8" Font="5" Size="5">` +
+    `<o:TextCode X="0" Y="6" DeltaX="g ${value.length - 1} 3">${value}</o:TextCode></o:TextObject>`;
+  const path = (size: number) =>
+    `<o:PathObject Boundary="10 10 ${size} ${size}" Fill="true" Stroke="false">` +
+    `<o:AbbreviatedData>M 0 0 L ${size} 0 L ${size} ${size} L 0 ${size} C</o:AbbreviatedData></o:PathObject>`;
+  const entries = [
+    ["OFD.xml", xml("OFD", "<o:DocBody><o:DocRoot>Docs/main.xml</o:DocRoot></o:DocBody>")],
+    [
+      "Docs/main.xml",
+      xml(
+        "Document",
+        `<o:CommonData><o:PageArea><o:PhysicalBox>0 0 100 80</o:PhysicalBox></o:PageArea>` +
+          `<o:PublicRes>Resources.xml</o:PublicRes><o:TemplatePage ID="1" BaseLoc="Tpl/page.xml"/></o:CommonData>` +
+          `<o:Pages><o:Page ID="11" BaseLoc="Pages/one.xml"/><o:Page ID="12" BaseLoc="Pages/two.xml"/></o:Pages>` +
+          `<o:Annotations>Annots/index.xml</o:Annotations>`,
+      ),
+    ],
+    [
+      "Docs/Resources.xml",
+      `<o:Res ${ns} BaseLoc="Assets"><o:Fonts><o:Font ID="5" FontName="Arial"/></o:Fonts>` +
+        `<o:DrawParams><o:DrawParam ID="6"><o:FillColor Value="255 0 0"/></o:DrawParam>` +
+        `<o:DrawParam ID="7" Relative="6"/><o:DrawParam ID="8"><o:FillColor Value="0 0 255"/></o:DrawParam></o:DrawParams>` +
+        `<o:MultiMedias><o:MultiMedia ID="9" Type="Image"><o:MediaFile>blue.png</o:MediaFile></o:MultiMedia></o:MultiMedias></o:Res>`,
+    ],
+    [
+      "Docs/Tpl/page.xml",
+      xml(
+        "Page",
+        `<o:Content><o:Layer DrawParam="8">${path(20)}</o:Layer><o:Layer>${text("TEMPLATE", 55)}</o:Layer></o:Content>`,
+      ),
+    ],
+    ...["ALPHA", "BETA"].map((label, i) => [
+      `Docs/Pages/${i === 0 ? "one" : "two"}.xml`,
+      xml(
+        "Page",
+        (i ? "<o:Area><o:PhysicalBox>0 0 120 90</o:PhysicalBox></o:Area>" : "") +
+          `<o:Template TemplateID="1" ZOrder="Background"/><o:Content><o:Layer DrawParam="7">${path(10)}</o:Layer>` +
+          `<o:Layer>${text(label, 40)}</o:Layer></o:Content>`,
+      ),
+    ]),
+    ["Docs/Annots/index.xml", xml("Annotations", `<o:Page PageID="11"><o:FileLoc>one.xml</o:FileLoc></o:Page>`)],
+    [
+      "Docs/Annots/one.xml",
+      xml(
+        "PageAnnot",
+        `<o:Annot ID="10" Type="Watermark"><o:Appearance Boundary="40 10 10 10">` +
+          `<o:ImageObject Boundary="0 0 10 10" CTM="10 0 0 10 0 0" ResourceID="9"/></o:Appearance></o:Annot>`,
+      ),
+    ],
+  ];
+  return makeZip([
+    ...entries.map(([name, content]) => ({ name, data: Buffer.from(content) })),
+    { name: "Docs/Assets/blue.png", data: makePng(2, 2, [0, 0, 255]) },
+  ]);
+}
+
+async function testBasic(): Promise<void> {
+  const file = tmpPath("native-ofd.ofd");
+  writeFileSync(file, makeOfd());
+  for (const [page, label] of [
+    [1, "ALPHA"],
+    [2, "BETA"],
+  ] as const) {
+    const text = extractPageText(file, page).replace(/\s/g, "");
+    if (!text.includes(label) || !text.includes("TEMPLATE")) {
+      throw new Error(`OFD page ${page}: missing page/template text: ${JSON.stringify(text)}`);
+    }
+  }
+
+  const renamed = tmpPath("native-ofd.zip");
+  copyFileSync(file, renamed);
+  await withControlledSumatra(
+    EXE,
+    async (client) => {
+      for (const [path, page] of [
+        [file, 1],
+        [file, 2],
+        [renamed, 1],
+      ] as const) {
+        const result = await client.request(ControlCommand.TestRenderPageColors, [path, page, 100]);
+        const raw = String(result[1] ?? "");
+        console.log(`OFD page ${page}: ${raw.trim()}`);
+        if (result[0] !== 0 || !raw.includes("pages=2")) {
+          throw new Error(`OFD render failed: ${raw}`);
+        }
+        const red = Number(/red=(\d+)/.exec(raw)?.[1]);
+        const blue = Number(/blue=(\d+)/.exec(raw)?.[1]);
+        if (!(red > 600 && red < 1000 && blue > 2000 && blue < 3600)) {
+          throw new Error(`OFD template order, inherited color or image failed: ${raw}`);
+        }
+        if (!raw.includes(page === 1 ? "size=284x227" : "size=341x256")) {
+          throw new Error(`OFD page dimensions failed: ${raw}`);
+        }
+      }
+    },
+    ["-log-to-file", tmpPath("ofd.log")],
+  );
+}
+
+// --- path fill defaults to transparent; text fill defaults to black
+
+const pathFillDpi = 720;
+const mmPerInch = 25.4;
+
+function makeSymbol(): Buffer {
+  const files = [
+    ["OFD.xml", `<OFD ${ns}><DocBody><DocRoot>Doc/Document.xml</DocRoot></DocBody></OFD>`],
+    [
+      "Doc/Document.xml",
+      `<Document ${ns}><CommonData><PageArea><PhysicalBox>0 0 25 25</PhysicalBox></PageArea></CommonData>` +
+        `<Pages><Page ID="1" BaseLoc="Page.xml"/></Pages></Document>`,
+    ],
+    [
+      "Doc/Page.xml",
+      `<Page ${ns}><Content><Layer><PathObject ID="2" Boundary="10 10 5 5" LineWidth="0.225" Fill="true">` +
+        `<AbbreviatedData>M 4.5315 2.493 B 4.5315 1.368 3.618 0.45 2.4885 0.45 ` +
+        `B 1.3635 0.45 0.45 1.368 0.45 2.493 B 0.45 3.618 1.3635 4.536 2.4885 4.536 ` +
+        `B 3.618 4.536 4.5315 3.618 4.5315 2.493 M 1.035 1.035 L 3.915 3.915 ` +
+        `M 1.035 3.915 L 3.915 1.035</AbbreviatedData></PathObject></Layer></Content></Page>`,
+    ],
+  ];
+  return makeZip(files.map(([name, xml]) => ({ name, data: Buffer.from(xml) })));
+}
+
+async function testPathFill(): Promise<void> {
+  const file = tmpPath("ofd-path-fill.ofd");
+  const output = tmpPath("ofd-path-fill-1.png");
+  writeFileSync(file, makeSymbol());
+  await withControlledSumatra(
+    EXE,
+    async (client) => {
+      await client.waitForRenderIdle();
+      const result = await client.request(ControlCommand.TestConvertToImages, [output, "1", pathFillDpi]);
+      if (result[0] !== 0 || !String(result[1]).startsWith("OK")) {
+        throw new Error(`OFD symbol export failed: ${result}`);
+      }
+    },
+    [file],
+  );
+
+  const image = loadPng(output);
+  const pixel = (x: number, y: number) =>
+    pngPixel(image, Math.round((x * pathFillDpi) / mmPerInch), Math.round((y * pathFillDpi) / mmPerInch));
+  for (const [x, y] of [
+    [11.5, 12.49],
+    [13.5, 12.49],
+    [12.49, 11.5],
+    [12.49, 13.5],
+  ]) {
+    const rgb = pixel(x, y);
+    if (Math.min(...rgb) < 245) {
+      throw new Error(`OFD transparent path fill: expected white at ${x},${y}, got ${rgb}`);
+    }
+  }
+  for (const [x, y] of [
+    [10.45, 12.49],
+    [12.49, 12.49],
+    [11.7, 11.7],
+    [11.7, 13.25],
+  ]) {
+    const rgb = pixel(x, y);
+    if (Math.max(...rgb) > 40) {
+      throw new Error(`OFD circle/cross stroke: expected black at ${x},${y}, got ${rgb}`);
+    }
+  }
+}
+
+// --- synthetic signature appearances need neither certificates nor private invoice data
+
+const sealDpi = 254;
+const pixelsPerMm = 10;
+const derSequence = 0x30;
+const derInteger = 0x02;
+const derOctetString = 0x04;
+const derIA5String = 0x16;
+
+function der(tag: number, content: Buffer): Buffer {
+  const bytes: number[] = [];
+  for (let n = content.length; n; n >>>= 8) bytes.unshift(n & 255);
+  const length = content.length < 128 ? [content.length] : [128 | bytes.length, ...bytes];
+  return Buffer.concat([Buffer.from([tag, ...length]), content]);
+}
+
+const seq = (...parts: Buffer[]) => der(derSequence, Buffer.concat(parts));
+const integer = (n: number) => der(derInteger, Buffer.from([n]));
+const string = (s: string) => der(derIA5String, Buffer.from(s));
+
+function pack(files: [string, string | Buffer][]): Buffer {
+  return makeZip(files.map(([name, content]) => ({ name, data: Buffer.from(content) })));
+}
+
+function sealOfd(): Buffer {
+  return pack([
+    ["OFD.xml", `<OFD ${ns}><DocBody><DocRoot>Doc/main.xml</DocRoot></DocBody></OFD>`],
+    [
+      "Doc/main.xml",
+      `<Document ${ns}><CommonData><PageArea><PhysicalBox>0 0 210 297</PhysicalBox></PageArea></CommonData>` +
+        `<Pages><Page ID="1" BaseLoc="page.xml"/></Pages></Document>`,
+    ],
+    [
+      "Doc/page.xml",
+      `<Page ${ns}><Area><PhysicalBox>0 0 104 84</PhysicalBox></Area><Content><Layer>` +
+        `<PathObject ID="2" Boundary="0 0 104 84" Fill="true" Stroke="false"><FillColor Value="255 0 0"/>` +
+        `<AbbreviatedData>M 0 0 L 104 0 L 104 84 L 0 84 C</AbbreviatedData></PathObject></Layer></Content></Page>`,
+    ],
+  ]);
+}
+
+function opaqueSeal(): Buffer {
+  const size = 8;
+  const channels = 3;
+  const stride = 1 + size * channels;
+  const rows = Buffer.alloc(size * stride, 255);
+  for (let y = 0; y < size; ++y) {
+    rows[y * stride] = 0;
+    if (y < 2 || y >= 6) continue;
+    for (let x = 2; x < 6; ++x) {
+      rows[y * stride + 1 + x * channels + 1] = 0;
+      rows[y * stride + 1 + x * channels + 2] = 0;
+    }
+  }
+  const header = Buffer.alloc(13);
+  header.writeUInt32BE(size, 0);
+  header.writeUInt32BE(size, 4);
+  header[8] = 8;
+  header[9] = 2;
+  return Buffer.concat([
+    Buffer.from("89504e470d0a1a0a", "hex"),
+    pngChunk("IHDR", header),
+    pngChunk("IDAT", deflateSync(rows)),
+    pngChunk("IEND", Buffer.alloc(0)),
+  ]);
+}
+
+function sealFixture(): Buffer {
+  const picture = (type: string, data: Buffer) =>
+    seq(string(type), der(derOctetString, data), integer(34), integer(26));
+  const signed = (image: Buffer) =>
+    seq(seq(integer(4), seq(seq(seq(string("ES"), integer(4), string("TEST")), string("test-seal"), seq(), image))));
+  const signature = (page: number, boundary: string, path: string) =>
+    `<Signature ${ns}><SignedInfo><StampAnnot ID="1" PageRef="${page}" Boundary="${boundary}"` +
+    (path.endsWith("one.dat") ? ` Clip="0 0 6 8"` : "") +
+    ` /></SignedInfo>` +
+    `<SignedValue>${path}</SignedValue></Signature>`;
+  return pack([
+    [
+      "OFD.xml",
+      `<OFD ${ns}><DocBody><DocRoot>Doc/main.xml</DocRoot><Signatures>/Doc/Signs/index.xml</Signatures></DocBody></OFD>`,
+    ],
+    [
+      "Doc/main.xml",
+      `<Document ${ns}><CommonData><PageArea><PhysicalBox>0 0 40 30</PhysicalBox></PageArea></CommonData>` +
+        `<Pages><Page ID="11" BaseLoc="page.xml"/><Page ID="22" BaseLoc="page.xml"/></Pages></Document>`,
+    ],
+    [
+      "Doc/page.xml",
+      `<Page ${ns}><Content><Layer>` +
+        `<PathObject ID="3" Boundary="14 20 12 8" Fill="true" Stroke="false"><FillColor Value="128 192 255"/>` +
+        `<AbbreviatedData>M 0 0 L 12 0 L 12 8 L 0 8 C</AbbreviatedData></PathObject>` +
+        `<PathObject ID="4" Boundary="14 21.5 12 0.4" LineWidth="0.4"><AbbreviatedData>M 0 0 L 12 0</AbbreviatedData></PathObject>` +
+        `</Layer></Content></Page>`,
+    ],
+    [
+      "Doc/Signs/index.xml",
+      `<Signatures ${ns}><Signature ID="1" BaseLoc="one.xml"/>` +
+        `<Signature ID="2" BaseLoc="/Doc/Signs/two.xml"/><Signature ID="3" BaseLoc="broken.xml"/>` +
+        `<Signature ID="4" BaseLoc="opaque.xml"/></Signatures>`,
+    ],
+    ["Doc/Signs/one.xml", signature(22, "8 6 12 8", "/Doc/Signs/one.dat")],
+    ["Doc/Signs/one.dat", signed(picture("ofd", sealOfd()))],
+    ["Doc/Signs/two.xml", signature(22, "24 6 6 12", "two.dat")],
+    ["Doc/Signs/two.dat", signed(picture("png", makePng(4, 2, [0, 0, 255])))],
+    ["Doc/Signs/broken.xml", signature(22, "4 20 8 4", "broken.dat")],
+    ["Doc/Signs/broken.dat", Buffer.from([derSequence, 0x88, 255, 255, 255, 255, 255, 255, 255, 255])],
+    ["Doc/Signs/opaque.xml", signature(22, "14 20 12 8", "opaque.dat")],
+    ["Doc/Signs/opaque.dat", signed(picture("png", opaqueSeal()))],
+  ]);
+}
+
+async function testSeals(): Promise<void> {
+  const file = tmpPath("ofd-seals.ofd");
+  const template = tmpPath("ofd-seals-<N>.png");
+  writeFileSync(file, sealFixture());
+  await withControlledSumatra(
+    EXE,
+    async (client) => {
+      await client.waitForRenderIdle();
+      const result = await client.request(ControlCommand.TestConvertToImages, [template, "all", sealDpi]);
+      if (result[0] !== 0 || !String(result[1]).startsWith("OK")) throw new Error(`OFD seal export failed: ${result}`);
+    },
+    [file],
+  );
+
+  const first = loadPng(tmpPath("ofd-seals-1.png"));
+  const second = loadPng(tmpPath("ofd-seals-2.png"));
+  const check = (image: typeof first, x: number, y: number, expected: number[]) => {
+    const actual = pngPixel(image, Math.round(x * pixelsPerMm), Math.round(y * pixelsPerMm));
+    if (actual.some((n, i) => Math.abs(n - expected[i]) > 10))
+      throw new Error(`OFD seal at ${x},${y}: expected ${expected}, got ${actual}`);
+  };
+  check(first, 14, 10, [255, 255, 255]);
+  check(first, 15, 20.5, [128, 192, 255]);
+  check(second, 15, 20.5, [128, 192, 255]);
+  check(second, 16, 21.5, [0, 0, 0]);
+  check(second, 20, 24, [128, 0, 0]);
+  check(second, 8, 22, [255, 255, 255]);
+  for (const [x, y] of [
+    [8.5, 6.5],
+    [13.5, 13.5],
+    [10, 10],
+  ])
+    check(second, x, y, [255, 0, 0]);
+  for (const [x, y] of [
+    [24.5, 6.5],
+    [29.5, 17.5],
+  ])
+    check(second, x, y, [0, 0, 255]);
+  for (const [x, y] of [
+    [7, 10],
+    [14.5, 10],
+    [21, 10],
+    [14, 15],
+    [31, 10],
+    [27, 19],
+  ])
+    check(second, x, y, [255, 255, 255]);
+}
+
+// --- focused fixtures for the OFDRW rendering cases
+
+const rectangle = (w: number, h: number) => `M 0 0 L ${w} 0 L ${w} ${h} L 0 ${h} C`;
+const path = (data: string, attrs: string, fill: string, clips = "") =>
+  `<PathObject ID="3" Boundary="4 4 20 20" Fill="true" Stroke="false" ${attrs}>` +
+  `<FillColor>${fill}</FillColor>${clips}<AbbreviatedData>${data}</AbbreviatedData></PathObject>`;
+const red =
+  `<PathObject ID="4" Boundary="0 0 20 20" Fill="true" Stroke="false">` +
+  `<FillColor Value="255 0 0"/><AbbreviatedData>${rectangle(20, 20)}</AbbreviatedData></PathObject>`;
+const redPath = (data: string, fill: string) =>
+  `<PathObject ID="5" Boundary="4 4 20 20" Fill="true" Stroke="false">${fill}<AbbreviatedData>${data}</AbbreviatedData></PathObject>`;
+const redUnit = `<CompositeGraphicUnits><CompositeGraphicUnit ID="10" Width="20" Height="20"><Content>${red}</Content></CompositeGraphicUnit></CompositeGraphicUnits>`;
+
+type Counts = { red: number; blue: number; nonwhite: number; right: number };
+type Case = {
+  name: string;
+  body: string;
+  resources?: string;
+  common?: string;
+  font?: Buffer;
+  base?: string;
+  image?: Buffer;
+  text?: string;
+  // inserted into the page before <Content>, e.g. <Template> or <PageRes>
+  pageHead?: string;
+  // inserted into Document.xml after <Pages> and into OFD.xml's <DocBody>
+  docTail?: string;
+  docBody?: string;
+  files?: [string, string][];
+  check: (c: Counts) => boolean;
+};
+
+const axial = `<AxialShd StartPoint="0 0" EndPoint="20 0" Extend="3"><Segment Position="0"><Color Value="255 0 0"/></Segment><Segment Position="1"><Color Value="0 0 255"/></Segment></AxialShd>`;
+
+const cases: Case[] = [
+  ...(IS_WIN
+    ? [
+        {
+          name: "system-ligature",
+          resources: `<Fonts><Font ID="5" FontName="Times New Roman"/></Fonts>`,
+          body:
+            `<TextObject ID="6" Boundary="4 4 25 10" Font="5" Size="8"><CGTransform CodePosition="0" CodeCount="2" GlyphCount="1">` +
+            `<Glyphs>191</Glyphs></CGTransform><TextCode X="0" Y="8" DeltaX="8">fiX</TextCode></TextObject>`,
+          text: "fiX",
+          check: (c: Counts) => c.right > 35 && c.right < 55,
+        },
+      ]
+    : []),
+  {
+    name: "ligature-position",
+    font: readFileSync(join(ROOT, "tests/issue-3219-font.cff")),
+    resources: `<Fonts><Font ID="5" FontName="Subset"><FontFile>font.cff</FontFile></Font></Fonts>`,
+    body:
+      `<TextObject ID="6" Boundary="4 4 25 10" Font="5" Size="8"><CGTransform CodePosition="0" CodeCount="2" GlyphCount="1">` +
+      `<Glyphs>34</Glyphs></CGTransform><TextCode X="0" Y="8" DeltaX="8">\nABX\n</TextCode></TextObject>`,
+    text: "ABX",
+    check: (c) => c.right > 35 && c.right < 55,
+  },
+  {
+    name: "expanded-position",
+    font: readFileSync(join(ROOT, "tests/issue-3219-font.cff")),
+    resources: `<Fonts><Font ID="5" FontName="Subset"><FontFile>font.cff</FontFile></Font></Fonts>`,
+    body:
+      `<TextObject ID="6" Boundary="4 4 25 10" Font="5" Size="8"><CGTransform CodePosition="0" CodeCount="1" GlyphCount="2">` +
+      `<Glyphs>34 34</Glyphs></CGTransform><TextCode X="0" Y="8" DeltaX="8 8">AX</TextCode></TextObject>`,
+    text: "AX",
+    check: (c) => c.right > 65 && c.right < 80,
+  },
+  {
+    name: "recovered-image",
+    base: "wrong-directory",
+    image: makePng(2, 2, [0, 0, 255]),
+    resources: `<MultiMedias><MultiMedia ID="9" Type="Image"><MediaFile>blue.png</MediaFile></MultiMedia></MultiMedias>`,
+    body: `<ImageObject ID="1" Boundary="4 4 10 10" CTM="10 0 0 10 0 0" ResourceID="9"/>`,
+    check: (c) => c.blue > 700,
+  },
+  {
+    name: "dash",
+    body:
+      `<PathObject ID="1" Boundary="4 4 20 2" LineWidth="1" DashPattern="1 1">` +
+      `<StrokeColor Value="255 0 0"/><AbbreviatedData>M 0 1 L 20 1</AbbreviatedData></PathObject>`,
+    check: (c) => c.red > 30 && c.red < 100,
+  },
+  {
+    name: "missing",
+    body: red + `<ImageObject ID="8" Boundary="0 0 1 1" ResourceID="999"/>`,
+    common: `<PublicRes>missing.xml</PublicRes>`,
+    check: (c) => c.red > 3000,
+  },
+  {
+    name: "composite",
+    resources: redUnit,
+    body: `<CompositeObject ID="1" ResourceID="10" Boundary="4 4 10 10" CTM="0.5 0 0 0.5 0 0" Alpha="127"/>`,
+    check: (c) => c.red === 0 && c.nonwhite > 700 && c.nonwhite < 1000,
+  },
+  {
+    name: "clip",
+    body: path(
+      rectangle(10, 10),
+      `CTM="2 0 0 2 0 0"`,
+      `<ColorPlaceholder/>`,
+      `<Clips TransFlag="false"><Clip><Area><Path Fill="true" Stroke="false"><AbbreviatedData>${rectangle(4, 20)}</AbbreviatedData></Path></Area>` +
+        `<Area CTM="1 0 0 1 6 0"><Path Fill="true" Stroke="false"><AbbreviatedData>${rectangle(4, 20)}</AbbreviatedData></Path></Area></Clip>` +
+        `<Clip><Area><Path Fill="true" Stroke="false"><AbbreviatedData>${rectangle(10, 10)}</AbbreviatedData></Path></Area></Clip></Clips>`,
+    ).replace(`<FillColor><ColorPlaceholder/></FillColor>`, `<FillColor Value="255 0 0"/>`),
+    check: (c) => c.red > 500 && c.red < 800,
+  },
+  {
+    name: "pattern",
+    body: path(
+      rectangle(20, 20),
+      "",
+      `<Pattern Width="2" Height="2" XStep="4" YStep="4">` +
+        `<CellContent><PathObject ID="4" Boundary="0 0 2 2" Fill="true" Stroke="false"><FillColor Value="255 0 0"/>` +
+        `<AbbreviatedData>${rectangle(2, 2)}</AbbreviatedData></PathObject></CellContent></Pattern>`,
+    ),
+    check: (c) => c.red > 600 && c.red < 1000,
+  },
+  ...[false, true].map((stroke): Case => ({
+    name: stroke ? "gradient-text-stroke" : "gradient-text-fill",
+    resources: `<Fonts><Font ID="5" FontName="Arial"/></Fonts>`,
+    body: `<TextObject ID="6" Boundary="4 4 22 16" Font="5" Size="10" Fill="${!stroke}" Stroke="${stroke}" LineWidth="0.5"><FillColor>${axial}</FillColor><StrokeColor>${axial}</StrokeColor><TextCode X="0" Y="12" DeltaX="7 7">HHH</TextCode></TextObject>`,
+    check: (c) => c.red > 5 && c.blue > 5,
+  })),
+  {
+    name: "gradient-path-stroke",
+    body: `<PathObject ID="1" Boundary="4 4 20 4" LineWidth="2"><StrokeColor>${axial}</StrokeColor><AbbreviatedData>M 0 2 L 20 2</AbbreviatedData></PathObject>`,
+    check: (c) => c.red > 10 && c.blue > 10,
+  },
+  {
+    name: "gradient",
+    body: path(
+      rectangle(20, 20),
+      "",
+      `<RadialShd StartPoint="10 10" EndPoint="10 10" EndRadius="10" Extend="3">` +
+        `<Segment Position="0"><Color Value="255 0 0"/></Segment><Segment Position="1"><Color Value="0 0 255"/></Segment></RadialShd>`,
+    ),
+    check: (c) => c.red > 50 && c.blue > 200 && c.nonwhite > 3000,
+  },
+  {
+    name: "mapped",
+    font: readFileSync(join(ROOT, "tests/issue-3219-font.cff")),
+    resources: `<Fonts><Font ID="5" FontName="Subset"><FontFile>font.cff</FontFile></Font></Fonts>`,
+    body:
+      `<TextObject ID="6" Boundary="4 4 20 10" Font="5" Size="8"><CGTransform CodePosition="0" CodeCount="2" GlyphCount="1">` +
+      `<Glyphs>34</Glyphs></CGTransform><TextCode X="0" Y="8" DeltaX="4">AB</TextCode></TextObject>`,
+    text: "AB",
+    check: (c) => c.nonwhite > 30,
+  },
+  {
+    name: "nofont",
+    resources: `<Fonts><Font ID="5" FontName="Arial"><FontFile>missing.ttf</FontFile></Font></Fonts>`,
+    body:
+      `<TextObject ID="6" Boundary="4 4 20 10" Font="5" Size="8"><CGTransform CodePosition="0" CodeCount="1" GlyphCount="1">` +
+      `<Glyphs>65535</Glyphs></CGTransform><TextCode X="0" Y="8" DeltaX="5 5">ABC</TextCode></TextObject>`,
+    text: "ABC",
+    check: (c) => c.nonwhite > 50,
+  },
+  {
+    // a 20 mm circle made of two arcs covers pi/4 of its 20 mm square
+    name: "arc",
+    body: redPath(`M 0 10 A 10 10 0 1 1 20 10 A 10 10 0 1 1 0 10 C`, `<FillColor Value="255 0 0"/>`),
+    check: (c) => c.red > 2200 && c.red < 2850,
+  },
+  {
+    name: "page-res",
+    pageHead: `<PageRes>PageRes.xml</PageRes>`,
+    files: [["Doc/PageRes.xml", `<Res ${ns}>${redUnit}</Res>`]],
+    body: `<CompositeObject ID="1" ResourceID="10" Boundary="0 0 20 20"/>`,
+    check: (c) => c.red > 3000,
+  },
+  {
+    name: "nested-template",
+    common: `<TemplatePage ID="30" BaseLoc="outer.xml"/><TemplatePage ID="31" BaseLoc="inner.xml"/>`,
+    pageHead: `<Template TemplateID="30"/>`,
+    files: [
+      ["Doc/outer.xml", `<Page ${ns}><Template TemplateID="31"/><Content/></Page>`],
+      ["Doc/inner.xml", `<Page ${ns}><Content><Layer>${red}</Layer></Content></Page>`],
+    ],
+    body: "",
+    check: (c) => c.red > 3000,
+  },
+  {
+    // a broken optional part must not take the page content with it
+    name: "missing-parts",
+    pageHead: `<Template TemplateID="99"/>`,
+    docTail: `<Annotations>missing-annots.xml</Annotations>`,
+    docBody: `<Signatures>missing-signs.xml</Signatures>`,
+    body: red,
+    check: (c) => c.red > 3000,
+  },
+  {
+    name: "indexed-color",
+    resources:
+      `<ColorSpaces><ColorSpace ID="7" Type="RGB"><Palette><CV>#FF #00 #00</CV><CV>#00 #00 #FF</CV></Palette>` +
+      `</ColorSpace></ColorSpaces>`,
+    body: redPath(rectangle(20, 20), `<FillColor ColorSpace="7" Index="1"/>`),
+    check: (c) => c.blue > 3000 && c.red === 0,
+  },
+  {
+    // an unsupported mesh gradient skips its object, not the page
+    name: "unsupported-object",
+    body: red + redPath(rectangle(5, 5), `<FillColor><GouraudShd><Point X="0" Y="0"/></GouraudShd></FillColor>`),
+    check: (c) => c.red > 3000,
+  },
+];
+
+function featureFixture(c: Case): Buffer {
+  const files: [string, Buffer][] = [
+    ["OFD.xml", Buffer.from(`<OFD ${ns}><DocBody><DocRoot>Doc/main.xml</DocRoot>${c.docBody ?? ""}</DocBody></OFD>`)],
+    [
+      "Doc/main.xml",
+      Buffer.from(
+        `<Document ${ns}><CommonData><PageArea><PhysicalBox>0 0 30 30</PhysicalBox></PageArea>` +
+          `${c.common ?? ""}<DocumentRes>Res.xml</DocumentRes></CommonData><Pages><Page ID="1" BaseLoc="page.xml"/></Pages>${c.docTail ?? ""}</Document>`,
+      ),
+    ],
+    ["Doc/Res.xml", Buffer.from(`<Res ${ns} BaseLoc="${c.base ?? "."}">${c.resources ?? ""}</Res>`)],
+    ["Doc/page.xml", Buffer.from(`<Page ${ns}>${c.pageHead ?? ""}<Content><Layer>${c.body}</Layer></Content></Page>`)],
+    ...(c.files ?? []).map(([name, xml]): [string, Buffer] => [name, Buffer.from(xml)]),
+  ];
+  if (c.font) files.push(["Doc/font.cff", c.font]);
+  if (c.image) files.push(["Doc/Assets/blue.png", c.image]);
+  return makeZip(files.map(([name, data]) => ({ name, data })));
+}
+
+async function testFeatures(): Promise<void> {
+  const failures: string[] = [];
+  const files = cases.map((c) => {
+    const file = tmpPath(`ofd-feature-${c.name}.ofd`);
+    writeFileSync(file, featureFixture(c));
+    return file;
+  });
+  await withControlledSumatra(EXE, async (client) => {
+    for (const [i, c] of cases.entries()) {
+      const result = await client.request(ControlCommand.TestRenderPageColors, [files[i], 1, 100]);
+      const raw = String(result[1] ?? "");
+      const count = (name: string) => Number(new RegExp(`\\b${name}=(\\d+)`).exec(raw)?.[1] ?? 0);
+      const counts = {
+        red: count("red"),
+        blue: count("blue"),
+        nonwhite: count("nonwhite"),
+        right: Number(/box=\d+,\d+,(\d+),/.exec(raw)?.[1] ?? 0),
+      };
+      console.log(`${c.name}: ${raw.trim()}`);
+      if (result[0] !== 0 || !c.check(counts)) failures.push(`${c.name}: ${raw.trim()}`);
+    }
+  });
+  if (failures.length) throw new Error(failures.join("\n"));
+  for (const [i, c] of cases.entries()) {
+    if (c.text && !extractPageText(files[i]).replace(/\s/g, "").includes(c.text))
+      throw new Error(`OFD ${c.name}: logical Unicode text was lost`);
+  }
+}
+
+export async function testit(): Promise<void> {
+  await testBasic();
+  await testPathFill();
+  await testSeals();
+  await testFeatures();
+}
+
+if (import.meta.main) {
+  await runStandalone(testit);
+}

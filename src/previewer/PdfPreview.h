@@ -14,6 +14,7 @@ enum class PreviewType {
     Mobi,
     Cbx,
     Tga,
+    Ofd,
 };
 
 class PdfPreview : public IThumbnailProvider,

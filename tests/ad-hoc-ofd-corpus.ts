@@ -1,51 +1,63 @@
-// Private samples stay outside the suite. Run: bun tests/ad-hoc-ofd-corpus.ts --no-build
+// Renders every page of the OFD samples in the shared test-files folder and
+// reports failed pages and OFD warnings. Run: bun tests/ad-hoc-ofd-corpus.ts [--no-build] [filter]
 
-import { mkdirSync, readdirSync } from "node:fs";
+import { existsSync, readdirSync, readFileSync } from "node:fs";
 import { join } from "node:path";
 import { ControlCommand, withControlledSumatra } from "./control.ts";
-import { EXE, ROOT, runStandalone, tmpPath } from "./util.ts";
+import { EXE, runStandalone, tmpPath } from "./util.ts";
+
+const samplesDir = "C:/Users/kjk/OneDrive/!sumatra/!test files/ofd";
+
+// lines mupdf logs when it skips or substitutes OFD content
+const ofdWarning = /OFD|ofd/;
 
 export async function testit(): Promise<void> {
-  const dir = join(ROOT, "demo");
-  const files = readdirSync(dir).filter((name) => name.toLowerCase().endsWith(".ofd"));
-  if (!files.length) {
-    throw new Error("No OFD samples in demo/");
+  if (!existsSync(samplesDir)) {
+    console.log(`skipping: no samples in ${samplesDir}`);
+    return;
   }
-  await withControlledSumatra(EXE, async (client) => {
-    for (const [index, name] of files.entries()) {
-      const result = await client.request(ControlCommand.TestRenderPageColors, [join(dir, name), 1, 100]);
-      const raw = String(result[1] ?? "");
-      if (result[0] !== 0 || !/nonwhite=[1-9]\d*/.test(raw)) {
-        throw new Error(`Sample ${index + 1} failed: ${raw}`);
-      }
-      console.log(`Sample ${index + 1}/${files.length}: ${raw.trim()}`);
-    }
-  });
+  const filter = process.argv.slice(2).find((a) => !a.startsWith("-"));
+  const files = readdirSync(samplesDir)
+    .filter((name) => name.toLowerCase().endsWith(".ofd"))
+    .filter((name) => !filter || name.includes(filter));
+  const logPath = tmpPath("ofd-corpus-log.txt");
+  const failures: string[] = [];
+  let pagesOk = 0;
 
-  const output = tmpPath("ofd-corpus");
-  mkdirSync(output, { recursive: true });
-  const samples = [files.find((name) => !name.startsWith("dzfp")), files.find((name) => name.startsWith("dzfp"))];
-  for (const [index, name] of samples.entries()) {
-    if (!name) {
-      continue;
-    }
-    await withControlledSumatra(
-      EXE,
-      async (client) => {
-        await client.waitForRenderIdle();
-        const result = await client.request(ControlCommand.TestConvertToImages, [
-          join(output, `sample-${index + 1}-<N>.png`),
-          "all",
-          144,
-        ]);
-        if (result[0] !== 0 || !String(result[1]).startsWith("OK")) {
-          throw new Error(`Sample export failed: ${result}`);
+  await withControlledSumatra(
+    EXE,
+    async (client) => {
+      for (const name of files) {
+        const path = join(samplesDir, name);
+        const logStart = existsSync(logPath) ? readFileSync(logPath, "utf8").length : 0;
+        let failed = 0;
+        let pageNo = 1;
+        for (; ; pageNo++) {
+          const result = await client.request(ControlCommand.TestRenderPageColors, [path, pageNo, 50]);
+          const raw = String(result[1] ?? "").trim();
+          if (raw.includes("bad-page")) break;
+          if (result[0] === 0) {
+            pagesOk++;
+            continue;
+          }
+          failed++;
+          failures.push(`${name} page ${pageNo}: ${raw}`);
+          if (raw.includes("engine-create-failed")) break;
         }
-      },
-      [join(dir, name)],
-    );
+        const log = existsSync(logPath) ? readFileSync(logPath, "utf8").slice(logStart) : "";
+        const warnings = [...new Set(log.split(/\r?\n/).filter((l) => ofdWarning.test(l)))];
+        const status = failed ? `FAILED ${failed}/${pageNo - 1}` : `ok ${pageNo - 1} pages`;
+        console.log(`${status}  ${name}`);
+        for (const w of warnings.slice(0, 5)) console.log(`    ${w.trim()}`);
+      }
+    },
+    ["-log-to-file", logPath],
+  );
+
+  console.log(`\n${pagesOk} pages rendered, ${failures.length} failed`);
+  if (failures.length) {
+    throw new Error(failures.join("\n"));
   }
-  console.log(`Previews: ${output}`);
 }
 
 if (import.meta.main) {

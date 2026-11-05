@@ -20,10 +20,7 @@ import { runNamedTests, runSuiteMain, startSuiteProgress, type NamedTest, type S
 import { setTestWindowLayout } from "./winapi.ts";
 import { beginSharedControlledSession, endSharedControlledSession } from "./win-automation.ts";
 import { testit as lintCommandIds } from "./lint-command-ids.ts";
-import { testit as ofd } from "./ofd.ts";
-import { testit as ofdPathFill } from "./ofd-path-fill.ts";
-import { testit as ofdSeals } from "./ofd-seals.ts";
-import { testit as ofdFeatures } from "./ofd-features.ts";
+import { testit as issue1909 } from "./issue-1909.ts";
 import { testit as jbig2ResizeOverflow } from "./jbig2-resize-overflow.ts";
 import { testit as issue6468 } from "./issue-6468.ts";
 import { testit as jpegXlPdf } from "./jpeg-xl-pdf.ts";
@@ -532,10 +529,7 @@ export const tests: NamedTest[] = [
   // first: it drives the home page, whose thumbnail selection follows the
   // mouse, so it is the one test that cares what the machine was doing before
   ["issue-5978", issue5978],
-  ["ofd-seals", ofdSeals],
-  ["ofd-features", ofdFeatures],
-  ["ofd-path-fill", ofdPathFill],
-  ["ofd", ofd],
+  ["issue-1909", issue1909],
   ["issue-6474", issue6474],
   ["issue-6476", issue6476],
   ["issue-6477", issue6477],

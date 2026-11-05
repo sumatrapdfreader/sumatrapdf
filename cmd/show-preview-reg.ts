@@ -14,6 +14,7 @@ const kPreview2Clsids: Record<string, string> = {
   MOBI: "{42CA907E-BDF5-4A75-994A-E1AEC8A10954}",
   CBX: "{C29D3E2B-8FF6-4033-A4E8-54221D859D74}",
   TGA: "{CB1D63A6-FE5E-4DED-BEA5-3F6AF1A70D08}",
+  OFD: "{2E2D1999-4830-4C98-A584-99886AA68D41}",
 };
 
 const previewers = [
@@ -25,6 +26,7 @@ const previewers = [
   { name: "EPUB", clsid: kPreview2Clsids.EPUB, exts: [".epub"] },
   { name: "FB2", clsid: kPreview2Clsids.FB2, exts: [".fb2", ".fb2z", ".fbz", ".zfb2", ".fb2.zip"] },
   { name: "MOBI", clsid: kPreview2Clsids.MOBI, exts: [".mobi"] },
+  { name: "OFD", clsid: kPreview2Clsids.OFD, exts: [".ofd"] },
 ];
 
 function regQuery(key: string, valueName?: string): string | null {

@@ -5,6 +5,7 @@
 
 struct Annotation;
 enum class AnnotationChange;
+enum class FileType : u8;
 
 struct FitzPageImageInfo {
     fz_rect rect = fz_unit_rect;
@@ -275,7 +276,8 @@ class EngineMupdf : public EngineBase {
     void RunCadDetection();
     void ToggleCadEnhanceOverride();
 
-    bool Load(Str filePath, PasswordUI* pwdUI = nullptr, FileType kindHint = FileType::Unknown);
+    bool Load(Str filePath, PasswordUI* pwdUI = nullptr);
+    bool Load(Str filePath, PasswordUI* pwdUI, FileType kindHint);
     bool LoadFromStream(fz_stream* stm, Str nameHint, PasswordUI* pwdUI = nullptr);
     bool FinishLoading();
     RenderedBitmap* GetPageImage(int pageNo, RectF rect, int imageIdx);

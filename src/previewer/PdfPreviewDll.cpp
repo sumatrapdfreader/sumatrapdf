@@ -71,6 +71,8 @@ class PreviewClassFactory : public IClassFactory {
             type = PreviewType::Cbx;
         } else if (IsClsid(StrL(kTgaPreviewClsid))) {
             type = PreviewType::Tga;
+        } else if (IsClsid(StrL(kOfdPreviewClsid))) {
+            type = PreviewType::Ofd;
         } else {
             return E_NOINTERFACE;
         }

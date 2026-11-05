@@ -38,6 +38,7 @@ static struct {
     {StrL(kFb2PreviewClsid), StrL(".fbz"), StrL(".zfb2")},
     {StrL(kFb2PreviewClsid), StrL(".fb2.zip")},
     {StrL(kMobiPreviewClsid), StrL(".mobi")},
+    {StrL(kOfdPreviewClsid), StrL(".ofd")},
 };
 // clang-format on
 

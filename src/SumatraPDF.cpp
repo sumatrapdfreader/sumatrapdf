@@ -1801,7 +1801,7 @@ static bool ShouldUsePageAspectForView(Str path) {
     }
     FileType ft = GuessFileTypeFromName(path, true);
     return ft == FileType::PDF || ft == FileType::Xps || ft == FileType::DjVu || ft == FileType::PS ||
-           ft == FileType::Dvi || ft == FileType::Caj;
+           ft == FileType::Dvi || ft == FileType::Caj || ft == FileType::Ofd;
 }
 
 static void ApplyPageAspectView(EngineBase* engine, DisplayMode* modeOut, float* zoomOut) {

@@ -637,6 +637,7 @@ static void extMapTest() {
     // CNKI formats, signatures per caj2pdf-rust
     utassert(GuessFileTypeFromName(StrL("paper.caj")) == FileType::Caj);
     utassert(GuessFileTypeFromName(StrL("paper.kdh")) == FileType::Caj);
+    utassert(GuessFileTypeFromName(StrL("invoice.ofd")) == FileType::Ofd);
     utassert(GuessFileTypeFromData(StrL("CAJ\0\x01\x02")) == FileType::Caj);
     utassert(GuessFileTypeFromData(StrL("KDH 2.00 Copyright")) == FileType::Caj);
     utassert(GuessFileTypeFromData(StrL("HN\0\0\x90\x01")) == FileType::Caj);

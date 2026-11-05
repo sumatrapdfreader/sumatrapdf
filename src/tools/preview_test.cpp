@@ -14,9 +14,16 @@ constexpr const WCHAR* kFb2PreviewClsid = L"{D5878036-E863-403E-A62C-7B9C7453336
 constexpr const WCHAR* kMobiPreviewClsid = L"{42CA907E-BDF5-4A75-994A-E1AEC8A10954}";
 constexpr const WCHAR* kCbxPreviewClsid = L"{C29D3E2B-8FF6-4033-A4E8-54221D859D74}";
 constexpr const WCHAR* kTgaPreviewClsid = L"{CB1D63A6-FE5E-4DED-BEA5-3F6AF1A70D08}";
+constexpr const WCHAR* kOfdPreviewClsid = L"{2E2D1999-4830-4C98-A584-99886AA68D41}";
 
 // Our GUID here:
 LPCOLESTR myGuid = kPdfPreviewClsid;
+
+// .ofd files use the OFD previewer, everything else myGuid
+static LPCOLESTR GuidForFile(const char* path) {
+    const char* ext = strrchr(path, '.');
+    return ext && _stricmp(ext, ".ofd") == 0 ? kOfdPreviewClsid : myGuid;
+}
 
 typedef HRESULT ourDllGetClassObjectT(REFCLSID rclsid, REFIID riid, void** ppv);
 
@@ -32,13 +39,12 @@ void _uploadDebugReport(Str, Str, bool) {}
 static Str kPdfPreviewDllName = StrL("PdfPreview.dll");
 
 int main(int c, char** v) {
-    GUID clsid{};
-    IIDFromString(myGuid, &clsid);
-
     if (c < 2) {
         printf("not enough arguments: file name\n");
         return 1;
     }
+    GUID clsid{};
+    IIDFromString(GuidForFile(v[1]), &clsid);
     HRESULT r;
     IStream* pStream = NULL;
     HMODULE dll = NULL;

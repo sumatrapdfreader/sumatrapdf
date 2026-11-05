@@ -11,15 +11,24 @@ static const float ofd_points_per_mm = 72.0f / 25.4f;
 enum {
     OFD_PATH_SIZE = 4096,
     OFD_MAX_DEPTH = 32,
+    OFD_MAX_SEAL_DEPTH = 4,
     OFD_MAX_GLYPHS = 1000000,
-    OFD_MAX_DASHES = 128
+    OFD_MAX_DASHES = 128,
+    OFD_ID_TABLE_SIZE = 1024
 };
 
 typedef struct ofd_resource {
     fz_xml* xml;
-    char path[OFD_PATH_SIZE];
+    char file[OFD_PATH_SIZE]; // the resource dictionary's own member name
+    char path[OFD_PATH_SIZE]; // base for its relative paths (BaseLoc)
     struct ofd_resource* next;
 } ofd_resource;
+
+// what ids (unique within a document) map to
+typedef struct {
+    fz_xml* node;
+    ofd_resource* res;
+} ofd_id_entry;
 
 typedef struct ofd_font_entry {
     fz_xml* definition;
@@ -35,6 +44,7 @@ typedef struct {
     fz_xml* xml;
     fz_xml* common;
     ofd_resource* resources;
+    fz_hash_table* ids;
     ofd_font_entry* fonts;
     char path[OFD_PATH_SIZE];
     char signatures[OFD_PATH_SIZE];
@@ -84,6 +94,18 @@ static float ofd_number(const char** input) {
     value = fz_strtof(s, &end);
     *input = end;
     return isfinite(value) ? value : 0;
+}
+
+// A color component: decimal, or hex with a leading '#' ("#FF").
+static float ofd_component(const char** input) {
+    const char* s = *input;
+    if (!s) return 0;
+    while (*s && (isspace((unsigned char)*s) || *s == ',')) ++s;
+    if (*s != '#') return ofd_number(input);
+    char* end;
+    long value = strtol(s + 1, &end, 16);
+    *input = end;
+    return (float)value;
 }
 
 static float ofd_attr(fz_xml* node, const char* name, float fallback) {
@@ -144,20 +166,68 @@ static void ofd_resource_path(fz_context* ctx, ofd_document* doc, char* out, con
     }
 }
 
+static int ofd_parse_id(const char* id, unsigned int* out) {
+    char* end;
+    if (!id || !isdigit((unsigned char)*id)) return 0;
+    unsigned long n = strtoul(id, &end, 10);
+    if (*end || n > 0xffffffffUL) return 0;
+    *out = (unsigned int)n;
+    return 1;
+}
+
+static void ofd_drop_id_entry(fz_context* ctx, void* entry) {
+    fz_free(ctx, entry);
+}
+
+// Index elements with an ID so lookups don't walk every resource tree.
+static void ofd_index_ids(fz_context* ctx, ofd_document* doc, ofd_resource* res, fz_xml* node, int depth) {
+    if (depth > OFD_MAX_DEPTH) return;
+    for (; node; node = fz_xml_next(node)) {
+        unsigned int key;
+        if (ofd_parse_id(fz_xml_att(node, "ID"), &key) && !fz_hash_find(ctx, doc->ids, &key)) {
+            ofd_id_entry* entry = fz_malloc_struct(ctx, ofd_id_entry);
+            entry->node = node;
+            entry->res = res;
+            fz_try(ctx) {
+                fz_hash_insert(ctx, doc->ids, &key, entry);
+            }
+            fz_catch(ctx) {
+                fz_free(ctx, entry);
+                fz_rethrow(ctx);
+            }
+        }
+        ofd_index_ids(ctx, doc, res, fz_xml_down(node), depth + 1);
+    }
+}
+
+// Loads each resource dictionary once; page and template resources accumulate as pages load.
 static void ofd_load_resources(fz_context* ctx, ofd_document* doc, fz_xml* parent, const char* path, const char* tag) {
     for (fz_xml* node = fz_xml_down(parent); node; node = fz_xml_next(node)) {
         if (!ofd_is(node, tag)) continue;
-        char path_name[OFD_PATH_SIZE];
-        ofd_resolve(ctx, path_name, path, ofd_text(node));
-        if (!fz_has_archive_entry(ctx, doc->archive, path_name)) {
-            fz_warn(ctx, "Missing OFD resource dictionary: %s", path_name);
+        char file[OFD_PATH_SIZE];
+        ofd_resolve(ctx, file, path, ofd_text(node));
+        if (!fz_has_archive_entry(ctx, doc->archive, file)) {
+            fz_warn(ctx, "Missing OFD resource dictionary: %s", file);
             continue;
         }
-        ofd_resource* res = fz_malloc_struct(ctx, ofd_resource);
+        int loaded = 0;
+        for (ofd_resource* res = doc->resources; res && !loaded; res = res->next) loaded = !strcmp(res->file, file);
+        if (loaded) continue;
+
+        fz_xml* xml = ofd_read_xml(ctx, doc, file);
+        ofd_resource* res = NULL;
+        fz_try(ctx) {
+            res = fz_malloc_struct(ctx, ofd_resource);
+        }
+        fz_catch(ctx) {
+            fz_drop_xml(ctx, xml);
+            fz_rethrow(ctx);
+        }
+        res->xml = xml;
         res->next = doc->resources;
         doc->resources = res;
-        fz_strlcpy(res->path, path_name, sizeof(res->path));
-        res->xml = ofd_read_xml(ctx, doc, res->path);
+        fz_strlcpy(res->file, file, sizeof(res->file));
+        fz_strlcpy(res->path, file, sizeof(res->path));
         const char* base = fz_xml_att(fz_xml_root(res->xml), "BaseLoc");
         if (base) {
             char resolved[OFD_PATH_SIZE];
@@ -165,6 +235,7 @@ static void ofd_load_resources(fz_context* ctx, ofd_document* doc, fz_xml* paren
             if (fz_snprintf(res->path, sizeof(res->path), "%s/", resolved) >= sizeof(res->path))
                 fz_throw(ctx, FZ_ERROR_LIMIT, "OFD resource path too long");
         }
+        ofd_index_ids(ctx, doc, res, fz_xml_root(res->xml), 0);
     }
 }
 
@@ -178,7 +249,15 @@ static fz_xml* ofd_find_id(fz_xml* node, const char* tag, const char* id, int de
     return NULL;
 }
 
-static fz_xml* ofd_resource_id(ofd_document* doc, const char* tag, const char* id, const char** path) {
+static fz_xml* ofd_resource_id(fz_context* ctx, ofd_document* doc, const char* tag, const char* id, const char** path) {
+    unsigned int key;
+    if (!id) return NULL;
+    ofd_id_entry* entry = ofd_parse_id(id, &key) ? fz_hash_find(ctx, doc->ids, &key) : NULL;
+    if (entry && ofd_is(entry->node, tag)) {
+        if (path) *path = entry->res->path;
+        return entry->node;
+    }
+    // non-numeric or duplicate ids
     for (ofd_resource* res = doc->resources; res; res = res->next) {
         fz_xml* node = ofd_find_id(fz_xml_root(res->xml), tag, id, 0);
         if (node) {
@@ -243,12 +322,14 @@ static void ofd_draw_tree(fz_context* ctx, ofd_document* doc, fz_xml* node, fz_d
                           ofd_paint inherited);
 static void ofd_brush(fz_context* ctx, ofd_document* doc, fz_xml* color, fz_device* dev, fz_rect area, fz_matrix ctm,
                       float alpha, int depth);
+static void ofd_brush_clipped(fz_context* ctx, ofd_document* doc, fz_xml* color, fz_device* dev, fz_rect area,
+                              fz_matrix ctm, float alpha, int depth);
 
 static void ofd_apply_paint(fz_context* ctx, ofd_document* doc, fz_xml* node, ofd_paint* paint, int depth) {
     if (depth > OFD_MAX_DEPTH) fz_throw(ctx, FZ_ERROR_LIMIT, "OFD draw parameter cycle");
     const char* id = fz_xml_att(node, "DrawParam");
     if (!id) id = fz_xml_att(node, "Relative");
-    fz_xml* param = ofd_resource_id(doc, "DrawParam", id, NULL);
+    fz_xml* param = ofd_resource_id(ctx, doc, "DrawParam", id, NULL);
     if (param) ofd_apply_paint(ctx, doc, param, paint, depth + 1);
     fz_xml* value = ofd_child(node, "FillColor");
     if (value) paint->fill = value;
@@ -300,9 +381,20 @@ static fz_stroke_state* ofd_make_stroke(fz_context* ctx, ofd_paint paint) {
 
 static float ofd_color(fz_context* ctx, ofd_document* doc, fz_xml* node, fz_xml* value, fz_colorspace** cs,
                        float* color) {
+    if (ofd_child(value, "GouraudShd") || ofd_child(value, "LaGouraudShd"))
+        fz_throw(ctx, FZ_ERROR_UNSUPPORTED, "OFD mesh gradients are not supported yet");
     const char* s = fz_xml_att(value, "Value");
-    if (value && !s) fz_throw(ctx, FZ_ERROR_UNSUPPORTED, "OFD indexed and gradient colors are not supported yet");
-    fz_xml* space = ofd_resource_id(doc, "ColorSpace", fz_xml_att(value, "ColorSpace"), NULL);
+    fz_xml* space = ofd_resource_id(ctx, doc, "ColorSpace", fz_xml_att(value, "ColorSpace"), NULL);
+    // Index selects an entry of the color space's palette, e.g. <CV>#FF #00 #00</CV>
+    const char* index = fz_xml_att(value, "Index");
+    if (!s && index) {
+        int wanted = (int)ofd_attr(value, "Index", 0);
+        int i = 0;
+        for (fz_xml* cv = fz_xml_down(ofd_child(space, "Palette")); cv; cv = fz_xml_next(cv)) {
+            if (ofd_is(cv, "CV") && i++ == wanted) s = ofd_text(cv);
+        }
+        if (!s) fz_throw(ctx, FZ_ERROR_FORMAT, "Invalid OFD palette index");
+    }
     const char* type = fz_xml_att(space, "Type");
     int n = 3;
     *cs = fz_device_rgb(ctx);
@@ -317,13 +409,13 @@ static float ofd_color(fz_context* ctx, ofd_document* doc, fz_xml* node, fz_xml*
     if (bits != 1 && bits != 2 && bits != 4 && bits != 8 && bits != 16)
         fz_throw(ctx, FZ_ERROR_FORMAT, "Invalid OFD color depth");
     float max = powf(2, bits) - 1;
-    for (int i = 0; i < n; ++i) color[i] = fz_clamp(ofd_number(&s) / max, 0, 1);
+    for (int i = 0; i < n; ++i) color[i] = fz_clamp(ofd_component(&s) / max, 0, 1);
     return ofd_attr(node, "Alpha", 255) / 255 * ofd_attr(value, "Alpha", 255) / 255;
 }
 
 static ofd_font_entry* ofd_font(fz_context* ctx, ofd_document* doc, fz_xml* node) {
     const char* base = NULL;
-    fz_xml* definition = ofd_resource_id(doc, "Font", fz_xml_att(node, "Font"), &base);
+    fz_xml* definition = ofd_resource_id(ctx, doc, "Font", fz_xml_att(node, "Font"), &base);
     for (ofd_font_entry* entry = doc->fonts; entry; entry = entry->next) {
         if (entry->definition == definition && entry->font) return entry;
     }
@@ -371,33 +463,72 @@ static int ofd_text_count(fz_context* ctx, fz_xml* node, const char* name, int f
     return (int)value;
 }
 
-static fz_xml* ofd_glyph_mapping(fz_context* ctx, fz_xml* node, int position) {
-    for (fz_xml* mapping = fz_xml_down(node); mapping; mapping = fz_xml_next(mapping)) {
-        if (!ofd_is(mapping, "CGTransform")) continue;
-        int start = ofd_text_count(ctx, mapping, "CodePosition", 0);
-        int count = ofd_text_count(ctx, mapping, "CodeCount", 1);
-        if (position >= start && position - start < count) return mapping;
-    }
-    return NULL;
+// A CGTransform: codes [start, start + codes) of a TextObject map to glyphs.
+typedef struct {
+    int start;
+    int codes;
+    int count;
+    int* glyphs;
+} ofd_cgt;
+
+static void ofd_drop_cgts(fz_context* ctx, ofd_cgt* cgts, int n) {
+    for (int i = 0; i < n; ++i) fz_free(ctx, cgts[i].glyphs);
+    fz_free(ctx, cgts);
 }
 
-static int ofd_mapped_glyph(fz_context* ctx, fz_xml* mapping, int index) {
-    const char* s = ofd_text(ofd_child(mapping, "Glyphs"));
-    float glyph = 0;
-    for (int i = 0; i <= index; ++i) {
-        const char* before = s;
-        glyph = ofd_number(&s);
-        if (s == before || glyph < 0 || glyph > OFD_MAX_GLYPHS || glyph != floorf(glyph))
-            fz_throw(ctx, FZ_ERROR_FORMAT, "Invalid OFD glyph mapping");
+// Parse a TextObject's glyph mappings once instead of rescanning them for every character.
+static ofd_cgt* ofd_load_cgts(fz_context* ctx, fz_xml* node, int* count_out) {
+    int n = 0;
+    for (fz_xml* m = fz_xml_down(node); m; m = fz_xml_next(m)) n += ofd_is(m, "CGTransform");
+    *count_out = 0;
+    if (!n) return NULL;
+    ofd_cgt* cgts = fz_calloc(ctx, n, sizeof(ofd_cgt));
+    int i = 0;
+    fz_try(ctx) {
+        for (fz_xml* m = fz_xml_down(node); m; m = fz_xml_next(m)) {
+            if (!ofd_is(m, "CGTransform")) continue;
+            ofd_cgt* c = &cgts[i++];
+            c->start = ofd_text_count(ctx, m, "CodePosition", 0);
+            c->codes = ofd_text_count(ctx, m, "CodeCount", 1);
+            c->count = ofd_text_count(ctx, m, "GlyphCount", 1);
+            if (c->codes <= 0 || c->count <= 0) fz_throw(ctx, FZ_ERROR_FORMAT, "Invalid OFD glyph count");
+            c->glyphs = fz_malloc_array(ctx, c->count, int);
+            const char* s = ofd_text(ofd_child(m, "Glyphs"));
+            for (int k = 0; k < c->count; ++k) {
+                const char* before = s;
+                float glyph = ofd_number(&s);
+                int valid = s != before && glyph >= 0 && glyph <= OFD_MAX_GLYPHS && glyph == floorf(glyph);
+                c->glyphs[k] = valid ? (int)glyph : -1;
+            }
+        }
     }
-    return (int)glyph;
+    fz_catch(ctx) {
+        ofd_drop_cgts(ctx, cgts, n);
+        fz_rethrow(ctx);
+    }
+    *count_out = n;
+    return cgts;
+}
+
+static ofd_cgt* ofd_glyph_mapping(ofd_cgt* cgts, int n, int position) {
+    for (int i = 0; i < n; ++i) {
+        if (position >= cgts[i].start && position - cgts[i].start < cgts[i].codes) return &cgts[i];
+    }
+    return NULL;
 }
 
 static fz_text* ofd_make_text(fz_context* ctx, ofd_document* doc, fz_xml* node) {
     ofd_font_entry* entry = ofd_font(ctx, doc, node);
     fz_text* text = fz_new_text(ctx);
+    ofd_cgt* cgts = NULL;
+    int ncgts = 0;
+    fz_var(cgts);
+    fz_var(ncgts);
     fz_try(ctx) {
+        if (entry->embedded || entry->system) cgts = ofd_load_cgts(ctx, node, &ncgts);
         float size = ofd_attr(node, "Size", 0);
+        fz_matrix glyph_trm = fz_scale(size * ofd_attr(node, "HScale", 1), -size);
+        glyph_trm = fz_concat(glyph_trm, fz_rotate(ofd_attr(node, "CharDirection", 0)));
         float x = 0, y = 0;
         float cluster_x = 0, cluster_y = 0;
         int position = 0;
@@ -418,25 +549,23 @@ static fz_text* ofd_make_text(fz_context* ctx, ofd_document* doc, fz_xml* node) 
                 s += fz_chartorune(&rune, s);
                 if (rune == '\r' || rune == '\n' || rune == '\t') continue;
                 fz_font* font = entry->font;
-                fz_xml* mapping = entry->embedded || entry->system ? ofd_glyph_mapping(ctx, node, position) : NULL;
-                int index = mapping ? position - ofd_text_count(ctx, mapping, "CodePosition", 0) : 0;
-                int glyphs = ofd_text_count(ctx, mapping, "GlyphCount", 1);
-                int codes = ofd_text_count(ctx, mapping, "CodeCount", 1);
-                if (glyphs <= 0 || codes <= 0) fz_throw(ctx, FZ_ERROR_FORMAT, "Invalid OFD glyph count");
+                ofd_cgt* mapping = ofd_glyph_mapping(cgts, ncgts, position);
+                int index = mapping ? position - mapping->start : 0;
+                int glyphs = mapping ? mapping->count : 1;
+                int codes = mapping ? mapping->codes : 1;
                 // Subset glyph IDs cannot address a substituted full font; retain real ligatures.
                 if (!entry->embedded && codes == glyphs) {
                     mapping = NULL;
                     index = 0;
                     glyphs = codes = 1;
                 }
-                int glyph = mapping ? (index < glyphs ? ofd_mapped_glyph(ctx, mapping, index) : -1)
+                int glyph = mapping ? (index < glyphs ? mapping->glyphs[index] : -1)
                                     : fz_encode_character_with_fallback(ctx, font, rune, 0, FZ_LANG_UNSET, &font);
                 int outputs = mapping && codes == 1 ? glyphs : 1;
                 for (int output = 0; output < outputs; ++output) {
-                    if (output) glyph = ofd_mapped_glyph(ctx, mapping, output);
+                    if (output) glyph = mapping->glyphs[output];
                     if (glyph >= font->glyph_count) glyph = 0;
-                    fz_matrix trm = fz_scale(size * ofd_attr(node, "HScale", 1), -size);
-                    trm = fz_concat(trm, fz_rotate(ofd_attr(node, "CharDirection", 0)));
+                    fz_matrix trm = glyph_trm;
                     trm.e = x;
                     trm.f = y;
                     if (!index && !output) {
@@ -461,6 +590,9 @@ static fz_text* ofd_make_text(fz_context* ctx, ofd_document* doc, fz_xml* node) 
             }
         }
     }
+    fz_always(ctx) {
+        ofd_drop_cgts(ctx, cgts, ncgts);
+    }
     fz_catch(ctx) {
         fz_drop_text(ctx, text);
         fz_rethrow(ctx);
@@ -482,9 +614,8 @@ static void ofd_draw_text(fz_context* ctx, ofd_document* doc, fz_xml* node, fz_d
             if (ofd_complex_color(paint.fill)) {
                 float alpha = ofd_attr(node, "Alpha", 255) / 255 * ofd_attr(paint.fill, "Alpha", 255) / 255;
                 fz_clip_text(ctx, dev, text, ctm, fz_infinite_rect);
-                ofd_brush(ctx, doc, paint.fill, dev, fz_bound_text(ctx, text, NULL, fz_identity), ctm, alpha,
-                          depth + 1);
-                fz_pop_clip(ctx, dev);
+                ofd_brush_clipped(ctx, doc, paint.fill, dev, fz_bound_text(ctx, text, NULL, fz_identity), ctm, alpha,
+                                  depth + 1);
             } else {
                 float alpha = ofd_color(ctx, doc, node, paint.fill, &cs, color);
                 fz_fill_text(ctx, dev, text, ctm, cs, color, alpha, fz_default_color_params);
@@ -495,9 +626,8 @@ static void ofd_draw_text(fz_context* ctx, ofd_document* doc, fz_xml* node, fz_d
             if (ofd_complex_color(paint.stroke)) {
                 float alpha = ofd_attr(node, "Alpha", 255) / 255 * ofd_attr(paint.stroke, "Alpha", 255) / 255;
                 fz_clip_stroke_text(ctx, dev, text, stroke, ctm, fz_infinite_rect);
-                ofd_brush(ctx, doc, paint.stroke, dev, fz_bound_text(ctx, text, stroke, fz_identity), ctm, alpha,
-                          depth + 1);
-                fz_pop_clip(ctx, dev);
+                ofd_brush_clipped(ctx, doc, paint.stroke, dev, fz_bound_text(ctx, text, stroke, fz_identity), ctm,
+                                  alpha, depth + 1);
             } else {
                 float alpha = ofd_color(ctx, doc, node, paint.stroke, &cs, color);
                 fz_stroke_text(ctx, dev, text, stroke, ctm, cs, color, alpha, fz_default_color_params);
@@ -513,6 +643,59 @@ static void ofd_draw_text(fz_context* ctx, ofd_document* doc, fz_xml* node, fz_d
     }
 }
 
+// SVG-style elliptical arc from the current point to (x, y), as cubic Beziers of at most 90 degrees.
+static void ofd_arc(fz_context* ctx, fz_path* path, const float* v) {
+    float rx = fabsf(v[0]), ry = fabsf(v[1]);
+    int large = v[3] != 0, sweep = v[4] != 0;
+    float x = v[5], y = v[6];
+    fz_point p0 = fz_currentpoint(ctx, path);
+    if (rx == 0 || ry == 0 || (p0.x == x && p0.y == y)) {
+        fz_lineto(ctx, path, x, y);
+        return;
+    }
+
+    // endpoint to center parameterization (SVG 1.1, appendix F.6.5)
+    float phi = v[2] * FZ_PI / 180;
+    float cosp = cosf(phi), sinp = sinf(phi);
+    float dx = (p0.x - x) / 2, dy = (p0.y - y) / 2;
+    float x1 = cosp * dx + sinp * dy;
+    float y1 = -sinp * dx + cosp * dy;
+    float lambda = (x1 * x1) / (rx * rx) + (y1 * y1) / (ry * ry);
+    if (lambda > 1) {
+        rx *= sqrtf(lambda);
+        ry *= sqrtf(lambda);
+    }
+    float num = rx * rx * ry * ry - rx * rx * y1 * y1 - ry * ry * x1 * x1;
+    float den = rx * rx * y1 * y1 + ry * ry * x1 * x1;
+    float coef = num > 0 && den > 0 ? sqrtf(num / den) : 0;
+    if (large == sweep) coef = -coef;
+    float cx1 = coef * rx * y1 / ry, cy1 = -coef * ry * x1 / rx;
+    float cx = cosp * cx1 - sinp * cy1 + (p0.x + x) / 2;
+    float cy = sinp * cx1 + cosp * cy1 + (p0.y + y) / 2;
+    float theta = atan2f((y1 - cy1) / ry, (x1 - cx1) / rx);
+    float dtheta = atan2f((-y1 - cy1) / ry, (-x1 - cx1) / rx) - theta;
+    if (sweep && dtheta < 0) dtheta += 2 * FZ_PI;
+    if (!sweep && dtheta > 0) dtheta -= 2 * FZ_PI;
+
+    int n = (int)ceilf(fabsf(dtheta) / (FZ_PI / 2) - 0.001f);
+    if (n < 1) n = 1;
+    float delta = dtheta / n;
+    float t = 4.0f / 3.0f * tanf(delta / 4);
+    for (int i = 0; i < n; ++i) {
+        float a1 = theta + i * delta, a2 = a1 + delta;
+        float c1 = cosf(a1), s1 = sinf(a1), c2 = cosf(a2), s2 = sinf(a2);
+        float u[3] = {c1 - t * s1, c2 + t * s2, c2};
+        float w[3] = {s1 + t * c1, s2 - t * c2, s2};
+        fz_point p[3];
+        for (int k = 0; k < 3; ++k) {
+            p[k].x = cx + rx * u[k] * cosp - ry * w[k] * sinp;
+            p[k].y = cy + rx * u[k] * sinp + ry * w[k] * cosp;
+        }
+        if (i == n - 1) p[2] = fz_make_point(x, y);
+        fz_curveto(ctx, path, p[0].x, p[0].y, p[1].x, p[1].y, p[2].x, p[2].y);
+    }
+}
+
 static fz_path* ofd_make_path(fz_context* ctx, fz_xml* node) {
     fz_path* path = fz_new_path(ctx);
     fz_try(ctx) {
@@ -521,8 +704,9 @@ static fz_path* ofd_make_path(fz_context* ctx, fz_xml* node) {
             while (isspace((unsigned char)*s)) ++s;
             if (!*s) break;
             char command = *s++;
-            float v[6];
-            int n = command == 'B'                                         ? 6
+            float v[7];
+            int n = command == 'A'                                         ? 7
+                    : command == 'B'                                       ? 6
                     : command == 'Q'                                       ? 4
                     : (command == 'M' || command == 'S' || command == 'L') ? 2
                                                                            : 0;
@@ -544,6 +728,9 @@ static fz_path* ofd_make_path(fz_context* ctx, fz_xml* node) {
                     break;
                 case 'Q':
                     fz_quadto(ctx, path, v[0], v[1], v[2], v[3]);
+                    break;
+                case 'A':
+                    ofd_arc(ctx, path, v);
                     break;
                 case 'C':
                     fz_closepath(ctx, path);
@@ -651,11 +838,39 @@ static void ofd_brush(fz_context* ctx, ofd_document* doc, fz_xml* color, fz_devi
     fz_matrix matrix = ofd_matrix(node, ctm);
     fz_rect coverage = fz_transform_rect(area, fz_invert_matrix(ofd_matrix(node, fz_identity)));
     fz_begin_group(ctx, dev, fz_transform_rect(area, ctm), NULL, 0, 0, FZ_BLEND_NORMAL, alpha);
-    fz_begin_tile(ctx, dev, coverage, fz_make_rect(0, 0, w, h), xstep, ystep, matrix);
-    ofd_paint paint = {NULL, NULL, 0.353f};
-    ofd_draw_tree(ctx, doc, fz_xml_down(ofd_child(node, "CellContent")), dev, matrix, depth + 1, paint);
-    fz_end_tile(ctx, dev);
-    fz_end_group(ctx, dev);
+    fz_try(ctx) {
+        fz_begin_tile(ctx, dev, coverage, fz_make_rect(0, 0, w, h), xstep, ystep, matrix);
+        fz_try(ctx) {
+            ofd_paint paint = {NULL, NULL, 0.353f};
+            ofd_draw_tree(ctx, doc, fz_xml_down(ofd_child(node, "CellContent")), dev, matrix, depth + 1, paint);
+        }
+        fz_always(ctx) {
+            fz_end_tile(ctx, dev);
+        }
+        fz_catch(ctx) {
+            fz_rethrow(ctx);
+        }
+    }
+    fz_always(ctx) {
+        fz_end_group(ctx, dev);
+    }
+    fz_catch(ctx) {
+        fz_rethrow(ctx);
+    }
+}
+
+// Paints a brush inside a clip the caller pushed, popping it even on errors.
+static void ofd_brush_clipped(fz_context* ctx, ofd_document* doc, fz_xml* color, fz_device* dev, fz_rect area,
+                              fz_matrix ctm, float alpha, int depth) {
+    fz_try(ctx) {
+        ofd_brush(ctx, doc, color, dev, area, ctm, alpha, depth);
+    }
+    fz_always(ctx) {
+        fz_pop_clip(ctx, dev);
+    }
+    fz_catch(ctx) {
+        fz_rethrow(ctx);
+    }
 }
 
 static void ofd_draw_path(fz_context* ctx, ofd_document* doc, fz_xml* node, fz_device* dev, fz_matrix ctm,
@@ -671,9 +886,8 @@ static void ofd_draw_path(fz_context* ctx, ofd_document* doc, fz_xml* node, fz_d
             if (ofd_complex_color(paint.fill)) {
                 float alpha = ofd_attr(node, "Alpha", 255) / 255 * ofd_attr(paint.fill, "Alpha", 255) / 255;
                 fz_clip_path(ctx, dev, path, fz_xml_att_eq(node, "Rule", "Even-Odd"), ctm, fz_infinite_rect);
-                ofd_brush(ctx, doc, paint.fill, dev, fz_bound_path(ctx, path, NULL, fz_identity), ctm, alpha,
-                          depth + 1);
-                fz_pop_clip(ctx, dev);
+                ofd_brush_clipped(ctx, doc, paint.fill, dev, fz_bound_path(ctx, path, NULL, fz_identity), ctm, alpha,
+                                  depth + 1);
             } else {
                 float alpha = ofd_color(ctx, doc, node, paint.fill, &cs, color);
                 fz_fill_path(ctx, dev, path, fz_xml_att_eq(node, "Rule", "Even-Odd"), ctm, cs, color, alpha,
@@ -685,9 +899,8 @@ static void ofd_draw_path(fz_context* ctx, ofd_document* doc, fz_xml* node, fz_d
             if (ofd_complex_color(paint.stroke)) {
                 float alpha = ofd_attr(node, "Alpha", 255) / 255 * ofd_attr(paint.stroke, "Alpha", 255) / 255;
                 fz_clip_stroke_path(ctx, dev, path, stroke, ctm, fz_infinite_rect);
-                ofd_brush(ctx, doc, paint.stroke, dev, fz_bound_path(ctx, path, stroke, fz_identity), ctm, alpha,
-                          depth + 1);
-                fz_pop_clip(ctx, dev);
+                ofd_brush_clipped(ctx, doc, paint.stroke, dev, fz_bound_path(ctx, path, stroke, fz_identity), ctm,
+                                  alpha, depth + 1);
             } else {
                 float alpha = ofd_color(ctx, doc, node, paint.stroke, &cs, color);
                 fz_stroke_path(ctx, dev, path, stroke, ctm, cs, color, alpha, fz_default_color_params);
@@ -705,7 +918,7 @@ static void ofd_draw_path(fz_context* ctx, ofd_document* doc, fz_xml* node, fz_d
 
 static void ofd_draw_image(fz_context* ctx, ofd_document* doc, fz_xml* node, fz_device* dev, fz_matrix ctm) {
     const char* base = NULL;
-    fz_xml* res = ofd_resource_id(doc, "MultiMedia", fz_xml_att(node, "ResourceID"), &base);
+    fz_xml* res = ofd_resource_id(ctx, doc, "MultiMedia", fz_xml_att(node, "ResourceID"), &base);
     if (!res) fz_throw(ctx, FZ_ERROR_FORMAT, "Missing OFD image resource");
     char path[OFD_PATH_SIZE];
     ofd_resource_path(ctx, doc, path, base, ofd_text(ofd_child(res, "MediaFile")));
@@ -727,67 +940,78 @@ static void ofd_draw_image(fz_context* ctx, ofd_document* doc, fz_xml* node, fz_
     }
 }
 
-static int ofd_apply_clips(fz_context* ctx, ofd_document* doc, fz_xml* node, fz_device* dev, fz_matrix parent,
-                           fz_matrix ctm, ofd_paint paint) {
+static void ofd_clip_area(fz_context* ctx, ofd_document* doc, fz_xml* area, fz_device* dev, fz_matrix base,
+                          ofd_paint paint) {
+    const float white[] = {1};
+    ofd_apply_paint(ctx, doc, area, &paint, 0);
+    fz_matrix matrix = ofd_matrix(area, base);
+    fz_xml* shape = ofd_child(area, "Path");
+    if (shape) {
+        fz_path* path = ofd_make_path(ctx, shape);
+        fz_stroke_state* stroke = NULL;
+        fz_var(stroke);
+        fz_try(ctx) {
+            fz_matrix transform = ofd_matrix(shape, matrix);
+            if (fz_xml_att_eq(shape, "Fill", "true"))
+                fz_fill_path(ctx, dev, path, fz_xml_att_eq(shape, "Rule", "Even-Odd"), transform, fz_device_gray(ctx),
+                             white, 1, fz_default_color_params);
+            if (!fz_xml_att_eq(shape, "Stroke", "false")) {
+                ofd_apply_paint(ctx, doc, shape, &paint, 0);
+                stroke = ofd_make_stroke(ctx, paint);
+                fz_stroke_path(ctx, dev, path, stroke, transform, fz_device_gray(ctx), white, 1,
+                               fz_default_color_params);
+            }
+        }
+        fz_always(ctx) {
+            fz_drop_stroke_state(ctx, stroke);
+            fz_drop_path(ctx, path);
+        }
+        fz_catch(ctx) {
+            fz_rethrow(ctx);
+        }
+    }
+    shape = ofd_child(area, "Text");
+    if (shape) {
+        fz_text* text = ofd_make_text(ctx, doc, shape);
+        fz_try(ctx) {
+            fz_fill_text(ctx, dev, text, ofd_matrix(shape, matrix), fz_device_gray(ctx), white, 1,
+                         fz_default_color_params);
+        }
+        fz_always(ctx) {
+            fz_drop_text(ctx, text);
+        }
+        fz_catch(ctx) {
+            fz_rethrow(ctx);
+        }
+    }
+}
+
+// Pushes one mask per Clip; *count tracks pushed masks so the caller can pop them even on errors.
+static void ofd_apply_clips(fz_context* ctx, ofd_document* doc, fz_xml* node, fz_device* dev, fz_matrix parent,
+                            fz_matrix ctm, ofd_paint paint, int* count) {
     fz_xml* clips = ofd_child(node, "Clips");
     fz_rect box = ofd_box(fz_xml_att(node, "Boundary"));
     fz_matrix base = fz_xml_att_eq(clips, "TransFlag", "true") ? ctm : fz_concat(fz_translate(box.x0, box.y0), parent);
     fz_rect bounds = fz_xml_att(node, "Boundary") ? fz_transform_rect(box, parent) : fz_infinite_rect;
-    int count = 0;
-    const float black[] = {0}, white[] = {1};
+    const float black[] = {0};
     for (fz_xml* clip = fz_xml_down(clips); clip; clip = fz_xml_next(clip)) {
         if (!ofd_is(clip, "Clip")) continue;
         // Areas within a Clip form a union; successive Clips intersect.
         fz_begin_mask(ctx, dev, bounds, 1, fz_device_gray(ctx), black, fz_default_color_params);
         for (fz_xml* area = fz_xml_down(clip); area; area = fz_xml_next(area)) {
             if (!ofd_is(area, "Area")) continue;
-            ofd_paint local = paint;
-            ofd_apply_paint(ctx, doc, area, &local, 0);
-            fz_matrix matrix = ofd_matrix(area, base);
-            fz_xml* shape = ofd_child(area, "Path");
-            if (shape) {
-                fz_path* path = ofd_make_path(ctx, shape);
-                fz_stroke_state* stroke = NULL;
-                fz_var(stroke);
-                fz_try(ctx) {
-                    fz_matrix transform = ofd_matrix(shape, matrix);
-                    if (fz_xml_att_eq(shape, "Fill", "true"))
-                        fz_fill_path(ctx, dev, path, fz_xml_att_eq(shape, "Rule", "Even-Odd"), transform,
-                                     fz_device_gray(ctx), white, 1, fz_default_color_params);
-                    if (!fz_xml_att_eq(shape, "Stroke", "false")) {
-                        ofd_apply_paint(ctx, doc, shape, &local, 0);
-                        stroke = ofd_make_stroke(ctx, local);
-                        fz_stroke_path(ctx, dev, path, stroke, transform, fz_device_gray(ctx), white, 1,
-                                       fz_default_color_params);
-                    }
-                }
-                fz_always(ctx) {
-                    fz_drop_stroke_state(ctx, stroke);
-                    fz_drop_path(ctx, path);
-                }
-                fz_catch(ctx) {
-                    fz_rethrow(ctx);
-                }
+            fz_try(ctx) {
+                ofd_clip_area(ctx, doc, area, dev, base, paint);
             }
-            shape = ofd_child(area, "Text");
-            if (shape) {
-                fz_text* text = ofd_make_text(ctx, doc, shape);
-                fz_try(ctx) {
-                    fz_fill_text(ctx, dev, text, ofd_matrix(shape, matrix), fz_device_gray(ctx), white, 1,
-                                 fz_default_color_params);
-                }
-                fz_always(ctx) {
-                    fz_drop_text(ctx, text);
-                }
-                fz_catch(ctx) {
-                    fz_rethrow(ctx);
-                }
+            fz_catch(ctx) {
+                fz_rethrow_if(ctx, FZ_ERROR_SYSTEM);
+                fz_report_error(ctx);
+                fz_warn(ctx, "Skipping OFD clip area");
             }
         }
         fz_end_mask(ctx, dev);
-        ++count;
+        ++*count;
     }
-    return count;
 }
 
 static void ofd_draw_tree(fz_context* ctx, ofd_document* doc, fz_xml* node, fz_device* dev, fz_matrix parent, int depth,
@@ -796,15 +1020,16 @@ static void ofd_draw_tree(fz_context* ctx, ofd_document* doc, fz_xml* node, fz_d
     for (; node; node = fz_xml_next(node)) {
         if (fz_xml_att_eq(node, "Visible", "false") || ofd_attr(node, "Alpha", 255) <= 0) continue;
         fz_matrix ctm = ofd_matrix(node, parent);
-        ofd_paint paint = inherited;
-        ofd_apply_paint(ctx, doc, node, &paint, 0);
         int container = ofd_is(node, "Content") || ofd_is(node, "Layer") || ofd_is(node, "PageBlock") ||
                         ofd_is(node, "Appearance") || ofd_is(node, "CompositeObject");
         int clips = 0, grouped = 0;
         fz_var(clips);
         fz_var(grouped);
+        // An object that fails (unsupported feature, bad data) is skipped, not the whole page.
         fz_try(ctx) {
-            clips = ofd_apply_clips(ctx, doc, node, dev, parent, ctm, paint);
+            ofd_paint paint = inherited;
+            ofd_apply_paint(ctx, doc, node, &paint, 0);
+            ofd_apply_clips(ctx, doc, node, dev, parent, ctm, paint, &clips);
             const char* blend = fz_xml_att(node, "BlendMode");
             float alpha = container ? ofd_attr(node, "Alpha", 255) / 255 : 1;
             if (blend || alpha < 1) {
@@ -818,17 +1043,10 @@ static void ofd_draw_tree(fz_context* ctx, ofd_document* doc, fz_xml* node, fz_d
                 ofd_draw_text(ctx, doc, node, dev, ctm, paint, depth);
             else if (ofd_is(node, "PathObject"))
                 ofd_draw_path(ctx, doc, node, dev, ctm, paint, depth);
-            else if (ofd_is(node, "ImageObject")) {
-                fz_try(ctx) {
-                    ofd_draw_image(ctx, doc, node, dev, ctm);
-                }
-                fz_catch(ctx) {
-                    fz_rethrow_if(ctx, FZ_ERROR_SYSTEM);
-                    fz_report_error(ctx);
-                    fz_warn(ctx, "Skipping unavailable OFD image");
-                }
-            } else if (ofd_is(node, "CompositeObject")) {
-                fz_xml* unit = ofd_resource_id(doc, "CompositeGraphicUnit", fz_xml_att(node, "ResourceID"), NULL);
+            else if (ofd_is(node, "ImageObject"))
+                ofd_draw_image(ctx, doc, node, dev, ctm);
+            else if (ofd_is(node, "CompositeObject")) {
+                fz_xml* unit = ofd_resource_id(ctx, doc, "CompositeGraphicUnit", fz_xml_att(node, "ResourceID"), NULL);
                 if (!unit)
                     fz_warn(ctx, "Missing OFD composite resource");
                 else
@@ -841,7 +1059,9 @@ static void ofd_draw_tree(fz_context* ctx, ofd_document* doc, fz_xml* node, fz_d
             while (clips-- > 0) fz_pop_clip(ctx, dev);
         }
         fz_catch(ctx) {
-            fz_rethrow(ctx);
+            fz_rethrow_if(ctx, FZ_ERROR_SYSTEM);
+            fz_report_error(ctx);
+            fz_warn(ctx, "Skipping OFD %s", fz_xml_tag(node));
         }
     }
 }
@@ -851,32 +1071,50 @@ static void ofd_draw_nodes(fz_context* ctx, ofd_document* doc, fz_xml* node, fz_
     ofd_draw_tree(ctx, doc, node, dev, ctm, depth, paint);
 }
 
-static void ofd_draw_file(fz_context* ctx, ofd_document* doc, const char* path, fz_device* dev, fz_matrix ctm) {
-    fz_xml* xml = ofd_read_xml(ctx, doc, path);
-    fz_try(ctx) {
-        if (ofd_child(fz_xml_root(xml), "PageRes") || ofd_child(fz_xml_root(xml), "Template"))
-            fz_throw(ctx, FZ_ERROR_UNSUPPORTED, "OFD page resources and nested templates are not supported yet");
-        ofd_draw_nodes(ctx, doc, ofd_child(fz_xml_root(xml), "Content"), dev, ctm, 0);
-    }
-    fz_always(ctx) {
-        fz_drop_xml(ctx, xml);
-    }
-    fz_catch(ctx) {
-        fz_rethrow(ctx);
+// Logs a non-fatal error so an optional part (template, annotation, seal) doesn't fail the page.
+static void ofd_skip(fz_context* ctx, const char* what) {
+    fz_rethrow_if(ctx, FZ_ERROR_SYSTEM);
+    fz_report_error(ctx);
+    fz_warn(ctx, "Skipping OFD %s", what);
+}
+
+static void ofd_draw_page_xml(fz_context* ctx, ofd_document* doc, fz_xml* root, const char* path, fz_device* dev,
+                              fz_matrix ctm, int depth);
+
+static void ofd_templates(fz_context* ctx, ofd_document* doc, fz_xml* page, fz_device* dev, fz_matrix ctm,
+                          const char* order, int depth) {
+    for (fz_xml* node = fz_xml_down(page); node; node = fz_xml_next(node)) {
+        if (!ofd_is(node, "Template")) continue;
+        fz_xml* tpl = ofd_find_id(doc->common, "TemplatePage", fz_xml_att(node, "TemplateID"), 0);
+        const char* z = fz_xml_att(node, "ZOrder");
+        if (!z) z = fz_xml_att(tpl, "ZOrder");
+        if (strcmp(z ? z : "Background", order)) continue;
+        fz_xml* xml = NULL;
+        fz_var(xml);
+        fz_try(ctx) {
+            if (!tpl) fz_throw(ctx, FZ_ERROR_FORMAT, "Missing OFD template %s", fz_xml_att(node, "TemplateID"));
+            char path[OFD_PATH_SIZE];
+            ofd_resolve(ctx, path, doc->path, fz_xml_att(tpl, "BaseLoc"));
+            xml = ofd_read_xml(ctx, doc, path);
+            ofd_draw_page_xml(ctx, doc, fz_xml_root(xml), path, dev, ctm, depth + 1);
+        }
+        fz_always(ctx) {
+            fz_drop_xml(ctx, xml);
+        }
+        fz_catch(ctx) {
+            ofd_skip(ctx, "template");
+        }
     }
 }
 
-static void ofd_templates(fz_context* ctx, ofd_document* doc, fz_xml* page, fz_device* dev, fz_matrix ctm,
-                          const char* order) {
-    for (fz_xml* node = fz_xml_down(page); node; node = fz_xml_next(node)) {
-        if (!ofd_is(node, "Template")) continue;
-        const char* z = fz_xml_att(node, "ZOrder");
-        if (strcmp(z ? z : "Background", order)) continue;
-        fz_xml* tpl = ofd_find_id(doc->common, "TemplatePage", fz_xml_att(node, "TemplateID"), 0);
-        char path[OFD_PATH_SIZE];
-        ofd_resolve(ctx, path, doc->path, fz_xml_att(tpl, "BaseLoc"));
-        ofd_draw_file(ctx, doc, path, dev, ctm);
-    }
+// Draws a page or template page: its resources, background templates, content, foreground templates.
+static void ofd_draw_page_xml(fz_context* ctx, ofd_document* doc, fz_xml* root, const char* path, fz_device* dev,
+                              fz_matrix ctm, int depth) {
+    if (depth > OFD_MAX_DEPTH) fz_throw(ctx, FZ_ERROR_LIMIT, "OFD templates nested too deep");
+    ofd_load_resources(ctx, doc, root, path, "PageRes");
+    ofd_templates(ctx, doc, root, dev, ctm, "Background", depth);
+    ofd_draw_nodes(ctx, doc, ofd_child(root, "Content"), dev, ctm, 0);
+    ofd_templates(ctx, doc, root, dev, ctm, "Foreground", depth);
 }
 
 static void ofd_drop_page(fz_context* ctx, fz_page* page) {
@@ -908,6 +1146,7 @@ static void ofd_annots(fz_context* ctx, ofd_document* doc, const char* page_id, 
             ofd_resolve(ctx, entry, path, ofd_text(ofd_child(node, "FileLoc")));
             annots = ofd_read_xml(ctx, doc, entry);
             for (fz_xml* annot = fz_xml_down(fz_xml_root(annots)); annot; annot = fz_xml_next(annot)) {
+                if (fz_xml_att_eq(annot, "Visible", "false")) continue;
                 ofd_draw_nodes(ctx, doc, ofd_child(annot, "Appearance"), dev, ctm, 0);
             }
             fz_drop_xml(ctx, annots);
@@ -925,7 +1164,7 @@ static void ofd_annots(fz_context* ctx, ofd_document* doc, const char* page_id, 
 
 static void ofd_draw_seal(fz_context* ctx, ofd_document* doc, fz_xml* stamp, const char* value_path, fz_device* dev,
                           fz_matrix ctm) {
-    if (doc->seal_depth >= OFD_MAX_DEPTH) fz_throw(ctx, FZ_ERROR_LIMIT, "OFD seal nesting too deep");
+    if (doc->seal_depth >= OFD_MAX_SEAL_DEPTH) fz_throw(ctx, FZ_ERROR_LIMIT, "OFD seal nesting too deep");
     fz_rect target = ofd_box(fz_xml_att(stamp, "Boundary"));
     if (fz_is_empty_rect(target)) fz_throw(ctx, FZ_ERROR_FORMAT, "Invalid OFD seal boundary");
     fz_buffer* signed_value = NULL;
@@ -1064,7 +1303,6 @@ static fz_page* ofd_load_page(fz_context* ctx, fz_document* doc_, int chapter, i
         ofd_resolve(ctx, path, doc->path, fz_xml_att(entry, "BaseLoc"));
         xml = ofd_read_xml(ctx, doc, path);
         fz_xml* root = fz_xml_root(xml);
-        if (ofd_child(root, "PageRes")) fz_throw(ctx, FZ_ERROR_UNSUPPORTED, "OFD page resources are not supported yet");
         fz_xml* area = ofd_child(root, "Area");
         fz_xml* physical = ofd_child(area, "PhysicalBox");
         if (!physical) physical = ofd_child(ofd_child(doc->common, "PageArea"), "PhysicalBox");
@@ -1074,11 +1312,19 @@ static fz_page* ofd_load_page(fz_context* ctx, fz_document* doc_, int chapter, i
         page->bounds = fz_transform_rect(box, ctm);
         page->list = fz_new_display_list(ctx, page->bounds);
         dev = fz_new_list_device(ctx, page->list);
-        ofd_templates(ctx, doc, root, dev, ctm, "Background");
-        ofd_draw_nodes(ctx, doc, ofd_child(root, "Content"), dev, ctm, 0);
-        ofd_templates(ctx, doc, root, dev, ctm, "Foreground");
-        ofd_annots(ctx, doc, fz_xml_att(entry, "ID"), dev, ctm);
-        ofd_signatures(ctx, doc, fz_xml_att(entry, "ID"), dev, ctm);
+        ofd_draw_page_xml(ctx, doc, root, path, dev, ctm, 0);
+        fz_try(ctx) {
+            ofd_annots(ctx, doc, fz_xml_att(entry, "ID"), dev, ctm);
+        }
+        fz_catch(ctx) {
+            ofd_skip(ctx, "annotations");
+        }
+        fz_try(ctx) {
+            ofd_signatures(ctx, doc, fz_xml_att(entry, "ID"), dev, ctm);
+        }
+        fz_catch(ctx) {
+            ofd_skip(ctx, "signatures");
+        }
         fz_close_device(ctx, dev);
     }
     fz_always(ctx) {
@@ -1115,6 +1361,7 @@ static void ofd_drop_document(fz_context* ctx, fz_document* doc_) {
         fz_drop_xml(ctx, res->xml);
         fz_free(ctx, res);
     }
+    fz_drop_hash_table(ctx, doc->ids);
     fz_drop_xml(ctx, doc->xml);
     fz_drop_archive(ctx, doc->archive);
 }
@@ -1131,6 +1378,7 @@ static fz_document* ofd_open_document(fz_context* ctx, const fz_document_handler
     fz_var(index);
     fz_try(ctx) {
         doc->archive = fz_open_archive_with_stream(ctx, stream);
+        doc->ids = fz_new_hash_table(ctx, OFD_ID_TABLE_SIZE, sizeof(unsigned int), -1, ofd_drop_id_entry);
         index = ofd_read_xml(ctx, doc, "OFD.xml");
         fz_xml* body = ofd_child(fz_xml_root(index), "DocBody");
         fz_xml* signatures = ofd_child(body, "Signatures");

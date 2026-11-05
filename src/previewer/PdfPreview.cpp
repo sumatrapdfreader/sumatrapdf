@@ -860,6 +860,8 @@ EngineBase* PdfPreview::LoadEngine(const Str& data) {
             return CreateEngineCbxFromData(data);
         case PreviewType::Tga:
             return CreateEngineImageFromData(data);
+        case PreviewType::Ofd:
+            return CreateEngineMupdfFromData(data, StrL("foo.ofd"), nullptr);
     }
     return nullptr;
 }
