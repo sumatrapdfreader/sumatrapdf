@@ -28,6 +28,7 @@ void BuildOpenFileFilters(OpenFileFilterList& out) {
     } fileFormats[] = {
         {Tr("PDF documents"), StrL("*.pdf;*.p7m"), true},
         {Tr("XPS documents"), StrL("*.xps;*.oxps"), true},
+        {Tr("OFD documents"), StrL("*.ofd"), true},
         {Tr("DjVu documents"), StrL("*.djvu"), true},
         {Tr("PostScript documents"), StrL("*.ps;*.eps"), IsEnginePsAvailable()},
         {Tr("DVI documents"), StrL("*.dvi"), IsEngineDviAvailable()},

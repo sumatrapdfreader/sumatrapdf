@@ -361,7 +361,8 @@ static EngineBase* CreateEngineForKind(FileType kind, FileType contentHintKind, 
     EngineBase* engine = nullptr;
     // markdown has no native SumatraPDF engine; always use mupdf (cmark-gfm),
     // regardless of gEnableEpubWithPdfEngine.
-    if (kind == FileType::PDF || kind == FileType::Xps || kind == FileType::Markdown || IsOfficeFileType(kind)) {
+    if (kind == FileType::PDF || kind == FileType::Xps || kind == FileType::Ofd || kind == FileType::Markdown ||
+        IsOfficeFileType(kind)) {
         return CreateEngineMupdfFromFile(path, kind, dpi, pwdUI);
     }
     if (IsEngineDjVuSupportedFileType(kind)) {
@@ -486,6 +487,10 @@ EngineBase* CreateEngineFromFile(Str path, PasswordUI* pwdUI, bool enableChmEngi
     FileType contentHint = FileType::Unknown;
     if (IsEngineCbxSupportedFileType(kind)) {
         contentHint = GuessFileTypeFromFile(path);
+        // OFD images are resources, not comic-book pages.
+        if (contentHint == FileType::Ofd) {
+            kind = contentHint;
+        }
     }
 
     EngineBase* engine = CreateEngineForKind(kind, contentHint, path, pwdUI, enableChmEngine);
@@ -511,7 +516,8 @@ static EngineBase* CreateEngineForKindFromData(FileType kind, Str data, Str name
     if (kind == FileType::Unknown || len(data) == 0) {
         return nullptr;
     }
-    if (kind == FileType::PDF || kind == FileType::Xps || kind == FileType::Markdown || IsOfficeFileType(kind)) {
+    if (kind == FileType::PDF || kind == FileType::Xps || kind == FileType::Ofd || kind == FileType::Markdown ||
+        IsOfficeFileType(kind)) {
         return CreateEngineMupdfFromData(data, nameHint, pwdUI);
     }
     if (IsEngineDjVuSupportedFileType(kind)) {
