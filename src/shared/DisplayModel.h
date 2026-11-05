@@ -261,6 +261,8 @@ struct DisplayModel : DocController {
     bool GetTrimEmptyMargins() const;
     void SetFreePan(bool enable);
     bool GetFreePan() const;
+    void SetFacingStepOne(bool enable);
+    bool GetFacingStepOne() const;
     void SetPageAdjust(int brightness, int contrast);
     Size PanSlack() const;
     bool EnsureTrimEmptyMarginsForVisiblePages();
@@ -281,8 +283,10 @@ struct DisplayModel : DocController {
     SizeF PageSizeAfterRotation(int pageNo, bool fitToContent = false, float contentPad = 0) const;
     bool ShouldTreatLandscapeAsSpread() const;
     void EnsureSpreadFlags() const;
+    bool StepsOnePage() const;
     int FirstPageInRow(int pageNo) const;
     int LastPageInRow(int pageNo) const;
+    int RowStartForPage(int pageNo) const;
     void ChangeStartPage(int startPage);
     Point GetContentStart(int pageNo) const;
     void RecalcVisibleParts() const;
@@ -392,6 +396,11 @@ struct DisplayModel : DocController {
     int brightness = 0;
     int contrast = 0;
     bool freePan = false;
+    // facing / book view moves one page at a time (#6487)
+    bool facingStepOne = false;
+    // set by GoToNextPage() when stepping one page: GoToPage() starts the row
+    // at the page even though it's already shown
+    bool landOnPage = false;
     // set while SetScrollState() restores a view exactly: GoToPage() may then
     // land in free pan's slack past the page edges
     bool restoringExactPan = false;

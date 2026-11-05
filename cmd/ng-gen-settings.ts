@@ -1229,6 +1229,12 @@ const fileState: Field[] = [
     "if true, the view can be panned past the page edges, so any part of a page can be brought to the center of the window",
   ).ver("3.7"),
   field(
+    "FacingStepOne",
+    Bool,
+    false,
+    "if true, facing and book view move one page at a time: pages 1-2, then 2-3, then 3-4",
+  ).ver("3.7"),
+  field(
     "Brightness",
     Int,
     0,
@@ -1305,6 +1311,7 @@ const fileStateLayout = [
   "UniformPageWidth",
   "TrimEmptyMargins",
   "FreePan",
+  "FacingStepOne",
 ];
 fileState.sort((a, b) => fileStateLayout.indexOf(a.Name) - fileStateLayout.indexOf(b.Name));
 

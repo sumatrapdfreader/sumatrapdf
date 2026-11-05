@@ -39,6 +39,8 @@ struct DocumentLayoutParams {
     // the whole two-page row (issues #1324, #872)
     bool landscapeAsSpread = false;
     Vec<u8> spreadFlags;
+    // non-continuous facing / book view: the row starts at startPage (#6487)
+    bool stepOnePage = false;
     // half a viewport of scroll room around the pages, so any point of a page
     // can be brought to the center of the window
     bool freePan = false;
@@ -53,6 +55,7 @@ struct FacingRow {
 };
 
 void CollectFacingRows(Vec<FacingRow>& out, int pageCount, bool bookView, const Vec<u8>& spreadFlags);
+FacingRow FacingRowAt(int firstPage, int pageCount, bool bookView, const Vec<u8>& spreadFlags);
 Size FreePanSlack(Size viewPort);
 
 struct DocumentLayout {

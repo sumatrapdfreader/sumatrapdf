@@ -681,6 +681,27 @@ TempStr DisplayModeResultTemp(Str action, int* exitCodeOut) {
     }
 
     bool reportR2L = str::EqI(action, StrL("r2l"));
+    // "pages": the pages shown, for stepping one page in facing view (#6487)
+    if (str::EqI(action, StrL("pages"))) {
+        DisplayModel* dm = win->AsFixed();
+        if (!dm) {
+            return finish(StrL("ERROR not-fixed-page"), 1);
+        }
+        out.Append(fmt("OK mode=%s step=%d current=%d shown=", DisplayModeToString(dm->GetDisplayMode()),
+                       dm->GetFacingStepOne() ? 1 : 0, dm->CurrentPageNo()));
+        bool first = true;
+        for (int pageNo = 1; pageNo <= dm->PageCount(); pageNo++) {
+            if (!dm->PageShown(pageNo)) {
+                continue;
+            }
+            if (!first) {
+                out.AppendChar(',');
+            }
+            out.Append(fmt("%d", pageNo));
+            first = false;
+        }
+        return finish(StrL(""), 0);
+    }
     if (str::EqI(action, StrL("zoom-real"))) {
         return finish(fmt("OK zoomReal=%g", win->ctrl->GetZoomVirtual(true)), 0);
     }

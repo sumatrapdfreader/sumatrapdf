@@ -15,19 +15,23 @@ static bool PageIsSpread(const Vec<u8>& flags, int pageNo) {
     return flags[i] != 0;
 }
 
+// the row that starts at firstPage: it and the next page, unless either is a
+// spread or it's book view's cover
+FacingRow FacingRowAt(int firstPage, int pageCount, bool bookView, const Vec<u8>& spreadFlags) {
+    FacingRow row{firstPage, firstPage, PageIsSpread(spreadFlags, firstPage)};
+    if (!(bookView && firstPage == 1) && !row.isSpread && firstPage + 1 <= pageCount &&
+        !PageIsSpread(spreadFlags, firstPage + 1)) {
+        row.lastPage++;
+    }
+    return row;
+}
+
 // Landscape spreads occupy a full row; book view keeps the first page alone.
 void CollectFacingRows(Vec<FacingRow>& out, int pageCount, bool bookView, const Vec<u8>& spreadFlags) {
     VecReset(out);
-    if (pageCount < 1) {
-        return;
-    }
     int page = 1;
     while (page <= pageCount) {
-        FacingRow row{page, page, PageIsSpread(spreadFlags, page)};
-        if (!(bookView && page == 1) && !row.isSpread && page + 1 <= pageCount &&
-            !PageIsSpread(spreadFlags, page + 1)) {
-            row.lastPage++;
-        }
+        FacingRow row = FacingRowAt(page, pageCount, bookView, spreadFlags);
         VecAppend(out, row);
         page = row.lastPage + 1;
     }
@@ -226,12 +230,9 @@ static void RelayoutRows(DocumentLayout& layout, bool isFitContent) {
     const int pageCount = layout.pages.len;
     bool single = IsSingle(params.displayMode);
     Vec<FacingRow> rows;
-    if (!single && !params.landscapeAsSpread && !IsContinuous(params.displayMode)) {
-        int last = std::min(params.startPage + 1, pageCount);
-        if (IsBookView(params.displayMode) && params.startPage == 1) {
-            last = 1;
-        }
-        VecAppend(rows, {params.startPage, last, false});
+    bool rowAtStart = !params.landscapeAsSpread || params.stepOnePage;
+    if (!single && rowAtStart && !IsContinuous(params.displayMode)) {
+        VecAppend(rows, FacingRowAt(params.startPage, pageCount, IsBookView(params.displayMode), params.spreadFlags));
     } else if (!single) {
         Vec<u8> noSpreads;
         CollectFacingRows(rows, pageCount, IsBookView(params.displayMode),

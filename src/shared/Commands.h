@@ -356,8 +356,9 @@ enum {
     CmdGoToPrevChapter = 550,
     CmdGoToNextChapter = 551,
     CmdToggleLayers = 552,
+    CmdToggleFacingStepOne = 553,
 
-    CmdLast = 552,
+    CmdLast = 553,
     CmdFirstCustom = CmdLast + 100,
 
     // aliases, at the end to not mess ordering

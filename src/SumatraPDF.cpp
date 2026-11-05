@@ -2041,6 +2041,7 @@ static void ReplaceDocumentInCurrentTab(LoadArgs* args, DocController* ctrl, Fil
                 dm->SetUniformPageWidth(fs->uniformPageWidth);
                 dm->SetTrimEmptyMargins(fs->trimEmptyMargins);
                 dm->SetFreePan(fs->freePan);
+                dm->SetFacingStepOne(fs->facingStepOne);
                 dm->SetPageAdjust(fs->brightness, fs->contrast);
                 EngineMupdfSetLayerStates(dm->GetEngine(), fs->layerStates);
             }
@@ -10918,6 +10919,10 @@ static LRESULT FrameOnCommand(MainWindow* win, HWND hwnd, UINT msg, WPARAM wp, L
 
         case CmdToggleFreePan:
             ToggleFreePan(win);
+            break;
+
+        case CmdToggleFacingStepOne:
+            ToggleFacingStepOne(win);
             break;
 
         case CmdToggleCaption:

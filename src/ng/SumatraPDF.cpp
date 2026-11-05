@@ -1766,6 +1766,7 @@ static MainWindow* LoadDocumentFinish(MainWindow* win, Str fullPath, DocControll
             dm->SetUniformPageWidth(fs->uniformPageWidth);
             dm->SetTrimEmptyMargins(fs->trimEmptyMargins);
             dm->SetFreePan(fs->freePan);
+            dm->SetFacingStepOne(fs->facingStepOne);
             dm->SetPageAdjust(fs->brightness, fs->contrast);
             EngineMupdfSetLayerStates(dm->GetEngine(), fs->layerStates);
             // migrate in place only: a SaveSettings() here would rebuild
@@ -5836,6 +5837,10 @@ void ExecuteCmd(MainWindow* win, int cmdId) {
 
         case CmdToggleMangaMode:
             ToggleMangaMode(win);
+            break;
+
+        case CmdToggleFacingStepOne:
+            ToggleFacingStepOne(win);
             break;
 
         case CmdToggleAutoRotateWidePages:

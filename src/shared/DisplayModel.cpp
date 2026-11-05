@@ -314,6 +314,24 @@ int DisplayModel::UnusedCanvasDx() const {
     return std::max(0, viewPort.dx - needed);
 }
 
+// in facing / book view, next / previous page moves by one page: 1-2, 2-3, 3-4
+// (#6487). Turning it off goes back to the row the start page belongs to
+void DisplayModel::SetFacingStepOne(bool enable) {
+    if (facingStepOne == enable) {
+        return;
+    }
+    facingStepOne = enable;
+    DisplayMode mode = GetDisplayMode();
+    if (!pagesInfo || zoomReal < 0.01f || IsSingle(mode) || IsContinuous(mode)) {
+        return;
+    }
+    GoToPage(startPage, 0);
+}
+
+bool DisplayModel::GetFacingStepOne() const {
+    return facingStepOne;
+}
+
 void DisplayModel::SetDisplayR2L(bool r2l) {
     displayR2L = r2l;
 }
@@ -658,6 +676,7 @@ void DisplayModel::GetDisplayState(FileState* fs) {
     fs->uniformPageWidth = uniformPageWidth;
     fs->trimEmptyMargins = trimEmptyMargins;
     fs->freePan = freePan;
+    fs->facingStepOne = facingStepOne;
     fs->brightness = brightness;
     fs->contrast = contrast;
     str::ReplaceWithCopy(&fs->layerStates, EngineMupdfChangedLayerStatesTemp(engine));
@@ -803,12 +822,22 @@ void DisplayModel::EnsureSpreadFlags() const {
     }
 }
 
+// rows of a non-continuous facing / book view stepping one page start at any
+// page: the row of page 5 is 5-6
+bool DisplayModel::StepsOnePage() const {
+    DisplayMode mode = GetDisplayMode();
+    return facingStepOne && !IsSingle(mode) && !IsContinuous(mode);
+}
+
 int DisplayModel::FirstPageInRow(int pageNo) const {
     int n = PageCount();
     if (n <= 0) {
         return 1;
     }
     pageNo = limitValue(pageNo, 1, n);
+    if (StepsOnePage()) {
+        return pageNo;
+    }
     int columns = ColumnsFromDisplayMode(GetDisplayMode());
     bool book = IsBookView(GetDisplayMode());
     if (columns < 2 || !ShouldTreatLandscapeAsSpread()) {
@@ -827,6 +856,14 @@ int DisplayModel::LastPageInRow(int pageNo) const {
         return 1;
     }
     pageNo = limitValue(pageNo, 1, n);
+    if (StepsOnePage()) {
+        Vec<u8> noSpreads;
+        bool spreads = ShouldTreatLandscapeAsSpread();
+        if (spreads) {
+            EnsureSpreadFlags();
+        }
+        return FacingRowAt(pageNo, n, IsBookView(GetDisplayMode()), spreads ? spreadFlags : noSpreads).lastPage;
+    }
     int columns = ColumnsFromDisplayMode(GetDisplayMode());
     bool book = IsBookView(GetDisplayMode());
     if (columns < 2 || !ShouldTreatLandscapeAsSpread()) {
@@ -837,6 +874,26 @@ int DisplayModel::LastPageInRow(int pageNo) const {
         return LastPageInARowNo(pageNo, columns, book, n);
     }
     return rowLast[pageNo - 1];
+}
+
+// the page a facing / book view row starts at when going to pageNo. Stepping
+// one page keeps the row on screen when it has pageNo (a search match on the
+// right page doesn't shift the pages); going to the last page shows two
+int DisplayModel::RowStartForPage(int pageNo) const {
+    if (!StepsOnePage()) {
+        return FirstPageInRow(pageNo);
+    }
+    if (landOnPage) {
+        return pageNo;
+    }
+    if (startPage <= pageNo && pageNo <= LastPageInRow(startPage)) {
+        return startPage;
+    }
+    int prev = pageNo - 1;
+    if (pageNo == PageCount() && prev >= 1 && LastPageInRow(prev) == pageNo) {
+        return prev;
+    }
+    return pageNo;
 }
 
 // Stable-view nav point tracking: remember views the user dwelled on so
@@ -1929,6 +1986,7 @@ void DisplayModel::Relayout(float newZoomVirtual, int newRotation) {
         params.scrollFollowsRotation = gSettings->continuousScrollFollowsRotation;
         params.freePan = freePan && !inPresentation;
         params.landscapeAsSpread = ShouldTreatLandscapeAsSpread();
+        params.stepOnePage = StepsOnePage();
         if (params.landscapeAsSpread) {
             EnsureSpreadFlags();
             params.spreadFlags = spreadFlags;
@@ -2564,8 +2622,9 @@ void DisplayModel::GoToPage(int pageNo, int scrollY, bool addNavPt, int scrollX)
 
     /* in facing / book view, land on the first page of the row */
     if (!IsSingle(GetDisplayMode())) {
-        pageNo = FirstPageInRow(pageNo);
+        pageNo = RowStartForPage(pageNo);
     }
+    landOnPage = false;
 
     if (!IsContinuous(GetDisplayMode())) {
         /* in single page mode going to another page involves recalculating
@@ -2658,7 +2717,7 @@ void DisplayModel::SetDisplayMode(DisplayMode newDisplayMode, bool keepContinuou
     }
 
     int currPageNo = CurrentPageNo();
-    if (IsFacing(newDisplayMode) && IsBookView(displayMode) && currPageNo < PageCount()) {
+    if (IsFacing(newDisplayMode) && IsBookView(displayMode) && currPageNo < PageCount() && !facingStepOne) {
         currPageNo++;
     }
     displayMode = newDisplayMode;
@@ -2784,12 +2843,13 @@ bool DisplayModel::GoToNextPage(bool keepViewOffset) {
             }
             target = next;
             pageNo = PageNoFromLocation(target);
-        } while (pageNo <= LastPageInRow(currPageNo));
+        } while (pageNo <= (StepsOnePage() ? currPageNo : LastPageInRow(currPageNo)));
         int scrollY = 0;
         int scrollX = -1;
         if (keepViewOffset) {
             GetRememberedViewOffset(this, currPageNo, &scrollX, &scrollY);
         }
+        landOnPage = StepsOnePage();
         GoToPage(pageNo, scrollY, false, scrollX);
         return true;
     }
@@ -2800,16 +2860,19 @@ bool DisplayModel::GoToNextPage(bool keepViewOffset) {
         GoToPage(currPageNo, false);
         return true;
     }
-    int firstPageInNewRow = LastPageInRow(currPageNo) + 1;
-    if (firstPageInNewRow > PageCount()) {
+    int lastInRow = LastPageInRow(currPageNo);
+    if (lastInRow >= PageCount()) {
         /* we're on a last row or after it, can't go any further */
         return false;
     }
+    // stepping one page: 2-3 is followed by 3-4
+    int firstPageInNewRow = StepsOnePage() ? currPageNo + 1 : lastInRow + 1;
     int scrollY = 0;
     int scrollX = -1;
     if (keepViewOffset) {
         GetRememberedViewOffset(this, currPageNo, &scrollX, &scrollY);
     }
+    landOnPage = StepsOnePage();
     GoToPage(firstPageInNewRow, scrollY, false, scrollX);
     return true;
 }
@@ -2927,12 +2990,12 @@ bool DisplayModel::GoToLastPage() {
     }
     int currPageNo = CurrentPageNo();
     int newPageNo = PageCount();
-    int firstPageInLastRow = FirstPageInRow(newPageNo);
+    int firstPageInLastRow = RowStartForPage(newPageNo);
 
     if (currPageNo == firstPageInLastRow) { /* are we on the last page already ? */
         return false;
     }
-    GoToPage(firstPageInLastRow, 0, true);
+    GoToPage(newPageNo, 0, true);
     return true;
 }
 

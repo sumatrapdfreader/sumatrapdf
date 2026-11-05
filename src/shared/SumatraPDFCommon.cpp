@@ -856,6 +856,22 @@ void ToggleMangaMode(MainWindow* win) {
     dm->SetScrollState(state);
 }
 
+// CmdToggleFacingStepOne (#6487): turning it on in single page or continuous
+// view switches to Facing (or Book View), where it applies
+void ToggleFacingStepOne(MainWindow* win) {
+    DisplayModel* dm = win->AsFixed();
+    if (!dm) {
+        return;
+    }
+    bool enable = !dm->GetFacingStepOne();
+    dm->SetFacingStepOne(enable);
+    DisplayMode mode = dm->GetDisplayMode();
+    if (!enable || (!IsSingle(mode) && !IsContinuous(mode))) {
+        return;
+    }
+    SwitchToDisplayMode(win, IsBookView(mode) ? DisplayMode::BookView : DisplayMode::Facing);
+}
+
 // ComicBookUI.AutoRotateWidePages, see DisplayModel::PageRotation
 void ToggleAutoRotateWidePages() {
     gSettings->comicBookUI.autoRotateWidePages = !gSettings->comicBookUI.autoRotateWidePages;

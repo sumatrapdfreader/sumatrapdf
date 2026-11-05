@@ -363,6 +363,7 @@ const commandsRaw = [
     "CmdGoToPrevChapter", "Previous Chapter",
     "CmdGoToNextChapter", "Next Chapter",
     "CmdToggleLayers", "Toggle Layers",
+    "CmdToggleFacingStepOne", "Toggle Facing: Step One Page",
 ];
 
 // removed slots are dropped: nothing outside the generators should see them

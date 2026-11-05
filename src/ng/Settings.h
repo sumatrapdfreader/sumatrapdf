@@ -356,6 +356,9 @@ struct FileState {
     // if true, the view can be panned past the page edges, so any part of
     // a page can be brought to the center of the window
     bool freePan;
+    // if true, facing and book view move one page at a time: pages 1-2,
+    // then 2-3, then 3-4
+    bool facingStepOne;
 };
 
 // a subset of FileState required for restoring the state of a single
@@ -1389,7 +1392,7 @@ struct FieldInfo;
 struct StructInfo;
 extern const StructInfo gFavoriteInfo;
 extern const StructInfo gFileEBookUIInfo;
-extern const FieldInfo gFileStateFields[29];
+extern const FieldInfo gFileStateFields[30];
 extern StructInfo gFileStateInfo;
 extern const StructInfo gTabStateInfo;
 extern const StructInfo gSessionDataInfo;
