@@ -21,6 +21,7 @@ void TocFilterChanged(MainWindow*);
 extern bool gShowAllMatchingTOC;
 
 void GoToTocItem(MainWindow*, TocItem*);
+bool GoToAdjacentChapter(MainWindow*, bool next);
 // the tree the bookmarks pane shows: the filtered one if a filter is on
 TocTree* CurrentTocTree(MainWindow*);
 bool TocItemIsMultiHighlight(MainWindow*, TocItem*);

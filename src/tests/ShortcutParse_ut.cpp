@@ -76,6 +76,22 @@ bool ShortcutParse_UnitTestShiftedPunct() {
     utassert(ParseShortcutString(StrL("Ctrl + '"), a));
     utassert(a.key == VK_OEM_7 && a.fVirt == (FCONTROL | FVIRTKEY));
 
+    // media and browser keys, in both spellings, shown with the spaced one
+    static const struct {
+        Str s;
+        WORD vk;
+    } named[] = {
+        {StrL("Media Next"), VK_MEDIA_NEXT_TRACK},       {StrL("MediaPrev"), VK_MEDIA_PREV_TRACK},
+        {StrL("Media Play Pause"), VK_MEDIA_PLAY_PAUSE}, {StrL("MediaStop"), VK_MEDIA_STOP},
+        {StrL("Browser Back"), VK_BROWSER_BACK},         {StrL("BrowserForward"), VK_BROWSER_FORWARD},
+    };
+    for (auto& n : named) {
+        a = {};
+        utassert(ParseShortcutString(n.s, a));
+        utassert(a.key == n.vk && a.fVirt == FVIRTKEY);
+    }
+    utassert(AccelShowsAs(FCONTROL | FVIRTKEY, VK_MEDIA_NEXT_TRACK, StrL("Ctrl + Media Next")));
+
     gShortcutLangCode = prevLang;
     return true;
 }

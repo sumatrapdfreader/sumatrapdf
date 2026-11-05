@@ -353,8 +353,10 @@ enum {
     CmdNewTab = 547,
     CmdShowSignatures = 548,
     CmdOpenFromURL = 549,
+    CmdGoToPrevChapter = 550,
+    CmdGoToNextChapter = 551,
 
-    CmdLast = 549,
+    CmdLast = 551,
     CmdFirstCustom = CmdLast + 100,
 
     // aliases, at the end to not mess ordering

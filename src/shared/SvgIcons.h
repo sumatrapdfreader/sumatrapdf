@@ -5,6 +5,8 @@ extern const char* gIconFileOpen;
 extern const char* gIconPrint;
 extern const char* gIconPagePrev;
 extern const char* gIconPageNext;
+extern const char* gIconChapterPrev;
+extern const char* gIconChapterNext;
 extern const char* gIconLayoutContinuous;
 extern const char* gIconLayoutSinglePage;
 extern const char* gIconZoomOut;

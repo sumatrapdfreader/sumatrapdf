@@ -389,6 +389,14 @@ MenuDef menuDefGoTo[] = {
         CmdGoToPage,
     },
     {
+        TrN("Next &Chapter"),
+        CmdGoToNextChapter,
+    },
+    {
+        TrN("Previous C&hapter"),
+        CmdGoToPrevChapter,
+    },
+    {
         StrL(kMenuSeparator),
         0,
     },

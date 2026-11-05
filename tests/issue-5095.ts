@@ -28,10 +28,13 @@ const DEFAULT_LAYOUT =
   "CmdZoomOut CmdZoomIn | CmdFindFirst | CmdToggleEditPDF";
 
 function makePdf(): string {
+  // a bookmark, so the chapter buttons have something to go to
   const objs = [
-    `<< /Type /Catalog /Pages 2 0 R >>`,
+    `<< /Type /Catalog /Pages 2 0 R /Outlines 4 0 R >>`,
     `<< /Type /Pages /Count 1 /Kids [3 0 R] >>`,
     `<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] >>`,
+    `<< /Type /Outlines /First 5 0 R /Last 5 0 R /Count 1 >>`,
+    `<< /Title (Start) /Parent 4 0 R /Dest [3 0 R /Fit] >>`,
   ];
   return assemblePdf(objs);
 }
@@ -147,6 +150,20 @@ export async function testit(): Promise<void> {
         `the documented default layout doesn't reproduce the standard one: ${name} is ` +
           `${a.visible ? `at ${a.idx}` : "hidden"} by default but ${b.visible ? `at ${b.idx}` : "hidden"} with it`,
       );
+    }
+  }
+  // optional buttons: not in the standard layout, on the toolbar when listed
+  const chapterCmds = ["CmdGoToPrevChapter", "CmdGoToNextChapter"];
+  writeSettings(appdata, "");
+  const stdChapters = await readToolbar(appdata, pdf, chapterCmds);
+  writeSettings(appdata, "CmdGoToPrevChapter CmdGoToNextChapter | PageInfo");
+  const chapters = await readToolbar(appdata, pdf, chapterCmds);
+  for (const name of chapterCmds) {
+    if (stdChapters.get(name)!.visible) {
+      throw new Error(`${name} is on the standard toolbar`);
+    }
+    if (!chapters.get(name)!.visible) {
+      throw new Error(`${name} is missing although the layout lists it`);
     }
   }
   console.log(`  ToolbarCustomLayout orders and hides buttons: Find=${find} < Next=${next} < Prev=${prev} ✓`);

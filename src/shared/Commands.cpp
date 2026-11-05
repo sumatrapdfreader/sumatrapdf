@@ -359,6 +359,8 @@ const CommandInfo gCommands[] = {
     {CmdNewTab, "CmdNewTab\0", StrL("New Tab")},
     {CmdShowSignatures, "CmdShowSignatures\0", StrL("Show Signatures")},
     {CmdOpenFromURL, "CmdOpenFromURL\0", StrL("Open from URL...")},
+    {CmdGoToPrevChapter, "CmdGoToPrevChapter\0", StrL("Previous Chapter")},
+    {CmdGoToNextChapter, "CmdGoToNextChapter\0", StrL("Next Chapter")},
 };
 const int gCommandsCount = dimofi(gCommands);
 

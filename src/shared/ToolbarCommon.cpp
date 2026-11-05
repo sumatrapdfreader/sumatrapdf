@@ -437,6 +437,12 @@ static ToolbarButtonInfo gToolbarButtons[] = {
 
 constexpr int kButtonsCount = dimof(gToolbarButtons);
 
+// built-in buttons that are only on the toolbar when ToolbarCustomLayout lists them
+static ToolbarButtonInfo gOptionalToolbarButtons[] = {
+    {gIconChapterPrev, CmdGoToPrevChapter, TrN("Previous Chapter")},
+    {gIconChapterNext, CmdGoToNextChapter, TrN("Next Chapter")},
+};
+
 // The built-in buttons actually on the toolbar, which is gToolbarButtons unless
 // ToolbarCustomLayout asks for a different set / order (issue #5095). A layout
 // can repeat a button, so allow for more than the default count.
@@ -503,6 +509,11 @@ void PopulateToolbarLayout() {
             if (gToolbarButtons[i].cmdId == cmdId) {
                 found = &gToolbarButtons[i];
                 break;
+            }
+        }
+        for (int i = 0; !found && i < dimof(gOptionalToolbarButtons) && cmdId != CmdNone; i++) {
+            if (gOptionalToolbarButtons[i].cmdId == cmdId) {
+                found = &gOptionalToolbarButtons[i];
             }
         }
         if (!found) {

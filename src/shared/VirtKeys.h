@@ -100,9 +100,15 @@
 #define VK_RCONTROL         0xA3
 #define VK_LMENU            0xA4
 #define VK_RMENU            0xA5
+#define VK_BROWSER_BACK     0xA6
+#define VK_BROWSER_FORWARD  0xA7
 #define VK_VOLUME_MUTE      0xAD
 #define VK_VOLUME_DOWN      0xAE
 #define VK_VOLUME_UP        0xAF
+#define VK_MEDIA_NEXT_TRACK 0xB0
+#define VK_MEDIA_PREV_TRACK 0xB1
+#define VK_MEDIA_STOP       0xB2
+#define VK_MEDIA_PLAY_PAUSE 0xB3
 #define VK_OEM_1            0xBA
 #define VK_OEM_PLUS         0xBB
 #define VK_OEM_COMMA        0xBC

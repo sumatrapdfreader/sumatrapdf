@@ -94,6 +94,18 @@ static SeqStrNum gVirtKeysNum =
     "VolumeDown\0" "\xdc\x02" \
     "Volume Up\0" "\xde\x02" \
     "VolumeUp\0" "\xde\x02" \
+    "Media Next\0" "\xe0\x02" \
+    "MediaNext\0" "\xe0\x02" \
+    "Media Prev\0" "\xe2\x02" \
+    "MediaPrev\0" "\xe2\x02" \
+    "Media Stop\0" "\xe4\x02" \
+    "MediaStop\0" "\xe4\x02" \
+    "Media Play Pause\0" "\xe6\x02" \
+    "MediaPlayPause\0" "\xe6\x02" \
+    "Browser Back\0" "\xcc\x02" \
+    "BrowserBack\0" "\xcc\x02" \
+    "Browser Forward\0" "\xce\x02" \
+    "BrowserForward\0" "\xce\x02" \
     "XButton1\0" "\x0a" \
     "XButton2\0" "\x0c" \
     "F1\0" "\xe0\x01" \
@@ -512,6 +524,7 @@ static const struct {
     u8 vk;
     Str name;
 } kGpuiKeyNames[] = {
+    // clang-format off
     {VK_BACK, StrL("backspace")},      {VK_TAB, StrL("tab")},       {VK_RETURN, StrL("enter")},
     {VK_ESCAPE, StrL("escape")},       {VK_SPACE, StrL("space")},   {VK_PRIOR, StrL("pageup")},
     {VK_NEXT, StrL("pagedown")},       {VK_END, StrL("end")},       {VK_HOME, StrL("home")},
@@ -520,6 +533,8 @@ static const struct {
     {VK_APPS, StrL("menu")},           {VK_ADD, StrL("add")},       {VK_SUBTRACT, StrL("subtract")},
     {VK_MULTIPLY, StrL("multiply")},   {VK_DIVIDE, StrL("divide")}, {VK_DECIMAL, StrL("decimal")},
     {VK_SEPARATOR, StrL("separator")},
+    {VK_BROWSER_BACK, StrL("back")},   {VK_BROWSER_FORWARD, StrL("forward")},
+    // clang-format on
 };
 
 static Str GpuiKeyName(u16 vk) {

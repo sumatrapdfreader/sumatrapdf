@@ -5635,6 +5635,13 @@ void ExecuteCmd(MainWindow* win, int cmdId) {
             break;
         }
 
+        case CmdGoToPrevChapter:
+        case CmdGoToNextChapter:
+            if (win->IsDocLoaded()) {
+                GoToAdjacentChapter(win, cmdId == CmdGoToNextChapter);
+            }
+            break;
+
         case CmdGoToFirstPage:
             if (win->IsCurrentTabAbout()) {
                 HomePageOnVScroll(win, ScrollMsg::Top, 0);

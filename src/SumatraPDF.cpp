@@ -11239,6 +11239,13 @@ static LRESULT FrameOnCommand(MainWindow* win, HWND hwnd, UINT msg, WPARAM wp, L
             break;
         }
 
+        case CmdGoToPrevChapter:
+        case CmdGoToNextChapter:
+            if (win->IsDocLoaded()) {
+                GoToAdjacentChapter(win, cmdId == CmdGoToNextChapter);
+            }
+            break;
+
         case CmdScrollDownHalfPage: {
             if (win->IsCurrentTabAbout()) {
                 HomePageOnVScroll(win, SB_PAGEDOWN);

@@ -49,6 +49,24 @@ const char* gIconPageNext =
   <line x1="13" y1="6" x2="19" y2="12" />
 </svg>)";
 
+// https://github.com/tabler/tabler-icons/blob/main/icons/outline/arrow-bar-to-left.svg
+const char* gIconChapterPrev =
+    R"(<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" stroke-width="1" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
+  <path d="M10 12l10 0" />
+  <path d="M10 12l4 4" />
+  <path d="M10 12l4 -4" />
+  <path d="M4 4l0 16" />
+</svg>)";
+
+// https://github.com/tabler/tabler-icons/blob/main/icons/outline/arrow-bar-to-right.svg
+const char* gIconChapterNext =
+    R"(<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" stroke-width="1" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
+  <path d="M14 12l-10 0" />
+  <path d="M14 12l-4 4" />
+  <path d="M14 12l-4 -4" />
+  <path d="M20 4l0 16" />
+</svg>)";
+
 // https://github.com/tabler/tabler-icons/blob/main/icons/outline/layout-rows.svg
 const char* gIconLayoutContinuous =
     R"(<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" stroke-width="1" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">

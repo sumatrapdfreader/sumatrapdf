@@ -415,6 +415,86 @@ void GoToTocItem(MainWindow* win, TocItem* tocItem) {
     uitask::Post(fn, "TaskGoToTocFromPalette");
 }
 
+// Where a ToC item points, as {chapter, page}. Page 0 means "somewhere in that
+// chapter": chaptered documents resolve an item only once its chapter is laid
+// out, and resolving every chapter here would lay out the whole book.
+static Location TocItemLocation(DocController* ctrl, TocItem* item, int currChapter) {
+    Location loc = item->loc;
+    if (loc.chapter < 1) {
+        return item->pageNo >= 1 ? LocFromPageNo(item->pageNo) : kInvalidLocation;
+    }
+    if (loc.page < 1 && loc.chapter == currChapter && item->dest) {
+        Location resolved = ctrl->ResolveDest(item->dest);
+        if (resolved.IsValid()) {
+            return resolved;
+        }
+    }
+    return loc;
+}
+
+static int CmpLocation(Location a, Location b) {
+    if (a.chapter != b.chapter) {
+        return a.chapter < b.chapter ? -1 : 1;
+    }
+    if (a.page != b.page) {
+        return a.page < b.page ? -1 : 1;
+    }
+    return 0;
+}
+
+struct AdjacentTocItem {
+    DocController* ctrl = nullptr;
+    Location curr;
+    bool next = true;
+    TocItem* best = nullptr;
+    Location bestLoc;
+};
+
+// Next: the first item after the current page. Previous: the last one before
+// it, so from inside a chapter it goes to that chapter's start, like a media
+// player. Items on the same page tie; the first one in the tree wins.
+static void FindAdjacentTocItemRec(AdjacentTocItem& d, TocItem* item) {
+    for (; item; item = item->next) {
+        Location loc = TocItemLocation(d.ctrl, item, d.curr.chapter);
+        if (loc.chapter >= 1) {
+            int cmp = CmpLocation(loc, d.curr);
+            bool candidate = d.next ? cmp > 0 : cmp < 0;
+            if (candidate && d.best) {
+                int cmpBest = CmpLocation(loc, d.bestLoc);
+                candidate = d.next ? cmpBest < 0 : cmpBest > 0;
+            }
+            if (candidate) {
+                d.best = item;
+                d.bestLoc = loc;
+            }
+        }
+        FindAdjacentTocItemRec(d, item->child);
+    }
+}
+
+// CmdGoToPrevChapter / CmdGoToNextChapter: go to the previous / next ToC entry.
+// Returns false when there is none.
+bool GoToAdjacentChapter(MainWindow* win, bool next) {
+    DocController* ctrl = win ? win->ctrl : nullptr;
+    if (!ctrl || ctrl->AsMarkdown()) {
+        return false;
+    }
+    TocTree* tree = ctrl->GetToc();
+    if (!tree || !tree->root) {
+        return false;
+    }
+    AdjacentTocItem d;
+    d.ctrl = ctrl;
+    d.curr = ctrl->CurrentLocation();
+    d.next = next;
+    FindAdjacentTocItemRec(d, tree->root->child);
+    if (!d.best) {
+        return false;
+    }
+    GoToTocItem(win, d.best);
+    return true;
+}
+
 // find the closest item in tree view to a given page number
 TocItem* TreeItemForPageNo(TreeModel* tm, int pageNo) {
     if (!tm) {

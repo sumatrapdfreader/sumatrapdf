@@ -360,6 +360,8 @@ const commandsRaw = [
     "CmdNewTab", "New Tab",
     "CmdShowSignatures", "Show Signatures",
     "CmdOpenFromURL", "Open from URL...",
+    "CmdGoToPrevChapter", "Previous Chapter",
+    "CmdGoToNextChapter", "Next Chapter",
 ];
 
 // removed slots are dropped: nothing outside the generators should see them
