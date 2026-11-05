@@ -3,6 +3,7 @@
 
 #include "mupdf/fitz.h"
 #include <ctype.h>
+#include "ofd-crypto.h"
 #include "ofd-seal.h"
 #include "ofd.h"
 
@@ -38,9 +39,10 @@ typedef struct ofd_font_entry {
     struct ofd_font_entry* next;
 } ofd_font_entry;
 
+// One DocBody of a package: ids, resources and paths are scoped to it.
 typedef struct {
-    fz_document super;
-    fz_archive* archive;
+    fz_archive* archive; // owned by the package
+    fz_xml* info;        // DocBody/DocInfo in the package's OFD.xml
     fz_xml* xml;
     fz_xml* common;
     ofd_resource* resources;
@@ -51,6 +53,16 @@ typedef struct {
     int count;
     int seal_depth;
 } ofd_document;
+
+// The fz_document: an OFD package, its documents' pages one after another.
+typedef struct {
+    fz_document super;
+    fz_archive* archive;
+    fz_xml* index; // OFD.xml
+    ofd_document* docs;
+    int ndocs;
+    int seal_depth;
+} ofd_package;
 
 static fz_document* ofd_open_document(fz_context* ctx, const fz_document_handler* handler, fz_stream* stream,
                                       fz_stream* accel, fz_archive* dir, void* state);
@@ -1207,7 +1219,7 @@ static void ofd_draw_seal(fz_context* ctx, ofd_document* doc, fz_xml* stamp, con
         if (type == OFD_SEAL_OFD) {
             stream = fz_open_buffer(ctx, picture);
             inner = ofd_open_document(ctx, NULL, stream, NULL, NULL, NULL);
-            ((ofd_document*)inner)->seal_depth = doc->seal_depth + 1;
+            ((ofd_package*)inner)->seal_depth = doc->seal_depth + 1;
             page = fz_load_page(ctx, inner, 0);
             fz_rect bounds = fz_bound_page(ctx, page);
             if (fz_is_empty_rect(bounds)) fz_throw(ctx, FZ_ERROR_FORMAT, "Invalid OFD seal page dimensions");
@@ -1283,13 +1295,29 @@ static void ofd_signatures(fz_context* ctx, ofd_document* doc, const char* page_
     }
 }
 
-static fz_page* ofd_load_page(fz_context* ctx, fz_document* doc_, int chapter, int number) {
-    ofd_document* doc = (ofd_document*)doc_;
-    if (chapter != 0 || number < 0 || number >= doc->count) fz_throw(ctx, FZ_ERROR_ARGUMENT, "OFD page out of range");
+static fz_xml* ofd_page_entry(ofd_document* doc, int number) {
     fz_xml* entry = fz_xml_down(ofd_child(fz_xml_root(doc->xml), "Pages"));
     for (int i = 0; entry; entry = fz_xml_next(entry)) {
         if (ofd_is(entry, "Page") && i++ == number) break;
     }
+    return entry;
+}
+
+// The package's pages are its documents' pages in order, in one chapter.
+static int ofd_first_page(ofd_package* pkg, int doc_index) {
+    int n = 0;
+    for (int i = 0; i < doc_index; ++i) n += pkg->docs[i].count;
+    return n;
+}
+
+static fz_page* ofd_load_page(fz_context* ctx, fz_document* doc_, int chapter, int number) {
+    ofd_package* pkg = (ofd_package*)doc_;
+    int i = 0;
+    while (i < pkg->ndocs && number >= pkg->docs[i].count) number -= pkg->docs[i++].count;
+    if (chapter != 0 || number < 0 || i == pkg->ndocs) fz_throw(ctx, FZ_ERROR_ARGUMENT, "OFD page out of range");
+    ofd_document* doc = &pkg->docs[i];
+    doc->seal_depth = pkg->seal_depth;
+    fz_xml* entry = ofd_page_entry(doc, number);
     ofd_page* page = fz_new_derived_page(ctx, ofd_page, doc_);
     page->super.drop_page = ofd_drop_page;
     page->super.bound_page = ofd_bound_page;
@@ -1338,17 +1366,129 @@ static fz_page* ofd_load_page(fz_context* ctx, fz_document* doc_, int chapter, i
     return &page->super;
 }
 
-static int ofd_count_pages(fz_context* ctx, fz_document* doc, int chapter) {
-    return chapter == 0 ? ((ofd_document*)doc)->count : 0;
+static int ofd_count_pages(fz_context* ctx, fz_document* doc_, int chapter) {
+    ofd_package* pkg = (ofd_package*)doc_;
+    return chapter == 0 ? ofd_first_page(pkg, pkg->ndocs) : 0;
 }
 
-static int ofd_metadata(fz_context* ctx, fz_document* doc, const char* key, char* buf, size_t size) {
-    if (strcmp(key, FZ_META_FORMAT)) return -1;
-    return 1 + (int)fz_strlcpy(buf, "OFD", size);
+static int ofd_metadata(fz_context* ctx, fz_document* doc_, const char* key, char* buf, size_t size) {
+    static const struct {
+        const char* key;
+        const char* tag;
+    } info_keys[] = {
+        {FZ_META_INFO_TITLE, "Title"},
+        {FZ_META_INFO_AUTHOR, "Author"},
+        {FZ_META_INFO_SUBJECT, "Subject"},
+        {FZ_META_INFO_KEYWORDS, "Keywords"},
+        {FZ_META_INFO_CREATOR, "Creator"},
+        {FZ_META_INFO_CREATIONDATE, "CreationDate"},
+        {FZ_META_INFO_MODIFICATIONDATE, "ModDate"},
+    };
+    ofd_package* pkg = (ofd_package*)doc_;
+    if (!strcmp(key, FZ_META_FORMAT)) return 1 + (int)fz_strlcpy(buf, "OFD", size);
+    for (size_t i = 0; i < nelem(info_keys); ++i) {
+        if (strcmp(key, info_keys[i].key)) continue;
+        fz_xml* node = ofd_child(pkg->docs[0].info, info_keys[i].tag);
+        if (!node) return -1;
+        return 1 + (int)fz_strlcpy(buf, ofd_text(node), size);
+    }
+    return -1;
 }
 
-static void ofd_drop_document(fz_context* ctx, fz_document* doc_) {
-    ofd_document* doc = (ofd_document*)doc_;
+// 0-based index of the document's page with this ID, -1 if none
+static int ofd_page_by_id(ofd_document* doc, const char* id) {
+    int i = 0;
+    for (fz_xml* entry = fz_xml_down(ofd_child(fz_xml_root(doc->xml), "Pages")); entry; entry = fz_xml_next(entry)) {
+        if (!ofd_is(entry, "Page")) continue;
+        if (fz_xml_att_eq(entry, "ID", id)) return i;
+        ++i;
+    }
+    return -1;
+}
+
+// page: 0-based, across all documents
+static fz_outline* ofd_new_outline(fz_context* ctx, const char* title, int page) {
+    fz_outline* item = fz_new_outline(ctx);
+    fz_try(ctx) {
+        item->title = fz_strdup(ctx, title);
+        item->page = fz_make_location(0, page);
+        char uri[32];
+        fz_snprintf(uri, sizeof(uri), "#page=%d", page + 1);
+        item->uri = fz_strdup(ctx, uri);
+    }
+    fz_catch(ctx) {
+        fz_drop_outline(ctx, item);
+        fz_rethrow(ctx);
+    }
+    return item;
+}
+
+// <OutlineElem Title=".."><Actions><Action><Goto><Dest PageID=".."/> with nested OutlineElems.
+static fz_outline* ofd_outline_elems(fz_context* ctx, ofd_package* pkg, int doc_index, fz_xml* node, int depth) {
+    if (depth > OFD_MAX_DEPTH) return NULL;
+    ofd_document* doc = &pkg->docs[doc_index];
+    int first = ofd_first_page(pkg, doc_index);
+    fz_outline* head = NULL;
+    fz_outline** tail = &head;
+    fz_try(ctx) {
+        for (; node; node = fz_xml_next(node)) {
+            if (!ofd_is(node, "OutlineElem")) continue;
+            fz_xml* dest = ofd_child(ofd_child(ofd_child(ofd_child(node, "Actions"), "Action"), "Goto"), "Dest");
+            int page = ofd_page_by_id(doc, fz_xml_att(dest, "PageID"));
+            const char* title = fz_xml_att(node, "Title");
+            *tail = ofd_new_outline(ctx, title ? title : "", first + (page < 0 ? 0 : page));
+            (*tail)->is_open = !fz_xml_att_eq(node, "Expanded", "false");
+            (*tail)->down = ofd_outline_elems(ctx, pkg, doc_index, fz_xml_down(node), depth + 1);
+            tail = &(*tail)->next;
+        }
+    }
+    fz_catch(ctx) {
+        fz_drop_outline(ctx, head);
+        fz_rethrow(ctx);
+    }
+    return head;
+}
+
+// The documents' own outlines; with several documents, an entry per document over its outline.
+static fz_outline* ofd_load_outline(fz_context* ctx, fz_document* doc_) {
+    ofd_package* pkg = (ofd_package*)doc_;
+    if (pkg->ndocs == 1) {
+        fz_xml* outlines = ofd_child(fz_xml_root(pkg->docs[0].xml), "Outlines");
+        return ofd_outline_elems(ctx, pkg, 0, fz_xml_down(outlines), 0);
+    }
+    fz_outline* head = NULL;
+    fz_outline** tail = &head;
+    fz_try(ctx) {
+        for (int i = 0; i < pkg->ndocs; ++i) {
+            char title[64];
+            const char* name = ofd_text(ofd_child(pkg->docs[i].info, "Title"));
+            if (!*name) {
+                fz_snprintf(title, sizeof(title), "Document %d", i + 1);
+                name = title;
+            }
+            *tail = ofd_new_outline(ctx, name, ofd_first_page(pkg, i));
+            (*tail)->is_open = 1;
+            fz_xml* outlines = ofd_child(fz_xml_root(pkg->docs[i].xml), "Outlines");
+            (*tail)->down = ofd_outline_elems(ctx, pkg, i, fz_xml_down(outlines), 0);
+            tail = &(*tail)->next;
+        }
+    }
+    fz_catch(ctx) {
+        fz_drop_outline(ctx, head);
+        fz_rethrow(ctx);
+    }
+    return head;
+}
+
+// Only "#page=N" (1-based, across all documents), as written by ofd_new_outline().
+static fz_link_dest ofd_resolve_link(fz_context* ctx, fz_document* doc, const char* uri) {
+    if (!uri || strncmp(uri, "#page=", 6)) return fz_make_link_dest_none();
+    int number = atoi(uri + 6) - 1;
+    if (number < 0 || number >= fz_count_pages(ctx, doc)) return fz_make_link_dest_none();
+    return fz_make_link_dest_xyz(0, number, 0, 0, 0);
+}
+
+static void ofd_drop_body(fz_context* ctx, ofd_document* doc) {
     while (doc->fonts) {
         ofd_font_entry* entry = doc->fonts;
         doc->fonts = entry->next;
@@ -1363,44 +1503,283 @@ static void ofd_drop_document(fz_context* ctx, fz_document* doc_) {
     }
     fz_drop_hash_table(ctx, doc->ids);
     fz_drop_xml(ctx, doc->xml);
-    fz_drop_archive(ctx, doc->archive);
+}
+
+static void ofd_drop_document(fz_context* ctx, fz_document* doc_) {
+    ofd_package* pkg = (ofd_package*)doc_;
+    for (int i = 0; i < pkg->ndocs; ++i) ofd_drop_body(ctx, &pkg->docs[i]);
+    fz_free(ctx, pkg->docs);
+    fz_drop_xml(ctx, pkg->index);
+    fz_drop_archive(ctx, pkg->archive);
+}
+
+static void ofd_open_body(fz_context* ctx, ofd_document* doc, fz_xml* body) {
+    doc->ids = fz_new_hash_table(ctx, OFD_ID_TABLE_SIZE, sizeof(unsigned int), -1, ofd_drop_id_entry);
+    doc->info = ofd_child(body, "DocInfo");
+    fz_xml* signatures = ofd_child(body, "Signatures");
+    if (signatures) ofd_resolve(ctx, doc->signatures, "OFD.xml", ofd_text(signatures));
+    ofd_resolve(ctx, doc->path, "OFD.xml", ofd_text(ofd_child(body, "DocRoot")));
+    doc->xml = ofd_read_xml(ctx, doc, doc->path);
+    doc->common = ofd_child(fz_xml_root(doc->xml), "CommonData");
+    ofd_load_resources(ctx, doc, doc->common, doc->path, "PublicRes");
+    ofd_load_resources(ctx, doc, doc->common, doc->path, "DocumentRes");
+    for (fz_xml* node = fz_xml_down(ofd_child(fz_xml_root(doc->xml), "Pages")); node; node = fz_xml_next(node)) {
+        if (ofd_is(node, "Page")) ++doc->count;
+    }
+    if (!doc->count) fz_throw(ctx, FZ_ERROR_FORMAT, "OFD document contains no pages");
 }
 
 /* Open OFD directly so rendering, text extraction and printing share the same display list. */
 static fz_document* ofd_open_document(fz_context* ctx, const fz_document_handler* handler, fz_stream* stream,
                                       fz_stream* accel, fz_archive* dir, void* state) {
-    ofd_document* doc = fz_new_derived_document(ctx, ofd_document);
-    doc->super.drop_document = ofd_drop_document;
-    doc->super.count_pages = ofd_count_pages;
-    doc->super.load_page = ofd_load_page;
-    doc->super.lookup_metadata = ofd_metadata;
+    ofd_package* pkg = fz_new_derived_document(ctx, ofd_package);
+    pkg->super.drop_document = ofd_drop_document;
+    pkg->super.count_pages = ofd_count_pages;
+    pkg->super.load_page = ofd_load_page;
+    pkg->super.lookup_metadata = ofd_metadata;
+    pkg->super.load_outline = ofd_load_outline;
+    pkg->super.resolve_link_dest = ofd_resolve_link;
+    fz_try(ctx) {
+        pkg->archive = fz_open_archive_with_stream(ctx, stream);
+        pkg->index = fz_parse_xml_archive_entry(ctx, pkg->archive, "OFD.xml", 0);
+        fz_xml* root = fz_xml_root(pkg->index);
+        int n = 0;
+        for (fz_xml* body = fz_xml_down(root); body; body = fz_xml_next(body)) n += ofd_is(body, "DocBody");
+        if (!n) fz_throw(ctx, FZ_ERROR_FORMAT, "OFD contains no documents");
+        pkg->docs = fz_calloc(ctx, n, sizeof(ofd_document));
+        // a document that can't be opened is skipped, unless it is the only one
+        for (fz_xml* body = fz_xml_down(root); body; body = fz_xml_next(body)) {
+            if (!ofd_is(body, "DocBody")) continue;
+            ofd_document* doc = &pkg->docs[pkg->ndocs];
+            doc->archive = pkg->archive;
+            fz_try(ctx) {
+                ofd_open_body(ctx, doc, body);
+                ++pkg->ndocs;
+            }
+            fz_catch(ctx) {
+                ofd_drop_body(ctx, doc);
+                memset(doc, 0, sizeof(*doc));
+                if (n == 1) fz_rethrow(ctx);
+                ofd_skip(ctx, "document");
+            }
+        }
+        if (!pkg->ndocs) fz_throw(ctx, FZ_ERROR_FORMAT, "OFD contains no readable documents");
+    }
+    fz_catch(ctx) {
+        fz_drop_document(ctx, &pkg->super);
+        fz_rethrow(ctx);
+    }
+    return &pkg->super;
+}
+
+//--- signature verification
+
+static int ofd_is_package(fz_document* doc) {
+    return doc && doc->load_page == ofd_load_page;
+}
+
+int ofd_count_signatures(fz_context* ctx, fz_document* doc_) {
+    if (!ofd_is_package(doc_)) return -1;
+    ofd_package* pkg = (ofd_package*)doc_;
+    int n = 0;
+    for (int i = 0; i < pkg->ndocs; ++i) {
+        ofd_document* doc = &pkg->docs[i];
+        if (!doc->signatures[0]) continue;
+        fz_xml* index = NULL;
+        fz_var(index);
+        fz_try(ctx) {
+            index = ofd_read_xml(ctx, doc, doc->signatures);
+            for (fz_xml* node = fz_xml_down(fz_xml_root(index)); node; node = fz_xml_next(node)) {
+                n += ofd_is(node, "Signature");
+            }
+        }
+        fz_always(ctx) {
+            fz_drop_xml(ctx, index);
+        }
+        fz_catch(ctx) {
+            ofd_skip(ctx, "signatures");
+        }
+    }
+    return n;
+}
+
+typedef enum {
+    OFD_DIGEST_UNSUPPORTED,
+    OFD_DIGEST_SM3,
+    OFD_DIGEST_SM3_WITH_KEY,
+    OFD_DIGEST_SHA256
+} ofd_digest;
+
+// CheckMethod: "SM3", the SM3 OID (1.2.156.10197.1.401[.1]), SM3 with the signer's key (.401.2) or SHA-256
+static ofd_digest ofd_digest_method(const char* method) {
+    if (!method || !*method) return OFD_DIGEST_SM3;
+    if (!fz_strcasecmp(method, "SM3") || !strcmp(method, "1.2.156.10197.1.401") ||
+        !strcmp(method, "1.2.156.10197.1.401.1") || fz_strstrcase(method, "#sm3"))
+        return OFD_DIGEST_SM3;
+    if (!strcmp(method, "1.2.156.10197.1.401.2")) return OFD_DIGEST_SM3_WITH_KEY;
+    if (!fz_strcasecmp(method, "SHA256") || !fz_strcasecmp(method, "SHA-256") ||
+        !strcmp(method, "2.16.840.1.101.3.4.2.1"))
+        return OFD_DIGEST_SHA256;
+    return OFD_DIGEST_UNSUPPORTED;
+}
+
+// 1 if the member's digest equals the base64 check value
+static int ofd_reference_matches(fz_context* ctx, ofd_document* doc, const char* path, ofd_digest method,
+                                 const unsigned char* key, const char* check_value) {
+    fz_buffer* data = NULL;
+    fz_buffer* expected = NULL;
+    int ok = 0;
+    fz_var(data);
+    fz_var(expected);
+    fz_try(ctx) {
+        if (!fz_has_archive_entry(ctx, doc->archive, path)) break;
+        data = fz_read_archive_entry(ctx, doc->archive, path);
+        expected = fz_new_buffer_from_base64(ctx, check_value, 0);
+        unsigned char* bytes;
+        size_t len = fz_buffer_storage(ctx, data, &bytes);
+        unsigned char* want;
+        size_t want_len = fz_buffer_storage(ctx, expected, &want);
+        unsigned char digest[32];
+        if (method == OFD_DIGEST_SM3) {
+            ofd_sm3(bytes, len, digest);
+        } else if (method == OFD_DIGEST_SM3_WITH_KEY) {
+            ofd_sm3_with_key(key, bytes, len, digest);
+        } else {
+            fz_sha256 sha;
+            fz_sha256_init(&sha);
+            fz_sha256_update(&sha, bytes, len);
+            fz_sha256_final(&sha, digest);
+        }
+        ok = want_len == sizeof(digest) && !memcmp(want, digest, sizeof(digest));
+    }
+    fz_always(ctx) {
+        fz_drop_buffer(ctx, expected);
+        fz_drop_buffer(ctx, data);
+    }
+    fz_catch(ctx) {
+        fz_rethrow(ctx);
+    }
+    return ok;
+}
+
+// The files a signature protects must still have the digests it recorded.
+static void ofd_check_references(fz_context* ctx, ofd_document* doc, fz_xml* refs, const char* sig_path,
+                                 ofd_signature_info* info) {
+    ofd_digest method = ofd_digest_method(fz_xml_att(refs, "CheckMethod"));
+    // the keyed digest needs the key from the signature's certificate
+    if (method == OFD_DIGEST_SM3_WITH_KEY && !info->check.has_key) method = OFD_DIGEST_UNSUPPORTED;
+    for (fz_xml* ref = fz_xml_down(refs); ref; ref = fz_xml_next(ref)) {
+        if (!ofd_is(ref, "Reference")) continue;
+        ++info->files_total;
+        if (method == OFD_DIGEST_UNSUPPORTED) continue;
+        char path[OFD_PATH_SIZE];
+        const char* file_ref = fz_xml_att(ref, "FileRef");
+        ofd_resolve(ctx, path, sig_path, file_ref);
+        if (ofd_reference_matches(ctx, doc, path, method, info->check.key, ofd_text(ofd_child(ref, "CheckValue")))) {
+            ++info->files_ok;
+        } else if (!info->bad_file[0]) {
+            fz_strlcpy(info->bad_file, path, sizeof(info->bad_file));
+        }
+    }
+}
+
+// Where the signature's first stamp is: page across all documents, rect in page points.
+static void ofd_stamp_location(fz_context* ctx, ofd_package* pkg, int chapter, fz_xml* signed_info,
+                               ofd_signature_info* info) {
+    ofd_document* doc = &pkg->docs[chapter];
+    fz_xml* stamp = ofd_child(signed_info, "StampAnnot");
+    info->page = -1;
+    if (!stamp) return;
+    int page = ofd_page_by_id(doc, fz_xml_att(stamp, "PageRef"));
+    if (page < 0) return;
+    page += ofd_first_page(pkg, chapter);
+    info->page = page;
+    fz_rect box = ofd_box(ofd_text(ofd_child(ofd_child(doc->common, "PageArea"), "PhysicalBox")));
+    fz_matrix ctm = fz_concat(fz_translate(-box.x0, -box.y0), fz_scale(ofd_points_per_mm, ofd_points_per_mm));
+    info->rect = fz_transform_rect(ofd_box(fz_xml_att(stamp, "Boundary")), ctm);
+}
+
+static void ofd_check_signature(fz_context* ctx, ofd_package* pkg, int chapter, fz_xml* entry, const char* index_path,
+                                ofd_signature_info* info) {
+    ofd_document* doc = &pkg->docs[chapter];
+    fz_buffer* tbs = NULL;
+    fz_buffer* value = NULL;
+    fz_xml* xml = NULL;
+    fz_var(tbs);
+    fz_var(value);
+    fz_var(xml);
+    fz_try(ctx) {
+        char path[OFD_PATH_SIZE];
+        ofd_resolve(ctx, path, index_path, fz_xml_att(entry, "BaseLoc"));
+        tbs = fz_read_archive_entry(ctx, doc->archive, path);
+        xml = fz_parse_xml(ctx, tbs, 0);
+        fz_xml* root = fz_xml_root(xml);
+        fz_xml* signed_info = ofd_child(root, "SignedInfo");
+        ofd_stamp_location(ctx, pkg, chapter, signed_info, info);
+
+        // first: the references' digests may need the signer's key
+        char value_path[OFD_PATH_SIZE];
+        ofd_resolve(ctx, value_path, path, ofd_text(ofd_child(root, "SignedValue")));
+        value = fz_read_archive_entry(ctx, doc->archive, value_path);
+        unsigned char* bytes;
+        size_t len = fz_buffer_storage(ctx, tbs, &bytes);
+        int is_seal = !fz_xml_att_eq(entry, "Type", "Sign");
+        ofd_verify_signed_value(ctx, value, is_seal, bytes, len, &info->check);
+
+        ofd_check_references(ctx, doc, ofd_child(signed_info, "References"), path, info);
+    }
+    fz_always(ctx) {
+        fz_drop_xml(ctx, xml);
+        fz_drop_buffer(ctx, value);
+        fz_drop_buffer(ctx, tbs);
+    }
+    fz_catch(ctx) {
+        fz_rethrow_if(ctx, FZ_ERROR_SYSTEM);
+        fz_report_error(ctx);
+        if (!info->check.problem) info->check.problem = "the signature couldn't be read";
+    }
+}
+
+void ofd_drop_signature_infos(fz_context* ctx, ofd_signature_info* info) {
+    while (info) {
+        ofd_signature_info* next = info->next;
+        fz_drop_buffer(ctx, info->check.cert);
+        fz_free(ctx, info);
+        info = next;
+    }
+}
+
+// Every signature of every document, in order; NULL when there are none.
+ofd_signature_info* ofd_check_signatures(fz_context* ctx, fz_document* doc_) {
+    if (!ofd_is_package(doc_)) return NULL;
+    ofd_package* pkg = (ofd_package*)doc_;
+    ofd_signature_info* head = NULL;
+    ofd_signature_info** tail = &head;
     fz_xml* index = NULL;
     fz_var(index);
     fz_try(ctx) {
-        doc->archive = fz_open_archive_with_stream(ctx, stream);
-        doc->ids = fz_new_hash_table(ctx, OFD_ID_TABLE_SIZE, sizeof(unsigned int), -1, ofd_drop_id_entry);
-        index = ofd_read_xml(ctx, doc, "OFD.xml");
-        fz_xml* body = ofd_child(fz_xml_root(index), "DocBody");
-        fz_xml* signatures = ofd_child(body, "Signatures");
-        if (signatures) ofd_resolve(ctx, doc->signatures, "OFD.xml", ofd_text(signatures));
-        ofd_resolve(ctx, doc->path, "OFD.xml", ofd_text(ofd_child(body, "DocRoot")));
-        doc->xml = ofd_read_xml(ctx, doc, doc->path);
-        doc->common = ofd_child(fz_xml_root(doc->xml), "CommonData");
-        ofd_load_resources(ctx, doc, doc->common, doc->path, "PublicRes");
-        ofd_load_resources(ctx, doc, doc->common, doc->path, "DocumentRes");
-        for (fz_xml* node = fz_xml_down(ofd_child(fz_xml_root(doc->xml), "Pages")); node; node = fz_xml_next(node)) {
-            if (ofd_is(node, "Page")) ++doc->count;
+        for (int i = 0; i < pkg->ndocs; ++i) {
+            ofd_document* doc = &pkg->docs[i];
+            if (!doc->signatures[0] || !fz_has_archive_entry(ctx, doc->archive, doc->signatures)) continue;
+            index = ofd_read_xml(ctx, doc, doc->signatures);
+            for (fz_xml* node = fz_xml_down(fz_xml_root(index)); node; node = fz_xml_next(node)) {
+                if (!ofd_is(node, "Signature")) continue;
+                *tail = fz_malloc_struct(ctx, ofd_signature_info);
+                ofd_check_signature(ctx, pkg, i, node, doc->signatures, *tail);
+                tail = &(*tail)->next;
+            }
+            fz_drop_xml(ctx, index);
+            index = NULL;
         }
-        if (!doc->count) fz_throw(ctx, FZ_ERROR_FORMAT, "OFD contains no pages");
     }
     fz_always(ctx) {
         fz_drop_xml(ctx, index);
     }
     fz_catch(ctx) {
-        fz_drop_document(ctx, &doc->super);
+        ofd_drop_signature_infos(ctx, head);
         fz_rethrow(ctx);
     }
-    return &doc->super;
+    return head;
 }
 
 static int ofd_recognize(fz_context* ctx, const fz_document_handler* handler, fz_stream* stream, fz_archive* dir,

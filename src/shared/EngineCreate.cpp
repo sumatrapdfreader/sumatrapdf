@@ -516,8 +516,11 @@ static EngineBase* CreateEngineForKindFromData(FileType kind, Str data, Str name
     if (kind == FileType::Unknown || len(data) == 0) {
         return nullptr;
     }
-    if (kind == FileType::PDF || kind == FileType::Xps || kind == FileType::Ofd || kind == FileType::Markdown ||
-        IsOfficeFileType(kind)) {
+    if (kind == FileType::Ofd) {
+        // a .zip name would give MuPDF's comic handler priority
+        return CreateEngineMupdfFromData(data, StrL("file.ofd"), pwdUI);
+    }
+    if (kind == FileType::PDF || kind == FileType::Xps || kind == FileType::Markdown || IsOfficeFileType(kind)) {
         return CreateEngineMupdfFromData(data, nameHint, pwdUI);
     }
     if (IsEngineDjVuSupportedFileType(kind)) {
@@ -560,6 +563,11 @@ EngineBase* CreateEngineFromData(Str data, Str nameHint, PasswordUI* pwdUI) {
         return nullptr;
     }
     FileType kind = GuessFileTypeFromName(nameHint, true);
+    // OFD images are resources, not comic-book pages
+    bool maybeZip = kind == FileType::Ofd || IsEngineCbxSupportedFileType(kind) || kind == FileType::Unknown;
+    if (maybeZip && GuessFileTypeFromData(data) == FileType::Zip && GuessFileTypeFromZipData(data) == FileType::Ofd) {
+        kind = FileType::Ofd;
+    }
     EngineBase* engine = CreateEngineForKindFromData(kind, data, nameHint, pwdUI);
     if (!engine) {
         FileType contentKind = GuessFileTypeFromData(data);

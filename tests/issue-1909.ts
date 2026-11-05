@@ -1,5 +1,5 @@
-// Native OFD documents (#1909): templates, inherited paint, text, paths, seals and the
-// features of the OFDRW samples, all from generated fixtures.
+// Native OFD documents (#1909): templates, inherited paint, text, paths, seals, the features of
+// the OFDRW samples, packages with several documents, attachments and signature checks.
 // Run: bun tests/issue-1909.ts [--no-build]
 
 import { copyFileSync, readFileSync, writeFileSync } from "node:fs";
@@ -8,6 +8,7 @@ import { deflateSync } from "node:zlib";
 import { ControlCommand, withControlledSumatra } from "./control.ts";
 import { IS_WIN } from "./host.ts";
 import {
+  assemblePdf,
   EXE,
   extractPageText,
   loadPng,
@@ -15,10 +16,14 @@ import {
   makeZip,
   pngChunk,
   pngPixel,
+  pollUntil,
+  readZip,
   ROOT,
   runStandalone,
+  SLOW_BUILD_FACTOR,
   tmpPath,
 } from "./util.ts";
+import { killAndWait, launchControlled } from "./win-automation.ts";
 
 const ns = 'xmlns="http://www.ofdspec.org/2016"';
 
@@ -611,11 +616,183 @@ async function testFeatures(): Promise<void> {
   }
 }
 
+// --- a package with several documents opens all of them, one ToC entry per document
+
+function packageFixture(): Buffer {
+  const page = (label: string) =>
+    `<Page ${ns}><Content><Layer><PathObject ID="2" Boundary="0 0 20 20" Fill="true" Stroke="false">` +
+    `<FillColor Value="255 0 0"/><AbbreviatedData>M 0 0 L 20 0 L 20 20 L 0 20 C</AbbreviatedData></PathObject>` +
+    `</Layer></Content></Page><!-- ${label} -->`;
+  const doc = (pages: number, outline: string) =>
+    `<Document ${ns}><CommonData><PageArea><PhysicalBox>0 0 50 40</PhysicalBox></PageArea></CommonData><Pages>` +
+    Array.from({ length: pages }, (_, i) => `<Page ID="${10 + i}" BaseLoc="p${i}.xml"/>`).join("") +
+    `</Pages>${outline}</Document>`;
+  const body = (dir: string, title: string) =>
+    `<DocBody><DocInfo><Title>${title}</Title></DocInfo><DocRoot>${dir}/Document.xml</DocRoot></DocBody>`;
+  const details =
+    `<Outlines><OutlineElem Title="Details"><Actions><Action Event="CLICK"><Goto><Dest Type="XYZ" PageID="11"/>` +
+    `</Goto></Action></Actions></OutlineElem></Outlines>`;
+  const files: [string, string][] = [
+    ["OFD.xml", `<OFD ${ns}>${body("Doc_0", "Invoice A")}${body("Doc_1", "Invoice B")}</OFD>`],
+    ["Doc_0/Document.xml", doc(1, "")],
+    ["Doc_0/p0.xml", page("A1")],
+    ["Doc_1/Document.xml", doc(2, details)],
+    ["Doc_1/p0.xml", page("B1")],
+    ["Doc_1/p1.xml", page("B2")],
+  ];
+  return makeZip(files.map(([name, xml]) => ({ name, data: Buffer.from(xml) })));
+}
+
+async function testPackage(): Promise<void> {
+  const file = tmpPath("ofd-package.ofd");
+  writeFileSync(file, packageFixture());
+  await withControlledSumatra(EXE, async (client) => {
+    const render = await client.request(ControlCommand.TestRenderPageColors, [file, 3, 100]);
+    if (render[0] !== 0 || !String(render[1]).includes("pages=3")) {
+      throw new Error(`OFD package: expected 3 pages from 2 documents: ${render[1]}`);
+    }
+    const toc = String((await client.request(ControlCommand.TestGetToc, [file]))[1] ?? "").replace(/\r/g, "");
+    const want = "Invoice A|page=1\nInvoice B|page=2\n  Details|page=3\n";
+    if (toc !== want) throw new Error(`OFD package ToC: expected ${JSON.stringify(want)}, got ${JSON.stringify(toc)}`);
+  });
+}
+
+// --- an OFD attachment named .zip opens from memory as OFD, not as a comic book of its images
+
+async function testMemory(): Promise<void> {
+  const ofd = makeOfd().toString("latin1");
+  const pdf = assemblePdf([
+    "<< /Type /Catalog /Pages 2 0 R >>",
+    "<< /Type /Pages /Count 1 /Kids [3 0 R] >>",
+    "<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Annots [4 0 R] >>",
+    "<< /Type /Annot /Subtype /FileAttachment /P 3 0 R /Rect [200 400 400 600] /FS 5 0 R /Name /PushPin >>",
+    "<< /Type /Filespec /F (invoice.zip) /UF (invoice.zip) /EF << /F 6 0 R >> >>",
+    `<< /Type /EmbeddedFile /Length ${ofd.length} /Params << /Size ${ofd.length} >> >>\nstream\n${ofd}\nendstream`,
+  ]);
+  const file = tmpPath("ofd-attachment.pdf");
+  writeFileSync(file, pdf, "latin1");
+  const { proc, client } = await launchControlled([file]);
+  try {
+    await client.waitForRenderIdle();
+    await client.setNotificationsEnabled(false);
+    await pollUntil(
+      async () => String((await client.request(ControlCommand.TestMarkupAnnots, ["open-embedded", 0, 0]))[1] ?? ""),
+      (r) => /OK/.test(r),
+      { timeoutMs: 8000 * SLOW_BUILD_FACTOR, error: (r) => `OFD attachment: open-embedded failed: ${r}` },
+    );
+    // makeOfd() has 2 pages and 1 image: a comic book of it has 1 page
+    const info = await pollUntil(
+      async () => String((await client.request(ControlCommand.TestPageInfo, []))[1] ?? ""),
+      (r) => /pages=2 /.test(r),
+      { timeoutMs: 8000 * SLOW_BUILD_FACTOR, error: (r) => `OFD attachment: expected 2 OFD pages: ${r}` },
+    );
+    console.log(`OFD attachment: ${info.split(" ").slice(0, 2).join(" ")}`);
+  } finally {
+    client.close();
+    await killAndWait(proc);
+  }
+}
+
+// --- signatures: SES and GB/T 35275 samples from ofdrw (tests/issue-1909-data), as signed and tampered with
+
+const dataDir = join(ROOT, "tests/issue-1909-data");
+
+// replaces one member of an OFD package
+function tamper(src: string, member: string, change: (data: Uint8Array) => Uint8Array): Buffer {
+  const entries = readZip(readFileSync(join(dataDir, src)));
+  const entry = entries.find((e) => e.name === member);
+  if (!entry) throw new Error(`OFD signatures: ${src} has no ${member}`);
+  entry.data = change(entry.data);
+  return makeZip(entries);
+}
+
+const flipLastByte = (d: Uint8Array) => {
+  const copy = new Uint8Array(d);
+  copy[copy.length - 1] ^= 1;
+  return copy;
+};
+const appendSpace = (d: Uint8Array) => new Uint8Array(Buffer.concat([d, Buffer.from(" ")]));
+
+type SigCase = { name: string; file: string; bar: RegExp; details: RegExp[] };
+
+async function signatureState(file: string): Promise<string> {
+  const { proc, client } = await launchControlled([file]);
+  try {
+    await client.waitForRenderIdle();
+    const state = await pollUntil(
+      async () => String((await client.request(ControlCommand.TestSignatureStatus, [""]))[1] ?? ""),
+      (r) => !/rows=0/.test(r),
+      { timeoutMs: 8000 * SLOW_BUILD_FACTOR, error: (r) => `OFD signatures: no signature rows: ${r}` },
+    );
+    const dialog = String((await client.request(ControlCommand.TestSignatureStatus, ["open 0"]))[1] ?? "");
+    return `${state.split("\n")[0]}\n${dialog.replace(/\r/g, "")}`;
+  } finally {
+    client.close();
+    await killAndWait(proc);
+  }
+}
+
+async function testSignatures(): Promise<void> {
+  const write = (name: string, data: Buffer) => {
+    const path = tmpPath(`ofd-sig-${name}.ofd`);
+    writeFileSync(path, data);
+    return path;
+  };
+  const intact = /The document wasn't changed after it was signed \(5 files checked\)/;
+  const unknown = /bar=1 At least one signature has problems/;
+  const invalid = /bar=1 At least one signature is invalid/;
+  const cases: SigCase[] = [
+    {
+      name: "ses-v4",
+      file: join(dataDir, "SESV4SignDoc.ofd"),
+      bar: unknown,
+      details: [intact, /Seal: OFD R&W 测试用印章/, /certificate wasn't valid at the signature time/],
+    },
+    { name: "ses-v1", file: join(dataDir, "SESV1SignDoc.ofd"), bar: unknown, details: [intact] },
+    {
+      name: "gbt35275",
+      file: join(dataDir, "GB35275PKCS9DigitalSign.ofd"),
+      bar: unknown,
+      details: [intact, /Format: digital signature \(GB\/T 35275\)/],
+    },
+    { name: "no-cert", file: join(dataDir, "DigitalSign.ofd"), bar: unknown, details: [/has no certificate/] },
+    {
+      name: "changed-page",
+      file: write("changed-page", tamper("SESV4SignDoc.ofd", "Doc_0/Pages/Page_0/Content.xml", appendSpace)),
+      bar: invalid,
+      details: [/Doc_0\/Pages\/Page_0\/Content.xml was changed or removed after signing/],
+    },
+    {
+      name: "changed-signature-xml",
+      file: write("changed-sigxml", tamper("SESV4SignDoc.ofd", "Doc_0/Signs/Sign_0/Signature.xml", appendSpace)),
+      bar: invalid,
+      details: [/Signature.xml was changed after signing/],
+    },
+    {
+      name: "bad-signature-value",
+      file: write("bad-value", tamper("SESV4SignDoc.ofd", "Doc_0/Signs/Sign_0/SignedValue.dat", flipLastByte)),
+      bar: invalid,
+      details: [/the signature doesn't match the signer's certificate/],
+    },
+  ];
+  const failures: string[] = [];
+  for (const c of cases) {
+    const state = await signatureState(c.file);
+    const missing = [c.bar, ...c.details].filter((re) => !re.test(state));
+    console.log(`OFD signature ${c.name}: ${missing.length ? "FAILED" : "ok"}`);
+    if (missing.length) failures.push(`${c.name}: expected ${missing.join(", ")} in:\n${state}`);
+  }
+  if (failures.length) throw new Error(failures.join("\n\n"));
+}
+
 export async function testit(): Promise<void> {
   await testBasic();
   await testPathFill();
   await testSeals();
   await testFeatures();
+  await testPackage();
+  await testMemory();
+  await testSignatures();
 }
 
 if (import.meta.main) {

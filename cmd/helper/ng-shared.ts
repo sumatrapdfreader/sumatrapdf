@@ -455,6 +455,8 @@ export const sharedFiles = [
   "src/shared/mupdf/ofd.h",
   "src/shared/mupdf/ofd-seal.c",
   "src/shared/mupdf/ofd-seal.h",
+  "src/shared/mupdf/ofd-crypto.c",
+  "src/shared/mupdf/ofd-crypto.h",
   "src/shared/mupdf/pkcs7-windows.c",
   "src/shared/mupdf/pkcs7-windows.h",
   "src/shared/mupdf/zxing-eci.cpp",

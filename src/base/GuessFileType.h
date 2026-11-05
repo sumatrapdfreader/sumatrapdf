@@ -89,6 +89,7 @@ bool FindWebpChunk(Str d, const char fourcc[4], Str& out);
 bool ExifOrientationSwapsDimensions(int orientation);
 FileType GuessFileTypeFromFile(Str path);
 FileType GuessFileTypeFromData(Str d);
+FileType GuessFileTypeFromZipData(Str data);
 FileType GuessFileTypeFromName(Str path, bool notDir = false);
 FileType GuessFileType(Str path, bool sniff);
 TempStr GfxFileExtFromDataTemp(Str);

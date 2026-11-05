@@ -17,7 +17,7 @@ import {
   writeFileSync,
 } from "node:fs";
 import { basename, dirname, join, resolve } from "node:path";
-import { deflateRawSync, deflateSync, inflateSync } from "node:zlib";
+import { deflateRawSync, deflateSync, inflateRawSync, inflateSync } from "node:zlib";
 import { IS_MAC, IS_WIN } from "./host.ts";
 import { ensureModifierKeysUp, enumWindows, getWindowPid, getWindowText, hasInteractiveDesktop } from "./winapi.ts";
 
@@ -562,6 +562,29 @@ export function writeStoredZip(path: string, files: { name: string; data: Buffer
 }
 
 export type ZipEntry = { name: string; data: Uint8Array; store?: boolean };
+
+// Entries of a zip with stored or deflated members, via its central directory.
+export function readZip(zip: Buffer): ZipEntry[] {
+  const eocd = zip.lastIndexOf(Buffer.from([0x50, 0x4b, 0x05, 0x06]));
+  if (eocd < 0) throw new Error("readZip: no end of central directory");
+  const count = zip.readUInt16LE(eocd + 10);
+  let p = zip.readUInt32LE(eocd + 16);
+  const entries: ZipEntry[] = [];
+  for (let i = 0; i < count; i++) {
+    const method = zip.readUInt16LE(p + 10);
+    const size = zip.readUInt32LE(p + 20);
+    const nameLen = zip.readUInt16LE(p + 28);
+    const extraLen = zip.readUInt16LE(p + 30);
+    const commentLen = zip.readUInt16LE(p + 32);
+    const local = zip.readUInt32LE(p + 42);
+    const name = zip.toString("utf8", p + 46, p + 46 + nameLen);
+    const start = local + 30 + zip.readUInt16LE(local + 26) + zip.readUInt16LE(local + 28);
+    const body = zip.subarray(start, start + size);
+    entries.push({ name, data: method === 0 ? new Uint8Array(body) : new Uint8Array(inflateRawSync(body)) });
+    p += 46 + nameLen + extraLen + commentLen;
+  }
+  return entries;
+}
 
 // Zip with deflated entries; `store` keeps one uncompressed (an EPUB mimetype).
 export function makeZip(entries: ZipEntry[]): Buffer {

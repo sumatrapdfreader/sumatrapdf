@@ -192,6 +192,7 @@ constexpr int kPdfCertifyFormsSigningAndAnnots = 3;
 
 void EngineMupdfGetUnsignedSignatureFields(EngineBase*, StrVec& names, Vec<int>& pageNos);
 int EngineMupdfCountSignedSignatures(EngineBase*);
+bool EngineMupdfHasOfdSignatures(EngineBase*);
 bool IsUnsignedSignatureWidget(Annotation*, TempStr* fieldNameOut);
 bool EngineMupdfSignDocument(EngineBase*, const PdfSignArgs&, Str* errOut);
 void ListWindowsSigningCertificates(StrVec& thumbprints, StrVec& labels);

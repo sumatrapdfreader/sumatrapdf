@@ -5899,6 +5899,8 @@ static void OnTemporaryFileNotifClosed(NotificationClosedEvent* ev) {
 struct SigStatusJob {
     WindowTab* tab = nullptr;
     EngineBase* engine = nullptr;
+    // only PDF signatures are checked against the EU trusted list
+    bool needsEutl = false;
     PdfSigResult* res = nullptr;
 };
 
@@ -5933,7 +5935,7 @@ static void OnSigStatusDone(SigStatusJob* job) {
 }
 
 static void SigStatusThread(SigStatusJob* job) {
-    if (EutlNeedsUpdate()) {
+    if (job->needsEutl && EutlNeedsUpdate()) {
         EutlUpdate(nullptr);
     }
     job->res = EngineMupdfCheckSignatures(job->engine);
@@ -5947,7 +5949,9 @@ static void MaybeShowSignatureStatus(MainWindow* win, WindowTab* tab) {
         return;
     }
     EngineBase* engine = tab->AsFixed()->GetEngine();
-    if (!EngineMupdfIsPdf(engine) || EngineMupdfCountSignedSignatures(engine) == 0) {
+    bool isPdf = EngineMupdfIsPdf(engine);
+    bool hasSignatures = isPdf ? EngineMupdfCountSignedSignatures(engine) > 0 : EngineMupdfHasOfdSignatures(engine);
+    if (!hasSignatures) {
         delete tab->signatures;
         tab->signatures = nullptr;
         return;
@@ -5956,6 +5960,7 @@ static void MaybeShowSignatureStatus(MainWindow* win, WindowTab* tab) {
     auto* job = new SigStatusJob;
     job->tab = tab;
     job->engine = engine;
+    job->needsEutl = isPdf;
     engine->AddRef();
     RunAsync(MkFunc0<SigStatusJob>(SigStatusThread, job), StrL("SigStatus"));
 }

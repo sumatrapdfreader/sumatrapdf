@@ -1356,6 +1356,8 @@ static bool IsFb2Archive(Archive* archive) {
     return nFb2 == 1;
 }
 
+static FileType GuessArchiveType(Archive* archive);
+
 FileType GuessFileTypeFromFile(Str path) {
     ReportIf(len(path) == 0);
     if (path::IsDirectory(path)) {
@@ -1382,6 +1384,24 @@ FileType GuessFileTypeFromFile(Str path) {
     if (!archive) {
         return res;
     }
+    res = GuessArchiveType(archive);
+    delete archive;
+    return res;
+}
+
+// For zip data: the format the zip holds (e.g. Ofd for a .zip with OFD.xml), else Zip
+FileType GuessFileTypeFromZipData(Str data) {
+    Archive* archive = OpenArchiveFromData(data);
+    if (!archive) {
+        return FileType::Zip;
+    }
+    FileType res = GuessArchiveType(archive);
+    delete archive;
+    return res;
+}
+
+static FileType GuessArchiveType(Archive* archive) {
+    FileType res = FileType::Zip;
     if (IsXpsArchive(archive)) {
         res = FileType::Xps;
         FileType office = OfficeArchiveType(archive);
@@ -1398,7 +1418,6 @@ FileType GuessFileTypeFromFile(Str path) {
     if (archive->GetFileId(StrL("OFD.xml")) >= 0) {
         res = FileType::Ofd;
     }
-    delete archive;
     return res;
 }
 

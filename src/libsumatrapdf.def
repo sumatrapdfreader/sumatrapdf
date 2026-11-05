@@ -14,6 +14,9 @@ EXPORTS
 
 	fz_open_document
 	fz_register_ofd_handler
+	ofd_count_signatures
+	ofd_check_signatures
+	ofd_drop_signature_infos
 
 	fz_write_byte
 

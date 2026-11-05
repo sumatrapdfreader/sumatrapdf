@@ -692,6 +692,8 @@ function mupdf_files()
     "src/shared/mupdf/load-jxl.cpp",
     "src/shared/mupdf/load-jxl.h",
     "src/shared/mupdf/ofd.c",
+    "src/shared/mupdf/ofd-crypto.c",
+    "src/shared/mupdf/ofd-crypto.h",
     "src/shared/mupdf/ofd.h",
     "src/shared/mupdf/ofd-seal.c",
     "src/shared/mupdf/ofd-seal.h",

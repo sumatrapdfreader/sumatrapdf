@@ -25,6 +25,7 @@
 
 extern "C" {
 #include <mupdf/pdf.h>
+#include "mupdf/ofd-seal.h"
 #include "mupdf/ofd.h"
 #if OS_WIN
 #include "mupdf/pkcs7-windows.h"
@@ -8996,6 +8997,107 @@ PdfSigResult::~PdfSigResult() {
     DeleteVecMembers(entries);
 }
 
+// One OFD signature as the signature bar, sidebar and dialog show it. Nothing vouches for
+// OFD (SM2) certificates here, so an intact signature's signer stays unverified.
+static PdfSigEntry* OfdSigEntry(const ofd_signature_info* info, int sigNo, PdfSigSummary* sum) {
+    const ofd_sig_check& c = info->check;
+    bool filesChanged = info->bad_file[0] != 0;
+    bool filesUnchecked = !filesChanged && info->files_ok < info->files_total;
+    bool hashChanged = c.data == OFD_CHECK_FAILED;
+    bool badSignature = c.signature == OFD_CHECK_FAILED;
+    bool invalid = filesChanged || hashChanged || badSignature;
+    bool intact = !invalid && !filesUnchecked && c.signature == OFD_CHECK_OK;
+
+    Str status;
+    if (filesChanged || hashChanged) {
+        status = StrL("Invalid: the signed part of the document doesn't match the signature.");
+    } else if (badSignature) {
+        status = StrL("Invalid: the signature doesn't match the signer's certificate.");
+    } else if (!intact) {
+        status = StrL("Validity unknown: the signature couldn't be checked.");
+    } else {
+        status = StrL("Validity unknown: the signer's identity couldn't be verified.");
+    }
+
+    str::Builder validity;
+    if (filesChanged) {
+        validity.Append(fmt("  %s was changed or removed after signing.\n", Str(info->bad_file)));
+    }
+    if (c.problem && !filesChanged) {
+        validity.Append(fmt("  The signature couldn't be checked: %s.\n", Str(c.problem)));
+    } else if (filesUnchecked) {
+        validity.Append(StrL("  The signed files couldn't be checked: their digest algorithm isn't supported.\n"));
+    }
+    // same "YYYY-MM-DD hh:mm:ss UTC" format, so they compare as strings
+    bool timeKnown = c.time[0] && c.not_before[0] && c.not_after[0];
+    if (timeKnown && (strcmp(c.time, c.not_before) < 0 || strcmp(c.time, c.not_after) > 0)) {
+        validity.Append(StrL("  The signer's certificate wasn't valid at the signature time.\n"));
+    }
+    if (intact) {
+        validity.Append(fmt("  The document wasn't changed after it was signed (%d files checked).\n", info->files_ok));
+        validity.Append(StrL("  OFD certificates aren't checked against trusted roots.\n"));
+    }
+
+    str::Builder d;
+    if (info->page >= 0) {
+        d.Append(fmt("Signature %d (page %d):\n", sigNo, info->page + 1));
+    } else {
+        d.Append(fmt("Signature %d:\n", sigNo));
+    }
+    if (c.signer[0]) {
+        d.Append(fmt("  Signed by: %s\n", Str(c.signer)));
+    }
+    if (c.seal_name[0]) {
+        d.Append(fmt("  Seal: %s\n", Str(c.seal_name)));
+    }
+    if (c.time[0]) {
+        d.Append(fmt("  Signature time: %s\n", Str(c.time)));
+    }
+    d.Append(fmt("  Status: %s\n", status));
+    d.Append(ToStr(validity));
+    if (c.format) {
+        d.Append(fmt("  Format: %s\n", Str(c.format)));
+    }
+    if (c.issuer[0]) {
+        d.Append(fmt("  Certificate issued by: %s\n", Str(c.issuer)));
+    }
+    if (c.not_before[0] && c.not_after[0]) {
+        d.Append(fmt("  Certificate valid from %s to %s\n", Str(c.not_before), Str(c.not_after)));
+    }
+
+    auto* entry = new PdfSigEntry();
+    entry->verdict = invalid ? SigVerdict::Invalid : SigVerdict::Unknown;
+    entry->pageNo = info->page + 1;
+    entry->rect = RectF(info->rect.x0, info->rect.y0, info->rect.x1 - info->rect.x0, info->rect.y1 - info->rect.y0);
+    entry->signer = str::Dup(Str(c.signer[0] ? c.signer : c.seal_name));
+    entry->status = str::Dup(status);
+    entry->validity = str::Dup(ToStr(validity));
+    entry->details = str::Dup(ToStr(d));
+    if (c.cert) {
+        entry->certDer = str::Dup(Str((const char*)c.cert->data, (int)c.cert->len));
+    }
+    sum->nSigned++;
+    sum->anyInvalid |= invalid;
+    sum->anyUnknown |= !invalid;
+    return entry;
+}
+
+static void GetOfdSignatures(EngineMupdf* e, PdfSigResult* res) {
+    fz_context* ctx = e->Ctx();
+    ofd_signature_info* infos = nullptr;
+    fz_try(ctx) {
+        infos = ofd_check_signatures(ctx, e->_doc);
+    }
+    fz_catch(ctx) {
+        fz_report_error(ctx);
+    }
+    int sigNo = 0;
+    for (ofd_signature_info* info = infos; info; info = info->next) {
+        VecAppend(res->entries, OfdSigEntry(info, ++sigNo, &res->sum));
+    }
+    ofd_drop_signature_infos(ctx, infos);
+}
+
 // Every signature's verdict, for showing them without opening Properties.
 PdfSigResult* EngineMupdfCheckSignatures(EngineBase* engine) {
     auto* res = new PdfSigResult();
@@ -9003,6 +9105,9 @@ PdfSigResult* EngineMupdfCheckSignatures(EngineBase* engine) {
     if (e && e->pdfdoc) {
         ScopedRecursiveMutex scope(&e->docLock);
         GetSignatures(e, res);
+    } else if (e && e->_doc) {
+        ScopedRecursiveMutex scope(&e->docLock);
+        GetOfdSignatures(e, res);
     }
     return res;
 }
@@ -10776,6 +10881,15 @@ void EngineMupdfRefreshModifiedState(EngineBase* engine) {
 bool EngineMupdfIsPdf(EngineBase* engine) {
     EngineMupdf* epdf = AsEngineMupdf(engine);
     return epdf && epdf->pdfdoc != nullptr;
+}
+
+bool EngineMupdfHasOfdSignatures(EngineBase* engine) {
+    EngineMupdf* e = AsEngineMupdf(engine);
+    if (!e || e->pdfdoc || !e->_doc) {
+        return false;
+    }
+    ScopedRecursiveMutex scope(&e->docLock);
+    return ofd_count_signatures(e->Ctx(), e->_doc) > 0;
 }
 
 bool EngineMupdfSupportsAnnotations(EngineBase* engine) {
