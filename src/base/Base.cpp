@@ -4361,6 +4361,74 @@ Str Utf8SliceByCodepoints(Str s, int startCodepoint, int nCodepoints) {
     return Str(s.s + startByte, endByte - startByte);
 }
 
+static bool IsWordSpace(int c) {
+    if (c <= ' ') {
+        return true;
+    }
+    switch (c) {
+        case 0x85:
+        case 0xa0:
+        case 0x1680:
+        case 0x2028:
+        case 0x2029:
+        case 0x202f:
+        case 0x205f:
+        case 0x3000:
+        case 0xfeff:
+            return true;
+    }
+    return c >= 0x2000 && c <= 0x200b;
+}
+
+// scripts written without spaces between words: kana and CJK ideographs
+static bool IsCjkWordChar(int c) {
+    return (c >= 0x3040 && c <= 0x30ff) || (c >= 0x3400 && c <= 0x4dbf) || (c >= 0x4e00 && c <= 0x9fff) ||
+           (c >= 0xf900 && c <= 0xfaff) || (c >= 0x20000 && c <= 0x2ffff);
+}
+
+// not locale-dependent iswalnum(): outside ASCII, anything but the
+// punctuation and symbol blocks is a letter
+static bool IsWordLetter(int c) {
+    if (c < 0x80) {
+        return isalnum(c);
+    }
+    bool isSymbol = (c <= 0xbf) || (c >= 0x2010 && c <= 0x2bff) || (c >= 0x3000 && c <= 0x303f);
+    return !isSymbol;
+}
+
+// counts like Word: a word is a run of non-space characters with a letter or
+// digit in it ("don't" and "e.g." are 1, "-" is 0), each CJK ideograph or kana
+// is a word. chars doesn't count spaces
+void CountWords(Str s, WordCount& wc) {
+    bool inRun = false;
+    bool runHasLetter = false;
+    auto endRun = [&]() {
+        if (inRun && runHasLetter) {
+            wc.words++;
+        }
+        inRun = false;
+        runHasLetter = false;
+    };
+
+    int i = 0;
+    while (i < len(s)) {
+        int c = Utf8CodepointNext(s, i);
+        if (IsWordSpace(c)) {
+            endRun();
+            continue;
+        }
+        wc.chars++;
+        if (IsCjkWordChar(c)) {
+            endRun();
+            wc.words++;
+            continue;
+        }
+        inRun = true;
+        runHasLetter = runHasLetter || IsWordLetter(c);
+    }
+    endRun();
+}
+
 static TempStr ShortenStringTemp(Str s, int maxLen) {
     int sLen = len(s);
     if (sLen <= maxLen) {

@@ -783,6 +783,10 @@ CommandVisibility GetCommandVisibility(int cmdId, const AppCommandCtx& ctx, Comm
         return CommandVisibility::Hide;
     }
 
+    if (cmdId == CmdCountWords && (!ctx.isFixedPage || ctx.isImageCollection)) {
+        return CommandVisibility::Hide;
+    }
+
     if ((cmdId == CmdAdjustBrightness || cmdId == CmdAdjustContrast) && !ctx.isFixedPage) {
         return CommandVisibility::Hide;
     }

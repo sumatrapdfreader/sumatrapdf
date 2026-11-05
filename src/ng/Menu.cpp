@@ -82,6 +82,10 @@ static MenuDef menuDefSelection[] = {
         CmdZoomToSelection,
     },
     {
+        TrN("Count &Words"),
+        CmdCountWords,
+    },
+    {
         StrL(kMenuSeparator),
         kMenuSeparatorID,
     },

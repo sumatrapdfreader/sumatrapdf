@@ -688,6 +688,8 @@ enum class ControlCmd : u16 {
     TestLayers = 152,
     // [word]: drag-select it from edge to edge, then the selected text
     TestSelectWordEdges = 153,
+    // the word count notification's text
+    TestWordCount = 154,
 };
 
 static_assert((u16)ControlCmd::Quit == (u16)ControlFrameCmd::Quit);
@@ -1395,6 +1397,13 @@ static void ExecuteControlRequest(ControlRequest* req) {
             IntArg(req, 2, selectLast); // optional, 1-based range end
             int exitCode = 0;
             Str res = AnnotEditorLayoutResultTemp(clientDy, selectItem, &exitCode, selectLast);
+            AppendTestResult(req, exitCode, res);
+            break;
+        }
+
+        case ControlCmd::TestWordCount: {
+            int exitCode = 0;
+            Str res = WordCountResultTemp(&exitCode);
             AppendTestResult(req, exitCode, res);
             break;
         }

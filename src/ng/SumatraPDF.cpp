@@ -5843,6 +5843,10 @@ void ExecuteCmd(MainWindow* win, int cmdId) {
             ToggleFacingStepOne(win);
             break;
 
+        case CmdCountWords:
+            CountWordsInDoc(win);
+            break;
+
         case CmdToggleAutoRotateWidePages:
             ToggleAutoRotateWidePages();
             break;

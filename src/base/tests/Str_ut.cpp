@@ -93,6 +93,29 @@ static void StrReplaceTest() {
     }
 }
 
+static void CountWordsOne(Str s, int words, int chars) {
+    WordCount wc;
+    CountWords(s, wc);
+    utassert(wc.words == words);
+    utassert(wc.chars == chars);
+}
+
+static void CountWordsTest() {
+    CountWordsOne({}, 0, 0);
+    CountWordsOne(StrL("  \n\t "), 0, 0);
+    CountWordsOne(StrL("Hello, world!"), 2, 12);
+    CountWordsOne(StrL("don't e.g. - 42"), 3, 12);
+    // "a — b": an em dash alone isn't a word
+    CountWordsOne(StrL("a \xe2\x80\x94 b"), 2, 3);
+    CountWordsOne(StrL("line one\nline\ttwo"), 4, 14);
+    // "zażółć gęślą" (NBSP between): Polish letters, non-breaking space
+    CountWordsOne(StrL("za\xc5\xbc\xc3\xb3\xc5\x82\xc4\x87\xc2\xa0g\xc4\x99\xc5\x9bl\xc4\x85"), 2, 11);
+    // "日本語abc": 3 ideographs + 1 Latin word
+    CountWordsOne(StrL("\xe6\x97\xa5\xe6\x9c\xac\xe8\xaa\x9e"
+                       "abc"),
+                  4, 6);
+}
+
 static void StrSeqNumTest() {
     str::Builder b;
     SeqStrNumAppend(&b, StrL("foo"), 10);
@@ -1168,6 +1191,7 @@ void StrTest() {
         setlocale(LC_CTYPE, CStrTemp(saved));
     }
 
+    CountWordsTest();
     strStrTest();
     wstrBuilderTest();
     StrIsDigitTest();

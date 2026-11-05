@@ -844,6 +844,8 @@ enum class ControlCmd : u16 {
     // [srcWin, tabIdx, dstWin]: move a tab as a drag does (-1 = new window);
     // tabIdx < 0 only lists every window's tabs
     TestMigrateTab = 151,
+    // the word count notification's text
+    TestWordCount = 154,
 };
 
 static_assert((u16)ControlCmd::Quit == (u16)ControlFrameCmd::Quit);
@@ -2130,6 +2132,13 @@ static void ExecuteControlRequest(ControlRequest* req) {
         case ControlCmd::TestAIChatReplay: {
             int exitCode = 0;
             Str res = AIChatTestReplayResultTemp(StringArg(req, 0), StringArg(req, 1), &exitCode);
+            AppendTestResult(req, exitCode, res);
+            break;
+        }
+
+        case ControlCmd::TestWordCount: {
+            int exitCode = 0;
+            Str res = WordCountResultTemp(&exitCode);
             AppendTestResult(req, exitCode, res);
             break;
         }

@@ -10925,6 +10925,10 @@ static LRESULT FrameOnCommand(MainWindow* win, HWND hwnd, UINT msg, WPARAM wp, L
             ToggleFacingStepOne(win);
             break;
 
+        case CmdCountWords:
+            CountWordsInDoc(win);
+            break;
+
         case CmdToggleCaption:
             ToggleCaption(cmd);
             break;

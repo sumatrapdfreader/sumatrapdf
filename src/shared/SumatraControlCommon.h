@@ -176,3 +176,4 @@ bool WriteControlResponse(ControlConn h, ControlRequest* req);
 TempStr FavoriteNavResultTemp(Str action, int pageNo, int* exitCodeOut);
 TempStr ScrollStateResultTemp(int* exitCodeOut);
 TempStr DisplayModeResultTemp(Str action, int* exitCodeOut);
+TempStr WordCountResultTemp(int* exitCodeOut);

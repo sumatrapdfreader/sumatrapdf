@@ -2249,6 +2249,12 @@ int Utf8CodepointPrev(Str s, int& byteIdx);
 int Utf8CodepointToByteIndex(Str s, int codepointIdx);
 Str Utf8SliceByCodepoints(Str s, int startCodepoint, int nCodepoints);
 
+struct WordCount {
+    int words = 0;
+    int chars = 0; // without spaces
+};
+void CountWords(Str s, WordCount& wc);
+
 TempStr ShortenStringUtf8Temp(Str s, int maxRunes);
 TempStr ShortenStringUtf8InTheMiddleTemp(Str s, int maxRunes);
 

@@ -3,6 +3,7 @@
 
 #include "base/Base.h"
 #include "base/UITask.h"
+#include "base/Pixmap.h"
 #include "gui/UIModels.h"
 #include "Settings.h"
 #include "DisplayMode.h"
@@ -54,6 +55,7 @@
 #include "ReadingBar.h"
 #include "NavFilesInFolder.h"
 #include "PerfLog.h"
+#include "SumatraPDFCommon.h"
 #include "SumatraControl.h"
 #include "SumatraControlCommon.h"
 
@@ -656,6 +658,17 @@ TempStr FavoriteNavResultTemp(Str action, int pageNo, int* exitCodeOut) {
         cur = ss.page;
     }
     return finish(fmt("OK page=%d y=%d", cur, y), 0);
+}
+
+// the first window's word count notification (#6489): "OK <text>", "OK" while there's none
+TempStr WordCountResultTemp(int* exitCodeOut) {
+    *exitCodeOut = 2;
+    if (len(gWindows) == 0 || !gWindows[0]->IsDocLoaded()) {
+        return str::DupTemp(StrL("NOTREADY no-doc\n"));
+    }
+    *exitCodeOut = 0;
+    TempStr msg = WordCountNotifMsgTemp(gWindows[0]);
+    return fmt("OK %s\n", msg);
 }
 
 // action: "get" | "r2l" | "presentation" | "fullscreen"

@@ -872,6 +872,137 @@ void ToggleFacingStepOne(MainWindow* win) {
     SwitchToDisplayMode(win, IsBookView(mode) ? DisplayMode::BookView : DisplayMode::Facing);
 }
 
+static Kind kNotifWordCount = "notifWordCount";
+constexpr int kWordCountResultTimeoutMs = 10 * 1000;
+constexpr int kWordCountProgressMs = 200;
+
+// bumped to cancel a running whole-document count
+static AtomicInt gWordCountGen = 0;
+
+struct WordCountProgress {
+    MainWindow* win = nullptr;
+    WindowTab* tab = nullptr;
+    int gen = 0;
+    int pagesDone = 0;
+    int pageCount = 0;
+    WordCount wc;
+};
+
+struct WordCountThreadData {
+    WordCountProgress progress;
+    EngineBase* engine = nullptr;
+};
+
+static TempStr WordCountMsgTemp(const WordCount& wc) {
+    return fmt(Tr("Words: %d, characters (no spaces): %d").s, wc.words, wc.chars);
+}
+
+static void OnWordCountProgress(WordCountProgress* p) {
+    bool valid = AtomicIntGet(&gWordCountGen) == p->gen && IsMainWindowValid(p->win) && IsWindowTabValid(p->tab);
+    NotificationWnd* wnd = valid ? GetNotificationForGroup(p->win, kNotifWordCount) : nullptr;
+    if (!wnd) {
+        delete p;
+        return;
+    }
+    if (p->pagesDone < p->pageCount) {
+        int perc = CalcPerc(p->pagesDone, p->pageCount);
+        TempStr msg = fmt(Tr("Counting words: page %d of %d...").s, p->pagesDone, p->pageCount);
+        UpdateNotificationProgress(wnd, msg, perc);
+    } else {
+        NotificationUpdateMessage(wnd, WordCountMsgTemp(p->wc), kWordCountResultTimeoutMs);
+    }
+    delete p;
+}
+
+static void PostWordCountProgress(const WordCountProgress& p) {
+    auto copy = new WordCountProgress(p);
+    uitask::Post(MkFunc0(OnWordCountProgress, copy), "WordCountProgress");
+}
+
+static void WordCountThread(WordCountThreadData* d) {
+    WordCountProgress& p = d->progress;
+    auto lastPost = TimeGet();
+    for (int pageNo = 1; pageNo <= p.pageCount; pageNo++) {
+        if (AtomicIntGet(&gWordCountGen) != p.gen) {
+            break;
+        }
+        CountWords(d->engine->GetTextForPage(pageNo), p.wc);
+        p.pagesDone = pageNo;
+        bool isLast = pageNo == p.pageCount;
+        if (isLast || TimeSinceInMs(lastPost) >= kWordCountProgressMs) {
+            PostWordCountProgress(p);
+            lastPost = TimeGet();
+        }
+    }
+    d->engine->ReleaseTextExtractionThreadContext();
+    d->engine->Release();
+    delete d;
+    AtomicIntDec(&gDangerousThreadCount);
+}
+
+static void OnWordCountNotifClosed(NotificationClosedEvent* ev) {
+    AtomicIntInc(&gWordCountGen);
+    RemoveNotification(ev->wnd);
+}
+
+// the word count notification's text, for tests
+TempStr WordCountNotifMsgTemp(MainWindow* win) {
+    NotificationWnd* wnd = GetNotificationForGroup(win, kNotifWordCount);
+    return wnd ? NotificationGetMessageTemp(wnd) : TempStr{};
+}
+
+// CmdCountWords (#6489): counts the text selection or, without one, the whole
+// document on a thread, showing progress in the notification
+void CountWordsInDoc(MainWindow* win) {
+    DisplayModel* dm = win->AsFixed();
+    WindowTab* tab = win->CurrentTab();
+    if (!dm || !tab) {
+        return;
+    }
+    RemoveNotificationsForGroup(win, kNotifWordCount);
+
+    NotificationCreateArgs args;
+    args.win = win;
+    args.tab = tab;
+    args.groupId = kNotifWordCount;
+
+    bool isTextOnly = false;
+    TempStr selText = GetSelectedTextTemp(tab, StrL("\n"), isTextOnly);
+    if (len(selText) > 0) {
+        WordCount wc;
+        CountWords(selText, wc);
+        args.timeoutMs = kWordCountResultTimeoutMs;
+        args.msg = fmt("%s %s", Tr("Selection:"), WordCountMsgTemp(wc));
+        ShowNotification(args);
+        return;
+    }
+
+    EngineBase* engine = dm->GetEngine();
+    auto d = new WordCountThreadData();
+    d->engine = engine;
+    d->progress.win = win;
+    d->progress.tab = tab;
+    d->progress.gen = AtomicIntInc(&gWordCountGen);
+    d->progress.pageCount = engine->PageCount();
+
+    args.msg = Tr("Counting words...");
+    args.onClosed = MkFunc1Void(OnWordCountNotifClosed);
+    ShowNotification(args);
+
+    engine->AddRef();
+    AtomicIntInc(&gDangerousThreadCount);
+    auto fn = MkFunc0<WordCountThreadData>(WordCountThread, d);
+    ThreadHandle thread = StartThread(fn, StrL("WordCount"));
+    if (thread) {
+        SafeCloseThreadHandle(&thread);
+        return;
+    }
+    AtomicIntDec(&gDangerousThreadCount);
+    engine->Release();
+    delete d;
+    RemoveNotificationsForGroup(win, kNotifWordCount);
+}
+
 // ComicBookUI.AutoRotateWidePages, see DisplayModel::PageRotation
 void ToggleAutoRotateWidePages() {
     gSettings->comicBookUI.autoRotateWidePages = !gSettings->comicBookUI.autoRotateWidePages;
