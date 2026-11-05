@@ -6370,27 +6370,14 @@ static void DuplicateInNewWindow(MainWindow* win) {
     DuplicateTabInNewWindow(tab);
 }
 
-// create a new tab in current window and load currently shown document into it
-// meant to make it easy to compare 2 documents side by side
-static void DuplicateInNewTab(MainWindow* win) {
-    if (win->IsCurrentTabAbout()) {
+// open the tab's document in a new tab of its window, at the same view
+void DuplicateTabInNewTab(WindowTab* tab) {
+    if (!tab || tab->IsAboutTab() || len(tab->filePath) == 0) {
         return;
     }
-    if (!win->IsDocLoaded()) {
-        return;
-    }
-    WindowTab* currentTab = win->CurrentTab();
-    if (!currentTab || len(currentTab->filePath) == 0) {
-        return;
-    }
-
-    Str path = currentTab->filePath;
-    ReportIf(len(path) == 0);
-    if (len(path) == 0) {
-        return;
-    }
-
-    TabState* state = NewTabStateFromTab(currentTab);
+    MainWindow* win = tab->win;
+    Str path = tab->filePath;
+    TabState* state = NewTabStateFromTab(tab);
 
     LoadArgs args(path, win);
     args.showWin = true;
@@ -10541,7 +10528,10 @@ static LRESULT FrameOnCommand(MainWindow* win, HWND hwnd, UINT msg, WPARAM wp, L
             break;
 
         case CmdDuplicateInNewTab:
-            DuplicateInNewTab(win);
+            // meant to make it easy to compare 2 parts of a document
+            if (!win->IsCurrentTabAbout() && win->IsDocLoaded()) {
+                DuplicateTabInNewTab(win->CurrentTab());
+            }
             break;
 
         case CmdOpenFile:

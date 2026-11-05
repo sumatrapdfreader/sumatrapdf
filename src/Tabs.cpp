@@ -443,6 +443,10 @@ static void TabsContextMenu(TabsCtrl* tabsCtrl, VirtMouseEvent* ev) {
             DuplicateTabInNewWindow(tabUnderMouse);
             return;
         }
+        case CmdDuplicateInNewTab: {
+            DuplicateTabInNewTab(tabUnderMouse);
+            return;
+        }
         case CmdProperties: {
             ShowProperties(win->hwndFrame, tabUnderMouse->ctrl);
             return;

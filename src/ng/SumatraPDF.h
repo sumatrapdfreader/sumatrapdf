@@ -123,6 +123,7 @@ enum class PlaceWindowWhen {
 void PlaceMainWindow(MainWindow* win, SessionData* data, PlaceWindowWhen when);
 void PlaceMainWindowLater(MainWindow* win, Rect pos, bool maximize);
 void DuplicateTabInNewWindow(WindowTab* tab);
+void DuplicateTabInNewTab(WindowTab* tab);
 void ReloadDocument(MainWindow* win, bool autoRefresh);
 bool ForwardBrowserMsg(MainWindow* win, UINT msg, WPARAM wp, LPARAM lp);
 bool ScrollBrowserDocKey(MainWindow* win, int vk);

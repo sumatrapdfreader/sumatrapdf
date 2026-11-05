@@ -2096,6 +2096,23 @@ void DuplicateTabInNewWindow(WindowTab* tab) {
     }
 }
 
+// Open the tab's document in a new tab of its window, at the same page.
+// Loading the path alone opens it at page 1 (#6168).
+void DuplicateTabInNewTab(WindowTab* tab) {
+    if (!tab || tab->IsNonDocumentTab() || len(tab->filePath) == 0) {
+        return;
+    }
+    MainWindow* win = tab->win;
+    TabState* state = NewTabStateFromTab(tab);
+    TempStr path = str::DupTemp(tab->filePath);
+    if (LoadDocument(win, path) && state) {
+        SetTabState(win->CurrentTab(), state);
+    }
+    if (state) {
+        DeleteTabState(state);
+    }
+}
+
 // --- next / prev file in folder ---------------------------------------------
 
 static int gNextPrevDirScanGen = 0;
@@ -5487,17 +5504,8 @@ void ExecuteCmd(MainWindow* win, int cmdId) {
             break;
 
         case CmdDuplicateInNewTab:
-            // the new tab is the same document at the same page. Loading the
-            // path alone opens it at page 1 (#6168).
-            if (tab && !tab->IsAboutTab() && win->IsDocLoaded() && len(tab->filePath) > 0) {
-                TabState* state = NewTabStateFromTab(tab);
-                TempStr path = str::DupTemp(tab->filePath);
-                if (LoadDocument(win, path) && state) {
-                    SetTabState(win->CurrentTab(), state);
-                }
-                if (state) {
-                    DeleteTabState(state);
-                }
+            if (tab && !tab->IsAboutTab() && win->IsDocLoaded()) {
+                DuplicateTabInNewTab(tab);
             }
             break;
 

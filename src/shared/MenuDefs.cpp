@@ -1179,6 +1179,21 @@ MenuDef menuDefContextStart[] = {
 
 //] ACCESSKEY_GROUP Context Menu (Start)
 
+static MenuDef menuDefContextTabDuplicate[] = {
+    {
+        TrN("In New Window"),
+        CmdDuplicateInNewWindow,
+    },
+    {
+        TrN("In New Tab"),
+        CmdDuplicateInNewTab,
+    },
+    {
+        {},
+        0,
+    },
+};
+
 MenuDef menuDefContextTab[] = {
     // these top items are removed unless the document has unsaved changes;
     // text matches the "Unsaved changes" close dialog
@@ -1211,8 +1226,8 @@ MenuDef menuDefContextTab[] = {
         CmdCopyFilePath,
     },
     {
-        TrN("Open In New Window"),
-        CmdDuplicateInNewWindow,
+        TrN("Duplicate"),
+        (UINT_PTR)menuDefContextTabDuplicate,
     },
     {
         TrN("Change Tab Color"),

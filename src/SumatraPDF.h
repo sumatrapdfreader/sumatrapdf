@@ -196,6 +196,7 @@ constexpr u32 kUiPanelsDrag = 0x40;   // live drag of the splitter between the s
 
 void ScheduleUiUpdate(MainWindow* win, u32 flags = kUiRelayout, int sidebarDx = -1);
 void DuplicateTabInNewWindow(WindowTab* tab);
+void DuplicateTabInNewTab(WindowTab* tab);
 void CopyFilePath(WindowTab*);
 void CopyLocationToClipboard(WindowTab*);
 

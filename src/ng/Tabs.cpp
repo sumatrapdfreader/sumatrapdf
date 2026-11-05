@@ -559,6 +559,9 @@ void TabContextMenuCommand(MainWindow* win, WindowTab* tabUnderMouse, int cmdId)
         case CmdDuplicateInNewWindow:
             DuplicateTabInNewWindow(tabUnderMouse);
             return;
+        case CmdDuplicateInNewTab:
+            DuplicateTabInNewTab(tabUnderMouse);
+            return;
         case CmdSetTabColor:
             ShowSetTabColorDialog(win, tabUnderMouse);
             return;
