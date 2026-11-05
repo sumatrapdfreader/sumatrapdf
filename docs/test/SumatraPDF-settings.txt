@@ -102,6 +102,7 @@ TabsMru = false
 CtrlTabSimple = false
 ZoomLevels = 
 ZoomIncrement = 0
+FitWidthPercent = 100
 
 FixedPageUI [
 	Grayscale = false

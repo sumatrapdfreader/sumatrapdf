@@ -1085,6 +1085,7 @@ static const FieldInfo gSettingsFields[] = {
     {offsetof(Settings, ctrlTabSimple), SettingType::Bool, false},
     {offsetof(Settings, zoomLevels), SettingType::FloatArray, (intptr_t)""},
     {offsetof(Settings, zoomIncrement), SettingType::Float, (intptr_t)"0"},
+    {offsetof(Settings, fitWidthPercent), SettingType::Int, 100},
     {(size_t)-1, SettingType::Comment, 0},
     {offsetof(Settings, fixedPageUI), SettingType::Struct, (intptr_t)&gFixedPageUIInfo},
     {(size_t)-1, SettingType::Comment, 0},
@@ -1162,7 +1163,7 @@ static const FieldInfo gSettingsFields[] = {
 };
 const StructInfo gSettingsInfo = {
     sizeof(Settings),
-    187,
+    188,
     gSettingsFields,
     "\0\0DefaultDisplayMode\0DefaultZoom\0DisableJavaScript\0AllowExternalImages\0EnableTeXEnhancements\0EscToExit\0Ful"
     "lPathInTitle\0InverseSearchCmdLine\0LazyLoading\0MainWindowBackground\0NoHomeTab\0NoCaj2pdfConverterDownload\0Home"
@@ -1182,12 +1183,13 @@ const StructInfo gSettingsInfo = {
     "kTheme\0DocumentColorsFollowTheme\0TocDy\0SidebarMiddleDy\0ToolbarCustomLayout\0ToolbarShowReadAloud\0ToolbarSize"
     "\0TreeFontName\0TreeFontSize\0UIFontSize\0DisableAntiAlias\0EngineeringDrawingEnhance\0DisableAutoLinks\0UseSysCol"
     "ors\0UseTabs\0ShowCaption\0SelectionToolbar\0SelectionToolbarLayout\0TabsMru\0CtrlTabSimple\0ZoomLevels\0ZoomIncre"
-    "ment\0\0FixedPageUI\0\0EBookUI\0\0ComicBookUI\0\0ImageUI\0\0ChmUI\0\0MarkdownUI\0\0HtmlUI\0\0ClaudeCode\0\0GrokBui"
-    "ld\0\0CodexBuild\0\0AntiGravity\0\0AIChat\0\0AIChatSidebarDx\0\0TranslateToLang\0TranslateFromLang\0TranslateEngin"
-    "e\0\0Annotations\0\0ExternalViewers\0\0ForwardSearch\0\0PrinterDefaults\0\0Fullscreen\0\0SelectionHandlers\0\0Text"
-    "Snippets\0\0Shortcuts\0\0Themes\0\0TabGroups\0\0CustomScreenDPI\0\0\0DefaultPasswords\0UiLanguage\0VersionToSkip\0"
-    "WindowState\0WindowPos\0SearchUIWindowPos\0AnnotationsWindowShowNote\0HelpWindowPos\0FileStates\0SessionData\0Reop"
-    "enOnce\0TimeOfLastUpdateCheck\0OpenCountWeek\0PropWinPos\0CheckForUpdates\0OnlineApiKey\0OnlineServer\0\0",
+    "ment\0FitWidthPercent\0\0FixedPageUI\0\0EBookUI\0\0ComicBookUI\0\0ImageUI\0\0ChmUI\0\0MarkdownUI\0\0HtmlUI\0\0Clau"
+    "deCode\0\0GrokBuild\0\0CodexBuild\0\0AntiGravity\0\0AIChat\0\0AIChatSidebarDx\0\0TranslateToLang\0TranslateFromLan"
+    "g\0TranslateEngine\0\0Annotations\0\0ExternalViewers\0\0ForwardSearch\0\0PrinterDefaults\0\0Fullscreen\0\0Selectio"
+    "nHandlers\0\0TextSnippets\0\0Shortcuts\0\0Themes\0\0TabGroups\0\0CustomScreenDPI\0\0\0DefaultPasswords\0UiLanguage"
+    "\0VersionToSkip\0WindowState\0WindowPos\0SearchUIWindowPos\0AnnotationsWindowShowNote\0HelpWindowPos\0FileStates\0"
+    "SessionData\0ReopenOnce\0TimeOfLastUpdateCheck\0OpenCountWeek\0PropWinPos\0CheckForUpdates\0OnlineApiKey\0OnlineSe"
+    "rver\0\0",
     "\0\0default layout of pages. page aspect (3.7+): first open of a PDF, XPS, DjVu or PostScript file uses page 1 — "
     "taller than wide is continuous + fit width, wider than tall is single page + fit page; a remembered FileState "
     "still wins\0default zoom. valid values: fit page, fit width, fit height, fit content, fit visible or percent like "
@@ -1336,19 +1338,21 @@ const StructInfo gSettingsInfo = {
     "3.6) instead of showing the tab switcher\0sequence of zoom levels when zooming in/out; values must lie between "
     "8.33 and 1000000 (the largest one becomes the maximum zoom, which is 6400 by default)\0how much a single zoom in "
     "/ zoom out step changes the zoom, as a percentage of the current zoom level. If 0 or negative, zooming steps "
-    "through ZoomLevels instead\0\0customization options for PDF, XPS, DjVu and PostScript UI\0\0customization options "
-    "for the ebook UI (EPUB, MOBI, FB2, PDB and plain text)\0\0customization options for Comic Book "
-    "UI\0\0customization options for image files UI\0\0customization options for CHM UI. UseFixedPageUI switches to "
-    "the PDF-style view; FontName applies to that view\0\0customization options for Markdown UI. If UseFixedPageUI is "
-    "true, MuPDF is used; otherwise WebView2 browser view is used when available\0\0customization options for HTML UI. "
-    "If UseFixedPageUI is true, MuPDF is used; otherwise WebView2 browser view is used when available\0\0settings for "
-    "the Claude Code chat sidebar\0\0settings for the Grok Build chat sidebar\0\0settings for the OpenAI Codex chat "
-    "sidebar\0\0settings for the Antigravity chat sidebar\0\0appearance of the AI chat sidebar, shared by all "
-    "backends\0\0width of the AI chat sidebar (0 = use default); shared by Claude Code, Grok Build, and OpenAI Codex "
-    "(internal)\0\0remembered destination language for selection translation; empty uses OS UI language\0remembered "
-    "source language for selection translation; empty means Auto\0remembered engine for Translate Selection: Google, "
-    "DeepL, Grok Build, Claude Code, OpenAI Codex or Antigravity\0\0default values for annotations in PDF "
-    "documents\0\0list of additional external viewers for various file types. See [docs for more "
+    "through ZoomLevels instead\0Fit Width (and Fit Visible) fit the pages to this percentage of the window's width, "
+    "centered: e.g. 40 to read in the middle of a wide screen. 20 to 100\0\0customization options for PDF, XPS, DjVu "
+    "and PostScript UI\0\0customization options for the ebook UI (EPUB, MOBI, FB2, PDB and plain "
+    "text)\0\0customization options for Comic Book UI\0\0customization options for image files UI\0\0customization "
+    "options for CHM UI. UseFixedPageUI switches to the PDF-style view; FontName applies to that view\0\0customization "
+    "options for Markdown UI. If UseFixedPageUI is true, MuPDF is used; otherwise WebView2 browser view is used when "
+    "available\0\0customization options for HTML UI. If UseFixedPageUI is true, MuPDF is used; otherwise WebView2 "
+    "browser view is used when available\0\0settings for the Claude Code chat sidebar\0\0settings for the Grok Build "
+    "chat sidebar\0\0settings for the OpenAI Codex chat sidebar\0\0settings for the Antigravity chat "
+    "sidebar\0\0appearance of the AI chat sidebar, shared by all backends\0\0width of the AI chat sidebar (0 = use "
+    "default); shared by Claude Code, Grok Build, and OpenAI Codex (internal)\0\0remembered destination language for "
+    "selection translation; empty uses OS UI language\0remembered source language for selection translation; empty "
+    "means Auto\0remembered engine for Translate Selection: Google, DeepL, Grok Build, Claude Code, OpenAI Codex or "
+    "Antigravity\0\0default values for annotations in PDF documents\0\0list of additional external viewers for various "
+    "file types. See [docs for more "
     "information](https://www.sumatrapdfreader.org/docs/Customize-external-viewers)\0\0customization options for how "
     "forward search results are shown (used from LaTeX editors)\0\0these override the default settings in the Print "
     "dialog\0\0options for fullscreen mode\0\0list of handlers for selected text, shown in context menu when text "

@@ -1399,6 +1399,18 @@ static bool IsVirtualFitZoom(float zoomVirtual) {
            IsFitContentZoom(zoomVirtual) || zoomVirtual == kZoomShrinkToFit || zoomVirtual == kZoomFitByOrientation;
 }
 
+// FitWidthPercent (#6497): the part of the window's width Fit Width fills, e.g.
+// 0.4 to read in the middle of a wide screen
+static float FitWidthFraction(float zoomVirtual) {
+    if (!gSettings || (zoomVirtual != kZoomFitWidth && zoomVirtual != kZoomFitVisible)) {
+        return 1.0f;
+    }
+    constexpr int kMinFitWidthPercent = 20;
+    constexpr int kMaxFitWidthPercent = 100;
+    int percent = limitValue(gSettings->fitWidthPercent, kMinFitWidthPercent, kMaxFitWidthPercent);
+    return (float)percent / 100.0f;
+}
+
 // Comics / image collections often have pages of different pixel sizes. In facing
 // view a single shared zoom leaves a gap under the shorter page. Match display
 // heights across the row instead (issue #5921), like dedicated comic readers.
@@ -1456,7 +1468,7 @@ static float ZoomRealMatchFacingHeights(const DisplayModel* dm, float zoomVirtua
     if (usableDx <= 0) {
         return 0;
     }
-    float targetHFromWidth = usableDx / aspectSum;
+    float targetHFromWidth = usableDx * FitWidthFraction(zoomVirtual) / aspectSum;
     float targetHFromHeight = (float)areaDy;
     float targetH;
     if (kZoomFitWidth == zoomVirtual || kZoomFitVisible == zoomVirtual) {
@@ -1584,7 +1596,7 @@ float DisplayModel::ZoomRealFromVirtualForPage(float zoomVirtual, int pageNo) co
         return 0;
     }
 
-    float zoomX = (float)areaForPagesDx / row.dx;
+    float zoomX = (float)areaForPagesDx * FitWidthFraction(zoomVirtual) / row.dx;
     float zoomY = (float)areaForPagesDy / row.dy;
     float zoom;
     // NOLINTNEXTLINE(bugprone-branch-clone): distinct fit modes that happen to pick the same axis

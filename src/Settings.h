@@ -1111,6 +1111,10 @@ struct Settings {
     // percentage of the current zoom level. If 0 or negative, zooming
     // steps through ZoomLevels instead
     float zoomIncrement;
+    // Fit Width (and Fit Visible) fit the pages to this percentage of the
+    // window's width, centered: e.g. 40 to read in the middle of a wide
+    // screen. 20 to 100
+    int fitWidthPercent;
     // width of the AI chat sidebar (0 = use default); shared by Claude
     // Code, Grok Build, and OpenAI Codex (internal)
     int aiChatSidebarDx;

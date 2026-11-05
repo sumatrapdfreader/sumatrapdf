@@ -2132,6 +2132,13 @@ const globalPrefs: Field[] = [
     "how much a single zoom in / zoom out step changes the zoom, as a percentage of the " +
       "current zoom level. If 0 or negative, zooming steps through ZoomLevels instead",
   ),
+  field(
+    "FitWidthPercent",
+    Int,
+    100,
+    "Fit Width (and Fit Visible) fit the pages to this percentage of the window's width, " +
+      "centered: e.g. 40 to read in the middle of a wide screen. 20 to 100",
+  ).ver("3.7"),
 
   emptyLine(),
 
@@ -2410,6 +2417,7 @@ const globalPrefsLayout = [
   "TreeFontSize",
   "UIFontSize",
   "ZoomIncrement",
+  "FitWidthPercent",
   "AIChatSidebarDx",
   "CustomScreenDPI",
   "WindowState",
