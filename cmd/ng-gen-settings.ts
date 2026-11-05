@@ -1234,6 +1234,7 @@ const fileState: Field[] = [
     false,
     "if true, facing and book view move one page at a time: pages 1-2, then 2-3, then 3-4",
   ).ver("3.7"),
+  field("Mirror", Bool, false, "if true, pages are shown (and printed) mirrored left to right").ver("3.7"),
   field(
     "Brightness",
     Int,
@@ -1312,6 +1313,7 @@ const fileStateLayout = [
   "TrimEmptyMargins",
   "FreePan",
   "FacingStepOne",
+  "Mirror",
 ];
 fileState.sort((a, b) => fileStateLayout.indexOf(a.Name) - fileStateLayout.indexOf(b.Name));
 

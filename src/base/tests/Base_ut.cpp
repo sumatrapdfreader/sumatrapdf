@@ -2,6 +2,7 @@
    License: Simplified BSD (see COPYING.BSD) */
 
 #include "base/Base.h"
+#include "base/Pixmap.h"
 
 // must be last due to assert() over-write
 #include "base/tests/UtAssert.h"
@@ -449,7 +450,37 @@ static void WaitThreadTest() {
 }
 #endif
 
+// CmdToggleMirror prints through FlipPixmapHorizontally: 3 and 4 byte pixels,
+// odd widths (the middle pixel stays), padded rows
+static void FlipPixmapTest() {
+    PixmapFormat formats[] = {PixmapFormat::BGR8, PixmapFormat::BGRA8};
+    for (PixmapFormat fmt : formats) {
+        constexpr int kDx = 3;
+        constexpr int kDy = 2;
+        Pixmap* p = AllocPixmap(kDx, kDy, fmt);
+        int bpp = PixmapBytesPerPixel(fmt);
+        for (int y = 0; y < kDy; y++) {
+            for (int x = 0; x < kDx; x++) {
+                for (int b = 0; b < bpp; b++) {
+                    p->data[(y * p->stride) + (x * bpp) + b] = (u8)((y * 100) + (x * 10) + b);
+                }
+            }
+        }
+        FlipPixmapHorizontally(p);
+        for (int y = 0; y < kDy; y++) {
+            for (int x = 0; x < kDx; x++) {
+                for (int b = 0; b < bpp; b++) {
+                    u8 want = (u8)((y * 100) + ((kDx - 1 - x) * 10) + b);
+                    utassert(p->data[(y * p->stride) + (x * bpp) + b] == want);
+                }
+            }
+        }
+        FreePixmap(p);
+    }
+}
+
 void BaseUtilTest() {
+    FlipPixmapTest();
 #if !OS_WASM
     WaitThreadTest();
 #endif

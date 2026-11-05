@@ -158,6 +158,8 @@ struct PrintData {
     Vec<SelectionOnPage> sel;   // empty when printing a page range
     Print_Advanced_Data advData;
     int rotation = 0;
+    // CmdToggleMirror: print as shown
+    bool mirror = false;
     ProgressUpdateCb progressCb;
     AbortCookieManager* abortCookie = nullptr;
     bool failedEngineClone = false;
@@ -818,7 +820,7 @@ PrintPageLayout CalculatePrintPageLayout(EngineBase& engine, int pageNo, const P
 // Returns true if at least one band was rendered and blitted.
 static bool PrintPageInBands(EngineBase& engine, HDC hdc, int pageNo, float zoom, int rotation,
                              const RectF& pageRectFull, Point offset, const Rect* stretchTo, RenderTarget target,
-                             AbortCookieManager* abortCookie, const ProgressUpdateCb& progressCb) {
+                             AbortCookieManager* abortCookie, const ProgressUpdateCb& progressCb, bool mirror = false) {
     if (!IsValidPrintZoom(zoom)) {
         logf("PrintPageInBands: rejecting zoom=%g page=%d\n", zoom, pageNo);
         return false;
@@ -880,6 +882,10 @@ static bool PrintPageInBands(EngineBase& engine, HDC hdc, int pageNo, float zoom
         // place this band: device rows [dy0, dy0+h) of the full [0, fullH) output,
         // mapped into devTarget (1:1 when not stretching). Compute the bottom edge
         // the same way so adjacent bands meet with no seam.
+        // a band is the page's full width, so flipping it mirrors the page
+        if (mirror) {
+            FlipPixmapHorizontally(bmp);
+        }
         Rect rc;
         rc.x = devTarget.x;
         rc.dx = devTarget.dx;
@@ -1131,7 +1137,7 @@ static bool PrintToDevice(const PrintData& pd) {
                 }
 
                 PrintPageInBands(engine, hdc, pd.sel[i].pageNo, zoom, pd.rotation, *clipRegion, offset, nullptr,
-                                 RenderTarget::Print, abortCookie, progressCb);
+                                 RenderTarget::Print, abortCookie, progressCb, pd.mirror);
             }
             // TODO: abort if !ok?
 
@@ -1183,10 +1189,10 @@ static bool PrintToDevice(const PrintData& pd) {
             RectF mediabox = engine.PageMediabox((int)pageNo);
             if (layout.isStretch) {
                 PrintPageInBands(engine, hdc, (int)pageNo, layout.zoom, layout.rotation, mediabox, Point(0, 0),
-                                 &layout.stretch, RenderTarget::Print, abortCookie, progressCb);
+                                 &layout.stretch, RenderTarget::Print, abortCookie, progressCb, pd.mirror);
             } else {
                 PrintPageInBands(engine, hdc, (int)pageNo, layout.zoom, layout.rotation, mediabox, layout.offset,
-                                 nullptr, RenderTarget::Print, abortCookie, progressCb);
+                                 nullptr, RenderTarget::Print, abortCookie, progressCb, pd.mirror);
             }
 
             res = EndPage(hdc);
@@ -2045,6 +2051,7 @@ static void PrintCurrentFileCont(MainWindow* win, bool waitForCompletion, bool s
 
     sel = printSelection ? win->CurrentTab()->selectionOnPage : nullptr;
     pd = new PrintData(pinnedEngine, printer, ranges, advanced, rotation, sel);
+    pd->mirror = dm->GetMirror();
     SafeEngineRelease(&pinnedEngine);
 
     if (pd->failedEngineClone) {

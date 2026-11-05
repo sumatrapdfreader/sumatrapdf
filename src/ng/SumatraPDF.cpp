@@ -1767,6 +1767,7 @@ static MainWindow* LoadDocumentFinish(MainWindow* win, Str fullPath, DocControll
             dm->SetTrimEmptyMargins(fs->trimEmptyMargins);
             dm->SetFreePan(fs->freePan);
             dm->SetFacingStepOne(fs->facingStepOne);
+            dm->SetMirror(fs->mirror);
             dm->SetPageAdjust(fs->brightness, fs->contrast);
             EngineMupdfSetLayerStates(dm->GetEngine(), fs->layerStates);
             // migrate in place only: a SaveSettings() here would rebuild
@@ -5875,6 +5876,10 @@ void ExecuteCmd(MainWindow* win, int cmdId) {
 
         case CmdToggleFacingStepOne:
             ToggleFacingStepOne(win);
+            break;
+
+        case CmdToggleMirror:
+            ToggleMirror(win);
             break;
 
         case CmdCountWords:

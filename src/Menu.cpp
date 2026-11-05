@@ -882,6 +882,7 @@ static void MenuUpdateDisplayMode(MainWindow* win) {
         MenuSetEnabled(win->menu, CmdToggleUniformPageWidth, true);
         MenuSetChecked(win->menu, CmdToggleTrimEmptyMargins, dm->GetTrimEmptyMargins());
         MenuSetEnabled(win->menu, CmdToggleTrimEmptyMargins, true);
+        MenuSetChecked(win->menu, CmdToggleMirror, dm->GetMirror());
     }
 }
 

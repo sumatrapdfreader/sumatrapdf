@@ -2049,6 +2049,7 @@ static void ReplaceDocumentInCurrentTab(LoadArgs* args, DocController* ctrl, Fil
                 dm->SetTrimEmptyMargins(fs->trimEmptyMargins);
                 dm->SetFreePan(fs->freePan);
                 dm->SetFacingStepOne(fs->facingStepOne);
+                dm->SetMirror(fs->mirror);
                 dm->SetPageAdjust(fs->brightness, fs->contrast);
                 EngineMupdfSetLayerStates(dm->GetEngine(), fs->layerStates);
             }
@@ -10952,6 +10953,10 @@ static LRESULT FrameOnCommand(MainWindow* win, HWND hwnd, UINT msg, WPARAM wp, L
 
         case CmdToggleFacingStepOne:
             ToggleFacingStepOne(win);
+            break;
+
+        case CmdToggleMirror:
+            ToggleMirror(win);
             break;
 
         case CmdCountWords:

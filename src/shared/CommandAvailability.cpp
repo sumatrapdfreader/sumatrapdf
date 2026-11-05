@@ -789,7 +789,8 @@ CommandVisibility GetCommandVisibility(int cmdId, const AppCommandCtx& ctx, Comm
         return CommandVisibility::Hide;
     }
 
-    if ((cmdId == CmdToggleFreePan || cmdId == CmdToggleFacingStepOne) && !ctx.isFixedPage) {
+    if ((cmdId == CmdToggleFreePan || cmdId == CmdToggleFacingStepOne || cmdId == CmdToggleMirror) &&
+        !ctx.isFixedPage) {
         return CommandVisibility::Hide;
     }
 

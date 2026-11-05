@@ -81,7 +81,7 @@ void CanvasHideScrollbars(MainWindow* win);
 
 // RenderCache::PaintTile blits a cached tile through these (RenderCache lives
 // in the `app` lib, which knows nothing about gpui)
-bool CanvasDrawTile(gpui::PaintCtx* ctx, BitmapCacheEntry* entry, Rect target, Rect source);
+bool CanvasDrawTile(gpui::PaintCtx* ctx, BitmapCacheEntry* entry, Rect target, Rect source, bool mirrored = false);
 // what wrapping cached pixmaps into gpui RenderImages has cost so far
 void CanvasBmpWrapStats(double& msOut, int& countOut);
 // ms from process start to the first page tile on screen, -1 before that

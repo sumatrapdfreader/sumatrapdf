@@ -1262,6 +1262,16 @@ void CountWordsInDoc(MainWindow* win) {
     RemoveNotificationsForGroup(win, kNotifWordCount);
 }
 
+// CmdToggleMirror (#6221)
+void ToggleMirror(MainWindow* win) {
+    DisplayModel* dm = win->AsFixed();
+    if (!dm) {
+        return;
+    }
+    dm->SetMirror(!dm->GetMirror());
+    win->RedrawAll(true);
+}
+
 // ComicBookUI.AutoRotateWidePages, see DisplayModel::PageRotation
 void ToggleAutoRotateWidePages() {
     gSettings->comicBookUI.autoRotateWidePages = !gSettings->comicBookUI.autoRotateWidePages;

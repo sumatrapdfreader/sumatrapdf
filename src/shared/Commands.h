@@ -360,8 +360,9 @@ enum {
     CmdCountWords = 554,
     CmdMinimizeWindow = 555,
     CmdShowSelectedText = 556,
+    CmdToggleMirror = 557,
 
-    CmdLast = 556,
+    CmdLast = 557,
     CmdFirstCustom = CmdLast + 100,
 
     // aliases, at the end to not mess ordering

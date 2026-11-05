@@ -1469,6 +1469,13 @@ static TempStr UpdateCommandNameTemp(MainWindow* win, int cmdId, Str s) {
                 newIsOn = !dm->GetFacingStepOne();
             }
         } break;
+        case CmdToggleMirror: {
+            DisplayModel* dm = win->AsFixed();
+            if (dm) {
+                isToggle = true;
+                newIsOn = !dm->GetMirror();
+            }
+        } break;
         case CmdFindToggleMatchCase: {
             isToggle = true;
             newIsOn = !win->findMatchCase;

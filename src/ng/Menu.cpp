@@ -692,6 +692,11 @@ static void SetMenuChecks(MenuModel* menu, MainWindow* win) {
             it.checked = gSettings && gSettings->comicBookUI.autoRotateWidePages;
             continue;
         }
+        if (it.cmdId == CmdToggleMirror) {
+            DisplayModel* dmMirror = win->AsFixed();
+            it.checked = dmMirror && dmMirror->GetMirror();
+            continue;
+        }
         if (it.cmdId == CmdTogglePageGrid) {
             it.checked = ShowPageGrid();
             continue;

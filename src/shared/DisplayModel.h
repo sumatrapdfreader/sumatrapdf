@@ -263,6 +263,8 @@ struct DisplayModel : DocController {
     bool GetFreePan() const;
     void SetFacingStepOne(bool enable);
     bool GetFacingStepOne() const;
+    void SetMirror(bool enable);
+    bool GetMirror() const;
     void SetPageAdjust(int brightness, int contrast);
     Size PanSlack() const;
     bool EnsureTrimEmptyMarginsForVisiblePages();
@@ -398,6 +400,8 @@ struct DisplayModel : DocController {
     bool freePan = false;
     // facing / book view moves one page at a time (#6487)
     bool facingStepOne = false;
+    // CmdToggleMirror: pages shown mirrored left to right
+    bool mirror = false;
     // set by GoToNextPage() when stepping one page: GoToPage() starts the row
     // at the page even though it's already shown
     bool landOnPage = false;

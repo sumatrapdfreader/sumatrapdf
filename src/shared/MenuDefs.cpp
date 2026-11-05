@@ -280,6 +280,10 @@ MenuDef menuDefView[] = {
         CmdRotateRight,
     },
     {
+        TrN("Mirror Pages"),
+        CmdToggleMirror,
+    },
+    {
         StrL(kMenuSeparator),
         0,
     },

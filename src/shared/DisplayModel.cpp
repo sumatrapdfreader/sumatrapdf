@@ -332,6 +332,17 @@ bool DisplayModel::GetFacingStepOne() const {
     return facingStepOne;
 }
 
+// CmdToggleMirror (#6221): pages are drawn flipped left to right. Page
+// coordinates on screen flip with them (CvtToScreen / CvtFromScreen), so
+// selection, links and annotations stay where they're seen
+void DisplayModel::SetMirror(bool enable) {
+    mirror = enable;
+}
+
+bool DisplayModel::GetMirror() const {
+    return mirror;
+}
+
 void DisplayModel::SetDisplayR2L(bool r2l) {
     displayR2L = r2l;
 }
@@ -677,6 +688,7 @@ void DisplayModel::GetDisplayState(FileState* fs) {
     fs->trimEmptyMargins = trimEmptyMargins;
     fs->freePan = freePan;
     fs->facingStepOne = facingStepOne;
+    fs->mirror = mirror;
     fs->brightness = brightness;
     fs->contrast = contrast;
     str::ReplaceWithCopy(&fs->layerStates, EngineMupdfChangedLayerStatesTemp(engine));
@@ -2358,6 +2370,9 @@ Point DisplayModel::CvtToScreen(int pageNo, PointF pt) {
     p.y -= origin.y;
     // don't add the full 0.5 for rounding to account for precision errors
     Rect r = pageInfo->pageOnScreen;
+    if (mirror) {
+        p.x = (float)r.dx - p.x;
+    }
     p.x += 0.499f + (float)r.x;
     p.y += 0.499f + (float)r.y;
 
@@ -2385,6 +2400,9 @@ PointF DisplayModel::CvtFromScreen(Point pt, int pageNo) {
     // don't add the full 0.5 for rounding to account for precision errors
     Rect r = pageInfo->pageOnScreen;
     PointF p = PointF((float)pt.x - 0.499f - (float)r.x, (float)pt.y - 0.499f - (float)r.y);
+    if (mirror) {
+        p.x = (float)r.dx - p.x;
+    }
     RectF pageBox = PageMediaBoxForLayout(pageNo);
     PointF origin = engine->Transform(pageBox, pageNo, zoom, PageRotation(pageNo)).TL();
     p.x += origin.x;

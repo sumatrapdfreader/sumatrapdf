@@ -360,6 +360,8 @@ struct FileState {
     // if true, facing and book view move one page at a time: pages 1-2,
     // then 2-3, then 3-4
     bool facingStepOne;
+    // if true, pages are shown (and printed) mirrored left to right
+    bool mirror;
 };
 
 // a subset of FileState required for restoring the state of a single
@@ -1415,7 +1417,7 @@ struct FieldInfo;
 struct StructInfo;
 extern const StructInfo gFavoriteInfo;
 extern const StructInfo gFileEBookUIInfo;
-extern const FieldInfo gFileStateFields[30];
+extern const FieldInfo gFileStateFields[31];
 extern StructInfo gFileStateInfo;
 extern const StructInfo gTabStateInfo;
 extern const StructInfo gSessionDataInfo;

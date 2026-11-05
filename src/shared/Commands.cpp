@@ -366,6 +366,7 @@ const CommandInfo gCommands[] = {
     {CmdCountWords, "CmdCountWords\0", StrL("Count Words")},
     {CmdMinimizeWindow, "CmdMinimizeWindow\0", StrL("Minimize Window")},
     {CmdShowSelectedText, "CmdShowSelectedText\0", StrL("Show Selected Text")},
+    {CmdToggleMirror, "CmdToggleMirror\0", StrL("Mirror Pages")},
 };
 const int gCommandsCount = dimofi(gCommands);
 

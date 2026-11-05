@@ -1601,7 +1601,14 @@ int RenderCache::PaintTile(
         source.dy = (int)((float)bounds.dy * factor);
     }
 #if defined(SUMATRA_NG)
-    CanvasDrawTile(ctx, entry, target, source);
+    // CmdToggleMirror: Paint() chose the tiles for the mirrored area; each goes
+    // to its mirrored place, drawn flipped
+    if (dm->GetMirror()) {
+        PageInfo* pi = dm->GetPageInfo(pageNo);
+        Rect page = pi ? pi->pageOnScreen : Rect{};
+        target.x = (2 * page.x) + page.dx - (target.x + target.dx);
+    }
+    CanvasDrawTile(ctx, entry, target, source, dm->GetMirror());
     if (gShowTileLayout) {
         CanvasDrawTileOutline(ctx, bounds);
     }
@@ -1683,6 +1690,13 @@ int RenderCache::Paint(
 
     int rotation = dm->PageRotation(pageNo);
     float zoom = dm->GetZoomReal(pageNo);
+#if defined(SUMATRA_NG)
+    // CmdToggleMirror: what shows in bounds is the mirrored part of the page
+    if (dm->GetMirror()) {
+        Rect page = pi->pageOnScreen;
+        bounds.x = (2 * page.x) + page.dx - (bounds.x + bounds.dx);
+    }
+#endif
     u16 targetRes = GetTileRes(dm, pageNo);
     u16 maxRes = GetMaxTileRes(dm, pageNo, rotation);
     maxRes = std::max(maxRes, targetRes);

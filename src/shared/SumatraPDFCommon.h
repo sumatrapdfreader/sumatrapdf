@@ -79,6 +79,7 @@ bool IsAtDocumentBottom(MainWindow* win);
 void OnNextFileHintClosed(NotificationClosedEvent* ev);
 void ToggleMangaMode(MainWindow* win);
 void ToggleFacingStepOne(MainWindow* win);
+void ToggleMirror(MainWindow* win);
 void CountWordsInDoc(MainWindow* win);
 TempStr WordCountNotifMsgTemp(MainWindow* win);
 void ShowSelectedText(MainWindow* win);

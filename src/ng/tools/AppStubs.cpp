@@ -183,7 +183,7 @@ namespace gpui {
 struct PaintCtx;
 }
 
-bool CanvasDrawTile(gpui::PaintCtx*, BitmapCacheEntry*, Rect, Rect) {
+bool CanvasDrawTile(gpui::PaintCtx*, BitmapCacheEntry*, Rect, Rect, bool) {
     return false;
 }
 

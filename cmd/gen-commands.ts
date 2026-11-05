@@ -367,6 +367,7 @@ const commandsRaw = [
     "CmdCountWords", "Count Words",
     "CmdMinimizeWindow", "Minimize Window",
     "CmdShowSelectedText", "Show Selected Text",
+    "CmdToggleMirror", "Mirror Pages",
 ];
 
 // removed slots are dropped: nothing outside the generators should see them

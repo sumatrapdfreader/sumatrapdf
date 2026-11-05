@@ -2774,6 +2774,37 @@ NO_INLINE static void PaintCurrentEditAnnotationMark(WindowTab* tab, HDC hdc, Di
     drawHandle(left, midY);
 }
 
+// CmdToggleMirror (#6221): the part of the page that shows in bounds once
+// flipped is painted as usual into a bitmap, then copied in mirrored. What is
+// already there (the page background, for transparent pages) goes into the
+// bitmap first, so compositing sees it
+static int PaintPageBitmap(HDC hdc, Rect bounds, DisplayModel* dm, int pageNo, PageInfo* pi, bool* outOfDateCue) {
+    if (!dm->GetMirror() || bounds.IsEmpty()) {
+        return gRenderCache->Paint(hdc, bounds, dm, pageNo, pi, outOfDateCue);
+    }
+    Rect page = pi->pageOnScreen;
+    Rect src = bounds;
+    src.x = (2 * page.x) + page.dx - (bounds.x + bounds.dx);
+
+    HDC memDC = CreateCompatibleDC(hdc);
+    HBITMAP bmp = CreateCompatibleBitmap(hdc, src.dx, src.dy);
+    if (!memDC || !bmp) {
+        DeleteObject(bmp);
+        DeleteDC(memDC);
+        return gRenderCache->Paint(hdc, bounds, dm, pageNo, pi, outOfDateCue);
+    }
+    HGDIOBJ prevBmp = SelectObject(memDC, bmp);
+    StretchBlt(memDC, src.dx - 1, 0, -src.dx, src.dy, hdc, bounds.x, bounds.y, bounds.dx, bounds.dy, SRCCOPY);
+    SetViewportOrgEx(memDC, -src.x, -src.y, nullptr);
+    int res = gRenderCache->Paint(memDC, src, dm, pageNo, pi, outOfDateCue);
+    SetViewportOrgEx(memDC, 0, 0, nullptr);
+    StretchBlt(hdc, bounds.x + bounds.dx - 1, bounds.y, -bounds.dx, bounds.dy, memDC, 0, 0, src.dx, src.dy, SRCCOPY);
+    SelectObject(memDC, prevBmp);
+    DeleteObject(bmp);
+    DeleteDC(memDC);
+    return res;
+}
+
 static bool DrawDocument(MainWindow* win, HDC hdc, Rect rcArea) {
     ReportIf(!win->AsFixed());
     if (!win->AsFixed()) {
@@ -2956,7 +2987,7 @@ static bool DrawDocument(MainWindow* win, HDC hdc, Rect rcArea) {
         }
 
         bool renderOutOfDateCue = false;
-        int renderDelay = gRenderCache->Paint(hdc, bounds, dm, pageNo, pi, &renderOutOfDateCue);
+        int renderDelay = PaintPageBitmap(hdc, bounds, dm, pageNo, pi, &renderOutOfDateCue);
         if (renderDelay == 0) {
             shouldPaint = true;
             if (curTab) {

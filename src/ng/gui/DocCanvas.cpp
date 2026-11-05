@@ -239,7 +239,7 @@ double CanvasFirstPaintMs() {
     return gFirstTilePaintMs;
 }
 
-bool CanvasDrawTile(gp::PaintCtx* ctx, BitmapCacheEntry* entry, Rect target, Rect source) {
+bool CanvasDrawTile(gp::PaintCtx* ctx, BitmapCacheEntry* entry, Rect target, Rect source, bool mirrored) {
     if (!ctx || !entry || !entry->bitmap) {
         return false;
     }
@@ -256,6 +256,18 @@ bool CanvasDrawTile(gp::PaintCtx* ctx, BitmapCacheEntry* entry, Rect target, Rec
              entry->renderImage ? StrL("ok") : StrL("FAILED"), TimeSinceInMs(timeStart), gBmpWrapCount, gBmpWrapMs);
     }
     auto* img = (gp::RenderImage*)entry->renderImage;
+    Size bmpSize = Size(entry->bitmap->width, entry->bitmap->height);
+    // CmdToggleMirror: a flipped copy of the tile, where source is mirrored too
+    if (mirrored && img) {
+        if (!entry->renderImageMirrored) {
+            Pixmap* flipped = ClonePixmap(entry->bitmap);
+            FlipPixmapHorizontally(flipped);
+            entry->renderImageMirrored = flipped ? RenderImageFromPixmap(ctx->pa, flipped) : nullptr;
+            FreePixmap(flipped);
+        }
+        img = (gp::RenderImage*)entry->renderImageMirrored;
+        source.x = bmpSize.dx - (source.x + source.dx);
+    }
     if (!img || source.dx <= 0 || source.dy <= 0 || target.dx <= 0 || target.dy <= 0) {
         return false;
     }
@@ -264,7 +276,6 @@ bool CanvasDrawTile(gp::PaintCtx* ctx, BitmapCacheEntry* entry, Rect target, Rec
     // that source lands on target and clip to target.
     float sx = (float)target.dx / (float)source.dx;
     float sy = (float)target.dy / (float)source.dy;
-    Size bmpSize = Size(entry->bitmap->width, entry->bitmap->height);
     gp::Bounds clip = ToCanvas(target);
     gp::Bounds image;
     image.x = clip.x - ((float)source.x * sx * gFrame.k);
@@ -485,7 +496,19 @@ static void ReleaseRenderImage(gp::RenderImage* img) {
 // render worker. A RenderImage owns D2D / D3D resources belonging to the paint
 // thread, so the release goes back to it.
 void CanvasFreeTileImage(BitmapCacheEntry* entry) {
-    if (!entry || !entry->renderImage) {
+    if (!entry) {
+        return;
+    }
+    if (entry->renderImageMirrored) {
+        auto* mirroredImg = (gp::RenderImage*)entry->renderImageMirrored;
+        entry->renderImageMirrored = nullptr;
+        if (GetCurrentThreadId() == gUiThread) {
+            gp::RenderImageRelease(mirroredImg);
+        } else {
+            uitask::Post(MkFunc0(ReleaseRenderImage, mirroredImg), "ReleaseRenderImage");
+        }
+    }
+    if (!entry->renderImage) {
         return;
     }
     auto* img = (gp::RenderImage*)entry->renderImage;

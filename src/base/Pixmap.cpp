@@ -9,6 +9,26 @@
 
 #include "base/Pixmap.h"
 
+// mirrors the pixels left to right, in place (CmdToggleMirror, #6221)
+void FlipPixmapHorizontally(Pixmap* p) {
+    int bpp = p ? PixmapBytesPerPixel(p->format) : 0;
+    if (!p || !p->data || bpp == 0) {
+        return;
+    }
+    for (int y = 0; y < p->height; y++) {
+        u8* row = p->data + ((size_t)y * p->stride);
+        u8* l = row;
+        u8* r = row + ((size_t)(p->width - 1) * bpp);
+        while (l < r) {
+            for (int b = 0; b < bpp; b++) {
+                std::swap(l[b], r[b]);
+            }
+            l += bpp;
+            r -= bpp;
+        }
+    }
+}
+
 void CopyPixmapRows(Pixmap* dst, const u8* src, int srcStride) {
     size_t rowBytes = (size_t)dst->width * PixmapBytesPerPixel(dst->format);
     for (int y = 0; y < dst->height; y++) {
