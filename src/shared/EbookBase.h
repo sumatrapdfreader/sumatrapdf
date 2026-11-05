@@ -26,7 +26,5 @@ struct EbookToc {
     EbookToc(const EbookToc&) = delete;
     EbookToc& operator=(const EbookToc&) = delete;
 
-    void Add(Str name, Str url, int level) {
-        VecAppend(items, {str::Dup(name), str::Dup(url), level});
-    }
+    void Add(Str name, Str url, int level) { VecAppend(items, {str::Dup(name), str::Dup(url), level}); }
 };

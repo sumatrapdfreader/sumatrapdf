@@ -126,9 +126,7 @@ Size PngSizeFromData(Str data) {
     if (len(data) < kIhdrEnd || memcmp(data.s, kSignature, sizeof(kSignature)) != 0) {
         return {};
     }
-    auto be32 = [](const u8* p) -> u32 {
-        return ((u32)p[0] << 24) | ((u32)p[1] << 16) | ((u32)p[2] << 8) | (u32)p[3];
-    };
+    auto be32 = [](const u8* p) -> u32 { return ((u32)p[0] << 24) | ((u32)p[1] << 16) | ((u32)p[2] << 8) | (u32)p[3]; };
     const u8* s = (const u8*)data.s;
     u32 width = be32(s + 16);
     u32 height = be32(s + 20);

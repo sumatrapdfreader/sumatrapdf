@@ -461,8 +461,8 @@ static int cert_is_self_signed(SecCertificateRef cert) {
     return res;
 }
 
-static pdf_signature_error verifier_check_certificate(fz_context* ctx, pdf_pkcs7_verifier* verifier,
-                                                      unsigned char* sig, size_t sig_len) {
+static pdf_signature_error verifier_check_certificate(fz_context* ctx, pdf_pkcs7_verifier* verifier, unsigned char* sig,
+                                                      size_t sig_len) {
     (void)verifier;
     CMSDecoderRef dec = decode_signature(ctx, NULL, sig, sig_len);
     if (!dec) {
