@@ -355,7 +355,7 @@ const commandsRaw = [
     "CmdConvertEpubToPdf", "Convert EPUB to PDF...",
     "CmdConvertCajToPDF", "Convert CAJ to PDF...",
     "CmdFindHistory", "Find History",
-    "CmdSumatraOnline", "Sumatra Online...",
+    "CmdSumatraPDFWeb", "SumatraPDF Web...",
     "CmdDebugSaveSettings", "Debug: Save Settings",
     "CmdNewTab", "New Tab",
     "CmdShowSignatures", "Show Signatures",

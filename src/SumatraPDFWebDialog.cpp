@@ -217,16 +217,16 @@ static bool IsOnlineApiKey(Str s) {
 // origins is not used, even when it would pass a prefix check.
 static Str OnlineOrigin() {
     Str server = (gSettings && len(gSettings->onlineServer) > 0) ? gSettings->onlineServer : Str{};
-    bool known = str::Eq(server, StrL("https://online.sumatrapdfreader.org")) ||
+    bool known = str::Eq(server, StrL("https://web.sumatrapdfreader.org")) ||
                  str::Eq(server, StrL("http://localhost:9332")) || str::Eq(server, StrL("http://127.0.0.1:9332"));
     if (known && OnlineURLAllowed(server)) {
         return server;
     }
-    return StrL("https://online.sumatrapdfreader.org");
+    return StrL("https://web.sumatrapdfreader.org");
 }
 
-struct SumatraOnlineWnd : WindowBase {
-    ~SumatraOnlineWnd() override = default;
+struct SumatraPDFWebWnd : WindowBase {
+    ~SumatraPDFWebWnd() override = default;
 
     MainWindow* win = nullptr;
     Edit* edit = nullptr;
@@ -274,10 +274,10 @@ struct SumatraOnlineWnd : WindowBase {
     void FinishJob(OnlineJobResult* res);
 };
 
-static SumatraOnlineWnd* gSumatraOnlineWnd = nullptr;
+static SumatraPDFWebWnd* gSumatraPDFWebWnd = nullptr;
 
-static void ClearSumatraOnlineWnd() {
-    gSumatraOnlineWnd = nullptr;
+static void ClearSumatraPDFWebWnd() {
+    gSumatraPDFWebWnd = nullptr;
 }
 
 static VirtText* NewOnlineNote(Str s, PlatformFont* font, Color col) {
@@ -287,7 +287,7 @@ static VirtText* NewOnlineNote(Str s, PlatformFont* font, Color col) {
     return t;
 }
 
-void SumatraOnlineWnd::SetStatus(Str s) {
+void SumatraPDFWebWnd::SetStatus(Str s) {
     if (!status) {
         return;
     }
@@ -298,15 +298,15 @@ void SumatraOnlineWnd::SetStatus(Str s) {
     }
 }
 
-void SumatraOnlineWnd::SetOkEnabled(bool enabled) {
+void SumatraPDFWebWnd::SetOkEnabled(bool enabled) {
     SetDlgButtonEnabled(btnOk, DlgButtonStyle::Filled, enabled);
 }
 
-void SumatraOnlineWnd::SetForgetEnabled(bool enabled) {
+void SumatraPDFWebWnd::SetForgetEnabled(bool enabled) {
     SetDlgButtonEnabled(btnForget, DlgButtonStyle::Ghost, enabled);
 }
 
-bool SumatraOnlineWnd::CanUploadDoc() const {
+bool SumatraPDFWebWnd::CanUploadDoc() const {
     if (!win) {
         return false;
     }
@@ -318,7 +318,7 @@ bool SumatraOnlineWnd::CanUploadDoc() const {
     return true;
 }
 
-void SumatraOnlineWnd::UpdateFileButtons() {
+void SumatraPDFWebWnd::UpdateFileButtons() {
     bool busy = inFlight;
     SetOkEnabled(!busy);
     bool keyOk = gSettings && IsOnlineApiKey(gSettings->onlineApiKey);
@@ -336,7 +336,7 @@ void SumatraOnlineWnd::UpdateFileButtons() {
     }
 }
 
-void SumatraOnlineWnd::ClearFileList() {
+void SumatraPDFWebWnd::ClearFileList() {
     VecReset(fileSizes);
     if (!fileModel) {
         return;
@@ -347,7 +347,7 @@ void SumatraOnlineWnd::ClearFileList() {
     }
 }
 
-void SumatraOnlineWnd::DrawFileRow(VirtListBox::DrawItemEvent* ev) {
+void SumatraPDFWebWnd::DrawFileRow(VirtListBox::DrawItemEvent* ev) {
     Str name = ev->listBox->model ? ev->listBox->model->Item(ev->itemIndex) : Str{};
     Str meta;
     if (ev->itemIndex >= 0 && ev->itemIndex < len(fileSizes)) {
@@ -356,11 +356,11 @@ void SumatraOnlineWnd::DrawFileRow(VirtListBox::DrawItemEvent* ev) {
     DrawDlgListItem(ev->listBox, ev->gfx, ev->itemRect, ev->selected, name, meta);
 }
 
-void SumatraOnlineWnd::OnFileSel() {
+void SumatraPDFWebWnd::OnFileSel() {
     UpdateFileButtons();
 }
 
-void SumatraOnlineWnd::OnLogin(VirtMouseEvent*) {
+void SumatraPDFWebWnd::OnLogin(VirtMouseEvent*) {
     Str origin = OnlineOrigin();
     TempStr url = fmt("%s/desktop", origin);
     if (!OnlineURLAllowed(url)) {
@@ -370,7 +370,7 @@ void SumatraOnlineWnd::OnLogin(VirtMouseEvent*) {
     SumatraLaunchBrowser(url);
 }
 
-void SumatraOnlineWnd::OnForget(VirtMouseEvent*) {
+void SumatraPDFWebWnd::OnForget(VirtMouseEvent*) {
     if (!gSettings) {
         return;
     }
@@ -390,13 +390,13 @@ void SumatraOnlineWnd::OnForget(VirtMouseEvent*) {
     UpdateFileButtons();
 }
 
-void SumatraOnlineWnd::OnCancel(VirtMouseEvent*) {
+void SumatraPDFWebWnd::OnCancel(VirtMouseEvent*) {
     reqId = 0;
     inFlight = false;
     ScheduleDelete();
 }
 
-void SumatraOnlineWnd::FinishVerify(OnlineVerifyResult* res) {
+void SumatraPDFWebWnd::FinishVerify(OnlineVerifyResult* res) {
     reqId = 0;
     inFlight = false;
     if (!gSettings) {
@@ -441,13 +441,13 @@ void SumatraOnlineWnd::FinishVerify(OnlineVerifyResult* res) {
         UpdateFileButtons();
         return;
     }
-    SetStatus(Tr("Could not reach Sumatra Online."));
+    SetStatus(Tr("Could not reach SumatraPDF Web."));
     UpdateFileButtons();
 }
 
 static void VerifyOnlineKeyDone(OnlineVerifyResult* res) {
     AutoDelete del(res);
-    SumatraOnlineWnd* wnd = gSumatraOnlineWnd;
+    SumatraPDFWebWnd* wnd = gSumatraPDFWebWnd;
     if (!wnd || wnd->reqId != res->id) {
         return;
     }
@@ -476,13 +476,13 @@ static void VerifyOnlineKeyThread(OnlineVerifyReq* req) {
     uitask::Post(MkFunc0(VerifyOnlineKeyDone, res), "OnlineKeyVerified");
 }
 
-void SumatraOnlineWnd::OnOk(VirtMouseEvent*) {
+void SumatraPDFWebWnd::OnOk(VirtMouseEvent*) {
     if (inFlight || !edit) {
         return;
     }
     Str token = edit->GetTextTemp();
     if (!IsOnlineApiKey(token)) {
-        SetStatus(Tr("That is not a Sumatra Online API key."));
+        SetStatus(Tr("That is not a SumatraPDF Web API key."));
         return;
     }
     Str origin = OnlineOrigin();
@@ -500,7 +500,7 @@ void SumatraOnlineWnd::OnOk(VirtMouseEvent*) {
     req->id = reqId;
     req->url = str::Dup(url);
     req->token = str::Dup(token);
-    RunAsync(MkFunc0(VerifyOnlineKeyThread, req), StrL("SumatraOnlineKey"));
+    RunAsync(MkFunc0(VerifyOnlineKeyThread, req), StrL("SumatraPDFWebKey"));
 }
 
 static void NoteHttp(OnlineJobResult* res, const HttpRsp& rsp) {
@@ -583,15 +583,15 @@ static void OnlineJobThread(OnlineJobReq* req) {
     uitask::Post(MkFunc0(OnlineJobDone, res), "OnlineJobDone");
 }
 
-void SumatraOnlineWnd::StartJob(OnlineJobReq* req) {
+void SumatraPDFWebWnd::StartJob(OnlineJobReq* req) {
     inFlight = true;
     reqId = ++gOnlineReqSeq;
     req->id = reqId;
     UpdateFileButtons();
-    RunAsync(MkFunc0(OnlineJobThread, req), StrL("SumatraOnlineFile"));
+    RunAsync(MkFunc0(OnlineJobThread, req), StrL("SumatraPDFWebFile"));
 }
 
-void SumatraOnlineWnd::StartList() {
+void SumatraPDFWebWnd::StartList() {
     if (inFlight || !gSettings || !IsOnlineApiKey(gSettings->onlineApiKey)) {
         return;
     }
@@ -601,7 +601,7 @@ void SumatraOnlineWnd::StartList() {
         return;
     }
     if (!status || len(status->s) == 0) {
-        SetStatus(Tr("Contacting Sumatra Online..."));
+        SetStatus(Tr("Contacting SumatraPDF Web..."));
         clearListStatus = true;
     } else {
         clearListStatus = false;
@@ -614,7 +614,7 @@ void SumatraOnlineWnd::StartList() {
 }
 
 // true when the caller should stop. A 401 keeps the saved key.
-bool SumatraOnlineWnd::ShowTransportError(OnlineJobResult* res) {
+bool SumatraPDFWebWnd::ShowTransportError(OnlineJobResult* res) {
     if (res->tooBig || res->error == ERROR_FILE_TOO_LARGE) {
         if (res->status >= 100 && res->status < 600) {
             lastHttpStatus = res->status;
@@ -636,7 +636,7 @@ bool SumatraOnlineWnd::ShowTransportError(OnlineJobResult* res) {
     if (res->status == kHttpStatusOk && res->error != ERROR_SUCCESS) {
         lastHttpStatus = kHttpStatusOk;
         SetStatus(res->job == OnlineJob::Download ? Tr("Could not save the download.")
-                                                  : Tr("Could not reach Sumatra Online."));
+                                                  : Tr("Could not reach SumatraPDF Web."));
         return true;
     }
     if (res->status == kHttpStatusOk) {
@@ -660,11 +660,11 @@ bool SumatraOnlineWnd::ShowTransportError(OnlineJobResult* res) {
         SetStatus(res->message);
         return true;
     }
-    SetStatus(Tr("Could not reach Sumatra Online."));
+    SetStatus(Tr("Could not reach SumatraPDF Web."));
     return true;
 }
 
-void SumatraOnlineWnd::FinishList(OnlineJobResult* res) {
+void SumatraPDFWebWnd::FinishList(OnlineJobResult* res) {
     if (ShowTransportError(res)) {
         clearListStatus = false;
         UpdateFileButtons();
@@ -696,7 +696,7 @@ void SumatraOnlineWnd::FinishList(OnlineJobResult* res) {
     UpdateFileButtons();
 }
 
-void SumatraOnlineWnd::FinishUpload(OnlineJobResult* res) {
+void SumatraPDFWebWnd::FinishUpload(OnlineJobResult* res) {
     if (ShowTransportError(res)) {
         UpdateFileButtons();
         return;
@@ -706,7 +706,7 @@ void SumatraOnlineWnd::FinishUpload(OnlineJobResult* res) {
     StartList();
 }
 
-void SumatraOnlineWnd::FinishDownload(OnlineJobResult* res) {
+void SumatraPDFWebWnd::FinishDownload(OnlineJobResult* res) {
     if (ShowTransportError(res)) {
         UpdateFileButtons();
         return;
@@ -722,7 +722,7 @@ void SumatraOnlineWnd::FinishDownload(OnlineJobResult* res) {
     StartLoadDocument(&args);
 }
 
-void SumatraOnlineWnd::FinishJob(OnlineJobResult* res) {
+void SumatraPDFWebWnd::FinishJob(OnlineJobResult* res) {
     inFlight = false;
     reqId = 0;
     if (res->job == OnlineJob::List) {
@@ -738,7 +738,7 @@ void SumatraOnlineWnd::FinishJob(OnlineJobResult* res) {
 
 static void OnlineJobDone(OnlineJobResult* res) {
     AutoDelete del(res);
-    SumatraOnlineWnd* wnd = gSumatraOnlineWnd;
+    SumatraPDFWebWnd* wnd = gSumatraPDFWebWnd;
     if (!wnd || wnd->reqId != res->id) {
         return;
     }
@@ -783,7 +783,7 @@ static TempStr PickUploadPath(HWND owner) {
     return path;
 }
 
-void SumatraOnlineWnd::BeginUpload(Str localPath) {
+void SumatraPDFWebWnd::BeginUpload(Str localPath) {
     if (inFlight) {
         return;
     }
@@ -792,7 +792,7 @@ void SumatraOnlineWnd::BeginUpload(Str localPath) {
         return;
     }
     if (!gSettings || !IsOnlineApiKey(gSettings->onlineApiKey)) {
-        SetStatus(Tr("That is not a Sumatra Online API key."));
+        SetStatus(Tr("That is not a SumatraPDF Web API key."));
         return;
     }
     // MsgBox pumps. localPath may be tab->filePath, freed when a load finishes.
@@ -817,9 +817,9 @@ void SumatraOnlineWnd::BeginUpload(Str localPath) {
 
     bool known = fileModel && fileModel->strings.Contains(baseOwned);
     TempStr question =
-        known ? fmt(Tr("Replace %s on Sumatra Online?").s, baseOwned)
+        known ? fmt(Tr("Replace %s on SumatraPDF Web?").s, baseOwned)
               : fmt(Tr("Upload %s? If that name already exists on the server, it is replaced.").s, baseOwned);
-    int answer = MsgBox(hwnd, question, Tr("Link Sumatra Online"), MB_YESNO | MB_ICONQUESTION);
+    int answer = MsgBox(hwnd, question, Tr("Link SumatraPDF Web"), MB_YESNO | MB_ICONQUESTION);
     if (answer != IDYES) {
         return;
     }
@@ -843,7 +843,7 @@ void SumatraOnlineWnd::BeginUpload(Str localPath) {
     StartJob(req);
 }
 
-void SumatraOnlineWnd::OnUpload(VirtMouseEvent*) {
+void SumatraPDFWebWnd::OnUpload(VirtMouseEvent*) {
     if (inFlight) {
         return;
     }
@@ -854,7 +854,7 @@ void SumatraOnlineWnd::OnUpload(VirtMouseEvent*) {
     BeginUpload(path);
 }
 
-void SumatraOnlineWnd::OnUploadDoc(VirtMouseEvent*) {
+void SumatraPDFWebWnd::OnUploadDoc(VirtMouseEvent*) {
     if (inFlight || !CanUploadDoc()) {
         UpdateFileButtons();
         return;
@@ -862,7 +862,7 @@ void SumatraOnlineWnd::OnUploadDoc(VirtMouseEvent*) {
     BeginUpload(win->CurrentTab()->filePath);
 }
 
-void SumatraOnlineWnd::OnOpen(VirtMouseEvent*) {
+void SumatraPDFWebWnd::OnOpen(VirtMouseEvent*) {
     if (inFlight || !listBox || !fileModel) {
         return;
     }
@@ -886,8 +886,8 @@ void SumatraOnlineWnd::OnOpen(VirtMouseEvent*) {
         SetStatus(Tr("That file name cannot be downloaded."));
         return;
     }
-    // <appdata>/SumatraPDF-online/<base name>, only after the name check. The same name overwrites.
-    TempStr dir = GetPathInAppDataDirTemp(StrL("SumatraPDF-online"));
+    // <appdata>/SumatraPDF-web/<base name>, only after the name check. The same name overwrites.
+    TempStr dir = GetPathInAppDataDirTemp(StrL("SumatraPDF-web"));
     if (!dir::CreateAll(dir)) {
         SetStatus(Tr("Could not save the download."));
         return;
@@ -908,18 +908,18 @@ void SumatraOnlineWnd::OnOpen(VirtMouseEvent*) {
 }
 
 static void OnClose(WindowBase::CloseEvent*) {
-    if (gSumatraOnlineWnd) {
-        gSumatraOnlineWnd->OnCancel();
+    if (gSumatraPDFWebWnd) {
+        gSumatraPDFWebWnd->OnCancel();
     }
 }
 
 static void OnDestroy(WindowBase::DestroyEvent*) {
-    if (gSumatraOnlineWnd) {
-        gSumatraOnlineWnd->OnCancel();
+    if (gSumatraPDFWebWnd) {
+        gSumatraPDFWebWnd->OnCancel();
     }
 }
 
-bool SumatraOnlineWnd::Create(MainWindow* mainWin) {
+bool SumatraPDFWebWnd::Create(MainWindow* mainWin) {
     win = mainWin;
     Color colTxt = ThemeWindowTextColor();
     Color colBg = ThemeWindowControlBackgroundColor();
@@ -930,7 +930,7 @@ bool SumatraOnlineWnd::Create(MainWindow* mainWin) {
     {
         CreateCustomArgs args;
         args.owner = win ? win->hwndFrame : nullptr;
-        args.title = Tr("Link Sumatra Online");
+        args.title = Tr("Link SumatraPDF Web");
         args.visible = false;
         args.style = WS_POPUPWINDOW | WS_CAPTION;
         args.font = fontText;
@@ -954,7 +954,7 @@ bool SumatraOnlineWnd::Create(MainWindow* mainWin) {
         NewOnlineNote(Tr("Forget key removes it from this computer. To revoke it, use the button on the website."),
                       fontText, colMuted));
     vbox->AddChild(NewOnlineNote(
-        Tr("This is a copy. Edits stay on this computer until you upload again. Save does not update Sumatra Online."),
+        Tr("This is a copy. Edits stay on this computer until you upload again. Save does not update SumatraPDF Web."),
         fontText, colMuted));
 
     edit = NewDlgEdit(hwnd, fontText, saved, kOnlineApiKeyLen);
@@ -966,8 +966,8 @@ bool SumatraOnlineWnd::Create(MainWindow* mainWin) {
     fileModel = new ListBoxModelStrings();
     listBox->SetModel(fileModel);
     listBox->onDrawItem =
-        MkMethod1<SumatraOnlineWnd, VirtListBox::DrawItemEvent*, &SumatraOnlineWnd::DrawFileRow>(this);
-    listBox->onSelectionChanged = MkMethod0<SumatraOnlineWnd, &SumatraOnlineWnd::OnFileSel>(this);
+        MkMethod1<SumatraPDFWebWnd, VirtListBox::DrawItemEvent*, &SumatraPDFWebWnd::DrawFileRow>(this);
+    listBox->onSelectionChanged = MkMethod0<SumatraPDFWebWnd, &SumatraPDFWebWnd::OnFileSel>(this);
     vbox->AddChild(NewDlgListBox(listBox));
 
     status = NewVirtText({.s = {}, .font = fontText, .textColor = colTxt, .isRtl = isRtl, .ellipsis = true});
@@ -976,19 +976,19 @@ bool SumatraOnlineWnd::Create(MainWindow* mainWin) {
     vbox->AddChild(status);
 
     btnLogin = NewDlgButton(hwnd, Tr("Log in..."), fontText, DlgButtonStyle::Ghost, false);
-    btnLogin->onClick = MkMethod1<SumatraOnlineWnd, VirtMouseEvent*, &SumatraOnlineWnd::OnLogin>(this);
+    btnLogin->onClick = MkMethod1<SumatraPDFWebWnd, VirtMouseEvent*, &SumatraPDFWebWnd::OnLogin>(this);
     btnForget = NewDlgButton(hwnd, Tr("Forget key"), fontText, DlgButtonStyle::Ghost, false);
-    btnForget->onClick = MkMethod1<SumatraOnlineWnd, VirtMouseEvent*, &SumatraOnlineWnd::OnForget>(this);
+    btnForget->onClick = MkMethod1<SumatraPDFWebWnd, VirtMouseEvent*, &SumatraPDFWebWnd::OnForget>(this);
     btnUpload = NewDlgButton(hwnd, Tr("Upload..."), fontText, DlgButtonStyle::Ghost, false);
-    btnUpload->onClick = MkMethod1<SumatraOnlineWnd, VirtMouseEvent*, &SumatraOnlineWnd::OnUpload>(this);
+    btnUpload->onClick = MkMethod1<SumatraPDFWebWnd, VirtMouseEvent*, &SumatraPDFWebWnd::OnUpload>(this);
     btnUploadDoc = NewDlgButton(hwnd, Tr("Upload this document"), fontText, DlgButtonStyle::Ghost, false);
-    btnUploadDoc->onClick = MkMethod1<SumatraOnlineWnd, VirtMouseEvent*, &SumatraOnlineWnd::OnUploadDoc>(this);
+    btnUploadDoc->onClick = MkMethod1<SumatraPDFWebWnd, VirtMouseEvent*, &SumatraPDFWebWnd::OnUploadDoc>(this);
     btnOpen = NewDlgButton(hwnd, Tr("Open"), fontText, DlgButtonStyle::Ghost, false);
-    btnOpen->onClick = MkMethod1<SumatraOnlineWnd, VirtMouseEvent*, &SumatraOnlineWnd::OnOpen>(this);
+    btnOpen->onClick = MkMethod1<SumatraPDFWebWnd, VirtMouseEvent*, &SumatraPDFWebWnd::OnOpen>(this);
     btnCancel = NewDlgButton(hwnd, Tr("Cancel"), fontText, DlgButtonStyle::Outline, false);
-    btnCancel->onClick = MkMethod1<SumatraOnlineWnd, VirtMouseEvent*, &SumatraOnlineWnd::OnCancel>(this);
+    btnCancel->onClick = MkMethod1<SumatraPDFWebWnd, VirtMouseEvent*, &SumatraPDFWebWnd::OnCancel>(this);
     btnOk = NewDlgButton(hwnd, Tr("OK"), fontText, DlgButtonStyle::Filled, true);
-    btnOk->onClick = MkMethod1<SumatraOnlineWnd, VirtMouseEvent*, &SumatraOnlineWnd::OnOk>(this);
+    btnOk->onClick = MkMethod1<SumatraPDFWebWnd, VirtMouseEvent*, &SumatraPDFWebWnd::OnOk>(this);
     SetForgetEnabled(len(saved) > 0);
 
     HBox* fileRow = NewDlgRow();
@@ -1020,20 +1020,20 @@ bool SumatraOnlineWnd::Create(MainWindow* mainWin) {
     return true;
 }
 
-void ShowSumatraOnlineDialog(MainWindow* win) {
+void ShowSumatraPDFWebDialog(MainWindow* win) {
     if (!CanAccessDisk() || !HasPermission(Perm::SavePreferences) || !HasPermission(Perm::InternetAccess)) {
         return;
     }
-    if (gSumatraOnlineWnd) {
-        HwndSetFocus(gSumatraOnlineWnd->hwnd);
-        if (gSumatraOnlineWnd->edit) {
-            HwndSetFocus(gSumatraOnlineWnd->edit->hwnd);
+    if (gSumatraPDFWebWnd) {
+        HwndSetFocus(gSumatraPDFWebWnd->hwnd);
+        if (gSumatraPDFWebWnd->edit) {
+            HwndSetFocus(gSumatraPDFWebWnd->edit->hwnd);
         }
         return;
     }
-    auto* wnd = new SumatraOnlineWnd();
+    auto* wnd = new SumatraPDFWebWnd();
     wnd->closeOnEsc = true;
-    wnd->onBeforeDelete = MkFunc0Void(ClearSumatraOnlineWnd);
+    wnd->onBeforeDelete = MkFunc0Void(ClearSumatraPDFWebWnd);
     wnd->onClose = MkFunc1Void<WindowBase::CloseEvent*>(OnClose);
     wnd->onDestroy = MkFunc1Void<WindowBase::DestroyEvent*>(OnDestroy);
     wnd->SetFont(GetAppFont());
@@ -1042,7 +1042,7 @@ void ShowSumatraOnlineDialog(MainWindow* win) {
         delete wnd;
         return;
     }
-    gSumatraOnlineWnd = wnd;
+    gSumatraPDFWebWnd = wnd;
     wnd->StartList();
     RunModalWindow(wnd->hwnd, win ? win->hwndFrame : nullptr);
 }

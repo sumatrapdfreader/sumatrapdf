@@ -6789,8 +6789,8 @@ void ExecuteCmd(MainWindow* win, int cmdId) {
             OnMenuExit();
             return;
 
-        case CmdSumatraOnline:
-            ShowTemporaryNotification(win, StrL("Sumatra Online is not in this build yet."), kNotif5SecsTimeOut);
+        case CmdSumatraPDFWeb:
+            ShowTemporaryNotification(win, StrL("SumatraPDF Web is not in this build yet."), kNotif5SecsTimeOut);
             break;
 
         default:

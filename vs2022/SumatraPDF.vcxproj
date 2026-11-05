@@ -1721,8 +1721,8 @@
     <ClCompile Include="..\src\SimpleBrowserWindow.cpp" />
     <ClCompile Include="..\src\SumatraControl.cpp" />
     <ClCompile Include="..\src\SumatraDialogs.cpp" />
-    <ClCompile Include="..\src\SumatraOnlineDialog.cpp" />
     <ClCompile Include="..\src\SumatraPDF.cpp" />
+    <ClCompile Include="..\src\SumatraPDFWebDialog.cpp" />
     <ClCompile Include="..\src\SumatraTest.cpp" />
     <ClCompile Include="..\src\TabGroupsManage.cpp" />
     <ClCompile Include="..\src\TableOfContents.cpp" />

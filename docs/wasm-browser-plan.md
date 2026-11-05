@@ -169,7 +169,7 @@ still counts as a user gesture so popup blockers allow it.
 
 | Command                                                                                  | What happens today                                                   |
 | ---------------------------------------------------------------------------------------- | -------------------------------------------------------------------- |
-| `CmdSumatraOnline`                                                                       | File menu; says "Sumatra Online is not in this build yet"            |
+| `CmdSumatraPDFWeb`                                                                       | File menu; says "SumatraPDF Web is not in this build yet"            |
 | `CmdCheckUpdate`, `CmdInstallPrereleaseUpdate`                                           | Error dialog "Couldn't download update information"                  |
 | `CmdSetScreenshotHotkey`                                                                 | Dialog for a global hotkey a page can't register                     |
 | `CmdSetInverseSearch`, `CmdInvokeInverseSearch`, `CmdToggleInverseSearch`                | Set opens a dialog; the others do nothing. Needs an editor to launch |

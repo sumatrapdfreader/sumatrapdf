@@ -56,7 +56,7 @@ void ShowEbookSettingsDialog(MainWindow* win);
 Str ShowGetPasswordDialog(HWND hwndParent, Str fileName, bool* rememberPassword, bool* showPassword);
 void ShowGoToPageDialog(MainWindow* win);
 void ShowInverseSearchDialog(MainWindow* win);
-void ShowSumatraOnlineDialog(MainWindow* win);
+void ShowSumatraPDFWebDialog(MainWindow* win);
 void ShowSettingsDialog(MainWindow* win);
 
 enum class PrintRangeAdv {

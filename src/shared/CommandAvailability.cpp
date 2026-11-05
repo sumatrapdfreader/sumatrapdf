@@ -89,7 +89,7 @@ static const i32 gNoDocWhitelist[] = {
     CmdTabGroupRestore,
     CmdSetScreenshotHotkey,
     CmdStopReadAloud,
-    CmdSumatraOnline,
+    CmdSumatraPDFWeb,
     0,
 };
 
@@ -106,8 +106,8 @@ static const i32 gHiddenOnWasm[] = {
     // the web app is always the latest version
     CmdCheckUpdate,
     CmdInstallPrereleaseUpdate,
-    // this is Sumatra Online already
-    CmdSumatraOnline,
+    // this is SumatraPDF Web already
+    CmdSumatraPDFWeb,
     // a page can't register a global hotkey, start programs or list printers
     CmdSetScreenshotHotkey,
     CmdSetInverseSearch,
@@ -207,7 +207,7 @@ static const i32 removeIfNoInternetPerms[] = {
     CmdHelpOpenManualOnWebsite,
     CmdHelpOpenKeyboardShortcuts,
     CmdContributeTranslation,
-    CmdSumatraOnline,
+    CmdSumatraPDFWeb,
     CmdOpenFromURL,
     0,
 };
@@ -232,7 +232,7 @@ static const i32 removeIfNoPrefsPerms[] = {
     CmdToggleFavoritesSort,
     CmdGoToNextFavorite,
     CmdGoToPrevFavorite,
-    CmdSumatraOnline,
+    CmdSumatraPDFWeb,
     CmdDebugSaveSettings,
     0,
 };
@@ -590,7 +590,7 @@ CommandVisibility GetCommandVisibility(int cmdId, const AppCommandCtx& ctx, Comm
 
     // The whitelist returns before the permission lists. This command is on
     // that list, so the internet and prefs checks have to happen here.
-    if (cmdId == CmdSumatraOnline && (!HasPermission(Perm::InternetAccess) || !HasPermission(Perm::SavePreferences))) {
+    if (cmdId == CmdSumatraPDFWeb && (!HasPermission(Perm::InternetAccess) || !HasPermission(Perm::SavePreferences))) {
         return CommandVisibility::Hide;
     }
 

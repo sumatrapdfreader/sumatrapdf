@@ -10637,8 +10637,8 @@ static LRESULT FrameOnCommand(MainWindow* win, HWND hwnd, UINT msg, WPARAM wp, L
             uitask::Post(MkFunc0(PrintSelectionDeferred, win), "CmdPrintSelection");
             break;
 
-        case CmdSumatraOnline:
-            ShowSumatraOnlineDialog(win);
+        case CmdSumatraPDFWeb:
+            ShowSumatraPDFWebDialog(win);
             break;
 
         case CmdCopyFilePath:

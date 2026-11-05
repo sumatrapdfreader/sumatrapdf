@@ -2338,12 +2338,12 @@ const globalPrefs: Field[] = [
     "OnlineApiKey",
     Str,
     null,
-    "API key for Sumatra Online. Set from File / Link Sumatra Online. Do not share the settings file.",
+    "API key for SumatraPDF Web. Set from File / Link SumatraPDF Web. Do not share the settings file.",
   )
     .internal()
     .ver("3.7")
     .omitFromDocs(),
-  field("OnlineServer", Str, null, "an empty value means the public Sumatra Online site. The dialog does not edit it.")
+  field("OnlineServer", Str, null, "an empty value means the public SumatraPDF Web site. The dialog does not edit it.")
     .internal()
     .ver("3.7")
     .omitFromDocs(),

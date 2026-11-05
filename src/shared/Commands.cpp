@@ -354,7 +354,7 @@ const CommandInfo gCommands[] = {
     {CmdConvertEpubToPdf, "CmdConvertEpubToPdf\0", StrL("Convert EPUB to PDF...")},
     {CmdConvertCajToPDF, "CmdConvertCajToPDF\0", StrL("Convert CAJ to PDF...")},
     {CmdFindHistory, "CmdFindHistory\0", StrL("Find History")},
-    {CmdSumatraOnline, "CmdSumatraOnline\0", StrL("Sumatra Online...")},
+    {CmdSumatraPDFWeb, "CmdSumatraPDFWeb\0", StrL("SumatraPDF Web...")},
     {CmdDebugSaveSettings, "CmdDebugSaveSettings\0", StrL("Debug: Save Settings")},
     {CmdNewTab, "CmdNewTab\0", StrL("New Tab")},
     {CmdShowSignatures, "CmdShowSignatures\0", StrL("Show Signatures")},

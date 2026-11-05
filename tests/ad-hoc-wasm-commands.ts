@@ -33,7 +33,7 @@ const HIDDEN_ON_WASM = [
   "CmdDuplicateInNewWindow",
   "CmdCheckUpdate",
   "CmdInstallPrereleaseUpdate",
-  "CmdSumatraOnline",
+  "CmdSumatraPDFWeb",
   "CmdSetScreenshotHotkey",
   "CmdSetInverseSearch",
   "CmdInvokeInverseSearch",

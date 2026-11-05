@@ -1374,9 +1374,9 @@ const StructInfo gSettingsInfo = {
     "cleared\0windows and tabs still open when SumatraPDF was last closed; reopened at startup if RestoreSession is "
     "true\0data required for reloading documents after an auto-update\0data required to determine when SumatraPDF last "
     "checked for updates\0value required to determine recency for the OpenCount value in FileStates\0position of the "
-    "document properties window\0if true, check once a day whether an update is available\0API key for Sumatra Online. "
-    "Set from File / Link Sumatra Online. Do not share the settings file.\0an empty value means the public Sumatra "
-    "Online site. The dialog does not edit it.\0\0Settings below are not recognized by the current version",
+    "document properties window\0if true, check once a day whether an update is available\0API key for SumatraPDF Web. "
+    "Set from File / Link SumatraPDF Web. Do not share the settings file.\0an empty value means the public SumatraPDF "
+    "Web site. The dialog does not edit it.\0\0Settings below are not recognized by the current version",
     false};
 static const FieldInfo gTheme_1_Fields[] = {
     {offsetof(Theme, name), SettingType::String, (intptr_t)""},

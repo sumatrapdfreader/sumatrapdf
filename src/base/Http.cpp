@@ -568,7 +568,7 @@ bool OnlineURLAllowed(Str url) {
     }
     WStr host(uc.lpszHostName, (int)uc.dwHostNameLength);
     if (uc.nScheme == INTERNET_SCHEME_HTTPS && uc.nPort == 443 &&
-        wstr::EqI(host, WStrL(L"online.sumatrapdfreader.org"))) {
+        wstr::EqI(host, WStrL(L"web.sumatrapdfreader.org"))) {
         return true;
     }
     if (uc.nScheme == INTERNET_SCHEME_HTTP && uc.nPort == 9332 &&

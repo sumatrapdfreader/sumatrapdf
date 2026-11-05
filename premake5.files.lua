@@ -297,7 +297,7 @@ function sumatrapdf_files()
     "GetPasswordDialog.*",
     "GoToPageDialog.*",
     "InverseSearchDialog.*",
-    "SumatraOnlineDialog.*",
+    "SumatraPDFWebDialog.*",
     "SettingsDialog.*",
     "AppSettings.*",
     "PagePosition.*",

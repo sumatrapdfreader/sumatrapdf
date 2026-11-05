@@ -348,7 +348,7 @@ enum {
     CmdConvertEpubToPdf = 542,
     CmdConvertCajToPDF = 543,
     CmdFindHistory = 544,
-    CmdSumatraOnline = 545,
+    CmdSumatraPDFWeb = 545,
     CmdDebugSaveSettings = 546,
     CmdNewTab = 547,
     CmdShowSignatures = 548,
