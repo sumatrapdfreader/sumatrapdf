@@ -1288,6 +1288,9 @@ struct Settings {
     // still scrolls, Shift + wheel scrolls horizontally and Ctrl + wheel
     // zooms
     bool mouseWheelTurnsPage;
+    // if true, the mouse wheel scrolls (and turns pages) the other way, as
+    // natural scrolling does; Ctrl + wheel zoom is unchanged
+    bool invertMouseWheel;
     // if true, in single page / facing / book view, scrolling past the top
     // or bottom of a zoomed-in page goes to the previous / next page; if
     // false, scrolling stops at the edge and the page is changed only by

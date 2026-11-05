@@ -1550,6 +1550,10 @@ static void CanvasOnMouseWheel(MainWindow* win, int delta, bool isCtrl, bool isS
         ZoomByMouseWheel(win, delta, pt);
         return;
     }
+    // InvertMouseWheel (#6493): scroll and turn pages the other way
+    if (gSettings->invertMouseWheel) {
+        delta = -delta;
+    }
 
     bool hScroll = isShift;
     bool vScroll = !hScroll;

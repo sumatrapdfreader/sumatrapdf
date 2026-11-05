@@ -1762,6 +1762,13 @@ const globalPrefs: Field[] = [
       "Alt + wheel still scrolls, Shift + wheel scrolls horizontally and Ctrl + wheel zooms",
   ).ver("3.7"),
   field(
+    "InvertMouseWheel",
+    Bool,
+    false,
+    "if true, the mouse wheel scrolls (and turns pages) the other way, as natural scrolling does; " +
+      "Ctrl + wheel zoom is unchanged",
+  ).ver("3.7"),
+  field(
     "ScrollEdgeTurnsPage",
     Bool,
     true,
@@ -2443,6 +2450,7 @@ const globalPrefsLayout = [
   "ExplorerQuickLook",
   "RememberViewOffsetOnPageTurn",
   "MouseWheelTurnsPage",
+  "InvertMouseWheel",
   "ScrollEdgeTurnsPage",
   "ShowDocumentFocusIndicator",
   "ShowAnnotationNotification",

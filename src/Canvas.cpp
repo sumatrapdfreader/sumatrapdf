@@ -3549,6 +3549,16 @@ static bool RefHoverTakesWheel(MainWindow* win, UINT msg, WPARAM wp, LPARAM lp) 
     return true;
 }
 
+// InvertMouseWheel (#6493): the wheel delta with its sign flipped
+static WPARAM MaybeInvertWheel(WPARAM wp) {
+    if (!gSettings->invertMouseWheel) {
+        return wp;
+    }
+    int delta = -(int)GET_WHEEL_DELTA_WPARAM(wp);
+    delta = std::min(delta, (int)SHRT_MAX);
+    return MAKEWPARAM(LOWORD(wp), (WORD)(short)delta);
+}
+
 static LRESULT CanvasOnMouseWheel(MainWindow* win, UINT msg, WPARAM wp, LPARAM lp) {
     // Scroll the ToC sidebar, if it's visible and the cursor is in it
     if (IsSidebarViewShown(win, SidebarView::Bookmarks) && HwndIsCursorOverWindow(win->tocTreeView->hwnd) &&
@@ -3590,6 +3600,7 @@ static LRESULT CanvasOnMouseWheel(MainWindow* win, UINT msg, WPARAM wp, LPARAM l
         ZoomByMouseWheel(win, wp);
         return 0;
     }
+    wp = MaybeInvertWheel(wp);
 
     bool hScroll = (LOWORD(wp) & MK_SHIFT) || IsShiftPressed();
     bool vScroll = !hScroll;
@@ -3874,6 +3885,7 @@ static LRESULT CanvasOnMouseHWheel(MainWindow* win, UINT msg, WPARAM wp, LPARAM 
         return 0;
     }
 
+    wp = MaybeInvertWheel(wp);
     short delta = GET_WHEEL_DELTA_WPARAM(wp);
     win->wheelAccumDelta += delta;
 

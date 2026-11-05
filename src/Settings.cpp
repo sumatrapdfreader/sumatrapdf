@@ -1026,6 +1026,7 @@ static const FieldInfo gSettingsFields[] = {
     {offsetof(Settings, explorerQuickLook), SettingType::Bool, false},
     {offsetof(Settings, rememberViewOffsetOnPageTurn), SettingType::Bool, false},
     {offsetof(Settings, mouseWheelTurnsPage), SettingType::Bool, false},
+    {offsetof(Settings, invertMouseWheel), SettingType::Bool, false},
     {offsetof(Settings, scrollEdgeTurnsPage), SettingType::Bool, true},
     {offsetof(Settings, showDocumentFocusIndicator), SettingType::Bool, false},
     {offsetof(Settings, showAnnotationNotification), SettingType::Bool, true},
@@ -1157,7 +1158,7 @@ static const FieldInfo gSettingsFields[] = {
 };
 const StructInfo gSettingsInfo = {
     sizeof(Settings),
-    184,
+    185,
     gSettingsFields,
     "\0\0DefaultDisplayMode\0DefaultZoom\0DisableJavaScript\0AllowExternalImages\0EnableTeXEnhancements\0EscToExit\0Ful"
     "lPathInTitle\0InverseSearchCmdLine\0LazyLoading\0MainWindowBackground\0NoHomeTab\0NoCaj2pdfConverterDownload\0Home"
@@ -1168,21 +1169,21 @@ const StructInfo gSettingsInfo = {
     "\0ShowToolbar\0Toolbar\0ToolbarPosition\0SearchUIFloating\0ShowFavorites\0SidebarBottomView\0ShowSidebarMiddle\0So"
     "rtFavoritesByName\0ShowToc\0AlwaysShowSidebar\0ShowThumbnailsIfNoToc\0SidebarOnRight\0SidebarAutoHide\0SidebarWind"
     "owSize\0ShowLinks\0HighlightFormFields\0ClickEdgeToTurnPage\0DisableLinks\0DisableLeftDragPan\0ExplorerQuickLook\0"
-    "RememberViewOffsetOnPageTurn\0MouseWheelTurnsPage\0ScrollEdgeTurnsPage\0ShowDocumentFocusIndicator\0ShowAnnotation"
-    "Notification\0ShowFileNavigateHint\0ShowAnnotationAuthorInTooltip\0ShowTocPageNumbers\0AutoGenerateTOC\0ShowStartP"
-    "age\0SidebarDx\0Scrollbars\0ScrollbarInSinglePage\0SmoothScroll\0ScrollLineAmount\0SaveMemory\0PaddingAfterLastPag"
-    "e\0ContinuousScrollFollowsRotation\0IgnoreDestinationZoom\0HighlightLinkDestination\0CitationHoverDelay\0ReadAloud"
-    "VoiceId\0ReadAloudSpeed\0ReadingAutoScrollSpeed\0ReadingBar\0FastScrollOverScrollbar\0PreventSleepInFullscreen\0Ta"
-    "bWidth\0TabsEqualWidth\0Theme\0HelpTheme\0LastLightTheme\0LastDarkTheme\0DocumentColorsFollowTheme\0TocDy\0Sidebar"
-    "MiddleDy\0ToolbarCustomLayout\0ToolbarShowReadAloud\0ToolbarSize\0TreeFontName\0TreeFontSize\0UIFontSize\0DisableA"
-    "ntiAlias\0EngineeringDrawingEnhance\0DisableAutoLinks\0UseSysColors\0UseTabs\0ShowCaption\0SelectionToolbar\0Selec"
-    "tionToolbarLayout\0TabsMru\0CtrlTabSimple\0ZoomLevels\0ZoomIncrement\0\0FixedPageUI\0\0EBookUI\0\0ComicBookUI\0\0I"
-    "mageUI\0\0ChmUI\0\0MarkdownUI\0\0HtmlUI\0\0ClaudeCode\0\0GrokBuild\0\0CodexBuild\0\0AntiGravity\0\0AIChat\0\0AICha"
-    "tSidebarDx\0\0TranslateToLang\0TranslateFromLang\0TranslateEngine\0\0Annotations\0\0ExternalViewers\0\0ForwardSear"
-    "ch\0\0PrinterDefaults\0\0Fullscreen\0\0SelectionHandlers\0\0TextSnippets\0\0Shortcuts\0\0Themes\0\0TabGroups\0\0Cu"
-    "stomScreenDPI\0\0\0DefaultPasswords\0UiLanguage\0VersionToSkip\0WindowState\0WindowPos\0SearchUIWindowPos\0Annotat"
-    "ionsWindowShowNote\0HelpWindowPos\0FileStates\0SessionData\0ReopenOnce\0TimeOfLastUpdateCheck\0OpenCountWeek\0Prop"
-    "WinPos\0CheckForUpdates\0OnlineApiKey\0OnlineServer\0\0",
+    "RememberViewOffsetOnPageTurn\0MouseWheelTurnsPage\0InvertMouseWheel\0ScrollEdgeTurnsPage\0ShowDocumentFocusIndicat"
+    "or\0ShowAnnotationNotification\0ShowFileNavigateHint\0ShowAnnotationAuthorInTooltip\0ShowTocPageNumbers\0AutoGener"
+    "ateTOC\0ShowStartPage\0SidebarDx\0Scrollbars\0ScrollbarInSinglePage\0SmoothScroll\0ScrollLineAmount\0SaveMemory\0P"
+    "addingAfterLastPage\0ContinuousScrollFollowsRotation\0IgnoreDestinationZoom\0HighlightLinkDestination\0CitationHov"
+    "erDelay\0ReadAloudVoiceId\0ReadAloudSpeed\0ReadingAutoScrollSpeed\0ReadingBar\0FastScrollOverScrollbar\0PreventSle"
+    "epInFullscreen\0TabWidth\0TabsEqualWidth\0Theme\0HelpTheme\0LastLightTheme\0LastDarkTheme\0DocumentColorsFollowThe"
+    "me\0TocDy\0SidebarMiddleDy\0ToolbarCustomLayout\0ToolbarShowReadAloud\0ToolbarSize\0TreeFontName\0TreeFontSize\0UI"
+    "FontSize\0DisableAntiAlias\0EngineeringDrawingEnhance\0DisableAutoLinks\0UseSysColors\0UseTabs\0ShowCaption\0Selec"
+    "tionToolbar\0SelectionToolbarLayout\0TabsMru\0CtrlTabSimple\0ZoomLevels\0ZoomIncrement\0\0FixedPageUI\0\0EBookUI\0"
+    "\0ComicBookUI\0\0ImageUI\0\0ChmUI\0\0MarkdownUI\0\0HtmlUI\0\0ClaudeCode\0\0GrokBuild\0\0CodexBuild\0\0AntiGravity"
+    "\0\0AIChat\0\0AIChatSidebarDx\0\0TranslateToLang\0TranslateFromLang\0TranslateEngine\0\0Annotations\0\0ExternalVie"
+    "wers\0\0ForwardSearch\0\0PrinterDefaults\0\0Fullscreen\0\0SelectionHandlers\0\0TextSnippets\0\0Shortcuts\0\0Themes"
+    "\0\0TabGroups\0\0CustomScreenDPI\0\0\0DefaultPasswords\0UiLanguage\0VersionToSkip\0WindowState\0WindowPos\0SearchU"
+    "IWindowPos\0AnnotationsWindowShowNote\0HelpWindowPos\0FileStates\0SessionData\0ReopenOnce\0TimeOfLastUpdateCheck\0"
+    "OpenCountWeek\0PropWinPos\0CheckForUpdates\0OnlineApiKey\0OnlineServer\0\0",
     "\0\0default layout of pages. page aspect (3.7+): first open of a PDF, XPS, DjVu or PostScript file uses page 1 — "
     "taller than wide is continuous + fit width, wider than tall is single page + fit page; a remembered FileState "
     "still wins\0default zoom. valid values: fit page, fit width, fit height, fit content, fit visible or percent like "
@@ -1256,19 +1257,20 @@ const StructInfo gSettingsInfo = {
     "the page instead of jumping to the top (useful when zoomed in on similarly sized pages)\0if true, one mouse-wheel "
     "notch goes to the next / previous page instead of scrolling; combine with RememberViewOffsetOnPageTurn to read "
     "zoomed-in pages without touching the keyboard. Alt + wheel still scrolls, Shift + wheel scrolls horizontally and "
-    "Ctrl + wheel zooms\0if true, in single page / facing / book view, scrolling past the top or bottom of a zoomed-in "
-    "page goes to the previous / next page; if false, scrolling stops at the edge and the page is changed only by the "
-    "keyboard, toolbar or scrollbar. A page that fits the window has nothing to scroll, so a wheel notch turns it "
-    "either way\0if true, draw a focus ring around the document when it has keyboard focus (Tab to the page area)\0if "
-    "true, show a tip when hovering an annotation (e.g. \"Highlight annotation. Ctrl+click to edit.\")\0if true, at "
-    "the end of a document show a hint to open the next file in the folder. Closing the hint sets it to false\0if "
-    "true, show the author at the bottom of an annotation tooltip as \"Author: <author>\"\0if true, show page numbers "
-    "(labels) right-aligned on bookmark / table-of-contents entries\0if true, a PDF without an outline gets a table of "
-    "contents built from numbered headings in its text (Generate Table Of Contents command does it on demand)\0if "
-    "true, show a list of frequently read documents when no document is loaded\0width of the favorites / bookmarks "
-    "sidebar in screen pixels, as last resized (0 means the default)\0scrollbar mode: windows (standard Windows "
-    "scrollbar), smart (overlay scrollbar with auto-hide), overlay (always visible overlay scrollbar), hidden (no "
-    "scrollbars)\0if true, show a scrollbar in single page mode as well\0if true, smooth mouse-wheel and arrow-key "
+    "Ctrl + wheel zooms\0if true, the mouse wheel scrolls (and turns pages) the other way, as natural scrolling does; "
+    "Ctrl + wheel zoom is unchanged\0if true, in single page / facing / book view, scrolling past the top or bottom of "
+    "a zoomed-in page goes to the previous / next page; if false, scrolling stops at the edge and the page is changed "
+    "only by the keyboard, toolbar or scrollbar. A page that fits the window has nothing to scroll, so a wheel notch "
+    "turns it either way\0if true, draw a focus ring around the document when it has keyboard focus (Tab to the page "
+    "area)\0if true, show a tip when hovering an annotation (e.g. \"Highlight annotation. Ctrl+click to edit.\")\0if "
+    "true, at the end of a document show a hint to open the next file in the folder. Closing the hint sets it to "
+    "false\0if true, show the author at the bottom of an annotation tooltip as \"Author: <author>\"\0if true, show "
+    "page numbers (labels) right-aligned on bookmark / table-of-contents entries\0if true, a PDF without an outline "
+    "gets a table of contents built from numbered headings in its text (Generate Table Of Contents command does it on "
+    "demand)\0if true, show a list of frequently read documents when no document is loaded\0width of the favorites / "
+    "bookmarks sidebar in screen pixels, as last resized (0 means the default)\0scrollbar mode: windows (standard "
+    "Windows scrollbar), smart (overlay scrollbar with auto-hide), overlay (always visible overlay scrollbar), hidden "
+    "(no scrollbars)\0if true, show a scrollbar in single page mode as well\0if true, smooth mouse-wheel and arrow-key "
     "scrolling (exponential chase of the target; continuous input stays fluid)\0distance, in screen pixels at 96 DPI, "
     "scrolled by an arrow-key press or one mouse-wheel line; values below 1 use 16\0how hard to free unused page and "
     "image caches to save RAM (0 to 100). 0 keeps them until an allocation fails; 100 drops them as soon as a page is "
