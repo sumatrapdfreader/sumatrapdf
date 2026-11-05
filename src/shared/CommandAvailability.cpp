@@ -98,6 +98,8 @@ static const i32 gNoDocWhitelist[] = {
 // showing "not supported" (docs/wasm-browser-plan.md).
 static const i32 gHiddenOnWasm[] = {
     CmdRunPDFScript,
+    // a browser tab can't be minimized
+    CmdMinimizeWindow,
     // a browser tab has one canvas, so one window
     CmdNewWindow,
     CmdDuplicateInNewWindow,

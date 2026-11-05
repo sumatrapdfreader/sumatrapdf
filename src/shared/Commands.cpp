@@ -364,6 +364,7 @@ const CommandInfo gCommands[] = {
     {CmdToggleLayers, "CmdToggleLayers\0", StrL("Toggle Layers")},
     {CmdToggleFacingStepOne, "CmdToggleFacingStepOne\0", StrL("Toggle Facing: Step One Page")},
     {CmdCountWords, "CmdCountWords\0", StrL("Count Words")},
+    {CmdMinimizeWindow, "CmdMinimizeWindow\0", StrL("Minimize Window")},
 };
 const int gCommandsCount = dimofi(gCommands);
 

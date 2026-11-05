@@ -881,6 +881,12 @@ void AppShellActivateWindow(MainWindow* win) {
     }
 }
 
+void AppShellMinimizeWindow(MainWindow* win) {
+    if (win && win->gpuiWin) {
+        gp::AppMinimize(win->gpuiWin);
+    }
+}
+
 // F6 treats the unfocused root as the document frame, like orig's frame HWND.
 bool AppShellIsFrameFocused(MainWindow* win) {
     if (!win || !win->gpuiWin || !win->shell) {
@@ -2836,7 +2842,11 @@ void ShellView::OnKeyDown(ShellView* self, gp::Ctx* cx, const gp::KeyEvent* ev) 
             return;
         }
     }
-    if (ev->vk == VK_ESCAPE) {
+    // orig translates accelerators before its Esc handling, so a Shift + Esc
+    // shortcut (e.g. CmdMinimizeWindow, #6491) runs instead
+    bool escShortcut = (ev->shift || ev->ctrl || ev->alt) &&
+                       SafeAcceleratorCmd((u16)ev->vk, ev->ctrl, ev->shift, ev->alt, ev->platform) != 0;
+    if (ev->vk == VK_ESCAPE && !escShortcut) {
         if (IsFormFieldEditActive()) {
             CommitFormFieldEdit(false);
         } else if (IsEditingFreeTextInPlace(win)) {

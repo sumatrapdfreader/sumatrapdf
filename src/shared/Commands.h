@@ -358,8 +358,9 @@ enum {
     CmdToggleLayers = 552,
     CmdToggleFacingStepOne = 553,
     CmdCountWords = 554,
+    CmdMinimizeWindow = 555,
 
-    CmdLast = 554,
+    CmdLast = 555,
     CmdFirstCustom = CmdLast + 100,
 
     // aliases, at the end to not mess ordering

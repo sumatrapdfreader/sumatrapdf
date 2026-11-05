@@ -74,6 +74,10 @@ const user32 = loadDll("user32.dll", {
   InvalidateRect: { args: [FFIType.ptr, FFIType.ptr, FFIType.bool], returns: FFIType.bool },
   UpdateWindow: { args: [FFIType.ptr], returns: FFIType.bool },
   IsZoomed: { args: [FFIType.ptr], returns: FFIType.bool },
+  IsIconic: { args: [FFIType.ptr], returns: FFIType.bool },
+  AttachThreadInput: { args: [FFIType.u32, FFIType.u32, FFIType.bool], returns: FFIType.bool },
+  GetKeyboardState: { args: [FFIType.ptr], returns: FFIType.bool },
+  SetKeyboardState: { args: [FFIType.ptr], returns: FFIType.bool },
   GetClientRect: { args: [FFIType.ptr, FFIType.ptr], returns: FFIType.bool },
   GetScrollInfo: { args: [FFIType.ptr, FFIType.i32, FFIType.ptr], returns: FFIType.bool },
   SetCursorPos: { args: [FFIType.i32, FFIType.i32], returns: FFIType.bool },
@@ -204,6 +208,7 @@ const gdiplus = loadDll("gdiplus.dll", {
 });
 
 const kernel32 = loadDll("kernel32.dll", {
+  GetCurrentThreadId: { args: [], returns: FFIType.u32 },
   CreateProcessW: {
     args: [
       FFIType.ptr,
@@ -1039,6 +1044,37 @@ export function isKeyDownAsync(vk: number): boolean {
 }
 
 const KEYEVENTF_KEYUP = 0x0002;
+
+export function isIconic(hwnd: number): boolean {
+  return user32.symbols.IsIconic(hwnd);
+}
+
+const kKeyDown = 0x80;
+
+// Posts WM_KEYDOWN vk to hwnd with Shift held, for a Shift shortcut. Injected
+// input is dropped here and a posted key carries no modifier, so share the app
+// thread's key state (AttachThreadInput) and mark Shift down in it: that is what
+// GetKeyState and TranslateAccelerator read. Call the returned function once the
+// app handled the key, to release Shift and detach.
+export function postKeyWithShift(hwnd: number, vk: number): () => void {
+  const appThread = user32.symbols.GetWindowThreadProcessId(hwnd, null);
+  const ourThread = kernel32.symbols.GetCurrentThreadId();
+  if (!user32.symbols.AttachThreadInput(ourThread, appThread, true)) {
+    throw new Error("postKeyWithShift: AttachThreadInput failed");
+  }
+  const keys = new Uint8Array(256);
+  const setShift = (down: boolean) => {
+    user32.symbols.GetKeyboardState(ptr(keys));
+    keys[VK_SHIFT] = down ? kKeyDown : 0;
+    user32.symbols.SetKeyboardState(ptr(keys));
+  };
+  setShift(true);
+  user32.symbols.PostMessageW(hwnd, WM_KEYDOWN, vk, 1);
+  return () => {
+    setShift(false);
+    user32.symbols.AttachThreadInput(ourThread, appThread, false);
+  };
+}
 
 // inject a key-up for vk, clearing a key the system thinks is still held
 export function injectKeyUp(vk: number): void {
