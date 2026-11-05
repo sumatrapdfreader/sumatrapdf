@@ -153,6 +153,9 @@
     <ClInclude Include="..\src\OverlayScrollbar.h">
       <Filter>src</Filter>
     </ClInclude>
+    <ClInclude Include="..\src\PageInfoBar.h">
+      <Filter>src</Filter>
+    </ClInclude>
     <ClInclude Include="..\src\PageThumbnails.h">
       <Filter>src</Filter>
     </ClInclude>
@@ -885,6 +888,9 @@
       <Filter>src</Filter>
     </ClCompile>
     <ClCompile Include="..\src\PageGridDialog.cpp">
+      <Filter>src</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\PageInfoBar.cpp">
       <Filter>src</Filter>
     </ClCompile>
     <ClCompile Include="..\src\PageThumbnails.cpp">

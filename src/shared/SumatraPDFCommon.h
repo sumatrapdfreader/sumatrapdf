@@ -21,6 +21,20 @@ extern bool gForceRtl;
 bool ShouldSaveThumbnail(FileState* ds);
 TempStr BuildZoomString(float zoomLevel);
 void UpdatePageInfoHelper(MainWindow* win, NotificationWnd* wnd, int pageNo);
+
+// PageInfoLocation
+enum class PageInfoBarMode {
+    Notification,
+    Bottom,
+    BottomOverlay,
+};
+PageInfoBarMode GetPageInfoBarMode();
+bool PageInfoBarShown(MainWindow* win);
+void PageInfoBarTextTemp(MainWindow* win, TempStr* leftOut, TempStr* rightOut);
+// implemented by each app: the bar was shown, hidden or its text changed
+void PageInfoBarChanged(MainWindow* win);
+// implemented by each app: "canvas=x,y,dx,dy bar=x,y,dx,dy" (or bar=none), for tests
+TempStr PageInfoBarGeometryTemp(MainWindow* win);
 bool ShouldUseBrowserView(FileType kind);
 struct CustomCommand;
 void ToggleCaption(CustomCommand* cmd);

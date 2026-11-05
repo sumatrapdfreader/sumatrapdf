@@ -178,3 +178,4 @@ TempStr ScrollStateResultTemp(int* exitCodeOut);
 TempStr DisplayModeResultTemp(Str action, int* exitCodeOut);
 TempStr WordCountResultTemp(int* exitCodeOut);
 TempStr PageInfoTextResultTemp(int* exitCodeOut);
+TempStr PageInfoBarResultTemp(int* exitCodeOut);

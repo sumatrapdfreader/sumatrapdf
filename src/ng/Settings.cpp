@@ -950,6 +950,7 @@ static const char* gEnumSettingsFilePicker[] = {"", "os", "sumatrapdf", nullptr}
 static const char* gEnumSettingsPrinterUI[] = {"", "auto", "modern", "classic", nullptr};
 static const char* gEnumSettingsToolbar[] = {"", "show", "hide", "overlay", nullptr};
 static const char* gEnumSettingsToolbarPosition[] = {"top", "bottom", nullptr};
+static const char* gEnumSettingsPageInfoLocation[] = {"notification", "legacy", "bottom", "bottom-overlay", nullptr};
 static const char* gEnumSettingsSidebarBottomView[] = {"", "favorites", "bookmarks", "thumbnails", nullptr};
 static const char* gEnumSettingsSidebarWindowSize[] = {"", "keep", "grow", nullptr};
 static const char* gEnumSettingsScrollbars[] = {"smart", "overlay", "hidden", nullptr};
@@ -1005,6 +1006,8 @@ static const FieldInfo gSettingsFields[] = {
      "show or hide, from ShowToolbar"},
     {offsetof(Settings, toolbarPosition), SettingType::String, (intptr_t)"top", false, gEnumSettingsToolbarPosition,
      nullptr},
+    {offsetof(Settings, pageInfoLocation), SettingType::String, (intptr_t)"notification", false,
+     gEnumSettingsPageInfoLocation, nullptr},
     {offsetof(Settings, searchUIFloating), SettingType::Bool, false},
     {offsetof(Settings, showFavorites), SettingType::Bool, false},
     {offsetof(Settings, sidebarBottomView), SettingType::String, 0, false, gEnumSettingsSidebarBottomView, "favorites"},
@@ -1157,7 +1160,7 @@ static const FieldInfo gSettingsFields[] = {
 };
 const StructInfo gSettingsInfo = {
     sizeof(Settings),
-    185,
+    186,
     gSettingsFields,
     "\0\0DefaultDisplayMode\0DefaultZoom\0DisableJavaScript\0AllowExternalImages\0EnableTeXEnhancements\0EscToExit\0Ful"
     "lPathInTitle\0InverseSearchCmdLine\0LazyLoading\0MainWindowBackground\0NoHomeTab\0NoCaj2pdfConverterDownload\0Home"
@@ -1165,24 +1168,24 @@ const StructInfo gSettingsInfo = {
     "gnatureStatus\0OfdTrustedCertificates\0TemporaryFileShowNotification\0TemporaryFileDestDir\0DownloadDirectory\0Tem"
     "poraryFileAutoMove\0RememberOpenedFiles\0RememberStatePerDocument\0RestoreSession\0ReuseInstance\0ShowMenubar\0Sho"
     "wMenubarWithTabs\0ShowPageNumberInTabs\0ShowHomePageReadingProgress\0ShowChaptersInEbooks\0ShowTips\0CustomColors"
-    "\0ShowToolbar\0Toolbar\0ToolbarPosition\0SearchUIFloating\0ShowFavorites\0SidebarBottomView\0ShowSidebarMiddle\0So"
-    "rtFavoritesByName\0ShowToc\0AlwaysShowSidebar\0ShowThumbnailsIfNoToc\0SidebarOnRight\0SidebarAutoHide\0SidebarWind"
-    "owSize\0ShowLinks\0HighlightFormFields\0ClickEdgeToTurnPage\0DisableLinks\0DisableLeftDragPan\0ExplorerQuickLook\0"
-    "RememberViewOffsetOnPageTurn\0MouseWheelTurnsPage\0InvertMouseWheel\0ScrollEdgeTurnsPage\0ShowDocumentFocusIndicat"
-    "or\0ShowAnnotationNotification\0ShowFileNavigateHint\0ShowAnnotationAuthorInTooltip\0ShowTocPageNumbers\0AutoGener"
-    "ateTOC\0ShowStartPage\0SidebarDx\0Scrollbars\0ScrollbarInSinglePage\0SmoothScroll\0ScrollLineAmount\0SaveMemory\0P"
-    "addingAfterLastPage\0ContinuousScrollFollowsRotation\0IgnoreDestinationZoom\0HighlightLinkDestination\0CitationHov"
-    "erDelay\0ReadAloudVoiceId\0ReadAloudSpeed\0ReadingAutoScrollSpeed\0ReadingBar\0FastScrollOverScrollbar\0PreventSle"
-    "epInFullscreen\0TabWidth\0TabsEqualWidth\0Theme\0HelpTheme\0LastLightTheme\0LastDarkTheme\0DocumentColorsFollowThe"
-    "me\0TocDy\0SidebarMiddleDy\0ToolbarCustomLayout\0ToolbarShowReadAloud\0ToolbarSize\0TreeFontName\0TreeFontSize\0UI"
-    "FontSize\0DisableAntiAlias\0EngineeringDrawingEnhance\0DisableAutoLinks\0UseSysColors\0UseTabs\0ShowCaption\0Selec"
-    "tionToolbar\0SelectionToolbarLayout\0TabsMru\0CtrlTabSimple\0ZoomLevels\0ZoomIncrement\0\0FixedPageUI\0\0EBookUI\0"
-    "\0ComicBookUI\0\0ImageUI\0\0ChmUI\0\0MarkdownUI\0\0HtmlUI\0\0ClaudeCode\0\0GrokBuild\0\0CodexBuild\0\0AntiGravity"
-    "\0\0AIChat\0\0AIChatSidebarDx\0\0TranslateToLang\0TranslateFromLang\0TranslateEngine\0\0Annotations\0\0ExternalVie"
-    "wers\0\0ForwardSearch\0\0PrinterDefaults\0\0Fullscreen\0\0SelectionHandlers\0\0TextSnippets\0\0Shortcuts\0\0Themes"
-    "\0\0TabGroups\0\0CustomScreenDPI\0\0\0DefaultPasswords\0UiLanguage\0VersionToSkip\0WindowState\0WindowPos\0SearchU"
-    "IWindowPos\0AnnotationsWindowShowNote\0HelpWindowPos\0FileStates\0SessionData\0ReopenOnce\0TimeOfLastUpdateCheck\0"
-    "OpenCountWeek\0PropWinPos\0CheckForUpdates\0OnlineApiKey\0OnlineServer\0\0",
+    "\0ShowToolbar\0Toolbar\0ToolbarPosition\0PageInfoLocation\0SearchUIFloating\0ShowFavorites\0SidebarBottomView\0Sho"
+    "wSidebarMiddle\0SortFavoritesByName\0ShowToc\0AlwaysShowSidebar\0ShowThumbnailsIfNoToc\0SidebarOnRight\0SidebarAut"
+    "oHide\0SidebarWindowSize\0ShowLinks\0HighlightFormFields\0ClickEdgeToTurnPage\0DisableLinks\0DisableLeftDragPan\0E"
+    "xplorerQuickLook\0RememberViewOffsetOnPageTurn\0MouseWheelTurnsPage\0InvertMouseWheel\0ScrollEdgeTurnsPage\0ShowDo"
+    "cumentFocusIndicator\0ShowAnnotationNotification\0ShowFileNavigateHint\0ShowAnnotationAuthorInTooltip\0ShowTocPage"
+    "Numbers\0AutoGenerateTOC\0ShowStartPage\0SidebarDx\0Scrollbars\0ScrollbarInSinglePage\0SmoothScroll\0ScrollLineAmo"
+    "unt\0SaveMemory\0PaddingAfterLastPage\0ContinuousScrollFollowsRotation\0IgnoreDestinationZoom\0HighlightLinkDestin"
+    "ation\0CitationHoverDelay\0ReadAloudVoiceId\0ReadAloudSpeed\0ReadingAutoScrollSpeed\0ReadingBar\0FastScrollOverScr"
+    "ollbar\0PreventSleepInFullscreen\0TabWidth\0TabsEqualWidth\0Theme\0HelpTheme\0LastLightTheme\0LastDarkTheme\0Docum"
+    "entColorsFollowTheme\0TocDy\0SidebarMiddleDy\0ToolbarCustomLayout\0ToolbarShowReadAloud\0ToolbarSize\0TreeFontName"
+    "\0TreeFontSize\0UIFontSize\0DisableAntiAlias\0EngineeringDrawingEnhance\0DisableAutoLinks\0UseSysColors\0UseTabs\0"
+    "ShowCaption\0SelectionToolbar\0SelectionToolbarLayout\0TabsMru\0CtrlTabSimple\0ZoomLevels\0ZoomIncrement\0\0FixedP"
+    "ageUI\0\0EBookUI\0\0ComicBookUI\0\0ImageUI\0\0ChmUI\0\0MarkdownUI\0\0HtmlUI\0\0ClaudeCode\0\0GrokBuild\0\0CodexBui"
+    "ld\0\0AntiGravity\0\0AIChat\0\0AIChatSidebarDx\0\0TranslateToLang\0TranslateFromLang\0TranslateEngine\0\0Annotatio"
+    "ns\0\0ExternalViewers\0\0ForwardSearch\0\0PrinterDefaults\0\0Fullscreen\0\0SelectionHandlers\0\0TextSnippets\0\0Sh"
+    "ortcuts\0\0Themes\0\0TabGroups\0\0CustomScreenDPI\0\0\0DefaultPasswords\0UiLanguage\0VersionToSkip\0WindowState\0W"
+    "indowPos\0SearchUIWindowPos\0AnnotationsWindowShowNote\0HelpWindowPos\0FileStates\0SessionData\0ReopenOnce\0TimeOf"
+    "LastUpdateCheck\0OpenCountWeek\0PropWinPos\0CheckForUpdates\0OnlineApiKey\0OnlineServer\0\0",
     "\0\0default layout of pages. page aspect (3.7+): first open of a PDF, XPS, DjVu, PostScript or DVI file uses page "
     "1 — taller than wide is continuous + fit width, wider than tall is single page + fit page; a remembered FileState "
     "still wins\0default zoom. valid values: fit page, fit width, fit height, fit content or percent like 100%\0if "
@@ -1228,19 +1231,21 @@ const StructInfo gSettingsInfo = {
     "derived as show/hide (internal; use Toolbar instead)\0toolbar mode: show (pinned), hide (no toolbar), overlay "
     "(toolbar floats over the page, sized to its natural width and centered, only shown when the mouse is near it). if "
     "empty, derived from ShowToolbar\0where the toolbar is placed: top or bottom (applies to both show and overlay "
-    "modes)\0if true, the find UI is a floating, movable window with a results list instead of the compact toolbar "
-    "overlay\0if true, show the sidebar's bottom panel: Favorites, unless SidebarBottomView says otherwise\0what the "
-    "sidebar's bottom panel shows: favorites (the default), bookmarks or thumbnails\0if true, and the sidebar's top "
-    "and bottom panels are visible, show a middle panel between them with the view neither of them shows\0if true, "
-    "favorites within each file are sorted alphabetically by name (or page label); if false (the default), they are "
-    "sorted by page number\0if true, show the table of contents (Bookmarks) sidebar when the document has one\0if "
-    "true, every document with bookmarks opens with the Bookmarks sidebar, even one that was closed with it hidden\0if "
-    "true, a document without bookmarks (and with more than one page) opens with the sidebar showing page "
-    "thumbnails\0if true, put the bookmarks / favorites sidebar on the right of the window (left is the default; "
-    "right-to-left UI languages already put it on the right)\0if true, the bookmarks / favorites sidebar takes no "
-    "space: it slides over the document when the mouse reaches the window's edge and hides when the mouse leaves "
-    "it\0what showing / hiding the bookmarks / favorites sidebar does to the window: empty or keep (the window keeps "
-    "its size and position, the document area shrinks), or grow (the window grows by the sidebar width where the "
+    "modes)\0where Toggle Page Info (i) shows the page information: notification (or legacy), a tip over the document; "
+    "bottom, a bar below the document with more about the file and the page; bottom-overlay, the same bar drawn over "
+    "the bottom of the document\0if true, the find UI is a floating, movable window with a results list instead of the "
+    "compact toolbar overlay\0if true, show the sidebar's bottom panel: Favorites, unless SidebarBottomView says "
+    "otherwise\0what the sidebar's bottom panel shows: favorites (the default), bookmarks or thumbnails\0if true, and "
+    "the sidebar's top and bottom panels are visible, show a middle panel between them with the view neither of them "
+    "shows\0if true, favorites within each file are sorted alphabetically by name (or page label); if false (the "
+    "default), they are sorted by page number\0if true, show the table of contents (Bookmarks) sidebar when the "
+    "document has one\0if true, every document with bookmarks opens with the Bookmarks sidebar, even one that was "
+    "closed with it hidden\0if true, a document without bookmarks (and with more than one page) opens with the sidebar "
+    "showing page thumbnails\0if true, put the bookmarks / favorites sidebar on the right of the window (left is the "
+    "default; right-to-left UI languages already put it on the right)\0if true, the bookmarks / favorites sidebar "
+    "takes no space: it slides over the document when the mouse reaches the window's edge and hides when the mouse "
+    "leaves it\0what showing / hiding the bookmarks / favorites sidebar does to the window: empty or keep (the window "
+    "keeps its size and position, the document area shrinks), or grow (the window grows by the sidebar width where the "
     "document can't spare it, and shrinks back on hide)\0if true, draw a blue border around links in the document\0if "
     "true, highlight empty fillable PDF form fields in pale blue so they are easy to find\0if true, a click (not a "
     "drag) on the left fifth of the page area goes to the previous page and a click on the right fifth goes to the "

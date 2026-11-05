@@ -848,6 +848,8 @@ enum class ControlCmd : u16 {
     TestWordCount = 154,
     // the page info tip's text
     TestPageInfoText = 155,
+    // the page info bar: where it is, the canvas, its text
+    TestPageInfoBar = 156,
 };
 
 static_assert((u16)ControlCmd::Quit == (u16)ControlFrameCmd::Quit);
@@ -2134,6 +2136,13 @@ static void ExecuteControlRequest(ControlRequest* req) {
         case ControlCmd::TestAIChatReplay: {
             int exitCode = 0;
             Str res = AIChatTestReplayResultTemp(StringArg(req, 0), StringArg(req, 1), &exitCode);
+            AppendTestResult(req, exitCode, res);
+            break;
+        }
+
+        case ControlCmd::TestPageInfoBar: {
+            int exitCode = 0;
+            Str res = PageInfoBarResultTemp(&exitCode);
             AppendTestResult(req, exitCode, res);
             break;
         }

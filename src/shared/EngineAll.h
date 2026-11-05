@@ -13,6 +13,7 @@ struct djvu_text_zone;
 bool IsEngineDjVuSupportedFileType(FileType kind);
 EngineBase* CreateEngineDjvuDecFromFile(Str path);
 EngineBase* CreateEngineDjvuDecFromData(Str data);
+int EngineDjvuDecPageDpi(EngineBase* engine, int pageNo);
 PageText DjvuZonesToPageText(djvu_text_zone* root, float dpiF);
 extern bool gMemoryMapLargeFiles;
 

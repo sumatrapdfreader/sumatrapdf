@@ -65,6 +65,7 @@
 #include "MainWindowCommon.h"
 #include "SignatureUI.h"
 #include "LayersUI.h"
+#include "PageInfoBar.h"
 
 static void SafeDeleteTabsCtrl(TabsCtrl* tabsCtrl) {
     logf("SafeDeleteTabsCtrl: 0x%p\n", tabsCtrl);
@@ -228,6 +229,7 @@ MainWindow::~MainWindow() {
     DeleteSignaturesCtrl(this);
     DeleteLayersCtrl(this);
     DeleteSigBar(this);
+    DeletePageInfoBar(this);
     delete tocFilteredTree;
     if (favTreeView) {
         delete favTreeView->treeModel;

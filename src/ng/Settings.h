@@ -945,6 +945,11 @@ struct Settings {
     // where the toolbar is placed: top or bottom (applies to both show and
     // overlay modes)
     Str toolbarPosition;
+    // where Toggle Page Info (i) shows the page information: notification
+    // (or legacy), a tip over the document; bottom, a bar below the
+    // document with more about the file and the page; bottom-overlay, the
+    // same bar drawn over the bottom of the document
+    Str pageInfoLocation;
     // scrollbar mode: smart (overlay scrollbar with auto-hide), overlay
     // (always visible overlay scrollbar), hidden (no scrollbars)
     Str scrollbars;

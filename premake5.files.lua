@@ -314,6 +314,7 @@ function sumatrapdf_files()
     "PageThumbnails.*",
     "SignatureUI.*",
     "LayersUI.*",
+    "PageInfoBar.*",
     "MergePdf.*",
     "AnnotPlacement.*",
     "AnnotPlacementCursors_win.*",

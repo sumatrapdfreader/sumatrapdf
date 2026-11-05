@@ -78,6 +78,7 @@
 #include "StressTesting.h"
 #include "HomePage.h"
 #include "DocumentProperties.h"
+#include "DocumentPropertiesCommon.h"
 #include "TabGroupsManage.h"
 #include "TableOfContents.h"
 #include "Tabs.h"
@@ -524,6 +525,218 @@ void UpdatePageInfoHelper(MainWindow* win, NotificationWnd* wnd, int pageNo) {
     }
 
     NotificationUpdateMessage(wnd, pageInfo);
+}
+
+//--- the page info bar (PageInfoLocation = bottom / bottom-overlay, #6494)
+
+PageInfoBarMode GetPageInfoBarMode() {
+    Str loc = gSettings->pageInfoLocation;
+    if (str::EqI(loc, StrL("bottom"))) {
+        return PageInfoBarMode::Bottom;
+    }
+    if (str::EqI(loc, StrL("bottom-overlay"))) {
+        return PageInfoBarMode::BottomOverlay;
+    }
+    return PageInfoBarMode::Notification;
+}
+
+// the bar replaces the page info tip; Toggle Page Info shows and hides it
+bool PageInfoBarShown(MainWindow* win) {
+    if (!win || !win->pageInfoWanted || GetPageInfoBarMode() == PageInfoBarMode::Notification) {
+        return false;
+    }
+    if (!win->IsDocLoaded() || !win->ctrl) {
+        return false;
+    }
+    return win->presentation != PM_BLACK_SCREEN && win->presentation != PM_WHITE_SCREEN;
+}
+
+// the left half only changes with the document, and reads the disk and the
+// document's properties: built once per document
+struct PageInfoBarFileCache {
+    DocController* ctrl = nullptr;
+    Str path;
+    Str left;
+};
+static PageInfoBarFileCache gPageInfoBarCache;
+
+static void AppendBarPart(str::Builder& out, Str part) {
+    if (len(part) == 0) {
+        return;
+    }
+    if (len(out) > 0) {
+        out.Append(StrL(kPageInfoSep));
+    }
+    out.Append(part);
+}
+
+// "PDF 1.7", "EPUB", "Folder"
+static TempStr FileFormatNameTemp(DocController* ctrl, EngineBase* engine) {
+    Str path = ctrl->GetFilePath();
+    if (engine && engine->kind == kindEngineMupdf) {
+        TempStr ver = engine->GetPropertyTemp(DocProp::PdfVersion);
+        if (len(ver) > 0) {
+            return fmt("PDF %s", ver);
+        }
+    }
+    if (engine && engine->kind == kindEngineImageDir) {
+        return str::DupTemp(Tr("Folder"));
+    }
+    TempStr ext = path::GetExtTemp(path);
+    if (len(ext) < 2) {
+        return {};
+    }
+    TempStr res = str::DupTemp(Str(ext.s + 1, len(ext) - 1));
+    str::ToUpperInPlace(res);
+    return res;
+}
+
+// file name · format · file size · pages · what the document has
+static TempStr PageInfoBarLeftTemp(DocController* ctrl) {
+    Str path = ctrl->GetFilePath();
+    DisplayModel* dm = ctrl->AsFixed();
+    EngineBase* engine = dm ? dm->GetEngine() : nullptr;
+    str::Builder out;
+    AppendBarPart(out, path::GetBaseNameTemp(path));
+    AppendBarPart(out, FileFormatNameTemp(ctrl, engine));
+    bool isDir = engine && engine->kind == kindEngineImageDir;
+    i64 size = isDir ? -1 : file::GetSize(path);
+    if (size >= 0) {
+        AppendBarPart(out, str::FormatSizeShortTemp(size));
+    }
+    if (!engine) {
+        return ToStrTemp(out);
+    }
+
+    bool isImage = engine->kind == kindEngineImage;
+    bool isComic = IsEngineImages(engine) && !isImage;
+    bool isEbook = ShowChapterUi(ctrl) || engine->kind == kindEngineEpub || engine->kind == kindEngineFb2 ||
+                   engine->kind == kindEngineMobi || engine->kind == kindEnginePdb;
+    if (!isImage && !isEbook) {
+        AppendBarPart(out, fmt(Tr("%d pages").s, engine->PageCount()));
+    }
+    if (engine->kind == kindEngineMupdf) {
+        if (EngineMupdfIsEncrypted(engine)) {
+            AppendBarPart(out, Tr("Encrypted"));
+        }
+        if (EngineMupdfCountSignedSignatures(engine) > 0) {
+            AppendBarPart(out, Tr("Signed"));
+        }
+        if (EngineMupdfHasLayers(engine)) {
+            AppendBarPart(out, Tr("Has layers"));
+        }
+    }
+    if (isEbook || isComic) {
+        AppendBarPart(out, engine->GetPropertyTemp(DocProp::Title));
+        AppendBarPart(out, engine->GetPropertyTemp(DocProp::Author));
+    }
+    if (isImage) {
+        AppendBarPart(out, engine->GetPropertyTemp(DocProp::CameraModel));
+        AppendBarPart(out, engine->GetPropertyTemp(DocProp::DateOriginal));
+    }
+    return ToStrTemp(out);
+}
+
+// "4032 × 3024 px"
+static TempStr PixelSizeTemp(RectF box) {
+    int w = (int)lroundf(box.dx);
+    int h = (int)lroundf(box.dy);
+    if (w <= 0 || h <= 0) {
+        return {};
+    }
+    return fmt("%d \xC3\x97 %d px", w, h);
+}
+
+// page · page size · rotation · zoom, or what an image / comic page is
+static TempStr PageInfoBarRightTemp(MainWindow* win) {
+    DocController* ctrl = win->ctrl;
+    if (IsBrowserDocController(ctrl)) {
+        return {};
+    }
+    DisplayModel* dm = ctrl->AsFixed();
+    EngineBase* engine = dm ? dm->GetEngine() : nullptr;
+    int pageNo = ctrl->CurrentPageNo();
+    int nPages = ctrl->PageCount();
+    int percentRead = (pageNo * 100) / std::max(nPages, 1);
+    str::Builder out;
+    bool isImage = engine && engine->kind == kindEngineImage;
+
+    if (isImage) {
+        // a single image: its pixels and, when it says, its print size
+        AppendBarPart(out, PixelSizeTemp(engine->PageMediabox(pageNo)));
+        float dpi = engine->fileDPI;
+        if (dpi > 0.5f && fabsf(dpi - 96.0f) > 0.5f) {
+            AppendBarPart(out, fmt("%.0f DPI", dpi));
+            RectF box = engine->PageMediabox(pageNo);
+            AppendBarPart(out, FormatSizeInLocaleUnitTemp(SizeF{box.dx / dpi, box.dy / dpi}));
+        }
+        if (nPages > 1) {
+            AppendBarPart(out, fmt(Tr("Frame %d / %d").s, pageNo, nPages));
+        }
+    } else if (ShowChapterUi(ctrl)) {
+        Location loc = ctrl->LocationFromPageNo(pageNo);
+        AppendBarPart(out, fmt(Tr("Chapter %d / %d").s, loc.chapter, ctrl->ChapterCount()));
+        AppendBarPart(out, fmt(Tr("Page %d / %d").s, loc.page, ctrl->ChapterPageCount(loc.chapter)));
+        AppendBarPart(out, fmt("%d%%", percentRead));
+    } else {
+        TempStr label = ctrl->HasPageLabels() ? ctrl->GetPageLabeTemp(pageNo) : TempStr{};
+        if (len(label) > 0 && !str::Eq(label, fmt("%d", pageNo))) {
+            AppendBarPart(out, fmt(Tr("Page %s (%d / %d, %d%%)").s, label, pageNo, nPages, percentRead));
+        } else {
+            AppendBarPart(out, fmt(Tr("Page %d / %d (%d%%)").s, pageNo, nPages, percentRead));
+        }
+    }
+
+    if (engine && IsEngineImages(engine) && !isImage) {
+        // comic / image folder: each visible image's name, pixels and bytes
+        int pages[2] = {};
+        int nShow = CollectPageInfoPages(ctrl, pageNo, pages, 2);
+        for (int i = 0; i < nShow; i++) {
+            TempStr imgName{};
+            i64 imgSize = -1;
+            if (!EngineImagesGetPageFileInfo(engine, pages[i], &imgName, &imgSize)) {
+                continue;
+            }
+            AppendBarPart(out, imgName);
+            AppendBarPart(out, PixelSizeTemp(engine->PageMediabox(pages[i])));
+            if (imgSize >= 0) {
+                AppendBarPart(out, str::FormatSizeShortTemp(imgSize));
+            }
+        }
+    } else if (engine && !isImage && !ShowChapterUi(ctrl)) {
+        AppendBarPart(out, FormatPageSizeShortTemp(engine, pageNo, dm->GetRotation()));
+        int djvuDpi = EngineDjvuDecPageDpi(engine, pageNo);
+        if (djvuDpi > 0) {
+            RectF box = engine->PageMediabox(pageNo);
+            float scale = (float)djvuDpi / engine->fileDPI;
+            AppendBarPart(out, PixelSizeTemp(RectF(0, 0, box.dx * scale, box.dy * scale)));
+            AppendBarPart(out, fmt("%d DPI", djvuDpi));
+        }
+        int rotation = dm->GetRotation();
+        if (rotation != 0) {
+            AppendBarPart(out, fmt(Tr("Rotated %d\xC2\xB0").s, rotation));
+        }
+    }
+    AppendBarPart(out, BuildZoomString(ctrl->GetZoomVirtual()));
+    return ToStrTemp(out);
+}
+
+// the bar's two halves: the file on the left, the current page on the right
+void PageInfoBarTextTemp(MainWindow* win, TempStr* leftOut, TempStr* rightOut) {
+    *leftOut = {};
+    *rightOut = {};
+    if (!win || !win->IsDocLoaded() || !win->ctrl) {
+        return;
+    }
+    DocController* ctrl = win->ctrl;
+    PageInfoBarFileCache& c = gPageInfoBarCache;
+    if (c.ctrl != ctrl || !str::Eq(c.path, ctrl->GetFilePath())) {
+        c.ctrl = ctrl;
+        str::ReplaceWithCopy(&c.path, ctrl->GetFilePath());
+        str::ReplaceWithCopy(&c.left, PageInfoBarLeftTemp(ctrl));
+    }
+    *leftOut = str::DupTemp(c.left);
+    *rightOut = PageInfoBarRightTemp(win);
 }
 
 // Markdown and HTML both render in the WebView2 browser view via MarkdownModel,
@@ -1495,6 +1708,11 @@ TempStr FindCoverImageTemp(Str docPath) {
 
 void TogglePageInfoHelper(MainWindow* win) {
     if (!win) {
+        return;
+    }
+    if (GetPageInfoBarMode() != PageInfoBarMode::Notification) {
+        win->pageInfoWanted = !win->pageInfoWanted;
+        PageInfoBarChanged(win);
         return;
     }
     if (win->pageInfoWanted) {

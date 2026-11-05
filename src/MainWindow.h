@@ -16,6 +16,7 @@ struct PageThumbnailsCtrl;
 struct SignaturesCtrl;
 struct LayersCtrl;
 struct SigBar;
+struct PageInfoBar;
 struct SidebarPanel;
 struct VirtRoot;
 struct VirtSplitter;
@@ -297,6 +298,8 @@ struct MainWindow { // NOLINT(clang-analyzer-optin.performance.Padding)
     // the Layers view: the PDF's optional content groups
     LayersCtrl* layersCtrl = nullptr;
     SigBar* sigBar = nullptr;
+    // PageInfoLocation = bottom / bottom-overlay
+    PageInfoBar* pageInfoBar = nullptr;
     TocTree* tocFilteredTree = nullptr;
 
     // whether the current tab's ToC has been loaded into the tree
@@ -521,6 +524,7 @@ struct MainWindow { // NOLINT(clang-analyzer-optin.performance.Padding)
     HwndSlot* menuSlot = nullptr;
     HwndSlot* toolbarTopSlot = nullptr;
     HwndSlot* toolbarBottomSlot = nullptr;
+    HwndSlot* pageInfoBarSlot = nullptr;
     // tabs-in-titlebar caption: VirtCtrl buttons + HwndSlots for tabs/menu
     VBox* captionLayout = nullptr;
     HBox* captionRow1 = nullptr;
@@ -594,6 +598,8 @@ struct MainWindow { // NOLINT(clang-analyzer-optin.performance.Padding)
             // full-window Favorites tab vs. sidebar panel: different geometry
             bool favoritesAsTab = false;
             bool sigBarVisible = false;
+            // 0: no page info bar, else 1 + PageInfoBarMode
+            int pageInfoBar = 0;
             bool showMenuBarRebar = false;
             bool aiChatVisible = false;
             int aiChatDx = 0;

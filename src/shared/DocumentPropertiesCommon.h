@@ -4,6 +4,8 @@
 // --- shared by DocumentPropertiesCommon.cpp and each app's DocumentProperties.cpp ---
 
 TempStr FormatPageSizeTemp(EngineBase* engine, int pageNo, int rotation);
+TempStr FormatPageSizeShortTemp(EngineBase* engine, int pageNo, int rotation);
+TempStr FormatSizeInLocaleUnitTemp(SizeF sizeInches);
 TempStr FormatPermissionsTemp(DocController* ctrl);
 void AppendProp(str::Builder& out, Str key, Str value);
 void AppendPdfFileStructure(str::Builder& out, Str fstruct, Str filePath);

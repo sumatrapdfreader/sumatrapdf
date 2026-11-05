@@ -683,6 +683,24 @@ TempStr PageInfoTextResultTemp(int* exitCodeOut) {
     return fmt("OK %s\n", msg);
 }
 
+// the first window's page info bar (#6494): where it is and what it says
+TempStr PageInfoBarResultTemp(int* exitCodeOut) {
+    *exitCodeOut = 2;
+    if (len(gWindows) == 0 || !gWindows[0]->IsDocLoaded()) {
+        return str::DupTemp(StrL("NOTREADY no-doc\n"));
+    }
+    *exitCodeOut = 0;
+    MainWindow* win = gWindows[0];
+    Str place = StrL("none");
+    if (PageInfoBarShown(win)) {
+        place = GetPageInfoBarMode() == PageInfoBarMode::Bottom ? StrL("row") : StrL("overlay");
+    }
+    TempStr left;
+    TempStr right;
+    PageInfoBarTextTemp(win, &left, &right);
+    return fmt("OK place=%s %s\nleft=%s\nright=%s\n", place, PageInfoBarGeometryTemp(win), left, right);
+}
+
 // action: "get" | "r2l" | "presentation" | "fullscreen"
 // Reports the current page layout and whether presentation / windowed
 // fullscreen is on. presentation/fullscreen toggle that mode first.

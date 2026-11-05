@@ -42,48 +42,66 @@ static TempStr FormatPageSizeUnitTemp(SizeF sizeInches, double unitsPerInch, Str
     return fmt("%sx%s %s", strWidth, strHeight, unit);
 }
 
+static Str PaperFormatName(SizeF sizeInches) {
+    switch (GetPaperFormatFromSizeApprox(sizeInches)) {
+        case PaperFormat::A2:
+            return StrL("A2");
+        case PaperFormat::A3:
+            return StrL("A3");
+        case PaperFormat::A4:
+            return StrL("A4");
+        case PaperFormat::A5:
+            return StrL("A5");
+        case PaperFormat::A6:
+            return StrL("A6");
+        case PaperFormat::Letter:
+            return StrL("Letter");
+        case PaperFormat::Legal:
+            return StrL("Legal");
+        case PaperFormat::Tabloid:
+            return StrL("Tabloid");
+        case PaperFormat::Statement:
+            return StrL("Statement");
+        case PaperFormat::Other:
+            break;
+    }
+    return StrL("Other");
+}
+
+static SizeF PageSizeInches(EngineBase* engine, int pageNo, int rotation) {
+    RectF mediabox = engine->PageMediabox(pageNo);
+    float zoom = 1.0f / engine->fileDPI;
+    return engine->Transform(mediabox, pageNo, zoom, rotation).Size();
+}
+
+// "W × H mm" or, where Windows measures in inches, "W × H in"
+TempStr FormatSizeInLocaleUnitTemp(SizeF sizeInches) {
+    if (GetMeasurementSystem() == 0) {
+        int w = (int)lround(sizeInches.dx * 25.4);
+        int h = (int)lround(sizeInches.dy * 25.4);
+        return fmt("%d \xC3\x97 %d mm", w, h);
+    }
+    TempStr w = str::FormatFloatWithThousandSepTemp(sizeInches.dx);
+    TempStr h = str::FormatFloatWithThousandSepTemp(sizeInches.dy);
+    return fmt("%s \xC3\x97 %s in", w, h);
+}
+
+// one unit, for the page info bar: "210 × 297 mm (A4)" (#6494)
+TempStr FormatPageSizeShortTemp(EngineBase* engine, int pageNo, int rotation) {
+    SizeF size = PageSizeInches(engine, pageNo, rotation);
+    TempStr res = FormatSizeInLocaleUnitTemp(size);
+    if (GetPaperFormatFromSizeApprox(size) == PaperFormat::Other) {
+        return res;
+    }
+    return fmt("%s (%s)", res, PaperFormatName(size));
+}
+
 // Format page size in cm/mm/in (locale unit first) and points (issue #2186).
 // Metric: "21.0 x 29.7 cm, 210 x 297 mm, 8.27 x 11.69 in, 595 x 842 pt (A4)"
 // US:     "8.27 x 11.69 in, 21.0 x 29.7 cm, 210 x 297 mm, 595 x 842 pt (A4)"
 TempStr FormatPageSizeTemp(EngineBase* engine, int pageNo, int rotation) {
-    RectF mediabox = engine->PageMediabox(pageNo);
-    float fileDpi = engine->fileDPI;
-    float zoom = 1.0f / fileDpi;
-    SizeF size = engine->Transform(mediabox, pageNo, zoom, rotation).Size();
-
-    Str formatName;
-    switch (GetPaperFormatFromSizeApprox(size)) {
-        case PaperFormat::A2:
-            formatName = StrL(" (A2)");
-            break;
-        case PaperFormat::A3:
-            formatName = StrL(" (A3)");
-            break;
-        case PaperFormat::A4:
-            formatName = StrL(" (A4)");
-            break;
-        case PaperFormat::A5:
-            formatName = StrL(" (A5)");
-            break;
-        case PaperFormat::A6:
-            formatName = StrL(" (A6)");
-            break;
-        case PaperFormat::Letter:
-            formatName = StrL(" (Letter)");
-            break;
-        case PaperFormat::Legal:
-            formatName = StrL(" (Legal)");
-            break;
-        case PaperFormat::Tabloid:
-            formatName = StrL(" (Tabloid)");
-            break;
-        case PaperFormat::Statement:
-            formatName = StrL(" (Statement)");
-            break;
-        case PaperFormat::Other:
-            formatName = StrL(" (Other)");
-            break;
-    }
+    SizeF size = PageSizeInches(engine, pageNo, rotation);
+    TempStr formatName = fmt(" (%s)", PaperFormatName(size));
 
     TempStr inStr = FormatPageSizeUnitTemp(size, 1.0, StrL("in"));
     TempStr cmStr = FormatPageSizeUnitTemp(size, 2.54, StrL("cm"));

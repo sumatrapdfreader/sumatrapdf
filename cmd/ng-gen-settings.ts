@@ -1599,6 +1599,16 @@ const globalPrefs: Field[] = [
     .enum(["top", "bottom"])
     .ver("3.7"),
   field(
+    "PageInfoLocation",
+    Str,
+    "notification",
+    "where Toggle Page Info (i) shows the page information: notification (or legacy), a tip over the document; " +
+      "bottom, a bar below the document with more about the file and the page; " +
+      "bottom-overlay, the same bar drawn over the bottom of the document",
+  )
+    .enum(["notification", "legacy", "bottom", "bottom-overlay"])
+    .ver("3.7"),
+  field(
     "SearchUIFloating",
     Bool,
     false,
@@ -2305,6 +2315,7 @@ const globalPrefsLayout = [
   "CustomColors",
   "Toolbar",
   "ToolbarPosition",
+  "PageInfoLocation",
   "Scrollbars",
   "ReadAloudVoiceId",
   "Theme",

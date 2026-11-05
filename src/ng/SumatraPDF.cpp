@@ -2060,6 +2060,8 @@ MainWindow* CreateAndShowMainWindow(SessionData* data) {
     if (!win) {
         return nullptr;
     }
+    // choosing where the page info bar goes is asking for it
+    win->pageInfoWanted = GetPageInfoBarMode() != PageInfoBarMode::Notification;
     // a session window is made at startup, where nothing holds a temp string
     PlaceMainWindow(win, data, data ? PlaceWindowWhen::Now : PlaceWindowWhen::Later);
     if (data && data->sidebarDx > 0) {
@@ -2243,6 +2245,10 @@ void ShowPageInfoIfWanted(MainWindow* win) {
     if (!win) {
         return;
     }
+    if (GetPageInfoBarMode() != PageInfoBarMode::Notification) {
+        PageInfoBarChanged(win);
+        return;
+    }
     if (!win->pageInfoWanted || !win->IsDocLoaded() || !win->ctrl) {
         // ng: orig drops the tip from CloseDocumentInCurrentTab, About and
         // Favorites; the one place every one of them goes through is enough
@@ -2263,6 +2269,25 @@ void ShowPageInfoIfWanted(MainWindow* win) {
     args.plainText = true;
     wnd = ShowNotification(args);
     UpdatePageInfoHelper(win, wnd, -1);
+}
+
+// --- the page info bar, PageInfoLocation = bottom / bottom-overlay (#6494) --
+
+bool PageInfoBarTakesRow(MainWindow* win) {
+    return PageInfoBarShown(win) && GetPageInfoBarMode() == PageInfoBarMode::Bottom;
+}
+
+bool PageInfoBarOverlays(MainWindow* win) {
+    return PageInfoBarShown(win) && GetPageInfoBarMode() == PageInfoBarMode::BottomOverlay;
+}
+
+// ng: the bar is built with every frame; a row also resizes the canvas
+void PageInfoBarChanged(MainWindow* win) {
+    if (!IsMainWindowValid(win)) {
+        return;
+    }
+    AppShellSyncCanvasSize(win);
+    AppShellInvalidate(win);
 }
 
 // --- the cursor-position tip, CmdToggleCursorPosition ----------------------
@@ -7425,6 +7450,7 @@ int GpuiMain(int argc, char** argv) {
 
     Size size = NewWindowSize(nullptr);
     MainWindow* win = AppShellCreateWindow(app, size.dx, size.dy);
+    win->pageInfoWanted = GetPageInfoBarMode() != PageInfoBarMode::Notification;
     if (!gFlags->quickLook) {
         PlaceMainWindow(win, nullptr, PlaceWindowWhen::Now);
     }

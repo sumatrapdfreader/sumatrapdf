@@ -46,6 +46,7 @@
 #include "EutlTrust.h"
 #include "SignatureUI.h"
 #include "LayersUI.h"
+#include "PageInfoBar.h"
 #include "PdfDarkMode.h"
 #include "Annotation.h"
 #include "FormFields.h"
@@ -1428,6 +1429,10 @@ void ControllerCallbackHandler::UpdateScrollbars(DisplayModel* dm, Size canvas) 
 // Show or refresh the page-info tip when the user wants it and a document is loaded.
 // CloseDocumentInCurrentTab / About / Favorites remove the notification; this restores it.
 void ShowPageInfoIfWanted(MainWindow* win) {
+    if (win && GetPageInfoBarMode() != PageInfoBarMode::Notification) {
+        PageInfoBarChanged(win);
+        return;
+    }
     if (!win || !win->pageInfoWanted || !win->IsDocLoaded() || !win->ctrl) {
         return;
     }
@@ -1453,6 +1458,7 @@ void ControllerCallbackHandler::ZoomChanged(DocController* ctrl, float /*zoomVir
     if (win->ctrl != ctrl) {
         return;
     }
+    PageInfoBarUpdate(win);
     NotificationWnd* wnd = GetNotificationForGroup(win, kNotifPageInfo);
     if (!wnd) {
         return;
@@ -1518,6 +1524,7 @@ void ControllerCallbackHandler::PageNoChanged(DocController* ctrl, int pageNo) {
         }
     }
 
+    PageInfoBarUpdate(win);
     NotificationWnd* wnd = GetNotificationForGroup(win, kNotifPageInfo);
     if (!pageChanged) {
         if (wnd) {
@@ -2642,6 +2649,7 @@ static void CreateFrameLayout(MainWindow* win) {
     win->toolbarTopSlot = new HwndSlot();
     win->sigBarSlot = new HwndSlot();
     win->toolbarBottomSlot = new HwndSlot();
+    win->pageInfoBarSlot = new HwndSlot();
     CreateCaptionLayout(win);
 
     // the webview is expensive to resize, so this one only moves the panes
@@ -2680,6 +2688,7 @@ static void CreateFrameLayout(MainWindow* win) {
     chrome->AddChild(win->sigBarSlot);
     chrome->AddChild(win->frameLayout, 1);
     chrome->AddChild(win->toolbarBottomSlot);
+    chrome->AddChild(win->pageInfoBarSlot);
     win->chromeLayout = chrome;
     FrameSyncSplitters(win);
 }
@@ -2801,6 +2810,8 @@ static MainWindow* CreateMainWindow() {
 
     ReportIf(nullptr != FindMainWindowByHwnd(hwndFrame));
     MainWindow* win = new MainWindow(hwndFrame);
+    // choosing where the page info bar goes is asking for it
+    win->pageInfoWanted = GetPageInfoBarMode() != PageInfoBarMode::Notification;
     win->frameDpi = RoundUp(posDpi, 4);
     DpiSet(win->frameDpi, win->frameDpi);
     UpdateWindowFrameBorderColor(win);
@@ -6845,9 +6856,10 @@ static bool IsUiLayoutEq(UILayout* s1, UILayout* s2) {
            s1->isToolbarVisible == s2->isToolbarVisible && s1->isToolbarOverlay == s2->isToolbarOverlay &&
            s1->sidebarTopVisible == s2->sidebarTopVisible && s1->sidebarBottomVisible == s2->sidebarBottomVisible &&
            s1->sidebarMiddleVisible == s2->sidebarMiddleVisible && s1->favoritesAsTab == s2->favoritesAsTab &&
-           s1->sigBarVisible == s2->sigBarVisible && s1->showMenuBarRebar == s2->showMenuBarRebar &&
-           s1->aiChatVisible == s2->aiChatVisible && s1->aiChatDx == s2->aiChatDx &&
-           s1->sidebarOnRight == s2->sidebarOnRight && s1->sidebarAutoHide == s2->sidebarAutoHide;
+           s1->sigBarVisible == s2->sigBarVisible && s1->pageInfoBar == s2->pageInfoBar &&
+           s1->showMenuBarRebar == s2->showMenuBarRebar && s1->aiChatVisible == s2->aiChatVisible &&
+           s1->aiChatDx == s2->aiChatDx && s1->sidebarOnRight == s2->sidebarOnRight &&
+           s1->sidebarAutoHide == s2->sidebarAutoHide;
 }
 
 // Favorites-only must not reserve a tab row (issue #5861)
@@ -7022,6 +7034,9 @@ static bool RelayoutFrame(MainWindow* win, bool updateToolbars, int sidebarDx) {
     curState.sidebarBottomVisible = win->uiState.sidebarBottomVisible || favAsTabNow;
     curState.favoritesAsTab = favAsTabNow;
     curState.sigBarVisible = !favAsTabNow && SigBarWanted(win);
+    if (!favAsTabNow && PageInfoBarShown(win)) {
+        curState.pageInfoBar = 1 + (int)GetPageInfoBarMode();
+    }
     curState.showMenuBarRebar = IsShowingMenuBarRebar(win);
     curState.aiChatVisible = win->uiState.aiChatVisible;
     curState.aiChatDx = win->aiChatDx;
@@ -7094,6 +7109,7 @@ static bool RelayoutFrame(MainWindow* win, bool updateToolbars, int sidebarDx) {
 
     if (PM_BLACK_SCREEN == win->presentation || PM_WHITE_SCREEN == win->presentation) {
         SigBarSetVisible(win, false);
+        PageInfoBarSetVisible(win, false);
         // make the black/white canvas cover the entire window
         HwndMoveWindow(win->hwndCanvas, &rc);
         gAfterLayout.Call(win);
@@ -7188,6 +7204,15 @@ static bool RelayoutFrame(MainWindow* win, bool updateToolbars, int sidebarDx) {
     int sigBarDy = showSigBar ? SigBarDy(win) : 0;
     SetVis(win->sigBarSlot, showSigBar);
     win->sigBarSlot->dy = sigBarDy;
+    // the page info bar: a row of its own, or over the bottom of the canvas
+    bool infoBarRow = !favAsTab && PageInfoBarTakesRow(win);
+    bool infoBarOverlay = !favAsTab && PageInfoBarOverlays(win);
+    HWND hwndInfoBar = (infoBarRow || infoBarOverlay) ? PageInfoBarEnsure(win) : nullptr;
+    infoBarRow = infoBarRow && hwndInfoBar;
+    infoBarOverlay = infoBarOverlay && hwndInfoBar;
+    int infoBarDy = infoBarRow ? PageInfoBarDy(win) : 0;
+    SetVis(win->pageInfoBarSlot, infoBarRow);
+    win->pageInfoBarSlot->dy = infoBarDy;
 
     // leave at least this much canvas for the document when sidebar is open
     constexpr int kMinDocCanvasDx = 200;
@@ -7233,7 +7258,7 @@ static bool RelayoutFrame(MainWindow* win, bool updateToolbars, int sidebarDx) {
         }
     }
 
-    int chromeDy = captionHeight + (showTabsBar ? tabHeight : 0) + menuBarDy + rebarDy + sigBarDy;
+    int chromeDy = captionHeight + (showTabsBar ? tabHeight : 0) + menuBarDy + rebarDy + sigBarDy + infoBarDy;
     int contentDy = std::max(rc.dy - chromeDy, 0);
 
     // the bottom panel takes what the top and middle ones leave
@@ -7303,6 +7328,7 @@ static bool RelayoutFrame(MainWindow* win, bool updateToolbars, int sidebarDx) {
     BindSlot(win->toolbarTopSlot, win->hwndToolbar, &dh, updateToolbars && showToolbar && !toolbarBottom);
     BindSlot(win->toolbarBottomSlot, win->hwndToolbar, &dh, updateToolbars && showToolbar && toolbarBottom);
     BindSlot(win->sigBarSlot, hwndSigBar, &dh, showSigBar);
+    BindSlot(win->pageInfoBarSlot, hwndInfoBar, &dh, infoBarRow);
     HWND topHwnd = win->sidebarTop->hwnd;
     HWND middleHwnd = win->sidebarMiddle->hwnd;
     HWND bottomHwnd = win->sidebarBottom->hwnd;
@@ -7345,7 +7371,7 @@ static bool RelayoutFrame(MainWindow* win, bool updateToolbars, int sidebarDx) {
     HwndSlot* chromeSlots[] = {
         win->tabsSlot,         win->menuSlot,    win->toolbarTopSlot, win->toolbarBottomSlot, win->capMenuSlot,
         win->capTabsRow1,      win->capTabsRow2, win->sidebarTopSlot, win->sidebarMiddleSlot, win->sidebarBottomSlot,
-        win->favoritesTabSlot, win->canvasSlot,  win->aiChatSlot,     win->sigBarSlot};
+        win->favoritesTabSlot, win->canvasSlot,  win->aiChatSlot,     win->sigBarSlot,        win->pageInfoBarSlot};
     for (HwndSlot* s : chromeSlots) {
         ClearSlotDefer(s);
     }
@@ -7369,6 +7395,9 @@ static bool RelayoutFrame(MainWindow* win, bool updateToolbars, int sidebarDx) {
     if (showSigBar) {
         SigBarUpdate(win);
     }
+    PageInfoBarSetVisible(win, infoBarRow || infoBarOverlay);
+    PageInfoBarPlaceOverlay(win);
+    PageInfoBarUpdate(win);
     UpdateCaptionOverlay(win, CaptionUpdate::Layout);
 
     // the floating sidebar's column: the canvas edge on the sidebar's side

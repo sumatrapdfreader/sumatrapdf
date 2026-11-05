@@ -2059,6 +2059,8 @@ static void AddSidebarOverlay(ShellView* self, gp::Ctx* cx, gp::El* canvasCol, g
     canvasCol->Child(el);
 }
 
+static gp::El* BuildPageInfoBar(MainWindow* win, gp::Ctx* cx);
+
 // the sidebar, the splitter and the canvas; orig's RelayoutFrame puts the same
 // three side by side with a SplitterCtrl between them
 static gp::El* BuildBody(ShellView* self, gp::Ctx* cx, bool overlayUp) {
@@ -2070,6 +2072,11 @@ static gp::El* BuildBody(ShellView* self, gp::Ctx* cx, bool overlayUp) {
     if (HasNotificationsFor(win)) {
         gp::El* box = gp::Div(cx->a)->FlexCol()->Flex1()->W(gp::kFill)->MinH(0)->Child(canvas);
         BuildNotifications(win, cx, box);
+        canvas = box;
+    }
+    if (PageInfoBarOverlays(win)) {
+        gp::El* box = gp::Div(cx->a)->FlexCol()->Flex1()->W(gp::kFill)->MinH(0)->Child(canvas);
+        box->Child(gp::Div(cx->a)->Absolute()->Left(0)->Right(0)->Bottom(0)->Child(BuildPageInfoBar(win, cx)));
         canvas = box;
     }
     gp::El* sidebar = SidebarBuild(win, cx);
@@ -3209,6 +3216,46 @@ static void WakeForUiTasks() {
     }
 }
 
+// the page info bar (#6494): a row under everything, or over the canvas
+constexpr int kPageInfoBarDy = 22;
+
+static gp::El* BuildPageInfoBar(MainWindow* win, gp::Ctx* cx) {
+    TempStr left;
+    TempStr right;
+    PageInfoBarTextTemp(win, &left, &right);
+    const gp::Theme& th = gp::ThemeNow(cx->app);
+    gp::Rgba fg = ToGpui(ThemeWindowTextColor());
+    return gp::Div(cx->a)
+        ->FlexRow()
+        ->ItemsCenter()
+        ->W(gp::kFill)
+        ->H((float)kPageInfoBarDy)
+        ->Shrink0()
+        ->PadX(8)
+        ->Gap(16)
+        ->Bg(ToGpui(ThemeControlBackgroundColor()))
+        ->BorderT(1, th.border)
+        ->Child(gp::TextEl(cx->a, GpuiDup(cx->a, left))->Font(12)->Fg(fg)->Flex1()->MinW(0)->Truncate())
+        ->Child(gp::TextEl(cx->a, GpuiDup(cx->a, right))->Font(12)->Fg(fg)->Shrink0());
+}
+
+static Rect CanvasRcForFrame(MainWindow* win, int frameDx, int frameDy, bool menuBarShown, bool tabsVisible);
+
+TempStr PageInfoBarGeometryTemp(MainWindow* win) {
+    Rect c = win->canvasRc;
+    TempStr canvas = fmt("canvas=%d,%d,%d,%d", c.x, c.y, c.dx, c.dy);
+    Rect b;
+    if (PageInfoBarTakesRow(win)) {
+        int border = AppShellFrameBorder(win);
+        b = Rect{border, win->frameRc.dy - border - kPageInfoBarDy, win->frameRc.dx - 2 * border, kPageInfoBarDy};
+    } else if (PageInfoBarOverlays(win)) {
+        b = Rect{c.x, c.y + c.dy - kPageInfoBarDy, c.dx, kPageInfoBarDy};
+    } else {
+        return fmt("%s bar=none", canvas);
+    }
+    return fmt("%s bar=%d,%d,%d,%d", canvas, b.x, b.y, b.dx, b.dy);
+}
+
 static Rect CanvasRcForFrame(MainWindow* win, int frameDx, int frameDy, bool menuBarShown, bool tabsVisible) {
     int chromeDy;
     if (ShowCaption(win)) {
@@ -3227,6 +3274,9 @@ static Rect CanvasRcForFrame(MainWindow* win, int frameDx, int frameDy, bool men
         sidebarDx = win->sidebarDx + kSplitterDx;
     }
     int bodyDy = frameDy - 2 * border - chromeDy - (tbAtBottom ? toolbarDy : 0);
+    if (PageInfoBarTakesRow(win)) {
+        bodyDy -= kPageInfoBarDy;
+    }
     int aiChatDx = AIChatPanelDx(win);
     int navFilesDx = NavFilesPanelDx(win);
     int bodyDx = frameDx - 2 * border;
@@ -3428,6 +3478,9 @@ gp::El* ShellView::Render(ShellView* self, gp::Ctx* cx) {
     }
     if (toolbar && !win->isToolbarOverlay && tbAtBottom) {
         root->Child(toolbar);
+    }
+    if (PageInfoBarTakesRow(win)) {
+        root->Child(BuildPageInfoBar(win, cx));
     }
 
     // in overlay mode the toolbar floats over the canvas, and its drop-down

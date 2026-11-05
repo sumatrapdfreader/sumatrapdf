@@ -133,6 +133,9 @@ void OpenNextPrevFileInFolder(MainWindow* win, bool forward, Str pathToDelete = 
 // the page-info tip (CmdTogglePageInfo): put it up or refresh it when the
 // user asked for it and a document is loaded
 void ShowPageInfoIfWanted(MainWindow* win);
+bool PageInfoBarTakesRow(MainWindow* win);
+bool PageInfoBarOverlays(MainWindow* win);
+void PageInfoBarTextTemp(MainWindow* win, TempStr* leftOut, TempStr* rightOut);
 #if OS_WIN
 void ShowDefaultAppNotification(MainWindow* win, const StrVec& missing);
 // orig's window picker. hwndRestore gets focus back when the picker closes.

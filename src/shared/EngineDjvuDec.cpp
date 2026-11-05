@@ -143,6 +143,7 @@ class EngineDjvuDec : public EngineBase {
     EngineBase* Clone() override;
 
     RectF PageMediabox(int pageNo) override;
+    int PageDpi(int pageNo) const { return pages[pageNo - 1]->dpi; }
 
     Pixmap* RenderPage(RenderPageArgs& args) override;
 
@@ -877,6 +878,14 @@ EngineBase* CreateEngineDjvuDecFromData(Str data) {
     }
     SafeEngineRelease(&engine);
     return nullptr;
+}
+
+// the scan resolution of a page, for the page info bar (#6494)
+int EngineDjvuDecPageDpi(EngineBase* engine, int pageNo) {
+    if (!engine || engine->kind != kindEngineDjVu || pageNo < 1 || pageNo > engine->PageCount()) {
+        return 0;
+    }
+    return ((EngineDjvuDec*)engine)->PageDpi(pageNo);
 }
 
 EngineBase* CreateEngineDjvuDecFromFile(Str path) {
