@@ -22,6 +22,7 @@ enum class SidebarContent {
     Bookmarks,
     Thumbnails,
     Favorites,
+    Layers,
 };
 #else
 struct PdfSigResult;

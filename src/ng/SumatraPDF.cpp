@@ -1767,6 +1767,7 @@ static MainWindow* LoadDocumentFinish(MainWindow* win, Str fullPath, DocControll
             dm->SetTrimEmptyMargins(fs->trimEmptyMargins);
             dm->SetFreePan(fs->freePan);
             dm->SetPageAdjust(fs->brightness, fs->contrast);
+            EngineMupdfSetLayerStates(dm->GetEngine(), fs->layerStates);
             // migrate in place only: a SaveSettings() here would rebuild
             // gInitialSessionData and free a TabState a restored tab borrows
             MigrateFileStatePagePos(ctrl, fs);
@@ -4053,6 +4054,20 @@ static void AdjustFrameForSidebar(MainWindow* win, bool show) {
 // RelayoutFrame move the sidebar HWNDs; gpui lays the panes out from the same
 // two flags on the next frame, so this only has orig's bookkeeping.
 // Keep is a tab switch: the frame stays the size a toggle already grew it to.
+// whether a sidebar panel has something to show for the current document
+static bool PanelContentAvailable(MainWindow* win, SidebarContent content) {
+    if (content == SidebarContent::Favorites && CanAccessDisk()) {
+        return true;
+    }
+    if (content == SidebarContent::Layers) {
+        return SidebarHasLayers(win);
+    }
+    if (content == SidebarContent::Thumbnails) {
+        return win->AsFixed() != nullptr;
+    }
+    return win->ctrl && win->ctrl->HasToc();
+}
+
 void SetSidebarVisibility(MainWindow* win, bool tocVisible, bool showFavorites, SidebarResizeFrame resizeFrame) {
     bool requestedFavorites = showFavorites;
     if (!CanAccessDisk()) {
@@ -4075,15 +4090,9 @@ void SetSidebarVisibility(MainWindow* win, bool tocVisible, bool showFavorites, 
     EngineBase* engine = win->CurrentTab() ? win->CurrentTab()->GetEngine() : nullptr;
     bool headingPending = EngineMupdfHeadingTocPending(engine);
 
-    bool topAvailable =
-        (topContent == SidebarContent::Favorites && CanAccessDisk()) ||
-        (topContent == SidebarContent::Thumbnails ? win->AsFixed() != nullptr : win->ctrl && win->ctrl->HasToc());
-    bool bottomAvailable =
-        (bottomContent == SidebarContent::Favorites && CanAccessDisk()) ||
-        (bottomContent == SidebarContent::Thumbnails ? win->AsFixed() != nullptr : win->ctrl && win->ctrl->HasToc());
-    bool middleAvailable =
-        (middleContent == SidebarContent::Favorites && CanAccessDisk()) ||
-        (middleContent == SidebarContent::Thumbnails ? win->AsFixed() != nullptr : win->ctrl && win->ctrl->HasToc());
+    bool topAvailable = PanelContentAvailable(win, topContent);
+    bool bottomAvailable = PanelContentAvailable(win, bottomContent);
+    bool middleAvailable = PanelContentAvailable(win, middleContent);
     tocVisible = tocVisible && topAvailable;
     showFavorites = showFavorites && bottomAvailable;
     // the middle panel shows only with the other two
@@ -5896,6 +5905,10 @@ void ExecuteCmd(MainWindow* win, int cmdId) {
 
         case CmdToggleThumbnails:
             SidebarToggleThumbnails(win);
+            break;
+
+        case CmdToggleLayers:
+            SidebarToggleLayers(win);
             break;
 
         // swaps the page colors for this session, whatever they are and

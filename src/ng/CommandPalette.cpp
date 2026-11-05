@@ -1087,6 +1087,10 @@ static TempStr UpdateCommandNameTemp(MainWindow* win, int cmdId, Str s) {
             isToggle = true;
             newIsOn = !SidebarContentVisible(win, SidebarContent::Thumbnails);
         } break;
+        case CmdToggleLayers: {
+            isToggle = true;
+            newIsOn = !SidebarContentVisible(win, SidebarContent::Layers);
+        } break;
         case CmdTogglePresentationMode: {
             isToggle = true;
             newIsOn = !win->presentation;

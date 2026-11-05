@@ -519,6 +519,7 @@ AppCommandCtx NewAppCommandCtx(MainWindow* win, Point cursorPos) {
         ctx.pageCount = win->ctrl->PageCount();
         ctx.hasToc = win->ctrl->HasToc();
     }
+    ctx.hasLayers = SidebarHasLayers(win);
 
     DisplayModel* dm = win->AsFixed();
     if (dm) {
