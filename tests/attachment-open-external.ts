@@ -5,11 +5,11 @@
 //
 // TMP points at a fresh dir so the extracted file can be checked. What happened
 // to it is read from the log: Explorer is unreliable without an interactive
-// desktop. Explorer windows the click opened are closed.
+// desktop. With -for-testing the app logs the reveal but doesn't open Explorer.
 import { existsSync, mkdirSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 import { cmdId, runStandalone, tmpPath } from "./util.ts";
-import { WM_CLOSE, enumWindows, getClassName, getClientRect, postMessage, sleep } from "./winapi.ts";
+import { getClientRect, sleep } from "./winapi.ts";
 import { clickAt, findCanvas, killAndWait, launchControlled, sendCommandSync } from "./win-automation.ts";
 
 // no perceived type, so the shell isn't allowed to run it: it's revealed instead
@@ -41,22 +41,6 @@ function attachmentPdf(): string {
   return out;
 }
 
-function explorerWindows(): Set<number> {
-  const res = new Set<number>();
-  enumWindows((hwnd) => {
-    if (getClassName(hwnd) === "CabinetWClass") {
-      res.add(hwnd);
-    }
-    return true;
-  });
-  return res;
-}
-
-// explorer windows opened since `before`
-function newExplorerWindows(before: Set<number>): number[] {
-  return [...explorerWindows()].filter((w) => !before.has(w));
-}
-
 export async function testit(): Promise<void> {
   const dir = tmpPath("attachment-open-external");
   rmSync(dir, { recursive: true, force: true });
@@ -69,7 +53,6 @@ export async function testit(): Promise<void> {
   // Windows reads TMP/TEMP. macOS and Linux read TMPDIR.
   const env = { TMP: tempDir, TEMP: tempDir, TMPDIR: tempDir };
   const { proc, client, frame } = await launchControlled(["-log-to-file", logPath, pdf], { env });
-  const before = explorerWindows();
   try {
     await client.waitForRenderIdle();
     sendCommandSync(frame, cmdId("CmdZoomFitPage"));
@@ -104,11 +87,6 @@ export async function testit(): Promise<void> {
     }
     console.log("attachment-open-external: OK");
   } finally {
-    // Explorer opens its window a moment later
-    await sleep(1500);
-    for (const w of newExplorerWindows(before)) {
-      postMessage(w, WM_CLOSE, 0, 0);
-    }
     client.close();
     await killAndWait(proc);
   }

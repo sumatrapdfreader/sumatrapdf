@@ -14,6 +14,7 @@
 #include "gui/UIModels.h"
 
 #include "Settings.h"
+#include "SumatraConfig.h"
 #include "AppTools.h"
 #include "AppSettings.h"
 #include "DisplayMode.h"
@@ -195,7 +196,10 @@ static void LaunchEmbeddedDestination(MainWindow* win, PageDestination* pd) {
         logf("LaunchEmbeddedDestination: opened '%s'\n", tmpPath);
     } else {
         logf("LaunchEmbeddedDestination: showing '%s' in the file manager\n", tmpPath);
-        OpenPathInDefaultFileManager(tmpPath);
+        // tests check the log; a revealed folder would leave a file manager window open
+        if (!gForTesting) {
+            OpenPathInDefaultFileManager(tmpPath);
+        }
     }
     str::Free(data);
 }
