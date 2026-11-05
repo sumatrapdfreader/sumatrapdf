@@ -7763,7 +7763,7 @@ extern "C" EMSCRIPTEN_KEEPALIVE int sumatra_test_fullscreen() {
 }
 
 // Rendering without the app, for a page that compares how engines render a
-// document (sumatra-online). With ?render-api in the URL main() makes no
+// document (sumatra-web). With ?render-api in the URL main() makes no
 // window and returns to the browser with the runtime alive; the page then
 // sets Module.sumatraRenderPath to a file in MEMFS and calls
 // sumatra_render_open() and sumatra_render_page(). See docs/wasm-host-api.md.
