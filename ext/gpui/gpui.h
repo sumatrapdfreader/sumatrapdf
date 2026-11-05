@@ -4260,6 +4260,14 @@ enum : int {
     KeyBrowserBack = 166,
     KeyBrowserForward = 167,
 
+    KeyVolumeMute = 173,
+    KeyVolumeDown = 174,
+    KeyVolumeUp = 175,
+    KeyMediaNextTrack = 176,
+    KeyMediaPrevTrack = 177,
+    KeyMediaStop = 178,
+    KeyMediaPlayPause = 179,
+
     KeySemicolon = 186,
     KeyEqual = 187,
     KeyComma = 188,

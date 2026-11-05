@@ -534,6 +534,10 @@ static const struct {
     {VK_MULTIPLY, StrL("multiply")},   {VK_DIVIDE, StrL("divide")}, {VK_DECIMAL, StrL("decimal")},
     {VK_SEPARATOR, StrL("separator")},
     {VK_BROWSER_BACK, StrL("back")},   {VK_BROWSER_FORWARD, StrL("forward")},
+    {VK_VOLUME_MUTE, StrL("volumemute")},        {VK_VOLUME_DOWN, StrL("volumedown")},
+    {VK_VOLUME_UP, StrL("volumeup")},            {VK_MEDIA_NEXT_TRACK, StrL("medianext")},
+    {VK_MEDIA_PREV_TRACK, StrL("mediaprev")},    {VK_MEDIA_STOP, StrL("mediastop")},
+    {VK_MEDIA_PLAY_PAUSE, StrL("mediaplaypause")},
     // clang-format on
 };
 

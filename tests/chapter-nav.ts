@@ -8,11 +8,23 @@ import { mkdirSync, rmSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 import type { ControlClient } from "./control.ts";
 import { assemblePdf, cmdId, runStandalone, tmpPath } from "./util.ts";
-import { sleep } from "./winapi.ts";
-import { killAndWait, launchControlled, sendCommand } from "./win-automation.ts";
+import { postMessage, sleep, WM_KEYDOWN } from "./winapi.ts";
+import { findCanvas, killAndWait, launchControlled, sendCommand } from "./win-automation.ts";
 
 const kPages = 10;
 const kWaitMs = 5000;
+const VK_MEDIA_NEXT_TRACK = 0xb0;
+
+// a media key bound to a chapter command, the way the post asked for
+const kSettings = `RestoreSession = false
+CheckForUpdates = false
+Shortcuts [
+    [
+        Cmd = CmdGoToNextChapter
+        Key = Media Next
+    ]
+]
+`;
 
 // bookmarks: Ch1 -> 1 (with Sec 1.1 -> 2), Ch2 -> 5, Ch3 -> 8
 function makeChaptersPdf(): string {
@@ -52,8 +64,11 @@ export async function testit(): Promise<void> {
   mkdirSync(dir, { recursive: true });
   const pdf = join(dir, "chapters.pdf");
   writeFileSync(pdf, makeChaptersPdf(), "latin1");
+  const appdata = join(dir, "appdata");
+  mkdirSync(appdata, { recursive: true });
+  writeFileSync(join(appdata, "SumatraPDF-settings.txt"), kSettings);
 
-  const { proc, client, frame } = await launchControlled([pdf]);
+  const { proc, client, frame } = await launchControlled(["-appdata", appdata, pdf]);
   try {
     await client.waitForRenderIdle();
     const next = cmdId("CmdGoToNextChapter");
@@ -79,6 +94,10 @@ export async function testit(): Promise<void> {
       sendCommand(frame, cmd);
       await waitForPage(client, want, `${cmd === next ? "next" : "previous"} chapter from page ${from}`);
     }
+
+    // the Media Next key runs the command it is bound to
+    postMessage(findCanvas(frame), WM_KEYDOWN, VK_MEDIA_NEXT_TRACK, 0);
+    await waitForPage(client, 2, "Media Next from page 1");
     console.log("chapter-nav: OK");
   } finally {
     client.close();

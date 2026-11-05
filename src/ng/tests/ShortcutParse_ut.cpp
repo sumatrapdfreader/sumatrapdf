@@ -131,12 +131,11 @@ static bool StrokeIs(Str shortcut, Str expected) {
 }
 
 bool ShortcutParse_UnitTestGpuiStroke() {
-    // gpui names the browser keys but not the media keys
     utassert(StrokeIs(StrL("Browser Back"), StrL("back")));
     utassert(StrokeIs(StrL("Alt + BrowserForward"), StrL("alt-forward")));
-    KeyShortcut media{};
-    utassert(ParseShortcutString(StrL("Media Next"), media));
-    utassert(len(ShortcutToGpuiStroke(media)) == 0);
+    utassert(StrokeIs(StrL("Media Next"), StrL("medianext")));
+    utassert(StrokeIs(StrL("Ctrl + MediaPlayPause"), StrL("ctrl-mediaplaypause")));
+    utassert(StrokeIs(StrL("Volume Up"), StrL("volumeup")));
     utassert(StrokeIs(StrL("Ctrl + Shift + F5"), StrL("ctrl-shift-f5")));
     utassert(StrokeIs(StrL("Ctrl + O"), StrL("ctrl-o")));
     utassert(StrokeIs(StrL("Alt + Left"), StrL("alt-left")));

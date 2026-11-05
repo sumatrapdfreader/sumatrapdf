@@ -16509,6 +16509,13 @@ static const NamedKey kNamedKeys[] = {
     {"delete", KeyDelete},
     {"back", KeyBrowserBack},
     {"forward", KeyBrowserForward},
+    {"volumemute", KeyVolumeMute},
+    {"volumedown", KeyVolumeDown},
+    {"volumeup", KeyVolumeUp},
+    {"medianext", KeyMediaNextTrack},
+    {"mediaprev", KeyMediaPrevTrack},
+    {"mediastop", KeyMediaStop},
+    {"mediaplaypause", KeyMediaPlayPause},
     {"menu", KeyApps},
     {"numpad0", KeyNumpad0},
     {"numpad1", KeyNumpad0 + 1},
@@ -17067,6 +17074,13 @@ bool KeyIsPrintable(int vk) {
         case KeyEnd:
         case KeyBrowserBack:
         case KeyBrowserForward:
+        case KeyVolumeMute:
+        case KeyVolumeDown:
+        case KeyVolumeUp:
+        case KeyMediaNextTrack:
+        case KeyMediaPrevTrack:
+        case KeyMediaStop:
+        case KeyMediaPlayPause:
         case KeyEscape:
 
         case KeyShift:
@@ -245948,6 +245962,22 @@ static int KeyFor(KeySym ks) {
             return KeyBrowserBack;
         case XF86XK_Forward:
             return KeyBrowserForward;
+        case XF86XK_AudioMute:
+            return KeyVolumeMute;
+        case XF86XK_AudioLowerVolume:
+            return KeyVolumeDown;
+        case XF86XK_AudioRaiseVolume:
+            return KeyVolumeUp;
+        case XF86XK_AudioNext:
+            return KeyMediaNextTrack;
+        case XF86XK_AudioPrev:
+            return KeyMediaPrevTrack;
+        case XF86XK_AudioStop:
+            return KeyMediaStop;
+
+        case XF86XK_AudioPlay:
+        case XF86XK_AudioPause:
+            return KeyMediaPlayPause;
         case XF86XK_Cut:
             return KeyCut;
         case XF86XK_Copy:
@@ -250158,6 +250188,57 @@ Window* WindowOpen(App* app, Str title, int dipW, int dipH, WinOpts opts) {
     return win;
 }
 
+static int MediaKeyFor(int nxKey) {
+    switch (nxKey) {
+        case 0:
+            return KeyVolumeUp;
+        case 1:
+            return KeyVolumeDown;
+        case 7:
+            return KeyVolumeMute;
+        case 16:
+            return KeyMediaPlayPause;
+        case 17:
+            return KeyMediaNextTrack;
+        case 18:
+            return KeyMediaPrevTrack;
+        default:
+            return 0;
+    }
+}
+
+static void DispatchMediaKey(App* app, NSEvent* ev) {
+    if ([ev type] != NSEventTypeSystemDefined || (int)[ev subtype] != 8) {
+        return;
+    }
+    NSInteger data = [ev data1];
+    int key = MediaKeyFor((int)((data & 0xFFFF0000) >> 16));
+    if (!key) {
+        return;
+    }
+    int state = (int)((data & 0xFF00) >> 8);
+    NSWindow* keyWin = [NSApp keyWindow];
+    for (int i = 0; i < app->windows.len; i++) {
+        Window* w = app->windows[i];
+        if (!w->plat || w->plat->window != keyWin) {
+            continue;
+        }
+        NSEventModifierFlags mods = [ev modifierFlags];
+        bool shift = (mods & NSEventModifierFlagShift) != 0;
+        bool ctrl = (mods & NSEventModifierFlagControl) != 0;
+        bool alt = (mods & NSEventModifierFlagOption) != 0;
+        bool platform = (mods & NSEventModifierFlagCommand) != 0;
+        if (state == 0xA) {
+            KeyDownFlags flags;
+            flags.held = (data & 0x1) != 0;
+            WindowKeyDown(w, key, shift, ctrl, alt, platform, false, flags);
+        } else if (state == 0xB) {
+            WindowKeyUp(w, key, shift, ctrl, alt, platform, false);
+        }
+        return;
+    }
+}
+
 int AppRun(App* app) {
     if (!app) {
         return 1;
@@ -250174,6 +250255,7 @@ int AppRun(App* app) {
                 if (!ev) {
                     break;
                 }
+                DispatchMediaKey(app, ev);
                 [NSApp sendEvent:ev];
             }
             if (!AppAnyWindowOpen(app)) {
@@ -250214,6 +250296,7 @@ int AppRun(App* app) {
                                                     inMode:NSDefaultRunLoopMode
                                                    dequeue:YES];
                 if (ev) {
+                    DispatchMediaKey(app, ev);
                     [NSApp sendEvent:ev];
                 }
             }
