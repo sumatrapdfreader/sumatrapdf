@@ -441,7 +441,10 @@ static void WaitThreadTest() {
     AtomicBoolSet(&gWaitThreadFinished, false);
     thread = StartThread(MkFunc0Void(WaitThreadWorker), StrL("wait-thread-test"));
     utassert(SafeCloseThreadHandle(&thread));
-    SleepInMs(150);
+    // poll, a loaded CI runner can take long
+    for (int i = 0; i < 500 && !AtomicBoolGet(&gWaitThreadFinished); i++) {
+        SleepInMs(10);
+    }
     utassert(AtomicBoolGet(&gWaitThreadFinished));
 }
 #endif
