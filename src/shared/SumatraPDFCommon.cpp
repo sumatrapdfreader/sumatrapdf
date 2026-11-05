@@ -429,7 +429,10 @@ static int CollectPageInfoPages(DocController* ctrl, int pageNo, int* pagesOut, 
     return n;
 }
 
-void UpdatePageInfoHelper(DocController* ctrl, NotificationWnd* wnd, int pageNo) {
+// "Page: 37 / 120 (31%) · 100%", starting with the file name in full screen
+// and presentation, where no title bar or tab shows it (#6492)
+void UpdatePageInfoHelper(MainWindow* win, NotificationWnd* wnd, int pageNo) {
+    DocController* ctrl = win->ctrl;
     if (!ctrl->ValidPageNo(pageNo)) {
         pageNo = ctrl->CurrentPageNo();
     }
@@ -445,6 +448,13 @@ void UpdatePageInfoHelper(DocController* ctrl, NotificationWnd* wnd, int pageNo)
         pageInfo = fmt("%s %s (%d / %d)", Tr("Page:"), label, pageNo, nPages);
     } else {
         pageInfo = fmt("%s %d / %d", Tr("Page:"), pageNo, nPages);
+    }
+    // of the whole document, also for a chaptered ebook
+    int percentRead = (pageNo * 100) / std::max(nPages, 1);
+    pageInfo = fmt("%s (%d%%)", pageInfo, percentRead);
+    if (win->isFullScreen || win->InPresentation()) {
+        TempStr fileName = path::GetBaseNameTemp(ctrl->GetFilePath());
+        pageInfo = str::JoinTemp(fileName, StrL(kPageInfoSep), pageInfo);
     }
     float zoomLevel = ctrl->GetZoomVirtual();
     auto zoomStr = BuildZoomString(zoomLevel);

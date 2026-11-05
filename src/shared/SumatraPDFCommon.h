@@ -20,7 +20,7 @@ void RestrictPolicies(Perm revokePermission);
 extern bool gForceRtl;
 bool ShouldSaveThumbnail(FileState* ds);
 TempStr BuildZoomString(float zoomLevel);
-void UpdatePageInfoHelper(DocController* ctrl, NotificationWnd* wnd, int pageNo);
+void UpdatePageInfoHelper(MainWindow* win, NotificationWnd* wnd, int pageNo);
 bool ShouldUseBrowserView(FileType kind);
 struct CustomCommand;
 void ToggleCaption(CustomCommand* cmd);

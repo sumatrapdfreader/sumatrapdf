@@ -671,6 +671,18 @@ TempStr WordCountResultTemp(int* exitCodeOut) {
     return fmt("OK %s\n", msg);
 }
 
+// the first window's page info tip (#6492): "OK <text>", "OK" while it's not shown
+TempStr PageInfoTextResultTemp(int* exitCodeOut) {
+    *exitCodeOut = 2;
+    if (len(gWindows) == 0 || !gWindows[0]->IsDocLoaded()) {
+        return str::DupTemp(StrL("NOTREADY no-doc\n"));
+    }
+    *exitCodeOut = 0;
+    NotificationWnd* wnd = GetNotificationForGroup(gWindows[0], kNotifPageInfo);
+    TempStr msg = wnd ? NotificationGetMessageTemp(wnd) : TempStr{};
+    return fmt("OK %s\n", msg);
+}
+
 // action: "get" | "r2l" | "presentation" | "fullscreen"
 // Reports the current page layout and whether presentation / windowed
 // fullscreen is on. presentation/fullscreen toggle that mode first.

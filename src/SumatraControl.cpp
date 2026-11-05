@@ -690,6 +690,8 @@ enum class ControlCmd : u16 {
     TestSelectWordEdges = 153,
     // the word count notification's text
     TestWordCount = 154,
+    // the page info tip's text
+    TestPageInfoText = 155,
 };
 
 static_assert((u16)ControlCmd::Quit == (u16)ControlFrameCmd::Quit);
@@ -1397,6 +1399,13 @@ static void ExecuteControlRequest(ControlRequest* req) {
             IntArg(req, 2, selectLast); // optional, 1-based range end
             int exitCode = 0;
             Str res = AnnotEditorLayoutResultTemp(clientDy, selectItem, &exitCode, selectLast);
+            AppendTestResult(req, exitCode, res);
+            break;
+        }
+
+        case ControlCmd::TestPageInfoText: {
+            int exitCode = 0;
+            Str res = PageInfoTextResultTemp(&exitCode);
             AppendTestResult(req, exitCode, res);
             break;
         }

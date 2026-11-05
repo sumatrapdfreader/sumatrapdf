@@ -1433,7 +1433,7 @@ void ShowPageInfoIfWanted(MainWindow* win) {
     }
     NotificationWnd* wnd = GetNotificationForGroup(win, kNotifPageInfo);
     if (wnd) {
-        UpdatePageInfoHelper(win->ctrl, wnd, -1);
+        UpdatePageInfoHelper(win, wnd, -1);
         return;
     }
     NotificationCreateArgs args;
@@ -1444,7 +1444,7 @@ void ShowPageInfoIfWanted(MainWindow* win) {
     // the message carries page labels and image entry names from the document
     args.plainText = true;
     wnd = ShowNotification(args);
-    UpdatePageInfoHelper(win->ctrl, wnd, -1);
+    UpdatePageInfoHelper(win, wnd, -1);
 }
 
 void ControllerCallbackHandler::ZoomChanged(DocController* ctrl, float /*zoomVirtual*/) {
@@ -1457,7 +1457,7 @@ void ControllerCallbackHandler::ZoomChanged(DocController* ctrl, float /*zoomVir
     if (!wnd) {
         return;
     }
-    UpdatePageInfoHelper(win->ctrl, wnd, win->currPageNo);
+    UpdatePageInfoHelper(win, wnd, win->currPageNo);
 }
 
 // The current page edit box is updated with the current page number
@@ -1521,7 +1521,7 @@ void ControllerCallbackHandler::PageNoChanged(DocController* ctrl, int pageNo) {
     NotificationWnd* wnd = GetNotificationForGroup(win, kNotifPageInfo);
     if (!pageChanged) {
         if (wnd) {
-            UpdatePageInfoHelper(win->ctrl, wnd, pageNo);
+            UpdatePageInfoHelper(win, wnd, pageNo);
         }
         return;
     }
@@ -1532,7 +1532,7 @@ void ControllerCallbackHandler::PageNoChanged(DocController* ctrl, int pageNo) {
     if (!wnd) {
         return;
     }
-    UpdatePageInfoHelper(win->ctrl, wnd, pageNo);
+    UpdatePageInfoHelper(win, wnd, pageNo);
 }
 
 // Debug check: ctrl->GetFilePath() should match path; logs and ReportIf on mismatch.

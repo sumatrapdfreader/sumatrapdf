@@ -2251,7 +2251,7 @@ void ShowPageInfoIfWanted(MainWindow* win) {
     }
     NotificationWnd* wnd = GetNotificationForGroup(win, kNotifPageInfo);
     if (wnd) {
-        UpdatePageInfoHelper(win->ctrl, wnd, -1);
+        UpdatePageInfoHelper(win, wnd, -1);
         return;
     }
     NotificationCreateArgs args;
@@ -2262,7 +2262,7 @@ void ShowPageInfoIfWanted(MainWindow* win) {
     // the message carries page labels and image entry names from the document
     args.plainText = true;
     wnd = ShowNotification(args);
-    UpdatePageInfoHelper(win->ctrl, wnd, -1);
+    UpdatePageInfoHelper(win, wnd, -1);
 }
 
 // --- the cursor-position tip, CmdToggleCursorPosition ----------------------
