@@ -671,6 +671,16 @@ TempStr WordCountResultTemp(int* exitCodeOut) {
     return fmt("OK %s\n", msg);
 }
 
+// the first window's Show Selected Text notification (#6496): "OK <text>"
+TempStr SelectedTextResultTemp(int* exitCodeOut) {
+    *exitCodeOut = 2;
+    if (len(gWindows) == 0 || !gWindows[0]->IsDocLoaded()) {
+        return str::DupTemp(StrL("NOTREADY no-doc\n"));
+    }
+    *exitCodeOut = 0;
+    return fmt("OK %s", SelectedTextNotifMsgTemp(gWindows[0]));
+}
+
 // the first window's page info tip (#6492): "OK <text>", "OK" while it's not shown
 TempStr PageInfoTextResultTemp(int* exitCodeOut) {
     *exitCodeOut = 2;

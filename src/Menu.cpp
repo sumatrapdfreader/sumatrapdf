@@ -153,6 +153,10 @@ static MenuDef menuDefSelection[] = {
         CmdCountWords,
     },
     {
+        TrN("Show Selected Te&xt"),
+        CmdShowSelectedText,
+    },
+    {
         StrL(kMenuSeparator),
         kMenuSeparatorID,
     },

@@ -10958,6 +10958,10 @@ static LRESULT FrameOnCommand(MainWindow* win, HWND hwnd, UINT msg, WPARAM wp, L
             CountWordsInDoc(win);
             break;
 
+        case CmdShowSelectedText:
+            ShowSelectedText(win);
+            break;
+
         case CmdMinimizeWindow:
             ShowWindow(win->hwndFrame, SW_MINIMIZE);
             break;

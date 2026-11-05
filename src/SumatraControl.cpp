@@ -694,6 +694,8 @@ enum class ControlCmd : u16 {
     TestPageInfoText = 155,
     // the page info bar: where it is, the canvas, its text
     TestPageInfoBar = 156,
+    // the Show Selected Text notification's text
+    TestSelectedText = 157,
 };
 
 static_assert((u16)ControlCmd::Quit == (u16)ControlFrameCmd::Quit);
@@ -1401,6 +1403,13 @@ static void ExecuteControlRequest(ControlRequest* req) {
             IntArg(req, 2, selectLast); // optional, 1-based range end
             int exitCode = 0;
             Str res = AnnotEditorLayoutResultTemp(clientDy, selectItem, &exitCode, selectLast);
+            AppendTestResult(req, exitCode, res);
+            break;
+        }
+
+        case ControlCmd::TestSelectedText: {
+            int exitCode = 0;
+            Str res = SelectedTextResultTemp(&exitCode);
             AppendTestResult(req, exitCode, res);
             break;
         }

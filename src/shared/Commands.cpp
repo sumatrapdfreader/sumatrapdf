@@ -365,6 +365,7 @@ const CommandInfo gCommands[] = {
     {CmdToggleFacingStepOne, "CmdToggleFacingStepOne\0", StrL("Toggle Facing: Step One Page")},
     {CmdCountWords, "CmdCountWords\0", StrL("Count Words")},
     {CmdMinimizeWindow, "CmdMinimizeWindow\0", StrL("Minimize Window")},
+    {CmdShowSelectedText, "CmdShowSelectedText\0", StrL("Show Selected Text")},
 };
 const int gCommandsCount = dimofi(gCommands);
 

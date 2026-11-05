@@ -5881,6 +5881,10 @@ void ExecuteCmd(MainWindow* win, int cmdId) {
             CountWordsInDoc(win);
             break;
 
+        case CmdShowSelectedText:
+            ShowSelectedText(win);
+            break;
+
         case CmdMinimizeWindow:
             AppShellMinimizeWindow(win);
             break;

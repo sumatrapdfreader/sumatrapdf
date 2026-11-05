@@ -81,6 +81,8 @@ void ToggleMangaMode(MainWindow* win);
 void ToggleFacingStepOne(MainWindow* win);
 void CountWordsInDoc(MainWindow* win);
 TempStr WordCountNotifMsgTemp(MainWindow* win);
+void ShowSelectedText(MainWindow* win);
+TempStr SelectedTextNotifMsgTemp(MainWindow* win);
 void ToggleAutoRotateWidePages();
 void OnMenuZoom(MainWindow* win, int menuId);
 void TogglePresentationMode(MainWindow* win);

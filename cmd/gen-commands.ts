@@ -366,6 +366,7 @@ const commandsRaw = [
     "CmdToggleFacingStepOne", "Toggle Facing: Step One Page",
     "CmdCountWords", "Count Words",
     "CmdMinimizeWindow", "Minimize Window",
+    "CmdShowSelectedText", "Show Selected Text",
 ];
 
 // removed slots are dropped: nothing outside the generators should see them

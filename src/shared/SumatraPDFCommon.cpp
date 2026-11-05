@@ -1168,6 +1168,42 @@ static void OnWordCountNotifClosed(NotificationClosedEvent* ev) {
     RemoveNotification(ev->wnd);
 }
 
+static Kind kNotifSelectedText = "notifSelectedText";
+constexpr int kSelectedTextMaxChars = 1000;
+
+// CmdShowSelectedText (#6496): the selection's text exactly as the document
+// has it, to check its text layer without pasting it somewhere
+void ShowSelectedText(MainWindow* win) {
+    WindowTab* tab = win->CurrentTab();
+    bool isTextOnly = false;
+    TempStr text = GetSelectedTextTemp(tab, StrL("\n"), isTextOnly);
+    if (len(text) == 0) {
+        return;
+    }
+    int nChars = Utf8CodepointCount(text);
+    if (nChars > kSelectedTextMaxChars) {
+        Str start = Utf8SliceByCodepoints(text, 0, kSelectedTextMaxChars);
+        TempStr note =
+            fmt(Tr("(the first %d of %d characters; Copy gets all of them)").s, kSelectedTextMaxChars, nChars);
+        text = fmt("%s\xE2\x80\xA6\n\n%s", start, note);
+    }
+    RemoveNotificationsForGroup(win, kNotifSelectedText);
+    NotificationCreateArgs args;
+    args.win = win;
+    args.tab = tab;
+    args.groupId = kNotifSelectedText;
+    args.timeoutMs = kNotifNoTimeout;
+    // the document's text: shown verbatim, never parsed as markup
+    args.plainText = true;
+    args.msg = text;
+    ShowNotification(args);
+}
+
+TempStr SelectedTextNotifMsgTemp(MainWindow* win) {
+    NotificationWnd* wnd = GetNotificationForGroup(win, kNotifSelectedText);
+    return wnd ? NotificationGetMessageTemp(wnd) : TempStr{};
+}
+
 // the word count notification's text, for tests
 TempStr WordCountNotifMsgTemp(MainWindow* win) {
     NotificationWnd* wnd = GetNotificationForGroup(win, kNotifWordCount);
