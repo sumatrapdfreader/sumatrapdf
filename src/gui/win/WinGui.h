@@ -1023,7 +1023,17 @@ struct TreeView : ControlBase {
         LRESULT result = 0;
     };
 
+    // wrapText: how many rows an item needs at availDx pixels wide
+    struct MeasureLinesEvent {
+        TreeView* treeView = nullptr;
+        TreeItem treeItem = 0;
+        int availDx = 0;
+
+        int lines = 1;
+    };
+
     using KeyDownHandler = Func1<KeyDownEvent*>;
+    using MeasureLinesHandler = Func1<MeasureLinesEvent*>;
     using ClickHandler = Func1<ClickEvent*>;
     using CustomDrawHandler = Func1<CustomDrawEvent*>;
     using GetTooltipHandler = Func1<TreeView::GetTooltipEvent*>;
@@ -1061,6 +1071,9 @@ struct TreeView : ControlBase {
     void SetTreeModel(TreeModel* tm);
     void SetState(TreeItem item, bool enable);
     bool GetState(TreeItem item);
+    void SetWrapText(bool wrap);
+    void RemeasureItems();
+    int ItemLines(TreeItem ti, int depth);
 
     bool fullRowSelect = false;
     Size idealSize;
@@ -1084,6 +1097,10 @@ struct TreeView : ControlBase {
 
     // for WM_NOITFY with TVN_KEYDOWN
     KeyDownHandler onKeyDown;
+
+    // items are several rows tall (TVS_NONEVENHEIGHT), as onMeasureLines says
+    bool wrapText = false;
+    MeasureLinesHandler onMeasureLines;
 
     // private
     TVITEMW item{};

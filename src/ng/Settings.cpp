@@ -1035,6 +1035,7 @@ static const FieldInfo gSettingsFields[] = {
     {offsetof(Settings, showFileNavigateHint), SettingType::Bool, true},
     {offsetof(Settings, showAnnotationAuthorInTooltip), SettingType::Bool, false},
     {offsetof(Settings, showTocPageNumbers), SettingType::Bool, true},
+    {offsetof(Settings, tocWrapText), SettingType::Bool, false},
     {offsetof(Settings, autoGenerateTOC), SettingType::Bool, false},
     {offsetof(Settings, showStartPage), SettingType::Bool, true},
     {offsetof(Settings, sidebarDx), SettingType::Int, 0, true},
@@ -1160,7 +1161,7 @@ static const FieldInfo gSettingsFields[] = {
 };
 const StructInfo gSettingsInfo = {
     sizeof(Settings),
-    186,
+    187,
     gSettingsFields,
     "\0\0DefaultDisplayMode\0DefaultZoom\0DisableJavaScript\0AllowExternalImages\0EnableTeXEnhancements\0EscToExit\0Ful"
     "lPathInTitle\0InverseSearchCmdLine\0LazyLoading\0MainWindowBackground\0NoHomeTab\0NoCaj2pdfConverterDownload\0Home"
@@ -1173,19 +1174,19 @@ const StructInfo gSettingsInfo = {
     "oHide\0SidebarWindowSize\0ShowLinks\0HighlightFormFields\0ClickEdgeToTurnPage\0DisableLinks\0DisableLeftDragPan\0E"
     "xplorerQuickLook\0RememberViewOffsetOnPageTurn\0MouseWheelTurnsPage\0InvertMouseWheel\0ScrollEdgeTurnsPage\0ShowDo"
     "cumentFocusIndicator\0ShowAnnotationNotification\0ShowFileNavigateHint\0ShowAnnotationAuthorInTooltip\0ShowTocPage"
-    "Numbers\0AutoGenerateTOC\0ShowStartPage\0SidebarDx\0Scrollbars\0ScrollbarInSinglePage\0SmoothScroll\0ScrollLineAmo"
-    "unt\0SaveMemory\0PaddingAfterLastPage\0ContinuousScrollFollowsRotation\0IgnoreDestinationZoom\0HighlightLinkDestin"
-    "ation\0CitationHoverDelay\0ReadAloudVoiceId\0ReadAloudSpeed\0ReadingAutoScrollSpeed\0ReadingBar\0FastScrollOverScr"
-    "ollbar\0PreventSleepInFullscreen\0TabWidth\0TabsEqualWidth\0Theme\0HelpTheme\0LastLightTheme\0LastDarkTheme\0Docum"
-    "entColorsFollowTheme\0TocDy\0SidebarMiddleDy\0ToolbarCustomLayout\0ToolbarShowReadAloud\0ToolbarSize\0TreeFontName"
-    "\0TreeFontSize\0UIFontSize\0DisableAntiAlias\0EngineeringDrawingEnhance\0DisableAutoLinks\0UseSysColors\0UseTabs\0"
-    "ShowCaption\0SelectionToolbar\0SelectionToolbarLayout\0TabsMru\0CtrlTabSimple\0ZoomLevels\0ZoomIncrement\0\0FixedP"
-    "ageUI\0\0EBookUI\0\0ComicBookUI\0\0ImageUI\0\0ChmUI\0\0MarkdownUI\0\0HtmlUI\0\0ClaudeCode\0\0GrokBuild\0\0CodexBui"
-    "ld\0\0AntiGravity\0\0AIChat\0\0AIChatSidebarDx\0\0TranslateToLang\0TranslateFromLang\0TranslateEngine\0\0Annotatio"
-    "ns\0\0ExternalViewers\0\0ForwardSearch\0\0PrinterDefaults\0\0Fullscreen\0\0SelectionHandlers\0\0TextSnippets\0\0Sh"
-    "ortcuts\0\0Themes\0\0TabGroups\0\0CustomScreenDPI\0\0\0DefaultPasswords\0UiLanguage\0VersionToSkip\0WindowState\0W"
-    "indowPos\0SearchUIWindowPos\0AnnotationsWindowShowNote\0HelpWindowPos\0FileStates\0SessionData\0ReopenOnce\0TimeOf"
-    "LastUpdateCheck\0OpenCountWeek\0PropWinPos\0CheckForUpdates\0OnlineApiKey\0OnlineServer\0\0",
+    "Numbers\0TocWrapText\0AutoGenerateTOC\0ShowStartPage\0SidebarDx\0Scrollbars\0ScrollbarInSinglePage\0SmoothScroll\0"
+    "ScrollLineAmount\0SaveMemory\0PaddingAfterLastPage\0ContinuousScrollFollowsRotation\0IgnoreDestinationZoom\0Highli"
+    "ghtLinkDestination\0CitationHoverDelay\0ReadAloudVoiceId\0ReadAloudSpeed\0ReadingAutoScrollSpeed\0ReadingBar\0Fast"
+    "ScrollOverScrollbar\0PreventSleepInFullscreen\0TabWidth\0TabsEqualWidth\0Theme\0HelpTheme\0LastLightTheme\0LastDar"
+    "kTheme\0DocumentColorsFollowTheme\0TocDy\0SidebarMiddleDy\0ToolbarCustomLayout\0ToolbarShowReadAloud\0ToolbarSize"
+    "\0TreeFontName\0TreeFontSize\0UIFontSize\0DisableAntiAlias\0EngineeringDrawingEnhance\0DisableAutoLinks\0UseSysCol"
+    "ors\0UseTabs\0ShowCaption\0SelectionToolbar\0SelectionToolbarLayout\0TabsMru\0CtrlTabSimple\0ZoomLevels\0ZoomIncre"
+    "ment\0\0FixedPageUI\0\0EBookUI\0\0ComicBookUI\0\0ImageUI\0\0ChmUI\0\0MarkdownUI\0\0HtmlUI\0\0ClaudeCode\0\0GrokBui"
+    "ld\0\0CodexBuild\0\0AntiGravity\0\0AIChat\0\0AIChatSidebarDx\0\0TranslateToLang\0TranslateFromLang\0TranslateEngin"
+    "e\0\0Annotations\0\0ExternalViewers\0\0ForwardSearch\0\0PrinterDefaults\0\0Fullscreen\0\0SelectionHandlers\0\0Text"
+    "Snippets\0\0Shortcuts\0\0Themes\0\0TabGroups\0\0CustomScreenDPI\0\0\0DefaultPasswords\0UiLanguage\0VersionToSkip\0"
+    "WindowState\0WindowPos\0SearchUIWindowPos\0AnnotationsWindowShowNote\0HelpWindowPos\0FileStates\0SessionData\0Reop"
+    "enOnce\0TimeOfLastUpdateCheck\0OpenCountWeek\0PropWinPos\0CheckForUpdates\0OnlineApiKey\0OnlineServer\0\0",
     "\0\0default layout of pages. page aspect (3.7+): first open of a PDF, XPS, DjVu, PostScript or DVI file uses page "
     "1 — taller than wide is continuous + fit width, wider than tall is single page + fit page; a remembered FileState "
     "still wins\0default zoom. valid values: fit page, fit width, fit height, fit content or percent like 100%\0if "
@@ -1267,7 +1268,8 @@ const StructInfo gSettingsInfo = {
     "area)\0if true, show a tip when hovering an annotation (e.g. \"Highlight annotation. Ctrl+click to edit.\")\0if "
     "true, at the end of a document show a hint to open the next file in the folder. Closing the hint sets it to "
     "false\0if true, show the author at the bottom of an annotation tooltip as \"Author: <author>\"\0if true, show "
-    "page numbers (labels) right-aligned on bookmark / table-of-contents entries\0if true, a PDF without an outline "
+    "page numbers (labels) right-aligned on bookmark / table-of-contents entries\0if true, long bookmark / "
+    "table-of-contents entries wrap to the sidebar's width instead of being cut off\0if true, a PDF without an outline "
     "gets a table of contents built from numbered headings in its text (Generate Table Of Contents command does it on "
     "demand)\0if true, show a list of frequently read documents when no document is loaded\0width of the favorites / "
     "bookmarks sidebar in screen pixels, as last resized (0 means the default)\0scrollbar mode: smart (overlay "

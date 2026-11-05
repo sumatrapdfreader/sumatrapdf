@@ -82,6 +82,9 @@ struct SidebarThumbCache {
 struct TocRow {
     TocItem* item;
     int depth;
+    // TocWrapText: where the row is in the list and how tall
+    float top = 0;
+    float dy = kRowDy;
 };
 
 struct FavRow {
@@ -1184,8 +1187,8 @@ static bool IsTocSelShown(SidebarUI* ui) {
         if (ui->tocRows[i].item != ui->tocSel) {
             continue;
         }
-        float top = (float)i * kRowDy;
-        return top >= ui->tocScrollY && top + kRowDy <= ui->tocScrollY + ui->tocView.h;
+        const TocRow& r = ui->tocRows[i];
+        return r.top >= ui->tocScrollY && r.top + r.dy <= ui->tocScrollY + ui->tocView.h;
     }
     return false;
 }
@@ -1356,6 +1359,80 @@ static void FlattenToc(TocItem* item, int depth, Vec<TocRow>& out) {
     }
 }
 
+// ng: gpui measures text only while painting, so the lines a wrapped title
+// takes are estimated word by word, at about 6 px a character of the 12 px
+// tree font. A wrapped line is a row tall (kWrapLineHeight)
+constexpr float kCharDxEstimate = 6.0f;
+constexpr float kWrapLineHeight = kRowDy / kTreeFontSize;
+constexpr int kTocMaxLines = 20;
+// the row's PadR(6), the label box's PadX(2) and the page number's PadL(8)
+constexpr float kTocRowPadsDx = 6 + 4;
+constexpr float kTocPagePadDx = 8;
+
+// TocWrapText (#1139): how many rows a bookmark's title wraps to
+static int TocRowLines(MainWindow* win, TocItem* item, int depth, float viewDx) {
+    float pageDx = 0;
+    if (gSettings->showTocPageNumbers && win->ctrl && item->pageNo > 0) {
+        TempStr label = win->ctrl->GetPageLabeTemp(item->pageNo);
+        pageDx = kTocPagePadDx + (float)Utf8CodepointCount(label) * kCharDxEstimate;
+    }
+    float avail = viewDx - (kRowPadL + (float)depth * kIndentDx + kChevronDx) - kTocRowPadsDx - pageDx;
+    if (!gSettings->tocWrapText || avail <= kCharDxEstimate) {
+        return 1;
+    }
+    Str s = item->title;
+    int lines = 1;
+    float lineDx = 0;
+    int i = 0;
+    while (i < len(s)) {
+        int start = i;
+        while (i < len(s) && s.s[i] != ' ') {
+            i++;
+        }
+        float wordDx = (float)Utf8CodepointCount(Str(s.s + start, i - start)) * kCharDxEstimate;
+        float spaceDx = lineDx > 0 ? kCharDxEstimate : 0;
+        if (lineDx > 0 && lineDx + spaceDx + wordDx > avail) {
+            lines++;
+            lineDx = 0;
+            spaceDx = 0;
+        }
+        // a word wider than the line takes the lines it needs
+        while (wordDx > avail) {
+            lines++;
+            wordDx -= avail;
+        }
+        lineDx += spaceDx + wordDx;
+        i++;
+    }
+    return std::min(lines, kTocMaxLines);
+}
+
+// the rows' tops and heights, and the list's height
+static float LayoutTocRows(MainWindow* win, Vec<TocRow>& rows, float viewDx) {
+    float y = 0;
+    for (TocRow& r : rows) {
+        r.top = y;
+        r.dy = (float)TocRowLines(win, r.item, r.depth, viewDx) * kRowDy;
+        y += r.dy;
+    }
+    return y;
+}
+
+// the row at list position y (the last one below the end)
+static int TocRowAtY(const Vec<TocRow>& rows, float y) {
+    int lo = 0;
+    int hi = len(rows) - 1;
+    while (lo < hi) {
+        int mid = (lo + hi + 1) / 2;
+        if (rows[mid].top <= y) {
+            lo = mid;
+        } else {
+            hi = mid - 1;
+        }
+    }
+    return std::max(lo, 0);
+}
+
 static void FlattenFav(FavTreeItem* item, int depth, Vec<FavRow>& out) {
     VecAppend(out, FavRow{item, depth});
     if (!item->isExpanded) {
@@ -1492,7 +1569,8 @@ bool SidebarContextMenuFromKey(MainWindow* win, gp::Ctx* cx) {
             ui->tocRightClick = ui->tocSel;
             ui->tocMenuValid = false;
             float x = kRowPadL + (float)ui->tocRows[i].depth * kIndentDx + kChevronDx;
-            OpenPopupMenuAt(cx, ui->tocPopup, x, (float)(i + 1) * kRowDy - ui->tocScrollY);
+            const TocRow& r = ui->tocRows[i];
+            OpenPopupMenuAt(cx, ui->tocPopup, x, r.top + r.dy - ui->tocScrollY);
             break;
         }
     } else if (content == SidebarContent::Favorites) {
@@ -1559,7 +1637,10 @@ void SidebarView::OnTocRowHover(SidebarView* self, gp::Ctx* cx, const gp::HoverE
         HoverTooltipHide(cx);
         return;
     }
-    HoverTooltipShow(cx, tip, RowBounds(ui->tocView, ui->tocScrollY, (int)rowIdx));
+    gp::Bounds rowBounds = ui->tocView;
+    rowBounds.y = ui->tocView.y + ui->tocRows[(int)rowIdx].top - ui->tocScrollY;
+    rowBounds.h = ui->tocRows[(int)rowIdx].dy;
+    HoverTooltipShow(cx, tip, rowBounds);
 }
 
 void SidebarView::OnFavRowHover(SidebarView* self, gp::Ctx* cx, const gp::HoverEvent* ev, int64_t rowIdx) {
@@ -2247,6 +2328,25 @@ TempStr SidebarThumbnailsResultTemp(int* exitCodeOut) {
     return ToStrTemp(sb);
 }
 
+// the bookmark rows, for tests: "OK rowDy=18 width=240 wrap=1", then
+// "row y=0 dy=36 title=..." each (#1139)
+TempStr TocRowsResultTemp(int* exitCodeOut) {
+    *exitCodeOut = 2;
+    MainWindow* win = len(gWindows) > 0 ? gWindows[0] : nullptr;
+    SidebarUI* ui = win ? Ui(win) : nullptr;
+    if (!ui || len(ui->tocRows) == 0) {
+        return str::DupTemp(StrL("NOTREADY no-toc\n"));
+    }
+    *exitCodeOut = 0;
+    str::Builder out;
+    int wrap = gSettings->tocWrapText ? 1 : 0;
+    out.Append(fmt("OK rowDy=%d width=%d wrap=%d\n", (int)kRowDy, (int)ui->tocView.w, wrap));
+    for (const TocRow& r : ui->tocRows) {
+        out.Append(fmt("row y=%d dy=%d title=%s\n", (int)r.top, (int)r.dy, r.item->title));
+    }
+    return ToStrTemp(out);
+}
+
 static gp::El* BuildTocPane(MainWindow* win, gp::Ctx* cx, SidebarSlot slot) {
     SidebarUI* ui = Ui(win);
     const gp::Theme& th = gp::ThemeNow(cx->app);
@@ -2257,6 +2357,7 @@ static gp::El* BuildTocPane(MainWindow* win, gp::Ctx* cx, SidebarSlot slot) {
         FlattenToc(tree->root->child, 0, ui->tocRows);
     }
     int nRows = ui->tocRows.len;
+    float listDy = LayoutTocRows(win, ui->tocRows, ui->tocView.w);
 
     if (ui->tocReveal) {
         int idx = -1;
@@ -2266,7 +2367,17 @@ static gp::El* BuildTocPane(MainWindow* win, gp::Ctx* cx, SidebarSlot slot) {
                 break;
             }
         }
-        ui->tocScrollY = ScrollToRow(ui->tocScrollY, ui->tocView.h, idx, nRows);
+        // ScrollToRow with the rows' own heights
+        if (idx >= 0 && ui->tocView.h > 0) {
+            const TocRow& r = ui->tocRows[idx];
+            float y = ui->tocScrollY;
+            if (r.top < y) {
+                y = r.top;
+            } else if (r.top + r.dy > y + ui->tocView.h) {
+                y = r.top + r.dy - ui->tocView.h;
+            }
+            ui->tocScrollY = std::max(0.f, std::min(y, std::max(0.f, listDy - ui->tocView.h)));
+        }
         // the pane has no height before its first layout: reveal on a later frame
         if (ui->tocView.h > 0) {
             ui->tocReveal = nullptr;
@@ -2291,11 +2402,11 @@ static gp::El* BuildTocPane(MainWindow* win, gp::Ctx* cx, SidebarSlot slot) {
 
     // the rows that fit the pane, plus spacers for the ones above and below
     float viewH = ui->tocView.h > 0 ? ui->tocView.h : 400;
-    int first = std::max(0, (int)(ui->tocScrollY / kRowDy) - 2);
-    int end = std::min(nRows, (int)((ui->tocScrollY + viewH) / kRowDy) + 3);
+    int first = nRows > 0 ? std::max(0, TocRowAtY(ui->tocRows, ui->tocScrollY) - 2) : 0;
+    int end = nRows > 0 ? std::min(nRows, TocRowAtY(ui->tocRows, ui->tocScrollY + viewH) + 3) : 0;
     gp::El* list = gp::Div(cx->a)->FlexCol()->W(gp::kFill);
     if (first > 0) {
-        list->Child(gp::Div(cx->a)->W(gp::kFill)->H((float)first * kRowDy));
+        list->Child(gp::Div(cx->a)->W(gp::kFill)->H(ui->tocRows[first].top));
     }
     gp::Listener click = gp::ListenTo(Ui(win)->view, &SidebarView::OnTocRowClick, 0);
     gp::Listener down = gp::ListenTo(Ui(win)->view, &SidebarView::OnTocRowDown, 0);
@@ -2307,12 +2418,14 @@ static gp::El* BuildTocPane(MainWindow* win, gp::Ctx* cx, SidebarSlot slot) {
     for (int i = first; i < end; i++) {
         TocItem* item = ui->tocRows[i].item;
         int depth = ui->tocRows[i].depth;
+        float rowDy = ui->tocRows[i].dy;
+        bool isWrapped = rowDy > kRowDy;
         bool isSel = item == ui->tocSel;
         bool isMatch = TocItemIsMultiHighlight(win, item);
         gp::El* row = gp::Div(cx->a)
                           ->FlexRow()
                           ->W(gp::kFill)
-                          ->H(kRowDy)
+                          ->H(rowDy)
                           ->ItemsCenter()
                           ->PadR(6)
                           ->PadL(kRowPadL + (float)depth * kIndentDx)
@@ -2332,7 +2445,25 @@ static gp::El* BuildTocPane(MainWindow* win, gp::Ctx* cx, SidebarSlot slot) {
         gp::El* labelBox = TreeRowLabelBox(cx, row, bgCol);
         gp::Rgba fg = ToGpui(txtCol);
         gp::El* label;
-        if (len(filterWords) > 0) {
+        if (isWrapped) {
+            // the chevron, the first line and the page number share the top row
+            row->ItemsStart();
+            labelBox->ItemsStart()->PadT(2);
+            label = gp::TextEl(cx->a, GpuiDup(cx->a, item->title))
+                        ->Font(kTreeFontSize)
+                        ->Fg(fg)
+                        ->Flex1()
+                        ->MinW(0)
+                        ->Wrap()
+                        ->LineHeight(kWrapLineHeight)
+                        ->ClipY();
+            if (bit::IsSet(item->fontFlags, kFontBitBold)) {
+                label->Bold();
+            }
+            if (bit::IsSet(item->fontFlags, kFontBitItalic)) {
+                label->Italic();
+            }
+        } else if (len(filterWords) > 0) {
             // orig's DrawTreeItemFilterHighlight: the matched letters get an
             // underlay while the bookmark filter is on
             label = FilterHighlightText(cx, item->title, filterWords, fg, 13)->Flex1()->MinW(0)->ClipX();
@@ -2372,7 +2503,7 @@ static gp::El* BuildTocPane(MainWindow* win, gp::Ctx* cx, SidebarSlot slot) {
         list->Child(row);
     }
     if (end < nRows) {
-        list->Child(gp::Div(cx->a)->W(gp::kFill)->H((float)(nRows - end) * kRowDy));
+        list->Child(gp::Div(cx->a)->W(gp::kFill)->H(listDy - ui->tocRows[end].top));
     }
 
     gp::El* scroll = gp::Div(cx->a)

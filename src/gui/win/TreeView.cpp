@@ -89,6 +89,7 @@ void TreeView::SetBounds(Rect bounds) {
     // full-row selection match the new clip. Height-only (window resize)
     // must not: MoveWindow copies the rows and only the new strip paints.
     if (hwnd && bounds.dx != prevDx) {
+        RemeasureItems();
         HwndInvalidate(hwnd, false);
     }
 }
@@ -397,6 +398,39 @@ static void FillTVITEM(TVITEMEXW* tvitem, TreeModel* tm, TreeItem ti) {
     tvitem->pszText = CWStrTemp(title);
 }
 
+static int ItemDepth(HWND hwnd, HTREEITEM h) {
+    int depth = 0;
+    for (HTREEITEM p = h ? TreeView_GetParent(hwnd, h) : nullptr; p; p = TreeView_GetParent(hwnd, p)) {
+        depth++;
+    }
+    return depth;
+}
+
+// wrapText: the rows an item at this depth needs at the tree's width. The text
+// starts one indent further per level than a top-level item's
+int TreeView::ItemLines(TreeItem ti, int depth) {
+    if (!wrapText || !onMeasureLines.IsValid()) {
+        return 1;
+    }
+    Rect cr = HwndClientRect(hwnd);
+    if (cr.dx <= 0) {
+        return 1;
+    }
+    int indent = TreeView_GetIndent(hwnd);
+    int left0 = indent;
+    HTREEITEM root = TreeView_GetRoot(hwnd);
+    RECT rc{};
+    if (root && TreeView_GetItemRect(hwnd, root, &rc, TRUE)) {
+        left0 = rc.left;
+    }
+    MeasureLinesEvent ev;
+    ev.treeView = this;
+    ev.treeItem = ti;
+    ev.availDx = cr.dx - (left0 + depth * indent);
+    onMeasureLines.Call(&ev);
+    return std::max(ev.lines, 1);
+}
+
 // inserting in front is faster:
 // https://devblogs.microsoft.com/oldnewthing/20111125-00/?p=9033
 static HTREEITEM insertItemFront(TreeView* treeView, TreeItem ti, HTREEITEM parent) {
@@ -412,8 +446,56 @@ static HTREEITEM insertItemFront(TreeView* treeView, TreeItem ti, HTREEITEM pare
         tvitem->mask |= TVIF_CHILDREN;
         tvitem->cChildren = 1;
     }
+    if (treeView->wrapText) {
+        int depth = parent ? ItemDepth(treeView->hwnd, parent) + 1 : 0;
+        tvitem->mask |= TVIF_INTEGRAL;
+        tvitem->iIntegral = treeView->ItemLines(ti, depth);
+    }
     HTREEITEM res = TreeView_InsertItem(treeView->hwnd, &toInsert);
     return res;
+}
+
+static void RemeasureSiblings(TreeView* tv, HTREEITEM first, int depth) {
+    HWND hwnd = tv->hwnd;
+    for (HTREEITEM h = first; h; h = TreeView_GetNextSibling(hwnd, h)) {
+        TVITEMEXW it{};
+        it.mask = TVIF_PARAM | TVIF_INTEGRAL;
+        it.hItem = h;
+        if (!TreeView_GetItem(hwnd, &it)) {
+            continue;
+        }
+        int lines = tv->ItemLines((TreeItem)it.lParam, depth);
+        if (lines != it.iIntegral) {
+            it.mask = TVIF_INTEGRAL;
+            it.iIntegral = lines;
+            TreeView_SetItem(hwnd, &it);
+        }
+        RemeasureSiblings(tv, TreeView_GetChild(hwnd, h), depth + 1);
+    }
+}
+
+// the width changed: items wrap differently (only the inserted ones, a lazy
+// tree measures the rest when they're inserted)
+void TreeView::RemeasureItems() {
+    if (!wrapText || !hwnd) {
+        return;
+    }
+    RemeasureSiblings(this, TreeView_GetRoot(hwnd), 0);
+}
+
+// wrapping rows are several lines tall and never scroll sideways. Takes
+// effect for the items inserted from now on (SetTreeModel inserts them all)
+void TreeView::SetWrapText(bool wrap) {
+    wrapText = wrap;
+    if (!hwnd) {
+        return;
+    }
+    LONG_PTR style = GetWindowLongPtrW(hwnd, GWL_STYLE);
+    LONG_PTR bits = TVS_NONEVENHEIGHT | TVS_NOHSCROLL;
+    LONG_PTR newStyle = wrap ? (style | bits) : (style & ~bits);
+    if (newStyle != style) {
+        SetWindowLongPtrW(hwnd, GWL_STYLE, newStyle);
+    }
 }
 
 bool TreeView::UpdateItem(TreeItem ti) {
@@ -495,6 +577,8 @@ void TreeView::SetTreeModel(TreeModel* tm) {
         ResetUserData(tm, tm->Root());
     }
     PopulateTree(this, tm);
+    // the first items were measured before there was a row to take the indent from
+    RemeasureItems();
     ResumeRedraw();
 
     uint flags = RDW_ERASE | RDW_FRAME | RDW_INVALIDATE | RDW_ALLCHILDREN;

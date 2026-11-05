@@ -1785,6 +1785,12 @@ const globalPrefs: Field[] = [
     "if true, show page numbers (labels) right-aligned on bookmark / table-of-contents entries",
   ).ver("3.7"),
   field(
+    "TocWrapText",
+    Bool,
+    false,
+    "if true, long bookmark / table-of-contents entries wrap to the sidebar's width instead of being cut off",
+  ).ver("3.7"),
+  field(
     "AutoGenerateTOC",
     Bool,
     false,
@@ -2425,6 +2431,7 @@ const globalPrefsLayout = [
   "ShowFileNavigateHint",
   "ShowAnnotationAuthorInTooltip",
   "ShowTocPageNumbers",
+  "TocWrapText",
   "ShowStartPage",
   "ScrollbarInSinglePage",
   "SmoothScroll",

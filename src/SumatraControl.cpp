@@ -696,6 +696,8 @@ enum class ControlCmd : u16 {
     TestPageInfoBar = 156,
     // the Show Selected Text notification's text
     TestSelectedText = 157,
+    // the bookmarks tree's visible rows and their heights
+    TestTocRows = 158,
 };
 
 static_assert((u16)ControlCmd::Quit == (u16)ControlFrameCmd::Quit);
@@ -1403,6 +1405,13 @@ static void ExecuteControlRequest(ControlRequest* req) {
             IntArg(req, 2, selectLast); // optional, 1-based range end
             int exitCode = 0;
             Str res = AnnotEditorLayoutResultTemp(clientDy, selectItem, &exitCode, selectLast);
+            AppendTestResult(req, exitCode, res);
+            break;
+        }
+
+        case ControlCmd::TestTocRows: {
+            int exitCode = 0;
+            Str res = TocRowsResultTemp(&exitCode);
             AppendTestResult(req, exitCode, res);
             break;
         }

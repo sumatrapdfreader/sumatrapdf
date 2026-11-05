@@ -166,6 +166,7 @@ export enum ControlCommand {
   TestPageInfoText = 155,
   TestPageInfoBar = 156,
   TestSelectedText = 157,
+  TestTocRows = 158,
 }
 
 export type ControlArg = number | string | Uint8Array | ControlArg[];

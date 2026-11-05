@@ -180,3 +180,5 @@ TempStr WordCountResultTemp(int* exitCodeOut);
 TempStr PageInfoTextResultTemp(int* exitCodeOut);
 TempStr PageInfoBarResultTemp(int* exitCodeOut);
 TempStr SelectedTextResultTemp(int* exitCodeOut);
+// implemented by each app
+TempStr TocRowsResultTemp(int* exitCodeOut);
