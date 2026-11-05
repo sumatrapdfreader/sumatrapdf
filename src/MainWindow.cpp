@@ -64,6 +64,7 @@
 #include "Tabs.h"
 #include "MainWindowCommon.h"
 #include "SignatureUI.h"
+#include "LayersUI.h"
 
 static void SafeDeleteTabsCtrl(TabsCtrl* tabsCtrl) {
     logf("SafeDeleteTabsCtrl: 0x%p\n", tabsCtrl);
@@ -225,6 +226,7 @@ MainWindow::~MainWindow() {
     delete tocViewLayout;
     delete pageThumbs;
     DeleteSignaturesCtrl(this);
+    DeleteLayersCtrl(this);
     DeleteSigBar(this);
     delete tocFilteredTree;
     if (favTreeView) {
@@ -771,6 +773,7 @@ AppCommandCtx NewAppCommandCtx(MainWindow* win, Point cursorPos) {
     ctx.isSpeaking = TtsIsSpeaking();
     ctx.clipboardHasImage = IsClipboardFormatAvailable(CF_BITMAP);
     ctx.hasSignatures = TabHasSignatures(ctx.tab);
+    ctx.hasLayers = TabHasLayers(ctx.tab);
     ctx.aiChatAvailable = IsAIChatAvailable();
     ctx.aiChatSupported = IsAIChatSupportedForTab(ctx.tab);
     ctx.grokInstalled = IsBackendInstalled(AIChatBackend::Grok);

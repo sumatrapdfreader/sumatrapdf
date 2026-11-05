@@ -32,8 +32,9 @@ enum class SidebarView {
     Thumbnails,
     Favorites,
     Signatures,
+    Layers,
 };
-constexpr int kSidebarViewCount = 4;
+constexpr int kSidebarViewCount = 5;
 
 SidebarView SidebarViewFromStr(Str s, SidebarView def);
 Str SidebarViewToStr(SidebarView);

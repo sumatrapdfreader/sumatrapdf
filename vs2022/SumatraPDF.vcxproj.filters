@@ -135,6 +135,9 @@
     <ClInclude Include="..\src\Installer.h">
       <Filter>src</Filter>
     </ClInclude>
+    <ClInclude Include="..\src\LayersUI.h">
+      <Filter>src</Filter>
+    </ClInclude>
     <ClInclude Include="..\src\MainWindow.h">
       <Filter>src</Filter>
     </ClInclude>
@@ -852,6 +855,9 @@
       <Filter>src</Filter>
     </ClCompile>
     <ClCompile Include="..\src\KeyboardHelp.cpp">
+      <Filter>src</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\LayersUI.cpp">
       <Filter>src</Filter>
     </ClCompile>
     <ClCompile Include="..\src\MainWindow.cpp">

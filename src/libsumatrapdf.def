@@ -1548,6 +1548,20 @@ EXPORTS
 
 	pdf_write_document
 
+	pdf_count_layers
+
+	pdf_layer_name
+
+	pdf_layer_is_enabled
+
+	pdf_enable_layer
+
+	pdf_count_layer_config_ui
+
+	pdf_layer_config_ui_info
+
+	pdf_toggle_layer_config_ui
+
 	pdf_lookup_page_number
 
 	pdf_count_pages

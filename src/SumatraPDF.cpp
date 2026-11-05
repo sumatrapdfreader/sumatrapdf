@@ -45,6 +45,7 @@
 #include "EngineAll.h"
 #include "EutlTrust.h"
 #include "SignatureUI.h"
+#include "LayersUI.h"
 #include "PdfDarkMode.h"
 #include "Annotation.h"
 #include "FormFields.h"
@@ -2041,6 +2042,7 @@ static void ReplaceDocumentInCurrentTab(LoadArgs* args, DocController* ctrl, Fil
                 dm->SetTrimEmptyMargins(fs->trimEmptyMargins);
                 dm->SetFreePan(fs->freePan);
                 dm->SetPageAdjust(fs->brightness, fs->contrast);
+                EngineMupdfSetLayerStates(dm->GetEngine(), fs->layerStates);
             }
             // migrate in place only. SaveSettings() here would rebuild
             // gInitialSessionData and free the TabState a lazily restored
@@ -7665,6 +7667,7 @@ static void ApplySidebarDpiFonts(MainWindow* win, int dpi) {
         SidebarPagesChanged(win);
     }
     SignaturesCtrlColorsAndDpi(win, dpi);
+    LayersCtrlColorsAndDpi(win, dpi);
     SigBarUpdate(win);
     if (win->tocFilterEdit) {
         win->tocFilterEdit->SetFont(appFont);
@@ -11073,6 +11076,17 @@ static LRESULT FrameOnCommand(MainWindow* win, HWND hwnd, UINT msg, WPARAM wp, L
         case CmdShowSignatures:
             if (win) {
                 ShowSidebarView(win, SidebarView::Signatures);
+            }
+            break;
+
+        case CmdToggleLayers:
+            if (!win) {
+                break;
+            }
+            if (IsSidebarViewShown(win, SidebarView::Layers)) {
+                HideSidebarView(win, SidebarView::Layers);
+            } else {
+                ShowSidebarView(win, SidebarView::Layers);
             }
             break;
 

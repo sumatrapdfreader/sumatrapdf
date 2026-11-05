@@ -14,6 +14,7 @@ struct VirtText;
 struct VirtCloseButton;
 struct PageThumbnailsCtrl;
 struct SignaturesCtrl;
+struct LayersCtrl;
 struct SigBar;
 struct SidebarPanel;
 struct VirtRoot;
@@ -293,6 +294,8 @@ struct MainWindow { // NOLINT(clang-analyzer-optin.performance.Padding)
     // the Thumbnails view: the document's page thumbnails
     PageThumbnailsCtrl* pageThumbs = nullptr;
     SignaturesCtrl* signaturesCtrl = nullptr;
+    // the Layers view: the PDF's optional content groups
+    LayersCtrl* layersCtrl = nullptr;
     SigBar* sigBar = nullptr;
     TocTree* tocFilteredTree = nullptr;
 

@@ -361,6 +361,7 @@ const CommandInfo gCommands[] = {
     {CmdOpenFromURL, "CmdOpenFromURL\0", StrL("Open from URL...")},
     {CmdGoToPrevChapter, "CmdGoToPrevChapter\0", StrL("Previous Chapter")},
     {CmdGoToNextChapter, "CmdGoToNextChapter\0", StrL("Next Chapter")},
+    {CmdToggleLayers, "CmdToggleLayers\0", StrL("Toggle Layers")},
 };
 const int gCommandsCount = dimofi(gCommands);
 

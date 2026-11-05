@@ -464,6 +464,9 @@ CommandVisibility GetCommandVisibility(int cmdId, const AppCommandCtx& ctx, Comm
     if (cmdId == CmdInsertTextSnippet) {
         return CommandVisibility::Hide;
     }
+    if (cmdId == CmdToggleLayers && !ctx.hasLayers) {
+        return CommandVisibility::Hide;
+    }
     if (cmdId == CmdShowSignatures && !ctx.hasSignatures) {
         return CommandVisibility::Hide;
     }

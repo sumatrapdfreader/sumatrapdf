@@ -38,6 +38,7 @@
 #include "PageThumbnails.h"
 #include "SidebarPanel.h"
 #include "SignatureUI.h"
+#include "LayersUI.h"
 #include "TableOfContents.h"
 #include "TableOfContentsCommon.h"
 #include "MenuDefs.h"
@@ -1228,6 +1229,7 @@ void CreateToc(MainWindow* win) {
     win->pageThumbs = new PageThumbnailsCtrl(win, GetAppFont(), dpi, ThumbnailsHost::Sidebar);
     win->pageThumbs->SetIsVisible(false);
     CreateSignaturesCtrl(win);
+    CreateLayersCtrl(win);
 
     UpdateControlsColors(win);
 }
@@ -1245,6 +1247,7 @@ void UpdateSidebarColors(MainWindow* win) {
     win->pageThumbs->SetColor(kColListText, ThemeWindowTextColor());
     win->pageThumbs->SetColor(kColListBg, ThemeControlBackgroundColor());
     SignaturesCtrlColorsAndDpi(win, DpiGetForHwnd(win->hwndFrame));
+    LayersCtrlColorsAndDpi(win, DpiGetForHwnd(win->hwndFrame));
     SigBarUpdate(win);
     UpdateSidebarPanelsIcons(win);
 }

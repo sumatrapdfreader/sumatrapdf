@@ -44,6 +44,7 @@ extern const char* gIconSigValid;
 extern const char* gIconSigProblem;
 extern const char* gIconSigInvalid;
 extern const char* gIconSidebarSignatures;
+extern const char* gIconSidebarLayers;
 extern const char* gIconEye;
 extern const char* gIconHelpCircle;
 extern const char* gIconEditAnnotations;

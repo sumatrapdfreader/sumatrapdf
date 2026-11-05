@@ -299,6 +299,9 @@ struct FileState {
     ParsedColor bgCol;
     // if given, overrides the tab color for this document
     ParsedColor tabCol;
+    // visibility of the PDF's layers (optional content groups), if
+    // changed: 1 (shown) or 0 (hidden) for each layer, in document order
+    Str layerStates;
     // how often the document was opened, halved every week so that the
     // Frequently Read list reflects what's relevant now instead of what
     // used to be opened a lot
@@ -1394,7 +1397,7 @@ struct FieldInfo;
 struct StructInfo;
 extern const StructInfo gFavoriteInfo;
 extern const StructInfo gFileEBookUIInfo;
-extern const FieldInfo gFileStateFields[28];
+extern const FieldInfo gFileStateFields[29];
 extern StructInfo gFileStateInfo;
 extern const StructInfo gTabStateInfo;
 extern const StructInfo gSessionDataInfo;

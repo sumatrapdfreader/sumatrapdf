@@ -355,8 +355,9 @@ enum {
     CmdOpenFromURL = 549,
     CmdGoToPrevChapter = 550,
     CmdGoToNextChapter = 551,
+    CmdToggleLayers = 552,
 
-    CmdLast = 551,
+    CmdLast = 552,
     CmdFirstCustom = CmdLast + 100,
 
     // aliases, at the end to not mess ordering

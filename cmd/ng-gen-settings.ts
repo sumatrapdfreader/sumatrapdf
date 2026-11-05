@@ -1242,6 +1242,12 @@ const fileState: Field[] = [
   ).ver("3.7"),
   field("BgCol", Color, "", "if given, overrides the background color for this document").ver("3.7"),
   field("TabCol", Color, "", "if given, overrides the tab color for this document").ver("3.7"),
+  field(
+    "LayerStates",
+    Str,
+    null,
+    "visibility of the PDF's layers (optional content groups), if changed: 1 (shown) or 0 (hidden) for each layer, in document order",
+  ).ver("3.7"),
   compactArray(
     "TocState",
     Int,
@@ -1278,6 +1284,7 @@ const fileStateLayout = [
   "Zoom",
   "BgCol",
   "TabCol",
+  "LayerStates",
   "OpenCount",
   "PageNo",
   "PageCount",

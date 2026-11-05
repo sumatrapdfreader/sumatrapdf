@@ -272,6 +272,13 @@ class EngineMupdf : public EngineBase {
     bool cadHairlineVector = false;
     CadEnhanceOverride cadEnhanceOverride = CadEnhanceOverride::Unset;
 
+    // optional content groups (layers): how many, and their on/off state ("1" /
+    // "0" per group) as loaded and now. The UI thread reads layerStates
+    // without waiting for a render to let go of docLock
+    int layerCount = 0;
+    Str layerStatesAtLoad;
+    Str layerStates;
+
     bool CadEnhanceActive() const;
     void RunCadDetection();
     void ToggleCadEnhanceOverride();

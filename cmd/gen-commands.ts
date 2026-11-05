@@ -362,6 +362,7 @@ const commandsRaw = [
     "CmdOpenFromURL", "Open from URL...",
     "CmdGoToPrevChapter", "Previous Chapter",
     "CmdGoToNextChapter", "Next Chapter",
+    "CmdToggleLayers", "Toggle Layers",
 ];
 
 // removed slots are dropped: nothing outside the generators should see them

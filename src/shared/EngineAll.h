@@ -267,6 +267,27 @@ void EngineMupdfSetAnnotAuthorInTooltip(AnnotAuthorVisibility);
 void EngineMupdfToggleCadEnhance(EngineBase* engine);
 bool EngineMupdfCadEnhanceActive(EngineBase* engine);
 void EngineMupdfInvalidateDarkMode(EngineBase* engine);
+
+// a row in the Layers sidebar view: a layer (optional content group) to turn on
+// or off, or a label grouping the layers under it
+enum class PdfLayerKind : u8 {
+    Label,
+    Checkbox,
+    Radio
+};
+struct PdfLayerRow {
+    Str text; // owned
+    int depth = 0;
+    PdfLayerKind kind = PdfLayerKind::Checkbox;
+    bool on = false;
+    bool locked = false;
+    ~PdfLayerRow() { str::Free(text); }
+};
+bool EngineMupdfHasLayers(EngineBase*);
+void EngineMupdfGetLayerRows(EngineBase*, Vec<PdfLayerRow*>& out);
+bool EngineMupdfToggleLayerRow(EngineBase*, int row);
+TempStr EngineMupdfChangedLayerStatesTemp(EngineBase*);
+void EngineMupdfSetLayerStates(EngineBase*, Str states);
 Str EngineMupdfLoadAttachment(EngineBase*, int attachmentNo);
 Str EngineMupdfLoadAnnotAttachment(EngineBase*, int objNum);
 Str EngineMupdfLoadEmbedded(EngineBase*, PageDestination*);

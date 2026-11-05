@@ -29,6 +29,7 @@
 #include "PageThumbnails.h"
 #include "TableOfContents.h"
 #include "SignatureUI.h"
+#include "LayersUI.h"
 #include "SidebarPanel.h"
 
 constexpr int kViewIconDx = 16;
@@ -42,6 +43,8 @@ static const char* ViewIcon(SidebarView v) {
             return gIconHomeThumbnails;
         case SidebarView::Signatures:
             return gIconSidebarSignatures;
+        case SidebarView::Layers:
+            return gIconSidebarLayers;
         default:
             return gIconSidebarFavorites;
     }
@@ -55,6 +58,8 @@ static Str ViewName(SidebarView v) {
             return Tr("Thumbnails");
         case SidebarView::Signatures:
             return Tr("Signatures");
+        case SidebarView::Layers:
+            return Tr("Layers");
         default:
             return Tr("Favorites");
     }
@@ -69,9 +74,29 @@ static ILayout* ViewLayout(MainWindow* win, SidebarView v) {
             return win->pageThumbs;
         case SidebarView::Signatures:
             return SignaturesView(win);
+        case SidebarView::Layers:
+            return LayersView(win);
         default:
             return win->favViewLayout;
     }
+}
+
+// views about the current document only: shown in the top panel, which belongs
+// to the document, and only for documents that have them
+static bool IsDocumentOnlyView(SidebarView v) {
+    return v == SidebarView::Signatures || v == SidebarView::Layers;
+}
+
+// the virtual control a document-only view shows, if p hosts one
+static VirtCtrl* HostedDocumentView(SidebarPanel* p) {
+    MainWindow* win = p->win;
+    VirtCtrl* views[] = {SignaturesView(win), LayersView(win)};
+    for (VirtCtrl* c : views) {
+        if (c && p->hosted == c) {
+            return c;
+        }
+    }
+    return nullptr;
 }
 
 static int ViewControls(MainWindow* win, SidebarView v, ControlBase* out[2]) {
@@ -97,6 +122,8 @@ bool IsSidebarViewAvailable(MainWindow* win, SidebarView v) {
             return CanShowThumbnails(win->CurrentTab());
         case SidebarView::Signatures:
             return TabHasSignatures(win->CurrentTab());
+        case SidebarView::Layers:
+            return TabHasLayers(win->CurrentTab());
         default:
             return !gPluginMode && CanAccessDisk();
     }
@@ -195,7 +222,7 @@ void ShowSidebarView(MainWindow* win, SidebarView v) {
         return;
     }
     // about this document only, so only the panel that belongs to the document
-    if (v == SidebarView::Signatures) {
+    if (IsDocumentOnlyView(v)) {
         OnViewClick(win->sidebarTop, v);
         WindowTab* tab = win->CurrentTab();
         if (tab) {
@@ -282,6 +309,10 @@ static void OnSignaturesClick(SidebarPanel* p, VirtMouseEvent*) {
     OnViewClick(p, SidebarView::Signatures);
 }
 
+static void OnLayersClick(SidebarPanel* p, VirtMouseEvent*) {
+    OnViewClick(p, SidebarView::Layers);
+}
+
 // ✕: hides the panel; on the Favorites tab, closes the tab
 static void OnCloseClick(SidebarPanel* p, VirtMouseEvent*) {
     MainWindow* win = p->win;
@@ -332,6 +363,9 @@ void FocusSidebarPanel(SidebarPanel* p) {
     }
     if (p->view == SidebarView::Signatures && p->root) {
         p->root->SetFocus(SignaturesView(win));
+    }
+    if (p->view == SidebarView::Layers && p->root) {
+        p->root->SetFocus(LayersView(win));
     }
 }
 
@@ -416,14 +450,14 @@ static LRESULT CALLBACK WndProcSidebarPanel(HWND hwnd, UINT msg, WPARAM wp, LPAR
             win->pageThumbs->ShowFocusRing(true);
         }
     }
-    bool signatures = p->hosted && win->signaturesCtrl && p->hosted == SignaturesView(win);
-    if ((msg == WM_SETFOCUS || msg == WM_KILLFOCUS) && p->root && signatures) {
-        p->root->SetFocus(msg == WM_SETFOCUS ? SignaturesView(win) : nullptr);
+    VirtCtrl* docView = HostedDocumentView(p);
+    if ((msg == WM_SETFOCUS || msg == WM_KILLFOCUS) && p->root && docView) {
+        p->root->SetFocus(msg == WM_SETFOCUS ? docView : nullptr);
     }
     // the root may have forgotten the control, which then keeps its focus ring
-    if (msg == WM_KILLFOCUS && signatures) {
-        SignaturesView(win)->SetFlag(vwfFocused, false);
-        SignaturesView(win)->Invalidate();
+    if (msg == WM_KILLFOCUS && docView) {
+        docView->SetFlag(vwfFocused, false);
+        docView->Invalidate();
     }
 
     // with the thumbnails focused, every key they don't take goes to the canvas,
@@ -464,7 +498,7 @@ static void UpdateViewIcons(SidebarPanel* p, int dpi) {
         b->padding = Insets{pad, pad, pad, pad};
         b->isSelected = p->view == v && p->hosted;
         b->SetIsEnabled(IsSidebarViewAvailable(p->win, v));
-        if (v == SidebarView::Signatures) {
+        if (IsDocumentOnlyView(v)) {
             // only where it can be shown: other documents have no use for it
             b->SetIsVisible(p->kind == SidebarPanelKind::Top && IsSidebarViewAvailable(p->win, v));
         }
@@ -493,7 +527,7 @@ SidebarPanel* CreateSidebarPanel(MainWindow* win, SidebarPanelKind kind) {
     header->alignCross = CrossAxisAlign::CrossCenter;
     using ClickFn = void (*)(SidebarPanel*, VirtMouseEvent*);
     const ClickFn onClick[kSidebarViewCount] = {OnBookmarksClick, OnThumbnailsClick, OnFavoritesClick,
-                                                OnSignaturesClick};
+                                                OnSignaturesClick, OnLayersClick};
     for (int i = 0; i < kSidebarViewCount; i++) {
         auto* b = new VirtIconButton();
         b->onClick = MkFunc1(onClick[i], p);
@@ -608,6 +642,13 @@ void AttachSidebarViews(MainWindow* win) {
             SignaturesView(win)->SetFlag(vwfFocused, false);
         }
         UpdateSignaturesCtrl(win);
+    }
+    if (win->layersCtrl) {
+        LayersView(win)->SetIsVisible(hostOf[(int)SidebarView::Layers] != nullptr);
+        if (!SidebarPanelHasFocus(hostOf[(int)SidebarView::Layers])) {
+            LayersView(win)->SetFlag(vwfFocused, false);
+        }
+        UpdateLayersCtrl(win);
     }
     for (SidebarPanel* p : panels) {
         UpdateViewIcons(p, DpiGetForHwnd(p->hwnd));

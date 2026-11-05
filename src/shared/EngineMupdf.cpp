@@ -3601,6 +3601,8 @@ static void FreePageInfo(fz_context* ctx, FzPageInfo* pi) {
 
 EngineMupdf::~EngineMupdf() {
     FreeProps(epubSidecarProps);
+    str::Free(layerStatesAtLoad);
+    str::Free(layerStates);
     pagesLock.Lock();
 
     auto* ctx = _ctx;
@@ -3680,6 +3682,57 @@ static void ForEachPageInfo(EngineMupdf* e, const Fn& fn) {
     }
 }
 
+//--- layers (optional content groups)
+
+// "1" / "0" per optional content group. Caller holds docLock
+static TempStr LayerStatesTemp(EngineMupdf* e) {
+    int n = e->layerCount;
+    if (n <= 0) {
+        return {};
+    }
+    char* s = (char*)AllocTemp(n + 1);
+    auto* ctx = e->Ctx();
+    fz_try(ctx) {
+        for (int i = 0; i < n; i++) {
+            s[i] = pdf_layer_is_enabled(ctx, e->pdfdoc, i) ? '1' : '0';
+        }
+    }
+    fz_catch(ctx) {
+        fz_report_error(ctx);
+        return {};
+    }
+    s[n] = 0;
+    return Str(s, n);
+}
+
+// remembers the document's own layer state, to save only what the user changed.
+// Caller holds docLock
+static void LoadLayerDefaults(EngineMupdf* e) {
+    auto* ctx = e->Ctx();
+    fz_try(ctx) {
+        e->layerCount = pdf_count_layers(ctx, e->pdfdoc);
+    }
+    fz_catch(ctx) {
+        fz_report_error(ctx);
+        e->layerCount = 0;
+    }
+    str::ReplaceWithCopy(&e->layerStatesAtLoad, LayerStatesTemp(e));
+    str::ReplaceWithCopy(&e->layerStates, e->layerStatesAtLoad);
+}
+
+// The next render runs pages again with the new layer state: the cached
+// display lists have the old one baked in
+static void DropDisplayListsForLayers(EngineMupdf* e) {
+    auto* ctx = e->Ctx();
+    ForEachPageInfo(e, [ctx](FzPageInfo* pi) {
+        if (pi->displayList) {
+            fz_drop_display_list(ctx, pi->displayList);
+            pi->displayList = nullptr;
+        }
+        pi->ResetDarkMode();
+    });
+}
+
 class PasswordCloner : public PasswordUI {
     u8* cryptKey = nullptr;
 
@@ -3742,6 +3795,7 @@ EngineBase* EngineMupdf::Clone() {
     }
     delete pwdUI;
 
+    TempStr layers;
     {
         ScopedRecursiveMutex scope(&docLock);
         clone->disableAntiAlias = disableAntiAlias;
@@ -3752,11 +3806,14 @@ EngineBase* EngineMupdf::Clone() {
         clone->cadRasterDominant = cadRasterDominant;
         clone->cadHairlineVector = cadHairlineVector;
         clone->cadEnhanceOverride = cadEnhanceOverride;
+        layers = str::DupTemp(layerStates);
 
         if (!decryptionKey.s && pdfdoc && pdfdoc->crypt) {
             clone->decryptionKey = Str();
         }
     }
+    // printing and thumbnails show the layers as the document does on screen
+    EngineMupdfSetLayerStates(clone, layers);
 
     return clone;
 }
@@ -5013,6 +5070,7 @@ bool EngineMupdf::FinishLoading() {
     }
 
     attachments = PdfLoadAttachments(ctx, pdfdoc, FilePath());
+    LoadLayerDefaults(this);
 
     pdf_obj* origInfo = nullptr;
     fz_var(origInfo);
@@ -11225,6 +11283,140 @@ void EngineMupdfToggleCadEnhance(EngineBase* engine) {
         epdf->RunCadDetection();
     }
     epdf->ToggleCadEnhanceOverride();
+}
+
+bool EngineMupdfHasLayers(EngineBase* engine) {
+    EngineMupdf* epdf = AsEngineMupdf(engine);
+    return epdf && epdf->pdfdoc && epdf->layerCount > 0;
+}
+
+static void AppendLayerRow(Vec<PdfLayerRow*>& out, const char* text, int depth, PdfLayerKind kind, bool on,
+                           bool locked) {
+    auto* row = new PdfLayerRow();
+    row->text = str::Dup(Str(text));
+    row->depth = depth;
+    row->kind = kind;
+    row->on = on;
+    row->locked = locked;
+    VecAppend(out, row);
+}
+
+static PdfLayerKind LayerKindFromUi(pdf_layer_config_ui_type t) {
+    switch (t) {
+        case PDF_LAYER_UI_CHECKBOX:
+            return PdfLayerKind::Checkbox;
+        case PDF_LAYER_UI_RADIOBOX:
+            return PdfLayerKind::Radio;
+        default:
+            return PdfLayerKind::Label;
+    }
+}
+
+// The layers as the document lists them for the user (its /Order, with nesting,
+// labels, radio groups and locked layers). A document without that list gets
+// every layer, flat. Caller deletes the rows
+void EngineMupdfGetLayerRows(EngineBase* engine, Vec<PdfLayerRow*>& out) {
+    if (!EngineMupdfHasLayers(engine)) {
+        return;
+    }
+    EngineMupdf* epdf = AsEngineMupdf(engine);
+    auto* ctx = epdf->Ctx();
+    ScopedRecursiveMutex doc(&epdf->docLock);
+    fz_try(ctx) {
+        int nUi = pdf_count_layer_config_ui(ctx, epdf->pdfdoc);
+        for (int i = 0; i < nUi; i++) {
+            pdf_layer_config_ui info{};
+            pdf_layer_config_ui_info(ctx, epdf->pdfdoc, i, &info);
+            AppendLayerRow(out, info.text, info.depth, LayerKindFromUi(info.type), info.selected, info.locked);
+        }
+        if (nUi == 0) {
+            for (int i = 0; i < epdf->layerCount; i++) {
+                const char* name = pdf_layer_name(ctx, epdf->pdfdoc, i);
+                bool on = pdf_layer_is_enabled(ctx, epdf->pdfdoc, i);
+                AppendLayerRow(out, name, 0, PdfLayerKind::Checkbox, on, false);
+            }
+        }
+    }
+    fz_catch(ctx) {
+        fz_report_error(ctx);
+    }
+}
+
+// Turns a layer row on or off (a radio button turns the rest of its group off).
+// Returns false if nothing changed, e.g. a label or a locked layer
+bool EngineMupdfToggleLayerRow(EngineBase* engine, int row) {
+    if (!EngineMupdfHasLayers(engine)) {
+        return false;
+    }
+    EngineMupdf* epdf = AsEngineMupdf(engine);
+    auto* ctx = epdf->Ctx();
+    // lock order (see EngineMupdf.h): a render running a page reads the state
+    ScopedRecursiveMutex pages(&epdf->pagesLock);
+    ScopedMutex render(&epdf->renderLock);
+    ScopedRecursiveMutex doc(&epdf->docLock);
+    fz_try(ctx) {
+        if (pdf_count_layer_config_ui(ctx, epdf->pdfdoc) > 0) {
+            pdf_toggle_layer_config_ui(ctx, epdf->pdfdoc, row);
+        } else {
+            bool on = pdf_layer_is_enabled(ctx, epdf->pdfdoc, row);
+            pdf_enable_layer(ctx, epdf->pdfdoc, row, !on);
+        }
+    }
+    fz_catch(ctx) {
+        fz_report_error(ctx);
+    }
+    TempStr states = LayerStatesTemp(epdf);
+    if (str::Eq(states, epdf->layerStates)) {
+        return false;
+    }
+    str::ReplaceWithCopy(&epdf->layerStates, states);
+    DropDisplayListsForLayers(epdf);
+    return true;
+}
+
+// the layer state to save for the document, empty while it is as the document
+// has it. Doesn't wait for a render
+TempStr EngineMupdfChangedLayerStatesTemp(EngineBase* engine) {
+    if (!EngineMupdfHasLayers(engine)) {
+        return {};
+    }
+    EngineMupdf* epdf = AsEngineMupdf(engine);
+    if (str::Eq(epdf->layerStates, epdf->layerStatesAtLoad)) {
+        return {};
+    }
+    return str::DupTemp(epdf->layerStates);
+}
+
+// restores what EngineMupdfChangedLayerStatesTemp() returned; ignored if the
+// document's layers changed since
+void EngineMupdfSetLayerStates(EngineBase* engine, Str states) {
+    if (!EngineMupdfHasLayers(engine)) {
+        return;
+    }
+    EngineMupdf* epdf = AsEngineMupdf(engine);
+    int n = len(states);
+    if (n != epdf->layerCount || str::Eq(states, epdf->layerStates)) {
+        return;
+    }
+    for (int i = 0; i < n; i++) {
+        if (states.s[i] != '0' && states.s[i] != '1') {
+            return;
+        }
+    }
+    auto* ctx = epdf->Ctx();
+    ScopedRecursiveMutex pages(&epdf->pagesLock);
+    ScopedMutex render(&epdf->renderLock);
+    ScopedRecursiveMutex doc(&epdf->docLock);
+    fz_try(ctx) {
+        for (int i = 0; i < n; i++) {
+            pdf_enable_layer(ctx, epdf->pdfdoc, i, states.s[i] == '1');
+        }
+    }
+    fz_catch(ctx) {
+        fz_report_error(ctx);
+    }
+    str::ReplaceWithCopy(&epdf->layerStates, LayerStatesTemp(epdf));
+    DropDisplayListsForLayers(epdf);
 }
 
 // caller must free

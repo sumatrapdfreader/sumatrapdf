@@ -160,6 +160,7 @@ export enum ControlCommand {
   TestTabWidths = 149,
   TestOpenFromUrl = 150,
   TestMigrateTab = 151,
+  TestLayers = 152,
 }
 
 export type ControlArg = number | string | Uint8Array | ControlArg[];

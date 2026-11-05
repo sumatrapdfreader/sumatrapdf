@@ -66,6 +66,7 @@ struct AppCommandCtx {
     bool clipboardReadAsync = false;
     // checked and found signatures; only the Windows app checks
     bool hasSignatures = false;
+    bool hasLayers = false;
 
     int nTabs = 0;
     bool hasDocTabs = false;

@@ -64,6 +64,7 @@
 #include "EngineAll.h"
 #include "EutlTrust.h"
 #include "SignatureUI.h"
+#include "LayersUI.h"
 #include "CommandPalette.h"
 #include "PdfTools.h"
 #include "MergePdf.h"
@@ -683,6 +684,8 @@ enum class ControlCmd : u16 {
     // [srcWin, tabIdx, dstWin]: move a tab as a drag does (-1 = new window);
     // tabIdx < 0 only lists every window's tabs
     TestMigrateTab = 151,
+    // [action]: "toggle <row>" or "show", then the Layers view's rows
+    TestLayers = 152,
 };
 
 static_assert((u16)ControlCmd::Quit == (u16)ControlFrameCmd::Quit);
@@ -1062,6 +1065,12 @@ static void ExecuteControlRequest(ControlRequest* req) {
         case ControlCmd::TestSignatureStatus: {
             MainWindow* win = len(gWindows) > 0 ? gWindows[0] : nullptr;
             AppendTestResult(req, 0, win ? SignatureUiStateTemp(win, StringArg(req, 0)) : TempStr{});
+            break;
+        }
+
+        case ControlCmd::TestLayers: {
+            MainWindow* win = len(gWindows) > 0 ? gWindows[0] : nullptr;
+            AppendTestResult(req, 0, win ? LayersStateTemp(win, StringArg(req, 0)) : TempStr{});
             break;
         }
 

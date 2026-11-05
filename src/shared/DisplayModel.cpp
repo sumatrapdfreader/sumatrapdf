@@ -660,6 +660,7 @@ void DisplayModel::GetDisplayState(FileState* fs) {
     fs->freePan = freePan;
     fs->brightness = brightness;
     fs->contrast = contrast;
+    str::ReplaceWithCopy(&fs->layerStates, EngineMupdfChangedLayerStatesTemp(engine));
 
     str::Free(fs->decryptionKey);
     fs->decryptionKey = engine->decryptionKey ? str::Dup(engine->decryptionKey) : Str();
