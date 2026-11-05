@@ -952,6 +952,7 @@ TempStr ToolbarButtonsResultTemp(int* exitCodeOut) {
         }
         out.Append(fmt("idx=%d cmd=%d hidden=%d rect=%d,%d,%d,%d text=%s\n", i, w ? w->id : 0, hidden ? 1 : 0, r.x, r.y,
                        r.x + r.dx, r.y + r.dy, text));
+        out.Append(fmt("button-enabled idx=%d enabled=%d text=%s\n", i, w && w->IsEnabled() ? 1 : 0, text));
         if (w && w->tooltip) {
             out.Append(fmt("tool=%d uid=%d rect=%d,%d,%d,%d\n", toolIdx, w->id, r.x, r.y, r.x + r.dx, r.y + r.dy));
             toolIdx++;

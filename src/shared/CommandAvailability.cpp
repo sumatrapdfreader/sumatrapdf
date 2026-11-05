@@ -551,7 +551,7 @@ CommandVisibility GetCommandVisibility(int cmdId, const AppCommandCtx& ctx, Comm
     if (CmdReopenLastClosedFile == cmdId) {
         return RecentlyCloseDocumentsCount() > 0 ? CommandVisibility::Show : CommandVisibility::Hide;
     }
-    if (cmdId == CmdTabGroupSave) {
+    if (cmdId == CmdTabGroupSave || origCmdId == CmdTabGroupSave) {
         if (surface == CommandSurface::Palette) {
             return ctx.hasDocTabs ? CommandVisibility::Show : CommandVisibility::Hide;
         }
@@ -596,6 +596,11 @@ CommandVisibility GetCommandVisibility(int cmdId, const AppCommandCtx& ctx, Comm
     }
 
     if (!ctx.isDocLoaded) {
+        // a Shortcuts / toolbar entry is a clone with its own id: the command
+        // it stands for decides, with all its checks (#6495)
+        if (origCmdId && CmdWorksWithoutDocument(origCmdId)) {
+            return GetCommandVisibility(origCmdId, ctx, surface);
+        }
         return CommandVisibility::Hide;
     }
 

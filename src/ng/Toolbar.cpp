@@ -402,6 +402,8 @@ TempStr ToolbarButtonsResultTemp(int* exitCodeOut) {
         }
         out.Append(fmt("idx=%d cmd=%d hidden=%d rect=%d,%d,%d,%d text=%s\n", i, bi.cmdId, hidden[i] ? 1 : 0, r.x, r.y,
                        r.x + r.dx, r.y + r.dy, text));
+        bool enabled = bi.cmdId != 0 && IsCmdEnabled(win, bi.cmdId, ctx);
+        out.Append(fmt("button-enabled idx=%d enabled=%d text=%s\n", i, enabled ? 1 : 0, text));
         if (!hidden[i] && bi.cmdId != 0 && bi.cmdId != PageInfoId && len(bi.toolTip) > 0) {
             out.Append(fmt("tool=%d uid=%d rect=%d,%d,%d,%d\n", toolIdx, bi.cmdId, r.x, r.y, r.x + r.dx, r.y + r.dy));
             toolIdx++;
