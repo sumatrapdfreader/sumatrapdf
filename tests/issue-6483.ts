@@ -17,8 +17,8 @@ import { extractPageText, runStandalone } from "./util.ts";
 const PDF = join(import.meta.dir, "issue-6483.pdf");
 
 // words from the first and second lines, in logical order
-// "الغضا مل": the next letter sits at the space's own origin (gap 0)
-const WANTED = ["ليت شعري هل", "بجنب الغضا", "وليت الغضا", "الغضا مل يقطع"];
+// "الغضا لم": the next letter sits at the space's own origin (gap 0)
+const WANTED = ["ليت شعري هل", "بجنب الغضا", "وليت الغضا", "الغضا لم يقطع"];
 
 // the page has ~70 words; with the bug it extracted with no spaces at all
 const kMinSpaces = 50;

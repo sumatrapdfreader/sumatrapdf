@@ -84,6 +84,7 @@ relative to `ext/mupdf`, so `-p1` from inside that directory.
 | `0081-html-pre-wraps` | `pre` defaults to `pre-wrap`: pages can't scroll, a book made from a text file lost most of each line |
 | `0082-html-table-margin-auto` | `margin-left` and `margin-right` `auto` center a table; RTF's `\trqc` needs it |
 | `0083-pdf-appearance-rtl-plain-text` | free text / form text lines get `dir="auto"`, so Persian, Arabic and Hebrew lines run right to left |
+| `0084-stext-rtl-clusters` | copied Arabic keeps diacritics and ligatures in logical order: RTL clusters survive the bidi run reversal (#6485) |
 
 That is the whole list: `ext/mupdf` is byte-for-byte `1.28.5` plus these
 patches, and nothing else.

@@ -109,6 +109,9 @@ typedef struct metatext_t
 	char *text;
 	fz_rect bounds;
 	struct metatext_t *prev;
+	/* SumatraPDF: right-to-left text, and whether a char of it was sent yet */
+	int rtl;
+	int emitted;
 } metatext_t;
 
 typedef struct
@@ -444,6 +447,12 @@ add_line_to_block(fz_context *ctx, fz_stext_page *page, fz_stext_block *block, c
 #define NON_ACCURATE_GLYPH_ADDED_SPACE (-2)
 #define NON_ACCURATE_GLYPH (-1)
 
+/* SumatraPDF: char continues the previous char's cluster: the rest of a glyph's
+ * multi-char unicode ("لا", "يْن") or of an ActualText. Its chars are in logical
+ * order, so reversing a visual-order RTL run must keep them together and in
+ * order. Cleared once the line is reordered. */
+#define STEXT_CLUSTER_CONT 0x8000 /* fz_stext_char.flags is 16 bits; mupdf uses up to 1024 */
+
 /* FontDescriptor ascent/descent is sometimes the font-wide glyph bbox
  * (Cambria Math: 3.12 / -2.46). Past 3em that box is not a text metric:
  * use the glyph ink for the vertical edges, or 0.8/-0.2 when the ink is
@@ -477,6 +486,8 @@ add_char_to_line(fz_context *ctx, fz_stext_page *page, fz_stext_line *line, fz_m
 	ch->size = size;
 	ch->font = fz_keep_font(ctx, font);
 	ch->flags = flags | (synthetic ? FZ_STEXT_SYNTHETIC : 0) | (synthetic > 1 ? FZ_STEXT_SYNTHETIC_LARGE : 0);
+	if (glyph == -1 && !synthetic)
+		ch->flags |= STEXT_CLUSTER_CONT;
 	if (font->flags.is_bold)
 		ch->flags |= FZ_STEXT_BOLD;
 
@@ -553,14 +564,18 @@ add_char_to_line(fz_context *ctx, fz_stext_page *page, fz_stext_line *line, fz_m
 	return ch;
 }
 
+/* SumatraPDF: reverse the clusters of curr..tail, keeping each cluster's chars in order */
 static fz_stext_char *reverse_bidi_span(fz_stext_char *curr, fz_stext_char *tail)
 {
-	fz_stext_char *prev, *next;
+	fz_stext_char *prev, *next, *last;
 	prev = tail;
 	while (curr != tail)
 	{
-		next = curr->next;
-		curr->next = prev;
+		last = curr;
+		while (last->next != tail && (last->next->flags & STEXT_CLUSTER_CONT))
+			last = last->next;
+		next = last->next;
+		last->next = prev;
 		prev = curr;
 		curr = next;
 	}
@@ -569,7 +584,7 @@ static fz_stext_char *reverse_bidi_span(fz_stext_char *curr, fz_stext_char *tail
 
 static void reverse_bidi_line(fz_stext_line *line)
 {
-	fz_stext_char *a, *b, **prev;
+	fz_stext_char *a, *b, *tail, **prev;
 	prev = &line->first_char;
 	for (a = line->first_char; a; a = a->next)
 	{
@@ -578,8 +593,14 @@ static void reverse_bidi_line(fz_stext_line *line)
 			b = a;
 			while (b->next && b->next->bidi)
 				b = b->next;
+			tail = b->next;
 			if (a != b)
-				*prev = reverse_bidi_span(a, b->next);
+			{
+				*prev = reverse_bidi_span(a, tail);
+				/* SumatraPDF: continue after the run, wherever its first char went */
+				for (a = *prev; a->next != tail; a = a->next)
+					;
+			}
 		}
 		prev = &a->next;
 		line->last_char = a;
@@ -892,6 +913,13 @@ fz_add_stext_char_imp(fz_context *ctx, fz_stext_device *dev, fz_font *font, int 
 	if (cur_line && (glyph == -1 || ucdn_get_general_category(c) == UCDN_GENERAL_CATEGORY_MN))
 	{
 		add_char_to_line(ctx, page, cur_line, trm, font, size, c, glyph, &dev->pen, &dev->pen, bidi, dev->color, 0, flags, dev->flags);
+		/* SumatraPDF: a cluster's base glyph can carry one of its marks from the
+		 * ActualText; the glyph still has its width */
+		if ((flags & STEXT_CLUSTER_CONT) && glyph >= 0 && adv > 0)
+		{
+			dev->lag_pen = p;
+			dev->pen = q;
+		}
 		dev->lastbidi = bidi;
 		dev->lastchar = c;
 		dev->lastline = cur_line;
@@ -1068,6 +1096,14 @@ fz_add_stext_char_imp(fz_context *ctx, fz_stext_device *dev, fz_font *font, int 
 		glyph = -1;
 
 	/* Add synthetic space */
+	/* SumatraPDF: an RTL ActualText cluster starts at its mark glyph, offset from
+	 * the base letter, which looks like a word gap. Its real spaces are glyphs. */
+	if (add_space && !(dev->opts.flags & FZ_STEXT_IGNORE_ACTUALTEXT))
+	{
+		metatext_t *mt = find_actualtext(dev);
+		if (mt && mt->rtl)
+			add_space = 0;
+	}
 	if (c != ' ' && add_space && !(dev->flags & FZ_STEXT_INHIBIT_SPACES))
 		add_char_to_line(ctx, page, cur_line, trm, font, size, ' ', (dev->flags & FZ_STEXT_ACCURATE_BBOXES) ? NON_ACCURATE_GLYPH_ADDED_SPACE : NON_ACCURATE_GLYPH, &dev->pen, &p, bidi, dev->color, add_space, flags, dev->flags);
 
@@ -1284,6 +1320,8 @@ static void
 flush_actualtext(fz_context *ctx, fz_stext_device *dev, const char *actualtext, int i, int end)
 {
 	int glyph = -2;
+	metatext_t *mt = find_actualtext(dev);
+	int cont = (mt && mt->emitted) ? STEXT_CLUSTER_CONT : 0;
 
 	if (*actualtext == 0)
 		return;
@@ -1311,8 +1349,10 @@ flush_actualtext(fz_context *ctx, fz_stext_device *dev, const char *actualtext, 
 			dev->last.wmode,
 			dev->last.bidi_level,
 			(i == 0) && (dev->flags & FZ_STEXT_PRESERVE_SPANS),
-			dev->last.flags);
+			dev->last.flags | cont);
 		i++;
+		if (mt)
+			mt->emitted = 1;
 
 		glyph = -1; /* -1 for all but first glyph in the actualtext run */
 	}
@@ -1366,9 +1406,14 @@ do_extract_within_actualtext(fz_context *ctx, fz_stext_device *dev, fz_text_span
 		return;
 	}
 
-	/* We haven't consumed the whole string, so there must be runes left.
-	 * Shut coverity up. */
-	assert(z != 0);
+	/* SumatraPDF: the glyphs can spell the whole actualtext and go on; send the
+	 * rest as plain text rather than assert. */
+	if (z == 0)
+	{
+		do_extract(ctx, dev, span, ctm, start, span->len, flags);
+		mt->text[0] = 0;
+		return;
+	}
 
 	/* Spot a matching postfix. Can't send it til the end. */
 	for (end = span->len; end > start; end--)
@@ -1407,7 +1452,8 @@ do_extract_within_actualtext(fz_context *ctx, fz_stext_device *dev, fz_text_span
 		tm.e = item->x;
 		tm.f = item->y;
 		dev->last.trm = fz_concat(tm, ctm);
-		dev->last.bidi_level = span->bidi_level;
+		/* SumatraPDF: a mark glyph whose unicode is bogus ('B') must not split the RTL run */
+		dev->last.bidi_level = mt->rtl ? (span->bidi_level | 1) : span->bidi_level;
 		dev->last.wmode = span->wmode;
 		if (font != dev->last.font)
 		{
@@ -1431,7 +1477,9 @@ do_extract_within_actualtext(fz_context *ctx, fz_stext_device *dev, fz_text_span
 			dev->last.wmode,
 			dev->last.bidi_level,
 			(i == 0) && (dev->flags & FZ_STEXT_PRESERVE_SPANS),
-			flags);
+			flags | (mt->emitted ? STEXT_CLUSTER_CONT : 0));
+		if (rune > 0)
+			mt->emitted = 1;
 	}
 
 	/* If we haven't spotted a postfix by this point, then don't force ourselves to output
@@ -1454,7 +1502,8 @@ do_extract_within_actualtext(fz_context *ctx, fz_stext_device *dev, fz_text_span
 
 	/* We found a matching postfix. It seems likely that this is going to be the only
 	 * text object we get, so send any remaining actualtext now. */
-	flush_actualtext(ctx, dev, actualtext, i, i + (int)strlen(actualtext) - (span->len - end));
+	/* SumatraPDF: count runes, not bytes, or a multi-byte postfix is sent twice */
+	flush_actualtext(ctx, dev, actualtext, i, i + fz_utflen(actualtext) - (span->len - end));
 
 	/* Send the postfix */
 	if (end != span->len)
@@ -1565,6 +1614,24 @@ fz_stext_ignore_text(fz_context *ctx, fz_device *dev, const fz_text *text, fz_ma
 	tdev->lasttext = fz_keep_text(ctx, text);
 }
 
+/* SumatraPDF: the first strong char decides: the right-to-left scripts against
+ * Latin, Greek and Cyrillic letters. */
+static int
+utf8_is_rtl(const char *s)
+{
+	while (*s)
+	{
+		int c;
+		s += fz_chartorune(&c, s);
+		if ((c >= 0x0590 && c <= 0x08ff) || (c >= 0xfb1d && c <= 0xfdff) || (c >= 0xfe70 && c <= 0xfeff) ||
+			(c >= 0x10800 && c <= 0x10fff) || (c >= 0x1e800 && c <= 0x1edff))
+			return 1;
+		if ((c >= 'A' && c <= 'Z') || (c >= 'a' && c <= 'z') || (c >= 0xc0 && c <= 0x24f) || (c >= 0x370 && c <= 0x52f))
+			return 0;
+	}
+	return 0;
+}
+
 static void
 fz_stext_begin_metatext(fz_context *ctx, fz_device *dev, fz_metatext meta, const char *text)
 {
@@ -1589,6 +1656,7 @@ fz_stext_begin_metatext(fz_context *ctx, fz_device *dev, fz_metatext meta, const
 		mt->type = meta;
 		mt->text = new_text;
 		mt->bounds = fz_empty_rect;
+		mt->rtl = meta == FZ_METATEXT_ACTUALTEXT && new_text && utf8_is_rtl(new_text);
 	}
 	fz_catch(ctx)
 	{
@@ -1836,6 +1904,8 @@ fixup_bboxes_and_bidi(fz_context *ctx, fz_stext_block *block)
 			block->bbox = fz_union_rect(block->bbox, line->bbox);
 			if (reorder)
 				reverse_bidi_line(line);
+			for (ch = line->first_char; ch; ch = ch->next)
+				ch->flags &= ~STEXT_CLUSTER_CONT;
 		}
 	}
 }

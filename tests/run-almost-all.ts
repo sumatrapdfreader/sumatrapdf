@@ -371,6 +371,7 @@ import { testit as hwheelHome } from "./hwheel-home.ts";
 import { testit as tabMenuClose } from "./tab-menu-close.ts";
 import { testit as chapterNav } from "./chapter-nav.ts";
 import { testit as issue6483 } from "./issue-6483.ts";
+import { testit as issue6485 } from "./issue-6485.ts";
 import { testit as printDialogMultiFile } from "./print-dialog-multi-file.ts";
 import { testit as issue6259 } from "./issue-6259.ts";
 import { testit as fullscreenSessionRestore } from "./fullscreen-session-restore.ts";
@@ -920,6 +921,7 @@ export const tests: NamedTest[] = [
   ["tab-menu-close", tabMenuClose],
   ["chapter-nav", chapterNav],
   ["issue-6483", issue6483],
+  ["issue-6485", issue6485],
   ["print-dialog-multi-file", printDialogMultiFile],
   ["issue-6259", issue6259],
   ["fullscreen-session-restore", fullscreenSessionRestore],
