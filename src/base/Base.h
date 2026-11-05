@@ -2204,6 +2204,7 @@ int ParseInt(Str s);
 i64 ParseInt64(Str s);
 bool IsValidProgramVersion(Str ver);
 int CompareProgramVersion(Str ver1, Str ver2);
+bool IsRtlCodepoint(int c);
 bool IsTextRtl(WStr s);
 bool IsTextRtl(Str s);
 

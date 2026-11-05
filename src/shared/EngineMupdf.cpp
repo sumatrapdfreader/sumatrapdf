@@ -1101,6 +1101,12 @@ static bool IsTrackingSpace(const fz_stext_char* space, const fz_stext_char* nex
     if (!space || !nextNonSpace) {
         return false;
     }
+    // Tracking spaces are a left-to-right problem. In right-to-left text the
+    // next letter is to the left, or at the space's origin for a diacritic, so
+    // every real word space would look like tracking (#6483).
+    if (IsRtlCodepoint(nextNonSpace->c)) {
+        return false;
+    }
     float gap = nextNonSpace->origin.x - space->origin.x;
     float size = space->size;
     if (size <= 0) {

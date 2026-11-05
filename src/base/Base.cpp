@@ -3802,12 +3802,13 @@ int CompareProgramVersion(Str ver1, Str ver2) {
 // ascii version that doesn't handle UTF-8
 // IsTextRtl is optimized version of checking if a string is rtl
 // we look at max first 40 chars and
-#if !OS_WIN
-static bool IsRtlCodepoint(wchar_t c) {
+// Hebrew, Arabic, Syriac, Thaana, NKo and the other right-to-left scripts
+bool IsRtlCodepoint(int c) {
     return (c >= 0x0590 && c <= 0x08ff) || (c >= 0xfb1d && c <= 0xfdff) || (c >= 0xfe70 && c <= 0xfeff) ||
            (c >= 0x10800 && c <= 0x10fff) || (c >= 0x1e800 && c <= 0x1edff);
 }
 
+#if !OS_WIN
 static bool IsLtrCodepoint(wchar_t c) {
     return (c >= L'A' && c <= L'Z') || (c >= L'a' && c <= L'z') || (c >= 0x00c0 && c <= 0x02af) ||
            (c >= 0x0370 && c <= 0x052f) || (c >= 0x1e00 && c <= 0x1fff);
