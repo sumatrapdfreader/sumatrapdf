@@ -3515,7 +3515,14 @@ static void ContinueCloseWindow(PendingCloseWindow* p) {
     CloseWindow(win, quitIfLast, false);
 }
 
+// Exit's save prompts are running
+static bool gExitPending = false;
+
 void RequestCloseWindow(MainWindow* win, bool quitIfLast) {
+    // Exit closes it anyway, after its own prompts
+    if (gExitPending) {
+        return;
+    }
     if (!IsMainWindowValid(win) || win->isBeingClosed || win->isClosePending) {
         return;
     }
@@ -3850,8 +3857,6 @@ struct PendingExit {
     int tabIdx = 0;
 };
 
-static bool gExitPending = false;
-
 static void FinishExit() {
     // we want to preserve the session state of all windows, so we save it now:
     // since we are closing the windows one by one, CloseWindow() must not save
@@ -3896,6 +3901,13 @@ static void ContinueExit(PendingExit* p) {
 void OnMenuExit() {
     if (gExitPending) {
         return;
+    }
+    // a window's close prompt is open: Exit would skip that tab (it is marked
+    // as asked) and drop its unsaved annotations unanswered
+    for (MainWindow* win : gWindows) {
+        if (win->isClosePending) {
+            return;
+        }
     }
     gExitPending = true;
     auto* p = new PendingExit();
