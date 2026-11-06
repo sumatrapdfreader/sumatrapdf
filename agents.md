@@ -185,7 +185,7 @@ files. `ng-gen-embedded.ts` generates ignored `src/ng/EmbeddedData*.cpp`;
 `.work/ng/translations.txt`. The manual uses the original website checkout
 and `.work/docs` staging; CI skips it when that checkout is absent.
 
-Standard Windows CI builds ng x64 release. Daily Windows CI builds debug
+Standard Windows CI builds ng x64 release and runs its unit tests. Daily Windows CI builds debug
 and release; Linux/macOS daily CI builds ng and runs unit tests. Linux also
 checks rendering/printing and hosts the separate Wasm CI job.
 
