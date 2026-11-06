@@ -33,9 +33,12 @@
 
 #include <string.h>
 
-/* This historic script has an unusually large font (2MB), so we skip it by default. */
+/* mupdf skips these large fonts (2MB, 2.8MB) by default; ours download on first use */
 #ifndef NOTO_TANGUT
-#define NOTO_TANGUT 0
+#define NOTO_TANGUT 1
+#endif
+#ifndef NOTO_SIGNWRITING
+#define NOTO_SIGNWRITING 1
 #endif
 
 /* Define some extra scripts for special fonts. */

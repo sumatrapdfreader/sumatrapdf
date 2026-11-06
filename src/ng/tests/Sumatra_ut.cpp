@@ -180,6 +180,10 @@ static void BuiltinFontTableTest() {
     utassert(AskedFor(ctx, UCDN_SCRIPT_HAN, FZ_LANG_UNSET, droid, 0));
     utassert(AskedFor(ctx, UCDN_SCRIPT_HANGUL, FZ_LANG_UNSET, droid, 0));
 
+    // fonts mupdf leaves out of its table by default for size
+    utassert(AskedFor(ctx, UCDN_SCRIPT_TANGUT, FZ_LANG_UNSET, StrL("NotoSerifTangut-Regular.otf"), 0));
+    utassert(AskedFor(ctx, UCDN_SCRIPT_SIGNWRITING, FZ_LANG_UNSET, StrL("NotoSansSignWriting-Regular.otf"), 0));
+
     gHaveSourceHan = false;
     utassert(AskedFor(ctx, UCDN_SCRIPT_HAN, FZ_LANG_ja, droid, 0));
     gHaveSourceHan = true;
