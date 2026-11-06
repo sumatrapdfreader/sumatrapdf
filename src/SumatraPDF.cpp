@@ -7176,7 +7176,7 @@ static bool RelayoutFrame(MainWindow* win, bool updateToolbars, int sidebarDx) {
     int menuBarDy = showMenuRebar ? GetMenuBarRebarHeight(win) : 0;
     int rebarDy = 0;
     if (showToolbar && win->hwndToolbar) {
-        rebarDy = HwndWindowRect(win->hwndToolbar).dy;
+        rebarDy = ToolbarDyForWidth(win, HwndClientRect(win->hwndFrame).dx);
     }
 
     SetVis(win->captionLayout, showCaption);

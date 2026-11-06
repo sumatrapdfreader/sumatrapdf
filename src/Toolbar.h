@@ -19,6 +19,7 @@ struct VirtHost;
 struct VirtIconButton;
 struct Edit;
 struct ILayout;
+struct Wrap;
 
 void CreateToolbar(MainWindow*);
 void ReCreateToolbar(MainWindow* win);
@@ -140,6 +141,8 @@ struct ToolbarVirt {
     Vec<VirtCtrl*> items; // not owned; the layout owns them
     Vec<VirtCtrl*> annotationItems;
     ILayout* annotationRow = nullptr;
+    // the main buttons; wraps onto more rows when the window is narrow
+    Wrap* buttonRow = nullptr;
     VirtText* pageLabel = nullptr;
     VirtText* pageLabel2 = nullptr; // "Page:" before pageEdit, only for HasChapters() docs
     VirtText* pageTotal = nullptr;
@@ -177,3 +180,4 @@ void ToolbarFocusFrame(MainWindow*);
 bool ToolbarFrameIsVisible(MainWindow*);
 void ToolbarPostCommand(MainWindow*, int cmdId);
 void ToolbarSetHeight(MainWindow*, int dy);
+int ToolbarDyForWidth(MainWindow*, int dx);
