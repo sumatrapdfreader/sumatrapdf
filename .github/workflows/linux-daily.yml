@@ -105,6 +105,8 @@ jobs:
       - uses: oven-sh/setup-bun@0c5077e51419868618aeaa5fe8019c62421857d6 # v2
       - name: test_util
         run: bun cmd/ng-build.ts -wasm -dbg test_util -run -- -for-ai
+      - name: fonts download into the cache
+        run: bun tests/wasm-font-download.ts
       - name: SumatraPDF
         run: bun cmd/ng-build.ts -wasm -rel SumatraPDF
 

@@ -122,6 +122,20 @@ static EmbeddedFont* gFonts = nullptr;
 EM_JS(int, WasmDownloadFont, (const char* url, int urlLen, const char* path, int pathLen), {
     var u = UTF8ToString(url, urlLen);
     var p = UTF8ToString(path, pathLen);
+    // Node (console targets, tests) has no XHR: SUMATRA_FONT_MIRROR is a directory
+    // with the files under their URL names (bun cmd/upload-fonts.ts -mirror)
+    if (typeof XMLHttpRequest == "undefined") {
+        var mirror = typeof process != "undefined" && process.env ? process.env.SUMATRA_FONT_MIRROR : "";
+        if (!mirror) return 0;
+        try {
+            var bytes = FS.readFile(mirror + "/" + u.split("/").pop());
+            FS.writeFile(p, bytes);
+            return bytes.length;
+        } catch (e) {
+            console.error("font not in SUMATRA_FONT_MIRROR", u, e.message || e);
+            return 0;
+        }
+    }
     try {
         var xhr = new XMLHttpRequest();
         xhr.open("GET", u, false);
@@ -181,12 +195,39 @@ EM_JS(void, WasmJsPrefetchFonts, (const char* list, int listLen), {
         if (wrote.indexOf(true) >= 0 && Module.sumatraStorageSave) Module.sumatraStorageSave();
     });
 });
+
+// a browser has no environment; Node (console targets) does
+EM_JS(void, WasmJsGetEnv, (const char* name, int nameLen, char* out, int outCap), {
+    var v = typeof process != "undefined" && process.env ? process.env[UTF8ToString(name, nameLen)] : "";
+    stringToUTF8(v ? v : "", out, outCap);
+});
 #endif
+
+// Test overrides, e.g. tests/font-download.ts:
+//   SUMATRA_FONT_CACHE     the font cache directory
+//   SUMATRA_FONT_URL_BASE  where fonts download from instead of R2 (desktop)
+//   SUMATRA_FONT_MIRROR    a directory Node reads them from (wasm, no XHR)
+static TempStr FontEnvTemp(Str name) {
+#if OS_WASM
+    char buf[1024];
+    WasmJsGetEnv(name.s, len(name), buf, (int)sizeof(buf));
+    return str::DupTemp(Str(buf));
+#elif OS_WIN
+    return GetEnvVariableTemp(name);
+#else
+    const char* v = getenv(CStrTemp(name));
+    return str::DupTemp(Str((char*)(v ? v : "")));
+#endif
+}
 
 // %LOCALAPPDATA%\SumatraPDF\fonts, or the XDG / macOS equivalent. Not the
 // settings directory: a portable exe and the preview dll share this cache.
 // Wasm uses /fonts, which the page mirrors to OPFS.
 static TempStr FontCacheDirTemp() {
+    TempStr testDir = FontEnvTemp(StrL("SUMATRA_FONT_CACHE"));
+    if (len(testDir) > 0) {
+        return testDir;
+    }
 #if OS_WASM
     return str::DupTemp(StrL("/fonts"));
 #elif OS_WIN
@@ -405,8 +446,13 @@ static void LoadFontFromCacheOrNet(Str name, EmbeddedFont* f) {
         file::Delete(path);
     }
     if (len(data) == 0) {
+        TempStr dlUrl = Str((char*)url);
+        TempStr base = FontEnvTemp(StrL("SUMATRA_FONT_URL_BASE"));
+        if (len(base) > 0) {
+            dlUrl = str::JoinTemp(base, StrL("/"), Str(file));
+        }
         logf("font '%s': downloading\n", name);
-        if (!DownloadFont(name, Str(url), path)) {
+        if (!DownloadFont(name, dlUrl, path)) {
             logf("font '%s': download failed\n", name);
             return;
         }

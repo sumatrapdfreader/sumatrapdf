@@ -12,11 +12,12 @@
 //
 // Credentials: ../secrets/sumatrapdf.env (R2_ACCESS, R2_SECRET) or the same
 // variables in the environment. -map-only writes the map and does not upload.
+// -mirror <dir> [font...] copies the fonts there under their R2 names, for tests.
 // -check uploads nothing and writes nothing: it fails when the map doesn't
 // match the fonts or a URL doesn't answer.
 
 import { createHash, createHmac } from "node:crypto";
-import { existsSync, readFileSync, readdirSync, writeFileSync } from "node:fs";
+import { copyFileSync, existsSync, mkdirSync, readFileSync, readdirSync, writeFileSync } from "node:fs";
 import { basename, extname, join, relative, resolve } from "node:path";
 import { clangFormatFiles } from "./util";
 
@@ -176,6 +177,32 @@ export function fontMapProblems(): string[] {
   return problems;
 }
 
+// The fonts as R2 serves them, file name included, for tests that point the
+// app at a local copy (SUMATRA_FONT_URL_BASE, SUMATRA_FONT_MIRROR). `only`
+// lists font file names ("CharisSIL.cff"); empty means all of them.
+export function writeMirror(dir: string, only: string[] = []): number {
+  const fonts = collectFonts();
+  const { names } = pickNames(fonts);
+  mkdirSync(dir, { recursive: true });
+  let n = 0;
+  for (const f of fonts) {
+    if (only.length > 0 && !only.includes(f.name)) continue;
+    copyFileSync(f.path, join(dir, names.get(f.name)!));
+    n++;
+  }
+  const missing = only.filter((name) => !fonts.some((f) => f.name === name));
+  if (missing.length > 0) throw new Error(`no such font: ${missing.join(", ")}`);
+  return n;
+}
+
+// The URL file name the map gives a font, e.g. DroidSansFallbackFull-f3cd.ttf
+export function remoteFontName(name: string): string {
+  const fonts = collectFonts();
+  const remote = pickNames(fonts).names.get(name);
+  if (!remote) throw new Error(`no such font: ${name}`);
+  return remote;
+}
+
 // URLs in the map that don't answer a HEAD request with 200
 async function unreachableUrls(): Promise<string[]> {
   const urls = [...readFileSync(mapPath, "utf8").matchAll(/"(https:[^"]+)"/g)].map((m) => m[1]);
@@ -299,7 +326,16 @@ async function uploadOne(
 async function main(): Promise<void> {
   const mapOnly = process.argv.includes("-map-only");
   if (process.argv.includes("-h") || process.argv.includes("-help")) {
-    console.log("usage: bun cmd/upload-fonts.ts [-map-only | -check]");
+    console.log("usage: bun cmd/upload-fonts.ts [-map-only | -check | -mirror <dir> [font...]]");
+    return;
+  }
+  const mirrorIdx = process.argv.indexOf("-mirror");
+  if (mirrorIdx >= 0) {
+    const dir = process.argv[mirrorIdx + 1];
+    if (!dir) throw new Error("-mirror needs a directory");
+    const only = process.argv.slice(mirrorIdx + 2).filter((a) => !a.startsWith("-"));
+    const n = writeMirror(dir, only);
+    console.log(`wrote ${n} fonts to ${dir}`);
     return;
   }
   if (process.argv.includes("-check")) {
