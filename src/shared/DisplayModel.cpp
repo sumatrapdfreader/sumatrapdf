@@ -364,6 +364,11 @@ void DisplayModel::SetTrimEmptyMargins(bool enable) {
         return;
     }
     trimEmptyMargins = enable;
+    RelayoutForTrim();
+}
+
+// Lays the pages out again after the part of them that is shown changed.
+void DisplayModel::RelayoutForTrim() {
     // restoring a document's remembered state sets this before the first
     // layout, when there is nothing to lay out and no zoom yet; the initial
     // layout picks the flag up on its own
@@ -387,6 +392,34 @@ void DisplayModel::SetTrimEmptyMargins(bool enable) {
 
 bool DisplayModel::GetTrimEmptyMargins() const {
     return trimEmptyMargins;
+}
+
+// box is in fractions of a page, e.g. {0.1, 0.05, 0.8, 0.9} drops 10% on the
+// left and right and 5% at the top and bottom of every page
+void DisplayModel::SetUserCrop(RectF box) {
+    box = box.Intersect(RectF(0, 0, 1, 1));
+    if (box.dx <= 0 || box.dy <= 0) {
+        box = {};
+    }
+    if (box == userCrop) {
+        return;
+    }
+    userCrop = box;
+    RelayoutForTrim();
+}
+
+RectF DisplayModel::GetUserCrop() const {
+    return userCrop;
+}
+
+// Shows on every page the part that rect (in page coordinates) covers on pageNo.
+void DisplayModel::TrimPagesToRect(int pageNo, RectF rect) {
+    RectF mbox = PageMediaBox(pageNo);
+    if (mbox.IsEmpty()) {
+        return;
+    }
+    RectF box((rect.x - mbox.x) / mbox.dx, (rect.y - mbox.y) / mbox.dy, rect.dx / mbox.dx, rect.dy / mbox.dy);
+    SetUserCrop(box);
 }
 
 // Only stores the values: the caller re-renders (RenderCache::InvalidateAll).
@@ -686,6 +719,7 @@ void DisplayModel::GetDisplayState(FileState* fs) {
     fs->displayR2L = displayR2L;
     fs->uniformPageWidth = uniformPageWidth;
     fs->trimEmptyMargins = trimEmptyMargins;
+    fs->userCrop = userCrop;
     fs->freePan = freePan;
     fs->facingStepOne = facingStepOne;
     fs->mirror = mirror;
@@ -1116,17 +1150,20 @@ RectF DisplayModel::PageMediaBoxForLayout(int pageNo) const {
     if (!pi) {
         return {};
     }
-    if (trimEmptyMargins && !pi->contentBox.IsEmpty()) {
+    if (userCrop.IsEmpty() && trimEmptyMargins && !pi->contentBox.IsEmpty()) {
         return pi->contentBox;
     }
+    RectF box = estimatedMediaBox;
     if (IsMediaBoxKnown(pi->mediaBox)) {
         // includes PageInfoState::Error, where mediaBox is the default box
-        return pi->mediaBox;
+        box = pi->mediaBox;
+    } else if (!useLazyMediaBoxes) {
+        box = PageMediaBox(pageNo);
     }
-    if (!useLazyMediaBoxes) {
-        return PageMediaBox(pageNo);
+    if (userCrop.IsEmpty()) {
+        return box;
     }
-    return estimatedMediaBox;
+    return {box.x + userCrop.x * box.dx, box.y + userCrop.y * box.dy, userCrop.dx * box.dx, userCrop.dy * box.dy};
 }
 
 // Pick the most common size among all pages measured so far. Visible spreads

@@ -2047,6 +2047,7 @@ static void ReplaceDocumentInCurrentTab(LoadArgs* args, DocController* ctrl, Fil
             if (fs) {
                 dm->SetUniformPageWidth(fs->uniformPageWidth);
                 dm->SetTrimEmptyMargins(fs->trimEmptyMargins);
+                dm->SetUserCrop(fs->userCrop);
                 dm->SetFreePan(fs->freePan);
                 dm->SetFacingStepOne(fs->facingStepOne);
                 dm->SetMirror(fs->mirror);
@@ -10935,6 +10936,14 @@ static LRESULT FrameOnCommand(MainWindow* win, HWND hwnd, UINT msg, WPARAM wp, L
 
         case CmdToggleTrimEmptyMargins:
             ToggleTrimEmptyMargins(win);
+            break;
+
+        case CmdTrimPagesToSelection:
+            TrimPagesToSelection(win);
+            break;
+
+        case CmdShowWholePages:
+            ShowWholePages(win);
             break;
 
         case CmdToggleFreePan:

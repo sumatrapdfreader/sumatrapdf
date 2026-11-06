@@ -268,6 +268,14 @@ MenuDef menuDefView[] = {
         CmdToggleTrimEmptyMargins,
     },
     {
+        TrN("Trim Pages To Selection"),
+        CmdTrimPagesToSelection,
+    },
+    {
+        TrN("Show Whole Pages"),
+        CmdShowWholePages,
+    },
+    {
         StrL(kMenuSeparator),
         0,
     },

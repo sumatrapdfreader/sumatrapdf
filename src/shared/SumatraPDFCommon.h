@@ -112,6 +112,8 @@ void ToggleContinuousView(MainWindow* win);
 void ShowZoomNotification(MainWindow* win, float zoomLevel);
 void ShowViewModeNotification(MainWindow* win, int cmdId);
 void ZoomToSelection(MainWindow* win);
+void TrimPagesToSelection(MainWindow* win);
+void ShowWholePages(MainWindow* win);
 bool IsManualDocHtmlPage(Str path);
 Str ManualInjectThemeCss(Str html);
 TempStr DocURIToWebUrlTemp(Str docURI);

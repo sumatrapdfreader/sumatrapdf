@@ -145,6 +145,7 @@ uintptr_t disableIfNoSelection[] = {
     CmdCopySelection,
     CmdShowSelectedText,
     CmdZoomToSelection,
+    CmdTrimPagesToSelection,
     CmdFindNextSel,
     CmdFindPrevSel,
     CmdTranslateSelection,
@@ -785,7 +786,8 @@ CommandVisibility GetCommandVisibility(int cmdId, const AppCommandCtx& ctx, Comm
         return CommandVisibility::Hide;
     }
 
-    if (cmdId == CmdToggleTrimEmptyMargins && !ctx.isFixedPage) {
+    if ((cmdId == CmdToggleTrimEmptyMargins || cmdId == CmdTrimPagesToSelection || cmdId == CmdShowWholePages) &&
+        !ctx.isFixedPage) {
         return CommandVisibility::Hide;
     }
 

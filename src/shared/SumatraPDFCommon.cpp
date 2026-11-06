@@ -1938,6 +1938,41 @@ void ZoomToSelection(MainWindow* win) {
     }
 }
 
+// Show on every page only the part the selection covers on its first page,
+// e.g. to cut the fixed margins off a scanned book (issue #3585).
+void TrimPagesToSelection(MainWindow* win) {
+    DisplayModel* dm = win->AsFixed();
+    WindowTab* tab = win->CurrentTab();
+    if (!dm || !tab || !win->showSelection || !tab->selectionOnPage || len(*tab->selectionOnPage) == 0) {
+        return;
+    }
+
+    int pageNo = (*tab->selectionOnPage)[0].pageNo;
+    RectF rect;
+    for (SelectionOnPage& sel : *tab->selectionOnPage) {
+        if (sel.pageNo == pageNo) {
+            rect = rect.Union(sel.rect);
+        }
+    }
+    if (rect.IsEmpty()) {
+        return;
+    }
+
+    DeleteOldSelectionInfo(win, true);
+    dm->TrimPagesToRect(pageNo, rect);
+    dm->GoToPage(pageNo, false);
+}
+
+void ShowWholePages(MainWindow* win) {
+    DisplayModel* dm = win->AsFixed();
+    if (!dm) {
+        return;
+    }
+    ScrollState state = dm->GetScrollState();
+    dm->SetUserCrop({});
+    dm->SetScrollState(state);
+}
+
 // what CmdToggleCursorPosition would switch to. The tip cycles pt -> mm -> in
 // and then closes, so the command palette can't say true / false; naming the
 // next unit here keeps it in step with ToggleCursorPositionInDoc() below

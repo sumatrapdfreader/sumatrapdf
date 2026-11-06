@@ -395,6 +395,14 @@ const keyboardShortcut: Field[] = [
   field("CmdId", Int, null, "command id").ver("3.6").notSaved(),
 ];
 
+// fractions (0 to 1) of the page's media box
+const userCrop: Field[] = [
+  field("X", Float, 0, "left edge, as a fraction of the page width"),
+  field("Y", Float, 0, "top edge, as a fraction of the page height"),
+  field("Dx", Float, 0, "width, as a fraction of the page width"),
+  field("Dy", Float, 0, "height, as a fraction of the page height"),
+];
+
 const scrollPos: Field[] = [
   field("X", Float, 0, "horizontal scroll offset, in document units"),
   field("Y", Float, 0, "vertical scroll offset, in document units"),
@@ -1222,6 +1230,13 @@ const fileState: Field[] = [
   field("TrimEmptyMargins", Bool, false, "if true, empty margins around page content are trimmed from display").ver(
     "3.7",
   ),
+  compactStruct(
+    "UserCrop",
+    userCrop,
+    "part of every page that is shown, set with CmdTrimPagesToSelection; all zeros shows whole pages",
+  )
+    .structName("RectF")
+    .ver("3.7"),
   field(
     "FreePan",
     Bool,
@@ -1311,6 +1326,7 @@ const fileStateLayout = [
   "DisplayR2L",
   "UniformPageWidth",
   "TrimEmptyMargins",
+  "UserCrop",
   "FreePan",
   "FacingStepOne",
   "Mirror",

@@ -361,8 +361,10 @@ enum {
     CmdMinimizeWindow = 555,
     CmdShowSelectedText = 556,
     CmdToggleMirror = 557,
+    CmdTrimPagesToSelection = 558,
+    CmdShowWholePages = 559,
 
-    CmdLast = 557,
+    CmdLast = 559,
     CmdFirstCustom = CmdLast + 100,
 
     // aliases, at the end to not mess ordering

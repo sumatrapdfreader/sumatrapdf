@@ -283,6 +283,7 @@ import { testit as navigateFilesDeleteSelection } from "./navigate-files-delete-
 import { testit as issue893 } from "./issue-893.ts";
 import { testit as findHistoryAltDown } from "./find-history-alt-down.ts";
 import { testit as issue1699 } from "./issue-1699.ts";
+import { testit as issue3585 } from "./issue-3585.ts";
 import { testit as issue1998 } from "./issue-1998.ts";
 import { testit as issue2199 } from "./issue-2199.ts";
 import { testit as issue906 } from "./issue-906.ts";
@@ -814,6 +815,7 @@ export const tests: NamedTest[] = [
   ["issue-5317", issue5317],
   ["issue-5694", issue5694],
   ["issue-1699", issue1699],
+  ["issue-3585", issue3585],
   ["issue-2155", issue2155],
   ["issue-2254", issue2254],
   ["issue-1846", issue1846],

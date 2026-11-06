@@ -354,6 +354,9 @@ struct FileState {
     bool uniformPageWidth;
     // if true, empty margins around page content are trimmed from display
     bool trimEmptyMargins;
+    // part of every page that is shown, set with CmdTrimPagesToSelection;
+    // all zeros shows whole pages
+    RectF userCrop;
     // if true, the view can be panned past the page edges, so any part of
     // a page can be brought to the center of the window
     bool freePan;
@@ -1417,7 +1420,7 @@ struct FieldInfo;
 struct StructInfo;
 extern const StructInfo gFavoriteInfo;
 extern const StructInfo gFileEBookUIInfo;
-extern const FieldInfo gFileStateFields[31];
+extern const FieldInfo gFileStateFields[32];
 extern StructInfo gFileStateInfo;
 extern const StructInfo gTabStateInfo;
 extern const StructInfo gSessionDataInfo;

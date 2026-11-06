@@ -780,6 +780,21 @@ static const StructInfo gRect_3_Info = {
     "pixels\0width, in screen pixels\0height, in screen pixels",
     false};
 
+static const FieldInfo gRectFFields[] = {
+    {offsetof(RectF, x), SettingType::Float, (intptr_t)"0"},
+    {offsetof(RectF, y), SettingType::Float, (intptr_t)"0"},
+    {offsetof(RectF, dx), SettingType::Float, (intptr_t)"0"},
+    {offsetof(RectF, dy), SettingType::Float, (intptr_t)"0"},
+};
+static const StructInfo gRectFInfo = {
+    sizeof(RectF),
+    4,
+    gRectFFields,
+    "X\0Y\0Dx\0Dy",
+    "left edge, as a fraction of the page width\0top edge, as a fraction of the page height\0width, as a fraction of "
+    "the page width\0height, as a fraction of the page height",
+    false};
+
 static const char* gEnumFileStateSidebarView[] = {"", "bookmarks", "thumbnails", nullptr};
 static const char* gEnumFileStateDisplayMode[] = {
     "automatic",         "single page",          "facing", "book view", "continuous",
@@ -814,18 +829,19 @@ const FieldInfo gFileStateFields[] = {
     {offsetof(FileState, displayR2L), SettingType::Bool, false},
     {offsetof(FileState, uniformPageWidth), SettingType::Bool, false},
     {offsetof(FileState, trimEmptyMargins), SettingType::Bool, false},
+    {offsetof(FileState, userCrop), SettingType::Compact, (intptr_t)&gRectFInfo},
     {offsetof(FileState, freePan), SettingType::Bool, false},
     {offsetof(FileState, facingStepOne), SettingType::Bool, false},
     {offsetof(FileState, mirror), SettingType::Bool, false},
 };
 StructInfo gFileStateInfo = {
     sizeof(FileState),
-    31,
+    32,
     gFileStateFields,
     "Favorites\0EBookUI\0TocState\0FilePath\0DecryptionKey\0SidebarView\0DisplayMode\0Zoom\0BgCol\0TabCol\0LayerStates"
     "\0OpenCount\0PageNo\0PageCount\0Rotation\0Brightness\0Contrast\0WindowState\0SidebarDx\0ScrollPos\0WindowPos\0IsPi"
-    "nned\0IsMissing\0UseDefaultState\0ShowToc\0DisplayR2L\0UniformPageWidth\0TrimEmptyMargins\0FreePan\0FacingStepOne"
-    "\0Mirror",
+    "nned\0IsMissing\0UseDefaultState\0ShowToc\0DisplayR2L\0UniformPageWidth\0TrimEmptyMargins\0UserCrop\0FreePan\0Faci"
+    "ngStepOne\0Mirror",
     "pages of this document bookmarked in the Favorites menu\0reflowable (ebook) settings for just this document. The "
     "block is absent until you add it; a field left empty or 0 uses the global EBookUI value. The global section's "
     "WindowBgCol and DefaultDisplayMode are already per-document as BgCol and DisplayMode below\0data required to "
@@ -847,9 +863,10 @@ StructInfo gFileStateInfo = {
     "defaults instead of the values below\0if true, show the table of contents (Bookmarks) sidebar when the document "
     "has one\0if true, the document is displayed right-to-left in facing and book view modes\0if true, percentage zoom "
     "scales every page to the width page 1 has at that zoom level\0if true, empty margins around page content are "
-    "trimmed from display\0if true, the view can be panned past the page edges, so any part of a page can be brought "
-    "to the center of the window\0if true, facing and book view move one page at a time: pages 1-2, then 2-3, then "
-    "3-4\0if true, pages are shown (and printed) mirrored left to right",
+    "trimmed from display\0part of every page that is shown, set with CmdTrimPagesToSelection; all zeros shows whole "
+    "pages\0if true, the view can be panned past the page edges, so any part of a page can be brought to the center of "
+    "the window\0if true, facing and book view move one page at a time: pages 1-2, then 2-3, then 3-4\0if true, pages "
+    "are shown (and printed) mirrored left to right",
     false};
 
 static const FieldInfo gPointF_2_Fields[] = {

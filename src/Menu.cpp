@@ -149,6 +149,10 @@ static MenuDef menuDefSelection[] = {
         CmdZoomToSelection,
     },
     {
+        TrN("&Trim Pages To Selection"),
+        CmdTrimPagesToSelection,
+    },
+    {
         TrN("Count &Words"),
         CmdCountWords,
     },
@@ -883,6 +887,7 @@ static void MenuUpdateDisplayMode(MainWindow* win) {
         MenuSetChecked(win->menu, CmdToggleTrimEmptyMargins, dm->GetTrimEmptyMargins());
         MenuSetEnabled(win->menu, CmdToggleTrimEmptyMargins, true);
         MenuSetChecked(win->menu, CmdToggleMirror, dm->GetMirror());
+        MenuSetEnabled(win->menu, CmdShowWholePages, !dm->GetUserCrop().IsEmpty());
     }
 }
 

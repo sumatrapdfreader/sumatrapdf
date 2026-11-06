@@ -259,6 +259,9 @@ struct DisplayModel : DocController {
     bool GetUniformPageWidth() const;
     void SetTrimEmptyMargins(bool enable);
     bool GetTrimEmptyMargins() const;
+    void SetUserCrop(RectF box);
+    RectF GetUserCrop() const;
+    void TrimPagesToRect(int pageNo, RectF rect);
     void SetFreePan(bool enable);
     bool GetFreePan() const;
     void SetFacingStepOne(bool enable);
@@ -268,6 +271,7 @@ struct DisplayModel : DocController {
     void SetPageAdjust(int brightness, int contrast);
     Size PanSlack() const;
     bool EnsureTrimEmptyMarginsForVisiblePages();
+    void RelayoutForTrim();
     bool GoToPageHorizontal(bool toRight);
 
     bool ShouldCacheRendering(int pageNo) const;
@@ -394,6 +398,8 @@ struct DisplayModel : DocController {
     bool uniformPageWidth = false;
     bool trimEmptyMargins = false;
     bool inTrimMarginsUpdate = false;
+    // part of every page shown, as fractions of its media box; empty: whole page
+    RectF userCrop;
     // -100..100, applied to rendered pages (see AdjustPagePixmap)
     int brightness = 0;
     int contrast = 0;
