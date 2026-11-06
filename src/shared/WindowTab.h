@@ -48,6 +48,10 @@ struct AutoScroll {
     int dir = 1;
     float accum = 0;
     i64 lastQpc = 0;
+    // seconds scrolled since start, for ReadingAutoScrollMinutes
+    float runSec = 0;
+    bool timeUp = false;
+    bool pausedByMinimize = false;
 };
 
 struct ReadingBarTab {

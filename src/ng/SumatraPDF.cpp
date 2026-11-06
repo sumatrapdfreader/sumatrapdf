@@ -1766,6 +1766,7 @@ static MainWindow* LoadDocumentFinish(MainWindow* win, Str fullPath, DocControll
             dm->SetUniformPageWidth(fs->uniformPageWidth);
             dm->SetTrimEmptyMargins(fs->trimEmptyMargins);
             dm->SetUserCrop(fs->userCrop);
+            dm->SetAutoScrollSpeed(fs->readingAutoScrollSpeed);
             dm->SetFreePan(fs->freePan);
             dm->SetFacingStepOne(fs->facingStepOne);
             dm->SetMirror(fs->mirror);

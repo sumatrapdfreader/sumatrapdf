@@ -134,7 +134,7 @@ void ReadingAutoScrollView::OnSpeed(ReadingAutoScrollView* self, gp::Ctx* cx, co
     }
     int idx = limitValue((int)(bar->speedSlider.value.End() + 0.5f), 0, SpeedCount() - 1);
     bar->sliderIdx = idx;
-    SetSpeed(kSpeeds[idx]);
+    SetSpeed(SessionTab(win), kSpeeds[idx]);
     gp::Notify(cx);
 }
 
@@ -181,8 +181,8 @@ ReadingAutoScrollBar* BarEnsure(MainWindow* win) {
     }
     if (!win->readingAutoScrollBar) {
         auto* bar = new ReadingAutoScrollBar();
-        bar->speedSlider =
-            gp::SliderStateNew(0, (float)(SpeedCount() - 1), gp::SliderSingle((float)ClosestSpeedIdx(CurrentSpeed())));
+        bar->speedSlider = gp::SliderStateNew(0, (float)(SpeedCount() - 1),
+                                              gp::SliderSingle((float)ClosestSpeedIdx(CurrentSpeed(SessionTab(win)))));
         win->readingAutoScrollBar = bar;
     }
     return win->readingAutoScrollBar;
@@ -309,7 +309,7 @@ static gp::El* BarRowBuild(MainWindow* win, gp::Ctx* cx, bool ownWindow) {
     // a speed set from a key / command has to reach the slider, but not while
     // the user is dragging it (orig's VirtSlider::IsAdjusting)
     if (!bar->speedSlider.dragging) {
-        int idx = ClosestSpeedIdx(CurrentSpeed());
+        int idx = ClosestSpeedIdx(CurrentSpeed(SessionTab(win)));
         if (idx != bar->sliderIdx) {
             bar->sliderIdx = idx;
             gp::SliderSetValue(&bar->speedSlider, gp::SliderSingle((float)idx));
@@ -390,8 +390,8 @@ TempStr ReadingAutoScrollBarStateTemp(int* exitCodeOut) {
 #endif
     out.Append(fmt("OK visible=1 paused=%d atEnd=%d dir=%d speed=%d scrollY=%d page=%d pages=%d hwnd=%d\n",
                    (int)tab->autoScroll.paused, (int)tab->autoScroll.atEnd, tab->autoScroll.dir,
-                   (int)(CurrentSpeed() + 0.5f), scrollY, page, pages, hwnd));
-    out.Append(fmt("speedIdx=%d speedCount=%d label=%s\n", ClosestSpeedIdx(CurrentSpeed()), SpeedCount(),
+                   (int)(CurrentSpeed(tab) + 0.5f), scrollY, page, pages, hwnd));
+    out.Append(fmt("speedIdx=%d speedCount=%d label=%s\n", ClosestSpeedIdx(CurrentSpeed(tab)), SpeedCount(),
                    SpeedLabelTemp(tab)));
     out.Append(fmt("status=%s\n", StatusTextTemp(tab)));
     return finish(0);

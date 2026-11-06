@@ -364,6 +364,9 @@ struct FileState {
     bool facingStepOne;
     // if true, pages are shown (and printed) mirrored left to right
     bool mirror;
+    // Automatically Scroll speed for this document, in pixels per second;
+    // 0 uses the global ReadingAutoScrollSpeed
+    float readingAutoScrollSpeed;
 };
 
 // a subset of FileState required for restoring the state of a single
@@ -1085,6 +1088,9 @@ struct Settings {
     // Ctrl+Shift+H). 1 to 320; also changed from the auto-scroll bar and
     // the arrow keys while scrolling
     float readingAutoScrollSpeed;
+    // Automatically Scroll pauses after scrolling this many minutes; 0
+    // scrolls until the end of the document
+    float readingAutoScrollMinutes;
     // reading bar (View menu): a horizontal band on the page to keep your
     // place. Highlight fills the band; Invert dims everything else
     ReadingBar readingBar;
@@ -1412,7 +1418,7 @@ struct FieldInfo;
 struct StructInfo;
 extern const StructInfo gFavoriteInfo;
 extern const StructInfo gFileEBookUIInfo;
-extern const FieldInfo gFileStateFields[32];
+extern const FieldInfo gFileStateFields[33];
 extern StructInfo gFileStateInfo;
 extern const StructInfo gTabStateInfo;
 extern const StructInfo gSessionDataInfo;

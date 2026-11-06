@@ -224,6 +224,7 @@ import { testit as issue6462 } from "./issue-6462.ts";
 import { testit as issue6480 } from "./issue-6480.ts";
 import { testit as issue6481 } from "./issue-6481.ts";
 import { testit as issue6482 } from "./issue-6482.ts";
+import { testit as autoScrollExtras } from "./auto-scroll-extras.ts";
 import { testit as issue6486 } from "./issue-6486.ts";
 import { testit as issue6487 } from "./issue-6487.ts";
 import { testit as issue6488 } from "./issue-6488.ts";
@@ -1042,6 +1043,7 @@ export const tests: NamedTest[] = [
   ["issue-6480", issue6480],
   ["issue-6481", issue6481],
   ["issue-6482", issue6482],
+  ["auto-scroll-extras", autoScrollExtras],
   ["issue-6486", issue6486],
   ["issue-6487", issue6487],
   ["issue-6488", issue6488],

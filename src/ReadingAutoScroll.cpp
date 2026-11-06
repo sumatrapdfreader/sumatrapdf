@@ -143,7 +143,7 @@ static void SyncSpeedLabel(ReadingAutoScrollBar* bar) {
 
 static void OnSpeedSliderDrag(ReadingAutoScrollBar* bar) {
     int idx = limitValue(bar->speedSlider->value, 0, SpeedCount() - 1);
-    SetSpeed(kSpeeds[idx]);
+    SetSpeed(SessionTab(WinFromBar(bar)), kSpeeds[idx]);
     SyncSpeedLabel(bar);
     HwndInvalidate(bar->hwnd);
 }
@@ -211,7 +211,7 @@ void ReadingAutoScrollBar::BuildLayout() {
     speedSlider = new VirtSlider();
     speedSlider->minVal = 0;
     speedSlider->maxVal = SpeedCount() - 1;
-    speedSlider->value = ClosestSpeedIdx(CurrentSpeed());
+    speedSlider->value = ClosestSpeedIdx(CurrentSpeed(SessionTab(WinFromBar(this))));
     speedSlider->onValueChanged = MkFunc0(OnSpeedSliderDrag, this);
     speedSlider->onValueCommitted = MkFunc0(OnSpeedSliderCommit, this);
     speedSlider->onGetTooltip = MkFunc1(OnSpeedSliderTooltip, this);
@@ -261,7 +261,7 @@ void ReadingAutoScrollBar::SyncLabels() {
     bool paused = tab && (tab->autoScroll.paused || tab->autoScroll.atEnd);
     btnPause->SetText(paused ? Tr("Resume") : Tr("Pause"));
     if (speedSlider && !speedSlider->IsAdjusting()) {
-        speedSlider->SetValue(ClosestSpeedIdx(CurrentSpeed()), false);
+        speedSlider->SetValue(ClosestSpeedIdx(CurrentSpeed(tab)), false);
     }
     SyncSpeedLabel(this);
     status->SetText(StatusTextTemp(tab));
@@ -436,7 +436,7 @@ TempStr ReadingAutoScrollBarStateTemp(int* exitCodeOut) {
     Rect speed = bar->speedSlider->bounds;
     out.Append(fmt("OK visible=1 paused=%d atEnd=%d dir=%d speed=%d scrollY=%d page=%d pages=%d hwnd=%d\n",
                    (int)tab->autoScroll.paused, (int)tab->autoScroll.atEnd, tab->autoScroll.dir,
-                   (int)lroundf(CurrentSpeed()), scrollY, page, pages, (int)(uintptr_t)bar->hwnd));
+                   (int)lroundf(CurrentSpeed(tab)), scrollY, page, pages, (int)(uintptr_t)bar->hwnd));
     out.Append(fmt("pause=%d,%d,%d,%d\n", pause.x, pause.y, pause.dx, pause.dy));
     out.Append(fmt("stop=%d,%d,%d,%d\n", stop.x, stop.y, stop.dx, stop.dy));
     out.Append(fmt("reverse=%d,%d,%d,%d\n", reverse.x, reverse.y, reverse.dx, reverse.dy));

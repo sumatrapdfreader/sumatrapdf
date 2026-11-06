@@ -1251,6 +1251,12 @@ const fileState: Field[] = [
   ).ver("3.7"),
   field("Mirror", Bool, false, "if true, pages are shown (and printed) mirrored left to right").ver("3.7"),
   field(
+    "ReadingAutoScrollSpeed",
+    Float,
+    0,
+    "Automatically Scroll speed for this document, in pixels per second; 0 uses the global ReadingAutoScrollSpeed",
+  ).ver("3.7"),
+  field(
     "Brightness",
     Int,
     0,
@@ -1330,6 +1336,7 @@ const fileStateLayout = [
   "FreePan",
   "FacingStepOne",
   "Mirror",
+  "ReadingAutoScrollSpeed",
 ];
 fileState.sort((a, b) => fileStateLayout.indexOf(a.Name) - fileStateLayout.indexOf(b.Name));
 
@@ -1904,6 +1911,12 @@ const globalPrefs: Field[] = [
     40,
     "pixels per second for Automatically Scroll (View menu / Ctrl+Shift+H). 1 to 320; also changed from the auto-scroll bar and the arrow keys while scrolling",
   ).ver("3.7"),
+  field(
+    "ReadingAutoScrollMinutes",
+    Float,
+    0,
+    "Automatically Scroll pauses after scrolling this many minutes; 0 scrolls until the end of the document",
+  ).ver("3.7"),
   struct(
     "ReadingBar",
     readingBar,
@@ -2385,6 +2398,7 @@ const globalPrefsLayout = [
   "CitationHoverDelay",
   "ReadAloudSpeed",
   "ReadingAutoScrollSpeed",
+  "ReadingAutoScrollMinutes",
   "ReadingBar",
   "TabWidth",
   "TabsEqualWidth",

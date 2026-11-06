@@ -261,6 +261,8 @@ struct DisplayModel : DocController {
     bool GetTrimEmptyMargins() const;
     void SetUserCrop(RectF box);
     RectF GetUserCrop() const;
+    void SetAutoScrollSpeed(float speed);
+    float GetAutoScrollSpeed() const;
     void TrimPagesToRect(int pageNo, RectF rect);
     void SetFreePan(bool enable);
     bool GetFreePan() const;
@@ -400,6 +402,8 @@ struct DisplayModel : DocController {
     bool inTrimMarginsUpdate = false;
     // part of every page shown, as fractions of its media box; empty: whole page
     RectF userCrop;
+    // Automatically Scroll px/s for this document; 0: the global setting
+    float autoScrollSpeed = 0;
     // -100..100, applied to rendered pages (see AdjustPagePixmap)
     int brightness = 0;
     int contrast = 0;

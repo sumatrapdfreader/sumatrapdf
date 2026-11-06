@@ -412,6 +412,14 @@ RectF DisplayModel::GetUserCrop() const {
     return userCrop;
 }
 
+void DisplayModel::SetAutoScrollSpeed(float speed) {
+    autoScrollSpeed = speed;
+}
+
+float DisplayModel::GetAutoScrollSpeed() const {
+    return autoScrollSpeed;
+}
+
 // Shows on every page the part that rect (in page coordinates) covers on pageNo.
 void DisplayModel::TrimPagesToRect(int pageNo, RectF rect) {
     RectF mbox = PageMediaBox(pageNo);
@@ -720,6 +728,7 @@ void DisplayModel::GetDisplayState(FileState* fs) {
     fs->uniformPageWidth = uniformPageWidth;
     fs->trimEmptyMargins = trimEmptyMargins;
     fs->userCrop = userCrop;
+    fs->readingAutoScrollSpeed = autoScrollSpeed;
     fs->freePan = freePan;
     fs->facingStepOne = facingStepOne;
     fs->mirror = mirror;

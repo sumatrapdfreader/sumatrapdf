@@ -19,6 +19,7 @@ void ReadingAutoScrollFaster(MainWindow*);
 void ReadingAutoScrollSlower(MainWindow*);
 void ReadingAutoScrollReverse(MainWindow*);
 void ReadingAutoScrollTick(MainWindow*);
+void ReadingAutoScrollOnMinimize(MainWindow*, bool minimized);
 void ReadingAutoScrollTick(MainWindow*, int elapsedMs);
 bool ReadingAutoScrollOnKey(MainWindow*, int key, bool ctrl, bool shift, bool alt);
 bool ReadingAutoScrollIsOn(MainWindow*);

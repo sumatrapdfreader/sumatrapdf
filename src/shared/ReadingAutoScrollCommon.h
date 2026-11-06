@@ -6,10 +6,10 @@
 // Arrow keys step these. Finer than Acrobat's 0-9 so speed is tunable.
 static const float kSpeeds[] = {1, 2, 3, 4, 6, 8, 12, 16, 20, 24, 32, 40, 48, 56, 64, 80, 96, 120, 160, 200, 260, 320};
 int SpeedCount();
-float CurrentSpeed();
+float CurrentSpeed(WindowTab* tab);
 int ClosestSpeedIdx(float s);
-void SetSpeed(float s);
-void StepSpeed(int dir);
+void SetSpeed(WindowTab* tab, float s);
+void StepSpeed(WindowTab* tab, int dir);
 TempStr StatusTextTemp(WindowTab* tab);
 DisplayModel* ScrollModel(WindowTab* tab);
 WindowTab* CurrentDocTab(MainWindow* win);

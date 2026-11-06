@@ -833,15 +833,16 @@ const FieldInfo gFileStateFields[] = {
     {offsetof(FileState, freePan), SettingType::Bool, false},
     {offsetof(FileState, facingStepOne), SettingType::Bool, false},
     {offsetof(FileState, mirror), SettingType::Bool, false},
+    {offsetof(FileState, readingAutoScrollSpeed), SettingType::Float, (intptr_t)"0"},
 };
 StructInfo gFileStateInfo = {
     sizeof(FileState),
-    32,
+    33,
     gFileStateFields,
     "Favorites\0EBookUI\0TocState\0FilePath\0DecryptionKey\0SidebarView\0DisplayMode\0Zoom\0BgCol\0TabCol\0LayerStates"
     "\0OpenCount\0PageNo\0PageCount\0Rotation\0Brightness\0Contrast\0WindowState\0SidebarDx\0ScrollPos\0WindowPos\0IsPi"
     "nned\0IsMissing\0UseDefaultState\0ShowToc\0DisplayR2L\0UniformPageWidth\0TrimEmptyMargins\0UserCrop\0FreePan\0Faci"
-    "ngStepOne\0Mirror",
+    "ngStepOne\0Mirror\0ReadingAutoScrollSpeed",
     "pages of this document bookmarked in the Favorites menu\0reflowable (ebook) settings for just this document. The "
     "block is absent until you add it; a field left empty or 0 uses the global EBookUI value. The global section's "
     "WindowBgCol and DefaultDisplayMode are already per-document as BgCol and DisplayMode below\0data required to "
@@ -866,7 +867,8 @@ StructInfo gFileStateInfo = {
     "trimmed from display\0part of every page that is shown, set with CmdTrimPagesToSelection; all zeros shows whole "
     "pages\0if true, the view can be panned past the page edges, so any part of a page can be brought to the center of "
     "the window\0if true, facing and book view move one page at a time: pages 1-2, then 2-3, then 3-4\0if true, pages "
-    "are shown (and printed) mirrored left to right",
+    "are shown (and printed) mirrored left to right\0Automatically Scroll speed for this document, in pixels per "
+    "second; 0 uses the global ReadingAutoScrollSpeed",
     false};
 
 static const FieldInfo gPointF_2_Fields[] = {
@@ -1072,6 +1074,7 @@ static const FieldInfo gSettingsFields[] = {
     {offsetof(Settings, readAloudVoiceId), SettingType::String, 0},
     {offsetof(Settings, readAloudSpeed), SettingType::Float, (intptr_t)"1"},
     {offsetof(Settings, readingAutoScrollSpeed), SettingType::Float, (intptr_t)"40"},
+    {offsetof(Settings, readingAutoScrollMinutes), SettingType::Float, (intptr_t)"0"},
     {offsetof(Settings, readingBar), SettingType::Struct, (intptr_t)&gReadingBarInfo},
     {offsetof(Settings, fastScrollOverScrollbar), SettingType::Bool, false},
     {offsetof(Settings, preventSleepInFullscreen), SettingType::Bool, true},
@@ -1182,7 +1185,7 @@ static const FieldInfo gSettingsFields[] = {
 };
 const StructInfo gSettingsInfo = {
     sizeof(Settings),
-    188,
+    189,
     gSettingsFields,
     "\0\0DefaultDisplayMode\0DefaultZoom\0DisableJavaScript\0AllowExternalImages\0EnableTeXEnhancements\0EscToExit\0Ful"
     "lPathInTitle\0InverseSearchCmdLine\0LazyLoading\0MainWindowBackground\0NoHomeTab\0NoCaj2pdfConverterDownload\0Home"
@@ -1197,18 +1200,18 @@ const StructInfo gSettingsInfo = {
     "cumentFocusIndicator\0ShowAnnotationNotification\0ShowFileNavigateHint\0ShowAnnotationAuthorInTooltip\0ShowTocPage"
     "Numbers\0TocWrapText\0AutoGenerateTOC\0ShowStartPage\0SidebarDx\0Scrollbars\0ScrollbarInSinglePage\0SmoothScroll\0"
     "ScrollLineAmount\0SaveMemory\0PaddingAfterLastPage\0ContinuousScrollFollowsRotation\0IgnoreDestinationZoom\0Highli"
-    "ghtLinkDestination\0CitationHoverDelay\0ReadAloudVoiceId\0ReadAloudSpeed\0ReadingAutoScrollSpeed\0ReadingBar\0Fast"
-    "ScrollOverScrollbar\0PreventSleepInFullscreen\0TabWidth\0TabsEqualWidth\0Theme\0HelpTheme\0LastLightTheme\0LastDar"
-    "kTheme\0DocumentColorsFollowTheme\0TocDy\0SidebarMiddleDy\0ToolbarCustomLayout\0ToolbarShowReadAloud\0ToolbarSize"
-    "\0TreeFontName\0TreeFontSize\0UIFontSize\0DisableAntiAlias\0EngineeringDrawingEnhance\0DisableAutoLinks\0UseSysCol"
-    "ors\0UseTabs\0ShowCaption\0SelectionToolbar\0SelectionToolbarLayout\0TabsMru\0CtrlTabSimple\0ZoomLevels\0ZoomIncre"
-    "ment\0FitWidthPercent\0\0FixedPageUI\0\0EBookUI\0\0ComicBookUI\0\0ImageUI\0\0ChmUI\0\0MarkdownUI\0\0HtmlUI\0\0Clau"
-    "deCode\0\0GrokBuild\0\0CodexBuild\0\0AntiGravity\0\0AIChat\0\0AIChatSidebarDx\0\0TranslateToLang\0TranslateFromLan"
-    "g\0TranslateEngine\0\0Annotations\0\0ExternalViewers\0\0ForwardSearch\0\0PrinterDefaults\0\0Fullscreen\0\0Selectio"
-    "nHandlers\0\0TextSnippets\0\0Shortcuts\0\0Themes\0\0TabGroups\0\0CustomScreenDPI\0\0\0DefaultPasswords\0UiLanguage"
-    "\0VersionToSkip\0WindowState\0WindowPos\0SearchUIWindowPos\0AnnotationsWindowShowNote\0HelpWindowPos\0FileStates\0"
-    "SessionData\0ReopenOnce\0TimeOfLastUpdateCheck\0OpenCountWeek\0PropWinPos\0CheckForUpdates\0OnlineApiKey\0OnlineSe"
-    "rver\0\0",
+    "ghtLinkDestination\0CitationHoverDelay\0ReadAloudVoiceId\0ReadAloudSpeed\0ReadingAutoScrollSpeed\0ReadingAutoScrol"
+    "lMinutes\0ReadingBar\0FastScrollOverScrollbar\0PreventSleepInFullscreen\0TabWidth\0TabsEqualWidth\0Theme\0HelpThem"
+    "e\0LastLightTheme\0LastDarkTheme\0DocumentColorsFollowTheme\0TocDy\0SidebarMiddleDy\0ToolbarCustomLayout\0ToolbarS"
+    "howReadAloud\0ToolbarSize\0TreeFontName\0TreeFontSize\0UIFontSize\0DisableAntiAlias\0EngineeringDrawingEnhance\0Di"
+    "sableAutoLinks\0UseSysColors\0UseTabs\0ShowCaption\0SelectionToolbar\0SelectionToolbarLayout\0TabsMru\0CtrlTabSimp"
+    "le\0ZoomLevels\0ZoomIncrement\0FitWidthPercent\0\0FixedPageUI\0\0EBookUI\0\0ComicBookUI\0\0ImageUI\0\0ChmUI\0\0Mar"
+    "kdownUI\0\0HtmlUI\0\0ClaudeCode\0\0GrokBuild\0\0CodexBuild\0\0AntiGravity\0\0AIChat\0\0AIChatSidebarDx\0\0Translat"
+    "eToLang\0TranslateFromLang\0TranslateEngine\0\0Annotations\0\0ExternalViewers\0\0ForwardSearch\0\0PrinterDefaults"
+    "\0\0Fullscreen\0\0SelectionHandlers\0\0TextSnippets\0\0Shortcuts\0\0Themes\0\0TabGroups\0\0CustomScreenDPI\0\0\0De"
+    "faultPasswords\0UiLanguage\0VersionToSkip\0WindowState\0WindowPos\0SearchUIWindowPos\0AnnotationsWindowShowNote\0H"
+    "elpWindowPos\0FileStates\0SessionData\0ReopenOnce\0TimeOfLastUpdateCheck\0OpenCountWeek\0PropWinPos\0CheckForUpdat"
+    "es\0OnlineApiKey\0OnlineServer\0\0",
     "\0\0default layout of pages. page aspect (3.7+): first open of a PDF, XPS, DjVu, PostScript or DVI file uses page "
     "1 — taller than wide is continuous + fit width, wider than tall is single page + fit page; a remembered FileState "
     "still wins\0default zoom. valid values: fit page, fit width, fit height, fit content or percent like 100%\0if "
@@ -1314,61 +1317,61 @@ const StructInfo gSettingsInfo = {
     "default. Voice ids match those used internally by the Read Aloud Voice menu (WinRT voice id or SAPI token "
     "id)\0playback speed multiplier for Read Aloud text-to-speech (0.5 .. 3.0), 1 is normal speed; can also be changed "
     "from the Read Aloud playback bar\0pixels per second for Automatically Scroll (View menu / Ctrl+Shift+H). 1 to "
-    "320; also changed from the auto-scroll bar and the arrow keys while scrolling\0reading bar (View menu): a "
-    "horizontal band on the page to keep your place. Highlight fills the band; Invert dims everything else\0if true, "
-    "mouse wheel scrolling is faster when mouse is over a scrollbar\0if true, prevents the screen from turning off "
-    "when in fullscreen or presentation mode\0maximum width of a single tab, in pixels at 100% display scaling (at "
-    "least 60)\0if true, all tabs are equally wide. If false, a tab is as wide as its file name needs, up to "
-    "TabWidth\0valid themes: Light, Dark, Light Warm, Dark from 3.5, Charcoal, Solarized Light, Solarized Dark, "
-    "Dracula, Nebula, Greeny, Choco, Purpy, One Dark, Monokai, Nord, GitHub Dark, Catppuccin Mocha, Tokyo Night, "
-    "Gruvbox, Night Owl, Ayu, Palenight, System\0color theme of the in-app manual (F1): app (follow the app's theme), "
-    "light or dark. The switch in the manual's top-right corner changes it\0the light theme the light/dark toggle and "
-    "the System theme switch to\0the dark theme the light/dark toggle and the System theme switch to\0how "
-    "MuPDF-rendered documents (PDF, XPS, DjVu, EPUB, MOBI, FB2, CBZ, images, etc.) use UI / FixedPageUI colors for the "
-    "page. Values: off (document's own colors; default); smart (recolor text and page background, keep photos/images "
-    "as-is — best for dark reading); legacy (also recolor images; pre-3.7 invert-style). Does not change "
-    "menus/toolbars — use Theme for UI chrome. Settings / Theme and the CmdSetDocumentColorsFollowTheme command set "
-    "all three values. Shift+I (Invert Colors) is separate: it swaps the page colors for the session whatever this is "
-    "set to\0if both the favorites and the bookmarks part of the sidebar are visible, this is the height of the "
-    "bookmarks (table of contents) part, in screen pixels\0if the sidebar's middle panel is visible, this is its "
-    "height, in screen pixels\0the toolbar's built-in buttons, in the order you want them, e.g. CmdOpenFile CmdPrint "
-    "PageInfo | CmdFindFirst. Leave a button out to hide it. | is a separator and PageInfo is the page number box. "
-    "Empty (the default) means the standard layout. Buttons you added yourself (see Shortcuts) still come last\0if "
-    "true, the toolbar has a Read Aloud button (with a drop-down for voice, speed and what to read). Read Aloud is "
-    "still reachable from the Read Aloud menu when this is false\0size of the toolbar icons in pixels at 100% display "
-    "scaling (8-64); the toolbar itself is a few pixels taller\0font name for bookmarks and favorites tree views. "
-    "automatic means Windows default\0font size for bookmarks and favorites tree views, in pixels; 0 means the Windows "
-    "default. Not scaled by the display scaling\0overrides the font size used for menus, toolbar and dialogs, in "
-    "pixels; 0 means the Windows default. Not scaled by the display scaling\0if true, render MuPDF-based documents "
-    "(PDF, XPS, DjVu, EPUB etc.) without anti-aliasing, giving sharper but jagged edges\0CAD/engineering PDF line "
-    "rendering: off, auto (enhance if a CAD drawing is detected) or on\0if true, disables auto-linking of URLs and "
-    "email addresses found in PDF text\0if true, use the Windows system colors for the document background and text. "
-    "Overrides other color settings\0if true, documents are opened in tabs instead of new windows\0show the caption; "
-    "when hidden, hover at the top to reveal it. Toggle with Shift+F8\0if true, a small floating toolbar with "
-    "selection actions (copy, read aloud, highlight etc.) pops up after selecting text. Set to false to disable "
-    "it\0which built-in buttons the selection toolbar has and in what order, e.g. CmdCopySelection | "
-    "CmdCreateAnnotHighlight. | or Separator inserts a separator. Leave a button out to hide it. Empty (the default) "
-    "is the standard set. SelectionHandlers with SelectToolbarNameOrSvg still come last\0if true, Ctrl+Tab and "
-    "Ctrl+Shift+Tab show the tab switcher in most recently used order instead of tab-strip order\0if true, Ctrl+Tab "
-    "and Ctrl+Shift+Tab immediately switch to the next / previous tab in tab-strip order (the behavior before version "
-    "3.6) instead of showing the tab switcher\0sequence of zoom levels when zooming in/out; values must lie between "
-    "8.33 and 1000000 (the largest one becomes the maximum zoom, which is 6400 by default)\0how much a single zoom in "
-    "/ zoom out step changes the zoom, as a percentage of the current zoom level. If 0 or negative, zooming steps "
-    "through ZoomLevels instead\0Fit Width (and Fit Visible) fit the pages to this percentage of the window's width, "
-    "centered: e.g. 40 to read in the middle of a wide screen. 20 to 100\0\0customization options for PDF, XPS, DjVu "
-    "and PostScript UI\0\0customization options for the ebook UI (EPUB, MOBI, FB2, PDB and plain "
-    "text)\0\0customization options for Comic Book UI\0\0customization options for image files UI\0\0customization "
-    "options for CHM UI. UseFixedPageUI switches to the PDF-style view; FontName applies to that view\0\0customization "
-    "options for Markdown UI. If UseFixedPageUI is true, MuPDF is used; otherwise WebView2 browser view is used when "
-    "available\0\0customization options for HTML UI. If UseFixedPageUI is true, MuPDF is used; otherwise WebView2 "
-    "browser view is used when available\0\0settings for the Claude Code chat sidebar\0\0settings for the Grok Build "
-    "chat sidebar\0\0settings for the OpenAI Codex chat sidebar\0\0settings for the Antigravity chat "
-    "sidebar\0\0appearance of the AI chat sidebar, shared by all backends\0\0width of the AI chat sidebar (0 = use "
-    "default); shared by Claude Code, Grok Build, and OpenAI Codex (internal)\0\0remembered destination language for "
-    "selection translation; empty uses OS UI language\0remembered source language for selection translation; empty "
-    "means Auto\0remembered engine for Translate Selection: Google, DeepL, Grok Build, Claude Code, OpenAI Codex or "
-    "Antigravity\0\0default values for annotations in PDF documents\0\0list of additional external viewers for various "
-    "file types. See [docs for more "
+    "320; also changed from the auto-scroll bar and the arrow keys while scrolling\0Automatically Scroll pauses after "
+    "scrolling this many minutes; 0 scrolls until the end of the document\0reading bar (View menu): a horizontal band "
+    "on the page to keep your place. Highlight fills the band; Invert dims everything else\0if true, mouse wheel "
+    "scrolling is faster when mouse is over a scrollbar\0if true, prevents the screen from turning off when in "
+    "fullscreen or presentation mode\0maximum width of a single tab, in pixels at 100% display scaling (at least "
+    "60)\0if true, all tabs are equally wide. If false, a tab is as wide as its file name needs, up to TabWidth\0valid "
+    "themes: Light, Dark, Light Warm, Dark from 3.5, Charcoal, Solarized Light, Solarized Dark, Dracula, Nebula, "
+    "Greeny, Choco, Purpy, One Dark, Monokai, Nord, GitHub Dark, Catppuccin Mocha, Tokyo Night, Gruvbox, Night Owl, "
+    "Ayu, Palenight, System\0color theme of the in-app manual (F1): app (follow the app's theme), light or dark. The "
+    "switch in the manual's top-right corner changes it\0the light theme the light/dark toggle and the System theme "
+    "switch to\0the dark theme the light/dark toggle and the System theme switch to\0how MuPDF-rendered documents "
+    "(PDF, XPS, DjVu, EPUB, MOBI, FB2, CBZ, images, etc.) use UI / FixedPageUI colors for the page. Values: off "
+    "(document's own colors; default); smart (recolor text and page background, keep photos/images as-is — best for "
+    "dark reading); legacy (also recolor images; pre-3.7 invert-style). Does not change menus/toolbars — use Theme for "
+    "UI chrome. Settings / Theme and the CmdSetDocumentColorsFollowTheme command set all three values. Shift+I (Invert "
+    "Colors) is separate: it swaps the page colors for the session whatever this is set to\0if both the favorites and "
+    "the bookmarks part of the sidebar are visible, this is the height of the bookmarks (table of contents) part, in "
+    "screen pixels\0if the sidebar's middle panel is visible, this is its height, in screen pixels\0the toolbar's "
+    "built-in buttons, in the order you want them, e.g. CmdOpenFile CmdPrint PageInfo | CmdFindFirst. Leave a button "
+    "out to hide it. | is a separator and PageInfo is the page number box. Empty (the default) means the standard "
+    "layout. Buttons you added yourself (see Shortcuts) still come last\0if true, the toolbar has a Read Aloud button "
+    "(with a drop-down for voice, speed and what to read). Read Aloud is still reachable from the Read Aloud menu when "
+    "this is false\0size of the toolbar icons in pixels at 100% display scaling (8-64); the toolbar itself is a few "
+    "pixels taller\0font name for bookmarks and favorites tree views. automatic means Windows default\0font size for "
+    "bookmarks and favorites tree views, in pixels; 0 means the Windows default. Not scaled by the display "
+    "scaling\0overrides the font size used for menus, toolbar and dialogs, in pixels; 0 means the Windows default. Not "
+    "scaled by the display scaling\0if true, render MuPDF-based documents (PDF, XPS, DjVu, EPUB etc.) without "
+    "anti-aliasing, giving sharper but jagged edges\0CAD/engineering PDF line rendering: off, auto (enhance if a CAD "
+    "drawing is detected) or on\0if true, disables auto-linking of URLs and email addresses found in PDF text\0if "
+    "true, use the Windows system colors for the document background and text. Overrides other color settings\0if "
+    "true, documents are opened in tabs instead of new windows\0show the caption; when hidden, hover at the top to "
+    "reveal it. Toggle with Shift+F8\0if true, a small floating toolbar with selection actions (copy, read aloud, "
+    "highlight etc.) pops up after selecting text. Set to false to disable it\0which built-in buttons the selection "
+    "toolbar has and in what order, e.g. CmdCopySelection | CmdCreateAnnotHighlight. | or Separator inserts a "
+    "separator. Leave a button out to hide it. Empty (the default) is the standard set. SelectionHandlers with "
+    "SelectToolbarNameOrSvg still come last\0if true, Ctrl+Tab and Ctrl+Shift+Tab show the tab switcher in most "
+    "recently used order instead of tab-strip order\0if true, Ctrl+Tab and Ctrl+Shift+Tab immediately switch to the "
+    "next / previous tab in tab-strip order (the behavior before version 3.6) instead of showing the tab "
+    "switcher\0sequence of zoom levels when zooming in/out; values must lie between 8.33 and 1000000 (the largest one "
+    "becomes the maximum zoom, which is 6400 by default)\0how much a single zoom in / zoom out step changes the zoom, "
+    "as a percentage of the current zoom level. If 0 or negative, zooming steps through ZoomLevels instead\0Fit Width "
+    "(and Fit Visible) fit the pages to this percentage of the window's width, centered: e.g. 40 to read in the middle "
+    "of a wide screen. 20 to 100\0\0customization options for PDF, XPS, DjVu and PostScript UI\0\0customization "
+    "options for the ebook UI (EPUB, MOBI, FB2, PDB and plain text)\0\0customization options for Comic Book "
+    "UI\0\0customization options for image files UI\0\0customization options for CHM UI. UseFixedPageUI switches to "
+    "the PDF-style view; FontName applies to that view\0\0customization options for Markdown UI. If UseFixedPageUI is "
+    "true, MuPDF is used; otherwise WebView2 browser view is used when available\0\0customization options for HTML UI. "
+    "If UseFixedPageUI is true, MuPDF is used; otherwise WebView2 browser view is used when available\0\0settings for "
+    "the Claude Code chat sidebar\0\0settings for the Grok Build chat sidebar\0\0settings for the OpenAI Codex chat "
+    "sidebar\0\0settings for the Antigravity chat sidebar\0\0appearance of the AI chat sidebar, shared by all "
+    "backends\0\0width of the AI chat sidebar (0 = use default); shared by Claude Code, Grok Build, and OpenAI Codex "
+    "(internal)\0\0remembered destination language for selection translation; empty uses OS UI language\0remembered "
+    "source language for selection translation; empty means Auto\0remembered engine for Translate Selection: Google, "
+    "DeepL, Grok Build, Claude Code, OpenAI Codex or Antigravity\0\0default values for annotations in PDF "
+    "documents\0\0list of additional external viewers for various file types. See [docs for more "
     "information](https://www.sumatrapdfreader.org/docs/Customize-external-viewers)\0\0customization options for how "
     "forward search results are shown (used from LaTeX editors)\0\0these override the default settings in the Print "
     "dialog\0\0options for fullscreen mode\0\0list of handlers for selected text, shown in context menu when text "

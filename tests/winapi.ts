@@ -367,6 +367,8 @@ export const PW_RENDERFULLCONTENT = 0x00000002;
 export const SRCCOPY = 0x00cc0020;
 export const COLORONCOLOR = 3; // StretchBlt mode: no smoothing
 // ShowWindow commands
+export const SW_SHOWMINNOACTIVE = 7;
+export const SW_SHOWNOACTIVATE = 4;
 export const SW_RESTORE = 9;
 export const SW_MAXIMIZE = 3;
 // GetSystemMetrics indices

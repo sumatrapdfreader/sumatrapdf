@@ -2048,6 +2048,7 @@ static void ReplaceDocumentInCurrentTab(LoadArgs* args, DocController* ctrl, Fil
                 dm->SetUniformPageWidth(fs->uniformPageWidth);
                 dm->SetTrimEmptyMargins(fs->trimEmptyMargins);
                 dm->SetUserCrop(fs->userCrop);
+                dm->SetAutoScrollSpeed(fs->readingAutoScrollSpeed);
                 dm->SetFreePan(fs->freePan);
                 dm->SetFacingStepOne(fs->facingStepOne);
                 dm->SetMirror(fs->mirror);
@@ -13835,9 +13836,11 @@ static LRESULT CALLBACK WndProcSumatraFrame(HWND hwnd, UINT msg, WPARAM wp, LPAR
                 // topmost popups and must be dismissed on minimize or they
                 // stick on the desktop (issue #5928).
                 win->DeleteToolTip();
+                ReadingAutoScrollOnMinimize(win, true);
                 break;
             }
             if (win) {
+                ReadingAutoScrollOnMinimize(win, false);
                 RememberDefaultWindowPosition(win);
                 // UIState.layout.rc remembers the last laid-out client size;
                 // the scheduled update relayouts only when the size actually
