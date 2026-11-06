@@ -1139,11 +1139,12 @@ static bool LitBinaryToText(UnBinaryCtx* ctx, int depth, Str parent) {
                     tag = c;
                     out.Append(StrL("<"));
                     isGoingdown = !(flags & kLitFlagClosing);
+                    // also for a custom tag: its attributes aren't in the atom table
+                    tagIsAtom = false;
                     if (tag == 0x8000) {
                         state = 6;
                         break;
                     }
-                    tagIsAtom = false;
                     const char* name = nullptr;
                     if (flags & kLitFlagAtom) {
                         if (!ctx->atoms || tag < 1 || tag > len(ctx->atoms->tags)) {
