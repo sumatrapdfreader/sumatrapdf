@@ -31,6 +31,9 @@ struct PageInfo {
     /* data that is calculated when needed. actual content size within a page (View target) */
     RectF contentBox;
     bool contentBoxCalculated = false;
+    // Read Columns: x of the gutter between the page's two columns, in page units
+    float columnGutterX = 0;
+    bool columnGutterKnown = false;
 
     /* data that changes when zoom and rotation changes */
     /* position and size within total area after applying zoom and rotation.
@@ -265,6 +268,10 @@ struct DisplayModel : DocController {
     void SetReadColumns(bool enable);
     bool GetReadColumns() const;
     void FitColumnToWindow();
+    void ToggleColumnsWholePage();
+    bool ReadsColumnsNow() const;
+    bool ShowsColumnsWholePage() const;
+    float ColumnGutterX(int pageNo);
     float GetAutoScrollSpeed() const;
     void TrimPagesToRect(int pageNo, RectF rect);
     void SetFreePan(bool enable);
@@ -410,6 +417,10 @@ struct DisplayModel : DocController {
     // Read Columns: scrolling goes down a page's left column, then its right one
     bool readColumns = false;
     bool inColumnScroll = false;
+    // ToggleColumnsWholePage(): the whole page is shown for a moment
+    bool columnsWholePage = false;
+    float columnsZoom = 0;
+    ScrollState columnsScroll;
     RectF ColumnRect(int pageNo, int col);
     bool CurrentColumn(int* pageNo, int* col);
     bool ColumnScroll(int dy, bool changePage);

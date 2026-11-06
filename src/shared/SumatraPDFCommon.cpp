@@ -1963,7 +1963,8 @@ void TrimPagesToSelection(MainWindow* win) {
     dm->GoToPage(pageNo, false);
 }
 
-// Read Columns needs one page under the other, so it shows pages continuously
+// Read Columns reads one page at a time or pages shown continuously; two pages
+// side by side switch to continuous
 void ToggleReadColumns(MainWindow* win) {
     DisplayModel* dm = win->AsFixed();
     if (!dm) {
@@ -1974,7 +1975,8 @@ void ToggleReadColumns(MainWindow* win) {
     if (!enable) {
         return;
     }
-    if (dm->GetDisplayMode() != DisplayMode::Continuous) {
+    DisplayMode mode = dm->GetDisplayMode();
+    if (mode != DisplayMode::Continuous && mode != DisplayMode::SinglePage) {
         SwitchToDisplayMode(win, DisplayMode::Continuous, false);
     }
     dm = win->AsFixed();

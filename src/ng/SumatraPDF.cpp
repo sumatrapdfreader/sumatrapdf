@@ -5969,6 +5969,12 @@ void ExecuteCmd(MainWindow* win, int cmdId) {
             ToggleReadColumns(win);
             break;
 
+        case CmdToggleColumnsWholePage:
+            if (win->AsFixed()) {
+                win->AsFixed()->ToggleColumnsWholePage();
+            }
+            break;
+
         case CmdNavigateBack:
             if (ctrl) {
                 ctrl->Navigate(-1);

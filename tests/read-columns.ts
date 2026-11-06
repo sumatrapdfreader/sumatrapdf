@@ -1,5 +1,7 @@
 // View > Read Columns reads a two-column page down its left column, then its
-// right one, then the next page's left column; scrolling up goes back.
+// right one, then the next page's left column; scrolling up goes back. It
+// works in continuous and single page view, finds the gutter from the text,
+// and Show Whole Page shows the page for a moment.
 //
 // Each page of the test document has a red left column and a blue right one,
 // so the column in view can be read off the canvas.
@@ -28,6 +30,29 @@ function makeColumnsPdf(): string {
     objs.push(`<< /Type /Page /Parent 2 0 R /MediaBox [0 0 600 400] /Contents ${contentObj} 0 R >>`);
   }
   objs.push(`<< /Length ${content.length} >>\nstream\n${content}\nendstream`);
+  return assemblePdf(objs);
+}
+
+// Unequal columns with text: the left one (red) is wider than half the page,
+// so only a gutter found from the text keeps red out of the right column's view.
+function makeTextColumnsPdf(): string {
+  const line = (x: number, y: number, n: number) => `BT /F1 10 Tf ${x} ${y} Td (${"x".repeat(n)}) Tj ET`;
+  const parts = ["1 0 0 rg 40 20 300 360 re f", "0 0 1 rg 380 20 180 360 re f", "0 0 0 rg"];
+  for (let y = 365; y > 25; y -= 12) {
+    parts.push(line(45, y, 58), line(385, y, 34));
+  }
+  const content = parts.join("\n");
+  const kids = Array.from({ length: kPages }, (_, i) => `${3 + i} 0 R`).join(" ");
+  const objs = ["<< /Type /Catalog /Pages 2 0 R >>", `<< /Type /Pages /Count ${kPages} /Kids [${kids}] >>`];
+  const contentObj = 3 + kPages;
+  for (let i = 0; i < kPages; i++) {
+    objs.push(
+      `<< /Type /Page /Parent 2 0 R /MediaBox [0 0 600 400] /Contents ${contentObj} 0 R ` +
+        `/Resources << /Font << /F1 ${contentObj + 1} 0 R >> >> >>`,
+    );
+  }
+  objs.push(`<< /Length ${content.length} >>\nstream\n${content}\nendstream`);
+  objs.push("<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica >>");
   return assemblePdf(objs);
 }
 
@@ -91,7 +116,7 @@ export async function testit(): Promise<void> {
   }
   const pdf = tmpPath("read-columns.pdf");
   writeFileSync(pdf, makeColumnsPdf(), "latin1");
-  const { proc, client, frame } = await launchControlled(["-view", "single page", "-zoom", "fit page", pdf]);
+  const { proc, client, frame } = await launchControlled(["-view", "continuous", "-zoom", "fit page", pdf]);
   try {
     await client.waitForRenderIdle();
     await client.setNotificationsEnabled(false);
@@ -126,6 +151,52 @@ export async function testit(): Promise<void> {
     }
     await client.request(ControlCommand.TestInvokeCommand, ["CmdToggleAutomaticallyScroll"]);
     console.log("  auto-scroll: page 1 right -> page 2 left");
+  } finally {
+    client.close();
+    await killAndWait(proc);
+  }
+  await testSinglePageAndGutter();
+}
+
+async function testSinglePageAndGutter(): Promise<void> {
+  const pdf = tmpPath("read-columns-text.pdf");
+  writeFileSync(pdf, makeTextColumnsPdf(), "latin1");
+  const { proc, client, frame } = await launchControlled(["-view", "single page", "-zoom", "fit page", pdf]);
+  try {
+    await client.waitForRenderIdle();
+    await client.setNotificationsEnabled(false);
+    await client.request(ControlCommand.TestInvokeCommand, ["CmdToggleReadColumns"]);
+    await client.waitForRenderIdle();
+    await sleep(200);
+    const mode = String((await client.request(ControlCommand.TestDisplayMode, ["pages"]))[1] ?? "");
+    if (!/mode=single page/.test(mode)) {
+      throw new Error(`read-columns: single page view should stay: ${mode}`);
+    }
+    if (only(colors(frame)) !== "red") {
+      throw new Error(`read-columns: should start on the left column: ${JSON.stringify(colors(frame))}`);
+    }
+    // the gutter: red never shows in the right column, blue never in the left
+    await scrollTo(client, frame, true, "blue", 1);
+    await scrollTo(client, frame, true, "red", 2);
+    console.log("  single page: page 1 left -> right -> page 2 left, gutter from the text");
+
+    await client.request(ControlCommand.TestInvokeCommand, ["CmdToggleColumnsWholePage"]);
+    await client.waitForRenderIdle();
+    await sleep(200);
+    let c = colors(frame);
+    if (c.red < 1000 || c.blue < 1000) {
+      throw new Error(`read-columns: Show Whole Page should show both columns: ${JSON.stringify(c)}`);
+    }
+    await client.request(ControlCommand.TestInvokeCommand, ["CmdToggleColumnsWholePage"]);
+    await client.waitForRenderIdle();
+    await sleep(200);
+    c = colors(frame);
+    if (only(c) !== "red" || (await pageNo(client)) !== 2) {
+      throw new Error(
+        `read-columns: Show Whole Page again should return to page 2's left column: ${JSON.stringify(c)}`,
+      );
+    }
+    console.log("  Show Whole Page and back");
   } finally {
     client.close();
     await killAndWait(proc);

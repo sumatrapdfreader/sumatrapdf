@@ -373,6 +373,7 @@ const CommandInfo gCommands[] = {
     {CmdReplaceImage, "CmdReplaceImage\0", StrL("Replace Image...")},
     {CmdEditImageExternally, "CmdEditImageExternally\0", StrL("Edit Image in Another App")},
     {CmdToggleReadColumns, "CmdToggleReadColumns\0", StrL("Read Columns")},
+    {CmdToggleColumnsWholePage, "CmdToggleColumnsWholePage\0", StrL("Read Columns: Show Whole Page")},
 };
 const int gCommandsCount = dimofi(gCommands);
 

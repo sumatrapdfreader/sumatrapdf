@@ -280,6 +280,10 @@ MenuDef menuDefView[] = {
         CmdToggleReadColumns,
     },
     {
+        TrN("Read Columns: Show &Whole Page"),
+        CmdToggleColumnsWholePage,
+    },
+    {
         StrL(kMenuSeparator),
         0,
     },

@@ -889,6 +889,8 @@ static void MenuUpdateDisplayMode(MainWindow* win) {
         MenuSetChecked(win->menu, CmdToggleMirror, dm->GetMirror());
         MenuSetEnabled(win->menu, CmdShowWholePages, !dm->GetUserCrop().IsEmpty());
         MenuSetChecked(win->menu, CmdToggleReadColumns, dm->GetReadColumns());
+        MenuSetEnabled(win->menu, CmdToggleColumnsWholePage, dm->GetReadColumns());
+        MenuSetChecked(win->menu, CmdToggleColumnsWholePage, dm->ShowsColumnsWholePage());
     }
 }
 

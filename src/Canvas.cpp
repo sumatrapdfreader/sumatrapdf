@@ -406,7 +406,7 @@ static void OnVScroll(MainWindow* win, WPARAM wp) {
     // Read Columns: line and page steps go column by column; the thumb still
     // drags anywhere
     DisplayModel* dm = win->AsFixed();
-    if (dm && dm->GetReadColumns() && IsContinuous(dm->GetDisplayMode())) {
+    if (dm && dm->ReadsColumnsNow()) {
         int step = 0;
         int page = (int)si.nPage;
         switch (msg) {

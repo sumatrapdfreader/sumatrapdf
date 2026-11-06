@@ -1243,7 +1243,7 @@ void CanvasOnVScroll(MainWindow* win, ScrollMsg msg, int nTrackPos) {
 
     // Read Columns (orig's OnVScroll): line and page steps go column by column;
     // the thumb still drags anywhere
-    if (dm->GetReadColumns() && IsContinuous(dm->GetDisplayMode())) {
+    if (dm->ReadsColumnsNow()) {
         int page = (int)si.nPage;
         int step = 0;
         switch (msg) {
