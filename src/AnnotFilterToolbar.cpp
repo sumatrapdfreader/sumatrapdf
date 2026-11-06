@@ -1159,7 +1159,7 @@ void ClearAnnotFilterAnnotations(MainWindow* win) {
     }
     UpdateCue(f);
     UpdateFloatButtons(f);
-    uitask::Post(MkFunc0(PostedRefreshAnnots, win), "RefreshAnnotFilterAnnots");
+    PostForWindow(win, PostedRefreshAnnots, "RefreshAnnotFilterAnnots");
 }
 
 void RefreshAnnotFilterAnnotations(MainWindow* win) {

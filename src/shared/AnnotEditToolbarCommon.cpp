@@ -754,7 +754,7 @@ void ScheduleShowSelectedAnnotationView(WindowTab* tab) {
         return;
     }
     tab->pendingShowSelectedAnnotation = true;
-    uitask::Post(MkFunc0(ShowSelectedAnnotationView, tab), "ShowSelectedAnnot");
+    PostForTab(tab, ShowSelectedAnnotationView, "ShowSelectedAnnot");
 }
 
 static void AddAnnotPage(Vec<int>& pages, int pageNo, int pageCount) {

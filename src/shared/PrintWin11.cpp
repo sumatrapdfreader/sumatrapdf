@@ -1197,7 +1197,7 @@ class Win11PrintSession {
                     return S_OK;
                 }
                 gWin11PrintUnavailable = true;
-                uitask::Post(MkFunc0(RetryWithClassicDialog, win), "Win11PrintFallback");
+                PostForWindow(win, RetryWithClassicDialog, "Win11PrintFallback");
                 return S_OK;
             });
         if (!completed) {

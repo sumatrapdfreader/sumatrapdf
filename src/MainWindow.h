@@ -851,6 +851,8 @@ bool IsMainWindowValid(MainWindow*);
 bool IsMainWindowValidAndNotClosing(MainWindow*);
 bool IsCurrentTab(MainWindow* win, WindowTab* tab);
 bool IsWindowTabValid(WindowTab*);
+void PostForWindow(MainWindow*, void (*fn)(MainWindow*), Kind kind);
+void PostForTab(WindowTab*, void (*fn)(WindowTab*), Kind kind);
 extern Vec<MainWindow*> gWindows;
 extern bool gShowFrameRate;
 void HighlightTab(MainWindow*, WindowTab*);

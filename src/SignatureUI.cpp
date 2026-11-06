@@ -270,11 +270,11 @@ static void OnSigBarPanel(MainWindow* win) {
 
 // posted: both change what the bar's tree holds, and a click comes from inside it
 static void OnSigBarCloseClick(MainWindow* win, VirtMouseEvent*) {
-    uitask::Post(MkFunc0<MainWindow>(OnSigBarClose, win), "SigBarClose");
+    PostForWindow(win, OnSigBarClose, "SigBarClose");
 }
 
 static void OnSigBarPanelClick(MainWindow* win, VirtMouseEvent*) {
-    uitask::Post(MkFunc0<MainWindow>(OnSigBarPanel, win), "SigBarPanel");
+    PostForWindow(win, OnSigBarPanel, "SigBarPanel");
 }
 
 bool SigBarWanted(MainWindow* win) {

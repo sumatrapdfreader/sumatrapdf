@@ -5,6 +5,7 @@
 #include "base/File.h"
 #include "base/Win.h"
 #include "base/GuessFileType.h"
+#include "base/UITask.h"
 #include "gui/UIModels.h"
 #include "Settings.h"
 #include "DisplayMode.h"
@@ -206,6 +207,38 @@ bool IsCurrentTab(MainWindow* win, WindowTab* tab) {
 
 bool IsWindowTabValid(WindowTab* tab) {
     return FindMainWindowByTab(tab) != nullptr;
+}
+
+// A posted task runs after the window or tab may have been closed and freed.
+// These post fn(ptr) and drop it if ptr is gone by then, so the task never
+// sees a dangling pointer.
+struct PostedForPtr {
+    void* ptr = nullptr;
+    void (*fn)(void*) = nullptr;
+};
+
+static void RunPostedForWindow(PostedForPtr* d) {
+    if (IsMainWindowValid((MainWindow*)d->ptr)) {
+        d->fn(d->ptr);
+    }
+    delete d;
+}
+
+static void RunPostedForTab(PostedForPtr* d) {
+    if (IsWindowTabValid((WindowTab*)d->ptr)) {
+        d->fn(d->ptr);
+    }
+    delete d;
+}
+
+void PostForWindow(MainWindow* win, void (*fn)(MainWindow*), Kind kind) {
+    auto d = new PostedForPtr{win, (void (*)(void*))fn};
+    uitask::Post(MkFunc0(RunPostedForWindow, d), kind);
+}
+
+void PostForTab(WindowTab* tab, void (*fn)(WindowTab*), Kind kind) {
+    auto d = new PostedForPtr{tab, (void (*)(void*))fn};
+    uitask::Post(MkFunc0(RunPostedForTab, d), kind);
 }
 
 void LinkHandler::GoToPage(int pageNo, bool addNavPoint) {

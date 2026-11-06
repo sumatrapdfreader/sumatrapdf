@@ -2274,7 +2274,7 @@ static void ReplaceDocumentInCurrentTab(LoadArgs* args, DocController* ctrl, Fil
                 dm->pendingScroll = ss;
                 dm->hasPendingScroll = true;
             }
-            uitask::Post(MkFunc0(FinishPendingDocumentRelayout, win), "FinishPendingDocumentRelayout");
+            PostForWindow(win, FinishPendingDocumentRelayout, "FinishPendingDocumentRelayout");
         } else {
             dm->pauseRendering = false;
             // restore scroll state after the canvas size has been restored
@@ -7668,7 +7668,7 @@ void ScheduleUiUpdate(MainWindow* win, u32 flags, int sidebarDx) {
         return; // one FrameUpdateUi is already queued; it'll pick this up
     }
     ui.updatePending = true;
-    uitask::Post(MkFunc0(FrameUpdateUi, win), "FrameUpdateUi");
+    PostForWindow(win, FrameUpdateUi, "FrameUpdateUi");
 }
 
 // Apply TOC/favorites fonts and TreeView row height for an explicit DPI
@@ -7803,7 +7803,7 @@ static void ScheduleDpiChromeRefresh(MainWindow* win) {
     win->dpiChromeRefreshPosted = true;
     // Post, not PostOptimized: we are already on the UI thread inside
     // WM_DPICHANGED; running now would re-enter on this stack.
-    uitask::Post(MkFunc0(RunPostedDpiChromeRefresh, win), "DpiChromeRefresh");
+    PostForWindow(win, RunPostedDpiChromeRefresh, "DpiChromeRefresh");
 }
 
 // WM_DPICHANGED: frame moved to a different DPI (or scaling changed).
@@ -10824,13 +10824,13 @@ static LRESULT FrameOnCommand(MainWindow* win, HWND hwnd, UINT msg, WPARAM wp, L
 
         case CmdPrint:
             // not PrintCurrentFile(win): see PrintCurrentFileDeferred
-            uitask::Post(MkFunc0(PrintCurrentFileDeferred, win), "CmdPrint");
+            PostForWindow(win, PrintCurrentFileDeferred, "CmdPrint");
             break;
 
         case CmdPrintSelection:
             // the print dialog with "Selection" pre-selected; the selection
             // can also be printed via CmdPrint by picking that radio button
-            uitask::Post(MkFunc0(PrintSelectionDeferred, win), "CmdPrintSelection");
+            PostForWindow(win, PrintSelectionDeferred, "CmdPrintSelection");
             break;
 
         case CmdSumatraPDFWeb:
@@ -12695,7 +12695,7 @@ static LRESULT FrameOnCommand(MainWindow* win, HWND hwnd, UINT msg, WPARAM wp, L
         StartFreeTextInPlaceEdit(win, lastCreatedAnnot);
     } else if (openEdit) {
         // in fullscreen too: Contents used to never open there (issue #6111)
-        uitask::Post(MkFunc0(StartSelectedAnnotContentsEdit, win), "StartAnnotContentsEdit");
+        PostForWindow(win, StartSelectedAnnotContentsEdit, "StartAnnotContentsEdit");
     }
     return 0;
 }
@@ -13979,7 +13979,7 @@ static LRESULT CALLBACK WndProcSumatraFrame(HWND hwnd, UINT msg, WPARAM wp, LPAR
     if (win && !gMyWindowWasEmbedded && isChildWindow) {
         logf("Detected window embedded in another window\n");
         gMyWindowWasEmbedded = true;
-        uitask::Post(MkFunc0(ApplyEmbeddedWindowChrome, win), "ApplyEmbeddedWindowChrome");
+        PostForWindow(win, ApplyEmbeddedWindowChrome, "ApplyEmbeddedWindowChrome");
     }
     // custom caption is incompatible with WS_CHILD hosts; skip even before
     // deferred ApplyEmbeddedWindowChrome clears tabsInTitlebar
@@ -14075,7 +14075,7 @@ static LRESULT CALLBACK WndProcSumatraFrame(HWND hwnd, UINT msg, WPARAM wp, LPAR
             if (win) {
                 win->NotifyWindowMoved();
                 if (win->dpiChromeRefreshPending) {
-                    uitask::Post(MkFunc0(FinishDeferredMainWindowDpiRefresh, win), "DpiSettled");
+                    PostForWindow(win, FinishDeferredMainWindowDpiRefresh, "DpiSettled");
                 } else {
                     win->deferDpiChromeRefresh = false;
                 }
@@ -17541,11 +17541,11 @@ ContinueOpenWindow:
 
     // needed if RememberOpenedFiles = false
     // https://github.com/sumatrapdfreader/sumatrapdf/issues/5456
-    uitask::Post(MkFunc0(LayoutAndFocusOnStartup, win), "LayoutAndFocusOnStartup");
+    PostForWindow(win, LayoutAndFocusOnStartup, "LayoutAndFocusOnStartup");
 
     // home-page bottom bar if we lost default-app status for registered extensions
     if (showStartPage) {
-        uitask::Post(MkFunc0(MaybeShowDefaultAppNotification, win), "MaybeShowDefaultAppNotification");
+        PostForWindow(win, MaybeShowDefaultAppNotification, "MaybeShowDefaultAppNotification");
     }
 
     StartSumatraControl(flags.controlPipeName);

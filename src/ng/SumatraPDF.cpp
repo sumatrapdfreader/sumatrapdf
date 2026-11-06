@@ -2671,7 +2671,7 @@ void ExecuteAnnotCreateCmd(MainWindow* win, int invokedCmdId, bool isPlacementCo
     if (cmdId == CmdCreateAnnotFreeText && lastCreatedAnnot->type == AnnotationType::FreeText) {
         StartFreeTextInPlaceEdit(win, lastCreatedAnnot);
     } else if (openEdit) {
-        uitask::Post(MkFunc0(StartSelectedAnnotContentsEdit, win), "StartAnnotContentsEdit");
+        PostForWindow(win, StartSelectedAnnotContentsEdit, "StartAnnotContentsEdit");
     }
     logf("ExecuteAnnotCreateCmd: cmd %d -> annotation type %d on page %d\n", cmdId, (int)lastCreatedAnnot->type,
          lastCreatedAnnot->pageNo);
@@ -5265,11 +5265,11 @@ void ExecuteCmd(MainWindow* win, int cmdId) {
 
         case CmdPrint:
             // not PrintCurrentFile(win): see PrintCurrentFileDeferred
-            uitask::Post(MkFunc0(PrintCurrentFileDeferred, win), "CmdPrint");
+            PostForWindow(win, PrintCurrentFileDeferred, "CmdPrint");
             break;
 
         case CmdPrintSelection:
-            uitask::Post(MkFunc0(PrintSelectionDeferred, win), "CmdPrintSelection");
+            PostForWindow(win, PrintSelectionDeferred, "CmdPrintSelection");
             break;
 
         case CmdListPrinters: {
@@ -7615,7 +7615,7 @@ int GpuiMain(int argc, char** argv) {
 #if OS_WIN
     // home-page bottom bar if we lost default-app status for registered extensions
     if (win->IsCurrentTabAbout()) {
-        uitask::Post(MkFunc0(MaybeShowDefaultAppNotification, win), "MaybeShowDefaultAppNotification");
+        PostForWindow(win, MaybeShowDefaultAppNotification, "MaybeShowDefaultAppNotification");
     }
 #endif
     StartSumatraControl(gFlags->controlPipeName);

@@ -2107,8 +2107,7 @@ bool gNextPrevDirReady = false;
 bool gNextPrevDirScanning = false;
 
 void ScheduleReloadTab(WindowTab* tab) {
-    auto fn = MkFunc0<WindowTab>(ReloadTab, tab);
-    uitask::Post(fn, "ReloadTab");
+    PostForTab(tab, ReloadTab, "ReloadTab");
 }
 
 // Called from the AUTO_RELOAD_TIMER tick. Returns true if the file changed

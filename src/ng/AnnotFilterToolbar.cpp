@@ -752,7 +752,7 @@ void ClearAnnotFilterAnnotations(MainWindow* win) {
     VecReset(f->annotations);
     VecReset(f->visibleAnnots);
     ResetListState(f);
-    uitask::Post(MkFunc0(PostedRefreshAnnots, win), "RefreshAnnotFilterAnnots");
+    PostForWindow(win, PostedRefreshAnnots, "RefreshAnnotFilterAnnots");
 }
 
 void RefreshAnnotFilterAnnotations(MainWindow* win) {
@@ -997,7 +997,7 @@ static void RunAnnotListMenuCmd(AnnotListMenuCmd* c) {
             break;
         case AnnotListMenu::Edit:
             SetSelectedAnnotation(tab, annot);
-            uitask::Post(MkFunc0(StartSelectedAnnotContentsEdit, win), "StartAnnotContentsEdit");
+            PostForWindow(win, StartSelectedAnnotContentsEdit, "StartAnnotContentsEdit");
             break;
         case AnnotListMenu::Delete:
             DeleteListSelection(f);

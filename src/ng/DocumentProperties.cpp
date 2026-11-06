@@ -862,7 +862,7 @@ gp::El* PropertiesDialogBuild(MainWindow* win, gp::Ctx* cx) {
         float guessDx = (float)len(longest) * charDx;
         lineDx = std::max(lineDx, guessDx);
         gProps.remeasure = false;
-        uitask::Post(MkFunc0(PropsRelayout, win), "PropsRelayout");
+        PostForWindow(win, PropsRelayout, "PropsRelayout");
     }
     float editDx = lineDx + kPropsLineSlackDx + ((float)kPropsSlackChars * charDx) + kPropsEditPadDx;
     float dx = std::max(kPropsMinDx, editDx + kPropsDialogPadDx);

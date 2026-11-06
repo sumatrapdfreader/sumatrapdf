@@ -93,7 +93,7 @@ static void TextDragDropNow(MainWindow* win) {
 }
 
 void StartTextDragDrop(MainWindow* win) {
-    uitask::Post(MkFunc0(TextDragDropNow, win), "StartTextDragDrop");
+    PostForWindow(win, TextDragDropNow, "StartTextDragDrop");
 }
 
 // Longest edge of the proportional drag-out thumbnail (logical px; DPI-scaled).
@@ -183,7 +183,7 @@ static void ImageDragDropPosted(MainWindow* win) {
 }
 
 void StartImageDragDrop(MainWindow* win) {
-    uitask::Post(MkFunc0(ImageDragDropPosted, win), "StartImageDragDrop");
+    PostForWindow(win, ImageDragDropPosted, "StartImageDragDrop");
 }
 
 void OpenDownloadedPath(Str* path) {

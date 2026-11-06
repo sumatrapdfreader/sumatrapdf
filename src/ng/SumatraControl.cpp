@@ -2644,7 +2644,7 @@ static void ExecuteControlRequest(ControlRequest* req) {
                 break;
             }
             if (str::EqI(name, StrL("WM_CLOSE"))) {
-                uitask::Post(MkFunc0(TestPostCloseWindow, win), "TestWM_CLOSE");
+                PostForWindow(win, TestPostCloseWindow, "TestWM_CLOSE");
                 AppendTestResult(req, 0, StrL("OK"));
                 break;
             }
@@ -3522,7 +3522,7 @@ static void ExecuteControlRequest(ControlRequest* req) {
                     AppendTestResult(req, 2, StrL("NOTREADY no-window"));
                     break;
                 }
-                uitask::Post(MkFunc0(TestPostCloseWindow, win), "TestWM_CLOSE");
+                PostForWindow(win, TestPostCloseWindow, "TestWM_CLOSE");
                 ExecuteCmd(win, CmdReadAloudFromTopPage);
             }
             AppendTestResult(req, 0, StrL("OK"));

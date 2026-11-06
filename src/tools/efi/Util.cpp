@@ -14,8 +14,8 @@ void log(const char* s) {
 static const struct DLLDesc {
     const char* Filename;
     IID UseCLSID;
-} msdiaDlls[] = { // this list is complete as of April 2013. In the future new msdia version
-                  // could be added, in which case it should be added to the top of this list
+} msdiaDlls[] = {                           // this list is complete as of April 2013. In the future new msdia version
+                                            // could be added, in which case it should be added to the top of this list
     "msdia110.dll", __uuidof(DiaSource110), // Visual Studio 2012
     "msdia100.dll", __uuidof(DiaSource100), // Visual Studio 2010
                                             // Note: there are also older version (msdia90.dll, msdia80.dll,

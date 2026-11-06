@@ -1159,7 +1159,7 @@ static void OnHoverRowClicked(MainWindow* win, VirtMouseEvent* ev) {
     int cmdId = w->id;
     // the click is being handled by the drop-down's own window, so it can only
     // be torn down once that returns
-    uitask::Post(MkFunc0(PostedHideHoverDropdown, win), "HideToolbarHoverDropdown");
+    PostForWindow(win, PostedHideHoverDropdown, "HideToolbarHoverDropdown");
     ToolbarPostCommand(win, cmdId);
 }
 
@@ -1918,7 +1918,7 @@ static void OnAnnotColorClicked(MainWindow* win, VirtMouseEvent* ev) {
         // with text selected, picking a color is also a request to mark it up
         ToolbarPostCommand(win, sw->id);
     }
-    uitask::Post(MkFunc0(PostedHideHoverDropdown, win), "HideToolbarHoverDropdown");
+    PostForWindow(win, PostedHideHoverDropdown, "HideToolbarHoverDropdown");
 }
 
 static void OnAnnotColorsEditClicked(MainWindow* win, VirtMouseEvent* ev) {
@@ -1927,7 +1927,7 @@ static void OnAnnotColorsEditClicked(MainWindow* win, VirtMouseEvent* ev) {
         return;
     }
     int cmdId = w->id;
-    uitask::Post(MkFunc0(PostedHideHoverDropdown, win), "HideToolbarHoverDropdown");
+    PostForWindow(win, PostedHideHoverDropdown, "HideToolbarHoverDropdown");
 
     auto* target = new AnnotColorsTarget();
     target->cmdId = cmdId;

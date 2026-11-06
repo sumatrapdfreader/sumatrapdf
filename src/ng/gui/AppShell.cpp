@@ -3535,7 +3535,7 @@ static bool OnWindowShouldClose(void* data, gp::Window*) {
     }
     if (!win->isClosePending) {
         win->isClosePending = true;
-        uitask::Post(MkFunc0(RunWindowCloseRequest, win), "WindowCloseRequest");
+        PostForWindow(win, RunWindowCloseRequest, "WindowCloseRequest");
     }
     return false;
 }
