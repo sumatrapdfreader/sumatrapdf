@@ -876,22 +876,13 @@ void DeleteAnnotationAndUpdateUI(WindowTab* tab, Annotation* annot) {
 // arrows in the annot list can keep moving the caret (issue #6009). Find
 // uses ScheduleRepaint, not MainWindowRerender, for the same reason.
 void ShowSelectedAnnotationView(WindowTab* tab) {
-    if (!tab) {
+    // the tab may have been closed (and freed) before this posted task ran
+    MainWindow* win = FindMainWindowByTab(tab);
+    if (!win) {
         return;
     }
     tab->pendingShowSelectedAnnotation = false;
-    if (!IsMainWindowValidAndNotClosing(tab->win)) {
-        return;
-    }
-    MainWindow* win = tab->win;
-    bool tabOpen = false;
-    for (WindowTab* t : win->Tabs()) {
-        if (t == tab) {
-            tabOpen = true;
-            break;
-        }
-    }
-    if (!tabOpen) {
+    if (!IsMainWindowValidAndNotClosing(win)) {
         return;
     }
     Annotation* annot = tab->selectedAnnotation;
