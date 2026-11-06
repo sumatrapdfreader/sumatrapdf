@@ -231,6 +231,7 @@ PrinterDefaults [
 	PrintScale = shrink
 	Collate = default
 	PrintDpi = 0
+	AutoRotate = true
 ]
 
 Fullscreen [
