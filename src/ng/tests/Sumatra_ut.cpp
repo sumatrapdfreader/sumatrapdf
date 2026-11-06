@@ -34,6 +34,13 @@ void install_load_mac_font_funcs(fz_context* ctx);
 }
 #endif
 
+extern "C" {
+#include <mupdf/fitz.h>
+#include <mupdf/ucdn.h>
+}
+#include "mupdf/noto_sumatra.h"
+#include "EmbeddedResources.h"
+
 // must be last to over-write assert()
 #include "base/tests/UtAssert.h"
 
@@ -131,6 +138,55 @@ static void OpenMarkdownWithSystemFonts(fz_context* ctx) {
     utassert(nPages > 0);
 }
 #endif
+
+// which font file the built-in font table asks the loader for
+static const char* gAskedFont = nullptr;
+static bool gHaveSourceHan = true;
+
+static const unsigned char* StubFontLoader(const char* fileName, int* size) {
+    static const unsigned char kData[] = {0};
+    if (!gHaveSourceHan && str::StartsWith(Str(fileName), StrL("SourceHan"))) {
+        *size = 0;
+        return nullptr;
+    }
+    gAskedFont = fileName;
+    *size = (int)sizeof(kData);
+    return kData;
+}
+
+static bool AskedFor(fz_context* ctx, int script, int lang, Str fileName, int subfont) {
+    int size = 0;
+    int sub = -1;
+    gAskedFont = nullptr;
+    const unsigned char* data = fz_lookup_noto_font(ctx, script, lang, &size, &sub);
+    return data && gAskedFont && str::Eq(Str(gAskedFont), fileName) && sub == subfont;
+}
+
+// CJK text tagged with a language gets that language's Source Han Serif face;
+// untagged text, or a failed download, gets Droid Sans Fallback
+static void BuiltinFontTableTest() {
+    fz_context* ctx = fz_new_context(nullptr, nullptr, FZ_STORE_UNLIMITED);
+    utassert(ctx);
+    fz_set_builtin_font_loader(StubFontLoader);
+
+    Str han = StrL("SourceHanSerif-Regular.ttc");
+    Str droid = StrL("DroidSansFallbackFull.ttf");
+    utassert(AskedFor(ctx, UCDN_SCRIPT_HAN, FZ_LANG_ja, han, 0));
+    utassert(AskedFor(ctx, UCDN_SCRIPT_HIRAGANA, FZ_LANG_ja, han, 0));
+    utassert(AskedFor(ctx, UCDN_SCRIPT_HAN, FZ_LANG_ko, han, 1));
+    utassert(AskedFor(ctx, UCDN_SCRIPT_HANGUL, FZ_LANG_ko, han, 1));
+    utassert(AskedFor(ctx, UCDN_SCRIPT_HAN, FZ_LANG_zh_Hans, han, 2));
+    utassert(AskedFor(ctx, UCDN_SCRIPT_HAN, FZ_LANG_zh_Hant, han, 3));
+    utassert(AskedFor(ctx, UCDN_SCRIPT_HAN, FZ_LANG_UNSET, droid, 0));
+    utassert(AskedFor(ctx, UCDN_SCRIPT_HANGUL, FZ_LANG_UNSET, droid, 0));
+
+    gHaveSourceHan = false;
+    utassert(AskedFor(ctx, UCDN_SCRIPT_HAN, FZ_LANG_ja, droid, 0));
+    gHaveSourceHan = true;
+
+    InstallEmbeddedFontLoader();
+    fz_drop_context(ctx);
+}
 
 #if OS_LINUX || OS_DARWIN
 static void PlatformSystemFontTest() {
@@ -333,6 +389,7 @@ void SumatraPDF_UnitTests() {
 #if OS_POSIX && !OS_WASM
     AIChatProcessTest();
 #endif
+    BuiltinFontTableTest();
 #if OS_LINUX || OS_DARWIN
     PlatformSystemFontTest();
 #endif

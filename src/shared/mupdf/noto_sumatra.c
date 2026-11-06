@@ -72,7 +72,18 @@ typedef struct {
 #define EMPTY(SCRIPT) {NULL, "", SCRIPT, FZ_LANG_UNSET, NO_SUBFONT, REGULAR},
 static const font_entry inbuilt_fonts[] = {
 #include "../../../ext/mupdf/source/fitz/font-table.h"
-    {NULL, "", END_OF_DATA, FZ_LANG_UNSET, NO_SUBFONT, REGULAR}};
+    /* TOFU_CJK_LANG makes the table use Droid Sans Fallback for CJK. Source Han
+     * Serif (25MB, downloaded) is added for text tagged with a language only, so
+     * untagged text keeps the smaller Droid, which desktop builds embed. */
+    FONT(han, SourceHanSerif_Regular_ttc, "Source Han Serif", UCDN_SCRIPT_HAN, FZ_LANG_ja, 0, REGULAR) ALIAS(
+        han, SourceHanSerif_Regular_ttc, "Source Han Serif", UCDN_SCRIPT_HIRAGANA, FZ_LANG_ja, 0, REGULAR)
+        ALIAS(han, SourceHanSerif_Regular_ttc, "Source Han Serif", UCDN_SCRIPT_KATAKANA, FZ_LANG_ja, 0, REGULAR) FONT(
+            han, SourceHanSerif_Regular_ttc, "Source Han Serif", UCDN_SCRIPT_HAN, FZ_LANG_ko, 1, REGULAR)
+            ALIAS(han, SourceHanSerif_Regular_ttc, "Source Han Serif", UCDN_SCRIPT_HANGUL, FZ_LANG_ko, 1, REGULAR) FONT(
+                han, SourceHanSerif_Regular_ttc, "Source Han Serif", UCDN_SCRIPT_HAN, FZ_LANG_zh_Hans, 2, REGULAR)
+                FONT(han, SourceHanSerif_Regular_ttc, "Source Han Serif", UCDN_SCRIPT_HAN, FZ_LANG_zh_Hant, 3, REGULAR)
+                    ALIAS(han, SourceHanSerif_Regular_ttc, "Source Han Serif", UCDN_SCRIPT_BOPOMOFO, FZ_LANG_zh_Hant, 3,
+                          REGULAR){NULL, "", END_OF_DATA, FZ_LANG_UNSET, NO_SUBFONT, REGULAR}};
 #undef FONT
 #undef ALIAS
 #undef EMPTY

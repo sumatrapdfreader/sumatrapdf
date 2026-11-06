@@ -994,7 +994,7 @@ workspace "SumatraPDF"
     defines { "USE_JPIP", "OPJ_EXPORTS", "HAVE_LCMS2MT=1", "HAVE_WEBP=1" }
     defines { "OPJ_STATIC", "SHARE_JPEG" }
     -- built-in fonts come from the loader (embedded pak, then cache, then
-    -- fonts_map.c). Source Han is not packed, so skip its table entries
+    -- fonts_map.c). Droid Sans Fallback for CJK; noto_sumatra.c adds Source Han per language
     defines { "TOFU_CJK_LANG" }
     defines { "FZ_ENABLE_PDF=1", "FZ_ENABLE_SVG=1", "FZ_ENABLE_BROTLI=1", "FZ_ENABLE_BARCODE=1", "FZ_ENABLE_JS=1", "FZ_ENABLE_HYPHEN=0", "FZ_ENABLE_MD=1" }
     defines { "HAVE_LIBARCHIVE", "LIBARCHIVE_STATIC" }

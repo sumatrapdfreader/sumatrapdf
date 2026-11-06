@@ -978,7 +978,7 @@ export const targets: Target[] = [
       "HAVE_WEBP=1",
       "SHARE_JPEG",
       // built-in fonts come from the loader (embedded pak, then cache, then
-      // fonts_map.c). Source Han is not packed: skip its table entries
+      // fonts_map.c). Droid Sans Fallback for CJK; noto_sumatra.c adds Source Han per language
       "TOFU_CJK_LANG",
       "FZ_ENABLE_PDF=1",
       "FZ_ENABLE_SVG=1",
