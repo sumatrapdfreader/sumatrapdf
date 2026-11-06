@@ -337,6 +337,12 @@ void DownloadAndInstallPendingUpdate(MainWindow* win) {
     if (!win || !gPendingUpdate) {
         return;
     }
+    // a check or download is running: it offers the update itself. Starting
+    // a second one ran two downloads, and the first to finish installed
+    // without asking
+    if (gUpdateCheckInProgress) {
+        return;
+    }
     UpdateInfo* updateInfo = gPendingUpdate;
     gPendingUpdate = nullptr;
     gUpdateAutoInstall = true;
