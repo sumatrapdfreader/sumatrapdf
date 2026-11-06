@@ -106,6 +106,27 @@ TempStr TrimGitTemp(Str s) {
     return s;
 }
 
+// how many digits of the commit the About box shows
+constexpr int kAboutCommitDigits = 6;
+
+// The About box's "source" row: the commit the build is made from ("a1b2c3"),
+// linking to it on GitHub. Local builds aren't given one.
+void AboutSourceRow(Str* text, Str* url) {
+    static Str gText;
+    static Str gUrl;
+    if (str::IsNull(gText)) {
+        if (len(gitCommidId) > 0) {
+            gText = str::Dup(Str(gitCommidId.s, std::min(len(gitCommidId), kAboutCommitDigits)));
+            gUrl = str::Dup(fmt("https://github.com/sumatrapdfreader/sumatrapdf/commit/%s", gitCommidId));
+        } else {
+            gText = str::Dup(StrL("local build"));
+            gUrl = str::Dup(StrL("https://github.com/sumatrapdfreader/sumatrapdf"));
+        }
+    }
+    *text = gText;
+    *url = gUrl;
+}
+
 // Home-list entries with a path (same set as thumbnails when search is empty).
 int CountHomePageFiles() {
     Vec<FileState*> all;

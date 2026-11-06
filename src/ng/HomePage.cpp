@@ -120,6 +120,8 @@ static AboutRow gAboutRows[] = {
     {StrL("forums"), StrL("SumatraPDF forums"), StrL("https://github.com/sumatrapdfreader/sumatrapdf/discussions")},
     {StrL("licenses"), StrL("Various Open Source"),
      StrL("https://github.com/sumatrapdfreader/sumatrapdf/blob/master/AUTHORS")},
+    // filled in by AboutSourceRow()
+    {StrL("source"), {}, {}},
     {StrL("more software by me"), StrL("Sumatra File Manager"), StrL("https://sumatrafilemanager.com")},
     {{}, StrL("Sumatra File Manager Online"), StrL("https://online.sumatrafilemanager.com")},
     {{}, {}, {}}};
@@ -127,6 +129,7 @@ static AboutRow gAboutRows[] = {
 // the rows from kAboutSoftwareRow on are the other software, in the footer
 constexpr int kAboutSoftwareEnd = dimofi(gAboutRows) - 1;
 constexpr int kAboutSoftwareRow = kAboutSoftwareEnd - 2;
+constexpr int kAboutSourceRow = kAboutSoftwareRow - 1;
 
 // the About box (orig's): the brand over the version, the link rows, a note,
 // then a hairline over the copy link and the other software. Every row has a
@@ -1006,6 +1009,8 @@ static gp::El* AboutBoxEl(MainWindow* win, gp::Ctx* cx, bool withBorder) {
     // the rows: muted labels, right-aligned, then the links
     gp::El* labels = gp::Div(cx->a)->FlexCol()->ItemsEnd()->Gap((float)kAboutRowGap)->Shrink0();
     gp::El* values = gp::Div(cx->a)->FlexCol()->ItemsStart()->Gap((float)kAboutRowGap)->Flex1()->MinW(0);
+    AboutRow* source = &gAboutRows[kAboutSourceRow];
+    AboutSourceRow(&source->rightTxt, &source->url);
     for (int i = 0; i < kAboutSoftwareRow; i++) {
         AboutRow* el = &gAboutRows[i];
         labels->Child(gp::TextEl(cx->a, GpuiDup(cx->a, el->leftTxt))
