@@ -162,6 +162,8 @@ typedef struct
 
 	unsigned int embed : 1;
 	unsigned int never_embed : 1;
+
+	unsigned int html_generic : 1; /* SumatraPDF: html default for a generic family (serif, sans-serif, monospace) */
 } fz_font_flags_t;
 
 /**

@@ -56,6 +56,19 @@ void TestRenderPage(const Flags& i) {
     }
 }
 
+static int DecodeUtf8Rune(const u8* p, int n) {
+    if (n == 2) {
+        return ((p[0] & 0x1f) << 6) | (p[1] & 0x3f);
+    }
+    if (n == 3) {
+        return ((p[0] & 0x0f) << 12) | ((p[1] & 0x3f) << 6) | (p[2] & 0x3f);
+    }
+    if (n == 4) {
+        return ((p[0] & 0x07) << 18) | ((p[1] & 0x3f) << 12) | ((p[2] & 0x3f) << 6) | (p[3] & 0x3f);
+    }
+    return p[0];
+}
+
 static void extractPageText(EngineBase* engine, int pageNo) {
     PageText pageText = engine->ExtractPageText(pageNo);
     if (len(pageText.text) == 0) {
@@ -80,19 +93,33 @@ static void extractPageText(EngineBase* engine, int pageNo) {
         if (n < 1 || p + n > end) {
             break;
         }
-        int cp = p[0];
-        if (n == 2) {
-            cp = ((p[0] & 0x1f) << 6) | (p[1] & 0x3f);
-        } else if (n == 3) {
-            cp = ((p[0] & 0x0f) << 12) | ((p[1] & 0x3f) << 6) | (p[2] & 0x3f);
-        } else if (n == 4) {
-            cp = ((p[0] & 0x07) << 18) | ((p[1] & 0x3f) << 12) | ((p[2] & 0x3f) << 6) | (p[3] & 0x3f);
-        }
+        int cp = DecodeUtf8Rune(p, n);
         int dy = pageText.coords ? pageText.coords[i].dy : 0;
         printf(" %d:%d", cp, dy);
         p += n;
     }
     printf("\n");
+
+    // codepoint:x,y,dx, same order as the text. tests/issue-6500.ts
+    // one write: log lines printed meanwhile would otherwise split it
+    str::Builder boxes;
+    boxes.Append(fmt("boxes on page %d:", pageNo));
+    p = (const u8*)pageText.text.s;
+    for (int i = 0; i < pageText.nCodepoints && p < end; i++) {
+        int n = utf8RuneLen(p);
+        if (n < 1 || p + n > end) {
+            break;
+        }
+        int cp = DecodeUtf8Rune(p, n);
+        Rect r = pageText.coords ? pageText.coords[i] : Rect{};
+        boxes.Append(fmt(" %d:%d,%d,%d", cp, r.x, r.y, r.dx));
+        p += n;
+    }
+    boxes.AppendChar('\n');
+    fflush(stdout);
+    Str boxesStr = ToStr(boxes);
+    fwrite(boxesStr.s, 1, len(boxesStr), stdout);
+    fflush(stdout);
     FreePageText(&pageText);
 }
 

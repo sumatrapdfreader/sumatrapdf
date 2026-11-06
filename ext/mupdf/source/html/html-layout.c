@@ -169,8 +169,27 @@ static int quick_ligature(fz_context *ctx, string_walker *walker, unsigned int *
 	return *in += 1, walker->glyph_info[i].codepoint;
 }
 
+/* SumatraPDF: CJK text in a generic family (no font-family resolved) gets the
+ * script's system font for the whole run, as browsers do, so punctuation
+ * inside it (“” …… ——) is full width instead of coming from the Latin
+ * default font (#6500) */
+static fz_font *cjk_run_font(fz_context *ctx, fz_font *font, int script, int language)
+{
+	fz_font *cjk;
+	fz_font_flags_t *flags = fz_font_flags(font);
+
+	if (!flags || !flags->html_generic)
+		return font;
+	if (script != UCDN_SCRIPT_HAN && script != UCDN_SCRIPT_HIRAGANA && script != UCDN_SCRIPT_KATAKANA &&
+		script != UCDN_SCRIPT_HANGUL && script != UCDN_SCRIPT_BOPOMOFO)
+		return font;
+	cjk = fz_load_fallback_font(ctx, script, language, flags->is_serif, flags->is_bold, flags->is_italic);
+	return cjk ? cjk : font;
+}
+
 static void init_string_walker(fz_context *ctx, string_walker *walker, hb_buffer_t *hb_buf, int rtl, fz_font *font, int script, int language, int small_caps, const char *text, int cluster_as_graphemes)
 {
+	font = cjk_run_font(ctx, font, script, language);
 	walker->ctx = ctx;
 	walker->hb_buf = hb_buf;
 	walker->rtl = rtl;
@@ -438,6 +457,17 @@ static float measure_line(fz_html_flow *node, fz_html_flow *end, float *baseline
 	return h;
 }
 
+/* SumatraPDF: a break opportunity between CJK chars. CJK text has no spaces,
+ * so justified lines are spread there, as browsers do (#6500). */
+static int is_cjk_gap(fz_html_flow *node, fz_html_flow *end)
+{
+	int s = node->script;
+	if (node->type != FLOW_SBREAK || node->breaks_line || node->next == end)
+		return 0;
+	return s == UCDN_SCRIPT_HAN || s == UCDN_SCRIPT_HIRAGANA || s == UCDN_SCRIPT_KATAKANA ||
+		s == UCDN_SCRIPT_HANGUL || s == UCDN_SCRIPT_BOPOMOFO;
+}
+
 static void layout_line(fz_context *ctx, float indent, float page_w, float line_w, int align, fz_html_flow *start, fz_html_flow *end, fz_html_box *box, float baseline, float line_h)
 {
 	float x = box->s.layout.x + indent;
@@ -455,6 +485,8 @@ static void layout_line(fz_context *ctx, float indent, float page_w, float line_
 	{
 		n++;
 		if (node->type == FLOW_SPACE && node->expand && !node->breaks_line)
+			i++;
+		else if (slop > 0 && is_cjk_gap(node, end))
 			i++;
 	}
 
@@ -530,6 +562,8 @@ static void layout_line(fz_context *ctx, float indent, float page_w, float line_
 			w = 0;
 		else if (node->type == FLOW_SPACE && !node->breaks_line)
 			w += node->expand ? justify : 0;
+		else if (slop > 0 && is_cjk_gap(node, end))
+			w += justify;
 		else if (node->type == FLOW_SHYPHEN && !node->breaks_line)
 			w = 0;
 		else if (node->type == FLOW_SHYPHEN && node->breaks_line)

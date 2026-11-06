@@ -1,0 +1,117 @@
+html: CJK text in a generic font, and justified CJK lines
+
+A font-family that doesn't resolve (Chinese EPUB tools name "zw", a font
+only e-readers have) falls back to the Latin serif font. Han chars then
+fall back to a CJK font one by one, but the punctuation inside Chinese
+text (“” …… ——) comes from the Latin font, half width. A CJK run in a
+generic family (serif, sans-serif, monospace, flagged html_generic on
+the font, whether builtin or a system font) now uses the script's
+system font for the whole run, as browsers do.
+
+Justified lines were only spread at spaces. Chinese has none, so its
+lines ended ragged. The leftover space now also goes to the soft breaks
+between CJK chars. (SumatraPDF #6500)
+
+diff --git a/include/mupdf/fitz/font.h b/include/mupdf/fitz/font.h
+index d25c6843f..be2bf2ad9 100644
+--- a/include/mupdf/fitz/font.h
++++ b/include/mupdf/fitz/font.h
+@@ -162,6 +162,8 @@ typedef struct
+ 
+ 	unsigned int embed : 1;
+ 	unsigned int never_embed : 1;
++
++	unsigned int html_generic : 1; /* SumatraPDF: html default for a generic family (serif, sans-serif, monospace) */
+ } fz_font_flags_t;
+ 
+ /**
+diff --git a/source/html/html-font.c b/source/html/html-font.c
+index e41035dac..612ba3087 100644
+--- a/source/html/html-font.c
++++ b/source/html/html-font.c
+@@ -45,6 +45,7 @@ fz_load_html_default_font(fz_context *ctx, fz_html_font_set *set, const char *fa
+ 			fz_throw(ctx, FZ_ERROR_UNSUPPORTED, "cannot load html font: %s", real_family);
+ 		set->fonts[idx] = fz_new_font_from_memory(ctx, NULL, data, size, 0, 1);
+ 		fz_font_flags(set->fonts[idx])->is_serif = !is_sans;
++		fz_font_flags(set->fonts[idx])->html_generic = 1;
+ 	}
+ 	return set->fonts[idx];
+ }
+@@ -134,6 +135,9 @@ fz_load_html_font(fz_context *ctx, fz_html_font_set *set,
+ 		font = fz_load_system_font(ctx, family, is_bold, is_italic, 0);
+ 		if (font)
+ 		{
++			/* SumatraPDF: the system can map a generic family too ("serif" to Times New Roman) */
++			if (!strcmp(family, "monospace") || !strcmp(family, "sans-serif") || !strcmp(family, "serif"))
++				fz_font_flags(font)->html_generic = 1;
+ 			fz_try(ctx)
+ 				fz_add_html_font_face(ctx, set, family, is_bold, is_italic, 0, "<system>", font);
+ 			fz_always(ctx)
+diff --git a/source/html/html-layout.c b/source/html/html-layout.c
+index 84ff2608f..d16bcd4ee 100644
+--- a/source/html/html-layout.c
++++ b/source/html/html-layout.c
+@@ -169,8 +169,27 @@ static int quick_ligature(fz_context *ctx, string_walker *walker, unsigned int *
+ 	return *in += 1, walker->glyph_info[i].codepoint;
+ }
+ 
++/* SumatraPDF: CJK text in a generic family (no font-family resolved) gets the
++ * script's system font for the whole run, as browsers do, so punctuation
++ * inside it (“” …… ——) is full width instead of coming from the Latin
++ * default font (#6500) */
++static fz_font *cjk_run_font(fz_context *ctx, fz_font *font, int script, int language)
++{
++	fz_font *cjk;
++	fz_font_flags_t *flags = fz_font_flags(font);
++
++	if (!flags || !flags->html_generic)
++		return font;
++	if (script != UCDN_SCRIPT_HAN && script != UCDN_SCRIPT_HIRAGANA && script != UCDN_SCRIPT_KATAKANA &&
++		script != UCDN_SCRIPT_HANGUL && script != UCDN_SCRIPT_BOPOMOFO)
++		return font;
++	cjk = fz_load_fallback_font(ctx, script, language, flags->is_serif, flags->is_bold, flags->is_italic);
++	return cjk ? cjk : font;
++}
++
+ static void init_string_walker(fz_context *ctx, string_walker *walker, hb_buffer_t *hb_buf, int rtl, fz_font *font, int script, int language, int small_caps, const char *text, int cluster_as_graphemes)
+ {
++	font = cjk_run_font(ctx, font, script, language);
+ 	walker->ctx = ctx;
+ 	walker->hb_buf = hb_buf;
+ 	walker->rtl = rtl;
+@@ -438,6 +457,17 @@ static float measure_line(fz_html_flow *node, fz_html_flow *end, float *baseline
+ 	return h;
+ }
+ 
++/* SumatraPDF: a break opportunity between CJK chars. CJK text has no spaces,
++ * so justified lines are spread there, as browsers do (#6500). */
++static int is_cjk_gap(fz_html_flow *node, fz_html_flow *end)
++{
++	int s = node->script;
++	if (node->type != FLOW_SBREAK || node->breaks_line || node->next == end)
++		return 0;
++	return s == UCDN_SCRIPT_HAN || s == UCDN_SCRIPT_HIRAGANA || s == UCDN_SCRIPT_KATAKANA ||
++		s == UCDN_SCRIPT_HANGUL || s == UCDN_SCRIPT_BOPOMOFO;
++}
++
+ static void layout_line(fz_context *ctx, float indent, float page_w, float line_w, int align, fz_html_flow *start, fz_html_flow *end, fz_html_box *box, float baseline, float line_h)
+ {
+ 	float x = box->s.layout.x + indent;
+@@ -456,6 +486,8 @@ static void layout_line(fz_context *ctx, float indent, float page_w, float line_
+ 		n++;
+ 		if (node->type == FLOW_SPACE && node->expand && !node->breaks_line)
+ 			i++;
++		else if (slop > 0 && is_cjk_gap(node, end))
++			i++;
+ 	}
+ 
+ 	if (align == TA_JUSTIFY)
+@@ -530,6 +562,8 @@ static void layout_line(fz_context *ctx, float indent, float page_w, float line_
+ 			w = 0;
+ 		else if (node->type == FLOW_SPACE && !node->breaks_line)
+ 			w += node->expand ? justify : 0;
++		else if (slop > 0 && is_cjk_gap(node, end))
++			w += justify;
+ 		else if (node->type == FLOW_SHYPHEN && !node->breaks_line)
+ 			w = 0;
+ 		else if (node->type == FLOW_SHYPHEN && node->breaks_line)

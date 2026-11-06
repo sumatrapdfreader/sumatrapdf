@@ -172,6 +172,9 @@ static struct {
     {"Kaiti_GB2312", "KaiTi"},
     {"Kaiti SC", "KaiTi"},
     {"Kaiti TC", "KaiTi"},
+    // "zw" (正文, body text): Chinese EPUB tools point it at e-reader font paths (#6500)
+    {"zw", "MicrosoftYaHei"},
+    {"zw-Bold", "MicrosoftYaHei-Bold"},
 };
 
 static win_font_info* g_win_fonts = NULL;
@@ -822,6 +825,14 @@ static fz_font* load_windows_font_by_name(fz_context* ctx, const char* orig_name
         found = find_font_name(fontname, use_clean_name);
         if (found) {
             goto Exit;
+        }
+        for (int i = 0; i < nelem(baseSubstitutes); i++) {
+            if (streq(fontname, baseSubstitutes[i].name)) {
+                found = find_font_name(baseSubstitutes[i].pattern, use_clean_name);
+                if (found) {
+                    goto Exit;
+                }
+            }
         }
         *comma = ',';
     } else {

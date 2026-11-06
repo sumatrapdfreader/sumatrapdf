@@ -45,6 +45,7 @@ fz_load_html_default_font(fz_context *ctx, fz_html_font_set *set, const char *fa
 			fz_throw(ctx, FZ_ERROR_UNSUPPORTED, "cannot load html font: %s", real_family);
 		set->fonts[idx] = fz_new_font_from_memory(ctx, NULL, data, size, 0, 1);
 		fz_font_flags(set->fonts[idx])->is_serif = !is_sans;
+		fz_font_flags(set->fonts[idx])->html_generic = 1;
 	}
 	return set->fonts[idx];
 }
@@ -134,6 +135,9 @@ fz_load_html_font(fz_context *ctx, fz_html_font_set *set,
 		font = fz_load_system_font(ctx, family, is_bold, is_italic, 0);
 		if (font)
 		{
+			/* SumatraPDF: the system can map a generic family too ("serif" to Times New Roman) */
+			if (!strcmp(family, "monospace") || !strcmp(family, "sans-serif") || !strcmp(family, "serif"))
+				fz_font_flags(font)->html_generic = 1;
 			fz_try(ctx)
 				fz_add_html_font_face(ctx, set, family, is_bold, is_italic, 0, "<system>", font);
 			fz_always(ctx)
