@@ -672,21 +672,36 @@ void VirtRoot::SetChild(VirtCtrl* c) {
     delete owned;
     owned = c;
     VecReset(tops);
-    hovered = nullptr;
-    captured = nullptr;
-    focused = nullptr;
-    pressed = nullptr;
     HideTooltip();
     if (c) {
         c->parent = nullptr;
         c->SetRoot(this);
         VecAppend(tops, c);
     }
+    DropStaleInputState();
     // the whole window is this one tree, so it can be laid out lazily, from
     // Paint(). A tree that also holds HWND controls can't: laying out would
     // move child windows in the middle of WM_PAINT
     layoutInPaint = true;
     needsLayout = true;
+}
+
+// after the tree changed: a ctrl that left it loses hover / press / focus /
+// capture the usual way. Nulling the pointers alone left the HWND captured
+// and the ctrl painted as hovered or pressed
+void VirtRoot::DropStaleInputState() {
+    if (hovered && hovered->root != this) {
+        ClearHover();
+    }
+    if (pressed && pressed->root != this) {
+        ClearPressed();
+    }
+    if (captured && captured->root != this) {
+        ReleaseCapture();
+    }
+    if (focused && focused->root != this) {
+        SetFocus(nullptr);
+    }
 }
 
 // the tops let go of this root, unless another root took them since
@@ -703,15 +718,12 @@ void VirtRoot::SetTops(const Vec<VirtCtrl*>& newTops) {
     // a dropped top can outlive this root (e.g. a view that moved elsewhere)
     ForgetTops();
     VecReset(tops);
-    hovered = nullptr;
-    captured = nullptr;
-    focused = nullptr;
-    pressed = nullptr;
     HideTooltip();
     for (VirtCtrl* w : newTops) {
         w->SetRoot(this);
         VecAppend(tops, w);
     }
+    DropStaleInputState();
     layoutInPaint = false;
 }
 

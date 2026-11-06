@@ -326,6 +326,7 @@ struct VirtRoot {
     // the tops found in a layout tree; not owned
     void SetTops(const Vec<VirtCtrl*>&);
     void ForgetTops();
+    void DropStaleInputState();
     void SetBounds(Rect);
     void LayoutIfNeeded();
     void RequestLayout();
