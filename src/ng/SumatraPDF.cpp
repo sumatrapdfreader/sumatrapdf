@@ -7514,6 +7514,7 @@ int GpuiMain(int argc, char** argv) {
     TakeInitialSessionData();
     InstallSessionStateHook();
     InstallLayoutNotifHooks();
+    InstallFontDownloadNotifHook();
 #if OS_WIN
     // a DDE / WM_COPYDATA open that arrives while the command line is still
     // being opened is queued instead of racing it

@@ -122,6 +122,7 @@ NotificationWnd* GetNotificationByKey(u32 key);
 // calls it with the ms since the last one
 void ExpireNotifications(MainWindow* win, int elapsedMs);
 void InstallLayoutNotifHooks();
+void InstallFontDownloadNotifHook();
 
 void MaybeDelayedWarningNotification(Str msg);
 void ShowMaybeDelayedNotifications(MainWindow* win);

@@ -53,6 +53,10 @@ static void FreeNotification(NotificationWnd* wnd) {
     delete wnd;
 }
 
+// ng: the gpui shell draws notifications in its frame, which a busy UI thread
+// doesn't get to; the notification shows once it returns
+void RepaintNotificationNow(NotificationWnd*) {}
+
 void RemoveNotification(NotificationWnd* wnd) {
     if (!wnd) {
         return;

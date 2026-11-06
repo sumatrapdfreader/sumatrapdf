@@ -121,5 +121,6 @@ NotificationWnd* ShowPlainWarningNotification(MainWindow* win, Str msg, int time
 void MaybeDelayedWarningNotification(Str msg);
 void ShowMaybeDelayedNotifications(HWND hwndParent);
 void InstallLayoutNotifHooks();
+void InstallFontDownloadNotifHook();
 
 int CalcPerc(int current, int total);

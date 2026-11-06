@@ -887,6 +887,15 @@ TempStr NotificationGetMessageTemp(NotificationWnd* wnd) {
     return HwndGetTextTemp(wnd->hwnd);
 }
 
+// paints it now, without running the message loop: the UI thread is busy, e.g.
+// downloading a font mupdf asked for
+void RepaintNotificationNow(NotificationWnd* wnd) {
+    if (NotificationIndexOf(wnd) < 0 || !wnd->hwnd) {
+        return;
+    }
+    RedrawWindow(wnd->hwnd, nullptr, nullptr, RDW_INVALIDATE | RDW_ERASE | RDW_UPDATENOW);
+}
+
 void RemoveNotification(NotificationWnd* wnd) {
     NotifsRemoveNotification(wnd);
 }

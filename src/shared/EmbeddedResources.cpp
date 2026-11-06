@@ -8,6 +8,7 @@
 #include "base/Crypto.h"
 #include "base/File.h"
 #include "base/Http.h"
+#include "base/Timer.h"
 #include "base/LzmaSimpleArchive.h"
 
 #include "Version.h"
@@ -228,7 +229,52 @@ static Str ReadKeptFont(Str path) {
     return data;
 }
 
-static bool DownloadFont(Str url, Str dest) {
+static FontDownloadProgressFn gFontDownloadProgressFn = nullptr;
+
+// the app shows download progress; the preview dll and the tool don't set it
+void SetFontDownloadProgressFn(FontDownloadProgressFn fn) {
+    gFontDownloadProgressFn = fn;
+}
+
+// a font's size from fonts_map.c, 0 if it isn't there
+static i64 FontMapSize(Str name) {
+    int n = sumatra_font_count();
+    for (int i = 0; i < n; i++) {
+        const char* url;
+        int size;
+        if (str::Eq(Str(sumatra_font_at(i, &url, &size)), name)) {
+            return size;
+        }
+    }
+    return 0;
+}
+
+static void ReportFontDownload(Str name, i64 nDownloaded, i64 total, FontDownloadEvent ev) {
+    if (gFontDownloadProgressFn) {
+        gFontDownloadProgressFn(name, nDownloaded, total, ev);
+    }
+}
+
+#if !OS_WASM
+constexpr int kFontProgressMs = 200;
+
+struct FontDownloadProgress {
+    Str name;
+    i64 total = 0;
+    TimeStamp lastReport{};
+};
+
+// HttpGetToFile calls this per chunk; the app hears about it at most every kFontProgressMs
+static void OnFontDownloadChunk(FontDownloadProgress* p, HttpProgress* hp) {
+    if (TimeSinceInMs(p->lastReport) < kFontProgressMs) {
+        return;
+    }
+    p->lastReport = TimeGet();
+    ReportFontDownload(p->name, hp->nDownloaded, p->total, FontDownloadEvent::Progress);
+}
+#endif
+
+static bool DownloadFont(Str name, Str url, Str dest) {
     if (!dir::CreateForFile(dest)) {
         logf("font cache: cannot create '%s'\n", dest);
         return false;
@@ -241,16 +287,18 @@ static bool DownloadFont(Str url, Str dest) {
     return true;
 #else
     TempStr part = str::JoinTemp(dest, StrL(".part"));
-    Func1<HttpProgress*> progress;
-    if (!HttpGetToFile(url, part, progress)) {
+    FontDownloadProgress p;
+    p.name = name;
+    p.total = FontMapSize(name);
+    p.lastReport = TimeGet();
+    ReportFontDownload(name, 0, p.total, FontDownloadEvent::Progress);
+    auto progress = MkFunc1<FontDownloadProgress, HttpProgress*>(OnFontDownloadChunk, &p);
+    bool ok = HttpGetToFile(url, part, progress) && file::RenameReplace(dest, part);
+    if (!ok) {
         file::Delete(part);
-        return false;
     }
-    if (!file::RenameReplace(dest, part)) {
-        file::Delete(part);
-        return false;
-    }
-    return true;
+    ReportFontDownload(name, ok ? p.total : 0, p.total, ok ? FontDownloadEvent::Done : FontDownloadEvent::Failed);
+    return ok;
 #endif
 }
 
@@ -358,13 +406,14 @@ static void LoadFontFromCacheOrNet(Str name, EmbeddedFont* f) {
     }
     if (len(data) == 0) {
         logf("font '%s': downloading\n", name);
-        if (!DownloadFont(Str(url), path)) {
+        if (!DownloadFont(name, Str(url), path)) {
             logf("font '%s': download failed\n", name);
             return;
         }
         data = ReadKeptFont(path);
         if (len(data) > 0 && !FontMatchesFileName(Str(file), data)) {
             logf("font '%s': downloaded file doesn't match its sha1, not kept\n", name);
+            ReportFontDownload(name, 0, 0, FontDownloadEvent::Failed);
             str::Free(data);
             file::Delete(path);
             return;
