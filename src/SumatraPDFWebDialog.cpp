@@ -4,6 +4,7 @@
 #include "base/Base.h"
 #include "base/Win.h"
 #include "base/Http.h"
+#include "base/Crypto.h"
 #include "base/File.h"
 #include "base/JsonParser.h"
 #include "base/AutoWin.h"
@@ -43,15 +44,16 @@ constexpr int kOnlineFileLines = 6;
 // 0: nothing in flight. A finished request whose id does not match is dropped.
 static u32 gOnlineReqSeq = 0;
 
-// The server's validUploadName: empty, "." and ".." and any of / \ : " ; CR LF NUL.
-// ';' is legal in a Windows file name, so the picker can still return one.
+// The server's validUploadName: empty, "." and "..", / \ and control characters.
+// The server stores files by content, so the name is only metadata; older servers
+// also refused : " ; (": and " can't be in a Windows file name anyway).
 static bool ValidUploadName(Str name) {
     if (len(name) == 0 || str::Eq(name, StrL(".")) || str::Eq(name, StrL(".."))) {
         return false;
     }
     for (int i = 0; i < len(name); i++) {
-        char c = name.s[i];
-        if (c == '/' || c == '\\' || c == ':' || c == '"' || c == ';' || c == '\r' || c == '\n' || c == '\0') {
+        u8 c = (u8)name.s[i];
+        if (c == '/' || c == '\\' || c < 0x20 || c == 0x7f) {
             return false;
         }
     }
@@ -553,8 +555,23 @@ static void OnlineJobThread(OnlineJobReq* req) {
             uitask::Post(MkFunc0(OnlineJobDone, res), "OnlineJobDone");
             return;
         }
+        // Content the server already has (another name, another device) isn't sent
+        // again: ask it to name that content. 404: it doesn't have it. A server from
+        // before sha1 links refuses the empty body. Either way, upload; the server
+        // checks the content against sha1.
+        u8 digest[20];
+        CalcSHA1Digest(body, digest);
+        TempStr url = fmt("%s&sha1=%s", req->url, str::MemToHexTemp(Str((const char*)digest, dimofi(digest))));
+        HttpRsp linkRsp;
+        HttpPostUrlNoRedirect(url, StrL("application/octet-stream"), hdr, Str{}, &linkRsp);
+        if (linkRsp.httpStatusCode == kHttpStatusOk || linkRsp.httpStatusCode == kHttpStatusUnauthorized) {
+            str::Free(body);
+            NoteHttp(res, linkRsp);
+            uitask::Post(MkFunc0(OnlineJobDone, res), "OnlineJobDone");
+            return;
+        }
         HttpRsp rsp;
-        HttpPostUrlNoRedirect(req->url, StrL("application/octet-stream"), hdr, body, &rsp);
+        HttpPostUrlNoRedirect(url, StrL("application/octet-stream"), hdr, body, &rsp);
         str::Free(body);
         NoteHttp(res, rsp);
         uitask::Post(MkFunc0(OnlineJobDone, res), "OnlineJobDone");
