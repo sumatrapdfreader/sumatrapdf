@@ -20,6 +20,7 @@ import { runNamedTests, runSuiteMain, startSuiteProgress, type NamedTest, type S
 import { setTestWindowLayout } from "./winapi.ts";
 import { beginSharedControlledSession, endSharedControlledSession } from "./win-automation.ts";
 import { testit as lintCommandIds } from "./lint-command-ids.ts";
+import { testit as fontMapCurrent } from "./font-map-current.ts";
 import { testit as issue1909 } from "./issue-1909.ts";
 import { testit as jbig2ResizeOverflow } from "./jbig2-resize-overflow.ts";
 import { testit as issue6468 } from "./issue-6468.ts";
@@ -726,6 +727,7 @@ export const tests: NamedTest[] = [
 
   // --- no Sumatra process -------------------------------------------------
   ["lint-command-ids", lintCommandIds],
+  ["font-map-current", fontMapCurrent],
   ["build-cli", buildCli],
   ["parse-tip-brackets", parseTipBrackets],
   ["combining-mark-first", combiningMarkFirst],

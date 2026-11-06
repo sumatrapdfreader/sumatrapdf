@@ -12,6 +12,8 @@
 //
 // Credentials: ../secrets/sumatrapdf.env (R2_ACCESS, R2_SECRET) or the same
 // variables in the environment. -map-only writes the map and does not upload.
+// -check uploads nothing and writes nothing: it fails when the map doesn't
+// match the fonts or a URL doesn't answer.
 
 import { createHash, createHmac } from "node:crypto";
 import { existsSync, readFileSync, readdirSync, writeFileSync } from "node:fs";
@@ -136,6 +138,39 @@ const char* sumatra_lookup_font_url(const char* name) {
   writeFileSync(mapPath, text.replaceAll("\r\n", "\n"));
 }
 
+// Differences between the font files and the map they should produce, e.g.
+// "stale: NotoSans-Regular.otf" after a mupdf update changed it. Empty when current.
+export function fontMapProblems(): string[] {
+  const fonts = collectFonts();
+  const { names } = pickNames(fonts);
+  const want = new Map(fonts.map((f) => [f.name, `${publicBase}/${names.get(f.name)}`]));
+  const have = new Map<string, string>();
+  for (const m of readFileSync(mapPath, "utf8").matchAll(/\{"([^"]+)",\s*"([^"]+)"\}/g)) have.set(m[1], m[2]);
+  const problems: string[] = [];
+  for (const [name, url] of want) {
+    const got = have.get(name);
+    if (!got) problems.push(`missing: ${name}`);
+    else if (got !== url) problems.push(`stale: ${name} (${got}, want ${url})`);
+  }
+  for (const name of have.keys()) {
+    if (!want.has(name)) problems.push(`no such font: ${name}`);
+  }
+  return problems;
+}
+
+// URLs in the map that don't answer a HEAD request with 200
+async function unreachableUrls(): Promise<string[]> {
+  const urls = [...readFileSync(mapPath, "utf8").matchAll(/"(https:[^"]+)"/g)].map((m) => m[1]);
+  const bad: string[] = [];
+  await Promise.all(
+    urls.map(async (url) => {
+      const r = await fetch(url, { method: "HEAD" }).catch(() => null);
+      if (!r || !r.ok) bad.push(`${r ? r.status : "error"} ${url}`);
+    }),
+  );
+  return bad;
+}
+
 function loadSecrets(): { access: string; secret: string } {
   const paths = [
     resolve(root, "..", "secrets", "sumatrapdf.env"),
@@ -246,7 +281,17 @@ async function uploadOne(
 async function main(): Promise<void> {
   const mapOnly = process.argv.includes("-map-only");
   if (process.argv.includes("-h") || process.argv.includes("-help")) {
-    console.log("usage: bun cmd/upload-fonts.ts [-map-only]");
+    console.log("usage: bun cmd/upload-fonts.ts [-map-only | -check]");
+    return;
+  }
+  if (process.argv.includes("-check")) {
+    const problems = [...fontMapProblems(), ...(await unreachableUrls())];
+    for (const p of problems) console.log(p);
+    if (problems.length > 0) {
+      console.log("run bun cmd/upload-fonts.ts to upload the fonts and update the map");
+      process.exit(1);
+    }
+    console.log(`${relative(root, mapPath)} is current and every font is on R2`);
     return;
   }
   const fonts = collectFonts();
@@ -277,4 +322,6 @@ async function main(): Promise<void> {
   console.log(`uploaded ${uploaded}, already there ${skipped}`);
 }
 
-await main();
+if (import.meta.main) {
+  await main();
+}
