@@ -254,15 +254,29 @@ static bool DownloadFont(Str url, Str dest) {
 }
 
 #if OS_WASM
-// The base 14 PDF fonts, which documents most often use without embedding them.
-// Fetched in the background on startup so opening such a document doesn't wait
-// on a synchronous download.
+// The base 14 PDF fonts, which documents most often use without embedding them,
+// and Charis SIL, the default EPUB font. Fetched in the background on startup so
+// opening such a document doesn't wait on a synchronous download.
 void PrefetchCommonFonts() {
     static const char* names[] = {
-        "NimbusSans-Regular.cff",   "NimbusSans-Bold.cff",   "NimbusSans-Italic.cff",   "NimbusSans-BoldItalic.cff",
-        "NimbusRoman-Regular.cff",  "NimbusRoman-Bold.cff",  "NimbusRoman-Italic.cff",  "NimbusRoman-BoldItalic.cff",
-        "NimbusMonoPS-Regular.cff", "NimbusMonoPS-Bold.cff", "NimbusMonoPS-Italic.cff", "NimbusMonoPS-BoldItalic.cff",
-        "StandardSymbolsPS.cff",    "Dingbats.cff",
+        "NimbusSans-Regular.cff",
+        "NimbusSans-Bold.cff",
+        "NimbusSans-Italic.cff",
+        "NimbusSans-BoldItalic.cff",
+        "NimbusRoman-Regular.cff",
+        "NimbusRoman-Bold.cff",
+        "NimbusRoman-Italic.cff",
+        "NimbusRoman-BoldItalic.cff",
+        "NimbusMonoPS-Regular.cff",
+        "NimbusMonoPS-Bold.cff",
+        "NimbusMonoPS-Italic.cff",
+        "NimbusMonoPS-BoldItalic.cff",
+        "StandardSymbolsPS.cff",
+        "Dingbats.cff",
+        "CharisSIL.cff",
+        "CharisSIL-Bold.cff",
+        "CharisSIL-Italic.cff",
+        "CharisSIL-BoldItalic.cff",
     };
     TempStr dir = FontCacheDirTemp();
     dir::CreateAll(dir);
