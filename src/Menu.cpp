@@ -1188,6 +1188,10 @@ void OnWindowContextMenu(MainWindow* win, int x, int y) {
         if (!onImage) {
             MenuRemove(popup, CmdSaveImage);
         }
+        if (!pageEl || !pageEl->Is(kindPageElementImage)) {
+            MenuRemove(popup, CmdReplaceImage);
+            MenuRemove(popup, CmdEditImageExternally);
+        }
         if (!isImageEngine && !onImage) {
             MenuRemove(popup, CmdCropImage);
             MenuRemove(popup, CmdResizeImage);
@@ -1319,6 +1323,12 @@ void OnWindowContextMenu(MainWindow* win, int x, int y) {
             return;
         case CmdSearchGoogleLensImage:
             SearchGoogleLensImage(tab, pageEl);
+            return;
+        case CmdReplaceImage:
+            ReplaceImageFromFile(win, pageEl);
+            return;
+        case CmdEditImageExternally:
+            EditImageExternally(win, pageEl);
             return;
         case CmdSaveImage:
         case CmdCropImage:

@@ -364,8 +364,10 @@ enum {
     CmdTrimPagesToSelection = 558,
     CmdShowWholePages = 559,
     CmdMeasure = 560,
+    CmdReplaceImage = 561,
+    CmdEditImageExternally = 562,
 
-    CmdLast = 560,
+    CmdLast = 562,
     CmdFirstCustom = CmdLast + 100,
 
     // aliases, at the end to not mess ordering

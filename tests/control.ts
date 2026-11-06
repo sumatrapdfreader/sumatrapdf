@@ -168,6 +168,7 @@ export enum ControlCommand {
   TestSelectedText = 157,
   TestTocRows = 158,
   TestMeasurement = 159,
+  TestImageReplace = 160,
 }
 
 export type ControlArg = number | string | Uint8Array | ControlArg[];

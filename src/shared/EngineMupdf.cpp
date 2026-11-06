@@ -10777,6 +10777,163 @@ bool EngineMupdfApplyRedactions(EngineBase* engine, Vec<Annotation*>& deletedOut
     return any;
 }
 
+//--- replacing an image embedded in a PDF
+
+// The image imageIdx of a page (as PageElementImage::imageID counts them) as a
+// PNG file, for editing it in another app. Caller owns the result.
+Str EngineMupdfImageAsPng(EngineBase* engine, int pageNo, int imageIdx) {
+    EngineMupdf* e = AsEngineMupdf(engine);
+    if (!e) {
+        return {};
+    }
+    FzPageInfo* pi = e->GetFzPageInfo(pageNo, false);
+    if (!pi || !pi->page) {
+        return {};
+    }
+    auto* ctx = e->Ctx();
+    ScopedRecursiveMutex scope(&e->docLock);
+    fz_image* image = FzFindImageAtIdx(ctx, pi, imageIdx);
+    if (!image) {
+        return {};
+    }
+    Str res;
+    fz_buffer* buf = nullptr;
+    fz_var(buf);
+    fz_try(ctx) {
+        buf = fz_new_buffer_from_image_as_png(ctx, image, fz_default_color_params);
+        unsigned char* data = nullptr;
+        size_t n = fz_buffer_storage(ctx, buf, &data);
+        if (data && n > 0 && n <= (size_t)INT_MAX) {
+            res = str::Dup(Str((char*)data, (int)n));
+        }
+    }
+    fz_always(ctx) {
+        fz_drop_buffer(ctx, buf);
+        fz_drop_image(ctx, image);
+    }
+    fz_catch(ctx) {
+        fz_report_error(ctx);
+    }
+    return res;
+}
+
+// a and b decode the same: when the image store dropped the one the page shows,
+// loading the XObject again gives a new fz_image for the same stream
+static bool SameImageData(fz_context* ctx, fz_image* a, fz_image* b) {
+    if (a->w != b->w || a->h != b->h || a->bpc != b->bpc || a->n != b->n) {
+        return false;
+    }
+    fz_compressed_buffer* ca = fz_compressed_image_buffer(ctx, a);
+    fz_compressed_buffer* cb = fz_compressed_image_buffer(ctx, b);
+    if (!ca || !cb || !ca->buffer || !cb->buffer) {
+        return false;
+    }
+    unsigned char* da = nullptr;
+    unsigned char* db = nullptr;
+    size_t na = fz_buffer_storage(ctx, ca->buffer, &da);
+    size_t nb = fz_buffer_storage(ctx, cb->buffer, &db);
+    return na == nb && na > 0 && memcmp(da, db, na) == 0;
+}
+
+// how deep form XObjects (which have resources of their own) are searched
+constexpr int kMaxFormDepth = 6;
+
+// The XObject dictionary entry that draws image, searched in res and the
+// resources of the forms it uses. Must be called inside fz_try.
+static bool FindImageXObject(fz_context* ctx, pdf_document* doc, pdf_obj* res, fz_image* image, int depth,
+                             pdf_obj** dictOut, pdf_obj** keyOut) {
+    pdf_obj* xobjs = pdf_dict_get(ctx, res, PDF_NAME(XObject));
+    int n = pdf_dict_len(ctx, xobjs);
+    for (int i = 0; i < n; i++) {
+        pdf_obj* val = pdf_dict_get_val(ctx, xobjs, i);
+        pdf_obj* subtype = pdf_dict_get(ctx, val, PDF_NAME(Subtype));
+        if (pdf_name_eq(ctx, subtype, PDF_NAME(Image))) {
+            fz_image* candidate = pdf_load_image(ctx, doc, val);
+            bool same = candidate == image || SameImageData(ctx, candidate, image);
+            fz_drop_image(ctx, candidate);
+            if (same) {
+                *dictOut = xobjs;
+                *keyOut = pdf_dict_get_key(ctx, xobjs, i);
+                return true;
+            }
+            continue;
+        }
+        if (depth < kMaxFormDepth && pdf_name_eq(ctx, subtype, PDF_NAME(Form))) {
+            pdf_obj* formRes = pdf_dict_get(ctx, val, PDF_NAME(Resources));
+            if (formRes && FindImageXObject(ctx, doc, formRes, image, depth + 1, dictOut, keyOut)) {
+                return true;
+            }
+        }
+    }
+    return false;
+}
+
+// Draws imageData (a PNG, JPEG, ... file) where the page's image imageIdx was,
+// in the same place and size. Only this page's resources change: another page
+// using the same image keeps it. One undo step. False for an inline image or
+// one that couldn't be found.
+bool EngineMupdfReplaceImage(EngineBase* engine, int pageNo, int imageIdx, Str imageData) {
+    EngineMupdf* e = AsEngineMupdf(engine);
+    if (!e || !e->pdfdoc || len(imageData) == 0) {
+        return false;
+    }
+    auto* ctx = e->Ctx();
+    ScopedEngineOperation op(engine, "Replace image");
+    ScopedRecursiveMutex pagesScope(&e->pagesLock);
+    ScopedMutex renderScope(&e->renderLock);
+    FzPageInfo* pi = GetFzPageInfoLocked(e, e->LocationFromPageNo(pageNo), true, nullptr);
+    if (!pi || !pi->page) {
+        return false;
+    }
+
+    bool ok = false;
+    {
+        ScopedRecursiveMutex docScope(&e->docLock);
+        fz_image* old = FzFindImageAtIdx(ctx, pi, imageIdx);
+        if (!old) {
+            return false;
+        }
+        fz_buffer* buf = nullptr;
+        fz_image* img = nullptr;
+        pdf_obj* ref = nullptr;
+        fz_var(buf);
+        fz_var(img);
+        fz_var(ref);
+        fz_try(ctx) {
+            pdf_page* page = pdf_page_from_fz_page(ctx, pi->page);
+            pdf_obj* res = page ? pdf_dict_get_inheritable(ctx, page->obj, PDF_NAME(Resources)) : nullptr;
+            pdf_obj* dict = nullptr;
+            pdf_obj* key = nullptr;
+            if (res && FindImageXObject(ctx, e->pdfdoc, res, old, 0, &dict, &key)) {
+                buf = fz_new_buffer_from_copied_data(ctx, (const unsigned char*)imageData.s, (size_t)len(imageData));
+                img = fz_new_image_from_buffer(ctx, buf);
+                ref = pdf_add_image(ctx, e->pdfdoc, img);
+                pdf_dict_put(ctx, dict, key, ref);
+                ok = true;
+            }
+        }
+        fz_always(ctx) {
+            pdf_drop_obj(ctx, ref);
+            fz_drop_image(ctx, img);
+            fz_drop_buffer(ctx, buf);
+            fz_drop_image(ctx, old);
+        }
+        fz_catch(ctx) {
+            fz_report_error(ctx);
+            ok = false;
+        }
+    }
+    if (!ok) {
+        logf("EngineMupdfReplaceImage: image %d on page %d not replaced\n", imageIdx, pageNo);
+        return false;
+    }
+    InvalidateFzPageAfterContentChange(e, pi);
+    e->InvalidateTextForPage(pageNo);
+    e->modifiedAnnotations = true;
+    StartLoadingFileBytes(e);
+    return true;
+}
+
 //--- Undo / redo, on top of MuPDF's journal (see pdf_enable_journal)
 
 // Where we are in the undo history: 0 is the document as it was loaded,

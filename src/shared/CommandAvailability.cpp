@@ -819,6 +819,16 @@ CommandVisibility GetCommandVisibility(int cmdId, const AppCommandCtx& ctx, Comm
         }
     }
 
+    if (cmdId == CmdReplaceImage || cmdId == CmdEditImageExternally) {
+#if defined(SUMATRA_NG)
+        return CommandVisibility::Hide;
+#else
+        if (surface == CommandSurface::Palette || !ctx.isPdf) {
+            return CommandVisibility::Hide;
+        }
+#endif
+    }
+
     if (surface == CommandSurface::Palette && ctx.engineKind != kindEngineImage) {
         // The context menu can edit an image embedded in another document because it
         // retains the page element under the cursor. Palette commands only receive the

@@ -370,6 +370,8 @@ const CommandInfo gCommands[] = {
     {CmdTrimPagesToSelection, "CmdTrimPagesToSelection\0", StrL("Trim Pages To Selection")},
     {CmdShowWholePages, "CmdShowWholePages\0", StrL("Show Whole Pages")},
     {CmdMeasure, "CmdMeasure\0", StrL("Measure")},
+    {CmdReplaceImage, "CmdReplaceImage\0", StrL("Replace Image...")},
+    {CmdEditImageExternally, "CmdEditImageExternally\0", StrL("Edit Image in Another App")},
 };
 const int gCommandsCount = dimofi(gCommands);
 

@@ -289,6 +289,8 @@ void EngineMupdfGetLayerRows(EngineBase*, Vec<PdfLayerRow*>& out);
 bool EngineMupdfToggleLayerRow(EngineBase*, int row);
 TempStr EngineMupdfChangedLayerStatesTemp(EngineBase*);
 bool EngineMupdfPagePathPoints(EngineBase*, int pageNo, Vec<PointF>& out);
+Str EngineMupdfImageAsPng(EngineBase*, int pageNo, int imageIdx);
+bool EngineMupdfReplaceImage(EngineBase*, int pageNo, int imageIdx, Str imageData);
 void EngineMupdfSetLayerStates(EngineBase*, Str states);
 Str EngineMupdfLoadAttachment(EngineBase*, int attachmentNo);
 Str EngineMupdfLoadAnnotAttachment(EngineBase*, int objNum);

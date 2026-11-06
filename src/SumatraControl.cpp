@@ -701,6 +701,8 @@ enum class ControlCmd : u16 {
     TestTocRows = 158,
     // [action, pageNo, x, y, ...]: drives the Measure tool
     TestMeasurement = 159,
+    // [action, pageNo, imageIdx, path]: replace / edit an image embedded in the PDF
+    TestImageReplace = 160,
 };
 
 static_assert((u16)ControlCmd::Quit == (u16)ControlFrameCmd::Quit);
@@ -2072,6 +2074,15 @@ static void ExecuteControlRequest(ControlRequest* req) {
                 }
             }
             AppendTestResult(req, 0, PageGridStateTemp());
+            break;
+        }
+
+        case ControlCmd::TestImageReplace: {
+            i32 pageNo = 0, imageIdx = 0;
+            IntArg(req, 1, pageNo);
+            IntArg(req, 2, imageIdx);
+            MainWindow* win = len(gWindows) > 0 ? gWindows[0] : nullptr;
+            AppendTestResult(req, 0, TestImageReplace(win, StringArg(req, 0), pageNo, imageIdx, StringArg(req, 3)));
             break;
         }
 

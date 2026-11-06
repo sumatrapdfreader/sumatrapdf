@@ -268,6 +268,8 @@ EXPORTS
 
 	fz_new_buffer_from_pixmap_as_jpeg
 
+	fz_new_buffer_from_image_as_png
+
 	fz_new_stext_page
 
 	fz_drop_stext_page

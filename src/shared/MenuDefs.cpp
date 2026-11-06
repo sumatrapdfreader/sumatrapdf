@@ -1025,6 +1025,14 @@ MenuDef menuDefContextImage[] = {
         CmdResizeImage,
     },
     {
+        TrN("Re&place Image..."),
+        CmdReplaceImage,
+    },
+    {
+        TrN("Edit Image in &Another App"),
+        CmdEditImageExternally,
+    },
+    {
         TrN("Convert page to &PDF"),
         CmdConvertImageToPdf,
     },

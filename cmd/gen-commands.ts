@@ -371,6 +371,8 @@ const commandsRaw = [
     "CmdTrimPagesToSelection", "Trim Pages To Selection",
     "CmdShowWholePages", "Show Whole Pages",
     "CmdMeasure", "Measure",
+    "CmdReplaceImage", "Replace Image...",
+    "CmdEditImageExternally", "Edit Image in Another App",
 ];
 
 // removed slots are dropped: nothing outside the generators should see them
