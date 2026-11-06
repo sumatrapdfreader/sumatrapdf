@@ -1466,10 +1466,10 @@ struct FindThreadData {
 
     bool WasCanceled() {
         bool winValid = IsMainWindowValidAndNotClosing(win);
-        auto res = !winValid || win->findCancelled;
+        auto res = !winValid || AtomicBoolGet(&win->findCancelled);
         if (res) {
             logf("FindThreadData: WasCanceled() returns true, isMainWindowValid: %d, win->findCancelled: %d\n",
-                 (int)winValid, (int)win->findCancelled);
+                 (int)winValid, (int)AtomicBoolGet(&win->findCancelled));
         }
         return res;
     }
@@ -2113,7 +2113,7 @@ void FindThread(FindThreadData* ftd) {
         }
     }
 
-    if (!textSearch->paused && !ftd->loopedAround && !win->findCancelled && !rect) {
+    if (!textSearch->paused && !ftd->loopedAround && !AtomicBoolGet(&win->findCancelled) && !rect) {
         // With no further findings, start over (unless this was a new search from the beginning)
         int startPage = (TextSearch::Direction::Forward == ftd->direction) ? textSearch->RestrictFirst()
                                                                            : textSearch->RestrictLast();
@@ -2128,13 +2128,9 @@ void FindThread(FindThreadData* ftd) {
         return;
     }
 
-    // wait for FindTextOnThread to return so that
-    // FindEndTask closes the correct handle to
-    // the current find thread
-    while (!win->findThread) {
-        SleepInMs(1);
-    }
-    PostFindEnd(ftd, rect, win->findCancelled);
+    // FindEndTask matches win->findThread against ftd->thread. Both are set
+    // by FindTextOnThread on the UI thread before the posted task can run
+    PostFindEnd(ftd, rect, AtomicBoolGet(&win->findCancelled));
     if (kHasThreads) {
         // a slice runs on the UI thread, whose temp memory isn't ours to free
         DestroyTempArena();
@@ -2149,11 +2145,11 @@ bool JoinFindThread(MainWindow* win, bool hideMessage) {
     if (win->findThread) {
         res = true;
         logf("JoinFindThread: setting win->findCancelled to true\n");
-        win->findCancelled = true;
+        AtomicBoolSet(&win->findCancelled, true);
         WaitThread(win->findThread, -1);
         win->findThread = nullptr;
     }
-    win->findCancelled = false;
+    AtomicBoolSet(&win->findCancelled, false);
 
     if (hideMessage) {
         bool didRemove = RemoveNotificationsForGroup(win, kNotifFindProgress);

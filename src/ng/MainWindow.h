@@ -370,7 +370,8 @@ struct MainWindow {
     bool printCanceled = false;
 
     ThreadHandle findThread = nullptr;
-    bool findCancelled = false;
+    // set on the UI thread, read by the find thread
+    AtomicBool findCancelled = 0;
     bool findMatchCase = false;
     bool findMatchWholeWord = false;
     // find-as-you-type is debounced: orig arms a WM_TIMER on hwndFrame, here

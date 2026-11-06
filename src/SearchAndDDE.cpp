@@ -201,7 +201,7 @@ void UpdateFindStatus(UpdateFindStatusData* d) {
     AutoDelete delData(d);
 
     auto* win = d->win;
-    if (!IsMainWindowValidAndNotClosing(win) || win->findCancelled) {
+    if (!IsMainWindowValidAndNotClosing(win) || AtomicBoolGet(&win->findCancelled)) {
         return;
     }
     if (!d->showProgress) {
@@ -209,7 +209,7 @@ void UpdateFindStatus(UpdateFindStatusData* d) {
         // document. The n/m counter and the floating results list are built by
         // the count thread (which does its own full scan), so bail out early and
         // leave the heavy lifting to it.
-        win->findCancelled = true;
+        AtomicBoolSet(&win->findCancelled, true);
     }
     // explicit Find Next/Prev (showProgress): keep going to completion. There's
     // no progress notification now -- the n/m counter is the only feedback.

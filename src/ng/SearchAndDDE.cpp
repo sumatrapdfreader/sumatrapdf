@@ -187,7 +187,7 @@ void UpdateFindStatus(UpdateFindStatusData* d) {
     AutoDelete delData(d);
 
     auto* win = d->win;
-    if (!IsMainWindowValidAndNotClosing(win) || win->findCancelled) {
+    if (!IsMainWindowValidAndNotClosing(win) || AtomicBoolGet(&win->findCancelled)) {
         return;
     }
     if (!d->showProgress && d->firstPage) {
@@ -197,7 +197,7 @@ void UpdateFindStatus(UpdateFindStatusData* d) {
         if (*d->firstPage == 0) {
             *d->firstPage = d->current;
         } else if (d->current != *d->firstPage) {
-            win->findCancelled = true;
+            AtomicBoolSet(&win->findCancelled, true);
         }
     }
     // explicit Find Next/Prev (showProgress): keep going to completion. There's
