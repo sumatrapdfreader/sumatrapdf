@@ -72,6 +72,7 @@ HighlightLinkDestination = false
 CitationHoverDelay = -1
 ReadAloudSpeed = 1
 ReadingAutoScrollSpeed = 40
+ReadingAutoScrollMinutes = 0
 ReadingBar [
 	Background = #66ffe082
 	Invert = false
