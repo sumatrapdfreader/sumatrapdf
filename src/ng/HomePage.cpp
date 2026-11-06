@@ -60,7 +60,7 @@
 static Str sumatraPromos = StrL(R"promos(Try [Edna](https://edna.arslexis.io): a note taking web app for power users.
 Try [MarkLexis](https://marklexis.arslexis.io): a bookmarking web application.
 Try [Sumatra File Manager](https://sumatrafilemanager.com): file manager with super powers.
-Try [Sumatra File Manager Online](https://online.sumatrafilemanager.com): file manager for S3, Dropbox and more.
+Try [Sumatra File Manager Web](https://online.sumatrafilemanager.com): file manager for S3, Dropbox and more.
 )promos");
 
 static Str promoFromServer;
@@ -123,7 +123,7 @@ static AboutRow gAboutRows[] = {
     // filled in by AboutSourceRow()
     {StrL("source"), {}, {}},
     {StrL("more software by me"), StrL("Sumatra File Manager"), StrL("https://sumatrafilemanager.com")},
-    {{}, StrL("Sumatra File Manager Online"), StrL("https://online.sumatrafilemanager.com")},
+    {{}, StrL("Sumatra File Manager Web"), StrL("https://online.sumatrafilemanager.com")},
     {{}, {}, {}}};
 
 // the rows from kAboutSoftwareRow on are the other software, in the footer
