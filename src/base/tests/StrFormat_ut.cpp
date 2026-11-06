@@ -16,7 +16,7 @@ using str::FormatTemp;
 
 #ifdef _MSC_VER
 static _locale_t GetUtf8FormatLocale() {
-    static _locale_t loc = _create_locale(LC_ALL, ".UTF-8");
+    static _locale_t loc = _create_locale(LC_CTYPE, ".UTF-8");
     return loc;
 }
 #endif
@@ -203,6 +203,7 @@ static void testFloats() {
     check(FormatTemp("%.0f", 2.0), StrL("2"));
     check(FormatTemp("%.0f", 0.0), StrL("0"));
     check(FormatTemp("%g", 0.5), fmtRef("%g", 0.5));
+    check(FormatTemp("%g", 7.7f), StrL("7.7")); // not "7,7" under a German user locale
     check(FormatTemp("%6.2f", 3.5), fmtRef("%6.2f", 3.5));
     check(FormatTemp("%6.2f", 3.5), StrL("  3.50"));
     check(FormatTemp("%+.1f", 1.25), StrL("+1.2")); // banker-ish rounding via printf

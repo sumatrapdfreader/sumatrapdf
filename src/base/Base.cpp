@@ -4030,7 +4030,8 @@ static _locale_t GetUtf8FormatLocale() {
     // detectors quiet); after the destructor runs, callers see nullptr
     // and fall back to plain vsnprintf
     struct Locale {
-        _locale_t loc = _create_locale(LC_ALL, ".UTF-8");
+        // only LC_CTYPE: numbers stay "C" (7.7, not the user locale's 7,7)
+        _locale_t loc = _create_locale(LC_CTYPE, ".UTF-8");
         ~Locale() {
             if (loc) {
                 _free_locale(loc);
