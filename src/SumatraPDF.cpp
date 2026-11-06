@@ -8222,11 +8222,12 @@ void EnterFullScreen(MainWindow* win, bool presentation) {
         return;
     }
 
-    if (presentation ? win->presentation : win->isFullScreen) {
+    // callers exit one mode before entering the other. Entering on top of it
+    // saved the stripped style as the one to restore, leaving a captionless window
+    if (win->isFullScreen || win->presentation) {
         return;
     }
 
-    ReportIf(presentation ? win->isFullScreen : win->presentation);
     if (presentation) {
         ReportIf(!win->ctrl);
         if (!win->IsDocLoaded()) {

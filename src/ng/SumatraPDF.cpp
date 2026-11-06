@@ -4705,10 +4705,10 @@ void EnterFullScreen(MainWindow* win, bool presentation) {
     if (!HasPermission(Perm::FullscreenAccess) || gPluginMode) {
         return;
     }
-    if (presentation ? win->InPresentation() : win->isFullScreen) {
+    // callers exit one mode before entering the other
+    if (win->isFullScreen || win->InPresentation()) {
         return;
     }
-    ReportIf(presentation ? win->isFullScreen : win->InPresentation());
 
     if (presentation) {
         if (!win->IsDocLoaded()) {
