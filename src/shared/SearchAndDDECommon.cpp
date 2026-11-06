@@ -1518,6 +1518,8 @@ void InvalidateFindForDocumentChange(MainWindow* win) {
     win->findCountEngine = nullptr;
     VecReset(win->findCountPositions);
     str::FreePtr(&win->findCountText);
+    // a count queued for the previous document
+    str::FreePtr(&win->findCountPendingText);
     FindWindowDocChanged(win);
 
     if (!IsFindUIVisible(win)) {
