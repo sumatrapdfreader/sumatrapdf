@@ -83,6 +83,10 @@ static int gTtsQueuedMessage = 0;
 static bool gTtsActive = false;
 static bool gTtsQueuedStarted = false;
 static bool gTtsInitTried = false;
+// the latest begin / end notifications: they can arrive on speechd's thread
+// before say() has returned the message's id, so say() checks these after
+static int gTtsLastBegun = 0;
+static int gTtsLastEnded = 0;
 
 void TtsLinuxRelease();
 
@@ -92,9 +96,9 @@ static bool LoadSpdFn(T& fn, const char* name) {
     return fn != nullptr;
 }
 
-static void TtsOnBegin(size_t messageId, size_t, SpdNotificationType) {
-    ScopedMutex lock(&gTtsMutex);
-    if ((int)messageId != gTtsQueuedMessage) {
+// caller holds gTtsMutex
+static void TtsBeganLocked(int messageId) {
+    if (messageId != gTtsQueuedMessage) {
         return;
     }
     str::ReplacePtr(&gTtsSpokenText, gTtsQueuedText);
@@ -106,16 +110,28 @@ static void TtsOnBegin(size_t messageId, size_t, SpdNotificationType) {
     gTtsQueuedStarted = true;
 }
 
-static void TtsOnEnd(size_t messageId, size_t, SpdNotificationType) {
-    ScopedMutex lock(&gTtsMutex);
-    if ((int)messageId == gTtsQueuedMessage) {
+// caller holds gTtsMutex
+static void TtsEndedLocked(int messageId) {
+    if (messageId == gTtsQueuedMessage) {
         str::FreePtr(&gTtsQueuedText);
         gTtsQueuedMessage = 0;
     }
-    if ((int)messageId == gTtsActiveMessage && gTtsQueuedMessage == 0) {
+    if (messageId == gTtsActiveMessage && gTtsQueuedMessage == 0) {
         gTtsActive = false;
         gTtsActiveMessage = 0;
     }
+}
+
+static void TtsOnBegin(size_t messageId, size_t, SpdNotificationType) {
+    ScopedMutex lock(&gTtsMutex);
+    gTtsLastBegun = (int)messageId;
+    TtsBeganLocked((int)messageId);
+}
+
+static void TtsOnEnd(size_t messageId, size_t, SpdNotificationType) {
+    ScopedMutex lock(&gTtsMutex);
+    gTtsLastEnded = (int)messageId;
+    TtsEndedLocked((int)messageId);
 }
 
 static void TtsOnMark(size_t messageId, size_t, SpdNotificationType, char* mark) {
@@ -232,6 +248,9 @@ bool TtsSpeakUtf8(Str text) {
     gTtsSpokenPos = 0;
     gTtsActiveMessage = message;
     gTtsActive = true;
+    if (gTtsLastEnded == message) {
+        TtsEndedLocked(message);
+    }
     return true;
 }
 
@@ -253,6 +272,12 @@ bool TtsQueueUtf8(Str text) {
     ScopedMutex lock(&gTtsMutex);
     str::ReplacePtr(&gTtsQueuedText, str::Dup(text));
     gTtsQueuedMessage = message;
+    if (gTtsLastBegun == message) {
+        TtsBeganLocked(message);
+    }
+    if (gTtsLastEnded == message) {
+        TtsEndedLocked(message);
+    }
     return true;
 }
 
