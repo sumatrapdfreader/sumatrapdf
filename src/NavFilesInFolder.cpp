@@ -660,7 +660,7 @@ void NavFilesInFolderWnd::RefreshList() {
     TempStr sel = SelectedPathTemp();
     int selIdx = -1;
     // listing still in flight: keep the file we meant to select
-    if (len(sel) == 0 && len(pendingSelectPath) > 0) {
+    if (len(sel) == 0 && scanInFlight && len(pendingSelectPath) > 0) {
         sel = str::DupTemp(pendingSelectPath);
     } else if (len(sel) == 0 && scanInFlight) {
         selIdx = pendingSelectIdx;

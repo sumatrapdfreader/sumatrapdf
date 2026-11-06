@@ -657,7 +657,7 @@ static void RefreshList() {
     TempStr sel = SelectedPathTemp();
     int selIdx = -1;
     // listing still in flight: keep the file we meant to select
-    if (len(sel) == 0 && len(gNav.pendingSelectPath) > 0) {
+    if (len(sel) == 0 && gNav.scanInFlight && len(gNav.pendingSelectPath) > 0) {
         sel = str::DupTemp(gNav.pendingSelectPath);
     } else if (len(sel) == 0 && gNav.scanInFlight) {
         selIdx = gNav.pendingSelectIdx;
