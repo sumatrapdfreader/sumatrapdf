@@ -250,7 +250,13 @@ void StopUiHangDetector() {
     }
     if (gWatchdogThread) {
         // the ping blocks for up to kHangThresholdMs, so give it that long
-        WaitForSingleObject(gWatchdogThread, kHangThresholdMs + 1000);
+        DWORD res = WaitForSingleObject(gWatchdogThread, kHangThresholdMs + 1000);
+        if (res == WAIT_TIMEOUT) {
+            // still in ReportHang (symbolizing can take seconds): it reads
+            // gStacks and the event, so leak them rather than free under it
+            log(StrL("StopUiHangDetector: watchdog still busy, not freeing its state\n"));
+            return;
+        }
         SafeCloseThreadHandle(&gWatchdogThread);
     }
     SafeCloseHandle(&gStopEvent);
