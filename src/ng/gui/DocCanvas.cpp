@@ -1241,6 +1241,40 @@ void CanvasOnVScroll(MainWindow* win, ScrollMsg msg, int nTrackPos) {
         return;
     }
 
+    // Read Columns (orig's OnVScroll): line and page steps go column by column;
+    // the thumb still drags anywhere
+    if (dm->GetReadColumns() && IsContinuous(dm->GetDisplayMode())) {
+        int page = (int)si.nPage;
+        int step = 0;
+        switch (msg) {
+            case ScrollMsg::LineUp:
+                step = -lineHeight;
+                break;
+            case ScrollMsg::LineDown:
+                step = lineHeight;
+                break;
+            case ScrollMsg::PageUp:
+                step = -page;
+                break;
+            case ScrollMsg::PageDown:
+                step = page;
+                break;
+            case ScrollMsg::HalfPageUp:
+                step = -page / 2;
+                break;
+            case ScrollMsg::HalfPageDown:
+                step = page / 2;
+                break;
+            default:
+                break;
+        }
+        if (step != 0) {
+            dm->ScrollYBy(step, true);
+            OnDocumentVerticalScrollIntent(win, step > 0);
+            return;
+        }
+    }
+
     // Page Up/Down follow the rotated stack. Arrow keys stay on this scrollbar.
     if (dm->ScrollFollowsRotation() && msg != ScrollMsg::LineUp && msg != ScrollMsg::LineDown &&
         msg != ScrollMsg::ThumbTrack) {

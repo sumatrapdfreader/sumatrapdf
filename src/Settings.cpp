@@ -838,15 +838,16 @@ const FieldInfo gFileStateFields[] = {
     {offsetof(FileState, facingStepOne), SettingType::Bool, false},
     {offsetof(FileState, mirror), SettingType::Bool, false},
     {offsetof(FileState, readingAutoScrollSpeed), SettingType::Float, (intptr_t)"0"},
+    {offsetof(FileState, readColumns), SettingType::Bool, false},
 };
 StructInfo gFileStateInfo = {
     sizeof(FileState),
-    35,
+    36,
     gFileStateFields,
     "Favorites\0EBookUI\0TocState\0FilePath\0DecryptionKey\0SidebarView\0DisplayMode\0Zoom\0BgCol\0TabCol\0LayerStates"
     "\0MeasurementUnit\0MeasurementScale\0OpenCount\0PageNo\0PageCount\0Rotation\0Brightness\0Contrast\0WindowState\0Si"
     "debarDx\0ScrollPos\0WindowPos\0IsPinned\0IsMissing\0UseDefaultState\0ShowToc\0DisplayR2L\0UniformPageWidth\0TrimEm"
-    "ptyMargins\0UserCrop\0FreePan\0FacingStepOne\0Mirror\0ReadingAutoScrollSpeed",
+    "ptyMargins\0UserCrop\0FreePan\0FacingStepOne\0Mirror\0ReadingAutoScrollSpeed\0ReadColumns",
     "pages of this document bookmarked in the Favorites menu\0reflowable (ebook) settings for just this document. The "
     "block is absent until you add it; a field left empty or 0 uses the global EBookUI value. The global section's "
     "WindowBgCol and DefaultDisplayMode are already per-document as BgCol and DisplayMode below\0data required to "
@@ -873,7 +874,8 @@ StructInfo gFileStateInfo = {
     "CmdTrimPagesToSelection; all zeros shows whole pages\0if true, the view can be panned past the page edges, so any "
     "part of a page can be brought to the center of the window\0if true, facing and book view move one page at a time: "
     "pages 1-2, then 2-3, then 3-4\0if true, pages are shown (and printed) mirrored left to right\0Automatically "
-    "Scroll speed for this document, in pixels per second; 0 uses the global ReadingAutoScrollSpeed",
+    "Scroll speed for this document, in pixels per second; 0 uses the global ReadingAutoScrollSpeed\0if true, "
+    "scrolling reads a two-column page down its left column, then its right one (View / Read Columns)",
     false};
 
 static const FieldInfo gPointF_2_Fields[] = {

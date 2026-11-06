@@ -403,8 +403,41 @@ static void OnVScroll(MainWindow* win, WPARAM wp) {
         return;
     }
 
-    // Page Up/Down follow the rotated stack. Arrow keys stay on this scrollbar.
+    // Read Columns: line and page steps go column by column; the thumb still
+    // drags anywhere
     DisplayModel* dm = win->AsFixed();
+    if (dm && dm->GetReadColumns() && IsContinuous(dm->GetDisplayMode())) {
+        int step = 0;
+        int page = (int)si.nPage;
+        switch (msg) {
+            case SB_LINEUP:
+                step = -lineHeight;
+                break;
+            case SB_LINEDOWN:
+                step = lineHeight;
+                break;
+            case SB_PAGEUP:
+                step = -page;
+                break;
+            case SB_PAGEDOWN:
+                step = page;
+                break;
+            case kSbHalfPageUp:
+                step = -page / 2;
+                break;
+            case kSbHalfPageDown:
+                step = page / 2;
+                break;
+        }
+        if (step != 0) {
+            dm->ScrollYBy(step, true);
+            ReadAloudOnUserViewChanged(win);
+            OnDocumentVerticalScrollIntent(win, step > 0);
+            return;
+        }
+    }
+
+    // Page Up/Down follow the rotated stack. Arrow keys stay on this scrollbar.
     if (dm && dm->ScrollFollowsRotation() && msg != SB_LINEUP && msg != SB_LINEDOWN && msg != SB_THUMBTRACK) {
         bool handled = true;
         int span = dm->ContentScrollHorizontal() ? dm->GetViewPort().dx : dm->GetViewPort().dy;

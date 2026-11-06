@@ -1263,6 +1263,12 @@ const fileState: Field[] = [
     "Automatically Scroll speed for this document, in pixels per second; 0 uses the global ReadingAutoScrollSpeed",
   ).ver("3.7"),
   field(
+    "ReadColumns",
+    Bool,
+    false,
+    "if true, scrolling reads a two-column page down its left column, then its right one (View / Read Columns)",
+  ).ver("3.7"),
+  field(
     "Brightness",
     Int,
     0,
@@ -1343,6 +1349,7 @@ const fileStateLayout = [
   "FacingStepOne",
   "Mirror",
   "ReadingAutoScrollSpeed",
+  "ReadColumns",
 ];
 fileState.sort((a, b) => fileStateLayout.indexOf(a.Name) - fileStateLayout.indexOf(b.Name));
 

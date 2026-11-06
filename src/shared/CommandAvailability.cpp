@@ -786,7 +786,8 @@ CommandVisibility GetCommandVisibility(int cmdId, const AppCommandCtx& ctx, Comm
         return CommandVisibility::Hide;
     }
 
-    if ((cmdId == CmdToggleTrimEmptyMargins || cmdId == CmdTrimPagesToSelection || cmdId == CmdShowWholePages) &&
+    if ((cmdId == CmdToggleTrimEmptyMargins || cmdId == CmdTrimPagesToSelection || cmdId == CmdShowWholePages ||
+         cmdId == CmdToggleReadColumns) &&
         !ctx.isFixedPage) {
         return CommandVisibility::Hide;
     }

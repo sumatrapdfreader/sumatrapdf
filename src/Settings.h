@@ -375,6 +375,9 @@ struct FileState {
     // Automatically Scroll speed for this document, in pixels per second;
     // 0 uses the global ReadingAutoScrollSpeed
     float readingAutoScrollSpeed;
+    // if true, scrolling reads a two-column page down its left column,
+    // then its right one (View / Read Columns)
+    bool readColumns;
 };
 
 // a subset of FileState required for restoring the state of a single
@@ -1433,7 +1436,7 @@ struct FieldInfo;
 struct StructInfo;
 extern const StructInfo gFavoriteInfo;
 extern const StructInfo gFileEBookUIInfo;
-extern const FieldInfo gFileStateFields[35];
+extern const FieldInfo gFileStateFields[36];
 extern StructInfo gFileStateInfo;
 extern const StructInfo gTabStateInfo;
 extern const StructInfo gSessionDataInfo;

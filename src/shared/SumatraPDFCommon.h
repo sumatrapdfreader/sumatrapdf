@@ -114,6 +114,7 @@ void ShowViewModeNotification(MainWindow* win, int cmdId);
 void ZoomToSelection(MainWindow* win);
 void TrimPagesToSelection(MainWindow* win);
 void ShowWholePages(MainWindow* win);
+void ToggleReadColumns(MainWindow* win);
 bool IsManualDocHtmlPage(Str path);
 Str ManualInjectThemeCss(Str html);
 TempStr DocURIToWebUrlTemp(Str docURI);

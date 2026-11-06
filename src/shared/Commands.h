@@ -366,8 +366,9 @@ enum {
     CmdMeasure = 560,
     CmdReplaceImage = 561,
     CmdEditImageExternally = 562,
+    CmdToggleReadColumns = 563,
 
-    CmdLast = 562,
+    CmdLast = 563,
     CmdFirstCustom = CmdLast + 100,
 
     // aliases, at the end to not mess ordering

@@ -888,6 +888,7 @@ static void MenuUpdateDisplayMode(MainWindow* win) {
         MenuSetEnabled(win->menu, CmdToggleTrimEmptyMargins, true);
         MenuSetChecked(win->menu, CmdToggleMirror, dm->GetMirror());
         MenuSetEnabled(win->menu, CmdShowWholePages, !dm->GetUserCrop().IsEmpty());
+        MenuSetChecked(win->menu, CmdToggleReadColumns, dm->GetReadColumns());
     }
 }
 

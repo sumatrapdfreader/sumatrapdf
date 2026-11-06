@@ -1768,6 +1768,7 @@ static MainWindow* LoadDocumentFinish(MainWindow* win, Str fullPath, DocControll
             dm->SetTrimEmptyMargins(fs->trimEmptyMargins);
             dm->SetUserCrop(fs->userCrop);
             dm->SetAutoScrollSpeed(fs->readingAutoScrollSpeed);
+            dm->SetReadColumns(fs->readColumns);
             dm->SetFreePan(fs->freePan);
             dm->SetFacingStepOne(fs->facingStepOne);
             dm->SetMirror(fs->mirror);
@@ -5962,6 +5963,10 @@ void ExecuteCmd(MainWindow* win, int cmdId) {
 
         case CmdShowWholePages:
             ShowWholePages(win);
+            break;
+
+        case CmdToggleReadColumns:
+            ToggleReadColumns(win);
             break;
 
         case CmdNavigateBack:

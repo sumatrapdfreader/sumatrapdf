@@ -420,6 +420,136 @@ float DisplayModel::GetAutoScrollSpeed() const {
     return autoScrollSpeed;
 }
 
+//--- Read Columns: a two-column page is read down its left column, then its right
+//
+//   +---------+---------+      scrolling down the left column, at its end
+//   |  1 ->   |  2 ->   |      the view jumps to the top of the right one,
+//   |  v      |  v      |      and from the end of that to the next page's
+//   +---------+---------+      left column. Up does the reverse.
+//
+// The zoom fits one column to the window, so the other is out of view.
+
+// space kept between a column's edge and the window's, in pixels
+constexpr int kColumnMarginPx = 8;
+
+void DisplayModel::SetReadColumns(bool enable) {
+    readColumns = enable;
+}
+
+bool DisplayModel::GetReadColumns() const {
+    return readColumns;
+}
+
+// col 0 is the left half of the page's content, col 1 the right half. The
+// content box leaves out the margins, so its middle is near the gutter.
+RectF DisplayModel::ColumnRect(int pageNo, int col) {
+    // in page units (GetContentBox() is zoomed)
+    PageInfo* pi = GetPageInfo(pageNo);
+    if (pi && pi->contentBox.IsEmpty()) {
+        pi->contentBox = engine->PageContentBox(pageNo);
+    }
+    RectF cb = pi ? pi->contentBox.Intersect(PageMediaBoxForLayout(pageNo)) : RectF{};
+    if (cb.IsEmpty()) {
+        cb = PageMediaBoxForLayout(pageNo);
+    }
+    float half = cb.dx / 2;
+    return {cb.x + (col * half), cb.y, half, cb.dy};
+}
+
+// the column the middle of the window is in
+bool DisplayModel::CurrentColumn(int* pageNo, int* col) {
+    Point mid{viewPort.dx / 2, viewPort.dy / 2};
+    int page = GetPageNoByPoint(mid);
+    if (!ValidPageNo(page)) {
+        page = GetPageNextToPoint(mid);
+    }
+    if (!ValidPageNo(page)) {
+        return false;
+    }
+    Rect right = CvtToScreen(page, ColumnRect(page, 1));
+    *pageNo = page;
+    // at fit page the middle of the window is on the gutter: that reads as the left column
+    *col = mid.x > right.x + DpiScale(kColumnMarginPx) ? 1 : 0;
+    return true;
+}
+
+// scrolls so the column's top (or bottom) is at the window's, centered across it
+void DisplayModel::ShowColumn(int pageNo, int col, bool top) {
+    Rect s = CvtToScreen(pageNo, ColumnRect(pageNo, col));
+    int margin = DpiScale(kColumnMarginPx);
+    int y = top ? viewPort.y + s.y - margin : viewPort.y + s.y + s.dy + margin - viewPort.dy;
+    int x = viewPort.x + s.x - ((viewPort.dx - s.dx) / 2);
+    ScrollXTo(x);
+    ScrollYTo(y);
+}
+
+// Scrolls dy within the current column, or jumps to the next / previous one
+// at its end. False when Read Columns doesn't apply, for a plain scroll.
+bool DisplayModel::ColumnScroll(int dy, bool changePage) {
+    if (!readColumns || inColumnScroll || !IsContinuous(GetDisplayMode()) || NormalizeRotation(rotation) != 0) {
+        return false;
+    }
+    int pageNo = 0;
+    int col = 0;
+    if (!CurrentColumn(&pageNo, &col)) {
+        return false;
+    }
+    Rect s = CvtToScreen(pageNo, ColumnRect(pageNo, col));
+    int margin = DpiScale(kColumnMarginPx);
+    inColumnScroll = true;
+    defer {
+        inColumnScroll = false;
+    };
+    if (dy > 0) {
+        // how far down until the column's end shows
+        int room = s.y + s.dy + margin - viewPort.dy;
+        if (room > 0) {
+            ScrollYBy(std::min(dy, room), changePage);
+            return true;
+        }
+        if (col == 1 && pageNo >= PageCount()) {
+            return false;
+        }
+        ShowColumn(col == 0 ? pageNo : pageNo + 1, col == 0 ? 1 : 0, true);
+        return true;
+    }
+    int room = s.y - margin;
+    if (room < 0) {
+        ScrollYBy(std::max(dy, room), changePage);
+        return true;
+    }
+    if (col == 0 && pageNo <= 1) {
+        return false;
+    }
+    ShowColumn(col == 1 ? pageNo : pageNo - 1, col == 1 ? 0 : 1, false);
+    return true;
+}
+
+// zooms so one column fills the window's width, and centers the current one
+void DisplayModel::FitColumnToWindow() {
+    int pageNo = 0;
+    int col = 0;
+    if (!CurrentColumn(&pageNo, &col)) {
+        return;
+    }
+    float want = (float)(viewPort.dx - (2 * DpiScale(kColumnMarginPx)));
+    // measured again after the first step: the scrollbar showing up or going
+    // away changes the window's width
+    for (int i = 0; i < 2; i++) {
+        // in page units: what's on screen lags a zoom change
+        float colDx = ColumnRect(pageNo, col).dx;
+        float real = GetZoomReal(pageNo);
+        if (colDx <= 0 || real <= 0) {
+            return;
+        }
+        float zoom = GetZoomVirtual(true) * (want / colDx) / real;
+        SetZoomVirtual(limitValue(zoom, kZoomMin, kZoomMax), nullptr);
+        want = (float)(viewPort.dx - (2 * DpiScale(kColumnMarginPx)));
+    }
+    Rect s = CvtToScreen(pageNo, ColumnRect(pageNo, col));
+    ScrollXTo(viewPort.x + s.x - ((viewPort.dx - s.dx) / 2));
+}
+
 // Shows on every page the part that rect (in page coordinates) covers on pageNo.
 void DisplayModel::TrimPagesToRect(int pageNo, RectF rect) {
     RectF mbox = PageMediaBox(pageNo);
@@ -729,6 +859,7 @@ void DisplayModel::GetDisplayState(FileState* fs) {
     fs->trimEmptyMargins = trimEmptyMargins;
     fs->userCrop = userCrop;
     fs->readingAutoScrollSpeed = autoScrollSpeed;
+    fs->readColumns = readColumns;
     fs->freePan = freePan;
     fs->facingStepOne = facingStepOne;
     fs->mirror = mirror;
@@ -3233,6 +3364,10 @@ void DisplayModel::ScrollYBy(int dy, bool changePage) {
 
     ReportIf(0 == dy);
     if (0 == dy) {
+        return;
+    }
+
+    if (ColumnScroll(dy, changePage)) {
         return;
     }
 

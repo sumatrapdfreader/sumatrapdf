@@ -262,6 +262,9 @@ struct DisplayModel : DocController {
     void SetUserCrop(RectF box);
     RectF GetUserCrop() const;
     void SetAutoScrollSpeed(float speed);
+    void SetReadColumns(bool enable);
+    bool GetReadColumns() const;
+    void FitColumnToWindow();
     float GetAutoScrollSpeed() const;
     void TrimPagesToRect(int pageNo, RectF rect);
     void SetFreePan(bool enable);
@@ -404,6 +407,13 @@ struct DisplayModel : DocController {
     RectF userCrop;
     // Automatically Scroll px/s for this document; 0: the global setting
     float autoScrollSpeed = 0;
+    // Read Columns: scrolling goes down a page's left column, then its right one
+    bool readColumns = false;
+    bool inColumnScroll = false;
+    RectF ColumnRect(int pageNo, int col);
+    bool CurrentColumn(int* pageNo, int* col);
+    bool ColumnScroll(int dy, bool changePage);
+    void ShowColumn(int pageNo, int col, bool top);
     // -100..100, applied to rendered pages (see AdjustPagePixmap)
     int brightness = 0;
     int contrast = 0;

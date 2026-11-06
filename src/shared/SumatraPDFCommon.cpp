@@ -1963,6 +1963,26 @@ void TrimPagesToSelection(MainWindow* win) {
     dm->GoToPage(pageNo, false);
 }
 
+// Read Columns needs one page under the other, so it shows pages continuously
+void ToggleReadColumns(MainWindow* win) {
+    DisplayModel* dm = win->AsFixed();
+    if (!dm) {
+        return;
+    }
+    bool enable = !dm->GetReadColumns();
+    dm->SetReadColumns(enable);
+    if (!enable) {
+        return;
+    }
+    if (dm->GetDisplayMode() != DisplayMode::Continuous) {
+        SwitchToDisplayMode(win, DisplayMode::Continuous, false);
+    }
+    dm = win->AsFixed();
+    if (dm) {
+        dm->FitColumnToWindow();
+    }
+}
+
 void ShowWholePages(MainWindow* win) {
     DisplayModel* dm = win->AsFixed();
     if (!dm) {

@@ -2051,6 +2051,7 @@ static void ReplaceDocumentInCurrentTab(LoadArgs* args, DocController* ctrl, Fil
                 dm->SetTrimEmptyMargins(fs->trimEmptyMargins);
                 dm->SetUserCrop(fs->userCrop);
                 dm->SetAutoScrollSpeed(fs->readingAutoScrollSpeed);
+                dm->SetReadColumns(fs->readColumns);
                 dm->SetFreePan(fs->freePan);
                 dm->SetFacingStepOne(fs->facingStepOne);
                 dm->SetMirror(fs->mirror);
@@ -11138,6 +11139,10 @@ static LRESULT FrameOnCommand(MainWindow* win, HWND hwnd, UINT msg, WPARAM wp, L
 
         case CmdShowWholePages:
             ShowWholePages(win);
+            break;
+
+        case CmdToggleReadColumns:
+            ToggleReadColumns(win);
             break;
 
         case CmdToggleFreePan:
