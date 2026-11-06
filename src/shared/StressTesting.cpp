@@ -644,6 +644,7 @@ static bool OpenFile(StressTest* st, Str fileName) {
 
     st->maxPagesForFile = kStressTestMaxPagesPerFile;
     st->nPagesRenderedThisFile = 0;
+    st->gotToc = false;
     VecClear(st->pagesToRender);
     DisplayModel* dmChapters = ctrl->AsFixed();
     // stress test picks pages from the full book, not just what's laid out so far
