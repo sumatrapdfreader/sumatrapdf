@@ -1008,7 +1008,10 @@ bool RenderCache::Render(DisplayModel* dm, int pageNo, int rotation, float zoom,
     PageRenderRequest* newRequest;
 
     /* add request to the queue */
-    if (requestCount == kMaxPageRequests) {
+    // startRendering counts queued requests: one that replaces the oldest
+    // in a full queue doesn't add one
+    bool queueWasFull = requestCount == kMaxPageRequests;
+    if (queueWasFull) {
         /* queue is full -> remove the oldest items on the queue */
         if (requests[0].renderFinishedCb.IsValid()) {
             requests[0].abort = true;
@@ -1058,7 +1061,9 @@ bool RenderCache::Render(DisplayModel* dm, int pageNo, int rotation, float zoom,
     }
     newRequest->renderFinishedCb = renderFinishedCb;
 
-    startRendering.Signal();
+    if (!queueWasFull) {
+        startRendering.Signal();
+    }
 
     // Lazy thread spawn: if no thread is currently waiting and we're below
     // the cap, start a new one. Existing busy threads will pick up the work
@@ -1369,6 +1374,16 @@ void RenderCache::AbortCurrentRequest(int threadIdx) {
     UpdateRenderInfo();
 }
 
+// AbortCurrentRequest sets req.abort from another thread, under requestAccess
+static bool RenderWasDropped(RenderCache* cache, PageRenderRequest& req) {
+    bool aborted;
+    {
+        ScopedRecursiveMutex scope(&cache->requestAccess);
+        aborted = req.abort;
+    }
+    return aborted || req.darkModeEpoch != cache->darkModeEpoch;
+}
+
 // Renders one queued request into the cache. Returns false when the queue was
 // empty; a request that turns out to be stale still counts as taken.
 static bool RenderCacheRunOne(RenderCache* cache, int threadIdx, PageRenderRequest& req) {
@@ -1409,7 +1424,7 @@ static bool RenderCacheRunOne(RenderCache* cache, int threadIdx, PageRenderReque
 #endif
     auto timeStart = TimeGet();
     Pixmap* bmp = engine->RenderPage(args);
-    if (req.abort || req.darkModeEpoch != cache->darkModeEpoch) {
+    if (RenderWasDropped(cache, req)) {
         // aborted or colors changed mid-render - discard result
         FreePixmap(bmp);
         return true;
@@ -1457,7 +1472,7 @@ static bool RenderCacheRunOne(RenderCache* cache, int threadIdx, PageRenderReque
             Color linkCol = profile ? profile->linkColor : cache->linkColor;
             RecolorPixmap(bmp, textCol, bgCol, linkCol, skipRectsPtr);
         }
-        if (req.abort || req.darkModeEpoch != cache->darkModeEpoch) {
+        if (RenderWasDropped(cache, req)) {
             // colors changed while recoloring - discard result
             FreePixmap(bmp);
             req.bmp = nullptr;
