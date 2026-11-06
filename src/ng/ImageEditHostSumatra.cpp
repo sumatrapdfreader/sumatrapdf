@@ -95,13 +95,8 @@ static bool SavePixmapAsPdf(Pixmap* px, Str destPath) {
     if (!px || len(destPath) == 0) {
         return false;
     }
-    Str png = EncodeAndOptimizePngFromPixmap(px);
-    if (len(png) == 0) {
-        return false;
-    }
     auto* c = new PdfCreator();
-    bool ok = c->AddPageFromImageData(png, 0);
-    str::Free(png);
+    bool ok = c->AddPageFromPixmap(px, 0);
     if (ok) {
         TempStr now = FormatPdfDateTemp();
         c->SetProperty(DocProp::CreationDate, now);
@@ -191,7 +186,8 @@ static bool SavePixmapAsImage(Pixmap* px, Str destPath, Str ext) {
         return false;
     }
     if (str::EqI(ext, StrL(".png"))) {
-        Str png = EncodeAndOptimizePngFromPixmap(px);
+        // no zopfli, it takes seconds; callers keeping the file run it in the background
+        Str png = EncodePngFromPixmap(px);
         if (len(png) == 0) {
             return false;
         }

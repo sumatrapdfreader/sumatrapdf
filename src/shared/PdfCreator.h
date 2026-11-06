@@ -2,6 +2,7 @@
    License: GPLv3 */
 
 struct fz_context;
+struct Pixmap;
 struct fz_image;
 struct pdf_document;
 enum class DocProp : u8;
@@ -19,6 +20,9 @@ class PdfCreator {
     bool AddPageFromGdiplusBitmap(Gdiplus::Bitmap* bmp, float imgDpi = 0);
 #endif
     bool AddPageFromImageData(Str data, float imgDpi = 0) const;
+    // the pixels go in as they are: encoding them first (e.g. as PNG) is wasted,
+    // mupdf would decode it again
+    bool AddPageFromPixmap(Pixmap* px, float imgDpi = 0);
 
     bool SetProperty(DocProp prop, Str value) const;
     bool CopyProperties(EngineBase* engine) const;
@@ -28,11 +32,5 @@ class PdfCreator {
     static void SetProducerName(Str name);
 
     static bool RenderToFile(Str pdfFileName, EngineBase* engine, int dpi = 150);
-    // Called only when raw page bytes cannot be embedded as-is (MuPDF /
-    // PDF cannot re-wrap the format). Return owned Str (caller frees) with
-    // embeddable image data (e.g. optimized PNG), or empty to skip to render.
-    using ImageDataFallbackFn = Str (*)(Str imageData);
-
-    static bool SaveImageCollectionAsPdf(Str pdfFileName, EngineBase* engine,
-                                         ImageDataFallbackFn fallbackToEmbeddable = nullptr);
+    static bool SaveImageCollectionAsPdf(Str pdfFileName, EngineBase* engine);
 };

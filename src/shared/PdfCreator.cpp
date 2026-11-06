@@ -234,13 +234,13 @@ bool PdfCreator::AddPageFromGdiplusBitmap(Gdiplus::Bitmap* bmp, float imgDpi) {
 
 // One page from a rendered Pixmap: the DIB it is backed by on Windows (which
 // is the only way to read a Native one), its pixels everywhere else.
-static bool AddPageFromPixmap(PdfCreator* c, Pixmap* px, float imgDpi) {
-    if (!c->ctx || !c->doc || !px) {
+bool PdfCreator::AddPageFromPixmap(Pixmap* px, float imgDpi) {
+    if (!ctx || !doc || !px) {
         return false;
     }
 #if OS_WIN
     if (px->hbmp) {
-        return AddPageFromHBITMAP(c, px->hbmp, Size(px->width, px->height), imgDpi);
+        return AddPageFromHBITMAP(this, px->hbmp, Size(px->width, px->height), imgDpi);
     }
 #endif
     if (px->format == PixmapFormat::Native || !px->data) {
@@ -248,13 +248,13 @@ static bool AddPageFromPixmap(PdfCreator* c, Pixmap* px, float imgDpi) {
     }
     bool ok = false;
     fz_var(ok);
-    fz_try(c->ctx) {
-        fz_image* image = fz_image_from_pixmap(c->ctx, px);
-        ok = c->AddPageFromFzImage(image, imgDpi);
-        fz_drop_image(c->ctx, image);
+    fz_try(ctx) {
+        fz_image* image = fz_image_from_pixmap(ctx, px);
+        ok = AddPageFromFzImage(image, imgDpi);
+        fz_drop_image(ctx, image);
     }
-    fz_catch(c->ctx) {
-        fz_report_error(c->ctx);
+    fz_catch(ctx) {
+        fz_report_error(ctx);
         return false;
     }
     return ok;
@@ -371,7 +371,7 @@ bool PdfCreator::RenderToFile(Str pdfFileName, EngineBase* engine, int dpi) {
     for (int i = 1; ok && i <= engine->PageCount(); i++) {
         RenderPageArgs args(i, zoom, 0, nullptr, RenderTarget::Export);
         Pixmap* bmp = engine->RenderPage(args);
-        ok = AddPageFromPixmap(c, bmp, (float)dpi);
+        ok = c->AddPageFromPixmap(bmp, (float)dpi);
         FreePixmap(bmp);
     }
     if (!ok) {
@@ -386,11 +386,9 @@ bool PdfCreator::RenderToFile(Str pdfFileName, EngineBase* engine, int dpi) {
 
 // Comic book / image folder / multi-page image → multi-page PDF (issue #4118).
 // 1) Embed original bytes when MuPDF can re-wrap them (JPEG, PNG, …).
-// 2) Else optional fallbackToEmbeddable (e.g. decode → optimized PNG).
-// 3) Else render the page at native resolution.
+// 2) Else (WebP, JXL, HEIC, …) render the page at native resolution.
 // Pages that fail every path are skipped.
-bool PdfCreator::SaveImageCollectionAsPdf(Str pdfFileName, EngineBase* engine,
-                                          ImageDataFallbackFn fallbackToEmbeddable) {
+bool PdfCreator::SaveImageCollectionAsPdf(Str pdfFileName, EngineBase* engine) {
     if (!engine || !engine->isImageCollection || engine->PageCount() <= 0) {
         return false;
     }
@@ -420,21 +418,13 @@ bool PdfCreator::SaveImageCollectionAsPdf(Str pdfFileName, EngineBase* engine,
         }
         if (len(data) > 0) {
             pageOk = c->AddPageFromImageData(data, dpi);
-            if (!pageOk && fallbackToEmbeddable) {
-                // WebP, JXL, HEIC, AVIF, TGA, … — convert to something PDF can store.
-                Str converted = fallbackToEmbeddable(data);
-                if (len(converted) > 0) {
-                    pageOk = c->AddPageFromImageData(converted, dpi);
-                }
-                str::Free(converted);
-            }
         }
 
         if (!pageOk) {
             // Last resort: render at native resolution (zoom 1.0 relative to file DPI).
             RenderPageArgs args(i, 1.0f, 0, nullptr, RenderTarget::Export);
             Pixmap* bmp = engine->RenderPage(args);
-            pageOk = AddPageFromPixmap(c, bmp, dpi);
+            pageOk = c->AddPageFromPixmap(bmp, dpi);
 #if OS_WIN
             if (!pageOk && bmp) {
                 Gdiplus::Bitmap* gp = WrapPixmapGdiplus(bmp);

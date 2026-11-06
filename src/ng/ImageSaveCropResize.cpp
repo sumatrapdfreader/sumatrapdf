@@ -22,6 +22,7 @@
 #include "base/GuessFileType.h"
 #include "base/Pixmap.h"
 #include "ImageReader.h"
+#include "PngOptimizer.h"
 #include "base/UITask.h"
 
 #include "gui/UIModels.h"
@@ -804,6 +805,8 @@ static void DoSave() {
         MessageBoxWarning(w.win, HostTr(StrL("Failed to save image")), StrL("Save Image"));
         return;
     }
+    // SavePixmapAsImage writes a PNG without zopfli, which takes seconds
+    OptimizePngFileAsync(dest);
     FinishSave(dest);
 }
 

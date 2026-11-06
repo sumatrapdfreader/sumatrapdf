@@ -163,15 +163,8 @@ static bool PrintEngineToPdf(EngineBase* engine, Str destPath, const Vec<Selecti
             logf("PrintEngineToPdf: failed to render page %d\n", pageNo);
             return false;
         }
-        // no zopfli: it takes seconds per page and the PDF is short-lived
-        Str png = EncodePngFromPixmap(bmp);
+        bool ok = c.AddPageFromPixmap(bmp, dpi);
         FreePixmap(bmp);
-        if (len(png) == 0) {
-            logf("PrintEngineToPdf: failed to encode page %d\n", pageNo);
-            return false;
-        }
-        bool ok = c.AddPageFromImageData(png, dpi);
-        str::Free(png);
         if (!ok) {
             logf("PrintEngineToPdf: failed to add page %d\n", pageNo);
             return false;
