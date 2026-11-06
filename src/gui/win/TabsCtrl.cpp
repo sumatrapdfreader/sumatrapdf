@@ -1069,6 +1069,12 @@ LRESULT TabsCtrl::WndProc(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp) {
         }
 
         case WM_LBUTTONUP: {
+            // end the drag before ReleaseCapture() so WM_CAPTURECHANGED doesn't cancel it
+            bool droppingTab = draggingTab;
+            if (draggingTab) {
+                draggingTab = false;
+                ImageList_EndDrag();
+            }
             bool isDragging = (GetCapture() == hwnd);
             if (isDragging) {
                 ReleaseCapture();
@@ -1085,15 +1091,13 @@ LRESULT TabsCtrl::WndProc(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp) {
             // update the hover state
             UpdateHover(tabUnderMouse);
 
-            if (!draggingTab) {
+            if (!droppingTab) {
                 LRESULT res = 0;
                 if (vroot) {
                     vroot->OnMessage(msg, wp, lp, res);
                 }
                 return 0;
             }
-            draggingTab = false;
-            ImageList_EndDrag();
             int selectedTab = selectedIdx;
             if (tabUnderMouse < 0) {
                 // migrate to new/different window
@@ -1115,6 +1119,16 @@ LRESULT TabsCtrl::WndProc(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp) {
             UpdateAfterDrag(this, selectedTab, dstIdx);
             ScheduleRepaint();
             return 0;
+        }
+
+        case WM_CAPTURECHANGED: {
+            // capture lost mid-drag (Alt+Tab, a dialog): cancel it, or the next
+            // button-up on the strip would drop the tab
+            if (draggingTab) {
+                draggingTab = false;
+                ImageList_EndDrag();
+            }
+            break;
         }
 
         case WM_MBUTTONDOWN: {
