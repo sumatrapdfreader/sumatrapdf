@@ -163,7 +163,8 @@ static bool PrintEngineToPdf(EngineBase* engine, Str destPath, const Vec<Selecti
             logf("PrintEngineToPdf: failed to render page %d\n", pageNo);
             return false;
         }
-        Str png = EncodeAndOptimizePngFromPixmap(bmp);
+        // no zopfli: it takes seconds per page and the PDF is short-lived
+        Str png = EncodePngFromPixmap(bmp);
         FreePixmap(bmp);
         if (len(png) == 0) {
             logf("PrintEngineToPdf: failed to encode page %d\n", pageNo);
@@ -425,6 +426,35 @@ PrintResult PrintFile(Str fileName, Str printerName, bool displayErrors, Str set
     return res;
 }
 
+#if OS_WASM
+// the browser prints a PDF itself, so a PDF goes there as it is (with unsaved
+// annotations, as a copy that has them); rendering pages is only for the rest
+// and for a selection or a rotated view, which the original can't show
+static bool WasmPrintEngine(EngineBase* engine, Vec<SelectionOnPage>* selection, int rotation) {
+    bool wholeDoc = !selection && rotation == 0;
+    TempStr tmpPath = GetTempFilePathTemp(StrL("sumatra-print-"));
+    if (wholeDoc && EngineMupdfIsPdf(engine) && !engine->isPasswordProtected) {
+        if (!EngineHasUnsavedAnnotations(engine) && file::Exists(engine->FilePath())) {
+            return WasmPrintPdf(engine->FilePath());
+        }
+        if (EngineMupdfSaveCopy(engine, tmpPath)) {
+            bool ok = WasmPrintPdf(tmpPath);
+            file::Delete(tmpPath);
+            return ok;
+        }
+    }
+    // comic books and images: the pages' own image data where PDF can hold it.
+    // No fallback converter: it would zopfli each WebP/JXL/... page
+    bool ok = wholeDoc && engine->isImageCollection && PdfCreator::SaveImageCollectionAsPdf(tmpPath, engine);
+    if (!ok) {
+        ok = PrintEngineToPdf(engine, tmpPath, selection, rotation);
+    }
+    ok = ok && WasmPrintPdf(tmpPath);
+    file::Delete(tmpPath);
+    return ok;
+}
+#endif
+
 struct PrintToPdfCtx {
     MainWindow* win;
     EngineBase* engine;
@@ -489,9 +519,7 @@ void PrintCurrentFile(MainWindow* win, bool waitForCompletion, bool selectionByD
         return;
     }
 #if OS_WASM
-    TempStr printPath = GetTempFilePathTemp(StrL("sumatra-print-"));
-    bool ok = PrintEngineToPdf(engine, printPath, selection, rotation) && WasmPrintPdf(printPath);
-    file::Delete(printPath);
+    bool ok = WasmPrintEngine(engine, selection, rotation);
     delete selection;
     if (!ok) {
         MessageBoxWarning(win, Tr("Couldn't initialize printer"), Tr("Printing problem."));
