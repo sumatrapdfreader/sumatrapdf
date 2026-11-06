@@ -121,8 +121,6 @@ struct ShellView {
     int menuKey = 0;
     int menuArmedIdx = -1;
     bool menuBarTemp = false;
-    // a click that armed the bar is still being dispatched
-    bool menuArmedByClick = false;
     // a dialog, the palette or the annotation list was built last frame: orig
     // gives each a window of its own, which has the keyboard while it is up
     bool overlayUp = false;
@@ -2534,11 +2532,10 @@ void ShellView::OnMouseDown(ShellView* self, gp::Ctx* cx, const gp::MouseDownEve
     // (a click on the bar itself opens a menu)
     bool onMenuBar =
         (self->win->isMenuBarVisible || self->menuBarTemp) && !gp::AppHasMenuBar() && ev->y < (float)kMenuBarDy;
-    if (self->menuArmedIdx >= 0 && !onMenuBar && !self->menuArmedByClick) {
+    if (self->menuArmedIdx >= 0 && !onMenuBar) {
         self->menuArmedIdx = -1;
         gp::Notify(cx);
     }
-    self->menuArmedByClick = false;
     // orig's WM_APPCOMMAND: the mouse's back / forward buttons, anywhere in
     // the frame
     if (ev->button == gp::MouseButton::NavigateBack || ev->button == gp::MouseButton::NavigateForward) {
