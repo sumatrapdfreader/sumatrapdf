@@ -227,6 +227,7 @@ import { testit as issue6482 } from "./issue-6482.ts";
 import { testit as autoScrollExtras } from "./auto-scroll-extras.ts";
 import { testit as toolbarWrap } from "./toolbar-wrap.ts";
 import { testit as reopenClosedWindow } from "./reopen-closed-window.ts";
+import { testit as tabGroupAutoSync } from "./tab-group-autosync.ts";
 import { testit as issue6486 } from "./issue-6486.ts";
 import { testit as issue6487 } from "./issue-6487.ts";
 import { testit as issue6488 } from "./issue-6488.ts";
@@ -1048,6 +1049,7 @@ export const tests: NamedTest[] = [
   ["auto-scroll-extras", autoScrollExtras],
   ["toolbar-wrap", toolbarWrap],
   ["reopen-closed-window", reopenClosedWindow],
+  ["tab-group-autosync", tabGroupAutoSync],
   ["issue-6486", issue6486],
   ["issue-6487", issue6487],
   ["issue-6488", issue6488],

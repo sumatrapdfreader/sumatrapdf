@@ -9,6 +9,11 @@ struct Annotation;
 struct Shortcut;
 
 void FreeTabGroup(TabGroup* group);
+void SetTabGroupFiles(TabGroup* group, MainWindow* win);
+void LinkTabGroup(MainWindow* win, TabGroup* group);
+void SyncTabGroups();
+void SyncTabGroup(MainWindow* win);
+TempStr TabGroupInfoTemp(TabGroup* group);
 Str ScrollbarModeDisplayName(int idx);
 int FindMatchIndex(MainWindow* win, int page, int glyph);
 int FieldFontPx(Annotation* widget, Rect rc);

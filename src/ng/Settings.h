@@ -209,6 +209,9 @@ struct TabGroup {
     Str name;
     // documents that belong to this tab group
     Vec<TabFile*>* tabFiles;
+    // if true, the group follows the tabs of the window it was saved from
+    // or restored into
+    bool autoSync;
 };
 
 // pages of this document bookmarked in the Favorites menu

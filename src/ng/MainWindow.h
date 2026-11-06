@@ -7,6 +7,7 @@ struct InputState;
 } // namespace gpui
 
 struct WindowTab;
+struct TabGroup;
 struct DocController;
 struct DocControllerCallback;
 struct ChmModel;
@@ -549,6 +550,8 @@ struct MainWindow {
     // set at the beginning of CloseWindow() to prevent processing commands
     // while closing
     bool isBeingClosed = false;
+    // the AutoSync tab group that follows this window's tabs; not owned
+    TabGroup* syncedTabGroup = nullptr;
     bool isClosePending = false;
 
     /* when doing a forward search, the result location is highlighted with

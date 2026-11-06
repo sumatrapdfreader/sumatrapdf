@@ -69,6 +69,7 @@
 #include "GlobalHotkeys.h"
 #include "PagePosition.h"
 #include "CachedObjects.h"
+#include "AppHelpersCommon.h"
 #endif
 #include "AppSettings.h"
 void ReloadSettingsUpdateWindows(bool showToolbarBefore);
@@ -737,6 +738,7 @@ static bool SaveSettings(bool force) {
 #if !defined(SUMATRA_NG)
     RememberSessionState();
     SyncInitialSessionData();
+    SyncTabGroups();
 #endif
 
     // remove entries which should (no longer) be remembered

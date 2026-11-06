@@ -152,6 +152,7 @@
 #include "SumatraCrashCommon.h"
 #include "OpenFileFilters.h"
 #include "OpenFromUrlCommon.h"
+#include "AppHelpersCommon.h"
 #include "SumatraLog.h"
 
 using Gdiplus::Graphics;
@@ -5524,6 +5525,7 @@ void CloseWindow(MainWindow* win, bool quitIfLast, bool forceClose) {
     }
 
     RememberClosedWindow(win);
+    SyncTabGroup(win);
     // Stop eventual TTS reading
     StopReadAloudIfSourceWindow(win);
     bool lastWindow = (1 == len(gWindows));

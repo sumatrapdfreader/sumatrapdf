@@ -355,6 +355,12 @@ const tabFile: Field[] = [field("Path", Str, "", "path of the document")];
 const tabGroup: Field[] = [
   field("Name", Str, "", "name of the tab group, as shown when restoring it"),
   array("TabFiles", tabFile, "documents that belong to this tab group"),
+  field(
+    "AutoSync",
+    Bool,
+    false,
+    "if true, the group follows the tabs of the window it was saved from or restored into",
+  ).ver("3.7"),
 ];
 
 // screen coordinates in real (already DPI-scaled) pixels: these are saved from

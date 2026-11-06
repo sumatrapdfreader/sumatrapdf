@@ -44,6 +44,8 @@ struct TabGroupsDlg {
     TabGroupDialogMode mode = TabGroupDialogMode::Save;
     int sel = -1;
     gpui::InputState* editName = nullptr;
+    // Save: the group follows the window's tabs
+    bool autoSync = false;
     bool wantFocus = false;
     float scrollY = 0;
     // orig's window, where the platform can have one; null: a dialog in the
@@ -115,6 +117,7 @@ struct TabGroupsView {
     static void OnDelete(TabGroupsView* self, gp::Ctx* cx, const gp::ClickEvent*);
     static void OnInput(TabGroupsView* self, gp::Ctx* cx, const gp::InputEvent* ev);
     static void OnScroll(TabGroupsView* self, gp::Ctx* cx, const gp::ScrollEvent* ev);
+    static void OnAutoSync(TabGroupsView* self, gp::Ctx* cx, const gp::ClickEvent*);
 };
 
 static gp::Entity<TabGroupsView> gTabGroupsView;
@@ -180,6 +183,7 @@ void ShowTabGroupsDialog(MainWindow* win, TabGroupDialogMode mode) {
     gTg->win = win;
     gTg->mode = mode;
     gTg->sel = -1;
+    gTg->autoSync = false;
     gTg->scrollY = 0;
     gTg->visible = true;
     if (mode == TabGroupDialogMode::Save) {
@@ -214,21 +218,11 @@ static void SaveTabGroup(MainWindow* win) {
 
     auto* group = AllocStruct<TabGroup>();
     group->name = str::Dup(name);
-    group->tabFiles = new Vec<TabFile*>();
-
-    for (WindowTab* tab : win->Tabs()) {
-        if (tab->IsAboutTab()) {
-            continue;
-        }
-        if (len(tab->filePath) == 0) {
-            continue;
-        }
-        auto* tf = AllocStruct<TabFile>();
-        str::ReplaceWithCopy(&tf->path, tab->filePath);
-        VecAppend(*group->tabFiles, tf);
-    }
-    logf("SaveTabGroup: '%s', %d tabs\n", name, GroupTabCount(group));
+    group->autoSync = gTg->autoSync;
+    SetTabGroupFiles(group, win);
+    logf("SaveTabGroup: '%s', %d tabs, autoSync %d\n", name, GroupTabCount(group), (int)group->autoSync);
     VecAppend(*Groups(), group);
+    LinkTabGroup(win, group);
     ScheduleSaveSettings();
     CloseCurrentDlg();
     InvalidateTabGroupWindows();
@@ -259,6 +253,9 @@ static void OpenTabGroup(MainWindow* win) {
             continue;
         }
         LoadDocument(targetWin, tf->path);
+    }
+    if (IsMainWindowValid(targetWin)) {
+        LinkTabGroup(targetWin, group);
     }
 }
 
@@ -299,6 +296,13 @@ void TabGroupsView::OnCancel(TabGroupsView*, gp::Ctx* cx, const gp::ClickEvent*)
 void TabGroupsView::OnScroll(TabGroupsView*, gp::Ctx* cx, const gp::ScrollEvent* ev) {
     UseDlgOf(cx);
     gTg->scrollY = ev->offsetY;
+    gp::Notify(cx);
+    AppShellInvalidate(gTg->win);
+}
+
+void TabGroupsView::OnAutoSync(TabGroupsView*, gp::Ctx* cx, const gp::ClickEvent*) {
+    UseDlgOf(cx);
+    gTg->autoSync = !gTg->autoSync;
     gp::Notify(cx);
     AppShellInvalidate(gTg->win);
 }
@@ -376,6 +380,16 @@ static gp::El* TabGroupsColumn(gp::Ctx* cx, float listDy) {
     if (isSave && gTg->editName) {
         gTg->editName->onChange = gp::ListenTo(gTabGroupsView, &TabGroupsView::OnInput);
         col->Child(DlgLine(cx, {}, 0, StrL("tabgroup-name"), gTg->editName, DlgField::Plain));
+        gp::El* check = DlgAccelEl(cx, gpc::Checkbox::New(cx, GStrL("tabgroup-autosync"))->Checked(gTg->autoSync),
+                                   Tr("&Keep the group in sync with this window's tabs"),
+                                   gp::ListenTo(gTabGroupsView, &TabGroupsView::OnAutoSync));
+        col->Child(gp::Div(cx->a)
+                       ->FlexRow()
+                       ->ItemsCenter()
+                       ->H(kToolDlgRowDy)
+                       ->Shrink0()
+                       ->PadX(kToolDlgPadDx)
+                       ->Child(check->Font(kToolDlgTextFontPx)));
         col->Child(DlgHairline(cx));
     }
     gTg->listViewDy = listDy;
@@ -394,7 +408,7 @@ static gp::El* TabGroupsColumn(gp::Ctx* cx, float listDy) {
         TabGroup* g = (*groups)[i];
         list->Child(DlgListRow(cx, fmt("tabgroup-row-%d", i), g->name, i == gTg->sel,
                                gp::ListenTo(gTabGroupsView, &TabGroupsView::OnRowClick, (intptr_t)i),
-                               fmt("%d tabs", GroupTabCount(g))));
+                               TabGroupInfoTemp(g)));
     }
     col->Child(DlgListBox(cx, list));
 
@@ -424,7 +438,7 @@ static gp::El* TabGroupsToolBuild(MainWindow*, gp::Ctx* cx) {
     // the list takes what the name, the list's padding and the footer leave
     float fixedDy = 2 * kToolDlgFilesPadDy + 2 * kToolDlgFootPadDy + kDlgBtnDy;
     if (gTg->mode == TabGroupDialogMode::Save) {
-        fixedDy += kToolDlgLineDy + 1;
+        fixedDy += kToolDlgLineDy + kToolDlgRowDy + 1;
     }
     float listDy = std::max(gp::WindowSize(cx->win).dipH - fixedDy, kDlgListRowDy);
     return gp::Div(cx->a)->FlexCol()->W(gp::kFill)->Flex1()->MinH(0)->Child(TabGroupsColumn(cx, listDy));

@@ -645,13 +645,15 @@ static const StructInfo gTabFileInfo = {sizeof(TabFile), 1, gTabFileFields, "Pat
 static const FieldInfo gTabGroupFields[] = {
     {offsetof(TabGroup, name), SettingType::String, (intptr_t)""},
     {offsetof(TabGroup, tabFiles), SettingType::Array, (intptr_t)&gTabFileInfo},
+    {offsetof(TabGroup, autoSync), SettingType::Bool, false},
 };
 static const StructInfo gTabGroupInfo = {
     sizeof(TabGroup),
-    2,
+    3,
     gTabGroupFields,
-    "Name\0TabFiles",
-    "name of the tab group, as shown when restoring it\0documents that belong to this tab group",
+    "Name\0TabFiles\0AutoSync",
+    "name of the tab group, as shown when restoring it\0documents that belong to this tab group\0if true, the group "
+    "follows the tabs of the window it was saved from or restored into",
     false};
 
 static const FieldInfo gRectFields[] = {

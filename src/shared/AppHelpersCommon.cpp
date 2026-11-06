@@ -20,6 +20,7 @@
 #include "Theme.h"
 #include "SumatraPDF.h"
 #include "MainWindow.h"
+#include "WindowTab.h"
 #include "AppTools.h"
 #include "AnnotFilterToolbar.h"
 #include "FindBar.h"
@@ -42,6 +43,62 @@ void FreeTabGroup(TabGroup* group) {
         delete group->tabFiles;
     }
     free(group);
+}
+
+// Makes group's documents those of win, in tab order.
+void SetTabGroupFiles(TabGroup* group, MainWindow* win) {
+    if (!group->tabFiles) {
+        group->tabFiles = new Vec<TabFile*>();
+    }
+    for (auto* tf : *group->tabFiles) {
+        str::Free(tf->path);
+        free(tf);
+    }
+    VecReset(*group->tabFiles);
+    for (WindowTab* tab : win->Tabs()) {
+        if (tab->IsAboutTab() || len(tab->filePath) == 0) {
+            continue;
+        }
+        auto* tf = AllocStruct<TabFile>();
+        str::ReplaceWithCopy(&tf->path, tab->filePath);
+        VecAppend(*group->tabFiles, tf);
+    }
+}
+
+// An AutoSync group follows win's tabs from now on; any other group unlinks it.
+void LinkTabGroup(MainWindow* win, TabGroup* group) {
+    win->syncedTabGroup = (group && group->autoSync) ? group : nullptr;
+}
+
+// Copies the window's tabs into its AutoSync group. The group can be gone
+// (deleted, or the settings were reloaded) or no longer AutoSync: then the
+// window stops following it.
+void SyncTabGroup(MainWindow* win) {
+    TabGroup* group = win->syncedTabGroup;
+    if (!group) {
+        return;
+    }
+    Vec<TabGroup*>* groups = gSettings->tabGroups;
+    if (!groups || VecFind(*groups, group) < 0 || !group->autoSync) {
+        win->syncedTabGroup = nullptr;
+        return;
+    }
+    SetTabGroupFiles(group, win);
+}
+
+void SyncTabGroups() {
+    for (MainWindow* win : gWindows) {
+        SyncTabGroup(win);
+    }
+}
+
+// what the tab group lists show next to a group's name: "4 tabs, synced"
+TempStr TabGroupInfoTemp(TabGroup* group) {
+    int n = group->tabFiles ? len(*group->tabFiles) : 0;
+    if (group->autoSync) {
+        return fmt(Tr("%d tabs, synced").s, n);
+    }
+    return fmt("%d tabs", n);
 }
 
 Str ScrollbarModeDisplayName(int idx) {

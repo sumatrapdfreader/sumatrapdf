@@ -30,6 +30,7 @@
 #include "TableOfContents.h"
 #include "gui/Sidebar.h"
 #include "VirtualDesktop.h"
+#include "AppHelpersCommon.h"
 #include "SessionState.h"
 #include "SumatraLog.h"
 
@@ -229,6 +230,7 @@ static void RememberSessionStateForSave() {
     }
     RememberSessionState();
     SyncInitialSessionData();
+    SyncTabGroups();
 }
 
 void InstallSessionStateHook() {

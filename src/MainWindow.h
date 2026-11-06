@@ -2,6 +2,7 @@
    License: GPLv3 */
 
 struct DoubleBuffer;
+struct TabGroup;
 struct Edit;
 struct WebviewWnd;
 struct LinkHandler;
@@ -798,6 +799,8 @@ struct MainWindow { // NOLINT(clang-analyzer-optin.performance.Padding)
     // processing commands while closing (e.g. reentrancy
     // via modal dialogs pumping messages)
     bool isBeingClosed = false;
+    // the AutoSync tab group that follows this window's tabs; not owned
+    TabGroup* syncedTabGroup = nullptr;
     // CloseAllTabs is already on the stack (nested DDE CmdCloseAllTabs)
     bool inCloseAllTabs = false;
 
