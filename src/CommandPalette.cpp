@@ -277,7 +277,8 @@ void SafeDeleteCommandPaletteWnd() {
     if (gTabToSelectOnClose) {
         WindowTab* tab = gTabToSelectOnClose;
         gTabToSelectOnClose = nullptr;
-        if (IsMainWindowValidAndNotClosing(tab->win) && tab->win->GetTabIdx(tab) >= 0) {
+        // the tab may have been closed (and freed) since it was picked
+        if (IsMainWindowValidAndNotClosing(FindMainWindowByTab(tab))) {
             SelectTabInWindow(tab);
         }
     }
