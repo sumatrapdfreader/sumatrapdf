@@ -1476,6 +1476,7 @@ enum {
     IDC_PRINT_PER_PAGE_PAPER_SIZE = 1067,
     IDC_PRINT_ROTATE_LABEL = 1068,
     IDC_PRINT_ROTATE = 1069,
+    IDC_PRINT_AUTO_ROTATE = 1071,
 };
 
 #ifndef ID_APPLY_NOW
@@ -1554,7 +1555,7 @@ static DLGTEMPLATE* BuildPrintAdvancedTemplate() {
     t.U16(0);
     t.U16(0);
     t.U16(292);
-    t.U16(194);
+    t.U16(207);
     t.U16(0); // no menu
     t.U16(0); // default dialog class
     t.Sz(L"Advanced");
@@ -1575,8 +1576,9 @@ static DLGTEMPLATE* BuildPrintAdvancedTemplate() {
     t.Item(check | WS_GROUP, 7, 133, 278, 10, IDC_PRINT_CENTER_HORIZONTALLY, kAtomButton);
     t.Item(check, 7, 146, 278, 10, IDC_PRINT_PAPER_SOURCE_BY_SIZE, kAtomButton);
     t.Item(check, 7, 159, 278, 10, IDC_PRINT_PER_PAGE_PAPER_SIZE, kAtomButton);
-    t.Item(SS_LEFT, 7, 175, 72, 9, IDC_PRINT_ROTATE_LABEL, kAtomStatic);
-    t.Item(CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP, 82, 173, 90, 60, IDC_PRINT_ROTATE, kAtomComboBox);
+    t.Item(check, 7, 172, 278, 10, IDC_PRINT_AUTO_ROTATE, kAtomButton);
+    t.Item(SS_LEFT, 7, 188, 72, 9, IDC_PRINT_ROTATE_LABEL, kAtomStatic);
+    t.Item(CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP, 82, 186, 90, 60, IDC_PRINT_ROTATE, kAtomComboBox);
 
     u16 cdit = (u16)t.nItems;
     memcpy(t.buf + cditPos, &cdit, sizeof(cdit));
@@ -1604,6 +1606,7 @@ static INT_PTR CALLBACK Sheet_Print_Advanced_Proc(HWND hDlg, UINT msg, WPARAM wp
             HwndSetDlgItemText(hDlg, IDC_PRINT_PAPER_SOURCE_BY_SIZE, Tr("Choose &paper source by document page size"));
             HwndSetDlgItemText(hDlg, IDC_PRINT_PER_PAGE_PAPER_SIZE,
                                Tr("Print each page at its &document page size (mixed sizes)"));
+            HwndSetDlgItemText(hDlg, IDC_PRINT_AUTO_ROTATE, Tr("Rotate &wide pages to fit the paper"));
             HwndSetDlgItemText(hDlg, IDC_PRINT_ROTATE_LABEL, Tr("&Rotate printout:"));
             {
                 HWND hwndCb = GetDlgItem(hDlg, IDC_PRINT_ROTATE);
@@ -1640,6 +1643,7 @@ static INT_PTR CALLBACK Sheet_Print_Advanced_Proc(HWND hDlg, UINT msg, WPARAM wp
             CheckDlgButton(hDlg, IDC_PRINT_PAPER_SOURCE_BY_SIZE,
                            data->paperSourceByPageSize ? BST_CHECKED : BST_UNCHECKED);
             CheckDlgButton(hDlg, IDC_PRINT_PER_PAGE_PAPER_SIZE, data->perPagePaperSize ? BST_CHECKED : BST_UNCHECKED);
+            CheckDlgButton(hDlg, IDC_PRINT_AUTO_ROTATE, data->autoRotate ? BST_CHECKED : BST_UNCHECKED);
 
             return FALSE;
             //] ACCESSKEY_GROUP Advanced Print Tab
@@ -1666,6 +1670,7 @@ static INT_PTR CALLBACK Sheet_Print_Advanced_Proc(HWND hDlg, UINT msg, WPARAM wp
                 data->centerHorizontally = IsDlgButtonChecked(hDlg, IDC_PRINT_CENTER_HORIZONTALLY) != 0;
                 data->paperSourceByPageSize = IsDlgButtonChecked(hDlg, IDC_PRINT_PAPER_SOURCE_BY_SIZE) != 0;
                 data->perPagePaperSize = IsDlgButtonChecked(hDlg, IDC_PRINT_PER_PAGE_PAPER_SIZE) != 0;
+                data->autoRotate = IsDlgButtonChecked(hDlg, IDC_PRINT_AUTO_ROTATE) != 0;
                 int rotIdx = (int)SendDlgItemMessage(hDlg, IDC_PRINT_ROTATE, CB_GETCURSEL, 0, 0);
                 data->extraRotation = rotIdx > 0 ? rotIdx * 90 : 0;
                 return TRUE;
@@ -1683,7 +1688,8 @@ static INT_PTR CALLBACK Sheet_Print_Advanced_Proc(HWND hDlg, UINT msg, WPARAM wp
                 case IDC_PRINT_SCALE_NONE:
                 case IDC_PRINT_CENTER_HORIZONTALLY:
                 case IDC_PRINT_PAPER_SOURCE_BY_SIZE:
-                case IDC_PRINT_PER_PAGE_PAPER_SIZE: {
+                case IDC_PRINT_PER_PAGE_PAPER_SIZE:
+                case IDC_PRINT_AUTO_ROTATE: {
                     HWND hApplyButton = GetDlgItem(GetParent(hDlg), ID_APPLY_NOW);
                     EnableWindow(hApplyButton, TRUE);
                 } break;
@@ -1861,6 +1867,7 @@ static void PrintCurrentFileCont(MainWindow* win, bool waitForCompletion, bool s
 
     Print_Advanced_Data advanced(PrintRangeAdv::All, defaultScaleAdv);
     advanced.dpiOverride = gSettings->printerDefaults.printDpi;
+    advanced.autoRotate = gSettings->printerDefaults.autoRotate;
 #if defined(SUMATRA_NG)
     ScopedMem<DLGTEMPLATE> dlgTemplate;
     HPROPSHEETPAGE hPsp = CreatePrintAdvancedPropSheet(&advanced, dlgTemplate);
@@ -2504,6 +2511,7 @@ PrintResult PrintFile2(EngineBase* engine, Str printerName, bool displayErrors, 
     {
         Print_Advanced_Data advanced;
         advanced.dpiOverride = gSettings->printerDefaults.printDpi;
+        advanced.autoRotate = gSettings->printerDefaults.autoRotate;
         Vec<PRINTPAGERANGE> ranges;
 
         // apply print defaults from the PDF's /ViewerPreferences (issue #534),

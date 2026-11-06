@@ -33,6 +33,7 @@ export const excludedTests: Record<string, string> = {
   "issue-4967": "prints through Microsoft Print to PDF",
   "issue-5065": "prints through Microsoft Print to PDF",
   "issue-5353": "prints through Microsoft Print to PDF",
+  "print-auto-rotate": "prints through Microsoft Print to PDF",
   "issue-6150": "prints through Microsoft Print to PDF",
   "issue-6323": "opens the system printer dialog and needs an installed printer",
   // a TeX distribution is a big install we don't want on the runner; the LaTeX

@@ -446,6 +446,10 @@ struct PrinterDefaults {
     // (e.g. 300 for a 300 dpi scan whose file doesn't say); 0 uses the
     // resolution recorded in the file
     float printDpi;
+    // default for the Print dialog's Rotate wide pages to fit the paper:
+    // if true, a page wider than it is tall is turned 90° to fill the
+    // paper
+    bool autoRotate;
 };
 
 // customization options for how forward search results are shown (used

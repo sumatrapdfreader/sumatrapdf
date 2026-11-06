@@ -485,15 +485,17 @@ static const FieldInfo gPrinterDefaultsFields[] = {
     {offsetof(PrinterDefaults, collate), SettingType::String, (intptr_t)"default", false, gEnumPrinterDefaultsCollate,
      nullptr},
     {offsetof(PrinterDefaults, printDpi), SettingType::Float, (intptr_t)"0"},
+    {offsetof(PrinterDefaults, autoRotate), SettingType::Bool, true},
 };
 static const StructInfo gPrinterDefaultsInfo = {
     sizeof(PrinterDefaults),
-    3,
+    4,
     gPrinterDefaultsFields,
-    "PrintScale\0Collate\0PrintDpi",
+    "PrintScale\0Collate\0PrintDpi\0AutoRotate",
     "default value for scaling (shrink, fit, none)\0default value for collate in the print dialog (default, collate, "
     "nocollate)\0resolution to assume for the document when printing at original size (e.g. 300 for a 300 dpi scan "
-    "whose file doesn't say); 0 uses the resolution recorded in the file",
+    "whose file doesn't say); 0 uses the resolution recorded in the file\0default for the Print dialog's Rotate wide "
+    "pages to fit the paper: if true, a page wider than it is tall is turned 90° to fill the paper",
     false};
 
 static const char* gEnumFullscreenToolbar[] = {"", "show", "hide", "overlay", nullptr};

@@ -201,6 +201,7 @@ static INT_PTR CALLBACK Sheet_Print_Advanced_Proc(HWND hDlg, UINT msg, WPARAM wp
             HwndSetDlgItemText(hDlg, IDC_PRINT_PAPER_SOURCE_BY_SIZE, Tr("Choose &paper source by document page size"));
             HwndSetDlgItemText(hDlg, IDC_PRINT_PER_PAGE_PAPER_SIZE,
                                Tr("Print each page at its &document page size (mixed sizes)"));
+            HwndSetDlgItemText(hDlg, IDC_PRINT_AUTO_ROTATE, Tr("Rotate &wide pages to fit the paper"));
             HwndSetDlgItemText(hDlg, IDC_PRINT_ROTATE_LABEL, Tr("&Rotate printout:"));
             {
                 HWND hwndCb = GetDlgItem(hDlg, IDC_PRINT_ROTATE);
@@ -238,6 +239,7 @@ static INT_PTR CALLBACK Sheet_Print_Advanced_Proc(HWND hDlg, UINT msg, WPARAM wp
             CheckDlgButton(hDlg, IDC_PRINT_PAPER_SOURCE_BY_SIZE,
                            data->paperSourceByPageSize ? BST_CHECKED : BST_UNCHECKED);
             CheckDlgButton(hDlg, IDC_PRINT_PER_PAGE_PAPER_SIZE, data->perPagePaperSize ? BST_CHECKED : BST_UNCHECKED);
+            CheckDlgButton(hDlg, IDC_PRINT_AUTO_ROTATE, data->autoRotate ? BST_CHECKED : BST_UNCHECKED);
 
             return FALSE;
             //] ACCESSKEY_GROUP Advanced Print Tab
@@ -264,6 +266,7 @@ static INT_PTR CALLBACK Sheet_Print_Advanced_Proc(HWND hDlg, UINT msg, WPARAM wp
                 data->centerHorizontally = IsDlgButtonChecked(hDlg, IDC_PRINT_CENTER_HORIZONTALLY) != 0;
                 data->paperSourceByPageSize = IsDlgButtonChecked(hDlg, IDC_PRINT_PAPER_SOURCE_BY_SIZE) != 0;
                 data->perPagePaperSize = IsDlgButtonChecked(hDlg, IDC_PRINT_PER_PAGE_PAPER_SIZE) != 0;
+                data->autoRotate = IsDlgButtonChecked(hDlg, IDC_PRINT_AUTO_ROTATE) != 0;
                 int rotIdx = (int)SendDlgItemMessage(hDlg, IDC_PRINT_ROTATE, CB_GETCURSEL, 0, 0);
                 data->extraRotation = rotIdx > 0 ? rotIdx * 90 : 0;
                 return TRUE;
@@ -281,7 +284,8 @@ static INT_PTR CALLBACK Sheet_Print_Advanced_Proc(HWND hDlg, UINT msg, WPARAM wp
                 case IDC_PRINT_SCALE_NONE:
                 case IDC_PRINT_CENTER_HORIZONTALLY:
                 case IDC_PRINT_PAPER_SOURCE_BY_SIZE:
-                case IDC_PRINT_PER_PAGE_PAPER_SIZE: {
+                case IDC_PRINT_PER_PAGE_PAPER_SIZE:
+                case IDC_PRINT_AUTO_ROTATE: {
                     HWND hApplyButton = GetDlgItem(GetParent(hDlg), ID_APPLY_NOW);
                     EnableWindow(hApplyButton, TRUE);
                 } break;

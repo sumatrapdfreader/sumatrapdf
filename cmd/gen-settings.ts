@@ -439,6 +439,12 @@ const printerDefaults: Field[] = [
     0,
     "resolution to assume for the document when printing at original size (e.g. 300 for a 300 dpi scan whose file doesn't say); 0 uses the resolution recorded in the file",
   ).ver("3.7"),
+  field(
+    "AutoRotate",
+    Bool,
+    true,
+    "default for the Print dialog's Rotate wide pages to fit the paper: if true, a page wider than it is tall is turned 90° to fill the paper",
+  ).ver("3.7"),
 ];
 
 // HighlightOffset / HighlightWidth are in document units (multiplied by the

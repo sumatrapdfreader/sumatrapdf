@@ -93,6 +93,7 @@ export function runPrintToPdf(
   inputPath: string,
   outputPath: string,
   printSettings: string,
+  extraArgs: string[] = [],
 ): { ok: boolean; stdout: string; stderr: string; exitCode: number } {
   rmSync(outputPath, { force: true });
   const out = printOutputPath(outputPath);
@@ -106,6 +107,7 @@ export function runPrintToPdf(
       "-for-testing",
       "-silent",
       "-exit-when-done",
+      ...extraArgs,
       "-print-to",
       PRINT_TO_PDF,
       "-print-settings",
