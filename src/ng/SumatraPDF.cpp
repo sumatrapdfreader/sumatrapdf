@@ -3798,6 +3798,7 @@ void CloseWindow(MainWindow* win, bool quitIfLast, bool) {
     win->isClosePending = false;
     win->isBeingClosed = true;
     logf("CloseWindow: 0x%p, %d windows open\n", win, len(gWindows));
+    RememberClosedWindow(win);
     // Stop eventual TTS reading
     StopReadAloudIfSourceWindow(win);
     // the provider processes hold a pipe this window's reader thread reads

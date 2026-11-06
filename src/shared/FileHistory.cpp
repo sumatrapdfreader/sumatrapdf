@@ -206,8 +206,8 @@ void FileHistoryPurge(bool alwaysUseDefaultState) {
     }
 }
 
-// list of recently closed documents, most recent at the end
-static StrVec gClosedDocuments;
+// recently closed tabs and windows, most recent at the end
+static Vec<ClosedDocuments*> gClosedDocuments;
 
 int RecentlyCloseDocumentsCount() {
     return len(gClosedDocuments);
@@ -217,15 +217,43 @@ void RememberRecentlyClosedDocument(Str path) {
     if (str::IsEmptyOrWhiteSpace(path)) {
         return;
     }
-    gClosedDocuments.Append(path);
+    auto* closed = new ClosedDocuments();
+    closed->paths.Append(path);
+    VecAppend(gClosedDocuments, closed);
 }
 
-Str PopRecentlyClosedDocument() {
-    int n = len(gClosedDocuments);
-    if (n > 0) {
-        return Str(gClosedDocuments.RemoveAtFast(n - 1));
+// A window with one document stays a closed tab: closing a window's last tab
+// already remembered it before closing the window.
+void RememberRecentlyClosedWindow(const StrVec& paths, int activeIdx) {
+    int n = len(paths);
+    if (n == 0) {
+        return;
     }
-    return {};
+    if (n == 1) {
+        int nClosed = len(gClosedDocuments);
+        ClosedDocuments* last = nClosed > 0 ? gClosedDocuments[nClosed - 1] : nullptr;
+        bool alreadyLast = last && !last->isWindow && str::Eq(last->paths[0], paths[0]);
+        if (!alreadyLast) {
+            RememberRecentlyClosedDocument(paths[0]);
+        }
+        return;
+    }
+    auto* closed = new ClosedDocuments();
+    for (int i = 0; i < n; i++) {
+        closed->paths.Append(paths[i]);
+    }
+    closed->activeIdx = limitValue(activeIdx, 0, n - 1);
+    closed->isWindow = true;
+    VecAppend(gClosedDocuments, closed);
+}
+
+// caller owns the result; null when nothing was closed
+ClosedDocuments* PopRecentlyClosed() {
+    int n = len(gClosedDocuments);
+    if (n == 0) {
+        return nullptr;
+    }
+    return VecPop(gClosedDocuments);
 }
 
 // --- thumbnail cache delete

@@ -163,6 +163,7 @@ bool TextSelectExtendFromVk(int key, TextSelectUnit& unit, int& delta);
 
 void NotifyUrlSelectionTruncated(WindowTab* tab);
 void ReopenLastClosedFile(MainWindow* win);
+void RememberClosedWindow(MainWindow* win);
 
 bool SendOpenFileToExistingInstance(HWND targetHwnd, Str fullPath, u32 newWindow);
 bool SendOpenFilesToExistingInstance(HWND targetHwnd, StrVec& paths, u32 newWindow);

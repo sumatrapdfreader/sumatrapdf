@@ -21,9 +21,18 @@ void FileHistoryGetFrequencyOrder(Vec<FileState*>& list);
 void FileHistoryGetRecentlyOpenedOrder(Vec<FileState*>& list);
 void FileHistoryPurge(bool alwaysUseDefaultState = false);
 
+// what Reopen Last Closed brings back: one closed tab, or a closed window's tabs
+struct ClosedDocuments {
+    StrVec paths;
+    // the window's selected tab, an index into paths
+    int activeIdx = 0;
+    bool isWindow = false;
+};
+
 int RecentlyCloseDocumentsCount();
 void RememberRecentlyClosedDocument(Str path);
-Str PopRecentlyClosedDocument();
+void RememberRecentlyClosedWindow(const StrVec& paths, int activeIdx);
+ClosedDocuments* PopRecentlyClosed();
 void RemoveNonExistentFilesAsync();
 bool DocumentPathExists(Str path);
 void CleanUpThumbnailCache();

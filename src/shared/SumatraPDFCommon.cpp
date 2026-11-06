@@ -2328,13 +2328,62 @@ void NotifyUrlSelectionTruncated(WindowTab* tab) {
     ShowNotification(args);
 }
 
+// Reopens the last closed tab, or all the tabs of the last closed window in
+// their order, in a window of their own unless this one has no documents.
 void ReopenLastClosedFile(MainWindow* win) {
-    Str path = PopRecentlyClosedDocument();
-    if (len(path) == 0) {
+    ClosedDocuments* closed = PopRecentlyClosed();
+    if (!closed) {
         return;
     }
-    logf("ReopenLastClosedFile: '%s'\n", path);
-    LoadDocument(win, path);
+    defer {
+        delete closed;
+    };
+    if (!closed->isWindow) {
+        logf("ReopenLastClosedFile: '%s'\n", closed->paths[0]);
+        LoadDocument(win, closed->paths[0]);
+        return;
+    }
+
+    int n = len(closed->paths);
+    logf("ReopenLastClosedFile: window with %d documents\n", n);
+    MainWindow* target = win;
+    if (!OS_WASM && HasOpenedDocuments(win)) {
+        target = CreateAndShowMainWindow(nullptr);
+    }
+    if (!target) {
+        return;
+    }
+    for (int i = 0; i < n; i++) {
+        LoadDocument(target, closed->paths[i]);
+    }
+    if (!IsMainWindowValid(target)) {
+        return;
+    }
+    // by path: the window can have a Home tab before the documents
+    Str activePath = closed->paths[closed->activeIdx];
+    for (WindowTab* tab : target->Tabs()) {
+        if (str::Eq(tab->filePath, activePath)) {
+            TabsSelect(target, target->GetTabIdx(tab));
+            break;
+        }
+    }
+}
+
+// Remembers a window's documents, in tab order, for Reopen Last Closed.
+void RememberClosedWindow(MainWindow* win) {
+    StrVec paths;
+    int activeIdx = 0;
+    WindowTab* current = win->CurrentTab();
+    for (WindowTab* tab : win->Tabs()) {
+        if (tab->IsNonDocumentTab() || len(tab->filePath) == 0) {
+            continue;
+        }
+        if (tab == current) {
+            activeIdx = len(paths);
+        }
+        paths.Append(tab->filePath);
+    }
+    RememberRecentlyClosedWindow(paths, activeIdx);
 }
 
 // Enter the requested mode even when the window is in the other fullscreen
