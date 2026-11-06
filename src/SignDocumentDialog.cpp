@@ -172,10 +172,8 @@ bool IsPlacingSignature(MainWindow* win) {
 // Leaves placement mode. Returns true if it was active. The hidden dialog is
 // shown again so the user can change the certificate or cancel.
 bool CancelPlacingSignature(MainWindow* win) {
+    // placement in another window is left alone
     if (!IsPlacingSignature(win)) {
-        if (gPlacingSignature) {
-            gPlacingSignature = false;
-        }
         return false;
     }
     gPlacingSignature = false;
@@ -787,8 +785,15 @@ void ShowSignDocumentDialog(MainWindow* win, Str fieldName, bool hasField, int c
         return;
     }
     if (gSignDocumentWnd) {
-        if (gPlacingSignature) {
-            CancelPlacingSignature(win);
+        // cancel placement in the dialog's own window, which may not be win
+        MainWindow* dlgWin = gSignDocumentWnd->win;
+        CancelPlacingSignature(dlgWin);
+        if (dlgWin != win) {
+            // one dialog at a time and it signs another document: don't
+            // retarget it, just bring it up
+            gSignDocumentWnd->SetIsVisible(true);
+            HwndSetFocus(gSignDocumentWnd->hwnd);
+            return;
         }
         if (hasField) {
             str::ReplaceWithCopy(&gSignDocumentWnd->preselectField, fieldName);
