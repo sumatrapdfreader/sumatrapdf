@@ -427,7 +427,7 @@ Exit:
 
 static void OnlineURLAllowedTest() {
     utassert(OnlineURLAllowed(StrL("https://web.sumatrapdfreader.org/api/files")));
-    utassert(OnlineURLAllowed(StrL("http://localhost:9332/desktop")));
+    utassert(OnlineURLAllowed(StrL("http://localhost:9332/desktop-link")));
     utassert(OnlineURLAllowed(StrL("http://127.0.0.1:9332/api/files")));
     utassert(OnlineURLAllowed(StrL("https://web.sumatrapdfreader.org")));
     utassert(OnlineURLAllowed(StrL("http://localhost:9332")));

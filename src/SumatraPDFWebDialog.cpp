@@ -362,7 +362,7 @@ void SumatraPDFWebWnd::OnFileSel() {
 
 void SumatraPDFWebWnd::OnLogin(VirtMouseEvent*) {
     Str origin = OnlineOrigin();
-    TempStr url = fmt("%s/desktop", origin);
+    TempStr url = fmt("%s/desktop-link", origin);
     if (!OnlineURLAllowed(url)) {
         SetStatus(Tr("The server address is not allowed."));
         return;
