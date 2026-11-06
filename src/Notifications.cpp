@@ -674,6 +674,10 @@ bool UpdateNotificationProgress(NotificationWnd* wnd, Str msg, int perc) {
 }
 
 static void NotifRemove(NotificationWnd* wnd) {
+    // already removed (and freed) between ScheduleRemove and now
+    if (NotificationIndexOf(wnd) < 0) {
+        return;
+    }
     if (!wnd->closedCb.IsValid()) {
         NotifsRemoveNotification(wnd);
         return;
