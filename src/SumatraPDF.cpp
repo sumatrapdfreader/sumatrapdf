@@ -10923,6 +10923,10 @@ static LRESULT FrameOnCommand(MainWindow* win, HWND hwnd, UINT msg, WPARAM wp, L
             SaveSettingsNow();
             break;
 
+        case CmdDebugShowDownloadedFonts:
+            ShowTextInWindow(StrL("SumatraPDF - Fonts"), DownloadedFontsReportTemp());
+            break;
+
         case CmdScreenshot:
             TakeScreenshots(win->hwndFrame);
             break;

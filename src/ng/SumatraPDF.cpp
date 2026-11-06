@@ -6508,6 +6508,10 @@ void ExecuteCmd(MainWindow* win, int cmdId) {
             SaveSettingsNow();
             break;
 
+        case CmdDebugShowDownloadedFonts:
+            ShowTextInWindow(win, StrL("SumatraPDF - Fonts"), DownloadedFontsReportTemp());
+            break;
+
 #if OS_WIN
         // open the OS "Open with" / Default apps UI for this extension
         case CmdFixDefaultApp: {

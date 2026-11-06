@@ -210,6 +210,7 @@ static const i32 removeIfNoInternetPerms[] = {
     CmdContributeTranslation,
     CmdSumatraPDFWeb,
     CmdOpenFromURL,
+    CmdDebugShowDownloadedFonts,
     0,
 };
 

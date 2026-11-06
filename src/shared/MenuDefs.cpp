@@ -717,6 +717,10 @@ MenuDef menuDefDebug[] = {
         CmdDebugShowCrashMiniDumps,
     },
     {
+        StrL("Show downloaded fonts"),
+        CmdDebugShowDownloadedFonts,
+    },
+    {
         {},
         0,
     },

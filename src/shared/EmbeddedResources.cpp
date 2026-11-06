@@ -398,3 +398,82 @@ static const u8* LoadEmbeddedFont(const char* fileName, int* size) {
 void InstallEmbeddedFontLoader() {
     fz_set_builtin_font_loader(LoadEmbeddedFont);
 }
+
+// whether the loader tried this font in this session and got nothing. TryLock:
+// the loader holds the lock while it downloads, the UI must not wait for that
+static bool FontFailedThisSession(Str name) {
+    if (!gFontsMutex.TryLock()) {
+        return false;
+    }
+    bool failed = false;
+    for (EmbeddedFont* f = gFonts; f; f = f->next) {
+        if (str::Eq(f->name, name)) {
+            failed = !f->data;
+            break;
+        }
+    }
+    gFontsMutex.Unlock();
+    return failed;
+}
+
+static void AppendPadded(str::Builder& b, Str s, int width) {
+    b.Append(s);
+    for (int i = len(s); i < width; i++) {
+        b.AppendChar(' ');
+    }
+}
+
+// mupdf's built-in fonts as 3 columns: name, size, where it comes from.
+// For CmdDebugShowDownloadedFonts.
+TempStr DownloadedFontsReportTemp() {
+    constexpr int kSizeWidth = 12;
+    lzma::SimpleArchive* archive = GetEmbeddedArchive();
+    TempStr dir = FontCacheDirTemp();
+    int n = sumatra_font_count();
+
+    int nameWidth = len(StrL("Font"));
+    for (int i = 0; i < n; i++) {
+        const char* url;
+        int size;
+        nameWidth = std::max(nameWidth, (int)strlen(sumatra_font_at(i, &url, &size)));
+    }
+    nameWidth += 2;
+
+    str::Builder b;
+    AppendPadded(b, StrL("Font"), nameWidth);
+    AppendPadded(b, StrL("Size"), kSizeWidth);
+    b.Append(StrL("Status\n"));
+
+    int nEmbedded = 0;
+    int nDownloaded = 0;
+    i64 downloadedSize = 0;
+    for (int i = 0; i < n; i++) {
+        const char* url;
+        int size;
+        Str name(sumatra_font_at(i, &url, &size));
+        const char* slash = strrchr(url, '/');
+        TempStr path = path::JoinTemp(dir, Str(slash ? slash + 1 : url));
+
+        Str status = StrL("not downloaded");
+        if (archive && lzma::GetIdxFromName(archive, fmt("fonts\\%s", name)) >= 0) {
+            status = StrL("embedded");
+            nEmbedded++;
+        } else if (file::GetSize(path) > 0) {
+            status = StrL("downloaded");
+            nDownloaded++;
+            downloadedSize += size;
+        } else if (FontFailedThisSession(name)) {
+            status = StrL("download failed");
+        }
+
+        AppendPadded(b, name, nameWidth);
+        AppendPadded(b, str::FormatSizeShortTemp(size), kSizeWidth);
+        b.Append(status);
+        b.AppendChar('\n');
+    }
+
+    b.Append(fmt("\n%d fonts: %d embedded, %d downloaded (%s), %d not downloaded\n", n, nEmbedded, nDownloaded,
+                 str::FormatSizeShortTemp(downloadedSize), n - nEmbedded - nDownloaded));
+    b.Append(fmt("Fonts directory: %s\n", dir));
+    return str::DupTemp(ToStr(b));
+}

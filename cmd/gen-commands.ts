@@ -375,6 +375,7 @@ const commandsRaw = [
     "CmdEditImageExternally", "Edit Image in Another App",
     "CmdToggleReadColumns", "Read Columns",
     "CmdToggleColumnsWholePage", "Read Columns: Show Whole Page",
+    "CmdDebugShowDownloadedFonts", "Debug: Show Downloaded Fonts",
 ];
 
 // removed slots are dropped: nothing outside the generators should see them
