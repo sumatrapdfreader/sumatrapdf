@@ -1350,11 +1350,21 @@ static void OnSave(ImageEditWindow* ew) {
     }
 }
 
-static void SwitchToSaveMode(ImageEditWindow* ew) {
-    ew->mode = ImageEditMode::Save;
+// a drag belongs to the mode it started in: switching modes (buttons can be
+// pressed from the keyboard while the mouse is down) ends it
+static void EndImageDrag(ImageEditWindow* ew) {
+    if (ew->isDragging && GetCapture() == ew->hwnd) {
+        ReleaseCapture();
+    }
     ew->isDragging = false;
+    ew->dragMoved = false;
     ew->dragEdge = DragEdge::None;
     ew->hoverEdge = DragEdge::None;
+}
+
+static void SwitchToSaveMode(ImageEditWindow* ew) {
+    EndImageDrag(ew);
+    ew->mode = ImageEditMode::Save;
     ew->cropX = 0;
     ew->cropY = 0;
     ew->cropW = ew->imgW;
@@ -1465,6 +1475,7 @@ static void ApplyResize(ImageEditWindow* ew) {
 }
 
 static void SwitchToCropMode(ImageEditWindow* ew) {
+    EndImageDrag(ew);
     // apply pending resize before switching
     if (ew->mode == ImageEditMode::Resize && IsResizeChanged(ew)) {
         ApplyResize(ew);
@@ -1484,6 +1495,7 @@ static void SwitchToCropMode(ImageEditWindow* ew) {
 }
 
 static void SwitchToResizeMode(ImageEditWindow* ew) {
+    EndImageDrag(ew);
     // apply pending crop before switching
     if (ew->mode == ImageEditMode::Crop && IsCropChanged(ew)) {
         ApplyCrop(ew);
