@@ -651,7 +651,8 @@ struct MainWindow { // NOLINT(clang-analyzer-optin.performance.Padding)
     UINT_PTR delayedRepaintTimer = 0;
 
     ThreadHandle printThread = nullptr;
-    bool printCanceled = false;
+    // set on the UI thread, read by the print thread
+    AtomicBool printCanceled = 0;
 
     ThreadHandle findThread = nullptr;
     // set on the UI thread, read by the find thread

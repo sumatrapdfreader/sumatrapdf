@@ -1232,7 +1232,8 @@ class PrintThreadData {
   public:
     NotificationWnd* wnd = nullptr;
     AbortCookieManager cookie;
-    bool isCanceled = false;
+    // set on the UI thread, read by the print thread
+    AtomicBool isCanceled = 0;
     MainWindow* win = nullptr;
 
     PrintData* data = nullptr;
@@ -1242,7 +1243,7 @@ class PrintThreadData {
     void OnNotifClosed(NotificationClosedEvent*) { RemovePrintNotification(); }
 
     void RemovePrintNotification() {
-        isCanceled = true;
+        AtomicBoolSet(&isCanceled, true);
         cookie.Abort();
         if (this->wnd && IsMainWindowValid(win)) {
             RemoveNotification(this->wnd);
@@ -1281,18 +1282,19 @@ class PrintThreadData {
         uitask::Post(fn, nullptr);
     }
 
-    bool WasCanceled() { return isCanceled || !IsMainWindowValidAndNotClosing(win) || win->printCanceled; }
+    bool WasCanceled() {
+        return AtomicBoolGet(&isCanceled) || !IsMainWindowValidAndNotClosing(win) || AtomicBoolGet(&win->printCanceled);
+    }
 };
 
 struct DeletePrinterThreadData {
     MainWindow* win;
-    ThreadHandle thread;
     PrintThreadData* threadData;
 };
 
 static void DeletePrinterThread(DeletePrinterThreadData* d) {
     auto* win = d->win;
-    if (IsMainWindowValid(win) && d->thread == win->printThread) {
+    if (IsMainWindowValid(win) && d->threadData->thread == win->printThread) {
         win->printThread = nullptr;
     }
     delete d->threadData;
@@ -1310,14 +1312,6 @@ static void UpdatePrintProgress(PrintThreadData* ftd, ProgressUpdateData* data) 
 
 static void PrintThread(PrintThreadData* ptd) {
     MainWindow* win = ptd->win;
-    // wait for PrintToDeviceOnThread to return so that we
-    // close the correct handle to the current printing thread
-    while (!win->printThread) {
-        Sleep(1);
-    }
-
-    ThreadHandle thread = ptd->thread = win->printThread;
-
     PrintData* pd = ptd->data;
     pd->progressCb = MkFunc1<PrintThreadData, ProgressUpdateData*>(UpdatePrintProgress, ptd);
     ;
@@ -1326,7 +1320,6 @@ static void PrintThread(PrintThreadData* ptd) {
 
     auto* data = new DeletePrinterThreadData;
     data->win = win;
-    data->thread = thread;
     data->threadData = ptd;
     auto fn = MkFunc0<DeletePrinterThreadData>(DeletePrinterThread, data);
     uitask::Post(fn, "PrintDeleteThread");
@@ -1339,14 +1332,17 @@ static void PrintToDeviceOnThread(MainWindow* win, PrintData* data) {
     win->printThread = nullptr;
     auto fn = MkFunc0(PrintThread, threadData);
     win->printThread = StartThread(fn, StrL("PrintThread"));
+    // read by DeletePrinterThread, which the thread posts to this (UI) thread,
+    // so it runs after this
+    threadData->thread = win->printThread;
 }
 
 void AbortPrinting(MainWindow* win) {
     if (win->printThread) {
-        win->printCanceled = true;
+        AtomicBoolSet(&win->printCanceled, true);
         WaitForSingleObject(win->printThread, INFINITE);
     }
-    win->printCanceled = false;
+    AtomicBoolSet(&win->printCanceled, false);
 }
 
 static HGLOBAL GlobalMemDup(const void* data, size_t n) {

@@ -5431,7 +5431,7 @@ void CloseCurrentTab(MainWindow* win, bool quitIfLast) {
 
 // a print job is running and was not asked to stop
 static bool IsPrintInProgress(MainWindow* win) {
-    if (!win || !win->printThread || win->printCanceled) {
+    if (!win || !win->printThread || AtomicBoolGet(&win->printCanceled)) {
         return false;
     }
     return WaitForSingleObject(win->printThread, 0) == WAIT_TIMEOUT;

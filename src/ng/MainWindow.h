@@ -367,7 +367,8 @@ struct MainWindow {
     gpui::InputState* findPagesEdit = nullptr;
 
     ThreadHandle printThread = nullptr;
-    bool printCanceled = false;
+    // set on the UI thread, read by the print thread
+    AtomicBool printCanceled = 0;
 
     ThreadHandle findThread = nullptr;
     // set on the UI thread, read by the find thread
