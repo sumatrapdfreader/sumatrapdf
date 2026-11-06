@@ -3075,6 +3075,10 @@ void DisplayModel::SetDisplayMode(DisplayMode newDisplayMode, bool keepContinuou
 }
 
 void DisplayModel::SetInPresentation(bool enable) {
+    // entering twice would save the presentation layout as the one to restore
+    if (enable && inPresentation) {
+        return;
+    }
     inPresentation = enable;
     if (inPresentation) {
         presDisplayMode = displayMode;
