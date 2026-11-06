@@ -281,6 +281,7 @@ class PageRenderer {
 
         AbortCookie* toDelete = nullptr;
         ThreadHandle th = nullptr;
+        HWND hwnd = nullptr;
         {
             AutoUnlockMutex scope(&pr->currAccess);
             if (bmp && !pr->reqAbort) {
@@ -295,12 +296,14 @@ class PageRenderer {
             toDelete = pr->abortCookie;
             pr->abortCookie = nullptr;
 
+            // once thread is null ~PageRenderer won't wait for us, so don't touch pr after this
             th = pr->thread;
             pr->thread = nullptr;
+            hwnd = pr->hwnd;
         }
         delete toDelete;
 
-        PostMessageW(pr->hwnd, kUwmPaintAgain, 0, 0);
+        PostMessageW(hwnd, kUwmPaintAgain, 0, 0);
 
         SafeCloseThreadHandle(&th);
         DestroyTempArena();
