@@ -1081,7 +1081,7 @@ static const FieldInfo gSettingsFields[] = {
     {offsetof(Settings, fastScrollOverScrollbar), SettingType::Bool, false},
     {offsetof(Settings, preventSleepInFullscreen), SettingType::Bool, true},
     {offsetof(Settings, tabWidth), SettingType::Int, 300},
-    {offsetof(Settings, tabsEqualWidth), SettingType::Bool, true},
+    {offsetof(Settings, tabsEqualWidth), SettingType::Bool, false},
     {offsetof(Settings, theme), SettingType::String, (intptr_t)"Light"},
     {offsetof(Settings, helpTheme), SettingType::String, (intptr_t)"app", false, gEnumSettingsHelpTheme, nullptr},
     {offsetof(Settings, lastLightTheme), SettingType::String, (intptr_t)"", true},

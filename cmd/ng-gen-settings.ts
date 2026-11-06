@@ -1944,7 +1944,7 @@ const globalPrefs: Field[] = [
   field(
     "TabsEqualWidth",
     Bool,
-    true,
+    false,
     "if true, all tabs are equally wide. If false, a tab is as wide as its file name needs, up to TabWidth",
   ).ver("3.7"),
   // Built-in names must stay in sync with themesTxt in src/Theme.cpp (plus System)
