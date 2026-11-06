@@ -664,6 +664,8 @@ static void SendAIChatMessage(MainWindow* win) {
     ctx->stream.hwndFrame = win->hwndFrame;
     ctx->stream.providerId = win->aiChatProvider;
     ctx->stream.sessionId = str::Dup(st->sessionId ? st->sessionId : kAIChatPendingSessionId());
+    st->turnId = AIChatNewTurnId();
+    ctx->stream.turnId = st->turnId;
     RunAsync(MkFunc0(StartAIChatReadThread, ctx), StrL("AIChatReadThread"));
 }
 

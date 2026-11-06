@@ -74,7 +74,8 @@ struct AIChatStreamCtx {
     HWND hwndFrame = nullptr;
     MainWindow* win = nullptr;
     int providerId = 0;
-    Str sessionId; // owned; the session the output belongs to
+    Str sessionId;  // owned; the session the output belongs to
+    int turnId = 0; // AIChatTabState::turnId of the turn this streams
 };
 
 void AIChatPostUpdate(AIChatStreamCtx* ctx, AIChatUpdateType type, Str text);

@@ -16,7 +16,8 @@ void WebViewFlushBlock(MainWindow* win);
 void WebViewClearChat(MainWindow* win);
 void WebViewShowUnsupportedFileType(MainWindow* win);
 void SetAIChatWorking(MainWindow* win, bool /*working*/);
-WindowTab* FindAIChatUpdateTab(MainWindow* win, int pid, Str sessionId);
+WindowTab* FindAIChatUpdateTab(MainWindow* win, int pid, int turnId);
+int AIChatNewTurnId();
 
 // implemented by each app
 void WebViewEval(MainWindow* win, Str js, bool record = true);

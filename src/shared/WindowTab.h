@@ -64,6 +64,8 @@ struct AIChatTabState {
     Str sessionId;
     str::Builder chatLog;
     void* process = nullptr;
+    // the running turn, 0 if none: its updates are routed by this
+    int turnId = 0;
 };
 
 /* Data related to a single document loaded into a tab/window */

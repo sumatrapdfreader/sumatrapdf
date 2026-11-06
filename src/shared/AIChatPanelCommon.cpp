@@ -134,23 +134,22 @@ void SetAIChatWorking(MainWindow* win, bool /*working*/) {
     UpdateAIChatPanelForCurrentTab(win);
 }
 
-// the tab an update belongs to; prefer tabs with a running process
-WindowTab* FindAIChatUpdateTab(MainWindow* win, int pid, Str sessionId) {
-    for (WindowTab* t : win->Tabs()) {
-        AIChatTabState* st = GetTabState(t, pid);
-        if (!st || !st->process) {
-            continue;
-        }
-        if (sessionId && st->sessionId && str::Eq(st->sessionId, sessionId)) {
-            return t;
-        }
-        if (sessionId && str::Eq(sessionId, kAIChatPendingSessionId()) && len(st->sessionId) == 0) {
-            return t;
-        }
+// Each turn gets a unique id, so a turn's updates reach its tab only. Routing
+// by session id mixed up two new sessions (both "pending" until the provider
+// names them) and kept delivering a stopped turn's output.
+int AIChatNewTurnId() {
+    static int gLastTurnId = 0;
+    return ++gLastTurnId;
+}
+
+// the tab running turn turnId; null for a finished or stopped turn
+WindowTab* FindAIChatUpdateTab(MainWindow* win, int pid, int turnId) {
+    if (turnId == 0) {
+        return nullptr;
     }
     for (WindowTab* t : win->Tabs()) {
         AIChatTabState* st = GetTabState(t, pid);
-        if (st && st->sessionId && sessionId && str::Eq(st->sessionId, sessionId)) {
+        if (st && st->turnId == turnId) {
             return t;
         }
     }
@@ -269,6 +268,7 @@ void StopAIChat(MainWindow* win) {
     if (provider && st && st->process) {
         AIChatLog(provider->logger, StrL("stop"), st->sessionId ? st->sessionId : StrL("(no session)"));
         AIChatCloseProcess(&st->process, true);
+        st->turnId = 0;
         WebViewAddError(win, StrL("Stopped by user."));
         SetAIChatWorking(win, false);
     }
@@ -280,7 +280,8 @@ struct AIChatUpdateData {
     MainWindow* win = nullptr;
     int providerId = 0;
     Str text;
-    Str sessionId; // to identify which tab this belongs to
+    Str sessionId;
+    int turnId = 0; // to identify which tab this belongs to
     AIChatUpdateType updateType = AIChatUpdateType::Text;
 };
 
@@ -333,6 +334,9 @@ static void ApplyAIChatUpdate(MainWindow* win, AIChatProvider* p, AIChatUpdateDa
             break;
         case AIChatUpdateType::Finished:
             OnAIChatFinished(win, p, st, isActiveTab);
+            if (st) {
+                st->turnId = 0;
+            }
             break;
     }
 }
@@ -345,7 +349,7 @@ static void OnAIChatUpdate(AIChatUpdateData* data) {
         FreeAIChatUpdateData(data);
         return;
     }
-    WindowTab* tab = FindAIChatUpdateTab(win, pid, data->sessionId);
+    WindowTab* tab = FindAIChatUpdateTab(win, pid, data->turnId);
     bool isActiveTab = IsCurrentTab(win, tab) && win->aiChatProvider == pid;
     ApplyAIChatUpdate(win, p, data, GetTabState(tab, pid), isActiveTab);
     FreeAIChatUpdateData(data);
@@ -370,6 +374,7 @@ void AIChatPostUpdate(AIChatStreamCtx* ctx, AIChatUpdateType type, Str text) {
     data->win = ctx->win;
     data->providerId = ctx->providerId;
     data->sessionId = ctx->sessionId ? str::Dup(ctx->sessionId) : Str{};
+    data->turnId = ctx->turnId;
     data->text = text ? str::Dup(text) : Str{};
     data->updateType = type;
     uitask::Post(MkFunc0(OnAIChatUpdate, data), "AIChatUpdate");
