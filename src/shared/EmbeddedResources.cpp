@@ -5,6 +5,7 @@
 #if OS_WIN
 #include "base/Win.h"
 #endif
+#include "base/Crypto.h"
 #include "base/File.h"
 #include "base/Http.h"
 #include "base/LzmaSimpleArchive.h"
@@ -304,6 +305,36 @@ void PrefetchCommonFonts() {
 }
 #endif
 
+// A font's URL file name ends in a prefix of its sha1 (DroidSansFallbackFull-f3cd.ttf,
+// cmd/upload-fonts.ts). Data that doesn't match, e.g. a proxy's error page, is not
+// a font. A name without such a suffix can't be checked and passes.
+bool FontMatchesFileName(Str fileName, Str data) {
+    // "<name>-<hex>.<ext>"
+    int end = len(fileName);
+    while (end > 0 && fileName.s[end - 1] != '.') {
+        end--;
+    }
+    end--;
+    int start = end;
+    while (start > 0 && fileName.s[start - 1] != '-') {
+        start--;
+    }
+    int hexLen = end - start;
+    if (end <= 0 || start <= 0 || hexLen < 4 || hexLen > 8) {
+        return true;
+    }
+    Str hex(fileName.s + start, hexLen);
+    for (int i = 0; i < hexLen; i++) {
+        if (!isxdigit((u8)hex.s[i])) {
+            return true;
+        }
+    }
+    u8 digest[20];
+    CalcSHA1Digest(data, digest);
+    TempStr sha1 = str::MemToHexTemp(Str((char*)digest, (int)sizeof(digest)));
+    return str::StartsWithI(sha1, hex);
+}
+
 // Embedded archive first, then the cache file named by the URL, then a download
 // into that cache. The bytes are kept for the process: mupdf holds the pointer.
 // A miss is remembered too, so a font we cannot get is not retried.
@@ -319,6 +350,12 @@ static void LoadFontFromCacheOrNet(Str name, EmbeddedFont* f) {
     }
     TempStr path = path::JoinTemp(FontCacheDirTemp(), Str(file));
     Str data = ReadKeptFont(path);
+    if (len(data) > 0 && !FontMatchesFileName(Str(file), data)) {
+        logf("font '%s': cached file is damaged, downloading again\n", name);
+        str::Free(data);
+        data = {};
+        file::Delete(path);
+    }
     if (len(data) == 0) {
         logf("font '%s': downloading\n", name);
         if (!DownloadFont(Str(url), path)) {
@@ -326,6 +363,12 @@ static void LoadFontFromCacheOrNet(Str name, EmbeddedFont* f) {
             return;
         }
         data = ReadKeptFont(path);
+        if (len(data) > 0 && !FontMatchesFileName(Str(file), data)) {
+            logf("font '%s': downloaded file doesn't match its sha1, not kept\n", name);
+            str::Free(data);
+            file::Delete(path);
+            return;
+        }
     }
     f->data = (u8*)data.s;
     f->size = len(data);

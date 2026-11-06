@@ -12,6 +12,7 @@ bool EnsureEmbeddedArchiveLoaded();
 lzma::SimpleArchive* GetEmbeddedArchive();
 u8* GetEmbeddedFileData(Str name, int* outSize = nullptr);
 void InstallEmbeddedFontLoader();
+bool FontMatchesFileName(Str fileName, Str data);
 #if OS_WASM
 void PrefetchCommonFonts();
 #endif

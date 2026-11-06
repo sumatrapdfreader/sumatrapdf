@@ -1279,7 +1279,7 @@ workspace "SumatraPDF"
     -- base: EmbeddedResources.cpp (mupdf's built-in fonts from SumatraPDF.exe's archive)
     links { "base", "libsumatrapdf" }
     links_base_win()
-    links { "shell32" }
+    links { "shell32", "wintrust" }
 
   project "PdfFilter"
     build_defines()

@@ -192,6 +192,18 @@ static void BuiltinFontTableTest() {
     fz_drop_context(ctx);
 }
 
+// a downloaded font must match the sha1 prefix in its file name
+static void FontMatchesFileNameTest() {
+    Str abc = StrL("abc"); // sha1 a9993e364706816aba3e25717850c26c9cd0d89d
+    utassert(FontMatchesFileName(StrL("Font-a999.ttf"), abc));
+    utassert(FontMatchesFileName(StrL("Font-Regular-A9993E36.otf"), abc));
+    utassert(!FontMatchesFileName(StrL("Font-a998.ttf"), abc));
+    utassert(!FontMatchesFileName(StrL("Font-Regular-a9993e.cff"), StrL("<html>")));
+    // nothing to check against
+    utassert(FontMatchesFileName(StrL("Font-Regular.otf"), abc));
+    utassert(FontMatchesFileName(StrL("Font.ttf"), abc));
+}
+
 #if OS_LINUX || OS_DARWIN
 static void PlatformSystemFontTest() {
     fz_context* ctx = fz_new_context(nullptr, nullptr, FZ_STORE_UNLIMITED);
@@ -394,6 +406,7 @@ void SumatraPDF_UnitTests() {
     AIChatProcessTest();
 #endif
     BuiltinFontTableTest();
+    FontMatchesFileNameTest();
 #if OS_LINUX || OS_DARWIN
     PlatformSystemFontTest();
 #endif
