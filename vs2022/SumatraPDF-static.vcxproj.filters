@@ -141,6 +141,9 @@
     <ClInclude Include="..\src\MainWindow.h">
       <Filter>src</Filter>
     </ClInclude>
+    <ClInclude Include="..\src\MeasurementToolbar.h">
+      <Filter>src</Filter>
+    </ClInclude>
     <ClInclude Include="..\src\Menu.h">
       <Filter>src</Filter>
     </ClInclude>
@@ -864,6 +867,9 @@
       <Filter>src</Filter>
     </ClCompile>
     <ClCompile Include="..\src\MainWindow.cpp">
+      <Filter>src</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\MeasurementToolbar.cpp">
       <Filter>src</Filter>
     </ClCompile>
     <ClCompile Include="..\src\Menu.cpp">

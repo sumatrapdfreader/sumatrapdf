@@ -963,6 +963,7 @@ static void MenuUpdateStateForWindow(MainWindow* win) {
     MenuSetChecked(win->menu, CmdToggleHighlightFormFields, gSettings->highlightFormFields);
     MenuSetChecked(win->menu, CmdToggleTransparencyGrid, ShowTransparencyGrid());
     MenuSetChecked(win->menu, CmdTogglePageGrid, ShowPageGrid());
+    MenuSetChecked(win->menu, CmdMeasure, win->measurementToolbar != nullptr);
     MenuSetChecked(win->menu, CmdToggleImages, ShowImageOutlines());
     MenuSetChecked(win->menu, CmdDebugShowFitContentArea, ShowFitContentArea());
     MenuSetEnabled(win->menu, CmdTabGroupSave, HasOpenedDocuments(win));

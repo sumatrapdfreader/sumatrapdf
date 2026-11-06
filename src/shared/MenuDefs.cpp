@@ -352,6 +352,10 @@ MenuDef menuDefView[] = {
         CmdConfigurePageGrid,
     },
     {
+        TrN("Measure"),
+        CmdMeasure,
+    },
+    {
         StrL(kMenuSeparator),
         0,
     },

@@ -370,6 +370,7 @@ const commandsRaw = [
     "CmdToggleMirror", "Mirror Pages",
     "CmdTrimPagesToSelection", "Trim Pages To Selection",
     "CmdShowWholePages", "Show Whole Pages",
+    "CmdMeasure", "Measure",
 ];
 
 // removed slots are dropped: nothing outside the generators should see them

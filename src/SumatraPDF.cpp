@@ -131,6 +131,7 @@
 #include "ReadAloud.h"
 #include "ReadingAutoScroll.h"
 #include "ReadingBar.h"
+#include "MeasurementToolbar.h"
 #include "ExplorerQuickLook.h"
 #include "PagePosition.h"
 #include "base/DbgHelpDyn.h"
@@ -3085,6 +3086,7 @@ void DeleteMainWindow(MainWindow* win) {
 
     DeletePropertiesWindow(win->hwndFrame);
     DestroyToolbar(win);
+    CloseMeasurement(win);
     RevokeCanvasDropTarget(win->hwndCanvas);
 
     ReportIf(win->findThread && WaitForSingleObject(win->findThread, 0) == WAIT_TIMEOUT);
@@ -4356,6 +4358,7 @@ void LoadModelIntoTab(WindowTab* tab) {
 
     MainWindow* win = tab->win;
     ReadingAutoScrollHideBar(win);
+    CloseMeasurement(win);
     ReadingBarCancelDrag(win);
     // Document content is about to change; drop any page-element / about-page tip
     // so it cannot linger over the new document.
@@ -4793,6 +4796,7 @@ static void CloseDocumentInCurrentTab(MainWindow* win, bool keepUIEnabled, bool 
     // so the overlay's widget pointer can't dangle (cancel: don't write/re-render
     // a document that's being closed or reloaded)
     CommitFormFieldEdit(false);
+    CloseMeasurement(win);
     CancelAnnotationPlacement(win);
     // signing writes into this document's engine; a tab switch or close would
     // leave the hidden placement dialog aimed at a dead model
@@ -8712,6 +8716,13 @@ static void OnFrameKeyEsc(MainWindow* win) {
         ReadingBarHide(win);
         return;
     }
+    if (win->measurementToolbar) {
+        // the first Esc drops the measurement being clicked, the next closes the tool
+        if (!MeasurementCancel(win)) {
+            CloseMeasurement(win);
+        }
+        return;
+    }
     if (AbortFinding(win, true)) {
         return;
     }
@@ -11909,6 +11920,10 @@ static LRESULT FrameOnCommand(MainWindow* win, HWND hwnd, UINT msg, WPARAM wp, L
         case CmdTogglePageGrid:
             TogglePageGrid();
             RedrawPageGridWindows();
+            break;
+
+        case CmdMeasure:
+            ToggleMeasurement(win);
             break;
 
         case CmdConfigurePageGrid:

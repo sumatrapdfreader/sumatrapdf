@@ -26,6 +26,11 @@ Compiler and sanitizer variants add suffixes, such as `dbg-clang` and
 base unit tests. `-run` launches SumatraPDF as a normal session, so it
 saves and restores settings. Pass `-- -for-testing` for a throwaway run.
 
+## Measuring
+
+`CmdMeasure` (calibrated length and rectangular area measurements) is currently
+available only in the original Windows app; ng hides it until a GPUI port exists.
+
 ## PDF scripts
 
 `CmdRunPDFScript` uses a GPUI dialog and runs the same MuPDF JavaScript

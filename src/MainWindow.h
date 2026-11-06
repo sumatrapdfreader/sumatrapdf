@@ -44,6 +44,7 @@ struct TocItem;
 struct FindBarWnd;
 struct FindWindowWnd;
 struct ToolbarVirt;
+struct MeasurementToolbar;
 
 constexpr int kMaxKeyboardLinkHintLength = 9;
 
@@ -783,6 +784,7 @@ struct MainWindow { // NOLINT(clang-analyzer-optin.performance.Padding)
 
     // compact property row under the selected annotation in Edit PDF mode
     AnnotEditToolbar* annotEditToolbar = nullptr;
+    MeasurementToolbar* measurementToolbar = nullptr;
     // filter box on the Edit PDF toolbar and its dropdown list
     AnnotFilterToolbar* annotFilterToolbar = nullptr;
     // session-only: pop the annotation list into a floating window (not saved)

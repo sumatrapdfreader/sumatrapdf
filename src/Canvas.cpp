@@ -73,6 +73,7 @@
 #include "RefHover.h"
 #include "Canvas.h"
 #include "PageGridDialogCommon.h"
+#include "MeasurementToolbar.h"
 #include "SumatraLog.h"
 
 // if set instead of trying to render pages we don't have, we simply do nothing
@@ -1018,6 +1019,9 @@ static void UpdateDraggedLineOrVertex(MainWindow* win, DisplayModel* dm, int x, 
 }
 
 static void OnMouseMove(MainWindow* win, int x, int y, WPARAM key) {
+    if (!(key & (MK_RBUTTON | MK_MBUTTON)) && MeasurementOnMove(win, Point{x, y})) {
+        return;
+    }
     if (ReadingBarOnMouseMove(win, x, y)) {
         return;
     }
@@ -1399,6 +1403,9 @@ static void OpenOrSelectEditAnnotation(WindowTab* tab, Annotation* annot, Point 
 }
 
 static void OnMouseLeftButtonDown(MainWindow* win, int x, int y, WPARAM key) {
+    if (MeasurementOnClick(win, Point{x, y}, (key & MK_CONTROL) != 0)) {
+        return;
+    }
     // lf("Left button clicked on %d %d", x, y);
     gPressOnlyDeselected = false;
     if (IsRightDragging(win)) {
@@ -1691,6 +1698,9 @@ static void OnMouseLeftButtonDown(MainWindow* win, int x, int y, WPARAM key) {
 }
 
 static void OnMouseLeftButtonUp(MainWindow* win, int x, int y, WPARAM key) {
+    if (win->measurementToolbar) {
+        return;
+    }
     if (ReadingBarOnLeftUp(win)) {
         return;
     }
@@ -1957,6 +1967,9 @@ static void OnMouseLeftButtonUp(MainWindow* win, int x, int y, WPARAM key) {
 bool gDisableInteractiveInverseSearch = false;
 
 static void OnMouseLeftButtonDblClk(MainWindow* win, int x, int y, WPARAM key) {
+    if (MeasurementOnClick(win, Point{x, y}, (key & MK_CONTROL) != 0)) {
+        return;
+    }
     // lf("Left button clicked on %d %d", x, y);
     if (AnnotationPlacementOnLeftDblClk(win, Point{x, y})) {
         return;
@@ -3084,6 +3097,7 @@ static bool DrawDocument(MainWindow* win, HDC hdc, Rect rcArea) {
     PaintReadAloudHighlight(win, &gfx);
     ReadingBarPaint(win, &gfx);
     PaintSignatureMarks(win, &gfx);
+    PaintMeasurement(win, &gfx);
 
     if (win->fwdSearchMark.show) {
         PaintForwardSearchMark(win, &gfx);
@@ -3279,6 +3293,10 @@ static LRESULT OnSetCursorMouseNone(MainWindow* win, HWND hwnd) {
 }
 
 static LRESULT OnSetCursor(MainWindow* win, HWND hwnd) {
+    if (win->measurementToolbar && win->mouseAction == MouseAction::None) {
+        SetCanvasCursor(win, IDC_CROSS);
+        return TRUE;
+    }
     ReportIf(win->hwndCanvas != hwnd);
     if (SigMarksOnSetCursor(win)) {
         return TRUE;

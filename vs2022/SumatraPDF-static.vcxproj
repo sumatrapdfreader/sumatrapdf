@@ -1403,6 +1403,7 @@
     <ClInclude Include="..\src\Installer.h" />
     <ClInclude Include="..\src\LayersUI.h" />
     <ClInclude Include="..\src\MainWindow.h" />
+    <ClInclude Include="..\src\MeasurementToolbar.h" />
     <ClInclude Include="..\src\Menu.h" />
     <ClInclude Include="..\src\MergePdf.h" />
     <ClInclude Include="..\src\Notifications.h" />
@@ -1674,6 +1675,7 @@
     <ClCompile Include="..\src\KeyboardHelp.cpp" />
     <ClCompile Include="..\src\LayersUI.cpp" />
     <ClCompile Include="..\src\MainWindow.cpp" />
+    <ClCompile Include="..\src\MeasurementToolbar.cpp" />
     <ClCompile Include="..\src\Menu.cpp" />
     <ClCompile Include="..\src\MergePdf.cpp" />
     <ClCompile Include="..\src\NavFilesInFolder.cpp" />

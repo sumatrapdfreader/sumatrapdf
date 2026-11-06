@@ -6827,6 +6827,112 @@ RectF EngineMupdf::PageContentBox(int pageNo, RenderTarget /*target*/) {
     return rect2.Intersect(mediabox);
 }
 
+//--- the points of the page's vector paths, for snapping a measurement to them
+
+// a CAD page can have millions; beyond this many, the rest are ignored
+constexpr int kMaxPathPoints = 500000;
+
+struct PathPointsDevice {
+    fz_device super;
+    Vec<PointF>* out;
+};
+
+struct PathPointsWalk {
+    Vec<PointF>* out;
+    fz_matrix ctm;
+};
+
+static void PathPointsAdd(PathPointsWalk* w, float x, float y) {
+    if (len(*w->out) >= kMaxPathPoints) {
+        return;
+    }
+    fz_point p = fz_transform_point(fz_make_point(x, y), w->ctm);
+    VecAppend(*w->out, PointF(p.x, p.y));
+}
+
+static void PathPointsMoveTo(fz_context*, void* arg, float x, float y) {
+    PathPointsAdd((PathPointsWalk*)arg, x, y);
+}
+
+static void PathPointsLineTo(fz_context*, void* arg, float x, float y) {
+    PathPointsAdd((PathPointsWalk*)arg, x, y);
+}
+
+// a curve's end point; its control points are not on the curve
+static void PathPointsCurveTo(fz_context*, void* arg, float, float, float, float, float x3, float y3) {
+    PathPointsAdd((PathPointsWalk*)arg, x3, y3);
+}
+
+static void PathPointsClose(fz_context*, void*) {}
+
+static void PathPointsAddPath(fz_context* ctx, fz_device* dev, const fz_path* path, fz_matrix ctm) {
+    // rectto, quadto, curvetov and curvetoy are null: fz_walk_path() then
+    // reports them as movetos, linetos and curvetos
+    static const fz_path_walker walker = {
+        PathPointsMoveTo, PathPointsLineTo, PathPointsCurveTo, PathPointsClose, nullptr, nullptr, nullptr, nullptr,
+    };
+    PathPointsWalk w{((PathPointsDevice*)dev)->out, ctm};
+    fz_walk_path(ctx, path, &walker, &w);
+}
+
+static void PathPointsFillPath(fz_context* ctx, fz_device* dev, const fz_path* path, int, fz_matrix ctm, fz_colorspace*,
+                               const float*, float, fz_color_params) {
+    PathPointsAddPath(ctx, dev, path, ctm);
+}
+
+static void PathPointsStrokePath(fz_context* ctx, fz_device* dev, const fz_path* path, const fz_stroke_state*,
+                                 fz_matrix ctm, fz_colorspace*, const float*, float, fz_color_params) {
+    PathPointsAddPath(ctx, dev, path, ctm);
+}
+
+// The end and corner points of the lines and curves drawn on a page, in page
+// coordinates (as PageMediabox). Empty for a scan, which has no paths.
+bool EngineMupdfPagePathPoints(EngineBase* engine, int pageNo, Vec<PointF>& out) {
+    VecReset(out);
+    EngineMupdf* epdf = AsEngineMupdf(engine);
+    if (!epdf) {
+        return false;
+    }
+    auto* ctx = epdf->Ctx();
+    FzPageInfo* pageInfo = epdf->GetFzPageInfo(pageNo, false);
+    if (!pageInfo) {
+        return false;
+    }
+    fz_rect pagerect;
+    fz_display_list* list = nullptr;
+    {
+        // as in PageContentBox()
+        ScopedMutex scope(&epdf->renderLock);
+        ScopedRecursiveMutex docScope(&epdf->docLock);
+        pagerect = fz_bound_page(ctx, pageInfo->page);
+        list = GetOrBuildPageDisplayList(pageInfo, ctx);
+    }
+    if (!list) {
+        return false;
+    }
+    fz_device* dev = nullptr;
+    bool ok = true;
+    fz_var(dev);
+    fz_try(ctx) {
+        auto* d = fz_new_derived_device(ctx, PathPointsDevice);
+        d->super.fill_path = PathPointsFillPath;
+        d->super.stroke_path = PathPointsStrokePath;
+        d->out = &out;
+        dev = &d->super;
+        fz_run_display_list(ctx, list, dev, fz_identity, pagerect, nullptr);
+        fz_close_device(ctx, dev);
+    }
+    fz_always(ctx) {
+        fz_drop_device(ctx, dev);
+        fz_drop_display_list(ctx, list);
+    }
+    fz_catch(ctx) {
+        fz_report_error(ctx);
+        ok = false;
+    }
+    return ok;
+}
+
 RectF EngineMupdf::Transform(const RectF& rect, int pageNo, float zoom, int rotation, bool inverse) {
     if (zoom <= 0) {
         Str name = FilePath();
