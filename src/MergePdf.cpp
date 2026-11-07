@@ -1913,7 +1913,7 @@ bool MergePdfWnd::SaveTo(Str destPath) {
     TempStr tmpPath = GetTempFilePathTemp(StrL("merge"));
     bool ok = len(tmpPath) > 0 && EngineMupdfMergePdfs(srcs, pages, tmpPath);
     if (ok) {
-        WindowTab* tab = FindTabByFile(destPath);
+        WindowTab* tab = FindTabByFilePath(destPath);
         if (tab) {
             // it's reloaded below; the file watcher needn't
             tab->ignoreNextAutoReload = true;
@@ -1937,7 +1937,7 @@ void MergePdfWnd::AfterSave(Str path) {
     MainWindow* w = IsMainWindowValidAndNotClosing(win) ? win : nullptr;
     TempStr savedPath = str::DupTemp(path);
     Close();
-    WindowTab* tab = FindTabByFile(savedPath);
+    WindowTab* tab = FindTabByFilePath(savedPath);
     if (tab) {
         SelectTabInWindow(tab);
         ReloadDocument(tab->win, false);

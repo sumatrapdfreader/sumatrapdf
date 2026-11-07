@@ -413,42 +413,35 @@ static WindowTab* CurrentTabForCache() {
     return nullptr;
 }
 
-static WindowTab* FindTabByFileInWindow(Str file, MainWindow* win) {
-    TempStr normFile = path::NormalizeTemp(file);
+static WindowTab* FindTabByFileInWindow(Str normPath, MainWindow* win) {
     for (WindowTab* tab : win->Tabs()) {
-        if (tab->type != WindowTab::Type::Document) {
-            continue;
-        }
-        Str fp = tab->filePath;
-        if (len(fp) == 0) {
-            continue;
-        }
-        if (path::IsSame(fp, normFile)) {
+        if (len(tab->filePath) > 0 && path::IsSame(tab->filePath, normPath)) {
             return tab;
         }
     }
     return nullptr;
 }
 
+// tab showing path in limitWin, or in any main window if limitWin is null
 WindowTab* FindTabByFilePath(Str path, MainWindow* limitWin) {
-    return FindTabByFile(path, limitWin);
+    if (len(path) == 0) {
+        return nullptr;
+    }
+    TempStr normPath = path::NormalizeTemp(path);
+    if (limitWin) {
+        return FindTabByFileInWindow(normPath, limitWin);
+    }
+    for (MainWindow* win : gWindows) {
+        if (WindowTab* tab = FindTabByFileInWindow(normPath, win)) {
+            return tab;
+        }
+    }
+    return nullptr;
 }
 
 // Runs a command in win, as if picked from its menu.
 void ExecuteCmd(MainWindow* win, int cmdId) {
     HwndSendCommand(win->hwndFrame, cmdId);
-}
-
-WindowTab* FindTabByFile(Str file, MainWindow* limitWin) {
-    if (limitWin) {
-        return FindTabByFileInWindow(file, limitWin);
-    }
-    for (MainWindow* win : gWindows) {
-        if (WindowTab* tab = FindTabByFileInWindow(file, win)) {
-            return tab;
-        }
-    }
-    return nullptr;
 }
 
 // Find the first window showing a given PDF file
@@ -466,7 +459,7 @@ MainWindow* FindMainWindowByFile(Str file, bool focusTab, MainWindow* limitWin) 
         }
     }
     if (!tab) {
-        tab = FindTabByFile(file, limitWin);
+        tab = FindTabByFilePath(file, limitWin);
     }
     if (!tab) {
         return nullptr;
@@ -514,7 +507,7 @@ bool IsDocumentOpenOrLoading(Str file) {
     if (len(file) == 0) {
         return false;
     }
-    if (FindTabByFile(file)) {
+    if (FindTabByFilePath(file)) {
         return true;
     }
     return IndexOfLoadingFile(file) >= 0;
@@ -5854,21 +5847,6 @@ static void ShowGeneratedMarkdownHtml(MainWindow* win) {
     if (!process) {
         logf("ShowGeneratedMarkdownHtml: failed to launch Notepad for '%s'\n", htmlPath);
     }
-}
-
-// tab showing path in any main window, or nullptr
-WindowTab* FindTabByFilePath(Str path) {
-    if (len(path) == 0) {
-        return nullptr;
-    }
-    for (MainWindow* win : gWindows) {
-        for (WindowTab* tab : win->Tabs()) {
-            if (path::IsSame(tab->filePath, path)) {
-                return tab;
-            }
-        }
-    }
-    return nullptr;
 }
 
 // the tab for `path`, only if it lives in `win`
@@ -17433,7 +17411,7 @@ ContinueOpenWindow:
 
     for (Str path : flags.fileNames) {
         if (restoreSession) {
-            auto* tab = FindTabByFile(path);
+            auto* tab = FindTabByFilePath(path);
             if (tab) {
                 tabToSelect = tab;
                 if (flags.forwardSearchOrigin && flags.forwardSearchLine && win && win->AsFixed() &&
@@ -17453,7 +17431,7 @@ ContinueOpenWindow:
         if (IsDocumentOpenOrLoading(path)) {
             if (auto* existing = FindMainWindowByFile(path, true)) {
                 win = existing;
-                tabToSelect = FindTabByFile(path);
+                tabToSelect = FindTabByFilePath(path);
             }
             continue;
         }

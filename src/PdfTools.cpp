@@ -832,7 +832,7 @@ void PdfDeletePageDialog::DoIt(VirtMouseEvent*) {
         return;
     }
 
-    WindowTab* sourceTab = isExtract ? FindTabByFile(srcPath, win) : nullptr;
+    WindowTab* sourceTab = isExtract ? FindTabByFilePath(srcPath, win) : nullptr;
     EngineBase* sourceEngine = sourceTab ? sourceTab->GetEngine() : nullptr;
 
     TempStr pageRange;
