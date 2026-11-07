@@ -113,6 +113,7 @@ bool IsGoToPageDialogVisible();
 gpui::El* GoToPageDialogBuild(MainWindow* win, gpui::Ctx* cx);
 
 void ShowAddFavoriteDialog(MainWindow* win, Str filePath, int pageNo, Str pageLabel, Str name);
+void ShowEditFavoritesDialog(MainWindow* win);
 void CloseAddFavoriteDialog();
 bool IsAddFavoriteDialogVisible();
 gpui::El* AddFavoriteDialogBuild(MainWindow* win, gpui::Ctx* cx);

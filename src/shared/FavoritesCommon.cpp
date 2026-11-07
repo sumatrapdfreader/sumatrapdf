@@ -357,6 +357,10 @@ static void SortFileFavorites(FileState* fs) {
     if (!fs || !fs->favorites || len(*fs->favorites) < 2) {
         return;
     }
+    // the order set in Edit Favorites
+    if (gSettings->favoritesManualOrder) {
+        return;
+    }
     if (gSettings->sortFavoritesByName) {
         VecSort(*fs->favorites, SortByName);
     } else {
@@ -374,10 +378,81 @@ static void SortAllFavorites() {
 // toggle SortFavoritesByName, re-sort, refresh trees, and save settings
 void ToggleSortFavoritesByName() {
     gSettings->sortFavoritesByName = !gSettings->sortFavoritesByName;
+    gSettings->favoritesManualOrder = false;
     SortAllFavorites();
     RememberFavTreeExpansionStateForAllWindows();
     UpdateFavoritesTreeForAllWindows();
     ScheduleSaveSettings();
+}
+
+// The Edit Favorites list: each file with favorites, sorted like the Favorites
+// tree, followed by its favorites.
+void BuildFavEditRows(Vec<FavEditRow>& rows) {
+    VecReset(rows);
+    StrVec paths;
+    GetSortedFilePaths(paths);
+    for (int i = 0; i < len(paths); i++) {
+        FileState* fs = GetFavByFilePath(paths[i]);
+        if (!fs || !fs->favorites || len(*fs->favorites) == 0) {
+            continue;
+        }
+        SortFileFavorites(fs);
+        VecAppend(rows, FavEditRow{fs, nullptr});
+        for (Favorite* fav : *fs->favorites) {
+            VecAppend(rows, FavEditRow{fs, fav});
+        }
+    }
+}
+
+// a file row is its file name, a favorite row is indented under it
+TempStr FavEditRowTextTemp(const FavEditRow& row) {
+    if (!row.fav) {
+        return path::GetBaseNameTemp(row.fs->filePath);
+    }
+    return str::JoinTemp(StrL("      "), FavReadableNameTemp(row.fav));
+}
+
+static void FavoritesEdited() {
+    RememberFavTreeExpansionStateForAllWindows();
+    UpdateFavoritesTreeForAllWindows();
+    ScheduleSaveSettings();
+}
+
+// an empty name shows the page instead
+void RenameFavorite(FileState* fs, Favorite* fav, Str name) {
+    if (!fs || !fav) {
+        return;
+    }
+    TempStr s = str::DupTemp(name);
+    str::TrimWSInPlace(s, str::TrimOpt::Both);
+    str::ReplaceWithCopy(&fav->name, len(s) > 0 ? Str(s) : Str{});
+    SortFileFavorites(fs);
+    FavoritesEdited();
+}
+
+bool CanMoveFavorite(FileState* fs, Favorite* fav, FavMove dir) {
+    if (!fs || !fs->favorites || !fav) {
+        return false;
+    }
+    int idx = VecFind(*fs->favorites, fav);
+    if (idx < 0) {
+        return false;
+    }
+    return dir == FavMove::Up ? idx > 0 : idx < len(*fs->favorites) - 1;
+}
+
+// Moving a favorite keeps the order from then on (FavoritesManualOrder).
+void MoveFavorite(FileState* fs, Favorite* fav, FavMove dir) {
+    if (!CanMoveFavorite(fs, fav, dir)) {
+        return;
+    }
+    Vec<Favorite*>& favs = *fs->favorites;
+    int idx = VecFind(favs, fav);
+    int other = dir == FavMove::Up ? idx - 1 : idx + 1;
+    favs[idx] = favs[other];
+    favs[other] = fav;
+    gSettings->favoritesManualOrder = true;
+    FavoritesEdited();
 }
 
 void AddOrReplaceFav(Str filePath, Str storedPagePos, Str name, Str pageLabel, PointF scrollPos,
@@ -1035,4 +1110,5 @@ void RebuildFavMenu(MainWindow* win, MenuRef menu) {
         AppendFavMenus(menu, ctrl->GetFilePath());
     }
     MenuSetEnabled(menu, CmdFavoriteToggle, HasFavorites());
+    MenuSetEnabled(menu, CmdEditFavorites, HasFavorites());
 }

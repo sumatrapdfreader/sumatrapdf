@@ -110,6 +110,23 @@ void SetSearchStartFavorite(MainWindow* win);
 
 void ToggleSortFavoritesByName();
 
+// one row of the Edit Favorites list: a file (fav is null) or one of its favorites
+struct FavEditRow {
+    FileState* fs = nullptr;
+    Favorite* fav = nullptr;
+};
+
+enum class FavMove {
+    Up,
+    Down,
+};
+
+void BuildFavEditRows(Vec<FavEditRow>& rows);
+TempStr FavEditRowTextTemp(const FavEditRow& row);
+void RenameFavorite(FileState* fs, Favorite* fav, Str name);
+bool CanMoveFavorite(FileState* fs, Favorite* fav, FavMove dir);
+void MoveFavorite(FileState* fs, Favorite* fav, FavMove dir);
+
 // --- shared by FavoritesCommon.cpp and each app's Favorites.cpp ---
 
 struct FavMenuEntry {

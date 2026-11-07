@@ -651,6 +651,17 @@ TempStr FavoriteNavResultTemp(Str action, int pageNo, int* exitCodeOut) {
         GoToNextFavorite(win, false);
     } else if (str::EqI(action, StrL("page"))) {
         // report only
+    } else if (str::EqI(action, StrL("list"))) {
+        // the current file's favorites in order: "OK manual=1 Intro@2,-@1"
+        FileState* fs = FileHistoryFindByPath(win->ctrl->GetFilePath());
+        out.Append(fmt("OK manual=%d ", gSettings->favoritesManualOrder ? 1 : 0));
+        int n = (fs && fs->favorites) ? len(*fs->favorites) : 0;
+        for (int i = 0; i < n; i++) {
+            Favorite* f = (*fs->favorites)[i];
+            out.Append(i > 0 ? StrL(",") : StrL(""));
+            out.Append(fmt("%s@%d", len(f->name) > 0 ? f->name : StrL("-"), ParseStoredPagePos(f->pageNo).pageNo));
+        }
+        return finish({}, 0);
     } else if (ControlFavoritesMenu(win, action, &menuIds)) {
         return finish(menuIds, 0);
     } else {

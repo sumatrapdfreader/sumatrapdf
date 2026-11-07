@@ -12245,6 +12245,9 @@ static LRESULT FrameOnCommand(MainWindow* win, HWND hwnd, UINT msg, WPARAM wp, L
         case CmdFavoriteShowInTab:
             ToggleFavoritesTab(win);
             break;
+        case CmdEditFavorites:
+            ShowEditFavoritesDialog(win);
+            break;
 
         case CmdGoToHomePage:
             GoToHomeTab(win);

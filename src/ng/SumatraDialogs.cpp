@@ -1278,12 +1278,15 @@ gp::El* DlgFooter(gp::Ctx* cx, Str okLabel, gp::Listener onOk, gp::Listener onCa
         row->Child(extra);
     }
     row->Child(gp::Div(cx->a)->Flex1());
-    row->Child(gpc::Button::New(cx, GStrL("dlg-cancel"))
-                   ->Label(ToGpui(Tr("Cancel")))
-                   ->Outline()
-                   ->WithSize(gp::UiSize::Small)
-                   ->OnClick(onCancel)
-                   ->IntoEl());
+    // no onCancel: only the action, as orig's NewDlgFooter() without a cancel button
+    if (onCancel.fn != 0) {
+        row->Child(gpc::Button::New(cx, GStrL("dlg-cancel"))
+                       ->Label(ToGpui(Tr("Cancel")))
+                       ->Outline()
+                       ->WithSize(gp::UiSize::Small)
+                       ->OnClick(onCancel)
+                       ->IntoEl());
+    }
     row->Child(DlgFilledButton(cx, GStrL("dlg-ok"), okLabel, onOk, okDisabled));
     return row;
 }

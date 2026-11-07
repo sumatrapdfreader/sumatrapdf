@@ -5527,6 +5527,10 @@ void ExecuteCmd(MainWindow* win, int cmdId) {
             ToggleFavoritesTab(win);
             break;
 
+        case CmdEditFavorites:
+            ShowEditFavoritesDialog(win);
+            break;
+
         case CmdToggleMenuBar:
             ToggleMenuBar(win, false);
             break;

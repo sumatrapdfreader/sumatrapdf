@@ -1693,6 +1693,13 @@ const globalPrefs: Field[] = [
     "if true, favorites within each file are sorted alphabetically by name " +
       "(or page label); if false (the default), they are sorted by page number",
   ).ver("3.7"),
+  field(
+    "FavoritesManualOrder",
+    Bool,
+    false,
+    "if true, favorites within each file keep the order set in Edit Favorites and new ones are added at the end; " +
+      "set by moving a favorite there, cleared by Sort By Name",
+  ).ver("3.7"),
   field("ShowToc", Bool, true, "if true, show the table of contents (Bookmarks) sidebar when the document has one"),
   field(
     "AlwaysShowSidebar",
@@ -2474,6 +2481,7 @@ const globalPrefsLayout = [
   "ShowFavorites",
   "ShowSidebarMiddle",
   "SortFavoritesByName",
+  "FavoritesManualOrder",
   "ShowToc",
   "AlwaysShowSidebar",
   "ShowThumbnailsIfNoToc",

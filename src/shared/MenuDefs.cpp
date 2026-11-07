@@ -631,6 +631,10 @@ MenuDef menuDefFavorites[] = {
         CmdFavoriteShowInTab,
     },
     {
+        TrN("Edit Favorites..."),
+        CmdEditFavorites,
+    },
+    {
         StrL(kMenuSeparator),
         0,
     },
@@ -1383,6 +1387,10 @@ MenuDef menuDefContextFav[] = {
     {
         TrN("Sort By Name"),
         CmdToggleFavoritesSort,
+    },
+    {
+        TrN("Edit Favorites..."),
+        CmdEditFavorites,
     },
     {
         StrL(kMenuSeparator),

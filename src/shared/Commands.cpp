@@ -377,6 +377,7 @@ const CommandInfo gCommands[] = {
     {CmdDebugShowDownloadedFonts, "CmdDebugShowDownloadedFonts\0", StrL("Debug: Show Downloaded Fonts")},
     {CmdTocExpandChapter, "CmdTocExpandChapter\0", StrL("Bookmarks: Expand Chapter")},
     {CmdTocCollapseChapter, "CmdTocCollapseChapter\0", StrL("Bookmarks: Collapse Chapter")},
+    {CmdEditFavorites, "CmdEditFavorites\0", StrL("Edit Favorites...")},
 };
 const int gCommandsCount = dimofi(gCommands);
 

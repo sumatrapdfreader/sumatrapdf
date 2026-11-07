@@ -378,6 +378,7 @@ const commandsRaw = [
     "CmdDebugShowDownloadedFonts", "Debug: Show Downloaded Fonts",
     "CmdTocExpandChapter", "Bookmarks: Expand Chapter",
     "CmdTocCollapseChapter", "Bookmarks: Collapse Chapter",
+    "CmdEditFavorites", "Edit Favorites...",
 ];
 
 // removed slots are dropped: nothing outside the generators should see them

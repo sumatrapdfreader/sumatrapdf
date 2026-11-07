@@ -1258,6 +1258,10 @@ struct Settings {
     // name (or page label); if false (the default), they are sorted by
     // page number
     bool sortFavoritesByName;
+    // if true, favorites within each file keep the order set in Edit
+    // Favorites and new ones are added at the end; set by moving a
+    // favorite there, cleared by Sort By Name
+    bool favoritesManualOrder;
     // if true, show the table of contents (Bookmarks) sidebar when the
     // document has one
     bool showToc;
