@@ -1436,10 +1436,9 @@ void EnginePdfProxy::CopyStateFromPdfEngine() {
     logicalPageCount = pdfEngine->LogicalPageCount();
 }
 
-// returns false if didn't perform action (temporary until we move
-// all code there)
+// an engine that follows a link itself (mupdf, djvu, ebook) overrides this;
+// false lets the caller's link handler follow it
 bool EngineBase::HandleLink(IPageDestination* /*dest*/, ILinkHandler* /*linkHandler*/) {
-    // if not implemented in derived classes
     return false;
 }
 
