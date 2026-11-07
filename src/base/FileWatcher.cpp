@@ -13,7 +13,8 @@
 static Str gFileWatcherSkipPath;
 
 void FileWatcherSetSkipPath(Str path) {
-    gFileWatcherSkipPath = path;
+    str::Free(gFileWatcherSkipPath);
+    gFileWatcherSkipPath = str::Dup(path);
 }
 
 static Str FileWatcherGetSkipPath() {

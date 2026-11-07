@@ -3,6 +3,7 @@
 
 #include "base/Base.h"
 #include "base/File.h"
+#include "base/FileWatcher.h"
 #include "base/Win.h"
 
 // must be last due to assert() over-write
@@ -272,6 +273,23 @@ void FileUtilTest() {
         utassert(len(shortPath) > 0);
         utassert(len(shortPath) == (int)strlen(shortPath.s));
         utassert(file::Exists(shortPath));
+        file::Delete(path);
+    }
+
+    {
+        // the skip path must be copied: the caller may free or reuse its buffer
+        TempStr path = path::JoinTemp(GetTempDirTemp(), StrL("file-watcher-skip-test.txt"));
+        utassert(file::WriteFile(path, StrL("x")));
+        Str callerBuf = str::Dup(path);
+        FileWatcherSetSkipPath(callerBuf);
+        memset(callerBuf.s, 'z', (size_t)len(callerBuf));
+        WatchedFile* wf = FileWatcherSubscribe(path, Func0{});
+        utassert(wf == nullptr);
+        if (wf) {
+            FileWatcherUnsubscribe(wf);
+        }
+        FileWatcherSetSkipPath(Str());
+        str::Free(callerBuf);
         file::Delete(path);
     }
 #endif
