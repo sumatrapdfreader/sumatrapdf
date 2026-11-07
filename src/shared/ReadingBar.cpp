@@ -27,6 +27,7 @@
 #include "gui/AppShell.h"
 #include "gui/DocCanvas.h"
 #endif
+#include "CanvasCommon.h"
 #include "ReadingAutoScroll.h"
 #include "ReadingBar.h"
 
@@ -253,13 +254,7 @@ void ReadingBarCancelDrag(MainWindow* win) {
     win->readingBarDrag = ReadingBarDrag::None;
     win->readingBarDragOff = 0;
     if (dragging) {
-#if defined(SUMATRA_NG)
         CanvasSetCapture(win, false);
-#else
-        if (win->hwndCanvas && GetCapture() == win->hwndCanvas) {
-            ReleaseCapture();
-        }
-#endif
     }
 }
 
@@ -276,11 +271,7 @@ void ReadingBarHide(MainWindow* win) {
         win->readingBarHover = false;
     }
     InvalidateCanvas(win);
-#if !defined(SUMATRA_NG)
-    if (win && win->hwndCanvas) {
-        ReadingAutoScrollRelayout(win->hwndCanvas);
-    }
-#endif
+    CanvasRelayoutAutoScroll(win);
 }
 
 void ReadingBarForgetTab(WindowTab* tab) {
@@ -312,11 +303,8 @@ void ReadingBarToggle(MainWindow* win) {
 #if defined(SUMATRA_NG)
     Rect band = BandRect(win);
     logf("ReadingBar: on, band %d,%d %dx%d, invert %d\n", band.x, band.y, band.dx, band.dy, (int)InvertOn());
-#else
-    if (win->hwndCanvas) {
-        ReadingAutoScrollRelayout(win->hwndCanvas);
-    }
 #endif
+    CanvasRelayoutAutoScroll(win);
 }
 
 void ReadingBarToggleInvert(MainWindow* win) {
@@ -396,13 +384,7 @@ bool ReadingBarOnLeftDown(MainWindow* win, int x, int y) {
         win->readingBarDrag = ReadingBarDrag::Move;
         win->readingBarDragOff = y - band.y;
     }
-#if defined(SUMATRA_NG)
     CanvasSetCapture(win, true);
-#else
-    if (win->hwndCanvas) {
-        SetCapture(win->hwndCanvas);
-    }
-#endif
     return true;
 }
 
@@ -431,11 +413,9 @@ bool ReadingBarOnMouseMove(MainWindow* win, int x, int y) {
         win->readingBarHover = hover;
         InvalidateCanvas(win);
     }
-#if !defined(SUMATRA_NG)
-    if (hover && win->hwndCanvas) {
-        TrackMouseLeave(win->hwndCanvas);
+    if (hover) {
+        CanvasTrackMouseLeave(win);
     }
-#endif
     return false;
 }
 

@@ -74,6 +74,7 @@
 #include "uia/Provider.h"
 #endif
 #include "Selection.h"
+#include "CanvasCommon.h"
 #if defined(SUMATRA_NG)
 
 #include "SumatraLog.h"
@@ -273,24 +274,14 @@ bool GetSelectionScreenRect(WindowTab* tab, Rect& out) {
     }
     MainWindow* win = tab->win;
     DisplayModel* dm = win->AsFixed();
-#if defined(SUMATRA_NG)
     if (!dm || !win->showSelection) {
-#else
-    if (!dm || !win->hwndCanvas || !win->showSelection) {
-#endif
         return false;
     }
     Rect bounds = SelectionBounds(dm, tab->selectionOnPage);
     if (bounds.IsEmpty()) {
         return false;
     }
-#if defined(SUMATRA_NG)
-    out = bounds;
-#else
-    Point p = HwndClientToScreen(win->hwndCanvas, bounds.TL());
-    out = Rect(p.x, p.y, bounds.dx, bounds.dy);
-#endif
-    return true;
+    return CanvasClientToScreen(win, bounds, out);
 }
 
 TempStr FormatSelectionPositionTemp(WindowTab* tab) {
@@ -320,24 +311,14 @@ static void RepaintSelection(MainWindow* win) {
 }
 
 static void StartSelectionCapture(MainWindow* win) {
-#if defined(SUMATRA_NG)
     CanvasSetCapture(win, true);
-#else
-    SetCapture(win->hwndCanvas);
-    SetTimer(win->hwndCanvas, kSelectSmoothScrollTimerID, kSelectSmoothScrollDelayInMs, nullptr);
-#endif
+    CanvasStartTimer(win, kSelectSmoothScrollTimerID, kSelectSmoothScrollDelayInMs);
     RepaintSelection(win);
 }
 
 static void StopSelectionCapture(MainWindow* win) {
-#if defined(SUMATRA_NG)
     CanvasSetCapture(win, false);
-#else
-    if (GetCapture() == win->hwndCanvas) {
-        ReleaseCapture();
-    }
-    KillTimer(win->hwndCanvas, kSelectSmoothScrollTimerID);
-#endif
+    CanvasKillTimer(win, kSelectSmoothScrollTimerID);
 }
 
 // Apply edge/corner/move drag to an original normalized rect (screen coords).

@@ -446,6 +446,23 @@ void CanvasSetKeyModifiers(bool shift, bool ctrl, bool platform) {
 // WM_CAPTURECHANGED, which gpui turns into a synthetic mouse-up.
 void CanvasSetCapture(MainWindow*, bool) {}
 
+// ng: the smooth-scroll tick runs off the render loop (see DocCanvasAutoScrollTick)
+void CanvasStartTimer(MainWindow*, int, int) {}
+
+void CanvasKillTimer(MainWindow*, int) {}
+
+// ng: gpui reports the leave itself
+void CanvasTrackMouseLeave(MainWindow*) {}
+
+// ng: the auto-scroll bar is a gpui view that lays itself out
+void CanvasRelayoutAutoScroll(MainWindow*) {}
+
+// ng: gpui does not report a window's screen position; canvas coordinates
+bool CanvasClientToScreen(MainWindow*, Rect r, Rect& out) {
+    out = r;
+    return true;
+}
+
 void CanvasSetClipboardText(MainWindow* win, Str s) {
     if (win && win->gpuiWin) {
         gp::ClipboardSetText(win->gpuiWin, ToGpui(s));
@@ -3530,9 +3547,6 @@ void CanvasTickPresentation(MainWindow* win, int elapsedMs) {
         AppShellShowCursor(win, false);
     }
 }
-
-// orig's kSelectSmoothScrollTimerID period
-constexpr int kSelectSmoothScrollDelayInMs = 20;
 
 // the auto-scroll tick: xScrollSpeed / yScrollSpeed are pixels per 20 ms
 void DocCanvasAutoScrollTick(MainWindow* win, int elapsedMs) {

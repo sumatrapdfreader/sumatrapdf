@@ -27,3 +27,11 @@ void MakeFullScrollbar(T& si) {
     si.nMax = 99;
     si.nPage = 100;
 }
+
+// the canvas window's mouse capture, timers and coordinates; implemented by each app
+void CanvasSetCapture(MainWindow* win, bool capture);
+void CanvasStartTimer(MainWindow* win, int id, int ms);
+void CanvasKillTimer(MainWindow* win, int id);
+void CanvasTrackMouseLeave(MainWindow* win);
+void CanvasRelayoutAutoScroll(MainWindow* win);
+bool CanvasClientToScreen(MainWindow* win, Rect r, Rect& out);

@@ -246,6 +246,49 @@ bool Canvas_UnitTestScrollLineAmount() {
 }
 #endif
 
+void CanvasSetCapture(MainWindow* win, bool capture) {
+    if (!win->hwndCanvas) {
+        return;
+    }
+    if (capture) {
+        SetCapture(win->hwndCanvas);
+        return;
+    }
+    if (GetCapture() == win->hwndCanvas) {
+        ReleaseCapture();
+    }
+}
+
+void CanvasStartTimer(MainWindow* win, int id, int ms) {
+    SetTimer(win->hwndCanvas, id, ms, nullptr);
+}
+
+void CanvasKillTimer(MainWindow* win, int id) {
+    KillTimer(win->hwndCanvas, id);
+}
+
+void CanvasTrackMouseLeave(MainWindow* win) {
+    if (win->hwndCanvas) {
+        TrackMouseLeave(win->hwndCanvas);
+    }
+}
+
+void CanvasRelayoutAutoScroll(MainWindow* win) {
+    if (win && win->hwndCanvas) {
+        ReadingAutoScrollRelayout(win->hwndCanvas);
+    }
+}
+
+// the rect's top-left in screen pixels; size unchanged
+bool CanvasClientToScreen(MainWindow* win, Rect r, Rect& out) {
+    if (!win->hwndCanvas) {
+        return false;
+    }
+    Point p = HwndClientToScreen(win->hwndCanvas, r.TL());
+    out = Rect(p.x, p.y, r.dx, r.dy);
+    return true;
+}
+
 static void StopSmoothScroll(MainWindow* win) {
     if (!win) {
         return;

@@ -1,15 +1,15 @@
 /* Copyright 2022 the SumatraPDF project authors (see AUTHORS file).
    License: GPLv3 */
 
+constexpr int kSelectSmoothScrollTimerID = 2;
+constexpr int kSelectSmoothScrollDelayInMs = 20;
+constexpr int kSelectSmoothScrollSlowDownFactor = 10;
+
 #if defined(SUMATRA_NG)
 namespace gpui {
 struct PaintCtx;
 }
 #else
-constexpr int kSelectSmoothScrollTimerID = 2;
-constexpr int kSelectSmoothScrollDelayInMs = 20;
-constexpr int kSelectSmoothScrollSlowDownFactor = 10;
-
 struct Gfx;
 #endif
 struct WindowTab;

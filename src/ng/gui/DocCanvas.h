@@ -106,8 +106,6 @@ void CanvasDrawEllipse(gpui::PaintCtx* ctx, Rect r, Color col, float width);
 Size CanvasMeasureText(gpui::PaintCtx* ctx, Str s, float fontSize);
 void CanvasDrawText(gpui::PaintCtx* ctx, Str s, Point at, Color col, float fontSize);
 
-// orig's SetCapture / ReleaseCapture on the canvas HWND
-void CanvasSetCapture(MainWindow* win, bool capture);
 void CanvasSetClipboardText(MainWindow* win, Str s);
 // what orig reads with GetKeyState; here it is the last mouse or key event
 bool CanvasCtrlPressed();
