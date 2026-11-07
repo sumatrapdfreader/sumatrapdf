@@ -63,6 +63,7 @@ TempStr FrameNcStripsResultTemp(int* exitCodeOut = nullptr);
 TempStr WheelWhileClosingResultTemp(int* exitCodeOut = nullptr);
 
 // helpers shared with each app's test commands
+void ExtractPageTextToStdout(EngineBase* engine, int pageNo);
 IPageDestination* NthDestInToc(TocItem* item, int target, int& counter);
 TocItem* NthTocItemWithDest(TocItem* item, int target, int& counter);
 bool FindWordCenter(EngineBase* engine, int pageNo, Str word, double* xOut, double* yOut);

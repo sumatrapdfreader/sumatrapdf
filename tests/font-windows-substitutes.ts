@@ -10,7 +10,7 @@
 
 import { mkdirSync, rmSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
-import { assemblePdf, EXE, makeZip, runStandalone, tmpPath, USE_NG, type ZipEntry } from "./util.ts";
+import { assemblePdf, EXE, makeZip, runStandalone, tmpPath, type ZipEntry } from "./util.ts";
 
 const name = "font-windows-substitutes";
 
@@ -71,9 +71,8 @@ async function extractText(path: string, fontUrlBase: string, cache: string): Pr
 }
 
 export async function testit(): Promise<void> {
-  if (USE_NG) {
-    // ng's -extract-text doesn't print the log lines this checks
-    console.log(`${name}: skipped for ng`);
+  if (process.platform !== "win32") {
+    console.log(`${name}: skipped, Windows only`);
     return;
   }
   const dir = tmpPath(name);

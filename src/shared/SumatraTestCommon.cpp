@@ -182,6 +182,75 @@ TempStr FindPageRangeResultTemp(Str pdfPath, Str needle, int first, int last, St
 
 // walk the outline tree in document order, return the `target`-th (1-based) item
 // that has a destination. `counter` tracks how many dests we've seen so far.
+static int DecodeUtf8Rune(const u8* p, int n) {
+    if (n == 2) {
+        return ((p[0] & 0x1f) << 6) | (p[1] & 0x3f);
+    }
+    if (n == 3) {
+        return ((p[0] & 0x0f) << 12) | ((p[1] & 0x3f) << 6) | (p[2] & 0x3f);
+    }
+    if (n == 4) {
+        return ((p[0] & 0x07) << 18) | ((p[1] & 0x3f) << 12) | ((p[2] & 0x3f) << 6) | (p[3] & 0x3f);
+    }
+    return p[0];
+}
+
+// -extract-text: the page's text as hex, then each character's height and box,
+// for tests (tests/issue-6348.ts, tests/issue-6500.ts)
+void ExtractPageTextToStdout(EngineBase* engine, int pageNo) {
+    PageText pageText = engine->ExtractPageText(pageNo);
+    if (len(pageText.text) == 0) {
+        return;
+    }
+    TempStr s = str::ReplaceTemp(Str(pageText.text.s), StrL("\n"), StrL("_"));
+    printf("text on page %d: '", pageNo);
+    // print characters as hex because I don't know what kind of locale-specific mangling
+    // printf() might do
+    int idx = 0;
+    while (s.s[idx] != 0) {
+        char c = s.s[idx++];
+        printf("%02x ", (u8)c);
+    }
+    printf("'\n");
+    // codepoint:height, same order as the text. tests/issue-6348.ts
+    printf("boxh on page %d:", pageNo);
+    const u8* p = (const u8*)pageText.text.s;
+    const u8* end = p + pageText.text.len;
+    for (int i = 0; i < pageText.nCodepoints && p < end; i++) {
+        int n = utf8RuneLen(p);
+        if (n < 1 || p + n > end) {
+            break;
+        }
+        int cp = DecodeUtf8Rune(p, n);
+        int dy = pageText.coords ? pageText.coords[i].dy : 0;
+        printf(" %d:%d", cp, dy);
+        p += n;
+    }
+    printf("\n");
+
+    // codepoint:x,y,dx, same order as the text. tests/issue-6500.ts
+    // one write: log lines printed meanwhile would otherwise split it
+    str::Builder boxes;
+    boxes.Append(fmt("boxes on page %d:", pageNo));
+    p = (const u8*)pageText.text.s;
+    for (int i = 0; i < pageText.nCodepoints && p < end; i++) {
+        int n = utf8RuneLen(p);
+        if (n < 1 || p + n > end) {
+            break;
+        }
+        int cp = DecodeUtf8Rune(p, n);
+        Rect r = pageText.coords ? pageText.coords[i] : Rect{};
+        boxes.Append(fmt(" %d:%d,%d,%d", cp, r.x, r.y, r.dx));
+        p += n;
+    }
+    boxes.AppendChar('\n');
+    fflush(stdout);
+    Str boxesStr = ToStr(boxes);
+    fwrite(boxesStr.s, 1, len(boxesStr), stdout);
+    fflush(stdout);
+    FreePageText(&pageText);
+}
+
 IPageDestination* NthDestInToc(TocItem* item, int target, int& counter) {
     for (; item; item = item->next) {
         if (item->dest) {

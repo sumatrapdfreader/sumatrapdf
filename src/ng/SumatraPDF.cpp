@@ -139,6 +139,7 @@
 #include "VirtualDesktop.h"
 #include "OpenFromUrlCommon.h"
 #include "AppHelpersCommon.h"
+#include "SumatraTest.h"
 
 RenderCache* gRenderCache = nullptr;
 static Flags* gFlags = nullptr;
@@ -7201,26 +7202,13 @@ static int MaybeRunCliTool(int argc, char** argv) {
 #if IS_DEBUG
 // -extract-text: print one page as hex and exit. Orig does this before any
 // window; leaving it to the GUI never returns.
-static void ExtractPageTextToStdout(EngineBase* engine, int pageNo) {
-    PageText pageText = engine->ExtractPageText(pageNo);
-    if (len(pageText.text) == 0) {
-        FreePageText(&pageText);
-        return;
-    }
-    TempStr s = str::ReplaceTemp(pageText.text, StrL("\n"), StrL("_"));
-    printf("text on page %d: '", pageNo);
-    for (int i = 0; i < len(s); i++) {
-        printf("%02x ", (u8)s.s[i]);
-    }
-    printf("'\n");
-    FreePageText(&pageText);
-}
-
 static void TestExtractPages(const Flags& ci) {
 #if OS_WIN
     RedirectIOToExistingConsole();
 #endif
-    gLogToConsole = false;
+    // as orig: the log goes along, so tests can see e.g. which fonts were
+    // loaded or downloaded (tests/font-download.ts)
+    gLogToConsole = true;
     for (Str fileName : ci.fileNames) {
         EngineBase* engine = CreateEngineFromFile(fileName, nullptr, true);
         if (!engine) {
