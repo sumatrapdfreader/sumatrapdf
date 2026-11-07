@@ -29,17 +29,6 @@ static Vec<OverlayScrollbar*> gAllScrollbars;
 // auto-repeat
 static OverlayScrollbar* gCapture = nullptr;
 
-// ng: win32's MulDiv (a * b / c, rounded) for a positive c; the other
-// platforms have none
-static int MulDivI(int a, int b, int c) {
-    if (c <= 0) {
-        return -1;
-    }
-    i64 n = (i64)a * (i64)b;
-    n = n >= 0 ? n + (c / 2) : n - (c / 2);
-    return (int)(n / c);
-}
-
 static bool IsLive(OverlayScrollbar* sb) {
     if (!sb) {
         return false;
@@ -67,38 +56,6 @@ int OverlayScrollbarWidth(OverlayScrollbar* sb) {
 
 Rect ClientRect(OverlayScrollbar* sb) {
     return Rect(0, 0, sb->clientDx, sb->clientDy);
-}
-
-static int ThumbLen(OverlayScrollbar* sb, int trackLen) {
-    int range = sb->nMax - sb->nMin + 1;
-    int thumbLen = MulDivI(trackLen, sb->nPage, std::max(range, 1));
-    return std::max(thumbLen, DpiScale(kMinThumbSize));
-}
-
-// Calculate thumb rect within the track
-static Rect GetThumbRect(OverlayScrollbar* sb) {
-    Rect track = GetTrackRect(sb);
-    int range = sb->nMax - sb->nMin + 1;
-    if (range <= 0 || sb->nPage >= range) {
-        return track;
-    }
-
-    int trackLen = IsVert(sb) ? track.dy : track.dx;
-    int thumbLen = ThumbLen(sb, trackLen);
-
-    int scrollableTrack = trackLen - thumbLen;
-    int scrollableRange = range - sb->nPage;
-    int pos = sb->isDragging ? sb->nTrackPos : sb->nPos;
-    int thumbOffset = 0;
-    if (scrollableRange > 0) {
-        thumbOffset = MulDivI(pos - sb->nMin, scrollableTrack, scrollableRange);
-    }
-    thumbOffset = limitValue(thumbOffset, 0, std::max(0, scrollableTrack));
-
-    if (IsVert(sb)) {
-        return {track.x, track.y + thumbOffset, track.dx, thumbLen};
-    }
-    return {track.x + thumbOffset, track.y, thumbLen, track.dy};
 }
 
 static void SendScrollMsg(OverlayScrollbar* sb, ScrollMsg msg) {
@@ -392,24 +349,6 @@ static void OnPaintScrollbar(gp::PaintCtx* ctx, gp::El* e, void* user) {
 }
 
 // --- mouse (orig's WndProcOverlayScrollbar) ----------------------------------
-
-// the position that puts the thumb's center at `clickPos` (client coords)
-static int PosForThumbCenteredAt(OverlayScrollbar* sb, int clickPos) {
-    Rect track = GetTrackRect(sb);
-    int range = sb->nMax - sb->nMin + 1;
-    int trackLen = IsVert(sb) ? track.dy : track.dx;
-    int thumbLen = ThumbLen(sb, trackLen);
-    int scrollableTrack = trackLen - thumbLen;
-    int scrollableRange = range - sb->nPage;
-    int clickInTrack = clickPos - (IsVert(sb) ? track.y : track.x);
-    int thumbOffset = clickInTrack - (thumbLen / 2);
-    thumbOffset = limitValue(thumbOffset, 0, std::max(0, scrollableTrack));
-    int newPos = sb->nMin;
-    if (scrollableTrack > 0 && scrollableRange > 0) {
-        newPos = sb->nMin + MulDivI(thumbOffset, scrollableRange, scrollableTrack);
-    }
-    return newPos;
-}
 
 static void OnLeftButtonDown(OverlayScrollbar* sb, int mx, int my, bool isShift) {
     Point pt(mx, my);

@@ -69,6 +69,68 @@ Rect GetTrackRect(OverlayScrollbar* sb) {
     return {total, 0, rc.dx - (2 * total), rc.dy};
 }
 
+// win32's MulDiv (a * b / c, rounded) for a positive c; portable
+int MulDivI(int a, int b, int c) {
+    if (c <= 0) {
+        return -1;
+    }
+    i64 n = (i64)a * (i64)b;
+    n = n >= 0 ? n + (c / 2) : n - (c / 2);
+    return (int)(n / c);
+}
+
+int ThumbLen(OverlayScrollbar* sb, int trackLen) {
+    int range = sb->nMax - sb->nMin + 1;
+    int thumbLen = MulDivI(trackLen, (int)sb->nPage, std::max(range, 1));
+    return std::max(thumbLen, DpiScale(kMinThumbSize));
+}
+
+// Calculate thumb rect within the track. The offset is clamped to 0 when the
+// track is shorter than the minimum thumb.
+Rect GetThumbRect(OverlayScrollbar* sb) {
+    Rect track = GetTrackRect(sb);
+    int range = sb->nMax - sb->nMin + 1;
+    int nPage = (int)sb->nPage;
+    if (range <= 0 || nPage >= range) {
+        return track;
+    }
+
+    int trackLen = IsVert(sb) ? track.dy : track.dx;
+    int thumbLen = ThumbLen(sb, trackLen);
+
+    int scrollableTrack = trackLen - thumbLen;
+    int scrollableRange = range - nPage;
+    int pos = sb->isDragging ? sb->nTrackPos : sb->nPos;
+    int thumbOffset = 0;
+    if (scrollableRange > 0) {
+        thumbOffset = MulDivI(pos - sb->nMin, scrollableTrack, scrollableRange);
+    }
+    thumbOffset = limitValue(thumbOffset, 0, std::max(0, scrollableTrack));
+
+    if (IsVert(sb)) {
+        return {track.x, track.y + thumbOffset, track.dx, thumbLen};
+    }
+    return {track.x + thumbOffset, track.y, thumbLen, track.dy};
+}
+
+// the position that puts the thumb's center at `clickPos` (client coords)
+int PosForThumbCenteredAt(OverlayScrollbar* sb, int clickPos) {
+    Rect track = GetTrackRect(sb);
+    int range = sb->nMax - sb->nMin + 1;
+    int trackLen = IsVert(sb) ? track.dy : track.dx;
+    int thumbLen = ThumbLen(sb, trackLen);
+    int scrollableTrack = trackLen - thumbLen;
+    int scrollableRange = range - (int)sb->nPage;
+    int clickInTrack = clickPos - (IsVert(sb) ? track.y : track.x);
+    int thumbOffset = clickInTrack - (thumbLen / 2);
+    thumbOffset = limitValue(thumbOffset, 0, std::max(0, scrollableTrack));
+    int newPos = sb->nMin;
+    if (scrollableTrack > 0 && scrollableRange > 0) {
+        newPos = sb->nMin + MulDivI(thumbOffset, scrollableRange, scrollableTrack);
+    }
+    return newPos;
+}
+
 Rect GetArrowTopRect(OverlayScrollbar* sb) {
     Rect rc = ClientRect(sb);
     int arrowSize = IsVert(sb) ? rc.dx : rc.dy;

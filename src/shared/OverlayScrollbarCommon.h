@@ -14,6 +14,10 @@ int ScaledWidth(OverlayScrollbar* sb, bool thick);
 bool IsVert(OverlayScrollbar* sb);
 
 Rect GetTrackRect(OverlayScrollbar* sb);
+int MulDivI(int a, int b, int c);
+int ThumbLen(OverlayScrollbar* sb, int trackLen);
+Rect GetThumbRect(OverlayScrollbar* sb);
+int PosForThumbCenteredAt(OverlayScrollbar* sb, int clickPos);
 Rect GetArrowTopRect(OverlayScrollbar* sb);
 Rect GetArrowBottomRect(OverlayScrollbar* sb);
 void ShowScrollbarWindow(OverlayScrollbar* sb, bool thick);

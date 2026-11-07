@@ -32,33 +32,6 @@ Rect ClientRect(OverlayScrollbar* sb) {
     return HwndClientRect(sb->hwnd);
 }
 
-// Calculate thumb rect within the track
-static Rect GetThumbRect(OverlayScrollbar* sb) {
-    Rect track = GetTrackRect(sb);
-    int range = sb->nMax - sb->nMin + 1;
-    if (range <= 0 || (int)sb->nPage >= range) {
-        return track;
-    }
-
-    int trackLen = IsVert(sb) ? track.dy : track.dx;
-    int thumbLen = MulDiv(trackLen, (int)sb->nPage, range);
-    thumbLen = std::max(thumbLen, DpiScale(kMinThumbSize));
-
-    int scrollableTrack = trackLen - thumbLen;
-    int scrollableRange = range - (int)sb->nPage;
-    int pos = sb->isDragging ? sb->nTrackPos : sb->nPos;
-    int thumbOffset = 0;
-    if (scrollableRange > 0) {
-        thumbOffset = MulDiv(pos - sb->nMin, scrollableTrack, scrollableRange);
-    }
-    thumbOffset = setMinMax(thumbOffset, 0, scrollableTrack);
-
-    if (IsVert(sb)) {
-        return {track.x, track.y + thumbOffset, track.dx, thumbLen};
-    }
-    return {track.x + thumbOffset, track.y, thumbLen, track.dy};
-}
-
 static void SendScrollMsg(OverlayScrollbar* sb, UINT scrollMsg, WPARAM wp) {
     SendMessageW(sb->hwndOwner, scrollMsg, wp, 0);
 }
@@ -530,10 +503,8 @@ static LRESULT CALLBACK WndProcOverlayScrollbar(HWND hwnd, UINT msg, WPARAM wp, 
                 int ptInTrack = IsVert(sb) ? my : mx;
                 Rect track = GetTrackRect(sb);
                 int range = sb->nMax - sb->nMin + 1;
-                int thumbLen = MulDiv(IsVert(sb) ? track.dy : track.dx, (int)sb->nPage, range);
-                int minThumb = DpiScale(kMinThumbSize);
-                thumbLen = std::max(thumbLen, minThumb);
                 int trackLen = IsVert(sb) ? track.dy : track.dx;
+                int thumbLen = ThumbLen(sb, trackLen);
                 int scrollableTrack = trackLen - thumbLen;
                 int scrollableRange = range - (int)sb->nPage;
 
@@ -600,21 +571,7 @@ static LRESULT CALLBACK WndProcOverlayScrollbar(HWND hwnd, UINT msg, WPARAM wp, 
 
             // Shift+click: jump thumb center to click position
             if (GetKeyState(VK_SHIFT) & 0x8000) {
-                Rect track = GetTrackRect(sb);
-                int range = sb->nMax - sb->nMin + 1;
-                int trackLen = IsVert(sb) ? track.dy : track.dx;
-                int thumbLen = MulDiv(trackLen, (int)sb->nPage, range);
-                int minThumb = DpiScale(kMinThumbSize);
-                thumbLen = std::max(thumbLen, minThumb);
-                int scrollableTrack = trackLen - thumbLen;
-                int scrollableRange = range - (int)sb->nPage;
-                int clickInTrack = (IsVert(sb) ? my : mx) - (IsVert(sb) ? track.y : track.x);
-                int thumbOffset = clickInTrack - (thumbLen / 2);
-                thumbOffset = setMinMax(thumbOffset, 0, scrollableTrack);
-                int newPos = sb->nMin;
-                if (scrollableTrack > 0 && scrollableRange > 0) {
-                    newPos = sb->nMin + MulDiv(thumbOffset, scrollableRange, scrollableTrack);
-                }
+                int newPos = PosForThumbCenteredAt(sb, IsVert(sb) ? my : mx);
                 sb->nTrackPos = newPos;
                 PaintScrollbar(sb);
                 SendScrollMsg(sb, ScrollMsgForType(sb), MAKEWPARAM(SB_THUMBTRACK, newPos));
