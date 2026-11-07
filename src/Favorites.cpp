@@ -568,10 +568,8 @@ static void FavTreeContextMenu(ContextMenuEvent* ev) {
         // Sort By Name works with no selection; Remove needs a favorite row.
         MenuRemove(popup, CmdFavoriteDel);
     }
-    MarkMenuOwnerDraw(popup);
     uint flags = TPM_RETURNCMD | TPM_RIGHTBUTTON;
     int cmd = TrackPopupMenu(popup, flags, pt.x, pt.y, 0, win->hwndFrame, nullptr);
-    FreeMenuOwnerDrawInfoData(popup);
     DestroyMenu(popup);
 
     // TODO: it would be nice to have a system for undo-ing things, like in Gmail,

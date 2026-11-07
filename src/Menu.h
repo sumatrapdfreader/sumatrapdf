@@ -4,21 +4,12 @@
 struct AppCommandCtx;
 using BuildMenuCtx = AppCommandCtx;
 
-struct MenuOwnerDrawInfo;
-
 struct MenuDef {
     Str title;
     UINT_PTR idOrSubmenu = 0;
 };
 
 #define kMenuSeparator "-----"
-
-void FreeAllMenuDrawInfos();
-void FreeMenuOwnerDrawInfo(MenuOwnerDrawInfo*);
-void MarkMenuOwnerDraw(HMENU, bool isMenuBar = false);
-void FreeMenuOwnerDrawInfoData(HMENU);
-void MenuCustomDrawMesureItem(HWND, MEASUREITEMSTRUCT*);
-void MenuCustomDrawItem(HWND, DRAWITEMSTRUCT*);
 
 HMENU BuildMenuFromDef(MenuDef* menuDefs, HMENU menu, BuildMenuCtx* ctx);
 void RemoveBadMenuSeparators(HMENU menu);

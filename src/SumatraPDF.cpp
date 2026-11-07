@@ -931,7 +931,6 @@ void RebuildMenuBarForWindow(MainWindow* win) {
             redrawMenuBar = true;
         }
     }
-    FreeMenuOwnerDrawInfoData(oldMenu);
     DestroyMenu(oldMenu);
     if (redrawMenuBar) {
         RedrawMenuBarForWindow(win);
@@ -12764,10 +12763,7 @@ static void MenuBarAsPopupMenu(MainWindow* win, Rect btnRect) {
         GetMenuItemInfo(win->menu, i, TRUE, &mii);
         AppendMenuW(popup, MF_POPUP | MF_STRING, (UINT_PTR)mii.hSubMenu, subMenuName);
     }
-
-    MarkMenuOwnerDraw(popup);
     TrackCaptionPopupMenu(win, popup, btnRect);
-    FreeMenuOwnerDrawInfoData(popup);
 
     while (count > 0) {
         --count;
@@ -14085,20 +14081,6 @@ static LRESULT CALLBACK WndProcSumatraFrame(HWND hwnd, UINT msg, WPARAM wp, LPAR
         case WM_COMMAND:
             return FrameOnCommand(win, hwnd, msg, wp, lp);
 
-        case WM_MEASUREITEM:
-            if (ThemeColorizeControls()) {
-                MenuCustomDrawMesureItem(hwnd, (MEASUREITEMSTRUCT*)lp);
-                return TRUE;
-            }
-            break;
-
-        case WM_DRAWITEM:
-            if (ThemeColorizeControls()) {
-                MenuCustomDrawItem(hwnd, (DRAWITEMSTRUCT*)lp);
-                return TRUE;
-            }
-            break;
-
         case WM_SETFOCUS:
         case WM_KILLFOCUS:
             // document keyboard focus is on the frame; repaint canvas focus ring (#4644)
@@ -14303,7 +14285,6 @@ static LRESULT CALLBACK WndProcSumatraFrame(HWND hwnd, UINT msg, WPARAM wp, LPAR
             // It's also sent when a parent window (e.g. Total Commander's lister)
             // destroys our embedded window.
             GlobalHotkeysOnDestroy(hwnd);
-            FreeMenuOwnerDrawInfoData(GetMenu(hwnd));
             if (win) {
                 CloseWindow(win, true, true);
             }
@@ -17646,8 +17627,6 @@ Exit:
     // which crashes if gSettings is freed
     FileHistorySetStates(nullptr);
     CleanUpSettings();
-
-    FreeAllMenuDrawInfos();
     FreeAnnotationClipboard();
     DeleteSyncTempFiles();
     ShutdownWin11Printing();

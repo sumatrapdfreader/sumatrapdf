@@ -585,10 +585,8 @@ static void TocContextMenu(ContextMenuEvent* ev) {
         MenuRemove(popup, CmdFavoriteDel);
     }
     RemoveBadMenuSeparators(popup);
-    MarkMenuOwnerDraw(popup);
     uint flags = TPM_RETURNCMD | TPM_RIGHTBUTTON;
     int cmd = TrackPopupMenu(popup, flags, pt.x, pt.y, 0, win->hwndFrame, nullptr);
-    FreeMenuOwnerDrawInfoData(popup);
     DestroyMenu(popup);
     // the menu runs a message loop: DDE or a reload can close or replace the
     // document meanwhile, freeing filePath, dti, dest and tab

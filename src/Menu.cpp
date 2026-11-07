@@ -57,17 +57,6 @@
 #include "MenuCommon.h"
 #include "MenuDefs.h"
 
-// value associated with menu item for owner-drawn purposes
-struct MenuOwnerDrawInfo {
-    Str text;
-    // copy of MENUITEMINFO fields
-    uint fType = 0;
-    uint fState = 0;
-    HBITMAP hbmpChecked = nullptr;
-    HBITMAP hbmpUnchecked = nullptr;
-    HBITMAP hbmpItem = nullptr;
-};
-
 static bool gAddCrashMeMenu = false;
 
 // clang-format off
@@ -1019,9 +1008,7 @@ void OnAboutContextMenu(MainWindow* win, int x, int y) {
             pt = Point(rc.x + 40, rc.y + 80);
         }
     }
-    MarkMenuOwnerDraw(popup);
     INT cmd = TrackPopupMenu(popup, TPM_RETURNCMD | TPM_RIGHTBUTTON, pt.x, pt.y, 0, win->hwndFrame, nullptr);
-    FreeMenuOwnerDrawInfoData(popup);
     DestroyMenu(popup);
 
     if (CmdOpenSelectedDocument == cmd) {
@@ -1281,10 +1268,8 @@ void OnWindowContextMenu(MainWindow* win, int x, int y) {
     }
 
     Point pt = HwndMapWindowPoint(win->hwndCanvas, HWND_DESKTOP, {x, y});
-    MarkMenuOwnerDraw(popup);
     UINT flags = TPM_RETURNCMD | TPM_RIGHTBUTTON;
     int cmdId = TrackPopupMenu(popup, flags, pt.x, pt.y, 0, win->hwndFrame, nullptr);
-    FreeMenuOwnerDrawInfoData(popup);
     DestroyMenu(popup);
 
     // TrackPopupMenu runs a nested message loop; during that time the window
@@ -1457,336 +1442,6 @@ void OnWindowContextMenu(MainWindow* win, int x, int y) {
     HwndSendCommand(win->hwndFrame, cmdId);
 }
 
-// so that we can do free everything at exit
-static Vec<MenuOwnerDrawInfo*> g_menuDrawInfos;
-
-void FreeAllMenuDrawInfos() {
-    while (len(g_menuDrawInfos) != 0) {
-        // Note: could be faster
-        FreeMenuOwnerDrawInfo(g_menuDrawInfos[0]);
-    }
-}
-
-void FreeMenuOwnerDrawInfo(MenuOwnerDrawInfo* modi) {
-    VecRemove(g_menuDrawInfos, modi);
-    str::Free(modi->text);
-    free(modi);
-}
-
-// menu text consists of potentially 2 parts:
-// - text of the menu item
-// - text for the keyboard shortcut
-// They are separated with \t
-static TempStr ParseMenuTextTemp(Str sIn, Str* shortcutOut) {
-    *shortcutOut = {};
-    Str before, after;
-    if (!str::CutChar(sIn, '\t', &before, &after)) {
-        return sIn;
-    }
-    *shortcutOut = after;
-    return str::DupTemp(before);
-}
-
-static void DrawMenuText(Gfx* gfx, Str text, Rect rc, u32 flags, PlatformFont* font, Color col) {
-    MenuAccelText parsed = ParseMenuAccelTextTemp(text);
-    gfx->DrawText(parsed.display, rc, flags, font, col);
-    if (parsed.underlineOff < 0 || parsed.underlineLen <= 0) {
-        return;
-    }
-    Size full = gfx->MeasureText(parsed.display, font);
-    Size before = parsed.underlineOff > 0 ? gfx->MeasureText(Str(parsed.display.s, parsed.underlineOff), font) : Size{};
-    Size ch = gfx->MeasureText(Str(parsed.display.s + parsed.underlineOff, parsed.underlineLen), font);
-    int textX = (flags & gfxTextRight) ? rc.x + rc.dx - full.dx : rc.x;
-    int underlineY = rc.y + full.dy - 1;
-    gfx->DrawLine({textX + before.dx, underlineY, ch.dx, 0}, col);
-}
-
-void FreeMenuOwnerDrawInfoData(HMENU hmenu) {
-    MENUITEMINFOW mii{};
-    mii.cbSize = sizeof(MENUITEMINFOW);
-
-    int n = GetMenuItemCount(hmenu);
-    for (int i = 0; i < n; i++) {
-        mii.fMask = MIIM_DATA | MIIM_FTYPE | MIIM_SUBMENU;
-        BOOL ok = GetMenuItemInfoW(hmenu, (uint)i, TRUE /* by position */, &mii);
-        ReportIf(!ok);
-        auto* modi = (MenuOwnerDrawInfo*)mii.dwItemData;
-        if (modi != nullptr) {
-            FreeMenuOwnerDrawInfo(modi);
-            mii.dwItemData = 0;
-            mii.fType &= ~MFT_OWNERDRAW;
-            SetMenuItemInfoW(hmenu, (uint)i, TRUE /* by position */, &mii);
-        }
-        if (mii.hSubMenu != nullptr) {
-            FreeMenuOwnerDrawInfoData(mii.hSubMenu);
-        }
-    };
-}
-#if 1
-void MarkMenuOwnerDraw(HMENU /*hmenu*/, bool /*isMenuBar*/) {
-    // our painting isn't good enough so disable for now
-    // rely on darkmodelib for menu theming, which only does light / dark theme from os
-}
-#else
-void MarkMenuOwnerDraw(HMENU hmenu, bool isMenuBar) {
-    // darkmodelib handles the menu bar via setWindowMenuBarSubclass
-    // but doesn't handle popup/context menus, so we owner-draw those
-    if (isMenuBar && DarkModeIsActive()) {
-        return;
-    }
-    if (!ThemeColorizeControls()) {
-        return;
-    }
-
-    // https://stackoverflow.com/questions/30353644/cmenu-border-color-on-mfc
-    static HBRUSH hbrBrush = nullptr;
-    static Color bgCol = (Color)-1;
-    Color col = ThemeMainWindowBackgroundColor();
-    if (!hbrBrush) {
-        bgCol = col;
-        hbrBrush = ::CreateSolidBrush(col);
-    } else {
-        if (col != bgCol) {
-            // in case theme changed
-            DeleteBrush(hbrBrush);
-            bgCol = col;
-            hbrBrush = ::CreateSolidBrush(col);
-        }
-    }
-
-    MENUINFO mi{};
-    mi.cbSize = sizeof(MENUINFO);
-    GetMenuInfo(hmenu, &mi);
-    mi.hbrBack = hbrBrush;
-    mi.fMask = MIM_BACKGROUND | MIM_STYLE | MIM_APPLYTOSUBMENUS;
-    SetMenuInfo(hmenu, &mi);
-
-    WCHAR buf[1024];
-
-    MENUITEMINFOW mii{};
-    mii.cbSize = sizeof(MENUITEMINFOW);
-
-    int n = GetMenuItemCount(hmenu);
-
-    for (int i = 0; i < n; i++) {
-        buf[0] = 0;
-        mii.fMask = MIIM_BITMAP | MIIM_CHECKMARKS | MIIM_DATA | MIIM_FTYPE | MIIM_STATE | MIIM_SUBMENU | MIIM_STRING;
-        mii.dwTypeData = &(buf[0]);
-        mii.cch = dimof(buf);
-        BOOL ok = GetMenuItemInfoW(hmenu, (uint)i, TRUE /* by position */, &mii);
-        ReportIf(!ok);
-        mii.fMask = MIIM_FTYPE | MIIM_DATA;
-        mii.fType |= MFT_OWNERDRAW;
-        if (mii.dwItemData != 0) {
-            auto modi = (MenuOwnerDrawInfo*)mii.dwItemData;
-            FreeMenuOwnerDrawInfo(modi);
-        }
-        auto modi = AllocStruct<MenuOwnerDrawInfo>();
-        g_menuDrawInfos.Append(modi);
-        modi->fState = mii.fState;
-        modi->fType = mii.fType;
-        modi->hbmpItem = mii.hbmpItem;
-        modi->hbmpChecked = mii.hbmpChecked;
-        modi->hbmpUnchecked = mii.hbmpUnchecked;
-        if (len(buf) > 0) {
-            modi->text = ToUtf8(buf);
-        }
-        mii.dwItemData = (ULONG_PTR)modi;
-        SetMenuItemInfoW(hmenu, (uint)i, TRUE /* by position */, &mii);
-
-        if (mii.hSubMenu != nullptr) {
-            MarkMenuOwnerDraw(mii.hSubMenu);
-        }
-    }
-}
-#endif
-
-static int GetMenuCheckMarkCx(HWND hwnd) {
-    DpiSetFromHwnd(hwnd);
-    // GetSystemMetrics() already answers in pixels for the system dpi, so the
-    // old DpiScale(GetSystemMetrics(...)) scaled it a second time
-    int cx = DpiGetSystemMetrics(SM_CXMENUCHECK);
-    if (!IsMenuFontSizeDefault()) {
-        cx = GetAppMenuFontSize();
-        // this applies scaling for default values on my win 11 i.e.:
-        // font size is 12, menu checkmark is 15
-        cx = (cx * 15) / 12;
-        cx = DpiScale(cx);
-    }
-    return cx;
-}
-
-constexpr int kMenuPaddingY = 4;
-constexpr int kMenuPaddingX = 8;
-
-void MenuCustomDrawMesureItem(HWND hwnd, MEASUREITEMSTRUCT* mis) {
-    DpiSetFromHwnd(hwnd);
-    if (ODT_MENU != mis->CtlType) {
-        return;
-    }
-    auto* modi = (MenuOwnerDrawInfo*)mis->itemData;
-
-    bool isSeparator = bit::IsMaskSet(modi->fType, (uint)MFT_SEPARATOR);
-    if (isSeparator) {
-        mis->itemHeight = DpiScale(7);
-        mis->itemWidth = DpiScale(33);
-        return;
-    }
-
-    Str text = modi && modi->text ? modi->text : StrL("Dummy");
-    PlatformFont* font = GetAppMenuFont();
-    Str shortcutText = {};
-    TempStr menuText = ParseMenuTextTemp(text, &shortcutText);
-    MenuAccelText parsed = ParseMenuAccelTextTemp(menuText);
-
-    auto size = PlatformFontMeasureText(font, parsed.display);
-    mis->itemHeight = size.dy;
-    int dx = size.dx;
-    if (shortcutText) {
-        // add space betweeen menu text and shortcut
-        size = PlatformFontMeasureText(font, StrL("    "));
-        dx += size.dx;
-        size = PlatformFontMeasureText(font, shortcutText);
-        dx += size.dx;
-    }
-    auto padX = DpiScale(kMenuPaddingX);
-    auto padY = DpiScale(kMenuPaddingY);
-
-    int cxMenuCheckMark = GetMenuCheckMarkCx(hwnd);
-    mis->itemHeight += padY * 2;
-    mis->itemWidth = uint(dx + cxMenuCheckMark + (padX * 2));
-}
-
-// https://gist.github.com/kjk/1df108aa126b7d8e298a5092550a53b7
-// TODO: improve how we paint the menu:
-// - position text the right way (not just DT_CENTER)
-//   taking into account LTR mode
-// - paint shortcut (part after \t if exists) separately
-// - paint MFS_DISABLED state
-// - paint icons for system menus
-void MenuCustomDrawItem(HWND hwnd, DRAWITEMSTRUCT* dis) {
-    DpiSetFromHwnd(hwnd);
-    if (ODT_MENU != dis->CtlType) {
-        return;
-    }
-    auto* modi = (MenuOwnerDrawInfo*)dis->itemData;
-    if (!modi) {
-        return;
-    }
-
-    // https://msdn.microsoft.com/en-us/library/windows/desktop/ms647578(v=vs.85).aspx
-
-    // low-order word of the dwTypeData member is the bitmap handle
-    // HBITMAP bmp = (HBITMAP)LOWORD(modi->dwTypeData) ?
-    // bool isBitmap = bit::IsMaskSet(modi->fType, (uint)MFT_BITMAP);
-
-    // ???
-    // bool isMenuBarBreak = bit::IsMaskSet(modi->fType, (uint)MFT_MENUBARBREAK);
-
-    // ???
-    // bool isMenuBreak = bit::IsMaskSet(modi->fType, (uint)MFT_MENUBREAK);
-
-    bool isSeparator = bit::IsMaskSet(modi->fType, (uint)MFT_SEPARATOR);
-
-    // default should be drawn in bold
-    // bool isDefault = bit::IsMaskSet(modi->fState, (uint)MFS_DEFAULT);
-
-    // disabled should be drawn grayed out
-    bool isDisabled = bit::IsMaskSet(modi->fState, (uint)MFS_DISABLED);
-
-    // don't know what that means
-    // bool isHilited = bit::IsMaskSet(modi->fState, (uint)MFS_HILITE);
-
-    // checked/unchecked state for check and radio menus
-    bool isChecked = bit::IsMaskSet(modi->fState, (uint)MFS_CHECKED);
-
-    // if isChecked, show as radio button (i.e. circle)
-    bool isRadioCheck = bit::IsMaskSet(modi->fType, (uint)MFT_RADIOCHECK);
-
-    PlatformFont* font = GetAppMenuFont();
-    Gfx* gfx = GfxCreate(dis->hDC);
-    defer {
-        delete gfx;
-    };
-
-    Color bgCol = ThemeMainWindowBackgroundColor();
-    Color txtCol = ThemeWindowTextColor();
-
-    bool isSelected = bit::IsMaskSet(dis->itemState, (uint)ODS_SELECTED);
-    if (isDisabled) {
-        txtCol = ThemeWindowTextDisabledColor();
-        if (isSelected) {
-            // subtle highlight for disabled selected items
-            bgCol = AccentColor(bgCol, 10);
-        }
-    } else if (isSelected) {
-        bgCol = AccentColor(bgCol, 40);
-    }
-
-    Rect rc = ToRect(dis->rcItem);
-    int rcDy = rc.dy;
-
-    int cxCheckMark = GetMenuCheckMarkCx(hwnd);
-    int padY = DpiScale(kMenuPaddingY);
-    int padX = DpiScale(kMenuPaddingX);
-
-    gfx->FillRect(rc, bgCol);
-
-    if (isSeparator) {
-        ReportIf(len(modi->text) != 0);
-        int sx = rc.x + cxCheckMark;
-        int y = rc.y + (rcDy / 2);
-        int ex = rc.x + rc.dx - padX;
-        gfx->DrawLine({sx, y, ex - sx, 0}, txtCol);
-        return;
-    }
-
-    // TODO: probably could be a bitmap etc.
-    if (len(modi->text) == 0) {
-        return;
-    }
-
-    Str shortcutText = {};
-    TempStr menuText = ParseMenuTextTemp(modi->text, &shortcutText);
-
-    rc.y += padY;
-    rc.dy -= padY;
-    rc.x += cxCheckMark;
-    rc.dx -= cxCheckMark;
-    DrawMenuText(gfx, menuText, rc, gfxTextSingleLine, font, txtCol);
-    if (shortcutText) {
-        rc = ToRect(dis->rcItem);
-        rc.y += padY;
-        rc.dy -= padY;
-        rc.dx -= padX + (cxCheckMark / 2);
-        gfx->DrawText(shortcutText, rc, gfxTextSingleLine | gfxTextRight, font, txtCol);
-    }
-
-    constexpr int kRadioCircleDx = 6;
-    if (isChecked) {
-        rc = ToRect(dis->rcItem);
-        // draw radio check indicator (a circle)
-        if (isRadioCheck) {
-            int dx = DpiScale(kRadioCircleDx);
-            int offX = DpiScale(1); // why? beause it looks better
-            rc.x = rc.x + offX + (cxCheckMark / 2) - (dx / 2);
-            rc.dx = dx;
-            rc.y = rc.y + (rcDy / 2) - (dx / 2);
-            rc.dy = dx;
-            gfx->FillEllipse(rc, txtCol);
-            return;
-        }
-
-        // draw a checkmark
-        int offX = DpiScale(6); // 6 is chosen experimentally
-        Point p0 = {rc.x + offX, rc.y + (rcDy / 2)};
-        Point p1 = {rc.x + (cxCheckMark / 2), rc.y + rc.dy - (padY * 3)};
-        Point p2 = {rc.x + cxCheckMark - offX, rc.y + (padY * 3)};
-        gfx->DrawLineAA(p0, p1, txtCol, 2);
-        gfx->DrawLineAA(p1, p2, txtCol, 2);
-    }
-}
-
 HMENU BuildMenu(MainWindow* win) {
     WindowTab* tab = win->CurrentTab();
 
@@ -1795,8 +1450,6 @@ HMENU BuildMenu(MainWindow* win) {
     HMENU mainMenu = BuildMenuFromDef(menuDefMenubar, CreateMenu(), ctx);
     // BuildMenuFromDef just set the global to this window's submenu
     win->menuReadAloud = GetReadAloudAppSubmenu();
-
-    MarkMenuOwnerDraw(mainMenu, true);
     return mainMenu;
 }
 
@@ -1826,7 +1479,6 @@ void UpdateAppMenu(MainWindow* win, HMENU m) {
         RebuildReadAloudMenu(win, m, true, win->contextMenuPtValid);
     }
     MenuUpdateStateForWindow(win);
-    MarkMenuOwnerDraw(win->menu, true);
 }
 
 // show/hide top-level menu bar. This doesn't persist across launches
