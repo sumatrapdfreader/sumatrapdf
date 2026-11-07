@@ -233,6 +233,8 @@ Str ExtractJsCallName(Str js);
 // JavaScript app.popUpMenu items (Altium schematic PDFs, issue #1198).
 struct PageDestinationJsMenu : IPageDestination {
     StrVec items;
+    // what picking each item returns (KiCad, issue #6503); empty when unknown
+    StrVec returns;
     Str tooltip;
 
     PageDestinationJsMenu();
@@ -240,6 +242,15 @@ struct PageDestinationJsMenu : IPageDestination {
 
     Str GetValue() override;
 };
+
+bool ParseJsMenuCallItems(Str js, StrVec& items, StrVec& returns);
+bool JsDefinesMenuFunction(Str js, Str name);
+
+struct JsMenuAction {
+    Str url;
+    int pageNo = 0;
+};
+JsMenuAction GetJsMenuAction(PageDestinationJsMenu*, int i);
 
 IPageDestination* NewSimpleDest(int pageNo, RectF rect, float zoom = 0.f, Str value = {});
 IPageDestination* NewSimpleDest(Arena* arena, int pageNo, RectF rect, float zoom = 0.f, Str value = {});

@@ -982,6 +982,25 @@ TempStr PageLinksResultTemp(Str path, int pageNo, int* exitCodeOut, const PointF
             valueShown = fmt("%s size=%d", valueShown, len(data));
             str::Free(data);
         }
+        if (dest->GetKind() == kindDestinationJsMenu) {
+            // what picking each item does: url:<url>, page:<n> or -
+            auto* menu = (PageDestinationJsMenu*)dest;
+            str::Builder actions;
+            for (int i = 0; i < len(menu->items); i++) {
+                JsMenuAction action = GetJsMenuAction(menu, i);
+                if (i > 0) {
+                    actions.AppendChar(';');
+                }
+                if (len(action.url) > 0) {
+                    actions.Append(fmt("url:%s", action.url));
+                } else if (action.pageNo > 0) {
+                    actions.Append(fmt("page:%d", action.pageNo));
+                } else {
+                    actions.AppendChar('-');
+                }
+            }
+            valueShown = fmt("%s actions=%s", valueShown, ToStr(actions));
+        }
         RectF src = el->GetRect();
         RectF destRc = dest->GetRect();
         out.Append(fmt("kind=%s page=%d src=%g,%g,%g,%g dest=%g,%g,%g,%g value=%s\n", Str(dest->GetKind()),

@@ -2654,6 +2654,39 @@ static char* LookupNamedJavaScript(fz_context* ctx, pdf_document* doc, Str name)
     return js;
 }
 
+// true when a document-level script defines function `name` and shows a
+// popUpMenu, so name([...]) calls pass it the menu items (KiCad, issue #6503)
+static bool DocJsDefinesMenuFunction(fz_context* ctx, pdf_document* doc, Str name) {
+    pdf_obj* tree = nullptr;
+    bool found = false;
+    fz_var(tree);
+    fz_var(found);
+    fz_try(ctx) {
+        tree = pdf_load_name_tree(ctx, doc, PDF_NAME(JavaScript));
+        int n = pdf_dict_len(ctx, tree);
+        for (int i = 0; i < n && !found; i++) {
+            pdf_obj* jsObj = pdf_dict_get_val(ctx, tree, i);
+            if (pdf_is_dict(ctx, jsObj)) {
+                jsObj = pdf_dict_get(ctx, jsObj, PDF_NAME(JS));
+            }
+            if (!jsObj) {
+                continue;
+            }
+            char* js = pdf_load_stream_or_string_as_utf8(ctx, jsObj);
+            found = JsDefinesMenuFunction(Str(js), name);
+            fz_free(ctx, js);
+        }
+    }
+    fz_always(ctx) {
+        pdf_drop_obj(ctx, tree);
+    }
+    fz_catch(ctx) {
+        fz_report_error(ctx);
+        found = false;
+    }
+    return found;
+}
+
 // Altium schematic PDFs (and similar) put component metadata on /Link annots
 // whose action is Acrobat JavaScript: either app.popUpMenu("...") inline, or a
 // call to a named ShowCompProps_* function in catalog /Names /JavaScript.
@@ -2680,6 +2713,9 @@ static void AppendJsMenuLinks(fz_context* ctx, pdf_document* doc, pdf_page* pdfp
         return;
     }
 
+    // the menu function last checked by DocJsDefinesMenuFunction, and its answer
+    Str menuFnChecked;
+    bool menuFnIsMenu = false;
     for (int i = 0; i < n; i++) {
         char* js = nullptr;
         fz_rect rect{};
@@ -2708,15 +2744,25 @@ static void AppendJsMenuLinks(fz_context* ctx, pdf_document* doc, pdf_page* pdfp
             continue;
         }
         StrVec items;
+        StrVec returns;
         ParseJsPopUpMenuItems(Str(js), items);
-        if (len(items) == 0) {
-            Str name = ExtractJsCallName(Str(js));
-            if (name) {
-                char* namedJs = LookupNamedJavaScript(ctx, doc, name);
-                if (namedJs) {
-                    ParseJsPopUpMenuItems(Str(namedJs), items);
-                    fz_free(ctx, namedJs);
-                }
+        Str name = len(items) == 0 ? ExtractJsCallName(Str(js)) : Str{};
+        if (name) {
+            char* namedJs = LookupNamedJavaScript(ctx, doc, name);
+            if (namedJs) {
+                ParseJsPopUpMenuItems(Str(namedJs), items);
+                fz_free(ctx, namedJs);
+            }
+        }
+        // KiCad: the items are the call's arguments, the function lives in any script
+        if (name && len(items) == 0 && ParseJsMenuCallItems(Str(js), items, returns)) {
+            if (!str::Eq(name, menuFnChecked)) {
+                str::ReplaceWithCopy(&menuFnChecked, name);
+                menuFnIsMenu = DocJsDefinesMenuFunction(ctx, doc, name);
+            }
+            if (!menuFnIsMenu) {
+                items.Reset();
+                returns.Reset();
             }
         }
         fz_free(ctx, js);
@@ -2725,12 +2771,14 @@ static void AppendJsMenuLinks(fz_context* ctx, pdf_document* doc, pdf_page* pdfp
         }
         auto* dest = new PageDestinationJsMenu();
         dest->items = items;
+        dest->returns = returns;
         dest->rect = ToRectF(rect);
         auto* pel = new PageElementDestination(dest);
         pel->pageNo = pageNo;
         pel->rect = dest->rect;
         VecAppend(links, pel);
     }
+    str::Free(menuFnChecked);
 }
 
 // Acrobat keeps /Info from an earlier trailer when an incremental update omits it (issue #1846).

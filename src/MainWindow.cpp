@@ -584,15 +584,11 @@ void LinkHandler::GotoLink(IPageDestination* dest) {
         if (cmd < 1 || cmd > len(menuDest->items)) {
             return;
         }
-        Str chosen = menuDest->items[cmd - 1];
-        Str url = chosen;
-        int colon = str::IndexOf(chosen, StrL(": "));
-        if (colon >= 0) {
-            url = Str(chosen.s + colon + 2, chosen.len - colon - 2);
-            str::TrimWs(url);
-        }
-        if (IsExternalUrl(url) || str::StartsWithI(url, StrL("ftp://"))) {
-            LaunchURL(url);
+        JsMenuAction action = GetJsMenuAction(menuDest, cmd - 1);
+        if (len(action.url) > 0) {
+            LaunchURL(action.url);
+        } else if (action.pageNo > 0 && win->ctrl->ValidPageNo(action.pageNo)) {
+            win->ctrl->GoToPage(action.pageNo, true);
         }
         return;
     }
