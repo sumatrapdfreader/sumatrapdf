@@ -441,13 +441,17 @@ extern void _uploadDebugReport(Str, Str, bool);
 #define STRINGIZE(x) STRINGIZE_(x)
 #define FILE_LINE __FILE__ ":" STRINGIZE(__LINE__)
 
-#define ReportIfCond(cond, condStr, fileLine, isCrash)                  \
-    __analysis_assume(!(cond));                                         \
-    do {                                                                \
-        if (cond) {                                                     \
-            _uploadDebugReport(StrL(condStr), StrL(fileLine), isCrash); \
-        }                                                               \
-    } while (0)
+// an expression, so the analysis assume must be one too (sal.h defines it empty)
+#ifdef _PREFAST_
+#define ReportAssumeNot(cond) __analysis_assume(!(cond))
+#else
+#define ReportAssumeNot(cond) ((void)0)
+#endif
+
+// evaluates to cond, so a release build can bail out too:
+// if (ReportIf(idx >= len)) { return; }
+#define ReportIfCond(cond, condStr, fileLine, isCrash) \
+    (ReportAssumeNot(cond), (cond) ? (_uploadDebugReport(StrL(condStr), StrL(fileLine), isCrash), true) : false)
 
 #define ReportIf(cond) ReportIfCond(cond, #cond, FILE_LINE, false)
 #if IS_DEBUG
@@ -458,8 +462,11 @@ extern void _uploadDebugReport(Str, Str, bool);
 // warns and clang-analyzer-deadcode.DeadStores reports a dead store, tempting
 // someone to "clean up" the variable and delete the debug assert with it.
 // Passing it to an empty inline function is a real read that costs nothing --
-// the call and the (side-effect-free) condition both optimize away.
-inline void ReportDebugIfNoOp(bool) {}
+// the call and the (side-effect-free) condition both optimize away. It returns
+// the condition so if (ReportDebugIf(...)) behaves the same in both builds.
+inline bool ReportDebugIfNoOp(bool cond) {
+    return cond;
+}
 #define ReportDebugIf(cond) ReportDebugIfNoOp(!!(cond))
 #endif
 

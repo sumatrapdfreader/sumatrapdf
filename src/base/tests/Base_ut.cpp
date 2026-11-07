@@ -314,6 +314,19 @@ static void ArenaChainedBlockSizeTest() {
     ArenaDelete(a);
 }
 
+// ReportIf() evaluates to its condition, once, so callers can bail out in release
+static void ReportIfReturnsCondTest() {
+    int n = 0;
+    bool reported = ReportIf(++n > 5);
+    utassert(!reported);
+    utassert(n == 1);
+    if (ReportDebugIf(n == 2)) {
+        utassert(false);
+    }
+    int* p = &n;
+    utassert(!ReportIf(!p));
+}
+
 // A size that wraps pos + size (e.g. a negative int cast to u64) must fail,
 // not move pos backwards over live allocations.
 static void ArenaPushOverflowTest() {
@@ -504,6 +517,7 @@ void BaseUtilTest() {
     Func1FromFunc0Test();
     Func1ListTest();
     ColorTest();
+    ReportIfReturnsCondTest();
     ArenaChainedBlockSizeTest();
     ArenaPushOverflowTest();
     ArenaPtrCompressTest();
