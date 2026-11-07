@@ -766,12 +766,9 @@ enum class ControlCmd : u16 {
     ResolveUnsavedChanges = 110,
     // orig's. 105 is TestSaveFileAs.
     TestImageOrientation = 106,
-    // ng: not one of orig's; the performance snapshot cmd/port-perf.ts reads.
-    // Orig's 101 / 102 are StartPerfLog / StopPerfLog, which this port answers
-    // at 119 / 120.
-    TestPerfStats = 101,
-    // ng: not one of orig's; the state of the six canvas overlays
-    TestOverlayState = 102,
+    // orig's
+    StartPerfLog = 101,
+    StopPerfLog = 102,
     // orig's. The session restore the tests wait on.
     WaitSessionRestored = 103,
     TestNavFiles = 104,
@@ -789,9 +786,7 @@ enum class ControlCmd : u16 {
     // ng: shows the "no longer the default app" bar for the given extensions
     // (".pdf,.epub"); the real check needs an installation and a UserChoice
     TestDefaultAppNotif = 118,
-    // ng: orig's 101 / 102, which the port had given to its own test commands
-    StartPerfLog = 119,
-    StopPerfLog = 120,
+    // 119 / 120: retired (StartPerfLog / StopPerfLog before they moved to orig's ids)
     // ng: not orig's; gpui input with modifiers / hover / a held button, and
     // one line of shell state to check it against
     TestInput = 121,
@@ -854,6 +849,10 @@ enum class ControlCmd : u16 {
     TestSelectedText = 157,
     // the bookmarks tree's visible rows and their heights
     TestTocRows = 158,
+    // ng: not one of orig's; the performance snapshot cmd/port-perf.ts reads
+    TestPerfStats = 161,
+    // ng: not one of orig's; the state of the six canvas overlays
+    TestOverlayState = 162,
 };
 
 static_assert((u16)ControlCmd::Quit == (u16)ControlFrameCmd::Quit);

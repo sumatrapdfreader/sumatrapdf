@@ -14,7 +14,6 @@ import { findTopWindow, getClientRect, isWindowVisible, sleep, waitForTopWindow 
 const POPUP_CLASS = "SumatraAnnotTextPopup";
 // ng draws the card in the canvas; its overlay probe (ng's wire number) says
 // whether it is up
-const kNgTestOverlayState = 102 as ControlCommand;
 
 type Rect = { x: number; y: number; dx: number; dy: number };
 
@@ -51,7 +50,7 @@ async function cardShown(client: ControlClient, pid: number): Promise<boolean> {
     const popup = findTopWindow(pid, POPUP_CLASS);
     return popup !== 0 && isWindowVisible(popup);
   }
-  const raw = String((await client.request(kNgTestOverlayState, []))[1] ?? "");
+  const raw = String((await client.request(ControlCommand.TestOverlayState, []))[1] ?? "");
   return /annotTextPopup=1/.test(raw);
 }
 

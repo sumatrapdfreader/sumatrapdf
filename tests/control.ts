@@ -169,6 +169,10 @@ export enum ControlCommand {
   TestTocRows = 158,
   TestMeasurement = 159,
   TestImageReplace = 160,
+  // ng only: performance snapshot (cmd/port-perf.ts)
+  TestPerfStats = 161,
+  // ng only: the state of the canvas overlays
+  TestOverlayState = 162,
 }
 
 export type ControlArg = number | string | Uint8Array | ControlArg[];

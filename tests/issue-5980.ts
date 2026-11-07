@@ -113,17 +113,16 @@ export async function testit(): Promise<void> {
     await client.waitForRenderIdle();
 
     if (IS_MAC) {
-      // Each outlined element is one drawn shape (TestOverlayState, ng wire 102).
-      // Windows 102 is StopPerfLog. Two toggles force a paint with links back on.
+      // Each outlined element is one drawn shape (TestOverlayState, ng only).
+      // Two toggles force a paint with links back on.
       sendCommand(frame, cmdId("CmdToggleLinks"));
       sendCommand(frame, cmdId("CmdToggleLinks"));
-      const kNgTestOverlayState = 102 as ControlCommand;
       let shapes = -1;
       let links = -1;
       let raw = "";
       const deadline = Date.now() + 3000 * SLOW_BUILD_FACTOR;
       while (Date.now() < deadline) {
-        const res = await client.request(kNgTestOverlayState, []);
+        const res = await client.request(ControlCommand.TestOverlayState, []);
         raw = String(res[1] ?? "");
         shapes = Number(/drawn shapes=(\d+)/.exec(raw)?.[1] ?? "-1");
         links = Number(/links=(\d+)/.exec(raw)?.[1] ?? "-1");

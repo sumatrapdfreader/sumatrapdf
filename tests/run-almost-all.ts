@@ -20,6 +20,7 @@ import { runNamedTests, runSuiteMain, startSuiteProgress, type NamedTest, type S
 import { setTestWindowLayout } from "./winapi.ts";
 import { beginSharedControlledSession, endSharedControlledSession } from "./win-automation.ts";
 import { testit as lintCommandIds } from "./lint-command-ids.ts";
+import { testit as lintControlIds } from "./lint-control-ids.ts";
 import { testit as lintPostedTasks } from "./lint-posted-tasks.ts";
 import { testit as fontMapCurrent } from "./font-map-current.ts";
 import { testit as issue1909 } from "./issue-1909.ts";
@@ -733,6 +734,7 @@ export const tests: NamedTest[] = [
 
   // --- no Sumatra process -------------------------------------------------
   ["lint-command-ids", lintCommandIds],
+  ["lint-control-ids", lintControlIds],
   ["lint-posted-tasks", lintPostedTasks],
   ["font-map-current", fontMapCurrent],
   ["build-cli", buildCli],
