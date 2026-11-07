@@ -87,7 +87,7 @@ export async function testit(): Promise<void> {
     put(".work/translations.txt", ":test\nde:Test\n");
     archive = await packEmbedded(tc, packer, output, fixture);
     if (!names(archive).includes("nested\\index.md")) fail("manual was not packed at the archive root");
-    if (!names(archive).includes("fonts\\NotoSans-Regular.otf")) fail("fonts were not packed");
+    if (!names(archive).includes("fonts\\NimbusSans-Regular.cff")) fail("fonts were not packed");
     run([packer, archive]);
     const before = statSync(archive).mtimeMs;
     await packEmbedded(tc, packer, output, fixture);

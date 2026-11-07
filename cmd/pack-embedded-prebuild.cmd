@@ -82,20 +82,18 @@ copy /y "%ROOT%\ext\markdown-it.min.js" "%STAGING%\markdown-it.min.js" >nul || e
 copy /y "%ROOT%\ext\pele.min.js" "%STAGING%\pele.min.js" >nul || exit /b 1
 copy /y "%ROOT%\ext\microlighter.min.js" "%STAGING%\microlighter.min.js" >nul || exit /b 1
 
-REM base 14 (URW), CJK fallback (Droid), Charis SIL for EPUB, a few Noto for
-REM math / music / symbols / emoji. Not packed: NimbusBoxes, Source Han and the
-REM per-script Noto fonts; those download on first use. SUMATRA_NO_EMBED_FONTS=1
+REM base 14 (URW), needed by most PDFs, and Charis SIL, every EPUB's font.
+REM Not packed, downloaded on first use: the CJK fallback (Droid), the Noto
+REM fallbacks and Source Han. Windows usually has a font for those first (see
+REM mupdf_load_system_font.c, EmbeddedResources.cpp). SUMATRA_NO_EMBED_FONTS=1
 REM packs none of them.
 if "%SUMATRA_NO_EMBED_FONTS%"=="1" goto no_fonts
+REM start empty so fonts no longer packed drop out; robocopy keeps the source
+REM times, so MakeLZSA still reuses the unchanged entries
+if exist "%STAGING%\fonts\" rmdir /s /q "%STAGING%\fonts"
 call :fonts urw Dingbats.cff NimbusMonoPS-*.cff NimbusRoman-*.cff NimbusSans-*.cff StandardSymbolsPS.cff
 if errorlevel 1 exit /b 1
-call :fonts droid DroidSansFallbackFull.ttf
-if errorlevel 1 exit /b 1
 call :fonts sil CharisSIL*.cff
-if errorlevel 1 exit /b 1
-call :fonts noto NotoSans-Regular.otf NotoSerif-Regular.otf NotoSansMath-Regular.otf NotoMusic-Regular.otf
-if errorlevel 1 exit /b 1
-call :fonts noto NotoSansSymbols-Regular.otf NotoSansSymbols2-Regular.otf NotoEmoji-Regular.ttf
 if errorlevel 1 exit /b 1
 goto pack
 
