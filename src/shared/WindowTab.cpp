@@ -76,8 +76,9 @@ bool WindowTab::IsAboutTab() const {
 
 #if !defined(SUMATRA_NG)
 // the SidebarView / SidebarBottomView settings
-static const char* kSidebarViewNames[kSidebarViewCount] = {"bookmarks", "thumbnails", "favorites", "signatures",
-                                                           "layers"};
+static const char* kSidebarViewNames[] = {"bookmarks", "thumbnails", "favorites", "signatures", "layers"};
+
+static_assert(dimof(kSidebarViewNames) == kSidebarViewCount);
 
 SidebarView SidebarViewFromStr(Str s, SidebarView def) {
     for (int i = 0; i < kSidebarViewCount; i++) {
@@ -89,6 +90,9 @@ SidebarView SidebarViewFromStr(Str s, SidebarView def) {
 }
 
 Str SidebarViewToStr(SidebarView v) {
+    if (ReportIf((int)v < 0 || (int)v >= kSidebarViewCount)) {
+        return {};
+    }
     return Str(kSidebarViewNames[(int)v]);
 }
 

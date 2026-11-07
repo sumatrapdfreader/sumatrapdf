@@ -1257,7 +1257,7 @@ static const FileType gImageTypes[] = {
     FileType::Ico
 };
 
-static const char* gImageFormatExts =
+static constexpr SeqStrings gImageFormatExts =
     ".png\0"
     ".jpg\0"
     ".jpeg\0"
@@ -1274,6 +1274,8 @@ static const char* gImageFormatExts =
     ".ico\0"
     "\0";
 // clang-format on
+// GfxFileExtFromTypeTemp() maps an index in one to the same index in the other
+static_assert(SeqStrCount(gImageFormatExts) == dimof(gImageTypes));
 
 TempStr GfxFileExtFromTypeTemp(FileType ft) {
     int idx = FileTypeIndexOf(gImageTypes, dimofi(gImageTypes), ft);

@@ -236,14 +236,21 @@ FindWindowWnd::~FindWindowWnd() {
 
 // the pixmaps belong to the icon cache, which re-renders them for the current
 // theme and size
+// the window's buttons, in order; btns[], the icons and these must line up
+constexpr int kFindWinBtnCmds[] = {CmdFindPrev, CmdFindNext, CmdFindToggleMatchCase, CmdFindToggleMatchWholeWord,
+                                   kFindWinPinCmdId};
+constexpr int kFindWinBtnCount = dimof(kFindWinBtnCmds);
+static_assert(dimof(FindWindowWnd::btns) == kFindWinBtnCount);
+
 void FindWindowWnd::UpdateButtonIcons(int dpi) {
-    static const char* icons[5] = {gIconChevronUp, gIconChevronDown, gIconMatchCase, gIconMatchWholeWord,
-                                   gIconArrowsDiagonalMinimize};
+    static const char* icons[] = {gIconChevronUp, gIconChevronDown, gIconMatchCase, gIconMatchWholeWord,
+                                  gIconArrowsDiagonalMinimize};
     if (dpi <= 0) {
         dpi = GetDpi();
     }
     int isz = RoundUp(DpiScaleByDpi(dpi, 16), 4);
-    for (int i = 0; i < 5; i++) {
+    static_assert(dimof(icons) == kFindWinBtnCount);
+    for (int i = 0; i < kFindWinBtnCount; i++) {
         if (btns[i]) {
             btns[i]->pixmap = GetCachedPixmapForSvg(Str(icons[i]), isz, isz);
         }
@@ -259,10 +266,9 @@ static void FindWindowButtonClicked(FindWindowWnd* w, VirtMouseEvent* ev) {
 }
 
 void FindWindowWnd::CreateButtons() {
-    static const int cmds[5] = {CmdFindPrev, CmdFindNext, CmdFindToggleMatchCase, CmdFindToggleMatchWholeWord,
-                                kFindWinPinCmdId};
+    const int* cmds = kFindWinBtnCmds;
     int pad = DpiScale(4);
-    for (int i = 0; i < 5; i++) {
+    for (int i = 0; i < kFindWinBtnCount; i++) {
         auto* b = new VirtIconButton();
         b->id = cmds[i];
         b->padding = Insets{pad, pad, pad, pad};
@@ -1129,6 +1135,8 @@ void FindWindowSetStatus(MainWindow* win, Str s, int totalHits) {
 // idx into FindWindowWnd::btns
 constexpr int kBtnMatchCase = 2;
 constexpr int kBtnMatchWholeWord = 3;
+static_assert(kFindWinBtnCmds[kBtnMatchCase] == CmdFindToggleMatchCase);
+static_assert(kFindWinBtnCmds[kBtnMatchWholeWord] == CmdFindToggleMatchWholeWord);
 
 static void FindWindowSetBtnChecked(MainWindow* win, int idx, bool checked) {
     if (!win->findWindow) {

@@ -28,6 +28,8 @@ static_assert((int)AnnotationType::Link == (int)PDF_ANNOT_LINK);
 static_assert((int)AnnotationType::ThreeD == (int)PDF_ANNOT_3D);
 static_assert((int)AnnotationType::Sound == (int)PDF_ANNOT_SOUND);
 static_assert((int)AnnotationType::Unknown == (int)PDF_ANNOT_UNKNOWN);
+static_assert((int)AnnotationType::Projection == (int)PDF_ANNOT_PROJECTION);
+static_assert(AnnotationType::Last == AnnotationType::Projection);
 
 // clang-format off
 static SeqStrings gAnnotationTextIcons = "Comment\0Help\0Insert\0Key\0NewParagraph\0Note\0Paragraph\0";
@@ -40,11 +42,12 @@ SeqStrings AnnotationTextIcons() {
 // clang-format off
 // indexed by AnnotationType; unlike AnnotationReadableNameTemp() these are not
 // translated, so they can appear in the annotation filter's ":t=" syntax
-static SeqStrings gAnnotationTypeNames =
+static constexpr SeqStrings gAnnotationTypeNames =
     "Text\0Link\0FreeText\0Line\0Square\0Circle\0Polygon\0PolyLine\0Highlight\0Underline\0Squiggly\0"
     "StrikeOut\0Redact\0Stamp\0Caret\0Ink\0Popup\0FileAttachment\0Sound\0Movie\0RichMedia\0Widget\0"
     "Screen\0PrinterMark\0TrapNet\0Watermark\0ThreeD\0Projection\0";
 // clang-format on
+static_assert(SeqStrCount(gAnnotationTypeNames) == (int)AnnotationType::Last + 1);
 
 SeqStrings AnnotationTypeNames() {
     return gAnnotationTypeNames;

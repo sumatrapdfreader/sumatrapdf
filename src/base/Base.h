@@ -2294,6 +2294,19 @@ TempStr GetFileNameTemp(Str url);
 
 using SeqStrings = const char*;
 
+// number of strings in a constexpr SeqStrings, for static_assert against an enum
+constexpr int SeqStrCount(SeqStrings s) {
+    int n = 0;
+    while (*s) {
+        while (*s) {
+            s++;
+        }
+        s++;
+        n++;
+    }
+    return n;
+}
+
 Str SeqStrFirst(SeqStrings strs);
 Str SeqStrNext(Str s);
 int SeqStrIndex(SeqStrings strs, Str toFind);

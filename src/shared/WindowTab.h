@@ -36,6 +36,7 @@ enum class SidebarView {
     Layers,
 };
 constexpr int kSidebarViewCount = 5;
+static_assert(kSidebarViewCount == (int)SidebarView::Layers + 1);
 
 SidebarView SidebarViewFromStr(Str s, SidebarView def);
 Str SidebarViewToStr(SidebarView);

@@ -42,6 +42,12 @@ constexpr int kFindBarCloseCmdId = (int)CmdLast + 50;
 
 constexpr int kFindBarPinCmdId = (int)CmdLast + 52;
 
+// the bar's buttons, in order; btns[], the icons and these must line up
+constexpr int kFindBarBtnCmds[] = {
+    CmdFindPrev,      CmdFindNext,       CmdFindToggleMatchCase, CmdFindToggleMatchWholeWord,
+    kFindBarPinCmdId, kFindBarCloseCmdId};
+constexpr int kFindBarBtnCount = dimof(kFindBarBtnCmds);
+
 namespace {
 
 // min-width box: at least `dx`, wider if the child needs more
@@ -133,7 +139,7 @@ struct FindBarWnd : WindowBase {
     Padding* padLayout = nullptr;
     int layoutDpi = 96;
     // prev / next / match-case / match-whole-word / pop-out / close
-    VirtIconButton* btns[6]{};
+    VirtIconButton* btns[kFindBarBtnCount]{};
 
     int barDx = 0;
     int barDy = 0;
@@ -209,13 +215,14 @@ FindBarWnd::~FindBarWnd() {
 // the icons come from the shared cache, which renders them for the current
 // theme and size
 void FindBarWnd::UpdateButtonIcons(int dpi) {
-    static const char* icons[6] = {gIconChevronUp,      gIconChevronDown,    gIconMatchCase,
-                                   gIconMatchWholeWord, gIconArrowsDiagonal, gIconClose};
+    static const char* icons[] = {gIconChevronUp,      gIconChevronDown,    gIconMatchCase,
+                                  gIconMatchWholeWord, gIconArrowsDiagonal, gIconClose};
     if (dpi <= 0) {
         dpi = GetDpi();
     }
     int isz = RoundUp(DpiScaleByDpi(dpi, 16), 4);
-    for (int i = 0; i < 6; i++) {
+    static_assert(dimof(icons) == kFindBarBtnCount);
+    for (int i = 0; i < kFindBarBtnCount; i++) {
         if (btns[i]) {
             btns[i]->pixmap = GetCachedPixmapForSvg(Str(icons[i]), isz, isz);
         }
@@ -231,11 +238,9 @@ static void FindBarButtonClicked(FindBarWnd* bar, VirtMouseEvent* ev) {
 }
 
 void FindBarWnd::CreateButtons() {
-    static const int cmds[6] = {
-        CmdFindPrev,      CmdFindNext,       CmdFindToggleMatchCase, CmdFindToggleMatchWholeWord,
-        kFindBarPinCmdId, kFindBarCloseCmdId};
+    const int* cmds = kFindBarBtnCmds;
     int pad = DpiScale(4);
-    for (int i = 0; i < 6; i++) {
+    for (int i = 0; i < kFindBarBtnCount; i++) {
         auto* b = new VirtIconButton();
         b->id = cmds[i];
         b->padding = Insets{pad, pad, pad, pad};
@@ -955,6 +960,8 @@ void FindBarSetStatus(MainWindow* win, Str s, int totalHits) {
 // idx into FindBarWnd::btns
 constexpr int kBtnMatchCase = 2;
 constexpr int kBtnMatchWholeWord = 3;
+static_assert(kFindBarBtnCmds[kBtnMatchCase] == CmdFindToggleMatchCase);
+static_assert(kFindBarBtnCmds[kBtnMatchWholeWord] == CmdFindToggleMatchWholeWord);
 
 static void FindBarSetBtnChecked(MainWindow* win, int idx, bool checked) {
     if (!win->findBar) {

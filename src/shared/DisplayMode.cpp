@@ -60,7 +60,7 @@ bool IsValidZoom(float zoom) {
 }
 
 // must match order of enum DisplayMode
-static SeqStrings displayModeNames =
+static constexpr SeqStrings displayModeNames =
     "automatic\0"
     "single page\0"
     "facing\0"
@@ -68,6 +68,7 @@ static SeqStrings displayModeNames =
     "continuous\0"
     "continuous facing\0"
     "continuous book view\0";
+static_assert(SeqStrCount(displayModeNames) == (int)DisplayMode::ContinuousBookView + 1);
 
 Str DisplayModeToString(DisplayMode mode) {
     int idx = (int)mode;
