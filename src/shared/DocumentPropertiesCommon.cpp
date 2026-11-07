@@ -2,6 +2,7 @@
    License: GPLv3 */
 
 #include "base/Base.h"
+#include <locale.h>
 #include "base/File.h"
 #include "gui/Dpi.h"
 #include "base/UITask.h"
