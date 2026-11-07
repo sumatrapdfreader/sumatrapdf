@@ -2548,10 +2548,16 @@ void ShellView::OnMouseDown(ShellView* self, gp::Ctx* cx, const gp::MouseDownEve
         gp::Notify(cx);
     }
     // orig's WM_APPCOMMAND: the mouse's back / forward buttons, anywhere in
-    // the frame
+    // the frame. A Shortcut can rebind them ("Ctrl + XButton1").
     if (ev->button == gp::MouseButton::NavigateBack || ev->button == gp::MouseButton::NavigateForward) {
         if (IsMainWindowValidAndNotClosing(self->win)) {
-            ExecuteCmd(self->win, ev->button == gp::MouseButton::NavigateBack ? CmdNavigateBack : CmdNavigateForward);
+            bool isBack = ev->button == gp::MouseButton::NavigateBack;
+            const gp::Modifiers& m = ev->modifiers;
+            int cmd = AcceleratorCmd(isBack ? VK_XBUTTON1 : VK_XBUTTON2, m.control, m.shift, m.alt, m.platform);
+            if (!cmd) {
+                cmd = isBack ? CmdNavigateBack : CmdNavigateForward;
+            }
+            ExecuteCmd(self->win, cmd);
             gp::Notify(cx);
         }
         return;

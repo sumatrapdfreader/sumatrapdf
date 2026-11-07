@@ -6,14 +6,16 @@
 import { mkdirSync, rmSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 import type { ControlClient } from "./control.ts";
-import { assemblePdf, runStandalone, tmpPath } from "./util.ts";
+import { assemblePdf, cmdId, runStandalone, tmpPath, USE_NG } from "./util.ts";
 import { packCoords, postMessage, sleep } from "./winapi.ts";
-import { findCanvas, killAndWait, launchControlled } from "./win-automation.ts";
+import { findCanvas, killAndWait, launchControlled, sendCommand } from "./win-automation.ts";
 
 const kPages = 10;
 const kWaitMs = 5000;
+const WM_XBUTTONDOWN = 0x020b;
 const WM_XBUTTONUP = 0x020c;
 const WM_APPCOMMAND = 0x0319;
+const XBUTTON1 = 1;
 const XBUTTON2 = 2;
 const MK_CONTROL = 0x8;
 const APPCOMMAND_BROWSER_BACKWARD = 1;
@@ -62,6 +64,20 @@ function sideButtonAppCommand(frame: number, keys: number): void {
   postMessage(frame, WM_APPCOMMAND, frame, lp);
 }
 
+// ng: gpui turns WM_XBUTTONDOWN into a NavigateBack / NavigateForward mouse
+// down. It reads modifiers from the keyboard state, which a posted message
+// can't set, so only unmodified buttons are checked.
+async function testNg(client: ControlClient, frame: number): Promise<void> {
+  postMessage(frame, WM_XBUTTONDOWN, XBUTTON2 << 16, packCoords(100, 100));
+  await waitForPage(client, 2, "XButton2 bound to CmdGoToNextPage");
+
+  sendCommand(frame, cmdId("CmdGoToLastPage"));
+  await waitForPage(client, kPages, "CmdGoToLastPage");
+
+  postMessage(frame, WM_XBUTTONDOWN, XBUTTON1 << 16, packCoords(100, 100));
+  await waitForPage(client, 2, "unbound XButton1 goes back");
+}
+
 export async function testit(): Promise<void> {
   const dir = tmpPath("mouse-button-shortcuts");
   rmSync(dir, { recursive: true, force: true });
@@ -76,6 +92,11 @@ export async function testit(): Promise<void> {
   try {
     await client.waitForRenderIdle();
     await waitForPage(client, 1, "start");
+    if (USE_NG) {
+      await testNg(client, frame);
+      console.log("mouse-button-shortcuts: OK");
+      return;
+    }
 
     // a real release of XButton2 over the page: DefWindowProc turns it into WM_APPCOMMAND
     postMessage(findCanvas(frame), WM_XBUTTONUP, XBUTTON2 << 16, packCoords(100, 100));

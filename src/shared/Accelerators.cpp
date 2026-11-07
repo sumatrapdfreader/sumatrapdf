@@ -530,8 +530,9 @@ int SafeAcceleratorCmd(u16 vk, bool ctrl, bool shift, bool alt, bool cmd) {
 
 // Command bound to a virtual key + modifiers, or 0. For keys that don't go
 // through the accelerator table, e.g. mouse side buttons ("Ctrl + XButton1").
-int AcceleratorCmd(u16 vk, bool ctrl, bool shift, bool alt) {
+int AcceleratorCmd(u16 vk, bool ctrl, bool shift, bool alt, bool cmd) {
     u8 mods = kVirt;
+    mods |= cmd ? kCmd : 0;
     mods |= ctrl ? kCtrl : 0;
     mods |= shift ? kShift : 0;
     mods |= alt ? kAlt : 0;
