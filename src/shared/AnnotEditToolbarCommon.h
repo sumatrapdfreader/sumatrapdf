@@ -85,6 +85,7 @@ Color PdfToWinColorWithAlpha(PdfColor c);
 PdfColor WinToPdfColor(Color c);
 PdfColor OpaquePdfColor(PdfColor c);
 void CollectItems(Annotation* annot, Vec<AnnotEditItem>& out);
+TempStr ChipLabelTemp(const AnnotEditItem& item);
 void ScheduleShowSelectedAnnotationView(WindowTab* tab);
 void CollectPriorityAnnotPages(WindowTab* tab, Annotation* extra, Vec<int>& pages);
 

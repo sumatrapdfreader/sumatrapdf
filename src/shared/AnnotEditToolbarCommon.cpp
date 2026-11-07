@@ -593,6 +593,27 @@ static PdfColor ColorWithOpacity(PdfColor c, Annotation* annot, bool withOpacity
     return MkPdfColor(r, g, b, (u8)Opacity(annot));
 }
 
+// the text a toolbar chip shows for item
+TempStr ChipLabelTemp(const AnnotEditItem& item) {
+    switch (item.kind) {
+        case AnnotEditKind::Opacity:
+            return fmt("%d%%", ((item.number * 100) + 127) / 255);
+        case AnnotEditKind::Border:
+        case AnnotEditKind::TextSize:
+            return fmt("%d", item.number);
+        case AnnotEditKind::Bold:
+            return str::DupTemp(StrL("B"));
+        case AnnotEditKind::Italic:
+            return str::DupTemp(StrL("I"));
+        case AnnotEditKind::Underline:
+            return str::DupTemp(StrL("U"));
+        case AnnotEditKind::Icon:
+            return str::DupTemp(item.iconName);
+        default:
+            return str::DupTemp(item.text);
+    }
+}
+
 void CollectItems(Annotation* annot, Vec<AnnotEditItem>& out) {
     VecReset(out);
     if (!AnnotationIsLive(annot)) {

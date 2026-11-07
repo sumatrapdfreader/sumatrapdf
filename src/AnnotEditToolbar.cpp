@@ -567,18 +567,6 @@ static void PaintStyleToggle(Gfx* gfx, Rect r, AnnotEditKind kind, Color col, Pl
     gfx->DrawText(label, r, gfxTextCenter | gfxTextVCenter, styled ? styled : font, col);
 }
 
-static TempStr ChipLabelTemp(const AnnotEditItem& item) {
-    switch (item.kind) {
-        case AnnotEditKind::Opacity:
-            return fmt("%d%%", ((item.number * 100) + 127) / 255);
-        case AnnotEditKind::Border:
-        case AnnotEditKind::TextSize:
-            return fmt("%d", item.number);
-        default:
-            return item.text;
-    }
-}
-
 void AnnotEditChip::Paint(VirtPaintCtx& ctx) {
     if (IsEnabled() && HasFlag(vwfHovered) && hoverBg != kColorUnset) {
         ctx.gfx->FillRoundedRect(ctx.bounds, DpiScale(kButtonRadius), hoverBg);
