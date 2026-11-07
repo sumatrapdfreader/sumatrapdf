@@ -108,10 +108,19 @@ static LRESULT CALLBACK WndBaseWindowProc(HWND hwnd, UINT msg, WPARAM wparam, LP
         HwndListAdd(w);
     }
 
-    if (w) {
-        return w->OnMessage(hwnd, msg, wparam, lparam);
+    if (!w) {
+        return ::DefWindowProc(hwnd, msg, wparam, lparam);
     }
-    return ::DefWindowProc(hwnd, msg, wparam, lparam);
+    LRESULT res = w->OnMessage(hwnd, msg, wparam, lparam);
+    // Windows destroys child and owned windows without asking us: drop the
+    // mapping so a recycled HWND can't reach this object, and later Destroy()
+    // doesn't destroy someone else's window. comctl32 removes subclasses here.
+    if (msg == WM_NCDESTROY && HwndBaseFromHwnd(hwnd) == w) {
+        HwndListRemove(w);
+        w->subclassId = 0;
+        w->hwnd = nullptr;
+    }
+    return res;
 }
 
 static LRESULT CALLBACK WndBaseSubclassedWindowProc(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp, UINT_PTR /*subclassId*/,
@@ -993,8 +1002,9 @@ LRESULT WindowBase::WndProcDefault(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lp
                 return 0;
             }
         }
-        // TODO: should only send WM_DESTROY, the rest should be hooked in OnDestroy
-        Destroy();
+        // not Destroy(): that unmaps us first, so WM_DESTROY (and onDestroy)
+        // would never reach this object; WM_NCDESTROY does the unmapping
+        ::DestroyWindow(hwnd);
         return 0;
     }
 
