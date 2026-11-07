@@ -673,10 +673,6 @@ static void extend_system_font_list(fz_context* ctx, const WCHAR* path) {
     FindClose(hList);
 }
 
-// cf. https://blogs.msdn.com/b/oldnewthing/archive/2004/10/25/247180.aspx
-EXTERN_C IMAGE_DOS_HEADER __ImageBase;
-#define CURRENT_HMODULE ((HMODULE) & __ImageBase)
-
 static void create_system_font_list(fz_context* ctx) {
     WCHAR szFontDir[MAX_PATH];
     UINT cch;
@@ -699,20 +695,6 @@ static void create_system_font_list(fz_context* ctx) {
     if (!g_win_fonts) {
         fz_warn(ctx, "couldn't find any usable system fonts");
     }
-
-#ifdef NOCJKFONT
-    {
-        // If no CJK fallback font is builtin but one has been shipped separately (in the same
-        // directory as the main executable), add it to the list of loadable system fonts
-        WCHAR szFile[MAX_PATH], *lpFileName;
-        szFile[0] = '\0';
-        GetModuleFileName(CURRENT_HMODULE, szFontDir, MAX_PATH);
-        szFontDir[nelem(szFontDir) - 1] = '\0';
-        GetFullPathNameW(szFontDir, MAX_PATH, szFile, &lpFileName);
-        lstrcpyn(lpFileName, L"DroidSansFallback.ttf", szFile + MAX_PATH - lpFileName);
-        extend_system_font_list(ctx, szFile);
-    }
-#endif
 
 #ifdef DEBUG
     // allow to overwrite system fonts for debugging purposes
@@ -1037,12 +1019,7 @@ static fz_font* load_windows_cjk_font(fz_context* ctx, const char* fontname, int
         }
     }
     fz_catch(ctx) {
-#ifdef NOCJKFONT
-        /* If no CJK fallback font is builtin, maybe one has been shipped separately */
-        font = load_windows_font_by_name(ctx, "DroidSansFallback", 0);
-#else
         fz_rethrow(ctx);
-#endif
     }
 
     return font;
