@@ -9,6 +9,7 @@
 #include "base/Win.h"
 #include "gui/PlatformFont.h"
 #include "gui/PlatformText.h"
+#include "gui/Dpi.h"
 
 #include "gui/UIModels.h"
 
@@ -23,6 +24,8 @@
 #include "PdfPreview.h"
 
 constexpr Color kColWindowBg = MkRgb(0x99, 0x99, 0x99);
+constexpr Color kColPageNoBg = MkRgb(0x33, 0x33, 0x33);
+constexpr Color kColPageNoText = MkRgb(0xff, 0xff, 0xff);
 constexpr int kPreviewMargin = 2;
 constexpr UINT kUwmPaintAgain = (WM_USER + 101);
 // Engine-scale zoom (1 = 100%). Below fit-page we snap back to fit.
@@ -424,6 +427,40 @@ static PreviewLayout ComputePreviewLayout(HWND hwnd, PdfPreview* preview, int pa
     return lo;
 }
 
+// "3 / 120" in the bottom-right corner: shows the page count without opening the file
+static void DrawPageNumber(HWND hwnd, HDC hdc, Rect client) {
+    SCROLLINFO si{};
+    si.cbSize = sizeof(si);
+    si.fMask = SIF_POS | SIF_RANGE;
+    if (!GetScrollInfo(hwnd, SB_VERT, &si)) {
+        return;
+    }
+    NONCLIENTMETRICS ncm{};
+    if (!GetNonClientMetricsForDpi(DpiGetForHwnd(hwnd), &ncm)) {
+        return;
+    }
+
+    TempStr s = fmt("%d / %d", si.nPos, si.nMax);
+    HFONT font = CreateFontIndirectW(&ncm.lfMessageFont);
+    uint format = DT_SINGLELINE | DT_NOPREFIX;
+    Size sz = HdcMeasureText(hdc, s, client.dx, format, font);
+    int pad = sz.dy / 4;
+    int dx = sz.dx + 4 * pad;
+    int dy = sz.dy + 2 * pad;
+    Rect r(client.x + client.dx - dx - 2 * pad, client.y + client.dy - dy - 2 * pad, dx, dy);
+
+    HBRUSH brush = CreateSolidBrush(kColPageNoBg);
+    HdcFillRect(hdc, r, brush);
+    DeleteObject(brush);
+
+    int prevMode = SetBkMode(hdc, TRANSPARENT);
+    COLORREF prevCol = SetTextColor(hdc, kColPageNoText);
+    HdcDrawText(hdc, s, r, format | DT_CENTER | DT_VCENTER, font);
+    SetTextColor(hdc, prevCol);
+    SetBkMode(hdc, prevMode);
+    DeleteObject(font);
+}
+
 static LRESULT OnPaint(HWND hwnd) {
     Rect rect = HwndClientRect(hwnd);
     DoubleBuffer buffer(hwnd, rect);
@@ -441,6 +478,7 @@ static LRESULT OnPaint(HWND hwnd) {
             HdcFillRect(hdc, lo.visible, brushWhite);
             preview->renderer->Render(hdc, lo, pageNo);
         }
+        DrawPageNumber(hwnd, hdc, rect);
     }
 
     DeleteObject(brushBg);
