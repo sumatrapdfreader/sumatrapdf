@@ -8415,6 +8415,8 @@ struct LayoutCacheStats {
     int restyled = 0;
     int remeasured = 0;
 
+    int remeasureHeld = 0;
+
     int allocs = 0;
 };
 
@@ -8436,6 +8438,9 @@ Size MeasureEl(PaintCtx* ctx, El* e, float inheritFont = 0,
 Size MeasureElAtWidth(PaintCtx* ctx, El* e, float width);
 
 bool LayoutInScratchPass();
+
+LayoutCache* LayoutRowCache(PaintCtx* ctx, uint64_t list, int index);
+void LayoutRowCachesFree(Window* win);
 void PaintEl(PaintCtx* ctx, El* e);
 
 int ElTextRangeRects(PaintCtx* ctx, const El* e, int lo, int hi, Bounds* out,
@@ -8631,6 +8636,15 @@ struct Window {
 
     LayoutCache* layout = nullptr;
 
+    struct RowLayout {
+        uint64_t list = 0;
+        int32_t index = 0;
+        uint64_t lastFrame = 0;
+        LayoutCache* cache = nullptr;
+    };
+    Vec<RowLayout> rowLayouts;
+    uint64_t rowLayoutSweptAt = 0;
+
     WindowSelection* sel = nullptr;
 
     EntityId root = {};
@@ -8701,6 +8715,8 @@ struct Window {
     CursorKind cursor = CursorKind::Arrow;
     bool cursorHidden = false;
     bool maximized = false;
+
+    bool minimized = false;
 
     float clientInset = -1;
     Tiling tiling = {};
@@ -9548,6 +9564,7 @@ void WindowOnShouldClose(Window* win, WindowShouldCloseFn fn, void* data);
 void AppClose(Window* win);
 void AppDrag(Window* win);
 bool AppIsMaximized(Window* win);
+bool AppIsMinimized(Window* win);
 }
 
 int GpuiMain(int argc, char** argv);
@@ -35712,7 +35729,7 @@ enum class WinSceneMode : uint8_t {
 struct WinPaintOptions {
     WinPaintBackend backend = WinPaintBackend::Direct2D;
     WinPaintMsaa msaa = WinPaintMsaa::X4;
-    WinSceneMode scene = WinSceneMode::Skip;
+    WinSceneMode scene = WinSceneMode::Damage;
 
     int gpuResetEvery = 0;
 };

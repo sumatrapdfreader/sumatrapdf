@@ -3187,11 +3187,7 @@ void ShellView::OnTick(ShellView* self, gp::Ctx* cx, const gp::TickEvent* ev) {
         }
     }
     // orig pauses auto-scroll from WM_SIZE; ng has no minimize event, so watch for one
-    bool minimized = false;
-#if OS_WIN
-    HWND hwnd = AppShellNativeHwnd(win);
-    minimized = hwnd && IsIconic(hwnd);
-#endif
+    bool minimized = gp::AppIsMinimized(win->gpuiWin);
     if (minimized != win->wasMinimized) {
         win->wasMinimized = minimized;
         ReadingAutoScrollOnMinimize(win, minimized);

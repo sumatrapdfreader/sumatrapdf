@@ -9616,12 +9616,33 @@ void PaintTextRangeBoxes(PaintCtx* ctx, Str s, float fontSize, float maxW,
     TextLayoutRelease(layout);
 }
 
+struct LayoutMeasureAsked {
+    taffy::SizeFOpt known;
+    taffy::SizeAvail avail;
+
+    float textW = 0;
+    bool text = false;
+    taffy::SizeF size;
+};
+
+static const int kLayoutMeasureLog = 4;
+
 struct LayoutNode {
     El* el = nullptr;
 
     uint64_t measKey = 0;
     uint8_t kind = 0;
+
+    LayoutMeasureAsked asked[kLayoutMeasureLog];
+    uint8_t askedCount = 0;
+    bool askedOverflow = false;
+    uint8_t askedFlags = 0;
 };
+
+static void LayoutMeasureLogReset(LayoutNode* rec) {
+    rec->askedCount = 0;
+    rec->askedOverflow = false;
+}
 
 struct LayoutCache {
     taffy::TaffyTree tree;
@@ -9987,9 +10008,95 @@ struct LayoutMeasureSizeCtx {
     LayoutNode* rec;
 };
 
+static taffy::SizeF LayoutMeasureSizeOf(taffy::SizeFOpt known,
+                                        taffy::SizeAvail avail,
+                                        LayoutMeasureSizeCtx* sc);
+
+static LayoutMeasureAsked LayoutMeasureQuestion(const El* e,
+                                                taffy::SizeFOpt known,
+                                                taffy::SizeAvail avail) {
+    LayoutMeasureAsked q;
+    q.known = known;
+    q.avail = avail;
+    if (e && e->kind == ElKind::Text) {
+        q.text = true;
+        q.textW = TextMeasureWidth(e, known, avail);
+    }
+    return q;
+}
+
+static bool LayoutMeasureSameQuestion(const LayoutMeasureAsked& a,
+                                      const LayoutMeasureAsked& b) {
+
+    if (memcmp(&a.known, &b.known, sizeof(a.known)) != 0 || a.text != b.text) {
+        return false;
+    }
+    if (a.text) {
+        return a.textW == b.textW;
+    }
+    return a.avail.width.kind == b.avail.width.kind &&
+           a.avail.width.value == b.avail.width.value &&
+           a.avail.height.kind == b.avail.height.kind &&
+           a.avail.height.value == b.avail.height.value;
+}
+
+static uint8_t LayoutMeasureFlags(const El* e) {
+    return (uint8_t)((e->style.wrap ? 1 : 0) | (e->style.truncate ? 2 : 0));
+}
+
 static taffy::SizeF LayoutMeasureSize(taffy::SizeFOpt known,
                                       taffy::SizeAvail avail, void* user) {
     LayoutMeasureSizeCtx* sc = (LayoutMeasureSizeCtx*)user;
+    taffy::SizeF size = LayoutMeasureSizeOf(known, avail, sc);
+    LayoutNode* rec = sc->rec;
+    if (rec && rec->el && !rec->askedOverflow) {
+        LayoutMeasureAsked q = LayoutMeasureQuestion(rec->el, known, avail);
+        if (rec->askedCount == 0) {
+            rec->askedFlags = LayoutMeasureFlags(rec->el);
+        }
+        bool seen = false;
+        for (int i = 0; i < rec->askedCount; i++) {
+            if (LayoutMeasureSameQuestion(rec->asked[i], q)) {
+                seen = true;
+                break;
+            }
+        }
+        if (!seen) {
+            if (rec->askedCount < kLayoutMeasureLog) {
+                q.size = size;
+                rec->asked[rec->askedCount++] = q;
+            } else {
+                rec->askedOverflow = true;
+            }
+        }
+    }
+    return size;
+}
+
+static bool LayoutMeasureStillHolds(PaintCtx* ctx, LayoutNode* rec) {
+    if (!rec || !rec->el || rec->askedOverflow) {
+        return false;
+    }
+    if (rec->askedCount == 0) {
+        return true;
+    }
+    if (LayoutMeasureFlags(rec->el) != rec->askedFlags) {
+        return false;
+    }
+    LayoutMeasureCtx mc = {ctx, taffy::CalcResolver{}};
+    LayoutMeasureSizeCtx sc = {&mc, rec};
+    for (int i = 0; i < rec->askedCount; i++) {
+        const LayoutMeasureAsked& q = rec->asked[i];
+        taffy::SizeF now = LayoutMeasureSizeOf(q.known, q.avail, &sc);
+        if (now.w != q.size.w || now.h != q.size.h) {
+            return false;
+        }
+    }
+    return true;
+}
+static taffy::SizeF LayoutMeasureSizeOf(taffy::SizeFOpt known,
+                                        taffy::SizeAvail avail,
+                                        LayoutMeasureSizeCtx* sc) {
 
     LayoutNode* rec = sc->rec;
     El* e = rec ? rec->el : nullptr;
@@ -10370,6 +10477,7 @@ static LayoutNode* LayoutNodeTake(LayoutCache* lc, El* e) {
     n->el = e;
     n->measKey = 0;
     n->kind = (uint8_t)e->kind;
+    LayoutMeasureLogReset(n);
     return n;
 }
 
@@ -10527,16 +10635,26 @@ static taffy::NodeId LayoutSync(LayoutSyncCtx* sc, El* e, taffy::NodeId prev,
     if (isRoot) {
         StretchRootStyle(&ts, sc->availW, sc->availH);
     }
+    bool restyled = false;
     if (!(ts == lc->tree.GetStyle(prev))) {
         lc->tree.SetStyle(prev, ts);
         lc->stats.restyled++;
+        restyled = true;
+
+        LayoutMeasureLogReset(rec);
     }
 
     uint64_t key = LayoutMeasureKey(sc->ctx, e);
     if (key != rec->measKey) {
         rec->measKey = key;
-        lc->tree.MarkDirty(prev);
-        lc->stats.remeasured++;
+        if (!restyled && LayoutMeasureStillHolds(sc->ctx, rec)) {
+
+            lc->stats.remeasureHeld++;
+        } else {
+            lc->tree.MarkDirty(prev);
+            LayoutMeasureLogReset(rec);
+            lc->stats.remeasured++;
+        }
     }
 
     int want = 0;
@@ -11288,6 +11406,74 @@ Size MeasureElAtWidth(PaintCtx* ctx, El* e, float width) {
 
 LayoutCache* LayoutCacheNew() {
     return new LayoutCache();
+}
+
+static const uint64_t kRowLayoutKeepFrames = 240;
+static const int kRowLayoutCap = 256;
+
+static void LayoutRowCacheSweep(Window* win) {
+    uint64_t now = win->frameSeq;
+    int keep = 0;
+    for (int i = 0; i < len(win->rowLayouts); i++) {
+        Window::RowLayout r = win->rowLayouts[i];
+        if (now > r.lastFrame + kRowLayoutKeepFrames) {
+            LayoutCacheFree(r.cache);
+            continue;
+        }
+        win->rowLayouts[keep++] = r;
+    }
+    win->rowLayouts.len = keep;
+}
+
+LayoutCache* LayoutRowCache(PaintCtx* ctx, uint64_t list, int index) {
+    Window* win = ctx ? ctx->window : nullptr;
+    if (!win || LayoutInScratchPass()) {
+        return nullptr;
+    }
+    uint64_t now = win->frameSeq;
+    if (win->rowLayoutSweptAt != now) {
+        win->rowLayoutSweptAt = now;
+        LayoutRowCacheSweep(win);
+    }
+    int oldest = -1;
+    for (int i = 0; i < len(win->rowLayouts); i++) {
+        Window::RowLayout& r = win->rowLayouts[i];
+        if (r.list == list && r.index == index) {
+            r.lastFrame = now;
+            return r.cache;
+        }
+        if (oldest < 0 || r.lastFrame < win->rowLayouts[oldest].lastFrame) {
+            oldest = i;
+        }
+    }
+    if (len(win->rowLayouts) >= kRowLayoutCap && oldest >= 0) {
+        Window::RowLayout& r = win->rowLayouts[oldest];
+        if (r.lastFrame == now) {
+
+            return nullptr;
+        }
+        LayoutCacheFree(r.cache);
+        win->rowLayouts[oldest] = win->rowLayouts[len(win->rowLayouts) - 1];
+        win->rowLayouts.len--;
+    }
+    Window::RowLayout r;
+    r.list = list;
+    r.index = index;
+    r.lastFrame = now;
+    r.cache = LayoutCacheNew();
+    VecAppend(win->rowLayouts, r);
+    return r.cache;
+}
+
+void LayoutRowCachesFree(Window* win) {
+    if (!win) {
+        return;
+    }
+    for (int i = 0; i < len(win->rowLayouts); i++) {
+        LayoutCacheFree(win->rowLayouts[i].cache);
+    }
+    VecReset(win->rowLayouts);
+    win->rowLayoutSweptAt = 0;
 }
 
 void LayoutCacheFree(LayoutCache* lc) {
@@ -18048,6 +18234,17 @@ static Bounds Union(Bounds a, Bounds b) {
     return r;
 }
 
+static Bounds SnapOutToPixels(Bounds b, float scale) {
+    if (b.w <= 0 || b.h <= 0 || scale <= 0) {
+        return b;
+    }
+    float x0 = floorf(b.x * scale) / scale;
+    float y0 = floorf(b.y * scale) / scale;
+    float x1 = ceilf((b.x + b.w) * scale) / scale;
+    float y1 = ceilf((b.y + b.h) * scale) / scale;
+    return Bounds{x0, y0, x1 - x0, y1 - y0};
+}
+
 static bool gpui_scene_SameBounds(Bounds a, Bounds b) {
     return a.x == b.x && a.y == b.y && a.w == b.w && a.h == b.h;
 }
@@ -18447,7 +18644,13 @@ void RecScroll(PaintCtx* ctx, float x, float y, float w, float h, float scrollX,
 void RecTextDraw(PaintCtx* ctx, TextLayout* tl, float x, float y, Rgba c,
                  bool clip, float clipW) {
     Size sz = TextLayoutSize(tl);
-    Prim* p = gpui_scene_Emit(ctx, kPText, Bounds{x, y, sz.w, sz.h});
+
+    float pad = TextLayoutBaseline(tl) * 0.5f;
+    if (pad < 2.f) {
+        pad = 2.f;
+    }
+    Prim* p = gpui_scene_Emit(ctx, kPText,
+                   Bounds{x - pad, y - pad, sz.w + pad * 2, sz.h + pad * 2});
     p->g0 = x;
     p->g1 = y;
     p->g2 = sz.w;
@@ -19449,7 +19652,8 @@ bool FrameEnd(PaintCtx* ctx, Bounds* damage) {
             changed++;
             d = Union(d, gPrev[i].bbox);
         }
-        dmg = Intersect(d, whole);
+        float scale = ctx && ctx->dpi > 0 ? ctx->dpi / 96.f : 1.f;
+        dmg = Intersect(SnapOutToPixels(d, scale), whole);
     }
     gStats.primsChanged = changed;
 
@@ -22106,10 +22310,10 @@ static void FrameBenchTick(Window* win, float secs) {
     LayoutCacheStats ls = LayoutCacheLastStats(win->layout);
     logf(
         "frame-bench layout nodes=%d live=%d slots=%d made=%d dropped=%d "
-        "restyled=%d remeasured=%d allocs=%d",
+        "restyled=%d remeasured=%d held=%d allocs=%d",
         ls.nodes, LayoutCacheNodeCount(win->layout),
         LayoutCacheSlotCount(win->layout), ls.made, ls.dropped, ls.restyled,
-        ls.remeasured, ls.allocs);
+        ls.remeasured, ls.remeasureHeld, ls.allocs);
     FrameBenchLogGpu();
     if (SceneOn()) {
         const scene::SceneStats& sc = scene::Stats(&win->paint);
@@ -22182,12 +22386,12 @@ static void LayoutDumpFrame(Window* win, El* root) {
     fprintf(f,
             "--- frame %llu t=%.3f view=%.0fx%.0f prims=%d presented=%d "
             "nodes=%d slots=%d made=%d dropped=%d restyled=%d remeasured=%d "
-            "allocs=%d\n",
+            "held=%d allocs=%d\n",
             (unsigned long long)win->frameSeq, TimeNow(), win->paint.viewW,
             win->paint.viewH, SceneOn() ? scene::Stats(&win->paint).prims : -1,
             (SceneOn() && scene::SkipPresent(&win->paint)) ? 0 : 1, ls.nodes,
             LayoutCacheSlotCount(win->layout), ls.made, ls.dropped, ls.restyled,
-            ls.remeasured, ls.allocs);
+            ls.remeasured, ls.remeasureHeld, ls.allocs);
     LayoutDumpEl(f, root, 0);
     fflush(f);
 }
@@ -25686,6 +25890,8 @@ Window::~Window() {
     scene::Free(&paint);
     StrFree(fileDropPaths);
     fileDropPaths = {};
+
+    LayoutRowCachesFree(this);
 }
 
 void WindowClosed(Window* win) {
@@ -25789,6 +25995,7 @@ static void AppRelease(App* app, bool platform) {
         TextMeasClear(&w->paint);
         LayoutCacheFree(w->layout);
         w->layout = nullptr;
+        LayoutRowCachesFree(w);
         WindowSelectionFree(w);
         PaintTargetFree(&w->paint);
         VecReset(w->timers);
@@ -26078,6 +26285,10 @@ void AppQuitAll(App* app) {
 
 bool AppIsMaximized(Window* win) {
     return win && win->maximized;
+}
+
+bool AppIsMinimized(Window* win) {
+    return win && win->minimized;
 }
 
 void WindowSetCursorVisible(Window* win, bool visible) {
@@ -77054,6 +77265,8 @@ void ItemSizeLayoutBuild(ItemSizeLayout* layout, Axis axis,
 
 struct VirtualListPaint {
     VirtualListOpts opts = {};
+
+    uint64_t layoutKey = 0;
     Arena* a = nullptr;
     App* app = nullptr;
     Window* win = nullptr;
@@ -77104,7 +77317,7 @@ static El* VirtualListTakeRow(const VirtualListOpts& o, El** rangeRows,
 
 static void VirtualListPlace(PaintCtx* ctx, El* e, El* made, Axis axis,
                              float pad, float innerW, float innerH, float along,
-                             float extent) {
+                             float extent, uint64_t layoutKey, int ix) {
     float x = e->x + pad;
     float y = e->y + pad;
     float w = innerW;
@@ -77117,7 +77330,8 @@ static void VirtualListPlace(PaintCtx* ctx, El* e, El* made, Axis axis,
         h = extent;
     }
 
-    LayoutEl(ctx, made, x, y, w, h, e->laidFont, e->style.color);
+    LayoutEl(ctx, made, x, y, w, h, e->laidFont, e->style.color,
+             LayoutRowCache(ctx, layoutKey, ix));
     e->Child(made);
 }
 
@@ -77200,7 +77414,7 @@ static void VirtualListBindRows(PaintCtx* ctx, El* e, VirtualListPaint* paint,
                 if (ix < layout->sizes.len) layout->sizes[ix] = extent;
             }
             VirtualListPlace(ctx, e, made, axis, pad, innerW, innerH,
-                             origin - offset, extent);
+                             origin - offset, extent, paint->layoutKey, ix);
             along += extent;
             origin += extent;
             ix++;
@@ -77242,8 +77456,8 @@ static void VirtualListBindRows(PaintCtx* ctx, El* e, VirtualListPaint* paint,
                                                     : (float)ix * o.rowH;
             along = origin - offset;
         }
-        VirtualListPlace(ctx, e, made, axis, pad, innerW, innerH, along,
-                         extent);
+        VirtualListPlace(ctx, e, made, axis, pad, innerW, innerH, along, extent,
+                         paint->layoutKey, ix);
     }
 }
 
@@ -77475,6 +77689,15 @@ El* VirtualList::New(Ctx* cx, Str id, const VirtualListOpts& o) {
     paint->a = a;
     paint->app = cx->app;
     paint->win = cx->win;
+    {
+        uint64_t h = 1469598103934665603ull;
+        for (int i = 0; i < len(id); i++) {
+            h = (h ^ (uint8_t)id.s[i]) * 1099511628211ull;
+        }
+        h = (h ^ (uint32_t)paint->opts.view.index) * 1099511628211ull;
+        h = (h ^ paint->opts.view.gen) * 1099511628211ull;
+        paint->layoutKey = h;
+    }
     El* e = New(cx, id)->ClipY()->ClipX();
 
     if (o.layoutAxis == Axis::Horizontal) {
@@ -248500,7 +248723,7 @@ static WinPaintOptions gWinPaintOptions = {
     WinPaintBackend::Direct2D,
 #endif
     WinPaintMsaa::X4,
-    WinSceneMode::Skip,
+    WinSceneMode::Damage,
     0,
 };
 
@@ -254571,7 +254794,7 @@ static Str gClipboard = {};
 
 static Atom aWmDeleteWindow, aWmProtocols, aNetWmName, aUtf8String;
 static Atom aNetWmState, aNetWmStateMaxVert, aNetWmStateMaxHorz;
-static Atom aNetWmStateFullscreen;
+static Atom aNetWmStateFullscreen, aNetWmStateHidden, aWmState;
 static Atom aNetFrameExtents;
 static Atom aNetWmMoveResize, aMotifWmHints, aGtkShowWindowMenu;
 static Atom aGtkEdgeConstraints;
@@ -254658,10 +254881,29 @@ static void Redraw(Window* win) {
     XFlush(gDpy);
 }
 
-static bool ReadMaximized(Window* win) {
-    PlatWindow* pw = win->plat;
-    if (!pw) {
+static bool ReadIconic(PlatWindow* pw) {
+    Atom type = 0;
+    int format = 0;
+    unsigned long n = 0, after = 0;
+    unsigned char* data = nullptr;
+    if (XGetWindowProperty(gDpy, pw->xwin, aWmState, 0, 2, False, aWmState,
+                           &type, &format, &n, &after, &data) != Success) {
         return false;
+    }
+    bool iconic =
+        data && format == 32 && n >= 1 && ((long*)data)[0] == IconicState;
+    if (data) {
+        XFree(data);
+    }
+    return iconic;
+}
+
+static void ReadWmState(Window* win) {
+    PlatWindow* pw = win->plat;
+    win->maximized = false;
+    win->minimized = false;
+    if (!pw) {
+        return;
     }
     Atom type = 0;
     int format = 0;
@@ -254669,7 +254911,7 @@ static bool ReadMaximized(Window* win) {
     unsigned char* data = nullptr;
     if (XGetWindowProperty(gDpy, pw->xwin, aNetWmState, 0, 32, False, XA_ATOM,
                            &type, &format, &n, &after, &data) != Success) {
-        return false;
+        return;
     }
     bool vert = false;
     bool horz = false;
@@ -254682,10 +254924,16 @@ static bool ReadMaximized(Window* win) {
             if (atoms[i] == aNetWmStateMaxHorz) {
                 horz = true;
             }
+            if (atoms[i] == aNetWmStateHidden) {
+                win->minimized = true;
+            }
         }
         XFree(data);
     }
-    return vert && horz;
+    win->maximized = vert && horz;
+    if (!win->minimized) {
+        win->minimized = ReadIconic(pw);
+    }
 }
 
 static Tiling ReadTiling(Window* win, bool maximized) {
@@ -256234,8 +256482,9 @@ static void HandleEvent(App* app, XEvent* ev) {
             break;
         case PropertyNotify:
             if (ev->xproperty.atom == aNetWmState ||
+                ev->xproperty.atom == aWmState ||
                 ev->xproperty.atom == aGtkEdgeConstraints) {
-                win->maximized = ReadMaximized(win);
+                ReadWmState(win);
                 win->tiling = ReadTiling(win, win->maximized);
                 pw->dirty = true;
             }
@@ -256649,6 +256898,8 @@ bool PlatInit(App* app) {
         XInternAtom(gDpy, "_NET_WM_STATE_MAXIMIZED_HORZ", False);
     aNetWmStateFullscreen =
         XInternAtom(gDpy, "_NET_WM_STATE_FULLSCREEN", False);
+    aNetWmStateHidden = XInternAtom(gDpy, "_NET_WM_STATE_HIDDEN", False);
+    aWmState = XInternAtom(gDpy, "WM_STATE", False);
     aNetWmMoveResize = XInternAtom(gDpy, "_NET_WM_MOVERESIZE", False);
     aMotifWmHints = XInternAtom(gDpy, "_MOTIF_WM_HINTS", False);
     aGtkShowWindowMenu = XInternAtom(gDpy, "_GTK_SHOW_WINDOW_MENU", False);
@@ -257960,6 +258211,21 @@ static bool PressedButton(MouseButton* out) {
 - (void)windowDidResize:(NSNotification*)note {
     (void)note;
     gpui::AppInvalidate(win);
+}
+
+- (void)windowDidMiniaturize:(NSNotification*)note {
+    (void)note;
+    if (win) {
+        win->minimized = true;
+    }
+}
+
+- (void)windowDidDeminiaturize:(NSNotification*)note {
+    (void)note;
+    if (win) {
+        win->minimized = false;
+        gpui::AppInvalidate(win);
+    }
 }
 
 - (void)windowDidChangeBackingProperties:(NSNotification*)note {
@@ -261126,6 +261392,7 @@ static LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam,
             return 0;
         case WM_SIZE:
             win->paint.dpi = HostDpi(hwnd);
+            win->minimized = wParam == SIZE_MINIMIZED;
 
             if (wParam != SIZE_MINIMIZED) {
                 RenderFrame(win);
