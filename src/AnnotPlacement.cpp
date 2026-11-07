@@ -137,6 +137,10 @@ void SetPlacementCursor(MainWindow* win) {
 }
 
 // what placement asks of the window system; ng has its own
+void PlacementHideHover(MainWindow* win) {
+    HideAnnotationHoverOverlay(win);
+}
+
 void PlacementFocusFrame(MainWindow* win) {
     HwndSetFocus(win->hwndFrame);
 }
@@ -260,87 +264,6 @@ void StartAnnotationPlacement(MainWindow* win, int cmdId) {
     if (HwndClientRect(win->hwndCanvas).Contains(pt)) {
         SetPlacementCursor(win);
     }
-}
-
-bool AnnotationPlacementOnMouseMove(MainWindow* win, Point pt, bool isShift, bool lButtonDown) {
-    if (!IsPlacingAnnotation(win) || KindOf(win) == AnnotPlacementKind::Highlighter) {
-        return false;
-    }
-    DisplayModel* dm = win->AsFixed();
-    if (!dm) {
-        return true;
-    }
-    if (win->annotationUnderCursor) {
-        win->annotationUnderCursor = nullptr;
-        if (IsPlacingPointAnnotation(win)) {
-            ScheduleRepaint(win, 0);
-        }
-    }
-    HideAnnotationHoverOverlay(win);
-    SetPlacementCursor(win);
-
-    AnnotPlacement& p = win->annotPlacement;
-    switch (p.kind) {
-        case AnnotPlacementKind::Ink:
-            if (p.mouseDown && lButtonDown) {
-                AppendInkPoint(win, dm, pt);
-            }
-            break;
-        case AnnotPlacementKind::Shape:
-            if (p.pageNo > 0) {
-                bool constrain = isShift;
-                if (p.mouseDown) {
-                    Point start = dm->CvtToScreen(p.pageNo, p.start);
-                    if (IsDragDistance(pt.x, start.x, pt.y, start.y)) {
-                        p.didDrag = true;
-                    }
-                }
-                if (pt != p.end || constrain != p.constrain) {
-                    p.end = pt;
-                    p.constrain = constrain;
-                    ScheduleRepaint(win, 0);
-                }
-            }
-            break;
-        case AnnotPlacementKind::Line:
-            if (p.pageNo > 0) {
-                Point start = dm->CvtToScreen(p.pageNo, p.start);
-                bool shift = isShift;
-                Point end = shift ? SnapLineEndpoint(start, pt) : pt;
-                // Compare the snapped point, not the pointer: Shift at the same
-                // spot still has to move the preview, and releasing it has to put it back.
-                if (end != p.end) {
-                    p.end = end;
-                    ScheduleRepaint(win, 0);
-                }
-            }
-            break;
-        case AnnotPlacementKind::PolyLine:
-            if (len(p.points) > 0) {
-                Point last = dm->CvtToScreen(p.pageNo, p.points[len(p.points) - 1]);
-                Point end = isShift ? SnapLineEndpoint(last, pt) : pt;
-                if (end != p.end) {
-                    p.end = end;
-                    ScheduleRepaint(win, 0);
-                }
-            }
-            break;
-        case AnnotPlacementKind::Text:
-        case AnnotPlacementKind::FreeText:
-        case AnnotPlacementKind::Stamp:
-        case AnnotPlacementKind::Caret:
-        case AnnotPlacementKind::FileAttachment: {
-            bool previewMoved = HasPreview(p.kind) && pt != p.pos;
-            p.pos = pt;
-            if (previewMoved) {
-                ScheduleRepaint(win, 0);
-            }
-            break;
-        }
-        default:
-            break;
-    }
-    return true;
 }
 
 bool AnnotationPlacementOnKeyDown(MainWindow* win, WPARAM key) {

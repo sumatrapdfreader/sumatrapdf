@@ -49,6 +49,7 @@ bool AppendInkPoint(MainWindow* win, DisplayModel* dm, Point pt);
 
 // implemented by each app: what placement asks of the window system
 void PlacementFocusFrame(MainWindow* win);
+void PlacementHideHover(MainWindow* win);
 void PlacementCaptureMouse(MainWindow* win);
 void PlacementReleaseMouse(MainWindow* win);
 void ReleasePlacementCapture(MainWindow* win);
