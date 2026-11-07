@@ -14,6 +14,7 @@
 #include "gui/UIModels.h"
 
 #include "Settings.h"
+#include "EngineBase.h"
 #include "AppTools.h"
 #include "SumatraConfig.h"
 #include "SumatraPDF.h"
@@ -69,13 +70,6 @@ struct SimpleBrowserView {
 };
 
 static gp::Entity<SimpleBrowserView> gBrowserView;
-
-// an absolute http(s)/mailto URL is "non-internal": it points outside the
-// content we serve from our virtual host
-static bool IsExternalUrl(Str url) {
-    return str::StartsWithI(url, StrL("http://")) || str::StartsWithI(url, StrL("https://")) ||
-           str::StartsWithI(url, StrL("mailto:"));
-}
 
 bool SimpleBrowserCb::OnBeforeNavigate(Str url, bool newWindow) {
     // a target="_blank" link arrives as a new-window request; open those in the

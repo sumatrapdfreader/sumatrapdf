@@ -14,6 +14,7 @@
 #include "gui/win/WebView.h"
 
 #include "Settings.h"
+#include "EngineBase.h"
 #include "AppTools.h"
 #include "SumatraConfig.h"
 #include "SumatraPDF.h"
@@ -81,14 +82,6 @@ void SimpleBrowserWindow::OnForward(VirtMouseEvent*) {
     if (webView) {
         webView->GoForward();
     }
-}
-
-// an absolute http(s)/mailto URL is "non-internal": it points outside the
-// content we serve from our virtual host (UrlForWebViewEvent strips the host
-// prefix off internal pages, so those arrive as a bare path without a scheme)
-static bool IsExternalUrl(Str url) {
-    return str::StartsWithI(url, StrL("http://")) || str::StartsWithI(url, StrL("https://")) ||
-           str::StartsWithI(url, StrL("mailto:"));
 }
 
 static bool NavigationStarting(void* ctx, Str url, bool newWindow) {
