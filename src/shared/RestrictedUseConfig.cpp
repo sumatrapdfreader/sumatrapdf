@@ -22,6 +22,9 @@ static const char* kRestrictedUseDescriptions[] = {
     "Allow AI chat and AI translation features. Internet and disk access are also required.",
 };
 
+static_assert(dimof(kRestrictedUseNames) == kRestrictedUseFeatureCount);
+static_assert(dimof(kRestrictedUseDescriptions) == kRestrictedUseFeatureCount);
+
 RestrictedUseConfig::~RestrictedUseConfig() {
     str::Free(linkProtocols);
     str::Free(safeFileTypes);
