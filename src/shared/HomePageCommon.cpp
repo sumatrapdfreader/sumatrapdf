@@ -411,6 +411,27 @@ void SetPromoString(Str s) {
     str::ReplaceWithCopy(&promoFromServer, s);
 }
 
+static Str BitnessStr() {
+    return sizeof(void*) == 8 ? StrL("64-bit") : StrL("32-bit");
+}
+
+// "v3.7 64-bit (dbg)", for bug reports
+TempStr GetAppVersionTemp() {
+    TempStr s = fmt("v%s %s", currentVersion, BitnessStr());
+    if (gIsDebugBuild) {
+        s = str::JoinTemp(s, StrL(" (dbg)"));
+    }
+    return s;
+}
+
+// "3.7 64-bit, built Oct 14 2026 01:46"
+TempStr AboutVersionLineTemp() {
+    Str built = StrL(__DATE__ " " __TIME__);
+    // without the seconds
+    built.len = std::max(0, len(built) - 3);
+    return fmt("%s %s, built %s", currentVersion, BitnessStr(), built);
+}
+
 // the line under the rows that says this isn't a release build
 Str AboutNoteText() {
 #if defined(PRE_RELEASE_VER)

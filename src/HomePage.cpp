@@ -196,28 +196,6 @@ static void OpenAboutUrl(VirtMouseEvent* ev) {
     OpenTipUrl(link->target);
 }
 
-static TempStr GetAppVersionTemp() {
-    TempStr s = str::DupTemp(StrL("v" CURR_VERSION_STRA));
-    if (IsProcess64()) {
-        s = str::JoinTemp(s, StrL(" 64-bit"));
-    } else {
-        s = str::JoinTemp(s, StrL(" 32-bit"));
-    }
-    if (gIsDebugBuild) {
-        s = str::JoinTemp(s, StrL(" (dbg)"));
-    }
-    return s;
-}
-
-// "3.7 64-bit, built Oct 14 2026 01:46"
-static TempStr AboutVersionLineTemp() {
-    Str bits = IsProcess64() ? StrL("64-bit") : StrL("32-bit");
-    Str built = StrL(__DATE__ " " __TIME__);
-    // without the seconds
-    built.len = std::max(0, len(built) - 3);
-    return fmt("%s %s, built %s", StrL(CURR_VERSION_STRA), bits, built);
-}
-
 constexpr Color kCol1 = MkRgb(196, 64, 50);
 constexpr Color kCol2 = MkRgb(227, 107, 35);
 constexpr Color kCol3 = MkRgb(93, 160, 40);

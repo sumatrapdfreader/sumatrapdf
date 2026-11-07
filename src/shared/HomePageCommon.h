@@ -12,6 +12,8 @@ Str SelectedTipLine();
 void PickRandomTipOrPromo();
 void EnsureTipsParsed();
 TempStr TrimGitTemp(Str s);
+TempStr GetAppVersionTemp();
+TempStr AboutVersionLineTemp();
 void AboutSourceRow(Str* text, Str* url);
 Str AboutNoteText();
 int CountHomePageFiles();
