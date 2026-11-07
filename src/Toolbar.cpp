@@ -472,6 +472,9 @@ void SetPdfAnnotationsToolbarEnabled(MainWindow* win, bool enabled) {
     ScheduleRepaint(win, 0);
 }
 
+// space left and right of the toolbar's button rows
+constexpr int kToolbarRowPadX = 4;
+
 // natural width of the toolbar content (buttons + page box); the find bar
 // floats separately so the page-total label is the rightmost element
 static int ToolbarNaturalWidth(MainWindow* win) {
@@ -492,7 +495,7 @@ static int ToolbarNaturalWidth(MainWindow* win) {
     if (dx <= 0) {
         dx = tb->rowDy * 8;
     }
-    return dx + DpiScale(12);
+    return dx + 2 * DpiScale(kToolbarRowPadX);
 }
 
 // when the overlay toolbar sits at the bottom, lift it above the horizontal
@@ -2706,8 +2709,9 @@ static void BuildToolbarLayout(MainWindow* win) {
 
     auto* root = new VBox();
     root->alignCross = CrossAxisAlign::Stretch;
-    root->AddChild(new Padding(box, Insets{0, DpiScale(4), 0, DpiScale(4)}));
-    tb->annotationRow = new Padding(annotationBox, Insets{0, DpiScale(4), 0, DpiScale(4)});
+    int padX = DpiScale(kToolbarRowPadX);
+    root->AddChild(new Padding(box, Insets{0, padX, 0, padX}));
+    tb->annotationRow = new Padding(annotationBox, Insets{0, padX, 0, padX});
     tb->annotationRow->SetVisibility(Visibility::Collapse);
     root->AddChild(tb->annotationRow);
     tb->host->SetLayout(root);
