@@ -163,10 +163,10 @@ bool ParseSimpleArchive(const u8* archiveHeader, int dataLen, SimpleArchive* arc
     }
 
     u32 filesCount = br.UInt32LE();
-    archiveOut->filesCount = (int)filesCount;
     if (filesCount > dimof(archiveOut->files)) {
         return false;
     }
+    archiveOut->filesCount = (int)filesCount;
 
     FileInfo* fi;
     for (u32 i = 0; i < filesCount; i++) {
@@ -189,9 +189,12 @@ bool ParseSimpleArchive(const u8* archiveHeader, int dataLen, SimpleArchive* arc
         fi->uncompressedCrc32 = br.UInt32LE();
         fi->ftModified.dwLowDateTime = br.UInt32LE();
         fi->ftModified.dwHighDateTime = br.UInt32LE();
-        fi->name = Str((char*)archiveHeader + br.Offset());
-        br.Skip(fileHdrSize - kFileEntryMinSize);
-        if (br.Char() != '\0') {
+        // the name fills the rest of the entry, then its NUL: no strlen on
+        // bytes that haven't been checked yet
+        int nameLen = fileHdrSize - kFileEntryMinSize;
+        fi->name = Str((char*)archiveHeader + br.Offset(), nameLen);
+        br.Skip(nameLen);
+        if (br.Char() != '\0' || memchr(fi->name.s, 0, (size_t)nameLen)) {
             return false;
         }
     }
