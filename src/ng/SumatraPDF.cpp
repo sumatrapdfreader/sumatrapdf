@@ -7199,9 +7199,9 @@ static int MaybeRunCliTool(int argc, char** argv) {
     return fn(argc - 1, argv + 1);
 }
 
-#if IS_DEBUG
+#if IS_DEBUG && !OS_WASM
 // -extract-text: print one page as hex and exit. Orig does this before any
-// window; leaving it to the GUI never returns.
+// window; leaving it to the GUI never returns. A page has no command line.
 static void TestExtractPages(const Flags& ci) {
 #if OS_WIN
     RedirectIOToExistingConsole();
@@ -7360,7 +7360,7 @@ int GpuiMain(int argc, char** argv) {
         }
     }
     LoadSettings();
-#if IS_DEBUG
+#if IS_DEBUG && !OS_WASM
     if (gFlags->testExtractPage) {
         TestExtractPages(*gFlags);
         uitask::Destroy();
