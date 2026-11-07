@@ -4383,9 +4383,8 @@ static TempStr AssemblePdfTemp(const char* const* objs, int nObjs) {
 bool EngineBase_UnitTestTextOutlivesInvalidate() {
     const char* objs[] = {
         "<< /Type /Catalog /Pages 2 0 R >>",
-        "<< /Type /Pages /Count 1 /Kids [3 0 R] >>",
-        "<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Resources << /Font << /F1 4 0 R >> >> /Contents 5 0 "
-        "R >>",
+        "<< /Type /Pages /Count 1 /Kids [3 0 R] /MediaBox [0 0 612 792] >>",
+        "<< /Type /Page /Parent 2 0 R /Resources << /Font << /F1 4 0 R >> >> /Contents 5 0 R >>",
         "<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica >>",
         "<< /Length 42 >>\nstream\nBT /F1 24 Tf 72 700 Td (Invalidated) Tj ET\nendstream",
     };
