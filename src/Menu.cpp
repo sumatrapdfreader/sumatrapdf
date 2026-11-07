@@ -543,7 +543,6 @@ HMENU BuildMenuFromDef(MenuDef* menuDef, HMENU menu, BuildMenuCtx* ctx) {
             Str path = tab ? tab->filePath : Str{};
             AppendExternalViewersToMenu(menu, path);
             addExternalViewersNext = false;
-            continue;
         }
 
         int cmdId = (int)md.idOrSubmenu;
