@@ -4,7 +4,7 @@
  * Local cache (gitignored via .work/):
  *   .work/translations.txt       languages complete enough for the binary
  *   (the build's prebuild, cmd/pack-embedded-prebuild.cmd, packs it with
- *   marked/pele/manual into out/<cfg>/embedded[-static].lzsa = IDR_EMBEDDED_PAK)
+ *   markdown-it/pele/manual into out/<cfg>/embedded[-static].lzsa = IDR_EMBEDDED_PAK)
  *
  * Flow:
  *   1. Extract Tr() / TrN() strings from src + command names + home page tips

@@ -210,7 +210,7 @@ function writeManualPakFiles(pages: string[]): void {
     copyFileNormalized(join(outDir, name), join(docsDir, name));
   }
   writeBundledRenderJs(outDir);
-  copyFileNormalized(join(outDir, "markdown-it.min.js"), join("cmd", "markdown-it.min.js"));
+  copyFileNormalized(join(outDir, "markdown-it.min.js"), join("ext", "markdown-it.min.js"));
   const bundledRender = readFileSync(join(outDir, "gen_docs.render.js"), "utf-8");
   if (!bundledRender.includes("cmd_ids") || !bundledRender.includes("driver();")) {
     throw new Error("bundled gen_docs.render.js missing Commands search UI");
@@ -323,7 +323,7 @@ export async function main(opts: GenDocsOptions = {}) {
   }
 
   // the build's prebuild (cmd/pack-embedded-prebuild.cmd) stages .work/docs
-  // with translations + marked/pele under out/<cfg>/embedded[-static]
+  // with translations + markdown-it/pele under out/<cfg>/embedded[-static]
   // and packs IDR_EMBEDDED_PAK, so rebuild the exe to pick up the new manual
   console.log(
     `To preview on-demand rendering, open: file://${resolve(join(manualOutDir, "manual.shell.html"))} (needs a local server or in-app help)`,

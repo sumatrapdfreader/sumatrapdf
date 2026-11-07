@@ -41,14 +41,14 @@
 constexpr UINT_PTR kTimerAutoSelectSession = 42;
 constexpr UINT_PTR kTimerWebViewSize = 43;
 
-// The chat page and its marked.min.js are both served to WebView2 from the
+// The chat page and its markdown-it.min.js are both served to WebView2 from the
 // provider's virtual host (https://<provider>/). NavigateToString/SetHtml does
 // not reliably load in the current WebView2 runtime (the page stays blank),
 // whereas Navigate() to a resource-served URL does - the same mechanism the
-// in-app manual and CHM viewers use. marked.min.js comes from IDR_EMBEDDED_PAK.
+// in-app manual and CHM viewers use. markdown-it.min.js comes from IDR_EMBEDDED_PAK.
 struct AIChatWebResources {
-    u8* marked = nullptr; // owned (malloc); from GetEmbeddedFileData
-    int markedLen = 0;
+    u8* markdownJs = nullptr; // owned (malloc); from GetEmbeddedFileData
+    int markdownJsLen = 0;
     Str html; // owned; the chat page HTML
 };
 static AIChatWebResources gAIChatWebResources;
@@ -68,9 +68,9 @@ static bool AIChatGetResource(void* ctx, Str path, WebViewResourceResult* res) {
         res->ownsData = false;
         return true;
     }
-    if (r->marked && r->markedLen > 0 && AIChatPathIs(path, StrL("marked.min.js"))) {
-        res->data = r->marked;
-        res->dataLen = (size_t)r->markedLen;
+    if (r->markdownJs && r->markdownJsLen > 0 && AIChatPathIs(path, StrL("markdown-it.min.js"))) {
+        res->data = r->markdownJs;
+        res->dataLen = (size_t)r->markdownJsLen;
         res->contentType = str::Dup(StrL("text/javascript"));
         res->ownsData = false;
         return true;
@@ -817,19 +817,19 @@ static void EnsureWebViewReady(MainWindow* win) {
     // use unique data dir per process to avoid locking conflicts
     webView->dataDir =
         str::Dup(fmt("%s\\SumatraPDF\\%s_%d", localAppData, p->webViewDataDirPrefix, (int)GetCurrentProcessId()));
-    int markedLen = 0;
-    u8* markedData = GetEmbeddedFileData(StrL("marked.min.js"), &markedLen);
-    if (!markedData || markedLen <= 0) {
-        free(markedData);
+    int markdownJsLen = 0;
+    u8* markdownJs = GetEmbeddedFileData(StrL("markdown-it.min.js"), &markdownJsLen);
+    if (!markdownJs || markdownJsLen <= 0) {
+        free(markdownJs);
         delete webView;
         return;
     }
     wstr::Free(webView->resourceUriPrefix);
     webView->resourceUriPrefix = wstr::Dup(ToWStrTemp(p->virtualHost));
-    // serve both the chat page and marked.min.js from the virtual host
-    free(gAIChatWebResources.marked);
-    gAIChatWebResources.marked = markedData;
-    gAIChatWebResources.markedLen = markedLen;
+    // serve both the chat page and markdown-it.min.js from the virtual host
+    free(gAIChatWebResources.markdownJs);
+    gAIChatWebResources.markdownJs = markdownJs;
+    gAIChatWebResources.markdownJsLen = markdownJsLen;
     str::ReplaceWithCopy(&gAIChatWebResources.html, AIChatFormatChatHtmlTemp(p->virtualHost, BgColorForProvider(p)));
     webView->resourceProvider.ctx = &gAIChatWebResources;
     webView->resourceProvider.getResource = AIChatGetResource;

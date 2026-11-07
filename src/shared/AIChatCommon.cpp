@@ -579,28 +579,10 @@ TempStr AIChatModelDisplayNameTemp(Str model, Str defaultDisplay) {
     return dup;
 }
 
-#if !defined(SUMATRA_NG)
-bool AIChatGetMarkedJsResource(void* ctx, Str path, WebViewResourceResult* res) {
-    auto* data = (LoadedDataResource*)ctx;
-    if (!data || !res || len(path) == 0) {
-        return false;
-    }
-    if (!str::EqI(path, StrL("/marked.min.js")) && !str::EqI(path, StrL("marked.min.js"))) {
-        return false;
-    }
-    res->data = data->data;
-    res->dataLen = data->dataSize;
-    res->contentType = str::Dup(StrL("text/javascript"));
-    res->ownsData = false;
-    return res->dataLen > 0;
-}
-
-#endif
-
 // no stray '%' in the CSS or JS: this goes through fmt(). Placeholders:
-// marked.min.js host, the :root css variables, the body class
+// markdown-it.min.js host, the :root css variables, the body class
 static const char* kAIChatHtmlFmt = R"(<!DOCTYPE html><html><head><meta charset='utf-8'>
-<script src='%smarked.min.js'></script>
+<script src='%smarkdown-it.min.js'></script>
 <style>
 :root { %s }
 * { box-sizing: border-box; }
@@ -647,6 +629,8 @@ var chatDiv = document.getElementById('chat');
 var plain = document.body.classList.contains('plain');
 var currentBlock = null;
 var currentRaw = '';
+// raw HTML stays text; bare URLs become links, like GitHub
+var md = typeof markdownit === 'function' ? markdownit({ linkify: true }) : null;
 function addUser(text) {
   flushBlock();
   var d = document.createElement('div');
@@ -673,8 +657,8 @@ function addError(text) {
 }
 function sanitizedMarkdown(markdown) {
   var t = document.createElement('template');
-  t.innerHTML = marked.parse(markdown);
-  var allowed = new Set(['A', 'BLOCKQUOTE', 'BR', 'CODE', 'DEL', 'EM', 'H1', 'H2', 'H3', 'H4', 'H5', 'H6',
+  t.innerHTML = md.render(markdown);
+  var allowed = new Set(['A', 'BLOCKQUOTE', 'BR', 'CODE', 'DEL', 'S', 'EM', 'H1', 'H2', 'H3', 'H4', 'H5', 'H6',
                          'HR', 'LI', 'OL', 'P', 'PRE', 'STRONG', 'TABLE', 'TBODY', 'TD', 'TH', 'THEAD', 'TR', 'UL']);
   var nodes = Array.from(t.content.querySelectorAll('*'));
   for (var el of nodes) {
@@ -707,7 +691,7 @@ function appendText(text) {
     currentRaw = '';
   }
   currentRaw += text;
-  if (typeof marked !== 'undefined') {
+  if (md) {
     currentBlock.replaceChildren(sanitizedMarkdown(currentRaw));
   } else {
     currentBlock.textContent = currentRaw;

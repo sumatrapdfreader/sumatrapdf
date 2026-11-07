@@ -218,7 +218,6 @@ TempStr AIChatModelDisplayNameTemp(Str model, Str defaultDisplay);
 
 TempStr AIChatFormatChatHtmlTemp(Str virtualHost, Str bgColor);
 Str AIChatStyleSnapshot();
-bool AIChatGetMarkedJsResource(void* ctx, Str path, WebViewResourceResult* res);
 
 void AIChatCloseProcess(void** processHandle, bool terminateIfRunning);
 bool AIChatLaunchProcessWithStdoutPipe(Str cmdLine, Str cwd, AIChatProcessLaunchResult* out);

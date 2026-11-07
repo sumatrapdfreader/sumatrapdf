@@ -1442,7 +1442,7 @@ workspace "SumatraPDF"
     filter "platforms:x64_asan"
     linkoptions { "/INFERASANLIBS" }
     filter {}
-    -- stage translations + marked/pele + manual under out/<cfg>/embedded-static
+    -- stage translations + markdown-it/pele + manual under out/<cfg>/embedded-static
     -- and pack them into out/<cfg>/embedded-static.lzsa (IDR_EMBEDDED_PAK, path
     -- passed via the EMBEDDED_PAK resdefine). Uses cmd so MSBuild need not have
     -- bun on PATH.
@@ -1551,7 +1551,7 @@ workspace "SumatraPDF"
     -- delay-loaded libsumatrapdf.dll which LoadLibsumatrapdf() loads by full path
     linkoptions { "/DEPENDENTLOADFLAG:0x800" }
     dependson { "PdfFilter", "PdfPreview", "sumatrapdf-tool" }
-    -- stage translations + marked/pele + manual under out/<cfg>/embedded and
+    -- stage translations + markdown-it/pele + manual under out/<cfg>/embedded and
     -- pack them plus the installer payload into out/<cfg>/embedded.lzsa
     -- (IDR_EMBEDDED_PAK, path passed via the EMBEDDED_PAK resdefine above).
     -- Always re-packed: MakeLZSA reuses unchanged entries, and signed release

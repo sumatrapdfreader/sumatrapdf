@@ -46,22 +46,22 @@
 // the page has loaded by then
 constexpr int kAutoSelectDelayMs = 500;
 
-// marked.min.js, unpacked once (orig reads it out of IDR_EMBEDDED_PAK)
-static u8* gMarkedJs = nullptr;
-static int gMarkedJsLen = 0;
+// markdown-it.min.js, unpacked once (orig reads it out of IDR_EMBEDDED_PAK)
+static u8* gMarkdownJs = nullptr;
+static int gMarkdownJsLen = 0;
 
-static void EnsureMarkedLoaded() {
-    if (gMarkedJs) {
+static void EnsureMarkdownJsLoaded() {
+    if (gMarkdownJs) {
         return;
     }
-    gMarkedJs = GetEmbeddedFileData(StrL("marked.min.js"), &gMarkedJsLen);
+    gMarkdownJs = GetEmbeddedFileData(StrL("markdown-it.min.js"), &gMarkdownJsLen);
 }
 
 // --- the panel --------------------------------------------------------------
 
 struct AIChatPanel;
 
-// serves the chat page and marked.min.js from the provider's virtual host
+// serves the chat page and markdown-it.min.js from the provider's virtual host
 struct AIChatResources : BrowserViewCallback {
     AIChatPanel* panel = nullptr;
 
@@ -114,10 +114,10 @@ Str AIChatResources::GetDataForUrl(Str url) {
     if (AIChatPathIs(url, StrL("index.html")) || len(url) == 0) {
         return panel->html;
     }
-    if (AIChatPathIs(url, StrL("marked.min.js"))) {
-        EnsureMarkedLoaded();
-        if (gMarkedJs && gMarkedJsLen > 0) {
-            return Str((char*)gMarkedJs, gMarkedJsLen);
+    if (AIChatPathIs(url, StrL("markdown-it.min.js"))) {
+        EnsureMarkdownJsLoaded();
+        if (gMarkdownJs && gMarkdownJsLen > 0) {
+            return Str((char*)gMarkdownJs, gMarkdownJsLen);
         }
     }
     return {};
@@ -201,7 +201,7 @@ static void EnsureWebViewReady(MainWindow* win) {
     if (!BrowserViewAvailable()) {
         return;
     }
-    EnsureMarkedLoaded();
+    EnsureMarkdownJsLoaded();
     MakeChatPage(p, provider);
     p->res.panel = p;
     p->view = BrowserViewCreate(win, nullptr, &p->res, provider->virtualHost);
