@@ -35,6 +35,8 @@ void TocExpandAll(MainWindow*);
 void TocCollapseAll(MainWindow*);
 void TocExpandToLevel(MainWindow*, int level);
 void TocCollapseSameLevel(MainWindow*, TocItem*);
+void TocExpandChapter(MainWindow*, TocItem*);
+void TocCollapseChapter(MainWindow*, TocItem*);
 
 #if OS_WIN
 void CreateToc(MainWindow*);

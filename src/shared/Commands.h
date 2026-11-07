@@ -369,8 +369,10 @@ enum {
     CmdToggleReadColumns = 563,
     CmdToggleColumnsWholePage = 564,
     CmdDebugShowDownloadedFonts = 565,
+    CmdTocExpandChapter = 566,
+    CmdTocCollapseChapter = 567,
 
-    CmdLast = 565,
+    CmdLast = 567,
     CmdFirstCustom = CmdLast + 100,
 
     // aliases, at the end to not mess ordering

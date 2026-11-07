@@ -337,6 +337,7 @@ import { testit as issue6048 } from "./issue-6048.ts";
 import { testit as issue6053 } from "./issue-6053.ts";
 import { testit as issue6054 } from "./issue-6054.ts";
 import { testit as favoritesMenu } from "./favorites-menu.ts";
+import { testit as tocExpandChapter } from "./toc-expand-chapter.ts";
 import { testit as fileMenuSendByEmail } from "./file-menu-send-by-email.ts";
 import { testit as favoritesTabAfterDocumentClose } from "./favorites-tab-after-document-close.ts";
 import { testit as movePolygonPolylineInk } from "./move-polygon-polyline-ink.ts";
@@ -862,6 +863,7 @@ export const tests: NamedTest[] = [
 
   // --- isolated session: -appdata, saveSettings, or own window placement -
   ["favorites-menu", favoritesMenu],
+  ["toc-expand-chapter", tocExpandChapter],
   ["file-menu-send-by-email", fileMenuSendByEmail],
   ["favorites-tab-after-document-close", favoritesTabAfterDocumentClose],
   ["issue-6045", issue6045],

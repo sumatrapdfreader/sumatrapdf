@@ -474,6 +474,20 @@ static void TocCollapseSameLevel(TreeView* tv, TreeItem ti) {
     tv->ResumeRedraw();
 }
 
+// Expand or collapse `ti` and everything under it, leaving other chapters alone.
+static void TocSetChapterExpanded(TreeView* tv, TreeItem ti, uint flag) {
+    if (!tv || !tv->hwnd) {
+        return;
+    }
+    HTREEITEM hItem = tv->GetHandleByTreeItem(ti);
+    if (!hItem) {
+        return;
+    }
+    tv->SuspendRedraw();
+    TreeViewExpandRecursively(tv->hwnd, hItem, flag, true);
+    tv->ResumeRedraw();
+}
+
 static void TocContextMenu(ContextMenuEvent* ev) {
     MainWindow* win = FindMainWindowByHwnd(ev->w->hwnd);
     if (!win || !win->ctrl) {
@@ -497,6 +511,10 @@ static void TocContextMenu(ContextMenuEvent* ev) {
 
     WindowTab* tab = win->CurrentTab();
     HMENU popup = BuildMenuFromDef(menuDefContextToc, CreatePopupMenu(), nullptr);
+    if (!dti || !dti->child) {
+        MenuRemove(popup, CmdTocExpandChapter);
+        MenuRemove(popup, CmdTocCollapseChapter);
+    }
 
     Str path;
     Str fileName;
@@ -597,6 +615,12 @@ static void TocContextMenu(ContextMenuEvent* ev) {
             break;
         case CmdTocCollapseSameLevel:
             TocCollapseSameLevel(win->tocTreeView, ti);
+            break;
+        case CmdTocExpandChapter:
+            TocSetChapterExpanded(win->tocTreeView, ti, TVE_EXPAND);
+            break;
+        case CmdTocCollapseChapter:
+            TocSetChapterExpanded(win->tocTreeView, ti, TVE_COLLAPSE);
             break;
         case CmdExpandToCurrentPage:
             ExpandTocToCurrentPage(win);

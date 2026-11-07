@@ -6249,6 +6249,14 @@ void ExecuteCmd(MainWindow* win, int cmdId) {
             TocCollapseSameLevel(win, SidebarTocSelection(win));
             break;
 
+        case CmdTocExpandChapter:
+            TocExpandChapter(win, SidebarTocSelection(win));
+            break;
+
+        case CmdTocCollapseChapter:
+            TocCollapseChapter(win, SidebarTocSelection(win));
+            break;
+
         case CmdExpandToCurrentPage:
             ExpandTocToCurrentPage(win);
             break;

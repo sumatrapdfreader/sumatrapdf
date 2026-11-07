@@ -372,6 +372,25 @@ void TocCollapseSameLevel(MainWindow* win, TocItem* ti) {
     AppShellInvalidate(win);
 }
 
+// Expand `ti` and everything under it, leaving other chapters alone.
+void TocExpandChapter(MainWindow* win, TocItem* ti) {
+    if (!ti) {
+        return;
+    }
+    SetExpanded(ti, true);
+    ExpandAllRec(ti->child, true);
+    AppShellInvalidate(win);
+}
+
+void TocCollapseChapter(MainWindow* win, TocItem* ti) {
+    if (!ti) {
+        return;
+    }
+    SetExpanded(ti, false);
+    ExpandAllRec(ti->child, false);
+    AppShellInvalidate(win);
+}
+
 // --- context menu -----------------------------------------------------------
 
 // ng: orig builds an HMENU and tracks it; the pane builds a gpui PopupMenu from
@@ -384,6 +403,10 @@ MenuModel* BuildTocContextMenu(MainWindow* win, TocItem* dti) {
         pageNo = PageDestGetPageNo(dest);
     }
     MenuModel* popup = BuildMenuFromDef(menuDefContextToc, nullptr);
+    if (!dti || !dti->child) {
+        MenuRemove(popup, CmdTocExpandChapter);
+        MenuRemove(popup, CmdTocCollapseChapter);
+    }
 
     Kind destKind = dest ? dest->GetKind() : nullptr;
     if (destKind == kindDestinationLaunchEmbedded) {
@@ -508,6 +531,12 @@ void TocContextMenuCommand(MainWindow* win, TocItem* dti, int cmd) {
             break;
         case CmdTocCollapseSameLevel:
             TocCollapseSameLevel(win, dti);
+            break;
+        case CmdTocExpandChapter:
+            TocExpandChapter(win, dti);
+            break;
+        case CmdTocCollapseChapter:
+            TocCollapseChapter(win, dti);
             break;
         case CmdExpandToCurrentPage:
             ExpandTocToCurrentPage(win);

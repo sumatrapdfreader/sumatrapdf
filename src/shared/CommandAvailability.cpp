@@ -383,6 +383,8 @@ static const i32 gBlacklistCommandsFromPalette[] = {
     CmdTocExpandToLevel2,
     CmdTocExpandToLevel3,
     CmdTocCollapseSameLevel,
+    CmdTocExpandChapter,
+    CmdTocCollapseChapter,
     CmdMoveFrameFocus,
     CmdFavoriteDel,
     CmdPresentationWhiteBackground,

@@ -1333,6 +1333,14 @@ MenuDef menuDefContextToc[] = {
         CmdTocCollapseSameLevel,
     },
     {
+        TrN("Expand Chapter"),
+        CmdTocExpandChapter,
+    },
+    {
+        TrN("Collapse Chapter"),
+        CmdTocCollapseChapter,
+    },
+    {
         TrN("Expand to Current Page"),
         CmdExpandToCurrentPage,
     },
