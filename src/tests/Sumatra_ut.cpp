@@ -132,6 +132,7 @@ bool RenderCache_UnitTestCookieUnlocked();
 bool RenderCache_UnitTestFullOfOneVisiblePage();
 bool RenderCache_UnitTestFullOfOldZoom();
 bool DocController_UnitTestDestroyHook();
+bool Commands_UnitTestIdLimit();
 
 // a color setting's row gets a swatch of its value, or of the value being typed
 // every SidebarView the app saves must survive loading; the settings enum used
@@ -775,6 +776,7 @@ int RunAppUnitTests(bool forAi) {
     utassert(RenderCache_UnitTestFullOfOneVisiblePage());
     utassert(RenderCache_UnitTestFullOfOldZoom());
     utassert(DocController_UnitTestDestroyHook());
+    utassert(Commands_UnitTestIdLimit());
     ReadAloudHighlight_UnitTests();
 #endif
     return utassert_print_results();

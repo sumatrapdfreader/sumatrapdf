@@ -571,6 +571,35 @@ void FreeCommandArgs(CommandArg* first) {
 
 static int gNextCustomCommandId = (int)CmdFirstCustom;
 
+// WM_COMMAND treats ids from 0xF000 up as system commands (SC_*), and ids
+// travel as 16 bits (LOWORD(wp))
+constexpr int kCustomCommandIdLimit = 0xF000;
+
+static bool IsCustomCommandIdUsed(int id) {
+    for (auto* cmd = gFirstCustomCommand; cmd; cmd = cmd->next) {
+        if (cmd->id == id) {
+            return true;
+        }
+    }
+    return false;
+}
+
+// Ids only grow (each settings reload and history entry takes new ones) so
+// live menus never see an id reused for another command. Once the range is
+// used up, take the lowest id no live command has.
+static int NewCustomCommandId() {
+    if (gNextCustomCommandId < kCustomCommandIdLimit) {
+        return gNextCustomCommandId++;
+    }
+    for (int id = (int)CmdFirstCustom; id < kCustomCommandIdLimit; id++) {
+        if (!IsCustomCommandIdUsed(id)) {
+            return id;
+        }
+    }
+    ReportIf(true);
+    return kCustomCommandIdLimit - 1;
+}
+
 CustomCommand* AllocCustomCommand(Str definition, Str name, Str key) {
     Str strings[] = {definition, name, key};
     auto* cmd = AllocCommandData<CustomCommand>(strings);
@@ -612,7 +641,7 @@ CustomCommand* CreateCustomCommand(Str definition, int origCmdId, CommandArg* ar
     // only when we have unique args we have to create a new command id
     int id = origCmdId;
     if (args != nullptr) {
-        id = gNextCustomCommandId++;
+        id = NewCustomCommandId();
     }
     NormalizeCommandNameAndKey(definition, &name, &key);
     auto* cmd = AllocCustomCommand(definition, name, key);
@@ -647,7 +676,7 @@ CustomCommand* CloneCustomCommand(CustomCommand* cmd, Str name, Str key) {
     auto* res = CreateCustomCommand(cmd->definition, cmd->origId, args, name, key);
     // Argumentless clones still need distinct toolbar IDs.
     if (!args) {
-        res->id = gNextCustomCommandId++;
+        res->id = NewCustomCommandId();
     }
     return res;
 }
@@ -659,6 +688,31 @@ CustomCommand* FindCustomCommand(int cmdId) {
         }
     }
     return nullptr;
+}
+
+// custom ids must stay below 0xF000 (system commands) once the range is used up
+bool Commands_UnitTestIdLimit() {
+    CustomCommand* savedFirst = gFirstCustomCommand;
+    int savedNext = gNextCustomCommandId;
+    gFirstCustomCommand = nullptr;
+    gNextCustomCommandId = kCustomCommandIdLimit - 2;
+
+    auto make = [] {
+        return CreateCustomCommand(StrL("CmdZoomCustom 50"), CmdZoomCustom, AllocCommandArg({}, StrL("50")), {}, {});
+    };
+    CustomCommand* a = make();
+    CustomCommand* b = make();
+    // range used up: the lowest free id is reused, never one at the limit
+    CustomCommand* c = make();
+    bool ok = a->id == kCustomCommandIdLimit - 2 && b->id == kCustomCommandIdLimit - 1;
+    ok = ok && c->id == (int)CmdFirstCustom;
+    CustomCommand* d = make();
+    ok = ok && d->id == (int)CmdFirstCustom + 1;
+
+    FreeCustomCommands();
+    gFirstCustomCommand = savedFirst;
+    gNextCustomCommandId = savedNext;
+    return ok;
 }
 
 void FreeCustomCommands() {
