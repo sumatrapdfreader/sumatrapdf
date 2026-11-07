@@ -11,6 +11,13 @@
 #include "PagePosition.h"
 #include "DocController.h"
 
+// lets the app drop raw pointers it keeps to a controller (e.g. for DDE)
+Func1<DocController*> gOnDocControllerDestroyed;
+
+DocController::~DocController() {
+    gOnDocControllerDestroyed.Call(this);
+}
+
 Location DocController::CurrentLocation() {
     return LocFromPageNo(CurrentPageNo());
 }

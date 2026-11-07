@@ -78,11 +78,14 @@ struct DocControllerCallback {
     virtual void PagesRenumbered(DisplayModel* dm) = 0;
 };
 
+struct DocController;
+extern Func1<DocController*> gOnDocControllerDestroyed;
+
 struct DocController {
     DocControllerCallback* cb;
 
     explicit DocController(DocControllerCallback* cb) : cb(cb) { ReportIf(!cb); }
-    virtual ~DocController() = default;
+    virtual ~DocController();
 
     // meta data
     virtual Str GetFilePath() const = 0;

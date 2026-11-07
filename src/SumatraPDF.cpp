@@ -1632,6 +1632,18 @@ static DocController* CreateControllerForChm(Str path, PasswordUI* pwdUI, MainWi
 // https://github.com/sumatrapdfreader/sumatrapdf/issues/3903
 DocController* gMostRecentlyOpenedDoc = nullptr;
 
+static void ForgetMostRecentlyOpenedDoc(DocController* ctrl) {
+    if (gMostRecentlyOpenedDoc == ctrl) {
+        gMostRecentlyOpenedDoc = nullptr;
+    }
+}
+
+// the controller can be deleted on paths that don't know about this global
+static void SetMostRecentlyOpenedDoc(DocController* ctrl) {
+    gOnDocControllerDestroyed = MkFunc1Void(ForgetMostRecentlyOpenedDoc);
+    gMostRecentlyOpenedDoc = ctrl;
+}
+
 DocController* CreateControllerForEngineOrFile(EngineBase* engine, Str path, PasswordUI* pwdUI, MainWindow* win) {
     auto timeStart = TimeGet();
     bool chmInFixedUI = gSettings->chmUI.useFixedPageUI;
@@ -1640,7 +1652,7 @@ DocController* CreateControllerForEngineOrFile(EngineBase* engine, Str path, Pas
         if (ShouldUseBrowserView(kind)) {
             auto* mdCtrl = CreateControllerForMarkdown(path, win);
             if (mdCtrl) {
-                gMostRecentlyOpenedDoc = mdCtrl;
+                SetMostRecentlyOpenedDoc(mdCtrl);
                 return mdCtrl;
             }
         }
@@ -1652,7 +1664,7 @@ DocController* CreateControllerForEngineOrFile(EngineBase* engine, Str path, Pas
     if (!engine) {
         // as a last resort, try to open as chm file
         auto* ctrl = CreateControllerForChm(path, pwdUI, win);
-        gMostRecentlyOpenedDoc = ctrl;
+        SetMostRecentlyOpenedDoc(ctrl);
         return ctrl;
     }
     int nPages = engine ? engine->pageCount : 0;
@@ -1666,7 +1678,7 @@ DocController* CreateControllerForEngineOrFile(EngineBase* engine, Str path, Pas
     DocController* ctrl = new DisplayModel(engine, win->cbHandler);
     ReportIf(!ctrl || !ctrl->AsFixed() || ctrl->AsChm());
     VerifyController(ctrl, path);
-    gMostRecentlyOpenedDoc = ctrl;
+    SetMostRecentlyOpenedDoc(ctrl);
     return ctrl;
 }
 

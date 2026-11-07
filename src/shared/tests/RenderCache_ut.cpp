@@ -211,3 +211,35 @@ bool RenderCache_UnitTestFullOfOldZoom() {
     }
     return ok;
 }
+
+static DocController* gDestroyedCtrl = nullptr;
+
+static void NoteCtrlDestroyed(DocController* ctrl) {
+    gDestroyedCtrl = ctrl;
+}
+
+// deleting a controller on any path tells the app, so it can drop raw
+// pointers to it (orig's gMostRecentlyOpenedDoc for DDE)
+bool DocController_UnitTestDestroyHook() {
+    Settings* prevSettings = gSettings;
+    if (!gSettings) {
+        gSettings = NewSettings({});
+    }
+    EngineBase* engine = CreateEngineMupdfFromData(Str(kOnePagePdf), StrL("one-page.pdf"), nullptr);
+    if (!engine) {
+        return false;
+    }
+    NoopDocCb cb;
+    DocController* ctrl = new DisplayModel(engine, &cb);
+    Func1<DocController*> prev = gOnDocControllerDestroyed;
+    gOnDocControllerDestroyed = MkFunc1Void(NoteCtrlDestroyed);
+    gDestroyedCtrl = nullptr;
+    delete ctrl;
+    bool ok = gDestroyedCtrl == ctrl;
+    gOnDocControllerDestroyed = prev;
+    if (!prevSettings) {
+        DeleteSettings(gSettings);
+        gSettings = nullptr;
+    }
+    return ok;
+}
