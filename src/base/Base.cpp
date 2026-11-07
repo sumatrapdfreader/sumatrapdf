@@ -1372,6 +1372,10 @@ NO_INLINE bool VecReserveNT(Arena* arena, VecNonTemplated* v, int elSize, int wa
 
 NO_INLINE void* VecInsertSpaceNT(VecNonTemplated* v, int elSize, int idx, int count) {
     int len = v->len;
+    // idx may be past the end (the gap is zeroed) but not before the start
+    if (ReportIf(idx < 0 || count < 0 || std::max(len, idx) > INT_MAX - count)) {
+        return nullptr;
+    }
     int newLen = std::max(len, idx) + count;
     if (!VecReserveNT(nullptr, v, elSize, newLen)) {
         return nullptr;
@@ -1406,6 +1410,9 @@ NO_INLINE bool VecResizeNT(VecNonTemplated* v, int elSize, int newSize) {
 
 NO_INLINE void VecRemoveAtNT(VecNonTemplated* v, int elSize, int idx, int count) {
     int len = v->len;
+    if (ReportIf(idx < 0 || count < 0 || idx > len - count)) {
+        return;
+    }
     char* els = (char*)v->els;
     if (len > idx + count) {
         char* dst = els + ((size_t)idx * (size_t)elSize);
@@ -1421,8 +1428,7 @@ NO_INLINE void VecRemoveAtNT(VecNonTemplated* v, int elSize, int idx, int count)
 // VecRemoveAtNT but does not keep the order
 NO_INLINE void VecRemoveAtFastNT(VecNonTemplated* v, int elSize, int idx) {
     int len = v->len;
-    ReportIf(idx >= len);
-    if (idx >= len) {
+    if (ReportIf(idx < 0 || idx >= len)) {
         return;
     }
     char* els = (char*)v->els;
@@ -3362,6 +3368,9 @@ bool BuilderT<C>::AppendNonEmpty(S src) {
 
 template <typename C>
 C BuilderT<C>::RemoveAt(int idx, int count) {
+    if (ReportIf(idx < 0 || count < 0 || idx > this->len - count || count == 0)) {
+        return 0;
+    }
     C res = this->els[idx];
     // VecRemoveAtN() zeroes the chars it frees at the end, so the NUL is there
     VecRemoveAtN(*this, idx, count);
@@ -6069,6 +6078,9 @@ static Str SetOrInsertAt(StrVec* v, int idx, Str s, PageOpResult (StrVecPage::*o
 // note: this might invalidate previously returned strings because
 // it might re-allocate memory used for those strings
 Str StrVec::SetAt(int idx, Str s) {
+    if (ReportIf(idx < 0 || idx >= size)) {
+        return {};
+    }
     return SetOrInsertAt(this, idx, s, &StrVecPage::SetAt);
 }
 
@@ -6076,6 +6088,9 @@ Str StrVec::SetAt(int idx, Str s) {
 // note: this might invalidate previously returned strings because
 // it might re-allocate memory used for those strings
 Str StrVec::InsertAt(int idx, Str s) {
+    if (ReportIf(idx < 0 || idx > size)) {
+        return {};
+    }
     if (idx == size) {
         return Append(s);
     }
@@ -6085,6 +6100,9 @@ Str StrVec::InsertAt(int idx, Str s) {
 }
 
 static Str RemoveAtHelper(StrVec* v, int idx, Str (StrVecPage::*op)(int)) {
+    if (ReportIf(idx < 0 || idx >= v->size)) {
+        return {};
+    }
     int idxInPage;
     auto* page = PageForIdx(v, PhysIdx(v, idx), &idxInPage);
     Str removed = page->AtStr(idxInPage);
@@ -6135,20 +6153,25 @@ bool StrVec::Remove(Str s) {
 }
 
 Str StrVec::At(int idx) const {
+    // PageForIdx() returns null and sortIndexes is read unchecked past the end
+    if (ReportIf(idx < 0 || idx >= size)) {
+        return {};
+    }
     int idxInPage;
     auto* page = PageForIdx(this, PhysIdx(this, idx), &idxInPage);
     return page->AtStr(idxInPage);
 }
 
 void* StrVec::AtDataRaw(int idx) const {
-    ReportIf(dataSize == 0); // shouldn't call
+    if (ReportIf(dataSize == 0 || idx < 0 || idx >= size)) {
+        return nullptr;
+    }
     int idxInPage;
     auto* page = PageForIdx(this, PhysIdx(this, idx), &idxInPage);
     return page->AtDataRaw(idxInPage);
 }
 
 Str StrVec::operator[](int idx) const {
-    ReportIf(idx < 0);
     return At(idx);
 }
 

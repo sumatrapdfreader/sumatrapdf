@@ -1977,7 +1977,9 @@ void VecRemoveAt(Vec<T>& v, int idx) {
 
 template <typename T>
 T VecPopAt(Vec<T>& v, int idx) {
-    ReportIf(idx >= v.len);
+    if (ReportIf(idx < 0 || idx >= v.len)) {
+        return T{};
+    }
     T el = v.els[idx];
     VecRemoveAtN(v, idx, 1);
     return el;
@@ -1998,7 +2000,9 @@ void VecRemoveLast(Vec<T>& v) {
 
 template <typename T>
 T VecPop(Vec<T>& v) {
-    ReportIf(0 == v.len);
+    if (ReportIf(0 == v.len)) {
+        return T{};
+    }
     T el = v.els[v.len - 1];
     VecRemoveAtFast(v, v.len - 1);
     return el;
@@ -2037,6 +2041,9 @@ T& VecLast(const Vec<T>& v) {
 
 template <typename T>
 int VecFind(const Vec<T>& v, const T& el, int startAt) {
+    if (startAt < 0) {
+        startAt = 0;
+    }
     for (int i = startAt; i < v.len; i++) {
         if (v.els[i] == el) {
             return i;

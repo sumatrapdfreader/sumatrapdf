@@ -427,7 +427,9 @@ Archive::FileInfo* Archive::GetFileDataById(int fileId) {
     if (fileId < 0) {
         return nullptr;
     }
-    ReportIf(fileId >= len(fileInfos_));
+    if (ReportIf(fileId >= len(fileInfos_))) {
+        return {};
+    }
     auto* fi = fileInfos_[fileId];
     ReportIf(fi->fileId != fileId);
     if (fi->data || fi->failed) {
@@ -446,7 +448,9 @@ Str Archive::GetFileDataPartById(int fileId, int sizeHint) {
     if (fileId < 0) {
         return {};
     }
-    ReportIf(fileId >= len(fileInfos_));
+    if (ReportIf(fileId >= len(fileInfos_))) {
+        return {};
+    }
     auto* fi = fileInfos_[fileId];
     int n = std::min(fi->fileSizeUncompressed, sizeHint);
     // if full data is cached, return a copy of the prefix

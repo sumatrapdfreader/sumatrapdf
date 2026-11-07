@@ -340,7 +340,9 @@ void HideFwdSearchMarkAfter(MainWindow* win, int delayMs) {
 
 void ShowForwardSearchResult(MainWindow* win, Str fileName, int line, int /* col */, int ret, int page,
                              Vec<Rect>& rects) {
-    ReportIf(!win->AsFixed());
+    if (ReportIf(!win->AsFixed())) {
+        return;
+    }
     DisplayModel* dm = win->AsFixed();
     VecReset(win->fwdSearchMark.rects);
     const PageInfo* pi = dm->GetPageInfo(page);

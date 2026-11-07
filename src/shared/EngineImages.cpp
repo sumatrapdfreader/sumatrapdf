@@ -962,7 +962,9 @@ RectF EngineImages::Transform(const RectF& rect, int pageNo, float zoom, int rot
 
 // don't delete the result
 Vec<IPageElement*> EngineImages::GetElements(int pageNo) {
-    ReportIf(pageNo < 1 || pageNo > pageCount);
+    if (ReportIf(pageNo < 1 || pageNo > len(pageInfos))) {
+        return Vec<IPageElement*>();
+    }
     auto* pi = pageInfos[pageNo - 1];
     if (pi->hasImageElement) {
         return pi->allElements;
@@ -2136,6 +2138,9 @@ bool EngineImageDir::SaveFileAs(Str dstPath) {
 }
 
 Pixmap* EngineImageDir::LoadPixmapForPage(int pageNo, bool& deleteAfterUse) {
+    if (ReportIf(pageNo < 1 || pageNo > len(pageFileNames))) {
+        return nullptr;
+    }
     Str path = pageFileNames[pageNo - 1];
     Str bmpData = file::ReadFile(path);
     if (len(bmpData) == 0) {
@@ -2148,6 +2153,9 @@ Pixmap* EngineImageDir::LoadPixmapForPage(int pageNo, bool& deleteAfterUse) {
 }
 
 Str EngineImageDir::GetImageData(int pageNo) {
+    if (ReportIf(pageNo < 1 || pageNo > len(pageInfos) || pageNo > len(pageFileNames))) {
+        return {};
+    }
     ScopedRecursiveMutex scope(&cacheLock);
     auto* pi = pageInfos[pageNo - 1];
     if (len(pi->rawData) == 0) {
@@ -2706,7 +2714,9 @@ TocTree* EngineCbx::GetToc() {
 }
 
 Str EngineCbx::GetImageData(int pageNo) {
-    ReportIf((pageNo < 1) || (pageNo > PageCount()));
+    if (ReportIf(pageNo < 1 || pageNo > len(files))) {
+        return {};
+    }
     int fileId = files[pageNo - 1]->fileId;
     auto* fi = cbxArchive->GetFileDataById(fileId);
     if (!fi || !fi->data) {
@@ -2792,6 +2802,9 @@ void EngineCbx::GetProperties(Props& propsOut) {
 
 // SVG pages become display-list images, so they stay sharp at any zoom (#6364)
 fz_image* EngineCbx::LoadFzImageForPage(fz_context* ctx, int pageNo) {
+    if (ReportIf(pageNo < 1 || pageNo > len(files))) {
+        return nullptr;
+    }
     FileType kind = GuessFileTypeFromName(files[pageNo - 1]->name, true);
     if (FileType::Svg != kind) {
         return EngineImages::LoadFzImageForPage(ctx, pageNo);
@@ -2834,6 +2847,9 @@ Pixmap* EngineCbx::LoadPixmapForPage(int pageNo, bool& deleteAfterUse) {
 }
 
 RectF EngineCbx::LoadMediabox(int pageNo) {
+    if (ReportIf(pageNo < 1 || pageNo > len(files))) {
+        return {};
+    }
     int fileId = files[pageNo - 1]->fileId;
 
     // try to get image size from just the file header (first 1024 bytes)

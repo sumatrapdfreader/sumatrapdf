@@ -328,7 +328,9 @@ __unused static Str scrollMsgStr(USHORT msg) {
 }
 
 static void OnVScroll(MainWindow* win, WPARAM wp) {
-    ReportIf(!win->AsFixed());
+    if (ReportIf(!win->AsFixed())) {
+        return;
+    }
 
     // Use overlay state whenever overlay mode is on — including SmartInvisible
     // (auto-hidden). Requiring IsOverlayScrollbarVisible() left keyboard scroll
@@ -575,7 +577,9 @@ static void OnVScroll(MainWindow* win, WPARAM wp) {
 }
 
 static void OnHScroll(MainWindow* win, WPARAM wp) {
-    ReportIf(!win->AsFixed());
+    if (ReportIf(!win->AsFixed())) {
+        return;
+    }
 
     bool overlayMode = ScrollbarsUseOverlay();
     bool useOverlay = overlayMode && win->overlayScrollH;
@@ -2176,7 +2180,9 @@ static void OnMouseRightButtonDown(MainWindow* win, int x, int y) {
     } else if (win->mouseAction != MouseAction::None) {
         return;
     }
-    ReportIf(!win->AsFixed());
+    if (ReportIf(!win->AsFixed())) {
+        return;
+    }
 
     HwndSetFocus(win->hwndFrame);
 
@@ -2187,7 +2193,9 @@ static void OnMouseRightButtonDown(MainWindow* win, int x, int y) {
 }
 
 static void OnMouseRightButtonUp(MainWindow* win, int x, int y, WPARAM key) {
-    ReportIf(!win->AsFixed());
+    if (ReportIf(!win->AsFixed())) {
+        return;
+    }
     // A held finger is delivered as a right-click, which would open the context
     // menu on top of the word the hold just selected (issue #538)
     if (win->touchSuppressContextMenu) {
@@ -2864,8 +2872,7 @@ static int PaintPageBitmap(HDC hdc, Rect bounds, DisplayModel* dm, int pageNo, P
 }
 
 static bool DrawDocument(MainWindow* win, HDC hdc, Rect rcArea) {
-    ReportIf(!win->AsFixed());
-    if (!win->AsFixed()) {
+    if (ReportIf(!win->AsFixed())) {
         return false;
     }
     DisplayModel* dm = win->AsFixed();

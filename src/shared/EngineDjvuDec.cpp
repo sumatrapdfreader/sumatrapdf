@@ -143,7 +143,12 @@ class EngineDjvuDec : public EngineBase {
     EngineBase* Clone() override;
 
     RectF PageMediabox(int pageNo) override;
-    int PageDpi(int pageNo) const { return pages[pageNo - 1]->dpi; }
+    int PageDpi(int pageNo) const {
+        if (ReportIf(pageNo < 1 || pageNo > len(pages))) {
+            return 0;
+        }
+        return pages[pageNo - 1]->dpi;
+    }
 
     Pixmap* RenderPage(RenderPageArgs& args) override;
 
@@ -371,7 +376,9 @@ bool EngineDjvuDec::FinishLoading() {
 }
 
 RectF EngineDjvuDec::PageMediabox(int pageNo) {
-    ReportIf(pageNo < 1 || pageNo > pageCount);
+    if (ReportIf(pageNo < 1 || pageNo > pageCount)) {
+        return {};
+    }
     return pages[pageNo - 1]->mediabox;
 }
 
@@ -634,6 +641,9 @@ static void CollectZonesUtf8(djvu_text_zone* z, float dpiF, str::Builder& sb, Ve
 }
 
 PageText EngineDjvuDec::ExtractPageText(int pageNo) {
+    if (ReportIf(pageNo < 1 || pageNo > pageCount)) {
+        return {};
+    }
     djvu_page_text_zones* z = djvu_page_text_get_zones(doc, pageNo - 1);
     AutoCall freeZones(djvu_text_zones_destroy, ctx, z);
     if (!z || !z->root) {
@@ -682,7 +692,9 @@ static TempStr ResolveNamedDestDjvuDecTemp(djvu_doc* doc, Str name) {
 }
 
 Vec<IPageElement*> EngineDjvuDec::GetElements(int pageNo) {
-    ReportIf(pageNo < 1 || pageNo > PageCount());
+    if (ReportIf(pageNo < 1 || pageNo > PageCount())) {
+        return Vec<IPageElement*>();
+    }
     auto* pi = pages[pageNo - 1];
     if (pi->gotElements) {
         return pi->allElements;
