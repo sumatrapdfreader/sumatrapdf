@@ -198,13 +198,8 @@ constexpr int kDlgBtnRadius = 4;
 VirtButton* NewDlgButton(HWND hwndForDpi, Str text, PlatformFont* font, DlgButtonStyle style, bool isDefault) {
     VirtButton* b = NewThemedButton(hwndForDpi, text, font, isDefault);
     b->cornerRadius = DpiScale(kDlgBtnRadius);
-    SetDlgButtonColors(b, style);
-    return b;
-}
-
-// the style's colors in the current theme
-void SetDlgButtonColors(VirtButton* b, DlgButtonStyle style) {
     SetVirtButtonStyle(b, style);
+    return b;
 }
 
 constexpr int kDlgBtnDisabledShift = 28;

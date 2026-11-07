@@ -557,10 +557,6 @@ int AsciiAcceleratorCmd(u32 ch) {
     return 0;
 }
 
-static Str CurrentLangCode() {
-    return trans::GetCurrentLangCode();
-}
-
 namespace {
 // ng: orig fills three win32 tables here (all / edit / tree view). We keep one
 // and classify at lookup time; gpui decides per key context (step 6).
@@ -719,7 +715,7 @@ static void BuildWinAcceleratorTables() {
 #endif
 
 void CreateSumatraAcceleratorTable() {
-    gShortcutLangCode = CurrentLangCode;
+    gShortcutLangCode = trans::GetCurrentLangCode;
     ReportIf(gAccels);
 
     PatchCreateAnnotEditAccelerators();

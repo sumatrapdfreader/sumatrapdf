@@ -168,8 +168,8 @@ void ChangeThemeWnd::Recolor() {
         SetDlgListColors(listBox);
     }
     labelDocumentColorsFollowTheme->SetColor(kColText, ThemeWindowDarkerTextColor());
-    SetDlgButtonColors(btnCancel, DlgButtonStyle::Outline);
-    SetDlgButtonColors(btnChange, DlgButtonStyle::Filled);
+    SetVirtButtonStyle(btnCancel, DlgButtonStyle::Outline);
+    SetVirtButtonStyle(btnChange, DlgButtonStyle::Filled);
     HwndInvalidate(hwnd);
 }
 

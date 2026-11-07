@@ -445,10 +445,6 @@ static void AIChatReadThread(AIChatReadThreadCtx* ctx) {
     delete ctx;
 }
 
-static void StartAIChatReadThread(AIChatReadThreadCtx* ctx) {
-    AIChatReadThread(ctx);
-}
-
 // --- Headless chat runner (for -dbg-control tests) ---
 
 static void AIChatReadAllPipe(HANDLE hPipe, str::Builder& out) {
@@ -666,7 +662,7 @@ static void SendAIChatMessage(MainWindow* win) {
     ctx->stream.sessionId = str::Dup(st->sessionId ? st->sessionId : kAIChatPendingSessionId());
     st->turnId = AIChatNewTurnId();
     ctx->stream.turnId = st->turnId;
-    RunAsync(MkFunc0(StartAIChatReadThread, ctx), StrL("AIChatReadThread"));
+    RunAsync(MkFunc0(AIChatReadThread, ctx), StrL("AIChatReadThread"));
 }
 
 // --- WndProcs ---

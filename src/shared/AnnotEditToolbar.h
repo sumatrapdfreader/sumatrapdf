@@ -51,7 +51,6 @@ void RefreshAnnotationLists(WindowTab*);
 void NotifyAnnotationsChanged(WindowTab*);
 void StartLoadingAnnotationsForUi(WindowTab*);
 void DetachAnnotationFromUI(Annotation*);
-void InvalidateEditAnnotationsOnEngineChange(WindowTab*);
 void RefreshEditAnnotationsAfterEngineChange(WindowTab*);
 void CloseAnnotationUiForTab(WindowTab*);
 

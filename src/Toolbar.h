@@ -169,8 +169,6 @@ struct ToolbarVirt {
 Color TbTextColor();
 VirtCtrl* ToolbarItemFromPoint(MainWindow*, Point);
 
-Edit* ToolbarCreatePageEdit(MainWindow*, PlatformFont*, int iconDy);
-Edit* ToolbarCreateChapterEdit(MainWindow*, PlatformFont*, int iconDy);
 void ToolbarSetNativeHooks(MainWindow*, VirtHost*);
 void ToolbarUpdateFindEditCursor(MainWindow*);
 Rect ToolbarCanvasRectInFrame(MainWindow*);

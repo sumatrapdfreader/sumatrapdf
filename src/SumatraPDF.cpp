@@ -2451,7 +2451,7 @@ void ReloadDocument(MainWindow* win, bool autoRefresh, bool canAskForPassword) {
     // Canvas and compact toolbar keep non-owning Annotation* from the engine.
     // Clear those pointers before a replacement controller is opened (or a
     // manual reload is about to replace the document with an error page).
-    InvalidateEditAnnotationsOnEngineChange(tab);
+    CloseAnnotationUiForTab(tab);
     tab->selectedAnnotation = nullptr;
     EndPdfEditOperation(win);
     win->annotationBeingDragged = nullptr;

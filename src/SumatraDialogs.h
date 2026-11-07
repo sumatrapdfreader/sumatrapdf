@@ -129,7 +129,6 @@ VirtText* NewDlgCaption(Str s, PlatformFont* font, Color col);
 ILayout* NewDlgUnderlined(ILayout* field);
 HBox* NewDlgRow();
 ILayout* NewDlgFooter(VirtButton* cancel, VirtButton* ok, VirtButton* extra = nullptr);
-void SetDlgButtonColors(VirtButton* b, DlgButtonStyle style);
 VirtListBox* NewDlgList(int dpi, PlatformFont* font);
 void SetDlgListColors(VirtListBox* lb);
 ILayout* NewDlgListBox(VirtListBox* lb);

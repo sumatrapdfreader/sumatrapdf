@@ -2549,6 +2549,8 @@ static VirtCtrl* MakeToolbarSeparator(int rowDy) {
     return sep;
 }
 
+static Edit* ToolbarCreateLocationEdit(MainWindow* win, PlatformFont* font, int iconDy);
+
 // (re)build the tree of virtual controls the toolbar is made of, one per button
 static void BuildToolbarLayout(MainWindow* win) {
     PopulateToolbarLayout();
@@ -2595,7 +2597,7 @@ static void BuildToolbarLayout(MainWindow* win) {
             box->AddChild(label);
 
             // chapter box: [chapterEdit] / N, hidden unless HasChapters()
-            Edit* chapterEdit = ToolbarCreateChapterEdit(win, tb->platformFont, tb->iconSize);
+            Edit* chapterEdit = ToolbarCreateLocationEdit(win, tb->platformFont, tb->iconSize);
             chapterEdit->SetVisibility(Visibility::Collapse);
             win->chapterEdit = chapterEdit;
             box->AddChild(chapterEdit);
@@ -2619,7 +2621,7 @@ static void BuildToolbarLayout(MainWindow* win) {
             tb->pageLabel2 = label2;
             box->AddChild(label2);
 
-            Edit* pageEdit = ToolbarCreatePageEdit(win, tb->platformFont, tb->iconSize);
+            Edit* pageEdit = ToolbarCreateLocationEdit(win, tb->platformFont, tb->iconSize);
             win->pageEdit = pageEdit;
             box->AddChild(pageEdit);
 
@@ -2973,14 +2975,6 @@ static Edit* ToolbarCreateLocationEdit(MainWindow* win, PlatformFont* font, int 
     e->idealDy = iconDy;
     e->onChar = MkFunc1(OnLocationEditChar, win);
     return e;
-}
-
-Edit* ToolbarCreatePageEdit(MainWindow* win, PlatformFont* font, int iconDy) {
-    return ToolbarCreateLocationEdit(win, font, iconDy);
-}
-
-Edit* ToolbarCreateChapterEdit(MainWindow* win, PlatformFont* font, int iconDy) {
-    return ToolbarCreateLocationEdit(win, font, iconDy);
 }
 
 // no document: the find edit does nothing, so don't offer a text cursor
