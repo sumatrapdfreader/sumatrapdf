@@ -10753,6 +10753,7 @@ static void InvalidateFzPageAfterContentChange(EngineMupdf* e, FzPageInfo* pi) {
     DropPageImages(ctx, pi);
     DeleteVecMembers(pi->links);
     DeleteVecMembers(pi->autoLinks);
+    AtomicIntInc(&e->elementsGeneration);
     if (pi->retainedLinks) {
         fz_drop_link(ctx, pi->retainedLinks);
         pi->retainedLinks = nullptr;

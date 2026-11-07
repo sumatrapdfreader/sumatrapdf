@@ -486,6 +486,9 @@ class EngineBase {
     // hex-encoded password fingerprint + crypt key; arena-allocated
     Str decryptionKey;
     bool hasPageLabels = false;
+    // bumped when IPageElement objects handed out by GetElements() are freed
+    // (e.g. after a content edit); holders compare it before using a pointer
+    AtomicInt elementsGeneration = 0;
     int logicalPageCount = 0;
     bool hideAnnotations = false;
     bool disableAntiAlias = false;

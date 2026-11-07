@@ -108,6 +108,10 @@ static void ImageDragDropNow(MainWindow* win) {
         return;
     }
     IPageElement* el = win->imageDragElement;
+    // page elements are freed when the page content changes (redaction, image replace)
+    if (win->imageDragElementGen != AtomicIntGet(&dm->GetEngine()->elementsGeneration)) {
+        el = nullptr;
+    }
     if (!el || !CanStartDrag(win)) {
         return;
     }

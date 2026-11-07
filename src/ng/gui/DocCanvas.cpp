@@ -2817,6 +2817,7 @@ static void OnMouseLeftButtonDown(MainWindow* win, int x, int y) {
     IPageElement* pageEl = dm->GetElementAtPos(pt, nullptr);
     if (pageEl && pageEl->Is(kindPageElementDest) && !gSettings->disableLinks) {
         win->linkOnLastButtonDown = pageEl;
+        win->linkOnLastButtonDownGen = AtomicIntGet(&dm->GetEngine()->elementsGeneration);
     }
 
     win->dragStartPending = true;
@@ -2885,6 +2886,7 @@ static void OnMouseLeftButtonDown(MainWindow* win, int x, int y) {
         if (imageEl && imageEl->Is(kindPageElementImage) && !IsFullPageImage(dm, imageEl, elPageNo)) {
             win->imageDragPending = true;
             win->imageDragElement = imageEl;
+            win->imageDragElementGen = AtomicIntGet(&dm->GetEngine()->elementsGeneration);
             win->imageDragPageNo = elPageNo;
             win->linkOnLastButtonDown = nullptr;
             CanvasSetCapture(win, true);
@@ -3169,6 +3171,10 @@ static void OnMouseLeftButtonUp(MainWindow* win, gp::Ctx* cx, int x, int y) {
     PointF ptPage = dm->CvtFromScreen(pt, pageNo);
 
     IPageElement* link = win->linkOnLastButtonDown;
+    // page elements are freed when the page content changes (redaction, image replace)
+    if (win->linkOnLastButtonDownGen != AtomicIntGet(&dm->GetEngine()->elementsGeneration)) {
+        link = nullptr;
+    }
     win->linkOnLastButtonDown = nullptr;
 
     WindowTab* tab = win->CurrentTab();

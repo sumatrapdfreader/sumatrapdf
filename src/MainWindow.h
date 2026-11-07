@@ -416,7 +416,8 @@ struct MainWindow { // NOLINT(clang-analyzer-optin.performance.Padding)
     bool textDragPending = false;  // true when mouse down on selected text, waiting for drag
     bool imageDragPending = false; // true when mouse down on image, waiting for drag
     IPageElement* imageDragElement = nullptr;
-    int imageDragPageNo = -1; // page of imageDragElement for screen-rect / hotspot
+    int imageDragElementGen = 0; // engine's elementsGeneration when it was taken
+    int imageDragPageNo = -1;    // page of imageDragElement for screen-rect / hotspot
 
     /* when dragging the document around, this is previous position of the
        cursor. A delta between previous and current is by how much we
@@ -725,6 +726,7 @@ struct MainWindow { // NOLINT(clang-analyzer-optin.performance.Padding)
     int textSelectAnchorGlyph = 0;
 
     IPageElement* linkOnLastButtonDown = nullptr;
+    int linkOnLastButtonDownGen = 0; // engine's elementsGeneration when it was taken
     Str urlOnLastButtonDown;
     Annotation* annotationUnderCursor = nullptr;
     // a gesture that writes to the PDF as it goes (a resize drag) has a journal

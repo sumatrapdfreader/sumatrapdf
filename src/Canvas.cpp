@@ -149,13 +149,19 @@ static void StartTextDragDrop(MainWindow* win) {
 // Longest edge of the proportional drag-out thumbnail (logical px; DPI-scaled).
 constexpr int kDragImageThumbnailSize = 220;
 
+// page elements are freed when the page content changes (redaction, image
+// replace): a pointer kept across that must not be used
+static int ElementsGen(DisplayModel* dm) {
+    return dm ? AtomicIntGet(&dm->GetEngine()->elementsGeneration) : 0;
+}
+
 static void StartImageDragDrop(MainWindow* win) {
     DisplayModel* dm = win->AsFixed();
     if (!dm) {
         return;
     }
     IPageElement* el = win->imageDragElement;
-    if (!el) {
+    if (!el || win->imageDragElementGen != ElementsGen(dm)) {
         return;
     }
     RenderedBitmap* rb = dm->GetEngine()->GetImageForPageElement(el);
@@ -1638,6 +1644,7 @@ static void OnMouseLeftButtonDown(MainWindow* win, int x, int y, WPARAM key) {
         IPageElement* pageEl = dm->GetElementAtPos(pt, nullptr);
         if (pageEl && pageEl->Is(kindPageElementDest) && !gSettings->disableLinks) {
             win->linkOnLastButtonDown = pageEl;
+            win->linkOnLastButtonDownGen = ElementsGen(dm);
         }
     }
 
@@ -1709,6 +1716,7 @@ static void OnMouseLeftButtonDown(MainWindow* win, int x, int y, WPARAM key) {
         if (pageEl && pageEl->Is(kindPageElementImage) && !IsFullPageImage(dm, pageEl, elPageNo)) {
             win->imageDragPending = true;
             win->imageDragElement = pageEl;
+            win->imageDragElementGen = ElementsGen(dm);
             win->imageDragPageNo = elPageNo;
             win->linkOnLastButtonDown = nullptr;
             SetCapture(win->hwndCanvas);
@@ -1844,6 +1852,9 @@ static void OnMouseLeftButtonUp(MainWindow* win, int x, int y, WPARAM key) {
     PointF ptPage = dm->CvtFromScreen(pt, pageNo);
 
     IPageElement* link = win->linkOnLastButtonDown;
+    if (win->linkOnLastButtonDownGen != ElementsGen(dm)) {
+        link = nullptr;
+    }
     win->linkOnLastButtonDown = nullptr;
 
     WindowTab* tab = win->CurrentTab();
