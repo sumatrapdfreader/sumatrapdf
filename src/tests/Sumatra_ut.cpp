@@ -28,6 +28,7 @@
 #include "EngineBase.h"
 #include "EngineAll.h"
 #include "AppSettings.h"
+#include "WindowTab.h"
 #include "Flags.h"
 #include "Commands.h"
 #include "Annotation.h"
@@ -133,6 +134,21 @@ bool RenderCache_UnitTestFullOfOldZoom();
 bool DocController_UnitTestDestroyHook();
 
 // a color setting's row gets a swatch of its value, or of the value being typed
+// every SidebarView the app saves must survive loading; the settings enum used
+// to drop signatures / layers, which came back as bookmarks
+static void SidebarViewSettingTest() {
+    for (int i = 0; i < kSidebarViewCount; i++) {
+        SidebarView v = (SidebarView)i;
+        TempStr data =
+            fmt("FileStates [\n\t[\n\t\tFilePath = C:\\a.pdf\n\t\tSidebarView = %s\n\t]\n]\n", SidebarViewToStr(v));
+        Settings* settings = NewSettings(data);
+        utassert(settings && settings->fileStates && len(*settings->fileStates) == 1);
+        Str got = (*settings->fileStates)[0]->sidebarView;
+        utassert(SidebarViewFromStr(got, SidebarView::Bookmarks) == v);
+        DeleteSettings(settings);
+    }
+}
+
 static void PaletteRowColorTest() {
     Settings* prevSettings = gSettings;
     if (!gSettings) {
@@ -451,6 +467,7 @@ static void SumatraPDF_UnitTests() {
     CachedObjects_UnitTests();
     CommandPaletteModel_UnitTests();
     PaletteRowColorTest();
+    SidebarViewSettingTest();
     GhostButtonDisabledTest();
     DocPropertiesTest();
     parseCommandsTest();

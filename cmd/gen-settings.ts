@@ -1236,9 +1236,9 @@ const fileState: Field[] = [
     "SidebarView",
     Str,
     null,
-    "what the sidebar's top panel shows: bookmarks (the default), thumbnails or favorites",
+    "what the sidebar's top panel shows: bookmarks (the default), thumbnails, favorites, signatures or layers",
   )
-    .enum(["bookmarks", "thumbnails", "favorites"])
+    .enum(["bookmarks", "thumbnails", "favorites", "signatures", "layers"])
     .emptyMeans("bookmarks")
     .ver("3.7"),
   field("SidebarDx", Int, 0, "width of the bookmarks / favorites sidebar in screen pixels, as last resized"),
@@ -1393,8 +1393,13 @@ const tabState: Field[] = [
     "PointF",
   ),
   field("ShowToc", Bool, true, "if true, the table of contents was shown when the document was closed"),
-  field("SidebarView", Str, null, "what the sidebar's top panel showed: bookmarks, thumbnails or favorites")
-    .enum(["bookmarks", "thumbnails", "favorites"])
+  field(
+    "SidebarView",
+    Str,
+    null,
+    "what the sidebar's top panel showed: bookmarks, thumbnails, favorites, signatures or layers",
+  )
+    .enum(["bookmarks", "thumbnails", "favorites", "signatures", "layers"])
     .emptyMeans("bookmarks")
     .ver("3.7"),
   compactArray("TocState", Int, null, "which table of contents items were expanded (see FileStates -> TocState)"),

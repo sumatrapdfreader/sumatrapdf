@@ -289,7 +289,7 @@ struct FileState {
     // by the crypt key (64 chars); only applies to PDF documents
     Str decryptionKey;
     // what the sidebar's top panel shows: bookmarks (the default),
-    // thumbnails or favorites
+    // thumbnails, favorites, signatures or layers
     Str sidebarView;
     // how pages are laid out for this document. The string is the
     // persisted form of DisplayModel::displayMode, so it's parsed after
@@ -400,8 +400,8 @@ struct TabState {
     // if true, the table of contents was shown when the document was
     // closed
     bool showToc;
-    // what the sidebar's top panel showed: bookmarks, thumbnails or
-    // favorites
+    // what the sidebar's top panel showed: bookmarks, thumbnails,
+    // favorites, signatures or layers
     Str sidebarView;
     // which table of contents items were expanded (see FileStates ->
     // TocState)

@@ -799,7 +799,8 @@ static const StructInfo gRectFInfo = {
     "the page width\0height, as a fraction of the page height",
     false};
 
-static const char* gEnumFileStateSidebarView[] = {"", "bookmarks", "thumbnails", "favorites", nullptr};
+static const char* gEnumFileStateSidebarView[] = {"",           "bookmarks", "thumbnails", "favorites",
+                                                  "signatures", "layers",    nullptr};
 static const char* gEnumFileStateDisplayMode[] = {
     "automatic",         "single page",          "facing", "book view", "continuous",
     "continuous facing", "continuous book view", nullptr};
@@ -855,10 +856,10 @@ StructInfo gFileStateInfo = {
     "WindowBgCol and DefaultDisplayMode are already per-document as BgCol and DisplayMode below\0data required to "
     "determine which parts of the table of contents have been expanded\0path of the document\0data required to open a "
     "password protected document without having to ask for the password again\0what the sidebar's top panel shows: "
-    "bookmarks (the default), thumbnails or favorites\0layout of pages\0zoom (in %) or one of those values: fit page, "
-    "fit width, fit height, fit content, fit visible\0if given, overrides the background color for this document\0if "
-    "given, overrides the tab color for this document\0visibility of the PDF's layers (optional content groups), if "
-    "changed: 1 (shown) or 0 (hidden) for each layer, in document order\0unit name for calibrated "
+    "bookmarks (the default), thumbnails, favorites, signatures or layers\0layout of pages\0zoom (in %) or one of "
+    "those values: fit page, fit width, fit height, fit content, fit visible\0if given, overrides the background color "
+    "for this document\0if given, overrides the tab color for this document\0visibility of the PDF's layers (optional "
+    "content groups), if changed: 1 (shown) or 0 (hidden) for each layer, in document order\0unit name for calibrated "
     "measurements\0calibrated measurement units per document coordinate; 0 uses points\0number of times this document "
     "has been opened recently\0number of the last read page, or `bm:<bookmark>` for documents with chapters (folds in "
     "ReparseIdx; see PagePosition.cpp)\0number of pages in the document when it was last open; 0 if unknown. Used to "
@@ -895,7 +896,8 @@ static const StructInfo gPointF_2_Info = {
 static const char* gEnumTabStateDisplayMode[] = {
     "automatic",         "single page",          "facing", "book view", "continuous",
     "continuous facing", "continuous book view", nullptr};
-static const char* gEnumTabStateSidebarView[] = {"", "bookmarks", "thumbnails", "favorites", nullptr};
+static const char* gEnumTabStateSidebarView[] = {"",           "bookmarks", "thumbnails", "favorites",
+                                                 "signatures", "layers",    nullptr};
 static const FieldInfo gTabStateFields[] = {
     {offsetof(TabState, filePath), SettingType::String, 0},
     {offsetof(TabState, displayMode), SettingType::String, (intptr_t)"automatic", false, gEnumTabStateDisplayMode,
@@ -917,8 +919,8 @@ const StructInfo gTabStateInfo = {
     "with chapters (see PagePosition.cpp)\0zoom (in %) or one of those values: fit page, fit width, fit height, fit "
     "content, fit visible\0how far pages have been rotated as a multiple of 90 degrees\0how far this document has been "
     "scrolled (in x and y direction)\0if true, the table of contents was shown when the document was closed\0what the "
-    "sidebar's top panel showed: bookmarks, thumbnails or favorites\0which table of contents items were expanded (see "
-    "FileStates -> TocState)",
+    "sidebar's top panel showed: bookmarks, thumbnails, favorites, signatures or layers\0which table of contents items "
+    "were expanded (see FileStates -> TocState)",
     false};
 
 static const FieldInfo gRect_4_Fields[] = {
