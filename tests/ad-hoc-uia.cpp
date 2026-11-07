@@ -152,6 +152,28 @@ int main(int argc, char** argv) {
                  {TextUnit_Word, "walk.word", 3, 40},
                  {TextUnit_Line, "walk.line", 3, 80},
                  {TextUnit_Page, "walk.page", 2, 40}};
+    // Compare / CompareEndpoints take another range: ours must be recognized
+    {
+        IUIAutomationTextRange* a = nullptr;
+        IUIAutomationTextRange* b = nullptr;
+        tp->get_DocumentRange(&a);
+        tp->get_DocumentRange(&b);
+        if (a && b) {
+            BOOL same = FALSE;
+            HRESULT hr = a->Compare(b, &same);
+            printf("compare.same=%d\n", SUCCEEDED(hr) && same ? 1 : 0);
+            int diff = 99;
+            hr = a->CompareEndpoints(TextPatternRangeEndpoint_Start, b, TextPatternRangeEndpoint_Start, &diff);
+            printf("compare.endpoints=%d\n", SUCCEEDED(hr) ? diff : 99);
+        }
+        if (a) {
+            a->Release();
+        }
+        if (b) {
+            b->Release();
+        }
+    }
+
     for (auto& w : walks) {
         IUIAutomationTextRange* r = nullptr;
         tp->get_DocumentRange(&r);

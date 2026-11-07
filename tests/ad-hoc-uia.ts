@@ -174,6 +174,9 @@ export async function testit(): Promise<void> {
       return v;
     };
 
+    if (need("compare.same") !== "1" || need("compare.endpoints") !== "0") {
+      throw new Error(`Compare / CompareEndpoints of two document ranges failed:\n${out}`);
+    }
     if (need("doc.found") !== "1") {
       throw new Error(`no Document element under the canvas:\n${out}`);
     }

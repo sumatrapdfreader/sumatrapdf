@@ -304,7 +304,31 @@ int SumatraUIAutomationTextRange::FindNextLineEndpoint(int pageno, int idx, bool
 }
 
 // IUnknown
+// private IID: lets us tell our own ranges from a client's before casting
+// {6B4F1C2E-8A39-4D5E-9C61-2F7A0B3D8E14}
+static const IID kIIDSumatraTextRange = {0x6b4f1c2e, 0x8a39, 0x4d5e, {0x9c, 0x61, 0x2f, 0x7a, 0x0b, 0x3d, 0x8e, 0x14}};
+
+// range as ours if it is one of our ranges over the same document, else null
+SumatraUIAutomationTextRange* SumatraUIAutomationTextRange::SameDocRange(ITextRangeProvider* range) {
+    if (!range) {
+        return nullptr;
+    }
+    void* p = nullptr;
+    if (FAILED(range->QueryInterface(kIIDSumatraTextRange, &p)) || !p) {
+        return nullptr;
+    }
+    auto* r = (SumatraUIAutomationTextRange*)p;
+    // the caller holds a reference for the duration of the call
+    r->Release();
+    return r->document == document ? r : nullptr;
+}
+
 HRESULT STDMETHODCALLTYPE SumatraUIAutomationTextRange::QueryInterface(REFIID riid, void** ppv) {
+    if (ppv && IsEqualIID(riid, kIIDSumatraTextRange)) {
+        AddRef();
+        *ppv = this;
+        return S_OK;
+    }
     static const QITAB qit[] = {QITABENT(SumatraUIAutomationTextRange, ITextRangeProvider), {nullptr}};
     return QISearch(this, qit, riid, ppv);
 }
@@ -342,8 +366,8 @@ HRESULT STDMETHODCALLTYPE SumatraUIAutomationTextRange::Compare(ITextRangeProvid
     if (range == nullptr) {
         return E_POINTER;
     }
-    // TODO: is range guaranteed to be a SumatraUIAutomationTextRange?
-    if (*((SumatraUIAutomationTextRange*)range) == *this) {
+    SumatraUIAutomationTextRange* other = SameDocRange(range);
+    if (other && *other == *this) {
         *areSame = TRUE;
     } else {
         *areSame = FALSE;
@@ -373,7 +397,10 @@ HRESULT STDMETHODCALLTYPE SumatraUIAutomationTextRange::CompareEndpoints(enum Te
         return E_INVALIDARG;
     }
 
-    SumatraUIAutomationTextRange* target = (SumatraUIAutomationTextRange*)range;
+    SumatraUIAutomationTextRange* target = SameDocRange(range);
+    if (!target) {
+        return E_INVALIDARG;
+    }
 
     int comp_b_page, comp_b_idx;
     if (targetEndPoint == TextPatternRangeEndpoint_Start) {
@@ -889,7 +916,10 @@ HRESULT STDMETHODCALLTYPE SumatraUIAutomationTextRange::MoveEndpointByRange(Text
         return E_POINTER;
     }
 
-    SumatraUIAutomationTextRange* target = (SumatraUIAutomationTextRange*)range;
+    SumatraUIAutomationTextRange* target = SameDocRange(range);
+    if (!target) {
+        return E_INVALIDARG;
+    }
 
     // moving one endpoint to "nowhere" (e.g. GetSelection() with nothing selected)
     // would leave a half-null range whose page -1 reaches GetTextForPage()
@@ -1012,9 +1042,9 @@ HRESULT STDMETHODCALLTYPE SumatraUIAutomationTextRange::GetChildren(SAFEARRAY** 
         if (pageNum >= startPage && pageNum <= endPage) {
             LONG index = pageNum - startPage;
 
+            // SafeArrayPutElement() AddRefs a VT_UNKNOWN element itself
             HRESULT hr = SafeArrayPutElement(psa, &index, it);
             ReportIf(FAILED(hr));
-            it->AddRef();
         }
 
         it = it->GetNextPage();
