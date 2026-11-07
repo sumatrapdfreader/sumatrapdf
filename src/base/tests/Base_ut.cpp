@@ -314,6 +314,20 @@ static void ArenaChainedBlockSizeTest() {
     ArenaDelete(a);
 }
 
+// A size that wraps pos + size (e.g. a negative int cast to u64) must fail,
+// not move pos backwards over live allocations.
+static void ArenaPushOverflowTest() {
+    Arena* a = ArenaNew();
+    utassert(a != nullptr);
+    utassert(a->Push(64, 8, false) != nullptr);
+    u64 pos = a->current->pos;
+
+    utassert(a->Push((u64)-16, 8, false) == nullptr);
+    utassert(a->Push((u64)(int)-1, 1, true) == nullptr);
+    utassert(a->current->pos == pos);
+    ArenaDelete(a);
+}
+
 static void ArenaPtrCompressTest() {
     // Single-block round-trip
     {
@@ -491,6 +505,7 @@ void BaseUtilTest() {
     Func1ListTest();
     ColorTest();
     ArenaChainedBlockSizeTest();
+    ArenaPushOverflowTest();
     ArenaPtrCompressTest();
 #if OS_POSIX && !OS_WASM
     TimedJoinTest();

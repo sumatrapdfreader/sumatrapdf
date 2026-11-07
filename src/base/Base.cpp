@@ -788,6 +788,10 @@ static void* ArenaPushLocked(Arena* arena, u64 size, u64 align, bool zero) {
     Arena* current = arena->current;
     u64 posPre = ArenaAlignPow2(current->pos, align);
     u64 posPost = posPre + size;
+    // a wrapped sum (e.g. a negative int size) would move pos backwards
+    if (posPost < posPre) {
+        return nullptr;
+    }
 
     u64 sizeToZero = 0;
     if (zero && current->committed > posPre) {
