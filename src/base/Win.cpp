@@ -3218,10 +3218,4 @@ void DeferWinPosHelper::MoveWindow(HWND hWnd, int x, int y, int cx, int cy, BOOL
     this->SetWindowPos(hWnd, nullptr, x, y, cx, cy, uFlags);
 }
 
-void UpdateBitmapColors(HBITMAP hbmp, Color textColor, Color bgColor, Color linkColor, Vec<Rect>* skipRects) {
-    Pixmap pixmap{};
-    pixmap.hbmp = hbmp;
-    RecolorPixmap(&pixmap, textColor, bgColor, linkColor, skipRects);
-}
-
 #endif

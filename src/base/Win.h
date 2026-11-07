@@ -226,8 +226,6 @@ struct RenderedBitmap {
     bool Blit(HDC hdc, Rect target);
 };
 
-void UpdateBitmapColors(HBITMAP hbmp, Color textColor, Color bgColor, Color linkColor = 0,
-                        Vec<Rect>* skipRects = nullptr);
 HBITMAP CreateMemoryBitmap(Size size, HANDLE* hDataMapping = nullptr);
 bool BlitHBITMAP(HBITMAP hbmp, HDC hdc, Rect target);
 

@@ -184,39 +184,6 @@ void ReadAloudHighlightFree(ReadAloudHighlightMap* map) {
     map->cap = 0;
 }
 
-bool ReadAloudHighlightBuildFromPage(EngineBase* engine, int pageNo, ReadAloudHighlightMap* map,
-                                     str::Builder& cleanedOut) {
-    if (!engine || !map) {
-        return false;
-    }
-
-    PageText pageText = engine->ExtractPageText(pageNo);
-    if (len(pageText.text) == 0 || pageText.nCodepoints <= 0) {
-        FreePageText(&pageText);
-        return false;
-    }
-
-    Location pageLoc = engine->LocationFromPageNo(pageNo);
-    Vec<ReadAloudRawByte> raw;
-    int byteIdx = 0;
-    for (int i = 0; i < pageText.nCodepoints; i++) {
-        ReadAloudByteLoc loc;
-        Rect r = pageText.coords[i];
-        if (r.x || r.dx) {
-            ReadAloudByteLocSetFromRect(loc, pageLoc, r);
-        }
-        int n = 0;
-        Utf8CodepointAtByte(pageText.text, byteIdx, &n);
-        for (int j = 0; j < n; j++) {
-            ReadAloudHighlightAppendRaw(raw, pageText.text.s[byteIdx + j], loc);
-        }
-        byteIdx += n;
-    }
-    FreePageText(&pageText);
-
-    return CleanRawBytes(raw, map, cleanedOut);
-}
-
 static void ReadAloudAppendPageGlyphs(Vec<ReadAloudRawByte>& raw, EngineBase* engine, int pageNo, int startGlyph,
                                       int endGlyph) {
     Rect* coords = nullptr;
