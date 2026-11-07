@@ -39,6 +39,7 @@
 #include "TipMarkup.h"
 #include "FilterHighlightDraw.h"
 #include "AIChatPanel.h"
+#include "base/DirScan.h"
 #include "NavFilesInFolder.h"
 #include "gui/AppShell.h"
 #include "SumatraDialogs.h"
@@ -46,6 +47,7 @@
 #include "gui/ToolWindow.h"
 #include "gui/NavFilesUI.h"
 #include "AppHelpersCommon.h"
+#include "NavFilesInFolderCommon.h"
 
 #include "SumatraLog.h"
 
@@ -56,8 +58,6 @@ enum NavBtn {
     NavBtnHome,
     NavBtnCount
 };
-
-constexpr int kNavHistoryMax = 100;
 
 // Clear: show ".." alone until the listing arrives (new folder).
 // Keep: leave the current listing on screen while it is re-read (F5,
@@ -171,10 +171,6 @@ static ToolWindow* gNavTw = nullptr;
 // next file it is asked to open has nowhere to go and closes it. Set while
 // the window it was opened from is gone (it is drawn for another one then)
 static bool gNavOwnerGone = false;
-// dirs visited ("" for home), kept for the whole session so a re-opened
-// window can still go Back to where the previous one was
-static StrVec gNavHistory;
-static int gNavHistIdx = -1;
 
 // ng: the picker outlives a file being opened, so the window it sits in can be
 // gone by the time a scan or a save prompt comes back
@@ -634,19 +630,9 @@ static void SetDir(Str dir, Str selectPath, int selectIdx = -1, NavListReset res
     NavInvalidate();
 }
 
-// show dir and record it in the session history, dropping the forward entries
+// show dir and record it in the session history
 static void Navigate(Str dir, Str selectPath = {}) {
-    bool same = gNavHistIdx >= 0 && str::EqI(gNavHistory[gNavHistIdx], dir);
-    if (!same) {
-        while (len(gNavHistory) > gNavHistIdx + 1) {
-            gNavHistory.RemoveAt(len(gNavHistory) - 1);
-        }
-        if (len(gNavHistory) >= kNavHistoryMax) {
-            gNavHistory.RemoveAt(0);
-        }
-        gNavHistory.Append(dir);
-        gNavHistIdx = len(gNavHistory) - 1;
-    }
+    NavHistoryPush(dir);
     SetDir(dir, selectPath);
 }
 
@@ -667,10 +653,9 @@ static void RefreshList() {
 }
 
 static void GoHome() {
-    if (IsHome()) {
-        return;
+    if (!IsHome()) {
+        Navigate(Str{});
     }
-    Navigate(Str{});
 }
 
 // from a root directory (C:\) Up goes to the home view

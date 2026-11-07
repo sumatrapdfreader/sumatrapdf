@@ -167,15 +167,6 @@ TempStr GetAppDataDirTemp() {
     return gAppDataDir;
 }
 
-// Generate full path for a file or directory for storing data
-TempStr GetPathInAppDataDirTemp(Str name) {
-    if (len(name) == 0) {
-        return {};
-    }
-    TempStr dir = GetAppDataDirTemp();
-    return path::JoinTemp(dir, name);
-}
-
 // List of rules used to detect TeX editors.
 
 #define kRegCurrentVer "Software\\Microsoft\\Windows\\CurrentVersion"
@@ -513,6 +504,15 @@ TempStr GetWebViewDataDirTemp() {
 }
 
 #endif // OS_WIN
+
+// Generate full path for a file or directory for storing data
+TempStr GetPathInAppDataDirTemp(Str name) {
+    if (len(name) == 0) {
+        return {};
+    }
+    TempStr dir = GetAppDataDirTemp();
+    return path::JoinTemp(dir, name);
+}
 
 // Portable helpers shared with AppTools_posix.cpp.
 

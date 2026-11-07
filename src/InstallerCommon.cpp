@@ -161,17 +161,6 @@ void UnRegisterPreviewer() {
     NotifyFailed(Tr("Couldn't uninstall PDF previewer"));
 }
 
-// Kill a process with given <processId> if it has a module (dll or exe) <modulePath>.
-// If <waitUntilTerminated> is true, will wait until process is fully killed.
-// Returns TRUE if killed a process
-bool KillProcWithIdAndModule(DWORD processId, Str modulePath, bool waitUntilTerminated) {
-    if (!IsProcWithModule(processId, modulePath)) {
-        return false;
-    }
-    logf("KillProcWithIdAndModule() processId=%d, modulePath=%s\n", processId, modulePath);
-    return KillProcWithId(processId, waitUntilTerminated);
-}
-
 // Kill processes that have any of our install-dir modules loaded:
 // libsumatrapdf.dll, PdfFilter.dll, PdfPreview.dll, SumatraPDF.exe.
 // dllhost/prevhost/SearchFilterHost load the shell-extension DLLs; they may

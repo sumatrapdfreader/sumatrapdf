@@ -34,6 +34,7 @@
 #include "SearchAndDDE.h"
 #include "RefHover.h"
 #include "WindowTab.h"
+#include "Tabs.h"
 #include "TableOfContents.h"
 #include "StressTesting.h"
 #include "ExternalViewers.h"
@@ -435,4 +436,14 @@ void LinkHandler::GotoNamedDest(Str name) {
             ctrl->GoToPage(pageNo, true);
         }
     }
+}
+
+void PopulateTabCloseFlags(AppCommandCtx& ctx) {
+    if (!ctx.win) {
+        return;
+    }
+
+    int nTabs = ctx.win->TabCount();
+    ctx.nTabs = nTabs;
+    SetTabCloseFlags(ctx);
 }

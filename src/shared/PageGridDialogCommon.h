@@ -91,3 +91,14 @@ bool PageGridDragActive();
 void PageGridDragEnd();
 void PageGridDragCancel();
 TempStr PageGridProbeTemp(DisplayModel* dm);
+
+// an edit's float rounded to the nearest int; parseFloat reads the edit
+template <typename T>
+bool ParseEditIntWith(T* e, bool (*parseFloat)(T*, float*), int* out) {
+    float v = 0;
+    if (!parseFloat(e, &v)) {
+        return false;
+    }
+    *out = (int)(v + (v >= 0 ? 0.5f : -0.5f));
+    return true;
+}

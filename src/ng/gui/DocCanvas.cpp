@@ -993,13 +993,6 @@ static bool DrawDocument(MainWindow* win, gp::PaintCtx* ctx, Rect rcArea) {
 
 // --- scrollbars -------------------------------------------------------------
 
-static void MakeFullScrollbar(CanvasScrollInfo& si) {
-    si.nPos = 0;
-    si.nMin = 0;
-    si.nMax = 99;
-    si.nPage = 100;
-}
-
 // orig's ControllerCallbackHandler::UpdateScrollbars: the range the window
 // scrollbars get. Here it also feeds the overlay bars the canvas draws.
 void CanvasUpdateScrollbars(MainWindow* win, DisplayModel* dm, Size canvas) {
@@ -1466,21 +1459,6 @@ static int WheelPageTurnDelta(MainWindow* win, int delta) {
     return std::max(kWheelDelta, lines * perLine);
 }
 
-// accumulates wheel travel; 1 to turn to the previous page, -1 to the next, 0 to stay
-static int WheelPageTurnDir(MainWindow* win, int delta) {
-    win->wheelAccumDelta += delta;
-    int turnDelta = WheelPageTurnDelta(win, delta);
-    if (win->wheelAccumDelta >= turnDelta) {
-        win->wheelAccumDelta -= turnDelta;
-        return 1;
-    }
-    if (win->wheelAccumDelta <= -turnDelta) {
-        win->wheelAccumDelta += turnDelta;
-        return -1;
-    }
-    return 0;
-}
-
 static void WheelTurnPage(MainWindow* win, int dir) {
     if (dir > 0) {
         win->ctrl->GoToPrevPage();
@@ -1647,13 +1625,13 @@ static void CanvasOnMouseWheel(MainWindow* win, int delta, bool isCtrl, bool isS
     // MouseWheelTurnsPage: a wheel notch is a page turn, not a scroll, even
     // when the page is zoomed past the window. Alt + wheel still scrolls
     if (vScroll && !isAlt && gSettings->mouseWheelTurnsPage) {
-        WheelTurnPage(win, WheelPageTurnDir(win, delta));
+        WheelTurnPage(win, WheelPageTurnDir(win, delta, WheelPageTurnDelta(win, delta)));
         return;
     }
 
     // fit content: flip page on wheel, regardless of scrollbar state
     if (vScroll && dm && FitContentWheelFlipsPage(dm) && IsSingle(dm->GetDisplayMode())) {
-        WheelTurnPage(win, WheelPageTurnDir(win, delta));
+        WheelTurnPage(win, WheelPageTurnDir(win, delta, WheelPageTurnDelta(win, delta)));
         return;
     }
 
@@ -1662,7 +1640,7 @@ static void CanvasOnMouseWheel(MainWindow* win, int delta, bool isCtrl, bool isS
 
     // in SinglePage mode a document that fits the viewport pages instead
     if (isSinglePageMode && vScroll && (!dm || !dm->NeedVScroll())) {
-        WheelTurnPage(win, WheelPageTurnDir(win, delta));
+        WheelTurnPage(win, WheelPageTurnDir(win, delta, WheelPageTurnDelta(win, delta)));
         return;
     }
 
@@ -1676,7 +1654,7 @@ static void CanvasOnMouseWheel(MainWindow* win, int delta, bool isCtrl, bool isS
             flipPage = true;
         }
         if (flipPage) {
-            WheelTurnPage(win, WheelPageTurnDir(win, delta));
+            WheelTurnPage(win, WheelPageTurnDir(win, delta, WheelPageTurnDelta(win, delta)));
             return;
         }
     }

@@ -182,8 +182,6 @@ struct FindWindowWnd : WindowBase {
     void SaveSelectedMatch();
     bool MoveResultSelection(WPARAM vkey);
     void FindNextOrPrev(bool forward);
-    int CurrentMatchIndex();         // list index of the document's current match, or -1
-    int FirstMatchFromCurrentPage(); // list index of the first match at/after the current page
 
     void OnSize(WindowBase::SizeEvent* ev);
     void OnDpiChanged(WindowBase::DpiChangedEvent* ev);
@@ -533,7 +531,7 @@ void FindWindowWnd::RefreshResults(bool allowNavigation) {
         savedSelGlyph = -1;
     }
     if (sel < 0) {
-        sel = CurrentMatchIndex();
+        sel = FindCurrentMatchIndex(win);
     }
     if (sel >= 0) {
         // the document already sits on a match (find-as-you-type found it): just
@@ -544,7 +542,7 @@ void FindWindowWnd::RefreshResults(bool allowNavigation) {
         // so the document isn't on a match. Drive selection + navigation off the
         // full count instead: go to the first match at/after the current page,
         // like find-as-you-type would have.
-        sel = FirstMatchFromCurrentPage();
+        sel = FindFirstMatchFromPage(win);
         results->SetCurrentSelection(sel);
         // streamed partial updates must not navigate: OnResultSelected joins
         // the in-flight count worker (GoToFindMatch), which would cancel the
@@ -664,49 +662,6 @@ void FindWindowWnd::SaveSelectedMatch() {
     savedSelGlyph = fm.startGlyph;
 }
 
-// list index of the match the document is currently on (so the selection can
-// track the current match), or -1 if it isn't in the list
-int FindWindowWnd::CurrentMatchIndex() {
-    if (win->ctrl && win->ctrl->CanFindInPage()) {
-        // tracked by the browser (chm / markdown) webview find (see
-        // SearchAndDDE.cpp BrowserFind*)
-        return win->browserFindCurrent;
-    }
-    DisplayModel* dm = win->AsFixed();
-    if (!dm || !dm->textSearch || dm->textSearch->result.len == 0) {
-        return -1;
-    }
-    return FindMatchIndex(win, dm->textSearch->startPage, dm->textSearch->startGlyph);
-}
-
-// first match at/after the current page, wrapping to the start of the document
-// if there is none: the match with the smallest forward page distance from the
-// current page (the list itself is in document order)
-int FindWindowWnd::FirstMatchFromCurrentPage() {
-    int n = len(win->findMatches);
-    if (n == 0) {
-        return -1;
-    }
-    int curPage = win->ctrl ? win->ctrl->CurrentPageNo() : 1;
-    int nPages = win->ctrl ? win->ctrl->PageCount() : 1;
-    int best = 0;
-    int bestDist = INT_MAX;
-    for (int i = 0; i < n; i++) {
-        int dist = win->findMatches[i].startPage - curPage;
-        if (dist < 0) {
-            dist += nPages;
-        }
-        if (dist < bestDist) {
-            bestDist = dist;
-            best = i;
-            if (dist == 0) {
-                break; // first match on the current page
-            }
-        }
-    }
-    return best;
-}
-
 // move the results-list selection (keyboard arrows or the Next/Prev buttons)
 // while focus stays in the search edit, navigating to the newly selected match.
 // Returns false (not handled) when there are no results, so the caller can fall
@@ -722,7 +677,7 @@ bool FindWindowWnd::MoveResultSelection(WPARAM vkey) {
     constexpr int kPage = 10;
     int cur = results->GetCurrentSelection();
     if (cur < 0) {
-        cur = CurrentMatchIndex(); // start from where the document already is
+        cur = FindCurrentMatchIndex(win); // start from where the document already is
     }
     int idx;
     switch (vkey) {

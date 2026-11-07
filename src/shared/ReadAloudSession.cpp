@@ -1297,3 +1297,26 @@ void ReadAloudOnTtsEvent(MainWindow* win) {
     }
     ReadAloudFinishSession(tab, win);
 }
+
+bool ApplyReadAloudVoiceFromSettings() {
+    if (!gSettings) {
+        return false;
+    }
+
+    float speed = gSettings->readAloudSpeed;
+    TtsSetSpeed(speed > 0 ? speed : 1.0f);
+
+    Str voiceId = gSettings->readAloudVoiceId;
+    if (len(voiceId) == 0) {
+        TtsSetVoiceById(StrL(""));
+        return false;
+    }
+
+    if (!TtsSetVoiceById(voiceId)) {
+        logf("ApplyReadAloudVoiceFromSettings: voice '%s' not available, using system default\n", voiceId);
+        str::ReplaceWithCopy(&gSettings->readAloudVoiceId, Str{});
+        TtsSetVoiceById(StrL(""));
+        return true;
+    }
+    return false;
+}

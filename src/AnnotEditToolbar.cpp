@@ -76,7 +76,6 @@ struct AnnotEditChip : VirtCustom {
 static void StartContentsEdit(AnnotEditToolbar*);
 static void EndContentsEdit(AnnotEditToolbar*, bool accept);
 static void DestroyContentsEditor(AnnotEditToolbar*);
-static void PostedStartContentsEdit(MainWindow*);
 static void PostedDeleteSelectedAnnotation(MainWindow*);
 static bool FreeTextInPlaceEditJustEnded();
 
@@ -1585,13 +1584,6 @@ void StartSelectedAnnotContentsEdit(MainWindow* win) {
         return;
     }
     StartContentsEdit(tb);
-}
-
-static void PostedStartContentsEdit(MainWindow* win) {
-    if (!IsMainWindowValidAndNotClosing(win)) {
-        return;
-    }
-    StartSelectedAnnotContentsEdit(win);
 }
 
 static void PostedDeleteSelectedAnnotation(MainWindow* win) {

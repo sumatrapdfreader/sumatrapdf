@@ -6,6 +6,7 @@
 constexpr DWORD kTenSecondsInMs = 10 * 1000;
 bool IsProcWithModule(DWORD processId, Str modulePath);
 bool KillProcWithId(DWORD processId, bool waitUntilTerminated);
+bool KillProcWithIdAndModule(DWORD processId, Str modulePath, bool waitUntilTerminated);
 Str ReadableProcName(Str procPath);
 extern PreviousInstallationInfo gPrevInstall;
 extern Flags gCliNew;

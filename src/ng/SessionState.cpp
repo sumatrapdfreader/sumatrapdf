@@ -60,63 +60,6 @@ static SessionData* CloneSessionData(const SessionData* src) {
     return dst;
 }
 
-// find the saved state for a lazy tab by file path. Because gInitialSessionData
-// is kept in sync with the live session, this never matches a closed window;
-// per-tab disambiguation (e.g. same file in two windows) comes from the more
-// reliable tab->tabState, which RememberSessionState prefers.
-static TabState* FindSessionTabState(Str fp) {
-    if (!gInitialSessionData) {
-        return nullptr;
-    }
-    for (SessionData* psd : *gInitialSessionData) {
-        for (TabState* pts : *psd->tabStates) {
-            if (str::Eq(pts->filePath, fp)) {
-                return pts;
-            }
-        }
-    }
-    return nullptr;
-}
-
-// lazy tabs borrow tab->tabState from gInitialSessionData. After we replace that
-// snapshot, repoint those pointers so the next SaveSettings() does not clone freed
-// TabState objects
-static void RefreshLazyTabStatePointers() {
-    int sdIdx = 0;
-    for (MainWindow* win : gWindows) {
-        bool hasFileTab = false;
-        for (WindowTab* tab : win->Tabs()) {
-            if (tab->filePath) {
-                hasFileTab = true;
-                break;
-            }
-        }
-        if (!hasFileTab) {
-            continue;
-        }
-        SessionData* sd = nullptr;
-        if (gInitialSessionData && sdIdx < len(*gInitialSessionData)) {
-            sd = (*gInitialSessionData)[sdIdx++];
-        }
-        int tsIdx = 0;
-        for (WindowTab* tab : win->Tabs()) {
-            if (len(tab->filePath) == 0) {
-                continue;
-            }
-            TabState* ts = nullptr;
-            if (sd && tsIdx < len(*sd->tabStates)) {
-                ts = (*sd->tabStates)[tsIdx];
-            }
-            tsIdx++;
-            if (!tab->ctrl && tab->tabState) {
-                // null when the new snapshot has nothing to borrow: the old one
-                // was just freed and must not be left dangling
-                tab->tabState = ts;
-            }
-        }
-    }
-}
-
 // keep gInitialSessionData mirroring the just-saved live session, so re-saving
 // not-yet-loaded tabs never feeds stale state from a closed window back into the
 // saved session (fixes #5668). Call after RememberSessionState().

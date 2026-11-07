@@ -9,6 +9,8 @@ bool RefHoverIsInternalLink(IPageElement* el, DisplayModel* dm);
 // WHEEL_DELTA, the unit RefHoverWheelScroll counts notches in
 constexpr int kWheelDelta = 120;
 
+bool IsPopupLink(RefHoverState* s, IPageElement* el);
+
 // implemented by each app
 bool RefHoverPopupShown(RefHoverState* s);
 Size RefHoverPopupClientSize(RefHoverState* s);

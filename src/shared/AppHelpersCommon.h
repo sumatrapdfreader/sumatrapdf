@@ -7,6 +7,7 @@ struct TabGroup;
 struct MainWindow;
 struct Annotation;
 struct Shortcut;
+struct TabState;
 
 void FreeTabGroup(TabGroup* group);
 void SetTabGroupFiles(TabGroup* group, MainWindow* win);
@@ -16,6 +17,10 @@ void SyncTabGroup(MainWindow* win);
 TempStr TabGroupInfoTemp(TabGroup* group);
 Str ScrollbarModeDisplayName(int idx);
 int FindMatchIndex(MainWindow* win, int page, int glyph);
+TabState* FindSessionTabState(Str fp);
+void RefreshLazyTabStatePointers();
+int FindCurrentMatchIndex(MainWindow* win);
+int FindFirstMatchFromPage(MainWindow* win);
 int FieldFontPx(Annotation* widget, Rect rc);
 int DecimalDigits(int n);
 Shortcut* FindScreenshotShortcutEntry();

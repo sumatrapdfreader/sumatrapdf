@@ -94,15 +94,6 @@ TempStr GetAppDataDirTemp() {
     return gAppDataDir;
 }
 
-// Generate full path for a file or directory for storing data
-TempStr GetPathInAppDataDirTemp(Str name) {
-    if (len(name) == 0) {
-        return {};
-    }
-    TempStr dir = GetAppDataDirTemp();
-    return path::JoinTemp(dir, name);
-}
-
 TempStr GetTempDirPathTemp() {
     const char* tmp = getenv("TMPDIR");
     return str::DupTemp(Str((char*)(tmp && *tmp ? tmp : "/tmp")));

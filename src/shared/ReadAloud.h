@@ -57,8 +57,8 @@ bool TtsTakeEngineCrash();
 bool TtsEngineCrashed();
 bool TtsTestEngineCrash();
 void TtsTestPumpOnNextSpeak();
-#if defined(SUMATRA_NG)
 bool ApplyReadAloudVoiceFromSettings();
+#if defined(SUMATRA_NG)
 void ReadAloudFreeVoiceCache();
 #endif
 

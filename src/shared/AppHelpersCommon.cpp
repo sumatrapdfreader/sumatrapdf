@@ -15,6 +15,10 @@
 #include "DisplayMode.h"
 #include "DocController.h"
 #include "EngineBase.h"
+#include "DisplayModel.h"
+#include "ProgressUpdateUI.h"
+#include "TextSelection.h"
+#include "TextSearch.h"
 #include "Annotation.h"
 #include "FormFields.h"
 #include "Theme.h"
@@ -124,6 +128,48 @@ int FindMatchIndex(MainWindow* win, int page, int glyph) {
         }
     }
     return -1;
+}
+
+// list index of the match the document is currently on (so the selection can
+// track the current match), or -1 if it isn't in the list
+int FindCurrentMatchIndex(MainWindow* win) {
+    if (win->ctrl && win->ctrl->CanFindInPage()) {
+        // tracked by the browser (chm / markdown) webview find
+        return win->browserFindCurrent;
+    }
+    DisplayModel* dm = win->AsFixed();
+    if (!dm || !dm->textSearch || dm->textSearch->result.len == 0) {
+        return -1;
+    }
+    return FindMatchIndex(win, dm->textSearch->startPage, dm->textSearch->startGlyph);
+}
+
+// first match at/after the current page, wrapping to the start of the document
+// if there is none: the match with the smallest forward page distance from the
+// current page (the list itself is in document order)
+int FindFirstMatchFromPage(MainWindow* win) {
+    int n = len(win->findMatches);
+    if (n == 0) {
+        return -1;
+    }
+    int curPage = win->ctrl ? win->ctrl->CurrentPageNo() : 1;
+    int nPages = win->ctrl ? win->ctrl->PageCount() : 1;
+    int best = 0;
+    int bestDist = INT_MAX;
+    for (int i = 0; i < n; i++) {
+        int dist = win->findMatches[i].startPage - curPage;
+        if (dist < 0) {
+            dist += nPages;
+        }
+        if (dist < bestDist) {
+            bestDist = dist;
+            best = i;
+            if (dist == 0) {
+                break; // first match on the current page
+            }
+        }
+    }
+    return best;
 }
 
 // the field's on-screen font height in pixels: the /DA font size (PDF points)
@@ -261,4 +307,61 @@ void ShowSaveTabGroupDialog(MainWindow* win) {
 
 void ShowOpenTabGroupDialog(MainWindow* win) {
     ShowTabGroupsDialog(win, TabGroupDialogMode::Open);
+}
+
+// find the saved state for a lazy tab by file path. Because gInitialSessionData
+// is kept in sync with the live session, this never matches a closed window;
+// per-tab disambiguation (e.g. same file in two windows) comes from the more
+// reliable tab->tabState, which RememberSessionState prefers.
+TabState* FindSessionTabState(Str fp) {
+    if (!gInitialSessionData) {
+        return nullptr;
+    }
+    for (SessionData* psd : *gInitialSessionData) {
+        for (TabState* pts : *psd->tabStates) {
+            if (str::Eq(pts->filePath, fp)) {
+                return pts;
+            }
+        }
+    }
+    return nullptr;
+}
+
+// lazy tabs borrow tab->tabState from gInitialSessionData. After we replace that
+// snapshot, repoint those pointers so the next SaveSettings() does not clone freed
+// TabState objects
+void RefreshLazyTabStatePointers() {
+    int sdIdx = 0;
+    for (MainWindow* win : gWindows) {
+        bool hasFileTab = false;
+        for (WindowTab* tab : win->Tabs()) {
+            if (tab->filePath) {
+                hasFileTab = true;
+                break;
+            }
+        }
+        if (!hasFileTab) {
+            continue;
+        }
+        SessionData* sd = nullptr;
+        if (gInitialSessionData && sdIdx < len(*gInitialSessionData)) {
+            sd = (*gInitialSessionData)[sdIdx++];
+        }
+        int tsIdx = 0;
+        for (WindowTab* tab : win->Tabs()) {
+            if (len(tab->filePath) == 0) {
+                continue;
+            }
+            TabState* ts = nullptr;
+            if (sd && tsIdx < len(*sd->tabStates)) {
+                ts = (*sd->tabStates)[tsIdx];
+            }
+            tsIdx++;
+            if (!tab->ctrl && tab->tabState) {
+                // null when the new snapshot has nothing to borrow: the old one
+                // was just freed and must not be left dangling
+                tab->tabState = ts;
+            }
+        }
+    }
 }

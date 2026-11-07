@@ -367,3 +367,17 @@ bool IsFullPageImage(DisplayModel* dm, IPageElement* el, int pageNo) {
     float imgArea = imgRc.dx * imgRc.dy;
     return imgArea >= 0.8f * pageArea;
 }
+
+// accumulates wheel travel; 1 to turn to the previous page, -1 to the next, 0 to stay
+int WheelPageTurnDir(MainWindow* win, int delta, int turnDelta) {
+    win->wheelAccumDelta += delta;
+    if (win->wheelAccumDelta >= turnDelta) {
+        win->wheelAccumDelta -= turnDelta;
+        return 1;
+    }
+    if (win->wheelAccumDelta <= -turnDelta) {
+        win->wheelAccumDelta += turnDelta;
+        return -1;
+    }
+    return 0;
+}

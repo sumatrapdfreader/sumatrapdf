@@ -154,17 +154,6 @@ constexpr int kAboutNoteGap = 8;
 constexpr int kAboutTextFontPx = 13;
 constexpr int kAboutMetaFontPx = 12;
 
-// the line under the rows that says this isn't a release build
-static Str AboutNoteText() {
-#if defined(PRE_RELEASE_VER)
-    return StrL("pre-release build");
-#elif IS_DEBUG
-    return StrL("debug build, for testing only");
-#else
-    return {};
-#endif
-}
-
 static TempStr GetAppVersionTemp() {
     TempStr s = str::JoinTemp(StrL("v"), currentVersion);
     bool is64 = sizeof(void*) == 8;

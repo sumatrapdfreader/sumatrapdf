@@ -55,8 +55,6 @@ enum NavBtn {
     NavBtnCount
 };
 
-constexpr int kNavHistoryMax = 100;
-
 // Clear: show ".." alone until the listing arrives (new folder).
 // Keep: leave the current listing on screen while it is re-read (F5,
 // activation); the result replaces it only if something changed
@@ -150,10 +148,6 @@ struct NavFilesInFolderWnd : WindowBase {
 
 static NavFilesInFolderWnd* gNavFilesWnd = nullptr;
 static HWND gHwndToActivateOnNavClose = nullptr;
-// dirs visited ("" for home), kept for the whole session so a re-opened
-// window can still go Back to where the previous one was
-static StrVec gNavHistory;
-static int gNavHistIdx = -1;
 
 NavFilesInFolderWnd::~NavFilesInFolderWnd() {
     scanGen++; // in-flight scans must not apply to a destroyed window
@@ -574,19 +568,9 @@ void NavFilesInFolderWnd::OnListChar(VirtCharEvent* ev) {
     ev->didHandle = true;
 }
 
-// show dir and record it in the session history, dropping the forward entries
+// show dir and record it in the session history
 void NavFilesInFolderWnd::Navigate(Str dir, Str selectPath) {
-    bool same = gNavHistIdx >= 0 && str::EqI(gNavHistory[gNavHistIdx], dir);
-    if (!same) {
-        while (len(gNavHistory) > gNavHistIdx + 1) {
-            gNavHistory.RemoveAt(len(gNavHistory) - 1);
-        }
-        if (len(gNavHistory) >= kNavHistoryMax) {
-            gNavHistory.RemoveAt(0);
-        }
-        gNavHistory.Append(dir);
-        gNavHistIdx = len(gNavHistory) - 1;
-    }
+    NavHistoryPush(dir);
     SetDir(dir, selectPath);
 }
 

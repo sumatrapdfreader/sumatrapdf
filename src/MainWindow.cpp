@@ -722,16 +722,6 @@ void SelectTocItemInTree(MainWindow* win, TocItem* tocItem) {
     win->tocKeepSelection = false;
 }
 
-static void PopulateTabCloseFlags(AppCommandCtx& ctx) {
-    if (!ctx.win) {
-        return;
-    }
-
-    int nTabs = ctx.win->TabCount();
-    ctx.nTabs = nTabs;
-    SetTabCloseFlags(ctx);
-}
-
 AppCommandCtx NewAppCommandCtx(MainWindow* win, Point cursorPos) {
     AppCommandCtx ctx;
     ctx.win = win;

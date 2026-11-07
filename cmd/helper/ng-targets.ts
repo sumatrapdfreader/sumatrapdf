@@ -635,6 +635,7 @@ const appSources = [
   "src/ng/NavFilesInFolder.cpp",
   "src/ng/NavFilesInFolderCommon.cpp",
   "src/ng/PagePosition.cpp",
+  "src/ng/ScrollbarPrefs.cpp",
   "src/ng/RefHoverDetect.cpp",
   "src/RefHoverInternal.cpp",
   "src/RefHoverText.cpp",

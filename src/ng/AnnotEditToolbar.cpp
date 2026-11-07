@@ -368,14 +368,6 @@ void EndAnnotContentsEdit(bool accept) {
 static bool FreeTextInPlaceEditJustEnded();
 static void ClearInPlaceJustEnded();
 
-static void PostedStartContentsEdit(MainWindow* win) {
-    // the window may have been closed since this was posted
-    if (!IsMainWindowValidAndNotClosing(win)) {
-        return;
-    }
-    StartSelectedAnnotContentsEdit(win);
-}
-
 // Contents editor on the property row (openedit after create, Contents chip).
 void StartSelectedAnnotContentsEdit(MainWindow* win) {
     if (!win || !win->gpuiWin) {

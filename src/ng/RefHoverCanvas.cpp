@@ -68,18 +68,6 @@ bool RefHoverShowNoteRef(RefHoverState*& s, MainWindow* win, DocController* ctrl
     return ScheduleLink(s, dm, x, y, el, 0);
 }
 
-// is el the link the shown (or pending) popup is for?
-static bool IsPopupLink(RefHoverState* s, IPageElement* el) {
-    if (!el || !el->Is(kindPageElementDest)) {
-        return false;
-    }
-    int page = el->GetPageNo();
-    RectF rect = el->GetRect();
-    bool shown = s->displayed.srcPage == page && s->displayed.srcRect == rect;
-    bool pending = s->pending.srcPage == page && s->pending.srcRect == rect;
-    return shown || pending;
-}
-
 // as in orig: a move reported at the same point (the mouse didn't move) must
 // not cancel or replace a popup
 static bool IsRepeatedMove(MainWindow* win, int x, int y) {

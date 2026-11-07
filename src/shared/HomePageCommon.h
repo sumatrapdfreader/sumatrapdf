@@ -13,6 +13,7 @@ void PickRandomTipOrPromo();
 void PickAnotherRandomTip();
 TempStr TrimGitTemp(Str s);
 void AboutSourceRow(Str* text, Str* url);
+Str AboutNoteText();
 int CountHomePageFiles();
 TempStr HomeThumbnailMetaTemp(FileState* fs, float* progressOut);
 constexpr i64 kHomeFileSizePending = -2;

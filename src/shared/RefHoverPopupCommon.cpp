@@ -249,3 +249,15 @@ bool RefHoverWheelScrollX(RefHoverState* s, EngineBase* engine, int wheelDelta) 
     region.x = newX;
     return RefHoverRerenderDisplayedRegion(s, engine, s->displayed.destPage, region);
 }
+
+// is el the link the shown (or pending) popup is for?
+bool IsPopupLink(RefHoverState* s, IPageElement* el) {
+    if (!el || !el->Is(kindPageElementDest)) {
+        return false;
+    }
+    int page = el->GetPageNo();
+    RectF rect = el->GetRect();
+    bool shown = s->displayed.srcPage == page && s->displayed.srcRect == rect;
+    bool pending = s->pending.srcPage == page && s->pending.srcRect == rect;
+    return shown || pending;
+}

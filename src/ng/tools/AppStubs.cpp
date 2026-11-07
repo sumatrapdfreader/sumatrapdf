@@ -103,14 +103,6 @@ SeqStrings gToolbarPositionNames = "top\0bottom\0";
 // window that owns the render cache and the scrollbars comes in step 6
 RenderCache* gRenderCache;
 
-int ScrollbarModeFromPrefs() {
-    int idx = SeqStrIndexIS(gScrollbarModeNames, gSettings->scrollbars);
-    if (idx < 0 || idx == kScrollbarWindows) {
-        idx = kScrollbarSmart;
-    }
-    return idx;
-}
-
 bool ScrollbarsAreHidden() {
     return ScrollbarModeFromPrefs() == kScrollbarHidden;
 }

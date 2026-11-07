@@ -116,48 +116,6 @@ static FindWindowWnd* Wnd(MainWindow* win) {
 
 // --- results ----------------------------------------------------------------
 
-// list index of the match the document is currently on (so the selection can
-// track the current match), or -1 if it isn't in the list
-static int CurrentMatchIndex(MainWindow* win) {
-    if (win->ctrl && win->ctrl->CanFindInPage()) {
-        // tracked by the browser (chm / markdown) webview find
-        return win->browserFindCurrent;
-    }
-    DisplayModel* dm = win->AsFixed();
-    if (!dm || !dm->textSearch || dm->textSearch->result.len == 0) {
-        return -1;
-    }
-    return FindMatchIndex(win, dm->textSearch->startPage, dm->textSearch->startGlyph);
-}
-
-// first match at/after the current page, wrapping to the start of the document
-// if there is none: the match with the smallest forward page distance from the
-// current page (the list itself is in document order)
-static int FirstMatchFromCurrentPage(MainWindow* win) {
-    int n = len(win->findMatches);
-    if (n == 0) {
-        return -1;
-    }
-    int curPage = win->ctrl ? win->ctrl->CurrentPageNo() : 1;
-    int nPages = win->ctrl ? win->ctrl->PageCount() : 1;
-    int best = 0;
-    int bestDist = INT_MAX;
-    for (int i = 0; i < n; i++) {
-        int dist = win->findMatches[i].startPage - curPage;
-        if (dist < 0) {
-            dist += nPages;
-        }
-        if (dist < bestDist) {
-            bestDist = dist;
-            best = i;
-            if (dist == 0) {
-                break; // first match on the current page
-            }
-        }
-    }
-    return best;
-}
-
 // ng: orig defers the navigation through uitask so the list can repaint first
 // and coalesces rapid presses with an epoch; here the selection is drawn from
 // the same frame's state, so the post is only needed to leave the event
@@ -236,7 +194,7 @@ void FindWindowRefreshResults(MainWindow* win, bool allowNavigation) {
         w->savedSelGlyph = -1;
     }
     if (sel < 0) {
-        sel = CurrentMatchIndex(win);
+        sel = FindCurrentMatchIndex(win);
     }
     if (sel >= 0) {
         // the document already sits on a match (find-as-you-type found it): just
@@ -246,7 +204,7 @@ void FindWindowRefreshResults(MainWindow* win, bool allowNavigation) {
         // find-as-you-type gave up (it self-cancels for matches on far pages),
         // so the document isn't on a match. Drive selection + navigation off the
         // full count instead: go to the first match at/after the current page.
-        w->sel = FirstMatchFromCurrentPage(win);
+        w->sel = FindFirstMatchFromPage(win);
         // streamed partial updates must not navigate: OnResultSelected joins
         // the in-flight count worker, which would cancel the very scan that's
         // producing these results
@@ -275,7 +233,7 @@ static bool MoveResultSelection(MainWindow* win, int vkey) {
     constexpr int kPage = 10;
     int cur = w->sel;
     if (cur < 0) {
-        cur = CurrentMatchIndex(win); // start from where the document already is
+        cur = FindCurrentMatchIndex(win); // start from where the document already is
     }
     int idx;
     switch (vkey) {

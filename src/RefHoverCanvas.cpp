@@ -79,18 +79,6 @@ bool RefHoverShowNoteRef(RefHoverState*& s, HWND hwndCanvas, DocController* ctrl
     return true;
 }
 
-// is el the link the shown (or pending) popup is for?
-static bool IsPopupLink(RefHoverState* s, IPageElement* el) {
-    if (!el || !el->Is(kindPageElementDest)) {
-        return false;
-    }
-    int page = el->GetPageNo();
-    RectF rect = el->GetRect();
-    bool shown = s->displayed.srcPage == page && s->displayed.srcRect == rect;
-    bool pending = s->pending.srcPage == page && s->pending.srcRect == rect;
-    return shown || pending;
-}
-
 // Windows sends WM_MOUSEMOVE without the mouse moving (a window appearing under
 // a resting cursor); such a move must not cancel or replace a popup
 static bool IsRepeatedMove(HWND hwndCanvas, int x, int y) {

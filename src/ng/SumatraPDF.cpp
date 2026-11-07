@@ -603,15 +603,6 @@ void ForgetFileFromFrequentlyRead(MainWindow* win, Str filePath) {
     win->RedrawAll(true);
 }
 
-int ScrollbarModeFromPrefs() {
-    int idx = SeqStrIndexIS(gScrollbarModeNames, gSettings->scrollbars);
-    // ng has no native Windows scrollbar; a saved "windows" value is smart
-    if (idx < 0 || idx == kScrollbarWindows) {
-        idx = kScrollbarSmart;
-    }
-    return idx;
-}
-
 // orig's OnMenuViewShowHideToolbar: F8 cycles show -> overlay -> hide, except
 // on the home page where it only toggles show / hide
 // the canvas takes the room the toolbar gave up, and the mode is remembered
@@ -868,16 +859,6 @@ MainWindow* FindMainWindowByFile(Str file, bool focusTab, MainWindow* limitWin) 
 
 // --- thumbnails (orig's, from SumatraPDF.cpp) --------------------------------
 
-void CreateThumbnailFromFileFinish(CreateThumbnailFromFileData* d) {
-    if (d->bmp) {
-        FileState* fs = FileHistoryFindByPath(d->filePath);
-        SetThumbnail(fs, d->bmp);
-        d->bmp = nullptr;
-        MaybeRedrawHomePage();
-    }
-    delete d;
-}
-
 // ng: a thumbnail never asks for a password
 EngineBase* CreateEngineForThumbnail(Str path) {
     return CreateEngineFromFile(path, nullptr, true);
@@ -1089,17 +1070,6 @@ static float EbookLayoutAspectForLoad(MainWindow* win, Str path) {
         return 0;
     }
     return (float)rc.dy / (float)rc.dx;
-}
-
-// First open only: papers use continuous fit-width; slides use single-page
-// fit-page (issue #4055).
-static bool ShouldUsePageAspect(Str path) {
-    if (!IsPageAspectDisplayMode(gSettings->defaultDisplayMode)) {
-        return false;
-    }
-    FileType ft = GuessFileTypeFromName(path, true);
-    return ft == FileType::PDF || ft == FileType::Xps || ft == FileType::DjVu || ft == FileType::PS ||
-           ft == FileType::Dvi || ft == FileType::Caj || ft == FileType::Ofd;
 }
 
 static void ApplyPageAspect(EngineBase* engine, DisplayMode* modeOut, float* zoomOut) {
@@ -3087,15 +3057,6 @@ struct RenameFileCtx {
 // the work half of Rename File: moves srcPath to dstPath and reloads the
 // document from there. false when the move failed
 static Kind kNotifTemporaryFile = "notifTemporaryFile";
-
-static void OnTemporaryFileNotifClosed(NotificationClosedEvent* ev) {
-    // closing it means "don't tell me again"
-    if (ev->reason == NotifCloseReason::User) {
-        gSettings->temporaryFileShowNotification = false;
-        ScheduleSaveSettings();
-    }
-    RemoveNotification(ev->wnd);
-}
 
 // TemporaryFileShowNotification: say the document is from a temporary folder
 // and offer to copy it to a permanent one, once per file (#6437)

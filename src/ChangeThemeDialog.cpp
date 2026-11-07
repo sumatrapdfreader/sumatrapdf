@@ -69,26 +69,6 @@ static constexpr UINT_PTR kThemePreviewTimerId = 1;
 static constexpr UINT kThemePreviewDebounceMs = 300;
 static SeqStrings gDocumentColorsFollowThemeNames = "off\0smart\0legacy\0";
 
-static int DocumentColorsFollowThemeToDropDownIndex(DocumentColorsFollowTheme mode) {
-    if (mode == DocumentColorsFollowTheme::Smart) {
-        return 1;
-    }
-    if (mode == DocumentColorsFollowTheme::Legacy) {
-        return 2;
-    }
-    return 0;
-}
-
-static DocumentColorsFollowTheme DocumentColorsFollowThemeFromDropDownIndex(int idx) {
-    if (idx == 1) {
-        return DocumentColorsFollowTheme::Smart;
-    }
-    if (idx == 2) {
-        return DocumentColorsFollowTheme::Legacy;
-    }
-    return DocumentColorsFollowTheme::Off;
-}
-
 ChangeThemeWnd::~ChangeThemeWnd() {
     KillPreviewTimer();
     str::Free(startThemePref);
@@ -217,7 +197,7 @@ void ChangeThemeWnd::OnDocumentColorsFollowThemeChanged() {
     if (idx < 0) {
         return;
     }
-    SetDocumentColorsFollowTheme(DocumentColorsFollowThemeFromDropDownIndex(idx));
+    SetDocumentColorsFollowTheme(FollowThemeFromIndex(idx));
     PreviewDocumentColors();
     KeepFocus();
 }
@@ -318,7 +298,7 @@ bool ChangeThemeWnd::Create(MainWindow* mainWin) {
         c->onSelectionChanged = MkMethod0<ChangeThemeWnd, &ChangeThemeWnd::OnDocumentColorsFollowThemeChanged>(this);
         c->onCloseUp = MkMethod0<ChangeThemeWnd, &ChangeThemeWnd::KeepFocus>(this);
         dropDownDocumentColorsFollowTheme = c;
-        CbSetCurrentSelection(c, DocumentColorsFollowThemeToDropDownIndex(startDocumentColorsFollowTheme));
+        CbSetCurrentSelection(c, FollowThemeToIndex(startDocumentColorsFollowTheme));
         row->AddChild(c);
         vbox->AddChild(new Padding(row, DpiScaledInsets(0, kToolDlgPadDx)));
     }

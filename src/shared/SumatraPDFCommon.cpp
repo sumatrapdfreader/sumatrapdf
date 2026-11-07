@@ -3450,3 +3450,33 @@ void ToggleSidebarAutoHide(CustomCommand* cmd) {
         ToggleSettingsBool(&gSettings->sidebarAutoHide);
     }
 }
+
+void CreateThumbnailFromFileFinish(CreateThumbnailFromFileData* d) {
+    if (d->bmp) {
+        FileState* fs = FileHistoryFindByPath(d->filePath);
+        SetThumbnail(fs, d->bmp);
+        d->bmp = nullptr;
+        MaybeRedrawHomePage();
+    }
+    delete d;
+}
+
+// Research articles vs slides (issue #4055): portrait -> continuous + fit
+// width, landscape -> single page + fit page. First open only.
+bool ShouldUsePageAspect(Str path) {
+    if (!IsPageAspectDisplayMode(gSettings->defaultDisplayMode)) {
+        return false;
+    }
+    FileType ft = GuessFileTypeFromName(path, true);
+    return ft == FileType::PDF || ft == FileType::Xps || ft == FileType::DjVu || ft == FileType::PS ||
+           ft == FileType::Dvi || ft == FileType::Caj || ft == FileType::Ofd;
+}
+
+void OnTemporaryFileNotifClosed(NotificationClosedEvent* ev) {
+    // closing it means "don't tell me again"
+    if (ev->reason == NotifCloseReason::User) {
+        gSettings->temporaryFileShowNotification = false;
+        ScheduleSaveSettings();
+    }
+    RemoveNotification(ev->wnd);
+}

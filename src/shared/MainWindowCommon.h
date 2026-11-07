@@ -29,6 +29,7 @@ bool IsFileSupportedByContent(Str filePath);
 TempStr NormalizeFuzzyTemp(Str str);
 bool MatchFuzzy(Str s1, Str s2, bool partially);
 bool IsRightDragging(MainWindow* win);
+void PopulateTabCloseFlags(AppCommandCtx& ctx);
 
 // implemented by each app
 void SelectTocItemInTree(MainWindow* win, TocItem* tocItem);

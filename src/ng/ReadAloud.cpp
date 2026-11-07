@@ -146,30 +146,6 @@ void TtsTestPumpOnNextSpeak() {}
 
 #endif // OS_DARWIN / OS_WASM / OS_LINUX / !OS_WIN
 
-// orig has this in AppSettings.cpp; see ReadAloud.h
-bool ApplyReadAloudVoiceFromSettings() {
-    if (!gSettings) {
-        return false;
-    }
-
-    float speed = gSettings->readAloudSpeed;
-    TtsSetSpeed(speed > 0 ? speed : 1.0f);
-
-    Str voiceId = gSettings->readAloudVoiceId;
-    if (len(voiceId) == 0) {
-        TtsSetVoiceById(StrL(""));
-        return false;
-    }
-
-    if (!TtsSetVoiceById(voiceId)) {
-        logf("ApplyReadAloudVoiceFromSettings: voice '%s' not available, using system default\n", voiceId);
-        str::ReplaceWithCopy(&gSettings->readAloudVoiceId, Str{});
-        TtsSetVoiceById(StrL(""));
-        return true;
-    }
-    return false;
-}
-
 // ---------------- 2. the highlight on the canvas ----------------
 
 // ng: orig arms a WM_TIMER on the canvas; the shell's tick counts this down

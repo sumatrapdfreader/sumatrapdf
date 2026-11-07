@@ -18,3 +18,12 @@ extern bool gShowFitContentArea;
 Color ColorForPdfPageBox(PdfPageBoxKind kind);
 Point PdfPageBoxLabelPos(const Rect& r, PdfPageBoxKind kind);
 bool IsFullPageImage(DisplayModel* dm, IPageElement* el, int pageNo);
+int WheelPageTurnDir(MainWindow* win, int delta, int turnDelta);
+
+template <typename T>
+void MakeFullScrollbar(T& si) {
+    si.nPos = 0;
+    si.nMin = 0;
+    si.nMax = 99;
+    si.nPage = 100;
+}

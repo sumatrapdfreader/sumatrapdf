@@ -122,12 +122,7 @@ static bool ParseEditFloat(Edit* e, float* out) {
 }
 
 static bool ParseEditInt(Edit* e, int* out) {
-    float v = 0;
-    if (!ParseEditFloat(e, &v)) {
-        return false;
-    }
-    *out = (int)(v + (v >= 0 ? 0.5f : -0.5f));
-    return true;
+    return ParseEditIntWith(e, ParseEditFloat, out);
 }
 
 void PageGridWnd::WriteSnapToPrefs() {

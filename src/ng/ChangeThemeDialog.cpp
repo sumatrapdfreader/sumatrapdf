@@ -70,27 +70,6 @@ struct ChangeThemeView {
 
 static gp::Entity<ChangeThemeView> gChangeThemeView;
 
-// orig's DocumentColorsFollowThemeToDropDownIndex / ...FromDropDownIndex
-static int FollowThemeToIndex(DocumentColorsFollowTheme mode) {
-    if (mode == DocumentColorsFollowTheme::Smart) {
-        return 1;
-    }
-    if (mode == DocumentColorsFollowTheme::Legacy) {
-        return 2;
-    }
-    return 0;
-}
-
-static DocumentColorsFollowTheme FollowThemeFromIndex(int idx) {
-    if (idx == 1) {
-        return DocumentColorsFollowTheme::Smart;
-    }
-    if (idx == 2) {
-        return DocumentColorsFollowTheme::Legacy;
-    }
-    return DocumentColorsFollowTheme::Off;
-}
-
 // the dialog in the frame; a window of its own is not the frame's business
 bool IsChangeThemeDialogVisible() {
     return gChangeTheme.visible && !gChangeTheme.tw;

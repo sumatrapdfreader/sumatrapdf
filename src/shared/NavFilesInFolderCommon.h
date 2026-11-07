@@ -19,5 +19,10 @@ void ListDriveRoots(StrVec& out);
 
 void CollectHomeEntries(Vec<NavFileEntry>& out);
 
+constexpr int kNavHistoryMax = 100;
+extern StrVec gNavHistory;
+extern int gNavHistIdx;
+void NavHistoryPush(Str dir);
+
 // implemented by each app
 void AppendHomeFileEntry(Vec<NavFileEntry>& out, Str path);

@@ -340,3 +340,14 @@ You can [zoom to fit the page content](Help/Scrolling-and-zooming#fit-the-page-c
 You can [paste an image from the clipboard](Help/Add-an-image-to-a-PDF#insert-an-image-from-the-clipboard).
 You can [translate selected text](Help/Customize-search-translation-services#search-or-translate-the-selection).
 )tips");
+
+// the line under the rows that says this isn't a release build
+Str AboutNoteText() {
+#if defined(PRE_RELEASE_VER)
+    return StrL("pre-release build");
+#elif IS_DEBUG
+    return StrL("debug build, for testing only");
+#else
+    return {};
+#endif
+}

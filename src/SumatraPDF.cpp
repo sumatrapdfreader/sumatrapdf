@@ -148,6 +148,7 @@
 #include "CachedObjects.h"
 #include "SumatraPDF.h"
 #include "PerfLog.h"
+#include "CanvasCommon.h"
 #include "SumatraPDFCommon.h"
 #include "VirtualDesktop.h"
 #include "SumatraCrashCommon.h"
@@ -1050,16 +1051,6 @@ void ControllerCallbackHandler::RenderThumbnail(DisplayModel* dm, Size size, con
     engine->disableAntiAlias = savedAntiAlias;
 }
 
-void CreateThumbnailFromFileFinish(CreateThumbnailFromFileData* d) {
-    if (d->bmp) {
-        FileState* fs = FileHistoryFindByPath(d->filePath);
-        SetThumbnail(fs, d->bmp);
-        d->bmp = nullptr;
-        MaybeRedrawHomePage();
-    }
-    delete d;
-}
-
 EngineBase* CreateEngineForThumbnail(Str path) {
     HwndPasswordUI pwdUI(nullptr);
     return CreateEngineFromFile(path, &pwdUI, true);
@@ -1173,13 +1164,6 @@ void ControllerCallbackHandler::FocusFrame(bool always) {
 void ControllerCallbackHandler::SaveDownload(Str url, Str data) {
     TempStr path = url::GetFileNameTemp(url);
     SaveDataToFile(win->hwndFrame, path, data);
-}
-
-static void makeFullScrollbar(SCROLLINFO& si) {
-    si.nPos = 0;
-    si.nMin = 0;
-    si.nMax = 99;
-    si.nPage = 100;
 }
 
 // True if the standard scrollbar actually occupies non-client space. ShowScrollBar
@@ -1314,7 +1298,7 @@ void ControllerCallbackHandler::UpdateScrollbars(DisplayModel* dm, Size canvas) 
     Size viewPort = dm->GetViewPort().Size();
 
     if (viewPort.dx >= canvas.dx) {
-        makeFullScrollbar(si);
+        MakeFullScrollbar(si);
     } else {
         si.nPos = dm->GetViewPort().x;
         si.nMin = 0;
@@ -1360,7 +1344,7 @@ void ControllerCallbackHandler::UpdateScrollbars(DisplayModel* dm, Size canvas) 
         si.nPage = 1;            // One page visible at a time
     } else {
         if (viewPort.dy >= canvas.dy) {
-            makeFullScrollbar(si);
+            MakeFullScrollbar(si);
         } else {
             si.nPos = dm->GetViewPort().y;
             si.nMin = 0;
@@ -1815,17 +1799,6 @@ static void UpdateUiForCurrentTab(MainWindow* win) {
 
 static float EbookLayoutAspectForView(MainWindow* win, Str path, DisplayMode displayMode, float zoom);
 
-// Research articles vs slides (issue #4055): portrait -> continuous + fit
-// width, landscape -> single page + fit page. First open only.
-static bool ShouldUsePageAspectForView(Str path) {
-    if (!IsPageAspectDisplayMode(gSettings->defaultDisplayMode)) {
-        return false;
-    }
-    FileType ft = GuessFileTypeFromName(path, true);
-    return ft == FileType::PDF || ft == FileType::Xps || ft == FileType::DjVu || ft == FileType::PS ||
-           ft == FileType::Dvi || ft == FileType::Caj || ft == FileType::Ofd;
-}
-
 static void ApplyPageAspectView(EngineBase* engine, DisplayMode* modeOut, float* zoomOut) {
     if (!engine || engine->PageCount() < 1) {
         return;
@@ -2025,7 +1998,7 @@ static void ReplaceDocumentInCurrentTab(LoadArgs* args, DocController* ctrl, Fil
         if (!fs) {
             displayMode = DisplayModeForNewDocument(path, engine);
             zoomVirtual = ZoomForNewDocument(path, engine, zoomVirtual);
-            if (ShouldUsePageAspectForView(path)) {
+            if (ShouldUsePageAspect(path)) {
                 ApplyPageAspectView(engine, &displayMode, &zoomVirtual);
             }
         }
@@ -5925,15 +5898,6 @@ static void DeleteCurrentFile(MainWindow* win) {
 static bool RenameCurrentFileTo(MainWindow* win, Str dstFilePath);
 
 Kind kNotifTemporaryFile = "notifTemporaryFile";
-
-static void OnTemporaryFileNotifClosed(NotificationClosedEvent* ev) {
-    // closing it means "don't tell me again"
-    if (ev->reason == NotifCloseReason::User) {
-        gSettings->temporaryFileShowNotification = false;
-        ScheduleSaveSettings();
-    }
-    RemoveNotification(ev->wnd);
-}
 
 struct SigStatusJob {
     WindowTab* tab = nullptr;

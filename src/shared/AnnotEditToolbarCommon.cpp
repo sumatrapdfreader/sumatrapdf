@@ -1044,3 +1044,11 @@ void ChipColorPicked(AnnotEditToolbarBase* tb, Color col) {
     }
     AnnotChanged(tab);
 }
+
+void PostedStartContentsEdit(MainWindow* win) {
+    // the window may have been closed since this was posted
+    if (!IsMainWindowValidAndNotClosing(win)) {
+        return;
+    }
+    StartSelectedAnnotContentsEdit(win);
+}

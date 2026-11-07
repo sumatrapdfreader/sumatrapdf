@@ -125,3 +125,5 @@ constexpr int kOpacityPercentMin = 10;
 // GDI's Arial is not quite MuPDF's Helvetica; leave room rather than let the
 // annotation wrap a line the box showed whole
 constexpr float kInPlaceWidthSlack = 1.03f;
+
+void PostedStartContentsEdit(MainWindow* win);

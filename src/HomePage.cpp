@@ -185,17 +185,6 @@ constexpr int kAboutSoftwareEnd = dimofi(gAboutRows) - 1;
 constexpr int kAboutSoftwareRow = kAboutSoftwareEnd - 2;
 constexpr int kAboutSourceRow = kAboutSoftwareRow - 1;
 
-// the line under the rows that says this isn't a release build
-static Str AboutNoteText() {
-#if defined(PRE_RELEASE_VER)
-    return StrL("pre-release build");
-#elif IS_DEBUG
-    return StrL("debug build, for testing only");
-#else
-    return {};
-#endif
-}
-
 // The About box, the same in the About window, the home page's dropdown and
 // the About page: the brand over the version line, label / link rows, the
 // build note, then a hairline over the copy link and the other software.

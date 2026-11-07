@@ -3543,21 +3543,6 @@ static int WheelPageTurnDelta(MainWindow* win, int delta) {
     return std::max(WHEEL_DELTA, lines * perLine);
 }
 
-// accumulates wheel travel; 1 to turn to the previous page, -1 to the next, 0 to stay
-static int WheelPageTurnDir(MainWindow* win, int delta) {
-    win->wheelAccumDelta += delta;
-    int turnDelta = WheelPageTurnDelta(win, delta);
-    if (win->wheelAccumDelta >= turnDelta) {
-        win->wheelAccumDelta -= turnDelta;
-        return 1;
-    }
-    if (win->wheelAccumDelta <= -turnDelta) {
-        win->wheelAccumDelta += turnDelta;
-        return -1;
-    }
-    return 0;
-}
-
 static void WheelTurnPage(MainWindow* win, int dir) {
     if (dir > 0) {
         win->ctrl->GoToPrevPage();
@@ -3742,13 +3727,13 @@ static LRESULT CanvasOnMouseWheel(MainWindow* win, UINT msg, WPARAM wp, LPARAM l
     // the keyboard. Alt + wheel still scrolls, so the rest of the page is
     // reachable; Shift + wheel and Ctrl + wheel are unchanged
     if (vScroll && !isAlt && gSettings->mouseWheelTurnsPage) {
-        WheelTurnPage(win, WheelPageTurnDir(win, delta));
+        WheelTurnPage(win, WheelPageTurnDir(win, delta, WheelPageTurnDelta(win, delta)));
         return 0;
     }
 
     // fit content: flip page on wheel, regardless of scrollbar state
     if (vScroll && dm && FitContentWheelFlipsPage(dm) && IsSingle(dm->GetDisplayMode())) {
-        WheelTurnPage(win, WheelPageTurnDir(win, delta));
+        WheelTurnPage(win, WheelPageTurnDir(win, delta, WheelPageTurnDelta(win, delta)));
         return 0;
     }
 
@@ -3763,7 +3748,7 @@ static LRESULT CanvasOnMouseWheel(MainWindow* win, UINT msg, WPARAM wp, LPARAM l
             // Fall through to the default scrolling behavior below
         } else {
             // Content fits in viewport, use page-by-page navigation
-            WheelTurnPage(win, WheelPageTurnDir(win, delta));
+            WheelTurnPage(win, WheelPageTurnDir(win, delta, WheelPageTurnDelta(win, delta)));
             return 0;
         }
     }
@@ -3779,7 +3764,7 @@ static LRESULT CanvasOnMouseWheel(MainWindow* win, UINT msg, WPARAM wp, LPARAM l
         }
         // Note: pre 3.6 didn't care about horizontallScroll and kZoomFitPage was handled below
         if (flipPage) {
-            WheelTurnPage(win, WheelPageTurnDir(win, delta));
+            WheelTurnPage(win, WheelPageTurnDir(win, delta, WheelPageTurnDelta(win, delta)));
             return 0;
         }
     }

@@ -195,6 +195,8 @@ bool SetupPluginMode(Flags& i);
 void OnFrameKeyB(MainWindow* win, bool isShift);
 EngineBase* CreateEngineForThumbnail(Str path);
 void CreateThumbnailFromFileFinish(CreateThumbnailFromFileData* d);
+bool ShouldUsePageAspect(Str path);
+void OnTemporaryFileNotifClosed(NotificationClosedEvent* ev);
 
 constexpr const char* kSumatraWindowTitle = "SumatraPDF";
 

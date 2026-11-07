@@ -161,3 +161,24 @@ void CollectHomeEntries(Vec<NavFileEntry>& out) {
         AppendHomeFileEntry(out, files[i]);
     }
 }
+
+// dirs visited ("" for home), kept for the whole session so a re-opened
+// window can still go Back to where the previous one was
+StrVec gNavHistory;
+int gNavHistIdx = -1;
+
+// record dir in the session history, dropping the forward entries
+void NavHistoryPush(Str dir) {
+    bool same = gNavHistIdx >= 0 && str::EqI(gNavHistory[gNavHistIdx], dir);
+    if (same) {
+        return;
+    }
+    while (len(gNavHistory) > gNavHistIdx + 1) {
+        gNavHistory.RemoveAt(len(gNavHistory) - 1);
+    }
+    if (len(gNavHistory) >= kNavHistoryMax) {
+        gNavHistory.RemoveAt(0);
+    }
+    gNavHistory.Append(dir);
+    gNavHistIdx = len(gNavHistory) - 1;
+}

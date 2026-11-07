@@ -107,17 +107,6 @@ TempStr GetShortcutPathTemp(int csidl) {
     return path::JoinTemp(dir, lnkName);
 }
 
-// Kill a process with given <processId> if it has a module (dll or exe) <modulePath>.
-// If <waitUntilTerminated> is true, will wait until process is fully killed.
-// Returns TRUE if killed a process
-bool KillProcWithIdAndModule(DWORD processId, Str modulePath, bool waitUntilTerminated) {
-    if (!IsProcWithModule(processId, modulePath)) {
-        return false;
-    }
-    logf("KillProcWithIdAndModule() processId=%d, modulePath=%s\n", processId, modulePath);
-    return KillProcWithId(processId, waitUntilTerminated);
-}
-
 // Kill processes that have our installed exe loaded.
 // returns false if there are processes and we failed to kill them
 bool KillProcessesUsingInstallationDir(Str dir) {

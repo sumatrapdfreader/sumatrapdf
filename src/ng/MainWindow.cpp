@@ -451,18 +451,6 @@ void MainWindow::ChangePresentationMode(WindowMode mode) {
     RedrawAll();
 }
 
-// ng: orig has these in CommandAvailability.cpp; they are the only part of it
-// that needs MainWindow / WindowTab, and keeping them out lets the command
-// policy link into the console tools. Bodies are orig's.
-static void PopulateTabCloseFlags(AppCommandCtx& ctx) {
-    if (!ctx.win) {
-        return;
-    }
-    int nTabs = ctx.win->TabCount();
-    ctx.nTabs = nTabs;
-    SetTabCloseFlags(ctx);
-}
-
 AppCommandCtx NewAppCommandCtx(MainWindow* win, Point cursorPos) {
     AppCommandCtx ctx;
     ctx.win = win;
