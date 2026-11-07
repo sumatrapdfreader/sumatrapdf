@@ -1059,21 +1059,26 @@ const kKeyDown = 0x80;
 // GetKeyState and TranslateAccelerator read. Call the returned function once the
 // app handled the key, to release Shift and detach.
 export function postKeyWithShift(hwnd: number, vk: number): () => void {
+  return postKeyWithModifier(hwnd, vk, VK_SHIFT);
+}
+
+// postKeyWithShift for any modifier (VK_CONTROL for a Ctrl shortcut)
+export function postKeyWithModifier(hwnd: number, vk: number, modVk: number): () => void {
   const appThread = user32.symbols.GetWindowThreadProcessId(hwnd, null);
   const ourThread = kernel32.symbols.GetCurrentThreadId();
   if (!user32.symbols.AttachThreadInput(ourThread, appThread, true)) {
-    throw new Error("postKeyWithShift: AttachThreadInput failed");
+    throw new Error("postKeyWithModifier: AttachThreadInput failed");
   }
   const keys = new Uint8Array(256);
-  const setShift = (down: boolean) => {
+  const setMod = (down: boolean) => {
     user32.symbols.GetKeyboardState(ptr(keys));
-    keys[VK_SHIFT] = down ? kKeyDown : 0;
+    keys[modVk] = down ? kKeyDown : 0;
     user32.symbols.SetKeyboardState(ptr(keys));
   };
-  setShift(true);
+  setMod(true);
   user32.symbols.PostMessageW(hwnd, WM_KEYDOWN, vk, 1);
   return () => {
-    setShift(false);
+    setMod(false);
     user32.symbols.AttachThreadInput(ourThread, appThread, false);
   };
 }

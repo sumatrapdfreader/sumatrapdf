@@ -151,6 +151,7 @@ static Accel gBuiltInAccelerators[] = {
     {{kShift | kCtrl | kVirt, VK_SUBTRACT}, CmdRotateLeft},
     {{kShift | kCtrl | kVirt, VK_OEM_MINUS}, CmdRotateLeft},
     {{kShift | kCtrl | kVirt, 'T'}, CmdReopenLastClosedFile},
+    {{kCtrl | kVirt, 'T'}, CmdNewTab},
     {{kCtrl | kVirt, VK_NEXT}, CmdNextTab},
     {{kCtrl | kVirt, VK_PRIOR}, CmdPrevTab},
     {{kCtrl | kShift | kVirt, VK_NEXT}, CmdMoveTabRight},

@@ -9,6 +9,7 @@ import { ControlCommand, type ControlClient, type VirtCtrlInfo } from "./control
 import { cmdId, makeTextPdf, runStandalone, tmpPath, writeAppdata } from "./util.ts";
 import {
   packCoords,
+  postKeyWithModifier,
   sendCopyDataW,
   sendMessage,
   sleep,
@@ -16,6 +17,7 @@ import {
   WM_LBUTTONUP,
   WM_MOUSEMOVE,
   MK_LBUTTON,
+  VK_CONTROL,
 } from "./winapi.ts";
 import { killAndWait, launchControlled, sendCommandSync } from "./win-automation.ts";
 
@@ -24,6 +26,8 @@ const PLUS_KIND = "tabsPlus";
 const BAR_KIND = "tabs";
 const HOME_TAB_MAX_DIVISOR = 2;
 const TABS_READY_MS = 10_000;
+const CTRL_T_ATTEMPTS = 3;
+const CTRL_T_WAIT_MS = 1000;
 const CROWDED_DOCS = 14;
 const DDE_COPYDATA_ID = 0x44646557;
 
@@ -272,6 +276,30 @@ async function testNotRestored(pdf: string, appdata: string): Promise<void> {
   }
 }
 
+// Ctrl+T is CmdNewTab's default shortcut
+async function testCtrlT(pdf: string, appdata: string): Promise<void> {
+  const { proc, client, frame } = await launchControlled(["-appdata", appdata, pdf]);
+  try {
+    await client.waitForRenderIdle();
+    await waitForTabs(client, 2);
+
+    // a real key event can reset the Ctrl we set in the shared key state before
+    // the app reads it, so re-send while no tab appeared
+    for (let i = 0; i < CTRL_T_ATTEMPTS; i++) {
+      const release = postKeyWithModifier(frame, "T".charCodeAt(0), VK_CONTROL);
+      await sleep(CTRL_T_WAIT_MS);
+      release();
+      if ((await readBar(client)).tabs.length > 2) {
+        break;
+      }
+    }
+    check((await readBar(client)).tabs.length === 3, "Ctrl+T should add one Home tab");
+    await expectSearchFocus(client);
+  } finally {
+    await killAndWait(proc);
+  }
+}
+
 export async function testit(): Promise<void> {
   const pdf = tmpPath("issue-6464.pdf");
   writeFileSync(pdf, makeTextPdf("home tab width"));
@@ -285,6 +313,7 @@ export async function testit(): Promise<void> {
   await testLayoutAndPlus(pdf, writeAppdata("issue-6464-appdata", settings));
   await testCrowded(paths, writeAppdata("issue-6464-crowded", settings));
   await testOpenInHomeTab(paths, writeAppdata("issue-6464-open", settings));
+  await testCtrlT(pdf, writeAppdata("issue-6464-ctrlt", settings));
   await testNoHomeTab(paths, writeAppdata("issue-6464-nohome", settings + "NoHomeTab = true\n"));
   // without -for-testing, ReuseInstance would hand the launch to any running instance
   const sessionSettings = "RestoreSession = true\nReuseInstance = false\nCheckForUpdates = false\n";
