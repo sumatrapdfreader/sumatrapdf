@@ -406,9 +406,14 @@ char (&DimofSizeHelper(T (&array)[N]))[N];
 // Note: I tried doing this via RaiseException(0x40000015, EXCEPTION_NONCONTINUABLE, 0, 0);
 // but it seemed to confuse callstack walking
 inline void CrashMe() {
+#if OS_WASM
+    // address 0 is valid wasm memory, so a null write doesn't fault
+    __builtin_trap();
+#else
     char* p = nullptr;
     // cppcheck-suppress nullPointer
     *p = 0; // NOLINT
+#endif
 }
 #if COMPILER_MSVC
 #pragma warning(pop)

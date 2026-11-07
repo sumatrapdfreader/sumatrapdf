@@ -566,6 +566,84 @@
     }
   };
 
+  // A crash: a wasm trap or abort() reaches the page as an error thrown out of
+  // whatever JS called into the module (an input handler, a frame, a timer).
+  // The first one goes to sumatraHost.onCrash (docs/wasm-host-api.md). After it
+  // the module's state can't be trusted: nothing calls into it but the log reads.
+  var kCrashLogTail = 16 * 1024;
+  // Chrome keeps 10 frames by default, too few to see where a trap came from
+  var kCrashStackFrames = 100;
+  var buildInfo = "";
+  Error.stackTraceLimit = Math.max(Error.stackTraceLimit || 0, kCrashStackFrames);
+
+  function heapString(ptr, n) {
+    if (!ptr || !Module.HEAPU8) return "";
+    var heap = Module.HEAPU8;
+    var end = ptr;
+    if (n === undefined) {
+      while (end < heap.length && heap[end]) end++;
+    } else {
+      end = ptr + n;
+    }
+    return new TextDecoder().decode(heap.subarray(ptr, end));
+  }
+
+  function crashLogTail() {
+    var data = Module._sumatra_wasm_log_data;
+    var size = Module._sumatra_wasm_log_len;
+    if (!data || !size) return "";
+    try {
+      var p = data();
+      var n = size();
+      var skip = Math.max(0, n - kCrashLogTail);
+      return heapString(p + skip, n - skip);
+    } catch (e) {
+      return "";
+    }
+  }
+
+  function isModuleError(err) {
+    if (!err) return false;
+    if (typeof WebAssembly !== "undefined" && err instanceof WebAssembly.RuntimeError) return true;
+    // a RangeError (JS call stack) or anything else thrown with wasm frames
+    return /wasm-function\[|\.wasm:/.test(String(err.stack || ""));
+  }
+
+  function reportCrash(kind, err) {
+    if (Module.__crashed) return;
+    Module.__crashed = true;
+    var report = {
+      kind: kind,
+      message: String((err && err.message) || err),
+      stack: String((err && err.stack) || ""),
+      build: buildInfo,
+      log: crashLogTail(),
+      url: location.href,
+      userAgent: navigator.userAgent,
+    };
+    console.error("SumatraPDF crashed:", report.message, report);
+    Module.sumatraHostCall("onCrash", report);
+  }
+  Module.sumatraReportCrash = reportCrash;
+
+  // abort(): failed assert, std::terminate, out of memory. Emscripten then
+  // throws, which the error event below would see too; this one has the reason.
+  Module.onAbort = function (what) {
+    reportCrash("abort", new Error("abort: " + what));
+  };
+  window.addEventListener("error", function (e) {
+    if (isModuleError(e.error)) reportCrash("trap", e.error);
+  });
+  window.addEventListener("unhandledrejection", function (e) {
+    if (isModuleError(e.reason)) reportCrash("trap", e.reason);
+  });
+
+  Module.postRun = Module.postRun || [];
+  Module.postRun.push(function () {
+    var info = Module._sumatra_wasm_build_info;
+    if (info) buildInfo = heapString(info());
+  });
+
   Module.preRun = Module.preRun || [];
   Module.preRun.push(function () {
     try {
@@ -592,7 +670,7 @@
   // discarded without another event, and OPFS writes are async, so they
   // can't be counted on to finish in pagehide: save when the page is hidden.
   function flushNow() {
-    if (Module.__exited || loadError) return;
+    if (Module.__exited || Module.__crashed || loadError) return;
     var flush = Module._sumatra_wasm_flush;
     if (!flush) return;
     flush();
@@ -608,7 +686,7 @@
   window.addEventListener("pagehide", flushNow);
   // annotations live in the document's bytes, which only Save writes
   window.addEventListener("beforeunload", function (e) {
-    if (Module.__exited) return;
+    if (Module.__exited || Module.__crashed) return;
     var has = Module._sumatra_wasm_has_unsaved;
     if (!has || !has()) return;
     e.preventDefault();

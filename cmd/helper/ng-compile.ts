@@ -897,6 +897,9 @@ function linkCmd(
       ld.push("-sEXPORTED_RUNTIME_METHODS=HEAPU8,HEAP32,HEAPF32,FS,addRunDependency,removeRunDependency");
       const shell = wasmShellFile(dir);
       ld.push("--shell-file", shell);
+      // function index -> name, to symbolicate the wasm-function[N] frames of a
+      // crash in a build without names (docs/wasm-host-api.md, onCrash)
+      ld.push("--emit-symbol-map");
       const preload = wasmPreloadArgs(t, fail);
       ld.push(...preload);
       extraKey = [readFileSync(shell, "utf8"), ...preload.map((a) => `${a}:${mtime(a.split("@")[0]!)}`)].join("\n");

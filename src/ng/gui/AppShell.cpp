@@ -90,6 +90,9 @@
 #include "AIChatPanel.h"
 #include "gui/DialogWidgets.h"
 #include "StressTesting.h"
+#include "SumatraConfig.h"
+
+#include "SumatraLog.h"
 
 // every command goes through one gpui action, with the command id as its
 // argument. The bindings carry a key context so a menu row does not pick up
@@ -1308,6 +1311,26 @@ extern "C" EMSCRIPTEN_KEEPALIVE void sumatra_wasm_fullscreen_left() {
             ExitFullScreen(win);
         }
     }
+}
+
+// the version and git commit, for a crash report (WasmShell.js asks at startup)
+extern "C" EMSCRIPTEN_KEEPALIVE const char* sumatra_wasm_build_info() {
+    static char* info = nullptr;
+    if (!info) {
+        info = str::Dup(fmt("%s %s", currentVersion, gitCommidId)).s;
+    }
+    return info;
+}
+
+// The log, for a crash report. WasmShell.js reads them right after a trap, when
+// the module's state can't be trusted: they only read globals (no lock, no
+// allocation, no stack).
+extern "C" EMSCRIPTEN_KEEPALIVE const char* sumatra_wasm_log_data() {
+    return gLogBuf ? gLogBuf->els : nullptr;
+}
+
+extern "C" EMSCRIPTEN_KEEPALIVE int sumatra_wasm_log_len() {
+    return gLogBuf ? (int)gLogBuf->len : 0;
 }
 
 // a save to OPFS failed: the document or setting is only in this tab
