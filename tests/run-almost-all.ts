@@ -398,6 +398,7 @@ import { testit as issue6483 } from "./issue-6483.ts";
 import { testit as issue6485 } from "./issue-6485.ts";
 import { testit as issue6500 } from "./issue-6500.ts";
 import { testit as fontDownload } from "./font-download.ts";
+import { testit as fontWindowsSubstitutes } from "./font-windows-substitutes.ts";
 import { testit as printDialogMultiFile } from "./print-dialog-multi-file.ts";
 import { testit as issue6259 } from "./issue-6259.ts";
 import { testit as fullscreenSessionRestore } from "./fullscreen-session-restore.ts";
@@ -954,6 +955,7 @@ export const tests: NamedTest[] = [
   ["issue-6485", issue6485],
   ["issue-6500", issue6500],
   ["font-download", fontDownload],
+  ["font-windows-substitutes", fontWindowsSubstitutes],
   ["print-dialog-multi-file", printDialogMultiFile],
   ["issue-6259", issue6259],
   ["fullscreen-session-restore", fullscreenSessionRestore],

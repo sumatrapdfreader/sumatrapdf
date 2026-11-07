@@ -967,6 +967,20 @@ static fz_font* load_windows_font(fz_context* ctx, const char* fontname, int bol
     return font;
 }
 
+// the CJK UI font Windows 10+ always has, for an Adobe CJK ordering
+static const char* WindowsCjkUiFont(int ros) {
+    switch (ros) {
+        case FZ_ADOBE_CNS:
+            return "MicrosoftJhengHeiRegular";
+        case FZ_ADOBE_JAPAN:
+            return "YuGothic-Regular";
+        case FZ_ADOBE_KOREA:
+            return "MalgunGothic";
+        default:
+            return "MicrosoftYaHei";
+    }
+}
+
 static fz_font* load_windows_cjk_font(fz_context* ctx, const char* fontname, int ros, int serif) {
     fz_font* font = NULL;
 
@@ -1013,6 +1027,12 @@ static fz_font* load_windows_cjk_font(fz_context* ctx, const char* fontname, int
                 default:
                     fz_throw(ctx, FZ_ERROR_GENERIC, "invalid sans-serif ros");
             }
+        }
+        // the fonts above are optional on Windows 10+ outside their locale; the
+        // UI fonts below ship with every install. Without either mupdf falls
+        // back to Droid Sans Fallback, which is downloaded on first use
+        if (!font) {
+            font = load_windows_font_by_name(ctx, WindowsCjkUiFont(ros), 0);
         }
     }
     fz_catch(ctx) {

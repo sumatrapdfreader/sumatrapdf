@@ -469,7 +469,55 @@ static void LoadFontFromCacheOrNet(Str name, EmbeddedFont* f) {
     f->size = len(data);
 }
 
+#if OS_WIN
+// mupdf asks for these fallback fonts directly, without trying system fonts
+// first as it does for scripts. Every Windows 10+ has fonts covering the same
+// blocks (math operators and alphanumerics, music, arrows, emoji), so they're
+// used instead of downloading.
+static const char* kWindowsFontSubstitutes[][2] = {
+    {"NotoSansMath-Regular.otf", "seguisym.ttf"},    {"NotoMusic-Regular.otf", "seguisym.ttf"},
+    {"NotoSansSymbols-Regular.otf", "seguisym.ttf"}, {"NotoSansSymbols2-Regular.otf", "seguisym.ttf"},
+    {"NotoEmoji-Regular.ttf", "seguiemj.ttf"},
+};
+
+// the Windows font file used for a built-in font, or null
+static const char* WindowsSubstituteFor(Str name) {
+    for (auto& sub : kWindowsFontSubstitutes) {
+        if (str::Eq(name, Str(sub[0]))) {
+            return sub[1];
+        }
+    }
+    return nullptr;
+}
+
+static void LoadWindowsSubstitute(Str name, EmbeddedFont* f) {
+    const char* file = WindowsSubstituteFor(name);
+    if (!file) {
+        return;
+    }
+    WCHAR winDir[MAX_PATH];
+    UINT n = GetWindowsDirectoryW(winDir, dimof(winDir));
+    if (n == 0 || n >= dimof(winDir)) {
+        return;
+    }
+    TempStr path = path::JoinTemp(ToUtf8Temp(WStr(winDir)), StrL("Fonts"), Str(file));
+    Str data = file::ReadFile(path);
+    if (len(data) == 0) {
+        return;
+    }
+    logf("font '%s': using Windows' %s\n", name, Str(file));
+    f->data = (u8*)data.s;
+    f->size = len(data);
+}
+#else
+static const char* WindowsSubstituteFor(Str) {
+    return nullptr;
+}
+#endif
+
 // mupdf's built-in fonts (src/mupdf/noto_sumatra.c). Each is loaded once.
+// From the embedded archive, else a Windows font covering the same glyphs,
+// else the font cache or a download.
 static const u8* LoadEmbeddedFont(const char* fileName, int* size) {
     Str name(fileName);
     AutoUnlockMutex lock(&gFontsMutex);
@@ -482,6 +530,11 @@ static const u8* LoadEmbeddedFont(const char* fileName, int* size) {
     EmbeddedFont* f = AllocStruct<EmbeddedFont>();
     f->name = str::Dup(name);
     f->data = GetEmbeddedFileData(fmt("fonts\\%s", name), &f->size);
+#if OS_WIN
+    if (!f->data) {
+        LoadWindowsSubstitute(name, f);
+    }
+#endif
     if (!f->data) {
         LoadFontFromCacheOrNet(name, f);
     }
@@ -557,6 +610,8 @@ TempStr DownloadedFontsReportTemp() {
             status = StrL("downloaded");
             nDownloaded++;
             downloadedSize += size;
+        } else if (WindowsSubstituteFor(name)) {
+            status = fmt("Windows' %s", Str(WindowsSubstituteFor(name)));
         } else if (FontFailedThisSession(name)) {
             status = StrL("download failed");
         }
