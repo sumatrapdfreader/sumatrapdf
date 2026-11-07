@@ -21,9 +21,7 @@
 #include "DisplayModel.h"
 #include "SumatraPDF.h"
 #include "MainWindow.h"
-#if !defined(SUMATRA_NG)
 #include "Selection.h"
-#endif
 #include "ReadAloud.h"
 #include "Translations.h"
 #if !defined(SUMATRA_NG)

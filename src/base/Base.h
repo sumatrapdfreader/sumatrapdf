@@ -129,6 +129,7 @@
 #include <new>       // for placement new
 #include <algorithm> // for std::min, std::max
 #include <utility>   // for std::forward
+#include <type_traits>
 #if OS_POSIX
 // pthread.h first: glibc mutex structs have a field named __unused
 #include <pthread.h>
@@ -1682,7 +1683,12 @@ struct Vec {
         return *this;
     }
 
-    ~Vec() { VecReset(*this); }
+    ~Vec() {
+        // elements are copied and moved with memcpy / memmove; checked here, not at
+        // class scope, so a Vec of a not-yet-complete type can still be declared
+        static_assert(std::is_trivially_copyable_v<T>, "Vec<T> needs a trivially copyable T");
+        VecReset(*this);
+    }
 
     T& operator[](int idx) const {
         ReportIf(idx < 0);

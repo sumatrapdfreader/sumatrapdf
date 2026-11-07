@@ -591,29 +591,29 @@ static void PaintInkPlacement(MainWindow* win, HDC hdc, DisplayModel* dm) {
     // every vertex, so a 40% highlighter looks closer to solid while dragging
     pen.SetLineJoin(Gdiplus::LineJoinRound);
 
-    Vec<Gdiplus::Point> pts;
-    VecGrow(pts, len(p.points));
+    // a temp array, not a Vec: Gdiplus::Point isn't trivially copyable
+    Gdiplus::Point* pts = AllocArrayTemp<Gdiplus::Point>(len(p.points));
     int pointIdx = 0;
     for (int count : p.strokeCounts) {
         if (count <= 0 || pointIdx >= len(p.points)) {
             continue;
         }
-        pts.len = 0;
+        int nPts = 0;
         for (int i = 0; i < count && pointIdx < len(p.points); i++) {
             Point pt = dm->CvtToScreen(pageNo, p.points[pointIdx++]);
-            VecAppend(pts, Gdiplus::Point(pt.x, pt.y));
+            pts[nPts++] = Gdiplus::Point(pt.x, pt.y);
         }
-        if (len(pts) == 0) {
+        if (nPts == 0) {
             continue;
         }
-        if (len(pts) == 1) {
+        if (nPts == 1) {
             int dotSize = std::max(DpiScale(3), 2);
             int dotHalf = dotSize / 2;
             Gdiplus::SolidBrush brush(strokeCol);
             gs.FillEllipse(&brush, pts[0].X - dotHalf, pts[0].Y - dotHalf, dotSize, dotSize);
             continue;
         }
-        gs.DrawLines(&pen, pts.els, len(pts));
+        gs.DrawLines(&pen, pts, nPts);
     }
 }
 

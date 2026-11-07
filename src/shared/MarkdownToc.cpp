@@ -242,9 +242,9 @@ static void MdTocParseWorker(MdTocParseCtx* ctx) {
         Str data = file::ReadFile(path);
         AutoFree dataOwner(data.s);
         if (ctx->htmlMode) {
-            ParseHtmlHeadingsData(data, toc->headings);
+            ParseHtmlHeadingsData(data, *toc->headings);
         } else {
-            ParseMarkdownHeadings(data, toc->headings);
+            ParseMarkdownHeadings(data, *toc->headings);
         }
     }
 }
@@ -258,6 +258,9 @@ void ParseMarkdownTocsParallel(StrVec& files, bool htmlMode, Vec<MarkdownFileToc
     }
     if (!VecResize(tocsOut, n)) {
         return;
+    }
+    for (MarkdownFileToc& toc : tocsOut) {
+        toc.headings = new Vec<MarkdownHeadingItem>();
     }
 
     EnsureCmarkPluginsRegistered();

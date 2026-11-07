@@ -683,7 +683,7 @@ static TocTree* BuildFullToc(Arena* arena, StrVec& pages, Str baseDir, bool isHt
         TempStr pageUrl = FileToVirtualUrlTemp(ft.filePath, baseDir, isHtml);
         AppendFileTocTraceItem(tocTrace, ft.filePath, pageUrl, pageNo);
 
-        for (MarkdownHeadingItem& hi : ft.headings) {
+        for (MarkdownHeadingItem& hi : *ft.headings) {
             TempStr destUrl = pageUrl;
             if (hi.anchor) {
                 destUrl = str::JoinTemp(pageUrl, fmt("#%s", hi.anchor));
@@ -699,11 +699,11 @@ static TocTree* BuildFullToc(Arena* arena, StrVec& pages, Str baseDir, bool isHt
 
     for (MarkdownFileToc& ft : fileTocs) {
         str::Free(ft.filePath);
-        for (MarkdownHeadingItem& hi : ft.headings) {
+        for (MarkdownHeadingItem& hi : *ft.headings) {
             str::Free(hi.title);
             str::Free(hi.anchor);
         }
-        VecReset(ft.headings);
+        delete ft.headings;
     }
 
     TocTree* res = BuildBrowserTocTree(arena, tocTrace);
