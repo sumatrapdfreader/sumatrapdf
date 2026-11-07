@@ -546,14 +546,6 @@ bool Copy(Str dst, Str src, bool dontOverwrite, const CopyProgressCb& cbProgress
     }
 }
 
-FILETIME GetAccessTime(Str path) {
-    struct stat st;
-    if (!StatPath(path, st)) {
-        return {};
-    }
-    return FileTimeFromTimespec(StatAccessTime(st));
-}
-
 bool SetAccessTime(Str path, FILETIME accessTime) {
     struct stat st;
     if (!StatPath(path, st)) {
@@ -825,16 +817,4 @@ TempStr GetDownloadsDirTemp() {
 #endif
     return path::JoinTemp(home, StrL("Downloads"));
 #endif
-}
-
-TempStr ExpandEnvVarTemp(Str varName) {
-    const char* val = getenv(CStrTemp(varName));
-    if (!val) {
-        return {};
-    }
-    return str::DupTemp(Str(val));
-}
-
-TempStr ToAbsolutePathTemp(Str path) {
-    return path::NormalizeTemp(path);
 }

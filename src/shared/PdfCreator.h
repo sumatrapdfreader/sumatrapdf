@@ -31,6 +31,5 @@ class PdfCreator {
 
     static void SetProducerName(Str name);
 
-    static bool RenderToFile(Str pdfFileName, EngineBase* engine, int dpi = 150);
     static bool SaveImageCollectionAsPdf(Str pdfFileName, EngineBase* engine);
 };

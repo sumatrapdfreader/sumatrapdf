@@ -240,14 +240,6 @@ Rect DisplayModel::GetViewPort() const {
     return viewPort;
 }
 
-bool DisplayModel::IsHScrollbarVisible() const {
-    return viewPort.dx < totalViewPortSize.dx;
-}
-
-bool DisplayModel::IsVScrollbarVisible() const {
-    return viewPort.dy < totalViewPortSize.dy;
-}
-
 bool DisplayModel::NeedHScroll() const {
     return viewPort.dx < canvasSize.dx;
 }

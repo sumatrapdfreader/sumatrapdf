@@ -150,7 +150,6 @@ void ReadAloudPlaybackBarTick(MainWindow* win);
 
 void ReadAloudPlaybackPauseOrResume();
 void ReadAloudPlaybackStop();
-void ReadAloudPlaybackCycleSpeed(int dir);
 void ReadAloudPlaybackBarDestroy(MainWindow* win);
 TempStr ReadAloudPlaybackBarStateTemp(int* exitCodeOut);
 #if defined(SUMATRA_NG)
@@ -210,7 +209,6 @@ bool HandleReadAloudMenuCommand(MainWindow* win, int cmdId);
 #if !defined(SUMATRA_NG)
 void SetReadAloudAppSubmenu(HMENU menu);
 HMENU GetReadAloudAppSubmenu();
-bool IsReadAloudAppSubmenu(HMENU menu);
 void SetReadAloudContextSubmenu(HMENU menu);
 bool IsReadAloudContextSubmenu(HMENU menu);
 HMENU GetReadAloudContextSubmenu();

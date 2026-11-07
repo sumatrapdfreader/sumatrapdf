@@ -569,19 +569,6 @@ MainWindow* FindMainWindowByHwnd(HWND hwnd) {
 }
 #endif
 
-// ng: orig's FindMainWindowByHwnd; the gpui window is what identifies a window
-MainWindow* FindMainWindowByGpuiWindow(gpui::Window* gw) {
-    if (!gw) {
-        return nullptr;
-    }
-    for (MainWindow* win : gWindows) {
-        if (win->gpuiWin == gw) {
-            return win;
-        }
-    }
-    return nullptr;
-}
-
 WindowTab* FindTabByFilePath(Str path, MainWindow* limitWin) {
     if (len(path) == 0) {
         return nullptr;

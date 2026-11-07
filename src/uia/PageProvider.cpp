@@ -41,10 +41,6 @@ SumatraUIAutomationPageProvider* SumatraUIAutomationPageProvider::GetNextPage() 
     return sibling_next;
 }
 
-SumatraUIAutomationPageProvider* SumatraUIAutomationPageProvider::GetPreviousPage() {
-    return sibling_prev;
-}
-
 HRESULT STDMETHODCALLTYPE SumatraUIAutomationPageProvider::QueryInterface(REFIID riid, void** ppv) {
     static const QITAB qit[] = {QITABENT(SumatraUIAutomationPageProvider, IRawElementProviderSimple),
                                 QITABENT(SumatraUIAutomationPageProvider, IRawElementProviderFragment),

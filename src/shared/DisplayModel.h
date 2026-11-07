@@ -192,8 +192,6 @@ struct DisplayModel : DocController {
     bool ViewportReadyForRelayout() const;
 
     Rect GetViewPort() const;
-    bool IsHScrollbarVisible() const;
-    bool IsVScrollbarVisible() const;
     bool NeedHScroll() const;
     bool NeedVScroll() const;
     bool CanScrollRight() const;

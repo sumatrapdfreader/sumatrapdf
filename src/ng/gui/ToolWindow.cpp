@@ -423,17 +423,6 @@ Point ToolWindowOffsetInOwner(ToolWindow* tw) {
     return Point{MulDiv(pt.x, 96, dpi), MulDiv(pt.y, 96, dpi)};
 }
 
-// ng: gpui has stopped tracking the mouse by the time the move loop ends
-// (it never sees the button go up), so the press is handed to the system
-// after the click that started it was dispatched
-void ToolWindowDragMove(ToolWindow* tw) {
-    if (!IsLive(tw) || !tw->hwnd) {
-        return;
-    }
-    ReleaseCapture();
-    PostMessageW(tw->hwnd, WM_SYSCOMMAND, SC_MOVE | HTCAPTION, 0);
-}
-
 // orig's DarkModeApplyToTitleBar: the caption follows the theme, not the system
 static void SyncCaptionTheme(ToolWindow* tw) {
     int dark = IsLightColor(ThemeWindowBackgroundColor()) ? 0 : 1;

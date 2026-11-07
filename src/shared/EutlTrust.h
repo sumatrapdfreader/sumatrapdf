@@ -21,7 +21,6 @@ struct EutlLookup {
 };
 
 bool EutlCertIsListed(const u8* der, int derLen);
-bool EutlCacheExists();
 bool EutlNeedsUpdate();
 TempStr EutlCacheInfoTemp();
 bool EutlUpdate(Str* errOut);

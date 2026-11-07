@@ -410,11 +410,6 @@ bool EutlCertIsListed(const u8* der, int derLen) {
     return found;
 }
 
-bool EutlCacheExists() {
-    TempStr path = EutlCachePathTemp();
-    return path && file::Exists(path);
-}
-
 // downloads by itself, from the EU's server only, when a signature needs it
 bool EutlNeedsUpdate() {
     if (!HasPermission(Perm::InternetAccess) || gForTesting) {

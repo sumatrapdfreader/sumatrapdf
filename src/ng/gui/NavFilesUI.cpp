@@ -300,10 +300,6 @@ void CloseNavFilesInFolder() {
     }
 }
 
-bool IsNavFilesInFolderVisible() {
-    return gNav.visible;
-}
-
 // ng: orig's picker is a window of its own and outlives the main one; so does
 // this where it is a window (NavToolOnOwnerClosed). As a panel it goes with
 // the window it sits in (the shell's tick calls this)

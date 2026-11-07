@@ -19,5 +19,3 @@ void OpenPathInDefaultFileManager(Str path);
 // StartChildProcess returns nullptr where there are no processes (wasm)
 struct ChildProcess;
 ChildProcess* StartChildProcess(Str cmdLine);
-bool ChildProcessHasExited(ChildProcess* p, int waitMs);
-void CloseChildProcess(ChildProcess* p);

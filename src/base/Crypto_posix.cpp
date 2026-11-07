@@ -325,10 +325,6 @@ void CalcSHA2Digest(Str data, u8 digest[32]) {
 
 #endif
 
-bool VerifySHA1Signature(Str /*data*/, Str /*hexSignature*/, Str /*pubkey*/) {
-    return false;
-}
-
 // Extracts the embedded content from a signed PKCS#7 / .p7m wrapper.
 Str ExtractP7m(Str d) {
 #if OS_LINUX && defined(SUMATRA_HAVE_OPENSSL)

@@ -391,16 +391,3 @@ gp::El* FormFieldEditBuild(MainWindow* win, gp::Ctx* cx) {
     }
     return list;
 }
-
-TempStr FormFieldEditStateTemp() {
-    if (!gEdit.widget) {
-        return str::DupTemp(StrL("formEdit active=0 choice=0 value=\n"));
-    }
-    Str value;
-    if (gEdit.isChoice) {
-        value = (gEdit.sel >= 0 && gEdit.sel < len(gEdit.options)) ? gEdit.options[gEdit.sel] : Str{};
-    } else if (gEdit.edit) {
-        value = FromGpui(gp::InputValue(gEdit.edit));
-    }
-    return fmt("formEdit active=1 choice=%d page=%d value=%s\n", gEdit.isChoice ? 1 : 0, gEdit.widget->pageNo, value);
-}

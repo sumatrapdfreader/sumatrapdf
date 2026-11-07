@@ -316,12 +316,6 @@ static void NotifsRemoveNotification(NotificationWnd* wnd) {
     delete wnd;
 }
 
-__unused static int GetWndX(NotificationWnd* wnd) {
-    Rect rect = HwndWindowRect(wnd->hwnd);
-    rect = HwndMapRectToWindow(rect, HWND_DESKTOP, GetParent(wnd->hwnd));
-    return rect.x;
-}
-
 NotificationWnd::~NotificationWnd() {
     if (delayTimerId != 0) {
         KillTimer(hwnd, delayTimerId);

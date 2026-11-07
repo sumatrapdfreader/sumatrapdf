@@ -156,8 +156,6 @@ Rect ToolWindowRect(ToolWindow* tw);
 // HwndResizeClientSize
 void ToolWindowSetClientSize(ToolWindow* tw, Size clientDip);
 void ToolWindowMove(ToolWindow* tw, Rect outer);
-// starts the system's move loop, for a window dragged by its body
-void ToolWindowDragMove(ToolWindow* tw);
 // orig's SetIsVisible() on a dialog that stays alive while it is out of the
 // way: a hidden modal window gives its main window back (enabled, active),
 // shown again it takes it away. The window keeps its place

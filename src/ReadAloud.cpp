@@ -564,10 +564,6 @@ HMENU GetReadAloudAppSubmenu() {
     return gReadAloudAppSubmenu;
 }
 
-bool IsReadAloudAppSubmenu(HMENU menu) {
-    return menu && menu == gReadAloudAppSubmenu;
-}
-
 void SetReadAloudContextSubmenu(HMENU menu) {
     gReadAloudContextSubmenu = menu;
 }

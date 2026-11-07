@@ -45,13 +45,6 @@ bool DarkModeIsActive() {
     return gUseDarkModeLib && DarkMode::isEnabled();
 }
 
-Color DarkModeDialogBgColor() {
-    if (DarkModeIsActive()) {
-        return ThemeWindowControlBackgroundColor();
-    }
-    return MkGray(0xee);
-}
-
 void DarkModeInit() {
     // WindowBase::UpdateTheme() re-applies dark mode through this hook, so
     // gui/ never names darkmodelib. Installed even when the lib isn't used:
@@ -191,14 +184,6 @@ void DarkModeApplyToWindowAndEraseBg(HWND hwnd) {
         return;
     }
     DarkMode::setDarkWndSafe(hwnd);
-    DarkMode::setWindowEraseBgSubclass(hwnd);
-}
-
-void DarkModeApplyToNotifyWindowAndEraseBg(HWND hwnd) {
-    if (!gUseDarkModeLib) {
-        return;
-    }
-    DarkMode::setDarkWndNotifySafe(hwnd);
     DarkMode::setWindowEraseBgSubclass(hwnd);
 }
 

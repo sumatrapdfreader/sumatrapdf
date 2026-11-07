@@ -31,10 +31,6 @@ MainWindow* BrowserViewWindow(BrowserView*) {
 
 void BrowserViewSetVisible(BrowserView*, bool) {}
 
-bool BrowserViewIsVisible(BrowserView*) {
-    return false;
-}
-
 void BrowserViewRefreshSurface(BrowserView*) {}
 
 void BrowserViewNavigate(BrowserView*, Str) {}

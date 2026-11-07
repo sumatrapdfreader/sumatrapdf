@@ -361,29 +361,6 @@ bool PdfCreator::SaveToFile(Str filePath) const {
     return true;
 }
 
-// creates a simple PDF with all pages rendered as a single image
-bool PdfCreator::RenderToFile(Str pdfFileName, EngineBase* engine, int dpi) {
-    EnsureFullLayout(engine);
-    PdfCreator* c = new PdfCreator();
-    bool ok = true;
-    // render all pages to images
-    float zoom = (float)dpi / engine->fileDPI;
-    for (int i = 1; ok && i <= engine->PageCount(); i++) {
-        RenderPageArgs args(i, zoom, 0, nullptr, RenderTarget::Export);
-        Pixmap* bmp = engine->RenderPage(args);
-        ok = c->AddPageFromPixmap(bmp, (float)dpi);
-        FreePixmap(bmp);
-    }
-    if (!ok) {
-        delete c;
-        return false;
-    }
-    c->CopyProperties(engine);
-    ok = c->SaveToFile(pdfFileName);
-    delete c;
-    return ok;
-}
-
 // Comic book / image folder / multi-page image → multi-page PDF (issue #4118).
 // 1) Embed original bytes when MuPDF can re-wrap them (JPEG, PNG, …).
 // 2) Else (WebP, JXL, HEIC, …) render the page at native resolution.

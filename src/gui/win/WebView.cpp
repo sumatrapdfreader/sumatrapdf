@@ -1500,26 +1500,6 @@ void WebviewWnd::RemoveInitScript(int token) {
     VecRemoveAt(initScripts, idx);
 }
 
-void WebviewWnd::RemoveAllInitScripts() {
-    for (WebViewInitScript& script : initScripts) {
-        if (script.id) {
-            if (webview) {
-                webview->RemoveScriptToExecuteOnDocumentCreated(script.id.s);
-            }
-            wstr::Free(script.id);
-        } else {
-            script.removePending = true;
-        }
-    }
-    // scripts whose id is still pending must stay in the list so
-    // OnInitScriptAdded() can remove them once it arrives
-    for (int i = len(initScripts) - 1; i >= 0; i--) {
-        if (!initScripts[i].removePending) {
-            VecRemoveAt(initScripts, i);
-        }
-    }
-}
-
 // markers the bridge puts first in its messages; JSON.stringify preserves
 // insertion order, so a prefix test is enough to tell these from raw messages
 static const char* kJsCallPrefix = "{\"__sumatraCall\":1";
@@ -1644,19 +1624,6 @@ void WebviewWnd::Bind(Str name) {
     RebuildBindScript();
     // also expose it in the document that's already loaded
     Eval(fmt("if (window.__sumatra__) window.__sumatra__.onBind(\"%s\");", json::EscapeStrTemp(name)));
-}
-
-void WebviewWnd::Unbind(Str name) {
-    int n = len(boundNames);
-    for (int i = 0; i < n; i++) {
-        if (str::Eq(boundNames[i], name)) {
-            str::Free(boundNames[i]);
-            VecRemoveAt(boundNames, i);
-            RebuildBindScript();
-            Eval(fmt("if (window.__sumatra__) window.__sumatra__.onUnbind(\"%s\");", json::EscapeStrTemp(name)));
-            return;
-        }
-    }
 }
 
 void WebviewWnd::Navigate(Str url) {

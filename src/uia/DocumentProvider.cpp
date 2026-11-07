@@ -109,11 +109,6 @@ SumatraUIAutomationPageProvider* SumatraUIAutomationDocumentProvider::GetFirstPa
     return child_first;
 }
 
-SumatraUIAutomationPageProvider* SumatraUIAutomationDocumentProvider::GetLastPage() {
-    ReportIf(!IsDocumentLoaded());
-    return child_last;
-}
-
 HRESULT STDMETHODCALLTYPE SumatraUIAutomationDocumentProvider::QueryInterface(REFIID riid, void** ppv) {
     static const QITAB qit[] = {QITABENT(SumatraUIAutomationDocumentProvider, IRawElementProviderSimple),
                                 QITABENT(SumatraUIAutomationDocumentProvider, IRawElementProviderFragment),

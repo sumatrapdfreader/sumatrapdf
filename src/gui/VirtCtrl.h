@@ -152,7 +152,6 @@ struct VirtCtrl : ILayout {
 
     Color GetColor(int idx) const;
     void SetColor(int idx, Color);
-    void ResetColors();
 
     // ILayout
     int MinIntrinsicHeight(int width) override;
@@ -217,7 +216,6 @@ struct VirtCtrl : ILayout {
     bool IsEnabled() const;
 
     HWND GetHwnd() const;
-    bool IsPaintable() const;
     bool IsHitTestable() const;
     void SetFlag(u32 f, bool on);
     bool HasFlag(u32 f) const;
@@ -375,7 +373,6 @@ struct VirtScroll : VirtCtrl {
     void OnMouseWheel(VirtMouseEvent*);
     void OnPan(VirtMouseEvent*);
 
-    void SetContentDy(int);
     int MaxScrollY() const;
     bool ScrollTo(int y);
     bool ScrollBy(int dy);
@@ -658,7 +655,6 @@ struct VirtText : VirtCtrl {
     Size Layout(Constraints bc) override;
     Size GetIdealSize() override;
 
-    Size MinIntrinsicSize(int width, int height);
     Size GetIdealSize(bool onlyIfEmpty);
     void SetText(Str);
 
@@ -860,8 +856,6 @@ struct VirtSlider : VirtCtrl {
     Point ThumbCenterLocal() const;
     void ApplyFromEvent(const VirtMouseEvent&, bool commit);
 };
-
-VirtSlider* AsVirtSlider(ILayout*);
 
 struct VirtSpacer : VirtCtrl {
     Size idealSize;

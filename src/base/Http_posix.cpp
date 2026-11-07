@@ -113,18 +113,6 @@ static bool PostUrl(Str url, Str headers, Str body, HttpRsp* rspOut) {
     return ok && IsHttpRspOk(rspOut);
 }
 
-static TempStr BuildPostUrlTemp(Str server, int port, Str url) {
-    Str scheme = port == 443 ? StrL("https://") : StrL("http://");
-    TempStr host = str::JoinTemp(scheme, server);
-    if (port != 443 && port != 80) {
-        host = fmt("%s:%d", host, port);
-    }
-    if (url && url.s[0] == '/') {
-        return str::JoinTemp(host, url);
-    }
-    return str::JoinTemp(host, StrL("/"), url);
-}
-
 bool HttpGet(Str urlA, HttpRsp* rspOut) {
     logf("HttpGet: url: '%s'\n", urlA);
     rspOut->data.Reset();
@@ -167,13 +155,6 @@ bool HttpGetToFile(Str urlA, Str destFilePath, const Func1<HttpProgress*>& cbPro
         file::Delete(destFilePath);
     }
     return ok;
-}
-
-bool HttpPost(Str serverA, int port, Str urlA, str::Builder* headers, str::Builder* data) {
-    HttpRsp rsp;
-    Str headerData = headers ? ToStr(*headers) : Str();
-    Str body = data ? ToStr(*data) : Str();
-    return PostUrl(BuildPostUrlTemp(serverA, port, urlA), headerData, body, &rsp) && rsp.httpStatusCode == 200;
 }
 
 bool HttpPostUrl(Str url, Str contentType, Str extraHeaders, Str body, HttpRsp* rspOut) {
@@ -267,18 +248,6 @@ static void AppendHeaders(str::Builder* cmd, str::Builder* headers) {
     }
 }
 
-static TempStr BuildPostUrlTemp(Str server, int port, Str url) {
-    Str scheme = port == 443 ? StrL("https://") : StrL("http://");
-    TempStr host = str::JoinTemp(scheme, server);
-    if (!((port == 443) || (port == 80))) {
-        host = fmt("%s:%d", host, port);
-    }
-    if (url && url.s[0] == '/') {
-        return str::JoinTemp(host, url);
-    }
-    return str::JoinTemp(host, StrL("/"), url);
-}
-
 bool HttpGet(Str urlA, HttpRsp* rspOut) {
     logf("HttpGet: url: '%s'\n", urlA);
     rspOut->data.Reset();
@@ -338,48 +307,6 @@ bool HttpGetToFile(Str urlA, Str destFilePath, const Func1<HttpProgress*>& cbPro
     } else {
         file::Delete(destFilePath);
     }
-    file::Delete(statusPath);
-    return ok;
-}
-
-bool HttpPost(Str serverA, int port, Str urlA, str::Builder* headers, str::Builder* data) {
-    TempStr bodyPath = NewTempFilePathTemp(StrL("sumatra-http-post-body-"));
-    TempStr outPath = NewTempFilePathTemp(StrL("sumatra-http-post-out-"));
-    TempStr statusPath = NewTempFilePathTemp(StrL("sumatra-http-status-"));
-    if (len(bodyPath) == 0 || len(outPath) == 0 || len(statusPath) == 0) {
-        return false;
-    }
-
-    bool ok = true;
-    if (data && len(*data) > 0) {
-        ok = file::WriteFile(bodyPath, ToStr(*data));
-    } else {
-        ok = file::WriteFile(bodyPath, Str());
-    }
-    if (!ok) {
-        goto Exit;
-    }
-
-    {
-        TempStr url = BuildPostUrlTemp(serverA, port, urlA);
-        str::Builder cmd;
-        str::BuilderReserve(cmd, 1024);
-        ok = AppendCurlBase(&cmd, outPath, statusPath);
-        cmd.Append(StrL(" --request POST "));
-        AppendHeaders(&cmd, headers);
-        cmd.Append(StrL(" --data-binary @"));
-        AppendShellQuoted(&cmd, bodyPath);
-        cmd.Append(StrL(" "));
-        AppendShellQuoted(&cmd, url);
-        AppendStatusRedirect(&cmd, statusPath);
-        ok = ok && RunShellCommand(ToStr(cmd));
-    }
-
-    ok = ok && ReadHttpStatusCode(statusPath) == 200;
-
-Exit:
-    file::Delete(bodyPath);
-    file::Delete(outPath);
     file::Delete(statusPath);
     return ok;
 }

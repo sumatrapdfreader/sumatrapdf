@@ -754,29 +754,6 @@ static void ArenaRelease(Arena* arena) {
     ArenaReleaseMemory(arena, arena->reserved);
 }
 
-static void* ArenaGetAvailableSpaceLocked(Arena* arena, int* bufSizeOut) {
-    if (!bufSizeOut) {
-        return nullptr;
-    }
-
-    Arena* current = arena ? arena->current : nullptr;
-    if (!current) {
-        *bufSizeOut = 0;
-        return nullptr;
-    }
-
-    u64 pos = ArenaAlignPow2(current->pos, 8);
-    if (pos >= current->committed) {
-        *bufSizeOut = 0;
-        return nullptr;
-    }
-
-    u64 available = current->committed - pos;
-    available = std::min<u64>(available, 0x7fffffff);
-    *bufSizeOut = (int)available;
-    return (char*)current + pos;
-}
-
 static void* ArenaPushLocked(Arena* arena, u64 size, u64 align, bool zero) {
     if (!arena) {
         return nullptr;
@@ -1102,46 +1079,6 @@ void Arena::Reset() {
     ArenaPopToLocked(this, 0);
     nAllocsSinceReset = 0;
     peakBytesSinceReset = 0;
-}
-
-void* Arena::GetAvailableSpace(int* bufSizeOut) {
-    if (!this) {
-        if (bufSizeOut) {
-            *bufSizeOut = 0;
-        }
-        return nullptr;
-    }
-
-    lock.Lock();
-    void* mem = ArenaGetAvailableSpaceLocked(this, bufSizeOut);
-    lock.Unlock();
-    return mem;
-}
-
-void* Arena::CommitReserved(void* mem, int size) {
-    if (size <= 0) {
-        return nullptr;
-    }
-
-    lock.Lock();
-
-    int availSize = 0;
-    void* availMem = ArenaGetAvailableSpaceLocked(this, &availSize);
-    if (mem == availMem && size <= availSize) {
-        void* committed = ArenaPushLocked(this, (u64)size, 8, false);
-        lock.Unlock();
-        return committed;
-    }
-
-    void* dst = ArenaPushLocked(this, (u64)size, 8, false);
-    lock.Unlock();
-    if (!dst) {
-        return nullptr;
-    }
-    if (mem) {
-        memcpy(dst, mem, (size_t)size);
-    }
-    return dst;
 }
 
 // size_t overloads that match the legacy Allocator::* static helper API
@@ -3442,21 +3379,7 @@ bool IsNonCharacter(WCHAR c) {
 }
 
 } // namespace wstr
-namespace str {
-
-// Reinterpret a UTF-16 byte buffer held in a Str as a WStr without a
-// char*→WCHAR* cast (CodeQL cpp/incorrect-string-type-conversion).
-WStr CastStrToWStr(Str s) {
-    if (len(s) == 0) {
-        return {};
-    }
-    WCHAR* w = nullptr;
-    static_assert(sizeof(char*) == sizeof(WCHAR*), "pointer sizes must match");
-    memcpy((void*)&w, (const void*)&s.s, sizeof(w));
-    return WStr(w, s.len / sizeofi(WCHAR));
-}
-
-} // namespace str
+namespace str {} // namespace str
 namespace wstr {
 
 // return true if s1 == s2, case sensitive
@@ -6501,20 +6424,6 @@ static Str WrapAllocatedStr(char* s, int n) {
 }
 #endif
 
-WStr CodePageToWStr(uint codePage, Str s, Arena* a) {
-    if (str::IsNull(s)) return {};
-#if OS_WIN
-    int n = len(s) == 0 ? 0 : MultiByteToWideChar(codePage, 0, s.s, len(s), nullptr, 0);
-    WCHAR* res = AllocArray<WCHAR>(a, n + 1);
-    if (!res) return {};
-    if (n > 0) MultiByteToWideChar(codePage, 0, s.s, len(s), res, n);
-    return WStr(res, n);
-#else
-    TempStr utf8 = IconvTemp(s, codePage, CP_UTF8);
-    return wstr::Dup(a, ToWStrTemp(utf8));
-#endif
-}
-
 WStr Utf8ToWStr(Str s, Arena* a) {
     // subtle: if s.s is nullptr, we return empty. if empty string => we return empty string
     if (str::IsNull(s)) {
@@ -6744,15 +6653,6 @@ Str AnsiToUtf8(Str src) {
     return res;
 }
 
-Str WStrToAnsi(WStr src) {
-    return WStrToCodePage(CP_ACP, src);
-}
-
-Str Utf8ToAnsi(Str s) {
-    TempWStr ws = ToWStrTemp(s);
-    return WStrToAnsi(ws);
-}
-
 } // namespace strconv
 
 // short names because frequently used
@@ -6793,18 +6693,6 @@ void UnpackColor(Color c, u8& r, u8& g, u8& b) {
 }
 
 #if OS_WIN
-// TODO: use AdjustLightness instead to compensate for the alpha?
-Gdiplus::Color Unblend(Color c, u8 alpha) {
-    u8 r, g, b, a;
-    UnpackColor(c, r, g, b, a);
-    u8 ralpha = (u8)((float)alpha * (float)a / 255.f);
-    float falpha = ((float)alpha * (float)a / 255.f);
-    float tmp = 255.0f / (falpha + 0.5f);
-    u8 R = (u8)floorf((float)std::max(r - (255 - ralpha), 0) * tmp);
-    u8 G = (u8)floorf((float)std::max(g - (255 - ralpha), 0) * tmp);
-    u8 B = (u8)floorf((float)std::max(b - (255 - ralpha), 0) * tmp);
-    return {alpha, R, G, B};
-}
 
 Gdiplus::Color GdiRgbFromColor(Color c) {
     u8 r, g, b;
@@ -6812,9 +6700,6 @@ Gdiplus::Color GdiRgbFromColor(Color c) {
     return {r, g, b};
 }
 
-Gdiplus::Color GdiRgbaFromColor(Color c) {
-    return {c};
-}
 #endif
 
 TempStr SerializeColorTemp(Color c) {
@@ -7219,105 +7104,6 @@ void wstr::BuilderUseExternalBuffer(Builder& b, WStr buf) {
 }
 bool wstr::BuilderReserve(Builder& b, int cap) {
     return b.Reserve(cap);
-}
-
-SizeF ToSizeFl(const Size s) {
-    return {(float)s.dx, (float)s.dy};
-}
-
-Size ToSize(const SizeF s) {
-    int dx = (int)floor(s.dx + 0.5);
-    int dy = (int)floor(s.dy + 0.5);
-    return {dx, dy};
-}
-
-static int StrArenaUlebSize(u32 n) {
-    int i = 1;
-    while (n >= 0x80) {
-        n >>= 7;
-        i++;
-    }
-    return i;
-}
-
-static int StrArenaUlebEncode(u8* dst, u32 n) {
-    int i = 0;
-    for (;;) {
-        u8 b = (u8)(n & 0x7f);
-        n >>= 7;
-        if (n) {
-            b |= 0x80;
-        }
-        dst[i++] = b;
-        if (!n) {
-            return i;
-        }
-    }
-}
-
-static bool StrArenaUlebDecode(const u8*& p, u32* out) {
-    u32 n = 0;
-    int shift = 0;
-    for (;;) {
-        u8 b = *p++;
-        n |= (u32)(b & 0x7f) << shift;
-        if (!(b & 0x80)) {
-            *out = n;
-            return true;
-        }
-        shift += 7;
-        if (shift >= 35) {
-            return false;
-        }
-    }
-}
-
-StrArena StrArenaAlloc(Arena* a, int size) {
-    if (!a || size < 0) {
-        return 0;
-    }
-    int vlen = StrArenaUlebSize((u32)size);
-    int total = vlen + size + 1;
-    u8* mem = (u8*)a->Push((u64)total, 1, false);
-    if (!mem) {
-        return 0;
-    }
-    StrArenaUlebEncode(mem, (u32)size);
-    mem[vlen + size] = 0;
-    return ArenaPtrCompress(a, mem);
-}
-
-StrArena StrArenaDupStr(Arena* a, Str s) {
-    if (!a) {
-        return 0;
-    }
-    int size = s.len;
-    size = std::max(size, 0);
-    StrArena sa = StrArenaAlloc(a, size);
-    if (!sa) {
-        return 0;
-    }
-    if (size > 0 && s.s) {
-        Str out = StrArenaToStr(a, sa);
-        memcpy(out.s, s.s, (size_t)size);
-    }
-    return sa;
-}
-
-Str StrArenaToStr(Arena* a, StrArena sa) {
-    if (!a || !sa) {
-        return {};
-    }
-    u8* mem = (u8*)ArenaPtrUncompress(a, sa);
-    if (!mem) {
-        return {};
-    }
-    const u8* p = mem;
-    u32 size = 0;
-    if (!StrArenaUlebDecode(p, &size)) {
-        return {};
-    }
-    return Str((char*)p, (int)size);
 }
 
 namespace str {

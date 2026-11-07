@@ -235,7 +235,6 @@ constexpr int kToolbarOverlay = 2;
 extern SeqStrings gToolbarModeNames;
 
 int ToolbarModeFromPrefs();
-bool ToolbarModeIsOverlay();
 bool ToolbarModeIsHidden();
 void SetToolbarMode(int mode);
 int FullscreenToolbarModeFromPrefs();

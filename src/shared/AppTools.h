@@ -45,7 +45,6 @@ void CollectInverseSearchCommands(StrVec& out, Str cmdLine);
 
 void EnsureAreaVisibility(Rect& rect);
 Rect GetDefaultWindowPos();
-void SaveCallstackLogs();
 
 Str Sha1OfAppExe();
 TempStr GetWebViewDataDirTemp();

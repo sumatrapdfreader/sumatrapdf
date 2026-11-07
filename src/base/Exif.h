@@ -98,12 +98,9 @@ struct ExifParser {
     ~ExifParser();
     void Reset();
     bool Parse(Str imageData);
-    bool HasProp(ExifProp prop) const;
-    ExifValueKind GetPropKind(ExifProp prop) const;
     TempStr GetStringProp(ExifProp prop, ExifProp altProp = ExifProp::None) const;
     bool GetIntProp(ExifProp prop, i64* valOut) const;
     bool GetRationalProp(ExifProp prop, ExifRational* valOut) const;
     bool GetFloatProp(ExifProp prop, double* valOut) const;
     TempStr GetFormattedPropTemp(ExifProp prop) const;
-    void GetDumpLines(StrVec& linesOut) const;
 };

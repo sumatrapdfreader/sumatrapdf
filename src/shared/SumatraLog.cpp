@@ -261,12 +261,6 @@ void DestroyLogging() {
 #endif
 }
 
-// ng: gpui calls base::log(); src/gui/GpuiLog.cpp forwards to here, because a
-// file that includes gpui.h can't also include base/Base.h (name clashes)
-void SumatraLogBytes(const char* s, int n) {
-    log(Str((char*)s, n));
-}
-
 // --- parent process chain (startup diagnostics) --------------------------------
 
 #if !OS_WIN

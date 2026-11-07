@@ -104,11 +104,9 @@ struct WebviewWnd : WindowBase {
     void AddInitScriptWithToken(Str js, int token);
     int FindInitScript(int token) const;
     void RemoveInitScript(int token);
-    void RemoveAllInitScripts();
     void OnInitScriptAdded(int token, const WCHAR* id);
     void Navigate(Str url);
     void Bind(Str name);
-    void Unbind(Str name);
     void Resolve(Str id, int status, Str resultJson);
     void OnJsCall(Str msg);
     void OnJsNotify(Str msg);

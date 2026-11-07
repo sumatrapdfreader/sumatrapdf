@@ -621,39 +621,6 @@ struct VecStr {
     Str* els;
 };
 
-template <typename T>
-inline bool addSafe(T* valInOut, T n) {
-    if (n == 0 || *valInOut == 0) {
-        valInOut = 0;
-        return true;
-    }
-    ReportIf(n < 0);
-    ReportIf(*valInOut < 0);
-    T res = *valInOut + n;
-    if (res < *valInOut) {
-        return false;
-    }
-    *valInOut = res;
-    return true;
-}
-
-template <typename T>
-inline bool mulSafe(T* valInOut, T n) {
-    if (n == 0 || *valInOut == 0) {
-        *valInOut = 0;
-        return true;
-    }
-    ReportIf(n < 0);
-    ReportIf(*valInOut < 0);
-    T res = *valInOut * n;
-    if (res < *valInOut || res < n) {
-        // multiplication overflowed
-        return false;
-    }
-    *valInOut = res;
-    return true;
-}
-
 bool MemEq(const void* s1, const void* s2, int n);
 
 int RoundToPowerOf2(int size);
@@ -1110,9 +1077,6 @@ using RectF = RectG<float>;
 
 Point ToPoint(PointF p);
 
-SizeF ToSizeFl(Size s);
-Size ToSize(SizeF s);
-
 RectF ToRectF(const Rect& r);
 Rect ToRect(const RectF& r);
 
@@ -1478,8 +1442,6 @@ struct Arena {
     u64 Pos();
     void PopTo(u64 pos);
     void Pop(u64 amt);
-    void* GetAvailableSpace(int* bufSizeOut);
-    void* CommitReserved(void* mem, int size);
 
     Arena() = delete;  // use ArenaNew()
     ~Arena() = delete; // use ArenaDelete()
@@ -1533,26 +1495,6 @@ struct AutoArenaSavepoint {
 extern Arena* gPermArena;
 Arena* GetPermArena();
 void DestroyPermArena();
-
-template <typename T>
-inline T* PushArrayNoZeroAligned(Arena* arena, u64 count, u64 align) {
-    return (T*)arena->Push(sizeof(T) * count, align, false);
-}
-
-template <typename T>
-inline T* PushArrayAligned(Arena* arena, u64 count, u64 align) {
-    return (T*)arena->Push(sizeof(T) * count, align, true);
-}
-
-template <typename T>
-inline T* PushArrayNoZero(Arena* arena, u64 count) {
-    return PushArrayNoZeroAligned<T>(arena, count, (alignof(T) > 8) ? alignof(T) : 8);
-}
-
-template <typename T>
-inline T* PushArray(Arena* arena, u64 count) {
-    return PushArrayAligned<T>(arena, count, (alignof(T) > 8) ? alignof(T) : 8);
-}
 
 void* Alloc(struct Arena* arena, int size);
 void Free(struct Arena* arena, void* mem);
@@ -2100,9 +2042,6 @@ bool VecPush(Arena* arena, T& v, E el) {
 // Singly-linked string node; AllocStrNode places the string bytes immediately
 // after the node in one allocation (s.s points into that block).
 using StrArena = u32;
-StrArena StrArenaAlloc(Arena* a, int size);
-StrArena StrArenaDupStr(Arena* a, Str s);
-Str StrArenaToStr(Arena* a, StrArena sa);
 
 struct StrNode {
     StrNode* next = nullptr;
@@ -2239,7 +2178,6 @@ int TrimWsBoth(Str& s);
 
 int BufSet(WCHAR* dst, int dstCchSize, Str src);
 
-WStr CastStrToWStr(Str s);
 } // namespace str
 
 namespace wstr {
@@ -2724,7 +2662,6 @@ TempStr JoinTemp(StrVec* v, Str sep);
 //--- Strconv.h ------------------------------------------------------------------
 
 namespace strconv {
-WStr CodePageToWStr(uint codePage, Str s, Arena* a = nullptr);
 
 WStr Utf8ToWStr(Str s, Arena* a = nullptr);
 Str WStrToUtf8(WStr s, Arena* a = nullptr);
@@ -2742,9 +2679,6 @@ enum class ByteOrder {
     BigEndian,
 };
 TempStr Utf16ToUtf8Temp(Str bytes, ByteOrder order);
-
-Str WStrToAnsi(WStr src);
-Str Utf8ToAnsi(Str s);
 
 TempWStr AnsiToWStrTemp(Str src);
 Str AnsiToUtf8(Str src);
@@ -2975,9 +2909,7 @@ DWORD PremultiplyPixel(Color c, u8 alpha);
 
 // GDI+ only exists on Windows; portable code works with Color
 #if OS_WIN
-Gdiplus::Color Unblend(Color c, u8 alpha);
 Gdiplus::Color GdiRgbFromColor(Color c);
-Gdiplus::Color GdiRgbaFromColor(Color c);
 #endif
 
 constexpr Color RgbToColor(Color rgb) {

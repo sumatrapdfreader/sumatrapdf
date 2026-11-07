@@ -41,10 +41,6 @@ TempStr GetCurrentThreadCallstackTemp() {
 
 void FreeCallstackLogs() {}
 
-Str GetCallstacks() {
-    return {};
-}
-
 void GetAllThreadsCallstacks(str::Builder& /*s*/) {}
 
 void GetAllThreadsCallstacksExcept(str::Builder& /*s*/, ThreadId /*skipThreadId*/) {}

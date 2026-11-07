@@ -610,30 +610,6 @@ static Pixmap* PixmapFromDataFzAny(Str d) {
 }
 #endif
 
-// adapted from http://cpansearch.perl.org/src/RJRAY/Image-Size-3.230/lib/Image/Size.pm
-// Cheap size probe (header parse, else full decode). Returns empty Size on failure.
-Size ImageSizeFromData(Str d) {
-    Size result;
-    FileTypeInfo fti = GuessFileInfoFromData(d);
-    if (fti.hasImageSize) {
-        result = Size(fti.imageDx, fti.imageDy);
-    } else if (fti.imageSizes) {
-        // multi-image file (animated GIF, multi-page TIFF, ...): the first image
-        result = fti.imageSizes[0];
-    }
-    FreeFileTypeInfo(&fti);
-    if (!result.IsEmpty()) {
-        return result;
-    }
-    // try expensive way of getting the info by decoding the image
-    Pixmap* px = PixmapFromData(d);
-    if (px) {
-        result = Size(px->width, px->height);
-        FreePixmap(px);
-    }
-    return result;
-}
-
 #if OS_WIN
 
 using Gdiplus::Bitmap;
@@ -983,32 +959,6 @@ Vec<Pixmap*> PixmapsFromData(Str bmpData) {
         VecAppend(res, px);
     }
     return res;
-}
-
-// Load path into a RenderedBitmap (Windows); nullptr on POSIX for now.
-RenderedBitmap* LoadRenderedBitmap(Str path) {
-    if (len(path) == 0) {
-        return nullptr;
-    }
-    Str data = file::ReadFile(path);
-    if (len(data) == 0) {
-        return nullptr;
-    }
-
-    Gdiplus::Bitmap* bmp = NewGdiplusBitmapFromPixmap(PixmapFromData(data));
-    str::Free(data);
-    if (!bmp) {
-        return nullptr;
-    }
-
-    HBITMAP hbmp = nullptr;
-    RenderedBitmap* rendered = nullptr;
-    if (bmp->GetHBITMAP((Gdiplus::ARGB)Gdiplus::Color::White, &hbmp) == Gdiplus::Ok) {
-        rendered = new RenderedBitmap(hbmp, Size((int)bmp->GetWidth(), (int)bmp->GetHeight()));
-    }
-    delete bmp;
-
-    return rendered;
 }
 
 #else
@@ -1548,10 +1498,6 @@ Vec<Pixmap*> PixmapsFromData(Str bmpData) {
         VecAppend(res, px);
     }
     return res;
-}
-
-RenderedBitmap* LoadRenderedBitmap(Str) {
-    return nullptr;
 }
 
 #endif

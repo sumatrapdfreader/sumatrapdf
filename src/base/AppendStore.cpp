@@ -14,10 +14,6 @@ static void SetStoreOSError(AppendStore* store, Str what) {
     SetStoreError(store, str::JoinTemp(what, StrL(": "), file::LastErrorTemp()));
 }
 
-Str AppendStoreError(AppendStore* store) {
-    return store ? Str(store->error) : Str();
-}
-
 static bool HasChar(Str s, char c) {
     return str::IndexOfChar(s, c) >= 0;
 }

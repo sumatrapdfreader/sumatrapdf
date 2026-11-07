@@ -80,11 +80,9 @@ struct PlatformWindow {
     void Focus();
     void Invalidate();
     void SetCursor(CursorId);
-    void BeginMove(const PlatformPointerEvent&);
 };
 
 Rect PlatformWindowRect(NativeWnd);
 Rect PlatformWindowWorkArea(NativeWnd);
 bool PlatformWindowIsMaximized(NativeWnd);
 void PlatformWindowActivateIfForeground(NativeWnd);
-void PlatformPostTask(const Func0&);

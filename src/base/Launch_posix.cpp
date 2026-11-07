@@ -98,25 +98,6 @@ ChildProcess* StartChildProcess(Str cmdLine) {
     return p;
 }
 
-// waitpid has no timeout, so poll it
-bool ChildProcessHasExited(ChildProcess* p, int waitMs) {
-    constexpr int kPollMs = 50;
-    for (int waited = 0; !p->exited; waited += kPollMs) {
-        int status = 0;
-        // -1: not our child any more, which is as good as exited
-        p->exited = waitpid(p->pid, &status, WNOHANG) != 0;
-        if (p->exited || waited >= waitMs) {
-            break;
-        }
-        SleepInMs(kPollMs);
-    }
-    return p->exited;
-}
-
-void CloseChildProcess(ChildProcess* p) {
-    delete p;
-}
-
 bool LaunchFileShellArgs(const StrVec& args) {
     return SpawnDetached(args);
 }

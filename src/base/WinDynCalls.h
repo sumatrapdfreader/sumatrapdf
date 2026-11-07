@@ -79,6 +79,5 @@ DBGHELP_API_LIST(API_DECLARATION2)
 #undef API_DECLARATION2
 
 void NoDllHijacking();
-void PrioritizeSystemDirectoriesForDllLoad();
 
 #endif

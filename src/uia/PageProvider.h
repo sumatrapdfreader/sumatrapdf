@@ -28,7 +28,6 @@ class SumatraUIAutomationPageProvider : public IRawElementProviderFragment,
 
     int GetPageNum() const;
     SumatraUIAutomationPageProvider* GetNextPage();
-    SumatraUIAutomationPageProvider* GetPreviousPage();
 
     // IUnknown
     HRESULT STDMETHODCALLTYPE QueryInterface(const IID&, void**);

@@ -91,7 +91,6 @@ void NotificationUpdateMessage(NotificationWnd* wnd, Str msg, int timeoutInMS = 
 TempStr NotificationGetMessageTemp(NotificationWnd* wnd);
 void RemoveNotification(NotificationWnd*);
 void CloseNotification(NotificationWnd*, NotifCloseReason reason = NotifCloseReason::Program);
-bool AreNotificationsEnabled();
 void SetNotificationsEnabled(bool);
 bool RemoveNotificationsForGroup(HWND, Kind);
 void RemoveNotificationsForHwnd(HWND);

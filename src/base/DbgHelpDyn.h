@@ -10,13 +10,8 @@ void WriteMiniDump(WStr crashDumpFilePath, MINIDUMP_EXCEPTION_INFORMATION* mei, 
 void GetThreadCallstack(str::Builder& s, ThreadId threadId);
 int GetSuspendedThreadCallstackAddrs(ThreadHandle hThread, u64* addrs, int maxAddrs);
 bool GetCurrentThreadCallstack(str::Builder& s);
-void LogCallstack();
-void RememberCallstackLogs();
 TempStr GetCurrentThreadCallstackTemp();
-void FreeCallstackLogs();
-Str GetCallstacks();
 void GetAllThreadsCallstacks(str::Builder& s);
-void GetAllThreadsCallstacksExcept(str::Builder& s, ThreadId skipThreadId);
 void GetExceptionInfo(str::Builder& s, EXCEPTION_POINTERS* excPointers);
 
 } // namespace dbghelp

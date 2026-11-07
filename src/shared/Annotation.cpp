@@ -49,10 +49,6 @@ static constexpr SeqStrings gAnnotationTypeNames =
 // clang-format on
 static_assert(SeqStrCount(gAnnotationTypeNames) == (int)AnnotationType::Last + 1);
 
-SeqStrings AnnotationTypeNames() {
-    return gAnnotationTypeNames;
-}
-
 // Matches case- and space-insensitively, so "free text" and "freetext" both
 // name AnnotationType::FreeText. Unknown if there is no such type.
 AnnotationType AnnotationTypeFromName(Str name) {

@@ -614,22 +614,6 @@ void RenderCache::FreeForDisplayModel(DisplayModel* dm) {
     }
 }
 
-void RenderCache::FreeNotVisible() {
-    ScopedRecursiveMutex scope(&cacheAccess);
-    // must go from end because freeing changes the cache
-    for (int i = cacheCount - 1; i >= 0; i--) {
-        BitmapCacheEntry* entry = cache[i];
-        // all invisible pages resp. page tiles
-        bool shouldFree = !entry->dm->PageVisibleNearby(entry->pageNo);
-        if (!shouldFree && entry->tile.res > 1) {
-            shouldFree = !IsTileVisible(entry->dm, entry->pageNo, entry->tile, 2.0);
-        }
-        if (shouldFree) {
-            DropCacheEntryIfNotUsed(entry);
-        }
-    }
-}
-
 // keep the cached bitmaps for visible pages to avoid flickering during a reload.
 // mark invisible pages as out-of-date to prevent inconsistencies
 void RenderCache::KeepForDisplayModel(DisplayModel* oldDm, DisplayModel* newDm) {

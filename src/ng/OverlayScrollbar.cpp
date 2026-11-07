@@ -511,8 +511,6 @@ struct ScrollbarView {
     static void OnMove(ScrollbarView*, gp::Ctx* cx, const gp::MouseMoveEvent* ev, int64_t arg);
     static void OnHover(ScrollbarView*, gp::Ctx* cx, const gp::HoverEvent* ev, int64_t arg);
     static void OnMenu(ScrollbarView*, gp::Ctx* cx, const gp::ClickEvent* ev, int64_t arg);
-    static void OnWinMove(ScrollbarView*, gp::Ctx* cx, const gp::MouseMoveEvent* ev);
-    static void OnWinUp(ScrollbarView*, gp::Ctx* cx, const gp::MouseUpEvent* ev);
     static void OnWinExit(ScrollbarView*, gp::Ctx* cx, const gp::MouseExitEvent* ev);
 };
 
@@ -641,14 +639,6 @@ void OverlayScrollbarOnWindowUp(gp::Window* gw, gp::MouseButton button) {
         return;
     }
     OnLeftButtonUp(sb);
-}
-
-void ScrollbarView::OnWinMove(ScrollbarView*, gp::Ctx* cx, const gp::MouseMoveEvent* ev) {
-    OverlayScrollbarOnWindowMove(cx->win, ev->x, ev->y);
-}
-
-void ScrollbarView::OnWinUp(ScrollbarView*, gp::Ctx* cx, const gp::MouseUpEvent* ev) {
-    OverlayScrollbarOnWindowUp(cx->win, ev->button);
 }
 
 // ng: a gpui menu item's action is dispatched from the focused element, which

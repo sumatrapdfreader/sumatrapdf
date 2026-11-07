@@ -28,7 +28,3 @@ Str EncodeGifFromPixmap(const Pixmap* px);
 bool DecodeJpegToCmyk(Str jpeg, int& w, int& h, int& stride, Vec<u8>& samples);
 
 Vec<Pixmap*> PixmapsFromData(Str);
-
-Size ImageSizeFromData(Str);
-
-RenderedBitmap* LoadRenderedBitmap(Str path);

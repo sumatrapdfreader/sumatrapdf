@@ -930,15 +930,6 @@ static void RememberSessionPassword(Str path, Str password, bool remember) {
     sp->remember = remember;
 }
 
-void FreeSessionPasswords() {
-    for (SessionPassword* sp : gSessionPasswords) {
-        str::Free(sp->path);
-        str::Free(sp->password);
-        delete sp;
-    }
-    VecReset(gSessionPasswords);
-}
-
 Str SumatraPasswordUI::GetPassword(Str filePath, u8* fileDigest, u8 decryptionKeyOut[32], bool* saveKey) {
     FileState* fileFromHistory = FileHistoryFindByPath(filePath);
     if (fileFromHistory && fileFromHistory->decryptionKey && fileDigest && decryptionKeyOut) {

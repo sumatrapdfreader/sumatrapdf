@@ -312,13 +312,6 @@ void TreeView::ExpandAll() {
     ResumeRedraw();
 }
 
-void TreeView::CollapseAll() {
-    SuspendRedraw();
-    auto* root = TreeView_GetRoot(this->hwnd);
-    TreeViewExpandRecursively(this->hwnd, root, TVE_COLLAPSE, false);
-    ResumeRedraw();
-}
-
 // TreeView_DeleteAllItems during scrollbar thumb tracking leaves mouse capture
 // stuck and breaks menu clicks until the user activates the control again.
 static void CancelInProgressInteraction(HWND hwnd) {
@@ -345,20 +338,6 @@ void TreeView::Clear() {
     SendMessageW(hwnd, WM_SETREDRAW, TRUE, 0);
     uint flags = RDW_ERASE | RDW_FRAME | RDW_INVALIDATE | RDW_ALLCHILDREN;
     ::RedrawWindow(hwnd, nullptr, nullptr, flags);
-}
-
-TempStr TreeView::GetDefaultTooltipTemp(TreeItem ti) {
-    auto* hItem = GetHandleByTreeItem(ti);
-    WCHAR buf[INFOTIPSIZE + 1]{}; // +1 just in case
-
-    TVITEMW it{};
-    it.hItem = hItem;
-    it.mask = TVIF_TEXT;
-    it.pszText = buf;
-    it.cchTextMax = dimof(buf);
-    TreeView_GetItem(hwnd, &it);
-
-    return ToUtf8Temp(buf);
 }
 
 // get the item at a given (x,y) position in the window
@@ -496,20 +475,6 @@ void TreeView::SetWrapText(bool wrap) {
     if (newStyle != style) {
         SetWindowLongPtrW(hwnd, GWL_STYLE, newStyle);
     }
-}
-
-bool TreeView::UpdateItem(TreeItem ti) {
-    HTREEITEM ht = GetHandleByTreeItem(ti);
-    ReportIf(!ht);
-    if (!ht) {
-        return false;
-    }
-
-    TVITEMEXW tvitem;
-    tvitem.hItem = ht;
-    FillTVITEM(&tvitem, treeModel, ti);
-    BOOL ok = TreeView_SetItem(hwnd, &tvitem);
-    return ok != 0;
 }
 
 // complicated because it inserts items backwards, as described in

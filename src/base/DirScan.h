@@ -168,17 +168,9 @@ struct DirScanProgress {
     bool scanning;
 };
 
-DirScanCtx* CreateDirScanCtx(Arena* arena, OnScannedDirCallback callback, void* userData);
-void AskDirScanThreadToQuit(DirScanCtx* ctx);
 DirEntries* RequestDirScan(DirScanCtx* ctx, Str dir, bool nonRecursive = false);
 void QueueDirScan(DirScanCtx* ctx, DirEntries* dv, bool nonRecursive = false);
-void RequestDirRescan(DirScanCtx* ctx, DirEntries* dv);
 void SetDirScanPriorityDir(DirScanCtx* ctx, Str dir);
-
-bool DirScanIsIdle(DirScanCtx* ctx);
-int GetDirScanProgress(DirScanCtx* ctx, DirScanProgress* out, int maxOut);
-
-DirEntry* FindEntryByName(DirEntries* dv, Str name);
 
 DirEntries* AllocDirEntries(Arena* arena, Str fullDir);
 void ReadDirectory(Arena* arena, DirEntries* dv, AtomicBool* shouldExit);

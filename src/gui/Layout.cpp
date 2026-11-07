@@ -117,10 +117,6 @@ Constraints ExpandHeight(int width) {
     return Constraints{min, max};
 }
 
-Constraints ExpandWidth(int height) {
-    return TightHeight(height);
-}
-
 Constraints Loose(const Size size) {
     return Constraints{Size{}, size};
 }
@@ -129,55 +125,10 @@ Constraints Tight(const Size size) {
     return Constraints{size, size};
 }
 
-Constraints TightHeight(int height) {
-    Size min{0, height};
-    Size max{Inf, height};
-    return Constraints{min, max};
-}
-
 Size Constraints::Constrain(Size size) const {
     int w = ClampI(size.dx, min.dx, max.dx);
     int h = ClampI(size.dy, min.dy, max.dy);
     return Size{w, h};
-}
-
-Size Constraints::ConstrainAndAttemptToPreserveAspectRatio(const Size size) const {
-    if (IsTight()) {
-        return min;
-    }
-
-    int width = size.dx;
-    int height = size.dy;
-
-    if (width > max.dx) {
-        width = max.dx;
-        height = Scale(width, size.dy, size.dx);
-    }
-    if (height > max.dy) {
-        height = max.dy;
-        width = Scale(height, size.dx, size.dy);
-    }
-
-    if (width < min.dx) {
-        width = min.dx;
-        height = Scale(width, size.dy, size.dx);
-    }
-
-    if (height < min.dy) {
-        height = min.dy;
-        width = Scale(height, size.dx, size.dy);
-    }
-
-    Size c{width, height};
-    return Constrain(c);
-}
-
-int Constraints::ConstrainHeight(int height) const {
-    return ClampI(height, min.dy, max.dy);
-}
-
-int Constraints::ConstrainWidth(int width) const {
-    return ClampI(width, min.dx, max.dx);
 }
 
 bool Constraints::HasBoundedHeight() const {
@@ -211,17 +162,8 @@ Constraints Constraints::Inset(int width, int height) const {
     return Constraints{min2, max2};
 }
 
-bool Constraints::IsBounded() const {
-    return HasBoundedWidth() && HasBoundedHeight();
-}
-
 bool Constraints::IsNormalized() const {
     return min.dx >= 0.0 && min.dx <= max.dx && min.dy >= 0.0 && min.dy <= max.dy;
-}
-
-bool Constraints::IsSatisfiedBy(Size size) const {
-    return min.dx <= size.dx && size.dx <= max.dx && min.dy <= size.dy && size.dy <= max.dy && size.dx != Inf &&
-           size.dy != Inf;
 }
 
 bool Constraints::IsTight() const {
@@ -242,15 +184,6 @@ Constraints Constraints::LoosenHeight() const {
 
 Constraints Constraints::LoosenWidth() const {
     return Constraints{Size{0, min.dy}, max};
-}
-
-Constraints Constraints::Tighten(Size size) const {
-    Constraints bc = *this;
-    bc.min.dx = ClampI(size.dx, bc.min.dx, bc.max.dx);
-    bc.max.dx = bc.min.dx;
-    bc.min.dy = ClampI(size.dy, bc.min.dy, bc.max.dy);
-    bc.max.dy = bc.min.dy;
-    return bc;
 }
 
 Constraints Constraints::TightenHeight(int height) const {
@@ -280,22 +213,9 @@ void ILayout::SetBounds(Rect bounds) {
     lastBounds = bounds;
 }
 
-bool IsLayoutOfKind(ILayout* l, Kind kind) {
-    if (l == nullptr) {
-        return false;
-    }
-    return l->GetKind() == kind;
-}
-
 // padding.go
 
 static Kind paddingKind = "padding";
-bool IsPadding(Kind kind) {
-    return kind == paddingKind;
-}
-bool IsPadding(ILayout* l) {
-    return IsLayoutOfKind(l, paddingKind);
-}
 
 int Padding::LayoutChildCount() {
     return child ? 1 : 0;

@@ -334,10 +334,6 @@ int ToolbarModeFromPrefs() {
     return idx;
 }
 
-bool ToolbarModeIsOverlay() {
-    return ToolbarModeFromPrefs() == kToolbarOverlay;
-}
-
 bool ToolbarModeIsHidden() {
     return ToolbarModeFromPrefs() == kToolbarHide;
 }

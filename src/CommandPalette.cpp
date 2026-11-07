@@ -130,12 +130,6 @@ struct CommandPaletteWnd : WindowBase, PaletteSources {
     bool MoveSelection(int vkey);
     bool RemoveSelectedItem();
     void SwitchToPrefix(Str prefix);
-    void SwitchToCommands();
-    void SwitchToTabs();
-    void SwitchToEverything();
-    void SwitchToFileHistory();
-    void SwitchToTOC();
-    void SwitchToFavorites();
     void SwitchToSettings();
     void BeginEditSettingValue(Str path);
     void ReturnToSettings(Str selPath);
@@ -410,30 +404,6 @@ static void EditSetTextAndFocus(Edit* e, Str s) {
 
 void CommandPaletteWnd::SwitchToPrefix(Str prefix) {
     EditSetTextAndFocus(editQuery, prefix);
-}
-
-void CommandPaletteWnd::SwitchToCommands() {
-    SwitchToPrefix(Str(kPalettePrefixCommands));
-}
-
-void CommandPaletteWnd::SwitchToTabs() {
-    SwitchToPrefix(Str(kPalettePrefixTabs));
-}
-
-void CommandPaletteWnd::SwitchToEverything() {
-    SwitchToPrefix(Str(kPalettePrefixEverything));
-}
-
-void CommandPaletteWnd::SwitchToFileHistory() {
-    SwitchToPrefix(Str(kPalettePrefixFileHistory));
-}
-
-void CommandPaletteWnd::SwitchToTOC() {
-    SwitchToPrefix(Str(kPalettePrefixTOC));
-}
-
-void CommandPaletteWnd::SwitchToFavorites() {
-    SwitchToPrefix(Str(kPalettePrefixFavorites));
 }
 
 void CommandPaletteWnd::SwitchToSettings() {

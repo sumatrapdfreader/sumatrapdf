@@ -739,17 +739,5 @@ bool Archive::OpenUnrarFallback(Str, bool, const ArchiveExtractProgressCb&) {
 #endif
 
 #if OS_WIN
-FILETIME Archive::FileInfo::GetWinFileTime() const {
-    FILETIME ft = {(DWORD)-1, (DWORD)-1};
-    LocalFileTimeToFileTime((FILETIME*)&fileTime, &ft);
-    return ft;
-}
 #else
-FILETIME Archive::FileInfo::GetWinFileTime() const {
-    if (fileTime < 0) {
-        return {(DWORD)-1, (DWORD)-1};
-    }
-    u64 ticks = kFileTimeUnixEpoch + (u64)fileTime * kFileTimeTicksPerSec;
-    return FileTimeFromU64(ticks);
-}
 #endif

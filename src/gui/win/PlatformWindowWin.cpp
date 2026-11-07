@@ -187,11 +187,6 @@ void PlatformWindow::SetCursor(CursorId id) {
     }
 }
 
-void PlatformWindow::BeginMove(const PlatformPointerEvent&) {
-    ReleaseCapture();
-    SendMessageW(native, WM_NCLBUTTONDOWN, HTCAPTION, 0);
-}
-
 Rect PlatformWindowRect(NativeWnd native) {
     return HwndWindowRect(native);
 }
@@ -213,8 +208,4 @@ void PlatformWindowActivateIfForeground(NativeWnd native) {
     if (!fg || fg == native) {
         SetActiveWindow(native);
     }
-}
-
-void PlatformPostTask(const Func0& fn) {
-    uitask::Post(fn, "PlatformWindowTask");
 }

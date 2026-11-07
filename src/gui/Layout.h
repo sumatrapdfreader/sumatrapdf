@@ -16,33 +16,25 @@ struct Constraints {
     Size max;
 
     Size Constrain(Size) const;
-    Size ConstrainAndAttemptToPreserveAspectRatio(Size) const;
-    int ConstrainHeight(int height) const;
-    int ConstrainWidth(int width) const;
     bool HasBoundedHeight() const;
     bool HasBoundedWidth() const;
     bool HasTightWidth() const;
     bool HasTightHeight() const;
     Constraints Inset(int width, int height) const;
-    bool IsBounded() const;
     bool IsNormalized() const;
     bool IsTight() const;
-    bool IsSatisfiedBy(Size) const;
     bool IsZero() const;
     Constraints Loosen() const;
     Constraints LoosenHeight() const;
     Constraints LoosenWidth() const;
-    Constraints Tighten(Size) const;
     Constraints TightenHeight(int height) const;
     Constraints TightenWidth(int width) const;
 };
 
 Constraints ExpandInf();
 Constraints ExpandHeight(int width);
-Constraints ExpandWidth(int height);
 Constraints Loose(Size size);
 Constraints Tight(Size size);
-Constraints TightHeight(int height);
 
 using NeedLayout = Func0;
 
@@ -90,8 +82,6 @@ struct ILayout {
 
 bool IsCollapsed(ILayout*);
 
-bool IsLayoutOfKind(ILayout*, Kind);
-
 // padding.go
 
 struct Insets {
@@ -122,9 +112,6 @@ struct Padding : ILayout {
     int LayoutChildCount() override;
     ILayout* LayoutChildAt(int) override;
 };
-
-bool IsPadding(Kind);
-bool IsPadding(ILayout*);
 
 // vbox.go
 

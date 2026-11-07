@@ -103,12 +103,6 @@ void VirtCtrl::SetColor(int idx, Color col) {
     colors[idx] = col;
 }
 
-// back to painting in the class's colors
-void VirtCtrl::ResetColors() {
-    free(colors);
-    colors = nullptr;
-}
-
 void VirtCtrl::SetTooltip(Str s) {
     str::ReplaceWithCopy(&tooltip, s);
 }
@@ -609,10 +603,6 @@ bool VirtCtrl::IsEnabled() const {
 
 HWND VirtCtrl::GetHwnd() const {
     return root ? root->hwnd : nullptr;
-}
-
-bool VirtCtrl::IsPaintable() const {
-    return visibility == Visibility::Visible;
 }
 
 bool VirtCtrl::IsHitTestable() const {
@@ -1492,15 +1482,6 @@ void VirtScroll::SetBounds(Rect r) {
 
 Point VirtScroll::ScrollOffset() {
     return {0, scrollY};
-}
-
-void VirtScroll::SetContentDy(int dy) {
-    if (contentDy == dy) {
-        return;
-    }
-    contentDy = dy;
-    ScrollTo(scrollY);
-    UpdateScrollbar();
 }
 
 int VirtScroll::MaxScrollY() const {
@@ -2785,12 +2766,6 @@ int VirtText::MinIntrinsicWidth(int) {
     return GetIdealSize().dx;
 }
 
-Size VirtText::MinIntrinsicSize(int width, int height) {
-    int dx = MinIntrinsicWidth(height);
-    int dy = MinIntrinsicHeight(width);
-    return {dx, dy};
-}
-
 Size VirtText::GetIdealSize() {
     Size res = GetIdealSize(false);
     res.dx += padding.left + padding.right;
@@ -3686,13 +3661,6 @@ VirtIconButton* AsVirtIconButton(ILayout* l) {
 VirtCloseButton* AsVirtCloseButton(ILayout* l) {
     if (l && l->GetKind() == kindVirtCtrlCloseButton) {
         return (VirtCloseButton*)l;
-    }
-    return nullptr;
-}
-
-VirtSlider* AsVirtSlider(ILayout* l) {
-    if (l && l->GetKind() == kindVirtCtrlSlider) {
-        return (VirtSlider*)l;
     }
     return nullptr;
 }

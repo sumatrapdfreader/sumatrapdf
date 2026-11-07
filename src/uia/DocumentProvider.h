@@ -33,7 +33,6 @@ class SumatraUIAutomationDocumentProvider : public IRawElementProviderFragment,
     HWND GetCanvasHwnd() const;
 
     SumatraUIAutomationPageProvider* GetFirstPage();
-    SumatraUIAutomationPageProvider* GetLastPage();
 
     // IUnknown
     HRESULT STDMETHODCALLTYPE QueryInterface(const IID&, void**);

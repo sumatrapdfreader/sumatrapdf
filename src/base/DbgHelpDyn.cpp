@@ -585,58 +585,6 @@ void GetExceptionInfo(str::Builder& s, EXCEPTION_POINTERS* excPointers) {
 
 static str::Builder* gCallstackLogs = nullptr;
 
-void RememberCallstackLogs() {
-    ReportIf(gCallstackLogs);
-    gCallstackLogs = new str::Builder();
-}
-
-void FreeCallstackLogs() {
-    delete gCallstackLogs;
-    gCallstackLogs = nullptr;
-}
-
-Str GetCallstacks() {
-    if (!gCallstackLogs) {
-        return {};
-    }
-    char* s = str::Dup(ToStr(*gCallstackLogs)).s;
-    return Str(s);
-}
-
-void LogCallstack() {
-    str::Builder s;
-    s.Reserve(2048);
-    if (!GetCurrentThreadCallstack(s)) {
-        return;
-    }
-
-    s.Append(StrL("\n"));
-    if (gCallstackLogs) {
-        gCallstackLogs->Append(ToStr(s));
-    }
-}
-
-void GetAllThreadsCallstacksExcept(str::Builder& s, ThreadId skipThreadId) {
-    HANDLE threadSnap = CreateToolhelp32Snapshot(TH32CS_SNAPTHREAD, 0);
-    if (threadSnap == INVALID_HANDLE_VALUE) {
-        return;
-    }
-
-    THREADENTRY32 te32;
-    te32.dwSize = sizeof(THREADENTRY32);
-
-    DWORD pid = GetCurrentProcessId();
-    BOOL ok = Thread32First(threadSnap, &te32);
-    while (ok) {
-        if (te32.th32OwnerProcessID == pid && te32.th32ThreadID != skipThreadId) {
-            GetThreadCallstack(s, te32.th32ThreadID);
-        }
-        ok = Thread32Next(threadSnap, &te32);
-    }
-
-    CloseHandle(threadSnap);
-}
-
 } // namespace dbghelp
 
 #endif // OS_WIN

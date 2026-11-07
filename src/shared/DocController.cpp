@@ -470,13 +470,6 @@ void BrowserDocController::SaveHtmlScrollPosForUrl(Str url, PointF pos) {
     VecAppend(htmlScrollPositions, pos);
 }
 
-bool BrowserDocController::GetSavedHtmlScrollPosForPage(int pageNo, PointF* pos) const {
-    if (!pos || !ValidPageNo(pageNo)) {
-        return false;
-    }
-    return GetSavedHtmlScrollPosForUrl(ScrollUrlForPageTemp(pageNo), pos);
-}
-
 bool BrowserDocController::GetSavedHtmlScrollPosForUrl(Str url, PointF* pos) const {
     if (len(url) == 0 || !pos) {
         return false;

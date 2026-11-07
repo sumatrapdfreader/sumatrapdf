@@ -79,7 +79,6 @@ Type GetType(Str path);
 TempStr GetTempFilePathTemp(Str filePrefix = Str());
 TempStr GetSelfExePathTemp();
 #if OS_WIN
-TempWStr GetSelfExePathW();
 // initialCch is only a starting guess; the buffer grows until the path fits.
 // Tests pass a tiny value to exercise that.
 TempWStr GetModulePathTemp(HMODULE mod, int initialCch);
@@ -138,7 +137,6 @@ bool SetModificationTime(Str path, FILETIME lastMod);
 DWORD GetAttributes(Str path);
 bool SetAttributes(Str path, DWORD attrs);
 
-bool StartsWithN(Str path, Str s);
 bool StartsWith(Str path, Str s);
 
 int GetZoneIdentifier(Str path);
@@ -164,7 +162,6 @@ bool RenameReplace(Str newPath, Str oldPath);
 bool OverwriteAtomicRetry(Str dst, Str src, int retryCount, int retrySleepMs);
 
 bool SetAccessTime(Str path, FILETIME accessTime);
-FILETIME GetAccessTime(Str path);
 
 } // namespace file
 
@@ -183,10 +180,6 @@ bool HasWriteAccess(Str dir);
 } // namespace dir
 
 bool FileSystemEntryExists(Str s);
-Str FindFirstValidParentDir(Str path);
-Str PathGetDirTemp(Str path);
-Str PathGetNameTemp(Str path);
-Str SmartResolveDirectory(Str dir);
 TempStr GetDownloadsDirTemp();
 
 bool FileTimeEq(const FILETIME& a, const FILETIME& b);

@@ -30,10 +30,6 @@ static const WStr kDefaultClassName = L"SumatraWgDefaultWinClass";
 // window can be told apart in a debugger / spy tool
 static const WStr kControlClassName = L"SumatraWgControlClass";
 
-TempStr WinMsgNameTemp(UINT msg) {
-    return fmt("0x%x", (int)msg);
-}
-
 //--- the single HWND -> object list, shared by windows and controls
 
 struct HwndToWnd {
@@ -1943,13 +1939,6 @@ void ControlBase::Attach(HWND hwnd) {
     AttachToHwnd(this, hwnd);
 }
 
-// Attaches a CWnd object to a dialog item.
-void ControlBase::AttachDlgItem(UINT id, HWND parent) {
-    ReportIf(!::IsWindow(parent));
-    HWND wnd = ::GetDlgItem(parent, (int)id);
-    Attach(wnd);
-}
-
 HWND ControlBase::CreateControl(const CreateControlArgs& args) {
     ReportIf(len(args.className) == 0);
     // TODO: validate that className is one of the known controls?
@@ -2003,18 +1992,6 @@ HWND ControlBase::CreateControl(const CreateControlArgs& args) {
 
 HWND ControlBase::CreateCustom(const CreateCustomArgs& args) {
     return CreateCustomHwnd(args, kControlClassName);
-}
-
-void ControlBase::SetInsetsPt(int uniform) {
-    insets = DpiScaledInsets(uniform);
-}
-
-void ControlBase::SetInsetsPt(int topBottom, int leftRight) {
-    insets = DpiScaledInsets(topBottom, leftRight);
-}
-
-void ControlBase::SetInsetsPt(int top, int right, int bottom, int left) {
-    insets = DpiScaledInsets(top, right, bottom, left);
 }
 
 bool ControlBase::IsFocused() const {

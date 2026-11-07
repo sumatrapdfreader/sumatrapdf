@@ -240,7 +240,6 @@ struct BrowserDocController : DocController {
     void SaveHtmlScrollPos();
     void SaveHtmlScrollPosForPage(int pageNo);
     void SaveHtmlScrollPosForUrl(Str url, PointF pos);
-    bool GetSavedHtmlScrollPosForPage(int pageNo, PointF* pos) const;
     bool GetSavedHtmlScrollPosForUrl(Str url, PointF* pos) const;
     void RestoreHtmlScrollPos();
     Str GetCachedData(Str url) const;

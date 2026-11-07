@@ -175,10 +175,6 @@ void InstallFontDownloadNotifHook() {
 // of e.g. tests/issue-1195.ts), so -dbg-control can switch them off.
 bool gNotificationsEnabled = true;
 
-bool AreNotificationsEnabled() {
-    return gNotificationsEnabled;
-}
-
 // notification groups both apps use
 Kind kNotifZoomOrView = "zoomOrView";
 Kind kNotifCursorPos = "cursorPosHelper";

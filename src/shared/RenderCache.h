@@ -263,7 +263,6 @@ struct RenderCache {
     bool DropCacheEntryIfNotUsed(BitmapCacheEntry* entry);
     bool IsCached(BitmapCacheEntry* entry);
     void FreePage(DisplayModel* dm, int pageNo, TilePosition* tile = nullptr);
-    void FreeNotVisible();
 
 #if OS_WIN
     int PaintTile(HDC hdc, Rect bounds, DisplayModel* dm, int pageNo, TilePosition tile, Rect tileOnScreen,

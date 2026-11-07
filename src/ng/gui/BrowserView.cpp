@@ -438,10 +438,6 @@ void BrowserViewSetVisible(BrowserView* bv, bool visible) {
     }
 }
 
-bool BrowserViewIsVisible(BrowserView* bv) {
-    return bv && bv->visible;
-}
-
 void BrowserViewRefreshSurface(BrowserView*) {}
 
 // --- navigation -------------------------------------------------------------

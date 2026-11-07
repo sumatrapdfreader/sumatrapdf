@@ -94,16 +94,6 @@ void Trackbar::SetRange(int min, int max) {
     SendMessageW(hwnd, TBM_SETRANGE, redraw, range);
 }
 
-int Trackbar::GetRangeMin() {
-    int res = (int)SendMessageW(hwnd, TBM_GETRANGEMIN, 0, 0);
-    return res;
-}
-
-int Trackbar::getRangeMax() {
-    int res = (int)SendMessageW(hwnd, TBM_GETRANGEMAX, 0, 0);
-    return res;
-}
-
 void Trackbar::SetValue(int pos) {
     WPARAM redraw = (WPARAM)TRUE;
     LPARAM p = (LPARAM)pos;

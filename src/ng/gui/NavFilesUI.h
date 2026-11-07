@@ -19,7 +19,6 @@ enum class NavKeyResult {
     Typed,
 };
 
-bool IsNavFilesInFolderVisible();
 void CloseNavFilesInFolder();
 void NavFilesReapClosedWindow();
 int NavFilesPanelDx(MainWindow* win);

@@ -790,12 +790,6 @@ void ReadAloudSetSpeedIdx(int idx) {
     ReadAloudSetSpeed(ReadAloudSpeedAt(idx));
 }
 
-void ReadAloudPlaybackCycleSpeed(int dir) {
-    int n = dimofi(kReadAloudSpeeds);
-    int idx = (ReadAloudClosestSpeedIdx() + dir + n) % n;
-    ReadAloudSetSpeed(kReadAloudSpeeds[idx]);
-}
-
 void ReadAloudPlaybackStop() {
     dbgtts("stop-click\n");
     // always halt TTS, even if the session tab is already gone (issue #6053)
