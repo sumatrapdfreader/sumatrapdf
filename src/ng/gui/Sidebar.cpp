@@ -72,10 +72,8 @@ struct SidebarThumbCache {
     EngineBase* renderEngine = nullptr;
     DisplayModel* owner = nullptr;
     MainWindow* win = nullptr;
-    AtomicInt cancelRendering = 0;
+    BgJob job;
     int rotation = 0;
-    bool workerRunning = false;
-    bool deleteWhenWorkerFinishes = false;
 };
 
 // one visible row of a tree
@@ -292,10 +290,7 @@ static void DetachThumbCache(SidebarUI* ui) {
     if (!cache) {
         return;
     }
-    AtomicIntSet(&cache->cancelRendering, 1);
-    if (cache->workerRunning) {
-        cache->deleteWhenWorkerFinishes = true;
-    } else {
+    if (cache->job.Detach()) {
         DeleteThumbCache(cache);
     }
 }
@@ -2001,7 +1996,7 @@ static Pixmap* RenderSidebarThumb(EngineBase* engine, int pageNo, Location loc, 
 static void FinishSidebarThumb(SidebarThumbTask* task) {
     SidebarThumbCache* cache = task->cache;
     int idx = task->pageNo - 1;
-    if (!cache->deleteWhenWorkerFinishes && idx >= 0 && idx < len(cache->thumbs)) {
+    if (!cache->job.IsDetached() && idx >= 0 && idx < len(cache->thumbs)) {
         SidebarThumb& thumb = cache->thumbs[idx];
         if (task->bitmap) {
             FreePixmap(thumb.bitmap);
@@ -2021,8 +2016,7 @@ static void FinishSidebarThumb(SidebarThumbTask* task) {
 }
 
 static void FinishSidebarWorker(SidebarThumbCache* cache) {
-    cache->workerRunning = false;
-    if (cache->deleteWhenWorkerFinishes) {
+    if (cache->job.Finish()) {
         DeleteThumbCache(cache);
         return;
     }
@@ -2034,7 +2028,7 @@ static void RenderSidebarThumbs(SidebarThumbWorker* worker) {
     SidebarThumbCache* cache = worker->cache;
     u64 sliceStart = GetTickCount64();
     while (cache->renderEngine && worker->next < len(worker->pages)) {
-        if (AtomicIntGet(&cache->cancelRendering) != 0) {
+        if (cache->job.IsCanceled()) {
             break;
         }
         if (!kHasThreads && GetTickCount64() - sliceStart >= (u64)kUiSliceMs) {
@@ -2085,7 +2079,7 @@ static SidebarThumbCache* EnsureThumbCache(MainWindow* win) {
 static void StartSidebarThumbs(MainWindow* win, int firstPage, int lastPage) {
     SidebarThumbCache* cache = EnsureThumbCache(win);
     DisplayModel* dm = win->AsFixed();
-    if (!cache || !dm || cache->workerRunning) {
+    if (!cache || !dm || cache->job.IsRunning()) {
         return;
     }
     auto* worker = new SidebarThumbWorker;
@@ -2105,8 +2099,7 @@ static void StartSidebarThumbs(MainWindow* win, int firstPage, int lastPage) {
         return;
     }
     worker->cache = cache;
-    cache->workerRunning = true;
-    AtomicIntSet(&cache->cancelRendering, 0);
+    cache->job.Start();
     auto fn = MkFunc0<SidebarThumbWorker>(RenderSidebarThumbs, worker);
     if (kHasThreads) {
         RunAsync(fn, StrL("SidebarThumbnailRender"));
@@ -2122,7 +2115,7 @@ void SidebarRefreshThumbnailPage(MainWindow* win, int pageNo) {
     if (!cache || idx < 0 || idx >= len(cache->thumbs)) {
         return;
     }
-    if (cache->workerRunning) {
+    if (cache->job.IsRunning()) {
         DetachThumbCache(ui);
         return;
     }

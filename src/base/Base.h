@@ -519,6 +519,35 @@ struct Countdown {
     }
 };
 
+// A background job sharing state with an owner that can go away while it runs
+// (a thumbnail cache and the window showing it). Whichever is done last frees
+// the state: Detach() (owner done) and Finish() (job done, back on the UI
+// thread) return true to that one. The job thread polls IsCanceled().
+struct BgJob {
+    AtomicBool canceled = 0;
+    bool running = false;
+    bool detached = false;
+
+    void Start() {
+        AtomicBoolSet(&canceled, false);
+        running = true;
+    }
+    void Cancel() { AtomicBoolSet(&canceled, true); }
+    void ClearCancel() { AtomicBoolSet(&canceled, false); }
+    bool IsCanceled() { return AtomicBoolGet(&canceled); }
+    bool IsRunning() const { return running; }
+    bool IsDetached() const { return detached; }
+    bool Detach() {
+        Cancel();
+        detached = true;
+        return !running;
+    }
+    bool Finish() {
+        running = false;
+        return detached;
+    }
+};
+
 template <typename T>
 T limitValue(T val, T min, T max) {
     if (min > max) {

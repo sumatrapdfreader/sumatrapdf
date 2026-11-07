@@ -106,10 +106,8 @@ struct PaletteThumb {
 struct ThumbnailCache {
     Vec<PaletteThumb> thumbs;
     EngineBase* renderEngine = nullptr;
-    AtomicInt cancelRendering = 0;
+    BgJob job;
     int rotation = 0;
-    bool workerRunning = false;
-    bool deleteWhenWorkerFinishes = false;
 };
 
 struct CommandPaletteWnd : PaletteSources {
@@ -269,7 +267,7 @@ struct ThumbRenderWorker {
 static void FinishThumbRender(ThumbRenderTask* task) {
     ThumbnailCache* cache = task->cache;
     int idx = task->pageNo - 1;
-    bool isValid = !cache->deleteWhenWorkerFinishes && idx >= 0 && idx < len(cache->thumbs);
+    bool isValid = !cache->job.IsDetached() && idx >= 0 && idx < len(cache->thumbs);
     if (isValid) {
         PaletteThumb& t = cache->thumbs[idx];
         if (task->bitmap) {
@@ -292,8 +290,7 @@ static void FinishThumbRender(ThumbRenderTask* task) {
 }
 
 static void FinishThumbWorker(ThumbnailCache* cache) {
-    cache->workerRunning = false;
-    if (cache->deleteWhenWorkerFinishes) {
+    if (cache->job.Finish()) {
         DeleteThumbnailCache(cache);
         return;
     }
@@ -311,7 +308,7 @@ static void RenderThumbsInBackground(ThumbRenderWorker* worker) {
     }
     EngineBase* engine = cache->renderEngine;
     while (engine && worker->next < len(worker->pages)) {
-        if (AtomicIntGet(&cache->cancelRendering) != 0) {
+        if (cache->job.IsCanceled()) {
             break;
         }
         if (!kHasThreads && GetTickCount64() - sliceStart >= (u64)kUiSliceMs) {
@@ -359,7 +356,7 @@ static float ThumbMaxScrollY(CommandPaletteWnd* wnd) {
 // screen on either side; thumbnails further than two more screens are freed
 static void StartThumbnailRendering() {
     CommandPaletteWnd* wnd = gCommandPaletteWnd;
-    if (!wnd || !wnd->thumbnailMode || !wnd->thumbCache || wnd->thumbCache->workerRunning) {
+    if (!wnd || !wnd->thumbnailMode || !wnd->thumbCache || wnd->thumbCache->job.IsRunning()) {
         return;
     }
     DisplayModel* dm = wnd->win ? wnd->win->AsFixed() : nullptr;
@@ -420,8 +417,7 @@ static void StartThumbnailRendering() {
         worker->sourceEngine = engine;
         engine->AddRef();
     }
-    AtomicIntSet(&cache->cancelRendering, 0);
-    cache->workerRunning = true;
+    cache->job.Start();
     auto fn = MkFunc0<ThumbRenderWorker>(RenderThumbsInBackground, worker);
     if (kHasThreads) {
         RunAsync(fn, StrL("CommandPaletteThumbnailRender"));
@@ -438,7 +434,7 @@ static void SetThumbnailMode(bool enabled) {
     wnd->thumbnailMode = enabled;
     if (!enabled) {
         if (wnd->thumbCache) {
-            AtomicIntSet(&wnd->thumbCache->cancelRendering, 1);
+            wnd->thumbCache->job.Cancel();
         }
         return;
     }
@@ -489,10 +485,7 @@ void CloseCommandPalette() {
     }
     delete wnd->editQuery;
     if (wnd->thumbCache) {
-        AtomicIntSet(&wnd->thumbCache->cancelRendering, 1);
-        if (wnd->thumbCache->workerRunning) {
-            wnd->thumbCache->deleteWhenWorkerFinishes = true;
-        } else {
+        if (wnd->thumbCache->job.Detach()) {
             DeleteThumbnailCache(wnd->thumbCache);
         }
     }
