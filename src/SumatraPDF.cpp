@@ -13962,6 +13962,30 @@ static void ApplyEmbeddedWindowChrome(MainWindow* win) {
     ScheduleUiUpdate(win, kUiForceRelayout | kUiToolbarDirty | kUiTabsDirty);
 }
 
+// Command a Shortcut binds to the mouse side button behind this WM_APPCOMMAND,
+// e.g. "Ctrl + XButton1"; 0 if none, so the button keeps going back / forward.
+static int MouseSideButtonCmd(LPARAM lp) {
+    if (GET_DEVICE_LPARAM(lp) != FAPPCOMMAND_MOUSE) {
+        return 0;
+    }
+    u16 vk = 0;
+    switch (GET_APPCOMMAND_LPARAM(lp)) {
+        case APPCOMMAND_BROWSER_BACKWARD:
+            vk = VK_XBUTTON1;
+            break;
+        case APPCOMMAND_BROWSER_FORWARD:
+            vk = VK_XBUTTON2;
+            break;
+        default:
+            return 0;
+    }
+    WORD keys = GET_KEYSTATE_LPARAM(lp);
+    bool ctrl = keys & MK_CONTROL;
+    bool shift = keys & MK_SHIFT;
+    bool alt = IsAltPressed();
+    return AcceleratorCmd(vk, ctrl, shift, alt);
+}
+
 static LRESULT CALLBACK WndProcSumatraFrame(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp) {
     DpiScope dpiScope(hwnd);
     MainWindow* win = FindMainWindowByHwnd(hwnd);
@@ -14150,10 +14174,15 @@ static LRESULT CALLBACK WndProcSumatraFrame(HWND hwnd, UINT msg, WPARAM wp, LPAR
             }
             break;
 
-        case WM_APPCOMMAND:
+        case WM_APPCOMMAND: {
             // both keyboard and mouse drivers should produce WM_APPCOMMAND
             // messages for their special keys, so handle these here and return
             // TRUE so as to not make them bubble up further
+            int cmd = MouseSideButtonCmd(lp);
+            if (cmd) {
+                HwndSendCommand(hwnd, cmd);
+                return TRUE;
+            }
             switch (GET_APPCOMMAND_LPARAM(lp)) {
                 case APPCOMMAND_BROWSER_BACKWARD:
                     HwndSendCommand(hwnd, CmdNavigateBack);
@@ -14172,6 +14201,7 @@ static LRESULT CALLBACK WndProcSumatraFrame(HWND hwnd, UINT msg, WPARAM wp, LPAR
                     return TRUE;
             }
             return DefWindowProc(hwnd, msg, wp, lp);
+        }
 
         case WM_CHAR:
             if (IsMainWindowValidAndNotClosing(win)) {

@@ -397,6 +397,7 @@ import { testit as wheelWhileClosing } from "./wheel-while-closing.ts";
 import { testit as hwheelHome } from "./hwheel-home.ts";
 import { testit as tabMenuClose } from "./tab-menu-close.ts";
 import { testit as chapterNav } from "./chapter-nav.ts";
+import { testit as mouseButtonShortcuts } from "./mouse-button-shortcuts.ts";
 import { testit as issue6483 } from "./issue-6483.ts";
 import { testit as issue6485 } from "./issue-6485.ts";
 import { testit as issue6500 } from "./issue-6500.ts";
@@ -960,6 +961,7 @@ export const tests: NamedTest[] = [
   ["hwheel-home", hwheelHome],
   ["tab-menu-close", tabMenuClose],
   ["chapter-nav", chapterNav],
+  ["mouse-button-shortcuts", mouseButtonShortcuts],
   ["issue-6483", issue6483],
   ["issue-6485", issue6485],
   ["issue-6500", issue6500],

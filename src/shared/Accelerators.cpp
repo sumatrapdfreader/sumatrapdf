@@ -528,6 +528,22 @@ int SafeAcceleratorCmd(u16 vk, bool ctrl, bool shift, bool alt, bool cmd) {
     return 0;
 }
 
+// Command bound to a virtual key + modifiers, or 0. For keys that don't go
+// through the accelerator table, e.g. mouse side buttons ("Ctrl + XButton1").
+int AcceleratorCmd(u16 vk, bool ctrl, bool shift, bool alt) {
+    u8 mods = kVirt;
+    mods |= ctrl ? kCtrl : 0;
+    mods |= shift ? kShift : 0;
+    mods |= alt ? kAlt : 0;
+    for (int i = 0; i < gAccelsCount; i++) {
+        const Accel& a = gAccels[i];
+        if (a.sc.vk == vk && a.sc.Mods() == mods) {
+            return a.cmd;
+        }
+    }
+    return 0;
+}
+
 // the command of an ASCII accelerator ({0, ch}, no modifiers): it matches
 // the typed character, so it works on any keyboard layout
 int AsciiAcceleratorCmd(u32 ch) {
