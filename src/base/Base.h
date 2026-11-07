@@ -2713,6 +2713,12 @@ TempStr StrToUtf8Temp(Str src, uint codePage);
 
 TempStr UnknownToUtf8Temp(Str s);
 
+enum class ByteOrder {
+    LittleEndian,
+    BigEndian,
+};
+TempStr Utf16ToUtf8Temp(Str bytes, ByteOrder order);
+
 Str WStrToAnsi(WStr src);
 Str Utf8ToAnsi(Str s);
 

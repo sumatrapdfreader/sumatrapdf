@@ -143,20 +143,12 @@ static TempStr DecodeTextToUtf8Temp(Str s, bool isXML = false) {
     if (str::TrimPrefix(s, StrL(kUtf8Bom))) {
         return str::DupTemp(s);
     }
+    // decoded from bytes, never in place: s may be archive-owned
     if (str::TrimPrefix(s, StrL(kUtf16Bom))) {
-        WStr ws = str::CastStrToWStr(s);
-        return ToUtf8Temp(ws);
+        return strconv::Utf16ToUtf8Temp(s, strconv::ByteOrder::LittleEndian);
     }
     if (str::TrimPrefix(s, StrL(kUtf16BeBom))) {
-        // convert from utf16 big endian to utf16 in a copy: s may be archive-owned
-        s = str::DupTemp(s);
-        int n = len(str::CastStrToWStr(s));
-        for (int i = 0; i < n; i++) {
-            int idx = i * 2;
-            std::swap(s.s[idx], s.s[idx + 1]);
-        }
-        WStr ws = str::CastStrToWStr(s);
-        return ToUtf8Temp(ws);
+        return strconv::Utf16ToUtf8Temp(s, strconv::ByteOrder::BigEndian);
     }
     uint codePage = isXML ? GetCodepageFromPI(s) : CP_ACP;
     if (CP_ACP == codePage && IsValidUtf8(s)) {

@@ -541,6 +541,17 @@ static void StrCutTest() {
     utassert(str::Eq(before, StrL("a")) && str::Eq(after, StrL("b::c")));
 }
 
+// must not depend on sizeof(WCHAR), which is 4 on Linux and macOS
+static void Utf16ToUtf8Test() {
+    // "Aé€😀" plus an unpaired high surrogate
+    Str le = Str("A\0\xE9\0\xAC\x20\x3D\xD8\x00\xDE\x00\xD8", 12);
+    Str be = Str("\0A\0\xE9\x20\xAC\xD8\x3D\xDE\x00\xD8\x00", 12);
+    Str want = StrL("A\xC3\xA9\xE2\x82\xAC\xF0\x9F\x98\x80\xEF\xBF\xBD");
+    utassert(str::Eq(strconv::Utf16ToUtf8Temp(le, strconv::ByteOrder::LittleEndian), want));
+    utassert(str::Eq(strconv::Utf16ToUtf8Temp(be, strconv::ByteOrder::BigEndian), want));
+    utassert(len(strconv::Utf16ToUtf8Temp(Str("A", 1), strconv::ByteOrder::LittleEndian)) == 0);
+}
+
 static void StrNormalizeNewlinesToLFInPlaceTest() {
     // CRLF and lone CR become LF, empty lines survive
     char buf[64];
@@ -1204,6 +1215,7 @@ void StrTest() {
     StrNextLineTest();
     StrTrimWsTest();
     StrNormalizeNewlinesToLFInPlaceTest();
+    Utf16ToUtf8Test();
     StrLFToCRLFTempTest();
     StrStartsWithTest();
     // ParseUntilTest();

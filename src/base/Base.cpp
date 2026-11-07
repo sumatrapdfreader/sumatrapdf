@@ -6635,6 +6635,41 @@ TempStr StrToUtf8Temp(Str src, uint codePage) {
     return ToMultiByteTemp(src, codePage, CP_UTF8);
 }
 
+// UTF-16 bytes (no BOM) to UTF-8. Reads code units itself rather than casting
+// to WCHAR, which is 4 bytes on Linux and macOS. Unpaired surrogates become
+// U+FFFD; a trailing odd byte is dropped.
+TempStr Utf16ToUtf8Temp(Str bytes, ByteOrder order) {
+    const u8* b = (const u8*)bytes.s;
+    int n = len(bytes) / 2;
+    // a code unit is at most 3 UTF-8 bytes, a surrogate pair (2 units) 4
+    char* out = AllocArrayTemp<char>(n * 3 + 1);
+    int off = 0;
+    auto unitAt = [&](int i) -> int {
+        int b0 = b[i * 2];
+        int b1 = b[i * 2 + 1];
+        return order == ByteOrder::BigEndian ? (b0 << 8) | b1 : (b1 << 8) | b0;
+    };
+    for (int i = 0; i < n; i++) {
+        int c = unitAt(i);
+        bool isHigh = c >= 0xD800 && c <= 0xDBFF;
+        bool isLow = c >= 0xDC00 && c <= 0xDFFF;
+        if (isHigh && i + 1 < n) {
+            int lo = unitAt(i + 1);
+            if (lo >= 0xDC00 && lo <= 0xDFFF) {
+                c = 0x10000 + ((c - 0xD800) << 10) + (lo - 0xDC00);
+                i++;
+                isHigh = false;
+            }
+        }
+        if (isHigh || isLow) {
+            c = 0xFFFD;
+        }
+        str::Utf8Encode(out, off, c);
+    }
+    out[off] = 0;
+    return Str(out, off);
+}
+
 // tries to convert a string in unknown encoding to utf8, as best
 // as it can
 // caller has to free() it
@@ -6648,21 +6683,11 @@ TempStr UnknownToUtf8Temp(Str s) {
     }
 
     if (str::TrimPrefix(s, Str(kUtf16Bom))) {
-        WStr ws = str::CastStrToWStr(s);
-        return ToUtf8Temp(ws);
+        return Utf16ToUtf8Temp(s, ByteOrder::LittleEndian);
     }
 
     if (str::TrimPrefix(s, Str(kUtf16BeBom))) {
-        // convert from utf16 big endian to utf16
-        WStr ws = str::CastStrToWStr(s);
-        TempWStr tmpW = str::DupTemp(ws);
-        int n = ws.len;
-        u8* bytes = (u8*)tmpW.s;
-        for (int i = 0; i < n; i++) {
-            int idx = i * sizeofi(WCHAR);
-            std::swap(bytes[idx], bytes[idx + 1]);
-        }
-        return ToUtf8Temp(WStr(tmpW.s, n));
+        return Utf16ToUtf8Temp(s, ByteOrder::BigEndian);
     }
 
     // if s is valid utf8, leave it alone
