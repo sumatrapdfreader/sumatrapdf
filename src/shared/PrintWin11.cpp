@@ -52,6 +52,8 @@
 
 #include "PrintWin11.h"
 
+void PrintCurrentFileDeferred(MainWindow* win);
+
 using Microsoft::WRL::Callback;
 using Microsoft::WRL::ComPtr;
 using Microsoft::WRL::MakeAndInitialize;
@@ -81,8 +83,6 @@ using PrintRequestedHandler =
 // Once that handshake is known to fail (an elevated app, see issue #6156), stay
 // on the classic dialog for the rest of the session.
 static bool gWin11PrintUnavailable = false;
-
-static void RetryWithClassicDialog(MainWindow* win);
 
 using OptionChangedHandler =
     Foundation::ITypedEventHandler<OptDetails::PrintTaskOptionDetails*, OptDetails::PrintTaskOptionChangedEventArgs*>;
@@ -1197,7 +1197,7 @@ class Win11PrintSession {
                     return S_OK;
                 }
                 gWin11PrintUnavailable = true;
-                PostForWindow(win, RetryWithClassicDialog, "Win11PrintFallback");
+                PostForWindow(win, PrintCurrentFileDeferred, "Win11PrintFallback");
                 return S_OK;
             });
         if (!completed) {
@@ -1276,14 +1276,6 @@ bool TryPrintCurrentFileWin11(MainWindow* win, HWND hwndFrame, PrintScaleAdv def
         return false;
     }
     return true;
-}
-
-// the modern dialog gave up without printing anything, so show the classic one
-static void RetryWithClassicDialog(MainWindow* win) {
-    if (!IsMainWindowValidAndNotClosing(win)) {
-        return;
-    }
-    PrintCurrentFile(win);
 }
 
 void ShutdownWin11Printing() {

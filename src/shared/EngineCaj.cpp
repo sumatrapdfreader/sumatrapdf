@@ -253,17 +253,6 @@ static void CheckForCaj2pdfUpdate() {
     gCaj2pdfUpdateLock.Unlock();
 }
 
-static i64 FileAgeSec(FILETIME ft) {
-    FILETIME nowFt{};
-    GetSystemTimeAsFileTime(&nowFt);
-    u64 now = FileTimeToU64(nowFt);
-    u64 then = FileTimeToU64(ft);
-    if (then == 0 || then > now) {
-        return 0;
-    }
-    return (i64)((now - then) / kFileTimeTicksPerSec);
-}
-
 // a document shouldn't wait for the network when we can already convert it
 static void MaybeCheckForCaj2pdfUpdate(Str dir) {
     if (!HasPermission(Perm::InternetAccess)) {

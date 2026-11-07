@@ -80,10 +80,7 @@ bool PdfDarkModeIsDecorativeStripImage(const RectF& imgRect, const RectF& pageBo
     return false;
 }
 
-bool PdfDarkModeImageLooksLikeDarkArtwork(fz_context* ctx, fz_image* image, float pageCoverage) {
-    (void)ctx;
-    (void)image;
-    (void)pageCoverage;
+bool PdfDarkModeImageLooksLikeDarkArtwork(fz_context*, fz_image*, float) {
     return false;
 }
 
@@ -99,10 +96,7 @@ RectF PdfDarkModeCapUnknownImagePageRect(const RectF& imgPage, float pageHeight)
     return imgPage;
 }
 
-bool PdfDarkModePageDominantImageRecolors(fz_context* ctx, fz_image* image, float pageCoverage) {
-    (void)ctx;
-    (void)image;
-    (void)pageCoverage;
+bool PdfDarkModePageDominantImageRecolors(fz_context*, fz_image*, float) {
     return false;
 }
 

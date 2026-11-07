@@ -373,26 +373,14 @@ void ReadAloudPlaybackBar::UpdateLayout(bool forceLayout) {
 }
 
 void ReadAloudPlaybackBar::OnPaint(WindowBase::PaintEvent* ev) {
-    Rect rc = HwndClientRect(hwnd);
-
-    Color colBg = ThemeNotificationsBackgroundColor();
-    Color colBorder = kColGray;
-
     SyncColors();
-    Gfx* gfx = GfxCreateWithDoubleBuffer(this, ev->hdc);
-    gfx->FillRect(rc, colBg);
-    if (vroot) {
-        vroot->Paint(gfx, rc);
-    }
-    gfx->DrawRect(rc, colBorder);
-    delete gfx;
+    PaintBorderedBar(this, ev->hdc, ThemeNotificationsBackgroundColor(), kColGray);
 }
 
 static void ReadAloudPlaybackBarOnWindowMoved(ReadAloudPlaybackBar* bar, MainWindow*) {
-    if (!bar->hwnd || !HwndIsVisible(bar->hwnd)) {
-        return;
+    if (HwndIsVisible(bar->hwnd)) {
+        bar->UpdateLayout();
     }
-    bar->UpdateLayout();
 }
 
 ReadAloudPlaybackBar* ReadAloudPlaybackBarEnsure(MainWindow* win) {

@@ -9,6 +9,7 @@ struct MainWindow;
 struct WindowTab;
 struct Gfx;
 
+WindowTab* CurrentDocTab(MainWindow* win);
 void ReadingBarToggle(MainWindow*);
 void ReadingBarToggleInvert(MainWindow*);
 void ReadingBarHide(MainWindow*);

@@ -124,19 +124,9 @@ TempStr GetSelfExePathTemp() {
 
 // Directory containing GetSelfExePathTemp().
 
-static ULARGE_INTEGER FileTimeToLargeInteger(const FILETIME& ft) {
-    ULARGE_INTEGER res;
-    res.LowPart = ft.dwLowDateTime;
-    res.HighPart = ft.dwHighDateTime;
-    return res;
-}
-
 int FileTimeDiffInSecs(const FILETIME& ft1, const FILETIME& ft2) {
-    ULARGE_INTEGER t1 = FileTimeToLargeInteger(ft1);
-    ULARGE_INTEGER t2 = FileTimeToLargeInteger(ft2);
-    LONGLONG diff = (LONGLONG)t1.QuadPart - (LONGLONG)t2.QuadPart;
-    diff = diff / (LONGLONG)10000000L;
-    return (int)diff;
+    i64 diff = (i64)FileTimeToU64(ft1) - (i64)FileTimeToU64(ft2);
+    return (int)(diff / (i64)kFileTimeTicksPerSec);
 }
 
 #endif

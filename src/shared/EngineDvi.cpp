@@ -493,17 +493,6 @@ static TempStr EnsureDviPdf(Str src) {
     return pdfPath;
 }
 
-static i64 FileAgeSec(FILETIME ft) {
-    FILETIME nowFt{};
-    GetSystemTimeAsFileTime(&nowFt);
-    u64 now = FileTimeToU64(nowFt);
-    u64 then = FileTimeToU64(ft);
-    if (then == 0 || then > now) {
-        return 0;
-    }
-    return (i64)((now - then) / kFileTimeTicksPerSec);
-}
-
 static void DeleteAged(Str path, i64 ageSec, i64 maxAgeSec) {
     if (ageSec < maxAgeSec) {
         return;

@@ -247,13 +247,8 @@ bool PdfToolDialog::CreateToolDialog(MainWindow* w, WindowTab* tab, Str title) {
     return true;
 }
 
-// a row with its content centered and the dialog's gap between the controls
 HBox* PdfToolDialog::NewRow() {
-    auto* row = new HBox();
-    row->alignCross = CrossAxisAlign::CrossCenter;
-    row->rtl = IsUIRtl();
-    row->gap = DpiScale(kToolDlgGapDx);
-    return row;
+    return NewDlgRow();
 }
 
 // `dy`: the label pads itself to that height, and so sets its row's;

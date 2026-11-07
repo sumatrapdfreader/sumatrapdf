@@ -2043,15 +2043,6 @@ void FindEndTask(FindEndTaskData* d) {
     win->findThread = nullptr;
 }
 
-static void UpdateSearchProgress(FindThreadData* ftd, ProgressUpdateData* data) {
-    if (data->wasCancelled) {
-        bool wasCancelled = ftd->WasCanceled();
-        *data->wasCancelled = wasCancelled;
-        return;
-    }
-    ftd->UpdateProgress(data->current, data->total);
-}
-
 static void PostFindEnd(FindThreadData* ftd, Vec<TextSel>* rect, bool canceled) {
     auto* data = new FindEndTaskData;
     data->win = ftd->win;
@@ -2111,7 +2102,7 @@ void FindThread(FindThreadData* ftd) {
     } else {
         ftd->started = true;
         ftd->dm = dm;
-        textSearch->progressCb = MkFunc1<FindThreadData, ProgressUpdateData*>(UpdateSearchProgress, ftd);
+        textSearch->progressCb = MkFunc1<FindThreadData, ProgressUpdateData*>(ForwardProgress<FindThreadData>, ftd);
         textSearch->SetDirection(ftd->direction);
         int currPageNo = textSearch->GetCurrentPageNo();
         if (ftd->wasModified || !ctrl->ValidPageNo(currPageNo) || !(bool)dm->GetPageInfo(currPageNo)->visibleRatio) {

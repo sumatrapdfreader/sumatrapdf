@@ -1301,19 +1301,10 @@ static void DeletePrinterThread(DeletePrinterThreadData* d) {
     delete d;
 }
 
-static void UpdatePrintProgress(PrintThreadData* ftd, ProgressUpdateData* data) {
-    if (data->wasCancelled) {
-        bool wasCancelled = ftd->WasCanceled();
-        *data->wasCancelled = wasCancelled;
-        return;
-    }
-    ftd->UpdateProgress(data->current, data->total);
-}
-
 static void PrintThread(PrintThreadData* ptd) {
     MainWindow* win = ptd->win;
     PrintData* pd = ptd->data;
-    pd->progressCb = MkFunc1<PrintThreadData, ProgressUpdateData*>(UpdatePrintProgress, ptd);
+    pd->progressCb = MkFunc1<PrintThreadData, ProgressUpdateData*>(ForwardProgress<PrintThreadData>, ptd);
     ;
     pd->abortCookie = &ptd->cookie;
     PrintToDevice(*pd);

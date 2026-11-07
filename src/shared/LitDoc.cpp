@@ -885,27 +885,14 @@ static bool LitParseManifest(LitFile* lit) {
     return len(lit->manifest) > 0;
 }
 
-static int LitHexVal(char c) {
-    if (c >= '0' && c <= '9') {
-        return c - '0';
-    }
-    if (c >= 'a' && c <= 'f') {
-        return c - 'a' + 10;
-    }
-    if (c >= 'A' && c <= 'F') {
-        return c - 'A' + 10;
-    }
-    return -1;
-}
-
 // Manifest paths are url-encoded and mupdf decodes the OPF's hrefs: "a %26 b.htm" is looked up as "a & b.htm"
 static TempStr LitZipNameTemp(Str path) {
     TempStr res = str::DupTemp(path);
     int n = 0;
     for (int i = 0; i < len(path); i++) {
         char c = path.s[i];
-        int hi = (c == '%' && i + 2 < len(path)) ? LitHexVal(path.s[i + 1]) : -1;
-        int lo = hi >= 0 ? LitHexVal(path.s[i + 2]) : -1;
+        int hi = (c == '%' && i + 2 < len(path)) ? str::HexDigitVal(path.s[i + 1]) : -1;
+        int lo = hi >= 0 ? str::HexDigitVal(path.s[i + 2]) : -1;
         if (lo >= 0) {
             c = (char)((hi << 4) | lo);
             i += 2;

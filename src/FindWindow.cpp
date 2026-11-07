@@ -41,70 +41,6 @@
 
 constexpr int kFindWinMinEditDx = 48;
 
-namespace {
-
-// exact-width box: the child is constrained to `dx`
-struct FindFixedDx : ILayout {
-    ILayout* child = nullptr;
-    int dx = 0;
-
-    FindFixedDx(ILayout* c, int dxIn);
-    ~FindFixedDx() override;
-
-    Size Layout(Constraints bc) override;
-    int MinIntrinsicHeight(int width) override;
-    int MinIntrinsicWidth(int height) override;
-    void SetBounds(Rect) override;
-    int LayoutChildCount() override;
-    ILayout* LayoutChildAt(int) override;
-};
-
-FindFixedDx::FindFixedDx(ILayout* c, int dxIn) {
-    child = c;
-    dx = dxIn;
-}
-
-FindFixedDx::~FindFixedDx() {
-    delete child;
-}
-
-int FindFixedDx::LayoutChildCount() {
-    return child ? 1 : 0;
-}
-
-ILayout* FindFixedDx::LayoutChildAt(int) {
-    return child;
-}
-
-int FindFixedDx::MinIntrinsicWidth(int) {
-    return dx;
-}
-
-int FindFixedDx::MinIntrinsicHeight(int width) {
-    return child ? child->MinIntrinsicHeight(width) : 0;
-}
-
-Size FindFixedDx::Layout(const Constraints bc) {
-    int w = MinIntrinsicWidth(0);
-    if (bc.min.dx > w) {
-        w = bc.min.dx;
-    }
-    if (bc.HasBoundedWidth() && bc.max.dx < w) {
-        w = bc.max.dx;
-    }
-    Size s = child ? child->Layout(bc.TightenWidth(w)) : Size{};
-    return {w, s.dy};
-}
-
-void FindFixedDx::SetBounds(Rect r) {
-    lastBounds = r;
-    if (child) {
-        child->SetBounds(r);
-    }
-}
-
-} // namespace
-
 struct FindWindowWnd;
 
 struct DeferredGoToFindMatchData {
@@ -133,8 +69,8 @@ struct FindWindowWnd : WindowBase {
     // the status text, the buttons and the results list are virtual controls;
     // the search fields are HWND children. Owned by `layout` once built
     VirtText* status = nullptr;
-    FindFixedDx* statusBox = nullptr;
-    FindFixedDx* pagesBox = nullptr;
+    MinDxBox* statusBox = nullptr;
+    MinDxBox* pagesBox = nullptr;
     HBox* toolsLayout = nullptr;
     Wrap* headerLayout = nullptr;
     Spacer* pagesLabelGap = nullptr;
@@ -204,7 +140,7 @@ static void DeferredGoToFindMatch(DeferredGoToFindMatchData* d) {
 }
 
 // append a command's keyboard shortcut to its tooltip, e.g. "Find Next (F3)"
-static TempStr AppendCmdAccel(Str base, int cmd) {
+TempStr AppendCmdAccel(Str base, int cmd) {
     TempStr accel = AppendAccelKeyToMenuStringTemp({}, cmd);
     if (len(accel) == 0) {
         return base;
@@ -400,7 +336,7 @@ void FindWindowWnd::BuildLayout() {
     toolsLayout = tools;
     tools->alignCross = CrossAxisAlign::CrossCenter;
     tools->gap = status->font->averageCharWidth;
-    statusBox = new FindFixedDx(status, FindStatusDx(status->font, 0, false));
+    statusBox = new MinDxBox(status, FindStatusDx(status->font, 0, false));
     tools->AddChild(statusBox);
     for (VirtIconButton* b : btns) {
         tools->AddChild(b);
@@ -419,7 +355,7 @@ void FindWindowWnd::BuildLayout() {
     pagesRow->AddChild(pagesLabel);
     pagesLabelGap = new Spacer(gap, 0);
     pagesRow->AddChild(pagesLabelGap);
-    pagesBox = new FindFixedDx(editPages, pagesDx);
+    pagesBox = new MinDxBox(editPages, pagesDx);
     pagesRow->AddChild(pagesBox);
 
     auto* vbox = new VBox();
@@ -773,26 +709,11 @@ void FindWindowWnd::UpdateTheme() {
 }
 
 void FindWindowWnd::OnTextChanged() {
-    if (suppressTextChanged) {
-        return;
-    }
-    OnFindBarTextChanged(win);
+    FindTextChanged(win, suppressTextChanged);
 }
 
-// picking an entry out of the open history list is a search request; walking
-// the list with the arrow keys only fills the box, and waits for Enter
 void FindWindowWnd::OnHistoryCommitted() {
-    if (suppressTextChanged || !edit) {
-        return;
-    }
-    int idx = CbGetCurrentSelection(edit);
-    if (idx < 0 || idx >= len(edit->items)) {
-        return;
-    }
-    // Take the term from the list item, not the edit: a combo box has not
-    // necessarily copied the picked item into its edit yet when it says the
-    // list closed.
-    StartPickedFindTerm(win, edit->items[idx]);
+    FindHistoryCommitted(win, edit, suppressTextChanged);
 }
 
 void FindWindowWnd::OnSize(WindowBase::SizeEvent* ev) {
@@ -817,17 +738,9 @@ void FindWindowWnd::OnSize(WindowBase::SizeEvent* ev) {
 void FindWindowWnd::OnDpiChanged(WindowBase::DpiChangedEvent* ev) {
     // Don't apply the suggested rect until Create() finished: it would pin the
     // still-hidden popup to the primary monitor (#5998).
-    if (!layout) {
-        ev->didHandle = true;
-        return;
+    if (ApplyDpiChangedRect(hwnd, ev, layout != nullptr)) {
+        UpdateDpi((int)ev->dpiX);
     }
-    RECT* r = ev->suggested;
-    if (r) {
-        SetWindowPos(hwnd, nullptr, r->left, r->top, r->right - r->left, r->bottom - r->top,
-                     SWP_NOZORDER | SWP_NOACTIVATE);
-    }
-    UpdateDpi((int)ev->dpiX);
-    ev->didHandle = true;
 }
 
 void FindWindowWnd::OnGetMinMaxInfo(WindowBase::GetMinMaxInfoEvent* ev) {

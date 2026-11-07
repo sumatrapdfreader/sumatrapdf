@@ -3370,13 +3370,6 @@ void WaitForConsoleClose() {
     }
 }
 
-static ULARGE_INTEGER FileTimeToLargeInteger(const FILETIME& ft) {
-    ULARGE_INTEGER res;
-    res.LowPart = ft.dwLowDateTime;
-    res.HighPart = ft.dwHighDateTime;
-    return res;
-}
-
 DWORD GetFileVersion(const WCHAR* path) {
     DWORD fileVersion = 0;
     DWORD size = GetFileVersionInfoSize(path, nullptr);
@@ -3661,9 +3654,7 @@ double GetProcessRunningTime() {
         return 0;
     }
     if (GetProcessTimes(hproc, &startTime, &d1, &d2, &d3)) {
-        ULARGE_INTEGER start = FileTimeToLargeInteger(startTime);
-        ULARGE_INTEGER curr = FileTimeToLargeInteger(currTime);
-        ULONGLONG diff = curr.QuadPart - start.QuadPart;
+        u64 diff = FileTimeToU64(currTime) - FileTimeToU64(startTime);
         // FILETIME is in 100 ns chunks
         timeInMs = ((double)(diff * 100)) / (double)1000000;
     }

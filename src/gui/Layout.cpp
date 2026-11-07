@@ -1870,3 +1870,47 @@ void HwndSlot::SetBounds(Rect bounds) {
     }
     HwndMoveWindow(hwnd, &bounds);
 }
+
+MinDxBox::MinDxBox(ILayout* c, int dxIn) {
+    child = c;
+    dx = dxIn;
+}
+
+MinDxBox::~MinDxBox() {
+    delete child;
+}
+
+int MinDxBox::LayoutChildCount() {
+    return child ? 1 : 0;
+}
+
+ILayout* MinDxBox::LayoutChildAt(int) {
+    return child;
+}
+
+int MinDxBox::MinIntrinsicWidth(int) {
+    return dx;
+}
+
+int MinDxBox::MinIntrinsicHeight(int width) {
+    return child ? child->MinIntrinsicHeight(width) : 0;
+}
+
+Size MinDxBox::Layout(const Constraints bc) {
+    int w = MinIntrinsicWidth(0);
+    if (bc.min.dx > w) {
+        w = bc.min.dx;
+    }
+    if (bc.HasBoundedWidth() && bc.max.dx < w) {
+        w = bc.max.dx;
+    }
+    Size s = child ? child->Layout(bc.TightenWidth(w)) : Size{};
+    return {w, s.dy};
+}
+
+void MinDxBox::SetBounds(Rect r) {
+    lastBounds = r;
+    if (child) {
+        child->SetBounds(r);
+    }
+}

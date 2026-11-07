@@ -2051,6 +2051,40 @@ void SizeToIdealSize(ControlBase* c) {
 
 //--- message loops
 
+// Darkmode child theming may reset the font of an edit; set it again.
+void ReapplyEditFont(Edit* edit, PlatformFont* font) {
+    if (edit && font) {
+        edit->SetFont(font);
+    }
+}
+
+// Double-buffered paint of a popup bar: background, virtual controls, 1px border.
+void PaintBorderedBar(HwndBase* w, HDC hdc, Color colBg, Color colBorder) {
+    Rect rc = HwndClientRect(w->hwnd);
+    Gfx* gfx = GfxCreateWithDoubleBuffer(w, hdc);
+    gfx->FillRect(rc, colBg);
+    if (w->vroot) {
+        w->vroot->Paint(gfx, rc);
+    }
+    gfx->DrawRect(rc, colBorder);
+    delete gfx;
+}
+
+// Moves the window to the DPI-suggested rect once its layout exists; returns false
+// while still creating, when the rect must not be applied.
+bool ApplyDpiChangedRect(HWND hwnd, WindowBase::DpiChangedEvent* ev, bool ready) {
+    ev->didHandle = true;
+    if (!ready) {
+        return false;
+    }
+    RECT* r = ev->suggested;
+    if (r) {
+        SetWindowPos(hwnd, nullptr, r->left, r->top, r->right - r->left, r->bottom - r->top,
+                     SWP_NOZORDER | SWP_NOACTIVATE);
+    }
+    return true;
+}
+
 // application.cpp
 bool PreTranslateMessage(MSG& msg) {
     bool shouldProcess = (WM_KEYFIRST <= msg.message && msg.message <= WM_KEYLAST) ||

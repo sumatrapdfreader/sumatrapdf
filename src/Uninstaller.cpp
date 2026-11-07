@@ -135,18 +135,6 @@ static void OnUninstallationFinished() {
     SafeCloseThreadHandle(&hThread);
 }
 
-static bool UninstallerOnWmCommand(WPARAM wp) {
-    switch (LOWORD(wp)) {
-        case IDCANCEL:
-            OnButtonExit();
-            break;
-
-        default:
-            return false;
-    }
-    return true;
-}
-
 constexpr const WCHAR* kInstallerWindowClassName = L"SUMATRA_PDF_INSTALLER_FRAME";
 
 static void CreateUninstallerWindow() {
@@ -213,7 +201,7 @@ static LRESULT CALLBACK WndProcUninstallerFrame(HWND hwnd, UINT msg, WPARAM wp, 
             break;
 
         case WM_COMMAND: {
-            handled = UninstallerOnWmCommand(wp);
+            handled = InstallerWmCommand(wp, OnButtonExit);
             if (!handled) {
                 return DefWindowProc(hwnd, msg, wp, lp);
             }

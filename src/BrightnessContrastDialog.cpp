@@ -72,14 +72,7 @@ static void ClearBrightnessContrastWnd() {
 }
 
 WindowTab* BrightnessContrastWnd::TargetTab() {
-    if (!IsMainWindowValidAndNotClosing(win)) {
-        return nullptr;
-    }
-    WindowTab* t = FindTabByFilePath(filePath);
-    if (!t || t->win != win) {
-        return nullptr;
-    }
-    return t;
+    return FindTabInWindow(filePath, win);
 }
 
 void BrightnessContrastWnd::UpdateValues() {

@@ -61,10 +61,7 @@ bool DocumentLayout::ValidPageNo(int pageNo) const {
 }
 
 DocumentLayoutPage* DocumentLayout::GetPage(int pageNo) {
-    if (!ValidPageNo(pageNo)) {
-        return nullptr;
-    }
-    return &pages[pageNo - 1];
+    return const_cast<DocumentLayoutPage*>(((const DocumentLayout*)this)->GetPage(pageNo));
 }
 
 const DocumentLayoutPage* DocumentLayout::GetPage(int pageNo) const {

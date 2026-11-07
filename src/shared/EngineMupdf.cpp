@@ -6790,11 +6790,15 @@ static void fz_content_bbox_begin_mask(fz_context*, fz_device* dev, fz_rect rect
     d->ignore++;
 }
 
-static void fz_content_bbox_end_mask(fz_context*, fz_device* dev, fz_function*) {
+static void fz_content_bbox_end_ignore(fz_device* dev) {
     fz_content_bbox_device* d = (fz_content_bbox_device*)dev;
     if (d->ignore > 0) {
         d->ignore--;
     }
+}
+
+static void fz_content_bbox_end_mask(fz_context*, fz_device* dev, fz_function*) {
+    fz_content_bbox_end_ignore(dev);
 }
 
 static void fz_content_bbox_begin_group(fz_context*, fz_device* dev, fz_rect rect, fz_colorspace*, int /*isolated*/,
@@ -6815,10 +6819,7 @@ static int fz_content_bbox_begin_tile(fz_context*, fz_device* dev, fz_rect area,
 }
 
 static void fz_content_bbox_end_tile(fz_context*, fz_device* dev) {
-    fz_content_bbox_device* d = (fz_content_bbox_device*)dev;
-    if (d->ignore > 0) {
-        d->ignore--;
-    }
+    fz_content_bbox_end_ignore(dev);
 }
 
 static fz_device* FzNewContentBBoxDevice(fz_context* ctx, fz_rect* result, fz_rect pageRect) {

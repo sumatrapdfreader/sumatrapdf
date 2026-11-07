@@ -3,6 +3,7 @@
 
 struct MainWindow;
 struct FindWindowWnd;
+struct DropDown;
 
 FindWindowWnd* CreateFindWindow(MainWindow* win);
 void DeleteFindWindow(MainWindow* win);
@@ -22,3 +23,7 @@ void FindWindowSyncHistory(MainWindow* win);
 TempStr FindResultPageColumnClipResultTemp(int* exitCodeOut = nullptr);
 TempStr FindResultsOrderResultTemp(Str term, int startPage, int* exitCodeOut = nullptr);
 TempStr FindWindowContentsResultTemp(int* exitCodeOut = nullptr);
+
+TempStr AppendCmdAccel(Str base, int cmd);
+void FindHistoryCommitted(MainWindow* win, DropDown* edit, bool suppressed);
+void FindTextChanged(MainWindow* win, bool suppressed);

@@ -574,3 +574,12 @@ void OnPaintFrame(HWND hwnd, bool skipMessage, VirtRoot* virt) {
     }
     EndPaint(hwnd, &ps);
 }
+
+// WM_COMMAND handling shared by the installer and uninstaller windows: only Cancel, which exits
+bool InstallerWmCommand(WPARAM wp, void (*onExit)()) {
+    if (LOWORD(wp) != IDCANCEL) {
+        return false;
+    }
+    onExit();
+    return true;
+}

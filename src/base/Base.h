@@ -260,6 +260,17 @@ inline u64 FileTimeToU64(const FILETIME& ft) {
     return ((u64)ft.dwHighDateTime << 32) | (u64)ft.dwLowDateTime;
 }
 
+inline i64 FileAgeSec(FILETIME ft) {
+    FILETIME nowFt{};
+    GetSystemTimeAsFileTime(&nowFt);
+    u64 now = FileTimeToU64(nowFt);
+    u64 then = FileTimeToU64(ft);
+    if (then == 0 || then > now) {
+        return 0;
+    }
+    return (i64)((now - then) / kFileTimeTicksPerSec);
+}
+
 inline FILETIME FileTimeFromU64(u64 value) {
     return {(DWORD)value, (DWORD)(value >> 32)};
 }
@@ -569,7 +580,8 @@ T limitValue(T val, T min, T max) {
     return val < min ? min : (val > max ? max : val);
 }
 
-inline int ClampI(int x, int min, int max) {
+template <typename T>
+T ClampT(T x, T min, T max) {
     if (x < min) {
         x = min;
     }
@@ -577,26 +589,18 @@ inline int ClampI(int x, int min, int max) {
         x = max;
     }
     return x;
+}
+
+inline int ClampI(int x, int min, int max) {
+    return ClampT(x, min, max);
 }
 
 inline float ClampF(float x, float min, float max) {
-    if (x < min) {
-        x = min;
-    }
-    if (x > max) {
-        x = max;
-    }
-    return x;
+    return ClampT(x, min, max);
 }
 
 inline double ClampD(double x, double min, double max) {
-    if (x < min) {
-        x = min;
-    }
-    if (x > max) {
-        x = max;
-    }
-    return x;
+    return ClampT(x, min, max);
 }
 
 // return true if adding n to val overflows. Only valid for n > 0

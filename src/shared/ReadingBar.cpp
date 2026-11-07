@@ -58,16 +58,8 @@ enum class ReadingBarHit {
     Close,
 };
 
-static WindowTab* DocTab(MainWindow* win) {
-    WindowTab* tab = win ? win->CurrentTab() : nullptr;
-    if (!tab || tab->IsNonDocumentTab()) {
-        return nullptr;
-    }
-    return tab;
-}
-
 static WindowTab* ActiveBarTab(MainWindow* win) {
-    WindowTab* tab = DocTab(win);
+    WindowTab* tab = CurrentDocTab(win);
     if (!tab || !tab->readingBar.on || !tab->AsFixed()) {
         return nullptr;
     }
@@ -275,7 +267,7 @@ void ReadingBarHide(MainWindow* win) {
 #if defined(SUMATRA_NG)
     logf("ReadingBar: off\n");
 #endif
-    WindowTab* tab = DocTab(win);
+    WindowTab* tab = CurrentDocTab(win);
     ReadingBarCancelDrag(win);
     if (tab) {
         tab->readingBar.on = false;
@@ -307,7 +299,7 @@ void ReadingBarForgetTab(WindowTab* tab) {
 }
 
 void ReadingBarToggle(MainWindow* win) {
-    WindowTab* tab = DocTab(win);
+    WindowTab* tab = CurrentDocTab(win);
     if (!tab || !tab->AsFixed()) {
         return;
     }

@@ -441,6 +441,10 @@ struct WindowBase : HwndBase {
     DestroyHandler onDestroy;
 };
 
+void ReapplyEditFont(Edit* edit, PlatformFont* font);
+void PaintBorderedBar(HwndBase* w, HDC hdc, Color colBg, Color colBorder);
+bool ApplyDpiChangedRect(HWND hwnd, WindowBase::DpiChangedEvent* ev, bool ready);
+
 bool PreTranslateMessage(MSG& msg);
 
 // Base of the controls that a layout positions: the win32 controls (Static,

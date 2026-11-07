@@ -5871,6 +5871,18 @@ WindowTab* FindTabByFilePath(Str path) {
     return nullptr;
 }
 
+// the tab for `path`, only if it lives in `win`
+WindowTab* FindTabInWindow(Str path, MainWindow* win) {
+    if (!IsMainWindowValidAndNotClosing(win)) {
+        return nullptr;
+    }
+    WindowTab* t = FindTabByFilePath(path);
+    if (!t || t->win != win) {
+        return nullptr;
+    }
+    return t;
+}
+
 static void DeleteCurrentFile(MainWindow* win) {
     if (!CanAccessDisk()) {
         return;

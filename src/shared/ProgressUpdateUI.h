@@ -17,3 +17,13 @@ inline bool WasCanceled(const ProgressUpdateCb& cb) {
     cb.Call(&data);
     return wasCancelled;
 }
+
+// ProgressUpdateCb target for a thread-data struct with WasCanceled() and UpdateProgress()
+template <typename T>
+void ForwardProgress(T* ftd, ProgressUpdateData* data) {
+    if (data->wasCancelled) {
+        *data->wasCancelled = ftd->WasCanceled();
+        return;
+    }
+    ftd->UpdateProgress(data->current, data->total);
+}

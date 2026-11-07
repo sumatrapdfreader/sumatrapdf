@@ -426,6 +426,22 @@ struct HwndSlot : ILayout {
     void SetBounds(Rect) override;
 };
 
+// at least `dx` wide, wider if the child needs more
+struct MinDxBox : ILayout {
+    ILayout* child = nullptr;
+    int dx = 0;
+
+    MinDxBox(ILayout* c, int dxIn);
+    ~MinDxBox() override;
+
+    Size Layout(Constraints bc) override;
+    int MinIntrinsicHeight(int width) override;
+    int MinIntrinsicWidth(int height) override;
+    void SetBounds(Rect) override;
+    int LayoutChildCount() override;
+    ILayout* LayoutChildAt(int) override;
+};
+
 void LayoutAndSizeToContent(ILayout* layout, int minDx, int minDy, HWND hwnd);
 
 #if IS_DEBUG

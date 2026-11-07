@@ -48,70 +48,6 @@ constexpr int kFindBarBtnCmds[] = {
     kFindBarPinCmdId, kFindBarCloseCmdId};
 constexpr int kFindBarBtnCount = dimof(kFindBarBtnCmds);
 
-namespace {
-
-// min-width box: at least `dx`, wider if the child needs more
-struct FindStatusBox : ILayout {
-    ILayout* child = nullptr;
-    int dx = 0;
-
-    FindStatusBox(ILayout* c, int dxIn);
-    ~FindStatusBox() override;
-
-    Size Layout(Constraints bc) override;
-    int MinIntrinsicHeight(int width) override;
-    int MinIntrinsicWidth(int height) override;
-    void SetBounds(Rect) override;
-    int LayoutChildCount() override;
-    ILayout* LayoutChildAt(int) override;
-};
-
-FindStatusBox::FindStatusBox(ILayout* c, int dxIn) {
-    child = c;
-    dx = dxIn;
-}
-
-FindStatusBox::~FindStatusBox() {
-    delete child;
-}
-
-int FindStatusBox::LayoutChildCount() {
-    return child ? 1 : 0;
-}
-
-ILayout* FindStatusBox::LayoutChildAt(int) {
-    return child;
-}
-
-int FindStatusBox::MinIntrinsicWidth(int) {
-    return dx;
-}
-
-int FindStatusBox::MinIntrinsicHeight(int width) {
-    return child ? child->MinIntrinsicHeight(width) : 0;
-}
-
-Size FindStatusBox::Layout(const Constraints bc) {
-    int w = MinIntrinsicWidth(0);
-    if (bc.min.dx > w) {
-        w = bc.min.dx;
-    }
-    if (bc.HasBoundedWidth() && bc.max.dx < w) {
-        w = bc.max.dx;
-    }
-    Size s = child ? child->Layout(bc.TightenWidth(w)) : Size{};
-    return {w, s.dy};
-}
-
-void FindStatusBox::SetBounds(Rect r) {
-    lastBounds = r;
-    if (child) {
-        child->SetBounds(r);
-    }
-}
-
-} // namespace
-
 // width of the "n / m" status slot, wide enough for the largest count it will
 // show. Shared with the floating find window so both size it the same way.
 int FindStatusDx(PlatformFont* font, int totalHits, bool capped) {
@@ -129,7 +65,7 @@ struct FindBarWnd : WindowBase {
     // the only HWND child. Owned by `layout` once BuildLayout() runs
     DropDown* edit = nullptr;
     VirtText* status = nullptr;
-    FindStatusBox* statusBox = nullptr;
+    MinDxBox* statusBox = nullptr;
     // what statusBox->dx was sized for; the slot is fixed so the search field
     // next to it doesn't resize every time the count changes
     int statusTotalHits = 0;
@@ -178,15 +114,6 @@ struct FindBarWnd : WindowBase {
 };
 
 // tooltip text for the bar's toolbar buttons
-// append a command's keyboard shortcut to its tooltip, e.g. "Find Next (F3)"
-static TempStr AppendCmdAccel(Str base, int cmd) {
-    TempStr accel = AppendAccelKeyToMenuStringTemp({}, cmd);
-    if (len(accel) == 0) {
-        return base;
-    }
-    return str::JoinTemp(base, fmt(" (%s)", Str(accel.s + 1, len(accel) - 1))); // +1 skips the leading \t
-}
-
 static TempStr FindBarButtonTooltip(int cmd) {
     switch (cmd) {
         case CmdFindPrev:
@@ -333,7 +260,7 @@ void FindBarWnd::BuildLayout() {
     row->AddChild(edit, 1);
     gapAfterEdit = new Spacer(gap, 0);
     row->AddChild(gapAfterEdit);
-    statusBox = new FindStatusBox(status, FindStatusDx(status->font, statusTotalHits, statusCapped));
+    statusBox = new MinDxBox(status, FindStatusDx(status->font, statusTotalHits, statusCapped));
     row->AddChild(statusBox);
     gapAfterStatus = new Spacer(gap, 0);
     row->AddChild(gapAfterStatus);
@@ -384,7 +311,11 @@ void FindBarWnd::Layout(int forceBarDx) {
 }
 
 void FindBarWnd::OnTextChanged() {
-    if (suppressTextChanged) {
+    FindTextChanged(win, suppressTextChanged);
+}
+
+void FindTextChanged(MainWindow* win, bool suppressed) {
+    if (suppressed) {
         return;
     }
     OnFindBarTextChanged(win);
@@ -427,8 +358,8 @@ void StartPickedFindTerm(MainWindow* win, Str term) {
 
 // picking an entry out of the open history list is a search request; walking
 // the list with the arrow keys only fills the box, and waits for Enter
-void FindBarWnd::OnHistoryCommitted() {
-    if (suppressTextChanged || !edit) {
+void FindHistoryCommitted(MainWindow* win, DropDown* edit, bool suppressed) {
+    if (suppressed || !edit) {
         return;
     }
     int idx = CbGetCurrentSelection(edit);
@@ -439,6 +370,10 @@ void FindBarWnd::OnHistoryCommitted() {
     // necessarily copied the picked item into its edit yet when it says the
     // list closed.
     StartPickedFindTerm(win, edit->items[idx]);
+}
+
+void FindBarWnd::OnHistoryCommitted() {
+    FindHistoryCommitted(win, edit, suppressTextChanged);
 }
 
 void FindBarWnd::OnSize(WindowBase::SizeEvent* ev) {

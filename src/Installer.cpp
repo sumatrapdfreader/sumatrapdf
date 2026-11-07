@@ -1514,18 +1514,6 @@ static void OnButtonBrowse(InstallerWnd* wnd) {
     EditSetFocus(editDir);
 }
 
-static bool InstallerOnWmCommand(WPARAM wp) {
-    switch (LOWORD(wp)) {
-        case IDCANCEL:
-            OnButtonExit();
-            break;
-
-        default:
-            return false;
-    }
-    return true;
-}
-
 static void SetTabOrder(HWND* hwnds, int nHwnds) {
     for (int i = 0; i < nHwnds; i++) {
         HWND hNew = hwnds[i];
@@ -1745,7 +1733,7 @@ static LRESULT CALLBACK WndProcInstallerFrame(HWND hwnd, UINT msg, WPARAM wp, LP
         }
 
         case WM_COMMAND: {
-            handled = InstallerOnWmCommand(wp);
+            handled = InstallerWmCommand(wp, OnButtonExit);
             if (!handled) {
                 return DefWindowProc(hwnd, msg, wp, lp);
             }

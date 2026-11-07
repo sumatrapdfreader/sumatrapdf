@@ -31,10 +31,7 @@ void TextViewWnd::ApplyDarkMode() {
 
 void TextViewWnd::UpdateTheme() {
     WindowBase::UpdateTheme();
-    // Re-apply monospaced font after darkmode child theming (may reset font).
-    if (edit && monoFont) {
-        edit->SetFont(monoFont);
-    }
+    ReapplyEditFont(edit, monoFont);
 }
 
 // Returns a temp-arena string: ToStr() would be a view into the local Builder

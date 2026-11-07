@@ -984,17 +984,9 @@ void AnnotFilterWindow::OnTimer(WindowBase::TimerEvent* ev) {
 }
 
 void AnnotFilterWindow::OnDpiChanged(WindowBase::DpiChangedEvent* ev) {
-    if (!layout) {
-        ev->didHandle = true;
-        return;
+    if (ApplyDpiChangedRect(hwnd, ev, layout != nullptr)) {
+        UpdateDpi((int)ev->dpiX);
     }
-    RECT* r = ev->suggested;
-    if (r) {
-        SetWindowPos(hwnd, nullptr, r->left, r->top, r->right - r->left, r->bottom - r->top,
-                     SWP_NOZORDER | SWP_NOACTIVATE);
-    }
-    UpdateDpi((int)ev->dpiX);
-    ev->didHandle = true;
 }
 
 void AnnotFilterWindow::OnGetMinMaxInfo(WindowBase::GetMinMaxInfoEvent* ev) {

@@ -345,19 +345,6 @@ static void AppendEscaped(str::Builder& out, Str s) {
     }
 }
 
-static int HexVal(char c) {
-    if (c >= '0' && c <= '9') {
-        return c - '0';
-    }
-    if (c >= 'a' && c <= 'f') {
-        return c - 'a' + 10;
-    }
-    if (c >= 'A' && c <= 'F') {
-        return c - 'A' + 10;
-    }
-    return -1;
-}
-
 static bool IsAsciiLetter(char c) {
     return (c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z');
 }
@@ -1893,8 +1880,8 @@ void RtfParser::ParseControl() {
         pos++;
         switch (c) {
             case '\'': {
-                int hi = pos < len(src) ? HexVal(src.s[pos]) : -1;
-                int lo = pos + 1 < len(src) ? HexVal(src.s[pos + 1]) : -1;
+                int hi = pos < len(src) ? str::HexDigitVal(src.s[pos]) : -1;
+                int lo = pos + 1 < len(src) ? str::HexDigitVal(src.s[pos + 1]) : -1;
                 if (hi >= 0 && lo >= 0) {
                     pos += 2;
                     AddByte((u8)(hi * 16 + lo));
@@ -1998,7 +1985,7 @@ void RtfParser::Parse() {
                 break;
             default:
                 if (g.dest == RtfDest::Pict) {
-                    int v = HexVal(c);
+                    int v = str::HexDigitVal(c);
                     if (v < 0) {
                         break;
                     }
