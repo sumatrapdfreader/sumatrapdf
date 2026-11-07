@@ -4400,6 +4400,9 @@ struct Listener {
 static_assert(sizeof(Listener) <= 24,
               "keep Listener flags packed into the function word");
 
+constexpr int kTimerGridMinMs = 50;
+double TimerNextDue(double now, int ms, bool repeat);
+
 struct TimerSub {
     int id = 0;
     int ms = 0;
@@ -36167,6 +36170,8 @@ void PlatInstallAccessibilityHitTest(Window* win);
 
 void PlatAccessibilityTreeChanged(Window* win);
 void PlatAccessibilityFocusChanged(Window* win, int focusId);
+
+bool PlatAccessibilityWanted(Window* win);
 
 struct PlatMenuItem {
     const char* label = nullptr;

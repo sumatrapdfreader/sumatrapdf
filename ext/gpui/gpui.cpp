@@ -5794,7 +5794,7 @@ static int WindowArmTimer(Window* win, int ms, Listener l, bool repeat) {
     TimerSub t;
     t.id = win->nextTimerId++;
     t.ms = ms;
-    t.dueAt = TimeNow() + (double)ms / 1000.0;
+    t.dueAt = TimerNextDue(TimeNow(), ms, repeat);
     t.repeat = repeat;
     t.l = l;
     VecAppend(win->timers, t);
@@ -22685,18 +22685,24 @@ static void DrawFrame(Window* win, void* native, int pxW, int pxH, float dipW,
         LayoutEl(&win->paint, root, 0, 0, dipW, dipH, WindowRemSize(win),
                  th.foreground, win->layout);
         FocusCollect(win, root);
-        AccessibilityCollect(root, &win->accessibility);
+
+        if (headless || PlatAccessibilityWanted(win)) {
+            AccessibilityCollect(root, &win->accessibility);
+            uint64_t accessibilityHash =
+                AccessibilityTreeHash(win->accessibility);
+            if (accessibilityHash != win->accessibilityHash) {
+                win->accessibilityHash = accessibilityHash;
+                PlatAccessibilityTreeChanged(win);
+            }
+        } else {
+            win->accessibilityHash = 0;
+        }
 
         FocusTrapApplyPending(win);
         gFrameLayoutSecs = TimeNow() - tLay0;
         double tPaint0 = TimeNow();
         PaintEl(&win->paint, root);
         gFramePaintSecs = TimeNow() - tPaint0;
-    }
-    uint64_t accessibilityHash = AccessibilityTreeHash(win->accessibility);
-    if (accessibilityHash != win->accessibilityHash) {
-        win->accessibilityHash = accessibilityHash;
-        PlatAccessibilityTreeChanged(win);
     }
 
     if (win->paint.wantsAnimFrame) {
@@ -25747,6 +25753,14 @@ static bool WindowAnimationDue(Window* win, double now) {
     return now >= win->lastDrawTime + kAnimationFrameInterval;
 }
 
+double TimerNextDue(double now, int ms, bool repeat) {
+    double period = (double)ms / 1000.0;
+    if (!repeat || ms < kTimerGridMinMs) {
+        return now + period;
+    }
+    return (floor((now + period * 0.5) / period) + 1) * period;
+}
+
 void WindowTimerTick(Window* win) {
     if (!win) {
         return;
@@ -25768,7 +25782,7 @@ void WindowTimerTick(Window* win) {
         Listener l = t.l;
         int ms = t.ms;
         if (t.repeat) {
-            t.dueAt = now + (double)ms / 1000.0;
+            t.dueAt = TimerNextDue(now, ms, true);
         } else {
             t.dueAt = 0;
         }
@@ -255626,6 +255640,10 @@ void PlatAccessibilityFocusChanged(Window* win, int focusId) {
     AccessibilityLinuxFocusChanged(win, focusId);
 }
 
+bool PlatAccessibilityWanted(Window* win) {
+    return win != nullptr;
+}
+
 Point AccessibilityLinuxWindowOrigin(Window* win) {
     Point result = {};
     if (!gDpy || !win || !win->plat) {
@@ -258740,6 +258758,10 @@ void PlatAccessibilityFocusChanged(Window* win, int focusId) {
     }
 }
 
+bool PlatAccessibilityWanted(Window* win) {
+    return win != nullptr;
+}
+
 bool PlatHasMenu() {
     return true;
 }
@@ -260391,6 +260413,11 @@ void PlatAccessibilityFocusChanged(Window* win, int focusId) {
     (void)focusId;
 }
 
+bool PlatAccessibilityWanted(Window* win) {
+    (void)win;
+    return false;
+}
+
 bool PlatHasMenu() {
     return false;
 }
@@ -260655,6 +260682,8 @@ struct PlatWindow {
     bool fileDrop = false;
 
     WinAccessibility* accessibility = nullptr;
+
+    bool accessibilityAsked = false;
 
     HCURSOR cursor = nullptr;
 
@@ -261228,6 +261257,11 @@ static LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam,
         }
         case WM_GETOBJECT:
             if ((LONG)lParam == UiaRootObjectId) {
+                if (!win->plat->accessibilityAsked) {
+
+                    win->plat->accessibilityAsked = true;
+                    AppInvalidate(win);
+                }
                 if (!win->plat->accessibility) {
                     win->plat
                         ->accessibility = AccessibilityWinNew(win, (void*)hwnd);
@@ -261698,7 +261732,10 @@ void AppSetTitle(Window* win, Str title) {
     }
 }
 
-static UINT TimerDelay(int ms) {
+static UINT TimerDelay(int ms, bool animating) {
+    if (!animating) {
+        return ms >= 1 ? (UINT)ms : 1;
+    }
     static double tick = 0;
     if (tick <= 0) {
         DWORD adjust = 0;
@@ -261723,7 +261760,8 @@ void PlatSetTimer(Window* win, int ms) {
         return;
     }
     if (ms > 0) {
-        SetTimer(hwnd, 1, TimerDelay(ms), nullptr);
+        bool animating = win->anim || win->opts.anim || win->animFrame;
+        SetTimer(hwnd, 1, TimerDelay(ms, animating), nullptr);
     } else {
         KillTimer(hwnd, 1);
     }
@@ -261854,6 +261892,13 @@ void PlatAccessibilityFocusChanged(Window* win, int focusId) {
     if (win && win->plat) {
         AccessibilityWinFocusChanged(win->plat->accessibility, focusId);
     }
+}
+
+bool PlatAccessibilityWanted(Window* win) {
+    if (!win || !win->plat) {
+        return false;
+    }
+    return win->plat->accessibilityAsked || UiaClientsAreListening();
 }
 
 bool PlatHasMenu() {
