@@ -6302,6 +6302,11 @@ static void CreateLnkShortcut(MainWindow* win) {
     if (!(TakeTestSaveFileName(&ofn) || GetSaveFileNameW(&ofn))) {
         return;
     }
+    // the dialog runs a message loop: DDE or a reload can close or replace
+    // the document meanwhile, freeing ctrl and path
+    if (!IsMainWindowValidAndNotClosing(win) || win->ctrl != ctrl) {
+        return;
+    }
 
     TempStr fileName = ToUtf8Temp(dstFileName);
     if (!str::EndsWithI(fileName, StrL(".lnk"))) {

@@ -476,7 +476,11 @@ static void TocCollapseSameLevel(TreeView* tv, TreeItem ti) {
 
 static void TocContextMenu(ContextMenuEvent* ev) {
     MainWindow* win = FindMainWindowByHwnd(ev->w->hwnd);
-    Str filePath = win->ctrl->GetFilePath();
+    if (!win || !win->ctrl) {
+        return;
+    }
+    DocController* ctrl = win->ctrl;
+    Str filePath = ctrl->GetFilePath();
 
     Point pt{};
 
@@ -570,6 +574,11 @@ static void TocContextMenu(ContextMenuEvent* ev) {
     int cmd = TrackPopupMenu(popup, flags, pt.x, pt.y, 0, win->hwndFrame, nullptr);
     FreeMenuOwnerDrawInfoData(popup);
     DestroyMenu(popup);
+    // the menu runs a message loop: DDE or a reload can close or replace the
+    // document meanwhile, freeing filePath, dti, dest and tab
+    if (!IsMainWindowValidAndNotClosing(win) || win->ctrl != ctrl || win->CurrentTab() != tab) {
+        return;
+    }
     switch (cmd) {
         case CmdExpandAll:
             win->tocTreeView->ExpandAll();

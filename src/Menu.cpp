@@ -1289,7 +1289,8 @@ void OnWindowContextMenu(MainWindow* win, int x, int y) {
     // TrackPopupMenu runs a nested message loop; during that time the window
     // can be force-closed (e.g. by a plugin host destroying the parent).
     // If that happened, all our cached pointers (win, dm, pageEl, etc.) are dangling.
-    if (!IsMainWindowValidAndNotClosing(win)) {
+    // DDE or a reload can also replace the document while the window lives on.
+    if (!IsMainWindowValidAndNotClosing(win) || win->AsFixed() != dm || win->CurrentTab() != tab) {
         return;
     }
 
