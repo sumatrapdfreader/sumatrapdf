@@ -2589,38 +2589,6 @@ void SetSelectedAnnotation(WindowTab* tab, Annotation* annot) {
     UpdateAnnotFilterToolbar(win);
 }
 
-// Load annot wrappers for one page (page + annot dicts, not stext).
-static void LoadAnnotsForPage(EngineMupdf* e, int pageNo) {
-    if (!e || pageNo < 1 || pageNo > e->pageCount) {
-        return;
-    }
-    FzPageInfo* pi = e->GetFzPageInfo(pageNo, true);
-    if (!pi) {
-        logf("LoadAnnotsForPage: page %d GetFzPageInfo failed\n", pageNo);
-        return;
-    }
-}
-
-void StartLoadingAnnotationsForUi(WindowTab* tab) {
-    if (!tab) {
-        return;
-    }
-    DisplayModel* dm = tab->AsFixed();
-    if (!dm) {
-        return;
-    }
-    EngineMupdf* engine = AsEngineMupdf(dm->GetEngine());
-    if (!engine) {
-        return;
-    }
-    Vec<int> firstPages;
-    CollectPriorityAnnotPages(tab, tab->selectedAnnotation, firstPages);
-    for (int pageNo : firstPages) {
-        LoadAnnotsForPage(engine, pageNo);
-    }
-    EngineMupdfStartLoadAllAnnotations(engine, firstPages, MkFunc0(OnAnnotsProgress, tab));
-}
-
 // orig reports canvas pixels as they are
 Rect CanvasToFramePx(MainWindow*, Rect r) {
     return r;

@@ -2151,23 +2151,6 @@ void SetSelectedAnnotation(WindowTab* tab, Annotation* annot) {
     }
 }
 
-void StartLoadingAnnotationsForUi(WindowTab* tab) {
-    DisplayModel* dm = tab ? tab->AsFixed() : nullptr;
-    if (!dm) {
-        return;
-    }
-    EngineBase* engine = dm->GetEngine();
-    if (!EngineSupportsAnnotations(engine)) {
-        return;
-    }
-    Vec<int> firstPages;
-    CollectPriorityAnnotPages(tab, tab->selectedAnnotation, firstPages);
-    for (int pageNo : firstPages) {
-        EngineMupdfLoadAnnotsForPage(engine, pageNo);
-    }
-    EngineMupdfStartLoadAllAnnotations(engine, firstPages, MkFunc0(OnAnnotsProgress, tab));
-}
-
 // tests click the frame; the document model is canvas pixels
 Rect CanvasToFramePx(MainWindow* win, Rect r) {
     float s = CanvasScale(win);

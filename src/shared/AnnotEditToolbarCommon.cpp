@@ -796,6 +796,24 @@ void CollectPriorityAnnotPages(WindowTab* tab, Annotation* extra, Vec<int>& page
     }
 }
 
+// Load the priority pages' annotations now, the rest in the background.
+void StartLoadingAnnotationsForUi(WindowTab* tab) {
+    DisplayModel* dm = tab ? tab->AsFixed() : nullptr;
+    if (!dm) {
+        return;
+    }
+    EngineBase* engine = dm->GetEngine();
+    if (!EngineSupportsAnnotations(engine)) {
+        return;
+    }
+    Vec<int> firstPages;
+    CollectPriorityAnnotPages(tab, tab->selectedAnnotation, firstPages);
+    for (int pageNo : firstPages) {
+        EngineMupdfLoadAnnotsForPage(engine, pageNo);
+    }
+    EngineMupdfStartLoadAllAnnotations(engine, firstPages, MkFunc0(OnAnnotsProgress, tab));
+}
+
 // how wide the stroke of an ink annotation is, from the Thickness slider of
 // its color drop-down
 void ChipThicknessPicked(AnnotEditToolbarBase* tb, int width) {

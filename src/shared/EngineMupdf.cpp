@@ -10625,10 +10625,7 @@ static void AnnotLoadThread(EngineMupdf* e) {
     uitask::Post(fn, "AnnotLoadFinished");
 }
 
-#if defined(SUMATRA_NG)
-// ng: the annotation UI asks for one page's wrappers before it starts the
-// background loader; it cannot include EngineMupdf.h (mupdf headers clash with
-// gpui.h), so this is the entry point
+// Loads one page's annotation wrappers (page + annot dicts, not stext).
 void EngineMupdfLoadAnnotsForPage(EngineBase* engine, int pageNo) {
     EngineMupdf* e = AsEngineMupdf(engine);
     if (!e || pageNo < 1 || pageNo > e->pageCount) {
@@ -10640,7 +10637,6 @@ void EngineMupdfLoadAnnotsForPage(EngineBase* engine, int pageNo) {
     }
 }
 
-#endif
 void EngineMupdfStartLoadAllAnnotations(EngineBase* engine, const Vec<int>& firstPages, const Func0& onProgress) {
     EngineMupdf* e = AsEngineMupdf(engine);
     if (!e || !e->pdfdoc) {
