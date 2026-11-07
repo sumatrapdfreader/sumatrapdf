@@ -136,15 +136,6 @@ void GfxGdiplus::DrawDashedRect(const Rect& r, Color col) {
     gfx->SetSmoothingMode(prev);
 }
 
-// `d` is the diameter of the corner circles (see the same helper in Gfx.cpp)
-static void AddRoundedRectPath(GraphicsPath& path, const Rect& rc, int d) {
-    path.AddArc(rc.x, rc.y, d, d, 180, 90);
-    path.AddArc(rc.x + rc.dx - d - 1, rc.y, d, d, 270, 90);
-    path.AddArc(rc.x + rc.dx - d - 1, rc.y + rc.dy - d - 1, d, d, 0, 90);
-    path.AddArc(rc.x, rc.y + rc.dy - d - 1, d, d, 90, 90);
-    path.CloseFigure();
-}
-
 void GfxGdiplus::FillRoundedRect(const Rect& r, int radius, Color fill, Color border) {
     if (r.IsEmpty()) {
         return;
@@ -177,18 +168,7 @@ void GfxGdiplus::FillEllipse(const Rect& r, Color col, u8 alpha) {
 }
 
 void GfxGdiplus::DrawLine(const Rect& r, Color col, int thickness) {
-    if (col == kColorUnset) {
-        col = textColor;
-    }
-    Rect r2 = r;
-    if (r2.dy == 0) {
-        r2.dy = thickness;
-    } else if (r2.dx == 0) {
-        r2.dx = thickness;
-    }
-    // a horizontal / vertical line is a thin rect: drawn as a fill it lands on
-    // whole pixels instead of being smeared over two rows
-    FillRect(r2, col);
+    GfxThinLine(this, r, col == kColorUnset ? textColor : col, thickness);
 }
 
 void GfxGdiplus::DrawLineAA(Point p1, Point p2, Color col, float thickness, u8 alpha) {

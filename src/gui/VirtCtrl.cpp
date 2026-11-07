@@ -1546,14 +1546,20 @@ void VirtScroll::ScrollIntoView(VirtCtrl* w) {
     }
 }
 
-void VirtScroll::OnMouseWheel(VirtMouseEvent* ev) {
+// scrolls `self` three lines per wheel notch
+template <typename T>
+static void WheelScroll(T* self, VirtMouseEvent* ev) {
     if (ev->wheelDelta == 0) {
         return;
     }
     int lines = -(ev->wheelDelta * 3) / WHEEL_DELTA;
-    if (ScrollBy(lines * lineDy)) {
+    if (self->ScrollBy(lines * self->lineDy)) {
         ev->didHandle = true;
     }
+}
+
+void VirtScroll::OnMouseWheel(VirtMouseEvent* ev) {
+    WheelScroll(this, ev);
 }
 
 // the content follows the finger
@@ -1739,13 +1745,7 @@ bool ScrollBox::ScrollPage(int dir) {
 }
 
 void ScrollBox::OnMouseWheel(VirtMouseEvent* ev) {
-    if (ev->wheelDelta == 0) {
-        return;
-    }
-    int lines = -(ev->wheelDelta * 3) / WHEEL_DELTA;
-    if (ScrollBy(lines * lineDy)) {
-        ev->didHandle = true;
-    }
+    WheelScroll(this, ev);
 }
 
 void ScrollBox::OnVScroll(WPARAM wp) {

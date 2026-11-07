@@ -378,7 +378,20 @@ int VBox::ChildrenCount() const {
     return len(children);
 }
 
-int VBox::NonCollapsedChildrenCount() {
+static boxElementInfo& AddBoxChild(ILayout* self, Vec<boxElementInfo>& children, ILayout* child, int flex) {
+    if (LayoutTreeContains(child, self)) {
+        ReportIf(true);
+        return gRefusedBoxElement;
+    }
+    boxElementInfo v{};
+    v.layout = child;
+    v.flex = flex;
+    VecAppend(children, v);
+    auto n = len(children);
+    return children[n - 1];
+}
+
+static int CountNonCollapsed(const Vec<boxElementInfo>& children) {
     int n = 0;
     for (const auto& c : children) {
         if (!IsCollapsed(c.layout)) {
@@ -386,6 +399,10 @@ int VBox::NonCollapsedChildrenCount() {
         }
     }
     return n;
+}
+
+int VBox::NonCollapsedChildrenCount() {
+    return CountNonCollapsed(children);
 }
 
 static int updateFlex(Vec<boxElementInfo>& children, MainAxisAlign alignMain) {
@@ -694,16 +711,7 @@ void VBox::SetBoundsForChild(int i, ILayout* v, int posX, int posY, int posX2, i
 }
 
 boxElementInfo& VBox::AddChild(ILayout* child, int flex) {
-    if (LayoutTreeContains(child, this)) {
-        ReportIf(true);
-        return gRefusedBoxElement;
-    }
-    boxElementInfo v{};
-    v.layout = child;
-    v.flex = flex;
-    VecAppend(children, v);
-    auto n = len(children);
-    return children[n - 1];
+    return AddBoxChild(this, children, child, flex);
 }
 
 boxElementInfo& VBox::AddChild(ILayout* child) {
@@ -736,13 +744,7 @@ int HBox::ChildrenCount() const {
 }
 
 int HBox::NonCollapsedChildrenCount() {
-    int n = 0;
-    for (const auto& c : children) {
-        if (!IsCollapsed(c.layout)) {
-            n++;
-        }
-    }
-    return n;
+    return CountNonCollapsed(children);
 }
 
 Size HBox::Layout(const Constraints bc) {
@@ -1025,16 +1027,7 @@ void HBox::SetBoundsForChild(int i, ILayout* v, int posX, int posY, int posX2, i
 }
 
 boxElementInfo& HBox::AddChild(ILayout* child, int flex) {
-    if (LayoutTreeContains(child, this)) {
-        ReportIf(true);
-        return gRefusedBoxElement;
-    }
-    boxElementInfo v{};
-    v.layout = child;
-    v.flex = flex;
-    VecAppend(children, v);
-    auto n = len(children);
-    return children[n - 1];
+    return AddBoxChild(this, children, child, flex);
 }
 
 boxElementInfo& HBox::AddChild(ILayout* child) {

@@ -29,6 +29,7 @@ struct HwndBase;
 namespace Gdiplus {
 class Font;
 class Graphics;
+class GraphicsPath;
 } // namespace Gdiplus
 
 struct ID2D1DCRenderTarget;
@@ -228,6 +229,9 @@ bool Direct2DAvailable();
 Size GfxMeasureText(PlatformFont*, Str);
 Size D2DMeasureText(PlatformFont*, Str);
 Size GdiplusMeasureText(PlatformFont*, Str);
+
+void GfxThinLine(Gfx*, const Rect&, Color, int thickness);
+void AddRoundedRectPath(Gdiplus::GraphicsPath&, const Rect&, int d);
 
 // flip to draw with Direct2D instead of gdiplus, for comparing the two
 extern bool gUseDirect2D;

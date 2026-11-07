@@ -638,18 +638,7 @@ void GfxDirect2D::FillEllipse(const Rect& r, Color col, u8 alpha) {
 }
 
 void GfxDirect2D::DrawLine(const Rect& r, Color col, int thickness) {
-    if (col == kColorUnset) {
-        col = textColor;
-    }
-    Rect r2 = r;
-    if (r2.dy == 0) {
-        r2.dy = thickness;
-    } else if (r2.dx == 0) {
-        r2.dx = thickness;
-    }
-    // a horizontal / vertical line is a thin rect: drawn as a fill it lands on
-    // whole pixels instead of being smeared over two rows
-    FillRect(r2, col);
+    GfxThinLine(this, r, col == kColorUnset ? textColor : col, thickness);
 }
 
 void GfxDirect2D::DrawLineAA(Point p1, Point p2, Color col, float thickness, u8 alpha) {

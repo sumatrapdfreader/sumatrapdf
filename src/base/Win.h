@@ -515,4 +515,16 @@ double TimeDiffMs(const LARGE_INTEGER& start, const LARGE_INTEGER& end);
 TempStr GetDefaultPrinterNameTemp();
 LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam);
 
+// IUnknown::Release() for a COM object with an AtomicInt refCount: calls `del` at 0
+// (a lambda, so the object's private destructor stays reachable)
+template <typename F>
+inline ULONG ComRelease(AtomicInt* refCount, F del) {
+    LONG res = InterlockedDecrement(refCount);
+    ReportIf(res < 0);
+    if (0 == res) {
+        del();
+    }
+    return res;
+}
+
 #endif // OS_WIN

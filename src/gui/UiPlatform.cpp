@@ -36,7 +36,7 @@ int UiEdgeDx() {
     return DpiGetSystemMetrics(SM_CXEDGE);
 }
 
-static LPWSTR ToWin32Cursor(CursorId id) {
+LPWSTR ToWin32Cursor(CursorId id) {
     switch (id) {
         case CursorId::Arrow:
             return IDC_ARROW;

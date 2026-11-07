@@ -152,7 +152,7 @@ void GfxHdc::FillQuads(const Point* pts, int nQuads, Color col, u8 alpha, int ou
 
 // `d` is the diameter of the corner circles, so it is the radius doubled; the
 // callers pass a value tuned to look right rather than a true radius
-static void AddRoundedRectPath(Gdiplus::GraphicsPath& path, const Rect& rc, int d) {
+void AddRoundedRectPath(Gdiplus::GraphicsPath& path, const Rect& rc, int d) {
     path.AddArc(rc.x, rc.y, d, d, 180, 90);
     path.AddArc(rc.x + rc.dx - d - 1, rc.y, d, d, 270, 90);
     path.AddArc(rc.x + rc.dx - d - 1, rc.y + rc.dy - d - 1, d, d, 0, 90);
@@ -191,6 +191,18 @@ void GfxHdc::FillEllipse(const Rect& r, Color col, u8 alpha) {
     GdiplusOnHdc gp(hdc);
     Gdiplus::SolidBrush br(Gdiplus::Color(alpha, GetRValue(col), GetGValue(col), GetBValue(col)));
     gp.g.FillEllipse(&br, r.x, r.y, r.dx - 1, r.dy - 1);
+}
+
+// a horizontal / vertical line is a thin rect: drawn as a fill it lands on
+// whole pixels instead of being smeared over two rows
+void GfxThinLine(Gfx* gfx, const Rect& r, Color col, int thickness) {
+    Rect r2 = r;
+    if (r2.dy == 0) {
+        r2.dy = thickness;
+    } else if (r2.dx == 0) {
+        r2.dx = thickness;
+    }
+    gfx->FillRect(r2, col);
 }
 
 // kColorUnset draws in the surface's current text color, which is how the

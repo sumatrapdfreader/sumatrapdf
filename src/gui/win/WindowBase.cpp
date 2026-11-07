@@ -520,21 +520,43 @@ void WindowBase::OnThemeChange() {
     RedrawWindow(hwnd, nullptr, nullptr, flags);
 }
 
-LRESULT WindowBase::OnMessage(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam) {
+// shared by WindowBase and ControlBase: run the onWndProc hook, then WndProcDefault
+template <typename T>
+static LRESULT DispatchOnMessage(T* self, HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam) {
     DpiScope dpi(hwnd);
-    if (onWndProc.IsValid()) {
-        WndProcEvent ev;
-        ev.w = this;
+    if (self->onWndProc.IsValid()) {
+        typename T::WndProcEvent ev;
+        ev.w = self;
         ev.hwnd = hwnd;
         ev.msg = msg;
         ev.wparam = wparam;
         ev.lparam = lparam;
-        onWndProc.Call(&ev);
+        self->onWndProc.Call(&ev);
         if (ev.didHandle) {
             return ev.result;
         }
     }
-    return WndProcDefault(hwnd, msg, wparam, lparam);
+    return self->WndProcDefault(hwnd, msg, wparam, lparam);
+}
+
+// shared by WindowBase and ControlBase: subclass an existing HWND and fire onAttach
+template <typename T>
+static void AttachToHwnd(T* self, HWND hwnd) {
+    ReportIf(!IsWindow(hwnd));
+    ReportIf(HwndBaseFromHwnd(hwnd));
+
+    self->hwnd = hwnd;
+    DpiSetFromHwnd(hwnd);
+    self->Subclass();
+    if (self->onAttach.IsValid()) {
+        typename T::AttachEvent ev;
+        ev.w = self;
+        self->onAttach.Call(&ev);
+    }
+}
+
+LRESULT WindowBase::OnMessage(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam) {
+    return DispatchOnMessage(this, hwnd, msg, wparam, lparam);
 }
 
 HWND WindowBase::CreateCustom(const CreateCustomArgs& args) {
@@ -1484,17 +1506,7 @@ bool WindowBase::PreTranslateMessage(MSG& msg) {
 }
 
 void WindowBase::Attach(HWND hwnd) {
-    ReportIf(!IsWindow(hwnd));
-    ReportIf(HwndBaseFromHwnd(hwnd));
-
-    this->hwnd = hwnd;
-    DpiSetFromHwnd(hwnd);
-    Subclass();
-    if (onAttach.IsValid()) {
-        AttachEvent ev;
-        ev.w = this;
-        onAttach.Call(&ev);
-    }
+    AttachToHwnd(this, hwnd);
 }
 
 int WindowBase::GetDpi() const {
@@ -1513,20 +1525,7 @@ ControlBase* ControlBase::AsControlBase() {
 }
 
 LRESULT ControlBase::OnMessage(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam) {
-    DpiScope dpi(hwnd);
-    if (onWndProc.IsValid()) {
-        WndProcEvent ev;
-        ev.w = this;
-        ev.hwnd = hwnd;
-        ev.msg = msg;
-        ev.wparam = wparam;
-        ev.lparam = lparam;
-        onWndProc.Call(&ev);
-        if (ev.didHandle) {
-            return ev.result;
-        }
-    }
-    return WndProcDefault(hwnd, msg, wparam, lparam);
+    return DispatchOnMessage(this, hwnd, msg, wparam, lparam);
 }
 
 void ControlBase::SetVisibility(Visibility newVisibility) {
@@ -1941,17 +1940,7 @@ LRESULT ControlBase::WndProcDefault(HWND hwnd, UINT msg, WPARAM wparam, LPARAM l
 }
 
 void ControlBase::Attach(HWND hwnd) {
-    ReportIf(!IsWindow(hwnd));
-    ReportIf(HwndBaseFromHwnd(hwnd));
-
-    this->hwnd = hwnd;
-    DpiSetFromHwnd(hwnd);
-    Subclass();
-    if (onAttach.IsValid()) {
-        AttachEvent ev;
-        ev.w = this;
-        onAttach.Call(&ev);
-    }
+    AttachToHwnd(this, hwnd);
 }
 
 // Attaches a CWnd object to a dialog item.

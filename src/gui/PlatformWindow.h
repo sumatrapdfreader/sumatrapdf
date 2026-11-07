@@ -7,6 +7,8 @@
 struct Gfx;
 enum class CursorId;
 
+LPWSTR ToWin32Cursor(CursorId);
+
 using NativeWnd = HWND;
 
 struct PlatformWindow;

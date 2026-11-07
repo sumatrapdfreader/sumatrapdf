@@ -13,6 +13,7 @@
 #include "EngineBase.h"
 #include "DisplayModel.h"
 #include "uia/Constants.h"
+#include "uia/Common.h"
 #include "uia/DocumentProvider.h"
 #include "uia/Provider.h"
 #include "uia/PageProvider.h"
@@ -57,12 +58,7 @@ ULONG STDMETHODCALLTYPE SumatraUIAutomationPageProvider::AddRef() {
 }
 
 ULONG STDMETHODCALLTYPE SumatraUIAutomationPageProvider::Release() {
-    LONG res = InterlockedDecrement(&refCount);
-    ReportIf(res < 0);
-    if (0 == res) {
-        delete this;
-    }
-    return res;
+    return ComRelease(&refCount, [this] { delete this; });
 }
 
 HRESULT STDMETHODCALLTYPE SumatraUIAutomationPageProvider::Navigate(enum NavigateDirection direction,
@@ -117,13 +113,7 @@ HRESULT STDMETHODCALLTYPE SumatraUIAutomationPageProvider::GetRuntimeId(SAFEARRA
 }
 
 HRESULT STDMETHODCALLTYPE SumatraUIAutomationPageProvider::GetEmbeddedFragmentRoots(SAFEARRAY** pRetVal) {
-    if (pRetVal == nullptr) {
-        return E_POINTER;
-    }
-
-    // no other roots => return nullptr
-    *pRetVal = nullptr;
-    return S_OK;
+    return UiaReturnNull(pRetVal);
 }
 
 HRESULT STDMETHODCALLTYPE SumatraUIAutomationPageProvider::SetFocus() {
@@ -202,20 +192,11 @@ HRESULT STDMETHODCALLTYPE SumatraUIAutomationPageProvider::GetPropertyValue(PROP
 
 HRESULT STDMETHODCALLTYPE
 SumatraUIAutomationPageProvider::get_HostRawElementProvider(IRawElementProviderSimple** pRetVal) {
-    if (pRetVal == nullptr) {
-        return E_POINTER;
-    }
-    *pRetVal = nullptr;
-    return S_OK;
+    return UiaReturnNull(pRetVal);
 }
 
 HRESULT STDMETHODCALLTYPE SumatraUIAutomationPageProvider::get_ProviderOptions(ProviderOptions* pRetVal) {
-    if (pRetVal == nullptr) {
-        return E_POINTER;
-    }
-    // see SumatraUIAutomationProvider::get_ProviderOptions
-    *pRetVal = ProviderOptions_ServerSideProvider | ProviderOptions_UseComThreading;
-    return S_OK;
+    return UiaProviderOptions(pRetVal);
 }
 
 HRESULT STDMETHODCALLTYPE SumatraUIAutomationPageProvider::SetValue(__unused LPCWSTR val) {

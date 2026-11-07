@@ -5,6 +5,7 @@
 #include "base/WinDynCalls.h"
 #include "base/Win.h"
 #include "uia/Constants.h"
+#include "uia/Common.h"
 #include "uia/DocumentProvider.h"
 #include "uia/StartPageProvider.h"
 #include "uia/Provider.h"
@@ -68,12 +69,7 @@ ULONG STDMETHODCALLTYPE SumatraUIAutomationProvider::AddRef() {
 }
 
 ULONG STDMETHODCALLTYPE SumatraUIAutomationProvider::Release() {
-    LONG res = InterlockedDecrement(&refCount);
-    ReportIf(res < 0);
-    if (0 == res) {
-        delete this;
-    }
-    return res;
+    return ComRelease(&refCount, [this] { delete this; });
 }
 
 HRESULT STDMETHODCALLTYPE SumatraUIAutomationProvider::GetPatternProvider(__unused PATTERNID patternId,
@@ -115,15 +111,7 @@ HRESULT STDMETHODCALLTYPE SumatraUIAutomationProvider::get_HostRawElementProvide
 }
 
 HRESULT STDMETHODCALLTYPE SumatraUIAutomationProvider::get_ProviderOptions(ProviderOptions* pRetVal) {
-    if (pRetVal == nullptr) {
-        return E_POINTER;
-    }
-    // UseComThreading makes UIA marshal every provider call onto the thread the
-    // provider was created on (the UI thread, an STA via OleInitialize). Without
-    // it calls arrive on RPC threads and race document teardown: a GetText() on
-    // an RPC thread called a pure virtual on an engine the UI thread was deleting.
-    *pRetVal = ProviderOptions_ServerSideProvider | ProviderOptions_UseComThreading;
-    return S_OK;
+    return UiaProviderOptions(pRetVal);
 }
 
 HRESULT STDMETHODCALLTYPE SumatraUIAutomationProvider::Navigate(enum NavigateDirection direction,
@@ -155,23 +143,11 @@ HRESULT STDMETHODCALLTYPE SumatraUIAutomationProvider::Navigate(enum NavigateDir
 }
 
 HRESULT STDMETHODCALLTYPE SumatraUIAutomationProvider::GetRuntimeId(SAFEARRAY** pRetVal) {
-    if (pRetVal == nullptr) {
-        return E_POINTER;
-    }
-
-    // top-level elements should return nullptr
-    *pRetVal = nullptr;
-    return S_OK;
+    return UiaReturnNull(pRetVal);
 }
 
 HRESULT STDMETHODCALLTYPE SumatraUIAutomationProvider::GetEmbeddedFragmentRoots(SAFEARRAY** pRetVal) {
-    if (pRetVal == nullptr) {
-        return E_POINTER;
-    }
-
-    // no other roots => return nullptr
-    *pRetVal = nullptr;
-    return S_OK;
+    return UiaReturnNull(pRetVal);
 }
 
 HRESULT STDMETHODCALLTYPE SumatraUIAutomationProvider::SetFocus() {

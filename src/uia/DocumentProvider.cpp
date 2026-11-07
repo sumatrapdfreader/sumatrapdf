@@ -15,6 +15,7 @@
 #include "TextSelection.h"
 #include "base/File.h"
 #include "uia/Constants.h"
+#include "uia/Common.h"
 #include "uia/PageProvider.h"
 #include "uia/Provider.h"
 #include "uia/TextRange.h"
@@ -127,12 +128,7 @@ ULONG STDMETHODCALLTYPE SumatraUIAutomationDocumentProvider::AddRef() {
 }
 
 ULONG STDMETHODCALLTYPE SumatraUIAutomationDocumentProvider::Release() {
-    LONG res = InterlockedDecrement(&refCount);
-    ReportIf(res < 0);
-    if (0 == res) {
-        delete this;
-    }
-    return res;
+    return ComRelease(&refCount, [this] { delete this; });
 }
 
 HRESULT STDMETHODCALLTYPE SumatraUIAutomationDocumentProvider::Navigate(enum NavigateDirection direction,
@@ -196,13 +192,7 @@ HRESULT STDMETHODCALLTYPE SumatraUIAutomationDocumentProvider::GetRuntimeId(SAFE
 }
 
 HRESULT STDMETHODCALLTYPE SumatraUIAutomationDocumentProvider::GetEmbeddedFragmentRoots(SAFEARRAY** pRetVal) {
-    if (pRetVal == nullptr) {
-        return E_POINTER;
-    }
-
-    // no other roots => return nullptr
-    *pRetVal = nullptr;
-    return S_OK;
+    return UiaReturnNull(pRetVal);
 }
 
 HRESULT STDMETHODCALLTYPE SumatraUIAutomationDocumentProvider::SetFocus() {
@@ -210,26 +200,12 @@ HRESULT STDMETHODCALLTYPE SumatraUIAutomationDocumentProvider::SetFocus() {
 }
 
 HRESULT STDMETHODCALLTYPE SumatraUIAutomationDocumentProvider::get_BoundingRectangle(struct UiaRect* pRetVal) {
-    // share area with the canvas uia provider
-    if (!root) {
-        return UIA_E_ELEMENTNOTAVAILABLE;
-    }
-    return root->get_BoundingRectangle(pRetVal);
+    return UiaRootRect(root, pRetVal);
 }
 
 HRESULT STDMETHODCALLTYPE
 SumatraUIAutomationDocumentProvider::get_FragmentRoot(IRawElementProviderFragmentRoot** pRetVal) {
-    if (pRetVal == nullptr) {
-        return E_POINTER;
-    }
-
-    // return the root node
-    *pRetVal = root;
-    if (!root) {
-        return UIA_E_ELEMENTNOTAVAILABLE;
-    }
-    root->AddRef();
-    return S_OK;
+    return UiaRootFragmentRoot(root, pRetVal);
 }
 
 HRESULT STDMETHODCALLTYPE SumatraUIAutomationDocumentProvider::GetPatternProvider(PATTERNID patternId,
@@ -294,20 +270,11 @@ HRESULT STDMETHODCALLTYPE SumatraUIAutomationDocumentProvider::GetPropertyValue(
 
 HRESULT STDMETHODCALLTYPE
 SumatraUIAutomationDocumentProvider::get_HostRawElementProvider(IRawElementProviderSimple** pRetVal) {
-    if (pRetVal == nullptr) {
-        return E_POINTER;
-    }
-    *pRetVal = nullptr;
-    return S_OK;
+    return UiaReturnNull(pRetVal);
 }
 
 HRESULT STDMETHODCALLTYPE SumatraUIAutomationDocumentProvider::get_ProviderOptions(ProviderOptions* pRetVal) {
-    if (pRetVal == nullptr) {
-        return E_POINTER;
-    }
-    // see SumatraUIAutomationProvider::get_ProviderOptions
-    *pRetVal = ProviderOptions_ServerSideProvider | ProviderOptions_UseComThreading;
-    return S_OK;
+    return UiaProviderOptions(pRetVal);
 }
 
 HRESULT STDMETHODCALLTYPE SumatraUIAutomationDocumentProvider::GetSelection(SAFEARRAY** pRetVal) {

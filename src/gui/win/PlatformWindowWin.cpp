@@ -180,32 +180,8 @@ void PlatformWindow::Invalidate() {
     HwndInvalidate(native, false);
 }
 
-static LPWSTR CursorName(CursorId id) {
-    switch (id) {
-        case CursorId::Arrow:
-            return IDC_ARROW;
-        case CursorId::IBeam:
-            return IDC_IBEAM;
-        case CursorId::Hand:
-            return IDC_HAND;
-        case CursorId::Cross:
-            return IDC_CROSS;
-        case CursorId::Move:
-            return IDC_SIZEALL;
-        case CursorId::SizeNS:
-            return IDC_SIZENS;
-        case CursorId::SizeWE:
-            return IDC_SIZEWE;
-        case CursorId::No:
-            return IDC_NO;
-        case CursorId::None:
-            return nullptr;
-    }
-    return nullptr;
-}
-
 void PlatformWindow::SetCursor(CursorId id) {
-    LPWSTR name = CursorName(id);
+    LPWSTR name = ToWin32Cursor(id);
     if (name) {
         SetCursorCached(name);
     }

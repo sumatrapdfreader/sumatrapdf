@@ -338,12 +338,7 @@ ULONG STDMETHODCALLTYPE SumatraUIAutomationTextRange::AddRef() {
 }
 
 ULONG STDMETHODCALLTYPE SumatraUIAutomationTextRange::Release() {
-    LONG res = InterlockedDecrement(&refCount);
-    ReportIf(res < 0);
-    if (0 == res) {
-        delete this;
-    }
-    return res;
+    return ComRelease(&refCount, [this] { delete this; });
 }
 
 // ITextRangeProvider

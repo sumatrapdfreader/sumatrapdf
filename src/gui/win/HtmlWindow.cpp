@@ -274,12 +274,7 @@ class HW_IInternetProtocolInfo : public IInternetProtocolInfo {
 };
 
 ULONG STDMETHODCALLTYPE HW_IInternetProtocolInfo::Release() {
-    LONG res = InterlockedDecrement(&refCount);
-    ReportIf(res < 0);
-    if (0 == res) {
-        delete this;
-    }
-    return res;
+    return ComRelease(&refCount, [this] { delete this; });
 }
 
 STDMETHODIMP HW_IInternetProtocolInfo::QueryInterface(REFIID riid, void** ppv) {
@@ -323,12 +318,7 @@ class HW_IInternetProtocol : public IInternetProtocol {
 };
 
 ULONG STDMETHODCALLTYPE HW_IInternetProtocol::Release() {
-    LONG res = InterlockedDecrement(&refCount);
-    ReportIf(res < 0);
-    if (0 == res) {
-        delete this;
-    }
-    return res;
+    return ComRelease(&refCount, [this] { delete this; });
 }
 
 STDMETHODIMP HW_IInternetProtocol::QueryInterface(REFIID riid, void** ppv) {
@@ -487,12 +477,7 @@ class HW_IInternetProtocolFactory : public IClassFactory {
 };
 
 STDMETHODIMP_(ULONG) HW_IInternetProtocolFactory::Release() {
-    LONG res = InterlockedDecrement(&refCount);
-    ReportIf(res < 0);
-    if (0 == res) {
-        delete this;
-    }
-    return res;
+    return ComRelease(&refCount, [this] { delete this; });
 }
 
 STDMETHODIMP HW_IInternetProtocolFactory::QueryInterface(REFIID riid, void** ppv) {
@@ -1148,12 +1133,7 @@ ULONG STDMETHODCALLTYPE HtmlMoniker::AddRef() {
 }
 
 ULONG STDMETHODCALLTYPE HtmlMoniker::Release() {
-    LONG res = InterlockedDecrement(&refCount);
-    ReportIf(res < 0);
-    if (0 == res) {
-        delete this;
-    }
-    return res;
+    return ComRelease(&refCount, [this] { delete this; });
 }
 
 // The window that renders the page and processes its input. It sits under
@@ -1959,12 +1939,7 @@ STDMETHODIMP FrameSite::QueryInterface(REFIID riid, void** ppv) {
 }
 
 ULONG STDMETHODCALLTYPE FrameSite::Release() {
-    LONG res = InterlockedDecrement(&refCount);
-    ReportIf(res < 0);
-    if (0 == res) {
-        delete this;
-    }
-    return res;
+    return ComRelease(&refCount, [this] { delete this; });
 }
 
 // IDispatch
